@@ -1,118 +1,109 @@
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 549602F4A;
-	Thu,  2 Oct 2025 07:45:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14F62FD7B1;
+	Thu,  2 Oct 2025 08:42:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759391129; cv=none; b=Tqmg8c8zFWS/Am6eU4eqAPaABiG7z47gS7z39qPAEex7cxfuOskbwqTU5+7zZ3FkMd1gXkHg0i3rvM5x3AoaJVV9YkO5S3sGjOyHaOXKUFVur3RcAvBPGSm4hnJTlzBbMc655Hh/kMogs5KZKjC6IB+ssWq5kRxfGmG2rycJ+qc=
+	t=1759394522; cv=none; b=Lu5Rgpdta7a02qLETbhXbU4Mbn04udmIado2RxfjJlPZSIYefYSyoxkmzpUjkjKt5nXxcTGayDeKh8yVQetJMUV5Vh/4dK5/Y46JdQ5ks6Xg3nNqsIMq3HIbrNvfeCUfGiZDxD0OsYpH0t/HpcuN9aTWlkEpV3/by4J2g1T9qJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759391129; c=relaxed/simple;
-	bh=kE/24R+PCV/l7eUZIlk5aGEh01L3C+6v7O1EKkb/aCQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mpv8LHAkAFEqJe48FpxxFQlpsrbhHhpD/WUWVGFzIKODvabuyDHa193rl5ytXPelgfUWVoacW5OEk4rB+WGSfVWkIl6zECT3sJ2uKEwfwMxprVsxTJ34Xnlr3AVoJpSybKcPxCanUXiebVp+JTA73/GKVpQPs0Wf7Hus5n7WUtI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 1247A2C06F79;
-	Thu,  2 Oct 2025 09:40:12 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id A5FC85F8EA1; Thu,  2 Oct 2025 09:40:11 +0200 (CEST)
-Date: Thu, 2 Oct 2025 09:40:11 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: Terry Bowman <terry.bowman@amd.com>, dave@stgolabs.net,
-	dave.jiang@intel.com, alison.schofield@intel.com,
-	dan.j.williams@intel.com, bhelgaas@google.com,
-	shiju.jose@huawei.com, ming.li@zohomail.com,
-	Smita.KoralahalliChannabasappa@amd.com, rrichter@amd.com,
-	dan.carpenter@linaro.org, PradeepVineshReddy.Kodamati@amd.com,
-	Benjamin.Cheatham@amd.com,
-	sathyanarayanan.kuppuswamy@linux.intel.com,
-	linux-cxl@vger.kernel.org, alucerop@amd.com, ira.weiny@intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v12 10/25] CXL/AER: Update PCI class code check to use
- FIELD_GET()
-Message-ID: <aN4sWxjrzxeCyGBO@wunner.de>
-References: <20250925223440.3539069-1-terry.bowman@amd.com>
- <20250925223440.3539069-11-terry.bowman@amd.com>
- <20251001171216.00005fa0@huawei.com>
+	s=arc-20240116; t=1759394522; c=relaxed/simple;
+	bh=+FtP3eq0PeHkdOKnxERNZd0lz8T1pKK47VnKvzTXIDM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KtCgnxFKzYHz7/Y89z+OxEl807WI8clsq1oQj1V7EMei66XaeMAJuiaTISShR0B/95ExQ0PbYyYstXB0DP0UQL0akuhWnKlART1D0qiSo+Dj9eY1UvYXT0q/Mp2yplXyFq6kaE9kUzhnKal9IkXyFD4F5LsH5DwtoC/WIIs8smI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KRLA4OMv; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KRLA4OMv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1759394520; x=1790930520;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=+FtP3eq0PeHkdOKnxERNZd0lz8T1pKK47VnKvzTXIDM=;
+  b=KRLA4OMvX1pQLliJtg8Y7OH/DVmoqerSSg0/ua9K6U1HuWOJF++wbuwC
+   tzGpUAjJmvgU6qtE1AHV0yUeLq7JWXVC/UZWyJRvAh0bO+NpvO1+Q1yej
+   TxlurCfhhKBJXZiJ1JRlvozZawo0Gsg8elT9IDYNvRY2EMjFoElVviRY/
+   bJu1Vs6Nx2eaO5+vmIbz/K14GFQ/4wneK1iNq9b/uq6XHOgS7c4kNNJ5p
+   g7DE9dusAiKCDAepjROs66OwdoIu/ZveRdKHGx8sz42MHPgBdPx/NYQI2
+   b5as2xJe+ocPW/UwIzuUok0GMpKZ59ZX8+OR5WG/kvlBr4aNpFn8UjHEz
+   A==;
+X-CSE-ConnectionGUID: F5fIk4+nT465ivRO/RX6Ew==
+X-CSE-MsgGUID: Z+Z53l98RbGlHRRcggNw7w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11569"; a="79099018"
+X-IronPort-AV: E=Sophos;i="6.18,309,1751266800"; 
+   d="scan'208";a="79099018"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2025 01:41:59 -0700
+X-CSE-ConnectionGUID: jNtY2rMWTe2xjWafWBCFwA==
+X-CSE-MsgGUID: txiw6bgrQ0O9wv9CHrBr7Q==
+X-ExtLoop1: 1
+Received: from slindbla-desk.ger.corp.intel.com (HELO pujfalus-desk.intel.com) ([10.245.246.8])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2025 01:41:56 -0700
+From: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+To: lgirdwood@gmail.com,
+	broonie@kernel.org
+Cc: linux-sound@vger.kernel.org,
+	kai.vehmanen@linux.intel.com,
+	ranjani.sridharan@linux.intel.com,
+	yung-chuan.liao@linux.intel.com,
+	pierre-louis.bossart@linux.dev,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	kw@linux.com
+Subject: [PATCH 0/7] ASoC/SOF/PCI/Intel: Support for Nova Lake S
+Date: Thu,  2 Oct 2025 11:42:45 +0300
+Message-ID: <20251002084252.7305-1-peter.ujfalusi@linux.intel.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251001171216.00005fa0@huawei.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 01, 2025 at 05:12:16PM +0100, Jonathan Cameron wrote:
-> On Thu, 25 Sep 2025 17:34:25 -0500 Terry Bowman <terry.bowman@amd.com> wrote:
-> The way that class code definitions work in pci_ids.h is somewhat odd
-> in my opinion, so I'd like input from Bjorn, Lukas etc on whether a
-> generic mask definition is a good idea or more likely to cause problems.
-> 
-> See for example. 
-> #define PCI_BASE_CLASS_STORAGE		0x01
-> ...
-> 
-> #define PCI_CLASS_STORAGE_SATA		0x0106
-> #define PCI_CLASS_STORAGE_SATA_AHCI	0x010601
-> 
-> This variability in what is called CLASS_* leads to fun
-> situations like in drivers/ata/ahci.c where we have some
-> PCI_CLASS_* shifted and some not...
+Hi,
 
-Macros working with PCI class codes generally accept a "shift" parameter
-to know by how many bits the class code needs to be shifted, see e.g.
-DECLARE_PCI_FIXUP_CLASS_EARLY() and friends.
+this series adds initial support for NVL-S from the Nova Lake family.
+NVL-S includes ACE4 audio subsystem, it has 2 DSP cores.
 
-A macro which shifts exactly by 8 is hence only of limited use.
+Regards,
+Peter
+---
+Bard Liao (1):
+  ASoC: Intel: soc-acpi-intel-nvl-match: add rt722 l3 support
 
+Peter Ujfalusi (6):
+  PCI: Add Intel Nova Lake S audio Device ID
+  ALSA: hda/hdmi: intelhdmi: add HDMI codec ID for Intel NVL
+  ASoC: Intel: soc-acpi: add NVL match tables
+  ASoC: SOF: Intel: add initial support for NVL-S
+  ALSA: hda: core: intel-dsp-config: Add support for NVL-S
+  ALSA: hda: controllers: intel: add support for Nova Lake S
 
-> > +++ b/drivers/pci/pcie/aer_cxl_rch.c
-> > @@ -17,10 +17,10 @@ static bool is_cxl_mem_dev(struct pci_dev *dev)
-> >  		return false;
-> >  
-> >  	/*
-> > -	 * CXL Memory Devices must have the 502h class code set (CXL
-> > -	 * 3.0, 8.1.12.1).
-> > +	 * CXL Memory Devices must have the 502h class code set
-> > +	 * (CXL 3.2, 8.1.12.1).
-> >  	 */
-> > -	if ((dev->class >> 8) != PCI_CLASS_MEMORY_CXL)
-> > +	if (FIELD_GET(PCI_CLASS_CODE_MASK, dev->class) != PCI_CLASS_MEMORY_CXL)
-> >  		return false;
+ include/linux/pci_ids.h                       |  1 +
+ include/sound/soc-acpi-intel-match.h          |  2 +
+ sound/hda/codecs/hdmi/intelhdmi.c             |  1 +
+ sound/hda/controllers/intel.c                 |  2 +
+ sound/hda/core/intel-dsp-config.c             |  8 ++
+ sound/soc/intel/common/Makefile               |  1 +
+ .../intel/common/soc-acpi-intel-nvl-match.c   | 90 +++++++++++++++++++
+ sound/soc/sof/intel/Kconfig                   | 17 ++++
+ sound/soc/sof/intel/Makefile                  |  2 +
+ sound/soc/sof/intel/hda-dsp.c                 |  1 +
+ sound/soc/sof/intel/hda.h                     |  1 +
+ sound/soc/sof/intel/nvl.c                     | 55 ++++++++++++
+ sound/soc/sof/intel/nvl.h                     | 14 +++
+ sound/soc/sof/intel/pci-nvl.c                 | 82 +++++++++++++++++
+ sound/soc/sof/intel/shim.h                    |  1 +
+ 15 files changed, 278 insertions(+)
+ create mode 100644 sound/soc/intel/common/soc-acpi-intel-nvl-match.c
+ create mode 100644 sound/soc/sof/intel/nvl.c
+ create mode 100644 sound/soc/sof/intel/nvl.h
+ create mode 100644 sound/soc/sof/intel/pci-nvl.c
 
-Hm, this doesn't look more readable TBH.
+-- 
+2.51.0
 
-Refactoring changes like this one should be submitted separately from
-this patch set.  If any of them are controversial, they delay upstreaming
-of the actual change, i.e. the CXL AER plumbing.  They also increase the
-size of the patch set, making it more difficult to review.
-
-
-> > +++ b/include/uapi/linux/pci_regs.h
-> > @@ -73,6 +73,8 @@
-> >  #define PCI_CLASS_PROG		0x09	/* Reg. Level Programming Interface */
-> >  #define PCI_CLASS_DEVICE	0x0a	/* Device class */
-> >  
-> > +#define PCI_CLASS_CODE_MASK     __GENMASK(23, 8)
-> > +
-> >  #define PCI_CACHE_LINE_SIZE	0x0c	/* 8 bits */
-> >  #define PCI_LATENCY_TIMER	0x0d	/* 8 bits */
-> >  #define PCI_HEADER_TYPE		0x0e	/* 8 bits */
-
-Putting this in a uapi header means we'll have to support it
-indefinitely.  Usually such macros are added to kernel-internal
-headers first and moved to uapi headers if/when the need arises.
-
-Thanks,
-
-Lukas
