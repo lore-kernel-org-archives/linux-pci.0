@@ -1,76 +1,61 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 937C927510E
-	for <linux-pci@vger.kernel.org>; Fri,  3 Oct 2025 02:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955C82C2353;
+	Fri,  3 Oct 2025 02:12:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759457062; cv=none; b=VvD7eUOFyhVs+7phM2zBR5VtJ9rXElDvV1dkrQ43ss8zRyxR7DPfvZuAftH2pFO5tfTnCvJCg3BACOn7EB4Z+z4nD6cCoWggBloT9Sa2IxKJRLEelGTMyKeAxJEJOvfKeSQ9vU/khUr1WxbF4c41QSiN7Lm6gBaYLrrQiO5HakY=
+	t=1759457542; cv=none; b=t6HC0IJecLSmYARhYWKMqK1W9VShX05zXBJsZ/w+rKpi96cDMdXx6oKtk6wYuEauNKNIsct1jAVXOApw/qfYUEwRIpz+6fBw4X9mAO9u8UEnztmRY2geA6I1A7obl5fQAFnbS0Q3/qYvE0+I2XPJQK15eDLnptqJQaP3/oqYpuo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759457062; c=relaxed/simple;
-	bh=Pipoy1XBbds2PlnklTKlbqV5Zk1mn6VbZPmBLBLrsLE=;
+	s=arc-20240116; t=1759457542; c=relaxed/simple;
+	bh=qtzjrZBBxKN/6Xha1W2kGG4xjEIlLB9Uc8Ik5gn2z2M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qD3aturZGfptCpWPaR7JYa7+1dF4vUZaRf8xqq34iAdfYfvmtrAG/+SuzB5ROd0uf+Vfck1/RTMXPhhniQPc6f+43fWlS0lyEwYbROD9qAIXIwgcweh7iLAWyczaYrCb7Gn0NQdQlIqX7o0AYY2JubYDqshe2JaYCOhkrPxJhUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eCE8GpUp; arc=none smtp.client-ip=209.85.216.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=kHZjL5hRQg1sUL7uqj7Tqrh1hqmU47aBTBdNZyClJcd0TzXmUusWZBBe8lv0F9IcRDWphNF1lkXuccdWdD4MPCcHCn7RLtJedsvhlvcxNNE9sruFi6/ar/QlprvC2xQyNKbvFHdR+qfRGLojnLejRXfYz5BLyDhxe01AW8QxNzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hNWSkcRM; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eCE8GpUp"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-329a41dc2ebso1812199a91.3
-        for <linux-pci@vger.kernel.org>; Thu, 02 Oct 2025 19:04:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759457057; x=1760061857; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=QPj4N/rg4SEFd6nYGGwkaDff/FuT1pDCqQiR8KahPrY=;
-        b=eCE8GpUplPzmvoCDTEd9eZyRlENmSw2CXONJwGyWU6Y8RClAD9sczPMCGJ/nVEfeNQ
-         Y2F55ETem5Gy3G6VIT0GkBrcRCTqiNI/bgXO6u/KWJCqmtTzHe44MdQVIb/j01zYuxXj
-         xyZDwZLzrPFLhKE6WNfx7tSaq1fC5My7xx4a2Eu1uymjUAHX8p3D7TYz3vb5itc9snd5
-         kLTF1hQ9AeNHFPUuZMrbZw1MNaBpcbAdJ9SUzkNHAfijbJBAWGYXi0Gi4n0oB21MfUHe
-         fUQEfBYJCuMprt+Dk5p+y/A+/6X9J4ukXXE3FtqtnY0QnHjLHUFoJy4HoGOLmHkvNbh+
-         hFhQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759457057; x=1760061857;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QPj4N/rg4SEFd6nYGGwkaDff/FuT1pDCqQiR8KahPrY=;
-        b=XcilhoyecxRywkriwTBZk+zNTpUkHzuow6ED87zq2ZwpJbz7KgO8sR5tmceuQupvcM
-         pNGAb/9Y/B/W3VJ7MetRTfAsGw4U9Acgb8riXvVq9FA5FeOeVD546NpgwlNi4PS9tTeT
-         vIaiiuiiK3cMLZ7w5ZHOk0ey91w5FZ3857BYNQcnCsc6iSqNAmtgPg3Z+dpPAFnxtUqP
-         X2yR8zJBZOUM8uH7xT+0Y66GG2LmqJ756poKEn2o0KlBTqhs/m5AIdRtWG5j00GtT9c+
-         115uzJzagxnkbGeltWu1ZXHtHAgkVt8pS9B65T8xJM+oYD6fys2gU3+G64PG3fCXy5No
-         TAoQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUzjv+SNQHeNEEfwnhxWn5LZ7Ms7Udp6/jU8U2oS8AY11Ek/DXW0YHbyUrSPwvpqIRZTi0sOqcACFI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4RZmCj+7Q62du2D5AADXoQHTUi1DguKu5wb5ihq/snC9XAS7N
-	V+TsiCMTKtfLDtiTrWQRwawFy2fdcJgu0O+c5c6jZ47H9p7ZCDVsL2d1
-X-Gm-Gg: ASbGncuZ4xcmbSily3izD98qzinQ5gRYsN9bJkWlO6AsHdV+r6yjYSiHO6C8PjaQqWp
-	90c5sybhaw/b6BneboWf8oCilRTV4RTkQnqxHPtyuC5imcBnF/R8r4Q3ouneNq7QYcsYVHPo9gA
-	mwJzkUsGfXtvy6eG5wGtp92/GuNiwdj6KXpE7yMI0SwBCZfD2umdF0ezpFk3T+pvMepq7DW+4a2
-	0GgO9iMmLvC9k4HPCCObJJAc0BTYqwdKFAmZGHlza+Cu8K5EuTbL+jql2A7eC0EPhFiLdu1B/eh
-	ypY0bYrhgxNlIH51WvhW7H2D6KGfHDdfBlGpUwJL5MvrrQcra4RlKmifmXGoNmTYy4fN6yHL1mh
-	15RWogtHtTNjoQU5X6VR+5dI8CNFfByD4hb/boI9eqdvhnA==
-X-Google-Smtp-Source: AGHT+IHn7vuMvBOMCFhdWNq+HKu7oYdcjqZnf8CFJ6x31g+GFu/ht3yUh0/GtT4ZLdiBWKZ5FvUL/Q==
-X-Received: by 2002:a17:90b:38cb:b0:330:7ff5:2c58 with SMTP id 98e67ed59e1d1-339c2705e45mr1606187a91.7.1759457056786;
-        Thu, 02 Oct 2025 19:04:16 -0700 (PDT)
-Received: from localhost ([2001:19f0:ac00:4eb8:5400:5ff:fe30:7df3])
-        by smtp.gmail.com with UTF8SMTPSA id 98e67ed59e1d1-339a701bf31sm6262637a91.19.2025.10.02.19.04.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Oct 2025 19:04:16 -0700 (PDT)
-Date: Fri, 3 Oct 2025 10:03:43 +0800
-From: Inochi Amaoto <inochiama@gmail.com>
-To: Kenneth Crudup <kenny@panix.com>, Inochi Amaoto <inochiama@gmail.com>
-Cc: tglx@linutronix.de, bhelgaas@google.com, unicorn_wang@outlook.com, 
-	linux-pci@vger.kernel.org
-Subject: Re: commit 54f45a30c0 ("PCI/MSI: Add startup/shutdown for per device
- domains") causing boot hangs on my laptop
-Message-ID: <wfdzfzzemspxjecijckhrzurdfuxebnxff4lyyrcw4zrqcxio5@z4uaz3hcty6f>
-References: <8a923590-5b3a-406f-a324-7bd1cf894d8f@panix.com>
- <hxyz7e6ebp3hmwyv3ivhy5kwc5skpynzl4djyylusheuv3fmqf@tmh2bygaex4r>
- <05f38588-7759-42ce-9202-2c48c29e2f23@panix.com>
- <feedlab62syxyk56uzclvrltwhaui7qgaxsynsgpfrudmpue52@vbt6zahn5kif>
- <gtmre52no2rqbno2tkuh77a6kjd4i7hrjbmfenucduglgqv6hw@gv4idxswvyng>
- <b955d5a6-5553-4659-b02a-a763993fcd82@panix.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hNWSkcRM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1759457536; x=1790993536;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qtzjrZBBxKN/6Xha1W2kGG4xjEIlLB9Uc8Ik5gn2z2M=;
+  b=hNWSkcRMYVT+wJwS2NRUgAAn04nLKLT1/J1NTApY0lw5RoI7NwcpGZVl
+   T3E6A3+G/cSrbdq665DbS0oAZeMVL5jzdjeMzeEKXz1u8Nc5nWOYJNeR3
+   BhQ4MvTfMH//0Yit2CfaPkTfM67vMcurpO2dSNC73TzmUhYVg5YbrJoQc
+   eJc35iM9jVnuk+Yo2wpT3FosRFotPf5UQoVDiKKWDkvG8o1bLmSp3aYbg
+   AA2KH4s4OMPbIVyoYhyc/puJQcE6iuqUPLRfsnWTxy8X19XPB4q1ij33d
+   reyh0K5OO+RXjB/OsCtugW1UosT8OkSr+dn9/mMU/43THGWC8L+tZcDXc
+   Q==;
+X-CSE-ConnectionGUID: sZb0cg6VTR+w4+xvhGYZPw==
+X-CSE-MsgGUID: GVV97dEJTw613u+VfGy6Rg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11570"; a="64361708"
+X-IronPort-AV: E=Sophos;i="6.18,311,1751266800"; 
+   d="scan'208";a="64361708"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2025 19:12:16 -0700
+X-CSE-ConnectionGUID: pCeIzc+NR8ORVedj+sh/Ig==
+X-CSE-MsgGUID: WNmjOiUcSsyju4Y91t++ZQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,311,1751266800"; 
+   d="scan'208";a="179601731"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by fmviesa008.fm.intel.com with ESMTP; 02 Oct 2025 19:12:14 -0700
+Date: Fri, 3 Oct 2025 09:59:44 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: dan.j.williams@intel.com
+Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+	yilun.xu@intel.com, baolu.lu@linux.intel.com,
+	zhenzhong.duan@intel.com, aneesh.kumar@kernel.org,
+	bhelgaas@google.com, aik@amd.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI/IDE: Add/export mini helpers for platform TSM
+ drivers
+Message-ID: <aN8uEHZzd2cCOYoK@yilunxu-OptiPlex-7050>
+References: <20250928062756.2188329-1-yilun.xu@linux.intel.com>
+ <20250928062756.2188329-2-yilun.xu@linux.intel.com>
+ <68dc74a6b7348_1fa210058@dwillia2-mobl4.notmuch>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -79,25 +64,55 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b955d5a6-5553-4659-b02a-a763993fcd82@panix.com>
+In-Reply-To: <68dc74a6b7348_1fa210058@dwillia2-mobl4.notmuch>
 
-On Thu, Oct 02, 2025 at 06:51:09PM -0700, Kenneth Crudup wrote:
+On Tue, Sep 30, 2025 at 05:24:06PM -0700, dan.j.williams@intel.com wrote:
+> Xu Yilun wrote:
+> > These mini helpers are mainly for platform TSM drivers to setup root
+> > port side configuration. Root port side IDE settings may require
+> > platform specific firmware calls (e.g. TDX Connect [1]) so could not use
+> > pci_ide_stream_setup(), but may still share these mini helpers cause
+> > they also refer to definitions in IDE specification.
+> > 
+> > [1]: https://lore.kernel.org/linux-coco/20250919142237.418648-28-dan.j.williams@intel.com/
+> > 
+> > Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+> > ---
+> >  include/linux/pci-ide.h | 6 ++++++
+> >  drivers/pci/ide.c       | 8 +++-----
+> >  2 files changed, 9 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/include/linux/pci-ide.h b/include/linux/pci-ide.h
+> > index a30f9460b04a..5adbd8b81f65 100644
+> > --- a/include/linux/pci-ide.h
+> > +++ b/include/linux/pci-ide.h
+> > @@ -6,6 +6,11 @@
+> >  #ifndef __PCI_IDE_H__
+> >  #define __PCI_IDE_H__
+> >  
+> > +#define PREP_PCI_IDE_SEL_RID_2(base, domain)               \
+> > +	(FIELD_PREP(PCI_IDE_SEL_RID_2_VALID, 1) |          \
+> > +	 FIELD_PREP(PCI_IDE_SEL_RID_2_BASE, (base)) | \
+> > +	 FIELD_PREP(PCI_IDE_SEL_RID_2_SEG, (domain)))
+> > +
+> >  enum pci_ide_partner_select {
+> >  	PCI_IDE_EP,
+> >  	PCI_IDE_RP,
+> > @@ -61,6 +66,7 @@ struct pci_ide {
+> >  	struct tsm_dev *tsm_dev;
+> >  };
+> >  
+> > +int pci_ide_domain(struct pci_dev *pdev);
+> >  struct pci_ide_partner *pci_ide_to_settings(struct pci_dev *pdev, struct pci_ide *ide);
+> >  struct pci_ide *pci_ide_stream_alloc(struct pci_dev *pdev);
+> >  void pci_ide_stream_free(struct pci_ide *ide);
 > 
-> 
-> On 10/2/25 18:30, Inochi Amaoto wrote:
-> 
-> > Can you have a try on this fix?
-> 
-> Bootloops, unfortunately, and very early on (in fact, so early ISTR we'd had
-> a conversation previously about the first iteration of these efforts).
-> 
+> So I do not think we need to export these as much as let TSM drivers
+> reuse more of the common register setup logic.
 
-Weird, this seems like affects more than the vmd itself.
-I think I need to know hierarchical information of the irq
-controller. Can you do me a favor for rebuilding a kernel
-with CONFIG_GENERIC_IRQ_DEBUGFS enabled and check the
-irq information under /sys/kernel/debug/irq/. Any of the
-vmd irq and NVMe irq should show the information for it.
+Do you mean PCI IDE should provide the collapsed raw RID/Address
+Association Register values for platform TSM drivers? TDX needs these
+raw values for SEAMCALLs.
 
-Regards,
-Inochi
+> 
+> I will flesh out more of the proposal on the next patch.
