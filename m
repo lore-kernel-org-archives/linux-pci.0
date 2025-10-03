@@ -1,27 +1,27 @@
 Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DB1C2DAFD7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE672DC33B;
 	Fri,  3 Oct 2025 02:40:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759459233; cv=none; b=tOQTdLPb11RxaSHQE3l2FDWVwRBpc9MkTx3O7FcTRTQLTpmKkJUx8kxQOiK15ccIhs02U2UqNdwPCzuEBVCkYSL25eyuG+xtxdMuEKilt0OidPhhOJ8/wIjjd08uTRNgS3+xTfkKouLVgRYTQeMtxgUEgdDyzbQ6ZD1tXiGp+os=
+	t=1759459233; cv=none; b=jvuEt6+Gnsp4at8JI1a77ZxBi4sR4jB2Np9FNHV8U4bU04tqz9SwVa2/UZihj6izf/c6zNtMNPICY9ZalhekNjwR3f6+ztQuCAKgxv35y+3S0OuoAFbnBc24OMdlk/4Cqd8D/xay9FAfkAdLkR7zz/vKduoSL+OP7MJkvirU88s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1759459233; c=relaxed/simple;
-	bh=wA/yhoDXkPXDFDtBTLBNE8yDTcYFQKFGB1ZHSi7YXfc=;
+	bh=udodIbL6v5L3ARkdqtvidUF2a323b6DgbAovYb/w62k=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bN/dNRvtIKw4AWrBooP8b4xq9EsWpFdY0+G2XXemavz1Al1olr0vbuYbb56kirHCKeyttLDKSRLr2SApE5syYoXy89t2IWPtJFXDPz2Su2fIajJFKLFPSorhrNigLEjI6qjCLzHJ4sVRrR7HiOYhPIw6s4hIBb3v7GsHUtoTPRo=
+	 MIME-Version:Content-Type; b=Ai/CylZv1eD6OJqK0JS+b7UVhNx+WzcgusLJzv4akmN5+cYBbnHACBYE4+aApUNxf9LPRWXeDhgRqziw7ypptO2PBZS/dE6uCSJKcacPkzF3m23F5dUozv3w/Tuilg0jXWxc5/lJ158hk7y17jyeV/7pxPG4J7pxgL+ykllrx7Q=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
 Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
-	by Atcsqr.andestech.com with ESMTPS id 5932Ze70070293
+	by Atcsqr.andestech.com with ESMTPS id 5932Zgjx070324
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 3 Oct 2025 10:35:40 +0800 (+08)
+	Fri, 3 Oct 2025 10:35:42 +0800 (+08)
 	(envelope-from randolph@andestech.com)
 Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
  (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Fri, 3 Oct 2025
- 10:35:40 +0800
+ 10:35:41 +0800
 From: Randolph Lin <randolph@andestech.com>
 To: <linux-kernel@vger.kernel.org>
 CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
@@ -34,9 +34,9 @@ CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
         <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
         <shradha.t@samsung.com>, <pjw@kernel.org>, <randolph.sklin@gmail.com>,
         <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
-Subject: [PATCH v6 1/5] PCI: dwc: Allow adjusting the number of ob/ib windows in glue driver
-Date: Fri, 3 Oct 2025 10:35:23 +0800
-Message-ID: <20251003023527.3284787-2-randolph@andestech.com>
+Subject: [PATCH v6 5/5] MAINTAINERS: Add maintainers for Andes QiLai PCIe driver
+Date: Fri, 3 Oct 2025 10:35:27 +0800
+Message-ID: <20251003023527.3284787-6-randolph@andestech.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251003023527.3284787-1-randolph@andestech.com>
 References: <20251003023527.3284787-1-randolph@andestech.com>
@@ -51,44 +51,33 @@ Content-Type: text/plain
 X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
 X-DNSRBL: 
 X-SPAM-SOURCE-CHECK: pass
-X-MAIL:Atcsqr.andestech.com 5932Ze70070293
+X-MAIL:Atcsqr.andestech.com 5932Zgjx070324
 
-The number of ob/ib windows is determined through write-read loops
-on registers in the core driver. Some glue drivers need to adjust
-the number of ob/ib windows to meet specific requirements,such as
-hardware limitations. This change allows the glue driver to adjust
-the number of ob/ib windows to satisfy platform-specific constraints.
-The glue driver may adjust the number of ob/ib windows, but the values
-must stay within hardware limits.
+Here add maintainer information for Andes QiLai PCIe driver.
 
 Signed-off-by: Randolph Lin <randolph@andestech.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 89aad5a08928..56c1e45adc06 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -907,8 +907,16 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
- 		max = 0;
- 	}
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 49aace3381cd..6f6021863e7d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19401,6 +19401,13 @@ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
+ F:	drivers/pci/controller/pcie-altera.c
  
--	pci->num_ob_windows = ob;
--	pci->num_ib_windows = ib;
-+	if (!pci->num_ob_windows)
-+		pci->num_ob_windows = ob;
-+	else if (pci->num_ob_windows > ob)
-+		dev_err(pci->dev, "Adjusted ob windows exceed the limit\n");
++PCI DRIVER FOR ANDES QILAI PCIE
++M:	Randolph Lin <randolph@andestech.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
++F:	drivers/pci/controller/dwc/pcie-andes-qilai.c
 +
-+	if (!pci->num_ib_windows)
-+		pci->num_ib_windows = ib;
-+	else if (pci->num_ib_windows > ib)
-+		dev_err(pci->dev, "Adjusted ib windows exceed the limit\n");
-+
- 	pci->region_align = 1 << fls(min);
- 	pci->region_limit = (max << 32) | (SZ_4G - 1);
- 
+ PCI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Toan Le <toan@os.amperecomputing.com>
+ L:	linux-pci@vger.kernel.org
 -- 
 2.34.1
 
