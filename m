@@ -1,169 +1,182 @@
-Received: from out162-62-57-64.mail.qq.com (out162-62-57-64.mail.qq.com [162.62.57.64])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1753A1F7098;
-	Mon,  6 Oct 2025 18:46:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F47B1B042E;
+	Mon,  6 Oct 2025 18:52:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759776368; cv=none; b=YGkDrpxr/XJACpQD0GHJOBnSpa7zuxxvyHFsBn2ONxj7/aozHc4pKVnEHHVh/p0/JME3GjzTYe003GaIHLYvg+TcNTlaC1DalLpwLvdXOtrzOgChZPRqSsXmL1YE+nkis2Iso6YXq4xmjmMNHgaOxJARQE8oL7jTNebhFnds1YU=
+	t=1759776734; cv=none; b=OIdA9/XLxHfp1WHR1jVcp0A4Vsm6Nm3vBy8bTBTurco6Tyv2KnD6Py5//yAu5kGmQDRO6ZBescsXQH5Bkm1HkUKSrPkfjfEk2qPSU3eqzVCNqr4q48XIOZOxgNlnepGVfO7MVNGrb0Vm44b0gd6yZW/fuEgrzbyoubH8xh1nOOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759776368; c=relaxed/simple;
-	bh=ji018SfjwN2M+GQX18OazxVjUwdrp8zoeY53TXXqyco=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=RDFRGJVqIHPH1a1VHfLPqJ25vqwLNoEM6wxi3h0S6MVHVFTSE4CDFmd2TtdQzMv0N+crYGW5S7p9gMVZQSD7F+D169frhJB1Imuwnk3uN7al6VApzvOASDF1rQB9qlsikJaSCF6/GNONJ7hpPehe/9+nQf/QbGFyye6stsD9UKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=i3ClO5jk; arc=none smtp.client-ip=162.62.57.64
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1759776734; c=relaxed/simple;
+	bh=ZWvIVGXtiM/1nsG2Z8koPrcNspjPo3e9IYnBwDXQV30=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V8jhfpcnuvKQFhzaEX/hNg+JzRU0YULemUfxHMlW+asXgK8lJ+olugzN1bID13K4Hc3zqcjlRr8CXM4tL6pSDLH3ESfOaT8Lgujprm8emHxVSMQcNAu0NgUsh+YhOAJ3BfivgTSJ8uko1Ps5ZpIlQiONq4UDv7mDCDZ+6+TZJ+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dQr/WvAh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="i3ClO5jk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1759776054; bh=bZ3DcGJ+3f3q61fb0vjsoxJFDfw3N9Ux8Yh2qfDnDUM=;
-	h=From:To:Cc:Subject:Date;
-	b=i3ClO5jkLjKeKrWTOIK63M40+zh6HnN7+UQ3tk00lljO6uniGsF20fnP78Hir2QhA
-	 cTvwD76kMVtjQZ2c/QraJBgZ5S6yOwTLv/mv+mls/Cl16funYAAhZxLtRffAF0aapM
-	 DTl2HZxjx528pcdgrLS8rM6rJmirzvgGmy4+0h5A=
-Received: from localhost.localdomain ([113.102.239.212])
-	by newxmesmtplogicsvrszb20-0.qq.com (NewEsmtp) with SMTP
-	id 8AAA6AD2; Tue, 07 Oct 2025 02:34:42 +0800
-X-QQ-mid: xmsmtpt1759775682tu8rjbowu
-Message-ID: <tencent_B5CE9A8654E8B2476383AEC85C25BDA7BD05@qq.com>
-X-QQ-XMAILINFO: Nr4sKL92GIu+xw0M0OARNyF+E4+Q6kKkdYlgvVFn21lPEPwycQ8X9mZKdqBnWg
-	 CjGz+Aeyqmvsafo24cOfWru0TwE1wW0BO74CxxmKfnfZ0EaBOuJR7OnZnkgE1J0fI4FtqzZKKXP4
-	 bpwvGshsTHCeuC00dAqjSODOZJM0GoQ/nPoq7/dKndSVgMU9Rklptcan0h0uULL3IgOb4MxL+Bx0
-	 SxbiAxqlE1nU8zdBYPIMCXU7tjM+kHTC7BPrQRuTBqLOvwrh9Cg2OnhvImxkMPFsBNx36X5FILeE
-	 IP3oVBn1+UNC22xC+Qdld27GW9qovPLAb3lPsIOh9g7Zq5lUVF9Djpthb4q2bZcbPWyHYQifU8BE
-	 6nNf3DGpdrRbwM/vOlYD24afYN8s+iVRrJcF8qKuCL6MhDfyefJzaiTKuWz/C5AsWNn7iaGKxMIT
-	 OBd0630UgAED9xYoLg+nOpI7OvdR7MbrQylRHk2dCpYKADjRQKui4bg1AGy70iWmbXdCnrqt8MHI
-	 Ls7c97g3fq+0Qsygi7oBCNFmCRvBGj1c4lnHbZ0EOV+aepdVCMAvxnU2xdUw4Y3ySHYuCe34HQ6X
-	 Mmq9aRkUzr1R0YFy5a2EdWNhwLLNBuqq3laAOBGWYMJVH3vcjWAYctDGKiPxq3kzuvj4v1tsLWnC
-	 TKrA4BKsOkszwRoE5MVscrVlFqs0nL+vqV9dnORSxRt9tDuDl2p2FxfEVwKqIeta0wEppdRQn6/+
-	 9TFylGuaNusZ7CicdQqDnp6x9pSrf0ljSfSp4Ejz3/R5YP0XkRcddh4lAQTFpAmslikHIX0Q/Lby
-	 ESGc60m4T38R5ILqzrIhNOqs6q+NeaILUGTlrgjE10AkFsqDhYK/3KmmpY+xWDJasNGeGlTajcNX
-	 Q2uMKYNdxQJ0lxKhn4ecZJWO5b288c9TatzlTFkp5ZeC9zmva27fusX8tsMOxa/b7OQTnn/D5uXG
-	 CCMQp3QwmmXZVNALrdOE0jzGz9mQ+6HVzJHvKSM0dEAaZc5Eb4AUYwbqq7BzaPxN4kEMP43NZ6wh
-	 buizhcin5P7YEN/lo8GsBzocO5cZ4=
-X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
-From: Guangbo Cui <2407018371@qq.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Clark Williams <clrkwllms@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Will Deacon <will@kernel.org>,
-	Boqun Feng <boqun.feng@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-rt-devel@lists.linux.dev,
-	Waiman Long <longman@redhat.com>,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Guangbo Cui <2407018371@qq.com>
-Subject: [PATCH] lockdep: Account for lockdep hardirq context in irq_forced_thread_fn under PREEMPT_RT
-Date: Mon,  6 Oct 2025 18:34:09 +0000
-X-OQ-MSGID: <20251006183408.41851-2-2407018371@qq.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dQr/WvAh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7F48C4CEF5;
+	Mon,  6 Oct 2025 18:52:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759776734;
+	bh=ZWvIVGXtiM/1nsG2Z8koPrcNspjPo3e9IYnBwDXQV30=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dQr/WvAh+y+d0RJDvIqzaEvsC4+YqkpNRMZegn/9RhfuEcXIP6vbZ2lCb3vhMACbv
+	 SbnNR3Zi8ly3zOl0WSV0C2aIWTKEImCE2awKQfcOc23+bRjW/F5KrZpkRD1vErunSF
+	 okbn6i9YHOzA+dMm3dQVE8km3I9EpbAcnB+Ys7BptD8Ku9sVRbwDG37QBs20F2Zu2N
+	 +2OAy063JaSuqbW6dXkezvxfSujipaTFr5jR7crcFntRQI5pD5b5B6LuKz0enfW7hz
+	 Ey7Y94ARuIdrWNtG47GlzfclMUmYmJ5taDoIK3UlOOVOThML9BM5gsCXmxJTUbOtti
+	 t/Y7HONM29MvA==
+Date: Mon, 6 Oct 2025 13:52:13 -0500
+From: Rob Herring <robh@kernel.org>
+To: Randolph Lin <randolph@andestech.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-riscv@lists.infradead.org, devicetree@vger.kernel.org,
+	jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org,
+	conor+dt@kernel.org, alex@ghiti.fr, aou@eecs.berkeley.edu,
+	palmer@dabbelt.com, paul.walmsley@sifive.com, ben717@andestech.com,
+	inochiama@gmail.com, thippeswamy.havalige@amd.com,
+	namcao@linutronix.de, shradha.t@samsung.com, pjw@kernel.org,
+	randolph.sklin@gmail.com, tim609@andestech.com
+Subject: Re: [PATCH v6 2/5] dt-bindings: PCI: Add Andes QiLai PCIe support
+Message-ID: <20251006185213.GA61386-robh@kernel.org>
+References: <20251003023527.3284787-1-randolph@andestech.com>
+ <20251003023527.3284787-3-randolph@andestech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251003023527.3284787-3-randolph@andestech.com>
 
-In PREEMPT_RT, IRQs are forced to run in threaded. However, lockdep did not correctly
-account for this case, causing false-positive warnings about hardirq context violations
-when analyzing lock acquisition in such threaded IRQs (see function `task_wait_context`).
+On Fri, Oct 03, 2025 at 10:35:24AM +0800, Randolph Lin wrote:
+> Add the Andes QiLai PCIe node, which includes 3 Root Complexes.
+> Only one example is required in the DTS bindings YAML file.
+> 
+> Signed-off-by: Randolph Lin <randolph@andestech.com>
+> ---
+>  .../bindings/pci/andestech,qilai-pcie.yaml    | 97 +++++++++++++++++++
+>  1 file changed, 97 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml b/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
+> new file mode 100644
+> index 000000000000..419468430e7e
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
+> @@ -0,0 +1,97 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/andestech,qilai-pcie.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Andes QiLai PCIe host controller
+> +
+> +description:
+> +  Andes QiLai PCIe host controller is based on the Synopsys DesignWare
+> +  PCI core. It shares common features with the PCIe DesignWare core and
+> +  inherits common properties defined in
+> +  Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml.
+> +
+> +maintainers:
+> +  - Randolph Lin <randolph@andestech.com>
+> +
+> +allOf:
+> +  - $ref: /schemas/pci/snps,dw-pcie.yaml#
+> +
+> +properties:
+> +  compatible:
+> +    const: andestech,qilai-pcie
+> +
+> +  reg:
+> +    items:
+> +      - description: Data Bus Interface (DBI) registers.
+> +      - description: APB registers.
+> +      - description: PCIe configuration space region.
+> +
+> +  reg-names:
+> +    items:
+> +      - const: dbi
+> +      - const: apb
+> +      - const: config
+> +
+> +  ranges:
+> +    maxItems: 2
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  "#interrupt-cells":
+> +    const: 1
 
-This patch updates `irq_forced_thread_fn` to explicitly call `lockdep_hardirq_enter()`
-and `lockdep_hardirq_exit()` when PREEMPT_RT is enabled, ensuring lockdep correctly
-tracks the hardirq context even when the IRQ is executed in a forced thread.
+You can drop this. #interrupt-cells is already defined in 
+pci-bus-common.yaml.
 
-This was discovered while testing PCIe AER error injection on an arm64 QEMU virtual machine:
+> +
+> +  interrupt-map: true
+> +
+> +required:
+> +  - reg
+> +  - reg-names
+> +  - "#interrupt-cells"
+> +  - interrupts
+> +  - interrupt-names
+> +  - interrupt-map-mask
+> +  - interrupt-map
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/irq.h>
+> +
+> +    soc {
+> +      #address-cells = <2>;
+> +      #size-cells = <2>;
+> +
+> +      bus@80000000 {
+> +        compatible = "simple-bus";
+> +        #address-cells = <2>;
+> +        #size-cells = <2>;
 
-```
-  qemu-system-aarch64 \
-      -nographic \
-      -machine virt,highmem=off,gic-version=3 \
-      -cpu cortex-a72 \
-      -kernel arch/arm64/boot/Image \
-      -initrd initramfs.cpio.gz \
-      -append "console=ttyAMA0 root=/dev/ram rdinit=/linuxrc earlyprintk nokaslr" \
-      -m 2G \
-      -smp 1 \
-      -netdev user,id=net0,hostfwd=tcp::2223-:22 \
-      -device virtio-net-pci,netdev=net0 \
-      -device pcie-root-port,id=rp0,chassis=1,slot=0x0 \
-      -device pci-testdev -s -S
-```
+Drop this node. No reason to show "simple-bus" in this example. Also it 
+fails checks:
 
-Injecting a correctable PCIe error via /dev/aer_inject caused a BUG
-report with "Invalid wait context" in the irq/PCIe thread.
+Documentation/devicetree/bindings/pci/andestech,qilai-pcie.example.dts:30.24-59.13: Warning (unit_address_vs_reg): /example-0/soc/bus@80000000: node has a unit name, but no reg or ranges property
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.example.dtb: bus@80000000 (simple-bus): 'ranges' is a required property
+	from schema $id: http://devicetree.org/schemas/simple-bus.yaml#
 
-```
-~ # export HEX="00020000000000000100000000000000000000000000000000000000"
-~ # echo -n "$HEX" | xxd -r -p | tee /dev/aer_inject >/dev/null
-[ 1850.947170] pcieport 0000:00:02.0: aer_inject: Injecting errors 00000001/00000000 into device 0000:00:02.0
-[ 1850.949951]
-[ 1850.950479] =============================
-[ 1850.950780] [ BUG: Invalid wait context ]
-[ 1850.951152] 6.17.0-11316-g7a405dbb0f03-dirty #7 Not tainted
-[ 1850.951457] -----------------------------
-[ 1850.951680] irq/16-PCIe PME/56 is trying to lock:
-[ 1850.952004] ffff800082865238 (inject_lock){+.+.}-{3:3}, at: aer_inj_read_config+0x38/0x1dc
-[ 1850.952731] other info that might help us debug this:
-[ 1850.952997] context-{5:5}
-[ 1850.953192] 5 locks held by irq/16-PCIe PME/56:
-[ 1850.953415]  #0: ffff800082647390 (local_bh){.+.+}-{1:3}, at: __local_bh_disable_ip+0x30/0x268
-[ 1850.953931]  #1: ffff8000826c6b38 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire+0x4/0x48
-[ 1850.954453]  #2: ffff000004bb6c58 (&data->lock){+...}-{3:3}, at: pcie_pme_irq+0x34/0xc4
-[ 1850.954949]  #3: ffff8000826c6b38 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire+0x4/0x48
-[ 1850.955420]  #4: ffff800082863d10 (pci_lock){....}-{2:2}, at: pci_bus_read_config_dword+0x5c/0xd8
-[ 1850.955932] stack backtrace:
-[ 1850.956412] CPU: 0 UID: 0 PID: 56 Comm: irq/16-PCIe PME Not tainted 6.17.0-11316-g7a405dbb0f03-dirty #7 PREEMPT_{RT,(full)}
-[ 1850.957039] Hardware name: linux,dummy-virt (DT)
-[ 1850.957409] Call trace:
-[ 1850.957727]  show_stack+0x18/0x24 (C)
-[ 1850.958089]  dump_stack_lvl+0x40/0xbc
-[ 1850.958339]  dump_stack+0x18/0x24
-[ 1850.958586]  __lock_acquire+0xa84/0x3008
-[ 1850.958907]  lock_acquire+0x128/0x2a8
-[ 1850.959171]  rt_spin_lock+0x50/0x1b8
-[ 1850.959476]  aer_inj_read_config+0x38/0x1dc
-[ 1850.959821]  pci_bus_read_config_dword+0x80/0xd8
-[ 1850.960079]  pcie_capability_read_dword+0xac/0xd8
-[ 1850.960454]  pcie_pme_irq+0x44/0xc4
-[ 1850.960728]  irq_forced_thread_fn+0x30/0x94
-[ 1850.960984]  irq_thread+0x1ac/0x3a4
-[ 1850.961308]  kthread+0x1b4/0x208
-[ 1850.961557]  ret_from_fork+0x10/0x20
-[ 1850.963088] pcieport 0000:00:02.0: AER: Correctable error message received from 0000:00:02.0
-[ 1850.963330] pcieport 0000:00:02.0: PCIe Bus Error: severity=Correctable, type=Physical Layer, (Receiver ID)
-[ 1850.963351] pcieport 0000:00:02.0:   device [1b36:000c] error status/mask=00000001/0000e000
-[ 1850.963385] pcieport 0000:00:02.0:    [ 0] RxErr                  (First)
-```
-
-Signed-off-by: Guangbo Cui <2407018371@qq.com>
----
- kernel/irq/manage.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index c94837382037..80007bce5625 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -1150,9 +1150,13 @@ static irqreturn_t irq_forced_thread_fn(struct irq_desc *desc, struct irqaction
- 	local_bh_disable();
- 	if (!IS_ENABLED(CONFIG_PREEMPT_RT))
- 		local_irq_disable();
-+	else
-+		lockdep_hardirq_enter();
- 	ret = irq_thread_fn(desc, action);
- 	if (!IS_ENABLED(CONFIG_PREEMPT_RT))
- 		local_irq_enable();
-+	else
-+		lockdep_hardirq_exit();
- 	local_bh_enable();
- 	return ret;
- }
--- 
-2.43.0
-
+> +
+> +        pcie@80000000 {
+> +          compatible = "andestech,qilai-pcie";
+> +          device_type = "pci";
+> +          reg = <0x0 0x80000000 0x0 0x20000000>,
+> +                <0x0 0x04000000 0x0 0x00001000>,
+> +                <0x0 0x00000000 0x0 0x00010000>;
+> +          reg-names = "dbi", "apb", "config";
+> +
+> +          linux,pci-domain = <0>;
+> +          #address-cells = <3>;
+> +          #size-cells = <2>;
+> +          ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x0 0xf0000000>,
+> +                   <0x43000000 0x01 0x00000000 0x01 0x0000000 0x1f 0x00000000>;
+> +
+> +          #interrupt-cells = <1>;
+> +          interrupts = <0xf>;
+> +          interrupt-names = "msi";
+> +          interrupt-parent = <&plic0>;
+> +          interrupt-map-mask = <0 0 0 7>;
+> +          interrupt-map = <0 0 0 1 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>,
+> +                          <0 0 0 2 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>,
+> +                          <0 0 0 3 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>,
+> +                          <0 0 0 4 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>;
+> +        };
+> +      };
+> +    };
+> -- 
+> 2.34.1
+> 
