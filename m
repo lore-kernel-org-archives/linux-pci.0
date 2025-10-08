@@ -1,97 +1,124 @@
-Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49EFA3594B
-	for <linux-pci@vger.kernel.org>; Wed,  8 Oct 2025 12:20:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0E1424E01D;
+	Wed,  8 Oct 2025 13:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759926055; cv=none; b=d0k0XXZSIYatvH1GmrCMkm4zijgHoJe4JedVVUV00MT6CDUE2HZpNZuhEEp/Gvc0YyQNM3P73hPiJqPw3kobSH/qttfqWLCaDsezK//7r8EfK9wnoUkuWMze32uPtkSXSq2FfXfqJ7cY9dJJ40iZW+kNNwDzvbG78P0EbWRZOEk=
+	t=1759930469; cv=none; b=YZ2oamUITFXtcomblTxQwbk06Nv2DECJXC8EAxOjkDExRnMzTXgmIQK0GsU/HM8MjO3Vo4Ko00ypKKpSZgNXqEnlb4IDTPZSgwoEyj9fwL4iveTgH0TveQsbZOuOxKn7BXPLL2qB2faxpm9fDLCGulIst/ZZZuwppQ3gGJqDD00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759926055; c=relaxed/simple;
-	bh=o1l3n2y5YwxEXg2rM4gAYMR7pahw4lA+e2lcwHc4J4A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cMaTpFd0W4Ge3+KatHtXXVEJz7Jdb1u67NkvityQT/nyFDeACB69VLhIFTHXQOsQd0ZbJ3d7DHq78fqtMbgiS5eLh3L1oSPUeKkaAL3yIdShc9KqHGn/A/OQoieS8LJwPeSw6rd2u++nX2V1DR53glviWAAruNOW8SichR4sm4g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.222.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-qk1-f179.google.com with SMTP id af79cd13be357-856701dc22aso762963185a.3
-        for <linux-pci@vger.kernel.org>; Wed, 08 Oct 2025 05:20:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759926053; x=1760530853;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Brp2nrWlwG3bN8c/hrIoL4Nm2qLdFlreoXWyVG7Wt10=;
-        b=cRGk8z/PZak/8jKfki7ijxLfFK2I55rSUkwJ672xiu9ztdIk1BGzugOOVkW8m9r/0j
-         VBtCAzPDF84MSWAaxE4Nn/LS7QCiFRVVjRqE8fiEAVZhmKk5gTsmK2RrN/XqobTv1zoS
-         fJY9CIOstmRALYxRsGq4ueT/Q7kELH+60D92xXtIdYWy/9Jklzhq0GPmeJiAObsunRcD
-         Pj09t6hIWK7WHIqLqHuztXrfkoB53ZM7JZCTnzh9YdjTZB97IzNZw2FVtakipKjomfcd
-         MPPD06TrR8oDBp/GDR1FA5IVt3T9lRrn3p1IEpNAc99I2sr4gWs16KYIU2doY5RtCtXs
-         1IBg==
-X-Forwarded-Encrypted: i=1; AJvYcCWpH1ScLIsqss4O5ZOyaH+B9KLrTxXa3kxAGyI+XiKF8NEeP8eWw1Ym3YMBoMxdV7YYerjGy+I9anQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxS0VcWNEXKoOsuXJB/AycH8apkWF8IjyWhEkg4lqGiAgnzpFEQ
-	OpRrhT8GfvOILZMrwZTTPXEpcnzMJ0ldxTJyuB47syL4l8tc8XFVZaJXV5cUY/FQ
-X-Gm-Gg: ASbGncumNGRLuYlgPcN2IioTrBnbYo3aIA80CZwtTTWnKTJ6yC3Qyyp/4AggoVl8h1U
-	edU6APP2HhBmi3NfUwhA/2vr+4f22mOdlfsPBJPNwW4yCd3UJwzPv/WqTi7mIphOH5egx4dtVh3
-	/S5QXpxhn9LEK40w/OU3R2aHqK4HBx9MqydbqpbRm1zbs5yUCFYisGO91KTiYn8Gw/oO5Su9t7c
-	Rltp+ggBx/iTClU2ql/fGoWCLGl1Mi7rp/ThcJRTu1m4p1RDU2XLxkSO9bEQn+nSDBiZu9oy1nb
-	Cjv0k3qJcSVqHjRym0iBWZLyleSkTfB80M4eFm4pDxgyBwuoEPqyIXGfFujMvSFxJdjA5UDBXBb
-	WrDHThGUbHcZDzy6czUJvjvFt+s2RsacDMrbyA3DLmsNkfXIbc1iCNN7/FrTUtoh3/hfVoD/b9x
-	zts03nD5QLU53h
-X-Google-Smtp-Source: AGHT+IFWbj0++gkfcbE9TlCZ9q6pZSe9yvOQ3iYm5jFtcf4gvjI2ohFNTrrmEjyd0IfUErdKfOcY8w==
-X-Received: by 2002:a05:620a:3193:b0:81a:d304:e0cc with SMTP id af79cd13be357-883504a9b19mr464056485a.26.1759926052936;
-        Wed, 08 Oct 2025 05:20:52 -0700 (PDT)
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com. [209.85.160.177])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-87772460ac0sm1774694585a.19.2025.10.08.05.20.52
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Oct 2025 05:20:52 -0700 (PDT)
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-4e06163d9e9so73724121cf.3
-        for <linux-pci@vger.kernel.org>; Wed, 08 Oct 2025 05:20:52 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXjaxHv8GoSx5d2OydinxDCS1GYVTQIF6W7GSsn0cRag2I3IkmNTqdvf/+Jdhkjg4BOnGZiarGcp5A=@vger.kernel.org
-X-Received: by 2002:a05:6102:f08:b0:519:534a:6c22 with SMTP id
- ada2fe7eead31-5d5e23b4082mr1034500137.32.1759925551779; Wed, 08 Oct 2025
- 05:12:31 -0700 (PDT)
+	s=arc-20240116; t=1759930469; c=relaxed/simple;
+	bh=L/JfgYUl9kx54NZaz4So/Tc7t9Ld6kXKMjxc+OdFfT4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ni7SAbaJWuGAuoQ95vzONXZNCDrr/CJv3rKukPbuKlAtns/PDSWeWinS3q3cENlBTBIRhEW5qBIGTkm1rxOr044NeYcIWrgY8eWWSfyPi3YNsJBnZspynp6DWHGITWrtUFdEzPU4Pr9WP+a3502j8vUSh8C4/7YAB2CAsH8AN34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout1.hostsharing.net (Postfix) with ESMTPS id C542E2C4E592;
+	Wed,  8 Oct 2025 15:34:16 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id B363A5F7D2E; Wed,  8 Oct 2025 15:34:16 +0200 (CEST)
+Date: Wed, 8 Oct 2025 15:34:16 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: Benjamin Block <bblock@linux.ibm.com>, linux-s390@vger.kernel.org,
+	kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, alex.williamson@redhat.com,
+	helgaas@kernel.org, clg@redhat.com, schnelle@linux.ibm.com,
+	mjrosato@linux.ibm.com
+Subject: Re: [PATCH v4 01/10] PCI: Avoid saving error values for config space
+Message-ID: <aOZoWDQV0TNh-NiM@wunner.de>
+References: <20250924171628.826-1-alifm@linux.ibm.com>
+ <20250924171628.826-2-alifm@linux.ibm.com>
+ <20251001151543.GB408411@p1gen4-pw042f0m>
+ <ae5b191d-ffc6-4d40-a44b-d08e04cac6be@linux.ibm.com>
+ <aOE1JMryY_Oa663e@wunner.de>
+ <c0818c13-8075-4db0-b76f-3c9b10516e7a@linux.ibm.com>
+ <aOQX6ZTMvekd6gWy@wunner.de>
+ <8c14d648-453c-4426-af69-4e911a1128c1@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251007133657.390523-1-claudiu.beznea.uj@bp.renesas.com> <20251007133657.390523-7-claudiu.beznea.uj@bp.renesas.com>
-In-Reply-To: <20251007133657.390523-7-claudiu.beznea.uj@bp.renesas.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 8 Oct 2025 14:12:19 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdWf=AfW40m0qJ3_P=Ni=OsO=KMqDY7USdvHEXmrHM+mzw@mail.gmail.com>
-X-Gm-Features: AS18NWAtQie1NbudVP3BXMcF3ZQanxK6LGXJKC21rxZI487nMAs440k_Psy4Pfs
-Message-ID: <CAMuHMdWf=AfW40m0qJ3_P=Ni=OsO=KMqDY7USdvHEXmrHM+mzw@mail.gmail.com>
-Subject: Re: [PATCH v5 6/6] arm64: defconfig: Enable PCIe for the Renesas
- RZ/G3S SoC
-To: Claudiu <claudiu.beznea@tuxon.dev>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, 
-	robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	magnus.damm@gmail.com, p.zabel@pengutronix.de, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, 
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8c14d648-453c-4426-af69-4e911a1128c1@linux.ibm.com>
 
-On Tue, 7 Oct 2025 at 15:37, Claudiu <claudiu.beznea@tuxon.dev> wrote:
-> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
->
-> Enable PCIe for the Renesas RZ/G3S SoC.
->
-> Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+On Mon, Oct 06, 2025 at 02:35:49PM -0700, Farhan Ali wrote:
+> On 10/6/2025 12:26 PM, Lukas Wunner wrote:
+> > On Mon, Oct 06, 2025 at 10:54:51AM -0700, Farhan Ali wrote:
+> > > On 10/4/2025 7:54 AM, Lukas Wunner wrote:
+> > > > I believe this also makes patch [01/10] in your series unnecessary.
+> > > I tested your patches + patches 2-10 of this series. It unfortunately didn't
+> > > completely help with the s390x use case. We still need the check to in
+> > > pci_save_state() from this patch to make sure we are not saving error
+> > > values, which can be written back to the device in pci_restore_state().
+> > What's the caller of pci_save_state() that needs this?
+> > 
+> > Can you move the check for PCI_POSSIBLE_ERROR() to the caller?
+> > I think plenty of other callers don't need this, so it adds
+> > extra overhead for them and down the road it'll be difficult
+> > to untangle which caller needs it and which doesn't.
+> 
+> The caller would be pci_dev_save_and_disable(). Are you suggesting moving
+> the PCI_POSSIBLE_ERROR() prior to calling pci_save_state()?
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+I'm not sure yet.  Let's back up a little:  I'm missing an
+architectural description how you're intending to do error
+recovery in the VM.  If I understand correctly, you're
+informing the VM of the error via the ->error_detected() callback.
 
-Gr{oetje,eeting}s,
+You're saying you need to check for accessibility of the device
+prior to resetting it from the VM, does that mean you're attempting
+a reset from the ->error_detected() callback?
 
-                        Geert
+According to Documentation/PCI/pci-error-recovery.rst, the device
+isn't supposed to be considered accessible in ->error_detected().
+The first callback which allows access is ->mmio_enabled().
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+I also don't quite understand why the VM needs to perform a reset.
+Why can't you just let the VM tell the host that a reset is needed
+(PCI_ERS_RESULT_NEED_RESET) and then the host resets the device on
+behalf of the VM?
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Furthermore, I'm thinking that you should be using pci_channel_offline()
+to detect accessibility of the device, rather than reading from
+Config Space and checking for PCI_POSSIBLE_ERROR().
+
+> > The state saved on device addition is just the initial state and
+> > it is fine if later on it gets updated (which is a nicer term than
+> > "overwritten").  E.g. when portdrv.c instantiates port services
+> > and drivers are bound to them, various registers in Config Space
+> > are changed, hence pcie_portdrv_probe() calls pci_save_state()
+> > again.
+> > 
+> > However we can discuss whether pci_save_state() is still needed
+> > in pci_dev_save_and_disable().
+> 
+> The commit 8dd7f8036c12 ("PCI: add support for function level reset")
+> introduced the logic of saving/restoring the device state after an FLR. My
+> assumption is it was done to save the most recent state of the device (as
+> the state could be updated by drivers). So I think it would still make sense
+> to save the device state in pci_dev_save_and_disable() if the Config Space
+> is still accessible?
+
+Yes, right now we can't assume that drivers call pci_save_state()
+in their probe hook if they modified Config Space.  They may rely
+on the state being saved prior to reset or a D3hot/D3cold transition.
+So we need to keep the pci_dev_save_and_disable() call for now.
+
+Generally the expectation is that Config Space is accessible when
+performing a reset with pci_try_reset_function().  Since that's
+apparently not guaranteed for your use case, I'm wondering if you
+might be using the function in a context it's not supposed to be used.
+
+Thanks,
+
+Lukas
