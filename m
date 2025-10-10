@@ -1,162 +1,259 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [4.193.249.245])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 408EA1D63E4;
-	Fri, 10 Oct 2025 08:01:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=4.193.249.245
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760083302; cv=none; b=MPS4pP0ludEs5C2FBOMXKU+Yxek6QXHowWBQpPEBqnPTOZaZMxXRTHb15hp9x4Kd35P/At+7ILAlfHe1I2peVg0h2NVYTPte4STJ/lB37+SImN9MBMS6gxx2E+cL1ZJfAL6juF+u+e4Wy26XAvIzwBcVn7kbsHk158O/Of9Yq8Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760083302; c=relaxed/simple;
-	bh=ELBJLST1RDB/j/4hubt1QnzhMzOP0q8NqmpIPqn/DIs=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=WJhl2tLO0oNMD+d1ov4GxhI+RdMvvR7MrAN4wt+VhASVZ0kGxXWK8rVZzvFBB2M6YZ57udmlpVIH4pd5+2mvVW89mqb/pPWIO0J/mBn3Kuyfg8juRycGQPU+2I0sKWX2RoFCcmOZWsxK8Q+uW1UTNoNFJ6+NScpDXQYzSOZTaDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=4.193.249.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
- ajax-webmail-app2 (Coremail) ; Fri, 10 Oct 2025 16:01:10 +0800 (GMT+08:00)
-Date: Fri, 10 Oct 2025 16:01:10 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
-To: "Bjorn Helgaas" <helgaas@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	p.zabel@pengutronix.de, johan+linaro@kernel.org,
-	quic_schintav@quicinc.com, shradha.t@samsung.com, cassel@kernel.org,
-	thippeswamy.havalige@amd.com, mayank.rana@oss.qualcomm.com,
-	inochiama@gmail.com, ningyu@eswincomputing.com,
-	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com,
-	"Yanghui Ou" <ouyanghui@eswincomputing.com>
-Subject: Re: Re: Re: [PATCH v3 2/2] PCI: EIC7700: Add Eswin PCIe host
- controller driver
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <27516921.17f2.1997bb2a498.Coremail.zhangsenchuan@eswincomputing.com>
-References: <20250923163254.GA2042659@bhelgaas>
- <27516921.17f2.1997bb2a498.Coremail.zhangsenchuan@eswincomputing.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011002.outbound.protection.outlook.com [52.101.52.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2E0F255F2C;
+	Fri, 10 Oct 2025 08:03:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.2
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1760083435; cv=fail; b=EwLVRCQ5ZdV3SnML1PtcN71sDgboPvCIMyS+6jXKJJtqoA/KCGFpoqIHSBUc+sfLN9s6k61mfR5qv2/+MOeuVnqlzNDFyFvKFp3+dbMKIUvLyaw17mVnSrSfRZBvZQ8ccSQu1cbeXNUdt5dj9qSVMfUXBLGjWSDBaYp3NTK9u8w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1760083435; c=relaxed/simple;
+	bh=eaVUQv9s6GlxjdSQCHgiSeS2lOmtoD8QF79ntRykCH8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=izU/693XCyagcZ1/ECoTbDZL9hCRy1G8o6zTUXCyrvHtsZTmQqj1S5kQSRkGG3/mg8cg1YF82TyNGBVG2DejEe2tSYE2JVdlHNTfsrdFXrJuLk+XvRzLoL1yN4XE44cd3WDFzZyBI6XV8lGkXZT7PS/e9S7bHD+bX+ryj8EmRa8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=QU+nufO6; arc=fail smtp.client-ip=52.101.52.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="QU+nufO6"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rUMx3UvEMyYFtqJfLz3/mqUrGXeOa3ICnLiplL1DH18+8MXKX/SzAoeeaTepRds4WV7wmSB7GxoXA1Ldkp/l1YdSsEX9R7KVvS9834i9TUgJ8EaId7Lwzju3L68Dy+QK+AwLZqqDaeF9vl2pIH9VwB0TBeNJRVJM0mWL7eXvxU4o/K0ApOvEcZDpHKOFUY3Lcv5/vOr79zzUMZciT+JvF4xx+bBFgkeNX+Rs0PzZ3zlbQvqHXQzJpM/Lrejxg9diiWnBocRI4P6wHmM0LJPLSnDTf9QlDd9rd5L3zHRF5LOymTbakdeeRHycQ2cpFIDTvdAKjjQGrrHBWPKAcSjzpw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pGLl4pc+LsoII1coWln8LUuDKulq/ixxZNXyscYzmS0=;
+ b=IQso0yEYV7Nt90M+bcSK6YY7s2/LQ7j3ln9K6vF87NEe0N64rX05ppBlt9dmBka8GcMJOGwbiKJom/9oaZFRiSVLsitRz3HeTQkg3bBScL7Mam7OcHUwFApOK3e4KWcCUTgovaSC+OcAnx4aY/bj5zHDIGgeU6uhT3yinabgMrVlnpwOsr9lfYEJQlWMNTeu33ndT4R9r44lHQQ5xVNAEhaHR7fQP+Ix9/nCApPW3/jGWcNKf6OxbEk7kAx5oZTgxulKE55/1vgmNyUbg+Ol3+8TYQaE/O2aUwcMkw9h3C+k22NEhlXcxtvO8Urp+EEtWYih7UVq2yJCeP7E5oRjcg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pGLl4pc+LsoII1coWln8LUuDKulq/ixxZNXyscYzmS0=;
+ b=QU+nufO6+i0CjuOmjnxvd7F4eKIcfV4+OQySiZ1PhuOTkDYUB1/CvoxODOxFbE43UNv2DjKclcLMl9HGc3HnDW/bsZYfCKXn32ff5UBJt5LuAoQYyo9Jt0Pedis3TiyDeecsBgXlpmpoOsN5b5tzJNM1LPTqlkZcvOiPA+Dzk7lwkR9LD0J0JGtwsA33YVBhL+Vn/EUBAlztD2KwrueoP4jrdUfcIYNyiP2NKXU7HcyvxQOC65elSkSuBMlp34Xitm++snnGYiI5gW2EA8i4iEoubKMAS7BtRl/QiF0Ey5Cjgk0XnLN6Bsmn2Wcr4Ox2xooYMhu4Sa1DXp3PMGAEjQ==
+Received: from DS7PR03CA0021.namprd03.prod.outlook.com (2603:10b6:5:3b8::26)
+ by DS0PR12MB9274.namprd12.prod.outlook.com (2603:10b6:8:1a9::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9203.10; Fri, 10 Oct
+ 2025 08:03:51 +0000
+Received: from DS3PEPF000099D7.namprd04.prod.outlook.com
+ (2603:10b6:5:3b8:cafe::1) by DS7PR03CA0021.outlook.office365.com
+ (2603:10b6:5:3b8::26) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9182.20 via Frontend Transport; Fri,
+ 10 Oct 2025 08:03:50 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ DS3PEPF000099D7.mail.protection.outlook.com (10.167.17.8) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9203.9 via Frontend Transport; Fri, 10 Oct 2025 08:03:51 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14; Fri, 10 Oct
+ 2025 01:03:40 -0700
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail203.nvidia.com
+ (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 10 Oct
+ 2025 01:03:39 -0700
+Received: from ipp2-2168.ipp2a1.colossus.nvidia.com (10.127.8.14) by
+ mail.nvidia.com (10.129.68.9) with Microsoft SMTP Server id 15.2.2562.20 via
+ Frontend Transport; Fri, 10 Oct 2025 01:03:39 -0700
+From: Zhi Wang <zhiw@nvidia.com>
+To: <rust-for-linux@vger.kernel.org>
+CC: <dakr@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+	<ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+	<a.hindborg@kernel.org>, <aliceryhl@google.com>, <tmgross@umich.edu>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
+	<aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+	<zhiw@nvidia.com>, <zhiwang@kernel.org>
+Subject: [RFC 1/6] rust: io: refactor Io<SIZE> helpers into IoRegion trait
+Date: Fri, 10 Oct 2025 08:03:25 +0000
+Message-ID: <20251010080330.183559-2-zhiw@nvidia.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20251010080330.183559-1-zhiw@nvidia.com>
+References: <20251010080330.183559-1-zhiw@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <41a980b8.1d1b.199cd23599d.Coremail.zhangsenchuan@eswincomputing.com>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:TQJkCgAXt5VGvehoQCQDAQ--.27271W
-X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAgELBmjn4
-	9YXZAAAsH
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS3PEPF000099D7:EE_|DS0PR12MB9274:EE_
+X-MS-Office365-Filtering-Correlation-Id: 17d903c8-a3a3-4231-ee89-08de07d38cc8
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|82310400026|36860700013;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?Z3XOFPQdNqgbcOv4UaTI56nob718liAtQ89r0o2D2eLXEWdfdklgFnmzOv14?=
+ =?us-ascii?Q?nBuPvXsouv4h9lxrGRXoZrhcBgQ/3+6RcWvz7JLmes7Ui3bpV56e6TlJKc2z?=
+ =?us-ascii?Q?DO9LzA7LsRMJXYKfM7eo3F0p40zxBUuOl+wLWfkdG2+6yhHqaRy3hbjm4cWv?=
+ =?us-ascii?Q?HeojoOWkJTBP9y1+4nfld5qbBD1YoePfBJC4LDLsSAN3fDMGgZBI5WoI7iMx?=
+ =?us-ascii?Q?EbSyJpX3qGzrpQbyda+AJT0yRO99XbxA+oUXKnClKqdP3Wgo8mmjXTo2wE6b?=
+ =?us-ascii?Q?nnd9i4YDusw1n+N8b/VMlQUQRwjEwlXOx4DKooilNxR2EIAD0Y4tlRyK/P/3?=
+ =?us-ascii?Q?y/nHdrJKbkrMqEqU57TocwZE16ihfjrTDgYBxFq63+S8mpXYOuBwAAR5i9Il?=
+ =?us-ascii?Q?APr8gJDLHe7G+s7/KRg8191wCbXDjkphT0R1mhSivaUrdMlkEEQwp+odETZv?=
+ =?us-ascii?Q?FQorW0edPZBsIzbvkoWZQsPDUFRlHBuKDemhI47TCdY7t1T+n+yDpS/2Uv4W?=
+ =?us-ascii?Q?qSEu7C2o6ld2UPptt5VAdPUwVcPtAg7uq5f+cL0zwUlDgzaJbfpyONb2t++E?=
+ =?us-ascii?Q?l2nxtX18EWItP9pgh2KVBl2ICF0uLIn3NL+TtC7w3qw+WfdzWHJvWXhBgxWV?=
+ =?us-ascii?Q?1+O5/eqORc6AXgqemZI/uVLgk/aw2J+fkYeMSwFnrJc87GT7ytlAol+lb3rw?=
+ =?us-ascii?Q?bhgoZOBWDGb791BF8BJl7dx21BMJy418TqhJwLDVzjUd6/jMInsI+cQTtdC7?=
+ =?us-ascii?Q?QBCJOFx8qkigpxen6ykeq6woMr6HDLRONPdPa1relQpmKE9wr9s7DURdYxrO?=
+ =?us-ascii?Q?faRHl5M8hQ5BFM/cFoxAegK2nwJYJ1uwPdl28i87JHwprz8nxzqSEsZXRh97?=
+ =?us-ascii?Q?AEGMS1oPXl9B7BKV1r4wlz/VgFkax16TMlyzrUalkwTVewlQ/apM4PF3gG3E?=
+ =?us-ascii?Q?N42mi9n4N9HSqqaCXOHy+LBffO3T/d4sbG399qbnquX+hqvEgyP1D0qCKDfG?=
+ =?us-ascii?Q?ZaR6d3AbBvv2/VkBp6j+7XLXOz10Y4F4FEl94aL3TZL3m+kluokdFgWahZVe?=
+ =?us-ascii?Q?sYedBZDHBXYi21QN60tUU1buWWg7yiH7r/04wgJA8hfvPhMTWgZ4W/cvmRlN?=
+ =?us-ascii?Q?XjbnxMQpVRchQq4aHsNZdG9i+zL4q8zmzVzw7UPDNIdCAkFfYWMAHJi1EkV0?=
+ =?us-ascii?Q?25mraKEtcXTej4dx/ykzERNu/h4RbCxTtbd4odk1evK8hLJUzoUSSC2LFI+p?=
+ =?us-ascii?Q?fT7SVIeMRVMF5pe27PV3MMsnCtUMwmpcx7RHIdoXCRBfJhnMcckvxoXR+Y4z?=
+ =?us-ascii?Q?qVuLIbKyXYogZlDWqNnI6w3E/w5cLUcmSODo08yvhvdXIMAWLKddtKyyqgaC?=
+ =?us-ascii?Q?jklD1jvoeo5OZg9A5FxcfhGh4FNS95efpEP7XCAc/hLYXEVz2HJpf51f9bdh?=
+ =?us-ascii?Q?UxZnN1VqoXvH7hid2LO6Ka/lFmZXw9qFoVAKxlzFgjGV0SXEYbgtrV2pm1dy?=
+ =?us-ascii?Q?YWqOHoi9aeXALlArslNMH6JPen4Unmq0Ag+n2k0RwqBfKWDaEOglIRTxmB71?=
+ =?us-ascii?Q?0FsKNCfXizGFhb2xVlA=3D?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(82310400026)(36860700013);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Oct 2025 08:03:51.2977
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 17d903c8-a3a3-4231-ee89-08de07d38cc8
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS3PEPF000099D7.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB9274
 
-CgoKPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2VzLS0tLS0KPiBGcm9tOiB6aGFuZ3NlbmNodWFuIDx6
-aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbT4KPiBTZW5kIHRpbWU6V2VkbmVzZGF5LCAy
-NC8wOS8yMDI1IDIwOjI4OjQ5Cj4gVG86ICJCam9ybiBIZWxnYWFzIiA8aGVsZ2Fhc0BrZXJuZWwu
-b3JnPgo+IENjOiBiaGVsZ2Fhc0Bnb29nbGUuY29tLCBscGllcmFsaXNpQGtlcm5lbC5vcmcsIGt3
-aWxjenluc2tpQGtlcm5lbC5vcmcsIG1hbmlAa2VybmVsLm9yZywgcm9iaEBrZXJuZWwub3JnLCBr
-cnprK2R0QGtlcm5lbC5vcmcsIGNvbm9yK2R0QGtlcm5lbC5vcmcsIGxpbnV4LXBjaUB2Z2VyLmtl
-cm5lbC5vcmcsIGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnLCBsaW51eC1rZXJuZWxAdmdlci5r
-ZXJuZWwub3JnLCBwLnphYmVsQHBlbmd1dHJvbml4LmRlLCBqb2hhbitsaW5hcm9Aa2VybmVsLm9y
-ZywgcXVpY19zY2hpbnRhdkBxdWljaW5jLmNvbSwgc2hyYWRoYS50QHNhbXN1bmcuY29tLCBjYXNz
-ZWxAa2VybmVsLm9yZywgdGhpcHBlc3dhbXkuaGF2YWxpZ2VAYW1kLmNvbSwgbWF5YW5rLnJhbmFA
-b3NzLnF1YWxjb21tLmNvbSwgaW5vY2hpYW1hQGdtYWlsLmNvbSwgbmluZ3l1QGVzd2luY29tcHV0
-aW5nLmNvbSwgbGlubWluQGVzd2luY29tcHV0aW5nLmNvbSwgcGlua2VzaC52YWdoZWxhQGVpbmZv
-Y2hpcHMuY29tLCAiWWFuZ2h1aSBPdSIgPG91eWFuZ2h1aUBlc3dpbmNvbXB1dGluZy5jb20+Cj4g
-U3ViamVjdDogUmU6IFJlOiBbUEFUQ0ggdjMgMi8yXSBQQ0k6IEVJQzc3MDA6IEFkZCBFc3dpbiBQ
-Q0llIGhvc3QgY29udHJvbGxlciBkcml2ZXIKPiAKPiAKPiAKPiAKPiA+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZXMtLS0tLQo+ID4gRnJvbTogIkJqb3JuIEhlbGdhYXMiIDxoZWxnYWFzQGtlcm5lbC5v
-cmc+Cj4gPiBTZW5kIHRpbWU6V2VkbmVzZGF5LCAyNC8wOS8yMDI1IDAwOjMyOjU0Cj4gPiBUbzog
-emhhbmdzZW5jaHVhbkBlc3dpbmNvbXB1dGluZy5jb20KPiA+IENjOiBiaGVsZ2Fhc0Bnb29nbGUu
-Y29tLCBscGllcmFsaXNpQGtlcm5lbC5vcmcsIGt3aWxjenluc2tpQGtlcm5lbC5vcmcsIG1hbmlA
-a2VybmVsLm9yZywgcm9iaEBrZXJuZWwub3JnLCBrcnprK2R0QGtlcm5lbC5vcmcsIGNvbm9yK2R0
-QGtlcm5lbC5vcmcsIGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcsIGRldmljZXRyZWVAdmdlci5r
-ZXJuZWwub3JnLCBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnLCBwLnphYmVsQHBlbmd1dHJv
-bml4LmRlLCBqb2hhbitsaW5hcm9Aa2VybmVsLm9yZywgcXVpY19zY2hpbnRhdkBxdWljaW5jLmNv
-bSwgc2hyYWRoYS50QHNhbXN1bmcuY29tLCBjYXNzZWxAa2VybmVsLm9yZywgdGhpcHBlc3dhbXku
-aGF2YWxpZ2VAYW1kLmNvbSwgbWF5YW5rLnJhbmFAb3NzLnF1YWxjb21tLmNvbSwgaW5vY2hpYW1h
-QGdtYWlsLmNvbSwgbmluZ3l1QGVzd2luY29tcHV0aW5nLmNvbSwgbGlubWluQGVzd2luY29tcHV0
-aW5nLmNvbSwgcGlua2VzaC52YWdoZWxhQGVpbmZvY2hpcHMuY29tLCAiWWFuZ2h1aSBPdSIgPG91
-eWFuZ2h1aUBlc3dpbmNvbXB1dGluZy5jb20+Cj4gPiBTdWJqZWN0OiBSZTogW1BBVENIIHYzIDIv
-Ml0gUENJOiBFSUM3NzAwOiBBZGQgRXN3aW4gUENJZSBob3N0IGNvbnRyb2xsZXIgZHJpdmVyCj4g
-PiAKPiA+IE9uIFR1ZSwgU2VwIDIzLCAyMDI1IGF0IDA4OjEyOjI3UE0gKzA4MDAsIHpoYW5nc2Vu
-Y2h1YW5AZXN3aW5jb21wdXRpbmcuY29tIHdyb3RlOgo+ID4gPiBBZGQgZHJpdmVyIGZvciB0aGUg
-RXN3aW4gRUlDNzcwMCBQQ0llIGhvc3QgY29udHJvbGxlcix0aGUgY29udHJvbGxlciBpcwo+ID4g
-PiBiYXNlZCBvbiB0aGUgRGVzaWduV2FyZSBQQ0llIGNvcmUsIElQIHJldmlzaW9uIDYuMDBhIFRo
-ZSBQQ0llIEdlbi4zCj4gPiA+IGNvbnRyb2xsZXIgc3VwcG9ydHMgYSBkYXRhIHJhdGUgb2YgOCBH
-VC9zIGFuZCA0IGNoYW5uZWxzLCBzdXBwb3J0IElOVFgKPiA+ID4gYW5kIE1TSSBpbnRlcnJ1cHRz
-Lgo+ID4gCj4gPiBzL2hvc3QgY29udHJvbGxlcix0aGUgY29udHJvbGxlciBpcy9ob3N0IGNvbnRy
-b2xsZXIsIHdoaWNoIGlzLwo+ID4gCj4gPiBBZGQgcGVyaW9kIGF0IGVuZCBvZiBmaXJzdCBzZW50
-ZW5jZS4KPiA+IAo+ID4gPiArKysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9LY29uZmln
-Cj4gPiA+IEBAIC0zNzUsNiArMzc1LDE3IEBAIGNvbmZpZyBQQ0lfRVhZTk9TCj4gPiA+ICAJICBo
-YXJkd2FyZSBhbmQgdGhlcmVmb3JlIHRoZSBkcml2ZXIgcmUtdXNlcyB0aGUgRGVzaWduV2FyZSBj
-b3JlCj4gPiA+ICAJICBmdW5jdGlvbnMgdG8gaW1wbGVtZW50IHRoZSBkcml2ZXIuCj4gPiA+ICAK
-PiA+ID4gCj4gPiA+ICtzdGF0aWMgaW50IGVzd2luX3BjaWVfc3VzcGVuZChzdHJ1Y3QgZGV2aWNl
-ICpkZXYpCj4gPiA+ICt7Cj4gPiA+ICsJc3RydWN0IGVzd2luX3BjaWUgKnBjaWUgPSBkZXZfZ2V0
-X2RydmRhdGEoZGV2KTsKPiA+ID4gKwlzdHJ1Y3QgZXN3aW5fcGNpZV9wb3J0ICpwb3J0Owo+ID4g
-PiArCj4gPiA+ICsJLyoKPiA+ID4gKwkgKiBGb3IgY29udHJvbGxlcnMgd2l0aCBhY3RpdmUgZGV2
-aWNlcywgcmVzb3VyY2VzIGFyZSByZXRhaW5lZCBhbmQKPiA+ID4gKwkgKiBjYW5ub3QgYmUgdHVy
-bmVkIG9mZi4KPiA+ID4gKwkgKi8KPiA+ID4gKwlpZiAoIWR3X3BjaWVfbGlua191cCgmcGNpZS0+
-cGNpKSkgewo+ID4gPiArCQlsaXN0X2Zvcl9lYWNoX2VudHJ5KHBvcnQsICZwY2llLT5wb3J0cywg
-bGlzdCkKPiA+ID4gKwkJCXJlc2V0X2NvbnRyb2xfYXNzZXJ0KHBvcnQtPnBlcnN0KTsKPiA+ID4g
-KwkJZXN3aW5fcGNpZV9hc3NlcnQocGNpZSk7Cj4gPiA+ICsJCWNsa19idWxrX2Rpc2FibGVfdW5w
-cmVwYXJlKHBjaWUtPm51bV9jbGtzLCBwY2llLT5jbGtzKTsKPiA+ID4gKwkJcGNpZS0+c3VzcGVu
-ZGVkID0gdHJ1ZTsKPiA+IAo+ID4gSSdtIGEgbGl0dGxlIGR1YmlvdXMgYWJvdXQgdGhpcyBzaW5j
-ZSBub25lIG9mIHRoZSBvdGhlciBkcml2ZXJzIGNoZWNrCj4gPiBkd19wY2llX2xpbmtfdXAoKS4K
-PiAKPiBkZWFyIEJqb3JuCj4gCj4gVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgeW91ciByZXZpZXcu
-Cj4gQ2xhcmlmaWNhdGlvbu+8mgo+IFRoZSBwcmV2aW91cyBwYXRjaCwgTWFuaSBnYXZlIG1lIGFk
-dmljZTogIlNvIHlvdSB3YW50IHRvIHBvd2VyIG9mZiB0aGUgCj4gZGV2aWNlIGV2ZW4gaWYgaXQg
-aW50ZW5kcyB0byBiZSBpbiBEMD8iIExpa2UgTlZNZS4iCj4gCj4gSSByZWZlcnJlZCB0byB0aGUg
-aW1wbGVtZW50YXRpb24gb2YgInBjaWUtcWNvbS5jIiBhbmQgYWRkZWQgdGhlIAo+IGp1ZGdtZW50
-IG9mIHRoZSBkd19wY2llX2xpbmtfdXAgZnVuY3Rpb24uCj4gCj4gVGhlIGZvbGxvd2luZyBhcmUg
-bWFuaSdzIGNvbW1lbnRzIG9uIGZpeGluZyB0aGlzIGlzc3Vl77yaCj4gLyoKPiAgKiBUdXJuIE9G
-RiB0aGUgcmVzb3VyY2VzIG9ubHkgZm9yIGNvbnRyb2xsZXJzIHdpdGhvdXQgYWN0aXZlIFBDSWUK
-PiAgKiBkZXZpY2VzLiBGb3IgY29udHJvbGxlcnMgd2l0aCBhY3RpdmUgZGV2aWNlcywgdGhlIHJl
-c291cmNlcyBhcmUga2VwdAo+ICAqIE9OIGFuZCB0aGUgbGluayBpcyBleHBlY3RlZCB0byBiZSBp
-biBMMC9MMSAoc3ViKXN0YXRlcy4KPiAgKgo+ICAqIFR1cm5pbmcgT0ZGIHRoZSByZXNvdXJjZXMg
-Zm9yIGNvbnRyb2xsZXJzIHdpdGggYWN0aXZlIFBDSWUgZGV2aWNlcwo+ICAqIHdpbGwgdHJpZ2dl
-ciBhY2Nlc3MgdmlvbGF0aW9uIGR1cmluZyB0aGUgZW5kIG9mIHRoZSBzdXNwZW5kIGN5Y2xlLAo+
-ICAqIGFzIGtlcm5lbCB0cmllcyB0byBhY2Nlc3MgdGhlIFBDSWUgZGV2aWNlcyBjb25maWcgc3Bh
-Y2UgZm9yIG1hc2tpbmcKPiAgKiBNU0lzLgo+ICAqCj4gICogQWxzbywgaXQgaXMgbm90IGRlc2ly
-YWJsZSB0byBwdXQgdGhlIGxpbmsgaW50byBMMi9MMyBzdGF0ZSBhcyB0aGF0Cj4gICogaW1wbGll
-cyBWREQgc3VwcGx5IHdpbGwgYmUgcmVtb3ZlZCBhbmQgdGhlIGRldmljZXMgbWF5IGdvIGludG8K
-PiAgKiBwb3dlcmRvd24gc3RhdGUuIFRoaXMgd2lsbCBhZmZlY3QgdGhlIGxpZmV0aW1lIG9mIHRo
-ZSBzdG9yYWdlIGRldmljZXMKPiAgKiBsaWtlIE5WTWUuCj4gICovCj4gCj4gPiAKPiA+IEl0IGFs
-c28gc2VlbXMgYSBsaXR0bGUgYml0IHJhY3kgc2luY2UgZHdfcGNpZV9saW5rX3VwKCkgY2FuIGFs
-d2F5cwo+ID4gY2hhbmdlIGFmdGVyIGl0J3MgY2FsbGVkLgoKU3VwcGxlbWVudO+8mgpTaW5jZSBo
-b3QgcGx1Z2dpbmcgaXMgbm90IHN1cHBvcnRlZCBhbmQgdGhlIGRldmljZSBkb2VzIG5vdCBzdXBw
-b3J0IAplbnRlcmluZyBMMi9MMyBzdGF0ZXMsIG9uY2UgdGhlIGRldmljZSdzIGluaXRpYWwgbGlu
-ayBpcyBlc3RhYmxpc2hlZCwgCml0IHdpbGwgbm90IGJlIGRpc2Nvbm5lY3RlZC4gZHdfcGNpZV9s
-aW5rX3VwKCkgd2lsbCBub3QgY2hhbmdlLiBPbmx5CndoZW4gdGhlIGRldmljZSBpcyBub3QgaW5z
-ZXJ0ZWQgd2lsbCB0aGUgbGluayBiZSBkaXNjb25uZWN0ZWQsIGFuZCAKYXQgdGhpcyB0aW1lLCB0
-aGUgcmVzb3VyY2UgY2FuIGJlIHR1cm5lZCBvZmYuCgo+ID4gCj4gPiBBbmQgdHJhY2tpbmcgcGNp
-ZS0+c3VzcGVuZGVkIGlzIGFsc28gdW51c3VhbCBpZiBub3QgdW5pcXVlLgoKU3VwcGxlbWVudO+8
-mgpJIHNhdyBzdWNoIHVzYWdlIGluIHRoZSBmdW5jdGlvbnMgZHdfcGNpZV9zdXNwZW5kX25vaXJx
-KCkgYW5kIApkd19wY2llX3Jlc3VtZV9ub2lycSgpLCBhbmQgdGhlbiByZWZlcnJlZCB0byBpdC4K
-Cj4gPiAKPiA+IFNob3VsZCBkd19wY2llX3N1c3BlbmRfbm9pcnEoKSBhbmQgZHdfcGNpZV9yZXN1
-bWVfbm9pcnEoKSBiZSB1c2VkCj4gPiBoZXJlPwo+IAo+IENsYXJpZmljYXRpb27vvJoKPiBUaGUg
-ZHdfcGNpZV9zdXNwZW5kX25vaXJxIGFuZCBkd19wY2llX3Jlc3VtZV9ub2lycSBjb2RlIGlzIGEg
-bmljZSB3cmFwcGVkIAo+IGNvbGxlY3Rpb24gZnVuY3Rpb24sIGJ1dCB0aGUgZHdfcGNpZV9zdXNw
-ZW5kX25vaXJxIGZ1bmN0aW9uIGltcGxlbWVudHMgCj4gc2VuZGluZyB0aGUgUE1FX1R1cm5fT2Zm
-IG1lc3NhZ2UuIE5vdGlmeSB0aGUgZGV2aWNlIHRvIGVudGVyIGxvdyBwb3dlciAKPiBjb25zdW1w
-dGlvbiBhbmQgd2FpdCBmb3IgaXQgdG8gZW50ZXIgdGhlIExUU1NNX0wyIHN0YXRlLiBPdXIgaGFy
-ZHdhcmUgb25seQo+IHN1cHBvcnRzIGVudGVyaW5nIHRoZSBMMC9MMSBzdGF0ZSBhbmQgZG9lcyBu
-b3Qgc3VwcG9ydCBlbnRlcmluZyB0aGUgRDNjb2RlIAo+IGFuZCBMMi9MMyBzdGF0ZXMuIEl0IHdp
-bGwgY2F1c2UgbWlzdGFrZXMgYW5kIGNhbid0IHJlc3VtZS4gVGhlcmVmb3JlLCBJIAo+IGNhbm5v
-dCBkaXJlY3RseSBjYWxsIHRoZSBkd19wY2llX3N1c3BlbmRfbm9pcnEgZnVuY3Rpb24gaGVyZS4K
-CkJlc3QgUmVnYXJkcywKU2VuY2h1YW4gWmhhbmcKCj4gCj4gPiAKPiA+ID4gKwl9Cj4gPiA+ICsK
-PiA+ID4gKwlyZXR1cm4gMDsKPiA+ID4gK30KPiA+ID4gKwo+ID4gPiArc3RhdGljIGludCBlc3dp
-bl9wY2llX3Jlc3VtZShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gPiA+ICt7Cj4gPiA+ICsJc3RydWN0
-IGVzd2luX3BjaWUgKnBjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsKPiA+ID4gKwlpbnQgcmV0
-Owo+ID4gPiArCj4gPiA+ICsJaWYgKCFwY2llLT5zdXNwZW5kZWQpCj4gPiA+ICsJCXJldHVybiAw
-Owo+ID4gPiArCj4gPiA+ICsJcmV0ID0gZXN3aW5fcGNpZV9ob3N0X2luaXQoJnBjaWUtPnBjaS5w
-cCk7Cj4gPiA+ICsJaWYgKHJldCkgewo+ID4gPiArCQlkZXZfZXJyKGRldiwgIkZhaWxlZCB0byBp
-bml0IGhvc3Q6ICVkXG4iLCByZXQpOwo+ID4gPiArCQlyZXR1cm4gcmV0Owo+ID4gPiArCX0KPiA+
-ID4gKwo+ID4gPiArCWR3X3BjaWVfc2V0dXBfcmMoJnBjaWUtPnBjaS5wcCk7Cj4gPiA+ICsJZXN3
-aW5fcGNpZV9zdGFydF9saW5rKCZwY2llLT5wY2kpOwo+ID4gPiArCWR3X3BjaWVfd2FpdF9mb3Jf
-bGluaygmcGNpZS0+cGNpKTsKPiA+ID4gKwo+ID4gPiArCXBjaWUtPnN1c3BlbmRlZCA9IGZhbHNl
-Owo+ID4gPiArCj4gPiA+ICsJcmV0dXJuIDA7Cj4gPiA+ICt9Cgo=
+The existing `Io<SIZE>` implementation embedded utility methods such
+as `addr()`, `maxsize()`, and offset validation helpers directly on the
+struct.
+
+To allow sharing of I/O region check logic across different region types
+(e.g. MMIO BARs, PCI config space), move common bound-checking and
+address arithmetic into a reusable trait.
+
+No functional change intended.
+
+Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+---
+ rust/kernel/io.rs | 65 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 44 insertions(+), 21 deletions(-)
+
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index 03b467722b86..f4727f3b954e 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -171,32 +171,24 @@ pub fn $try_name(&self, value: $type_name, offset: usize) -> Result {
+     };
+ }
+ 
+-impl<const SIZE: usize> Io<SIZE> {
+-    /// Converts an `IoRaw` into an `Io` instance, providing the accessors to the MMIO mapping.
+-    ///
+-    /// # Safety
+-    ///
+-    /// Callers must ensure that `addr` is the start of a valid I/O mapped memory region of size
+-    /// `maxsize`.
+-    pub unsafe fn from_raw(raw: &IoRaw<SIZE>) -> &Self {
+-        // SAFETY: `Io` is a transparent wrapper around `IoRaw`.
+-        unsafe { &*core::ptr::from_ref(raw).cast() }
+-    }
+-
++/// Represents a region of I/O space of a fixed size.
++///
++/// Provides common helpers for offset validation and address
++/// calculation on top of a base address and maximum size.
++///
++/// Types implementing this trait (e.g. MMIO BARs or PCI config
++/// regions) can share the same accessors.
++pub trait IoRegion<const SIZE: usize> {
+     /// Returns the base address of this mapping.
+-    #[inline]
+-    pub fn addr(&self) -> usize {
+-        self.0.addr()
+-    }
++    fn addr(&self) -> usize;
+ 
+     /// Returns the maximum size of this mapping.
+-    #[inline]
+-    pub fn maxsize(&self) -> usize {
+-        self.0.maxsize()
+-    }
++    fn maxsize(&self) -> usize;
+ 
++    /// Checks whether an access of type `U` at the given `offset`
++    /// is valid within this region.
+     #[inline]
+-    const fn offset_valid<U>(offset: usize, size: usize) -> bool {
++    fn offset_valid<U>(offset: usize, size: usize) -> bool {
+         let type_size = core::mem::size_of::<U>();
+         if let Some(end) = offset.checked_add(type_size) {
+             end <= size && offset % type_size == 0
+@@ -205,6 +197,8 @@ const fn offset_valid<U>(offset: usize, size: usize) -> bool {
+         }
+     }
+ 
++    /// Returns the absolute I/O address for a given `offset`.
++    /// Performs runtime bounds checks using [`offset_valid`]
+     #[inline]
+     fn io_addr<U>(&self, offset: usize) -> Result<usize> {
+         if !Self::offset_valid::<U>(offset, self.maxsize()) {
+@@ -216,12 +210,41 @@ fn io_addr<U>(&self, offset: usize) -> Result<usize> {
+         self.addr().checked_add(offset).ok_or(EINVAL)
+     }
+ 
++    /// Returns the absolute I/O address for a given `offset`,
++    /// performing compile-time bound checks.
+     #[inline]
+     fn io_addr_assert<U>(&self, offset: usize) -> usize {
+         build_assert!(Self::offset_valid::<U>(offset, SIZE));
+ 
+         self.addr() + offset
+     }
++}
++
++impl<const SIZE: usize> IoRegion<SIZE> for Io<SIZE> {
++    /// Returns the base address of this mapping.
++    #[inline]
++    fn addr(&self) -> usize {
++        self.0.addr()
++    }
++
++    /// Returns the maximum size of this mapping.
++    #[inline]
++    fn maxsize(&self) -> usize {
++        self.0.maxsize()
++    }
++}
++
++impl<const SIZE: usize> Io<SIZE> {
++    /// Converts an `IoRaw` into an `Io` instance, providing the accessors to the MMIO mapping.
++    ///
++    /// # Safety
++    ///
++    /// Callers must ensure that `addr` is the start of a valid I/O mapped memory region of size
++    /// `maxsize`.
++    pub unsafe fn from_raw(raw: &IoRaw<SIZE>) -> &Self {
++        // SAFETY: `Io` is a transparent wrapper around `IoRaw`.
++        unsafe { &*core::ptr::from_ref(raw).cast() }
++    }
+ 
+     define_read!(read8, try_read8, readb -> u8);
+     define_read!(read16, try_read16, readw -> u16);
+-- 
+2.47.3
+
