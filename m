@@ -1,28 +1,28 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013023.outbound.protection.outlook.com [40.93.196.23])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010049.outbound.protection.outlook.com [52.101.201.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CFF527FB0E;
-	Fri, 10 Oct 2025 08:03:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35F6027FB31;
+	Fri, 10 Oct 2025 08:03:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.49
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760083440; cv=fail; b=sRh7SJKBB9x/1obehqnlNa1Jmc+4pOdA9qvRn5wz9eMoI8FawUz6uQVd6SgwBOpc9OZcgKXgFhx8jykNlIzgXX/HedObm88yeKn10G7u/Rns+7JSzMVrI5vZHLsW+wpG+E3SMV8bvbMCT9DrQBI1XcjhR37G2H7b5Zo1Hhd5lkc=
+	t=1760083442; cv=fail; b=ubjWfbUZII46jamuX+CdkjqV3hrR/8D6B9z0sVRpe6UenqWqgbYfUAQRYPVtjFIUBYtgqUwmtq0aa2lEsw+CHsEDiafyTMlx8M0VkbIx+33Ibs20FgH6PUFgDBp8GXYL6463rwK6aONBSKUKdcoral5s6peWpldXDVYVX/g+efs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760083440; c=relaxed/simple;
-	bh=4k6VymLTRDXdmhpcL+IeeTaUZty0fnpSu0SO9yOurZw=;
+	s=arc-20240116; t=1760083442; c=relaxed/simple;
+	bh=aJBX7rhjHReB3unZfgi1cghtqPtvrxz99NeKC9MlYlw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uVJBwgeDKD5LAgBHYeN+TIw57s+xr6wv30otK3WoUyzkl7YwM/b9wsGWoef03mpARraUT0OtPdFKJQMbiuuNiWu/rpvn2Y+qm2urUlUoThEfb4/KQVNBqMFfWoHj5MDAMdho958NETKnBgE2G7vtG/uGPgB0zDNjGJQ9d1P9J0k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=tHnGJncI; arc=fail smtp.client-ip=40.93.196.23
+	 MIME-Version:Content-Type; b=ATzBeTmODCIL+9ypgFFpT7hb16VU2O2JdRNz8u25NClH9k55PoBmFeNQHtfhZYjW2DIHpZ01X9A/QOxxW632nDWy8Sg5smlzs9EyOoF3X9cnYpB0bne74JP2dgVh67+vJQauyd+4L+dqzTdtcJL4biWMfhUHj+rMEykQfULXWcA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=WsHEdUSO; arc=fail smtp.client-ip=52.101.201.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="tHnGJncI"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="WsHEdUSO"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=b7qnAFZ1n4Vo4QK8MP0mzk62NeZSw02Fsbp9HNFouhMopHmjGXqNEItd66V66hFxXFvMuCXojQw4xntxz8+Vhs1A3uZgR8IAAjneU61pEVQdu0AqkE7r0BCSEFrFsluQTZoBckr9/RTQyNFiY+EFqwAtICFiyVfbDsVPp/06T6XW7lUdEBGM+yTHeH4CyFGyQh8JGkFl5pyeHAMS5tKRaBCYAqKW9t38In2EnH/BgLzliyhB/p5KWbgmFSTBhTyD5SW2EGgstqkSoyxJCVmTct5coADKefvL8fwcqDkNkkKlaBL8ZUZ+NyDaGBCmsZDGxUbhOZLWf4BEo21KxP0wjA==
+ b=DIpJN5Tn2q4mEUs+czKWTysh80VJysnxtUkmeMnNPS9A4cj+xPAojNsBsuEjnEpDHd6EWZSVTlvCY6mas+wxU/nIM41S/F8vqSwjaiSbxU7eZ95FDCdYJgiDxMuxoE/xqMNQAbvarZ+PIefgjBda3GmdwO8qqZ7qtDpaHUjSwWvAeDlV0XYFhoey+KuIHA7LLJ/U+mr257qxqbP++zOu6S7gF/jXic6TvU83zgkrMTWS2dEfBaUEER7QnXnoFbd51785VTt9npcX7q/xYgOYGVNwXHLmVaVIQWT+zRChX3vWFcsiLqdMwIjNadgSe9PH4+WSswCy+koTKnh2K1TPpg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=n+JKKciUi5RESVKBXPE9hvJKLVqvKcU1tY04C/ZNzss=;
- b=wwwlJMdmA8oPP/9vyYKPMU70xSnMjAr3Be3i8TS7bs3zoDJ5ES37SJcRH07KQeZ0OtCJFeEjCiMRIQhIvtz12j0a+W8OgZhcrjGTZITrMvkgoNaqBKj7ji7fEc4WxhQdJ/T2kp5xJ0hP+3pewe68/nsnRvc+HSnEUddoXbD0jcF0SDJqpRJ/WIU2bJGzmcjZG0NN4UlLa6IbPUODqzFnL7HuEb2MHVSxPh7IvSBNx/BK8Fhyl2r7HGxC2KFHebTUBkyStj2xFfqrrgCm4Ws7CkQAiaX5vRVMJ9LF0FYXdCwf/ukTdvqt/6tV7zfac7K1BjtKqd+bBKI916TChkHwOg==
+ bh=Iv9OwkGiglW6Pf/gRQ23fjgXCeHMzY1eAzwKmCs+cUQ=;
+ b=APVkSkQ+QQTlb4lrIaCNagr/JWe1cKSSFNeiJ8hD+Kk+zPo0yFoXa/1sdjtO/gR0A+IaD89vgZRM49IDQOCgD528oodVR5j5Un8dNmzlHqrBeRzOP1qxQM0R5PT11njQYHqzZrDLJ1MZQ9gjIc/u95k9isUIRry1vFSPMycI5NfV1tG9Yg9aONVg43PCPO+3pxC2RYTUFyvdCNBvA2jdSbFeRyE+XJMFy2rAXRYiwDWU6ZBVKyDtL+fLNSiletG6tlfMTKuPR07x2/E4/oE37cxQd92DB+zJD+TZb5ppJ0so54JNRiHjyRgszGvOp92fBptPFqqOIKrh/5j8Vtm1pA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=n+JKKciUi5RESVKBXPE9hvJKLVqvKcU1tY04C/ZNzss=;
- b=tHnGJncIxu1+n/PPEXEg6nsD2JqJEvPqsYh5XEImTwPOXMs0EhFolT0K1kkcakqt2bIho9woN//0d0LQOn8vWWlegApJvz3AwBHjMDs0rL9H3g81+46ST1wBnaYFuqPpCO3DBohzrINR57W1J/4BBmAt0Hht176g1J3TXAcgw4uG5ap6uQwzUYtE68hLQjP2GnSQi1FG3wrwNH/lOs+ax5i4M9AwP5KRr9ULnFBgNrOrmORm9TwSJzSGpireOA+f8ndfSt/6CZes+Qr/On3CNbPfn7DJmHoCCQjXH8jSPkiwy5kJD1nKMCF7bmPOPR4w6GkiNJG41GDzAqzNw53W0g==
-Received: from DS7PR03CA0016.namprd03.prod.outlook.com (2603:10b6:5:3b8::21)
- by SA3PR12MB8438.namprd12.prod.outlook.com (2603:10b6:806:2f6::21) with
+ bh=Iv9OwkGiglW6Pf/gRQ23fjgXCeHMzY1eAzwKmCs+cUQ=;
+ b=WsHEdUSOn6g8poURxsJn1k8wMjfaQOWOjcUQMY8GDSh0R2L/Ali5JNT5OpjkxIhsqEWDF4IvQPrjJaTv5kkYh8nXP5vq7RkhLFUM1x+OAjxodiYXPU8ydejhC/QOJRB7d8rHHrtMh2fC8VCMnzoNJ12j61ITPScJUVCfeH4h/1wieZ5PIurTSQPp9NLyIFL8Ros8vSX7MWMLEpNnCowvBS7E/ldmNenBejuAaw23HSt1LSbzK/+ghxu13v4LFvmvXgf41HSEemrgf2Q1JhF2zj5Js+nea78A9nMCraq0C7a5cH4shucs3LUecljzHvXxD+nEtvNTwG8EQxiAIGYRPQ==
+Received: from DS7PR03CA0023.namprd03.prod.outlook.com (2603:10b6:5:3b8::28)
+ by BY5PR12MB4227.namprd12.prod.outlook.com (2603:10b6:a03:206::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9203.9; Fri, 10 Oct
- 2025 08:03:54 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9203.10; Fri, 10 Oct
+ 2025 08:03:53 +0000
 Received: from DS3PEPF000099D7.namprd04.prod.outlook.com
- (2603:10b6:5:3b8:cafe::74) by DS7PR03CA0016.outlook.office365.com
- (2603:10b6:5:3b8::21) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9203.10 via Frontend Transport; Fri,
- 10 Oct 2025 08:03:54 +0000
+ (2603:10b6:5:3b8:cafe::65) by DS7PR03CA0023.outlook.office365.com
+ (2603:10b6:5:3b8::28) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9182.20 via Frontend Transport; Fri,
+ 10 Oct 2025 08:03:52 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -51,18 +51,18 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
 Received: from mail.nvidia.com (216.228.117.161) by
  DS3PEPF000099D7.mail.protection.outlook.com (10.167.17.8) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9203.9 via Frontend Transport; Fri, 10 Oct 2025 08:03:54 +0000
+ 15.20.9203.9 via Frontend Transport; Fri, 10 Oct 2025 08:03:52 +0000
 Received: from rnnvmail204.nvidia.com (10.129.68.6) by mail.nvidia.com
  (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14; Fri, 10 Oct
- 2025 01:03:43 -0700
+ 2025 01:03:41 -0700
 Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail204.nvidia.com
  (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 10 Oct
- 2025 01:03:43 -0700
+ 2025 01:03:40 -0700
 Received: from ipp2-2168.ipp2a1.colossus.nvidia.com (10.127.8.14) by
  mail.nvidia.com (10.129.68.9) with Microsoft SMTP Server id 15.2.2562.20 via
- Frontend Transport; Fri, 10 Oct 2025 01:03:42 -0700
+ Frontend Transport; Fri, 10 Oct 2025 01:03:40 -0700
 From: Zhi Wang <zhiw@nvidia.com>
 To: <rust-for-linux@vger.kernel.org>
 CC: <dakr@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
@@ -73,9 +73,9 @@ CC: <dakr@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
 	<cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
 	<aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
 	<zhiw@nvidia.com>, <zhiwang@kernel.org>
-Subject: [RFC 5/6] rust: pci: add helper to find extended capability
-Date: Fri, 10 Oct 2025 08:03:29 +0000
-Message-ID: <20251010080330.183559-6-zhiw@nvidia.com>
+Subject: [RFC 2/6] rust: io: factor out MMIO read/write macros
+Date: Fri, 10 Oct 2025 08:03:26 +0000
+Message-ID: <20251010080330.183559-3-zhiw@nvidia.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251010080330.183559-1-zhiw@nvidia.com>
 References: <20251010080330.183559-1-zhiw@nvidia.com>
@@ -90,84 +90,222 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS3PEPF000099D7:EE_|SA3PR12MB8438:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4a9448c8-40a3-4a67-21a5-08de07d38e93
+X-MS-TrafficTypeDiagnostic: DS3PEPF000099D7:EE_|BY5PR12MB4227:EE_
+X-MS-Office365-Filtering-Correlation-Id: 17664e80-f31e-430e-e7de-08de07d38da7
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|82310400026|1800799024|7416014|376014;
+	BCL:0;ARA:13230040|7416014|376014|1800799024|82310400026|36860700013;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?YELxQSwhVaU7DGinTPy/Ofhz3aguFUgl4xaBabxdCRbq57KzeIjQ3znXom+7?=
- =?us-ascii?Q?3j1pbMwREzpCNDLLCTO08FwxeRcUbJS9Q7kjK0dL/NIRP33RE8BqJoZdU6X4?=
- =?us-ascii?Q?KlRuNr8duQUDo/2bPFzAZdkmPhFhtw+wc8Jg/j6wTkLSLc57ntqQq/v2W3+f?=
- =?us-ascii?Q?PA5iJKgyCqpyygLB7uPlhNZICvte/EIHCGtTH6fW1sSAR+QVgmKmUezacgyw?=
- =?us-ascii?Q?RqGmDTPZymDauwmwiaPEW/0Xk4TLXWiafZ497Yc4iYDBI9BA4nF/aP8kGWAa?=
- =?us-ascii?Q?MehnmLRMDVqZENFtelg5P98xBFbYC4K/fU2M4GL1p5pj4tj5ooWhC4QUD3HJ?=
- =?us-ascii?Q?qy+3OQp8W8V+b+gTHncUxjQ3HE0oe5atfHiKjAi0xc+PWfMOCDswMYPyc70s?=
- =?us-ascii?Q?iSFzrB4J/qae1AGji+Jox8mzTTYEpAhCatuIRttafs+YJ2uQ6tRyliodJCzw?=
- =?us-ascii?Q?HwQMT3LD4BfNrmy9zXlJuq3ob5eAqavjFfoTq/Q9b+LtQC/9rKxXEwiLA/Lw?=
- =?us-ascii?Q?38GrHVJJX/gxk2khCyM/p4sUVm467IIKIP9+ie0FdD0BrYD3voIEZVc0y3rz?=
- =?us-ascii?Q?PDtGtxAgflrXvwIdE6T40KdkC/hfCRgh7uKXr8Ov0poZ4qsMWT7qAAY5gcQd?=
- =?us-ascii?Q?vtO4hQyCQoPMciVGinxGV0LTwpGmF03oq4qT+q76HyAedtzUOjkxFfpGQ8lP?=
- =?us-ascii?Q?fyfkIsFiG9soCIletHVx+eYs7ML4klmOYtOXV0q1AJOsVV6pXXFqyIOK0uG/?=
- =?us-ascii?Q?7D7jlaaeVU4sXSl54W+hY/0ZeQ/EJfvcHEdsOPzsfXsn6aqUwa0qh0Oduq2c?=
- =?us-ascii?Q?W+RJiQbkfagyPgh6lL/thG7f27/IUm48H3RGL5dnh6KMi03DTjqOuoQOzSQq?=
- =?us-ascii?Q?dzsZUtIp7gT/y3dZKIBmbTCN8OSO4x/UnG40u3wJnpzIM0to9snLszudcfU6?=
- =?us-ascii?Q?wWYrPCj4vVX9dle7vkp6rEZ6/GooFiiMkuTJD6346f3vzcgUWQH82yi7SG0y?=
- =?us-ascii?Q?QhpgyiW7XJrUg2qGpZXNYLZikWLWvMFW7NUBCHxoh31J9WLZJ5TZNl594k2a?=
- =?us-ascii?Q?se8iNcpBTUJoEqwCA58nWEE/UasziJRCVGngeQfv6onFgkfOzVZAYoFO58yt?=
- =?us-ascii?Q?GZPCijJqp1SQ0QR/W6Vbeb1lLLkThI/7k/9qnWpmUMNq6iGN+6nBTtRiVTsV?=
- =?us-ascii?Q?/Am77snnxrWPLcVfgdqB3aq1gLMopPd7ng6ZJ6slibtFVqvpDqFmR1jdhDDv?=
- =?us-ascii?Q?mvLI6IETvK9FgK0CWkKMGb2W4ylzTzj0wDe5W9bOVFeTsWDH9sHSshbJrkyX?=
- =?us-ascii?Q?jAMY+XH7fzwC8vzT3F5jALgV7qFuOIRMYxyQWdForqaxKVhRvXWkQIEVgDqA?=
- =?us-ascii?Q?vqHQj4nACx+tX2W/TNEDQALo3G1WL1ANuuLkpjMfX6CwrD4llRzL6tHvKb0f?=
- =?us-ascii?Q?xSqS9mZ2c0+SyQnjlDbeOhRSZx0sjNCKMBaOblA+2aWEuYbfec2Fz7NkYFVq?=
- =?us-ascii?Q?6ItUd2SBZ1+QK85sNFodTdTs3j1yV6Gf/G13XGh4a0LEOgoXqH9Fcv593TIv?=
- =?us-ascii?Q?QX68vFzauiq8pq7n+Yc=3D?=
+	=?us-ascii?Q?OX5x5L+xhhmPFRT8mRNmdhIomjwZMpUH9p+WvtY7neLzFKRPFH+F16Fm9GoY?=
+ =?us-ascii?Q?earfJ4ICFslfAvmd4Bk/BepgQy+er2xQsDa9OzEwhdBsZab82EPBjKPUyVPN?=
+ =?us-ascii?Q?2Eef921pNKZxJsrX7acoyacL4DftELBQwxlNwsAAfODo9kazMUylywTghFfJ?=
+ =?us-ascii?Q?H8c9kAKT+hPM4M0hNoIyITNo74j/fYtUUPBVgWqUSE8+eqoCOaAHFXlMqa37?=
+ =?us-ascii?Q?/20espCRX9jCZ16peGlD+8wpbWFmfVnLs1K7wk6uAQdePmkigNDPj1euVeBY?=
+ =?us-ascii?Q?wW6tZ2sLLQq7N2V2cQSfLFIDkJKEHyN+8OqMCSxv90qEOGi6AHBkaN6CcHsa?=
+ =?us-ascii?Q?ckjkNdRLwX7w6BVvZ+0p29qANVJ/GjsyFDwRvQmJLorhKAeziIKQ3Tk15EYC?=
+ =?us-ascii?Q?DTZfSj9psRy3M6eMj/wUfvkJrFCSQOat+e4VrAnSGe+LstNNn55g0xJEu5GS?=
+ =?us-ascii?Q?Ww2sRDDchn3EAIQKypsPoYXzg/bjvq/PO9moSWQ55HegTqPe2/RBO6w+WmZV?=
+ =?us-ascii?Q?BvW2epVeHrKi1rsRPoUULIv4z91D04Vmh1HHcfApz1BaWw6cPGC2iz/V4t8T?=
+ =?us-ascii?Q?xrp0IlORHdK1UJXnP+mXdIN7L/xr4sES0LFv+pYU+JXeV/0rIpiRwudzaqof?=
+ =?us-ascii?Q?0IijeHDu/W0n3CnpRriRxlH2KcL/zpXTa1ZgnPDfOYULEC7uP1cZSf9nOfWP?=
+ =?us-ascii?Q?jDtY2sdIm1/Vl5Ewf0olmcT1uGnWc9iNGRj0KYUwfHZoLruqX7n4VvVnbTUz?=
+ =?us-ascii?Q?uKTWBs03lAwa9KpzkAwrkbEQpwWOlJ80pnxu2tdvWsI5eHj53HF5YdP2FAzO?=
+ =?us-ascii?Q?WNg/A7F6626c+i8HTqegBkP2lJfs3JgCPjcUojuHwEkRTWBTloA9K9X1VkyC?=
+ =?us-ascii?Q?tC8vV3AtZoFfAii3fzAKwMCOR+cY29L3+/SA2z5/0t+LQuAxSaKN2TiLqfRe?=
+ =?us-ascii?Q?+Wix4e2FBDgd5N4zJ09iAtXVmAP2Z0cEe2mAUHrRixb0lGbu/mIVRw2QMyyX?=
+ =?us-ascii?Q?uyrY8gXoGvtv2p9jt5R/lJB5HMm2t5/8mUfdB166RginIdoKGop4s5RMJEOp?=
+ =?us-ascii?Q?nfJJMaxodo63GEeI++k1Pbv1w1lHtnHfFJok/+3PgPPcTa1riwMqwiym2USJ?=
+ =?us-ascii?Q?ndB46atg5U5X6sLVJ7xW7tK0v44OdQoPOEK8xRBjDXMs7UJQa37l3he2xvKD?=
+ =?us-ascii?Q?OuMPrGPYZZihPwmYos313BXK6BufXw2nsBFRqWJQQi1EpLaZ7UObuhp1p8jQ?=
+ =?us-ascii?Q?A6hCKQsqADJ9HhEEsgwxyyPJJOY55T/wsqcYwdBXSC5mTZIjlAtRWAFqSg/I?=
+ =?us-ascii?Q?N9RLh9dDcw1MMRNXcoSqzOfShPb6ZHNpSMUgJ+4q7IXst2Ap20Aap8+MtAA8?=
+ =?us-ascii?Q?q7XgpWzXtj0c86lhqaSEziBeExLmSg5MZksL2dgfwgjK+sjeMb8kJoLMr7Fw?=
+ =?us-ascii?Q?wqytPPMWCuMLL75GSGi8B+1SI9cM4vURqWLO8KF6G1YxxY6kgtNcRJMwbd72?=
+ =?us-ascii?Q?cxXgn1LrKfRv0x3gi6RAFBluUKIJjsf83Zlx7tLYbHHNojGNTk0lNy6e+/UP?=
+ =?us-ascii?Q?c4xR3XNkh1Zze0QBSmE=3D?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700013)(82310400026)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(82310400026)(36860700013);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Oct 2025 08:03:54.3028
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Oct 2025 08:03:52.8041
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4a9448c8-40a3-4a67-21a5-08de07d38e93
+X-MS-Exchange-CrossTenant-Network-Message-Id: 17664e80-f31e-430e-e7de-08de07d38da7
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	DS3PEPF000099D7.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR12MB8438
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4227
 
-Add a safe wrapper for `pci_find_ext_capability()` that returns an
-`Option<u16>` indicating the offset of a given PCIe extended capability.
+Refactor the existing MMIO accessors to use common call macros
+instead of inlining the bindings calls in each `define_{read,write}!`
+expansion.
 
-This allows Rust drivers to query extended capabilities without dealing
-with raw pointers or integer return codes. The method returns `None`
-when the capability is not present.
+This factoring separates the common offset/bounds checks from the
+low-level call pattern, making it easier to add additional I/O accessor
+families.
+
+No functional change intended.
 
 Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 ---
- rust/kernel/pci.rs | 7 +++++++
- 1 file changed, 7 insertions(+)
+ rust/kernel/io.rs | 67 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 42 insertions(+), 25 deletions(-)
 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 2f94b370fc99..5d9c5eef5c85 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -477,6 +477,13 @@ pub fn cfg_size(&self) -> i32 {
-         // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
-         unsafe { (*self.as_raw()).cfg_size }
-     }
-+
-+    /// Find the extended capability
-+    pub fn find_ext_capability(&self, cap: i32) -> Option<u16> {
-+        // SAFETY: `self.as_raw()` is a valid pointer to a `struct pci_dev`.
-+        let offset = unsafe { bindings::pci_find_ext_capability(self.as_raw(), cap) };
-+        (offset != 0).then(|| offset as u16)
-+    }
- }
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index f4727f3b954e..8d67d46777db 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -112,8 +112,22 @@ pub fn maxsize(&self) -> usize {
+ #[repr(transparent)]
+ pub struct Io<const SIZE: usize = 0>(IoRaw<SIZE>);
  
- impl Device<device::Bound> {
++macro_rules! call_mmio_read {
++    ($c_fn:ident, $self:ident, $offset:expr, $type:ty, $addr:expr) => {
++        // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
++        unsafe { bindings::$c_fn($addr as *const c_void) }
++    };
++}
++
++macro_rules! call_mmio_write {
++    ($c_fn:ident, $self:ident, $offset:expr, $ty:ty, $addr:expr, $value:expr) => {
++        // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
++        unsafe { bindings::$c_fn($value, $addr as *mut c_void) }
++    };
++}
++
+ macro_rules! define_read {
+-    ($(#[$attr:meta])* $name:ident, $try_name:ident, $c_fn:ident -> $type_name:ty) => {
++    ($(#[$attr:meta])* $name:ident, $try_name:ident, $call_macro:ident, $c_fn:ident -> $type_name:ty) => {
+         /// Read IO data from a given offset known at compile time.
+         ///
+         /// Bound checks are performed on compile time, hence if the offset is not known at compile
+@@ -121,10 +135,9 @@ macro_rules! define_read {
+         $(#[$attr])*
+         #[inline]
+         pub fn $name(&self, offset: usize) -> $type_name {
+-            let addr = self.io_addr_assert::<$type_name>(offset);
++            let _addr = self.io_addr_assert::<$type_name>(offset);
+ 
+-            // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            unsafe { bindings::$c_fn(addr as *const c_void) }
++            $call_macro!($c_fn, self, offset, $type_name, _addr)
+         }
+ 
+         /// Read IO data from a given offset.
+@@ -133,16 +146,17 @@ pub fn $name(&self, offset: usize) -> $type_name {
+         /// out of bounds.
+         $(#[$attr])*
+         pub fn $try_name(&self, offset: usize) -> Result<$type_name> {
+-            let addr = self.io_addr::<$type_name>(offset)?;
++            let _addr = self.io_addr::<$type_name>(offset)?;
+ 
+             // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            Ok(unsafe { bindings::$c_fn(addr as *const c_void) })
++            Ok($call_macro!($c_fn, self, offset, $type_name, _addr))
+         }
+     };
+ }
++pub(crate) use define_read;
+ 
+ macro_rules! define_write {
+-    ($(#[$attr:meta])* $name:ident, $try_name:ident, $c_fn:ident <- $type_name:ty) => {
++    ($(#[$attr:meta])* $name:ident, $try_name:ident, $call_macro:ident, $c_fn:ident <- $type_name:ty) => {
+         /// Write IO data from a given offset known at compile time.
+         ///
+         /// Bound checks are performed on compile time, hence if the offset is not known at compile
+@@ -150,10 +164,9 @@ macro_rules! define_write {
+         $(#[$attr])*
+         #[inline]
+         pub fn $name(&self, value: $type_name, offset: usize) {
+-            let addr = self.io_addr_assert::<$type_name>(offset);
++            let _addr = self.io_addr_assert::<$type_name>(offset);
+ 
+-            // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            unsafe { bindings::$c_fn(value, addr as *mut c_void) }
++            $call_macro!($c_fn, self, offset, $type_name, _addr, value)
+         }
+ 
+         /// Write IO data from a given offset.
+@@ -162,14 +175,14 @@ pub fn $name(&self, value: $type_name, offset: usize) {
+         /// out of bounds.
+         $(#[$attr])*
+         pub fn $try_name(&self, value: $type_name, offset: usize) -> Result {
+-            let addr = self.io_addr::<$type_name>(offset)?;
++            let _addr = self.io_addr::<$type_name>(offset)?;
+ 
+-            // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            unsafe { bindings::$c_fn(value, addr as *mut c_void) }
++            $call_macro!($c_fn, self, offset, $type_name, _addr, value);
+             Ok(())
+         }
+     };
+ }
++pub(crate) use define_write;
+ 
+ /// Represents a region of I/O space of a fixed size.
+ ///
+@@ -246,43 +259,47 @@ pub unsafe fn from_raw(raw: &IoRaw<SIZE>) -> &Self {
+         unsafe { &*core::ptr::from_ref(raw).cast() }
+     }
+ 
+-    define_read!(read8, try_read8, readb -> u8);
+-    define_read!(read16, try_read16, readw -> u16);
+-    define_read!(read32, try_read32, readl -> u32);
++    define_read!(read8, try_read8, call_mmio_read, readb -> u8);
++    define_read!(read16, try_read16, call_mmio_read, readw -> u16);
++    define_read!(read32, try_read32, call_mmio_read, readl -> u32);
+     define_read!(
+         #[cfg(CONFIG_64BIT)]
+         read64,
+         try_read64,
++        call_mmio_read,
+         readq -> u64
+     );
+ 
+-    define_read!(read8_relaxed, try_read8_relaxed, readb_relaxed -> u8);
+-    define_read!(read16_relaxed, try_read16_relaxed, readw_relaxed -> u16);
+-    define_read!(read32_relaxed, try_read32_relaxed, readl_relaxed -> u32);
++    define_read!(read8_relaxed, try_read8_relaxed, call_mmio_read, readb_relaxed -> u8);
++    define_read!(read16_relaxed, try_read16_relaxed, call_mmio_read, readw_relaxed -> u16);
++    define_read!(read32_relaxed, try_read32_relaxed, call_mmio_read, readl_relaxed -> u32);
+     define_read!(
+         #[cfg(CONFIG_64BIT)]
+         read64_relaxed,
+         try_read64_relaxed,
++        call_mmio_read,
+         readq_relaxed -> u64
+     );
+ 
+-    define_write!(write8, try_write8, writeb <- u8);
+-    define_write!(write16, try_write16, writew <- u16);
+-    define_write!(write32, try_write32, writel <- u32);
++    define_write!(write8, try_write8, call_mmio_write, writeb <- u8);
++    define_write!(write16, try_write16, call_mmio_write, writew <- u16);
++    define_write!(write32, try_write32, call_mmio_write, writel <- u32);
+     define_write!(
+         #[cfg(CONFIG_64BIT)]
+         write64,
+         try_write64,
++        call_mmio_write,
+         writeq <- u64
+     );
+ 
+-    define_write!(write8_relaxed, try_write8_relaxed, writeb_relaxed <- u8);
+-    define_write!(write16_relaxed, try_write16_relaxed, writew_relaxed <- u16);
+-    define_write!(write32_relaxed, try_write32_relaxed, writel_relaxed <- u32);
++    define_write!(write8_relaxed, try_write8_relaxed, call_mmio_write, writeb_relaxed <- u8);
++    define_write!(write16_relaxed, try_write16_relaxed, call_mmio_write, writew_relaxed <- u16);
++    define_write!(write32_relaxed, try_write32_relaxed, call_mmio_write, writel_relaxed <- u32);
+     define_write!(
+         #[cfg(CONFIG_64BIT)]
+         write64_relaxed,
+         try_write64_relaxed,
++        call_mmio_write,
+         writeq_relaxed <- u64
+     );
+ }
 -- 
 2.47.3
 
