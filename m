@@ -1,91 +1,93 @@
-Received: from elvis.franken.de (elvis.franken.de [193.175.24.41])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E3386246778;
-	Mon, 13 Oct 2025 21:41:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.175.24.41
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643E42DF13A;
+	Mon, 13 Oct 2025 21:50:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760391681; cv=none; b=BvYSQARx8cQNtSvIuRQRuhKZ12x/l6T3HT+Hex565F8HiRJ913fGlB1HLkf9a3drYBO7HkxhiNHFAnS4IxFtEOCgmLx64/wAl1NO95LG8HOQVJNnQv/h9bWYR29+RetFv1JpcKORNXLA36OO5M50WtKQ0h7vv4L1hWzkePBaCeA=
+	t=1760392238; cv=none; b=AUD95xzJFZ2X29xg/Kftiqi7LTbW1Nm93Gir14mM2TiNSrCaM8gm/ds+brQLGHrvD8IoNqXGkb1SV2zClqGsrgWfFPrrgFNGi7Ti+2xSdDC8OcA/Olbaii/YUNiay2MuB8KN/iwNDsIbNoLwZLh/MULqIfZegG5HDKiJ2zSOVYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760391681; c=relaxed/simple;
-	bh=VINIqmrGcK4Q5kNGL6kTupqRoKpcr1/Zsu3Lhu78K8I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OeDVAnml6zLNnHrc8T++NruQXuCt1rpH691/y6q+9sJ+znTNG5yuy9cfZDWukSI7ou3aP2bxgJFVXc1dyJlPcoAW7+qKLQF6BCxrqushXAKEyqsziBcAHukkAYQUE1hJInvgD/kgqPLtiJqiSfrorymw+MdR4PAwpIE4D+mRrQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de; spf=pass smtp.mailfrom=alpha.franken.de; arc=none smtp.client-ip=193.175.24.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alpha.franken.de
-Received: from uucp by elvis.franken.de with local-rmail (Exim 3.36 #1)
-	id 1v8Pv4-0000sq-00; Mon, 13 Oct 2025 23:17:26 +0200
-Received: by alpha.franken.de (Postfix, from userid 1000)
-	id 5C1B0C0256; Mon, 13 Oct 2025 23:17:13 +0200 (CEST)
-Date: Mon, 13 Oct 2025 23:17:13 +0200
-From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, macro@orcam.me.uk
-Subject: Re: [PATCH v2 03/24] MIPS: PCI: Use pci_enable_resources()
-Message-ID: <aO1sWdliSd03a2WC@alpha.franken.de>
-References: <20250829131113.36754-1-ilpo.jarvinen@linux.intel.com>
- <20250829131113.36754-4-ilpo.jarvinen@linux.intel.com>
- <9085ab12-1559-4462-9b18-f03dcb9a4088@roeck-us.net>
+	s=arc-20240116; t=1760392238; c=relaxed/simple;
+	bh=ymKuPXBsFv/u0TtxiDIqOl7RHihyuM04NYtYM3NNQT4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=qcRgzN300qb3UoC3HrU4xPCF+mGNDXfvySn5WaIuc/MOY2oZa42MC5EWdABEnAdwcZKGGayxh/13TSA2Z+ai78M8LC+gRSPfyyrbrqd7xRsaWRo9sTlE6i+xw8FwcCyIhx6wxP+Fn54k6Fi9rYKB3rlxPnsX2ZuFRI2PLJJjSgA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JPN1OHRT; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JPN1OHRT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C35A4C4CEE7;
+	Mon, 13 Oct 2025 21:50:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760392238;
+	bh=ymKuPXBsFv/u0TtxiDIqOl7RHihyuM04NYtYM3NNQT4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=JPN1OHRTtWDf0nED0mv2+IbTG9zMLmfBJ35p9foN1uFZfUrDBD6ivkKKSUtlSsbxT
+	 +RzZsIz5CLLCQexwpwHK16Msm+CiBwBk7owpJNOZZykzMpA/sqGd0fXsbMXBIDvRIh
+	 bs0PSU2rDAiLOstXQCcoqaCLXctKOLbjinLvNoooYZ2bZibiz/vtHyt7Fq0puhqt/d
+	 ZJDbzQ6umAz4HwqSFMHw2BBchHIV428LFrTd6uwuQgtwv+NDGxkXyaJ9jdui/fpZkA
+	 PdojRpu6gCI9X0zP5zw8oEPFoMmOLt7JjwtX0GbPgl7fosPYwczL3/AETk5V9t5kY7
+	 XwP/qteC0N/Ng==
+Date: Mon, 13 Oct 2025 16:50:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, bhelgaas@google.com,
+	mani@kernel.org, robh@kernel.org, sashal@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] pci: cadence-ep: Fix incorrect MSI capability ID
+Message-ID: <20251013215036.GA866714@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9085ab12-1559-4462-9b18-f03dcb9a4088@roeck-us.net>
+In-Reply-To: <20251010144307.12979-1-18255117159@163.com>
 
-On Mon, Oct 13, 2025 at 12:54:25PM -0700, Guenter Roeck wrote:
-> Hi,
+On Fri, Oct 10, 2025 at 10:43:07PM +0800, Hans Zhang wrote:
+> In a previous change, the MSIX capability ID (PCI_CAP_ID_MSIX)
+> was mistakenly used when trying to locate the MSI capability in
+> cdns_pcie_ep_get_msi(). This is incorrect as the function handles
+> MSI functionality, not MSIX.
 > 
-> On Fri, Aug 29, 2025 at 04:10:52PM +0300, Ilpo Järvinen wrote:
-> > pci-legacy.c under MIPS has a copy of pci_enable_resources() named as
-> > pcibios_enable_resources(). Having own copy of same functionality could
-> > lead to inconsistencies in behavior, especially now as
-> > pci_enable_resources() and the bridge window resource flags behavior are
-> > going to be altered by upcoming changes.
-> > 
-> > The check for !r->start && r->end is already covered by the more generic
-> > checks done in pci_enable_resources().
-> > 
-> > Call pci_enable_resources() from MIPS's pcibios_enable_device() and remove
-> > pcibios_enable_resources().
-> > 
-> > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-> > Acked-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> Fix this by replacing PCI_CAP_ID_MSIX with the correct MSI capability
+> ID(PCI_CAP_ID_MSI) when calling cdns_pcie_find_capability(). This
+> ensures the MSI capability is properly located, allowing MSI functionality
+> to work asintended.
 > 
-> This patch causes boot failures when trying to boot mips images from
-> ide drive in qemu. As far as I can see the interface no longer instantiates.
+> Fixes: 907912c1daa7 ("PCI: cadence: Use cdns_pcie_find_*capability() to avoid hardcoding offsets")
+> Reported-by: Sasha Levin <sashal@kernel.org>
+> Closes: https://lore.kernel.org/r/aOfMk9BW8BH2P30V@laps/
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+
+Applied to pci/for-linus for v6.18, thanks!
+
+> ---
+> Dear Maintainer,
 > 
-> Reverting this patch fixes the problem. Bisect log attached for reference.
-
-Patch below fixes my qemu malta setup. Now I'm wondering, why this is
-needed. It was added with commit
-
-aa0980b80908 ("Fixes for system controllers for Atlas/Malta core cards.")
-
-Maciej, do you remember why this is needed ?
-
-Thomas.
-
-diff --git a/arch/mips/pci/pci-malta.c b/arch/mips/pci/pci-malta.c
-index 6aefdf20ca05..e0270b818b03 100644
---- a/arch/mips/pci/pci-malta.c
-+++ b/arch/mips/pci/pci-malta.c
-@@ -229,10 +229,6 @@ void __init mips_pcibios_init(void)
- 		return;
- 	}
- 
--	/* PIIX4 ACPI starts at 0x1000 */
--	if (controller->io_resource->start < 0x00001000UL)
--		controller->io_resource->start = 0x00001000UL;
--
- 	iomem_resource.end &= 0xfffffffffULL;			/* 64 GB */
- 	ioport_resource.end = controller->io_resource->end;
- 
--- 
-Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
-good idea.                                                [ RFC1925, 2.3 ]
+> Since the previous patch mistakenly changed the MSI ID to MSIX ID,
+> a patch is submitted here to fix it. Thank you very much, Sasha, for
+> pointing it out.
+> 
+> Best regards,
+> Hans
+> ---
+>  drivers/pci/controller/cadence/pcie-cadence-ep.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> index 1eac012a8226..c0e1194a936b 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> @@ -255,7 +255,7 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn, u8 vfn)
+>  	u16 flags, mme;
+>  	u8 cap;
+>  
+> -	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSIX);
+> +	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSI);
+>  	fn = cdns_pcie_get_fn_from_vfn(pcie, fn, vfn);
+>  
+>  	/* Validate that the MSI feature is actually enabled. */
+> -- 
+> 2.34.1
+> 
