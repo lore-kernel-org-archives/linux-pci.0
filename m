@@ -1,237 +1,181 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E89230BBBB
-	for <linux-pci@vger.kernel.org>; Mon, 13 Oct 2025 15:19:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB24930CDBF;
+	Mon, 13 Oct 2025 15:26:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760368766; cv=none; b=PS6JJ4hHEfKD9VrTs5xe3tdOOwnngxQKclFIP9CAlXF2sdjcK05Fx6IYs9ziUGWMIseb/whfRdBodq0F/SYPBks6Z1k2RogqjUZ2OYDGAIb3NwFHergZq3mpS7kWNOyAKnoUKHSEZOHQLc/k1fK0QSEfrkCCXpmg2ZbtfM+dRr4=
+	t=1760369188; cv=none; b=X5ozrGk5sghpZA1Qkx5ka5I4x29di8NgPpLej3QlaSYuJk2wsN4Pi2a4S4J8SZxre5cHo9OMNq/uSOFjf5R7faivCTf9KWmedltMvt8kNgvrVNmtKO3IIfvnmp2gLBHl3JMFKeSwCMiFTeeoO1w9ej4RSYZiAf0Hor/ALrT+2mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760368766; c=relaxed/simple;
-	bh=nppjRKcSel+8WMKIgoRNqkBZ1LEu01MyMB6lbpXN4Ss=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PTCG3cly/cPBvK05ua1AtV8E93463P4YyJt6utFwJRJcWPZD9VIic2KTnkhZ35MVMxOZbxDkR4dhUZp13hA3BUc8GVV0U7PWVP0aAQnAL3+IlJsj3LMFPnHW1KC7TQf+FibjsX7CxeXMK6nAOvv3W0yRyND+hTcK1nEXIgQGEbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=0UYvG7bB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=bKsqT7ro; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=0UYvG7bB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=bKsqT7ro; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1760369188; c=relaxed/simple;
+	bh=iwT2J/6Ee3JNCasRQZJmlsM7yv8uBxsSvtO7x8CH+0Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lJtgoQkhZAFbVYkCxo3gGg34Gwjxibtt9MZbfVN3RKvvMLYkLcPBI90+72zlyoRkW75VlZrkDMHG1df0EhTQ62xPREtiZEJUScR54Vvzm1HnmnCqX46aMiAdxt+cgMXJzsjPEcYdrHOGcg4qfobZilEY1awONK06I+jgy0Mabyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QI46AevF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="0UYvG7bB";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="bKsqT7ro";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="0UYvG7bB";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="bKsqT7ro"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 439BE21A0F;
-	Mon, 13 Oct 2025 15:19:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1760368762; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=kHAePRcnBPKeyn3DzMFjKbP/0+GxEY/FQi2HZFLpJ2Y=;
-	b=0UYvG7bBdxCkENKAAU+l5MfPIrwdAeZHyXrPsnbCK+LMud3ZbN6edJMjuGNWYQglZNjenu
-	48XKs+UmGmKOqJB4qLXM8SI7Dtpd+BAkD8U+wCkKe2iamXRW9vHBYxbcSZtzzn+6Jlnw46
-	0Lkselx4VV6wJ2k9CQkBNX5TBavyy5o=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1760368762;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=kHAePRcnBPKeyn3DzMFjKbP/0+GxEY/FQi2HZFLpJ2Y=;
-	b=bKsqT7roLH1RzHdFpDZtI748PlOiA5XH4eYEb1c8eGVI1oaTGm6rSPxdx9mySUjQ0F6YVx
-	Duvi7s6BN2aoPzAw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=0UYvG7bB;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=bKsqT7ro
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1760368762; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=kHAePRcnBPKeyn3DzMFjKbP/0+GxEY/FQi2HZFLpJ2Y=;
-	b=0UYvG7bBdxCkENKAAU+l5MfPIrwdAeZHyXrPsnbCK+LMud3ZbN6edJMjuGNWYQglZNjenu
-	48XKs+UmGmKOqJB4qLXM8SI7Dtpd+BAkD8U+wCkKe2iamXRW9vHBYxbcSZtzzn+6Jlnw46
-	0Lkselx4VV6wJ2k9CQkBNX5TBavyy5o=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1760368762;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=kHAePRcnBPKeyn3DzMFjKbP/0+GxEY/FQi2HZFLpJ2Y=;
-	b=bKsqT7roLH1RzHdFpDZtI748PlOiA5XH4eYEb1c8eGVI1oaTGm6rSPxdx9mySUjQ0F6YVx
-	Duvi7s6BN2aoPzAw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4C0161374A;
-	Mon, 13 Oct 2025 15:19:21 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id oo5PEXkY7WgPTAAAD6G6ig
-	(envelope-from <tzimmermann@suse.de>); Mon, 13 Oct 2025 15:19:21 +0000
-Message-ID: <a7870faa-9c31-435b-b043-9f3ba1cbdcee@suse.de>
-Date: Mon, 13 Oct 2025 17:19:20 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QI46AevF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F303AC4CEFE;
+	Mon, 13 Oct 2025 15:26:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760369187;
+	bh=iwT2J/6Ee3JNCasRQZJmlsM7yv8uBxsSvtO7x8CH+0Y=;
+	h=From:To:Cc:Subject:Date:From;
+	b=QI46AevFpmY08Ci9IDO9Gbh1+r/WU2BxnmEGrp2cn2WKFO9huEbazJLddAk4lN5GX
+	 b5c/n1Xuj+sMBclqJh5bm30LuSPzc6gcOuf3MBJoABy1hwPlYjR9mrnXGr0b+7QdBH
+	 fhxk9/aQRt4ipCV+PI/GqslOGkkvvHIuFGClxI7pj6yC11uh2TNxiWya2U/uyAT24m
+	 ZNi8xuJ0//k5X/ObU507wts9lR7ncxAQFX2BVBDLEAaxW0xvMTsRJHR/EzMS3LIB1a
+	 WgkAoZ71H1kPSiyyABQNvnMsFUwlG5bAg4iD17Ru5KX1wb5ub49SkfrHTpAFNdvccF
+	 ulvZnDXcm9buA==
+From: Leon Romanovsky <leon@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Jason Gunthorpe <jgg@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	dri-devel@lists.freedesktop.org,
+	iommu@lists.linux.dev,
+	Jens Axboe <axboe@kernel.dk>,
+	Joerg Roedel <joro@8bytes.org>,
+	kvm@vger.kernel.org,
+	linaro-mm-sig@lists.linaro.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-pci@vger.kernel.org,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	Will Deacon <will@kernel.org>
+Subject: [PATCH v5 0/9] vfio/pci: Allow MMIO regions to be exported through dma-buf
+Date: Mon, 13 Oct 2025 18:26:02 +0300
+Message-ID: <cover.1760368250.git.leon@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/VGA: Select SCREEN_INFO
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Mario Limonciello <superm1@kernel.org>
-Cc: mario.limonciello@amd.com, bhelgaas@google.com,
- Eric Biggers <ebiggers@kernel.org>, linux-pci@vger.kernel.org
-References: <20251013135929.913441-1-superm1@kernel.org>
- <f36a943e-73bb-97ce-83bc-56aa0e1b5267@linux.intel.com>
- <6dd53ff9-2398-4756-9c13-c082f1c01d4b@kernel.org>
- <56b866bd-d1ad-3be3-a6a6-ed726aa1f9ef@linux.intel.com>
-Content-Language: en-US
-From: Thomas Zimmermann <tzimmermann@suse.de>
-Autocrypt: addr=tzimmermann@suse.de; keydata=
- xsBNBFs50uABCADEHPidWt974CaxBVbrIBwqcq/WURinJ3+2WlIrKWspiP83vfZKaXhFYsdg
- XH47fDVbPPj+d6tQrw5lPQCyqjwrCPYnq3WlIBnGPJ4/jreTL6V+qfKRDlGLWFjZcsrPJGE0
- BeB5BbqP5erN1qylK9i3gPoQjXGhpBpQYwRrEyQyjuvk+Ev0K1Jc5tVDeJAuau3TGNgah4Yc
- hdHm3bkPjz9EErV85RwvImQ1dptvx6s7xzwXTgGAsaYZsL8WCwDaTuqFa1d1jjlaxg6+tZsB
- 9GluwvIhSezPgnEmimZDkGnZRRSFiGP8yjqTjjWuf0bSj5rUnTGiyLyRZRNGcXmu6hjlABEB
- AAHNJ1Rob21hcyBaaW1tZXJtYW5uIDx0emltbWVybWFubkBzdXNlLmRlPsLAjgQTAQgAOAIb
- AwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftODH
- AAoJEGgNwR1TC3ojx1wH/0hKGWugiqDgLNXLRD/4TfHBEKmxIrmfu9Z5t7vwUKfwhFL6hqvo
- lXPJJKQpQ2z8+X2vZm/slsLn7J1yjrOsoJhKABDi+3QWWSGkaGwRJAdPVVyJMfJRNNNIKwVb
- U6B1BkX2XDKDGffF4TxlOpSQzdtNI/9gleOoUA8+jy8knnDYzjBNOZqLG2FuTdicBXblz0Mf
- vg41gd9kCwYXDnD91rJU8tzylXv03E75NCaTxTM+FBXPmsAVYQ4GYhhgFt8S2UWMoaaABLDe
- 7l5FdnLdDEcbmd8uLU2CaG4W2cLrUaI4jz2XbkcPQkqTQ3EB67hYkjiEE6Zy3ggOitiQGcqp
- j//OwE0EWznS4AEIAMYmP4M/V+T5RY5at/g7rUdNsLhWv1APYrh9RQefODYHrNRHUE9eosYb
- T6XMryR9hT8XlGOYRwKWwiQBoWSDiTMo/Xi29jUnn4BXfI2px2DTXwc22LKtLAgTRjP+qbU6
- 3Y0xnQN29UGDbYgyyK51DW3H0If2a3JNsheAAK+Xc9baj0LGIc8T9uiEWHBnCH+RdhgATnWW
- GKdDegUR5BkDfDg5O/FISymJBHx2Dyoklv5g4BzkgqTqwmaYzsl8UxZKvbaxq0zbehDda8lv
- hFXodNFMAgTLJlLuDYOGLK2AwbrS3Sp0AEbkpdJBb44qVlGm5bApZouHeJ/+n+7r12+lqdsA
- EQEAAcLAdgQYAQgAIAIbDBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftOH6AAoJEGgNwR1T
- C3ojVSkIALpAPkIJPQoURPb1VWjh34l0HlglmYHvZszJWTXYwavHR8+k6Baa6H7ufXNQtThR
- yIxJrQLW6rV5lm7TjhffEhxVCn37+cg0zZ3j7zIsSS0rx/aMwi6VhFJA5hfn3T0TtrijKP4A
- SAQO9xD1Zk9/61JWk8OysuIh7MXkl0fxbRKWE93XeQBhIJHQfnc+YBLprdnxR446Sh8Wn/2D
- Ya8cavuWf2zrB6cZurs048xe0UbSW5AOSo4V9M0jzYI4nZqTmPxYyXbm30Kvmz0rYVRaitYJ
- 4kyYYMhuULvrJDMjZRvaNe52tkKAvMevcGdt38H4KSVXAylqyQOW5zvPc4/sq9c=
-In-Reply-To: <56b866bd-d1ad-3be3-a6a6-ed726aa1f9ef@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 439BE21A0F
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Score: -4.51
 
-Hi
+Changelog:
+v5:
+ * Rebased on top of v6.18-rc1.
+ * Added more validation logic to make sure that DMA-BUF length doesn't
+   overflow in various scenarios.
+ * Hide kernel config from the users.
+ * Fixed type conversion issue. DMA ranges are exposed with u64 length,
+   but DMA-BUF uses "unsigned int" as a length for SG entries.
+ * Added check to prevent from VFIO drivers which reports BAR size
+   different from PCI, do not use DMA-BUF functionality.
+v4: https://lore.kernel.org/all/cover.1759070796.git.leon@kernel.org
+ * Split pcim_p2pdma_provider() to two functions, one that initializes
+   array of providers and another to return right provider pointer.
+v3: https://lore.kernel.org/all/cover.1758804980.git.leon@kernel.org
+ * Changed pcim_p2pdma_enable() to be pcim_p2pdma_provider().
+ * Cache provider in vfio_pci_dma_buf struct instead of BAR index.
+ * Removed misleading comment from pcim_p2pdma_provider().
+ * Moved MMIO check to be in pcim_p2pdma_provider().
+v2: https://lore.kernel.org/all/cover.1757589589.git.leon@kernel.org/
+ * Added extra patch which adds new CONFIG, so next patches can reuse
+ * it.
+ * Squashed "PCI/P2PDMA: Remove redundant bus_offset from map state"
+   into the other patch.
+ * Fixed revoke calls to be aligned with true->false semantics.
+ * Extended p2pdma_providers to be per-BAR and not global to whole
+ * device.
+ * Fixed possible race between dmabuf states and revoke.
+ * Moved revoke to PCI BAR zap block.
+v1: https://lore.kernel.org/all/cover.1754311439.git.leon@kernel.org
+ * Changed commit messages.
+ * Reused DMA_ATTR_MMIO attribute.
+ * Returned support for multiple DMA ranges per-dMABUF.
+v0: https://lore.kernel.org/all/cover.1753274085.git.leonro@nvidia.com
 
-Am 13.10.25 um 16:35 schrieb Ilpo Järvinen:
-> On Mon, 13 Oct 2025, Mario Limonciello wrote:
->
->> On 10/13/25 9:16 AM, Ilpo Järvinen wrote:
->>> On Mon, 13 Oct 2025, Mario Limonciello (AMD) wrote:
->>>
->>>> commit 337bf13aa9dda ("PCI/VGA: Replace vga_is_firmware_default() with
->>>> a screen info check") introduced an implicit dependency upon SCREEN_INFO
->>>> by removing the open coded implementation.
->>>>
->>>> If a user didn't have CONFIG_SCREEN_INFO set vga_is_firmware_default()
->>>> would now return false.  Add a select for SCREEN_INFO to ensure that the
->>>> VGA arbiter works as intended.
->>>>
->>>> Reported-by: Eric Biggers <ebiggers@kernel.org>
->>>> Closes: https://lore.kernel.org/linux-pci/20251012182302.GA3412@sol/
->>>> Suggested-by: Thomas Zimmermann <tzimmermann@suse.de>
->>>> Fixes: 337bf13aa9dda ("PCI/VGA: Replace vga_is_firmware_default() with a
->>>> screen info check")
->>>> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
->>>> ---
->>>>    drivers/pci/Kconfig | 1 +
->>>>    1 file changed, 1 insertion(+)
->>>>
->>>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
->>>> index 7065a8e5f9b14..c35fed47addd5 100644
->>>> --- a/drivers/pci/Kconfig
->>>> +++ b/drivers/pci/Kconfig
->>>> @@ -306,6 +306,7 @@ config VGA_ARB
->>>>    	bool "VGA Arbitration" if EXPERT
->>>>    	default y
->>>>    	depends on (PCI && !S390)
->>>> +	select SCREEN_INFO
->>>>    	help
->>>>    	  Some "legacy" VGA devices implemented on PCI typically have the same
->>>>    	  hard-decoded addresses as they did on ISA. When multiple PCI devices
->>> The commit 337bf13aa9dda ("PCI/VGA: Replace vga_is_firmware_default() with
->>> a screen info check") also changed to #ifdef CONFIG_SCREEN_INFO around the
->>> call, but that now becomes superfluous with this select, no?
->> Thanks! Will adjust.
+---------------------------------------------------------------------------
+Based on "[PATCH v6 00/16] dma-mapping: migrate to physical address-based API"
+https://lore.kernel.org/all/cover.1757423202.git.leonro@nvidia.com/ series.
+---------------------------------------------------------------------------
 
-Yes, thanks. You can no longer run into this #else.
+This series extends the VFIO PCI subsystem to support exporting MMIO
+regions from PCI device BARs as dma-buf objects, enabling safe sharing of
+non-struct page memory with controlled lifetime management. This allows RDMA
+and other subsystems to import dma-buf FDs and build them into memory regions
+for PCI P2P operations.
 
->>
->>> Looking into the history of the ifdefs here is quite odd pattern (only
->>> the last one comes with some explanation but even that is on the vague
->>> side and fails to remove the actual now unnecessary ifdef :-/):
->>>
->>> #if defined(CONFIG_X86) -> #if defined(CONFIG_X86) -> select SCREEN_INFO
->>>
->>> Was it intentional to allow building without CONFIG_SCREEN_INFO?
->>>
->> You mean in the VGA arbiter code?  Or just in general?
-> Here in the VGA arbiter. I'm just trying to understand why the #else part
-> was here post-337bf13aa9dda.
+The series supports a use case for SPDK where a NVMe device will be
+owned by SPDK through VFIO but interacting with a RDMA device. The RDMA
+device may directly access the NVMe CMB or directly manipulate the NVMe
+device's doorbell using PCI P2P.
 
-The #else branch used to return false (i.e., the device is not the 
-default).  But this was only used internally by fbcon for minor 
-features. So it really didn't matter that much.
+However, as a general mechanism, it can support many other scenarios with
+VFIO. This dmabuf approach can be usable by iommufd as well for generic
+and safe P2P mappings.
 
-Now we need the default for userspace, hence we likely should have an 
-#else branch at all.
+In addition to the SPDK use-case mentioned above, the capability added
+in this patch series can also be useful when a buffer (located in device
+memory such as VRAM) needs to be shared between any two dGPU devices or
+instances (assuming one of them is bound to VFIO PCI) as long as they
+are P2P DMA compatible.
 
-Best regards
-Thomas
+The implementation provides a revocable attachment mechanism using dma-buf
+move operations. MMIO regions are normally pinned as BARs don't change
+physical addresses, but access is revoked when the VFIO device is closed
+or a PCI reset is issued. This ensures kernel self-defense against
+potentially hostile userspace.
 
->
->> There is a lot of
->> other places that conditionalize code on CONFIG_SCREEN_INFO.  You don't "have"
->> to build in the the VGA arbiter and presumably those are correct.
->>
+The series includes significant refactoring of the PCI P2PDMA subsystem
+to separate core P2P functionality from memory allocation features,
+making it more modular and suitable for VFIO use cases that don't need
+struct page support.
+
+-----------------------------------------------------------------------
+The series is based originally on
+https://lore.kernel.org/all/20250307052248.405803-1-vivek.kasireddy@intel.com/
+but heavily rewritten to be based on DMA physical API.
+-----------------------------------------------------------------------
+The WIP branch can be found here:
+https://git.kernel.org/pub/scm/linux/kernel/git/leon/linux-rdma.git/log/?h=dmabuf-vfio-v5
+
+Thanks
+
+Leon Romanovsky (7):
+  PCI/P2PDMA: Separate the mmap() support from the core logic
+  PCI/P2PDMA: Simplify bus address mapping API
+  PCI/P2PDMA: Refactor to separate core P2P functionality from memory
+    allocation
+  PCI/P2PDMA: Export pci_p2pdma_map_type() function
+  types: move phys_vec definition to common header
+  vfio/pci: Enable peer-to-peer DMA transactions by default
+  vfio/pci: Add dma-buf export support for MMIO regions
+
+Vivek Kasireddy (2):
+  vfio: Export vfio device get and put registration helpers
+  vfio/pci: Share the core device pointer while invoking feature
+    functions
+
+ block/blk-mq-dma.c                 |   7 +-
+ drivers/iommu/dma-iommu.c          |   4 +-
+ drivers/pci/p2pdma.c               | 175 ++++++++---
+ drivers/vfio/pci/Kconfig           |   3 +
+ drivers/vfio/pci/Makefile          |   2 +
+ drivers/vfio/pci/vfio_pci_config.c |  22 +-
+ drivers/vfio/pci/vfio_pci_core.c   |  63 ++--
+ drivers/vfio/pci/vfio_pci_dmabuf.c | 446 +++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_priv.h   |  23 ++
+ drivers/vfio/vfio_main.c           |   2 +
+ include/linux/pci-p2pdma.h         | 120 +++++---
+ include/linux/types.h              |   5 +
+ include/linux/vfio.h               |   2 +
+ include/linux/vfio_pci_core.h      |   1 +
+ include/uapi/linux/vfio.h          |  25 ++
+ kernel/dma/direct.c                |   4 +-
+ mm/hmm.c                           |   2 +-
+ 17 files changed, 785 insertions(+), 121 deletions(-)
+ create mode 100644 drivers/vfio/pci/vfio_pci_dmabuf.c
 
 -- 
---
-Thomas Zimmermann
-Graphics Driver Developer
-SUSE Software Solutions Germany GmbH
-Frankenstrasse 146, 90461 Nuernberg, Germany
-GF: Ivo Totev, Andrew Myers, Andrew McDonald, Boudien Moerman
-HRB 36809 (AG Nuernberg)
-
+2.51.0
 
