@@ -1,101 +1,117 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E99AD2D060C;
-	Wed, 15 Oct 2025 08:03:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A514013957E;
+	Wed, 15 Oct 2025 08:03:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760515396; cv=none; b=f1JSvZeQJOI/5FVB3y8I4L9pisIfs4L09Tx10FdyW6NEEmhi38RoVMJi23viwMKhSfkmd6R4ad6Ez4C3m5noHBSzs+lB+HVMy3fWFN2+UdZ4BYbe5vuriQabGpD/GGfV7xe4s8yyugLGt/RNQLqemgXcFaL0K+RhfeHoTR6Mzag=
+	t=1760515431; cv=none; b=Fab5FC+fgv9rJd9fmxkLrcyP+havAWoFMMzf7Wnu4HSYponuZP3FyNU+OnkUWmvHpnIWkFdhzBcT8NT9IWy7FTfopEo7vpYXGvux+PWtQoqDNqwBqI7qgTOX7MifTzP1oNWlDIqCDhuJq+NtxV+i9BNHvliVIdAwS7Lh9AxVIhA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760515396; c=relaxed/simple;
-	bh=hL6Oj0457W1ccYkzRwwH6dIwpIvldkAXzRJyQpPfUc4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Fd97QqyWmS16tWwPmqxkspLs6gEMcqjCXhrs2yf0QyZxSTDB5bpRkddTGW2QDPi7uIOBzI2t9l21WGqipLRJRcllWGjZqZp6+00yVKRYWCk7LfihXppSNhJHHm0XOUBvPKiY52JCLkzkpIqpzEbzg/1b2WaL7+s4772yuIZ1pFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fG8tNjc4; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1760515431; c=relaxed/simple;
+	bh=5unoLNZna7TbN6XnAcrbvPxZlZXyH1EX+4YdDxPuHhA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OhFuuou0w/V9fm2aalj6OQzofQjASShYojjbCUuj9vzwOAkohTT3V8qxlIPMJ+qa5YmgPNbjZJbITBZwEOTsn7q0EO9He2cI5Nx1i/8w/14kmMjuXeZYe7yRhnDEr5FEj1eluFZhoGX0pA/S9t7ZsrTwhdnabd+YlbBzjRnwDnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XSNhFi6L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fG8tNjc4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1760515395; x=1792051395;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=hL6Oj0457W1ccYkzRwwH6dIwpIvldkAXzRJyQpPfUc4=;
-  b=fG8tNjc418BpxYSJ2qNy7nOEIzFNYgSyRgMSPVu++nx8MOeJhqK6okYh
-   rY8ol7AoqhC9hICiU+4gKe9M5zHiEYNNMzfjhpgZRQdKwq1+NKmynille
-   c2TUBDtGtDZz//KvRPbjM6LFBLc319HmJH9Ufq6eE/1gnH+Fz3DF2To8t
-   cZUL8bg4VNFYLqDhCmpuaR9JwtrbKahUG+pVMF/PSRrZtsTD3ex54iqT3
-   VJjEVm7Hd4uEZIwf9yJgRJHcGQf7gJjCBt6RDvTzmGXHzIUKXvkaa45aY
-   lutRvhPoSDpN3TUXTRzmiPqmqxNmVbP8Z+FSCr8JeKft6+h3lGqTgMfxG
-   w==;
-X-CSE-ConnectionGUID: ZWiqaQ2FQTWRJuG/dzta9g==
-X-CSE-MsgGUID: Dqh2LsuWTgerXelWiZEUdw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11582"; a="61891543"
-X-IronPort-AV: E=Sophos;i="6.19,230,1754982000"; 
-   d="scan'208";a="61891543"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2025 01:03:15 -0700
-X-CSE-ConnectionGUID: C8rnhy7SQFqSxfjI4ZhzAw==
-X-CSE-MsgGUID: bIBj/XW1R8aHi/Vad3RNqQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,230,1754982000"; 
-   d="scan'208";a="205805570"
-Received: from bnilawar-desk2.iind.intel.com ([10.190.239.41])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2025 01:03:10 -0700
-From: Badal Nilawar <badal.nilawar@intel.com>
-To: intel-xe@lists.freedesktop.org,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: anshuman.gupta@intel.com,
-	rafael@kernel.org,
-	lenb@kernel.org,
-	bhelgaas@google.com,
-	ilpo.jarvinen@linux.intel.com,
-	lucas.demarchi@intel.com,
-	rodrigo.vivi@intel.com,
-	varun.gupta@intel.com,
-	ville.syrjala@linux.intel.com,
-	uma.shankar@intel.com,
-	karthik.poosa@intel.com
-Subject: [PATCH v5 12/12] drm/xe/vrsr: Introduce a debugfs node named vrsr_capable
-Date: Wed, 15 Oct 2025 13:37:10 +0530
-Message-Id: <20251015080710.1468409-13-badal.nilawar@intel.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251015080710.1468409-1-badal.nilawar@intel.com>
-References: <20251015080710.1468409-1-badal.nilawar@intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XSNhFi6L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9135CC4CEF8;
+	Wed, 15 Oct 2025 08:03:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760515431;
+	bh=5unoLNZna7TbN6XnAcrbvPxZlZXyH1EX+4YdDxPuHhA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XSNhFi6LSwYMGRwm8/DjIzD70+SJl6l4LlN+k5qLeOMIEtbTZO2LQs9c8auQB/xDA
+	 K7JY5T9kobA8hMf16Hn2Hf7NwRCDtbTnXMHW+pn6XrtllrMxH39uRqhnYCFrxKAPG8
+	 ciDRfUJ8clQlL7702X9qNivz2a76qmwTnRe0J/K4W710FBp0MY404iWKMPyjSbGYr0
+	 7Rjptvc0+/m+BV1c+OT/QNJb2NH6LZjgi3FYZaPilIB/mj9WiW8g9H689PO0C1kLrF
+	 ztXTF07l+hufkiLkTAHi0wsnXGencQw7E30Ywg1vcfYrbCEoGpps4RfqlkSBpn6rSl
+	 7VGDwrPt2mv/g==
+Date: Wed, 15 Oct 2025 10:03:44 +0200
+From: Lorenzo Pieralisi <lpieralisi@kernel.org>
+To: Frank Li <Frank.li@nxp.com>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	Rob Herring <robh@kernel.org>,
+	Sascha Bischoff <sascha.bischoff@arm.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Marc Zyngier <maz@kernel.org>
+Subject: Re: [PATCH v2 2/4] of/irq: Fix OF node refcount in
+ of_msi_get_domain()
+Message-ID: <aO9VYGkCq7MDCcNn@lpieralisi>
+References: <20251014095845.1310624-1-lpieralisi@kernel.org>
+ <20251014095845.1310624-3-lpieralisi@kernel.org>
+ <aO7Mx11tWFbDX8u1@lizhi-Precision-Tower-5810>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aO7Mx11tWFbDX8u1@lizhi-Precision-Tower-5810>
 
-Add a debugfs node named vrsr_capable to check if the device
-supports VRSR.
+On Tue, Oct 14, 2025 at 06:20:55PM -0400, Frank Li wrote:
+> On Tue, Oct 14, 2025 at 11:58:43AM +0200, Lorenzo Pieralisi wrote:
+> > In of_msi_get_domain() if the iterator loop stops early because an
+> > irq_domain match is detected, an of_node_put() on the iterator node is
+> > needed to keep the OF node refcount in sync.
+> >
+> > Add it.
+> >
+> > Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> > Cc: Rob Herring <robh@kernel.org>
+> > ---
+> 
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> 
+> After go though of_for_each_phandle, I understand why need of_node_put()
+> at break branch.
+> 
+> It will be nice if add of_for_each_phandle_scoped() help macro.
 
-V2: Use debugfs_create_bool for vrsr_capable node (Karthik)
+Yes because this fix is not the end of it AFAICS.
 
-Signed-off-by: Badal Nilawar <badal.nilawar@intel.com>
----
- drivers/gpu/drm/xe/xe_debugfs.c | 3 +++
- 1 file changed, 3 insertions(+)
+Please review and test patch (4) as well since I slightly change
+the existing logic there, I don't want to break the EP mapping code you
+added in f1680d9081e1 (by the way, I don't get that commit logic, if the
+msi-parent loop would match it could just return and we could have
+removed the
 
-diff --git a/drivers/gpu/drm/xe/xe_debugfs.c b/drivers/gpu/drm/xe/xe_debugfs.c
-index 1c3c9557a9bd..11d1942c196d 100644
---- a/drivers/gpu/drm/xe/xe_debugfs.c
-+++ b/drivers/gpu/drm/xe/xe_debugfs.c
-@@ -402,6 +402,9 @@ void xe_debugfs_register(struct xe_device *xe)
- 	debugfs_create_file("disable_late_binding", 0600, root, xe,
- 			    &disable_late_binding_fops);
- 
-+	debugfs_create_bool("vrsr_capable", 0400, root,
-+			    &xe->d3cold.vrsr_capable);
-+
- 	for (mem_type = XE_PL_VRAM0; mem_type <= XE_PL_VRAM1; ++mem_type) {
- 		man = ttm_manager_type(bdev, mem_type);
- 
--- 
-2.34.1
+if (ret)
 
+guarding of_map_id(), correct ?).
+
+That's what I did in patch (4), please have a look.
+
+Thanks,
+Lorenzo
+
+> 
+> 
+> >  drivers/of/irq.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+> > index e67b2041e73b..9f6cd5abba76 100644
+> > --- a/drivers/of/irq.c
+> > +++ b/drivers/of/irq.c
+> > @@ -773,8 +773,10 @@ struct irq_domain *of_msi_get_domain(struct device *dev,
+> >
+> >  	of_for_each_phandle(&it, err, np, "msi-parent", "#msi-cells", 0) {
+> >  		d = irq_find_matching_host(it.node, token);
+> > -		if (d)
+> > +		if (d) {
+> > +			of_node_put(it.node);
+> >  			return d;
+> > +		}
+> >  	}
+> >
+> >  	return NULL;
+> > --
+> > 2.50.1
+> >
