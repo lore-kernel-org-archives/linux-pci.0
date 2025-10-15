@@ -1,28 +1,29 @@
-Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
+Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD77E2EFD95;
-	Wed, 15 Oct 2025 02:42:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.111
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BDAF30C349;
+	Wed, 15 Oct 2025 02:42:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760496131; cv=none; b=S6JgNtGRt5avVEKPmtHmOwFbaSJUK3fiBLElMkdOOgRaD7qNcQbWH2G5ySJNWdTfhUBQGmlkUw4QMgOaP4GOmRuELPjsvI2oy6LPHHauMkoxTAp2iqrFDYq2hV8cjfy0XscbY4jBiiL6e3tChW7pVHhOetEib/zveHM93RlFAmc=
+	t=1760496132; cv=none; b=L/TOnpcl5qVAciUw49GZqLurCo9ip9CngHuhhQUwPLyiwr/WSP1bRpqjizs4B9y6oxcvSD446y43L9Q8VizfU/NKpXBICUX+p3ddQez+5y4JXc5wIsIgZ0CImmDcXIdc+9bD/LAO+kRsmQ8FUyqsVlRbcSXIm/0a6nSGGyMUQXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760496131; c=relaxed/simple;
-	bh=014Py1s/FbA/gxplaC4PtzFIBmvUlYJ1ExAgwJXx610=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WcQKMy9QlKoT4dC9pLQj4OJwi0b0a9Jwp18auM5mJ4OC9psz+7mip3XxQ9qlYn0p3W6CcEMe05aHVrk9kfZB7msT9m5wzKsvY0VBS4ntuIGS8GDnkXxwU374Cp7SN/CvyJRexZ/kb+q4X/nvLt8fJOHBEXD4t9HrTrBb319AKyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=uqMkjEmc; arc=none smtp.client-ip=115.124.30.111
+	s=arc-20240116; t=1760496132; c=relaxed/simple;
+	bh=eouj9LH5rcZ4+vjxu/jnWgda4kXju3BBQYozjDFdcAI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=oFxrWc8wy5csEVEJSVJLJhg8z9WW3z1ehSrgF78x+gY2igihyQA/ncyPcGhcJ+bP1hnmdFc1gm+uL/j34aYdT+3a+NgBbng51+L5YGjcFCeSkV7ph2mGUpDaxWlPL3qtpvrWJoW2wfTlPmme4DjDCGj4odZtVfaq+Hrh8BsDV/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=Am3GK+Rl; arc=none smtp.client-ip=115.124.30.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="uqMkjEmc"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="Am3GK+Rl"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1760496121; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=zebhL7qvvzWTRlhLZGSq5g9aY1gfkbEgG5c4GvbYqVw=;
-	b=uqMkjEmcicWDq4wWjClUbkGD7fQrx6foIRX4PrkQHd1qZyJCxTPSFKkRm+UxbL7nYfZe3IW3CYRgH7crXep8W5OesqZ6ANIVbufIc05y4BtDXpwmv4Y2zDtlffQPLfmHnbv5UAZoTUcfgRN+NZ0qcsDM4ApCbvvQeT6DXN47mx8=
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WqEYD3-_1760496119 cluster:ay36)
+	t=1760496126; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=puzbyrksJ6Ibr4OiaAvXhPRXIfrNu8KphJ6x82nMuQc=;
+	b=Am3GK+RlZte9BkAu/3kog1vhBg4Q/I2hqJeyBfsJNSK/FsgC3iPJVMH98wnTOe/Qv+/ZeD0IF6Oc8RUXUTZcGSbSIIm51IDr9uC1z43lOiKBQJI89KBXgMElZKxQRMz2u7ZOTIyzGb9fUyf+g+awH0i2CbTBCTBIugP/pzMXHhk=
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WqEYD7h_1760496124 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Wed, 15 Oct 2025 10:42:01 +0800
+          Wed, 15 Oct 2025 10:42:04 +0800
 From: Shuai Xue <xueshuai@linux.alibaba.com>
 To: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
@@ -37,10 +38,12 @@ Cc: mahesh@linux.ibm.com,
 	terry.bowman@amd.com,
 	tianruidong@linux.alibaba.com,
 	lukas@wunner.de
-Subject: [PATCH v6 0/5] PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
-Date: Wed, 15 Oct 2025 10:41:54 +0800
-Message-Id: <20251015024159.56414-1-xueshuai@linux.alibaba.com>
+Subject: [PATCH v6 4/5] PCI/ERR: Use pcie_aer_is_native() to check for native AER control
+Date: Wed, 15 Oct 2025 10:41:58 +0800
+Message-Id: <20251015024159.56414-5-xueshuai@linux.alibaba.com>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20251015024159.56414-1-xueshuai@linux.alibaba.com>
+References: <20251015024159.56414-1-xueshuai@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,82 +52,38 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-changes since v5:
-- rebase to 6.18-rc1
-- add separate patches to clear device fatal status per Kuppuswamy
+Replace the manual checks for native AER control with the
+pcie_aer_is_native() helper, which provides a more robust way
+to determine if we have native control of AER.
 
-changes since v4:
-- rebase to 6.17-rc6
-- pick up Reviewed-by tag for PATCH[2] from Sathyanarayanan
-- minor typos in commit log per Manivannan
+No functional changes intended.
 
-changes since v3:
-- squash patch 1 and 2 into one patch per Sathyanarayanan
-- add comments note for dpc_process_error per Sathyanarayanan
-- pick up Reviewed-by tag for PATCH[1] from Sathyanarayanan
+Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+---
+ drivers/pci/pcie/err.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-changes since v2:
-- moving the "err_port" rename to a separate patch per Sathyanarayanan
-- rewrite comments of dpc_process_error per Sathyanarayanan
-- remove NULL initialization for err_dev per Sathyanarayanan
-
-changes since v1:
-- rewrite commit log per Bjorn
-- refactor aer_get_device_error_info to reduce duplication per Keith
-- fix to avoid reporting fatal errors twice for root and downstream ports per Keith
-
-The AER driver has historically avoided reading the configuration space of an
-endpoint or RCiEP that reported a fatal error, considering the link to that
-device unreliable. Consequently, when a fatal error occurs, the AER and DPC
-drivers do not report specific error types, resulting in logs like:
-
-  pcieport 0015:00:00.0: EDR: EDR event received
-  pcieport 0015:00:00.0: EDR: Reported EDR dev: 0015:00:00.0
-  pcieport 0015:00:00.0: DPC: containment event, status:0x200d, ERR_FATAL received from 0015:01:00.0
-  pcieport 0015:00:00.0: AER: broadcast error_detected message
-  pcieport 0015:00:00.0: AER: broadcast mmio_enabled message
-  pcieport 0015:00:00.0: AER: broadcast resume message
-  pcieport 0015:00:00.0: pciehp: Slot(21): Link Down/Up ignored
-  pcieport 0015:00:00.0: AER: device recovery successful
-  pcieport 0015:00:00.0: EDR: DPC port successfully recovered
-  pcieport 0015:00:00.0: EDR: Status for 0015:00:00.0: 0x80
-
-AER status registers are sticky and Write-1-to-clear. If the link recovered
-after hot reset, we can still safely access AER status and TLP header of the
-error device. In such case, report fatal errors which helps to figure out the
-error root case.
-
-After this patch, the logs like:
-
-  pcieport 0015:00:00.0: EDR: EDR event received
-  pcieport 0015:00:00.0: EDR: Reported EDR dev: 0015:00:00.0
-  pcieport 0015:00:00.0: DPC: containment event, status:0x200d, ERR_FATAL received from 0015:01:00.0
-  pcieport 0015:00:00.0: AER: broadcast error_detected message
-  vfio-pci 0015:01:00.0: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
-  pcieport 0015:00:00.0: pciehp: Slot(21): Link Down/Up ignored
-  vfio-pci 0015:01:00.0:   device [144d:a80a] error status/mask=00001000/00400000
-  vfio-pci 0015:01:00.0:    [12] TLP                    (First)
-  vfio-pci 0015:01:00.0: AER:   TLP Header: 0x4a004010 0x00000040 0x01000000 0xffffffff
-  pcieport 0015:00:00.0: AER: broadcast mmio_enabled message
-  pcieport 0015:00:00.0: AER: broadcast resume message
-  pcieport 0015:00:00.0: AER: device recovery successful
-  pcieport 0015:00:00.0: EDR: DPC port successfully recovered
-  pcieport 0015:00:00.0: EDR: Status for 0015:00:00.0: 0x80
-
-Shuai Xue (5):
-  PCI/DPC: Clarify naming for error port in DPC Handling
-  PCI/DPC: Run recovery on device that detected the error
-  PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
-  PCI/ERR: Use pcie_aer_is_native() to check for native AER control
-  PCI/AER: Clear both AER fatal and non-fatal status
-
- drivers/pci/pci.h      |  6 ++++--
- drivers/pci/pcie/aer.c | 18 +++++++++++-------
- drivers/pci/pcie/dpc.c | 31 ++++++++++++++++++++++++-------
- drivers/pci/pcie/edr.c | 35 ++++++++++++++++++-----------------
- drivers/pci/pcie/err.c | 16 +++++++++++++---
- 5 files changed, 70 insertions(+), 36 deletions(-)
-
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 4e65eac809d1..097990094b71 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -214,7 +214,6 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	int type = pci_pcie_type(dev);
+ 	struct pci_dev *bridge;
+ 	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+-	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+ 	struct aer_err_info info;
+ 
+ 	/*
+@@ -289,7 +288,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	 * it is responsible for clearing this status.  In that case, the
+ 	 * signaling device may not even be visible to the OS.
+ 	 */
+-	if (host->native_aer || pcie_ports_native) {
++	if (pcie_aer_is_native(dev)) {
+ 		pcie_clear_device_status(dev);
+ 		pci_aer_clear_nonfatal_status(dev);
+ 	}
 -- 
 2.39.3
 
