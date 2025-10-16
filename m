@@ -1,44 +1,44 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0282331DDB9;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0274E2571BE;
 	Thu, 16 Oct 2025 10:08:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760609342; cv=none; b=p1oHwl62oDxGVVoK8Zf+g8d5oqRtr5/SNRoVOxBFt/P+YWw1pias69x8Zc5P2jkDmaMMOeZdu7I+Rc7NG+qRorxLL7JB6yB501QbGhmEN4eVo93d8wP+916aUaRfSuq2dM35rZRVmUp/Q21HdDQkXCq0lPRwd9Zps3dPtru/3Xw=
+	t=1760609342; cv=none; b=FQNKy+kocRHL5lw1e43Dvs2QWNQzyRaKKRcMhBkIIgBFa8UDb2yFrMScuQLeTDW9EHSdZNS0jBndh6XSszhpdkfwKHYa+WLirasn9mhg6coq8rFShrVJyCwTIBCNmcBEhqoeoP2XUvDmLhJYsajYskBJV6WREde66FEm+tgTPr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1760609342; c=relaxed/simple;
-	bh=F9fawG1dTHERqo07t+5z+NJo3HhYUlGxKpLEWlNHroE=;
+	bh=YvAn2hXGjztM1f4HAy7F7ikwrS8JBglEj5IZ6jjRVbk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=F6gp48OFdcAAzsPuXQ6gkvApQdQ50cD+b2iuM5BBSLRcVcV9Lus3Sunld1Q7C3q85hAp8fpIztw1HQGvwlXRU2sSk0RQxb7OB399+Z/Z7FH/Hk0dDSqIPiVqHoLHV4PRLRSdbi79iRK+17+jw3XJdD0ji1gyM+cdRtQbJ96J6Kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=Y2kTAhnh; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=isPmWoutiq+/MktsMuHGZTUBLgnSu7fXj5hBDSZYtPK1iUfmHDy8YTRjf6Hq5UPSFlHSB+vTw1rdnbeYsgyE/ubkuzlyIgoU6a1DswTUvnbcyNDOadRNgI5H435hD0dYkJBuHbilMqrhGDKh7sYksD4nsd66nIWkJz76pfAZ0wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=FSKOlFpm; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="Y2kTAhnh"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="FSKOlFpm"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1760609335;
-	bh=F9fawG1dTHERqo07t+5z+NJo3HhYUlGxKpLEWlNHroE=;
+	bh=YvAn2hXGjztM1f4HAy7F7ikwrS8JBglEj5IZ6jjRVbk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Y2kTAhnhKvmN3531kyO7g4tqiihggZJ0XjB42+CeCYp6NYJMrg5UYToVq0CwHnLUB
-	 o6CiOwGfzzp8KTgOoqyPjEVhtm72+2izrD9KXm6xXsERvwj+S4V8maaiQ5vlT7Bhca
-	 KGcnESmVaKqy+RzjFxt6LaQQlKPSKZ9c5io/drbETOSVOcKkhH2HOSwLPsqDsD4HZX
-	 f2I6R/EMJWlNeQ1CEfOJWXXUTdoOlUiPB3pt8vWdM4Tahw8gj+y0D1xWbo/DP7io4C
-	 80+lERU0zQp/Pj+H9XmSGiFQQamOHfjrCiONXquqhsDlrK9MzpZtor1TNd9kHVkxRa
-	 K/cqafSIOhjFA==
-Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531::8])
+	b=FSKOlFpmwY7sUH1WQ/xDcnfPl7kPCE2PU2w3q6mkklwXimgaee8Lrfd5F55Mueol/
+	 +vRfOg5LBWulaWOqgNwp4tbZz8DM1hp5aVv2CG6DrlOOIPMjP0Fv8uQTUPFmJy8q83
+	 FwB7cwUi3JjrV7fyaCVCBR2LPpVLvN/R5NvbcfUoTDEeZRA96mCmxgyCJmJv507hF4
+	 iljK26EEF8A8iXRqIRRXfYdek6nmA/SH3qy52EUZL9az0VfF3qyHyc3UbI6hsURWWT
+	 IDz937cM4t3WGk9cG3z1TCX6Fa/iLrJWHLgq/eTBGXkYW3+L0YXmsiJms6XjtFLywi
+	 q04mimivQkHSw==
+Received: from beast.luon.net (simons.connected.by.freedominter.net [45.83.240.172])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
 	(No client certificate requested)
 	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id DD40717E1413;
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id F1B3E17E1418;
 	Thu, 16 Oct 2025 12:08:54 +0200 (CEST)
 Received: by beast.luon.net (Postfix, from userid 1000)
-	id CC83F10C9C79A; Thu, 16 Oct 2025 12:08:53 +0200 (CEST)
+	id C6ED810C9C798; Thu, 16 Oct 2025 12:08:53 +0200 (CEST)
 From: Sjoerd Simons <sjoerd@collabora.com>
-Date: Thu, 16 Oct 2025 12:08:49 +0200
-Subject: [PATCH 13/15] arm64: dts: mediatek: mt7981b: Add wifi memory
- region
+Date: Thu, 16 Oct 2025 12:08:48 +0200
+Subject: [PATCH 12/15] arm64: dts: mediatek: mt7981b-openwrt-one: Enable
+ Ethernet
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251016-openwrt-one-network-v1-13-de259719b6f2@collabora.com>
+Message-Id: <20251016-openwrt-one-network-v1-12-de259719b6f2@collabora.com>
 References: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
 In-Reply-To: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -74,39 +74,110 @@ Cc: kernel@collabora.com, devicetree@vger.kernel.org,
  Sjoerd Simons <sjoerd@collabora.com>
 X-Mailer: b4 0.14.3
 
-Add required memory region for the builtin wifi block. Disable the block
-by default as it won't function properly without at least pin muxing.
+Enable the Ethernet subsystem on OpenWrt One board with dual-MAC
+configuration:
+- GMAC0: Connected to external Airoha EN8811H 2.5GbE PHY via SGMII
+  (2500base-x mode) for WAN connectivity with LED indicators
+- GMAC1: Connected to internal MT7981 1GbE PHY (GMII mode) for LAN
+
+Ethernet aliases are defined to provide consistent network interface
+naming (ethernet0 = LAN, ethernet1 = WAN).
 
 Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
 ---
- arch/arm64/boot/dts/mediatek/mt7981b.dtsi | 7 +++++++
- 1 file changed, 7 insertions(+)
+ .../boot/dts/mediatek/mt7981b-openwrt-one.dts      | 58 ++++++++++++++++++++++
+ 1 file changed, 58 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
-index c85fa0ddf2da8..fbccb63227e89 100644
---- a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
-+++ b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
-@@ -69,6 +69,11 @@ secmon_reserved: secmon@43000000 {
- 			no-map;
- 		};
+diff --git a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
+index 9878009385cc6..6e6e4f1515f67 100644
+--- a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
++++ b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
+@@ -3,6 +3,8 @@
+ /dts-v1/;
  
-+		wmcpu_emi: wmcpu-reserved@47c80000 {
-+			reg = <0 0x47c80000 0 0x100000>;
-+			no-map;
-+		};
-+
- 		wo_emi0: wo-emi@47d80000 {
- 			reg = <0 0x47d80000 0 0x40000>;
- 			no-map;
-@@ -494,6 +499,8 @@ wifi: wifi@18000000 {
- 			clock-names = "mcu", "ap2conn";
- 			resets = <&watchdog MT7986_TOPRGU_CONSYS_SW_RST>;
- 			reset-names = "consys";
-+			memory-region = <&wmcpu_emi>;
-+			status = "disabled";
- 		};
+ #include "mt7981b.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/leds/common.h>
+ #include "dt-bindings/pinctrl/mt65xx.h"
+ 
+ / {
+@@ -10,6 +12,8 @@ / {
+ 	model = "OpenWrt One";
+ 
+ 	aliases {
++		ethernet0 = &gmac1;
++		ethernet1 = &gmac0;
+ 		serial0 = &uart0;
  	};
  
+@@ -41,6 +45,56 @@ reg_5v: regulator-5v {
+ 	};
+ };
+ 
++&eth {
++	status = "okay";
++
++	gmac0: mac@0 {
++		compatible = "mediatek,eth-mac";
++		reg = <0>;
++		nvmem-cells = <&macaddr_factory_24 0>;
++		nvmem-cell-names = "mac-address";
++		phy-mode = "2500base-x";
++		phy-handle = <&phy15>;
++	};
++
++	gmac1: mac@1 {
++		compatible = "mediatek,eth-mac";
++		reg = <1>;
++		phy-mode = "gmii";
++		phy-handle = <&int_gbe_phy>;
++	};
++};
++
++&mdio_bus {
++	phy15: ethernet-phy@f {
++		compatible = "ethernet-phy-id03a2.a411";
++		reg = <0xf>;
++		interrupt-parent = <&pio>;
++		interrupts = <38 IRQ_TYPE_EDGE_FALLING>;
++		reset-gpios = <&pio 39 GPIO_ACTIVE_LOW>;
++		reset-assert-us = <10000>;
++		reset-deassert-us = <20000>;
++		airoha,pnswap-rx;
++
++		leds {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			led@0 {
++				reg = <0>;
++				function = LED_FUNCTION_WAN;
++				color = <LED_COLOR_ID_AMBER>;
++			};
++
++			led@1 {
++				reg = <1>;
++				function = LED_FUNCTION_WAN;
++				color = <LED_COLOR_ID_GREEN>;
++			};
++		};
++	};
++};
++
+ &pcie {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pcie_pins>;
+@@ -145,6 +199,10 @@ partition@180000 {
+ 	};
+ };
+ 
++&sgmiisys0 {
++	mediatek,pnswap;
++};
++
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pins>;
 
 -- 
 2.51.0
