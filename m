@@ -1,44 +1,44 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0274E2571BE;
-	Thu, 16 Oct 2025 10:08:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6066E320CB6;
+	Thu, 16 Oct 2025 10:09:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760609342; cv=none; b=FQNKy+kocRHL5lw1e43Dvs2QWNQzyRaKKRcMhBkIIgBFa8UDb2yFrMScuQLeTDW9EHSdZNS0jBndh6XSszhpdkfwKHYa+WLirasn9mhg6coq8rFShrVJyCwTIBCNmcBEhqoeoP2XUvDmLhJYsajYskBJV6WREde66FEm+tgTPr0=
+	t=1760609343; cv=none; b=AYU/c4yV4JQxO7uGmzQHmaJpw0SYo/0OVZBn0Tds/QLOGlQOJ4pbr0nxFftuLWclvqOBoiA84s0QeVru1gm5KbWJC5wiRlgsukUsWhLMdsw3m+cw4N9ghcTpq5J11+o8mEjzyjv+ZtL2kuT3bWSamoX4Govm34OVkyAJlLUUtf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760609342; c=relaxed/simple;
-	bh=YvAn2hXGjztM1f4HAy7F7ikwrS8JBglEj5IZ6jjRVbk=;
+	s=arc-20240116; t=1760609343; c=relaxed/simple;
+	bh=/9YbgjlHnPZMHMycRQr53HOb6zwo9SzUrHjuObo7cBA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=isPmWoutiq+/MktsMuHGZTUBLgnSu7fXj5hBDSZYtPK1iUfmHDy8YTRjf6Hq5UPSFlHSB+vTw1rdnbeYsgyE/ubkuzlyIgoU6a1DswTUvnbcyNDOadRNgI5H435hD0dYkJBuHbilMqrhGDKh7sYksD4nsd66nIWkJz76pfAZ0wo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=FSKOlFpm; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=s2CqYoHYury5JOLL0kqLsouGEidBVtLzCKR+T2vGzahj/05D8dkkPsmGRoicKoELR6yXPWPalR3jLC47VyUut+4y4kwYBJeAMbAFEr/z4JBbkwlQkT/85gIf+dJqKEZSLc5OxCUrilsYJXO5oov9BMa74hsRKNU8l254z7SlP+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=KSkSRWTv; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="FSKOlFpm"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="KSkSRWTv"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1760609335;
-	bh=YvAn2hXGjztM1f4HAy7F7ikwrS8JBglEj5IZ6jjRVbk=;
+	bh=/9YbgjlHnPZMHMycRQr53HOb6zwo9SzUrHjuObo7cBA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=FSKOlFpmwY7sUH1WQ/xDcnfPl7kPCE2PU2w3q6mkklwXimgaee8Lrfd5F55Mueol/
-	 +vRfOg5LBWulaWOqgNwp4tbZz8DM1hp5aVv2CG6DrlOOIPMjP0Fv8uQTUPFmJy8q83
-	 FwB7cwUi3JjrV7fyaCVCBR2LPpVLvN/R5NvbcfUoTDEeZRA96mCmxgyCJmJv507hF4
-	 iljK26EEF8A8iXRqIRRXfYdek6nmA/SH3qy52EUZL9az0VfF3qyHyc3UbI6hsURWWT
-	 IDz937cM4t3WGk9cG3z1TCX6Fa/iLrJWHLgq/eTBGXkYW3+L0YXmsiJms6XjtFLywi
-	 q04mimivQkHSw==
-Received: from beast.luon.net (simons.connected.by.freedominter.net [45.83.240.172])
+	b=KSkSRWTvGo6x1LTcT5efwwjCTTWLQ7wEEv9OStS3hULu24OWClwUwhJ8eoyA0jRir
+	 bg64S8D0jiifyHEPEigSstfRvdZ/sbpOBL3lieGUzKmWPv1Z57KFuXur5dMhZvNNfO
+	 0vDggTEJAREqU1ThiG8/obSKYr6fdiu38rwM3IVdu2Af8f8jQGsq4OT8ILU3/3mmLw
+	 dfNlLxnbtopWjqc4TnmwB7arULQ+gaYmKC+cWrNBMt0KjFLCMaHyHzc3SQCNZb0dL4
+	 TGzzukqSL4Zbuo2XGg2W74T2zcVNS40b3aRSgFK1hKOZnEJA3dyFt+T7AKXLqyLpH1
+	 HoIUJ5GApA2eQ==
+Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531::8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
 	(No client certificate requested)
 	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id F1B3E17E1418;
-	Thu, 16 Oct 2025 12:08:54 +0200 (CEST)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 20B5917E14DD;
+	Thu, 16 Oct 2025 12:08:55 +0200 (CEST)
 Received: by beast.luon.net (Postfix, from userid 1000)
-	id C6ED810C9C798; Thu, 16 Oct 2025 12:08:53 +0200 (CEST)
+	id AAC9910C9C78E; Thu, 16 Oct 2025 12:08:53 +0200 (CEST)
 From: Sjoerd Simons <sjoerd@collabora.com>
-Date: Thu, 16 Oct 2025 12:08:48 +0200
-Subject: [PATCH 12/15] arm64: dts: mediatek: mt7981b-openwrt-one: Enable
- Ethernet
+Date: Thu, 16 Oct 2025 12:08:43 +0200
+Subject: [PATCH 07/15] arm64: dts: mediatek: mt7981b: Add PCIe and USB
+ support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251016-openwrt-one-network-v1-12-de259719b6f2@collabora.com>
+Message-Id: <20251016-openwrt-one-network-v1-7-de259719b6f2@collabora.com>
 References: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
 In-Reply-To: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -74,110 +74,129 @@ Cc: kernel@collabora.com, devicetree@vger.kernel.org,
  Sjoerd Simons <sjoerd@collabora.com>
 X-Mailer: b4 0.14.3
 
-Enable the Ethernet subsystem on OpenWrt One board with dual-MAC
-configuration:
-- GMAC0: Connected to external Airoha EN8811H 2.5GbE PHY via SGMII
-  (2500base-x mode) for WAN connectivity with LED indicators
-- GMAC1: Connected to internal MT7981 1GbE PHY (GMII mode) for LAN
+Add device tree nodes for PCIe controller and USB3 XHCI host
+controller on MT7981B SoC. Both controllers share the USB3 PHY
+which can be configured for either USB3 or PCIe operation.
 
-Ethernet aliases are defined to provide consistent network interface
-naming (ethernet0 = LAN, ethernet1 = WAN).
+The USB3 XHCI controller supports USB 2.0 and USB 3.0 SuperSpeed
+operation. The PCIe controller is compatible with PCIe Gen2
+specifications.
+
+Also add the topmisc syscon node required for USB/PCIe PHY
+multiplexing.
 
 Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
 ---
- .../boot/dts/mediatek/mt7981b-openwrt-one.dts      | 58 ++++++++++++++++++++++
- 1 file changed, 58 insertions(+)
+ arch/arm64/boot/dts/mediatek/mt7981b.dtsi | 82 +++++++++++++++++++++++++++++++
+ 1 file changed, 82 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-index 9878009385cc6..6e6e4f1515f67 100644
---- a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-@@ -3,6 +3,8 @@
- /dts-v1/;
+diff --git a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+index b477375078ccd..13950fe6e8766 100644
+--- a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+@@ -2,6 +2,7 @@
  
- #include "mt7981b.dtsi"
-+#include <dt-bindings/gpio/gpio.h>
-+#include <dt-bindings/leds/common.h>
- #include "dt-bindings/pinctrl/mt65xx.h"
+ #include <dt-bindings/clock/mediatek,mt7981-clk.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/phy/phy.h>
+ #include <dt-bindings/reset/mt7986-resets.h>
  
  / {
-@@ -10,6 +12,8 @@ / {
- 	model = "OpenWrt One";
+@@ -221,6 +222,57 @@ auxadc: adc@1100d000 {
+ 			status = "disabled";
+ 		};
  
- 	aliases {
-+		ethernet0 = &gmac1;
-+		ethernet1 = &gmac0;
- 		serial0 = &uart0;
- 	};
- 
-@@ -41,6 +45,56 @@ reg_5v: regulator-5v {
- 	};
- };
- 
-+&eth {
-+	status = "okay";
++		xhci: usb@11200000 {
++			compatible = "mediatek,mt7986-xhci", "mediatek,mtk-xhci";
++			reg = <0 0x11200000 0 0x2e00>,
++			      <0 0x11203e00 0 0x0100>;
++			reg-names = "mac", "ippc";
++			clocks = <&infracfg CLK_INFRA_IUSB_SYS_CK>,
++				 <&infracfg CLK_INFRA_IUSB_CK>,
++				 <&infracfg CLK_INFRA_IUSB_133_CK>,
++				 <&infracfg CLK_INFRA_IUSB_66M_CK>,
++				 <&topckgen CLK_TOP_U2U3_XHCI_SEL>;
++			clock-names = "sys_ck", "ref_ck", "mcu_ck", "dma_ck", "xhci_ck";
++			interrupts = <GIC_SPI 173 IRQ_TYPE_LEVEL_HIGH>;
++			phys = <&u2port0 PHY_TYPE_USB2>,
++			       <&u3port0 PHY_TYPE_USB3>;
++			status = "disabled";
++		};
 +
-+	gmac0: mac@0 {
-+		compatible = "mediatek,eth-mac";
-+		reg = <0>;
-+		nvmem-cells = <&macaddr_factory_24 0>;
-+		nvmem-cell-names = "mac-address";
-+		phy-mode = "2500base-x";
-+		phy-handle = <&phy15>;
-+	};
++		pcie: pcie@11280000 {
++			compatible = "mediatek,mt7981-pcie",
++				     "mediatek,mt8192-pcie";
++			reg = <0 0x11280000 0 0x4000>;
++			reg-names = "pcie-mac";
++			ranges = <0x82000000 0 0x20000000
++				  0x0 0x20000000 0 0x10000000>;
++			bus-range = <0x00 0xff>;
++			clocks = <&infracfg CLK_INFRA_IPCIE_CK>,
++				 <&infracfg CLK_INFRA_IPCIE_PIPE_CK>,
++				 <&infracfg CLK_INFRA_IPCIER_CK>,
++				 <&infracfg CLK_INFRA_IPCIEB_CK>;
++			clock-names = "pl_250m", "tl_26m", "peri_26m", "top_133m";
++			device_type = "pci";
++			phys = <&u3port0 PHY_TYPE_PCIE>;
++			phy-names = "pcie-phy";
++			interrupts = <GIC_SPI 168 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-map-mask = <0 0 0 7>;
++			interrupt-map = <0 0 0 1 &pcie_intc 0>,
++					<0 0 0 2 &pcie_intc 1>,
++					<0 0 0 3 &pcie_intc 2>,
++					<0 0 0 4 &pcie_intc 3>;
++			#address-cells = <3>;
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			status = "disabled";
 +
-+	gmac1: mac@1 {
-+		compatible = "mediatek,eth-mac";
-+		reg = <1>;
-+		phy-mode = "gmii";
-+		phy-handle = <&int_gbe_phy>;
-+	};
-+};
-+
-+&mdio_bus {
-+	phy15: ethernet-phy@f {
-+		compatible = "ethernet-phy-id03a2.a411";
-+		reg = <0xf>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <38 IRQ_TYPE_EDGE_FALLING>;
-+		reset-gpios = <&pio 39 GPIO_ACTIVE_LOW>;
-+		reset-assert-us = <10000>;
-+		reset-deassert-us = <20000>;
-+		airoha,pnswap-rx;
-+
-+		leds {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			led@0 {
-+				reg = <0>;
-+				function = LED_FUNCTION_WAN;
-+				color = <LED_COLOR_ID_AMBER>;
-+			};
-+
-+			led@1 {
-+				reg = <1>;
-+				function = LED_FUNCTION_WAN;
-+				color = <LED_COLOR_ID_GREEN>;
++			pcie_intc: interrupt-controller {
++				interrupt-controller;
++				#address-cells = <0>;
++				#interrupt-cells = <1>;
 +			};
 +		};
-+	};
-+};
 +
- &pcie {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie_pins>;
-@@ -145,6 +199,10 @@ partition@180000 {
- 	};
- };
+ 		pio: pinctrl@11d00000 {
+ 			compatible = "mediatek,mt7981-pinctrl";
+ 			reg = <0 0x11d00000 0 0x1000>,
+@@ -243,6 +295,36 @@ pio: pinctrl@11d00000 {
+ 			#interrupt-cells = <2>;
+ 		};
  
-+&sgmiisys0 {
-+	mediatek,pnswap;
-+};
++		topmisc: topmisc@11d10000 {
++			compatible = "mediatek,mt7981-topmisc", "syscon";
++			reg = <0 0x11d10000 0 0x10000>;
++			#clock-cells = <1>;
++		};
 +
- &uart0 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&uart0_pins>;
++		usb_phy: t-phy@11e10000 {
++			compatible = "mediatek,mt7981-tphy",
++				     "mediatek,generic-tphy-v2";
++			ranges = <0 0 0x11e10000 0x1700>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++			status = "disabled";
++
++			u2port0: usb-phy@0 {
++				reg = <0x0 0x700>;
++				clocks = <&topckgen CLK_TOP_USB_FRMCNT_SEL>;
++				clock-names = "ref";
++				#phy-cells = <1>;
++			};
++
++			u3port0: usb-phy@700 {
++				reg = <0x700 0x900>;
++				clocks = <&topckgen CLK_TOP_USB3_PHY_SEL>;
++				clock-names = "ref";
++				#phy-cells = <1>;
++				mediatek,syscon-type = <&topmisc 0x218 0>;
++			};
++		};
++
+ 		efuse: efuse@11f20000 {
+ 			compatible = "mediatek,mt7981-efuse", "mediatek,efuse";
+ 			reg = <0 0x11f20000 0 0x1000>;
 
 -- 
 2.51.0
