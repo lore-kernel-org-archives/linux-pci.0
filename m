@@ -1,233 +1,153 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013067.outbound.protection.outlook.com [40.93.196.67])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F7961917F1;
-	Thu, 16 Oct 2025 23:02:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.67
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760655765; cv=fail; b=Cs6dU4TUa5KD+N/DGkvEvwipi9ehhBJGdxxsz0o3/8LySaggDdruT0QaVthnep1TkaDXd4mrdvqgBD7z4JglIQwPhY6ByA4YsWPBJtA9Rn5nVKQ8sit4auPW85JI1v8mAOL8iucGBYuU7LPNnnx+i5aa/dvuQVWFj3NXTGEo+G8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760655765; c=relaxed/simple;
-	bh=OD5f+Rn9Lw6zjAnn3HqXG9TJ5U7r8NnX+MBTSEwMAGU=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=beMvYYWBoAmNx6v/DJgEaE8fEKw7G7Yrs71SvjnzH7XMFZ0AgxGGoK7m1SDmWL3tqlO+SjMtFS6MphXSbeXzt1o2JAPdVOcPrlZm8ujv/bUa+Se23Ccc6r8BZuhKOVxySyPExDHtx2zKy/Bo6tFE9fBYNKGeUNbtNcyNchhHoRg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Jw5/gSB7; arc=fail smtp.client-ip=40.93.196.67
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C32D2E6137
+	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2025 23:28:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1760657296; cv=none; b=sRpuHBSojgGm0qFmDYCqzjZXNDnTJ7wMMQR8HkZls7XvekC9zXKu9fv6Lmn7eG/miDlMgLRwsdtVvERCI4nDyvxEZPI+J49niQnMOP75JZpY/orFUyhiIQ0E5pzu+wZp0y4yjGAHsxSpV1QvUjOzCUoYSZdJCGqAnZqNd0kmlfI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1760657296; c=relaxed/simple;
+	bh=XJoRXhF6cct+u5hqeBr/GjrKmq9CEKau2+FBHdOwe7Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=u9w2K+/5lD1aOkmJizBmIWNpJVM1Lj2cTs1yaUEgUD/qlByu8nhVN85WKoXpG657qQ3oIhTRSyfQEjthnVrwrUYfISOUICnVoSzGZ6yDPf1Q5tEHXeEv30HzMGr8ixXKJ1E+/c5Q7N5vEe7q6Otu3wHMsviMHd1bceeSnpKThqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=nlcTtEqO; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Jw5/gSB7"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JuUu5MxbrlSKHq5Egrop43p/jXLwbiTRfSh7OWf1j37Jg3mmyQerh7ELFGx0AIrcXII9+b1KIF2yladnTKNfJ2Hqg1YFEP76/B85keTP8Drnusq5E0/tMDG31H48b3OeX32Fb1r5ukJAoKWWrB+oz7TKR9yB7MKLTu5kyXSs/pdgBvVsqNiBFbWWB5fSrfqx3JgG1OPu2VzJJhqnOjb0fb70ViUUr98jpE72LVT/ZIU7wyBsoUmtzjNlxYopJqIGxIg3vR0HUJC0AU9x+dgF6eiaEKYrEkwWDJLA798Y0nIRre10OM5caa2zqVLDyzTyWaBv4Aq21P5r0Wx7qPFPhA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kismvsNEufypGCJVN/tT1SvB6mxCWfVgvricajZexAI=;
- b=c97AtjNj1HxYOy4ybAKRpcfyGZSpH+B79hJW30WLpPMEKpTmNFqCrYwwbVY5keGy0SVcsesibMsuiIfnKyq5uQ7+MOe2GpMh1lRT0pVlZB0T6APUkHiPKdzopb8B71PsYcSptMMpdNC/JC71NURGcoBOi0cVnMhvqKWKGiUXTCVavn/QTLbSptPMXVHZED0Wv1PVJGBInXxJAq/YoMY81HjmkGhftvele9h3A/x9hU/xg+6LX1NTUV2oT2cFgBlXpUqHPxYFLB7gX0853kF0cncs/oi7RRxCAqmUoKOuHlPBfjDHkZpienwkvQWLC8eBTSwZgx8yzW9Qovuga02Bxw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kismvsNEufypGCJVN/tT1SvB6mxCWfVgvricajZexAI=;
- b=Jw5/gSB7mY8WODITl2LEajkNgzQ/SfKzya64EyBlh3rgfbrORm+o1xoVGCwZ6pj3GRDNtXpsGP2UB9NU/+RrD618PVeOYFeaENHQhVJGrc852ztuJlvwKwjOIVz2jSufeaM2/g63V+iXjl13QjnHU/JOwpj2dMwjCc8mDKHKx/i6QeaSGwUt2+hMEs68f9kZlMkbY8Jor3Nd6ykF6I5erm8ofaOAfRWe9BcwPO3+mXfWjGeEgySj57+7dE1F2/r3go6qd8l3pKJlL3OzSrzDm++CdxO8/yL1iAmSQot2EFX8rW+bmXVOxVkbLVus7zfYOkzHbZMsd5VNIUliC+DPDA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from SN7PR12MB8059.namprd12.prod.outlook.com (2603:10b6:806:32b::7)
- by DM6PR12MB4369.namprd12.prod.outlook.com (2603:10b6:5:2a1::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9228.12; Thu, 16 Oct
- 2025 23:02:40 +0000
-Received: from SN7PR12MB8059.namprd12.prod.outlook.com
- ([fe80::4ee2:654e:1fe8:4b91]) by SN7PR12MB8059.namprd12.prod.outlook.com
- ([fe80::4ee2:654e:1fe8:4b91%2]) with mapi id 15.20.9228.010; Thu, 16 Oct 2025
- 23:02:39 +0000
-Message-ID: <9643ecf3-7f55-4f4b-9e5c-26c2608fb4d3@nvidia.com>
-Date: Thu, 16 Oct 2025 19:02:37 -0400
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] rust: pci: implement TryInto<IrqRequest<'a>> for
- IrqVector<'a>
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org,
- alex.gaynor@gmail.com, boqun.feng@gmail.com, gary@garyguo.net,
- bjorn3_gh@protonmail.com, lossin@kernel.org, a.hindborg@kernel.org,
- aliceryhl@google.com, tmgross@umich.edu, rust-for-linux@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20251015182118.106604-1-dakr@kernel.org>
- <20251015182118.106604-2-dakr@kernel.org> <20251016222420.GA1480061@joelbox2>
- <DDK49THLLA3Y.242R8EP6IDZJ3@kernel.org>
-Content-Language: en-US
-From: Joel Fernandes <joelagnelf@nvidia.com>
-In-Reply-To: <DDK49THLLA3Y.242R8EP6IDZJ3@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BN9PR03CA0652.namprd03.prod.outlook.com
- (2603:10b6:408:13b::27) To SN7PR12MB8059.namprd12.prod.outlook.com
- (2603:10b6:806:32b::7)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="nlcTtEqO"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-781206cce18so1360703b3a.0
+        for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2025 16:28:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1760657294; x=1761262094; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=VDHKL7YrbYj0WMr/qaC61DmFE96g6L5ksIAhfdoxQrQ=;
+        b=nlcTtEqOnd54qW/ICO8glTxNOt8FmeJe9owrl9qhvsPQpg/B2Mp2KNJrvMtdul+Qc0
+         5ZrKRVGXHR9+Sciv6jft3dF9eSOcsgAtHbQadNAfu0F+YCXY0RCAJj29LAAA/rB3arHR
+         zik0LCswwZQ/Ug93I4EKLk4SwByaxOXB4G2HA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760657294; x=1761262094;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=VDHKL7YrbYj0WMr/qaC61DmFE96g6L5ksIAhfdoxQrQ=;
+        b=iSXn3nwY++84Z0lk6QRF+SR7vpGueYSZLXwQf/9caobN6xplszo3pvubPE88YLGJvJ
+         UF9X04EHTkCgbkSDnFP6RRgNiqRDuH0jfVKG89DdnFBi2NJDnnahvRJf+ujxO0/oG6PO
+         cvMJiKqLV6gEQ3algt9Ai2TaowWM+NMPcKIPv2kxbEI3EkbN9NZjHWJvTisN6dX34yA5
+         aG/P8B+GaX42nFzH6kEZi0DPcIA2dvgYl+/zErbctrLkRYa6+Eh2I4OMPcFcAuYKGDvr
+         c5E9sR2xssbcgbyhIXNg86elBbYTQ+S9/yplpHaPMnWdOa7dd3QaC3Y1dyz4ZWbe56Tn
+         ovag==
+X-Forwarded-Encrypted: i=1; AJvYcCX9Fwjijk9DvzV0ZMXYW4Vys5BfuQ2FLVeMbXe09JlBWrRpkwklx/EojSyW3o7iQFAqexvX/yuQfQA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKhYwakpkG3haimd6+vvoHPHWTqdGuM9TIaMc5USrahjQT1tRH
+	nL6n/CN6J6Vl7hveOhjnICgx9asXtkc8PyRurnWgSdgqoOP+GTQ8/EUhfb2uA4ceUlmUxsRgL+6
+	ngIk=
+X-Gm-Gg: ASbGnct7fhYN6EexQewQN8tmDmzTA/gMYaRtbhg7xdTB1EZoXDnkQGfhsfjxTpT0p4M
+	J9T1wcSyxK5wLSq4eK/Mn94RCFYHKJpCfe2k2T0hXROR0neacRlRMh1Lx2rKTuNVOm+5qz4/Hrt
+	EvRF8WnpzdgH87vima+F7jwyA52jdupYnUgIG3gheHepYoQ8W4U4qz2S+7l+2f1jBM1ZNpoCMu4
+	rNSAzi9n77Dx3ycOuPY2hVa2ccPFpSnIkL5MKXVv0o47+Zwg0icsP9D8IbK/7GqHlyVS+djoqPR
+	/v3VlHLumAZAY1i9Y06vwLPqtsSIeepRkEv1URRGvWM2d21kq1v89Ed5IL7Tgr6bfgQGhWmndiP
+	pwYPaQBfY5gblqyeLhOl5LkZtF1Y2a2gZ1EsbDnRXGa0jxtfvhJgCIY6MoHgRtTgc+GdDa1ZKIu
+	O5prSOFlIQeI5Xvq/U4NInVZg8Tcvw6foNqgHUZQ==
+X-Google-Smtp-Source: AGHT+IHptz2Viou3aQb7JTKgXj8lqBa3xVm9ubMw1J3oe5c1h0nSfI0VxDkbrkw3mL1kDx6q4igwAQ==
+X-Received: by 2002:a05:6a20:6a28:b0:32d:b925:22ab with SMTP id adf61e73a8af0-334a78fbd98mr2663524637.17.1760657294603;
+        Thu, 16 Oct 2025 16:28:14 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:98f9:84ca:9891:3fd2])
+        by smtp.gmail.com with UTF8SMTPSA id d2e1a72fcca58-7992b060b59sm24127004b3a.2.2025.10.16.16.28.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 16 Oct 2025 16:28:13 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>,
+	stable@vger.kernel.org
+Subject: [PATCH] PCI/PM: Prevent runtime suspend before devices are fully initialized
+Date: Thu, 16 Oct 2025 15:53:35 -0700
+Message-ID: <20251016155335.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid>
+X-Mailer: git-send-email 2.51.0.858.gf9c4a03a3a-goog
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN7PR12MB8059:EE_|DM6PR12MB4369:EE_
-X-MS-Office365-Filtering-Correlation-Id: c37ef4c4-795b-460c-b7fe-08de0d081b0d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|7416014|376014|7053199007;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?elBIWU5ENXhlTnIxcytWYmRYZ01EaHJNUFV2dk1VdW1rT0QzNjVjeDZ0TzlV?=
- =?utf-8?B?VTM4MWo1SHpNaDczWHdxdERySFBhT3NhVUtibSt5azBiaWFiejN5b1JJVlc4?=
- =?utf-8?B?Z2FNSldVaUZZWVdUV0t3NjhKVVVFRzJQUFV1UGJPTHJTTTBaR1JvekgzQjJD?=
- =?utf-8?B?VVpndU9RTFpKeW5tRzI2R0FWVW10ZmJKbGc3SUg2MXB6Y1VNYk1xZjcvUGxt?=
- =?utf-8?B?MHpVcU1pemg5VkNSWFpQL2w1YWZBeUU1L3YvUS9nV0xSdVdRRHhuVjM1RWdN?=
- =?utf-8?B?MXVrSjhRZmQ4ZDdIenE5NlpVU2FERUhsbmIzcHhaLzdBbFpWcnUxUGdvd3Vj?=
- =?utf-8?B?OVg2TFBMbnNtM0pta2U1bDJ6UUVHWFVaQUtzcjBGNnE0bDdTN0o4QVZ5VnQ0?=
- =?utf-8?B?Uzh3ZGIzMUFWU0UySG9WTk45ZVZJOHNFNmIrRkZZM3hyQ21TNFowVVpvQ2h2?=
- =?utf-8?B?Yi9wdXozMUw0MjFmdmRXR1FyTjl6c0lMOUhZdkJYOTBmeHFmN2tDR2RkSWZh?=
- =?utf-8?B?ODJ6dkxMaXVpeit5VnhXOWNUNzRCd0dGYWEvclJyRXhxbEwwMEE0VTZ1R29V?=
- =?utf-8?B?MWo3aU5lb2pnd2t2YUh3VFdkVmpwMElqRVJheXU2VzZNUXNMVFA3VGVIeWNK?=
- =?utf-8?B?SnVZWG41MFVDcVpmSjlVbXVkaWNjeDVSU3dKcy9TUFdSL2w2WllkZGp4Umds?=
- =?utf-8?B?clppazdYUDRjSWtYQ0x0SG9vejNBZllXTnlpVEN5K0xiaCs5NW56d0dpOTdE?=
- =?utf-8?B?SUREdnBVZVhKdXJZT2N3NjJCaEl6bVU3bFRnZSs2QWVEZHFtVVhJa0lremwv?=
- =?utf-8?B?N090RlQ1NHYyamtMT3ZhRFVRdG1UZUhMTHlaMXo3bWkrb0orRnNydWptTVRh?=
- =?utf-8?B?UGdsUzBHWWJvdnltVW5EazJldlRJeEMzRWUrd2xRbFdwbDYzUHhwWjNOOHoz?=
- =?utf-8?B?Z2laVFozVWZxRnlwaGlrZEY5UWlQdXRueU9EMGlIT0Z2dU9tNE9INnd5NXZP?=
- =?utf-8?B?SHpDbmpuekNZdU5JcndWbnBhbnNHR2JYV094TnFwUXo2ZXFyVXl1M1ByNFo2?=
- =?utf-8?B?OWZlR3R0Z2dJcmRXc1Q2azl4RXdKS1JyUE94WFBzZFZyYnBHMnQ1V2JXSXpa?=
- =?utf-8?B?Uk95djR5bFlTOE92OTNoZGdmNjlqbTZ5L0ZDVm91OElpdWZqNnc4N2xoMEFn?=
- =?utf-8?B?VWJpRVdzbmRjQlVWNXNkY3dOOWRBaVFkQVVMUjgzZXYwNTBnUHBLYmdnRmJ3?=
- =?utf-8?B?bmJBellNMUVBOG1QRDVrQzRFMVVXOHBhRGsrTDlQUnh6c1Y1cTRnRHBKdC9w?=
- =?utf-8?B?SnAxc1VZQXZwRFdNcXRKWTE1MGp3V3RhVHFxaWFxWUNRa2phOFhyMk1abGwz?=
- =?utf-8?B?SnVuRjd2bkZiaXBROFRIR3d5NXN3NGZpZi82UDNqNnVrM2pqSythQXcxcENn?=
- =?utf-8?B?YldLazJHWU1kMGpla2l5cmVSbk9PeWFxbUJiK2RmNFZWY2hMd0N0eE1SL3J3?=
- =?utf-8?B?dFVHaUVwV2t2Mm5qVVNQZkMvM0w1dGY0K1hOaVA1aDl4eVJKVkNEeHFlRm1w?=
- =?utf-8?B?dzJJZWFWb1M2SUd4MkRaV0d4Qm9TZjAvdWxsZExRQU9VUWpCYVJyajJkdHZv?=
- =?utf-8?B?dzhMZEVTTEp2azV1YS83NzEvUTM3NnpOLzN3QytzSXRLbHNxdDZ2SldPbFNR?=
- =?utf-8?B?aDcvRVcvSHNyd1JhNFhGZjJ3Nm5idlovaGxqdnY1QnZtd29iNHFraW5GejdQ?=
- =?utf-8?B?L2JIN2hsSE42Q241V0pHbSs4a0JoM3dHY0IvVC9qeWxwSVBrUjFQa3o3bW00?=
- =?utf-8?B?M3pZalZJTW1icnNOb2kzbFVsTU9BTTEzL2xpSE5WMng1bDFLNEhadzJITnNs?=
- =?utf-8?B?RXAzUzFPdElWUEtsa2NLVGMwMkEraTZBaGEwc2VjSmFFdk10U3FVMkhhc0dN?=
- =?utf-8?Q?VZ8C3nu8mhsgp+rWxO3uGAHtOodAGqie?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR12MB8059.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QmVmTG9mZzJSRHV5Z0JaYkZ5dVNtNW9ScXBMc3dqOWdEYy9vUzZGV0VrZ1BT?=
- =?utf-8?B?VXVIZ1JhdWZMWEVKdXE1OWhRUWR4SW9vb1l6Y24rNkRDaERzaFFmcjZFMnhG?=
- =?utf-8?B?V09sTnR4VG4yQllQNXp3Uzh3dUs5cnBMU2JTTjhlYXpNZ2QxTk56T1NVY2VG?=
- =?utf-8?B?S2ZuREZ1TGhCTFRJNTJ1TTh6bk9RajhJZE0rUWFUMHBlTnBaaDFaY1B0YU1m?=
- =?utf-8?B?TDNPeWxMYmd2TWFRQjlPNVA1dWk1ckx2ZkhxK1dobDRYQkszYVpJOHdhdU9E?=
- =?utf-8?B?enVwVWlYekYySTFTYml2a21TckxuejZUdHRUWEdDTVlwRDVkell1UHp0dXFj?=
- =?utf-8?B?OTJuTGxrUmVuVmp5amNyVC9kR21oRHVabWdRNFpta0hzbzR5bnRrSThUT1Zj?=
- =?utf-8?B?WnB5bndXOE83ajhkQXRLcFRjN3NKRlhvRVpnUFZJRitZbFFpVTlocnBqK1lB?=
- =?utf-8?B?c1o0aFlRWE9jZWpQR3Z5dDZkVHhoUXNINTdxT2NsdDdCdk9uemRhMm40WTdo?=
- =?utf-8?B?ZittUzhPRUJpZjJnK0ExWW1sVEppZm5OWkFyNkEyajdRMlpYQWNhRG9LaUdG?=
- =?utf-8?B?allQOVc0RVVTMW0xMnhGYjNPVUJsalhkYXNwa0Y4OEE0cEJ4ZFBpVkJBNzJj?=
- =?utf-8?B?Q2E3b0pKYUJUajErK3RCc2lKMGdzS01GWkczSURvTFFZK2VER2NFTXZtcjgy?=
- =?utf-8?B?NnFiaERkMlZudTdsdTZVblYrbnc1d1F5cmJlcTZGemdXRTdwanhnTWFTTk1F?=
- =?utf-8?B?UVBrMCt4Y3JVRFhNMzdHM2tvQWZtbVFVSmwva25lSmJsZHl5NUF6SGV3Y2Rt?=
- =?utf-8?B?MGh1eHRtc0Y5TmdicU1xVlNORnpOamF0cDB1MGt6aXZjMm1nck84eUEzNEJy?=
- =?utf-8?B?aTFSRjEyS3ZWOXJySG1CN3lDMDhTZFQrK25qYXlMRExRZjNNQVNEbHFZd0o3?=
- =?utf-8?B?UEUxQ0l3TG05eGtlY1VTK2dvOVdBNlBKSHQ1MloxQ3A1TXkwWXNRd2JaeXFj?=
- =?utf-8?B?WG9NRlpUaHN0dGFiTVBrMTRmNGxQdTF3VDdHUTBUNE1adUdrSng2QkZpR0Zu?=
- =?utf-8?B?YWgyV05hU2MzNW1vcGZLWm12VWlIZ25QOU4wWUllR0RleEJXR1hqOElPcUN6?=
- =?utf-8?B?dE5MdGRyQkJYYS9OSlBzNHhKbXJNd1g0MzZob0FoTHU2QVRQdTUxRFRlTVBN?=
- =?utf-8?B?Rzk2eUxDOHN1L0RNQ09OTXdKYkcwRnlFQVhPeThNRDRzVlBXYmtpdTBOSjhC?=
- =?utf-8?B?K3h0S05HdEtPVGJxb2RCRE82MkFZWjhqODRrTTA1ZVdTRWhmMStQUXl5Ynlx?=
- =?utf-8?B?amZOUDhqNWdVejgwRFB5NjgzdVE2STNDRmJxTjNHNForM3ZMV1RxOW1vT3VU?=
- =?utf-8?B?ZE9TUUVCOGlCY0Ercm5OYUI1YmNtcDNtMHUvTVVtZVRqSStwKzl5K1hPWkll?=
- =?utf-8?B?aDhQU3RlQTJ4Q3JPNFZ1S2FkSXNqaUFIL1RCZXlURlRoNEcySGlXUzFLZDdq?=
- =?utf-8?B?cjhLdTRMN3lDQ1R6S3A2aU5tOHR3QlFKQUUvWXFTVkJWWHd2ZjFDYTBOcHg3?=
- =?utf-8?B?akpweWhlbmw3bDRTeXZhYmFSMVVVaEh6VU53RXVTcWw2VFNKbGw4bkVickNl?=
- =?utf-8?B?dmE4ZnYweXhzT1hqN3ROTnNoMHNvYmdSV05QYUJCbjlwYnBBY1EyajlhMnpr?=
- =?utf-8?B?cjdtYS9IakRyRmlZVnI1KzdqMldIeUJzRnpGRzZpMDZ0Rm1LRjlnMkZwMEk1?=
- =?utf-8?B?eTZ2Y2lJdGZDQmRKNW9ycXVwWHVSREQrZ2d0bjkySHN4U0IzYitVblBLL1Nz?=
- =?utf-8?B?QWhLTzFpRjFZUElqU0JuNENMalhuSDhISDhTcytteWxmd0pKQWh6QWMwTDF6?=
- =?utf-8?B?Z0pYMFd3eDQ2OEgzVXJQNlFOTVFNeG15cmRaejYyQjZvN0YzVXNNVmF6Zklj?=
- =?utf-8?B?UW1GQkFWNk5wck5JTnR1ZXdOTlR4QVVWbmFpSk5vak9Kd3NBOExpSmxkU1gy?=
- =?utf-8?B?WWd3dUVMV1RCeVh1WHpKL01qMmVvSkoxYy9RMnVtRmR2VXVRZjA4a1l2NExT?=
- =?utf-8?B?T1hxRHh2SXNaQ0Jid3VSdkEwRzB2c1VIcHhDS1pFdDdIc3VWVkk3Q1dHQWY2?=
- =?utf-8?Q?nS76aNxDs4H5aJh4fMil+g4ri?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c37ef4c4-795b-460c-b7fe-08de0d081b0d
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR12MB8059.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2025 23:02:39.9324
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qHRUBxyG1ACFFALdrOb+2SxeCwCUu6AxzFjiwYy+r03iUVxv4ymWbUh8UFvVUHu7BVXdIVnDHTCLc5Ihb3yUuA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4369
+Content-Transfer-Encoding: 8bit
 
+PCI devices are created via pci_scan_slot() and similar, and are
+promptly configured for runtime PM (pci_pm_init()). They are initially
+prevented from suspending by way of pm_runtime_forbid(); however, it's
+expected that user space may override this via sysfs [1].
 
+Now, sometime after initial scan, a PCI device receives its BAR
+configuration (pci_assign_unassigned_bus_resources(), etc.).
 
-On 10/16/2025 6:57 PM, Danilo Krummrich wrote:
-> On Fri Oct 17, 2025 at 12:24 AM CEST, Joel Fernandes wrote:
->> On Wed, Oct 15, 2025 at 08:14:29PM +0200, Danilo Krummrich wrote:
->>> Implement TryInto<IrqRequest<'a>> for IrqVector<'a> to directly convert
->>> a pci::IrqVector into a generic IrqRequest, instead of taking the
->>> indirection via an unrelated pci::Device method.
->>>
->>> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
->>> ---
->>>  rust/kernel/pci.rs | 38 ++++++++++++++++++--------------------
->>>  1 file changed, 18 insertions(+), 20 deletions(-)
->>>
->>> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
->>> index d91ec9f008ae..c6b750047b2e 100644
->>> --- a/rust/kernel/pci.rs
->>> +++ b/rust/kernel/pci.rs
->>> @@ -596,6 +596,20 @@ fn index(&self) -> u32 {
->>>      }
->>>  }
->>>  
->>> +impl<'a> TryInto<IrqRequest<'a>> for IrqVector<'a> {
->>> +    type Error = Error;
->>> +
->>> +    fn try_into(self) -> Result<IrqRequest<'a>> {
->>> +        // SAFETY: `self.as_raw` returns a valid pointer to a `struct pci_dev`.
->>> +        let irq = unsafe { bindings::pci_irq_vector(self.dev.as_raw(), self.index()) };
->>> +        if irq < 0 {
->>> +            return Err(crate::error::Error::from_errno(irq));
->>> +        }
->>> +        // SAFETY: `irq` is guaranteed to be a valid IRQ number for `&self`.
->>> +        Ok(unsafe { IrqRequest::new(self.dev.as_ref(), irq as u32) })
->>> +    }
->>> +}A
->>
->>
->> Nice change, looks good to me but I do feel it is odd to 'convert' an
->> IrqVector directly into a IrqRequest using TryInto (one is a device-relative
->> vector index and the other holds the notion of an IRQ request).
->>
->> Instead, we should convert IrqVector into something like LinuxIrqNumber
->> (using TryInto) because we're converting one number to another, and then pass
->> that to a separate function to create the IrqRequest.
-> 
-> Well, IrqRequest is exactly that, a representation of an IRQ number. So, this is
-> already doing exactly that, converting one number to another:
-> 
-> 	pub struct IrqRequest<'a> {
-> 	    dev: &'a Device<Bound>,
-> 	    irq: u32,
-> 	}
-> 
-> (The reason this is called IrqRequest instead of IrqNumber is that the number is
-> an irrelevant implementation detail of how an IRQ is requested.)
-> 
-> 	pub struct IrqVector<'a> {
-> 	    dev: &'a Device<Bound>,
-> 	    index: u32,
-> 	}
-> 
-> So, what happens here is that we convert the vector index from IrqVector into
-> the irq number in IrqRequest.
-Ah true, I think the naming "IrqRequest" throw me off. Sorry about that, so this
-patch is good then :) Thanks,
+If a PCI device is allowed to suspend between pci_scan_slot() and
+pci_assign_unassigned_bus_resources(), then pci-driver.c will
+save/restore incorrect BAR configuration for the device, and the device
+may cease to function.
 
- - Joel
+This behavior races with user space, since user space may enable runtime
+PM [1] as soon as it sees the device, which may be before BAR
+configuration.
+
+Prevent suspending in this intermediate state by holding a runtime PM
+reference until the device is fully initialized and ready for probe().
+
+[1] echo auto > /sys/bus/pci/devices/.../power/control
+
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+
+ drivers/pci/bus.c | 7 +++++++
+ drivers/pci/pci.c | 6 ++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index f26aec6ff588..227a8898acac 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -14,6 +14,7 @@
+ #include <linux/of.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/proc_fs.h>
+ #include <linux/slab.h>
+ 
+@@ -375,6 +376,12 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 		put_device(&pdev->dev);
+ 	}
+ 
++	/*
++	 * Now that resources are assigned, drop the reference we grabbed in
++	 * pci_pm_init().
++	 */
++	pm_runtime_put_noidle(&dev->dev);
++
+ 	if (!dn || of_device_is_available(dn))
+ 		pci_dev_allow_binding(dev);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b14dd064006c..06a901214f2c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3226,6 +3226,12 @@ void pci_pm_init(struct pci_dev *dev)
+ 	pci_pm_power_up_and_verify_state(dev);
+ 	pm_runtime_forbid(&dev->dev);
+ 	pm_runtime_set_active(&dev->dev);
++	/*
++	 * We cannot allow a device to suspend before its resources are
++	 * configured. Otherwise, we may allow saving/restoring unexpected BAR
++	 * configuration.
++	 */
++	pm_runtime_get_noresume(&dev->dev);
+ 	pm_runtime_enable(&dev->dev);
+ }
+ 
+-- 
+2.51.0.858.gf9c4a03a3a-goog
 
