@@ -1,44 +1,44 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FF04328620;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FFAA17A2EC;
 	Thu, 16 Oct 2025 10:08:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760609338; cv=none; b=B2TbM7dNcDY8LrZiBZF+H9Jh8g4sn37LBAzrbredNUeVX7gsTfxncwr+MMuuSqC+9g5Nu/UhNbdPDPZUD2r7QMGWiEZ69DsZgSqDaQti63JOtYzzBzgOKwFrJ8sUuKsaE5qOhl8896VWSetHwNDLbFrGBv30PH7EM9EJ536Nh+w=
+	t=1760609338; cv=none; b=Az9oSpvMaEKhs3FYVUP4vWdKe6ywGiAEcbTgKK5C1SK2K5vNG0256TJkmHyHlTprdJZr8zEpWNrARgQxiLEHKoY+4Xd9Y52aYi+VPQwUJwwQX0thvAAS5szyyVdQ/ugE64pnjczq5nK9sFWsctF2AhQ1k9KgjBWV/yPtkEjOHFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1760609338; c=relaxed/simple;
-	bh=TeAojYi5K2VePl3l0wjWKntYVL0CacFDEADdqE/Cfz8=;
+	bh=hIWnvBUyNgSj6OMVE9lF3kFgGrlwr44/+QcM5a5I2Ts=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=FuH7lzVX23mGcK2qPGYqwAYV6isG8sRfSL6aed95v+aw8JE75iclV49xZAwsVEo8wJ5Yae/CijET8tOvqbelpelX9Lo518cZGFR4If82AspwNonYCWbIUqU+70mJnQ0gC6y+iGGb9T8KBGJkqT0qiZqTW0UhOuri0KojW+M90Kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=DWSfiQqk; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=uJz6zhENOkdT7KucBpIMNgeGvLjNFT/y3ao6YDdCXkAK8UrN+bkw7Jh1INxNka1us7bBzD1Dp5a4ndd+VuhkaWr5GyyOKBvb3k3QjwvAcn1+6AIYizYX5AuEjZW1Iqwaca6p53zEPHpQEcTrrvAhekUm2WgG90o0H4L6osSyOYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=TyhoBd+/; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="DWSfiQqk"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="TyhoBd+/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1760609334;
-	bh=TeAojYi5K2VePl3l0wjWKntYVL0CacFDEADdqE/Cfz8=;
+	bh=hIWnvBUyNgSj6OMVE9lF3kFgGrlwr44/+QcM5a5I2Ts=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=DWSfiQqkwFHirM3/s+cNrgKb2sL7dVd97npEDMMFAlGZ0lFeG+KpeVhSo97eSM0CR
-	 cPZvM69V84mvsqcjNMFy0H82N7PtvAIS/CyYgkjTU2SWf6PiewV13DIhPLIpJoiqnw
-	 1eHpN7GsCX+QBsWLevq3d3/rkahzdjBdFz84p3EwnRZb3qY0V9JWLT5z5dKaxuPxhg
-	 yhE7MyRUv9PEUttQkdsRwFXO4hGzhgKpxRjMB4lRG7upfS7+np3X+hwmS2r1EkcCku
-	 ZZjBBCX+P+iwyedjYmmBZgBo+uT5Yai8L1LRz0fmrsoH2dv8oEVPAwC1PNKakamzho
-	 8KhNNPcCeEQbA==
+	b=TyhoBd+/lCA1upSmzbzSIKuO82jmtslA7gXRNAB1KqHz99Q3InVHROXppEZRITG7c
+	 38cmyuRLAE3tpF+JozH/4+wXi7T4vb/ReWWBw+W+uGgA5Amn1KkFrFhjndiU9R0XFW
+	 x3cpWjLCUYrU8X/D55BjzK2kOHntakmIKXHa4dPm/qiU7tq7sjyOq0NhK4n4Insq0H
+	 +1bXLBnK6gz1Vu8fp9krrl5EOwqZ5gdT3z/RpxIRL8Sy0ocx9X1KTD1P2/9g/03I32
+	 7ybsEbNzKDjgkQJI+fk0dnYRN3JQBqbByIK3g7wNdIt/fQAaJdAXpinTTsBAOpC7xS
+	 W77WcN9hM+fYg==
 Received: from beast.luon.net (simons.connected.by.freedominter.net [45.83.240.172])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
 	(No client certificate requested)
 	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 71DAF17E1340;
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 5476817E12DF;
 	Thu, 16 Oct 2025 12:08:54 +0200 (CEST)
 Received: by beast.luon.net (Postfix, from userid 1000)
-	id B0DE310C9C790; Thu, 16 Oct 2025 12:08:53 +0200 (CEST)
+	id 9FECD10C9C78A; Thu, 16 Oct 2025 12:08:53 +0200 (CEST)
 From: Sjoerd Simons <sjoerd@collabora.com>
-Date: Thu, 16 Oct 2025 12:08:44 +0200
-Subject: [PATCH 08/15] arm64: dts: mediatek: mt7981b-openwrt-one: Enable
- PCIe and USB
+Date: Thu, 16 Oct 2025 12:08:41 +0200
+Subject: [PATCH 05/15] dt-bindings: pci: mediatek-pcie-gen3: Add MT7981
+ PCIe compatible
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251016-openwrt-one-network-v1-8-de259719b6f2@collabora.com>
+Message-Id: <20251016-openwrt-one-network-v1-5-de259719b6f2@collabora.com>
 References: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
 In-Reply-To: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -74,76 +74,27 @@ Cc: kernel@collabora.com, devicetree@vger.kernel.org,
  Sjoerd Simons <sjoerd@collabora.com>
 X-Mailer: b4 0.14.3
 
-Enable the PCIe controller and USB3 XHCI host on the OpenWrt One
-board. The USB controller is configured for USB 2.0 only mode, as the
-shared USB3/PCIe PHY is dedicated to PCIe functionality on this board.
+Add compatible string for MediaTek MT7981 PCIe Gen3 controller.
+The MT7981 PCIe controller is compatible with the MT8192 PCIe
+controller.
 
 Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
 ---
- .../boot/dts/mediatek/mt7981b-openwrt-one.dts      | 43 ++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+ Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-index f836059d7f475..b6ca628ee72fd 100644
---- a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-@@ -20,9 +20,40 @@ memory@40000000 {
- 		reg = <0 0x40000000 0 0x40000000>;
- 		device_type = "memory";
- 	};
-+
-+	reg_3p3v: regulator-3p3v {
-+		compatible = "regulator-fixed";
-+		regulator-name = "fixed-3.3V";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		regulator-boot-on;
-+		regulator-always-on;
-+	};
-+
-+	reg_5v: regulator-5v {
-+		compatible = "regulator-fixed";
-+		regulator-name = "fixed-5V";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		regulator-boot-on;
-+		regulator-always-on;
-+	};
-+};
-+
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_pins>;
-+	status = "okay";
- };
- 
- &pio {
-+	pcie_pins: pcie-pins {
-+		mux {
-+			function = "pcie";
-+			groups = "pcie_pereset";
-+		};
-+	};
-+
- 	uart0_pins: uart0-pins {
- 		mux {
- 			function = "uart";
-@@ -36,3 +67,15 @@ &uart0 {
- 	pinctrl-0 = <&uart0_pins>;
- 	status = "okay";
- };
-+
-+&usb_phy {
-+	status = "okay";
-+};
-+
-+&xhci {
-+	phys = <&u2port0 PHY_TYPE_USB2>;
-+	vusb33-supply = <&reg_3p3v>;
-+	vbus-supply = <&reg_5v>;
-+	mediatek,u3p-dis-msk = <0x01>;
-+	status = "okay";
-+};
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+index 0278845701ce8..4db700fc36ba7 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+@@ -48,6 +48,7 @@ properties:
+     oneOf:
+       - items:
+           - enum:
++              - mediatek,mt7981-pcie
+               - mediatek,mt7986-pcie
+               - mediatek,mt8188-pcie
+               - mediatek,mt8195-pcie
 
 -- 
 2.51.0
