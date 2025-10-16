@@ -1,146 +1,97 @@
-Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A01C232ED45;
-	Thu, 16 Oct 2025 10:09:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B1702E0934;
+	Thu, 16 Oct 2025 10:42:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760609346; cv=none; b=mSqMtirSAIPcmYM4lAddTpsmCqIhgdIA38AOXu9nO7rFKd5t09sJyG3N1V9UlCVKtjbySb3PTTwuF2zveKux/GgguWB2YAaNocHDH/e/anSvaPy3f5odKS+0z6NA7QkW442V8lznVfbzy01w0oMY5l7tdY0/TUJL+uQ21k0Q7mc=
+	t=1760611378; cv=none; b=p0eRKHMUg1GCQMEh1+pUgSPMwv8/sUEoOXbvU1+91ZpddaiL3CX1Jv+UWJIz8jbuU5kRnj1OpgGe8YmLzvcbhOz9+E5EGkEnkXVd7Ieq4HgKCQ02t4kVhXXfW+ro0lV32d5dDhQ1fWX1Z+68tUNKIBpH6ZQrSS5pypij50O6NR0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760609346; c=relaxed/simple;
-	bh=BEI3WpfnV3DAkVHimDT1eTbeDPtH/m3RFZodb7kY6GE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=milggP9EFidM0U0rlGPK7E/nCmfUxlbDNoCU0Pd73jqwfJMDhutQzy13n479/UzD2R4Cqw1MU8wgSrAXKzp/Mw1EquP7a2JwcmtDJCEHLtUBGtdfHeOPKSVLWOpSIhYzWAFLk9NrbjZpYDMlv/EmmKFCod9YqrvrBf+HoQVV6zQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=RG/uzljE; arc=none smtp.client-ip=148.251.105.195
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1760611378; c=relaxed/simple;
+	bh=fErXExt8RSysN8h2wJXFWIVOcFCJHfLTOJEmQT9C/wc=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=peiT/Acn98ADf0DiXyH1Uxid2fI/4lnOckmqUYn0E5UsATi/s1BQs16Z6McUzXm2fUhIInamWJeNSJ59t7kFfF4xyOGxKf65vJ4iMc7jYcqpX83kPB3luf1ehi77m3Wwbdyay9xRF0MXa15DtoqqEPZRgZu1PDeGsWdXJfRsGkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JmiVN99a; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="RG/uzljE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1760609335;
-	bh=BEI3WpfnV3DAkVHimDT1eTbeDPtH/m3RFZodb7kY6GE=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=RG/uzljEhnsovHfCnnmMPnrK+pJoTTc9sB78CLw2Vj9lG57oHc7ALzqY+ktq056uN
-	 VOlsSzgEjMzGiGA+wk1YjxxZu5+Hv/opM5ZFiPm4ZTbdmDPPIhIAx7EQBiT692b3sk
-	 XF1MceFhO/I0CZIbriX8Myg7N4+ivQaTFzOgFUL/5doMrk7bP9kqf8AYfv3qISOkea
-	 QA6aBcTay1fhDJCx1GP9Nf0bloPaiEc2C1p1wkN7dt/F6pecVs1pggxSQvHlXjCqvY
-	 QZy5zkb23m11x/27NX865Ay+VIEx839Pzdm8OXvY9go3Clv6orpFqkC3lRqFHTnxLc
-	 dqkaLzHP3QF/w==
-Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531::8])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
-	(No client certificate requested)
-	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 893B417E156C;
-	Thu, 16 Oct 2025 12:08:55 +0200 (CEST)
-Received: by beast.luon.net (Postfix, from userid 1000)
-	id B432E10C9C792; Thu, 16 Oct 2025 12:08:53 +0200 (CEST)
-From: Sjoerd Simons <sjoerd@collabora.com>
-Date: Thu, 16 Oct 2025 12:08:45 +0200
-Subject: [PATCH 09/15] dt-bindings: net: mediatek,net: Correct bindings for
- MT7981
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JmiVN99a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB8BDC4CEF9;
+	Thu, 16 Oct 2025 10:42:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760611378;
+	bh=fErXExt8RSysN8h2wJXFWIVOcFCJHfLTOJEmQT9C/wc=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=JmiVN99azeY59tVwDTzaK+WC4HQWXUncOqi3pAncLsEm7ZoloUtQxcL0wO03R+6/y
+	 PQQBiEKO8U3A1mlrvP3RQKUG6j9ISIEA8lFMKq6OCCskt7dHIy0j/pZS2yN2P4eLMz
+	 s06rZAmY58W9yL0Y0zrEm4QJTaxF1y6DQYh2/YScdddCgZwVmREfLd2kNXizNAbYu3
+	 irTpEnrr8B/lItxlpxgJkCPDQrtZMwjRZuqn2MKytv65xyyjRGmMQZEzKLoRBhVQ7J
+	 CJm5MFX/ATbnHUJ3MR8dMAmQ4RWRJ5o34bBiuNvdsY14Eg+qoDg7pTytqL4EyvS+HT
+	 hgj3oGQp5xSsQ==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Tamir Duberstein <tamird@gmail.com>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>, Miguel Ojeda
+ <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng
+ <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?=
+ Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Alice Ryhl
+ <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Danilo Krummrich
+ <dakr@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann
+ <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter
+ <simona@ffwll.ch>, FUJITA Tomonori <fujita.tomonori@gmail.com>, Andrew
+ Lunn <andrew@lunn.ch>, Heiner Kallweit <hkallweit1@gmail.com>, Russell
+ King <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>,
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>, Michael Turquette
+ <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, Breno Leitao
+ <leitao@debian.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Luis
+ Chamberlain <mcgrof@kernel.org>, Russ Weight <russ.weight@linux.dev>, Dave
+ Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, Leon
+ Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Arnd
+ Bergmann
+ <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>, David Gow
+ <davidgow@google.com>, Rae Moar <rmoar@google.com>, Jens Axboe
+ <axboe@kernel.dk>, Alexandre Courbot <acourbot@nvidia.com>, Alexander Viro
+ <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan
+ Kara <jack@suse.cz>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown
+ <broonie@kernel.org>
+Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ rust-for-linux@vger.kernel.org, nouveau@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+ linux-clk@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com,
+ linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Tamir
+ Duberstein <tamird@gmail.com>
+Subject: Re: [PATCH v2 17/19] rust: sync: replace `kernel::c_str!` with
+ C-Strings
+In-Reply-To: <20250925-core-cstr-cstrings-v2-17-78e0aaace1cd@gmail.com>
+References: <20250925-core-cstr-cstrings-v2-0-78e0aaace1cd@gmail.com>
+ <20250925-core-cstr-cstrings-v2-17-78e0aaace1cd@gmail.com>
+Date: Thu, 16 Oct 2025 12:42:35 +0200
+Message-ID: <874irz5dr8.fsf@t14s.mail-host-address-is-not-set>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251016-openwrt-one-network-v1-9-de259719b6f2@collabora.com>
-References: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
-In-Reply-To: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
-To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Ryder Lee <ryder.lee@mediatek.com>, 
- Jianjun Wang <jianjun.wang@mediatek.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, Lee Jones <lee@kernel.org>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>
-Cc: kernel@collabora.com, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, 
- linux-phy@lists.infradead.org, netdev@vger.kernel.org, 
- Daniel Golle <daniel@makrotopia.org>, Bryan Hinton <bryan@bryanhinton.com>, 
- Sjoerd Simons <sjoerd@collabora.com>
-X-Mailer: b4 0.14.3
+Content-Type: text/plain
 
-Different SoCs have different numbers of Wireless Ethernet
-Dispatch (WED) units:
-- MT7981: Has 1 WED unit
-- MT7986: Has 2 WED units
-- MT7988: Has 2 WED units
+Tamir Duberstein <tamird@gmail.com> writes:
 
-Update the binding to reflect these hardware differences. The MT7981
-also uses infracfg for PHY switching, so allow that property.
+> C-String literals were added in Rust 1.77. Replace instances of
+> `kernel::c_str!` with C-String literals where possible.
+>
+> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Reviewed-by: Alice Ryhl <aliceryhl@google.com>
+> Reviewed-by: Benno Lossin <lossin@kernel.org>
+> Signed-off-by: Tamir Duberstein <tamird@gmail.com>
 
-Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
----
- Documentation/devicetree/bindings/net/mediatek,net.yaml | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+Acked-by: Andreas Hindborg <a.hindborg@kernel.org>
 
-diff --git a/Documentation/devicetree/bindings/net/mediatek,net.yaml b/Documentation/devicetree/bindings/net/mediatek,net.yaml
-index b45f67f92e80d..453e6bb34094a 100644
---- a/Documentation/devicetree/bindings/net/mediatek,net.yaml
-+++ b/Documentation/devicetree/bindings/net/mediatek,net.yaml
-@@ -112,7 +112,7 @@ properties:
- 
-   mediatek,wed:
-     $ref: /schemas/types.yaml#/definitions/phandle-array
--    minItems: 2
-+    minItems: 1
-     maxItems: 2
-     items:
-       maxItems: 1
-@@ -338,12 +338,14 @@ allOf:
-             - const: netsys0
-             - const: netsys1
- 
--        mediatek,infracfg: false
--
-         mediatek,sgmiisys:
-           minItems: 2
-           maxItems: 2
- 
-+        mediatek,wed:
-+          minItems: 1
-+          maxItems: 1
-+
-   - if:
-       properties:
-         compatible:
-@@ -385,6 +387,10 @@ allOf:
-           minItems: 2
-           maxItems: 2
- 
-+        mediatek,wed:
-+          minItems: 2
-+          maxItems: 2
-+
-   - if:
-       properties:
-         compatible:
-@@ -429,6 +435,10 @@ allOf:
-             - const: xgp2
-             - const: xgp3
- 
-+        mediatek,wed:
-+          minItems: 2
-+          maxItems: 2
-+
- patternProperties:
-   "^mac@[0-2]$":
-     type: object
 
--- 
-2.51.0
+Best regards,
+Andreas Hindborg
+
+
 
