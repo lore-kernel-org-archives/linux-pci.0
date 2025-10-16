@@ -1,153 +1,239 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010056.outbound.protection.outlook.com [52.101.61.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C32D2E6137
-	for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2025 23:28:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760657296; cv=none; b=sRpuHBSojgGm0qFmDYCqzjZXNDnTJ7wMMQR8HkZls7XvekC9zXKu9fv6Lmn7eG/miDlMgLRwsdtVvERCI4nDyvxEZPI+J49niQnMOP75JZpY/orFUyhiIQ0E5pzu+wZp0y4yjGAHsxSpV1QvUjOzCUoYSZdJCGqAnZqNd0kmlfI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760657296; c=relaxed/simple;
-	bh=XJoRXhF6cct+u5hqeBr/GjrKmq9CEKau2+FBHdOwe7Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=u9w2K+/5lD1aOkmJizBmIWNpJVM1Lj2cTs1yaUEgUD/qlByu8nhVN85WKoXpG657qQ3oIhTRSyfQEjthnVrwrUYfISOUICnVoSzGZ6yDPf1Q5tEHXeEv30HzMGr8ixXKJ1E+/c5Q7N5vEe7q6Otu3wHMsviMHd1bceeSnpKThqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=nlcTtEqO; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D8B22E1F08;
+	Thu, 16 Oct 2025 23:53:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.56
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1760658821; cv=fail; b=HTgs9Jv92XMYN/EKH3Qs+fj9AVj7vWurRQ8bEFaMboIRO1Xd5labJDHBZ7MhAG0YD24TxvDRI4CdyLUDFX4pfUSiS/NCgEPBbJGcsORwhAq7Hu/tPYUE8XrtBv5UvdsmQ9kAGXlrKj5IacnlMMy9s2axTOyDRN5k3Wj6NSEn1jQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1760658821; c=relaxed/simple;
+	bh=XISh3w2MsVzjMchSJK0b6EEUnHL/XVDvSXg28hm1eAc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=Ht+3DeXLCYmVSzS7w6oc7DhEgCy9H64iMaUvbRgKcp3XSsL8pExRMq7WZCKK2NKUMcbp/FHGiciXr1y8fGfT+UalKnhl4fGZ5qXvFUYpqpEoxaTTWSsk4jwFJWu0p1dG4H68rZ/4SFIzC6oif8umodFH2M02tcNkCDNeu61wvg8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=sExZW6CI; arc=fail smtp.client-ip=52.101.61.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="nlcTtEqO"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-781206cce18so1360703b3a.0
-        for <linux-pci@vger.kernel.org>; Thu, 16 Oct 2025 16:28:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1760657294; x=1761262094; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=VDHKL7YrbYj0WMr/qaC61DmFE96g6L5ksIAhfdoxQrQ=;
-        b=nlcTtEqOnd54qW/ICO8glTxNOt8FmeJe9owrl9qhvsPQpg/B2Mp2KNJrvMtdul+Qc0
-         5ZrKRVGXHR9+Sciv6jft3dF9eSOcsgAtHbQadNAfu0F+YCXY0RCAJj29LAAA/rB3arHR
-         zik0LCswwZQ/Ug93I4EKLk4SwByaxOXB4G2HA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760657294; x=1761262094;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=VDHKL7YrbYj0WMr/qaC61DmFE96g6L5ksIAhfdoxQrQ=;
-        b=iSXn3nwY++84Z0lk6QRF+SR7vpGueYSZLXwQf/9caobN6xplszo3pvubPE88YLGJvJ
-         UF9X04EHTkCgbkSDnFP6RRgNiqRDuH0jfVKG89DdnFBi2NJDnnahvRJf+ujxO0/oG6PO
-         cvMJiKqLV6gEQ3algt9Ai2TaowWM+NMPcKIPv2kxbEI3EkbN9NZjHWJvTisN6dX34yA5
-         aG/P8B+GaX42nFzH6kEZi0DPcIA2dvgYl+/zErbctrLkRYa6+Eh2I4OMPcFcAuYKGDvr
-         c5E9sR2xssbcgbyhIXNg86elBbYTQ+S9/yplpHaPMnWdOa7dd3QaC3Y1dyz4ZWbe56Tn
-         ovag==
-X-Forwarded-Encrypted: i=1; AJvYcCX9Fwjijk9DvzV0ZMXYW4Vys5BfuQ2FLVeMbXe09JlBWrRpkwklx/EojSyW3o7iQFAqexvX/yuQfQA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxKhYwakpkG3haimd6+vvoHPHWTqdGuM9TIaMc5USrahjQT1tRH
-	nL6n/CN6J6Vl7hveOhjnICgx9asXtkc8PyRurnWgSdgqoOP+GTQ8/EUhfb2uA4ceUlmUxsRgL+6
-	ngIk=
-X-Gm-Gg: ASbGnct7fhYN6EexQewQN8tmDmzTA/gMYaRtbhg7xdTB1EZoXDnkQGfhsfjxTpT0p4M
-	J9T1wcSyxK5wLSq4eK/Mn94RCFYHKJpCfe2k2T0hXROR0neacRlRMh1Lx2rKTuNVOm+5qz4/Hrt
-	EvRF8WnpzdgH87vima+F7jwyA52jdupYnUgIG3gheHepYoQ8W4U4qz2S+7l+2f1jBM1ZNpoCMu4
-	rNSAzi9n77Dx3ycOuPY2hVa2ccPFpSnIkL5MKXVv0o47+Zwg0icsP9D8IbK/7GqHlyVS+djoqPR
-	/v3VlHLumAZAY1i9Y06vwLPqtsSIeepRkEv1URRGvWM2d21kq1v89Ed5IL7Tgr6bfgQGhWmndiP
-	pwYPaQBfY5gblqyeLhOl5LkZtF1Y2a2gZ1EsbDnRXGa0jxtfvhJgCIY6MoHgRtTgc+GdDa1ZKIu
-	O5prSOFlIQeI5Xvq/U4NInVZg8Tcvw6foNqgHUZQ==
-X-Google-Smtp-Source: AGHT+IHptz2Viou3aQb7JTKgXj8lqBa3xVm9ubMw1J3oe5c1h0nSfI0VxDkbrkw3mL1kDx6q4igwAQ==
-X-Received: by 2002:a05:6a20:6a28:b0:32d:b925:22ab with SMTP id adf61e73a8af0-334a78fbd98mr2663524637.17.1760657294603;
-        Thu, 16 Oct 2025 16:28:14 -0700 (PDT)
-Received: from localhost ([2a00:79e0:2e7c:8:98f9:84ca:9891:3fd2])
-        by smtp.gmail.com with UTF8SMTPSA id d2e1a72fcca58-7992b060b59sm24127004b3a.2.2025.10.16.16.28.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Oct 2025 16:28:13 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	linux-pci@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>,
-	stable@vger.kernel.org
-Subject: [PATCH] PCI/PM: Prevent runtime suspend before devices are fully initialized
-Date: Thu, 16 Oct 2025 15:53:35 -0700
-Message-ID: <20251016155335.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid>
-X-Mailer: git-send-email 2.51.0.858.gf9c4a03a3a-goog
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="sExZW6CI"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VzVw+V0y3ntpsI4be8b+hKVS2vjN3qfKRzjVB8p7LEr1ciZUJBTPxX9xEm6FrBcISrwovEZDKvAwxYLI7mu5sam3aJu0JJo/bU0eT7ThIcggJMGTW79QktjI93zODK+TSFA6GnzsatvRtOzpTHRD1Qdbdz4knCyG8gKOwn7W6YeXf3aDyKUAv/8xDAIDdxjkjee+ReKwqsXmkc9SPS8F/XhRvp4kWaDC1YFjd1M4znnjPJuEhES+Q91xjBThuP2EqwkIjG/OPTVkbtHyvq4rfz9UoaO8ahlOpdPW6tLlztXMA59WmMRVOzsp9FCO50l5KDe/BeTDz3hULqQJlXJByw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RD/xCVRTrLeDxfGMCtcUQXjf8Hu5gk0sMVUTLPCchq4=;
+ b=G/O3XDxmPm9fnTUeM4lVCSRolYgasAohhCMPMOcQBgCG+tHD3hTqLenj9TiWbCyLysciJGmMWAVXacJukpoHPyDPd//LfaYEQtURtCnNglSXeZxl3YRM/6IrVor9e1L+Ifj79YaKc0RST2K4CUkk1W3c2871uuc1hkchpYwQLVm0uKd1x8LjBx3QUFC0zftkemzQfjGFWFCBdCWuVpl3u9PC+64DWE6SYS7b3yD2GiwuTuHFFh531MN9P/BbKJlYxcQzoaAQnzjOwB5LokDcUXYNrPWynItUWAiLYvfNCgjEfbo2xzRhWV9DUqSdDw349WsKMA4mXEsfZrnE3baAMg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RD/xCVRTrLeDxfGMCtcUQXjf8Hu5gk0sMVUTLPCchq4=;
+ b=sExZW6CITN4sB1IKBxwQfti39f+DtUoF4um3BD1Hzg8j/ajAdbhhxXNvS7WQOHdpgK0J60tKbJKGfXLJCjyiLOwWrCmDJ2UtoKZi9A+Y2bOYM1cwF6Xza/ArVXH4nmxwNePYNnINKoA/DMkaNfE/uBrDBMtkiaoa7xX55iCWpOWRabxrV8N6v97viCY2jKL7QlPJcOYqvXPLCITHFURKrnpzPc5/Iwmt/knV0euWC8vQWrfEBIHll4nTPWnxCp+2l7auwnkyZkCNt3rDShzzhf8a1a67bvTrgcU1j5P/XnV/YgYY/3MhmDjcxumjuqCPKv4YF2qvDG1pD29T2qSc/g==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MN2PR12MB3613.namprd12.prod.outlook.com (2603:10b6:208:c1::17)
+ by CH3PR12MB8903.namprd12.prod.outlook.com (2603:10b6:610:17a::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9228.9; Thu, 16 Oct
+ 2025 23:53:35 +0000
+Received: from MN2PR12MB3613.namprd12.prod.outlook.com
+ ([fe80::1b3b:64f5:9211:608b]) by MN2PR12MB3613.namprd12.prod.outlook.com
+ ([fe80::1b3b:64f5:9211:608b%4]) with mapi id 15.20.9228.010; Thu, 16 Oct 2025
+ 23:53:35 +0000
+Date: Thu, 16 Oct 2025 20:53:32 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Leon Romanovsky <leonro@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	dri-devel@lists.freedesktop.org, iommu@lists.linux.dev,
+	Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
+	kvm@vger.kernel.org, linaro-mm-sig@lists.linaro.org,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	Will Deacon <will@kernel.org>
+Subject: Re: [PATCH v5 9/9] vfio/pci: Add dma-buf export support for MMIO
+ regions
+Message-ID: <20251016235332.GA265079@nvidia.com>
+References: <cover.1760368250.git.leon@kernel.org>
+ <72ecaa13864ca346797e342d23a7929562788148.1760368250.git.leon@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <72ecaa13864ca346797e342d23a7929562788148.1760368250.git.leon@kernel.org>
+X-ClientProxiedBy: PH0PR07CA0066.namprd07.prod.outlook.com
+ (2603:10b6:510:f::11) To MN2PR12MB3613.namprd12.prod.outlook.com
+ (2603:10b6:208:c1::17)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN2PR12MB3613:EE_|CH3PR12MB8903:EE_
+X-MS-Office365-Filtering-Correlation-Id: 18b9e1f5-f067-4b8f-547a-08de0d0f37de
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|7416014|366016|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?rnGVBiR43qrrkw2KiPc0VorIsauBwV5mCkT6wX5E2r6AIUy0QZ9igCmFyYHS?=
+ =?us-ascii?Q?iRRyHFQCo1te+/o8kLfhZF+RdMCWA2Mla7l7OFLDsFmB2UlouEb3v1ptWRKE?=
+ =?us-ascii?Q?kOH5Gyt9IXs60jzqs0QsMDKrYcq9lyU/O+cNhylM3Z1Z9jo1ModPpdpxoBsL?=
+ =?us-ascii?Q?T7gxlOhV+YAQj6v6aiU/IArK6oPNPxDN7QFcVKMHSLG46GTeQhasQLc5z39s?=
+ =?us-ascii?Q?/A8CK5RzujiZBcUHZ2zLH95K709+oQMV5SULDxSkTCNsWcO1IToYNJJw5kpA?=
+ =?us-ascii?Q?oR6bdR0j8WW0xwJwLAJ3+9SVuiErXpSAViGk8TylRYn7FJDYkJnx1OqPbMdf?=
+ =?us-ascii?Q?3U7qQOLNtNekAR58V1ZcwuUSic84dqW2E5ja2CHTHdcbvRUrfvYlhvCcMsBy?=
+ =?us-ascii?Q?pMQs9EUQ6mHO8e1AkujRDf+owbgyIVaMCXbjLUcHb9lM7WKX+0xOoQHh6KDn?=
+ =?us-ascii?Q?0hDL9XU9sCYBdS3E4FhpUhtUXVai2OuZ8IO49mIifcOlgZbE3KRt+h0aoCsU?=
+ =?us-ascii?Q?0ZikxUQHm0wRhKK5iVwE+b6OPI6faBy4ULydJOgAxR3q4ieXyilbQPE03dm7?=
+ =?us-ascii?Q?Rhg2CCiVoEKgDDIEcB4UtnIjIQbY0TIcGaIPsxslfxReKGN2GDT7Fv495ef+?=
+ =?us-ascii?Q?SPQlOEW+Q9PHW3kmdSd/JFT57VNdHBuWfwx2IK4a9vTiRTkAt99y9r1gEF7r?=
+ =?us-ascii?Q?m8Lf8bhVuuOcknXYz9w5FPF4/iiDth9s8+GRgiRfn1ydce5OokHntgQtfGtu?=
+ =?us-ascii?Q?cZucSiOQrzw/MEYlRqoi2I1cVhvCOZMlVvUjna9glu6vkOxAm3A/A/wqEu8G?=
+ =?us-ascii?Q?Z1/4ywpiOpplfVZJeqfSYn+KAIRmUxu4PMmsRQuG9MvRrpQHfQx8da5VOSlM?=
+ =?us-ascii?Q?6uZGuTOmmypbxV+k2sI/v9oRiWDJ/lHtBUSnzAwEL9xQldTVGbgT39R7Hqnj?=
+ =?us-ascii?Q?fyeIfBsN+uTzRcr9Ko7y7n4to5keywpEEjekmxn3WJ9JZE9AwF1RW1O9ZFWH?=
+ =?us-ascii?Q?fGfkliw5geCNy6i9LXOW++IFdKskAcqfT+YzfSZR9/fnQcWrycqmbUct0Njg?=
+ =?us-ascii?Q?NLgrMmMwFjh/22T3odvVKoMDVQPEWpbhgXFQ76MVfOqfmFJ6hjZP4Spktw6P?=
+ =?us-ascii?Q?PpczAYp7rTR7bteEvuQPks/AzeoTBMCqGZIrvCrtvePGJMwATx3th3LQvysU?=
+ =?us-ascii?Q?OuYov/VwO5KlFHKCA82Jm9DQVsX8eYl+Nd9j6JPXjXs1jLGMuGhLSk8jWeZD?=
+ =?us-ascii?Q?qasp2rmqmTZZO77Wbq7y77MCn87Wz1q+U5f5i5xsymCN7LsCUzrJk/NLvekY?=
+ =?us-ascii?Q?fI/oilB4mfSG367kcOnBeJ1JekvdXlGei+asIFFhxHURgLzgREmnoUu7HORG?=
+ =?us-ascii?Q?24zy4o64oyTZvkv8nQWXjkN41BDQdlJyo0lgD+laCZKbyPD/iPHD9DoBMxNS?=
+ =?us-ascii?Q?Y38c6zxsUkchGex7PoJ7p9sNxjAUMunV?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB3613.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(366016)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?39IpYg/hgaPLPdM27s4mQS8T4DJCdcelKREpNEih5CqGHfhXY25GKB7FQpGU?=
+ =?us-ascii?Q?1wlmQI1GBdWNOP2xQlsOerbQgvvOfJ3Ys0l0F2CN4wAbec/B/tTmtO6ecuBa?=
+ =?us-ascii?Q?ZHTjeaxpUy7tgyO4gXdj69R8iDMMFtTm9eJIfF1CWqhx7SaCPB5E54+fQT7Q?=
+ =?us-ascii?Q?/cOJMt3+zPqWjZHa3Oz8zpNOgFACOD/qrDZwmk5ishyCk256EsEs6QZaaMWy?=
+ =?us-ascii?Q?9dn/42TJCdZGLG3mcylwCP6ZI5C7/famSHJ8QDG90NFySPfIPofgsXMZHB3M?=
+ =?us-ascii?Q?umeWJuvAqPPyENcHhzRHF4b0ZZLtqzGAP5Su8g3dXM15UzlCjttHbEVe+9pH?=
+ =?us-ascii?Q?jCevoFiq1odNZgD4ieKOiM9eFTkta6N6qC/AiGwsnmJVyufwkLQocZSiHODE?=
+ =?us-ascii?Q?ocFHHWES0WN0/fziKRTiCW8QGBsJuDBlqOCaY81eJcftAa9G/PN4UFQIwBuw?=
+ =?us-ascii?Q?0YVff2+meD0rX8wOoVWkMaYy//C4zWaSHVkQFnr8y37kmnUxgfs1kLkyVbDa?=
+ =?us-ascii?Q?vFy8K3H7sZ/IXh21RqW5vgjyGMA/wN9FsKsFIHxm9QugudMxOhedDzaxuiY2?=
+ =?us-ascii?Q?vhbUoDpE2D7BA9w9N74SQuIfxPyuBAfkVBAqZR9knFRCyWNYulL0NpngHkMr?=
+ =?us-ascii?Q?+SCTkfuzRDbi6cWFRaKnU69MfcAPbCPFQaSQaDvh+zO7nUrAg5IotyFrq/zy?=
+ =?us-ascii?Q?lI9Nfo5tGVldpo/OXN/6ueqw/c08MIy/d94to0bDEZmcgolNb3WThtIAdb0c?=
+ =?us-ascii?Q?7bUcjrbtWBZ8Pwc8cS58Cf451bo3qOE+S8Aik1QoRvy28QEJC2nDO4Ku14rO?=
+ =?us-ascii?Q?Cq6Au+4VsunJDDL+OPYQaamcNzbfil2Mb3dtrZx78f4frebgAtjmBKGpFmI7?=
+ =?us-ascii?Q?9JIhvsZcK0au8oKnqXlP/35aiQQjWiZp2JGbKSndAuBWHZrE/rrmkvNjEwig?=
+ =?us-ascii?Q?YwQFcjmQuQshLmhzp9bJYT3vAtCG8DkWBPQH0KPXg2Irhyx2SQoLClZkafh9?=
+ =?us-ascii?Q?L4EkHye5uSok7uIh5D73QDJsavp0yFmjets0ICGn5cBcegZuNqHkuxHUNEkm?=
+ =?us-ascii?Q?IMY1+XvKkSmLVmJgXo5E5i1SJJunZNgjmvlvSSoaoqBtgl1LZgTBxSr6TsdN?=
+ =?us-ascii?Q?7wdhLakRX4rHC79s7tQa5PA4VgffcwX1qFIy5DmfGhGPKwqfwdCARAeWYfY1?=
+ =?us-ascii?Q?NLYz0gXnWnUAyfmqShrTv/+fwrI3V/cXlDzrcIDQ6k2KELnd/YAibhpx+Egt?=
+ =?us-ascii?Q?8RMFrg9m64JSPabUuAB9hZ0qzfSXcO/+B9f0AYsAoaxhuh3Zx818c4yQP9gH?=
+ =?us-ascii?Q?z47ukY2r93USzf4G0+vqDqJkyODFn7WoJ7KFndaPjdTwyvqZblWlbvuhjd2T?=
+ =?us-ascii?Q?1MpBvmLzDHzzrf89WCbIChjPJf9dPLnhCptzEONgPbPGHFih3yZ/MhJ4cyYf?=
+ =?us-ascii?Q?ONaqS03P7jo5buSVHmZrTEKgq6WRs63DXLlADkt7cxXWsLzLQN3l42PyuOEu?=
+ =?us-ascii?Q?IaFYjZwxhs3//Ny8OFWTTIC/e7Nq7KmK8fx04IDaXoWBVz7XaVCO2QtPrkAW?=
+ =?us-ascii?Q?slXOzxFYhCDN0lX0KLSZQy5LNnclfs8SWJ45j6MB?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18b9e1f5-f067-4b8f-547a-08de0d0f37de
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB3613.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Oct 2025 23:53:35.1119
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Jt9bYDuyBbkaHgYqsT62+FAa/0GFys7MoQUQrQy99mNhrDUn13ZL3GVgoxyajCEU
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8903
 
-PCI devices are created via pci_scan_slot() and similar, and are
-promptly configured for runtime PM (pci_pm_init()). They are initially
-prevented from suspending by way of pm_runtime_forbid(); however, it's
-expected that user space may override this via sysfs [1].
+On Mon, Oct 13, 2025 at 06:26:11PM +0300, Leon Romanovsky wrote:
+> +
+> +static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
+> +				   struct dma_buf_attachment *attachment)
+> +{
+> +	struct vfio_pci_dma_buf *priv = dmabuf->priv;
+> +
+> +	if (!attachment->peer2peer)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (priv->revoked)
+> +		return -ENODEV;
+> +
+> +	switch (pci_p2pdma_map_type(priv->provider, attachment->dev)) {
+> +	case PCI_P2PDMA_MAP_THRU_HOST_BRIDGE:
+> +		break;
+> +	case PCI_P2PDMA_MAP_BUS_ADDR:
+> +		/*
+> +		 * There is no need in IOVA at all for this flow.
+> +		 * We rely on attachment->priv == NULL as a marker
+> +		 * for this mode.
+> +		 */
+> +		return 0;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+> +	attachment->priv = kzalloc(sizeof(struct dma_iova_state), GFP_KERNEL);
+> +	if (!attachment->priv)
+> +		return -ENOMEM;
+> +
+> +	dma_iova_try_alloc(attachment->dev, attachment->priv, 0, priv->size);
 
-Now, sometime after initial scan, a PCI device receives its BAR
-configuration (pci_assign_unassigned_bus_resources(), etc.).
+The lifetime of this isn't good..
 
-If a PCI device is allowed to suspend between pci_scan_slot() and
-pci_assign_unassigned_bus_resources(), then pci-driver.c will
-save/restore incorrect BAR configuration for the device, and the device
-may cease to function.
+> +	return 0;
+> +}
+> +
+> +static void vfio_pci_dma_buf_detach(struct dma_buf *dmabuf,
+> +				    struct dma_buf_attachment *attachment)
+> +{
+> +	kfree(attachment->priv);
+> +}
 
-This behavior races with user space, since user space may enable runtime
-PM [1] as soon as it sees the device, which may be before BAR
-configuration.
+If the caller fails to call map then it leaks the iova.
 
-Prevent suspending in this intermediate state by holding a runtime PM
-reference until the device is fully initialized and ready for probe().
+> +static struct sg_table *
+> +vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
+> +		     enum dma_data_direction dir)
+> +{
+[..]
 
-[1] echo auto > /sys/bus/pci/devices/.../power/control
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
+> +err_unmap_dma:
+> +	if (!i || !state)
+> +		; /* Do nothing */
+> +	else if (dma_use_iova(state))
+> +		dma_iova_destroy(attachment->dev, state, mapped_len, dir,
+> +				 attrs);
 
- drivers/pci/bus.c | 7 +++++++
- drivers/pci/pci.c | 6 ++++++
- 2 files changed, 13 insertions(+)
+If we hit this error path then it is freed..
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index f26aec6ff588..227a8898acac 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -14,6 +14,7 @@
- #include <linux/of.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
- #include <linux/proc_fs.h>
- #include <linux/slab.h>
- 
-@@ -375,6 +376,12 @@ void pci_bus_add_device(struct pci_dev *dev)
- 		put_device(&pdev->dev);
- 	}
- 
-+	/*
-+	 * Now that resources are assigned, drop the reference we grabbed in
-+	 * pci_pm_init().
-+	 */
-+	pm_runtime_put_noidle(&dev->dev);
-+
- 	if (!dn || of_device_is_available(dn))
- 		pci_dev_allow_binding(dev);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b14dd064006c..06a901214f2c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3226,6 +3226,12 @@ void pci_pm_init(struct pci_dev *dev)
- 	pci_pm_power_up_and_verify_state(dev);
- 	pm_runtime_forbid(&dev->dev);
- 	pm_runtime_set_active(&dev->dev);
-+	/*
-+	 * We cannot allow a device to suspend before its resources are
-+	 * configured. Otherwise, we may allow saving/restoring unexpected BAR
-+	 * configuration.
-+	 */
-+	pm_runtime_get_noresume(&dev->dev);
- 	pm_runtime_enable(&dev->dev);
- }
- 
--- 
-2.51.0.858.gf9c4a03a3a-goog
+> +static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
+> +				   struct sg_table *sgt,
+> +				   enum dma_data_direction dir)
+> +{
+> +	struct vfio_pci_dma_buf *priv = attachment->dmabuf->priv;
+> +	struct dma_iova_state *state = attachment->priv;
+> +	unsigned long attrs = DMA_ATTR_MMIO;
+> +	struct scatterlist *sgl;
+> +	int i;
+> +
+> +	if (!state)
+> +		; /* Do nothing */
+> +	else if (dma_use_iova(state))
+> +		dma_iova_destroy(attachment->dev, state, priv->size, dir,
+> +				 attrs);
 
+It is freed here too, but we can call map multiple times. Every time a
+move_notify happens can trigger another call to map.
+
+I think just call unlink in those two and put dma_iova_free in detach
+
+Jason
