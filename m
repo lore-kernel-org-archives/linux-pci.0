@@ -1,85 +1,72 @@
-Received: from manage.vyzra.com (unknown [104.128.60.218])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0388D342C90
-	for <linux-pci@vger.kernel.org>; Fri, 17 Oct 2025 13:05:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=104.128.60.218
+Received: from elvis.franken.de (elvis.franken.de [193.175.24.41])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9A97F346A11;
+	Fri, 17 Oct 2025 13:13:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.175.24.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760706311; cv=none; b=IzxFEygCq736+wXLBZjUCM5M3C8ChkpQTTww8VnnNXkor87rfzJ+QAXyoLN2iBaq3gu76dK1jCJ7utcdBmH+twakeoD9aFji5OG20P9pFM66aPQFVQGCYtK3414KrD3KxdbwF4S93+zQZpLJA5VMycUu3UaofLiBzMOUZBc7OSs=
+	t=1760706823; cv=none; b=RjH8HzFz/ODdwVIUizEZgiDz2Yt0RYeh+jHAPGGgMnT1lcV8lTcrQp23CLyNFyXrP/wlVxDtTuF93KQWXCxpBbtoiQl55lgqLCXFi/1l08mbfrTrBeWODahtxI08CwGwyJuAKti/YByXoY2U9ZdX3THOqiTRmSjE8zlpqhp7DL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760706311; c=relaxed/simple;
-	bh=biLnUx9jTTyVdIbdiavoTAgEZeIqqOihfb373MH/e18=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bvbzsIpXdoJw2Wb7lsvZClzhO+mnDLYxA4xytQjMXf/ipJhfDQdjqNltdl3GCRB+L6ImaB7xUNThknkp5CUIz9Ia4KBns57VJzMTfxjFPyotBXnd20IZ5k5o8In56uS+NhUT7CRZnm8WUCpHA2JULDNBjetoDwvDGpQ2Sh9shE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debtmanager.org; spf=none smtp.mailfrom=manage.vyzra.com; dkim=fail (0-bit key) header.d=debtmanager.org header.i=@debtmanager.org header.b=Q7njh6Bm reason="key not found in DNS"; arc=none smtp.client-ip=104.128.60.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debtmanager.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=manage.vyzra.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=debtmanager.org header.i=@debtmanager.org header.b="Q7njh6Bm"
-Received: from debtmanager.org (unknown [103.237.86.103])
-	by manage.vyzra.com (Postfix) with ESMTPA id 4B22753386F1
-	for <linux-pci@vger.kernel.org>; Fri, 17 Oct 2025 07:45:34 -0500 (CDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=debtmanager.org;
-	s=DKIM2021; t=1760705134; h=from:from:reply-to:reply-to:subject:subject:date:date:
-	 message-id:message-id:to:to:cc:mime-version:mime-version:
-	 content-type:content-type:  content-transfer-encoding:content-transfer-encoding;
-	bh=Aj8bDacQlJB5qNMC5+yWWged1+K/M8YReXQkzUminbQ=;
-	b=Q7njh6Bmgpq7OfANpIELaC8biUkPpYDK+LriMZ676vgnv2r4A+7wAna3j1P7Ifoo2S21q7
-	fs5EATtZkXmQBGGmbAcfldilR4aU53JaCbe7I79OVGxHE1Y9xLMz/0gP9WG0zMg0PhsrO0
-	wJOqjTLg/eEECxkjlutDQCsN9VI7uHvkT1//INIV/v9eqO9S6EW/D5b812nyC+5Nb8av84
-	21dmYCDwJ2iq163iCK4lj2gfIzH8csF6ZfGB7083rGAvULte2GMpoGYQfrLnKa2tG892IM
-	Ql+03oh+fPedqVYAm2tvpqfUCB1Y0rx+QGy5Y//6/D48o+HH317xIAzophlwWA==
-Reply-To: vlad.dinu@rdslink.ro
-From: "Vlad Dinu" <info@debtmanager.org>
-To: linux-pci@vger.kernel.org
-Subject: *** Urgent Change ***
-Date: 17 Oct 2025 05:45:33 -0700
-Message-ID: <20251017054533.E99F2C8C9652A628@debtmanager.org>
+	s=arc-20240116; t=1760706823; c=relaxed/simple;
+	bh=QN+FTil0OtW06PC1H5D6pXDm5/rYU8ei/m/tw8aCc/E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ly4DXYYVwvRwwa2ele3IOEPySa4LHmn5JHQ+q9Hr4uuZThgJN4lESA9M/orCN8663HYvYNWa35PH6OWNbcqogOO4MOCIoql5ulU0UURin+D6N1GeBjq70fb9B0uzOcvyy9SJQ4dSoBfQbt9jrPdX31xeWK1CubbT6Z20EQ2WbHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de; spf=pass smtp.mailfrom=alpha.franken.de; arc=none smtp.client-ip=193.175.24.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alpha.franken.de
+Received: from uucp by elvis.franken.de with local-rmail (Exim 3.36 #1)
+	id 1v9kH3-000599-00; Fri, 17 Oct 2025 15:13:37 +0200
+Received: by alpha.franken.de (Postfix, from userid 1000)
+	id A624EC0256; Fri, 17 Oct 2025 14:11:20 +0200 (CEST)
+Date: Fri, 17 Oct 2025 14:11:20 +0200
+From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 03/24] MIPS: PCI: Use pci_enable_resources()
+Message-ID: <aPIyaPuTXEfBPHme@alpha.franken.de>
+References: <20250829131113.36754-1-ilpo.jarvinen@linux.intel.com>
+ <20250829131113.36754-4-ilpo.jarvinen@linux.intel.com>
+ <9085ab12-1559-4462-9b18-f03dcb9a4088@roeck-us.net>
+ <aO1sWdliSd03a2WC@alpha.franken.de>
+ <alpine.DEB.2.21.2510132229120.39634@angie.orcam.me.uk>
+ <74ed2ce0-744a-264f-6042-df4bbec0f58e@linux.intel.com>
+ <alpine.DEB.2.21.2510141232400.39634@angie.orcam.me.uk>
+ <9f80ba5e-726b-ad68-b71f-ab23470bfa36@linux.intel.com>
+ <aPIfSvhqhc9wxzGi@alpha.franken.de>
+ <21079c94-cd49-bcd7-6f5d-7d5cd9d61432@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-Spam-Score: -0.10
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <21079c94-cd49-bcd7-6f5d-7d5cd9d61432@linux.intel.com>
 
-Hello,
+On Fri, Oct 17, 2025 at 01:58:13PM +0300, Ilpo Järvinen wrote:
+> On Fri, 17 Oct 2025, Thomas Bogendoerfer wrote:
+> 
+> > On Tue, Oct 14, 2025 at 03:41:42PM +0300, Ilpo Järvinen wrote:
+> > > [...]
+> > > It was "good enough" only because the arch specific 
+> > > pcibios_enable_resources() was lacking the check for whether the resource 
+> > > truly got assigned or not. The PIIX4 driver must worked just fine without 
+> > > those IO resources which is what most drivers do despite using 
+> > > pci(m)_enable_device() and not pci_enable_device_mem() (the latter 
+> > > doesn't even seem to come with m variant).
+> > 
+> > will you send a v2 of the patch ?
+> 
+> Without the the if ()? I can do that, I was unsure how people wanted to 
+> progress with this.
 
-I am Vlad Dinu, the newly appointed Director of IMF Legal=20
-Affairs, Security and Investigation. I have been given the=20
-responsibility to look into all the payments that are still=20
-pending and owed to fund beneficiaries / scam victims worldwide.
+yes without the if(), thank you
 
-This action was taken because there have been issues with some=20
-banks not being able to send or release money to the correct=20
-beneficiary accounts. We have found out that some directors in=20
-different organizations are moving pending funds to their own=20
-chosen accounts instead of where they should go.
+Thomas.
 
-During my investigation, I discovered that an account was=20
-reported to redirect your funds to a bank in Sweden.
-The details of that account are provided below. I would like you=20
-to confirm if you are aware of this new information, as we are=20
-now planning to send the payment to the account mentioned.
-
-NAME OF BENEFICIARY: ERIK KASPERSSON
-BANK NAME: SWEDBANK AB
-ADDRESS: REPSLAGAREGATAN 23A, 582 22 LINK=C3=96PING, SWEDEN
-SWIFT CODE: SWEDSESS
-ACCOUNT NUMBER: 84806-31282205
-
-
-A payment instruction has been issued by the Department of=20
-Treasury for an immediate release of your payment to the bank=20
-account above without further prejudice. We cannot approve or=20
-schedule payment to the 
-
-given bank account without your confirmation. May we proceed with=20
-the transfer to the Beneficiary: Erik Kaspersson, bank account in=20
-Sweden?
-
-I await your urgent response.
-
-Mr. Vlad Dinu.
+-- 
+Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
+good idea.                                                [ RFC1925, 2.3 ]
