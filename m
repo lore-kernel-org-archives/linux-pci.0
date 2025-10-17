@@ -1,72 +1,62 @@
-Received: from elvis.franken.de (elvis.franken.de [193.175.24.41])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9A97F346A11;
-	Fri, 17 Oct 2025 13:13:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.175.24.41
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5484034AAE7;
+	Fri, 17 Oct 2025 13:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760706823; cv=none; b=RjH8HzFz/ODdwVIUizEZgiDz2Yt0RYeh+jHAPGGgMnT1lcV8lTcrQp23CLyNFyXrP/wlVxDtTuF93KQWXCxpBbtoiQl55lgqLCXFi/1l08mbfrTrBeWODahtxI08CwGwyJuAKti/YByXoY2U9ZdX3THOqiTRmSjE8zlpqhp7DL4=
+	t=1760707929; cv=none; b=golGQdIyZ9/1K/J5ojWNE84t8fFKf+/8brzY/lFp24Kbsgn2ciq9rgb9TIREg7d+VlZGXug6T4owMHmTNevP6PPSwE+Xhsg6xXZcn67sVyX9i1YsUD2JEq8dQO3aJlOQV/Ap6XonDAjyT3gyqfEOpfsyPBkCxDjehH+HxZiQpgk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760706823; c=relaxed/simple;
-	bh=QN+FTil0OtW06PC1H5D6pXDm5/rYU8ei/m/tw8aCc/E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ly4DXYYVwvRwwa2ele3IOEPySa4LHmn5JHQ+q9Hr4uuZThgJN4lESA9M/orCN8663HYvYNWa35PH6OWNbcqogOO4MOCIoql5ulU0UURin+D6N1GeBjq70fb9B0uzOcvyy9SJQ4dSoBfQbt9jrPdX31xeWK1CubbT6Z20EQ2WbHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de; spf=pass smtp.mailfrom=alpha.franken.de; arc=none smtp.client-ip=193.175.24.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alpha.franken.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alpha.franken.de
-Received: from uucp by elvis.franken.de with local-rmail (Exim 3.36 #1)
-	id 1v9kH3-000599-00; Fri, 17 Oct 2025 15:13:37 +0200
-Received: by alpha.franken.de (Postfix, from userid 1000)
-	id A624EC0256; Fri, 17 Oct 2025 14:11:20 +0200 (CEST)
-Date: Fri, 17 Oct 2025 14:11:20 +0200
-From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 03/24] MIPS: PCI: Use pci_enable_resources()
-Message-ID: <aPIyaPuTXEfBPHme@alpha.franken.de>
-References: <20250829131113.36754-1-ilpo.jarvinen@linux.intel.com>
- <20250829131113.36754-4-ilpo.jarvinen@linux.intel.com>
- <9085ab12-1559-4462-9b18-f03dcb9a4088@roeck-us.net>
- <aO1sWdliSd03a2WC@alpha.franken.de>
- <alpine.DEB.2.21.2510132229120.39634@angie.orcam.me.uk>
- <74ed2ce0-744a-264f-6042-df4bbec0f58e@linux.intel.com>
- <alpine.DEB.2.21.2510141232400.39634@angie.orcam.me.uk>
- <9f80ba5e-726b-ad68-b71f-ab23470bfa36@linux.intel.com>
- <aPIfSvhqhc9wxzGi@alpha.franken.de>
- <21079c94-cd49-bcd7-6f5d-7d5cd9d61432@linux.intel.com>
+	s=arc-20240116; t=1760707929; c=relaxed/simple;
+	bh=BuEqEG9VLaaFzTv+H5CiZPe9UFuAeFbnOVea+VPT9GE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=jydGaKpyef6ZImYXCq0rFhsCqSbSC/3xnuGhZCSfgMnk9F1FR9AuZkVVGmZxOrTek+bJJ1A9O+FuL4NP9y5Z0tsH5jsTuPD4jorfOkbxsg6WOv4TlKSutrMIRz4O3VFLSLts4USl0ou4TSpYaSQmVaD3U1RWDmhlgwp9XtDHRA8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VN9I5qZH; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VN9I5qZH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD93FC4CEF9;
+	Fri, 17 Oct 2025 13:32:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760707928;
+	bh=BuEqEG9VLaaFzTv+H5CiZPe9UFuAeFbnOVea+VPT9GE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=VN9I5qZHyH1tOlZ4LItFFmJeHawQRsBnpHeiFAymDB+n4BnQ6UsZxB0xG59SXN+AW
+	 ed1DBRDBYg47ERuJ9najxfQN4BhwrLIHfAWt9DJgfxtGeghmxrsxZExB/+SD5FjJbm
+	 YxFuW3L9u//72t1tqt26vCoUqn/sWZGqXHb0n9SuGM2P3SadSKoMtpMmu6F7DBw0kI
+	 ReFRDnIDofZscffoRJ3FiBKvmuQielPxwzlG01iapVcMMzaBl1uElTI+MIK07nuuq0
+	 s0nDRNzwl/rF/nsTvZ63l+e5rQpNBuLepfmqbCV2eGNq/W2ZViO0Ua5eiUMJYjeQCQ
+	 E6zGHDa8zOK/w==
+Date: Fri, 17 Oct 2025 08:32:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?SGVydsOpIEQu?= <herve@dxcv.net>
+Cc: bhelgaas@google.com, dlan@gentoo.org, inochiama@gmail.com,
+	jonathan.derrick@linux.dev, kenny@panix.com, kwilczynski@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	lists@sapience.com, looong.bin@gmail.com, lpieralisi@kernel.org,
+	mani@kernel.org, nirmal.patel@linux.intel.com, robh@kernel.org,
+	socketcan@hartkopp.net, tglx@linutronix.de, todd.e.brandt@intel.com,
+	unicorn_wang@outlook.com
+Subject: Re: [PATCH] PCI: vmd: override irq_startup()/irq_shutdown() in
+ vmd_init_dev_msi_info()
+Message-ID: <20251017133207.GA1027444@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <21079c94-cd49-bcd7-6f5d-7d5cd9d61432@linux.intel.com>
+In-Reply-To: <20251017072954.6978-1-herve@dxcv.net>
 
-On Fri, Oct 17, 2025 at 01:58:13PM +0300, Ilpo J‰rvinen wrote:
-> On Fri, 17 Oct 2025, Thomas Bogendoerfer wrote:
+On Fri, Oct 17, 2025 at 09:29:52AM +0200, Herv√© D. wrote:
+> Hello,
 > 
-> > On Tue, Oct 14, 2025 at 03:41:42PM +0300, Ilpo J‰rvinen wrote:
-> > > [...]
-> > > It was "good enough" only because the arch specific 
-> > > pcibios_enable_resources() was lacking the check for whether the resource 
-> > > truly got assigned or not. The PIIX4 driver must worked just fine without 
-> > > those IO resources which is what most drivers do despite using 
-> > > pci(m)_enable_device() and not pci_enable_device_mem() (the latter 
-> > > doesn't even seem to come with m variant).
-> > 
-> > will you send a v2 of the patch ?
+> I've tested the patch on a clean 6.17.3 tree, seems booting and running properly on my debian13 system.
 > 
-> Without the the if ()? I can do that, I was unsure how people wanted to 
-> progress with this.
+> you can include theses on the patch
+> Reported-by: Herv√© <herve@dxcv.net>
+> Tested-by: Herv√© <herve@dxcv.net>
 
-yes without the if(), thank you
-
-Thomas.
-
--- 
-Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
-good idea.                                                [ RFC1925, 2.3 ]
+Thank you!  Added to the commit, should appear in v6.18-rc2.
