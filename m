@@ -1,118 +1,85 @@
-Received: from mail-wr1-f74.google.com (mail-wr1-f74.google.com [209.85.221.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from manage.vyzra.com (unknown [104.128.60.218])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 509E3331A43
-	for <linux-pci@vger.kernel.org>; Fri, 17 Oct 2025 13:04:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0388D342C90
+	for <linux-pci@vger.kernel.org>; Fri, 17 Oct 2025 13:05:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=104.128.60.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760706297; cv=none; b=E4liODHsQ9Ue9Yvxm/yLYJrg4d315HVzapZNf/q0wZIVz50AwnJYCxo4ln7B4KFZNhuNK5LOCQvLUceTmbZj5wLOl/JZzm/oPJPGnMsWl+KCNEV7E3nkPqqD5SsOJ3xuAlapE/4PnV1ja0ZdK20TLyGWZuaDg+t8lBx1U4BLYI0=
+	t=1760706311; cv=none; b=IzxFEygCq736+wXLBZjUCM5M3C8ChkpQTTww8VnnNXkor87rfzJ+QAXyoLN2iBaq3gu76dK1jCJ7utcdBmH+twakeoD9aFji5OG20P9pFM66aPQFVQGCYtK3414KrD3KxdbwF4S93+zQZpLJA5VMycUu3UaofLiBzMOUZBc7OSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760706297; c=relaxed/simple;
-	bh=45mXk3vW1QoAnyjK4Nd0ASLRTO5e22FNrn8YEgJAgCM=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=hyvkoPHWllfAMBPblvFF6/01n2VAMyGqVA/5o3iSeTX5XNfOQwMkMzv5d63+U5irvphZoeo8KE2YEVX//meKn+5KlF+RzDcxBzpjbecTs8baM6z/afQC+6r/7tgvlKIS0GBhQ8UYcGHbrKU0cujeV27lGU0n4yuAo9jjyVYATvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=M9heAzin; arc=none smtp.client-ip=209.85.221.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+	s=arc-20240116; t=1760706311; c=relaxed/simple;
+	bh=biLnUx9jTTyVdIbdiavoTAgEZeIqqOihfb373MH/e18=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bvbzsIpXdoJw2Wb7lsvZClzhO+mnDLYxA4xytQjMXf/ipJhfDQdjqNltdl3GCRB+L6ImaB7xUNThknkp5CUIz9Ia4KBns57VJzMTfxjFPyotBXnd20IZ5k5o8In56uS+NhUT7CRZnm8WUCpHA2JULDNBjetoDwvDGpQ2Sh9shE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debtmanager.org; spf=none smtp.mailfrom=manage.vyzra.com; dkim=fail (0-bit key) header.d=debtmanager.org header.i=@debtmanager.org header.b=Q7njh6Bm reason="key not found in DNS"; arc=none smtp.client-ip=104.128.60.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debtmanager.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=manage.vyzra.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="M9heAzin"
-Received: by mail-wr1-f74.google.com with SMTP id ffacd0b85a97d-3f924ae2a89so2520335f8f.3
-        for <linux-pci@vger.kernel.org>; Fri, 17 Oct 2025 06:04:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1760706294; x=1761311094; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=QsGulBtXOolWogbv37P9kOPn3EPzZ7HWeVFTvLjVVtA=;
-        b=M9heAzinbWs6Rws/XraRiYASpesShCyWMFYu3Ulftwtmb8EKhO1Cg3XmpkqIluR/1E
-         0A2rNY/+AhKaiXftu0BmP2ymAuKimHzsi/H4teFi91493IWupZSZZ62fc92UgtPWDccI
-         UzzPUz8dEjWv4I+sbnuF+vpbs76iOXmq8SXWo/dpVbu3IE14neNkx+/D6O60EEdRf6hc
-         srW5cprOSSsWHget1JX8jbm+8SMNnfQjoOR3J0jCFFKK4D61zovbTG8nTtEHYgPjUXfX
-         HqYtShRJsQo4MfxYrjxFYmTw0uweC7OrwWC5+dNs+Kis/eI1tFQfDEPtnnsc86E2oHyj
-         expA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760706294; x=1761311094;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QsGulBtXOolWogbv37P9kOPn3EPzZ7HWeVFTvLjVVtA=;
-        b=qbR8APvwJhk06m6EH+Xz0DK8UVKlLh3lg4WhStaNppUoPGx+b711SrfIzOm/44Ik57
-         pS7pXuJibQzADd9obo4vl4T8WotG3KHP/Mi24tbK8WsuxPKFOkM2QNu0FyAb2fqEmckv
-         QV8PcShA1c+1tLog+QnWlAO3/AOOV4LE65y8aXCfoYZQOwyQTysYXy17kdiUclXMk6oY
-         1+aLV9K1en/wclI7jtL5DsbTRXXf8YL2vfWb9xE2LHlqlueghuL/PO8hNmi0ZVG1Smuv
-         EWbwDa7AXALrHcLoVn4gbQ2oolhfYj+zzxIB0M0zzgzV/VOrlHNuVJGJnnxOXXamoyN0
-         u5hQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUnaGxPtIzpT6wBahnm4Y84ai9iybaYfz1AwebEKHDDrbsJ6Te/3Gub5WpyKz6Bgzb+FL/iyO2FPEE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy3MDaQeNL50S6OyC5/7xSRJYxYANlfgQyBkI8f6W9ceZtjhc8J
-	KUSdOiJ063fCtETdQwmg2DL6uiWoYkXG18naCleM9DVN95t/XDObgae0DPGANi4HlU3LQRAiLPN
-	/tMgNCZo2rYFPRcHenA==
-X-Google-Smtp-Source: AGHT+IHmxuUy/higL8bMvF0u1RF+TfLvGKbJRuFXq91cThOSrZ5KPNHsS9I5kFewP7afvF/ZcVPnLKvl0oA6dKw=
-X-Received: from wmbgx4.prod.google.com ([2002:a05:600c:8584:b0:46e:1fc1:6636])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6000:40ce:b0:427:6a8:532a with SMTP id ffacd0b85a97d-42706a8535dmr1784522f8f.31.1760706293678;
- Fri, 17 Oct 2025 06:04:53 -0700 (PDT)
-Date: Fri, 17 Oct 2025 13:04:52 +0000
-In-Reply-To: <20251016125544.15559-1-dakr@kernel.org>
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=debtmanager.org header.i=@debtmanager.org header.b="Q7njh6Bm"
+Received: from debtmanager.org (unknown [103.237.86.103])
+	by manage.vyzra.com (Postfix) with ESMTPA id 4B22753386F1
+	for <linux-pci@vger.kernel.org>; Fri, 17 Oct 2025 07:45:34 -0500 (CDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=debtmanager.org;
+	s=DKIM2021; t=1760705134; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:mime-version:mime-version:
+	 content-type:content-type:  content-transfer-encoding:content-transfer-encoding;
+	bh=Aj8bDacQlJB5qNMC5+yWWged1+K/M8YReXQkzUminbQ=;
+	b=Q7njh6Bmgpq7OfANpIELaC8biUkPpYDK+LriMZ676vgnv2r4A+7wAna3j1P7Ifoo2S21q7
+	fs5EATtZkXmQBGGmbAcfldilR4aU53JaCbe7I79OVGxHE1Y9xLMz/0gP9WG0zMg0PhsrO0
+	wJOqjTLg/eEECxkjlutDQCsN9VI7uHvkT1//INIV/v9eqO9S6EW/D5b812nyC+5Nb8av84
+	21dmYCDwJ2iq163iCK4lj2gfIzH8csF6ZfGB7083rGAvULte2GMpoGYQfrLnKa2tG892IM
+	Ql+03oh+fPedqVYAm2tvpqfUCB1Y0rx+QGy5Y//6/D48o+HH317xIAzophlwWA==
+Reply-To: vlad.dinu@rdslink.ro
+From: "Vlad Dinu" <info@debtmanager.org>
+To: linux-pci@vger.kernel.org
+Subject: *** Urgent Change ***
+Date: 17 Oct 2025 05:45:33 -0700
+Message-ID: <20251017054533.E99F2C8C9652A628@debtmanager.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20251016125544.15559-1-dakr@kernel.org>
-Message-ID: <aPI-9GoI7ZsNCpQr@google.com>
-Subject: Re: [PATCH] rust: driver: let probe() return impl PinInit<Self, Error>
-From: Alice Ryhl <aliceryhl@google.com>
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: gregkh@linuxfoundation.org, rafael@kernel.org, viresh.kumar@linaro.org, 
-	acourbot@nvidia.com, ira.weiny@intel.com, leon@kernel.org, 
-	daniel.almeida@collabora.com, bhelgaas@google.com, kwilczynski@kernel.org, 
-	abdiel.janulgue@gmail.com, robin.murphy@arm.com, ojeda@kernel.org, 
-	alex.gaynor@gmail.com, boqun.feng@gmail.com, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, lossin@kernel.org, a.hindborg@kernel.org, 
-	tmgross@umich.edu, rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-pm@vger.kernel.org, nouveau@lists.freedesktop.org, 
-	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Spam-Score: -0.10
 
-On Thu, Oct 16, 2025 at 02:55:28PM +0200, Danilo Krummrich wrote:
-> The driver model defines the lifetime of the private data stored in (and
-> owned by) a bus device to be valid from when the driver is bound to a
-> device (i.e. from successful probe()) until the driver is unbound from
-> the device.
-> 
-> This is already taken care of by the Rust implementation of the driver
-> model. However, we still ask drivers to return a Result<Pin<KBox<Self>>>
-> from probe().
-> 
-> Unlike in C, where we do not have the concept of initializers, but
-> rather deal with uninitialized memory, drivers can just return an
-> impl PinInit<Self, Error> instead.
-> 
-> This contributed to more clarity to the fact that a driver returns it's
-> device private data in probe() and the Rust driver model owns the data,
-> manages the lifetime and - considering the lifetime - provides (safe)
-> accessors for the driver.
-> 
-> Hence, let probe() functions return an impl PinInit<Self, Error> instead
-> of Result<Pin<KBox<Self>>>.
-> 
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
-> ---
-> Depends on a minor pin-init patch [1] (Benno will send it to the list
-> soon). A branch with this patch and the pin-init dependency is available
-> in [2].
-> 
-> [1] https://github.com/Rust-for-Linux/pin-init/pull/86/commits
-> [2] https://git.kernel.org/pub/scm/linux/kernel/git/dakr/linux.git/log/?h=probe_return
+Hello,
 
-Overall LGTM.
-Reviewed-by: Alice Ryhl <aliceryhl@google.com>
+I am Vlad Dinu, the newly appointed Director of IMF Legal=20
+Affairs, Security and Investigation. I have been given the=20
+responsibility to look into all the payments that are still=20
+pending and owed to fund beneficiaries / scam victims worldwide.
 
->  impl Device<CoreInternal> {
->      /// Store a pointer to the bound driver's private data.
-> -    pub fn set_drvdata(&self, data: impl ForeignOwnable) {
-> +    pub fn set_drvdata<T: 'static>(&self, data: impl PinInit<T, Error>) -> Result {
-> +        let data = KBox::pin_init(data, GFP_KERNEL)?;
+This action was taken because there have been issues with some=20
+banks not being able to send or release money to the correct=20
+beneficiary accounts. We have found out that some directors in=20
+different organizations are moving pending funds to their own=20
+chosen accounts instead of where they should go.
 
-Perhaps the gfp flags should be an argument set_drvdata?
+During my investigation, I discovered that an account was=20
+reported to redirect your funds to a bank in Sweden.
+The details of that account are provided below. I would like you=20
+to confirm if you are aware of this new information, as we are=20
+now planning to send the payment to the account mentioned.
 
-Alice
+NAME OF BENEFICIARY: ERIK KASPERSSON
+BANK NAME: SWEDBANK AB
+ADDRESS: REPSLAGAREGATAN 23A, 582 22 LINK=C3=96PING, SWEDEN
+SWIFT CODE: SWEDSESS
+ACCOUNT NUMBER: 84806-31282205
+
+
+A payment instruction has been issued by the Department of=20
+Treasury for an immediate release of your payment to the bank=20
+account above without further prejudice. We cannot approve or=20
+schedule payment to the 
+
+given bank account without your confirmation. May we proceed with=20
+the transfer to the Beneficiary: Erik Kaspersson, bank account in=20
+Sweden?
+
+I await your urgent response.
+
+Mr. Vlad Dinu.
