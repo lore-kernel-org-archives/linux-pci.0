@@ -1,227 +1,329 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3C016F288;
-	Sat, 18 Oct 2025 17:33:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A3FA523A
+	for <linux-pci@vger.kernel.org>; Sat, 18 Oct 2025 17:45:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760808835; cv=none; b=i0YrLmp2qYeIQWpkWdx+REu9YxarnM8mKgIXbZoF7gJzZPYF7PwZsYDE7ki340eSOOw8yp7b6qzMDaI9Kd58NupQQVjvppkg1zQZNeOP/awd5pSujiYsNC41/bbkdgnm/ERbGikVBvrblkbXpcAOMkN8TdGtxrEgiyIZuzGRurk=
+	t=1760809537; cv=none; b=HTGHyAWwCJfwDQMUSJ3+aDsqkIk/mW0x2M4sc7yeBPgtiGWwe2VkVuvc3apc5X92b5Ni4kUOk9Rph+H/jKjZAIL882z0+wip3UhQ1Q6mCBfBw7Tu6qfGNc6iVTru+my82ZDBb1XqewCccN1Otjza3VVFFchELI6H82+L/4XDXYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760808835; c=relaxed/simple;
-	bh=mqhP8QyGZTc4BwBAUo2/jUHYtMkloV7xLlgmDxkDDYI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NRhK/yY26DxXy9O0N4r+6ejrtLO1DCCJ7+K6dQsJk6meXMkW9XS0enMvBhg58m+cJfnU6hjR7CYymFX09uFa/1aK/1hQIi5j0M3kHOwWMiqEu0NdfwN5iJOmA20ZcPmkebPGJ77+vlhDUHVC1wpWjPumaJBn5t1oCb6176UG1ao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=m+l7I6N6; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1760809537; c=relaxed/simple;
+	bh=RkRyHI7uPJ58DcP8916jBGhXJnT62dW3s7Q+6uzhQjA=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=uyEwqTBCZ+mKALbD5EUIDnAQsUkuzSmM2P34P7s92BPGuQwg6j02365gZdGHP48llqmnMMA1Rdd/N7n1qYYQ4+DtVI5/mSnS3ohLoKc6fJhbSY9s9BdH7gG3aY5437CXLoZHoB/cLXOkAutt9QoaqXVQhxJpgzIYDFqbKwMzFOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UgA/ww7w; arc=none smtp.client-ip=209.85.222.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="m+l7I6N6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1760808834; x=1792344834;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=mqhP8QyGZTc4BwBAUo2/jUHYtMkloV7xLlgmDxkDDYI=;
-  b=m+l7I6N6oZxxG7WMJObi6kMCjJemzSfMXNF+FXBNWjzE/SEM1AgfUgk3
-   fcvm4r7B0PAjgT3nORLal3TVVnGuNWNPCCnF6VNSTmNYlcSKDzjlZMXb/
-   Yepuqf+OOAIumo/6D/CREdgkyTWneKRL+r/xOSCF641/80rMZtFg905dk
-   qKw2hh8L5mxowntDd84UCdblb7hZXcLBPJtIs4DUZflW39Vlvz1AdzSCu
-   JiWKrBkdFMuJ1sm/sHdLRNJNA8C9gpsdUCz/SMUz59ionurWbChcU+PGQ
-   CbvmsQoJK7j6vxzXTSh88mEhcSvKxq54y+Rkks4CkbNkkTZtdDo/HJujp
-   Q==;
-X-CSE-ConnectionGUID: vkDhOoe9RqaJDHXAySxAeA==
-X-CSE-MsgGUID: iMoTfHlfT46mVV0Mw6T6Sw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="62901807"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="62901807"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2025 10:33:52 -0700
-X-CSE-ConnectionGUID: 6kguCOd6RsmyWUWlxYPJrQ==
-X-CSE-MsgGUID: bS/xrvw1ReeYI5ZbDKFaog==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,239,1754982000"; 
-   d="scan'208";a="183474260"
-Received: from pgcooper-mobl3.ger.corp.intel.com (HELO ashevche-desk.local) ([10.245.244.194])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2025 10:33:49 -0700
-Received: from andy by ashevche-desk with local (Exim 4.98.2)
-	(envelope-from <andriy.shevchenko@linux.intel.com>)
-	id 1v92V3-00000000Kqx-2z8n;
-	Wed, 15 Oct 2025 17:29:09 +0300
-Date: Wed, 15 Oct 2025 17:29:09 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Kai-Heng Feng <kaihengf@nvidia.com>, Rob Herring <robh@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [PATCH 2/3] PCI: Do not coalesce host bridge resource structs in
- place
-Message-ID: <aO-vtdECWNpYpo6f@smile.fi.intel.com>
-References: <20251010144231.15773-1-ilpo.jarvinen@linux.intel.com>
- <20251010144231.15773-3-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UgA/ww7w"
+Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-891208f6185so224939585a.1
+        for <linux-pci@vger.kernel.org>; Sat, 18 Oct 2025 10:45:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1760809532; x=1761414332; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=GdMS95Atx4mSrNPZQAo+LsUQxkW9pe6jqlDkCSsN+lg=;
+        b=UgA/ww7wEmiz3T8cs0PpRj3NhbSeVpFRYahyuWcxurfuX/pjpdckIPTm8j9Gzb4KaD
+         JqGWdDVZfJSf2QhUbEmjFbEO+wyI1R12R2tIbSi6FJV4erXBuACx/eMHM52+pQe89Cih
+         wZqVGM9YDGGcXPeM95JD0/hZ7v4aFM86wlstTelb+clOhi2w4KR9nXIkUyyyOaYrLbrk
+         LOEZV+NgPKI1QCVr5GfHu+mFHQFTJdVlnL1ZTQkKONQ3Zrs7a6x2g8DGOJ5Goi4yXdaI
+         eznJOzIn1ANrhcTm2iOWrRuWYcjyXuVnz9rMNci+eSOy9Jg61az0xc19atQhuhIxFrdT
+         0XPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760809532; x=1761414332;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GdMS95Atx4mSrNPZQAo+LsUQxkW9pe6jqlDkCSsN+lg=;
+        b=Tqr2JFuWn42aLb+smQxy9iCC6800rCb92QnLDlulVXxD3RcbkPnk10kyyQSpODYnWj
+         oA0iviF3y+nZbRQe4OB1TUoOyKcE0QNMZIBPw+JYVk8a9gNuOfaph/eXfSBTgx9P3/KG
+         xABtFmJcQLExQPfBfn0IxyciDvbL3Fw361lv1T2vqh1hKvPfgMTa65xT5Ff0+1hzxau+
+         MrBrd3K6rZmz6ZlLz9qo5d3fQ1wdARu6NEAde6fauB+k4RdQoIU35M78wmi7FczsG6n+
+         RLWcY/mEx8ELA/S6GgSc8rnstzFekwC0ocFOWmszKYaP+SXbzzfB9nq1M1dSxs7BdLEb
+         o9rQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUnkriZ+UfLtdTbZ1j9COTbq5ntFVVwMfCVAwY0/e5v3yj3DuAdUoPfzXXv+LrPQXh9vHoDJwTdXiA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYAmb1XuP8nuQxu2Q5OwmGsU0H7XUcc8rLMEho/egPVZk3weVb
+	4+DVg6PONJxCCfX2cv2l3Wu9KwDz9Ye7f/WYATXuqIFPP6oKpElBbsCP
+X-Gm-Gg: ASbGnctdWJJC0qd+ByPUWe7P/vZBMfUefsuxGPr+YNapeh3FMg5NPkfp/Tz2jcp0V/x
+	3MVPaMrQOMWHOGa7GuTeJvIkGpgNiqd0Amk9dRvuvNXCJQhJLWpXfTFhfRBUUIqtg2ahTHxasMh
+	Qgtuep/P/ccb5ToXQVkUc14ARu2BlKk0vJ7GLQWJ6d4JaXMxgsnyMAdKZ9VYYIprg11zQed3eZl
+	kHNLbgCOMqI7ZK7mo2JXttQIvGgUm3yyVaSAojk0Su0vGCj8xDX3J97LQf1eZRmQ7yKxTSA/WYE
+	aKgv8ht2PDz1uEinr2VTk93rS0R+DwvDi+fA17tlyi8hoaeYDVklhvQtd83nubTG/vS+BDs4T+y
+	wK8RbzoNHA88L6c59Hkh/RKWU4JQmdjc8BIOKAC3hOGzThJssoRIsaacZ0hEnhm7Iav6moAWsJA
+	NnWjOJHAtgtjj3F0HdmJVd2qTTFpWglK796BlZh5Nvjr43rL0tOOFW4pm2NXFTbhpJAYNXNeS15
+	adHZashhHerSjFyDPZdqasB1KeBaD17kGANv544x8gYMKQGsrCHI3xuhlBg1Kg=
+X-Google-Smtp-Source: AGHT+IEdevRuwofuzpFzVC3FI0PAVHgIWWVzq4ljVRX5kAtuoN7pN/QGHe+EUZbFrhmTy1MgZSLsgQ==
+X-Received: by 2002:a05:620a:4806:b0:890:28c7:f668 with SMTP id af79cd13be357-890706048dfmr1055053185a.75.1760809532242;
+        Sat, 18 Oct 2025 10:45:32 -0700 (PDT)
+Received: from 117.1.168.192.in-addr.arpa ([2600:4808:6353:5c00:1948:1052:f1e9:e23a])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4e8ab114132sm20445161cf.40.2025.10.18.10.45.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 18 Oct 2025 10:45:31 -0700 (PDT)
+From: Tamir Duberstein <tamird@gmail.com>
+Subject: [PATCH v18 00/16] rust: replace kernel::str::CStr w/
+ core::ffi::CStr
+Date: Sat, 18 Oct 2025 13:45:11 -0400
+Message-Id: <20251018-cstr-core-v18-0-ef3d02760804@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251010144231.15773-3-ilpo.jarvinen@linux.intel.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIACjS82gC/3XTzW7bMAwH8FcpfK4Kkvreqe8x9CBTcmOsiTrZM
+ xoEeffJWVvbMXaU5R/1h0hdmiGVPg3Nj4dLU9LUD30+1QW6x4eGD+H0mkQf64eGgDQQoOBhLIJ
+ zSSKq1rfGIwF3Tf3/vaSu/7gV+/lS113JRzEeSgpfFRQ49Kil0eaJnAMrSEwh5pKn4df5+b3kM
+ Z+OoX974nycSx76YczlfIs3mbnwVxBaBZmMAOGU8RxNJN/F59fvInOQyf5X2ipjQFe3CJR099K
+ tpVxLVyW3siOTrDPO3Eu/SIl2LX2VGqNh1kSdoXuJsFBNak0RqjUKKXgVfbR6Z3FlJWwszomjZ
+ +CWWw/7c2mxBv3G0nzDwJ5tq7QH2Fm5WLuZkrpVbe2KjTK13obdTaFaWdxmVnPmYBNwcMRun1k
+ v1uGmQahnayVFTyQ7lXZ2NVCe9MbOE6U51gYrC4n35y4jhYBbe5sp1smGxM7CZhqv/95JSb//1
+ Lc2fj6W6/UvA6b1f4kDAAA=
+X-Change-ID: 20250201-cstr-core-d4b9b69120cf
+To: Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
+ Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Luis Chamberlain <mcgrof@kernel.org>, Russ Weight <russ.weight@linux.dev>, 
+ Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, 
+ Will Deacon <will@kernel.org>, Waiman Long <longman@redhat.com>, 
+ Nathan Chancellor <nathan@kernel.org>, 
+ Nick Desaulniers <nick.desaulniers+lkml@gmail.com>, 
+ Bill Wendling <morbo@google.com>, Justin Stitt <justinstitt@google.com>, 
+ Christian Brauner <brauner@kernel.org>, 
+ Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
+ =?utf-8?q?Arve_Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, 
+ Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, 
+ Joel Fernandes <joelagnelf@nvidia.com>, Carlos Llamas <cmllamas@google.com>, 
+ Suren Baghdasaryan <surenb@google.com>, Jens Axboe <axboe@kernel.dk>, 
+ Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
+ Vlastimil Babka <vbabka@suse.cz>, 
+ "Liam R. Howlett" <Liam.Howlett@oracle.com>, 
+ Uladzislau Rezki <urezki@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
+ Stephen Boyd <sboyd@kernel.org>, Breno Leitao <leitao@debian.org>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>
+Cc: rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ llvm@lists.linux.dev, linux-fsdevel@vger.kernel.org, 
+ linux-block@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-clk@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, Tamir Duberstein <tamird@gmail.com>, 
+ Matthew Maurer <mmaurer@google.com>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=openssh-sha256; t=1760809526; l=8902;
+ i=tamird@gmail.com; h=from:subject:message-id;
+ bh=RkRyHI7uPJ58DcP8916jBGhXJnT62dW3s7Q+6uzhQjA=;
+ b=U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgtYz36g7iDMSkY5K7Ab51ksGX7hJgs
+ MRt+XVZTrIzMVIAAAAGcGF0YXR0AAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAA
+ QPrydIdiiRS/gK8h0NUWuFXcftpHIZ9RrtXQTWEtyVAud7xhDhZsNYylluVe0V4u3EjmEfmoG1y
+ kqY2z5aP8tQw=
+X-Developer-Key: i=tamird@gmail.com; a=openssh;
+ fpr=SHA256:264rPmnnrb+ERkS7DDS3tuwqcJss/zevJRzoylqMsbc
 
-On Fri, Oct 10, 2025 at 05:42:30PM +0300, Ilpo Järvinen wrote:
-> The resource coalescing for host bridge windows in
-> pci_register_host_bridge() can alter the underlying struct resource
-> which is inherently dangerous as this code has no knowledge of who else
-> holds a pointer the same resource.
-> 
-> Merge the struct resource inside a newly added
-> resource_list_merge_entries() which uses the internal __res member of
-> the struct resource_entry to store the merged resource, thus preserving
-> the original resource structs.
+This picks up from Michal Rostecki's work[0]. Per Michal's guidance I
+have omitted Co-authored tags, as the end result is quite different.
 
-...
+This series is intended to be taken through rust-next. The final patch
+in the series requires some other subsystems' `Acked-by`s:
+- drivers/android/binder/stats.rs: rust_binder. Alice, could you take a
+  look?
+- rust/kernel/device.rs: driver-core. Already acked by gregkh.
+- rust/kernel/firmware.rs: driver-core. Danilo, could you take a look?
+- rust/kernel/seq_file.rs: vfs. Christian, could you take a look?
+- rust/kernel/sync/*: locking-core. Boqun, could you take a look?
 
-> +static void resource_clear_tree_links(struct resource *res)
-> +{
-> +	res->parent = NULL;
-> +	res->child = NULL;
-> +	res->sibling = NULL;
-> +}
+Link: https://lore.kernel.org/rust-for-linux/20240819153656.28807-2-vadorovsky@protonmail.com/t/#u [0]
+Closes: https://github.com/Rust-for-Linux/linux/issues/1075
 
-Not sure if this is the best location to inject a new helper to in the code
-(I mean the position in the file). But I leave it to you just to give another
-look in case something more suitable can be found.
+Signed-off-by: Tamir Duberstein <tamird@gmail.com>
+---
+Changes in v18:
+- Rebase on rust-next and fix more backsliding. (thanks Alice!)
+- Link to v17: https://lore.kernel.org/r/20251015-cstr-core-v17-0-dc5e7aec870d@gmail.com
 
->  static int __release_resource(struct resource *old, bool release_child)
+Changes in v17:
+- Rebase on rust-next and fix backsliding relative to series 2a and 2b.
+- Link to v16: https://lore.kernel.org/r/20250925-cstr-core-v16-0-5cdcb3470ec2@gmail.com
 
-...
+Changes in v16:
+- Rebase on rust-next.
+- Link to v15: https://lore.kernel.org/r/20250813-cstr-core-v15-0-c732d9223f4e@gmail.com
 
-> +/**
-> + * resource_mergeable - Test if resources are contiguous and can be merged
-> + * @r1: first resource
-> + * @r2: second resource
-> + *
-> + * Tests @r1 is followed by @r2 contiguously and share the metadata.
+Changes in v15:
+- Seal `CStrExt`. (Benno Lossin)
+- Add patch to remove trailing commas from
+  samples/rust/rust_driver_platform.rs.
+- Link to v14: https://lore.kernel.org/r/20250710-cstr-core-v14-0-ca7e0ca82c82@gmail.com
 
-This needs an additional explanation about name equivalence that's not only by
-pointers, but by a content.
+Changes in v14:
+- Break the change into multiple series.
+- Move `CStr` reexport to `kernel::ffi`. (Alice Ryhl)
+- `pub use core::fmt::{....}` in `kernel/fmt.rs`. (Benno Lossin)
+- Avoid unnecessary binding to `first_lit` in `fmt!`. (Benno Lossin)
+- Add comment to `identifier`-extracting loop. (Benno Lossin)
+- Change `quote_spanned!` formatting. (Benno Lossin)
+- Link to v13: https://lore.kernel.org/r/20250701-cstr-core-v13-0-29f7d3eb97a6@gmail.com
 
-> + * Return: %true if resources are mergeable non-destructively.
-> + */
-> +static bool resource_mergeable(struct resource *r1, struct resource *r2)
-> +{
-> +	if ((r1->flags != r2->flags) ||
-> +	    (r1->desc != r2->desc) ||
-> +	    (r1->parent != r2->parent) ||
-> +	    (r1->end + 1 != r2->start))
-> +		return false;
+Changes in v13:
+- Rebase on v6.16-rc4.
+- Link to v12: https://lore.kernel.org/r/20250619-cstr-core-v12-0-80c9c7b45900@gmail.com
 
-> +	if (r1->name == r2->name)
-> +		return true;
-> +
-> +	if (r1->name && r2->name && !strcmp(r1->name, r2->name))
-> +		return true;
-> +
-> +	return false;
+Changes in v12:
+- Introduce `kernel::fmt::Display` to allow implementations on foreign
+  types.
+- Tidy up doc comment on `str_to_cstr`. (Alice Ryhl).
+- Link to v11: https://lore.kernel.org/r/20250530-cstr-core-v11-0-cd9c0cbcb902@gmail.com
 
-Hmm... Can we keep the logic more straight as in returning false cases as soon
-as possible?
+Changes in v11:
+- Use `quote_spanned!` to avoid `use<'a, T>` and generally reduce manual
+  token construction.
+- Add a commit to simplify `quote_spanned!`.
+- Drop first commit in favor of
+  https://lore.kernel.org/rust-for-linux/20240906164448.2268368-1-paddymills@proton.me/.
+  (Miguel Ojeda)
+- Correctly handle expressions such as `pr_info!("{a}", a = a = a)`.
+  (Benno Lossin)
+- Avoid dealing with `}}` escapes, which is not needed. (Benno Lossin)
+- Revert some unnecessary changes. (Benno Lossin)
+- Rename `c_str_avoid_literals!` to `str_to_cstr!`. (Benno Lossin &
+  Alice Ryhl).
+- Link to v10: https://lore.kernel.org/r/20250524-cstr-core-v10-0-6412a94d9d75@gmail.com
 
-I think of something like this:
+Changes in v10:
+- Rebase on cbeaa41dfe26b72639141e87183cb23e00d4b0dd.
+- Implement Alice's suggestion to use a proc macro to work around orphan
+  rules otherwise preventing `core::ffi::CStr` to be directly printed
+  with `{}`.
+- Link to v9: https://lore.kernel.org/r/20250317-cstr-core-v9-0-51d6cc522f62@gmail.com
 
-	if (r1->name && r2->name)
-		return strcmp(r1->name, r2->name) == 0;
+Changes in v9:
+- Rebase on rust-next.
+- Restore `impl Display for BStr` which exists upstream[1].
+- Link: https://doc.rust-lang.org/nightly/std/bstr/struct.ByteStr.html#impl-Display-for-ByteStr [1]
+- Link to v8: https://lore.kernel.org/r/20250203-cstr-core-v8-0-cb3f26e78686@gmail.com
 
-	return r1->name == r2->name;
+Changes in v8:
+- Move `{from,as}_char_ptr` back to `CStrExt`. This reduces the diff
+  some.
+- Restore `from_bytes_with_nul_unchecked_mut`, `to_cstring`.
+- Link to v7: https://lore.kernel.org/r/20250202-cstr-core-v7-0-da1802520438@gmail.com
 
-> +}
+Changes in v7:
+- Rebased on mainline.
+- Restore functionality added in commit a321f3ad0a5d ("rust: str: add
+  {make,to}_{upper,lower}case() to CString").
+- Used `diff.algorithm patience` to improve diff readability.
+- Link to v6: https://lore.kernel.org/r/20250202-cstr-core-v6-0-8469cd6d29fd@gmail.com
 
-...
+Changes in v6:
+- Split the work into several commits for ease of review.
+- Restore `{from,as}_char_ptr` to allow building on ARM (see commit
+  message).
+- Add `CStrExt` to `kernel::prelude`. (Alice Ryhl)
+- Remove `CStrExt::from_bytes_with_nul_unchecked_mut` and restore
+  `DerefMut for CString`. (Alice Ryhl)
+- Rename and hide `kernel::c_str!` to encourage use of C-String
+  literals.
+- Drop implementation and invocation changes in kunit.rs. (Trevor Gross)
+- Drop docs on `Display` impl. (Trevor Gross)
+- Rewrite docs in the style of the standard library.
+- Restore the `test_cstr_debug` unit tests to demonstrate that the
+  implementation has changed.
 
-> +	new_res->start = res->start;
-> +	new_res->end = next_res->end;
-> +	new_res->name = res->name;
-> +	new_res->flags = res->flags;
-> +	new_res->desc = res->desc;
+Changes in v5:
+- Keep the `test_cstr_display*` unit tests.
 
-Hmm... IIRC I saw similar code lines a few times in the kernel in resource.c
-and might be elsewhere. Perhaps a time for another helper?
+Changes in v4:
+- Provide the `CStrExt` trait with `display()` method, which returns a
+   `CStrDisplay` wrapper with `Display` implementation. This addresses
+   the lack of `Display` implementation for `core::ffi::CStr`.
+- Provide `from_bytes_with_nul_unchecked_mut()` method in `CStrExt`,
+   which might be useful and is going to prevent manual, unsafe casts.
+- Fix a typo (s/preffered/prefered/).
 
+Changes in v3:
+- Fix the commit message.
+- Remove redundant braces in `use`, when only one item is imported.
 
-...
+Changes in v2:
+- Do not remove `c_str` macro. While it's preferred to use C-string
+   literals, there are two cases where `c_str` is helpful:
+   - When working with macros, which already return a Rust string literal
+     (e.g. `stringify!`).
+   - When building macros, where we want to take a Rust string literal as an
+     argument (for caller's convenience), but still use it as a C-string
+     internally.
+- Use Rust literals as arguments in macros (`new_mutex`, `new_condvar`,
+   `new_mutex`). Use the `c_str` macro to convert these literals to C-string
+   literals.
+- Use `c_str` in kunit.rs for converting the output of `stringify!` to a
+   `CStr`.
+- Remove `DerefMut` implementation for `CString`.
 
-> +	/* prepare for step 2), find res & next_res from child/sibling chain. */
-> +	p = &parent->child;
-> +	while (1) {
-> +		tmp = *p;
-> +		if (tmp == res)
-> +			break;
-> +
-> +		/*  No res in child/sibling, the resource tree is corrupted! */
+---
+Tamir Duberstein (16):
+      samples: rust: platform: remove trailing commas
+      rust_binder: remove trailing comma
+      rust_binder: use `kernel::fmt`
+      rust_binder: use `core::ffi::CStr` method names
+      rnull: use `kernel::fmt`
+      rust: alloc: use `kernel::fmt`
+      rust: debugfs: use `kernel::fmt`
+      rust: pci: use `kernel::fmt`
+      rust: remove spurious `use core::fmt::Debug`
+      rust: opp: use `CStr::as_char_ptr`
+      rust: opp: fix broken rustdoc link
+      rust: configfs: use `CStr::as_char_ptr`
+      rust: regulator: use `CStr::as_char_ptr`
+      rust: clk: use `CStr::as_char_ptr`
+      rust: support formatting of foreign types
+      rust: replace `CStr` with `core::ffi::CStr`
 
-Extra space which is not needed.
+ drivers/android/binder/error.rs          |   5 +-
+ drivers/android/binder/process.rs        |   2 +-
+ drivers/android/binder/stats.rs          |   6 +-
+ drivers/block/rnull/configfs.rs          |   9 +-
+ rust/ffi.rs                              |   2 +
+ rust/kernel/alloc/kvec/errors.rs         |  14 +-
+ rust/kernel/clk.rs                       |   4 +-
+ rust/kernel/configfs.rs                  |   2 +-
+ rust/kernel/debugfs.rs                   |   2 +-
+ rust/kernel/debugfs/callback_adapters.rs |   7 +-
+ rust/kernel/debugfs/entry.rs             |   2 +-
+ rust/kernel/debugfs/file_ops.rs          |   6 +-
+ rust/kernel/debugfs/traits.rs            |  10 +-
+ rust/kernel/device.rs                    |   1 +
+ rust/kernel/drm/ioctl.rs                 |   4 +-
+ rust/kernel/error.rs                     |   2 +
+ rust/kernel/firmware.rs                  |   9 +-
+ rust/kernel/fmt.rs                       |  87 ++++++-
+ rust/kernel/opp.rs                       |   8 +-
+ rust/kernel/pci/id.rs                    |   3 +-
+ rust/kernel/prelude.rs                   |   7 +-
+ rust/kernel/ptr.rs                       |   1 -
+ rust/kernel/regulator.rs                 |   9 +-
+ rust/kernel/seq_file.rs                  |   2 +-
+ rust/kernel/str.rs                       | 395 +++++++------------------------
+ rust/kernel/sync/condvar.rs              |   2 +-
+ rust/kernel/sync/lock.rs                 |   2 +-
+ rust/kernel/sync/lock/global.rs          |   2 +-
+ rust/macros/fmt.rs                       |  94 ++++++++
+ rust/macros/lib.rs                       |  19 ++
+ rust/macros/quote.rs                     |   7 +
+ samples/rust/rust_driver_platform.rs     |   4 +-
+ 32 files changed, 367 insertions(+), 362 deletions(-)
+---
+base-commit: 6f3b6e91f7201e248d83232538db14d30100e9c7
+change-id: 20250201-cstr-core-d4b9b69120cf
 
-> +		if (WARN_ON_ONCE(!tmp))
-> +			return -EINVAL;
-> +
-> +		p = &tmp->sibling;
-> +	}
-
-...
-
-> static bool system_ram_resources_mergeable(struct resource *r1,
->  					   struct resource *r2)
->  {
->  	/* We assume either r1 or r2 is IORESOURCE_SYSRAM_MERGEABLE. */
-> -	return r1->flags == r2->flags && r1->end + 1 == r2->start &&
-> -	       r1->name == r2->name && r1->desc == r2->desc &&
-> +	return resource_mergeable(r1, r2) &&
->  	       !r1->child && !r2->child;
-
-Now one line?
-
->  }
-
-> +struct resource_entry *resource_list_merge_entries(struct resource_entry *entry,
-> +						   struct resource_entry *next)
-> +{
-> +	struct resource *res = entry->res, *next_res = next->res, *new_res;
-> +	int ret;
-> +
-> +	if ((entry->offset != next->offset) ||
-> +	    !resource_mergeable(res, next_res))
-
-One line? (It's only 82 characters long)
-
-> +		return ERR_PTR(-EINVAL);
-> +
-> +	/* Use the internal __res to not mutate the input resources. */
-> +	struct resource_entry __free(kfree) *new = resource_list_create_entry(NULL, 0);
-> +	if (!new)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	new->offset = next->offset;
-> +	new_res = new->res;
-> +
-> +	ret = resource_coalesce(res, next_res, new_res);
-> +	if (ret)
-> +		return ERR_PTR(ret);
-> +
-> +	resource_list_add_tail(new, &entry->node);
-> +	resource_list_destroy_entry(entry);
-> +	resource_list_destroy_entry(next);
-> +
-> +	return no_free_ptr(new);
-> +}
-
--- 
-With Best Regards,
-Andy Shevchenko
-
+Best regards,
+--  
+Tamir Duberstein <tamird@gmail.com>
 
