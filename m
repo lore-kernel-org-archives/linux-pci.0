@@ -1,124 +1,226 @@
-Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBA362D592F
-	for <linux-pci@vger.kernel.org>; Mon, 20 Oct 2025 18:53:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94750261B9E;
+	Mon, 20 Oct 2025 19:02:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760986430; cv=none; b=RFZd+kXv9ul7hSL49PG1HHPRGSL3o3CTgiGhCG32fqILsKPm+lA9a6Ci1oFAR0bFjey44HQlsXiy2+SIJ6HIWzAN1aZD+sMU4aQJjuJCv4/QmUgor+2X01qsyFYPWcO0U4BfGQ+JTJ7FilEKuidGViVXiYXjlFIkRbWhQhmfceo=
+	t=1760986933; cv=none; b=PC7oXVvSmHltsyHDtB8grVeKjmzgIfjhlgtg4tlyNBU5KlFfV622Xatvc//5tjvxP98i4KAe0KGxdbnla5OUYua7x1s7CcsKu0oBpLJLVYQ76yCOAr/hW2SsskA+VxVdN3lfarVMFr+p/8lliS+vbjHPTtaJFbZQgdn+XnUIXJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760986430; c=relaxed/simple;
-	bh=ep9oGRp0oF+oCFDHArxdHwQE5BacfqsLXNq7hLcEyno=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YB0z/rk4u/KaXe94ASvwPZvYbiWgGhcHFFFf+zYKoss+Ru/XpXutWJR32RU57uCfSBxvXPESLl6lt6JaW8lSlos+fXBjHe+j1dKHqCP51T4f+Jat2OD1Wt0gw2cG/1smFe+PpoYDrLIPO1Kfv131fmhXjebK74WXmZYjFV28T3I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DIzWjg9g; arc=none smtp.client-ip=209.85.167.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1760986933; c=relaxed/simple;
+	bh=BTaf2JeikokcnZN/DcMJvPwDGGebUQjBL9CjUvtWROY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=b+VOdOqwv7Yv8w6RzsynQqvv4uieOm9VP0YzMspxhZ0CbLcViXsymHRYYSCtblbECijm0AVOubR8JlBHbjuWe7Y/q+PpGVxYaHoNraQpu2e8C86EqXutIYs4gI0m8Rod66Y1o9jDS+8heaOp32UcCehzX3i0slKY5qzgEHLe2fE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=oFU0rGqJ; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DIzWjg9g"
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-591c9934e0cso5227448e87.0
-        for <linux-pci@vger.kernel.org>; Mon, 20 Oct 2025 11:53:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760986427; x=1761591227; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qvkRm+XTrLJJZVcVghGvmjpr/0j+IP7YtKfaztr+Qdc=;
-        b=DIzWjg9gnQnUG9TcemQgQYlJC55i8rgv3s+7i2MxRtYySa9ILCW7fpRp9+J2yWIUEl
-         viFqIMc25uHKqE43zhQ2Qr2hAW7gVMoVl98xyP7YerEPBKHs4claLxW18eJl+NreoJej
-         WffmX3v9GA7My0V+8IfhPBc8dGhJ7ua17YO5gpnpjBL3NuSe8BOAKoHqVqdfywjpmbaF
-         V+NwuuKz4KqToNNYnna2QJtySN0ULEyzfCdRYcwssMitclS8mmxPy5YJdXCiYEFsOeib
-         BiQIBJ1dDXo4RWYkETf2/Dv5QVUmC5rJp9xAu+ogGX4V0Yzng765/M9+UZU0QAu8v9hI
-         88vw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760986427; x=1761591227;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=qvkRm+XTrLJJZVcVghGvmjpr/0j+IP7YtKfaztr+Qdc=;
-        b=HtR7Q1MAUxvrQ4tJPoV9tNyblzaFT9f+4vyrSshuiu9HXucFi57eZNMXchvakcXooI
-         ML7N731LtQShRspWvMQAC8g2I7k/masQighZbo/Mnil5FhxeLzrizG0fU/xfRoYNfaMe
-         7lC3ziH7SN+ZdRcYDRtgAAy8K+Nm6HMdoKYFdZdt09EKlHjCrDs5Xtqik7deUOMcvcud
-         JM5clAekZGYMarux19AUo2Qh8wTqAbZpL+HZPCDcRvofcMGC57RkiqQknTrdCjqecOMU
-         zBSdvKf3zZDSYtu5OKaH3KKZS2rLnWYISDvKPcHK8gbPut+bmmH4CqC2zcJN5al0qRMB
-         MRFA==
-X-Forwarded-Encrypted: i=1; AJvYcCXs9fbxNo2PBypG/r0TcQbv3vm/sSkXs3MVl8T2tNhwk08e47O+dvcAkv16Sq/bvu4y6m4Rb7E/08w=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy3wN9lepgPnCMOkr+Bdb0hKUT1pTJcUhT8rcJO44cWuhtm/lwL
-	mxsOYM+xsNyBfEwnvfesscrSl+DpZ1FPefuXfKaApGdLYBC4FOqTFEYlzn30rIPMEvvGaiZlyXt
-	eEVZZNlkE6EwTAh+43ekD5Uyr0+SLW6g=
-X-Gm-Gg: ASbGnctOj9QK/0CLnHg0TXfSL5hvZusixW3DOPlKNnUQL0kEVtfMC1jMrYgnVL1cXg8
-	atVQ3JiCpTFlwqNBSfmAODGF2VafCA57lao79+aQMYopwwwhE0lY/tFjVDS7rUbNNSnivgFmlB/
-	q6bbBWUGNDpWXOdzV1lZQCCgKTrHx+BpxdvKcoUxmIgJbMun49+4uSlXcBGUUpHNacZV1hFTCOj
-	/LySThT8PDP+Sb20rPsJRMXjLDBb9s5Hui585SpWFT4/3RroRZp3BjkbtF8
-X-Google-Smtp-Source: AGHT+IGriJ7UXZ9nd8XnOsNbi6d9VsXWG8HB0uHqueF027XCSb3Vwq82mSdbbfih1n1Eq8I/zX/Vvg6RGc3tBqBeAaA=
-X-Received: by 2002:a05:6512:308d:b0:577:318a:a1c6 with SMTP id
- 2adb3069b0e04-591d84f7185mr4042715e87.23.1760986426759; Mon, 20 Oct 2025
- 11:53:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="oFU0rGqJ"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59KGYVTs027635;
+	Mon, 20 Oct 2025 19:02:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=pp1; bh=EnCSOFCChDHKwtLNy
+	shGpOKoUJ0zJMwgZ3OIo6E5RHk=; b=oFU0rGqJ9aHpYCPFLvxuNCwvSG5xRvmUM
+	NprsChdCwajWMZNjMXOytw1kGQDzL5EWLFAZAG9TAx2AyEqwORWweIkErXryk/wh
+	/x23GswmGK1ONB5ji0BU1a5BBfe8gAJ3ULVbqImE++csghNNdL8qCyrELYA83Gej
+	SOBKqECtrVQojBsTv47UsssxyN/CGyXfiyibzHpAV66ClWernl68nq1jqBalf/qN
+	kpRVe1J4qSzR1X2Y9Y1Jjed1dmP09Ui4IROSxnYzFPSyfvt0M/11sJPR8EPOhWXP
+	XE/ZifPGGSEDmmT69Zmgk4xGvNw/dz2ZjhSo7WSRhspqqh7LSYGmQ==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 49v33f36gv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Oct 2025 19:02:08 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 59KIbsn7024677;
+	Mon, 20 Oct 2025 19:02:07 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 49vpqjq4jg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Oct 2025 19:02:07 +0000
+Received: from smtpav03.dal12v.mail.ibm.com (smtpav03.dal12v.mail.ibm.com [10.241.53.102])
+	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 59KJ263x7209564
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 20 Oct 2025 19:02:06 GMT
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 29A5858060;
+	Mon, 20 Oct 2025 19:02:06 +0000 (GMT)
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 80EA858068;
+	Mon, 20 Oct 2025 19:02:05 +0000 (GMT)
+Received: from IBM-D32RQW3.ibm.com (unknown [9.61.240.93])
+	by smtpav03.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 20 Oct 2025 19:02:05 +0000 (GMT)
+From: Farhan Ali <alifm@linux.ibm.com>
+To: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, stable@vger.kernel.org, alifm@linux.ibm.com,
+        schnelle@linux.ibm.com, mjrosato@linux.ibm.com
+Subject: [PATCH v1 2/3] s390/pci: Add architecture specific resource/bus address translation
+Date: Mon, 20 Oct 2025 12:01:59 -0700
+Message-ID: <20251020190200.1365-3-alifm@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20251020190200.1365-1-alifm@linux.ibm.com>
+References: <20251020190200.1365-1-alifm@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250731-pci-tegra-module-v7-2-cad4b088b8fb@gmail.com> <20250926212519.GA2268653@bhelgaas>
-In-Reply-To: <20250926212519.GA2268653@bhelgaas>
-From: Aaron Kling <webgeek1234@gmail.com>
-Date: Mon, 20 Oct 2025 13:53:35 -0500
-X-Gm-Features: AS18NWCmMUTtQXUaLifQrSGp8qDRYM75-V9Y9cQ9D8p5t478TikwLfPuNlOWrnU
-Message-ID: <CALHNRZ-1sLDz7rSO97tWFeRzgP4rGo=winc7ZsANtAtQkU+pFw@mail.gmail.com>
-Subject: Re: [PATCH v7 2/3] cpuidle: tegra: Export tegra_cpuidle_pcie_irqs_in_use
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Daniel Lezcano <daniel.lezcano@linaro.org>, 
-	Thomas Gleixner <tglx@linutronix.de>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=FMYWBuos c=1 sm=1 tr=0 ts=68f68730 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=VnNF1IyMAAAA:8
+ a=yYx7OUe3D3zVL1aRsq0A:9 a=cPQSjfK2_nFv0Q5t_7PE:22
+X-Proofpoint-GUID: 3d5M2-QNCCegtw7o-pFeuM4h8SOyvYl9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDE4MDAyMiBTYWx0ZWRfX/qVGm0fpqf7j
+ A/bi3XRz6dcWrCyZu2DGvUbH4ok5wKQRF27rKgL6nO+WtAxAwwd1IijZ5dWiHkbzzfAcsSBsrw2
+ Chj0g4FA2J0r+/cEKBQSgxaUAttRjhMPqLHi3LBEwbVZKwS610+o5dUY/7McQKbLeBFPle3IPxw
+ YO4dNfWGICIkc/mzYdmutLSDpZB0+WPLK2j3DPWAUMUGoUWjRcxUZ3N2rzzAkNFEFuj+rbiJq/G
+ 46F4aVpKVO9a8n4AeDVikItvhvDvp84DhE2YNP+WtEt2Q2XrlC09eVjof/KdTc6UYjwesXT1D+Q
+ kzaFkL3yGAOO2OJ7cK3xJTj2ABunEZZKHrpLJ/ro8bKy8aCDzMXjdvQvEvEINcNfz5O+lYgROUI
+ LsZcuTra6D9ny72iPTPHRRPxHtxvVw==
+X-Proofpoint-ORIG-GUID: 3d5M2-QNCCegtw7o-pFeuM4h8SOyvYl9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-20_05,2025-10-13_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 priorityscore=1501 adultscore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 phishscore=0 spamscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510180022
 
-On Fri, Sep 26, 2025 at 4:25=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> [cc->to: Rafael, Daniel, any feedback or ack?  Would like to resolve
-> this (part of Aaron's series at
-> https://lore.kernel.org/r/20250731-pci-tegra-module-v7-0-cad4b088b8fb@gma=
-il.com)]
->
-> On Thu, Jul 31, 2025 at 04:59:25PM -0500, Aaron Kling via B4 Relay wrote:
-> > From: Aaron Kling <webgeek1234@gmail.com>
-> >
-> > Add export for tegra_cpuidle_pcie_irqs_in_use() so that drivers like
-> > pci-tegra can be loaded as a module.
-> >
-> > Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
-> > ---
-> >  drivers/cpuidle/cpuidle-tegra.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/drivers/cpuidle/cpuidle-tegra.c b/drivers/cpuidle/cpuidle-=
-tegra.c
-> > index b203a93deac5f378572be90e22c73e7417adb99e..aca907a62bb5de4ee4c71c1=
-900eacedd4b90bc0a 100644
-> > --- a/drivers/cpuidle/cpuidle-tegra.c
-> > +++ b/drivers/cpuidle/cpuidle-tegra.c
-> > @@ -336,6 +336,7 @@ void tegra_cpuidle_pcie_irqs_in_use(void)
-> >       pr_info("disabling CC6 state, since PCIe IRQs are in use\n");
-> >       tegra_cpuidle_disable_state(TEGRA_CC6);
-> >  }
-> > +EXPORT_SYMBOL_GPL(tegra_cpuidle_pcie_irqs_in_use);
->
-> tegra_cpuidle_pcie_irqs_in_use() looks like a workaround for a Tegra20
-> hardware defect, and having no knowledge of typical Tegra20 systems,
-> my questions would be "Why do we even bother with this?  Should
-> cpuidle-tegra.c just disable CC6 always, unconditionally?  The whole
-> thing, and all of include/soc/tegra/cpuidle.h, looks like it might be
-> more trouble than it's worth."
+On s390 today we overwrite the PCI BAR resource address to either an
+artificial cookie address or MIO address. However this address is different
+from the bus address of the BARs programmed by firmware. The artificial
+cookie address was created to index into an array of function handles
+(zpci_iomap_start). The MIO (mapped I/O) addresses are provided by firmware
+but maybe different from the bus address. This creates an issue when trying
+to convert the BAR resource address to bus address using the generic
+pcibios_resource_to_bus().
 
-It's been almost a month again with no responses. Does this have any
-path forward that doesn't include signoff from the cpuidle
-maintainers? It's been over four months since they were first asked to
-look at this, so I presume there will never be any response.
+Implement an architecture specific pcibios_resource_to_bus() function to
+correctly translate PCI BAR resource addresses to bus addresses for s390.
+Similarly add architecture specific pcibios_bus_to_resource function to do
+the reverse translation.
 
-Aaron
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+---
+ arch/s390/pci/pci.c       | 74 +++++++++++++++++++++++++++++++++++++++
+ drivers/pci/host-bridge.c |  4 +--
+ 2 files changed, 76 insertions(+), 2 deletions(-)
+
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index c82c577db2bc..cacad02b2b7f 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -264,6 +264,80 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return 0;
+ }
+ 
++void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
++			     struct resource *res)
++{
++	struct zpci_bus *zbus = bus->sysdata;
++	struct zpci_bar_struct *zbar;
++	struct zpci_dev *zdev;
++
++	region->start = res->start;
++	region->end = res->end;
++
++	for (int i = 0; i < ZPCI_FUNCTIONS_PER_BUS; i++) {
++		int j = 0;
++
++		zbar = NULL;
++		zdev = zbus->function[i];
++		if (!zdev)
++			continue;
++
++		for (j = 0; j < PCI_STD_NUM_BARS; j++) {
++			if (zdev->bars[j].res->start == res->start &&
++			    zdev->bars[j].res->end == res->end &&
++			    res->flags & IORESOURCE_MEM) {
++				zbar = &zdev->bars[j];
++				break;
++			}
++		}
++
++		if (zbar) {
++			/* only MMIO is supported */
++			region->start = zbar->val & PCI_BASE_ADDRESS_MEM_MASK;
++			if (zbar->val & PCI_BASE_ADDRESS_MEM_TYPE_64)
++				region->start |= (u64)zdev->bars[j + 1].val << 32;
++
++			region->end = region->start + (1UL << zbar->size) - 1;
++			return;
++		}
++	}
++}
++
++void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	struct zpci_bus *zbus = bus->sysdata;
++	struct zpci_dev *zdev;
++	resource_size_t start, end;
++
++	res->start = region->start;
++	res->end = region->end;
++
++	for (int i = 0; i < ZPCI_FUNCTIONS_PER_BUS; i++) {
++		zdev = zbus->function[i];
++		if (!zdev || !zdev->has_resources)
++			continue;
++
++		for (int j = 0; j < PCI_STD_NUM_BARS; j++) {
++			if (!zdev->bars[j].size)
++				continue;
++
++			/* only MMIO is supported */
++			start = zdev->bars[j].val & PCI_BASE_ADDRESS_MEM_MASK;
++			if (zdev->bars[j].val & PCI_BASE_ADDRESS_MEM_TYPE_64)
++				start |= (u64)zdev->bars[j + 1].val << 32;
++
++			end = start + (1UL << zdev->bars[j].size) - 1;
++
++			if (start == region->start && end == region->end) {
++				res->start = zdev->bars[j].res->start;
++				res->end = zdev->bars[j].res->end;
++				return;
++			}
++		}
++	}
++}
++
+ void __iomem *ioremap_prot(phys_addr_t phys_addr, size_t size,
+ 			   pgprot_t prot)
+ {
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index afa50b446567..56d62afb3afe 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -48,7 +48,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ }
+ EXPORT_SYMBOL_GPL(pci_set_host_bridge_release);
+ 
+-void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
++void __weak pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 			     struct resource *res)
+ {
+ 	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+@@ -73,7 +73,7 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
++void __weak pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region)
+ {
+ 	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+-- 
+2.43.0
+
