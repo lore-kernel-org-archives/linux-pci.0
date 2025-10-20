@@ -1,91 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05FE825229C;
-	Mon, 20 Oct 2025 11:14:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5965E16A956;
+	Mon, 20 Oct 2025 11:23:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760958880; cv=none; b=QLfHxL29bvcDOlJUlzTXyoZb+5HL8D5oSjjoZzGxcCKHJZBiTpE1e0IweTD+IXvs4ppxnhS/n/dm8ZCrLOQ3qyHg2eyPGKrGiwc9UcE2MqsPG7cBYvNctGJcVknPs7RfaCqdKDInTWettjllxNhcviBke0y/bqjvTYoGmPThcGw=
+	t=1760959431; cv=none; b=qgLunWMpXcEchItShSj/0pvIFWCIj0yhvExT+2V6e693DgEtS4sQXVwcFT2U3Ktml6tfa8EzuucUHSJeC/iPt8lxiSH/qxxlGE6WAbWpvxNFjdwsNpQOrwPIjDYXliE4CfCF7wx2ISPU85l9qzS772pE+9tXwoMECnvVLVqGVxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760958880; c=relaxed/simple;
-	bh=V62uDvINV9pfoVeOC2Ljq6Nrt7DgmFMZhMqR7vMAx0Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LgNVq1VNIPHnXpedA3ESQWs1+rRU/Qu9fr9NZQfzd1mtQ8J20bYQqa0jD2pnsF0WTygI6GlqpAjmsqJq2Ft1iNxiaDnZA0ejVvNLMHcfE5xwSf4FAZWgMdmj2FxQJfkmWLD1s+Sy+q17wUnCJ4v+DckoRlvyekmDy1valZyX8NM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hlZryOFe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760959431; c=relaxed/simple;
+	bh=w6wBWLki2XIvs2oBWydKFD3OGmGR/riqqF+ZppMwnEk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=dKeDbJas7okydpqT+3GyoQ8AMKlBVgpYvEDMb6pyd6KFycSXyfPOcS98/ZJx9OqIAxfa6WpdGPOM5HMZEzR6akTJ6Of9ia6mGOrrM4K6Wr6LuXZtEC4I4BJMpbNmnkB9dX709/mzz8x4PDdeCRosLQQTvCRmXOKBKmEKnsQcpWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=K3QH8yK4; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hlZryOFe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37AD3C4CEF9;
-	Mon, 20 Oct 2025 11:14:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760958879;
-	bh=V62uDvINV9pfoVeOC2Ljq6Nrt7DgmFMZhMqR7vMAx0Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hlZryOFeHJf9xG35np+I8SQEsCotqwkDYwGHMmcPhmkWb/+OUt7FEPDQEtoM9Cicq
-	 PtOoFgtyHTf4CkrHhwYQFmRYyDNm/0LyyKw5uMAyA8Hc+fRyzuJqefn7VgeOjk8aWs
-	 l32RAGqkrBvI2scqZqfWAC9h0lW6NFP64HicXaUJKbFG2SYArjryLEhDW+vT9dpwxK
-	 Cm3n5XLDwQYeg54lUlm1e5e1FP5DCHkhNsiQiXD9PJj9p8QLQg+sShRcpTtSSCZ7Dv
-	 y9tJGge0cSSG/Xb+iR31uvMLKrDZ3yLS1KwgYCE3w1d2o5o4Wu/tQdqp5VYeC9W8Xg
-	 fi3j/06XLJAwg==
-Date: Mon, 20 Oct 2025 13:14:37 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Vitor Soares <ivitro@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Vitor Soares <vitor.soares@toradex.com>, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] dt-bindings: PCI: ti,j721e-pci-host: Add optional
- regulator supplies
-Message-ID: <20251020-kickass-fervent-capybara-9c48a0@kuoka>
-References: <20251014112553.398845-1-ivitro@gmail.com>
- <20251014112553.398845-2-ivitro@gmail.com>
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="K3QH8yK4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1760959427;
+	bh=w6wBWLki2XIvs2oBWydKFD3OGmGR/riqqF+ZppMwnEk=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=K3QH8yK4CEEZ/MSEEGQHJwb6X87Nc/goxw1hXt14U7wNfwqwIdy7XX3iZQzRE7DiY
+	 BH0OxR6/vzSx29X+lGcqkvNblqc4+jJlBPNzPKafTI3MDq+JrmvH7facRLWOqC04OM
+	 RvC/jJmVhrIQP9sNW0/R7TEm2GeWyzymO30QZWcE5tGcGflV+qbMI52t2PEX9KGSRG
+	 uJDRdCqlmcRRzf58j0lQLSx+rnkcF+X91DSYmNYb3zfeUeODZHKi+5wsqwj1sRYmEL
+	 l5L7yE7RXL1xlROPvyLkikA+W8dwkmr0KeCRw+QxGfyMSxYkouciCPHibtHkmJ00Ws
+	 AfncBTEzkDMfw==
+Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 8802A17E04DA;
+	Mon, 20 Oct 2025 13:23:46 +0200 (CEST)
+Message-ID: <98f8d06a-b470-42ca-880f-e0007abb28dc@collabora.com>
+Date: Mon, 20 Oct 2025 13:23:46 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20251014112553.398845-2-ivitro@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 5/5] PCI: mediatek: Add support for Airoha AN7583 SoC
+To: Christian Marangi <ansuelsmth@gmail.com>,
+ Ryder Lee <ryder.lee@mediatek.com>, Jianjun Wang
+ <jianjun.wang@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
+ <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Andrew Lunn <andrew@lunn.ch>,
+ Heiner Kallweit <hkallweit1@gmail.com>, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+ upstream@airoha.com
+References: <20251020111121.31779-1-ansuelsmth@gmail.com>
+ <20251020111121.31779-6-ansuelsmth@gmail.com>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Content-Language: en-US
+In-Reply-To: <20251020111121.31779-6-ansuelsmth@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 14, 2025 at 12:25:48PM +0100, Vitor Soares wrote:
-> From: Vitor Soares <vitor.soares@toradex.com>
+Il 20/10/25 13:11, Christian Marangi ha scritto:
+> Add support for the second PCIe Root Complex present on Airoha AN7583
+> SoC.
 > 
-> Add optional regulator supply properties for PCIe endpoints on TI SoCs.
-> Some boards provide dedicated regulators for PCIe devices, such as
-> 1.5V (miniPCIe), 3.3V (common for M.2 or miniPCIe), or 12V
-> (for high-power devices). These supplies are now described as optional
-> properties to allow the driver to control endpoint power where supported.
-
-Last sentence is completely redundant. Please do not describe DT, we
-all can read the patch. Driver is irrelevant here.
-
-How you described here and in descriptions, suggests these are rather
-port properties, not the controller.
-
+> This is based on the Mediatek Gen1/2 PCIe driver and similar to Gen3
+> also require workaround for the reset signals.
 > 
-> Signed-off-by: Vitor Soares <vitor.soares@toradex.com>
-> ---
->  .../devicetree/bindings/pci/ti,j721e-pci-host.yaml | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
+> Introduce a new quirk to skip having to reset signals and also introduce
+> some additional logic to configure the PBUS registers required for
+> Airoha SoC.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-> index c704099f134b..a20b03406448 100644
-> --- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-> +++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-> @@ -110,6 +110,18 @@ properties:
->        interrupts:
->          maxItems: 1
->  
-> +  vpcie1v5-supply:
+> Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
 
-How is it called in this device datasheet (not the board schematics)?
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 
-> +    description: 1.5V regulator used to power PCIe interfaces,
-> +                 typically present on miniPCIe slots.
-
-Best regards,
-Krzysztof
 
