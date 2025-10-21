@@ -1,23 +1,23 @@
-Received: from mail-m3270.qiye.163.com (mail-m3270.qiye.163.com [220.197.32.70])
+Received: from mail-m49237.qiye.163.com (mail-m49237.qiye.163.com [45.254.49.237])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1A3229A312
-	for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2025 07:49:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9807F27CCE0
+	for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2025 07:54:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.237
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761032965; cv=none; b=j9YxuHz2LyFBivE2v4JFP6YcIxlwlmNVMqpzUJsu4vUuubnHozNRTGizVMM1lJdgf/lgtAlgX64OWSCJAhEPBCkQynph7UJTIsxU4OqFO+6vVZ6Qm2HlWsrpbU8Pt9n0w255iGVKFXoGYytAjMXd22Q34YuzPHNERn8/lfIrkKw=
+	t=1761033258; cv=none; b=bjr427bUUphZFNDZ5UfjiIlwmIOJd8XCflmLVzzbeGYgU2XVap4+wa5v+yEmz6Tk+Nb7dWb6dlcYgQDrsEALtpYLoABHBnmHtOkiezqY+3VBKEayp6kwABTmHwUEtvL8jj/KtQ82b8VZys5AUj9bzpyEgrjW6PacvmAbtI2wdsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761032965; c=relaxed/simple;
-	bh=ZT+ZkJ0Dotc27S5w7lGWwTr5fIB3nIokkMMhaK0wv5E=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=aNSDVaMpGGLHrumCwxDXyRFCSD/RioypjdlIwGOTjLTBC4L+DO5S7UBg75N4rSEXQIoIie6HY8TP/oOSbuYuZluw3KDwPWBEtr2eOdTvs8fR6Ll/mlUjlq7o56puJEc6PWONoCLJmSZte7Ls8hXVHMOayagg8KzkEcq8ae92Qnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=GPbeA/Hu; arc=none smtp.client-ip=220.197.32.70
+	s=arc-20240116; t=1761033258; c=relaxed/simple;
+	bh=fo8/mrojmt6vNGKkiyUd2Ip7JLOqYwBtLut+V+A+ZAA=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=MZZ1QcLi69MxMMwJXKdVfvvtsxhg8IBHpu+Z4z6ujSfxuqR5eE77/pa8aBIBH9WbrbZZErx4bnnNpIySuaENO9Q6esAfxdMVJ5ELsI05oesMEPzjcodWsXJfaJ3qFEIOAupyJxsx+Jn2f8ez33Oafa4/x7fN++gc4ZduQmnT380=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Vq3LJ7/U; arc=none smtp.client-ip=45.254.49.237
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="GPbeA/Hu"
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Vq3LJ7/U"
 Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 26a1f52fc;
-	Tue, 21 Oct 2025 15:49:18 +0800 (GMT+08:00)
+	by smtp.qiye.163.com (Hmail) with ESMTP id 26a1f526e;
+	Tue, 21 Oct 2025 15:48:57 +0800 (GMT+08:00)
 From: Shawn Lin <shawn.lin@rock-chips.com>
 To: Heiko Stuebner <heiko@sntech.de>,
 	Manivannan Sadhasivam <mani@kernel.org>,
@@ -27,21 +27,19 @@ Cc: Thierry Reding <thierry.reding@gmail.com>,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-pci@vger.kernel.org,
 	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 4/4] arm64: dts: rockchip: Add PCIe clkreq stuff for RK3588 EVB1
-Date: Tue, 21 Oct 2025 15:48:27 +0800
-Message-Id: <1761032907-154829-5-git-send-email-shawn.lin@rock-chips.com>
+Subject: [PATCH 0/4] Add L1 substates support for Rockchip platforms
+Date: Tue, 21 Oct 2025 15:48:23 +0800
+Message-Id: <1761032907-154829-1-git-send-email-shawn.lin@rock-chips.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1761032907-154829-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1761032907-154829-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9a05be704409cckunm38953c58648290
+X-HM-Tid: 0a9a05be1e2309cckunm38953c58648025
 X-HM-MType: 1
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQhoZHVYeGE8eSEtNTh5DGktWFRQJFh
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGUhOQ1ZCQk9JHUsdGE1JSU1WFRQJFh
 	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
 	hVSktLVUpCS0tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=GPbeA/Hu/nckH1/F6KPmZa1j8jJ2qzdRbY7dcAiSfyBZWWaKwBivTkIVrQUDfFepoT3vrgLArnI7d8GI9L+wZbvt0dVijcstCs9SXGumYwR6kEUU1Utwt5ZeiTL/FuRs/GZBmK98M6xmetJv+lf5GHUp5vZwF580kT4g67b3aQQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=mBAxCGrCTd9wlaG397H8JWnqIiuZ9kVnamTzv/ECLFY=;
+	b=Vq3LJ7/UGNDBdYOue34NgFlI1e8t5JJOYSzVN2d/DJK02q0KePB/H/l9zU+hf3ODFCXdQUTtXVCt8myp95loi/M0w7MSvD5VM3TxZtfC2xi+f7I3M3KQDQyJHRmmgn5iqLch2+L8eGdKBu+eLReQvJSJ3lMza2RGGWSfDCCFqeI=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=VCQl/FqWE9J7fIKvF5/urqWiEUcYew2okAi1/XK5yYQ=;
 	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -49,45 +47,30 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Add supports-clkreq and pinmux for PCIe ASPM L1 substates.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+This patch-set adds ASPM L1 substates support for Rockchip platform.
+As supports-clkreq is used by some more host drivers, patch 1 creates
+of_pci_clkreq_present() and patch 2 reuse it. Patch 3 enables or disables
+L1 substates on Rockchip driver by checking if clkreq# is ready. Patch 4
+enable L1 substates on RK3588-EVB1.
+
+This series of patches is tested on RK3588-EVB1 with a NVMe connected
+to the pcie3x4 slot(actually I tested several NVMes), A RTL8111 NIC card
+connected pcie2x1l1 and a broadcom Wi-Fi connected to pcie2x1l0. All works
+fine under L1 substates by checking the LTSSM.
+
+
+
+Shawn Lin (1):
+  arm64: dts: rockchip: Add PCIe clkreq stuff for RK3588 EVB1
+  PCI: dw-rockchip: Add L1sub support
+  PCI: tegra194: Use of_pci_clkreq_present() instead
+  PCI: of: Add of_pci_clkreq_present()
+
+
  arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts | 7 +++++--
  1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts b/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts
-index ff1ba5ed56ef..c9d284cb738b 100644
---- a/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts
-+++ b/arch/arm64/boot/dts/rockchip/rk3588-evb1-v10.dts
-@@ -522,6 +522,7 @@ &pcie2x1l0 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie2_0_rst>, <&pcie2_0_wake>, <&pcie2_0_clkreq>, <&wifi_host_wake_irq>;
- 	reset-gpios = <&gpio4 RK_PA5 GPIO_ACTIVE_HIGH>;
-+	supports-clkreq;
- 	vpcie3v3-supply = <&vcc3v3_wlan>;
- 	status = "okay";
- 
-@@ -545,7 +546,8 @@ wifi: wifi@0,0 {
- &pcie2x1l1 {
- 	reset-gpios = <&gpio4 RK_PA2 GPIO_ACTIVE_HIGH>;
- 	pinctrl-names = "default";
--	pinctrl-0 = <&pcie2_1_rst>, <&rtl8111_isolate>;
-+	pinctrl-0 = <&pcie2_1_rst>, <&rtl8111_isolate>, <&pcie30x1m1_1_clkreqn>;
-+	supports-clkreq;
- 	status = "okay";
- };
- 
-@@ -555,7 +557,8 @@ &pcie30phy {
- 
- &pcie3x4 {
- 	pinctrl-names = "default";
--	pinctrl-0 = <&pcie3_reset>;
-+	pinctrl-0 = <&pcie3_reset>, <&pcie30x4m1_clkreqn>;
-+	supports-clkreq;
- 	reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_HIGH>;
- 	vpcie3v3-supply = <&vcc3v3_pcie30>;
- 	status = "okay";
 -- 
-2.43.0
+2.7.4
 
