@@ -1,145 +1,164 @@
-Received: from mail-yx1-f43.google.com (mail-yx1-f43.google.com [74.125.224.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B709832E73D
-	for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2025 10:37:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DCF232ABFE
+	for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2025 10:48:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761043051; cv=none; b=CVX9ihWsCKPlPABjIYWXXpjDBm7R0XkOmbZ60YU5AFI++qDyqRfzOSN++nwgtYgJrVVRUglayjahH/H5YLDJHIKfR39TfRjFhZyCssTmFjjL89vjp26cXV0g3bBFJ73yllDK/td2744pgJZG9rOFMS38UHTBu91fhhBDJf8m7tg=
+	t=1761043718; cv=none; b=TfRqMyh5OlzFFsca8H4WrN0HA6+2+H6k84pyiHMKDaQrIMLoejNy7K/+FB4wfKZ+CeSso/o+xdGUxA0zbxpG+iOpwZ4YKGRJJp7l9a9bf9jOEZacNEtR2cfPVQyp7oTNNIw/r7AFtCSItI00hHvWXS+BYh8vG2DOIQHGVfcfw00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761043051; c=relaxed/simple;
-	bh=G8bIrdKOREeaQWFYl+BVblIyK/tNvhnzk9i8+sGZ5Dk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VxqdyTLhD9aY9XK0Hvmp0slieMFxaxHrdIDiEsUEMBeF3z4PE25xnGhEZl0RbAjl9Mk//9eqWjL964ZuyB02l1VjGTkAGouC+H4e8yKEUjU+piHCbCLnKkZ6Mj6e+2ztu5doKUDpc2XO4aN0aVU42DZuNP4PLCUZC/WYDb3UPQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=OV4FJNFQ; arc=none smtp.client-ip=74.125.224.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1761043718; c=relaxed/simple;
+	bh=olJmFGlKFNLp0pg07TkKmR6050oXI4IGIcOyPRNd8Og=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fmSvVjpo0vFSqKoKf7UbQ9DkEOdbt6PxRswVUZ4iEJj/+Ugq+pz6uyzx/uc7zt9M4+3pO03mwe8jnStQ6WOTpSca4IECNjHJKw8sIgFtY5UwVo5N2cBqr8Bs2NNMejgOeyx3cdYeQNMdy/JHPyGNynFoEo4XqUI4321uY2sSUpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=H4hn0HpM; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="OV4FJNFQ"
-Received: by mail-yx1-f43.google.com with SMTP id 956f58d0204a3-633c1b740c5so5218814d50.3
-        for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2025 03:37:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1761043046; x=1761647846; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=du/uiA2g0ruAK2UrT7r+xEuTy7bML0SpAVcY8ooVq04=;
-        b=OV4FJNFQ1uapnGqxwNArp1c3sMnou9Gn5Mulg7FgaRBpu3ejO833yxc66+0QPR5qku
-         aA6EtTV2yORIXSU8/KOKiCgkLr08ed7m+oB3VG68OcVm4IkfQWuf0NSFnvDvBvHYEmGO
-         s7eoCUGrMzgib3JPXWKNfiFjGSXvsakVOwKCpyf53cvuthskb+tI6l295G2g2M067qv0
-         G6+Xk1iy4eqtknYhBYxWVNcWvuKiCEb1jHN6XCahAmWGOYfMn+CWYLTXienvZkfJa3Lm
-         e+zGW8er2mG1JDxIljGhsR0OOWqP1w+F6NtkkmNhuPT00c+L0r+NcJ0Wx1GHFOjnhc7B
-         L2yw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761043046; x=1761647846;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=du/uiA2g0ruAK2UrT7r+xEuTy7bML0SpAVcY8ooVq04=;
-        b=kHA+yNSJglsOScKMtpppGtvTBOmv7lqIhktqT3C0fDHYPlP1omQSa+Fb8wNBaVZ8OC
-         kefd4Yh+cvJ+m51iB1YLDPxETI1oAI58hWZVr7pieTJRXUcCpzJY73N6TRAhdHcWHnJm
-         IciFgHZHiLctNPXMLRNA4/Q3PgMNqCz3SHl1MdALX04lTj0d9XimnHbcAG2u5BY4Z6aT
-         psFL0h0EejsTL3ginhBkIRUvKlu1uwxbri3InzxVYjKZ7GyhlpGKTeyiVZ1X9olJMBxV
-         PgVVpeuB4IgN/JNBkeSKaAXDHHkz8VkRH7aiYqhOEuUSAkqFPbm1+//gUqv1aSfy+VsP
-         PgvQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUmh3aJMfJJ2fHD1FPvPhpMGxZ+LZq88GzgvkFSWyLB7/Or/JZ6WYBgbNJRvj4gTJSgiISQU/e1dK4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNga1fukLIUyrY10EC5fPR+Yj0YAK6OhY8uoMl1AlMOUCuDdUR
-	i7/e0cqe+JEhaJxlYmlj0zvB0C3bh4tl374O3a93xLAc2Zyh9Sf0GHetPXcRfpqw9KbVNehpuLA
-	v1Ug2k+KSFkAWZgdDJoBQxajgzhTGzUUMxLO+d7WUpA==
-X-Gm-Gg: ASbGnctqAlV90m8/sJ4VZOpn7bW66yWzLrnnkU21F2e+xRYgTHNXNuhYwrlotlE/sVf
-	K0yEPlTd8gIalahPl6VvgCFUZVpt6bFfIOyWs9Ap29xAqlsjTpPZ4y09zMhhzK8unRSpVp5IA9j
-	buBrTe3zNep7cgyfRLgL/QfXLdm7chGsmArtpwGV3BKOeKO6akFhf+QVQOqFhkrSQwBRRivmpbK
-	C8V2bVJ1Ih4C+OhYqHCnsxZ8uNmRg13mEYqXeXcD12CbOZQkhd4f9kNcBCB0w==
-X-Google-Smtp-Source: AGHT+IFFOhRKu4kQW/XKD1Pm8VUPug9hRZQumhyHTlK9vebZPyquvLC0TgCPXJX5yR8+F8jVszRXlOsVXxUxv7obTms=
-X-Received: by 2002:a05:690e:4090:b0:63e:3e77:a7c4 with SMTP id
- 956f58d0204a3-63e3e77a7fdmr3660188d50.1.1761043045615; Tue, 21 Oct 2025
- 03:37:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="H4hn0HpM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761043717; x=1792579717;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=olJmFGlKFNLp0pg07TkKmR6050oXI4IGIcOyPRNd8Og=;
+  b=H4hn0HpMdGou+aWyZhtnfbZsT04RcQ8rp2wtoE7Nwr8AnPiztGLE3zDu
+   l3mp+miLaJZgT3jSd0rQIgVHxVArYX942CI+UdGAu6Ls0WYMfw9b4KQBn
+   IpJYCcSFWeFeEAWQjtaBEQ+0kikAkkBlhEsxOW87Qt5maGpLX0GgVCe29
+   tjniKQvCyieceQ+1bWUpmGiB3ZQ9qVm/JmjVRr5b/lk5CZwXAc6gNTq2/
+   G71c/3+Ae6kqzWH7fuzd5d3ebN+D5jW86GQvYeOUrJdbcovvoH0Lpsl+7
+   Pb5SHQ2Mk0B/qA8KRe4j091ZULsp4YvCtsGb3Xi1zhBsspv4lrcENQSzm
+   A==;
+X-CSE-ConnectionGUID: f7OtXeJEQA6ko8cQGAZmsw==
+X-CSE-MsgGUID: OLNMxHDRTFq+k3WSi+FrBA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="63087652"
+X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
+   d="scan'208";a="63087652"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2025 03:48:36 -0700
+X-CSE-ConnectionGUID: 97xsNhDdSYiNeWC6oH0QQg==
+X-CSE-MsgGUID: F4QFdYCkTbmPlnqrjggoPQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,244,1754982000"; 
+   d="scan'208";a="214192976"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by orviesa002.jf.intel.com with ESMTP; 21 Oct 2025 03:48:34 -0700
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id 92F8195; Tue, 21 Oct 2025 12:48:33 +0200 (CEST)
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI/PTM: Do not enable PTM solely based on the capability existense
+Date: Tue, 21 Oct 2025 12:48:33 +0200
+Message-ID: <20251021104833.3729120-1-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251015071420.1173068-1-herve.codina@bootlin.com> <20251015071420.1173068-10-herve.codina@bootlin.com>
-In-Reply-To: <20251015071420.1173068-10-herve.codina@bootlin.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 21 Oct 2025 12:36:49 +0200
-X-Gm-Features: AS18NWAi-o77CPd71JT42D3mLl8vqFN7eYPAV53oOUDllJc5eKGrXIzOLUEhLMM
-Message-ID: <CAPDyKFrkJp4Ny1kUoWy6LHmv6zCOGK-jVEYk95s2ayhqEbDOpw@mail.gmail.com>
-Subject: Re: [PATCH v4 09/29] drivers: core: Use fw_devlink_set_device()
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, 
-	Wolfram Sang <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, 
-	Arnd Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@google.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Charles Keepax <ckeepax@opensource.cirrus.com>, 
-	Richard Fitzgerald <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, 
-	Linus Walleij <linus.walleij@linaro.org>, Mark Brown <broonie@kernel.org>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>, 
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
-	Sakari Ailus <sakari.ailus@linux.intel.com>, Len Brown <lenb@kernel.org>, 
-	Davidlohr Bueso <dave@stgolabs.net>, Jonathan Cameron <jonathan.cameron@huawei.com>, 
-	Dave Jiang <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>, 
-	Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
-	Dan Williams <dan.j.williams@intel.com>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Wolfram Sang <wsa@kernel.org>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
-	linux-clk@vger.kernel.org, linux-i2c@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-spi@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, 
-	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
-	Steen Hegelund <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>, 
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-On Wed, 15 Oct 2025 at 09:18, Herve Codina <herve.codina@bootlin.com> wrote:
->
-> The code set directly fwnode->dev field.
->
-> Use the dedicated fw_devlink_set_device() helper to perform this
-> operation.
->
-> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+It is not advisable to enable PTM solely based on the fact that the
+capability exists. Instead there are separate bits in the capability
+register that need to be set for the feature to be enabled for a given
+component (this is suggestion from Intel PCIe folks):
 
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+  - PCIe Endpoint that has PTM capability must to declare requester
+    capable
+  - PCIe Switch Upstream Port that has PTM capability must declare
+    both requester and responder capable
+  - PCIe Root Port must declare root port capable.
 
-Kind regards
-Uffe
+Currently we see following:
 
+  pci 0000:01:00.0: [8086:5786] type 01 class 0x060400 PCIe Switch Upstream Port
+  pci 0000:01:00.0: PCI bridge to [bus 00]
+  pci 0000:01:00.0:   bridge window [io  0x0000-0x0fff]
+  pci 0000:01:00.0:   bridge window [mem 0x00000000-0x000fffff]
+  pci 0000:01:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
+  ...
+  pci 0000:01:00.0: PTM enabled, 4ns granularity
+  ...
+  pcieport 0000:00:07.0: AER: Multiple Uncorrectable (Non-Fatal) error message received from 0000:00:07.0
+  pcieport 0000:00:07.0: PCIe Bus Error: severity=Uncorrectable (Non-Fatal), type=Transaction Layer, (Receiver ID)
+  pcieport 0000:00:07.0:   device [8086:e44e] error status/mask=00200000/00000000
+  pcieport 0000:00:07.0:    [21] ACSViol                (First)
 
-> ---
->  drivers/base/core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 3e81b1914ce5..9da630d75d17 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -3739,7 +3739,7 @@ int device_add(struct device *dev)
->          * device and the driver sync_state callback is called for this device.
->          */
->         if (dev->fwnode && !dev->fwnode->dev) {
-> -               dev->fwnode->dev = dev;
-> +               fw_devlink_set_device(dev->fwnode, dev);
->                 fw_devlink_link_device(dev);
->         }
->
-> @@ -3899,7 +3899,7 @@ void device_del(struct device *dev)
->         device_unlock(dev);
->
->         if (dev->fwnode && dev->fwnode->dev == dev)
-> -               dev->fwnode->dev = NULL;
-> +               fw_devlink_set_device(dev->fwnode, NULL);
->
->         /* Notify clients of device removal.  This call must come
->          * before dpm_sysfs_remove().
-> --
-> 2.51.0
->
+The 01:00.0 PCIe Upstream Port has this:
+
+  Capabilities: [220 v1] Precision Time Measurement
+		PTMCap: Requester- Responder- Root-
+
+This happens because Linux sees the PTM capability and blindly enables
+PTM which then causes the AER error to trigger.
+
+Fix this by enabling PTM only if the above described criteria is met.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/ptm.c | 33 +++++++++++++++++++++++++++++----
+ 1 file changed, 29 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+index 65e4b008be00..8dcc3469dc09 100644
+--- a/drivers/pci/pcie/ptm.c
++++ b/drivers/pci/pcie/ptm.c
+@@ -81,9 +81,26 @@ void pci_ptm_init(struct pci_dev *dev)
+ 		dev->ptm_granularity = 0;
+ 	}
+ 
+-	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM)
+-		pci_enable_ptm(dev, NULL);
++	switch (pci_pcie_type(dev)) {
++	case PCI_EXP_TYPE_ROOT_PORT:
++		/*
++		 * Root Port must declare Root Capable if we want to
++		 * enable PTM for it.
++		 */
++		if (dev->ptm_root)
++			pci_enable_ptm(dev, NULL);
++		break;
++	case PCI_EXP_TYPE_UPSTREAM:
++		/*
++		 * Switch Upstream Ports must declare both Requester
++		 * Capable and Responder Capable if we want to enable
++		 * PTM for it.
++		 */
++		if ((cap & (PCI_PTM_CAP_REQ | PCI_PTM_CAP_RES)) ==
++		    (PCI_PTM_CAP_REQ | PCI_PTM_CAP_RES))
++			pci_enable_ptm(dev, NULL);
++		break;
++	}
+ }
+ 
+ void pci_save_ptm_state(struct pci_dev *dev)
+@@ -125,7 +142,7 @@ static int __pci_enable_ptm(struct pci_dev *dev)
+ {
+ 	u16 ptm = dev->ptm_cap;
+ 	struct pci_dev *ups;
+-	u32 ctrl;
++	u32 cap, ctrl;
+ 
+ 	if (!ptm)
+ 		return -EINVAL;
+@@ -144,6 +161,14 @@ static int __pci_enable_ptm(struct pci_dev *dev)
+ 			return -EINVAL;
+ 	}
+ 
++	/*
++	 * PCIe Endpoint must declare Requester Capable before we can
++	 * enable PTM for it.
++	 */
++	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
++	if (!(cap & PCI_PTM_CAP_REQ))
++		return -EINVAL;
++
+ 	pci_read_config_dword(dev, ptm + PCI_PTM_CTRL, &ctrl);
+ 
+ 	ctrl |= PCI_PTM_CTRL_ENABLE;
+-- 
+2.50.1
+
