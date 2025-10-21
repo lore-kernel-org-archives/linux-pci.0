@@ -1,164 +1,267 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DCF232ABFE
-	for <linux-pci@vger.kernel.org>; Tue, 21 Oct 2025 10:48:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C3823E340;
+	Tue, 21 Oct 2025 11:02:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761043718; cv=none; b=TfRqMyh5OlzFFsca8H4WrN0HA6+2+H6k84pyiHMKDaQrIMLoejNy7K/+FB4wfKZ+CeSso/o+xdGUxA0zbxpG+iOpwZ4YKGRJJp7l9a9bf9jOEZacNEtR2cfPVQyp7oTNNIw/r7AFtCSItI00hHvWXS+BYh8vG2DOIQHGVfcfw00=
+	t=1761044543; cv=none; b=VY5q1kvKrym5DntTxmJeuMaz6wx/7qX+4J1KDw43bjSvyh3IaXg9VVQ/7UX0873ppOqFVBVLnu+KLaumXkkmPVYsHymyWS3kqJhHyA198JRV3O6K8btnY/5P8BIPkqWUrQZ4MQYInVIm4YzGdqVlM83x3G2vxsQnjHHbd8tT/eU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761043718; c=relaxed/simple;
-	bh=olJmFGlKFNLp0pg07TkKmR6050oXI4IGIcOyPRNd8Og=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fmSvVjpo0vFSqKoKf7UbQ9DkEOdbt6PxRswVUZ4iEJj/+Ugq+pz6uyzx/uc7zt9M4+3pO03mwe8jnStQ6WOTpSca4IECNjHJKw8sIgFtY5UwVo5N2cBqr8Bs2NNMejgOeyx3cdYeQNMdy/JHPyGNynFoEo4XqUI4321uY2sSUpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=H4hn0HpM; arc=none smtp.client-ip=198.175.65.17
+	s=arc-20240116; t=1761044543; c=relaxed/simple;
+	bh=4fz4wz59GVcGyxkCosyq8sO/kNH/5xlswDAosqFoi6s=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=Cvao8U0IFmf/7wSh+VuvBWDfwNBL8LGf+zv8SQ8/E4sPgayUg4ivBYR4UD6J+e+8vZGSUdrV/VIub499fLnJA6LxxC0oLmPYECb6nSP6ZcHGKYbO7RR09+yVL5VH1QYrE6jJfMTec1JRl61vtDrby+dyfyASPpG35j2w/V0j4K4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OLReVaWJ; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="H4hn0HpM"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OLReVaWJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1761043717; x=1792579717;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=olJmFGlKFNLp0pg07TkKmR6050oXI4IGIcOyPRNd8Og=;
-  b=H4hn0HpMdGou+aWyZhtnfbZsT04RcQ8rp2wtoE7Nwr8AnPiztGLE3zDu
-   l3mp+miLaJZgT3jSd0rQIgVHxVArYX942CI+UdGAu6Ls0WYMfw9b4KQBn
-   IpJYCcSFWeFeEAWQjtaBEQ+0kikAkkBlhEsxOW87Qt5maGpLX0GgVCe29
-   tjniKQvCyieceQ+1bWUpmGiB3ZQ9qVm/JmjVRr5b/lk5CZwXAc6gNTq2/
-   G71c/3+Ae6kqzWH7fuzd5d3ebN+D5jW86GQvYeOUrJdbcovvoH0Lpsl+7
-   Pb5SHQ2Mk0B/qA8KRe4j091ZULsp4YvCtsGb3Xi1zhBsspv4lrcENQSzm
-   A==;
-X-CSE-ConnectionGUID: f7OtXeJEQA6ko8cQGAZmsw==
-X-CSE-MsgGUID: OLNMxHDRTFq+k3WSi+FrBA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="63087652"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="63087652"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2025 03:48:36 -0700
-X-CSE-ConnectionGUID: 97xsNhDdSYiNeWC6oH0QQg==
-X-CSE-MsgGUID: F4QFdYCkTbmPlnqrjggoPQ==
+  t=1761044541; x=1792580541;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=4fz4wz59GVcGyxkCosyq8sO/kNH/5xlswDAosqFoi6s=;
+  b=OLReVaWJig44B2MrprUtQeNvKC01d58qNxgUvcgSEaoeeNnpzD+Il9tZ
+   2etrBBjFcuZi6GvPf+liE3FUIYEnqLnEjPKFTk/FEuUzjAWWmfAFcKEzQ
+   Eo8Muysv6Ntbjxu/fT+wuTQJ4S9ByMtiJctKqSY/4R4jWrDo+KINfD6Sl
+   NTeFH3//5I9OwsWRhi5lNAMLF9ptY+NzhNtkqDWD6fiMwkVLRSVYVwtnj
+   rE7i2On8IKgLB8OfbjS5UcytSle3AHHBPETaLUeSNI9Ei03NrR3cgZvS3
+   t7Q2wDiL+ZaQAYXik1hBeG+NYehY5AfeMcuJXC/CqWjsbkz7fInSC9e3N
+   g==;
+X-CSE-ConnectionGUID: euxZZFC8TUGFQg4INnmJDg==
+X-CSE-MsgGUID: jTXgrgqhQg+3T3pqfzTwHQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="65782711"
+X-IronPort-AV: E=Sophos;i="6.19,244,1754982000"; 
+   d="scan'208";a="65782711"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2025 04:02:21 -0700
+X-CSE-ConnectionGUID: kHz7nIy2RDGaI5xz3kOuYQ==
+X-CSE-MsgGUID: TM9H9HjAQwS0ILUyoYfweQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,244,1754982000"; 
-   d="scan'208";a="214192976"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa002.jf.intel.com with ESMTP; 21 Oct 2025 03:48:34 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 92F8195; Tue, 21 Oct 2025 12:48:33 +0200 (CEST)
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] PCI/PTM: Do not enable PTM solely based on the capability existense
-Date: Tue, 21 Oct 2025 12:48:33 +0200
-Message-ID: <20251021104833.3729120-1-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.50.1
+   d="scan'208";a="187971086"
+Received: from cpetruta-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.189])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2025 04:02:14 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 21 Oct 2025 14:02:10 +0300 (EEST)
+To: Bjorn Helgaas <helgaas@kernel.org>, 
+    Jim Quinlan <james.quinlan@broadcom.com>
+cc: linux-pci@vger.kernel.org, Nicolas Saenz Julienne <nsaenz@kernel.org>, 
+    Bjorn Helgaas <bhelgaas@google.com>, 
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
+    Cyril Brulebois <kibi@debian.org>, bcm-kernel-feedback-list@broadcom.com, 
+    jim2101024@gmail.com, Florian Fainelli <florian.fainelli@broadcom.com>, 
+    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
+    Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+    "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-rpi-kernel@lists.infradead.org>, 
+    "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>, 
+    open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 2/2] PCI: brcmstb: Add panic/die handler to driver
+In-Reply-To: <20251020184832.GA1144646@bhelgaas>
+Message-ID: <2b0f9620-a105-6e49-f9cb-4bac14e14ce2@linux.intel.com>
+References: <20251020184832.GA1144646@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 
-It is not advisable to enable PTM solely based on the fact that the
-capability exists. Instead there are separate bits in the capability
-register that need to be set for the feature to be enabled for a given
-component (this is suggestion from Intel PCIe folks):
+On Mon, 20 Oct 2025, Bjorn Helgaas wrote:
 
-  - PCIe Endpoint that has PTM capability must to declare requester
-    capable
-  - PCIe Switch Upstream Port that has PTM capability must declare
-    both requester and responder capable
-  - PCIe Root Port must declare root port capable.
+> On Fri, Oct 03, 2025 at 03:56:07PM -0400, Jim Quinlan wrote:
+> > Whereas most PCIe HW returns 0xffffffff on illegal accesses and the like,
+> > by default Broadcom's STB PCIe controller effects an abort.  Some SoCs --
+> > 7216 and its descendants -- have new HW that identifies error details.
+> > 
+> > This simple handler determines if the PCIe controller was the cause of the
+> > abort and if so, prints out diagnostic info.  Unfortunately, an abort still
+> > occurs.
+> > 
+> > Care is taken to read the error registers only when the PCIe bridge is
+> > active and the PCIe registers are acceptable.  Otherwise, a "die" event
+> > caused by something other than the PCIe could cause an abort if the PCIe
+> > "die" handler tried to access registers when the bridge is off.
+> > 
+> > Example error output:
+> >   brcm-pcie 8b20000.pcie: Error: Mem Acc: 32bit, Read, @0x38000000
+> >   brcm-pcie 8b20000.pcie:  Type: TO=0 Abt=0 UnspReq=1 AccDsble=0 BadAddr=0
+> 
+> > +/* Error report registers */
+> > +#define PCIE_OUTB_ERR_TREAT				0x6000
+> > +#define  PCIE_OUTB_ERR_TREAT_CONFIG_MASK		0x1
+> > +#define  PCIE_OUTB_ERR_TREAT_MEM_MASK			0x2
+> > +#define PCIE_OUTB_ERR_VALID				0x6004
+> > +#define PCIE_OUTB_ERR_CLEAR				0x6008
+> > +#define PCIE_OUTB_ERR_ACC_INFO				0x600c
+> > +#define  PCIE_OUTB_ERR_ACC_INFO_CFG_ERR_MASK		0x01
+> > +#define  PCIE_OUTB_ERR_ACC_INFO_MEM_ERR_MASK		0x02
+> > +#define  PCIE_OUTB_ERR_ACC_INFO_TYPE_64_MASK		0x04
+> > +#define  PCIE_OUTB_ERR_ACC_INFO_DIR_WRITE_MASK		0x10
+> > +#define  PCIE_OUTB_ERR_ACC_INFO_BYTE_LANES_MASK		0xff00
+> > +#define PCIE_OUTB_ERR_ACC_ADDR				0x6010
+> > +#define PCIE_OUTB_ERR_ACC_ADDR_BUS_MASK			0xff00000
+> > +#define PCIE_OUTB_ERR_ACC_ADDR_DEV_MASK			0xf8000
+> > +#define PCIE_OUTB_ERR_ACC_ADDR_FUNC_MASK		0x7000
+> > +#define PCIE_OUTB_ERR_ACC_ADDR_REG_MASK			0xfff
+> > +#define PCIE_OUTB_ERR_CFG_CAUSE				0x6014
+> > +#define  PCIE_OUTB_ERR_CFG_CAUSE_TIMEOUT_MASK		0x40
+> > +#define  PCIE_OUTB_ERR_CFG_CAUSE_ABORT_MASK		0x20
+> > +#define  PCIE_OUTB_ERR_CFG_CAUSE_UNSUPP_REQ_MASK	0x10
+> > +#define  PCIE_OUTB_ERR_CFG_CAUSE_ACC_TIMEOUT_MASK	0x4
+> > +#define  PCIE_OUTB_ERR_CFG_CAUSE_ACC_DISABLED_MASK	0x2
+> > +#define  PCIE_OUTB_ERR_CFG_CAUSE_ACC_64BIT__MASK	0x1
 
-Currently we see following:
+Double __
 
-  pci 0000:01:00.0: [8086:5786] type 01 class 0x060400 PCIe Switch Upstream Port
-  pci 0000:01:00.0: PCI bridge to [bus 00]
-  pci 0000:01:00.0:   bridge window [io  0x0000-0x0fff]
-  pci 0000:01:00.0:   bridge window [mem 0x00000000-0x000fffff]
-  pci 0000:01:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-  ...
-  pci 0000:01:00.0: PTM enabled, 4ns granularity
-  ...
-  pcieport 0000:00:07.0: AER: Multiple Uncorrectable (Non-Fatal) error message received from 0000:00:07.0
-  pcieport 0000:00:07.0: PCIe Bus Error: severity=Uncorrectable (Non-Fatal), type=Transaction Layer, (Receiver ID)
-  pcieport 0000:00:07.0:   device [8086:e44e] error status/mask=00200000/00000000
-  pcieport 0000:00:07.0:    [21] ACSViol                (First)
+> > +#define PCIE_OUTB_ERR_MEM_ADDR_LO			0x6018
+> > +#define PCIE_OUTB_ERR_MEM_ADDR_HI			0x601c
+> > +#define PCIE_OUTB_ERR_MEM_CAUSE				0x6020
+> > +#define  PCIE_OUTB_ERR_MEM_CAUSE_TIMEOUT_MASK		0x40
+> > +#define  PCIE_OUTB_ERR_MEM_CAUSE_ABORT_MASK		0x20
+> > +#define  PCIE_OUTB_ERR_MEM_CAUSE_UNSUPP_REQ_MASK	0x10
+> > +#define  PCIE_OUTB_ERR_MEM_CAUSE_ACC_DISABLED_MASK	0x2
+> > +#define  PCIE_OUTB_ERR_MEM_CAUSE_BAD_ADDR_MASK		0x1
 
-The 01:00.0 PCIe Upstream Port has this:
+Maybe use BIT() instead for single bits?
 
-  Capabilities: [220 v1] Precision Time Measurement
-		PTMCap: Requester- Responder- Root-
+> IMO "_MASK" is not adding anything useful to these names.  But I see
+> there's a lot of precedent in this driver.
+>
+> >  #define  PCIE_RGR1_SW_INIT_1_PERST_MASK			0x1
+> >  #define  PCIE_RGR1_SW_INIT_1_PERST_SHIFT		0x0
 
-This happens because Linux sees the PTM capability and blindly enables
-PTM which then causes the AER error to trigger.
+Please don't add unnecessary _SHIFT defines as FIELD_GET/PREP() for the 
+field define should have most cases covered that require shifting.
 
-Fix this by enabling PTM only if the above described criteria is met.
+This define is also entirely unused in this patch.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/pcie/ptm.c | 33 +++++++++++++++++++++++++++++----
- 1 file changed, 29 insertions(+), 4 deletions(-)
+> > @@ -306,6 +342,8 @@ struct brcm_pcie {
+> >  	bool			ep_wakeup_capable;
+> >  	const struct pcie_cfg_data	*cfg;
+> >  	bool			bridge_in_reset;
+> > +	struct notifier_block	die_notifier;
+> > +	struct notifier_block	panic_notifier;
+> >  	spinlock_t		bridge_lock;
+> >  };
+> >  
+> > @@ -1731,6 +1769,115 @@ static int brcm_pcie_resume_noirq(struct device *dev)
+> >  	return ret;
+> >  }
+> >  
+> > +/* Dump out PCIe errors on die or panic */
+> > +static int _brcm_pcie_dump_err(struct brcm_pcie *pcie,
+> 
+> What is the leading underscore telling me?  There's no
+> brcm_pcie_dump_err() that we need to distinguish from.
+> 
+> > +			       const char *type)
+> > +{
+> > +	void __iomem *base = pcie->base;
+> > +	int i, is_cfg_err, is_mem_err, lanes;
+> > +	char *width_str, *direction_str, lanes_str[9];
+> > +	u32 info, cfg_addr, cfg_cause, mem_cause, lo, hi;
+> > +	unsigned long flags;
+> > +
+> > +	spin_lock_irqsave(&pcie->bridge_lock, flags);
+> > +	/* Don't access registers when the bridge is off */
+> > +	if (pcie->bridge_in_reset || readl(base + PCIE_OUTB_ERR_VALID) == 0) {
+> > +		spin_unlock_irqrestore(&pcie->bridge_lock, flags);
+> > +		return NOTIFY_DONE;
+> > +	}
+> > +
+> > +	/* Read all necessary registers so we can release the spinlock ASAP */
+> > +	info = readl(base + PCIE_OUTB_ERR_ACC_INFO);
+> > +	is_cfg_err = !!(info & PCIE_OUTB_ERR_ACC_INFO_CFG_ERR_MASK);
+> > +	is_mem_err = !!(info & PCIE_OUTB_ERR_ACC_INFO_MEM_ERR_MASK);
+> > +	if (is_cfg_err) {
+> > +		cfg_addr = readl(base + PCIE_OUTB_ERR_ACC_ADDR);
+> > +		cfg_cause = readl(base + PCIE_OUTB_ERR_CFG_CAUSE);
+> > +	}
+> > +	if (is_mem_err) {
+> > +		mem_cause = readl(base + PCIE_OUTB_ERR_MEM_CAUSE);
+> > +		lo = readl(base + PCIE_OUTB_ERR_MEM_ADDR_LO);
+> > +		hi = readl(base + PCIE_OUTB_ERR_MEM_ADDR_HI);
+> > +	}
+> > +	/* We've got all of the info, clear the error */
+> > +	writel(1, base + PCIE_OUTB_ERR_CLEAR);
+> > +	spin_unlock_irqrestore(&pcie->bridge_lock, flags);
+> > +
+> > +	dev_err(pcie->dev, "reporting data on PCIe %s error\n", type);
+> 
+> Looks like this isn't included in the example error output.  Not a big
+> deal in itself, but logging this:
+> 
+>   brcm-pcie 8b20000.pcie: reporting data on PCIe Panic error
+> 
+> suggests that we know this panic was directly *caused* by PCIe, and
+> I'm not sure the fact that somebody called panic() and
+> PCIE_OUTB_ERR_VALID was non-zero is convincing evidence of that.
+> 
+> I think this relies on the assumptions that (a) the controller
+> triggers an abort and (b) the abort handler calls panic().  So I think
+> this logs useful information that *might* be related to the panic.
+> 
+> I'd rather phrase this with a little less certainty, to convey the
+> idea that "here's some PCIe error information that might be related to
+> the panic/die".
+> 
+> > +	width_str = (info & PCIE_OUTB_ERR_ACC_INFO_TYPE_64_MASK) ? "64bit" : "32bit";
+> > +	direction_str = (info & PCIE_OUTB_ERR_ACC_INFO_DIR_WRITE_MASK) ? "Write" : "Read";
 
-diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index 65e4b008be00..8dcc3469dc09 100644
---- a/drivers/pci/pcie/ptm.c
-+++ b/drivers/pci/pcie/ptm.c
-@@ -81,9 +81,26 @@ void pci_ptm_init(struct pci_dev *dev)
- 		dev->ptm_granularity = 0;
- 	}
- 
--	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
--	    pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM)
--		pci_enable_ptm(dev, NULL);
-+	switch (pci_pcie_type(dev)) {
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+		/*
-+		 * Root Port must declare Root Capable if we want to
-+		 * enable PTM for it.
-+		 */
-+		if (dev->ptm_root)
-+			pci_enable_ptm(dev, NULL);
-+		break;
-+	case PCI_EXP_TYPE_UPSTREAM:
-+		/*
-+		 * Switch Upstream Ports must declare both Requester
-+		 * Capable and Responder Capable if we want to enable
-+		 * PTM for it.
-+		 */
-+		if ((cap & (PCI_PTM_CAP_REQ | PCI_PTM_CAP_RES)) ==
-+		    (PCI_PTM_CAP_REQ | PCI_PTM_CAP_RES))
-+			pci_enable_ptm(dev, NULL);
-+		break;
-+	}
- }
- 
- void pci_save_ptm_state(struct pci_dev *dev)
-@@ -125,7 +142,7 @@ static int __pci_enable_ptm(struct pci_dev *dev)
- {
- 	u16 ptm = dev->ptm_cap;
- 	struct pci_dev *ups;
--	u32 ctrl;
-+	u32 cap, ctrl;
- 
- 	if (!ptm)
- 		return -EINVAL;
-@@ -144,6 +161,14 @@ static int __pci_enable_ptm(struct pci_dev *dev)
- 			return -EINVAL;
- 	}
- 
-+	/*
-+	 * PCIe Endpoint must declare Requester Capable before we can
-+	 * enable PTM for it.
-+	 */
-+	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
-+	if (!(cap & PCI_PTM_CAP_REQ))
-+		return -EINVAL;
-+
- 	pci_read_config_dword(dev, ptm + PCI_PTM_CTRL, &ctrl);
- 
- 	ctrl |= PCI_PTM_CTRL_ENABLE;
--- 
-2.50.1
+Please use str_read_write() + don't forget it's include.
 
+It might be also worth to add str_64bit_32bit() in the form with the
+dash ("64-bit") as there a couple of other drivers print the same choice.
+
+
+> > +	lanes = FIELD_GET(PCIE_OUTB_ERR_ACC_INFO_BYTE_LANES_MASK, info);
+> > +	for (i = 0, lanes_str[8] = 0; i < 8; i++)
+> > +		lanes_str[i] = (lanes & (1 << i)) ? '1' : '0';
+> > +
+> > +	if (is_cfg_err) {
+> > +		int bus = FIELD_GET(PCIE_OUTB_ERR_ACC_ADDR_BUS_MASK, cfg_addr);
+> > +		int dev = FIELD_GET(PCIE_OUTB_ERR_ACC_ADDR_DEV_MASK, cfg_addr);
+> > +		int func = FIELD_GET(PCIE_OUTB_ERR_ACC_ADDR_FUNC_MASK, cfg_addr);
+> > +		int reg = FIELD_GET(PCIE_OUTB_ERR_ACC_ADDR_REG_MASK, cfg_addr);
+> > +
+> > +		dev_err(pcie->dev, "Error: CFG Acc, %s, %s, Bus=%d, Dev=%d, Fun=%d, Reg=0x%x, lanes=%s\n",
+> 
+> Why are we printing bus and dev with %d?  Can we use the usual format
+> ("%04x:%02x:%02x.%d") so it matches other logging?
+> 
+> > +			width_str, direction_str, bus, dev, func, reg, lanes_str);
+> > +		dev_err(pcie->dev, " Type: TO=%d Abt=%d UnsupReq=%d AccTO=%d AccDsbld=%d Acc64bit=%d\n",
+> > +			!!(cfg_cause & PCIE_OUTB_ERR_CFG_CAUSE_TIMEOUT_MASK),
+> > +			!!(cfg_cause & PCIE_OUTB_ERR_CFG_CAUSE_ABORT_MASK),
+> > +			!!(cfg_cause & PCIE_OUTB_ERR_CFG_CAUSE_UNSUPP_REQ_MASK),
+> > +			!!(cfg_cause & PCIE_OUTB_ERR_CFG_CAUSE_ACC_TIMEOUT_MASK),
+> > +			!!(cfg_cause & PCIE_OUTB_ERR_CFG_CAUSE_ACC_DISABLED_MASK),
+> > +			!!(cfg_cause & PCIE_OUTB_ERR_CFG_CAUSE_ACC_64BIT__MASK));
+> > +	}
+> > +
+> > +	if (is_mem_err) {
+> > +		u64 addr = ((u64)hi << 32) | (u64)lo;
+> > +
+> > +		dev_err(pcie->dev, "Error: Mem Acc, %s, %s, @0x%llx, lanes=%s\n",
+> > +			width_str, direction_str, addr, lanes_str);
+> > +		dev_err(pcie->dev, " Type: TO=%d Abt=%d UnsupReq=%d AccDsble=%d BadAddr=%d\n",
+> > +			!!(mem_cause & PCIE_OUTB_ERR_MEM_CAUSE_TIMEOUT_MASK),
+> > +			!!(mem_cause & PCIE_OUTB_ERR_MEM_CAUSE_ABORT_MASK),
+> > +			!!(mem_cause & PCIE_OUTB_ERR_MEM_CAUSE_UNSUPP_REQ_MASK),
+> > +			!!(mem_cause & PCIE_OUTB_ERR_MEM_CAUSE_ACC_DISABLED_MASK),
+> > +			!!(mem_cause & PCIE_OUTB_ERR_MEM_CAUSE_BAD_ADDR_MASK));
+> > +	}
+> > +
+> > +	return NOTIFY_OK;
+> 
+> What is the difference between NOTIFY_DONE and NOTIFY_OK?  Can the
+> caller do anything useful based on the difference?
+> 
+> This seems like opportunistic error information that isn't definitely
+> definitely connected to anything, so I'm not sure returning different
+> values is really reliable.
+> 
