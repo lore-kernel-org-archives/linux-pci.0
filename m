@@ -1,269 +1,189 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C8512ECD11
-	for <linux-pci@vger.kernel.org>; Thu, 23 Oct 2025 17:28:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAD7334A3DA
+	for <linux-pci@vger.kernel.org>; Thu, 23 Oct 2025 17:43:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761240516; cv=none; b=TZuKj3W8wTqdsdsPC+WPKt74yf/RfpDt0KBudkF4d9AzrzGdDFX6SLJGNPKpqcVdjGImua4I/MGFxkKymr4zdgHB5gOWcIWmpmg09yVvUm31dxVkgI5b0xlV+mAYKWDcJBMn+sKOIJqY3DuU9Knk0t+76mVT8lfuvyYeZdcV9HQ=
+	t=1761241395; cv=none; b=LNyllrr99XJaG1kQ/CI2+OBEKqHTb61hw+pSnTLzml8kUqeMxp5rtqRm1jLc8qaiIulZuaCUpI+AYfnjvxFEkiAeC+I4r/oZ3XLoKL9dETh2PlYK4CBvFwg26FTq99rn28eN0Ag0V/lT8cWuucnMEoL5DhkjcomI2xEaZPHV+Pg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761240516; c=relaxed/simple;
-	bh=AHFDoYfjon/4tGZlpCp8TVU857N1RhEo3OW1MemkxkA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N3NeNM+/O3Zkp4bNYdYJuKid3+FjouxvkoXCqbpkiktLmB+vHaJBYg3JVGdpHMogTfNl3SR78EIkOLSRW3p96p3DuW0zLuLJtT95oQ2enJ1Ev0OZv1DUemAO/Mieo7fLHpkqxlcFq+B6nwVjBy6rz8+Te1KBeX2pjGdC2nUh4jY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=RvxeRid9; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1761241395; c=relaxed/simple;
+	bh=lBogzcavFia1tq1/hy2llZwqk3cknuFx94ohvomXMBA=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=gul78mtSnfnIRNgh/S/wIjQWwWXntgYQ3lJ1Jfs0+Oe7woPeDjxH7rols5Qjd7cNZoj1Zuw+DoWy2aEX4X4djZKYdRAt3tJQ0GBqggvwkEm/5rfeEAz9bchdQ7S1vX4xNHvK41yzNw0BBPQ2YDCzd3o1QK7FVTN2hXoGBLM3zY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IJ4QZwDF; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="RvxeRid9"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id F0C37240101
-	for <linux-pci@vger.kernel.org>; Thu, 23 Oct 2025 19:28:32 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1761240512; bh=RrvubjSJi3MqTyvAC8OUUj/Q0ANkEdPC8q50Ec7fUD4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
-	b=RvxeRid9xPMZH5REw69NSanJ75+9X6YG24esm/ENW0Whf8nnH8LZE4OvWNys9QQkD
-	 AvRiUfhF53N8aVxw3jHvUTcuT1+iizAvYEUO4EEOe+W5HqsXfWg1QYgK7Gq9t3IZ72
-	 4sUfMC9laQjYr7d/JzmgS9x1dV5JZ+n7n6ozgO91Jl08xuz9b2jvJ5P8JpgMQP+9Ul
-	 uOh2J/XNKwRkuqiddsx2r/cjoDGt/sJOE83rzc0VLzCgC5OK16ukDZuYwmiEyZ2Oqz
-	 GImGQEHqDLrFBekeyUhJAQ99n0o/Q41+FS1AMYZk3Ksd0iDYziTmgXZl5bqD0/Ptcf
-	 SGCTY8kj/MZNw==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4cstKW5tSHz6v2J;
-	Thu, 23 Oct 2025 19:28:15 +0200 (CEST)
-From: Markus Probst <markus.probst@posteo.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Alex Gaynor <alex.gaynor@gmail.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Lee Jones <lee@kernel.org>,
-	Pavel Machek <pavel@kernel.org>
-Cc: Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Boqun Feng <boqun.feng@gmail.com>,
-	Gary Guo <gary@garyguo.net>,
-	bjorn3_gh@protonmail.com,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>,
-	Trevor Gross <tmgross@umich.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Markus Probst <markus.probst@posteo.de>,
-	rust-for-linux@vger.kernel.org,
-	linux-leds@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v6 1/2] rust: Add trait to convert a device reference to a bus device reference
-Date: Thu, 23 Oct 2025 17:28:18 +0000
-Message-ID: <20251023172803.730677-2-markus.probst@posteo.de>
-In-Reply-To: <20251023172803.730677-1-markus.probst@posteo.de>
-References: <20251023172803.730677-1-markus.probst@posteo.de>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IJ4QZwDF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761241393; x=1792777393;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=lBogzcavFia1tq1/hy2llZwqk3cknuFx94ohvomXMBA=;
+  b=IJ4QZwDFGetACI0MXLH1J7DUSzmGMCd+n2t3ubsIFfBYVLxCvIHp/e9K
+   opbVmrk3cFLZ6mLksYedfwQ3WgsESeqTkbB/YE+JWclm2bHv3lXtgXGoE
+   87q/c2wXJZ8MI0aPTxMdUcw0rsGIFRSna8LXGOaXEklEQDwnoOZdYspsC
+   jALl3r8T9gIuhmbddIlbN4J2MvT3vG96Go9MnZZiiu1ziy02S0/NXTkun
+   Ondjw28Bn/7rkWBa4HFv9+mVTmJdALLxKPbbrT/KzeDMbFHjh06j1uE8g
+   YAiqKsIERqaWYd1kK8TTm8zU6IfIyed2+8p8wJf8eTAOj5rCT5Pi4wBS8
+   w==;
+X-CSE-ConnectionGUID: 9bUnEVOeTkeZJD90ax96Zg==
+X-CSE-MsgGUID: BEyQD5TKTrqgrynphMRR3g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="63125358"
+X-IronPort-AV: E=Sophos;i="6.19,250,1754982000"; 
+   d="scan'208";a="63125358"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Oct 2025 10:43:05 -0700
+X-CSE-ConnectionGUID: KyhLV5dhTR+V6DJO+HlNKA==
+X-CSE-MsgGUID: nkm4X9Q6SCOpy1ru1Fvulg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,250,1754982000"; 
+   d="scan'208";a="188280889"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.225])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Oct 2025 10:43:00 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 23 Oct 2025 20:42:56 +0300 (EEST)
+To: Simon Richter <Simon.Richter@hogyros.de>, 
+    Lucas De Marchi <lucas.demarchi@intel.com>
+cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: BAR resizing broken in 6.18 (PPC only?)
+In-Reply-To: <af2ed697-4856-4477-8da8-2838ceaf3179@hogyros.de>
+Message-ID: <4fbe3ae1-0752-33f3-35c2-d81e21031f8a@linux.intel.com>
+References: <f9a8c975-f5d3-4dd2-988e-4371a1433a60@hogyros.de> <a5e7a118-ba70-000e-bab4-8d56b3404325@linux.intel.com> <67840a16-99b4-4d8c-9b5c-4721ab0970a2@hogyros.de> <922b1f68-a6a2-269b-880c-d594f9ca6bde@linux.intel.com>
+ <af2ed697-4856-4477-8da8-2838ceaf3179@hogyros.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5467; i=markus.probst@posteo.de; h=from:subject; bh=AHFDoYfjon/4tGZlpCp8TVU857N1RhEo3OW1MemkxkA=; b=owEBbQKS/ZANAwAIATR2H/jnrUPSAcsmYgBo+mQk7ds/yPGUoEze9yaiY7baeuYuxgf9yNmUC g0US3spVCqJAjMEAAEIAB0WIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaPpkJAAKCRA0dh/4561D 0oo4D/9wbqvRM1QMq4Bwjg9o8KhrhZOjTqksjwkfS93pUsyfugqgkEFh1HIl1ksiikdNlexNb5E VtehOU0vOL3akZTLamwLS5nm5won8MOL8s1Iy+yQsPEGxzwM1kP0u8xBQ6n/0cocR3VImK8LNRG ycnwcHZpj2dfxEjcA+T+dTBPBERZ9XLQdBzSVKX5bfnNsQpaqdoGhAlVrxSv5BsFFY4ou7cbLys zUdoRXjZBHVQe6CVoksy0xJLG2JFYvKyWgKm1rM/N0Mo/juBU2BzO5BKZK6jWLxb6DOjnHAMimo 5aV4E0ybOw0ceGYc7Wzoa1iUoc2L1oS1TQaSNPMn7Z9LcKxn3ZL3xs040Hn8QCF52hj/8fJWi65 ZQ8pl/Waz7NLBlrS88q1PXFNyidycdBhdld0ZxHO22kom7KriwsH7cLbmfstnYw7NmaoSOrTGV5 GzxTSTQ2rorR3rswNsQzeTCWs0aLBLtFO6y5HwxBMfZ0y3/RVogHL4hr6tGryD4GpMXsOa7S4By btPz+fQDWsrRk3VMvY/wlqREjn3TYHIz3vlYSxNMPMYjx/lP4WJCjTLGdWIWP+c7uqpZ+ULu9/S BKjk7knCeDz5XRPEuKfC35WKJtJMdt9L4/8is7bOROV7RDXM8ZD4jJHVJsooeMDXNtlREcH+2li dxqRb9n2I/YLHxA=
- =
-X-Developer-Key: i=markus.probst@posteo.de; a=openpgp; fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
-Content-Transfer-Encoding: 8bit
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+Content-Type: multipart/mixed; BOUNDARY="8323328-303087025-1761221295=:1016"
+Content-ID: <256de186-4697-84cb-cf91-ad575ccac02f@linux.intel.com>
 
-Implement the `AsBusDevice` trait for converting a `Device` reference to a
-bus device reference for all bus devices.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-The `AsBusDevice` trait allows abstractions to provide the bus device in
-class device callbacks. It must not be used by drivers and is intended for
-bus and class device abstractions only.
+--8323328-303087025-1761221295=:1016
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <395cf5de-bb93-a13b-3583-453330015155@linux.intel.com>
 
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
- rust/kernel/auxiliary.rs |  7 +++++++
- rust/kernel/device.rs    | 30 ++++++++++++++++++++++++++++++
- rust/kernel/pci.rs       |  7 +++++++
- rust/kernel/platform.rs  |  7 +++++++
- rust/kernel/usb.rs       |  6 ++++++
- 5 files changed, 57 insertions(+)
+On Wed, 22 Oct 2025, Simon Richter wrote:
+> On 10/22/25 1:20 AM, Ilpo J=E4rvinen wrote:
+>=20
+> > Could you please test if the patch below helps.
+>=20
+> Yes, this looks better.
+>=20
+>  - "good" is the 6.17 reference
+>  - "shrink" is with this patch and the BAR0 release from Lucas
+>  - "bar0" is with this patch, with the bridge BAR0 still mapped (i.e. wit=
+hout
+> the patch from Lucas)
+>=20
+> If you compare "good" vs "bar0", the differences are now fairly minimal. =
+The
+> non-prefetchable window has shrunk, but assignments are otherwise the sam=
+e.
 
-diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
-index e11848bbf206..cd1121191137 100644
---- a/rust/kernel/auxiliary.rs
-+++ b/rust/kernel/auxiliary.rs
-@@ -15,6 +15,7 @@
- };
- use core::{
-     marker::PhantomData,
-+    mem::offset_of,
-     ptr::{addr_of_mut, NonNull},
- };
- 
-@@ -239,6 +240,12 @@ extern "C" fn release(dev: *mut bindings::device) {
-     }
- }
- 
-+// SAFETY: `auxilary::Device` is a transparent wrapper of `struct auxiliary_device`.
-+// The offset is guaranteed to point to a valid device field inside `auxilary::Device`.
-+unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Device<Ctx> {
-+    const OFFSET: usize = offset_of!(bindings::auxiliary_device, dev);
-+}
-+
- // SAFETY: `Device` is a transparent wrapper of a type that doesn't depend on `Device`'s generic
- // argument.
- kernel::impl_device_context_deref!(unsafe { Device });
-diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
-index 1321e6f0b53c..d7024c2bb90f 100644
---- a/rust/kernel/device.rs
-+++ b/rust/kernel/device.rs
-@@ -511,6 +511,36 @@ impl DeviceContext for Core {}
- impl DeviceContext for CoreInternal {}
- impl DeviceContext for Normal {}
- 
-+/// Bus devices can implement this trait to allow abstractions to provide the bus device in
-+/// class device callbacks.
-+///
-+/// This must not be used by drivers and is intended for bus and class device abstractions only.
-+///
-+/// # Safety
-+///
-+/// `AsBusDevice::OFFSET` must be a offset to a device field in the implemented struct.
-+pub(crate) unsafe trait AsBusDevice<Ctx: DeviceContext>: AsRef<Device<Ctx>> {
-+    /// The relative offset to the device field.
-+    ///
-+    /// Use `offset_of!(bindings, field)` macro to avoid breakage.
-+    const OFFSET: usize;
-+
-+    /// Convert a reference to [`Device`] into `Self`.
-+    ///
-+    /// # Safety
-+    ///
-+    /// `dev` must be contained in `Self`.
-+    unsafe fn from_device(dev: &Device<Ctx>) -> &Self
-+    where
-+        Self: Sized,
-+    {
-+        let raw = dev.as_raw();
-+        // SAFETY: `raw - Self::OFFSET` is guaranteed by the safety requirements
-+        // to be a valid pointer to `Self`.
-+        unsafe { &*raw.byte_sub(Self::OFFSET).cast::<Self>() }
-+    }
-+}
-+
- /// # Safety
- ///
- /// The type given as `$device` must be a transparent wrapper of a type that doesn't depend on the
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 7fcc5f6022c1..d78f6feeaae9 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -19,6 +19,7 @@
- };
- use core::{
-     marker::PhantomData,
-+    mem::offset_of,
-     ops::Deref,
-     ptr::{addr_of_mut, NonNull},
- };
-@@ -593,6 +594,12 @@ pub fn set_master(&self) {
-     }
- }
- 
-+// SAFETY: `pci::Device` is a transparent wrapper of `struct pci_dev`.
-+// The offset is guaranteed to point to a valid device field inside `pci::Device`.
-+unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Device<Ctx> {
-+    const OFFSET: usize = offset_of!(bindings::pci_dev, dev);
-+}
-+
- // SAFETY: `Device` is a transparent wrapper of a type that doesn't depend on `Device`'s generic
- // argument.
- kernel::impl_device_context_deref!(unsafe { Device });
-diff --git a/rust/kernel/platform.rs b/rust/kernel/platform.rs
-index 7205fe3416d3..7197264b5a53 100644
---- a/rust/kernel/platform.rs
-+++ b/rust/kernel/platform.rs
-@@ -19,6 +19,7 @@
- 
- use core::{
-     marker::PhantomData,
-+    mem::offset_of,
-     ptr::{addr_of_mut, NonNull},
- };
- 
-@@ -285,6 +286,12 @@ pub fn io_request_by_name(&self, name: &CStr) -> Option<IoRequest<'_>> {
-     }
- }
- 
-+// SAFETY: `platform::Device` is a transparent wrapper of `struct platform_device`.
-+// The offset is guaranteed to point to a valid device field inside `platform::Device`.
-+unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Device<Ctx> {
-+    const OFFSET: usize = offset_of!(bindings::platform_device, dev);
-+}
-+
- macro_rules! define_irq_accessor_by_index {
-     (
-         $(#[$meta:meta])* $fn_name:ident,
-diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
-index 14ddb711bab3..ec21261baf6a 100644
---- a/rust/kernel/usb.rs
-+++ b/rust/kernel/usb.rs
-@@ -324,6 +324,12 @@ fn as_raw(&self) -> *mut bindings::usb_interface {
-     }
- }
- 
-+// SAFETY: `usb::Interface` is a transparent wrapper of `struct usb_interface`.
-+// The offset is guaranteed to point to a valid device field inside `usb::Interface`.
-+unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Interface<Ctx> {
-+    const OFFSET: usize = offset_of!(bindings::usb_interface, dev);
-+}
-+
- // SAFETY: `Interface` is a transparent wrapper of a type that doesn't depend on
- // `Interface`'s generic argument.
- kernel::impl_device_context_deref!(unsafe { Interface });
--- 
-2.51.0
+If a window has extra size prior to any resource fitting operation, the=20
+kernel will recalculate the size based on what it knows about the=20
+downstream resource sizes, no more so extra size is removed.
 
+I thought that old_size was to prevent such shrinkage, but it is=20
+problematic as we've seen here (and also in a some other cases).
+
+It would be possible to move the max for old_size outside of align so=20
+something like this instead of the patch you tested:
+
+-       return ALIGN(max(size, old_size), align);
++       return max(ALIGN(size, align), old_size);
+
+That would not try to make the bridge window larger due to alignment than=
+=20
+what the old_size was, so it should still fit to its old range keeping=20
+its old size.
+
+> I've added "lspci -v" output as well, which shows the bridge configuratio=
+n.
+> I'm still not sure that the address mappings between PCI and system bus a=
+re
+> 1:1.
+>=20
+> So the BAR0 release patch from Lucas seems to be no longer required with =
+this,
+> although it does align the prefetchable area better, so in theory it woul=
+d
+> allow a 512G BAR to be mapped. In practice, there are no Intel dGPUs with=
+ 512G
+> VRAM.
+>
+> > There's indeed something messy and odd going on here with the resource =
+and
+> > window mappings, in the bad case there's also this line which doesn't m=
+ake
+> > much sense:
+> > +pci 0030:01:00.0: bridge window [mem 0x6200000000000-0x6203fbff0ffff 6=
+4bit
+> > pref]: can't claim; address conflict with 0030:01:00.0 [mem
+> > 0x6200020000000-0x62000207fffff 64bit pref]
+>=20
+> > ...but that conflicting resource was not assigned in between releasing
+> > this bridge window and trying to claim it back so how did that
+> > conflicting resource get there is totally mysterious to me. It doesn't
+> > seem related directly to the the resize no longer working though.
+>=20
+> That is the upstream bridge's BAR0 mapping, which is not a bridge window,=
+ so
+> presumably the window allocation algorithm is unaware of it.
+
+Resource tree is independent of PCI's resource allocation algorithm. Now=20
+that I look the numbers and logs again, this doesn't look valid resource=20
+tree state (from iomem.good!):
+
+6200000000000-6203fbfffffff : pciex@620c3c0000000
+  6200000000000-6203fbff0ffff : PCI Bus 0030:01
+    6200020000000-62000207fffff : 0030:01:00.0
+    6200000000000-6203fbff0ffff : PCI Bus 0030:02
+      6200400000000-62007ffffffff : PCI Bus 0030:03
+        6200400000000-62007ffffffff : 0030:03:00.0
+
+6200020000000-62000207fffff and 6200000000000-6203fbff0ffff appear as=20
+siblings and those addresses conflict. It seems this "good" kernel is=20
+"cheating" by double counting addresses... ;-D
+
+I've now found the cause in part thanks to another reporter with=20
+similar impossible resource conflicts (an old bug in the resizing=20
+algorithm which is there since BAR resizing was introduced).
+
+It will take me a few days to fix all this as fixing the claim issue=20
+will make other domino bricks to fall so I'll have to refactor this=20
+pci_resize_resource() interface now, unfortunately.
+
+> > > It's a bit weird that there is a log message that says "enabling devi=
+ce",
+> > > then
+> > > the BARs are reconfigured. I'd want the decoding logic to be inactive
+> > > while
+> > > addresses are assigned.
+>=20
+> > So no real issue here and only logging is not the way you'd want it?
+>=20
+> It works for the GPU, but I'm unsure about my FPGA designs now, for the m=
+ost
+> part, I would have expected that the "enable memory decoding" bit had to =
+be 0
+> while BAR registers are being written, and I would have expected the driv=
+er to
+> resize the BAR first, then enable the device.
+
+Lucas did move resizing earlier but I guess it still occurs after enabling=
+=20
+the device. I don't know enough about xe driver to say how early BARs=20
+could be resized.
+
+--=20
+ i.
+--8323328-303087025-1761221295=:1016--
