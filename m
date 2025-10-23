@@ -1,27 +1,26 @@
 Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89A84311C15;
-	Thu, 23 Oct 2025 12:13:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EDDE30AD04;
+	Thu, 23 Oct 2025 12:13:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761221607; cv=none; b=E/gThOTvxtEp8gBhl/raUFJoXJar8t49argCGUSnFnDgpnZyWE/OnrMvX0CHLiwWwfZXEl0dRfwVe+8xJQSmYe/F3Cv4NiD8adyNvWAYmWGq7O4rhv8MQP0kE57/jBmd3hMSd+rzHHHpKLXk15uZbzH1pWVn7hLVeiUHYLif+T4=
+	t=1761221612; cv=none; b=lAf9uO2V5bNshtaRYF+Ep/HwicU+V9baaZT0vJjjFCOitQucRAYrgJtb7snyP+KVgkH8/7rIIGxVTeKeci5KlcSztH9p044YIa4aexpcPDwklJB7o6aEq62bkx3IltrKupuNf6NKMuT65VAcsDf6e+OA/I7WuFmnAK8MMk7U/So=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761221607; c=relaxed/simple;
-	bh=xU6nY5nIW50uvgpEnX6GNOjl4w/8ijNw+CyrECbJLiY=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fDN7yJ40ydrS7AZ1IJeIPh3FZGjJbIShPxxMSwafnfKaF7KHtCIb1rchmE8QUupIrSy588llF/sTLgXg0vyIwJskEt0DqUcuoMnaWIwHjnBe2K2tku9T9ShDuYu9jkXToZN0RQB9fvH8uFc4PrSZx6CHJckN9Utr9gNIFD93P88=
+	s=arc-20240116; t=1761221612; c=relaxed/simple;
+	bh=E+i4TInBClPj84mlYx0Hg88NApGQgSSh/7BOT4A7hTU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kOFCHRbEHyqGGG+ayYJgXxiOiMywY3q0yTGMqy3K5B1foegXs80db3hpAY+v+CIYuFdIv8GYCACzMv4zE05HKhIrr5ZclezPWPOieRzuUlyx5CKuj6SVJchezWN4gfXYK6ChDVO5NAifc+jlt7l3E15f0TP8qXUIiGe7wNjLg4o=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
 Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
-	by Atcsqr.andestech.com with ESMTPS id 59NC9hWC039378
+	by Atcsqr.andestech.com with ESMTPS id 59NC9fwl039374
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 23 Oct 2025 20:09:43 +0800 (+08)
+	Thu, 23 Oct 2025 20:09:41 +0800 (+08)
 	(envelope-from randolph@andestech.com)
 Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
  (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Thu, 23 Oct 2025
- 20:09:43 +0800
+ 20:09:41 +0800
 From: Randolph Lin <randolph@andestech.com>
 To: <linux-kernel@vger.kernel.org>
 CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
@@ -34,12 +33,10 @@ CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
         <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
         <shradha.t@samsung.com>, <pjw@kernel.org>, <randolph.sklin@gmail.com>,
         <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
-Subject: [PATCH v9 4/4] MAINTAINERS: Add maintainers for Andes QiLai PCIe driver
-Date: Thu, 23 Oct 2025 20:09:33 +0800
-Message-ID: <20251023120933.2427946-5-randolph@andestech.com>
+Subject: [PATCH v9 0/4] Add support for Andes Qilai SoC PCIe controller
+Date: Thu, 23 Oct 2025 20:09:29 +0800
+Message-ID: <20251023120933.2427946-1-randolph@andestech.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251023120933.2427946-1-randolph@andestech.com>
-References: <20251023120933.2427946-1-randolph@andestech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,33 +48,71 @@ Content-Type: text/plain
 X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
 X-DNSRBL: 
 X-SPAM-SOURCE-CHECK: pass
-X-MAIL:Atcsqr.andestech.com 59NC9hWC039378
+X-MAIL:Atcsqr.andestech.com 59NC9fwl039374
 
-Here add maintainer information for Andes QiLai PCIe driver.
+Add support for Andes Qilai SoC PCIe controller
+
+These patches introduce driver support for the PCIe controller on the
+Andes Qilai SoC.
 
 Signed-off-by: Randolph Lin <randolph@andestech.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 25463fa36508..d21af8c3da0f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -19603,6 +19603,13 @@ S:	Supported
- F:	Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
- F:	drivers/pci/controller/pcie-altera.c
- 
-+PCI DRIVER FOR ANDES QILAI PCIE
-+M:	Randolph Lin <randolph@andestech.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
-+F:	drivers/pci/controller/dwc/pcie-andes-qilai.c
-+
- PCI DRIVER FOR APPLIEDMICRO XGENE
- M:	Toan Le <toan@os.amperecomputing.com>
- L:	linux-pci@vger.kernel.org
+---
+Changes in v9:
+- Drop the patch that adjusts the number of OB/IB windows.
+- Made minor adjustments based on the reviewer's suggestions.
+
+Changes in v8:
+- Fix the compile error reported by the kernel test robot.
+
+Changes in v7:
+- Remove unnecessary nodes and property in DTS bindings
+
+Changes in v6:
+- Fix typo in the logic for adjusting the number of OB/IB windows
+
+Changes in v5:
+- Add support to adjust the number of OB/IB windows in the glue driver.
+- Fix the number of OB windows in the Qilai PCIe driver.
+- Remove meaningless properties from the device tree.
+- Made minor adjustments based on the reviewer's suggestions.
+
+Changes in v4:
+- Add .post_init callback for enabling IOCP cache.  
+- Sort by vender name in Kconfig 
+- Using PROBE_PREFER_ASYNCHRONOUS as default probe type.
+- Made minor adjustments based on the reviewer's suggestions.
+
+Changes in v3:
+- Remove outbound ATU address range validation callback and logic.
+- Add logic to skip failed outbound iATU configuration and continue.
+- Using PROBE_PREFER_ASYNCHRONOUS as default probe type.
+- Made minor adjustments based on the reviewer's suggestions.
+
+Changes in v2:
+- Remove the patch that adds the dma-ranges property to the SoC node.
+- Add dma-ranges to the PCIe parent node bus node.
+- Refactor and rename outbound ATU address range validation callback and logic.
+- Use parent_bus_offset instead of cpu_addr_fixup().
+- Using PROBE_DEFAULT_STRATEGY as default probe type.
+- Made minor adjustments based on the reviewer's suggestions.
+
+Randolph Lin (4):
+  dt-bindings: PCI: Add Andes QiLai PCIe support
+  riscv: dts: andes: Add PCIe node into the QiLai SoC
+  PCI: andes: Add Andes QiLai SoC PCIe host driver support
+  MAINTAINERS: Add maintainers for Andes QiLai PCIe driver
+
+ .../bindings/pci/andestech,qilai-pcie.yaml    |  86 ++++++++
+ MAINTAINERS                                   |   7 +
+ arch/riscv/boot/dts/andes/qilai.dtsi          | 106 ++++++++++
+ drivers/pci/controller/dwc/Kconfig            |  13 ++
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pcie-andes-qilai.c | 198 ++++++++++++++++++
+ 6 files changed, 411 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-andes-qilai.c
+
 -- 
 2.34.1
 
