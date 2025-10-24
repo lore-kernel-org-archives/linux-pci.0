@@ -1,316 +1,149 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0DE30F948;
-	Fri, 24 Oct 2025 09:56:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA49930E0D0
+	for <linux-pci@vger.kernel.org>; Fri, 24 Oct 2025 10:05:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761299794; cv=none; b=DvzVDTOUr6jN4JuQDI4rB+neWz8jmgZHBclZRU7d1oQezOW3+kTpIbLS1sfiZrgBw6mvQ+PjZT0RlLda/8C//3WHuziakz2AhyaupmzEVR04EuC+9hi8gun3NA588ckuvfKq8JerdXa+N9iLNbtf08yYWOxAO5CsL3aj5esnSnE=
+	t=1761300333; cv=none; b=VQRJGFHMqIhiO5kbgz9BEuoZkA5VpxtzzrJwdX/CSQgkSf6U+wLbZTJjG223YFe7UXh9hzXk3HohJg3zObFe6YM8PiX8hSlcXKn8J2Ef6A7tg85nTu9g+Cln+jrP8UF3TCeb0GJL/XmxfBWKZ6EiXPNUoZAEloaV+zIviteKF2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761299794; c=relaxed/simple;
-	bh=GmY8qbd1L3flGSO1mhqX98o8Y9PqRNCwlqTwlaAzLB4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RdVqArFIqgCLuU+i6jwi3SRNOXc14TrcWTN5v255ZiUZk4PdlzE3tm1R1miT6/ns6bG5gDNhjY598sYvEVO3TxVjJddhVGyrko8PVrJkHAh5oX4keWxL3+t/SqNEbOgxYSpvPW18nAhJN3OBFEAkSVC7QZQaOXwwi8MPG3T6cTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=l88Dgn/+; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1761300333; c=relaxed/simple;
+	bh=efrS9BaHzDRqhG4QPznfmvIjLIwB/bsLCdY70IE0Tv4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=bnzVRIe7ar8XVHINZlLHrP7CpnDwu0Nr5IiKt6Psf4mf015TMH2QXFKqIcbSngCsuQn8PPLzn6pyuy4MU9BCtaKacTazMzU44OqgU21CnWpn4HgdI0whg+LoGJVeeTSd4b4DLKu7nXAUKk5b4v4oxFzDtTCrJFOALIZ8uAwHZa8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LSlB0Dh1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="l88Dgn/+"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59O3GG9H005176;
-	Fri, 24 Oct 2025 09:56:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=TBTRP82DD6r
-	WSYHRma2QX4NoT7exTBJrFy59hd1B4F4=; b=l88Dgn/+MPeOLvCP+L/+CPzDCIK
-	v1Zw9FCrhRRrh1FD8/sJrVP5K4J4QIpl/hVq0PkU4kuC4YJYSHlPD5JVJF+2JaSV
-	h8VFtRj1w3/dcHgwoEiyZ7Vf3lKwdmqZFqRioY2g3vsPaQJAHEy5BFoGKRQK9y+b
-	i7YcaXBuVt1sSkLp4pTmEtFsfqeHRhC1Kh23IBuc3NM0XcvB0YuixdR+zfRNK8jZ
-	bQJIZYFZrRPTQfzwuVGwc2fmM8LN5iX4XsWj1KikjfH2UHZmzI7T6M0Xv/WyO4XW
-	hpIGDq49Nwm5ncrWKjD15zn5m2UmjxMwRhVPkShq1I4OjI2EClQUvlQdZQQ==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49v2gebm9d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Oct 2025 09:56:16 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 59O9uD4W003978;
-	Fri, 24 Oct 2025 09:56:13 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 49v3ymqf0b-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Oct 2025 09:56:13 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 59O9uCIB003962;
-	Fri, 24 Oct 2025 09:56:13 GMT
-Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 59O9uCwB003935
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Oct 2025 09:56:12 +0000
-Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id A02077AE; Fri, 24 Oct 2025 17:56:10 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: [PATCH v14 2/5] arm64: dts: qcom: qcs8300: enable pcie0
-Date: Fri, 24 Oct 2025 17:56:06 +0800
-Message-Id: <20251024095609.48096-3-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251024095609.48096-1-ziyue.zhang@oss.qualcomm.com>
-References: <20251024095609.48096-1-ziyue.zhang@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LSlB0Dh1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A9F6C116D0
+	for <linux-pci@vger.kernel.org>; Fri, 24 Oct 2025 10:05:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761300333;
+	bh=efrS9BaHzDRqhG4QPznfmvIjLIwB/bsLCdY70IE0Tv4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=LSlB0Dh1NSpS/8uneJsnnbGYw6rT7CMLI2jcZevmBWtZpigdzWvSTOzE4mXD4eqdn
+	 2w4TtPSZnPE606Dqnm0qzfQPlujwqqBAIbsjqgTVOAAp7nc5mzAckY/VZYCSig7UiV
+	 wKwfhMx862FZZUcc5yGBudrBYPDAACMpiaGzTwczT/NB9eXVTRsqH54r2pTrUov9S3
+	 Epx4VstKOE4K2AZlT7MWmrBF46uDeryS4nVfbf0lEDAYyk/zwxuETeBwWTt2TNpNtV
+	 ujpK1IXZtAFizaa0IjOh+hgpDrvb0cjfqQmqstkk0I4A7X+SqUqtszq6zRtd6hrJ7o
+	 ucsa30tvHR6kg==
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-63b9da57cecso3032220a12.0
+        for <linux-pci@vger.kernel.org>; Fri, 24 Oct 2025 03:05:33 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCWPwrPopyDGdy96QswOOyHowyuCjnh5t5QHDvC7iHDy1+9yhokzCdnU9ZGU6Sk1dBLXvTD9qQKMeGs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCFNLkhb27e6v1FSxirOMHh7xnOIL0IaJ1b3YhIZwZuMCgOFCA
+	qipoqhU/BYL/JJOZNLqGw1YkdEpdfERf8r6+Rg44X3FnE5qPudB1bfeCtc9eXFUUAEZYMuPAFIr
+	+B3Iqnm7ufWdUwFE/5a1GMaG29JgFVcM=
+X-Google-Smtp-Source: AGHT+IFHKF3NqoBmlDZaV0FmRNKD8/mFve+wH2ZdxsuoPoEiVQWtYjjzOJHSr2GPjLRNRae1vdUmrmDSA+Q6Q598ylA=
+X-Received: by 2002:a05:6402:2551:b0:639:ff4f:4bba with SMTP id
+ 4fb4d7f45d1cf-63c1f631c38mr25690693a12.2.1761300331796; Fri, 24 Oct 2025
+ 03:05:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDE4MDAyMCBTYWx0ZWRfX+qKdeYSdozYP
- sI6vXm1HmtzfcMg89mcQBLzO5ekd3RSW9vNTxGlv5DT9DIyYdKydAc7GT3MjdKfeMVBY8MyyV1o
- 7wO7LQ2rbxCv4vgF2rX+r1g3Edg9NiPElQ3KeZD6d9tRDCMYE4zSABcp5CcKO/NM5piIOFmWWCr
- TTg6K6EjvW1Are98+Y2kcJsZobmoChoTHs88BxsmTpY8sCcwrgCfT8Y6h5+8a8YEQWRsZkeIZ5v
- ZImyu3M53hy4crbEolEziQELJixDCT4W7zLIcNAe/DsDivSIoqao7OJJdQzaiwn3oq2DBjl08dM
- 8fsGDoGa/rmS4aF++UQx4LCuWFs6Ck5ZsgwPdFc0JudPDnD92OixR1bvmxiwFmqSqCCQd8zH8KY
- mRucCs9LjVyIYvSTpeT7ok2ERIgSfg==
-X-Authority-Analysis: v=2.4 cv=KqFAGGWN c=1 sm=1 tr=0 ts=68fb4d41 cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=KKAkSRfTAAAA:8 a=EUspDBNiAAAA:8
- a=AB9_xyHDybkdeVn4xrgA:9 a=0SwTTl3ol2e16pCM:21 a=cvBusfyB2V15izCimMoJ:22
- a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22 a=xoEH_sTeL_Rfw54TyV31:22
-X-Proofpoint-GUID: 2W0HKEEsV8M2YDTt8WdjFRj8_zY1sPde
-X-Proofpoint-ORIG-GUID: 2W0HKEEsV8M2YDTt8WdjFRj8_zY1sPde
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-10-24_01,2025-10-22_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 clxscore=1011 phishscore=0 malwarescore=0 impostorscore=0
- lowpriorityscore=0 adultscore=0 priorityscore=1501 spamscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510180020
+References: <d3f11e8562f589ddb2c1c83e74161bd8948084c3.camel@linux.ibm.com>
+ <CAAhV-H4Q932R0fAbL6JyygZcgALdO_HJZ1Cqo88EhNMm04yjtQ@mail.gmail.com> <163456ca8cf900e24fe3b9ce71fdad7b68398058.camel@linux.ibm.com>
+In-Reply-To: <163456ca8cf900e24fe3b9ce71fdad7b68398058.camel@linux.ibm.com>
+From: Huacai Chen <chenhuacai@kernel.org>
+Date: Fri, 24 Oct 2025 18:05:19 +0800
+X-Gmail-Original-Message-ID: <CAAhV-H58cjSgPLPfSSZD4DSSct_bKLF6SYMSJpBwdUT8NY3AhA@mail.gmail.com>
+X-Gm-Features: AWmQ_bn7F9mwmAnOW8C62JDHkaD4KHO_NxlTLxyK-o3RilHrWBmtY9bE5wxagHA
+Message-ID: <CAAhV-H58cjSgPLPfSSZD4DSSct_bKLF6SYMSJpBwdUT8NY3AhA@mail.gmail.com>
+Subject: Re: Potential issue with hypervisor_isolated_pci_functions() handling
+To: Niklas Schnelle <schnelle@linux.ibm.com>
+Cc: Jan Kiszka <jan.kiszka@siemens.com>, Bjorn Helgaas <helgaas@kernel.org>, 
+	linux-pci <linux-pci@vger.kernel.org>, jailhouse-dev@googlegroups.com, 
+	linux-s390 <linux-s390@vger.kernel.org>, loongarch@lists.linux.dev, 
+	Farhan Ali <alifm@linux.ibm.com>, Matthew Rosato <mjrosato@linux.ibm.com>, 
+	Tianrui Zhao <zhaotianrui@loongson.cn>, Gerd Bayer <gbayer@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add configurations in devicetree for PCIe0, including registers, clocks,
-interrupts and phy setting sequence.
+Hi, Niklas,
 
-Add PCIe lane equalization preset properties for 8 GT/s and 16GT/s
+On Thu, Oct 23, 2025 at 11:25=E2=80=AFPM Niklas Schnelle <schnelle@linux.ib=
+m.com> wrote:
+>
+> On Wed, 2025-10-22 at 22:49 +0800, Huacai Chen wrote:
+> > Hi, Niklas,
+> >
+> > On Wed, Oct 22, 2025 at 7:40=E2=80=AFPM Niklas Schnelle <schnelle@linux=
+.ibm.com> wrote:
+> > >
+> > > Hi Huacai, Hi Jan, Hi Bjorn,
+> > >
+> > > I noticed that with commit a02fd05661d7 ("PCI: Extend isolated functi=
+on
+> > > probing to LoongArch") LoongArch now also makes use of the isolated
+> > > function probing. First, nice to see this sees more users and that th=
+e
+> > > interface is useful to you.
+> > >
+> > > Seeing this, I was reminded of an issue I ran into when using this
+> > > mechanism with SR-IOV capable devices. In that case VFs with devfn > =
+7
+> > > and PCI_SLOT(devfn) !=3D 0 wouldn't get probed.
+> > > This is because if a device is found next_fn() will check whether dev=
+-
+> > > > multifunction is set. So if for example devfn =3D=3D 8 is found (fn=
+ =3D=3D 0)
+> > > dev->multifunction won't be set in pci_scan_slot() and for VFs it's
+> > > also not set via PCI_HEADER_TYPE_MFD. So we won't check for devfn =3D=
+=3D 9
+> > > even though that could very well be there.
+> > >
+> > > Now for s390 this currently doesn't cause issues because for all
+> > > multifunction devices we have, we either get a VF alone and then sinc=
+e
+> > > commit 25f39d3dcb48 ("s390/pci: Ignore RID for isolated VFs") use dev=
+fn
+> > > =3D=3D 0, or we have the parent PF passed-through and then VFs always=
+ get
+> > > hot plugged after SR-IOV enable, which then uses
+> > > pci_scan_single_device(). And for non VFs we always have devfn =3D=3D=
+ 0
+> > > and/or devfn =3D=3D 1 and multifunction via the header. So in a sense=
+ the
+> > > above commit works around the issue, though that wasn't its primary
+> > > intention.
+> > >
+> > > Did either of you also run into this issue or can reproduce it?
+> > >
+> > > Somewhat related, if ARI is enabled this would also break the isolate=
+d
+> > > function case including on s390 where ARI is used by the platform
+> > > firmware, but detected as off by Linux because there is no struct
+> > > pci_dev associated with the PCI bus. If I patch Linux to correctly
+> > > detect ARI, it no longer finds an isolated PF with devfn =3D=3D 1.
+> > LoongArch do have some problems after commit a02fd05661d7 ("PCI:
+> > Extend isolated function probing to LoongArch"). Please see:
+> > https://lore.kernel.org/linux-pci/20251014074100.2149737-1-chenhuacai@l=
+oongson.cn/
+> >
+> > Now we don't know what happens exactly, so I haven't answered Bjorn's
+> > question...
+> >
+> > Huacai
+> >
+>
+> Hi Huacai,
+>
+> I have now send[0] a fix proposal together with correctly exposing ARI
+> enablement in s390. I also reproduced both the issue I saw with SR-IOV
+> and with ARI and confirmed that the first patch in the series fixes
+> them. You're on Cc and I'd highly appreciate if you could test whether
+> this fixes your issues as well.
+>
+> Thanks,
+> Niklas
+>
+> [0]
+> https://lore.kernel.org/linux-pci/20251023-ari_no_bus_dev-v4-0-8482e2ed10=
+bd@linux.ibm.com/
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
----
- arch/arm64/boot/dts/qcom/qcs8300.dtsi | 179 +++++++++++++++++++++++++-
- 1 file changed, 178 insertions(+), 1 deletion(-)
+There are two patches in this series. If LoongArch has a similar
+problem as S390, only the first patch is enough, or should we need an
+architectural change similar to the second patch?
 
-diff --git a/arch/arm64/boot/dts/qcom/qcs8300.dtsi b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
-index 8d78ccac411e..a55b9eb02898 100644
---- a/arch/arm64/boot/dts/qcom/qcs8300.dtsi
-+++ b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
-@@ -903,7 +903,7 @@ gcc: clock-controller@100000 {
- 			#power-domain-cells = <1>;
- 			clocks = <&rpmhcc RPMH_CXO_CLK>,
- 				 <&sleep_clk>,
--				 <0>,
-+				 <&pcie0_phy>,
- 				 <0>,
- 				 <0>,
- 				 <0>,
-@@ -2255,6 +2255,183 @@ mmss_noc: interconnect@17a0000 {
- 			qcom,bcm-voters = <&apps_bcm_voter>;
- 		};
- 
-+		pcie0: pci@1c00000 {
-+			device_type = "pci";
-+			compatible = "qcom,pcie-qcs8300", "qcom,pcie-sa8775p";
-+			reg = <0x0 0x01c00000 0x0 0x3000>,
-+			      <0x0 0x40000000 0x0 0xf20>,
-+			      <0x0 0x40000f20 0x0 0xa8>,
-+			      <0x0 0x40001000 0x0 0x4000>,
-+			      <0x0 0x40100000 0x0 0x100000>,
-+			      <0x0 0x01c03000 0x0 0x1000>;
-+			reg-names = "parf",
-+				    "dbi",
-+				    "elbi",
-+				    "atu",
-+				    "config",
-+				    "mhi";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
-+				 <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x1fd00000>;
-+			bus-range = <0x00 0xff>;
-+
-+			dma-coherent;
-+
-+			linux,pci-domain = <0>;
-+			num-lanes = <2>;
-+
-+			interrupts = <GIC_SPI 307 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 308 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 309 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 312 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 314 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 306 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi0",
-+					  "msi1",
-+					  "msi2",
-+					  "msi3",
-+					  "msi4",
-+					  "msi5",
-+					  "msi6",
-+					  "msi7",
-+					  "global";
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc GIC_SPI 434 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &intc GIC_SPI 435 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &intc GIC_SPI 438 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &intc GIC_SPI 439 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>;
-+			clock-names = "aux",
-+				      "cfg",
-+				      "bus_master",
-+				      "bus_slave",
-+				      "slave_q2a";
-+
-+			assigned-clocks = <&gcc GCC_PCIE_0_AUX_CLK>;
-+			assigned-clock-rates = <19200000>;
-+
-+			interconnects = <&pcie_anoc MASTER_PCIE_0 QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
-+					 &config_noc SLAVE_PCIE_0 QCOM_ICC_TAG_ACTIVE_ONLY>;
-+			interconnect-names = "pcie-mem",
-+					     "cpu-pcie";
-+
-+			iommu-map = <0x0 &pcie_smmu 0x0000 0x1>,
-+				    <0x100 &pcie_smmu 0x0001 0x1>;
-+
-+			resets = <&gcc GCC_PCIE_0_BCR>,
-+				 <&gcc GCC_PCIE_0_LINK_DOWN_BCR>;
-+			reset-names = "pci",
-+				      "link_down";
-+
-+			power-domains = <&gcc GCC_PCIE_0_GDSC>;
-+
-+			eq-presets-8gts = /bits/ 16 <0x5555 0x5555>;
-+			eq-presets-16gts = /bits/ 8 <0x55 0x55>;
-+
-+			status = "disabled";
-+
-+			pcie3_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				/* GEN 1 x1 */
-+				opp-2500000 {
-+					opp-hz = /bits/ 64 <2500000>;
-+					required-opps = <&rpmhpd_opp_svs_l1>;
-+					opp-peak-kBps = <250000 1>;
-+				};
-+
-+				/* GEN 1 x2 and GEN 2 x1 */
-+				opp-5000000 {
-+					opp-hz = /bits/ 64 <5000000>;
-+					required-opps = <&rpmhpd_opp_svs_l1>;
-+					opp-peak-kBps = <500000 1>;
-+				};
-+
-+				/* GEN 2 x2 */
-+				opp-10000000 {
-+					opp-hz = /bits/ 64 <10000000>;
-+					required-opps = <&rpmhpd_opp_svs_l1>;
-+					opp-peak-kBps = <1000000 1>;
-+				};
-+
-+				/* GEN 3 x1 */
-+				opp-8000000 {
-+					opp-hz = /bits/ 64 <8000000>;
-+					required-opps = <&rpmhpd_opp_svs_l1>;
-+					opp-peak-kBps = <984500 1>;
-+				};
-+
-+				/* GEN 3 x2 and GEN 4 x1 */
-+				opp-16000000 {
-+					opp-hz = /bits/ 64 <16000000>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+					opp-peak-kBps = <1969000 1>;
-+				};
-+
-+				/* GEN 4 x2 */
-+				opp-32000000 {
-+					opp-hz = /bits/ 64 <32000000>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+					opp-peak-kBps = <3938000 1>;
-+				};
-+			};
-+
-+			pcieport0: pcie@0 {
-+				device_type = "pci";
-+				reg = <0x0 0x0 0x0 0x0 0x0>;
-+				bus-range = <0x01 0xff>;
-+
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges;
-+				phys = <&pcie0_phy>;
-+			};
-+		};
-+
-+		pcie0_phy: phy@1c04000 {
-+			compatible = "qcom,qcs8300-qmp-gen4x2-pcie-phy";
-+			reg = <0x0 0x01c04000 0x0 0x2000>;
-+
-+			clocks = <&gcc GCC_PCIE_0_PHY_AUX_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_CLKREF_EN>,
-+				 <&gcc GCC_PCIE_0_PHY_RCHNG_CLK>,
-+				 <&gcc GCC_PCIE_0_PIPE_CLK>,
-+				 <&gcc GCC_PCIE_0_PIPEDIV2_CLK>;
-+			clock-names = "aux",
-+				      "cfg_ahb",
-+				      "ref",
-+				      "rchng",
-+				      "pipe",
-+				      "pipediv2";
-+
-+			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
-+			reset-names = "phy";
-+
-+			assigned-clocks = <&gcc GCC_PCIE_0_PHY_RCHNG_CLK>;
-+			assigned-clock-rates = <100000000>;
-+
-+			#clock-cells = <0>;
-+			clock-output-names = "pcie_0_pipe_clk";
-+
-+			#phy-cells = <0>;
-+
-+			status = "disabled";
-+		};
-+
- 		ufs_mem_hc: ufs@1d84000 {
- 			compatible = "qcom,qcs8300-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
- 			reg = <0x0 0x01d84000 0x0 0x3000>;
--- 
-2.34.1
-
+Huacai
