@@ -1,28 +1,29 @@
-Received: from out30-113.freemail.mail.aliyun.com (out30-113.freemail.mail.aliyun.com [115.124.30.113])
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE0E1125A9;
-	Sat, 25 Oct 2025 11:42:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.113
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D33472F83B8;
+	Sat, 25 Oct 2025 11:42:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761392537; cv=none; b=YvBlXj3defNVn4mxadl/wxFJoDQ9Bp1E/PXiYez9jioJX1QaVxttZ9Bxjmy2rDHt/bawfgPUMXKurGa/FfuI2pjIIL5zWBcPX+gt1nH1I+rfe9I6raIGkuySECvnIZFVgRVtaTI8edHyvujl4TETZVX1ofTt+3+demlDuJxz2FU=
+	t=1761392540; cv=none; b=dIHFZ+w/O6PpNPciHHiyJWMg493o67b728WZaVCYyEp+6onz1C59nKvbQ8iY2No42F748lrzye5Ds9pyJK3+A7HxAXY+sFhFUlguPL/ZgSV1mmimFXe4JiwwPXkDhVAMXTljy1jmJzafMmeet7GCwlHg2ZPjWPIBz/uO5hR/KkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761392537; c=relaxed/simple;
-	bh=H3mlJ0jLzxUq3liDuRwZIkiiKefMUKLhNzLfln0Gb/k=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=nUESeWLnvoeEJcb/MT8akSgtczB6XphHCllEPaa2fD1lBUolgls6mu3565ytFgWQZoiiWnwAuKzaUXH9Z53AbyFt/3dH1U+iLLAZNZcWY7Yrc3KT/rNGXDnwfC8xLTS5KSStQXaYnNp1OMQKAo2ZjjqO0YJDXIX4K8pPAR+O4R4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=wTxY2ccG; arc=none smtp.client-ip=115.124.30.113
+	s=arc-20240116; t=1761392540; c=relaxed/simple;
+	bh=OUh/XG151vsZreFH20lIvtumt84ynAEZS96GcNa0wxs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CRNRH/rOV+2vrSxeIMiuMkUb/7CNVJ9pCWYm+XOu5OH3fcjEdL9fr/EYGuufEYnFJX9c2wnIKZ3yY+ZpHTI/6x/zrgf0nAeC73DiXu4aqJra3NbuJU4IdzqhTFfQkLn7uWSqWmgG9TLj4n/eQyF/AUZn58G/358tQ80bJkNiAgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=eqFCeupG; arc=none smtp.client-ip=115.124.30.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="wTxY2ccG"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="eqFCeupG"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1761392526; h=From:To:Subject:Date:Message-Id:MIME-Version:Content-Type;
-	bh=GhFrCpZd8LutM5rPkha9lgb3n3CgPlLWOr9ztbGOOE0=;
-	b=wTxY2ccGHTgzCjVgc+VvS4RSgNYOq30/u1RomlgSFcb3KlbugLQ8PiK6LQmVqIB77XyX/TMPEQmiDkZcOdhwGs+8oQXur10xBredWdJSHPl1Ae4abRDHQjqdtN+65Og3zj2BWcF22sJCRDBRV9zxvn4/pAzz+VL8acaSt+00i/c=
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WqwoUfp_1761392522 cluster:ay36)
+	t=1761392529; h=From:To:Subject:Date:Message-Id:MIME-Version:Content-Type;
+	bh=ZXis57oCSpBFB4a8y0ISQ5Oi5GcKyDv+DrwQmN1TBwo=;
+	b=eqFCeupG0uCBMxxx6AMXnMvuYBnYBVbP7suO5hcLJCf5SD8fSN8mf56rJV1Zt988PJ++HhIq8hzYX4ghy45ZTJVuy7a0nfrYol8k0eiDkvlbMbDhS9O/tFWQrzN7OSPsXgT6fDbC0ufYSaidWFUqB5cEc0vbB7cT6oJv3X3/OVM=
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WqwoUh2_1761392526 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Sat, 25 Oct 2025 19:42:04 +0800
+          Sat, 25 Oct 2025 19:42:07 +0800
 From: Shuai Xue <xueshuai@linux.alibaba.com>
 To: rostedt@goodmis.org,
 	lukas@wunner.de,
@@ -47,10 +48,12 @@ Cc: bhelgaas@google.com,
 	mark.rutland@arm.com,
 	peterz@infradead.org,
 	tianruidong@linux.alibaba.com
-Subject: [PATCH v13 0/3] PCI: trace: Add a RAS tracepoint to monitor link speed changes
-Date: Sat, 25 Oct 2025 19:41:55 +0800
-Message-Id: <20251025114158.71714-1-xueshuai@linux.alibaba.com>
+Subject: [PATCH v13 2/3] PCI: trace: Add a RAS tracepoint to monitor link speed changes
+Date: Sat, 25 Oct 2025 19:41:57 +0800
+Message-Id: <20251025114158.71714-3-xueshuai@linux.alibaba.com>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20251025114158.71714-1-xueshuai@linux.alibaba.com>
+References: <20251025114158.71714-1-xueshuai@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,66 +63,240 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-changes since v12:
-- add Reviewed-by tag for PATCH 1 from Steve
-- add Reviewed-by tag for PATCH 1-3 from Ilpo
-- add comments for why use string to define tracepoint per Steve
-- minor doc improvements from Ilpo
-- remove use pci_speed_string to fix PCI dependends which cause build error on sparc64
+PCIe link speed degradation directly impacts system performance and
+often indicates hardware issues such as faulty devices, physical layer
+problems, or configuration errors.
 
-changes since v11:
-- rebase to Linux 6.18-rc1 (no functional changes)
+To this end, add a RAS tracepoint to monitor link speed changes,
+enabling proactive health checks and diagnostic analysis.
 
-changes since v10:
-- explicitly include header file per Ilpo
-- add comma on any non-terminator entry  per Ilpo
-- compile trace.o under CONFIG_TRACING per Ilpo
+The following output is generated when a device is hotplugged:
 
-changes since v9:
-- add a documentation about PCI tracepoints per Bjorn
-- create a dedicated drivers/pci/trace.c that always defines the PCI tracepoints per Steve
-- move tracepoint callite into __pcie_update_link_speed() per Lukas and Bjorn
+$ echo 1 > /sys/kernel/debug/tracing/events/pci/pcie_link_event/enable
+$ cat /sys/kernel/debug/tracing/trace_pipe
+   irq/51-pciehp-88      [001] .....   381.545386: pcie_link_event: 0000:00:02.0 type:4, reason:4, cur_bus_speed:20, max_bus_speed:23, width:1, flit_mode:0, status:DLLLA
 
-changes since v8:
-- rewrite commit log from Bjorn
-- move pci_hp_event to a common place (include/trace/events/pci.h) per Ilpo
-- rename hotplug event strings per Bjorn and Lukas
-- add PCIe link tracepoint per Bjorn, Lukas, and Ilpo
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Suggested-by: Matthew W Carlis <mattc@purestorage.com>
+Suggested-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |  3 +-
+ drivers/pci/pci.c                |  2 +-
+ drivers/pci/pci.h                | 21 ++++++++++--
+ drivers/pci/pcie/bwctrl.c        |  4 +--
+ drivers/pci/probe.c              |  9 +++--
+ include/trace/events/pci.h       | 57 ++++++++++++++++++++++++++++++++
+ 6 files changed, 87 insertions(+), 9 deletions(-)
 
-changes since v7:
-- replace the TRACE_INCLUDE_PATH to avoid macro conflict per Steven
-- pick up Reviewed-by from Lukas Wunner
-
-Hotplug events are critical indicators for analyzing hardware health, and
-surprise link downs can significantly impact system performance and reliability.
-In addition, PCIe link speed degradation directly impacts system performance and
-often indicates hardware issues such as faulty devices, physical layer problems,
-or configuration errors.
-
-This patch set add PCI hotplug and PCIe link tracepoint to help analyze PCI
-hotplug events and PCIe link speed degradation.
-
-Shuai Xue (3):
-  PCI: trace: Add a generic RAS tracepoint for hotplug event
-  PCI: trace: Add a RAS tracepoint to monitor link speed changes
-  Documentation: tracing: Add documentation about PCI tracepoints
-
- Documentation/trace/events-pci.rst |  74 +++++++++++++++++
- drivers/pci/Makefile               |   3 +
- drivers/pci/hotplug/pciehp_ctrl.c  |  31 +++++--
- drivers/pci/hotplug/pciehp_hpc.c   |   3 +-
- drivers/pci/pci.c                  |   2 +-
- drivers/pci/pci.h                  |  21 ++++-
- drivers/pci/pcie/bwctrl.c          |   4 +-
- drivers/pci/probe.c                |   9 +-
- drivers/pci/trace.c                |  11 +++
- include/trace/events/pci.h         | 129 +++++++++++++++++++++++++++++
- include/uapi/linux/pci.h           |   7 ++
- 11 files changed, 279 insertions(+), 15 deletions(-)
- create mode 100644 Documentation/trace/events-pci.rst
- create mode 100644 drivers/pci/trace.c
- create mode 100644 include/trace/events/pci.h
-
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index bcc51b26d03d..ad5f28f6a8b1 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -320,7 +320,8 @@ int pciehp_check_link_status(struct controller *ctrl)
+ 	}
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA2, &linksta2);
+-	__pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status, linksta2);
++	__pcie_update_link_speed(ctrl->pcie->port->subordinate, PCIE_HOTPLUG,
++				 lnk_status, linksta2);
+ 
+ 	if (!found) {
+ 		ctrl_info(ctrl, "Slot(%s): No device found\n",
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b14dd064006c..6a979a234fe6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4698,7 +4698,7 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
+ 	 * Link Speed.
+ 	 */
+ 	if (pdev->subordinate)
+-		pcie_update_link_speed(pdev->subordinate);
++		pcie_update_link_speed(pdev->subordinate, PCIE_LINK_RETRAIN);
+ 
+ 	return rc;
+ }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4492b809094b..bc4de8fb4cba 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -5,6 +5,7 @@
+ #include <linux/align.h>
+ #include <linux/bitfield.h>
+ #include <linux/pci.h>
++#include <trace/events/pci.h>
+ 
+ struct pcie_tlp_log;
+ 
+@@ -553,12 +554,28 @@ const char *pci_speed_string(enum pci_bus_speed speed);
+ void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+ void pcie_report_downtraining(struct pci_dev *dev);
+ 
+-static inline void __pcie_update_link_speed(struct pci_bus *bus, u16 linksta, u16 linksta2)
++enum pcie_link_change_reason {
++	PCIE_LINK_RETRAIN,
++	PCIE_ADD_BUS,
++	PCIE_BWCTRL_ENABLE,
++	PCIE_BWCTRL_IRQ,
++	PCIE_HOTPLUG,
++};
++
++static inline void __pcie_update_link_speed(struct pci_bus *bus,
++					    enum pcie_link_change_reason reason,
++					    u16 linksta, u16 linksta2)
+ {
+ 	bus->cur_bus_speed = pcie_link_speed[linksta & PCI_EXP_LNKSTA_CLS];
+ 	bus->flit_mode = (linksta2 & PCI_EXP_LNKSTA2_FLIT) ? 1 : 0;
++
++	trace_pcie_link_event(bus,
++			     reason,
++			     FIELD_GET(PCI_EXP_LNKSTA_NLW, linksta),
++			     linksta & PCI_EXP_LNKSTA_LINK_STATUS_MASK);
+ }
+-void pcie_update_link_speed(struct pci_bus *bus);
++
++void pcie_update_link_speed(struct pci_bus *bus, enum pcie_link_change_reason reason);
+ 
+ /* Single Root I/O Virtualization */
+ struct pci_sriov {
+diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+index 36f939f23d34..32f1b30ecb84 100644
+--- a/drivers/pci/pcie/bwctrl.c
++++ b/drivers/pci/pcie/bwctrl.c
+@@ -199,7 +199,7 @@ static void pcie_bwnotif_enable(struct pcie_device *srv)
+ 	 * Update after enabling notifications & clearing status bits ensures
+ 	 * link speed is up to date.
+ 	 */
+-	pcie_update_link_speed(port->subordinate);
++	pcie_update_link_speed(port->subordinate, PCIE_BWCTRL_ENABLE);
+ }
+ 
+ static void pcie_bwnotif_disable(struct pci_dev *port)
+@@ -234,7 +234,7 @@ static irqreturn_t pcie_bwnotif_irq(int irq, void *context)
+ 	 * speed (inside pcie_update_link_speed()) after LBMS has been
+ 	 * cleared to avoid missing link speed changes.
+ 	 */
+-	pcie_update_link_speed(port->subordinate);
++	pcie_update_link_speed(port->subordinate, PCIE_BWCTRL_IRQ);
+ 
+ 	return IRQ_HANDLED;
+ }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c83e75a0ec12..d52f997ea476 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -22,6 +22,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/bitfield.h>
++#include <trace/events/pci.h>
+ #include "pci.h"
+ 
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+@@ -813,14 +814,16 @@ const char *pci_speed_string(enum pci_bus_speed speed)
+ }
+ EXPORT_SYMBOL_GPL(pci_speed_string);
+ 
+-void pcie_update_link_speed(struct pci_bus *bus)
++void pcie_update_link_speed(struct pci_bus *bus,
++			    enum pcie_link_change_reason reason)
+ {
+ 	struct pci_dev *bridge = bus->self;
+ 	u16 linksta, linksta2;
+ 
+ 	pcie_capability_read_word(bridge, PCI_EXP_LNKSTA, &linksta);
+ 	pcie_capability_read_word(bridge, PCI_EXP_LNKSTA2, &linksta2);
+-	__pcie_update_link_speed(bus, linksta, linksta2);
++
++	__pcie_update_link_speed(bus, reason, linksta, linksta2);
+ }
+ EXPORT_SYMBOL_GPL(pcie_update_link_speed);
+ 
+@@ -907,7 +910,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 		pcie_capability_read_dword(bridge, PCI_EXP_LNKCAP, &linkcap);
+ 		bus->max_bus_speed = pcie_link_speed[linkcap & PCI_EXP_LNKCAP_SLS];
+ 
+-		pcie_update_link_speed(bus);
++		pcie_update_link_speed(bus, PCIE_ADD_BUS);
+ 	}
+ }
+ 
+diff --git a/include/trace/events/pci.h b/include/trace/events/pci.h
+index 39e512a167ee..9a9122f62fd3 100644
+--- a/include/trace/events/pci.h
++++ b/include/trace/events/pci.h
+@@ -5,6 +5,7 @@
+ #if !defined(_TRACE_HW_EVENT_PCI_H) || defined(TRACE_HEADER_MULTI_READ)
+ #define _TRACE_HW_EVENT_PCI_H
+ 
++#include <uapi/linux/pci_regs.h>
+ #include <linux/tracepoint.h>
+ 
+ #define PCI_HOTPLUG_EVENT						\
+@@ -66,6 +67,62 @@ TRACE_EVENT(pci_hp_event,
+ 	)
+ );
+ 
++#define PCI_EXP_LNKSTA_LINK_STATUS_MASK (PCI_EXP_LNKSTA_LBMS | \
++					 PCI_EXP_LNKSTA_LABS | \
++					 PCI_EXP_LNKSTA_LT | \
++					 PCI_EXP_LNKSTA_DLLLA)
++
++#define LNKSTA_FLAGS					\
++	{ PCI_EXP_LNKSTA_LT,	"LT"},			\
++	{ PCI_EXP_LNKSTA_DLLLA,	"DLLLA"},		\
++	{ PCI_EXP_LNKSTA_LBMS,	"LBMS"},		\
++	{ PCI_EXP_LNKSTA_LABS,	"LABS"}
++
++TRACE_EVENT(pcie_link_event,
++
++	TP_PROTO(struct pci_bus *bus,
++		  unsigned int reason,
++		  unsigned int width,
++		  unsigned int status
++		),
++
++	TP_ARGS(bus, reason, width, status),
++
++	TP_STRUCT__entry(
++		__string(	port_name,	pci_name(bus->self))
++		__field(	unsigned int,	type		)
++		__field(	unsigned int,	reason		)
++		__field(	unsigned int,	cur_bus_speed	)
++		__field(	unsigned int,	max_bus_speed	)
++		__field(	unsigned int,	width		)
++		__field(	unsigned int,	flit_mode	)
++		__field(	unsigned int,	link_status	)
++	),
++
++	TP_fast_assign(
++		__assign_str(port_name);
++		__entry->type			= pci_pcie_type(bus->self);
++		__entry->reason			= reason;
++		__entry->cur_bus_speed		= bus->cur_bus_speed;
++		__entry->max_bus_speed		= bus->max_bus_speed;
++		__entry->width			= width;
++		__entry->flit_mode		= bus->flit_mode;
++		__entry->link_status		= status;
++	),
++
++	TP_printk("%s type:%d, reason:%d, cur_bus_speed:%d, max_bus_speed:%d, width:%u, flit_mode:%u, status:%s\n",
++		__get_str(port_name),
++		__entry->type,
++		__entry->reason,
++		__entry->cur_bus_speed,
++		__entry->max_bus_speed,
++		__entry->width,
++		__entry->flit_mode,
++		__print_flags((unsigned long)__entry->link_status, "|",
++				LNKSTA_FLAGS)
++	)
++);
++
+ #endif /* _TRACE_HW_EVENT_PCI_H */
+ 
+ /* This part must be outside protection */
 -- 
 2.39.3
 
