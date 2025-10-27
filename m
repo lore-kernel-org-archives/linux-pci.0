@@ -1,196 +1,321 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89E26322C78
-	for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2025 20:06:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 365903168E0
+	for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2025 20:08:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761595576; cv=none; b=IB7AgINOhUCsqEy+my/toEfdJvFbCoBdkf4obOOjYL/U/xkuZwo3gkFOtNpBhEdragLXu7mckpP1Nwv/g5kBePeIKnpaSHKkW2F60dGhWwkkq3YTUzjUxZ0OhDC8Ks3FE0tAB5Y6BgNBDf+8lIQnLEuvBPxCzOtHSoslcmAQacg=
+	t=1761595693; cv=none; b=tmbvN2Rul+b7AcpgNW9PfmJ0+9PTp8D7/tKqTWX2TC4ruimdnQddrk8elVslYnaCmA1TxM0xjALj2oOzOp416DwDfLNdz3R+QI8e9dHNWhc9N6DUlqhL2Y58I83laEicgssboSM8MmK38gX3JPkKBb+dKmQ4X9OI6MVXczxYXRM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761595576; c=relaxed/simple;
-	bh=wSBf5Xy4Aslo7SOGQU/mF5ZHvq4mmV3sP1znVcDJV8o=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tLZUJ0ELdxErsjzKSc7PdVZrK61lnhYbPPSWaesbL+1lIj1Z9FkvaB/66UURzj5KP5ZWhr8YTssC39JTGwFdUCmsLJLvN1JCMAjLfpQf3pSx4jWGmRoLKJNI85C8k7jDIwf508ap9QRS5/LfGj01tuOpOeFUgRirBRij8VkIP1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=eJ/3B5AE; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1761595693; c=relaxed/simple;
+	bh=MdJJ1ynfyQu1hYBwVz0W0Fw7LpTpbxDAQOy2+gKUAzw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Qh0tjlAc9vMxDW5VluYmKN4s2ONsYCEr5+zfiY4MDRMXqAtoXVv+mVPiW3sSlsG4veoyP6py2QOHJhZVMHOSpXcisi0HCgyzMStYqrLvEmC2adFQriOXclTjjJUFXwcJD7E+cowiUO9Jui3/Xxx3ZcY48Oato8azgrPUEUq1lL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U3IR4U+C; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="eJ/3B5AE"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 26457240101
-	for <linux-pci@vger.kernel.org>; Mon, 27 Oct 2025 21:06:02 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1761595562; bh=O37ZSH19ALLogD4cYR4ZnjINIQhJoZZcAsSu5q2wlf8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
-	b=eJ/3B5AEFrWv6iu5CE+FzcpVWc0yiGU9nnGMOwKEcX0iKXc9nvA+tQsK83fVPh3nT
-	 7fhtibKsReArXIq8oExS0dJAZrbMm39ASUvlIgTCjCx/Wy8H+ZJ9jj6OpyoUQvFoHe
-	 NurvvnaA6fervtroqgVmDIMpHp8EmfRodKH9FLuwGOIDreildB4q+iCkLj/jy+Ug7G
-	 dnMQrHGg8vIYPkBLIl2s/9RoGpqYt4YpQnVujzlM1+0RmqckGSNIXRXhwo2OgjQNy6
-	 xFONqbwQT8mk6pOBL+5Al9BaGN/mqSvr1qBLZdBRScCG0d8Qt9C2hEQode/3woqF6f
-	 T9srXx1dgkrfQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4cwPdf42dxz9rxB;
-	Mon, 27 Oct 2025 21:05:58 +0100 (CET)
-From: Markus Probst <markus.probst@posteo.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Alex Gaynor <alex.gaynor@gmail.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Lee Jones <lee@kernel.org>,
-	Pavel Machek <pavel@kernel.org>
-Cc: Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Boqun Feng <boqun.feng@gmail.com>,
-	Gary Guo <gary@garyguo.net>,
-	bjorn3_gh@protonmail.com,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>,
-	Trevor Gross <tmgross@umich.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Markus Probst <markus.probst@posteo.de>,
-	rust-for-linux@vger.kernel.org,
-	linux-leds@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v7 0/2] rust: leds: add led classdev abstractions
-Date: Mon, 27 Oct 2025 20:06:01 +0000
-Message-ID: <20251027200547.1038967-1-markus.probst@posteo.de>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U3IR4U+C"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761595691; x=1793131691;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=MdJJ1ynfyQu1hYBwVz0W0Fw7LpTpbxDAQOy2+gKUAzw=;
+  b=U3IR4U+CPB3MZnsjd5VkUW2BdA4QWF1AcvipAbZlqwyaa8N131nUfYS7
+   b5CFnn0/+x8AuJbI5CwbWtPcbB+mSWv4p3MxD4TxBfrxOoCojMVm54Cuq
+   uDSHJrp8oTzegV5Iv/32E3ciNtuPieu4NH/RFsYu8S8qWP1h13olZ1qwI
+   R9YgF+mZkO/j0GtnqlXHemp2YJbAq3vSyquTCyUXIwLGf2U9WbGRxsXpr
+   zxRGFXrvHeNGoCW+DhLVyKPqA3/DKMMo4RarjrsIGX6YpJ6iPxxnBrIk/
+   UYaqZhEWrhwxcBNwG6vz/+2wxZLBHArxCkbd28Svu733hGs9op4lVfsNC
+   g==;
+X-CSE-ConnectionGUID: PDLimmKsRZq9MPpg9QJhLg==
+X-CSE-MsgGUID: yxbX+6vdRya9R78bw2aU5w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="62718414"
+X-IronPort-AV: E=Sophos;i="6.19,259,1754982000"; 
+   d="scan'208";a="62718414"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 13:08:10 -0700
+X-CSE-ConnectionGUID: yi6vRZGTRS6mR2TRCQgDKg==
+X-CSE-MsgGUID: kB7cUDS0QAOoRmfPy+4Zjg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,259,1754982000"; 
+   d="scan'208";a="222346274"
+Received: from kcaccard-desk.amr.corp.intel.com (HELO [10.125.109.111]) ([10.125.109.111])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 13:08:09 -0700
+Message-ID: <9c6fc6c7-14f0-4551-921d-1a385f96cbd6@intel.com>
+Date: Mon, 27 Oct 2025 13:08:07 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2881; i=markus.probst@posteo.de; h=from:subject; bh=wSBf5Xy4Aslo7SOGQU/mF5ZHvq4mmV3sP1znVcDJV8o=; b=owEBbQKS/ZANAwAIATR2H/jnrUPSAcsmYgBo/9B4JsuuiA0OKSWEXg+sojaOajOX0n2M15kxE tnRYnT9YaSJAjMEAAEIAB0WIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaP/QeAAKCRA0dh/4561D 0tSpD/9Iagsy9UUpit6BzNhdkBEz0eYFQjCT3IUhC/LWIKycXyHU8ym65yBb2slilc2lLiZir8h BSJ/9308hnZ1u+D6wMGlZqihcxzYJrCzJdxmyDAhJnRhuC16wY+uytbBSj05CBp5Hx0FPWbLs/8 0TVmtmF8zT6VTQjCs0eNtMG9rkLIdZaso8rkp3Fl6P76ncE4CYgMe4qCx0UpcKQa+yR59pU8wxN f2L6IaB3KK68NONPrH5Gxts4Q69d+USYxuxdDeI2JEUgHL9IQInzpAP/hr1WI7d8QBhzIgp5xcQ o5eWDKVpyZz6lSv1O9tUfwqL8IqYLIH6YAL/it6VDsRwMwOhU3lWPLBk+E1WzkYW+eYAFmdxrkL jLNCpa6OB9jJcjzUY/p7INoH9edPpwcQoSh6Jv6twSkbm88a66unNJYNfrr6Uj5z1GAKVMfxzkY viLVsHVzhEwxluARsz3eNaXvMtw9pDAZ8v1tHsRSjhprJAubUlbj2/8lX5iojVQyaEXrW6IEPdY X34aaQINLSlVOVNqbHYccc9Ii5jUoEuTHaxZnfWarqAgVQUXbPLwyE27YvduqYAQe9MntNcWR0D CmIjDJmwrUAcj+MHS5ZWlfcQGEXl3KsaMVRQ3HQzOErdBdNc78rBHAYLk1exAawuWTsJE43q4yz Q05ey4gbWQ+iTEQ=
- =
-X-Developer-Key: i=markus.probst@posteo.de; a=openpgp; fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] PCI: Enable host bridge emulation for
+ PCI_DOMAINS_GENERIC platforms
+To: Dan Williams <dan.j.williams@intel.com>, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, jonathan.derrick@linux.dev,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, Suzuki K Poulose <suzuki.poulose@arm.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Michael Kelley <mhklinux@outlook.com>
+References: <20251024224622.1470555-1-dan.j.williams@intel.com>
+ <20251024224622.1470555-2-dan.j.williams@intel.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Content-Language: en-US
+In-Reply-To: <20251024224622.1470555-2-dan.j.williams@intel.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+Content-Transfer-Encoding: 7bit
 
-This patch series has previously been contained in
-https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
-which added a rust written led driver for a microcontroller via i2c.
 
-As the reading and writing to the i2c client via the register!
-macro has not been implemented yet [1], the patch series will only
-contain the additional abstractions required.
 
-[1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@kernel.org/
+On 10/24/25 3:46 PM, Dan Williams wrote:
+> The ability to emulate a host bridge is useful not only for hardware PCI
+> controllers like CONFIG_VMD, or virtual PCI controllers like
+> CONFIG_PCI_HYPERV, but also for test and development scenarios like
+> CONFIG_SAMPLES_DEVSEC [1].
+> 
+> One stumbling block for defining CONFIG_SAMPLES_DEVSEC, a sample
+> implementation of a platform TSM for PCI Device Security, is the need to
+> accommodate PCI_DOMAINS_GENERIC architectures alongside x86 [2].
+> 
+> In support of supplementing the existing CONFIG_PCI_BRIDGE_EMUL
+> infrastructure for host bridges:
+> 
+> * Introduce pci_bus_find_emul_domain_nr() as a common way to find a free
+>   PCI domain number whether that is to reuse the existing dynamic
+>   allocation code in the !ACPI case, or to assign an unused domain above
+>   the last ACPI segment.
+> 
+> * Convert pci-hyperv to the new allocator so that the PCI core can
+>   unconditionally assume that bridge->domain_nr != PCI_DOMAIN_NR_NOT_SET
+>   is the dynamically allocated case.
+> 
+> A follow on patch can also convert vmd to the new scheme. Currently vmd
+> is limited to CONFIG_PCI_DOMAINS_GENERIC=n (x86) so, unlike pci-hyperv,
+> it does not immediately conflict with this new
+> pci_bus_find_emul_domain_nr() mechanism.
+> 
+> Link: http://lore.kernel.org/174107249038.1288555.12362100502109498455.stgit@dwillia2-xfh.jf.intel.com [1]
+> Reported-by: Suzuki K Poulose <suzuki.poulose@arm.com>
+> Closes: http://lore.kernel.org/20250311144601.145736-3-suzuki.poulose@arm.com
+> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+> Cc: Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: Wei Liu <wei.liu@kernel.org>
+> Cc: Dexuan Cui <decui@microsoft.com>
+> Tested-by: Suzuki K Poulose <suzuki.poulose@arm.com>
+> [michael: maintain compatibility with userspace that expects 16-bit ids]
+> Cc: Michael Kelley <mhklinux@outlook.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-The following changes were made:
-* add abstraction to convert a device reference to a bus device
-  reference for use in class device callbacks
-
-* add basic led classdev abstractions to register and unregister leds
-
-Changes since v6:
-* fixed typos
-* improved documentation
-
-Changes since v5:
-* rename `IntoBusDevice` trait into `AsBusDevice`
-* fix documentation about `LedOps::BLOCKING`
-* removed dependency on i2c bindings
-* added `AsBusDevice` implementation for `platform::Device`
-* removed `device::Device` fallback implementation
-* document that `AsBusDevice` must not be used by drivers and is
-  intended for bus and class device abstractions only.
-
-Changes since v4:
-* add abstraction to convert a device reference to a bus device
-  reference
-* require the bus device as parent device and provide it in class device
-  callbacks
-* remove Pin<Vec<_>> abstraction (as not relevant for the led
-  abstractions)
-* fixed formatting in `led::Device::new`
-* fixed `LedOps::BLOCKING` did the inverse effect
-
-Changes since v3:
-* fixed kunit tests failing because of example in documentation
-
-Changes since v2:
-* return `Devres` on `led::Device` creation
-* replace KBox<T> with T in struct definition
-* increment and decrement reference-count of fwnode
-* make a device parent mandatory for led classdev creation
-* rename `led::Handler` to `led::LedOps`
-* add optional `brightness_get` function to `led::LedOps`
-* use `#[vtable]` instead of `const BLINK: bool`
-* use `Opaque::cast_from` instead of casting a pointer
-* improve documentation
-* improve support for older rust versions
-* use `&Device<Bound>` for parent
-
-Changes since v1:
-* fixed typos noticed by Onur Özkan
-
-Markus Probst (2):
-  rust: Add trait to convert a device reference to a bus device
-    reference
-  rust: leds: add basic led classdev abstractions
-
-Markus Probst (2):
-  rust: Add trait to convert a device reference to a bus device
-    reference
-  rust: leds: add basic led classdev abstractions
-
- rust/kernel/auxiliary.rs |   7 +
- rust/kernel/device.rs    |  33 ++++
- rust/kernel/led.rs       | 375 +++++++++++++++++++++++++++++++++++++++
- rust/kernel/lib.rs       |   1 +
- rust/kernel/pci.rs       |   7 +
- rust/kernel/platform.rs  |   7 +
- rust/kernel/usb.rs       |   6 +
- 7 files changed, 436 insertions(+)
- create mode 100644 rust/kernel/led.rs
-
--- 
-2.51.0
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>> ---
+>  include/linux/pci.h                 |  7 ++++
+>  drivers/pci/controller/pci-hyperv.c | 62 +++++------------------------
+>  drivers/pci/pci.c                   | 24 ++++++++++-
+>  drivers/pci/probe.c                 |  8 +++-
+>  4 files changed, 46 insertions(+), 55 deletions(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d1fdf81fbe1e..1ef1535802b0 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1956,10 +1956,17 @@ DEFINE_GUARD(pci_dev, struct pci_dev *, pci_dev_lock(_T), pci_dev_unlock(_T))
+>   */
+>  #ifdef CONFIG_PCI_DOMAINS
+>  extern int pci_domains_supported;
+> +int pci_bus_find_emul_domain_nr(u32 hint, u32 min, u32 max);
+> +void pci_bus_release_emul_domain_nr(int domain_nr);
+>  #else
+>  enum { pci_domains_supported = 0 };
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+> +static inline int pci_bus_find_emul_domain_nr(u32 hint, u32 min, u32 max)
+> +{
+> +	return 0;
+> +}
+> +static inline void pci_bus_release_emul_domain_nr(int domain_nr) { }
+>  #endif /* CONFIG_PCI_DOMAINS */
+>  
+>  /*
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index 146b43981b27..64f68efaf547 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -3696,48 +3696,6 @@ static int hv_send_resources_released(struct hv_device *hdev)
+>  	return 0;
+>  }
+>  
+> -#define HVPCI_DOM_MAP_SIZE (64 * 1024)
+> -static DECLARE_BITMAP(hvpci_dom_map, HVPCI_DOM_MAP_SIZE);
+> -
+> -/*
+> - * PCI domain number 0 is used by emulated devices on Gen1 VMs, so define 0
+> - * as invalid for passthrough PCI devices of this driver.
+> - */
+> -#define HVPCI_DOM_INVALID 0
+> -
+> -/**
+> - * hv_get_dom_num() - Get a valid PCI domain number
+> - * Check if the PCI domain number is in use, and return another number if
+> - * it is in use.
+> - *
+> - * @dom: Requested domain number
+> - *
+> - * return: domain number on success, HVPCI_DOM_INVALID on failure
+> - */
+> -static u16 hv_get_dom_num(u16 dom)
+> -{
+> -	unsigned int i;
+> -
+> -	if (test_and_set_bit(dom, hvpci_dom_map) == 0)
+> -		return dom;
+> -
+> -	for_each_clear_bit(i, hvpci_dom_map, HVPCI_DOM_MAP_SIZE) {
+> -		if (test_and_set_bit(i, hvpci_dom_map) == 0)
+> -			return i;
+> -	}
+> -
+> -	return HVPCI_DOM_INVALID;
+> -}
+> -
+> -/**
+> - * hv_put_dom_num() - Mark the PCI domain number as free
+> - * @dom: Domain number to be freed
+> - */
+> -static void hv_put_dom_num(u16 dom)
+> -{
+> -	clear_bit(dom, hvpci_dom_map);
+> -}
+> -
+>  /**
+>   * hv_pci_probe() - New VMBus channel probe, for a root PCI bus
+>   * @hdev:	VMBus's tracking struct for this root PCI bus
+> @@ -3750,9 +3708,9 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  {
+>  	struct pci_host_bridge *bridge;
+>  	struct hv_pcibus_device *hbus;
+> -	u16 dom_req, dom;
+> +	int ret, dom;
+> +	u16 dom_req;
+>  	char *name;
+> -	int ret;
+>  
+>  	bridge = devm_pci_alloc_host_bridge(&hdev->device, 0);
+>  	if (!bridge)
+> @@ -3779,11 +3737,14 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	 * PCI bus (which is actually emulated by the hypervisor) is domain 0.
+>  	 * (2) There will be no overlap between domains (after fixing possible
+>  	 * collisions) in the same VM.
+> +	 *
+> +	 * Because Gen1 VMs use domain 0, don't allow picking domain 0 here,
+> +	 * even if bytes 4 and 5 of the instance GUID are both zero. For wider
+> +	 * userspace compatibility, limit the domain id to a 16-bit value.
+>  	 */
+>  	dom_req = hdev->dev_instance.b[5] << 8 | hdev->dev_instance.b[4];
+> -	dom = hv_get_dom_num(dom_req);
+> -
+> -	if (dom == HVPCI_DOM_INVALID) {
+> +	dom = pci_bus_find_emul_domain_nr(dom_req, 1, U16_MAX);
+> +	if (dom < 0) {
+>  		dev_err(&hdev->device,
+>  			"Unable to use dom# 0x%x or other numbers", dom_req);
+>  		ret = -EINVAL;
+> @@ -3917,7 +3878,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  destroy_wq:
+>  	destroy_workqueue(hbus->wq);
+>  free_dom:
+> -	hv_put_dom_num(hbus->bridge->domain_nr);
+> +	pci_bus_release_emul_domain_nr(hbus->bridge->domain_nr);
+>  free_bus:
+>  	kfree(hbus);
+>  	return ret;
+> @@ -4042,8 +4003,6 @@ static void hv_pci_remove(struct hv_device *hdev)
+>  	irq_domain_remove(hbus->irq_domain);
+>  	irq_domain_free_fwnode(hbus->fwnode);
+>  
+> -	hv_put_dom_num(hbus->bridge->domain_nr);
+> -
+>  	kfree(hbus);
+>  }
+>  
+> @@ -4217,9 +4176,6 @@ static int __init init_hv_pci_drv(void)
+>  	if (ret)
+>  		return ret;
+>  
+> -	/* Set the invalid domain number's bit, so it will not be used */
+> -	set_bit(HVPCI_DOM_INVALID, hvpci_dom_map);
+> -
+>  	/* Initialize PCI block r/w interface */
+>  	hvpci_block_ops.read_block = hv_read_config_block;
+>  	hvpci_block_ops.write_block = hv_write_config_block;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b14dd064006c..64aed8705e91 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -6656,9 +6656,31 @@ static void pci_no_domains(void)
+>  #endif
+>  }
+>  
+> +#ifdef CONFIG_PCI_DOMAINS
+> +static DEFINE_IDA(pci_domain_nr_dynamic_ida);
+> +
+> +/**
+> + * pci_bus_find_emul_domain_nr() - allocate a PCI domain number per constraints
+> + * @hint: desired domain, 0 if any id in the range of @min to @max is acceptable
+> + * @min: minimum allowable domain
+> + * @max: maximum allowable domain, no ids higher than INT_MAX will be returned
+> + */
+> +int pci_bus_find_emul_domain_nr(u32 hint, u32 min, u32 max)
+> +{
+> +	return ida_alloc_range(&pci_domain_nr_dynamic_ida, max(hint, min), max,
+> +			       GFP_KERNEL);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_bus_find_emul_domain_nr);
+> +
+> +void pci_bus_release_emul_domain_nr(int domain_nr)
+> +{
+> +	ida_free(&pci_domain_nr_dynamic_ida, domain_nr);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_bus_release_emul_domain_nr);
+> +#endif
+> +
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  static DEFINE_IDA(pci_domain_nr_static_ida);
+> -static DEFINE_IDA(pci_domain_nr_dynamic_ida);
+>  
+>  static void of_pci_reserve_static_domain_nr(void)
+>  {
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 0ce98e18b5a8..5e101ced00a5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -650,6 +650,11 @@ static void pci_release_host_bridge_dev(struct device *dev)
+>  
+>  	pci_free_resource_list(&bridge->windows);
+>  	pci_free_resource_list(&bridge->dma_ranges);
+> +
+> +	/* Host bridges only have domain_nr set in the emulation case */
+> +	if (bridge->domain_nr != PCI_DOMAIN_NR_NOT_SET)
+> +		pci_bus_release_emul_domain_nr(bridge->domain_nr);
+> +
+>  	kfree(bridge);
+>  }
+>  
+> @@ -1130,7 +1135,8 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+>  	device_del(&bridge->dev);
+>  free:
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -	pci_bus_release_domain_nr(parent, bus->domain_nr);
+> +	if (bridge->domain_nr == PCI_DOMAIN_NR_NOT_SET)
+> +		pci_bus_release_domain_nr(parent, bus->domain_nr);
+>  #endif
+>  	if (bus_registered)
+>  		put_device(&bus->dev);
 
