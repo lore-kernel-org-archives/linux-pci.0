@@ -1,103 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEEDE21C9EA;
-	Mon, 27 Oct 2025 13:25:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12DAA2F39C4;
+	Mon, 27 Oct 2025 13:29:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761571548; cv=none; b=BC8rF8WWq5+mvt2go/9Z5+huFywzjpmZNkMqlCgUmCBCTU63hw/l2TDy8Q+/ZbPKeaXf54Cd+mTHRckJ+O4+3jI+uiGNjMfiNTe9cC0dQPvJIsr1ZRBeMGBP0Q09A5j/Dzv65pcngi8DRCJcuQpqi6lk2wiI7xlkUt4asxY1itE=
+	t=1761571788; cv=none; b=c5vS5EXoCYvWn46GXhdC3sw38JBb6HYuA9twD4/EMCvBg7mP11Jay87axIoOJS31pFPyL3LzI4yxQQOWkwCWM0KIUTnBINFR/sytxGhlnt2BR+rTJg5me7Cw3D3V7gwSpwNXqXf+j2crG7WkST8IbM/mYIfeVWX8nT6s/Eqab/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761571548; c=relaxed/simple;
-	bh=zNGpOEoYqx7xy5cROnhdp1a4nB6KZU1eGaURTKMN9ME=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dHyn4w1cmIhhpu2CIDkdbiHqmJ3AZ9CIyH+ynNlV0wjMlT3NmPCi0a7adOJAro/2NOcpCHTI2Ku8iAD14zbYT1UEnAjp3aXaelZOEOfPsCHgxSgrDChptt2bGaK1kkJZcPRfADaRPUYl4K3LWy+a7feoj5dCJ9F9dbhYE5OeLfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ihRsIql2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761571788; c=relaxed/simple;
+	bh=0d6aCU3IN4hfNs4sKlqR551oawozInlye3Ny0w9aJag=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=i/8B1ki+XJg0JTuPPdAXizqH10jjl/3kkbqBWiscbOJ2nLmOxAdVZ6VjAMHinOKGz0cd5wHAcRaLW+w8ZyA6G/xFkYLSbGj/xLXQA1n12ZEg07PyKJbRckImBgN+faj0BghV+9CKx78Zo/D8eduIQgziarB7x81swsynQWSLHWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UE5/EYbe; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ihRsIql2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 735D4C4CEF1;
-	Mon, 27 Oct 2025 13:25:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761571547;
-	bh=zNGpOEoYqx7xy5cROnhdp1a4nB6KZU1eGaURTKMN9ME=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ihRsIql2mINFsL666nVwdasscR0qhrmzn7orDsLo4NkORvVAozkZweHJ2dTrgAOrq
-	 OuVH8alQ4Aqs6rBDcnJ8SZwrHeIl05V5xyja45x3YdzIJssQ4usT/CtGFI6p2wx2/4
-	 3U3B+Rv86/nd/Hdnb1/gTsWKcgZk+elgPAM+KZezXaSmVxD8w1RBloWwYjp2dY5yxr
-	 SW2qBemry5Nv/TWLV5GNerxZVeg5VBNNaNnyTc2hutKctEEFoP+S2Ss7ePftZqhCmG
-	 Ub+J1osOQfVOZ/gOSKPSmHtF3hmNeb2gtuAo/m3m1yFEULeitbyduwncDwfqOc3VqJ
-	 8GbNj/GhG3Rjg==
-Received: from johan by xi.lan with local (Exim 4.98.2)
-	(envelope-from <johan@kernel.org>)
-	id 1vDNEM-0000000004y-3FQc;
-	Mon, 27 Oct 2025 14:25:50 +0100
-Date: Mon, 27 Oct 2025 14:25:50 +0100
-From: Johan Hovold <johan@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Frank Li <Frank.li@nxp.com>, Shawn Lin <shawn.lin@rock-chips.com>,
-	Rob Herring <robh@kernel.org>,
-	"David E . Box" <david.e.box@linux.intel.com>,
-	Kai-Heng Feng <kai.heng.feng@canonical.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Chia-Lin Kao <acelan.kao@canonical.com>,
-	Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-	Han Jingoo <jingoohan1@gmail.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] Revert "PCI: qcom: Remove custom ASPM enablement code"
-Message-ID: <aP9y3nK0FlgINa0o@hovoldconsulting.com>
-References: <20251024210514.1365996-1-helgaas@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UE5/EYbe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761571787; x=1793107787;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=0d6aCU3IN4hfNs4sKlqR551oawozInlye3Ny0w9aJag=;
+  b=UE5/EYbe37ir+hFQcsSgeo4qbKutlppsNu+2m/fdkXToaT+FxkcC73/Z
+   hzkvnXA1VUPQtBsUpqT9VY5cyF51Pz7IX9A5Vmvl5mJQTuxWqsNjMxaLo
+   VjoGgE8Sel2ldGd8d1NFWlOPJ5bRzA7GnY/UlrqaQNDTPxVZsRvnXPDLT
+   QFL1ovz8qE/8UJuXrPxwYZxrDZEyenQPVeFrGzPG92WX1Wc7svd5CuwAz
+   L2aJpLLUWDfm6lYINthPBAXvZEpZ9d4bUeiTt70IUBK+lD/IhRmdFRKLm
+   x2BTITe3jNyfh8wTvgIl8AWsJZIuz/8avMsIFo0jB330yCJ/tfRJjk6AI
+   Q==;
+X-CSE-ConnectionGUID: EgzwRHnlR9mu297cTbJE0w==
+X-CSE-MsgGUID: I+ye5PJiTgOF1/mqXaRQxA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="74766699"
+X-IronPort-AV: E=Sophos;i="6.19,258,1754982000"; 
+   d="scan'208";a="74766699"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 06:29:46 -0700
+X-CSE-ConnectionGUID: w7tfZ0+ZSOixykI/VXQMJQ==
+X-CSE-MsgGUID: MfHKbxnjTuqN1B8GJ07gkQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,258,1754982000"; 
+   d="scan'208";a="184269075"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.41])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 06:29:43 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 27 Oct 2025 15:29:39 +0200 (EET)
+To: Klaus Kudielka <klaus.kudielka@gmail.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, regressions@lists.linux.dev
+Subject: Re: WARNING at drivers/pci/setup-bus.c:2373, bisected to "PCI: Use
+ pbus_select_window_for_type() during mem window sizing"
+In-Reply-To: <af6f0f2e1dec9053c6984139b8582fc6ceab6813.camel@gmail.com>
+Message-ID: <ba71af2d-c484-9de2-2a7d-b1ac254eeaea@linux.intel.com>
+References: <20250829131113.36754-1-ilpo.jarvinen@linux.intel.com>    <20250829131113.36754-20-ilpo.jarvinen@linux.intel.com>   <51e8cf1c62b8318882257d6b5a9de7fdaaecc343.camel@gmail.com>  <990fe39da66ad23df4c85ef247b274a0fc6c2336.camel@gmail.com>
+ <af6f0f2e1dec9053c6984139b8582fc6ceab6813.camel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251024210514.1365996-1-helgaas@kernel.org>
+Content-Type: multipart/mixed; BOUNDARY="8323328-56115584-1761570020=:970"
+Content-ID: <47fd933f-e509-f956-b926-1a3dc4fd6841@linux.intel.com>
 
-On Fri, Oct 24, 2025 at 04:04:57PM -0500, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> This reverts commit a729c16646198872e345bf6c48dbe540ad8a9753.
-> 
-> Prior to a729c1664619 ("PCI: qcom: Remove custom ASPM enablement code"),
-> the qcom controller driver enabled ASPM, including L0s, L1, and L1 PM
-> Substates, for all devices powered on at the time the controller driver
-> enumerates them.
-> 
-> ASPM was *not* enabled for devices powered on later by pwrctrl (unless the
-> kernel was built with PCIEASPM_POWERSAVE or PCIEASPM_POWER_SUPERSAVE, or
-> the user enabled ASPM via module parameter or sysfs).
-> 
-> After f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for
-> devicetree platforms"), the PCI core enabled all ASPM states for all
-> devices whether powered on initially or by pwrctrl, so a729c1664619 was
-> unnecessary and reverted.
-> 
-> But f3ac2ff14834 was too aggressive and broke platforms that didn't support
-> CLKREQ# or required device-specific configuration for L1 Substates, so
-> df5192d9bb0e ("PCI/ASPM: Enable only L0s and L1 for devicetree platforms")
-> enabled only L0s and L1.
-> 
-> On Qualcomm platforms, this left L1 Substates disabled, which was a
-> regression.  Revert a729c1664619 so L1 Substates will be enabled on devices
-> that are initially powered on.  Devices powered on by pwrctrl will be
-> addressed later.
-> 
-> Fixes: df5192d9bb0e ("PCI/ASPM: Enable only L0s and L1 for devicetree platforms")
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-This indeed re-enables L1SS for the X13s NVMe:
+--8323328-56115584-1761570020=:970
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <ae1466fc-fe50-8c70-d0c5-5e851b625862@linux.intel.com>
 
-Reported-by: Johan Hovold <johan@kernel.org>
-Link: https://lore.kernel.org/lkml/aPuXZlaawFmmsLmX@hovoldconsulting.com/
-Tested-by: Johan Hovold <johan@kernel.org>
+On Sat, 25 Oct 2025, Klaus Kudielka wrote:
 
-Johan
+> On Sat, 2025-10-25 at 12:11 +0200, Klaus Kudielka wrote:
+> >=20
+> > > [=A0=A0=A0 0.027107] pci 0000:00:03.0: bridge window [mem 0x00200000-=
+0x003fffff] to [bus 02] add_size 200000 add_align 200000
+> > > [=A0=A0=A0 0.027115] pci 0000:00:03.0: bridge window [mem 0x00200000-=
+0x003fffff] to [bus 02] add_size 200000 add_align 200000
+> >=20
+> > So, this part of=A0 pbus_size_mem() now seems to be called *TWICE* for =
+the same bridge window:
+> >=20
+> > =09=09add_to_list(realloc_head, bus->self, b_res, size1-size0, add_alig=
+n);
+> > =09=09pci_info(bus->self, "bridge window %pR to %pR add_size %llx add_a=
+lign %llx\n",
+> > =09=09=09=A0=A0 b_res, &bus->busn_res,
+> > =09=09=09=A0=A0 (unsigned long long) (size1 - size0),
+> > =09=09=09=A0=A0 (unsigned long long) add_align);
+> >=20
+> >=20
+> >=20
+> > WITHOUT the offending commit, I see only one line, and no WARNING.
+> > > [=A0=A0=A0 0.027405] pci 0000:00:03.0: bridge window [mem 0x00200000-=
+0x003fffff] to [bus 02] add_size 200000 add_align 200000
+> >=20
+> >=20
+>=20
+>=20
+> After some more testing, I think I know what is going on.
+>=20
+> - My device seems to have only non-prefetchable IO resources.
+> - In pci_bus_size_bridges(), pbus_size_mem() is called twice, once with I=
+ORESOURCE_PREFETCH, once without.
+> - This seems to be the intended behaviour (with or without the offending =
+commit).
+>=20
+> - What DOES make the difference, is the use of pbus_select_window_for_typ=
+e() inside pbus_size_mem().
+> - On my device, that function returns the ***non-prefetchable*** resource=
+, even if being asked for a prefetchable one.
+> - End result: b_res is valid (and identical) in both calls to pbus_size_m=
+em().
+> - Honestly, that does not look right to me.
+>=20
+>=20
+> Indeed, my device goes back to the original behaviour (without WARNING), =
+if I go back to the original use of
+> find_bus_resource_of_type():
+>=20
+>=20
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1312,7 +1312,9 @@ static void pbus_size_mem(struct pci_bus *bus, unsi=
+gned long type,
+>         resource_size_t min_align, win_align, align, size, size0, size1 =
+=3D 0;
+>         resource_size_t aligns[28]; /* Alignments from 1MB to 128TB */
+>         int order, max_order;
+> -       struct resource *b_res =3D pbus_select_window_for_type(bus, type)=
+;
+> +       struct resource *b_res =3D find_bus_resource_of_type(bus,
+> +                       IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE=
+_MEM_64,
+> +                       type);
+>         resource_size_t children_add_size =3D 0;
+>         resource_size_t children_add_align =3D 0;
+>         resource_size_t add_align =3D 0;
+>=20
+>=20
+>=20
+> Comments?
+
+Hi Klaus,
+
+I'm sorry this ended up falling through cracks until now (this is far from=
+=20
+the only regression I've on my table at the moment).
+
+Big kudos for you from figuring out what went wrong! For a bridge which=20
+doesn't have a prefetchable window, pbus_size_mem() should not be called fo=
+r it.
+
+I've sent a fix patch separately. Please test it.
+
+--=20
+ i.
+--8323328-56115584-1761570020=:970--
