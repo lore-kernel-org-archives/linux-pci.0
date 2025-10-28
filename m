@@ -1,39 +1,67 @@
-Received: from mail.tuxedocomputers.com (mail.tuxedocomputers.com [157.90.84.7])
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35B0A3019DE;
-	Tue, 28 Oct 2025 10:26:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=157.90.84.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E373B5227
+	for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2025 11:14:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761647218; cv=none; b=mbgOuTEaAeYWIOTlV/IBr6qUOcNOtS0Dj7Bprx3kChqXcvLAsZxAaFO/15vyWTGiZYnU641vKbQXGJe1GgYX1FdWqE4ktDWa9/bS5iXAuGvhcVRyMPJ8PS3qG+sSNSYe3Bmxg8UrcDf89ELQ5/I/Y3eQpeRDvmczu8ye6SVaTow=
+	t=1761650063; cv=none; b=e1A1cFzxMI0kS1zKNYgzyttQArJIvLQg+rt7PYKtt4t/bVfew3ikMGZr2NNNICHdNsdz+0l7/praK4JECo46aSq5PXFYvSC6tkEo5Mp7D8E6gzMzOPKvEwDf8UaUtOCWv9hkWoz8koghdFs2MzTHk7VQAJT72KdfQ6bqM4nJLoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761647218; c=relaxed/simple;
-	bh=fGPfVLmHb+wl9h4eE562Vwd7sPPgvOxQ4yq0Gh3pNIk=;
+	s=arc-20240116; t=1761650063; c=relaxed/simple;
+	bh=UvfI+0Dexvqi89jOuSdlxco1E27i3zPPumESPPyhntQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dWj+iMmgxbPSVWOxlRCBeKw5D393To2+C2h7hFne559RFonIat/F+7dNJfHfr0xRN8A9f0xEXGL3i2T3jMnMmdebWlcqabhTebe7Kc1ul0bqolS7SQ140Dq7bgFHJb0HQbM2VFY8KO89qtlYCIfWNkrgQ9n6F1razh+dxEtsveg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuxedocomputers.com; spf=pass smtp.mailfrom=tuxedocomputers.com; dkim=pass (1024-bit key) header.d=tuxedocomputers.com header.i=@tuxedocomputers.com header.b=QmTHE+1z; arc=none smtp.client-ip=157.90.84.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuxedocomputers.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxedocomputers.com
+	 In-Reply-To:Content-Type; b=k3tnh25OXW8lgDNgZIkmhC9dTzFeQHPeRPxuvb/ekfdiY1ZYUqoPYLm1xS+DOxxzJxYVSpPA99GOvHgHfv12cbv/fulOe8f+UKN1PcZ13GxLn4x1r2bW49dHG55X9wcJcoAG9A5WaZEom5zwUGeMS9pPzbuyTH3LPz8yJvTd3nE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R0OZqRxO; arc=none smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=tuxedocomputers.com header.i=@tuxedocomputers.com header.b="QmTHE+1z"
-Received: from [10.10.11.27] (business-24-134-105-141.pool2.vodafone-ip.de [24.134.105.141])
-	(Authenticated sender: a.erhardt@tuxedocomputers.com)
-	by mail.tuxedocomputers.com (Postfix) with ESMTPSA id 16A932FC004D;
-	Tue, 28 Oct 2025 11:16:52 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tuxedocomputers.com;
-	s=default; t=1761646613;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AMx59YWeliqF/lFY/+ujXIhGSvd8cbjYB40wlB1RYFA=;
-	b=QmTHE+1zUU91L74zpwra1sUslqOLhjB8in8RHnroIZSWxQ6lBjrUjbIVH+zGHq++nET7u/
-	yusdq9wdM0bxM+vKOVtS6z6N71IW27l7SXCBsr4YeMBySbCjoAmDKI2WWgUKx8bZgmaGrn
-	YuJJXxhjlgqW5Vec8+nkonQBlBqJzLc=
-Authentication-Results: mail.tuxedocomputers.com;
-	auth=pass smtp.auth=a.erhardt@tuxedocomputers.com smtp.mailfrom=aer@tuxedocomputers.com
-Message-ID: <e172ebf2-4b65-4781-b9e7-eb7bd4fa956a@tuxedocomputers.com>
-Date: Tue, 28 Oct 2025 11:16:51 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R0OZqRxO"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-b3e7cc84b82so913594166b.0
+        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2025 04:14:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761650060; x=1762254860; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=YjFpI9BYeJIGawQior8vsJoD7SmwJll5ZNIMlbkQNe0=;
+        b=R0OZqRxOtBqxX/rZBL4S2C3y3U3RNMl6iz0/8oIqXKU28NYDvTmLrqGxYShitik6MK
+         VAPqJiZFBjuDjj9f9zlX5DkBXo8nscRRtYYNnHTeHO8825Ypcd0Y0W2KvHLiMrNYw+AL
+         9kmWhZ9K7qpj/mOCKh/lyDJg1MNNLapfnFeMmNSRFLMK6BYKQV0Hwjocg3p/FV16BNlu
+         a+4fz630T6RaGNUF7jLe1QCGdCnsIgurM/D3uU0rtstzJ7tHjcDiUtq9Y79At3lkmaHc
+         PzRTa56pXXPgmBSJ65ev5DJwY4cSK+MMLNH8+i3Wmk6122maSf1jnSvPS1tQFpwhCBw6
+         za4w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761650060; x=1762254860;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=YjFpI9BYeJIGawQior8vsJoD7SmwJll5ZNIMlbkQNe0=;
+        b=KRPnrCEr4Hf2FYnR7/HbqMIeH9MMgZFOrn3R4tFdvfwUWXSZCewI5uw32t/vkxLwkR
+         QtpNpP/0OEQZer5HrF1z4c5CIQTrY81I/QABrIxCtCNG57tOtmAZAoxCs+m/fkBWY2ma
+         uvnMW8vR2cDCaNoUGEiRsyWYPpVBA/ixx16wXHYEoW2DfyngnKogOQxFLf8mhilWBY3x
+         YVcNLwnl799/D+F6HHbmV0B19Z4w4mNfpMVnGdyRe0EbNLwVIz3l/EKfYJI2CnVxh6i+
+         kRgz9GWHXvLaa3IoR7TJuZXAayTzysE/8E9zILZKQPF6wnQ5ui/nYzX3B353kImBrNJY
+         i+dA==
+X-Forwarded-Encrypted: i=1; AJvYcCXHCciL1ohQTGsQjuMg4Hl9+RPCHt7jTrkwUuHLqhAcfCNacjlLI1S9vxkaD/JVodQdg1NiO0sbyt8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxcoIgQ6JVNYNoJ7dGytnmQyWhsd46WqoBKQcpgS75Z+A1nK9C2
+	LPpFYmkkR3qDLfhDRSHfG1FEqbDIWDyPg/67d2ddohF0ZR7lV3bIBA7r
+X-Gm-Gg: ASbGncv4lIg3LCDKOTf5h5UNtyJJ3FrYGmmD3BHv03zhVpI4puhe2iUeeq6a3G6PPQs
+	RypKj5q5mWmdME2Iaz8lVtSNGbuRdeOnNpnAiKd885kTJAnVsbnNdyIAoM0c5widcS4mida5s2q
+	RjshU3wHJIavPbiqj7lhO/lR5DUIoxt8/MXS6rfN1gZOJKXrxoXRg9DmEszQH6orhtRrZG4BNfz
+	AbjmMGBG5suRaMc07D9CpBXBHDCNsilQPHOT+H4ZAdykaynlBl2XrpD1h4vAcUSDwtgCMGHWFJ1
+	B06fFOldDK97cMUiinsY950B2daXS+PIWCpEd6dXFrdTT9bAb3wgJRfom+GjyyXLgf6+Vb92Xlk
+	lH3Iq1Z+/oJZEdK+JreaEEqD7IxaQ/SnViZW99eVpcNXZyK/y5MXF3sI6taGFHvVBCYSgYXH2w1
+	Bz1hGIU0csoH9Mm0W6avhx5rWab7hsZD+5ehZXxbaOSmV4pMFYlXA3JxPCq+fUk/OAz9Q5Oo91t
+	33SflcMs+ouC1YK5etXqdnFWbzgAfiygCVuS9LR2qMwIgvWBErYIg==
+X-Google-Smtp-Source: AGHT+IGFhB1uFC3jfUFSa2Q1GaChneZzYP9rrCvUKq1g/2kn74sMQ9tiDca6CquKILqpFbpXF/Q/Kg==
+X-Received: by 2002:a17:907:7f0a:b0:b4a:ed12:ce51 with SMTP id a640c23a62f3a-b6dba498fe6mr339684266b.23.1761650059938;
+        Tue, 28 Oct 2025 04:14:19 -0700 (PDT)
+Received: from ?IPV6:2001:1c00:20d:1300:1b1c:4449:176a:89ea? (2001-1c00-020d-1300-1b1c-4449-176a-89ea.cable.dynamic.v6.ziggo.nl. [2001:1c00:20d:1300:1b1c:4449:176a:89ea])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b6d853077ddsm1052436566b.11.2025.10.28.04.14.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Oct 2025 04:14:19 -0700 (PDT)
+Message-ID: <05610ae5-4a8a-47e9-808b-7ff98fade78e@gmail.com>
+Date: Tue, 28 Oct 2025 12:14:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,119 +69,59 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 3/4] fbcon: Use screen info to find primary device
-To: "Mario Limonciello (AMD)" <superm1@kernel.org>,
- David Airlie <airlied@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Simona Vetter <simona@ffwll.ch>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
- open list <linux-kernel@vger.kernel.org>,
- "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
- Daniel Dadap <ddadap@nvidia.com>
-References: <20250811162606.587759-1-superm1@kernel.org>
- <20250811162606.587759-4-superm1@kernel.org>
+Subject: Re: [PATCH 12/15] arm64: dts: mediatek: mt7981b-openwrt-one: Enable
+ Ethernet
+To: Sjoerd Simons <sjoerd@collabora.com>, Andrew Lunn <andrew@lunn.ch>,
+ "Lucien.Jheng" <lucienzx159@gmail.com>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Matthias Brugger
+ <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Ryder Lee <ryder.lee@mediatek.com>, Jianjun Wang
+ <jianjun.wang@mediatek.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>, Lee Jones <lee@kernel.org>,
+ Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>,
+ kernel@collabora.com, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-phy@lists.infradead.org, netdev@vger.kernel.org,
+ Daniel Golle <daniel@makrotopia.org>, Bryan Hinton <bryan@bryanhinton.com>
+References: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
+ <20251016-openwrt-one-network-v1-12-de259719b6f2@collabora.com>
+ <4f82aa17-1bf8-4d72-bc1f-b32f364e1cf6@lunn.ch>
+ <8f5335a703905dea9d8d0c1840862a3478da1ca7.camel@collabora.com>
+From: Eric Woudstra <ericwouds@gmail.com>
 Content-Language: en-US
-From: Aaron Erhardt <aer@tuxedocomputers.com>
-In-Reply-To: <20250811162606.587759-4-superm1@kernel.org>
+In-Reply-To: <8f5335a703905dea9d8d0c1840862a3478da1ca7.camel@collabora.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 
-On Mon, Aug 11, 2025 at 11:26:05AM -0500, Mario Limonciello (AMD) wrote:
-> On systems with non VGA GPUs fbcon can't find the primary GPU because
-> video_is_primary_device() only checks the VGA arbiter.
+
+On 10/21/25 10:21 PM, Sjoerd Simons wrote:
+> On Fri, 2025-10-17 at 19:31 +0200, Andrew Lunn wrote:
+>>> +&mdio_bus {
+>>> +	phy15: ethernet-phy@f {
+>>> +		compatible = "ethernet-phy-id03a2.a411";
+>>> +		reg = <0xf>;
+>>> +		interrupt-parent = <&pio>;
+>>> +		interrupts = <38 IRQ_TYPE_EDGE_FALLING>;
+>>
+>> This is probably wrong. PHY interrupts are generally level, not edge.
 > 
-> Add a screen info check to video_is_primary_device() so that callers
-> can get accurate data on such systems.
-
-I have a question regarding this change. To me, the function name 
-video_is_primary_device() implies that there is only one primary GPU.
-I would also expect that the 'boot_display' attribute added later in 
-the patch series based on this function is only set for one GPU, but 
-that is not necessarily the case. Since I'm working on a user-space
-program that reads the 'boot_display' attribute, I need to know what
-behavior is intended in order to do a correct implementation.
-
+> Sadly i can't find a datasheet for the PHY, so can't really validate that easily. Maybe Eric can
+> comment here as the author of the relevant PHY driver.
 > 
-> Reviewed-by: Thomas Zimmermann <tzimmermann@suse.de>
-> Suggested-by: Thomas Zimmermann <tzimmermann@suse.de>
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
-> ---
-> v10:
->  * Rebase on 6.17-rc1
->  * Squash 'fbcon: Stop using screen_info_pci_dev()'
-> ---
->  arch/x86/video/video-common.c | 25 ++++++++++++++++++++++++-
->  1 file changed, 24 insertions(+), 1 deletion(-)
+> I'd note that the mt7986a-bananapi-bpi-r3-mini dts has the same setup for this PHY, however that's
+> ofcourse not authoritative.
 > 
-> diff --git a/arch/x86/video/video-common.c b/arch/x86/video/video-common.c
-> index 81fc97a2a837a..e0aeee99bc99e 100644
-> --- a/arch/x86/video/video-common.c
-> +++ b/arch/x86/video/video-common.c
-> @@ -9,6 +9,7 @@
->  
->  #include <linux/module.h>
->  #include <linux/pci.h>
-> +#include <linux/screen_info.h>
->  #include <linux/vgaarb.h>
->  
->  #include <asm/video.h>
-> @@ -27,6 +28,11 @@ EXPORT_SYMBOL(pgprot_framebuffer);
->  
->  bool video_is_primary_device(struct device *dev)
->  {
-> +#ifdef CONFIG_SCREEN_INFO
-> +	struct screen_info *si = &screen_info;
-> +	struct resource res[SCREEN_INFO_MAX_RESOURCES];
-> +	ssize_t i, numres;
-> +#endif
->  	struct pci_dev *pdev;
->  
->  	if (!dev_is_pci(dev))
-> @@ -34,7 +40,24 @@ bool video_is_primary_device(struct device *dev)
->  
->  	pdev = to_pci_dev(dev);
->  
-> -	return (pdev == vga_default_device());
-> +	if (!pci_is_display(pdev))
-> +		return false;
-> +
-> +	if (pdev == vga_default_device())
-> +		return true;
 
-This can mark a VGA device as primary GPU.
-
-> +
-> +#ifdef CONFIG_SCREEN_INFO
-> +	numres = screen_info_resources(si, res, ARRAY_SIZE(res));
-> +	for (i = 0; i < numres; ++i) {
-> +		if (!(res[i].flags & IORESOURCE_MEM))
-> +			continue;
-> +
-> +		if (pci_find_resource(pdev, &res[i]))
-> +			return true;
-> +	}
-> +#endif
-
-And then the new code can also choose a primary GPU.
-
-> +
-> +	return false;
->  }
->  EXPORT_SYMBOL(video_is_primary_device);
->  
-
-In particular, I have hardware that has this exact configuration where
-two GPUs are marked as primary and have a 'boot_display' attribute: the
-first one through vga_default_device(), the second one through the new
-detection method.
-
-Is this intended?
-
-Kind regards
-Aaron
+Lucien would have access to the correct information about the interrupt.
 
