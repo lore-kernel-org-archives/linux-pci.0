@@ -1,166 +1,206 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from hall.aurel32.net (hall.aurel32.net [195.154.113.88])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71F97238175
-	for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2025 17:42:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C9202F25F1;
+	Tue, 28 Oct 2025 18:00:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.154.113.88
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761673358; cv=none; b=X6rNkdUJ3pBSwcC8/yNU09oFAXsXgI/Dl3BlL0bv0CTzUhJsx9Wth9rPza6eKiWQvrEltiMYYyLrQQiu1p9X6zh1vFhq19m2kBt++lueiej5nlnXKtaVFOigrGNxaa/mKJNbVEb3ZKUhYYxasqZF/P2ucPb4v19G/aPu8y2q5Zc=
+	t=1761674419; cv=none; b=nsT/QklGPmnHXuUBH60g2lsTsYjPGNpGky37PdRYYk0V7mHDKoDbAqQLdbu1d8m8wwso/2jQxO6vM/jNdTkHzfxDJk5L2AWeqqrd0VNsepHmG1gwSOT9gEc/7kkg+XJTW5QPirRy49pTCBfUo3I/BugL2SRrrYL9jBwB1hdZw/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761673358; c=relaxed/simple;
-	bh=sVgolvHBSJka8vC4OKuZhc6q69RPDNNdOJ+9cK7cy2M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WC3PRgRHRdHlc7jNTfmLrQ0DGFrjy881DjcH7BL8m+DV0LOviTHKdejaDC1BDlRpR/tRA04KmhzQ404ejgE7sZfdHKrkm2eJnOeu83lH3bQ3dFQ7P28Rfnb/NogNkKC6vrgb9MJPe7qNegwhg+I01XoRrArXuSSQBo+QQpgvOgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DCsYtHLv; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=MvMijUrP; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1761674419; c=relaxed/simple;
+	bh=VhuXtct2llGlUKtkPUEWUGkg5rp+EFF2CwePBKwQWAo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qm+nzxtt3drzMMPeEfRjHiODmW+PMk1dTAWGdNqrS5dOmwoKOj8vyJ3WVM/ITjyc2wu3sJdN+jfLW+947RFcN/Ulrs2wljsbtdltsAiccg7EYq9JiqHRExJswIFdV6/GZShUI8HtMwwvcB9U8O0GJ/m/hDz1zbPgW77FM/J8l+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net; spf=pass smtp.mailfrom=aurel32.net; dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b=R8Ovmd8N; arc=none smtp.client-ip=195.154.113.88
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DCsYtHLv";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="MvMijUrP"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 59SEnvc21886891
-	for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2025 17:42:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Us00t4uVlHXxk31bFSR+oXPx+8hv46C7a9Rtr50Zi4U=; b=DCsYtHLvNZ/Xxgq4
-	TiVHhZOW3reQBKx+JuS/Cuz+0OII3UG33Fk3Mj5ZRRNHGrvT/qRkNPEWfeCNlA0F
-	T8grrCu7uACH8xX42mTCzkjk6f4sHEN31xRluyW8aJVCpDCT7MVV03sAlApH0GJB
-	eEJHZ07JvuDcOe7i3vttTzCz+U6rcaJFFffwnBt5/yiqUwJiIVb8djEoeduCDjYJ
-	j/KCn4L2/lZ6NGtirdtyztz2JSSKq8uD9/Q34b1W1iheP65gf2y4dajgR824M9UV
-	uJOUwR4rR3zVQrv94WQKx4xkzHhH9u7p7vXCPo7wujSAdqUCjZmeUX7Ye4zqNKxz
-	K0cj+g==
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a2njrtk6q-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2025 17:42:36 +0000 (GMT)
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-b6ce1b57b9cso4191282a12.1
-        for <linux-pci@vger.kernel.org>; Tue, 28 Oct 2025 10:42:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1761673356; x=1762278156; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Us00t4uVlHXxk31bFSR+oXPx+8hv46C7a9Rtr50Zi4U=;
-        b=MvMijUrPxK13KdSX5bWR+sVbiKJSQw4692hbV47CdQbY9OSNmQ4u0/jO9dcGlK0tBT
-         QAuvR8egtqKNa7o/PXYLT/VJrAj/0N22AZrQMJLFUuthrPzK+nPUsQJwzruhyH8eYgj0
-         Z//atSXM6UmBvBVmc4mo7dVbXcWTGDlI7tL3gBpMK8lRVw3WdgRy6kSGlkt8dQ+SzDts
-         vowz2DrZuBLbO/ynfXoaGUhj6vtvJrwetmEiaqG81e624+B8FPhKkLMsyim4cIgA+MOA
-         sM2r6suyOyP/4zew6KahTlQPbB8iLslTQdhjW4naTq4kQto0Ys10LPSTn5icKlFqojlG
-         8GXA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761673356; x=1762278156;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Us00t4uVlHXxk31bFSR+oXPx+8hv46C7a9Rtr50Zi4U=;
-        b=K/BOa6WCfaic1b8Zy9jb/JLCWav5X2Bc90Tach3HbXc+BPH6R4ywT7eBZeWX31m4bX
-         UAXGjD7cdjjIE6wFN00K7UpsPoDBMCnlrB/85VELmXVPvb5nkub/0czNzsPgn4bGoQD/
-         X73b/JyZcrfewUOP6Yg11gTJ8iAPCe0B/eVx9yWDmlxqVEHg6qHu5e4bwYyl0grGUFgS
-         nsLNBJtez7yy+gXIk+qzYo6WPnCoTtGMjVSrGcLIkOnUjl7PFZ9gwnS4jg9NCQsYe7Wj
-         dDcVx72qwN65PxBxNi3TqHbbVDyr6IUsYIo/Ttpqb+fj5tkAuHZQLEzn+ElHWUgMTE/8
-         mbTA==
-X-Forwarded-Encrypted: i=1; AJvYcCWCWIonFUZBl68NhJdg4lhq0efWZCNLkzUwKWvoGDPcBwGu346Z0146PZC3B4KdaGzQBGLRvXsQh2U=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxFrwRiJFy82KFKIk7Ht3bUg2Ui7wmK5Vs1vVZb1uBios+Ftdog
-	AC3S/Zd+EuJQfrHrLOuXzAqIt45GQspQ00DA5vVtpZZUT2bbm9Z5OaQHccMrc66/37kwQ7PuzO3
-	lM28L0Iht5T0Ty607N+DRUZySHbJuycy6C1hDE4tE25mL3ypxqZx4l1daxi9i++0=
-X-Gm-Gg: ASbGnctXu/9/CjLVgoVmzCrCZD0Yb9zXKy0tgB1r0CGk4bHfAWBLIdWyodeta+3/f5q
-	IlzSuGM7YzRk72Cn6kuRl/VTga8tzjmqJA5xX2pdeQzNd9AcngYDB3puoytF+cWm31Bm/09SHKy
-	WQLGZUOpPSbIh1ZGQpYbqd6ms9TXuSSxIKDN0wgpbSH4tcRR4HA6JWjSEBKdbLg8rwrl8nwjM+s
-	1aKlz+0uugtFVAI/2CZzRhQPn08+dRxI24gA7UTYw8MCbi8HTMYGi6TDd56aQpBS2RWPK1pNcF6
-	ULoCS2THq38zWUEd2zJj9mXoJhR06E0g0rioyhhmE2TkbVSJCy4zMIAyb5i6JvWqK0Qjb9kjlYa
-	LXdLGFj1gJsNYIDL2kB7PWQURIVjLi6DcAQ==
-X-Received: by 2002:a17:902:e5c8:b0:275:81ca:2c5 with SMTP id d9443c01a7336-294cb5376c9mr68893605ad.59.1761673355780;
-        Tue, 28 Oct 2025 10:42:35 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF8YmrED6GOKiOwqc3GYd5ad4wsT16uGbVKCFKeOMcE0bVa3igKgSnhX7LKmDH5DOEt31TBtw==
-X-Received: by 2002:a17:902:e5c8:b0:275:81ca:2c5 with SMTP id d9443c01a7336-294cb5376c9mr68893255ad.59.1761673355274;
-        Tue, 28 Oct 2025 10:42:35 -0700 (PDT)
-Received: from [192.168.29.63] ([49.43.225.158])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29498d0c414sm123607725ad.44.2025.10.28.10.42.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Oct 2025 10:42:34 -0700 (PDT)
-Message-ID: <e9306983-e2df-4235-a58b-e0b451380b52@oss.qualcomm.com>
-Date: Tue, 28 Oct 2025 23:12:23 +0530
+	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b="R8Ovmd8N"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
+	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
+	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
+	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
+	bh=Hg4yk8h2S9UFPnNuzCx8HQK8YMdf20o+Im/dr85/zXQ=; b=R8Ovmd8NBwXulNQtyTfLsMwMIN
+	QaO+L7OCqIGgkcse7iaihMcTfHlToyTu5bL/vSk1H1i70G9Dsd7TfFfH9+33HE1vEmN7rTZv5Ed8K
+	axV3kiRfH5LvXNPtmrDchc+LFcgS5UU2Pov1xpNZ43/a15QOHqa6omz2q+sPsFHtYxLUPI0gvdHR1
+	/ZRwZ+u66zpkOu9Fi8i1vzvyEfx8vrn1/JV+Iv1Enczfcz7L67mWJoN+pnsRK1QNciZyyLsgfCOnp
+	AckH7GcqIZNRoTHMsuMSzm/X7snvQftdDUwPafT1TdeSdKLxj22nogPSixHBQDL8NUZ3Ed20HEA3/
+	ILrcPEmA==;
+Received: from [2a01:e34:ec5d:a741:1ee1:92ff:feb4:5ec0] (helo=ohm.rr44.fr)
+	by hall.aurel32.net with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <aurelien@aurel32.net>)
+	id 1vDnz5-00000008hSt-1qV2;
+	Tue, 28 Oct 2025 18:59:51 +0100
+Date: Tue, 28 Oct 2025 18:59:50 +0100
+From: Aurelien Jarno <aurelien@aurel32.net>
+To: Alex Elder <elder@riscstar.com>
+Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+	bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	mani@kernel.org, vkoul@kernel.org, kishon@kernel.org,
+	dlan@gentoo.org, guodong@riscstar.com, pjw@kernel.org,
+	palmer@dabbelt.com, aou@eecs.berkeley.edu, alex@ghiti.fr,
+	p.zabel@pengutronix.de, christian.bruel@foss.st.com,
+	shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com,
+	qiang.yu@oss.qualcomm.com, namcao@linutronix.de,
+	thippeswamy.havalige@amd.com, inochiama@gmail.com,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-phy@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/7] Introduce SpacemiT K1 PCIe phy and host controller
+Message-ID: <aQEElhSCRNqaPf8m@aurel32.net>
+Mail-Followup-To: Alex Elder <elder@riscstar.com>, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, bhelgaas@google.com,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	vkoul@kernel.org, kishon@kernel.org, dlan@gentoo.org,
+	guodong@riscstar.com, pjw@kernel.org, palmer@dabbelt.com,
+	aou@eecs.berkeley.edu, alex@ghiti.fr, p.zabel@pengutronix.de,
+	christian.bruel@foss.st.com, shradha.t@samsung.com,
+	krishna.chundru@oss.qualcomm.com, qiang.yu@oss.qualcomm.com,
+	namcao@linutronix.de, thippeswamy.havalige@amd.com,
+	inochiama@gmail.com, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
+	spacemit@lists.linux.dev, linux-riscv@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+References: <20251013153526.2276556-1-elder@riscstar.com>
+ <aPEhvFD8TzVtqE2n@aurel32.net>
+ <92ee253f-bf6a-481a-acc2-daf26d268395@riscstar.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: (subset) [PATCH v8 0/5] PCI: dwc: Add ECAM support with iATU
- configuration
-To: Bjorn Andersson <andersson@kernel.org>,
-        cros-qcom-dts-watchers@chromium.org,
-        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Lorenzo Pieralisi
- <lpieralisi@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        quic_vbadigan@quicinc.com, quic_mrana@quicinc.com,
-        quic_vpernami@quicinc.com, mmareddy@quicinc.com,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-References: <20250828-ecam_v4-v8-0-92a30e0fa02d@oss.qualcomm.com>
- <176160465177.73268.9869510926279916233.b4-ty@kernel.org>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <176160465177.73268.9869510926279916233.b4-ty@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=dqvWylg4 c=1 sm=1 tr=0 ts=6901008c cx=c_pps
- a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=jzToj74tLtS9RNrshGflUA==:17
- a=IkcTkHD0fZMA:10 a=x6icFKpwvdMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=DjtaZYkIGepEHi-_gOIA:9 a=QEXdDO2ut3YA:10
- a=zZCYzV9kfG8A:10 a=_Vgx9l1VpLgwpw_dHYaR:22
-X-Proofpoint-GUID: gj39Z6uQ_NW5CMy1G7yDvpMzqyxX4H-F
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDI4MDE1MCBTYWx0ZWRfX2QHpF1mKli7k
- GiQCM86dy493nR1fxq43+gdkDnG6y0cfNMuqbZ1BMClm4j0pP2sq7PRZl0qnAKXojjeE+XFSCE0
- WT/lTwsCysZdkYMHI3aPVKMBYaSDeU0luroA1nH9iMxI3NWJP9Rc+aicD3phckvq6yUakui4s0I
- td7/J6/htXd7laylirHdIC5hDm/mrN1n3gqDKzro4cwQ5q8gYZaADldIEEZcPe7VshVKM5Y1Rnb
- fAanH2n4nIUf1BPkRd3zWuVhzoELxUKXX+Bfex6snQSUWPv6RRq4OE4I6yaiA4ES18rYebVI4yw
- 1eSFhlPFIDE15A0cq+X5xtsDyaXtyFG9Xq+AOf4Rqj9PSXgsGD000tjf5Au516iHULKSQvbhsDC
- dRiRYgc8QDB6zILZH8HfDVk+oR9nlA==
-X-Proofpoint-ORIG-GUID: gj39Z6uQ_NW5CMy1G7yDvpMzqyxX4H-F
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-10-28_06,2025-10-22_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 clxscore=1015 impostorscore=0 priorityscore=1501
- lowpriorityscore=0 bulkscore=0 spamscore=0 suspectscore=0 malwarescore=0
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2510020000
- definitions=main-2510280150
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <92ee253f-bf6a-481a-acc2-daf26d268395@riscstar.com>
+User-Agent: Mutt/2.2.13 (2024-03-09)
+
+Hi Alex,
+
+On 2025-10-17 11:21, Alex Elder wrote:
+> On 10/16/25 11:47 AM, Aurelien Jarno wrote:
+> > Hi Alex,
+> > 
+> > On 2025-10-13 10:35, Alex Elder wrote:
+> > > This series introduces a PHY driver and a PCIe driver to support PCIe
+> > > on the SpacemiT K1 SoC.  The PCIe implementation is derived from a
+> > > Synopsys DesignWare PCIe IP.  The PHY driver supports one combination
+> > > PCIe/USB PHY as well as two PCIe-only PHYs.  The combo PHY port uses
+> > > one PCIe lane, and the other two ports each have two lanes.  All PCIe
+> > > ports operate at 5 GT/second.
+> > > 
+> > > The PCIe PHYs must be configured using a value that can only be
+> > > determined using the combo PHY, operating in PCIe mode.  To allow
+> > > that PHY to be used for USB, the calibration step is performed by
+> > > the PHY driver automatically at probe time.  Once this step is done,
+> > > the PHY can be used for either PCIe or USB.
+> > > 
+> > > Version 2 of this series incorporates suggestions made during the
+> > > review of version 1.  Specific highlights are detailed below.
+> > 
+> > With the issues mentioned in patch 4 fixed, this patchset works fine for
+> > me. That said I had to disable ASPM by passing pcie_aspm=off on the
+> > command line, as it is now enabled by default since 6.18-rc1 [1]. At
+> > this stage, I am not sure if it is an issue with my NVME drive or an
+> > issue with the controller.
+> 
+> Can you describe what symptoms you had that required you to pass
+> "pcie_aspm=off" on the kernel command line?
+> 
+> I see these lines in my boot log related to ASPM (and added by
+> the commit you link to), for both pcie1 and pcie2:
+> 
+>   pci 0000:01:00.0: ASPM: DT platform, enabling L0s-up L0s-dw L1 AS
+> PM-L1.1 ASPM-L1.2 PCI-PM-L1.1 PCI-PM-L1.2
+>   pci 0000:01:00.0: ASPM: DT platform, enabling ClockPM
+> 
+>   . . .
+> 
+>   nvme nvme0: pci function 0000:01:00.0
+>   nvme 0000:01:00.0: enabling device (0000 -> 0002)
+>   nvme nvme0: allocated 64 MiB host memory buffer (16 segments).
+>   nvme nvme0: 8/0/0 default/read/poll queues
+>    nvme0n1: p1
+> 
+> My NVMe drive on pcie1 works correctly.
+>   https://www.crucial.com/ssd/p3/CT1000P3SSD8
+> 
+>   root@bananapif3:~# df /a
+>   Filesystem     1K-blocks     Used Available Use% Mounted on
+>   /dev/nvme0n1p1 960302804 32063304 879385040   4% /a
+>   root@bananapif3:~#
+
+Sorry for the delay, it took me time to test some more things and 
+different SSDs. First of all I still see the issue with your v3 on top 
+of v6.18-rc3, which includes some fixes for ASPM support [1].
+
+I have tried 3 different SSDs, none of them are working, but the 
+symptoms are different, although all related with ASPM (pcie_aspm=off 
+workarounds the issue).
+
+With a Fox Spirit PM18 SSD (Silicon Motion, Inc. SM2263EN/SM2263XT 
+controller), I do not have more than this:
+[    5.196723] nvme nvme0: pci function 0000:01:00.0
+[    5.198843] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+
+With a WD Blue SN570 SSD, I get this:
+[    5.199513] nvme nvme0: pci function 0000:01:00.0
+[    5.201653] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+[    5.270334] nvme nvme0: allocated 32 MiB host memory buffer (8 segments).
+[    5.277624] nvme nvme0: 8/0/0 default/read/poll queues
+[   19.192350] nvme nvme0: using unchecked data buffer
+[   48.108400] nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
+[   48.113885] nvme nvme0: Does your device have a faulty power saving mode enabled?
+[   48.121346] nvme nvme0: Try "nvme_core.default_ps_max_latency_us=0 pcie_aspm=off pcie_port_pm=off" and report a bug
+[   48.176878] nvme0n1: I/O Cmd(0x2) @ LBA 0, 8 blocks, I/O Error (sct 0x3 / sc 0x71) 
+[   48.181926] I/O error, dev nvme0n1, sector 0 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 2
+[   48.243670] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+[   48.246914] nvme nvme0: Disabling device after reset failure: -19
+[   48.280495] Buffer I/O error on dev nvme0n1, logical block 0, async page read
 
 
-On 10/28/2025 4:07 AM, Bjorn Andersson wrote:
-> On Thu, 28 Aug 2025 13:04:21 +0530, Krishna Chaitanya Chundru wrote:
->> The current implementation requires iATU for every configuration
->> space access which increases latency & cpu utilization.
->>
->> Designware databook 5.20a, section 3.10.10.3 says about CFG Shift Feature,
->> which shifts/maps the BDF (bits [31:16] of the third header DWORD, which
->> would be matched against the Base and Limit addresses) of the incoming
->> CfgRd0/CfgWr0 down to bits[27:12]of the translated address.
->>
->> [...]
-> Applied, thanks!
->
-> [1/5] arm64: dts: qcom: sc7280: Increase config size to 256MB for ECAM feature
->        commit: 03e928442d469f7d8dafc549638730647202d9ce
+Finally with a PNY CS1030 SSD (Phison PS5015-E15 controller), I get this:
+[    5.215631] nvme nvme0: pci function 0000:01:00.0
+[    5.220435] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+[    5.329565] nvme nvme0: allocated 64 MiB host memory buffer (16 segments).
+[   66.540485] nvme nvme0: I/O tag 28 (401c) QID 0 timeout, disable controller
+[   66.585245] nvme 0000:01:00.0: probe with driver nvme failed with error -4
 
-Hi Bjorn,
+Note that I also tested this latest SSD on a VisionFive 2 board with exactly
+the same kernel (I just moved the SSD and booted), and it works fine with ASPM
+enabled (confirmed with lspci).
 
-Can you revert this change, this is regression due to this series due to 
-that we have change the logic,
-we need to update the dtsi accordingly, I will send a separate for all 
-controllers to enable this ECAM feature.
+> I basically want to know if there's something I should do with this
+> driver to address this.  (Mani, can you explain?)
 
-- Krishna Chaitanya.
+I am not sure on my side how to debug that. What I know is that it is 
+linked to ASPM L1, L0 works fine. In other words the SSDs work fine with 
+this patch:
 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 79b9651584737..1a134ec68b591 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -801,8 +801,8 @@ static void pcie_aspm_override_default_link_state(struct pcie_link_state *link)
+ 	if (of_have_populated_dt()) {
+ 		if (link->aspm_support & PCIE_LINK_STATE_L0S)
+ 			link->aspm_default |= PCIE_LINK_STATE_L0S;
+-		if (link->aspm_support & PCIE_LINK_STATE_L1)
+-			link->aspm_default |= PCIE_LINK_STATE_L1;
++//		if (link->aspm_support & PCIE_LINK_STATE_L1)
++//			link->aspm_default |= PCIE_LINK_STATE_L1;
+ 		override = link->aspm_default & ~link->aspm_enabled;
+ 		if (override)
+ 			pci_info(pdev, "ASPM: default states%s%s\n",
 
-> Best regards,
+I can test more things if needed, but I don't know where to start.
+
+Regards
+Aurelien
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=df5192d9bb0e38bf831fb93e8026e346aa017ca8
+
+-- 
+Aurelien Jarno                          GPG: 4096R/1DDD8C9B
+aurelien@aurel32.net                     http://aurel32.net
