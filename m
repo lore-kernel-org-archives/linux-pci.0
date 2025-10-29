@@ -1,74 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D0F30F804;
-	Wed, 29 Oct 2025 18:10:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E36A35502B
+	for <linux-pci@vger.kernel.org>; Wed, 29 Oct 2025 18:21:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761761434; cv=none; b=Uy4HwYdeSfY4mnjlAbnwHD7Ws2HHeFtJzEDOnjf7wSzwLqr4UMgJG77EuUkYkQaR/juX5Bub4oOSxMuEvN5NwHqrZK+HBlGSZcKzcGvigqzH3YIqytlFLFhKl3///VKuZ6AWEFxesAU36xWoII22gBGHXCyvHg4lXrGK9z/wezM=
+	t=1761762103; cv=none; b=RICcvpHOhsrKSE9om3LwlsFharnpc0hntjjOjF67dcQC7crk5TU2r6HLWz7XDbtRM26YQI+E1OwnTONhSAJR0rEWHiilj1tsC28c5V3R72xcfoC8HxiAQFu6H/+9DGRpON8JURijre5hp0C2pTLuECcEScw7PCdJrof5uMm2oWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761761434; c=relaxed/simple;
-	bh=74+OE1xL32AvuQq0dCzthnLOebJGx9aO7I8+OqhTme8=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=SHci+uf1LdHZI9mIewMNgU0phuzxkuut1oyHSw3TFXSTw3vFsx+AfH8W8eGU8wjceioFt5jHeeniavSEJ5s9n8O2XfLbA5QxmV5AQSMam5pQJqDJ5ZjJsFR+YLxZ9kzBaxGkJ3VxqvFi5w7q6ecI5oQ3MIKYagECvNzE6xeiIF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0pR2af2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761762103; c=relaxed/simple;
+	bh=DPpnCMRM2ONFlhs5+vFfnp4TspRDpdDt+xZVOrOrXxE=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=ZuNUJx60tIoZZEmMRr7oKPoCZVvRg+iUp7WoSkzVyZm/NcuqVPzB8uzdDQpI7NGqjpk7B3IPcAV2e/l5d9GMZE2u8cEt6Oi2ypKsaVnzVvUA2deMj4okt7vNwL1Yh0vv3b1xUoY4t3rsLAtWmEIbCJQu0ejaLxJP3XpkWIiJvxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gFW23Htf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0pR2af2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC30EC4CEF7;
-	Wed, 29 Oct 2025 18:10:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gFW23Htf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB6DDC4CEF8;
+	Wed, 29 Oct 2025 18:21:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761761433;
-	bh=74+OE1xL32AvuQq0dCzthnLOebJGx9aO7I8+OqhTme8=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=l0pR2af2+eTNjUNeK/+V70j4UcNIyzTxBB6UzatnxTQxP3m5FLTvcRUwFT7Ctg9Fu
-	 CwWeH1YHUai8aC6GF76VT1dC1l3ZiY1FC7C5dXvcUjivP4xkb7GiCyRRDjRGyVkpEk
-	 4IGn8beCrZuxOoCoQI2zVR8+QvGqQrcM753kMIEwgyEJ12pECqu9QK/r6+JyPrGQhb
-	 U6xGVGE3PVLYoh/SaJHTT+CLU7opohH4jvtoUR0vU5+PNcoZpLF/AEQAMrqzqKjuc3
-	 nRa//LA4UsHIWZFwgx2iprmGnuUZfItHocV5Lse9k+ioEJRj/wXy7LglfgBLdSbMnf
-	 Moieps/F1a+cw==
+	s=k20201202; t=1761762102;
+	bh=DPpnCMRM2ONFlhs5+vFfnp4TspRDpdDt+xZVOrOrXxE=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=gFW23Htfob9JVF7Tkn4OSf9AnrApu+I6w/WwRAqodqNSJgWV3LvyyA301zt0Uc/34
+	 x6/VtvfQztzfWNSs4dCB24QCQ92FaoC3Ir0q1XCVKjJFK0mda3xuB3/1XZaRMFNUXz
+	 eKchmNDyoozyoZ1HDSmEvBNDfCzBEX/JM9hSKH1faPH+eCNjYzQ8eolkTg1SxEnsuN
+	 OiYGqp9kql+IT4pn3GRuJtUrP7KVnTg8oBjrsKkvR1gl2P1VWZJ1WaGGmovzTOQ08j
+	 00jFA5M5GT40p+AGKTcPdvEO7j6lNxIAKnKsXGXjkZV2+V5oKvWkiHqhIxIa5TZ/hr
+	 O23qaAx/QhODA==
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfauth.phl.internal (Postfix) with ESMTP id EBBEDF40069;
+	Wed, 29 Oct 2025 14:21:40 -0400 (EDT)
+Received: from phl-imap-08 ([10.202.2.84])
+  by phl-compute-04.internal (MEProxy); Wed, 29 Oct 2025 14:21:40 -0400
+X-ME-Sender: <xms:NFsCaVDOQpzKD7wTZgNCCgPb13e9mhCbRK36w5KK5UL_6Vz3kfOqqg>
+    <xme:NFsCaeWLHPtpKhKZrslQ2gjrJtZvmfWKaeB-BNH71AIRQgkZgmY6dvyy7h1hVLqQY
+    7vQeI-WSHuXH29wxJ06dzec-n0tAu4pMEPndl_0A5NlTk476sEDng0>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggdduieeggeefucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedfnfgvohhn
+    ucftohhmrghnohhvshhkhidfuceolhgvohhnsehkvghrnhgvlhdrohhrgheqnecuggftrf
+    grthhtvghrnhepjeevffelgfelvdfgvedvteelhefhvdffheegffekveelieevfeejteei
+    leeuuedvnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomh
+    eplhgvohhnodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdduvdeftdehfeel
+    keegqddvjeejleejjedvkedqlhgvohhnpeepkhgvrhhnvghlrdhorhhgsehlvghonhdrnh
+    hupdhnsggprhgtphhtthhopedvgedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohep
+    jhhorhhoseeksgihthgvshdrohhrghdprhgtphhtthhopegthhhrihhsthhirghnrdhkoh
+    gvnhhighesrghmugdrtghomhdprhgtphhtthhopehrohgsihhnrdhmuhhrphhhhiesrghr
+    mhdrtghomhdprhgtphhtthhopehlohhgrghnghesuggvlhhtrghtvggvrdgtohhmpdhrtg
+    hpthhtoheprghmrghsthhrohesfhgsrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghs
+    sehgohhoghhlvgdrtghomhdprhgtphhtthhopehvihhvvghkrdhkrghsihhrvgguugihse
+    hinhhtvghlrdgtohhmpdhrtghpthhtoheprgigsghovgeskhgvrhhnvghlrdgukhdprhgt
+    phhtthhopeifihhllheskhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:NFsCaUzjtyzcUVu3XHD3WVhral27CzlLF39AneDrzievZ37OsGY-GA>
+    <xmx:NFsCaRUFAQz6l_v7A2JkDReVdjjdcI-Y2IcFNcrwrHcfSX10RiJcNQ>
+    <xmx:NFsCafZkyPDABk8DELRQCYDmg48L5nSl4vq1dKK-pP8IizJlTTWYMg>
+    <xmx:NFsCaeR_shcDrhZPGvArnf4UbT0ylRaXp3-PRr2Wr-isMOf0OBIlZw>
+    <xmx:NFsCafRS72r3S4Uq0J_JrwdIdBgQm6Y4YZw8AGtHru_SaMGZiKXRtxaV>
+Feedback-ID: i927946fb:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id B52662CE0071; Wed, 29 Oct 2025 14:21:40 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 29 Oct 2025 19:10:27 +0100
-Message-Id: <DDV0AYWXTCL5.2QDTJI55Q87CJ@kernel.org>
-Subject: Re: [PATCH 0/8] Device::drvdata() and driver/driver interaction
- (auxiliary)
-Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>
-To: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
- <acourbot@nvidia.com>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
- <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <aliceryhl@google.com>,
- <tmgross@umich.edu>, <pcolberg@redhat.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20251020223516.241050-1-dakr@kernel.org>
-In-Reply-To: <20251020223516.241050-1-dakr@kernel.org>
+MIME-Version: 1.0
+X-ThreadId: AwB0iom3SqON
+Date: Wed, 29 Oct 2025 20:21:20 +0200
+From: "Leon Romanovsky" <leon@kernel.org>
+To: "Alex Mastro" <amastro@fb.com>
+Cc: "Alex Williamson" <alex.williamson@redhat.com>,
+ "Leon Romanovsky" <leonro@nvidia.com>, "Jason Gunthorpe" <jgg@nvidia.com>,
+ "Andrew Morton" <akpm@linux-foundation.org>,
+ "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ dri-devel@lists.freedesktop.org, iommu@lists.linux.dev,
+ "Jens Axboe" <axboe@kernel.dk>, "Joerg Roedel" <joro@8bytes.org>,
+ kvm@vger.kernel.org, linaro-mm-sig@lists.linaro.org,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
+ "Logan Gunthorpe" <logang@deltatee.com>,
+ "Marek Szyprowski" <m.szyprowski@samsung.com>,
+ "Robin Murphy" <robin.murphy@arm.com>,
+ "Sumit Semwal" <sumit.semwal@linaro.org>,
+ "Vivek Kasireddy" <vivek.kasireddy@intel.com>,
+ "Will Deacon" <will@kernel.org>
+Message-Id: <275a5a94-1c69-4eb0-a9d0-4b397073555f@app.fastmail.com>
+In-Reply-To: <aQJF1wiWWWoIgHI0@devgpu015.cco6.facebook.com>
+References: <cover.1760368250.git.leon@kernel.org>
+ <72ecaa13864ca346797e342d23a7929562788148.1760368250.git.leon@kernel.org>
+ <aQJF1wiWWWoIgHI0@devgpu015.cco6.facebook.com>
+Subject: Re: [PATCH v5 9/9] vfio/pci: Add dma-buf export support for MMIO regions
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On Tue Oct 21, 2025 at 12:34 AM CEST, Danilo Krummrich wrote:
 
-Applied to driver-core-testing, thanks!
 
-> Danilo Krummrich (8):
->   rust: device: narrow the generic of drvdata_obtain()
->   rust: device: introduce Device::drvdata()
+On Wed, Oct 29, 2025, at 18:50, Alex Mastro wrote:
+> On Mon, Oct 13, 2025 at 06:26:11PM +0300, Leon Romanovsky wrote:
+>> +	/*
+>> +	 * dma_buf_fd() consumes the reference, when the file closes the dmabuf
+>> +	 * will be released.
+>> +	 */
+>> +	return dma_buf_fd(priv->dmabuf, get_dma_buf.open_flags);
+>
+> I think this still needs to unwind state on fd allocation error. Reference
+> ownership is only transferred on success.
 
-    [ * Remove unnecessary `const _: ()` block,
-      * rename type_id_{store,match}() to {set,match}_type_id(),
-      * assert size_of::<bindings::driver_type>() >=3D size_of::<TypeId>(),
-      * add missing check in case Device::drvdata() is called from probe().
+Yes, you are correct, i need to call to dma_buf_put() in case of error. I will fix.
 
-      - Danilo ]
+Thanks
 
->   rust: auxiliary: consider auxiliary devices always have a parent
->   rust: auxiliary: unregister on parent device unbind
->   rust: auxiliary: move parent() to impl Device
->   rust: auxiliary: implement parent() for Device<Bound>
->   samples: rust: auxiliary: misc cleanup of ParentDriver::connect()
->   samples: rust: auxiliary: illustrate driver interaction
+>
+>> +
+>> +err_dev_put:
+>> +	vfio_device_put_registration(&vdev->vdev);
+>> +err_free_phys:
+>> +	kfree(priv->phys_vec);
+>> +err_free_priv:
+>> +	kfree(priv);
+>> +err_free_ranges:
+>> +	kfree(dma_ranges);
+>> +	return ret;
+>> +}
