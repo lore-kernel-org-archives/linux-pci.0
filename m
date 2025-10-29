@@ -1,71 +1,71 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazhn15012044.outbound.protection.outlook.com [52.102.140.44])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazhn15012016.outbound.protection.outlook.com [52.102.137.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B6D31A562;
-	Wed, 29 Oct 2025 08:06:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.102.140.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8096131B10D;
+	Wed, 29 Oct 2025 08:06:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.102.137.16
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761725172; cv=fail; b=gCIAp0S5yxc9jnLy1zxgfkoZnlSJbFEGg0ceUBZQJ35NWnEnJ4HmBMc+dduPL6k9335XiW10ADn2aZwHOZmWJBkj81cpq+7xNOhPCBLIugsFC2LZ9RCeCLI1lZMYd2IChO0ysnZGThRBQgnCVK1ZqjP+YL+bXgFz6i/S9fvPXmg=
+	t=1761725177; cv=fail; b=BMf9eVDO9Ev5X/+CnURiLoBm28erM3AfqByovaGe1dczNsDf1YsX01yX4igFX4u2gTqPZh64GS8uN1PFoBzIPp+1EbUn5kLTTu/TFQ7hSst7/s32dvcaNQ7bQREXUzkmgGDKzCgGuGqP97UWQtu3yQBbVqlBdgyNkw3M3xKc3ho=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761725172; c=relaxed/simple;
-	bh=xmM/Zg5w8puH7zPYWXZs5NEnytFWJAkU5Fuup9SOmSM=;
+	s=arc-20240116; t=1761725177; c=relaxed/simple;
+	bh=Pu2qbLo05SeIku5YlbqlxZEy6k1+xzLTzWX9GtElL2k=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Rk2DVmqKNldd2y8Ql+9xnZ/PujZ7b59gIIQ47OSFX570PmtKXaF9jOmGM/6OjkCTjsyT5gfws1LSvirrwbnJuOcoL6Bkua5qhqNCRJ2C5rXW1nDYEjDojYneZFJN0+G1owzl3s2tEsj4sJWOYqF5CaN0eXVjSJ5yx0SGF/P0OhM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=pm2stAdR; arc=fail smtp.client-ip=52.102.140.44
+	 MIME-Version:Content-Type; b=b4dk124r2WBM3ejd4gZmc2P2aW6VQIhLP0l2WiG0yC6fpj6aEmqMcjru4FC5n4zmczRayNT2UpQorGdJHhHduC6QQc9HV8SO6jVDvn5LyEysqWTf/PvUxc2ZW+3HkH2hnuv9bsfF19QuFo72CSPQZqnGbQFBKbxtaOtbtMuNEhA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=dxPgKMqV; arc=fail smtp.client-ip=52.102.137.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="pm2stAdR"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="dxPgKMqV"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=f+3cLxhwSL5Lun2JLQN7srQ1r+4nbBt720cGbdJs/E4PcJdmcra0dKLhZRNLNVjIt6MPss4cqZS/CmPEz6OpN4SzOid0ZcNeW26H0z/fGvMyxNUaJXa0vZbTBOJmA767o+9nzNkp/pNk16dJwvV9vajXaO6qwo+kn2uqki1NQQhORKI+Fu+xMfrN16soeMFR4PoZVVoCb9RLqc82hzWJqhDsbnWN09AqYaAEazxhyDkVvJhYSYqJIZ9VR+vCa/uU+WkB9DEz86uyjFFUqG++URMrVsBGkoLZ1CVYlukGEG8ECVFhdfHn6+D4B3lFgvDeHzTRfBIDaOjy+H8yL6hDjA==
+ b=fV6AedWLqwfniXig+fQkbd9b6KH8PJDTICZXoU/o4PgXFB/2E+cP1V4ub8wf1epGRrd/BrbeoWxNsF1p/BaLB2Wr4fYuB8n+KzsH+oRS5rOgIEn4+Djc1iyTpiBCaEauJ1TbO321Rr8LXRzBvkcFL0rg88aT0rMAAA+11+0gvbaD89BOvQiv8Ivbi480YnSi264S5ZrBmvcPRxeUiJUwfHjELbkwIXtBKFmaA91pyJzneriCanoian6LyfdHnZTOMXyR9L79quwBeLpmyBaOvylq7t29bf+Kc1clQ34ZltkIS5X8zD/rRnecE5m7ZqV7BCMPOtnPN5vQUk6ifSc9EA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FySFmbwoC4NvRz8AKlKQCcwcSNZbL+Kmkb0n90DF7Ds=;
- b=ixvJE8nSAihpXvP5rUJ5/FGG09Fx8BTHX021pLgU0exo3iz+SNsfCBF6DSJXl9p9vOmhh0v8KNH4FayZDlA1Gnx0I5G1bh1v0IfMJGVlyv2WJFdJbCEP6NArbXLXlkzzvBIrIGT2XaOoN5/zSphHrDyuRCQvzRFiBNW0kGp6zkpA//WBGCLyKBJ8AJjldn4kzMH+suT9xBUruN1evpfR5Vo96KzdHzxqLxzN40xlXnOOh4RBgdYdztRT9PYax44ctrJxWd2ryUdtLBwUV/bBoTRdeaMVHaie2diAX/Q/g6PzDPfeZx8YFHDhvbN7jQmDlIBhb/1YYq5ktW573bRTBQ==
+ bh=6cfeFEwvP97w5VwKIXsqz1yzfF7xnqTbAvPZSTTJstQ=;
+ b=EPVhfKt75iZW0ThL1kITBkjJRXpKW3kKP1+OsJg9ovdrDcxy3F5vYT6J7ThFJmNNfswqHZhIwycq+JWUP2UcnWfr/0DIT1RqqYiYKRO7jHBC3RWkS9tqYvBsOO3tswCOPXkQLXoM977Uq+v9nV+8uS/r61I1qk75V/WuO9jcjDhCAclLVwolGcsL1/PHKpsyHc4zY0P7fJXt5pcDCn3lwu1dgu7sfH0jGwy9TJTY+wcvvzXPp9QodhkAVxZptyagJccNDxB4nX35f9blPBQEiMNo1hiFvq/Y6LC5LPTPTS1/9BZS1+jOXMV8MDsZhw3pkRKL0rEs3WlW/jaEhbvU3g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.194) smtp.rcpttodomain=lists.infradead.org smtp.mailfrom=ti.com;
+ 198.47.23.195) smtp.rcpttodomain=lists.infradead.org smtp.mailfrom=ti.com;
  dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FySFmbwoC4NvRz8AKlKQCcwcSNZbL+Kmkb0n90DF7Ds=;
- b=pm2stAdRMzdnt7fAiqRnQvmkzucxDR2njaUFnhpkq2y2Ds1bc9tXMPQMxaL4/UTBJRosM0za5sA7GActXpnrbKXykuZ/T+uCk5Z9VmSws/CPJJGeIQWMxvjM0bMBVP4BZnOphdYdgaPL2z026yvMhf/xHzeeN/dNx9uqCGNht04=
-Received: from SJ0PR13CA0088.namprd13.prod.outlook.com (2603:10b6:a03:2c4::33)
- by PH0PR10MB4710.namprd10.prod.outlook.com (2603:10b6:510:3e::17) with
+ bh=6cfeFEwvP97w5VwKIXsqz1yzfF7xnqTbAvPZSTTJstQ=;
+ b=dxPgKMqVq6Abejj3afThhIBb6OrGFHyq3iTv3YV2ZZzgADit+2o9Ra7YeR8iy8UV+dSdgzub2cjqcLfsS2RMmHyS8HdRokqpY26igO+D67FwpJZIAI3+wmbeVNFLEvuFASc3BnGjIk2SbtItjFJPyv9MdqpIgJ5JSc9CAstaEL0=
+Received: from CH2PR05CA0057.namprd05.prod.outlook.com (2603:10b6:610:38::34)
+ by MW4PR10MB6369.namprd10.prod.outlook.com (2603:10b6:303:1ec::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9253.17; Wed, 29 Oct
- 2025 08:06:04 +0000
-Received: from CO1PEPF000066EC.namprd05.prod.outlook.com
- (2603:10b6:a03:2c4:cafe::17) by SJ0PR13CA0088.outlook.office365.com
- (2603:10b6:a03:2c4::33) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9275.14 via Frontend Transport; Wed,
- 29 Oct 2025 08:06:04 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9253.19; Wed, 29 Oct
+ 2025 08:06:12 +0000
+Received: from CH1PEPF0000A346.namprd04.prod.outlook.com
+ (2603:10b6:610:38:cafe::29) by CH2PR05CA0057.outlook.office365.com
+ (2603:10b6:610:38::34) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9275.12 via Frontend Transport; Wed,
+ 29 Oct 2025 08:06:07 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
  smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
  action=none header.from=ti.com;
 Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
-Received: from flwvzet200.ext.ti.com (198.47.21.194) by
- CO1PEPF000066EC.mail.protection.outlook.com (10.167.249.8) with Microsoft
+ 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
+Received: from lewvzet201.ext.ti.com (198.47.23.195) by
+ CH1PEPF0000A346.mail.protection.outlook.com (10.167.244.11) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9275.10 via Frontend Transport; Wed, 29 Oct 2025 08:06:02 +0000
-Received: from DFLE201.ent.ti.com (10.64.6.59) by flwvzet200.ext.ti.com
- (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.9275.10 via Frontend Transport; Wed, 29 Oct 2025 08:06:10 +0000
+Received: from DLEE206.ent.ti.com (157.170.170.90) by lewvzet201.ext.ti.com
+ (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 29 Oct
- 2025 03:05:55 -0500
-Received: from DFLE201.ent.ti.com (10.64.6.59) by DFLE201.ent.ti.com
- (10.64.6.59) with Microsoft SMTP Server (version=TLS1_2,
+ 2025 03:06:07 -0500
+Received: from DLEE201.ent.ti.com (157.170.170.76) by DLEE206.ent.ti.com
+ (157.170.170.90) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 29 Oct
- 2025 03:05:54 -0500
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE201.ent.ti.com
- (10.64.6.59) with Microsoft SMTP Server (version=TLS1_2,
+ 2025 03:06:06 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DLEE201.ent.ti.com
+ (157.170.170.76) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Wed, 29 Oct 2025 03:05:54 -0500
+ Transport; Wed, 29 Oct 2025 03:06:06 -0500
 Received: from toolbox.dhcp.ti.com (uda0492258.dhcp.ti.com [10.24.73.74])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 59T85aXg3704660;
-	Wed, 29 Oct 2025 03:05:49 -0500
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 59T85aXi3704660;
+	Wed, 29 Oct 2025 03:06:01 -0500
 From: Siddharth Vadapalli <s-vadapalli@ti.com>
 To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
 	<robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
@@ -76,9 +76,9 @@ To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
 	<rongqianfeng@vivo.com>, <jirislaby@kernel.org>
 CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>, <srk@ti.com>, <s-vadapalli@ti.com>
-Subject: [PATCH v5 2/4] PCI: dwc: Export dw_pcie_allocate_domains() and dw_pcie_ep_raise_msix_irq()
-Date: Wed, 29 Oct 2025 13:34:50 +0530
-Message-ID: <20251029080547.1253757-3-s-vadapalli@ti.com>
+Subject: [PATCH v5 4/4] PCI: keystone: Add support to build as a loadable module
+Date: Wed, 29 Oct 2025 13:34:52 +0530
+Message-ID: <20251029080547.1253757-5-s-vadapalli@ti.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251029080547.1253757-1-s-vadapalli@ti.com>
 References: <20251029080547.1253757-1-s-vadapalli@ti.com>
@@ -93,95 +93,290 @@ Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000066EC:EE_|PH0PR10MB4710:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2afb029d-036f-41fa-22b0-08de16c200e3
+X-MS-TrafficTypeDiagnostic: CH1PEPF0000A346:EE_|MW4PR10MB6369:EE_
+X-MS-Office365-Filtering-Correlation-Id: 78747c45-e70d-449c-3f2c-08de16c2055e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|82310400026|36860700013|34020700016|1800799024|921020|12100799066;
+	BCL:0;ARA:13230040|34020700016|1800799024|36860700013|376014|82310400026|7416014|921020|12100799066;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?rulv/Pv6/1aRHYO7Bu4Yl6D8IxgZW+39VXRSWyzImPM0mLV98qkjuSKSQ4l6?=
- =?us-ascii?Q?TF1LFfx1KXZeoVA4UMCUomPEmniqqiwnnFcKz8CQNsQbzo3ccMJuKrH0CjnW?=
- =?us-ascii?Q?wgprdFRE0VAVSJ22z8JlSJ/dIo5pVQc6lEQVHd00CnpU+uVli1JNtqL9KWJi?=
- =?us-ascii?Q?X55+olTk92MVDbVAaxM4sdSbiCG9tjJt3eAvCued8hgy/gAcGVhK21xEz4dv?=
- =?us-ascii?Q?b7rt5x0hjEk/t5sfanNpeHbORzxeWkEHPnIy5HSkjF23OGgvYcu48hfjvRCf?=
- =?us-ascii?Q?yAOtT2VM+QGw1zD3JJLW3RuQJl1sc39IqlXiB1l9AJFxg2lFyXGAzNU9jfWg?=
- =?us-ascii?Q?v52OldiCFvxCmxgbX031upwBr7QmfNzsMkIHVDGAVAbssh9ryQtROlnkPCKp?=
- =?us-ascii?Q?OcqMnfwYxOOmLmw9K3ZqS6Ij9N9hhIlajUyIhXVyzsw3iKqli7aRl0GpdKJi?=
- =?us-ascii?Q?UyCcrLr9o2pYHhalcKwTKC40tkWUL1WbIOy+38kB6FuC6vxPo8iCb1U6kee9?=
- =?us-ascii?Q?qYgAKopN78k3CYkjM4d0kuh/WRuOrli5Bdiai6hM06mP74HcUamIAlG232wO?=
- =?us-ascii?Q?4xRBS93PcJT1VWZ/xFxlo4bGOj5UIGFSqL7DQA/c7lZ9YmDwcDf/9owYDgRW?=
- =?us-ascii?Q?rtjJVWBQBReDqXvZmaXzEHdElPnzwZL0HvisfqCB4ZP+7Fu+56hUEHtPGUP8?=
- =?us-ascii?Q?pSKXtFI284R4qHiP1FbJzcYYli9fUGQBVyu3r6ZGNk2Tka7w8u5P6Yf0O3AN?=
- =?us-ascii?Q?6bp+XECd6dl/uNyGAruxLXBBMP9NGxhbluAANn01f+Cy5Eynq0lVMFXEJ2SS?=
- =?us-ascii?Q?/pwaxVDM1mFObzMjZUy1L1hnhXtShEGjhiINi/zuTqsuEj5vgdRaNe64BptK?=
- =?us-ascii?Q?fVsW7/Ze8YbS+hzolgEmVkA5pqfu7ymtHrt5mf/FESy0emZIv/Muaz+Ao/HW?=
- =?us-ascii?Q?EkDpRC0ZeKTnPJHtkai56f1wSoOZYpAIpYcnwr2Es9PmHopnFlc8N+qm+BkC?=
- =?us-ascii?Q?fySN3EfTguroeZq0F1I6ZuTcUKnp4uh/+2BOdcFD95o0hDpj2H5GEM2brmCq?=
- =?us-ascii?Q?ggUR6BWTBKt2M/TcEwYrMMckFZ5I0F1P0PD3rNJQ+C9UNDBfcKhnMbS7q5Co?=
- =?us-ascii?Q?EBBbenBVuA3br/QYETr/m68xh6bwVr4j4r3+KSIN57MCDK8sg50QEaXNuOdo?=
- =?us-ascii?Q?naZH4bxR+621VZ985Jqw5Uq/sNJoMVeWdzsFe3enW6Qdi7UNThiTOZAVDBZn?=
- =?us-ascii?Q?qdZwCnl7n97pntrDxJuNp86Ai/pEYun+ftpslEVWWWJrEkE/7/ggWimnA8Mm?=
- =?us-ascii?Q?XEygMwep97pqxT+2sQg8Sww5KkVOJW0w1rr1cK2E7DCG0pUjk41jhmZVh37U?=
- =?us-ascii?Q?WJ5ss1lUpb7bTgd0358H8nGvwgsep084UAjErMYgHI542tceInVvskptYDmN?=
- =?us-ascii?Q?i2FIf+cALc5SZ4ijStijtwseKUeDPSSkjumJBP//819RAieGUADE2rNkIXip?=
- =?us-ascii?Q?W+VV3s5daOd/BhRnc2gWjp66sQ8pxNQSfCE8?=
+	=?us-ascii?Q?U/CcA40PsCoa2Q3Q2rIsXs2JhPTMIXbMxlU/TcM2kxN8znHbIbf33pmcAs8k?=
+ =?us-ascii?Q?ckw7rt8hWTCHJoa+UI14QxeoEJp8/n+d4r6uiBPSSyS9k6DWlfj4B4kCavXM?=
+ =?us-ascii?Q?BiHoz+VXub64ohbh4IF3cMgT+hvS5wX1xGIYAB6Xt6a95iPzT8lEPgcJkL9u?=
+ =?us-ascii?Q?cnUzylQUBt+llOaFJrBRRXX3t4GT8Gu44Tdnze2e6hhDkwn1C6zy4vGJYxio?=
+ =?us-ascii?Q?r9zA9LIaaY9z2ZwlN8ol7WaXKyNgfpT6GC2rjTSO3FgTPV0XFl3Av5sNHrBT?=
+ =?us-ascii?Q?wnQSQqq/gqrvTj/NyJYNenf/stUZR35SlzxRWcdoPBAd50CZUwVP+1kxEcYa?=
+ =?us-ascii?Q?bxkAAVIMikg2PsogYm7spH2GfOl+1g/PjQA4w8g8TDkaUtTk35makAVAkWv+?=
+ =?us-ascii?Q?8/jGxyiK4cDjTp2lnVN/gEj3n3m3fIky6JhUynjPIJjbwCD+w9Z4lV1E+z7O?=
+ =?us-ascii?Q?VK/9M/BlVmMUrba9XouH1PjzwX4aWQaPyfHNTP3pWK1pfr5S2vvyHFHbJavc?=
+ =?us-ascii?Q?cki+nZ3nSwCmJujQJTb2zEjcKHnjzSbnX58kAPxIsN7VlCLEnPKzmrjzg6YV?=
+ =?us-ascii?Q?bAA7WJWVAwInZpH7OcRghk4jk66fPyvqADtfpDmTYMBdlQ0TnDY8zcQ+v2Bu?=
+ =?us-ascii?Q?RbR/UZahQNupgCxgTHouMbFEN74qsNptSDsB3W7H0iy1IfKai3pGDoLFnwgz?=
+ =?us-ascii?Q?y8bizNQaUn1QDVhZEt1QWzCpdxFBEwcm6RhfoNvwtG7X5BfUjts6in2oO+Mx?=
+ =?us-ascii?Q?XheF2zD9d8OHR2Bz1zBgT1fG7wXMlABcQZQPLVXd74XMHpiCiS/rCONP3itA?=
+ =?us-ascii?Q?CKfw6bUACXO70LDIxDMX5PukWig2s/lJ6B/vXSx+PwGY2YVReoA7gFGrJBCF?=
+ =?us-ascii?Q?8W8adZxWD5i9EsUqoyZmpnV2JAkj5T5V1vacUAax872A0AGuk53HbHu5Nhbg?=
+ =?us-ascii?Q?CHW2Sy7X+RYPIErPYLo+D/C2OPEBrxRsPGdCcevvsxcbckGA9S3KFQJlzgGD?=
+ =?us-ascii?Q?kvKK060Sol4lvdrn1bziHGrhr5Cz826LphGfKUiRCbLM/d/Ubcyi6UURgUAm?=
+ =?us-ascii?Q?v/CbqkoionXZdJbZLuwXdYDZDN2zm3YOVTy4ZM5QgjM/wL2YJzPWTLci4jmj?=
+ =?us-ascii?Q?OM+yR2FrYnuVjr1JwO11C3Zp0p8/bjeKPiCIMAST1dk3i9wOTa45pPHINlD5?=
+ =?us-ascii?Q?4mxarD3IVJ9EAnJIGeRoAEns5V6dmneUo57Li4A2WNORY3WhFZ/04sQ0NUZE?=
+ =?us-ascii?Q?5nBuFKPyNDLM+Q4/RATrwtjBlk7YV7kWCjwr5BCvj2bGKoRi97EpqxZWnrU3?=
+ =?us-ascii?Q?KZcyJ+KI0kDHUT4jM/qmGwZHho/88erLD1BElXcL6e3+ChXIeePrqvhDctnp?=
+ =?us-ascii?Q?tSNhbSUVfFVHzU9z3Iccil+ssrjZj35pEZXh+CVk9HdfMFWqCnln0WzhDa6O?=
+ =?us-ascii?Q?i4V90fdxa5IZQfpjZI+eQKm0Zj29sOFIe32FIV4y1niPpwfEF6urCVjdqHwr?=
+ =?us-ascii?Q?mPZ42aRNB0BzM/4UEtC+hUlufck4ChYLApnh?=
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(376014)(7416014)(82310400026)(36860700013)(34020700016)(1800799024)(921020)(12100799066);DIR:OUT;SFP:1501;
+	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(34020700016)(1800799024)(36860700013)(376014)(82310400026)(7416014)(921020)(12100799066);DIR:OUT;SFP:1501;
 X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Oct 2025 08:06:02.6518
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Oct 2025 08:06:10.1464
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2afb029d-036f-41fa-22b0-08de16c200e3
+X-MS-Exchange-CrossTenant-Network-Message-Id: 78747c45-e70d-449c-3f2c-08de16c2055e
 X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CO1PEPF000066EC.namprd05.prod.outlook.com
+	CH1PEPF0000A346.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4710
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR10MB6369
 
-The pci-keystone.c driver uses the functions 'dw_pcie_allocate_domains()'
-and 'dw_pcie_ep_raise_msix_irq()'. In preparation for enabling the
-pci-keystone.c driver to be built as a loadable module, export them.
+The 'pci-keystone.c' driver is the application/glue/wrapper driver for the
+Designware PCIe Controllers on TI SoCs. Now that all of the helper APIs
+that the 'pci-keystone.c' driver depends upon have been exported for use,
+enable support to build the driver as a loadable module.
+
+Additionally, the functions marked by the '__init' keyword may be invoked:
+a) After a probe deferral
+OR
+b) During a delayed probe - Delay attributed to driver being built as a
+   loadable module
+
+In both of the cases mentioned above, the '__init' memory will be freed
+before the functions are invoked. This results in an exception of the form:
+
+	Unable to handle kernel paging request at virtual address ...
+	Mem abort info:
+	...
+	pc : ks_pcie_host_init+0x0/0x540
+	lr : dw_pcie_host_init+0x170/0x498
+	...
+	ks_pcie_host_init+0x0/0x540 (P)
+	ks_pcie_probe+0x728/0x84c
+	platform_probe+0x5c/0x98
+	really_probe+0xbc/0x29c
+	__driver_probe_device+0x78/0x12c
+	driver_probe_device+0xd8/0x15c
+	...
+
+To address this, introduce a new function namely 'ks_pcie_init()' to
+register the 'fault handler' while removing the '__init' keyword from
+existing functions.
 
 Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 ---
 
 v4:
-https://lore.kernel.org/r/20251022095724.997218-3-s-vadapalli@ti.com/
-No Changes since v4.
+https://lore.kernel.org/r/20251022095724.997218-5-s-vadapalli@ti.com/
+Changes since v4:
+- To fix the build error on ARM32 platforms as reported at:
+  https://lore.kernel.org/r/202510281008.jw19XuyP-lkp@intel.com/
+  patch 4 in the series has been updated by introducing a new config
+  named "PCI_KEYSTONE_TRISTATE" which allows building the driver as
+  a loadable module. Additionally, this newly introduced config can
+  be enabled only for non-ARM32 platforms. As a result, ARM32 platforms
+  continue using the existing PCI_KEYSTONE config which is a bool, while
+  ARM64 platforms can use PCI_KEYSTONE_TRISTATE which is a tristate, and
+  can optionally enabled loadable module support being enabled by this
+  series.
 
 Regards,
 Siddharth.
 
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 1 +
- drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/pci/controller/dwc/Kconfig        | 15 +++--
+ drivers/pci/controller/dwc/Makefile       |  3 +
+ drivers/pci/controller/dwc/pci-keystone.c | 78 +++++++++++++----------
+ 3 files changed, 59 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 7f2112c2fb21..19571ac2b961 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -797,6 +797,7 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 349d4657393c..c5bc2f0b1f39 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -482,15 +482,21 @@ config PCI_DRA7XX_EP
+ 	  to enable device-specific features PCI_DRA7XX_EP must be selected.
+ 	  This uses the DesignWare core.
  
- 	return 0;
++# ARM32 platforms use hook_fault_code() and cannot support loadable module.
+ config PCI_KEYSTONE
+ 	bool
+ 
++# On non-ARM32 platforms, loadable module can be supported.
++config PCI_KEYSTONE_TRISTATE
++	tristate
++
+ config PCI_KEYSTONE_HOST
+-	bool "TI Keystone PCIe controller (host mode)"
++	tristate "TI Keystone PCIe controller (host mode)"
+ 	depends on ARCH_KEYSTONE || ARCH_K3 || COMPILE_TEST
+ 	depends on PCI_MSI
+ 	select PCIE_DW_HOST
+-	select PCI_KEYSTONE
++	select PCI_KEYSTONE if ARM
++	select PCI_KEYSTONE_TRISTATE if !ARM
+ 	help
+ 	  Enables support for the PCIe controller in the Keystone SoC to
+ 	  work in host mode. The PCI controller on Keystone is based on
+@@ -498,11 +504,12 @@ config PCI_KEYSTONE_HOST
+ 	  DesignWare core functions to implement the driver.
+ 
+ config PCI_KEYSTONE_EP
+-	bool "TI Keystone PCIe controller (endpoint mode)"
++	tristate "TI Keystone PCIe controller (endpoint mode)"
+ 	depends on ARCH_KEYSTONE || ARCH_K3 || COMPILE_TEST
+ 	depends on PCI_ENDPOINT
+ 	select PCIE_DW_EP
+-	select PCI_KEYSTONE
++	select PCI_KEYSTONE if ARM
++	select PCI_KEYSTONE_TRISTATE if !ARM
+ 	help
+ 	  Enables support for the PCIe controller in the Keystone SoC to
+ 	  work in endpoint mode. The PCI controller on Keystone is based
+diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+index 7ae28f3b0fb3..7c8de0067612 100644
+--- a/drivers/pci/controller/dwc/Makefile
++++ b/drivers/pci/controller/dwc/Makefile
+@@ -11,7 +11,10 @@ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCIE_FU740) += pcie-fu740.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
++# ARM32 platforms use hook_fault_code() and cannot support loadable module.
+ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone.o
++# On non-ARM32 platforms, loadable module can be supported.
++obj-$(CONFIG_PCI_KEYSTONE_TRISTATE) += pci-keystone.o
+ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_LAYERSCAPE_EP) += pci-layerscape-ep.o
+ obj-$(CONFIG_PCIE_QCOM_COMMON) += pcie-qcom-common.o
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 25b8193ffbcf..53f88b31ad43 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -17,6 +17,7 @@
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/mfd/syscon.h>
++#include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+@@ -777,29 +778,7 @@ static int ks_pcie_config_intx_irq(struct keystone_pcie *ks_pcie)
+ 	return ret;
  }
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_msix_irq);
  
- /**
-  * dw_pcie_ep_cleanup - Cleanup DWC EP resources after fundamental reset
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index e92513c5bda5..39fda91db27b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -233,6 +233,7 @@ int dw_pcie_allocate_domains(struct dw_pcie_rp *pp)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_allocate_domains);
- 
- void dw_pcie_free_msi(struct dw_pcie_rp *pp)
+-#ifdef CONFIG_ARM
+-/*
+- * When a PCI device does not exist during config cycles, keystone host
+- * gets a bus error instead of returning 0xffffffff (PCI_ERROR_RESPONSE).
+- * This handler always returns 0 for this kind of fault.
+- */
+-static int ks_pcie_fault(unsigned long addr, unsigned int fsr,
+-			 struct pt_regs *regs)
+-{
+-	unsigned long instr = *(unsigned long *) instruction_pointer(regs);
+-
+-	if ((instr & 0x0e100090) == 0x00100090) {
+-		int reg = (instr >> 12) & 15;
+-
+-		regs->uregs[reg] = -1;
+-		regs->ARM_pc += 4;
+-	}
+-
+-	return 0;
+-}
+-#endif
+-
+-static int __init ks_pcie_init_id(struct keystone_pcie *ks_pcie)
++static int ks_pcie_init_id(struct keystone_pcie *ks_pcie)
  {
+ 	int ret;
+ 	unsigned int id;
+@@ -831,7 +810,7 @@ static int __init ks_pcie_init_id(struct keystone_pcie *ks_pcie)
+ 	return 0;
+ }
+ 
+-static int __init ks_pcie_host_init(struct dw_pcie_rp *pp)
++static int ks_pcie_host_init(struct dw_pcie_rp *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
+@@ -861,15 +840,6 @@ static int __init ks_pcie_host_init(struct dw_pcie_rp *pp)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-#ifdef CONFIG_ARM
+-	/*
+-	 * PCIe access errors that result into OCP errors are caught by ARM as
+-	 * "External aborts"
+-	 */
+-	hook_fault_code(17, ks_pcie_fault, SIGBUS, 0,
+-			"Asynchronous external abort");
+-#endif
+-
+ 	return 0;
+ }
+ 
+@@ -1134,6 +1104,7 @@ static const struct of_device_id ks_pcie_of_match[] = {
+ 	},
+ 	{ },
+ };
++MODULE_DEVICE_TABLE(of, ks_pcie_of_match);
+ 
+ static int ks_pcie_probe(struct platform_device *pdev)
+ {
+@@ -1381,4 +1352,45 @@ static struct platform_driver ks_pcie_driver = {
+ 		.of_match_table = ks_pcie_of_match,
+ 	},
+ };
++
++#ifdef CONFIG_ARM
++/*
++ * When a PCI device does not exist during config cycles, keystone host
++ * gets a bus error instead of returning 0xffffffff (PCI_ERROR_RESPONSE).
++ * This handler always returns 0 for this kind of fault.
++ */
++static int ks_pcie_fault(unsigned long addr, unsigned int fsr,
++			 struct pt_regs *regs)
++{
++	unsigned long instr = *(unsigned long *)instruction_pointer(regs);
++
++	if ((instr & 0x0e100090) == 0x00100090) {
++		int reg = (instr >> 12) & 15;
++
++		regs->uregs[reg] = -1;
++		regs->ARM_pc += 4;
++	}
++
++	return 0;
++}
++
++static int __init ks_pcie_init(void)
++{
++	/*
++	 * PCIe access errors that result into OCP errors are caught by ARM as
++	 * "External aborts"
++	 */
++	if (of_find_matching_node(NULL, ks_pcie_of_match))
++		hook_fault_code(17, ks_pcie_fault, SIGBUS, 0,
++				"Asynchronous external abort");
++
++	return platform_driver_register(&ks_pcie_driver);
++}
++device_initcall(ks_pcie_init);
++#else
+ builtin_platform_driver(ks_pcie_driver);
++#endif
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("PCIe controller driver for Texas Instruments Keystone SoCs");
++MODULE_AUTHOR("Murali Karicheri <m-karicheri2@ti.com>");
 -- 
 2.51.0
 
