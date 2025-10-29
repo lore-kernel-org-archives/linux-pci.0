@@ -1,117 +1,190 @@
-Received: from sinmsgout02.his.huawei.com (sinmsgout02.his.huawei.com [119.8.177.37])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BE362F2914;
-	Wed, 29 Oct 2025 16:54:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.8.177.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E1B923A994;
+	Wed, 29 Oct 2025 17:02:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761756861; cv=none; b=qXn8hPn1v+YPibgxWk6+pxKnC8U2qJvdbyj9zLFu8y3/DdADHCfwMEZ+jOqpjr0NEVGRtpwAo90F13p4+5bQ/gquoS8MpmYiJwOU6Lx4d2NvUChjJckfbdCWbNYAu5274OBkTeouXU7UINTPmURFykcCInOcpSUToF6hJooww6I=
+	t=1761757371; cv=none; b=fnfMYSn5xqaz2qoqbumG8gi0ufVEU9gk+mY0zyLhoCoLalLu1eJaCtXHs8ODSS7/UtMC2AEYYWvM5rA4ZIIJb7WVJAPr4zE3smkGzjO3ljP6VR5q1jqbVCzHD9KWe2NuKInULDslmi1oM9Cm92p3pxiZfSoG4D8SSPznqBpHlew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761756861; c=relaxed/simple;
-	bh=cqMOhgJNEJRGWDHyeQNSDCAzBFBytooZvZF7oJrv4YM=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SrAJqi/6zatDwbT0Tc8emJlN1+foWIFt7yeZCRWqREv3A8r5cSIXwnRWTOU19u3rTHrR1XdUgnfqrU96yNZtUNDEImxiUYahL8mstBlOPjajfNhCDNnfjcoVYh3A/9WorlH62kHUjgPhaxN53eJCGu1cMRYqPkHmmHulaAkItAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=zKXYuAmA; arc=none smtp.client-ip=119.8.177.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1761757371; c=relaxed/simple;
+	bh=UnDARnYIG3wueo5oOGgTK3bYf/ken2YDQuLHjxtY2Zc=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=sR6rASFTVjqT2efml6YeoxKeKCmSv1Wgx0iIFA+RmHk3igejOucaXqBotKrBY7wHJnFxzR2TmmbMAAmiBZnGFz3cyn++xMJEZ0SThDxtI1KOA0eamkdzcfksupdVY0efNLsFno6bnXbzMXl1vd45Es/8lHEsI5dMZpMfBi3Aeto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sis5XiZU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="zKXYuAmA"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=m2jSDZVK5vTMEmTMmE/pg6ZtWZC0lCPNthsEXNeUeCs=;
-	b=zKXYuAmAksPcURPrpFxMTt8CoCLiyYUiJZLpqU4WU6CZFcLZFPm4JtKtjj5octcqLd62JA0pP
-	ZAcTw2KnxB0MKj3FfqZl18XofBkU+AxLhbF/LXBogz5yj6yo3KNJCecug0Mx7KP60d0iUjcat7r
-	NRxTySbW8xpQU03tsMOMHjU=
-Received: from frasgout.his.huawei.com (unknown [172.18.146.35])
-	by sinmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4cxYGT5HWYz1vnt7;
-	Thu, 30 Oct 2025 00:53:21 +0800 (CST)
-Received: from mail.maildlp.com (unknown [172.18.186.216])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4cxYBt6m3Cz6M4Zj;
-	Thu, 30 Oct 2025 00:50:14 +0800 (CST)
-Received: from dubpeml100005.china.huawei.com (unknown [7.214.146.113])
-	by mail.maildlp.com (Postfix) with ESMTPS id D8E2A140371;
-	Thu, 30 Oct 2025 00:54:05 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml100005.china.huawei.com
- (7.214.146.113) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 29 Oct
- 2025 16:54:04 +0000
-Date: Wed, 29 Oct 2025 16:54:03 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
-CC: <linux-coco@lists.linux.dev>, <kvmarm@lists.linux.dev>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<dan.j.williams@intel.com>, <aik@amd.com>, <lukas@wunner.de>, Samuel Ortiz
-	<sameo@rivosinc.com>, Xu Yilun <yilun.xu@linux.intel.com>, Jason Gunthorpe
-	<jgg@ziepe.ca>, Suzuki K Poulose <Suzuki.Poulose@arm.com>, Steven Price
-	<steven.price@arm.com>, Bjorn Helgaas <helgaas@kernel.org>, Catalin Marinas
-	<catalin.marinas@arm.com>, Marc Zyngier <maz@kernel.org>, Will Deacon
-	<will@kernel.org>, Oliver Upton <oliver.upton@linux.dev>
-Subject: Re: [PATCH RESEND v2 03/12] coco: guest: arm64: Drop dummy RSI
- platform device stub
-Message-ID: <20251029165403.00000178@huawei.com>
-In-Reply-To: <20251027095602.1154418-4-aneesh.kumar@kernel.org>
-References: <20251027095602.1154418-1-aneesh.kumar@kernel.org>
-	<20251027095602.1154418-4-aneesh.kumar@kernel.org>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sis5XiZU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF496C4CEF7;
+	Wed, 29 Oct 2025 17:02:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761757370;
+	bh=UnDARnYIG3wueo5oOGgTK3bYf/ken2YDQuLHjxtY2Zc=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
+	b=sis5XiZUF3cBmnMfqRMDyTQ8k+5kwHcKlIM8duFrUaVYVDRlZJr+YLBuEyK53AZbe
+	 CeSpPbi7+GzarNtWHjmPymX8PgYJlbzXYD0eCPI7CUpZbmUpw6fVh6dmTAOSTdhfDh
+	 OWW7HUczdIXyIjOHQBgPNqlilJcaot8nc992Un5cHpXUH2OtWrxWduWFkeJjG5K76R
+	 CJJoTl/TA2d1MMdtwrVhG9YItTff39DlqMN9o7zdKvvXcldOd/SfBWI5Pnnf2g98i8
+	 LIgjd/hNXuexhFOo/DtDI9rxiH1UZcJDtFeQRQGzWBnmz7c4Wks6zX1sAgqxUv+1QS
+	 2fI510xQVnB1Q==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
- dubpeml100005.china.huawei.com (7.214.146.113)
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 29 Oct 2025 18:02:45 +0100
+Message-Id: <DDUYV4ETTD50.3UCGLW45AK740@kernel.org>
+Subject: Re: [PATCH 2/8] rust: device: introduce Device::drvdata()
+Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
+ <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <acourbot@nvidia.com>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+ <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+ <pcolberg@redhat.com>, <rust-for-linux@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+To: "Alice Ryhl" <aliceryhl@google.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20251020223516.241050-1-dakr@kernel.org>
+ <20251020223516.241050-3-dakr@kernel.org> <aQIPvaFJIXySV-Q5@google.com>
+ <DDUWW90NZIDY.2TVA8S0RDSXZJ@kernel.org>
+In-Reply-To: <DDUWW90NZIDY.2TVA8S0RDSXZJ@kernel.org>
 
-On Mon, 27 Oct 2025 15:25:53 +0530
-"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org> wrote:
+On Wed Oct 29, 2025 at 4:30 PM CET, Danilo Krummrich wrote:
+> On Wed Oct 29, 2025 at 1:59 PM CET, Alice Ryhl wrote:
+>> Are you going to open that docs PR to the Rust compiler about the size
+>> of TypeID that we talked about? :)
+>
+> Yes, I will -- thanks for the reminder.
+>
+>> Reviewed-by: Alice Ryhl <aliceryhl@google.com>
+>>
+>>> +// Compile-time checks.
+>>> +const _: () =3D {
+>>> +    // Assert that we can `read()` / `write()` a `TypeId` instance fro=
+m / into `struct driver_type`.
+>>> +    static_assert!(core::mem::size_of::<bindings::driver_type>() =3D=
+=3D core::mem::size_of::<TypeId>());
+>>> +};
+>>
+>> You don't need the "const _: ()" part. See the definition of
+>> static_assert! to see why.
+>
+> Indeed, good catch -- same for the suggestions below.
+>
+>> Also, I would not require equality. The Rust team did not think that it
+>> would ever increase in size, but it may decrease.
+>>
+>>>  /// The core representation of a device in the kernel's driver model.
+>>>  ///
+>>>  /// This structure represents the Rust abstraction for a C `struct dev=
+ice`. A [`Device`] can either
+>>> @@ -198,12 +204,29 @@ pub unsafe fn as_bound(&self) -> &Device<Bound> {
+>>>  }
+>>> =20
+>>>  impl Device<CoreInternal> {
+>>> +    fn type_id_store<T: 'static>(&self) {
+>>
+>> This name isn't great. How about "set_type_id()" instead?
 
-> The SMCCC firmware driver now creates the `arm-smccc` platform device
-> and also creates the CCA auxiliary devices once the RSI ABI is
-> discovered. This makes the arch-specific arm64_create_dummy_rsi_dev()
-> helper redundant. Remove the arm-cca-dev platform device registration
-> and let the SMCCC probe manage the RSI device.
-> 
-> systemd match on platform:arm-cca-dev for confidential vm detection [1].
-> Losing the platform device registration can break that. Keeping this
-> removal in its own change makes it easy to revert if that regression
-> blocks the rollout.
-> 
-> [1] https://lore.kernel.org/all/4a7d84b2-2ec4-4773-a2d5-7b63d5c683cf@arm.com
-> 
-> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
-Fair enough keeping it separate for now I guess.
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+Here's the diff, including a missing check in case someone tries to call
+Device::drvdata() from probe().
 
-(and I see from that thread I did look at the RFC but clearly forgot all
- about it :( )
-> ---
->  arch/arm64/kernel/rsi.c | 15 ---------------
->  1 file changed, 15 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/rsi.c b/arch/arm64/kernel/rsi.c
-> index 5d711942e543..1b716d18b80e 100644
-> --- a/arch/arm64/kernel/rsi.c
-> +++ b/arch/arm64/kernel/rsi.c
-> @@ -158,18 +158,3 @@ void __init arm64_rsi_init(void)
->  
->  	static_branch_enable(&rsi_present);
->  }
-> -
-> -static struct platform_device rsi_dev = {
-> -	.name = "arm-cca-dev",
-> -	.id = PLATFORM_DEVID_NONE
-> -};
-> -
-> -static int __init arm64_create_dummy_rsi_dev(void)
-> -{
-> -	if (is_realm_world() &&
-> -	    platform_device_register(&rsi_dev))
-> -		pr_err("failed to register rsi platform device\n");
-> -	return 0;
-> -}
-> -
-> -arch_initcall(arm64_create_dummy_rsi_dev)
+diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+index 36c6eec0ceab..1a307be953c2 100644
+--- a/rust/kernel/device.rs
++++ b/rust/kernel/device.rs
+@@ -17,11 +17,8 @@
+
+ pub mod property;
+
+-// Compile-time checks.
+-const _: () =3D {
+-    // Assert that we can `read()` / `write()` a `TypeId` instance from / =
+into `struct driver_type`.
+-    static_assert!(core::mem::size_of::<bindings::driver_type>() =3D=3D co=
+re::mem::size_of::<TypeId>());
+-};
++// Assert that we can `read()` / `write()` a `TypeId` instance from / into=
+ `struct driver_type`.
++static_assert!(core::mem::size_of::<bindings::driver_type>() >=3D core::me=
+m::size_of::<TypeId>());
+
+ /// The core representation of a device in the kernel's driver model.
+ ///
+@@ -204,7 +201,7 @@ pub unsafe fn as_bound(&self) -> &Device<Bound> {
+ }
+
+ impl Device<CoreInternal> {
+-    fn type_id_store<T: 'static>(&self) {
++    fn set_type_id<T: 'static>(&self) {
+         // SAFETY: By the type invariants, `self.as_raw()` is a valid poin=
+ter to a `struct device`.
+         let private =3D unsafe { (*self.as_raw()).p };
+
+@@ -226,7 +223,7 @@ pub fn set_drvdata<T: 'static>(&self, data: impl PinIni=
+t<T, Error>) -> Result {
+
+         // SAFETY: By the type invariants, `self.as_raw()` is a valid poin=
+ter to a `struct device`.
+         unsafe { bindings::dev_set_drvdata(self.as_raw(), data.into_foreig=
+n().cast()) };
+-        self.type_id_store::<T>();
++        self.set_type_id::<T>();
+
+         Ok(())
+     }
+@@ -242,6 +239,9 @@ pub unsafe fn drvdata_obtain<T: 'static>(&self) -> Pin<=
+KBox<T>> {
+         // SAFETY: By the type invariants, `self.as_raw()` is a valid poin=
+ter to a `struct device`.
+         let ptr =3D unsafe { bindings::dev_get_drvdata(self.as_raw()) };
+
++        // SAFETY: By the type invariants, `self.as_raw()` is a valid poin=
+ter to a `struct device`.
++        unsafe { bindings::dev_set_drvdata(self.as_raw(), core::ptr::null_=
+mut()) };
++
+         // SAFETY:
+         // - By the safety requirements of this function, `ptr` comes from=
+ a previous call to
+         //   `into_foreign()`.
+@@ -286,7 +286,7 @@ unsafe fn drvdata_unchecked<T: 'static>(&self) -> Pin<&=
+T> {
+         unsafe { Pin::<KBox<T>>::borrow(ptr.cast()) }
+     }
+
+-    fn type_id_match<T: 'static>(&self) -> Result {
++    fn match_type_id<T: 'static>(&self) -> Result {
+         // SAFETY: By the type invariants, `self.as_raw()` is a valid poin=
+ter to a `struct device`.
+         let private =3D unsafe { (*self.as_raw()).p };
+
+@@ -311,11 +311,16 @@ fn type_id_match<T: 'static>(&self) -> Result {
+     /// Returns a pinned reference to the driver's private data or [`EINVA=
+L`] if it doesn't match
+     /// the asserted type `T`.
+     pub fn drvdata<T: 'static>(&self) -> Result<Pin<&T>> {
+-        self.type_id_match::<T>()?;
++        // SAFETY: By the type invariants, `self.as_raw()` is a valid poin=
+ter to a `struct device`.
++        if unsafe { bindings::dev_get_drvdata(self.as_raw()) }.is_null() {
++            return Err(ENOENT);
++        }
++
++        self.match_type_id::<T>()?;
+
+         // SAFETY:
+-        // - The `Bound` device context guarantees that this is only ever =
+call after a call
+-        //   to `set_drvdata()` and before `drvdata_obtain()`.
++        // - The above check of `dev_get_drvdata()` guarantees that we are=
+ called after
++        //   `set_drvdata()` and before `drvdata_obtain()`.
+         // - We've just checked that the type of the driver's private data=
+ is in fact `T`.
+         Ok(unsafe { self.drvdata_unchecked() })
+     }
 
