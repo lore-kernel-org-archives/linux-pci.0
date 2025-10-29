@@ -1,179 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8765F354AE2;
-	Wed, 29 Oct 2025 17:56:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 656A71DF994;
+	Wed, 29 Oct 2025 17:57:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761760609; cv=none; b=iIpP5QTg4/47geivGUqYvUyBmDu40lmc77F+B0pSZzmMvJyf3/xKlUhbuqG7P0Y2QAI8i5XxcaOOw7N8pG+TdcWl5t6gxQlnNbhmLpwRB7CN/ar9vbhDYGhBwaWfcXWjA907aXgitqQvH97j63nRlOlXDJNHOHVl4W+TRtl1H0k=
+	t=1761760626; cv=none; b=YnVrDlShzSjr3MInWjpaU0fxqxD80cxB5F4UGQ/1fQkw/EDzt1dGz/9H8QnAGpz0v+PydOuMCDjb96Zq1/Q9JsCrThS42xsRJIaEjVtBxI/MoiO1hTrDm8SxIZrtkCa0ahCVC7QhZnKJOYiLkimJYIYIl0jNWiPOE/Tn+wpMlOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761760609; c=relaxed/simple;
-	bh=VzK5oAorESm47QWMsddWXTePfWCCmkkIk79NLObV5bc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=DQOLV2l9Xo05FROP7Qwq5xZozdGExnglxWyZmyxF4T1Qp76c2vmyaQLd0thKtkOXMUqEI1CwOhB4iblAWQyVgs3ZEyl0Aezq8SzSbcOE9pikqivpmUsUueMPdx8xqfJKUT9IJSgDyASpT6mLhljbEvKxTU2xOl0KiVdUYs8U2xY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WefDjtFQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761760626; c=relaxed/simple;
+	bh=KOwiUHfMn1x26g5AuHjur/7d23DIKlmVDPD29Tb+wwI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=uBDKk2+KUzCaddxi6xUM02FKEKvFMIdFOy96YcJJScGtTYn+l97hlo1waQlGXDlYHw5K1kZR0GZ2WTCYY9yf84YZJ5YUeu5csKGrGxQDo6ltVZ6aif7A4ENfgvQi5xrrinxhhSnk8APJBbSFVhv2LUbWblEklmV2OubRh/mkAZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=TcNwTjRy; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WefDjtFQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA482C4CEF7;
-	Wed, 29 Oct 2025 17:56:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761760609;
-	bh=VzK5oAorESm47QWMsddWXTePfWCCmkkIk79NLObV5bc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=WefDjtFQxaqNITeCzyBwduPSq6eq7KGJtsT2AF0tpE+HPH+tjK4IzpZavlRn/5XsQ
-	 bAqy+ezFjPZQf9TOZPQl6LXTvXW9IfgUJjbAoy5vs36s3bfKfYzKQg/z1bubPH73jh
-	 1ItJud1AeLXZlnq4bcVqu3rpaUAMlJkdHmPuONikaXEvzkph5eumYyBiA1nwLpgQr4
-	 QSEpHgWx8G4kOS7ej8Kp+v5EZVkYD3yl7v3+XLUa3lNShkcaOmr1AUVB0MzBpFpGOj
-	 pC344FC62eHwyUuXg2zk98jn071eznE2X1eDI8XnNdAIINuY4R7ZrZ6Wl5YCNKdj1p
-	 /8lus9PKvBXYA==
-Date: Wed, 29 Oct 2025 12:56:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, x86@kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-riscv@lists.infradead.org, linux-mips@vger.kernel.org,
-	loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
-	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 4/7] clk: ingenic: tcu: Use contextual data instead of
- global variable
-Message-ID: <20251029175647.GA1572736@bhelgaas>
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="TcNwTjRy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1761760622;
+	bh=KOwiUHfMn1x26g5AuHjur/7d23DIKlmVDPD29Tb+wwI=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=TcNwTjRy5FgQpxQtD5LVNsR5bAo3cC0l2MJlPVwGrkVSzIs1ObsdrAuWeP13poSH2
+	 2usb1qfzTxgZy0xZXuYYTBImuHmqPlXLF4FRWiTTm6n7ZhLMj8gCDaAVAJwMS1RHKf
+	 QmLd2MTrbzNjeKcgAGXxlkFYJ9cxp3DUZVSg6UTjo93uNGCqI3KihHduu+uFB2yHQw
+	 6qZ7cQpFnxPaBKTOx1yO6yufNIJY1qc9yNzoxH4je/tfIReXG6ovznlkgpomx4Pt8L
+	 Zkz/Z7Yc8jA+m4P9iePSRcu1QySILJyJULQfK8AXo4qUqJ8yAuhIyei00cB0HTzHqw
+	 bfWTu2K/xmHZw==
+Received: from jupiter.universe (dyndsl-091-248-085-053.ewe-ip-backbone.de [91.248.85.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
+	(No client certificate requested)
+	(Authenticated sender: sre)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 94E5F17E12D5;
+	Wed, 29 Oct 2025 18:57:02 +0100 (CET)
+Received: by jupiter.universe (Postfix, from userid 1000)
+	id 1DA9148003D; Wed, 29 Oct 2025 18:57:02 +0100 (CET)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+Date: Wed, 29 Oct 2025 18:56:40 +0100
+Subject: [PATCH v4 1/9] PCI: dw-rockchip: Rename rockchip_pcie_get_ltssm
+ function
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251029163336.2785270-5-thierry.reding@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251029-rockchip-pcie-system-suspend-v4-1-ce2e1b0692d2@collabora.com>
+References: <20251029-rockchip-pcie-system-suspend-v4-0-ce2e1b0692d2@collabora.com>
+In-Reply-To: <20251029-rockchip-pcie-system-suspend-v4-0-ce2e1b0692d2@collabora.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, Jingoo Han <jingoohan1@gmail.com>, 
+ Shawn Lin <shawn.lin@rock-chips.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ kernel@collabora.com, Sebastian Reichel <sebastian.reichel@collabora.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2340;
+ i=sebastian.reichel@collabora.com; h=from:subject:message-id;
+ bh=KOwiUHfMn1x26g5AuHjur/7d23DIKlmVDPD29Tb+wwI=;
+ b=owJ4nAFtApL9kA0DAAoB2O7X88g7+poByyZiAGkCVW07kSfM27DEyFgIygv3KfKbO7g4Y5RUS
+ 0FkVNHVfQzUD4kCMwQAAQoAHRYhBO9mDQdGP4tyanlUE9ju1/PIO/qaBQJpAlVtAAoJENju1/PI
+ O/qa+8MP/0gXB/ghhIbwUxROpOWVF/mYgegB29+5ohKIbDKB0PqmmYUeh4J0jL17eXRBTBit0h4
+ S7harhCtKIf8HBElCKUOSeu1OkJ1o5b1qu9ibdQz7dXNrNLIdu5AFCTSL4IR5opwgy2ziVUsWOU
+ SlpbP9fKLTsSKwnqS7ihg87CA1/tZFGd4XA/MN1ovRoPrzG/LdR6JOlpeoribtBrOtSJ71aHVDm
+ miaHJSqxGRH1/pVzzjDGVDWQmo4NGMDfwcFchGr9uBOlhycRuwJFXtuR8H9RYEONQK3JufzziqE
+ 62+AijWrjKJlr/0LLK7EjzHYgVbbyVRU7relSc7uG+PB5z1u1WDzKAL+qZlxX9We3YvW/MVYp2o
+ vQcBryrzZ8cvSTbDXg2fr12t+KdkMeAtTKPjhbXfCgfZKSD5E1mivIVb1IAitX2EcXVaMD6XZVF
+ 55ptG+9io6a2XPxSKSEa/BUpfTcEWf6Xq65LOlaL5x2X+MJrU1PYoVPd2w3EgBFSumZRa3wBvQn
+ Zw5d4joGTlBTt4VffuH91dbDsnK7y9yueikTPbeIKE8smAyZ8p6V+yUF1il3sP5F83iovwg+3Ub
+ IBBpwlG9PlSq6gwaA240uQo+EROea1Oi4K3P5dBui+8/d5yGwFbbED+yPC3Ebi98/Ag7HOuy9XN
+ YA0QoKdai/wwndt/Z3fowsA==
+X-Developer-Key: i=sebastian.reichel@collabora.com; a=openpgp;
+ fpr=EF660D07463F8B726A795413D8EED7F3C83BFA9A
 
-On Wed, Oct 29, 2025 at 05:33:33PM +0100, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> Pass the driver-specific data via the syscore struct and use it in the
-> syscore ops.
+Rename rockchip_pcie_get_ltssm to rockchip_pcie_get_ltssm_status_reg
+to avoid confusion after introducing the .get_ltssm operation support,
+which requires further processing of the register.
 
-Some of these things in drivers/clk/ are also platform_device drivers
-(though not this one) and use generic power management, e.g.,
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+---
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/clk/qcom/q6sstop-qcs404.c?id=v6.17#n209
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index 3e2752c7dd09..58427db1cc65 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -175,7 +175,7 @@ static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
+ 	return 0;
+ }
+ 
+-static u32 rockchip_pcie_get_ltssm(struct rockchip_pcie *rockchip)
++static u32 rockchip_pcie_get_ltssm_status_reg(struct rockchip_pcie *rockchip)
+ {
+ 	return rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_LTSSM_STATUS);
+ }
+@@ -195,7 +195,7 @@ static void rockchip_pcie_disable_ltssm(struct rockchip_pcie *rockchip)
+ static bool rockchip_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
+-	u32 val = rockchip_pcie_get_ltssm(rockchip);
++	u32 val = rockchip_pcie_get_ltssm_status_reg(rockchip);
+ 
+ 	return FIELD_GET(PCIE_LINKUP_MASK, val) == PCIE_LINKUP;
+ }
+@@ -460,7 +460,7 @@ static irqreturn_t rockchip_pcie_rc_sys_irq_thread(int irq, void *arg)
+ 	rockchip_pcie_writel_apb(rockchip, reg, PCIE_CLIENT_INTR_STATUS_MISC);
+ 
+ 	dev_dbg(dev, "PCIE_CLIENT_INTR_STATUS_MISC: %#x\n", reg);
+-	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm(rockchip));
++	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm_status_reg(rockchip));
+ 
+ 	if (reg & PCIE_RDLH_LINK_UP_CHGED) {
+ 		if (rockchip_pcie_link_up(pci)) {
+@@ -487,7 +487,7 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
+ 	rockchip_pcie_writel_apb(rockchip, reg, PCIE_CLIENT_INTR_STATUS_MISC);
+ 
+ 	dev_dbg(dev, "PCIE_CLIENT_INTR_STATUS_MISC: %#x\n", reg);
+-	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm(rockchip));
++	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm_status_reg(rockchip));
+ 
+ 	if (reg & PCIE_LINK_REQ_RST_NOT_INT) {
+ 		dev_dbg(dev, "hot reset or link-down reset\n");
 
-I have no idea if that's desirable or practical here, but using the
-platform_device model instead of syscore could have advantages in
-terms of modeling device dependencies and ordering.
+-- 
+2.51.0
 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> Changes in v3:
-> - adjust for API changes and update commit message
-> 
->  drivers/clk/ingenic/tcu.c | 63 +++++++++++++++++++--------------------
->  1 file changed, 30 insertions(+), 33 deletions(-)
-> 
-> diff --git a/drivers/clk/ingenic/tcu.c b/drivers/clk/ingenic/tcu.c
-> index bc6a51da2072..8c6337d8e831 100644
-> --- a/drivers/clk/ingenic/tcu.c
-> +++ b/drivers/clk/ingenic/tcu.c
-> @@ -53,9 +53,9 @@ struct ingenic_tcu {
->  	struct clk *clk;
->  
->  	struct clk_hw_onecell_data *clocks;
-> -};
->  
-> -static struct ingenic_tcu *ingenic_tcu;
-> +	struct syscore syscore;
-> +};
->  
->  static inline struct ingenic_tcu_clk *to_tcu_clk(struct clk_hw *hw)
->  {
-> @@ -332,6 +332,29 @@ static const struct of_device_id __maybe_unused ingenic_tcu_of_match[] __initcon
->  	{ /* sentinel */ }
->  };
->  
-> +static int __maybe_unused tcu_pm_suspend(void *data)
-> +{
-> +	struct ingenic_tcu *tcu = data;
-> +
-> +	if (tcu->clk)
-> +		clk_disable(tcu->clk);
-> +
-> +	return 0;
-> +}
-> +
-> +static void __maybe_unused tcu_pm_resume(void *data)
-> +{
-> +	struct ingenic_tcu *tcu = data;
-> +
-> +	if (tcu->clk)
-> +		clk_enable(tcu->clk);
-> +}
-> +
-> +static const struct syscore_ops tcu_pm_ops __maybe_unused = {
-> +	.suspend = tcu_pm_suspend,
-> +	.resume = tcu_pm_resume,
-> +};
-> +
->  static int __init ingenic_tcu_probe(struct device_node *np)
->  {
->  	const struct of_device_id *id = of_match_node(ingenic_tcu_of_match, np);
-> @@ -430,7 +453,11 @@ static int __init ingenic_tcu_probe(struct device_node *np)
->  		goto err_unregister_ost_clock;
->  	}
->  
-> -	ingenic_tcu = tcu;
-> +	if (IS_ENABLED(CONFIG_PM_SLEEP)) {
-> +		tcu->syscore.ops = &tcu_pm_ops;
-> +		tcu->syscore.data = tcu;
-> +		register_syscore(&tcu->syscore);
-> +	}
->  
->  	return 0;
->  
-> @@ -455,42 +482,12 @@ static int __init ingenic_tcu_probe(struct device_node *np)
->  	return ret;
->  }
->  
-> -static int __maybe_unused tcu_pm_suspend(void *data)
-> -{
-> -	struct ingenic_tcu *tcu = ingenic_tcu;
-> -
-> -	if (tcu->clk)
-> -		clk_disable(tcu->clk);
-> -
-> -	return 0;
-> -}
-> -
-> -static void __maybe_unused tcu_pm_resume(void *data)
-> -{
-> -	struct ingenic_tcu *tcu = ingenic_tcu;
-> -
-> -	if (tcu->clk)
-> -		clk_enable(tcu->clk);
-> -}
-> -
-> -static const struct syscore_ops __maybe_unused tcu_pm_ops = {
-> -	.suspend = tcu_pm_suspend,
-> -	.resume = tcu_pm_resume,
-> -};
-> -
-> -static struct syscore __maybe_unused tcu_pm = {
-> -	.ops = &tcu_pm_ops,
-> -};
-> -
->  static void __init ingenic_tcu_init(struct device_node *np)
->  {
->  	int ret = ingenic_tcu_probe(np);
->  
->  	if (ret)
->  		pr_crit("Failed to initialize TCU clocks: %d\n", ret);
-> -
-> -	if (IS_ENABLED(CONFIG_PM_SLEEP))
-> -		register_syscore(&tcu_pm);
->  }
->  
->  CLK_OF_DECLARE_DRIVER(jz4740_cgu, "ingenic,jz4740-tcu", ingenic_tcu_init);
-> -- 
-> 2.51.0
-> 
