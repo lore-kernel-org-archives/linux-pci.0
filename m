@@ -1,129 +1,253 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6096531E0F7;
-	Thu, 30 Oct 2025 08:53:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B2E23375C2
+	for <linux-pci@vger.kernel.org>; Thu, 30 Oct 2025 09:05:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761814408; cv=none; b=NGlpgh8snqPub5XGY+Zru80QOlkIo9fcm9gEeT4D2iCsrtP7PQ3c19vx5CEnXbipVpmKnlzhGq8EVoyUM4QS/eGZGXtEcjO2TqUZXBk6F+jH4K/KiZL8MCvFYFpBFKnt5P6bdIeqT9lsdU4b18VIl1cP2LDBXUw2IAgFnqv2eGc=
+	t=1761815107; cv=none; b=T3y15d+r+cg0UTZnLkDf12kkacMJVLIXXKly6p5YlWvsXoeAYZ8C1Kj4RUoqFKbZKrCHpfayE+EHdYYS8DBWHwA/x9Zfb161Wki60KAzvEW27Z5aAGYwWbRIfkANMrcv81Idoi1bnkaIhaEDpIIfkYvciyjbfYuCrxjL3GaHbqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761814408; c=relaxed/simple;
-	bh=6j5vgNwBIXH6gvDl5iq2317NlBXDxKTvEoExIEpwNlA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FGveI6LG1NflDVTUXWbu1bkv3+qa0RbCEPp3rK/871CtYaYwIYlIKDtULgojPbAaH7kliBKbPLfvIZcouejLQaumyPTCdXmjerB8nt2sdr3SHo7q4+BG89UOpN6XtP//aiZZx3J845oxsIYBkuPoiK0/hUAjfqLKyqjtuAXDbis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=n658eDyt; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1761815107; c=relaxed/simple;
+	bh=7y0f7DM/9Fu681tu7EA5itbeJa5mk7ik9CostNPDHl4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NPK9AWNuQ8/Ol8XOYiMTHwkEU5hPg2nlMpFV+xml1MubfWSD43hlsR7vgYMOvSVNeMtPEup/ULe5+XgL1Qur2JNK5xBrbxJYVSUlFHMJIQ6JtBxbirZx/626ZBDOUFNZaaioFtRGVM3k+aJsH4j5gyF3TZnJgu0XBJxowmAMkNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YopriDsc; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=drmB1LGG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YopriDsc; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=drmB1LGG; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="n658eDyt"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 59U7Yjkj1598878;
-	Thu, 30 Oct 2025 08:53:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=6t+6uWhyy591iuiYgwhisW/rL2lpx2ayTva
-	AMRuLfGQ=; b=n658eDytvOrCoDSW6MnyEvIJzRN+uXMsTsuh5oNSW3EO25wS3dx
-	gWiEofUmVWV1PSQFjj2IJ378kviy+joJ+EHTH2XW0+J+O+08RjqwTkJ0CZrDYDbK
-	tU0pi57EDAizxJSJj0LJxReeTwVTH8s0mgI/xCj91YGtC9W5I8FwnphHzH60BCFT
-	7qRmcIxmnPntS7hXzO+oxIwKDM3PVw68adB8g6lQJkiA9ICh2wr/S7YgO74IqCJl
-	5w+cnk/2AwnFmzJ2fJez9ppR5RgFijW0ZAluWHYGf396VvWTBxbzqAqEon8djhzJ
-	3p3a0POkj64UvORHsIdBrC3GOQ6kgBH13ZQ==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a3ta7ss5c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Oct 2025 08:53:15 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 59U8m8Mq027982;
-	Thu, 30 Oct 2025 08:48:08 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4a0qmmec4j-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Oct 2025 08:48:08 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 59U8m8wP027967;
-	Thu, 30 Oct 2025 08:48:08 GMT
-Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 59U8m7Ie027964
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Oct 2025 08:48:07 +0000
-Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id 10F42780; Thu, 30 Oct 2025 16:48:06 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v2 0/4] Add PCIe3 and PCIe5 support for HAMOA-IOT-EVK board
-Date: Thu, 30 Oct 2025 16:48:00 +0800
-Message-Id: <20251030084804.1682744-1-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YopriDsc";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="drmB1LGG";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YopriDsc";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="drmB1LGG"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 494E31F8B8;
+	Thu, 30 Oct 2025 09:05:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1761815103; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lzKO/XeWMBH3INZbM+ZTs291o3A5XJvv3T24IEcIOZQ=;
+	b=YopriDsc5qeQCfVYMnRLQQhrsLxUH/KR6tXmcMXSakvRYuBWztgEoXyXPmP6bzgwXokX2A
+	LNISEtkogbdLBYZEnxmsdibifkHmhWGWwe5p9ZgQbOWU6Kcq7/+yqsaBLyPanmcvMMyFW8
+	1vlbIeQpSvERQbRIv3xPl46R7v+bCh4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1761815103;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lzKO/XeWMBH3INZbM+ZTs291o3A5XJvv3T24IEcIOZQ=;
+	b=drmB1LGGmgBmQKIEWGXtVXtjQUycADaFpplEwMvR3TEcAMoBpkHWOP/1Sm9nB1sHv7HaBy
+	OqxSHwFCRJpnOCCw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=YopriDsc;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=drmB1LGG
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1761815103; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lzKO/XeWMBH3INZbM+ZTs291o3A5XJvv3T24IEcIOZQ=;
+	b=YopriDsc5qeQCfVYMnRLQQhrsLxUH/KR6tXmcMXSakvRYuBWztgEoXyXPmP6bzgwXokX2A
+	LNISEtkogbdLBYZEnxmsdibifkHmhWGWwe5p9ZgQbOWU6Kcq7/+yqsaBLyPanmcvMMyFW8
+	1vlbIeQpSvERQbRIv3xPl46R7v+bCh4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1761815103;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lzKO/XeWMBH3INZbM+ZTs291o3A5XJvv3T24IEcIOZQ=;
+	b=drmB1LGGmgBmQKIEWGXtVXtjQUycADaFpplEwMvR3TEcAMoBpkHWOP/1Sm9nB1sHv7HaBy
+	OqxSHwFCRJpnOCCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C005B13393;
+	Thu, 30 Oct 2025 09:05:02 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id TdU1LD4qA2myWQAAD6G6ig
+	(envelope-from <clopez@suse.de>); Thu, 30 Oct 2025 09:05:02 +0000
+Message-ID: <74df9e1d-69f4-43e6-89fe-3290b94ab8dd@suse.de>
+Date: Thu, 30 Oct 2025 10:04:57 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=aaVsXBot c=1 sm=1 tr=0 ts=6903277b cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=QeMu0tCiC60fgC08giYA:9 a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22
- a=xoEH_sTeL_Rfw54TyV31:22
-X-Proofpoint-ORIG-GUID: tBEy9dmEZO1fn0qvzrmEOK2lB2d4RNi3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDMwMDA3MiBTYWx0ZWRfXzGkp6NWNom4O
- nvtiEmS3Ngw3+ASEh1F9sPh1InDUYpdXEIB9xBT6jOLVSfmbYVgY/k8K3fQXZ/1GA/k5eZN9a8z
- V70bLwJnsM5U5t5kuXQmtVgiiduizkCWVrqfqL5TE5yuasMtvGOqJ+VN1tekISc2Kx35OaJuVwZ
- +o48vRx7rMXhi2bKStoo1IXm/DFGwAZsJw8QnETL7FgIim9LJiVwumWLttNZR6qZc4h+k0j3FUL
- W14uR0BEeUhCZUc9UFYRm782r6MzwLmprd9N+/MISbtkh/OS5jUIhhLYBnBvOw838T1vlJ4p0L3
- 8SGg7ER3IDpG02iDRL26Cqs5k7wt3T+OzMyA7OPElkxL8ausfOwV3KVeXVBmyzNdM4yZ+n6ZkA9
- n9Louvn3xK7HveEM1svXIs0Hgh3UOQ==
-X-Proofpoint-GUID: tBEy9dmEZO1fn0qvzrmEOK2lB2d4RNi3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-10-30_02,2025-10-29_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 priorityscore=1501 malwarescore=0 clxscore=1015 impostorscore=0
- suspectscore=0 spamscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2510240001 definitions=main-2510300072
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 1/9] coco/tsm: Introduce a core device for TEE Security
+ Managers
+To: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+ linux-pci@vger.kernel.org
+Cc: aik@amd.com, yilun.xu@linux.intel.com, aneesh.kumar@kernel.org,
+ bhelgaas@google.com, gregkh@linuxfoundation.org,
+ Jonathan Cameron <jonathan.cameron@huawei.com>
+References: <20251024020418.1366664-1-dan.j.williams@intel.com>
+ <20251024020418.1366664-2-dan.j.williams@intel.com>
+From: =?UTF-8?Q?Carlos_L=C3=B3pez?= <clopez@suse.de>
+Content-Language: en-US
+In-Reply-To: <20251024020418.1366664-2-dan.j.williams@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 494E31F8B8
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[intel.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:mid];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Score: -4.51
 
-This patch series adds support for PCIe3 and PCIe5 on the HAMOA-IOT-EVK
-board.
+Hi,
 
-PCIe3 is a Gen4 x8 slot intended for external GPU.
-PCIe5 is a Gen3 x2 slot designed for external modem connectivity.
+On 10/24/25 4:04 AM, Dan Williams wrote:
+> A "TSM" is a platform component that provides an API for securely
+> provisioning resources for a confidential guest (TVM) to consume. The
+> name originates from the PCI specification for platform agent that
+> carries out operations for PCIe TDISP (TEE Device Interface Security
+> Protocol).
+> 
+> Instances of this core device are parented by a device representing the
+> platform security function like CONFIG_CRYPTO_DEV_CCP or
+> CONFIG_INTEL_TDX_HOST.
+> 
+> This device interface is a frontend to the aspects of a TSM and TEE I/O
+> that are cross-architecture common. This includes mechanisms like
+> enumerating available platform TEE I/O capabilities and provisioning
+> connections between the platform TSM and device DSMs (Device Security
+> Manager (TDISP)).
+> 
+> For now this is just the scaffolding for registering a TSM device sysfs
+> interface.
+> 
+> Cc: Alexey Kardashevskiy <aik@amd.com>
+> Cc: Xu Yilun <yilun.xu@linux.intel.com>
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Co-developed-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/virt/coco/Kconfig                 |   3 +
+>  drivers/virt/coco/Makefile                |   1 +
+>  Documentation/ABI/testing/sysfs-class-tsm |   9 ++
+>  include/linux/tsm.h                       |   4 +
+>  drivers/virt/coco/tsm-core.c              | 109 ++++++++++++++++++++++
+>  MAINTAINERS                               |   2 +-
+>  6 files changed, 127 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/ABI/testing/sysfs-class-tsm
+>  create mode 100644 drivers/virt/coco/tsm-core.c
+> 
+> diff --git a/drivers/virt/coco/Kconfig b/drivers/virt/coco/Kconfig
+> index 819a97e8ba99..bb0c6d6ddcc8 100644
+> --- a/drivers/virt/coco/Kconfig
+> +++ b/drivers/virt/coco/Kconfig
+> @@ -14,3 +14,6 @@ source "drivers/virt/coco/tdx-guest/Kconfig"
+>  source "drivers/virt/coco/arm-cca-guest/Kconfig"
+>  
+>  source "drivers/virt/coco/guest/Kconfig"
+> +
+> +config TSM
+> +	bool
+> diff --git a/drivers/virt/coco/Makefile b/drivers/virt/coco/Makefile
+> index f918bbb61737..cb52021912b3 100644
+> --- a/drivers/virt/coco/Makefile
+> +++ b/drivers/virt/coco/Makefile
+> @@ -7,4 +7,5 @@ obj-$(CONFIG_ARM_PKVM_GUEST)	+= pkvm-guest/
+>  obj-$(CONFIG_SEV_GUEST)		+= sev-guest/
+>  obj-$(CONFIG_INTEL_TDX_GUEST)	+= tdx-guest/
+>  obj-$(CONFIG_ARM_CCA_GUEST)	+= arm-cca-guest/
+> +obj-$(CONFIG_TSM) 		+= tsm-core.o
+>  obj-$(CONFIG_TSM_GUEST)		+= guest/
+> diff --git a/Documentation/ABI/testing/sysfs-class-tsm b/Documentation/ABI/testing/sysfs-class-tsm
+> new file mode 100644
+> index 000000000000..2949468deaf7
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-class-tsm
+> @@ -0,0 +1,9 @@
+> +What:		/sys/class/tsm/tsmN
+> +Contact:	linux-coco@lists.linux.dev
+> +Description:
+> +		"tsmN" is a device that represents the generic attributes of a
+> +		platform TEE Security Manager.  It is typically a child of a
+> +		platform enumerated TSM device. /sys/class/tsm/tsmN/uevent
+> +		signals when the PCI layer is able to support establishment of
+> +		link encryption and other device-security features coordinated
+> +		through a platform tsm.
+> diff --git a/include/linux/tsm.h b/include/linux/tsm.h
+> index 431054810dca..aa906eb67360 100644
+> --- a/include/linux/tsm.h
+> +++ b/include/linux/tsm.h
+> @@ -5,6 +5,7 @@
+>  #include <linux/sizes.h>
+>  #include <linux/types.h>
+>  #include <linux/uuid.h>
+> +#include <linux/device.h>
+>  
+>  #define TSM_REPORT_INBLOB_MAX 64
+>  #define TSM_REPORT_OUTBLOB_MAX SZ_32K
+> @@ -109,4 +110,7 @@ struct tsm_report_ops {
+>  
+>  int tsm_report_register(const struct tsm_report_ops *ops, void *priv);
+>  int tsm_report_unregister(const struct tsm_report_ops *ops);
+> +struct tsm_dev;
+> +struct tsm_dev *tsm_register(struct device *parent);
+> +void tsm_unregister(struct tsm_dev *tsm_dev);
+>  #endif /* __TSM_H */
+> diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
+> new file mode 100644
+> index 000000000000..a64b776642cf
+> --- /dev/null
+> +++ b/drivers/virt/coco/tsm-core.c
+> @@ -0,0 +1,109 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/* Copyright(c) 2024 Intel Corporation. All rights reserved. */
+> +
+> +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+> +
+> +#include <linux/tsm.h>
+> +#include <linux/idr.h>
+> +#include <linux/rwsem.h>
+> +#include <linux/device.h>
+> +#include <linux/module.h>
+> +#include <linux/cleanup.h>
+> +
+> +static struct class *tsm_class;
+> +static DECLARE_RWSEM(tsm_rwsem);
+> +static DEFINE_IDR(tsm_idr);
 
-To enable these interfaces, the series introduces the necessary device
-tree nodes and associated regulator definitions to ensure proper power
-sequencing and functionality.
+The IDR documentation states it is deprecated and one should use XArray
+in its place. Is there any particular reason to use IDR instead in this
+patch series?
 
----
-Changes in v2:
-- Move PMIC gpio pins to patch set 4 (Krishna)
-- Link to v1: https://lore.kernel.org/all/20250922075509.3288419-1-ziyue.zhang@oss.qualcomm.com/
-
-Ziyue Zhang (4):
-  arm64: dts: qcom: Add PCIe 5 support for HAMOA-IOT-SOM platform
-  arm64: dts: qcom: Add PCIe 5 wwan regulator for HAMOA-IOT-EVK board
-  arm64: dts: qcom: Add PCIe 3 support for HAMOA-IOT-SOM platform
-  arm64: dts: qcom: Add PCIe 3 regulators for HAMOA-IOT-EVK board
-
- arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts  | 83 +++++++++++++++++++++
- arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi | 79 ++++++++++++++++++++
- 2 files changed, 162 insertions(+)
-
-
-base-commit: 131f3d9446a6075192cdd91f197989d98302faa6
--- 
-2.34.1
-
+Best,
+Carlos
