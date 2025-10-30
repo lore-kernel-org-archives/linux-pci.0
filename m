@@ -1,175 +1,150 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF763396F4;
-	Thu, 30 Oct 2025 08:48:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB7E2EA749
+	for <linux-pci@vger.kernel.org>; Thu, 30 Oct 2025 08:51:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761814107; cv=none; b=eW8SYMq49DqHNkwquJW7uscfvAJ+vXVaAFTVlbrUA+c9KnNNVNTIgqDfHP1REUpso+6Zfps1OGbhy8OE4MtycjKVsgIaeqH1o/Rcuy4vglcEf72s71jY6AnmOzFzmez+Q8NS3udHOkCpDI+NI2KxH8eFY0I5/F/EaFcZu/NyW+4=
+	t=1761814267; cv=none; b=J9zHbPdJ6RB9+qZPEUGjtHxVNoO1mgQ+odZhZaW37eJ8WOoPBhzxbgRouhRgr/xwARVQM6DNixljRN4OtKYTYAB5p2yiQ17OzvdYfmLZYDex2yFxW7ZeYdQct5KG2uxCcaPftMa7ijr+022NEY75h251JzIHsJys+Pao9+qMSik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761814107; c=relaxed/simple;
-	bh=DJN3So8VZpK2im5IEJEjoxLYPMCK48cONPMEYvoA7R8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LOjKl9sc5+EBdXu3zZbVMtvrTFsYUp6ZOG8LXNXGCiTTrtfNIOyE//pZIETojQ2Lv3mHp9L+J6yZeb9xIpUxpMi366Jc0buFg6hH5W8E0Tzkb8H/iAKpXUxOFVwuyUNnDiVpe3uyIj2lmPFlQCHJp9aZ99FmfKVir4HsY69rbuQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dPnnJ+Ty; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1761814267; c=relaxed/simple;
+	bh=Ab4bFMlRn2+t7TcLaOM9kd7d6OlSqWi3gNKBX8PBHkw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=BPJVVvY9pYLz7NlRBHPpX0dTSes+S+TWSrzNJWHZacAl8L9+PFV3uGeV/h/vL1zuRNzaecXYIFtOa1eqverRDz9nE5xxZPPtnhPkgWoiu/FYYz+GNoPXxaqQF/LZS8SXxfywtM1wxAJRkRDqBMyzo+r/40E2iKyEDiREHyXCTXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=llJpzuVU; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dPnnJ+Ty"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 59TMqkH6810598;
-	Thu, 30 Oct 2025 08:48:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=9If20Nov04a
-	FqDbLwCl3tk3lYTGHB6D8GOpgwBQNnqI=; b=dPnnJ+TyLKdv6MJMpPRdgiXyYAz
-	OQLhxYSKxuXPF8G+jwB479NP0xdudRvGEE++MwTDnZTc88T+YP2gHHT5GH/VSbo3
-	VgKpM8QUhqWFt5OlI8yavzBfFqQgL+ivzZCpKKngL5WsS/UXfp2Owy6HzHdbyojN
-	VhMEh/WI3t0gvdODOrqE1wuOeVwpKsNW+FH//dvSjbqgN876r5aC4zW7JsueEPUK
-	1uSACFIe0HAMtuia9No67hJOZxrtnCF43VlF7tyIbY0KPoUqJADOWCCnz8EATmNV
-	PgWHZ2YJshEad7BLRlCZfJoRAfA+hc0XTHysIFC30XhovZA8jxCZGySqJbA==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a3mvgavgf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Oct 2025 08:48:10 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 59U8m8hn027983;
-	Thu, 30 Oct 2025 08:48:08 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4a0qmmec4k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Oct 2025 08:48:08 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 59U8m8uR027968;
-	Thu, 30 Oct 2025 08:48:08 GMT
-Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 59U8m7fr027965
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Oct 2025 08:48:08 +0000
-Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id 38C80797; Thu, 30 Oct 2025 16:48:06 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v2 3/4] arm64: dts: qcom: Add PCIe 3 support for HAMOA-IOT-SOM platform
-Date: Thu, 30 Oct 2025 16:48:03 +0800
-Message-Id: <20251030084804.1682744-4-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251030084804.1682744-1-ziyue.zhang@oss.qualcomm.com>
-References: <20251030084804.1682744-1-ziyue.zhang@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="llJpzuVU"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-b6dc4667305so14627466b.3
+        for <linux-pci@vger.kernel.org>; Thu, 30 Oct 2025 01:51:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1761814264; x=1762419064; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=fphLVYMAvPJpHfDK6UrhmubmM09SFyL/nslykzGwIZk=;
+        b=llJpzuVUgcmuV7n6BUCxqyPBBxA7g3xTc7l6oj9M1mEABhtPD4Ll8/lFg1JRq9J9m8
+         SPPj06G4xe4XNcgxPJoe52qK15iWWhWagWfezSyKiepDl6JrZTxcMWCUMWRbKYTUI2AP
+         tHzAyhgvJ9Xmxb6DegqUHT5cdL7kYhSth8JlWJL4eDxMUy8h3BYEPPH2r/tQVHAxO6OW
+         mUXA6zaygG+0o3h58Uyz/O0Ot6zEc+su61Jb8IaN0M7riGtDYCHuKsYkzyJBKZrOiG0+
+         a2/rcLQ52844FWeVEULBPcEL9OWKVYrleousDHfmcGKtHMWahHiG3tB9CFh7Pv/n7XAV
+         sjlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761814264; x=1762419064;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=fphLVYMAvPJpHfDK6UrhmubmM09SFyL/nslykzGwIZk=;
+        b=tT8jwEZyrIo1u3rwunWPvpS/AVELZ4WSZmR5I/rRCVcl/LH7mvE2MIj3AidvW7OV/W
+         ifrigmSDK6j+LkWm2GQItxIIDnMJHYAMsm4NxgDlMtyF97oFXDNDOHMol8fj7jva8/Hs
+         T2Bwv+xQx8U4z3QhDNi7jXoeHZrIIlma2VK5H1m24qwSS0tfedZxyzl05MMj1rAnoddm
+         g1DxExoMA9/DocIPV4NMH0CaFL+Ol7qFxNWC0QPQl/JHZ9zxBqZi+6AcJHMzInBCKwET
+         zBTY3cwzMixRtnpaOfATNfpR0XGuzup++DwIdQaf2BVibMFslmELXKBqIHLZu8tuUBvn
+         Pbuw==
+X-Forwarded-Encrypted: i=1; AJvYcCWk0XPkL67SsbhYv+l5iGvlsU5nAIxsjfxzk91z+9Ot5kdqH9UBlWkSAWVBhL07bgW0DOss8KW74XI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz34elnb1PT7dQ/Ixop3+NxDq1luID6twvdyRlhTiL1QfwfFNpX
+	ldxaYKfSIZV+VoqhfBHd3rUXvfDWAzS2Y0A2VeIku4cWIvVcGy8Cp1MGTNODXnuCA4I=
+X-Gm-Gg: ASbGncuC4doQsRpd4nSeUGnP0qGUWbclIj6B+fbF4nwrHlJFvCoFASgCZ0GZ964bxBx
+	wEWpcZVl7AhCz6qoh4AkSENIfZeKuXhIlzTN4OnZPpQ5AdxtJrvDwppHkEg+/Zc4XJddmLeoghs
+	OYb9JuvMboX8vGXW2w2ySxw74A0I5G6Sk3nyJMYzKKtJer1jiEMn2aVwT3ezS6WcaULniNWxYTE
+	OTlRTnC1qKJjBsf5oQ5bMkMSPqq8SdhuU7OU6nMJ+uLO+4n7fyr+W1QLUY4xXDbZn7M2dJTCpUL
+	7KQTmgIllQYKKvCTfqutVIN55b1nn5jGVelpgKnZ+y2Dcx/XMBk31IjiKLWoA8CQKs/6Gx59Ehe
+	+v8u39W9ZFi2Fj0qqBeZUNkPXGaams2gbFyqrMm8xhuyhCiR06UGPmssvqxSJP+URm2Ydpvjnzd
+	GCFfP3WNaTGxA1SrAsUrOAvaQb3aM=
+X-Google-Smtp-Source: AGHT+IHFbhCJxIHhxK1PfIfJ3CGHx1FwG3numMCvfaT1IhJ+pDSEZ5JnH3CdW8UpTPiDkI4IfhzqnQ==
+X-Received: by 2002:a17:906:dc91:b0:b6d:606f:2a96 with SMTP id a640c23a62f3a-b703d30b8a2mr277791766b.4.1761814263561;
+        Thu, 30 Oct 2025 01:51:03 -0700 (PDT)
+Received: from [127.0.1.1] ([178.197.219.123])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b6d85ba3798sm1691789366b.39.2025.10.30.01.51.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Oct 2025 01:51:03 -0700 (PDT)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v2 0/9] dt-bindings: PCI: qcom: Add missing required
+ power-domains and resets
+Date: Thu, 30 Oct 2025 09:50:43 +0100
+Message-Id: <20251030-dt-bindings-pci-qcom-fixes-power-domains-v2-0-28c1f11599fe@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDMwMDA3MSBTYWx0ZWRfXwKkg5GcwL22I
- aCAQflxUaZfN6vWwS//lZr4LibOOSPeqIffZRANcl56+QVCGIaU2Bj6HZx0Zy/kkxq6MGJpM93e
- QRU/jBd6X3uKZ3mGLUpW7xYalQMCb8x66LKyWdFGQpX16MRAg25US8gYDQyW/TMIVOQsYgND6AC
- +cnV5TktkFsVQ2UXnEer1DVuIxdFnef5e1TwJVYVZmiyh2oINoaisdwZwWJ90/fJ4FZP6O6BoHm
- JG572+h8G8/R3oETQqT5DzmeldwiOjjluAs0S9z64Sq42VERFmBxZaBtp1ZAV0C3EKYWRXxQFNN
- GQY/US4kZT+b77FTCAZR/cxNT8yuTpS7jGMaA7AiFowl5eE0IFwFzlsCx88aDbjZDJhXnI1ybIR
- WjHkbMRMXf/o2+KpPOOxPtc6l+tdvg==
-X-Authority-Analysis: v=2.4 cv=S8XUAYsP c=1 sm=1 tr=0 ts=6903264a cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8
- a=k1FgOfwui3dmZkiehC4A:9 a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22
- a=xoEH_sTeL_Rfw54TyV31:22
-X-Proofpoint-GUID: noSyTXGuj--rnSniHagmsP1NfAABCA39
-X-Proofpoint-ORIG-GUID: noSyTXGuj--rnSniHagmsP1NfAABCA39
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-10-30_02,2025-10-29_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 malwarescore=0 spamscore=0 bulkscore=0 clxscore=1015
- phishscore=0 priorityscore=1501 impostorscore=0 lowpriorityscore=0
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2510240001
- definitions=main-2510300071
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAOMmA2kC/52NTQ6CMBBGr0Jm7RgY+QmuvIdhUdoBJpEWW4Ia0
+ rtbOYLL9+XLezsE9sIBrtkOnjcJ4mwCOmWgJ2VHRjGJgXKqipxaNCv2Yo3YMeCiBZ/azTjImxO
+ 6F3s0blZiA15qVddtT0wVQdItno9bst27xJOE1fnPUd6K3/pHZCswR6MapUmXTTOUt4dY5d3Z+
+ RG6GOMX1QszouEAAAA=
+X-Change-ID: 20251029-dt-bindings-pci-qcom-fixes-power-domains-36a669b2e252
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Abel Vesa <abel.vesa@linaro.org>
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+ linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2135;
+ i=krzysztof.kozlowski@linaro.org; h=from:subject:message-id;
+ bh=Ab4bFMlRn2+t7TcLaOM9kd7d6OlSqWi3gNKBX8PBHkw=;
+ b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBpAybq5uKkpMdxtoEseaUzYb3uSZL+fy7PNhr1U
+ nPiy80XCSCJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCaQMm6gAKCRDBN2bmhouD
+ 12vbEACY82plr/2mBhTr/qkdJBo+0J2zKAWHMAMn2UGMm7j5dR/tmOp60DOC1zZP5kZJ6QBIAi6
+ crJEdgmncJ1ahlWEP3eLVBUvkttmcUonO6eozGNnczKYjTUT7K5JjiJpLHDDgCOzf4y3gPzG3I4
+ w8aAxVYirXSjaRz5Tr5kZ1YqmgPezND/8Ce5Dm2sKm8y0OgIf+qAdnQcdmFBBWHpzbbYZRd4J9y
+ yp49RXp//pp+CCYDpPXrXCw1IZgSiIrAHzRFxMgAp6HCcryghrjPtm3NJuDeCxJWzZwoCWBEJCE
+ eahc4hKM5a+kOqLQi6w0vXij8fx+uVcjMavX9ZWR9s4Co2e3VMVOWFF8RJQsioR8Hl3hdmk+03m
+ C3C+AcbssyW/A5PEaftf7Xu9FVIM759ZoQT+CHlB3R1wSbwaIHD2YiUkJWopI5KSZ1OGcyz1tZO
+ zx9Z077/bEh7WYakdRWsHZMh4TcGOpipdt0LLE1+PJ30IRnP7NST/5M5PTAkNBIoykDtjIMdyeB
+ P5R2HoMXlgvCpmpZGN21ge7uO7kMZid3IJPmTcBxbIwDBJ8igU+9SDoX7GTZF3MlwO8c/2YXODC
+ /qUbCsv+5zTtluq/6hreLaPjj+TLXQ9DloOQQDLpfe0ZCdla/yBM/p8N5KEIWg9uKDMYzoAKmrC
+ GzZXj9QFLrCEDrg==
+X-Developer-Key: i=krzysztof.kozlowski@linaro.org; a=openpgp;
+ fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
 
-This update enables PCIe3 support by adding necessary sideband signals
-(PERST#, WAKE#, CLKREQ#) and required regulators to the PCIe3 controller
-and PHY device tree nodes.
+Changes in v2:
+- Add also resets
+- Drop cc-stable tag in the last patch
+- Link to v1: https://patch.msgid.link/20251029-dt-bindings-pci-qcom-fixes-power-domains-v1-0-da7ac2c477f4@linaro.org
 
-These changes ensure correct link initialization and power sequencing for
-devices connected via PCIe3.
+Recent binding changes forgot to make power-domains and resets required.
 
-Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
+I am not updating SC8180xp because it will be fixed other way in my next
+patchset.
+
+Best regards,
+Krzysztof
+
 ---
- arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi | 39 +++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+Krzysztof Kozlowski (9):
+      dt-bindings: PCI: qcom,pcie-sa8775p: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-sc7280: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-sc8280xp: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-sm8150: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-sm8250: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-sm8350: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-sm8450: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-sm8550: Add missing required power-domains and resets
+      dt-bindings: PCI: qcom,pcie-x1e80100: Add missing required power-domains and resets
 
-diff --git a/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi b/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi
-index 8ea5d0cebe6e..14033d030425 100644
---- a/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi
-+++ b/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi
-@@ -390,6 +390,22 @@ &gpu_zap_shader {
- 	firmware-name = "qcom/x1e80100/gen70500_zap.mbn";
- };
- 
-+&pcie3 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie3_default>;
-+	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
-+	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
-+
-+	status = "okay";
-+};
-+
-+&pcie3_phy {
-+	vdda-phy-supply = <&vreg_l3c_0p8>;
-+	vdda-pll-supply = <&vreg_l3e_1p2>;
-+
-+	status = "okay";
-+};
-+
- &pcie4 {
- 	perst-gpios = <&tlmm 146 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 148 GPIO_ACTIVE_LOW>;
-@@ -471,6 +487,29 @@ &tlmm {
- 	gpio-reserved-ranges = <34 2>, /* TPM LP & INT */
- 			       <44 4>; /* SPI (TPM) */
- 
-+	pcie3_default: pcie3-default-state {
-+		clkreq-n-pins {
-+			pins = "gpio144";
-+			function = "pcie3_clk";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+
-+		perst-n-pins {
-+			pins = "gpio143";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-down;
-+		};
-+
-+		wake-n-pins {
-+			pins = "gpio145";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+	};
-+
- 	pcie4_default: pcie4-default-state {
- 		clkreq-n-pins {
- 			pins = "gpio147";
+ Documentation/devicetree/bindings/pci/qcom,pcie-sa8775p.yaml  | 3 +++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sc7280.yaml   | 5 +++++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sc8280xp.yaml | 3 +++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sm8150.yaml   | 5 +++++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sm8250.yaml   | 5 +++++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sm8350.yaml   | 5 +++++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml   | 5 +++++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sm8550.yaml   | 5 +++++
+ Documentation/devicetree/bindings/pci/qcom,pcie-x1e80100.yaml | 5 +++++
+ 9 files changed, 41 insertions(+)
+---
+base-commit: 326bbf6e2b1ce8d1e6166cce2ca414aa241c382f
+change-id: 20251029-dt-bindings-pci-qcom-fixes-power-domains-36a669b2e252
+
+Best regards,
 -- 
-2.34.1
+Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
