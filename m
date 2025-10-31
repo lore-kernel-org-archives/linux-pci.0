@@ -1,46 +1,46 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AACDE320CDF
-	for <linux-pci@vger.kernel.org>; Fri, 31 Oct 2025 21:29:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52332324B33
+	for <linux-pci@vger.kernel.org>; Fri, 31 Oct 2025 21:29:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761946145; cv=none; b=JAeiocn72QOlcJVJEam6dG1vboc8w9oBDRk8C3vrzYqmjZ02zRD2fT/jVr43yQP0EB2uw5ZruZo+OeM5wR9tftCuEnjVEkVW5s7gBghysSHJzds85zx3LgipXm7eAyxynQ4a0iWVoSo0r0WqyqYaFFx4iWAmR5N+nT9Nf7/ypqU=
+	t=1761946145; cv=none; b=lUgzoMDwLEZkEGinY4KKrgxZkdLYB1fHjJNkFdZzNAL3TuA/c2rzLVeYUQPXZK0ZxZwE+iomKClpY7W+5ny7QID6h1uvKsHxQ7qinhJ7TSy+D4H9G4ns8Tw+lqxu3bmjW7xY2NBNNPP6Uef6hP454lHu6+DwxwTvoEf1i3VYumo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1761946145; c=relaxed/simple;
-	bh=EjsivcQ7mzvN3zvnIv2XuKqH3YqomSKkWhzsjDODlDo=;
+	bh=+fFZaPOxKKFP1Y8B3sc4//72UBC6J+SAsBM42404vGM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K38A5aIUajudz9qkJN8hXfphfC9qbONkhIi7CzbJVtYM355JyUy2uDDEGVJbQ5+VBbpO59HuDHxaJJDWKPpT0fBbmPb7FUIl+z+oSq036rhykX7Z8RMo+FhnkVi8mISAlfuy0hTiYrU5vXY8C0lJa5/MaZQyE4JtmTwMt4pav4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=POmpUroS; arc=none smtp.client-ip=198.175.65.19
+	 MIME-Version:Content-Type; b=Sb5+IH0EFG9KxK3sNJVzAFrHnLnq6i6B63hIcEhel+u1wlpiuKKGteMHKdyc1k26MUe3sOvZpj9hS6iZz2SnT4oO3Pw4+fkL9InDs+uT+wWs3cXfyfzn+wd37i+WPIPbQZCLwSKqmyV2eH9woo8Vd0WeZ4BMCyy3JheLLAuOGoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Anhqv+Fz; arc=none smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="POmpUroS"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Anhqv+Fz"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1761946144; x=1793482144;
+  t=1761946145; x=1793482145;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=EjsivcQ7mzvN3zvnIv2XuKqH3YqomSKkWhzsjDODlDo=;
-  b=POmpUroS+QtNRQ4LlY4mKTkCV5JsyLgVqrCQn4Vn3JYEeoVzQwlj/ekQ
-   xBOADUodestckJyogzc/1uTJACAj3G80ILUmUJRPWbABhKbYY9fbzp1nj
-   XvOmf764jvhfyVQ/Y+r+3XhXdO/91FbLtQDafLHsYq7NkCo8A1ICI2S5J
-   f6jy3SwniXe9Po1r68+VhzMPeUqjzvbu4GDhaBNiAU723BvdekZPWydvJ
-   gDhpV/ZHexrqWQHvdiDT1IyDN7tAdXcvVoWLiEnqMftCzk9Vy/1V4JZ8j
-   Nq7PfP7i5TcgBoPbpqqN1+4Un4JDwTwS5P7wqlUsezLOx/Oa2wcPX2yOQ
-   A==;
-X-CSE-ConnectionGUID: gMFfFbjgSNaZtNL2XAz2WA==
-X-CSE-MsgGUID: xb9SV9jdQX+jtW7XrO63xg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11599"; a="64002414"
+  bh=+fFZaPOxKKFP1Y8B3sc4//72UBC6J+SAsBM42404vGM=;
+  b=Anhqv+FzzhPFMOSMkCoc81zaMygOoSdNoiNvEyhFYJ7/nCX7OYKI8dEo
+   6p/lCe6L9FTfhYT2OQ1wqvgOrv10xpqTIqF6vOJd21IdUli911prSEPB3
+   Nm/S7UMwoaZaTM8JBcYpg13xjC1oe/iMtdxpq8Xtsx/gswUe0RISG7hCP
+   PUVJyGvzKAEsX721UR4ykxDsdd7lElt5B27UCsetgTqTk6ZxEDPfXKMWq
+   mLKo1h79CkcDOJeRGfOqIK3CdLgvTDL4ga13qjcnlCfRX3UwNQ4fEp9GL
+   ZSpzo8LXqXyx2j051E2M8XaQYiH2pTz1HIE6N1/s9dTWQZMVQ5yBTEEGE
+   Q==;
+X-CSE-ConnectionGUID: 66jR323USu2yCK+2bgBJkQ==
+X-CSE-MsgGUID: vo0X77Q0TZKwCQqaPVl9VA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11599"; a="64002416"
 X-IronPort-AV: E=Sophos;i="6.19,270,1754982000"; 
-   d="scan'208";a="64002414"
+   d="scan'208";a="64002416"
 Received: from orviesa002.jf.intel.com ([10.64.159.142])
   by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2025 14:29:00 -0700
-X-CSE-ConnectionGUID: ZKHo/JohRWWM8vT4GvbdaA==
-X-CSE-MsgGUID: q2Pr+ZzwSuaZbBO/BjGA8Q==
+X-CSE-ConnectionGUID: K6Tc4DJsTICPTLqmfpD8RA==
+X-CSE-MsgGUID: 8PNy4wemS625Ns24pHD5kQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,270,1754982000"; 
-   d="scan'208";a="216986661"
+   d="scan'208";a="216986668"
 Received: from dwillia2-desk.jf.intel.com ([10.88.27.145])
   by orviesa002.jf.intel.com with ESMTP; 31 Oct 2025 14:28:59 -0700
 From: Dan Williams <dan.j.williams@intel.com>
@@ -50,10 +50,14 @@ Cc: linux-coco@lists.linux.dev,
 	aik@amd.com,
 	aneesh.kumar@kernel.org,
 	yilun.xu@linux.intel.com,
+	Lukas Wunner <lukas@wunner.de>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Samuel Ortiz <sameo@rivosinc.com>,
 	Jonathan Cameron <jonathan.cameron@huawei.com>
-Subject: [PATCH v8 3/9] PCI: Introduce pci_walk_bus_reverse(), for_each_pci_dev_reverse()
-Date: Fri, 31 Oct 2025 14:28:55 -0700
-Message-ID: <20251031212902.2256310-4-dan.j.williams@intel.com>
+Subject: [PATCH v8 5/9] PCI: Add PCIe Device 3 Extended Capability enumeration
+Date: Fri, 31 Oct 2025 14:28:57 -0700
+Message-ID: <20251031212902.2256310-6-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251031212902.2256310-1-dan.j.williams@intel.com>
 References: <20251031212902.2256310-1-dan.j.williams@intel.com>
@@ -63,295 +67,96 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-PCI/TSM, the PCI core functionality for the PCIe TEE Device Interface
-Security Protocol (TDISP), has a need to walk all subordinate functions of
-a Device Security Manager (DSM) to setup a device security context. A DSM
-is physical function 0 of multi-function or SR-IOV device endpoint, or it
-is an upstream switch port.
+PCIe r7.0 Section 7.7.9 Device 3 Extended Capability Structure, defines the
+canonical location for determining the Flit Mode of a device. This status
+is a dependency for PCIe IDE enabling. Add a new fm_enabled flag to 'struct
+pci_dev'.
 
-In error scenarios or when a TEE Security Manager (TSM) device is removed
-it needs to unwind all established DSM contexts.
-
-Introduce reverse versions of PCI device iteration helpers to mirror the
-setup path and ensure that dependent children are handled before parents.
-
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Lukas Wunner <lukas@wunner.de>
+Cc: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Samuel Ortiz <sameo@rivosinc.com>
+Cc: Alexey Kardashevskiy <aik@amd.com>
+Cc: Xu Yilun <yilun.xu@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- include/linux/device/bus.h |  3 ++
- include/linux/pci.h        | 11 +++++++
- drivers/base/bus.c         | 38 +++++++++++++++++++++++
- drivers/pci/bus.c          | 39 ++++++++++++++++++++++++
- drivers/pci/search.c       | 62 +++++++++++++++++++++++++++++++++-----
- 5 files changed, 145 insertions(+), 8 deletions(-)
+ include/linux/pci.h           |  1 +
+ include/uapi/linux/pci_regs.h |  7 +++++++
+ drivers/pci/probe.c           | 12 ++++++++++++
+ 3 files changed, 20 insertions(+)
 
-diff --git a/include/linux/device/bus.h b/include/linux/device/bus.h
-index f5a56efd2bd6..99b1002b3e31 100644
---- a/include/linux/device/bus.h
-+++ b/include/linux/device/bus.h
-@@ -150,6 +150,9 @@ int bus_for_each_dev(const struct bus_type *bus, struct device *start,
- 		     void *data, device_iter_t fn);
- struct device *bus_find_device(const struct bus_type *bus, struct device *start,
- 			       const void *data, device_match_t match);
-+struct device *bus_find_device_reverse(const struct bus_type *bus,
-+				       struct device *start, const void *data,
-+				       device_match_t match);
- /**
-  * bus_find_device_by_name - device iterator for locating a particular device
-  * of a specific name.
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4402ca931124..b6a12a82be12 100644
+index 2f9c0cb6a50a..ea94799c81b0 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -582,6 +582,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
+@@ -450,6 +450,7 @@ struct pci_dev {
+ 	unsigned int	pasid_enabled:1;	/* Process Address Space ID */
+ 	unsigned int	pri_enabled:1;		/* Page Request Interface */
+ 	unsigned int	tph_enabled:1;		/* TLP Processing Hints */
++	unsigned int	fm_enabled:1;		/* Flit Mode (segment captured) */
+ 	unsigned int	is_managed:1;		/* Managed via devres */
+ 	unsigned int	is_msi_managed:1;	/* MSI release via devres installed */
+ 	unsigned int	needs_freset:1;		/* Requires fundamental reset */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f2759c1097bc..3add74ae2594 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -755,6 +755,7 @@
+ #define PCI_EXT_CAP_ID_NPEM	0x29	/* Native PCIe Enclosure Management */
+ #define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
+ #define PCI_EXT_CAP_ID_DOE	0x2E	/* Data Object Exchange */
++#define PCI_EXT_CAP_ID_DEV3	0x2F	/* Device 3 Capability/Control/Status */
+ #define PCI_EXT_CAP_ID_IDE	0x30    /* Integrity and Data Encryption */
+ #define PCI_EXT_CAP_ID_PL_64GT	0x31	/* Physical Layer 64.0 GT/s */
+ #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_64GT
+@@ -1246,6 +1247,12 @@
+ /* Deprecated old name, replaced with PCI_DOE_DATA_OBJECT_DISC_RSP_3_TYPE */
+ #define PCI_DOE_DATA_OBJECT_DISC_RSP_3_PROTOCOL		PCI_DOE_DATA_OBJECT_DISC_RSP_3_TYPE
  
- #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
- #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
-+#define for_each_pci_dev_reverse(d) \
-+	while ((d = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
- 
- static inline int pci_channel_offline(struct pci_dev *pdev)
- {
-@@ -1242,6 +1244,8 @@ u64 pci_get_dsn(struct pci_dev *dev);
- 
- struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
- 			       struct pci_dev *from);
-+struct pci_dev *pci_get_device_reverse(unsigned int vendor, unsigned int device,
-+				       struct pci_dev *from);
- struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- 			       unsigned int ss_vendor, unsigned int ss_device,
- 			       struct pci_dev *from);
-@@ -1661,6 +1665,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata);
-+void pci_walk_bus_reverse(struct pci_bus *top,
-+			  int (*cb)(struct pci_dev *, void *), void *userdata);
- int pci_cfg_space_size(struct pci_dev *dev);
- unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-@@ -2049,6 +2055,11 @@ static inline struct pci_dev *pci_get_device(unsigned int vendor,
- 					     struct pci_dev *from)
- { return NULL; }
- 
-+static inline struct pci_dev *pci_get_device_reverse(unsigned int vendor,
-+						     unsigned int device,
-+						     struct pci_dev *from)
-+{ return NULL; }
++/* Device 3 Extended Capability */
++#define PCI_DEV3_CAP		0x04	/* Device 3 Capabilities Register */
++#define PCI_DEV3_CTL		0x08	/* Device 3 Control Register */
++#define PCI_DEV3_STA		0x0c	/* Device 3 Status Register */
++#define  PCI_DEV3_STA_SEGMENT	0x8	/* Segment Captured (end-to-end flit-mode detected) */
 +
- static inline struct pci_dev *pci_get_subsys(unsigned int vendor,
- 					     unsigned int device,
- 					     unsigned int ss_vendor,
-diff --git a/drivers/base/bus.c b/drivers/base/bus.c
-index 5e75e1bce551..d19dae8f9d1b 100644
---- a/drivers/base/bus.c
-+++ b/drivers/base/bus.c
-@@ -334,6 +334,19 @@ static struct device *next_device(struct klist_iter *i)
- 	return dev;
+ /* Compute Express Link (CXL r3.1, sec 8.1.5) */
+ #define PCI_DVSEC_CXL_PORT				3
+ #define PCI_DVSEC_CXL_PORT_CTL				0x0c
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index d1467348c169..3b54f1720be5 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2283,6 +2283,17 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
+ 	return 0;
  }
  
-+static struct device *prev_device(struct klist_iter *i)
++static void pci_dev3_init(struct pci_dev *pdev)
 +{
-+	struct klist_node *n = klist_prev(i);
-+	struct device *dev = NULL;
-+	struct device_private *dev_prv;
++	u16 cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DEV3);
++	u32 val = 0;
 +
-+	if (n) {
-+		dev_prv = to_device_private_bus(n);
-+		dev = dev_prv->device;
-+	}
-+	return dev;
++	if (!cap)
++		return;
++	pci_read_config_dword(pdev, cap + PCI_DEV3_STA, &val);
++	pdev->fm_enabled = !!(val & PCI_DEV3_STA_SEGMENT);
 +}
 +
  /**
-  * bus_for_each_dev - device iterator.
-  * @bus: bus type.
-@@ -414,6 +427,31 @@ struct device *bus_find_device(const struct bus_type *bus,
- }
- EXPORT_SYMBOL_GPL(bus_find_device);
+  * pcie_relaxed_ordering_enabled - Probe for PCIe relaxed ordering enable
+  * @dev: PCI device to query
+@@ -2667,6 +2678,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_doe_init(dev);		/* Data Object Exchange */
+ 	pci_tph_init(dev);		/* TLP Processing Hints */
+ 	pci_rebar_init(dev);		/* Resizable BAR */
++	pci_dev3_init(dev);		/* Device 3 capabilities */
+ 	pci_ide_init(dev);		/* Link Integrity and Data Encryption */
  
-+struct device *bus_find_device_reverse(const struct bus_type *bus,
-+				       struct device *start, const void *data,
-+				       device_match_t match)
-+{
-+	struct subsys_private *sp = bus_to_subsys(bus);
-+	struct klist_iter i;
-+	struct device *dev;
-+
-+	if (!sp)
-+		return NULL;
-+
-+	klist_iter_init_node(&sp->klist_devices, &i,
-+			     (start ? &start->p->knode_bus : NULL));
-+	while ((dev = prev_device(&i))) {
-+		if (match(dev, data)) {
-+			get_device(dev);
-+			break;
-+		}
-+	}
-+	klist_iter_exit(&i);
-+	subsys_put(sp);
-+	return dev;
-+}
-+EXPORT_SYMBOL_GPL(bus_find_device_reverse);
-+
- static struct device_driver *next_driver(struct klist_iter *i)
- {
- 	struct klist_node *n = klist_next(i);
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index f26aec6ff588..b8b17f825bc0 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -8,6 +8,7 @@
-  */
- #include <linux/module.h>
- #include <linux/kernel.h>
-+#include <linux/cleanup.h>
- #include <linux/pci.h>
- #include <linux/errno.h>
- #include <linux/ioport.h>
-@@ -432,6 +433,27 @@ static int __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void
- 	return ret;
- }
- 
-+static int __pci_walk_bus_reverse(struct pci_bus *top,
-+				  int (*cb)(struct pci_dev *, void *),
-+				  void *userdata)
-+{
-+	struct pci_dev *dev;
-+	int ret = 0;
-+
-+	list_for_each_entry_reverse(dev, &top->devices, bus_list) {
-+		if (dev->subordinate) {
-+			ret = __pci_walk_bus_reverse(dev->subordinate, cb,
-+						     userdata);
-+			if (ret)
-+				break;
-+		}
-+		ret = cb(dev, userdata);
-+		if (ret)
-+			break;
-+	}
-+	return ret;
-+}
-+
- /**
-  *  pci_walk_bus - walk devices on/under bus, calling callback.
-  *  @top: bus whose devices should be walked
-@@ -453,6 +475,23 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *), void
- }
- EXPORT_SYMBOL_GPL(pci_walk_bus);
- 
-+/**
-+ * pci_walk_bus_reverse - walk devices on/under bus, calling callback.
-+ * @top: bus whose devices should be walked
-+ * @cb: callback to be called for each device found
-+ * @userdata: arbitrary pointer to be passed to callback
-+ *
-+ * Same semantics as pci_walk_bus(), but walks the bus in reverse order.
-+ */
-+void pci_walk_bus_reverse(struct pci_bus *top,
-+			  int (*cb)(struct pci_dev *, void *), void *userdata)
-+{
-+	down_read(&pci_bus_sem);
-+	__pci_walk_bus_reverse(top, cb, userdata);
-+	up_read(&pci_bus_sem);
-+}
-+EXPORT_SYMBOL_GPL(pci_walk_bus_reverse);
-+
- void pci_walk_bus_locked(struct pci_bus *top, int (*cb)(struct pci_dev *, void *), void *userdata)
- {
- 	lockdep_assert_held(&pci_bus_sem);
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 53840634fbfc..e6e84dc62e82 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -282,6 +282,45 @@ static struct pci_dev *pci_get_dev_by_id(const struct pci_device_id *id,
- 	return pdev;
- }
- 
-+static struct pci_dev *pci_get_dev_by_id_reverse(const struct pci_device_id *id,
-+						 struct pci_dev *from)
-+{
-+	struct device *dev;
-+	struct device *dev_start = NULL;
-+	struct pci_dev *pdev = NULL;
-+
-+	if (from)
-+		dev_start = &from->dev;
-+	dev = bus_find_device_reverse(&pci_bus_type, dev_start, (void *)id,
-+				      match_pci_dev_by_id);
-+	if (dev)
-+		pdev = to_pci_dev(dev);
-+	pci_dev_put(from);
-+	return pdev;
-+}
-+
-+enum pci_search_direction {
-+	PCI_SEARCH_FORWARD,
-+	PCI_SEARCH_REVERSE,
-+};
-+
-+static struct pci_dev *__pci_get_subsys(unsigned int vendor, unsigned int device,
-+				 unsigned int ss_vendor, unsigned int ss_device,
-+				 struct pci_dev *from, enum pci_search_direction dir)
-+{
-+	struct pci_device_id id = {
-+		.vendor = vendor,
-+		.device = device,
-+		.subvendor = ss_vendor,
-+		.subdevice = ss_device,
-+	};
-+
-+	if (dir == PCI_SEARCH_FORWARD)
-+		return pci_get_dev_by_id(&id, from);
-+	else
-+		return pci_get_dev_by_id_reverse(&id, from);
-+}
-+
- /**
-  * pci_get_subsys - begin or continue searching for a PCI device by vendor/subvendor/device/subdevice id
-  * @vendor: PCI vendor id to match, or %PCI_ANY_ID to match all vendor ids
-@@ -302,14 +341,8 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- 			       unsigned int ss_vendor, unsigned int ss_device,
- 			       struct pci_dev *from)
- {
--	struct pci_device_id id = {
--		.vendor = vendor,
--		.device = device,
--		.subvendor = ss_vendor,
--		.subdevice = ss_device,
--	};
--
--	return pci_get_dev_by_id(&id, from);
-+	return __pci_get_subsys(vendor, device, ss_vendor, ss_device, from,
-+				PCI_SEARCH_FORWARD);
- }
- EXPORT_SYMBOL(pci_get_subsys);
- 
-@@ -334,6 +367,19 @@ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
- }
- EXPORT_SYMBOL(pci_get_device);
- 
-+/*
-+ * Same semantics as pci_get_device(), except walks the PCI device list
-+ * in reverse discovery order.
-+ */
-+struct pci_dev *pci_get_device_reverse(unsigned int vendor,
-+				       unsigned int device,
-+				       struct pci_dev *from)
-+{
-+	return __pci_get_subsys(vendor, device, PCI_ANY_ID, PCI_ANY_ID, from,
-+				PCI_SEARCH_REVERSE);
-+}
-+EXPORT_SYMBOL(pci_get_device_reverse);
-+
- /**
-  * pci_get_class - begin or continue searching for a PCI device by class
-  * @class: search for a PCI device with this class designation
+ 	pcie_report_downtraining(dev);
 -- 
 2.51.0
 
