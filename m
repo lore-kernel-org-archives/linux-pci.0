@@ -1,30 +1,29 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F46E19049B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ED4A223DEC;
 	Sat,  1 Nov 2025 16:24:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762014258; cv=none; b=MpWyZyEQn9hyvCLh1/zM2nFDg/CgAXq4NZw7YUlilif2t+frfUC5Z33eg7ykj+5B1ORPyzoRP6GJXZ66D22/PgfUzF0TKKDUPXAsK1qeBRjTPaB5/dPj5NWYMItLh5i4ZAwANgq0kNWVuaSxOgW+GdDHIotKv5MMr5nBJXAMgGA=
+	t=1762014258; cv=none; b=YrdQpDqcN9bLQGxro+AvxDou/stmiEy3dlKENU2Nmvhwo8E2sV1oGfBHJp7QlIeD+dd1KAH+j11V28WPh/2kk4XN7oUDMOiJ1QcNxqJs75l5ZqxT4yGZmm6+NFdetTqP/AJSlu1ONEwG3Kxj+dIKfMqtlAXPB3QMrSaxToCIi2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762014258; c=relaxed/simple;
-	bh=W1Ad/Hpmi05kW+LkYpX9iXeR3vzD1qS/oR7rcvv5ZMM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UFF+OQiuUSMrWTohaFS7vhH4xOeiePAsx7XlNg5o9s/E6mx9yrJ3QRdm+CMj5Ms5HST1iZ142ET1xLpakpiQrZFV3vuXX73UAyCMJFb7yV/9VkJ0jzlrtGCVUc8UzqADtTA2PzKiJF/gS6U5fevoCzuNJwnIKm2xVX12BqSWQUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=LXJ0jJPg; arc=none smtp.client-ip=220.197.31.4
+	bh=5nWCJ5QCtsBmc7noyT68SATJhsdCzufXpdESYb3gVeE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AASs7yUpHBhGJi1euxp5vnpFEsISz7TXeowGQMxsMzjs5/6eA64Nm24/4XhIXnFD/1vnNwXMfdwBWSORHFDW+ke02lfnPE8XG/jid0/pVFMWglAn7lXHzMim+jO+++RuqPHUM2b+2kBvRdnxUXQGuYVJ1CDs6nd7tafHmnz/Pxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=WlW5KisV; arc=none smtp.client-ip=220.197.31.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="LXJ0jJPg"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="WlW5KisV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=rT
-	eDMOibmlghpQVXp52MOWLYZFEzyWAti7xjOoZt1/I=; b=LXJ0jJPgsEbN8jsn3g
-	j7upqizSVegB/eDdNnZhbBIspuKLiGJThtOBLiXg7L6BWlV6VqKrjDLBc+PTLVAk
-	jVirPP6XtUUMTAi6phZ1nGhBIHfcseWp0vjw0Avu5deeySv8l1tDysOit+kQO+F0
-	OBlwNtc9NvBnoAojmi2mKMtrU=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=9t
+	P1LLYdRr/BqHbJev6RqyxqZPPW7NhIMvgXJosQ1o8=; b=WlW5KisVw+/w/PZOId
+	7TL1828mg4ukbv3DgW8Z+zOiugVKyLpRGtWvuPxBCeBL7QNR8S6TuntuNlPfLyH7
+	SHhxqrwwL39bcbFt4xGjIa2kqrk8SAqNSDA07MAOzZsjtCO8Gsjedgdbu/CXavXv
+	MJqbec2Gcpw7otVWbsp66TbdM=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCHBDkQNAZpNmGwAw--.59274S4;
-	Sun, 02 Nov 2025 00:23:47 +0800 (CST)
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCHBDkQNAZpNmGwAw--.59274S2;
+	Sun, 02 Nov 2025 00:23:45 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: mahesh@linux.ibm.com,
 	bhelgaas@google.com
@@ -35,12 +34,10 @@ Cc: oohall@gmail.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [RESEND PATCH v4 2/2] PCI/AER: Use pci_clear/set_config_dword to simplify code
-Date: Sun,  2 Nov 2025 00:22:19 +0800
-Message-Id: <20251101162219.12016-3-18255117159@163.com>
+Subject: [RESEND PATCH v4 0/2] PCI: Introduce pci_clear/set_config_dword()
+Date: Sun,  2 Nov 2025 00:22:17 +0800
+Message-Id: <20251101162219.12016-1-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251101162219.12016-1-18255117159@163.com>
-References: <20251101162219.12016-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,90 +45,51 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCHBDkQNAZpNmGwAw--.59274S4
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZFyDAFy7AF15tw1kJr4ruFg_yoW5Xw1UpF
-	W3AFWfAr4UJF15ZrWDWaykJwn5AF97t34fKr93Kwn5XF48uFZrJ3sav34UJ345KFZ5X34r
-	Jws5Ka1rZF4UJ3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zE2YLgUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiFQj4o2kGMU41FwABs1
+X-CM-TRANSID:_____wCHBDkQNAZpNmGwAw--.59274S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJrW3Zr17tFykJFyUCw1fCrg_yoW8XrWUpr
+	WfZry3Xr47GFya9FW7WF12ka45Wan7AFWrGr13K34rZr43ZrW7XF9YqryrAF9rJrW8Jw4a
+	9rs7WF109w1qkFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRX_-DUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiDw74o2kGMDUqJQABs+
 
-Replace manual read-modify-write sequences in multiple functions with
-pci_clear/set_config_dword helper to reduce code duplication.
+This series introduces auxiliary functions for the PCI configuration space
+and simplifies the read and write operations of the AER driver, reducing a
+lot of repetitive code.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
+Patch 1 adds pci_clear_config_dword() and pci_set_config_dword() helpers
+to reduce repetitive read-modify-write sequences when modifying PCI config
+space. These helpers improve code readability and maintainability.
+
+Patch 2 refactors the PCIe AER driver to use these new helpers,
+eliminating manual read-modify-write patterns and intermediate variable
+in several functions. This results in cleaner and more concise code.
+
 ---
- drivers/pci/pcie/aer.c | 29 ++++++++++-------------------
- 1 file changed, 10 insertions(+), 19 deletions(-)
+Changes for v4:
+- Introduce pci_clear/set_config_dword()
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e286c197d716..468d4a726a20 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -176,14 +176,12 @@ static int enable_ecrc_checking(struct pci_dev *dev)
- static int disable_ecrc_checking(struct pci_dev *dev)
- {
- 	int aer = dev->aer_cap;
--	u32 reg32;
- 
- 	if (!aer)
- 		return -ENODEV;
- 
--	pci_read_config_dword(dev, aer + PCI_ERR_CAP, &reg32);
--	reg32 &= ~(PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
--	pci_write_config_dword(dev, aer + PCI_ERR_CAP, reg32);
-+	pci_clear_config_dword(dev, aer + PCI_ERR_CAP,
-+			       PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
- 
- 	return 0;
- }
-@@ -1102,15 +1100,12 @@ static bool find_source_device(struct pci_dev *parent,
- static void pci_aer_unmask_internal_errors(struct pci_dev *dev)
- {
- 	int aer = dev->aer_cap;
--	u32 mask;
- 
--	pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, &mask);
--	mask &= ~PCI_ERR_UNC_INTN;
--	pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, mask);
-+	pci_clear_config_dword(dev, aer + PCI_ERR_UNCOR_MASK,
-+			       PCI_ERR_UNC_INTN);
- 
--	pci_read_config_dword(dev, aer + PCI_ERR_COR_MASK, &mask);
--	mask &= ~PCI_ERR_COR_INTERNAL;
--	pci_write_config_dword(dev, aer + PCI_ERR_COR_MASK, mask);
-+	pci_clear_config_dword(dev, aer + PCI_ERR_COR_MASK,
-+			       PCI_ERR_COR_INTERNAL);
- }
- 
- static bool is_cxl_mem_dev(struct pci_dev *dev)
-@@ -1556,23 +1551,19 @@ static irqreturn_t aer_irq(int irq, void *context)
- static void aer_enable_irq(struct pci_dev *pdev)
- {
- 	int aer = pdev->aer_cap;
--	u32 reg32;
- 
- 	/* Enable Root Port's interrupt in response to error messages */
--	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
--	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-+	pci_set_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND,
-+			     ROOT_PORT_INTR_ON_MESG_MASK);
- }
- 
- static void aer_disable_irq(struct pci_dev *pdev)
- {
- 	int aer = pdev->aer_cap;
--	u32 reg32;
- 
- 	/* Disable Root Port's interrupt in response to error messages */
--	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
--	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-+	pci_clear_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND,
-+			       ROOT_PORT_INTR_ON_MESG_MASK);
- }
- 
- /**
+Changes for v3:
+https://patchwork.kernel.org/project/linux-pci/patch/20250816161743.340684-1-18255117159@163.com/
+
+- Rebase to v6.17-rc1.
+- The patch commit message were modified.
+- Add Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+
+Changes for v2:
+- The patch commit message were modified.
+- New optimizations for the functions disable_ecrc_checking, aer_enable_irq, and aer_disable_irq have been added.
+---
+
+Hans Zhang (2):
+  PCI: Introduce pci_clear/set_config_dword()
+  PCI/AER: Use pci_clear/set_config_dword to simplify code
+
+ drivers/pci/pcie/aer.c | 29 ++++++++++-------------------
+ include/linux/pci.h    | 12 ++++++++++++
+ 2 files changed, 22 insertions(+), 19 deletions(-)
+
+
+base-commit: 8742b2d8935f476449ef37e263bc4da3295c7b58
 -- 
 2.25.1
 
