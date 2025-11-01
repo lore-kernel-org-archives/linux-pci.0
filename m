@@ -1,101 +1,109 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-28.smtpout.orange.fr [80.12.242.28])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83341DF248;
-	Sat,  1 Nov 2025 16:06:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D738D24DCE6;
+	Sat,  1 Nov 2025 16:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762013170; cv=none; b=JIk/JT56rIxToqWU1Y/qIiTAn/9e9YUEFVqvLLtR5z3YgjPEUO35JLAM46AKi0u5WcDXkl2ThLXwk0hTGyNxgfuLeUFEE9Ub+i0pfYMzv44XJJkvIWwDo9K4KfY9LMbqoyBLq+V4/unxBVDIbNEBbh04Ywt+QNrJUPD0EK4UsPg=
+	t=1762013680; cv=none; b=ff6zEGRIcaSEPKEnOGycs4IyBYjpJZX9cVfnDC3xYNTMsTVfaCubWrRA8trAEaZ58Fg+dCBT5342Qo13BufBT+n4Ajvq7b84rE9+ukrv83qWagblVEdDH7acVhoDEqS9TweGbBSI8d2Gw8zMb+ec2nuhJWxKMk/9rIOvXM84WTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762013170; c=relaxed/simple;
-	bh=Qkq2J1XbXyE+1yYBv/tl1ZkDKsDlaBjvSwLxP8RDrus=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=loGovGeXYM/GPVhgEzlOqN7U1c+sk7wNtiIOrRztHaSFj7vm9gYyt3J7s2u0Vt+lRPFQOOHAcAMVxzfWM95Ocy7DHwF2i+WE+496LnqFst9V/3P9SJlEpA8kxgEcfqqjjlHglp+n5QZ9KlJBbLyuWCCnMiPq85Ug5bwekTpD2cM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Qv4h+ZWT; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1762013680; c=relaxed/simple;
+	bh=3Psem+Ishk9PvrrqsHVjpICl3mn/S2dLyq4I1Tu/qf4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=azQRx/dVSmDOmGXLnCoHcXR/s8DGmXEGF7DrA+SvgP9rgfG9BIK3ZuAhRp4+86yJ5f68+MmenfBmKsP1c8EHAqzuqD+IYTHAMHySqB5Ro6RJQSCwT6YHzD9i8psyrG/7eO7542UrTi7Dq/r+0wi/EcCKLziWWVKvfvdDtT+TCCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=gbgYe8A8; arc=none smtp.client-ip=80.12.242.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Qv4h+ZWT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=wt
-	UqoOB1t4ZfIMOLU4hyF3m97cGANHPWUTnEiH4MHfI=; b=Qv4h+ZWTNeHY8wZVya
-	KNdLA4ekmcvy3lCgO/cU6kF1PohIvFnjLAhusLoxZUFb88ZQ2Zyj8McJNopCCurD
-	avCuCgnRdForiJMec6+KgrLe3iM4GXPz3yRQBNbVt+B9C5qKo3di42o4XDlWUz0v
-	wb8juJAnMqBkFkrHu5sIR5Dt4=
-Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDXL4nTLwZp3qOtAw--.844S2;
-	Sun, 02 Nov 2025 00:05:40 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: bhelgaas@google.com,
-	helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Hans Zhang <18255117159@163.com>
-Subject: [PATCH v4 0/4] PCI: Add delay macros for better code readability and maintainability
-Date: Sun,  2 Nov 2025 00:05:34 +0800
-Message-Id: <20251101160538.10055-1-18255117159@163.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="gbgYe8A8"
+Received: from [IPV6:2a01:cb10:785:b00:8347:f260:7456:7662]
+ ([IPv6:2a01:cb10:785:b00:8347:f260:7456:7662])
+	by smtp.orange.fr with ESMTPA
+	id FEEGvCCejmO02FEEGvdAs1; Sat, 01 Nov 2025 17:13:26 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1762013606;
+	bh=YSrTYnslOhTn5JbALa4w7U69LIYmYpZEDX3oWdycpgw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:From;
+	b=gbgYe8A8KuqOFQtTNTj6Tqf5xEWg1oKBfPbx8zE4SiNYQ4AQyOry8RRPxKz0YJmUz
+	 XT3+g/ANUZ/Hp4oh8sHl0yREZ9jNOh4yfZZH1Wjc1TB2XWv7V8iuDGu/vtSpBzsMNX
+	 ELdOHMhJQuM0nccN9NRQBVsbhAHMa2gMUotfNPd/6gSzCSo/EGRIJuoOtSU9vgppIc
+	 gm5bkolz2nbySa9GTKcJUHAXbhUrIhdVBwNTPTaAVc4Hl4ar1LfR5iENTJ9q8A/LDK
+	 n06Cc5gY2o2Y5IBnHYcn8QTiISG+x1DTxZPB1naMF1wbXwqUP/opLnV9oKtLkRzw2F
+	 qXtTSUfUTEBkg==
+X-ME-Helo: [IPV6:2a01:cb10:785:b00:8347:f260:7456:7662]
+X-ME-Auth: bWFyaW9uLmphaWxsZXRAd2FuYWRvby5mcg==
+X-ME-Date: Sat, 01 Nov 2025 17:13:26 +0100
+X-ME-IP: 2a01:cb10:785:b00:8347:f260:7456:7662
+Message-ID: <c1afb7fa-c45f-44e3-81e1-200da04c29ef@wanadoo.fr>
+Date: Sat, 1 Nov 2025 17:13:23 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 3/4] PCI: pciehp: Add macros for hotplug operation
+ delays
+To: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
+ helgaas@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20251101160538.10055-1-18255117159@163.com>
+ <20251101160538.10055-4-18255117159@163.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Content-Language: en-US, fr-FR
+In-Reply-To: <20251101160538.10055-4-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXL4nTLwZp3qOtAw--.844S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFyDtw15Gw1fXw4fGr1rWFg_yoW8Ww4kpa
-	y5GFsYkrs7J3yFya97ua1I9F98Aa9rAFWjqrWkG3429FW3Z3W5XFsagr4YvFy7ZrW0gw1I
-	qry2kw10ka4jyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEgAw8UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhn4o2kGKs1Z4QACsK
 
-This series improves code readability and maintainability in the PCI
-subsystem by replacing hard-coded delay values with descriptive macros.
+Le 01/11/2025 à 17:05, Hans Zhang a écrit :
+> Add WAIT_PDS_TIMEOUT_MS and POLL_CMD_TIMEOUT_MS macros for hotplug
+> operation delays to improve code readability.
+> 
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> ---
+>   drivers/pci/hotplug/pciehp_hpc.c | 7 +++++--
+>   1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index bcc51b26d03d..15b09c6a8d6b 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -28,6 +28,9 @@
+>   #include "../pci.h"
+>   #include "pciehp.h"
+>   
+> +#define WAIT_PDS_TIMEOUT_MS	10
+> +#define POLL_CMD_TIMEOUT_MS	10
+> +
+>   static const struct dmi_system_id inband_presence_disabled_dmi_table[] = {
+>   	/*
+>   	 * Match all Dell systems, as some Dell systems have inband
+> @@ -103,7 +106,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
+>   			smp_mb();
+>   			return 1;
+>   		}
+> -		msleep(10);
+> +		msleep(POLL_CMD_TIMEOUT_MS);
+>   		timeout -= 10;
 
----
-Hi Bjorn,
+Should we have: timeout -= POLL_CMD_TIMEOUT_MS;
 
-I wonder if there is still a need to advance this series? If it's not necessary,
-please drop it. Thank you very much.
+?
 
-Best regards
-Hans
+>   	} while (timeout >= 0);
+>   	return 0;	/* timeout */
+> @@ -283,7 +286,7 @@ static void pcie_wait_for_presence(struct pci_dev *pdev)
+>   		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+>   		if (slot_status & PCI_EXP_SLTSTA_PDS)
+>   			return;
+> -		msleep(10);
+> +		msleep(WAIT_PDS_TIMEOUT_MS);
 
+Same with WAIT_PDS_TIMEOUT_MS.
 
-Changes for v4:
-https://patchwork.kernel.org/project/linux-pci/patch/20250826170315.721551-1-18255117159@163.com/
+CJ
 
-- According to Bjorn's feedback, the benefits of using fsleep are not significant.
-  drop the 0002 patch in v3. (Bjorn)
-- For the controller drivers, the added macros do no good and provide no value.
-  So if you ever respin this series, you can drop them. (Mani)
-
-Changes for v3:
-https://patchwork.kernel.org/project/linux-pci/cover/20250822155908.625553-1-18255117159@163.com/
-
-- According to Bjorn's suggestion, split the first patch of v2 and add
-  macro definitions to the remaining patches.
-
-Changes for v2:
-https://patchwork.kernel.org/project/linux-pci/patch/20250820160944.489061-1-18255117159@163.com/
-
-- According to the Maintainer's suggestion, it was modified to fsleep,
-  usleep_range, and macro definitions were used instead of hard code. (Bjorn)
----
-
-Hans Zhang (4):
-  PCI: Add macro for secondary bus reset delay
-  PCI: Add macro for link status check delay
-  PCI: pciehp: Add macros for hotplug operation delays
-  PCI/DPC: Add macro for RP busy check delay
-
- drivers/pci/hotplug/pciehp_hpc.c |  7 +++++--
- drivers/pci/pci.c                | 11 +++++------
- drivers/pci/pci.h                |  3 +++
- drivers/pci/pcie/dpc.c           |  4 +++-
- 4 files changed, 16 insertions(+), 9 deletions(-)
-
-
-base-commit: ba36dd5ee6fd4643ebbf6ee6eefcecf0b07e35c7
--- 
-2.34.1
+>   		timeout -= 10;
+>   	} while (timeout > 0);
+>   }
 
