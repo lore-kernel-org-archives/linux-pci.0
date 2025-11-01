@@ -1,42 +1,39 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 488211DED42;
-	Sat,  1 Nov 2025 16:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83341DF248;
+	Sat,  1 Nov 2025 16:06:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762013168; cv=none; b=BRxyt4BRV6RHhwiaMDSX1ZKvSjvKAjUUT4gfmc4UU123LoczBuuENpiHr6AkfZmNlol9rEcoMcnJFEx8NNwXeFXnT+JFd9nmkEKs9EoL5CGTqdje1FEsCPE1scJDGoQSjhZkyEf03Rv1k0Eq73nxDhcloErFbH/8gf84BtpNNMI=
+	t=1762013170; cv=none; b=JIk/JT56rIxToqWU1Y/qIiTAn/9e9YUEFVqvLLtR5z3YgjPEUO35JLAM46AKi0u5WcDXkl2ThLXwk0hTGyNxgfuLeUFEE9Ub+i0pfYMzv44XJJkvIWwDo9K4KfY9LMbqoyBLq+V4/unxBVDIbNEBbh04Ywt+QNrJUPD0EK4UsPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762013168; c=relaxed/simple;
-	bh=qGBRO2c6Apw9WL+MuNeqKXnc+l5yjmXHbbw5ebuF9ds=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=fBfdEtV5TWpVtUaepb/m6DlKjj48ZQcK+9Ya+uLToQ2T1CKg/rGcT4vs9YIiisFXyZeQlMf0EHY8lwNNYxYLlMBI0/mh/0KeqhKl3fJQbj+wvw1Md+bdNA6LorI1R0OJKN5VDBI828elEkOEBNvi1bh9kx6XmLiqs4zRQ/baXVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XLT4nuyE; arc=none smtp.client-ip=117.135.210.2
+	s=arc-20240116; t=1762013170; c=relaxed/simple;
+	bh=Qkq2J1XbXyE+1yYBv/tl1ZkDKsDlaBjvSwLxP8RDrus=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=loGovGeXYM/GPVhgEzlOqN7U1c+sk7wNtiIOrRztHaSFj7vm9gYyt3J7s2u0Vt+lRPFQOOHAcAMVxzfWM95Ocy7DHwF2i+WE+496LnqFst9V/3P9SJlEpA8kxgEcfqqjjlHglp+n5QZ9KlJBbLyuWCCnMiPq85Ug5bwekTpD2cM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Qv4h+ZWT; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XLT4nuyE"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Qv4h+ZWT"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=i+
-	y4KPWUsBAQQaupLuRxWCTWo46ly/Fkjsxz8IWvoFo=; b=XLT4nuyEViRet9kwtx
-	o4avf3gLD+k9Jax7H0j0LNkGj5ICyk/gMssGs6l0JiSs12mQvJxeFHULoFgdvbjl
-	jHFo/HwkIlbIriP32NpdXoJMioRrXcCvIiBgtpnNWg2Go2k0bOeKB/zvg1H4Fapc
-	l+I7wOVYb4M0QEn0DBTWcQAZo=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=wt
+	UqoOB1t4ZfIMOLU4hyF3m97cGANHPWUTnEiH4MHfI=; b=Qv4h+ZWTNeHY8wZVya
+	KNdLA4ekmcvy3lCgO/cU6kF1PohIvFnjLAhusLoxZUFb88ZQ2Zyj8McJNopCCurD
+	avCuCgnRdForiJMec6+KgrLe3iM4GXPz3yRQBNbVt+B9C5qKo3di42o4XDlWUz0v
+	wb8juJAnMqBkFkrHu5sIR5Dt4=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDXL4nTLwZp3qOtAw--.844S6;
-	Sun, 02 Nov 2025 00:05:42 +0800 (CST)
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDXL4nTLwZp3qOtAw--.844S2;
+	Sun, 02 Nov 2025 00:05:40 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	helgaas@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Hans Zhang <18255117159@163.com>
-Subject: [PATCH v4 4/4] PCI/DPC: Add macro for RP busy check delay
-Date: Sun,  2 Nov 2025 00:05:38 +0800
-Message-Id: <20251101160538.10055-5-18255117159@163.com>
+Subject: [PATCH v4 0/4] PCI: Add delay macros for better code readability and maintainability
+Date: Sun,  2 Nov 2025 00:05:34 +0800
+Message-Id: <20251101160538.10055-1-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251101160538.10055-1-18255117159@163.com>
-References: <20251101160538.10055-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,42 +41,61 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXL4nTLwZp3qOtAw--.844S6
-X-Coremail-Antispam: 1Uf129KBjvdXoWrKrykKrW8CF4UZF18Kw17Jrb_yoWkAwb_uF
-	yFvryIyrW5CF97C3yYy3ySy34UA3Z7Zr1xWa1FyFWfZr17trnrJrZ2vw15trZ8W3y5XFy5
-	Aw4DJ34Yyr9rGjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRK9a95UUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhn4o2kGKs1hDAAAsd
+X-CM-TRANSID:_____wDXL4nTLwZp3qOtAw--.844S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7AFyDtw15Gw1fXw4fGr1rWFg_yoW8Ww4kpa
+	y5GFsYkrs7J3yFya97ua1I9F98Aa9rAFWjqrWkG3429FW3Z3W5XFsagr4YvFy7ZrW0gw1I
+	qry2kw10ka4jyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEgAw8UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhn4o2kGKs1Z4QACsK
 
-Add PCIE_EXP_DPC_BUSY_CHECK_MS macro for RP busy check delay.
+This series improves code readability and maintainability in the PCI
+subsystem by replacing hard-coded delay values with descriptive macros.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/pcie/dpc.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Hi Bjorn,
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index fc18349614d7..bd5e8cd9e43e 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -21,6 +21,8 @@
- #define PCI_EXP_DPC_CTL_EN_MASK	(PCI_EXP_DPC_CTL_EN_FATAL | \
- 				 PCI_EXP_DPC_CTL_EN_NONFATAL)
- 
-+#define PCIE_EXP_DPC_BUSY_CHECK_MS	10
-+
- static const char * const rp_pio_error_string[] = {
- 	"Configuration Request received UR Completion",	 /* Bit Position 0  */
- 	"Configuration Request received CA Completion",	 /* Bit Position 1  */
-@@ -135,7 +137,7 @@ static int dpc_wait_rp_inactive(struct pci_dev *pdev)
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 	while (status & PCI_EXP_DPC_RP_BUSY &&
- 					!time_after(jiffies, timeout)) {
--		msleep(10);
-+		msleep(PCIE_EXP_DPC_BUSY_CHECK_MS);
- 		pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 	}
- 	if (status & PCI_EXP_DPC_RP_BUSY) {
+I wonder if there is still a need to advance this series? If it's not necessary,
+please drop it. Thank you very much.
+
+Best regards
+Hans
+
+
+Changes for v4:
+https://patchwork.kernel.org/project/linux-pci/patch/20250826170315.721551-1-18255117159@163.com/
+
+- According to Bjorn's feedback, the benefits of using fsleep are not significant.
+  drop the 0002 patch in v3. (Bjorn)
+- For the controller drivers, the added macros do no good and provide no value.
+  So if you ever respin this series, you can drop them. (Mani)
+
+Changes for v3:
+https://patchwork.kernel.org/project/linux-pci/cover/20250822155908.625553-1-18255117159@163.com/
+
+- According to Bjorn's suggestion, split the first patch of v2 and add
+  macro definitions to the remaining patches.
+
+Changes for v2:
+https://patchwork.kernel.org/project/linux-pci/patch/20250820160944.489061-1-18255117159@163.com/
+
+- According to the Maintainer's suggestion, it was modified to fsleep,
+  usleep_range, and macro definitions were used instead of hard code. (Bjorn)
+---
+
+Hans Zhang (4):
+  PCI: Add macro for secondary bus reset delay
+  PCI: Add macro for link status check delay
+  PCI: pciehp: Add macros for hotplug operation delays
+  PCI/DPC: Add macro for RP busy check delay
+
+ drivers/pci/hotplug/pciehp_hpc.c |  7 +++++--
+ drivers/pci/pci.c                | 11 +++++------
+ drivers/pci/pci.h                |  3 +++
+ drivers/pci/pcie/dpc.c           |  4 +++-
+ 4 files changed, 16 insertions(+), 9 deletions(-)
+
+
+base-commit: ba36dd5ee6fd4643ebbf6ee6eefcecf0b07e35c7
 -- 
 2.34.1
 
