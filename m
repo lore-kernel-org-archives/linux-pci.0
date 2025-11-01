@@ -1,127 +1,92 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E814634D396;
-	Sat,  1 Nov 2025 16:16:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B23017A2F0;
+	Sat,  1 Nov 2025 16:24:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762013786; cv=none; b=bLM2L4nH69gM4yck4BXeRHQiVLMMQhwkqy6ASBXmtOiPCtubHrV0RLs1jXpvoVCnkKwf/+xahXHRqhcKxFPsme1wqQ2fryuydmRuF2tTDy+ez52TQIctkt7W+fqSSwTw/26iAuwAUfnsO4CcE5NcnE0BVtVc2BN5msHdw+b7jHc=
+	t=1762014257; cv=none; b=faG2zyz9JrlknPBrmY+8YCUgwMVv7dzPSEpTWD8LCr4qzgQ+4bIJo0p6t6wRHyqs1/XltU4h1puP0lLCi12wBJpmqfbw6VVP/UrsAZ6DLYlGrwQhb1ANjybmEMWpq14jFlQlszYaSb9T9S4Zy3FsD6X1bC77N3qxekx4/gsN5Jw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762013786; c=relaxed/simple;
-	bh=K2JYXfQ0hVDX8OIELLq6/FdS5/KG83sW03rGHpTMU/o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=V4OsG/3ZqiJXEM6l+gXiZ8SPgyuwouYODeLPLT7j8rE2WPUfhowStu8w22KDK00tW+cnqE0NjfTOLg0cSGfEKPlchhvpqa0JhtnOuE+vIumRbIdD/8iCuXlrhBCHzzTU/IIsS2lQ5IMooavZR8UwTWp6hBA2Pzy8Dd1xG27p3Oc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Ozt+HsMT; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1762014257; c=relaxed/simple;
+	bh=9Ud/LeNIcKwL0efzQzPowgMKrjbEYWLDeh1PO30vwtM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Q5MZjoRrpxuzkWE7Py6xMxKrKDn2aRc5MO7RXqql/9JIak6Aln79R0GRgqJxDO4oa9BO6Bg4XGk9kPwk4gJ4YB442YfKLQuQut99VE4bn428gHKcCM5VwpV/c97XUVI8L52J52yLPOC5b4G8l9nVb/vb+7QUZgh1XOsgUIrVkX8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=TtEq1vpD; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Ozt+HsMT"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="TtEq1vpD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=dguzoqFh9vYupZqCUF84hwScckDIUOLpGnPK71FG71w=;
-	b=Ozt+HsMT43uGLkU4z9xdYV2n7kn1ibNZYJ+g4YfqcwyCCwQmZ32uPVgZ/gyl2b
-	nJYuOuk5FhL+mskcZv5S1stWs6qnMLBsPf0d/5DQ7Lw3n65BicsKdx2M3fR9FDSb
-	/daTnrnXT5OnRsgRBA2LrKnjnC+10/+1HThm76lhJzIcI=
-Received: from [IPV6:240e:b8f:927e:1000:3c54:eb11:a795:c9c9] (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3VyZGMgZpRqjcAw--.51288S2;
-	Sun, 02 Nov 2025 00:16:07 +0800 (CST)
-Message-ID: <eb45e253-0aec-4fca-9bfe-31d23fe8bd1d@163.com>
-Date: Sun, 2 Nov 2025 00:16:06 +0800
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=3V
+	QIEWJRrZqUWBIlYJxpy6ioV+MlB2SKV2d469TV62M=; b=TtEq1vpDhxs+q/92BZ
+	xkUuxYPlpDFf25bJsffU+uROyvaSorqXGl9WnzgmfkTVimFjkYX6Y5Kya7oj3jVb
+	4lNS8IlxoijbYUzhUe0rYnMIXrbdUUIcUBHZIn6jYTjrRb6GLfZdM+UG7uFqWQ/e
+	X1tU0zJzAwgjeu/ilXAywoEyY=
+Received: from zhb.. (unknown [])
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCHBDkQNAZpNmGwAw--.59274S3;
+	Sun, 02 Nov 2025 00:23:47 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: mahesh@linux.ibm.com,
+	bhelgaas@google.com
+Cc: oohall@gmail.com,
+	mani@kernel.org,
+	lukas@wunner.de,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [RESEND PATCH v4 1/2] PCI: Introduce pci_clear/set_config_dword()
+Date: Sun,  2 Nov 2025 00:22:18 +0800
+Message-Id: <20251101162219.12016-2-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20251101162219.12016-1-18255117159@163.com>
+References: <20251101162219.12016-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/4] PCI: pciehp: Add macros for hotplug operation
- delays
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, bhelgaas@google.com,
- helgaas@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20251101160538.10055-1-18255117159@163.com>
- <20251101160538.10055-4-18255117159@163.com>
- <c1afb7fa-c45f-44e3-81e1-200da04c29ef@wanadoo.fr>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <c1afb7fa-c45f-44e3-81e1-200da04c29ef@wanadoo.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3VyZGMgZpRqjcAw--.51288S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tw48AF15AF1rGr47Aw4Utwb_yoW8AF1xp3
-	95AFWYyF1rJr45CayrZan8Jrn8A3ZxCrZFkrW8GryfCFyxA3s8A3WfKa4YqF1fAryUur1U
-	XFy5JFy5XFs8tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Uk3k_UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhj4o2kGKs2TPQAAsf
+X-CM-TRANSID:_____wCHBDkQNAZpNmGwAw--.59274S3
+X-Coremail-Antispam: 1Uf129KBjvJXoWrKw4rWrWxKrWxAFykCry7Awb_yoW8Jr15pF
+	Z8CFyfGFyxGFnIk3WDXay8Aw18WrWkXFWIgrW3K3s8ZFW2ya4vvF909r17Jwn3GrWvvr45
+	A393KFZY9r4qya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pipBT5UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiFR-4o2kGMU41FgAAsi
 
+Add helper functions to clear or set bits in PCI config space.
+These helpers reduce code duplication and improve readability for config
+space modifications by encapsulating common read-modify-write patterns.
 
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ include/linux/pci.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-On 2025/11/2 00:13, Christophe JAILLET wrote:
-> Le 01/11/2025 à 17:05, Hans Zhang a écrit :
->> Add WAIT_PDS_TIMEOUT_MS and POLL_CMD_TIMEOUT_MS macros for hotplug
->> operation delays to improve code readability.
->>
->> Signed-off-by: Hans Zhang <18255117159@163.com>
->> ---
->>   drivers/pci/hotplug/pciehp_hpc.c | 7 +++++--
->>   1 file changed, 5 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/ 
->> pciehp_hpc.c
->> index bcc51b26d03d..15b09c6a8d6b 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -28,6 +28,9 @@
->>   #include "../pci.h"
->>   #include "pciehp.h"
->> +#define WAIT_PDS_TIMEOUT_MS    10
->> +#define POLL_CMD_TIMEOUT_MS    10
->> +
->>   static const struct dmi_system_id 
->> inband_presence_disabled_dmi_table[] = {
->>       /*
->>        * Match all Dell systems, as some Dell systems have inband
->> @@ -103,7 +106,7 @@ static int pcie_poll_cmd(struct controller *ctrl, 
->> int timeout)
->>               smp_mb();
->>               return 1;
->>           }
->> -        msleep(10);
->> +        msleep(POLL_CMD_TIMEOUT_MS);
->>           timeout -= 10;
-> 
-> Should we have: timeout -= POLL_CMD_TIMEOUT_MS;
-> 
-> ?
-
-Hi Christophe,
-
-Thank you very much for your reply and reminder.
-
-If Bjorn finds it meaningful, I will fix it in the next version.
-
-
-> 
->>       } while (timeout >= 0);
->>       return 0;    /* timeout */
->> @@ -283,7 +286,7 @@ static void pcie_wait_for_presence(struct pci_dev 
->> *pdev)
->>           pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
->>           if (slot_status & PCI_EXP_SLTSTA_PDS)
->>               return;
->> -        msleep(10);
->> +        msleep(WAIT_PDS_TIMEOUT_MS);
-> 
-> Same with WAIT_PDS_TIMEOUT_MS.
-> 
-
-Will change.
-
-Best regards,
-Hans
-
-> CJ
-> 
->>           timeout -= 10;
->>       } while (timeout > 0);
->>   }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 59876de13860..bb0dba2b7aee 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1341,6 +1341,18 @@ static inline int pcie_capability_clear_dword(struct pci_dev *dev, int pos,
+ 	return pcie_capability_clear_and_set_dword(dev, pos, clear, 0);
+ }
+ 
++static inline void pci_clear_config_dword(const struct pci_dev *dev, int pos,
++					  u32 clear)
++{
++	pci_clear_and_set_config_dword(dev, pos, clear, 0);
++}
++
++static inline void pci_set_config_dword(const struct pci_dev *dev, int pos,
++					u32 set)
++{
++	pci_clear_and_set_config_dword(dev, pos, 0, set);
++}
++
+ /* User-space driven config access */
+ int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
+ int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
+-- 
+2.25.1
 
