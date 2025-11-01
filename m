@@ -1,112 +1,118 @@
-Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9023823BD01;
-	Sat,  1 Nov 2025 12:41:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762000870; cv=pass; b=fC+kCYqsM2asGktoaI9nsbPobz4w0HTZwq9VK+L8JjVnRF36wMU4mtS+Obbes2WBPkrQmLJfWDdsNBvAwupSlmq5n0F0TT0GB3ZmWzgXG4zlFUTc9s6j5hknmYlCbB1mFi/6dnjBPPuFfJXdf3Qbj76zvSL2APx3um69shrlD3A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762000870; c=relaxed/simple;
-	bh=Xx4k/fa+z5oSv3/s6q/fkvdh6lOYHQhINeo6yjxMnCM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=X2kfL1u9nkQgcjWMa7NgpheN9rzmyoO3Wyn9Mfn29cUgoFteCZaaDam12VeiW+whAddZmGDBLSsIKZAFUJqithEmTeON7s3Sh8lYubVhlo2uB4EKh2ltIvjEjNloy8nKC3kKe48q3KNHjIN19j0ZlUZ29uyy8EbMeW2uFoScvb4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=sjoerd@collabora.com header.b=hVxDDM/g; arc=pass smtp.client-ip=136.143.188.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6481531E8;
+	Sat,  1 Nov 2025 13:33:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762003982; cv=none; b=fKcH/td4X/+e9FjNzJOo3XNRn6CPNQ+Auj2NjuL/+RDPaUAU7O5I5UkL+VpYI71ctS2fs9otoiFIeHtbCHEeNn3C5TSsfl/KkHQ3CY/8CDRbqngHJV+zT4nyb27evkGdTBdDXVMaavyc8b6ZVZ84eTJqj2UfJQKNm7CW/rJtYEM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762003982; c=relaxed/simple;
+	bh=TML+7NIpD9ku6fMMNJ4M3sDNuPNu+rMvX1U1RKvDE/Y=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=pi1rJssmeiBzrB73DNUIoUiwOY6fXvsl0cY5i3vbC/nl8SHjAjZypyABMRLYO32W1cb1fzO5kJl5obyMSGgJQ0vvZTHBbeh9YaFQnIGEQpyGmCX1hCFZgfWe1w+p9RzbWZVwwhg+a/9DdAOIhZpEHH/jbYsAILi9irjk5rovT4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=fS5BHcvi; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=sjoerd@collabora.com header.b="hVxDDM/g"
-ARC-Seal: i=1; a=rsa-sha256; t=1762000821; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=A7QggDksDzCmseQYSFGx/xof5FXoKWhxWCF1voGnOqira6R7CpXcFOe0adxPrhAfq46N1HjN76y4RmHjG2MKHWqbGxvwsMyJVal7+yN2yaVxHACMWl+iV2XKLZ756ZfiGeB7GPOMfmO5c2NiDuOqi33nIosp10r5BtTbdXDjSu0=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1762000821; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=wX50N1iHvuUcfFTPrDTk6BLpkXD7It4diuWw8d34XeY=; 
-	b=IRfmqhYlU29u+cfbSc2SPpAMwbA9jqEXzZ2q6s4FAq/fo8xrlDQSrLa8qvj+KfyhxxoqqjfejRhYxARtTv0si7j9gCxYbC/wfSsPcXJeow/Nupy5oK9uEUoQqa+vx/v1KKRRxXaopfS8uW9e92K+MwM/7lXIx+A+HLzbpKdLB3Y=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=sjoerd@collabora.com;
-	dmarc=pass header.from=<sjoerd@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1762000821;
-	s=zohomail; d=collabora.com; i=sjoerd@collabora.com;
-	h=Message-ID:Subject:Subject:From:From:To:To:Cc:Cc:Date:Date:In-Reply-To:References:Content-Type:Content-Transfer-Encoding:MIME-Version:Message-Id:Reply-To;
-	bh=wX50N1iHvuUcfFTPrDTk6BLpkXD7It4diuWw8d34XeY=;
-	b=hVxDDM/gqRw68T07nRuvdrHGupRkXhOU8RexT1UeP+9bS+r2KO4yzzfNJKjP+80C
-	7ABb6CAL4qYLI3lXalMwKyt2SNufHOI19Bfnb3DH6aWQUjo7eCQ7Z9iLnS5/At0SWAQ
-	DMYA4onW8qA2XN4liLwbv9J0ttSlgEbygWhi/Tro=
-Received: by mx.zohomail.com with SMTPS id 1762000816267360.6637248664106;
-	Sat, 1 Nov 2025 05:40:16 -0700 (PDT)
-Message-ID: <548101c6c887299b3c39f294e376c782e0bd2160.camel@collabora.com>
-Subject: Re: [PATCH 13/15] arm64: dts: mediatek: mt7981b: Add wifi memory
- region
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="fS5BHcvi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1762003979;
+	bh=TML+7NIpD9ku6fMMNJ4M3sDNuPNu+rMvX1U1RKvDE/Y=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=fS5BHcvi5NKG+PayXkzDIFxY7Y8m/3TPgiARnEqyD6D3CrOj9z3utuHzrvbZXwhnJ
+	 kXnsg0GSmRMe3nTgq3T9YmN4Xo1hAHjEe5UUAFdsFnFP4MX6HY+ZRw5ZkiXuTQaprE
+	 9Bb69eiqABYmuEpO5zHfwAqhHlNAETVAF04/CkeTT3xLukM7J9Zlp/7JNMOJMMnhq6
+	 aXj72/6mY5Di7+KnE9vfg7LfwnRti9EmJ9gI6ZGWSM9rqTmLx1H6Ov7xDOccXMJJ6y
+	 zIfefG8sDXNUVjw1mA1tkGOWgfvTqpZ+ht4/Xia735EskZ6IjWT6Mo0ay6wqEJq5uy
+	 K1v6mSQQwOrsQ==
+Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531::8])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: sjoerd)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id DA4E317E1091;
+	Sat,  1 Nov 2025 14:32:58 +0100 (CET)
+Received: by beast.luon.net (Postfix, from userid 1000)
+	id 88F2410E9D02A; Sat, 01 Nov 2025 14:32:58 +0100 (CET)
 From: Sjoerd Simons <sjoerd@collabora.com>
-To: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,  Matthias Brugger
- <matthias.bgg@gmail.com>, Ryder Lee <ryder.lee@mediatek.com>, Jianjun Wang	
- <jianjun.wang@mediatek.com>, Bjorn Helgaas <bhelgaas@google.com>, Lorenzo
- Pieralisi <lpieralisi@kernel.org>, Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>,  Manivannan Sadhasivam	 <mani@kernel.org>,
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul	 <vkoul@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>, Lee Jones	 <lee@kernel.org>,
- Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"	
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski	
- <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Lorenzo Bianconi	
- <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>
-Cc: kernel@collabora.com, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-phy@lists.infradead.org, netdev@vger.kernel.org, Daniel Golle
-	 <daniel@makrotopia.org>, Bryan Hinton <bryan@bryanhinton.com>
-Date: Sat, 01 Nov 2025 13:40:06 +0100
-In-Reply-To: <9bf32a56-b67f-488a-8719-3f97d85533d3@collabora.com>
-References: <20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com>
-	 <20251016-openwrt-one-network-v1-13-de259719b6f2@collabora.com>
-	 <9bf32a56-b67f-488a-8719-3f97d85533d3@collabora.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2-7 
+Date: Sat, 01 Nov 2025 14:32:46 +0100
+Subject: [PATCH v2 01/15] arm64: dts: mediatek: mt7981b: Configure UART0
+ pinmux
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ZohoMailClient: External
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251101-openwrt-one-network-v2-1-2a162b9eea91@collabora.com>
+References: <20251101-openwrt-one-network-v2-0-2a162b9eea91@collabora.com>
+In-Reply-To: <20251101-openwrt-one-network-v2-0-2a162b9eea91@collabora.com>
+To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+ Ryder Lee <ryder.lee@mediatek.com>, 
+ Jianjun Wang <jianjun.wang@mediatek.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, Lee Jones <lee@kernel.org>, 
+ Andrew Lunn <andrew+netdev@lunn.ch>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>
+Cc: kernel@collabora.com, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, 
+ linux-phy@lists.infradead.org, netdev@vger.kernel.org, 
+ Daniel Golle <daniel@makrotopia.org>, Bryan Hinton <bryan@bryanhinton.com>, 
+ Sjoerd Simons <sjoerd@collabora.com>
+X-Mailer: b4 0.14.3
 
-On Thu, 2025-10-16 at 13:28 +0200, AngeloGioacchino Del Regno wrote:
-> Il 16/10/25 12:08, Sjoerd Simons ha scritto:
-> > Add required memory region for the builtin wifi block. Disable the bloc=
-k
-> > by default as it won't function properly without at least pin muxing.
-> >=20
-> > Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
->=20
-> You should split this commit in two:
-> =C2=A0 - Add wifi memory region
-> =C2=A0 - Disable wifi by default
+Add explicit pinctrl configuration for UART0
 
-Will split.
+Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
+---
+V1 -> V2: Move pinctrl to the soc dtsi as it's the only available
+          pinmux for the uart. And very rare for the pins to be used for
+          anything else.
+---
+ arch/arm64/boot/dts/mediatek/mt7981b.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-> Regarding the second commit, you have to re-enable the wifi node in all o=
-f
-> the currently supported MT7981b devices, including:
-> =C2=A0 - Xiaomi AX3000T
-> =C2=A0 - Cudy WR3000 V1
->=20
-> While I agree that without pin muxing the wifi may not properly work, it =
-is
-> unclear whether the aforementioned devices are pre-setting the pinmux in =
-the
-> bootloader before booting Linux.
->=20
-> In case those do, you'd be "breaking" WiFi on two routers here.
+diff --git a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+index 58c99f2a25218..4fa35bbf0a9cd 100644
+--- a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+@@ -102,6 +102,8 @@ uart0: serial@11002000 {
+ 			clocks = <&infracfg CLK_INFRA_UART0_SEL>,
+ 				 <&infracfg CLK_INFRA_UART0_CK>;
+ 			clock-names = "baud", "bus";
++			pinctrl-names = "default";
++			pinctrl-0 = <&uart0_pins>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -229,6 +231,13 @@ pio: pinctrl@11d00000 {
+ 			gpio-controller;
+ 			#gpio-cells = <2>;
+ 			#interrupt-cells = <2>;
++
++			uart0_pins: uart0-pins {
++				mux {
++					function = "uart";
++					groups = "uart0";
++				};
++			};
+ 		};
+ 
+ 		efuse@11f20000 {
 
-Wifi will never have worked on those upstream; The driver hits an unconditi=
-onal -EINVAL during probe
-due to the  missing memory-region this patch adds. I'll make sure to note t=
-hat in the new disable
-patch.
+-- 
+2.51.0
 
---=20
-Sjoerd Simons <sjoerd@collabora.com>
