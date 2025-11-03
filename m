@@ -1,163 +1,157 @@
-Received: from mail-il1-f179.google.com (mail-il1-f179.google.com [209.85.166.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E82D3164A6
-	for <linux-pci@vger.kernel.org>; Mon,  3 Nov 2025 16:51:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA8C2156678;
+	Mon,  3 Nov 2025 17:28:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762188676; cv=none; b=WrG8n9FB7zwe2ZLjU2PbZXoKqS6qVLVeP9HtrL80Ug503WdLh9B5jY21+u7Cqhg54RW3I9a5Dsk9/u9MR9pqZsuP9szMCbdm3IDc2s/EeHKpzL+ZTayxgVKFjm0CLyfnmPgdU9bCKoyrNEgDlrEKHj6oabLi2EiU4FZ/rlg1QaA=
+	t=1762190912; cv=none; b=kk5tGXidYCnNaYtU/TxljErpiYNix24lz6MchABblJ4Tnv4pYJzFGCc72Wx36ccA8nyXa5sPUW+dXgHjSKnNQ7ECZqZHkbCaTClSNfe8B82KkkTKMkSCNTWljlr5SWptHePFNqm+devFCKNJjZwTu9iupWGSmDBZigOc4DzuEXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762188676; c=relaxed/simple;
-	bh=9X5qYxyuX7GnNfRV7eA4zSQai4y1CCQShsSie8Vm55M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=kmjHZM35XKBDyYOoFwAvKp8CK++QgII4VDYJHqOwVcjheS2kRRBaZmYksLnsIlE4T5C5brv+Fharm3yQ5jIDHJG+aH1gKc1ZeO7U0l8AYAYWDyMGQjUfiHHhyobbsRED01238CFOBa1SDjkTdgzPRFxI5dJn85SXTVgYzVq3V/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b=iqSloNE4; arc=none smtp.client-ip=209.85.166.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+	s=arc-20240116; t=1762190912; c=relaxed/simple;
+	bh=xn8o05xUchR4VJZbvh3b7LrEVKldpcP244qArsTXXVI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=GS+3dseTTWJNAABZ21Dke7psqDD2iBSYEbXPyFY1UxL8964fN69ZjZ6vQlJuakgRicnJMZcmbNAlNdb6p6ctu7HGXXNPwrs1LOHmtOmI2o+y63TAeeOwJNhV0PyqL3wzIVX4j4LUZOUw18RVUHoH90fCNseqvowPtgZoAPjjK/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mwWnPAkG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b="iqSloNE4"
-Received: by mail-il1-f179.google.com with SMTP id e9e14a558f8ab-4330ef18d8aso29980075ab.0
-        for <linux-pci@vger.kernel.org>; Mon, 03 Nov 2025 08:51:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=riscstar-com.20230601.gappssmtp.com; s=20230601; t=1762188673; x=1762793473; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=1ZYP6s7A0e6t6qMHErZJUr+ea4gjElbTNwHT5ZSG9V0=;
-        b=iqSloNE47jdELzksVc0fnuz9fogLeKwgmZivkrfyPb7yGkOcOG6P0FJ/Rn5QgSgC1v
-         49D7ExByxsmTH/H5jv/jfaeADVKncryNbXx+ntFypxjqLNMx8iCxkdn0D5KrdWVkiUjX
-         Phpqqi9HU5CzjsH85qeDJNSkuirer2Qu8tcA4Dsc+6dRfNbWIljvwgbDyTEbdgKgI4e1
-         pcbwx2nXRMoOch2a4fYUX/Z7qdedILVVBzTALJ+AMI3VfB4C7olxHjDa74u1bAvfyBPK
-         u8xJLKmKRMr0OGMHDRKqb3W5s4sYL1lodGRx9fohAMSRuxKXLVHY3pRSuNBMABmIFBYn
-         3vLA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762188673; x=1762793473;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1ZYP6s7A0e6t6qMHErZJUr+ea4gjElbTNwHT5ZSG9V0=;
-        b=nX751CWNIIJ67ESVIaXy06TrAAaf+2/VBvXXvJKhVPqlxf5hEaYoaIYPJOj1TXkl3s
-         ozUepQ321ryeF0Nld5HILYyVcH98y5zIbFHuNdb6Rw7Bf6UrBS7iA8gioIlBi5gbRrZK
-         dErxU4Qekc2itiLxy80++7VZP6wmrQhHKalEDbjMMNpP4ZTujlzZ19TY1PnzaRBISshf
-         DZbeYXbVONuYXMk5ZLm2tAjrXG/DZcN0psFAGyDfIeGHLxohr3RftjSVWtO1HHavBwhG
-         DtzOuqPlWnPSrUqVKjE4+nQkWzAUCv3hRrxw7sOnYZGc7Ppuq0ATbVmY9lK4Cv5lSkGu
-         K9Mg==
-X-Forwarded-Encrypted: i=1; AJvYcCXFkoOsAAUcX9pbZlC5MVf8wzeA3x4q6gucVLz/qN7PxmNSyj/mON2c00Qicx2o5xX+r3x70Q3cbpA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzWWJGwitIGs79DCFrTYD5J2xHWo/dk/3utSFlJDvaZzZwOE1bP
-	QMigjN+QTiKd3sqUOuK4vZ4o539bCiIJO6dqrSpvwDUjDjix534/U9c9nQD+GP0K0L0=
-X-Gm-Gg: ASbGncsdKKYXXbgoaDfk7tK6D8W17iPiEr9/bkixk9f+pjqmz5qNmG9DVMKYQYuLqBb
-	bydJfWeBD2DQ6Z9DsEtrltoPXuOYa9DIFISHD5w25ZuxG8lDP3wOShBS62ny3xaLKbQZ/RHKjFN
-	1QCbv9iuA+3aS56soBG3WuZzdmzFr9JZYWSWmGLO0OoZ4OBqtRJ7+tc+Z7OnPO/yY1BxDwcjgR/
-	aOkWh3a92dTE8e/m6wFw4nX3VfU83Jrbxp6nMlhxcSrR2MaUJbMxhvDJ2wq1Merh0Px4U6t7+Ov
-	X76A/XEBoqUs0vrMZUB6wylTNBLGa7FmvHEF5ovbcHHS6ZA7nAYp8l5FMNd8FKpSPwhESYtFuS5
-	qt4BwML2bisoAAqoI6wSK0brbOrDSRNvMD3AWwincnGw+PzdUzygECIdQbYZtHalXD3LeXZTrgP
-	qzu+YTpLA3/uAmjh1XovOUdtqssFpb7a4qC/1qCM5b/TAaqotSKNQ=
-X-Google-Smtp-Source: AGHT+IG3IvG/mEvLf0CP6EjG0xRAhCkqKP6lfBEvoWKsucXyQJGlFuxO7exsoiSwRmrN+GNPUYV9uA==
-X-Received: by 2002:a05:6e02:174b:b0:433:2d6a:ec2b with SMTP id e9e14a558f8ab-4332d6b190fmr50614775ab.24.1762188673045;
-        Mon, 03 Nov 2025 08:51:13 -0800 (PST)
-Received: from [172.22.22.234] (c-75-72-117-212.hsd1.mn.comcast.net. [75.72.117.212])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5b7226ba48dsm324005173.49.2025.11.03.08.51.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Nov 2025 08:51:12 -0800 (PST)
-Message-ID: <6872beb1-f27f-48b9-a756-5b7faa380cec@riscstar.com>
-Date: Mon, 3 Nov 2025 10:51:11 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mwWnPAkG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0444BC4CEE7;
+	Mon,  3 Nov 2025 17:28:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762190912;
+	bh=xn8o05xUchR4VJZbvh3b7LrEVKldpcP244qArsTXXVI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=mwWnPAkGnsmPrgqlf8pyTOI5XUhmBZS5vXTg6IX9pJry4PPcJOfns8zSFy0SEufL+
+	 vsYNYNEmwmI8/2OhKWhXkkmisVla1c4lfW58fiYuX2j2gRktQTBVVtnE+VnsC4/kwi
+	 yKFzQhbeRX1MSlB2uXnpKiDv2iQi6TvBFEtrKnRpaS6Pm/LhteW3SEG7ouAQGV0ySR
+	 JeCYpgmuf81mrwKw8BEwLKRY5Zt4VN1PXUVxCAlK91G5m7t2gYYpdToke9K6TYq1Qi
+	 6t1Yqab9hRFg4QOlv4cUSnE18QfIUOkMGJOXmpE3M6NofJUkvFB8LWQ2RrnpQiLoDd
+	 InMlobK4o/Rtw==
+Date: Mon, 3 Nov 2025 11:28:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yishai Hadas <yishaih@nvidia.com>
+Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Tariq Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+	Edward Srouji <edwards@nvidia.com>
+Subject: Re: [PATCH mlx5-next 1/2] PCI/TPH: Expose pcie_tph_get_st_table_loc()
+Message-ID: <20251103172830.GA1811635@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 5/7] PCI: spacemit: introduce SpacemiT PCIe host driver
-To: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, bhelgaas@google.com, dlan@gentoo.org, johannes@erdfelt.com,
- p.zabel@pengutronix.de, christian.bruel@foss.st.com,
- thippeswamy.havalige@amd.com, krishna.chundru@oss.qualcomm.com,
- mayank.rana@oss.qualcomm.com, qiang.yu@oss.qualcomm.com,
- shradha.t@samsung.com, inochiama@gmail.com, guodong@riscstar.com,
- linux-pci@vger.kernel.org, spacemit@lists.linux.dev,
- linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <20251030220259.1063792-1-elder@riscstar.com>
- <20251030220259.1063792-6-elder@riscstar.com> <aQU4rGzrB1-Vu7C6@aurel32.net>
-Content-Language: en-US
-From: Alex Elder <elder@riscstar.com>
-In-Reply-To: <aQU4rGzrB1-Vu7C6@aurel32.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c9cb13f6-570e-422f-b988-035a31e85330@nvidia.com>
 
-On 10/31/25 5:31 PM, Aurelien Jarno wrote:
-> Hi Alex,
+On Mon, Nov 03, 2025 at 06:23:26PM +0200, Yishai Hadas wrote:
+> On 03/11/2025 17:43, Bjorn Helgaas wrote:
+> > On Mon, Oct 27, 2025 at 11:34:01AM +0200, Leon Romanovsky wrote:
+> > > From: Yishai Hadas <yishaih@nvidia.com>
+> > > 
+> > > Expose pcie_tph_get_st_table_loc() to be used by drivers as will be done
+> > > in the next patch from the series.
+> > > 
+> > > Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
+> > > Signed-off-by: Edward Srouji <edwards@nvidia.com>
+> > > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> > > ---
+> > >   drivers/pci/tph.c       | 7 ++++---
+> > >   include/linux/pci-tph.h | 1 +
+> > >   2 files changed, 5 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> > > index cc64f93709a4..8f8457ec9adb 100644
+> > > --- a/drivers/pci/tph.c
+> > > +++ b/drivers/pci/tph.c
+> > > @@ -155,7 +155,7 @@ static u8 get_st_modes(struct pci_dev *pdev)
+> > >   	return reg;
+> > >   }
+> > > -static u32 get_st_table_loc(struct pci_dev *pdev)
+> > > +u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+> > >   {
+> > >   	u32 reg;
+> > > @@ -163,6 +163,7 @@ static u32 get_st_table_loc(struct pci_dev *pdev)
+> > >   	return FIELD_GET(PCI_TPH_CAP_LOC_MASK, reg);
+> > >   }
+> > > +EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
+> > 
+> > OK by me, but I think we should add kernel-doc for the return value.
+> > 
+> > With that doc added:
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> On 2025-10-30 17:02, Alex Elder wrote:
->> +/* Disable ASPM L1 for now, until reported errors can be reproduced */
+> Thanks Bjorn.
 > 
-> Thanks for adding this function.
+> We may add the below hunk.
 > 
->> +static void k1_pcie_post_init(struct dw_pcie_rp *pp)
->> +{
->> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->> +	u8 offset;
->> +	u32 val;
->> +
->> +	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
->> +
->> +	dw_pcie_dbi_ro_wr_en(pci);
->> +
->> +	/* Turn off ASPM L1 for the link */
->> +	val = readl(pci->dbi_base + offset + PCI_EXP_LNKCAP);
-> 
-> Why not using dw_pcie_readl_dbi() instead?
-> 
->> +	val &= ~PCI_EXP_LNKCAP_ASPM_L1;
->> +	writel(val, pci->dbi_base + offset + PCI_EXP_LNKCAP);
-> 
-> And here dw_pcie_writel_dbi()?
-> 
->> +
->> +	dw_pcie_dbi_ro_wr_dis(pci);
->> +}
->> +
->> +static void k1_pcie_deinit(struct dw_pcie_rp *pp)
->> +{
->> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->> +	struct k1_pcie *k1 = to_k1_pcie(pci);
->> +
->> +	/* Assert fundamental reset (drive PERST# low) */
->> +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CLK_RESET_CONTROL,
->> +			PCIE_RC_PERST);
->> +
->> +	phy_exit(k1->phy);
->> +
->> +	k1_pcie_disable_resources(k1);
->> +}
->> +
->> +static const struct dw_pcie_host_ops k1_pcie_host_ops = {
->> +	.init		= k1_pcie_init,
->> +	.post_init	= k1_pcie_post_init,
-> 
-> Unfortunately, while I can see the effect of the change with for
-> instance lspci -vvv, this happens way too late in the device scan
-> process, i.e. after pcie_aspm_override_default_link_state() and causes
-> L1 to still be enabled.
+> Can that work for you ?
 
-OK thanks for this information.  I am going to contact you
-privately to get more information on your errors (and those
-Johannes is reporting) so that I can try to resolve them
-before I post the next version of this patch series.
+No, because (a) it just restates the function name and doesn't say how
+to interpret the return value (you would need a PCIe spec to look it
+up) and (b) kernel-doc syntax would be "Return: " (see
+Documentation/doc-guide/kernel-doc.rst for examples).
 
-					-Alex
-
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 8f8457ec9adb..385307a9a328 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
+> @@ -155,6 +155,12 @@ static u8 get_st_modes(struct pci_dev *pdev)
+>         return reg;
+>  }
 > 
-> I have tried to move it earlier, in k1_pcie_init() after writing the
-> vendor and device IDs. This works as long as "nvme scan" is run in
-> U-Boot. But if I don't run this command, it seems that the change is
-> ignored or lost (i.e. I can still see L1 enabled with lspci -vvv).
+> +/**
+> + * pcie_tph_get_st_table_loc - query the device for its ST table location
+> + * @pdev: PCI device to query
+> + *
+> + * Return the location of the ST table
+> + */
+>  u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+>  {
+>         u32 reg;
 > 
-> Moving it at the end of k1_pcie_init() works fine, like moving it at the
-> beginning of k1_pcie_start_link(). But my knowledge is too limited to
-> know where is the correct place.
+> Yishai
 > 
-> Regards
-> Aurelien
+> > 
+> > 
+> > >   /*
+> > >    * Return the size of ST table. If ST table is not in TPH Requester Extended
+> > > @@ -174,7 +175,7 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+> > >   	u32 loc;
+> > >   	/* Check ST table location first */
+> > > -	loc = get_st_table_loc(pdev);
+> > > +	loc = pcie_tph_get_st_table_loc(pdev);
+> > >   	/* Convert loc to match with PCI_TPH_LOC_* defined in pci_regs.h */
+> > >   	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
+> > > @@ -299,7 +300,7 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
+> > >   	 */
+> > >   	set_ctrl_reg_req_en(pdev, PCI_TPH_REQ_DISABLE);
+> > > -	loc = get_st_table_loc(pdev);
+> > > +	loc = pcie_tph_get_st_table_loc(pdev);
+> > >   	/* Convert loc to match with PCI_TPH_LOC_* */
+> > >   	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
+> > > diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+> > > index 9e4e331b1603..ba28140ce670 100644
+> > > --- a/include/linux/pci-tph.h
+> > > +++ b/include/linux/pci-tph.h
+> > > @@ -29,6 +29,7 @@ int pcie_tph_get_cpu_st(struct pci_dev *dev,
+> > >   void pcie_disable_tph(struct pci_dev *pdev);
+> > >   int pcie_enable_tph(struct pci_dev *pdev, int mode);
+> > >   u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
+> > > +u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
+> > >   #else
+> > >   static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
+> > >   					unsigned int index, u16 tag)
+> > > 
+> > > -- 
+> > > 2.51.0
+> > > 
 > 
-
