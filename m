@@ -1,38 +1,48 @@
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10854302776;
-	Mon,  3 Nov 2025 17:34:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CDFA2BE7C2;
+	Mon,  3 Nov 2025 18:10:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762191252; cv=none; b=SsVyGOilAUNsUsx9T6A6uSA3Y0MZuLTeCdqXrUDJNPceIdlW/gSPtYACgTXLSZXPYRLIdXg/+QWwz1TW6MRagV0QIi+1VY+1BCzNT3Lm80CY4gA/TToKAWC3SDRu1Etx04+euSGGy8i3Tk6v18BwjRX5AnNSPzmbpGoNxUZRgfI=
+	t=1762193440; cv=none; b=YAPjTLnOy/VEjh++hlTB/gA265oY1m2ROX/zLYNiFDJ2MDWTYglhXDYaKsp8/SBvuPoNVeM3fATorH3tq083L+k+K4LGYIcop48czNSQecNh0oOLOTRzW1pnukg6UOnjuBAyn0cCLyMnYjUn2AGPiKmxcqMCDssJvMQ3z6T5AaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762191252; c=relaxed/simple;
-	bh=EeNYtgR1toDC3fdjLxxuBK0lqNQOk8UkqKfeoB/1HXI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EDOdqNretieYq2dE48NMaPb3b6uy+DDOve8IhsoxVJ8LVVSaj5QeslfN3JtAxaiMOCXJUGdO1YWgw116/vzn9NaCjdWAd3iFH5xBLdX9dKeoZxOJ1QIs17IkLdBobQj+LoglAmEt6c9QKBO1MgOobOmcKCvyirkjsNcvoDuNAW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout3.hostsharing.net (Postfix) with ESMTPS id E01D82C02B9C;
-	Mon,  3 Nov 2025 18:24:08 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id ABEC2AEC9; Mon,  3 Nov 2025 18:24:08 +0100 (CET)
-Date: Mon, 3 Nov 2025 18:24:08 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 3/4] PCI: pciehp: Add macros for hotplug operation
- delays
-Message-ID: <aQjlOHJoj-Fkkk4b@wunner.de>
-References: <20251101160538.10055-4-18255117159@163.com>
- <20251103153734.GA1806239@bhelgaas>
+	s=arc-20240116; t=1762193440; c=relaxed/simple;
+	bh=dZ5DzmV8v+EdzX/v24I9P1Dtpu2Lj+7owRynAELiKHQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=RT7c+z7fjofJclUChLdytbRCWzKCrKLaqPD7dkm8li6FLDVbMSUQxKhBY6pMWt0IlXwLhynrNGDZNEuRD2Q+VvB0viBvdegtFkLEi0W3bizPcdkjTLCu9oHOGZtyex+uXoJJr/6DFr6+tauvsZ8vJgCuDxP4NHhbZuTegTtNEpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LwB/JXL4; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LwB/JXL4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03921C4CEE7;
+	Mon,  3 Nov 2025 18:10:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762193440;
+	bh=dZ5DzmV8v+EdzX/v24I9P1Dtpu2Lj+7owRynAELiKHQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=LwB/JXL47a6IAwbTm9xSakkJCGfu82fn/vpMMT6GFWRB6cQ0dL2vEVWxPkGkmN+N/
+	 1EkdRhwDrAHXkytiFeIwv/kWUcnqe1++yX7rQ2xrNS6MoNfcRMuoVUIXLkO546Edak
+	 EGkq79cEE0iemsqGiiDdxOTQZgkTya6f4jriLo0bfK2vQso/PHIHxYRjm1BIMXbLkw
+	 MRYd/0ugIMaWgcmpGmednsEbbBZYJFD4BBdr5HPZvtN/nk7/C/+VSM0f+h1zscxvHE
+	 kuXtZQ32SPf/HLrlhA7hUUtHooqG67Z7hW6Dc/Ez7IRSAiCGEP46p6X0vPqoYkmPaJ
+	 FB1RjwG24qhMQ==
+Date: Mon, 3 Nov 2025 12:10:38 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Geraldo Nascimento <geraldogabriel@gmail.com>
+Cc: linux-rockchip@lists.infradead.org,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Johan Jonker <jbx6244@gmail.com>
+Subject: Re: [RFC PATCH 2/2] PCI: rockchip-host: drop wait on PERST# toggle
+Message-ID: <20251103181038.GA1814635@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,40 +51,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251103153734.GA1806239@bhelgaas>
+In-Reply-To: <d3d0c3a387ff461e62bbd66a0bde654a9a17761e.1762150971.git.geraldogabriel@gmail.com>
 
-On Mon, Nov 03, 2025 at 09:37:34AM -0600, Bjorn Helgaas wrote:
-> On Sun, Nov 02, 2025 at 12:05:37AM +0800, Hans Zhang wrote:
-> > Add WAIT_PDS_TIMEOUT_MS and POLL_CMD_TIMEOUT_MS macros for hotplug
-> > operation delays to improve code readability.
-[...]
-> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> > @@ -28,6 +28,9 @@
-> >  #include "../pci.h"
-> >  #include "pciehp.h"
-> >  
-> > +#define WAIT_PDS_TIMEOUT_MS	10
-> > +#define POLL_CMD_TIMEOUT_MS	10
-> > +
-> >  static const struct dmi_system_id inband_presence_disabled_dmi_table[] = {
-> >  	/*
-> >  	 * Match all Dell systems, as some Dell systems have inband
-> > @@ -103,7 +106,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
-> >  			smp_mb();
-> >  			return 1;
-> >  		}
-> > -		msleep(10);
-> > +		msleep(POLL_CMD_TIMEOUT_MS);
+On Mon, Nov 03, 2025 at 03:27:25AM -0300, Geraldo Nascimento wrote:
+> With this change PCIe will complete link-training with a known quirky
+> device - Samsung OEM PM981a SSD. This is completely against the PCIe
+> spec and yet it works as long as the power regulator for 3v3 PCIe
+> power is not defined as always-on or boot-on.
+
+What is against the spec?  In what way is this SSD "known quirky"?  Is
+there a published erratum for it?
+
+Removing this delay might make this SSD work, but if this delay is
+required per PCIe spec, how can we be confident that other devices
+will still work?
+
+Reports of devices that still work is not really enough to move this
+from the "hack that makes one device work" column to the "safe and
+effective for all devices" column.
+
+It's easy to see how *lack* of a delay can break something, but much
+harder to imagine how *removing* a delay can make something work.
+Devices must be able to tolerate pretty much arbitrary delays.
+
+> Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
+> ---
+>  drivers/pci/controller/pcie-rockchip-host.c | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> Lukas might have different opinions and I would defer to him here.
+> diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+> index ee1822ca01db..6add0faf6dc9 100644
+> --- a/drivers/pci/controller/pcie-rockchip-host.c
+> +++ b/drivers/pci/controller/pcie-rockchip-host.c
+> @@ -314,7 +314,6 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+>  	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+>  			    PCIE_CLIENT_CONFIG);
+>  
+> -	msleep(PCIE_T_PVPERL_MS);
+>  	gpiod_set_value_cansleep(rockchip->perst_gpio, 1);
+>  
+>  	msleep(PCIE_RESET_CONFIG_WAIT_MS);
+> -- 
+> 2.49.0
 > 
-> But IMO (a) these aren't timeouts, they are poll intervals, (b) the
-> values are arbitrary with no connection to a spec, so less reason for
-> a #define, and (c) the #defines don't improve readability because now
-> I have to look at two places to understand the poll loops.
-
-I agree on all counts.
-
-Thanks,
-
-Lukas
+> 
+> _______________________________________________
+> Linux-rockchip mailing list
+> Linux-rockchip@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-rockchip
