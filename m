@@ -1,132 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92A9320B800;
-	Wed,  5 Nov 2025 16:36:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A22338594
+	for <linux-pci@vger.kernel.org>; Wed,  5 Nov 2025 16:52:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762360572; cv=none; b=X8d/iZeaHbZ+rAWTEJaMID2DuzjbO7/Kv2l4ioiFR42VPzZSj/DisDJA+33fqI+tNnJlQHm6HZ0LOQDc1NF+1W32upSB9oPVyMY1RuFFQHeXXzoLMXwdC2yAcxhL5oGTAzcUkePQ9rWV42VpmZuVhotw9jc5aovpekSvO0kq8f0=
+	t=1762361527; cv=none; b=Ji5hccN1mWglFhe4yrpbDQnDy7QCN/gEBu8Y07SEuOq/8oQdpgRLVzqZs4cvyHycQz6t55XiuP0JNRVXuGQyfMbJEnlnsRnNKrPjygork1Ib3xlhfHMLgmgVgXBElvzGlWIRoI3ibYlp6Vzx+pG120CE5W/iAmhE9v/t6wHAJNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762360572; c=relaxed/simple;
-	bh=6TrJvUK9Bi4MtE396O6mjFvQ4XSVRdM4jTat1mqDJ+c=;
+	s=arc-20240116; t=1762361527; c=relaxed/simple;
+	bh=esO8jRq9uTUw55PJsW3htw0zar+bIhexF73TArzHxxk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lNuv9Ah7ucsJKaM+9SOIK3+gk4AK2WmuqpJC0DBwpPSXdGBVprNbZnq5nbR4gCKmzfZHPiEpVP2qSHgvT02yiPTdkQt89Tif0WSxtNGOcbZD+i09jKKSuCjaaZT5mxObvU/1XIlw2DCll3EjJJC2hlnOm8tCmhEfl44A4v/Uq/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bJvV3Gcj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=lxgf9f0zPxVxTOXWrNdexrOasw5SrknBSBxc+49hp8tIGcEj1tZH34K2Fq4QaEugsqosda02aJMsB1WMMfzMheb/l+thJonIBjKUpd9PunMs+2DVkwDHkud3EqgEu0RImf4fV8tICOVANUU2zRW3XkMEM9+jc4VEn1oNJmEPosI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AVpbhQKs; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bJvV3Gcj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98E76C116D0;
-	Wed,  5 Nov 2025 16:36:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762360572;
-	bh=6TrJvUK9Bi4MtE396O6mjFvQ4XSVRdM4jTat1mqDJ+c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=bJvV3GcjxVMkbPp2/HPHTvVQ3suklWsEfheD+VTVjPqA9H4nzGbxr2Z/oMCnFchhM
-	 hx0phKZelWW3iUoT74SWOR0eAm/GMDUMSFZuJwRx3xLLzarjdMxhpnjROdsmqC1Bz9
-	 MmxSP1G8Pm7sZ6X9Aw3/6NWdF7ILo/dLtzKjptrZcQKyjuY5ue+jqOiVpPmYroetzt
-	 pSWR0IX5HMGCyAHJeRFyG1+DMWcS1izzqvM9K89t6srVDOjWc2wPYOBV+rjwy9RPKh
-	 A6Jk4/1Jh9oT6si2+yJ2cfyT73UhwGEh/7aY2SdorDojoRR9eU1sKBBAVl6FGvx5cd
-	 7YvIKTyAlo22A==
-Date: Wed, 5 Nov 2025 17:36:09 +0100
-From: Frederic Weisbecker <frederic@kernel.org>
-To: Waiman Long <llong@redhat.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Gabriele Monaco <gmonaco@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vlastimil Babka <vbabka@suse.cz>, Will Deacon <will@kernel.org>,
-	cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 18/33] cpuset: Remove cpuset_cpu_is_isolated()
-Message-ID: <aQt8-dzr4Ac3l3bt@localhost.localdomain>
-References: <20251013203146.10162-1-frederic@kernel.org>
- <20251013203146.10162-19-frederic@kernel.org>
- <7821fb40-5082-4d11-b539-4c5abc2e572c@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AVpbhQKs"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4710022571cso64344095e9.3
+        for <linux-pci@vger.kernel.org>; Wed, 05 Nov 2025 08:52:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762361524; x=1762966324; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=esO8jRq9uTUw55PJsW3htw0zar+bIhexF73TArzHxxk=;
+        b=AVpbhQKsWHsJPurkBtpFjS569EuYKUxy0Ewl5KvxLz11TynIudTMz6x27b6A6doKWz
+         ip2xD5KKY1oMJCK0Dweum3CzpsfSfe5Azmrly9qy+6lx5DTGxHpK2A+42y5Z3pqNqWXK
+         5oMVmrIxCr+TXfau1fOpH55Ds8Gfkw+SKMup3+25IM0tOOtYD8mCPcmX3YHevXG3I9fS
+         voKjd3O+6JkWCl7xwg0Uy4qskOwo95lmPAQUzNV1zgopuIouOGjmjNsUQ0iiplG4NNw3
+         pJwe6bLtD5Fb+hz4cFTbQ+dE2Dx8twHim57o5xVAlYBYEkIZ+8VVi9pnTa3HqwZj4o61
+         JDfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762361524; x=1762966324;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=esO8jRq9uTUw55PJsW3htw0zar+bIhexF73TArzHxxk=;
+        b=OwRNmMWFBirrlv6jwMUrZPkKAET6ynmQJw4AlWWg64N0TgWR0XpcsX4RWLns5YCR+r
+         6Jj+f8/mpuDeHzXfGsGNeCB9yljNhDZMipBpFJ5OFqcGkOxDny5k/IsV74uO36QRVbwf
+         h56gkGvO/BFQLI6l0F2EZDiMqpdXnyGqIPm/mzuYg8w4vlU+kS4wNiWdVS+qiIafYPZ8
+         8MNOWEMUzwCmfW8EZfaQexnE5SkaJi2f6JeiM4QdSv096Yy3aAiNjbC3MFtcB5ySG7HE
+         BfSC8Xo2ncwGzbjVehw1aCofg9TlxlMSTIxu+9NeCBAnwi/5BhvLuLEXHFAGPbWA2shl
+         EOsg==
+X-Forwarded-Encrypted: i=1; AJvYcCU/DaZjLL1hTHrnyPwIpkRdxOc6tcEOBtU2X122rRSp8+C0otIKHnbuvPE4divgT7f7aMuirCXx0yc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzc4PRNpJ3kUCarTxuGxT33yFWNkdksH+0Q95in8Qr4vOHRNfDj
+	lb6BASM3aGfp0/exLXr6rPcYzcHWMyyOlScXJAu9ocDWWvDJIvqeX7yv
+X-Gm-Gg: ASbGncvAfHe1E0Js/guWT4bBrZ9ehnXl0k6ENmjvAMZ/F7l/luZIamfPtsAQ8/kh49R
+	eA6VgkRNwlGdKpqgvLSJGeBxNB5Bkx2uTo/j6Jgy8jDt17jStQoTbhaE4M2RIjGX61igEG1+Mt7
+	hmJQ8UZWQ3sLcV7TFeyxr9pw6Ut7tK6OGLGPpop06bKHNv6IceanSEpVd6WIaxKTU7qRg3H+GIX
+	WsRHX1RhjCczMYeTHeY8KOOScHXN93CYWqxpURXeOsbSPZ9JDMP73kPZ7Ydbr1y1zOFkWKyh2eU
+	CyaEkgxdCjAXujL+G5a0bkNrHqSurKqn69OVRT9QBHeqOAYc1O9jmXgjv8x8Hkl0Du2r2Cbckzw
+	vumJFQRPoEjwBWXq3NIbWLDW87UpRzXVo1xVOmj6QiAIoJIklkXdL2Gjj6lVBY5GelBTsx14DVT
+	WBIyta4MG3pC/GvSxkYFLvC1WzxZnRldOqQ/T7vfuQJKUsXFxIKYz76I8tz8mbwyk=
+X-Google-Smtp-Source: AGHT+IF1eT04urNHEfsD9kdCj32CNL1YcHJ6oGuMVK3cU2BLT/aQRFRmm7ox5OYZe77ML31HK9v5ow==
+X-Received: by 2002:a05:600c:1c94:b0:477:fcb:2256 with SMTP id 5b1f17b1804b1-4775ce23efemr42468465e9.17.1762361524090;
+        Wed, 05 Nov 2025 08:52:04 -0800 (PST)
+Received: from orome (p200300e41f274600f22f74fffe1f3a53.dip0.t-ipconnect.de. [2003:e4:1f27:4600:f22f:74ff:fe1f:3a53])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4775ce210a7sm59725725e9.12.2025.11.05.08.52.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Nov 2025 08:52:02 -0800 (PST)
+Date: Wed, 5 Nov 2025 17:52:01 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: x86@kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-riscv@lists.infradead.org, linux-mips@vger.kernel.org, loongarch@lists.linux.dev, 
+	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/7] syscore: Pass context data to callbacks
+Message-ID: <3dzha4qyqdrbutxby3n5nkvihnxrhniqr6w726eumhzgln2w5l@fbu72mzmjz4m>
+References: <20251029163336.2785270-1-thierry.reding@gmail.com>
+ <20251029163336.2785270-2-thierry.reding@gmail.com>
+ <CAJZ5v0igMJ12KoYCmrWauvOfdxaNP5-XVKoSxUroaKFN7S-rTQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ykyajizgfjgayrmb"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7821fb40-5082-4d11-b539-4c5abc2e572c@redhat.com>
+In-Reply-To: <CAJZ5v0igMJ12KoYCmrWauvOfdxaNP5-XVKoSxUroaKFN7S-rTQ@mail.gmail.com>
 
-Le Wed, Oct 29, 2025 at 02:05:17PM -0400, Waiman Long a écrit :
-> On 10/13/25 4:31 PM, Frederic Weisbecker wrote:
-> > The set of cpuset isolated CPUs is now included in HK_TYPE_DOMAIN
-> > housekeeping cpumask. There is no usecase left interested in just
-> > checking what is isolated by cpuset and not by the isolcpus= kernel
-> > boot parameter.
-> > 
-> > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-> > ---
-> >   include/linux/cpuset.h          |  6 ------
-> >   include/linux/sched/isolation.h |  3 +--
-> >   kernel/cgroup/cpuset.c          | 12 ------------
-> >   3 files changed, 1 insertion(+), 20 deletions(-)
-> > 
-> > diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-> > index 051d36fec578..a10775a4f702 100644
-> > --- a/include/linux/cpuset.h
-> > +++ b/include/linux/cpuset.h
-> > @@ -78,7 +78,6 @@ extern void cpuset_lock(void);
-> >   extern void cpuset_unlock(void);
-> >   extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
-> >   extern bool cpuset_cpus_allowed_fallback(struct task_struct *p);
-> > -extern bool cpuset_cpu_is_isolated(int cpu);
-> >   extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
-> >   #define cpuset_current_mems_allowed (current->mems_allowed)
-> >   void cpuset_init_current_mems_allowed(void);
-> > @@ -208,11 +207,6 @@ static inline bool cpuset_cpus_allowed_fallback(struct task_struct *p)
-> >   	return false;
-> >   }
-> > -static inline bool cpuset_cpu_is_isolated(int cpu)
-> > -{
-> > -	return false;
-> > -}
-> > -
-> >   static inline nodemask_t cpuset_mems_allowed(struct task_struct *p)
-> >   {
-> >   	return node_possible_map;
-> > diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
-> > index 94d5c835121b..0f50c152cf68 100644
-> > --- a/include/linux/sched/isolation.h
-> > +++ b/include/linux/sched/isolation.h
-> > @@ -76,8 +76,7 @@ static inline bool housekeeping_cpu(int cpu, enum hk_type type)
-> >   static inline bool cpu_is_isolated(int cpu)
-> >   {
-> >   	return !housekeeping_test_cpu(cpu, HK_TYPE_DOMAIN) ||
-> > -	       !housekeeping_test_cpu(cpu, HK_TYPE_TICK) ||
-> > -	       cpuset_cpu_is_isolated(cpu);
-> > +	       !housekeeping_test_cpu(cpu, HK_TYPE_TICK);
-> >   }
-> 
-> You can also remove the "<linux/cpuset.h>" include from isolation.h which
-> was added by commit 3232e7aad11e5 ("cgroup/cpuset: Include isolated cpuset
-> CPUs in cpu_is_isolated() check") which introduces cpuset_cpu_is_isolated().
 
-Done. Thanks!
+--ykyajizgfjgayrmb
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v3 1/7] syscore: Pass context data to callbacks
+MIME-Version: 1.0
 
--- 
-Frederic Weisbecker
-SUSE Labs
+On Mon, Nov 03, 2025 at 05:18:08PM +0100, Rafael J. Wysocki wrote:
+> On Wed, Oct 29, 2025 at 5:33=E2=80=AFPM Thierry Reding <thierry.reding@gm=
+ail.com> wrote:
+> >
+> > From: Thierry Reding <treding@nvidia.com>
+> >
+> > Several drivers can benefit from registering per-instance data along
+> > with the syscore operations. To achieve this, move the modifiable fields
+> > out of the syscore_ops structure and into a separate struct syscore that
+> > can be registered with the framework. Add a void * driver data field for
+> > drivers to store contextual data that will be passed to the syscore ops.
+> >
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+>=20
+> This change is fine with me, so I can apply it unless somebody has any
+> specific heartburn related to it (Greg?), but in case you want to
+> route it differently
+>=20
+> Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
+
+I have a few follow-up patches for the Tegra PMC driver that depend on
+this. 6.19 is what I was targetting, so if we could put this into a
+stable branch that'd be the best solution. I can set that up via the
+Tegra tree if you and Greg are okay with it.
+
+If that's all too complicated, I can probably wait until the next cycle
+to merge the PMC changes.
+
+Thierry
+
+--ykyajizgfjgayrmb
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmkLgLAACgkQ3SOs138+
+s6F0Lg//dTn1/PUCYHRhF8cm1xB6JKggiLC40TRct49fcf9eF5gAdCqXm44qKoaF
+67aqiXAiwzovTctJIu3rz8p71/FeXp/qGWDdPm/+wI7yD+BoCcVO0nmvXuPwCzhd
+ZMwqeaRVm57JX4M9S5BdkOGtDLgAjyZ/6Qq/2isiQSPiWWl/IT3YiLyzw8vq8mcY
+VoepQGK5hm7CHFf8FOBs+sMt6q5JJDm0VjNi+seVcCNg9U25GaXCRc2D9ztAqRib
+3768/KMhlftnoJKsizCwWq2Gyw0Se7ifz66djjf51sHd064LLDv7OZpfeGyiFK01
+MvVGXoPFuIJB0yqIoMRBbeRULm4kq+dkUkt1JWwYAMw9ZJnhXPJJI8bal2IASj8/
+E6NADiYd9HS8kAXWYvLkm0xHv4FN5WXWG2a+Gf6K2vpBm07zG2xnI+eVjYQSnb9W
+O9TcZf3jDWvgEQ31plH5JFY32sI4vjLAdcKS2oRfkbxFDJvTS+RRjj3EPqFshNXf
+B5E6pXTCltOkUepuhbGDzIifVWzYgg/GyXNfwzdnJUXcAz7QPPJySfMraf/dn+8S
+hggVgAivRFDEtaNEqKU6iqoePR3HIUJe/Ebjrb199RV9t4FcnVYOpviJRf5EWpsF
+2YEUJPiA7neiac9fPLwCoRh33bJTIzanmWVxmFF1nQ2vozIt68U=
+=3Mmd
+-----END PGP SIGNATURE-----
+
+--ykyajizgfjgayrmb--
