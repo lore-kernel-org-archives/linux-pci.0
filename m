@@ -1,128 +1,92 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAE05337B8D;
-	Wed,  5 Nov 2025 16:10:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76C00332EAD;
+	Wed,  5 Nov 2025 16:17:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762359042; cv=none; b=CBfmb7wmwufc3H+VuqX3aWVAwhTCUOOEGumupx8DbOcX4fqd24N8KMFFYG1ojnFy+MA244ljftwE4qML1XS936gO1eW1Uu7uiHZE2d9OIpsKsMPsd6AF56iOApxPdpfpVElq0CQnRTsnvAQGUagXeIEE8X8XXQLpS5NJP9CQX9o=
+	t=1762359440; cv=none; b=GIrFyVF9d5PEQVTKoghwXOuMtoWPzwYqEZ07HRoQDNJFwY9duSQtiKyRULVHu24X4GX2aoEYGuuRP1MvXTK46VlmLqzjjzEaHFA2s8uyKP4+ARkNz1n05RCQUuQWTkwosLMgMkDJqVuHCtY5rmGMdzdsrL6IqJ66ittSRKd2LOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762359042; c=relaxed/simple;
-	bh=XYA0QT3mqjvdTOITUkYl9g9WPkydTiL2kfrfusBPpNU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z03HDRRbxqW4cMTY5xEogAb5X3AwpzvwPU5D2ovcNGlOhZL1GSyoCbQxdCXipDzXVgHyHuCL+JcMqvNsihZhFg0Rabw75Fc9B+1bsfXTfQrflba/GcQ+7HJSQr9TKGZlZgKWHCyDTgMQn7PbfaI0ynwotvpvx9QeO9H+SxZ1Pag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aa4LlpN2; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1762359440; c=relaxed/simple;
+	bh=m0WmoCYyOXZpK7uUlcvblqPFNrYVzKYbQ3i1eOPl5Zg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R3Y8vJElT6nXBeOy+IIxYX8pPs6LsJlXWqIkqDPpTvNNiBCGmRZ+xCZDMZnlTTgbAPSQ2/rbO8U60cDAdn2MqLeME6ZjmqZHz6cy3kYv4xktfhkev38oZWhn1+frdJFIjl0ert1jevqIs6SS9xzzuXDUwJ+b1MzMgnvYQxF9YP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l0hjf0Ui; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aa4LlpN2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762359041; x=1793895041;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=XYA0QT3mqjvdTOITUkYl9g9WPkydTiL2kfrfusBPpNU=;
-  b=aa4LlpN2yOfkaUezIGabqAyathDHGILCtsFXpV9pPil0wB8Fb/CapP5R
-   nuj3mW+Z82GrastbGF6EcwQ5Ap30gxl9+1CeuGTwRiaF8GedyhxppZX65
-   2uiyhscojssgLA/ICn0qX4qIOEpPNmI96oODhkukC5ywxKVBC5WrkMyCR
-   7CJVEy8FCs0Fy7V7QcfPeWwims5PgkjSilGMceChoARr+DJbTKMf2d6My
-   MQ8tF4DAFLaQr9JrEWUObSdciWgW3CcMTP4YTByeW0gpm9e1EGKh+fiHS
-   UNA7VxwmDRXkqNBdjn/+KQ8tdiTfNYEHWWe1JN0mzEQOQpuyEwGMk22Mm
-   g==;
-X-CSE-ConnectionGUID: oNmqnrn1SKG843Gyb5fTzg==
-X-CSE-MsgGUID: fWYALw2uR9yHCMZm8SI48g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11603"; a="68337305"
-X-IronPort-AV: E=Sophos;i="6.19,282,1754982000"; 
-   d="scan'208";a="68337305"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2025 08:10:40 -0800
-X-CSE-ConnectionGUID: oqAlASDJQ9ey+Wxwyv6JbA==
-X-CSE-MsgGUID: fxLVxVU5SN+2XZuOAeMlng==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,282,1754982000"; 
-   d="scan'208";a="187158870"
-Received: from rchatre-mobl4.amr.corp.intel.com (HELO [10.125.110.242]) ([10.125.110.242])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Nov 2025 08:10:38 -0800
-Message-ID: <3024ae89-4c19-4d29-aca4-0aef21bcd5e9@intel.com>
-Date: Wed, 5 Nov 2025 09:10:37 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l0hjf0Ui"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EA00C4CEF5;
+	Wed,  5 Nov 2025 16:17:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762359439;
+	bh=m0WmoCYyOXZpK7uUlcvblqPFNrYVzKYbQ3i1eOPl5Zg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=l0hjf0UiodG9bvlzR0teTF7/EOA6sdH3lJdRLlau9I8A/DseQMnymKV6dDPaF700i
+	 /GM4BkXlPH1RycuSsw1W8H9JlsG+Bpucpt9ON/Yb5Lp8BhsF0xHuIPaLrfAj2uEL5x
+	 FGHRWbLzd0GHQgdJxbcv9AuCCM02jjoLln2tMRrhAU4O51K57/fzGeuubEOv9trZh9
+	 vwOscUOROGk2lS5YeTqltie7TWPT1TVeiQnqH89qkQQHLnjKNmuhBQSCx2JZFrhqQw
+	 s6AEiUIsphHx7/SDFAYdbTpJoHq3d0onR71up8dRK9b/ZyB8C1jktq8jhvlYW0LWY/
+	 sPiObTTJWLXrA==
+Date: Wed, 5 Nov 2025 17:17:17 +0100
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Waiman Long <llong@redhat.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	"David S . Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Gabriele Monaco <gmonaco@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Vlastimil Babka <vbabka@suse.cz>, Will Deacon <will@kernel.org>,
+	cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-block@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 14/33] sched/isolation: Flush memcg workqueues on cpuset
+ isolated partition change
+Message-ID: <aQt4jT9qqP_l_ZSF@localhost.localdomain>
+References: <20251013203146.10162-1-frederic@kernel.org>
+ <20251013203146.10162-15-frederic@kernel.org>
+ <364e084a-ef37-42ab-a2ae-5f103f1eb212@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RESEND v13 23/25] CXL/PCI: Introduce CXL uncorrectable protocol
- error recovery
-To: "Bowman, Terry" <terry.bowman@amd.com>,
- Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: dave@stgolabs.net, alison.schofield@intel.com, dan.j.williams@intel.com,
- bhelgaas@google.com, shiju.jose@huawei.com, ming.li@zohomail.com,
- Smita.KoralahalliChannabasappa@amd.com, rrichter@amd.com,
- dan.carpenter@linaro.org, PradeepVineshReddy.Kodamati@amd.com,
- lukas@wunner.de, Benjamin.Cheatham@amd.com,
- sathyanarayanan.kuppuswamy@linux.intel.com, linux-cxl@vger.kernel.org,
- alucerop@amd.com, ira.weiny@intel.com, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20251104170305.4163840-1-terry.bowman@amd.com>
- <20251104170305.4163840-24-terry.bowman@amd.com>
- <20251104184732.0000362f@huawei.com>
- <10115294-8be9-42af-a466-40a194cfa4e8@intel.com>
- <5246e21b-d226-4faf-936b-d3dffe2cc45e@amd.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Content-Language: en-US
-In-Reply-To: <5246e21b-d226-4faf-936b-d3dffe2cc45e@amd.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <364e084a-ef37-42ab-a2ae-5f103f1eb212@redhat.com>
 
-
-
-On 11/5/25 7:59 AM, Bowman, Terry wrote:
+Le Tue, Oct 21, 2025 at 03:16:45PM -0400, Waiman Long a �crit :
+> > @@ -5134,6 +5141,9 @@ int __init mem_cgroup_init(void)
+> >   	cpuhp_setup_state_nocalls(CPUHP_MM_MEMCQ_DEAD, "mm/memctrl:dead", NULL,
+> >   				  memcg_hotplug_cpu_dead);
+> > +	memcg_wq = alloc_workqueue("memcg", 0, 0);
 > 
-> 
-> On 11/4/2025 5:43 PM, Dave Jiang wrote:
->>
->> On 11/4/25 11:47 AM, Jonathan Cameron wrote:
->>> On Tue, 4 Nov 2025 11:03:03 -0600
->>> Terry Bowman <terry.bowman@amd.com> wrote:
+> Should we explicitly mark the memcg_wq as WQ_PERCPU even though I think
+> percpu is the default. The schedule_work_on() schedules work on the
+> system_percpu_wq.
 
-<snip>
+Good catch, percpu is the default but that behaviour is scheduled for
+deprecation. I'm adding WQ_PERCPU.
 
->>>> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
->>>> index 5bc144cde0ee..52c6f19564b6 100644
->>>> --- a/drivers/cxl/core/ras.c
->>>> +++ b/drivers/cxl/core/ras.c
->>>> @@ -259,8 +259,138 @@ static void device_unlock_if(struct device *dev, bool take)
->>>>  		device_unlock(dev);
->>>>  }
->>>>  
->>>> +/**
->>>> + * cxl_report_error_detected
->>>> + * @dev: Device being reported
->>>> + * @data: Result
->>>> + * @err_pdev: Device with initial detected error. Is locked immediately
->>>> + *            after KFIFO dequeue.
->>>> + */
->>>> +static int cxl_report_error_detected(struct device *dev, void *data, struct pci_dev *err_pdev)
->>>> +{
->>>> +	bool need_lock = (dev != &err_pdev->dev);
->>> Add a comment on why this controls need for locking.
->>> The resulting code is complex enough I'd be tempted to split the whole
->>> thing into locked and unlocked variants.
->> May not be a bad idea. Terry, can you see if this would reduce the complexity?
->>
->> DJ 
-> 
-> I agree and will split into 2 functions. Do you have naming suggestions for a function copy 
-> without locks? Is cxl_report_error_detected_nolock() OK to go along with existing 
-> cxl_report_error_detected()? 
+Thanks!
 
-Maybe cxl_report_error_detected_lock() vs cxl_report_error_detected().
-I think there's also precedent of __cxl_report_error_detected() with no lock and indicates a raw function vs cxl_report_error_detected() with lock. 
-
-DJ
-
-> 
-> Terry
-
-
+-- 
+Frederic Weisbecker
+SUSE Labs
