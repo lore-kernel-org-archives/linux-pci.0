@@ -1,44 +1,44 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748542E7BD3;
-	Wed,  5 Nov 2025 21:18:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76CE12E22BF;
+	Wed,  5 Nov 2025 21:18:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762377524; cv=none; b=ClfEwOUbYhNxAyha+xENcmb5go9BTvKsTJCV9M/AEgsYCZjHdTFw7u/BTI8L8U6MXw9p2JCSyGdQiuC095b4oL4tuYhRp4BlhPikg5P/1VZTrMx8NAftoCD4RdmUmw+zJctRECjk6nXr0ZkWlRGxWTJiuGpmK+cczSqHBmabQ1g=
+	t=1762377524; cv=none; b=RwozxYH488EhiJ6TVpCvPAvwGGTREFztSrKtS8ddUswc+t0hhvyNWa+eXqZkxJ76NnBi4XO3hztajkwit650zbeXzeZV3p+HCGJV8Gj/HMitKjMQIN7YhXYImvJY0VObKevpeBI3irwltITUvQu676s9W3DFjqfulzv8BXJLj6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762377524; c=relaxed/simple;
-	bh=qtE8TxX+bp4mVeKXXycM622mPKaw8qoe/nGz0YEjV0g=;
+	bh=l3tEWhRqP4lk80hQap0vJX2rjpGnZh5LT9KfShignVs=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RPcNb0qKgErbTLQ6FurZbAtTT7ruEmDsRMBb1J3OSPyM1CFYajGzJ4U/UAR0Kea5cVSGohy9oeTE87VWFuiARqVBqx/WqfU7ymnwYGYzH1F7tx+JH6pygQVOcXKZrXTSR+t3GG6Pprz15DD4w/51c3ukCeK2INjAxV4rZFGHaxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=IaRJcfEJ; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=BlU1vmEtyVRBmUk5LytlsvEfNeQgFSa3RRHVAwhRB/TBmljA0vjh2FTKtyomhQ2xyx1CIU8UI/WXXZO1TI0KnbqaCR7WbSUD9smMmus2enZdCnk9q+jFPU0djegfzLH/m9mVRaowB5KaecESz7aYD+2BoeXD2bQR8mJz+mvp3Sw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=RZt8bfUA; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="IaRJcfEJ"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="RZt8bfUA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1762377516;
-	bh=qtE8TxX+bp4mVeKXXycM622mPKaw8qoe/nGz0YEjV0g=;
+	bh=l3tEWhRqP4lk80hQap0vJX2rjpGnZh5LT9KfShignVs=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=IaRJcfEJJPmuVxfIA0AMonJG0NAIwG2GFs1HcbU8uvXF99pgELvzC5G7nSSRhwUVJ
-	 LuwV5lD0JO+6NbQDCg/6824/ru1L/WtPNmPZ9XIv2dmNWRPrG1D+ir8Y18q8GzoaIE
-	 qEW8KlPcmRtH5QYv8gEmfKMpqY/vnwuoHhrQxhH/YBZUJn8Mrio3T/yeFVOaa9Kfp/
-	 3bU7QVAyxxZtxGmkVSf/V0rYQ39sDr5ivWxPxN2ygRhLyKoa/vXN3Zh8b/MbgnaR53
-	 jdmgxlQ8Y7in86CB/YBRRqqqam07WivxiWw5icWmtAT4asEubhTmOpyhAMNyxRoJ/A
-	 g3EvDDnrDetBw==
+	b=RZt8bfUA3x1BMPbp6nkMXKDVBZsmSqC8Cr6yQf9Bmt2Dn+/fwoSYvUgfRuREfi7tC
+	 Q/Q8f7iMK8cG1uT2ybpCwmTx6q0+56XFN+FUXpTwPkiJMlqFbUFh6CDhq3d/Sb3pYd
+	 0khH4Qat4TIVxrmiUAmDbJPZJT6v44l65FEstFParsZO2eah/zNv3Ok8LrSTZFrPLT
+	 QOlF3l0Ffm4b5G93+j/mYrVhX1W2ZC5PZDl3BBzk01fwCQCSA3FY8u3Pgkmvk7bXAF
+	 cQY9ji73EbfDjeSbnSNsBMHmBoCAp688kMuyKVrKb17vGX9Deq5zuP796vQziSjtIf
+	 lHPsXdw8w/mGw==
 Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531::8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
 	(No client certificate requested)
 	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 4164C17E1500;
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 3395417E14FF;
 	Wed,  5 Nov 2025 22:18:36 +0100 (CET)
 Received: by beast.luon.net (Postfix, from userid 1000)
-	id B209C10F352E7; Wed, 05 Nov 2025 22:18:34 +0100 (CET)
+	id D51B210F352F3; Wed, 05 Nov 2025 22:18:34 +0100 (CET)
 From: Sjoerd Simons <sjoerd@collabora.com>
-Date: Wed, 05 Nov 2025 22:18:02 +0100
-Subject: [PATCH v3 07/13] arm64: dts: mediatek: mt7981b-openwrt-one: Enable
- PCIe and USB
+Date: Wed, 05 Nov 2025 22:18:08 +0100
+Subject: [PATCH v3 13/13] arm64: dts: mediatek: mt7981b-openwrt-one: Enable
+ wifi
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251105-openwrt-one-network-v3-7-008e2cab38d1@collabora.com>
+Message-Id: <20251105-openwrt-one-network-v3-13-008e2cab38d1@collabora.com>
 References: <20251105-openwrt-one-network-v3-0-008e2cab38d1@collabora.com>
 In-Reply-To: <20251105-openwrt-one-network-v3-0-008e2cab38d1@collabora.com>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -74,76 +74,72 @@ Cc: kernel@collabora.com, devicetree@vger.kernel.org,
  Sjoerd Simons <sjoerd@collabora.com>
 X-Mailer: b4 0.14.3
 
-Enable the PCIe controller and USB3 XHCI host on the OpenWrt One
-board. The USB controller is configured for USB 2.0 only mode, as the
-shared USB3/PCIe PHY is dedicated to PCIe functionality on this board.
+Enable Dual-band WiFI 6 functionality on the Openwrt One
 
 Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
 ---
- .../boot/dts/mediatek/mt7981b-openwrt-one.dts      | 43 ++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+V2 -> V3: replace MTK_DRIVE_4mA with direct value
+V1 -> V2: Update eeprom node label
+---
+ .../boot/dts/mediatek/mt7981b-openwrt-one.dts      | 24 ++++++++++++++++++++++
+ arch/arm64/boot/dts/mediatek/mt7981b.dtsi          |  2 +-
+ 2 files changed, 25 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-index 2e39e72877301..7382599cfea29 100644
+index 2aea899006453..3de368c73bc81 100644
 --- a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
 +++ b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-@@ -67,9 +67,40 @@ led-2 {
- 			linux,default-trigger = "netdev";
+@@ -180,6 +180,22 @@ conf-pd {
+ 			pins = "SPI2_CLK", "SPI2_MOSI", "SPI2_MISO";
  		};
  	};
 +
-+	reg_3p3v: regulator-3p3v {
-+		compatible = "regulator-fixed";
-+		regulator-name = "fixed-3.3V";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		regulator-boot-on;
-+		regulator-always-on;
-+	};
-+
-+	reg_5v: regulator-5v {
-+		compatible = "regulator-fixed";
-+		regulator-name = "fixed-5V";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		regulator-boot-on;
-+		regulator-always-on;
-+	};
-+};
-+
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_pins>;
-+	status = "okay";
- };
- 
- &pio {
-+	pcie_pins: pcie-pins {
++	wifi_dbdc_pins: wifi-dbdc-pins {
 +		mux {
-+			function = "pcie";
-+			groups = "pcie_pereset";
++			function = "eth";
++			groups = "wf0_mode1";
++		};
++
++		conf {
++			pins = "WF_HB1", "WF_HB2", "WF_HB3", "WF_HB4",
++			       "WF_HB0", "WF_HB0_B", "WF_HB5", "WF_HB6",
++			       "WF_HB7", "WF_HB8", "WF_HB9", "WF_HB10",
++			       "WF_TOP_CLK", "WF_TOP_DATA", "WF_XO_REQ",
++			       "WF_CBA_RESETB", "WF_DIG_RESETB";
++			drive-strength = <4>;
 +		};
 +	};
-+
- 	pwm_pins: pwm-pins {
- 		mux {
- 			function = "pwm";
-@@ -163,3 +194,15 @@ partition@180000 {
- &uart0 {
+ };
+ 
+ &pwm {
+@@ -257,6 +273,14 @@ &usb_phy {
  	status = "okay";
  };
-+
-+&usb_phy {
+ 
++&wifi {
++	nvmem-cells = <&wifi_factory_calibration>;
++	nvmem-cell-names = "eeprom";
++	pinctrl-names = "dbdc";
++	pinctrl-0 = <&wifi_dbdc_pins>;
 +	status = "okay";
 +};
 +
-+&xhci {
-+	phys = <&u2port0 PHY_TYPE_USB2>;
-+	vusb33-supply = <&reg_3p3v>;
-+	vbus-supply = <&reg_5v>;
-+	mediatek,u3p-dis-msk = <0x01>;
-+	status = "okay";
-+};
+ &xhci {
+ 	phys = <&u2port0 PHY_TYPE_USB2>;
+ 	vusb33-supply = <&reg_3p3v>;
+diff --git a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+index a7be3670e0059..66d89495bac52 100644
+--- a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+@@ -490,7 +490,7 @@ wo_ccif0: syscon@151a5000 {
+ 			interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>;
+ 		};
+ 
+-		wifi@18000000 {
++		wifi: wifi@18000000 {
+ 			compatible = "mediatek,mt7981-wmac";
+ 			reg = <0 0x18000000 0 0x1000000>,
+ 			      <0 0x10003000 0 0x1000>,
 
 -- 
 2.51.0
