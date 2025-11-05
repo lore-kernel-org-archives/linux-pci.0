@@ -1,205 +1,94 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19A1C30AAA6
-	for <linux-pci@vger.kernel.org>; Wed,  5 Nov 2025 09:58:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6545330217A;
+	Wed,  5 Nov 2025 10:28:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762336718; cv=none; b=SXLlEBfEa3plhY5dG50i4JzdFuzpPzN0APAiUKLuDEnSk2GPX6B2AUZFv++AmqhfqGsQWSOzCFA/vi+ZKougOo4ZcX8b16X/IDOaj8ETVuro9dQe9jdsMnHKTBPmqMtex+TNrxvq7i15pRCt8mFs27ZBdlBR9ERtLQEvEPU6QmM=
+	t=1762338492; cv=none; b=OjzDe8Neur2oDq5c5+e0m1hKIYkhcz7ea5MW9m9UxIvpqFS8k5tpPD/RCVw4kjyhccqaTEXo/Nv+tyI5xnLdJPGhBmDXN3Uzc7ILZoIdFJIhHOwOJBvB9Ck+aJfFTd4j3tkDAVcZpFCM7K0o7zKGETaddTsp1FxJepNXN16Epdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762336718; c=relaxed/simple;
-	bh=xhNdJyN7AZiwLi4Z1ohVMtL5ge8wLkv5mOX4hdS8AGc=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kIbwKRo9u4vmjmZGh86VSB+m6ALeNa/TUAbnRiCQoDaBGZWW6aZ5uzWg0ZRtvQfevMPBDH4qiMB3u1jM3FXaiEqfuyqR/qYT9eIzcNau/WAwjEKa2ba1A2UPjJTExfNytIzZRMxovvEnmSAjl7hI6Jt5pV6u1q4SHh9a9wEU7qc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.231])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4d1gfB0Hblz6HJWQ;
-	Wed,  5 Nov 2025 17:54:42 +0800 (CST)
-Received: from dubpeml100005.china.huawei.com (unknown [7.214.146.113])
-	by mail.maildlp.com (Postfix) with ESMTPS id F3DBD1400E8;
-	Wed,  5 Nov 2025 17:58:33 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml100005.china.huawei.com
- (7.214.146.113) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 5 Nov
- 2025 09:58:33 +0000
-Date: Wed, 5 Nov 2025 09:58:32 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Dan Williams <dan.j.williams@intel.com>
-CC: <linux-pci@vger.kernel.org>, <linux-coco@lists.linux.dev>,
-	<bhelgaas@google.com>, <aneesh.kumar@kernel.org>, <yilun.xu@linux.intel.com>,
-	<aik@amd.com>, Arto Merilainen <amerilainen@nvidia.com>
-Subject: Re: [PATCH 2/6] PCI/IDE: Add Address Association Register setup for
- downstream MMIO
-Message-ID: <20251105095832.00000871@huawei.com>
-In-Reply-To: <20251105040055.2832866-3-dan.j.williams@intel.com>
-References: <20251105040055.2832866-1-dan.j.williams@intel.com>
-	<20251105040055.2832866-3-dan.j.williams@intel.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1762338492; c=relaxed/simple;
+	bh=sATlqbfCMquHAhiGt98UAjhO81tc66fm/b5s3xZ+bT0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fzhM+9vu8FefAwsU0hEFpKvJ3iIcUcOR1YNdpG4i1A3XkF2ZJvBBZEs3QvBI3oVQUx7zcQ6xav8jOTNBq3i4xW3gn8dCl3SDmAD0wqOzSQMTM4i+8svGF93qJBdkp8+r7m8Vp23AG5lRH55hBgtwaubzGIvArN9PVT1GpQ+iodA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aVk2cw91; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aVk2cw91"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 271F4C4CEF8;
+	Wed,  5 Nov 2025 10:28:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762338491;
+	bh=sATlqbfCMquHAhiGt98UAjhO81tc66fm/b5s3xZ+bT0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aVk2cw91xb3rYUDPFcGEtjuOOgvOL7LPdFKi9Ek3C8A3pJKShz5NSz1ygG7990U70
+	 5MKPxs/CwWggCZ4NBUoVASSOYENYZskX4+KO9mC8L1RewpnSZj56X8WFBZDNFPpUfy
+	 YCNph4JFxwP9Up1f+JrWSvK82fQiSY22vGOxTCP6iLTvLpbHlddw5Nn4D6qLqZDe18
+	 A0Oj6TSleOyym73rw53E1sx7OYY8l/oHNN3z842GkfoKpnsiK0i2CxbV/gyf2DmldO
+	 cFy/IYkMMWOVXppMcDDu5pu2Fn3ak95UF3m2BmecxYlu57lWhbPod+Xmu+3QfoThOH
+	 18Og5nj9EJS4w==
+Date: Wed, 5 Nov 2025 11:28:04 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Vincent Guittot <vincent.guittot@linaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, chester62515@gmail.com,
+	mbrugger@suse.com, ghennadi.procopciuc@oss.nxp.com, s32@nxp.com,
+	bhelgaas@google.com, jingoohan1@gmail.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, Ionut.Vicovan@nxp.com,
+	larisa.grigore@nxp.com, Ghennadi.Procopciuc@nxp.com,
+	ciprianmarian.costea@nxp.com, bogdan.hamciuc@nxp.com,
+	Frank.li@nxp.com, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, imx@lists.linux.dev
+Subject: Re: [PATCH 3/4 v3] PCI: s32g: Add initial PCIe support (RC)
+Message-ID: <aQsmtKsTEmf7e7Sd@ryzen>
+References: <20251022174309.1180931-4-vincent.guittot@linaro.org>
+ <20251022190402.GA1262472@bhelgaas>
+ <CAKfTPtCtHquxtK=Zx2WSNm15MmqeUXO8XXi8FkS4EpuP80PP7g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
- dubpeml100005.china.huawei.com (7.214.146.113)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKfTPtCtHquxtK=Zx2WSNm15MmqeUXO8XXi8FkS4EpuP80PP7g@mail.gmail.com>
 
-On Tue,  4 Nov 2025 20:00:51 -0800
-Dan Williams <dan.j.williams@intel.com> wrote:
-
-> From: Xu Yilun <yilun.xu@linux.intel.com>
+On Fri, Oct 24, 2025 at 08:50:46AM +0200, Vincent Guittot wrote:
+> On Wed, 22 Oct 2025 at 21:04, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > +     dw_pcie_dbi_ro_wr_en(pci);
+> > > +
+> > > +     val = dw_pcie_readl_dbi(pci, PCIE_PORT_FORCE);
+> > > +     val |= PORT_FORCE_DO_DESKEW_FOR_SRIS;
+> > > +     dw_pcie_writel_dbi(pci, PCIE_PORT_FORCE, val);
+> > > +
+> > > +     /*
+> > > +      * Set max payload supported, 256 bytes and
+> > > +      * relaxed ordering.
+> > > +      */
+> > > +     val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+> > > +     val &= ~(PCI_EXP_DEVCTL_RELAX_EN |
+> > > +              PCI_EXP_DEVCTL_PAYLOAD |
+> > > +              PCI_EXP_DEVCTL_READRQ);
+> > > +     val |= PCI_EXP_DEVCTL_RELAX_EN |
+> > > +            PCI_EXP_DEVCTL_PAYLOAD_256B |
+> > > +            PCI_EXP_DEVCTL_READRQ_256B;
+> > > +     dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+> >
+> > MPS and relaxed ordering should be configured by the PCI core.  Is
+> > there some s32g-specific restriction about these?
 > 
-> The address ranges for downstream Address Association Registers need to
-> cover memory addresses for all functions (PFs/VFs/downstream devices)
-> managed by a Device Security Manager (DSM). The proposed solution is get
-> the memory (32-bit only) range and prefetchable-memory (64-bit capable)
-> range from the immediate ancestor downstream port (either the direct-attach
-> RP or deepest switch port when switch attached).
-> 
-> Similar to RID association, address associations will be set by default if
-> hardware sets 'Number of Address Association Register Blocks' in the
-> 'Selective IDE Stream Capability Register' to a non-zero value. TSM drivers
-> can opt-out of the settings by zero'ing out unwanted / unsupported address
-> ranges. E.g. TDX Connect only supports prefetachable (64-bit capable)
-> memory ranges for the Address Association setting.
-> 
-> If the immediate downstream port provides both a memory range and
-> prefetchable-memory range, but the IDE partner port only provides 1 Address
-> Association Register block then the TSM driver can pick which range to
-> associate, or let the PCI core prioritize memory.
-> 
-> Note, the Address Association Register setup for upstream requests is still
-> uncertain so is not included.
-> 
-> Co-developed-by: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-> Co-developed-by: Arto Merilainen <amerilainen@nvidia.com>
-> Signed-off-by: Arto Merilainen <amerilainen@nvidia.com>
-> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
-> Co-developed-by: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  include/linux/pci-ide.h |  27 ++++++++++
->  include/linux/pci.h     |   5 ++
->  drivers/pci/ide.c       | 115 ++++++++++++++++++++++++++++++++++++----
->  3 files changed, 138 insertions(+), 9 deletions(-)
-> 
-> diff --git a/include/linux/pci-ide.h b/include/linux/pci-ide.h
-> index d0f10f3c89fc..55283c8490e4 100644
-> --- a/include/linux/pci-ide.h
-> +++ b/include/linux/pci-ide.h
-> @@ -28,6 +28,9 @@ enum pci_ide_partner_select {
->   * @rid_start: Partner Port Requester ID range start
->   * @rid_end: Partner Port Requester ID range end
->   * @stream_index: Selective IDE Stream Register Block selection
-> + * @mem_assoc: PCI bus memory address association for targeting peer partner
+> I will check with the team why they did that
 
-The text above about TDX only support prefetchable to me suggestions this
-is optional so should be marked so like pref_assoc?
+Most likely, the reason is that, the PCI core does not set the MPS to the
+maximum supported MPS for the root port.
 
-> + * @pref_assoc: (optional) PCI bus prefetchable memory address association for
-> + *		targeting peer partner
->   * @default_stream: Endpoint uses this stream for all upstream TLPs regardless of
->   *		    address and RID association registers
->   * @setup: flag to track whether to run pci_ide_stream_teardown() for this
-> @@ -38,11 +41,35 @@ struct pci_ide_partner {
->  	u16 rid_start;
->  	u16 rid_end;
->  	u8 stream_index;
-> +	struct pci_bus_region mem_assoc;
-> +	struct pci_bus_region pref_assoc;
->  	unsigned int default_stream:1;
->  	unsigned int setup:1;
->  	unsigned int enable:1;
->  };
+So without that change, the port will use use 128B instead of 256B.
+
+I assume that you should be able to drop (at least the MPS part) if this
+change gets accepted:
+https://lore.kernel.org/linux-pci/20251104165125.174168-1-18255117159@163.com/
 
 
-> diff --git a/drivers/pci/ide.c b/drivers/pci/ide.c
-> index da5b1acccbb4..d7fc741f3a26 100644
-> --- a/drivers/pci/ide.c
-> +++ b/drivers/pci/ide.c
-
-
-> @@ -385,6 +408,61 @@ static void set_ide_sel_ctl(struct pci_dev *pdev, struct pci_ide *ide,
->  	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_CTL, val);
->  }
->  
-> +#define SEL_ADDR1_LOWER GENMASK(31, 20)
-> +#define SEL_ADDR_UPPER GENMASK_ULL(63, 32)
-> +#define PREP_PCI_IDE_SEL_ADDR1(base, limit)			\
-> +	(FIELD_PREP(PCI_IDE_SEL_ADDR_1_VALID, 1) |		\
-> +	 FIELD_PREP(PCI_IDE_SEL_ADDR_1_BASE_LOW,		\
-> +		    FIELD_GET(SEL_ADDR1_LOWER, (base))) |	\
-> +	 FIELD_PREP(PCI_IDE_SEL_ADDR_1_LIMIT_LOW,		\
-> +		    FIELD_GET(SEL_ADDR1_LOWER, (limit))))
-
-Whilst complex, if it is only going to get one use, I'd just put the
-complexity inline.  If it's getting lots of use in later patches then
-fair enough having this macro.
-
-> +
-> +static void mem_assoc_to_regs(struct pci_bus_region *region,
-> +			      struct pci_ide_regs *regs, int idx)
-> +{
-> +	regs->addr[idx].assoc1 =
-> +		PREP_PCI_IDE_SEL_ADDR1(region->start, region->end);
-> +	regs->addr[idx].assoc2 = FIELD_GET(SEL_ADDR_UPPER, region->end);
-> +	regs->addr[idx].assoc3 = FIELD_GET(SEL_ADDR_UPPER, region->start);
-> +}
-
->  /**
->   * pci_ide_stream_setup() - program settings to Selective IDE Stream registers
->   * @pdev: PCIe device object for either a Root Port or Endpoint Partner Port
-> @@ -398,22 +476,34 @@ static void set_ide_sel_ctl(struct pci_dev *pdev, struct pci_ide *ide,
->  void pci_ide_stream_setup(struct pci_dev *pdev, struct pci_ide *ide)
->  {
->  	struct pci_ide_partner *settings = pci_ide_to_settings(pdev, ide);
-> +	struct pci_ide_regs regs;
->  	int pos;
-> -	u32 val;
->  
->  	if (!settings)
->  		return;
->  
-> +	pci_ide_stream_to_regs(pdev, ide, &regs);
-
-If I were being super fussy, I'd suggest doing the factor out to a structure
-+ helper as a precursor patch then just add the new stuff here.
-meh. I'm not that bothered but it would slightly simply review.
-
-I'm not entirely convinced by the helper as a readability improvement
-but don't hate it.
-
-
-> +
->  	pos = sel_ide_offset(pdev, settings);
->  
-> -	val = FIELD_PREP(PCI_IDE_SEL_RID_1_LIMIT, settings->rid_end);
-> -	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_1, val);
-> +	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_1, regs.rid1);
-> +	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_2, regs.rid2);
->  
-> -	val = FIELD_PREP(PCI_IDE_SEL_RID_2_VALID, 1) |
-> -	      FIELD_PREP(PCI_IDE_SEL_RID_2_BASE, settings->rid_start) |
-> -	      FIELD_PREP(PCI_IDE_SEL_RID_2_SEG, pci_ide_domain(pdev));
-> +	for (int i = 0; i < regs.nr_addr; i++) {
-> +		pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_1(i),
-> +				       regs.addr[i].assoc1);
-> +		pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_2(i),
-> +				       regs.addr[i].assoc2);
-> +		pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_3(i),
-> +				       regs.addr[i].assoc3);
-> +	}
->  
-> -	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_2, val);
-> +	/* clear extra unused address association blocks */
-> +	for (int i = regs.nr_addr; i < pdev->nr_ide_mem; i++) {
-> +		pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_1(i), 0);
-> +		pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_2(i), 0);
-> +		pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_3(i), 0);
-> +	}
-
+Kind regards,
+Niklas
