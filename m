@@ -1,44 +1,44 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB65A23F424;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009552652A2;
 	Wed,  5 Nov 2025 21:18:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762377518; cv=none; b=TrKMSWY3ddRrbjfsp3aItcVNASoCsA+c+GjtueEstBvS0t2qXd6FDXEf+ef5ekSDVc9HKvlIB1jd1anabnNBxj/HNmQh5wrH+TXwRYp1P8os/JmAlEowhoa3RZUHn1b21+iDo4nxpH9J+KyoZZaxjLYHYX9eDxTE8DbVhk4vWco=
+	t=1762377518; cv=none; b=EOeIdRxsfpijjgmY/++9g0VQIqpqvszcKXdEMH87TqYn3CbpafOppC7BWWRXXgnena2xCEXKYH44ZE0hHWuAAL61JI5wSVD1yPGdZxAmiME9oW7Vo5gCWxMS+588oV0dTuJisifbyUyihsPz3AlAFGKo2R2vzRbb7/knVRC2KqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762377518; c=relaxed/simple;
-	bh=/ng5O2dKBBjx/PoMHfml7fIWlsGEdTjPoLQQq68Vk1w=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=JlZ3h1E+yV55PKTj+S7/umBnGMuqND9FCaUUGyEEJvLiNEykMwjqkShBHZoQQRDwqlpkCvpSx5574iw52kb2DqF0tNfWvdbbBHTEDHau+eUC9KeDsMDKA4pvGO+yvkE2HuhnHr0cd5AQFmaw801TtUV683VEC5RZONOwjiEJh/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=FYYWj5Er; arc=none smtp.client-ip=148.251.105.195
+	bh=JdKvpThqp3TDs4o0pkrFusvXBPtE9LtpoPmwO6qXgiM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=gS3qxoBGFaqe0Rav+Vk3uzNYihuNwB8xVj1QjLOBfRAV3QXPlh95MukVyUEBE9jnX78Wy+KbS5UVlRnUCHzxsl62InZu3aeB9gkwrFwJ61WQ+4VWCm1b4o5Pc/6ghPsaGyup5gVZT/G9KyrSsG+obPQ2+QEo3iU00ZT84crSr7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=ZTJBt+ch; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="FYYWj5Er"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="ZTJBt+ch"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1762377515;
-	bh=/ng5O2dKBBjx/PoMHfml7fIWlsGEdTjPoLQQq68Vk1w=;
-	h=From:Subject:Date:To:Cc:From;
-	b=FYYWj5ErKAQWBH2zuGZaHzNU61uViaX++wuDgl6qi3m3uq/JVL8lRCK2QpXOCeVXQ
-	 cK6bH0vpEageL4dR1k+JzkdBvT3UDR3JFEKn+jOJ+c+YwUlXUL8nDJEUHqzZ0r+mRA
-	 oB3wh+vHFKV76nODd5F3Ycl+IOrvH+whHccdpoEReZww8gZWhwCqanfyL6UxsEAODV
-	 rkM2Kxf+JQAbXgTHiJjAE8L2l00CXVt9ql3g8xaZmkaivTwHEk+yolMSL+dbsZ27vg
-	 OhJ+uySIkR+3pqqAgKBENCEXgrY9ThTbJGfaPWzJwryQDqYT6RrZ4FqOKyzNEaq180
-	 AnSWhk/d0T2gA==
+	bh=JdKvpThqp3TDs4o0pkrFusvXBPtE9LtpoPmwO6qXgiM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=ZTJBt+chv2OorZPxJOTV0pe1cpqVHLoTNLfzME7KhrNsfGLdxx4oH4GlB0XTU3ZzV
+	 Dg/1pyFg1MGW0e662nfEk1S8BJrzpfsREKZsEPGeAY2p05QsUhTegWiVIBXoO1G2nv
+	 mfEov68FCA/RIqnRgXKcmwscA6qChdT1wHsVU4wdvAWeKz6S+JOOJNWAAhNo2hDtD1
+	 t0a14zBni0iDuSr1ArRKL9Bm1jdw/nG6dqU++jjHl20Cwo/N52n0Bo9o7E+I+I6CIb
+	 5MRJJoYhfbIbU9KPj9WrxNuNRuWVAHXdyvnH5AkIoYVAjapxGp/1IYQ56If0dyk/Fw
+	 PLZas/NOkgAGA==
 Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531::8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
 	(No client certificate requested)
 	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id DFEF017E04D6;
-	Wed,  5 Nov 2025 22:18:34 +0100 (CET)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 061F717E1396;
+	Wed,  5 Nov 2025 22:18:35 +0100 (CET)
 Received: by beast.luon.net (Postfix, from userid 1000)
-	id 8C1DE10F352D9; Wed, 05 Nov 2025 22:18:34 +0100 (CET)
+	id 9FA6010F352E1; Wed, 05 Nov 2025 22:18:34 +0100 (CET)
 From: Sjoerd Simons <sjoerd@collabora.com>
-Subject: [PATCH v3 00/13] arm64: dts: mediatek: Add Openwrt One AP
- functionality
-Date: Wed, 05 Nov 2025 22:17:55 +0100
-Message-Id: <20251105-openwrt-one-network-v3-0-008e2cab38d1@collabora.com>
+Date: Wed, 05 Nov 2025 22:17:59 +0100
+Subject: [PATCH v3 04/13] dt-bindings: PCI: mediatek-gen3: Add MT7981 PCIe
+ compatible
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,10 +47,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAO/C2kC/x3MSwqAMAwA0atI1gba+gG9irjQGjUIqaSignh3i
- 8u3mHkgkjJFaLMHlE6OHCShyDPw6yALIU/J4IyrrLE1hp3k0gODEAodV9ANSzP6ZvB2dJWHVO5
- KM9//tevf9wNgNip4ZQAAAA==
-X-Change-ID: 20251016-openwrt-one-network-40bc9ac1b25c
+Message-Id: <20251105-openwrt-one-network-v3-4-008e2cab38d1@collabora.com>
+References: <20251105-openwrt-one-network-v3-0-008e2cab38d1@collabora.com>
+In-Reply-To: <20251105-openwrt-one-network-v3-0-008e2cab38d1@collabora.com>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
  Conor Dooley <conor+dt@kernel.org>, 
  Matthias Brugger <matthias.bgg@gmail.com>, 
@@ -76,79 +75,32 @@ Cc: kernel@collabora.com, devicetree@vger.kernel.org,
  Conor Dooley <conor.dooley@microchip.com>
 X-Mailer: b4 0.14.3
 
-Significant changes in V3:
-  * Drop patches that were picked up
-  * Re-order patches so changes that don't require dt binding changes
-    come first (Requested by Angelo)
-  * Specify drive power directly rather then using MTK_DRIVE_...
-  * Simply mediatek,net binding changes to avoid accidental changes to
-    other compatibles then mediatek,mt7981-eth
-Significant changes in V2:
-  * https://lore.kernel.org/lkml/20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com/
-  * Only introduce labels in mt7981b.dtsi when required
-  * Switch Airoha EN8811H phy irq to level rather then edge triggered
-  * Move uart0 pinctrl from board dts to soc dtsi
-  * Only overwrite constraints with non-default values in MT7981 bindings
-  * Make SPI NOR nvmem cell labels more meaningfull
-  * Seperate fixing and disable-by-default for the mt7981 in seperate
-    patches
+Add compatible string for MediaTek MT7981 PCIe Gen3 controller.
+The MT7981 PCIe controller is compatible with the MT8192 PCIe
+controller.
 
-This series add various peripherals to the Openwrt One, to make it
-actually useful an access point:
-
-* Pcie express (tested with nvme storage)
-* Wired network interfaces
-* Wireless network interfaces (2.4g, 5ghz wifi)
-* Status leds
-* SPI NOR for factory data
-
-Unsurprisingly the series is a mix of dt binding updates, extensions of
-the mt7981b and the openwrt one dtb. All driver support required is
-already available.
-
-Sadly during testing i've found various quirks requiring kernel
-arguments. Documenting those here both as note to self and making it
-easier for others to test :)
-
-* fw_devlink=permissive: the nvmem fixed-layout doesn't create a layout
-  device, so doesn't trigger fw_devlink
-* clk_ignore_unused: Needed when building CONFIG_NET_MEDIATEK_SOC as a
-  module. If the ethernet related clocks (gp1/gp2) get disabled the
-  mac ends up in a weird state causing it not to function correctly.
-* pcie_aspm: ASPM is forced to enabled in 6.18-rc1, unfortunately
-  enabling ASPM L1.1 ends up triggering unrecoverable AERs.
-
-Patches are against the mediatek trees for-next branch
-
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
 ---
-Sjoerd Simons (13):
-      arm64: dts: mediatek: mt7981b-openwrt-one: Enable SPI NOR
-      arm64: dts: mediatek: mt7981b-openwrt-one: Enable software leds
-      dt-bindings: mfd: syscon: Add mt7981-topmisc
-      dt-bindings: PCI: mediatek-gen3: Add MT7981 PCIe compatible
-      dt-bindings: phy: mediatek,tphy: Add support for MT7981
-      arm64: dts: mediatek: mt7981b: Add PCIe and USB support
-      arm64: dts: mediatek: mt7981b-openwrt-one: Enable PCIe and USB
-      dt-bindings: net: mediatek,net: Correct bindings for MT7981
-      arm64: dts: mediatek: mt7981b: Add Ethernet and WiFi offload support
-      arm64: dts: mediatek: mt7981b-openwrt-one: Enable Ethernet
-      arm64: dts: mediatek: mt7981b: Disable wifi by default
-      arm64: dts: mediatek: mt7981b: Add wifi memory region
-      arm64: dts: mediatek: mt7981b-openwrt-one: Enable wifi
-
- Documentation/devicetree/bindings/mfd/syscon.yaml  |   1 +
- .../devicetree/bindings/net/mediatek,net.yaml      |   6 +-
- .../bindings/pci/mediatek-pcie-gen3.yaml           |   1 +
- .../devicetree/bindings/phy/mediatek,tphy.yaml     |   1 +
- .../boot/dts/mediatek/mt7981b-openwrt-one.dts      | 263 +++++++++++++++++++++
- arch/arm64/boot/dts/mediatek/mt7981b.dtsi          | 226 +++++++++++++++++-
- 6 files changed, 492 insertions(+), 6 deletions(-)
+V1 -> V2: Improve commit subject
 ---
-base-commit: d7d7ac9af8cb72e3e3816ae9da3d9ee1bdfa4f9b
-change-id: 20251016-openwrt-one-network-40bc9ac1b25c
+ Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-Best regards,
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+index 0278845701ce8..4db700fc36ba7 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+@@ -48,6 +48,7 @@ properties:
+     oneOf:
+       - items:
+           - enum:
++              - mediatek,mt7981-pcie
+               - mediatek,mt7986-pcie
+               - mediatek,mt8188-pcie
+               - mediatek,mt8195-pcie
+
 -- 
-Sjoerd Simons <sjoerd@collabora.com>
+2.51.0
 
