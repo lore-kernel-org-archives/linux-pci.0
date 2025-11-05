@@ -1,43 +1,44 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C42532E7F27;
-	Wed,  5 Nov 2025 21:18:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 744FF2E8DEB;
+	Wed,  5 Nov 2025 21:18:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762377524; cv=none; b=l0mpBMpE6Ei5L1TV29xiF1tk9Z38yl0n/KoGm65iPMJgYGLTRCphY3X+n0TY89axlYKby7dbwgLyLsNr78v+y9s8pnjwKaNo7p7irOTFHmhsTwisS8jFxmckx0mFdZj2zEVylRTHWw68meABqmdqAAfBg/W5Yjs2Cdcw6WxvYUY=
+	t=1762377524; cv=none; b=qbcfGyeB6edquKbZEkDis/eoY49AMB5bpb3QDR4Y82OkCnjl8b3FMU7l8jJYr0skqhEt+aiW20OWFafAp03ZjVOJyhCgZnKwz0JDyfdEeF4YX9pndjWnMkYpELAOD1dfbgeoFSKFP00On1nDqciTW2uELYA4K81mwrdIBGoE9VE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762377524; c=relaxed/simple;
-	bh=BNloXSmxfui+A+UD0vb6639VkVLh4h7qFS1iqqJUbUo=;
+	bh=HT2YugA6R+JpQglGJhQu+r3GtnpE3Srg2faLNwIOQZE=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=s9zIJx6hBidcVurdA9tIo+qfhOLlWq57FV0BLZKr1YmSd3XwLTqqFY9hds6z0WTASlgrWI6XWods8DkU4Az9Etw6F/783z2qdJXlbBlce1zDVNO5GKyYx6HfoPrOpjfl69mwCiDvji4S5POAMiGxZDcPS+UkBh2OG6BpzNq5xAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=XpSLf1aG; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=XN2tJsQq5jDDGl0wu5md+giXnO1F8uDCwew85oC1pO65+2HorNkcg5+KSvQzWXl2xIrNCtobssh9F9YxkWLw8zwZWrhOIqpDUUSAoP0PFjWRp+zdQKgKzqxTBKXF+U43OuJhoZ28OTqb7K7DQPVwwITATFWK+JgrYtNGv9KBSY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=pX5785Xe; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="XpSLf1aG"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="pX5785Xe"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
 	s=mail; t=1762377520;
-	bh=BNloXSmxfui+A+UD0vb6639VkVLh4h7qFS1iqqJUbUo=;
+	bh=HT2YugA6R+JpQglGJhQu+r3GtnpE3Srg2faLNwIOQZE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=XpSLf1aGffJeN3zx8uRhcaOmvn2uTssdN8S/TbdnUE69GnvkRSpHrFeCAMfgFw6h+
-	 WBE8bR6DFUQSFUfl/t8PJarzCojzGlWEe/Bjpwy//0LUvlJ4H2KglxqzierbnbGWkJ
-	 JxcwY+/LDHd88TJx4wF2pxlYa68pFOAAGnZ+LVsowRN70g0ShSx+cKfz/MuBEEx866
-	 eY2aaiv7kk6cgbVTTgbQpofXT93rsBTiSVOz3zUbIplNpgMBhJP8HWFRc1NYQ6iiQc
-	 z6Bp9JVIF1zTXGnS32qST64tNFlO9EM6BZ3Y+WERvYeLEXmsObKq7fVOFZwuL1SDIz
-	 lkVC+aPo126sA==
+	b=pX5785XeaN9MSnSwL2CJEFah8vNhRL8O3uSgIa5IIUsi0dsVKQvFHNPboZ1/t6VGy
+	 HYMGlF/jafIWUIBCk3xUfon2NPBc/8iS7yAe6TOMu+7np1x2bdtprDcNn2WTGFcX5c
+	 t9YD1NdO/D97DTeU+AuNZeMagJIob4P/4RUTgI0pyfPYexY505AVtR4IYod4lwE/iD
+	 14zbJi4IQ7nOQq2nXVZRLfsFZOl8Se0bc8bOiGCKbU7u2hCgO/MHEZmy7Tp5lOFOO+
+	 arFcHIVGSPsrSCy0aGHPYhJxu8F2xT+eBJsfmFn39sWISuHJXg3lY64C/eh1tAKFqu
+	 /M/mfIOF6ApyQ==
 Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531::8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
 	(No client certificate requested)
 	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id EB61317E1562;
-	Wed,  5 Nov 2025 22:18:39 +0100 (CET)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 6F62117E156C;
+	Wed,  5 Nov 2025 22:18:40 +0100 (CET)
 Received: by beast.luon.net (Postfix, from userid 1000)
-	id 9C16B10F352DF; Wed, 05 Nov 2025 22:18:34 +0100 (CET)
+	id CC1B810F352F1; Wed, 05 Nov 2025 22:18:34 +0100 (CET)
 From: Sjoerd Simons <sjoerd@collabora.com>
-Date: Wed, 05 Nov 2025 22:17:58 +0100
-Subject: [PATCH v3 03/13] dt-bindings: mfd: syscon: Add mt7981-topmisc
+Date: Wed, 05 Nov 2025 22:18:07 +0100
+Subject: [PATCH v3 12/13] arm64: dts: mediatek: mt7981b: Add wifi memory
+ region
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251105-openwrt-one-network-v3-3-008e2cab38d1@collabora.com>
+Message-Id: <20251105-openwrt-one-network-v3-12-008e2cab38d1@collabora.com>
 References: <20251105-openwrt-one-network-v3-0-008e2cab38d1@collabora.com>
 In-Reply-To: <20251105-openwrt-one-network-v3-0-008e2cab38d1@collabora.com>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -70,32 +71,42 @@ Cc: kernel@collabora.com, devicetree@vger.kernel.org,
  linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, 
  linux-phy@lists.infradead.org, netdev@vger.kernel.org, 
  Daniel Golle <daniel@makrotopia.org>, Bryan Hinton <bryan@bryanhinton.com>, 
- Sjoerd Simons <sjoerd@collabora.com>, 
- Conor Dooley <conor.dooley@microchip.com>
+ Sjoerd Simons <sjoerd@collabora.com>
 X-Mailer: b4 0.14.3
 
-This hardware block amongst other things includes a multiplexer for a
-high-speed Combo-Phy. This binding allows exposing the multiplexer
+Add required memory region for the builtin wifi block.
 
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
 ---
- Documentation/devicetree/bindings/mfd/syscon.yaml | 1 +
- 1 file changed, 1 insertion(+)
+V1 -> V2: Don't set status to in this patch
+---
+ arch/arm64/boot/dts/mediatek/mt7981b.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/mfd/syscon.yaml b/Documentation/devicetree/bindings/mfd/syscon.yaml
-index 657c38175fba2..51511078c4c3b 100644
---- a/Documentation/devicetree/bindings/mfd/syscon.yaml
-+++ b/Documentation/devicetree/bindings/mfd/syscon.yaml
-@@ -193,6 +193,7 @@ properties:
-           - mediatek,mt2701-pctl-a-syscfg
-           - mediatek,mt2712-pctl-a-syscfg
-           - mediatek,mt6397-pctl-pmic-syscfg
-+          - mediatek,mt7981-topmisc
-           - mediatek,mt7988-topmisc
-           - mediatek,mt8135-pctl-a-syscfg
-           - mediatek,mt8135-pctl-b-syscfg
+diff --git a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+index 1f4c114354660..a7be3670e0059 100644
+--- a/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt7981b.dtsi
+@@ -69,6 +69,11 @@ secmon_reserved: secmon@43000000 {
+ 			no-map;
+ 		};
+ 
++		wmcpu_emi: wmcpu-reserved@47c80000 {
++			reg = <0 0x47c80000 0 0x100000>;
++			no-map;
++		};
++
+ 		wo_emi0: wo-emi@47d80000 {
+ 			reg = <0 0x47d80000 0 0x40000>;
+ 			no-map;
+@@ -497,6 +502,7 @@ wifi@18000000 {
+ 			clocks = <&topckgen CLK_TOP_NETSYS_MCU_SEL>,
+ 				 <&topckgen CLK_TOP_AP2CNN_HOST_SEL>;
+ 			clock-names = "mcu", "ap2conn";
++			memory-region = <&wmcpu_emi>;
+ 			resets = <&watchdog MT7986_TOPRGU_CONSYS_SW_RST>;
+ 			reset-names = "consys";
+ 			status = "disabled";
 
 -- 
 2.51.0
