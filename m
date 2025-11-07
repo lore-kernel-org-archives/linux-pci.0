@@ -1,115 +1,176 @@
-Received: from mail-oa1-f41.google.com (mail-oa1-f41.google.com [209.85.160.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2320728D8F4
-	for <linux-pci@vger.kernel.org>; Fri,  7 Nov 2025 02:44:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055962F616C;
+	Fri,  7 Nov 2025 03:29:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762483446; cv=none; b=Gfkn2LfZ5bqlC4SuB5u6WuKj+7hHSfF3n9apml/MYvEZNIHBstamHgNDvlODXZmIkBl3jIDc7sf5+/383tRiEvqN22abN38MOXIp55qEf0tkwAb88JD5SH6Ddt6w4gN6t84OTYlG1M1yS9M8pxRSG9nS08pv0e9iuaksUYglNVs=
+	t=1762486151; cv=none; b=ss2ow8b54v7eCIH0H8PPWzkPrf4gKZbrUhR7VmI6bnjUJFQF3dip3hSBXM6HTgjsf2pgInlrnAhmsHWideBbOpSgVSpdktVS5+6H4KRiRH9qetc/f919ukYiAHipMDn/sWZwVfx0PVTnWpR0OfnHJIgqQQ2WlxaH8pA182SGKhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762483446; c=relaxed/simple;
-	bh=f0zO8wvgQhxW3NMqX1Rfvdtn5DxNIhGdOq4ogpGv4Pk=;
+	s=arc-20240116; t=1762486151; c=relaxed/simple;
+	bh=IImINCHPo8SydfXgzNxPKnocMV0I2PHbN0YbvkHwWSE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZCxOsarNkyHsGpDUstHE3jZaF1vNT2b27xyeTWgfMQX6xBTH0hOmnLE4O+crC7FW51V3wJq1JcjfC1YGOXca9qF/71NbRPT99tpfTEY9bO0NjpiIMFk018eCZoGAnOPAByXCBMTjkTaYkZjTZnGm/2ocf6WoKeQVeDIvZzc5EX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BlHBFQLh; arc=none smtp.client-ip=209.85.160.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=HemAU03x2lIIOgW1qrfsAdlmLsDarhRvrjJ91z7QEGlC5cnSz4xG0ALqI+sYD0PUcNNsgkhBjsI0Bdqmpc3GuxV+X8PCrNAOteNjYZjDJG7bG9GpmOwozIu3KC7gVAFW7tmHK2DRp6UAKcQquAzYuU7/oirXPKSgSaHH93uNZ7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JdMebRk8; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BlHBFQLh"
-Received: by mail-oa1-f41.google.com with SMTP id 586e51a60fabf-3d47192e99bso211477fac.0
-        for <linux-pci@vger.kernel.org>; Thu, 06 Nov 2025 18:44:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762483444; x=1763088244; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=tQJFO3d01XRWHlItzAgkgKpAHFmrqaV2k8tk3VC7Qsk=;
-        b=BlHBFQLh/UZuO1Vd7TyJbmQiWmsQH5fEz+JdpMIVwmNjuTfmB3USdPmo577ml5MDX9
-         RNQC+4Q5khFuY7fzTzOwH5JYMlMUFoc7YQfO8Y2kYnvV1CrYlc7lSkSpKg+HSZqXarGf
-         eFXLnmVP0zZ1FsTpG7OaknTglg5nDP2UbclVZ37b7DGOs6TKfhV3tpKAGsy4S4bhg1ua
-         1Z9c7IV5hvMua0/rZqdBpdIZgmM8E7+n7WIUMd4KGshnXYduPSskKUMVQ9ZfE68pBP9i
-         V+nxtdXpvJBrmGIIwZn2o8GfefHsHbbzj3F3dasldmLjH+KX1y587ZPd/mCXGlQv8SJk
-         DXcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762483444; x=1763088244;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tQJFO3d01XRWHlItzAgkgKpAHFmrqaV2k8tk3VC7Qsk=;
-        b=uXrfa3krlRTTm8gkI3n0Ls0TMm7yFobkOC9ISOAc0c1XvH9IDVICqQPN4kg96mrnsQ
-         yF5UA32P0bQZB6o0iINJMVjnsGb+6NRFrI2P6cmgoNLxs6k+VuuTRu0S0VzmT44z/yhw
-         f1uH95whSo/QivfKd4vYlG0aiVyi/GncXzPU7+l86weDzfUtbQQi7eHHgv0PMJUFB7pr
-         07udYdimM+1rBlbfG1N3bnUQEA6WlTl+yIEksvh3JAUXwqJG5fNXT3OxsraL83hm4+r/
-         2vX4W1BA6092Al4sm/bR5fnNTa2+eFvJsJcXCxuTiW6oLTN+qw9ej2y7EPa7nQQP40TX
-         E7hg==
-X-Forwarded-Encrypted: i=1; AJvYcCUKj20OS4eLLmXjpGU2pekQ7BPPzpP5h9+Ti8XdYvNIOq2q8chfFZO4mD9P8o3nKzzxU3WkdSGgEuY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyV2ugslJxvyL7tdgemNIrt8jsokEcNSkq98nk6adp5QcNKQOaC
-	DJU9aDASQJyPHXQRBKdO8JQ9YG+IGLvsSV7stlqXFLEk/y4ZjKtbJU1O
-X-Gm-Gg: ASbGnctnYgxZ9i6t7awt5R2+eD6ITJ1On9MTRkk+fnHFnMXqENe2Tgk/zZKfTmjaDa5
-	l52YVugZcVLmnmNJWucNzixHZMy+MFOmjPmsQeem+PvlpUyrqOg5GSjfc2eXpxEYg9sXhd479Ny
-	/qgufzah66SpqFN2M/yBJsegAvSmXyIMS26Y4ACpCEaHK3ap6gDdPZb5rtKvMWSjfU9u3JG8Kf5
-	obadtLTxco3noJkN52YTC1W+wwX4ih8ss+STI9zCkcWwgVHEdb30GYkC/kje1PR/meZWhmQaqxn
-	aNn3wsRYtd4GXwJwHiGhUEn+ap8jWhXQc5c4Zw21/JL6WxKSpASH4QovpqphWMCfeHfXRl+fbo/
-	1zBJmnNRhaxH1Y53BVgvhjNSPo4PtcPuMT+ke1KjHtkSSgtIwYDkaZYFVtColzg==
-X-Google-Smtp-Source: AGHT+IFD2D//hG6hBMCeFSWKnWdmScBR8+/9DZwOHc0uXkeVWeA8HfOnZLz9J/lfwgpLyio/zbkAWg==
-X-Received: by 2002:a05:6871:51e7:b0:3e0:aec2:8b50 with SMTP id 586e51a60fabf-3e42aba92a0mr60346fac.22.1762483444119;
-        Thu, 06 Nov 2025 18:44:04 -0800 (PST)
-Received: from geday ([2804:7f2:8082:6c9::1])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-3e41f1ec269sm760868fac.20.2025.11.06.18.43.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Nov 2025 18:44:03 -0800 (PST)
-Date: Thu, 6 Nov 2025 23:43:57 -0300
-From: Geraldo Nascimento <geraldogabriel@gmail.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Johan Jonker <jbx6244@gmail.com>,
-	linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH] arm64: dts: rockchip: align bindings to PCIe spec
-Message-ID: <aQ1c7ZDycxiOIy8Y@geday>
-References: <4b5ffcccfef2a61838aa563521672a171acb27b2.1762321976.git.geraldogabriel@gmail.com>
- <ba120577-42da-424d-8102-9d085c1494c8@rock-chips.com>
- <aQsIXcQzeYop6a0B@geday>
- <67b605b0-7046-448a-bc9b-d3ac56333809@rock-chips.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JdMebRk8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1762486150; x=1794022150;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=IImINCHPo8SydfXgzNxPKnocMV0I2PHbN0YbvkHwWSE=;
+  b=JdMebRk8Xj33YjbNGVzPqXhj9xaqt2xFnHX4kF1uzam9FVCVUA/F/tlc
+   kH3Yq9jJjUUw/MaRn9hHJGSMqwRsvGQb86oFomCdJKgiNLf/siODYq9a5
+   ATYo8z7cdG1C6k41SydMFsMdzBY4VRdAfyOLs3cphWskqeVsu1K0ObdGn
+   nF2f1A61ZGj+zdnx9jtQPkiJ/vUJ5q7WXcqpFfddqsuC1cwzp61PRE0jy
+   CdfG2OweSCZQ4pgrvIULPwFOsu3buIm/5WbxpXfXolOCGcpI/QNCMCA3h
+   8mrXCqTjZtizrsDqHDljZuHQ/Bi6QHgUxIXRQxWi8Rks+hhM37ddC91c5
+   w==;
+X-CSE-ConnectionGUID: NCei9HNURhaS5eYJvVeeIw==
+X-CSE-MsgGUID: MueM+MNSQIWMykfIrhGjGQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11605"; a="82263948"
+X-IronPort-AV: E=Sophos;i="6.19,285,1754982000"; 
+   d="scan'208";a="82263948"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2025 19:29:09 -0800
+X-CSE-ConnectionGUID: Z6/WTQBjRRq8v4/Nzqz/1g==
+X-CSE-MsgGUID: phJBU6CNQ6OYLjJ23GpONA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,285,1754982000"; 
+   d="scan'208";a="193102109"
+Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
+  by orviesa005.jf.intel.com with ESMTP; 06 Nov 2025 19:29:06 -0800
+Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vHD9q-000Uem-1y;
+	Fri, 07 Nov 2025 03:29:03 +0000
+Date: Fri, 7 Nov 2025 11:28:26 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	bhelgaas@google.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, will@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	robh@kernel.org, linux-arm-msm@vger.kernel.org,
+	zhangsenchuan@eswincomputing.com,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH 3/3] PCI: dwc: Skip PME_Turn_Off and L2/L3 transition if
+ no device is available
+Message-ID: <202511071025.JM5nTGnO-lkp@intel.com>
+References: <20251106061326.8241-4-manivannan.sadhasivam@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <67b605b0-7046-448a-bc9b-d3ac56333809@rock-chips.com>
+In-Reply-To: <20251106061326.8241-4-manivannan.sadhasivam@oss.qualcomm.com>
 
-On Wed, Nov 05, 2025 at 04:56:36PM +0800, Shawn Lin wrote:
-> 在 2025/11/05 星期三 16:18, Geraldo Nascimento 写道:
-> > Hi Shawn, glad to hear from you.
-> > 
-> > Perhaps the following change is better? It resolves the issue
-> > without the added complication of open drain. After you questioned
-> > if open drain is actually part of the spec, I remembered that
-> > GPIO_OPEN_DRAIN is actually (GPIO_SINGLE_ENDED | GPIO_LINE_OPEN_DRAIN)
-> > so I decided to test with just GPIO_SINGLE_ENDED and it works.
+Hi Manivannan,
 
-Shawn,
+kernel test robot noticed the following build warnings:
 
-I quote from the PCIe Mini Card Electromechanical Specification Rev 1.2
+[auto build test WARNING on pci/next]
+[also build test WARNING on pci/for-linus linus/master v6.18-rc4 next-20251106]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-"3.4.1. Logic Signal Requirements
+url:    https://github.com/intel-lab-lkp/linux/commits/Manivannan-Sadhasivam/PCI-host-common-Add-an-API-to-check-for-any-device-under-the-Root-Ports/20251106-141822
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20251106061326.8241-4-manivannan.sadhasivam%40oss.qualcomm.com
+patch subject: [PATCH 3/3] PCI: dwc: Skip PME_Turn_Off and L2/L3 transition if no device is available
+config: arm-randconfig-001-20251107 (https://download.01.org/0day-ci/archive/20251107/202511071025.JM5nTGnO-lkp@intel.com/config)
+compiler: clang version 17.0.6 (https://github.com/llvm/llvm-project 6009708b4367171ccdbf4b5905cb6a803753fe18)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251107/202511071025.JM5nTGnO-lkp@intel.com/reproduce)
 
-The 3.3V card logic levels for single-ended digital signals (WAKE#,
-CLKREQ#, PERST#, and W_DISABLE#) are given in Table 3-7. [...]"
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511071025.JM5nTGnO-lkp@intel.com/
 
-So while you are correct that PERST# is most definitely not Open Drain,
-there's evidence on the spec that defines this signal as Single-Ended.
+All warnings (new ones prefixed by >>):
 
-Thanks,
-Geraldo Nascimento
+>> drivers/pci/controller/dwc/pcie-designware-host.c:1133:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
+    1133 |         if (!pci_root_ports_have_device(pci->pp.bridge->bus))
+         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-designware-host.c:1176:9: note: uninitialized use occurs here
+    1176 |         return ret;
+         |                ^~~
+   drivers/pci/controller/dwc/pcie-designware-host.c:1133:2: note: remove the 'if' if its condition is always false
+    1133 |         if (!pci_root_ports_have_device(pci->pp.bridge->bus))
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    1134 |                 goto stop_link;
+         |                 ~~~~~~~~~~~~~~
+   drivers/pci/controller/dwc/pcie-designware-host.c:1131:9: note: initialize the variable 'ret' to silence this warning
+    1131 |         int ret;
+         |                ^
+         |                 = 0
+   1 warning generated.
+
+
+vim +1133 drivers/pci/controller/dwc/pcie-designware-host.c
+
+  1126	
+  1127	int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+  1128	{
+  1129		u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+  1130		u32 val;
+  1131		int ret;
+  1132	
+> 1133		if (!pci_root_ports_have_device(pci->pp.bridge->bus))
+  1134			goto stop_link;
+  1135	
+  1136		/*
+  1137		 * If L1SS is supported, then do not put the link into L2 as some
+  1138		 * devices such as NVMe expect low resume latency.
+  1139		 */
+  1140		if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
+  1141			return 0;
+  1142	
+  1143		if (pci->pp.ops->pme_turn_off) {
+  1144			pci->pp.ops->pme_turn_off(&pci->pp);
+  1145		} else {
+  1146			ret = dw_pcie_pme_turn_off(pci);
+  1147			if (ret)
+  1148				return ret;
+  1149		}
+  1150	
+  1151		ret = read_poll_timeout(dw_pcie_get_ltssm, val,
+  1152					val == DW_PCIE_LTSSM_L2_IDLE ||
+  1153					val <= DW_PCIE_LTSSM_DETECT_WAIT,
+  1154					PCIE_PME_TO_L2_TIMEOUT_US/10,
+  1155					PCIE_PME_TO_L2_TIMEOUT_US, false, pci);
+  1156		if (ret) {
+  1157			/* Only log message when LTSSM isn't in DETECT or POLL */
+  1158			dev_err(pci->dev, "Timeout waiting for L2 entry! LTSSM: 0x%x\n", val);
+  1159			return ret;
+  1160		}
+  1161	
+  1162		/*
+  1163		 * Per PCIe r6.0, sec 5.3.3.2.1, software should wait at least
+  1164		 * 100ns after L2/L3 Ready before turning off refclock and
+  1165		 * main power. This is harmless when no endpoint is connected.
+  1166		 */
+  1167		udelay(1);
+  1168	
+  1169	stop_link:
+  1170		dw_pcie_stop_link(pci);
+  1171		if (pci->pp.ops->deinit)
+  1172			pci->pp.ops->deinit(&pci->pp);
+  1173	
+  1174		pci->suspended = true;
+  1175	
+  1176		return ret;
+  1177	}
+  1178	EXPORT_SYMBOL_GPL(dw_pcie_suspend_noirq);
+  1179	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
