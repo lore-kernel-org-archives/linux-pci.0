@@ -1,265 +1,162 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F090247287;
-	Fri,  7 Nov 2025 16:15:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42E69262FC7
+	for <linux-pci@vger.kernel.org>; Fri,  7 Nov 2025 16:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762532153; cv=none; b=DseMYvJJVK4+56MjPE7gPdzOKw/Mb6PPb+OajA1KauP3ZkSi5XkcV9zTkaif+qSFIpXicMkJ53Aimn23eQjGnVyikNkla4zqvH6e8x5mcKpoAV8U3LvWQcl8aT4c9kzYEoqIIiIw/YjQn8SadPXkaoHu1AXXy57uJnnueaMwc1I=
+	t=1762532546; cv=none; b=XluBdMxoss+8qqF+GGi9dlR1GSIDhdXR+EjP6P7ZLad9Qy//kfeGfOs80awz8HXv26Wetl/Sm6lVyRVbu8Wy+pj9q7a9XUugm1of76cVJ2YC3pxOtbmslgcTP6jxMXG6+e+pRjgr53QuoUb49hMFovpgdTS/SU5N6+AzLbImkkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762532153; c=relaxed/simple;
-	bh=FH0JNPE2M5JSheYCq6QpYcQfhXLdpicZpzRC33BxUSI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=LFNhSshBXTzJTNsGxvP4FPCFOu4pgoEWMpeSUkfCURm4vb1FatCQRjY0FeQq5ktvDosxJ0EcOGxNSB9YfXBBrtzzVmaOcCQpZgELr5PWxf59QEX++EJiAfe1sZ08KYmfjwPGIcwSN4wGVuHnZp6ZZKYgXTOG3GBBEHwoSSQ00yA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U8qK/Okn; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1762532546; c=relaxed/simple;
+	bh=/uuBJvBfa8Ndn+0lFjyrN8xoJzUWciCEN2Zw2GSaeHE=;
+	h=Message-ID:Date:From:To:Subject:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=E/FBpxZ/5ZeDlUR5sjgPzvZz/ZTyFaJAjXrn1WjycDguA9+qb7B4HIY1DA4uDjxAW9FG/iA+eNg2xS17cJT9qFc9mgi2Yytl/R3PgFouvMoISGeqpUf01nvoBKbXCNWhgtI9Pn29iPAKoy6D0dlCsBzG7Jtw7S0rkLc0ew2oSh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hNYWvEGB; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U8qK/Okn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762532151; x=1794068151;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=FH0JNPE2M5JSheYCq6QpYcQfhXLdpicZpzRC33BxUSI=;
-  b=U8qK/Oknnk5o/L4Ev1atp65vTO8UArtxk7dbEhSnRGf0IzWiYbqVCd4g
-   Rk08Q/wjlW5tvkWVF/yv18UDnMOvbI5dLMdUWRWTdIRouJ2eUKiT9qJL+
-   2J8S66FVM00uQEWn0TqMKsjR/1/d2yljR+oAm1Bwfv7YHGbOZ5X9uibjL
-   wa6qcaXX1WF663GM1zf5UMMq9p93TfOgg5QRc/lp5wNHnIMFbzCqKoX20
-   DNfmRxvAx5ZE3xD9rAZZU3u+Q80WLpP+99hZHdHll4+s6/68MXeli7EuG
-   HTVPt7PYbpo2GtMVMaI4s3sX/qtzMFW9XnHQBhTYWTMDIMSbgpSMd8orH
-   w==;
-X-CSE-ConnectionGUID: tRhPetlJQYie1Wac4myxBg==
-X-CSE-MsgGUID: sjTkV058RNeGXJegB06vow==
-X-IronPort-AV: E=McAfee;i="6800,10657,11606"; a="52249120"
-X-IronPort-AV: E=Sophos;i="6.19,287,1754982000"; 
-   d="scan'208";a="52249120"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2025 08:15:50 -0800
-X-CSE-ConnectionGUID: f7sU9PdEQq6ucVZByXGRAA==
-X-CSE-MsgGUID: K4n+yYAMQsCZj1S5V4KpjQ==
-X-ExtLoop1: 1
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.71])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2025 08:15:47 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: Steve Oswald <stevepeter.oswald@gmail.com>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hNYWvEGB"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-429bcddad32so678540f8f.3
+        for <linux-pci@vger.kernel.org>; Fri, 07 Nov 2025 08:22:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762532542; x=1763137342; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:subject:to
+         :from:date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=eXVAQ6YCxaql2PnrFc8uwn29EJDszDo6Iic48te9xOI=;
+        b=hNYWvEGBW3TtYnRTtEl+d7RNbddPGhPtf+L1OuraZ65v0VHz2TMpWMt3Mhp7bRh5OR
+         ScgpvIDT+iyeDI7vU+fBqrenmWvVhfpFUfGyM+7GWiCcZMnYuXTjqohPYYYSg12oUY63
+         M2+YGO0NGhqkdE8SjyrpHwCuGQ4oNK8hP48ExI6EpH8d2+m9AxJvYZwWYnNsV4biEheS
+         kJJ5kXfILMzwvwOgVsAV7UrTRYHVqDcxscBvxk7Uft0xF80dEEQwftK+0EwOs3FYPmDk
+         3dpb17b1J4hH019enMnzVmJoCd5qfX6SdcpY9NJAxgsvrKrJDgdvViBX5urcd+/du7SO
+         rauw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762532542; x=1763137342;
+        h=in-reply-to:content-disposition:mime-version:references:subject:to
+         :from:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=eXVAQ6YCxaql2PnrFc8uwn29EJDszDo6Iic48te9xOI=;
+        b=oEDpHhKnXCPlBZHCqExf4VACYPnT+Oaa8VjBdWOPcZH6paxyvLmKWC8+pRASV8VA7L
+         AxAzo0tdll1UJhglWzBV15x6atwgLyA7NYZNWhil/uaryA2aF5ukSt8ZoXBxnnxQwVF8
+         CdOTHNNbVXq7gnzXnraT8VHQWwIiq+gphWQR0b75HJRj5OZwAfBIs2/+RNKCJbgDGLlk
+         L0uO+HQyA+18hnmnC8eiK72v0DLRluRMYKvH1iGeEAJrPsmy5tqcwsvmx7J43PUUA34A
+         eLkcHP0FZKbMSeMji6+vAE6Ux2P57LC+EwypDxpe7qZx1k0lGGiJUoPYkAYs3irN9mIh
+         R3xg==
+X-Forwarded-Encrypted: i=1; AJvYcCXf3RqTJ4v29zqgYchn1PXL52EpiUMvFvWl8wmKy1JFDZSmgY9HBcMaZFrG3LXYmmK4qzs8zzrYvlU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwCvF0QRPFCg2KS6V79vYXqne5eY0FtCw9k73QkQSgVcKzm9R5B
+	f3QMADB7pQtMDuncNpAsiCgW1fCyCFVYG07L7sZcXakKy5OvPYAzJwu5
+X-Gm-Gg: ASbGnctT+47pCl4x/xVcTGh925n5URziW7zf5UNOwxwYRH58XgwlO5KjFf3vlY+TqMq
+	9K8CgWzZgJD19wB1j9hUXPIp7DoAcD3Vjm/6FBuar1AOjcAbIQr5LnWcEl6X3ZaxYXtgp5zMXKM
+	l3w6Z2QOSS67KeIo2lVL47oyFyw6DBYtyp0VcW+SnFdB6WHo2KDqYHPH9/5yzoxCbHLwB4zzPTJ
+	nRFw/FrctREhkDZ1+5GuNlsHb11WfMdsdQcw8RBq3v5nU/4qOSlnH+p8Zs6bVsjXW39w9IF3i1q
+	EG0kOIGadJRfdzLpT9iqBOCypczr+1nmG7xWqgZaT6ZvMS1ghXghzbMLS+cEP+FLW2ftQd15Dpr
+	MT72plMSTDZx3keVst9MLaysbkA/KhAyMnRV3j6qc/zU3ih/JeaDlq6Ujv95AftutkvQ4bZiDmU
+	45j+RvE9s9pBvxNHWhMgHvoyKKZr5zXX5TuxCF6c8=
+X-Google-Smtp-Source: AGHT+IGFfr9CT1eblajtZCP2XVFU0Vr5uVwdsTRLDJcCXPnjm3McVM0mCmW9P9Gky5idSjyeK+nn1A==
+X-Received: by 2002:a05:6000:2905:b0:425:7e45:a4df with SMTP id ffacd0b85a97d-42adc6896abmr3482205f8f.11.1762532542447;
+        Fri, 07 Nov 2025 08:22:22 -0800 (PST)
+Received: from Ansuel-XPS. (93-34-90-37.ip49.fastwebnet.it. [93.34.90.37])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42b29e4b9bdsm1826631f8f.32.2025.11.07.08.22.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Nov 2025 08:22:21 -0800 (PST)
+Message-ID: <690e1cbd.df0a0220.25b002.6c64@mx.google.com>
+X-Google-Original-Message-ID: <aQ4cugRUZrJVqR3c@Ansuel-XPS.>
+Date: Fri, 7 Nov 2025 17:22:18 +0100
+From: Christian Marangi <ansuelsmth@gmail.com>
+To: Ryder Lee <ryder.lee@mediatek.com>,
+	Jianjun Wang <jianjun.wang@mediatek.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 1/1] PCI: Prevent shrinking bridge window from its required size
-Date: Fri,  7 Nov 2025 18:15:36 +0200
-Message-Id: <20251107161537.8232-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.5
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, upstream@airoha.com
+Subject: Re: [PATCH v3 1/2] dt-bindings: PCI: mediatek-gen3: Add support for
+ Airoha AN7583
+References: <20250925155330.6779-1-ansuelsmth@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250925155330.6779-1-ansuelsmth@gmail.com>
 
-pci_bridge_distribute_available_resources() -> ... ->
-adjust_bridge_window() is called in between __pci_bus_size_bridges()
-and assigning the resources. Since the commit 948675736a77 ("PCI: Allow
-adjust_bridge_window() to shrink resource if necessary")
-adjust_bridge_window() can also shrink the bridge window to force it to
-a smaller size. The shrunken size, however, conflicts what
-__pci_bus_size_bridges() -> pbus_size_mem() calculated as the required
-bridge window size. By shrinking the resource size,
-adjust_bridge_window() prevents rest of the resource fitting algorithm
-working as intended. Resource fitting logic is expecting assignment
-failures when bridge windows need resizing, but there are cases where
-failures are no longer happening after the commit 948675736a77 ("PCI:
-Allow adjust_bridge_window() to shrink resource if necessary").
+On Thu, Sep 25, 2025 at 05:53:08PM +0200, Christian Marangi wrote:
+> Introduce Airoha AN7583 SoC compatible in mediatek-gen3 PCIe controller
+> binding.
+> 
+> This differ from the Airoha EN7581 SoC by the fact that only one Gen3
+> PCIe controller is present on the SoC.
+> 
+> The compatible have -gen3 tag as the Airoha AN7583 SoC have both GEN2
+> and GEN3 PCIe controller and it's required to differentiate them as
+> different schema are required for the 2 PCIe Controller variant.
+> 
+> Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 
-The commit 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink
-resource if necessary") justifies the change by the extra reservation
-made due to hpmemsize parameter, however, the kernel code contradicts
-with that statement. (For simplicity, finer-grained hpmmiosize and
-hpmmiopref parameters that can be used to the same effect as hpmemsize
-are ignored in this description.)
+Any chance this can be picked? All the 2 patch got review tag.
 
-pbus_size_mem() calls calculate_memsize() twice. First with add_size=0
-to find out the minimal required resource size. The second call occurs
-with add_size=hpmemsize (effectively) but the result does not directly
-affect the resource size only resulting in an entry on the realloc_head
-list (a.k.a. add_list). Yet, adjust_bridge_window() directly changes
-the resource size which does not include what is reserved due to
-hpmemsize. Also, if the required size for the bridge window exceeds
-hpmemsize, the parameter does not have any effect even on the second
-size calculcation made by pbus_size_mem(); from calculate_memsize():
+> ---
+> Changes v3:
+> - Add review tag
+> - Add comments for compatible inconsistency
+> Changes v2:
+> - Fix alphabetical order
+> 
+>  .../bindings/pci/mediatek-pcie-gen3.yaml      | 21 +++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> index 0278845701ce..1ca9594a9739 100644
+> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> @@ -58,6 +58,7 @@ properties:
+>            - const: mediatek,mt8196-pcie
+>        - const: mediatek,mt8192-pcie
+>        - const: mediatek,mt8196-pcie
+> +      - const: airoha,an7583-pcie-gen3
+>        - const: airoha,en7581-pcie
+>  
+>    reg:
+> @@ -276,6 +277,26 @@ allOf:
+>  
+>          mediatek,pbus-csr: false
+>  
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          const: airoha,an7583-pcie-gen3
+> +    then:
+> +      properties:
+> +        clocks:
+> +          maxItems: 1
+> +
+> +        clock-names:
+> +          items:
+> +            - const: sys-ck
+> +
+> +        resets:
+> +          minItems: 1
+> +
+> +        reset-names:
+> +          items:
+> +            - const: phy-lane0
+> +
+>    - if:
+>        properties:
+>          compatible:
+> -- 
+> 2.51.0
+> 
 
-  size = max(size, add_size) + children_add_size;
-
-The commit ae4611f1d7e9 ("PCI: Set resource size directly in
-adjust_bridge_window()") that precedes the commit 948675736a77 ("PCI:
-Allow adjust_bridge_window() to shrink resource if necessary") is also
-related to causing this problem. Its changelog explicitly states
-adjust_bridge_window() wants to "guarantee" allocation success.
-Guaranteed allocations, however, are incompatible with how the other
-parts of the resource fitting algorithm work. The given justification
-fails to explain why guaranteed allocations at this stage are required
-nor why forcing window to a smaller value than what was calculated by
-pbus_size_mem() is correct. While the change might have worked by chance
-in some test scenario, too small bridge window does not "guarantee"
-success from the point of view of the endpoint device resource
-assignments. No issue is mentioned within the changelog so it's unclear
-if the change was made to fix some observed issue nor and what that
-issue was.
-
-The unwanted shrinking of a bridge window occurs, e.g., when a device
-with large BARs such as eGPU is attached using Thunderbolt and the Root
-Port holds less than enough resource space for the eGPU. The GPU
-resources are in order of GBs and the default hotplug allocation is
-mere 2M (DEFAULT_HOTPLUG_MMIO_PREF_SIZE). The problem is illustrated by
-this log (filtered to the relevant content only):
-
-pci 0000:00:07.0: PCI bridge to [bus 03-2c]
-pci 0000:00:07.0:   bridge window [mem 0x6000000000-0x601bffffff 64bit pref]
-pci 0000:03:00.0: PCI bridge to [bus 00]
-pci 0000:03:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-pci 0000:03:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:03:00.0: PCI bridge to [bus 04-2c]
-pcieport 0000:00:07.0: Assigned bridge window [mem 0x6000000000-0x601bffffff 64bit pref] to [bus 03-2c] cannot fit 0xc00000000 required for 0000:03:00.0 bridging to [bus 04-2c]
-pci 0000:03:00.0: bridge window [mem 0x800000000-0x10003fffff 64bit pref] to [bus 04-2c] add_size 100000 add_align 100000
-pcieport 0000:00:07.0: distributing available resources
-pci 0000:03:00.0: bridge window [mem 0x800000000-0x10003fffff 64bit pref] shrunken by 0x00000007e4400000
-pci 0000:03:00.0: bridge window [mem 0x6000000000-0x601bffffff 64bit pref]: assigned
-
-The initial size of the Root Port's window is 448MB (0x601bffffff -
-0x6000000000). __pci_bus_size_bridges() -> pbus_size_mem() calculates
-the required size to be 32772 MB (0x10003fffff - 0x800000000) which
-would fit the eGPU resources. adjust_bridge_window() then shrinks the
-bridge window down to what is guaranteed to fit into the Root Port's
-bridge window. The bridge window for 03:00.0 is also eliminated from
-the add_list (a.k.a. realloc_head) list by adjust_bridge_window().
-
-After adjustment, the resources are assigned and as the bridge window
-for 03:00.0 is assigned successfully, no failure is recorded. Without a
-failure, no attempt to resize the window of the Root Port is required.
-The end result is eGPU not having large enough resources to work.
-
-The commit 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink
-resource if necessary") also claims nested bridge windows are sized the
-same, which is false. pbus_size_mem() calculates the size for the
-parent bridge window by summing all the downstream resources so the
-resource fitting calculates larger bridge window for the parent to
-accomodate the childen. That is, hpmemsize does not result the same
-size for the case where there are nested bridge windows.
-
-In order to fix the most immediate problem, don't shrink the resource
-size in adjust_bridge_window() as hpmemsize had nothing to do with it.
-When considering add_size, only reduce it up to what is added due to
-hpmemsize (if required size is larger than hpmemsize, the parameter has
-no impact, see calculate_memsize()). Unfortunately, if the tail of the
-bridge window was aligned in calculate_memsize() from below hpmemsize
-to above it, the size check will falsely match but the check at least
-errs to the side of caution. There's not enough information available
-in adjust_bridge_window() to know the calculated size precisely.
-
-This is not exactly a revert of the commits e4611f1d7e9 ("PCI: Set
-resource size directly in adjust_bridge_window()") and 948675736a77
-("PCI: Allow adjust_bridge_window() to shrink resource if necessary")
-as shrinking still remains in place but is implemented differently,
-and the end result behaves very differently.
-
-It is possible that those two commits fixed some other issue that is
-not described with enough detail in the changelog and undoing parts of
-them results in another regression due to behavioral change.
-Nonetheless, as described above, the solution by those two commits was
-flawed and the issue, if one exists, should be solved in a way that is
-compatible with the rest of the resource fitting algorithm instead of
-working against it.
-
-Besides shrinking, the case where adjust_bridge_window() expands the
-bridge window is likely somewhat wrong as well because it removes the
-entry from add_list (a.k.a. realloc_head), but it is less damaging as
-that only impacts optional resources and may have no impact if
-expanding by hpmemsize is larger than what add_size was. Fixing it is
-left as further work.
-
-Fixes: 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink resource if necessary")
-Fixes: ae4611f1d7e9 ("PCI: Set resource size directly in adjust_bridge_window()")
-Reported-by: Steve Oswald <stevepeter.oswald@gmail.com>
-Closes: https://lore.kernel.org/linux-pci/CAN95MYEaO8QYYL=5cN19nv_qDGuuP5QOD17pD_ed6a7UqFVZ-g@mail.gmail.com/
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
-
-Bjorn,
-
-While this fixes a real issue, the change feels quite complex despite not
-looking very complex on surface. As such, there could be unforeseen
-side-effects so I'd prefer this be routed through next.
-
- drivers/pci/setup-bus.c | 42 +++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 40 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4a8735b275e4..5e3510ef7b9b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2005,6 +2005,7 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
- 				 resource_size_t new_size)
- {
- 	resource_size_t add_size, size = resource_size(res);
-+	struct pci_dev_resource *dev_res;
- 
- 	if (res->parent)
- 		return;
-@@ -2017,9 +2018,46 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
- 		pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
- 			&add_size);
- 	} else if (new_size < size) {
-+		int idx = pci_resource_num(bridge, res);
-+
-+		/*
-+		 * hpio/mmio/mmioprefsize hasn't been included at all? See the
-+		 * add_size param at the callsites of calculate_memsize().
-+		 */
-+		if (!add_list)
-+			return;
-+
-+		/* Only shrink if the hotplug extra relates to window size. */
-+		switch (idx) {
-+			case PCI_BRIDGE_IO_WINDOW:
-+				if (size > pci_hotplug_io_size)
-+					return;
-+				break;
-+			case PCI_BRIDGE_MEM_WINDOW:
-+				if (size > pci_hotplug_mmio_size)
-+					return;
-+				break;
-+			case PCI_BRIDGE_PREF_MEM_WINDOW:
-+				if (size > pci_hotplug_mmio_pref_size)
-+					return;
-+				break;
-+			default:
-+				break;
-+		}
-+
-+		dev_res = res_to_dev_res(add_list, res);
- 		add_size = size - new_size;
--		pci_dbg(bridge, "bridge window %pR shrunken by %pa\n", res,
--			&add_size);
-+		if (add_size < dev_res->add_size) {
-+			dev_res->add_size -= add_size;
-+			pci_dbg(bridge, "bridge window %pR optional size shrunken by %pa\n",
-+				res, &add_size);
-+		} else {
-+			pci_dbg(bridge, "bridge window %pR optional size removed\n",
-+				res);
-+			remove_from_list(add_list, res);
-+		}
-+		return;
-+
- 	} else {
- 		return;
- 	}
-
-base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
 -- 
-2.39.5
-
+	Ansuel
