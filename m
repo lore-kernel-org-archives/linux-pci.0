@@ -1,377 +1,230 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mout.web.de (mout.web.de [217.72.192.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A589A25743D
-	for <linux-pci@vger.kernel.org>; Fri,  7 Nov 2025 16:22:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3015C1A9F96;
+	Fri,  7 Nov 2025 17:10:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762532555; cv=none; b=ot08YTMTw9n4cigH4iXc9oIqk98s08JWwNR0502qmMiC464YzaoIQT9LRVOVKR3Vji2ap5AiVWoEILt3COgmfQicKPD0OMHpSxjqIMn2jeVVX5aK5/RXhnsCx3wKjLnNabagrDCmrjgS0qKnw5REtJ8UfGx/JpZe1C7AIt5/BSo=
+	t=1762535421; cv=none; b=SdrwyvyvhkB2qnfbI8Xzmbe/+5i/V5n7FfZcoqb0kfIhZqzl6+IdqBOy9ktNSxiMXb8uw3YAHnZuXYBEsx9NyuEMBmZKTo/G+KwFZpRfwLYwD5rYVEabn9yNsHppVbNVVtVlkpBtm7pO5lP/i4+t6tB+oOi2PM6/ptPpRT43RAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762532555; c=relaxed/simple;
-	bh=M3hIRl80Q5O96AMnys0mCWCGm7+oZD+i2AUZ9a42n70=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=T7RcwtiEgZLqkyh1V43ArB2lRc6x6Ebz5c5GNkI363C0MBvTxEmj8qErbvNYJQFOfnQQ+w8XrjXzIc8/o0u6vvFgR2aYZk0FyHI/hQMcX8X2rz30adudZjPiGBWQYLLRnLmoRK+WC6UEgZLtt50TDNS6tl8zJJ20EDhn2BrgHwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=V+8OX2QJ; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1762535421; c=relaxed/simple;
+	bh=Q4iZVFIWDajlVqYZQyoAIORebj7pus8kKZIBIi+Th0I=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=oB+64EBl+pmDfJmuJV+rM4M1loiWpx5994l+Cj6/eWYRoRthTiyhgwnePl4qhecVhVotlIrhikgslw2hNRXjERXqO9fzefCDLdXeSL59xe4WreeY1pCU7Oz7BckmUEANAL65n1wr7oS+TKhz8rNV1I/IEuAd9eF1olrcwRPNdHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=spasswolf@web.de header.b=qoGasUuB; arc=none smtp.client-ip=217.72.192.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="V+8OX2QJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762532544; x=1794068544;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=M3hIRl80Q5O96AMnys0mCWCGm7+oZD+i2AUZ9a42n70=;
-  b=V+8OX2QJEex1pC6vD/TmluvZ9CGglP45V/ZOpY96MBmr1qbv0EayYe4I
-   DdG0dzjDv3aYC4ZPW+zc5TvYW33D05oATb598Hh1OazuEer/OWKDCCbZ8
-   O+JnXCGi87kHcA+nnf4ZAD7BRZ9uU/UOd9lPmNKYSwfzmd3wXUdz+h1x9
-   qm880JNA/3IbgOeTLwUrzDtdUbEIGiYCm4WNltMNZMKXn6+AWX56x0OPn
-   M+QqNoreIaS9Cm67BJ807YJGKhqG9Izg/WVCebrHZUF3Cu+6iZFrcg8/Z
-   dvuqoPtbCp6tyHmHtXbveSzlzWG3pbU87GXI2wmnAEmFXW9JrTWwKTpR8
-   g==;
-X-CSE-ConnectionGUID: iYfJEDqwQmSPG1pYCsWmBA==
-X-CSE-MsgGUID: EO8n+Tw2QJK9oN37J0v4aw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11606"; a="64724202"
-X-IronPort-AV: E=Sophos;i="6.19,287,1754982000"; 
-   d="scan'208";a="64724202"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2025 08:22:23 -0800
-X-CSE-ConnectionGUID: 8R6kkMOVSImKBg4MFpbuJw==
-X-CSE-MsgGUID: HZdBvog6Rei0tVV5DV4VJQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,287,1754982000"; 
-   d="scan'208";a="188239894"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.71])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2025 08:22:22 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 7 Nov 2025 18:22:18 +0200 (EET)
-To: Steve Oswald <stevepeter.oswald@gmail.com>
-cc: linux-pci@vger.kernel.org
-Subject: Re: [BUG] Thunderbolt eGPU PCI BARs incorrectly assigned, fails to
- assign memory
-In-Reply-To: <CAN95MYG_hRKrLWVLD9+BFeikOy7W5GN1px3kG8mE0p-DO0aAGA@mail.gmail.com>
-Message-ID: <d2372a56-6b49-fe4f-4993-6e386f14852e@linux.intel.com>
-References: <CAN95MYEaO8QYYL=5cN19nv_qDGuuP5QOD17pD_ed6a7UqFVZ-g@mail.gmail.com> <9254be77-46ea-992f-a1bd-98bea3943520@linux.intel.com> <f743efbe-56b7-ad85-f278-743af9385f10@linux.intel.com> <82ac5594-61c0-fece-1d9c-7c10316df384@linux.intel.com>
- <CAN95MYHpdz0u6-J_=7_enxq-TMzRJJJntfjYxBRgrG8UYbhQ1A@mail.gmail.com> <eb70b817-175c-7a34-d2bf-9472019afa47@linux.intel.com> <0263ea7c-8df9-1dba-f797-f18e253b3f30@linux.intel.com> <CAN95MYG_hRKrLWVLD9+BFeikOy7W5GN1px3kG8mE0p-DO0aAGA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=web.de header.i=spasswolf@web.de header.b="qoGasUuB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1762535395; x=1763140195; i=spasswolf@web.de;
+	bh=SKEK1JrL+/0p/+OIRqKOxtvvs0duYiZVtOLyFdp51kU=;
+	h=X-UI-Sender-Class:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:MIME-Version:Content-Transfer-Encoding:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=qoGasUuB8tzthdF3u/5mI57zW8Fq1BTps/LxqkECusiEnpRjJBvUMrhlOUXN8rrL
+	 OpimuGMrRvHPheBhqPdsnKc4PYqJOqqQyGjBju0xQDZ+ivJ/dEcBsThyiYQi3ZmiR
+	 r5VLkX9XRySWrHRies3jX+kUNJlXaRIC79T7sYygp/oIK7NnQf7umKev8e+JonONE
+	 lTg7P8RJDcCmZqSVDIoxBECjNXfOET2XBOmPeQVEQq4V31t9LMqb6Rlfiazt4IPwE
+	 Uk3zRy525fADCR6XtcJo3n7r9SWQSPb8rQ+0TWHEJ7Z1psWdo0VRRpTSaeanwo6e7
+	 hVtNBIvMTpyD9OVEwg==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.0.101] ([95.223.134.88]) by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MOUtg-1vZeeL01cc-00Oi0K; Fri, 07
+ Nov 2025 18:09:55 +0100
+Message-ID: <ab51bd58919a31107caf8f8753804cb2dbfa791d.camel@web.de>
+Subject: Re: [REGRESSION 00/04] Crash during resume of pcie bridge
+From: Bert Karwatzki <spasswolf@web.de>
+To: "Mario Limonciello (AMD) (kernel.org)" <superm1@kernel.org>, Christian
+ =?ISO-8859-1?Q?K=F6nig?=
+	 <christian.koenig@amd.com>, linux-kernel@vger.kernel.org
+Cc: linux-next@vger.kernel.org, regressions@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, "Rafael J . Wysocki"
+	 <rafael.j.wysocki@intel.com>, spasswolf@web.de
+Date: Fri, 07 Nov 2025 18:09:53 +0100
+In-Reply-To: <0cb75fae3a9cdb8dd82ca82348f4df919d34844d.camel@web.de>
+References: <20251006120944.7880-1-spasswolf@web.de>
+		 <8edcc464-c467-4e83-a93b-19b92a2cf193@kernel.org>
+		 <4903e7c36adf377bcca289dbd3528055dc6cfb32.camel@web.de>
+		 <4a8302a0-209f-446a-9825-36cb267c1718@kernel.org>
+		 <25f36fa7-d1d6-4b81-a42f-64c445d6f065@amd.com>
+		 <1853e2af7f70cf726df278137b6d2d89d9d9dc82.camel@web.de>
+		 <f18bafacbd8316c9623658e2935f8fc3b276af64.camel@web.de>
+		 <26bf82303f661cdd34e4e8c16997e33eb21d1ee4.camel@web.de>
+		 <635b6cb19b5969bed7432dfd1cd651124e63aebb.camel@web.de>
+		 <18e472a0489ee5337465d5dc26685cebaf7c4f8d.camel@web.de>
+		 <3772b8f5-6d1a-403e-ad27-99a711e78902@kernel.org>
+	 <0cb75fae3a9cdb8dd82ca82348f4df919d34844d.camel@web.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.56.1-1+deb13u1 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-636551309-1762532538=:1070"
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:QLOBqZlUoVkFkBzybM3FNXJ8fgpyENig0SB6XsCI12/QxXFEKx4
+ V2xRXZBzSPdWgNW4d25HB8up32yn8VQEBeoETymJgm8g4nGdPnAka0DRAyt0e9l8fNXOwL2
+ YI5iLAU3bRcYaRtFSnvY8Mmuv9hgB4IJeJxG6zOwRaC9n0sHZcIoiwx6y8JDGrBkLk2Y2Jw
+ gtvJ5eCvN4tYPpOlQozfQ==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:ImZ0DGL/Uw4=;kMMHkIJJ1hrfkaJf5lBJ1vo+zKU
+ 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
+ 3ziyOKsvS9qpdd/fI=
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-636551309-1762532538=:1070
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Sat, 11 Oct 2025, Steve Oswald wrote:
-
-> Hi Ilpo,
-> sorry for the late reply. It took me quite a while.
-> The patch you sent was probably not based off of
-> f6d41443f54856ceece0d5b584f47f681513bde4, because I used the
-> linux-stable git and there was no pci_resource_num.
-> I used git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
-> @ f6d41443f548 added the missing function from the mainline repo.
+Am Freitag, dem 07.11.2025 um 14:09 +0100 schrieb Bert Karwatzki:
 >=20
-> Hotplugging works now,
-
-Thanks for testing.
-
-> it still crashes the gpu driver on unplugging
-> at runtime though, might still be related or just a driver bug.
-> Here is the dmesg output:
-> https://gist.githubusercontent.com/stepeos/cd060c7d66ab195f51ab4d5675b4e4=
-af/raw/048752be295efe536c4f453938aac6e47e2429a3/patched%2520kernel
-
-Those warnings look amdgpu driver state machine problem which have=20
-nothing to do with PCI core code.
-
-> Thanks for the fix!
-
-I finally remembered to submit the fix officially. I you feel like it, you=
-=20
-can give your Tested-by tag if you want to be credited for your testing=20
-efforts (in the thread where the official patch submission is so=20
-maintainer's tools will pick it up automatically into the commit message).
-
-
---=20
- i.
-
-
-> Am Mi., 8. Okt. 2025 um 13:43 Uhr schrieb Ilpo J=C3=A4rvinen
-> <ilpo.jarvinen@linux.intel.com>:
-> >
-> > On Wed, 3 Sep 2025, Ilpo J=C3=A4rvinen wrote:
-> >
-> > > On Mon, 1 Sep 2025, Steve Oswald wrote:
-> > >
-> > > > I've added the dmesg output fordyndbg=3D"file drivers/pci/*. I wasn=
-'t
-> > > > sure if I added it with the escaped quotes correctly.
-> > > > https://gist.github.com/stepeos/cd060c7d66ab195f51ab4d5675b4e4af/ra=
-w/9cf5fc3a8c4f13588a33d61865f804f85e50470a/dmesg_linux_6.11.0_dyndbg.log
-> > >
-> > > Hi again,
-> > >
-> > > I think the patch below should solve your issue. If you manage to get=
- it
-> > > tested and are confident enough it fixed your issue, you may provide =
-your
-> > > Tested-by tag so I can include it into the official submission of the=
- fix.
-> >
-> > Hi Steve,
-> >
-> > Did you manage to test this patch?
-> >
-> > --
-> >  i.
-> >
-> > >
-> > >
-> > > From 1c8ef31c6ac6616869b447a473e879b233df62db Mon Sep 17 00:00:00 200=
-1
-> > > From: =3D?UTF-8?q?Ilpo=3D20J=3DC3=3DA4rvinen?=3D <ilpo.jarvinen@linux=
-=2Eintel.com>
-> > > Date: Wed, 3 Sep 2025 15:53:48 +0300
-> > > Subject: [PATCH 1/1] PCI: Prevent shrinking bridge window from its re=
-quired
-> > >  size
-> > > MIME-Version: 1.0
-> > > Content-Type: text/plain; charset=3DUTF-8
-> > > Content-Transfer-Encoding: 8bit
-> > >
-> > > pci_bridge_distribute_available_resources() -> ... ->
-> > > adjust_bridge_window() is called in between __pci_bus_size_bridges()
-> > > and assigning the resources. Since the commit 948675736a77 ("PCI: All=
-ow
-> > > adjust_bridge_window() to shrink resource if necessary")
-> > > adjust_bridge_window() can also shrink the bridge window to force it =
-to
-> > > a smaller size. The shrunken size, however, conflicts what
-> > > __pci_bus_size_bridges() -> pbus_size_mem() calculated as the require=
-d
-> > > bridge window size. By shrinking the resource size,
-> > > adjust_bridge_window() prevents rest of the resource fitting algorith=
-m
-> > > working as intended. Resource fitting logic is expecting assignment
-> > > failures when bridge windows need resizing, but there are cases where
-> > > failures are no longer happening after the commit 948675736a77 ("PCI:
-> > > Allow adjust_bridge_window() to shrink resource if necessary").
-> > >
-> > > The commit 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink
-> > > resource if necessary") justifies the change by the extra reservation
-> > > made due to hpmemsize parameter, however, the kernel code contradicts
-> > > with that statement. (For simplicity, finer-grained hpmmiosize and
-> > > hpmmiopref parameters that can be used to the same effect as hpmemsiz=
-e
-> > > are ignored in this description.)
-> > >
-> > > pbus_size_mem() calls calculate_memsize() twice. First with add_size=
-=3D0
-> > > to find out the minimal required resource size. The second call occur=
-s
-> > > with add_size=3Dhpmemsize (effectively) but the result does not direc=
-tly
-> > > affect the resource size only resulting in an entry on the realloc_he=
-ad
-> > > list (a.k.a. add_list). Yet, adjust_bridge_window() directly changes
-> > > the resource size which does not include what is reserved due to
-> > > hpmemsize. Also, if the required size for the bridge window exceeds
-> > > hpmemsize, the parameter does not have any effect even on the second
-> > > size calculcation made by pbus_size_mem(); from calculate_memsize():
-> > >
-> > >   size =3D max(size, add_size) + children_add_size;
-> > >
-> > > The commit ae4611f1d7e9 ("PCI: Set resource size directly in
-> > > adjust_bridge_window()") that precedes the commit 948675736a77 ("PCI:
-> > > Allow adjust_bridge_window() to shrink resource if necessary") is als=
-o
-> > > related to causing this problem. Its changelog explicitly states
-> > > adjust_bridge_window() wants to "guarantee" allocation success.
-> > > Guaranteed allocations, however, are incompatible with how the other
-> > > parts of the resource fitting algorithm work. The given justification
-> > > fails to explain why guaranteed allocations at this stage are require=
-d
-> > > nor why forcing window to a smaller value than what was calculated by
-> > > pbus_size_mem() is correct. The the change might have worked by chanc=
-e
-> > > in some test scenario, too small bridge window does not "guarantee"
-> > > success from the point of view of the endpoint device resource
-> > > assignments. No issue is mentioned within the changelog so it's uncle=
-ar
-> > > if the change was made to fix some observed issue nor and what that
-> > > issue was.
-> > >
-> > > The unwanted shrinking of a bridge window occurs, e.g., when a device
-> > > with large BARs such as eGPU is attached using Thunderbolt and the Ro=
-ot
-> > > Port holds less than enough resource space for the eGPU. The GPU
-> > > resources are in order of GBs and the default hotplug allocation is
-> > > mere 2M (DEFAULT_HOTPLUG_MMIO_PREF_SIZE). The problem is illustrated =
-by
-> > > this log (filtered to the relevant content only):
-> > >
-> > > pci 0000:00:07.0: PCI bridge to [bus 03-2c]
-> > > pci 0000:00:07.0:   bridge window [mem 0x6000000000-0x601bffffff 64bi=
-t pref]
-> > > pci 0000:03:00.0: PCI bridge to [bus 00]
-> > > pci 0000:03:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pr=
-ef]
-> > > pci 0000:03:00.0: bridge configuration invalid ([bus 00-00]), reconfi=
-guring
-> > > pci 0000:03:00.0: PCI bridge to [bus 04-2c]
-> > > pcieport 0000:00:07.0: Assigned bridge window [mem 0x6000000000-0x601=
-bffffff 64bit pref] to [bus 03-2c] cannot fit 0xc00000000 required for 0000=
-:03:00.0 bridging to [bus 04-2c]
-> > > pci 0000:03:00.0: bridge window [mem 0x800000000-0x10003fffff 64bit p=
-ref] to [bus 04-2c] add_size 100000 add_align 100000
-> > > pcieport 0000:00:07.0: distributing available resources
-> > > pci 0000:03:00.0: bridge window [mem 0x800000000-0x10003fffff 64bit p=
-ref] shrunken by 0x00000007e4400000
-> > > pci 0000:03:00.0: bridge window [mem 0x6000000000-0x601bffffff 64bit =
-pref]: assigned
-> > >
-> > > The initial size of the Root Port's window is 448MB (0x601bffffff -
-> > > 0x6000000000). __pci_bus_size_bridges() -> pbus_size_mem() calculates
-> > > the required size to be 32772 MB (0x10003fffff - 0x800000000) which
-> > > would fit the eGPU resources. adjust_bridge_window() then shrinks the
-> > > bridge window down to what is guaranteed to fit into the Root Port's
-> > > bridge window. The bridge window for 03:00.0 is also eliminated from
-> > > the add_list (a.k.a. realloc_head) list by adjust_bridge_window().
-> > >
-> > > After adjustment, the resources are assigned and as the bridge window
-> > > for 03:00.0 is assigned successfully, no failure is recorded. Without=
- a
-> > > failure, no attempt to resize the window of the Root Port is required=
-=2E
-> > > The end result is eGPU not having large enough resources to work.
-> > >
-> > > The commit 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink
-> > > resource if necessary") also claims nested bridge windows are sized t=
-he
-> > > same, which is false. pbus_size_mem() calculates the size for the
-> > > parent bridge window by summing all the downstream resources so the
-> > > resource fitting calculates larger bridge window for the parent to
-> > > accomodate the childen. That is, hpmemsize does not result the same
-> > > size for the case where there are nested bridge windows.
-> > >
-> > > In order to fix the most immediate problem, don't shrink the resource
-> > > size as hpmemsize had nothing to do with it. When considering add_siz=
-e,
-> > > only reduce it up to what is added due to hpmemsize (if required size
-> > > is larger than hpmemsize, the parameter has no impact, see
-> > > calculate_memsize()).
-> > >
-> > > This is not exactly a revert of the commits e4611f1d7e9 ("PCI: Set
-> > > resource size directly in adjust_bridge_window()") and 948675736a77
-> > > ("PCI: Allow adjust_bridge_window() to shrink resource if necessary")
-> > > as shrinking still remains in place but is implemented differently,
-> > > and the end result behaves very differently.
-> > >
-> > > It is possible that those two commits fixed some other issue that is
-> > > not described with enough detail in the changelog and undoing parts o=
-f
-> > > them results in another regression due to behavioral change.
-> > > Nonetheless, as described above, the solution by those two commits wa=
-s
-> > > flawed and the issue, if one exists, should be solved in a way that i=
-s
-> > > compatible with the rest of the resource fitting algorithm instead of
-> > > working against it.
-> > >
-> > > Besides shrinking, the case where adjust_bridge_window() expands the
-> > > bridge window is likely somewhat wrong as well because it removes the
-> > > entry from add_list (a.k.a. realloc_head), but it is less damaging as
-> > > that only impacts optional resources and may have no impact if
-> > > expanding by hpmemsize is larger than what add_size was. Fixing it is
-> > > left as further work.
-> > >
-> > > Reported-by: Steve Oswald <stevepeter.oswald@gmail.com>
-> > > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> > > ---
-> > >  drivers/pci/setup-bus.c | 42 +++++++++++++++++++++++++++++++++++++++=
---
-> > >  1 file changed, 40 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > > index 23082bc0ca37..4dd618bc4196 100644
-> > > --- a/drivers/pci/setup-bus.c
-> > > +++ b/drivers/pci/setup-bus.c
-> > > @@ -1828,6 +1828,7 @@ static void adjust_bridge_window(struct pci_dev=
- *bridge, struct resource *res,
-> > >                                resource_size_t new_size)
-> > >  {
-> > >       resource_size_t add_size, size =3D resource_size(res);
-> > > +     struct pci_dev_resource *dev_res;
-> > >
-> > >       if (res->parent)
-> > >               return;
-> > > @@ -1840,9 +1841,46 @@ static void adjust_bridge_window(struct pci_de=
-v *bridge, struct resource *res,
-> > >               pci_dbg(bridge, "bridge window %pR extended by %pa\n", =
-res,
-> > >                       &add_size);
-> > >       } else if (new_size < size) {
-> > > +             int idx =3D pci_resource_num(bridge, res);
-> > > +
-> > > +             /*
-> > > +              * hpio/mmio/mmioprefsize hasn't been included at all? =
-See the
-> > > +              * add_size param at the callsites of calculate_memsize=
-().
-> > > +              */
-> > > +             if (!add_list)
-> > > +                     return;
-> > > +
-> > > +             /* Only shrink if the hotplug extra relates to window s=
-ize. */
-> > > +             switch (idx) {
-> > > +                     case PCI_BRIDGE_IO_WINDOW:
-> > > +                             if (size > pci_hotplug_io_size)
-> > > +                                     return;
-> > > +                             break;
-> > > +                     case PCI_BRIDGE_MEM_WINDOW:
-> > > +                             if (size > pci_hotplug_mmio_size)
-> > > +                                     return;
-> > > +                             break;
-> > > +                     case PCI_BRIDGE_PREF_MEM_WINDOW:
-> > > +                             if (size > pci_hotplug_mmio_pref_size)
-> > > +                                     return;
-> > > +                             break;
-> > > +                     default:
-> > > +                             break;
-> > > +             }
-> > > +
-> > > +             dev_res =3D res_to_dev_res(add_list, res);
-> > >               add_size =3D size - new_size;
-> > > -             pci_dbg(bridge, "bridge window %pR shrunken by %pa\n", =
-res,
-> > > -                     &add_size);
-> > > +             if (add_size < dev_res->add_size) {
-> > > +                     dev_res->add_size -=3D add_size;
-> > > +                     pci_dbg(bridge, "bridge window %pR optional siz=
-e shrunken by %pa\n",
-> > > +                             res, &add_size);
-> > > +             } else {
-> > > +                     pci_dbg(bridge, "bridge window %pR optional siz=
-e removed\n",
-> > > +                             res);
-> > > +                     remove_from_list(add_list, res);
-> > > +             }
-> > > +             return;
-> > > +
-> > >       } else {
-> > >               return;
-> > >       }
-> > >
-> > > base-commit: f6d41443f54856ceece0d5b584f47f681513bde4
-> > >
+> Testing:
+> v6.12			booted 13:00, 7.11.2025 no crash after 1h, 890 GPP0 events, 287 =
+resumes
 >=20
---8323328-636551309-1762532538=:1070--
+>=20
+> Bert Karwatzki
+
+v6.12 crashed after 2h, 946 GPP0 events and 499 resumes. So there's no bas=
+e
+for a bisection.=C2=A0
+
+But the crash from v6.14.11 gave this error in netconsole:
+
+2025-11-06T19:17:34.967439+01:00 T370;[drm] PCIE GART of 512M enabled (tab=
+le at 0x00000081FEB00000).
+2025-11-06T19:17:34.967439+01:00 T370;amdgpu 0000:03:00.0: amdgpu: PSP is =
+resuming...#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:0000:03:00.0
+2025-11-06T19:17:34.967588+01:00 T12;pci_bus 0000:03: Allocating resources=
+#012 SUBSYSTEM=3Dpci_bus#012 DEVICE=3D+pci_bus:0000:03
+2025-11-06T19:17:35.143353+01:00 T370;amdgpu 0000:03:00.0: amdgpu: reserve=
+ 0xa00000 from 0x81fd000000 for PSP TMR#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+=
+pci:0000:03:00.0
+2025-11-06T19:17:35.226021+01:00 T370;amdgpu 0000:03:00.0: amdgpu: RAS: op=
+tional ras ta ucode is not available#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci=
+:0000:03:00.0
+2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SECURED=
+ISPLAY: securedisplay ta ucode is not available#012 SUBSYSTEM=3Dpci#012
+DEVICE=3D+pci:0000:03:00.0
+2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SMU is =
+resuming...#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:0000:03:00.0
+2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: smu dri=
+ver if version =3D 0x0000000f, smu fw if version =3D 0x00000013, smu fw pr=
+ogram =3D 0,
+version =3D 0x003b3100 (59.49.0)#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:000=
+0:03:00.0
+2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SMU dri=
+ver if version not matched#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:0000:03:0=
+0.0
+2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SMU: re=
+sponse:0xFFFFFFFF for index:6 param:0x00000000 message:EnableAllSmuFeature=
+s?#012
+SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:0000:03:00.0
+2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: Failed =
+to enable requested dpm features!#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:00=
+00:03:00.0
+2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: Failed =
+to setup smc hw!#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:0000:03:00.0
+2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: resume =
+of IP block <smu> failed -121#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:0000:0=
+3:00.0
+2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: amdgpu_=
+device_ip_resume failed (-121).#012 SUBSYSTEM=3Dpci#012 DEVICE=3D+pci:0000=
+:03:00.0
+2025-11-06T19:17:36.114889+01:00 C8;INFO: NMI handler (perf_event_nmi_hand=
+ler) took too long to run: 35.314 msecs
+2025-11-06T19:17:36.114889+01:00 C8;perf: interrupt took too long (275880 =
+> 2500), lowering kernel.perf_event_max_sample_rate to 1000
+2025-11-06T19:17:37.930799+01:00 C4;INFO: NMI handler (perf_event_nmi_hand=
+ler) took too long to run: 152.914 msecs
+2025-11-06T19:17:37.930799+01:00 C4;perf: interrupt took too long (1194640=
+ > 344850), lowering kernel.perf_event_max_sample_rate to 1000
+2025-11-06T19:17:38.939845+01:00 C14;INFO: NMI handler (perf_event_nmi_han=
+dler) took too long to run: 197.312 msecs
+2025-11-06T19:17:38.939845+01:00 C14;perf: interrupt took too long (154152=
+1 > 1493300), lowering kernel.perf_event_max_sample_rate to 1000
+
+These 4 lines have not been recorded previously, so perhaps I have to look
+for a NULL pointer dereference in an error path:
+
+2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: AE_TIME, Returned by Ha=
+ndler for [EmbeddedControl] (20240827/evregion-301)
+2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: Timeout from EC hardwar=
+e or EC device driver (20240827/evregion-311)
+2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: Aborting method \x5c_SB=
+.PCI0.SBRG.EC.BAT1.UPBS due to previous error (AE_TIME) (20240827/psparse-=
+529)
+2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: Aborting method \x5c_SB=
+.PCI0.SBRG.EC.BAT1._BST due to previous error (AE_TIME) (20240827/psparse-=
+529)=20
+
+
+Bert Karwatzki
