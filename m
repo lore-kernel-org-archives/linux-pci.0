@@ -1,40 +1,40 @@
-Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazon11023086.outbound.protection.outlook.com [52.101.127.86])
+Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazon11023137.outbound.protection.outlook.com [40.107.44.137])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 779DF212568;
-	Sat,  8 Nov 2025 14:03:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.127.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C1D71DE4F1;
+	Sat,  8 Nov 2025 14:03:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.44.137
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762610597; cv=fail; b=EkAMKI/r1Q5P14vxZCYMhY6N7WCyWxvD9OL4qr4OVZxNQ2SbjOHDoWF+yjJHuxUJytBZneLLpH/6SFnjaaQlLZ/Ba5jm/GpKoE3cZj8H/bWsPnxIUMm21K5ytFRvsQw/N2p/c7j9wltSFPOVC7Hy4VYUxCZkxT+FkSPF7XMJd1s=
+	t=1762610598; cv=fail; b=qniHEv0yEQnXL9zUwJ/k9SmdmlX2RgLPOHQO8QpQCjRNjyVeWQE68wt7IjmvusBDeUW4F8n97CF3VPtoTNid51srPU3SC0i1BiNL4VYgDVQ2jAQD5kKiLXMCA42o9P7KvInvEQMNdBc3S6ywiStONZazc9WtOCDxCy8q8K2Mlfk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762610597; c=relaxed/simple;
-	bh=xSRoZQb2UNYT+aOEzubP77z2bAgIJyDldNsTSU/nhN4=;
+	s=arc-20240116; t=1762610598; c=relaxed/simple;
+	bh=WlQClg6frxhcRHEMj8ZylbzI4DB6f6yJ0EXyHCZdLhU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=knFoNWY3LOu/feR7O8tSv8B25hqSZeZM6UNDKjDp8/gAIkzdTk2vG2DJ/3taunnmqRGQ1x+PCbv25kGYl9jsGao9tJAVsk7nyPRN0qZEe8ToCBlnpsAUK41F5GmrleURQe64PaLCgRbL+YoDQZr33mig6BJz+sRVTHX2F3D8K8c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.127.86
+	 MIME-Version:Content-Type; b=PhA/OfBr+0U4HWUeR2S02BBuzHSMnV+MIBiXBwaDguhHUTYnFajjevczVufwy1OcQxWV7yU47lo3WMnrSCoNMcNuSrMbuVd6k1yzbu08qZYrkN9mMBWPoSIOPwy9T+O7czE9Vq0iwfRGCs2QsfpxNXvd6nYnXUMKQRU5s/RG50A=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.44.137
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dkeujA4ukNj8at67aVpwOPTm6IxFbdvNkqsC0GrXan7U48fcoLGMZEpx6ZV430+4kwYuWce78XXZ8oTFZ8txVaM4pZA7m3VZ64oN6im7dcqZtjFfBPgi+dLyPgXk1g0FPcKy2R9g5Y7GSb3A8mNI/q1QGFEl/rKg+Vl5F9zAZO6PUiAE1Fbo0d+ko9Tk6I3ycxSDEZCoHuq098IGmfHvGCEZWZExU4/S1+Z9g0G6NN+WzbHYdxsRVODy6IzGugsNS3fi+5HPYcUbvJd+nhIg86o3JTjchyy5T1VFu2VS4RfuoGR5sf1wpYJWFPsD6kYrtsxfR35iiLqkxbkLSXypPA==
+ b=cfTaXzuihE+1VtoGYNRFS9eGccliapct/k+qyTG58gTaeUl0mUiRJVb+uJ0gnSodaJUSgxRs23PYFuQchSPZ4TSSwptbBS5wtC2d8qQ5VVHdym2Zl6uhdEcXhEVii9vfX5nNKh9OCLjJbOhVcRej23lIrIpRvy1VOMOIBxAXjR7DimowQlzDNOMBsNHd/aiPitB8gIslIN/tBMD0ndOM0X7wayADUDMFN6Kr9BtKQcr6eve9Aqqh0/7p9/nlCdo3onAQSQJ4rzmpZEUyzZT8MHJL9bgZ4aub/nAW3+uGFahNQsIi9n83BA7AwBnRlwF73hzzHQE1lnJjFlsTfDUs2w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nfKn7gVBO7GcjBMV8RC+LeGUQKD4zN506MIzDLFeQNk=;
- b=HNBf04tgsfn5UGdH8USR/InETYQEB1eb9NX4V/jlxykblBJLbrOgy/v0W+tdISP2UB5+9pgcAppGupyuOOhx/iwOidO9C9pSf/96gplzmWa5EG2p1lxU370mmcLYQskActI2Q24z4pVgkVMQVy9zEwnSg/eoaX3qNT0QKL0DHwzOTDGfzfeHrSMuuoEM1xzlUxeYyMKo/9CZ6J2azbZBesQsLu3fA9If9Bk2PmZXd/S4nrLoT2vbTk6fQjfJJvjv+G5spS+Tp2/NVTCrNwLOcW93cnK8DalRpkax3mdyE8uWcAEgnuIA1+7Qd8h+VnzzQUrPd+ztk+UbO7g5I+dt3A==
+ bh=WXU9wPxi9DZ+GV6htPv6QnuXrMW5w671lSIBh5+Bnh4=;
+ b=Cg/qc3qETuPz2J9lvJThGDuRIqsyMs6iQqvU/PsDioScjwRGZf3CvbleZycg7aZf2+7QJriT9/RqzCEzb3CbH+/5c4pLaDA7UtFrtWiu8NW2FeKZEhEwf2ayApqfsSzeSr0DXxkpwYgde+4RXV3AUslqpONfqHKaKGvTNK2VgiI5LT9yqfoXSFqW5dsr9CsaJV3pS+FjbqdqgEM6abG6AYQq6nK7aXQ6a2VbB/DmHyT20yPMteVhj6IB8rYHqWa7Ltl2PsQ3aGxK4ex3uVXEq3R57ObW6L9sMgNMtpYnDtjP4xwr3byTiGNAVYoJf5gTBXK1kButR06vu2A8Vlq/bw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  222.71.101.198) smtp.rcpttodomain=cadence.com smtp.mailfrom=cixtech.com;
  dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
  not signed); arc=none (0)
-Received: from SG2PR01CA0121.apcprd01.prod.exchangelabs.com
- (2603:1096:4:40::25) by TY2PPF7E205D1F6.apcprd06.prod.outlook.com
- (2603:1096:408::799) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.12; Sat, 8 Nov
+Received: from PS2PR01CA0009.apcprd01.prod.exchangelabs.com
+ (2603:1096:300:2d::21) by KUZPR06MB8109.apcprd06.prod.outlook.com
+ (2603:1096:d10:47::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.15; Sat, 8 Nov
  2025 14:03:11 +0000
-Received: from SG2PEPF000B66C9.apcprd03.prod.outlook.com
- (2603:1096:4:40:cafe::47) by SG2PR01CA0121.outlook.office365.com
- (2603:1096:4:40::25) with Microsoft SMTP Server (version=TLS1_3,
+Received: from TY2PEPF0000AB88.apcprd03.prod.outlook.com
+ (2603:1096:300:2d:cafe::47) by PS2PR01CA0009.outlook.office365.com
+ (2603:1096:300:2d::21) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9298.15 via Frontend Transport; Sat,
- 8 Nov 2025 14:02:09 +0000
+ 8 Nov 2025 14:03:25 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
  smtp.mailfrom=cixtech.com; dkim=none (message not signed)
  header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
@@ -42,11 +42,11 @@ Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
  222.71.101.198 as permitted sender) receiver=protection.outlook.com;
  client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
 Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- SG2PEPF000B66C9.mail.protection.outlook.com (10.167.240.20) with Microsoft
+ TY2PEPF0000AB88.mail.protection.outlook.com (10.167.253.11) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.20.9320.13 via Frontend Transport; Sat, 8 Nov 2025 14:03:09 +0000
 Received: from hans.. (unknown [172.16.64.208])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 720224143A8E;
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 529594143A8B;
 	Sat,  8 Nov 2025 22:03:06 +0800 (CST)
 From: hans.zhang@cixtech.com
 To: bhelgaas@google.com,
@@ -67,9 +67,9 @@ Cc: mpillai@cadence.com,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH v11 10/10] arm64: dts: cix: Enable PCIe on the Orion O6 board
-Date: Sat,  8 Nov 2025 22:03:05 +0800
-Message-ID: <20251108140305.1120117-11-hans.zhang@cixtech.com>
+Subject: [PATCH v11 08/10] MAINTAINERS: add entry for CIX Sky1 PCIe driver
+Date: Sat,  8 Nov 2025 22:03:03 +0800
+Message-ID: <20251108140305.1120117-9-hans.zhang@cixtech.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20251108140305.1120117-1-hans.zhang@cixtech.com>
 References: <20251108140305.1120117-1-hans.zhang@cixtech.com>
@@ -82,137 +82,82 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SG2PEPF000B66C9:EE_|TY2PPF7E205D1F6:EE_
+X-MS-TrafficTypeDiagnostic: TY2PEPF0000AB88:EE_|KUZPR06MB8109:EE_
 Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 458b4679-3264-4cd1-da85-08de1ecf8c67
+X-MS-Office365-Filtering-Correlation-Id: 49d35590-7066-4d5f-b840-08de1ecf8c8a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|1800799024|376014|7416014|82310400026;
+	BCL:0;ARA:13230040|36860700013|7416014|376014|82310400026|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?xTfG4LTJQbtbtDap6JyOQJsaYGEy9KE2H/iXAr2c/T69YGo5UTtBE2XJeqly?=
- =?us-ascii?Q?0lw4fwJPjdZZ/tes8TauVwrBbbbnqffpsrL4JFwqnuMIa7LVQBbOlDbLHpPV?=
- =?us-ascii?Q?C7ujpxoiwGiQMRkDwBzUbKV3eYHgoMCHMTcM+6kN+Pn2VWjDaAAWGkIeTWgK?=
- =?us-ascii?Q?GO80vjzc7ARNS5uroFtN+uS+/8axlU5D7w473VQxX3jhz25ZmxztbzZX03OX?=
- =?us-ascii?Q?jPPFoibA8GDVCI2EZh4IcnWmrQFJRZmJaqYavVK9SPUXV64KTcNDKSSsnrsO?=
- =?us-ascii?Q?8KW/FJ1PUHPJ7U0W7XXwVNwN78jP+ezCpXLs0CJdJBejLveR22p0Nbqxg63l?=
- =?us-ascii?Q?ui4DQmpp4NfLZ8zelusiAgM8fuBspbDGUMk1M+B078BAK1UyiCVxrVhB2baP?=
- =?us-ascii?Q?pj6a0AwGPqkj3I8Vew884IesWyAx9GdNSyvsHKZ/wjEOA9/7Mnu+vVzbA3O+?=
- =?us-ascii?Q?eOH7f9vlphmEbJfq8z1LxvPn8bilZYtai+7COZ/fGU6b9H0e/gJlIoAgOUwx?=
- =?us-ascii?Q?/fnCRMA+rmLqz6yMQTNaSp178H3x6BlZi32U+FZwhHcU4z6vCdyXlKT3UgNU?=
- =?us-ascii?Q?UcQ2YILCE/QNpN9oTztA9Aalu62lzZwXWHovnRfs9V6aurjdu2DsRTDbiCJb?=
- =?us-ascii?Q?G3C4AmxCy9TEHad7LC7F4PR/T/AxfzTlfFNolAoCxE5xWI2xxWMTQ5M9TsnK?=
- =?us-ascii?Q?qV+gMyyknOUwk+Tqww2d6IEki3Ovtmvb2jJlmH+uA7DJWqlkujggWFnlswKL?=
- =?us-ascii?Q?gvXuNxJuNxcZ9QO+ajJ/L8MSN99RuI8Xweg41gepB0HHhFrs8WSCOGKhNv3n?=
- =?us-ascii?Q?03XJ+SoK8Y8jTmEbUGwis0cpQbGLgt1L+HwhrSvXi1AukCQb0pPdnee0mTBO?=
- =?us-ascii?Q?U1sJvkNSmY6vTa1Z9Vhu2IJPlJcHNByjXrXn0dmptX6+0SKpk0KWLZl2SSlq?=
- =?us-ascii?Q?jqu7eTgZ9HODiaEIQApXER9gDd7EK8wt3bhTUoIqEy62whgMagZgh9wjwszO?=
- =?us-ascii?Q?FIiQqEBBm1uXwEyq6VX/SqrnNMIrjPiYcR/ojRpi+PFAjNLOs01Mn31EQaKx?=
- =?us-ascii?Q?1FNOfvm2cDGYcofHxS9e6Y/RcJtFH1KEtdqQcpfqksowe4HR5pEy6UyxNo4x?=
- =?us-ascii?Q?yf4y0ig9EZVdqvYcaCYt5+ip0dV82pmzJHf90Z1Ncu1tbbryuwBdF6m16S0a?=
- =?us-ascii?Q?fhHDs2KtI6tba/1hdDyZWFSA6LRPYh0F2j4rF32lSeMWUKNr4yKkizFNFLR+?=
- =?us-ascii?Q?TRegRsW1fw8KdMVUof8diY5E7eorpkkwDf8cna9ettJjtQXLNc4OHK8PC9dl?=
- =?us-ascii?Q?8lMGYdZ54IShP6AMGFNHtcp4wSB6OJ5ijwNEarVNAx9gZ+/UoSfTP+8rglkM?=
- =?us-ascii?Q?BDc7wTKqbCLpJVE3LrUJoUdBVaaMR40RNbpGotjkdIBJXMBfTWdHjpSmfndq?=
- =?us-ascii?Q?o8W5z3LCPSTRlFq4UZnl2JbVn+SrajI+f8G2MF7PYQvu1gO5U36ws2ac6mmf?=
- =?us-ascii?Q?an50yUuUp07ewgtlVaIHx184a5SpUf1hSt4nWoheDuaMHxj6m0gztG2ssxai?=
- =?us-ascii?Q?jFeF6G9sfSFUthEi20U=3D?=
+	=?us-ascii?Q?0mstjp6x4McUIMe0lNIoZL6fLPOZAUCXdy3AWEBuCK48zYK1VQS0dFle7Bpd?=
+ =?us-ascii?Q?Ka3LY48u+Q5wNIRBbj3ywwczr0HkQ5cE7TpSaZaWP8lm6BSZLpA6N+w7ggKl?=
+ =?us-ascii?Q?iUMxqaPejZSNH6unvjBXYTOwW2HNOczQ6UM83RQEAnb/KnZqqR38J0mIjQ3s?=
+ =?us-ascii?Q?UZVn8GXixRfHZqcsSxZZH61eRvayeaI/K79YzdymsXTnCSwAHgbGykWLDfS0?=
+ =?us-ascii?Q?8sA4W+rdfvCiXyjzUxrvHPlROG1Y0OFHaMCAvVh4SfI8WRPHODxpfBEd4RB3?=
+ =?us-ascii?Q?FkAhriQl2rdhbee/QK3fMVU2n6m2kg0zvCNkT56moUpy5S6c+9FMLFpXPyob?=
+ =?us-ascii?Q?ypr7lxl9ges/2b2CATk6WVmV6KBt8ncNKI8WMoBQQO7b/Q9OLtp/lgYwm5qe?=
+ =?us-ascii?Q?5pqVrCa5Os/f/HpDLkIpcuyDfiFUgaPKb9Cx/MUBHt+EKRvZHKYFuu558VVP?=
+ =?us-ascii?Q?TiBhm8XZBxcQa7FIVQgmZ/+HEYFwgIA9+f6kqD9PJQlKTl1RQmT3PeN1n6Fj?=
+ =?us-ascii?Q?7M9oX5MEWxrNphk8NeeY4PelNZJZz5ZnY786QyQHEE8i3BWCTng8Sjr/IARF?=
+ =?us-ascii?Q?BHi3PFnnlBRjIsalgCCcgcohwH2NxIBSP6WTeEPE1oHsSePwWjlqPyLSV+tY?=
+ =?us-ascii?Q?mSGRpCnI6DmmeD6tcl6hHnTdwTVvLcEi3iZ3JL/VtTqYqM6LQT2VMxEPRYmE?=
+ =?us-ascii?Q?El0/5RdzLNDgd+uoZc4B39SuvQx6lFE7cjiqDxP4rJ03iq1iI8WjjFdK/DFt?=
+ =?us-ascii?Q?OREy8Hp1I8/BHSXzOKBWoXcvFqc7XjbT/zO/2S35JGHyATNr2iQTjk051yO9?=
+ =?us-ascii?Q?PbMhSwkAJH55BXcv9wewkYDJc1UeAvtgAiufgEDRpgbyZXSI1gOXn7lKN3HZ?=
+ =?us-ascii?Q?EMJCk0Lb7go+GrOA7zfUVG6+N4huG1d/DQZ7///N2jmCBKnrbd4Va82q8J2Z?=
+ =?us-ascii?Q?yB3F1lI3SMNYohJuHX3/Vn0Pn0CBmsSdAkIDjBynN1vUSpGjIgyqBwmvp89e?=
+ =?us-ascii?Q?5BkER9GENhGwDurpBWgW9w36e/0AMIm2EB4kouL8KCu1s4OeVOKEiYaIHlpo?=
+ =?us-ascii?Q?Kpw8MEZc9ezW+/vpX1W8acBLzXo8CJXb6LsvBgFgFZvWTFqsbfIVLcOd3uDL?=
+ =?us-ascii?Q?C+ZLZnGWXpmO9M5+gjsrHxd0mZQNmBgdCAzyGelCVCSTY+WtXqdiW7rueSJn?=
+ =?us-ascii?Q?9wGhgkCYOmW5ltBzE5Rfjvu/jYaT2sGh1lR7OY8mkmyyd6RqdDtaJZ1h8GqI?=
+ =?us-ascii?Q?sGCjKEEJotw5EQOmMBhLLU6YEXfKptHqMxJpA34QL5anJeCx4yVBpf1f1Z1h?=
+ =?us-ascii?Q?kfe1SR9Dbp+sANs9FaLhvtzskdPQ6PbLkOSQmadSVBVoB40fjyYwQBuGJapj?=
+ =?us-ascii?Q?OyMJCkaBEuiTuoiUYQ/XxkmuDZ1PyNHHj3sCj1PmlOrpfAxKwsGG85qSZudj?=
+ =?us-ascii?Q?FM9BK6W0VWNjA6cpnKP+t7DVyDJukB3jGNnaVPwZwj7ZglUOn5ZKBnoi3t4W?=
+ =?us-ascii?Q?ECGa+3OfvC1PniFFj6PKOCiV3T7BAj8hYmTmQ2PN+X3A7lYcTkqwpyOQSnY2?=
+ =?us-ascii?Q?rAncguDDZm36+BnR7/s=3D?=
 X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700013)(1800799024)(376014)(7416014)(82310400026);DIR:OUT;SFP:1102;
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700013)(7416014)(376014)(82310400026)(1800799024);DIR:OUT;SFP:1102;
 X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Nov 2025 14:03:09.4182
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Nov 2025 14:03:09.5517
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 458b4679-3264-4cd1-da85-08de1ecf8c67
+X-MS-Exchange-CrossTenant-Network-Message-Id: 49d35590-7066-4d5f-b840-08de1ecf8c8a
 X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SG2PEPF000B66C9.apcprd03.prod.outlook.com
+	TY2PEPF0000AB88.apcprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY2PPF7E205D1F6
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: KUZPR06MB8109
 
 From: Hans Zhang <hans.zhang@cixtech.com>
 
-Add PCIe RC support on Orion O6 board.
-
-The Orion O6 board includes multiple PCIe root complexes. The current
-device tree configuration enables detection and basic operation of PCIe
-endpoints on this platform.
-
-GPIO and pinctrl subsystems for this platform are not yet ready for
-upstream inclusion. Consequently, attributes such as reset-gpios and
-pinctrl configurations are temporarily omitted from the PCIe node
-definitions.
-
-Endpoint detection and functionality are confirmed to be operational with
-this basic configuration. The missing GPIO and pinctrl support will be
-added incrementally in future patches as the dependent subsystems become
-available upstream.
+Add myself as maintainer of Sky1 PCIe host driver
 
 Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
 ---
-Dear Krzysztof and Mani,
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Due to the fact that the GPIO, PINCTRL and other modules of our platform are
-not yet ready for upstream. Attributes that PCIe depends on, such as reset-gpios
-and pinctrl*, have not been added for the time being. It will be added gradually
-in the future.
-
-The following are Arnd's previous comments. We can go to upsteam separately.
-https://lore.kernel.org/all/422deb4d-db29-48c1-b0c9-7915951df500@app.fastmail.com/
-
-
-The following are the situations of five PCIe controller enumeration devices.
-
-root@cix-localhost:~# uname -a
-Linux cix-localhost 6.18.0-rc4-00010-g0f5b0f23abef #237 SMP PREEMPT Sat Nov  8 21:47:44 CST 2025 aarch64 GNU/Linux
-root@cix-localhost:~#
-root@cix-localhost:~# lspci
-0000:c0:00.0 PCI bridge: Device 1f6c:0001
-0000:c1:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8126 (rev 01)
-0001:90:00.0 PCI bridge: Device 1f6c:0001
-0001:91:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller S4LV008[Pascal]
-0002:60:00.0 PCI bridge: Device 1f6c:0001
-0002:61:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless Network Controller
-0003:00:00.0 PCI bridge: Device 1f6c:0001
-0003:01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8126 (rev 01)
-0004:30:00.0 PCI bridge: Device 1f6c:0001
-0004:31:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8126 (rev 01)
----
- arch/arm64/boot/dts/cix/sky1-orion-o6.dts | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/cix/sky1-orion-o6.dts b/arch/arm64/boot/dts/cix/sky1-orion-o6.dts
-index d74964d53c3b..be3ec4f5d11e 100644
---- a/arch/arm64/boot/dts/cix/sky1-orion-o6.dts
-+++ b/arch/arm64/boot/dts/cix/sky1-orion-o6.dts
-@@ -34,6 +34,26 @@ linux,cma {
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 46bd8e033042..5b3f3aa74365 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19646,6 +19646,13 @@ S:	Orphan
+ F:	Documentation/devicetree/bindings/pci/cdns,*
+ F:	drivers/pci/controller/cadence/*cadence*
  
- };
- 
-+&pcie_x8_rc {
-+	status = "okay";
-+};
++PCI DRIVER FOR CIX Sky1
++M:	Hans Zhang <hans.zhang@cixtech.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/cix,sky1-pcie-*.yaml
++F:	drivers/pci/controller/cadence/*sky1*
 +
-+&pcie_x4_rc {
-+	status = "okay";
-+};
-+
-+&pcie_x2_rc {
-+	status = "okay";
-+};
-+
-+&pcie_x1_0_rc {
-+	status = "okay";
-+};
-+
-+&pcie_x1_1_rc {
-+	status = "okay";
-+};
-+
- &uart2 {
- 	status = "okay";
- };
+ PCI DRIVER FOR FREESCALE LAYERSCAPE
+ M:	Minghuan Lian <minghuan.Lian@nxp.com>
+ M:	Mingkai Hu <mingkai.hu@nxp.com>
 -- 
 2.49.0
 
