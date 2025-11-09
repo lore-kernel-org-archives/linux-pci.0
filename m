@@ -1,176 +1,150 @@
-Received: from smtpbg150.qq.com (smtpbg150.qq.com [18.132.163.193])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FBA7221540;
-	Sun,  9 Nov 2025 23:27:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.132.163.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B719925F96B
+	for <linux-pci@vger.kernel.org>; Sun,  9 Nov 2025 23:58:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762730847; cv=none; b=UG3IZrKrznovuZv7/ABhm2Smqej2IJA7hW96x0YdKNl26JwuGRj9Q5UpMUOPUw7v5KzS9inbuRw0WWp7NWUMl8+f07hF0lgw4jio/khRWN/NU/sOYQAezKsPBcJsVqZkfwYO4HFq8ehlkujm7axiJqyEc2T0JDNt9UkXwOhfwv0=
+	t=1762732685; cv=none; b=uUdqkFNwao3H/5sokf+0VtYrISrHVOk1LJPnA/ETEJetRHnWNxCdviaYkLAB6abFTx9OwVhO2ZkGU8pLNAN5AkrUIiBCj5o8P9l8sn4Pte+mA1JNwD9iX+VccjrEkA7Glp3rxoWNOmBKp5HrM2Vofitnvh5V9yj+5FbU8eZaBb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762730847; c=relaxed/simple;
-	bh=8SrTwbMflVcat3ahnfwwZTWOIz8pK42Ml9bkc01KNZ0=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=qi9YtsxjTz/d2tIWb4oLT1P+Pg2MVL3G4kxOwOySMwbpxYCldMw9gSMwutKyajwgyd8X/aQ3aly/Q7hjuholaob/fQSbWnlycBPPwhWijLEUAMPD97z6Ix+ix/7gVLqazYrfUW/OTN07g0FKsmbRa8KyEDDJSaRaSpb3o3iK08Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=18.132.163.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
-X-QQ-mid: zesmtpip3t1762730819tde5730c0
-X-QQ-Originating-IP: /NgVUa1Hm4yKathG8PIGfyt70MVAaoYNOhhfCI6iCDE=
-Received: from [IPV6:240f:10b:7440:1:64e0:6ba: ( [localhost])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Mon, 10 Nov 2025 07:26:56 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 12146803779019856956
-Message-ID: <F8B2B6FA2884D69A+b7da13f2-0ffb-4308-b1ba-0549bc461be8@radxa.com>
-Date: Mon, 10 Nov 2025 08:26:56 +0900
+	s=arc-20240116; t=1762732685; c=relaxed/simple;
+	bh=VYPoW3UY0CELQy8XzPDSdrI2ABoXchU20b+SMwMONAQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AocTD06KKZyUmPn2JwVudIzE4E4NyuApUZJCr2aODsOWE5queBFIOx4mqW/bYGRmyOJNPrP3oSTRLMGkH0zTV5gaU9wrY4YA1B4ztJuaWwp9U6Tbv9hfjwx7MJThF2OT3Q0V4Pg2LFZ1v1rfKTp7UhKC5uE3nkRif4RrT6IKY40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bUDTdBoT; arc=none smtp.client-ip=209.85.217.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bUDTdBoT"
+Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-5dbcd54d2d8so2217620137.2
+        for <linux-pci@vger.kernel.org>; Sun, 09 Nov 2025 15:58:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762732682; x=1763337482; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ciGXNa1z8OLW1upm7VDcuKg7m+mkewvk1om1QMnHPzA=;
+        b=bUDTdBoTIr6XCmxW6aMvQNwbXKzjE13//r4WFAOJ5pFDX6E0imd5bvPzHrTasbosFr
+         w85qy0bUoMy+MTme1RB2dgptUh2e8nPkyAYTzKPpgHEv1iS430jvoMu8xQQkUlvBq1dc
+         TcN7o9O8EAc5Kss436g9N2WL3sl0q23GRaIlC+f+Aaqr9xPjGVVrL9lhAnX6OU1+RXdE
+         Uzfu1+HlgaSXAW6ThN4BOuLrwYtzGgJamvnyPYsl1s0bdoihyaNG0Zfc58FJIcX78k17
+         m95P0jv5s8GrMiyqDTs+yRV4UL6VY9JaME+788PVIgBW4aJS9eCKL0kRqcKWu4652rNJ
+         8FKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762732682; x=1763337482;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ciGXNa1z8OLW1upm7VDcuKg7m+mkewvk1om1QMnHPzA=;
+        b=MNrUB1T5KgCd3yqdpLYt3Mfa12+aOLr8OMeZWa74pXEZpClxBOINma62iQDTsVge7U
+         aRzBklYh5h9PEquWVCrRWrazf/g8tt++R14PJ9fO7kieO/lx4drapNwnTArXL4Gigy95
+         3W5D6hWkXhsVccIYnjSGYT4CcPiywllA/OcKv9WxRRdPFkI6RYLfALBaDsyfUOYwLMRA
+         zZKvBs1UvKqwjv76x30/CPGu3iZT1MHiABKshX4cSS4S5Y2X7iKdn6eaZtvDi+TTtxYl
+         oFZ8yHSIW6lmMHqV0zrmu2kGqYbOphMAgepnFLybfiYOtQMmDlx1MjTeGrsT5tJyaHKq
+         yeEw==
+X-Forwarded-Encrypted: i=1; AJvYcCVZhCNSTch61pA0vpENdSUJyXdXaAZNdK/jSBuFmVRtUdA68Kw476mfDo3TFNuFMzeNAV5ZAFh/uvk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2NcnFgo6AynJXNBCcEXT3G/9mA2scROdAVHpzBoxdtQhnmylv
+	xmUceGcAck3SU6ZV2xEdGpVK9r/ynqOGixErTYlfhYzKMEN3Nm3tgf0U
+X-Gm-Gg: ASbGncshbV3eMQ9Hy5BROKZYwNsP680GSDpTyfrRbRb6ZLkIK22uleN/wKcT0LLVCU/
+	bh6V0Vg/eSnUx6xAlvzoLsC6yJmDm5tGTuGyzq+ECtUy+Y768chly/d9R0QevvxCwWZk7woVoIs
+	H/PrOaut/seRtsYI/qrO5v5YtA6GDGI0iYBXgkOpApK7Rely7jhL4KbGo001zVnIZF1V8XWIuYO
+	o6db2QIhq/Kev0Zd28x4hRcSNYsCI2VvfC1AMqKa9HP9cJ1tAepOuY9+YgDDfEo1qIwg+mNhfif
+	FV1p0SqBJGj/14gkDH8owmj5wOJx2+ZYugXGlsWO+EDkJi392l0DQrtoZ2TF3ZFXCT6eiLJLkTF
+	zChKoxlrH0hbHBqC5UWUkTbJSQfwf+wfhLu0bFNtSXtxzB5uPL9iyK+wnNDPnKwEX4eDz10ioEF
+	GC14rBoJJ4
+X-Google-Smtp-Source: AGHT+IHkEshzMykihoxZN8xwmOnrJz2pDDGH7SWMAzmcaEUtc/A4N6Xa3uJOm+m//4yVDMfdlbkPlw==
+X-Received: by 2002:a05:6102:3049:b0:5db:f031:84c4 with SMTP id ada2fe7eead31-5ddc475a644mr2405338137.28.1762732682621;
+        Sun, 09 Nov 2025 15:58:02 -0800 (PST)
+Received: from geday ([2804:7f2:800b:6140::dead:c001])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-559958320aasm6388204e0c.20.2025.11.09.15.57.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 09 Nov 2025 15:58:00 -0800 (PST)
+Date: Sun, 9 Nov 2025 20:57:52 -0300
+From: Geraldo Nascimento <geraldogabriel@gmail.com>
+To: Dragan Simic <dsimic@manjaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-rockchip@lists.infradead.org,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Johan Jonker <jbx6244@gmail.com>
+Subject: Re: [RFC PATCH 2/2] PCI: rockchip-host: drop wait on PERST# toggle
+Message-ID: <aREqgL8JVYUcKO7R@geday>
+References: <d3d0c3a387ff461e62bbd66a0bde654a9a17761e.1762150971.git.geraldogabriel@gmail.com>
+ <20251103181038.GA1814635@bhelgaas>
+ <aQrKtFT0ldc70gKj@geday>
+ <17220ae9-9e0e-cb0b-63bd-eaf9a6ed6411@manjaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: FUKAUMI Naoki <naoki@radxa.com>
-Subject: [RESEND] Re: [PATCH] PCI: dw-rockchip: Skip waiting for link up
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, Damien Le Moal
- <dlemoal@kernel.org>, Anand Moon <linux.amoon@gmail.com>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
- Dragan Simic <dsimic@manjaro.org>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kw@linux.com>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
- mani@kernel.org
-References: <20250113-rockchip-no-wait-v1-1-25417f37b92f@kernel.org>
- <1E8E4DB773970CB5+5a52c9e1-01b8-4872-99b7-021099f04031@radxa.com>
- <6e87b611-13ea-4d89-8dbf-85510dd86fa6@rock-chips.com>
- <aQ840q5BxNS1eIai@ryzen> <aQ9FWEuW47L8YOxC@ryzen>
- <55EB0E5F655F3AFC+136b89fd-98d4-42af-a99d-a0bb05cc93f3@radxa.com>
- <aRCI5kG16_1erMME@ryzen>
-Content-Language: en-US
-In-Reply-To: <aRCI5kG16_1erMME@ryzen>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpip:radxa.com:qybglogicsvrsz:qybglogicsvrsz4b-0
-X-QQ-XMAILINFO: NChuY+V9daHbIcYr8tY7r7zqouRYG8/sElpemvh2s9b5D1MjX83g9Uf1
-	17ER4LvNvH8uEfuhqbdKDNhoi4bdUzM81o1FX+/v+Ko50Ws05zW/bb5KIdu79L/+DGHEnv5
-	c4kRMMpuCZKATQnEGryieZDtIXY4nvzWpoXpn4L28/v+UYHm66wcejwm+hjn2Qw20vjNsgs
-	SNQiyIOMYoleqlhdZasIbP8UbVSz//vLNUrOdxZ6hHeDe0SdHtaa1KqpeeSbvBCh2w5fn6b
-	luhCeEVmIp6LeT1d6IXwDcJ2u6uwUIMFAwvxCND1Toas8ZrLr3gJbYvF2jowndIjKftLcNV
-	j9PF2sjOfSuRnurGI18gSPOjhs6oBlN2LTUH6TDtW41/jhu+JBXkr8MjWllWjjp4ZbTYVpP
-	ChN64WaLo/ezWV7UAW+r4V/XY+P2J/lX8grj9zrJQDn7ok+Npfqvzx9U24jCzk5Qil4wvfU
-	jzcdkCIhU4pDgOB1y0bKzdUOBpxxPg9bNoYbZAgNgFH0Wyujb/szExW54ZR2Z/e7EhzNVV/
-	kTarvFbhtfNustB3pUboTNcgbonfIwIvFgpJ7XEfU91LFECeGVMA8SIJwOLK4Y1i0y7/ybf
-	G5+rD+TPwok3hwMo9uPTE95BSYaaUw7VhYKUySgRjVCdcxpwutgrzBB/zkrW2Ev41m6r2wD
-	WBMoMEGLGXUe3xFPWGRdOWPM3MYbZahddctktC2ycHp6CzsxeghRFr3Kz7zfYsTbS+StgoM
-	Cs5l8/X5O0Kldmzom0lEzJx2t9M+wGbQ2m4iBugM5k+Q+ugNoTUDJZcz9yj4X+mwf5a8Z7N
-	qAcIyyRYSnwE9H8xEUkCPzuTAO7GzdCJFXcGU7orNWXRaFbYP4FNI4aN6oKLzNmYGBFimUq
-	DkMPUoFFnMLcdzLkUxdSK3HcpRfjWCOyotkqDe4/FaArbr12Rnbq1mHwNx8VLWttnB9ra/m
-	fcuRR+6A3VcPb5mSgfw51CYoCjTA3o9e17//GcHSxFuUW+IdZLSN4VBPjxtUEVQrpq0F6aZ
-	6JBKL23JEWOhHdi0nU/aqPwr312MESJ1o9/QG2UI7dg8lfM3I9
-X-QQ-XMRINFO: NS+P29fieYNw95Bth2bWPxk=
-X-QQ-RECHKSPAM: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <17220ae9-9e0e-cb0b-63bd-eaf9a6ed6411@manjaro.org>
 
-(RESEND: fix mani's email address)
-
-Hi Niklas,
-
-On 11/9/25 21:28, Niklas Cassel wrote:
-> On Sun, Nov 09, 2025 at 01:42:23PM +0900, FUKAUMI Naoki wrote:
->> Hi Niklas,
->>
->> On 11/8/25 22:27, Niklas Cassel wrote:
->> (snip)> (And btw. please test with the latest 6.18-rc, as, from experience,
->> the
->>> ASPM problems in earlier RCs can result in some weird problems that are
->>> not immediately deduced to be caused by the ASPM enablement.)
->>
->> Here is dmesg from v6.18-rc4:
->>   https://gist.github.com/RadxaNaoki/40e1d049bff4f1d2d4773a5ba0ed9dff
+On Mon, Nov 10, 2025 at 12:51:49AM +0100, Dragan Simic wrote:
+> Hello Geraldo,
 > 
-> Same problem as before:
-> [    1.732538] pci_bus 0004:43: busn_res: can not insert [bus 43-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.732645] pci_bus 0004:43: busn_res: [bus 43-41] end is updated to 43
-> [    1.732651] pci_bus 0004:43: busn_res: can not insert [bus 43] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.732661] pci 0004:42:00.0: devices behind bridge are unusable because [bus 43] cannot be assigned for them
-> [    1.732840] pci_bus 0004:44: busn_res: can not insert [bus 44-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.732947] pci_bus 0004:44: busn_res: [bus 44-41] end is updated to 44
-> [    1.732952] pci_bus 0004:44: busn_res: can not insert [bus 44] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.732962] pci 0004:42:02.0: devices behind bridge are unusable because [bus 44] cannot be assigned for them
-> [    1.733134] pci_bus 0004:45: busn_res: can not insert [bus 45-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.733246] pci_bus 0004:45: busn_res: [bus 45-41] end is updated to 45
-> [    1.733255] pci_bus 0004:45: busn_res: can not insert [bus 45] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.733266] pci 0004:42:06.0: devices behind bridge are unusable because [bus 45] cannot be assigned for them
-> [    1.733438] pci_bus 0004:46: busn_res: can not insert [bus 46-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.733544] pci_bus 0004:46: busn_res: [bus 46-41] end is updated to 46
-> [    1.733550] pci_bus 0004:46: busn_res: can not insert [bus 46] under [bus 42-41] (conflicts with (null) [bus 42-41])
-> [    1.733560] pci 0004:42:0e.0: devices behind bridge are unusable because [bus 46] cannot be assigned for them
-> [    1.733571] pci_bus 0004:42: busn_res: [bus 42-41] end is updated to 46
-> [    1.733575] pci_bus 0004:42: busn_res: can not insert [bus 42-46] under [bus 41] (conflicts with (null) [bus 41])
-> [    1.733585] pci 0004:41:00.0: devices behind bridge are unusable because [bus 42-46] cannot be assigned for them
-> [    1.733596] pcieport 0004:40:00.0: bridge has subordinate 41 but max busn 46
+> On Wednesday, November 05, 2025 04:55 CET, Geraldo Nascimento <geraldogabriel@gmail.com> wrote:
+> > I did some more testing, intrigued by why would a delay of more than
+> > 5 ms after the enablement of the power rails trigger failure in
+> > initial link-training.
+> > 
+> > Something in my intuition kept telling me this was PERST# related,
+> > and so I followed that rabbit-hole.
+> > 
+> > It seems the following change will allow the SSD to work with the
+> > Rockchip-IP PCIe core without any other changes. So it is purely
+> > a DT change and we are able to keep the mandatory 100ms delay
+> > after driving PERST# low, as well as the always-on/boot-on
+> > properties of the 3v3 power regulator.
+> > 
+> > This time everything is within the PCIe spec AFAICT, PERST# indeed
+> > is an Open Drain signal, and indeed it does requires pull-up resistor
+> > to maintain the drive after driving it high.
+> > 
+> > I'm still testing the overall stability of this, let's hope for the
+> > best!
+> > 
+> > diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+> > index aa70776e898a..1c5afc0413bc 100644
+> > --- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+> > +++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+> > @@ -383,13 +383,14 @@ &pcie_phy {
+> >  };
+> >  
+> >  &pcie0 {
+> > -	ep-gpios = <&gpio0 RK_PB4 GPIO_ACTIVE_HIGH>;
+> > +	ep-gpios = <&gpio0 RK_PB4 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+> >  	num-lanes = <4>;
+> > -	pinctrl-0 = <&pcie_clkreqnb_cpm>;
+> > +	pinctrl-0 = <&pcie_clkreqnb_cpm>, <&pcie_perst>;
+> >  	pinctrl-names = "default";
+> >  	vpcie0v9-supply = <&vcca_0v9>;	/* VCC_0V9_S0 */
+> >  	vpcie1v8-supply = <&vcca_1v8>;	/* VCC_1V8_S0 */
+> >  	vpcie3v3-supply = <&vcc3v3_pcie>;
+> > +	max-link-speed = <2>;
 > 
-> 
-> Seems like the ASM2806 switch, for some reason, is not ready.
-> 
-> One change that Diederik pointed out is that in the "good" case,
-> the link is always in Gen1 speed.
-> 
-> Perhaps you could build with CONFIG_PCI_QUIRKS=y and try this patch:
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 214ed060ca1b..ac134d95a97f 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -96,6 +96,7 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
->   {
->   	static const struct pci_device_id ids[] = {
->   		{ PCI_VDEVICE(ASMEDIA, 0x2824) }, /* ASMedia ASM2824 */
-> +		{ PCI_VDEVICE(ASMEDIA, 0x2806) }, /* ASMedia ASM2806 */
->   		{}
->   	};
->   	u16 lnksta, lnkctl2;
+> FWIW, we shouldn't be enabling PCIe Gen2 here, because it's been
+> already disabled for the RK3399 due to unknown errata in the commit
+> 712fa1777207 ("arm64: dts: rockchip: add max-link-speed for rk3399",
+> 2016-12-16).  It's perfectly reasonable to assume the same for the
+> RK3399Pro, which is basically RK3399 packaged together with RK1808,
+> AFAIK with no on-package interconnects.
 
-It doesn't help with either probing behind the bridge or the link speed.
+Hi Dragan!
 
-> If that does not work, perhaps you could try this patch
-> (assuming that all Rock 5C:s have a ASM2806 on pcie2x1l2):
+Thanks for the catch, you are correct. But in this case it was just
+for my tests and it crept in in the git diff. I wasn't really proposing
+to make that change.
 
-ROCK 5C has a PCIe FPC connector and I'm using Dual 2.5G Router HAT.
-  https://radxa.com/products/rock5/5c#techspec
-  https://radxa.com/products/accessories/dual-2-5g-router-hat
-
-Regarding the link speed, I initially suspected the FPC connector and/or 
-cable might be the issue. However, I tried the Dual 2.5G Router HAT with 
-the ROCK 5A (which uses a different cable), and I got the same result.
-
-BTW, the link speed varies between 2Gb/s and 4Gb/s depending on the 
-reboot. (with or without quirk)
-
-Best regards,
-
---
-FUKAUMI Naoki
-Radxa Computer (Shenzhen) Co., Ltd.
-
-> diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts b/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts
-> index dd7317bab613..26f8539d934a 100644
-> --- a/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts
-> +++ b/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts
-> @@ -452,6 +452,7 @@ &pcie2x1l2 {
->   	pinctrl-0 = <&pcie20x1_2_perstn_m0>;
->   	reset-gpios = <&gpio3 RK_PD1 GPIO_ACTIVE_HIGH>;
->   	vpcie3v3-supply = <&pcie2x1l2_3v3>;
-> +	max-link-speed = <1>;
->   	status = "okay";
->   };
-> 
-> 
-> 
-> Kind regards,
-> Niklas
-> 
+Thanks,
+Geraldo Nascimento
 
