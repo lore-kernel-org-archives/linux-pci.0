@@ -1,174 +1,232 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010027.outbound.protection.outlook.com [52.101.85.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 652563115B0;
-	Mon, 10 Nov 2025 13:25:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762781140; cv=none; b=qT6DlyxTHwSHL6KaCgBuWvDCyFuxxi7TPXNd+uGlGurpyLJMOt5Sdg9gCh/lzDi4bFhVkK/oE69A7QBRWNiaICOpa+idjlvEFW1b+DY0TSxHP78p+xuYPugmQfY1YKsN31EDBqtvPpCAFOLO1qvWeDsU6qIgv2azjJblTaSmgxE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762781140; c=relaxed/simple;
-	bh=jcAHCEUHT9yst86SBkzAojU5urnpIcVyy0d24XwustU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=d+ovOokBxOc4PQUaO/hVNjmh+Uj40hy1HikCqWNxAUIz/LLmb4IUFDN2e+2c7fLl/RN5/cizkV9LsppXewrBjFqdXP73CJhgL4zRSK7y5oKH8MHoCIuUV2A1QdFNHH1x0FZtFQMqlpiXjT6cLYs/9IXjpJIsqVaD20k7Gu/8l8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ks/VcF6e; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA27D199E9D;
+	Mon, 10 Nov 2025 13:33:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.27
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762781605; cv=fail; b=ewBUJAWLPmhIqq2zacaTqMc4sEVdPZMYqEVXolzA73pfpNLlX7QLYYiA9DXwjw8iNJJad1Y2zmxjrBS/UJluuAjAppTWS2Tq5jDiFiKm1NsmJ0T2BElRbituwZAzckFumrm2pmNOj36xkK/dc9Yj+Yf1NA6ImCGsFzu2pFXZQfk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762781605; c=relaxed/simple;
+	bh=U2MMeZEfegi6kN3LRAPt4uD2QqgfifZSW5H5VfzAeIE=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=HQKOidDK8XW/5nUV/EgggGXFQ/gZj2aEAUdj8iZOGDcHXJAmvytUTOW5lUUXCLFV+IHWy29NMKTeyJh3uoGQJwlD0XVwYCL2ZD/255DRLfU0adeVuRQAjW/KpFBCAkVzzo5oNHJ/Lp5kWjqOwl4iRcMvgHjU7T0xna5G/b6b7/8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=y5GCRxoF; arc=fail smtp.client-ip=52.101.85.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ks/VcF6e"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5AAAVSZN031579;
-	Mon, 10 Nov 2025 13:25:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=/acSXP
-	te+AuOKB+6uxLyjUxP88lsIVuVztPJbWyi/UI=; b=ks/VcF6evnrgzHEmLPyJe1
-	CTCEkbQ6Qj8b5K3uqKbON6bkqjtCJIpAL1OlBfdeXpbi6+goN8obV5TaS1IHDatb
-	6XkwbIFblct6irNOOE5f50gmIo2/TAxyae4PK2k5zM8byWqrNm1QCrs1KMzC3WWR
-	8oQosTHmxozgBAYkOqNwkNT3a2F+KwKkf/ybBzUL/1RWXkrcps8uULaJVB/Y6Ra8
-	KW2UmZnMaUebJ9jEO4jNofEnre0YFKvTNmmGBskt/0CVegw/XDtbFqJCywR2wqdQ
-	yp1awd/3RIjs4WXoLkJRFCCO1PQYywY1xRKFES1NKAVo20UABtFWUXN8PfVpRLyg
-	==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4aa3m7xk11-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Nov 2025 13:25:28 +0000 (GMT)
-Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 5AAD91Or012742;
-	Mon, 10 Nov 2025 13:25:27 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4aa3m7xk0t-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Nov 2025 13:25:27 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5AAD57hk007368;
-	Mon, 10 Nov 2025 13:25:26 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4aajdj5hx2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Nov 2025 13:25:26 +0000
-Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 5AADPMFx54395344
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 10 Nov 2025 13:25:23 GMT
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E016920040;
-	Mon, 10 Nov 2025 13:25:22 +0000 (GMT)
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id BA9DC2004E;
-	Mon, 10 Nov 2025 13:25:22 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 10 Nov 2025 13:25:22 +0000 (GMT)
-From: Gerd Bayer <gbayer@linux.ibm.com>
-Date: Mon, 10 Nov 2025 14:25:05 +0100
-Subject: [PATCH 1/2] PCI: AtomicOps: Define valid root port capabilities
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="y5GCRxoF"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=A1SAyZkkkTbclGS59rLEKoGrEQMbnUVa0eAqlEUplZ4Ddp8B42J7Iexpv9xkiNPsaBct+SNeNeIbqCgYgF55De1GzpQaAZIhLyWom1Fvk7t8lVY+gpKTL4qA89X+hze2at+b/goajzkXYqaiy7HFmA4fAAr/oL4wdM0NzACwUoHPNNY5hjETuoYUXLv3aALTYM29eGWM0spfcdmvSDc5GcOKeuIBoHhCWf7t45N2Egvb2n75kxpUqANTeN89ZmdWXnN6a5Cz/GHSX+yivp6r8Z2EaFh3b8Hq8N0WmMXweV1/Hw4EN6k7zA/U5jxUodb/qneK65FAw96ysd4qvYI1IQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=uUrkmBiRXX9k235vCITJ3mB04M1pdRmUPQToFbrBiyY=;
+ b=kBgPU5gvq/vYCzqkmUY6LI7/IdEzMXn5WcVDaaBkqXSVC0sKk14QVtzOlKcs4X2ArEdmLChUQmiLy93lelCSeVAO5vmMxn5PZhB20J/b8uq99vO4HVvBUXjnCFzhGzDdMZ5kSTxwRW1jVGURDQkXt16wVy3hGEJHDsP22AxZBnXtO3kf4YZ/Ky+nZnqM05onImAvp1Ovl5Ur27ROWXyzWsO5EWbdRfDdLmmElQ+g0UGeOpZZu7wiNpGTkQYsJyqa8d4VqGKi3gljFxCCroUam6DCt91k8u7IUqrV8hX5uA+AhJB1rsPv3D1ca4Me6T9no8e0Zruw14OedBollqKnSg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uUrkmBiRXX9k235vCITJ3mB04M1pdRmUPQToFbrBiyY=;
+ b=y5GCRxoFNU5hR+T0ylyPFjsqQZtjOgoP2Sp9wBnLF3SdvyU70tZ8+o+a0ilIbQ8Ki1MbxGC/xoO7sLFb+2PloHZDcmq9BmTZQcAj/B61raV1+JHTO8mzvaaXYXdb2FqhXvHutRkqQEy4ZolvVmktUJ4td4n+6DL33z3LFVMrFO4=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
+ by LV8PR12MB9155.namprd12.prod.outlook.com (2603:10b6:408:183::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.16; Mon, 10 Nov
+ 2025 13:33:21 +0000
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::46fb:96f2:7667:7ca5]) by PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::46fb:96f2:7667:7ca5%4]) with mapi id 15.20.9298.015; Mon, 10 Nov 2025
+ 13:33:21 +0000
+Message-ID: <0719d985-1c09-4039-84c1-8736a1ca5e2d@amd.com>
+Date: Mon, 10 Nov 2025 14:33:07 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION 00/04] Crash during resume of pcie bridge
+To: Bert Karwatzki <spasswolf@web.de>,
+ "Mario Limonciello (AMD) (kernel.org)" <superm1@kernel.org>,
+ linux-kernel@vger.kernel.org
+Cc: linux-next@vger.kernel.org, regressions@lists.linux.dev,
+ linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+References: <20251006120944.7880-1-spasswolf@web.de>
+ <8edcc464-c467-4e83-a93b-19b92a2cf193@kernel.org>
+ <4903e7c36adf377bcca289dbd3528055dc6cfb32.camel@web.de>
+ <4a8302a0-209f-446a-9825-36cb267c1718@kernel.org>
+ <25f36fa7-d1d6-4b81-a42f-64c445d6f065@amd.com>
+ <1853e2af7f70cf726df278137b6d2d89d9d9dc82.camel@web.de>
+ <f18bafacbd8316c9623658e2935f8fc3b276af64.camel@web.de>
+ <26bf82303f661cdd34e4e8c16997e33eb21d1ee4.camel@web.de>
+ <635b6cb19b5969bed7432dfd1cd651124e63aebb.camel@web.de>
+ <18e472a0489ee5337465d5dc26685cebaf7c4f8d.camel@web.de>
+ <3772b8f5-6d1a-403e-ad27-99a711e78902@kernel.org>
+ <0cb75fae3a9cdb8dd82ca82348f4df919d34844d.camel@web.de>
+ <ab51bd58919a31107caf8f8753804cb2dbfa791d.camel@web.de>
+Content-Language: en-US
+From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+In-Reply-To: <ab51bd58919a31107caf8f8753804cb2dbfa791d.camel@web.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: FR4P281CA0355.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:f4::8) To PH7PR12MB5685.namprd12.prod.outlook.com
+ (2603:10b6:510:13c::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251110-fix_pciatops-v1-1-edc58a57b62e@linux.ibm.com>
-References: <20251110-fix_pciatops-v1-0-edc58a57b62e@linux.ibm.com>
-In-Reply-To: <20251110-fix_pciatops-v1-0-edc58a57b62e@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jay Cornwall <Jay.Cornwall@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>
-Cc: Niklas Schnelle <schnelle@linux.ibm.com>,
-        Alexander Schmidt <alexs@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Gerd Bayer <gbayer@linux.ibm.com>, Leon Romanovsky <leon@kernel.org>
-X-Mailer: b4 0.14.2
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=MtZfKmae c=1 sm=1 tr=0 ts=6911e7c8 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=8GgRulezAQhDBDp5LV8A:9 a=QEXdDO2ut3YA:10
- a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-GUID: UNJVx7QPg1d4KuVyWWtCLmBM82ySq0p-
-X-Proofpoint-ORIG-GUID: wPOG6K1kOOqsIZdLhuiJaHG0Q-ZmrVVh
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTA4MDA3OSBTYWx0ZWRfX3d3R/WWF0XMt
- 07JS1WFKfDZdUh7ELJ3mv2WQx5FcFWfCBZFj//vu1EhZ+SdMljrRgAAg6Wh+jLuGFSneasF+Gl3
- BScSQcqbizs4s8shjs6ogDhEaG+312dDdxZzL9D4PAZ4HT2PC9hD6r2EazuHM2mNvtt8ySwW4CX
- k79xQPNefEdIbNm6P1gD5oXlG+aFpc1WFici3faRImNFI8dJYgQiRQFf6iQJHK2JNq1QXvOUIV/
- 2mZh3mVZwKrCC6fjvF5xKUYUsQW58w+siHqCWr044h9XYMWVdDoorIp38G/w/a2gbVyhCEv7237
- R/QKxa2yIaOCjOHXVRVENdCFdXofLmsjNF59vGXfX6rQqXw1SP5740NiMxiDNLkhBXyU1ns8Ohi
- m48h/aRPRfUFKLZ5/snq59+nuaxLOA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-10_05,2025-11-10_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 adultscore=0 priorityscore=1501 bulkscore=0 impostorscore=0
- suspectscore=0 lowpriorityscore=0 clxscore=1015 phishscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510240000 definitions=main-2511080079
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|LV8PR12MB9155:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7bdbb4d2-613e-4c32-0cc3-08de205db73c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?aUxBRE9zMXhvbGNOWGh5UXZiY0JZcjVkaE1RS0tmRjB4OW0wbWV6R3RJRVRp?=
+ =?utf-8?B?Y3pxSWpETEhnWmE0NXplUlhCRGZwd1BIZWRDRWNjK2FSeTdHWDJSbjJPeWxK?=
+ =?utf-8?B?cGc2WWtVZk9GTC9TUEpwRmNYUnhEdU5mamo3emVMMXNtNVJCcng5RHI1Yjg5?=
+ =?utf-8?B?aC9QdHBiT0lBcnhySE82RTlvQmdMWnVVK09WQnJjTWN4WEYvWm9DMTlZVFZ1?=
+ =?utf-8?B?Q2NRUytsOGNzb0h1dnYyNkN6dy9Bd0NJb2lMZEpwTmFLMHNXSHdqeENCckJM?=
+ =?utf-8?B?RE9SeWs3RjIxY2l6bzZVWTluSEcxQWIvdHNLQlBoRm1acUVNQUhBQTNCemo1?=
+ =?utf-8?B?ZWwrS1kxNmw4VUFSL3Q1anQzYXhvTlFLTHI0aXB0MjYzeGpKaFBQMG12UXRP?=
+ =?utf-8?B?ekJsbkdkeVlFSjV6M0FzRW9YNFR5OEZpNlZZMVFGMTM3Wmk1dXVlVUlEa202?=
+ =?utf-8?B?azFmdnZJKyswREpJd2VWcHlrWUlEMzU3a3ZWL0ZOcWxSVmNQaEUvSVNYTlVy?=
+ =?utf-8?B?WEIzazZRVlZDUHVuR09QcVIxRzVFN3VMdHcrcytIYUZwdXA1dzQ3SWFURjRi?=
+ =?utf-8?B?ekpSR3g1MWFsWGxFaUFCVVBQSFpJcTk3Y1ZHbDJFaUhyYWlmMDc1a0V1V0xS?=
+ =?utf-8?B?cmNnMTBnRHFka0VIOTh4dkFkZks5QmdRYVN2bERoZjZxUkhxS0xEZFFwVHR2?=
+ =?utf-8?B?cVhYaExzek5lMXN1R3YyaUpySGxlcXJDaElYQUxwOHJMVkRVZEk2WEJ1Nnpm?=
+ =?utf-8?B?SWV6SEVleGNqTUJ3Wit3THVJRDVQNWw1RjZZY21VZHlHWFZES2xEU0JtK29Z?=
+ =?utf-8?B?MGwyaDVkeU91dFpjYUlOZTBLWFp1VGhGN3M0SGZIZDNwSlozUjhGTTlSUitW?=
+ =?utf-8?B?OWZBb3hiMFZpdmMvdDNHWVkxNFNFaHRJcXZJb0YralRUamNmYkNPcVR0bjBS?=
+ =?utf-8?B?K1RIRkF5M0ZBN0JJNzJ6U2owZmZxdGlWY3lkKytFdmltc0JISTZOaTBleFRn?=
+ =?utf-8?B?NnpSeGZFSUVSUC9NNTgyTGx6alJXNGppMSt2M0FqUkdUOUxldTNhUUlWaFJK?=
+ =?utf-8?B?S21OVWpmUnFlcjczRXB0WDdGaHZSd2VHMVZvRTJ1bXdWSGlWcGFhZXlLNFVl?=
+ =?utf-8?B?WmhsZkU0VkpUWVpuQ2orVWp4ZllhUHhRTVhBR3hRYmc4QkEzYkV4akN1UU1F?=
+ =?utf-8?B?cFg0SEpoTFBHcXltMUR3dndxR2t1V05JbWlQMEpxbit3US9WZFAwZ01ZTVVn?=
+ =?utf-8?B?aE5lT0JPVGswUGpZY0ExZGMwSUJSdzg3eDB1Qlk0Q0RMdWFSSXorbTRKdDFj?=
+ =?utf-8?B?S0E2VllhQkxlZjRvSUJvK24yUnVBSzNhWWV0RnJFV2FUK2o4bFpiNEZXY045?=
+ =?utf-8?B?MlJRYnJxa3AxbDZRRVhyd21VUHloTjhzRkxkSmRSL1ZIc3hZbjFvUDNBcURr?=
+ =?utf-8?B?SU1NYUttRDhQbUR1cEFpQjhNdWFzbjB1d3ZFeEovTnV2aUcrZG96YXJ1NjQx?=
+ =?utf-8?B?blVOTWVXN3J2Y2RaUXRpb0R4ZXFrSnVEQmVYZHh1MEFGLzNPbEZXL2xhUTI5?=
+ =?utf-8?B?WjYvSHdhVGJyckhURWMvL3ZrMktacUQvNWdzaWZOWUdGMHgzb2lmVFd6ZUd0?=
+ =?utf-8?B?M2tNa3c5WkQ1bTR3VVQxOUJWMExtTDIwdnc4M0tMMzdoNm0wOGtHL0ZWUlRU?=
+ =?utf-8?B?ZU9YSUVKd1VzM2JkVCt5Z042YTRnMUhoaGw2T1IzTFpKNHl6SlVnVm9SVXcz?=
+ =?utf-8?B?SnZVeTVsNnFKa3NwZU1yVzhEWmlRYVJaQUhhcEkrcis1UFY0WUpkZFM5QXFP?=
+ =?utf-8?B?KzhlWkU0V2tJVmdxdVpuQUU1M0x3TnQwVmhkOXUxVmRPQmh0MTkxVlpyMHVp?=
+ =?utf-8?B?akErWjdCeS9HTXpLMWF6Z1RPMzh6SWhGbjVMRlBJaTNEWHN0SmQ3aUtRTUNY?=
+ =?utf-8?Q?pejuWsCLr4MtisVg5uB8nWrmt2flwIV4?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?dGdmM05tVGpDVHN0NXFvcWQ1QnZpL3k1T1hlU29MS2hZdDJzRng3KzVxWkIr?=
+ =?utf-8?B?Y1FudDQwU3VqMy9WUlJodVlzUUowYU5RNmRCdnhkNERuK1hRcW8rYlZBZW1m?=
+ =?utf-8?B?bWo2N2o2YWdiRVRuN2lVTkYxWDZySlVUTXVHbUM5RFdSWkNTc3hMSWJiWUxD?=
+ =?utf-8?B?S1RXOXFmWms2Qk9QMXNJRW1vdGEvY05WbUVUbUV0YUxTVjJlSytKQTlYNS8r?=
+ =?utf-8?B?Y2J3WTdjV1JUK2pGdnVuaHFlMUNRdHNTVC9SR3F3MXczN1NxLzBPbHdVWVlW?=
+ =?utf-8?B?WTFRTzdJQ0ozcVRBaHI5akpvL05DNjEzcjFpK0dXR3dKbThzdnd1Wi9CWG1P?=
+ =?utf-8?B?VTNQUnN4N3lGcGpKS2VRUkpVSTJGcVBGdDZKUkhqNEY1ZEcwejB6RDVEcmxa?=
+ =?utf-8?B?U1hJQllISFZXRUpIbUVXSm5INlFJSzI4ejFNT0g1bS9weGJmNHFta1pGY1Qx?=
+ =?utf-8?B?TDNha29laXc3TEVBV2VWdEJuU2RqcjhpSzMrZnhDbjFPbHQ1MVBubDBrUWxG?=
+ =?utf-8?B?MFdIUTFMUjAwV3gyRHhYbFdIZFRxNEkySUFxMDlxZG5iaTFsWVYzNDBqTVNX?=
+ =?utf-8?B?UlVtVGl4WnUvcmdIN0FpVnNpSjdIVUhlNVgxbGNvbVVVVXB1UmRZS2hKSHlM?=
+ =?utf-8?B?Wno4b09MUktUYjI4UWVrSWFDZEx1MTlZVnhiN3htT0RTU2c5Y2VSTWFxS29Q?=
+ =?utf-8?B?MzZETUFaLzh5S0kwR3lsSm00OEV1OUhIdkpEMldocGhQUjVSeVFVRkYzZDd6?=
+ =?utf-8?B?LzJrQnVsRThqQmxhSi9ua2tZQkdtVDdCdFhuVURFNG1rbS80eWR6SkowR0JB?=
+ =?utf-8?B?TVRRVThlbkZCalM1SEJtakdrZ1FmZzNXa0h4VWYwQ2JEUDhtZGEyM1ZaVU95?=
+ =?utf-8?B?T1JBNXB6WHYzdG9qbVlTSGZsTTJSRlBueitTT1hQbXczMlNuTmI0VXZycno1?=
+ =?utf-8?B?Qk9FbkpsR2daNnM0RkpaVlVtR1hKRHlMdFNvRXVKa2dsbytUY0FqZWxrNEdj?=
+ =?utf-8?B?SjMzS0RncEdVT1dYbkxtbzNneTBqbTdqMDBscDcvN1diSzQwNXl1bCtKZGcz?=
+ =?utf-8?B?Z3h4MzZqYTE4OTZJNllFQjVSeURTVlVVbHN2NmNSRlZSbWg0a08xZ3pzT1RI?=
+ =?utf-8?B?bFI2Um45ZXNWWW1YSEVJYjBpdTlzT3lQRGdCS0FIeUtCUE1EemRmYWkzeXV6?=
+ =?utf-8?B?b3V2STVhUzZHQi8wUmp2SU5YTHVHQ2tlZ2I5Q010WEYrNHRWZ05WQ0Uvd1pw?=
+ =?utf-8?B?V0oxMXJqWXd3MWZCTW1OTlNoU3M1Ny8vWFJpV0c3ZWppQldtRDE1dWRNRUM1?=
+ =?utf-8?B?K3VScGV1a3FpR1FNdkdneW0zeE9mT0k2amZkS3NuUWhJU0t2bVd6Wm9YQVlT?=
+ =?utf-8?B?bDQyZmtrb1VOTDJwRUY4NUpSaDJ0K01rMm5kSTdWeVA1K2VZSWdUN3pzczZS?=
+ =?utf-8?B?TlFxK05jR0tFSG41T0Y4QitaR3hpWjRxUTFGdmtjMTU1RkFCM1oyUUQxaTdC?=
+ =?utf-8?B?WTZtZzY1VWVXNFNCRXNlZnFSaDA1d2Q2WWI0VTZDVUhpYzJ5TXk1VVlNa1My?=
+ =?utf-8?B?K2IwcGF4SkpwV08xV05Ka2VSMU02QzBnY1k4czBmeDRCSVhxNjRPNXlJdXVE?=
+ =?utf-8?B?MmNKK2xkeklQTEd3OGxESlpKQnI3a0ZMWjEvNzlRakN3U2FuR1o2ZVNRQWZB?=
+ =?utf-8?B?aGd5cXA0U25vdE9KL3JqMVJwS25kTDRJcG8vU2FTMFNUK2QwaGh5SW1OT0xQ?=
+ =?utf-8?B?TFcvSlFxS2pmcGJ2ZURta25VazBaQmwxVmZCS3VtWGVsdlY4SllybVZ1WjBJ?=
+ =?utf-8?B?NnZtZkwrQzh2N0x6Z1Nac0lqaHpHdmtSTjMyQ1ZhQ004K1Z2V3FmZzAyMVg1?=
+ =?utf-8?B?dTI1MFVMbmZFeHJvSFpTRjl5TXNsc0Zqc0ZKb2MyU1ZKSWxXdkRZN2J6eTEx?=
+ =?utf-8?B?djhCcjVQbXcxdm5sUjB6L0I0OXBXR0Z3Njc4SEIyN0xLVlJRNlU5bW1VdGEy?=
+ =?utf-8?B?YVFzMmJ4d1Z1dGhXaXl3bGF4dEVjbXkxYXdCRElrc014MGl3VGV2Y2trR0xV?=
+ =?utf-8?B?aVBGY29oYW9DMCtVamlPQU96MGN6STJVZGdydG9USjNoZ3NUc0JDMW0rUW9o?=
+ =?utf-8?Q?Rpbo=3D?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7bdbb4d2-613e-4c32-0cc3-08de205db73c
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2025 13:33:21.5501
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YR/EfmU2vWKTrsTngsbTyTtJT7vxhqu8tQzxqag46vpG7FhqX6ehQnBw5EMn7m4n
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR12MB9155
 
-Provide the two combinations of Atomic Op Completion size attributes
-that a root port may support per PCIe Spec 7.0 section 6.15.3.1. -
-besides the trivial "No support" - as two new defines.
+Hi Bert,
 
-Change documentation of pci_enable_atomic_ops_to_root() that these are
-the only ones that should be used. Also, spell out that all requested
-capabilities need to be supported at the root port for enable to
-succeed. Also emphasize that on success, this sets AtomicOpsCtl:ReqEn to
-1, and leaves it untouched in case of failure.
+well sorry to say that but from your dumps it looks more and more like you just have faulty HW.
 
-Suggested-by: Leon Romanovsky <leon@kernel.org>
-Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
----
- drivers/pci/pci.c             | 13 +++++++------
- include/uapi/linux/pci_regs.h |  8 ++++++++
- 2 files changed, 15 insertions(+), 6 deletions(-)
+An SMU response of 0xFFFFFFFF means that the device has spontaneously fallen of the bus while trying to resume it.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b14dd064006cca80ec5275e45a35d6dc2b4d0bbc..597bf419c3a6867f8df7ebdc14fc8ca47d0958a6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3809,15 +3809,16 @@ int pci_rebar_set_size(struct pci_dev *pdev, int bar, int size)
- /**
-  * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
-  * @dev: the PCI device
-- * @cap_mask: mask of desired AtomicOp sizes, including one or more of:
-- *	PCI_EXP_DEVCAP2_ATOMIC_COMP32
-- *	PCI_EXP_DEVCAP2_ATOMIC_COMP64
-- *	PCI_EXP_DEVCAP2_ATOMIC_COMP128
-+ * @cap_mask: root port must support combinations of AtomicOp sizes
-+ *	PCI_EXP_ROOT_PORT_ATOMIC_BASE
-+ *	PCI_EXP_ROOT_PORT_ATOMIC_FULL
-  *
-  * Return 0 if all upstream bridges support AtomicOp routing, egress
-  * blocking is disabled on all upstream ports, and the root port supports
-- * the requested completion capabilities (32-bit, 64-bit and/or 128-bit
-- * AtomicOp completion), or negative otherwise.
-+ * all the requested completion capabilities (BASE: 32-bit, 64-bit or
-+ * FULL: 32/64- and 128-bit AtomicOp completion). In that case enable the
-+ * device to send AtomicOp requests. Otherwise, return negative and leave
-+ * the enablement in the PCI config space untouched.
-  */
- int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- {
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 07e06aafec502af7c12379f7207e2e3321dc2ff1..0435306b4d26dc4caf27ae0391a5e6b930538213 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -663,6 +663,14 @@
- #define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
- #define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
- #define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion */
-+/* PCIe spec 7.0 6.15.3.1: Root ports may support one of 2 sets of Atomic Ops */
-+#define  PCI_EXP_ROOT_PORT_ATOMIC_BASE		\
-+	(PCI_EXP_DEVCAP2_ATOMIC_COMP32 |	\
-+	 PCI_EXP_DEVCAP2_ATOMIC_COMP64)
-+#define  PCI_EXP_ROOT_PORT_ATOMIC_FULL		\
-+	(PCI_EXP_DEVCAP2_ATOMIC_COMP32 |	\
-+	 PCI_EXP_DEVCAP2_ATOMIC_COMP64 |	\
-+	 PCI_EXP_DEVCAP2_ATOMIC_COMP128)
- #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
- #define  PCI_EXP_DEVCAP2_TPH_COMP_MASK	0x00003000 /* TPH completer support */
- #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+My educated guess is that this is caused by a faulty power management, but basically it could be anything.
 
--- 
-2.48.1
+Regards,
+Christian.
+
+On 11/7/25 18:09, Bert Karwatzki wrote:
+> Am Freitag, dem 07.11.2025 um 14:09 +0100 schrieb Bert Karwatzki:
+>>
+>> Testing:
+>> v6.12			booted 13:00, 7.11.2025 no crash after 1h, 890 GPP0 events, 287 resumes
+>>
+>>
+>> Bert Karwatzki
+> 
+> v6.12 crashed after 2h, 946 GPP0 events and 499 resumes. So there's no base
+> for a bisection. 
+> 
+> But the crash from v6.14.11 gave this error in netconsole:
+> 
+> 2025-11-06T19:17:34.967439+01:00 T370;[drm] PCIE GART of 512M enabled (table at 0x00000081FEB00000).
+> 2025-11-06T19:17:34.967439+01:00 T370;amdgpu 0000:03:00.0: amdgpu: PSP is resuming...#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:34.967588+01:00 T12;pci_bus 0000:03: Allocating resources#012 SUBSYSTEM=pci_bus#012 DEVICE=+pci_bus:0000:03
+> 2025-11-06T19:17:35.143353+01:00 T370;amdgpu 0000:03:00.0: amdgpu: reserve 0xa00000 from 0x81fd000000 for PSP TMR#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.226021+01:00 T370;amdgpu 0000:03:00.0: amdgpu: RAS: optional ras ta ucode is not available#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SECUREDISPLAY: securedisplay ta ucode is not available#012 SUBSYSTEM=pci#012
+> DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SMU is resuming...#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: smu driver if version = 0x0000000f, smu fw if version = 0x00000013, smu fw program = 0,
+> version = 0x003b3100 (59.49.0)#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.237386+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SMU driver if version not matched#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: SMU: response:0xFFFFFFFF for index:6 param:0x00000000 message:EnableAllSmuFeatures?#012
+> SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: Failed to enable requested dpm features!#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: Failed to setup smc hw!#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: resume of IP block <smu> failed -121#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:35.509600+01:00 T370;amdgpu 0000:03:00.0: amdgpu: amdgpu_device_ip_resume failed (-121).#012 SUBSYSTEM=pci#012 DEVICE=+pci:0000:03:00.0
+> 2025-11-06T19:17:36.114889+01:00 C8;INFO: NMI handler (perf_event_nmi_handler) took too long to run: 35.314 msecs
+> 2025-11-06T19:17:36.114889+01:00 C8;perf: interrupt took too long (275880 > 2500), lowering kernel.perf_event_max_sample_rate to 1000
+> 2025-11-06T19:17:37.930799+01:00 C4;INFO: NMI handler (perf_event_nmi_handler) took too long to run: 152.914 msecs
+> 2025-11-06T19:17:37.930799+01:00 C4;perf: interrupt took too long (1194640 > 344850), lowering kernel.perf_event_max_sample_rate to 1000
+> 2025-11-06T19:17:38.939845+01:00 C14;INFO: NMI handler (perf_event_nmi_handler) took too long to run: 197.312 msecs
+> 2025-11-06T19:17:38.939845+01:00 C14;perf: interrupt took too long (1541521 > 1493300), lowering kernel.perf_event_max_sample_rate to 1000
+> 
+> These 4 lines have not been recorded previously, so perhaps I have to look
+> for a NULL pointer dereference in an error path:
+> 
+> 2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: AE_TIME, Returned by Handler for [EmbeddedControl] (20240827/evregion-301)
+> 2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: Timeout from EC hardware or EC device driver (20240827/evregion-311)
+> 2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: Aborting method \x5c_SB.PCI0.SBRG.EC.BAT1.UPBS due to previous error (AE_TIME) (20240827/psparse-529)
+> 2025-11-06T19:17:42.571252+01:00 T1896;ACPI Error: Aborting method \x5c_SB.PCI0.SBRG.EC.BAT1._BST due to previous error (AE_TIME) (20240827/psparse-529) 
+> 
+> 
+> Bert Karwatzki
 
