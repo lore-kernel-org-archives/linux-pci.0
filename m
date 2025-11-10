@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4AE5334C0E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 237E5329C68;
 	Mon, 10 Nov 2025 18:47:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762800482; cv=none; b=DMy0MLOpV2cNc+5sksPzlsJ5cPZ3iy8XDl4ueyZLlqrceoCiAmAKc6jz8OUx8YhES0eycXGnm96+Z0Wy+IyrYHB8h4L8/1FSMpb3cTtcD8NWxf+rcoEkETlemiFWrK6eWOVZ5R4S76PqI6tG5YYZhoM6ajTD4LJxMPwa/3TVKcE=
+	t=1762800483; cv=none; b=swh87nfGbpEnISjWhPv4OJloRSyT1G3j21W+g/Xz5m5FMEmJGH65+dr28CiMBJ+22bhhAGtsDS8/7AcKOlSO7u1Z6U2tQsSPKatOUbAyoTMyvd365C4bnWasZxGsYOgAJAv5iX61GkWoCO6lpgncXoI5KHA9wtgyRiGu8NFZGm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762800482; c=relaxed/simple;
-	bh=A5irvzi0m0e4oJb0NFNZM1AgnebZZ4FvmhneqXXMsfY=;
+	s=arc-20240116; t=1762800483; c=relaxed/simple;
+	bh=OzdF6HTk4h3/oUsmY5IfpSD2bmNX4EBLpymNpYyHIRk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NE3fjUvUSWfXQCVfq1SzTFWtj50DCBJIARzEOgIl0SgILhT+GHDLxN8aoIGDYrFYOjz/Y6DZOsHd0369xXd0avCbfBMlpkmzi0tTYUTD4ghit4bV4cJyApGpBvhtqOzAruUHWgofR3MALWF0H+Zr6Kc+jPBg8NYbvbDEO415WlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EOVK7JQl; arc=none smtp.client-ip=198.175.65.16
+	 MIME-Version; b=ocTmVJovDUgZ3j73/WTxMQolEWxFklYneFct9t3Ke8w5/ys8fSUGMQN+NVIcE2ksbNl9oATuJCf1BZFLwBdyU8qL+TyEMOtNrySh2VcxaaT+bF4qTzJ+HGqT/XS7BjTNG/n5RZgcrtbr7p+Gl3K3kzP05ywvfkbHVnvY9Us2Ymo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Sj4SGBwa; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EOVK7JQl"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Sj4SGBwa"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1762800480; x=1794336480;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=A5irvzi0m0e4oJb0NFNZM1AgnebZZ4FvmhneqXXMsfY=;
-  b=EOVK7JQls5IccTLyQUvtStUhE3CvTzqKGiEtYW/fIAeBitW0t9w7LTu/
-   k5L0+jpBR2ayoN/qVPDB99PHN+RNZg4CsrCAAUyAJ54qaHjQZtdZVbIQ/
-   TwCv+38cGTOx1kncHIx6vjm+Z4N0UKHqdwQ3xffe6HPI2/UMxdV5Rlwwr
-   EDbQ+m/Ai9NF26uPSWgs9TbScbEWkPxX6rWSgKEeQIwbnC1iRJrpH/gaQ
-   Ul1IiMol3ZqDDvznc3+xF3a2YYSeDWW5cJ1FktWCivnHzXBSD5M49YL3r
-   4OURHdPR4OAKrSq8xDTvas0mGtCShSyMowl6kr9EG0d/usKgRS454vS6j
-   w==;
-X-CSE-ConnectionGUID: xTyxuv8YTe2vjq8HqIMkWw==
-X-CSE-MsgGUID: 0RaueUy5Q/iPbJ6XzyvAcA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="65013814"
-X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
-   d="scan'208";a="65013814"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:47:58 -0800
-X-CSE-ConnectionGUID: IbVxk6lrRy6vvOzUHLOBGg==
-X-CSE-MsgGUID: 3cH2l3wUQWCPg1NmGkue4g==
+  bh=OzdF6HTk4h3/oUsmY5IfpSD2bmNX4EBLpymNpYyHIRk=;
+  b=Sj4SGBwa/i6v67ca+t6yf1wvHlIA7sLHK3aYtH+wfHQYua/KACfXBzSz
+   D3y0tWnmOq6W+LRzqFI3QepUVgrcBUcnmeoFNJypOGdIQEek7SxO9C/Dn
+   3AnxVmujiYSJHw84kBoSyV4gtvprDtEObWHr5SDMZazDhCztbHXqFHA2d
+   l3JfabHujyBIKT5DMdYhvxG0gCEadbLTaJwynxikkyOUi5Ps6rJnvKiYe
+   ZlaVLSUEIhJbOxIkn7aS9tBFMHQRH7U5x5LzouM2TzR4X1v08GO5OyOkm
+   5WlVv42+y7t454biU8YwDQsqwoNWezm5QJ2/b9IuuqtQg1vXAH724TCVA
+   A==;
+X-CSE-ConnectionGUID: /C7viHMvRzyEom5+HfbZ5w==
+X-CSE-MsgGUID: z9i3Uut1Sly9YubeT+vXbQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="64769643"
+X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
+   d="scan'208";a="64769643"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:47:58 -0800
+X-CSE-ConnectionGUID: KOb4f4b3RM6tdzmNBqgdkw==
+X-CSE-MsgGUID: yn8eDI+aQmWsr3VL9QEEYA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
-   d="scan'208";a="192851956"
+   d="scan'208";a="219401997"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa003.jf.intel.com with ESMTP; 10 Nov 2025 10:47:49 -0800
+  by orviesa002.jf.intel.com with ESMTP; 10 Nov 2025 10:47:49 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 3C100A0; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
+	id 508CAA3; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -142,9 +142,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Jaroslav Kysela <perex@perex.cz>,
 	Takashi Iwai <tiwai@suse.com>
-Subject: [PATCH v1 11/23] igb: Switch to use %ptSp
-Date: Mon, 10 Nov 2025 19:40:30 +0100
-Message-ID: <20251110184727.666591-12-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 14/23] media: v4l2-ioctl: Switch to use %ptSp
+Date: Mon, 10 Nov 2025 19:40:33 +0100
+Message-ID: <20251110184727.666591-15-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
 References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
@@ -161,30 +161,25 @@ struct timespec64 in human readable format.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/ethernet/intel/igb/igb_ptp.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/media/v4l2-core/v4l2-ioctl.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/igb/igb_ptp.c b/drivers/net/ethernet/intel/igb/igb_ptp.c
-index a7876882aeaf..bd85d02ecadd 100644
---- a/drivers/net/ethernet/intel/igb/igb_ptp.c
-+++ b/drivers/net/ethernet/intel/igb/igb_ptp.c
-@@ -840,14 +840,11 @@ static void igb_ptp_overflow_check(struct work_struct *work)
- 	struct igb_adapter *igb =
- 		container_of(work, struct igb_adapter, ptp_overflow_work.work);
- 	struct timespec64 ts;
--	u64 ns;
+diff --git a/drivers/media/v4l2-core/v4l2-ioctl.c b/drivers/media/v4l2-core/v4l2-ioctl.c
+index 01cf52c3ea33..edc4d97b4161 100644
+--- a/drivers/media/v4l2-core/v4l2-ioctl.c
++++ b/drivers/media/v4l2-core/v4l2-ioctl.c
+@@ -791,9 +791,8 @@ static void v4l_print_event(const void *arg, bool write_only)
+ 	const struct v4l2_event *p = arg;
+ 	const struct v4l2_event_ctrl *c;
  
- 	/* Update the timecounter */
--	ns = timecounter_read(&igb->tc);
-+	ts = ns_to_timespec64(timecounter_read(&igb->tc));
- 
--	ts = ns_to_timespec64(ns);
--	pr_debug("igb overflow check at %lld.%09lu\n",
--		 (long long) ts.tv_sec, ts.tv_nsec);
-+	pr_debug("igb overflow check at %ptSp\n", &ts);
- 
- 	schedule_delayed_work(&igb->ptp_overflow_work,
- 			      IGB_SYSTIM_OVERFLOW_PERIOD);
+-	pr_cont("type=0x%x, pending=%u, sequence=%u, id=%u, timestamp=%llu.%9.9llu\n",
+-			p->type, p->pending, p->sequence, p->id,
+-			p->timestamp.tv_sec, p->timestamp.tv_nsec);
++	pr_cont("type=0x%x, pending=%u, sequence=%u, id=%u, timestamp=%ptSp\n",
++		p->type, p->pending, p->sequence, p->id, &p->timestamp);
+ 	switch (p->type) {
+ 	case V4L2_EVENT_VSYNC:
+ 		printk(KERN_DEBUG "field=%s\n",
 -- 
 2.50.1
 
