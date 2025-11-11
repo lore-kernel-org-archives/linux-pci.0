@@ -1,172 +1,188 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012005.outbound.protection.outlook.com [52.101.48.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1DC3199FB0
-	for <linux-pci@vger.kernel.org>; Tue, 11 Nov 2025 05:07:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762837636; cv=none; b=kPfADqS0HIQtqb5IGJiEMLVP5s87IYQYgCi5y0QA5EehieSF6Ye/BmKn9ftBdi0cPX95VBEp7iO1NH9jli5WHOh0vro8q+O0eK9PmGxeg5/GoZbG1x1UbKw0POpSJyQPSIkJ6yQyN/p3yGQ7ciiKHxa8pHexcFVixuRX8KIJxZY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762837636; c=relaxed/simple;
-	bh=tI2kC+2KfiRPrtxzHbZvr3jaxxKKsGvLvaDbA7eYwwA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iu6q22dJoezNy827jk0c6eBsNYYuV02PZ5dal3edY69epyzPKZ/+GacTBtpazvZ0/BRH+a0/WX74EU3QaDjx1y0JMCjFYYPKwPaoU4SSX4fmUiCclg7cIR6n2NukXv4gRgcXNLjpKJRHKrRealst1CPB6w4ewn8feVrQsvY3KXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D+ix+ugN; arc=none smtp.client-ip=209.85.215.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD59192B75;
+	Tue, 11 Nov 2025 05:13:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.5
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762838008; cv=fail; b=MPag6dEBhVKyXPTLbqbN3YUjUoMwNjR4l57lvne2fBRnSnvxUg8K0HWdG4E2GODTxesjhrPtXKIlxCXhrlZ1HIcjEtqnHL6mn78YNcE19DvDcDq0Bo5PPr2h+vMf+Ma8le8GZCS6Mm+1mzOIhQbleSFGIiPgGVeuVB+B9VJSbPc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762838008; c=relaxed/simple;
+	bh=CVXjeL4ilGYdwcF07mQ1whRrqVOfrJ8rKJ1rJ8o9c5w=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lQSr1PIRQLVoJBWpFKngOFQHuMT1GFzoKWRHIPB3L+jKAfNkGIpVGWn5b6EppAKW2lek4uJnuSnaAmnGWjYVq5UfW3KGJRuxfYgEgjLka8JEsedtZfQdnPWO9vU+KPt0epBtrncgQAbhHA2tqVMuFJ2tFVyHNmyN7S0nyC20H+s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=VDjrkfcT; arc=fail smtp.client-ip=52.101.48.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D+ix+ugN"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-b98983bae80so2257415a12.0
-        for <linux-pci@vger.kernel.org>; Mon, 10 Nov 2025 21:07:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762837634; x=1763442434; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=lJxYvXKODjOtMv/aaVdKBa6NeBdC7u8qy7OeqKDdoDM=;
-        b=D+ix+ugNJ2OWCZnxs+bwCkxb0koanVFsbXl4vxlLHKu3dQ7+O/B1Rxe1IATs3nIYYc
-         DvKjKjQ/os0nzajoQm4g8kpOGVg5s3Iqzigvj6EbsiqtEI1MHRMAMM6LiSj00896vQ+K
-         TNPgLin3vmMFDpNxI1IU/AO6ycsYpkIwoPV53SudffAHa/5xIjMYa+K6TBcLDtpDtG0C
-         yey6ffb9cXVzMFNG3lczBa8szMCGyDzUIT9/APGnpz4WwnySfse/UvRgu+T3KGvmV+Ki
-         1lluImIvXEwzD95t7oomzfhDJtUsEmiCj+qI4B8zxBu2pne1UKgRgx+zEvwrdZlPHmCC
-         V6SQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762837634; x=1763442434;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lJxYvXKODjOtMv/aaVdKBa6NeBdC7u8qy7OeqKDdoDM=;
-        b=gwpNmBrZf8/ndvR5lLoaL/y8gUoe9oeAYGaQ/hD3GTmJnX8IcmVsf0M2Hp8deaTG3x
-         dbtOwmvq1ZiChxDZFuCrk2Xe655QzAcfHJOtBBHGDkkvNjDpuWro9ty3bq46F40hUdhs
-         gGYAHvRdNKMSfrv7iYZasN5EUR8DSbMwU4rf8ZfeND8neZit9WI3Ll7snbSjntz5dxWW
-         tf8cVHNmQyyc1cQbkkSEenxq2fd1SiDnYt9zxV548PctISuVOp/F4ulrTivQrYjxdQkL
-         I/9/ImvMKzAd/3c8gE9MlaOwUSVA2ZRBtjFmeSe6C7whm7YchodqwM0EEOU4BZIlt2kY
-         1bKA==
-X-Forwarded-Encrypted: i=1; AJvYcCXuB8otNrGhr0gfIEkXE3TRNQgUqy0XDl7BKzazmjiqcFJPdjEtD9GwQaTnP54gW5g8KsgGdBlzDc0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLr8VEbLWK9kG3hsYycpyFbCrozWs/iEvMIDmg/zhhCMzzhtyJ
-	eUC7cH8FwSdMtNhBKxA3S+Ix2pSarT3t41YoBSPgA2TjgKsrx/uE2w9l
-X-Gm-Gg: ASbGncvuCzma3lpWZ/OAXqc3l1k8cydbxiW0osK7EbJqxkE8WK/QYgUp6rXAwzVN4yR
-	AUarfYFgPzC92XsSCqo5kgd5bixDvhKJ84MKC5WII82odQ9cMkYfA+v012VlUfRkvar/6XhTEcu
-	feZ4kyNm7HAaQOpvgdMb/cgJpLNlry8zGe9h8v9tXlyL5pkbuCVwPGLkrsXD/oj8I/pPyY92UpZ
-	KUgMx8vCF7CDm2xSmLFH7Vc+Ldh1i5cxZBI3epmEbJEhp4ca0Xv3qJDkwbNJAcenVSflx9tKFH+
-	Co7GGW1/3EaD2K9cPZohvOPRissgWC/D/Sg79JiWquEx87tskwZAL0evO7+2h3FDR1RZyDWOYPd
-	vsYb3BXIjG4COAaIBqOxTVApJ7RASj/DBA0Ch8zoIcO40PFtNGcGgL7eZnHxFRNo=
-X-Google-Smtp-Source: AGHT+IHzRdTCrue2ZgiQ50oZybWSGURPQR9pesddb3UZWH63AO4FM9OjcqyLQkulc+41mGYvnLonyQ==
-X-Received: by 2002:a17:902:ecc6:b0:295:54cb:16ac with SMTP id d9443c01a7336-297e562ea82mr121851615ad.18.1762837634116;
-        Mon, 10 Nov 2025 21:07:14 -0800 (PST)
-Received: from geday ([2804:7f2:800b:6d3a::dead:c001])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-296509680e5sm169778595ad.1.2025.11.10.21.07.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Nov 2025 21:07:13 -0800 (PST)
-Date: Tue, 11 Nov 2025 02:06:53 -0300
-From: Geraldo Nascimento <geraldogabriel@gmail.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Ye Zhang <ye.zhang@rock-chips.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Johan Jonker <jbx6244@gmail.com>,
-	linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH] arm64: dts: rockchip: align bindings to PCIe spec
-Message-ID: <aRLEbfsmXnGwyigS@geday>
-References: <4b5ffcccfef2a61838aa563521672a171acb27b2.1762321976.git.geraldogabriel@gmail.com>
- <ba120577-42da-424d-8102-9d085c1494c8@rock-chips.com>
- <aQsIXcQzeYop6a0B@geday>
- <67b605b0-7046-448a-bc9b-d3ac56333809@rock-chips.com>
- <aQ1c7ZDycxiOIy8Y@geday>
- <d9e257bd-806c-48b4-bb22-f1342e9fc15a@rock-chips.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="VDjrkfcT"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=YdPiRvOJNQzQSO6Pe/S59Of92lcHAq28uyKcsUDA9LmBngxYrO7yLKmZ3okGtS73f8Aq7l56waQcc2NbquvTY6lTNbtok4HgJjDNFu0FNvi9slSuFrMip8lPazDFiqOW2eoOJn83wiPc+l4VtS3Fh0Vcznjk0ZFSmlsaIIALo7sKEUpT3tCD5XnqAt0zB3WH07+5UQ/AwEWqMQ2iDOVvJeWv3CcxvMjLfK2Pf99wmjVcp/jhiJKnJa8kYgtDResBkCGqFRrS788rkednP/LZPzlH3xYg5bmVMHoSy3fx3y9W0/K23rMRAbf7+uqpCktkESOIT+T5RqHctCMjTul8Ag==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=SfLY+StWgd89RasNXxXggmjoiUuGiW941YAAIzfupLw=;
+ b=N4TTtaXpxFnNtF64ks3dhwCCedodIZM8xLfcs2KO2FsON/tZHpqOFo6cTComH+CJtY2Ld88AGaStifv4CJJwKr2nT+wj+rw6nzzcsb2Nv1FwztZWAPaHcy+2bOh72o7cw8nJEI2aCl4mtDXDTH2zfZ4m5DLOiCVyFkUStA1Kc7yxIKPYYw5MG2fADw10eTrZn54pA8lmxpwJ9PMyjKwzovl0Sj7RbCM8AyMSIlLoUt9Dfj5o91kAreupOpNUKhF+HT1y4csqfaQcAqmAVm2lOXh2r5ihiTJFG4wP2duBHqcorYEq1AImLidn6w2BECFdM5mzC0Gv7onraAC2eiKzyQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=8bytes.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=SfLY+StWgd89RasNXxXggmjoiUuGiW941YAAIzfupLw=;
+ b=VDjrkfcT1TP7Vn0JP6yXLUIosUDwA73f4LZeEgUniXEGsfJ4aFJKWjmq0NvYMSI0JccoDDvPaO4I9LOu6qRnYMiZWE3+hSbt+qebV+CC46vSEEA54Nzf31nK8GmqWyzvfWasFtmbTRMUGYVMuwuYDtdKciOtCF4kBOyeipmURSqRFZ0sxtPOmVkR0rE+oqulZ16M+YU21uWAQHimUTojxx7ei5wbE3/zeMvLjl7nQPG3GelFnExykDjlyAR+XLHRjtmmglk8TLgIGi+kZUYGacCv5EZkdpBORcJChxkMIeUjCdCs6Y+OFGSkbhhjMkuwLOCgfrUsr7I+NrphqPOkFA==
+Received: from DS7PR03CA0027.namprd03.prod.outlook.com (2603:10b6:5:3b8::32)
+ by SN7PR12MB7883.namprd12.prod.outlook.com (2603:10b6:806:32b::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.16; Tue, 11 Nov
+ 2025 05:13:23 +0000
+Received: from DS3PEPF0000C381.namprd04.prod.outlook.com
+ (2603:10b6:5:3b8:cafe::3d) by DS7PR03CA0027.outlook.office365.com
+ (2603:10b6:5:3b8::32) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9298.16 via Frontend Transport; Tue,
+ 11 Nov 2025 05:13:06 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ DS3PEPF0000C381.mail.protection.outlook.com (10.167.23.11) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9320.13 via Frontend Transport; Tue, 11 Nov 2025 05:13:23 +0000
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 10 Nov
+ 2025 21:13:14 -0800
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail204.nvidia.com
+ (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 10 Nov
+ 2025 21:13:14 -0800
+Received: from Asurada-Nvidia.nvidia.com (10.127.8.11) by mail.nvidia.com
+ (10.129.68.6) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
+ Transport; Mon, 10 Nov 2025 21:13:13 -0800
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: <joro@8bytes.org>, <afael@kernel.org>, <bhelgaas@google.com>,
+	<alex@shazbot.org>, <jgg@nvidia.com>, <kevin.tian@intel.com>
+CC: <will@kernel.org>, <robin.murphy@arm.com>, <lenb@kernel.org>,
+	<baolu.lu@linux.intel.com>, <linux-arm-kernel@lists.infradead.org>,
+	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<kvm@vger.kernel.org>, <patches@lists.linux.dev>, <pjaroszynski@nvidia.com>,
+	<vsethi@nvidia.com>, <helgaas@kernel.org>, <etzhao1900@gmail.com>
+Subject: [PATCH v5 1/5] iommu: Lock group->mutex in iommu_deferred_attach()
+Date: Mon, 10 Nov 2025 21:12:51 -0800
+Message-ID: <11b3ab833d717feb41ce23ae6ebdc3af13ea55a7.1762835355.git.nicolinc@nvidia.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1762835355.git.nicolinc@nvidia.com>
+References: <cover.1762835355.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <d9e257bd-806c-48b4-bb22-f1342e9fc15a@rock-chips.com>
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS3PEPF0000C381:EE_|SN7PR12MB7883:EE_
+X-MS-Office365-Filtering-Correlation-Id: 967611e0-4ea0-45f8-0447-08de20e1097d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|82310400026|36860700013;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?nrTeELvhBSRe2R2/trtVaVvZUgapDmtJzP6dI+2c4UGJEOkdzm9OY/tV974R?=
+ =?us-ascii?Q?TT7Mhm9/qhrXJbGCMzTpKcjbshVpz2fZELH+G5tjlCcsCPXOg1zNJ6nTXtUI?=
+ =?us-ascii?Q?nj2I/7g2fbcKCXwqCD4YxsC9clfoVjC3yXsr7naF0gQ2qK1UkYozeih25bwm?=
+ =?us-ascii?Q?Oi59moPx5xpTGX2aFNBHF27e5V8MtWQumwIrOzfAq9wk/qX3YBPTs07aD4fO?=
+ =?us-ascii?Q?YD2FKDsV0Zl5qVXLlXOuS2QmeWLmzJmdNelAYTs2UUxPl8ppTat/fu1mvNFr?=
+ =?us-ascii?Q?orQS3zXoMW6KCJ28L/++oqUDn7lbTmHIfU8GR996zZApLIB61G/7asw1PPJl?=
+ =?us-ascii?Q?IKLX4gHDwJKFfjIglybr/T02yo7RUeH3uUowJh0ziAweDUMKEhtwtOje7iPn?=
+ =?us-ascii?Q?NJ3xjHNYdEw4m79dgDuPhhoArBuhCMCyFQCZtwNOXw1GXe5DxBJeA/rxKtpM?=
+ =?us-ascii?Q?bjInTvo93lx+qIy1VODFwfv5SA9SK00BQZ2A7Zp0Ys2Ry4lC05rg7a59m1ju?=
+ =?us-ascii?Q?/jwAyQWAfyQGtng093XH+MkCO7a83nv7nECzKZjqi1/yKh1BdVTurmkDfy+o?=
+ =?us-ascii?Q?nQQiNdeSPMLlBx970vCGV/CQOvYqgxjt523PR+5yunSIzu09ZT8DJLz+vDPx?=
+ =?us-ascii?Q?8mhIy1BoPpIzgMrYbzJVzwGI8UsFbGgC+NXz/VVmJHpYW8FtEOhe1BI2Wqha?=
+ =?us-ascii?Q?YrPmdi6J5i9oNL9KJsizkfkVl79GpxT+1A4kp1CivXx0W/rEAkwnrUXJqyOt?=
+ =?us-ascii?Q?XcuqwWKKcsUDuxzNzXJlYkNFblYJH8sFYkP+bCIVol9ety68UnCxpSu3abDy?=
+ =?us-ascii?Q?oR95UGdFoJgtPLcR8TORoi0/A7SYo1b15ztAQn1Hx7R0oJPQsw8pFCUiS2LY?=
+ =?us-ascii?Q?D4NAkUwkvnp5BDhPpUtyn79YMSBNVY5XfihIpk9YAf4l/YOpB6Mh9dDcuT+d?=
+ =?us-ascii?Q?cPtOKE2oFXp2dbuy+p2RqwORIh42mVxlMesL0gDP4feWb83B0P37P53Xd8QJ?=
+ =?us-ascii?Q?s2hfC91ON6QtqGpnv8H8mtyBkJm7FIyhNgzXrafmE0gKTYBWU+jxaTCOZrpM?=
+ =?us-ascii?Q?X/KP11LD1IBiR/u5XlQx+iNXUVFfnHK/VjLPTTeItEeSoEKzxeezPTXrmjuU?=
+ =?us-ascii?Q?LJlhuZQGyfwrJFJHk4nOXtLmVX33PLaF0iGqPbzQ+MDvXamhRGzOfvjU2w6a?=
+ =?us-ascii?Q?DqwBE5hiwuxhYeH6JUQS9E6V0aX1Jmq7S8VJQBUdBjNdwLlehp234hxuwwSF?=
+ =?us-ascii?Q?lsYD0lzWbqSSkqoB+Tu1LxgpkgQF1Bc+wNF93zFAuydPxKfc1UetRzB3KlwT?=
+ =?us-ascii?Q?ubvpl1h0QWB+VZukB9Zik0Fa2Axz6UTAHWPueycBPc/wS5GTfxULhn4vsWWj?=
+ =?us-ascii?Q?hM7A3rHoIqLYw+d/bu4xjb/qG33cnTGUCRrBiLBpPr7w03l3+6lW0HpdCzjW?=
+ =?us-ascii?Q?LRydRILzaIq0L5vUbkS+80KJeEXanTTskJEY2bcpTS2yHJBES/PntFVSZ+hj?=
+ =?us-ascii?Q?NOKyiHBzJZGs8NtpcPnHbbwp2udymVSiX0M8HSsOG7NJRewCvhSQzjYRewL+?=
+ =?us-ascii?Q?TEJ76WClS1nv9svvnCg=3D?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(82310400026)(36860700013);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2025 05:13:23.0674
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 967611e0-4ea0-45f8-0447-08de20e1097d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS3PEPF0000C381.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7883
 
-On Fri, Nov 07, 2025 at 11:01:04AM +0800, Shawn Lin wrote:
-> + Ye Zhang
-> 
-> 在 2025/11/07 星期五 10:43, Geraldo Nascimento 写道:
-> > On Wed, Nov 05, 2025 at 04:56:36PM +0800, Shawn Lin wrote:
-> >> 在 2025/11/05 星期三 16:18, Geraldo Nascimento 写道:
-> >>> Hi Shawn, glad to hear from you.
-> >>>
-> >>> Perhaps the following change is better? It resolves the issue
-> >>> without the added complication of open drain. After you questioned
-> >>> if open drain is actually part of the spec, I remembered that
-> >>> GPIO_OPEN_DRAIN is actually (GPIO_SINGLE_ENDED | GPIO_LINE_OPEN_DRAIN)
-> >>> so I decided to test with just GPIO_SINGLE_ENDED and it works.
-> > 
-> > Shawn,
-> > 
-> > I quote from the PCIe Mini Card Electromechanical Specification Rev 1.2
-> > 
-> > "3.4.1. Logic Signal Requirements
-> > 
-> > The 3.3V card logic levels for single-ended digital signals (WAKE#,
-> > CLKREQ#, PERST#, and W_DISABLE#) are given in Table 3-7. [...]"
-> > 
-> > So while you are correct that PERST# is most definitely not Open Drain,
-> > there's evidence on the spec that defines this signal as Single-Ended.
-> > 
-> 
-> This's true. But I couldn't find any user in dts using either
-> GPIO_SINGLE_ENDED or GPIO_OPEN_DRAIN for PCIe PERST#. I'm curious
-> how these two flags affect actual behavior of chips. Ye, could you
-> please help check it?
->
+The iommu_deferred_attach() function invokes __iommu_attach_device(), but
+doesn't hold the group->mutex like other __iommu_attach_device() callers.
 
-While I haven't heard from Ye Zhang still your comment instigated
-me to dig deeper, thank you Shawn Lin. What I discovered I believe
-is a bug in the Rockchip driver for the GPIO subsystem. Look:
+Though there is no pratical bug being triggered so far, it would be better
+to apply the same locking to this __iommu_attach_device(), since the IOMMU
+drivers nowaday are more aware of the group->mutex -- some of them use the
+iommu_group_mutex_assert() function that could be potentially in the path
+of an attach_dev callback function invoked by the __iommu_attach_device().
 
-diff --git a/drivers/gpio/gpio-rockchip.c b/drivers/gpio/gpio-rockchip.c
-index 47174eb3ba76..5387c78ea11c 100644
---- a/drivers/gpio/gpio-rockchip.c
-+++ b/drivers/gpio/gpio-rockchip.c
-@@ -272,9 +272,10 @@ static int rockchip_gpio_direction_input(struct gpio_chip *gc,
- static int rockchip_gpio_direction_output(struct gpio_chip *gc,
- 					  unsigned int offset, int value)
- {
--	rockchip_gpio_set(gc, offset, value);
+Worth mentioning that the iommu_deferred_attach() will soon need to check
+group->resetting_domain that must be locked also.
+
+Thus, grab the mutex to guard __iommu_attach_device() like other callers.
+
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+---
+ drivers/iommu/iommu.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 2ca990dfbb884..170e522b5bda4 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -2185,10 +2185,17 @@ EXPORT_SYMBOL_GPL(iommu_attach_device);
  
--	return rockchip_gpio_set_direction(gc, offset, false);
-+	rockchip_gpio_set_direction(gc, offset, false);
+ int iommu_deferred_attach(struct device *dev, struct iommu_domain *domain)
+ {
+-	if (dev->iommu && dev->iommu->attach_deferred)
+-		return __iommu_attach_device(domain, dev, NULL);
++	/*
++	 * This is called on the dma mapping fast path so avoid locking. This is
++	 * racy, but we have an expectation that the driver will setup its DMAs
++	 * inside probe while being single threaded to avoid racing.
++	 */
++	if (!dev->iommu || !dev->iommu->attach_deferred)
++		return 0;
+ 
+-	return 0;
++	guard(mutex)(&dev->iommu_group->mutex);
 +
-+	return rockchip_gpio_set(gc, offset, value);
++	return __iommu_attach_device(domain, dev, NULL);
  }
  
- /*
+ void iommu_detach_device(struct iommu_domain *domain, struct device *dev)
+-- 
+2.43.0
 
-It seems to me the current logic is inverted, i.e. GPIO Port A Data
-Register can't be successfully written if direction output is not set
-yet.
-
-I have to double-check with printk() but from what I see here it may
-be very possible that first call to gpiod_get_index() will not set
-proper value and only subsequent calls made to gpiod set_value()
-will begin to set value.
-
-For what it is worth, with the diff the workaround to set as open
-source/emitter with pulldown or set open drain with pullup no longer
-works, i.e. PCIe initial link training fails.
-
-The workaround to drop TPVPERL still works, i.e. PCIe initial link
-training proceeds, system operational.
-
-Thanks,
-Geraldo Nascimento
-
-> > Thanks,
-> > Geraldo Nascimento
-> > 
-> 
