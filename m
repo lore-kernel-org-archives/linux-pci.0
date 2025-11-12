@@ -1,174 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C485341642;
-	Wed, 12 Nov 2025 14:45:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A414634B1A9
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2025 15:00:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762958731; cv=none; b=ZWQk9UWlNF3UOZTaGncnNR2O3VARQbaRZSacdFpLAk3JVfXTy+jJsravbEBuLECGCnj9ZxCIPYd0ganCGmHTq92RtvPeuji/0mZ5XZnlkrdHa8hKgO50JRmBYxU+kRzNrVXquxWOeCBXwGAuX1NArmgYZKRmyvrdVZn9mBkYQ7s=
+	t=1762959610; cv=none; b=Gx1Asm6RronnACA2d6cxIKh+rnHzU0BAW09JSlB1BmCkE3mdu1xZ1ZpP/jMrYR7JElBgQCegyUVfy+5ip9DRHan+T2OM1uGaRKTr0A+NyGyKzhCIY0mNSOxbKJswboU0z5A+2pGDDEDly42J5a5rIMFsIPaA/s7mNYgHlpizFvc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762958731; c=relaxed/simple;
-	bh=ZTNyhNFf+p9S6BsXERBUufVxby0L/rriRpDnCjmebu0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Y+HfB4367+6JE4M6txICxo34XPeUx+Bjo6QFObxj/pylCgURepi/rwq+WYC/gF4lMtGI8nyLzd3owH3ARxIqJdgYoAAFhl+h/SPha/g/T0ujmyHpB9aurNCE1ArQJTkSAVJRehyXJOk4Ahd7+xISlNIjq6Zdr86WZij4asE2Df8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c+eWFXLV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762959610; c=relaxed/simple;
+	bh=AitKwurl0RZQ42Z6io85kiDDF35RvnC+HaXcObo6dj0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JFeWW9gaXbHl4Nd06GhuWcZ2MNfapkUXbYbASqtvEajC9snz3eOj1ZZ98nPeXhCC/zk2BHrXXCawcmTtFdjWagAKr7Jh+/IESV46VNOjYOMqK92VLfMy0N0wKRxw95L7QLxJNMp3uvx0Dy0DnDvsS8mSc8w6Ess2sj6w9xcl/cI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=X0NM6JoW; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c+eWFXLV"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 30C6DC4CEF1;
-	Wed, 12 Nov 2025 14:45:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762958731;
-	bh=ZTNyhNFf+p9S6BsXERBUufVxby0L/rriRpDnCjmebu0=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=c+eWFXLVVteOvv4fIzjsKblkThHYhc5ibkkgVCrxCYjAbRU9sZvC0W2NsRkPWDD7L
-	 wuClsqH0O8DEEqHgFdIYFdlSUl8pHqEd304fkB9tzkRiyoAB3sB227XVjrFfmi+Qfc
-	 W6BYl+TaXj5RSovSCewKJgS5/LMm2qCcM7+oVgBhmZMprkoCCcFiahsh7l3EsTaEh5
-	 VILyCGIZl0HDu9lhuqQiv6fwfsI4uhB8L1aV02m+vxyXbd2nlqO9Gjk11WMHjA4kcL
-	 64fIVPVSnsjRLCIoljDLNCShdloLJoEoCYX4DyXAC9QVKtTOC6gSiNl1vsCeeBB57k
-	 JVQBrC2Wh7H8g==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28BEBCD13D3;
-	Wed, 12 Nov 2025 14:45:31 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 12 Nov 2025 20:15:17 +0530
-Subject: [PATCH 5/9] serdev: Add modalias support for serdev client devices
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="X0NM6JoW"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-592f7e50da2so1163640e87.0
+        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2025 07:00:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1762959607; x=1763564407; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AitKwurl0RZQ42Z6io85kiDDF35RvnC+HaXcObo6dj0=;
+        b=X0NM6JoWO3vCIkMCOghqijtCg3SeWhol9lAhtWz18k6Sn8W3yt71kZD3JkmCK+4kR3
+         MUnCp18H92Z1iff18JrNUpN/Rd6S6Z5aP2p051Eb8FrVcBoX1s+8YFxP3NgtIb6SxRtk
+         k71ekbnddmkWRIJIThxNn3kGT37sYi5u+4eOYidWHisGrH8hJnOl4wlr1igPGFTgvamE
+         3zwAODUkvTa4xWIx5sVjvN6qMNLk3wbun6lLxuifjUTKI0eJ9jWpgD7ly5JdtM+kaivM
+         XLtdi7C74PsoMrI1aGGZWTI5aHDyXtgo15C8V834ysGrQepz0BMTRU1P4R76Py8iN3G6
+         aWQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762959607; x=1763564407;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=AitKwurl0RZQ42Z6io85kiDDF35RvnC+HaXcObo6dj0=;
+        b=mw73tVn38CrAFyiBuiquIGNA/aDLAXhe8TROe+d5QkhfUVbR5pApcpQ0mlo24izlft
+         xELf9sBFWxOGPxdMoWrBM7MeGglWTBv/07v26BRAbTockBcAkNZTMf7irNqL16ic83HD
+         O+ccwLcJ6wvvsXD6TpZ4vUV3e+bd21TkEhvYY0/K0Hrjckh/E3qi6vN6bfXV/0wVmeQx
+         VqlDHBPlxgDBGs5WCOOFtmQuKNzSi5ls2Lm9PQ7e9VIz8Q369udv5w3fTa9ikP2h8KUF
+         RlXZdfj5eKAk2BmjXgAgK8vMv+uz6B9X2wsmRZeClQ/B2EBL9qVsRgToHCZjGgLk3v/I
+         j/Fg==
+X-Forwarded-Encrypted: i=1; AJvYcCVq9SXiGbGVtj/nhEK+wvcz3cocgVQQrDB9znwdP0sgEGFBGEXhs4OUuIkiPYSKbgIIYEk/W7/nvTc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrcdeBchJvjlVBDcuIhcQw/UYFcgBJmpvkwPUdjvg+do1K+Q+2
+	re+kankmlY3HVE1NGcQoZWkGeBg3s/s1llEtWUu0/4FpGrAbV9H4pCWoCb14krVfT4O9Udll9VN
+	6JZeh6tcyq4WZt0QvAoFp/diGxgwuv0Py6Y3+al+SnQ==
+X-Gm-Gg: ASbGncs9uaQ5a6MiEErB+Y7ZyUUjPdbWz4qxF0A+KsZGQIGzJYsei+S7FMHbj8oS292
+	gEqmh9NEdZgVICMmASADi8vHBs0BYuLLwlgq2a1mpA6aB+T8PdfjRPJvqSGA5ml/tHZY/QuIbJq
+	AuXR0Wx3RLDD7IG3KSdMdigKPo48QRaHr7WDI3/mALg3ENJXXgg/ycGnbeLqggkjv9BmCAV945G
+	7mvnrU20wdl0un8v7724ynK3ItOICcOZ5+GfSkqNX76kiTOV+o7wEYnDJuOKMlwdCdA3kN6bHoe
+	+khxhSEoECIk
+X-Google-Smtp-Source: AGHT+IHJlMhc97BIbUXAmDMRKBFEzcYUIzG9wOUoHY7EvexUIuj9NB/ckjr2BS4pe1nb7zekpoNjYTR8GQ8gWpKStzg=
+X-Received: by 2002:a05:6512:12c5:b0:594:27de:77e7 with SMTP id
+ 2adb3069b0e04-59576e6adcbmr1074429e87.15.1762959606578; Wed, 12 Nov 2025
+ 07:00:06 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251112-pci-m2-e-v1-5-97413d6bf824@oss.qualcomm.com>
-References: <20251112-pci-m2-e-v1-0-97413d6bf824@oss.qualcomm.com>
-In-Reply-To: <20251112-pci-m2-e-v1-0-97413d6bf824@oss.qualcomm.com>
-To: Rob Herring <robh@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
- Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
- =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
- Mark Pearson <mpearson-lenovo@squebb.ca>, 
- "Derek J. Clark" <derekjohn.clark@gmail.com>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
- Bartosz Golaszewski <brgl@bgdev.pl>
-Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
- linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
- linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3104;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=d3crWSGCGUGn4wtoYTdDJMgOBARJSAYtgVh6kQhItYQ=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpFJ2HLBj0atRdQkoYoEtIlsRq/2nfEpNLLTmK8
- 0Ee8SHCPp2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaRSdhwAKCRBVnxHm/pHO
- 9ccoB/9JulXVNBQpte5g04Zu3cGVEtybP7nbcJRotlJ106/5GvyjbUjrShqI832UjbWtjgtNtc3
- myVXAVbBbIRPoaVWY356o/T3owMpyRDkiLZk1NFJ0RVInasTwuDM+GXTT3URoLQkCYbusx7nlfn
- pP+eHsk+ZjcXWswcI+pRcm1d63s65LwpVHyeZlcxQv8r/cg/MbUp/PMEZiSHw/e4Ka3pprDytt7
- 2Osv6Mynw2x9nJ5M+sb3n1u0NRLnqeM/D5s/sPFAwyMHsCHy2VVabnJSwo7BsY/opFJ4jUa1c/k
- ryGpgpPFOpTHT7cFdpd8gXslxG4YoRjCn7kZZjis3WqdlDMM
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
+References: <20251108-pci-m2-v2-0-e8bc4d7bf42d@oss.qualcomm.com> <20251108-pci-m2-v2-2-e8bc4d7bf42d@oss.qualcomm.com>
+In-Reply-To: <20251108-pci-m2-v2-2-e8bc4d7bf42d@oss.qualcomm.com>
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Date: Wed, 12 Nov 2025 15:59:53 +0100
+X-Gm-Features: AWmQ_bmPrX98SnIay2Tpg2LShNsYicURP0Ag78YAbsYoHwDKuqWeMRjHIudWFWg
+Message-ID: <CAMRc=Mcoi7koQBDyKPGet=FGX0emExRBhWMKW14fPmk217y2Ow@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] PCI/pwrctrl: Add support for handling PCIe M.2 connectors
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Sat, Nov 8, 2025 at 4:23=E2=80=AFAM Manivannan Sadhasivam
+<manivannan.sadhasivam@oss.qualcomm.com> wrote:
+>
+> Add support for handling the PCIe M.2 connectors as Power Sequencing
+> devices. These connectors are exposed as the Power Sequencing devices
+> as they often support multiple interfaces like PCIe/SATA, USB/UART to the
+> host machine and each interfaces could be driven by different client
+> drivers at the same time.
+>
+> This driver handles the PCIe interface of these connectors. It first chec=
+ks
+> for the presence of the graph port in the Root Port node with the help of
+> of_graph_is_present() API, if present, it acquires/poweres ON the
+> corresponding pwrseq device.
+>
+> Once the pwrseq device is powered ON, the driver will skip parsing the Ro=
+ot
+> Port/Slot resources and registers with the pwrctrl framework.
+>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
+com>
+> ---
 
-Add modlias support to serdev so that the serdev client driver can be
-autoloaded by udev when the serdev client device gets created.
-
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/tty/serdev/core.c       | 15 +++++++++++----
- include/linux/mod_devicetable.h |  1 +
- scripts/mod/file2alias.c        |  8 ++++++++
- 3 files changed, 20 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
-index f90095cb778f2374303f98809d1639a000e0d9e0..8c2a40a537d93f4b9353a2f128cdf51b521929b1 100644
---- a/drivers/tty/serdev/core.c
-+++ b/drivers/tty/serdev/core.c
-@@ -34,7 +34,11 @@ static ssize_t modalias_show(struct device *dev,
- 	if (len != -ENODEV)
- 		return len;
- 
--	return of_device_modalias(dev, buf, PAGE_SIZE);
-+	len = of_device_modalias(dev, buf, PAGE_SIZE);
-+	if (len != -ENODEV)
-+		return len;
-+
-+	return sysfs_emit(buf, SERDEV_DEVICE_MODALIAS_FMT "\n", dev_name(dev));
- }
- static DEVICE_ATTR_RO(modalias);
- 
-@@ -48,13 +52,16 @@ static int serdev_device_uevent(const struct device *dev, struct kobj_uevent_env
- {
- 	int rc;
- 
--	/* TODO: platform modalias */
--
- 	rc = acpi_device_uevent_modalias(dev, env);
- 	if (rc != -ENODEV)
- 		return rc;
- 
--	return of_device_uevent_modalias(dev, env);
-+	rc = of_device_uevent_modalias(dev, env);
-+	if (rc != -ENODEV)
-+		return rc;
-+
-+	return add_uevent_var(env, "MODALIAS=" SERDEV_DEVICE_MODALIAS_FMT,
-+					dev_name(dev));
- }
- 
- static void serdev_device_release(struct device *dev)
-diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
-index 70c54c4bedba2fcb8f5eb37c2d9ede05d5d91188..dad9637cf28552c3423affc4eb249efa6ba05514 100644
---- a/include/linux/mod_devicetable.h
-+++ b/include/linux/mod_devicetable.h
-@@ -976,6 +976,7 @@ struct coreboot_device_id {
- 	kernel_ulong_t driver_data;
- };
- 
-+#define SERDEV_DEVICE_MODALIAS_FMT "serdev:%s"
- #define SERDEV_NAME_SIZE 32
- 
- struct serdev_device_id {
-diff --git a/scripts/mod/file2alias.c b/scripts/mod/file2alias.c
-index b3333560b95ee998fbe5bdc9ed380847962d1bd1..27e9f7c718c4d48ca5dbd5538490529119df9509 100644
---- a/scripts/mod/file2alias.c
-+++ b/scripts/mod/file2alias.c
-@@ -1371,6 +1371,13 @@ static void do_coreboot_entry(struct module *mod, void *symval)
- 	module_alias_printf(mod, false, "coreboot:t%08X", tag);
- }
- 
-+/* Looks like: serdev:S */
-+static void do_serdev_entry(struct module *mod, void *symval)
-+{
-+	DEF_FIELD_ADDR(symval, serdev_device_id, name);
-+	module_alias_printf(mod, false, SERDEV_DEVICE_MODALIAS_FMT, *name);
-+}
-+
- /* Does namelen bytes of name exactly match the symbol? */
- static bool sym_is(const char *name, unsigned namelen, const char *symbol)
- {
-@@ -1467,6 +1474,7 @@ static const struct devtable devtable[] = {
- 	{"usb", SIZE_usb_device_id, do_usb_entry_multi},
- 	{"pnp", SIZE_pnp_device_id, do_pnp_device_entry},
- 	{"pnp_card", SIZE_pnp_card_device_id, do_pnp_card_entry},
-+	{"serdev", SIZE_serdev_device_id, do_serdev_entry},
- };
- 
- /* Create MODULE_ALIAS() statements.
-
--- 
-2.48.1
-
-
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
