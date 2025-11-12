@@ -1,114 +1,96 @@
-Received: from mail-m15573.qiye.163.com (mail-m15573.qiye.163.com [101.71.155.73])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 664AA2F12CA;
-	Wed, 12 Nov 2025 08:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B2F32874F1;
+	Wed, 12 Nov 2025 08:40:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762936614; cv=none; b=eNYU5M2nrPwl91ITd+PQF8VvKK1lKq8mYNBiO7e0vtFLJdFvTRZJ45Dc+YNADEr9uXgN6iMLln2aaHx7Uo9p4aDEXwj4WlQJkt4G0/mlVLG0qVDWhHk1G8NZ4jKYArAuza4qm3RnaT/IEntzXrFZI9rcZef+a3eouBdvgYC+iwI=
+	t=1762936813; cv=none; b=GAonX9iOAKAjDp2mrtGA+re6m/AFOyRbXGVEYsXUbP00omAzrks7DpOe8HzBLDSjL20yjCEmLzE1l62GEw1qddZ3R8NHvQCpoodYlfWxiW4xzuWFqy+9XQCzJoxq57ZKERtIZMk29b2wwZyzikj12OsJk3eBh3YzCw9ZIrX8FyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762936614; c=relaxed/simple;
-	bh=Sipvm/6HeiwNQ0RENEV6ehQdZ0dLq6Ls92vfVOazIAs=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ZdeAMlp8ZGUeoG1NlkEfesqxyoUMuo0e4gYljOk3eq4qpr0TrwmrP5ee5k5llhVysNxiCMmwx1F/REgg4N0GYem9hbXDV4P+VTuEhaZIgccGFN4rnfWZW2WkJ8YO/FfCDo9g6poH4PmLrXbdsnqCuh66HNrhFCUrOc9hog5jzQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=OQrlNibC; arc=none smtp.client-ip=101.71.155.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1762936813; c=relaxed/simple;
+	bh=24AR814wLA55Qc7z3MU0tNwo9drr/C1xImdNGy5q2O0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o+3c2+fKHl4aCoyV23ZIAejIO5TDbhdiu9FpnMjpQkQbLappwbUdcrLUWvmTzVNqOf4Wjhmudb4t2/CE+QTbcN6+uWzxQloGCg1mIVTxrC5kMjlBOiMC0aQltDDtd7aHYihN/hjK93lpNPRcklHZZq8iHDiUWNPt1bUhPPTztaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UvaW3kwl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="OQrlNibC"
-Received: from [172.16.12.129] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 29503293b;
-	Wed, 12 Nov 2025 16:31:32 +0800 (GMT+08:00)
-Message-ID: <ef433574-3e81-4636-82c8-9bc3552addca@rock-chips.com>
-Date: Wed, 12 Nov 2025 16:31:30 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UvaW3kwl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F370CC19421;
+	Wed, 12 Nov 2025 08:40:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762936812;
+	bh=24AR814wLA55Qc7z3MU0tNwo9drr/C1xImdNGy5q2O0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UvaW3kwlNSnW6HuOEIaJ/EsL2sNWRr/khWI8ueFg+45xLnNr6VEwJKymoqQcdxYcb
+	 NsrjK5c9QT0AJOITRlsKoSbw18w5uVEUKGPXCprJZylbKbkMPMHptIGkY/ru10J8o4
+	 AiogQZmLOHr0aOrDBK7NErbcj0SPg+I0w/rL/3ppYId+x0lIqyJPipebEW/xFYlWoI
+	 v9BKwVOWhQt1k6y8Eu1joGAUX28fQkfz3uNK4V3sHJpVJXL5fQuC3nB2WtfbVqt248
+	 gKp2uhiU1xgu7T6lyq8ayY/7rMCOkP8JMRq1cWbQcheQxa6WP+YYcPeOg9+ikgHm/Q
+	 QgqAGbyUxTCJA==
+Date: Wed, 12 Nov 2025 09:40:06 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Kever Yang <kever.yang@rock-chips.com>,
+	Simon Xue <xxm@rock-chips.com>, Damien Le Moal <dlemoal@kernel.org>,
+	Dragan Simic <dsimic@manjaro.org>, FUKAUMI Naoki <naoki@radxa.com>,
+	Diederik de Haas <diederik@cknow-tech.com>, stable@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Prevent advertising L1 Substates
+ support
+Message-ID: <aRRH5i2oq1FBSs_7@ryzen>
+References: <aRM1VOodnSpaob3P@ryzen>
+ <20251111214336.GA2190667@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, pali@kernel.org, neil.armstrong@linaro.org,
- robh@kernel.org, jingoohan1@gmail.com, khilman@baylibre.com,
- jbrunet@baylibre.com, martin.blumenstingl@googlemail.com, cassel@kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org,
- linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH v6 1/2] PCI: Configure Root Port MPS during host probing
-To: Hans Zhang <18255117159@163.com>, lpieralisi@kernel.org,
- kwilczynski@kernel.org, bhelgaas@google.com, helgaas@kernel.org,
- heiko@sntech.de, mani@kernel.org, yue.wang@Amlogic.com
-References: <20251104165125.174168-1-18255117159@163.com>
- <20251104165125.174168-2-18255117159@163.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20251104165125.174168-2-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9a7731027109cckunm3695c205155bc1
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQklNSVZKGBkfHhlCQklCSRhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=OQrlNibCvuZayM7wDbAagcEJdfH7X7Q3cM6x97+7LQYx7k4r/CgTIBxxCMJ3Y3fvGNo5K6I52NbBbMcdb5R2ELbdSxTmrl+IoMlKzkcVNDrZPs9R8U4AlvAAIOr+HA4C22Kud5mpViQKRjgDZtrex+JDHEueUhSBWnW/n+bRq3E=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=qaMbRURJhLkvG/AVZ92aTWNCGETrMCxlf9HvH6rX52w=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251111214336.GA2190667@bhelgaas>
 
-在 2025/11/05 星期三 0:51, Hans Zhang 写道:
-> Current PCIe initialization logic may leave Root Ports (root bridges)
-> operating with non-optimal Maximum Payload Size (MPS) settings. Existing
-> code in pci_configure_mps() returns early for devices without an upstream
-> bridge (!bridge) which includes Root Ports, so their MPS values remain
-> at firmware/hardware defaults. This fails to utilize the controller's full
-> capabilities, leading to suboptimal data transfer efficiency across the
-> PCIe hierarchy.
+On Tue, Nov 11, 2025 at 03:43:36PM -0600, Bjorn Helgaas wrote:
+> On Tue, Nov 11, 2025 at 02:08:36PM +0100, Niklas Cassel wrote:
+> > On Tue, Oct 21, 2025 at 08:05:17AM +0530, Manivannan Sadhasivam wrote:
+> > > On Fri, 17 Oct 2025 18:32:53 +0200, Niklas Cassel wrote:
+> > > > The L1 substates support requires additional steps to work, namely:
+> > > > -Proper handling of the CLKREQ# sideband signal. (It is mostly handled by
+> > > >  hardware, but software still needs to set the clkreq fields in the
+> > > >  PCIE_CLIENT_POWER_CON register to match the hardware implementation.)
+> > > > -Program the frequency of the aux clock into the
+> > > >  DSP_PCIE_PL_AUX_CLK_FREQ_OFF register. (During L1 substates the core_clk
+> > > >  is turned off and the aux_clk is used instead.)
+> > > > 
+> > > > [...]
+> > > 
+> > > Applied, thanks!
+> > > 
+> > > [1/1] PCI: dw-rockchip: Prevent advertising L1 Substates support
+> > >       commit: 40331c63e7901a2cc75ce6b5d24d50601efb833d
+> > 
+> > Last update in this thread was "Applied, thanks!"
+> >
+> > and the patch was applied to pci/controller/dw-rockchip
+> > 
+> > since then it seems to have been demoted to
+> > pci/controller/dw-rockchip-pend
 > 
-> With this patch, during the host controller probing phase:
-> - When PCIe bus tuning is enabled (not PCIE_BUS_TUNE_OFF), and
-> - The device is a Root Port without an upstream bridge (!bridge),
-> The Root Port's MPS is set to its hardware-supported maximum value
-> (128 << dev->pcie_mpss).
+> That was Oct 20, and we had some conversation about a more generic
+> approach after that, so I moved it to dw-rockchip-pend while we worked
+> that out.
 > 
-> Note that this initial maximum MPS setting may be reduced later, during
-> downstream device enumeration, if any downstream device does not suppor
-> the Root Port's maximum MPS.
-> 
-> This change ensures Root Ports are properly initialized before downstream
-> devices negotiate MPS, while maintaining backward compatibility via the
-> PCIE_BUS_TUNE_OFF check.
-> 
+> I fleshed it out the generic approach and will post it soon.
 
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+Ok, thank you!
 
-> Suggested-by: Niklas Cassel <cassel@kernel.org>
-> Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
->   drivers/pci/probe.c | 12 ++++++++++++
->   1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 0ce98e18b5a8..2459def3af9b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2196,6 +2196,18 @@ static void pci_configure_mps(struct pci_dev *dev)
->   		return;
->   	}
->   
-> +	/*
-> +	 * Unless MPS strategy is PCIE_BUS_TUNE_OFF (don't touch MPS at all),
-> +	 * start off by setting Root Ports' MPS to MPSS. This only applies to
-> +	 * Root Ports without an upstream bridge (root bridges), as other Root
-> +	 * Ports will have downstream bridges. Depending on the MPS strategy
-> +	 * and MPSS of downstream devices, the Root Port's MPS may be
-> +	 * overridden later.
-> +	 */
-> +	if (!bridge && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-> +	    pcie_bus_config != PCIE_BUS_TUNE_OFF)
-> +		pcie_set_mps(dev, 128 << dev->pcie_mpss);
-> +
->   	if (!bridge || !pci_is_pcie(bridge))
->   		return;
->   
 
+Kind regards,
+Niklas
