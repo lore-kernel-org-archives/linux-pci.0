@@ -1,132 +1,109 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C6902FDC5B;
-	Wed, 12 Nov 2025 09:03:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B21CF2FFF81
+	for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2025 09:37:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762938217; cv=none; b=Xc4D2AldCeK3Vtfl+jFCidCxa+TqT4a/RFJddQIxcdvzbf1tNmnqMVrq+8LKqyUWuk+7sJv/+H5DU2M+MywzXBpEI0lRpaKDjTBcEQcVI4T4jiesgcE8NcoCUeDCSCnxvRXelFwfMufBU4PePS0hpPbs1NNTNvsP6CLgibxbNq4=
+	t=1762940257; cv=none; b=q3UknGo8CECTGSraMeqOX2NqFjjeeSM3VgktS4ePU4aGftdC//t4ssdO0/c2iWKJOIa/WDSZBZpOf/qY1AIIEjxnECr7KTKgAb1vfFFInY9/E35y026EXseNj17NdtzZKlhiwQcWbgVqipUbCS++VnxaA8cQxTeG1obLq8hMyuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762938217; c=relaxed/simple;
-	bh=7tURlJM86yJH4vMqghem7Jsbv4a+GRg87gUdHWRlhqU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CQAG/3s6ni78d8Yioq8F4h2h3ZGut157AWIBy7HKgcBcLGu6yTJZlJ0hZth7NQz+zPZaCQ6YS8l4Xk7WLPkSKQqTSPEg1WymdpKo/yq7ukgSV3XvXpfXLbRjsPcXqdOrCpiu9U8KKOHribViJegyTbJsNGTDhu7vsHbKhQg+yNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=PplWNV0P; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1762940257; c=relaxed/simple;
+	bh=hCDeVTqFeb8OCPymlEUvRNJIVTTjvVc1/ClAQBXXnOc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LZFMQjVtWbRx7y30CPo1dRLcO0WGAsy9VtAhmJdPhVoTKTxYVXu3ZLP8lLpVMcsKOS40I7lO/lRy0kEOKtrXPa3VnW2iId9C7jMGS3HRpAg/smx4+TNXyC+EbquTlGlJizJTGIhkWm0KCWegNZn3vvR30Qx973GrYbJ4glKhb10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WsF0FxMS; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="PplWNV0P"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AC8ndr14006241;
-	Wed, 12 Nov 2025 09:03:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=kmp/UD49T+mMXHBhn6G//elyFU+oJ4daqAG
-	JIwEP9CM=; b=PplWNV0P7iwhJ6RzivUM35cViADNGkgEsrNI5sQMenUqGWrzFXc
-	8kg2rkg4iUNmXJiRDheeTSQWQv13scIEeWFWAvhL8mQOmUd0vHKDu4ACZY7H40VF
-	e9xS1iiROiHm4JgcFfn5tHT/YCCjGihoIOr8Oqy4qdbCRPtamd5qvHm6clb8xQPv
-	qN4vvNfdyR6Zo/PR1j0CvapqdFA1KrOvCzEgMWc66FKf8+xu0E/BU7QbZMKCf98s
-	i7iIDN8V4mYGPxIIcasKKvBQKvLviZkSv2ZpCrd2t+jtKdwCowuV/y8IHerP3uc2
-	6ucnweTIsEd7u7dwaZuKj97JF8x7g6XXgEQ==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4acg5bh870-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 12 Nov 2025 09:03:24 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5AC93LG9012295;
-	Wed, 12 Nov 2025 09:03:21 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 4a9xxmq754-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 12 Nov 2025 09:03:21 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5AC93LQ5012283;
-	Wed, 12 Nov 2025 09:03:21 GMT
-Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5AC93KOW012280
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 12 Nov 2025 09:03:21 +0000
-Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id 716EB77B; Wed, 12 Nov 2025 17:03:19 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        krishna.chundru@oss.qualcomm.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v3 0/2] Add PCIe3 and PCIe5 support for HAMOA-IOT-EVK board
-Date: Wed, 12 Nov 2025 17:03:14 +0800
-Message-Id: <20251112090316.936187-1-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WsF0FxMS"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-b67cd5d88ddso87550a12.0
+        for <linux-pci@vger.kernel.org>; Wed, 12 Nov 2025 01:37:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762940255; x=1763545055; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VfWmqteduDoVLqj6JdhBgBiH8a4Ayud5Tb7Bt0CJ/gA=;
+        b=WsF0FxMS8mzXEeyWRR7r4qLWRZO3QGbSO39+9raslSbMBDM7uF3e3vgkocLsjZ278a
+         BYAU8rBorVNKWsZHM3+I44i1OurmXTuWZ0LwgLNUXYW883h2R69L3GXXqe8g1lOiCJxB
+         kyjv0K7P0ra9GSOpHWaJGGTHToKrOraFxDKibnMZm7LDj+0scKTDB/M0GKb292nJ3oYR
+         meLuSl/C+Gt+QB7Xz2gharKc/e99nCXIyNXzO6K/lpA7dUMO66xjnCREecQTSquqa7pM
+         xBfLuDoHfiwltF6xrNz8k5/hfD19IXO5+KB6pyMaq4ncy45n64VZipbXSl/YS0/UEbxQ
+         qQwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762940255; x=1763545055;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=VfWmqteduDoVLqj6JdhBgBiH8a4Ayud5Tb7Bt0CJ/gA=;
+        b=jU95UuJrIrxrD+yp4l3OwsZeCCc5sQOihsQFWvySY/qumEO4cpQJXPgMddnkuaYdD6
+         hzvYXF+Lnt4BjzX9PbRiFL2GuSCLCd+zyA3Kgn37fz2OvTDoLbDb6EMVuwBdbMu/j0zL
+         SFp5htD+0XGvPW920lGQwUUyqFokHVH/7zK12BjbshCGfl/k5THlETsLVNRqJoC4zumV
+         Ncj5qvwGZwG26ZhVEpF6JGeyP1QgrVnwL1XfV1bwpE3iY9tmX6E9v0h8MKv11Y9zJLA+
+         cR9xCoW0w3Z6B725Nep8TrSK+kYyfnJD0vYTR0k23PrRqOg0ElJ7kGsHRxEuokC3J5+d
+         ussQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVS+qE4r8XW3YaVxoC3ya9lVRKIw9/OTnNH3QVMdpI+zrsAWYXjtZjlKt6ElHQSAkWLcOZkbHVSn+g=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw/KH5JHFdMbSArBN36B9TrNTYHt+UwSiqt3s1NhUBjo7RuEpKc
+	6sriGIqe1Y3gYTv8GEQxbJiTiPNBDgty6q771T0D/0DFNpD3lIvrh4n7EcYiCJZLSMnVanqkdRe
+	ev8urw34Wfp1rsk7rIzSEUIocp/l5unc=
+X-Gm-Gg: ASbGnct1nTZLHxBiBeaUyozEekGFu3OfMyk7wCffhZatKn0qud4dMkanx/We2AM4+Sn
+	6ZJ3kn6SJO6W8zDPXbWyS4lNyCbfd0k2VGJ+R+dzKlw3w8FMamF/PXvT0jVQ1JX0EkExwysB9bh
+	YJQHRLqp7A7Q9a+CxuznYbWPurjI/nIS+baO6oKPYChdS0QHzw7JE0dr0FQiAd9a0r6Pli/lLA9
+	GXhWRN07E9RDcPLwymQLYof05aiTTEnRgOqkl2lCNcxb9aSU50uPFAVEvOskRVJYFrlRHiGLPv/
+	+HJ62dDlCLm74g+LfjYrmpSoo4H8p+66TyGpLrccVYJY45vBmcYAZvtRV9QnRZpCA2fHH8/Kmf5
+	O5Ro=
+X-Google-Smtp-Source: AGHT+IF7dXQUMFsuDu6yVFEy1qQhkvdBAqpDcIJQlWtpA21Ok2PTF3w0o0PHF/4blQHATl8xPBVAytdXYF1ksZ+cx+0=
+X-Received: by 2002:a17:902:d507:b0:295:3f35:a31b with SMTP id
+ d9443c01a7336-2984ec8c0d5mr19207665ad.0.1762940255046; Wed, 12 Nov 2025
+ 01:37:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: TrRre4cN3kxxGOAdTY9Db1hr6cDmKmIY
-X-Proofpoint-GUID: TrRre4cN3kxxGOAdTY9Db1hr6cDmKmIY
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTEyMDA3MCBTYWx0ZWRfX5vM68VZECLi6
- fGMuSV2S1Gxp6zmGivhzENv0KKxNWz3+AGPJRvRgNadpnWfV8QSbM+hPpnZzQrSqo9LN7NjhtoN
- ybnwwabPjBup0w1luyKfskRXXjp9QT6r38ZI2AlIPObyeSsXkB6xmqmy6AsjTpzch0E6/b3lSAI
- 88ZoUkN+L8Lh+wg+e0DOpAwGyyfAkLTHbD7+TJsoKnbCoIhL+yFmAbw1qz8cWW9rExmFaAqmLOA
- 9xpRUjXv0WZ2Hc5w+c0pKwLOV1dsh0Bi6drziXPEqKth4ldCArEWwmR8d3nU1nW7VLo7hNrI/+l
- 7XYGLg+u6p2D7Twmln10hsqlNeu3liWAg4WsScRiQp0SrvoULciQkBqqnzYh3Olk0Y3iTwA/dU4
- EH7L2XuwX0GpPdYKso0H3YJ0PHrDKA==
-X-Authority-Analysis: v=2.4 cv=YYawJgRf c=1 sm=1 tr=0 ts=69144d5c cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=QeMu0tCiC60fgC08giYA:9 a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22
- a=xoEH_sTeL_Rfw54TyV31:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-12_03,2025-11-11_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 impostorscore=0 malwarescore=0 spamscore=0
- priorityscore=1501 phishscore=0 lowpriorityscore=0 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2510240001 definitions=main-2511120070
+References: <20251101214629.10718-1-mt@markoturk.info> <aRRJPZVkCv2i7kt2@vps.markoturk.info>
+In-Reply-To: <aRRJPZVkCv2i7kt2@vps.markoturk.info>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Wed, 12 Nov 2025 10:37:22 +0100
+X-Gm-Features: AWmQ_bmCvbaIgHZdY2OvUnghnEILgb9lSGGzpn6r-4k_0J9xQP5iYx7rCXgAVnM
+Message-ID: <CANiq72kfy3RvCwxp7Y++fKTMrviP5CqC_Zts_NjtEtNCnpU3Mg@mail.gmail.com>
+Subject: Re: [PATCH] samples: rust: fix endianness issue in rust_driver_pci
+To: Marko Turk <mt@markoturk.info>, Dirk Behme <dirk.behme@de.bosch.com>
+Cc: dakr@kernel.org, bhelgaas@google.com, kwilczynski@kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This patch series adds support for PCIe3 and PCIe5 on the HAMOA-IOT-EVK
-board.
+On Wed, Nov 12, 2025 at 9:47=E2=80=AFAM Marko Turk <mt@markoturk.info> wrot=
+e:
+>
+> On Sat, Nov 01, 2025 at 10:46:54PM +0100, Marko Turk wrote:
+> > QEMU PCI test device specifies all registers as little endian. OFFSET
+> > register is converted properly, but the COUNT register is not.
+> >
+> > Apply the same conversion to the COUNT register also.
+> >
+> > Signed-off-by: Marko Turk <mt@markoturk.info>
+> > Fixes: 685376d18e9a ("samples: rust: add Rust PCI sample driver")
+>
+> Can someone take a look?
 
-PCIe3 is a Gen4 x8 slot intended for sata controller.
-PCIe5 is a Gen3 x2 slot designed for external modem connectivity.
+Your message was in my spam folder -- that may be affecting who saw it.
 
-To enable these interfaces, the series introduces the necessary device
-tree nodes and associated regulator definitions to ensure proper power
-sequencing and functionality.
+From https://www.qemu.org/docs/master/specs/pci-testdev.html:
 
----
-Changes in v3:
-- Update commit message and DT format (Bjron)
-- Merge PCIe3 and PCIe5 changes into one patch
-- Link to v2: https://lore.kernel.org/all/20251030084804.1682744-1-ziyue.zhang@oss.qualcomm.com/
+    "All registers are little endian."
 
-Changes in v2:
-- Move PMIC gpio pins to patch set 4 (Krishna)
-- Link to v1: https://lore.kernel.org/all/20250922075509.3288419-1-ziyue.zhang@oss.qualcomm.com/
+So this seems right. A couple tags:
 
-Ziyue Zhang (2):
-  arm64: dts: qcom: Add PCIe3 and PCIe5 support for HAMOA-IOT-SOM
-    platform
-  arm64: dts: qcom: Add PCIe3 and PCIe5 regulators for HAMAO-IOT-EVK
-    board
+Cc: stable@vger.kernel.org
+Link: https://www.qemu.org/docs/master/specs/pci-testdev.html
 
- arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts  | 83 +++++++++++++++++++++
- arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi | 79 ++++++++++++++++++++
- 2 files changed, 162 insertions(+)
+Cc'ing Dirk, since he tested the sample originally.
 
--- 
-2.34.1
+Thanks!
 
+Cheers,
+Miguel
