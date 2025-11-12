@@ -1,26 +1,55 @@
-Received: from mail-m1973173.qiye.163.com (mail-m1973173.qiye.163.com [220.197.31.73])
+Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazon11022111.outbound.protection.outlook.com [40.107.75.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DCD3A944;
-	Wed, 12 Nov 2025 02:19:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.73
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762913969; cv=none; b=TnLk++38gxOS/Lzj0eKi94DMGcd7HgDJwAA+Pv/fqenPAeahznte+ePmcEsKH+7g2/e/jBHnSAH19TWV77g6lORuuEAKSxkJwegKqkh2+ELWAH8N4cN7UB1d/odxfPCjFtY67PLXTpakU88KqNyNBk2bHb9qJbrBBJ34BcLS/Dk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762913969; c=relaxed/simple;
-	bh=zrv4BQuAkbeUDpzcVRThVXvibXJv+pWYHlspRCkMfOk=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=OVbvxen98DtEU8iJlEeckFE7oTKS7FoHlthO/mQKn8HaZz6AdWtmVVnePD+JReMrDWBMVUo3dm9fdMJPkvzh/ViJqDiN3T5zWpenV1LxSrqmxLVzHrf98vNZWHkg++MaoQIwBU6hfz78E0eFq+Y9RJMc6y8LSl+o1EQ0Nf+MPPg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=DNa5Gs7k; arc=none smtp.client-ip=220.197.31.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="DNa5Gs7k"
-Received: from [192.168.61.151] (unknown [110.83.51.2])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 293fd660a;
-	Wed, 12 Nov 2025 09:03:42 +0800 (GMT+08:00)
-Message-ID: <79a8c3cc-2b60-4bce-b1ba-7ab5f033f924@rock-chips.com>
-Date: Wed, 12 Nov 2025 09:03:38 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6B6822370D;
+	Wed, 12 Nov 2025 02:49:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.75.111
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762915799; cv=fail; b=P8CcCDvqm9FkujDVANMlXxEXUszEaNAWrQMHO5qi9kMfcdy0Kre+497hokYXZgdopJlF87ubXKNthxM3dLxkQOmfO9EFjT4vJQlNqZiH7Li/Fp2vOtZlkuSkmbYnORQXP+uvMIMBVtKBbbE/Gtk0XipFmFqL4iptJ5t/bIfnx54=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762915799; c=relaxed/simple;
+	bh=aAaK+fOiXBOm0RkUfxjWXFCAYAkD8GLQGttzI0yvlFQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mTioI4BYZHTVKef+gSiOWLaV77v8Tl+n6B/9JTQecZR4bsxn/1uBYnW89yARt5ppH28veheeNNHN90cSnkd5Nz0x0NJAGXBmwlsCXHHmyWn5USMDYOYR0JYBfLaVG7CY8FI6UUUJNKJc3F0YAHxajp4bbBeAuS06zbb/UhoVbdU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.75.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cyq2AkxHrmiDmv91djjP00tLCGrUR1VscSvSARaG7ts+WbvLnCE1Nx2XyhPZWuUf+2CRxxE87QN6JH30NiVjvEMj1jxlGzh6vU3Z39WqU9foVJMSl/H32r6cIJLNburPvux8PqpEybDLmAbAPEq5yJrr5HZvnI/KLQRoRnnaeVTaPdqLl1xIgbfk+L/YVZzZFlArBlk8j0V2bUh+7PnLp3Z4QXBIqhedUDahkOXZ2vOanun2Oi8xJUsFE0+BLOpDju+CoPfqIE2nLz5aCrFwTwP6/50yJgMESOp2Z6f1umuifPCaRMl2/hZCywBOy2bD0kaXRx1xGtzR3rRmxNto+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=zhJ1h/19pA1rVIw2NzIOWDwzP/r8gLb7prN4Oc3+rqY=;
+ b=tXRq7MS0iCK/mHHRCdsVLiN4XV1LmFGykcK7RdYwuTIo4P5PEm+Bpv63yRqFQMrE/KMvYwd+WJpPVzoCnKWTLAMJ4R73CjcdITfWOc0VHURjp9f6QKj9K+dFNqjL6Mz2aiX/5Ce+gsx7dWjfrNPjfT0TmhC20VAD6CeLPgvBGFfIcq60ZQPRcB4dqBgYST25mOREwvQiV90qel+xmu9YOKgMM1/shAMMO7zkVRCLx5zNgfXXsSqFZMHzihzWf4zu7HjtfB4JUz0dWV9eKKCC1h4ZtaFGSe8T0ZznW+34ayl0jHlsz/zbon9+Ecnto5CywlfDB9vNIYpMwTyzxZ02uw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 222.71.101.198) smtp.rcpttodomain=cknow-tech.com smtp.mailfrom=cixtech.com;
+ dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
+ not signed); arc=none (0)
+Received: from SI2PR06CA0016.apcprd06.prod.outlook.com (2603:1096:4:186::22)
+ by TYPPR06MB8208.apcprd06.prod.outlook.com (2603:1096:405:383::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.12; Wed, 12 Nov
+ 2025 02:49:51 +0000
+Received: from SG1PEPF000082E1.apcprd02.prod.outlook.com
+ (2603:1096:4:186:cafe::b) by SI2PR06CA0016.outlook.office365.com
+ (2603:1096:4:186::22) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9320.15 via Frontend Transport; Wed,
+ 12 Nov 2025 02:49:47 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
+ smtp.mailfrom=cixtech.com; dkim=none (message not signed)
+ header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
+Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
+ 222.71.101.198 as permitted sender) receiver=protection.outlook.com;
+ client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
+Received: from smtprelay.cixcomputing.com (222.71.101.198) by
+ SG1PEPF000082E1.mail.protection.outlook.com (10.167.240.4) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9320.13 via Frontend Transport; Wed, 12 Nov 2025 02:49:49 +0000
+Received: from [172.16.96.116] (unknown [172.16.96.116])
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 4AEBA41C0141;
+	Wed, 12 Nov 2025 10:49:48 +0800 (CST)
+Message-ID: <e8ef529b-b2e9-4c39-8137-60795fda7773@cixtech.com>
+Date: Wed, 12 Nov 2025 10:49:47 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -28,7 +57,10 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Manivannan Sadhasivam <mani@kernel.org>,
+Subject: Re: [PATCH 3/4] PCI: dw-rockchip: Configure L1sub support
+To: Bjorn Helgaas <helgaas@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
  Lorenzo Pieralisi <lpieralisi@kernel.org>,
  =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
  Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
@@ -40,180 +72,194 @@ Cc: shawn.lin@rock-chips.com, Manivannan Sadhasivam <mani@kernel.org>,
  Sascha Hauer <s.hauer@pengutronix.de>, Fabio Estevam <festevam@gmail.com>,
  Conor Dooley <conor@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>,
  Thierry Reding <thierry.reding@gmail.com>,
- Jonathan Hunter <jonathanh@nvidia.com>, Hans Zhang <hans.zhang@cixtech.com>,
- linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
- kernel@pengutronix.de, Bjorn Helgaas <bhelgaas@google.com>,
- Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH 1/4] PCI: dwc: Advertise L1 PM Substates only if driver
- requests it
-To: Bjorn Helgaas <helgaas@kernel.org>
+ Jonathan Hunter <jonathanh@nvidia.com>, linux-tegra@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-rockchip@lists.infradead.org, kernel@pengutronix.de,
+ Bjorn Helgaas <bhelgaas@google.com>
 References: <20251111221621.2208606-1-helgaas@kernel.org>
- <20251111221621.2208606-2-helgaas@kernel.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20251111221621.2208606-2-helgaas@kernel.org>
+ <20251111221621.2208606-4-helgaas@kernel.org>
+Content-Language: en-US
+From: Hans Zhang <hans.zhang@cixtech.com>
+In-Reply-To: <20251111221621.2208606-4-helgaas@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9a759702a009cckunm68f60faf90264
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkaTUNNVkxJSRoZGR5KTRoaHlYVFAkWGhdVEwETFh
-	oSFyQUDg9ZV1kYEgtZQVlKSktVQ0hVTkpVSVlXWRYaDxIVHRRZQVlPS0hVSktISkpCTVVKS0tVSk
-	JZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=DNa5Gs7krwEhPUprrj/3XgxdSRjNLBnw+qN8B4C1vhJlTX/vfffYkqXOnhtb/6isIcgYPxadD7Z2X5DoSALMwp3BimgGwfur5wMUdCPUpgAhoDNn1bx0HLtK5uyLXSstW6gi7Ky7ThJ0IqZ6g1wO8KJqM501+F+nkx1fxrx3axo=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=X0Bnr2iJChPdZ80UCVLiI+51ilZQPsF7USzqD4IyGeA=;
-	h=date:mime-version:subject:message-id:from;
+Content-Transfer-Encoding: 7bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SG1PEPF000082E1:EE_|TYPPR06MB8208:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2a4b5c70-cfa5-4e0e-6de1-08de219625a8
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|82310400026|376014|7416014|36860700013;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?N1Y5WG1acmE5TFBITlpjS0djdWxpdXY3a0dzSnl0Q1JWV0xlYjFYSmdsZVQ5?=
+ =?utf-8?B?NXQ3dG96dWFWdTF6UktQZFlMMENkUUlhU2Jyc2szT3U5cDB2emc3OFBLdnB4?=
+ =?utf-8?B?VUlxNEtrcXgwZUJrY2Q4UVVtMjF2RXZwVDJFYVp1ZVE0ck9BVnFaQS9HTU8w?=
+ =?utf-8?B?OXpJeGZoRkJNVUNBUjE0S0VJTEd1T0l3M1BSMGxFTG15RG0vdWYvKzZZTmZS?=
+ =?utf-8?B?d0tkbWJTbkVHcUFKRXpyV21pQ25vUjlVZk9uZmpaNStDd0tRVEFuZm9tZXlz?=
+ =?utf-8?B?L1dhTTA1bmtaazRXemU0TDkyQm1JZy9VRHpKeENMQVhzWTkxR2hRUEhNS2hl?=
+ =?utf-8?B?cUs4c2pteERFZHNHcHl6Nm9NMHptcG84UVY3ME85Tys2aHRrN2ZBRUFVbjNM?=
+ =?utf-8?B?M0h3bXZERU81c3VLakd2Z1Bvd0QyMHFWUnQ2YS9YNHdUMEJ1QUtFazNsUS9t?=
+ =?utf-8?B?cFJ1TzU5eUhDZG82NlY4ZDVDOFBVZEtZK2VvcytZWFd4RGUxQkNBSWFRMklQ?=
+ =?utf-8?B?N2NwNTRDSDVoaFlEckc4aEpRbEZYd01FSis2aGxNaWRxV0JQZmJsUmZucjRu?=
+ =?utf-8?B?ZlFJTFMzbW1WWU03MnhZSzlsekx3MWVxd2lLRDdRYlB3ekROZjZmVDJlWTUv?=
+ =?utf-8?B?cHdDcDZZR2RwbTNHdVV5YUVxNDUweEhHOGZ4dElVUHltdkVra0dhancrSzFv?=
+ =?utf-8?B?UkZ1MWQzMmw2NkFWcmxOR3dXQWNSV05DcWRXQnJPK1VPOTYwZFBGVnFUSWRh?=
+ =?utf-8?B?bkFySUY1S0RBRWgvSGdJSjBGcGNKVzB4KzQ1U2lnRmI2Nk5QN0hGeGtobS9J?=
+ =?utf-8?B?QUJoRDk5eWUxekZqWldNSFFicCtSL1RZa1JNV3RXd2k0b0lpZDJWcWdoSWlN?=
+ =?utf-8?B?NUdZWTJQYm1EY0RMV3RKcDdsNnhJVWtzc1g5TTR1Y0xqNzMvRTNjVHhRQ05r?=
+ =?utf-8?B?bWdTaUpKcEJVbVFaNDZ6OFZBUzlIWVZ1dkxMdU9vQS82ZFJ5SlplVWVhZUNQ?=
+ =?utf-8?B?YTlISWNvcmFGYVlxTUZ1bzdHbEs2TmNGczlsdWpTa1hNRTlwS2RWcWhnbGtt?=
+ =?utf-8?B?YTVnS041dGZvczNxbTByOFBlczd6bVU5RXh1dVVqYlRLaTllNlg4U2FwWU41?=
+ =?utf-8?B?ZlZDQUh3Z2JhS0p1ekpBRUE5ZU5tWGtDTDBYbnFTa2F3VWVtK2MxMmxHTHVz?=
+ =?utf-8?B?YXlYdjBKSmlBK2E0L09QK1BxemtWcXk0UjM0Smt2S3F3K2hORmhyTXdSR3FM?=
+ =?utf-8?B?WVJxSndkcXluLzZ2VTJlOGxUZE8xaEYzNFpEamF6dXlYQzNYbEZnR01WUHEw?=
+ =?utf-8?B?dWlFd2kxQnNHc3V6bXBKd2lyQXZWdHdVQ1RwbWZ3R0JHY21ZZlBxN3ZnS3pH?=
+ =?utf-8?B?NjkvMTM2NklrbnFIemcwZ2tFb3VWMFhzZHptbzc5SzREQ1VsOVFXRTdkTnBI?=
+ =?utf-8?B?RjliUlZja2hYVVVzWXlRU01NSklCYzF3TDZhVktQOTM1N1RDejhmZVE5RnI1?=
+ =?utf-8?B?NTNud1h0eGVaR0lhREpJM3FnTEtYaHZPNVBERlFJVUJEZnhrVmFVK1hlNzEw?=
+ =?utf-8?B?RGdFYUdIaUVydjZvSHIrVk81S2FNZWs2a0lKN3RETFJzNmJWZTc5MzB3Zkwy?=
+ =?utf-8?B?VzV5TzZITGxjanlaNzB5V3JreUZLMHZ6dFE0TDhPSGQzeWFEcis1aVpRWUpn?=
+ =?utf-8?B?allMcEUyQTc0bkttZWtvcFlkcUNSa1Q2aVhxZHFENktXbkM4bmZWTVpGSGVx?=
+ =?utf-8?B?YXFCZi8yRFcxVlBUNThRYUpzSldxVngyc1EzTzAvaFBWUWhrSW1kQjZCZ2lv?=
+ =?utf-8?B?bVN3aVlHbUsvZFVDSFFpT2gyVUtQdWs3NlFmSVZ4bTFtdVR2YkpZS0JDc0VN?=
+ =?utf-8?B?S0pRWkJQcWRSVElyM1NaNjhxVHppZXdYcHVpRUtFaDJnSThIbXo1S21NMVRo?=
+ =?utf-8?B?OUdsOGZpc2Urenk4UmhoY0NuUi82aXZGUjZQTzM1cG9ESGNLYW4wdkJuOTBq?=
+ =?utf-8?B?UEdTcnlYYUliVnJHSTgzdktxT3VTNEcwR29yTC9vK1lUanFac3Juckl1S09G?=
+ =?utf-8?Q?qRWVoK?=
+X-Forefront-Antispam-Report:
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(7416014)(36860700013);DIR:OUT;SFP:1102;
+X-OriginatorOrg: cixtech.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2025 02:49:49.2380
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2a4b5c70-cfa5-4e0e-6de1-08de219625a8
+X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SG1PEPF000082E1.apcprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYPPR06MB8208
 
-在 2025/11/12 星期三 6:16, Bjorn Helgaas 写道:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> L1 PM Substates require the CLKREF# signal and may also require
-> device-specific support.  If CLKREF# is not supported or driver support is
-> lacking, enabling L1.1 or L1.2 may cause errors when accessing devices,
-> e.g.,
-> 
->    nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
-> 
-> If the kernel is built with CONFIG_PCIEASPM_POWER_SUPERSAVE=y or users
-> enable L1.x via sysfs, users may trip over these errors even if L1
-> Substates haven't been enabled by firmware or the driver.
-> 
-> To prevent such errors, disable advertising the L1 PM Substates unless the
-> driver sets "dw_pcie.l1ss_support" to indicate that it knows CLKREF# is
-> present and any device-specific configuration has been done.
-> 
-> Set "dw_pcie.l1ss_support" in tegra194 (if DT includes the
-> "supports-clkreq' property) and qcom (for 2.7.0 controllers) so they can
-> continue to use L1 Substates.
-> 
-> Based on Niklas's patch:
-> https://patch.msgid.link/20251017163252.598812-2-cassel@kernel.org
 
 
-Except the issue Fank pointed out, the commit msg says CLKREF# 3 times
-which seems not a term from spec. Should it be CLKREQ# ?
-
-Otherwise,
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-
+On 11/12/2025 6:16 AM, Bjorn Helgaas wrote:
+> EXTERNAL EMAIL
 > 
+> From: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> L1 PM Substates for RC mode require support in the dw-rockchip driver
+> including proper handling of the CLKREQ# sideband signal. It is mostly
+> handled by hardware, but software still needs to set the clkreq fields
+> in the PCIE_CLIENT_POWER_CON register to match the hardware implementation.
+> 
+> For more details, see section '18.6.6.4 L1 Substate' in the RK3658 TRM 1.1
+> Part 2, or section '11.6.6.4 L1 Substate' in the RK3588 TRM 1.0 Part2.
+> 
+> Meanwhile, for the EP mode, we haven't prepared enough to actually support
+> L1 PM Substates yet. So disable it now until proper support is added later.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> [bhelgaas: set pci->l1ss_support so DWC core preserves L1SS Capability bits;
+> drop corresponding code here]
 > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Link: https://patch.msgid.link/1761187883-150120-1-git-send-email-shawn.lin@rock-chips.com
+
+
+Reviewed-by: Hans Zhang <hans.zhang@cixtech.com>
+
+Best regards,
+Hans
+
 > ---
->   .../pci/controller/dwc/pcie-designware-ep.c   |  2 ++
->   .../pci/controller/dwc/pcie-designware-host.c |  2 ++
->   drivers/pci/controller/dwc/pcie-designware.c  | 24 +++++++++++++++++++
->   drivers/pci/controller/dwc/pcie-designware.h  |  2 ++
->   drivers/pci/controller/dwc/pcie-qcom.c        |  2 ++
->   drivers/pci/controller/dwc/pcie-tegra194.c    |  3 +++
->   6 files changed, 35 insertions(+)
+>   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 38 +++++++++++++++++++
+>   1 file changed, 38 insertions(+)
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> index 7f2112c2fb21..c94cff6eeb01 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -966,6 +966,8 @@ int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
->   	if (ep->ops->init)
->   		ep->ops->init(ep);
->   
-> +	dw_pcie_config_l1ss(pci);
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index 3e2752c7dd09..62a095752833 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -62,6 +62,12 @@
+>   /* Interrupt Mask Register Related to Miscellaneous Operation */
+>   #define PCIE_CLIENT_INTR_MASK_MISC     0x24
+> 
+> +/* Power Management Control Register */
+> +#define PCIE_CLIENT_POWER_CON          0x2c
+> +#define  PCIE_CLKREQ_READY             FIELD_PREP_WM16(BIT(0), 1)
+> +#define  PCIE_CLKREQ_NOT_READY         FIELD_PREP_WM16(BIT(0), 0)
+> +#define  PCIE_CLKREQ_PULL_DOWN         FIELD_PREP_WM16(GENMASK(13, 12), 1)
 > +
->   	ptm_cap_base = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_PTM);
->   
->   	/*
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 20c9333bcb1c..f1d5b45a3214 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -1060,6 +1060,8 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
->   		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
->   	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
->   
-> +	dw_pcie_config_l1ss(pci);
-> +
->   	dw_pcie_config_presets(pp);
->   	/*
->   	 * If the platform provides its own child bus config accesses, it means
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index c644216995f6..ede686623fad 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -1081,6 +1081,30 @@ void dw_pcie_edma_remove(struct dw_pcie *pci)
->   	dw_edma_remove(&pci->edma);
+>   /* Hot Reset Control Register */
+>   #define PCIE_CLIENT_HOT_RESET_CTRL     0x180
+>   #define  PCIE_LTSSM_APP_DLY2_EN                BIT(1)
+> @@ -85,6 +91,7 @@ struct rockchip_pcie {
+>          struct regulator *vpcie3v3;
+>          struct irq_domain *irq_domain;
+>          const struct rockchip_pcie_of_data *data;
+> +       bool supports_clkreq;
+>   };
+> 
+>   struct rockchip_pcie_of_data {
+> @@ -200,6 +207,32 @@ static bool rockchip_pcie_link_up(struct dw_pcie *pci)
+>          return FIELD_GET(PCIE_LINKUP_MASK, val) == PCIE_LINKUP;
 >   }
->   
-> +void dw_pcie_config_l1ss(struct dw_pcie *pci)
+> 
+> +/*
+> + * See e.g. section '11.6.6.4 L1 Substate' in the RK3588 TRM V1.0 for the steps
+> + * needed to support L1 substates. Currently, just enable L1 substates for RC
+> + * mode if CLKREQ# is properly connected and supports-clkreq is present in DT.
+> + * For EP mode, there are more things should be done to actually save power in
+> + * L1 substates, so disable L1 substates until there is proper support.
+> + */
+> +static void rockchip_pcie_configure_l1sub(struct dw_pcie *pci)
 > +{
-> +	u16 l1ss;
-> +	u32 l1ss_cap;
+> +       struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
 > +
-> +	if (!pci->l1ss_support)
-> +		return;
+> +       /* Enable L1 substates if CLKREQ# is properly connected */
+> +       if (rockchip->supports_clkreq &&
+> +           rockchip->data->mode == DW_PCIE_RC_TYPE ) {
+> +               rockchip_pcie_writel_apb(rockchip, PCIE_CLKREQ_READY,
+> +                                        PCIE_CLIENT_POWER_CON);
+> +               pci->l1ss_support = true;
+> +               return;
+> +       }
 > +
-> +	l1ss = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_L1SS);
-> +	if (!l1ss)
-> +		return;
-> +
-> +	/*
-> +	 * Unless the driver claims "l1ss_support", don't advertise L1 PM
-> +	 * Substates because they require CLKREF# and possibly other
-> +	 * device-specific configuration.
-> +	 */
-> +	l1ss_cap = dw_pcie_readl_dbi(pci, l1ss + PCI_L1SS_CAP);
-> +	l1ss_cap &= ~(PCI_L1SS_CAP_PCIPM_L1_1 | PCI_L1SS_CAP_ASPM_L1_1 |
-> +		      PCI_L1SS_CAP_PCIPM_L1_2 | PCI_L1SS_CAP_ASPM_L1_2 |
-> +		      PCI_L1SS_CAP_L1_PM_SS);
-> +	dw_pcie_writel_dbi(pci, l1ss + PCI_L1SS_CAP, l1ss_cap);
+> +       /* Otherwise, pull down CLKREQ# */
+> +       rockchip_pcie_writel_apb(rockchip,
+> +                                PCIE_CLKREQ_PULL_DOWN | PCIE_CLKREQ_NOT_READY,
+> +                                PCIE_CLIENT_POWER_CON);
 > +}
 > +
->   void dw_pcie_setup(struct dw_pcie *pci)
+>   static void rockchip_pcie_enable_l0s(struct dw_pcie *pci)
 >   {
->   	u32 val;
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index e995f692a1ec..8d14b1fe2280 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -516,6 +516,7 @@ struct dw_pcie {
->   	int			max_link_speed;
->   	u8			n_fts[2];
->   	struct dw_edma_chip	edma;
-> +	bool			l1ss_support;	/* L1 PM Substates support */
->   	struct clk_bulk_data	app_clks[DW_PCIE_NUM_APP_CLKS];
->   	struct clk_bulk_data	core_clks[DW_PCIE_NUM_CORE_CLKS];
->   	struct reset_control_bulk_data	app_rsts[DW_PCIE_NUM_APP_RSTS];
-> @@ -573,6 +574,7 @@ int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
->   				int type, u64 parent_bus_addr,
->   				u8 bar, size_t size);
->   void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index);
-> +void dw_pcie_config_l1ss(struct dw_pcie *pci);
->   void dw_pcie_setup(struct dw_pcie *pci);
->   void dw_pcie_iatu_detect(struct dw_pcie *pci);
->   int dw_pcie_edma_detect(struct dw_pcie *pci);
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 805edbbfe7eb..61c2f4e2f74d 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1067,6 +1067,8 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
->   	val &= ~REQ_NOT_ENTR_L1;
->   	writel(val, pcie->parf + PARF_PM_CTRL);
->   
-> +	pci->l1ss_support = true;
+>          u32 cap, lnkcap;
+> @@ -264,6 +297,7 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
+>          irq_set_chained_handler_and_data(irq, rockchip_pcie_intx_handler,
+>                                           rockchip);
+> 
+> +       rockchip_pcie_configure_l1sub(pci);
+>          rockchip_pcie_enable_l0s(pci);
+> 
+>          return 0;
+> @@ -301,6 +335,7 @@ static void rockchip_pcie_ep_init(struct dw_pcie_ep *ep)
+>          struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>          enum pci_barno bar;
+> 
+> +       rockchip_pcie_configure_l1sub(pci);
+>          rockchip_pcie_enable_l0s(pci);
+>          rockchip_pcie_ep_hide_broken_ats_cap_rk3588(ep);
+> 
+> @@ -412,6 +447,9 @@ static int rockchip_pcie_resource_get(struct platform_device *pdev,
+>                  return dev_err_probe(&pdev->dev, PTR_ERR(rockchip->rst),
+>                                       "failed to get reset lines\n");
+> 
+> +       rockchip->supports_clkreq = of_property_read_bool(pdev->dev.of_node,
+> +                                                         "supports-clkreq");
 > +
->   	val = readl(pcie->parf + PARF_AXI_MSTR_WR_ADDR_HALT_V2);
->   	val |= EN;
->   	writel(val, pcie->parf + PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 10e74458e667..3934757baa30 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -703,6 +703,9 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
->   	val |= (pcie->aspm_pwr_on_t << 19);
->   	dw_pcie_writel_dbi(pci, pcie->cfg_link_cap_l1sub, val);
->   
-> +	if (pcie->supports_clkreq)
-> +		pci->l1ss_support = true;
-> +
->   	/* Program L0s and L1 entrance latencies */
->   	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
->   	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
+>          return 0;
+>   }
+> 
+> --
+> 2.43.0
+> 
 
