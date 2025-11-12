@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5695E340DA1;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7188341ACA;
 	Wed, 12 Nov 2025 14:45:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762958731; cv=none; b=sAdGrUIut7I21WjmBA31FMP7c1hFZgvU8v6OctXRFepWhRTygjX/bqfR8QKBdyajC8SfESqd9am6maSeAU3f0Bx5zbGmn9g2z0JyYgT5ULWBi6JuSMqQOEIsyfEhOpUwho1ABABHhDt+NRRBORv3dFnnKBm41rJA+71av1MrkE8=
+	t=1762958731; cv=none; b=YJAz/qzukTf6kbvScbUC1CHADt9/slbz6c1UOfEqEINf3L/g/RuG3P5df8woYWUFqe/uWPu85lAMBsjdmsvKaYOjYMksrU6LbktZEdXUj6JjLATx0hfGOqa/Z9JizzoHEm9SjJMIbZ3uOAIRocHdVZwtbd1m3RszWe0T6jNWBIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762958731; c=relaxed/simple;
-	bh=fcOLB6aV+fb9mRzie6Oop52h19x8OdlUrwUv/AKoKFg=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=JSyWC3Te7D6FADdb7XhMzMxFFhtC2dSiM2WFmtl1DKZF0W7S0tmOA3dyAgbPgOcBKHpAjdYQYF7p329XkTtJqNBupimuDog9qldCWCTSrnOIRmX0M0PyKy0a2bSpWTgr6SCmI4pR1BIL9aUKO4bVJ/WDuIyvclR4f6PUV9sRVVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DD47qKdS; arc=none smtp.client-ip=10.30.226.201
+	bh=2UqdtptdBU2Ixkj2Mo9/MHhheDA/CJ3F+dFzasuy1xo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=pbmyKaPzBT1++IALrrmR9+yAzdqf30gFnTxm1CEMHjaKfhZ3dZL3jtKyn3FFEOpHMFaPgThjmMkJITKMbcIhzaTdf7uTgSFDdwm2Gnny1MC1Yk5oX/FHqmw45Zty2SYt+rlq959DLnm7hCV+VjGP2bkWk6ur0Um2YiS3XV6hNQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WQA92Js0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DD47qKdS"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DA33FC4CEF7;
-	Wed, 12 Nov 2025 14:45:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WQA92Js0"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4EFF3C19422;
+	Wed, 12 Nov 2025 14:45:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762958730;
-	bh=fcOLB6aV+fb9mRzie6Oop52h19x8OdlUrwUv/AKoKFg=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=DD47qKdSYQ2MPF/TkXcFFe0n9leIQo0XfMLbzvkaLamsT0/2HIWyknK4dmpk/dJlR
-	 dX21PGHPhCCkzk8lfNWXAUzVbhlINu8tPnh1KG4uzX7ZabO4ql3vIUzJpBRI25y+I6
-	 SpoeJWQPQT65DqXLpNWqI0q9CtgAbgIz/QWoRL1KZwSyKhNGx76t5EkzxTgd1CttrZ
-	 rCbzwnGZotWelmt1HGXJ4WD+FaQUEUS5d4Li+T1qppL0jd0RH4juRL3c5a8UwZvRpn
-	 WY5CkaMk4qz5iPaPqqImA1GAF260TzRQKqGzGzpHhf7MU9imtKis0bzrDNw/VHwYS/
-	 3dliOTMtOMdhg==
+	s=k20201202; t=1762958731;
+	bh=2UqdtptdBU2Ixkj2Mo9/MHhheDA/CJ3F+dFzasuy1xo=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=WQA92Js0w72MQOUczTasWwm2xlPxoQQuD9RIkfRgljxRVBgRGO7EqQ+3MaS4tPlbj
+	 +WrmcusZwVDML4m1U+Gk2Pcp4OXEJI3y2LL24Wo9pNfEy3jL5/gH3i1QTymgdYpUVM
+	 4CV4pSt0jiANM81if0pkuYihmV1ji8kBWYZ1vlk5KWr8sNaEJoqzeQuMevQ3egUQjI
+	 oWiV83tZ05moTpWoa90DGFUJnPg5Olc6nJJf/K8J/xNmqeGZmAOzPeVdeI63d8b3kA
+	 1Z9dpHsYeLwOgxDZQc4kofK2eHAC7lSBU65RinBe9kfeGV6maRk1VTE2kIINqPzCbM
+	 OfP/ibbIk3wZQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7606CCF9E3;
-	Wed, 12 Nov 2025 14:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4758FCCF9E3;
+	Wed, 12 Nov 2025 14:45:31 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH 0/9] Add support for handling PCIe M.2 Key E connectors in
- devicetree
-Date: Wed, 12 Nov 2025 20:15:12 +0530
-Message-Id: <20251112-pci-m2-e-v1-0-97413d6bf824@oss.qualcomm.com>
+Date: Wed, 12 Nov 2025 20:15:19 +0530
+Subject: [PATCH 7/9] dt-bindings: connector: Add PCIe M.2 Mechanical Key E
+ connector
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,10 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHidFGkC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDI1NDQ0Mj3YLkTN1cI91UXUsTM0vTxGTLFDNTcyWg8oKi1LTMCrBR0bG1tQB
- YQKlsWgAAAA==
-X-Change-ID: 20251112-pci-m2-e-94695ac9d657
+Message-Id: <20251112-pci-m2-e-v1-7-97413d6bf824@oss.qualcomm.com>
+References: <20251112-pci-m2-e-v1-0-97413d6bf824@oss.qualcomm.com>
+In-Reply-To: <20251112-pci-m2-e-v1-0-97413d6bf824@oss.qualcomm.com>
 To: Rob Herring <robh@kernel.org>, 
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
  Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
@@ -65,16 +64,16 @@ Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
  Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5716;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7404;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=fcOLB6aV+fb9mRzie6Oop52h19x8OdlUrwUv/AKoKFg=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpFJ2G7KlzBgIqqLqxlA+KZvF2LQnt5o2J4sC6m
- 5T22DpFW/+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaRSdhgAKCRBVnxHm/pHO
- 9QjrB/9XHscvM2AZEr4cvvGDU7LjMbW+6OH13K8HChauuQQq1sQCyda01k1+C75y7jgDegnxjIn
- r/fanARmC5BGZzRB7ZqmyhtHbsc6bfXuHVAYY9mf21mbN04Yt15eeIDlBTlrblXStHlXP14Iu7H
- gjw3GxZ8oMZM/6oaqpcjJjFUNGRC1TWsWnL1V84Ao9qRMJ75TN2fLZyG+4Pd7m803HQEDmIjFZR
- qvZfU3tT96zNXbmmhFkxKgPsvOk9XV104b84AvbJlgjDhuYnU7Y2j4x7J1Y5kdZGUa6zIHnXUiD
- OUpq3nlOAZCKUrLvb5zIfglGBLIUYTafIbPLj2me6+pJP+Cg
+ bh=s83ZX+5+i5VDAPG771sdizpD1jqft8fr1qXw80NJhok=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpFJ2HAPeWlv7bxfpUlwZrq2eqL3B2nVw3qpmIH
+ bgfv2cgTneJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaRSdhwAKCRBVnxHm/pHO
+ 9e5yB/9c2QjpAQ2X7j7qFmJw54Xgp6/fZhxz1XrqzykT4/6U2xPB6br5UlaEPsdYY0S4tWN/rNl
+ Bdh8O/MXRVpNH62jeumxFECbruUSWlZZcRy7RGtJLF32xcF9yKdeKtWrogWd6BiSL8uIlb2EdK7
+ Bqyv6K8PCaXmjL6LiY9JD3szgTVH/VGJBbt4n31cboa4/e+yToAKTrpy+ssx0JWtPAq5G2ZObTU
+ U3vttxrc9umk6WzybukzRadJai0JEpfc6RMsU8SJ8481FmJsw1e73JPioel5ZnHNOf0cV5bVjS4
+ D2+lpTm6sXpYBVRfip9vTMlEH7j+N3GAznvKmzDctuXFnnou
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -82,124 +81,203 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series is the continuation of the series [1] that added the initial support
-for the PCIe M.2 connectors. This series extends it by adding support for Key E
-connectors. These connectors are used to connect the Wireless Connectivity
-devices such as WiFi, BT, NFC and GNSS devices to the host machine over
-interfaces such as PCIe/SDIO, USB/UART and NFC. This series adds support for
-connectors that expose PCIe interface for WiFi and UART interface for BT. Other
-interfaces are left for future improvements.
+Add the devicetree binding for PCIe M.2 Mechanical Key E connector defined
+in the PCI Express M.2 Specification, r4.0, sec 5.1.2. This connector
+provides interfaces like PCIe or SDIO to attach the WiFi devices to the
+host machine, USB or UART+PCM interfaces to attach the Bluetooth (BT)
+devices along with additional interfaces like I2C for NFC solution. At any
+point of time, the connector can only support either PCIe or SDIO as the
+WiFi interface and USB or UART as the BT interface.
 
-Serdev device support for BT
-============================
+The connector provides a primary power supply of 3.3v, along with an
+optional 1.8v VIO supply for the Adapter I/O buffer circuitry operating at
+1.8v sideband signaling.
 
-Adding support for the PCIe interface was mostly straightforward and a lot
-similar to the previous Key M connector. But adding UART interface has proved to
-be tricky. This is mostly because of the fact UART is a non-discoverable bus,
-unlike PCIe which is discoverable. So this series relied on the PCI notifier to
-create the serdev device for UART/BT. This means the PCIe interface will be
-brought up first and after the PCIe device enumeration, the serdev device will
-be created by the pwrseq driver. This logic is necessary since the connector
-driver and DT node don't describe the device, but just the connector. So to make
-the connector interface Plug and Play, the connector driver uses the PCIe device
-ID to identify the card and creates the serdev device. This logic could be
-extended in the future to support more M.2 cards. Even if the M.2 card uses SDIO
-interface for connecting WLAN, a SDIO notifier could be added to create the
-serdev device.
-
-Open questions
-==============
-
-Though this series adds the relevant functionality for handling the M.2 Key M
-connectors, there are still a few open questions exists on the design. 
-
-1. I've used the M.2 card model name as the serdev device name. This is found
-out by comparing the PCIe VID:PID in the notifier. Is this approach acceptable?
-I did not use the PID as the serdev name since it will vary if the SDIO
-interface is used in the future.
-
-2. PCIe client drivers of some M.2 WLAN cards like the Qcom QCA6390, rely on
-the PCIe device DT node to extract properties such as
-'qcom,calibration-variant', 'firmware-name', etc... For those drivers, should we
-add the PCIe DT node in the Root Port in conjunction with the Port node as
-below?
-
-pcie@0 {
-	wifi@0 {
-		compatible = "pci17cb,1103";
-		...
-		qcom,calibration-variant = "LE_X13S";
-	};
-
-	port {
-		pcie4_port0_ep: endpoint {
-			remote-endpoint = <&m2_e_pcie_ep>;
-		};
-	};
-};
-
-This will also require marking the PMU supplies optional in the relevant ath
-bindings for M.2 cards.
-
-3. Some M.2 cards require specific power up sequence like delays between
-regulator/GPIO and such. For instance, the WCN7850 card supported in this series
-requires 50ms delay between powering up an interface and driving it. I've just
-hardcoded the delay in the driver, but it is a pure hack. Since the pwrseq
-driver doesn't know anything about the device it is dealing with before powering
-it ON, how should it handle the device specific power requirements? Should we
-hardcode the device specific property in the connector node? But then, it will
-no longer become a generic M.2 connector and sort of defeats the purpose of the
-connector binding.
-
-I hope to address these questions with the help of the relevant subsystem
-maintainers and the community. Until then, this series is *not* mergeable as a
-whole.
-
-Testing
-=======
-
-This series, together with the devicetree changes [2] was tested on the
-Qualcomm X1e based Lenovo Thinkpad T14s Laptop which has the WCN7850 WLAN/BT M.2
-card connected over PCIe and UART.
-
-[1] https://lore.kernel.org/linux-pci/20251108-pci-m2-v2-0-e8bc4d7bf42d@oss.qualcomm.com
-[2] https://github.com/Mani-Sadhasivam/linux/commit/d39b81b3ff1ecfb0d423b4da0771925d41648b5a
+The connector also supplies optional signals in the form of GPIOs for fine
+grained power management.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Manivannan Sadhasivam (9):
-      serdev: Convert to_serdev_device() and to_serdev_controller() helpers to macros
-      serdev: Add serdev device based driver match support
-      serdev: Allow passing the serdev device name to serdev_device_add()
-      serdev: Add an API to find the serdev controller associated with the devicetree node
-      serdev: Add modalias support for serdev client devices
-      serdev: Skip registering serdev devices from DT is external connector is used
-      dt-bindings: connector: Add PCIe M.2 Mechanical Key E connector
-      Bluetooth: hci_qca: Add support for WCN7850 PCIe M.2 card
-      power: sequencing: pcie-m2: Add support for PCIe M.2 Key E connectors
-
- .../bindings/connector/pcie-m2-e-connector.yaml    | 154 +++++++++++++++
+ .../bindings/connector/pcie-m2-e-connector.yaml    | 154 +++++++++++++++++++++
  MAINTAINERS                                        |   1 +
- drivers/bluetooth/hci_qca.c                        |  20 ++
- drivers/platform/x86/dell/dell-uart-backlight.c    |   2 +-
- .../x86/lenovo/yoga-tab2-pro-1380-fastcharger.c    |   2 +-
- drivers/platform/x86/x86-android-tablets/core.c    |   2 +-
- drivers/power/sequencing/Kconfig                   |   1 +
- drivers/power/sequencing/pwrseq-pcie-m2.c          | 218 ++++++++++++++++++++-
- drivers/tty/serdev/core.c                          |  77 +++++++-
- include/linux/mod_devicetable.h                    |   8 +
- include/linux/serdev.h                             |  25 ++-
- scripts/mod/devicetable-offsets.c                  |   3 +
- scripts/mod/file2alias.c                           |   8 +
- 13 files changed, 494 insertions(+), 27 deletions(-)
----
-base-commit: db81ec30672bb228cd7cd809edeeae661d621f2d
-change-id: 20251112-pci-m2-e-94695ac9d657
+ 2 files changed, 155 insertions(+)
 
-Best regards,
+diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..91cb56b1a75b7e3de3b9fe9a7537089f96875746
+--- /dev/null
++++ b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+@@ -0,0 +1,154 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/connector/pcie-m2-e-connector.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: PCIe M.2 Mechanical Key E Connector
++
++maintainers:
++  - Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
++
++description:
++  A PCIe M.2 E connector node represents a physical PCIe M.2 Mechanical Key E
++  connector. Mechanical Key E connectors are used to connect Wireless
++  Connectivity devices including combinations of Wi-Fi, BT, NFC to the host
++  machine over interfaces like PCIe/SDIO, USB/UART+PCM, and I2C.
++
++properties:
++  compatible:
++    const: pcie-m2-e-connector
++
++  vpcie3v3-supply:
++    description: A phandle to the regulator for 3.3v supply.
++
++  vpcie1v8-supply:
++    description: A phandle to the regulator for VIO 1.8v supply.
++
++  ports:
++    $ref: /schemas/graph.yaml#/properties/ports
++    description: OF graph bindings modeling the interfaces exposed on the
++      connector. Since a single connector can have multiple interfaces, every
++      interface has an assigned OF graph port number as described below.
++
++    properties:
++      port@0:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: PCIe/SDIO interface
++
++      port@1:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: USB 2.0/UART interface
++
++      port@2:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: PCM/I2S interface
++
++      port@3:
++        $ref: /schemas/graph.yaml#/properties/port
++        description: I2C interface
++
++    oneOf:
++      - required:
++          - port@0
++
++  clocks:
++    description: 32.768 KHz Suspend Clock (SUSCLK) input from the host system to
++      the M.2 card. Refer, PCI Express M.2 Specification r4.0, sec 3.1.12.1 for
++      more details.
++    maxItems: 1
++
++  w_disable1-gpios:
++    description: GPIO controlled connection to W_DISABLE1# signal. This signal
++      is used by the system to disable WiFi radio in the M.2 card. Refer, PCI
++      Express M.2 Specification r4.0, sec 3.1.12.3 for more details.
++    maxItems: 1
++
++  w_disable2-gpios:
++    description: GPIO controlled connection to W_DISABLE2# signal. This signal
++      is used by the system to disable BT radio in the M.2 card. Refer, PCI
++      Express M.2 Specification r4.0, sec 3.1.12.3 for more details.
++    maxItems: 1
++
++  led1-gpios:
++    description: GPIO controlled connection to LED_1# signal. This signal is
++      used by the M.2 card to indicate the card status via the system mounted
++      LED. Refer, PCI Express M.2 Specification r4.0, sec 3.1.12.2 for more
++      details.
++    maxItems: 1
++
++  led2-gpios:
++    description: GPIO controlled connection to LED_2# signal. This signal is
++      used by the M.2 card to indicate the card status via the system mounted
++      LED. Refer, PCI Express M.2 Specification r4.0, sec 3.1.12.2 for more
++      details.
++    maxItems: 1
++
++  viocfg-gpios:
++    description: GPIO controlled connection to IO voltage configuration
++      (VIO_CFG) signal. This signal is used by the M.2 card to indicate to the
++      host system that the card supports an independent IO voltage domain for
++      the sideband signals. Refer, PCI Express M.2 Specification r4.0, sec
++      3.1.15.1 for more details.
++    maxItems: 1
++
++  uim_power_src-gpios:
++    description: GPIO controlled connection to UIM_POWER_SRC signal. This signal
++      is used when the NFC solution is implemented and receives the power output
++      from WWAN_UIM_PWR signal of the another WWAN M.2 card. Refer, PCI Express
++      M.2 Specification r4.0, sec 3.1.11.1 for more details.
++    maxItems: 1
++
++  uim_power_snk-gpios:
++    description: GPIO controlled connection to UIM_POWER_SNK signal. This signal
++      is used when the NFC solution is implemented and supplies power to the
++      Universal Integrated Circuit Card (UICC). Refer, PCI Express M.2
++      Specification r4.0, sec 3.1.11.2 for more details.
++    maxItems: 1
++
++  uim_swp-gpios:
++    description: GPIO controlled connection to UIM_SWP signal. This signal is
++      used when the NFC solution is implemented and implements the Single Wire
++      Protocol (SWP) interface to the UICC. Refer, PCI Express M.2 Specification
++      r4.0, sec 3.1.11.3 for more details.
++    maxItems: 1
++
++required:
++  - compatible
++  - vpcie3v3-supply
++
++additionalProperties: false
++
++examples:
++  # PCI M.2 Key E connector for WLAN/BT with PCIe/UART interfaces
++  - |
++    #include <dt-bindings/gpio/gpio.h>
++
++    connector {
++        compatible = "pcie-m2-e-connector";
++        vpcie3v3-supply = <&vreg_wcn_3p3>;
++        vpcie1v8-supply = <&vreg_l15b_1p8>;
++        w_disable1-gpios = <&tlmm 117 GPIO_ACTIVE_LOW>;
++        w_disable2-gpios = <&tlmm 116 GPIO_ACTIVE_LOW>;
++
++        ports {
++            #address-cells = <1>;
++            #size-cells = <0>;
++
++            port@0 {
++                reg = <0>;
++
++                endpoint {
++                    remote-endpoint = <&pcie4_port0_ep>;
++                };
++            };
++
++            port@3 {
++                reg = <3>;
++
++                endpoint {
++                    remote-endpoint = <&uart14_ep>;
++                };
++            };
++        };
++    };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9b3f689d1f50c62afa3772a0c6802f99a98ac2de..f707f29d0a37f344d8dd061b7e49dbb807933c9f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20478,6 +20478,7 @@ PCIE M.2 POWER SEQUENCING
+ M:	Manivannan Sadhasivam <mani@kernel.org>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
++F:	Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+ F:	Documentation/devicetree/bindings/connector/pcie-m2-m-connector.yaml
+ F:	drivers/power/sequencing/pwrseq-pcie-m2.c
+ 
+
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.48.1
 
 
