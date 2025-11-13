@@ -1,38 +1,38 @@
 Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C22C289367
-	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 14:26:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9A342D0C94
+	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 14:43:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763043991; cv=none; b=EewHIRVf3ps3kBDJPpfheQTr3UzTMz9+Sl8tPqcSrFiFqOOdtGMYg3rk4w3SblYPY03XEKbpIf+/0gamyZkg/UHvATbq0BE2mn5+2pIaaXUATHe/8Yck0bH2WSC0JLfQkQZAfjHzGIxZGK7AFq3C49DCDAYXgmKrfkV1jKtYtpY=
+	t=1763044990; cv=none; b=CR6kJV05PZnW/qWcS8Q2l3sdVx6fwNyQqMDAS+Q1TBWYsuxRUysx+pSV37zvdexLpQz1O6rd7q4fMWrn3Pw2sLvfOylRCnC2eKqZsugyE2CCI53ByC9GnZyhg8VMLqcMhE+JeFWGvEgbNwA7UjFMNcRBdzNVuRVbdkIl0Bb8YaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763043991; c=relaxed/simple;
-	bh=pEtsXEYDUVwFnZGZDZwf6LQ8RdbFl0B6scfu0LRUXU4=;
+	s=arc-20240116; t=1763044990; c=relaxed/simple;
+	bh=pzyv7vLjjU9lDazIwtsSgVGiP+Et3EtHRfN13T3NXVk=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=jLdlie4gt3U0lZiSAaA+IEHCkWfybFe3vx481QZjfduqbPNMMednYedV/zXJxDbXujltICnvcDGj52aYwp7jsFFiBRJ4NujWG9M14DvwQBtnhbZgH6RnMrPyj5R+R6LbzCo+9IQxrCt6UUmpFDW6NKcBs8KyGNqKng7YK3wlsME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=ew70EQT5; arc=none smtp.client-ip=185.67.36.65
+	 Content-Type:MIME-Version; b=BLSY4+eunqxzxMOqc+73i77IDl5sRKDF8kI+eL2TfqNPI9IxNW/Q5HIgSpqa/7kR3mdtXnSOnHaJb5mHL6q5VCL0gskBEbtU9HucFFlUlLRvEWRQ7+uMNSIeFwmuI2Cp3lz70OQOK4FN2mPX9nH81NSeI9T9HjlPCGmIW90ZDMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=pUaRuL6o; arc=none smtp.client-ip=185.67.36.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="ew70EQT5"
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="pUaRuL6o"
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id EC24F240028
-	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 15:17:37 +0100 (CET)
+	by mout01.posteo.de (Postfix) with ESMTPS id B479724002B
+	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 15:43:04 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1763043457; bh=adBBVnRsn7HOZmzACpymK40j8Veheszabl7lrdMc79A=;
+	t=1763044984; bh=q7uv+pZE/Rt1SjFLQLc3Ebfv1mmsna4IvbAjN0LEdXM=;
 	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
 	 Content-Transfer-Encoding:MIME-Version:OpenPGP:From;
-	b=ew70EQT52cJdMgXCXLOLor/H/VLZGG3bz/CZ83Wu+R/5Q5MLsdzoat8QBWz8d4+bI
-	 wIRTwCmtKi/JVSwLUyCbIQSWcIAyeJAD/fuCr/30NEum8KpBK0HT2aQo7lKrHF5qv6
-	 g7zU3R/6idx9cJAcqMqPZJPp42OkL8hfHAKDCZEZTFhT9tkwEzoe/DttLqClB9RbdL
-	 6qSwPuuIcnH/bfOFeKb1WB0JG9shLP45xENrlC0Xzbz6JOUeajOwf4IsDAlKPEisX3
-	 k4FysbpxZ6DvLWu6Wz5hIpySSEYE7QfI9B4xvF63lG0QJrbOZy5JJ3NafuXp+kJJly
-	 VwNp3mDJytCAg==
+	b=pUaRuL6ooOsKt9kULEak6RFgNePZcJxGrNSSQ7HmWr/dfmzKIsOrCBryqNsQYWUhB
+	 IQZ2CNFRbT7dG9CxYUfldhM0cuLnRiXfCy6z9Bbl0cTflPIT2q3eZsVfilEgtB7U/9
+	 gI6QfxEUpsSnEgH7GfMmDStI8oJ0TIW/wRG7Swv4jGXinMJEbqnUhJpOJVF4N1HYkk
+	 U5YjRiwZhUXDnrlzzqxtruu+RsctzXtOy9Q3sipmADCzeHgXUOvNuUbkLUMdT7hKT/
+	 Dy0x/xDSVeyt4C2HC2SO0UiPuRRkL8p4bPdOa/ZREjnPg7MxhFEtzj1Rx40rWreG4b
+	 Sr4Nv/vkibNew==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4d6j5p2CqVz6trs;
-	Thu, 13 Nov 2025 15:17:34 +0100 (CET)
-Message-ID: <ce0b823830c8477b723fb8d6ee0166e5b5848fa0.camel@posteo.de>
+	by submission (posteo.de) with ESMTPSA id 4d6jg92v54z6trs;
+	Thu, 13 Nov 2025 15:43:01 +0100 (CET)
+Message-ID: <8e1d09db23439a361e12b93bbaa2f80959799775.camel@posteo.de>
 Subject: Re: [PATCH v7 0/2] rust: leds: add led classdev abstractions
 From: Markus Probst <markus.probst@posteo.de>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Miguel Ojeda
@@ -48,9 +48,10 @@ Cc: Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>,
  <kwilczynski@kernel.org>, rust-for-linux@vger.kernel.org, 
 	linux-leds@vger.kernel.org, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Date: Thu, 13 Nov 2025 14:17:36 +0000
-In-Reply-To: <20251027200547.1038967-1-markus.probst@posteo.de>
+Date: Thu, 13 Nov 2025 14:43:03 +0000
+In-Reply-To: <bf4192fd466571f798023b70c3e83e19448d8149.camel@posteo.de>
 References: <20251027200547.1038967-1-markus.probst@posteo.de>
+	 <bf4192fd466571f798023b70c3e83e19448d8149.camel@posteo.de>
 Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
  keydata=mQINBGiDvXgBEADAXUceKafpl46S35UmDh2wRvvx+UfZbcTjeQOlSwKP7YVJ4JOZrVs93
  qReNLkOWguIqPBxR9blQ4nyYrqSCV+MMw/3ifyXIm6Pw2YRUDg+WTEOjTixRCoWDgUj1nOsvJ9tVA
@@ -94,102 +95,111 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-On Mon, 2025-10-27 at 20:06 +0000, Markus Probst wrote:
-> This patch series has previously been contained in
-> https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.pro=
-bst@posteo.de/T/#t
-> which added a rust written led driver for a microcontroller via i2c.
+On Thu, 2025-11-13 at 15:20 +0100, Markus Probst wrote:
+> On Mon, 2025-10-27 at 20:06 +0000, Markus Probst wrote:
+> > This patch series has previously been contained in
+> > https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.p=
+robst@posteo.de/T/#t
+> > which added a rust written led driver for a microcontroller via i2c.
+> >=20
+> > As the reading and writing to the i2c client via the register!
+> > macro has not been implemented yet [1], the patch series will only
+> > contain the additional abstractions required.
+> >=20
+> > [1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@k=
+ernel.org/
+> >=20
+> > The following changes were made:
+> > * add abstraction to convert a device reference to a bus device
+> >   reference for use in class device callbacks
+> >=20
+> > * add basic led classdev abstractions to register and unregister leds
+> >=20
+> > Changes since v6:
+> > * fixed typos
+> > * improved documentation
+> >=20
+> > Changes since v5:
+> > * rename `IntoBusDevice` trait into `AsBusDevice`
+> > * fix documentation about `LedOps::BLOCKING`
+> > * removed dependency on i2c bindings
+> > * added `AsBusDevice` implementation for `platform::Device`
+> > * removed `device::Device` fallback implementation
+> > * document that `AsBusDevice` must not be used by drivers and is
+> >   intended for bus and class device abstractions only.
+> >=20
+> > Changes since v4:
+> > * add abstraction to convert a device reference to a bus device
+> >   reference
+> > * require the bus device as parent device and provide it in class devic=
+e
+> >   callbacks
+> > * remove Pin<Vec<_>> abstraction (as not relevant for the led
+> >   abstractions)
+> > * fixed formatting in `led::Device::new`
+> > * fixed `LedOps::BLOCKING` did the inverse effect
+> >=20
+> > Changes since v3:
+> > * fixed kunit tests failing because of example in documentation
+> >=20
+> > Changes since v2:
+> > * return `Devres` on `led::Device` creation
+> > * replace KBox<T> with T in struct definition
+> > * increment and decrement reference-count of fwnode
+> > * make a device parent mandatory for led classdev creation
+> > * rename `led::Handler` to `led::LedOps`
+> > * add optional `brightness_get` function to `led::LedOps`
+> > * use `#[vtable]` instead of `const BLINK: bool`
+> > * use `Opaque::cast_from` instead of casting a pointer
+> > * improve documentation
+> > * improve support for older rust versions
+> > * use `&Device<Bound>` for parent
+> >=20
+> > Changes since v1:
+> > * fixed typos noticed by Onur =C3=96zkan
+> >=20
+> > Markus Probst (2):
+> >   rust: Add trait to convert a device reference to a bus device
+> >     reference
+> >   rust: leds: add basic led classdev abstractions
+> >=20
+> > Markus Probst (2):
+> >   rust: Add trait to convert a device reference to a bus device
+> >     reference
+> >   rust: leds: add basic led classdev abstractions
 >=20
-> As the reading and writing to the i2c client via the register!
-> macro has not been implemented yet [1], the patch series will only
-> contain the additional abstractions required.
+> Hi,
 >=20
-> [1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@ker=
-nel.org/
+> So you know in advance, I will add a 3. patch for multicolor led
+> classdev abstractions (drivers/leds/led-class-multicolor.c,
+> include/linux/led-class-multicolor.h) to this patch series.
 >=20
-> The following changes were made:
-> * add abstraction to convert a device reference to a bus device
->   reference for use in class device callbacks
+> In the atmega1608 led driver (the user of these abstractions) there are
+> leds with different colors that share the same slot.
+> Technically "drivers/leds/rgb/leds-group-multicolor.c" could be used in
+> combination with single color leds instead, but then hardware
+> accelerated blinking wouldn't be supported. I think it would make more
+> sense to directly implement it in the driver.
 >=20
-> * add basic led classdev abstractions to register and unregister leds
+> The existing 2 patches shouldn't change, so feel free to review them.
 >=20
-> Changes since v6:
-> * fixed typos
-> * improved documentation
->=20
-> Changes since v5:
-> * rename `IntoBusDevice` trait into `AsBusDevice`
-> * fix documentation about `LedOps::BLOCKING`
-> * removed dependency on i2c bindings
-> * added `AsBusDevice` implementation for `platform::Device`
-> * removed `device::Device` fallback implementation
-> * document that `AsBusDevice` must not be used by drivers and is
->   intended for bus and class device abstractions only.
->=20
-> Changes since v4:
-> * add abstraction to convert a device reference to a bus device
->   reference
-> * require the bus device as parent device and provide it in class device
->   callbacks
-> * remove Pin<Vec<_>> abstraction (as not relevant for the led
->   abstractions)
-> * fixed formatting in `led::Device::new`
-> * fixed `LedOps::BLOCKING` did the inverse effect
->=20
-> Changes since v3:
-> * fixed kunit tests failing because of example in documentation
->=20
-> Changes since v2:
-> * return `Devres` on `led::Device` creation
-> * replace KBox<T> with T in struct definition
-> * increment and decrement reference-count of fwnode
-> * make a device parent mandatory for led classdev creation
-> * rename `led::Handler` to `led::LedOps`
-> * add optional `brightness_get` function to `led::LedOps`
-> * use `#[vtable]` instead of `const BLINK: bool`
-> * use `Opaque::cast_from` instead of casting a pointer
-> * improve documentation
-> * improve support for older rust versions
-> * use `&Device<Bound>` for parent
->=20
-> Changes since v1:
-> * fixed typos noticed by Onur =C3=96zkan
->=20
-> Markus Probst (2):
->   rust: Add trait to convert a device reference to a bus device
->     reference
->   rust: leds: add basic led classdev abstractions
->=20
-> Markus Probst (2):
->   rust: Add trait to convert a device reference to a bus device
->     reference
->   rust: leds: add basic led classdev abstractions
+> Thanks
+> - Markus Probst
 
-Hi,
-
-So you know in advance, I will add a 3. patch for multicolor led
-classdev abstractions (drivers/leds/led-class-multicolor.c,
-include/linux/led-class-multicolor.h) to this patch series.
-
-In the atmega1608 led driver (the user of these abstractions) there are
-leds with different colors that share the same slot.
-Technically "drivers/leds/rgb/leds-group-multicolor.c" could be used in
-combination with single color leds instead, but then hardware
-accelerated blinking wouldn't be supported. I think it would make more
-sense to directly implement it in the driver.
-
-The existing 2 patches shouldn't change, so feel free to review them.
+ignore the duplicate email. Sending the email gave an error, retrying
+resulted in the email being sent twice.
 
 Thanks
 - Markus Probst
 
 >=20
->  rust/kernel/auxiliary.rs |   7 +
->  rust/kernel/device.rs    |  33 ++++
->  rust/kernel/led.rs       | 375 +++++++++++++++++++++++++++++++++++++++
->  rust/kernel/lib.rs       |   1 +
->  rust/kernel/pci.rs       |   7 +
->  rust/kernel/platform.rs  |   7 +
->  rust/kernel/usb.rs       |   6 +
->  7 files changed, 436 insertions(+)
->  create mode 100644 rust/kernel/led.rs
+> >=20
+> >  rust/kernel/auxiliary.rs |   7 +
+> >  rust/kernel/device.rs    |  33 ++++
+> >  rust/kernel/led.rs       | 375 +++++++++++++++++++++++++++++++++++++++
+> >  rust/kernel/lib.rs       |   1 +
+> >  rust/kernel/pci.rs       |   7 +
+> >  rust/kernel/platform.rs  |   7 +
+> >  rust/kernel/usb.rs       |   6 +
+> >  7 files changed, 436 insertions(+)
+> >  create mode 100644 rust/kernel/led.rs
