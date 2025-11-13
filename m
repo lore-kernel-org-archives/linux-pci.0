@@ -1,112 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5087C316907
-	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 19:18:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51CC9320A08;
+	Thu, 13 Nov 2025 19:36:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763061502; cv=none; b=lj1scXqikril4yqUDYweGbb+unttAdOK8GCfyXrlw949xBTXZg00yGD70YUmAjR7kNOg7FnVn8HuEbjuD5rN+yv2u+ajW/fSAj20PPTIWOXVbEVVCGWP4d0Jg5ugXz9LGwZHxqDUa2KTO82FS3+Y+JD9G7BdXVWZT9qI54DcBm8=
+	t=1763062566; cv=none; b=vAG9fyqboKYjjkZEpamBN2eGoj19ULPFFotAVV5q3eoq0TaJhBU4sS+t0dHs7N+r2yWZb+uRCcKSi9+ZX255kKLzrXS2+wNB3bu/59ig8kFVnsaknQ3gVX9SD5itEfRtCnEV7z2q9aiFpEZqrBZvWcFl/4TJxhDBGRFEvWp5aZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763061502; c=relaxed/simple;
-	bh=6UprQ8VPFTOJEJnrAk3c1+70Nbd/u85upyCo1jyU1qk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=e/vDxUZd7kXG6zusXj0W5PWu+nT49YaErj73TAFvhrhZWqj4N/mvQoMOCDWxRQPn2HIXBgs1uHQ9kclOOMr7JYtfIwUl41Jikypcv0TQk9MrXVP5QQHZk4SaoaNsRZIss7hSiA+e0lWDtf2j3JKopII6HEpLlwV+KDLw+VQhoPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W0X7qiri; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763062566; c=relaxed/simple;
+	bh=PBFH+ADRleOCfP4HnfjAr2xVRLcV8QfGms5yV42h6ys=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=uwxOACJFB87Z3XSVtkpY3bpHMd8bAb+s2yWZcXEnBcDnw7Txa3ojAsDpGW7HXt29LxyoC0w7IjDDHv2OB6OLFhTaTPmqidfsUHuxk9DHz9R37LICIEgiqbUDSgHFuN9Stl38CuHdR4GnMVzqaSazAYz66Q4thdpn+GlfmBFEMhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SgY7hI1f; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W0X7qiri"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00C2DC113D0
-	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 19:18:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SgY7hI1f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3308EC4CEF8;
+	Thu, 13 Nov 2025 19:36:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763061502;
-	bh=6UprQ8VPFTOJEJnrAk3c1+70Nbd/u85upyCo1jyU1qk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=W0X7qiriJx8qwv9BbYquHPo7dcdlB2adgQNwN+FfcpIdmW/AITZJ5Zpqm03CC/Dxr
-	 6GnRSXQmfJ+W2vthEpzKITubGF74mnCc6WUcvin3uowyc8BT86f+//ZfLYv29g+BBF
-	 lF+wiMxVq3NM9L1tiAzuG5XwvTH/cQqPOIPuH8Swojls+LSeWQiKJpBdWwsNkrHfoc
-	 ViJlr54gGxXeICJKCHSvemTDsL0eAAUa1Kuky49BxecjyBAtJpJBy74zC1sU1paLFh
-	 iEnE0JiwwGU2Q+ypXPimklXXrXm0/+3QIl6jESwwRiu7KL4wKdlkBy+NprPJA+WbMw
-	 +qgnAYGxQ0H4g==
-Received: by mail-oo1-f53.google.com with SMTP id 006d021491bc7-656b7f02b56so536682eaf.0
-        for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 11:18:21 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXG8i60pKPkX41RyXvj7C+BroJxyT1EvBm/8WtRYEgE2I1YzSk0VIT6NJVKnkwVY/L1B5Bia9LB49A=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwvZ8Um9gkb1maLuaFcYW4U4FKlgkOiYWClAtqN1CyOk9me2FV5
-	qETTY5F/lu/qLzjMA/fZXfkR0QYQbX7t9aJOOpFyGh3jiHdR+nzp6WuNHWZTb8IHbK4ieGPoKtF
-	/YpeAsiDgiU4yGCHUjl9V9enomHksAcM=
-X-Google-Smtp-Source: AGHT+IEEkDRYf3o6eWh7An4Eb7oaPpWELLivUE1adLZQeit4rdCPvsjZcC3pPuLNVua35azYMW1z4kNGcBFvSY5y77M=
-X-Received: by 2002:a05:6871:e324:b0:3d4:b889:7d65 with SMTP id
- 586e51a60fabf-3e8674043b0mr485629fac.19.1763061501288; Thu, 13 Nov 2025
- 11:18:21 -0800 (PST)
+	s=k20201202; t=1763062565;
+	bh=PBFH+ADRleOCfP4HnfjAr2xVRLcV8QfGms5yV42h6ys=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=SgY7hI1f/4Zgm5vpRR3zSZmagPjmCKT0wjxKm1d/6VLZaLHafOQqtBO8QgkCzAqpw
+	 7gyJiC2oOwTgCIYxq/8FKKUfkRcKt9zYcXq5qMK6QVWYnVvKIulaHK2uk98D4clksS
+	 NyJ6BOD2c2IWxeEXEwYlxDI4YFm3OOv8KOBkX9YjFOtTyI98OEWVVDhA+TmzBMD1Qv
+	 CyhBgcI4JPrI87he+YClCFGbQHNOoH6OhkPHSxC+EjQEz6XgvDX0K/d1+pgkKnjquJ
+	 Md1QXjk+WrwiKGUR2bnqoRN9CWLw+5y5p2sUGlJ3TyruWjGoa2o9gjaQ8p2vptWAcD
+	 KudT18xC6zhNQ==
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>, Takashi Iwai <tiwai@suse.de>,
+ LKML <linux-kernel@vger.kernel.org>, Zhang Qilong <zhangqilong3@huawei.com>,
+ Frank Li <Frank.Li@nxp.com>, Dhruva Gole <d-gole@ti.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+Subject:
+ [PATCH v2 3/3] PCI/sysfs: Use PM_RUNTIME_ACQUIRE()/PM_RUNTIME_ACQUIRE_ERR()
+Date: Thu, 13 Nov 2025 20:35:27 +0100
+Message-ID: <3932581.kQq0lBPeGt@rafael.j.wysocki>
+Organization: Linux Kernel Development
+In-Reply-To: <5959587.DvuYhMxLoT@rafael.j.wysocki>
+References: <5959587.DvuYhMxLoT@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251029163336.2785270-1-thierry.reding@gmail.com>
- <20251029163336.2785270-2-thierry.reding@gmail.com> <CAJZ5v0igMJ12KoYCmrWauvOfdxaNP5-XVKoSxUroaKFN7S-rTQ@mail.gmail.com>
- <3dzha4qyqdrbutxby3n5nkvihnxrhniqr6w726eumhzgln2w5l@fbu72mzmjz4m> <2tx3o5es77oa37zqvikcoo6n2ryxvepa54ezsaawcjdbf3g3wp@o2dbcbskjksk>
-In-Reply-To: <2tx3o5es77oa37zqvikcoo6n2ryxvepa54ezsaawcjdbf3g3wp@o2dbcbskjksk>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 13 Nov 2025 20:18:10 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0gupHEg8ip+2R1wYAQ=BQn4Mk5EMMu==StRxwvXA0WwsA@mail.gmail.com>
-X-Gm-Features: AWmQ_bka8IUODzeQR5ggeX8uZbZXXCIST1G0sD3k8DJ8TOKe2Mgor6ApCD0oVpM
-Message-ID: <CAJZ5v0gupHEg8ip+2R1wYAQ=BQn4Mk5EMMu==StRxwvXA0WwsA@mail.gmail.com>
-Subject: Re: [PATCH v3 1/7] syscore: Pass context data to callbacks
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, x86@kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-mips@vger.kernel.org, loongarch@lists.linux.dev, 
-	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 13, 2025 at 7:32=E2=80=AFPM Thierry Reding <thierry.reding@gmai=
-l.com> wrote:
->
-> On Wed, Nov 05, 2025 at 05:52:01PM +0100, Thierry Reding wrote:
-> > On Mon, Nov 03, 2025 at 05:18:08PM +0100, Rafael J. Wysocki wrote:
-> > > On Wed, Oct 29, 2025 at 5:33=E2=80=AFPM Thierry Reding <thierry.redin=
-g@gmail.com> wrote:
-> > > >
-> > > > From: Thierry Reding <treding@nvidia.com>
-> > > >
-> > > > Several drivers can benefit from registering per-instance data alon=
-g
-> > > > with the syscore operations. To achieve this, move the modifiable f=
-ields
-> > > > out of the syscore_ops structure and into a separate struct syscore=
- that
-> > > > can be registered with the framework. Add a void * driver data fiel=
-d for
-> > > > drivers to store contextual data that will be passed to the syscore=
- ops.
-> > > >
-> > > > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> > >
-> > > This change is fine with me, so I can apply it unless somebody has an=
-y
-> > > specific heartburn related to it (Greg?), but in case you want to
-> > > route it differently
-> > >
-> > > Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
-> >
-> > I have a few follow-up patches for the Tegra PMC driver that depend on
-> > this. 6.19 is what I was targetting, so if we could put this into a
-> > stable branch that'd be the best solution. I can set that up via the
-> > Tegra tree if you and Greg are okay with it.
-> >
-> > If that's all too complicated, I can probably wait until the next cycle
-> > to merge the PMC changes.
->
-> I've added this single patch to a branch based off of v6.18-rc1 that I
-> plan to feed into linux-next so it can get some broader exposure.
->
-> I can keep that branch stable so it can go through multiple trees if
-> needed. If anyone's interested, the branch is here:
->
->         https://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git/l=
-og/?h=3Dfor-6.19/syscore
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-You beat me to this, sorry about the delay.
+Use new PM_RUNTIME_ACQUIRE() and PM_RUNTIME_ACQUIRE_ERR() wrapper macros
+to make the code look more straightforward.
+
+No intentional funtional impact.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+v1 -> v2: Adjust to the changes in patch [1/3].
+
+---
+ drivers/pci/pci-sysfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1517,8 +1517,8 @@ static ssize_t reset_method_store(struct
+ 		return count;
+ 	}
+ 
+-	ACQUIRE(pm_runtime_active_try, pm)(dev);
+-	if (ACQUIRE_ERR(pm_runtime_active_try, &pm))
++	PM_RUNTIME_ACQUIRE(dev, pm);
++	if (PM_RUNTIME_ACQUIRE_ERR(&pm))
+ 		return -ENXIO;
+ 
+ 	if (sysfs_streq(buf, "default")) {
+
+
+
