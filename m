@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50423590AC;
-	Thu, 13 Nov 2025 16:27:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214163570B0;
+	Thu, 13 Nov 2025 16:27:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763051251; cv=none; b=HEFPkhaHxUDBvSBH4A1s/mcd71NZVevjYg1ICDhigOus+KvZd0WiYaRsHpYTJHbouJsK47hFvuPkvbp813qHjPmmuDsO8Ku4wuLOWzGafi5l3Lf/pwwGDcoBstoFan1HSW/DfV+HT5BSmm+B/E0S7EGSLgc2Pl79Q3IGXTeTqZk=
+	t=1763051260; cv=none; b=nu9qyXvFsLLYRPw6OQ2njSQ5164PtS9dMCcHWCK797tzOiyu0Y7jR177SLFJ5EUWTaXkoV/97DmOV2Tbo4Kpc+YHiKJRsbSXvXhtbdJF8WqfRm4m0DcXcqf+MxziMuNHPhjPERnAWl4G6T/QLAIeVoheMXwqru89khHYSsdf1ZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763051251; c=relaxed/simple;
-	bh=tH8YgZlv9d0wlhPjzMO9fmgTNpl7ZjS2fL9m6nz41ok=;
+	s=arc-20240116; t=1763051260; c=relaxed/simple;
+	bh=h3nrujcBusoF0SQ2oOAT+J5w7BXLt6Ag/5weFGZmhGg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BQxxx3Msf/eYv+uKzyD9FqCdOPba0eGrXoBKoNcuzSHMejoEWVg7sP6nyc694yAX+Pz/meNalI2fFXHjweFbDGeGv53Pskmzx0tq9jTN7PWmwPyhjWTF6/F1X3/xo+pSrFCgqspN3JXYxqBr6UWiL/sZxVmfBVnWnzVsLyVuUFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aRfSO1Fz; arc=none smtp.client-ip=192.198.163.14
+	 MIME-Version:Content-Type; b=u33TelHG2JKnXvyjSc23w8vbv8HNz6k4x1ZPdX0qeZ/dx94/ppVX7iYR1vZ9+HNyr0lqd/+KDUA68HoZNPjz39XkcEcYM3opISkMAZum+IuDvwhWpaAAuEdrAGhHfCveGSRiO8aAzaGuS9liD+tBQNLxdwVqI6i+1j9IvH3k0nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eIZJcWcA; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aRfSO1Fz"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eIZJcWcA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763051249; x=1794587249;
+  t=1763051258; x=1794587258;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=tH8YgZlv9d0wlhPjzMO9fmgTNpl7ZjS2fL9m6nz41ok=;
-  b=aRfSO1FzoR9bK5JrQ0FZ8h05kPjto3BgVwcNj5FxAkC7v1LUs7brlIis
-   YIn9mYOkQwNPLuZCkJQXHq4t0fcD0lTuFvJZh6V5JJ2CYoj/j/XyQjt3O
-   VKZg/62S9lItIgIj0QrrZ1Up7SuG7gU9FRttY2v2MEtBVDux/Ypl2xTqr
-   2Pz4oKfyOU0yuMub5OpzU+9Eyu4BbDlLCSRofT7tuBsHdcFoegy8WK/iQ
-   +F8i6zEByJqngmwnFIoAKPiEeQCM5GkH/4AAfan2xbThpU3X0RhI+OKvm
-   bQA8+U6QRlXf7zDxNBO4ppa4GWWlr8jUZVNzgEYFcY38fi8LAl+9Mzvyh
-   Q==;
-X-CSE-ConnectionGUID: M62wGEGOTfSQbZ3iTnuJHA==
-X-CSE-MsgGUID: wgze7nmZTy+9ulpB99LwRw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11612"; a="65176155"
+  bh=h3nrujcBusoF0SQ2oOAT+J5w7BXLt6Ag/5weFGZmhGg=;
+  b=eIZJcWcAZTE1eFw4ILxzfiiaVYVYJ6A0rgKt4m+C4jei/0svUMWmojwE
+   MeL5MoxLOvUUYWZWYLLZ7XI/Gyg6CAS5H8Vn4vJwAO1FuRAugyAgaWpZZ
+   IGivJ08NoOF7LONMKZzW3lov/JBdUQi2iURvB2fyuKLhGfacvL54WHOy3
+   yXc3Lmndp7bKMF8wMaxGAfnZ7wcjWqwN9dw41gLw7YLWlHHdeiLlr02Ia
+   EedpvU2eyyDyqnU6PjTwewAZBG0a7kuCKnO32TSSmtPYFPhYEtxYNvVAK
+   GUCfJsKwOdaa+wMWjLkbUl+dTcIQfOz//EvlHBDECMLSEAsJJZ1tqBo6V
+   A==;
+X-CSE-ConnectionGUID: l2MIo1LATfueVB6dbPCsyQ==
+X-CSE-MsgGUID: hdlrdxF5Rei+zX+pNd0iug==
+X-IronPort-AV: E=McAfee;i="6800,10657,11612"; a="65176181"
 X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
-   d="scan'208";a="65176155"
+   d="scan'208";a="65176181"
 Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 08:27:28 -0800
-X-CSE-ConnectionGUID: GC8T9ezKSTCEGGdX/L39MQ==
-X-CSE-MsgGUID: 0wxTKae0QuaHonn3ZhHtnA==
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 08:27:37 -0800
+X-CSE-ConnectionGUID: 098LOjq3Tr6F3fHuG5VUhw==
+X-CSE-MsgGUID: +GMSlqWxSnaC2LaB9MLYoQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
-   d="scan'208";a="189971869"
+   d="scan'208";a="189971888"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.164])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 08:27:23 -0800
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 08:27:33 -0800
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>,
 	Simon Richter <Simon.Richter@hogyros.de>,
@@ -65,9 +65,9 @@ To: =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>,
 	=?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>,
 	linux-kernel@vger.kernel.org
 Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v2 04/11] PCI: Try BAR resize even when no window was released
-Date: Thu, 13 Nov 2025 18:26:21 +0200
-Message-Id: <20251113162628.5946-5-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 05/11] PCI: Freeing saved list does not require holding pci_bus_sem
+Date: Thu, 13 Nov 2025 18:26:22 +0200
+Message-Id: <20251113162628.5946-6-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20251113162628.5946-1-ilpo.jarvinen@linux.intel.com>
 References: <20251113162628.5946-1-ilpo.jarvinen@linux.intel.com>
@@ -80,45 +80,28 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Usually, resizing BARs requires releasing bridge windows in order to
-resize it to fit a larger BAR into the window. This is not always the
-case, however, FW could have made the window large enough to accomodate
-larger BAR as is, or the user might prefer to shrink a BAR to make more
-space for another Resizable BAR.
-
-Thus, replace the check that requires that at least one bridge window
-was released with a check that simply ensures bridge is not NULL.
+Freeing the saved list does not require holding pci_bus_sem, so the
+critical section can be made shorter.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/setup-bus.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/pci/setup-bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d58f025aeaff..1a3d54563854 100644
+index 1a3d54563854..51f5e5a80b54 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -2424,7 +2424,7 @@ int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *res)
- {
- 	unsigned long type = res->flags;
- 	struct pci_dev_resource *dev_res;
--	struct pci_dev *bridge;
-+	struct pci_dev *bridge = NULL;
- 	LIST_HEAD(saved);
- 	LIST_HEAD(added);
- 	LIST_HEAD(failed);
-@@ -2459,10 +2459,8 @@ int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *res)
- 		bus = bus->parent;
+@@ -2513,8 +2513,8 @@ int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *res)
+ 		pci_claim_resource(dev, i);
+ 		pci_setup_bridge(dev->subordinate);
  	}
+-	free_list(&saved);
+ 	up_read(&pci_bus_sem);
++	free_list(&saved);
  
--	if (list_empty(&saved)) {
--		up_read(&pci_bus_sem);
-+	if (!bridge)
- 		return -ENOENT;
--	}
- 
- 	__pci_bus_size_bridges(bridge->subordinate, &added);
- 	__pci_bridge_assign_resources(bridge, &added, &failed);
+ 	return ret;
+ }
 -- 
 2.39.5
 
