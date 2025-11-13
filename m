@@ -1,92 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AED72FABE7;
-	Thu, 13 Nov 2025 16:41:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055913557E9;
+	Thu, 13 Nov 2025 16:42:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763052109; cv=none; b=GunVq5dz9KrvwRanq1n+/vTbXQCAFx7LO9pycX3qDTHbxGbTcldXeQ8rtkALJ0KcjyuHmVMQcIyGo3qjiH41GuopMT9KkbAjdBu1GR51HOSWtp0Sn3qrnRADD29W26UJ7SLSK4x6zZ8kjAfLA7P1aSHmVgWbh4HH5cpLEc8H0BM=
+	t=1763052123; cv=none; b=PD4jXBcN/XO8di+lg2JwqyKChERwZra81U9T19qwDK/XX1IMOdXCE0+y0Q3B+gM2cT87LWIk/JUIHiHaqRMcTSZj5TwnCkPRMgCci47LeuoQrg21XIR4Uc8IFZeWCkLLgIIbdrWxL+eS7MFrXpSifhcryz8CDnX5jsCWGKN3cf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763052109; c=relaxed/simple;
-	bh=LaRCBS/NM2UH70AYb59BDNP5EEFwL4hnOEnhhOk227U=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ESG7EmOQc1XZLvS4tH1UpFb+KInQxY1OyRwa/ptg2sy4VFYDHrAeE2Sy+Zl6h4YpFqDDcagJF4AkgNhmoTt5Y0uHzQFAtW8kr7xFIbQllmKy7S+KSy4D0CafDvbJzdGUq20ywbSNU/wbh+IhHvKEjw22QqkVtk0nZh3bqpEIMSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pIzgUDB0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763052123; c=relaxed/simple;
+	bh=tbI30SQdpsjBi0FiA0lyqvsLgdo6wOPvrHQ/VuIekYY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bbEb5YOHBOo6ymN6PVG5uu9UT1SxajoUjaYyND4B8CVfbyKUrswWSptf7s6Fv2QdmyCcU8dTvWgOANVPngv8HZNoEPE4ND3P3Vv1VPXWQtfk5pt76Tg+c7JP0bUsIBwyD712JQslAICNnYVaw+GjN7X5gXjg8B2goTn9WRUSxZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qNgGXQIa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pIzgUDB0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF6B8C113D0;
-	Thu, 13 Nov 2025 16:41:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qNgGXQIa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46851C113D0;
+	Thu, 13 Nov 2025 16:41:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763052109;
-	bh=LaRCBS/NM2UH70AYb59BDNP5EEFwL4hnOEnhhOk227U=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=pIzgUDB04zVZWchKSc7agD9XxYb2HMujtHvPel3xlr/GKXvEogwuoZ+78k3+vch45
-	 NbF4hBjE6nuZAdnCE6glNR+88s+s4HsysFyLiWqhpfCWgsWiuxPWKxoAsML95KzN0t
-	 9PO4WOG3CVw4jPZRG+OXRHmwh8lf8CbSbxpLb5JNQ3cZ2sTkTNmd19SQ1+c3NgGuEw
-	 lWsKvYO5X6HeS5ZhV5gQR8wDUflwfyG5FldD3Qo8o6g10u407JoSYExuWAUDOImCwX
-	 C8X1+/CBkUc2mq0E5ujO/qLkg8/ujI123JuWWynGi+RpdWFHGDXjIO1f7JlDL7OGtM
-	 mKKAm+gWnlO0g==
-Date: Thu, 13 Nov 2025 10:41:47 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	bhelgaas@google.com, will@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, robh@kernel.org,
-	linux-arm-msm@vger.kernel.org, zhangsenchuan@eswincomputing.com,
-	vincent.guittot@linaro.org
-Subject: Re: [PATCH v2 2/3] PCI: qcom: Check for the presence of a device
- instead of Link up during suspend
-Message-ID: <20251113164147.GA2285894@bhelgaas>
+	s=k20201202; t=1763052122;
+	bh=tbI30SQdpsjBi0FiA0lyqvsLgdo6wOPvrHQ/VuIekYY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qNgGXQIajwxVe7WQ6kGYsfOs7tSWSzNInH4olIfs/uNUQzMJDBdh1uWvYgVARgS7L
+	 MkAaVG9auvsafOddLcG45jmQc3v1nOehwRhRvHGQjzcKei4eZEe5Ym44vPahLnL916
+	 QgDNMcuEuhc+oJ17Xpuavg9cl0TZ3yruFjCPTXVuEnk1T/5wBmKbNA/CfUlyK1V6se
+	 HY2sE5/OILtgWAA75hTY+o9QlRhMRAw44S+qk+cObISqfwHdtorH238PvR2M0MBqj7
+	 0GhzF8VV7KeT7s+YnwnEGp3be9KojOk5Tz6DEdtf/7g3QUK0KghiWpbgovzeetJB8B
+	 xcm4CJq+pWrVQ==
+Date: Thu, 13 Nov 2025 22:11:47 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	andersson@kernel.org, robh@kernel.org, manivannan.sadhasivam@linaro.org, 
+	krzk@kernel.org, helgaas@kernel.org, linux-arm-msm@vger.kernel.org, 
+	devicetree@vger.kernel.org, lpieralisi@kernel.org, kw@linux.com, conor+dt@kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-spec@vger.kernel.org, 
+	quic_vbadigan@quicinc.com
+Subject: Re: [PATCH v2] schemas: pci: Document PCIe T_POWER_ON
+Message-ID: <epqkkezjnkwznh4minlvhh7vbnwh3isqeofqamgupj7rjnhjv2@wtrx4ecjgvob>
+References: <20251110112947.2071036-1-krishna.chundru@oss.qualcomm.com>
+ <aRHdiYYcn2uZkLor@wunner.de>
+ <44c7b4a8-33ce-4516-81bf-349b5e555806@oss.qualcomm.com>
+ <aRWYoHvaCCN95ZR9@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20251107044319.8356-3-manivannan.sadhasivam@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aRWYoHvaCCN95ZR9@wunner.de>
 
-On Fri, Nov 07, 2025 at 10:13:18AM +0530, Manivannan Sadhasivam wrote:
-> The suspend handler checks for the PCIe Link up to decide when to turn off
-> the controller resources. But this check is racy as the PCIe Link can go
-> down just after this check.
+On Thu, Nov 13, 2025 at 09:36:48AM +0100, Lukas Wunner wrote:
+> On Thu, Nov 13, 2025 at 09:33:54AM +0530, Krishna Chaitanya Chundru wrote:
+> > On 11/10/2025 6:11 PM, Lukas Wunner wrote:
+> > > On Mon, Nov 10, 2025 at 04:59:47PM +0530, Krishna Chaitanya Chundru wrote:
+> > > >  From PCIe r6, sec 5.5.4 & Table 5-11 in sec 5.5.5 T_POWER_ON is the
+> > > Please use the latest spec version as reference, i.e. PCIe r7.0.
+> > ack.
+> > > > minimum amount of time(in us) that each component must wait in L1.2.Exit
+> > > > after sampling CLKREQ# asserted before actively driving the interface to
+> > > > ensure no device is ever actively driving into an unpowered component and
+> > > > these values are based on the components and AC coupling capacitors used
+> > > > in the connection linking the two components.
+> > > > 
+> > > > This property should be used to indicate the T_POWER_ON for each Root Port.
+> > > What's the difference between this property and the Port T_POWER_ON_Scale
+> > > and T_POWER_ON_Value in the L1 PM Substates Capabilities Register?
+> > > 
+> > > Why do you need this in the device tree even though it's available
+> > > in the register?
+> > 
+> > This value is same as L1 PM substates value, some controllers needs to
+> > update this
+> > value before enumeration as hardware might now program this value
+> > correctly[1].
+> > 
+> > [1]: [PATCH] PCI: qcom: Program correct T_POWER_ON value for L1.2 exit
+> > timing
+> > 
+> > <https://lore.kernel.org/all/20251104-t_power_on_fux-v1-1-eb5916e47fd7@oss.qualcomm.com/>
 > 
-> So use the newly introduced API, pci_root_ports_have_device() that checks
-> for the presence of a device under any of the Root Ports to replace the
-> Link up check.
+> Per PCIe r7.0 sec 7.8.3.2, all fields in the L1 PM Substates Capabilities
+> Register are of type "HwInit", which sec 7.4 defines as:
+> 
+>    "Register bits are permitted, as an implementation option, to be
+>     hard-coded, initialized by system/device firmware, or initialized
+>     by hardware mechanisms such as pin strapping or nonvolatile storage.
+>     Initialization by system firmware is permitted only for
+>     system-integrated devices.
+>     Bits must be fixed in value and read-only after initialization."
+>                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 
+> These bits are not supposed to be writable by the operating system,
+> so what you're doing in that patch is not spec-compliant.
+> 
 
-Why is pci_root_ports_have_device() itself not racy?
+I interpret 'initialized by system/device firmware', same as 'initialized by
+OS', as both are mostly same for the devicetree platforms. So it is fine IMO.
+Ofc, if the initialization was carried out by the firmware, then OS has no
+business in changing it, but it is not the case.
 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> I think it needs to be made explicit in the devicetree schema that
+> the property is only intended for non-compliant hardware which allows
+> (and requires) the operating system to initialize the register.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 805edbbfe7eb..b2b89e2e4916 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -2018,6 +2018,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
->  static int qcom_pcie_suspend_noirq(struct device *dev)
->  {
->  	struct qcom_pcie *pcie;
-> +	struct dw_pcie_rp *pp;
->  	int ret = 0;
->  
->  	pcie = dev_get_drvdata(dev);
-> @@ -2053,8 +2054,9 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
->  	 * powerdown state. This will affect the lifetime of the storage devices
->  	 * like NVMe.
->  	 */
-> -	if (!dw_pcie_link_up(pcie->pci)) {
-> -		qcom_pcie_host_deinit(&pcie->pci->pp);
-> +	pp = &pcie->pci->pp;
-> +	if (!pci_root_ports_have_device(pp->bridge->bus)) {
-> +		qcom_pcie_host_deinit(pp);
->  		pcie->suspended = true;
->  	}
->  
-> -- 
-> 2.48.1
+
+Sorry, I disagree. The hardware is spec compliant, just that the firmware missed
+initializing the fields.
+
+> Maybe it makes more sense to have a property which specifies the raw
+> 32-bit register contents, instead of having a property for each
+> individual field.  Otherwise you'll have to amend the schema
+> whenever the PCIe spec extends the register with additional fields.
 > 
+
+DT properties do not specify a register value, but instead they specify hardware
+configuration value and that's what this property is doing. The OS/other DT
+consumers should interpret this value as per the spec and program the relevant
+registers.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
