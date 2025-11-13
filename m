@@ -1,113 +1,186 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7283009F8
-	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 04:53:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25983219E8;
+	Thu, 13 Nov 2025 04:57:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763009605; cv=none; b=MCqX9dGbhwrkwosDOUmtj/Sfa7mCcHTcxb6IKcQTX6Y6kYw0csMgQXWbx3J7n59hZGs9gLo1gpma1ght0jAZk7q9hPrRaPRUmtjvfXxcjn0rwIfeR7A0dhFeS2NQGb2qPQWh6k2d8df0ITY8aaU23IuGaytZ1NF8k1x1o6xs5UI=
+	t=1763009876; cv=none; b=N9FwE2g+6bfYQTq99NwQuxT8PF4c49fzts1e3bpBVF4WEHPkjENBUGGlO8WaL+IzkXyItlCGWeKFitdFDp0NY8pLx1dnCyS/Utgy8rlJRSjN3ePtLvxsYLozXsCNhUved358SSIxxFDdXl4hcl1yGPr7hn/EFPTejod8tKnwKB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763009605; c=relaxed/simple;
-	bh=MDTy5l7zBehoe+SZ4+HdMgrSU8NN3NUhiMGEUnkraTU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=MEGUg3DtXxeLdLq/NTfn3NZgc+qAouaimYNd6M1UMmgPFHbdbv2JtdAHFbmM9KImKG4wsGyQtT1oDVaiX2RQ6GyxcnKvDMo67Ms7pq411bQ9lGBVo1sWETC1UkO7SylB56ARh3ICN1Hu7kmDxByP477QXKlJWb+eqRFvg3otFcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Y+yUYbQv; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1763009876; c=relaxed/simple;
+	bh=Thw/uLvj2yZzys3H5OOUTp5jqFPhVUvxTtwUf6CqU3k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Kv0LiiwU0KcoUKlVnJoGMjKUFEgRDLADvHnxRbr/6zV+Vc9xqnWj/5icW9gzgXvWuvzJ5aI+dOa2Sb9vfHGRmUe3FZPRK6gkLLx5ljPDoXAmnTvu6fG1lMXiiRAuV9V+pVM4n4ACN54ydG/nGUjdzLIszjR6/i3wKdmCVJ/OiTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b0EQfKeu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Y+yUYbQv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763009605; x=1794545605;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=MDTy5l7zBehoe+SZ4+HdMgrSU8NN3NUhiMGEUnkraTU=;
-  b=Y+yUYbQvz84duTC8xO1eP/H7Mu4yGOygixkEJ7H6uL8PvvuvZnTmerhc
-   N6vWDy4a0OGxgbE+K5rRX9SyVEubfH/0r/wcEKhgc0xytF6vZ9GsaJrSd
-   MJgxM4WGgqsIt3W5nTzNvoOiqrCYy+qMov9+nL88qlzX0M0Emm014xACz
-   b1nin6GRKhFyt0TRe+1fG6e6x3tu7yVbXfIQMSA51hle7Ugt1e3hxAmmx
-   ZcoGJnW++3180atNPU+xcUS7b71hmchgvFLXWW++ukeJpCzeUBxPkK/mF
-   rmQ2l1LmwRbKqHHjKNmUBpCrtvD6Hgpxn7JjtmggVvTXb+RfokUqEXxpy
-   w==;
-X-CSE-ConnectionGUID: AbuU8RHuS4e9LWZ2PuL5Vg==
-X-CSE-MsgGUID: YeQZsdeJS3ycga5PesPu/g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11611"; a="82480075"
-X-IronPort-AV: E=Sophos;i="6.19,301,1754982000"; 
-   d="scan'208";a="82480075"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2025 20:53:24 -0800
-X-CSE-ConnectionGUID: rijXJvZUSse0BSAmNvPBpQ==
-X-CSE-MsgGUID: tODqS8BESkOR7W5dEGWH9Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,301,1754982000"; 
-   d="scan'208";a="189415463"
-Received: from lkp-server01.sh.intel.com (HELO 7b01c990427b) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 12 Nov 2025 20:53:21 -0800
-Received: from kbuild by 7b01c990427b with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1vJPKh-0004uO-1s;
-	Thu, 13 Nov 2025 04:53:19 +0000
-Date: Thu, 13 Nov 2025 12:52:30 +0800
-From: kernel test robot <lkp@intel.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
-Subject: [pci:for-linus 6/6] drivers/pci/quirks.c:2528:56: error: use of
- undeclared identifier 'quirk_disable_aspm_l0s_l1_cap'; did you mean
- 'quirk_disable_aspm_l0s_l1'?
-Message-ID: <202511131032.6htiMYJT-lkp@intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b0EQfKeu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DC78C4CEF1;
+	Thu, 13 Nov 2025 04:57:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763009875;
+	bh=Thw/uLvj2yZzys3H5OOUTp5jqFPhVUvxTtwUf6CqU3k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=b0EQfKeu8rCOPYNTkKylY2Ni8bO2OLrpOqtrYH6FLMLXQwY3adw1B55Mg7iCrHIuA
+	 W25opCmF+mV+zqFk9R9KLtTA6d3jaa3TpmqGktk6BZHrs1/GFjFrVVwIYPQe4ZDenf
+	 ukxLvn2E1/wbZi+EDOUxub2kkDoUdEOOjRdxc/1lJz0AgHA7atUv1zaOpXAiY3Dnqj
+	 L/pi/CcfEwn0edvWM6gS4K1scR3RJtUMXfwpbfCNE3CWJvF11o+eeuKrilzNd2sCiR
+	 FnjbiZNpawu4qK5vEJsrVzQdQmqXR8JEbETtUHHfUC5ldg+VKV9iuc8/xscqU/j14j
+	 /6lkI50UyQVhA==
+Date: Thu, 13 Nov 2025 10:27:42 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	Stephan Gerhold <stephan.gerhold@linaro.org>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] dt-bindings: connector: Add PCIe M.2 Mechanical
+ Key M connector
+Message-ID: <ptis4un4tz2icqfzkp76pvc3qqzuqsg7te5vw2v5nnucsthffk@3pjgzy2po3nr>
+References: <20251108-pci-m2-v2-0-e8bc4d7bf42d@oss.qualcomm.com>
+ <20251108-pci-m2-v2-1-e8bc4d7bf42d@oss.qualcomm.com>
+ <gmwg46c3za5z2ev34mms44gpq3sq7sb4jaozbdn5cejwbejbpo@wwr2j7dkjov4>
+ <qrgaulegz2tb7yzklyl7rpkgbf6ysx44bxtyn6n3tcyq4an4e5@bzngutkvfno3>
+ <5kedk7c6kc2e5j4kqeyik6i7ju54sdn6etjhpwl2vt4nq6c6ug@2yld4hpvbuzg>
+ <n3efko3q7i64qmipgxz5yjeqvgmw26b4dvwofe6qnx7xqsjtx5@bbbpxmfioxrj>
+ <zjwuk4mg6n5wm7yecsjv6lrwb42rpmpdtoyh2dnh23h6kr57d6@iqxvrrdgs7vn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <zjwuk4mg6n5wm7yecsjv6lrwb42rpmpdtoyh2dnh23h6kr57d6@iqxvrrdgs7vn>
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-head:   c478e1774359af6039f586f0a49280cfe180a21b
-commit: c478e1774359af6039f586f0a49280cfe180a21b [6/6] PCI/ASPM: Avoid L0s and L1 on Hi1105 [19e5:1105] Wi-Fi
-config: loongarch-allnoconfig (https://download.01.org/0day-ci/archive/20251113/202511131032.6htiMYJT-lkp@intel.com/config)
-compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 996639d6ebb86ff15a8c99b67f1c2e2117636ae7)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251113/202511131032.6htiMYJT-lkp@intel.com/reproduce)
+On Wed, Nov 12, 2025 at 10:12:36PM +0200, Dmitry Baryshkov wrote:
+> On Tue, Nov 11, 2025 at 07:19:45PM +0530, Manivannan Sadhasivam wrote:
+> > On Sun, Nov 09, 2025 at 10:13:59PM +0200, Dmitry Baryshkov wrote:
+> > > On Sun, Nov 09, 2025 at 09:48:02PM +0530, Manivannan Sadhasivam wrote:
+> > > > On Sat, Nov 08, 2025 at 08:10:54PM +0200, Dmitry Baryshkov wrote:
+> > > > > On Sat, Nov 08, 2025 at 08:53:19AM +0530, Manivannan Sadhasivam wrote:
+> > > > > > Add the devicetree binding for PCIe M.2 Mechanical Key M connector defined
+> > > > > > in the PCI Express M.2 Specification, r4.0, sec 5.3. This connector
+> > > > > > provides interfaces like PCIe and SATA to attach the Solid State Drives
+> > > > > > (SSDs) to the host machine along with additional interfaces like USB, and
+> > > > > > SMB for debugging and supplementary features. At any point of time, the
+> > > > > > connector can only support either PCIe or SATA as the primary host
+> > > > > > interface.
+> > > > > > 
+> > > > > > The connector provides a primary power supply of 3.3v, along with an
+> > > > > > optional 1.8v VIO supply for the Adapter I/O buffer circuitry operating at
+> > > > > > 1.8v sideband signaling.
+> > > > > > 
+> > > > > > The connector also supplies optional signals in the form of GPIOs for fine
+> > > > > > grained power management.
+> > > > > > 
+> > > > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > > > > ---
+> > > > > >  .../bindings/connector/pcie-m2-m-connector.yaml    | 122 +++++++++++++++++++++
+> > > > > >  1 file changed, 122 insertions(+)
+> > > > > > 
+> > > > > > diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-m-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-m-connector.yaml
+> > > > > > new file mode 100644
+> > > > > > index 0000000000000000000000000000000000000000..be0a3b43e8fd2a2a3b76cad4808ddde79dceaa21
+> > > > > > --- /dev/null
+> > > > > > +++ b/Documentation/devicetree/bindings/connector/pcie-m2-m-connector.yaml
+> > > > > > @@ -0,0 +1,122 @@
+> > > > > > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > > > > > +%YAML 1.2
+> > > > > > +---
+> > > > > > +$id: http://devicetree.org/schemas/connector/pcie-m2-m-connector.yaml#
+> > > > > > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > > > > > +
+> > > > > > +title: PCIe M.2 Mechanical Key M Connector
+> > > > > > +
+> > > > > > +maintainers:
+> > > > > > +  - Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > > > > +
+> > > > > > +description:
+> > > > > > +  A PCIe M.2 M connector node represents a physical PCIe M.2 Mechanical Key M
+> > > > > > +  connector. The Mechanical Key M connectors are used to connect SSDs to the
+> > > > > > +  host system over PCIe/SATA interfaces. These connectors also offer optional
+> > > > > > +  interfaces like USB, SMB.
+> > > > > > +
+> > > > > > +properties:
+> > > > > > +  compatible:
+> > > > > > +    const: pcie-m2-m-connector
+> > > > > 
+> > > > > Is a generic compatible enough here? Compare this to the USB connectors,
+> > > > > which, in case of an independent USB-B connector controlled/ing GPIOs,
+> > > > > gets additional gpio-usb-b-connector?
+> > > > > 
+> > > > 
+> > > > I can't comment on it as I've not seen such usecases as of now. But I do think
+> > > > that this generic compatible should satisfy most of the design requirements. If
+> > > > necessity arises, a custom compatible could be introduced with this generic one
+> > > > as a fallback.
+> > > 
+> > > Ack
+> > > 
+> > > > 
+> > > > > > +
+> > > > > > +  vpcie3v3-supply:
+> > > > > > +    description: A phandle to the regulator for 3.3v supply.
+> > > > > > +
+> > > > > > +  vio1v8-supply:
+> > > > > > +    description: A phandle to the regulator for VIO 1.8v supply.
+> > > > > > +
+> > > > > > +  ports:
+> > > > > > +    $ref: /schemas/graph.yaml#/properties/ports
+> > > > > > +    description: OF graph bindings modeling the interfaces exposed on the
+> > > > > > +      connector. Since a single connector can have multiple interfaces, every
+> > > > > > +      interface has an assigned OF graph port number as described below.
+> > > > > > +
+> > > > > > +    properties:
+> > > > > > +      port@0:
+> > > > > > +        $ref: /schemas/graph.yaml#/properties/port
+> > > > > > +        description: PCIe/SATA interface
+> > > > > 
+> > > > > Should it be defined as having two endpoints: one for PCIe, one for
+> > > > > SATA?
+> > > > > 
+> > > > 
+> > > > I'm not sure. From the dtschema of the connector node:
+> > > > 
+> > > > "If a single port is connected to more than one remote device, an 'endpoint'
+> > > > child node must be provided for each link"
+> > > > 
+> > > > Here, a single port is atmost connected to only one endpoint and that endpoint
+> > > > could PCIe/SATA. So IMO, defining two endpoint nodes doesn't fit here.
+> > > 
+> > > I think this needs to be better defined. E.g. there should be either one
+> > > endpoint going to the shared SATA / PCIe MUX, which should then be
+> > > controlled somehow, in a platform-specific way (how?) or there should be
+> > > two endpoints defined, e.g. @0 for SATA and @1 for PCIe (should we
+> > > prevent powering up M.2 if PEDET points out the unsupported function?).
+> > > (Note: these questions might be the definitive point for the bare
+> > > m2-m-connector vs gpio-m2-m-connector: the former one defines just the
+> > > M.2 signals, letting e.g. UEFI or PCIe controller to react to them, the
+> > > latter one defines how to control MUXes, the behaviour wrt PEDET, etc.,
+> > > performing all those actions in OS driver).
+> > > 
+> > 
+> > In the case of an external GPIO controlled MUX for PCIe/SATA interface, I would
+> > assume that the MUX will be controlled by the PEDET itself. PEDET will be driven
+> > low by the card if it uses SATA, pulled high (NC) if it uses PCIe. Then that
+> > signal will help the MUX to route the proper interface to the connector.
+> > 
+> > Even in that case, there should be a single endpoint coming from the MUX to the
+> > connector.
+> 
+> How would you model this in the actual DT? We don't have separate
+> PCIe/SATA muxes in DT, do we?
+> 
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202511131032.6htiMYJT-lkp@intel.com/
+I think I got it wrong here. Even in the case of MUX, the actual endpoint link
+should exist between PCIe and SATA nodes to the connector node. So yes, having 2
+endpoint nodes makes sense.
 
-All errors (new ones prefixed by >>):
-
->> drivers/pci/quirks.c:2528:56: error: use of undeclared identifier 'quirk_disable_aspm_l0s_l1_cap'; did you mean 'quirk_disable_aspm_l0s_l1'?
-    2528 | DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HUAWEI, 0x1105, quirk_disable_aspm_l0s_l1_cap);
-         |                                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         |                                                        quirk_disable_aspm_l0s_l1
-   include/linux/pci.h:2362:40: note: expanded from macro 'DECLARE_PCI_FIXUP_HEADER'
-    2362 |                 hook, vendor, device, PCI_ANY_ID, 0, hook)
-         |                                                      ^~~~
-   include/linux/pci.h:2321:43: note: expanded from macro 'DECLARE_PCI_FIXUP_SECTION'
-    2321 |                 = { vendor, device, class, class_shift, hook };
-         |                                                         ^~~~
-   drivers/pci/quirks.c:2514:13: note: 'quirk_disable_aspm_l0s_l1' declared here
-    2514 | static void quirk_disable_aspm_l0s_l1(struct pci_dev *dev)
-         |             ^
-   1 error generated.
-
-
-vim +2528 drivers/pci/quirks.c
-
-  2519	
-  2520	/*
-  2521	 * ASM1083/1085 PCIe-PCI bridge devices cause AER timeout errors on the
-  2522	 * upstream PCIe root port when ASPM is enabled. At least L0s mode is affected;
-  2523	 * disable both L0s and L1 for now to be safe.
-  2524	 */
-  2525	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080, quirk_disable_aspm_l0s_l1);
-  2526	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, 0x0451, quirk_disable_aspm_l0s_l1);
-  2527	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PASEMI, 0xa002, quirk_disable_aspm_l0s_l1);
-> 2528	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HUAWEI, 0x1105, quirk_disable_aspm_l0s_l1_cap);
-  2529	
+- Mani
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+மணிவண்ணன் சதாசிவம்
