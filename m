@@ -1,191 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D128287246;
-	Thu, 13 Nov 2025 04:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66BA13009D3
+	for <linux-pci@vger.kernel.org>; Thu, 13 Nov 2025 04:53:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763009486; cv=none; b=PqRWM08swseUxv4BUfjPfjaJ60YV7z+MVtmX78sDksazxQMBlHlhmp50U25qVPyLrwEQz+Hlw0GCdfJgMwLZES6VS2pV214eE8HEjUeczjtNbrMkLd1d1FyOwGRIB6sTG5xoBoz8EOfu5JMYU0AT5aF/piA+iBiTqMI1QjhbqHI=
+	t=1763009605; cv=none; b=MLfOwJhp0SWxaZnABAsV8h89kPhRYOUaMH9usV8xKpbglxeSziHJBIdmM84x4K3DnO4CfTQb5bSuENdRhfuG5zCsWVpSTcg6J2t3p1bEPBWRN+wnO5GGLf/r2QxyD7506MrLLy4q6EzAhyCuDkyYf9p7upLrzziUBGvVKIHqd7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763009486; c=relaxed/simple;
-	bh=u1EUAM6v70Id6ffUyitEzHKUzjJqyDleo4+wyX4xB1k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rmQXeN9IqqISaO+qkLNl3GRArViK4wxiDNu4Ztp8Mz73LJ47BqZwBJ5FdluknVv3z/YnEDm81u/lSmRy8WM4CVhWaTuudRhziJGMumRarMxxkeEAZwPg808HY2LDr5ZDLzFAJ+9kDY8W5P/B0ncMCIdun4gyk8iXqWXNKI1Pzo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=glxU1Wrf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763009605; c=relaxed/simple;
+	bh=Sgk4sNsoPmm9DQzn3ceYNqEReekm5CzcVM4xwpOkc0o=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=SHMnAWGxUfnjmnsN9dvsWMs/hVTA4PUEi7i3qpQaAeleroHSF0ilx9wroITRGn5L1qLJy07Kz+bWdbhZHyZnMnvQGNZ6NY6gfdG2sTBfoSkV5FrD77+AncxnGDVsTQKskZbQm20QTmx5oE7W/PnWw7rU9NDjn5nSlUzGvdhSM6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ep8kBNy8; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="glxU1Wrf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE866C4CEF5;
-	Thu, 13 Nov 2025 04:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763009486;
-	bh=u1EUAM6v70Id6ffUyitEzHKUzjJqyDleo4+wyX4xB1k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=glxU1WrfDP8k7P6d3p7QCqNLd/d0t4Ua5Ee2ES1XSQCxN18wR1pQ9PmT6R34ZsMIw
-	 98yDh/372bYdTHroq4t9dCea9YG1KlGigje2VMM79I5aPcbW87MGqfy2zdB5EuVoNC
-	 Y5NbC56Z1LU/eJzkxVYbsr2HRFDUMxcSCBK1xP5OYd0Z+JVPoIBHVOpv8COG/H/5GX
-	 yVVm6/g2ol54DCjzv/CvJz07pBN/iE4jwdOef808YZUHqn2vmW3M3/gjka3QWCM29G
-	 7mRdDZjQGYH/cpoRKXYI91HFubJxa7/JJf5pQnEUOw/iw2iaVTifsX2swIWmJGOQ24
-	 fgRgHp7z08NZQ==
-Date: Thu, 13 Nov 2025 10:21:06 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Cc: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org, 
-	kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org, kw@linux.com, 
-	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com, 
-	krishna.chundru@oss.qualcomm.com, quic_vbadigan@quicinc.com
-Subject: Re: [PATCH v3 1/2] arm64: dts: qcom: Add PCIe3 and PCIe5 support for
- HAMOA-IOT-SOM platform
-Message-ID: <nkcxf3gnpvjilvw36f65e3olynta2jebki2rkc4tmka7poux6j@g6xksv3aobpp>
-References: <20251112090316.936187-1-ziyue.zhang@oss.qualcomm.com>
- <20251112090316.936187-2-ziyue.zhang@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ep8kBNy8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763009604; x=1794545604;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=Sgk4sNsoPmm9DQzn3ceYNqEReekm5CzcVM4xwpOkc0o=;
+  b=Ep8kBNy8qKorytH/NAIRp1/vRAyO68fevUzgRq2DZYyhb4pIIwDgVzCN
+   UcFbrH9+zKGWMDHxBANSxqe77CUmyzi6Df1TFeM3rsgoH7cBx3YO0rNxu
+   XW1UPmOs/mdPrFAavHSMmpSDOlWGjJbj631q7nDIqRQku+yEM09ruFerX
+   0rSVi94USU2zoO+CitkV0aAUybWmMqptG+UIUcK1KiJFvih3grLhcZTBM
+   xRjFiAJZ6xnFHGyhtN5yPZVlV2PPo/zMNkarIr9PQCMRwauHyzRi1jSY0
+   XHHyA+ip+DaTKKudNa4tv2k5v386cEWx+NqDMfwHYxGEGVyENLka0Gs7r
+   g==;
+X-CSE-ConnectionGUID: lLuQAr/1Qc65Qz6wZ8MhFw==
+X-CSE-MsgGUID: 79QCNSm1T9OyD6Gfil0/Jg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11611"; a="82480071"
+X-IronPort-AV: E=Sophos;i="6.19,301,1754982000"; 
+   d="scan'208";a="82480071"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2025 20:53:23 -0800
+X-CSE-ConnectionGUID: ABE8EZQ2SUax+nD615gsTw==
+X-CSE-MsgGUID: E/QqV3EQSUSu8ZNfMYlAdg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,301,1754982000"; 
+   d="scan'208";a="189415464"
+Received: from lkp-server01.sh.intel.com (HELO 7b01c990427b) ([10.239.97.150])
+  by orviesa007.jf.intel.com with ESMTP; 12 Nov 2025 20:53:21 -0800
+Received: from kbuild by 7b01c990427b with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vJPKh-0004uL-1o;
+	Thu, 13 Nov 2025 04:53:19 +0000
+Date: Thu, 13 Nov 2025 12:52:34 +0800
+From: kernel test robot <lkp@intel.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: [pci:for-linus 6/6] drivers/pci/quirks.c:2528:56: error:
+ 'quirk_disable_aspm_l0s_l1_cap' undeclared here (not in a function); did you
+ mean 'quirk_disable_aspm_l0s_l1'?
+Message-ID: <202511131022.oNFNddSz-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251112090316.936187-2-ziyue.zhang@oss.qualcomm.com>
 
-On Wed, Nov 12, 2025 at 05:03:15PM +0800, Ziyue Zhang wrote:
-> HAMOA IoT SOM requires PCIe3 and PCIe5 connectivity for SATA controller
-> and SDX65.
-> Add the required sideband signals (PERST#, WAKE#, CLKREQ#), pinctrl states
-> and power supply properties in the device tree, which PCIe3 and PCIe5
-> require.
-> 
-> Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-> Reviewed-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi | 79 +++++++++++++++++++++
->  1 file changed, 79 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi b/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi
-> index 4de7c0abb25a..abb8ea323d78 100644
-> --- a/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/hamoa-iot-som.dtsi
-> @@ -390,6 +390,22 @@ &gpu_zap_shader {
->  	firmware-name = "qcom/x1e80100/gen70500_zap.mbn";
->  };
->  
-> +&pcie3 {
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&pcie3_default>;
-> +	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
-> +	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
+head:   c478e1774359af6039f586f0a49280cfe180a21b
+commit: c478e1774359af6039f586f0a49280cfe180a21b [6/6] PCI/ASPM: Avoid L0s and L1 on Hi1105 [19e5:1105] Wi-Fi
+config: alpha-allnoconfig (https://download.01.org/0day-ci/archive/20251113/202511131022.oNFNddSz-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 15.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251113/202511131022.oNFNddSz-lkp@intel.com/reproduce)
 
-Can you move these GPIOs and PHY (in SoC dtsi) properties to Root Port node?
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511131022.oNFNddSz-lkp@intel.com/
 
-Specifying Root Port properties in controller node is deprecated.
+All errors (new ones prefixed by >>):
 
-- Mani
+   In file included from drivers/pci/quirks.c:21:
+>> drivers/pci/quirks.c:2528:56: error: 'quirk_disable_aspm_l0s_l1_cap' undeclared here (not in a function); did you mean 'quirk_disable_aspm_l0s_l1'?
+    2528 | DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HUAWEI, 0x1105, quirk_disable_aspm_l0s_l1_cap);
+         |                                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/pci.h:2321:57: note: in definition of macro 'DECLARE_PCI_FIXUP_SECTION'
+    2321 |                 = { vendor, device, class, class_shift, hook };
+         |                                                         ^~~~
+   drivers/pci/quirks.c:2528:1: note: in expansion of macro 'DECLARE_PCI_FIXUP_HEADER'
+    2528 | DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HUAWEI, 0x1105, quirk_disable_aspm_l0s_l1_cap);
+         | ^~~~~~~~~~~~~~~~~~~~~~~~
 
-> +
-> +	status = "okay";
-> +};
-> +
-> +&pcie3_phy {
-> +	vdda-phy-supply = <&vreg_l3c_0p8>;
-> +	vdda-pll-supply = <&vreg_l3e_1p2>;
-> +
-> +	status = "okay";
-> +};
-> +
->  &pcie4 {
->  	perst-gpios = <&tlmm 146 GPIO_ACTIVE_LOW>;
->  	wake-gpios = <&tlmm 148 GPIO_ACTIVE_LOW>;
-> @@ -407,6 +423,23 @@ &pcie4_phy {
->  	status = "okay";
->  };
->  
-> +&pcie5 {
-> +	perst-gpios = <&tlmm 149 GPIO_ACTIVE_LOW>;
-> +	wake-gpios = <&tlmm 151 GPIO_ACTIVE_LOW>;
-> +
-> +	pinctrl-0 = <&pcie5_default>;
-> +	pinctrl-names = "default";
-> +
-> +	status = "okay";
-> +};
-> +
-> +&pcie5_phy {
-> +	vdda-phy-supply = <&vreg_l3i_0p8>;
-> +	vdda-pll-supply = <&vreg_l3e_1p2>;
-> +
-> +	status = "okay";
-> +};
-> +
->  &pcie6a {
->  	perst-gpios = <&tlmm 152 GPIO_ACTIVE_LOW>;
->  	wake-gpios = <&tlmm 154 GPIO_ACTIVE_LOW>;
-> @@ -454,6 +487,29 @@ &tlmm {
->  	gpio-reserved-ranges = <34 2>, /* TPM LP & INT */
->  			       <44 4>; /* SPI (TPM) */
->  
-> +	pcie3_default: pcie3-default-state {
-> +		clkreq-n-pins {
-> +			pins = "gpio144";
-> +			function = "pcie3_clk";
-> +			drive-strength = <2>;
-> +			bias-pull-up;
-> +		};
-> +
-> +		perst-n-pins {
-> +			pins = "gpio143";
-> +			function = "gpio";
-> +			drive-strength = <2>;
-> +			bias-disable;
-> +		};
-> +
-> +		wake-n-pins {
-> +			pins = "gpio145";
-> +			function = "gpio";
-> +			drive-strength = <2>;
-> +			bias-pull-up;
-> +		};
-> +	};
-> +
->  	pcie4_default: pcie4-default-state {
->  		clkreq-n-pins {
->  			pins = "gpio147";
-> @@ -477,6 +533,29 @@ wake-n-pins {
->  		};
->  	};
->  
-> +	pcie5_default: pcie5-default-state {
-> +		clkreq-n-pins {
-> +			pins = "gpio150";
-> +			function = "pcie5_clk";
-> +			drive-strength = <2>;
-> +			bias-pull-up;
-> +		};
-> +
-> +		perst-n-pins {
-> +			pins = "gpio149";
-> +			function = "gpio";
-> +			drive-strength = <2>;
-> +			bias-disable;
-> +		};
-> +
-> +		wake-n-pins {
-> +			pins = "gpio151";
-> +			function = "gpio";
-> +			drive-strength = <2>;
-> +			bias-pull-up;
-> +		};
-> +	};
-> +
->  	pcie6a_default: pcie6a-default-state {
->  		clkreq-n-pins {
->  			pins = "gpio153";
-> -- 
-> 2.34.1
-> 
+
+vim +2528 drivers/pci/quirks.c
+
+  2519	
+  2520	/*
+  2521	 * ASM1083/1085 PCIe-PCI bridge devices cause AER timeout errors on the
+  2522	 * upstream PCIe root port when ASPM is enabled. At least L0s mode is affected;
+  2523	 * disable both L0s and L1 for now to be safe.
+  2524	 */
+  2525	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080, quirk_disable_aspm_l0s_l1);
+  2526	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, 0x0451, quirk_disable_aspm_l0s_l1);
+  2527	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PASEMI, 0xa002, quirk_disable_aspm_l0s_l1);
+> 2528	DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HUAWEI, 0x1105, quirk_disable_aspm_l0s_l1_cap);
+  2529	
 
 -- 
-மணிவண்ணன் சதாசிவம்
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
