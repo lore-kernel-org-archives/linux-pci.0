@@ -1,199 +1,143 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mail-m49235.qiye.163.com (mail-m49235.qiye.163.com [45.254.49.235])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 307EB2F6567;
-	Fri, 14 Nov 2025 09:19:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.18
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763111944; cv=fail; b=cdyH6cb9d15t4ByMGnDWg7AmZPtgOnhEkIhBz4ZDdS72gR/LJjl9Tz3SZK71S0unWPvxjQuyfCKDHu8MCwuTemnzhYeHor1wxYo3GOJrxdbM2wMGJOAaQqj3h/oJBQrNXthW7uvCz3iaovPAqSx/lwA5rvhQDyNFtdVfuPiVe10=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763111944; c=relaxed/simple;
-	bh=RwyJw+hPrYrzvXrzwMZnoRGJQQBuVFeFvRgqHK2wbQ4=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=F+Xp+n96fusrNg/GFJWJxy9PyQDXKdfvJYT0syGKIZHsODaIUDysdnJ/PLdgxG3t41u/oieBf5BkYkc9+E03TH5/AYWU7RxfwTOnQEr/NXoaPrtO6W1Fjjvr67R7qRFugj2FMbSOZSpzJAneNp1u+1UD2NLMZ2StUE0GPhnXyO4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=d5V5JVPm; arc=fail smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5452F6567;
+	Fri, 14 Nov 2025 09:21:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.235
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1763112104; cv=none; b=KVIQw3rBRxmx0al3txLrpGoA1gnIeiX9xxa3D+JXqnwrnSXXRPtFol2G0FuKe67rUU5aMsSREO3kksZCxP3Gg3UBcyCd7WygBPG1R2PF2bfQwpwf7KvTe+9axgamzAW17/bdWOQ/xGNoR0fnPtmQQ7ldiXVufPZ0OAwA7JSv9CM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1763112104; c=relaxed/simple;
+	bh=8GuigxhVC/1VVbYqTRQPCHgKwEOMm5TYRelesVWIoHI=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=nHW2tkeWfrqIN5+D1/S7r8N+DN4jAn0Hgpe8Anvpou7SlYHQNPpp+PQWkwq7dMQmOLnZhSiPleIlOw9McM1Lyk9RE5094RT63R814yNOhdCkiFsG0X06WGkXk2fuq2Q4Sd/K/nvDHU1cYMVjkWhaWUV9yQD0boERAOwgtqe5lR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=OanU7ELu; arc=none smtp.client-ip=45.254.49.235
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="d5V5JVPm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763111944; x=1794647944;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=RwyJw+hPrYrzvXrzwMZnoRGJQQBuVFeFvRgqHK2wbQ4=;
-  b=d5V5JVPm7e/NobNFyH0VRpT5ii9skNxZLHgpA7Vsq81L4qcJDiuSkLOM
-   EeyXmtcBqCW1DP21bTABGHmZf6D4IjCMvSnmp+AvF/vKtl3jrNfAJggZH
-   F390o7xlir00EtXQdfP7MkpRl4Z4LrpkF0z7LNq/MKxvtFq/Z39zIvNxn
-   6NT9QFTBQKN2lahCyAZOhO4XxqwHiFMnY549D2bKhSAwG7veve1r4kSA8
-   o6DFKQ1vZ1IG8wZtAHjUB/Fbhy4oUAMGBWB9tbv4iskqz+BHyK/HiPmeV
-   gkRWZV9s9u38fYoE/yTgmJ8DroOFW0Fj5z4eLKPa2sOjc/9h/pBXAAd6T
-   Q==;
-X-CSE-ConnectionGUID: 2IGRSNo9Qx2TftWMUVa68w==
-X-CSE-MsgGUID: EYHuvpW7SOOa0+EytjHukw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11612"; a="65239114"
-X-IronPort-AV: E=Sophos;i="6.19,304,1754982000"; 
-   d="scan'208";a="65239114"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2025 01:19:02 -0800
-X-CSE-ConnectionGUID: 74xcelYTSxSOEi34RpY93Q==
-X-CSE-MsgGUID: hnHWlgnASJmGuKmaEqSwUg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,304,1754982000"; 
-   d="scan'208";a="189751358"
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by orviesa007.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2025 01:19:02 -0800
-Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.27; Fri, 14 Nov 2025 01:19:01 -0800
-Received: from ORSEDG902.ED.cps.intel.com (10.7.248.12) by
- ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.27 via Frontend Transport; Fri, 14 Nov 2025 01:19:01 -0800
-Received: from CH1PR05CU001.outbound.protection.outlook.com (52.101.193.46) by
- edgegateway.intel.com (134.134.137.112) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.27; Fri, 14 Nov 2025 01:19:00 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dd/mbVWPg91tnkLV5CF2HGTF3xsZPNxGuUvuPVfWNY6R+dM4NH2stIlGAb/YFte0XmQWimLoT5ldfsnOhfMTLrCeg2hLxJpnlieOkbDehTvJd5m3ymP0l/R3GtwUaLQvNpV2QF4pCrhOVqFy5/zo0u+hk19cxIaS86m0iAjDddeM1veLw9r3LlvoC+v3Gt4rcDPTkZG9uFi0UEC42xaaLV/o4HOJ4cKJ7Y3pGdDnRcHYrD+033MkhuCmGAFR4PdDBnkCFuioCyYAKAWbOfjaoiEclG6PMEmFLiV8LK08K51Lwe41ghSUC4a58A2wpCuaVuY2xsqw8OakLhKMNh4DcA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=RwyJw+hPrYrzvXrzwMZnoRGJQQBuVFeFvRgqHK2wbQ4=;
- b=FtxEmWbwxgGDWI3jv3PXRIWKiRV2Ut3N8ya2Av7WizP+GDZZrskpRHw5PKsbENORftZUb2HPRHq90aNaPjdHGIBe3c5bqP89gl9del45SvmjSOKxmXOOeuuV0Bj0ZbwjCqD8zovSowNkHm44KD2cyfMYNg8UQwGycaJ6eZeWASwQyl2PKutTgwMjH7VbmOuf/2QVsJcvtaxJcs8gt7l2GmkStGXlS4LCIYe3pdJbbGkM70obzYmn6IZojcSj+SrbpeLSL2kE//C9ujg/nyrjKipVmEwgjSwJojTWGcdcHlPOMsxPbbg4F2KNzeNrYoJ0WBNzg4cjeBTm4rHrxsHUrg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from BN9PR11MB5276.namprd11.prod.outlook.com (2603:10b6:408:135::18)
- by PH0PR11MB5078.namprd11.prod.outlook.com (2603:10b6:510:3e::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9320.17; Fri, 14 Nov
- 2025 09:18:58 +0000
-Received: from BN9PR11MB5276.namprd11.prod.outlook.com
- ([fe80::b576:d3bd:c8e0:4bc1]) by BN9PR11MB5276.namprd11.prod.outlook.com
- ([fe80::b576:d3bd:c8e0:4bc1%5]) with mapi id 15.20.9320.013; Fri, 14 Nov 2025
- 09:18:58 +0000
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Nicolin Chen <nicolinc@nvidia.com>, "joro@8bytes.org" <joro@8bytes.org>,
-	"afael@kernel.org" <afael@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "alex@shazbot.org" <alex@shazbot.org>,
-	"jgg@nvidia.com" <jgg@nvidia.com>
-CC: "will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
-	<robin.murphy@arm.com>, "lenb@kernel.org" <lenb@kernel.org>,
-	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "iommu@lists.linux.dev"
-	<iommu@lists.linux.dev>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"patches@lists.linux.dev" <patches@lists.linux.dev>, "Jaroszynski, Piotr"
-	<pjaroszynski@nvidia.com>, "Sethi, Vikram" <vsethi@nvidia.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>, "etzhao1900@gmail.com"
-	<etzhao1900@gmail.com>
-Subject: RE: [PATCH v5 3/5] iommu: Add iommu_driver_get_domain_for_dev()
- helper
-Thread-Topic: [PATCH v5 3/5] iommu: Add iommu_driver_get_domain_for_dev()
- helper
-Thread-Index: AQHcUsoPpfLoaM2cuES0GsNCd75abLTx6alw
-Date: Fri, 14 Nov 2025 09:18:57 +0000
-Message-ID: <BN9PR11MB527660654210CCC3C12690468CCAA@BN9PR11MB5276.namprd11.prod.outlook.com>
-References: <cover.1762835355.git.nicolinc@nvidia.com>
- <0303739735f3f49bcebc244804e9eeb82b1c41dc.1762835355.git.nicolinc@nvidia.com>
-In-Reply-To: <0303739735f3f49bcebc244804e9eeb82b1c41dc.1762835355.git.nicolinc@nvidia.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BN9PR11MB5276:EE_|PH0PR11MB5078:EE_
-x-ms-office365-filtering-correlation-id: 61dbcf9a-83a0-499a-80bd-08de235ed753
-x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016|38070700021;
-x-microsoft-antispam-message-info: =?us-ascii?Q?Srj/mOIaskZeG1ILG56aIu/jcRow/Pj2QEtKAUjNSSDuIlFBPwcCj72XgMDM?=
- =?us-ascii?Q?7ijPZGjvB2bzQLEIepFgphcaY65xokOswra334Nu9fCsH/JKp5B+tRwR7UM9?=
- =?us-ascii?Q?XB4Fc61XGvv1VZOuArBx/lyFqvLBBZrUGKRpCNSpJCWP7M6T9Jk4nbprB8wn?=
- =?us-ascii?Q?DezH/R1xbZAQRilbhxG6qZVk9W90Snw0y1tZREy4ryEblfYyu5zUlHth3meL?=
- =?us-ascii?Q?diHwql83S9PsZ/pI/cFN2ck+fHAr1jb4WvBRtKwcg+wRLCBInFGl0fOAwJGs?=
- =?us-ascii?Q?OZg0z2dtlGFLdCy2xTN+LK+CN6c4WlFQkY3QRN5AzO3lkqlubXw8VuPuiAo5?=
- =?us-ascii?Q?CpAxKH/iPUcVB+1kycP1fYEdrr0gcTNMQb4pnEfLkw3yRyPjOruRA98DKiz2?=
- =?us-ascii?Q?HletRnoyp7t1xAqMzvVUMpHuUEUBXI+GeHqJBCABklIqPpxw8k+df5iiica0?=
- =?us-ascii?Q?Ff2TKGN/0yCGuMl9tBZyZDB+3RUO3HWQIGIk5vIXUbleHJBnatrxwWpkLi92?=
- =?us-ascii?Q?RhzEZgkLjH9SmyNfpFnulz4pbu6qtSVSJsXGpXu8obKGyQgrYTy7WqwlgT2H?=
- =?us-ascii?Q?0P9uLmp/xvyjonCfSWPvlPRqc5STDIu1rmGY4f7bFf9mu0DUEBDVaAVUu/hx?=
- =?us-ascii?Q?FxZSM9714dcKAlSyLNp9JwVjYByQvwO4zx4gWEMSeiAqqWYE+p/DA8Fl5acq?=
- =?us-ascii?Q?q9LOZ62LAXNuWzO56PMNXKxhWWXfJUHAPfzrIki0lYntKG70hol784/H18by?=
- =?us-ascii?Q?tz/v854PQZ3sDv4N+Mexhvii4bpvTf0tv33Bm8adW1GaMM2tq5FvZVKd5giv?=
- =?us-ascii?Q?/CDediu9bZlWIHBTDvUk3PiIu247L/xjRgW8+DqJdHsYW4O8CgYQ575szCLr?=
- =?us-ascii?Q?chj6sD/+7Q66Lw+UB5b4DTTajiWEv1PngZ4z/CSkoQfsrWTJJf3NVfMCzuH8?=
- =?us-ascii?Q?/0ou5F0ckIykWJdFkwivn/EugWIjyAAu4FKnrypm2kZRoAkm0fTER4BM+J85?=
- =?us-ascii?Q?Q5Hi+vv77hHInzJN+ChxBrNAjl5a5oWzklc+NvSWiz+03Nb2JEWMbIacSH6B?=
- =?us-ascii?Q?XW0prUdHwMJvVDSQUnZOczJSnGNcaXyGjkz50K05tAQBa0lizvlPgrKVx5LO?=
- =?us-ascii?Q?RulHn0DBIB5p+5PjrPpDcnvQxYZHLVXnTG+r7wFfmZa6uBG1ekjYQrcF377H?=
- =?us-ascii?Q?UsiLhNol5rzNt0oThIjE2ckRzhqfxBwzBJPJcGSpiup4oZEYgn8WQSwoeFdz?=
- =?us-ascii?Q?/5q/mukJWxzfzMusESy1IgykSZ+UlzWHhejRDNKC3xzHN0QMkhQlm25gbfTC?=
- =?us-ascii?Q?z7pLHwDdobdEvICrgYqePfcR+AQK2uMn4oGti7Sf8gbqHpvmiT7MRKVAiP0s?=
- =?us-ascii?Q?1KoRfs+4n7vlve90rxYpSRc36I8rHt7btHl9suacVIzx4kwxouZUoWQAgV8a?=
- =?us-ascii?Q?he4KOI5+DPDtILWBiuZiYOObv6ODZDTgyTCWVL5Rc4mh0PvwtN7XOa/AHQZF?=
- =?us-ascii?Q?CJFZM8rzsXYKH8EJa1TgO1Z7ZTXkGpi6Awil?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR11MB5276.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?CgW7O9v0EuoYAniI/Dd/5SyOKxT7zWKWvqXJONTmDCjT+SAG9id1l7khiCEV?=
- =?us-ascii?Q?kCfWtGMuk8vybFNK3FrVP1rZVsgbnFsZxv5pNPD07n4sPMwlhLiyDw9ahTHA?=
- =?us-ascii?Q?IrHb+xUhBfnlPPkXHnfoYDPMbB5O0aEPL5p91naedVjhbkpEvKXZ9gq+amsH?=
- =?us-ascii?Q?88RDlQwDeQfAW+rzoWrDY4uJ2kYAM4XYMXy54yCroIp+AYVDdp94l7gGKhEg?=
- =?us-ascii?Q?iXpwxa8IEbrwkTvK8up2XLQnJLkIkl6n4hnoq5Inpp/gM8VWS86Dl9feRrj0?=
- =?us-ascii?Q?ja7EaOlu0Tny4kkG2ZLuI00X5JqpvwfXuHpfuSOPy1MX3uqngeV3v2HmlKqK?=
- =?us-ascii?Q?BSxS7+O+vohDv0d+Hiz5zU5bcBda8CJ065+ghGb/WvX75ytcbhViqB3z28JD?=
- =?us-ascii?Q?8dQ1DIy2A4wlHquQcTAiYf9pX1USD4Zcgd1RmdhlmcwIWk7rQNZ+HWdEFi6e?=
- =?us-ascii?Q?kaYiVkMg1QWCVMZO77IgdXCaA4ZeCTxT9u/kQvaoHTatqiTztguNmwxlVus5?=
- =?us-ascii?Q?Ey3cUaiZssPRuU1Q7KskV4nopxZmVsN3x5GTTVwJNCBV0+qGje1JmRdxHkXu?=
- =?us-ascii?Q?sGDkBxvFlY6zRxX9BTXPeM7vAPNACFfsPVUfLbHgnT8+YnGs+a4953K16Rxg?=
- =?us-ascii?Q?wYNjO/MvrKDsL6ZyFoIRqela+LtQs/iIueuGm8xZz4BxgpGsMyCp/oCqeD3M?=
- =?us-ascii?Q?00HpdEiqN6u+hlk9s7EJSVhNL78sUYB8MVh4fFzfN/I03uu7HQ6HeNlg+S5V?=
- =?us-ascii?Q?KrZ9ymDg8i/chqn8FAR5F+8Aj9N3wU4+T3jm1nF89xgP04SE5r2nR3d1S6Id?=
- =?us-ascii?Q?WCMGTpcR+O0zOOkROaWUnhxfXhtKa6xDMbDT65p44rZJo4rcGVLHsOPfm03W?=
- =?us-ascii?Q?BdDviT+jrIDhxLfDTkJU9UIaoq46n2N5Lv5z46iuJZA12VdaLtwjL9PVlb8/?=
- =?us-ascii?Q?DakDfghxY4nB/lKLKK7bJxNKa9rqfHUGLHJGicfuKZgvpoU+YbomuUa3h4QS?=
- =?us-ascii?Q?R09E+Xbi40fDL9GsbK0kacpMEgVhGKE1XrX6LEJvb7gLDF6bB2Ru5sV0yCop?=
- =?us-ascii?Q?elV4UyUumggahWBIYoievoasj7K2RBCAIPsc7iuQR/hVIA3feCLcEpAIz7So?=
- =?us-ascii?Q?6yVhagk45bkajZfaV87mUrPRtd7vsDcnWYJQA9ppLrnFZG9aK5hQiEjUF1DR?=
- =?us-ascii?Q?qd2F+27gay0Ln3/wFSW2Ywm642qyvhsoAgWEX/JLZsBCvM0oujzgOpdqSWQs?=
- =?us-ascii?Q?KbvW8d7uWkke3G6Wi1HmvRp1RK5SzU+gx4J73+APMFVJefrlxT0F+7DvSY4c?=
- =?us-ascii?Q?E3VZy7iw2AhIW0kbnOr1UvLeLOs5PDaJsQG2zP6YH9rntP1uK3yJqcnKLcTJ?=
- =?us-ascii?Q?49G/EXbhpGL0+/nE+drTxAhgpGWBXyD85DQcsa36UGYB81fdpsNdToX9g0xu?=
- =?us-ascii?Q?JsuyHXKNGpjDaVVjNCTmhTYSFtgBXXQoKexravH6oN7WBHNZr3fnyHmwrjBd?=
- =?us-ascii?Q?O+WD5JbIaipLdmo5ZsjCz9hCtvuzeZvyp3fERSgP1mcoSfw39i6twTSKdi4S?=
- =?us-ascii?Q?/LhH7tkKYh5V9vB+H7SiwcdNlKyRrj+UB7zJcnrE?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="OanU7ELu"
+Received: from [172.16.12.129] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 29992e5be;
+	Fri, 14 Nov 2025 17:16:22 +0800 (GMT+08:00)
+Message-ID: <e8524bf8-a90c-423f-8a58-9ef05a3db1dd@rock-chips.com>
+Date: Fri, 14 Nov 2025 17:16:21 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BN9PR11MB5276.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 61dbcf9a-83a0-499a-80bd-08de235ed753
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Nov 2025 09:18:57.9242
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ady25NFH0zdBtwdjU7khfIWHGeSpqXMD2zqaRwUuiLa19hd+jSDZ0tA6DJc8SR5VYEv0YmgBuchHyCvR8wEj/g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB5078
-X-OriginatorOrg: intel.com
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+ linux-kernel <linux-kernel@vger.kernel.org>,
+ devicetree <devicetree@vger.kernel.org>, krzk+dt <krzk+dt@kernel.org>,
+ conor+dt <conor+dt@kernel.org>, Johan Jonker <jbx6244@gmail.com>,
+ linux-rockchip <linux-rockchip@lists.infradead.org>,
+ Simon Glass <sjg@chromium.org>, Philipp Tomsich <philipp.tomsich@vrull.eu>,
+ Kever Yang <kever.yang@rock-chips.com>, Tom Rini <trini@konsulko.com>,
+ u-boot@lists.denx.de, =?UTF-8?B?5byg54Oo?= <ye.zhang@rock-chips.com>
+Subject: Re: [PATCH] arm64: dts: rockchip: align bindings to PCIe spec
+To: Geraldo Nascimento <geraldogabriel@gmail.com>
+References: <4b5ffcccfef2a61838aa563521672a171acb27b2.1762321976.git.geraldogabriel@gmail.com>
+ <ba120577-42da-424d-8102-9d085c1494c8@rock-chips.com>
+ <aQsIXcQzeYop6a0B@geday>
+ <67b605b0-7046-448a-bc9b-d3ac56333809@rock-chips.com>
+ <aQ1c7ZDycxiOIy8Y@geday>
+ <d9e257bd-806c-48b4-bb22-f1342e9fc15a@rock-chips.com>
+ <aRLEbfsmXnGwyigS@geday>
+ <AGsAmwCFJj0ZQ4vKzrqC84rs.3.1762847224180.Hmail.ye.zhang@rock-chips.com>
+ <aRQ_R90S8T82th45@geday> <aRUvr0UggTYkkCZ_@geday> <aRazCssWVdAOmy7D@geday>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <aRazCssWVdAOmy7D@geday>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9a81a6c7ff09cckunm83f5efda44ea74
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQhgYQlZCQx9JSU5DSkNPSh9WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=OanU7ELuu0i6QxNwaBwYgLpQCUE6kBkXnosBpB5xJa+/1c8gaH9JjY3Crn4xM7igJavW9mLTplYkYMO2WXlXr40/yHnKDOGRpyQQRywI3wvtfothQLLLSpusqui0Vwx57upf1ejVQaFOQ/Bxnq8U70SFQxa91P3HMX8M5OD1UuE=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=pAiVqyQ+kiQN8Phi43cHK6Tl1rhV/2RbqIHqDBjVGzk=;
+	h=date:mime-version:subject:message-id:from;
 
-> From: Nicolin Chen <nicolinc@nvidia.com>
-> Sent: Tuesday, November 11, 2025 1:13 PM
->=20
-> There is a need to stage a resetting PCI device to temporally the blocked
+在 2025/11/14 星期五 12:41, Geraldo Nascimento 写道:
+> On Wed, Nov 12, 2025 at 10:09:15PM -0300, Geraldo Nascimento wrote:
+>> Hi Ye, Shawn,
+>>
+>> Here's more contained workaround without resorting to clearing DDR to
+>> INPUT for every GPIO:
+>>
+>> diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+>> index ee1822ca01db..1d89131ec6ac 100644
+>> --- a/drivers/pci/controller/pcie-rockchip-host.c
+>> +++ b/drivers/pci/controller/pcie-rockchip-host.c
+>> @@ -315,7 +315,8 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+>>   			    PCIE_CLIENT_CONFIG);
+>>   
+>>   	msleep(PCIE_T_PVPERL_MS);
+>> -	gpiod_set_value_cansleep(rockchip->perst_gpio, 1);
+>> +	gpiod_direction_input(rockchip->perst_gpio);
+>> +	gpiod_direction_output(rockchip->perst_gpio, 1);
+>>   
+>>   	msleep(PCIE_RESET_CONFIG_WAIT_MS);
+>>   
+>> This results in working PCIe for me, pass initial link training.
+> 
+> Sorry for the inconvenience of more mail, but I'm providing as much
+> detail as I can.
+> 
 
-s/temporally/temporarily/
+Don't worry, it's helpful, so I think Ye could have a look.
+May I ask if the failure only happened to one specific board?
+
+Another thing I noticed is about one commit:
+114b06ee108c ("PCI: rockchip: Set Target Link Speed to 5.0 GT/s before 
+retraining")
+
+It said: "Rockchip controllers can support up to 5.0 GT/s link speed."
+But we issued an errata long time ago to announced it doesn't, you could
+also check the PCIe part of RK3399 datasheet:
+https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datasheet_V2.1-20200323.pdf
+
+Also we set max-link-speed to ONE in rk3399-base.dtsi but seems another
+patch slip in: 755fff528b1b ("arm64: dts: rockchip: add variables for 
+pcie completion to helios64")
+
+> This hack has been confirmed to work in U-boot also.
+> 
+> diff --git a/drivers/pci/pcie_rockchip.c b/drivers/pci/pcie_rockchip.c
+> index 19f9e58a640..5702b607ee6 100644
+> --- a/drivers/pci/pcie_rockchip.c
+> +++ b/drivers/pci/pcie_rockchip.c
+> @@ -329,8 +329,10 @@ static int rockchip_pcie_init_port(struct udevice *dev)
+>   	writel(PCIE_CLIENT_LINK_TRAIN_ENABLE,
+>   	       priv->apb_base + PCIE_CLIENT_CONFIG);
+>   
+> -	if (dm_gpio_is_valid(&priv->ep_gpio))
+> -		dm_gpio_set_value(&priv->ep_gpio, 1);
+> +	if (dm_gpio_is_valid(&priv->ep_gpio)) {
+> +		dm_gpio_set_dir_flags(&priv->ep_gpio, (priv->ep_gpio.flags & ~GPIOD_IS_OUT) | GPIOD_IS_IN);
+> +		dm_gpio_set_dir_flags(&priv->ep_gpio, (priv->ep_gpio.flags & ~GPIOD_IS_IN) | GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+> +	}
+>   
+>   	ret = readl_poll_sleep_timeout
+>   			(priv->apb_base + PCIE_CLIENT_BASIC_STATUS1,
+> 
+> So my report suggests this is not specific to Linux and because same
+> workaround works in U-boot simplified driver model I suggest you check
+> from your side.
+> 
+> Previously PCIe link training timeout, not working. Now I'm very happy
+> with working PCIe in Linux and U-boot.
+> 
+> Thanks,
+> Geraldo Nascimento
+> 
 
