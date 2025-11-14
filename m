@@ -1,157 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA3012DC794;
-	Fri, 14 Nov 2025 18:59:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92F42ECD0F;
+	Fri, 14 Nov 2025 19:03:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763146771; cv=none; b=JOUPmJHkv/GsuFjRazOKBwURI7Jff3gvLFpZ7w3zIKHMDOjuhZrw9cX7dajzTFwgh56ekzoJbooYoAmn6rFmSHC4cw3sLMN+87rrcTyt1pEJaAVNX6Q6xzlZZTHEx60QXQeW5f04DVkX64AnQQZJRnUK7MLYF9BjqbNVef9634w=
+	t=1763147025; cv=none; b=aSGRXF3EI6d4OfHtUGg+PR00IW0aP/Fc2m6elZSFyry6/QLDxBoPI/BZpLgK8Y5uR/cM3h9tRmPys5m7TS6hLsC5RNS3KBxr5iYrfw9Z5OVUTcA3ceQiPEIDjBzY/ZWDR0TN2uLHabD44WraayH3zcLEuzUZMzX/BzhA+yedSn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763146771; c=relaxed/simple;
-	bh=kb4vVC9exWAZjRCcwIcqHoYZzk1sVFsAZ4sy0TjOZnU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=QETwBt4EnixI/rcfuef0LwyRiGd5ELIlftOGC4A+yLlyAOqMlJLCwrxlbA36/pbvNRXbDmhEVk8V4ixQJTf8JpcF0l0zZoIaTz/yFgYXsSOTbBlJio6+pn3z5a73y8joJEhmAQkQOnHaVteXPQPy4uXXP03cnKcJOAMoV3Rj8wI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D7sY7WBe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763147025; c=relaxed/simple;
+	bh=Dym/pfPU9DLIbudGmaXmsPCZxOSh2XiLLb064rHEO3A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=offgZPkCB1V2LFnOQNdM0WJmgrGAEgorRFS77k86ZXe5Ecm1oNGa7m5Vx4AWs7wIFhsWEKdm5FUgXPlyGIZbFwIJYfRexno9oQmjPEbZD6yvNVWh00WwWsOPHEs3BawPZwMG2h5RwKpgCXNfvAylX+z30EaKFOcv3njh0uHRcPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VdZU2x2V; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D7sY7WBe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A38BC2BC86;
-	Fri, 14 Nov 2025 18:59:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763146770;
-	bh=kb4vVC9exWAZjRCcwIcqHoYZzk1sVFsAZ4sy0TjOZnU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=D7sY7WBeYKhYRE/ZqKAyww/oiMkz2yorlpOCsTSA+VvkPWjr4qNoyWG22jVnny5ZW
-	 gs1lnsk0CkM9PLT8NG7WmjnBImZZHVdI8gOxC3VQpxvgPcLkzEdBrtzzqtbFIsQ0QO
-	 v32878CMEiOi4xiYQJ1TBCOG/KaHrVdGiSzlX97rOSKcTu5CP4UUQ4g3RtU8sxkNrI
-	 DlvTIhLY8Jbdf6Dk7U87xsmeJ84UQ5oukLg/g92pvyDyFFQk7wVrNMfGMTGPwTmAog
-	 h0k2wxcVHwtgw0dF6Ye7nsueTLiIYzzq82Md5pqoA3DuqNnN4suN+uYB/KwaQhUd3C
-	 qy3j20hjujKbw==
-Date: Fri, 14 Nov 2025 12:59:28 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian Bruel <christian.bruel@foss.st.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VdZU2x2V"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763147023; x=1794683023;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Dym/pfPU9DLIbudGmaXmsPCZxOSh2XiLLb064rHEO3A=;
+  b=VdZU2x2VKXnVWtWctzTR5nRJDg8cETcsshi/vLl6WK437V77VkFqXj3w
+   Uzms0zzElpEyHJ+/Mly0sPTcrcSICgBNwkOBjU3CkwkckK4fiVBv8bkby
+   PRsigd9I9PWHE+dCGvByZmEJGMI4tfphTvtmNT2y5oibzXxxTJ/yMI3Oa
+   /LuRbSVbFDRmmPRZZ5C4mhAEUrKZOK/PYHR468p1Sxa20sq6ED/oeBWKH
+   /GuCtT2woK4gLKkYjqqVfgzUW4nlA3nI0r9oe5g7FZXsfzC1TVKzCPBLK
+   0RqPkFjT4NE2Uk5Xm2YQ3Bq8w/OOFxxiT+M3HwacQFhwF1f50ke5VNYmD
+   Q==;
+X-CSE-ConnectionGUID: yoU8wm9wSvukuLi0/Sin9A==
+X-CSE-MsgGUID: p/1hQRqGSH6U+d0ysZJBeQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11613"; a="87896161"
+X-IronPort-AV: E=Sophos;i="6.19,305,1754982000"; 
+   d="scan'208";a="87896161"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2025 11:03:43 -0800
+X-CSE-ConnectionGUID: Y3M1gm+YRxme2H3VOXGn5Q==
+X-CSE-MsgGUID: ZFiGynYVRpC+9bZ21AGmqg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,305,1754982000"; 
+   d="scan'208";a="195002153"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by orviesa005.jf.intel.com with ESMTP; 14 Nov 2025 11:03:41 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1003)
+	id B1D2F94; Fri, 14 Nov 2025 19:55:36 +0100 (CET)
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Christian Bruel <christian.bruel@foss.st.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
 Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Alexandre Torgue <alexandre.torgue@foss.st.com>,
-	linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: stm32: Fix LTSSM EP race with start link.
-Message-ID: <20251114185928.GA2335574@bhelgaas>
+	Alexandre Torgue <alexandre.torgue@foss.st.com>
+Subject: [PATCH v2 1/1] PCI: stm32: Don't use "proxy" headers
+Date: Fri, 14 Nov 2025 19:52:01 +0100
+Message-ID: <20251114185534.3287497-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251114-perst_ep-v1-1-e7976317a890@foss.st.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Nov 14, 2025 at 08:45:52AM +0100, Christian Bruel wrote:
-> If the host has deasserted PERST# and started link training before the link
-> is started on EP side, enabling LTSSM before the endpoint registers are
-> initialized in the perst_irq handler results in probing incorrect values.
-> 
-> Thus, wait for the PERST# level-triggered interrupt to start link training
-> at the end of initialization and cleanup the stm32_pcie_[start stop]_link
-> functions.
+Update header inclusions to follow IWYU (Include What You Use)
+principle.
 
-I've seen this kind of thing in other drivers, and I wondered whether
-it was safe because the host asserts and deasserts PERST#
-asynchronously, independent of anything the endpoint is doing.
+In particular, replace of_gpio.h, which is subject to remove by the GPIOLIB
+subsystem, with the respective headers that are being used by the driver.
 
-I assume it's possible that the host deasserts PERST# before this
-driver has the stm32_pcie_ep_perst_irq_thread() thread set up.  If
-that happens and the driver doesn't see the PERST# interrupt, does
-everything still work correctly?
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
 
-> Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
-> ---
->  drivers/pci/controller/dwc/pcie-stm32-ep.c | 38 ++++++------------------------
->  1 file changed, 7 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-stm32-ep.c b/drivers/pci/controller/dwc/pcie-stm32-ep.c
-> index 3400c7cd2d88a279c49ef36a99fc7537c381c384..d0654bb43759bb8d0f0d7badbf7bdae839241fcf 100644
-> --- a/drivers/pci/controller/dwc/pcie-stm32-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-stm32-ep.c
-> @@ -37,36 +37,9 @@ static void stm32_pcie_ep_init(struct dw_pcie_ep *ep)
->  		dw_pcie_ep_reset_bar(pci, bar);
->  }
->  
-> -static int stm32_pcie_enable_link(struct dw_pcie *pci)
-> -{
-> -	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
-> -
-> -	regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
-> -			   STM32MP25_PCIECR_LTSSM_EN,
-> -			   STM32MP25_PCIECR_LTSSM_EN);
-> -
-> -	return dw_pcie_wait_for_link(pci);
-> -}
-> -
-> -static void stm32_pcie_disable_link(struct dw_pcie *pci)
-> -{
-> -	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
-> -
-> -	regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR, STM32MP25_PCIECR_LTSSM_EN, 0);
-> -}
-> -
->  static int stm32_pcie_start_link(struct dw_pcie *pci)
->  {
->  	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
-> -	int ret;
-> -
-> -	dev_dbg(pci->dev, "Enable link\n");
-> -
-> -	ret = stm32_pcie_enable_link(pci);
-> -	if (ret) {
-> -		dev_err(pci->dev, "PCIe cannot establish link: %d\n", ret);
-> -		return ret;
-> -	}
->  
->  	enable_irq(stm32_pcie->perst_irq);
->  
-> @@ -77,11 +50,7 @@ static void stm32_pcie_stop_link(struct dw_pcie *pci)
->  {
->  	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
->  
-> -	dev_dbg(pci->dev, "Disable link\n");
-> -
->  	disable_irq(stm32_pcie->perst_irq);
-> -
-> -	stm32_pcie_disable_link(pci);
->  }
->  
->  static int stm32_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> @@ -152,6 +121,8 @@ static void stm32_pcie_perst_assert(struct dw_pcie *pci)
->  
->  	dev_dbg(dev, "PERST asserted by host\n");
->  
-> +	regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR, STM32MP25_PCIECR_LTSSM_EN, 0);
-> +
->  	pci_epc_deinit_notify(ep->epc);
->  
->  	stm32_pcie_disable_resources(stm32_pcie);
-> @@ -192,6 +163,11 @@ static void stm32_pcie_perst_deassert(struct dw_pcie *pci)
->  
->  	pci_epc_init_notify(ep->epc);
->  
-> +	/* Enable link training */
-> +	regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
-> +			   STM32MP25_PCIECR_LTSSM_EN,
-> +			   STM32MP25_PCIECR_LTSSM_EN);
-> +
->  	return;
->  
->  err_disable_resources:
-> 
-> ---
-> base-commit: 31115ecec74fe5c679a149d7037009f26b3aa8a9
-> change-id: 20251113-perst_ep-0b57b9679cf9
-> 
-> Best regards,
-> -- 
-> Christian Bruel <christian.bruel@foss.st.com>
-> 
+v2: took care of pci-stm32.* as well (Christian)
+
+ drivers/pci/controller/dwc/pcie-stm32-ep.c |  2 +-
+ drivers/pci/controller/dwc/pcie-stm32.c    | 14 +++++++++++++-
+ drivers/pci/controller/dwc/pcie-stm32.h    |  3 +++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-stm32-ep.c b/drivers/pci/controller/dwc/pcie-stm32-ep.c
+index 3400c7cd2d88..2b9b451306fc 100644
+--- a/drivers/pci/controller/dwc/pcie-stm32-ep.c
++++ b/drivers/pci/controller/dwc/pcie-stm32-ep.c
+@@ -7,9 +7,9 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/of_platform.h>
+-#include <linux/of_gpio.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+diff --git a/drivers/pci/controller/dwc/pcie-stm32.c b/drivers/pci/controller/dwc/pcie-stm32.c
+index 96a5fb893af4..a9e77478443b 100644
+--- a/drivers/pci/controller/dwc/pcie-stm32.c
++++ b/drivers/pci/controller/dwc/pcie-stm32.c
+@@ -7,18 +7,30 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <linux/err.h>
++#include <linux/gpio/consumer.h>
++#include <linux/irq.h>
+ #include <linux/mfd/syscon.h>
++#include <linux/mod_devicetable.h>
++#include <linux/module.h>
++#include <linux/of.h>
+ #include <linux/of_platform.h>
+ #include <linux/phy/phy.h>
+ #include <linux/pinctrl/consumer.h>
+ #include <linux/platform_device.h>
++#include <linux/pm.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pm_wakeirq.h>
+ #include <linux/regmap.h>
+ #include <linux/reset.h>
++#include <linux/stddef.h>
++
++#include "../../pci.h"
++
+ #include "pcie-designware.h"
+ #include "pcie-stm32.h"
+-#include "../../pci.h"
+ 
+ struct stm32_pcie {
+ 	struct dw_pcie pci;
+diff --git a/drivers/pci/controller/dwc/pcie-stm32.h b/drivers/pci/controller/dwc/pcie-stm32.h
+index 09d39f04e469..419cf1ff669d 100644
+--- a/drivers/pci/controller/dwc/pcie-stm32.h
++++ b/drivers/pci/controller/dwc/pcie-stm32.h
+@@ -6,6 +6,9 @@
+  * Author: Christian Bruel <christian.bruel@foss.st.com>
+  */
+ 
++#include <linux/bits.h>
++#include <linux/device.h>
++
+ #define to_stm32_pcie(x)	dev_get_drvdata((x)->dev)
+ 
+ #define STM32MP25_PCIECR_TYPE_MASK	GENMASK(11, 8)
+-- 
+2.50.1
+
