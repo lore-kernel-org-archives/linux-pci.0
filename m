@@ -1,143 +1,189 @@
-Received: from mail-m49235.qiye.163.com (mail-m49235.qiye.163.com [45.254.49.235])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5452F6567;
-	Fri, 14 Nov 2025 09:21:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.235
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30AE1235358
+	for <linux-pci@vger.kernel.org>; Fri, 14 Nov 2025 09:31:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763112104; cv=none; b=KVIQw3rBRxmx0al3txLrpGoA1gnIeiX9xxa3D+JXqnwrnSXXRPtFol2G0FuKe67rUU5aMsSREO3kksZCxP3Gg3UBcyCd7WygBPG1R2PF2bfQwpwf7KvTe+9axgamzAW17/bdWOQ/xGNoR0fnPtmQQ7ldiXVufPZ0OAwA7JSv9CM=
+	t=1763112662; cv=none; b=XnC13CBnn/AcsFUmlxFBouHRSKhwIDl+Uva51ri4WXnb/RiGvgqRt0eyBOt94viyIx1pacKTazfaO9TpRo0jZ2UP9VusnYoeInp3gxroHKSNiN3ANa5RVWmlxrzvmQuRIrT+IEb29M994XVmwBVtXX6zWqDldZCyDEGQWez5B3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763112104; c=relaxed/simple;
-	bh=8GuigxhVC/1VVbYqTRQPCHgKwEOMm5TYRelesVWIoHI=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=nHW2tkeWfrqIN5+D1/S7r8N+DN4jAn0Hgpe8Anvpou7SlYHQNPpp+PQWkwq7dMQmOLnZhSiPleIlOw9McM1Lyk9RE5094RT63R814yNOhdCkiFsG0X06WGkXk2fuq2Q4Sd/K/nvDHU1cYMVjkWhaWUV9yQD0boERAOwgtqe5lR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=OanU7ELu; arc=none smtp.client-ip=45.254.49.235
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1763112662; c=relaxed/simple;
+	bh=z4vfe0YOsLO7B6866/Z7uqgMkZ4yfdSBC06xVdFUy9Q=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=oQt38iTbun0Oqti6Hkz6Y0thHuYgXz3c/t6wbVPOriFMjEAaZ/6PTre2CxeboIz/w9MjpEYsXfAYwoBbw8+dWjr2UER/Z+gCScH/pubNxzPt5r6KZYNzYC5f72O/adp+7KRBeIdEkXAD95mziF0kkz5RWHqe3S4kJbNqgNj3fz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=PJUbhfPs; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="OanU7ELu"
-Received: from [172.16.12.129] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 29992e5be;
-	Fri, 14 Nov 2025 17:16:22 +0800 (GMT+08:00)
-Message-ID: <e8524bf8-a90c-423f-8a58-9ef05a3db1dd@rock-chips.com>
-Date: Fri, 14 Nov 2025 17:16:21 +0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PJUbhfPs"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-47775fb6c56so19548395e9.1
+        for <linux-pci@vger.kernel.org>; Fri, 14 Nov 2025 01:30:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1763112658; x=1763717458; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:user-agent
+         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uG1ndTGu7u+afhv3ORckpwAAuy9xCYDjJCa9P3afHXY=;
+        b=PJUbhfPsw1jiyAHHlE+dLNv9ENXhHlrUS1nGmsO8nCLwoAszxU9yIdWPUIQMTcSYuL
+         e/9bLg8AAwQlYh5USHOEoybJGQ85DOyV8U2iod94n5RVBMEwiXUSue4XMjAB9RewdzCE
+         1/EHXVY/jaKZHPQg6sTDNLR7ukk9V/7FNvvEgekGb8jThCTw5a3U8CryLAujvxpPrHGK
+         Rw25XXZF3LkjZ3JbU5i9ajqW668WhwRIZtwdzxhp6FeGgT4I39ugCXafYcR0vMlXt2Ko
+         YmN/GI3ge8LCVYRPtAGpwxXNgrQnEmXl6gKtKg5tI4i7nSteXXyMhBam6LK3A6ivrXww
+         DSeg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763112658; x=1763717458;
+        h=content-transfer-encoding:mime-version:message-id:date:user-agent
+         :references:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uG1ndTGu7u+afhv3ORckpwAAuy9xCYDjJCa9P3afHXY=;
+        b=EqTOYcSj0kG+fYBPlLTeq84JH3ljnWW7hqYLs6ElZN4v4laGE0EANCKFzpa9/tNoJ9
+         N1Q2DnLhr9lvipqY4wWTpNh5ELc+ySlJnHvv25SMCFBuGV3Q6kalm068OJnDD04CzXTm
+         xrAmd0FvZRldowlN24pbvU0WydoK3ADTBwxMNvx1X0H6kkgoHY5P3qZl1FUX8urVeNJg
+         76jpy3Ku7Cy1m2r+OuEZqwTj1ikHkhX7iWRGfItQaNMcU8qr2Mosim0NVbjVr+yrxu89
+         qxyhWyEUPC5Wux/5WqAQvAmeeLEPaRqNVkMej6EfndzvK27KzQN0IW9WEjD33lhwTLev
+         ET/Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVyCbFQ7IeWlpUHaz22WbCIy+82IpaKyhkTcRtqWer/R0AtyhYxdOZ4T6Vlvj9JwQbCmTjsmpO7uGs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx9aY1ZSSjNsoAZaNYyT4CxsCEqNyXDGYAjR2H8s7jI4vglQs/z
+	bfGem3cavN+q1+VQXuDBoIwSizNQzq5Zg2nZlbSY3kIkFtrsmhnCBSTvuo6X9gfck/s=
+X-Gm-Gg: ASbGncvUw6juUuB7EsbYTNJaYmXivmj47k4xNnguP3Q3EjsWG5CIKY0s0mh7mzsir7T
+	+c2m/oYDHBZCDpteLFcKwpwCrVQJpcy0g/hnki7udLgmSiuWVbbOBwKkSCXn7De5xgGpcDh6KOl
+	zeH1d/3Ne9iOwuGVP+6o6YucMmBetgTqi/Zy8MseRVLu9CNVW7HAY4qxHoqBBbJUmR1HH9pb5vc
+	dhDsF5K5i0nc6EyvnexOcpAN4knQAqZqysO87R+acA/OeYJeGOB4XV6zRkE4hJ7T1oIUa8bQ7Ly
+	kBY0HR/l5uIRVY15z+NrrXMx6XHIf1RDlTatG71+/0YtzSFRgwCoAKVDhIi9JMwu0T81B1+NRz7
+	XtlvruAQbN41+Ofpsotm1Tb+xjJtmnbA1s8/ApGZB4eOM5tSBCPAid9llwyVo5aiZg9bLqFAyVr
+	e/
+X-Google-Smtp-Source: AGHT+IFJ0DG17bS7Bpxic+Ik1NHnlwSocVb3TsoIa+Uww+ltuZjndP90MdsbrAR2R5TWE+X80Slu9A==
+X-Received: by 2002:a05:600c:4706:b0:471:9b5:6fd3 with SMTP id 5b1f17b1804b1-4778fe0e0a9mr20589695e9.0.1763112658371;
+        Fri, 14 Nov 2025 01:30:58 -0800 (PST)
+Received: from draig.lan ([185.126.160.19])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4778c897bb8sm77561695e9.12.2025.11.14.01.30.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Nov 2025 01:30:57 -0800 (PST)
+Received: from draig (localhost [IPv6:::1])
+	by draig.lan (Postfix) with ESMTP id DBD265F820;
+	Fri, 14 Nov 2025 09:30:56 +0000 (GMT)
+From: =?utf-8?Q?Alex_Benn=C3=A9e?= <alex.bennee@linaro.org>
+To: Ilpo =?utf-8?Q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: Simon Richter <Simon.Richter@hogyros.de>,  Lucas De Marchi
+ <lucas.demarchi@intel.com>,  Alex Deucher <alexander.deucher@amd.com>,
+  amd-gfx@lists.freedesktop.org,  Bjorn Helgaas <bhelgaas@google.com>,
+  David Airlie <airlied@gmail.com>,  dri-devel@lists.freedesktop.org,
+  intel-gfx@lists.freedesktop.org,  intel-xe@lists.freedesktop.org,  Jani
+ Nikula <jani.nikula@linux.intel.com>,  Joonas Lahtinen
+ <joonas.lahtinen@linux.intel.com>,  linux-pci@vger.kernel.org,  Rodrigo
+ Vivi <rodrigo.vivi@intel.com>,  Simona Vetter <simona@ffwll.ch>,  Tvrtko
+ Ursulin <tursulin@ursulin.net>,  Christian =?utf-8?Q?K=C3=B6nig?=
+ <christian.koenig@amd.com>,  Thomas =?utf-8?Q?Hellstr=C3=B6m?=
+ <thomas.hellstrom@linux.intel.com>,  =?utf-8?Q?Micha=C5=82?= Winiarski
+ <michal.winiarski@intel.com>
+Subject: Re: [PATCH v2 00/11] PCI: BAR resizing fix/rework
+In-Reply-To: <20251113162628.5946-1-ilpo.jarvinen@linux.intel.com> ("Ilpo
+	=?utf-8?Q?J=C3=A4rvinen=22's?= message of "Thu, 13 Nov 2025 18:26:17
+ +0200")
+References: <20251113162628.5946-1-ilpo.jarvinen@linux.intel.com>
+User-Agent: mu4e 1.12.14-dev2; emacs 30.1
+Date: Fri, 14 Nov 2025 09:30:56 +0000
+Message-ID: <87pl9lot9r.fsf@draig.linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci <linux-pci@vger.kernel.org>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- devicetree <devicetree@vger.kernel.org>, krzk+dt <krzk+dt@kernel.org>,
- conor+dt <conor+dt@kernel.org>, Johan Jonker <jbx6244@gmail.com>,
- linux-rockchip <linux-rockchip@lists.infradead.org>,
- Simon Glass <sjg@chromium.org>, Philipp Tomsich <philipp.tomsich@vrull.eu>,
- Kever Yang <kever.yang@rock-chips.com>, Tom Rini <trini@konsulko.com>,
- u-boot@lists.denx.de, =?UTF-8?B?5byg54Oo?= <ye.zhang@rock-chips.com>
-Subject: Re: [PATCH] arm64: dts: rockchip: align bindings to PCIe spec
-To: Geraldo Nascimento <geraldogabriel@gmail.com>
-References: <4b5ffcccfef2a61838aa563521672a171acb27b2.1762321976.git.geraldogabriel@gmail.com>
- <ba120577-42da-424d-8102-9d085c1494c8@rock-chips.com>
- <aQsIXcQzeYop6a0B@geday>
- <67b605b0-7046-448a-bc9b-d3ac56333809@rock-chips.com>
- <aQ1c7ZDycxiOIy8Y@geday>
- <d9e257bd-806c-48b4-bb22-f1342e9fc15a@rock-chips.com>
- <aRLEbfsmXnGwyigS@geday>
- <AGsAmwCFJj0ZQ4vKzrqC84rs.3.1762847224180.Hmail.ye.zhang@rock-chips.com>
- <aRQ_R90S8T82th45@geday> <aRUvr0UggTYkkCZ_@geday> <aRazCssWVdAOmy7D@geday>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <aRazCssWVdAOmy7D@geday>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9a81a6c7ff09cckunm83f5efda44ea74
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQhgYQlZCQx9JSU5DSkNPSh9WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=OanU7ELuu0i6QxNwaBwYgLpQCUE6kBkXnosBpB5xJa+/1c8gaH9JjY3Crn4xM7igJavW9mLTplYkYMO2WXlXr40/yHnKDOGRpyQQRywI3wvtfothQLLLSpusqui0Vwx57upf1ejVQaFOQ/Bxnq8U70SFQxa91P3HMX8M5OD1UuE=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=pAiVqyQ+kiQN8Phi43cHK6Tl1rhV/2RbqIHqDBjVGzk=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-在 2025/11/14 星期五 12:41, Geraldo Nascimento 写道:
-> On Wed, Nov 12, 2025 at 10:09:15PM -0300, Geraldo Nascimento wrote:
->> Hi Ye, Shawn,
->>
->> Here's more contained workaround without resorting to clearing DDR to
->> INPUT for every GPIO:
->>
->> diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
->> index ee1822ca01db..1d89131ec6ac 100644
->> --- a/drivers/pci/controller/pcie-rockchip-host.c
->> +++ b/drivers/pci/controller/pcie-rockchip-host.c
->> @@ -315,7 +315,8 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
->>   			    PCIE_CLIENT_CONFIG);
->>   
->>   	msleep(PCIE_T_PVPERL_MS);
->> -	gpiod_set_value_cansleep(rockchip->perst_gpio, 1);
->> +	gpiod_direction_input(rockchip->perst_gpio);
->> +	gpiod_direction_output(rockchip->perst_gpio, 1);
->>   
->>   	msleep(PCIE_RESET_CONFIG_WAIT_MS);
->>   
->> This results in working PCIe for me, pass initial link training.
-> 
-> Sorry for the inconvenience of more mail, but I'm providing as much
-> detail as I can.
-> 
+Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com> writes:
 
-Don't worry, it's helpful, so I think Ye could have a look.
-May I ask if the failure only happened to one specific board?
+> Hi all,
+>
+> Thanks to issue reports from Simon Richter and Alex Benn=C3=A9e, I
+> discovered BAR resize rollback can corrupt the resource tree. As fixing
+> corruption requires avoiding overlapping resource assignments, the
+> correct fix can unfortunately results in worse user experience, what
+> appeared to be "working" previously might no longer do so. Thus, I had
+> to do a larger rework to pci_resize_resource() in order to properly
+> restore resource states as it was prior to BAR resize.
+>
+> This rework has been on my TODO list anyway but it wasn't the highest
+> prio item until pci_resize_resource() started to cause regressions due
+> to other resource assignment algorithm changes.
 
-Another thing I noticed is about one commit:
-114b06ee108c ("PCI: rockchip: Set Target Link Speed to 5.0 GT/s before 
-retraining")
+Thanks I'll have a look.
 
-It said: "Rockchip controllers can support up to 5.0 GT/s link speed."
-But we issued an errata long time ago to announced it doesn't, you could
-also check the PCIe part of RK3399 datasheet:
-https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datasheet_V2.1-20200323.pdf
+Where does this apply? At least v6.17 doesn't seem to have
+pbus_reassign_bridge_resources which 4/11 is trying to tweak.
 
-Also we set max-link-speed to ONE in rk3399-base.dtsi but seems another
-patch slip in: 755fff528b1b ("arm64: dts: rockchip: add variables for 
-pcie completion to helios64")
+>
+> BAR resize rollback does not always restore BAR resources as they were
+> before the resize operation was started. Currently, when
+> pci_resize_resource() call is made by a driver, the driver must release
+> device resource prior to the call. This is a design flaw in
+> pci_resize_resource() API as PCI core cannot then save the state of
+> those resources from what it was prior to release so it could restore
+> them later if the BAR size change has to be rolled back.
+>
+> PCI core's BAR resize operation doesn't even attempt to restore the
+> device resources currently when rolling back BAR resize operation. If
+> the normal resource assignment algorithm assigned those resources, then
+> device resources might be assigned after pci_resize_resource() call but
+> that could also trigger the resource tree corruption issue so what
+> appeared to an user as "working" might be a corrupted state.
+>
+> With the new pci_resize_resource() interface, the driver calling
+> pci_resize_resource() should no longer release the device resources.
+>
+> I've added WARN_ON_ONCE() to pick up similar bugs that cause resource
+> tree corruption. At least in my tests all looked clear on that front
+> after this series.
+>
+> It would still be nice if the reporters could test these changes
+> resolve the claim conflicts (while I've tested the series to some extent,
+> I don't have such conflicts here).
+>
+> This series will likely conflict with some drm changes from Lucas (will
+> make them partially obsolete by removing the need to release dev's
+> resources on the driver side).
+>
+> I'll soon submit refresh of pci/rebar series on top of this series as
+> there are some conflicts with them.
+>
+> v2:
+> - Add exclude_bars parameter to pci_resize_resource()
+> - Add Link tags
+> - Add kerneldoc patch
+> - Add patch to release pci_bus_sem earlier.
+> - Fix to uninitialized var warnings.
+> - Don't use guard() as goto from before it triggers error with clang.
+>
+> Ilpo J=C3=A4rvinen (11):
+>   PCI: Prevent resource tree corruption when BAR resize fails
+>   PCI/IOV: Adjust ->barsz[] when changing BAR size
+>   PCI: Change pci_dev variable from 'bridge' to 'dev'
+>   PCI: Try BAR resize even when no window was released
+>   PCI: Freeing saved list does not require holding pci_bus_sem
+>   PCI: Fix restoring BARs on BAR resize rollback path
+>   PCI: Add kerneldoc for pci_resize_resource()
+>   drm/xe: Remove driver side BAR release before resize
+>   drm/i915: Remove driver side BAR release before resize
+>   drm/amdgpu: Remove driver side BAR release before resize
+>   PCI: Prevent restoring assigned resources
+>
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c  |  10 +-
+>  drivers/gpu/drm/i915/gt/intel_region_lmem.c |  14 +--
+>  drivers/gpu/drm/xe/xe_vram.c                |   5 +-
+>  drivers/pci/iov.c                           |  15 +--
+>  drivers/pci/pci-sysfs.c                     |  17 +--
+>  drivers/pci/pci.c                           |   4 +
+>  drivers/pci/pci.h                           |   9 +-
+>  drivers/pci/setup-bus.c                     | 126 ++++++++++++++------
+>  drivers/pci/setup-res.c                     |  52 ++++----
+>  include/linux/pci.h                         |   3 +-
+>  10 files changed, 142 insertions(+), 113 deletions(-)
+>
+>
+> base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
 
-> This hack has been confirmed to work in U-boot also.
-> 
-> diff --git a/drivers/pci/pcie_rockchip.c b/drivers/pci/pcie_rockchip.c
-> index 19f9e58a640..5702b607ee6 100644
-> --- a/drivers/pci/pcie_rockchip.c
-> +++ b/drivers/pci/pcie_rockchip.c
-> @@ -329,8 +329,10 @@ static int rockchip_pcie_init_port(struct udevice *dev)
->   	writel(PCIE_CLIENT_LINK_TRAIN_ENABLE,
->   	       priv->apb_base + PCIE_CLIENT_CONFIG);
->   
-> -	if (dm_gpio_is_valid(&priv->ep_gpio))
-> -		dm_gpio_set_value(&priv->ep_gpio, 1);
-> +	if (dm_gpio_is_valid(&priv->ep_gpio)) {
-> +		dm_gpio_set_dir_flags(&priv->ep_gpio, (priv->ep_gpio.flags & ~GPIOD_IS_OUT) | GPIOD_IS_IN);
-> +		dm_gpio_set_dir_flags(&priv->ep_gpio, (priv->ep_gpio.flags & ~GPIOD_IS_IN) | GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
-> +	}
->   
->   	ret = readl_poll_sleep_timeout
->   			(priv->apb_base + PCIE_CLIENT_BASIC_STATUS1,
-> 
-> So my report suggests this is not specific to Linux and because same
-> workaround works in U-boot simplified driver model I suggest you check
-> from your side.
-> 
-> Previously PCIe link training timeout, not working. Now I'm very happy
-> with working PCIe in Linux and U-boot.
-> 
-> Thanks,
-> Geraldo Nascimento
-> 
-
+--=20
+Alex Benn=C3=A9e
+Virtualisation Tech Lead @ Linaro
