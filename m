@@ -1,101 +1,280 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A836257843
-	for <linux-pci@vger.kernel.org>; Sat, 15 Nov 2025 10:12:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A09583019AB
+	for <linux-pci@vger.kernel.org>; Sat, 15 Nov 2025 17:26:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763201530; cv=none; b=A1GXiQjJ9YEsQgB1aiuaQrN2KAsslEd0nc74WucWlGpczNlTHCr9xnbDYpeWtXc5bwSFsXqDnKTV5icpFg5yXxKB6sZ1A7X1gXwK6P/Vo7ncJsdZfXG82CSYiIN5rX/KRWReIWPP6uVllwx4uH6k/fWH+jFPxiZaUJdFQ0kCRFE=
+	t=1763227564; cv=none; b=CDuNSRPKVrbfhEqJnbz2A6Io+ILsl+10iA8xr+/c33QjzbGlc2IDQvkE3dB/2JB1Z/PcLJu29faOADTwJmvz8IKzMG74rggktaQMfNC1pSUG4/wgB6grEDQyQg7IckMs6pqwsa9e6Ij8H56z4aKYIMUGuZ+4TrW0gImmV+sYUI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763201530; c=relaxed/simple;
-	bh=tTipRfPoP0MF1Jl+BTl3lV1NSWbP9afYNktAm+9O+Qs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l8dD338dhHpkcFt3c6H8dK11ViOvyVisSwhYOFg5hY0jfViG3cYlXzcog0G9pu/X7R1GfUxn4NLjsNR0e+8N8SqnexHCwZGhIh+5a5UhBB4gJwZEs7ejVGI7rFj/eknaoT9bBm2hTRYYZnCyRrdxV9Zeuioz9eRsIZHX8cPu9t4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mqf0vtk/; arc=none smtp.client-ip=209.85.215.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1763227564; c=relaxed/simple;
+	bh=t68H8rXu6XmkMh+iLw+R6lOjuYBvGB8PMDn92zVlKYk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=WGQREhPrssf0DYA1K164ofow3ZWO1WUNloBKdkJ3ospkBZ/gfFVbNTfrQ17H4QRcqsPHsD/KifaBsJcGVx5nLMnDyu/9qpIlU9Y6oLyqUrXjjeFbeL5yylWni88dovLpXwZ+em0//jKgZMt3GdYG3B7ovoAMxMApNovN6MMV2BY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=o5FNgKOc; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mqf0vtk/"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-bc4b952cc9dso1668465a12.3
-        for <linux-pci@vger.kernel.org>; Sat, 15 Nov 2025 02:12:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763201527; x=1763806327; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gm+ckSfEplX4Ke9EThg3ex6u+yrRtxkSfPzMWCL9PGA=;
-        b=mqf0vtk/gVaIhgOrv3VS1rvyf90F/hoLmzEjS1UWDzlWVJdwvv9hp9rcdY8h7R9wKH
-         HIzs5xtmcyLdWjyqCnQynXQMbDq8UG5rFySGrvmg7rU2Htt+5gBPtqOW1uxScYzXVTNt
-         W3fCurx3lV8JLYRkCYJ6Ryx1rRg78lAgoCGdvd6aqDENyW0WU6nXDfcnmgrJ5wuwXQMr
-         ucdvuzY2xofE3qf2q/WIi4kdow/ihz9R65je/gO6XiW8Wx1GfMCCUb6TJthUNheIDDuI
-         mDJVbzg3q7pwxE6NEG4YZtOQp+Are8AEHH2LuT1nIzvhV9ICwb6vWD/8s9bcIlDmhob6
-         Qc2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763201527; x=1763806327;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gm+ckSfEplX4Ke9EThg3ex6u+yrRtxkSfPzMWCL9PGA=;
-        b=xJMUr/561h/eCuNiElV4WEsb2l99BBph+4ygBqtsKkhq6lrE4AbWCDnszIiMmocssY
-         pmR+kPDhHhlasAwKdvvDhEhXYymf2Zq4Oziw1CTBjEch+2orTdZSKPtURo6hNSLHDH9F
-         pp8jAwILG16Tg8za3tmnpgOifMDqYR1JD85VZF7B3Heo8tL+O4rx2R9Pbe+JOUfi2ts8
-         7VTgHOsi+sbisXDIT70q1nqM41iaBxOTT15M6MLCn21bzi8/J2TT3913h9Nc1VjSLUzq
-         uiobVbDVzxyBfvehlN1nExHXOS6zuJPlMMTWeXcM1CpebvV0W9nhVkdppf4OvcBbPnx1
-         fBCQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUXI4N8NH/BAlucjaF8mmZQFq1eGviHcXRC2zwPUNgD6BZi9tBQfw9auuJhQGsJS88gzbv1wEVtofI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwaE4asqpLGxgw5HJyHunRcJn1r/q9DA3aVcjZNBwDM1ZcoZ5nq
-	y1HKSMMGrSqOfOQd2oxiuX/GYjgqmDu2cK38/9hPQ1vdRl9SL4YcJ58N
-X-Gm-Gg: ASbGnct59rVEKaoJep8pGM8oi1K3BQLie6EYkNKosLL21M0DVuc/ldOkNp+Esbth6Aa
-	joYAZQKLXPhm25glGGj3LPVuWJbCC5riZCBvnzG7GtwMSC3DRkIUKK61KLHGO5MiC+B9nuMFDa2
-	PhGfrWCtQSQ+dB8bN+T5O8kFnZhkB2KGILPO3W6bIHGWeZjwt7tygP4p/h2xtMGettJZL5i+LQB
-	e9CZMq4Q7LtrEiOukwZJWTkwMCRcbdtlE2UYcmZHzYCCqqyp47jL2ZBpnRCianCNhSJXUqYwfw+
-	SG6UkfwpNUvm4dZnyaQQa7CwRJvwf3gIYWb/doWpuwqfcrh0Hl8bodaRH1d96N7dUQD270/AOQ2
-	lZWpikdYgFyupAONHwmf7fuhb0BKwX9SNQCNyZot8ZwZCg/qgfhrgrrW69tBxi8l8DQT4pFazmQ
-	==
-X-Google-Smtp-Source: AGHT+IFOLT76Y53zANSgKQXjUT+7ysvQ4Xrl63BgxDn5v68pWGwdHgGSzDNQOkc+msl09UwqFa5XFw==
-X-Received: by 2002:a05:7301:b0d:b0:2a4:3594:d552 with SMTP id 5a478bee46e88-2a4abb23c99mr1792869eec.31.1763201526899;
-        Sat, 15 Nov 2025 02:12:06 -0800 (PST)
-Received: from geday ([2804:7f2:800b:a121::dead:c001])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2a49dad0aefsm15522074eec.3.2025.11.15.02.12.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 15 Nov 2025 02:12:06 -0800 (PST)
-Date: Sat, 15 Nov 2025 07:11:59 -0300
-From: Geraldo Nascimento <geraldogabriel@gmail.com>
-To: Dragan Simic <dsimic@manjaro.org>
-Cc: linux-rockchip@lists.infradead.org,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Johan Jonker <jbx6244@gmail.com>
-Subject: Re: [PATCH 2/3] PCI: rockchip-host: comment danger of 5.0 GT/s speed
-Message-ID: <aRhR79u5BPtRRFw3@geday>
-References: <cover.1763197368.git.geraldogabriel@gmail.com>
- <b04ed0deb42c914847dd28233010f9573d6b5902.1763197368.git.geraldogabriel@gmail.com>
- <c8a6d165-2cdd-cd0d-4bed-95dfa5ff30d2@manjaro.org>
- <aRhNIcGcQKp2ylqN@geday>
- <85d1543b-ea91-5f0f-59d6-e00fcf720938@manjaro.org>
- <aRhQMRjffbeCeArE@geday>
- <52931e25-0d6f-ca0a-7c26-2c65ab11432e@manjaro.org>
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="o5FNgKOc"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id E3142240104
+	for <linux-pci@vger.kernel.org>; Sat, 15 Nov 2025 18:26:00 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1763227560; bh=4QYoNPwoYQKT22elmcFf1tXNwc4vKowEFwTDurGb5Jc=;
+	h=From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:To:Cc:Autocrypt:OpenPGP:From;
+	b=o5FNgKOcECtgoQLWpgHmyDu9Nv8iUmGRYVPY5qcgKRbptfMnPNN3SQUmbHen5RViH
+	 dL3HIbFTDUB935N7XGhnODoVc84skDXJMDcmaOyG7VqGEpOStDmfS1U1y8l4ui9Fsb
+	 ap1vTRyvVBuicK4WhWZrNBLBN9WfSfT3cAg/y9v8HuDibO56gscQ7VPD0XCphZKOch
+	 kQm5tBsQp6NA1LmsM5CfXoIq3yXOMxbM46MacIhOlkX9dpDInKi7+HFUAHzXCP68X4
+	 f2F8G3MbbAg4DGZWgpvoM234x48gMjUD6DC/0zRZkpscxPdge/1dsS6ckZX+xzUUhg
+	 FIQwYlyn+DPhQ==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4d81BF3Y3bz9rxN;
+	Sat, 15 Nov 2025 18:25:57 +0100 (CET)
+From: Markus Probst <markus.probst@posteo.de>
+Date: Sat, 15 Nov 2025 17:25:59 +0000
+Subject: [PATCH v8 1/4] rust: Add trait to convert a device reference to a
+ bus device reference
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <52931e25-0d6f-ca0a-7c26-2c65ab11432e@manjaro.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251115-rust_leds-v8-1-d9a41f355538@posteo.de>
+References: <20251115-rust_leds-v8-0-d9a41f355538@posteo.de>
+In-Reply-To: <20251115-rust_leds-v8-0-d9a41f355538@posteo.de>
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+ Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
+ Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng <boqun.feng@gmail.com>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Markus Probst <markus.probst@posteo.de>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5575;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=t68H8rXu6XmkMh+iLw+R6lOjuYBvGB8PMDn92zVlKYk=;
+ b=kA0DAAgBNHYf+OetQ9IByyZiAGkYt6KgKX/PeBpr9apcWnZAiYnycFTjkPh2p6FjafjF1csrr
+ okCMwQAAQgAHRYhBIJ0GMT0rFjncjDEczR2H/jnrUPSBQJpGLeiAAoJEDR2H/jnrUPSyQwP/2we
+ dxICIPBqDGQomYu6VqQb9I3KtmDWRKlHsAWkzp1avm8yuaY1VuFsNYIvs+ctHKeFXQ+Ab02H9PW
+ nvjjCnJ50f+OAi5tkh5EvcM5EFCiQiLakKE3/heCEmcshkzS5QFvix3k+bYWlWDFZxufyjd3VEO
+ VE9v+mnpIPbO9/2Ryqg2R5/Sldy4NqsECwsVPpHejOW29I6TPg5zHPohJZdClbxUFZOTpvFWxNA
+ WFW48HtSbDg1YGAQGZ49VYE7kN+g7Eyd/nQ+eiyepJ6dK//BAn3ZJfnNDCn7yzuZt/oh+EDBmlI
+ CHGPY/4iURwFGuJV4uIyVqt7n09i3G8c1VfUbnli0/hDw7lzTsPuYtUTPCNeXv9insiTm8y8r1s
+ MzHW3jmpsBcpRYQRg7YIj/IaIFK6cKJvJD8FGaWju+AbL6BnHUmexD84riOUD8u1mRkbr1ciE7h
+ vJbdtoro6J8KzLtSZ3Bffg7JWuDb7UDWNFpEgHU6NThS1a02YyfhQvx0al6KQpihtiq/R7UOFvM
+ +inmn2WG8GVgjJWneAZP+QD0nS03V+G5+5Zw92yiQXJAZA6DjZ465xeRsiAv97SpvZiB0wEHZ/n
+ eh0mJi8lqq5l12iw8p1GMFiQfhrjdJfz07sjWN178hTrcTUvtDyIVD5Z9EmPqQ2KRjn31SAW4s2
+ +O7Ir
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-On Sat, Nov 15, 2025 at 11:09:42AM +0100, Dragan Simic wrote:
-> Please, wait a day or two before sending the v2, because that's
-> standard procedure.  Sending more than one version in the same day
-> is highly discouraged, because it doesn't give enough time to people
-> for reviewing, and may cause people to look at a wrong version.
+Implement the `AsBusDevice` trait for converting a `Device` reference to a
+bus device reference for all bus devices.
 
-Yeah, you're right, sorry.
+The `AsBusDevice` trait allows abstractions to provide the bus device in
+class device callbacks. It must not be used by drivers and is intended for
+bus and class device abstractions only.
+
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+ rust/kernel/auxiliary.rs |  7 +++++++
+ rust/kernel/device.rs    | 33 +++++++++++++++++++++++++++++++++
+ rust/kernel/pci.rs       |  7 +++++++
+ rust/kernel/platform.rs  |  7 +++++++
+ rust/kernel/usb.rs       |  6 ++++++
+ 5 files changed, 60 insertions(+)
+
+diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
+index 7a3b0b9c418e..db52062a4355 100644
+--- a/rust/kernel/auxiliary.rs
++++ b/rust/kernel/auxiliary.rs
+@@ -15,6 +15,7 @@
+ };
+ use core::{
+     marker::PhantomData,
++    mem::offset_of,
+     ptr::{addr_of_mut, NonNull},
+ };
+ 
+@@ -233,6 +234,12 @@ extern "C" fn release(dev: *mut bindings::device) {
+     }
+ }
+ 
++// SAFETY: `auxiliary::Device` is a transparent wrapper of `struct auxiliary_device`.
++// The offset is guaranteed to point to a valid device field inside `auxiliary::Device`.
++unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Device<Ctx> {
++    const OFFSET: usize = offset_of!(bindings::auxiliary_device, dev);
++}
++
+ // SAFETY: `Device` is a transparent wrapper of a type that doesn't depend on `Device`'s generic
+ // argument.
+ kernel::impl_device_context_deref!(unsafe { Device });
+diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+index a849b7dde2fd..bf09fd0b0199 100644
+--- a/rust/kernel/device.rs
++++ b/rust/kernel/device.rs
+@@ -511,6 +511,39 @@ impl DeviceContext for Core {}
+ impl DeviceContext for CoreInternal {}
+ impl DeviceContext for Normal {}
+ 
++/// Convert device references to bus device references.
++///
++/// Bus devices can implement this trait to allow abstractions to provide the bus device in
++/// class device callbacks.
++///
++/// This must not be used by drivers and is intended for bus and class device abstractions only.
++///
++/// # Safety
++///
++/// `AsBusDevice::OFFSET` must be the offset of the embedded base `struct device` field within a
++/// bus device structure.
++pub(crate) unsafe trait AsBusDevice<Ctx: DeviceContext>: AsRef<Device<Ctx>> {
++    /// The relative offset to the device field.
++    ///
++    /// Use `offset_of!(bindings, field)` macro to avoid breakage.
++    const OFFSET: usize;
++
++    /// Convert a reference to [`Device`] into `Self`.
++    ///
++    /// # Safety
++    ///
++    /// `dev` must be contained in `Self`.
++    unsafe fn from_device(dev: &Device<Ctx>) -> &Self
++    where
++        Self: Sized,
++    {
++        let raw = dev.as_raw();
++        // SAFETY: `raw - Self::OFFSET` is guaranteed by the safety requirements
++        // to be a valid pointer to `Self`.
++        unsafe { &*raw.byte_sub(Self::OFFSET).cast::<Self>() }
++    }
++}
++
+ /// # Safety
+ ///
+ /// The type given as `$device` must be a transparent wrapper of a type that doesn't depend on the
+diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+index 7fcc5f6022c1..d78f6feeaae9 100644
+--- a/rust/kernel/pci.rs
++++ b/rust/kernel/pci.rs
+@@ -19,6 +19,7 @@
+ };
+ use core::{
+     marker::PhantomData,
++    mem::offset_of,
+     ops::Deref,
+     ptr::{addr_of_mut, NonNull},
+ };
+@@ -593,6 +594,12 @@ pub fn set_master(&self) {
+     }
+ }
+ 
++// SAFETY: `pci::Device` is a transparent wrapper of `struct pci_dev`.
++// The offset is guaranteed to point to a valid device field inside `pci::Device`.
++unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Device<Ctx> {
++    const OFFSET: usize = offset_of!(bindings::pci_dev, dev);
++}
++
+ // SAFETY: `Device` is a transparent wrapper of a type that doesn't depend on `Device`'s generic
+ // argument.
+ kernel::impl_device_context_deref!(unsafe { Device });
+diff --git a/rust/kernel/platform.rs b/rust/kernel/platform.rs
+index 7205fe3416d3..7197264b5a53 100644
+--- a/rust/kernel/platform.rs
++++ b/rust/kernel/platform.rs
+@@ -19,6 +19,7 @@
+ 
+ use core::{
+     marker::PhantomData,
++    mem::offset_of,
+     ptr::{addr_of_mut, NonNull},
+ };
+ 
+@@ -285,6 +286,12 @@ pub fn io_request_by_name(&self, name: &CStr) -> Option<IoRequest<'_>> {
+     }
+ }
+ 
++// SAFETY: `platform::Device` is a transparent wrapper of `struct platform_device`.
++// The offset is guaranteed to point to a valid device field inside `platform::Device`.
++unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Device<Ctx> {
++    const OFFSET: usize = offset_of!(bindings::platform_device, dev);
++}
++
+ macro_rules! define_irq_accessor_by_index {
+     (
+         $(#[$meta:meta])* $fn_name:ident,
+diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
+index 14ddb711bab3..ec21261baf6a 100644
+--- a/rust/kernel/usb.rs
++++ b/rust/kernel/usb.rs
+@@ -324,6 +324,12 @@ fn as_raw(&self) -> *mut bindings::usb_interface {
+     }
+ }
+ 
++// SAFETY: `usb::Interface` is a transparent wrapper of `struct usb_interface`.
++// The offset is guaranteed to point to a valid device field inside `usb::Interface`.
++unsafe impl<Ctx: device::DeviceContext> device::AsBusDevice<Ctx> for Interface<Ctx> {
++    const OFFSET: usize = offset_of!(bindings::usb_interface, dev);
++}
++
+ // SAFETY: `Interface` is a transparent wrapper of a type that doesn't depend on
+ // `Interface`'s generic argument.
+ kernel::impl_device_context_deref!(unsafe { Interface });
+
+-- 
+2.51.0
+
