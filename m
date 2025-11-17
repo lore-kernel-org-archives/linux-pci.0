@@ -1,26 +1,80 @@
-Received: from mail-m32105.qiye.163.com (mail-m32105.qiye.163.com [220.197.32.105])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87805316910;
-	Mon, 17 Nov 2025 07:12:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 089A9FBF6
+	for <linux-pci@vger.kernel.org>; Mon, 17 Nov 2025 07:25:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763363545; cv=none; b=Febhd/1fTXV7gB6rzMkJbn2xneEBbBGWyj5TiNwa/wFxlilasiipTXTSPhpRJv6mecmRIOVjEKetfUMVnKMkvDXcqy+hnqZUqj8ktx+50FHY9J7WVK/CpOjjWCsTaQEQMAj1IdPJIBdZw/c3jhb2nfDvfVzuYg0MrSJoOLC+OKg=
+	t=1763364311; cv=none; b=urNF5lUSp8d6rTfngL/6rwC/mgMHVK1jR18DwJPeEHZVIAnaekC52rjBxdz/x4p1HMY4UqdkI/mj/QynK7IV7wvo2Gap92z3ejUHw4N5rPdQx6MCHQaA5wLZrNkVmS0CCwov0tKAlpBTODjW5p4aE4gVmIpPvhztMD+prM5XwRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763363545; c=relaxed/simple;
-	bh=hBs7BWFuJLm3njcdhha6spSB4xF2eB1P648L2la8O7A=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ABRQ7a1U/e/DXOW4qC5jRK25L+27OMqF5/S+x0xrdeTgZ/r2kQGvunt3lPghRqrNGWTH6sLf2ohOXUAA8H5cMgoh15NoH2fUmCMCciCRcKMahVcZmMbD+avshwaiemxOWxDshBErIG2vjH2gF7EX/WKzWDaAu66jR3wu7Cb4i5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=iqz49SGW; arc=none smtp.client-ip=220.197.32.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1763364311; c=relaxed/simple;
+	bh=dUPVDPDRP3NNUt88ZfA+zvPXiA5WQJIBmxnHj+xmdMY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eklFOT0DO1hOUc4iQ+wqdhE6cxPmkS2sYAEHd5O2iUsesOelL3zmm3n8/RFYJeqOPR1a2jyQ2gDXCL70hOUYWUtmUExrN5p+s3acBwJ6MKfNfZ38SbKJ4p6tnvt+eOQs1DA5RzMc5g8WU2qHCSV2eHBmCPt1PdJhubjNajf49Y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=hf/zaDiP; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JSOl7iL0; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=hm36GJXK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+AKsyHCU; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="iqz49SGW"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 29c9004d4;
-	Mon, 17 Nov 2025 11:42:59 +0800 (GMT+08:00)
-Message-ID: <8f3cc1c1-7bf7-4610-b7ce-79ebd6f05a6e@rock-chips.com>
-Date: Mon, 17 Nov 2025 11:42:59 +0800
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="hf/zaDiP";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JSOl7iL0";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="hm36GJXK";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+AKsyHCU"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id DFE25211F8;
+	Mon, 17 Nov 2025 07:25:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1763364306; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=xvvBd8QK4XVRfEaq/PkpsjYeplILL5dLxZSS6uyILuI=;
+	b=hf/zaDiPkG6XqS44eAu0FMiGGtbHOoQwegvRJVXc15sMDc/d4VSlB65Kwh8MqzRFwh10vD
+	oDw0HRfIGxP7novIlogGZ/PzPDFERYfGpTSTrV8IzT9RSfvF8MzIlA/9Ev+5sudlDcNgha
+	GniWXaGQTK4FmAvxThHlJ3Eimkhgpco=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1763364306;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=xvvBd8QK4XVRfEaq/PkpsjYeplILL5dLxZSS6uyILuI=;
+	b=JSOl7iL0DbDWwCBNuj3tCot9//7doVksTLbK0RqCKXo6szHkOEnNrsvKyCr/pc4V0wIz06
+	mkff0Myq2aUAIOAg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1763364305; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=xvvBd8QK4XVRfEaq/PkpsjYeplILL5dLxZSS6uyILuI=;
+	b=hm36GJXK971978mz6GFQ9mOpyoIwUMFSlaNi8LgfHnxxrzwZ9dqpKjOx4d2UXJJdxfIpKz
+	7K2TYKjgNVDJgqeop9lYvcTWnhe76a4njn6ey0EorVaRxSCT70qIRPV+GkoEDw9XVAMySb
+	+9d8kyMdozay/xdElSOvF36sR5htzvU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1763364305;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=xvvBd8QK4XVRfEaq/PkpsjYeplILL5dLxZSS6uyILuI=;
+	b=+AKsyHCUJjIEuQANniinyIgHnQb+4jjuinDWJ57SSywAKNKqyESDfzWNJUqL2rIxpqtvlI
+	HISdu37ZPU8MJ4AA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B0C963EA61;
+	Mon, 17 Nov 2025 07:25:05 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id MqW0KdHNGmlBHAAAD6G6ig
+	(envelope-from <tzimmermann@suse.de>); Mon, 17 Nov 2025 07:25:05 +0000
+Message-ID: <50f7af87-8a04-44aa-87e8-f236102b71b8@suse.de>
+Date: Mon, 17 Nov 2025 08:25:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -28,63 +82,159 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Johan Jonker <jbx6244@gmail.com>,
- Dragan Simic <dsimic@manjaro.org>, linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH 0/3] PCI: rockchip: 5.0 GT/s speed may be dangerous
-To: Geraldo Nascimento <geraldogabriel@gmail.com>
-References: <cover.1763197368.git.geraldogabriel@gmail.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <cover.1763197368.git.geraldogabriel@gmail.com>
+Subject: Re: [PATCH] PCI/VGA: Don't assume the only VGA device on a system is
+ `boot_vga`
+To: Mario Limonciello <superm1@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: mario.limonciello@amd.com, bhelgaas@google.com,
+ Aaron Erhardt <aer@tuxedocomputers.com>, linux-pci@vger.kernel.org
+References: <20251029193455.GA1576217@bhelgaas>
+ <546c998b-a740-4cc9-8f9c-21c8d2db7c3e@kernel.org>
+ <ab9a68fa-bd4e-4c76-afab-b4b7c1713574@kernel.org>
+Content-Language: en-US
+From: Thomas Zimmermann <tzimmermann@suse.de>
+Autocrypt: addr=tzimmermann@suse.de; keydata=
+ xsBNBFs50uABCADEHPidWt974CaxBVbrIBwqcq/WURinJ3+2WlIrKWspiP83vfZKaXhFYsdg
+ XH47fDVbPPj+d6tQrw5lPQCyqjwrCPYnq3WlIBnGPJ4/jreTL6V+qfKRDlGLWFjZcsrPJGE0
+ BeB5BbqP5erN1qylK9i3gPoQjXGhpBpQYwRrEyQyjuvk+Ev0K1Jc5tVDeJAuau3TGNgah4Yc
+ hdHm3bkPjz9EErV85RwvImQ1dptvx6s7xzwXTgGAsaYZsL8WCwDaTuqFa1d1jjlaxg6+tZsB
+ 9GluwvIhSezPgnEmimZDkGnZRRSFiGP8yjqTjjWuf0bSj5rUnTGiyLyRZRNGcXmu6hjlABEB
+ AAHNJ1Rob21hcyBaaW1tZXJtYW5uIDx0emltbWVybWFubkBzdXNlLmRlPsLAjgQTAQgAOAIb
+ AwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftODH
+ AAoJEGgNwR1TC3ojx1wH/0hKGWugiqDgLNXLRD/4TfHBEKmxIrmfu9Z5t7vwUKfwhFL6hqvo
+ lXPJJKQpQ2z8+X2vZm/slsLn7J1yjrOsoJhKABDi+3QWWSGkaGwRJAdPVVyJMfJRNNNIKwVb
+ U6B1BkX2XDKDGffF4TxlOpSQzdtNI/9gleOoUA8+jy8knnDYzjBNOZqLG2FuTdicBXblz0Mf
+ vg41gd9kCwYXDnD91rJU8tzylXv03E75NCaTxTM+FBXPmsAVYQ4GYhhgFt8S2UWMoaaABLDe
+ 7l5FdnLdDEcbmd8uLU2CaG4W2cLrUaI4jz2XbkcPQkqTQ3EB67hYkjiEE6Zy3ggOitiQGcqp
+ j//OwE0EWznS4AEIAMYmP4M/V+T5RY5at/g7rUdNsLhWv1APYrh9RQefODYHrNRHUE9eosYb
+ T6XMryR9hT8XlGOYRwKWwiQBoWSDiTMo/Xi29jUnn4BXfI2px2DTXwc22LKtLAgTRjP+qbU6
+ 3Y0xnQN29UGDbYgyyK51DW3H0If2a3JNsheAAK+Xc9baj0LGIc8T9uiEWHBnCH+RdhgATnWW
+ GKdDegUR5BkDfDg5O/FISymJBHx2Dyoklv5g4BzkgqTqwmaYzsl8UxZKvbaxq0zbehDda8lv
+ hFXodNFMAgTLJlLuDYOGLK2AwbrS3Sp0AEbkpdJBb44qVlGm5bApZouHeJ/+n+7r12+lqdsA
+ EQEAAcLAdgQYAQgAIAIbDBYhBHIX+6yM6c9jRKFo5WgNwR1TC3ojBQJftOH6AAoJEGgNwR1T
+ C3ojVSkIALpAPkIJPQoURPb1VWjh34l0HlglmYHvZszJWTXYwavHR8+k6Baa6H7ufXNQtThR
+ yIxJrQLW6rV5lm7TjhffEhxVCn37+cg0zZ3j7zIsSS0rx/aMwi6VhFJA5hfn3T0TtrijKP4A
+ SAQO9xD1Zk9/61JWk8OysuIh7MXkl0fxbRKWE93XeQBhIJHQfnc+YBLprdnxR446Sh8Wn/2D
+ Ya8cavuWf2zrB6cZurs048xe0UbSW5AOSo4V9M0jzYI4nZqTmPxYyXbm30Kvmz0rYVRaitYJ
+ 4kyYYMhuULvrJDMjZRvaNe52tkKAvMevcGdt38H4KSVXAylqyQOW5zvPc4/sq9c=
+In-Reply-To: <ab9a68fa-bd4e-4c76-afab-b4b7c1713574@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9a8fe8a40409cckunm2225600d70b383
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGk9ISFZDHx8aThpIQxkdTU1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=iqz49SGWasZFgXzvmpgvrAR/MiWOraupVXaPEaboWVYCcb/RkncHqs1bDxk236bb5xLnrZpa/O9g9zIVR3QitzVvwYdmqnu25XhHXnG5UGEq/cJdWiS4vzlPE29CJQ8C9imQcmwuPVBFSZsuTZaZ61zjdE1XET97PRp2eNCjBec=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=L/mOHkyVCGlpZGPK0VdOwC9RDdilpu9JCgLw5m5Dy4Y=;
-	h=date:mime-version:subject:message-id:from;
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo,suse.com:url]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-Hi Geraldo,
+Hi
 
-在 2025/11/15 星期六 17:10, Geraldo Nascimento 写道:
-> In recent interactions with Shawn Lin from Rockchip it came to my
-> attention there's an unknown errata regarding 5.0 GT/s operational
-> speed of their PCIe core. According to Shawn there's grave danger
-> even if the odds are low. To contain any damage, let's cover the
-> remaining corner-cases where the default would lead to 5.0 GT/s
-> operation as well as add a comment to Root Complex driver core,
-> documenting this danger.
-> 
+Am 17.11.25 um 06:20 schrieb Mario Limonciello:
+>
+>
+> On 10/29/25 2:38 PM, Mario Limonciello wrote:
+>> +Thomas
+>>
+>> On 10/29/25 2:34 PM, Bjorn Helgaas wrote:
+>>> On Wed, Oct 29, 2025 at 01:59:33PM -0500, Mario Limonciello (AMD) 
+>>> wrote:
+>>>> Some systems ship with multiple display class devices but not all
+>>>> of them are VGA devices. If the "only" VGA device on the system is not
+>>>> used for displaying the image on the screen marking it as `boot_vga`
+>>>> because nothing was found is totally wrong.
+>>>>
+>>>> This behavior actually leads to mistakes of the wrong device being
+>>>> advertised to userspace and then userspace can make incorrect 
+>>>> decisions.
+>>>>
+>>>> As there is an accurate `boot_display` sysfs file stop lying about
+>>>> `boot_vga` by assuming if nothing is found it's the right device.
+>>>>
+>>>> Reported-by: Aaron Erhardt <aer@tuxedocomputers.com>
+>>>> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220712
+>>>> Tested-by: Aaron Erhardt <aer@tuxedocomputers.com>
+>>>> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
+>>>
+>>> Do we need a Fixes: here?  A stable cc?
+>>>
+>>> The bugzilla suggests this might be a regression and hence v6.18
+>>> material?
+>>
+>> Yeah I think you're right, we should add these two tags and this 
+>> should go to 6.18 if it's a reasonable change.
+>>
+>> Cc: stable@vger.kernel.org
+>> Fixes: ad90860bd10ee ("fbcon: Use screen info to find primary device")
+>>
+>> But let's also make sure Thomas Zimmermann agrees with this change.
+>>
+>
+> ping?
 
-I'm not sure just adding a warn would be a good choice. Could we totally
-force to use gen1 and add a warn if trying to use Gen2.
+Sorry, this fell though the cracks. I can see that this backfires, but still
 
-Meanwhile amend the commit message to add a reference
-of RK3399 official datesheet[1] which says PCIe on RK3399 should only
-support 2.5GT/s?
+Acked-by: Thomas Zimmermann <tzimmermann@suse.de>
 
+because the overall logic of detecting the boot-up VGA is questionable. 
+It picks the first possible candidate instead of looking at all devices 
+before making the decision. If we see regressions from the patch here, 
+this would be the place to fix it.
 
-[1]https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datasheet_V2.1-20200323.pdf
+Best regards
+Thomas
 
-> Geraldo Nascimento (3):
->    PCI: rockchip: warn of danger of 5.0 GT/s speeds
->    PCI: rockchip-host: comment danger of 5.0 GT/s speed
->    arm64: dts: rockchip: drop max-link-speed = <2> in helios64 PCIe
-> 
->   arch/arm64/boot/dts/rockchip/rk3399-kobol-helios64.dts | 1 -
->   drivers/pci/controller/pcie-rockchip-host.c            | 5 +++++
->   drivers/pci/controller/pcie-rockchip.c                 | 8 ++++++--
->   3 files changed, 11 insertions(+), 3 deletions(-)
-> 
+>
+>>>
+>>>> ---
+>>>>   drivers/pci/vgaarb.c | 7 -------
+>>>>   1 file changed, 7 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+>>>> index 436fa7f4c3873..baa242b140993 100644
+>>>> --- a/drivers/pci/vgaarb.c
+>>>> +++ b/drivers/pci/vgaarb.c
+>>>> @@ -652,13 +652,6 @@ static bool vga_is_boot_device(struct 
+>>>> vga_device *vgadev)
+>>>>           return true;
+>>>>       }
+>>>> -    /*
+>>>> -     * Vgadev has neither IO nor MEM enabled.  If we haven't found 
+>>>> any
+>>>> -     * other VGA devices, it is the best candidate so far.
+>>>> -     */
+>>>> -    if (!boot_vga)
+>>>> -        return true;
+>>>> -
+>>>>       return false;
+>>>>   }
+>>>> -- 
+>>>> 2.43.0
+>>>>
+>>
+>>
+>
+
+-- 
+--
+Thomas Zimmermann
+Graphics Driver Developer
+SUSE Software Solutions Germany GmbH
+Frankenstr. 146, 90461 Nürnberg, Germany, www.suse.com
+GF: Jochen Jaser, Andrew McDonald, Werner Knoblich, (HRB 36809, AG Nürnberg)
+
 
