@@ -1,96 +1,164 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from TWMBX01.aspeed.com (mail.aspeedtech.com [211.20.114.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E819732C929
-	for <linux-pci@vger.kernel.org>; Mon, 17 Nov 2025 12:12:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61DD732D0DC;
+	Mon, 17 Nov 2025 12:38:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.20.114.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763381541; cv=none; b=P55MWa98IlscLBABKIk5vaw5zgmIau2r9jHRFQS0GzLVcWvm8nqNJmOq+9Y3VR4lbd8UmBcGztOvLYLDxYnj5q4NrppvHDFjZ+2T9VyKlZLWrk/VXN088ILQYUMSpnnG0++ThiW4G/9HrmTZTiBeJkteIEniHbj76YgduYYU/eM=
+	t=1763383137; cv=none; b=QfmCTx8T1hQZ/HU2qTw3/CDeFR0FX4djaIIhpkSI+lergaVnZwRI2vsL0BDxaGfc3/ttfdi1QfK+sx3BoqFnlBowMi2eEBoOhItnGipBSXiVAaS/JZwaUN1VNYXrueDuO2ZWzT5G8YfoqP/ioDi58qVAKZ8D5PHZtw4rSOOYglQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763381541; c=relaxed/simple;
-	bh=hHkkkuzcm+OZgcYuNf2+6konfNd6VrAMNQZDC0IlSeY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mZ055vdoPCbmRSL243RgnIkLyDNQJTJ8xfcu+Qgm1Tolj+SQVUrWgEj7FX+/IMq3njz/lIa7Au4UhI5g8cC30cKuK4fYziUTdq9XF8h2FKX8Jr5dKO4hpSHko5MtVNpPHMhSQNZm5UgebxUUX5dWqxGuiijKAc84MDaB88cXpqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BCc9FN/b; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BCc9FN/b"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763381539; x=1794917539;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=hHkkkuzcm+OZgcYuNf2+6konfNd6VrAMNQZDC0IlSeY=;
-  b=BCc9FN/bievtA+XL58uIHwZlBBDz2Y+gdGu9dlPqauthsIR8WUXAftnW
-   q0UjInJ39AbHdimPB0jntRY0VSpoMFEg0ZFAZbYQXHga2Cwj6AEPeVyof
-   n9vUzOONpcTZonD1vPwKCE+FhNDwZEYzZydXZG8tydNmMw6YulZhXg6Bs
-   Rwi2v/ZMS82nxmRzdRHf70XJBcmI84sS9c6o7/b01LtVDf/6CYItRaw1u
-   rUWx+8iSadx2d3fHKvwVHOYNVSgBA6nw7Fmepi+J5GTpgLLm/c1ikvDdl
-   trvh3z/cFZNRDvl1tI99/LrhX9Bn6b9SrKrcWAnJWEFhyWcX6M67jZ16k
-   Q==;
-X-CSE-ConnectionGUID: Us76Dz5wTV2EG/Exh72xpw==
-X-CSE-MsgGUID: PigVFU5wTtamjG19CFU4xg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11615"; a="65279958"
-X-IronPort-AV: E=Sophos;i="6.19,311,1754982000"; 
-   d="scan'208";a="65279958"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2025 04:12:18 -0800
-X-CSE-ConnectionGUID: twGw8rNGQZilaZjenVGMPQ==
-X-CSE-MsgGUID: R2rrSy3cSiKopfRyRGYLNw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,311,1754982000"; 
-   d="scan'208";a="190230655"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa009.jf.intel.com with ESMTP; 17 Nov 2025 04:12:17 -0800
-Date: Mon, 17 Nov 2025 19:57:34 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-coco@lists.linux.dev,
-	Jonathan.Cameron@huawei.com
-Subject: Re: [PATCH v2 7/8] PCI/TSM: Add pci_tsm_guest_req() for managing TDIs
-Message-ID: <aRsNrmcc5p2wUg9r@yilunxu-OptiPlex-7050>
-References: <20251113021446.436830-1-dan.j.williams@intel.com>
- <20251113021446.436830-8-dan.j.williams@intel.com>
+	s=arc-20240116; t=1763383137; c=relaxed/simple;
+	bh=gF4hglxp1LlzjlZWp1T+90NygUlYjcsq/Mvi0As3xDo=;
+	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type:To:CC; b=BqrzO1aYHxmKUZnWYzEbQPfYRVBV+5NFZxDorslNucYaABgnotpxDayEymWW9Bbh2qFJ6SlL1YW3k/UwhcpFUIN48EYrIcgYPklLSOx8BdeKw6MUq1V3MORD6ridLPVu5qLciVxkn/hd7Ybh03v5ukY8cIV+9SFZkQxnwOviUuw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=aspeedtech.com; spf=pass smtp.mailfrom=aspeedtech.com; arc=none smtp.client-ip=211.20.114.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=aspeedtech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aspeedtech.com
+Received: from TWMBX01.aspeed.com (192.168.0.62) by TWMBX01.aspeed.com
+ (192.168.0.62) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Mon, 17 Nov
+ 2025 20:38:52 +0800
+Received: from [127.0.1.1] (192.168.10.13) by TWMBX01.aspeed.com
+ (192.168.0.62) with Microsoft SMTP Server id 15.2.1748.10 via Frontend
+ Transport; Mon, 17 Nov 2025 20:38:52 +0800
+From: Jacky Chou <jacky_chou@aspeedtech.com>
+Subject: [PATCH v5 0/8] Add ASPEED PCIe Root Complex support
+Date: Mon, 17 Nov 2025 20:37:47 +0800
+Message-ID: <20251117-upstream_pcie_rc-v5-0-b4a198576acf@aspeedtech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251113021446.436830-8-dan.j.williams@intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIABsXG2kC/43NTU7DMBCG4atUXmNrfjKJw4p7IBQFZyAGtYnsN
+ KKqcnfcLOgOWL4jPd9cTdYUNZvHw9UkXWOO06mEPBxMGPvTu9o4lDYEJIjA9jznJWl/7OYQtUv
+ B+qqSRtrh1SObwuakb/Frn3x+KT3GvEzpsn9Y8Xbdx6BGBmYAdIzCNTcW7UcfPi9dGKfzU59n1
+ WHRMLowHc1taaW7blCAKyZwJML+P5rvugUEkZbIYdEi8LeufjQCNdCKJ3HoEWv8HW/b9g07oTo
+ wZgEAAA==
+X-Change-ID: 20251103-upstream_pcie_rc-8445759db813
+To: Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Joel Stanley <joel@jms.id.au>, "Andrew
+ Jeffery" <andrew@codeconstruct.com.au>, Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Manivannan
+ Sadhasivam" <mani@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>
+CC: <linux-aspeed@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<linux-phy@lists.infradead.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+	Andrew Jeffery <andrew@aj.id.au>, <openbmc@lists.ozlabs.org>,
+	<linux-gpio@vger.kernel.org>, Jacky Chou <jacky_chou@aspeedtech.com>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1763383131; l=4906;
+ i=jacky_chou@aspeedtech.com; s=20251031; h=from:subject:message-id;
+ bh=gF4hglxp1LlzjlZWp1T+90NygUlYjcsq/Mvi0As3xDo=;
+ b=MWXQzl73ovjxvrLgyEvEY6IqZKZDLpWVz9vIUSeIgIwSZIbnOhBA5NJ3hLGLvUya//pVRoSgg
+ yjkR0ewH6bqAWlsMQ2UWSwhxa6H85HaAmstcQrw/CU7g3mzvdewAgd2
+X-Developer-Key: i=jacky_chou@aspeedtech.com; a=ed25519;
+ pk=8XBx7KFM1drEsfCXTH9QC2lbMlGU4XwJTA6Jt9Mabdo=
 
-On Wed, Nov 12, 2025 at 06:14:45PM -0800, Dan Williams wrote:
-> A PCIe device function interface assigned to a TVM is a TEE Device
-> Interface (TDI). A TDI instantiated by pci_tsm_bind() needs additional
-> steps taken by the TVM to be accepted into the TVM's Trusted Compute
-> Boundary (TCB) and transitioned to the RUN state.
-> 
-> pci_tsm_guest_req() is a channel for the guest to request TDISP collateral,
-> like Device Interface Reports, and effect TDISP state changes, like
-> LOCKED->RUN transititions. Similar to IDE establishment and pci_tsm_bind(),
-              ^
-transition
+This patch series adds support for the ASPEED PCIe Root Complex,
+including device tree bindings, pinctrl support, and the PCIe host controller
+driver. The patches introduce the necessary device tree nodes, pinmux groups,
+and driver implementation to enable PCIe functionality on ASPEED platforms.
+Currently, the ASPEED PCIe Root Complex only supports a single port.
 
-[...]
+Summary of changes:
+- Add device tree binding documents for ASPEED PCIe PHY, PCIe Config, and PCIe RC
+- Update MAINTAINERS for new bindings and driver
+- Add PCIe RC node and PERST control pin to aspeed-g6 device tree
+- Implement ASPEED PCIe PHY driver
+- Implement ASPEED PCIe Root Complex host controller driver
 
-> +ssize_t pci_tsm_guest_req(struct pci_dev *pdev, enum pci_tsm_req_scope scope,
-> +			  sockptr_t req_in, size_t in_len, sockptr_t req_out,
-> +			  size_t out_len, u64 *tsm_code)
-> +{
-> +	struct pci_tsm_pf0 *tsm_pf0;
-> +	struct pci_tdi *tdi;
-> +	int rc;
-> +
-> +	/* Forbid requests that are not directly related to TDISP operations */
-> +	if (scope > PCI_TSM_REQ_STATE_CHANGE)
-> +		return -EINVAL;
+This series has been tested on AST2600/AST2700 platforms and enables PCIe device
+enumeration and operation.
 
-So we are not ready for PCI_TSM_REQ_DEBUG_READ/WRITE, is it?
+Signed-off-by: Jacky Chou <jacky_chou@aspeedtech.com>
+---
+Changes in v5:
+- Remove legacy-interrupt-controller and the INTx points to pcie node itself.
+- Correct bar mapping description and implementation to PCIe address
+  configuration in pcie-aspeed.c driver.
+- Link to v4: https://lore.kernel.org/r/20251027095825.181161-1-jacky_chou@aspeedtech.com/
 
-Others look good to me.
+Changes in v4:
+- Remove aspeed,ast2700-pcie-cfg.yaml
+- Add more descriptions for AST2600 PCIe RC in aspeed,ast2600-pcie.yaml
+- Change interrupt-controller to legacy-interrupt-controller in yaml
+  and dtsi
+- Remove msi-parent property in yaml and dtsi
+- Modify the bus range to starting from 0x00 in aspeed-g6.dtsi
+- Fixed the typo on MODULE_DEVICE_TABLE() in phy-aspeed-pcie.c
+- Add PCIE_CPL_STS_SUCCESS definition in pci/pci.h
+- Add prefix ASPEED_ for register definition in RC driver
+- Add a flag to indicate clear msi status twice for AST2700 workaround
+- Remove getting domain number
+- Remove scanning AST2600 HOST bridge on device number 0
+- Remove all codes about CONFIG_PCI_MSI
+- Get root but number from resouce list by IORESOURCE_BUS
+- Change module_platform_driver to builtin_platform_driver
+- Link to v3: https://lore.kernel.org/r/20250901055922.1553550-1-jacky_chou@aspeedtech.com/
 
-Reviewed-by: Xu Yilun <yilun.xu@linux.intel.com>
+Changes in v3:
+- Add ASPEED PCIe PHY driver
+- Remove the aspeed,pciecfg property from AST2600 RC node, merged into RC node
+- Update the binding doc for aspeed,ast2700-pcie-cfg to reflect the changes
+- Update the binding doc for aspeed,ast2600-pcie to reflect the changes
+- Update the binding doc for aspeed,ast2600-pinctrl to reflect the changes
+- Update the device tree source to reflect the changes
+- Adjusted the use of mutex in RC drivers to use GRAND
+- Updated from reviewer comments
+- Link to v2: https://lore.kernel.org/r/20250715034320.2553837-1-jacky_chou@aspeedtech.com/
+
+Changes in v2:
+- Moved ASPEED PCIe PHY yaml binding to `soc/aspeed` directory and
+  changed it as syscon
+- Added `MAINTAINERS` entry for the new PCIe RC driver
+- Updated device tree bindings to reflect the new structure
+- Refactored configuration read and write functions to main bus and
+  child bus ops
+- Refactored initialization to implement multiple ports support
+- Added PCIe FMT and TYPE definitions for TLP header in
+  `include/uapi/linux/pci_regs.h`
+- Updated from reviewer comments
+- Link to v1: https://lore.kernel.org/r/20250613033001.3153637-1-jacky_chou@aspeedtech.com/
+
+---
+Jacky Chou (8):
+      dt-bindings: phy: aspeed: Add ASPEED PCIe PHY
+      dt-bindings: PCI: Add ASPEED PCIe RC support
+      dt-bindings: pinctrl: aspeed,ast2600-pinctrl: Add PCIe RC PERST# group
+      ARM: dts: aspeed-g6: Add PCIe RC and PCIe PHY node
+      PHY: aspeed: Add ASPEED PCIe PHY driver
+      PCI: Add FMT, TYPE and CPL status definition for TLP header
+      PCI: aspeed: Add ASPEED PCIe RC driver
+      MAINTAINERS: Add ASPEED PCIe RC driver
+
+ .../bindings/pci/aspeed,ast2600-pcie.yaml          |  149 +++
+ .../bindings/phy/aspeed,ast2600-pcie-phy.yaml      |   42 +
+ .../bindings/pinctrl/aspeed,ast2600-pinctrl.yaml   |    2 +
+ MAINTAINERS                                        |   12 +
+ arch/arm/boot/dts/aspeed/aspeed-g6-pinctrl.dtsi    |    5 +
+ arch/arm/boot/dts/aspeed/aspeed-g6.dtsi            |   50 +
+ drivers/pci/controller/Kconfig                     |   16 +
+ drivers/pci/controller/Makefile                    |    1 +
+ drivers/pci/controller/pcie-aspeed.c               | 1117 ++++++++++++++++++++
+ drivers/pci/pci.h                                  |   15 +
+ drivers/phy/Kconfig                                |    1 +
+ drivers/phy/Makefile                               |    1 +
+ drivers/phy/aspeed/Kconfig                         |   15 +
+ drivers/phy/aspeed/Makefile                        |    2 +
+ drivers/phy/aspeed/phy-aspeed-pcie.c               |  209 ++++
+ 15 files changed, 1637 insertions(+)
+---
+base-commit: 6a23ae0a96a600d1d12557add110e0bb6e32730c
+change-id: 20251103-upstream_pcie_rc-8445759db813
+
+Best regards,
+-- 
+Jacky Chou <jacky_chou@aspeedtech.com>
 
