@@ -1,113 +1,88 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from mail1.manjaro.org (mail1.manjaro.org [142.132.176.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B5727E05F;
-	Mon, 17 Nov 2025 02:39:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E09EC22FE11;
+	Mon, 17 Nov 2025 03:57:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=142.132.176.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763347171; cv=none; b=sENhfrrS+weGfJ8iUOnrtTpWTy89lHLiH36TwElaGq3CBnLKg4MSdHeVbJ1S86QLGoP1YIWRZRCIu5oqkitaMyTqMqtRN+qpN+U0XSsrCQLG2I+rSh39e3c8ZzZtv/jHoMkjamCMr6h0A360+F11/F4PboOM7+PKBCXrj2voMqc=
+	t=1763351839; cv=none; b=MCINf/VHnuJIYQ7oD6QsXbRjw+e6mqa5RX/X+wUUS/OVfozzsdtQus7O3Rk9C+RB1xS7DIKfhQBEq1ETUbTRQ4qxtYT9z58nf4aUmsHK9dWltUED+Fi/OkEVk1jASzVhjfX+HFwmO5WKsxE8fyPxOVKvZ+WlmMQMqAntNysFhLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763347171; c=relaxed/simple;
-	bh=rXScII9er1iRGZXNNqYS6o0YjelZ8hdCoPtxn3zisMI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mA91Uc7gkBvCJLpoDOOq9+iuuu3juqWd3XwDc6fdkcaUd+QzeTHJjggPePJr+MOGQtisrzq9c2+RMKuOqSbnVZvlKmM7fopQAZHYuBaHA0IciZ8Fgs58E9U00Q+aiksNAuWV6HP56MWk8J5wAhA+lRvuhqscQ7l38GgH39pPTmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kFdxbHjl; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1763351839; c=relaxed/simple;
+	bh=7GAsV4shDMmM/4Cr5HBvJqE82KAZ+Ys+ssRT6rBZE7o=;
+	h=From:In-Reply-To:Content-Type:References:Date:Cc:To:MIME-Version:
+	 Message-ID:Subject; b=DTO/K2bzS1azUhT4cTVD9PUam+CtlAHDAdjm4J1StZtA+Q7c5VRxhjR0LmoyEJLSgp/027uM2qsIioI0ug3U/+Nwngu0Pdf4HbRz7j+wtplZPRoYxNQtLz8+UTi4/itM4dyoa1i6l/t9CYo9bjD95MgUXzPn2JAq7YXwJ5d8ryA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org; spf=pass smtp.mailfrom=manjaro.org; dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b=ReNdiVpe; arc=none smtp.client-ip=142.132.176.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=manjaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kFdxbHjl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763347170; x=1794883170;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=rXScII9er1iRGZXNNqYS6o0YjelZ8hdCoPtxn3zisMI=;
-  b=kFdxbHjl3lzzWtMtj/K5p19vfyA7Hoh9ap2TyA2l1gx4sLL/GT6cUnVA
-   jB5prqlWO5VHtF01GVLyG/8ntuVvwMADf2aOe4I8gleuNmHWiGCCCaE6g
-   1+pgaE/4HZWo0ZuXesUmN2m+yvxfJwriPB50sQSC2YfwrwWYygDHFjxBM
-   cI2gDdKygHDDox0cpFdP5x6qISI1LR0RvhUDBFP//UxXqQANRSTqYAQwi
-   Vh+VOflUaE3gZLPegf6YvDSaiMf1XRp1X4AEYYoSxjaJ22pwhRgx4vOwM
-   b/oBtjAGVISByt+CeU6992BhonbFMZnjMh+yORn3GlNVtENCXQRL0NAko
-   A==;
-X-CSE-ConnectionGUID: KJWsqLmhSgqC5ksqT4rvTg==
-X-CSE-MsgGUID: ao8p+wQTQSuYx/dPtGN15Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11615"; a="82729639"
-X-IronPort-AV: E=Sophos;i="6.19,310,1754982000"; 
-   d="scan'208";a="82729639"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2025 18:39:30 -0800
-X-CSE-ConnectionGUID: kd0YV+4EQXupkqe2ppiz6g==
-X-CSE-MsgGUID: U0j2srXpR9GlZojKT13Q2g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,310,1754982000"; 
-   d="scan'208";a="227658539"
-Received: from yilunxu-optiplex-7050.sh.intel.com ([10.239.159.165])
-  by orviesa001.jf.intel.com with ESMTP; 16 Nov 2025 18:39:25 -0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org
-Cc: chao.gao@intel.com,
-	dave.jiang@intel.com,
-	baolu.lu@linux.intel.com,
-	yilun.xu@linux.intel.com,
-	yilun.xu@intel.com,
-	zhenzhong.duan@intel.com,
-	kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com,
-	dave.hansen@linux.intel.com,
-	dan.j.williams@intel.com,
-	kas@kernel.org,
-	x86@kernel.org
-Subject: [PATCH v1 26/26] coco/tdx-host: Finally enable SPDM session and IDE Establishment
-Date: Mon, 17 Nov 2025 10:23:10 +0800
-Message-Id: <20251117022311.2443900-27-yilun.xu@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20251117022311.2443900-1-yilun.xu@linux.intel.com>
-References: <20251117022311.2443900-1-yilun.xu@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b="ReNdiVpe"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPA id 8855841196;
+	Mon, 17 Nov 2025 04:57:11 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=manjaro.org; s=dkim;
+	t=1763351834; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=BT04am3Kehc9aOs97jW5wTodqgxSkKf04K5hJUaJPzg=;
+	b=ReNdiVpeKrbgcSVmskmDotomCmwdsUx3+lrrU0N+K8oOwEV3dkiVyZQcohUTzaGNKRKgtk
+	hYQeg1FoGF3ALHk6FnHSjPCylwzuNmoOROB/sIR2JgkwXRLPXXJyUkt5FtZYGs+l++rLVv
+	j27F0p/AQ+LZm5JvqnMmp5we99oF8L1vBwyYj3OerttrRhPqqNq28yIBRY7ClbHIy/yamE
+	lR4bThz0szV2dhvXjmty4JyC/IAItlWzSNa3kC+Md03xB4Z+TEZSUL5NgqEoLHZzudlAPP
+	3yKvBIVIkDFCwAh8mhmlshQ5zUoBjFMjc8AkyMspHhP18woVqWhU4LspaHFCRQ==
+From: "Dragan Simic" <dsimic@manjaro.org>
+In-Reply-To: <8f3cc1c1-7bf7-4610-b7ce-79ebd6f05a6e@rock-chips.com>
+Content-Type: text/plain; charset="utf-8"
+References: <cover.1763197368.git.geraldogabriel@gmail.com> <8f3cc1c1-7bf7-4610-b7ce-79ebd6f05a6e@rock-chips.com>
+Date: Mon, 17 Nov 2025 04:57:11 +0100
+Cc: "Geraldo Nascimento" <geraldogabriel@gmail.com>, "Lorenzo Pieralisi" <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Manivannan Sadhasivam" <mani@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>, "Heiko Stuebner" <heiko@sntech.de>, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, "Krzysztof Kozlowski" <krzk+dt@kernel.org>, "Conor Dooley" <conor+dt@kernel.org>, "Johan Jonker" <jbx6244@gmail.com>, linux-rockchip@lists.infradead.org
+To: "Shawn Lin" <shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-ID: <257951b7-c22e-9707-6aba-3dc5794306bb@manjaro.org>
+Subject: =?utf-8?q?Re=3A?= [PATCH 0/3] =?utf-8?q?PCI=3A?==?utf-8?q?_rockchip=3A?=
+ =?utf-8?q?_5=2E0?= GT/s speed may be dangerous
+User-Agent: SOGoMail 5.12.3
+Content-Transfer-Encoding: quoted-printable
+X-Last-TLS-Session-Version: None
 
-The basic SPDM session and IDE functionalities are all implemented,
-enable them.
+Hello Shawn and Geraldo,
 
-Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
----
- drivers/virt/coco/tdx-host/tdx-host.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+On Monday, November 17, 2025 04:42 CET, Shawn Lin <shawn.lin@rock-chips=
+.com> wrote:
+> =E5=9C=A8 2025/11/15 =E6=98=9F=E6=9C=9F=E5=85=AD 17:10, Geraldo Nasci=
+mento =E5=86=99=E9=81=93:
+> > In recent interactions with Shawn Lin from Rockchip it came to my
+> > attention there's an unknown errata regarding 5.0 GT/s operational
+> > speed of their PCIe core. According to Shawn there's grave danger
+> > even if the odds are low. To contain any damage, let's cover the
+> > remaining corner-cases where the default would lead to 5.0 GT/s
+> > operation as well as add a comment to Root Complex driver core,
+> > documenting this danger.
+>=20
+> I'm not sure just adding a warn would be a good choice. Could we tota=
+lly
+> force to use gen1 and add a warn if trying to use Gen2.
 
-diff --git a/drivers/virt/coco/tdx-host/tdx-host.c b/drivers/virt/coco/tdx-host/tdx-host.c
-index 7f3c00f17ec7..b809f8f77206 100644
---- a/drivers/virt/coco/tdx-host/tdx-host.c
-+++ b/drivers/virt/coco/tdx-host/tdx-host.c
-@@ -885,7 +885,7 @@ static int tdx_iommu_enable_all(void)
- 	return ret;
- }
- 
--static int __maybe_unused tdx_connect_init(struct device *dev)
-+static int tdx_connect_init(struct device *dev)
- {
- 	struct tsm_dev *link;
- 	int ret;
-@@ -934,12 +934,8 @@ static int __maybe_unused tdx_connect_init(struct device *dev)
- 
- static int tdx_host_probe(struct faux_device *fdev)
- {
--	/*
--	 * Only support TDX Connect now. More TDX features could be added here.
--	 *
--	 * TODO: do tdx_connect_init() when it is fully implemented.
--	 */
--	return 0;
-+	/* Only support TDX Connect now. More TDX features could be added here. */
-+	return tdx_connect_init(&fdev->dev);
- }
- 
- static struct faux_device_ops tdx_host_ops = {
--- 
-2.25.1
+I think that forcing 2.5 GT/s with an appropriate warning message
+is a good idea.  That would be like some quirk that gets applied
+automatically, to prevent data corruption, while warning people
+who attempt to "overclock" the PCIe interface.
+
+> Meanwhile amend the commit message to add a reference
+> of RK3399 official datesheet[1] which says PCIe on RK3399 should only
+> support 2.5GT/s?
+>=20
+> [1]https://opensource.rock-chips.com/images/d/d7/Rockchip=5FRK3399=5F=
+Datasheet=5FV2.1-20200323.pdf
+
+Also, rewording the patch summary as follows below may be good,
+because that would provide more details:
+
+  PCI: rockchip: Warn about Gen2 5.0 GT/s on RK3399 being unsafe
+
+Or, if we'll go with the automatic downgrading, like this:
+
+  PCI: rockchip: Limit RK3399 to Gen1 2.5 GT/s to prevent breakage
 
