@@ -1,133 +1,118 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C2E5284886
-	for <linux-pci@vger.kernel.org>; Mon, 17 Nov 2025 05:11:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 018982459ED
+	for <linux-pci@vger.kernel.org>; Mon, 17 Nov 2025 05:20:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763356298; cv=none; b=QuxxLqQ/qAm6O1Y7IPMkFlK1SoMd+roDNeSrlj+Kid9VnybaIc76+YrrFFIxsdqHYwMrSDgQYkAs/MU5mSWRspa45aDxsotdIhe5BkU/C9qyj1V+pDbelWIJg6gUYPXGatPBLp2rjtfInTs0VyxSlIArqwnfmOHZhf0gvse4IIM=
+	t=1763356816; cv=none; b=sLJcoG2TqjCMI5wulbx5pI5vofyUBB5elrSQ3o5p0ISvuPwK1x+RRtUpJ0/uUYG3gb4D8TK1h4MEIQrOhwGEDILGAPEhdPtX6tr/IIbeHlkLi3phIrbPAuADsNeWpEhdi/ahEpWVxopB70J2SbjOZyxhYff11qZ/YsyYYQUPeFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763356298; c=relaxed/simple;
-	bh=MGyyMgQNRMj89rmL2Aope18G1ElVNFRh1ZCxZUFgYHI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ot3wON4UvCKG8QgYDqO6XmnqjU3YjUoSgnvCGExzsiLcY/R1VeIw0k7IoRNkbZ1ss2KUZdQWNIP/AJQDtGUcnOu1P2Eusmy4mK7BOPpeEqu+NYyHi7HLQoNBU8Ejxn3subePg/hG1PoDDfzBzHwFk1d641B+XmayJg618yvXzt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kkLj2TT4; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1763356816; c=relaxed/simple;
+	bh=RzCk3NX7y4lDeWH2d85kbNJGqzftNNMqTjyb/RyUcFc=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=gmAyLQ5Pk/1/uzxFoFVheaV8KXO7D+7yWl1woTOJubpcApmACmokFB6WRHNZKfkNGd65xqloA0jkEaTqQ7bcXhxi0pZ6hwQ86sOObeZvUpPFr0UC7jDK46DOAzal4IVOU+/gr/HKfRD6XiQQI8wLUxfbjImGzYPdmWNngPSpoTQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aR7Xh+bw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kkLj2TT4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763356296; x=1794892296;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=MGyyMgQNRMj89rmL2Aope18G1ElVNFRh1ZCxZUFgYHI=;
-  b=kkLj2TT4ZA6gYHYawf9yv+PicBKefANBSyp/ymn4ltctrU0YJ/qppZAU
-   tt7rx3BNO6hVQ5/6trsuiCblX6phUYZow+5GvXAH52at4yqOVi8DgGVcS
-   RaXgb/foDlA922GyXoPC61F3+WriGQTI9zxJaTrbgWPEkJ1IDvJOpQHf/
-   igGLVYn2hWbJ8dTIwYvZkCKiOT9Xp1K2+cD5iF0VJEXK95tWaB8yTnLtb
-   Dwz5et/PtS/VByrntcPJoEGtnHJi9Ug3ozGsuzbTSNKHquQD5iibPKBQj
-   ihK+jqCMrO28isZe94cqCWyAGkHGxlqCwOZHXkQuEkKcJlyiJUGwf0nk+
-   w==;
-X-CSE-ConnectionGUID: 2Wb1ffIHQzC+GISgrogyzA==
-X-CSE-MsgGUID: AFRrjsPzSGSz+a0MTnnZaQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11615"; a="65060278"
-X-IronPort-AV: E=Sophos;i="6.19,311,1754982000"; 
-   d="scan'208";a="65060278"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2025 21:11:36 -0800
-X-CSE-ConnectionGUID: 5vAUe8wMSjiBhRceq0e0+g==
-X-CSE-MsgGUID: GgHZzgH5Q2mkbGpnyCrAMA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,311,1754982000"; 
-   d="scan'208";a="194803453"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa004.jf.intel.com with ESMTP; 16 Nov 2025 21:11:34 -0800
-Date: Mon, 17 Nov 2025 12:56:52 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: dan.j.williams@intel.com
-Cc: Jonathan Cameron <jonathan.cameron@huawei.com>,
-	linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	xin@zytor.com, chao.gao@intel.com
-Subject: Re: [RFC PATCH 20/27] coco/tdx-host: Add connect()/disconnect()
- handlers prototype
-Message-ID: <aRqrFKV/5hinDiYg@yilunxu-OptiPlex-7050>
-References: <20250919142237.418648-1-dan.j.williams@intel.com>
- <20250919142237.418648-21-dan.j.williams@intel.com>
- <20251030112055.00001fcb@huawei.com>
- <69093bf7d6ee_74f59100fe@dwillia2-mobl4.notmuch>
- <aQwvsbZy50ac+xid@yilunxu-OptiPlex-7050>
- <69128889c6c2d_1d911009f@dwillia2-mobl4.notmuch>
- <aRVHpdQ637ltYJku@yilunxu-OptiPlex-7050>
- <69178ebd69506_10154100a9@dwillia2-mobl4.notmuch>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aR7Xh+bw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9C72C19422;
+	Mon, 17 Nov 2025 05:20:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763356815;
+	bh=RzCk3NX7y4lDeWH2d85kbNJGqzftNNMqTjyb/RyUcFc=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+	b=aR7Xh+bwmKtDHzCmwPsCcaF/0fqKm3vrjSUlJjJGXXNYjZZUGSNvONk1CsuDl2KZi
+	 wUGe4HwXPDH89fvfB7zmNC4/VVR2rmrfzItv7y8Sxews+WX3ECVaUfPm0RVUmvElKr
+	 ELFLKsXflP3smCeMfVFmjkh9TjkE4tfvpFpMW+zb0oUXjuLEgSwIWIUG1svLOKmmzj
+	 ziOKD8E208Lmlx8rPoJPgnIvVEh2t5prRv4VOe6IG/6m9S5hRo+5fICakywbLQCGff
+	 8aHLj8aEdIKAbqKT70077LWjG/3andhUvgltWS43RENznkdvNsouVXNEjMPqmwvCxj
+	 HEHbwQZFkzB7Q==
+Message-ID: <ab9a68fa-bd4e-4c76-afab-b4b7c1713574@kernel.org>
+Date: Sun, 16 Nov 2025 23:20:10 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <69178ebd69506_10154100a9@dwillia2-mobl4.notmuch>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI/VGA: Don't assume the only VGA device on a system is
+ `boot_vga`
+From: Mario Limonciello <superm1@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Zimmermann <tzimmermann@suse.de>
+Cc: mario.limonciello@amd.com, bhelgaas@google.com,
+ Aaron Erhardt <aer@tuxedocomputers.com>, linux-pci@vger.kernel.org
+References: <20251029193455.GA1576217@bhelgaas>
+ <546c998b-a740-4cc9-8f9c-21c8d2db7c3e@kernel.org>
+Content-Language: en-US
+In-Reply-To: <546c998b-a740-4cc9-8f9c-21c8d2db7c3e@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Fri, Nov 14, 2025 at 12:19:09PM -0800, dan.j.williams@intel.com wrote:
-> Xu Yilun wrote:
-> [..]
-> > IOW, I like this current piece of code cause it is in perfect balance.
-> > I don't have to change the mindset much for code design. I get the benifit
-> > of auto-cleanup, and the local cleanup handlers (tlink_spdm, tlink_ide)
-> > are cheap but clearly tell me what will happen if any step fails.
-> 
-> I think in this case of conflicting minor preferences the tie goes to
-> the submitter. While I personally think the discipline of clearly
-> delineating objects and ownerships yields maintainability benefits, I
-> also do not hate the model of "extend existing object with scope based
-> setup".
-> 
-> So,
-> 
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
-> 
-> > > > 	if (IS_ERR(tlink_spdm)) {
-> > > > 		pci_err(pdev, "fail to setup spdm session\n");
-> > > > 		return PTR_ERR(tlink_spdm);
-> > > > 	}
-> > > > 
-> > > > 	struct tdx_link *tlink_ide __free(tdx_ide_stream_teardown) =
-> > > > 		tdx_ide_stream_setup(tlink);
-> > > > 	if (IS_ERR(tlink_ide)) {
-> > > > 		pci_err(pdev, "fail to setup ide stream\n");
-> > > > 		return PTR_ERR(tlink_ide);
-> > > > 	}
-> > > 
-> > > No strict need for scope-based cleanup if this is the last resource
-> > > acquisition,
-> > 
-> > So if we don't do auto-cleanup for the last one, do we still need a
-> > structure for that? If not,
-> > 
-> >  struct tdx_link {
-> > 	struct tdx_spdm *spdm;
-> > 	
-> > 	int ide_stream_field1;
-> > 	int ide_stream_field2;
-> > 	...
-> >  }
-> > 
-> > seems so wierd.
-> 
-> Yeah, a little clunky.
-> 
-> > > but maybe there are other PCI/TSM core things to do that
-> > > are not shown.
-> > 
-> > There is no following items for now but I think cleanup for the last one
-> > is good. Otherwise we may face with the same problem as goto, that we
-> > see unrelated changes (add cleanup for previous one) when we add a new
-> > step.
-> 
-> Again, this is a case of I still disagree with shipping the dead code,
 
-OK. Will delete the last scope-based cleanup
 
-> but not enough to NAK your preference.
+On 10/29/25 2:38 PM, Mario Limonciello wrote:
+> +Thomas
+> 
+> On 10/29/25 2:34 PM, Bjorn Helgaas wrote:
+>> On Wed, Oct 29, 2025 at 01:59:33PM -0500, Mario Limonciello (AMD) wrote:
+>>> Some systems ship with multiple display class devices but not all
+>>> of them are VGA devices. If the "only" VGA device on the system is not
+>>> used for displaying the image on the screen marking it as `boot_vga`
+>>> because nothing was found is totally wrong.
+>>>
+>>> This behavior actually leads to mistakes of the wrong device being
+>>> advertised to userspace and then userspace can make incorrect decisions.
+>>>
+>>> As there is an accurate `boot_display` sysfs file stop lying about
+>>> `boot_vga` by assuming if nothing is found it's the right device.
+>>>
+>>> Reported-by: Aaron Erhardt <aer@tuxedocomputers.com>
+>>> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220712
+>>> Tested-by: Aaron Erhardt <aer@tuxedocomputers.com>
+>>> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
+>>
+>> Do we need a Fixes: here?  A stable cc?
+>>
+>> The bugzilla suggests this might be a regression and hence v6.18
+>> material?
+> 
+> Yeah I think you're right, we should add these two tags and this should 
+> go to 6.18 if it's a reasonable change.
+> 
+> Cc: stable@vger.kernel.org
+> Fixes: ad90860bd10ee ("fbcon: Use screen info to find primary device")
+> 
+> But let's also make sure Thomas Zimmermann agrees with this change.
+> 
+
+ping?
+
+>>
+>>> ---
+>>>   drivers/pci/vgaarb.c | 7 -------
+>>>   1 file changed, 7 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+>>> index 436fa7f4c3873..baa242b140993 100644
+>>> --- a/drivers/pci/vgaarb.c
+>>> +++ b/drivers/pci/vgaarb.c
+>>> @@ -652,13 +652,6 @@ static bool vga_is_boot_device(struct vga_device 
+>>> *vgadev)
+>>>           return true;
+>>>       }
+>>> -    /*
+>>> -     * Vgadev has neither IO nor MEM enabled.  If we haven't found any
+>>> -     * other VGA devices, it is the best candidate so far.
+>>> -     */
+>>> -    if (!boot_vga)
+>>> -        return true;
+>>> -
+>>>       return false;
+>>>   }
+>>> -- 
+>>> 2.43.0
+>>>
+> 
+> 
+
