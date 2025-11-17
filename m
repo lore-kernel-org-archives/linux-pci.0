@@ -1,95 +1,153 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4DE4331A40
-	for <linux-pci@vger.kernel.org>; Mon, 17 Nov 2025 15:13:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B727027280A;
+	Mon, 17 Nov 2025 15:36:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763392406; cv=none; b=NjXWY8oHxbg6TozoyZVNyCZqIPfXKPf5rlcDEWnkk0SdwN7hFiKdxxhJJVGnXvAPRcnKTfFZ61oH1KogQBnRGJ2PC06jEr+5xGvhH7nBWnY3JAl4hTZxLTYy/5CvrRzengy5mJCG6LYSS+o6W8+Y3kQKkwzkw/Qq6cw0yaSIzD8=
+	t=1763393790; cv=none; b=aAoxtY3CTGDP933OoZ3oRBZZBgvuTdWTFR0QjvA679C4CZj0l1xw2Ms3+e5gTcafYTEAd54r7yecG2XHmfMRv21w1R3aKkDvriraqnxhSHKMCpv5mHlS+uw8yj4P6eV5/20o3YwLXR67XP6ZSAohz+AeehnfWgxjWcydqRGCAZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763392406; c=relaxed/simple;
-	bh=OBvsF9gYOTJDqXss7CjhmAyEM0ox4oqYdV/ncbetlbA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DkcI8DNwLb3FiR2e04wrTDnQ2ufMA2WgmIJLXvR/ZyXp4fcD9sWWUsxDeDpu8ASqn2MBy6J9Zn+awV4uaPYaSxJbJbylt42ycPQagt1Et8mKvx6fzXX9Ymsa1L9YHnFp2Ks7nAynbY320k8CVmxQGla//IuUkXis4vJzOvPwOTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=COELKfPU; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1763393790; c=relaxed/simple;
+	bh=e4u3eYmUgkB0Kz0goGsy4ER6DXTGROhUPStI4UwkDYo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ozb81FXn+kkJiga9NZiPgvMZd27FZEXzh2QIDaxI4T5ufaR8NN9Eb51laINM1HZT3Q7KyBVmafKWyYq2nycYsRLdIPrDkUSSslrk/+8rT1dW0w1q7pj7BDuu75seInUsyhAV4PwX3UCzAZgm130QkqXI2MVvzFE7mQNgZy52nL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=bTgByaG4; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=a3V3ZZ/H; arc=none smtp.client-ip=103.168.172.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="COELKfPU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763392405; x=1794928405;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=OBvsF9gYOTJDqXss7CjhmAyEM0ox4oqYdV/ncbetlbA=;
-  b=COELKfPU+7cZScRGZD7Z64kKHLVp7EmAEcS1tIiA7KFZdrP1rDwwAsci
-   iHJEFwYLFr1nS+/Jpyt5dd2tcc8TcNP3hsaITipxVC1rW4j9IV7EBHyPx
-   9wdqgnuLZ4iVrzPXx2ERDwsbb2GyjzfLvslxu3l87AMM5E6K/4TVkOmnj
-   uR/pJt8mh/n8xNrovFRGNaUjMSBEd7NiFgdDGz9EhBr7mVMGT/HiCXp1Q
-   9pfTwWAGgc4OthQi/f70PQ9LwWQzR90dy2eg1on2E+KBO6RZ+xeVAARlg
-   E0TI93y31TrGYP2vXQ1KO2nCecg25K7NWKdSgz4mg+ndzDhaaZIoolZPc
-   A==;
-X-CSE-ConnectionGUID: KqLb4JhNSSqDqXIE7lp3Ww==
-X-CSE-MsgGUID: TPxqLVnuRv6Sj7qUySTXpw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11616"; a="69014024"
-X-IronPort-AV: E=Sophos;i="6.19,312,1754982000"; 
-   d="scan'208";a="69014024"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2025 07:13:24 -0800
-X-CSE-ConnectionGUID: bBStdWu1R3mgedFTda+0DA==
-X-CSE-MsgGUID: rw0Hy/rDSbGoH6t0WsFHGQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,312,1754982000"; 
-   d="scan'208";a="189769969"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa010.jf.intel.com with ESMTP; 17 Nov 2025 07:13:22 -0800
-Date: Mon, 17 Nov 2025 22:58:38 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-coco@lists.linux.dev,
-	Jonathan.Cameron@huawei.com, Bjorn Helgaas <bhelgaas@google.com>,
-	Lukas Wunner <lukas@wunner.de>, Samuel Ortiz <sameo@rivosinc.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Subject: Re: [PATCH v2 8/8] PCI/TSM: Add 'dsm' and 'bound' attributes for
- dependent functions
-Message-ID: <aRs4HnWBzJuD4mVt@yilunxu-OptiPlex-7050>
-References: <20251113021446.436830-1-dan.j.williams@intel.com>
- <20251113021446.436830-9-dan.j.williams@intel.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="bTgByaG4";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="a3V3ZZ/H"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id AEDCD14001CD;
+	Mon, 17 Nov 2025 10:36:26 -0500 (EST)
+Received: from phl-mailfrontend-01 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Mon, 17 Nov 2025 10:36:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1763393786;
+	 x=1763480186; bh=dumULOFDFktDrAv/FEHp3FtDy5iDmeMi8WaBMWjFFc0=; b=
+	bTgByaG40HRwAAQHrZmUb1QxjoIKG692YfpeDBRFe9Iu6ybe//AfCHpW3mIPsM1M
+	WYnkzK8lh2vXojzl2+qseUFiMvxqQKr0IYjFET9zskLG20I8YPQxfkYQYgftEyWx
+	jeD3gXXQIl0ubwQsOnRCneY9Ee+d3+FyAnOe8/ZEXTNbJBdR9zsD/Uqm6CFnrieJ
+	60m+mV6mdpdJNLWAtv0sUtz2nkHnAVCeUhvAsXprKWeJ9SeFuthsuY3OGDw1Tpsw
+	ZMjmSiwEFqUDMvWqfBkZB2f2ikmXmb74OaRGArj1p0panyj3vvVWtNAew6f7EjEB
+	kku47rytqu0faY0bmEgdRA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1763393786; x=
+	1763480186; bh=dumULOFDFktDrAv/FEHp3FtDy5iDmeMi8WaBMWjFFc0=; b=a
+	3V3ZZ/HrTsgG7BZQp9uEsbe6TdQbscGPUzzV1ucmE75P+RX148fjF6z3+eDtfxE/
+	+LIsnQGcry5t2eP9DsugDIxSRuHjQL4Pa48vQlCFL4Aj9/mvHNagLk5oliXqjZiN
+	P7d9HhnMs2X2J530B8bl9/HIJt7CTkAoGK83TiPn4Am8w3vpm2woXXyidHxnjDmy
+	AoDIYJqVBQO7kNTSKqZlkxYHdKM38pK6DV5BLhEpHopJc14gJ9bdwbzb1CECdFQ4
+	29UG0a8x0Qak4XNvR1lJ563e3TxaNlVHCoAPZmYQcpWw6cJWVjhYMw/XcXCtUO7+
+	0XyIT5kl1gHE9x0NMHR1g==
+X-ME-Sender: <xms:-EAbaWyQ-WAwnluLWHzIZSr0mg8fK4EjRWclwqn4UadFrYR9CFAq3A>
+    <xme:-EAbaYnO_OBUD04HGAVXLl5Y0sdGgCgZ0LkU9JWquhPnnfcmXV8ZdkOcf5KlVUEak
+    U9OYBBXPjLciDkkfhjTYgSLsu-_gFaVGAR6arDrg1_4BpjJyD5n4g>
+X-ME-Received: <xmr:-EAbaeV7CxOi5NsfI_0iHooQtOGJov1ufXfnaa1D97FrNVc9zEAX-2Uc>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdeggddvudekkeegucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkjghfgggtgfesthhqredttddtjeenucfhrhhomheptehlvgigucgh
+    ihhllhhirghmshhonhcuoegrlhgvgiesshhhrgiisghothdrohhrgheqnecuggftrfgrth
+    htvghrnhepgffggfegffffhffhhefftdeikedtueefkefghfehledtkedvvddtieehveej
+    fffgnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpe
+    dtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlhgvgiesshhhrgiisghothdrohhrghdp
+    nhgspghrtghpthhtohepfeehpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegthh
+    hrihhsthhirghnrdhkohgvnhhighesrghmugdrtghomhdprhgtphhtthhopehlvghonhes
+    khgvrhhnvghlrdhorhhgpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtg
+    homhdprhgtphhtthhopehlohhgrghnghesuggvlhhtrghtvggvrdgtohhmpdhrtghpthht
+    oheprgigsghovgeskhgvrhhnvghlrdgukhdprhgtphhtthhopehrohgsihhnrdhmuhhrph
+    hhhiesrghrmhdrtghomhdprhgtphhtthhopehjohhroheskegshihtvghsrdhorhhgpdhr
+    tghpthhtohepfihilhhlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmrdhsiiihph
+    hrohifshhkihesshgrmhhsuhhnghdrtghomh
+X-ME-Proxy: <xmx:-EAbaZ0fTJm_ATpV97jWOpcVupVrX5qYHi8qRNGt3G3rqeBOTipOKQ>
+    <xmx:-EAbaekY7TK2z-tERLv9vPNj8oV4GTGLaugTF_hEpglIkqI0gqjajw>
+    <xmx:-EAbaQEqElQCUqBqS26kmOTvil5W3KYOkdSQUnH2TTqyeLc7k0jBCw>
+    <xmx:-EAbabl0qbHJHfqmS6yt46qZ4Q6MuXUoWNyxiao6TOaw-x3l0mdFoA>
+    <xmx:-kAbaVsEtsMVur8JcMzBXoqZTmuBVUtCij-s3rV4asHdXPXnRrkBls7n>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 17 Nov 2025 10:36:22 -0500 (EST)
+Date: Mon, 17 Nov 2025 08:36:20 -0700
+From: Alex Williamson <alex@shazbot.org>
+To: Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Jens Axboe <axboe@kernel.dk>,
+ Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will@kernel.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Jonathan Corbet <corbet@lwn.net>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Kees Cook <kees@kernel.org>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+ Shameer Kolothum <skolothumtho@nvidia.com>,
+ Kevin Tian <kevin.tian@intel.com>, Krishnakant Jaju <kjaju@nvidia.com>,
+ Matt Ochs <mochs@nvidia.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ iommu@lists.linux.dev, linux-mm@kvack.org, linux-doc@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-hardening@vger.kernel.org, Alex Mastro <amastro@fb.com>,
+ Nicolin Chen <nicolinc@nvidia.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>
+Subject: Re: [PATCH v7 00/11] vfio/pci: Allow MMIO regions to be exported
+ through dma-buf
+Message-ID: <20251117083620.4660081a.alex@shazbot.org>
+In-Reply-To: <da399efa-ad5b-4bdc-964d-b6cc4a4fc55d@amd.com>
+References: <20251106-dmabuf-vfio-v7-0-2503bf390699@nvidia.com>
+	<20251110134218.5e399b0f.alex@shazbot.org>
+	<da399efa-ad5b-4bdc-964d-b6cc4a4fc55d@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251113021446.436830-9-dan.j.williams@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Nov 12, 2025 at 06:14:46PM -0800, Dan Williams wrote:
-> PCI/TSM sysfs for physical function 0 devices, i.e. the "DSM" (Device
-> Security Manager), contains the 'connect' and 'disconnect' attributes.
-> After a successful 'connect' operation the DSM, its dependent functions
-> (SR-IOV virtual functions, non-zero multi-functions, or downstream
-> endpoints of a switch DSM) are candidates for being transitioned into a
-> TDISP (TEE Device Interface Security Protocol) operational state, via
-> pci_tsm_bind(). At present sysfs is blind to which devices are capable of
-> TDISP operation and it is ambiguous which functions are serviced by which
-> DSMs.
-> 
-> Add a 'dsm' attribute to identify a function's DSM device, and add a
-> 'bound' attribute to identify when a function has entered a TDISP
-> operational state.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Lukas Wunner <lukas@wunner.de>
-> Cc: Samuel Ortiz <sameo@rivosinc.com>
-> Cc: Alexey Kardashevskiy <aik@amd.com>
-> Cc: Xu Yilun <yilun.xu@linux.intel.com>
-> Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
-> Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+On Tue, 11 Nov 2025 09:54:22 +0100
+Christian K=C3=B6nig <christian.koenig@amd.com> wrote:
 
-Reviewed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> On 11/10/25 21:42, Alex Williamson wrote:
+> > On Thu,  6 Nov 2025 16:16:45 +0200
+> > Leon Romanovsky <leon@kernel.org> wrote:
+> >  =20
+> >> Changelog:
+> >> v7:
+> >>  * Dropped restore_revoke flag and added vfio_pci_dma_buf_move
+> >>    to reverse loop.
+> >>  * Fixed spelling errors in documentation patch.
+> >>  * Rebased on top of v6.18-rc3.
+> >>  * Added include to stddef.h to vfio.h, to keep uapi header file indep=
+endent. =20
+> >=20
+> > I think we're winding down on review comments.  It'd be great to get
+> > p2pdma and dma-buf acks on this series.  Otherwise it's been posted
+> > enough that we'll assume no objections.  Thanks, =20
+>=20
+> Already have it on my TODO list to take a closer look, but no idea when t=
+hat will be.
+>=20
+> This patch set is on place 4 or 5 on a rather long list of stuff to revie=
+w/finish.
 
+Hi Christian,
+
+Gentle nudge.  Leon posted v8[1] last week, which is not drawing any
+new comments.  Do you foresee having time for review that I should
+still hold off merging for v6.19 a bit longer?  Thanks,
+
+Alex
+
+
+[1]https://lore.kernel.org/all/20251111-dmabuf-vfio-v8-0-fd9aa5df478f@nvidi=
+a.com/
