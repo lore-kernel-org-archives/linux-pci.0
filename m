@@ -1,107 +1,87 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E33D7347BA3;
-	Tue, 18 Nov 2025 12:42:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8B123BCFF;
+	Tue, 18 Nov 2025 13:02:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763469751; cv=none; b=mwPG01MEE1hMVnPtXoYh5Zq1FOAMLptmJCc9c1C+aw9aN4eU4OGHuA3Vae1hRc/lYmsgfgHtHXOcI8hPmUXGYY+/kXqkRM1cI46SBPj50edQlaC/SYPs9E02tWQmooj2vk75aGgkmd54YfioPkviTWgERI2jYNdXKfSbWf79NpI=
+	t=1763470941; cv=none; b=kGlYYKwI0gu7otjeV59HWxXUTaXRZ3rbRPgh50cyUFEY/8O/nZdWsYzfuScY8tFyf8nt44c2EEVncowfjxph44INTJAqBPshe4ofYXNbehADkJj+LGNffo99SwRB78KKd3k9MghCYTvIKRG7oSOGbeCLwV2R6Uz8rMzqIt/Lqdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763469751; c=relaxed/simple;
-	bh=omW4v+Tc3Le2QAQshFJbpuP+L60KdBKt3nR18RcALXs=;
+	s=arc-20240116; t=1763470941; c=relaxed/simple;
+	bh=CB2uOReZgsobtwaBKBpmnV0Wphw1VrV1rB9pFCourqE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EAtZhO6UKX7unXP5pUf/QGcjOcXs74L0b4CuZngYCyQLkTwRBDYK9WbcmbKFofeW9Vn0ot3rEa44/Hljt2EqknUJons/ihhBEfFn8R7jKSaKPw59py8i60evsV9qm+V1cdZ6dkOtudaW/NCow3tuucvAf+qNAE40KYqxqm4InWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=er5T6IQh; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=WoTfX4VphjOmNRpJg5VhE6Ja/5w0hbr10v6eS5fW7KnqEDsLgwPCovQAd/CCGJ5TfuzxJ6dqUTTdDeMIQFTSjxK6Oh/q8cwTmQLhe6a4fZTZy6I1CwN1iajDfOuqYdTQUl7eAgk6eXNVKULlAT1Qve6wtsI1hrnIMNCuMYEOVrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=v04/qdvc; arc=none smtp.client-ip=82.195.75.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="er5T6IQh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763469750; x=1795005750;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=omW4v+Tc3Le2QAQshFJbpuP+L60KdBKt3nR18RcALXs=;
-  b=er5T6IQheD8bv4BMG5u1bH5Qp8IfQToj3zLapMDp+McOBBH277Pe/Phu
-   cgjLUQfPaV2t9CZNeY+c+23gXr76kdrgemvhmQUnygMasEzUvW3I0vi2w
-   GDzv2MuIGhOZai+BhXZ/PnzqtQK+OdKc17nD0bG3O9uKzutB20SKF924c
-   Qj911MKDVMhloWikitkVHfPsCSAXElraGrBx+r28m5y25yXoQi4cfDxwe
-   5uD2SCphLn+/Wh+iu4EqpgdWTI4A2wNYFbR5S3+Ga+oAnZy++igj/HPtw
-   ipUNgSj4F0P+uSC34sNn4m0WeR1KxAWNixZTRvn2sPePZVTKmkEMc/Rcn
-   w==;
-X-CSE-ConnectionGUID: P5SQNxeWSiuqLgkw6aR6yw==
-X-CSE-MsgGUID: U3xHq0ToTDG1QFpiCqSbPw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11616"; a="65369814"
-X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
-   d="scan'208";a="65369814"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 04:42:29 -0800
-X-CSE-ConnectionGUID: O+PKAPd1TESN5U62SXzP0A==
-X-CSE-MsgGUID: EmcXUBzwSMyUDkqlVl+y7A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
-   d="scan'208";a="221655749"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa001.fm.intel.com with ESMTP; 18 Nov 2025 04:42:26 -0800
-Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 78E0098; Tue, 18 Nov 2025 13:42:25 +0100 (CET)
-Date: Tue, 18 Nov 2025 13:42:25 +0100
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Jonathan Cameron <jic23@kernel.org>
-Cc: Christian Bruel <christian.bruel@foss.st.com>,
-	linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Alexandre Torgue <alexandre.torgue@foss.st.com>
-Subject: Re: [PATCH v2 1/1] PCI: stm32: Don't use "proxy" headers
-Message-ID: <aRxpsc02hGW1w_hu@black.igk.intel.com>
-References: <20251114185534.3287497-1-andriy.shevchenko@linux.intel.com>
- <20251117204348.GA2522408@bhelgaas>
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="v04/qdvc"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=CB2uOReZgsobtwaBKBpmnV0Wphw1VrV1rB9pFCourqE=; b=v04/qdvc32+tt+zPP4pbDmrzkf
+	zXGN+g/n7abQcm8ATAQLOOicg69LK54vwGhdR8jdcZh3yLsGHMNA3Ut6OlqqiMOMStHcN7gxFfKxN
+	enI0+iv1n4sauXKQob6ILS8ypE7nUnadXxnfCJlEXdPaBj7rxfELh4+KlLT/MN2SBs8/tGY6r+j1s
+	CViq6f347IAYD/ZBAw4f+BRM+uNF9RSbdew7zxtwQhEk2cL2iXEVhLh8nlUMvdMAnDuiu44RuoVai
+	ciM5p5UncHRv9cYN7CNYAyQVHPxLxsepPQA/I94/WwnvGJaaw6RSksnJT8E8jby62YqZCLWtPio7B
+	sRZNlS6w==;
+Received: from authenticated user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <leitao@debian.org>)
+	id 1vLLLH-00FHMs-OI; Tue, 18 Nov 2025 13:01:56 +0000
+Date: Tue, 18 Nov 2025 05:01:47 -0800
+From: Breno Leitao <leitao@debian.org>
+To: tony.luck@intel.com, bp@alien8.de, akpm@linux-foundation.org
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	acpica-devel@lists.linux.dev, osandov@osandov.com, xueshuai@linux.alibaba.com, 
+	konrad.wilk@oracle.com, linux-edac@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-pci@vger.kernel.org, kernel-team@meta.com, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Len Brown <lenb@kernel.org>, James Morse <james.morse@arm.com>, 
+	Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, 
+	Robert Moore <robert.moore@intel.com>, Thomas Gleixner <tglx@linutronix.de>, 
+	Ingo Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+	"H. Peter Anvin" <hpa@zytor.com>, Hanjun Guo <guohanjun@huawei.com>, 
+	Mauro Carvalho Chehab <mchehab@kernel.org>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH RESEND v5] vmcoreinfo: Track and log recoverable hardware
+ errors
+Message-ID: <vpilvvscosdl4o4cvbmtsrrp4btfwr5iidywmuiawfrgtlcwrr@ubtdbxfqyqpu>
+References: <20251010-vmcore_hw_error-v5-1-636ede3efe44@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251117204348.GA2522408@bhelgaas>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <20251010-vmcore_hw_error-v5-1-636ede3efe44@debian.org>
+X-Debian-User: leitao
 
-On Mon, Nov 17, 2025 at 02:43:48PM -0600, Bjorn Helgaas wrote:
-> On Fri, Nov 14, 2025 at 07:52:01PM +0100, Andy Shevchenko wrote:
-> > Update header inclusions to follow IWYU (Include What You Use)
-> > principle.
-> > 
-> > In particular, replace of_gpio.h, which is subject to remove by the GPIOLIB
-> > subsystem, with the respective headers that are being used by the driver.
-> 
-> Thanks, Andy!  It looks like a lot of work to figure this out by hand.
+Hello Andrew, Borislav, Tony,
 
-True.
+On Fri, Oct 10, 2025 at 03:36:50AM -0700, Breno Leitao wrote:
+> Introduce a generic infrastructure for tracking recoverable hardware
+> errors (HW errors that are visible to the OS but does not cause a panic)
+> and record them for vmcore consumption. This aids post-mortem crash
+> analysis tools by preserving a count and timestamp for the last
+> occurrence of such errors. On the other side, correctable errors, which
+> the OS typically remains unaware of because the underlying hardware
+> handles them transparently, are less relevant for crash dump
+> and therefore are NOT tracked in this infrastructure.
 
-> Is there a tool to figure this out?  Maybe something I could run when
-> reviewing patches?
+<snip>
 
-I have a déjà vu answering this question. Was it you last time who asked
-the same?
+> Suggested-by: Tony Luck <tony.luck@intel.com>
+> Suggested-by: Shuai Xue <xueshuai@linux.alibaba.com>
+> Signed-off-by: Breno Leitao <leitao@debian.org>
+> Reviewed-by: Shuai Xue <xueshuai@linux.alibaba.com>
 
-The tool is iwyu which is heavily tuned for the kernel use by Jonathan (Cc'ed).
-But I do it manually.
+Do you know what is the right tree for this patch?
 
-> IWYU seems like a nice principle but I couldn't find any mention in
-> Documentation/.  Should it be covered there somehow?
+I am wondering if it should go through Kdump, x86 or RAS/MCE tree?
 
-Perhaps. Maybe we can start with IIO, where it's a highly recommended thing
-for the new code submissions.
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+Thanks
+--breno
