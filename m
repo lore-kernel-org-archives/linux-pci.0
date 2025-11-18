@@ -1,123 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2BE23090CF
-	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2025 13:04:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26368329E46;
+	Tue, 18 Nov 2025 13:14:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763471048; cv=none; b=ieYFKDrjFhMMIBDOL26Vr0ajK3XUxqohEW2qusqFBxRcKaOky8C7LbBmKWc9FO5JohBOCYC/GH2+zWcSDXuyYmF3F1EYQ8vaFLwhre+CRTbuFFDHH1xF7UM6FaeohDlqpYf90DKQN/a4rQMNhi20NCv4Q8qBg7eQOSFdfsVP6D0=
+	t=1763471694; cv=none; b=BVyvMDLsdbExqfx6uL0+aH/YDr6zeUYJhTotkIgNayZGUqsxE92L1gMGgkuT10/+d5MB7Ndnq7YDohh+yT54FMK3WYrqMOTJuB2hlMSAih+B4xwGOKOk1VMHm2FjHw6Q18ilHczTgvyhP+/WgnvSHvvflHp0sgZKfwq8fElV2jA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763471048; c=relaxed/simple;
-	bh=QY1OIrfV7wJNhoLm6jftQrdDzbys+UOJ7sTIBabxKQU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Yc6ayQPAy/wNhyFNtFWvW9myCbTDCghtH/A8NfhHnvg9WvcxpAqE3pehzMrH8bBqcZq9MRWjwZRgZXU/a2NsYqUCH0xnAJnzXwdG49mgzw8RnKGMFbVNoIXqi2fJk/kn7YUk2oCdUHm9c2W8pagJ3reS4EiRBfHSRD9xIWZm/NY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BSfEQeAB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763471694; c=relaxed/simple;
+	bh=6eM5MEhpy8qjHBQhtFNZN0yn242L+U7uvd1kx4IHV/E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MYUp9yzvI1henfpViH0mQctxBPFjCUwoedFjK7r9e6uB7i4gD6mSRd7FZXY9vmbjhNmjT7Vy0FxhfvCZAHpE99PL5diCRaJDsbMNqxyCd18H8uIDLLxpX1yrIYe5/Jp/hB0LgEON4jmRMGws5lAiQZQzwGjAcj0ybwjYTNOBJyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mAGIomI2; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BSfEQeAB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57ACEC4CEFB
-	for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2025 13:04:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763471048;
-	bh=QY1OIrfV7wJNhoLm6jftQrdDzbys+UOJ7sTIBabxKQU=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=BSfEQeABbwnLjR4Vdrpji2a0ltLUBfFx8Ci/+czx+NTxX11c4PvRHAuWY1gfGbXYV
-	 lU0apMgZ71ZfpXPERdNXc8jyS0NkgG5SOVVd8IvuJbzrajPwvsRVbOXt6bvUgqSx+8
-	 BItroIpA7lumTKBlytgaBEaXRkNV/Qe6hiRHYd3kKn3frl2xCNy6xGhVO+ofRnXFG+
-	 MB7Ds3Z2l02mFQKMPEC5gKHASaT047gylPDlPf7sH/dhQCTG3/RRUGK7xprpTgnIr9
-	 18zlOxNeSED1Qekqgers87b1DeXt2kpSicXUUSMCNJSyIiTdAa8nQT2JaxmFj/VRfM
-	 /14tF7RRPRjVg==
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-6418b55f86dso8761230a12.1
-        for <linux-pci@vger.kernel.org>; Tue, 18 Nov 2025 05:04:08 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWd5q6pXDDdo2iynDPEuCZE0RCKCoIa/mGSTwjpj9fyVCBx9KloB80osGXsf/mIYSPZZnyFyoYYkBE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzcKGhxBwz40JkwX344smo12x5TJVGPTxYASVYN7/GSyA9aTaLx
-	QoyXVkAdaTDQRIxHKaLPA85bE//3EJ4Ncz5G9BsDXAxe9b0u5Hf47PSN09VDVl26SF6n0dZTbBQ
-	7vm0Z0DD1NJGsgOQcXGSMh5IBxmn+mw==
-X-Google-Smtp-Source: AGHT+IGzaPWs9CO2/QqJ2lcK3lJrPrwRYsH8Qm8HjBS/YlxbWZYRORJiSB2uoxSx80hvbGBnIei2bDGhcwM4UJKc8fE=
-X-Received: by 2002:a05:6402:2809:b0:63c:2d72:56e3 with SMTP id
- 4fb4d7f45d1cf-64350e8e003mr14781379a12.23.1763471043426; Tue, 18 Nov 2025
- 05:04:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mAGIomI2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763471692; x=1795007692;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=6eM5MEhpy8qjHBQhtFNZN0yn242L+U7uvd1kx4IHV/E=;
+  b=mAGIomI2GRIWPp9ms0iyg8NbaUUnxz3aMLg433BKBwVsPVBBIijM5K9v
+   CTEIumnBSTPbwvGiwp2qVLoQqvmtz9NoOtnfZGaFID8s5ehm4yKSxWB3A
+   sKhK/GbmzvyuYF0gtxGn5bk1Ef3NUIEH2nY8dZaXF37IJrVALHFtZMWlf
+   57eVq3mLqZH12jg0lLgMtRdQp2Z/QoZ7hwP2QfgLx38mZN0SdEYqQtpJY
+   M0eN/5XZIpQy4oVlGw4EngWsZbQFWWOANp9/J/hASX12h+sGZOzB619N8
+   ByY+6QkKzt+WY5QjMdOI5U7f1C2jlgSLUaz4BD71P6w8y+NMc580RYjl3
+   A==;
+X-CSE-ConnectionGUID: RfNB7KOSQ1axWoMPtoSNMw==
+X-CSE-MsgGUID: JtSW52ERRfSR96apoBEtRg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11616"; a="69361867"
+X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
+   d="scan'208";a="69361867"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 05:14:51 -0800
+X-CSE-ConnectionGUID: q0noG09pSv+jtV0xmXaiGA==
+X-CSE-MsgGUID: NncBD5WsSnCq7CwXI6o+VA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
+   d="scan'208";a="194870125"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa003.jf.intel.com with ESMTP; 18 Nov 2025 05:14:48 -0800
+Date: Tue, 18 Nov 2025 21:00:02 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Dave Hansen <dave.hansen@intel.com>
+Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+	chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
+	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
+	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
+	dan.j.williams@intel.com, kas@kernel.org, x86@kernel.org
+Subject: Re: [PATCH v1 07/26] x86/virt/tdx: Read TDX global metadata for TDX
+ Module Extensions
+Message-ID: <aRxt0prMKusEEt2+@yilunxu-OptiPlex-7050>
+References: <20251117022311.2443900-1-yilun.xu@linux.intel.com>
+ <20251117022311.2443900-8-yilun.xu@linux.intel.com>
+ <89a4e42d-b0fd-49b0-8d51-df7bac0d5e5b@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251112-pci-m2-e-v1-0-97413d6bf824@oss.qualcomm.com> <20251112-pci-m2-e-v1-6-97413d6bf824@oss.qualcomm.com>
-In-Reply-To: <20251112-pci-m2-e-v1-6-97413d6bf824@oss.qualcomm.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 18 Nov 2025 07:03:51 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqKBcXH0EWguto3EFY2cJ5p=8VUZczMHz1u5fNFocv-AmA@mail.gmail.com>
-X-Gm-Features: AWmQ_blGP-_XDvdtj3MDVFdTuQEWnKJrtZXKQUPHlGxcSMsdX4Hk0jJFpfTnlMY
-Message-ID: <CAL_JsqKBcXH0EWguto3EFY2cJ5p=8VUZczMHz1u5fNFocv-AmA@mail.gmail.com>
-Subject: Re: [PATCH 6/9] serdev: Skip registering serdev devices from DT is
- external connector is used
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
-	Hans de Goede <hansg@kernel.org>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <89a4e42d-b0fd-49b0-8d51-df7bac0d5e5b@intel.com>
 
-On Wed, Nov 12, 2025 at 8:45=E2=80=AFAM Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> wrote:
->
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->
-> If an external connector like M.2 is connected to the serdev controller
-> in DT, then the serdev devices will be created dynamically by the connect=
-or
-> driver. So skip registering devices from DT node as there will be no
-> statically defined devices.
+On Mon, Nov 17, 2025 at 08:52:36AM -0800, Dave Hansen wrote:
+> On 11/16/25 18:22, Xu Yilun wrote:
+> > +static __init int get_tdx_sys_info_ext(struct tdx_sys_info_ext *sysinfo_ext)
+> > +{
+> > +	int ret = 0;
+> > +	u64 val;
+> > +
+> > +	if (!ret && !(ret = read_sys_metadata_field(0x3100000100000000, &val)))
+> > +		sysinfo_ext->memory_pool_required_pages = val;
+> > +	if (!ret && !(ret = read_sys_metadata_field(0x3100000100000001, &val)))
+> > +		sysinfo_ext->ext_required = val;
+> > +
+> > +	return ret;
+> > +}
+> 
+> These were OK-ish when they were being generated by a script.
+> 
+> Now that they're being generated by and edited by humans, they
+> need to actually be readable.
 
-You could still have statically defined devices. You are just choosing
-to probe them later from the connector driver.
+I agree. Further more, let me figure out if we could require minimum
+boilerplate code when a new field is added.
 
->
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
-com>
-> ---
->  drivers/tty/serdev/core.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
->
-> diff --git a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
-> index 8c2a40a537d93f4b9353a2f128cdf51b521929b1..1378587d386356ca4415fa455=
-b2ee722b5e44d3e 100644
-> --- a/drivers/tty/serdev/core.c
-> +++ b/drivers/tty/serdev/core.c
-> @@ -12,6 +12,7 @@
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/of.h>
-> +#include <linux/of_graph.h>
->  #include <linux/of_device.h>
->  #include <linux/pm_domain.h>
->  #include <linux/pm_runtime.h>
-> @@ -560,6 +561,15 @@ static int of_serdev_register_devices(struct serdev_=
-controller *ctrl)
->         int err;
->         bool found =3D false;
->
-> +       /*
-> +        * When the serdev controller is connected to an external connect=
-or like
-> +        * M.2 in DT, then the serdev devices will be created dynamically=
- by the
-> +        * connector driver. So skip looking for devices in DT node as th=
-ere will
-> +        * be no statically defined devices.
-> +        */
-> +       if (of_graph_is_present(ctrl->dev.of_node))
-> +               return 0;
+> 
+> Can we please get this down to something that looks more like:
+> 
+> 	MACRO(&sysinfo_ext->memory_pool_required_pages, 0x3100000100000000);
+> 	MACRO(&sysinfo_ext->ext_required,		0x3100000100000001);
+> 
+> You can generate code in that macro, or generate a struct like
+> this:
+> 
+> static __init int get_tdx_sys_info_ext(struct tdx_sys_info_ext *sysinfo_ext)
+> {
+> 	int ret = 0;
+> 	struct tdx_metadata_init[] = {
+> 		MACRO(&sysinfo_ext->memory_pool_required_pages, 0x3100000100000000),
+> 		MACRO(&sysinfo_ext->ext_required,		0x3100000100000001),
+> 		{},
+> 	};
+> 
+> 	return tdx_...(sysinfo_ext, tdx_metadata_init);
+> }
+> 
+> and have the helper parse the structure.
+> 
+> But, either way, the method that's being proposed here needs to go.
 
-Where's the schema that allows graph nodes?
+I'll try and may need a seperate refactoring patch for the existing
+code.
 
-Rob
+
