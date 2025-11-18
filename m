@@ -1,54 +1,62 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8B123BCFF;
-	Tue, 18 Nov 2025 13:02:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AFD9275AE4;
+	Tue, 18 Nov 2025 13:02:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763470941; cv=none; b=kGlYYKwI0gu7otjeV59HWxXUTaXRZ3rbRPgh50cyUFEY/8O/nZdWsYzfuScY8tFyf8nt44c2EEVncowfjxph44INTJAqBPshe4ofYXNbehADkJj+LGNffo99SwRB78KKd3k9MghCYTvIKRG7oSOGbeCLwV2R6Uz8rMzqIt/Lqdk=
+	t=1763470967; cv=none; b=gGNEfiXnhqdjwuRvdeTDlX8chZa04xRb5eYeRwXvM8BXLw3M39L2MHSCxEIl8v60SH9NifNFi562sjjpniDN9b7wLLg+u+xv1sqaVMk4te0aXXA07nhylGzDEj7sunlWvE/L+9UHwzU0TBgk0JT+GKPY8De4yyAfDryUs0xumUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763470941; c=relaxed/simple;
-	bh=CB2uOReZgsobtwaBKBpmnV0Wphw1VrV1rB9pFCourqE=;
+	s=arc-20240116; t=1763470967; c=relaxed/simple;
+	bh=l8Q8mNGhNmk90OG2libW1IjxLLKiGopo3PW17f7lBv4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WoTfX4VphjOmNRpJg5VhE6Ja/5w0hbr10v6eS5fW7KnqEDsLgwPCovQAd/CCGJ5TfuzxJ6dqUTTdDeMIQFTSjxK6Oh/q8cwTmQLhe6a4fZTZy6I1CwN1iajDfOuqYdTQUl7eAgk6eXNVKULlAT1Qve6wtsI1hrnIMNCuMYEOVrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=v04/qdvc; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=QpCctmhK2vmOymBS7NqjGREQqbRFq7O3HMkP8SefjxwFhho4OcIAiu6nsTzQ2zxIn3K3yHMBKOON8K3roIfiIjXfYqA1cpVMOfQ15VgLRf2vRG4WXXlrqzeytuTCHqCqgoq8dIbWnZNCHkon3OuCxzBGCbHI14Y3mOLQ7RWCNQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WFJtfK0c; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="v04/qdvc"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=CB2uOReZgsobtwaBKBpmnV0Wphw1VrV1rB9pFCourqE=; b=v04/qdvc32+tt+zPP4pbDmrzkf
-	zXGN+g/n7abQcm8ATAQLOOicg69LK54vwGhdR8jdcZh3yLsGHMNA3Ut6OlqqiMOMStHcN7gxFfKxN
-	enI0+iv1n4sauXKQob6ILS8ypE7nUnadXxnfCJlEXdPaBj7rxfELh4+KlLT/MN2SBs8/tGY6r+j1s
-	CViq6f347IAYD/ZBAw4f+BRM+uNF9RSbdew7zxtwQhEk2cL2iXEVhLh8nlUMvdMAnDuiu44RuoVai
-	ciM5p5UncHRv9cYN7CNYAyQVHPxLxsepPQA/I94/WwnvGJaaw6RSksnJT8E8jby62YqZCLWtPio7B
-	sRZNlS6w==;
-Received: from authenticated user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <leitao@debian.org>)
-	id 1vLLLH-00FHMs-OI; Tue, 18 Nov 2025 13:01:56 +0000
-Date: Tue, 18 Nov 2025 05:01:47 -0800
-From: Breno Leitao <leitao@debian.org>
-To: tony.luck@intel.com, bp@alien8.de, akpm@linux-foundation.org
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	acpica-devel@lists.linux.dev, osandov@osandov.com, xueshuai@linux.alibaba.com, 
-	konrad.wilk@oracle.com, linux-edac@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	linux-pci@vger.kernel.org, kernel-team@meta.com, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Len Brown <lenb@kernel.org>, James Morse <james.morse@arm.com>, 
-	Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>, 
-	Robert Moore <robert.moore@intel.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Ingo Molnar <mingo@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, Hanjun Guo <guohanjun@huawei.com>, 
-	Mauro Carvalho Chehab <mchehab@kernel.org>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
-	Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH RESEND v5] vmcoreinfo: Track and log recoverable hardware
- errors
-Message-ID: <vpilvvscosdl4o4cvbmtsrrp4btfwr5iidywmuiawfrgtlcwrr@ubtdbxfqyqpu>
-References: <20251010-vmcore_hw_error-v5-1-636ede3efe44@debian.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WFJtfK0c"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763470965; x=1795006965;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=l8Q8mNGhNmk90OG2libW1IjxLLKiGopo3PW17f7lBv4=;
+  b=WFJtfK0cF5bra8r+9XSjBkDJn9ove1z85qDVj5v6HR6vjHFxexnQAv6M
+   1JaI9I8IzPKj8L1FmHOBxWcp0KXuD+lerSzjjqRJix5+rT6Oac6otUqLs
+   /ttXaLCGD0TBSoecrVmJXEcdicRe5Jq3xKlMOzPsTXmmir3K5bFJk5gkV
+   T17iR5QJLQlIAEMZscHxNzBl4oE3guTAY1UYIsDWstiUeDdOnGrr3OwgA
+   Hqqk1hSRIX+AWJ0t92caTrnnZEdLC/q7oXv1y0B9C22D2kLkaxDVPp1NP
+   fhduUAgmE63AIxoxjr9V2HBX13nuGiB1T2js1Va2hWWrORNprlDI/GDJF
+   w==;
+X-CSE-ConnectionGUID: dfmXAoTfT+GpdW8jycJHjQ==
+X-CSE-MsgGUID: 3Fhk+4qGTvy+/LjWJNcBiA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11616"; a="76093101"
+X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
+   d="scan'208";a="76093101"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 05:02:44 -0800
+X-CSE-ConnectionGUID: kbqC98dGShC0fqX/e+8oJQ==
+X-CSE-MsgGUID: VnGycLDxQZOHE/3HgxdoIg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
+   d="scan'208";a="190553929"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa009.jf.intel.com with ESMTP; 18 Nov 2025 05:02:41 -0800
+Date: Tue, 18 Nov 2025 20:47:55 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Dave Hansen <dave.hansen@intel.com>
+Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
+	chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
+	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
+	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
+	dan.j.williams@intel.com, kas@kernel.org, x86@kernel.org
+Subject: Re: [PATCH v1 06/26] x86/virt/tdx: Add tdx_page_array helpers for
+ new TDX Module objects
+Message-ID: <aRxq+/zNuBTobD7i@yilunxu-OptiPlex-7050>
+References: <20251117022311.2443900-1-yilun.xu@linux.intel.com>
+ <20251117022311.2443900-7-yilun.xu@linux.intel.com>
+ <96d66314-a0f8-4c63-8f0d-1d392882e007@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -57,31 +65,100 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251010-vmcore_hw_error-v5-1-636ede3efe44@debian.org>
-X-Debian-User: leitao
+In-Reply-To: <96d66314-a0f8-4c63-8f0d-1d392882e007@intel.com>
 
-Hello Andrew, Borislav, Tony,
+On Mon, Nov 17, 2025 at 08:41:37AM -0800, Dave Hansen wrote:
+> On 11/16/25 18:22, Xu Yilun wrote:
+> > +	struct page *root __free(__free_page) = alloc_page(GFP_KERNEL |
+> > +							   __GFP_ZERO);
+> > +	if (!root)
+> > +		return NULL;
+> 
+> Why don't you just kcalloc() this like the rest of them?
 
-On Fri, Oct 10, 2025 at 03:36:50AM -0700, Breno Leitao wrote:
-> Introduce a generic infrastructure for tracking recoverable hardware
-> errors (HW errors that are visible to the OS but does not cause a panic)
-> and record them for vmcore consumption. This aids post-mortem crash
-> analysis tools by preserving a count and timestamp for the last
-> occurrence of such errors. On the other side, correctable errors, which
-> the OS typically remains unaware of because the underlying hardware
-> handles them transparently, are less relevant for crash dump
-> and therefore are NOT tracked in this infrastructure.
+It's feasible for this patch, see the code below.
 
-<snip>
+But when I'm trying to address the copy-and-paste concern in Patch #15,
+I realize the common part is the allocation of the supporting structures
+(struct tdx_page_array *, struct page **, the root page), and the
+different part is the allocation of data pages that TDX module requires.
+So I don't think I should allocate root page along with the data pages
+here.
 
-> Suggested-by: Tony Luck <tony.luck@intel.com>
-> Suggested-by: Shuai Xue <xueshuai@linux.alibaba.com>
-> Signed-off-by: Breno Leitao <leitao@debian.org>
-> Reviewed-by: Shuai Xue <xueshuai@linux.alibaba.com>
+> 
+> Then you won't need "mm: Add __free() support for __free_page()" either,
+> right?
 
-Do you know what is the right tree for this patch?
+mm.. But I still need this scope-based cleanup in later patch:
 
-I am wondering if it should go through Kdump, x86 or RAS/MCE tree?
+  [PATCH v1 22/26] coco/tdx-host: Implement SPDM session setup
 
-Thanks
---breno
+
+--------------8<------
+diff --git a/arch/x86/include/asm/tdx.h b/arch/x86/include/asm/tdx.h
+index b5ad3818f222..bb62f8639040 100644
+--- a/arch/x86/include/asm/tdx.h
++++ b/arch/x86/include/asm/tdx.h
+@@ -148,6 +148,7 @@ struct tdx_page_array {
+        unsigned int offset;
+        unsigned int nents;
+        struct page *root;
++       struct page **raw;
+ };
+
+ void tdx_page_array_free(struct tdx_page_array *array);
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index fd622445d3d6..c41af2260475 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -360,15 +360,16 @@ void tdx_page_array_free(struct tdx_page_array *array)
+        if (!array)
+                return;
+
+-       __free_page(array->root);
+-       tdx_free_pages_bulk(array->nr_pages, array->pages);
+-       kfree(array->pages);
++       tdx_free_pages_bulk(array->nr_pages + 1, array->raw);
++       kfree(array->raw);
+        kfree(array);
+ }
+ EXPORT_SYMBOL_GPL(tdx_page_array_free);
+
+ static struct tdx_page_array *tdx_page_array_alloc(unsigned int nr_pages)
+ {
++       /* Need an extra root page to hold the page array HPA list */
++       unsigned int nr_pages_alloc = nr_pages + 1;
+        int ret;
+
+        if (!nr_pages)
+@@ -379,23 +380,19 @@ static struct tdx_page_array *tdx_page_array_alloc(unsigned int nr_pages)
+        if (!array)
+                return NULL;
+
+-       struct page *root __free(__free_page) = alloc_page(GFP_KERNEL |
+-                                                          __GFP_ZERO);
+-       if (!root)
+-               return NULL;
+-
+-       struct page **pages __free(kfree) = kcalloc(nr_pages, sizeof(*pages),
+-                                                   GFP_KERNEL);
+-       if (!pages)
++       struct page **raw __free(kfree) = kcalloc(nr_pages_alloc, sizeof(*raw),
++                                                 GFP_KERNEL);
++       if (!raw)
+                return NULL;
+
+-       ret = tdx_alloc_pages_bulk(nr_pages, pages);
++       ret = tdx_alloc_pages_bulk(nr_pages_alloc, raw);
+        if (ret)
+                return NULL;
+
++       array->root = raw[0];
++       array->pages = raw + 1;
+        array->nr_pages = nr_pages;
+-       array->pages = no_free_ptr(pages);
+-       array->root = no_free_ptr(root);
++       array->raw = no_free_ptr(raw);
+
+        return no_free_ptr(array);
+ }
