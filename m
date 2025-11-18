@@ -1,121 +1,94 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26368329E46;
-	Tue, 18 Nov 2025 13:14:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD2193115B5;
+	Tue, 18 Nov 2025 14:10:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763471694; cv=none; b=BVyvMDLsdbExqfx6uL0+aH/YDr6zeUYJhTotkIgNayZGUqsxE92L1gMGgkuT10/+d5MB7Ndnq7YDohh+yT54FMK3WYrqMOTJuB2hlMSAih+B4xwGOKOk1VMHm2FjHw6Q18ilHczTgvyhP+/WgnvSHvvflHp0sgZKfwq8fElV2jA=
+	t=1763475051; cv=none; b=SmNBuhIqVVCBMb2YC8XMh+EO3RECdlm7F7LtfrJFS4mrZEXWnEMEo58QnlmLdBYr0JrmdHMiTQghtDflI2tZCo/Hro5t0Lu08RKwM8hWMfZf27gQNWw9BeMoX+lrvniBHVuJcPe+BXXhlJAyF10gOgZsxGWdyIiZyloMB+TwVPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763471694; c=relaxed/simple;
-	bh=6eM5MEhpy8qjHBQhtFNZN0yn242L+U7uvd1kx4IHV/E=;
+	s=arc-20240116; t=1763475051; c=relaxed/simple;
+	bh=KQ625rAMNORnM/wvTGLNBjB5LaLAlN08QsB0CW73NX4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MYUp9yzvI1henfpViH0mQctxBPFjCUwoedFjK7r9e6uB7i4gD6mSRd7FZXY9vmbjhNmjT7Vy0FxhfvCZAHpE99PL5diCRaJDsbMNqxyCd18H8uIDLLxpX1yrIYe5/Jp/hB0LgEON4jmRMGws5lAiQZQzwGjAcj0ybwjYTNOBJyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mAGIomI2; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=OsOQdlzxvWxwfNww3niLhbAkigJWbojpPZWXRaLZPusKWfHSwdDXKhVDsK96OebH8j437Q9XNAoz6qQvrdamQLaGtVfE+RQk7iLkU8os/K2s043O3OPjnNxwZQ3AsQZ4qGKZX7PcKdwAuAypHGZ/auYdO+2VmTbKrCcWkZ2FGsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=gzDSz+t8; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mAGIomI2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763471692; x=1795007692;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=6eM5MEhpy8qjHBQhtFNZN0yn242L+U7uvd1kx4IHV/E=;
-  b=mAGIomI2GRIWPp9ms0iyg8NbaUUnxz3aMLg433BKBwVsPVBBIijM5K9v
-   CTEIumnBSTPbwvGiwp2qVLoQqvmtz9NoOtnfZGaFID8s5ehm4yKSxWB3A
-   sKhK/GbmzvyuYF0gtxGn5bk1Ef3NUIEH2nY8dZaXF37IJrVALHFtZMWlf
-   57eVq3mLqZH12jg0lLgMtRdQp2Z/QoZ7hwP2QfgLx38mZN0SdEYqQtpJY
-   M0eN/5XZIpQy4oVlGw4EngWsZbQFWWOANp9/J/hASX12h+sGZOzB619N8
-   ByY+6QkKzt+WY5QjMdOI5U7f1C2jlgSLUaz4BD71P6w8y+NMc580RYjl3
-   A==;
-X-CSE-ConnectionGUID: RfNB7KOSQ1axWoMPtoSNMw==
-X-CSE-MsgGUID: JtSW52ERRfSR96apoBEtRg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11616"; a="69361867"
-X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
-   d="scan'208";a="69361867"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 05:14:51 -0800
-X-CSE-ConnectionGUID: q0noG09pSv+jtV0xmXaiGA==
-X-CSE-MsgGUID: NncBD5WsSnCq7CwXI6o+VA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
-   d="scan'208";a="194870125"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa003.jf.intel.com with ESMTP; 18 Nov 2025 05:14:48 -0800
-Date: Tue, 18 Nov 2025 21:00:02 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dave Hansen <dave.hansen@intel.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	chao.gao@intel.com, dave.jiang@intel.com, baolu.lu@linux.intel.com,
-	yilun.xu@intel.com, zhenzhong.duan@intel.com, kvm@vger.kernel.org,
-	rick.p.edgecombe@intel.com, dave.hansen@linux.intel.com,
-	dan.j.williams@intel.com, kas@kernel.org, x86@kernel.org
-Subject: Re: [PATCH v1 07/26] x86/virt/tdx: Read TDX global metadata for TDX
- Module Extensions
-Message-ID: <aRxt0prMKusEEt2+@yilunxu-OptiPlex-7050>
-References: <20251117022311.2443900-1-yilun.xu@linux.intel.com>
- <20251117022311.2443900-8-yilun.xu@linux.intel.com>
- <89a4e42d-b0fd-49b0-8d51-df7bac0d5e5b@intel.com>
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="gzDSz+t8"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 8C2FF40E016E;
+	Tue, 18 Nov 2025 14:10:40 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id kqE8OtHje236; Tue, 18 Nov 2025 14:10:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1763475036; bh=9GD8fqgyRaRKCE/AY0roMXTzEL0vi/2D0Y4+wcNO0K8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gzDSz+t8y2W5ztKUxB2zKC8hvXpqWlIHWrKM18Ov/M9poPe8ZwILXR5W4V078i0Hu
+	 l4fmG0sRIkNQPQCqUlkbpQ2RjFB7rV9NkkMZrVIMhJJYeNyhbinqJsA/xixzgr7IKI
+	 QXfvIexTR17HxrYdZhGNzG93BEJgwLPzUpEzLSm0jWgfJ8JP665GEPVVKuAI5vGqvT
+	 7GyF4Hm5Ez28zvH6SDR6ltfmuWLFLAXxb6v20g5vA8qZagWUJrql3QLi7G0MipLw5/
+	 FT2qwDh4Ppd874MfgFEG0u4EGA6VUFIl9fICW8s/REdigd6f0t1OwASPOYdsCtm8rL
+	 27XQsNZV3tfqueCpE0JSzzW/OGl2OLxQO7Cc6Qj5+qLQJ7oPcgJ7NG2rFqnb+d90JY
+	 fKQkPBZactJdMwq6fpj9mh+8Q/DdSgRUQB4g4notdOEV2pRqsIfZa+Rebhwm0Xo+G9
+	 vZZzZYrzIqrIsPTx3GmmgconK0RAqYSUJZ4EjGEw0W/ZdxAOujIerrllTGeDYUmQYg
+	 sNRkw/GC8OPfjVfBjygiG3NqN2BRgM8JErLCmf9msXk3TKh5Ytm8BpVUM2jsgbBkzM
+	 fgR1Ooth9wlGU+wGUdaWKFPZH7/4U8p7VH6uY/Ih7++wGDSLbQxTbv+DbWXuQ42pWV
+	 YR8PsAW4U6JF9zUXCnPZyn+k=
+Received: from zn.tnic (pd9530da1.dip0.t-ipconnect.de [217.83.13.161])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with UTF8SMTPSA id 2BDBD40E0216;
+	Tue, 18 Nov 2025 14:10:09 +0000 (UTC)
+Date: Tue, 18 Nov 2025 15:10:02 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Breno Leitao <leitao@debian.org>
+Cc: tony.luck@intel.com, akpm@linux-foundation.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	acpica-devel@lists.linux.dev, osandov@osandov.com,
+	xueshuai@linux.alibaba.com, konrad.wilk@oracle.com,
+	linux-edac@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org, kernel-team@meta.com,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, James Morse <james.morse@arm.com>,
+	Robert Moore <robert.moore@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Hanjun Guo <guohanjun@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH RESEND v5] vmcoreinfo: Track and log recoverable hardware
+ errors
+Message-ID: <20251118141002.GEaRx-Oge8ZxtR4Vzi@fat_crate.local>
+References: <20251010-vmcore_hw_error-v5-1-636ede3efe44@debian.org>
+ <vpilvvscosdl4o4cvbmtsrrp4btfwr5iidywmuiawfrgtlcwrr@ubtdbxfqyqpu>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <89a4e42d-b0fd-49b0-8d51-df7bac0d5e5b@intel.com>
+In-Reply-To: <vpilvvscosdl4o4cvbmtsrrp4btfwr5iidywmuiawfrgtlcwrr@ubtdbxfqyqpu>
 
-On Mon, Nov 17, 2025 at 08:52:36AM -0800, Dave Hansen wrote:
-> On 11/16/25 18:22, Xu Yilun wrote:
-> > +static __init int get_tdx_sys_info_ext(struct tdx_sys_info_ext *sysinfo_ext)
-> > +{
-> > +	int ret = 0;
-> > +	u64 val;
-> > +
-> > +	if (!ret && !(ret = read_sys_metadata_field(0x3100000100000000, &val)))
-> > +		sysinfo_ext->memory_pool_required_pages = val;
-> > +	if (!ret && !(ret = read_sys_metadata_field(0x3100000100000001, &val)))
-> > +		sysinfo_ext->ext_required = val;
-> > +
-> > +	return ret;
-> > +}
+On Tue, Nov 18, 2025 at 05:01:47AM -0800, Breno Leitao wrote:
+> Do you know what is the right tree for this patch?
 > 
-> These were OK-ish when they were being generated by a script.
-> 
-> Now that they're being generated by and edited by humans, they
-> need to actually be readable.
+> I am wondering if it should go through Kdump, x86 or RAS/MCE tree?
 
-I agree. Further more, let me figure out if we could require minimum
-boilerplate code when a new field is added.
+I can take it if akpm wants me to...
 
-> 
-> Can we please get this down to something that looks more like:
-> 
-> 	MACRO(&sysinfo_ext->memory_pool_required_pages, 0x3100000100000000);
-> 	MACRO(&sysinfo_ext->ext_required,		0x3100000100000001);
-> 
-> You can generate code in that macro, or generate a struct like
-> this:
-> 
-> static __init int get_tdx_sys_info_ext(struct tdx_sys_info_ext *sysinfo_ext)
-> {
-> 	int ret = 0;
-> 	struct tdx_metadata_init[] = {
-> 		MACRO(&sysinfo_ext->memory_pool_required_pages, 0x3100000100000000),
-> 		MACRO(&sysinfo_ext->ext_required,		0x3100000100000001),
-> 		{},
-> 	};
-> 
-> 	return tdx_...(sysinfo_ext, tdx_metadata_init);
-> }
-> 
-> and have the helper parse the structure.
-> 
-> But, either way, the method that's being proposed here needs to go.
+-- 
+Regards/Gruss,
+    Boris.
 
-I'll try and may need a seperate refactoring patch for the existing
-code.
-
-
+https://people.kernel.org/tglx/notes-about-netiquette
