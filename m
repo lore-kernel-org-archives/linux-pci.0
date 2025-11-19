@@ -1,166 +1,254 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011013.outbound.protection.outlook.com [52.101.52.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3FE2D63F2;
-	Wed, 19 Nov 2025 02:58:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.13
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763521091; cv=fail; b=PdQ+eu3Dh55FDhtyttSwoPIprLwImnGvhdRmTOXt8nBXrQpQ3dvUhlwuUirGXgSKPPgztNb4TjGoWBjCJ2yzn3wg4vd6PPFLR1CtlFLMcI6dpv+bWLUGtMycakJV01xiRIW93usO+Y+EaqvsIVTrMknJkpzkbqF0gk8LY4veUqE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763521091; c=relaxed/simple;
-	bh=IU+xN4mGlYYcOWYy8U2067Tzm1156ueIINw++idTvGQ=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O9I/AQnR/HlAsqQqzn06Qgn1E0D3KdfzEoMR2hBh0+r3UGU53P0c8FuxtfqsgdSDeNspLjwlh5pTMB1wBFbV9BBNjdKQCOy5OdDsGu4579OTkv++qeZh82Q3+gY/nKF4OP8sPjDs6u16iTUdnfK63JNLOuXBVUlhwv7BVtKR9x0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=V2NNDAYl; arc=fail smtp.client-ip=52.101.52.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815442D9EF3;
+	Wed, 19 Nov 2025 03:03:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1763521436; cv=none; b=jU/dlClPQ4uX0rXwXFsoak7BwOWIgcb+TvPhfM34zNKhKh0J505CzrTydKMdfC49Mh4UP1gy/UwFF5dvZaEpciMX7MlLqAff1sZiYKHhVMwvCE4caCZH69nfTGy7GWC2M0FM5nXyOAuERwlgivNVDnSLhrTFHL/QoIaP4NF8AwE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1763521436; c=relaxed/simple;
+	bh=pXsZhuxxB+kI3KzL5qT6v5f2HxideVTv+RifgqSeoW0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=blfapRaS/wWy1XwHOGUl/XYl1VdnKoSe1pj6s2pWIuZueLxl4jFFDgwYNt/rLPKYT/TzlxN2qGNkPnvV7ubik9u5GHw6aKsaZc4ESUbGnMMQihRYNGuXKhWCLnbROqicy5poXD/yE9DBeKxz65NF9i590x2sInlcrPwjDz9zuos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NL5GiA/j; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="V2NNDAYl"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=d9svGsATLQpCMy30lRbYg99UkUmruAYoUEUbJWXDH+8tQ0WO0KskJ7b6icSYLoALckynO3y/yyst3i2YO8OPLG2m40Pa+NgAx7yqYDIUoIDk67u2OyNbC2xO8g39avgD3CtcMWasyQkIE+IpBUZM7M3IgYD5AyzkiZZItuicMr4/xbdPzGdnkUAzF9lRk4vusrI3hmW6M0nifFw2Xn4RxE99orO5wUyzoBm2kZJ80T9cdNW+A1DHZ2AMLFfFt/ShJAW7LB0gMpS6H5xActMOyAUlplNcHiAvJ8KNsZf2OhwkdDM+p2eamV2IDMFuO2TlrGlpQ8sepFsSxbZsb/KDFw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oQgO+5ebdOnWGfqH9mnnlh3Ijz/z4H6/GahjpM15XXQ=;
- b=f7zTvl6h/hqco1xGjkhkgaWStgbtd0eYroItl46fKignklJmpYWbxA3wpXTt5w21x1Vl8nNyIGFLuOjkrqB8UCJbjOw0gxre4TeXkYUglQ3kobqfkqcnxzk2TydSHdPlpA03JzmX+w4ueyIljUB4mp64FlbKS1+Rt7udtQ4I1Ivw9GCjV8IOXDZUVsER49JeZWne2orQmX282/A9tZhArgsY/AZASe5fN8GyqKKdXckmSW0zTyZx1Zzdog3r8KNhym5YNr9G757xhI+p9PUm9WF7UmLxNQhYfWXjtClg4PUm39jaL39b79tV/TcclxyKTfbGq3lZn/YoJAytG2FpNg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=arm.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oQgO+5ebdOnWGfqH9mnnlh3Ijz/z4H6/GahjpM15XXQ=;
- b=V2NNDAYlaI1nkJ/u7LVncD4T4tXWH8Gpyges8bOyAidNY/nYYeNeGQi22PzGdl8vnlAOEHUk0mhMrKmcmCvrS/dUrMtl2usnnMOPiASNldRaJsJmi2Il59Mz+4AzMe7R05aDccDGz/px1pSd/aHJPZ7TZmNPo3v99e4oMPN290SWzDZkpYPgq8qN1Fp2WnMFmrttax09HyoXYMuoSWiCljuV0NrMH/vqM1WRi3x5CqMbgcDinASoVq0mNW8u6CvDFtlwOqnXDn72PBixIDzsGWt5jrj3M+z0fN3QZciIyHBRDza6KB/YbmlcxFeHthiCSGSTxEWtsvVwkoQ3nfdGEg==
-Received: from SN6PR08CA0005.namprd08.prod.outlook.com (2603:10b6:805:66::18)
- by LV2PR12MB5822.namprd12.prod.outlook.com (2603:10b6:408:179::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9343.10; Wed, 19 Nov
- 2025 02:56:53 +0000
-Received: from SN1PEPF000397B2.namprd05.prod.outlook.com
- (2603:10b6:805:66:cafe::de) by SN6PR08CA0005.outlook.office365.com
- (2603:10b6:805:66::18) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9343.10 via Frontend Transport; Wed,
- 19 Nov 2025 02:56:53 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- SN1PEPF000397B2.mail.protection.outlook.com (10.167.248.56) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9343.9 via Frontend Transport; Wed, 19 Nov 2025 02:56:52 +0000
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 18 Nov
- 2025 18:56:36 -0800
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail204.nvidia.com
- (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 18 Nov
- 2025 18:56:36 -0800
-Received: from Asurada-Nvidia (10.127.8.11) by mail.nvidia.com (10.129.68.6)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Tue, 18 Nov 2025 18:56:34 -0800
-Date: Tue, 18 Nov 2025 18:56:33 -0800
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: <robin.murphy@arm.com>, <joro@8bytes.org>, <afael@kernel.org>,
-	<bhelgaas@google.com>, <alex@shazbot.org>, <jgg@nvidia.com>,
-	<kevin.tian@intel.com>
-CC: <will@kernel.org>, <lenb@kernel.org>, <baolu.lu@linux.intel.com>,
-	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
-	<patches@lists.linux.dev>, <pjaroszynski@nvidia.com>, <vsethi@nvidia.com>,
-	<helgaas@kernel.org>, <etzhao1900@gmail.com>
-Subject: Re: [PATCH v6 4/5] iommu: Introduce
- pci_dev_reset_iommu_prepare/done()
-Message-ID: <aR0x4b7fN22K36jR@Asurada-Nvidia>
-References: <cover.1763512374.git.nicolinc@nvidia.com>
- <246a652600f2ba510354a1a670fa1177280528be.1763512374.git.nicolinc@nvidia.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NL5GiA/j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763521435; x=1795057435;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=pXsZhuxxB+kI3KzL5qT6v5f2HxideVTv+RifgqSeoW0=;
+  b=NL5GiA/jL0dBodDOKBDXEqb7M3ZohDxuUgjSevz8Sq+qzrPnG72J8Q6N
+   4Tl6RZn5HMDHJQsifZNnJdGaod2EWnR5e2EqiK8iKPGWwklxe7vcY0apy
+   QcHYKTTMo+xV43UwBNlUAHgNcFK2eLpbLKRpeZTq5b6EQH2VeVyB4KfEW
+   3pvpRpenGXxc/z1K54GYduFnAfdnvcA7ELCnLBWWDV20JO6E6ND2Gfemc
+   l5pyAPQnNfJK4NQEn+ePPKm4D9IDC4uFZNPp63CE5PeceS7OOX2rVB0s7
+   hO5J28RldvW9ZGURTHvu872O4qQxBq8jhy3XxdYZa7B0BX7mp3c9fAf+c
+   Q==;
+X-CSE-ConnectionGUID: MQBX9xmkSv2JwnC4MjfkNA==
+X-CSE-MsgGUID: WISKrYunTmaKvLGKeu6Lbg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11617"; a="83181392"
+X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
+   d="scan'208";a="83181392"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 19:03:54 -0800
+X-CSE-ConnectionGUID: svX445uPT3aJVISNNc1eYg==
+X-CSE-MsgGUID: ux192vFhRle5ZCI9piTKCA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
+   d="scan'208";a="190200915"
+Received: from lkp-server01.sh.intel.com (HELO adf6d29aa8d9) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 18 Nov 2025 19:03:48 -0800
+Received: from kbuild by adf6d29aa8d9 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vLYTy-0002Nn-09;
+	Wed, 19 Nov 2025 03:03:46 +0000
+Date: Wed, 19 Nov 2025 11:03:33 +0800
+From: kernel test robot <lkp@intel.com>
+To: Nicolin Chen <nicolinc@nvidia.com>, robin.murphy@arm.com,
+	joro@8bytes.org, afael@kernel.org, bhelgaas@google.com,
+	alex@shazbot.org, jgg@nvidia.com, kevin.tian@intel.com
+Cc: oe-kbuild-all@lists.linux.dev, will@kernel.org, lenb@kernel.org,
+	baolu.lu@linux.intel.com, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, patches@lists.linux.dev,
+	pjaroszynski@nvidia.com, vsethi@nvidia.com, helgaas@kernel.org,
+	etzhao1900@gmail.com
+Subject: Re: [PATCH v6 5/5] PCI: Suspend iommu function prior to resetting a
+ device
+Message-ID: <202511191219.qIkZ1n2P-lkp@intel.com>
+References: <9f6caaedc278fe057aacb813d94f44a93d8cab3c.1763512374.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <246a652600f2ba510354a1a670fa1177280528be.1763512374.git.nicolinc@nvidia.com>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN1PEPF000397B2:EE_|LV2PR12MB5822:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8802f48b-3f4d-441b-19b5-08de27174af8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|1800799024|82310400026|376014|7416014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?WB284D0OZKvWVVk/HR/th4cqbIRvwj2B8ljPQw1FJiyLqJrZ/tuQk2DC3Rsx?=
- =?us-ascii?Q?DdP5e58a+E/xAKIbyS9QiAclQrk5LcG2x7OymHNMzyETNChNvbrYJqrNLBJK?=
- =?us-ascii?Q?2y4N4zyAgjpGqvgRXUIjGADxSFBc1Hj2mD7aVvIeJCS6A7qIk2PirwhjLmux?=
- =?us-ascii?Q?ZgmkUF7IHzlzHLjHHGskYmNrVY+QwV3BtnaTAyEf5olKg7ND4vOtuR85L5Jv?=
- =?us-ascii?Q?2QVWOv04CDR7nXcOxrNRtHZNUfNjftk7Z6RJcPHh22Og6I9K1tdBddAlNP/R?=
- =?us-ascii?Q?Ltxy6UGNL193QZLsbjeyRz0oZlN8KsLvD139nC1h4L/Fybz2N8NNekYKlRVQ?=
- =?us-ascii?Q?EtLZ8AJWFZTQp3aqSNSYYLkPe11BrGsF8dPak9dfyJBb0TyMHHYA/hsChUk0?=
- =?us-ascii?Q?BcNEZZytQpD57+Fky7PPDEnMbQISz6FIYP8FVaJqjY4qvUcin7JQE110KdSP?=
- =?us-ascii?Q?Ui/nE7U5al3vsYOioi1LLbd8Wh+kbNhjUKpmZrLP+KydY5FhQET28CZVETV7?=
- =?us-ascii?Q?eO+HyKpEsSzMfhf5jD24StiXRjA5DLDe4qpKd5eXGcnzqwiK4QpBU1xrO1pC?=
- =?us-ascii?Q?BWUVTXIV9Z4+gc+CZFN82dpcyIYpuGzDvnM58iCUW0RcRQSOn5pb7o2zl1zx?=
- =?us-ascii?Q?tPO72iVg+6XS6jpowvLdifNRw0LCR6VnxLX7yvu8oPFnwIZxbCaunXZKOmWf?=
- =?us-ascii?Q?XEqtO18rR+5x8vmv9bM0SZYy5LYjmkJRqeCmKX4kfWNGx27yNblnD0Od+Jh5?=
- =?us-ascii?Q?ubgmZJ0SQT2z0yk5/cuvnB5oRvJbTq2Z+cObGKUr/bnPh6214i/3Y8Xvm24C?=
- =?us-ascii?Q?5rO/pGNuRaL7l7r5ydi18E46voWJllN7oe62dnDrCKmyJkgUsrnY3yqQOlxB?=
- =?us-ascii?Q?BwPsnih+80i9fXeza35K6B/f+K2DIIXOgisPKpT+h6F08qDjgJX5ZGp9Vd7n?=
- =?us-ascii?Q?mWt1sp9TY3qGol8t/R1tfVYQtg1L1s7dpQT/SJcWjRAlsI/vBrNi+Pp7ljQc?=
- =?us-ascii?Q?g6/57bsEbR4iQVlsIxAHlzB/Um4wLCf/9xpnm089HmKLFzF0+ijl16UiznRf?=
- =?us-ascii?Q?KjpH0r1YjHugNjyHXDzVSYjNeFggaaNO8IVhRPUzzf9UEyZvCRgQPpW6IjSf?=
- =?us-ascii?Q?VH+4KmdN6/NPB+7famYrygT5gztAb7fiS68+v2k8amZRAqVTvGnxXHWCWld4?=
- =?us-ascii?Q?PVTLBHBUoelfUXKQs+vVqnwCx3QMwCIt1bG+ySB9crnL0ppkgh3wbxHCbl6M?=
- =?us-ascii?Q?QK2TVj3AJo3CCbLCUaZycWaGd7Yij22/BBbQulWY3lwt0YaBNhsryOU6HJ85?=
- =?us-ascii?Q?GV3KJ2soHUHLMTKItMg+qEn1erRB9Nd01YHhv6hXfNcDefKabMU59U4W+T7+?=
- =?us-ascii?Q?FC46GrTvuFaGCwof8WIDW9AnTwWf1Ud0Xf/GkTjfFzTpB4p3YJ89GtHs64+8?=
- =?us-ascii?Q?5cCxwl7UmagVzTfWyrv1TIkNNDaPyb7lTbSYS9ZHd60xvHxbHVKpk4Bf/2SH?=
- =?us-ascii?Q?GePaZePPxSojFpG0AmcgXevrgSLgB3kz5eKL4ncGxrghX0um7KYCoSC31/iC?=
- =?us-ascii?Q?IjRBMgD6Z4S42c61RqM=3D?=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700013)(1800799024)(82310400026)(376014)(7416014);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2025 02:56:52.7433
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8802f48b-3f4d-441b-19b5-08de27174af8
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SN1PEPF000397B2.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5822
+In-Reply-To: <9f6caaedc278fe057aacb813d94f44a93d8cab3c.1763512374.git.nicolinc@nvidia.com>
 
-On Tue, Nov 18, 2025 at 04:52:10PM -0800, Nicolin Chen wrote:
-> +/* PCI device reset functions */
-> +int pci_dev_reset_iommu_prepare(struct pci_dev *pdev);
-> +void pci_dev_reset_iommu_done(struct pci_dev *pdev);
->  #else /* CONFIG_IOMMU_API */
->  
->  struct iommu_ops {};
-> @@ -1509,6 +1513,15 @@ static inline ioasid_t iommu_alloc_global_pasid(struct device *dev)
->  }
->  
->  static inline void iommu_free_global_pasid(ioasid_t pasid) {}
-> +
-> +static inline int pci_dev_reset_iommu_prepare(struct device *dev)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline void pci_dev_reset_iommu_done(struct device *dev)
+Hi Nicolin,
 
-Ah, I forgot to update these two using struct pci_dev..
+kernel test robot noticed the following build errors:
 
-Will fix this in v7.
+[auto build test ERROR on next-20251118]
+[cannot apply to pci/next pci/for-linus awilliam-vfio/next awilliam-vfio/for-linus rafael-pm/linux-next rafael-pm/bleeding-edge linus/master v6.18-rc6 v6.18-rc5 v6.18-rc4 v6.18-rc6]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Nicolin
+url:    https://github.com/intel-lab-lkp/linux/commits/Nicolin-Chen/iommu-Lock-group-mutex-in-iommu_deferred_attach/20251119-085721
+base:   next-20251118
+patch link:    https://lore.kernel.org/r/9f6caaedc278fe057aacb813d94f44a93d8cab3c.1763512374.git.nicolinc%40nvidia.com
+patch subject: [PATCH v6 5/5] PCI: Suspend iommu function prior to resetting a device
+config: alpha-allnoconfig (https://download.01.org/0day-ci/archive/20251119/202511191219.qIkZ1n2P-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 15.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251119/202511191219.qIkZ1n2P-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511191219.qIkZ1n2P-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/pci/pci.c: In function 'pcie_flr':
+>> drivers/pci/pci.c:4341:43: error: passing argument 1 of 'pci_dev_reset_iommu_prepare' from incompatible pointer type [-Wincompatible-pointer-types]
+    4341 |         ret = pci_dev_reset_iommu_prepare(dev);
+         |                                           ^~~
+         |                                           |
+         |                                           struct pci_dev *
+   In file included from drivers/pci/pci.c:16:
+   include/linux/iommu.h:1519:62: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1519 | static inline int pci_dev_reset_iommu_prepare(struct device *dev)
+         |                                               ~~~~~~~~~~~~~~~^~~
+>> drivers/pci/pci.c:4361:34: error: passing argument 1 of 'pci_dev_reset_iommu_done' from incompatible pointer type [-Wincompatible-pointer-types]
+    4361 |         pci_dev_reset_iommu_done(dev);
+         |                                  ^~~
+         |                                  |
+         |                                  struct pci_dev *
+   include/linux/iommu.h:1524:60: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1524 | static inline void pci_dev_reset_iommu_done(struct device *dev)
+         |                                             ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c: In function 'pci_af_flr':
+   drivers/pci/pci.c:4418:43: error: passing argument 1 of 'pci_dev_reset_iommu_prepare' from incompatible pointer type [-Wincompatible-pointer-types]
+    4418 |         ret = pci_dev_reset_iommu_prepare(dev);
+         |                                           ^~~
+         |                                           |
+         |                                           struct pci_dev *
+   include/linux/iommu.h:1519:62: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1519 | static inline int pci_dev_reset_iommu_prepare(struct device *dev)
+         |                                               ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c:4439:34: error: passing argument 1 of 'pci_dev_reset_iommu_done' from incompatible pointer type [-Wincompatible-pointer-types]
+    4439 |         pci_dev_reset_iommu_done(dev);
+         |                                  ^~~
+         |                                  |
+         |                                  struct pci_dev *
+   include/linux/iommu.h:1524:60: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1524 | static inline void pci_dev_reset_iommu_done(struct device *dev)
+         |                                             ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c: In function 'pci_pm_reset':
+   drivers/pci/pci.c:4476:43: error: passing argument 1 of 'pci_dev_reset_iommu_prepare' from incompatible pointer type [-Wincompatible-pointer-types]
+    4476 |         ret = pci_dev_reset_iommu_prepare(dev);
+         |                                           ^~~
+         |                                           |
+         |                                           struct pci_dev *
+   include/linux/iommu.h:1519:62: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1519 | static inline int pci_dev_reset_iommu_prepare(struct device *dev)
+         |                                               ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c:4493:34: error: passing argument 1 of 'pci_dev_reset_iommu_done' from incompatible pointer type [-Wincompatible-pointer-types]
+    4493 |         pci_dev_reset_iommu_done(dev);
+         |                                  ^~~
+         |                                  |
+         |                                  struct pci_dev *
+   include/linux/iommu.h:1524:60: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1524 | static inline void pci_dev_reset_iommu_done(struct device *dev)
+         |                                             ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c: In function 'pci_reset_bus_function':
+   drivers/pci/pci.c:4922:42: error: passing argument 1 of 'pci_dev_reset_iommu_prepare' from incompatible pointer type [-Wincompatible-pointer-types]
+    4922 |         rc = pci_dev_reset_iommu_prepare(dev);
+         |                                          ^~~
+         |                                          |
+         |                                          struct pci_dev *
+   include/linux/iommu.h:1519:62: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1519 | static inline int pci_dev_reset_iommu_prepare(struct device *dev)
+         |                                               ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c:4934:34: error: passing argument 1 of 'pci_dev_reset_iommu_done' from incompatible pointer type [-Wincompatible-pointer-types]
+    4934 |         pci_dev_reset_iommu_done(dev);
+         |                                  ^~~
+         |                                  |
+         |                                  struct pci_dev *
+   include/linux/iommu.h:1524:60: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1524 | static inline void pci_dev_reset_iommu_done(struct device *dev)
+         |                                             ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c: In function 'cxl_reset_bus_function':
+   drivers/pci/pci.c:4959:42: error: passing argument 1 of 'pci_dev_reset_iommu_prepare' from incompatible pointer type [-Wincompatible-pointer-types]
+    4959 |         rc = pci_dev_reset_iommu_prepare(dev);
+         |                                          ^~~
+         |                                          |
+         |                                          struct pci_dev *
+   include/linux/iommu.h:1519:62: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1519 | static inline int pci_dev_reset_iommu_prepare(struct device *dev)
+         |                                               ~~~~~~~~~~~~~~~^~~
+   drivers/pci/pci.c:4979:34: error: passing argument 1 of 'pci_dev_reset_iommu_done' from incompatible pointer type [-Wincompatible-pointer-types]
+    4979 |         pci_dev_reset_iommu_done(dev);
+         |                                  ^~~
+         |                                  |
+         |                                  struct pci_dev *
+   include/linux/iommu.h:1524:60: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1524 | static inline void pci_dev_reset_iommu_done(struct device *dev)
+         |                                             ~~~~~~~~~~~~~~~^~~
+--
+   drivers/pci/quirks.c: In function '__pci_dev_specific_reset':
+>> drivers/pci/quirks.c:4237:43: error: passing argument 1 of 'pci_dev_reset_iommu_prepare' from incompatible pointer type [-Wincompatible-pointer-types]
+    4237 |         ret = pci_dev_reset_iommu_prepare(dev);
+         |                                           ^~~
+         |                                           |
+         |                                           struct pci_dev *
+   In file included from drivers/pci/quirks.c:24:
+   include/linux/iommu.h:1519:62: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1519 | static inline int pci_dev_reset_iommu_prepare(struct device *dev)
+         |                                               ~~~~~~~~~~~~~~~^~~
+>> drivers/pci/quirks.c:4244:34: error: passing argument 1 of 'pci_dev_reset_iommu_done' from incompatible pointer type [-Wincompatible-pointer-types]
+    4244 |         pci_dev_reset_iommu_done(dev);
+         |                                  ^~~
+         |                                  |
+         |                                  struct pci_dev *
+   include/linux/iommu.h:1524:60: note: expected 'struct device *' but argument is of type 'struct pci_dev *'
+    1524 | static inline void pci_dev_reset_iommu_done(struct device *dev)
+         |                                             ~~~~~~~~~~~~~~~^~~
+
+
+vim +/pci_dev_reset_iommu_prepare +4341 drivers/pci/pci.c
+
+  4325	
+  4326	/**
+  4327	 * pcie_flr - initiate a PCIe function level reset
+  4328	 * @dev: device to reset
+  4329	 *
+  4330	 * Initiate a function level reset unconditionally on @dev without
+  4331	 * checking any flags and DEVCAP
+  4332	 */
+  4333	int pcie_flr(struct pci_dev *dev)
+  4334	{
+  4335		int ret;
+  4336	
+  4337		if (!pci_wait_for_pending_transaction(dev))
+  4338			pci_err(dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+  4339	
+  4340		/* Have to call it after waiting for pending DMA transaction */
+> 4341		ret = pci_dev_reset_iommu_prepare(dev);
+  4342		if (ret) {
+  4343			pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+  4344			return ret;
+  4345		}
+  4346	
+  4347		pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+  4348	
+  4349		if (dev->imm_ready)
+  4350			goto done;
+  4351	
+  4352		/*
+  4353		 * Per PCIe r4.0, sec 6.6.2, a device must complete an FLR within
+  4354		 * 100ms, but may silently discard requests while the FLR is in
+  4355		 * progress.  Wait 100ms before trying to access the device.
+  4356		 */
+  4357		msleep(100);
+  4358	
+  4359		ret = pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
+  4360	done:
+> 4361		pci_dev_reset_iommu_done(dev);
+  4362		return ret;
+  4363	}
+  4364	EXPORT_SYMBOL_GPL(pcie_flr);
+  4365	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
