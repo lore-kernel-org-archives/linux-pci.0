@@ -1,320 +1,299 @@
-Received: from mailtransmit05.runbox.com (mailtransmit05.runbox.com [185.226.149.38])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D7FF30AAC5;
-	Wed, 19 Nov 2025 22:43:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.38
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763592230; cv=none; b=aav4JXhscTnohnveId/rfYVAezi6etzh+ixj/eErFLs3Bju/NjDq0smHaodkJzFEzcCmwjO0hHzRorCnJ05I/0UMrViN8p2CaoH+8ppLllikKCU5FAhdCEYpAHN8M4gO4g7MfQr70SH8J4H3FKzxQQcREQeVpRM8yu200Uc/3uI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763592230; c=relaxed/simple;
-	bh=SB6KrqYz2LaY0bnmGLgzebEVm2460Yuuig9I59sAzLQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=BBsuSArsGRUEyPYUQ7IiHYZJCDOGAbq/adN46hz5rEzITM70tHyTt98wns8eAqsFVbKTw/Oi0iNN6hfevAlg5JXgvxv1b4Dhd8jSFAEHwDN9ukye2tctrJhRZzaB900Oj6AFO0gh7XHCPlssBr27Sj6WDfUP4pzG9qSC/l5fPzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=PsN5RGYw; arc=none smtp.client-ip=185.226.149.38
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=runbox.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 291C42D46B4;
+	Wed, 19 Nov 2025 23:34:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1763595279; cv=fail; b=diYJ/7emoqnx0DXORklVANJOGB9y9O1ASiYQmxbpZeuObokFKn42Q1fNOOT53+Xeez5F0MA3Sryb4hNTc5lMDcR/AaHzeCBXKvWVenknZqm3nsDU6mWHR/oE56+GhRRzRI5/a1DLrVeNs5SnN17P4dCC2zAjRF0LmJO1KZZ0Ki0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1763595279; c=relaxed/simple;
+	bh=NhOBld4NzlvP6xkCcQs7mEuC7c5yjFvO+73PLl2kIM4=;
+	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
+	 Content-Type:MIME-Version; b=MGscKaqLUxeZgdMmoPyXCAGbq3E1QgZdfstwKPKVGECZF6qq8PLC5Udttyk9a+7806WZK8zA3auS32i06EHFdT33i0ZN81FEv+NfLXlReNg2Ed4cu3Gf4DZcCsQssrURirgBGAVjMeOF7BDKGQmVcEAz81fCXHOUJ9aalyP2UpE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U9UjBIZe; arc=fail smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="PsN5RGYw"
-Received: from mailtransmit02.runbox ([10.9.9.162] helo=aibo.runbox.com)
-	by mailtransmit05.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.93)
-	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1vLqsC-006kl6-Cb; Wed, 19 Nov 2025 23:42:00 +0100
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=runbox.com;
-	 s=selector1; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
-	Subject:Cc:To:From; bh=vH8FIvcSxGANwVWko1oGmXX5GS5gNWUC/JCXBzpAFv8=; b=PsN5RG
-	Yw4adVp36kJvtQBzaOeT30b6SW8wtA5jYGrJdbMMMsYsvDj4CzgnWokM1Sou28r+uOGKmcLsCEfjF
-	x7vRqk4x0ZUk5Q3m4pLyHeUUi+2iNW4NTnKESfxwnZdG/Am3FVwILrLSmsIUe5z7hIsRaqS00FKIb
-	wpBgN3ajl01apzJtdlTrMHmSUaRE77jg78EefkqX+M/OVhBFzrdgCcdKMETn1d8vUsGL8F9h+RdA+
-	wbd/Fhu7XqijCSkRTMRCMNALzN5ANR/Nkxu1LF1FZnjDAvEZUMlegQ7pY4fPBR4It4haMp7qd5v5s
-	K6zPsakFUTM6CKZVixkuDzeoxeCg==;
-Received: from [10.9.9.74] (helo=submission03.runbox)
-	by mailtransmit02.runbox with esmtp (Exim 4.86_2)
-	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1vLqs5-0007yi-PP; Wed, 19 Nov 2025 23:41:53 +0100
-Received: by submission03.runbox with esmtpsa  [Authenticated ID (1493616)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.93)
-	id 1vLqs1-00Fos6-6h; Wed, 19 Nov 2025 23:41:49 +0100
-From: david.laight.linux@gmail.com
-To: linux-kernel@vger.kernel.org
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Andi Shyti <andi.shyti@kernel.org>,
-	Andreas Dilger <adilger.kernel@dilger.ca>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Ard Biesheuvel <ardb@kernel.org>,
-	Arnaldo Carvalho de Melo <acme@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Christian Brauner <brauner@kernel.org>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	David Ahern <dsahern@kernel.org>,
-	David Hildenbrand <david@redhat.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Dennis Zhou <dennis@kernel.org>,
-	Eric Dumazet <edumazet@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Ingo Molnar <mingo@redhat.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Jakub Sitnicki <jakub@cloudflare.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Jarkko Sakkinen <jarkko@kernel.org>,
-	"Jason A. Donenfeld" <Jason@zx2c4.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	John Allen <john.allen@amd.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Juergen Gross <jgross@suse.com>,
-	Kees Cook <kees@kernel.org>,
-	KP Singh <kpsingh@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Mika Westerberg <westeri@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Miklos Szeredi <miklos@szeredi.hu>,
-	Namhyung Kim <namhyung@kernel.org>,
-	Neal Cardwell <ncardwell@google.com>,
-	nic_swsd@realtek.com,
-	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-	Olivia Mackall <olivia@selenic.com>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	Peter Huewe <peterhuewe@gmx.de>,
-	Peter Zijlstra <peterz@infradead.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Sean Christopherson <seanjc@google.com>,
-	Srinivas Kandagatla <srini@kernel.org>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Tejun Heo <tj@kernel.org>,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
-	x86@kernel.org,
-	Yury Norov <yury.norov@gmail.com>,
-	amd-gfx@lists.freedesktop.org,
-	bpf@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	io-uring@vger.kernel.org,
-	kvm@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-crypto@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	linux-efi@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	linux-i2c@vger.kernel.org,
-	linux-integrity@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-nvme@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-perf-users@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	mptcp@lists.linux.dev,
-	netdev@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	David Laight <david.laight.linux@gmail.com>
-Subject: [PATCH 00/44] Change a lot of min_t() that might mask high bits
-Date: Wed, 19 Nov 2025 22:40:56 +0000
-Message-Id: <20251119224140.8616-1-david.laight.linux@gmail.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U9UjBIZe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763595277; x=1795131277;
+  h=from:date:to:cc:message-id:in-reply-to:references:
+   subject:content-transfer-encoding:mime-version;
+  bh=NhOBld4NzlvP6xkCcQs7mEuC7c5yjFvO+73PLl2kIM4=;
+  b=U9UjBIZejb6l7Ppia/vyz39VtZ/Ui+MklMWHmEDYVUdsuFiCldjyoS5H
+   LU11yk4VQTbgiDvC7SdUW+SBrR23Iguazw9dDMGaXGG62Dv2ZJnaGiSZ8
+   IMbMivOch6w/7Uy/wZiPi49h1kFg4OvfBUsjlJyMDA0CDpnnpz1q7PdYN
+   Et0uvszFQnMZ1aQrFgjjj73D9GnB4+NIwydnjIdBeZbg8JK+piym8rz/b
+   AcLFDpGR1KYJsumMS+3rGvw2ra8Um5ulcIwVwD7g/I3w4d5Yd3Ud1fZIr
+   w6Yv31I4b4P8ult2wkMN5I5FS/FsGVbZnvSahkx+t7VCGvGtCQ2Bq1jok
+   Q==;
+X-CSE-ConnectionGUID: t929tBM7SJitXJ05sx1z/g==
+X-CSE-MsgGUID: z1PzoAbnT6idh5Y1ZqMv6Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11618"; a="64659294"
+X-IronPort-AV: E=Sophos;i="6.19,316,1754982000"; 
+   d="scan'208";a="64659294"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 15:34:36 -0800
+X-CSE-ConnectionGUID: +6/vOJ6US6uFpLn0B/Lp/Q==
+X-CSE-MsgGUID: 6umedpAhSJWpdR8Z6kALYw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,316,1754982000"; 
+   d="scan'208";a="191632166"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by fmviesa009.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 15:34:36 -0800
+Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.27; Wed, 19 Nov 2025 15:34:35 -0800
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.27 via Frontend Transport; Wed, 19 Nov 2025 15:34:35 -0800
+Received: from CH5PR02CU005.outbound.protection.outlook.com (40.107.200.61) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.27; Wed, 19 Nov 2025 15:34:37 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=qIdyH+6GVKCVt3vZtH2e45lwBw0KwqjnZHTyAB8hTx5koDI83mbHL1MBz6yAmrPBQZCzLRKSPr45CLfUfmYcBZph39dp/ad3/VluxFBpC0+S+4VJ9aQVagYg3Pvw0RcMNlrJTgbjFWK6qGZSlnlcxdVyNHkgk29SckmCjc4cnZil6Hdpo1s+jGOHTOulXcS8Y4hnzDghJlTgOy7XBqKtTDFGrw3Zwnz4MtIE1gzVG38sHOMAOomRQyblDjiFxz/T39INPQN880vKoDEQocFCiiPP0LS0uvQMOCBT8Piz/BkNT9R2NaN5U5jFUySuRQdQENnG7M6LdDGyyUMYL/IceA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=SGxNyRnn2fjENroz8h7Pki7bvEMo2zvdFXJ3W7tB6Hc=;
+ b=D+nKtnUKew/xNSS14MLGceNaoib4112ZG/AixPWJEoC3zIKOrqNVJJN7hIw5zKPCXEna8OwPC973dfF8ZxZ9KfkzqaMHUOIuYrJEScHkGXseEDkAkXi/iwdgFm3mhwX1Q8zBtd5n2Fx8/xIVNtnV69A6m/gzk2A+LHv8teYvnut3DRID0Rh8tdgX/Df/Q+q0/59DqAD17o8JoFGFaRXyJedZh3oLkpAHA+kS0bI0i9WZcqYRiuCoBN/BQhY6AwrAImiYsHjiiuv3YmpF9pgGUJ5TxPlatDXl2FZVRRSEXmvddBbjSKm+Wma/T3lGMtnjQkm0yaXutC56eOb5TOHshA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by IA0PR11MB7380.namprd11.prod.outlook.com (2603:10b6:208:430::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9343.10; Wed, 19 Nov
+ 2025 23:34:33 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff%4]) with mapi id 15.20.9343.009; Wed, 19 Nov 2025
+ 23:34:32 +0000
+From: <dan.j.williams@intel.com>
+Date: Wed, 19 Nov 2025 15:34:30 -0800
+To: "Bowman, Terry" <terry.bowman@amd.com>, <dan.j.williams@intel.com>,
+	<dave@stgolabs.net>, <jonathan.cameron@huawei.com>, <dave.jiang@intel.com>,
+	<alison.schofield@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
+	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
+	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
+	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	<linux-cxl@vger.kernel.org>, <alucerop@amd.com>, <ira.weiny@intel.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Message-ID: <691e5406e9b35_1aaf4100c4@dwillia2-mobl4.notmuch>
+In-Reply-To: <930fcd64-92b2-462c-8301-6c753f41c498@amd.com>
+References: <20251104170305.4163840-1-terry.bowman@amd.com>
+ <20251104170305.4163840-3-terry.bowman@amd.com>
+ <691d375d78bd8_1a37510040@dwillia2-mobl4.notmuch>
+ <930fcd64-92b2-462c-8301-6c753f41c498@amd.com>
+Subject: Re: [RESEND v13 02/25] PCI/CXL: Introduce pcie_is_cxl()
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: BYAPR06CA0050.namprd06.prod.outlook.com
+ (2603:10b6:a03:14b::27) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|IA0PR11MB7380:EE_
+X-MS-Office365-Filtering-Correlation-Id: d5045d5c-4308-49d9-ee79-08de27c43139
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|366016|1800799024|7053199007|921020;
+X-Microsoft-Antispam-Message-Info: =?utf-8?B?WGRPTFF6b0ltMkxJRWNwMDRlbVprYjBkTEs1UWJoQ1JMK3hJWjBnQWRlMldZ?=
+ =?utf-8?B?aHpLRzN6L01haG5leGhqTGcrcCtXdjQ3cmRDcWZpZnZxeVdnWGV3UWJ3Sk16?=
+ =?utf-8?B?bkI4VGVKNHNWWTU4Q1E0T2VmeEtkcU85Y3Fza3lqSC9OTlhXRU1oUW10dmp6?=
+ =?utf-8?B?R05ISzNBNDJQMEZqd3pkb0dEdnhBdFNpRmVtRXZYOUlpL01aUGJqQ25NV2RB?=
+ =?utf-8?B?aHhOVjhEeHpxa05ISFNTQ0RlUHFmUGk1dTQ3ZzZhcVIrV3BWYjB3UlowR0VM?=
+ =?utf-8?B?eFdqS055bzkwT2o0NHhzUExTMHlFUlBoVzk1Y2pEVS9JZ2FZa2M4Q2xJdURq?=
+ =?utf-8?B?N1hSKzgrdy9ENkpFN2d3cHo5SDBmYVkwNTR3bjZ3azJucjFuMzVzaVNGVEtR?=
+ =?utf-8?B?WFA4aUxRSUwvS3prSGhxc2hRc3hSREJiSDg1bWp4U2tEQmIzd3hBWHdJeGRC?=
+ =?utf-8?B?RCtsY2tHa2t5VWFUZlkyUHE4ZTYxSW9vTGd4b3FTRzEySjlkb2tKbjZiZmJN?=
+ =?utf-8?B?VERnZ2ZpMERDM3ZxeS9qM2owY1FlVUdRVGtoVXF6YUZ5cTlpRURQY2orYkdD?=
+ =?utf-8?B?MHgxNzJWUXUxdWRGWHNXQ1p1MExsZERGZDBXc0ZSRFVvUGlNSUNObnFUcGJa?=
+ =?utf-8?B?T3QrWi9paEU5cWVCZUUyTFhXNjcyVGZIZFhjdnlsanV4UmFWZUdlS05ocUlR?=
+ =?utf-8?B?elBiRS9XN1EvNFZ5cnlicVVSUUR6MmVyRWphVHpYWjdGY0pGeFdvbHFRL1ow?=
+ =?utf-8?B?OHoreUx4TTRSZGVWTkVvalhpMnRXcmFkYXpucm9TcWQ3eTJHS3Z0Y1M4N1Fj?=
+ =?utf-8?B?T2tsTVRjbnB6ck9GYmltK3JhbmhOVGN0QjZEYXBQSVE1aCt0bUVhT3loNjVK?=
+ =?utf-8?B?d2tNVzZhd1BVK2ZJcUJuRDdXZkVJU05XdkxLZG9rRDlMQkYyRk1rQS84SE9I?=
+ =?utf-8?B?LzcrTHg0cEZPZlFTd1JsM3plNHVmUUFJWUpPMEpYYUZFaFJZenVpNDhLWmdl?=
+ =?utf-8?B?MFlJNkZ6N2VoWkxuZUNWdWlpWUNQbnNNa1QzaUtiUVI3RFZCTE9BY3NTM29o?=
+ =?utf-8?B?YjQ2UUpuQnUydytzWGtSRHJISU4wT0dJVkt4MUFtbVRuU1NCRjMzc2JFbkFT?=
+ =?utf-8?B?b0VtUngwNjI0YmZxbWFCQ1E1T2FwWkpGV1lBN0h1T0NuMXI5YTRLRGthTlpW?=
+ =?utf-8?B?dVVMSzZjUm4wYUdOQk9laTlaRkFVR3psRUFjTHV5aGF0UGdEOENQNVI4N1I1?=
+ =?utf-8?B?MnFmN0QvTlVpZFQwY0krS1lVeWVaMXdScnAvekxGQXRnN2R2TmxIaENoMkJK?=
+ =?utf-8?B?WlpyaTZTZ0tQYmdHelVJQVVoQzQvQUZaemNodDEwMmJEVjdRYTBXOTNXTzAy?=
+ =?utf-8?B?d0IxdXVzRWFNaXlMOVJ6OUZLdzd4NlNKQmVYOGlvNnpkM3poNm1keWtkVm1J?=
+ =?utf-8?B?elhxYjlNK3VPNXVwdmJkSDhQVG83VnBFUVZ6MDVyVDBISEtQcVpxRHNLMXZ0?=
+ =?utf-8?B?Wk9yVStWY250Z3d2OE5QSEUxdmpiUGNTalNMaGcrTklHNVhDRGJDR2wydUV0?=
+ =?utf-8?B?aGtEbFdCaFJLcGdlenBQVWF2Tlk0RVJJSG9TL0RKaUpDdlVoRy83bHgzdC9B?=
+ =?utf-8?B?YzROdGxTT0Y4a0dxYVcrNHpYUXE1VG1UcUsrUmlxMHF2OER5U3N3emlWcjBK?=
+ =?utf-8?B?dGs5K2ZoSG13c2xSYVhxNTIxQUpTZVpwcWdacEZRMlFzVEdzS2NHdEJPRUpM?=
+ =?utf-8?B?ZkdxNnZwekN0SEY5ejJzVi94M0pBYmlQSEpNZkNmc2VwcUN5S2Z1RVRXVXZa?=
+ =?utf-8?B?YXRtVkVMTjJacU9JSkY4R0lwY1gwYzdXcGZPeEFGY3ArTE9iQ2w4OGFwMDRI?=
+ =?utf-8?B?K3RybmtVSnNmZVp5NVRRa1ZLVXV0KytqMEV2UVlRM1R4K0xJV3FHRnUzUExl?=
+ =?utf-8?B?Q2M5bnhPM2tOVWNyRmRucU9ReTNXVTVacXhpK21zZnNRem9ReE9pcUVJNzRQ?=
+ =?utf-8?B?SC9EeGhyTW1uMmlFb2Y5bGhjNFQvTms2c1A2b3JXNHJoS00vMzQ2ZnBjUGJK?=
+ =?utf-8?Q?JUQt7B?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(7053199007)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VHZBNjN6bWdJMFNPTDhCTXVvcTg4UEJGNWpMM002amN3VkxVNnJ3T2lJdzlD?=
+ =?utf-8?B?MFQyR3BicjdnTWxVdjhRQ0IyOHhRcVN1TnBZNEIrdlNIVWJjOXBSQ1FrOHJu?=
+ =?utf-8?B?b2FiaW9tekVXWXJDdHBqQ3BqZGRWTUpOVUV3M0dGeHp6WkF0SUpiOXJ5TEs1?=
+ =?utf-8?B?ZHdnQ0gvVEh3eFpZSnBoN3hMTlJZVjVtMTRJT2tXTlJ2ektiZHl1aE5oQ0RC?=
+ =?utf-8?B?OXFsSURJUnRjZkVCdU5xYktMTDYwL2ZOWnU3RzVFeFEyVnV1RHl1KzJQWXNl?=
+ =?utf-8?B?eTc4blc0TERIbGdjR1F0Z2srenlrTmIxMkZFNmJhNkpTdzU5c3JWRVNRampR?=
+ =?utf-8?B?NktnR3Y1Y1FZRmdyVGpCeW1INXl5ZlBDNk9xcStyNXRhTnhFa0JwRG1mMDdx?=
+ =?utf-8?B?VEkrN0ZHbWtGWkE4OGJUYUh6S2Y3VUxqR3E0dU5oelZjYlZwZExyYTNFeWF3?=
+ =?utf-8?B?RHFGbU1LNjlLdVdVMk9EUk85WXVZUkdHeUh5Uk90aE5POHJ6Rnc5ZkN0UHFO?=
+ =?utf-8?B?dXFmZmZJTW02ZjFSaVYvWU43dEh1blJuMjhCdEhDUVVHQ1pEVnJtMUJJWFp2?=
+ =?utf-8?B?djZsNjlGbmthOGtQYTNTbWF6MUlmQ1R1ZC9WNkxzYTMwQzJiZDVpQzdQVlJn?=
+ =?utf-8?B?a3c1UTJjNTIvalhsRDltMzQzTEg2bXdrZFVQMG9jRm1TYUNBZzlXeVJ4NlQ1?=
+ =?utf-8?B?LzlBNTQrYi9rZ0dQSGJLbnNjU0Y4UUVHcXRsbjdZdHEzdWJSSUhQYThwQk9Y?=
+ =?utf-8?B?dTlSajJBZ2JsN3FWSUVJRjVYV1I4MW1PeTAyNURWa3pHQVQ1d0htUGxkWG0v?=
+ =?utf-8?B?OXVUY3NnVkZ4V0hSTnl0b0dSU3Bub1VxWmpacDFtaHg5Vi9KcytsdzNXM2Vh?=
+ =?utf-8?B?cTJZSjlHM1daeHlnNGdCaVl0NS9jSlhuNHlydXJFTjBHaUpZV2FZT01mU0JW?=
+ =?utf-8?B?NWF0Zi93R1NYakFQTVZ0MmNiY0t6QXFNQzhOVnJPczR6NGlTL3VtZG5jZVRB?=
+ =?utf-8?B?TC9nOUprbGl3ZlROZ2drQ21Ra1BqbEFuWDlIYStYOWh4RE5RKzFDamxVSkFW?=
+ =?utf-8?B?TjBMeVlERndiTDUraG1xYmgxYzBUazVNbnI5a2ExRGhZYlErZXA0K3ZneklT?=
+ =?utf-8?B?LzdHeElWVzd2VVJBcUFTM1RNL3RDaE5OQTFOZTYzZUdJMGFoVHhoNW5ycWF1?=
+ =?utf-8?B?V2JraGpQTGh6ZCszQWpOMXF4ZUFXaHM2eXVzdEN5Yk5oNmdSdzg2M3ppVEhD?=
+ =?utf-8?B?OHMxZ1BJZlJLV2xvZDdsQUdRNlhsNVYwY1d3Njl2ZkpmNjcwRTJUdXFTMUhJ?=
+ =?utf-8?B?aUt4dXlDbzR4TlJNMS9QcG0weFVMM0tLd09DRWVkUVdwUC9BUjdIeHV1d2RX?=
+ =?utf-8?B?V3I4RjFNQlNza1hqUWthekR2cXNVMG1SL0drak9qcURXbXRDaG5uRlU3Nmlv?=
+ =?utf-8?B?SHdBSUQrQ1YrQmNHUGQ5K0VaWi9HY3hXY2E4TUtRMUVwN2dncktGN0t1ZTJp?=
+ =?utf-8?B?SHE1bk44MzhXNk9Ob01ITE1TczB0MFdxSFovUmdDelZGWVBCdDA3VkV4STFE?=
+ =?utf-8?B?dW9TdS9qdlF2L056UndjWDhIOGtGUGxMUW8wSU5EQ05oV3hLeERWRTVXS244?=
+ =?utf-8?B?a0dKdG0wSlRkdVNUQ2ViVDloK1BxekNFcWhHNThjM1hPVFEzMTNJeExaUFpj?=
+ =?utf-8?B?ejlDYmhZZ01XQmwrRmQ3ZFFnWm9XbFBZcThienhVNUorNHRxMjVYbUIwQ1lq?=
+ =?utf-8?B?U2IyMXEyVkordG55QXFwQnBxVnRjUk9Kamd5d1oveE9reUg4SllrOGhKUGRC?=
+ =?utf-8?B?UHY3QVY5VWh3SU4xbHRkMURlTHVtWnA5UkdwSW1hcC9pOTZWRjByajRTa2N5?=
+ =?utf-8?B?MlNmcmIxTHJteStTS0tQN3RSbTJzUjdlTlc3VXNYSTZjN2praTFEcmVEY0F3?=
+ =?utf-8?B?djdIYmpYL3FlSSsyUzBsSEo2L1RMbWRzQm9mSUtxTXo4SFgrOEc4K3N3RHpT?=
+ =?utf-8?B?M3dKQ2l5N1l6TGQ0TzVmOHpONG5LVkE0VHpmRTMzaXQrWWdkYlpTR2hDRG1n?=
+ =?utf-8?B?cmV3NVF6bW9ERGFPNHg2U2xzcFE2WXRHYjFhMFVpcmh2NzFmWFJWYnQ3VW4y?=
+ =?utf-8?B?ZkFWTG5PTmU5KytpZ0h4aTIwdTVyT1Uzbm9RdjUvQkw0aFE5dGNxZUFMWlRz?=
+ =?utf-8?B?Q3c9PQ==?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: d5045d5c-4308-49d9-ee79-08de27c43139
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2025 23:34:32.8303
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: hAHKokQHpCuEp9d72UWJITpz8DH7ITNLBWCITXA6hcoSxuLZsN3cqRawOAa3Lo2BFktJmHB/zF2pf8RnhTFcdEYWXvTfWfi1xqPn1yzuh3Q=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR11MB7380
+X-OriginatorOrg: intel.com
 
-From: David Laight <david.laight.linux@gmail.com>
+Bowman, Terry wrote:
+>=20
+>=20
+> On 11/18/2025 9:19 PM, dan.j.williams@intel.com wrote:
+> > Terry Bowman wrote:
+> >> CXL and AER drivers need the ability to identify CXL devices.
+> >>
+> >> Introduce set_pcie_cxl() with logic checking for CXL.mem or CXL.cache
+> >> status in the CXL Flexbus DVSEC status register. The CXL Flexbus DVSEC
+> >> presence is used because it is required for all the CXL PCIe devices.[=
+1]
+> >>
+> >> Add boolean 'struct pci_dev::is_cxl' with the purpose to cache the CXL
+> >> CXL.cache and CXl.mem status.
+> >>
+> >> In the case the device is an EP or USP, call set_pcie_cxl() on behalf =
+of
+> >> the parent downstream device. Once a device is created there is
+> >> possibilty the parent training or CXL state was updated as well. This
+> >> will make certain the correct parent CXL state is cached.
+> >>
+> >> Add function pcie_is_cxl() to return 'struct pci_dev::is_cxl'.
+> >>
+> >> [1] CXL 3.1 Spec, 8.1.1 PCIe Designated Vendor-Specific Extended
+> >>     Capability (DVSEC) ID Assignment, Table 8-2
+> >>
+> >> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> >> Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+> >> Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@li=
+nux.intel.com>
+> >> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+> >> Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> >> Reviewed-by: Alejandro Lucero <alucerop@amd.com>
+> >> Reviewed-by: Ben Cheatham <benjamin.cheatham@amd.com>
+> >>
+> >> ---
+> >>
+> >> Changes in v12->v13:
+> >> - Add Ben's "reviewed-by"
+> >>
+> >> Changes in v11->v12:
+> >> - Add review-by for Alejandro
+> >> - Add comment in set_pcie_cxl() explaining why updating parent status.
+> >>
+> >> Changes in v10->v11:
+> >> - Amend set_pcie_cxl() to check for Upstream Port's and EP's parent
+> >>   downstream port by calling set_pcie_cxl(). (Dan)
+> >> - Retitle patch: 'Add' -> 'Introduce'
+> >> - Add check for CXL.mem and CXL.cache (Alejandro, Dan)
+> > [..]
+> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> >> index 0ce98e18b5a8..63124651f865 100644
+> >> --- a/drivers/pci/probe.c
+> >> +++ b/drivers/pci/probe.c
+> >> @@ -1709,6 +1709,33 @@ static void set_pcie_thunderbolt(struct pci_dev=
+ *dev)
+> >>  		dev->is_thunderbolt =3D 1;
+> >>  }
+> >> =20
+> >> +static void set_pcie_cxl(struct pci_dev *dev)
+> >> +{
+> >> +	struct pci_dev *parent;
+> >> +	u16 dvsec =3D pci_find_dvsec_capability(dev, PCI_VENDOR_ID_CXL,
+> >> +					      PCI_DVSEC_CXL_FLEXBUS_PORT);
+> >> +	if (dvsec) {
+> >> +		u16 cap;
+> >> +
+> >> +		pci_read_config_word(dev, dvsec + PCI_DVSEC_CXL_FLEXBUS_STATUS_OFFS=
+ET, &cap);
+> >> +
+> >> +		dev->is_cxl =3D FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_STATUS_CACHE_MASK, =
+cap) ||
+> >> +			FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_STATUS_MEM_MASK, cap);
+> >> +	}
+> >> +
+> >> +	if (!pci_is_pcie(dev) ||
+> >> +	    !(pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_ENDPOINT ||
+> >> +	      pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_UPSTREAM))
+> >> +		return;
+> > Why are downstream ports excluded?
+> I thought we only need to check the upstream 'parent' if dev is an EP=C2=
+=A0
+> or USP as those are the only PCIe types in CXL that interface directly=C2=
+=A0
+> to the upstream dport device.
 
-It in not uncommon for code to use min_t(uint, a, b) when one of a or b
-is 64bit and can have a value that is larger than 2^32;
-This is particularly prevelant with:
-	uint_var = min_t(uint, uint_var, uint64_expression);
+Yes, but in all cases the device upstream of an endpoint or an upstream
+port is a PCI_EXP_TYPE_ROOT_PORT or PCI_EXP_TYPE_DOWNSTREAM device. So I
+do not understand why this function needs to make any exclusions.
 
-Casts to u8 and u16 are very likely to discard significant bits.
+> And its the upstream dport device that must=C2=A0 be checked to ensure it
+> has the correct is_cxl setting.
 
-These can be detected at compile time by changing min_t(), for example:
-#define CHECK_SIZE(fn, type, val) \
-	BUILD_BUG_ON_MSG(sizeof (val) > sizeof (type) && \
-		!statically_true(((val) >> 8 * (sizeof (type) - 1)) < 256), \
-		fn "() significant bits of '" #val "' may be discarded")
+...but it will never have the correct is_cxl setting because that 'if
+()' statement precludes the update.
 
-#define min_t(type, x, y) ({ \
-	CHECK_SIZE("min_t", type, x); \
-	CHECK_SIZE("min_t", type, y); \
-	__cmp_once(min, type, x, y); })
+> Do I need to update is_cxl for USP in the case of DSP-USP topology?=C2=A0
 
-(and similar changes to max_t() and clamp_t().)
-
-This shows up some real bugs, some unlikely bugs and some false positives.
-In most cases both arguments are unsigned type (just different ones)
-and min_t() can just be replaced by min().
-
-The patches are all independant and are most of the ones needed to
-get the x86-64 kernel I build to compile.
-I've not tried building an allyesconfig or allmodconfig kernel.
-I've also not included the patch to minmax.h itself.
-
-I've tried to put the patches that actually fix things first.
-The last one is 0009.
-
-I gave up on fixing sched/fair.c - it is too broken for a single patch!
-The patch for net/ipv4/tcp.c is also absent because do_tcp_getsockopt()
-needs multiple/larger changes to make it 'sane'.
-
-I've had to trim the 124 maintainers/lists that get_maintainer.pl finds
-from 124 to under 100 to be able to send the cover letter.
-The individual patches only go to the addresses found for the associated files.
-That reduces the number of emails to a less unsane number.
-
-David Laight (44):
-  x86/asm/bitops: Change the return type of variable__ffs() to unsigned
-    int
-  ext4: Fix saturation of 64bit inode times for old filesystems
-  perf: Fix branch stack callchain limit
-  io_uring/net: Change some dubious min_t()
-  ipc/msg: Fix saturation of percpu counts in msgctl_info()
-  bpf: Verifier, remove some unusual uses of min_t() and max_t()
-  net/core/flow_dissector: Fix cap of __skb_flow_dissect() return value.
-  net: ethtool: Use min3() instead of nested min_t(u16,...)
-  ipv6: __ip6_append_data() don't abuse max_t() casts
-  x86/crypto: ctr_crypt() use min() instead of min_t()
-  arch/x96/kvm: use min() instead of min_t()
-  block: use min() instead of min_t()
-  drivers/acpi: use min() instead of min_t()
-  drivers/char/hw_random: use min3() instead of nested min_t()
-  drivers/char/tpm: use min() instead of min_t()
-  drivers/crypto/ccp: use min() instead of min_t()
-  drivers/cxl: use min() instead of min_t()
-  drivers/gpio: use min() instead of min_t()
-  drivers/gpu/drm/amd: use min() instead of min_t()
-  drivers/i2c/busses: use min() instead of min_t()
-  drivers/net/ethernet/realtek: use min() instead of min_t()
-  drivers/nvme: use min() instead of min_t()
-  arch/x86/mm: use min() instead of min_t()
-  drivers/nvmem: use min() instead of min_t()
-  drivers/pci: use min() instead of min_t()
-  drivers/scsi: use min() instead of min_t()
-  drivers/tty/vt: use umin() instead of min_t(u16, ...) for row/col
-    limits
-  drivers/usb/storage: use min() instead of min_t()
-  drivers/xen: use min() instead of min_t()
-  fs: use min() or umin() instead of min_t()
-  block: bvec.h: use min() instead of min_t()
-  nodemask: use min() instead of min_t()
-  ipc: use min() instead of min_t()
-  bpf: use min() instead of min_t()
-  bpf_trace: use min() instead of min_t()
-  lib/bucket_locks: use min() instead of min_t()
-  lib/crypto/mpi: use min() instead of min_t()
-  lib/dynamic_queue_limits: use max() instead of max_t()
-  mm: use min() instead of min_t()
-  net: Don't pass bitfields to max_t()
-  net/core: Change loop conditions so min() can be used
-  net: use min() instead of min_t()
-  net/netlink: Use umin() to avoid min_t(int, ...) discarding high bits
-  net/mptcp: Change some dubious min_t(int, ...) to min()
-
- arch/x86/crypto/aesni-intel_glue.c            |  3 +-
- arch/x86/include/asm/bitops.h                 | 18 +++++-------
- arch/x86/kvm/emulate.c                        |  3 +-
- arch/x86/kvm/lapic.c                          |  2 +-
- arch/x86/kvm/mmu/mmu.c                        |  2 +-
- arch/x86/mm/pat/set_memory.c                  | 12 ++++----
- block/blk-iocost.c                            |  6 ++--
- block/blk-settings.c                          |  2 +-
- block/partitions/efi.c                        |  3 +-
- drivers/acpi/property.c                       |  2 +-
- drivers/char/hw_random/core.c                 |  2 +-
- drivers/char/tpm/tpm1-cmd.c                   |  2 +-
- drivers/char/tpm/tpm_tis_core.c               |  4 +--
- drivers/crypto/ccp/ccp-dev.c                  |  2 +-
- drivers/cxl/core/mbox.c                       |  2 +-
- drivers/gpio/gpiolib-acpi-core.c              |  2 +-
- .../gpu/drm/amd/amdgpu/amdgpu_doorbell_mgr.c  |  4 +--
- drivers/gpu/drm/amd/amdgpu/amdgpu_vm.c        |  2 +-
- .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c |  2 +-
- drivers/i2c/busses/i2c-designware-master.c    |  2 +-
- drivers/net/ethernet/realtek/r8169_main.c     |  3 +-
- drivers/nvme/host/pci.c                       |  3 +-
- drivers/nvme/host/zns.c                       |  3 +-
- drivers/nvmem/core.c                          |  2 +-
- drivers/pci/probe.c                           |  3 +-
- drivers/scsi/hosts.c                          |  2 +-
- drivers/tty/vt/selection.c                    |  9 +++---
- drivers/usb/storage/protocol.c                |  3 +-
- drivers/xen/grant-table.c                     |  2 +-
- fs/buffer.c                                   |  2 +-
- fs/exec.c                                     |  2 +-
- fs/ext4/ext4.h                                |  2 +-
- fs/ext4/mballoc.c                             |  3 +-
- fs/ext4/resize.c                              |  2 +-
- fs/ext4/super.c                               |  2 +-
- fs/fat/dir.c                                  |  4 +--
- fs/fat/file.c                                 |  3 +-
- fs/fuse/dev.c                                 |  2 +-
- fs/fuse/file.c                                |  8 ++---
- fs/splice.c                                   |  2 +-
- include/linux/bvec.h                          |  3 +-
- include/linux/nodemask.h                      |  9 +++---
- include/linux/perf_event.h                    |  2 +-
- include/net/tcp_ecn.h                         |  5 ++--
- io_uring/net.c                                |  6 ++--
- ipc/mqueue.c                                  |  4 +--
- ipc/msg.c                                     |  6 ++--
- kernel/bpf/core.c                             |  4 +--
- kernel/bpf/log.c                              |  2 +-
- kernel/bpf/verifier.c                         | 29 +++++++------------
- kernel/trace/bpf_trace.c                      |  2 +-
- lib/bucket_locks.c                            |  2 +-
- lib/crypto/mpi/mpicoder.c                     |  2 +-
- lib/dynamic_queue_limits.c                    |  2 +-
- mm/gup.c                                      |  4 +--
- mm/memblock.c                                 |  2 +-
- mm/memory.c                                   |  2 +-
- mm/percpu.c                                   |  2 +-
- mm/truncate.c                                 |  3 +-
- mm/vmscan.c                                   |  2 +-
- net/core/datagram.c                           |  6 ++--
- net/core/flow_dissector.c                     |  7 ++---
- net/core/net-sysfs.c                          |  3 +-
- net/core/skmsg.c                              |  4 +--
- net/ethtool/cmis_cdb.c                        |  7 ++---
- net/ipv4/fib_trie.c                           |  2 +-
- net/ipv4/tcp_input.c                          |  4 +--
- net/ipv4/tcp_output.c                         |  5 ++--
- net/ipv4/tcp_timer.c                          |  4 +--
- net/ipv6/addrconf.c                           |  8 ++---
- net/ipv6/ip6_output.c                         |  7 +++--
- net/ipv6/ndisc.c                              |  5 ++--
- net/mptcp/protocol.c                          |  8 ++---
- net/netlink/genetlink.c                       |  9 +++---
- net/packet/af_packet.c                        |  2 +-
- net/unix/af_unix.c                            |  4 +--
- 76 files changed, 141 insertions(+), 176 deletions(-)
-
--- 
-2.39.5
-
+I think the only change needed is drop that early return 'if ()'
+statement altogether.=
