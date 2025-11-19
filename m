@@ -1,40 +1,41 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7875A3612C1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3C0364E96
 	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2025 14:11:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763561496; cv=none; b=YL+N8ydmdABP8JKo9eoeAmTMzrMZZYUctlmcqDm/bbVmpzj93UzFmK1Ao5bvAo0A9wivPWQEFlthmvgKkBc1UA7vkn+3ctA+BwUOLMqFu386WGyvNogfiBtkeUjf+jJnoK3DivXj+XjGdoJ/8ZFgnjwC0XHyIsbU4AoFo3B13Lo=
+	t=1763561496; cv=none; b=XSIm3YxIxfjn+VPYADBkhtpY6StpluZSEXZnkS/9iiuFWWUuBGUx725tWB6XVT/zADXBSYGo+G7eJddpgiR2dct9dPoG4SwWLM91tDtZ6PBHfzHCp6n2xEY6bY/0ZawuX3tXsPYR2054I9J+ZkHICba7OhYHY+2weZyv6SoxpK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1763561496; c=relaxed/simple;
-	bh=X8Hwzghf1B7tzwaWKSa37QYc7JPpdsNrrs4G08GwRdo=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=BmWmnddnfcIXiE3l0tMGMcc/6x7KDqw6OtMPizTsIhvvDsHBkHMPfSIpAFkBavT57+wby3lNzG8eAwyA+X1/160JoH1CV4CryRBT2cqCeQ0v4O4gcOMxK5QnJNOk7GikqLC1yeXrJHgHI29DzNcOoyF3BQjXYGoKmeT5QK3E3mM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=XNf6eEB3; arc=none smtp.client-ip=185.67.36.66
+	bh=QYt2D6TCLcoCb8hD9WrVGYk0tnqyKZI+KpUzwfLWJPs=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Rkq6cwGUbC+4bc2jTOAiblo0J1NHukR2uIIrWhybFVSh7z6NNdRdoRnXi3R5xNAv4nKgMfoL+w9EDU3FZo0I3qUiKnwuMV9vb6vxX7fxRymppHafSavvhDkOAxS7f2/2MuF3bRSUeTaR+Yx+U7f0i+A8daPetn3drThpEMoFBjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=qnZpNv3x; arc=none smtp.client-ip=185.67.36.65
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="XNf6eEB3"
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="qnZpNv3x"
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 91399240101
-	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2025 15:11:20 +0100 (CET)
+	by mout01.posteo.de (Postfix) with ESMTPS id 0771B24002D
+	for <linux-pci@vger.kernel.org>; Wed, 19 Nov 2025 15:11:26 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1763561485; bh=e86qQ+MKm1TAfsmbwnZgsyBQhq79pXz2excRK8B6BZg=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
-	b=XNf6eEB3NwlSaD11bEvTLd9zz3VKJNJWhvAkgyvDdVI+CDMaAkuT3rrtT5rmuHxvR
-	 KuXjvi+zGKTzwhyoXe1XCvg1VatmnaOOk/cGTCcIXsQQ1m6y4N06E4+6y0HIlrEaiC
-	 tIE2elJslQ2RuUkWjCqO8EueWjWmxdyB6AAo30Iv/0/xVilaBs/fsAhkih3/4p6Rf/
-	 oGt004kslTmq9rTrsQmrFVvhw6hEmQ1dleU6DSvcm+yuDPgGX5VaH3rbfLJbPDG0zv
-	 wpl3kUT74gLWKJF475Ps+Oh3VtzOkqex1hx5U0GIuDSfXXTbz3vRrm5ssgts76lfN1
-	 QhDns8bmCyjkg==
+	t=1763561486; bh=YQmlGTqcdgyCjAinwbQZx4Jor61kriIjWS/BuOoDFfI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:To:Cc:Autocrypt:OpenPGP:From;
+	b=qnZpNv3xvNO/9oIyfO5PyttFly6B9r8exj0zvgc7fF9Pb8xPR+1yF28aZQ/xBxt2J
+	 T1GPDdIV+m2h5vD7T2vaDq39f6PtWhvtjP2EorxhUDX+X9OmABa45ooEbZJ32xF9G7
+	 Ns7OfIxtbXAw/niNBEM3QSAWXGtSRRgWPGzRaqwX3oUcxu/IkIU8iFaW/YwyIaDPSF
+	 8su0PmYVhoHIxMfELqDsWK+crhiPKMM6AYpfdXWqscTu23dckCxFmNPDhAlGoRtz96
+	 GHVrJmQm7x8F+cum0OQ915rzumwQY1H/sEX3bNkejnqf7hFfodF3/ZdBUOV/YRRJvc
+	 XdlpZLqoYJDjw==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4dBNgm67Qkz6v18;
-	Wed, 19 Nov 2025 15:11:16 +0100 (CET)
+	by submission (posteo.de) with ESMTPSA id 4dBNgt0Njzz6twB;
+	Wed, 19 Nov 2025 15:11:22 +0100 (CET)
 From: Markus Probst <markus.probst@posteo.de>
-Subject: [PATCH v9 0/3] rust: leds: add led classdev abstractions
-Date: Wed, 19 Nov 2025 14:11:19 +0000
-Message-Id: <20251119-rust_leds-v9-0-86c15da19063@posteo.de>
+Date: Wed, 19 Nov 2025 14:11:24 +0000
+Subject: [PATCH v9 2/3] rust: leds: split generic and normal led classdev
+ abstractions up
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,11 +43,10 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIANvPHWkC/03M0QrCIBTG8VcZ5zpjusm0q71HjJB5bELM4TEph
- u+eDYIu/x8fvx0Io0eCS7NDxOzJh7WGPjUwL2a9I/O2NohWSM55z+KT0u2BlpjRUrthFm5wGup
- /i+j867CuU+3FUwrxfdBZfdefIv+UrFjLrDY9d52UslPjFihhOFuEqZTyAYS9DfaiAAAA
-X-Change-ID: 20251114-rust_leds-a959f7c2f7f9
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251119-rust_leds-v9-2-86c15da19063@posteo.de>
+References: <20251119-rust_leds-v9-0-86c15da19063@posteo.de>
+In-Reply-To: <20251119-rust_leds-v9-0-86c15da19063@posteo.de>
 To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
  Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
@@ -62,21 +62,21 @@ To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
 Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
  Markus Probst <markus.probst@posteo.de>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3599;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=15003;
  i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=X8Hwzghf1B7tzwaWKSa37QYc7JPpdsNrrs4G08GwRdo=;
- b=owEBbQKS/ZANAwAIATR2H/jnrUPSAcsmYgBpHdAEPOFiKMQcY3O1MqtrKXfa5XgPp+Flf5enw
- bMhXn4xEvKJAjMEAAEIAB0WIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaR3QBAAKCRA0dh/4561D
- 0kyiEACMll/ZSwavVx3HJCku9gnPNpxK0jUsBmzTUCqxNP31O1WHDSXM+VTPBy6wFIaHLnMLul+
- ydVAJF/keYZpNi7+vZ5K0SLRQ03J+fjqw9IzFm3DhEa11SugCnUq/KrsZsF/zj1m+ks13xVgWgH
- vQZ2EtPn7V3+bcV3KP9/4nC5pkHnTGEDfbHcP+BG2022Im2QOyr5Pjh0pMPYI+WRXFvOzquuQLx
- zswHB//BvBiwUXfbA0Fwrqk8+85KAWmhnlF7NKu1B01XPLFO+5vxpGwE007gfmsse27AE0nruFR
- AeE6hALfY7AKFFEZKZllIdRd1/wM44dwV6QjK7JQf1TqgavuiE76di2LcVS54W5d+MDfjTpeBz8
- G7oGOtVzfTMu+zXQCftdO2KxcEBc9j79lDg86Q5hdXXpL1mAb76YgBshRnf7NeSRvIt2mWdo5Uv
- e0zAobG4Jst++3EPseEGPgqVASvfzCOWZAoil0N3kFKlV8Ij8E8XscexAmj7Ha3h57grQpGwuT1
- Vw8heBy4DYpx4UOLtCEXRjcxc3qX64/upf9NIRb3QyWcDT25xIJSSnYq1Ilj/+r5X40Jdd07ovc
- genFnNlPLtCFz0mcBGDeses8fAofz7wPYdTV9ysN76xkfZ8kUyVQqtXXTlJ1qy3T5H/Q+9Z4Gyj
- 4b8c3ZLdt3rDnYg==
+ bh=QYt2D6TCLcoCb8hD9WrVGYk0tnqyKZI+KpUzwfLWJPs=;
+ b=owEBbQKS/ZANAwAIATR2H/jnrUPSAcsmYgBpHdAEqjxE44vl1Oxk5vEcmkorJrBf3vWdodM+1
+ /uhB/XfBy2JAjMEAAEIAB0WIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaR3QBAAKCRA0dh/4561D
+ 0kWzD/9mUnNbEfJ3OT5wPxilJZdHyPYMydLAyDUfFylv4QxeWpyf0fbnt8RMmE1UGfDpeY3QcSN
+ KX6b0s7fQvxg7isKxTD9bAZ3kjKfRIZLFYr1n0LhkkuhsXxjOEBCF+zNRddzhQypH5N6OFFaLZ4
+ DVp4zwHt7GLilTXlbYIpGLowco9ESvmTRHbTZOdzVJCoTeMw2up85hhohUgxpnYmjALSK44zs1P
+ jcmSpUJWZ9hxqDxQKZRY1Z/PTYA5orto5IYyhfHC3q4V4CWmTR14lL6rD8/GDIB+NNz2tisyX5K
+ nMxxP5Ih73eeUCk6g21tjlvMOiFUrdD/Y3fQ9+bMbeaX/SGUq9+mrveqqF57rCGqTmz8zb9PBT4
+ fieOFlKIHXmkFvYSSdcicy77NlF0nJF2cK82OYhLgklo7Luuw1ngkXTIzzc4jAYg4e45kVc1gfd
+ igu2qxuSnk2K42WosDeo1d8PU8c3dqOq4J32pIw+cSC4KvaQGCWKqpk1w9SHNmYxXkx7hLGLqVb
+ ib2OsYvasMI7WSXFjdoksOByAYNiIyGWBZ1Ivcu9EOMuOr0RnvPbfNQlziOZ9FreNq70aVnN4Z1
+ O3mWioYnZ1O36BeVf1++p04k8tHy0f5HkNjK38ht17GSfEq/S2SZTEJuYHfKjpzPqD5+cheSJBg
+ ySuyaGgKe6pm+Ug==
 X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
  fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
 Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
@@ -122,98 +122,346 @@ Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
   aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
 OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-This patch series has previously been contained in
-https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
-which added a rust written led driver for a microcontroller via i2c.
-
-As the reading and writing to the i2c client via the register!
-macro has not been implemented yet [1], the patch series will only
-contain the additional abstractions required.
-
-[1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@kernel.org/
-
-The following changes were made:
-* add basic led classdev abstractions to register and unregister leds
-
-* add basic led classdev abstractions to register and unregister
-  multicolor leds
-
-Changes since v8:
-* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
-* make functions in `MultiColorSubLed` const
-* drop the "rust: Add trait to convert a device reference to a bus
-  device reference" patch, as it has been picked into driver-core
-
-Changes since v7:
-* adjusted import style
-* added classdev parameter to callback functions in `LedOps`
-* implement `led::Color`
-* extend `led::InitData` with
-  - initial_brightness
-  - default_trigger
-  - default_color
-* split generic and normal led classdev abstractions up (see patch 3/4)
-* add multicolor led class device abstractions (see patch 4/4)
-* added MAINTAINERS entry
-
-Changes since v6:
-* fixed typos
-* improved documentation
-
-Changes since v5:
-* rename `IntoBusDevice` trait into `AsBusDevice`
-* fix documentation about `LedOps::BLOCKING`
-* removed dependency on i2c bindings
-* added `AsBusDevice` implementation for `platform::Device`
-* removed `device::Device` fallback implementation
-* document that `AsBusDevice` must not be used by drivers and is
-  intended for bus and class device abstractions only.
-
-Changes since v4:
-* add abstraction to convert a device reference to a bus device
-  reference
-* require the bus device as parent device and provide it in class device
-  callbacks
-* remove Pin<Vec<_>> abstraction (as not relevant for the led
-  abstractions)
-* fixed formatting in `led::Device::new`
-* fixed `LedOps::BLOCKING` did the inverse effect
-
-Changes since v3:
-* fixed kunit tests failing because of example in documentation
-
-Changes since v2:
-* return `Devres` on `led::Device` creation
-* replace KBox<T> with T in struct definition
-* increment and decrement reference-count of fwnode
-* make a device parent mandatory for led classdev creation
-* rename `led::Handler` to `led::LedOps`
-* add optional `brightness_get` function to `led::LedOps`
-* use `#[vtable]` instead of `const BLINK: bool`
-* use `Opaque::cast_from` instead of casting a pointer
-* improve documentation
-* improve support for older rust versions
-* use `&Device<Bound>` for parent
-
-Changes since v1:
-* fixed typos noticed by Onur Özkan
+Move code specific to normal led class devices into a separate file and
+introduce the `led::Mode` trait to allow for other types of led class
+devices.
 
 Signed-off-by: Markus Probst <markus.probst@posteo.de>
 ---
-Markus Probst (3):
-      rust: leds: add basic led classdev abstractions
-      rust: leds: split generic and normal led classdev abstractions up
-      rust: leds: add multicolor classdev abstractions
+ MAINTAINERS               |   1 +
+ rust/kernel/device.rs     |   2 +-
+ rust/kernel/led.rs        | 128 +++++++++++++++++++++++++++++++++++-----------
+ rust/kernel/led/normal.rs |  39 ++++++++++++++
+ 4 files changed, 139 insertions(+), 31 deletions(-)
 
- MAINTAINERS                     |   8 +
- rust/bindings/bindings_helper.h |   1 +
- rust/kernel/device.rs           |   2 +-
- rust/kernel/led.rs              | 551 ++++++++++++++++++++++++++++++++++++++++
- rust/kernel/led/multicolor.rs   | 195 ++++++++++++++
- rust/kernel/led/normal.rs       |  39 +++
- rust/kernel/lib.rs              |   1 +
- 7 files changed, 796 insertions(+), 1 deletion(-)
----
-base-commit: e4addc7cc2dfcc19f1c8c8e47f3834b22cb21559
-change-id: 20251114-rust_leds-a959f7c2f7f9
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 80cb030911b7..ca11b9064e3f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -14118,6 +14118,7 @@ L:	linux-leds@vger.kernel.org
+ L:	rust-for-linux@vger.kernel.org
+ S:	Maintained
+ F:	rust/kernel/led.rs
++F:	rust/kernel/led/
+ 
+ LEGO MINDSTORMS EV3
+ R:	David Lechner <david@lechnology.com>
+diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+index 660cb2b48c07..d330248ff2aa 100644
+--- a/rust/kernel/device.rs
++++ b/rust/kernel/device.rs
+@@ -333,7 +333,7 @@ pub(crate) fn as_raw(&self) -> *mut bindings::device {
+     }
+ 
+     /// Returns a reference to the parent device, if any.
+-    #[cfg_attr(not(CONFIG_AUXILIARY_BUS), expect(dead_code))]
++    #[cfg_attr(not(any(CONFIG_AUXILIARY_BUS, CONFIG_LEDS_CLASS)), expect(dead_code))]
+     pub(crate) fn parent(&self) -> Option<&Device> {
+         // SAFETY:
+         // - By the type invariant `self.as_raw()` is always valid.
+diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
+index fca55f02be8d..d51735322093 100644
+--- a/rust/kernel/led.rs
++++ b/rust/kernel/led.rs
+@@ -44,14 +44,18 @@
+     }, //
+ };
+ 
++mod normal;
++
++pub use normal::Normal;
++
+ /// The led class device representation.
+ ///
+-/// This structure represents the Rust abstraction for a C `struct led_classdev`.
++/// This structure represents the Rust abstraction for a led class device.
+ #[pin_data(PinnedDrop)]
+ pub struct Device<T: LedOps> {
+     ops: T,
+     #[pin]
+-    classdev: Opaque<bindings::led_classdev>,
++    classdev: Opaque<<T::Mode as private::Mode>::Type>,
+ }
+ 
+ /// The led init data representation.
+@@ -153,6 +157,7 @@ pub fn color(self, color: Color) -> Self {
+ /// #[vtable]
+ /// impl led::LedOps for MyLedOps {
+ ///     type Bus = platform::Device<device::Bound>;
++///     type Mode = led::Normal;
+ ///     const BLOCKING: bool = false;
+ ///     const MAX_BRIGHTNESS: u32 = 255;
+ ///
+@@ -184,6 +189,12 @@ pub trait LedOps: Send + 'static + Sized {
+     /// The bus device required by the implementation.
+     #[allow(private_bounds)]
+     type Bus: AsBusDevice<Bound>;
++
++    /// The led mode to use.
++    ///
++    /// See [`Mode`].
++    type Mode: Mode;
++
+     /// If set true, [`LedOps::brightness_set`] and [`LedOps::blink_set`] must perform the
+     /// operation immediately. If set false, they must not sleep.
+     const BLOCKING: bool;
+@@ -270,6 +281,42 @@ fn try_from(value: u32) -> core::result::Result<Self, Self::Error> {
+     }
+ }
+ 
++/// The led mode.
++///
++/// Each led mode has its own led class device type with different capabilities.
++///
++/// See [`Normal`].
++pub trait Mode: private::Mode {}
++
++impl<T: private::Mode> Mode for T {}
++
++type RegisterFunc<T> =
++    unsafe extern "C" fn(*mut bindings::device, *mut T, *mut bindings::led_init_data) -> i32;
++
++type UnregisterFunc<T> = unsafe extern "C" fn(*mut T);
++
++mod private {
++    pub trait Mode {
++        type Type;
++        const REGISTER: super::RegisterFunc<Self::Type>;
++        const UNREGISTER: super::UnregisterFunc<Self::Type>;
++
++        /// # Safety
++        /// `raw` must be a valid pointer to [`Self::Type`].
++        unsafe fn device<'a>(raw: *mut Self::Type) -> &'a crate::device::Device;
++
++        /// # Safety
++        /// `led_cdev` must be a valid pointer to `led_classdev` embedded within [`Self::Type`].
++        unsafe fn from_classdev(led_cdev: *mut bindings::led_classdev) -> *mut Self::Type;
++
++        /// # Safety
++        /// `raw` must be a valid pointer to [`Self::Type`].
++        unsafe fn pre_brightness_set(_raw: *mut Self::Type, _brightness: u32) {}
++
++        fn release(_led_cdev: &mut Self::Type) {}
++    }
++}
++
+ // SAFETY: A `led::Device` can be unregistered from any thread.
+ unsafe impl<T: LedOps + Send> Send for Device<T> {}
+ 
+@@ -278,24 +325,22 @@ unsafe impl<T: LedOps + Send> Send for Device<T> {}
+ unsafe impl<T: LedOps + Sync> Sync for Device<T> {}
+ 
+ impl<T: LedOps> Device<T> {
+-    /// Registers a new led classdev.
+-    ///
+-    /// The [`Device`] will be unregistered on drop.
+-    pub fn new<'a>(
++    fn __new<'a>(
+         parent: &'a T::Bus,
+         init_data: InitData<'a>,
+         ops: T,
++        func: impl FnOnce(bindings::led_classdev) -> Result<<T::Mode as private::Mode>::Type> + 'a,
+     ) -> impl PinInit<Devres<Self>, Error> + 'a {
+         Devres::new(
+             parent.as_ref(),
+             try_pin_init!(Self {
+                 ops,
+-                classdev <- Opaque::try_ffi_init(|ptr: *mut bindings::led_classdev| {
++                classdev <- Opaque::try_ffi_init(|ptr: *mut <T::Mode as private::Mode>::Type| {
+                     // SAFETY: `try_ffi_init` guarantees that `ptr` is valid for write.
+-                    // `led_classdev` gets fully initialized in-place by
+-                    // `led_classdev_register_ext` including `mutex` and `list_head`.
++                    // `T::Mode::Type` (and the embedded led_classdev) gets fully initialized
++                    // in-place by `T::Mode::REGISTER` including `mutex` and `list_head`.
+                     unsafe {
+-                        ptr.write(bindings::led_classdev {
++                        ptr.write((func)(bindings::led_classdev {
+                             brightness_set: (!T::BLOCKING)
+                                 .then_some(Adapter::<T>::brightness_set_callback),
+                             brightness_set_blocking: T::BLOCKING
+@@ -309,7 +354,7 @@ pub fn new<'a>(
+                                 .map_or(core::ptr::null(), CStr::as_char_ptr),
+                             color: init_data.color as u32,
+                             ..bindings::led_classdev::default()
+-                        })
++                        })?)
+                     };
+ 
+                     let mut init_data_raw = bindings::led_init_data {
+@@ -326,11 +371,11 @@ pub fn new<'a>(
+                     };
+ 
+                     // SAFETY:
+-                    // - `parent.as_raw()` is guaranteed to be a pointer to a valid `device`
+-                    //    or a null pointer.
+-                    // - `ptr` is guaranteed to be a pointer to an initialized `led_classdev`.
++                    // - `parent.as_ref().as_raw()` is guaranteed to be a pointer to a valid
++                    //    `device`.
++                    // - `ptr` is guaranteed to be a pointer to an initialized `T::Mode::Type`.
+                     to_result(unsafe {
+-                        bindings::led_classdev_register_ext(
++                        (<T::Mode as private::Mode>::REGISTER)(
+                             parent.as_ref().as_raw(),
+                             ptr,
+                             &mut init_data_raw,
+@@ -350,15 +395,22 @@ pub fn new<'a>(
+     /// `led::Device`.
+     unsafe fn from_raw<'a>(led_cdev: *mut bindings::led_classdev) -> &'a Self {
+         // SAFETY: The function's contract guarantees that `led_cdev` points to a `led_classdev`
+-        // field embedded within a valid `led::Device`. `container_of!` can therefore
+-        // safely calculate the address of the containing struct.
+-        unsafe { &*container_of!(Opaque::cast_from(led_cdev), Self, classdev) }
++        // embedded within a `led::Device` and thus is embedded within `T::Mode::Type`.
++        let raw = unsafe { <T::Mode as private::Mode>::from_classdev(led_cdev) };
++
++        // SAFETY: The function's contract guarantees that `raw` points to a `led_classdev` field
++        // embedded within a valid `led::Device`. `container_of!` can therefore safely calculate
++        // the address of the containing struct.
++        unsafe { &*container_of!(Opaque::cast_from(raw), Self, classdev) }
+     }
+ 
+     fn parent(&self) -> &device::Device<Bound> {
+-        // SAFETY:
+-        // - `self.classdev.get()` is guaranteed to be a valid pointer to `led_classdev`.
+-        unsafe { device::Device::from_raw((*(*self.classdev.get()).dev).parent) }
++        // SAFETY: `self.classdev.get()` is guaranteed to be a valid pointer to `T::Mode::Type`.
++        let device = unsafe { <T::Mode as private::Mode>::device(self.classdev.get()) };
++        // SAFETY: `led::Device::__new` doesn't allow to register a class device without an parent.
++        let parent = unsafe { device.parent().unwrap_unchecked() };
++        // SAFETY: the existence of `self` guarantees that `parent` is bound to a driver.
++        unsafe { parent.as_bound() }
+     }
+ }
+ 
+@@ -376,11 +428,17 @@ impl<T: LedOps> Adapter<T> {
+         brightness: u32,
+     ) {
+         // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
+-        // `led_classdev` embedded within a `led::Device`.
++        // `T::Mode::Type` embedded within a `led::Device`.
+         let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
+         // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
+         let parent = unsafe { T::Bus::from_device(classdev.parent()) };
+ 
++        // SAFETY: `classdev.classdev.get()` is guaranteed to be a valid pointer to a
++        // `T::Mode::Type`.
++        unsafe {
++            <T::Mode as private::Mode>::pre_brightness_set(classdev.classdev.get(), brightness);
++        }
++
+         let _ = classdev.ops.brightness_set(parent, classdev, brightness);
+     }
+ 
+@@ -394,11 +452,17 @@ impl<T: LedOps> Adapter<T> {
+     ) -> i32 {
+         from_result(|| {
+             // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
+-            // `led_classdev` embedded within a `led::Device`.
++            // `T::Mode::Type` embedded within a `led::Device`.
+             let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
+             // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
+             let parent = unsafe { T::Bus::from_device(classdev.parent()) };
+ 
++            // SAFETY: `classdev.classdev.get()` is guaranteed to be a valid pointer to a
++            // `T::Mode::Type`.
++            unsafe {
++                <T::Mode as private::Mode>::pre_brightness_set(classdev.classdev.get(), brightness);
++            }
++
+             classdev.ops.brightness_set(parent, classdev, brightness)?;
+             Ok(0)
+         })
+@@ -410,7 +474,7 @@ impl<T: LedOps> Adapter<T> {
+     /// This function is called on getting the brightness of a led.
+     unsafe extern "C" fn brightness_get_callback(led_cdev: *mut bindings::led_classdev) -> u32 {
+         // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
+-        // `led_classdev` embedded within a `led::Device`.
++        // `T::Mode::Type` embedded within a `led::Device`.
+         let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
+         // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
+         let parent = unsafe { T::Bus::from_device(classdev.parent()) };
+@@ -431,7 +495,7 @@ impl<T: LedOps> Adapter<T> {
+     ) -> i32 {
+         from_result(|| {
+             // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
+-            // `led_classdev` embedded within a `led::Device`.
++            // `T::Mode::Type` embedded within a `led::Device`.
+             let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
+             // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
+             let parent = unsafe { T::Bus::from_device(classdev.parent()) };
+@@ -456,17 +520,21 @@ impl<T: LedOps> PinnedDrop for Device<T> {
+     fn drop(self: Pin<&mut Self>) {
+         let raw = self.classdev.get();
+         // SAFETY: The existence of `self` guarantees that `self.classdev.get()` is a pointer to a
+-        // valid `struct led_classdev`.
+-        let dev: &device::Device = unsafe { device::Device::from_raw((*raw).dev) };
++        // valid `T::Mode::Type`.
++        let dev: &device::Device = unsafe { <T::Mode as private::Mode>::device(raw) };
+ 
+         let _fwnode = dev
+             .fwnode()
+             // SAFETY: the reference count of `fwnode` has previously been
+-            // incremented in `led::Device::new`.
++            // incremented in `led::Device::__new`.
+             .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode)) });
+ 
+         // SAFETY: The existence of `self` guarantees that `self.classdev` has previously been
+-        // successfully registered with `led_classdev_register_ext`.
+-        unsafe { bindings::led_classdev_unregister(self.classdev.get()) };
++        // successfully registered with `T::Mode::REGISTER`.
++        unsafe { (<T::Mode as private::Mode>::UNREGISTER)(raw) };
++
++        // SAFETY: The existence of `self` guarantees that `self.classdev.get()` is a pointer to a
++        // valid `T::Mode::Type`.
++        <T::Mode as private::Mode>::release(unsafe { &mut *raw });
+     }
+ }
+diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
+new file mode 100644
+index 000000000000..13feeb3256f3
+--- /dev/null
++++ b/rust/kernel/led/normal.rs
+@@ -0,0 +1,39 @@
++// SPDX-License-Identifier: GPL-2.0
++
++//! Led mode for the `struct led_classdev`.
++//!
++//! C header: [`include/linux/leds.h`](srctree/include/linux/leds.h)
++
++use super::*;
++
++/// The led mode for the `struct led_classdev`. Leds with this mode can only have a fixed color.
++pub enum Normal {}
++
++impl private::Mode for Normal {
++    type Type = bindings::led_classdev;
++    const REGISTER: RegisterFunc<Self::Type> = bindings::led_classdev_register_ext;
++    const UNREGISTER: UnregisterFunc<Self::Type> = bindings::led_classdev_unregister;
++
++    unsafe fn device<'a>(raw: *mut Self::Type) -> &'a device::Device {
++        // SAFETY:
++        // - The function's contract guarantees that `raw` is a valid pointer to `led_classdev`.
++        unsafe { device::Device::from_raw((*raw).dev) }
++    }
++
++    unsafe fn from_classdev(led_cdev: *mut bindings::led_classdev) -> *mut Self::Type {
++        led_cdev
++    }
++}
++
++impl<T: LedOps<Mode = Normal>> Device<T> {
++    /// Registers a new led classdev.
++    ///
++    /// The [`Device`] will be unregistered on drop.
++    pub fn new<'a>(
++        parent: &'a T::Bus,
++        init_data: InitData<'a>,
++        ops: T,
++    ) -> impl PinInit<Devres<Self>, Error> + 'a {
++        Self::__new(parent, init_data, ops, Ok)
++    }
++}
+
+-- 
+2.51.0
 
