@@ -1,279 +1,236 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from sinmsgout02.his.huawei.com (sinmsgout02.his.huawei.com [119.8.177.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2461327BF7;
-	Wed, 19 Nov 2025 15:51:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.14
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763567474; cv=fail; b=E9Ad0jQRaar/Bn6QhH7a8sQvv8OvbOLi+t14FmegqGBr0LY8AZqjAzsTQxAOx+KMP9SeUxWEQ8nmeKoX2EAKZuhvaazwoD4LIOlG8c+8Sm9AD8zSUQmzs113l9FmLQxKFQvRze6wrtsLAuzkH4S0MyqQBgqwLQLwhGViC7soFu0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763567474; c=relaxed/simple;
-	bh=SDNhV2SFjnxiQ97ij+uYlt7bEWI9pk1P7lGzHa5C1qQ=;
-	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
-	 Content-Type:MIME-Version; b=pNjnh0ubuvlqqbZtRg2SE1bp6jZ2VjDtOFBrMRfUyw2CYe5yEtDHwmrXtdYrYJZLd0a9PdZEjvOYJmMr/7T9TYNnXnuvzeacZHz6ZklYVjmfGycvnsm9oqv2ar0Ry41zZTY5wMv08HB0lp0R6+G6blffaIGH2vjmQC9AUxuuq4Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JKbjyuon; arc=fail smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4242636E548;
+	Wed, 19 Nov 2025 15:52:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.8.177.37
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1763567537; cv=none; b=qkzUQQREDEUZ1/h1HhmfZHbULQAVFlk+hyYR9y2jp2S0mYGeVronYkvLMOknBUPSRGlHT9a+in467SmZL50wejNKKEM6KZHKLzYwQgIRy/O0bQH3PIjG4+6DdKH+QydfeRO5iePiJRQMx9YF4DF6Y5B5xDN3CwWxBnaF0fEUhLk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1763567537; c=relaxed/simple;
+	bh=bSdaB7lW1lSi0E0gZSaghl+2XjuxCB5jAB+RWuHLNLM=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=iC7d7lqNjdMFAuQnrWpYoBk/TrZGpkNBx7oA27MZNiL8h4PjH4RROixdUOPkvHAHVFbLyaZawyu8BUxR3J2Eaxif+JQwUapHzmRFqCXlD2qKJXp6azZnz+GUmUY9NobxqCTJFh07WEd5PJtT0mqbOyiPIUCNc3AFd4QRwlZCuPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=iUTHAB35; arc=none smtp.client-ip=119.8.177.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JKbjyuon"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763567471; x=1795103471;
-  h=from:date:to:cc:message-id:in-reply-to:references:
-   subject:content-transfer-encoding:mime-version;
-  bh=SDNhV2SFjnxiQ97ij+uYlt7bEWI9pk1P7lGzHa5C1qQ=;
-  b=JKbjyuonUpqY/eW7+qW881Q3sq4Bv0/adVcd2kivhqRmLMn3nqnKhnfj
-   GLhGCuSF1Z5f5Gr7FTOf/wm1SH79KHSCQkX3R6Rys6E6WBfcyYJzUEByg
-   pODVWX3oTuFlfwveotnD2/RizkwzbC5mmc9MwFwXfKYffJiqd9QB/yL2o
-   Ww3etboCjP3/VxV0+TXYgoZHT0cdNK02V/+DJAqXHpLNTnnhMCovuHKtw
-   7Yajf1XEf0dZjV5w5tR8HF57nTbb2J/Ebs4w6JyuQjx2zkU4IdDqrcInv
-   STdgnHvUz+Js0dy/C57SCvDIynKuhesxXXDgFdskjIk+GI9XixjIgD07D
-   Q==;
-X-CSE-ConnectionGUID: 8nh/X1TpQ/ancJEJ/61jcA==
-X-CSE-MsgGUID: IdGIMVd7S9Ggqi9ww41GYg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11618"; a="69466275"
-X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
-   d="scan'208";a="69466275"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 07:51:10 -0800
-X-CSE-ConnectionGUID: 8nlJeXngT+WwrcEdwUw0Lg==
-X-CSE-MsgGUID: fftLgo2xRo+BMGLDwu4JsA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
-   d="scan'208";a="190760088"
-Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
-  by fmviesa007.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 07:51:05 -0800
-Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
- fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.27; Wed, 19 Nov 2025 07:51:01 -0800
-Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
- FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.27 via Frontend Transport; Wed, 19 Nov 2025 07:51:01 -0800
-Received: from BL2PR02CU003.outbound.protection.outlook.com (52.101.52.16) by
- edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.27; Wed, 19 Nov 2025 07:51:00 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=W9e5it6YznZbnjvGs9MMkvj+UknCXdbjWbWqLZ7xkzR1H8Pn5IS/fi/8tJLoAjjKJPDZzvjplPHSzxdgO9Nc68Mroh8JfU/R+aWXGHCHslGKR+enAu/3ebRp5sAzNdbqGfL2w4jKzqMfYF0eCXFlyXSgOex2x/TbZlyB1n0VAqg0V66nOfxUGidYzp4bfkcJFK6twWMwsddeoErSGA8qZZDBF10tCEhSPMlOpUoAKStJ+Ggq/a+KT9741mEYARYMgwuRDT9vgpBrIPIJyDKCTQhVBH5rXj5K6LgsdWsN0uAFJwZPyWEF+ww7dGh8GCtzgt4hYJQtrywQw9YuETJJlQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=34XXOoIZsRKFhU5hJicJSBqG5be69hOhkOEEBYpX0Zg=;
- b=TX/Dc2SutqfPWlwD8SP35W5UaYuNRWSu+diiOAm7fA/rsuyR6Dk550TUzE1TOlI51A08/yfxgcncSisidup7yWvlu6W1TyPjLIabCppWe+AKYWiweHpetrKgvfYQApxWf4NoejMv4wDDmCjuOICJMDtXtf3HRWThVFhr4S9vd2ql4+Cu3YGdEU8jVLNoOQ4AqGEOaVQ4nB3UOlRMv2o6zcL6SYOPFSyxLnnpy/saxm6vpDBnWttTv24qeOSUM2S0VuS+nmabjI7PURsRgczkKMAUkdNhpFybpvIeZ5QlypHYK/VbXT4hHJh68dFqQhUa0NoOlceGaLWkUpYA+ZyBJw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by PH3PPF5D8CD6E8B.namprd11.prod.outlook.com (2603:10b6:518:1::d25) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9343.10; Wed, 19 Nov
- 2025 15:50:58 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff%4]) with mapi id 15.20.9343.009; Wed, 19 Nov 2025
- 15:50:58 +0000
-From: <dan.j.williams@intel.com>
-Date: Wed, 19 Nov 2025 07:50:57 -0800
-To: Dave Hansen <dave.hansen@intel.com>, Xu Yilun <yilun.xu@linux.intel.com>,
-	<linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>
-CC: <chao.gao@intel.com>, <dave.jiang@intel.com>, <baolu.lu@linux.intel.com>,
-	<yilun.xu@intel.com>, <zhenzhong.duan@intel.com>, <kvm@vger.kernel.org>,
-	<rick.p.edgecombe@intel.com>, <dave.hansen@linux.intel.com>,
-	<dan.j.williams@intel.com>, <kas@kernel.org>, <x86@kernel.org>
-Message-ID: <691de76151967_1aaf41001e@dwillia2-mobl4.notmuch>
-In-Reply-To: <3c069d9f-501e-4fde-8ec7-7ea60e4159d0@intel.com>
-References: <20251117022311.2443900-1-yilun.xu@linux.intel.com>
- <3c069d9f-501e-4fde-8ec7-7ea60e4159d0@intel.com>
-Subject: Re: [PATCH v1 00/26] PCI/TSM: TDX Connect: SPDM Session and IDE
- Establishment
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: BY3PR05CA0026.namprd05.prod.outlook.com
- (2603:10b6:a03:254::31) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="iUTHAB35"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=q3clo3KyFTEVc2h7pK2fYPAaOgWyuzbjKCRKWYR9BsM=;
+	b=iUTHAB35Yh/j/CFTThTRZUBtsSSPrLIPJKaAAERqScHT9wanJafLG8Yj/CVg2EvEO+K+6soID
+	HMO0JIU7KRXMpp0pw8XFLn7IIVyAurdy4sWSFT1OqLFF8OO7CHUoB+IygjGIdX8pG1MCez2i8h1
+	Cea/8ZF59AKmPkbHvMQK3rk=
+Received: from frasgout.his.huawei.com (unknown [172.18.146.32])
+	by sinmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4dBQRd1dkpz1vnLd;
+	Wed, 19 Nov 2025 23:30:53 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.18.186.231])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dBQSK2DhDzHnGgk;
+	Wed, 19 Nov 2025 23:31:29 +0800 (CST)
+Received: from dubpeml100005.china.huawei.com (unknown [7.214.146.113])
+	by mail.maildlp.com (Postfix) with ESMTPS id 4F53A14033C;
+	Wed, 19 Nov 2025 23:32:02 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml100005.china.huawei.com
+ (7.214.146.113) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Wed, 19 Nov
+ 2025 15:32:01 +0000
+Date: Wed, 19 Nov 2025 15:32:00 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
+CC: <linux-coco@lists.linux.dev>, <kvmarm@lists.linux.dev>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dan.j.williams@intel.com>, <aik@amd.com>, <lukas@wunner.de>, Samuel Ortiz
+	<sameo@rivosinc.com>, Xu Yilun <yilun.xu@linux.intel.com>, Jason Gunthorpe
+	<jgg@ziepe.ca>, Suzuki K Poulose <Suzuki.Poulose@arm.com>, Steven Price
+	<steven.price@arm.com>, Bjorn Helgaas <helgaas@kernel.org>, Catalin Marinas
+	<catalin.marinas@arm.com>, Marc Zyngier <maz@kernel.org>, Will Deacon
+	<will@kernel.org>, Oliver Upton <oliver.upton@linux.dev>
+Subject: Re: [PATCH v2 02/11] coco: guest: arm64: Add Realm Host Interface
+ and guest DA helper
+Message-ID: <20251119153200.00007fd0@huawei.com>
+In-Reply-To: <20251117140007.122062-3-aneesh.kumar@kernel.org>
+References: <20251117140007.122062-1-aneesh.kumar@kernel.org>
+	<20251117140007.122062-3-aneesh.kumar@kernel.org>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|PH3PPF5D8CD6E8B:EE_
-X-MS-Office365-Filtering-Correlation-Id: c226396e-35a3-46c0-3ece-08de27836ea8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info: =?utf-8?B?OUo5WTlnaXFWQmprQVhiODZvRm1GYmFkdEpBUEZMa1RGczR3Q2xHdUI2Mllt?=
- =?utf-8?B?N0x0UlJVL0p1d25WQjVlWHZNR3hUdGliMVh4T3ZUby9mYUtZY1RNblRpWklp?=
- =?utf-8?B?NThsc096OUhxRTZlZDhjbDk3cDQxTWx5ZCtvZS91dHhDWVhkaVdSU3F3cXJO?=
- =?utf-8?B?UjFiRS9zOEVIaVMydW8vcWhBb1ZPajBHa1Z5RVZLN20yRk1ONzA1aXhPUWFk?=
- =?utf-8?B?UXEwVTl1ZWJFWWNPam9za3gwVExyeHNQZVJodE9nUjJuK3lSQmt3RjF0ZUc2?=
- =?utf-8?B?am8xMVBucFNHZ1ZYRFJHZ3loUElwT0JCY1h6MUl6SHFXRnUzc0dPWEpOTnVL?=
- =?utf-8?B?cklucGN3eEd1WjNoUGlLb2IyYTBzbWZJT0hqb1BXbHJ5ZUs3TExUQWpjQVZi?=
- =?utf-8?B?ZWViTFFOV3NZNHFRTHRmYVA3MmtZSUdQM3RLSmxjUVkxVk9PS1gyTWJWNjR6?=
- =?utf-8?B?bk9OOHhUdEI5eThQNmFxc3BuU3FOL3dwQk1UZm1ocjZ6OVo1Z0lONmtVa2M1?=
- =?utf-8?B?MGQ4WGphMm5yZk9sMVhrUy9ZS1U1OGd2UGtsUjFKYmlYaGhleTFSb0xDQ0E5?=
- =?utf-8?B?TTlmREtXWEJ0MVVDT1ZwWnpHQ1NGUnlRTWozdEQxU21ObWNHbnFMblpXQWRh?=
- =?utf-8?B?SEFCS0MxWWRsanFYdWlyZlZjSEJ6emRyamdIbUd1Vllwa0Nsb1ZWeEpPM1Vj?=
- =?utf-8?B?N2VTVnliZVpQeHM0SDd4ZWpIcWpWRXFPOU51REtUbkw5ZFlXV1Yxa2ZJRSt3?=
- =?utf-8?B?aWRrTFhVamxjLzBmY0xoeUg3MEYwbE9pajRKRVA5a2NJd1RTRVJIcHdVNHNM?=
- =?utf-8?B?UTJOa2lhZ3hockhjOGVqS2xPcHNTa2IrY3pwZUl2bE1zanAvc0diSTltRENH?=
- =?utf-8?B?Qk5uTXRIa3NZc1ljK3hXbi9FeHFYUU16RFVCd3VJcDY4cUF1RHNsZUdhK3dN?=
- =?utf-8?B?ckFOSmVmbEhFTTI4RThsTU90U3Q5VUxxaW5TbzZrdkg3eGtnd1R1Y0d1dGhC?=
- =?utf-8?B?VFdmeTdsUld3Z1pYRUk1Z1RtU2ZTQVhUQk9pL1VnbEpBcG9Ib2t6ekszNURN?=
- =?utf-8?B?cG9sS3Q3ZVl6T2dnYWZ3NGpMSkdkc1pnNndmY2w4aUJjRUVUbVYvc0VPNElI?=
- =?utf-8?B?RlpEaEFjTnUrU3ZRd2xFdVZGdkt2cUpkbnl4WHNBMDNMTHRia0V1ZVZUZ1lH?=
- =?utf-8?B?OENLRlZhTFdBVXNNQXpoWjB2ek5qZjdmbjNYOUpwKzZZRU1BTWUvNUJ6aXI1?=
- =?utf-8?B?VFN5dHJpaDJGL0NOWkVqdy9LcFp5ZzdEUkxKNm1nb2dzOTNmeFZzRGFab1FI?=
- =?utf-8?B?dkdhUTBIVnJQUjdaTEtObXhZaE1QME1Mb2pPR2l6RUdjL2xMK254TUk5Um1M?=
- =?utf-8?B?aTZUVE84RkJxSGFtczFNbXBlY2xBZ25pK3FuTGdQcHF5OGVteHhFRVpaaXFP?=
- =?utf-8?B?K1FjbDQ4SGpZTERNcXJoNWdpR0JiaG1NOENVMTB0M0xVOWxDcTV5cWlxSnEr?=
- =?utf-8?B?NlVvZm44Tm5mY1VsUGpiT2VxbUZFSk9FdFVOanBiUHJZUWdiQWdEMmNNQVMy?=
- =?utf-8?B?dDd1emZvSy9kc2trSklUMU8yUkNyRkpRc3EvY0JUZE9iamNtdWQ5OFVPQzM3?=
- =?utf-8?B?QXNXSjVSdndpOEprQmtza2I3MVcvZFR6ZjNaaStzT0FQN3h5WjVxWlAyZVkz?=
- =?utf-8?B?YnQ1UnltamRiSzNyelg4MHNrRWU3R2E2TzBTL3dnK3kvVXZ1dVlIc1hSc2dy?=
- =?utf-8?B?b0ZJVkVsRU81eHNGa0RCbHdDbEVBUnd2WXpmRGdldnZEdW9Ybk91SzVvUDdD?=
- =?utf-8?B?aGlwQkNHejlhNXh4R01Idml2ZGZLb2N0VS9wSG04MTB2cUc5RDBoelZiT0ZR?=
- =?utf-8?B?UlVMbzMwYjlIS1ViUkVncGFqK3B3b0c0YmtnVWZMVjNQb0s0V0hUbTMxSDBx?=
- =?utf-8?B?eC9YbFRJOWFYMjk2R1FSYi8zclZrT01iRDNKUW9BSk5vUTNSaVVqQjRrWmVi?=
- =?utf-8?B?YzJ3eUQyYWNRPT0=?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UUl6RUg2MGgwV2JUaVhYcGp2dFlYaU9iK3NRT0VYSytpUlZqMG9pQUpuTVZN?=
- =?utf-8?B?RGF6MWVrc2tHWVBxWFVxU0pPdFFNWktNbFh5T1lUV2VkU1ROTFE2WlhndjBy?=
- =?utf-8?B?cVg5Zm9WZG5iTEdKN01sK21wM2ZXZkhsN2ExWjgxcWFTK1NVbWwwSy96T2lX?=
- =?utf-8?B?d3pmVWhUMmxSR0pBRTE0WHZibWJVRm5xMkNGRCtFNzJNQS9Dc04vUHVCM21X?=
- =?utf-8?B?Uk93NFJFbDd2Q3M1NCsyZkY5VHBHWnlUMGkrZU9rRzZyZVBTT0pxV3VhK3d1?=
- =?utf-8?B?QVBMQmdmUGZNc2h4R2oxNGhjOUtIc3ZEYTF6TGpIV3NRaEREbU5qeis3Uk15?=
- =?utf-8?B?UnZGdXFiNFhGbDVHVDdaekVNUVBwU3ZTLzVQTENuaXpIWVUrNWNJUDF0bjBF?=
- =?utf-8?B?NXNqZ2QxWGZCU3pNNTV3TG1ESG8wV0RpMXVTSXArRThJMDU3RTNoNnlJZ2lx?=
- =?utf-8?B?UitFTTRQUnlTRjJKUUJtSkxLaXlnTlQ5V3ZsUmdUUDljUitUcExpWjY2amZ0?=
- =?utf-8?B?VzFhRGN2M3J2RVFpdlBWWVp0TXRsZDZLN25DN1A5ekM2OEVQeXVUYnBCY0hx?=
- =?utf-8?B?enBLMEJZSm9VS3lWZkNqaWtFcGk2OG4yZU5YY0dtenJMam9mYVlRVStTdmVq?=
- =?utf-8?B?R0Q5anV4TmVQeWpVU2phRDFxTDdvUFdaL3FwWHJJUkdvME1HS0F3NGdtdHFn?=
- =?utf-8?B?bVpCUVl1QXR3TWNtTGhNWFFLMHk5UHU0Y0VVcXdsa2R3Zkh5d1Urbi9vTVdq?=
- =?utf-8?B?N3BxWUgwMndHN2pLTkNXVk93enJDc2xmN0Z4bWZFSFY4RWtCWWtHOEt1QXoy?=
- =?utf-8?B?K3RaTDBmQ05mZlYrY2FZaUFNS0R5SkgzTmxCWVZWY1hyYi9ndnhvYWJPY2Zw?=
- =?utf-8?B?bWdlL2FoQlRiSjNWMStSSEh2TXRUK01ScDVTb3VxM3luS0JMV2NDMWN5Yzc2?=
- =?utf-8?B?S2p6NXpNV1h1Z2F3VW51UUtMWEh5Sk5taFI2UDRHd2JtNHpJaDl4WEx5Y0Y2?=
- =?utf-8?B?RGYvWXA1d2ttc0xjV1hhcUFLYXU2MTQ3Z2o5SnJEcnV4ZFM4NVl5eUpxOE00?=
- =?utf-8?B?QzZaQ09FTjF0enhUK0pjemE3Q1VnVUxqdUFKRXRkSG85VjBFcEJneEMyVlN3?=
- =?utf-8?B?Y0hGMWJrWjM4MlVic1FHQWx0aGVVaHA0eEtKREw2Q3JSRGVTdmg0YzJGK2FU?=
- =?utf-8?B?UkVndlZXb3Rsd1NheTRzYVQyRC9qdlkrdmozVGV5bzdPbkpVVTcrekxMbVhC?=
- =?utf-8?B?NXQ4M1dTejROWko3UWxVeVEzVDQwQWdyT0RvYXNBdGFFVUVMTUhyeXZ1RVJJ?=
- =?utf-8?B?VTJmcGxENjNEaVo3cThzcit6d0o5MUhsMEkxLzFhNjVFbURQTm5NOFB3YlZV?=
- =?utf-8?B?WkVMTTRnenQ2VjNBTnByTTZheWpWUGoybm1pWndxUWRHK0xNckRjMnlWQXNB?=
- =?utf-8?B?WG1hVWk1U0tYY3FvelBNZ29KNzVYN2VVa21QWXNxc25SNlVqUnB4RkZCZnVs?=
- =?utf-8?B?MTg1bXl2cWpWZXk1MU8yOUlNK0YyMk9lOENCZitMLzN4KytPVVhCSUVsTFBW?=
- =?utf-8?B?cWJKSmZaVkFMU2JTZ2pNZEo4MXFNemZ1WlNBOG5rejdQcFp2bzhoSU1yQis1?=
- =?utf-8?B?Q1VWTUcvMGUzU1pjWXJJc3l5dVUvS2Nwd1l3aWdJS1ozVUJnYTJaampLMGw1?=
- =?utf-8?B?TFJKUDc5QkxFbTE0clN4aktzeENMOFRMVjdQc2h4OE55U1pMamxnc0JlKzVv?=
- =?utf-8?B?bFBNSmlnN3VjVzlZek1USXRzeGF5QU1rZi9ibkhQYXRtTzhSdTdHcnhLT3hS?=
- =?utf-8?B?UGlTVTZPUnE0Ri9tV1hIOEJUZ2t1SklUNldOeXJTU2hBTWIxUHNNQ2pSdTV2?=
- =?utf-8?B?ZjRxOW43UDZNTkdYZXlhMGhSYlJyZGY5QkM1WVI0ZnphQjFNNndybG1pcE45?=
- =?utf-8?B?QndLaXAxbm5UeDQ0Q0pQbVdlYjYreDhadE9jTSt2Z0drbmdSK3dzOUJ6QmNp?=
- =?utf-8?B?OGxIczJHT0VIY3NxY0dRUkpCbWk3TVhpOTZnREN0UnF3RUdaS2RpZEhINU5s?=
- =?utf-8?B?ZWlrYml4US9SRXNock9MRUVaaGw0VHd2UXVEbzBwM1IvZ3NzQklubEdOdEs2?=
- =?utf-8?B?a2o4eTFRdlM5RHZzbFFLZVlpZ1VTQjg5dHoxeUVIaGdDWjNEaE5scjgwZ0JD?=
- =?utf-8?B?Nmc9PQ==?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: c226396e-35a3-46c0-3ece-08de27836ea8
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2025 15:50:58.5958
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6KO1SNTDVNZHfSBAH4TEYgx1sHj5CfExgb5GYV8Vap5/gi6Vy7GyU517GbX9qy9HHcvcsFMJEaZW7LfvHHOgu6bp6575wI0d2BwPdKrTaZ4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH3PPF5D8CD6E8B
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
+ dubpeml100005.china.huawei.com (7.214.146.113)
 
-Dave Hansen wrote:
-> Any chance we could use english in subjects? Isn't this something more
-> along the lines of:
->=20
-> 	PCI: Secure Device Passthrough For TDX, initial support
->=20
-> I mean, "TDX Connect" is a pure marketing term that doesn't tell us
-> much. Right?
+On Mon, 17 Nov 2025 19:29:58 +0530
+"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org> wrote:
 
-Note that I generated that subject for this series during the RFC.
-Yilun, apologies for setting you up for this feedback.
+> - describe the Realm Host Interface SMC IDs and result codes in a new
+>   `asm/rhi.h` header
+> - expose `struct rsi_host_call` plus an `rsi_host_call()` helper so we can
+>   invoke `SMC_RSI_HOST_CALL` from C code
+> - build a guest-side `rhi-da` helper that drives the vdev TDI state machine
+>   via RHI host calls and translates the firmware status codes
+> 
+> This provides the basic RHI plumbing that later DA features rely on.
+> 
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+Hi Aneesh, minor comments follow.
 
-In retrospect, a better subject would be:
+> diff --git a/drivers/virt/coco/arm-cca-guest/rhi-da.c b/drivers/virt/coco/arm-cca-guest/rhi-da.c
+> new file mode 100644
+> index 000000000000..3430d8df4424
+> --- /dev/null
+> +++ b/drivers/virt/coco/arm-cca-guest/rhi-da.c
+...
 
-"PCI/TSM: PCIe Link Encryption Establishment via TDX platform services"
+> +
+> +bool rhi_has_da_support(void)
+> +{
+> +	int ret;
+> +	struct rsi_host_call *rhicall;
+> +
+> +	rhicall = kmalloc(sizeof(struct rsi_host_call), GFP_KERNEL);
 
-Most of the plain English description of this topic has gone through
-multiple rounds of review in the core series to introduce and
-re-introduce these acronyms [1].
+Doesn't look to be passed out anywhere, so not obvious why the lifetime
+of this extends beyond this function.  Maybe I'm missing something.
 
-This TDX series is one of many low-level architecture specific drivers,
-and no, this phase of the enablement does not touch passthrough. It only
-implements initial link protection details which are this acronym soup
-that the PCI community at least is slowly learning to speak. It is a
-pre-requisite for passthrough work.
+> +	if (!rhicall)
+> +		return -ENOMEM;
+> +
+> +	rhicall->imm = 0;
+> +	rhicall->gprs[0] = RHI_DA_FEATURES;
+> +
+> +	ret = rsi_host_call(virt_to_phys(rhicall));
+> +	if (ret != RSI_SUCCESS || rhicall->gprs[0] == SMCCC_RET_NOT_SUPPORTED)
+> +		return false;
+> +
+> +	/* For base DA to work we need these to be supported */
+> +	if ((rhicall->gprs[0] & RHI_DA_BASE_FEATURE) == RHI_DA_BASE_FEATURE)
+> +		return true;
+> +
+> +	return false;
+> +}
+> +
+> +static inline int rhi_vdev_continue(unsigned long vdev_id, unsigned long cookie)
+> +{
+> +	unsigned long ret;
+> +
+> +	struct rsi_host_call *rhi_call __free(kfree) =
+> +		kmalloc(sizeof(struct rsi_host_call), GFP_KERNEL);
 
-The ordering of the enabling staging is detailed here [2].
+sizeof(*rhi_call)  Same for all other cases of this.
 
-I will add more decoder ring to that. At some point the coarse English
-breaks down as the need talk about fine details picks up, i.e.  specific
-acronyms used by the specification need to be invoked. Granted, maybe
-not in the subject.
+> +	if (!rhi_call)
+> +		return -ENOMEM;
+> +
+> +	rhi_call->imm = 0;
+> +	rhi_call->gprs[0] = RHI_DA_VDEV_CONTINUE;
+> +	rhi_call->gprs[1] = vdev_id;
+> +	rhi_call->gprs[2] = cookie;
+> +
+> +	ret = rsi_host_call(virt_to_phys(rhi_call));
+> +	if (ret != RSI_SUCCESS)
+> +		return -EIO;
+> +
+> +	return map_rhi_da_error(rhi_call->gprs[0]);
+> +}
+> +
+> +static int __rhi_vdev_abort(unsigned long vdev_id, unsigned long *da_error)
+> +{
+> +	unsigned long ret;
+> +	struct rsi_host_call *rhi_call __free(kfree) =
+> +		kmalloc(sizeof(struct rsi_host_call), GFP_KERNEL);
 
-[1]: http://lore.kernel.org/20251031212902.2256310-1-dan.j.williams@intel.c=
-om
-[2]: https://git.kernel.org/pub/scm/linux/kernel/git/devsec/tsm.git/tree/Do=
-cumentation/driver-api/pci/tsm.rst?h=3Dstaging
+sizeof(*rhi_call) probably preferred.
 
-> I'll also say that even the beginning of the cover letter doesn't help a
-> lot. Plain, acronym-free language when possible would be much
-> appreciated there and across this series.
->=20
-> For instance, there's not even a problem statement to be seen. I asked
-> ChatGPT: "write me a short, three sentence plain language paragraph
-> about why TDX Connect is needed on top of regular TDX"
->=20
-> 	Regular TDX keeps a guest=E2=80=99s memory safe but leaves the path to
-> 	physical devices exposed to the host. That means the host could
-> 	spoof a device, alter configuration, or watch DMA traffic. TDX
-> 	Connect closes that gap by letting the guest verify real devices
-> 	and encrypt the I/O link so the host can=E2=80=99t interfere.
+> +	if (!rhi_call)
+> +		return -ENOMEM;
+> +
+> +	rhi_call->imm = 0;
+> +	rhi_call->gprs[0] = RHI_DA_VDEV_ABORT;
+> +	rhi_call->gprs[1] = vdev_id;
+> +
+> +	ret = rsi_host_call(virt_to_phys(rhi_call));
+> +	if (ret != RSI_SUCCESS)
+> +		return -EIO;
+> +
+> +	return *da_error = rhi_call->gprs[0];
+> +	return 0;
 
-None of that is implemented in this series.
+?  Run builds after each patch and you may catch stuff like this.
 
-> That would be a great way to open a cover letter.
+> +}
+> +
+> +static bool should_abort_rhi_call_loop(unsigned long vdev_id)
+> +{
+> +	int ret;
+> +
+> +	cond_resched();
+> +	if (signal_pending(current)) {
+> +		unsigned long da_error;
+> +
+> +		ret = __rhi_vdev_abort(vdev_id, &da_error);
+> +		/* consider all kind of error as not aborted */
+> +		if (!ret && (da_error == RHI_DA_SUCCESS))
+> +			return true;
+> +	}
+> +	return false;
+> +}
+> +
+> +static int __rhi_vdev_set_tdi_state(unsigned long vdev_id,
+> +				    unsigned long target_state,
 
-I think the break down is not reminding folks that this is a low-level
-incremental implementation supporting core infrastructure that has
-described the "first phase" problem on behalf of a class of these "TSM"
-drivers that will follow. English is needed, yes, but I do not think we
-need each submission to recreate an intro essay from the core
-submission. Yes, we lost the link in this case, and that is my fault,
-not Yilun's.
+Maybe use an enum for target state? Can name it to align with the
+RHIDAVDevTDIState used as the type for this in the RHI spec.
 
-> On 11/16/25 18:22, Xu Yilun wrote:
-> >  arch/x86/virt/vmx/tdx/tdx.c                   | 740 ++++++++++++-
-> >  arch/x86/virt/vmx/tdx/tdx_global_metadata.c   |  32 +
->=20
-> Let me know if anyone feels differently, but I really think the "TDX
-> Host Extensions" need to be reviewed as a different patch set. Sure,
-> they are a dependency for "TDX Connect". But, in the end, the host
-> extension enabling does not interact at *ALL* with the later stuff. It's
-> purely:
 
-I feel differently.
+> +				    unsigned long *cookie)
+> +{
+> +	unsigned long ret;
+> +
+> +	struct rsi_host_call *rhi_call __free(kfree) =
+> +		kmalloc(sizeof(struct rsi_host_call), GFP_KERNEL);
+> +	if (!rhi_call)
+> +		return -ENOMEM;
+> +
+> +	rhi_call->imm = 0;
+> +	rhi_call->gprs[0] = RHI_DA_VDEV_SET_TDI_STATE;
+> +	rhi_call->gprs[1] = vdev_id;
+> +	rhi_call->gprs[2] = target_state;
+> +
+> +	ret = rsi_host_call(virt_to_phys(rhi_call));
+> +	if (ret != RSI_SUCCESS)
+> +		return -EIO;
+> +
+> +	*cookie = rhi_call->gprs[1];
+> +	return map_rhi_da_error(rhi_call->gprs[0]);
+> +}
 
-> 	* Ask the TDX module how much memory it wants
-> 	* Feed it with that much memory
->=20
-> ... and voila! The fancy new extension works. Right?
+> diff --git a/drivers/virt/coco/arm-cca-guest/rhi-da.h b/drivers/virt/coco/arm-cca-guest/rhi-da.h
+> new file mode 100644
+> index 000000000000..8dd77c7ed645
+> --- /dev/null
+> +++ b/drivers/virt/coco/arm-cca-guest/rhi-da.h
+> @@ -0,0 +1,14 @@
+> +/* SPDX-License-Identifier: GPL-2.0-only */
+> +/*
+> + * Copyright (C) 2024 ARM Ltd.
 
-Right, minor implementation detail of new ABIs. What does a "TDX
-Host Extensions" patch set do that does not introduce new ABI? Linux
-should not merge a patch that gives resources to the TDX Module
-independent of a intent to use the ABIs.=
+Possibly update if this has changed much this year.
+
+> + */
+> +
+> +#ifndef _VIRT_COCO_RHI_DA_H_
+> +#define _VIRT_COCO_RHI_DA_H_
+> +
+> +#include <asm/rhi.h>
+> +
+> +struct pci_dev;
+> +bool rhi_has_da_support(void);
+> +int rhi_vdev_set_tdi_state(struct pci_dev *pdev, unsigned long target_state);
+> +#endif
+
