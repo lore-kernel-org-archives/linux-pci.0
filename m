@@ -1,305 +1,274 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sinmsgout01.his.huawei.com (sinmsgout01.his.huawei.com [119.8.177.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B24285CB6;
-	Wed, 19 Nov 2025 15:41:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC0F42E92D0;
+	Wed, 19 Nov 2025 15:42:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.8.177.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763566876; cv=none; b=InXmhKLKDbK/aW/YX5c3FR6NY1XmgQxSA2KSvdmNUs4wVT36fKCz/mRBRkAB86iJon2df1sWl0lu7WNjtb1OfsTrysqgvrsKACMQYuQZ67Lu3CjDvYFXrVQX7aylS2Fx+x2s8uKpdb9nrpTia+/2APWmT1gI4b7AI42KYn2cPkU=
+	t=1763566975; cv=none; b=SMTQRzwFdNr5pErZE+M3fkF2NgVb0OMV7ADH1dbGT7Xz7HFVAPe/ltZtpFtQYNsEfvD30Le01h3V5wyg8blUN186uS5xtS+3OfwAEk7EelsCYUTng4k5ammSZYt+SFObHDbHCRjDEbEbfg0NaJkEZpt25oZ1IviL0eepIIy6YHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763566876; c=relaxed/simple;
-	bh=+tu5xEE2csr5lj4QfalL/akMO0Iwzk3kuQR0JJgfkqQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZW/os156ObB8wxAnA/7S1DtH9xEoiwkyEtRC34ghemRQXpx3IjdFkcsUE4ulLgN+eOB4ohWh7DgKyeRN63SeJDpaURtOWqr3wXBPdRQWm9m/or9NuThWuqKMmwvap0dbYTNLnut8GCsOSZHGEZMkA4198FmxCjF6DvMvb5TGHo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QZA36zm5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763566975; c=relaxed/simple;
+	bh=35vOJPyrgKb+9cfdez7P0ePWSzUKBrJup9U4Y+XzUhU=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=K8ugphzLd/9R/oHa5ijz8lNROcErroNK2fvBoKMujnY1otc6aOhiNmjBeS8RYYh05o4Zm/68YZbNuxJGd0oaHpD85doVu/k20VCjOsf1GhUOlNMsfN8ZLQ9mNzHSJFP3btkoGSF1og5L9onSKhO1VNfVEsLSD06oZayAMAaCutM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Q6XYebHb; arc=none smtp.client-ip=119.8.177.36
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QZA36zm5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B957C2BCB2;
-	Wed, 19 Nov 2025 15:41:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763566873;
-	bh=+tu5xEE2csr5lj4QfalL/akMO0Iwzk3kuQR0JJgfkqQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QZA36zm5JLd7o0QBgL/m337GXPzMm86iJP+sqGrJjj1yhmQahzCnAAdePGwI0czJ9
-	 rt4OUD/ZwcM93t/K+PUcYG/mPoxd3i5GXITekoSzYkf+zK+1puSkDtnkTCfXWs++0m
-	 M9zKcwUgAkxFOEXC/RFEX/wz1Iq7Syn6vdULPDfvt40zK7+wJ2eDruSfFEgrILevfv
-	 d1Sb/+sY9emGTM3ScYXG3ovMIORPEms7/vnPk+lNN/iOHrUpZto2zHikmZMZUuTeXw
-	 q5uBEXiMRpmdS+1CbaUYpBm+Kas3khufe9slupFE9daJ6PwQfcbycL8K+e+GM1qvBy
-	 uhz+0UV4rK9dw==
-Date: Wed, 19 Nov 2025 17:41:08 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>, Jens Axboe <axboe@kernel.dk>,
-	Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Sumit Semwal <sumit.semwal@linaro.org>, Kees Cook <kees@kernel.org>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <skolothumtho@nvidia.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Krishnakant Jaju <kjaju@nvidia.com>, Matt Ochs <mochs@nvidia.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org, iommu@lists.linux.dev,
-	linux-mm@kvack.org, linux-doc@vger.kernel.org,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
-	linux-hardening@vger.kernel.org, Alex Mastro <amastro@fb.com>,
-	Nicolin Chen <nicolinc@nvidia.com>
-Subject: Re: [Linaro-mm-sig] [PATCH v8 06/11] dma-buf: provide phys_vec to
- scatter-gather mapping routine
-Message-ID: <20251119154108.GK18335@unreal>
-References: <20251111-dmabuf-vfio-v8-0-fd9aa5df478f@nvidia.com>
- <20251111-dmabuf-vfio-v8-6-fd9aa5df478f@nvidia.com>
- <8a11b605-6ac7-48ac-8f27-22df7072e4ad@amd.com>
- <20251119134245.GD18335@unreal>
- <6714dc49-6b5c-4d58-9a43-95bb95873a97@amd.com>
- <20251119145007.GJ18335@unreal>
- <26d7ecab-33ed-4aab-82d5-954b0d1d1718@amd.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Q6XYebHb"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=4KQ60AZkRR436n3z62l8wSAm4xK4aGrP18HCQEaGmFI=;
+	b=Q6XYebHbPap5JMYIPqzRsnJ0QvPVtJvZHbN2hIehZnC6wg1n94G2W6lCweazDWEVFr+nUIDUR
+	jaMCNXyMHIVgELx9VoVzTuCPm1H/aAfEp8lPKvKw+4Sod7xAadtW/ESkE3Nbjby+7qmrqUH5/to
+	GKTFGP5Mr5INoRWoVKDwG9c=
+Received: from frasgout.his.huawei.com (unknown [172.18.146.32])
+	by sinmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4dBQD415Jjz1P7G1;
+	Wed, 19 Nov 2025 23:20:51 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.18.186.231])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dBQDq3W4VzHnH4l;
+	Wed, 19 Nov 2025 23:21:31 +0800 (CST)
+Received: from dubpeml100005.china.huawei.com (unknown [7.214.146.113])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7B0B81402ED;
+	Wed, 19 Nov 2025 23:22:04 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml100005.china.huawei.com
+ (7.214.146.113) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Wed, 19 Nov
+ 2025 15:22:03 +0000
+Date: Wed, 19 Nov 2025 15:22:01 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
+CC: <linux-coco@lists.linux.dev>, <kvmarm@lists.linux.dev>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<dan.j.williams@intel.com>, <aik@amd.com>, <lukas@wunner.de>, Samuel Ortiz
+	<sameo@rivosinc.com>, Xu Yilun <yilun.xu@linux.intel.com>, Jason Gunthorpe
+	<jgg@ziepe.ca>, Suzuki K Poulose <Suzuki.Poulose@arm.com>, Steven Price
+	<steven.price@arm.com>, Bjorn Helgaas <helgaas@kernel.org>, Catalin Marinas
+	<catalin.marinas@arm.com>, Marc Zyngier <maz@kernel.org>, Will Deacon
+	<will@kernel.org>, Oliver Upton <oliver.upton@linux.dev>
+Subject: Re: [PATCH v2 01/11] coco: guest: arm64: Guest TSM callback and
+ realm device lock support
+Message-ID: <20251119152201.00000876@huawei.com>
+In-Reply-To: <20251117140007.122062-2-aneesh.kumar@kernel.org>
+References: <20251117140007.122062-1-aneesh.kumar@kernel.org>
+	<20251117140007.122062-2-aneesh.kumar@kernel.org>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <26d7ecab-33ed-4aab-82d5-954b0d1d1718@amd.com>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
+ dubpeml100005.china.huawei.com (7.214.146.113)
 
-On Wed, Nov 19, 2025 at 03:53:30PM +0100, Christian König wrote:
-> 
-> 
-> On 11/19/25 15:50, Leon Romanovsky wrote:
-> > On Wed, Nov 19, 2025 at 03:11:01PM +0100, Christian König wrote:
-> >> On 11/19/25 14:42, Leon Romanovsky wrote:
-> >>> On Wed, Nov 19, 2025 at 02:16:57PM +0100, Christian König wrote:
-> >>>>
-> >>>>
-> >>>> On 11/11/25 10:57, Leon Romanovsky wrote:
-> >>>>> From: Leon Romanovsky <leonro@nvidia.com>
-> >>>>>
-> >>>>> Add dma_buf_map() and dma_buf_unmap() helpers to convert an array of
-> >>>>> MMIO physical address ranges into scatter-gather tables with proper
-> >>>>> DMA mapping.
-> >>>>>
-> >>>>> These common functions are a starting point and support any PCI
-> >>>>> drivers creating mappings from their BAR's MMIO addresses. VFIO is one
-> >>>>> case, as shortly will be RDMA. We can review existing DRM drivers to
-> >>>>> refactor them separately. We hope this will evolve into routines to
-> >>>>> help common DRM that include mixed CPU and MMIO mappings.
-> >>>>>
-> >>>>> Compared to the dma_map_resource() abuse this implementation handles
-> >>>>> the complicated PCI P2P scenarios properly, especially when an IOMMU
-> >>>>> is enabled:
-> >>>>>
-> >>>>>  - Direct bus address mapping without IOVA allocation for
-> >>>>>    PCI_P2PDMA_MAP_BUS_ADDR, using pci_p2pdma_bus_addr_map(). This
-> >>>>>    happens if the IOMMU is enabled but the PCIe switch ACS flags allow
-> >>>>>    transactions to avoid the host bridge.
-> >>>>>
-> >>>>>    Further, this handles the slightly obscure, case of MMIO with a
-> >>>>>    phys_addr_t that is different from the physical BAR programming
-> >>>>>    (bus offset). The phys_addr_t is converted to a dma_addr_t and
-> >>>>>    accommodates this effect. This enables certain real systems to
-> >>>>>    work, especially on ARM platforms.
-> >>>>>
-> >>>>>  - Mapping through host bridge with IOVA allocation and DMA_ATTR_MMIO
-> >>>>>    attribute for MMIO memory regions (PCI_P2PDMA_MAP_THRU_HOST_BRIDGE).
-> >>>>>    This happens when the IOMMU is enabled and the ACS flags are forcing
-> >>>>>    all traffic to the IOMMU - ie for virtualization systems.
-> >>>>>
-> >>>>>  - Cases where P2P is not supported through the host bridge/CPU. The
-> >>>>>    P2P subsystem is the proper place to detect this and block it.
-> >>>>>
-> >>>>> Helper functions fill_sg_entry() and calc_sg_nents() handle the
-> >>>>> scatter-gather table construction, splitting large regions into
-> >>>>> UINT_MAX-sized chunks to fit within sg->length field limits.
-> >>>>>
-> >>>>> Since the physical address based DMA API forbids use of the CPU list
-> >>>>> of the scatterlist this will produce a mangled scatterlist that has
-> >>>>> a fully zero-length and NULL'd CPU list. The list is 0 length,
-> >>>>> all the struct page pointers are NULL and zero sized. This is stronger
-> >>>>> and more robust than the existing mangle_sg_table() technique. It is
-> >>>>> a future project to migrate DMABUF as a subsystem away from using
-> >>>>> scatterlist for this data structure.
-> >>>>>
-> >>>>> Tested-by: Alex Mastro <amastro@fb.com>
-> >>>>> Tested-by: Nicolin Chen <nicolinc@nvidia.com>
-> >>>>> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> >>>>> ---
-> >>>>>  drivers/dma-buf/dma-buf.c | 235 ++++++++++++++++++++++++++++++++++++++++++++++
-> >>>>>  include/linux/dma-buf.h   |  18 ++++
-> >>>>>  2 files changed, 253 insertions(+)
-> >>>>>
-> >>>>> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-> >>>>> index 2bcf9ceca997..cb55dff1dad5 100644
-> >>>>> --- a/drivers/dma-buf/dma-buf.c
-> >>>>> +++ b/drivers/dma-buf/dma-buf.c
-> >>>>> @@ -1254,6 +1254,241 @@ void dma_buf_unmap_attachment_unlocked(struct dma_buf_attachment *attach,
-> >>>>>  }
-> >>>>>  EXPORT_SYMBOL_NS_GPL(dma_buf_unmap_attachment_unlocked, "DMA_BUF");
-> >>>>>  
-> >>>>> +static struct scatterlist *fill_sg_entry(struct scatterlist *sgl, size_t length,
-> >>>>> +					 dma_addr_t addr)
-> >>>>> +{
-> >>>>> +	unsigned int len, nents;
-> >>>>> +	int i;
-> >>>>> +
-> >>>>> +	nents = DIV_ROUND_UP(length, UINT_MAX);
-> >>>>> +	for (i = 0; i < nents; i++) {
-> >>>>> +		len = min_t(size_t, length, UINT_MAX);
-> >>>>> +		length -= len;
-> >>>>> +		/*
-> >>>>> +		 * DMABUF abuses scatterlist to create a scatterlist
-> >>>>> +		 * that does not have any CPU list, only the DMA list.
-> >>>>> +		 * Always set the page related values to NULL to ensure
-> >>>>> +		 * importers can't use it. The phys_addr based DMA API
-> >>>>> +		 * does not require the CPU list for mapping or unmapping.
-> >>>>> +		 */
-> >>>>> +		sg_set_page(sgl, NULL, 0, 0);
-> >>>>> +		sg_dma_address(sgl) = addr + i * UINT_MAX;
-> >>>>> +		sg_dma_len(sgl) = len;
-> >>>>> +		sgl = sg_next(sgl);
-> >>>>> +	}
-> >>>>> +
-> >>>>> +	return sgl;
-> >>>>> +}
-> >>>>> +
-> >>>>> +static unsigned int calc_sg_nents(struct dma_iova_state *state,
-> >>>>> +				  struct dma_buf_phys_vec *phys_vec,
-> >>>>> +				  size_t nr_ranges, size_t size)
-> >>>>> +{
-> >>>>> +	unsigned int nents = 0;
-> >>>>> +	size_t i;
-> >>>>> +
-> >>>>> +	if (!state || !dma_use_iova(state)) {
-> >>>>> +		for (i = 0; i < nr_ranges; i++)
-> >>>>> +			nents += DIV_ROUND_UP(phys_vec[i].len, UINT_MAX);
-> >>>>> +	} else {
-> >>>>> +		/*
-> >>>>> +		 * In IOVA case, there is only one SG entry which spans
-> >>>>> +		 * for whole IOVA address space, but we need to make sure
-> >>>>> +		 * that it fits sg->length, maybe we need more.
-> >>>>> +		 */
-> >>>>> +		nents = DIV_ROUND_UP(size, UINT_MAX);
-> >>>>> +	}
-> >>>>> +
-> >>>>> +	return nents;
-> >>>>> +}
-> >>>>> +
-> >>>>> +/**
-> >>>>> + * struct dma_buf_dma - holds DMA mapping information
-> >>>>> + * @sgt:    Scatter-gather table
-> >>>>> + * @state:  DMA IOVA state relevant in IOMMU-based DMA
-> >>>>> + * @size:   Total size of DMA transfer
-> >>>>> + */
-> >>>>> +struct dma_buf_dma {
-> >>>>> +	struct sg_table sgt;
-> >>>>> +	struct dma_iova_state *state;
-> >>>>> +	size_t size;
-> >>>>> +};
-> >>>>> +
-> >>>>> +/**
-> >>>>> + * dma_buf_map - Returns the scatterlist table of the attachment from arrays
-> >>>>> + * of physical vectors. This funciton is intended for MMIO memory only.
-> >>>>> + * @attach:	[in]	attachment whose scatterlist is to be returned
-> >>>>> + * @provider:	[in]	p2pdma provider
-> >>>>> + * @phys_vec:	[in]	array of physical vectors
-> >>>>> + * @nr_ranges:	[in]	number of entries in phys_vec array
-> >>>>> + * @size:	[in]	total size of phys_vec
-> >>>>> + * @dir:	[in]	direction of DMA transfer
-> >>>>> + *
-> >>>>> + * Returns sg_table containing the scatterlist to be returned; returns ERR_PTR
-> >>>>> + * on error. May return -EINTR if it is interrupted by a signal.
-> >>>>> + *
-> >>>>> + * On success, the DMA addresses and lengths in the returned scatterlist are
-> >>>>> + * PAGE_SIZE aligned.
-> >>>>> + *
-> >>>>> + * A mapping must be unmapped by using dma_buf_unmap().
-> >>>>> + */
-> >>>>> +struct sg_table *dma_buf_map(struct dma_buf_attachment *attach,
-> >>>>
-> >>>> That is clearly not a good name for this function. We already have overloaded the term *mapping* with something completely different.
-> >>>
-> >>> This function performs DMA mapping, so what name do you suggest instead of dma_buf_map()?
-> >>
-> >> Something like dma_buf_phys_vec_to_sg_table(). I'm not good at naming either.
-> > 
-> > Can I call it simply dma_buf_mapping() as I plan to put that function in dma_buf_mapping.c
-> > file per-your request.
-> 
-> No, just completely drop the term "mapping" here. This is about phys_vector to sg_table conversion and nothing else.
+On Mon, 17 Nov 2025 19:29:57 +0530
+"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org> wrote:
 
-We have both map and unmap, so dma_buf_*_to_*() can be applicable to dma_buf_map() only.
-And it is not simple conversion, most of the logic is actually handles mapping:
-
-  137         for (i = 0; i < nr_ranges; i++) {
-  138                 if (!dma->state) {
-  139                         addr = pci_p2pdma_bus_addr_map(provider,
-  140                                                        phys_vec[i].paddr);
-  141                 } else if (dma_use_iova(dma->state)) {
-  142                         ret = dma_iova_link(attach->dev, dma->state,
-  143                                             phys_vec[i].paddr, 0,
-  144                                             phys_vec[i].len, dir,
-  145                                             DMA_ATTR_MMIO);
-  146                         if (ret)
-  147                                 goto err_unmap_dma;
-  148
-  149                         mapped_len += phys_vec[i].len;
-  150                 } else {
-  151                         addr = dma_map_phys(attach->dev, phys_vec[i].paddr,
-  152                                             phys_vec[i].len, dir,
-  153                                             DMA_ATTR_MMIO);
-  154                         ret = dma_mapping_error(attach->dev, addr);
-  155                         if (ret)
-  156                                 goto err_unmap_dma;
-  157                 }
-  158
-  159                 if (!dma->state || !dma_use_iova(dma->state))
-  160                         sgl = fill_sg_entry(sgl, phys_vec[i].len, addr);
-  161         }
-  162
-  163         if (dma->state && dma_use_iova(dma->state)) {
-  164                 WARN_ON_ONCE(mapped_len != size);
-  165                 ret = dma_iova_sync(attach->dev, dma->state, 0, mapped_len);
-  166                 if (ret)
-  167                         goto err_unmap_dma;
-  168
-  169                 sgl = fill_sg_entry(sgl, mapped_len, dma->state->addr);
-  170         }
-
-SG table conversion is only two lines (160 and 169) which are here
-because of DMABUF dependency on SG.
-
-What about dma_buf_phys_vec_mapping()/dma_buf_phys_vec_unmapping()?
-
+> Register the TSM callback when the DA feature is supported by RSI. The
+> build order is also adjusted so that the TSM class is created before the
+> arm-cca-guest driver is initialized.
 > 
-> That we create an IOVA mapping when the access needs to go through the root complex is an implementation detail.
+> In addition, add support for the TDISP lock sequence. Writing a TSM
+> (TEE Security Manager) device name from `/sys/class/tsm` into `tsm/lock`
+> triggers the realm device lock operation.
 > 
-> > 
-> > Regarding SG, the long term plan is to remove SG table completely, so at
-> > least external users of DMABUF shouldn't be exposed to internal implementation
-> > details (SG table).
-> 
-> Hui? Well I suggested to remove the sg_table, but that doesn't mean that implementations shouldn't be aware of that.
+> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
+Hi Aneesh,
 
-VFIO which is first user of this interface. It doesn't care how
-internally DMABUF handles array of phys_vecs. Today, it is sg_table,
-tomorrow it will be something else.
+Some minor stuff in here.   One general comment is that there
+are some fixlets for the CCA code surrounding what this patch
+should focus on. Break those out as separate cleanup or base
+this on top of the fixed up version of that code.
 
-Thanks
+Thanks,
 
-> 
-> Regards,
-> Christian.
-> 
-> > 
-> > Thanks
-> 
+Jonathan
+
+> diff --git a/arch/arm64/kernel/rsi.c b/arch/arm64/kernel/rsi.c
+> index 1b716d18b80e..2ec0f5dff02e 100644
+> --- a/arch/arm64/kernel/rsi.c
+> +++ b/arch/arm64/kernel/rsi.c
+> @@ -15,6 +15,7 @@
+>  #include <asm/rsi.h>
+>  
+>  static struct realm_config config;
+> +static unsigned long rsi_feat_reg0;
+>  
+>  unsigned long prot_ns_shared;
+>  EXPORT_SYMBOL(prot_ns_shared);
+> @@ -22,6 +23,12 @@ EXPORT_SYMBOL(prot_ns_shared);
+>  DEFINE_STATIC_KEY_FALSE_RO(rsi_present);
+>  EXPORT_SYMBOL(rsi_present);
+>  
+> +bool rsi_has_da_feature(void)
+> +{
+> +	return u64_get_bits(rsi_feat_reg0, RSI_FEATURE_REGISTER_0_DA);
+
+I'm not keen on mixing explicit size of a u64 with the implicit
+fact an unsigned long is effectively a u64.  Can we tidy up the types
+to match?
+ 
+> +}
+> +EXPORT_SYMBOL_GPL(rsi_has_da_feature);
+
+> diff --git a/drivers/virt/coco/Makefile b/drivers/virt/coco/Makefile
+> index cb52021912b3..57556d7c1cec 100644
+> --- a/drivers/virt/coco/Makefile
+> +++ b/drivers/virt/coco/Makefile
+> @@ -6,6 +6,6 @@ obj-$(CONFIG_EFI_SECRET)	+= efi_secret/
+>  obj-$(CONFIG_ARM_PKVM_GUEST)	+= pkvm-guest/
+>  obj-$(CONFIG_SEV_GUEST)		+= sev-guest/
+>  obj-$(CONFIG_INTEL_TDX_GUEST)	+= tdx-guest/
+> -obj-$(CONFIG_ARM_CCA_GUEST)	+= arm-cca-guest/
+>  obj-$(CONFIG_TSM) 		+= tsm-core.o
+>  obj-$(CONFIG_TSM_GUEST)		+= guest/
+> +obj-$(CONFIG_ARM_CCA_GUEST)	+= arm-cca-guest/
+
+Check all patches for noise like this.  It may be a valid change but in this series
+it's just adding confusion.
+
+> diff --git a/drivers/virt/coco/arm-cca-guest/Kconfig b/drivers/virt/coco/arm-cca-guest/Kconfig
+> index a42359a90558..66b2d9202b66 100644
+> --- a/drivers/virt/coco/arm-cca-guest/Kconfig
+> +++ b/drivers/virt/coco/arm-cca-guest/Kconfig
+> @@ -1,11 +1,17 @@
+> +# SPDX-License-Identifier: GPL-2.0-only
+> +#
+> +
+>  config ARM_CCA_GUEST
+>  	tristate "Arm CCA Guest driver"
+>  	depends on ARM64
+> +	depends on PCI_TSM
+>  	select TSM_REPORTS
+>  	select AUXILIARY_BUS
+> +	select TSM
+>  	help
+> -	  The driver provides userspace interface to request and
+> +	  The driver provides userspace interface to request an
+
+Push this fixlet to the series adding this or a follow up if that isn't being respun.
+Definitely shouldn't be in here.
+
+>  	  attestation report from the Realm Management Monitor(RMM).
+> +	  If the DA feature is supported, it also register with TSM framework.
+>  
+>  	  If you choose 'M' here, this module will be called
+>  	  arm-cca-guest.
+> diff --git a/drivers/virt/coco/arm-cca-guest/Makefile b/drivers/virt/coco/arm-cca-guest/Makefile
+> index 75a120e24fda..bc3b2be4019f 100644
+> --- a/drivers/virt/coco/arm-cca-guest/Makefile
+> +++ b/drivers/virt/coco/arm-cca-guest/Makefile
+> @@ -1,4 +1,5 @@
+>  # SPDX-License-Identifier: GPL-2.0-only
+> +#
+
+Stray change.
+
+>  obj-$(CONFIG_ARM_CCA_GUEST) += arm-cca-guest.o
+>  
+>  arm-cca-guest-y +=  arm-cca.o
+> diff --git a/drivers/virt/coco/arm-cca-guest/arm-cca.c b/drivers/virt/coco/arm-cca-guest/arm-cca.c
+> index dc96171791db..288fa53ad0af 100644
+> --- a/drivers/virt/coco/arm-cca-guest/arm-cca.c
+> +++ b/drivers/virt/coco/arm-cca-guest/arm-cca.c
+> @@ -1,6 +1,6 @@
+>  // SPDX-License-Identifier: GPL-2.0-only
+>  /*
+> - * Copyright (C) 2023 ARM Ltd.
+> + * Copyright (C) 2025 ARM Ltd.
+Usually we just extend the date span rather than claiming everything is
+2025. e.g.
+ * Copyright (C) 2023-2025 ARM Ltd.
+
+>   */
+
+> @@ -192,6 +194,57 @@ static void unregister_cca_tsm_report(void *data)
+>  	tsm_report_unregister(&arm_cca_tsm_report_ops);
+>  }
+>  
+> +static struct pci_tsm *cca_tsm_lock(struct tsm_dev *tsm_dev, struct pci_dev *pdev)
+> +{
+> +	int ret;
+> +
+> +	struct cca_guest_dsc *cca_dsc __free(kfree) =
+> +		kzalloc(sizeof(*cca_dsc), GFP_KERNEL);
+> +	if (!cca_dsc)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	ret = pci_tsm_devsec_constructor(pdev, &cca_dsc->pci, tsm_dev);
+> +	if (ret)
+> +		return ERR_PTR(ret);
+> +
+> +	return ERR_PTR(-EIO);
+
+Perhaps add a comment so you have something like
+
+	return ERR_PTR(-EIO); /* For now always return an error */
+
+Just makes it a tiny bit easier to review as no need to go check this
+is removed in a later patch.
+
+> +}
+> +
+> +static void cca_tsm_unlock(struct pci_tsm *tsm)
+> +{
+> +	struct cca_guest_dsc *cca_dsc = to_cca_guest_dsc(tsm->pdev);
+> +
+> +	kfree(cca_dsc);
+> +}
+> +
+> +static struct pci_tsm_ops cca_devsec_pci_ops = {
+> +	.lock = cca_tsm_lock,
+> +	.unlock = cca_tsm_unlock,
+> +};
+> +
+> +static void cca_devsec_tsm_remove(void *tsm_dev)
+> +{
+> +	tsm_unregister(tsm_dev);
+> +}
+> +
+> +static int cca_devsec_tsm_register(struct auxiliary_device *adev)
+> +{
+> +	struct tsm_dev *tsm_dev;
+> +	int rc;
+> +
+> +	tsm_dev = tsm_register(&adev->dev, &cca_devsec_pci_ops);
+> +	if (IS_ERR(tsm_dev))
+> +		return PTR_ERR(tsm_dev);
+> +
+> +	rc = devm_add_action_or_reset(&adev->dev, cca_devsec_tsm_remove, tsm_dev);
+> +	if (rc) {
+> +		cca_devsec_tsm_remove(tsm_dev);
+
+Take a look at what the _or_reset() does in the devm_add_action_or_reset().
+Short story, you should not need this call if the devm machinery has returned
+an error.
+
+> +		return rc;
+> +	}
+> +
+> +	return 0;
+> +}
+
+> diff --git a/drivers/virt/coco/arm-cca-guest/rsi-da.h b/drivers/virt/coco/arm-cca-guest/rsi-da.h
+> new file mode 100644
+> index 000000000000..5ad3b740710e
+> --- /dev/null
+> +++ b/drivers/virt/coco/arm-cca-guest/rsi-da.h
+
+> +static inline int rsi_vdev_id(struct pci_dev *pdev)
+> +{
+> +	return (pci_domain_nr(pdev->bus) << 16) |
+> +	       PCI_DEVID(pdev->bus->number, pdev->devfn);
+
+I'm struggling to find where this is actually defined in the various specs
+so good to have a reference in a comment here.
+
+> +}
+> +
+> +#endif
+
