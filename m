@@ -1,94 +1,124 @@
-Received: from mail-m49242.qiye.163.com (mail-m49242.qiye.163.com [45.254.49.242])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D5C821D58B;
-	Thu, 20 Nov 2025 02:15:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.242
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE72A28A1F1;
+	Thu, 20 Nov 2025 02:50:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763604938; cv=none; b=mY8ozG5H63ijtXThPuWL010QO4Ge6pAd/QpFmyhTFeOeVFFU9rHC8ORBCEH2/yq0W7uy+Bmur79YRdsQOMhCmDVg3cLWyp4zXkXvqfY88JFHbZayIu05ofr+hlLnW431d6midOydWb0UUyKxrU8tIIE/U3I2cIHGTN5eEz4TqyY=
+	t=1763607041; cv=none; b=jcjOVaoDOZV1+wgKwk8UzQIbTpSF8lan2VPmIdYN98+KeYZDi0xeoUzwahEKJXgsk5NBwDQSc0YcsTqLJ9iHq7UMoz4se7JKfSoeSKuwkMPeFtOkSy3MCm9w7gqXCrqIhgkvd/4b0GolVNXxqu7JgXmZknCQafuM0NHCpAl9PR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763604938; c=relaxed/simple;
-	bh=UL8sTm43NeZAhEYB4lKuH440ib+PbQmutrqcom2cnsc=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=iUC8o8dyF0KidE2Hf4s+m2xpMa8L1mZK/i2Yu6fRhDOdWamd1c1M0RH2NTNxaGJncw5tmgMH2BvHF+Sjf3fzT1msjT1u0xMNgrIWSu8PTHYqDAOWG1Km7PNqRAZJWsXL31UeZxETQPYKSME1+9MvAuFtWMP/1jsagWpRsVLFjUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=ZNcpIKGa; arc=none smtp.client-ip=45.254.49.242
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1763607041; c=relaxed/simple;
+	bh=Aa7WnttGEYS9DURKutasxGDYsZUdjqB9YngO+llu6wc=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=C4r4IUpwi1U+MkLX3u93wu4GRdtISbFU00bXwvUs0hNX4ejM4ZcgNlUoyNB+IFnIpNBAyHfjonraHBDoTbNRAvqRfwuuHoEf+T3SiV0DkO1mTNCuFnbNzDt+pay6Z+s4MlW+6fDzRsmGCemUjRxx8GIswWzElSAm8GGYXot7Sck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S8MjIokI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="ZNcpIKGa"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2a338ae48;
-	Thu, 20 Nov 2025 08:59:50 +0800 (GMT+08:00)
-Message-ID: <278991f2-69a1-46a2-83a3-4af212255e2f@rock-chips.com>
-Date: Thu, 20 Nov 2025 08:59:46 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S8MjIokI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DE17C4CEF5;
+	Thu, 20 Nov 2025 02:50:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763607041;
+	bh=Aa7WnttGEYS9DURKutasxGDYsZUdjqB9YngO+llu6wc=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=S8MjIokIPFiZtBoyLBhAKt0Eug5olwn21DgCteRt2goUeFiplqSVQ0DaqYvklPhyY
+	 CS6dPeKFTQq8swWVerxdr/5zzsYF/BKPGHhHhpFXgo9ae/HcvxaRnI8AMl6Fi6c7Bk
+	 +CDWkdTTQ2Ciey6FwLEhQrPo5NyN8Z6pwhxSub3K9YLEN906H3WNsDabCsJ7uJPwwv
+	 WbwKo4JVKIRsFYv6yqO9uIwikHQVDb4oiUOLL6Cre0bDb4ErQ1MRPixvYzd6JPJv+z
+	 m8+4+SzI6lWRulT2OP6V8nNlbYVlB2Df9yTZi/CIxe+J/p5us+qqAo0L6z4az0lpZF
+	 ZvxsXSDUBtB3Q==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EB15F39EF96C;
+	Thu, 20 Nov 2025 02:50:07 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, vincent.guittot@linaro.org,
- zhangsenchuan@eswincomputing.com
-Subject: Re: [PATCH 1/2] PCI: dwc: Skip PME_Turn_Off broadcast and L2/L3
- transition during suspend if link is not up
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20251119-pci-dwc-suspend-rework-v1-0-aad104828562@oss.qualcomm.com>
- <20251119-pci-dwc-suspend-rework-v1-1-aad104828562@oss.qualcomm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20251119-pci-dwc-suspend-rework-v1-1-aad104828562@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9a9ec6579209cckunm91b0f514102e20
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0IdHVYaQkkaSxpLSRkfTUpWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=ZNcpIKGa1n+T6KB9zhoZUvpPzplfzr2g4FO7+ena7u09pt3N7nVxnID0HUiQv0Ot6W7cgjGw7acUENxgyN6SgBF8m7Vog30aKT/VplUMj7xVkKnBibvCVzRnWdLNlH3zKuHKGSmF9PlpHY9Hx3FUTaqhV5Uk/6SPtWyav2TCcCs=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=om+XrfwotQrdKk/BOGxUHzlcB6vGxswl2wuDRmWg9wM=;
-	h=date:mime-version:subject:message-id:from;
+Subject: Re: [PATCH v4 00/11] arm64: dts: mediatek: Add Openwrt One AP
+ functionality
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <176360700676.1051457.11874224265724256534.git-patchwork-notify@kernel.org>
+Date: Thu, 20 Nov 2025 02:50:06 +0000
+References: <20251115-openwrt-one-network-v4-0-48cbda2969ac@collabora.com>
+In-Reply-To: <20251115-openwrt-one-network-v4-0-48cbda2969ac@collabora.com>
+To: Sjoerd Simons <sjoerd@collabora.com>
+Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+ ryder.lee@mediatek.com, jianjun.wang@mediatek.com, bhelgaas@google.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ chunfeng.yun@mediatek.com, vkoul@kernel.org, kishon@kernel.org,
+ lee@kernel.org, andrew+netdev@lunn.ch, davem@davemloft.net,
+ edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, lorenzo@kernel.org,
+ nbd@nbd.name, kernel@collabora.com, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-phy@lists.infradead.org, netdev@vger.kernel.org, daniel@makrotopia.org,
+ bryan@bryanhinton.com, conor.dooley@microchip.com
 
-在 2025/11/20 星期四 2:10, Manivannan Sadhasivam 写道:
-> During system suspend, if the PCIe link is not up, then there is no need
-> to broadcast PME_Turn_Off message and wait for L2/L3 transition. So skip
-> them.
-> 
+Hello:
 
-Review-by: Shawn Lin <shawn.lin@rock-chips.com>
+This series was applied to netdev/net-next.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->   drivers/pci/controller/dwc/pcie-designware-host.c | 4 ++++
->   1 file changed, 4 insertions(+)
+On Sat, 15 Nov 2025 21:58:03 +0100 you wrote:
+> Significant changes in V4:
+>   * Drop patches that were picked up
+>   * Improve mediatek,net dt bindings:
+>     - Move back to V2 version (widening global constraint, constraining
+>       per compatible)
+>     - Ensure all compatibles are constraint in the amount of WEDs (2 for
+>       everything apart from mt7981). Specifically adding constraints for
+>       mediatek,mt7622-eth and ralink,rt5350-eth
+> Significant changes in V3:
+>   * Drop patches that were picked up
+>   * Re-order patches so changes that don't require dt binding changes
+>     come first (Requested by Angelo)
+>   * Specify drive power directly rather then using MTK_DRIVE_...
+>   * Simply mediatek,net binding changes to avoid accidental changes to
+>     other compatibles then mediatek,mt7981-eth
+> Significant changes in V2:
+>   * https://lore.kernel.org/lkml/20251016-openwrt-one-network-v1-0-de259719b6f2@collabora.com/
+>   * Only introduce labels in mt7981b.dtsi when required
+>   * Switch Airoha EN8811H phy irq to level rather then edge triggered
+>   * Move uart0 pinctrl from board dts to soc dtsi
+>   * Only overwrite constraints with non-default values in MT7981 bindings
+>   * Make SPI NOR nvmem cell labels more meaningfull
+>   * Seperate fixing and disable-by-default for the mt7981 in seperate
+>     patches
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 20c9333bcb1c..8fe3454f3b13 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -1129,6 +1129,9 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->   	u32 val;
->   	int ret;
->   
-> +	if (!dw_pcie_link_up(pci))
-> +		goto stop_link;
-> +
->   	/*
->   	 * If L1SS is supported, then do not put the link into L2 as some
->   	 * devices such as NVMe expect low resume latency.
-> @@ -1162,6 +1165,7 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->   	 */
->   	udelay(1);
->   
-> +stop_link:
->   	dw_pcie_stop_link(pci);
->   	if (pci->pp.ops->deinit)
->   		pci->pp.ops->deinit(&pci->pp);
-> 
+> [...]
+
+Here is the summary with links:
+  - [v4,01/11] dt-bindings: mfd: syscon: Add mt7981-topmisc
+    (no matching commit)
+  - [v4,02/11] dt-bindings: PCI: mediatek-gen3: Add MT7981 PCIe compatible
+    (no matching commit)
+  - [v4,03/11] dt-bindings: phy: mediatek,tphy: Add support for MT7981
+    (no matching commit)
+  - [v4,04/11] arm64: dts: mediatek: mt7981b: Add PCIe and USB support
+    (no matching commit)
+  - [v4,05/11] arm64: dts: mediatek: mt7981b-openwrt-one: Enable PCIe and USB
+    (no matching commit)
+  - [v4,06/11] dt-bindings: net: mediatek,net: Correct bindings for MT7981
+    https://git.kernel.org/netdev/net-next/c/bc41fbbf6faa
+  - [v4,07/11] arm64: dts: mediatek: mt7981b: Add Ethernet and WiFi offload support
+    (no matching commit)
+  - [v4,08/11] arm64: dts: mediatek: mt7981b-openwrt-one: Enable Ethernet
+    (no matching commit)
+  - [v4,09/11] arm64: dts: mediatek: mt7981b: Disable wifi by default
+    (no matching commit)
+  - [v4,10/11] arm64: dts: mediatek: mt7981b: Add wifi memory region
+    (no matching commit)
+  - [v4,11/11] arm64: dts: mediatek: mt7981b-openwrt-one: Enable wifi
+    (no matching commit)
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
