@@ -1,163 +1,190 @@
-Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013065.outbound.protection.outlook.com [40.107.201.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C454A2D3221
-	for <linux-pci@vger.kernel.org>; Fri, 21 Nov 2025 23:28:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.176
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763767721; cv=none; b=DWg+12RJNsB0UciIgzd48HvfnBjavvhd2Qvl/9SrEN650hUtvjYufJkhMpRwSf/L+xlFlsd8CpUY0lPlfb8C+jzZSlBsQa/Dud0Sddxj+QzmZ7wo+l1TTzFYHutLTYR02LeSHcPkC6eVVpP6rIcne8UnRtN6Ff+MqEJE6fSwB9E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763767721; c=relaxed/simple;
-	bh=mauH3JtypClNExnFnUryKjVThxBomgYf7WHHEjpqgb8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IF3YquiGV0NeM1V4HGES2g4XeWcPlRACjmMnvBOmb49P7bu1o9eW2AlUYD6Z8LCrnnq2ULRJ52cgFysAGIQrT1Fj2Suf24y1xjAXQamNKHUoy5BdVU0GImJbmV/2RViL2NgMenQ592THEYSCKpXAmsM1QSg2f9WV/LmR0RWRuBE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=I3y4qwRT; arc=none smtp.client-ip=209.85.222.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDAFD13AD05;
+	Sat, 22 Nov 2025 01:57:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.65
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1763776679; cv=fail; b=DoDreYFmajmCjFmASwlkhrGr0wRJ857NxBC6vKOaaVYeObe34cY2Pf/2OflvRFfE1i9pCu1Qr/+vEDwbg77YMZeYNU3EuPzl3fWEWKxp77LieWjYhInC5eJJIoP3VWqeU9qnqejKQ43VjD/Lky/gKeduMsgeOWpISQ0oYj06/tc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1763776679; c=relaxed/simple;
+	bh=zygvyRf8iVJZfTeOONOEj6jHA6bECqcSFQ3liTODmy0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=bcMm/+76CcZ0pq4QdhIeJ/8leKPOC62l5oYygfrN93mxVKxmT8UgjICOkiNTzpihiF2sCi56qNasZAnQQp81IizvhfnBLAD2k3asu4O/nUGrURVIirRbxJRXtHJTyYXaYnPuSBzf5MKwObot6wJQx8EMF4D2Yb58VY5oIXssTNw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=CmhGFo0i; arc=fail smtp.client-ip=40.107.201.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="I3y4qwRT"
-Received: by mail-qk1-f176.google.com with SMTP id af79cd13be357-8b2dcdde698so362806985a.3
-        for <linux-pci@vger.kernel.org>; Fri, 21 Nov 2025 15:28:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1763767715; x=1764372515; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=mPkLUeocYZ9OHUjt6MdsqZZIbrBB8fliyjymBJQ8m2U=;
-        b=I3y4qwRTvUh9rlS5syKtf1HlC+Nyuq3zqu8WG7f8i0y+hrnFDZs6JR0puvf//dG6q9
-         ykpB6ZtpGK7RL9alVdrq4fNBPGIA0TVjkAhrCLG8M5hJOZA196ZtCgig4Iu6Uajf1COu
-         zr8i79g9rXT2fjYnywpy8uqC9WrnI+SZ9iWr4i6O2jfVbgy4hyvHJPxY0ENrxbVZluhw
-         +oynvrAaNiIqKox6J2oyslLtVnYGCS1Q05IfXzAQyzJa63bwv5Smrlh19VHnc8NowrTS
-         PTa+rn2vh10uHiPLE9vPIPorxy36tDcvDaKF5F+NSQ18un/j8/RGSFFIK5vHcRLP44aD
-         mekQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763767715; x=1764372515;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mPkLUeocYZ9OHUjt6MdsqZZIbrBB8fliyjymBJQ8m2U=;
-        b=ZcQ4oBotjdYrUliQwBWdFotgOa4k2RTvQ2jcudPCp+rUIdSpJGerdcUX/KRrFcm55a
-         5TSIh+eDHCta3DLXW10WHNPTksrMgITZfp/XJLb8uftCb4DE4cLEm+00baKvFqO+ljav
-         Mu9fOPx1C4a93AG6tHpinCZpj/5SElouolH4HDY209oWHPBRie2/RDKePa3cnyvCH2tw
-         I2m/8C1Jq3cF7MTMYSuY79xhwMlfkVEHWPHl0jksIypNZCPmmRO8llmUstMU5ZivxLF5
-         ODXFvLbfpMf3q0NSKdK3aqB6bduRRIpE5ssZuc4HFGsQU1cE5S1ABgN7jBa+yaLwLZHZ
-         UiCA==
-X-Forwarded-Encrypted: i=1; AJvYcCUCx7vXMSQm4qZBd9LWxC+QTVcpJWArd9zipqUL2XmX708+9Y+Ue3imavWcSABoEmkcuNqQIxb244g=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwEv2JnKa3LMzemQyLHYBSN7cMnJD8AiPJtQHgyH3QqfpezA+GV
-	8GPHfytjIp3d0hMygAUijApLt5BHyDg92N/J7kIGw3vcARODtUoIRLo4BPTtosmbhOA=
-X-Gm-Gg: ASbGnctrJek8xdPtdC74lMfhg9yJbx7AaExIKL66Mol8SixCHUzu5mZOOAwxz3WHRPh
-	qF1Vikzby148mUhq/f42rlFIDRH97mNI38nRyYSt72C9zKfq1HvaKo47ijpRN5VzxVLmLsXsCfZ
-	c50wDVM5zoT0MHox5uwxa3lyAO29Q3rDSSnPfKVrFyXYPW4qeZhKv4jubRDksXeGM4/tyvWKZwZ
-	FSGIfTr1vBZEMEZG6QWqRqu+MlaVkC/+1sH3+jdTsAYI8UBlRX6rKThgGf6PHsAVLnecaE/XcOf
-	cM2UMHHvXtt3TbLmT0sFVgFJDPQNHvOLQhKkGjfcyBCDeo2U4An8vatXoFsgQmQRjq0fWktxSL+
-	LjAdmThWiYaHpZ/twkB57tZLrJO/RNCOvMpNg8zShKSQLOQ3SZWux/dM4t/TIcgCx7pRuo8JbAb
-	eRG5Y9POtWMX+3+cQs1OV2ojv6KFTsWx4RxS2lnmPuakhgvmsHw4v6rZl+
-X-Google-Smtp-Source: AGHT+IGLeMtP253GHas4M+LvKhyXDfO6U6IBU1zq+lA7A93sFOfzBPQ38o7t96QuMPLUVNh7bM9LEQ==
-X-Received: by 2002:a05:620a:4714:b0:8b2:769b:74cd with SMTP id af79cd13be357-8b33d4846f2mr511750485a.71.1763767714795;
-        Fri, 21 Nov 2025 15:28:34 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-47-55-120-4.dhcp-dynamic.fibreop.ns.bellaliant.net. [47.55.120.4])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8b3295c1328sm451262285a.27.2025.11.21.15.28.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Nov 2025 15:28:34 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1vMaYL-00000001bZj-1HN0;
-	Fri, 21 Nov 2025 19:28:33 -0400
-Date: Fri, 21 Nov 2025 19:28:33 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Peter Colberg <pcolberg@redhat.com>
-Cc: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Alex Gaynor <alex.gaynor@gmail.com>,
-	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
-	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
-	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>
-Subject: Re: [PATCH 3/8] rust: pci: add {enable,disable}_sriov(), to control
- SR-IOV capability
-Message-ID: <20251121232833.GH233636@ziepe.ca>
-References: <20251119-rust-pci-sriov-v1-0-883a94599a97@redhat.com>
- <20251119-rust-pci-sriov-v1-3-883a94599a97@redhat.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="CmhGFo0i"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=vQSdpwVdXIUbBtVWzcHJytMEj9d7icDuc2ebf9Hv/wGaOl6IZS+KGgNbOQCQQcAcszRrbBTEGG9AIyvQtXeDufPRH5B6Yb/puPB/YNo/esFm+d1GSDRy9mYt5diyT/KroQZ8qENF+hAiZ8RlnPmIQhETSETFQOvYFJYbCulFZ5x3nQrzDkrqTW3MGxiHjhdyoKygfRF718lJjm0tVe91KbxCbrXa1D1ha6bzajaR0Yrx3U+y+pbCiB7cet7njUBfMGJc+d5M5KRYkrlZDfkdkE6qne9bY9/OdsFMNhb2SwBgdWuZW3dR3zqKrXx8IskHk1478MXrAsDFD856M61Reg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mNY9x1RtcvkkzqkoxtEh/9kLnwrlK2GzglZgK+WuMC0=;
+ b=F+zEMag8HgUi7/v14ENra57DSmXow2xTDcZbRuO+2acubK+l+pyp5rE+4T87k40GgSVSUJ3W5QU/ot7T38N3peJMHVPuU6LxEXkj8uQ8WWl1pWTSMRzgOQV6CNLt+BDOPgaUtqiFOZfPDTAr6F6+q+moC93XxJx4YmQZruZdKe/gBQFj4V63qre2KmFjuVIU1qWwavdCaqcfI1OV+n/HmPwW+C7bdzI6HV0KglR8pB2E6LltISR9HdgyEkbpLH8AgjqXb/UdaQ3RiPoWnwalHLbq90WA/eJam36IaFuNB8IQKs0SMkUanSskanUcOtLF4/YDqv/eLv05I5LzgfvRbA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=8bytes.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mNY9x1RtcvkkzqkoxtEh/9kLnwrlK2GzglZgK+WuMC0=;
+ b=CmhGFo0ilh7R27IRidcUngcqJgzwWgn9t0KZg7y6Va30N/vMRc3BzAjbBvwnItien7NIpRa+ls1V9uPPHEOAY5zLiNVF5dyFe6ZHpumv0IN3+GsHSdzFaH514h8Yfms0nCDR8k0ZEwvhDmOGFZjQeYBVToLglHoBAhB5FG4pQJ2QxzGYMqf3DooohvRt2JyUvHcpX+4kTp50loanLrvmQRnQpBSRgsGVQZkhwgp4eVGkmRU4/AJPH2C5gvo6YHUsDDhfHlWD4h7c6Ry/1QVHaUyvU4zfB9Eera685qsW6hjqsfzW3mjSQbZaRCYxJM4TRTOBmp31GFR5eNhGWDPbGw==
+Received: from BL1PR13CA0383.namprd13.prod.outlook.com (2603:10b6:208:2c0::28)
+ by LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9343.10; Sat, 22 Nov
+ 2025 01:57:54 +0000
+Received: from BL02EPF0001A104.namprd05.prod.outlook.com
+ (2603:10b6:208:2c0:cafe::fa) by BL1PR13CA0383.outlook.office365.com
+ (2603:10b6:208:2c0::28) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9343.10 via Frontend Transport; Sat,
+ 22 Nov 2025 01:57:54 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ BL02EPF0001A104.mail.protection.outlook.com (10.167.241.135) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9343.9 via Frontend Transport; Sat, 22 Nov 2025 01:57:54 +0000
+Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 21 Nov
+ 2025 17:57:46 -0800
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Fri, 21 Nov 2025 17:57:45 -0800
+Received: from Asurada-Nvidia.nvidia.com (10.127.8.11) by mail.nvidia.com
+ (10.126.190.181) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
+ Transport; Fri, 21 Nov 2025 17:57:44 -0800
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: <joro@8bytes.org>, <afael@kernel.org>, <bhelgaas@google.com>,
+	<alex@shazbot.org>, <jgg@nvidia.com>
+CC: <will@kernel.org>, <robin.murphy@arm.com>, <lenb@kernel.org>,
+	<kevin.tian@intel.com>, <baolu.lu@linux.intel.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
+	<patches@lists.linux.dev>, <pjaroszynski@nvidia.com>, <vsethi@nvidia.com>,
+	<helgaas@kernel.org>, <etzhao1900@gmail.com>
+Subject: [PATCH v7 1/5] iommu: Lock group->mutex in iommu_deferred_attach()
+Date: Fri, 21 Nov 2025 17:57:28 -0800
+Message-ID: <a7ebae88c78e81e7ff0d14788ddff2e6a9fcecd3.1763775108.git.nicolinc@nvidia.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1763775108.git.nicolinc@nvidia.com>
+References: <cover.1763775108.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251119-rust-pci-sriov-v1-3-883a94599a97@redhat.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL02EPF0001A104:EE_|LV8PR12MB9620:EE_
+X-MS-Office365-Filtering-Correlation-Id: 62534e43-b3c3-4174-4052-08de296a8d0d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|82310400026|36860700013|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?+kv2YfsnkNt0kMCYVKtsZ8zyP1GJ3R8/jmda4KS+5y20ZMZzyHODGCsSGl/R?=
+ =?us-ascii?Q?hEJKGqNVz9r8DWBEDghN/kSlt//TYeCtQe9lIF9w0nO7qvv7TVYfBIawY3oI?=
+ =?us-ascii?Q?vRPQvTpwZ3JvwiHSl4xXsfT0jLhzjI/IOpRuZ9hdPAc96WIafBbwdGK8uwPb?=
+ =?us-ascii?Q?JtT2DxZxw6YD55rh/G5/yY1ZfGxHMoMkeySZGcOtnfrdOEqg7Cg2Oy21oyl2?=
+ =?us-ascii?Q?0HtsWCd6oh3H+l7FjInTP5T8sCrc495SioIU3aeFRqp3vmCJP70wWaJthSxu?=
+ =?us-ascii?Q?bGQ72YBiMp+O2dV+R+GQCJymSoOR+8sHqjKuzMac9Bte33LjA+0PycUyYv8/?=
+ =?us-ascii?Q?LQrxLNaXJORmsR2mgIe25lLkPaA5nl2AopK6K1bXuzTRMfu9Sz+qxtIeChtg?=
+ =?us-ascii?Q?+azQ/GkpPUX5Q5x2EgeBvLUxwW8SZ1UHx5PEhopQZfNZlZAy1wxIjobDEj9v?=
+ =?us-ascii?Q?wZBCaaLj/taDYPpdErsEHNFBmfXS0sjPqLzfKstOWFD7LXoUrKAFwoMgp0X7?=
+ =?us-ascii?Q?q9j8lE3MhrlrYXs3G+C/N742E1qoSHYfgz6+xqoX93ni+VYAlX91uQHp5Elf?=
+ =?us-ascii?Q?NyMgl/decmiju0CiQaEvTbcUYuonK8bvkQkBYXmxeXTY5QtKnNlZdOwteZ4t?=
+ =?us-ascii?Q?YZYt0Sw0Gwmi3THmumyMt99slLNEl/70c662f1Egdt3RgNYYaQerD9QhWFzP?=
+ =?us-ascii?Q?tjI21y2n28H2byTkAWtjW6qXmQLyeuo5i9w7ou1LesS84LwGlO+kofW/tFG0?=
+ =?us-ascii?Q?N3brHG1ePe7WaxWq06zNL1f7wPsHCL661xR6kHxTCKxjiTYziSYJS+BxKRTp?=
+ =?us-ascii?Q?dI34OqeclD8Hy7urJm/qEyNb8b0f1ZwGDi+mH4j32mOZFB4V0yVRfPlYNDxk?=
+ =?us-ascii?Q?NOYYa/A1ZCg9vh+3afaBsUrut1O2wa/fixAJW1j5X4fabj/fLLsrRQ2ANHOy?=
+ =?us-ascii?Q?CpyhkyYzghsyOYCKe9M+A1VtYZAB2a1pib/aBY7RKIEadcGgdZDsVJFEanL1?=
+ =?us-ascii?Q?IKveDvtA54uXagiihOrpEOEnodl4btaeRdrVkLSxweGgDHqb/gn45rL3pcsz?=
+ =?us-ascii?Q?Qmbp4oJgsLdatDGxEuHeh6Hg8lJuE0s3XS2NCOz7tJlahDnN3vHmkzjATUNi?=
+ =?us-ascii?Q?uX6X1A7IjCEekBTOTnLAUcVwAxzlE+6sDGVzgypNOAR6HBotrLYyPa/YR52H?=
+ =?us-ascii?Q?wMyqAqWNrazOca/oUxNCYIIXxM2Po1skUWmXpo7Q630Mj6zQtIYGCZSKaZKU?=
+ =?us-ascii?Q?bOjW09B/H33J50dFPbVuFGeuyYu2qA+muAaNqdP0UGLeEQSkhgumcFA2AVsA?=
+ =?us-ascii?Q?1EpuQbCjCdg0pWje3nuRLZXj7B7WNm7EGmBKpGjxj2HVMyA5PFGEZ4PN6wN0?=
+ =?us-ascii?Q?JWoqHveK7U172iNOA6zDJlZ1/mfDL7YZ8L1ZMySpRLrY07K7iw4jkxc7++GL?=
+ =?us-ascii?Q?18NikgUrz3Yj4z37uli3JcJ/zag9HlyHLemlERd+QjPwGwVQyagjT8HChm72?=
+ =?us-ascii?Q?uDJuaDcRNzF28cWd3NnyZ3evc4hC1GdsFcUrm5KjkrhB3veHWsv7Vwj6at8N?=
+ =?us-ascii?Q?LLgrE8PqYSe0fhzgz3U=3D?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(376014)(82310400026)(36860700013)(1800799024);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2025 01:57:54.1226
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 62534e43-b3c3-4174-4052-08de296a8d0d
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL02EPF0001A104.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR12MB9620
 
-On Wed, Nov 19, 2025 at 05:19:07PM -0500, Peter Colberg wrote:
-> Add methods to enable and disable the Single Root I/O Virtualization
-> (SR-IOV) capability for a PCI device. The wrapped C methods take care
-> of validating whether the device is a Physical Function (PF), whether
-> SR-IOV is currently disabled (or enabled), and whether the number of
-> requested VFs does not exceed the total number of supported VFs.
-> 
-> Suggested-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Peter Colberg <pcolberg@redhat.com>
-> ---
->  rust/kernel/pci.rs | 30 ++++++++++++++++++++++++++++++
->  1 file changed, 30 insertions(+)
-> 
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index 814990d386708fe2ac652ccaa674c10a6cf390cb..556a01ed9bc3b1300a3340a3d2383e08ceacbfe5 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -454,6 +454,36 @@ pub fn set_master(&self) {
->          // SAFETY: `self.as_raw` is guaranteed to be a pointer to a valid `struct pci_dev`.
->          unsafe { bindings::pci_set_master(self.as_raw()) };
->      }
-> +
-> +    /// Enable the Single Root I/O Virtualization (SR-IOV) capability for this device,
-> +    /// where `nr_virtfn` is number of Virtual Functions (VF) to enable.
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    pub fn enable_sriov(&self, nr_virtfn: i32) -> Result {
-> +        // SAFETY:
-> +        // `self.as_raw` returns a valid pointer to a `struct pci_dev`.
-> +        //
-> +        // `pci_enable_sriov()` checks that the enable operation is valid:
-> +        // - the device is a Physical Function (PF),
-> +        // - SR-IOV is currently disabled, and
-> +        // - `nr_virtfn` does not exceed the total number of supported VFs.
-> +        let ret = unsafe { bindings::pci_enable_sriov(self.as_raw(), nr_virtfn) };
-> +        if ret != 0 {
-> +            return Err(crate::error::Error::from_errno(ret));
-> +        }
-> +        Ok(())
-> +    }
-> +
-> +    /// Disable the Single Root I/O Virtualization (SR-IOV) capability for this device.
-> +    #[cfg(CONFIG_PCI_IOV)]
-> +    pub fn disable_sriov(&self) {
-> +        // SAFETY:
-> +        // `self.as_raw` returns a valid pointer to a `struct pci_dev`.
-> +        //
-> +        // `pci_disable_sriov()` checks that the disable operation is valid:
-> +        // - the device is a Physical Function (PF), and
-> +        // - SR-IOV is currently enabled.
-> +        unsafe { bindings::pci_disable_sriov(self.as_raw()) };
-> +    }
+The iommu_deferred_attach() function invokes __iommu_attach_device(), but
+doesn't hold the group->mutex like other __iommu_attach_device() callers.
 
-Both these functions should only be called on bound devices - the
-safety statement should call it out, does the code require it?
+Though there is no pratical bug being triggered so far, it would be better
+to apply the same locking to this __iommu_attach_device(), since the IOMMU
+drivers nowaday are more aware of the group->mutex -- some of them use the
+iommu_group_mutex_assert() function that could be potentially in the path
+of an attach_dev callback function invoked by the __iommu_attach_device().
 
-Also per my other email SRIOV should be disabled before a driver can
-be unbound, this patch should take care of it to not introduce an
-dangerous enable_sriov().
+Worth mentioning that the iommu_deferred_attach() will soon need to check
+group->resetting_domain that must be locked also.
 
-Jason
+Thus, grab the mutex to guard __iommu_attach_device() like other callers.
+
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
+Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+---
+ drivers/iommu/iommu.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 2ca990dfbb884..170e522b5bda4 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -2185,10 +2185,17 @@ EXPORT_SYMBOL_GPL(iommu_attach_device);
+ 
+ int iommu_deferred_attach(struct device *dev, struct iommu_domain *domain)
+ {
+-	if (dev->iommu && dev->iommu->attach_deferred)
+-		return __iommu_attach_device(domain, dev, NULL);
++	/*
++	 * This is called on the dma mapping fast path so avoid locking. This is
++	 * racy, but we have an expectation that the driver will setup its DMAs
++	 * inside probe while being single threaded to avoid racing.
++	 */
++	if (!dev->iommu || !dev->iommu->attach_deferred)
++		return 0;
+ 
+-	return 0;
++	guard(mutex)(&dev->iommu_group->mutex);
++
++	return __iommu_attach_device(domain, dev, NULL);
+ }
+ 
+ void iommu_detach_device(struct iommu_domain *domain, struct device *dev)
+-- 
+2.43.0
+
