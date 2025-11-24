@@ -1,161 +1,293 @@
-Received: from zg8tmja2lje4os43os4xodqa.icoremail.net (zg8tmja2lje4os43os4xodqa.icoremail.net [206.189.79.184])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A8D232F616D;
-	Mon, 24 Nov 2025 09:54:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.79.184
+Received: from abb.hmeau.com (abb.hmeau.com [180.181.231.80])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C901424B28;
+	Mon, 24 Nov 2025 09:54:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=180.181.231.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763978075; cv=none; b=MIAcYeEuTCjWPfE0xuRD4faQYE+oO4s/49ymNxopfWxy4EIBy509OgQgSfme8kEvMnmdKRG2F7BVGBcu5myVgbRWIz6V3AoQFhd/HUF1gZmTa3NF2DeNI1OLXAfXnlPdSL82KLyWr6yEQsnttz7NqJuJLKfXQxcAWqXLhJh/t0A=
+	t=1763978079; cv=none; b=OrhBTwl6BMqS8pYcfarqR9HGAhSeI26vREWeXj7sBtD3362M7aMbqTWKdvA+MacwqTfvv60xSfYJrLX5R7ZY13HB4AG4msj+1X0S9R+Z/MP740gcweSDj6N1kvAhRDqqwqzdmvUcPjbfzOSF6WcoccepgvIZ1DE8k4B1kYcckKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763978075; c=relaxed/simple;
-	bh=x7QfpMJANVDpJDQnxYFKECtVmeDJ7sPd7edlq5nmgkA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=BRgrQIS7XeRVI3X0wbrIZHnZ0H29cdWaDi2McONzFbz2/sUg1JLorIY3XBS8s7eK3Ql5ShQ/x1P3zJJeVqUjDjNtO2f3JlWZudMUzXW1SNLQ5HOUs4/uVh66p3B7VWL2UTueriZ5ZrJwiywatGjsRQ6YTs1QiSPe1sw8Mzt9Gt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=206.189.79.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
- ajax-webmail-app2 (Coremail) ; Mon, 24 Nov 2025 17:53:55 +0800 (GMT+08:00)
-Date: Mon, 24 Nov 2025 17:53:55 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
-To: "Shawn Lin" <shawn.lin@rock-chips.com>
-Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
-	p.zabel@pengutronix.de, jingoohan1@gmail.com,
-	gustavo.pimentel@synopsys.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	christian.bruel@foss.st.com, mayank.rana@oss.qualcomm.com,
-	shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com,
-	thippeswamy.havalige@amd.com, inochiama@gmail.com,
-	ningyu@eswincomputing.com, linmin@eswincomputing.com,
-	pinkesh.vaghela@einfochips.com, ouyanghui@eswincomputing.com,
-	Frank.li@nxp.com, "Manivannan Sadhasivam" <mani@kernel.org>
-Subject: Re: Re: [PATCH v6 3/3] PCI: dwc: Add no_suspport_L2 flag and skip
- PME_Turn_Off broadcast
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <c77bb3c8-f658-4275-b0f5-37ac215142f7@rock-chips.com>
-References: <20251120101018.1477-1-zhangsenchuan@eswincomputing.com>
- <20251120101236.1538-1-zhangsenchuan@eswincomputing.com>
- <dux47crrf6ranvexkpzw667hzmkgfguqadseco52svgvglalye@alxqq4ybu672>
- <11367b43.6d3.19aa52bc596.Coremail.zhangsenchuan@eswincomputing.com>
- <c77bb3c8-f658-4275-b0f5-37ac215142f7@rock-chips.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1763978079; c=relaxed/simple;
+	bh=zgUegguLz9fnh3Kc5FyiFvVdDbDa4+bOp5Www3PDcuc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ctY5ec1pVMPgAQziivIuyNMUNBBzBLjHqXG57D/iuzXjRNcJdrcJjU9kdacC12pvOLum/X7GMW/2XgVUnWfvsJJolpF2qFqE3iXEuv3DrL1T+h/W/fWPLtntbF/kEBoAZhmjDER1oIdcu/C7H+zIkeFDv76zc8PF6r9/vuR0yyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au; spf=pass smtp.mailfrom=gondor.apana.org.au; dkim=pass (2048-bit key) header.d=gondor.apana.org.au header.i=@gondor.apana.org.au header.b=P87gnIuA; arc=none smtp.client-ip=180.181.231.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gondor.apana.org.au
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gondor.apana.org.au header.i=@gondor.apana.org.au header.b="P87gnIuA"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=gondor.apana.org.au; s=h01; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:cc:to:subject:message-id:date:
+	from:content-type:reply-to; bh=B05uJapQfRMGohKkgF1xNVyERBHmagh8Bd3xg1q2NeI=; 
+	b=P87gnIuANW/TJp73uiT1mmsGlTWnBuH0H7vh23lNqSWq4OBDSGmsQEtkmAFMHotC7U4wL6z8BsM
+	xZhrA2DnJ6Byz1eNq9hCgsl0YlQqjChTspvActJHQABJusXSSyN3NViM7BAWMow9uYLi6/azgr/1S
+	bPNPkqeI4K++8lXngyxVPKygWdoefLDaHUV8R9vP4h+Voyby/LgDfyG/U2ZiZD9XFH7HpGmBTtoYh
+	gxxkqEEHWY1my7y2fTHFr9TydDJrVMgiVb3KBgJmEGPf57jfBn092eZeVh0rkWj5FfVDm/r5gwJdx
+	bl004005PGTqWH4a9OI+Nq6nG2BqQ4oMU7WA==;
+Received: from loth.rohan.me.apana.org.au ([192.168.167.2])
+	by formenos.hmeau.com with smtp (Exim 4.96 #2 (Debian))
+	id 1vNTCh-005XNj-0w;
+	Mon, 24 Nov 2025 17:49:52 +0800
+Received: by loth.rohan.me.apana.org.au (sSMTP sendmail emulation); Mon, 24 Nov 2025 17:49:51 +0800
+Date: Mon, 24 Nov 2025 17:49:51 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: david.laight.linux@gmail.com
+Cc: linux-kernel@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Andi Shyti <andi.shyti@kernel.org>,
+	Andreas Dilger <adilger.kernel@dilger.ca>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Borislav Petkov <bp@alien8.de>,
+	Christian Brauner <brauner@kernel.org>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Dave Jiang <dave.jiang@intel.com>, David Ahern <dsahern@kernel.org>,
+	David Hildenbrand <david@redhat.com>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Dennis Zhou <dennis@kernel.org>, Eric Dumazet <edumazet@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
+	Jakub Sitnicki <jakub@cloudflare.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Jarkko Sakkinen <jarkko@kernel.org>,
+	"Jason A. Donenfeld" <Jason@zx2c4.com>,
+	Jens Axboe <axboe@kernel.dk>, Jiri Slaby <jirislaby@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	John Allen <john.allen@amd.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Juergen Gross <jgross@suse.com>, Kees Cook <kees@kernel.org>,
+	KP Singh <kpsingh@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Mika Westerberg <westeri@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
+	Namhyung Kim <namhyung@kernel.org>,
+	Neal Cardwell <ncardwell@google.com>, nic_swsd@realtek.com,
+	OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+	Olivia Mackall <olivia@selenic.com>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Peter Huewe <peterhuewe@gmx.de>,
+	Peter Zijlstra <peterz@infradead.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Sean Christopherson <seanjc@google.com>,
+	Srinivas Kandagatla <srini@kernel.org>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>, Tejun Heo <tj@kernel.org>,
+	Theodore Ts'o <tytso@mit.edu>, Thomas Gleixner <tglx@linutronix.de>,
+	Tom Lendacky <thomas.lendacky@amd.com>,
+	Willem de Bruijn <willemdebruijn.kernel@gmail.com>, x86@kernel.org,
+	Yury Norov <yury.norov@gmail.com>, amd-gfx@lists.freedesktop.org,
+	bpf@vger.kernel.org, cgroups@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, io-uring@vger.kernel.org,
+	kvm@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+	linux-cxl@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linux-integrity@vger.kernel.org, linux-mm@kvack.org,
+	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-perf-users@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-serial@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+	linux-usb@vger.kernel.org, mptcp@lists.linux.dev,
+	netdev@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH 00/44] Change a lot of min_t() that might mask high bits
+Message-ID: <aSQqP6nlqGYOGqcJ@gondor.apana.org.au>
+References: <20251119224140.8616-1-david.laight.linux@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <5638129a.7fc.19ab548c1bc.Coremail.zhangsenchuan@eswincomputing.com>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:TQJkCgDnK68zKyRp0+N9AA--.2426W
-X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAQEQBmkjN
-	wMmNAAAs6
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251119224140.8616-1-david.laight.linux@gmail.com>
 
-CgoKPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2VzLS0tLS0KPiBGcm9tOiAiU2hhd24gTGluIiA8c2hh
-d24ubGluQHJvY2stY2hpcHMuY29tPgo+IFNlbmQgdGltZTpGcmlkYXksIDIxLzExLzIwMjUgMTU6
-MTQ6NTEKPiBUbzogemhhbmdzZW5jaHVhbiA8emhhbmdzZW5jaHVhbkBlc3dpbmNvbXB1dGluZy5j
-b20+Cj4gQ2M6IHNoYXduLmxpbkByb2NrLWNoaXBzLmNvbSwgYmhlbGdhYXNAZ29vZ2xlLmNvbSwg
-a3J6aytkdEBrZXJuZWwub3JnLCBjb25vcitkdEBrZXJuZWwub3JnLCBscGllcmFsaXNpQGtlcm5l
-bC5vcmcsIGt3aWxjenluc2tpQGtlcm5lbC5vcmcsIHJvYmhAa2VybmVsLm9yZywgcC56YWJlbEBw
-ZW5ndXRyb25peC5kZSwgamluZ29vaGFuMUBnbWFpbC5jb20sIGd1c3Rhdm8ucGltZW50ZWxAc3lu
-b3BzeXMuY29tLCBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnLCBkZXZpY2V0cmVlQHZnZXIua2Vy
-bmVsLm9yZywgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZywgY2hyaXN0aWFuLmJydWVsQGZv
-c3Muc3QuY29tLCBtYXlhbmsucmFuYUBvc3MucXVhbGNvbW0uY29tLCBzaHJhZGhhLnRAc2Ftc3Vu
-Zy5jb20sIGtyaXNobmEuY2h1bmRydUBvc3MucXVhbGNvbW0uY29tLCB0aGlwcGVzd2FteS5oYXZh
-bGlnZUBhbWQuY29tLCBpbm9jaGlhbWFAZ21haWwuY29tLCBuaW5neXVAZXN3aW5jb21wdXRpbmcu
-Y29tLCBsaW5taW5AZXN3aW5jb21wdXRpbmcuY29tLCBwaW5rZXNoLnZhZ2hlbGFAZWluZm9jaGlw
-cy5jb20sIG91eWFuZ2h1aUBlc3dpbmNvbXB1dGluZy5jb20sIEZyYW5rLmxpQG54cC5jb20sICJN
-YW5pdmFubmFuIFNhZGhhc2l2YW0iIDxtYW5pQGtlcm5lbC5vcmc+Cj4gU3ViamVjdDogUmU6IFtQ
-QVRDSCB2NiAzLzNdIFBDSTogZHdjOiBBZGQgbm9fc3VzcHBvcnRfTDIgZmxhZyBhbmQgc2tpcCBQ
-TUVfVHVybl9PZmYgYnJvYWRjYXN0Cj4gCj4g5ZyoIDIwMjUvMTEvMjEg5pif5pyf5LqUIDE0OjQ4
-LCB6aGFuZ3NlbmNodWFuIOWGmemBkzoKPiA+IAo+ID4gCj4gPiAKPiA+PiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2VzLS0tLS0KPiA+PiBGcm9tOiAiTWFuaXZhbm5hbiBTYWRoYXNpdmFtIiA8bWFuaUBr
-ZXJuZWwub3JnPgo+ID4+IFNlbmQgdGltZTpUaHVyc2RheSwgMjAvMTEvMjAyNSAyMDo0NTozOAo+
-ID4+IFRvOiB6aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbQo+ID4+IENjOiBiaGVsZ2Fh
-c0Bnb29nbGUuY29tLCBrcnprK2R0QGtlcm5lbC5vcmcsIGNvbm9yK2R0QGtlcm5lbC5vcmcsIGxw
-aWVyYWxpc2lAa2VybmVsLm9yZywga3dpbGN6eW5za2lAa2VybmVsLm9yZywgcm9iaEBrZXJuZWwu
-b3JnLCBwLnphYmVsQHBlbmd1dHJvbml4LmRlLCBqaW5nb29oYW4xQGdtYWlsLmNvbSwgZ3VzdGF2
-by5waW1lbnRlbEBzeW5vcHN5cy5jb20sIGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcsIGRldmlj
-ZXRyZWVAdmdlci5rZXJuZWwub3JnLCBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnLCBjaHJp
-c3RpYW4uYnJ1ZWxAZm9zcy5zdC5jb20sIG1heWFuay5yYW5hQG9zcy5xdWFsY29tbS5jb20sIHNo
-cmFkaGEudEBzYW1zdW5nLmNvbSwga3Jpc2huYS5jaHVuZHJ1QG9zcy5xdWFsY29tbS5jb20sIHRo
-aXBwZXN3YW15LmhhdmFsaWdlQGFtZC5jb20sIGlub2NoaWFtYUBnbWFpbC5jb20sIG5pbmd5dUBl
-c3dpbmNvbXB1dGluZy5jb20sIGxpbm1pbkBlc3dpbmNvbXB1dGluZy5jb20sIHBpbmtlc2gudmFn
-aGVsYUBlaW5mb2NoaXBzLmNvbSwgb3V5YW5naHVpQGVzd2luY29tcHV0aW5nLmNvbSwgRnJhbmsu
-bGlAbnhwLmNvbQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjYgMy8zXSBQQ0k6IGR3YzogQWRk
-IG5vX3N1c3Bwb3J0X0wyIGZsYWcgYW5kIHNraXAgUE1FX1R1cm5fT2ZmIGJyb2FkY2FzdAo+ID4+
-Cj4gPj4gT24gVGh1LCBOb3YgMjAsIDIwMjUgYXQgMDY6MTI6MzVQTSArMDgwMCwgemhhbmdzZW5j
-aHVhbkBlc3dpbmNvbXB1dGluZy5jb20gd3JvdGU6Cj4gPj4+IEZyb206IFNlbmNodWFuIFpoYW5n
-IDx6aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbT4KPiA+Pj4KPiA+Pj4gVGhlIEVTV0lO
-IEVJQzc3MDAgc29jIGRvZXMgbm90IHN1cHBvcnQgZW50ZXIgTDIgbGluayBzdGF0ZS4gVGhlcmVm
-b3JlIGFkZAo+ID4+PiBub19zdXNwcG9ydF9MMiBmbGFnIHNraXAgUE1FX1R1cm5fT2ZmIGJyb2Fk
-Y2FzdCBhbmQgbGluayBzdGF0ZSBjaGVjayBjb2RlLAo+ID4+PiBvdGhlciBkcml2ZXIgY2FuIHJl
-dXNlIHRoaXMgZmxhZyBpZiBtZWV0IHRoZSBzaW1pbGFyIHNpdHVhdGlvbi4KPiA+Pj4KPiA+Pj4g
-U2lnbmVkLW9mZi1ieTogWXUgTmluZyA8bmluZ3l1QGVzd2luY29tcHV0aW5nLmNvbT4KPiA+Pj4g
-U2lnbmVkLW9mZi1ieTogWWFuZ2h1aSBPdSA8b3V5YW5naHVpQGVzd2luY29tcHV0aW5nLmNvbT4K
-PiA+Pj4gU2lnbmVkLW9mZi1ieTogU2VuY2h1YW4gWmhhbmcgPHpoYW5nc2VuY2h1YW5AZXN3aW5j
-b21wdXRpbmcuY29tPgo+ID4+Cj4gPj4gRG9lcyB0aGlzIHBhdGNoIHdvcmsgZm9yIHlvdT8KPiA+
-PiBodHRwczovL2xvcmUua2VybmVsLm9yZy9saW51eC1wY2kvMjAyNTExMTktcGNpLWR3Yy1zdXNw
-ZW5kLXJld29yay12MS0xLWFhZDEwNDgyODU2MkBvc3MucXVhbGNvbW0uY29tLwo+ID4gCj4gPiBp
-ZiB0aGUgUENJZSBsaW5rIGlzIG5vdCB1cCwgdGhpcyBzdWl0cyBtZSB0b28sIGJ1dCBpZiB0aGUg
-UENJZSBsaW5rIHVwLAo+ID4gb3VyIGhhcmR3YXJlIGRvZXMgbm90IHN1cHBvcnQgZW50ZXJpbmcg
-dGhlIEwyIGxpbmsgc3RhdGUuIEF0IHRoaXMgcG9pbnQsCj4gCj4gUGVyIFBDSWUgc3BlYywgNS4y
-IExpbmsgU3RhdGUgUG93ZXIgTWFuYWdlbWVudDoKPiAiTDIvTDMgUmVhZHkgdHJhbnNpdGlvbiBw
-cm90b2NvbCBzdXBwb3J0IGlzIHJlcXVpcmVkLgo+IFRoZSBMMi9MMyBSZWFkeSBzdGF0ZSBlbnRy
-eSB0cmFuc2l0aW9uIHByb2Nlc3MgbXVzdCBiZWdpbiBhcyBzb29uIGFzCj4gcG9zc2libGUgZm9s
-bG93aW5nIHRoZSBhY2tub3dsZWRnbWVudCBvZiBhIFBNRV9UdXJuX09mZiBNZXNzYWdlLCAoaS5l
-LiwKPiB0aGUgaW5qZWN0aW9uIG9mIGEgUE1FX1RPX0FjayBUTFApLiBUaGUgRG93bnN0cmVhbSBj
-b21wb25lbnQgaW5pdGlhdGVzCj4gTDIvTDMgUmVhZHkgZW50cnkgYnkgc2VuZGluZyBhIFBNX0Vu
-dGVyX0wyMyBETExQLiAiCj4gCj4gIkwyIHN1cHBvcnQgaXMgb3B0aW9uYWwsIGFuZCBkZXBlbmRl
-bnQgdXBvbiB0aGUgcHJlc2VuY2Ugb2YgYXV4aWxpYXJ5IHBvd2VyIgo+IAo+IEkgaW50ZXJwcmV0
-IGl0IGFzIGl0IGlzIG1hbmRhdG9yeSBzdXBwb3J0IGZvciBicm9hZGNhc3QgUE1FX1R1cm5fT2Zm
-IGFuZAo+IGFjayBQTUVfVE9fQWNrLCB3aGljaCBpcyB3aGF0IHRoZSBvcmlnaW5hbCBjb2RlIGRv
-ZXMuIFRoZW4geW91ciBJUCBjYW4ndAo+IHJlYWxseSBnbyBpbnRvIEwyIGZvciB3aGF0ZXZlciBy
-ZWFzb25zPyBXaWxsIHlvdXIgY29udHJvbGxlciBiZSBicm9rZW4gCj4gaWYgYWNraW5nIFBNRV9U
-dXJuX09mZj8gIE90aGVyd2lzZSB3ZSBjb3VsZCBzdGlsbCBsZXQgTDIvTDMgUmVhZHkKPiB0cmFu
-c3N0aW9uIGhhcHBlbiBhbmQgbGVhdmUgdGhlIGRldmljZSBpbiBMMyB0byBzYXZlIHBvd2VyLgoK
-SGksIFNoYXduCgpUaGFuayB5b3UgZm9yIHlvdXIgY29tbWVudCBhbmQgZXhwbGFuYXRpb24uCk91
-ciBoYXJkd2FyZSBjYW5ub3QgYnJvYWRjYXN0IFBNRV9UdXJuX09mZi4gT3RoZXJ3aXNlLCB0aGUg
-Y29udHJvbGxlciB3aWxsCmhhdmUgcHJvYmxlbXMsIHRoZSBkYmkgcmVnaXN0ZXIgc2hvd3MgdGhh
-dCBpdCBjYW5ub3QgYmUgYWNjZXNzZWRlZC4gVGhlIGxpbmsKc3RhdGUgY2Fubm90IGJlIHJlYWQg
-aW4gdGhlIHJlYWRfcG9sbF90aW1lb3V0IGZ1bmN0aW9uLgoKS2luZCByZWdhcmRzLApTZW5jaHVh
-biBaaGFuZwoKPiAKPiAKPiA+IGl0IGlzIGFsc28gbmVjZXNzYXJ5IHRvIHNraXAgdGhlIGJyb2Fk
-Y2FzdCBQTUVfVHVybl9PZmYgbWVzc2FnZSBhbmQgd2FpdAo+ID4gZm9yIEwyIHRyYW5zaXRpb24u
-Cj4gPiAKPiA+IAo+ID4+Cj4gPj4+IC0tLQo+ID4+PiAgIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIv
-ZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0LmMgfCA0ICsrKysKPiA+Pj4gICBkcml2ZXJzL3BjaS9j
-b250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUuaCAgICAgIHwgMSArCj4gPj4+ICAgMiBmaWxl
-cyBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKykKPiA+Pj4KPiA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0LmMgYi9kcml2ZXJzL3Bj
-aS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jCj4gPj4+IGluZGV4IGU5MjUx
-M2M1YmRhNS4uYTIwMzU3NzYwNmU1IDEwMDY0NAo+ID4+PiAtLS0gYS9kcml2ZXJzL3BjaS9jb250
-cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jCj4gPj4+ICsrKyBiL2RyaXZlcnMvcGNp
-L2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0LmMKPiA+Pj4gQEAgLTExNTYsNiAr
-MTE1Niw5IEBAIGludCBkd19wY2llX3N1c3BlbmRfbm9pcnEoc3RydWN0IGR3X3BjaWUgKnBjaSkK
-PiA+Pj4gICAJaWYgKGR3X3BjaWVfcmVhZHdfZGJpKHBjaSwgb2Zmc2V0ICsgUENJX0VYUF9MTktD
-VEwpICYgUENJX0VYUF9MTktDVExfQVNQTV9MMSkKPiA+Pj4gICAJCXJldHVybiAwOwo+ID4+Pgo+
-ID4+PiArCWlmIChwY2ktPm5vX3N1c3Bwb3J0X0wyKQo+ID4+PiArCQlnb3RvIHN0b3BfbGluazsK
-PiA+Pj4gKwo+ID4+PiAgIAlpZiAocGNpLT5wcC5vcHMtPnBtZV90dXJuX29mZikgewo+ID4+PiAg
-IAkJcGNpLT5wcC5vcHMtPnBtZV90dXJuX29mZigmcGNpLT5wcCk7Cj4gPj4+ICAgCX0gZWxzZSB7
-Cj4gPj4+IEBAIC0xMTgyLDYgKzExODUsNyBAQCBpbnQgZHdfcGNpZV9zdXNwZW5kX25vaXJxKHN0
-cnVjdCBkd19wY2llICpwY2kpCj4gPj4+ICAgCSAqLwo+ID4+PiAgIAl1ZGVsYXkoMSk7Cj4gPj4+
-Cj4gPj4+ICtzdG9wX2xpbms6Cj4gPj4+ICAgCWR3X3BjaWVfc3RvcF9saW5rKHBjaSk7Cj4gPj4+
-ICAgCWlmIChwY2ktPnBwLm9wcy0+ZGVpbml0KQo+ID4+PiAgIAkJcGNpLT5wcC5vcHMtPmRlaW5p
-dCgmcGNpLT5wcCk7Cj4gPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3
-Yy9wY2llLWRlc2lnbndhcmUuaCBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVz
-aWdud2FyZS5oCj4gPj4+IGluZGV4IGU5OTVmNjkyYTFlYy4uMTcwYTczMjk5Y2U1IDEwMDY0NAo+
-ID4+PiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUuaAo+
-ID4+PiArKysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUuaAo+
-ID4+PiBAQCAtNTM5LDYgKzUzOSw3IEBAIHN0cnVjdCBkd19wY2llIHsKPiA+Pj4gICAJICogdXNl
-X3BhcmVudF9kdF9yYW5nZXMgdG8gdHJ1ZSB0byBhdm9pZCB0aGlzIHdhcm5pbmcuCj4gPj4+ICAg
-CSAqLwo+ID4+PiAgIAlib29sCQkJdXNlX3BhcmVudF9kdF9yYW5nZXM7Cj4gPj4+ICsJYm9vbAkJ
-CW5vX3N1c3Bwb3J0X0wyOwo+ID4+PiAgIH07Cj4gPj4+Cj4gPj4+ICAgI2RlZmluZSB0b19kd19w
-Y2llX2Zyb21fcHAocG9ydCkgY29udGFpbmVyX29mKChwb3J0KSwgc3RydWN0IGR3X3BjaWUsIHBw
-KQo+ID4+PiAtLQo+ID4+PiAyLjI1LjEKPiA+Pj4KPiA+Pgo+ID4+IC0tIAo+ID4+IOCuruCuo+Cu
-v+CuteCuo+CvjeCuo+CuqeCvjSDgrprgrqTgrr7grprgrr/grrXgrq7gr40K
+On Wed, Nov 19, 2025 at 10:40:56PM +0000, david.laight.linux@gmail.com wrote:
+> From: David Laight <david.laight.linux@gmail.com>
+> 
+> It in not uncommon for code to use min_t(uint, a, b) when one of a or b
+> is 64bit and can have a value that is larger than 2^32;
+> This is particularly prevelant with:
+> 	uint_var = min_t(uint, uint_var, uint64_expression);
+> 
+> Casts to u8 and u16 are very likely to discard significant bits.
+> 
+> These can be detected at compile time by changing min_t(), for example:
+> #define CHECK_SIZE(fn, type, val) \
+> 	BUILD_BUG_ON_MSG(sizeof (val) > sizeof (type) && \
+> 		!statically_true(((val) >> 8 * (sizeof (type) - 1)) < 256), \
+> 		fn "() significant bits of '" #val "' may be discarded")
+> 
+> #define min_t(type, x, y) ({ \
+> 	CHECK_SIZE("min_t", type, x); \
+> 	CHECK_SIZE("min_t", type, y); \
+> 	__cmp_once(min, type, x, y); })
+> 
+> (and similar changes to max_t() and clamp_t().)
+> 
+> This shows up some real bugs, some unlikely bugs and some false positives.
+> In most cases both arguments are unsigned type (just different ones)
+> and min_t() can just be replaced by min().
+> 
+> The patches are all independant and are most of the ones needed to
+> get the x86-64 kernel I build to compile.
+> I've not tried building an allyesconfig or allmodconfig kernel.
+> I've also not included the patch to minmax.h itself.
+> 
+> I've tried to put the patches that actually fix things first.
+> The last one is 0009.
+> 
+> I gave up on fixing sched/fair.c - it is too broken for a single patch!
+> The patch for net/ipv4/tcp.c is also absent because do_tcp_getsockopt()
+> needs multiple/larger changes to make it 'sane'.
+> 
+> I've had to trim the 124 maintainers/lists that get_maintainer.pl finds
+> from 124 to under 100 to be able to send the cover letter.
+> The individual patches only go to the addresses found for the associated files.
+> That reduces the number of emails to a less unsane number.
+> 
+> David Laight (44):
+>   x86/asm/bitops: Change the return type of variable__ffs() to unsigned
+>     int
+>   ext4: Fix saturation of 64bit inode times for old filesystems
+>   perf: Fix branch stack callchain limit
+>   io_uring/net: Change some dubious min_t()
+>   ipc/msg: Fix saturation of percpu counts in msgctl_info()
+>   bpf: Verifier, remove some unusual uses of min_t() and max_t()
+>   net/core/flow_dissector: Fix cap of __skb_flow_dissect() return value.
+>   net: ethtool: Use min3() instead of nested min_t(u16,...)
+>   ipv6: __ip6_append_data() don't abuse max_t() casts
+>   x86/crypto: ctr_crypt() use min() instead of min_t()
+>   arch/x96/kvm: use min() instead of min_t()
+>   block: use min() instead of min_t()
+>   drivers/acpi: use min() instead of min_t()
+>   drivers/char/hw_random: use min3() instead of nested min_t()
+>   drivers/char/tpm: use min() instead of min_t()
+>   drivers/crypto/ccp: use min() instead of min_t()
+>   drivers/cxl: use min() instead of min_t()
+>   drivers/gpio: use min() instead of min_t()
+>   drivers/gpu/drm/amd: use min() instead of min_t()
+>   drivers/i2c/busses: use min() instead of min_t()
+>   drivers/net/ethernet/realtek: use min() instead of min_t()
+>   drivers/nvme: use min() instead of min_t()
+>   arch/x86/mm: use min() instead of min_t()
+>   drivers/nvmem: use min() instead of min_t()
+>   drivers/pci: use min() instead of min_t()
+>   drivers/scsi: use min() instead of min_t()
+>   drivers/tty/vt: use umin() instead of min_t(u16, ...) for row/col
+>     limits
+>   drivers/usb/storage: use min() instead of min_t()
+>   drivers/xen: use min() instead of min_t()
+>   fs: use min() or umin() instead of min_t()
+>   block: bvec.h: use min() instead of min_t()
+>   nodemask: use min() instead of min_t()
+>   ipc: use min() instead of min_t()
+>   bpf: use min() instead of min_t()
+>   bpf_trace: use min() instead of min_t()
+>   lib/bucket_locks: use min() instead of min_t()
+>   lib/crypto/mpi: use min() instead of min_t()
+>   lib/dynamic_queue_limits: use max() instead of max_t()
+>   mm: use min() instead of min_t()
+>   net: Don't pass bitfields to max_t()
+>   net/core: Change loop conditions so min() can be used
+>   net: use min() instead of min_t()
+>   net/netlink: Use umin() to avoid min_t(int, ...) discarding high bits
+>   net/mptcp: Change some dubious min_t(int, ...) to min()
+> 
+>  arch/x86/crypto/aesni-intel_glue.c            |  3 +-
+>  arch/x86/include/asm/bitops.h                 | 18 +++++-------
+>  arch/x86/kvm/emulate.c                        |  3 +-
+>  arch/x86/kvm/lapic.c                          |  2 +-
+>  arch/x86/kvm/mmu/mmu.c                        |  2 +-
+>  arch/x86/mm/pat/set_memory.c                  | 12 ++++----
+>  block/blk-iocost.c                            |  6 ++--
+>  block/blk-settings.c                          |  2 +-
+>  block/partitions/efi.c                        |  3 +-
+>  drivers/acpi/property.c                       |  2 +-
+>  drivers/char/hw_random/core.c                 |  2 +-
+>  drivers/char/tpm/tpm1-cmd.c                   |  2 +-
+>  drivers/char/tpm/tpm_tis_core.c               |  4 +--
+>  drivers/crypto/ccp/ccp-dev.c                  |  2 +-
+>  drivers/cxl/core/mbox.c                       |  2 +-
+>  drivers/gpio/gpiolib-acpi-core.c              |  2 +-
+>  .../gpu/drm/amd/amdgpu/amdgpu_doorbell_mgr.c  |  4 +--
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_vm.c        |  2 +-
+>  .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c |  2 +-
+>  drivers/i2c/busses/i2c-designware-master.c    |  2 +-
+>  drivers/net/ethernet/realtek/r8169_main.c     |  3 +-
+>  drivers/nvme/host/pci.c                       |  3 +-
+>  drivers/nvme/host/zns.c                       |  3 +-
+>  drivers/nvmem/core.c                          |  2 +-
+>  drivers/pci/probe.c                           |  3 +-
+>  drivers/scsi/hosts.c                          |  2 +-
+>  drivers/tty/vt/selection.c                    |  9 +++---
+>  drivers/usb/storage/protocol.c                |  3 +-
+>  drivers/xen/grant-table.c                     |  2 +-
+>  fs/buffer.c                                   |  2 +-
+>  fs/exec.c                                     |  2 +-
+>  fs/ext4/ext4.h                                |  2 +-
+>  fs/ext4/mballoc.c                             |  3 +-
+>  fs/ext4/resize.c                              |  2 +-
+>  fs/ext4/super.c                               |  2 +-
+>  fs/fat/dir.c                                  |  4 +--
+>  fs/fat/file.c                                 |  3 +-
+>  fs/fuse/dev.c                                 |  2 +-
+>  fs/fuse/file.c                                |  8 ++---
+>  fs/splice.c                                   |  2 +-
+>  include/linux/bvec.h                          |  3 +-
+>  include/linux/nodemask.h                      |  9 +++---
+>  include/linux/perf_event.h                    |  2 +-
+>  include/net/tcp_ecn.h                         |  5 ++--
+>  io_uring/net.c                                |  6 ++--
+>  ipc/mqueue.c                                  |  4 +--
+>  ipc/msg.c                                     |  6 ++--
+>  kernel/bpf/core.c                             |  4 +--
+>  kernel/bpf/log.c                              |  2 +-
+>  kernel/bpf/verifier.c                         | 29 +++++++------------
+>  kernel/trace/bpf_trace.c                      |  2 +-
+>  lib/bucket_locks.c                            |  2 +-
+>  lib/crypto/mpi/mpicoder.c                     |  2 +-
+>  lib/dynamic_queue_limits.c                    |  2 +-
+>  mm/gup.c                                      |  4 +--
+>  mm/memblock.c                                 |  2 +-
+>  mm/memory.c                                   |  2 +-
+>  mm/percpu.c                                   |  2 +-
+>  mm/truncate.c                                 |  3 +-
+>  mm/vmscan.c                                   |  2 +-
+>  net/core/datagram.c                           |  6 ++--
+>  net/core/flow_dissector.c                     |  7 ++---
+>  net/core/net-sysfs.c                          |  3 +-
+>  net/core/skmsg.c                              |  4 +--
+>  net/ethtool/cmis_cdb.c                        |  7 ++---
+>  net/ipv4/fib_trie.c                           |  2 +-
+>  net/ipv4/tcp_input.c                          |  4 +--
+>  net/ipv4/tcp_output.c                         |  5 ++--
+>  net/ipv4/tcp_timer.c                          |  4 +--
+>  net/ipv6/addrconf.c                           |  8 ++---
+>  net/ipv6/ip6_output.c                         |  7 +++--
+>  net/ipv6/ndisc.c                              |  5 ++--
+>  net/mptcp/protocol.c                          |  8 ++---
+>  net/netlink/genetlink.c                       |  9 +++---
+>  net/packet/af_packet.c                        |  2 +-
+>  net/unix/af_unix.c                            |  4 +--
+>  76 files changed, 141 insertions(+), 176 deletions(-)
+
+Patches 10,14,16,37 applied.  Thanks.
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
