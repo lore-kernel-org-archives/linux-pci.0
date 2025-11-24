@@ -1,140 +1,267 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB251B425C;
-	Mon, 24 Nov 2025 15:37:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EECC3148BB;
+	Mon, 24 Nov 2025 16:21:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763998671; cv=none; b=mYnmSu19Vzy2In1yF860s2gDcH/AwjoxsJkKKBEURprtRxMCheSU9G9H14Qf4KwqklXZrV1/56C1YPcDQu1cwTMa1d6J1ckv+4hFab2AXvUW5Ql2Eeu5QqhTfSkC5q3rG05qXDN95YXDx6P53jSg+0Ucy23DTDaGdlNcs/FRz3k=
+	t=1764001264; cv=none; b=m+bWKSJrU88br/WYairvkbxEfzQr7e+yzorDQgq76wUqCO4Eroov3OoXUkG96nzd1tGlVw6EZSduTVgaZh+6AGedrrxVzG3wPf16sNRViKW3uVExOJAmBE0SogPwLYKo/ES09m3/A1CmPz+63M57hLwIDXytIRB3nvDtugqYKqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763998671; c=relaxed/simple;
-	bh=mvXmtYTlP0liL3n3HBxo+l820PLNPXobvd912Sw+u3k=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=gF6eIV0Rcee2BYMN/twIKSDs/KvC9l2Tlv/h484mpszjTtbo+RO4l+gz0deKsQB3gI3OdBORTspPQKLQ255oW1My2N/huKEbmWluPSC3xwkOGAnUGn5fAkeU7u+feN/LDogiKi6mxyadglje8+Yslz/ri3qU3H3OJNaNpyzVhLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GIJ//jUm; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1764001264; c=relaxed/simple;
+	bh=2/wSjlYlmesfAG0/zAvXE+XbKKwCVNRs5QkoifeUpB0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=siierCoVZANOAgsUjxNcCf8g5L0H/ZGReI20a1+wg3O4SDtCW6xNZ++vBNhzgezR6+p36p0a7pPc+N6Kw/SJJ+yqxZPA0Y7isriyvVHkkNUkKJkytXs8u2Q1bxq2j/lmcvide+F+1oBQIuNZcn3ayU3+s5aFr57O0kAYOSsZTms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kdWWtbSB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GIJ//jUm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763998670; x=1795534670;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=mvXmtYTlP0liL3n3HBxo+l820PLNPXobvd912Sw+u3k=;
-  b=GIJ//jUmneTbcDZ45b8lnTZ9TWdJ3MyIMIMBDFf/6sRYFOX3yPrH3G/U
-   6PH+uN5FC7/KoZ5KhtXmF7AJx6yEzB/UOP7G1R82O7d13ZqH9oD2JThl6
-   Nvf32jxpVE3tNkTGC7kzRQ1mwVe+DDcKfI5acZZ4oR2n64NDWbwnvTq0D
-   xruiPDUlJp7mACaar/2yRMGEhMB0DFBsfCfX6MdyMKIn/To8/GXU4YOsY
-   ee3LTm6Pe8eycMkM2XnZ4velfQpPdI3po+Z66UrWSxn30jJaq/O8Ty8A6
-   nfkxHqzEQSeEUX9gc3j+1cYb5fXfdEyc9sGYY85ZIwRRBKl1yYi6e9fDY
-   w==;
-X-CSE-ConnectionGUID: E5QnEZ55SrKE3uuJbbexvQ==
-X-CSE-MsgGUID: bZjweMt4Q9iWQdYKn44XUQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11623"; a="65938012"
-X-IronPort-AV: E=Sophos;i="6.20,223,1758610800"; 
-   d="scan'208";a="65938012"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2025 07:37:49 -0800
-X-CSE-ConnectionGUID: IF4uLpgiSO+WVDkaG+1itQ==
-X-CSE-MsgGUID: UPgpsHpOSomYhjSu4SHGNQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.20,223,1758610800"; 
-   d="scan'208";a="215701942"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.97])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2025 07:37:46 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Dan Carpenter <dan.carpenter@linaro.org>
-Subject: [PATCH 1/1] PCI: Check pci_rebar_size_supported() input
-Date: Mon, 24 Nov 2025 17:37:40 +0200
-Message-Id: <20251124153740.2995-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kdWWtbSB"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2408FC2BCB3;
+	Mon, 24 Nov 2025 16:21:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764001264;
+	bh=2/wSjlYlmesfAG0/zAvXE+XbKKwCVNRs5QkoifeUpB0=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=kdWWtbSBrAJVZ5V4n/3cPF7R60EDNjhTCVwolPQAaR+jL+F+bEZm+dPq40mAUo5UR
+	 JqUprs/4D9ABmetu9DV2pxVqW5lm21a8IYRIU6962f+XSt3kIwKqEup2nOCAJMcuCS
+	 Ofia37m8ZziaNoGBRFKMAU9P+utyjEjWL5o/RMe5X9R1QQbn6bP2+gc6Rax+BeLKjM
+	 f4TpAgIE5/rPgoAAR/exiP2dIZHuL6TbHIMeWhY4lkb+DsK1cc9qDyT8BGYBya14V8
+	 ht3jaSQvKMOKmZ2CS5YP0n49EegSiN94slHO/NZ///IWr99AJqd3dGndTB3x6AXb/U
+	 svrYULLRJtGtQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BB57CFD318;
+	Mon, 24 Nov 2025 16:21:04 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Mon, 24 Nov 2025 21:50:47 +0530
+Subject: [PATCH 4/5] PCI/pwrctrl: Add APIs to power on/off the pwrctrl
+ devices
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251124-pci-pwrctrl-rework-v1-4-78a72627683d@oss.qualcomm.com>
+References: <20251124-pci-pwrctrl-rework-v1-0-78a72627683d@oss.qualcomm.com>
+In-Reply-To: <20251124-pci-pwrctrl-rework-v1-0-78a72627683d@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Chen-Yu Tsai <wens@kernel.org>, 
+ Brian Norris <briannorris@chromium.org>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Niklas Cassel <cassel@kernel.org>, Alex Elder <elder@riscstar.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6010;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=cTf/zTyNct49tnAIkI8rXW+P63X5Y4jjQ+JhAwnxQfc=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpJIXsO9rD/aqEW0RypVmV8irmgBjyoBahPFk8m
+ tpgvqsSyHyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaSSF7AAKCRBVnxHm/pHO
+ 9bpcB/4ziIXp+vpYF7OTtY8KxDXddG3PWy+86Gdi24L4BV/3N7YXekjVocK2ZxBfvnpa9wS/5J/
+ pR001gLV4LGV8zzZj0iedAt/MKEno91JVxZ90a64ViJcZJsREG4meNY3MXh4sJMzvvbHA7t4JDH
+ wFLLGZ1ZF4+CD8Lq5IaPqZxvCjMUXA2S7D5IFiY9Ed2vvuyZxbT6jBuu/1mYEmuAPzZ/TxA5S3z
+ rb5IKvMpBcQX7m3RbhuR2nmA8ZVw5veX7IRofrfwNyZgoRSjPjvm5qH5FGekPy/fk2jSUGPvtAX
+ 91KzEafzULFaisrqcpQYuX8XOhVoPqVCMPUDlKHsPhOKbmb6
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-According to Dan Carpenter, smatch detects issue with size parameter
-given to pci_rebar_size_supported():
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-  drivers/pci/rebar.c:142 pci_rebar_size_supported()
-  error: undefined (user controlled) shift '(((1))) << size'
+To fix PCIe bridge resource allocation issues when powering PCIe
+switches with the pwrctrl driver, introduce APIs to explicitly power
+on and off all related devices simultaneously.
 
-  The problem is this call tree:
-  __resource_resize_store() <- takes an unsigned long from the user
-     -> pci_resize_resource() <- truncates it to int
-        -> pci_rebar_size_supported()
+Previously, the individual pwrctrl drivers powered on/off the PCIe devices
+autonomously, without any control from the controller drivers. But to
+enforce ordering w.r.t powering on the devices, these APIs will power
+on/off all the devices at the same time.
 
-The string input to __resource_resize_store() is to unsigned long and
-then passed to pci_resize_resource(). There could be similar problems
-also with the values coming from GPU drivers.
+The pci_pwrctrl_power_on_devices() API recursively scans the PCI child
+nodes, makes sure that pwrctrl drivers are bind to devices, and calls their
+power_on() callbacks.
 
-Add 'size' validation to pci_rebar_size_supported().
+Similarly, pci_pwrctrl_power_off_devices() API powers off devices
+recursively via their power_off() callbacks.
 
-There seems to be no SZ_128T prior to this so add one to be able to
-specify the largest size supported by the kernel (PCIe r7.0 spec
-already defines sizes even beyond 128TB but kernel does not yet support
-them).
+These APIs are expected to be called during the controller probe and
+suspend/resume time to power on/off the devices. But before calling these
+APIs, the pwrctrl devices should've been created beforehand using the
+pci_pwrctrl_{create/destroy}_devices() APIs.
 
-The issue looks older than the introduction of
-pci_rebar_size_supported() in the commit bb1fabd0d94e ("PCI: Add
-pci_rebar_size_supported() helper").
-
-It would be also nice to convert 'size' unsigned too everywhere, maybe
-even u8 but that is left as further work.
-
-Fixes: 8bb705e3e79d ("PCI: Add pci_resize_resource() for resizing BARs")
-Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Co-developed-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
+ drivers/pci/pwrctrl/core.c  | 121 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-pwrctrl.h |   4 ++
+ 2 files changed, 125 insertions(+)
 
-As this is so close to the merge window, I assume this will be routed
-through next but I suggest not folding it to the commit bb1fabd0d94e
-("PCI: Add pci_rebar_size_supported() helper") as this should be
-backported. It will fail backport immediately as pci_rebar_size_supported()
-is only in pci/resource but I'll deal with it when the time comes and
-create a backport for it to the older codebase.
-
----
- drivers/pci/rebar.c   | 3 +++
- include/linux/sizes.h | 1 +
- 2 files changed, 4 insertions(+)
-
-diff --git a/drivers/pci/rebar.c b/drivers/pci/rebar.c
-index 8f7af3053cd8..a84165a196fa 100644
---- a/drivers/pci/rebar.c
-+++ b/drivers/pci/rebar.c
-@@ -139,6 +139,9 @@ bool pci_rebar_size_supported(struct pci_dev *pdev, int bar, int size)
+diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
+index 6eca54e0d540..e0a0cf015bd0 100644
+--- a/drivers/pci/pwrctrl/core.c
++++ b/drivers/pci/pwrctrl/core.c
+@@ -65,6 +65,7 @@ void pci_pwrctrl_init(struct pci_pwrctrl *pwrctrl, struct device *dev)
  {
- 	u64 sizes = pci_rebar_get_possible_sizes(pdev, bar);
- 
-+	if (size < 0 || size > ilog2(SZ_128T) - ilog2(PCI_REBAR_MIN_SIZE))
-+		return false;
-+
- 	return BIT(size) & sizes;
+ 	pwrctrl->dev = dev;
+ 	INIT_WORK(&pwrctrl->work, rescan_work_func);
++	dev_set_drvdata(dev, pwrctrl);
  }
- EXPORT_SYMBOL_GPL(pci_rebar_size_supported);
-diff --git a/include/linux/sizes.h b/include/linux/sizes.h
-index 49039494076f..f1f1a055b047 100644
---- a/include/linux/sizes.h
-+++ b/include/linux/sizes.h
-@@ -67,5 +67,6 @@
- #define SZ_16T				_AC(0x100000000000, ULL)
- #define SZ_32T				_AC(0x200000000000, ULL)
- #define SZ_64T				_AC(0x400000000000, ULL)
-+#define SZ_128T				_AC(0x800000000000, ULL)
+ EXPORT_SYMBOL_GPL(pci_pwrctrl_init);
  
- #endif /* __LINUX_SIZES_H__ */
+@@ -152,6 +153,126 @@ int devm_pci_pwrctrl_device_set_ready(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(devm_pci_pwrctrl_device_set_ready);
+ 
++static int __pci_pwrctrl_power_on_device(struct device *dev)
++{
++	struct pci_pwrctrl *pwrctrl = dev_get_drvdata(dev);
++
++	if (!pwrctrl)
++		return 0;
++
++	return pwrctrl->power_on(pwrctrl);
++}
++
++/*
++ * Power on the devices in a depth first manner. Before powering on the device,
++ * make sure its driver is bound.
++ */
++static int pci_pwrctrl_power_on_device(struct device_node *np)
++{
++	struct platform_device *pdev;
++	int ret;
++
++	for_each_available_child_of_node_scoped(np, child) {
++		ret = pci_pwrctrl_power_on_device(child);
++		if (ret)
++			return ret;
++	}
++
++	pdev = of_find_device_by_node(np);
++	if (pdev) {
++		if (!device_is_bound(&pdev->dev)) {
++			dev_err(&pdev->dev, "driver is not bound\n");
++			ret = -EPROBE_DEFER;
++		} else {
++			ret = __pci_pwrctrl_power_on_device(&pdev->dev);
++		}
++		put_device(&pdev->dev);
++
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++
++/**
++ * pci_pwrctrl_power_on_devices - Power on the pwrctrl devices
++ *
++ * @parent: Parent PCI device for which the pwrctrl devices need to be powered
++ * on.
++ *
++ * This function recursively traverses all pwrctrl devices for the child nodes
++ * of the specified PCI parent device, and powers them on in a depth first
++ * manner.
++ *
++ * Returns: 0 on success, negative error number on error.
++ */
++int pci_pwrctrl_power_on_devices(struct device *parent)
++{
++	struct device_node *np = parent->of_node;
++	int ret;
++
++	for_each_available_child_of_node_scoped(np, child) {
++		ret = pci_pwrctrl_power_on_device(child);
++		if (ret) {
++			pci_pwrctrl_power_off_devices(parent);
++			return ret;
++		}
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
++
++static void __pci_pwrctrl_power_off_device(struct device *dev)
++{
++	struct pci_pwrctrl *pwrctrl = dev_get_drvdata(dev);
++
++	if (!pwrctrl)
++		return;
++
++	return pwrctrl->power_off(pwrctrl);
++}
++
++static int pci_pwrctrl_power_off_device(struct device_node *np)
++{
++	struct platform_device *pdev;
++
++	for_each_available_child_of_node_scoped(np, child)
++		pci_pwrctrl_power_off_device(child);
++
++	pdev = of_find_device_by_node(np);
++	if (pdev) {
++		if (device_is_bound(&pdev->dev))
++			__pci_pwrctrl_power_off_device(&pdev->dev);
++
++		put_device(&pdev->dev);
++	}
++
++	return 0;
++}
++
++/**
++ * pci_pwrctrl_power_off_devices - Power off the pwrctrl devices
++ *
++ * @parent: Parent PCI device for which the pwrctrl devices need to be powered
++ * off.
++ *
++ * This function recursively traverses all pwrctrl devices for the child nodes
++ * of the specified PCI parent device, and powers them off in a depth first
++ * manner.
++ *
++ * Returns: 0 on success, negative error number on error.
++ */
++void pci_pwrctrl_power_off_devices(struct device *parent)
++{
++	struct device_node *np = parent->of_node;
++
++	for_each_available_child_of_node_scoped(np, child)
++		pci_pwrctrl_power_off_device(child);
++}
++EXPORT_SYMBOL_GPL(pci_pwrctrl_power_off_devices);
++
+ static int pci_pwrctrl_create_device(struct device_node *np, struct device *parent)
+ {
+ 	struct platform_device *pdev;
+diff --git a/include/linux/pci-pwrctrl.h b/include/linux/pci-pwrctrl.h
+index 5590ffec0bea..1b77769eebbe 100644
+--- a/include/linux/pci-pwrctrl.h
++++ b/include/linux/pci-pwrctrl.h
+@@ -57,8 +57,12 @@ int devm_pci_pwrctrl_device_set_ready(struct device *dev,
+ #if IS_ENABLED(CONFIG_PCI_PWRCTRL)
+ int pci_pwrctrl_create_devices(struct device *parent);
+ void pci_pwrctrl_destroy_devices(struct device *parent);
++int pci_pwrctrl_power_on_devices(struct device *parent);
++void pci_pwrctrl_power_off_devices(struct device *parent);
+ #else
+ static inline int pci_pwrctrl_create_devices(struct device *parent) { return 0; }
+ static void pci_pwrctrl_destroy_devices(struct device *parent) { }
++static inline int pci_pwrctrl_power_on_devices(struct device *parent) { return 0; }
++static void pci_pwrctrl_power_off_devices(struct device *parent) { }
+ #endif
+ #endif /* __PCI_PWRCTRL_H__ */
 
-base-commit: bf0a90fc907e47344f88e5b9b241082184dbac27
 -- 
-2.39.5
+2.48.1
+
 
