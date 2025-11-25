@@ -1,25 +1,26 @@
 Received: from CHN02-BJS-obe.outbound.protection.partner.outlook.cn (mail-bjschn02on2096.outbound.protection.partner.outlook.cn [139.219.17.96])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61DF12D7D42;
-	Tue, 25 Nov 2025 07:56:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BBCE2FB972;
+	Tue, 25 Nov 2025 07:56:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.17.96
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764057388; cv=fail; b=oMDs+R5f8pfG/6NpVpxS9D2cQXDsHy6mtldPCLT8hTYHYbHsqLhym3sBpeZ+JZu4b/gZKudbCP19pLRW9gpnmiofyqLll05q5DLxGjAti/IZVKQEHzsRos2OjEkBYHJp7PetWc5KkUuf0Xl/cjJIqco/Wyi/GJZ6I5CqSLA+hvY=
+	t=1764057393; cv=fail; b=umjgLYzpgCs8PB8pAIUVODRKPTbB+4AjzKbL21YmT/YeAHjRP6l4cpjdiRY2PiZ8sVpxWg+YQ8jNM0A0H4y122B4kNPgZq4KVNpMNM0iO4s8mOKD40ky09Fm7KY3cESpfhg4R83Ejj7eMWBsjNJFbfJy2LxVkxRnobPPd0TihSM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764057388; c=relaxed/simple;
-	bh=sCl7c15XPNfM2DQVduY5R/2uLdSY35FS+LwzWiEEmvs=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=U0srZjPH0xxhnd/tzF9nvokdD4TgPZqVr16acinEeQyjp4xYG0WSegIcODn7zNM40mj6d6bVqNDZXNCgmnI2buUwj4m/U46pSl72hsIm3PJ7B3dVt4ob4vZQH6ojkXKMagAOdbtncW0EyhneMoaDgOsku2PnaLsgPSRcQp+DFAI=
+	s=arc-20240116; t=1764057393; c=relaxed/simple;
+	bh=fWWQQmIvi2Msouxq6WCv4bSHEtDXjg4YvymY4LxYpg4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ufQatQOHMv62ZOZrtK4rfuFw/SxylVKuQd4kbmLRf/EH5XffGRwQNwgufj/bpKWJen7Rukto4mj+Av1agsQcaFPUK2cKjyx+abyL64dldeqQH24UzfchZFBDhPtqidUveK8+zLEONr40MLQGMqDatYfMPJkhlToBCD8Qr8/Oh5s=
 ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=starfivetech.com; spf=pass smtp.mailfrom=starfivetech.com; arc=fail smtp.client-ip=139.219.17.96
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=starfivetech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iac+k4AG8EuzAIk4q0qIC5WTnPVabL3+9y6PRS7V8EeeA+YgwmNBPRqWHTTCR80xLwodRenqyq9HIUl94fFjF45JPaHtoBn4sqRZLsFxZjOyp2v7JjY/0ctSS0DNkMCh07LP99ChHPvr01ZtmEx0T945xJB25VTlu/e2i3RQ06x1ZPU8tCzfp7T6ETvH2w+bFD0nB3SwZA1WP3KkLc7e1FaNx86Qz/vn9pENQRu0Uqhebtgc5Te05H2ROP2K9cIpN1jEyoNE8u8KOX/sCUfPOMPVayRL1Bkqe5PwUxFBlliJ3UiecXKICZE9koXqFeSvoqepr6BtoE8qcsabvNU3vQ==
+ b=nE7Ocs9vRbKVcZ+cRL75BD/wAqE/gLgV2lwU4p0LXPSUncuShnvzsZfZJlkimca+bOdV1NXgsUEOB+Lc43fHFdSI5EhnS9o/R/Q4rDeiPVurHeWjMZfODRpm8yzCy84XYU4FnywC0hUh/MdRQDZfS82uJZdeDQY8NZYW6kpjIAYkI28Cd/3XseLUFIbTe3nXenggHwA3OAqzbI6B6hO2j2HwQZxmDY5xZfqXb5utosqf/y8MDFLHwTEHTvQBdsB96FIP1ldXru6PgIAt9mLwiBevMsJu0kaXL+hmegYo8K8F/AfCeiH2Wq4CE4lzwrFGMr4WjcBpTxryRy/TNMZQpw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/W9B4rVkTyRyqqZydAZnsxYyIsIqgz0uyA80j4onAe8=;
- b=loGjd5XciJ37G4UsfI0ObBBGK6Zr18eHPW1j1yeFomQJW4f/wo2wazO2tqLOjUV2hPjlXkBJUheP+VoZcRKv1Fsk/QX1Rog2G87V85sryaCIlWmSn/oXlNJF1IN2mnA1fhTX0EpsP6J0WMDtXKzyWJlzjQJjFAFMeJSJ0U4BS1JXrRjMJ9skaEAXWcsGLau/Kb4uLFSZC4JROD7nBsCBbDctY93/5GAaFwBw/cWeoyCI9coYuyc8VLlOAgZGOdHeC4wkl+F6XWCJJSnBEoFQfpkZFcXq7wKoNcBUM2t2zMCGeyo8e+z9xJ8KikOxazaQF1Iicl7K+sZMztiiFgDJ0Q==
+ bh=IPtYrnO4YFzX5NMtrDCvthwhZQ7NbYUoU47wI280HeE=;
+ b=Bo6Hfp+NF2Ld8tKPbu2z2EnTfjI11Y0d+obaHtOo+4/7/BWvc31mzK6FF+wis0D5oSVtQVmnmMffBPRS1lc01c3Rn6nYkpElUTRzLZg8+bXnqfo47ZcUeXB2TVjy/7psPVxZCoZirkWzkzLElDqdo5JQk8b200AzAlV2pB1tQgRIH7hJelKi1tN2MwOVnmmMfiQJWZddIs8LyuVN6P1GclO34bT0TM5l/K4BPBvAbW1j630nLifGlY53cHkv2V0HJnPaVK1kQ9oqOy4r0UU8zi3F2JVADzDUbZ5FZ+t/XYPjrn3FE1t75xKyC/akEXMlEyMg61wU1WWfiV3kypvf9g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=starfivetech.com; dmarc=pass action=none
  header.from=starfivetech.com; dkim=pass header.d=starfivetech.com; arc=none
@@ -29,11 +30,11 @@ Received: from ZQ2PR01MB1307.CHNPR01.prod.partner.outlook.cn
  (2406:e500:c550:7::14) by ZQ2PR01MB1241.CHNPR01.prod.partner.outlook.cn
  (2406:e500:c550:6::13) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9320.18; Tue, 25 Nov
- 2025 07:56:12 +0000
+ 2025 07:56:15 +0000
 Received: from ZQ2PR01MB1307.CHNPR01.prod.partner.outlook.cn
  ([fe80::2595:ef4d:fae:37d7]) by ZQ2PR01MB1307.CHNPR01.prod.partner.outlook.cn
  ([fe80::2595:ef4d:fae:37d7%6]) with mapi id 15.20.9320.024; Tue, 25 Nov 2025
- 07:56:12 +0000
+ 07:56:15 +0000
 From: Hal Feng <hal.feng@starfivetech.com>
 To: Conor Dooley <conor+dt@kernel.org>,
 	Rob Herring <robh@kernel.org>,
@@ -57,10 +58,12 @@ Cc: Hal Feng <hal.feng@starfivetech.com>,
 	linux-pci@vger.kernel.org,
 	linux-riscv@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v4 0/6] Add support for StarFive VisionFive 2 Lite board
-Date: Tue, 25 Nov 2025 15:55:58 +0800
-Message-ID: <20251125075604.69370-1-hal.feng@starfivetech.com>
+Subject: [PATCH v4 2/6] dt-bindings: riscv: Add StarFive JH7110S SoC and VisionFive 2 Lite board
+Date: Tue, 25 Nov 2025 15:56:00 +0800
+Message-ID: <20251125075604.69370-3-hal.feng@starfivetech.com>
 X-Mailer: git-send-email 2.43.2
+In-Reply-To: <20251125075604.69370-1-hal.feng@starfivetech.com>
+References: <20251125075604.69370-1-hal.feng@starfivetech.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: SH0PR01CA0018.CHNPR01.prod.partner.outlook.cn
@@ -74,154 +77,92 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: ZQ2PR01MB1307:EE_|ZQ2PR01MB1241:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1dd38fa9-e98e-46f4-07b4-08de2bf81a0c
+X-MS-Office365-Filtering-Correlation-Id: 048e498a-1e5c-443c-cb28-08de2bf81bf1
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|7416014|52116014|41320700013|366016|1800799024|921020|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	tvgVUitx1wqAO+B7X9m5153Ql+ob2EfjBRN0PGIAjtIOD91qFDtAuG5LcoKUAkyjX78Tn+angj33lb7o83zuFI1w11WpC1PSko6DiBrd6JMJ6rtH18yJ1zmHxWEzLseLSehrVhYPThMswSMVZalH8mYi+R+rhtNUnyTXWQI+tnzmgR8ElDkSdAAKAmKTGSKNORszvulLdDWwWubUCDXFrZCL9smG9XnkcGtRSTkFmeMIOu1weZKWfDZToNmal1AWbRxGfwjuTOiRBKQL9ZQPiYLj0WdvjQ/so7Cq6g0sdTaql0ISc78zzPYvXHPRgkhfZrDp7EnMBztWqu/7S+j1W9mC34Y/vEHNyDwn5smlfmOTXb0IYne/LqauOExnulPs72GWu406kdeqSUBOUPpUq2k6tgzkpxKrk3Gx3X/XaMLggiuGJVaSWmCCCLhhCC6IuZVJVGk+F5zlkcvSX5D1SNyEs/24YUWGsSeo0XBdTvJIKA5aVY929TpHasFJsnykxFn3t5VCJamRUrd95N2c3406dyhBzcxEkTxenBj5J6g+NxkoTBD3+c5V5Or+YohXXjO/9PmP9pSfEl3IZM+lou/ZhNdJDWR+NUxYiBq9UNs=
+	YnRFrFGSSo9QPSQjeRWL6NhLFfR5YpUz9oTSfHiM2xdADmZIJKwBDKz4FkPRYb/9jnwTzulvUzFmI+v0yRwcN5IgsnZFuQL+6YMQyJfqA+izd8B4aV6J7ESdS3bPUhyEtYbj03vFcrePxTlj3BJN1SE9HHEIW4ADLD/Jlfi3ZU1g5opUaPPDUoH4/rWYsH1fD5G5yw513l8VZL6XIrqNMUR8Y9ySybBSmbfWLhOOE7vvfd7gXIph0AAcwy6BVBVRayo5I2tcQasjkz6px3BMfTn5UVY/WEyQEHVVU6yTGR1/Ps4kpVgzOqnSrPEX6wvdKMJ4FoQllYdj4G1OLIMoGddDkEusmVeyNdoHBj+R87WQSEZ2nxijJWISGumCcmHN88d/xEEHAugTvVxSV++Q0Q9i8L5Uskns8DOTQflR2D0OLTy4NqEOjS2UT2hHKT24j95ooto892Nd9R4bLoINyikkjxmtWVdKl0hoL2hong800Uh3LX70ea9GpaDlnYQttH4sXPnoUKrcPDg5+AXCf+OlJamwtlTsYRQLtXcJ0cD5rzS8kYvOcYr6ttAM9O/0D8M+AsmwF4rz78QFGLQyzce5Sl4vifgmmfETv26cwK4=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:ZQ2PR01MB1307.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230040)(7416014)(52116014)(41320700013)(366016)(1800799024)(921020)(38350700014);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?GYAlKPFTeThkn3xrm8aJ85t4hC446LEqVuHVxKGNoDrC4lA/VJ/MykmfL05p?=
- =?us-ascii?Q?xFJspbM5RkaubQm/Qht+GWSaQe+Ed+XyDa8EW/2iK/XWY5a1BAwqv6FhHMMq?=
- =?us-ascii?Q?aiVqEpALJOO9XNimaX28JmjKiyKdW9yNLi/fMQa3/B7+YDgk6r2U4QRtKXGN?=
- =?us-ascii?Q?8VfWs7gc0xEHSgH/0qk1v6GhK+LzjSUuc0uxPMLx7jz7f7//MQxgNhvGjfyY?=
- =?us-ascii?Q?aeYqKLDnQLCynJ59lX604L8ZmYg79qFL8VeCCycwYgdOTo2M0qj8WSYWMhiN?=
- =?us-ascii?Q?hPGeO8sXHI9FE+bDALHs+zXx+pw0EiapdbMYIFBAxolYX4UxeDT2e0mUHNFO?=
- =?us-ascii?Q?ExCNvYp3phfxtC7qPYyDwMFKAjd1V+dt8U9eBqhkShpSMNszisZ8yFtAAZWQ?=
- =?us-ascii?Q?dCzaAEtDQh4u1kdF0dbS3+8JomIdywTW27S0p4FGYNflc/8rvJ3TC1I1VsPZ?=
- =?us-ascii?Q?GrL3pIFPTR+UqTVs8PXfjN1Dk5A3w6PtvR9JA2Q0n1nAarucRzelV55NhtIj?=
- =?us-ascii?Q?YbAfcn/h7teQ/hh7ZAlsl/sRgo/++iN4obPhcTFHTX560uP8eHaPDTJH1WWL?=
- =?us-ascii?Q?K/vKp+B1XksveFiG3q/qyNcEgUjDPKH7pIUAYub/tzXDe/6zOG35aQqRIZnV?=
- =?us-ascii?Q?qIwS54HrsniFWP4HgaKeSuiamdTO+z4CnLB8WVigIVdOxTesVVWeZuZJISLm?=
- =?us-ascii?Q?eAYfKWPmL+z79gSul5gtDE0EK7eLJ+4UNiqOpvJ0rvN1Jkr50JtCpeg3M+ri?=
- =?us-ascii?Q?W79tlw2PEndc1kN3wq5zLyVtJ74LfLAMoKdV5LNiRBpo8Ku7ZtzlVQlRt7iG?=
- =?us-ascii?Q?k/3aOLjhjkhJVmuxhfMhxTQVp7sQJbkT63BQMN94D6C/N5MB1FZXj3VjC/by?=
- =?us-ascii?Q?/185UQcXRoAOtN+Gisaj2RhJL7FxFUSC4ROQRUj7tfJjH054hnJVEgV/rQDZ?=
- =?us-ascii?Q?aawAUu+AD49j9D76HafspeJj1ZsYyotQ+JykqbwhpSGLh9LvU1zv4lUpUiaq?=
- =?us-ascii?Q?CT4+hlJiLoIzmmPvX1iuGSzwrDwUPV20mMvcBKnkcnc6KLBk5B64hsUJ8ZZb?=
- =?us-ascii?Q?7uMeeXQ1qzMxPGiP664iOupIqbu9dzhoIgcYOT/xpE6u2MBc7P2PCnHOazXM?=
- =?us-ascii?Q?xEVXk9XrNhRU5xMDiSeOkTQvzp77hZYD6J0wH8kJgzEroxE1xjiXyRjAh7xy?=
- =?us-ascii?Q?sKWD8oa08kzhCbitlf+Jz1xm1G2DtJ/khTx96RrKS9r6hQmNnZRhEv1po1ck?=
- =?us-ascii?Q?fNoAnptTEptqMCqGEtyenGcHsHLavFIUXdFBED64h+M0dGYN+4qq937O1Bmo?=
- =?us-ascii?Q?/3CVkf3Zm/l88T/wkzRAaEj8LuSiF63eJAwqbdO9XhgAZhn1eWsI+OwjbZtt?=
- =?us-ascii?Q?aZMZ5gV93JJnltXlTZ6FfIIrBAYpGaGkxnv8Ii0zTEw1aYYw93jugFrxYQTb?=
- =?us-ascii?Q?gy12PETywKPUz0q91ossKqHzTsgPO0LtFOg7dPD4YwPi5QQax2kAlK5bLK2w?=
- =?us-ascii?Q?Yxf+UtT1i8DhLwkuI5IOUP+rjFUtnklUxMGNUxi6Wj9B6DdPkDH8aLyNFqd9?=
- =?us-ascii?Q?PSU7CK/oWfX/MKoNbpJcdOpkZs5paVXogwD7JYM3EkOiJKBYHciVsWgPA5bQ?=
- =?us-ascii?Q?Xg=3D=3D?=
+	=?us-ascii?Q?WWagSQUDzlYKoGHIgH9U985YzCNIrT2U1JFpSqtpp00VSegpMa9J2xIcIIgO?=
+ =?us-ascii?Q?TB09vyLgX3Oa59CR7ZAysJVuxt9C8J6hef1/J/cnI8/CJzod1Oh9e28tvMRl?=
+ =?us-ascii?Q?6Xa5X9ZT2dvAoInCHLs8f+H/Mp1vxI/DohQqtOLIgitUkyWaL2SzujnLQJjX?=
+ =?us-ascii?Q?AT1BETo+SM29FFZmn7hd40RwF/hA6BpBG2sNArd0TcgVTyYk1Rn6/f2VgvpK?=
+ =?us-ascii?Q?eoQn45aeK63YhwR8v/qZUY5Q0h8CR5x5SOsgJ/HoMj3Vif9nh1w2uDR0pq/M?=
+ =?us-ascii?Q?Tu5iIhx+Q9kfgZDBFso9WGqPy5uyayWcMjH2BltNtZh4RsvbnD+fRTmRHujj?=
+ =?us-ascii?Q?n4nyXNJlNs75psM28SZMlkbfQaZMJJypJHj+3KGIQ/Uxkb70oaqRSQMOMr25?=
+ =?us-ascii?Q?sTHUoZe8iRskN5ok7Z12LslQzAoYiVXVCrSQqEbFwHX7c15gsKpcLzwy1ijn?=
+ =?us-ascii?Q?DZgoXRKo6wmY0rh/h25MAy/TMIxaPZ1oEaqjKx2VwoJoyiwgaaAvwidOygOD?=
+ =?us-ascii?Q?HHx4Lcjz8lqeYAvQZ1uecujtmsv9NQm4w/k/6kqzWq8GIUvfFtmW2+v6WeXM?=
+ =?us-ascii?Q?rbWSBw5u0Y87HbqOIvAzp1w/JRhEsSrkvn39mtKSrlCDUMn9hw/24cVhAJsh?=
+ =?us-ascii?Q?6yocvqNy+1VwKkriTcqJDwfyy0HliEzfSDdGuLyM8Xs8/kRrj6omcGHxh2jN?=
+ =?us-ascii?Q?H2GynF2W4vPu9my8W7rZt9lLGr13TujPc6FNB8Dwsfay2pMtwUsG5LH0a59I?=
+ =?us-ascii?Q?6X3aDdC/WcY+IBwmi0nAeQcGkyORH6jGzDil/hJY6B240MqLmCLujSlWWIje?=
+ =?us-ascii?Q?vBtw8jk4BJs/6RSaBf/Nvv7DOrWM/k3pmN9nXtTJKK98gmIrZk7sCtxKvu6B?=
+ =?us-ascii?Q?iPkK8wcOvUZnGL/pVVjIcQ3InV35kDqJWMmTPTjY035DclgtDlSJ/wcBWyYp?=
+ =?us-ascii?Q?VPtnQ0gzw0NKIWT2mHiaKkkhjdFvGkja96vfb5TgETnwzjVOgFMq313FNgta?=
+ =?us-ascii?Q?LBa9Isp4wqXp60ZEuAn2NaTYi5a56vXmuWRfdrP6YSskLB1TpVEXUyUepEZu?=
+ =?us-ascii?Q?foqRyrq32vf9CgWImte1roSfo7UgSxh9+RIybfRUTzAQlxvlgRIsOprOM+NJ?=
+ =?us-ascii?Q?ZaAwjnFtcVCg4TWc5kb8wClLQ6B0B/UiXvDz/zROEvuWgUGhZxiIkJMdl5di?=
+ =?us-ascii?Q?LTmHPsZEHndN2WvAG7xZrAwijY5auQUNOVOdMzwnKB2spRtaHoP25vwLZBJb?=
+ =?us-ascii?Q?Y/8fGOgYcCJ+AzcAEndo1m4OAZmUoJpLoa8nM9Yuw7vxX3LTrngzgviGPMqB?=
+ =?us-ascii?Q?OemL7ZJcHx5dHdTdB1005HJB89f2NeXantJawRqAkjuICaua4cfUnwGMgcvB?=
+ =?us-ascii?Q?8kadqEnObpLChkqvQgtlbxff2UAzmOe2c+D5Sy13qa/Qk7h65z9EpyOAF5s8?=
+ =?us-ascii?Q?6jdULjJ9U4hIXsW1DjOq7kioTaE9foY2GzERImhqzJ2b+SwOMHtkDhW/2WEa?=
+ =?us-ascii?Q?b6ghXONoOHe9SZrmqMT9XRanle+HZ+V8DuPZsyNgskMaTWTuSvO89U6vqTkT?=
+ =?us-ascii?Q?K1ENuX0xR7BShoFSzahk5rynVkVuAb7y1Iqnr77TTI6wZFh5+OHmSMJ2j8r+?=
+ =?us-ascii?Q?/w=3D=3D?=
 X-OriginatorOrg: starfivetech.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1dd38fa9-e98e-46f4-07b4-08de2bf81a0c
+X-MS-Exchange-CrossTenant-Network-Message-Id: 048e498a-1e5c-443c-cb28-08de2bf81bf1
 X-MS-Exchange-CrossTenant-AuthSource: ZQ2PR01MB1307.CHNPR01.prod.partner.outlook.cn
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2025 07:56:12.3744
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2025 07:56:15.4845
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: npzpvTdXZ0p6UZGjGdBsb2tAqBC7jVMWZjejXp8Q+DBB0dg+18vYqRqk8v7DWJWMaFDQIibwO/xHyvWzlgsHo2stYgYsMa0UoLse/ZpMSOY=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6qmD/IokVbggIZQTTejdCO8N8a4ifg2c9JJzTfWLrgOPHbACz+aZUlR5dur+ldvduZEG+rdPntMEJUZRlxHlrBmPcmjs1jDTpNBh9u2Rntg=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: ZQ2PR01MB1241
 
-VisionFive 2 Lite is a mini SBC based on the StarFive JH7110S industrial
-SoC which can run at -40~85 degrees centigrade and up to 1.25GHz.
+Add device tree bindings for the StarFive JH7110S SoC
+and the VisionFive 2 Lite board equipped with it.
 
-Board features:
-- JH7110S SoC
-- 4/8 GiB LPDDR4 DRAM
-- AXP15060 PMIC
-- 40 pin GPIO header
-- 1x USB 3.0 host port
-- 3x USB 2.0 host port
-- 1x M.2 M-Key (size: 2242)
-- 1x MicroSD slot (optional non-removable 64GiB eMMC)
-- 1x QSPI Flash
-- 1x I2C EEPROM
-- 1x 1Gbps Ethernet port
-- SDIO-based Wi-Fi & UART-based Bluetooth
-- 1x HDMI port
-- 1x 2-lane DSI
-- 1x 2-lane CSI
+JH7110S SoC is an industrial SoC which can run at -40~85 degrees centigrade
+and up to 1.25GHz. Its CPU cores and peripherals are the same as
+those of the JH7110 SoC.
 
-VisionFive 2 Lite schematics: https://doc-en.rvspace.org/VisionFive2Lite/PDF/VF2_LITE_V1.10_TF_20250818_SCH.pdf
-VisionFive 2 Lite Quick Start Guide: https://doc-en.rvspace.org/VisionFive2Lite/VisionFive2LiteQSG/index.html
-More documents: https://doc-en.rvspace.org/Doc_Center/visionfive_2_lite.html
+VisionFive 2 Lite boards have MicroSD card version (default) and eMMC
+version, which are called "VisionFive 2 Lite" and "VisionFive 2 Lite eMMC"
+respectively.
 
-Changes since v3:
-patch 1:
-- Enable PCIe slot 3V3 power using regulator APIs instead of GPIO APIs.
-patch 3: (reuse the dts structure implemented in v1)
-- Add a new patch to move out the uncommon nodes in jh7110-common.dtsi.
-- Include "jh7110-common.dtsi" instead of "jh7110.dtsi".
-- Add the regulator-vcc-3v3-pcie node and reference it in the pcie1 node.
-patch 3, 4, 5:
-- Use "jh7110" instead of "jh7110s" as the device tree filename prefix.
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Tested-by: Matthias Brugger <mbrugger@suse.com>
+Reviewed-by: Heinrich Schuchardt <heinrich.schuchardt@canonical.com>
+Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+---
+ Documentation/devicetree/bindings/riscv/starfive.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Changes since v2:
-- Drop patch 3, 4, 5.
-patch 6:
-- jh7110s-starfive-visionfive-2-lite.dtsi directly includes "jh7110.dtsi"
-  instead of "jh7110s-common.dtsi".
-
-Changes since v1:
-- Drop patch 1 because it is applied.
-- Rename jh7110.dtsi to jh711x.dtsi.
-- Move the content of jh7110-common.dtsi to the new file
-  jh711x-common.dtsi and move opp table to jh7110-common.dtsi.
-patch 4:
-- Move the uncommon nodes to jh7110-common.dtsi instead of board dts.
-patch 5:
-- Add jh7110s-common.dtsi and include it in jh7110s-starfive-visionfive-2-lite.dtsi.
-
-Changes since RFC:
-- Add jh7110s compatible to the generic cpufreq driver.
-- Fix the dtbs_check error by adding the missing "enable-gpios" property
-  in jh7110 pcie dt-bindings.
-- Rebase on the latest mainline.
-- Add VisionFive 2 Lite eMMC board device tree and add a common board dtsi
-  for VisionFive 2 Lite variants.
-- Add usb switch pin configuration (GPIO62).
-- Improve the commit messages.
-
-History:
-v3: https://lore.kernel.org/all/20251120082946.109378-1-hal.feng@starfivetech.com/
-v2: https://lore.kernel.org/all/20251107095530.114775-1-hal.feng@starfivetech.com/
-v1: https://lore.kernel.org/all/20251016080054.12484-1-hal.feng@starfivetech.com/
-RFC: https://lore.kernel.org/all/20250821100930.71404-1-hal.feng@starfivetech.com/
-
-Hal Feng (6):
-  PCI: starfive: Use regulator APIs instead of GPIO APIs to enable the
-    3V3 power supply of PCIe slots
-  dt-bindings: riscv: Add StarFive JH7110S SoC and VisionFive 2 Lite
-    board
-  riscv: dts: starfive: jh7110-common: Move out some nodes to the board
-    dts
-  riscv: dts: starfive: Add common board dtsi for VisionFive 2 Lite
-    variants
-  riscv: dts: starfive: Add VisionFive 2 Lite board device tree
-  riscv: dts: starfive: Add VisionFive 2 Lite eMMC board device tree
-
- .../devicetree/bindings/riscv/starfive.yaml   |   6 +
- arch/riscv/boot/dts/starfive/Makefile         |   2 +
- .../boot/dts/starfive/jh7110-common.dtsi      |   8 -
- .../jh7110-deepcomputing-fml13v01.dts         |  14 ++
- .../boot/dts/starfive/jh7110-milkv-mars.dts   |  14 ++
- .../dts/starfive/jh7110-milkv-marscm-emmc.dts |   9 +
- .../dts/starfive/jh7110-milkv-marscm-lite.dts |   1 +
- .../dts/starfive/jh7110-pine64-star64.dts     |  14 ++
- ...jh7110-starfive-visionfive-2-lite-emmc.dts |  22 +++
- .../jh7110-starfive-visionfive-2-lite.dts     |  20 +++
- .../jh7110-starfive-visionfive-2-lite.dtsi    | 161 ++++++++++++++++++
- .../jh7110-starfive-visionfive-2.dtsi         |  11 ++
- drivers/pci/controller/plda/pcie-starfive.c   |  25 +--
- 13 files changed, 289 insertions(+), 18 deletions(-)
- create mode 100644 arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2-lite-emmc.dts
- create mode 100644 arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2-lite.dts
- create mode 100644 arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2-lite.dtsi
-
-
-base-commit: 422f3140bbcb657e1b86c484296972ab76f6d1ff
+diff --git a/Documentation/devicetree/bindings/riscv/starfive.yaml b/Documentation/devicetree/bindings/riscv/starfive.yaml
+index 04510341a71e..797d9956b949 100644
+--- a/Documentation/devicetree/bindings/riscv/starfive.yaml
++++ b/Documentation/devicetree/bindings/riscv/starfive.yaml
+@@ -35,6 +35,12 @@ properties:
+               - starfive,visionfive-2-v1.3b
+           - const: starfive,jh7110
+ 
++      - items:
++          - enum:
++              - starfive,visionfive-2-lite
++              - starfive,visionfive-2-lite-emmc
++          - const: starfive,jh7110s
++
+ additionalProperties: true
+ 
+ ...
 -- 
 2.43.2
 
