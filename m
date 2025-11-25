@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACC9A32692E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CE0B3246F0;
 	Tue, 25 Nov 2025 14:45:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764081911; cv=none; b=Uwc9newBnxm+BXhrWHDBH+CwxrQYDcXCPT/sRdTbf9gonNfBj/Ztce60QE7ywMd+md4WddmCS4zt9b1Ia3Xfj4cmjF4lx/IclHTss8M7P41d0/kr4hNkG203FGiuoUzgQeF1YgFdQDx5V17rJQ1ihhQXrFNdDLnb9uqk33km4ZE=
+	t=1764081911; cv=none; b=O9UNZ5Xy0SHOuMSA4XPhUM+djfVRT6PegYyKnNqWfgfqsx8EOvk0UK1FxqxTdqlZqqd2sqykKdbt9i4pgsXl20d/FuAHSRCQWXKJtEZ3lt/LNMOpd06F2kNC1ISBCJlD8Xaj/pFpBv2t0ILjJNU6VmueMGp8zNmTAR20OEUt1LA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1764081911; c=relaxed/simple;
-	bh=9wiAneIe4PtRYieKALLniV4NVJC0MpqwxX1iHoF/arI=;
+	bh=rR3gz3yzpBRkBDHXSaogJdTENZ1CLw1h0jHGgJLehB8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=NSreXKZ/yEBRdKMpZB4hbg+6MVxtJaLYJiZvWWyIsUm3MpsCBSHjHdFCUgp3K74/EJuHaEL0YSewKGUfG4GhR6hZW8B6B7fcxufMAYCqDVU4xWyj5E/FOZH0Ez1Y7/Zr7rqmYJ8R38dEszij3x0/hlyGKIFa8QympOQrOmswoZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fpQ7VFAd; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=Sk8wsfTDGL/ogDhkbm1iQJOuc67o8PZbFMKKIZxFt28TZOz432SsB94G/74afK003WGhUeyEJkLTgwF8oqXUtOd4Ab8wyZyv5kuyjHysGyvdoaMIKIWgcyav31nWC6PF4npzv2DMJIjxZfNH6IgUc8vNimBkI0+cthXwyZwMe+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uMri3jMC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fpQ7VFAd"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 3EBECC2BCB1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uMri3jMC"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2336BC19424;
 	Tue, 25 Nov 2025 14:45:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1764081911;
-	bh=9wiAneIe4PtRYieKALLniV4NVJC0MpqwxX1iHoF/arI=;
+	bh=rR3gz3yzpBRkBDHXSaogJdTENZ1CLw1h0jHGgJLehB8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=fpQ7VFAd2pqGR6bj0TlULByIgk+6MsIeIZOBqGCjLPpB5Pw3Dn+NdWfEC6SAfD80Z
-	 cXg3GC0vHYxXHI4paDkCDNJ4apBtWqME8QJtwYUkeq4vrwIIT0cPw6WZnKBjP2kl8L
-	 Rr24CtHFpfAQnYYOI54SVlWUF/2fZhH9Q4jz3fR9Vd22rKgc8O2HUAMjnhiAiNbLNv
-	 40ZsEwlOrp17XPfEwOaIXy3xHLgTaqWe2Gor5dAQ42jiQHdGp2BzhoeKMHHZ57DL0C
-	 RIUwV9XQ7yP1wXxNhJgvCYIqYEWu04qhZXt5C9EWZ7E0r4o5FU/oYS7JQkdkzxhX/l
-	 VkMSRCQ/RLTDw==
+	b=uMri3jMCRqfuHCVaOSWbll6PTnM0TnPMc8C5vzQM6fRxFtJqOpoWHy6UTPZAPAUb+
+	 6lJsHRQ7hcKLNwptFIw5YoE042O1OKnxh08s+JrKDRlpelBzsRbyWImmg2tXPjrVQQ
+	 wfYjZ6ItFg8MEkyTEsN6ynsLjtrrT2YGIuxdvuD2iK5A2Gst9d1xRiribI7VsjktD/
+	 m9xEHnnWbVq6b357/ogRElVLXHR9tz1/1Xi2d00IGoIx658dqchqSh5OWHiW0LsWjm
+	 Wxha7qFSKPfqp7mzm1ZsFLKKnSvnkr3pbZTKqt7s+gV8eOdpokLkXNBzc7yihSzSAI
+	 gA/8S9EuIrZNQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A83D0E6C6;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CCFDD0E6F4;
 	Tue, 25 Nov 2025 14:45:11 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Tue, 25 Nov 2025 20:15:08 +0530
-Subject: [PATCH v2 04/10] serdev: Add an API to find the serdev controller
- associated with the devicetree node
+Date: Tue, 25 Nov 2025 20:15:06 +0530
+Subject: [PATCH v2 02/10] serdev: Add serdev device based driver match
+ support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251125-pci-m2-e-v2-4-32826de07cc5@oss.qualcomm.com>
+Message-Id: <20251125-pci-m2-e-v2-2-32826de07cc5@oss.qualcomm.com>
 References: <20251125-pci-m2-e-v2-0-32826de07cc5@oss.qualcomm.com>
 In-Reply-To: <20251125-pci-m2-e-v2-0-32826de07cc5@oss.qualcomm.com>
 To: Rob Herring <robh@kernel.org>, 
@@ -64,16 +64,16 @@ Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
  Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1955;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3979;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=V1p0qX3vrz92sD1qV7R72e5ox9rZKasfmlTpIXqG3AM=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpJcDyF1/pgOLf1aVGEuv44G7i0XrrfAOqmecw2
- mzElUd/v5qJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaSXA8gAKCRBVnxHm/pHO
- 9bvfB/44AU6EYFmyxS7a2q+VGScl6JakUBZg0CeSHUIPNiLIgltpD0wnO13rOmWVZlBH5iaUmRG
- eHFX+92RGGqNKq+DblVtUN2wujOTz1iv3YvstidexJufqx6AiAnbMXyIk85S5d5joN0yNQYhhdA
- ijzPQU9/cij19LvCo3rnTyK8TtU/mV5na5rwUvbKfs4xs9SVTplFPnAW5mmXY2ZCoKNDR3b40eP
- 2ATF6PeHljysxSNEwGLfEmrgyKduSU2C1FiEf+lTOoZZsJqe8f/rw54zZRbYRQr9/gpUhvgS4XZ
- daPSu1Th2xsHK4LKi5Q1g4ADiGWwLY9uL6ImU9bLchSUpN95
+ bh=l5Ts3o61IXqTXA6cCJVPncMY06Qk0XS4grwShZ7YiiY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpJcDy5aNQTrm4PBQrFGYoE/mpmzlHS14l3KcAg
+ f67d/Vs8WOJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaSXA8gAKCRBVnxHm/pHO
+ 9WM0B/9vOuD1CGvFWE0LFie5T37/3Dlph915pP3GTxIx3fy/Ux553oVeUV7W9wQX2Mpi83Hb/F+
+ ny6kHH7fV0no6NuuQHmyjyVEGvbG+Qw6zG2FOmkzIBBzVezUph+MvIBNwyrs76QAwW2uAHGQiDY
+ Xdy1FAov0YL439699RHC7LXcD6sg4AvYgXLrIf0yHknev1pnXNtNUHtoMvmHcvFOidBpYuJTF9u
+ LGvizzdk6qCPZj8HpGXD+2UCVGIDRpsK1ei3Qni3oSx4yPHm2zPUFFRwA7SsHjTZEhE9hSI/EEs
+ LXHONCdvpTB80Hzk786sXqWYmP7FXNcojvZDERXUlhPN0hhE
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -83,60 +83,125 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Add of_find_serdev_controller_by_node() API to find the serdev controller
-device associated with the devicetree node.
+Add support to match serdev devices with serdev drivers based on the serdev
+ID table defined in serdev_device_driver::id_table.
+
+The matching function, serdev_driver_match_device() uses the serdev device
+name to match against the entries in serdev_device_driver::id_table.
+
+If there is no serdev id_table for the driver, then serdev_device_match()
+will fallback to ACPI and DT based matching.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/tty/serdev/core.c | 16 ++++++++++++++++
- include/linux/serdev.h    |  9 +++++++++
- 2 files changed, 25 insertions(+)
+ drivers/tty/serdev/core.c         | 23 ++++++++++++++++++++++-
+ include/linux/mod_devicetable.h   |  7 +++++++
+ include/linux/serdev.h            |  4 ++++
+ scripts/mod/devicetable-offsets.c |  3 +++
+ 4 files changed, 36 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
-index 76b89dd0720f..f90095cb778f 100644
+index b33e708cb245..2b5582cd5063 100644
 --- a/drivers/tty/serdev/core.c
 +++ b/drivers/tty/serdev/core.c
-@@ -530,6 +530,22 @@ struct serdev_controller *serdev_controller_alloc(struct device *host,
- }
- EXPORT_SYMBOL_GPL(serdev_controller_alloc);
+@@ -85,12 +85,33 @@ static const struct device_type serdev_ctrl_type = {
+ 	.release	= serdev_ctrl_release,
+ };
  
-+/**
-+ * of_find_serdev_controller_by_node() - Find the serdev controller associated
-+ *					 with the devicetree node
-+ * @node:	Devicetree node
-+ *
-+ * Return: Pointer to the serdev controller associated with the node. NULL if
-+ * the controller is not found.
-+ */
-+struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node)
++static int serdev_driver_match_device(struct device *dev, const struct device_driver *drv)
 +{
-+	struct device *dev = bus_find_device_by_of_node(&serdev_bus_type, node);
++	const struct serdev_device_driver *serdev_drv = to_serdev_device_driver(drv);
++	struct serdev_device *serdev = to_serdev_device(dev);
++	const struct serdev_device_id *id;
 +
-+	return (dev && dev->type == &serdev_ctrl_type) ? to_serdev_controller(dev) : NULL;
++	if (!serdev_drv->id_table)
++		return 0;
++
++	for (id = serdev_drv->id_table; id->name[0]; id++) {
++		if (!strcmp(dev_name(dev), id->name)) {
++			serdev->id = id;
++			return 1;
++		}
++	}
++
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(of_find_serdev_controller_by_node);
 +
- static int of_serdev_register_devices(struct serdev_controller *ctrl)
+ static int serdev_device_match(struct device *dev, const struct device_driver *drv)
  {
- 	struct device_node *node;
+ 	if (!is_serdev_device(dev))
+ 		return 0;
+ 
+-	/* TODO: platform matching */
++	if (serdev_driver_match_device(dev, drv))
++		return 1;
++
+ 	if (acpi_driver_match_device(dev, drv))
+ 		return 1;
+ 
+diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
+index 6077972e8b45..70c54c4bedba 100644
+--- a/include/linux/mod_devicetable.h
++++ b/include/linux/mod_devicetable.h
+@@ -976,4 +976,11 @@ struct coreboot_device_id {
+ 	kernel_ulong_t driver_data;
+ };
+ 
++#define SERDEV_NAME_SIZE 32
++
++struct serdev_device_id {
++	const char name[SERDEV_NAME_SIZE];
++	kernel_ulong_t driver_data;
++};
++
+ #endif /* LINUX_MOD_DEVICETABLE_H */
 diff --git a/include/linux/serdev.h b/include/linux/serdev.h
-index ffc6eb13f44b..fa235c92592a 100644
+index ecde0ad3e248..aca92e0ee6e7 100644
 --- a/include/linux/serdev.h
 +++ b/include/linux/serdev.h
-@@ -337,4 +337,13 @@ static inline bool serdev_acpi_get_uart_resource(struct acpi_resource *ares,
- }
- #endif /* CONFIG_ACPI */
+@@ -39,6 +39,7 @@ struct serdev_device_ops {
+  * @ops:	Device operations.
+  * @write_comp	Completion used by serdev_device_write() internally
+  * @write_lock	Lock to serialize access when writing data
++ * @id:		serdev device ID entry
+  */
+ struct serdev_device {
+ 	struct device dev;
+@@ -47,6 +48,7 @@ struct serdev_device {
+ 	const struct serdev_device_ops *ops;
+ 	struct completion write_comp;
+ 	struct mutex write_lock;
++	const struct serdev_device_id *id;
+ };
  
-+#ifdef CONFIG_OF
-+struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node);
-+#else
-+struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node)
-+{
-+	return NULL;
-+}
-+#endif /* CONFIG_OF */
+ #define to_serdev_device(d) container_of_const(d, struct serdev_device, dev)
+@@ -55,11 +57,13 @@ struct serdev_device {
+  * struct serdev_device_driver - serdev slave device driver
+  * @driver:	serdev device drivers should initialize name field of this
+  *		structure.
++ * @id_table:	serdev device ID table
+  * @probe:	binds this driver to a serdev device.
+  * @remove:	unbinds this driver from the serdev device.
+  */
+ struct serdev_device_driver {
+ 	struct device_driver driver;
++	const struct serdev_device_id *id_table;
+ 	int	(*probe)(struct serdev_device *);
+ 	void	(*remove)(struct serdev_device *);
+ };
+diff --git a/scripts/mod/devicetable-offsets.c b/scripts/mod/devicetable-offsets.c
+index d3d00e85edf7..c1bfa8eddc4d 100644
+--- a/scripts/mod/devicetable-offsets.c
++++ b/scripts/mod/devicetable-offsets.c
+@@ -280,5 +280,8 @@ int main(void)
+ 	DEVID(coreboot_device_id);
+ 	DEVID_FIELD(coreboot_device_id, tag);
+ 
++	DEVID(serdev_device_id);
++	DEVID_FIELD(serdev_device_id, name);
 +
- #endif /*_LINUX_SERDEV_H */
+ 	return 0;
+ }
 
 -- 
 2.48.1
