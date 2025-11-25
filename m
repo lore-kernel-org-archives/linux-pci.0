@@ -1,91 +1,142 @@
-Received: from mail-m49228.qiye.163.com (mail-m49228.qiye.163.com [45.254.49.228])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C166C189BB6
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2025 01:59:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D97C8283FDD;
+	Tue, 25 Nov 2025 05:21:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764035961; cv=none; b=EQ0G5AjD/9Zbue7pzwXyhsonqh57D/Pmm4p0XZ2mLYDV/GFiA0o4YdmR/NlahPEVgiUIWSb41oPViJIL9OUmm688/VT3m07KWIfYPh+/Ibo0CVME/PuR6Y9PFCgDtQP3Udp9b6AbePWIeqm3X+cvHyOnXKyew0xS0dDy+KzsYKM=
+	t=1764048105; cv=none; b=dG24Xu6TQkxSlr3BVXuC6VCXgyOF2cufbBdBnv+rrnujHOhOExGNLTmHUJqaj/e4yS/qR3YwwIu1i0ePVYO7lMHMFtgMDwPbrUpnzOcMO2ht+gCOHQ1bcbg32UgWK7JjpnqnLZ5S+0RD9Ae5d4Wp3IJdKGPDrTQ56tLlJYdf5eU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764035961; c=relaxed/simple;
-	bh=aHQTH9QFNGCxch0bBzDSaqqfhTYGGew0JbSDCbyFO9Y=;
-	h=From:To:Cc:Subject:Date:Message-Id; b=mk3z5aT59ccTfvnSQsnzKuYb8tw826brajTbvyrRo7bXTDlGveK+vyBZLOwB1kYxY/aXwPUeq5cr4FYVvulCHCb3Q/hIgAeQHVX2Ykfx2uFhJlWgKM/An2wUPeGw0Db8gjUfP1YRgN3yaeQ230SknH4uVGdYGE171Rz3cuMnYO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Ltr4dsMh; arc=none smtp.client-ip=45.254.49.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1764048105; c=relaxed/simple;
+	bh=qed1tIlgYImH+5jgHrPf6vSo6U9oFRv/oP55UdFhWMM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BnzU/E79DF1YDu+kB2OQQzv2fJ9MIilrHMQkJ10lMrr4yvedvyTvYmWa0RWM6IxxPzrOQsf3Ox1rpSV9C0n3MnsT8eqwpxDP8d+++xbhwfHt4StRUhEMY6LiTBLGpnA136DmzRbxUYTVsO71S6csx/rbOGjjfp3UYxrzL6TGubM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RXrYd7oJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Ltr4dsMh"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2ac10622e;
-	Tue, 25 Nov 2025 09:54:05 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-rockchip@lists.infradead.org,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/2] PCI: dwc: Add L1ss context to ltssm_status of debugfs
-Date: Tue, 25 Nov 2025 09:53:51 +0800
-Message-Id: <1764035632-180821-1-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-X-HM-Tid: 0a9ab8b7cf3409cckunmc92cec9842edfc
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkJIS1ZCGUoYSxpLSR9CTk9WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpOTE
-	pVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=Ltr4dsMh8wI/9sc7SmWE51Rge2BjwPSYVnyJWwUwPnGuhe+ntzNajECvRd5KVOPdNZ+AP2VVqOPydgMe61nAmuUlUx6WH1xGxncfnJZXj3il3qiFkVttcedopDr/lcJYAJl5iHg4htAp6aXjHA46YaH+5k2r2ptJf7TmkrmJ6i4=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=gnPCKZrubDiKp9Ce3hoVnypxFgyrp1MpSGv7XHiWqo8=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RXrYd7oJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09132C4CEF1;
+	Tue, 25 Nov 2025 05:21:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764048104;
+	bh=qed1tIlgYImH+5jgHrPf6vSo6U9oFRv/oP55UdFhWMM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RXrYd7oJTu2M2fgDwzIjyrsaKTIIUE3Vbbqiiom3OYz4r70MZ48cdh33Dwi9WHsrz
+	 W5MOhQmsutGsFP5gcQ1Q6MnjpnCk6t0FhVCMaqmnSakKaNYglhekorZCQhc2lLwuJs
+	 PuLnODdoWwbBQKvGEMcCJqCisSn93G4uOoWjt4lnolGCoQJOMxjlH5E4QVfIH31fWZ
+	 0NiZTum8t32AHI8qAoP5+qoCJXWRlAjly8azuY/I3Dd6hV9VXZiGFthSaqG09uth6E
+	 8a8P8WJHrGcQsiGVg/fw1TmuG8CtMuFrtKghTUsDM7fz+NvEpRDVRwseFoN3yj8rvf
+	 yGQFedtEIzLMA==
+Date: Tue, 25 Nov 2025 10:51:35 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Alexey Bogoslavsky <Alexey.Bogoslavsky@sandisk.com>, 
+	Jeffrey Lien <Jeff.Lien@sandisk.com>, Avinash M N <Avinash.M.N@sandisk.com>
+Subject: Re: [PATCH v2] PCI: Add quirk to disable ASPM L1 for Sandisk SN740
+ NVMe SSDs
+Message-ID: <tiadpmogdxom5h2bquct2ch6hoc6ozh6bgnzdmnj3mia22vtue@c5yjxbx65lsm>
+References: <20251120161253.189580-1-mani@kernel.org>
+ <20251124235307.GA2725632@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251124235307.GA2725632@bhelgaas>
 
-dwc core couldn't distinguish ltssm status among L1.0, L1.1 and L1.2.
-But the variant driver may implement additional register to tell them
-apart. So this patch adds two pseudo definitions for variant drivers to
-transltae their internal L1 substates for debugfs to show.
+On Mon, Nov 24, 2025 at 05:53:07PM -0600, Bjorn Helgaas wrote:
+> [+cc Alexey, Jeffrey, Avinash]
+> 
+> On Thu, Nov 20, 2025 at 09:42:53PM +0530, Manivannan Sadhasivam wrote:
+> > The Sandisk SN740 NVMe SSDs cause below AER errors on the upstream Root
+> > Port of PCIe controller in Microsoft Surface Laptop 7, when ASPM L1 is
+> > enabled:
+> > 
+> >   pcieport 0006:00:00.0: AER: Correctable error message received from 0006:01:00.0
+> >   nvme 0006:01:00.0: PCIe Bus Error: severity=Correctable, type=Physical Layer, (Receiver ID)
+> >   nvme 0006:01:00.0:   device [15b7:5015] error status/mask=00000001/0000e000
+> >   nvme 0006:01:00.0:    [ 0] RxErr
+> 
+> Do we have any information about whether this error happens with the
+> SN740 on platforms other than the Surface Laptop 7?  Or whether it
+> happens on the Surface with other endpoints?
+> 
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
-This patch is based on latest pci controller/dwc branch given that L1ss support
-for Rockchip has been applied.
+This device comes pre installed with the Surface Laptop 7 I believe. It is not
+very convenient to replace the NVMe in a laptop for testing.
 
- drivers/pci/controller/dwc/pcie-designware-debugfs.c | 2 ++
- drivers/pci/controller/dwc/pcie-designware.h         | 4 ++++
- 2 files changed, 6 insertions(+)
+> I'm a little hesitant about quirking devices and claiming they are
+> defective without a solid root cause.
+> 
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-index 0fbf86c0b97e..df98fee69892 100644
---- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-@@ -485,6 +485,8 @@ static const char *ltssm_status_string(enum dw_pcie_ltssm ltssm)
- 	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ1);
- 	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ2);
- 	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ3);
-+	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_1);
-+	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_2);
- 	default:
- 		str = "DW_PCIE_LTSSM_UNKNOWN";
- 		break;
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index d3dc0cd8e7b5..3f4611882e29 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -380,6 +380,10 @@ enum dw_pcie_ltssm {
- 	DW_PCIE_LTSSM_RCVRY_EQ2 = 0x22,
- 	DW_PCIE_LTSSM_RCVRY_EQ3 = 0x23,
+There are a couple of points that made me convince myself:
+
+* Other X1E laptops are working fine with ASPM L1.
+* This laptop has WCN785x WiFi/BT combo card connected to the other controller
+instance and L1 is working fine for it.
+* There is no known issue with ASPM L1 in X1E chipsets.
+
+Because of these, I was so certain that the NVMe is the fault here.
+
+> Sandisk folks, do you have any insight into this?  Any known errata or
+> possibility of looking into this with an analyzer?
+> 
+
+I don't think Konrad has access to the analyzer, neither any of us.
+
+If you are still hesitant, I'd suggest adding the platform check so that this
+quirk is only limited to the Surface Laptop 7:
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index adc54533df7f..1655757ba66a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -29,6 +29,7 @@
+ #include <linux/ktime.h>
+ #include <linux/mm.h>
+ #include <linux/nvme.h>
++#include <linux/of.h>
+ #include <linux/platform_data/x86/apple.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/sizes.h>
+@@ -2527,15 +2528,19 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, 0x0451, quirk_disable_aspm_l0s
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PASEMI, 0xa002, quirk_disable_aspm_l0s_l1);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HUAWEI, 0x1105, quirk_disable_aspm_l0s_l1);
  
-+	/* Variant drivers provide pseudo L1 substates from get_ltssm()*/
-+	DW_PCIE_LTSSM_L1_1 = 0x141,
-+	DW_PCIE_LTSSM_L1_2 = 0x142,
++/*
++ * Sandisk SN740 NVMe SSDs in Microsoft Surface Laptop 7 cause AER timeout
++ * errors on the upstream PCIe Root Port when ASPM L1 is enabled.
++ */
+ static void quirk_disable_aspm_l1(struct pci_dev *dev)
+ {
+-       pcie_aspm_remove_cap(dev, PCI_EXP_LNKCAP_ASPM_L1);
++       struct device_node *root __free(device_node) = of_find_node_by_path("/");
++       const char *model = of_get_property(root, "compatible", NULL);
 +
- 	DW_PCIE_LTSSM_UNKNOWN = 0xFFFFFFFF,
- };
++       if (!strcmp(model, "microsoft,romulus13"))
++               pcie_aspm_remove_cap(dev, PCI_EXP_LNKCAP_ASPM_L1);
+ }
  
--- 
-2.43.0
+-/*
+- * Sandisk SN740 NVMe SSDs cause AER timeout errors on the upstream PCIe Root
+- * Port when ASPM L1 is enabled.
+- */
+ DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5015, quirk_disable_aspm_l1);
+ 
+ /*
 
+This check is similar to the DMI checks we have currently non-DT platforms.
+Infact, we have also use the DMI checks on this laptop as it comes with SMBIOS.
+
+Note: I'm not sure if Konrad's lapto is based on "microsoft,romulus13" or
+"microsoft,romulus15".
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
