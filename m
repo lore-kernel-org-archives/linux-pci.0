@@ -1,196 +1,146 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C57431C57B
-	for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2025 14:22:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 867F032692D;
+	Tue, 25 Nov 2025 14:45:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764080575; cv=none; b=m/e3FIhBNwVQIyj50B/YUNXVjPAZ9bxFdU1Uk9Hkf45qBZCv+8oylITQtOwCp29OJCt7vP7AyjzoVynyyfT+LkspeaO1oiwb+M4Lns/PTS3WGxl1W8tBt+9ueItAQN68lLqS8uQ52Gi+BLf9I9SMgyd99dAmmjajjuRl8acOh6Y=
+	t=1764081911; cv=none; b=RnXyr+qflnVGOA3mFV7QxaaRtfC2F7PpWrLbyqKgZreG0qiCNvtWkzrdzEw7ShQLgaN0763He3zgyghqbuvVNbChWVSMwwpn8kpKEBRwxvp8NUkpXFsSoYky9ggp4rXGImaggWCVIrdLRSHeiDj6fhSb9sEG7oMOESHuRIAVhvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764080575; c=relaxed/simple;
-	bh=SRKoFuOUD1fJozvJfcfLCTLodVX08ExcSJJP8gTJJ/M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RrfiqisxLjSWgmdQdruSK2sY40+FvdukzvXqcfBjm/HTRgWSQRnIAiULvYOgtoGVbKTYvpZJ3umjLRcJWxn7TcKrFBUE16UhYa+JTkSRh6q6y2rkqnMKnItRGM8t4K6+wpj0cigLLIGlrY9GkHwE/w//bvrC7b94cZaU0Uqcxms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=uzDulWQU; arc=none smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1764081911; c=relaxed/simple;
+	bh=XBDSzMYIFkCw09WI3jBNA9MTUk89wi4ZpjMVAgW3SWY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=AvBW6IZxnQSyqTKYGOq9C+Xucx02OtGzLkMw2YGKeXmYQvysRSWu8Tlg06YwSQnGNU2iYT27i+7pXJOHzdzlz7l1QDGKwmkf9QzxAxJwcoGVi8adeCt0lX7QXMyjdi/SYtNd/RqobOpQywadlPewfm68KoE1aIJ2S//uiDTyjrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YEGxOm9c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="uzDulWQU"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-42b3c5defb2so3680776f8f.2
-        for <linux-pci@vger.kernel.org>; Tue, 25 Nov 2025 06:22:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1764080572; x=1764685372; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LYT1VtoVlzvOZrdkNdZF/nKv9vz8mfrTW6PpEO5ou4E=;
-        b=uzDulWQUPB+mcW9QhemP5iU4/sdww10YbFrg0ysNetRDGMiBakrXkDJY2Hkk2h4Kwn
-         l5t/7ddwgpOkX4OPOyXnhQtNx5lg0VSWoHgBB3CUnnotCaWMx2BeDa5XXFN9HNSCC0nG
-         skUnxMECSgzNyzXgpv1cjNQzoH8J/V5EJ3gcjTQjGCNiGhHAbof40MyTfyilU/T6c3r9
-         VGSiFI3cnOa0zpJn0xPn9mTIRtSDXGTG1gZkEnfXjO+ZI1tWLrFfgbUS45q+9cAmWuz1
-         XAG0+4KniVrpQIIpcodPTwP0ycafpI8lIBaVg9r3OO5Ejkh9jR8cXUhSFELU8RYAA3wn
-         KYAg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764080572; x=1764685372;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=LYT1VtoVlzvOZrdkNdZF/nKv9vz8mfrTW6PpEO5ou4E=;
-        b=jDi+LcBFKR7r9RkuF2m14YKybloWdPCRB/uNT2FS+51OeYplM8JcIWULemi9YtF5Yw
-         clRM+7RyiV39muPjzSFbswvpfbDbQnyUCv+gTVoaM6WLEybJ49H393vt0PbcsEWl7z/p
-         vNUOjumanRobfpBA/mmLvVqn0huMfBSxowefGrbLZCGGgpHofN2Bptuz0NcetHDjFALs
-         3pmIwaUEVliRbxQHcZkq5riXIUCfLCIdrDWNk1BL74yoTXsaMdGa6pMmPEBip1rQcSSW
-         XE8AR1uvFZCthh7m6iqFGB0yU2T/OqGyBD/pYQuEnuS5WZYlRqcKRL75t0chhl9MMVD1
-         egIQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXmYygcHS0CO+6Hf6oIjBHXWKMTPDeVyPAn2SN1A6ot4XpaXMbUBkP7fyRtHziIfVYwUWcVoE4Mh9Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzv/BERrTrDLgFNXykzsXTEcdGYkOo8As4XyHw02OJcqMMZ42WA
-	tX6Dtml8Wzi0Rzg/YC8AQ7v8Bfaw/TKkFdkZ239pwiKJ9DgUO8akT2h41bldMWCAzNrcOog9Pxv
-	EfjCX46AH/yyXbi65jW+7FTjS1vaiUXWbj3IqqRFG
-X-Gm-Gg: ASbGnct0eeJHvchMrwLYRGgoNPR5egQZky8kXtD/P5JYWTC7+hYKhsuW3Rsms7roYHo
-	7Bx4KZyXNLUGuCZJl4SaookGnNU4sn+UZtwzRLc/aCx+wD0l0jMN3245pjo0GRxJybWafndRhV4
-	QqxcDyrUqyqBT1vMg9o7yIBfkSsueGyFVi7OE4Sz25qYdAweRYh+nyoyk//iG3OL9MZtJyMCUnZ
-	RKl0yUru7Aeaolo06gouPJVkOUVpw1bWJG3Au0U6R/ad7MlKFKSlNiebWlySXtJET/FyNP/NRLK
-	wDBMEp/s5rc=
-X-Google-Smtp-Source: AGHT+IH2MYO2xalTpJnW5pkTtgy3I5HydZt5liuweeYqfukYO9an6xcfvAyiUF1iJKqDv9hzAKbiFMbEsz451F/xstY=
-X-Received: by 2002:a05:6000:1445:b0:42b:3ed2:c08a with SMTP id
- ffacd0b85a97d-42cc1cbd06dmr17365312f8f.13.1764080571675; Tue, 25 Nov 2025
- 06:22:51 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YEGxOm9c"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 09090C116C6;
+	Tue, 25 Nov 2025 14:45:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764081911;
+	bh=XBDSzMYIFkCw09WI3jBNA9MTUk89wi4ZpjMVAgW3SWY=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=YEGxOm9cg7W9Mou29C0GZ3AC7mXlMogFvHnZ4TfkrH9V8P7eTv9Zw3AXXwKiDEc6B
+	 giSUc5nG7p9typxHoZ+iFFTE9+MygmewJqfOtCcLN98dNv84m+IgJOKEFv4HFFZHWe
+	 nJd8FRnRxKQrYpy9Vm280kffEv1Ci9bB+YNRgBSNg20QpyN7G15tMQO4KfGvF/UwEX
+	 A59DZnoX27mfbr26dlI/LzdAcZeDZzr4nkrh3SllLHYbH4FEqNyHVkVXrl2w0WlFV3
+	 h9Fcgv3yUw09L8qaSVW+4xAfajIkhWwg2UVTu9u3GRDO9S7FDEj8MUC9Bp+B+SR+fy
+	 XzL6QnxP/Nvcg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBF03D0E6F1;
+	Tue, 25 Nov 2025 14:45:10 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Tue, 25 Nov 2025 20:15:05 +0530
+Subject: [PATCH v2 01/10] serdev: Convert to_serdev_*() helpers to macros
+ and use container_of_const()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251119112117.116979-1-zhiw@nvidia.com> <20251119112117.116979-4-zhiw@nvidia.com>
- <DEHU2XNZ50HW.281CCT1CZ79CF@nvidia.com> <DEHU7A4DWOSX.PZ4CCKLAH9QV@nvidia.com>
-In-Reply-To: <DEHU7A4DWOSX.PZ4CCKLAH9QV@nvidia.com>
-From: Alice Ryhl <aliceryhl@google.com>
-Date: Tue, 25 Nov 2025 15:22:39 +0100
-X-Gm-Features: AWmQ_bnmcUvz0D0w8i5WIfKnJ-siR4BLsptNpV2Tb4YAf1c-9xeQGVhAxsn-1ec
-Message-ID: <CAH5fLgiCgMse0-L9Fb_r=3umucTqNosfO4R+1YVzOqavo07zMg@mail.gmail.com>
-Subject: Re: [PATCH v7 3/6] rust: io: factor common I/O helpers into Io trait
-To: Alexandre Courbot <acourbot@nvidia.com>
-Cc: Zhi Wang <zhiw@nvidia.com>, rust-for-linux@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, dakr@kernel.org, 
-	bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org, 
-	alex.gaynor@gmail.com, boqun.feng@gmail.com, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, lossin@kernel.org, a.hindborg@kernel.org, 
-	tmgross@umich.edu, markus.probst@posteo.de, helgaas@kernel.org, 
-	cjia@nvidia.com, smitra@nvidia.com, ankita@nvidia.com, aniketa@nvidia.com, 
-	kwankhede@nvidia.com, targupta@nvidia.com, joelagnelf@nvidia.com, 
-	jhubbard@nvidia.com, zhiwang@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20251125-pci-m2-e-v2-1-32826de07cc5@oss.qualcomm.com>
+References: <20251125-pci-m2-e-v2-0-32826de07cc5@oss.qualcomm.com>
+In-Reply-To: <20251125-pci-m2-e-v2-0-32826de07cc5@oss.qualcomm.com>
+To: Rob Herring <robh@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
+ Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Mark Pearson <mpearson-lenovo@squebb.ca>, 
+ "Derek J. Clark" <derekjohn.clark@gmail.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
+ linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+ linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2123;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=gp2plOukmLsK8Wz0sYhXr+7v4Z6uCCCmxZxVG517B/M=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpJcDyeFLCzWDU7DbBpggspqjnYeo3HN+5r50pB
+ iGA2Xp8WLeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaSXA8gAKCRBVnxHm/pHO
+ 9RlvB/9CbifjQ3jZwZtMwC+hnrlvILHtu+kiJsXQ3WfhvHxz5q0Fcm0nkfdBBgSUwx/bFhMqidX
+ /GyfwPv1MHx3GEX3AH41y1whdyQO02CzHOwLE+yu7n7gGnz5009PCzMinAD06jW9aZrHWzlx4Qa
+ Voe1JgB5+FRVKs8ppyCu9GEiOdQ2mrnnd2PoWslfpd5KX7DbJvqkAFG2CdPXmWe2f/yJKQZ10S4
+ KTR3UoQ1qHi3PQQHP35gajlhY+DXW6Ilc4F3HXG5ohmDGa3i8lJ0qsNb//RwdfdGbkGCgYDJg0Z
+ IDLx/gjMjBJuZlTxmgbt6Ot3q3BBG4UnBbmWvKq5nbkoP8/Z
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On Tue, Nov 25, 2025 at 3:15=E2=80=AFPM Alexandre Courbot <acourbot@nvidia.=
-com> wrote:
->
-> On Tue Nov 25, 2025 at 11:09 PM JST, Alexandre Courbot wrote:
-> > On Wed Nov 19, 2025 at 8:21 PM JST, Zhi Wang wrote:
-> > <snip>
-> >> -impl<const SIZE: usize> Io<SIZE> {
-> >> -    /// Converts an `IoRaw` into an `Io` instance, providing the acce=
-ssors to the MMIO mapping.
-> >> -    ///
-> >> -    /// # Safety
-> >> -    ///
-> >> -    /// Callers must ensure that `addr` is the start of a valid I/O m=
-apped memory region of size
-> >> -    /// `maxsize`.
-> >> -    pub unsafe fn from_raw(raw: &IoRaw<SIZE>) -> &Self {
-> >> -        // SAFETY: `Io` is a transparent wrapper around `IoRaw`.
-> >> -        unsafe { &*core::ptr::from_ref(raw).cast() }
-> >> +/// Checks whether an access of type `U` at the given `offset`
-> >> +/// is valid within this region.
-> >> +#[inline]
-> >> +const fn offset_valid<U>(offset: usize, size: usize) -> bool {
-> >> +    let type_size =3D core::mem::size_of::<U>();
-> >> +    if let Some(end) =3D offset.checked_add(type_size) {
-> >> +        end <=3D size && offset % type_size =3D=3D 0
-> >> +    } else {
-> >> +        false
-> >>      }
-> >> +}
-> >> +
-> >> +/// Represents a region of I/O space of a fixed size.
-> >> +///
-> >> +/// Provides common helpers for offset validation and address
-> >> +/// calculation on top of a base address and maximum size.
-> >> +///
-> >> +pub trait Io {
-> >> +    /// Minimum usable size of this region.
-> >> +    const MIN_SIZE: usize;
-> >
-> > This associated constant should probably be part of `IoInfallible` -
-> > otherwise what value should it take if some type only implement
-> > `IoFallible`?
-> >
-> >>
-> >>      /// Returns the base address of this mapping.
-> >> -    #[inline]
-> >> -    pub fn addr(&self) -> usize {
-> >> -        self.0.addr()
-> >> -    }
-> >> +    fn addr(&self) -> usize;
-> >>
-> >>      /// Returns the maximum size of this mapping.
-> >> -    #[inline]
-> >> -    pub fn maxsize(&self) -> usize {
-> >> -        self.0.maxsize()
-> >> -    }
-> >> -
-> >> -    #[inline]
-> >> -    const fn offset_valid<U>(offset: usize, size: usize) -> bool {
-> >> -        let type_size =3D core::mem::size_of::<U>();
-> >> -        if let Some(end) =3D offset.checked_add(type_size) {
-> >> -            end <=3D size && offset % type_size =3D=3D 0
-> >> -        } else {
-> >> -            false
-> >> -        }
-> >> -    }
-> >> +    fn maxsize(&self) -> usize;
-> >>
-> >> +    /// Returns the absolute I/O address for a given `offset`,
-> >> +    /// performing runtime bound checks.
-> >>      #[inline]
-> >>      fn io_addr<U>(&self, offset: usize) -> Result<usize> {
-> >> -        if !Self::offset_valid::<U>(offset, self.maxsize()) {
-> >> +        if !offset_valid::<U>(offset, self.maxsize()) {
-> >>              return Err(EINVAL);
-> >>          }
-> >
-> > Similarly I cannot find any context where `maxsize` and `io_addr` are
-> > used outside of `IoFallible`, hinting that these should be part of this
-> > trait.
-> >
-> >>
-> >> @@ -239,50 +240,190 @@ fn io_addr<U>(&self, offset: usize) -> Result<u=
-size> {
-> >>          self.addr().checked_add(offset).ok_or(EINVAL)
-> >>      }
-> >>
-> >> +    /// Returns the absolute I/O address for a given `offset`,
-> >> +    /// performing compile-time bound checks.
-> >>      #[inline]
-> >>      fn io_addr_assert<U>(&self, offset: usize) -> usize {
-> >> -        build_assert!(Self::offset_valid::<U>(offset, SIZE));
-> >> +        build_assert!(offset_valid::<U>(offset, Self::MIN_SIZE));
-> >>
-> >>          self.addr() + offset
-> >>      }
-> >
-> > ... and `io_addr_assert` is only used from `IoFallible`.
-> >
-> > So if my gut feeling is correct, we can disband `Io` entirely and only
->
-> ... except that we can't due to `addr`, unless we find a better way to
-> provide this base. But even if we need to keep `Io`, the compile-time
-> and runtime members should be moved to their respective traits.
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-If you have IoInfallible depend on IoFallible, then you can place
-`addr` on IoFallible.
+If these helpers receive the 'const struct device' pointer, then the const
+qualifier will get dropped, leading to below warning:
 
-(And I still think you should rename IoFallible to Io and IoInfallible
-to IoKnownSize.)
+warning: passing argument 1 of ‘to_serdev_device_driver’ discards 'const'
+qualifier from pointer target type [-Wdiscarded-qualifiers]
 
-Alice
+This is not an issue as of now, but with the future commits adding serdev
+device based driver matching, this warning will get triggered. Hence,
+convert these helpers to macros so that the qualifier get preserved and
+also use container_of_const() as container_of() is deprecated.
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ include/linux/serdev.h | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
+
+diff --git a/include/linux/serdev.h b/include/linux/serdev.h
+index 34562eb99931..ecde0ad3e248 100644
+--- a/include/linux/serdev.h
++++ b/include/linux/serdev.h
+@@ -49,10 +49,7 @@ struct serdev_device {
+ 	struct mutex write_lock;
+ };
+ 
+-static inline struct serdev_device *to_serdev_device(struct device *d)
+-{
+-	return container_of(d, struct serdev_device, dev);
+-}
++#define to_serdev_device(d) container_of_const(d, struct serdev_device, dev)
+ 
+ /**
+  * struct serdev_device_driver - serdev slave device driver
+@@ -67,10 +64,7 @@ struct serdev_device_driver {
+ 	void	(*remove)(struct serdev_device *);
+ };
+ 
+-static inline struct serdev_device_driver *to_serdev_device_driver(struct device_driver *d)
+-{
+-	return container_of(d, struct serdev_device_driver, driver);
+-}
++#define to_serdev_device_driver(d) container_of_const(d, struct serdev_device_driver, driver)
+ 
+ enum serdev_parity {
+ 	SERDEV_PARITY_NONE,
+@@ -111,10 +105,7 @@ struct serdev_controller {
+ 	const struct serdev_controller_ops *ops;
+ };
+ 
+-static inline struct serdev_controller *to_serdev_controller(struct device *d)
+-{
+-	return container_of(d, struct serdev_controller, dev);
+-}
++#define to_serdev_controller(d) container_of_const(d, struct serdev_controller, dev)
+ 
+ static inline void *serdev_device_get_drvdata(const struct serdev_device *serdev)
+ {
+
+-- 
+2.48.1
+
+
