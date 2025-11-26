@@ -1,338 +1,195 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010070.outbound.protection.outlook.com [52.101.201.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ABF633EAFC
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2025 16:09:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764173376; cv=none; b=TzrvvFzK5gB7/9B1k6z+cwX+P/pBuOXz4Vp4mui+lePDa3Q5B/QDbBsQYZgYByjtKAwH/zNl4nw3sGLoCvKqnr91vDUC7+9pyKbb5ZGxq+cJbGK4UjZ0FWkSWBrgkCTCrWfxQUmBF7X5Z8WVifMOL+aQoNqjzBCn7FArvbLD+Q4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764173376; c=relaxed/simple;
-	bh=CIWnpIXy2b0rOBp4vkPsIt5G3iIH1TZkuRslbfuh9wY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=F7GeSv2faqpYZngMZa/C/vm/5IcOdK6joYXIPuQXpEIOn49OL1Bp3F4535Jjp0d0oNPZdw/dwsGYtrgNZ+hpwqqrkzDxSXXEMPF/QPFDTQK/CEwSA8g+fYkrVjI5fGu5PLJdn4lF2k/7J2e9h1Rf4jWIO9I4w+xjNlaaSt3uAnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gDVVsqKg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nlR4bgUc; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gDVVsqKg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nlR4bgUc; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C28D25487C;
+	Wed, 26 Nov 2025 16:17:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.70
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1764173842; cv=fail; b=I/uQYzuhNLFjsIpVprmFjes+ejRPzyif7K5Y+JL3JIzMW5RfChHGZ23vAGjIUh/7RytQpJ8KBMRy5euTh9PBkWhka+m5j78uPhUlr2CVh+nhAN2bU+t2FROySctAnTDmeyzMB6u/dQlDq3GtirHl0fv/rih/nunh9g4pP+YWg5Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1764173842; c=relaxed/simple;
+	bh=59dbul5u+a5/eEc9+HVPaPgFdQqoiHNrx+O01kjC4hU=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GW5BynJp0GE2Gew+UimF7bXVdyNJLazwc8ySxtueX9m2kR6wcAvN2WWqZhB2v4//0xy/Wl/91IP8/9jcmGni+5/UbYG/7WyyDoZg1yDaCbWZ/DuXNznLAZWhcYVRyV1G00LMLDtThU66KPz4A8252yPWL9M/lQ7LOkdBndX40Xk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=PnB7M0xY; arc=fail smtp.client-ip=52.101.201.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gDVVsqKg";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nlR4bgUc";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gDVVsqKg";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nlR4bgUc"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id BEC2A33709;
-	Wed, 26 Nov 2025 16:09:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1764173343; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BrrbJ3alRtzOMTMhYJrDntjaxvd3iXypW6GUIunVDTk=;
-	b=gDVVsqKgbfh75SmTezs4cw5BsGWBy1HWvPN0lWCIuapXTEVyitUG1XzH/vT6POLV25petk
-	xGMCONZMHgiWh9wnKy0mv1vTu9BTgYmSvyPi+B68bAGfgTJxXd823j/GznUK0g2MVS1e1g
-	V2cTt2DrASho4AhQNabjuOlHbElHZ8I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1764173343;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BrrbJ3alRtzOMTMhYJrDntjaxvd3iXypW6GUIunVDTk=;
-	b=nlR4bgUcRp9vlyOFO1DCiQOXM5k/oJsckEX/Bytc1gRzOs7DOAyZNjoG25oisWzvkPO71s
-	GHyJmNhl2zcRG3BQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=gDVVsqKg;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=nlR4bgUc
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1764173343; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BrrbJ3alRtzOMTMhYJrDntjaxvd3iXypW6GUIunVDTk=;
-	b=gDVVsqKgbfh75SmTezs4cw5BsGWBy1HWvPN0lWCIuapXTEVyitUG1XzH/vT6POLV25petk
-	xGMCONZMHgiWh9wnKy0mv1vTu9BTgYmSvyPi+B68bAGfgTJxXd823j/GznUK0g2MVS1e1g
-	V2cTt2DrASho4AhQNabjuOlHbElHZ8I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1764173343;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BrrbJ3alRtzOMTMhYJrDntjaxvd3iXypW6GUIunVDTk=;
-	b=nlR4bgUcRp9vlyOFO1DCiQOXM5k/oJsckEX/Bytc1gRzOs7DOAyZNjoG25oisWzvkPO71s
-	GHyJmNhl2zcRG3BQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 463AA3EA65;
-	Wed, 26 Nov 2025 16:09:03 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id IC+6Dx8mJ2lnIgAAD6G6ig
-	(envelope-from <tzimmermann@suse.de>); Wed, 26 Nov 2025 16:09:03 +0000
-From: Thomas Zimmermann <tzimmermann@suse.de>
-To: ardb@kernel.org,
-	javierm@redhat.com,
-	arnd@arndb.de,
-	richard.lyu@suse.com,
-	helgaas@kernel.org
-Cc: x86@kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-efi@vger.kernel.org,
-	loongarch@lists.linux.dev,
-	linux-riscv@lists.infradead.org,
-	dri-devel@lists.freedesktop.org,
-	linux-hyperv@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	Thomas Zimmermann <tzimmermann@suse.de>
-Subject: [PATCH v3 9/9] efi: libstub: Simplify interfaces for primary_display
-Date: Wed, 26 Nov 2025 17:03:26 +0100
-Message-ID: <20251126160854.553077-10-tzimmermann@suse.de>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251126160854.553077-1-tzimmermann@suse.de>
-References: <20251126160854.553077-1-tzimmermann@suse.de>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="PnB7M0xY"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=muEvsr01lyaLhIOmVAoGRb6fHLXxPuKu0O2OkBmj8w13NNGeUvWoYIwZEl/OKYWS9TguENN/QWHlGbyL8p8t39r3AAXQ0z/0aR1M/qWXidNM/UfQqwfFPWryTTY12FYXjxrz5p/vQ1Gee0zIy5YMWYXT6OmhZr7Oa2N7CmUXoWny4+j9cjqvHRdHydevxmujDTUtxHgTyokNh0nSOcSA0u74APlGgK27g8WatI3VGbHttmZA6T9WMhd0rSkxcUP5DQRE+D++mlN5ZWkv2Ywtm5TJCmI5tyWJL5lzDE7bvma334pHUvzeJmBNgFgZPLPYSoBfUFcbAYPJXJuTHAJC9Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BT9J92y2KCsCjcSJEXZha/lFViLEelcSyMMy7Qud3EE=;
+ b=vLZQdsaeysDF500/7HToV0cCW++TGqQ5FzO8qOCUoE5ZrBfgXfylrE6jXWjCpqAEVQVrjRoUbvMkTB+k7dkN1SmvGhTNGcE1yjii5DatA4g3zigN1F0Z9evvd72PJ2xgfiZJvxvWh81m2B7oml7NupY2YWC+c8Nk4cTQSlr9yMNNc4G3EzWNM0Yy0LwSFu4aMt0Gd74bbda6N658SYUBKkKH7H1IkQ+sm/kSDcfGbptgHWXC+X4vpmrI09a5q/dGgb+pN2tGNU0BtSUUs4pnX4g7BHxszb2rkwxNadt81bva11KROcYbczi9T6jbkoQHtD3PT2nNeYhTIK0GscwsCQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=amd.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BT9J92y2KCsCjcSJEXZha/lFViLEelcSyMMy7Qud3EE=;
+ b=PnB7M0xYEnSSdvzJCR49HHiH9cdY7gPGranJEnAtfJFXg1mlDIzGE9Z5d59R6kZgBhZxuHTB8M8iZjBqRMJYPWyNd1LzWxIFvuSA0xMs72jrHUh6KOoCkORgZduQxwfdb1jWOvQk/KRNuWtalDYYkHo+BjnYIU/H70PQ0Wv0krkvkw64KkK5LxB8vvBGX+w4WaAeEQ+1L+82hxO7jFueeYwbZfGf8mcFZu5TkZ/8xKNSfH1BJGP/sx05DF20NFxtFQZoT5SkwbEMlsriKBfUVopLIuj1iJtg12DVWVwNRurlJ/ZBx0ghTx+Eyj4bvepdmnLLqI/yoXujCt8cVtgm9A==
+Received: from SJ0PR13CA0043.namprd13.prod.outlook.com (2603:10b6:a03:2c2::18)
+ by CH3PR12MB7547.namprd12.prod.outlook.com (2603:10b6:610:147::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9366.12; Wed, 26 Nov
+ 2025 16:17:14 +0000
+Received: from SJ1PEPF00002320.namprd03.prod.outlook.com
+ (2603:10b6:a03:2c2:cafe::8c) by SJ0PR13CA0043.outlook.office365.com
+ (2603:10b6:a03:2c2::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9366.11 via Frontend Transport; Wed,
+ 26 Nov 2025 16:17:14 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ SJ1PEPF00002320.mail.protection.outlook.com (10.167.242.86) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9366.7 via Frontend Transport; Wed, 26 Nov 2025 16:17:14 +0000
+Received: from rnnvmail205.nvidia.com (10.129.68.10) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 26 Nov
+ 2025 08:16:58 -0800
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by rnnvmail205.nvidia.com
+ (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 26 Nov
+ 2025 08:16:57 -0800
+Received: from Asurada-Nvidia (10.127.8.13) by mail.nvidia.com (10.129.68.7)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Wed, 26 Nov 2025 08:16:56 -0800
+Date: Wed, 26 Nov 2025 08:16:54 -0800
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: "Srivastava, Dheeraj Kumar" <dhsrivas@amd.com>
+CC: <joro@8bytes.org>, <afael@kernel.org>, <bhelgaas@google.com>,
+	<alex@shazbot.org>, <jgg@nvidia.com>, <will@kernel.org>,
+	<robin.murphy@arm.com>, <lenb@kernel.org>, <kevin.tian@intel.com>,
+	<baolu.lu@linux.intel.com>, <linux-arm-kernel@lists.infradead.org>,
+	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<kvm@vger.kernel.org>, <patches@lists.linux.dev>, <pjaroszynski@nvidia.com>,
+	<vsethi@nvidia.com>, <helgaas@kernel.org>, <etzhao1900@gmail.com>
+Subject: Re: [PATCH v7 1/5] iommu: Lock group->mutex in
+ iommu_deferred_attach()
+Message-ID: <aScn9t5ctN7FgRKD@Asurada-Nvidia>
+References: <cover.1763775108.git.nicolinc@nvidia.com>
+ <a7ebae88c78e81e7ff0d14788ddff2e6a9fcecd3.1763775108.git.nicolinc@nvidia.com>
+ <1f65de37-db9f-4807-a3ff-6cd377c855a5@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[16];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLtfyjk8sg4x43ngtem9djprcp)];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	TO_DN_SOME(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -3.01
-X-Spam-Level: 
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: BEC2A33709
+In-Reply-To: <1f65de37-db9f-4807-a3ff-6cd377c855a5@amd.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00002320:EE_|CH3PR12MB7547:EE_
+X-MS-Office365-Filtering-Correlation-Id: 369c9118-1291-418d-922b-08de2d074319
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|82310400026|376014|7416014|36860700013;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?SXUya21lUlc1UW44cVlaNTJpclpJbjNXcjY0M3RtY0s2bUc5dDFub3dwYkdr?=
+ =?utf-8?B?UGNodTFmdXJOSHlXMEhCUXlqRTdVK2x3S2Vka094Y3Vyc3dXbDAzUmM0L1NI?=
+ =?utf-8?B?U2hRazc5ZEdoczUwTlRvRzlyb2JhSy9URlF0M1J5c0VCUlQ2WWNXSVlFWWdt?=
+ =?utf-8?B?U2ZjLzdHSE9LM0VDaHdkdHNBRTl5OEtGcVI5WnlSTlcyUFJycXNsMXdDYmVk?=
+ =?utf-8?B?eVJGbmwwWDRKVmdiYVFVNEJyMG9nVGx4OFU0cDNMRFM5ZGdPdkFTM0FLVm9k?=
+ =?utf-8?B?SDlqM21JOFJLMnJGNklCbDU0dUFPbVNLVTdqS04rNzg3NVZKbmlrSXFvTGFK?=
+ =?utf-8?B?aWpVSUxQZjdVSEd2USt6MzRZYjVRZm5xUy91MGdkY0x0WW12NjRacHQ0NHhP?=
+ =?utf-8?B?Y0hqYTN2Z1B4dy95ZTVMVncrSDYzM20zbW81ZVMrVHFHMUdkOHJ5SldhNlRU?=
+ =?utf-8?B?ZDhvWWdNY0xMeXZmeFlsK2dWQ3k3Ly9zb0gxQ3NsMVNHTUFCOUZJa1E0ayth?=
+ =?utf-8?B?bm9xdGRWTDh6ckdCMlg4TWczNlR6b2lmKzhtNk82ZDNlcTRsMGRHNzdPWXRu?=
+ =?utf-8?B?QXhhTy9Td3dDUDZUWEVIdzZpSStnOVI4OWhRVElmSnVXSDRsNExaSnFKZzBm?=
+ =?utf-8?B?THZ5cEZ0bnVRNTduOWRsRE1PeWRLZ2NPUUhvY2RIOXlVQ0NLNnlNYjNBTk00?=
+ =?utf-8?B?cUVKKzIveHA1Q1RCNzd1QVRmT2x5Y2hSeFordzBIaDR5a0txejVVdTR4RHF4?=
+ =?utf-8?B?L2Z1cnRyWnROWlhIZFhMczdnUjV4TXZ1dWQ1WDQwaC91d21lZFFObHBVdlVW?=
+ =?utf-8?B?a2lXM1BSYTVEWVpVVHBJV3hhbTd0ZndyV0VHakpQZXZ6TE5QS1RSbll2NWdC?=
+ =?utf-8?B?czc5L0wrcHZ2M1B1cnRFVGVKQkwvVzJROURISlJBejduTGc0YzZYQ2htRGox?=
+ =?utf-8?B?S0tLbXh2TlV0LzkvNDdWTlYxRjNHenJnOURhQjlGRkptNi9uKy8xUmRSc3p6?=
+ =?utf-8?B?QTA1VWZReFFQMzFHalVtU1FsOG1FeUV4ZUNsY3htcDR6L1ZKdTI0L1ExN2Fa?=
+ =?utf-8?B?cE12anFDM2tDaWszaFREdjl6THd3Zm1uSElFOWp0bjd4NStPdXBmVkZVODU0?=
+ =?utf-8?B?NDBNY0gwcmlaU1dCQ1ZMNEFINDNnNEx2R3ovSWNSQnd0VXV1MGtGRzJBRWJw?=
+ =?utf-8?B?S2MrWW5BTG5ab0VXRjI1WVJXMzJ0T2R0VzNSaEdnNEtMdThhUUxJRzROcnV3?=
+ =?utf-8?B?T0tSdVRuZVJvU2NlV0ZwalhvMlREc3Q4YUtvTDVralFuVnYzR1ZGUHlEc29p?=
+ =?utf-8?B?TzJnSklJa1RrTDdTRXJ1YXFOeittZ2xTME11VFYweVB1Y25oOGw5dkJ0M1Bx?=
+ =?utf-8?B?Y2twWWZ5Kys2RkNBOTlhaUxiRFlGbHV0amdDOWpUSE1UMW1POXpaR3VrU013?=
+ =?utf-8?B?c1VYYWN2bE9UcGg1NFc5SiszanAzWWZVL0I1Sy9iUGZLazBsM3ErNGtjeC9B?=
+ =?utf-8?B?U1I3ZEJmSGlWRit0MDJFSFZxWlNkbFFLRkRqb3BHd1FnaStlK0t1YVk5WHUr?=
+ =?utf-8?B?MnZuWUVEb05idnNkWTU4WktkalI1MVVmYUlkbGkyR3l1cGJQVnRSdHlUK1Ex?=
+ =?utf-8?B?SWJNTVNyWXBsWE1lZ2g3OVlqMjBBTHRUUGVpdUN4WksvUmx6S3VINVB1clFs?=
+ =?utf-8?B?aUlpZjRscldCWElkUTVZYS9tWlBCbWQ3TlFWcVNIa0szcVY2ZWwyRCt4MVUz?=
+ =?utf-8?B?WEF1dHQ4SDBVUTRkdVkzTHVjdWNGYjFkTVVLT2lnYUk2NEIrRmJsMmQxNzlu?=
+ =?utf-8?B?L0V1ZjYraU1hcks3WVZDSHpvdWtrQ2tTdnlVRnYzM0NVZytEM3g1eHBlRkdx?=
+ =?utf-8?B?NFAyM1NGWHFrTndDNlpmY28zUUtFTHVteDhTalBUMHlEYU0vRUVvQUVqOGMw?=
+ =?utf-8?B?K2p0RVByS3VtdWQ0T2hXcVdsbjNUbzJaWEtzQUYrcEpUbmp6SC9BMlhETDlJ?=
+ =?utf-8?B?eGl2Kyt2L05jZlhnTWlKU2dWb0VUS2VJZ2dZYzZBZS8rSjhScHV5ZERaQXhQ?=
+ =?utf-8?B?dzlsWmE3dm5rQm15bUw1NGNVNytYeSs2amplZldnNmxIYi9VNUNBWDFYRXlG?=
+ =?utf-8?Q?nDqQ=3D?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(7416014)(36860700013);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Nov 2025 16:17:14.6630
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 369c9118-1291-418d-922b-08de2d074319
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ1PEPF00002320.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7547
 
-Rename alloc_primary_display() and __alloc_primary_display(), clarify
-free semantics to make interfaces easier to understand.
+On Wed, Nov 26, 2025 at 06:25:34PM +0530, Srivastava, Dheeraj Kumar wrote:
+> On 11/22/2025 7:27 AM, Nicolin Chen wrote:
+> > The iommu_deferred_attach() function invokes __iommu_attach_device(), but
+> > doesn't hold the group->mutex like other __iommu_attach_device() callers.
+> > 
+> > Though there is no pratical bug being triggered so far, it would be better
+> > to apply the same locking to this __iommu_attach_device(), since the IOMMU
+> > drivers nowaday are more aware of the group->mutex -- some of them use the
+> > iommu_group_mutex_assert() function that could be potentially in the path
+> > of an attach_dev callback function invoked by the __iommu_attach_device().
+> > 
+> > Worth mentioning that the iommu_deferred_attach() will soon need to check
+> > group->resetting_domain that must be locked also.
+> > 
+> > Thus, grab the mutex to guard __iommu_attach_device() like other callers.
+> > 
+> 
+> Tested the series with PCI reset on PFs and VFs, including device
+> pass-through to a Linux guest. All scenarios worked as expected.
+> 
+> Tested-by: Dheeraj Kumar Srivastava <dheerajkumar.srivastava@amd.com>
 
-Rename alloc_primary_display() to lookup_primary_display() as it
-does not necessarily allocate. Then rename __alloc_primary_display()
-to the new alloc_primary_display(). The helper belongs to
-free_primary_display), so it should be named without underscores.
+Thanks for testing!
 
-The lookup helper does not necessarily allocate, so the output
-parameter needs_free to indicate when free should be called. Pass
-an argument through the calls to track this state. Put the free
-handling into release_primary_display() for simplificy.
+Yet, this is replying to PATCH-1. So, you might want to reply with
+your "Tested-by" tag to PATCH-0 :)
 
-Also move the comment fro primary_display.c to efi-stub-entry.c,
-where it now describes lookup_primary_display().
+Otherwise, default B4 command might miss your tag in other patches:
 
-Signed-off-by: Thomas Zimmermann <tzimmermann@suse.de>
----
- drivers/firmware/efi/libstub/efi-stub-entry.c | 23 +++++++++++++++++--
- drivers/firmware/efi/libstub/efi-stub.c       | 22 ++++++++++++------
- drivers/firmware/efi/libstub/efistub.h        |  2 +-
- .../firmware/efi/libstub/primary_display.c    | 17 +-------------
- drivers/firmware/efi/libstub/zboot.c          |  6 +++--
- 5 files changed, 42 insertions(+), 28 deletions(-)
+  ✗ [PATCH v7 1/5] iommu: Lock group->mutex in iommu_deferred_attach()
+    + Tested-by: Dheeraj Kumar Srivastava <dheerajkumar.srivastava@amd.com> (✓ DKIM/amd.com)
+  ✗ [PATCH v7 2/5] iommu: Tidy domain for iommu_setup_dma_ops()
+    + Reviewed-by: Jason Gunthorpe <jgg@nvidia.com> (✗ DKIM/Nvidia.com)
+  ✗ [PATCH v7 3/5] iommu: Add iommu_driver_get_domain_for_dev() helper
+    + Reviewed-by: Jason Gunthorpe <jgg@nvidia.com> (✗ DKIM/Nvidia.com)
+  ✗ [PATCH v7 4/5] iommu: Introduce pci_dev_reset_iommu_prepare/done()
+    + Reviewed-by: Jason Gunthorpe <jgg@nvidia.com> (✗ DKIM/Nvidia.com)
+  ✗ [PATCH v7 5/5] PCI: Suspend iommu function prior to resetting a device
+    + Reviewed-by: Jason Gunthorpe <jgg@nvidia.com> (✗ DKIM/Nvidia.com)
 
-diff --git a/drivers/firmware/efi/libstub/efi-stub-entry.c b/drivers/firmware/efi/libstub/efi-stub-entry.c
-index aa85e910fe59..3077b51fe0b2 100644
---- a/drivers/firmware/efi/libstub/efi-stub-entry.c
-+++ b/drivers/firmware/efi/libstub/efi-stub-entry.c
-@@ -14,10 +14,29 @@ static void *kernel_image_addr(void *addr)
- 	return addr + kernel_image_offset;
- }
- 
--struct sysfb_display_info *alloc_primary_display(void)
-+/*
-+ * There are two ways of populating the core kernel's sysfb_primary_display
-+ * via the stub:
-+ *
-+ *   - using a configuration table, which relies on the EFI init code to
-+ *     locate the table and copy the contents; or
-+ *
-+ *   - by linking directly to the core kernel's copy of the global symbol.
-+ *
-+ * The latter is preferred because it makes the EFIFB earlycon available very
-+ * early, but it only works if the EFI stub is part of the core kernel image
-+ * itself. The zboot decompressor can only use the configuration table
-+ * approach.
-+ */
-+
-+struct sysfb_display_info *lookup_primary_display(bool *needs_free)
- {
-+	*needs_free = true;
-+
- 	if (IS_ENABLED(CONFIG_ARM))
--		return __alloc_primary_display();
-+		return alloc_primary_display();
-+
-+	*needs_free = false;
- 
- 	if (IS_ENABLED(CONFIG_X86) ||
- 	    IS_ENABLED(CONFIG_EFI_EARLYCON) ||
-diff --git a/drivers/firmware/efi/libstub/efi-stub.c b/drivers/firmware/efi/libstub/efi-stub.c
-index 42d6073bcd06..dc545f62c62b 100644
---- a/drivers/firmware/efi/libstub/efi-stub.c
-+++ b/drivers/firmware/efi/libstub/efi-stub.c
-@@ -51,14 +51,14 @@ static bool flat_va_mapping = (EFI_RT_VIRTUAL_OFFSET != 0);
- void __weak free_primary_display(struct sysfb_display_info *dpy)
- { }
- 
--static struct sysfb_display_info *setup_primary_display(void)
-+static struct sysfb_display_info *setup_primary_display(bool *dpy_needs_free)
- {
- 	struct sysfb_display_info *dpy;
- 	struct screen_info *screen = NULL;
- 	struct edid_info *edid = NULL;
- 	efi_status_t status;
- 
--	dpy = alloc_primary_display();
-+	dpy = lookup_primary_display(dpy_needs_free);
- 	if (!dpy)
- 		return NULL;
- 	screen = &dpy->screen;
-@@ -68,15 +68,22 @@ static struct sysfb_display_info *setup_primary_display(void)
- 
- 	status = efi_setup_graphics(screen, edid);
- 	if (status != EFI_SUCCESS)
--		goto err_free_primary_display;
-+		goto err___free_primary_display;
- 
- 	return dpy;
- 
--err_free_primary_display:
--	free_primary_display(dpy);
-+err___free_primary_display:
-+	if (*dpy_needs_free)
-+		free_primary_display(dpy);
- 	return NULL;
- }
- 
-+static void release_primary_display(struct sysfb_display_info *dpy, bool dpy_needs_free)
-+{
-+	if (dpy && dpy_needs_free)
-+		free_primary_display(dpy);
-+}
-+
- static void install_memreserve_table(void)
- {
- 	struct linux_efi_memreserve *rsv;
-@@ -156,13 +163,14 @@ efi_status_t efi_stub_common(efi_handle_t handle,
- 			     char *cmdline_ptr)
- {
- 	struct sysfb_display_info *dpy;
-+	bool dpy_needs_free;
- 	efi_status_t status;
- 
- 	status = check_platform_features();
- 	if (status != EFI_SUCCESS)
- 		return status;
- 
--	dpy = setup_primary_display();
-+	dpy = setup_primary_display(&dpy_needs_free);
- 
- 	efi_retrieve_eventlog();
- 
-@@ -182,7 +190,7 @@ efi_status_t efi_stub_common(efi_handle_t handle,
- 
- 	status = efi_boot_kernel(handle, image, image_addr, cmdline_ptr);
- 
--	free_primary_display(dpy);
-+	release_primary_display(dpy, dpy_needs_free);
- 
- 	return status;
- }
-diff --git a/drivers/firmware/efi/libstub/efistub.h b/drivers/firmware/efi/libstub/efistub.h
-index 979a21818cc1..1503ffb82903 100644
---- a/drivers/firmware/efi/libstub/efistub.h
-+++ b/drivers/firmware/efi/libstub/efistub.h
-@@ -1176,8 +1176,8 @@ efi_enable_reset_attack_mitigation(void) { }
- 
- void efi_retrieve_eventlog(void);
- 
-+struct sysfb_display_info *lookup_primary_display(bool *needs_free);
- struct sysfb_display_info *alloc_primary_display(void);
--struct sysfb_display_info *__alloc_primary_display(void);
- void free_primary_display(struct sysfb_display_info *dpy);
- 
- void efi_cache_sync_image(unsigned long image_base,
-diff --git a/drivers/firmware/efi/libstub/primary_display.c b/drivers/firmware/efi/libstub/primary_display.c
-index cdaebab26514..34c54ac1e02a 100644
---- a/drivers/firmware/efi/libstub/primary_display.c
-+++ b/drivers/firmware/efi/libstub/primary_display.c
-@@ -7,24 +7,9 @@
- 
- #include "efistub.h"
- 
--/*
-- * There are two ways of populating the core kernel's sysfb_primary_display
-- * via the stub:
-- *
-- *   - using a configuration table, which relies on the EFI init code to
-- *     locate the table and copy the contents; or
-- *
-- *   - by linking directly to the core kernel's copy of the global symbol.
-- *
-- * The latter is preferred because it makes the EFIFB earlycon available very
-- * early, but it only works if the EFI stub is part of the core kernel image
-- * itself. The zboot decompressor can only use the configuration table
-- * approach.
-- */
--
- static efi_guid_t primary_display_guid = LINUX_EFI_PRIMARY_DISPLAY_TABLE_GUID;
- 
--struct sysfb_display_info *__alloc_primary_display(void)
-+struct sysfb_display_info *alloc_primary_display(void)
- {
- 	struct sysfb_display_info *dpy;
- 	efi_status_t status;
-diff --git a/drivers/firmware/efi/libstub/zboot.c b/drivers/firmware/efi/libstub/zboot.c
-index 4b76f74c56da..c1fd1fdbcb08 100644
---- a/drivers/firmware/efi/libstub/zboot.c
-+++ b/drivers/firmware/efi/libstub/zboot.c
-@@ -26,9 +26,11 @@ void __weak efi_cache_sync_image(unsigned long image_base,
- 	// executable code loaded into memory to be safe for execution.
- }
- 
--struct sysfb_display_info *alloc_primary_display(void)
-+struct sysfb_display_info *lookup_primary_display(bool *needs_free)
- {
--	return __alloc_primary_display();
-+	*needs_free = true;
-+
-+	return alloc_primary_display();
- }
- 
- asmlinkage efi_status_t __efiapi
--- 
-2.51.1
-
+Thank you
+Nicolin
