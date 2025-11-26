@@ -1,296 +1,185 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A092933DEC8
-	for <linux-pci@vger.kernel.org>; Wed, 26 Nov 2025 16:09:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A21433A024;
+	Wed, 26 Nov 2025 16:09:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764173351; cv=none; b=fujRUDh3a6Bgn5yZlauUOvjf5xT7W42IO/avjk+GSF25V3gNqcZJ8F2t5HuDiO00r6aofO2hlDjSIJA1GAxQa+mIks0M0eprNTsuRTAjDNcL2fhPkZy1LvHcjJ3PStF2l1k6TmCEFd57pC2ZUu2GlUODK0GodSmcH0jmoZkzsu4=
+	t=1764173352; cv=none; b=T0IR3WAeDcMtp2tFboSga4eHo4ALqWib3fvjprZs7i2fEBnRtgw8s2m7tNmxoeazYtK4OuXlhd0EAHH/JVBVbDJb0oLKdd7IYjW34vGV8UoqrQjiBzbm/+PIgZPTXvJAAE8r/yrTzDkUzd8SYAQET9rLkDOVTflaCzIWPY/zNFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764173351; c=relaxed/simple;
-	bh=L1aPOhyq8DGxlHXlPMvUQew9wYYpOFCTBbsUMdEBg7w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rE47DQeopGk37SLDyDLxBIYKNOBSq1hspcUN0xK/14sIU7Y0V8FQ7pL4Q6T4xP7+aBENUSJy0itsnO0NVWaD1m28cnGMlBb8UYkiKliCGqcSdprDr0p315Lh+T5rrru8lr130/DoZSH0rQXGUsfEo4J7k17aB+aKPf3cXFDkGOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=HNlHLdT4; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BtXYUld8; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=EyCENnQs; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=x1rd6/pA; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1764173352; c=relaxed/simple;
+	bh=rnuPj8l3nxRD30Mzwohmphj0ozjaGXooltYOoIP3XdE=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=S8ZtdDZnbqnfF9W2kG+StBWf+NSLiL09Tmgvh2QTCp6sl7t5B/K6spXo/XAKHAx6OApIuWx6WwQqO2+HiPbTfg+d2ALRSntjzEdQztsFs0DWNSbmkdKFsOC+Io/nZAA8PlIN9NoWmO7Ji0rESDmGPMg3eEBpZy+39+KUratymy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fb.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=fb.com header.i=@fb.com header.b=CATY9ftr; arc=none smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fb.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="HNlHLdT4";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BtXYUld8";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="EyCENnQs";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="x1rd6/pA"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id EB0005BE8D;
-	Wed, 26 Nov 2025 16:08:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1764173340; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=63HXk2asPcR6HKGFSmIOTJlWneEzg1F4AZ9qPy2VUyc=;
-	b=HNlHLdT4+ftHDfSGcOLmy/wgSh5PB0cIxN3PxYieoVKiFvyEg8LqW4ET/7i469pmj8Lj8r
-	FFYRB2BMSM5Cjq6CIf+WPNeq6UfL04Jz+h3N19417jz3JnfrAY52w+MeBLNLemJLqAjoTl
-	pID0na9X6myqM8n7YH+zioeY7M/kMQ8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1764173340;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=63HXk2asPcR6HKGFSmIOTJlWneEzg1F4AZ9qPy2VUyc=;
-	b=BtXYUld8tzzkYVjOlVGH33TFv6Kfv0PQxIUS+XyuDDZpunpaFqz3IKfrOFfn5OCn5VAeEF
-	OOtQyrTU0ueFv8Dg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=EyCENnQs;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="x1rd6/pA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1764173339; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=63HXk2asPcR6HKGFSmIOTJlWneEzg1F4AZ9qPy2VUyc=;
-	b=EyCENnQsl8ql14ma1fvIBorWD44yIEHI8lT/qCunnUIaRK1Ao+djFjva9osjmJ1wh7q49T
-	46MPz3orf+H4x0zBFul1vfD9JsUmomlTSyzC/+g+duBwOe0GRJaZFyKigWcDkFEhhFI+MS
-	MEdpWIq3AQR5UNvOlmCX8bmiicagCc8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1764173339;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=63HXk2asPcR6HKGFSmIOTJlWneEzg1F4AZ9qPy2VUyc=;
-	b=x1rd6/pAixjpIpLzme3cxM2k/UuYVXhrQrtn+ltzf+fRuYOB2bhlwpUamTWylLS2vhJrV5
-	o3i4EkgeCsw7HDBA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7CDC83EA65;
-	Wed, 26 Nov 2025 16:08:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id SHoMHRsmJ2lnIgAAD6G6ig
-	(envelope-from <tzimmermann@suse.de>); Wed, 26 Nov 2025 16:08:59 +0000
-From: Thomas Zimmermann <tzimmermann@suse.de>
-To: ardb@kernel.org,
-	javierm@redhat.com,
-	arnd@arndb.de,
-	richard.lyu@suse.com,
-	helgaas@kernel.org
-Cc: x86@kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-efi@vger.kernel.org,
-	loongarch@lists.linux.dev,
-	linux-riscv@lists.infradead.org,
-	dri-devel@lists.freedesktop.org,
-	linux-hyperv@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	Thomas Zimmermann <tzimmermann@suse.de>
-Subject: [PATCH v3 1/9] efi: earlycon: Reduce number of references to global screen_info
-Date: Wed, 26 Nov 2025 17:03:18 +0100
-Message-ID: <20251126160854.553077-2-tzimmermann@suse.de>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251126160854.553077-1-tzimmermann@suse.de>
-References: <20251126160854.553077-1-tzimmermann@suse.de>
+	dkim=pass (2048-bit key) header.d=fb.com header.i=@fb.com header.b="CATY9ftr"
+Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
+	by m0089730.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 5AQEPbd43733913;
+	Wed, 26 Nov 2025 08:08:31 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=s2048-2025-q2; bh=oZmYh6YpHcTCE9H3NEMw
+	SXw1R9ZP1diRqyx6ns/UxKM=; b=CATY9ftrmS7XqrrPh2Kw2+U4yOLTDIOhQo4t
+	fT++bE5QnXUTTDj1SISKs+UQWWlWXESUt4Vk/Uw4ZSdu3sXkySe9GBFHO/GtOEWQ
+	411l/Uycz4QsElZjqmNLTTOC03Bk3xrahRxGe2dTAYG3Xw8/u0qaXvlwf4Qf+gzA
+	RQRz/m6jwIWn7OkNdO9JgYCJ3G1u1eeNgwfmMCUjXO0Y/Z5VrkUOlbGe0Sigp71N
+	fPi2jhyinHmV7dk2u+LQ68tQs+O+aJ2d0sCNzYiAXKyb0pPsIXMYGocj6ADUHnCK
+	VMnCClf+dI7uC/6KbcFfIu8b90bADDeEXqso0Amh6UxzsGo6vA==
+Received: from mail.thefacebook.com ([163.114.134.16])
+	by m0089730.ppops.net (PPS) with ESMTPS id 4ap3a78uqy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Wed, 26 Nov 2025 08:08:31 -0800 (PST)
+Received: from devgpu015.cco6.facebook.com (2620:10d:c085:208::7cb7) by
+ mail.thefacebook.com (2620:10d:c08b:78::c78f) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.29; Wed, 26 Nov 2025 16:08:29 +0000
+Date: Wed, 26 Nov 2025 08:08:24 -0800
+From: Alex Mastro <amastro@fb.com>
+To: Pranjal Shrivastava <praan@google.com>
+CC: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Logan Gunthorpe <logang@deltatee.com>, Jens Axboe <axboe@kernel.dk>,
+        Robin
+ Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+        Will Deacon
+	<will@kernel.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Jason
+ Gunthorpe <jgg@ziepe.ca>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jonathan
+ Corbet <corbet@lwn.net>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Christian
+ =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Kees Cook
+	<kees@kernel.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Ankit
+ Agrawal <ankita@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+        Shameer
+ Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>, Alex
+ Williamson <alex@shazbot.org>,
+        Krishnakant Jaju <kjaju@nvidia.com>, Matt Ochs
+	<mochs@nvidia.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-block@vger.kernel.org>, <iommu@lists.linux.dev>,
+        <linux-mm@kvack.org>, <linux-doc@vger.kernel.org>,
+        <linux-media@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        <linaro-mm-sig@lists.linaro.org>, <kvm@vger.kernel.org>,
+        <linux-hardening@vger.kernel.org>, Nicolin Chen <nicolinc@nvidia.com>,
+        Jason
+ Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH v9 06/11] dma-buf: provide phys_vec to scatter-gather
+ mapping routine
+Message-ID: <aScl+LCPN2TiN7Pd@devgpu015.cco6.facebook.com>
+References: <20251120-dmabuf-vfio-v9-0-d7f71607f371@nvidia.com>
+ <20251120-dmabuf-vfio-v9-6-d7f71607f371@nvidia.com>
+ <aSZHO6otK0Heh+Qj@devgpu015.cco6.facebook.com>
+ <aSb8yH6fSlwk1oZZ@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[16];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLtfyjk8sg4x43ngtem9djprcp)];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	TO_DN_SOME(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:dkim,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email]
-X-Spam-Level: 
-X-Spam-Score: -3.01
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: EB0005BE8D
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <aSb8yH6fSlwk1oZZ@google.com>
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTI2MDEzMiBTYWx0ZWRfX3bFJkIqQfPcn
+ LWbsluc+XiO7FtO07pm/tzene/bBlAJbYXetaCM2lBsQPJ7MYrk9CERNphaL5xKMK0Fnvy9OfVQ
+ Y+bU9q7WY0Uh4Ys8J+otFMneIfwxv0xQluXqaIjHKTPEMVRe0iLSwQwQAHlspppJcXBPJ55pvJz
+ JZGujlxTRi2Y6L0eYmj2p7cT3nMIZvFmJX5h1nMX2rkgpOumcUuD7Oe2fNXk47TY9k+6i3mWPRm
+ +1gsqEAXdsAGhXv5RuZTmDTEo722fCpYhIfmTOQnzXGxfUvfRTUYuIHNc7jrvUJJ3yy8os7MmWa
+ fQzyxL3akPGWodtrtHsYmp6smX1T/MBPHuER3U7LA5bJUfQjB0xkE91sw0JPQLAlnjtXtOu0oRF
+ 6D5ufStP6OnrcDNfC66Kegl4bp3vwg==
+X-Authority-Analysis: v=2.4 cv=AJKKJ3lP c=1 sm=1 tr=0 ts=692725ff cx=c_pps
+ a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
+ a=kj9zAlcOel0A:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=B5NVPXpBE_52QoX4XTUA:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-ORIG-GUID: jOyqyM0SasvNGLs4etkYDuX4vfn-Z9b2
+X-Proofpoint-GUID: jOyqyM0SasvNGLs4etkYDuX4vfn-Z9b2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-11-25_02,2025-11-26_01,2025-10-01_01
 
-Replace usage of global screen_info with local pointers. This will
-later reduce churn when screen_info is being moved.
+On Wed, Nov 26, 2025 at 01:12:40PM +0000, Pranjal Shrivastava wrote:
+> On Tue, Nov 25, 2025 at 04:18:03PM -0800, Alex Mastro wrote:
+> > On Thu, Nov 20, 2025 at 11:28:25AM +0200, Leon Romanovsky wrote:
+> > > +static struct scatterlist *fill_sg_entry(struct scatterlist *sgl, size_t length,
+> > > +					 dma_addr_t addr)
+> > > +{
+> > > +	unsigned int len, nents;
+> > > +	int i;
+> > > +
+> > > +	nents = DIV_ROUND_UP(length, UINT_MAX);
+> > > +	for (i = 0; i < nents; i++) {
+> > > +		len = min_t(size_t, length, UINT_MAX);
+> > > +		length -= len;
+> > > +		/*
+> > > +		 * DMABUF abuses scatterlist to create a scatterlist
+> > > +		 * that does not have any CPU list, only the DMA list.
+> > > +		 * Always set the page related values to NULL to ensure
+> > > +		 * importers can't use it. The phys_addr based DMA API
+> > > +		 * does not require the CPU list for mapping or unmapping.
+> > > +		 */
+> > > +		sg_set_page(sgl, NULL, 0, 0);
+> > > +		sg_dma_address(sgl) = addr + i * UINT_MAX;
+> > 
+> > (i * UINT_MAX) happens in 32-bit before being promoted to dma_addr_t for
+> > addition with addr. Overflows for i >=2 when length >= 8 GiB. Needs a cast:
+> > 
+> > 		sg_dma_address(sgl) = addr + (dma_addr_t)i * UINT_MAX;
+> > 
+> > Discovered this while debugging why dma-buf import was failing for
+> > an 8 GiB dma-buf using my earlier toy program [1]. It was surfaced by
+> > ib_umem_find_best_pgsz() returning 0 due to malformed scatterlist, which bubbles
+> > up as an EINVAL.
+> >
+> 
+> Thanks a lot for testing & reporting this!
+> 
+> However, I believe the casting approach is a little fragile (and
+> potentially prone to issues depending on how dma_addr_t is sized on
+> different platforms). Thus, approaching this with accumulation seems
+> better as it avoids the multiplication logic entirely, maybe something
+> like the following (untested) diff ?
 
-v2:
-- fix coding style
+If the function input range is well-formed, then all values in
+[addr..addr+length) must be expressible by dma_addr_t, so I don't think overflow
+after casting is possible as long as nents is valid.
 
-Signed-off-by: Thomas Zimmermann <tzimmermann@suse.de>
-Reviewed-by: Richard Lyu <richard.lyu@suse.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Ard Biesheuvel <ardb@kernel.org>
----
- drivers/firmware/efi/earlycon.c | 40 ++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+That said, `nents = DIV_ROUND_UP(length, UINT_MAX)` is simply broken on any
+system where size_t is 32b. I don't know if that's a practical consideration for
+these code paths though.
 
-diff --git a/drivers/firmware/efi/earlycon.c b/drivers/firmware/efi/earlycon.c
-index d18a1a5de144..42e3a173dac1 100644
---- a/drivers/firmware/efi/earlycon.c
-+++ b/drivers/firmware/efi/earlycon.c
-@@ -32,12 +32,13 @@ static void *efi_fb;
-  */
- static int __init efi_earlycon_remap_fb(void)
- {
-+	const struct screen_info *si = &screen_info;
-+
- 	/* bail if there is no bootconsole or it was unregistered already */
- 	if (!earlycon_console || !console_is_registered(earlycon_console))
- 		return 0;
- 
--	efi_fb = memremap(fb_base, screen_info.lfb_size,
--			  fb_wb ? MEMREMAP_WB : MEMREMAP_WC);
-+	efi_fb = memremap(fb_base, si->lfb_size, fb_wb ? MEMREMAP_WB : MEMREMAP_WC);
- 
- 	return efi_fb ? 0 : -ENOMEM;
- }
-@@ -71,12 +72,12 @@ static __ref void efi_earlycon_unmap(void *addr, unsigned long len)
- 	early_memunmap(addr, len);
- }
- 
--static void efi_earlycon_clear_scanline(unsigned int y)
-+static void efi_earlycon_clear_scanline(unsigned int y, const struct screen_info *si)
- {
- 	unsigned long *dst;
- 	u16 len;
- 
--	len = screen_info.lfb_linelength;
-+	len = si->lfb_linelength;
- 	dst = efi_earlycon_map(y*len, len);
- 	if (!dst)
- 		return;
-@@ -85,7 +86,7 @@ static void efi_earlycon_clear_scanline(unsigned int y)
- 	efi_earlycon_unmap(dst, len);
- }
- 
--static void efi_earlycon_scroll_up(void)
-+static void efi_earlycon_scroll_up(const struct screen_info *si)
- {
- 	unsigned long *dst, *src;
- 	u16 maxlen = 0;
-@@ -99,8 +100,8 @@ static void efi_earlycon_scroll_up(void)
- 	}
- 	maxlen *= 4;
- 
--	len = screen_info.lfb_linelength;
--	height = screen_info.lfb_height;
-+	len = si->lfb_linelength;
-+	height = si->lfb_height;
- 
- 	for (i = 0; i < height - font->height; i++) {
- 		dst = efi_earlycon_map(i*len, len);
-@@ -120,7 +121,8 @@ static void efi_earlycon_scroll_up(void)
- 	}
- }
- 
--static void efi_earlycon_write_char(u32 *dst, unsigned char c, unsigned int h)
-+static void efi_earlycon_write_char(u32 *dst, unsigned char c, unsigned int h,
-+				    const struct screen_info *si)
- {
- 	const u32 color_black = 0x00000000;
- 	const u32 color_white = 0x00ffffff;
-@@ -145,13 +147,12 @@ static void efi_earlycon_write_char(u32 *dst, unsigned char c, unsigned int h)
- static void
- efi_earlycon_write(struct console *con, const char *str, unsigned int num)
- {
--	struct screen_info *si;
-+	const struct screen_info *si = &screen_info;
- 	u32 cur_efi_x = efi_x;
- 	unsigned int len;
- 	const char *s;
- 	void *dst;
- 
--	si = &screen_info;
- 	len = si->lfb_linelength;
- 
- 	while (num) {
-@@ -174,7 +175,7 @@ efi_earlycon_write(struct console *con, const char *str, unsigned int num)
- 			x = efi_x;
- 
- 			while (n-- > 0) {
--				efi_earlycon_write_char(dst + x*4, *s, h);
-+				efi_earlycon_write_char(dst + x * 4, *s, h, si);
- 				x += font->width;
- 				s++;
- 			}
-@@ -207,10 +208,10 @@ efi_earlycon_write(struct console *con, const char *str, unsigned int num)
- 			cur_line_y = (cur_line_y + 1) % max_line_y;
- 
- 			efi_y -= font->height;
--			efi_earlycon_scroll_up();
-+			efi_earlycon_scroll_up(si);
- 
- 			for (i = 0; i < font->height; i++)
--				efi_earlycon_clear_scanline(efi_y + i);
-+				efi_earlycon_clear_scanline(efi_y + i, si);
- 		}
- 	}
- }
-@@ -226,22 +227,21 @@ void __init efi_earlycon_reprobe(void)
- static int __init efi_earlycon_setup(struct earlycon_device *device,
- 				     const char *opt)
- {
--	struct screen_info *si;
-+	const struct screen_info *si = &screen_info;
- 	u16 xres, yres;
- 	u32 i;
- 
- 	fb_wb = opt && !strcmp(opt, "ram");
- 
--	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI) {
-+	if (si->orig_video_isVGA != VIDEO_TYPE_EFI) {
- 		fb_probed = true;
- 		return -ENODEV;
- 	}
- 
--	fb_base = screen_info.lfb_base;
--	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
--		fb_base |= (u64)screen_info.ext_lfb_base << 32;
-+	fb_base = si->lfb_base;
-+	if (si->capabilities & VIDEO_CAPABILITY_64BIT_BASE)
-+		fb_base |= (u64)si->ext_lfb_base << 32;
- 
--	si = &screen_info;
- 	xres = si->lfb_width;
- 	yres = si->lfb_height;
- 
-@@ -266,7 +266,7 @@ static int __init efi_earlycon_setup(struct earlycon_device *device,
- 
- 	efi_y -= font->height;
- 	for (i = 0; i < (yres - efi_y) / font->height; i++)
--		efi_earlycon_scroll_up();
-+		efi_earlycon_scroll_up(si);
- 
- 	device->con->write = efi_earlycon_write;
- 	earlycon_console = device->con;
--- 
-2.51.1
-
+> 
+> --- a/drivers/dma-buf/dma-buf-mapping.c
+> +++ b/drivers/dma-buf/dma-buf-mapping.c
+> @@ -252,14 +252,14 @@ static struct scatterlist *fill_sg_entry(struct scatterlist *sgl, size_t length,
+>  	nents = DIV_ROUND_UP(length, UINT_MAX);
+>  	for (i = 0; i < nents; i++) {
+>  		len = min_t(size_t, length, UINT_MAX);
+> -		length -= len;
+>  		/*
+>  		 * DMABUF abuses scatterlist to create a scatterlist
+>  		 * that does not have any CPU list, only the DMA list.
+>  		 * Always set the page related values to NULL to ensure
+>  		 * importers can't use it. The phys_addr based DMA API
+>  		 * does not require the CPU list for mapping or unmapping.
+>  		 */
+>  		sg_set_page(sgl, NULL, 0, 0);
+> -		sg_dma_address(sgl) = addr + i * UINT_MAX;
+> +		sg_dma_address(sgl) = addr;
+>  		sg_dma_len(sgl) = len;
+> +
+> +		addr += len;
+> +		length -= len;
+>  		sgl = sg_next(sgl);
+>  	}
+> 
+> Thanks,
+> Praan
