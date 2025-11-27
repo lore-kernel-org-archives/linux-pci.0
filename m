@@ -1,163 +1,105 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 785C0336EDF
-	for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2025 15:31:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5E04336EFB
+	for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2025 15:31:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764257481; cv=none; b=gNtWCdi7cog8EcrfH7X86MKDajBcHvEYxHTa47DvqpnHJDuGlXjeHyOPJtSQzOsFmDOf6ykbr36fX4T6j5XihEMboCOk7jKAXcAk58damo3h03xDS3/YMgknYXm4rYBrO5eCf5dWvc6uT5dOSRUGmjtJ372xJPHgtfBsv8REtj8=
+	t=1764257483; cv=none; b=L4JBvv6XlDwLZ5T2/jn+RhyEEFS9g8Q2paL3DPKtKX5DuWaiCURkWvNkGI0IeWyNpE+Ah1g+3fzJs9lBcnri7+47i/TFgcNxN3i6NMF8i+QIMiJdp7v0ErXUcSsDcTnNKb0FLOxiM00n5ACFYoi7koTetAlmplC3DaAWrOc2HsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764257481; c=relaxed/simple;
-	bh=lv4dBKqxLyjp77PBEf8fzvjGHtU+jVpXznqOTVKlVp0=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=CtmuPy04h0fV430NqO/uyhfalUChNezEjqix1kHcbakf3i8xknTpNZJGxIcx/Z4VhbfP9WobhkjdyWdWqfD5412NrPzTOlz+N6I3+R5z+CYJ1MImqAX0fr3hO2IX0RLl7+ZdfJTC+ZjSIeaKNS/Pi/pXfxEcoydIknDqJJ8C0FI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XbjLDulC; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Aztyget/; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XbjLDulC";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Aztyget/"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5ARD2Y3k1023020
-	for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2025 15:31:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=bTv+skRnWxBY4zQ/qTJiMs
-	0T+FjJqZMGsZTyb8Mcm8o=; b=XbjLDulCAdUkq8Zz8xSAfyZDbjhFnrpjyrb3sn
-	AtCzcxQAk1A4/3tqa8K6bdZSK9OZDPCmcCAXVh3tOcfKOvNceFh9vP7muYX4wc0h
-	tvLuGKbBCDHm8/yP+s21KU4ngqzXrqnLpwPN1ec612MluEVp4Mzf1NF3H8guOMU1
-	SaE92yBQw1mUc+2xdZ9SD3Igl0/5l0YkaS3S2KSQHsp9h+vhR0Hw3ugFaxk/j5GV
-	nk4pCF1Admix2DzA0EWgiFiO9gqW7MHw+hwC8jK4v+iMO8SOiEtnVEKqPGajR8x1
-	9VUi1Zr4jVb8fZh2xxnV/NhTQy3GVm61jKKzbHKKxhehZv6Q==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4apq66gb7g-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2025 15:31:18 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-341aec498fdso1124803a91.2
-        for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2025 07:31:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1764257477; x=1764862277; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=bTv+skRnWxBY4zQ/qTJiMs0T+FjJqZMGsZTyb8Mcm8o=;
-        b=Aztyget/RHSF9wNldl/j0A4EBVa7G7ChwbKXRtCq0ZfmYoAx4sbICI5bo+0z9TQeEX
-         5ZmHj+QeUaN5+hxaSB5Q40hKmGUiuyOv0wAhLZPazD2MKgox5EnE4O2gaAwrtStfOIcX
-         qkTPj5bpyMKP5ZYgAb7Jky2U38w2k9ZTR9lJt7ByGXPgFA+YsIiCJFB43pz7hV7kfr4D
-         +l7gqlHvyHErXf0eK4zyevkHvaCaTC7PQoKXJHvKo+UrdZS/8s24oC/lMf7FvYMGiplz
-         CGWYkGhP171EuQMSfyHVHOeq6tOf4zypByN0E6zuyy/oqVMHyPXv0eJtRwe6q0NwpbNF
-         CCAg==
+	s=arc-20240116; t=1764257483; c=relaxed/simple;
+	bh=0Ms3nh6UST62nZ5f2gQbl1TP9z1Cw0CPLTAwI1ISOn0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ImIwXmhxTs3PJbucXbe8VBKvwIV8KVDpfbVjryTq2AMCdwDCOZNvvRFcqZ4WgBYzfysfJ+93RT4A6DEn7WEbFvZpZG8/351UKNNcyVL3oWIZSfYp0GLOlTpX7kLcsvQTAuREj0eblkh1BvKcz+Vg1pZH4m82LXl0TzOD8vsUcdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.217.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-5d758dba570so406632137.2
+        for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2025 07:31:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764257477; x=1764862277;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20230601; t=1764257480; x=1764862280;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=bTv+skRnWxBY4zQ/qTJiMs0T+FjJqZMGsZTyb8Mcm8o=;
-        b=jwmfBBqXTFy3YRfEN7yvl9lGYZAH+AUa73YJI8v9xBK94vA5KjLgDxHUudi3FFBBd1
-         8qcSQoDoNuO7a0UWb/xOHCHN12QGjcHaLTGutVuh/F5LpmbPzt9Qe6VuM7DQvD8vlr0a
-         TzpAnNiJfYfF2aoQRxIO+32ZrryGgAvXuULYKBnitYfhSQbFfx8zVQpBuCzRzmJ956b4
-         8IpqUZ13BmrRek39OOoK14ij7+zJ5+18/ZQA26Izpz4bGhEPw0v4dxBvyY59nEIuBje3
-         JoItHRVjSn9tTLAAbkSorMJuFXJo2c6un0e4UXqsIUuUMuxd16orNbq9RRreBqFKhXuv
-         A6uA==
-X-Gm-Message-State: AOJu0YzPWK6mj5IfqJIC61WfPbGG7Rzu7VJs0+kWbUF0kSsXHMtTeJmN
-	XhyJGGMf7qFgxuR0B2sXzGf5pj+dglxeYdBhWqpJfyK9RzChRBwTNKXnPBIWED7br6zUnCGvSWX
-	9tgFq9bwdBEtW8v60eVQ7GOaYFDoB2IMvboubwRUfd9n0Ek/E+D6RiCQOSVdvlCQ=
-X-Gm-Gg: ASbGncsxLZLwAzZQuEyieDwImtd5Rx5oc9YNJcN6nUxf5AWk93L8iygBkZKgSaUtaFY
-	XRUW7fbDgBz/G43uotNFIVOKqdNggv66AzwvJqQnGcs+erHhSRe4gtA8z0R8TVbk0dZUvZHzdB7
-	MJ96v3XevhGA7ZdDMzUk69f28BVQspnr05TMqoomZk6JZgoDQmvmmmlkR6r6lPqAO5qGMHFLqtl
-	LuSfgudWYOvzp9fnMFfJgP/xxet+lksUe4Gv5nHXM0OMCvrjFLZIcMSXnOsYkgHbZo3YEDU4dep
-	YSCeEI1B2utZlPlWdk7BxONcsdVTEt5hnfwwGSOba0B/m+mQZc/LUrKrhOG8KO6OS/2pg4sVNzB
-	Vde/iwByhOUiqZ/NxFrjsNg74WbSmsdW0FuhVlr8u3xU/9g==
-X-Received: by 2002:a17:90a:d00c:b0:340:e529:5572 with SMTP id 98e67ed59e1d1-34733e6cac7mr21267676a91.8.1764257477197;
-        Thu, 27 Nov 2025 07:31:17 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFcpXUstFl9psAS6Gx8M6//WR3/e3A1aEjx1JVWfbgtQ5osET1uda2Q913gJvIqiuVLjhFu2g==
-X-Received: by 2002:a17:90a:d00c:b0:340:e529:5572 with SMTP id 98e67ed59e1d1-34733e6cac7mr21267643a91.8.1764257476690;
-        Thu, 27 Nov 2025 07:31:16 -0800 (PST)
-Received: from hu-sushruts-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3475e889832sm3592940a91.0.2025.11.27.07.31.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Nov 2025 07:31:16 -0800 (PST)
-From: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
-Subject: [PATCH 0/2] PCI: dwc: Program device-id
-Date: Thu, 27 Nov 2025 21:00:50 +0530
-Message-Id: <20251127-program-device-id-v1-0-31ad36beda2c@quicinc.com>
+        bh=gMGm1buzaIw6yaiLwd7+ag/+onuunyVRgfQz7fJY0H8=;
+        b=ImnU7tFFnKWoYEUH3fy1lbCTKt3DtIJcPmBJZDeObnmHe/Y1ymFqGJChWAUecMkF9z
+         xK1kb79addb1lfl/oCeb6Po7cz0Om1HD8spSY/EtEoYVRxTsFszos9snrGbXsE4NOGDr
+         eEO5p01cESS3+FX9TEJgI1FOj9a/jm97RSZ6E9IvloNJp+MvyS/wxcgSsHVsjjepmhKS
+         9Adz+xh/l6Kn7RUWJeXvrcfzdauywL2+Ky+Ja31ZtTiOyzKOEYXzRHfbL3zSl17hZOsD
+         r9xlaJq4K/S0yPLbiFPnyfYO7Gi0MKkJ5ILBTH9iiVBTIhczg5/LQ/yK3wYVx0lZK6KF
+         I/3Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXyaXzwM/w/5BXz3CFAAS292Iy8iffkALMO3FBIdFlAvW5GsXD5Q+Igqxp+WRj55bHbAQhK/bKe/dE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwIo2FLjZMESNP/weGFkNE3imV00vylXtbJz8xlWkTWA/pAJO3M
+	CVYuJ86s9pUrthrj9lDgiBWXm78essatWKLvJgntU0qTIbcH6ZYM1vnFkEAyx6X8
+X-Gm-Gg: ASbGnctdydxEcGfY3/IdF0E+l3Wkq9YUvDjr/nswwRC6/A/EG0VVnL95JzJun8myQme
+	HAO3C13Tpcw5wgzp9sFzyR1D7piC/8Bvlkig6VfU53+RUmrCFNaWBSzZTvo9a6lPSFkmznhvNGg
+	IOOaI2WlrvNz2KtmixeiVA/N8szOwnsX7zh55PE/FcY7XlFTrM6y4BJ72bhyW7i89o7LZ+ONedC
+	k+MlCt2z1bL5sPdTLy5xeAN31Vqf0IwHTjuVKOF18vFyNn8bQKmFkt8mOPVbKBIj5gxfomuBhNp
+	mmD1N10V4SG/kYI+UUMHy2sfL/V8yDPOY1DBc3cbVO+T6Qj/cLXsUs6gimLNQmt0EXU6N2HodwC
+	562Wj3Wzr8tDdDYCpLXF+3+kWPBlUHJSkWVWFSWmT3Z+S6x5hT4JG2yuQURKEYXj+P7+HZyOqC+
+	Xn6pWvEcSxPBOR27qFP+iyKPZs0/a8xbVwbpkruAHTVYrS2nii
+X-Google-Smtp-Source: AGHT+IFPD5uEkelzfciCdmtuY62d+0dLFWIdlEAwRYYuwTtHKd2rPNmmbfVyOWJDW5vbBg3xWVC1SQ==
+X-Received: by 2002:a05:6102:50a2:b0:5df:af0f:308e with SMTP id ada2fe7eead31-5e223f4ba7amr3850526137.0.1764257480426;
+        Thu, 27 Nov 2025 07:31:20 -0800 (PST)
+Received: from mail-ua1-f46.google.com (mail-ua1-f46.google.com. [209.85.222.46])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-93cd6e62cb4sm697527241.8.2025.11.27.07.31.19
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 27 Nov 2025 07:31:19 -0800 (PST)
+Received: by mail-ua1-f46.google.com with SMTP id a1e0cc1a2514c-93a9f700a8cso224157241.2
+        for <linux-pci@vger.kernel.org>; Thu, 27 Nov 2025 07:31:19 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWjS0dJLLCecjsGjd0FZu0fuJewXyNgZOhS0ZOd2LTkYX4rq8J5MdgYdXkjfQ8R7T5WfdC4uZpIAk0=@vger.kernel.org
+X-Received: by 2002:a05:6102:943:b0:5e1:ef48:271f with SMTP id
+ ada2fe7eead31-5e2243b0ae6mr3428187137.24.1764257479536; Thu, 27 Nov 2025
+ 07:31:19 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAKpuKGkC/x2MQQqAIBBFryKzTkhBF10lWpiONotURohAunvW8
- vHffx0aMmGDRXRgvKhRyQPUJMAfLieUFAaDnrVRSltZuSR2pwxD9t8qtTMhWO8iqh3GrzJGuv/
- muj3PC51JqkxjAAAA
-X-Change-ID: 20251126-program-device-id-2a5dd6cafe1b
-To: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        cros-qcom-dts-watchers@chromium.org,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1764257471; l=918;
- i=quic_sushruts@quicinc.com; s=20251127; h=from:subject:message-id;
- bh=lv4dBKqxLyjp77PBEf8fzvjGHtU+jVpXznqOTVKlVp0=;
- b=5RfBAESBesbAUT1/4ewz5k/zfKisXA2tW9A+lAAwn2Ah/ZZMm8EtQGKIm7u1zMjt1TKVTS8X9
- SA2GhD/Z6FXAG6h0naXV+0F2kvJEqdMYhC0XHokV9E5A+4iUtu1qU0T
-X-Developer-Key: i=quic_sushruts@quicinc.com; a=ed25519;
- pk=OrUHTxBaSg1oY3CtCictJ5A4bDMNLRZS1S+QfD9pdjw=
-X-Proofpoint-GUID: MbMTPuXH9WJ-pNyeW9Uf7Sq0oi50Kyxl
-X-Proofpoint-ORIG-GUID: MbMTPuXH9WJ-pNyeW9Uf7Sq0oi50Kyxl
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTI3MDExNSBTYWx0ZWRfX1UbvYF/Q7WCW
- uulfyCJzrVdID4laN2LrWDhiL0wO21TRxCh0zDuZ7vojICM4aRKPub2fxCqZJu/C+9fmPzpqKYs
- +rAdrEZ2NREq4dJy92snPkNE8RU2LWnqLhWGZX334mpCYNesr2lV47BsDjg9x2a9cvGt2EcW1P5
- GS/TwuBz4WgOb3Ne7kDGLG3O+NyjlOn9nBY9+v6s3DC+FbVCslax/ayl5C0czK4+QQU1CTolF5T
- pqefU00p/C9sj8r0Q9Sd9vdTy4DPyoIy2GccqnZHS+Jkn2iiwS/ANVfNjP0Buopo9b71uQwFcRd
- vXF+8Fa8YkVKFScvyNKo6lAn6q+a/VPOxEpZIzvRnPkwWe/nqDWjBuQrhnK+SNjhklU0vp/vz/t
- jUDY/zoLF54rcNFwQz8GotYQdFc8NA==
-X-Authority-Analysis: v=2.4 cv=BYHVE7t2 c=1 sm=1 tr=0 ts=69286ec6 cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8
- a=sSXGd-9XW_a8K-_bqFIA:9 a=QEXdDO2ut3YA:10 a=rl5im9kqc5Lf4LNbBjHf:22
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-25_02,2025-11-27_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 bulkscore=0 priorityscore=1501 spamscore=0
- clxscore=1011 suspectscore=0 malwarescore=0 phishscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2510240001 definitions=main-2511270115
+References: <20251119143523.977085-1-claudiu.beznea.uj@bp.renesas.com>
+ <20251119143523.977085-5-claudiu.beznea.uj@bp.renesas.com> <6hvsrtdxpm2ywwk7whaala3ynfdy4lo76epigxvn345ymormqf@bp3au24dwwud>
+In-Reply-To: <6hvsrtdxpm2ywwk7whaala3ynfdy4lo76epigxvn345ymormqf@bp3au24dwwud>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 27 Nov 2025 16:31:08 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdVgWcEFa+=XEQRTM4ZiJCBJnv6f8FD6CyKuO7cnB2QQcw@mail.gmail.com>
+X-Gm-Features: AWmQ_bmuHs8omtOnus2gS0alfoG90XbZ5XLzzwu1zc-9nISSqEQTG2vuN7RDHuI
+Message-ID: <CAMuHMdVgWcEFa+=XEQRTM4ZiJCBJnv6f8FD6CyKuO7cnB2QQcw@mail.gmail.com>
+Subject: Re: [PATCH v8 4/6] arm64: dts: renesas: rzg3s-smarc-som: Add PCIe
+ reference clock
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Claudiu <claudiu.beznea@tuxon.dev>, bhelgaas@google.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
+	conor+dt@kernel.org, geert+renesas@glider.be, magnus.damm@gmail.com, 
+	p.zabel@pengutronix.de, linux-pci@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, 
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Content-Type: text/plain; charset="UTF-8"
 
-For some controllers, HW doesn't program the correct device-id
-leading to incorrect identification in lspci. For ex, QCOM
-controller SC7280 uses same device id as SM8250. This would
-cause issues while applying controller specific quirks.
+On Tue, 25 Nov 2025 at 06:54, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> On Wed, Nov 19, 2025 at 04:35:21PM +0200, Claudiu wrote:
+> > From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> >
+> > Versa3 clock generator available on RZ/G3S SMARC Module provides the
+> > reference clock for SoC PCIe interface. Update the device tree to reflect
+> > this connection.
+> >
+> > Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+>
+> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 
-So, program the correct device-id after reading it from the
-devicetree.
+Thx, will queue in renesas-devel for v6.20.
 
-Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
----
-Sushrut Shree Trivedi (2):
-      PCI: dwc: Program device-id
-      arm64: dts: qcom: sc7280: Add PCIe device-id
+Gr{oetje,eeting}s,
 
- arch/arm64/boot/dts/qcom/sc7280.dtsi              | 2 ++
- drivers/pci/controller/dwc/pcie-designware-host.c | 7 +++++++
- drivers/pci/controller/dwc/pcie-designware.h      | 2 ++
- 3 files changed, 11 insertions(+)
----
-base-commit: e26d26ba210e5371c153de892ae45a63b1a34ff8
-change-id: 20251126-program-device-id-2a5dd6cafe1b
+                        Geert
 
-Best regards,
 -- 
-Sushrut Shree Trivedi <quic_sushruts@quicinc.com>
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
