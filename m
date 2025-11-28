@@ -1,256 +1,299 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B88A8308F11
-	for <linux-pci@vger.kernel.org>; Fri, 28 Nov 2025 09:57:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F995287253
+	for <linux-pci@vger.kernel.org>; Fri, 28 Nov 2025 10:00:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764323842; cv=none; b=YsX8fPa4jb9DRw7UrIU5oBdTTrX75OzGdVogLIf4jFK8Fr4ZnILdczD/9xOXsbH6AJzMhyvB8wcasuDAgk8Kwv1pG8gEQbJbvXl32N4bCAjQhyj9JwODiv4oPRyB44Xn9QpoSG5PoC6QAx4hlOYgVlAK6cCRbENkBfgPM4oGR3M=
+	t=1764324049; cv=none; b=FQRenK0Hh1EkxC+KE7dcBLsvj+R5T40V+scHyyPXMbz8aJl0EAC8+5uw3AWKW5MqscQDS0x+hA4fOG16ev64buRE5gLYmmm4o4CzcmczMZgBGWF0W2RTglgZ1iafxx+soNsuYKtdACB1RH8Rn7QycpLLCotVUrr0RNJ+X6xOxZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764323842; c=relaxed/simple;
-	bh=ZCQ+X6CcJNnx+pPiStYcloaCorZ3vkX6wLFtfUvufdQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MFwvzv0ZJLayG3CpJioBPWFu52qlrbKBLwSeY/o+oiEa9NrF1NInDpYA6optBR8nEp9BgyNAs2M7SRE2tRxRzHtAAK1bLNnE+FRy4RXHICs1DCrG3M06pfPkz8v4ji9aTz89YGSfaSWgjGcA+XjkHcX3e67EzAhADmPSJYFUD58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ph0bkRlG; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HwnOHixS; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1764324049; c=relaxed/simple;
+	bh=TaRZM71/5VBjSq639Phe6Hwz5f1btLjNNYEyAwc/qwY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PfLmotVk1BrZRsInzCP90jkErv0svWYP9P9QsxZAA8l1jvRHhIYzNXrcpSvxQzRB4tQWJyswLAQWsVXr7JDL1C2jiuqh+yWZGJidvkKqCBwUCyXB5Mgd4Vf8G0ug41do6HWRiLBv5gmCYSUc9aO6sE4pgMqKPJ+kSFlHTy7h1sY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KuMrdrr1; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ph0bkRlG";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HwnOHixS"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AS8rmUv3989819
-	for <linux-pci@vger.kernel.org>; Fri, 28 Nov 2025 09:57:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	MOyTbwOeGqQB5EkYD/6KseST7rH0TIy381RauUT9o68=; b=ph0bkRlGju6I6WaS
-	dgjo1eSQxVWS38oBGdjQjX32fg31UwKBxtWTqeCmLvx5lFkwIWuJZj6UwQvFl5aP
-	CObMWbSviY/Vu85tQV5jLpLqw8yzQCmatAm0ReFm7ARLqweLlSQVjIYRZVVN3LE7
-	oKWr4+4xLLf6Otti8shnRIkvhuzFfN/X4rmuxQWiofIuo0cxOzMNzzOK+pcMvfuK
-	sZdHR2FYMoO7UVa/xUlgSv9UIOk9/xNEuuC3Rdg1P0eFyWKMDzyyT1mgneT0jDe/
-	e1vyZOPrAh8pt3A7LMUOvcqtrjWgIzAeNiSWJtZ545UGPftc6tm2U8+MGbD/XnHX
-	hMpn2g==
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4aq8mm86yt-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 28 Nov 2025 09:57:15 +0000 (GMT)
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-bddf9ce4935so1414866a12.1
-        for <linux-pci@vger.kernel.org>; Fri, 28 Nov 2025 01:57:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KuMrdrr1"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-640ca678745so2984556a12.2
+        for <linux-pci@vger.kernel.org>; Fri, 28 Nov 2025 02:00:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1764323835; x=1764928635; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=MOyTbwOeGqQB5EkYD/6KseST7rH0TIy381RauUT9o68=;
-        b=HwnOHixSz9kVW0sHphIdZR7hq/ezA57aaF0cb6n8ukM6I0jZy8SHBmN5lfc9SDwGmT
-         nTytnAu5Nvt555+PbrWpBSFgJcJU+KYBieYH/S0Nrpv1AmHyOyMZubhUkJB5zvJrNNyR
-         m0dam8zlLPjJ8oqJvsbT9itT4kJhOlV9k95oZHbaxuzH3GR0crhGqAUNLb+MeRRfH7pb
-         Yxk09gJayK+Tf7YYaE1eD5L8O0/PAneWsOmgSfInrksKvgQW8SS5A8ZX1iyGb3yFf+L0
-         WuCbC96pb92qKgxhfAO6wNEaHDfuiemRGOOrZTGXM15qmI8eARasjKpH3AiVV1hyUoi8
-         4YnQ==
+        d=gmail.com; s=20230601; t=1764324046; x=1764928846; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=2uX5AKFlE3KaTGTC6lsIDfjTJSY5MRYErJSJUEI7kZs=;
+        b=KuMrdrr12uY6NIaBrye3JKS/W0VbSdPaBe7EWo+lo0sROO5BPZAyOOR7pEaQ3ZURnK
+         6ccXLWBW93bmykbGcIzv37BwIXl9cCyKiR5nqhA9IYs8eRkVPxnKcin9xI0E/wwy/iF1
+         tQKkq0SBX2lt2SEsTnb3i3ll82l+9x3g2F6D1hB389V98SZRG5RH2xwXv8cBF3DZhDRJ
+         TAJ+QqGk47v95ZLDYNru4/VyCvRA+MMioVk9OMv0FQxrE6hyznRBok+7oHpsdU+BJmqm
+         MZ+3kf3RL6zyoltxuGq3BsB8NtsZ2nRTmKcVu3ZgZ9887RZGdB37NGpmKLjU9gyuoJWt
+         l/Aw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764323835; x=1764928635;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MOyTbwOeGqQB5EkYD/6KseST7rH0TIy381RauUT9o68=;
-        b=WOFjzss1GWdA4Jm0tHmAr3K/DfVehFeD68ZWNdC08+sJ+f+wHvtfWA1D5bMwZTDGtd
-         xyfsltXpUqOG8ZM5Iz73FOuFumQDasVwtpmcT8bOZB29xRhVD4hYbH6G7/BIf2cOQIrm
-         kWuXZUV0HU6eoqs0BQMFIfid85Q+3nI3DotjVo4VZsS50jJz3jUJpvkVwSAHwQWSil9e
-         /xa79RXNSm/XZNRvTYPa57QurcZI0Fg4pZkVS8qa4+SQvXuiS2l6Cv7LLdtFMiFYaf+f
-         cWG7sWi8KaV6fg7KHxSVj/BlyyvPS9C0UL08MfVPtCSNwLRv+UFOIAAVtHeC5RQrdw+C
-         B+9g==
-X-Forwarded-Encrypted: i=1; AJvYcCWLl6EXfNxyIuEzUARlYWK50LhViZOEdc612zQZE9f35JeGvUUr2CzePmq9kIhgEcMKGjMMkXFoEmQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywr6nD+zDKKmwhdl52EPdU4AfyRhQ8LaHooVW+EXaSMjT/0rFw7
-	ce5dfqIKbh1xJh6dsOVyctPtPrWRkg6fcA6bPp16AH7BzqSDPkMC7E99FWtMy/j6NGHdFNy8t5K
-	5yPSR4hTBgl5J86cK5qR1QwlWe3JYz/YOytiuUjYuWfLDFOkUmv9RNTx8MPMPbD4=
-X-Gm-Gg: ASbGncu5BwY3QPdkLCcrHGpKBZejIdGzMX91fa5KXHpBpn9/f8/TTtxTDjLS42YocUl
-	NT3s947WlhGvBCbV+XvTiK1PJ06OWyhTDuJhQmjDKgpTPPLG0vstUV3myjANAzZQo7ejwacEd5r
-	eomiIJexKFgMZyc7BTndzfZV1QY7as5lC9CjsZxdbrDHmqdWIKaDX8fP4dRje/OnPx+RbVGngXJ
-	MSimjYb5WsqEc8hidL3E9Qrj1KjUU+WeQUrvogUTSJTqaJJTDh8Fyej8JI/6AX8UZ11+OUF4h8L
-	KtHGkDTmRrizeUNcvk9SraTxeU2YokyZRkwGZztWekZmAq/ARdEbOpfXTg1/1bV3LHc9WkaS1qw
-	+6yHQMgrb04HXBzQ9+QuPhTVnGNwxhh4S+fccdZRRxx9iXA8h81VO/r/f
-X-Received: by 2002:a05:693c:248b:b0:2a4:5c3b:e2b0 with SMTP id 5a478bee46e88-2a94176125dmr8165223eec.25.1764323834412;
-        Fri, 28 Nov 2025 01:57:14 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHocW7i1Sn9KTPY4QfjJZylauhsGHMC3Tm4JYoMU9NxglbeedCvSs5CRZc2eN/HIdaKiy39SQ==
-X-Received: by 2002:a05:693c:248b:b0:2a4:5c3b:e2b0 with SMTP id 5a478bee46e88-2a94176125dmr8165205eec.25.1764323833621;
-        Fri, 28 Nov 2025 01:57:13 -0800 (PST)
-Received: from hu-qianyu-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2a9653ca11esm13697351eec.0.2025.11.28.01.57.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Nov 2025 01:57:12 -0800 (PST)
-Date: Fri, 28 Nov 2025 01:57:11 -0800
-From: Qiang Yu <qiang.yu@oss.qualcomm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH 3/5] PCI: dwc: Remove MSI/MSIX capability if iMSI-RX is
- used as MSI controller
-Message-ID: <aSlx91D1MczvUUdV@hu-qianyu-lv.qualcomm.com>
-References: <20251109-remove_cap-v1-0-2208f46f4dc2@oss.qualcomm.com>
- <20251109-remove_cap-v1-3-2208f46f4dc2@oss.qualcomm.com>
- <dc8fb64e-fcb1-4070-9565-9b4c014a548f@rock-chips.com>
- <7d4xj3tguhf6yodhhwnsqp5s4gvxxtmrovzwhzhrvozhkidod7@j4w2nexd5je2>
- <3ac0d6c5-0c49-45fd-b855-d9b040249096@rock-chips.com>
+        d=1e100.net; s=20230601; t=1764324046; x=1764928846;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=2uX5AKFlE3KaTGTC6lsIDfjTJSY5MRYErJSJUEI7kZs=;
+        b=mudyzJ1JMCnfrgNz23xdCOu9TnBUFAxfCdMYsfY6ZucBbLfVzLw+xphW4DggQVhPtK
+         9scBGd9gSpjmBzEh6ilGp9H58H3Oq+AQf10/gB8CEzxVMlOILlf605gC3tN93u8ccJ3U
+         zQJ80GMvplovIMRdlrkzs1CuPQAHFTMqaN+bzYlMyzan6tVvoqfyZ3oDHx16Eqo9Zi7b
+         M5fz7/JoC7gmEGdvlQ02avw/bFDTNkuKp+AyIZaoYTmnCOTieQsDjXftm35TcSHdmRjj
+         whi7y1DcmSBPCguLzgEEbwZp7YPv3q49oR7sal7XPolKcZ0AcPpKF9ENPad3CzOVnQIT
+         lt3Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUMo6aS1vjWmZTKShs8+oO11sFNWDT56Fv/3tbytcsWhJ6S6F65Gc7ROMdiPo+zgQZUa2wcQJT8DrQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxtFvxfh/DA7J5GjdgbD41tjMJ7cGwVIP0WDjjIso/trZNykNcb
+	q9FrkxvFJ8GUvw0yz9ufYffBzgME8X1md4mCwu5xsomxjXgF5u9SiqIezx8ZAeOV
+X-Gm-Gg: ASbGncsuzpyq+HAiqmuiBtVtuTkPBwr6VlXrphCj3ca9APj/HY96MFT82XlBug7vvN/
+	FD8W3J8aKWk4WoSl2Zn7w6ylFj/YA3ORarZmtG6jxjD9mzdzWBlwLhFV+/O7k8Zc/Srm+znXMkq
+	82gJumi9iBvdNxPdoqRj22qYv+sgledy+miwl+MIbS9YsU5K/4sPvD6GlN6gQUamEEofSWY/0WX
+	t2v9ErVtCz2S1aM0nGofxmWmpQ0sfvFhZDDUvU65TNJBa0Toffb7Y6ELONBY0JzrZk+RhWNQ1JY
+	/pzJCvuGXw/7jht82jfjYsguivB3VqPhZ7z9NHQZ4cgM370p97rXVIMLjwbdTlAYMf3+Z7i3+jI
+	DfzkVP5xTUGRD5/0KW1g4GxwN8WHEilUyOt4aYP3HG2lbWQ/RQEm72ObuhFf8Y1yAs0+Dgm9l+K
+	i/F8b7/LfzF2y/ysbpPY9UFwp9PvG+q10ftTh7sMXqsVIZlOL4PDvAWg3YLa1e17U=
+X-Google-Smtp-Source: AGHT+IEGkgK12Pivg49NR/ZOgpbdU3G5UdskYoGlRBNhkhTeK8ns6GTXdVkYN5ONzey9AOU/AvVmTQ==
+X-Received: by 2002:a05:6512:10cd:b0:595:80d2:cfdf with SMTP id 2adb3069b0e04-596a3e98385mr9843309e87.6.1764318899877;
+        Fri, 28 Nov 2025 00:34:59 -0800 (PST)
+Received: from ?IPV6:2001:14ba:437:c00::198? (2001-14ba-437-c00--198.rev.dnainternet.fi. [2001:14ba:437:c00::198])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-596bfa48aaasm1029238e87.71.2025.11.28.00.34.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Nov 2025 00:34:59 -0800 (PST)
+Message-ID: <55076f4b-d523-4f8c-8bd4-0645b790737e@gmail.com>
+Date: Fri, 28 Nov 2025 10:34:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 01/29] Revert "treewide: Fix probing of devices in DT
+ overlays"
+To: Rob Herring <robh@kernel.org>, Matti Vaittinen <mazziesaccount@gmail.com>
+Cc: Herve Codina <herve.codina@bootlin.com>, Andrew Lunn <andrew@lunn.ch>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>,
+ Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
+ <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>,
+ Wolfram Sang <wsa+renesas@sang-engineering.com>,
+ Peter Rosin <peda@axentia.se>, Arnd Bergmann <arnd@arndb.de>,
+ Saravana Kannan <saravanak@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Charles Keepax <ckeepax@opensource.cirrus.com>,
+ Richard Fitzgerald <rf@opensource.cirrus.com>,
+ David Rhodes <david.rhodes@cirrus.com>,
+ Linus Walleij <linus.walleij@linaro.org>,
+ Ulf Hansson <ulf.hansson@linaro.org>, Mark Brown <broonie@kernel.org>,
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Daniel Scally <djrscally@gmail.com>,
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+ Sakari Ailus <sakari.ailus@linux.intel.com>, Len Brown <lenb@kernel.org>,
+ Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Dave Jiang <dave.jiang@intel.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>, Wolfram Sang <wsa@kernel.org>,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+ linux-clk@vger.kernel.org, linux-i2c@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+ patches@opensource.cirrus.com, linux-gpio@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-spi@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
+ Allan Nielsen <allan.nielsen@microchip.com>,
+ Horatiu Vultur <horatiu.vultur@microchip.com>,
+ Steen Hegelund <steen.hegelund@microchip.com>,
+ Luca Ceresoli <luca.ceresoli@bootlin.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+References: <20251015071420.1173068-1-herve.codina@bootlin.com>
+ <20251015071420.1173068-2-herve.codina@bootlin.com>
+ <f74ab0a2-b74b-4b96-8469-a716c850e230@gmail.com>
+ <CAL_JsqJDOYuzutMHMeFAogd5a_OX6Hwi8Gwz1Vy7HpXgNeYKsg@mail.gmail.com>
+ <5cf2a12a-7c66-4622-b4a9-14896c6df005@gmail.com>
+ <CAL_JsqJjm12LxpDg6LmpY=Ro_keHwnrWiYMLVnG=s_pSP4X2WQ@mail.gmail.com>
+ <072dde7c-a53c-4525-83ac-57ea38edc0b5@gmail.com>
+ <CAL_JsqKyG98pXGKpL=gxSc92izpzN7YCdq62ZJByhE6aFYs1fw@mail.gmail.com>
+Content-Language: en-US
+From: Kalle Niemi <kaleposti@gmail.com>
+In-Reply-To: <CAL_JsqKyG98pXGKpL=gxSc92izpzN7YCdq62ZJByhE6aFYs1fw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <3ac0d6c5-0c49-45fd-b855-d9b040249096@rock-chips.com>
-X-Proofpoint-ORIG-GUID: J2xC_7cRQ22gFW0zKbDv9traZyGTrdwO
-X-Proofpoint-GUID: J2xC_7cRQ22gFW0zKbDv9traZyGTrdwO
-X-Authority-Analysis: v=2.4 cv=Cvqys34D c=1 sm=1 tr=0 ts=692971fb cx=c_pps
- a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=8BFNsxKPdyf3tXGkzS8A:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=_Vgx9l1VpLgwpw_dHYaR:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTI4MDA3MSBTYWx0ZWRfX2BpHtkU4refA
- +p9kmRD3LishZmzLQU4vju4H2rR9rr0I2aH49DcS2UthcoYec8UPjzKDFchECcS/jv3uX8xQL9c
- weEcBkLQh8oi1pXBvn/Wb4DNX+N2vu2wtizzt+7gXYbPEh6glTH7o5rTLhfZ5YH7OflD2H/wigN
- HLk8ivyYHrRICJMhCobPsTCVTyfBXcqxEYnAhgQw8e7LAuo6OYJYGmwQ6sBtBdpthUSrWoNIGTo
- L2X1FObKwU6VuQJCdzDhMAFiU32KM4WtgLY1z9Y7vD6vqkc0hZU+jmUmlHU6MFlUuf7bUCimCgv
- mSxDDcOfN+DBqw54b7CS2OEwjhR8sFA5Z8s8aFkCGMNZ72/Djg/UKApY4XwDnlDO2vOnaeBCkpC
- lqjuui8nVVOjv/jgfDxNo60xIlTa3w==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-28_03,2025-11-27_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 priorityscore=1501 malwarescore=0 impostorscore=0
- suspectscore=0 clxscore=1015 lowpriorityscore=0 bulkscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2510240001 definitions=main-2511280071
 
-On Fri, Nov 21, 2025 at 12:04:09PM +0800, Shawn Lin wrote:
-> 在 2025/11/21 星期五 1:00, Manivannan Sadhasivam 写道:
-> > On Thu, Nov 20, 2025 at 10:06:03PM +0800, Shawn Lin wrote:
-> > > 在 2025/11/10 星期一 14:59, Qiang Yu 写道:
-> > > > Some platforms may not support ITS (Interrupt Translation Service) and
-> > > > MBI (Message Based Interrupt), or there are not enough available empty SPI
-> > > > lines for MBI, in which case the msi-map and msi-parent property will not
-> > > > be provided in device tree node. For those cases, the DWC PCIe driver
-> > > > defaults to using the iMSI-RX module as MSI controller. However, due to
-> > > > DWC IP design, iMSI-RX cannot generate MSI interrupts for Root Ports even
-> > > > when MSI is properly configured and supported as iMSI-RX will only monitor
-> > > > and intercept incoming MSI TLPs from PCIe link, but the memory write
-> > > > generated by Root Port are internal system bus transactions instead of
-> > > > PCIe TLPs, so they are ignored.
-> > > > 
-> > > > This leads to interrupts such as PME, AER from the Root Port not received
-> > > 
-> > > This's true which also stops Rockchip's dwc IP from working with AER
-> > > service. But my platform can't work with AER service even with ITS support.
-> > > 
-> > > > on the host and the users have to resort to workarounds such as passing
-> > > > "pcie_pme=nomsi" cmdline parameter.
-> > > 
-> > > ack.
-> > > 
-> > > > 
-> > > > To ensure reliable interrupt handling, remove MSI and MSI-X capabilities
-> > > > from Root Ports when using iMSI-RX as MSI controller, which is indicated
-> > > > by has_msi_ctrl == true. This forces a fallback to INTx interrupts,
-> > > > eliminating the need for manual kernel command line workarounds.
-> > > > 
-> > > > With this behavior:
-> > > > - Platforms with ITS/MBI support use ITS/MBI MSI for interrupts from all
-> > > >     components.
-> > > > - Platforms without ITS/MBI support fall back to INTx for Root Ports and
-> > > >     use iMSI-RX for other PCI devices.
-> > > > 
-> > > > Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
-> > > > ---
-> > > >    drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++++++
-> > > >    1 file changed, 10 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > > index 20c9333bcb1c4812e2fd96047a49944574df1e6f..3724aa7f9b356bfba33a6515e2c62a3170aef1e9 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > > @@ -1083,6 +1083,16 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
-> > > >    	dw_pcie_dbi_ro_wr_dis(pci);
-> > > > +	/*
-> > > > +	 * If iMSI-RX module is used as the MSI controller, remove MSI and
-> > > > +	 * MSI-X capabilities from PCIe Root Ports to ensure fallback to INTx
-> > > > +	 * interrupt handling.
-> > > > +	 */
-> > > > +	if (pp->has_msi_ctrl) {
-> > > 
-> > > Isn't has_msi_ctrl means you have something like GIC-ITS
-> > > support instead of iMSI module? Am I missing anything?
-> > > 
-> > 
-> > It is the other way around. Presence of this flag means, iMSI-RX is used. But I
-> > think the driver should clear the CAPs irrespective of this flag.
-> 
-> Thanks for correcting me. Yeap, how can I make such a mistake. :(
-> 
-> Anyway, this patch works for me:
-> 
-> root@debian:/userdata# ./aer-inject aer.txt
-> [   17.764272] pcieport 0000:00:00.0: aer_inject: Injecting errors
-> 00000040/00000000 into device 0000:01:00.0
-> [   17.765178] aer_isr ! #log I added in aer_isr
-> [   17.765394] pcieport 0000:00:00.0: AER: Correctable error message
-> received from 0000:01:00.0
-> [   17.766211] nvme 0000:01:00.0: PCIe Bus Error: severity=Correctable,
-> type=Data Link Layer, (Receiver ID)
-> root@debian:/userdata# [   17.767045] nvme 0000:01:00.0:   device
-> [144d:a80a] error status/mask=00000040/0000e000
-> [   17.767980] nvme 0000:01:00.0:    [ 6] BadTLP
-> 
-> root@debian:/userdata# cat /proc/interrupts | grep aerdrv
->  60:      0      0      0      0      0      0     0     0     INTx   0 Edge
-> PCIe PME, aerdrv, PCIe bwctrl
->  63:      0      0      0      1      0      0     0     0     INTx   0 Edge
-> PCIe PME, aerdrv
-> 110:      0      0      0      0      0      0     0     0     INTx   0 Edge
-> PCIe PME, aerdrv
-> 
-> > 
-> > > > +		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
-> > > > +		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
-> > > 
-> > > Will it make all devices connected to use INTx only?
-> > > 
-> > 
-> > Nah, it is just for the Root Port. The MSI/MSI-X from endpoint devices will
-> > continue to work as usual.
-> 
-> Qiang Yu,
-> 
-> Could you please help your IP version with below patch?
-> It's in hex format, you could convert each pair of hex
-> characters to ASCII, i.g, 0x3437302a is 4.70a. The reason
-> is we asked Synopsys to help check this issue before, then
-> we were informed that they have supported it at least since
-> IP version 6.0x. So we may have to limit the version first.
+
+On 11/27/25 03:54, Rob Herring wrote:
+> On Tue, Nov 25, 2025 at 12:43 AM Matti Vaittinen
+> <mazziesaccount@gmail.com> wrote:
+>> On 24/11/2025 19:01, Rob Herring wrote:
+>>> On Mon, Nov 24, 2025 at 10:44 AM Kalle Niemi <kaleposti@gmail.com> wrote:
+>>>>
+>>>> On 11/24/25 16:53, Rob Herring wrote:
+>>>>> On Mon, Nov 24, 2025 at 8:48 AM Kalle Niemi <kaleposti@gmail.com> wrote:
+>>>>>> On 10/15/25 10:13, Herve Codina wrote:
+>>>>>>> From: Saravana Kannan <saravanak@google.com>
+>>>>>>>
+>>>>>>> This reverts commit 1a50d9403fb90cbe4dea0ec9fd0351d2ecbd8924.
+>>>>>>>
+>>>>>>> While the commit fixed fw_devlink overlay handling for one case, it
+>>>>>>> broke it for another case. So revert it and redo the fix in a separate
+>>>>>>> patch.
+>>>>>>>
+>>>>>>> Fixes: 1a50d9403fb9 ("treewide: Fix probing of devices in DT overlays")
+>>>>>>> Reported-by: Herve Codina <herve.codina@bootlin.com>
+>>>>>>> Closes: https://lore.kernel.org/lkml/CAMuHMdXEnSD4rRJ-o90x4OprUacN_rJgyo8x6=9F9rZ+-KzjOg@mail.gmail.com/
+>>>>>>> Closes: https://lore.kernel.org/all/20240221095137.616d2aaa@bootlin.com/
+>>>>>>> Closes: https://lore.kernel.org/lkml/20240312151835.29ef62a0@bootlin.com/
+>>>>>>> Signed-off-by: Saravana Kannan <saravanak@google.com>
+>>>>>>> Link: https://lore.kernel.org/lkml/20240411235623.1260061-2-saravanak@google.com/
+>>>>>>> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+>>>>>>> Acked-by: Mark Brown <broonie@kernel.org>
+>>>>>>> ---
+>>>>>>>      drivers/bus/imx-weim.c    | 6 ------
+>>>>>>>      drivers/i2c/i2c-core-of.c | 5 -----
+>>>>>>>      drivers/of/dynamic.c      | 1 -
+>>>>>>>      drivers/of/platform.c     | 5 -----
+>>>>>>>      drivers/spi/spi.c         | 5 -----
+>>>>>>>      5 files changed, 22 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/drivers/bus/imx-weim.c b/drivers/bus/imx-weim.c
+>>>>>>> index 83d623d97f5f..87070155b057 100644
+>>>>>>> --- a/drivers/bus/imx-weim.c
+>>>>>>> +++ b/drivers/bus/imx-weim.c
+>>>>>>> @@ -327,12 +327,6 @@ static int of_weim_notify(struct notifier_block *nb, unsigned long action,
+>>>>>>>                                   "Failed to setup timing for '%pOF'\n", rd->dn);
+>>>>>>>
+>>>>>>>                  if (!of_node_check_flag(rd->dn, OF_POPULATED)) {
+>>>>>>> -                     /*
+>>>>>>> -                      * Clear the flag before adding the device so that
+>>>>>>> -                      * fw_devlink doesn't skip adding consumers to this
+>>>>>>> -                      * device.
+>>>>>>> -                      */
+>>>>>>> -                     rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
+>>>>>>>                          if (!of_platform_device_create(rd->dn, NULL, &pdev->dev)) {
+>>>>>>>                                  dev_err(&pdev->dev,
+>>>>>>>                                          "Failed to create child device '%pOF'\n",
+>>>>>>> diff --git a/drivers/i2c/i2c-core-of.c b/drivers/i2c/i2c-core-of.c
+>>>>>>> index eb7fb202355f..30b48a428c0b 100644
+>>>>>>> --- a/drivers/i2c/i2c-core-of.c
+>>>>>>> +++ b/drivers/i2c/i2c-core-of.c
+>>>>>>> @@ -176,11 +176,6 @@ static int of_i2c_notify(struct notifier_block *nb, unsigned long action,
+>>>>>>>                          return NOTIFY_OK;
+>>>>>>>                  }
+>>>>>>>
+>>>>>>> -             /*
+>>>>>>> -              * Clear the flag before adding the device so that fw_devlink
+>>>>>>> -              * doesn't skip adding consumers to this device.
+>>>>>>> -              */
+>>>>>>> -             rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
+>>>>>>>                  client = of_i2c_register_device(adap, rd->dn);
+>>>>>>>                  if (IS_ERR(client)) {
+>>>>>>>                          dev_err(&adap->dev, "failed to create client for '%pOF'\n",
+>>>>>>> diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
+>>>>>>> index 2eaaddcb0ec4..b5be7484fb36 100644
+>>>>>>> --- a/drivers/of/dynamic.c
+>>>>>>> +++ b/drivers/of/dynamic.c
+>>>>>>> @@ -225,7 +225,6 @@ static void __of_attach_node(struct device_node *np)
+>>>>>>>          np->sibling = np->parent->child;
+>>>>>>>          np->parent->child = np;
+>>>>>>>          of_node_clear_flag(np, OF_DETACHED);
+>>>>>>> -     np->fwnode.flags |= FWNODE_FLAG_NOT_DEVICE;
+>>>>>>>
+>>>>>>>          raw_spin_unlock_irqrestore(&devtree_lock, flags);
+>>>>>>>
+>>>>>>> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+>>>>>>> index f77cb19973a5..ef9445ba168b 100644
+>>>>>>> --- a/drivers/of/platform.c
+>>>>>>> +++ b/drivers/of/platform.c
+>>>>>>> @@ -739,11 +739,6 @@ static int of_platform_notify(struct notifier_block *nb,
+>>>>>>>                  if (of_node_check_flag(rd->dn, OF_POPULATED))
+>>>>>>>                          return NOTIFY_OK;
+>>>>>>>
+>>>>>>> -             /*
+>>>>>>> -              * Clear the flag before adding the device so that fw_devlink
+>>>>>>> -              * doesn't skip adding consumers to this device.
+>>>>>>> -              */
+>>>>>>> -             rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
+>>>>>>>                  /* pdev_parent may be NULL when no bus platform device */
+>>>>>>>                  pdev_parent = of_find_device_by_node(parent);
+>>>>>>>                  pdev = of_platform_device_create(rd->dn, NULL,
+>>>>>>> diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
+>>>>>>> index 2e0647a06890..b22944a207c9 100644
+>>>>>>> --- a/drivers/spi/spi.c
+>>>>>>> +++ b/drivers/spi/spi.c
+>>>>>>> @@ -4791,11 +4791,6 @@ static int of_spi_notify(struct notifier_block *nb, unsigned long action,
+>>>>>>>                          return NOTIFY_OK;
+>>>>>>>                  }
+>>>>>>>
+>>>>>>> -             /*
+>>>>>>> -              * Clear the flag before adding the device so that fw_devlink
+>>>>>>> -              * doesn't skip adding consumers to this device.
+>>>>>>> -              */
+>>>>>>> -             rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
+>>>>>>>                  spi = of_register_spi_device(ctlr, rd->dn);
+>>>>>>>                  put_device(&ctlr->dev);
+>>>>>>>
+>>>>>> Sorry, some of you will receive this message now for second time. First
+>>>>>> message was sent to older series of patches.
+>>>>>> -
+>>>>>>
+>>>>>> Hello,
+>>>>>>
+>>>>>> Test system testing drivers for ROHM ICs bisected this commit to cause
+>>>>>> BD71847 drivers probe to not be called.
+>>>>> This driver (and overlay support) is in linux-next or something out of
+>>>>> tree on top of linux-next?
+>>>>>
+>>>>> Rob
+>>>> Yes the driver is in mainline linux: /drivers/mfd/rohm-bd718x7.c
+>>> I don't see any support to apply overlays in that driver.
+>> Ah. Sorry for the confusion peeps. I asked Kalle to report this without
+>> proper consideration. 100% my bad.
+>>
+>> While the bd718x7 drive indeed is mainline (and tested), the actual
+>> 'glue-code' doing the overlay is part of the downstream test
+>> infrastructure. So yes, this is not a bug in upstream kernel - this
+>> falls in the category of an upstream change causing downstream things to
+>> break. So, feel free to say: "Go fix your code" :)
+>>
+>> Now that this is sorted, if someone is still interested in helping us to
+>> get our upstream drivers tested - the downstream piece is just taking
+>> the compiled device-tree overlay at runtime (via bin-attribute file),
+>> and applying it using the of_overlay_fdt_apply(). The approach is
+>> working for our testing purposes when the device is added to I2C/SPI
+>> node which is already enabled. However, in case where we have the I2C
+>> disabled, and enable it in the same overlay where we add the new device
+>> - then the new device does not get probed.
+>>
+>> I would be really grateful if someone had a pointer for us.
+> Seems to be fw_devlink related. I suppose if you turn it off it works?
+> There's info about the dependencies in sysfs or maybe debugfs. I don't
+> remember the details, but that should help to tell you why things
+> aren't probing.
 >
+> I've dropped the changes for 6.18 for now. No one really seems to be
+> in need of them yet AFAICT.
+>
+> Rob
+Hello,
 
-Hi Shawn,
+Thank you for the help. We are going to look into sysfs / debugfs as 
+soon as we have time.
 
-I checked the IP version of PCIe core on glymur, it is 6.00a (0x3630302A)
-and iMSI-RX still can't generate MSI for rootport.
+I tried with this and result was the same, BD71847 was not probed:
+[    0.000000] Kernel command line: console=ttyO0,115200n8 root=/dev/nfs 
+rw nfsroot=192.168.255.126:/home/user01/nfs,nfsvers=3 
+ip=192.168.255.1:192.168.255.126::255.255.255.0:bbb1:eth0 nfsrootdebug  
+fw_devlink=no
 
-- Qiang Yu
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -1057,6 +1057,10 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
-> 
->         dw_pcie_msi_init(pp);
-> 
-> +#define PORT_LOGIC_PCIE_VERSION_NUMBER_OFF 0x8f8
-> +       val = dw_pcie_readl_dbi(pci, PORT_LOGIC_PCIE_VERSION_NUMBER_OFF);
-> +       printk("version = 0x%x\n", val);
-> +
-> 
-> 
-> 
+
+With todays linux-next the BD71847 got probed; I assume the changes got 
+dropped for the moment.
+
+Kalle
+
