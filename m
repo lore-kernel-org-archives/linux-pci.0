@@ -1,193 +1,176 @@
-Received: from mail-m1973175.qiye.163.com (mail-m1973175.qiye.163.com [220.197.31.75])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 504713002D7;
-	Fri, 28 Nov 2025 10:03:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B69102E62B3;
+	Fri, 28 Nov 2025 10:49:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764324189; cv=none; b=q0nP35M93YTvqInH2DevDjIcvQx5xx10iN45Y6Q86csrQ3fFVoZqWUpgSAh4iepwnM9ypVkxI3bdze9Do4pn8ootrFWvuEdUQ/F4hqjhqpeafXJ3l4rTOTYEXdGzj8TEoYPJ58QATlllW09xeYNDoQ4whjHZLl92KaRm3crhiYc=
+	t=1764326989; cv=none; b=ou/cRnkm4Dedk4I0EG38Wl98JFtP5pPK2rS4SnfA6bX5Hfs5zFds4UQgQ/tVxUILvRW+Fyc+nvNGDEqieKQHHfPToyWBWdOUe0EzFSa4qKB9shodk778IYAeAlCd7aXMkRRkoQZJkPime25dZf64di6BjJu6g/9QXWAl4zKCDFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764324189; c=relaxed/simple;
-	bh=Av2+/muJiBJ/UxJApjUl1cE96TDlyTztxtrF+MWKLAQ=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=fTeyAlFESjLxrW3hLmhgxKU7WljhueZqTUjnFNV5A3o+UeHkzSUHZtrxZAOJLMpzs9MaJuv3MNauwMbeFhdSCoMTkvn9pA/ussetoeAADkeIWQk0X/rPMGdazs7EIzsL45TzI+i/G5YhVPLDhRtj/nJGt7Q/mchm4cyp2t/UkVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=GbOlW/IH; arc=none smtp.client-ip=220.197.31.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1764326989; c=relaxed/simple;
+	bh=zwYc03gE9i5Ws5sxqQHu/4jeFLFZdA0/OihtvOsta9s=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=blTQelRUccukCjHRgb6ITtMJoV7a9KhY8ctK7zaOqQFUmTVhp5wYFxk6vYRif6K03eF7PzogOSFcsjD2nHnLLt4KbFg4Ypf44wXR/dhrNAvvgkiB4L9CpJU7T2i9QhePi30UkXyQkjLnok1Dv+ar9L4kv6C629PIhgagPpHYl3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=U5PwWgce; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="GbOlW/IH"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2b435546d;
-	Fri, 28 Nov 2025 18:02:54 +0800 (GMT+08:00)
-Message-ID: <5b5d0ac2-72b4-4641-a0ef-a34c20ce8729@rock-chips.com>
-Date: Fri, 28 Nov 2025 18:02:50 +0800
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="U5PwWgce"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AS8OMmf3967407;
+	Fri, 28 Nov 2025 10:49:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=XOv43bH80aT
+	uObCz8M2ge9QC9lBOIRg02jqoIxfCx8A=; b=U5PwWgceN/X0tRKH7vqNQ4OvxJY
+	H5IUBmV1JHvNgvmw7RiGeQgWKzmkBdkB2D1FInDftYxbJK7p+tRjjzZrx9w+HHKb
+	I8pqDjEerkbn8OC8JCTdVFkkH9M9FJ0uopaOsfygP3fmOBREpOjqc09AfSk6ab65
+	Dd8RpUUT7YBE4pVzMkdvU4rp/jIstugr39YJjizhqiMRsLKJ/JgCijpdsK2xtIil
+	JUFA95DRQaCsXavW+Cptqf9BiEJ5s+cSJnRu1Jq2Cg9mPJWzcQtj6HYV+VgEkjyR
+	nclEZ6ORj5kvO9vjgOgCwuwW2XYAlUbAtDcNRyV/CcHbAx4rlAvU1ZatC6g==
+Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4apkv5k96u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 28 Nov 2025 10:49:37 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5ASAnYBN000881;
+	Fri, 28 Nov 2025 10:49:34 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4ak68mvqhj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 28 Nov 2025 10:49:34 +0000
+Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5ASAnXUm000858;
+	Fri, 28 Nov 2025 10:49:33 GMT
+Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 5ASAnXnQ000849
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 28 Nov 2025 10:49:33 +0000
+Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
+	id 25FEE7AD; Fri, 28 Nov 2025 18:49:32 +0800 (CST)
+From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
+To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
+        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
+        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
+        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
+        kw@linux.com
+Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
+        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
+        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: [PATCH v15 3/6] arm64: dts: qcom: qcs8300-ride: enable pcie0 interface
+Date: Fri, 28 Nov 2025 18:49:25 +0800
+Message-Id: <20251128104928.4070050-4-ziyue.zhang@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20251128104928.4070050-1-ziyue.zhang@oss.qualcomm.com>
+References: <20251128104928.4070050-1-ziyue.zhang@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH 3/5] PCI: dwc: Remove MSI/MSIX capability if iMSI-RX is
- used as MSI controller
-To: Qiang Yu <qiang.yu@oss.qualcomm.com>
-References: <20251109-remove_cap-v1-0-2208f46f4dc2@oss.qualcomm.com>
- <20251109-remove_cap-v1-3-2208f46f4dc2@oss.qualcomm.com>
- <dc8fb64e-fcb1-4070-9565-9b4c014a548f@rock-chips.com>
- <7d4xj3tguhf6yodhhwnsqp5s4gvxxtmrovzwhzhrvozhkidod7@j4w2nexd5je2>
- <3ac0d6c5-0c49-45fd-b855-d9b040249096@rock-chips.com>
- <aSlx91D1MczvUUdV@hu-qianyu-lv.qualcomm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <aSlx91D1MczvUUdV@hu-qianyu-lv.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9ac9ea6c1009cckunm7ad65ca470101b
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQxhIGVZKSxkfQkkeTUJOGB9WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=GbOlW/IHwyRixsVP1CIDoCLIfiF9/sbDA4p2SPkYJtYT5xGAmdP8SU0hdmueSJMlck38zdY2N8qJXHe7IQQFHZ74//nU7YtA0pni6J1G0sJdN+cqKkJFrNT/w2d06p1V61g+ltGqp2MvIzEjOqpzJdFMQWoMl1gFE9P7v6xUYZE=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=HzeuSFODqOQQndAd/qKh98myiRiX8TIis0dhMbPG8PI=;
-	h=date:mime-version:subject:message-id:from;
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: h1vgwn2WKR6JynovnnRpfiQSDCWc8wJD
+X-Authority-Analysis: v=2.4 cv=O8k0fR9W c=1 sm=1 tr=0 ts=69297e41 cx=c_pps
+ a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=KKAkSRfTAAAA:8 a=EUspDBNiAAAA:8
+ a=IKGGdEyG_brSza0xPGIA:9 a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTI4MDA3OCBTYWx0ZWRfXxoH+MxAJ2seW
+ qHbw1JELSFbGk++lIsFtVKpfGQQTAa2rSpM+4YO+MAjMm+OUsCRdT1RJINAZtR4G/Aj8XEvqVYB
+ peQ6gzsOE9VIt+5mN5m19WWxJoiEyUQ8DYnmVlVO2vvVwxMssgTJ6E0id8xhwJMMe/htits/Yoa
+ Rwk1+F5SyYY7MipPjHwS9BdHRoSiP9Ez06hS/kABcNs4UNj1DPMmzjBZEzqQTH4ii7UaFewJG8I
+ INyqDOQ1DgUcpa5RMDXjT9cO+jksXdsCgpPyGQ9cjWBq2mHkZcH+cxedgFuti8wiPXL0/yGPULf
+ R/R7skBXTd2FKAwchhoFHS0Xfz//FWZvrhF6gChauD/nP40ylKJDAhatTOraOmy0dZSVQNKb8sk
+ rLMaBO7yQr541JFJKCymfDIitgMKFw==
+X-Proofpoint-GUID: h1vgwn2WKR6JynovnnRpfiQSDCWc8wJD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-11-28_03,2025-11-27_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 suspectscore=0 adultscore=0 clxscore=1015 impostorscore=0
+ spamscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2510240001 definitions=main-2511280078
 
-在 2025/11/28 星期五 17:57, Qiang Yu 写道:
-> On Fri, Nov 21, 2025 at 12:04:09PM +0800, Shawn Lin wrote:
->> 在 2025/11/21 星期五 1:00, Manivannan Sadhasivam 写道:
->>> On Thu, Nov 20, 2025 at 10:06:03PM +0800, Shawn Lin wrote:
->>>> 在 2025/11/10 星期一 14:59, Qiang Yu 写道:
->>>>> Some platforms may not support ITS (Interrupt Translation Service) and
->>>>> MBI (Message Based Interrupt), or there are not enough available empty SPI
->>>>> lines for MBI, in which case the msi-map and msi-parent property will not
->>>>> be provided in device tree node. For those cases, the DWC PCIe driver
->>>>> defaults to using the iMSI-RX module as MSI controller. However, due to
->>>>> DWC IP design, iMSI-RX cannot generate MSI interrupts for Root Ports even
->>>>> when MSI is properly configured and supported as iMSI-RX will only monitor
->>>>> and intercept incoming MSI TLPs from PCIe link, but the memory write
->>>>> generated by Root Port are internal system bus transactions instead of
->>>>> PCIe TLPs, so they are ignored.
->>>>>
->>>>> This leads to interrupts such as PME, AER from the Root Port not received
->>>>
->>>> This's true which also stops Rockchip's dwc IP from working with AER
->>>> service. But my platform can't work with AER service even with ITS support.
->>>>
->>>>> on the host and the users have to resort to workarounds such as passing
->>>>> "pcie_pme=nomsi" cmdline parameter.
->>>>
->>>> ack.
->>>>
->>>>>
->>>>> To ensure reliable interrupt handling, remove MSI and MSI-X capabilities
->>>>> from Root Ports when using iMSI-RX as MSI controller, which is indicated
->>>>> by has_msi_ctrl == true. This forces a fallback to INTx interrupts,
->>>>> eliminating the need for manual kernel command line workarounds.
->>>>>
->>>>> With this behavior:
->>>>> - Platforms with ITS/MBI support use ITS/MBI MSI for interrupts from all
->>>>>      components.
->>>>> - Platforms without ITS/MBI support fall back to INTx for Root Ports and
->>>>>      use iMSI-RX for other PCI devices.
->>>>>
->>>>> Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
->>>>> ---
->>>>>     drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++++++++
->>>>>     1 file changed, 10 insertions(+)
->>>>>
->>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
->>>>> index 20c9333bcb1c4812e2fd96047a49944574df1e6f..3724aa7f9b356bfba33a6515e2c62a3170aef1e9 100644
->>>>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->>>>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->>>>> @@ -1083,6 +1083,16 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
->>>>>     	dw_pcie_dbi_ro_wr_dis(pci);
->>>>> +	/*
->>>>> +	 * If iMSI-RX module is used as the MSI controller, remove MSI and
->>>>> +	 * MSI-X capabilities from PCIe Root Ports to ensure fallback to INTx
->>>>> +	 * interrupt handling.
->>>>> +	 */
->>>>> +	if (pp->has_msi_ctrl) {
->>>>
->>>> Isn't has_msi_ctrl means you have something like GIC-ITS
->>>> support instead of iMSI module? Am I missing anything?
->>>>
->>>
->>> It is the other way around. Presence of this flag means, iMSI-RX is used. But I
->>> think the driver should clear the CAPs irrespective of this flag.
->>
->> Thanks for correcting me. Yeap, how can I make such a mistake. :(
->>
->> Anyway, this patch works for me:
->>
->> root@debian:/userdata# ./aer-inject aer.txt
->> [   17.764272] pcieport 0000:00:00.0: aer_inject: Injecting errors
->> 00000040/00000000 into device 0000:01:00.0
->> [   17.765178] aer_isr ! #log I added in aer_isr
->> [   17.765394] pcieport 0000:00:00.0: AER: Correctable error message
->> received from 0000:01:00.0
->> [   17.766211] nvme 0000:01:00.0: PCIe Bus Error: severity=Correctable,
->> type=Data Link Layer, (Receiver ID)
->> root@debian:/userdata# [   17.767045] nvme 0000:01:00.0:   device
->> [144d:a80a] error status/mask=00000040/0000e000
->> [   17.767980] nvme 0000:01:00.0:    [ 6] BadTLP
->>
->> root@debian:/userdata# cat /proc/interrupts | grep aerdrv
->>   60:      0      0      0      0      0      0     0     0     INTx   0 Edge
->> PCIe PME, aerdrv, PCIe bwctrl
->>   63:      0      0      0      1      0      0     0     0     INTx   0 Edge
->> PCIe PME, aerdrv
->> 110:      0      0      0      0      0      0     0     0     INTx   0 Edge
->> PCIe PME, aerdrv
->>
->>>
->>>>> +		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
->>>>> +		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
->>>>
->>>> Will it make all devices connected to use INTx only?
->>>>
->>>
->>> Nah, it is just for the Root Port. The MSI/MSI-X from endpoint devices will
->>> continue to work as usual.
->>
->> Qiang Yu,
->>
->> Could you please help your IP version with below patch?
->> It's in hex format, you could convert each pair of hex
->> characters to ASCII, i.g, 0x3437302a is 4.70a. The reason
->> is we asked Synopsys to help check this issue before, then
->> we were informed that they have supported it at least since
->> IP version 6.0x. So we may have to limit the version first.
->>
-> 
-> Hi Shawn,
-> 
-> I checked the IP version of PCIe core on glymur, it is 6.00a (0x3630302A)
-> and iMSI-RX still can't generate MSI for rootport.
-> 
+Add configurations in devicetree for PCIe0, board related gpios,
+PMIC regulators, etc for qcs8300-ride board.
 
-Thanks for let me know. I have no doubt about this patch, it works
-for me as well.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
+---
+ arch/arm64/boot/dts/qcom/qcs8300-ride.dts | 42 +++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-> - Qiang Yu
->> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->> @@ -1057,6 +1057,10 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
->>
->>          dw_pcie_msi_init(pp);
->>
->> +#define PORT_LOGIC_PCIE_VERSION_NUMBER_OFF 0x8f8
->> +       val = dw_pcie_readl_dbi(pci, PORT_LOGIC_PCIE_VERSION_NUMBER_OFF);
->> +       printk("version = 0x%x\n", val);
->> +
->>
->>
->>
-> 
-> 
+diff --git a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
+index 9bcb869dd270..7ab01dc3bbc9 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
+@@ -317,6 +317,25 @@ &iris {
+ 	status = "okay";
+ };
+ 
++&pcie0 {
++	pinctrl-0 = <&pcie0_default_state>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pcieport0 {
++	reset-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
++};
++
++&pcie0_phy {
++	vdda-phy-supply = <&vreg_l6a>;
++	vdda-pll-supply = <&vreg_l5a>;
++
++	status = "okay";
++};
++
+ &qupv3_id_0 {
+ 	status = "okay";
+ };
+@@ -377,6 +396,29 @@ ethernet0_mdio: ethernet0-mdio-pins {
+ 			bias-pull-up;
+ 		};
+ 	};
++
++	pcie0_default_state: pcie0-default-state {
++		wake-pins {
++			pins = "gpio0";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		clkreq-pins {
++			pins = "gpio1";
++			function = "pcie0_clkreq";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		perst-pins {
++			pins = "gpio2";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++	};
+ };
+ 
+ &uart7 {
+-- 
+2.34.1
 
