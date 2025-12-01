@@ -1,88 +1,64 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7E592F2603;
-	Mon,  1 Dec 2025 13:09:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B00DF30FC35
+	for <linux-pci@vger.kernel.org>; Mon,  1 Dec 2025 13:26:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764594599; cv=none; b=F2s1h4dGpFLD+FCSQLqelVJaTgOezOvtqu/xNwm8o3AYmoSLZW/kDtlvhqyrvIsuMFqfNY8H9y8YsZthSr76kcPRhSyaQqgZHIk/+Y/YKo/85IPWlTgUSr5821aHtrufJxE1KIR8ltUdcMhVYGeYOEM/P9nZmiN3CD/TXZDrz1Q=
+	t=1764595582; cv=none; b=C4FxQrnrd/dVWBeuX3mUrDpA2ZyzsMG+FrN296aoDOq0OkP34wzdLglo1yQZb//zSYC6kj4O37OFa71rAzg0z0M9zoVEDiOP2T92y5UuZdOSLxszaSoXBMT6BBtYNPuV+PLdc8NOBfrQmA41nA12gbNN/WioDKsHujjBI8XyW+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764594599; c=relaxed/simple;
-	bh=zg2mBZ9w8LQ344DKjJnn30Gx+/5hAbRUGgtojX6y6sg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ljgVl1f9R8dQqt49xYZBWcLQ6Rw00G6m0URko2Lg09kSs2XSmLWvCc81HYRlchizVL6kKRcVFwjZrxw3lFvqKO44orfS11zoY7LALFRcLx8mOYLxu9HcdXQ6lmHF7yEfKRMf+AQYIDS7SqGWddswZIoZAHnjaNsSLYIAHMH5iNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=LmEAuJIA; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="LmEAuJIA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version:
-	Content-Type; bh=zg2mBZ9w8LQ344DKjJnn30Gx+/5hAbRUGgtojX6y6sg=;
-	b=LmEAuJIAIde6QXYHQ81OHgJz/63qNbztwo7RKc9HSU2kL+6HQUmsIwmwTzY61b
-	24JKl6HgbWpx+FHYgqa1uOXnjRjezS2c/iu7CqODxB3RUNKIQPe7mFVaHkM4W2OW
-	RCQMMEfJL2NStEMEqXO59/rG6HG9VW+iDV9WWWRP4ck+A=
-Received: from emily-VMware-Virtual-Platform.. (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wBHrZAvky1pnbQPDw--.3674S2;
-	Mon, 01 Dec 2025 21:08:01 +0800 (CST)
-From: huyuye <huyuye812@163.com>
-To: sunilvl@ventanamicro.com
-Cc: ajones@ventanamicro.com,
-	anup@brainfault.org,
-	aou@eecs.berkeley.edu,
-	atishp@rivosinc.com,
-	bhelgaas@google.com,
-	catalin.marinas@arm.com,
-	conor.dooley@microchip.com,
-	dfustini@tenstorrent.com,
-	haibo1.xu@intel.com,
-	lenb@kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	palmer@dabbelt.com,
-	rafael@kernel.org,
-	robert.moore@intel.com,
-	samuel.holland@sifive.com,
-	tglx@linutronix.de,
-	will@kernel.org,
-	dai.hualiang@zte.com.cn,
-	deng.weixian@zte.com.cn,
-	guo.chang2@zte.com.cn,
-	liu.qingtao2@zte.com.cn,
-	wu.jiabao@zte.com.cn,
-	lin.yongchun@zte.com.cn,
-	hu.yuye@zte.com.cn,
-	zhang.longxiang@zte.com.cn,
-	huyuye <huyuye812@163.com>
-Subject: Re:[PATCH v7 08/17] ACPI: pci_link: Clear the dependencies after probe
-Date: Mon,  1 Dec 2025 21:07:55 +0800
-Message-ID: <20251201130757.7032-1-huyuye812@163.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240729142241.733357-9-sunilvl@ventanamicro.com>
-References: <20240729142241.733357-9-sunilvl@ventanamicro.com>
+	s=arc-20240116; t=1764595582; c=relaxed/simple;
+	bh=sokggr8bO/LgBuyGjRQJCRAZyeKmO4+IyJXkOVOAZqk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=m7FGmtywFbC1jjJvJBZymsY3kPf+0PVMX3+SdyhIOspGOmXlo3Vfuue6oEa76E/J3LynhMhd+B2VoCVHEDR9pNZHMNimNUf3luImdvNiE4VO8Gmi50VlOAwgJQeOtrEUVYyvpl3pzk5iOMqcN4E315f7QAP8xWlE4H8nhlBHDQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id A47AA2C0525E;
+	Mon,  1 Dec 2025 14:26:17 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 71B1710A84; Mon,  1 Dec 2025 14:26:17 +0100 (CET)
+Date: Mon, 1 Dec 2025 14:26:17 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: "guanghuifeng@linux.alibaba.com" <guanghuifeng@linux.alibaba.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	kanie <kanie@linux.alibaba.com>,
+	alikernel-developer <alikernel-developer@linux.alibaba.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: Re: [PATCH] PCI: Fix PCIe SBR dev/link wait error
+Message-ID: <aS2XeetaEW1RoWus@wunner.de>
+References: <20251124104502.777141-1-guanghuifeng@linux.alibaba.com>
+ <20251124235858.GA2726643@bhelgaas>
+ <a4a2a5ee-1f4e-4560-b8cf-c9c10ae475dd.guanghuifeng@linux.alibaba.com>
+ <aS1oArFHeo9FAuv-@wunner.de>
+ <969657a9-ea6b-44a8-a06c-c2af52212493@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBHrZAvky1pnbQPDw--.3674S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7JFyUZF13Kw4xAry7Cw48WFg_yoWxZFbEgr
-	n5AFyDZw4ftw17Gry3WF97JFW3K3y29r9xGa4xXrZ7Gw4fAa1DCan7Cr12vr15GF4xGr4a
-	kr15uw47GwsI9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7VUjVOptUUUUU==
-X-CM-SenderInfo: 5kx135bhyrjqqrwthudrp/xtbBzwgXCGktkDVHogAAsc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <969657a9-ea6b-44a8-a06c-c2af52212493@linux.alibaba.com>
 
-Hi, sunilvl
+On Mon, Dec 01, 2025 at 08:56:10PM +0800, guanghuifeng@linux.alibaba.com wrote:
+> 2025/12/1 18:03, Lukas Wunner :
+> > It seems highly unusual that the different functions of the same physical
+> > device require different delays until they're accessible.  I don't think
+> > we can accept such a sweeping change wholesale without more details,
+> > so please share what the topology looks like (lspci -tv), what devices are
+> > involved (lspci -vvv) and which device requires extra wait time for some
+> > of its functions.
 
-Based on the above patch, I understand that you previously resolved dependencies between Link devices and PCI Host Bridges by calling acpi_dev_clear_dependencies(device). I would like to ask: on RISC‑V platforms, if we need to manage dependencies between multiple PCI Host Bridges, could this be addressed by adding a call to acpi_dev_clear_dependencies(device) at the end of the acpi_pci_root_add enumeration function?
+Could you please provide the details I asked for above?
 
-Initialization order dependencies can be defined via the ACPI _DEP method in the DSDT. For example, if host bridge B depends on host bridge A, bridge B should not be enumerated until bridge A is fully initialized.
+Thanks,
 
-Best regards,
-Yuye
-
+Lukas
