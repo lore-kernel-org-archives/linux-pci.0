@@ -1,58 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9DB01E47C5;
-	Mon,  1 Dec 2025 06:40:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E434286D7B
+	for <linux-pci@vger.kernel.org>; Mon,  1 Dec 2025 06:48:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764571218; cv=none; b=PIRKT/Ns2ThAo1aXpkqKvHM0JNlWpOZ2si42+BI32GKlxRCxbsVdagGCLmIuUKHBWTTvj8R6zOFNmMgoXe2WRGpO8QyquZ9l0UjX8RZRfeGHwR7ZpNJBIY0DRhJsQoA1wBAFnrL7dLcX9lMi/PbqS7jnZfP1zd3xeyii/WvB3cI=
+	t=1764571720; cv=none; b=njlusWv75JVXu860HDhdwKhS+UriO3hcukYAYcxH/+rzzd1zntOdkjPxaqfBlIHjrZwy08az3it6JfR/3JLQhESjbVL2whISAjU7jHj7hKJ+7LtuBZF34V1Qnh8w1EwW+GS+T2nxD1xBhJL4cXasx8N7SxUlrRsaa3Qzmh0k1V0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764571218; c=relaxed/simple;
-	bh=BUMTj/ea2YlzqvnqyiSxOxPBM/xPbxxNYqiHcRDynGg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZlHEXWoAtKanMfx/HyIz2VSyinHnxQv7RldX0bj7Q6t7WsMffq1IgxzsdDmeS5n9mYwZEaQ4xWk4OpWf67wSfp55xl0tDoG+Ykd1kD0Pf14KYouzzEaR95o1fzwL49KGFp7xL0dM8xHCBUsYffQVwdZlzIsXvN16dEX+j+YF0uc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZN62uUg8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764571720; c=relaxed/simple;
+	bh=1NRo23qvFcKwP4ZEynQppXAUxeIqmqyc5XRObziJiXg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KVAu6tUyM06DypyghyNjXNAjjFMvA4bOOCtkAzd2zMlxSybipNeZMunE1sP/YWWz4Wztjvq6A4sSxK/Pv7xCLmZGmt577RKUijzO2WRDXdOXwuNNobghTkMoCeR4ExmDrIs795sYPkuIH/TdAi2an/2CfU1xFPQea2WM67PcTYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool; spf=pass smtp.mailfrom=packett.cool; dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b=vG/7rzgp; arc=none smtp.client-ip=95.215.58.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=packett.cool
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=packett.cool
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZN62uUg8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEC18C4CEF1;
-	Mon,  1 Dec 2025 06:40:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764571217;
-	bh=BUMTj/ea2YlzqvnqyiSxOxPBM/xPbxxNYqiHcRDynGg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZN62uUg8TIZ2rsF0xhyKBh6C/xS6qb0pU+f15siHilqicNlfTSlOTLZSFM/63RJAf
-	 D2PZ5FoRikrUrHH6HRCco5CagArK6sWF+7zVkE/raKd7KM3a3uwbe9ps6pVwVpSjBf
-	 X/tIWlHRQYGxDVRerNlVQE/lV7BoV42R44tKNYirPZXzRR1bOXx+k+pCWPaZfsND4E
-	 oeV5XoqqWXKSuDIibh/NoteVsOGiQlGkiQ/rKP5GOP81hXPtDbl3TG3L+CNCngFHx1
-	 NP5UD1UMBaau3WZ0bAsckjep9uI2HfOCEQTcUH56sTYeRawRJtprH0C7rL0hBY/M7K
-	 kstQtQ24hKfDA==
-Date: Mon, 1 Dec 2025 07:40:11 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>
-Cc: FUKAUMI Naoki <naoki@radxa.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: dwc: Make Link Up IRQ logic handle already
- powered on PCIe switches
-Message-ID: <aS04Sx9YRPwPjPzc@ryzen>
-References: <20251201063634.4115762-2-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=packett.cool header.i=@packett.cool header.b="vG/7rzgp"
+Message-ID: <9a9280e7-d29a-475a-83fa-671acfab9d92@packett.cool>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=packett.cool;
+	s=key1; t=1764571705;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/CvsvPDo++88EIfQk1NEfDubJ5f3pS7dCz2G/tHuOlo=;
+	b=vG/7rzgp++1UVzDvFlSiXFXxbhK45/p4F7ZFE/ppCGsEQ+Esxt2HtVMYpHX5qOGSKQjqcz
+	lND3oOWBCZmrGS1zopweXxuye9ek6jNx/AW3yyjPyvxZe5NrFLk6RifnwwlkpAlYbPuAL5
+	Wiaf0ZsqgdXpAtoxwJmqLlDeV1QdKiFrGbFjrUBLNwhQHFhyICuY2M4/yrI3WQ9pBSFgeD
+	jwOsWZZetVnlujuUmqn9QoIUpfnH8tqIUvCse4AVed+VqOjP7jdd7EwwIwhzyx69E2JTfp
+	+0ORuqxTbNkLtnagpAP3Vzd0RB/pjgt7YIFk0Jy4lKKF5kJ8YdbziH1+8yZKSw==
+Date: Mon, 1 Dec 2025 03:48:13 -0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251201063634.4115762-2-cassel@kernel.org>
+Subject: Re: [PATCH v2] PCI: Add quirk to disable ASPM L1 for Sandisk SN740
+ NVMe SSDs
+To: Manivannan Sadhasivam <mani@kernel.org>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+ bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Konrad Dybcio
+ <konrad.dybcio@oss.qualcomm.com>,
+ Alexey Bogoslavsky <Alexey.Bogoslavsky@sandisk.com>,
+ Jeffrey Lien <Jeff.Lien@sandisk.com>, Avinash M N <Avinash.M.N@sandisk.com>
+References: <20251120161253.189580-1-mani@kernel.org>
+ <20251124235307.GA2725632@bhelgaas>
+ <tiadpmogdxom5h2bquct2ch6hoc6ozh6bgnzdmnj3mia22vtue@c5yjxbx65lsm>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Val Packett <val@packett.cool>
+In-Reply-To: <tiadpmogdxom5h2bquct2ch6hoc6ozh6bgnzdmnj3mia22vtue@c5yjxbx65lsm>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-Forgot to pick up tags from v1, adding them here so that e.g. b4 will pick
-them up:
 
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
-Tested-by: FUKAUMI Naoki <naoki@radxa.com>
+On 11/25/25 2:21 AM, Manivannan Sadhasivam wrote:
+> [..]
+> There are a couple of points that made me convince myself:
+>
+> * Other X1E laptops are working fine with ASPM L1.
+> * This laptop has WCN785x WiFi/BT combo card connected to the other controller
+> instance and L1 is working fine for it.
+> * There is no known issue with ASPM L1 in X1E chipsets.
+>
+> Because of these, I was so certain that the NVMe is the fault here.
+
+There is *a* known issue with ASPM L1 on X1E, reported by maaaany users 
+on #aarch64-laptops, that we discussed in another thread..
+
+But it is a full system freeze, **not** a correctable AER message, and 
+it definitely happens with a bunch of various SSDs on various laptops. I 
+personally have had it happen both with the SN740 and an SK Hynix drive, 
+on a Latitude 7455. It's an SSD-only issue (disabling ASPM just for the 
+drive, but keeping it on for the WiFi, was enough to get to month-long 
+uptime) but not specific to any SSD model.
+
+One bit of news I have about it is that I recently started using EL2 
+(slbounce), and I did see something that looked like that hang.. but 
+unlike in EL1, right before the reboot the panic LED did start blinking. 
+So if that was indeed from the same issue, I should now be able to catch 
+it into pstore (if pstore works.. trying blk with sdhc instead of efi 
+now 0.o) Maybe QHEE was eating the fault and itself crashing, since it 
+"owns" the PCIe IOMMU when it's running.. (???)
+
+~val
+
