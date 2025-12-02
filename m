@@ -1,331 +1,252 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from CHN02-BJS-obe.outbound.protection.partner.outlook.cn (mail-bjschn02on2129.outbound.protection.partner.outlook.cn [139.219.17.129])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082A2296BA5;
-	Tue,  2 Dec 2025 11:44:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764675886; cv=none; b=ia26F42vqfSPv7VO5CF011+ORZNUAWYd79vv2guH33zBFhLC0ybD/CMOSz4r+KxCW+aiPGFFICIQ+T/KPhID9y7CH29vlfodX0YZBhsWiZ13MgRmcJM4/g0o7S2gHL5Rn151aNPDBjt/w6jHxAeUcngkYpo43Fho2LqSEFj6RPQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764675886; c=relaxed/simple;
-	bh=A2OtBjHKMPsv5ieu0X0QAARKlZkIcWNozF8zp2T2n7c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EQ0QxSkuzTe8JlZBZvDKBJwVllHLmrlB9MgY64k6jRfi1EY48VHKkeEF9ks8K54iKWykUfj2UnVm9ZpknkeZl3ZgW2GZNKP33VElCjIE71He6K0MxEddRAxxQJAvB/s+anR7qd1G+RyQaFGFyOJTu7H/s4myxLH3bQF3jcHsjME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XWPsL1ju; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XWPsL1ju"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E566C4CEF1;
-	Tue,  2 Dec 2025 11:44:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764675885;
-	bh=A2OtBjHKMPsv5ieu0X0QAARKlZkIcWNozF8zp2T2n7c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XWPsL1juzkH3Cy///Ny5yKw9iel0mf0OoPe7j9SDtdwUYKGAqWZTLKIL+6DIganYy
-	 rboC8MZXuN2GKqELrn9+ubeSNSZF+aXY7SUfNuPAf5CEwj3tkMAWQuRBTcRcKemsiN
-	 hEhqNdJUuKmqq+gDN8y5XNBvvS24gCT8JszlIjNz6SW+y+KfaA9wjJMdMHg7Gbe4J4
-	 MjNKDTsgoSV2ZMxRO3y06JdAi4gaM4+HxFKFIY2MuXHdThj5i0eG1jY7DvYmn4G7qG
-	 WHN8Diy6D5uTFusOcg8mDMs7MQUnvqge8y3jk2zGUghVC5HWetCsknCUxEkG2ekQsg
-	 ZWv9UFaYK5Dew==
-Date: Tue, 2 Dec 2025 17:14:31 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Jonathan Chocron <jonnyc@amazon.com>, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v9 4/4] PCI: dwc: Support ECAM mechanism by enabling iATU
- 'CFG Shift Feature'
-Message-ID: <ps5jjiqv5mw2g3exzvfcfsa4bcda7hois2h6riarwb2d2son4u@2onu4bibw2hb>
-References: <alpine.DEB.2.21.2511280256260.36486@angie.orcam.me.uk>
- <c7aea2b3-6984-40f5-8234-14d265dabefc@oss.qualcomm.com>
- <alpine.DEB.2.21.2511280755440.36486@angie.orcam.me.uk>
- <cabf4c20-095b-4579-adc1-146a566b19b9@oss.qualcomm.com>
- <alpine.DEB.2.21.2511281714030.36486@angie.orcam.me.uk>
- <a4c6d47f-28b5-40d3-bc82-10aeb14f8e78@oss.qualcomm.com>
- <alpine.DEB.2.21.2511290428340.36486@angie.orcam.me.uk>
- <h7pgm3lqolm53sb4wrcpcurk4ghz4tulqnr7vgd7rzxy4hscue@jcn5tepevlwl>
- <syg7vpbt3w53s24hgl7b6w64odmif5bq557lwlvzlbvgkukwcn@66jtzzc3vtiu>
- <alpine.DEB.2.21.2512011617250.49654@angie.orcam.me.uk>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF0D2247289;
+	Tue,  2 Dec 2025 11:48:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.17.129
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1764676106; cv=fail; b=uEDoc52gq3VNU3FYTq/V45TSy4sJVDcOqDdGym0efPvnXbjQ7y6+UzOzwAbabBn6/25bHRJrOjtRmQz1guH8wgwEWZ3ElH/8JjOV+QWXAlzcuS4AlYpIE8EB9lkLOUqGcSi7JOuegRz+HpzY/WfUyU3jCzKQaTNRD8y3YdvxfJU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1764676106; c=relaxed/simple;
+	bh=I8njSH+P4c8tT//3JRNboLmxDGSclM/htDhv3dA9Bmk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=pndKmKfqQE/qBK2r+BZPYd4iebZCWvJ6XunWxYrK1ilCEB2QWINIoHUwXKG6XyDFhBHsaYQ0cjtxo+c8DjCjFwLeep6sUCSObenFLBzf4tcNE2hoTp0VQOb2SzKn9BVkp+Cvy1+PXp7OFtSTAHlKBPBPCXWcV5SfpFhmPnj3dC8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=starfivetech.com; spf=pass smtp.mailfrom=starfivetech.com; arc=fail smtp.client-ip=139.219.17.129
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=starfivetech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SIuZ9fce/ynNIEBFEOC487hHuGANm+OSimUsh94piSk7BZKQvfB8eHKr5eYHhYVgdYmnw9ajbBHlhxOhOmciSaJUWk+ArAI7nL/GVG5ZwsdiuxEA4IpCKw8ARCAsSX1AlHuEHLHwl1IK0gu7s3ccklkLHH4ww0Iw6HDRZQVhm2x1aJ3pYfWngQzV3Df0OX8YpIsCDKwJv8cfHGBsckqJ0z7HLx3H0CSW87cVGEJslJHA0STveZ+OFol8F5AQJGHbm1aGxpA3GluOfJAg+7ovCa6DvZbQbv6D3pGvJZZ3sG77eQQ/Qx/dZtPdq96Wyf/13pdmAtNHFhKDNlIvt7LeGQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=++v4MPYb0zg/HMXLX0kXJVxCglGYOgthmgVEynH7LT8=;
+ b=f3LMYue1jzNClQ3ltUxVBi+jPle9pE2DkzhFvh5Bq3+ReiRIGMmZR3OI363S5xqL3nlu5BZ4i1eDRg5unbo+KjFDS/T2uRstmDjBdmW28oKqLU3VO0buSGny94Pe2RtQmCZ9s+v71pf+2DKAyYSc715QVLFgSyavCpwKU0lAWF1umcmm7hSznTefSDTJR/KtDR6+WKw9CWl4WK26ePm1Io40mB6wPjhdyEfuLewy3W4DFRuXljEsPLsyVHvsEbO17qCz5MQ2JXnchY+pgqICB+ph9HUs2zJtGcXX/+tBNx+ftHz6JEVQMo/ghZuXtKs3iwUzJOEkyCx1CMTPZM7XrA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=starfivetech.com; dmarc=pass action=none
+ header.from=starfivetech.com; dkim=pass header.d=starfivetech.com; arc=none
+Received: from ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c550::13) by ZQ0PR01MB1047.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c550:c::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9320.21; Tue, 2 Dec
+ 2025 03:16:23 +0000
+Received: from ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn
+ ([fe80::f2b9:99db:485d:ea26]) by
+ ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn ([fe80::f2b9:99db:485d:ea26%4])
+ with mapi id 15.20.9388.003; Tue, 2 Dec 2025 03:16:23 +0000
+From: Kevin Xie <kevin.xie@starfivetech.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Hal Feng <hal.feng@starfivetech.com>
+CC: Conor Dooley <conor+dt@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Palmer Dabbelt
+	<palmer@dabbelt.com>, Paul Walmsley <pjw@kernel.org>, Albert Ou
+	<aou@eecs.berkeley.edu>, "Rafael J . Wysocki" <rafael@kernel.org>, Viresh
+ Kumar <viresh.kumar@linaro.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Liam
+ Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Emil Renner
+ Berthing <emil.renner.berthing@canonical.com>, Heinrich Schuchardt
+	<heinrich.schuchardt@canonical.com>, E Shattow <e@freeshell.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 1/6] PCI: starfive: Use regulator APIs instead of GPIO
+ APIs to enable the 3V3 power supply of PCIe slots
+Thread-Topic: [PATCH v4 1/6] PCI: starfive: Use regulator APIs instead of GPIO
+ APIs to enable the 3V3 power supply of PCIe slots
+Thread-Index: AQHcYwRwWAZxAfe/n0a28faM175GW7UNkvowgAAXQxCAAAPMgA==
+Date: Tue, 2 Dec 2025 03:16:23 +0000
+Message-ID:
+ <ZQ0PR01MB0981E3055536E5E7405093B882D82@ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn>
+References: <20251125075604.69370-2-hal.feng@starfivetech.com>
+ <20251201205236.GA3023515@bhelgaas>
+ <ZQ0PR01MB09816F6CF06E8021488DBCBC82D82@ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn>
+ <ZQ0PR01MB09816DBC8A88CEC939C8968482D82@ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn>
+In-Reply-To:
+ <ZQ0PR01MB09816DBC8A88CEC939C8968482D82@ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=starfivetech.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: ZQ0PR01MB0981:EE_|ZQ0PR01MB1047:EE_
+x-ms-office365-filtering-correlation-id: 64722de1-cb98-43e6-b5dd-08de31512c3e
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|366016|41320700013|7416014|38070700021;
+x-microsoft-antispam-message-info:
+ OOcB4HPJiV8YCxrlfd6qMI1WlEPTeqxFY7fWDRZisg3feKqe+IF83sypmgOKikonNEvyeP7ydqzYC2XYe9M1pYczRFn0a8YtvAn5WmRNQK0FpX8nzOWhNNhNtBAPwM+vpoYG/idVZTyEftDH68NwDG9eIy/0UDSulI+m4k8x1cT0QmQZuM9dhsJ1BwM3UaFks0SvBcnSBkLlaqxLaICfNMqa30jteqOMaMBewvjfuy7ghhMpLnfRNHfXBo+G0WgMI+dVEj5Yy1O1RDGCn7pPHrG+tBJO3fOiRrcb2Z/MOkATaRi8ht4P5IalSUhB+y8NvMYZ71bzVKbrfs0U3ruwlcX/mcEc1Ugi652Gnh93WjUsq1WtICxkaOKOO4bgQkgEXDzkV95eiS11bHatdROwj172RjZ21Fo/dkzD40Ikp/PiFQUUxxtQ9ssVtR+FVyryFaRQdBTMyr49dl0NmNjgKMljRpqjkd+8JY/8frRyi0fwfiV6HLu2zA5MIlu6CgbMpEfBAOsHuC+44qJm7e15VlNwk/Lf3QIUcKfIeklQbO6ogMOQMxiUKV9g5Xv1bXNOv+sn2E06e2DoNzQS4h8uuWCi5t+VrXuBLksOSh4uD1I=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(41320700013)(7416014)(38070700021);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?WoQLFuSvICG5tQZgiK3BVY24I3ufc0j71FGpfh3pKvXL7iyC+mew1za7tp?=
+ =?iso-8859-2?Q?iQ+pzmlyiBTazJcLHexDl7pOaM1S1+sh3Ww2yZnxZdk80LNss6A4u3qEN1?=
+ =?iso-8859-2?Q?DZbq6p7LTHpqjYUQL9pXJUWcs+zySUNQitvYK3wa4otC3K0bY96UG2Uxag?=
+ =?iso-8859-2?Q?KxPMvCTQ1wUsBk7jtdv3l9ExX+DfG8RWio47J95dWtkruKcJ27NxdBtei6?=
+ =?iso-8859-2?Q?XfPkhIP2d7E+aw7gSM+ovi4rbdXENnD5lv97E4jVfYrVox/4DBVeqB1sl8?=
+ =?iso-8859-2?Q?nmwpali73DjyaduZrkIv42QRGC21fFex7PExjHJ4Xj6ndSs8yELH90N3ga?=
+ =?iso-8859-2?Q?lowynGMlFAOi3cLvHiAhLFl2J/C5JDTdI85rnEcG4uhNfXSdA2mJzhHaeY?=
+ =?iso-8859-2?Q?XSEV2SVBTeEvkgbf2Vlmw9CtctHq2pRMgETrS/Cs8Wo66KFm1Wr/GQ+SRX?=
+ =?iso-8859-2?Q?e6b76RmoM+b5y4noe6sD93Q1LS8Wf6ADenYMSw8ioln4TKYs1uyj7cD0bl?=
+ =?iso-8859-2?Q?4qkHrGeZJLDT5wrniGKLO0lmz3nPmBuzopL5v+WYMENpZBQTIQUhCL953v?=
+ =?iso-8859-2?Q?CR68PcwYE1fQd6fFSzQtCs1nQrPL5AfbtUTiMx95igQpSqfWk9tVVM/JBX?=
+ =?iso-8859-2?Q?43NJHNz7+kKCS7ERYBe51x3ef5eyxMZ6DYf0Z1BBu9KljHb2urS0SGfJRT?=
+ =?iso-8859-2?Q?e4PyclDHbujvG236n2VksgCx7C0QeBvA+uk6JMSJWwE/4SExGhcLV9BtMt?=
+ =?iso-8859-2?Q?n2351Yss+24gdCAaVUuasmPLMaAt87M7TICIb/chyVBg+6LNIVFeo981z5?=
+ =?iso-8859-2?Q?+vp//ydW6DnWNnoRhfI05GxAcDA68H9Vq72AKidWpnylLxQ7xELfk3LdBA?=
+ =?iso-8859-2?Q?nvqhOXxTO74Fyl9iXNpcvYt5tgAzIKaTVzsJib8UmIGtOT/PzV+/FjAu9S?=
+ =?iso-8859-2?Q?RlscfXy5qhtIK9/Uma15ASLCVFdoqHPxEQeiM7O7EoNDmiRXrcF7gqWeC0?=
+ =?iso-8859-2?Q?88S8cgMGAYc/x4n+gtOFvpex7zf5Vm0vuCuM9geXl6tH0EK1RDnDazaLCP?=
+ =?iso-8859-2?Q?N/DvewciseCNqpfsM2J1WPYmZn0stl/4RMlwag3jiZGO56hSkZQCyuqzYl?=
+ =?iso-8859-2?Q?RxleuiCxbcoKmhyBepaDFva5wCpx+3bqDGQ/OY5Bmgq2Swilf5AaMP72Jh?=
+ =?iso-8859-2?Q?gY5kkeb7m/NpvaTSiqieA1eR0MMhqC0HeSBeHOaWbwp1W4FN6PN94zzQ3j?=
+ =?iso-8859-2?Q?CIYVi4FlQbOpoH7lec+yDn/60/oRLoIQPEQIgcMB/2genSS4W8MBmTORk6?=
+ =?iso-8859-2?Q?PQGDDBHFGDKMI8jZZjjtGZy3mLdzR+OGy1DNRd/EGirKhCOGtJ9I9redHP?=
+ =?iso-8859-2?Q?zR0BExAjvBX1y+TG1Kkiv6yo4LXJnBAiXHjrHeRt6uAS9RwqonKdoN6igT?=
+ =?iso-8859-2?Q?X2phoWBvc9fcjcngPk7NyjA0fG0BO+0sWdRhqK+TbgzNCdo0atBaXKJ5mp?=
+ =?iso-8859-2?Q?yx9UeWDPV/qRtagQUqfpSEZt3OYEIzScWnrTo6W+1QJtjUW4gtHRZFTN2A?=
+ =?iso-8859-2?Q?lR68aaoun42LuhLyZ1t1WJwiQ8FbYqU8AVDkajLCb7qi8DIrBdqnsmeyow?=
+ =?iso-8859-2?Q?QI2U24s9f2TCeI7htgaF5E5yWtiAL/VYNhkw2zC2XZzh5Wl0uAAX+R0g?=
+ =?iso-8859-2?Q?=3D=3D?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="3my6bnxaowecwlhh"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <alpine.DEB.2.21.2512011617250.49654@angie.orcam.me.uk>
+X-OriginatorOrg: starfivetech.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn
+X-MS-Exchange-CrossTenant-Network-Message-Id: 64722de1-cb98-43e6-b5dd-08de31512c3e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Dec 2025 03:16:23.7002
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: zKHLhEYzuLpYmzobPLHz8OLZvIOwmPVqbbMUSNUqx5exe52U0ygdqXfi/tk1jFawgNv4FpcTW7PYcmcwJ3Qtpy0AuJBvTsQhxXDTgc8SpMw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: ZQ0PR01MB1047
 
+> > >Re: [PATCH v4 1/6] PCI: starfive: Use regulator APIs instead of  GPIO
+> > >APIs to enable the 3V3 power supply of PCIe slots
+> > >
+> > > [+cc Kevin, pcie-starfive.c maintainer; will need his ack]
+> > >
+> > > Subject line is excessively long.
+> > >
+> > > On Tue, Nov 25, 2025 at 03:55:59PM +0800, Hal Feng wrote:
+> > > > The "enable-gpio" property is not documented in the dt-bindings
+> > > > and using GPIO APIs is not a standard method to enable or disable
+> > > > PCIe slot power, so use regulator APIs to replace them.
+> > >
+> > > I can't tell from this whether existing DTs will continue to work
+> > > after this change.  It looks like previously we looked for an
+> > > "enable-gpios" or "enable-gpio" property and now we'll look for a
+> > > "vpcie3v3-supply" regulator property.
+> > >
+> > > I don't see "enable-gpios" or "enable-gpio" mentioned in any of the
+> > > DT patches in this series, so maybe that property was never actually
+> > > used before, and the code for pcie->power_gpio was actually dead?
+> > >
+> >
+> > pcie->power_gpio is used in the our JH7110 EVB, it share the same pcie
+> > pcie->controller
+> > driver with VisionFive2 board. Although JH7110 was not upstreamed, we
+> > still hope to maintain the compatibility of the driver.
+> >
+>=20
+> Sorry, I missed the background information regarding replacing enable_gpi=
+o
+> with regulator APIs. I agree with this change.
+>=20
+> > > Please add something here about how we know this won't break any
+> > > existing setups using DTs that are already in the field.
+> > >
+> > > > Tested-by: Matthias Brugger <mbrugger@suse.com>
+> > > > Fixes: 39b91eb40c6a ("PCI: starfive: Add JH7110 PCIe controller")
+> > >
+> > > Based on the cover letter, it looks like the point of this is to add
+> > > support for a new device, which I don't think really qualifies as a "=
+fix".
+> > >
+> > > > Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
 
---3my6bnxaowecwlhh
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Acked-by: Kevin Xie <kevin.xie@starfivetech.com>
 
-On Mon, Dec 01, 2025 at 04:42:42PM +0000, Maciej W. Rozycki wrote:
-> On Mon, 1 Dec 2025, Manivannan Sadhasivam wrote:
-> 
-> > > > So it's definitely nothing specific to the parport driver, but rather a 
-> > > > general issue with PCI/e port I/O not working anymore.  I do hope these 
-> > > > observations will let you address the issue now.  You might be able to 
-> > > > reproduce it with hardware you have available even.
-> > > > 
-> > > 
-> > > Yes, looks like the I/O port access is not working with the CFG Shift feature.
-> > > The spec says that both I/O and MEM TLPs should be handled by this feature, so
-> > > we are currently unsure why MEM works, but not I/O.
-> 
->  As I say, last time I checked (for another reason) documentation was not 
-> available to the general public, so I can't help with that.
-> 
-
-Sure. I know that the DWC documentation is well secured behind firewalls. So not
-asking for help here.
-
-> > > The issue you reported with parport_pc driver is that the driver gets probed,
-> > > but it fails to detect the parallel ports on the device. More precisely, it
-> > > fails due to the parport_SPP_supported() check in drivers/parport/parport_pc.c.
-> > > This function performs some read/write checks to make sure that the port exists,
-> > > but most likely the read value doesn't match the written one. And since there is
-> > > no log printed in this function, it just failed silently.
-> 
->  Whatever the exact transaction conditions are port I/O TLPs seem not to 
-> make it through to the requested target device anymore.
-> 
->  FWIW the defxx driver issues a command to the device's command register 
-> and wants to see a successful completion status in the status register 
-> before retrieving the MAC address via the data register.  So it's not a 
-> simple case of poking at a register and reading it back, but the end 
-> result is the same: the device cannot be talked to.
-> 
-> > > We will check why I/O access fails with ECAM mode and revert back asap. Since
-> > > the merge window is now open, it becomes difficult to revert the CFG shift
-> > > feature cleanly. The timing of the report also made it difficult to fix the
-> > > issue in v6.18. Hopefully, we can backport the fix once we identify the culprit.
-> 
->  No worries, I've been around for long enough (short of 30 years) to know 
-> the process.
-> 
->  FWIW the original change would've best been reverted for 6.18 as a fatal 
-> regression, however port I/O is uncommon enough nowadays we can defer any 
-> final decision to 6.19 I suppose.  I'm glad I've tripped over this in the 
-> first place as I'm not eager to upgrade all my lab devices all the time, 
-> and it was owing to another issue only that I chose this moment to move 
-> forward, not so long after the original commit.
-> 
-> > Can you try the attached patch? It is a reworked version of Krishna's patch. I
-> > just moved things around to check potential override issue.
-> 
->  No change in behaviour, sorry.  I suppose it's this range of host address 
-> decoding:
-> 
-> fu740-pcie e00000000.pcie:       IO 0x0060080000..0x006008ffff -> 0x0060080000
-> 
-> aka:
-> 
-> pci_bus 0000:00: root bus resource [io  0x0000-0xffff] (bus address [0x60080000-0x6008ffff])
-> 
-> that you're after.  Are you sure your code discovers it correctly?  As I 
-> say I can only see IORESOURCE_MEM references and no IORESOURCE_IO ones as 
-> would be appropriate for the root bus resource quoted.
-> 
-
-The I/O resource is discovered by the driver correctly as seen from the logs:
-
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff] (bus address [0x60080000-0x6008ffff])
-pci_bus 0000:00: root bus resource [mem 0x60090000-0x7fffffff]
-pci_bus 0000:00: root bus resource [mem 0x2000000000-0x3fffffffff pref]
-
-But we believe that the iATU is not programmed for the I/O port, resulting in
-the I/O access not going out to the device.
-
-Krishna found an issue in the previous patch that got shared. So I've attached a
-new one. Could you please try and let us know? If it didn't help, please share
-the dmesg log that will have some more info.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
-
---3my6bnxaowecwlhh
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment;
-	filename="0001-PCI-qcom-Enable-iATU-mapping-for-memory-IO-regions.patch"
-
-From 5acab1289f8fd20ecead7c517e7e282584946ff0 Mon Sep 17 00:00:00 2001
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Date: Fri, 28 Nov 2025 16:44:17 +0530
-Subject: [PATCH] PCI: qcom: Enable iATU mapping for memory & IO regions
-
-Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- .../pci/controller/dwc/pcie-designware-host.c | 42 ++++++++++++-------
- drivers/pci/controller/dwc/pcie-designware.c  |  3 ++
- drivers/pci/controller/dwc/pcie-designware.h  |  2 +-
- 3 files changed, 31 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index e92513c5bda5..d977bb92cf3b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -36,6 +36,7 @@ static struct pci_ops dw_child_pcie_ops;
- 
- #define IS_256MB_ALIGNED(x) IS_ALIGNED(x, SZ_256M)
- 
-+static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp);
- static const struct msi_parent_ops dw_pcie_msi_parent_ops = {
- 	.required_flags		= DW_PCIE_MSI_FLAGS_REQUIRED,
- 	.supported_flags	= DW_PCIE_MSI_FLAGS_SUPPORTED,
-@@ -433,7 +434,7 @@ static int dw_pcie_config_ecam_iatu(struct dw_pcie_rp *pp)
- 	 * Immediate bus under Root Bus, needs type 0 iATU configuration and
- 	 * remaining buses need type 1 iATU configuration.
- 	 */
--	atu.index = 0;
-+	atu.index = pp->ob_atu_index;
- 	atu.type = PCIE_ATU_TYPE_CFG0;
- 	atu.parent_bus_addr = pp->cfg0_base + SZ_1M;
- 	/* 1MiB is to cover 1 (bus) * 32 (devices) * 8 (functions) */
-@@ -448,14 +449,20 @@ static int dw_pcie_config_ecam_iatu(struct dw_pcie_rp *pp)
- 	if (bus_range_max < 2)
- 		return 0;
- 
-+	pp->ob_atu_index++;
-+
- 	/* Configure remaining buses in type 1 iATU configuration */
--	atu.index = 1;
-+	atu.index = pp->ob_atu_index;
- 	atu.type = PCIE_ATU_TYPE_CFG1;
- 	atu.parent_bus_addr = pp->cfg0_base + SZ_2M;
- 	atu.size = (SZ_1M * bus_range_max) - SZ_2M;
- 	atu.ctrl2 = PCIE_ATU_CFG_SHIFT_MODE_ENABLE;
- 
--	return dw_pcie_prog_outbound_atu(pci, &atu);
-+	ret = dw_pcie_prog_outbound_atu(pci, &atu);
-+	if (!ret)
-+		pp->ob_atu_index++;
-+
-+	return ret;
- }
- 
- static int dw_pcie_create_ecam_window(struct dw_pcie_rp *pp, struct resource *res)
-@@ -630,14 +637,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		goto err_free_msi;
- 
--	if (pp->ecam_enabled) {
--		ret = dw_pcie_config_ecam_iatu(pp);
--		if (ret) {
--			dev_err(dev, "Failed to configure iATU in ECAM mode\n");
--			goto err_free_msi;
--		}
--	}
--
- 	/*
- 	 * Allocate the resource for MSG TLP before programming the iATU
- 	 * outbound window in dw_pcie_setup_rc(). Since the allocation depends
-@@ -919,6 +918,8 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 		}
- 	}
- 
-+	dev_info(pci->dev, "%s: %d MEM index: %d", __func__, __LINE__, i);
-+
- 	if (pp->io_size) {
- 		if (pci->num_ob_windows > ++i) {
- 			atu.index = i;
-@@ -936,13 +937,16 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 		} else {
- 			pp->cfg0_io_shared = true;
- 		}
-+
-+		dev_info(pci->dev, "%s: %d I/O index: %d", __func__, __LINE__, i);
- 	}
- 
- 	if (pci->num_ob_windows <= i)
- 		dev_warn(pci->dev, "Ranges exceed outbound iATU size (%d)\n",
- 			 pci->num_ob_windows);
- 
--	pp->msg_atu_index = i;
-+	pp->ob_atu_index = ++i;
-+	dev_info(pci->dev, "%s: %d Final index: %d", __func__, __LINE__, i);
- 
- 	i = 0;
- 	resource_list_for_each_entry(entry, &pp->bridge->dma_ranges) {
-@@ -1086,12 +1090,20 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
- 	 * the platform uses its own address translation component rather than
- 	 * ATU, so we should not program the ATU here.
- 	 */
--	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
-+	if (pp->bridge->child_ops == &dw_child_pcie_ops || pp->ecam_enabled) {
- 		ret = dw_pcie_iatu_setup(pp);
- 		if (ret)
- 			return ret;
- 	}
- 
-+	if (pp->ecam_enabled) {
-+		ret = dw_pcie_config_ecam_iatu(pp);
-+		if (ret) {
-+			dev_err(pci->dev, "Failed to configure iATU in ECAM mode\n");
-+			return ret;
-+		}
-+	}
-+
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0);
- 
- 	/* Program correct class for RC */
-@@ -1113,7 +1125,7 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
- 	void __iomem *mem;
- 	int ret;
- 
--	if (pci->num_ob_windows <= pci->pp.msg_atu_index)
-+	if (pci->num_ob_windows <= pci->pp.ob_atu_index)
- 		return -ENOSPC;
- 
- 	if (!pci->pp.msg_res)
-@@ -1123,7 +1135,7 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
- 	atu.routing = PCIE_MSG_TYPE_R_BC;
- 	atu.type = PCIE_ATU_TYPE_MSG;
- 	atu.size = resource_size(pci->pp.msg_res);
--	atu.index = pci->pp.msg_atu_index;
-+	atu.index = pci->pp.ob_atu_index;
- 
- 	atu.parent_bus_addr = pci->pp.msg_res->start - pci->parent_bus_offset;
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index c644216995f6..d27b469b417b 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -478,6 +478,9 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 
- 	limit_addr = parent_bus_addr + atu->size - 1;
- 
-+	if (atu->index > pci->num_ob_windows)
-+		return -ENOSPC;
-+
- 	if ((limit_addr & ~pci->region_limit) != (parent_bus_addr & ~pci->region_limit) ||
- 	    !IS_ALIGNED(parent_bus_addr, pci->region_align) ||
- 	    !IS_ALIGNED(atu->pci_addr, pci->region_align) || !atu->size) {
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index e995f692a1ec..69d0bd8b3c57 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -423,8 +423,8 @@ struct dw_pcie_rp {
- 	struct pci_host_bridge  *bridge;
- 	raw_spinlock_t		lock;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-+	int			ob_atu_index;
- 	bool			use_atu_msg;
--	int			msg_atu_index;
- 	struct resource		*msg_res;
- 	bool			use_linkup_irq;
- 	struct pci_eq_presets	presets;
--- 
-2.48.1
-
-
---3my6bnxaowecwlhh--
+> > > > ---
+> > > >  drivers/pci/controller/plda/pcie-starfive.c | 25
+> > > > ++++++++++++---------
+> > > >  1 file changed, 15 insertions(+), 10 deletions(-)
+> > > >
+> > > > diff --git a/drivers/pci/controller/plda/pcie-starfive.c
+> > > > b/drivers/pci/controller/plda/pcie-starfive.c
+> > > > index 3caf53c6c082..298036c3e7f9 100644
+> > > > --- a/drivers/pci/controller/plda/pcie-starfive.c
+> > > > +++ b/drivers/pci/controller/plda/pcie-starfive.c
+> > > > @@ -55,7 +55,7 @@ struct starfive_jh7110_pcie {
+> > > >  	struct reset_control *resets;
+> > > >  	struct clk_bulk_data *clks;
+> > > >  	struct regmap *reg_syscon;
+> > > > -	struct gpio_desc *power_gpio;
+> > > > +	struct regulator *vpcie3v3;
+> > > >  	struct gpio_desc *reset_gpio;
+> > > >  	struct phy *phy;
+> > > >
+> > > > @@ -153,11 +153,13 @@ static int starfive_pcie_parse_dt(struct
+> > > starfive_jh7110_pcie *pcie,
+> > > >  		return dev_err_probe(dev, PTR_ERR(pcie->reset_gpio),
+> > > >  				     "failed to get perst-gpio\n");
+> > > >
+> > > > -	pcie->power_gpio =3D devm_gpiod_get_optional(dev, "enable",
+> > > > -						   GPIOD_OUT_LOW);
+> > > > -	if (IS_ERR(pcie->power_gpio))
+> > > > -		return dev_err_probe(dev, PTR_ERR(pcie->power_gpio),
+> > > > -				     "failed to get power-gpio\n");
+> > > > +	pcie->vpcie3v3 =3D devm_regulator_get_optional(dev, "vpcie3v3");
+> > > > +	if (IS_ERR(pcie->vpcie3v3)) {
+> > > > +		if (PTR_ERR(pcie->vpcie3v3) !=3D -ENODEV)
+> > > > +			return dev_err_probe(dev, PTR_ERR(pcie->vpcie3v3),
+> > > > +					     "failed to get vpcie3v3 regulator\n");
+> > > > +		pcie->vpcie3v3 =3D NULL;
+> > > > +	}
+> > > >
+> > > >  	return 0;
+> > > >  }
+> > > > @@ -270,8 +272,8 @@ static void starfive_pcie_host_deinit(struct
+> > > plda_pcie_rp *plda)
+> > > >  		container_of(plda, struct starfive_jh7110_pcie, plda);
+> > > >
+> > > >  	starfive_pcie_clk_rst_deinit(pcie);
+> > > > -	if (pcie->power_gpio)
+> > > > -		gpiod_set_value_cansleep(pcie->power_gpio, 0);
+> > > > +	if (pcie->vpcie3v3)
+> > > > +		regulator_disable(pcie->vpcie3v3);
+> > > >  	starfive_pcie_disable_phy(pcie);  }
+> > > >
+> > > > @@ -304,8 +306,11 @@ static int starfive_pcie_host_init(struct
+> > > plda_pcie_rp *plda)
+> > > >  	if (ret)
+> > > >  		return ret;
+> > > >
+> > > > -	if (pcie->power_gpio)
+> > > > -		gpiod_set_value_cansleep(pcie->power_gpio, 1);
+> > > > +	if (pcie->vpcie3v3) {
+> > > > +		ret =3D regulator_enable(pcie->vpcie3v3);
+> > > > +		if (ret)
+> > > > +			dev_err_probe(dev, ret, "failed to enable vpcie3v3
+> regulator\n");
+> > > > +	}
+> > > >
+> > > >  	if (pcie->reset_gpio)
+> > > >  		gpiod_set_value_cansleep(pcie->reset_gpio, 1);
+> > > > --
+> > > > 2.43.2
+> > > >
+> > > >
+> > > > _______________________________________________
+> > > > linux-riscv mailing list
+> > > > linux-riscv@lists.infradead.org
+> > > > http://lists.infradead.org/mailman/listinfo/linux-riscv
