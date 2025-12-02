@@ -1,148 +1,207 @@
-Received: from exactco.de (exactco.de [176.9.10.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39D021F03C5;
-	Tue,  2 Dec 2025 16:40:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.10.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E7E328D8ED
+	for <linux-pci@vger.kernel.org>; Tue,  2 Dec 2025 16:43:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764693611; cv=none; b=HWWZrIq9v05pGMY25IdYoTaGw9nc8jEZqowMgo4jKqBAguVMUUq6J+qpjHP5FYSZ0z+OtC8HFJ9vyfPEtIKKUUhinRB4jQPQf9FUT2wwbdS5YhtVlIg60JyjXTsH3AZpL603wQJ0fzrltpgtsH0VBeLBBnM395K6Llne9sEFmKo=
+	t=1764693790; cv=none; b=A5iHLeosNe0VSSC5/X5INGx+uzmJX633NqseTPRgcmcU96KOZsddLwTSodlp1KofYCyfoLJmOCJ8FsPe66v1geqKQkYpYUUhOt0z7RAXljEAAzMIbWPyAqe30qQ9KcpMW2RLrVwZ5Gd+QU5pBTfET7+b8ZsWdmRalr7nJo2BSoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764693611; c=relaxed/simple;
-	bh=7ImWrWsUTPqaaE4oIWOP/Gsu7JuANTworIz1AIVVfLM=;
-	h=Date:Message-Id:Cc:To:Subject:From:Mime-Version:Content-Type; b=bEdR0uyVmaklTP5VgZsE1ZVOk87zxAgOPQ6mNKa8E5e4EYL2aPYWGTljV+//vG7QxBFVPzhgXlX5vrg3vw4eG7VuFn6w0sTLkiI+cdfhT5xwKnbKh0ZLZCgP/vaYTU1E6fUoBF089akNBeF8m/XSDbDbH6b5LdUvvIrhxb8Scns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=exactco.de; spf=pass smtp.mailfrom=exactco.de; dkim=pass (2048-bit key) header.d=exactco.de header.i=@exactco.de header.b=Qyh2Wkqr; arc=none smtp.client-ip=176.9.10.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=exactco.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=exactco.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=exactco.de header.i=@exactco.de header.b="Qyh2Wkqr"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=exactco.de;
-	s=x; h=Content-Transfer-Encoding:Content-Type:Mime-Version:From:Subject:To:Cc
-	:Message-Id:Date:Sender:Reply-To:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:
-	References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:List-Post:
-	List-Owner:List-Archive; bh=U5O24SN1EST6YrllSJW7bCyK4rasEc8rrfttpt9ll5g=; b=Q
-	yh2Wkqr6XxNQeOweAUMoREjBnScsr2zmxCRtqufHPqgRs5a7g1Rh4LDzTlEcbxtOnaWAkseE4lWzR
-	fTiwYR970+QG4Nzwvbu42fA+GXcO3knUuMn6np7qB2BFZzyP6eUxVsbMj1Uo991PKwiBsrSwtr2Qr
-	7v9rOZ8gW2lDBE3ZLnwfKJSNqL5YfLcaSe/sBH/tzbS3RWIM9RleqQxsz2kb42nhmGRb2zOC67RRX
-	rub53MQ9L/7hZeJmJCpmYxIEgHyavecqUs/KnYz1ojFw9mlt0PM0bmfFnJkmhhQq6kojlSB92OdCS
-	n/a1i6mHgqg7gXFMp5Tom2GHO+4fYM3tw==;
-Date: Tue, 02 Dec 2025 17:40:07 +0100 (CET)
-Message-Id: <20251202.174007.745614442598214100.rene@exactco.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, John Paul Adrian Glaubitz
- <glaubitz@physik.fu-berlin.de>, Riccardo Mottola
- <riccardo.mottola@libero.it>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Fix PCI bridges not to go to D3Hot on older RISC
- systems
-From: =?iso-8859-1?Q?Ren=E9?= Rebe <rene@exactco.de>
-X-Mailer: Mew version 6.10 on Emacs 30.2
+	s=arc-20240116; t=1764693790; c=relaxed/simple;
+	bh=7JWQpNMMWls0pEOEbb/qFxvVCdKg8LNQq2xwgx7Zjik=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=YYQnt+O/s6QVgXmsgF1nCO/5FiAT7ouJKIKUqBIyTEanCojRDbEjw6zSZUU5frorh2q3Z0CefHvGix0548KgbpqFvdZYtl657o0tPRSCRko627DvAxCQFEuhInxcCm5Fbq9WvT1sClcRjXHDuLt8BX5bDTk99ZOiS8lo+yx3qIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-88249766055so64841056d6.1
+        for <linux-pci@vger.kernel.org>; Tue, 02 Dec 2025 08:43:08 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764693787; x=1765298587;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=yo/Q77iM2dxCsDJX0wSMsdkdBK/3CM2tnqmsgemQ55M=;
+        b=dFPXP8rIX3kiixUbpo3kbHFScwePy0roBhGomMROXjemJq8+DiBHBO1bcpfUgjh+p4
+         j1+fVn95zrbuaL+gvAHCuMTvt1QNBY49gC8P1j58zL5qfJQZ2kOxNi+QR6h7i53yiacp
+         xb7nsJ18agaz2SiL2qvRxSE1kEqI2IKFqA+EBzgph3Q2dMNV6TzzPHPsZDcBqAW0Ze80
+         Hevt7HoKSsVLH0p9ejiRqYmcGJPCzdyre0eKwBDyVLBuEICZ2rsQSCAXcaIgRjkfZXhB
+         ByHKkVyRR3j8Qb83HBm1rqFa1DQ+UcS7CSneKvDe6wdXxnLDIipHky3YtSXuP37VsKdS
+         nFsA==
+X-Forwarded-Encrypted: i=1; AJvYcCWHDNUdzmT5neSxygd7FyLNilyiun3ioAuaKbSRbUz2GHdy71XUYOxGemnhQll1rpNAekbjc52zdpk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNSkFc+ZOojejXHE8gjNwfKBzuSxS34AyO6DxUrbYR8oq2iIKw
+	MSumDJYKxGdFQEvVWwXUPh5bC34G5J2wj9cBghPbx2RXmMo5+GfzUTWs8QlLkSM8
+X-Gm-Gg: ASbGnctNyqMYtwFKGTvtxYm61CM/lsKkCXiBcqVqEYFN1DDMkj0BWnGHIYTC3VBnrtC
+	k8AyPtgNO0rYCT5x/lUneym7pOpMvKFcFvaSQepH+d6dhBmB3opO1ZS/FzKFOSA9v+t5z0qv8R1
+	MtHiJ0smKm6MZ6///7vLyJYfweYTE/3gji/0L99T4kCv60qmNavkXqVrLvvPXp6ONScECEd053H
+	D3+B4tPrEgZ/filh/ArloVgmSpLNpfxbgl7Rs1jZwsNPrQ3r9Y75DrzF+9B8mfGBNI7suhMLa2F
+	3RTcs0eVTEvj4uow2bViK1xPsKw2hqaKej9ZhMUrGHxrrbQ2UrWBatne5iHoXsdVo4NnjpNyBfw
+	lUvJnn/BsXDAiQaxG0VkxEnSJuZrIeVC4mlgr5RRr7P13XSrxz50HKoaD/bqM4baMBQGvWGFggN
+	bHF3Gymk6N+nd/z5jgPLaC5lAqswGTqEBlYoQFjOI/X4GHEEsy
+X-Google-Smtp-Source: AGHT+IFmrcHdhcMjv9ZZdOZUrv6TkOWbwdNafexd0/CO2XDOXZh6dNqIjmh8hsGE1WGIHjCdPkFeJg==
+X-Received: by 2002:a05:6214:caa:b0:882:51e0:6429 with SMTP id 6a1803df08f44-8847c535c69mr647211466d6.47.1764693787173;
+        Tue, 02 Dec 2025 08:43:07 -0800 (PST)
+Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com. [209.85.219.44])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-886524af19fsm106768116d6.11.2025.12.02.08.43.06
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 02 Dec 2025 08:43:07 -0800 (PST)
+Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-88051279e87so56658846d6.3
+        for <linux-pci@vger.kernel.org>; Tue, 02 Dec 2025 08:43:06 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXLXjxBCObdxBzji4qHgi9/L4SB6ZNPNWL4nCgXz3Et9GzpmOMV+bcJh7lF+6OYzJ9kbY4vql4n8+8=@vger.kernel.org
+X-Received: by 2002:a05:6102:3048:b0:5db:20ea:2329 with SMTP id
+ ada2fe7eead31-5e1de370617mr15734527137.35.1764693347428; Tue, 02 Dec 2025
+ 08:35:47 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+References: <20251015071420.1173068-1-herve.codina@bootlin.com>
+ <20251015071420.1173068-2-herve.codina@bootlin.com> <f74ab0a2-b74b-4b96-8469-a716c850e230@gmail.com>
+ <CAL_JsqJDOYuzutMHMeFAogd5a_OX6Hwi8Gwz1Vy7HpXgNeYKsg@mail.gmail.com>
+ <5cf2a12a-7c66-4622-b4a9-14896c6df005@gmail.com> <CAL_JsqJjm12LxpDg6LmpY=Ro_keHwnrWiYMLVnG=s_pSP4X2WQ@mail.gmail.com>
+ <072dde7c-a53c-4525-83ac-57ea38edc0b5@gmail.com> <CAL_JsqKyG98pXGKpL=gxSc92izpzN7YCdq62ZJByhE6aFYs1fw@mail.gmail.com>
+ <55076f4b-d523-4f8c-8bd4-0645b790737e@gmail.com> <20251202102619.5cd971cc@bootlin.com>
+In-Reply-To: <20251202102619.5cd971cc@bootlin.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 2 Dec 2025 17:35:35 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdXogrkTAm=4pC0B+Sybr=PR3XovnBgmiEyTvUMmJHvBRA@mail.gmail.com>
+X-Gm-Features: AWmQ_blh_df1oI4YfJoUHGn7ADOVOwmOm5bT6QJUN9usi3sbU4oWN1R6RdMkuuY
+Message-ID: <CAMuHMdXogrkTAm=4pC0B+Sybr=PR3XovnBgmiEyTvUMmJHvBRA@mail.gmail.com>
+Subject: Re: [PATCH v4 01/29] Revert "treewide: Fix probing of devices in DT overlays"
+To: Herve Codina <herve.codina@bootlin.com>
+Cc: Kalle Niemi <kaleposti@gmail.com>, Rob Herring <robh@kernel.org>, 
+	Matti Vaittinen <mazziesaccount@gmail.com>, Andrew Lunn <andrew@lunn.ch>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
+	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
+	Fabio Estevam <festevam@gmail.com>, Michael Turquette <mturquette@baylibre.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, 
+	Wolfram Sang <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, 
+	Arnd Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@google.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Charles Keepax <ckeepax@opensource.cirrus.com>, 
+	Richard Fitzgerald <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, 
+	Linus Walleij <linus.walleij@linaro.org>, Ulf Hansson <ulf.hansson@linaro.org>, 
+	Mark Brown <broonie@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Daniel Scally <djrscally@gmail.com>, Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+	Sakari Ailus <sakari.ailus@linux.intel.com>, Len Brown <lenb@kernel.org>, 
+	Davidlohr Bueso <dave@stgolabs.net>, Jonathan Cameron <jonathan.cameron@huawei.com>, 
+	Dave Jiang <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>, 
+	Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+	Dan Williams <dan.j.williams@intel.com>, Geert Uytterhoeven <geert+renesas@glider.be>, 
+	Wolfram Sang <wsa@kernel.org>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
+	linux-clk@vger.kernel.org, linux-i2c@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+	patches@opensource.cirrus.com, linux-gpio@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-spi@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, 
+	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
+	Steen Hegelund <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>, 
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Commit a5fb3ff63287 ("PCI: Allow PCI bridges to go to D3Hot on all
-non-x86") was bisected to break various non-x86 RISC Unix systems,
-e.g. sparc64, see two example oopses below. Fix by only allowing D3Hot
-on modern ARM64, PPC64 and RISCV ISAs besides new enough x86.
+Hi Herv=C3=A9,
 
-Sun Blade 1000:
-ERROR(0): Cheetah error trap taken afsr[0010080005000000] afar[000007f900800000] TL1(0)
-ERROR(0): TPC[100a05a4] TNPC[100a05a8] O7[42acc8] TSTATE[4411001603]
-ERROR(0):
-TPC<MakeIocReady+0xc/0x278 [mptbase]>
-ERROR(0): M_SYND(0),  E_SYND(0), Privileged
-ERROR(0): Highest priority error (0000080000000000) "Bus error response from system bus"
-ERROR(0): D-cache idx[0] tag[0000000000000000] utag[0000000000000000] stag[0000000000000000]
-ERROR(0): D-cache data0[0000000000000000] data1[0000000000000000] data2[0000000000000000] data3[0000000000000000]
-ERROR(0): I-cache idx[0] tag[0000000000000000] utag[0000000000000000] stag[0000000000000000] u[0000000000000000] l[0000000000000000]
-ERROR(0): I-cache INSN0[0000000000000000] INSN1[0000000000000000] INSN2[0000000000000000] INSN3[0000000000000000]
-ERROR(0): I-cache INSN4[0000000000000000] INSN5[0000000000000000] INSN6[0000000000000000] INSN7[0000000000000000]
-ERROR(0): E-cache idx[b08040] tag[000000001e008fa0]
-ERROR(0): E-cache data0[0000000000000000] data1[0000000000000000] data2[0000000000000000] data3[ffffffffffffffff]
-Kernel panic - not syncing: Irrecoverable deferred error trap.
-CPU: 0 UID: 0 PID: 46 Comm: (udev-worker) Not tainted 6.14.0-rc1-00001-ga5fb3ff63287 #18
-Call Trace:
-[<00000000004294b0>] panic+0xf0/0x370
-[<0000000000435bc4>] cheetah_deferred_handler+0x2c8/0x2d8
-[<0000000000405e88>] c_deferred+0x18/0x24
-[<00000000100a05a4>] MakeIocReady+0xc/0x278 [mptbase]
-[<00000000100a089c>] mpt_do_ioc_recovery+0x8c/0x1054 [mptbase]
-[<000000001009f2d4>] mpt_attach+0x920/0xa68 [mptbase]
-[<000000001012424c>] mptsas_probe+0x8/0x3e8 [mptsas]
-[<0000000000788308>] local_pci_probe+0x24/0x70
-[<0000000000788dac>] pci_device_probe+0x1c0/0x1d0
-[<000000000082633c>] really_probe+0x13c/0x29c
-[<0000000000826590>] __driver_probe_device+0xf4/0x104
-[<0000000000826614>] driver_probe_device+0x24/0xa0
-[<000000000082683c>] __driver_attach+0xe8/0x104
-[<0000000000824da0>] bus_for_each_dev+0x58/0x84
-[<0000000000825508>] bus_add_driver+0xdc/0x1f8
-[<0000000000827110>] driver_register+0x70/0x120
+On Tue, 2 Dec 2025 at 10:26, Herve Codina <herve.codina@bootlin.com> wrote:
+> On Fri, 28 Nov 2025 10:34:57 +0200
+> Kalle Niemi <kaleposti@gmail.com> wrote:
+> > >>>>>> Test system testing drivers for ROHM ICs bisected this commit to=
+ cause
+> > >>>>>> BD71847 drivers probe to not be called.
+> > >>>>> This driver (and overlay support) is in linux-next or something o=
+ut of
+> > >>>>> tree on top of linux-next?
+> > >>>>>
+> > >>>>> Rob
+> > >>>> Yes the driver is in mainline linux: /drivers/mfd/rohm-bd718x7.c
+> > >>> I don't see any support to apply overlays in that driver.
+> > >> Ah. Sorry for the confusion peeps. I asked Kalle to report this with=
+out
+> > >> proper consideration. 100% my bad.
+> > >>
+> > >> While the bd718x7 drive indeed is mainline (and tested), the actual
+> > >> 'glue-code' doing the overlay is part of the downstream test
+> > >> infrastructure. So yes, this is not a bug in upstream kernel - this
+> > >> falls in the category of an upstream change causing downstream thing=
+s to
+> > >> break. So, feel free to say: "Go fix your code" :)
+> > >>
+> > >> Now that this is sorted, if someone is still interested in helping u=
+s to
+> > >> get our upstream drivers tested - the downstream piece is just takin=
+g
+> > >> the compiled device-tree overlay at runtime (via bin-attribute file)=
+,
+> > >> and applying it using the of_overlay_fdt_apply(). The approach is
+> > >> working for our testing purposes when the device is added to I2C/SPI
+> > >> node which is already enabled. However, in case where we have the I2=
+C
+> > >> disabled, and enable it in the same overlay where we add the new dev=
+ice
+> > >> - then the new device does not get probed.
+> > >>
+> > >> I would be really grateful if someone had a pointer for us.
+> > > Seems to be fw_devlink related. I suppose if you turn it off it works=
+?
+> > > There's info about the dependencies in sysfs or maybe debugfs. I don'=
+t
+> > > remember the details, but that should help to tell you why things
+> > > aren't probing.
+>
+> Rob reverted patches but I plan to continue my work on it.
+> On my side, I need the reverted patches but I fully understand that, on
+> your side, you need a working system.
+>
+> In order to move forward and find a solution for my next iteration, can y=
+ou
+> send your overlay (dtso) used in your working and non working cases?
 
-Niagara T1:
-mptsas 0000:07:00.0: Unable to change power state from D3cold to D0, device inaccessible
-NON-RESUMABLE ERROR: Reporting on cpu 31
-NON-RESUMABLE ERROR: TPC [0x0000000010184034] <MakeIocReady+0x10/0x298 [mptbase]>
-NON-RESUMABLE ERROR: RAW [1f10000000000007:0000000e3179235c:0000000202000004:000000ea00300000
-NON-RESUMABLE ERROR: 00000000001f0000:0000000000000000:0000000000000000:0000000000000000]
-NON-RESUMABLE ERROR: handle [0x1f10000000000007] stick [0x0000000e3179235c]
-NON-RESUMABLE ERROR: type [precise nonresumable]
-NON-RESUMABLE ERROR: attrs [0x02000004] < PIO sp-faulted priv >
-NON-RESUMABLE ERROR: raddr [0x000000ea00300000]
-Kernel panic - not syncing: Non-resumable error.
-CPU: 31 UID: 0 PID: 367 Comm: (udev-worker) Not tainted 6.16.12+3-sparc64-smp #1 NONE  Debian 6.16.12-2+sparc64.1
-Call Trace:
-[<00000000004373c4>] dump_stack+0x8/0x18
-[<0000000000429540>] panic+0xf4/0x398
-[<000000000043afcc>] sun4v_nonresum_error+0x16c/0x240
-[<0000000000406eb8>] sun4v_nonres_mondo+0xc8/0xd8
-[<0000000010184034>] MakeIocReady+0x10/0x298 [mptbase]
-[<00000000101844b4>] mpt_do_ioc_recovery+0x9c/0x1110 [mptbase]
-[<00000000101836f8>] mpt_attach+0xb58/0xd20 [mptbase]
-[<0000000010287f30>] mptsas_probe+0x10/0x440 [mptsas]
-[<0000000000b3fab0>] local_pci_probe+0x30/0x80
-[<0000000000b405d4>] pci_device_probe+0xb4/0x240
-[<0000000000bfd348>] really_probe+0xc8/0x400
-[<0000000000bfd70c>] __driver_probe_device+0x8c/0x160
-[<0000000000bfd8c8>] driver_probe_device+0x28/0x100
-[<0000000000bfdb7c>] __driver_attach+0xbc/0x1e0
-[<0000000000bfacfc>] bus_for_each_dev+0x5c/0xc0
-[<0000000000bfcafc>] driver_attach+0x1c/0x40
-Press Stop-A (L1-A) from sun keyboard or send break
-twice on console to return to the boot prom
+Hmm, I must have missed when Rob applied (part of) this series, as I
+do an overlay test (using the out-of-tree configfs) on top of every
+(bi-weekly) renesas-drivers release, and saw no issues during the last
+few months.
 
-Fixes: a5fb3ff63287 ("PCI: Allow PCI bridges to go to D3Hot on all non-x86")
-Signed-off-by: René Rebe <rene@exactco.de>
----
-Tested on Sun Blade 1000, and shipping in all T2/Linux builds since 2025-08-01
----
- drivers/pci/pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+So I applied this series and tested loading my SPI EEPROM overlay.
+And it indeed breaks, with the culprit being this particular patch.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b14dd064006c..7619d2cfa66d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3033,9 +3033,9 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 
- 		/*
- 		 * Out of caution, we only allow PCIe ports from 2015 or newer
--		 * into D3 on x86.
-+		 * into D3 or other modern ISAs only.
- 		 */
--		if (!IS_ENABLED(CONFIG_X86) || dmi_get_bios_year() >= 2015)
-+		if (IS_ENABLED(CONFIG_ARM64) || IS_ENABLED(CONFIG_PPC64) || IS_ENABLED(CONFIG_RISCV) || dmi_get_bios_year() >= 2015)
- 			return true;
- 		break;
- 	}
--- 
-2.52.0
+Interestingly, quoting from this patch:
 
--- 
-René Rebe, ExactCODE GmbH, Berlin, Germany
-https://exactco.de • https://t2linux.com • https://patreon.com/renerebe
+   "While the commit fixed fw_devlink overlay handling for one case, it
+    broke it for another case. So revert it and redo the fix in a separate
+    patch."
+
+Where is the separate patch that redid the fix? I assume it is "[PATCH
+v4 03/29] of: dynamic: Fix overlayed devices not probing because
+of fw_devlink"?  Unfortunately that doesn't fix the issue for me.
+
+Quoting more from this patch:
+
+   "Closes: https://lore.kernel.org/lkml/CAMuHMdXEnSD4rRJ-o90x4OprUacN_rJgy=
+o8x6=3D9F9rZ+-KzjOg@mail.gmail.com/"
+
+Strange that it claims to fix the issue reported there, as the failure
+mode I am seeing is exactly the same as documented in that report?
+
+Do you know what is wrong? The overlay I am using is referenced in
+the bug report linked above.
+
+Thanks!
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
