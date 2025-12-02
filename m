@@ -1,107 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E763FC2;
-	Tue,  2 Dec 2025 16:31:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B1AC29ACD1
+	for <linux-pci@vger.kernel.org>; Tue,  2 Dec 2025 16:37:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764693076; cv=none; b=J5Fsv2IIeGmr5h1eM4aWpejqr2uW0G3+UGfdHq0v2L9xhDf8gzX8BKkwTvBQIIFrOeD8gegZ1M7XBesIjwuDjtXRdFUdzsE7jmTJtNe0SUd6DH3xG8nyPvBYNvnuQqd41o2uHLwyPN17yRpPYOAaFnUJWMnsfkQA5CSDE7nr/Tc=
+	t=1764693426; cv=none; b=GP4M7S5YjsHOWkXesDfb7ijLYPsw0IaZgPzW3dJsy7xF+DtMCliJQ1ZmGvtZbyWgWUxTMn+oZ+LQaWvH2bW59uDMBlPM2HIY5CE79Xuft8uQJnkfBB6bUrD0XZj8dKP9s72ZZR3LgZfSUTz9c11vfOT3TAsT/3a2ZpEA8/v2w/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764693076; c=relaxed/simple;
-	bh=sYyyeu01r9nTnopkdoe3Q+H+YBGvXq9b3XEXUU2b3LA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=WGYJSBluFzx1h30AibFf5lgmmo2izfRjnXB8RgvwI2ppy2m5m15k0mtfWur/E0Ih5Kgorp+l8Ba6arWezdFxdxGexevyNnkMsT22oITvNnjHyYhX1dwm3qgBfPNWPl0fZRud2CPISrb9bq9LcEBq8RJQZ+JBOCHDycHWQTU5haE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eDDhsgxA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764693426; c=relaxed/simple;
+	bh=137moXo8s/LmN37PzrzHz3oClS2z0BOI660OGTmkq9M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=OtGErtb26hHDw0V5HqIpcf5A7D5WulTh1B5ZCv/O1nZzGQfyXLz3I266idvKTnqnkJFGVQrxk9ZTy2mRuSPBNbP7F7IXuQX0OivSyzQ+85skJvs6/KxMme9XD9KAaglKG+EKGRGuCvzxDN9Q6/Jo3bqwhtbpVoeVlbHf+/xzK3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LzvHQtrI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eDDhsgxA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDFCBC4CEF1;
-	Tue,  2 Dec 2025 16:31:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LzvHQtrI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41EAAC16AAE
+	for <linux-pci@vger.kernel.org>; Tue,  2 Dec 2025 16:37:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764693076;
-	bh=sYyyeu01r9nTnopkdoe3Q+H+YBGvXq9b3XEXUU2b3LA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=eDDhsgxAJq/061wE/XBrP2wIWjI0YVdZXK3gcIEa2959edzNaO3yDn2i1k8guLIq4
-	 mFsJv/HRIUue/z5UPcELnk4OQz9Fpee3kDyZfGC2lbeLCPc0uhjrgL82k2naFX2tYS
-	 prt9gF4R4sz2KNKeUG2A/XZG1wSXNAjVCQf6fd44ZT2hgvfg5L0LrXKybTkVPtKnBK
-	 R9rDH/T6n0dHHTVE+xptn54ucazdNbYMG9JAPTDbQEFg9aVuPmBob0FlUuVdwdLX6H
-	 l7VXa1arMYc6jg6J4L6mjHBhXns42MfUlGL58lu+AUtHc+u8uopUlG/Wj1ywzZvNsw
-	 DZTlHCc4QG82Q==
-Date: Tue, 2 Dec 2025 10:31:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kevin Xie <kevin.xie@starfivetech.com>
-Cc: Hal Feng <hal.feng@starfivetech.com>,
-	Conor Dooley <conor+dt@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>, Paul Walmsley <pjw@kernel.org>,
-	Albert Ou <aou@eecs.berkeley.edu>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Liam Girdwood <lgirdwood@gmail.com>,
-	Mark Brown <broonie@kernel.org>,
-	Emil Renner Berthing <emil.renner.berthing@canonical.com>,
-	Heinrich Schuchardt <heinrich.schuchardt@canonical.com>,
-	E Shattow <e@freeshell.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 1/6] PCI: starfive: Use regulator APIs instead of GPIO
- APIs to enable the 3V3 power supply of PCIe slots
-Message-ID: <20251202163114.GA3075889@bhelgaas>
+	s=k20201202; t=1764693425;
+	bh=137moXo8s/LmN37PzrzHz3oClS2z0BOI660OGTmkq9M=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=LzvHQtrIyyQfQV/Iz3CjgyT9gqMZbEwDW/p2zvN92TmwugOpF/UP/oCUx+BIz0x8M
+	 AcKdqicqIDA+6DF9PkwOZq/79oBW9osyNJg74lj6W8XtHToYS1yk9EYLwP6hmEvoz9
+	 qIc99FiYIcLiMj7Yp0ONQICl9DJ3JUm0JrdVAe9QxMIna4rtPNU2S1800YJcoo1z83
+	 EilHSPemzCQOgxNj1wvUgzdin8qQIZ6dLqQCd9U5BSokzKTP9I2+f78+GzM5HRI9Ke
+	 /bt1PydAxkPqKhSmR212BcdFhdFVU2pwzbHCuuumYp1gqJD4PyvLMpKBm2b2Qs8mdM
+	 GOtmtlm8SjisQ==
+Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-787e7aa1631so71013367b3.1
+        for <linux-pci@vger.kernel.org>; Tue, 02 Dec 2025 08:37:05 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXO/d7OZy/koPdBtgfmfu6qDwJjB5LOlfAo/GCg5L7zASxcKUjVsCfqmD+jMoK1Pcoe6o1NIMiTxFY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywu+k6ixg/MPx7pYzHnbKCrNhJiNRNjyn3Swv4jRdUAermvqADV
+	TtP1Ha0sSCtuduHPB0tUtmF/pbphqp2TXK546+rVDqdzX6FiFVDMOy4Rpp2uCWMq3HYYhMvpctn
+	9ejB6FMKDXX9KvB7dhhcbupo8tYNxYOUCenUPFU7RcA==
+X-Google-Smtp-Source: AGHT+IGBjNPjFljsTlPxo4WA2SJdBNwTPxDeLBltGjpOxyikR+XugUL9DT8xEhxT2+IgiyRotcSK36cErNv3/7fdio8=
+X-Received: by 2002:a05:690e:1349:b0:63c:f5a6:f308 with SMTP id
+ 956f58d0204a3-6442f1af559mr2807207d50.31.1764693424538; Tue, 02 Dec 2025
+ 08:37:04 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZQ0PR01MB09816DBC8A88CEC939C8968482D82@ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn>
+References: <20251126193608.2678510-1-dmatlack@google.com> <20251126193608.2678510-3-dmatlack@google.com>
+ <aSrMSRd8RJn2IKF4@wunner.de> <20251130005113.GB760268@nvidia.com>
+ <CA+CK2bB0V9jdmrcNjgsmWHmSFQpSpxdVahf1pb3Bz2WA3rKcng@mail.gmail.com>
+ <20251201132934.GA1075897@nvidia.com> <aS3kUwlVV_WGT66w@google.com>
+ <aS6FJz0725VRLF00@wunner.de> <20251202145925.GC1075897@nvidia.com>
+In-Reply-To: <20251202145925.GC1075897@nvidia.com>
+From: Chris Li <chrisl@kernel.org>
+Date: Tue, 2 Dec 2025 20:36:53 +0400
+X-Gmail-Original-Message-ID: <CACePvbVDqc+DN+=9m1qScw6vYEMYbLvfBPwFVsZwMhd71Db2=A@mail.gmail.com>
+X-Gm-Features: AWmQ_bnbbe-i2loCjPCRmFKkZMkrwcLJ0pPNoTuT2OJK0ymAFbAsS-FLNs74Umc
+Message-ID: <CACePvbVDqc+DN+=9m1qScw6vYEMYbLvfBPwFVsZwMhd71Db2=A@mail.gmail.com>
+Subject: Re: [PATCH 02/21] PCI: Add API to track PCI devices preserved across
+ Live Update
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Lukas Wunner <lukas@wunner.de>, David Matlack <dmatlack@google.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Alex Williamson <alex@shazbot.org>, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alex Mastro <amastro@fb.com>, 
+	Alistair Popple <apopple@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, David Rientjes <rientjes@google.com>, 
+	Jacob Pan <jacob.pan@linux.microsoft.com>, Josh Hilke <jrhilke@google.com>, 
+	Kevin Tian <kevin.tian@intel.com>, kvm@vger.kernel.org, 
+	Leon Romanovsky <leonro@nvidia.com>, linux-kernel@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org, 
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Philipp Stanner <pstanner@redhat.com>, Pratyush Yadav <pratyush@kernel.org>, 
+	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <shuah@kernel.org>, 
+	Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, 
+	Yi Liu <yi.l.liu@intel.com>, Yunxiang Li <Yunxiang.Li@amd.com>, 
+	Zhu Yanjun <yanjun.zhu@linux.dev>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Dec 02, 2025 at 03:02:48AM +0000, Kevin Xie wrote:
-> ...
+Hi Lukas,
 
-> > > On Tue, Nov 25, 2025 at 03:55:59PM +0800, Hal Feng wrote:
-> > > > The "enable-gpio" property is not documented in the dt-bindings and
-> > > > using GPIO APIs is not a standard method to enable or disable PCIe
-> > > > slot power, so use regulator APIs to replace them.
-> > >
-> > > I can't tell from this whether existing DTs will continue to work
-> > > after this change.  It looks like previously we looked for an
-> > > "enable-gpios" or "enable-gpio" property and now we'll look for a
-> > > "vpcie3v3-supply" regulator property.
-> > >
-> > > I don't see "enable-gpios" or "enable-gpio" mentioned in any of the DT
-> > > patches in this series, so maybe that property was never actually used
-> > > before, and the code for pcie->power_gpio was actually dead?
-> > 
-> > pcie->power_gpio is used in the our JH7110 EVB, it share the same
-> > pcie pcie->controller driver with VisionFive2 board. Although
-> > JH7110 was not upstreamed, we still hope to maintain the
-> > compatibility of the driver.
-> 
-> Sorry, I missed the background information regarding replacing
-> enable_gpio with regulator APIs. I agree with this change.
+Sorry I am late to the party.
 
-OK, thanks.  I would still like to have something added to the commit
-log to the effect that this change will break any DTs that use
-"enable-gpios" or "enable-gpio", but that's not a problem because such
-DTs were only internal to StarFive and we are OK with updating them
-and dealing with the fact that the DT is rev-locked with the kernel
-version (old kernels would require an old DT with "enable-gpio" and
-new kernels require an updated DT with "vpcie3v3-supply").  Or DTs
-using "enable-gpio" never existed in the first place.
+On Tue, Dec 2, 2025 at 6:59=E2=80=AFPM Jason Gunthorpe <jgg@nvidia.com> wro=
+te:
+>
+> On Tue, Dec 02, 2025 at 07:20:23AM +0100, Lukas Wunner wrote:
+>
+> > But you do gain a bit of reliability if you don't assume bus numbers
+> > to stay the same and instead use the "path from root" approach to
+> > identify devices.
+>
+> Again, that's not reliability it is subtle bugs. The device is active
+> during KHO, you CAN NOT do any resource reassignment, not bus numbers,
+> not mmio. It must be fully disabled.
 
-Or whatever.  I just want the commit log to be clear that
-"enable-gpio" is no longer supported and "vpcie3v3-supply" must be
-included instead, AND that you are aware of the breaking nature of the
-change and here is why that's not an issue.
+I agree with Jason. The bus number is used in the low level hardware
+to do the DMA transfer. The bus number can not change for a device
+during livedupate with pending DMA transfer. The BDF MUST remain the
+same as the liveupdate with DMA transfer requirement. Given the BDF
+remains the same. Using the path from root doesn't buy you more
+protections. It just makes the patch more complicated but achieves the
+same thing. That is why I chose the BDF approach for the PCI
+liveupdate subsystem in the first place. To keep it simple.
 
-We can't make kernel changes that require end users to upgrade the DT
-when they update the kernel or downgrade the DT when rolling back.
+Jason, please correct me if I am wrong. My understanding is that not
+only the device that is actively doing the DMA requires the bus number
+to stay the same, I think all the parent bridge, all the way to the
+root PCI host bridge, bus number must remain the same. After all, the
+DMA will need to route through the parent bridges.
 
-Bjorn
+Another point is that, on the same machine it can have multiple PCI
+host bridges. Each PCI host bridge bus number is acquired from the
+ACPI table walk. I am not aware of any way to get the slot number of
+the PCI host bridge. Lukas, do you know how to get the PCI host bridge
+slot number to form a path?
+
+Chris
