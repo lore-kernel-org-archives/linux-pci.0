@@ -1,113 +1,277 @@
-Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C30D2F5461
-	for <linux-pci@vger.kernel.org>; Tue,  2 Dec 2025 04:28:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446C11A23A6
+	for <linux-pci@vger.kernel.org>; Tue,  2 Dec 2025 04:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764649708; cv=none; b=rjFDvqAz5zmC8n/qfo6H+UpV55PDBOd76ZrBdnE+tsD1NC4E3gn7gK0OQ9dsjaYTlEQz7rpGNOLmkW2AZuw6CmosPdi0VZCbpvx07s1kAaGs3/NIeh+5eoMzuF7lNWu7yBblMF5rCxYyECeyxKKxVM+S4/IUMDqb1OH/DtJ/NeY=
+	t=1764649946; cv=none; b=j7PSdfhjv39VD87NXFfZFYX4SC0j/QhLZkIJgYXE5CU3pkBzyWI8MAlzKRRv0vmnXN1J74P8G1rHZTRUcJGW1hbbeddl2KPsMJ8n1MkUepmRJG+gfWYAhzh42jt+KKMMCxj7MK2NxCyuqi7mHWy/hIv7a1PTivZHgUfvN8b2VBM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764649708; c=relaxed/simple;
-	bh=crsFLDgVaXi059lngL00+3IYJxJAGz/pJ25CeD6imWo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TPTPKo5+vgiDSKP3XXaK7ebzHihwvFioy83Qqfan4xS7J2Wh357x3OpOvoV23pHu/ULajVZ2rYfbVkJuq1+R6Ofhnt9qnsIp1McYumy2o2rNMsGhLItym2osruUPqxwh/dnvwv3SI/Y9+1sglBllIQffVeGxN3MFMBidvn/dNHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ventanamicro.com; spf=pass smtp.mailfrom=ventanamicro.com; dkim=pass (2048-bit key) header.d=ventanamicro.com header.i=@ventanamicro.com header.b=Ks6Dc1l/; arc=none smtp.client-ip=74.125.82.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ventanamicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ventanamicro.com
+	s=arc-20240116; t=1764649946; c=relaxed/simple;
+	bh=Kj7hWsdAis1KwIFgGWjWH6We7WMDDLF4AY4+G8fzcNY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OhwnBi8/rPizRejRzomQ3TWx8cg4kerpyoyXBYtdRD+eTwqJvAfk9yeISRS7CQ3Wk/QwJ660EXJbZsCBm4pTv+1trAGi/Am78IKYTHlHj5o0jla7x8BdsOs4Z63J/Oc914CD8dBoJ3dkhsN9Wfr6mRVVJaU+pqLDpFYzylvjLRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=ixj5P9C6; arc=none smtp.client-ip=115.124.30.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ventanamicro.com header.i=@ventanamicro.com header.b="Ks6Dc1l/"
-Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-2a484a0b7cfso7049718eec.1
-        for <linux-pci@vger.kernel.org>; Mon, 01 Dec 2025 20:28:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ventanamicro.com; s=google; t=1764649706; x=1765254506; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Uv873R59GF4pDUvydCooybALtCJ2h5ZZnBbEItimlbk=;
-        b=Ks6Dc1l/9pzgaEt8/YGZoH5xozWj8NEUu2gnBoiCbz6GTWF+ijuoJkim4sIq6692xZ
-         17+bPREtXTaqKScTikSa1fT8rNQGglF8rJk2u1kDtFfa9qLf2VRxANr/CcONLzO0Xo6T
-         XwlKoguAeVyXzP3k4Ek9e6Y7z5x/rJeLYH1ZL8Pt6WvsaRgCSlIKdX8hb/XYHVD7x8Ff
-         rlXGtTMAbQ5d6vmA/3OmRZiCKsydYFQOtfgt6MHMkXPDwflv6DST/Ta+0vjWH3kRWomO
-         gRlWZXpSQovHu34hbalN5Gi7DOzUYca6yaAKvIGbDYzSjIq7eVFsji+BKtAKCC8qCVry
-         LanQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764649706; x=1765254506;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Uv873R59GF4pDUvydCooybALtCJ2h5ZZnBbEItimlbk=;
-        b=p6g4LXPQQnPT3cWBRQBtFEk6OYpbQHyH83RouGFEW5cgt4guROOh5n/XahBI9S4Ny9
-         r3UuKBGSj+6uaBf3DUy8kkpYlVUShTHbYSFY9f1aCNjFL8XfbEwzXVtushaPRcTGOd7V
-         AvCEGox6fEVoBiiX6EulqF/dXbHs5bC9ctudbJ+ETcFOxMYsahXiWFkjK0d4Bou239l3
-         daf5EPfCR7YXrHl6G1nXvh91hGsqkiYWWfdOvpbWGYC4u6Y4AsoFrvfKScITX7O9LKB1
-         NRqKr0Z3f6U+pJME98TlC9bpfTEXuTZL5Uepwgmq2WLEpYU3ttmwwU+cCpvuJy7Zdyjp
-         vLhg==
-X-Forwarded-Encrypted: i=1; AJvYcCVWt8Esdn6gSP47viJJHKpX+92dSrl2gDdoQ0n0cl+qypQBpeCHW7kadwXOutx7AfiEa5e8TavlnvM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwvhqyDSynehVlf3uKqHg+VQCEDhFlMH0hcgnvGoMvh6dUN4KkB
-	8WuwEq8E1XMuJ2EeWf/6KiYt4SwKAg1+djCent8m6thkBDoHHN94BLWRESbpw1neuHM=
-X-Gm-Gg: ASbGncsNMAbcevJvMb/umVTCWY7xxZOeFi7awmV5mpiMR07Xb9AwGyEPr4V/sfNfhtX
-	Es6dq5j5gS31AerwEAKUvQBLGbIvyJuJtbDMY/ap8aB3MrXi63xbcvd8MtJs+A+98YZbZWd4k3i
-	tXtR8WpX/iS/TVsFvvrk5/k5xMfTHs3ZZ3Ba+Gl8k6y4zzG2IxYe3AA5BEnoVzXSQJoQy2Bp9Dr
-	ydd1ya/n6bDmHSCzs3ZGDrZV09gpRjCoy69udmctaBmxfIjcLNjG/d7upDyKji++v4k2UkwYf2r
-	o5pd5RWnGPjqncv6s8YMLcnWuUQW5Nv8QMQ55blrHjY83eF8kv45+mgyiCHJxU+pUZtKp9Z7OgO
-	WQZNJ5bZO/MSJp6XY0AM7P5lylk4NnpRy8q9eB4fcrahclTT9QVDMHQEroKaIzt1PyR/PVTYU4u
-	Xsmwl7wDF7M+RxcPjjzw==
-X-Google-Smtp-Source: AGHT+IHz9/5MGJKnqrRQBBG71Tv8qvd7//uMmkLyg5Z6fy/L0/ZDmN2B0A/dYTxnaQjFO5ur+16uhA==
-X-Received: by 2002:a05:7300:e10f:b0:2a4:3593:ccbb with SMTP id 5a478bee46e88-2ab7e661990mr930517eec.2.1764649705538;
-        Mon, 01 Dec 2025 20:28:25 -0800 (PST)
-Received: from sunil-laptop ([103.97.166.196])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2a96560986csm77426225eec.2.2025.12.01.20.28.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Dec 2025 20:28:24 -0800 (PST)
-Date: Tue, 2 Dec 2025 09:58:11 +0530
-From: Sunil V L <sunilvl@ventanamicro.com>
-To: huyuye <huyuye812@163.com>
-Cc: ajones@ventanamicro.com, anup@brainfault.org, aou@eecs.berkeley.edu,
-	atishp@rivosinc.com, bhelgaas@google.com, catalin.marinas@arm.com,
-	conor.dooley@microchip.com, dfustini@tenstorrent.com,
-	haibo1.xu@intel.com, lenb@kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org,
-	palmer@dabbelt.com, rafael@kernel.org, robert.moore@intel.com,
-	samuel.holland@sifive.com, tglx@linutronix.de, will@kernel.org,
-	dai.hualiang@zte.com.cn, deng.weixian@zte.com.cn,
-	guo.chang2@zte.com.cn, liu.qingtao2@zte.com.cn,
-	wu.jiabao@zte.com.cn, lin.yongchun@zte.com.cn, hu.yuye@zte.com.cn,
-	zhang.longxiang@zte.com.cn
-Subject: Re: [PATCH v7 08/17] ACPI: pci_link: Clear the dependencies after
- probe
-Message-ID: <aS5q28HPYLzK6h8r@sunil-laptop>
-References: <20240729142241.733357-9-sunilvl@ventanamicro.com>
- <20251201141230.12656-1-huyuye812@163.com>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="ixj5P9C6"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1764649940; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=wluPgiVNcPw138dWo0O3QKrhq1dSsVltZX1fH9uX2m4=;
+	b=ixj5P9C6SI8YKRbJn6UOvOOWVo+qF7fLrVnRl8ejkMs8cXTAUXfmsyR4yRwZ1yAy1iF38sEBpUhP5k1ZFNtmM7LDPpQNPmQo9sBVmey/kwvPHtU2csAlfzSzc4TUnT6ieKbGGmZeywfbrBur+++okRGncAg5mBGjpqNLfd0h86M=
+Received: from VM20241011-104.tbsite.net(mailfrom:guanghuifeng@linux.alibaba.com fp:SMTPD_---0WtuzBGr_1764649940 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 02 Dec 2025 12:32:20 +0800
+From: Guanghui Feng <guanghuifeng@linux.alibaba.com>
+To: bhelgaas@google.com,
+	ilpo.jarvinen@linux.intel.com
+Cc: linux-pci@vger.kernel.org,
+	alikernel-developer@linux.alibaba.com
+Subject: [PATCH v4 v4 1/1] PCI: Fix PCIe SBR dev/link wait error
+Date: Tue,  2 Dec 2025 12:32:07 +0800
+Message-ID: <20251202043207.3924714-2-guanghuifeng@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.7
+In-Reply-To: <20251202043207.3924714-1-guanghuifeng@linux.alibaba.com>
+References: <d285f1b6-8758-efd3-da0e-6448033519fc@linux.intel.com>
+ <20251202043207.3924714-1-guanghuifeng@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251201141230.12656-1-huyuye812@163.com>
 
-On Mon, Dec 01, 2025 at 10:12:29PM +0800, huyuye wrote:
-> > Hi, sunilvl
-> 
-> > Based on the above patch, I understand that you previously >resolved dependencies between Link devices and PCI Host Bridges by >calling acpi_dev_clear_dependencies(device). I would like to ask: >on RISC‑V platforms, if we need to manage dependencies between >multiple PCI Host Bridges, could this be addressed by adding a >call to acpi_dev_clear_dependencies(device) at the end of the >acpi_pci_root_add enumeration function?
-> 
-> > Initialization order dependencies can be defined via the ACPI >_DEP method in the DSDT. For example, if host bridge B depends on >host bridge A, bridge B should not be enumerated until bridge A is >fully initialized.
-> 
-> > Yes, that should work.
-> > Regards,
-> > Sunil
-> 
-> Hi,Sunil
-> 
-> I'm truly honored by your affirmation of my answer.Do you think this solution has a chance of being accepted into the upstream kernel? Are there any unintended side effects we may have overlooked?
-> 
-Acceptance of this solution depends on the PCI/ACPI maintainers. To help
-them evaluate it, you should clearly describe why your platform requires
-this dependency in the patch.
+When executing a PCIe secondary bus reset, all downstream switches and
+endpoints will generate reset events. Simultaneously, all PCIe links
+will undergo retraining, and each link will independently re-execute the
+LTSSM state machine training. Therefore, after executing the SBR, it is
+necessary to wait for all downstream links and devices to complete
+recovery. Otherwise, after the SBR returns, accessing devices with some
+links or endpoints not yet fully recovered may result in driver errors,
+or even trigger device offline issues.
 
-Regards
-Sunil
+Signed-off-by: Guanghui Feng <guanghuifeng@linux.alibaba.com>
+Reviewed-by: Guixin Liu <kanie@linux.alibaba.com>
+---
+ drivers/pci/pci.c | 143 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 103 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b14dd064006c..9cf0e58ef23f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4788,6 +4788,63 @@ static int pci_bus_max_d3cold_delay(const struct pci_bus *bus)
+ 	return max(min_delay, max_delay);
+ }
+ 
++static int pci_readiness_check(struct pci_dev *pdev, struct pci_dev *child,
++		unsigned long start_t, char *reset_type)
++{
++	int elapsed = jiffies_to_msecs(jiffies - start_t);
++
++	if (pci_dev_is_disconnected(pdev) || pci_dev_is_disconnected(child))
++		return 0;
++
++	if (pcie_get_speed_cap(pdev) <= PCIE_SPEED_5_0GT) {
++		u16 status;
++
++		pci_dbg(pdev, "waiting %d ms for downstream link\n", elapsed);
++
++		if (!pci_dev_wait(child, reset_type, 0))
++			return 0;
++
++		if (PCI_RESET_WAIT > elapsed)
++			return PCI_RESET_WAIT - elapsed;
++
++		/*
++		 * If the port supports active link reporting we now check
++		 * whether the link is active and if not bail out early with
++		 * the assumption that the device is not present anymore.
++		 */
++		if (!pdev->link_active_reporting)
++			return -ENOTTY;
++
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &status);
++		if (!(status & PCI_EXP_LNKSTA_DLLLA))
++			return -ENOTTY;
++
++		if (!pci_dev_wait(child, reset_type, 0))
++			return 0;
++
++		if (PCIE_RESET_READY_POLL_MS > elapsed)
++			return PCIE_RESET_READY_POLL_MS - elapsed;
++
++		return -ENOTTY;
++	}
++
++	pci_dbg(pdev, "waiting %d ms for downstream link, after activation\n",
++		elapsed);
++	if (!pcie_wait_for_link_delay(pdev, true, 0)) {
++		/* Did not train, no need to wait any further */
++		pci_info(pdev, "Data Link Layer Link Active not set in %d msec\n", elapsed);
++		return -ENOTTY;
++	}
++
++	if (!pci_dev_wait(child, reset_type, 0))
++		return 0;
++
++	if (PCIE_RESET_READY_POLL_MS > elapsed)
++		return PCIE_RESET_READY_POLL_MS - elapsed;
++
++	return -ENOTTY;
++}
++
+ /**
+  * pci_bridge_wait_for_secondary_bus - Wait for secondary bus to be accessible
+  * @dev: PCI bridge
+@@ -4802,12 +4859,14 @@ static int pci_bus_max_d3cold_delay(const struct pci_bus *bus)
+  * 4.3.2.
+  *
+  * Return 0 on success or -ENOTTY if the first device on the secondary bus
+- * failed to become accessible.
++ * failed to become accessible or a value greater than 0 indicates the
++ * left required waiting time..
+  */
+-int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
++static int __pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, unsigned long start_t,
++		char *reset_type)
+ {
+-	struct pci_dev *child __free(pci_dev_put) = NULL;
+-	int delay;
++	struct pci_dev *child;
++	int delay, ret, elapsed = jiffies_to_msecs(jiffies - start_t);
+ 
+ 	if (pci_dev_is_disconnected(dev))
+ 		return 0;
+@@ -4835,8 +4894,6 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
+ 		return 0;
+ 	}
+ 
+-	child = pci_dev_get(list_first_entry(&dev->subordinate->devices,
+-					     struct pci_dev, bus_list));
+ 	up_read(&pci_bus_sem);
+ 
+ 	/*
+@@ -4844,8 +4901,10 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
+ 	 * accessing the device after reset (that is 1000 ms + 100 ms).
+ 	 */
+ 	if (!pci_is_pcie(dev)) {
+-		pci_dbg(dev, "waiting %d ms for secondary bus\n", 1000 + delay);
+-		msleep(1000 + delay);
++		if (1000 + delay > elapsed)
++			return 1000 + delay - elapsed;
++
++		pci_dbg(dev, "waiting %d ms for secondary bus\n", elapsed);
+ 		return 0;
+ 	}
+ 
+@@ -4867,41 +4926,47 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
+ 	if (!pcie_downstream_port(dev))
+ 		return 0;
+ 
+-	if (pcie_get_speed_cap(dev) <= PCIE_SPEED_5_0GT) {
+-		u16 status;
+-
+-		pci_dbg(dev, "waiting %d ms for downstream link\n", delay);
+-		msleep(delay);
+-
+-		if (!pci_dev_wait(child, reset_type, PCI_RESET_WAIT - delay))
+-			return 0;
++	if (delay > elapsed)
++		return delay - elapsed;
+ 
++	down_read(&pci_bus_sem);
++	list_for_each_entry(child, &dev->subordinate->devices, bus_list) {
+ 		/*
+-		 * If the port supports active link reporting we now check
+-		 * whether the link is active and if not bail out early with
+-		 * the assumption that the device is not present anymore.
++		 * Check if all devices under the same bus have completed
++		 * the reset process, including multifunction devices in
++		 * the same bus.
+ 		 */
+-		if (!dev->link_active_reporting)
+-			return -ENOTTY;
++		ret = pci_readiness_check(dev, child, start_t, reset_type);
+ 
+-		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &status);
+-		if (!(status & PCI_EXP_LNKSTA_DLLLA))
+-			return -ENOTTY;
++		if (ret == 0 && child->subordinate) {
++			pci_restore_config_space(child);
++			ret = __pci_bridge_wait_for_secondary_bus(child, start_t, reset_type);
++		}
+ 
+-		return pci_dev_wait(child, reset_type,
+-				    PCIE_RESET_READY_POLL_MS - PCI_RESET_WAIT);
++		if(ret)
++			break;
+ 	}
++	up_read(&pci_bus_sem);
+ 
+-	pci_dbg(dev, "waiting %d ms for downstream link, after activation\n",
+-		delay);
+-	if (!pcie_wait_for_link_delay(dev, true, delay)) {
+-		/* Did not train, no need to wait any further */
+-		pci_info(dev, "Data Link Layer Link Active not set in %d msec\n", delay);
+-		return -ENOTTY;
++	return ret;
++}
++
++int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
++{
++	int res, gap = 1;
++	unsigned long start_t = jiffies;
++
++	res = __pci_bridge_wait_for_secondary_bus(dev, start_t, reset_type);
++
++	while (res > 0) {
++		gap = gap < res ? gap : res;
++		msleep(gap);
++		gap <<= 1;
++
++		res = __pci_bridge_wait_for_secondary_bus(dev, start_t, reset_type);
+ 	}
+ 
+-	return pci_dev_wait(child, reset_type,
+-			    PCIE_RESET_READY_POLL_MS - delay);
++	return res;
+ }
+ 
+ void pci_reset_secondary_bus(struct pci_dev *dev)
+@@ -5542,10 +5607,8 @@ static void pci_bus_restore_locked(struct pci_bus *bus)
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pci_dev_restore(dev);
+-		if (dev->subordinate) {
+-			pci_bridge_wait_for_secondary_bus(dev, "bus reset");
++		if (dev->subordinate)
+ 			pci_bus_restore_locked(dev->subordinate);
+-		}
+ 	}
+ }
+ 
+@@ -5575,14 +5638,14 @@ static void pci_slot_restore_locked(struct pci_slot *slot)
+ {
+ 	struct pci_dev *dev;
+ 
++	pci_bridge_wait_for_secondary_bus(slot->bus->self, "slot reset");
++
+ 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+ 		if (!dev->slot || dev->slot != slot)
+ 			continue;
+ 		pci_dev_restore(dev);
+-		if (dev->subordinate) {
+-			pci_bridge_wait_for_secondary_bus(dev, "slot reset");
++		if (dev->subordinate)
+ 			pci_bus_restore_locked(dev->subordinate);
+-		}
+ 	}
+ }
+ 
+-- 
+2.32.0.3.gf3a3e56d6
+
