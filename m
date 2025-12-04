@@ -1,236 +1,205 @@
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2C13396FE
-	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2025 13:13:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06DAA33B6FC;
+	Thu,  4 Dec 2025 13:32:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764854039; cv=none; b=K1wCbMvnoN9uik8N5EQbPwdPHUj9okMZXyvCMb3a7wTmQpZK9UKLQv/eEmVYNodfFsPDrXhoUnG8SvInufrzt1PBd20tHhMkVpjHNCVwt1uoLdbnuLlSqf3BPymS7uqSOtCjEIUg9B+MvI39hsOvzgSKUhS6bsiKKNGjVPGHyPk=
+	t=1764855167; cv=none; b=lg5GztK5d6EwfNg5f+YBs3gaMawrklps7QTQkn1Bfj7+oGL8HNleNigxzhlSQmLhdit6yAALauSlVGOS9YS6tt/1dsitzgxvHXBAjGyPTVqv6E+k/wg1o0Ji02Dt96UaD0oDAU33/HDHzP3CYxsl2kDpIeaG9iqJyA1z0GWq+2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764854039; c=relaxed/simple;
-	bh=t3Bnpz+avM0HDsIK2c6aRt7hjY3/SE76r3tU+199wfM=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:In-Reply-To:
-	 Content-Type:References; b=R+r693wyETCSi06BYg69VW9w7pUf8PeYOr+8nKmCUTS74P/1CNUBN6j3RpncCL3R85LloFQ4hhD8zgv2IHZZHkiaGIGfvQgHgYFl2BPkMc2/4kcABOv1IGcWa/9wiKeovBtozEQ5kdxnrfJiPz11msI5BlMtaU9r/bQlfJYWb9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=pFAixUks; arc=none smtp.client-ip=210.118.77.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1764855167; c=relaxed/simple;
+	bh=3v3VlgRwdbEm5Jz7/1tD4NafUahZLStcG6k+IKOd/2Y=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=rFfqKJaFMhrVVRgFjU4qi9PM7nACS5+A6M3V9r8AsF7qLDyHyjjbyZQ0Ogre41kykqEeaWPZZzUsyKmkQqeijSLp94U4GELMJiCnKN/YhaWWQa7UJwXZ3uDivHnRhVK+yg13f3V5i85uWKXgmmrOGObsvBnk2UVjLtS6CitTpkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cu0O5kHh; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="pFAixUks"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20251204131348euoutp02544eeba872b5c4c41424d9150510b19e~_BWN5DAPx2671426714euoutp02C
-	for <linux-pci@vger.kernel.org>; Thu,  4 Dec 2025 13:13:48 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20251204131348euoutp02544eeba872b5c4c41424d9150510b19e~_BWN5DAPx2671426714euoutp02C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1764854028;
-	bh=Gy5jTRlG1BOYeQhQOMMh3NCOscTG3v7BR1Xhg1G1ERU=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=pFAixUksRC2Wdoz8LmLhVOPqgFcvzR/pVJFofqaBd0/qroFWSRkVRApnglKilhBs9
-	 YdG4DOVQdX7jMQVkDcz3pZD6nPZ4ub3UiPPpPds+jLhmvmTAbbs5vLe723rLYKaEtI
-	 beG0RPRuwYdWPaKhEDst57IG9Go0cDevD4eC1PoY=
-Received: from eusmtip1.samsung.com (unknown [203.254.199.221]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20251204131348eucas1p25ae62f3b5284465e01fccd48040b0e78~_BWNqJoKD1811618116eucas1p2Z;
-	Thu,  4 Dec 2025 13:13:48 +0000 (GMT)
-Received: from [106.210.134.192] (unknown [106.210.134.192]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20251204131347eusmtip1a586babc772de7476d6c338c6efce3e4~_BWMlcNB01787117871eusmtip1N;
-	Thu,  4 Dec 2025 13:13:47 +0000 (GMT)
-Message-ID: <de80df44-f797-4e8c-a411-09ed3c1286a3@samsung.com>
-Date: Thu, 4 Dec 2025 14:13:45 +0100
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cu0O5kHh"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5B4C4mkh009614;
+	Thu, 4 Dec 2025 13:32:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=3v3Vlg
+	RwdbEm5Jz7/1tD4NafUahZLStcG6k+IKOd/2Y=; b=cu0O5kHhW0Hz4jY8Xprorg
+	Gltg/lFvyMNgmOME0vz6+KPn2J1hGbePUxQ5Nsm5LCZLhbhyxFy6idL3eHrR01pr
+	LIhJFZyDVtlJ60AcoiuLnGdNBiOUalEfjjlu1zCd/Zrqieb7FJJgina/3AAyCf0M
+	1GZboRF8LTbfl+c2gSkv5TQ0kaNdV9Jas3SOmhGarhNZopvllA2vkYhVGkXqw9wK
+	K7lkw49XFpJ065hWEqv0vxLU4+XUkaj+eA4Mxq7cAW56Zl4N8z/2SJGrg7PaCjWp
+	eHQzKxYDpU7Mq4lZZCdFSHDAeCCZ+earnxAd/sJXVb0gQvEkYFkdCdQfKjjnP8KA
+	==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4aqrja0ft1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Dec 2025 13:32:44 +0000 (GMT)
+Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 5B4DSaMP025401;
+	Thu, 4 Dec 2025 13:32:44 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4aqrja0fsv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Dec 2025 13:32:44 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5B4D1Z7Q003891;
+	Thu, 4 Dec 2025 13:32:43 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ardcjyr4q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Dec 2025 13:32:43 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 5B4DWdCE58130786
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 4 Dec 2025 13:32:39 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 978D52004B;
+	Thu,  4 Dec 2025 13:32:39 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 328DE20040;
+	Thu,  4 Dec 2025 13:32:39 +0000 (GMT)
+Received: from [9.155.208.229] (unknown [9.155.208.229])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  4 Dec 2025 13:32:39 +0000 (GMT)
+Message-ID: <147846fa858805ae8cc2e7ba3cf9801dbb3264b2.camel@linux.ibm.com>
+Subject: Re: [PATCH v3] PCI: s390: Expose the UID as an arch specific PCI
+ slot attribute
+From: Gerd Bayer <gbayer@linux.ibm.com>
+To: Niklas Schnelle <schnelle@linux.ibm.com>,
+        Bjorn Helgaas
+	 <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>
+Cc: Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Christian Borntraeger	
+ <borntraeger@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Heiko
+ Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander
+ Gordeev	 <agordeev@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Julian Ruess	 <julianr@linux.ibm.com>,
+        Peter Oberparleiter
+ <oberpar@linux.ibm.com>,
+        Ramesh Errabolu <ramesh@linux.ibm.com>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Thu, 04 Dec 2025 14:32:39 +0100
+In-Reply-To: <f49c568303ec861a721969251da9b686cc051303.camel@linux.ibm.com>
+References: <20251015-uid_slot-v3-1-44389895c1bb@linux.ibm.com>
+		 <c66fe13cf2dbe9def72cbd5ae703538dcb770d7b.camel@linux.ibm.com>
+	 <f49c568303ec861a721969251da9b686cc051303.camel@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (3.58.2-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: [PATCH v2 0/4] PCI: Fix ACS enablement for Root Ports in OF
- platforms
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, Bjorn
-	Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	iommu@lists.linux.dev, Naresh Kamboju <naresh.kamboju@linaro.org>,
-	Pavankumar Kondeti <quic_pkondeti@quicinc.com>, Xingang Wang
-	<wangxingang5@huawei.com>, Robin Murphy <robin.murphy@arm.com>, Jason
-	Gunthorpe <jgg@ziepe.ca>, Manivannan Sadhasivam <mani@kernel.org>
-Content-Language: en-US
-In-Reply-To: <b63ec0aa-7a4a-4f8d-9b93-e724f3f2a9d1@samsung.com>
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20251204131348eucas1p25ae62f3b5284465e01fccd48040b0e78
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20251202142307eucas1p12a15e5656bb53f48f445c3056d4e3166
-X-EPHeader: CA
-X-CMS-RootMailID: 20251202142307eucas1p12a15e5656bb53f48f445c3056d4e3166
-References: <CGME20251202142307eucas1p12a15e5656bb53f48f445c3056d4e3166@eucas1p1.samsung.com>
-	<20251202-pci_acs-v2-0-5d2759a71489@oss.qualcomm.com>
-	<b63ec0aa-7a4a-4f8d-9b93-e724f3f2a9d1@samsung.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 2c5f1R5rY2fTn46mnIZSuAgG63ddoy61
+X-Proofpoint-ORIG-GUID: gyBdYrPJbMAG0OYqmNWzvgjJMCRdfPtx
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTI5MDAyMCBTYWx0ZWRfX5j35LcScXHMD
+ vNvllffWEdl3jBgTXWfRi97Zirlc1G8OjPfF0h0ePDcJ+RtRY6OOP5V5Cj10kigAcTPcTbUhJDX
+ FKinCOGkvI51XoonBJSwBSH4DDKwiHlDc9DNiuu564xgihVm2mkEvFd7wH/kuFFiCQP3MgGVo1J
+ 38H3XcaZKpuWKNsLvpxcIlrR7GUsYO3vCPb5JkskisGL9AXW1GxsbzFQP2oQfEO8KNr2cA4yFah
+ JIcbSCyX/zrQiaEIP45Xt6lomWGquK9ccSMv4GU96uJECJ7MNz+wi+e0f5RYJn+7z9DcQS4lVDW
+ W8wchkKA3b2GsiR13qbYX+FGOZnuch9dcjs461GdftdmYPDNQCeKQMLAgIpq4SBcV3KSMWb1/pD
+ d4l11Gqs2LXv9Dof9fUu6otyJrrJew==
+X-Authority-Analysis: v=2.4 cv=dYGNHHXe c=1 sm=1 tr=0 ts=69318d7c cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VnNF1IyMAAAA:8 a=hDeK41mN1ZnsdbcWdGkA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-12-04_03,2025-12-03_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 spamscore=0 suspectscore=0 clxscore=1015 adultscore=0
+ lowpriorityscore=0 bulkscore=0 phishscore=0 priorityscore=1501
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2510240000
+ definitions=main-2511290020
 
-On 03.12.2025 13:04, Marek Szyprowski wrote:
-> On 02.12.2025 15:22, Manivannan Sadhasivam wrote:
->> This series fixes the long standing issue with ACS in OF platforms. 
->> There are
->> two fixes in this series, both fixing independent issues on their 
->> own, but both
->> are needed to properly enable ACS on OF platforms.
->>
->> Issue(s) background
->> ===================
->>
->> Back in 2021, Xingang Wang first noted a failure in attaching the 
->> HiSilicon SEC
->> device to QEMU ARM64 pci-root-port device [1]. He then tracked down 
->> the issue to
->> ACS not being enabled for the QEMU Root Port device and he proposed a 
->> patch to
->> fix it [2].
->>
->> Once the patch got applied, people reported PCIe issues with 
->> linux-next on the
->> ARM Juno Development boards, where they saw failure in enumerating 
->> the endpoint
->> devices [3][4]. So soon, the patch got dropped, but the actual issue 
->> with the
->> ARM Juno boards was left behind.
->>
->> Fast forward to 2024, Pavan resubmitted the same fix [5] for his own 
->> usecase,
->> hoping that someone in the community would fix the issue with ARM 
->> Juno boards.
->> But the patch was rightly rejected, as a patch that was known to 
->> cause issues
->> should not be merged to the kernel. But again, no one investigated 
->> the Juno
->> issue and it was left behind again.
->>
->> Now it ended up in my plate and I managed to track down the issue 
->> with the help
->> of Naresh who got access to the Juno boards in LKFT. The Juno issue 
->> was with the
->> PCIe switch from Microsemi/IDT, which triggers ACS Source Validation 
->> error on
->> Completions received for the Configuration Read Request from a device 
->> connected
->> to the downstream port that has not yet captured the PCIe bus number. 
->> As per the
->> PCIe spec r6.0 sec 2.2.6.2, "Functions must capture the Bus and 
->> Device Numbers
->> supplied with all Type 0 Configuration Write Requests completed by 
->> the Function
->> and supply these numbers in the Bus and Device Number fields of the 
->> Requester ID
->> for all Requests". So during the first Configuration Read Request 
->> issued by the
->> switch downstream port during enumeration (for reading Vendor ID), 
->> Bus and
->> Device numbers will be unknown to the device. So it responds to the 
->> Read Request
->> with Completion having Bus and Device number as 0. The switch 
->> interprets the
->> Completion as an ACS Source Validation error and drops the 
->> completion, leading
->> to the failure in detecting the endpoint device. Though the PCIe spec 
->> r6.0, sec
->> 6.12.1.1, states that "Completions are never affected by ACS Source 
->> Validation".
->> This behavior is in violation of the spec.
->>
->> Solution
->> ========
->>
->> In September, I submitted a series [6] to fix both issues. For the 
->> IDT issue,
->> I reused the existing quirk in the PCI core which does a dummy config 
->> write
->> before issuing the first config read to the device. And for the ACS 
->> enablement
->> issue, I just resubmitted the original patch from Xingang which called
->> pci_request_acs() from devm_of_pci_bridge_init().
->>
->> But during the review of the series, several comments were received 
->> and they
->> required the series to be reworked completely. Hence, in this 
->> version, I've
->> incorported the comments as below:
->>
->> 1. For the ACS enablement issue, I've moved the pci_enable_acs() call 
->> from
->> pci_acs_init() to pci_dma_configure().
->>
->> 2. For the IDT issue, I've cached the ACS capabilities (RO) in 
->> 'pci_dev',
->> collected the broken capability for the IDT switches in the quirk and 
->> used it to
->> disable the capability in the cache. This also allowed me to get rid 
->> of the
->> earlier workaround for the switch.
->>
->> [1] 
->> https://lore.kernel.org/all/038397a6-57e2-b6fc-6e1c-7c03b7be9d96@huawei.com
->> [2] 
->> https://lore.kernel.org/all/1621566204-37456-1-git-send-email-wangxingang5@huawei.com
->> [3] 
->> https://lore.kernel.org/all/01314d70-41e6-70f9-e496-84091948701a@samsung.com
->> [4] 
->> https://lore.kernel.org/all/CADYN=9JWU3CMLzMEcD5MSQGnaLyDRSKc5SofBFHUax6YuTRaJA@mail.gmail.com
->> [5] 
->> https://lore.kernel.org/linux-pci/20241107-pci_acs_fix-v1-1-185a2462a571@quicinc.com
->> [6] 
->> https://lore.kernel.org/linux-pci/20250910-pci-acs-v1-0-fe9adb65ad7d@oss.qualcomm.com
->>
-> Thanks for this patchset! I've tested it on my ARM Juno R1 and it 
-> looks that it almost works fine. This patchset even fixed some issues 
-> with PCI devices probe, as I again see SATA and GBit ethernet devices, 
-> which were missing since Linux v6.14 (it looks that I've also missed 
-> this in my tests).
->
-> # lspci
-> 00:00.0 PCI bridge: PLDA PCI Express Core Reference Design (rev 01)
-> 01:00.0 PCI bridge: Integrated Device Technology, Inc. [IDT] Device 
-> 8090 (rev 02)
-> 02:01.0 PCI bridge: Integrated Device Technology, Inc. [IDT] Device 
-> 8090 (rev 02)
-> 02:02.0 PCI bridge: Integrated Device Technology, Inc. [IDT] Device 
-> 8090 (rev 02)
-> 02:03.0 PCI bridge: Integrated Device Technology, Inc. [IDT] Device 
-> 8090 (rev 02)
-> 02:0c.0 PCI bridge: Integrated Device Technology, Inc. [IDT] Device 
-> 8090 (rev 02)
-> 02:10.0 PCI bridge: Integrated Device Technology, Inc. [IDT] Device 
-> 8090 (rev 02)
-> 02:1f.0 PCI bridge: Integrated Device Technology, Inc. [IDT] Device 
-> 8090 (rev 02)
-> 03:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial 
-> ATA Raid II Controller (rev 01)
-> 08:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8057 
-> PCI-E Gigabit Ethernet Controller
->
-> However there is also a regression. After applying this patchset 
-> system suspend/resume stopped working. This is probably related to 
-> this message:
->
-> pcieport 0000:02:1f.0: Unable to change power state from D0 to D3hot, 
-> device inaccessible
->
-> which appears after calling 'rtcwake -s10 -mmem'. This might not be 
-> related to this patchset, so I probably need to apply it on older 
-> kernel releases and check.
+On Thu, 2025-12-04 at 14:09 +0100, Niklas Schnelle wrote:
+> On Thu, 2025-12-04 at 13:45 +0100, Gerd Bayer wrote:
+> > On Wed, 2025-10-15 at 15:42 +0200, Niklas Schnelle wrote:
+> > > On s390, an individual PCI function can generally be identified by tw=
+o
+> > > identifiers, the FID and the UID. Which identifier is used depends on
+> > > the scope and the platform configuration.
+> > >=20
+> > > The first identifier, the FID, is always available and identifies a P=
+CI
+> > > device uniquely within a machine. The FID may be virtualized by
+> > > hypervisors, but on the LPAR level, the machine scope makes it
+> > > impossible to create the same configuration based on FIDs on two
+> > > different LPARs of the same machine, and difficult to reuse across
+> > > machines.
+> > >=20
+> > > Such matching LPAR configurations are useful, though, allowing
+> > > standardized setups and booting a Linux installation on different LPA=
+Rs.
+> > > To this end the UID, or user-defined identifier, was introduced. Whil=
+e
+> > > it is only guaranteed to be unique within an LPAR and only if indicat=
+ed
+> > > by firmware, it allows users to replicate PCI device setups.
+> > >=20
+> > > On s390, which uses a machine hypervisor, a per PCI function hotplug
+> > > model is used. The shortcoming with the UID then is, that it is not
+> > > visible to the user without first attaching the PCI function and
+> > > accessing the "uid" device attribute. The FID, on the other hand, is
+> > > used as the slot name and is thus known even with the PCI function in
+> > > standby.
+> > >=20
+> > > Remedy this shortcoming by providing the UID as an attribute on the s=
+lot
+> > > allowing the user to identify a PCI function based on the UID without
+> > > having to first attach it. Do this via a macro mechanism analogous to
+> > > what was introduced by commit 265baca69a07 ("s390/pci: Stop usurping
+> > > pdev->dev.groups") for the PCI device attributes.
+> >=20
+> > Hi Niklas,
+> >=20
+> > I like this addition a lot. Also, Lukas' method to add arch-specific
+> > attributes to sysfs. Is there a reason why you didn't apply that
+> > mechanism 1-to-1?
+>=20
+> I considered that and actually had basically the same as your diff in
+> an intermediate version. To me it looked cleaner with the #ifdef in the
+> attribute_group array initialization as I feel that it is more obvious
+> if the macroed elements are used. This may be because my editor grays
+> out the code between unused #ifdef or just because "it's in one place"
+> either way just a matter of taste. Also the comma gave me checkpatch
+> complaints.
+
+I agree, for me it's more a question of taste than anything else. If
+there's a preference towards commonality, Lukas or Bjorn may want to
+chime in.
 
 
-Just one more information - I've applied this patchset on top of v6.16 
-and it works perfectly on ARM Juno R1. SATA and GBit ethernet are 
-visible again and system suspend/resume works too, so the issue with the 
-latter on top of v6.18 seems not to be directly related to $subject 
-patchset. I will try to bisect this issue when I have some spare time.
+> >=20
+> > >=20
+> > > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> > > ---
+> > > Note: I considered adding the UID as a generic "index" via the hotplu=
+g
+> > > slot driver but felt like there is probably too little commonality on
+> > > format and usage patterns
+> >=20
+> > Sorry for my ignorance but how is the hotplug slot driver defining an
+> > "index" or how is used?
+> >=20
+>=20
+> It's not. I meant that I considered that the UID could be turned into a
+> generic "index" attribute in the same way that the UID is used as
+> /sys/bus/pci/devices/<dev>/index on s390 while the same attribute is an
+> SMBIOS index thing on x86 and others.
 
-Feel free to add:
+I see and agree, "index" by itself lacks the definition of a
+"dimension" on which you mark individual slots.
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Having no further comments, feel free to add my
+Reviewed-by: Gerd Bayer <gbayer@linux.ibm.com>
 
-
-Best regards
--- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
-
+Thanks,
+Gerd
