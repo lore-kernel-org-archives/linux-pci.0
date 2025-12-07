@@ -1,68 +1,68 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E8C123C4F4
-	for <linux-pci@vger.kernel.org>; Sun,  7 Dec 2025 08:29:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4035124886A
+	for <linux-pci@vger.kernel.org>; Sun,  7 Dec 2025 08:50:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765096159; cv=none; b=F2BZ0dUO3wqP7fUrmY62qwd1e4YOSef9m1vKtsVfn5TY1i9ynohImH4askl+oQ/vM3FLZMxg7/ZVDvbOq7YGYoxqLt0Fcrzq8TFrK4/vkx4+RcCyUlYYIXBx+lNQyywCgVtFUzC4QcJ5erAewKaX/G+pCqXHe9gY7PezduG/FpM=
+	t=1765097448; cv=none; b=ZG0vSwvXJhFMM9+HRY2vJTuHxeVt5iMfyLtFLErdqWpMP+hw43XREq+DTk8C4OX+fQm2aTGqIFPJYnFatZfv45PZQ1Z6z1O0/c/ojdD2suM/pRa+HQb9+i/G4kmsJitMFWSUT4ZMrGrOkA5nTxdevZIET3spk4JVutI7J9EYXfU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765096159; c=relaxed/simple;
-	bh=/LR1XGcTPw/8s4MqENvx9JIq/PEmCHmXFp+zwo/6N0o=;
+	s=arc-20240116; t=1765097448; c=relaxed/simple;
+	bh=XMqJYBYTtu4XRIcQoWEA3xfw1GeilePurf/OYgdwnSE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RPEW/E4URGJyEU5UzVT+UXCugWm1XPhvVgq8bcwhG+y7laqQCP4xEy9snmT3cZRHXa+rHHAiWY44cpaoDwEQ/vZpfKM3QGNlvT3m8Ovu6jrfzeE71S8OV/sQ8O5pcYiY8ugUFm5T4Gdze9DJfJwhCAc4fHrCd3ELzN0f1gTpQTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OuKZP/hr; arc=none smtp.client-ip=209.85.208.47
+	 In-Reply-To:Content-Type; b=Tcta24BZsUR/qxup7gYDn+501oirz2lflIGUxbPcqU2PsVX+B+WDbCt9/TehnbNtfGSMSVrEfbWfePa38gHit0RxMwqG5xmG/snkrF5xrKDIwoQ6dF+teUHNmz3wZqxdTlxIymA2bIkgG4vHXmm6y1fY7TCDBFfvPhCMJgSKW00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hAt6HoPI; arc=none smtp.client-ip=209.85.208.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OuKZP/hr"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-64166a57f3bso5683954a12.1
-        for <linux-pci@vger.kernel.org>; Sun, 07 Dec 2025 00:29:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hAt6HoPI"
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-37b495ce059so26852411fa.0
+        for <linux-pci@vger.kernel.org>; Sun, 07 Dec 2025 00:50:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765096156; x=1765700956; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1765097445; x=1765702245; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=wUAqt5njeLVh6MrbdJefpUGQCUq+3iNdkFktE67ektk=;
-        b=OuKZP/hrqZnW6AQzguFO8INBYhQyreRn5UVf07EYzhNVbc5cwYLO2dtBAS6Kj9KQ0z
-         6FGx1Ul+/g0FuymIWM/+E6f4CfFNm99PX3yHfYXoJ2rdqSoRN/NLnLLL8IKIFm7aqGi6
-         QIddfpd8kJe001tSBRix4Q/1iGPMWSoddmOLg15Na9p88xW+X7sR6UZpQVpq/SIgDU6V
-         UvdGNriKwMmvyM2TpNDYzlh/EqFhgNCof0sKBUSTQaAUaVUBWzRU/y34tQBBHNUd9qt0
-         vERAppWNh6IxD42IyTfATiVHJjXkI1BouANUQgKjnGDPLvPz/4JbvuGFiBxI3mxSlflT
-         y16g==
+        bh=5b12hRnRWv6onGjF90Cte/QEE3Sc5Ju08UGYaWm18PI=;
+        b=hAt6HoPIuqFSnHI1Gxy3lBFFlUZn7H/OMluppNnoan6Ypz549W72h9xythoW5AhZAQ
+         6WVLAh37yDStYH83Ncee7eYUYGeGuLXRHBzlsTgcY7TLp2s8fdZW5ph6oB0zSVVjxnkO
+         CnILHG4Avk4wEtiLtRQPl/IH6dhQquEcmh0+LKu0zZ5Cvrog36Nj5K758xpfPAIO8AQl
+         OqFhDHuxOvV0plCCW/mToZL24rU2l7wMN6xKbfju+rBLkfKLjvR0QZOlSKvktvH+8Y68
+         nK5LvUmG5X2ab7JpvZMj2ai+7HJOD9FsDulY9TBWJENrcq+tx7TztSCokeKhDL0dHJy0
+         m2Bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765096156; x=1765700956;
+        d=1e100.net; s=20230601; t=1765097445; x=1765702245;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=wUAqt5njeLVh6MrbdJefpUGQCUq+3iNdkFktE67ektk=;
-        b=BaR2CRv19rnFdFpN2U52sGl7ieuUxyjdfedIZETB8E48Giuebz2tMwjQoAIezq9FH/
-         eyC3Y/3e2OEwrrslzLxGHLaLYqU2uJaIoRhp1CGpfNIqZe/87Ongf95bP7jPJg39QUI8
-         eVHJhmLPySvdR6FZPNZYDSySY74zFzI8AKG05tQQJyiFxatGArjHJwPK/oeGUM13BLvf
-         bX0UtxY19rmLgq4BqCOWYbl6fVMhp48OeFCv5dVPqgHy2QJCPpTEm/qzbM+JSlzw4oF+
-         xghVxzwIg4ElT4CAMAOw+nuOmX4EO7IJtUIlCrQbWWn6vRqK4FubjM5Vdx3SQj+bt7Mt
-         14WA==
-X-Forwarded-Encrypted: i=1; AJvYcCVKwD5UVq9DeKBs6H6pKuYqqXxjvPX0ujf1GXPWfX6NvABpMWdT3jM95bzlIKfCI37DCjff97f9e/o=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyu6qTw9Aq8GU5AAOXfD2bKHm1zuROv1MJfnRi4LtwjbqvfxHBA
-	CRo9maoim+ADEiAQp2hjLHCevvmy0nE68cVpXuqQvhe5EjHqjlC33RoHFUL68LAd
-X-Gm-Gg: ASbGncuO4my+2+jkRCT6EaON6PKS7GAnJS1QWOTDl90ldoEYhHaN+m6GsyNunuYACoV
-	bs7TZsMAW53iFSHvWYMS/3NsY4QUF5O67H5KblrhizDCe2P/A+qD1KihyQ1X1bspFc5AOmUzYG5
-	39fBUJL7j9r20MRuQ/3Vd8PaR9xrrxKfwgoQ/qqnRCdnzjAu1Ogi+HK0BlniGPc4YcivOgIxPyQ
-	QZH4vReAq1TkMzjOKcsCqB1eO+Kj57mOWc/c/GO2SmeCGWi5yr6tFYYoyluO44H0bt4qUtbh5As
-	29/3R52B8UPiNSJBY1I76RpCFDWxE4/yjTvNQlJ1AGoEP2tpJTCl+2Xes5XDcZMq4qSi+xp9iWu
-	KPr7wiWJyR3bNoID38taF2yfTmCJ/ZvKdeNodMCRSNLHN3h6uRpJb4eB7R8k+0apsEdqNXPFLhI
-	dUOdjBwBJqj4UXIywDvYbCX+Q285wTDnQJZk4y+/qxS33HVeQwyFwA7II/fTQmVcTX66w5FLQfH
-	I6JJiSFGvQ4DuHD7zFcHG+I5Y424+ZVHhDDsePwhsg=
-X-Google-Smtp-Source: AGHT+IEVqNfD63Og/iUd5redAtxSFIwiSLJ5eCxMwzhmCuXyLMf5his7H3QmVu2l6AnzMWhPzE8plg==
-X-Received: by 2002:a05:600c:3b07:b0:477:1af2:f40a with SMTP id 5b1f17b1804b1-47939e242f1mr45974225e9.17.1765089776787;
-        Sat, 06 Dec 2025 22:42:56 -0800 (PST)
+        bh=5b12hRnRWv6onGjF90Cte/QEE3Sc5Ju08UGYaWm18PI=;
+        b=cH0XDaSVhkOuglZEA8BoqiXbFlIkcGb5S1LSphF6jDRPLk0vL10EaSXhNczfo6gkjF
+         dd3bvsb5gjVksl/6DcyZ77hM7Y69HUdyzrwH4HfBRoNzNXPtXL+3klEYZf0ircAUHOky
+         wQuh9g0zO4fSQ6jQyjTkas8cmrnvS9WkhHwdUMfB8cAJyV6up3bVkdUDVE+FkT58LCcP
+         Q+8YYcEjPjZRimDPhACgGu2HDxQPdCakzafO5yz7gcz215a25qopxEfmx74WlhLnzWnH
+         WWsKcZpesTfe5ZiWVbG38E9gXRJ68ZSD/cIQpTwS1C8Ck3gtxNvwuHo2kOIaC6Pwgyb6
+         uXiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXzncVApePo4faQVfHQocY9lUY50qcDehKdd+rSnwSXkWjfG9Z0bJg4NUg445ZCB7SqwarAiX5Lg2w=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzj7PdQJD47FGBQXPQSoJW0zSpk/27SYL6UYZtWjYCCoxtgHSvv
+	88mA1EIGaAixQrBhIJuY1CMZsPxdNvpnO8a8oh/Wv72V2YvL63yxNyp6d9Mzyw==
+X-Gm-Gg: ASbGncvz0A0E6/NGXSaL2RLcst9nV5v2OA4rhL9ofv93ZbmrlS+t8h4Y3gMZcLI71cv
+	eTsKtm8T1rALLhll8DAbh5h8kxcCqCtArIbdR+4nCcPj7WSSwrS9cGnBqluDLdqzlEZsQyqMkJQ
+	3O9RNMohWSqTBluNH8AVk2GxwDVb+m0KvDVzIhWzKNGZT1A9rW3/2sLEWGt7lMmh9mWlNDSxzAE
+	2CnQl+ljaZrGubA1rvOfxJyvmut4uAsoM+Wl7pI+vZ0w5anLEtcmC/qHGQI+Iokx42YDrc15BIC
+	ShtYUwadzmP0ZV2st6CFVN9U95QZLW4NfIKbmlzNI60kfLs4MHugLhfL+MlXXrnNbfPZEsal7Ey
+	20olBvdwN7Wy9R1VlWfz7yIFv+Z8LOxOolzpxswOY7l7JXe+c4X6uuTxnTHFnTSAmZs4MsMdORX
+	rSZ4DTtjls6VSnkeFJVfyleQ1GjmNLI3auryyynPvb0tLBvf/bnEBEVsFqcaEWMUAkfdQjLoqbj
+	DhaWLl5U657u1itZ7+ZQ+xgTnPN3BcD47XDQ2ZHpu8=
+X-Google-Smtp-Source: AGHT+IHkpbBEjUpSSNR6c1N0xrVq9kG40VYKHC/sRRQKwimb+t89Kzoar8J3mhxBoq7JhZtP7BsBvQ==
+X-Received: by 2002:a05:6000:430d:b0:42b:5448:7b08 with SMTP id ffacd0b85a97d-42f89f094b2mr4983612f8f.5.1765091533868;
+        Sat, 06 Dec 2025 23:12:13 -0800 (PST)
 Received: from ?IPV6:2003:df:bf22:3c00:1c42:64e:ef2a:93cd? (p200300dfbf223c001c42064eef2a93cd.dip0.t-ipconnect.de. [2003:df:bf22:3c00:1c42:64e:ef2a:93cd])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47930ca15adsm179162575e9.13.2025.12.06.22.42.55
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cc090bdsm18354202f8f.19.2025.12.06.23.12.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 06 Dec 2025 22:42:56 -0800 (PST)
-Message-ID: <7fe8b05d-cb49-48bd-ac0a-d993e173924c@gmail.com>
-Date: Sun, 7 Dec 2025 07:42:54 +0100
+        Sat, 06 Dec 2025 23:12:13 -0800 (PST)
+Message-ID: <ca549425-e10b-4d54-aebe-278d90c8cb92@gmail.com>
+Date: Sun, 7 Dec 2025 08:12:10 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,8 +70,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC 7/7] gpu: nova-core: load the scrubber ucode when vGPU
- support is enabled
+Subject: Re: [RFC 1/7] rust: pci: expose sriov_get_totalvfs() helper
 To: Zhi Wang <zhiw@nvidia.com>, rust-for-linux@vger.kernel.org,
  linux-pci@vger.kernel.org, nouveau@lists.freedesktop.org,
  linux-kernel@vger.kernel.org
@@ -85,129 +84,105 @@ Cc: airlied@gmail.com, dakr@kernel.org, aliceryhl@google.com,
  acourbot@nvidia.com, joelagnelf@nvidia.com, jhubbard@nvidia.com,
  zhiwang@kernel.org
 References: <20251206124208.305963-1-zhiw@nvidia.com>
- <20251206124208.305963-8-zhiw@nvidia.com>
-Content-Language: de-AT-frami
+ <20251206124208.305963-2-zhiw@nvidia.com>
+Content-Language: de-AT-frami, en-US
 From: Dirk Behme <dirk.behme@gmail.com>
-In-Reply-To: <20251206124208.305963-8-zhiw@nvidia.com>
+In-Reply-To: <20251206124208.305963-2-zhiw@nvidia.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 06.12.25 13:42, Zhi Wang wrote:
-> To support the maximum vGPUs on the device that support vGPU, a larger
-> WPR2 heap size is required. By setting the WPR2 heap size larger than 256MB
-> the scrubber ucode image is required to scrub the FB memory before any
-> other ucode image is executed.
+> Add a wrapper for the `pci_sriov_get_totalvfs()` helper, allowing drivers
+> to query the number of total SR-IOV virtual functions a PCI device
+> supports.
 > 
-> If not, the GSP firmware hangs when booting.
-> 
-> When vGPU support is enabled, execute the scrubber ucode image to scrub the
-> FB memory before executing any other ucode images.
+> This is useful for components that need to conditionally enable features
+> based on SR-IOV capability.
 > 
 > Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 > ---
->  drivers/gpu/nova-core/firmware.rs        |  1 +
->  drivers/gpu/nova-core/firmware/booter.rs |  2 ++
->  drivers/gpu/nova-core/gsp/boot.rs        | 27 ++++++++++++++++++++++++
->  drivers/gpu/nova-core/regs.rs            | 11 ++++++++++
->  4 files changed, 41 insertions(+)
+>  rust/kernel/pci.rs | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
 > 
-> diff --git a/drivers/gpu/nova-core/firmware.rs b/drivers/gpu/nova-core/firmware.rs
-> index 2d2008b33fb4..5ae1ab262d57 100644
-> --- a/drivers/gpu/nova-core/firmware.rs
-> +++ b/drivers/gpu/nova-core/firmware.rs
-> @@ -226,6 +226,7 @@ const fn make_entry_chipset(self, chipset: &str) -> Self {
->              .make_entry_file(chipset, "booter_unload")
->              .make_entry_file(chipset, "bootloader")
->              .make_entry_file(chipset, "gsp")
-> +            .make_entry_file(chipset, "scrubber")
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index 7fcc5f6022c1..9a82e83dfd30 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
+> @@ -514,6 +514,18 @@ pub fn pci_class(&self) -> Class {
+>          // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
+>          Class::from_raw(unsafe { (*self.as_raw()).class })
 >      }
->  
->      pub(crate) const fn create(
-> diff --git a/drivers/gpu/nova-core/firmware/booter.rs b/drivers/gpu/nova-core/firmware/booter.rs
-> index f107f753214a..f622c9b960de 100644
-> --- a/drivers/gpu/nova-core/firmware/booter.rs
-> +++ b/drivers/gpu/nova-core/firmware/booter.rs
-> @@ -269,6 +269,7 @@ fn new_booter(dev: &device::Device<device::Bound>, data: &[u8]) -> Result<Self>
->  
->  #[derive(Copy, Clone, Debug, PartialEq)]
->  pub(crate) enum BooterKind {
-> +    Scrubber,
->      Loader,
->      #[expect(unused)]
->      Unloader,
-> @@ -286,6 +287,7 @@ pub(crate) fn new(
->          bar: &Bar0,
->      ) -> Result<Self> {
->          let fw_name = match kind {
-> +            BooterKind::Scrubber => "scrubber",
->              BooterKind::Loader => "booter_load",
->              BooterKind::Unloader => "booter_unload",
->          };
-> diff --git a/drivers/gpu/nova-core/gsp/boot.rs b/drivers/gpu/nova-core/gsp/boot.rs
-> index ec006c26f19f..8ef79433f017 100644
-> --- a/drivers/gpu/nova-core/gsp/boot.rs
-> +++ b/drivers/gpu/nova-core/gsp/boot.rs
-> @@ -151,6 +151,33 @@ pub(crate) fn boot(
->  
->          Self::run_fwsec_frts(dev, gsp_falcon, bar, &bios, &fb_layout)?;
->  
-> +        if vgpu_support {
-> +            let scrubber = BooterFirmware::new(
-> +                dev,
-> +                BooterKind::Scrubber,
-> +                chipset,
-> +                FIRMWARE_VERSION,
-> +                sec2_falcon,
-> +                bar,
-> +            )?;
 > +
-> +            sec2_falcon.reset(bar)?;
-> +            sec2_falcon.dma_load(bar, &scrubber)?;
+> +    /// Returns total number of VFs, or `Err(ENODEV)` if none available.
+> +    pub fn sriov_get_totalvfs(&self) -> Result<i32> {
+> +        // SAFETY: `self.as_raw()` is a valid pointer to a `struct pci_dev`.
+> +        let vfs = unsafe { bindings::pci_sriov_get_totalvfs(self.as_raw()) };
 > +
-> +            let (mbox0, mbox1) = sec2_falcon.boot(bar, None, None)?;
-> +
-> +            dev_dbg!(
-> +                pdev.as_ref(),
+> +        if vfs != 0 {
+> +            Ok(vfs)
+> +        } else {
+> +            Err(ENODEV)
+> +        }
 
+In the thread [1] there was some discussion about the `if {} else {}`
+"style". From that discussion I "distilled" 6 options [2] which I
+liked for having an overview :) Of course not all of these applied
+there (const), neither will they here. And all have pros and cons. I
+think in the end option #4 was selected.
 
-I think you can use `dev` here?
+What's about to do something similar here (and in the 2/7 patch as well)?
+
+if vfs == 0 {
+    return Err(ENODEV);
+}
+
+Ok(vfs)
 
 Dirk
 
+[1]
+https://lore.kernel.org/rust-for-linux/CANiq72kiscT5euAUjcSzvxMzM9Hdj8aQGeUN_pVF-vHf3DhBuQ@mail.gmail.com/
 
-> +                "SEC2 MBOX0: {:#x}, MBOX1{:#x}\n",
-> +                mbox0,
-> +                mbox1
-> +            );
-> +
-> +            if !regs::NV_PGC6_BSI_SECURE_SCRATCH_15::read(bar).scrubber_completed() {
-> +                return Err(ETIMEDOUT);
-> +            }
-> +        }
-> +
->          let booter_loader = BooterFirmware::new(
->              dev,
->              BooterKind::Loader,
-> diff --git a/drivers/gpu/nova-core/regs.rs b/drivers/gpu/nova-core/regs.rs
-> index 82cc6c0790e5..9f3a52ca014f 100644
-> --- a/drivers/gpu/nova-core/regs.rs
-> +++ b/drivers/gpu/nova-core/regs.rs
-> @@ -173,6 +173,17 @@ pub(crate) fn higher_bound(self) -> u64 {
->      26:26   boot_stage_3_handoff as bool;
->  });
->  
-> +register!(NV_PGC6_BSI_SECURE_SCRATCH_15 @ 0x001180fc {
-> +    31:29   scrubber_handoff as u8;
-> +});
-> +
-> +impl NV_PGC6_BSI_SECURE_SCRATCH_15 {
-> +    /// Returns `true` if scrubber is completed.
-> +    pub(crate) fn scrubber_completed(self) -> bool {
-> +        self.scrubber_handoff() >= 0x3
-> +    }
-> +}
-> +
->  // Privilege level mask register. It dictates whether the host CPU has privilege to access the
->  // `PGC6_AON_SECURE_SCRATCH_GROUP_05` register (which it needs to read GFW_BOOT).
->  register!(NV_PGC6_AON_SECURE_SCRATCH_GROUP_05_PRIV_LEVEL_MASK @ 0x00118128,
+[2] Options distilled from the thread [1]:
 
+1.
+
+if let Some(sum) = addr.checked_add(PAGE_SIZE - 1) {
+    return Some(sum & PAGE_MASK);
+}
+None
+
+
+2.
+
+addr.checked_add(PAGE_SIZE - 1).map(|sum| sum & PAGE_MASK)
+
+
+3.
+
+if let Some(sum) = addr.checked_add(PAGE_SIZE - 1) {
+   Some(sum & PAGE_MASK);
+} else {
+   None
+}
+
+
+4.
+
+let Some(sum) = addr.checked_add(PAGE_SIZE - 1) else {
+    return None;
+};
+
+Some(sum & PAGE_MASK)
+
+
+5.
+
+match addr.checked_add(PAGE_SIZE - 1) {
+  Some(v) => Some(v & PAGE_MASK),
+  None => None,
+}
+
+6.
+
+Some(addr.checked_add(PAGE_SIZE - 1)? & PAGE_MASK)
