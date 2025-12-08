@@ -1,22 +1,23 @@
 Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4B93B2D1913;
-	Mon,  8 Dec 2025 19:24:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B1D282D8797;
+	Mon,  8 Dec 2025 19:24:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765221874; cv=none; b=JRE7L7A+ChWdPCWoAyodGRXCpcIFl+atBLD2AskKIZyKiJns9oieZPQ4NoDyQMo4a3EYXWH/k4GelneLwQl5IfOBB8mRlfgJWDHEv/Ka++qxGZMikGVN7kA3MOHFnhf4fJENL0YBnhBRvOSV4byjPMzkIUTEseF9gED1D+OJCcs=
+	t=1765221878; cv=none; b=Lr1y9iELVW8PCAaqyBOP1HDdZLHVu1HPl+wftDGDM6v1ysDrIgmJ+9Ai3YBhRZogAQ9vNNirkhdmzn9WnrlpBgzGNRhrIZMNuUQDfnoF+xyh0q3rODFHzaJArYCssrX0i7FkH5ncoT3Y6IRfHCutJnNNgimSo7O8cT1qTbcmjQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765221874; c=relaxed/simple;
-	bh=3E3N1XVHNA9+Igs2y4sx7H1DPE5OngWT/ynyAwD7AlU=;
-	h=Date:From:To:cc:Subject:Message-ID:MIME-Version:Content-Type; b=pYV3yaz99yZ2SNyqXJFYKDvZeY932ENCt/6RwMR/Izwd6V8s1wqJHk3lXte6/CIlSmTCEvOTHA2fosdCQSD3QC8TOTFKDwiVeGubgL150uaMF5u10B0ROrty/YaiFVNrf0L1QFSWRZ4swW5QsdLxll4lp6ZDifWd61tXGoPw0NI=
+	s=arc-20240116; t=1765221878; c=relaxed/simple;
+	bh=qzBomRVkdx6gOEMDtQNKxBJ5V74dgUdI3wmV3uyrbco=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=iGb7u8sLVqIl/WpTLaA0hEZgSlHFGe3JoWGfV8n9QD+nptuv/02/ZAYRqO2sBfwc/DkFGFcnW00e+Q8yIr+pWI7FSeeataIpvcoeTo6kxOKPNVH6Clp459LT+oVRY9bniwF1lqRReKSYe0OZY+B1T0mRmaULPA2acpj322vxHhs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 13FD192009C; Mon,  8 Dec 2025 20:24:24 +0100 (CET)
+	id 1D4D492009E; Mon,  8 Dec 2025 20:24:34 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 0D6D392009B;
-	Mon,  8 Dec 2025 19:24:24 +0000 (GMT)
-Date: Mon, 8 Dec 2025 19:24:23 +0000 (GMT)
+	by angie.orcam.me.uk (Postfix) with ESMTP id 167B292009B;
+	Mon,  8 Dec 2025 19:24:34 +0000 (GMT)
+Date: Mon, 8 Dec 2025 19:24:34 +0000 (GMT)
 From: "Maciej W. Rozycki" <macro@orcam.me.uk>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
     Matthew W Carlis <mattc@purestorage.com>, 
@@ -27,9 +28,11 @@ cc: ashishk@purestorage.com, msaggi@purestorage.com, sconnor@purestorage.com,
     Jiwei <jiwei.sun.bj@qq.com>, guojinhui.liam@bytedance.com, 
     ahuang12@lenovo.com, sunjw10@lenovo.com, linux-pci@vger.kernel.org, 
     linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/3] PCI: Always lift 2.5GT/s restriction in PCIe failed
- link retraining
-Message-ID: <alpine.DEB.2.21.2512072345220.49654@angie.orcam.me.uk>
+Subject: [PATCH v2 2/3] PCI: Use pcie_get_speed_cap() in PCIe failed link
+ retraining
+In-Reply-To: <alpine.DEB.2.21.2512072345220.49654@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2512080348310.49654@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2512072345220.49654@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -39,20 +42,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 
-Hi,
+Rewrite a check for the maximum link speed in the Link Capabilities 
+register in terms of pcie_get_speed_cap().  No functional change.
 
- I've figured out that backporting will be less intrusive if an update to 
-use `->supported_speeds' is posted as a separate follow-up change.  So it 
-is now 2/3 in this series, after 1/3 comprising the original patch, only 
-trivially updated.  Then 3/3 moves the maximum link speed determination 
-earlier on for an early exit in the PCIE_SPEED_2_5GT case; maybe unlikely, 
-but essentially free now, now that we retrieve the speed anyway, and makes 
-code a little simpler yet.
+Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
+---
+ drivers/pci/quirks.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
- Please let me know if you'd prefer me to fold 2/3 into 1/3 after all.
-
- Previous iterations:
-
-- v1 at: <https://lore.kernel.org/r/alpine.DEB.2.21.2511290245460.36486@angie.orcam.me.uk/>.
-
-  Maciej
+linux-pcie-failed-link-retrain-get-speed-cap.diff
+Index: linux-macro/drivers/pci/quirks.c
+===================================================================
+--- linux-macro.orig/drivers/pci/quirks.c
++++ linux-macro/drivers/pci/quirks.c
+@@ -94,8 +94,8 @@ static bool pcie_lbms_seen(struct pci_de
+ int pcie_failed_link_retrain(struct pci_dev *dev)
+ {
+ 	u16 lnksta, lnkctl2, oldlnkctl2;
++	enum pci_bus_speed speed_cap;
+ 	int ret = -ENOTTY;
+-	u32 lnkcap;
+ 
+ 	if (!pci_is_pcie(dev) || !pcie_downstream_port(dev) ||
+ 	    !pcie_cap_has_lnkctl2(dev) || !dev->link_active_reporting)
+@@ -110,12 +110,12 @@ int pcie_failed_link_retrain(struct pci_
+ 			goto err;
+ 	}
+ 
++	speed_cap = pcie_get_speed_cap(dev);
+ 	pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &lnkctl2);
+-	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+ 	if ((lnkctl2 & PCI_EXP_LNKCTL2_TLS) == PCI_EXP_LNKCTL2_TLS_2_5GT &&
+-	    (lnkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
++	    speed_cap > PCIE_SPEED_2_5GT) {
+ 		pci_info(dev, "removing 2.5GT/s downstream link speed restriction\n");
+-		ret = pcie_set_target_speed(dev, PCIE_LNKCAP_SLS2SPEED(lnkcap), false);
++		ret = pcie_set_target_speed(dev, speed_cap, false);
+ 		if (ret)
+ 			goto err;
+ 	}
