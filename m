@@ -1,321 +1,260 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013034.outbound.protection.outlook.com [40.93.196.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E617F20298D
-	for <linux-pci@vger.kernel.org>; Mon,  8 Dec 2025 13:47:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765201661; cv=none; b=R96DVkUNHBG3a9gC5SXSVqz82kTbnyZPr1EGtxClUGmNRuOigTulHO4WENbjcsB717m/krLVWsMe08k5pQlwQgOehIO0Qx5wGMmLyimyHpUf8UhiXRxY9i/TA81RWNLF/dzyl4MX+JHZRznK6tWwXu9I9HFHTMDSgneza+CoSFM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765201661; c=relaxed/simple;
-	bh=w8gzdfx6JQvIZ0Oqn3q2Q4JHYq2E2fO6PxK6hIxg6+Q=;
-	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PNRr0jZ2L2p3JINkcQKnaYBqaj9mObOifXeWm9HhKOC787djAsP593GrxyBuiHc+bve6BOOBjcpi8IQc62sxmZFx2LAng7WDrs3ecXyO5dm946CUVRvVzwdlJAfBJI2hmNpfXYDE4wVCHURZla+tQ9jU85jDXuQ6Cw5bYV8z0rk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VTNhmPHs; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEBA22C08D4;
+	Mon,  8 Dec 2025 14:06:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.34
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1765202770; cv=fail; b=Mg+hlr7tCDGfxTIK2sJc0m55z+YbVyRiwR205+JD/+BuWstDJRNyr9n593WtpMJ4533FgXH1sG+FjKQjhDIA9FIWRlsTG1s8Sz1r8woImDI4YZqHoZPuJmNDK/oFXZmNwIjVnVGA78fCIMdwrhTnJoXdIzky3Yf83chBYF/61aE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1765202770; c=relaxed/simple;
+	bh=5wIujHsfVtUbEkv3fHQXvXhA9Nv3HPqPKmTKZxyDvOE=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=poQ5T3gTANEcfT0IQy/13diY8TwiGDDbmsUU4YCwcBx2S/VYUak+qPE7/0RPtJaLyVwPMjgx+/SBzgN+/RQNsV19vi4H7M1y3Z1edZ8aJ1wN6gKjjNfyRlT+UYG9hbN19jHKLpDw1b61Fb32QV9xpeWM+8Kp7wUjhxg6jLiXmAw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=FOrvqosZ; arc=fail smtp.client-ip=40.93.196.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VTNhmPHs"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-42e29739ff1so1840672f8f.1
-        for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2025 05:47:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765201658; x=1765806458; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:subject:cc:to:from:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=t6wU/Qh8pwHSSzJMjj4mzq4XUPkn0V1TiolBocJSBw4=;
-        b=VTNhmPHs9fBI+rVX2UI55JFR6oVa9sKZkxupxZOvu/Ogdrohfztc5fhZHdfor0d1Nt
-         oq+GVreeNbCERHFRiAaXG0yCmxPtNom46aniYhOKHzKnXGZhoxMsgjMFuslgLg2Woiag
-         S5yV6aK82KLeyVIqhR8BPBu4gVWTYUixXR7fc28VQS8+UdYhmdEWED7qY5EDNR1Y29V2
-         43rX2BMIP2Ugf5IbLFwQ8p3a0YQyB1+SUveC3DLh8EkOgCF7B+WD/Pwp/LX6UJMWcyaN
-         caQjBzbbYRhPOAE128ab7J9u1uBKRr8SIQ3Lq+gTpFNUDiF9G2izwmqA8FextAUP7hq0
-         2qOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765201658; x=1765806458;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:subject:cc:to:from:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=t6wU/Qh8pwHSSzJMjj4mzq4XUPkn0V1TiolBocJSBw4=;
-        b=TnFUYpjYXX4fpPz43haeDvO+wyl1I4YS0ZM5Nd6T/+9yRiFxsD9nPgV3cUI+eYbWIj
-         RcyT1mHNcuKuX6S/waFntwZrE6egYQpjdhQqhf/60wAuMOb9gUZlPTyRk/qT8YfOiD+x
-         +WjsMaMeXxWxMbVvc/kiESjte9/Dck+MXZggsTkJMXErZ1uhAYmVnVMfi8DhpARGB0Mc
-         2Srka1bSte8KGWYBJOQ1S3n8JTdFhOsRLC2aN8WOPlGSyOCFnS+gr1h1L7XVl6vjBpkx
-         pMOS+jcBgKi4nWs0ghL3OBOuihnctKZilr+chrmpt+nOjokAAcEHFbMwfdzsvZ4dWKa3
-         QZ+Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXRoNIjnz7o2R2NjKDQOgvwVMeRo+YYbBcWzKRGvdjecrfKs6WtVlNSzq+mvWeV2uwHQQosYGJ+DZA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw7ct9umWvEaY/wlJimjT57eHK/SVSk0k0RaTJR3rxxKQj0AeJY
-	nntdNPhlbi926boeiXcJmKm3a8mtw4hxwS/A8uN7WSkvREosI9UEbAUa
-X-Gm-Gg: ASbGncsdg9k2ZrYDstfjQczMZUDZgM1i6N5lUGhAziGewMkyPq9qh9gJwpa4pRWN67h
-	y79ebmKD0YGTiptP3YZKnLl6ZehRxwu67h9nEH/sy7rGpRi5Nmq5X34AdQSDi/RFXOd/isPG5oU
-	QfxMDy7B3rRsWMhISI+GE9Pg52/3uuhulTm/0f6YUvfz1Lp/lzG56Y/wjGiXCK79uka0juX3ueM
-	zdPHDm9ZLVnzgA46RVCp2q+luay0yEwNluZFgHVMk1jJVFGaHQjEKZUCp24hSdA2ezCEBuEUXTe
-	UPn+jA3y9m1TwCZUTaQTENG/Ly6VpYZBA41KhEERgg7E8LUd8sU3ByVor64OgDsDq2xs4duJXWB
-	avOUn+yIYoM43bwmg6tj7bBXXTyQuIFk36bfJsWZ17rm3mOaElejzU9BMmfxatuUGMMjJSqpjjz
-	C2XYvtJUFCZGxMtF7qH4jCyVTWD7ocug8vcs4Vq+4=
-X-Google-Smtp-Source: AGHT+IFj+2cOI4kjvHler5IESWTnnJEbnElZQx8nQOnGL3+h4sAa+Kibogq8Dpac3faT3gjHlpDegA==
-X-Received: by 2002:a05:6000:40dc:b0:429:a89d:ecef with SMTP id ffacd0b85a97d-42f78875bbamr18362849f8f.13.1765201657918;
-        Mon, 08 Dec 2025 05:47:37 -0800 (PST)
-Received: from Ansuel-XPS. (93-34-88-81.ip49.fastwebnet.it. [93.34.88.81])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7d22249esm25647216f8f.25.2025.12.08.05.47.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Dec 2025 05:47:37 -0800 (PST)
-Message-ID: <6936d6f9.5d0a0220.2a4b1f.ab28@mx.google.com>
-X-Google-Original-Message-ID: <aTbW9w11QYqIvStQ@Ansuel-XPS.>
-Date: Mon, 8 Dec 2025 14:47:35 +0100
-From: Christian Marangi <ansuelsmth@gmail.com>
-To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Magnus Damm <damm@igel.co.jp>, LKML <linux-kernel@vger.kernel.org>,
-	"Rob Herring (Arm)" <robh@kernel.org>, stable@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] resource: handle wrong resource_size value on zero
- start/end resource
-References: <20251207215359.28895-1-ansuelsmth@gmail.com>
- <9c126c75-1d50-6315-4a15-e58e1adf20e4@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="FOrvqosZ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Cy4QWKIXp83OnLpI5k7aiE6fsOMLg9KAqCWAL3zBlI7u0FyaqgYczlMb6qumTfdCHbOphZZasWqss/JPYPHf2I2q0S9EchNM5v5BT7TuOodTGQGooxywAe7mbQbolJ+Cz/wRNKjdzY1+MCvA9GayBnSY08b5Wo6eCCpWeCjlIrXyLEU+ZClTJd4As8bEtY1nZ1i9r536nraThXKaJWBBfHot6GThufJGf7hWFK+yIN/pL68ZDvQkb02ZIQSlwda7ZnXp5DTKOWn1Lr0nX+YuxQJwUGV+w0iuMZvRyVAAnXGQgwezg8KBSE9z1uv1I2hQANH+DoEJ6B/V7uEL/AmDHA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=aTQZ2xRSpBcuuVZApaEdkbm27CmJGDO007AndhgVigc=;
+ b=N5kDFdnOmX9WD8AjE4fhueClL1+UzYyKPQE09cDek7Y3POBMDeH+2CWQB5hFS9ekXbpPJQBDC3PVrUe7lg861iQd8U9aYVZx1r5qKxhYyqYkrEH7sm0XvmbQmO8rS2nEcS1S8/3q+HRgt512krW+vZQ1OxxjX8kO2oVLYjtzImvmU3nG6IdYPnbIOv8+vjyWSfivY1oe+K8cZGPaTWuwHs8gqKfepuLOh0+gRaSS8YYTYmePkPTYZgGyTc15FTmQEbPymYL7sHn7jyhrV6w3Gi8JrKaj/iV+w5qg5KGWbk5QcM3s5tS++9ZYtQOJm6oqZab43bgoHSvT9u9g3LwzBQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=aTQZ2xRSpBcuuVZApaEdkbm27CmJGDO007AndhgVigc=;
+ b=FOrvqosZ+wLje/7I5A2UP++grBkPGqeHDoupB6m4p09S/C2LDR3nidpepmrMrHeHBTbz+j/jQn3FdmspZwsG0+WufY68SaOmDVyXNXFX1C7EhsewDU+OwGRbZNEh45B9NyrfxiumR798rQxojy+OC4TgNX1CDh+nL+59Ntqw49o=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from DM6PR12MB4202.namprd12.prod.outlook.com (2603:10b6:5:219::22)
+ by DS7PR12MB6334.namprd12.prod.outlook.com (2603:10b6:8:95::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9388.14; Mon, 8 Dec
+ 2025 14:04:52 +0000
+Received: from DM6PR12MB4202.namprd12.prod.outlook.com
+ ([fe80::f943:600c:2558:af79]) by DM6PR12MB4202.namprd12.prod.outlook.com
+ ([fe80::f943:600c:2558:af79%5]) with mapi id 15.20.9388.013; Mon, 8 Dec 2025
+ 14:04:51 +0000
+Message-ID: <f45b11fc-270d-4047-8149-75081399b2ed@amd.com>
+Date: Mon, 8 Dec 2025 14:04:47 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/6] cxl: Initialization reworks in support Soft Reserve
+ Recovery and Accelerator Memory
+Content-Language: en-US
+To: dan.j.williams@intel.com, dave.jiang@intel.com
+Cc: linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Smita.KoralahalliChannabasappa@amd.com, alison.schofield@intel.com,
+ terry.bowman@amd.com, alejandro.lucero-palau@amd.com,
+ linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com,
+ Shiju Jose <shiju.jose@huawei.com>
+References: <20251204022136.2573521-1-dan.j.williams@intel.com>
+ <143deecb-aa53-42e6-b7eb-91fb392e7502@amd.com>
+ <69334c038705b_1b2e100b5@dwillia2-mobl4.notmuch>
+From: Alejandro Lucero Palau <alucerop@amd.com>
+In-Reply-To: <69334c038705b_1b2e100b5@dwillia2-mobl4.notmuch>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DUZPR01CA0027.eurprd01.prod.exchangelabs.com
+ (2603:10a6:10:46b::14) To DM6PR12MB4202.namprd12.prod.outlook.com
+ (2603:10b6:5:219::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9c126c75-1d50-6315-4a15-e58e1adf20e4@linux.intel.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR12MB4202:EE_|DS7PR12MB6334:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1327b76c-107f-4da3-00fe-08de3662c13f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?RzFiZ2RwSVl0a1YvQzlCNlloVUpJSFhBU3RDdlQ2L1VhZDFtL3k5K2VpRkJY?=
+ =?utf-8?B?VVlROHpmR2wxQ3Y3U0ZTbDN3azR1WVFBL3lkWnhwRGM1ZCt6K09JYzl1N2Nu?=
+ =?utf-8?B?MFYraWFHS2RwZDlxNWltT29teVBSVEMrTEI0cDR4b3cxNU9MSVdpSFNmaHRG?=
+ =?utf-8?B?dXNqbVYzZHRTaXFkMnRLRStGUEJDclF1NzIva1E1cVJXNVpqamhBQnQ5aUpj?=
+ =?utf-8?B?amhIZ0RmTDI3UytvZ3hBY0NjWkdqd0FJdVFGcFd3T2xlRG1kSmJQejlWQTg1?=
+ =?utf-8?B?MmRPeVpGUSttdWlDQTRnYlh3WlJjNVRKR0xVNU43ZmJ4NmN6RTdEb20rbFRU?=
+ =?utf-8?B?dkcyT0t4MGcwTzllRXJxbUVTUUNvdngxNHJ2MW51NkgvRmU1L0NHS2JHM0ZM?=
+ =?utf-8?B?QVFub25KM1FvVkN5WVFXQWo4U08wTU5JVmJqakdjZEJQcHdLdUl4TGMwbEoz?=
+ =?utf-8?B?ZGVwdjVhTXhQSlNPV09OVlFjUmxrbDQ1QTFXM3JwNHp4NUFCblE5WE54Y0Ry?=
+ =?utf-8?B?WmpYRTJ1clNidEsvby9vZXFBdjFxREhOYkpFWWFHN3l1K0tNNW5EbHU3dnBa?=
+ =?utf-8?B?dkxRY29FRUtvNi9CbHlVTUZsM0haWXJKT21sQWd6aXVFOUZHMkJTRHd1ZXRV?=
+ =?utf-8?B?blNDNjlVeWc3YlQ4dDM5TFFCTkFKRnRtUk5ENS9GN09VSEVtZ2FvR3pOem1z?=
+ =?utf-8?B?dXV1ZUZLV3hzQjB2cTVZTVRDUmZ4Y29YZUEwaGhSSm1Yc1dBaHJ4UGtFRXNM?=
+ =?utf-8?B?NUlsZVNRTDZQUzkxbnhCUzFhTENaZi8ydDdtSGdkL2d0VkVYR1VUUlcwMFZW?=
+ =?utf-8?B?bTZhblJjMm5mV2t1SEhiS1JqazdoaHhFdTZoNXZjWEIvWU1KV0VSZE9ILzFE?=
+ =?utf-8?B?dUd3RlRwR2g4NXZxam80TFZMWVRacFpsTjRLelN3M3E4VmFLYjZzSXFEdGRC?=
+ =?utf-8?B?eDkvaHdtNTRYMDdKbEZEb1Evc1l0SmRSVDNTUyt0c3VRZXBUNDlPY09UeWJY?=
+ =?utf-8?B?QTRqaGFYU2xsckRwZmtOUFoxU3psaU41UDlTcHBvU3VXWWVvMWZaSGpCVDFP?=
+ =?utf-8?B?bGswYWFOVTltZ0pMMm4waXVrYlYzbE9hbHlYQk5qZGNGbUpZYmhSS3JkVU01?=
+ =?utf-8?B?Qm01ZThFbzJZMDY1SlA0N2dxQ2tuVjZFNUo2TXVWS2xnOFlSTHhnY2dYNDFH?=
+ =?utf-8?B?QmZHSHNaWWdFaCs4Qll5NGVZTERCOE1ObjZhNk9QbCtlWUo3TVFqa2ZCTWFk?=
+ =?utf-8?B?QlBTVW9WWU9QK1l0TERBeXlzVmNyL0QxcWlWdkJZaE9DL21JeXh6WnY3SWVZ?=
+ =?utf-8?B?SXd3UW1NNWJROFpMenBqekRLVjEyZks0dnAyL21NYTJld0pUam5ic0ZyVHdD?=
+ =?utf-8?B?a25TMkFKL1NFWkxzV21KNi82Tlh6Uit2WWVQL1JjckIrdldMSGdXeG9ZTXk4?=
+ =?utf-8?B?ZitRM3FBY3BHUzlCNjhpOWcwWEF2amtWQnVaOVJ1cTlTaTkwL0paL2tndXhB?=
+ =?utf-8?B?SDBSeDYwUVdnRGZDUjRNQjRFZHBQSG1JUGlYVkVmV2VMV25hZDBUbDJKQm1S?=
+ =?utf-8?B?dnBGalZaNFF5TXdITSttRTJqNnp3TFc4R2F4R3FzSThyNkpHTU8zRXpta0pz?=
+ =?utf-8?B?MW1zTmdRZmRQQU1iU0RBNjlUWHN3ekM3V2hiZkxPTHVqUUUrY0NUL2I2eEsz?=
+ =?utf-8?B?aStXUUxwNG85RDhJNnFqTTBybFBEU3FseUs5Z2JNZHBaRkR6R1BjeStwMGtM?=
+ =?utf-8?B?ZmRTR2lqUkMxZFBuYkkrTGtqK3lFTUk3aUd6RDBHdjhUVlBMM0ZpN2xsOGRz?=
+ =?utf-8?B?TysvbUFjNm4xV0JUZFN3aDJtcjlISGxDc2NuQ3gwQ3JDRkNOZ2t1WGxJRXhp?=
+ =?utf-8?B?c3Z1bEt3Q2Q0SGRpcXg0a1lDeEhyZmZpelc0SmQvMytrQ0FRcjFCZG1hbmZh?=
+ =?utf-8?B?ZFkzbGozQnVpbGNtWGJDSlNkQTZsZ3BMaDdIV1EzcEs1WUhqcUlxTCtvMWNI?=
+ =?utf-8?B?QzJERzlQejJ3PT0=?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB4202.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?VWJsWWF0WW9rRlpBbGxGbytuS0JFbEo0RUk0VWZOWHozTE9BOHlQSXJ4WGFY?=
+ =?utf-8?B?YXRNalZVc2ZqQlZhelZJVjkyQU1ZSUlJWXlaRndVbjcwTmhxUFN6OUhhbnlr?=
+ =?utf-8?B?MUljWXdGUFFSTUtadUJ3ZExOLzFhQUk4bjdBcFNlWldNQ0RReVFmQUVBS0F4?=
+ =?utf-8?B?Q1dFV1F5bUpzSjdqT25BaEdjcDg0bDVmbTNWWnllOGxtZ094eXc4U1BMYVdB?=
+ =?utf-8?B?c0RBL1NXeFlNM05TM25xVG5TeTBkclV0OVc0Mmk0MHFUbFlWQXlNT1VqZStC?=
+ =?utf-8?B?V3o5ejRIbGkybkwzcGFuSXQrdkVmWnZ4eXRsaERxYm1FVStja3JVQllkVVpD?=
+ =?utf-8?B?dm5UMFVpTytGbmVlY1JPUVprUmxSRFBSSDVjWkRGcVdpdExBUUJKSjZuT0Jv?=
+ =?utf-8?B?Z0xiYkhpYU1ENmxPZDdiNUpvVkc0VTFWVmVhbEowRzBWRG5ucUVNVERmUDVD?=
+ =?utf-8?B?K1pRaTBvRVJqSHFhbWRKNG5CcXJva3JkaVBUdVhHMzRja2kzQmNQREpoYWww?=
+ =?utf-8?B?aUNYaVY0NWJhd1o0aFAzLzdOVitzWFRaZi8wVEdnYnEzZU5xZmlrVVdhMkE2?=
+ =?utf-8?B?V0FXNkZtbUNZdjVqcFN0ODJySGRxSE1Ca2RPWlZkMUF0RGxKTXhmYmhqekd1?=
+ =?utf-8?B?alAvSzhtenNONlR4WExab0ZtMGNOZ3pRQkZONkpwZ2NqbDd6UEtWdmtsbnBF?=
+ =?utf-8?B?ZGlUcGpSaFQ2MXhvcExGVVpsbXBzU1FLektRZ0lkVndJQXdtbVovQnVPemhL?=
+ =?utf-8?B?OGtqSldpMjFmUUVyaWlpV1gzZVY2UU5mSHBPZk5KaE1OalhsSjFtcllmYUJs?=
+ =?utf-8?B?cGpSRjAzUkxkM0NGZkNyTk5QVHdVOGczSTgxeHZTdWFmci9KeGxxSTduYU9s?=
+ =?utf-8?B?NWhzb1lmdXhHeWxRMnEwLzhiOExKdjlWQklOVUdvcUUyQllZQW5EK1g3V2Mv?=
+ =?utf-8?B?b2plWXpXQ2Z3NWFNRXRzdThqaldFTTN6d2oyN0g5NFlKK3V3cy82UDBlVUZU?=
+ =?utf-8?B?VzRJVi91OFo0WERTNTdDdW02cUdreGg3NDVhRG84Qmt6ZEo1cGsvdDkwQ1h6?=
+ =?utf-8?B?MEVHNURINW8wQmg4aHJ2QU9VdEVWMXFaNm9HWnYyVUFiQyttUGxyWEVkNzNG?=
+ =?utf-8?B?blM1MVlUOS9pV2Z2QysvUmxUdzFzYitQc2hTOG5PeldVZGdOVXhTL0RjR3Mx?=
+ =?utf-8?B?QmxkdTFmbW9rdzFNSzR1R1duMEhIekliMjIra3YrZEtWMFVxd1RVVERsRGFt?=
+ =?utf-8?B?Zy9XNW9zUndVcDg4cVR5RHl4bXk1TDRpTHYycnYvVlhSNWFObEwzeGg2UjV0?=
+ =?utf-8?B?ZWo4eENDSld6NndjRHd6QUdqV3p5bVcwZmU2THd4aTlhbE43WjNMdDJLZ2Ex?=
+ =?utf-8?B?VWdkdlovc1NTMks1ZGdmWk95MzJnVHMyajhOOFp6ZDBaUkx0cTM1ekJaQkt1?=
+ =?utf-8?B?RUZmV2YrejFKT3NJd1d4Rk9aU0xQK2pxb0FROW5ZWlMzY3RBeHlrNG9zemFk?=
+ =?utf-8?B?QU5vM1YzdDkwMEhlWER5ZnlIbjFtMVlwa2tkS1k5TDhXYlZKc1Bud3dBck80?=
+ =?utf-8?B?UDNHMmFYVWN0cUZ0bnAzcVpTWDRZbjdNdUQvcUtraHQwNUZubHZZYVlnKzRR?=
+ =?utf-8?B?SVJ0YzNuYVpxTjl5L0RscWt0ZkltbHRuemVkcEE2WXJlR0x5dTBMb3hVOVYw?=
+ =?utf-8?B?a3FvZWVOUUxYTnVuaTlvYmltTmRtOW5WRjBFR016a3RJbXR2TGxoUEkzNXd4?=
+ =?utf-8?B?a0Z4N3EvTWtuVTQ1Y3hXRmtXdWxYdFhKVUF0dnVEWWh4RHgyMkVsck85OE1P?=
+ =?utf-8?B?bkFxWWtLTUVNeFhUTkV4UGxCS2E5bDdZczhGdVI4MUZSWEErWVl6YmVIb1Bn?=
+ =?utf-8?B?UnlPRFFpUDVVWHZkRFVlQWFOU1dYVDRBc0RFK0kvVWw0TnF3bFY3WS9rWVNx?=
+ =?utf-8?B?MkdZcFFEamlOcEFOeDRIbUFuMmxuV1VXVVFpQjhzN09ha2t5b2hvekpVMTc1?=
+ =?utf-8?B?aWtveXV5QTlsMS9JMkkwbmpWVDc5ZUpsYlZVQnVveDVscUZDZFpWK3VSYTRS?=
+ =?utf-8?B?UzhiYVlMeXRyekoxa2pEaVNyVnA3L29QZFlDL2NRSDVxa3l6Skx5dVY0c3BM?=
+ =?utf-8?Q?PsHyOhWn/ceXoPKyLNmzEKlWu?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1327b76c-107f-4da3-00fe-08de3662c13f
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB4202.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Dec 2025 14:04:51.1830
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: mxeZcw3yolGQpCH2UOWsLvIfVLXBGzMvDmnBXJtj65fVc+jX8cdQXSeplDI7JxGAspXrvUVv9rn/fUxNp1pZCg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6334
 
-On Mon, Dec 08, 2025 at 03:29:01PM +0200, Ilpo Järvinen wrote:
-> On Sun, 7 Dec 2025, Christian Marangi wrote:
-> 
-> > Commit 900730dc4705 ("wifi: ath: Use
-> > of_reserved_mem_region_to_resource() for "memory-region"") uncovered a
-> > massive problem with the usage of resource_size() helper.
-> > 
-> > The reported commit caused a regression with ath11k WiFi firmware
-> > loading and the change was just a simple replacement of duplicate code
-> > with a new helper of_reserved_mem_region_to_resource().
-> > 
-> > On reworking this, in the commit also a check for the presence of the
-> > node was replaced with resource_size(&res). This was done following the
-> > logic that if the node wasn't present then it's expected that also the
-> > resource_size is zero, mimicking the same if-else logic.
-> 
-> So what's the actual resource that causes this ath11 regression? You seem 
-> possess that knowledge as you knew to create this patch.
+
+On 12/5/25 21:17, dan.j.williams@intel.com wrote:
+> Alejandro Lucero Palau wrote:
+> [..]
+>>> For "Accelerator Memory", the driver is not cxl_pci, but any potential
+>>> PCI driver that wants to use the devm_cxl_add_memdev() ABI to attach to
+>>> the CXL memory domain. Those drivers want to know if the CXL link is
+>>> live end-to-end (from endpoint, through switches, to the host bridge)
+>>> and CXL memory operations are enabled. If not, a CXL accelerator may be
+>>> able to fall back to PCI-only operation. Similar to the "Soft Reserve
+>>> Memory" it needs to know that the CXL subsystem had a chance to probe
+>>> the ancestor topology of the device and let that driver make a
+>>> synchronous decision about CXL operation.
+>>
+>> IMO, this is not the problem with accelerators, because this can not be
+>> dynamically done, or not easily.
+> Hmm, what do you mean can not be dynamically done? The observation is
+> that a CXL card and its driver have no idea if the card is going to be
+> plugged into a PCIe only slot.
+
+
+Right.
+
+
 >
+> At runtime the driver only finds out the CXL is not there from the
+> result of devm_cxl_add_memdev().
 
-I'm not gatekeeping the information. Just trying to get involved as much
-people as possible in checking this.
 
-This helper is used in generic OF and PCI code and since there is the
-combo 2008 code + no comments, then it's sensible to make sure no
-confusion was applied across the year.
+If there is no CXL properly initialized, what also implies a PCI-only 
+slot, the driver can know looking at the CXL.mem and CXL.cache status in 
+the CXL control register. That is what sfc driver does now using Terry's 
+patchset instead of only checking CXL DVSEC and trying further CXL 
+initialization using the CXL core API for Type2. Neither call to create 
+cxl dev state nor memdev is needed to figure out. Of course, those calls 
+can point to another kind of problem, but the driver can find out 
+without using them.
 
-> of_reserved_mem_region_to_resource() does use resource_set_range() so how 
-> did the end address become 0? Is there perhaps some other bug being 
-> covered up with this patch to resource_size()?
-> 
 
-This IS EXACTLY the problem HERE. There is the assumption that
-resource_size() MUST be used ALWAYS after a resource struct is used.
+>> The HW will support CXL or PCI, and if
+>> CXL mem is not enabled by the firmware, likely due to a
+>> negotiation/linking problem, the driver can keep going with CXL.io.
+> Right, I think we are in violent agreement.
+>
+>> Of course, this is from my experience with sfc driver/hardware. Note
+>> sfc driver added the check for CXL availability based on Terry's v13.
+> Note that Terry's check for CXL availabilty is purely a hardware
+> detection, there are still software reasons why cxl_acpi and cxl_mem
+> can prevent devm_cxl_add_memdev() success.
+>
+>> But this is useful for solving the problem of module removal which can
+>> leave the type2 driver without the base for doing any unwinding. Once a
+>> type2 uses code from those other cxl modules explicitly, the problem is
+>> avoided. You seem to have forgotten about this problem, what I think it
+>> is worth to describe.
+> What problem exactly? If it needs to be captured in these changelogs or
+> code comments, let me know.
 
-But this is not alywas the case... nothing stops to call resource_size()
-on a a local
 
-struct resource res = {}
+It is a surprise you not remembering this ...
 
-and assume resource_size() returning 0 (as struct resource is all zero
-and assuming logically the size to be zero) (this assumption has been
-already proved to be wrong by the previous message but it's very common
-to assume that an helper called on an all zero struct returns 0 if the
-subject is about size or range of address)
 
-> > This was also the reason the regression was mostly hard to catch at
-> > first sight as the rework is correctly done given the assumption on the
-> > used helpers.
-> > 
-> > BUT this is actually not the case. On further inspection on
-> > resource_size() it was found that it NEVER actually returns 0.
-> >
-> > Even if the resource value of start and end are 0, the return value of
-> > resource_size() will ALWAYS be 1, resulting in the broken if-else
-> > condition ALWAYS going in the first if condition.
-> > 
-> > This was simply confirmed by reading the resource_size() logic:
-> > 
-> > 	return res->end - res->start + 1;
-> 
-> ???
-> 
-> resource_size() does return 0 when ->start = 0 and ->end = - 1 which is 
-> the correctly setup of a zero-sized resource (when flags are non-zero).
-> 
+v17 tried to fix this problem which was pointed out in v16 by you in 
+several patches.
 
-Again IF the resource struct is correctly init, in the case of
-kmalloc-ed stuff or local variables init to zero, then you quickly
-trigger the bug as both start and end will be zero.
 
-Also I honestly found some difficulties finding where end is set to -1.
+v17:
 
-I actually found case in OF code where both start and end are set to -1
-resulting.
+https://lore.kernel.org/linux-cxl/6887b72724173_11968100cb@dwillia2-mobl4.notmuch/
 
-Can you point me where is this init code?
 
-> > Given the confusion,
-> 
-> There's lots of resource setup code which does set resource end address 
-> properly by applying -1 to it.
-> 
-> > also other case of such usage were searched in the
-> > kernel and with great suprise it seems LOTS of place assume
-> > resource_size() should return zero in the context of the resource start
-> > and end set to 0.
-> >
-> > Quoting for example comments in drivers/vfio/pci/vfio_pci_core.c:
-> > 
-> > 		/*
-> > 		 * The PCI core shouldn't set up a resource with a
-> > 		 * type but zero size. But there may be bugs that
-> > 		 * cause us to do that.
-> > 		 */
-> > 		if (!resource_size(res))
-> > 			goto no_mmap;
-> 
-> This place does not tell you what ->end is expected to be set? Where did 
-> you infer that information?
-> 
-> I suspect this code would want to do resource_is_assigned() (which doesn't 
-> exists yet but would check only res->parent != NULL) or base the check on 
-> IORESOURCE_UNSET|IORESOURCE_DISABLED.
-> 
-> Often using resourse_size() (or a few other address based checks) in 
-> drivers is misguided, what drivers are more interested in is if the 
-> resource is valid and/or properly in the resource tree (assigned by 
-> the PCI core which implies it's valid too and has a non-zero size), not so 
-> much about it's size. As you can see, size itself not even used here at 
-> all, that is, this place never was interested in size but uses it as a 
-> proxy for something else (like also many other drivers do)!
-> 
+Next my reply to another comment from you trying to clarify/enumerate 
+different problems which were getting intertwined creating confusion (at 
+least to me). Sadly none did comment further, likely none read my 
+explanation ... even if I asked for it with another email and 
+specifically in one community meeting:
 
-Yes I agree that resource_size() is not the correct way to check if a
-resource is valid but it seems to be used for this task in some code.
+https://lore.kernel.org/linux-cxl/836d06d6-a36f-4ba3-b7c9-ba8687ba2190@amd.com/
 
-> > It really seems resource_size() was tought with the assumption that
-> > resource struct was always correctly initialized before calling it and
-> > never set to zero.
-> > 
-> > But across the year this got lost and now there are lots of driver that
-> > assume resource_size() returns 0 if start and end are also 0.
-> 
-> Who creates such resources?
-> 
 
-It's more a matter of using resource_size() in place where struct
-resource is optionally used. 
+Next discussion about trying to solve the modules removal adding a 
+callback by the driver which you did not like:
 
-> If flags are non-zero, those places should be fixed (I'm currently fixing 
-> one case from drivers/pci/probe.c thanks to you bringing this up :-)) but 
-> I think the number of places to fix are fewer than you seem to think. I 
-> read though all end assignments in PCI core and found only this single(!) 
-> problem there.
-> 
+https://lore.kernel.org/linux-cxl/6892325deccdb_55f09100fb@dwillia2-xfh.jf.intel.com.notmuch/
 
-Thanks a lot for checking the PCI code, that is one of my concern
-subsystem where this might be problematic. The other is the OF code.
 
-> > To better handle this and make resource_size() returns correct value in
-> > such case, add a simple check and return 0 if both resource start and
-> > resource end are zero.
-> >
-> > Cc: Rob Herring (Arm) <robh@kernel.org>
-> > Cc: stable@vger.kernel.org
-> > Fixes: 1a4e564b7db9 ("resource: add resource_size()")
-> > Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
-> > ---
-> >  include/linux/ioport.h | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> > index 9afa30f9346f..1b8ce62255db 100644
-> > --- a/include/linux/ioport.h
-> > +++ b/include/linux/ioport.h
-> > @@ -288,6 +288,9 @@ static inline void resource_set_range(struct resource *res,
-> >  
-> >  static inline resource_size_t resource_size(const struct resource *res)
-> >  {
-> > +	if (!res->start && !res->end)
-> > +		return 0;
-> 
-> This looks wrong to me.
-> 
+Here, v16, you stated specifically about cxl kernel modules removed 
+while a Type2 driver is using cxl:
 
-Yes it's indded wrong as I didn't think of case where start and end can
-match and correctly return a size of 1.
+https://lore.kernel.org/linux-cxl/682e2a0b9b15b_1626e10088@dwillia2-xfh.jf.intel.com.notmuch/
 
-> Lets try to fix the resource setup side instead. The real problem is in 
-> any code that sets ->end to zero when it wanted to set resource size to 
-> zero, which are not the same thing. To make it simpler (no need to 
-> manually apply -1 to the end address) and less error prone, we have 
-> helpers resource_set_range/size() and DEFINE_RES() that handle applying -1 
-> correctly.
-> 
+https://lore.kernel.org/linux-cxl/682e300371a0_1626e1003@dwillia2-xfh.jf.intel.com.notmuch/
 
-OK! Thanks for the pointer so there is a DEFINE_RES() for local
-variables!
+https://lore.kernel.org/linux-cxl/682e3f3343977_1626e100b0@dwillia2-xfh.jf.intel.com.notmuch/
 
-> > +
-> >  	return res->end - res->start + 1;
-> >  }
-> >  static inline unsigned long resource_type(const struct resource *res)
-> 
-> 
-> Taking this suggestion from your other email:
-> 
-> > if (!res.flags && !res.start && !res.end)
-> > 	return 0;
-> 
-> IMO, the caller shouldn't be calling resource_size() at all when 
-> !res.flags as that indicates the caller is confused and doesn't really 
-> know what it is even checking for. If a driver does even know if the 
-> resource is valid (has a valid type) or not, it should be checking that 
-> _first_ (it might needs the size for valid resources but it should IMO 
-> still check validity of the resource first).
-> 
-> Also, as mentioned above, some/many drivers are not fundamentally 
-> interested in validity itself but whether the resource is assigned to the 
-> resource tree.
-> 
-> For valid resources, this extra check is entirely unnecessary.
-> 
-> I'd be supportive of adding
-> 
-> WARN_ON_ONCE(!res.flags)
-> 
-> ...here but that will be likely a bit too noisy without first auditting 
-> many places (from stable people's perspective a triggering WARN_ON() => 
-> DoS). But that's IMO the direction kernel code should be heading.
-> 
 
-I'm more than happy to send a v2 of this fixing ath11k and adding the
-WARN_ON_ONCE with res.flags.
-
-Seems the only correct way to track this down and improve this in the
-next kernel versions.
-
-Also thanks to Andy and you for explaining this and reasurme me there
-wasn't a big bug around this helper but just some minor logical
-confusion.
-
-Do you agree on the plan for v2? (we can assume the noise won't be so
-much as I expect only SOME driver to be affected by this problem) (I
-hope)
-
-> -- 
->  i.
-> 
-
--- 
-	Ansuel
