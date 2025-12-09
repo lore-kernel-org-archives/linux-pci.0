@@ -1,106 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A4492116E0;
-	Tue,  9 Dec 2025 00:30:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1FE123314B
+	for <linux-pci@vger.kernel.org>; Tue,  9 Dec 2025 01:09:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765240205; cv=none; b=aIP6tKdDVjeNcjn8ODzguVIzrgT046auoLYqlvr2vI6Sdxj72dveTYXe74RXE+Bi9w4AfhyCf0gb2RMqV6qCAHzCzDOpyXrC9A1U6RVcqLRHRgjPAihJA0I1pr2G/VCItCZYENqJtA70wbzMU/OJQmCVFd6/bF24CsDnRfsJA8k=
+	t=1765242594; cv=none; b=sL0leL6bsPPQErqi/VyKZEb2hIhIRzclqgr0pf/Uq/HQfBpm9gj49uf8lZzD88P+4x0QXegxU3RaUNvHjMEP5B22W+BCojI0JrKZTWHH/gHVyfiWzHnpdio+6vmt5mEcSfxV/+p/avZBVseMBYfTYfICXDlsPgfopDVS4/pyoy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765240205; c=relaxed/simple;
-	bh=uIOnczQcgxSPWkCuGxpR2EJBZFJat5++OZeHgYLg25c=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ViFtH0QcKiKNQ3kXCI5prjwK3sZxwnr1HKcqS0TaLfrE7dy1owT+2Vz7HfzsFiR9pY5cbYiXYUrjlpiyUCj9DXkDoazsLsrn4WRz/qlYiwegQyNo9wG3IQjwDpyUx76Xm/evjiBxyxp5u4NaChkLbo3QnxGxxt5gkAK6p1G0tu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lvAsh6JU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765242594; c=relaxed/simple;
+	bh=mEsBT/pLTbTyK3CEgFpn4Sf1V+J+71IdtUhL88rzZE4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BmyxdWXCN9soMmVFJwwob29Ucpyr/WXeEr+gbeDpDbST4tlzVUmCxtMPSgzRFz8hFHdVo/hNcDlqyFfKIipgL27gdS5Wj9isEYs7qbEoZ5/xrZAEiskILUA8XlRa6YPjiRlrAaRdKym3r4aeb6k3pFmJAzYXqutY2N3PevccLZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UBvifLej; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lvAsh6JU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04C65C4CEF1;
-	Tue,  9 Dec 2025 00:30:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765240205;
-	bh=uIOnczQcgxSPWkCuGxpR2EJBZFJat5++OZeHgYLg25c=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=lvAsh6JUxWIoQPIZ4dUQxqBgSVCiADgkM2sGNAy8vgwUoo6j2yIjRtXJ5lAieGs2G
-	 sQoSlAgSbjg2at6jWPazX24oAXLxfK62aYGT5YHhiBvCK31tL5si1+9AicHzL5g6ST
-	 3Sh3p+WMGt0nxXCezY2tKk4yA+QQ2R/VtMWFp0Hhxl9K+37tv61/Y5Cr+HM6MKK3zP
-	 Fwj4/sEkGKTe74+w3F7jGAGbgwta73pT0tT6DneccMu86Idrog/O2Pj91cS3428iNb
-	 aODwIDk05Fy63EpGvtmJIdut1kUUwnCGjb3mG9+9Ok4wUx88sFC/43+8vH8iDgEoUU
-	 Z2+5n2F0H50qg==
-Date: Mon, 8 Dec 2025 18:30:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Darshit Shah <darnshah@amazon.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Jonathan Cameron <Jonthan.Cameron@huawei.com>, darnir@gnu.org,
-	Feng Tang <feng.tang@linux.alibaba.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, nh-open-source@amazon.com
-Subject: Re: [PATCH] drivers/pci: Allow attaching AER to non-RP devices that
- support MSI
-Message-ID: <20251209003003.GA3436550@bhelgaas>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UBvifLej"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-297f6ccc890so8025625ad.2
+        for <linux-pci@vger.kernel.org>; Mon, 08 Dec 2025 17:09:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1765242592; x=1765847392; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mEsBT/pLTbTyK3CEgFpn4Sf1V+J+71IdtUhL88rzZE4=;
+        b=UBvifLejNNaz0+hjEWIBt1RpfkkU+B9kkaF3mqgLHbFYIdlb++9igJuSDeCNVO7BFw
+         CcikptyBHu+CdHcH4gEFuTC3d2EOFja8EjA1DR7DbbrEKLeHr1yf/hhsx3HgtyHJu91b
+         O6HOuSFNzKVACPf7/tSf/4WP8HcI7MXvEB9noe7R2xgr3DwuPiY80OqWy7qYMavbBXKI
+         BR/AWfR6kYwpZmOVm4Xh4BSPhHD7lRHi2XgbMb7KCSEmVY928Ui66ya80C+rGlLTTBUr
+         M7U7l176fDbPQCM6vCMS7t6j/mRBivMeqAUX4qXuM1d+tZN0UoBzIF1wXauhx2ME3At2
+         vHQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765242592; x=1765847392;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=mEsBT/pLTbTyK3CEgFpn4Sf1V+J+71IdtUhL88rzZE4=;
+        b=R/NHjYxcolpyRh3qqaHxKZt42BvcGJiVu5FXBrUcABvRAUmmmA30X13rqIi3Cs3Poo
+         9fe+iKLJfux2G8Q1nOX3IIVoR12yoP/OlQpjfSJ60s3YVQeJQigCxZFuyNGWYxGm+uNx
+         pzuZiCM32XM9chge8FNZK3F0M+2K2HXS7PdFpf7pdo9AJ4ORAxUwK2M53kuH3jMmRMcl
+         9eUT+Hbe8ICJDAcZamTT3x3w0SVm0c6/tRw+LHRvdSds0alzzmFZ29Qp+TIugp9KutMZ
+         SsZDJA/Y0yij7QZzj9EVrWHe03RsN3rZlZT/+1t5bR7EemO8tg/gQNfGOaWwKXmRmpBz
+         2HxQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU+ZM6YszajCSXetGY5RZhNi0z/JB8ddXIRP5bNxZGp82FrRK/d4NfHGe+lnZIHvaz3IKg0mD0WK7c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzTFL50wFfGI17Xp62tyng1eeqEhhSipR9JnI/CmRMPPzRL7+u5
+	YlINQ1xed0p7QV6Kuxz5COQHDu4U2iOuK7RnBC3cjSW8lSZhmUi+xP37ig0sLCnvYMd3f6KmOZf
+	mB6EMqfQXJFrGc7RgcYNPQFbVMiXtRZDWwQ==
+X-Gm-Gg: ASbGncsHCxIEG2s4Bp0oyJvgZ5ETONNpauO9daXI1GDIsODpaGMWnD/dWwoVyBvYoiV
+	aZz4aKeZjaetcmO3Jienp9tqo4iu4TCdftRKBnSvKt3voj7ME3W0MegzK2yXAMQKPbtcAEEED3E
+	sDAOGwLnvbasOSD9b1XsRohFik+4KSQ+OQuR+528cvY1C8r7LArs6p0jm3YizQov9loUbuUvpBt
+	GZdYsYxzYVU5JfdBw96RRi9LgvaRMCqPmIRYNfGyE3AeBnYsRpa06PXHRZMYaJFlKmQYIGz8xb3
+	31IVvSXkJNBDo+71IRbdElM3CI77cgZg/Yo4trEG0X9OxYua2wsIBZzZ3ZxGzEd8BYlCWc4j9h2
+	hRxVy8TpkvPUK
+X-Google-Smtp-Source: AGHT+IEJL3H2CdkWL4QxEIdsfYYJgp/HlFqFDJUUsqk1LlVkWGajJj3NrPDAOyq+1dE7luFLpJ2g4+mrjjdZg1vzVG8=
+X-Received: by 2002:a05:7300:bc0e:b0:2ab:ca55:b76a with SMTP id
+ 5a478bee46e88-2abca55b82amr3434532eec.5.1765242591987; Mon, 08 Dec 2025
+ 17:09:51 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251128122053.35909-1-darnshah@amazon.de>
+References: <20251206124208.305963-1-zhiw@nvidia.com> <20251206124208.305963-2-zhiw@nvidia.com>
+ <ca549425-e10b-4d54-aebe-278d90c8cb92@gmail.com>
+In-Reply-To: <ca549425-e10b-4d54-aebe-278d90c8cb92@gmail.com>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Tue, 9 Dec 2025 02:09:38 +0100
+X-Gm-Features: AQt7F2pwYK4ZIpAGJ2cuBoFunByDKO5gKUgFer_xOdKdqv7XdaFLaTqM1T-H2w8
+Message-ID: <CANiq72mkPMwb=3P_-fjObUC8NmY_6pzK5cn41RRwa2zJCazuPA@mail.gmail.com>
+Subject: Re: [RFC 1/7] rust: pci: expose sriov_get_totalvfs() helper
+To: Dirk Behme <dirk.behme@gmail.com>
+Cc: Zhi Wang <zhiw@nvidia.com>, rust-for-linux@vger.kernel.org, 
+	linux-pci@vger.kernel.org, nouveau@lists.freedesktop.org, 
+	linux-kernel@vger.kernel.org, airlied@gmail.com, dakr@kernel.org, 
+	aliceryhl@google.com, bhelgaas@google.com, kwilczynski@kernel.org, 
+	ojeda@kernel.org, alex.gaynor@gmail.com, boqun.feng@gmail.com, 
+	gary@garyguo.net, bjorn3_gh@protonmail.com, lossin@kernel.org, 
+	a.hindborg@kernel.org, tmgross@umich.edu, markus.probst@posteo.de, 
+	helgaas@kernel.org, cjia@nvidia.com, alex@shazbot.org, smitra@nvidia.com, 
+	ankita@nvidia.com, aniketa@nvidia.com, kwankhede@nvidia.com, 
+	targupta@nvidia.com, acourbot@nvidia.com, joelagnelf@nvidia.com, 
+	jhubbard@nvidia.com, zhiwang@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 28, 2025 at 12:20:53PM +0000, Darshit Shah wrote:
-> Previously portdrv tried to prevent non-Root Port (RP) and non-Root
-> Complex Event Collector (RCEC) devices from enabling AER capability.
-> This was done because some switches enable AER but do not support MSI.
-> Hence, trying to initialize the AER IRQ for such devices would fail and
-> Linux would fail to claim the switch port entirely.
+On Sun, Dec 7, 2025 at 9:52=E2=80=AFAM Dirk Behme <dirk.behme@gmail.com> wr=
+ote:
+>
+> What's about to do something similar here (and in the 2/7 patch as well)?
 
-The d8d2b65a940b commit log could have been clearer.
+In general, using early returns (especially for error and `None`
+cases), i.e. keeping the happy path as the unindented/main one,
+matches better the usual kernel style.
 
-Some switches advertise an AER capability, but they can't generate AER
-interrupts, regardless of whether they support MSI.  Only RPs and
-RCECs can generate AER interrupts.
+Whether that is with a simple `if` or `let ... else` etc. it depends
+on the case, of course.
 
-> However, it is possible to have switches upstream of an endpoint that
-> support MSI and AER. Without AER capability being enabled on such
-> a switch, portdrv will refuse to enable the DPC capability as well,
-> preventing a PCIe error on an endpoint from being handled by the switch.
-> 
-> Allow enabling the AER service on non-RP, non-RCEC devices if they still
-> support both AER and MSI. This allows switches upstream of an endpoint
-> to generate and handle DPC events.
-> Fixes: d8d2b65a940b ("PCI/portdrv: Allow AER service only for Root Ports & RCECs")
-> Signed-off-by: Darshit Shah <darnshah@amazon.de>
-> ---
->  drivers/pci/pcie/portdrv.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index d1b68c18444f..41326bbcd295 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -237,8 +237,8 @@ static int get_port_device_capability(struct pci_dev *dev)
->  	}
->  
->  #ifdef CONFIG_PCIEAER
-> -	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> -             pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
-> +	if ((dev->msi_cap || pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> +	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
->  	    dev->aer_cap && pci_aer_available() &&
->  	    (pcie_ports_native || host->native_aer))
->  		services |= PCIE_PORT_SERVICE_AER;
-> -- 
-> 2.47.3
-> 
-> 
-> 
-> 
-> Amazon Web Services Development Center Germany GmbH
-> Tamara-Danz-Str. 13
-> 10243 Berlin
-> Geschaeftsfuehrung: Christian Schlaeger, Christof Hellmis
-> Eingetragen am Amtsgericht Charlottenburg unter HRB 257764 B
-> Sitz: Berlin
-> Ust-ID: DE 365 538 597
-> 
+Cheers,
+Miguel
