@@ -1,492 +1,303 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 651BF2F6921;
-	Wed, 10 Dec 2025 13:28:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 062451A2C11;
+	Wed, 10 Dec 2025 13:29:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765373335; cv=none; b=BnCGEFwlkhxwzpnWNhq8viYq0eFoMqEFCnr+wz7N9/EvzSKBpjsCAZgdKyfCDx9WpHtTavm8ZR8QEygvzDAzjMY7VEUUCYQVol/FCnrCAV/0okIkEPahKnZFm5QzudPQuyaHnkbtPP4oRW9LoRhb9O81Fotunj1KH3Inxt2cFjE=
+	t=1765373362; cv=none; b=GNCMij42L/+0/v8/7Up3ShnlgPFvh12yepKeDGASRdxmduQo+vuPdgrNE3XKwkejm6qCNWEOrbBX7zxP4msUM7F+4i0bG5IB+U1UQ9vA2R8fRIRQlzCV+RavuzmhOdrcKfzNhslsXaWVihVyLkeXl0IKAKpWAKAxxUNRguzui0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765373335; c=relaxed/simple;
-	bh=P2KiuDfTJZyyeegmlMu/tzLjG7kjB+eVL46tLpx8yhM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZEZmOK9On/gbVOWST7yNcEfumkrcxonM0Fi7SxlEu0H1kaVtDiDP0NTslocS1/2A99Yh502OaN/Zl1Vd2aJHbd/vOBxF8Ol21REfZsDybYgMNoraZYrVgBeWBbNH0hQ7tyg+eBiUOaDczBxDpRLzjA9MEdxYNeGLZ9Axa3TupTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k1jSLUNF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765373362; c=relaxed/simple;
+	bh=MwiXQLIcWrbLj8E9P+0B8xrrHKBjCjA6bzzE3QNHmC8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nUuhVy638qd4vphu1xJCqt3LQWFEYrht3U52k3CP9b/fQh2G08Y37Ztp39j97zYlN0W2spTHSEgwKhuzJLH6yqXz5S+sx9jZgflzgUfWb6ibjfz5EZSSBHBmNtkfZCVmxrtP/qG23m1qlSJazG/OadzYir4nTsCekr7jbwImbUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=cmy3VXSo; arc=none smtp.client-ip=115.124.30.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k1jSLUNF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DC75C4CEF1;
-	Wed, 10 Dec 2025 13:28:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765373334;
-	bh=P2KiuDfTJZyyeegmlMu/tzLjG7kjB+eVL46tLpx8yhM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=k1jSLUNFqDGq8Dh39OkfITvP40vSy5t+L4MjvHcfGTfv67niJKOgvKoEKpT4y3jxu
-	 0gzFfa66WC9ewVX0GCPoAv8+JtcmjFX2ZmZsHad+RqN1BMNXaNq+YLS8thVwR9/glr
-	 Jjmeb65xlh1aLMw81+u5VkobSnsvwXyyavLtyIZSzp9e7alnCUnGSQSXjU7qeMOjL5
-	 X78E2VWAVCVEgfTcldZJZhIJXYScrnZLutUz9R5FMiCIrB1ocVA+gteXksdmb3LNub
-	 C7/Hznz/kiTT6emIIDTRoHUqIyLOzNlkvRYzTEEmVsF8QWTY2kg8h6gRcA+2BKscPc
-	 Bwty7JGYiSHFw==
-Date: Wed, 10 Dec 2025 22:28:51 +0900
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Verma, Devendra" <Devendra.Verma@amd.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"vkoul@kernel.org" <vkoul@kernel.org>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"Simek, Michal" <michal.simek@amd.com>
-Subject: Re: [PATCH RESEND v6 2/2] dmaengine: dw-edma: Add non-LL mode
-Message-ID: <sshal25ch5pipzodbamg7h6k6scfzzsxnkox3dd5t6lvkrjis6@gmb55objtlgw>
-References: <20251121113455.4029-1-devendra.verma@amd.com>
- <20251121113455.4029-3-devendra.verma@amd.com>
- <pcyikziojphmgcyeicjegmbpdpktsay5n5q3xvsexifziesxmx@wpcdf77lowo4>
- <SA1PR12MB8120143580059C4AEDA50CD395A0A@SA1PR12MB8120.namprd12.prod.outlook.com>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="cmy3VXSo"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1765373353; h=From:To:Subject:Date:Message-Id:MIME-Version:Content-Type;
+	bh=m39sO+6SREDpQpl8u3qHWf4Tg5cantWDkrs/RDJtjNk=;
+	b=cmy3VXSoGWGdC5Cus5j9pBg0KnefWnpm5WLHcrUt8o9ysEjnuGqYjvhSckjzI2uEcOzyrDBWPhMUJJ2PWbANcxtMqDP5FnYglz3EDGAuT4f4gN9v9UDcTVl2Is7KSDU6qW1/Vsnk/hRPKn0ZmgBeAxpTzqjGAUni8udCqIPx2UU=
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WuWtM5I_1765373351 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 10 Dec 2025 21:29:12 +0800
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+To: rostedt@goodmis.org,
+	lukas@wunner.de,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-edac@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	helgaas@kernel.org,
+	ilpo.jarvinen@linux.intel.com,
+	mattc@purestorage.com,
+	Jonathan.Cameron@huawei.com,
+	alok.a.tiwari@oracle.com
+Cc: bhelgaas@google.com,
+	tony.luck@intel.com,
+	bp@alien8.de,
+	xueshuai@linux.alibaba.com,
+	mhiramat@kernel.org,
+	mathieu.desnoyers@efficios.com,
+	oleg@redhat.com,
+	naveen@kernel.org,
+	davem@davemloft.net,
+	anil.s.keshavamurthy@intel.com,
+	mark.rutland@arm.com,
+	peterz@infradead.org,
+	tianruidong@linux.alibaba.com
+Subject: [PATCH v14 2/3] PCI: trace: Add a RAS tracepoint to monitor link speed changes
+Date: Wed, 10 Dec 2025 21:29:06 +0800
+Message-Id: <20251210132907.58799-3-xueshuai@linux.alibaba.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20251210132907.58799-1-xueshuai@linux.alibaba.com>
+References: <20251210132907.58799-1-xueshuai@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <SA1PR12MB8120143580059C4AEDA50CD395A0A@SA1PR12MB8120.namprd12.prod.outlook.com>
 
-On Wed, Dec 10, 2025 at 11:39:59AM +0000, Verma, Devendra wrote:
-> [AMD Official Use Only - AMD Internal Distribution Only]
-> 
-> Hi Manivannan
-> 
-> Please check my response inline.
-> 
-> Regards,
-> Devendra
-> 
-> > -----Original Message-----
-> > From: Manivannan Sadhasivam <mani@kernel.org>
-> > Sent: Monday, December 8, 2025 11:00 AM
-> > To: Verma, Devendra <Devendra.Verma@amd.com>
-> > Cc: bhelgaas@google.com; vkoul@kernel.org; dmaengine@vger.kernel.org;
-> > linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Simek, Michal
-> > <michal.simek@amd.com>
-> > Subject: Re: [PATCH RESEND v6 2/2] dmaengine: dw-edma: Add non-LL mode
-> >
-> > Caution: This message originated from an External Source. Use proper
-> > caution when opening attachments, clicking links, or responding.
-> >
-> >
-> > On Fri, Nov 21, 2025 at 05:04:55PM +0530, Devendra K Verma wrote:
-> > > AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
-> > > The current code does not have the mechanisms to enable the DMA
-> > > transactions using the non-LL mode. The following two cases are added
-> > > with this patch:
-> > > - When a valid physical base address is not configured via the
-> > >   Xilinx VSEC capability then the IP can still be used in non-LL
-> > >   mode. The default mode for all the DMA transactions and for all
-> > >   the DMA channels then is non-LL mode.
-> > > - When a valid physical base address is configured but the client
-> > >   wants to use the non-LL mode for DMA transactions then also the
-> > >   flexibility is provided via the peripheral_config struct member of
-> > >   dma_slave_config. In this case the channels can be individually
-> > >   configured in non-LL mode. This use case is desirable for single
-> > >   DMA transfer of a chunk, this saves the effort of preparing the
-> > >   Link List. This particular scenario is applicable to AMD as well
-> > >   as Synopsys IP.
-> > >
-> >
-> > Which in-kernel DMA client is using this non-LL mode?
-> >
-> > - Mani
-> >
-> 
-> Existing dma client application(s) can use the non-LL mode for the
-> AMD (Xilinx) use case with the help of a simple peripheral_config
-> variable which is part of the dma_slave_config structure.
+PCIe link speed degradation directly impacts system performance and
+often indicates hardware issues such as faulty devices, physical layer
+problems, or configuration errors.
 
-There is no existing client driver making use of this non-LL mode. So
-essentially, this patch is introducing the dead code.
+To this end, add a RAS tracepoint to monitor link speed changes,
+enabling proactive health checks and diagnostic analysis.
 
-> Though, no driver is using the non-LL mode as non-LL mode is not available
-> in the current code.
+The following output is generated when a device is hotplugged:
 
-Then introduce non-LL mode when such client drivers start using it.
+$ echo 1 > /sys/kernel/debug/tracing/events/pci/pcie_link_event/enable
+$ cat /sys/kernel/debug/tracing/trace_pipe
+   irq/51-pciehp-88      [001] .....   381.545386: pcie_link_event: 0000:00:02.0 type:4, reason:4, cur_bus_speed:20, max_bus_speed:23, width:1, flit_mode:0, status:DLLLA
 
-- Mani
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Suggested-by: Matthew W Carlis <mattc@purestorage.com>
+Suggested-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |  3 +-
+ drivers/pci/pci.c                |  2 +-
+ drivers/pci/pci.h                | 21 ++++++++++--
+ drivers/pci/pcie/bwctrl.c        |  4 +--
+ drivers/pci/probe.c              |  9 +++--
+ include/trace/events/pci.h       | 57 ++++++++++++++++++++++++++++++++
+ 6 files changed, 87 insertions(+), 9 deletions(-)
 
-> Based on the following input (peripheral_config) from client in
-> dw_edma_device_config(), non-LL mode can be decided by the controller driver.
-> +     if (config->peripheral_config)
-> +             non_ll = *(int *)config->peripheral_config;
-> 
-> > > Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
-> > > ---
-> > > Changes in v6
-> > >   Gave definition to bits used for channel configuration.
-> > >   Removed the comment related to doorbell.
-> > >
-> > > Changes in v5
-> > >   Variable name 'nollp' changed to 'non_ll'.
-> > >   In the dw_edma_device_config() WARN_ON replaced with dev_err().
-> > >   Comments follow the 80-column guideline.
-> > >
-> > > Changes in v4
-> > >   No change
-> > >
-> > > Changes in v3
-> > >   No change
-> > >
-> > > Changes in v2
-> > >   Reverted the function return type to u64 for
-> > >   dw_edma_get_phys_addr().
-> > >
-> > > Changes in v1
-> > >   Changed the function return type for dw_edma_get_phys_addr().
-> > >   Corrected the typo raised in review.
-> > > ---
-> > >  drivers/dma/dw-edma/dw-edma-core.c    | 41 ++++++++++++++++++++---
-> > >  drivers/dma/dw-edma/dw-edma-core.h    |  1 +
-> > >  drivers/dma/dw-edma/dw-edma-pcie.c    | 44 +++++++++++++++++--------
-> > >  drivers/dma/dw-edma/dw-hdma-v0-core.c | 61
-> > > ++++++++++++++++++++++++++++++++++-
-> > >  drivers/dma/dw-edma/dw-hdma-v0-regs.h |  1 +
-> > >  include/linux/dma/edma.h              |  1 +
-> > >  6 files changed, 130 insertions(+), 19 deletions(-)
-> > >
-> > > diff --git a/drivers/dma/dw-edma/dw-edma-core.c
-> > > b/drivers/dma/dw-edma/dw-edma-core.c
-> > > index b43255f..60a3279 100644
-> > > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > > +++ b/drivers/dma/dw-edma/dw-edma-core.c
-> > > @@ -223,8 +223,31 @@ static int dw_edma_device_config(struct
-> > dma_chan *dchan,
-> > >                                struct dma_slave_config *config)  {
-> > >       struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> > > +     int non_ll = 0;
-> > > +
-> > > +     if (config->peripheral_config &&
-> > > +         config->peripheral_size != sizeof(int)) {
-> > > +             dev_err(dchan->device->dev,
-> > > +                     "config param peripheral size mismatch\n");
-> > > +             return -EINVAL;
-> > > +     }
-> > >
-> > >       memcpy(&chan->config, config, sizeof(*config));
-> > > +
-> > > +     /*
-> > > +      * When there is no valid LLP base address available then the default
-> > > +      * DMA ops will use the non-LL mode.
-> > > +      * Cases where LL mode is enabled and client wants to use the non-LL
-> > > +      * mode then also client can do so via providing the peripheral_config
-> > > +      * param.
-> > > +      */
-> > > +     if (config->peripheral_config)
-> > > +             non_ll = *(int *)config->peripheral_config;
-> > > +
-> > > +     chan->non_ll = false;
-> > > +     if (chan->dw->chip->non_ll || (!chan->dw->chip->non_ll && non_ll))
-> > > +             chan->non_ll = true;
-> > > +
-> > >       chan->configured = true;
-> > >
-> > >       return 0;
-> > > @@ -353,7 +376,7 @@ static void dw_edma_device_issue_pending(struct
-> > dma_chan *dchan)
-> > >       struct dw_edma_chan *chan = dchan2dw_edma_chan(xfer->dchan);
-> > >       enum dma_transfer_direction dir = xfer->direction;
-> > >       struct scatterlist *sg = NULL;
-> > > -     struct dw_edma_chunk *chunk;
-> > > +     struct dw_edma_chunk *chunk = NULL;
-> > >       struct dw_edma_burst *burst;
-> > >       struct dw_edma_desc *desc;
-> > >       u64 src_addr, dst_addr;
-> > > @@ -419,9 +442,11 @@ static void dw_edma_device_issue_pending(struct
-> > dma_chan *dchan)
-> > >       if (unlikely(!desc))
-> > >               goto err_alloc;
-> > >
-> > > -     chunk = dw_edma_alloc_chunk(desc);
-> > > -     if (unlikely(!chunk))
-> > > -             goto err_alloc;
-> > > +     if (!chan->non_ll) {
-> > > +             chunk = dw_edma_alloc_chunk(desc);
-> > > +             if (unlikely(!chunk))
-> > > +                     goto err_alloc;
-> > > +     }
-> > >
-> > >       if (xfer->type == EDMA_XFER_INTERLEAVED) {
-> > >               src_addr = xfer->xfer.il->src_start; @@ -450,7 +475,13
-> > > @@ static void dw_edma_device_issue_pending(struct dma_chan *dchan)
-> > >               if (xfer->type == EDMA_XFER_SCATTER_GATHER && !sg)
-> > >                       break;
-> > >
-> > > -             if (chunk->bursts_alloc == chan->ll_max) {
-> > > +             /*
-> > > +              * For non-LL mode, only a single burst can be handled
-> > > +              * in a single chunk unlike LL mode where multiple bursts
-> > > +              * can be configured in a single chunk.
-> > > +              */
-> > > +             if ((chunk && chunk->bursts_alloc == chan->ll_max) ||
-> > > +                 chan->non_ll) {
-> > >                       chunk = dw_edma_alloc_chunk(desc);
-> > >                       if (unlikely(!chunk))
-> > >                               goto err_alloc; diff --git
-> > > a/drivers/dma/dw-edma/dw-edma-core.h
-> > > b/drivers/dma/dw-edma/dw-edma-core.h
-> > > index 71894b9..c8e3d19 100644
-> > > --- a/drivers/dma/dw-edma/dw-edma-core.h
-> > > +++ b/drivers/dma/dw-edma/dw-edma-core.h
-> > > @@ -86,6 +86,7 @@ struct dw_edma_chan {
-> > >       u8                              configured;
-> > >
-> > >       struct dma_slave_config         config;
-> > > +     bool                            non_ll;
-> > >  };
-> > >
-> > >  struct dw_edma_irq {
-> > > diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > b/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > index 3d7247c..e7e95df 100644
-> > > --- a/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-> > > @@ -269,6 +269,15 @@ static void
-> > dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
-> > >       pdata->devmem_phys_off = off;
-> > >  }
-> > >
-> > > +static u64 dw_edma_get_phys_addr(struct pci_dev *pdev,
-> > > +                              struct dw_edma_pcie_data *pdata,
-> > > +                              enum pci_barno bar) {
-> > > +     if (pdev->vendor == PCI_VENDOR_ID_XILINX)
-> > > +             return pdata->devmem_phys_off;
-> > > +     return pci_bus_address(pdev, bar); }
-> > > +
-> > >  static int dw_edma_pcie_probe(struct pci_dev *pdev,
-> > >                             const struct pci_device_id *pid)  { @@
-> > > -278,6 +287,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
-> > >       struct dw_edma_chip *chip;
-> > >       int err, nr_irqs;
-> > >       int i, mask;
-> > > +     bool non_ll = false;
-> > >
-> > >       vsec_data = kmalloc(sizeof(*vsec_data), GFP_KERNEL);
-> > >       if (!vsec_data)
-> > > @@ -302,21 +312,24 @@ static int dw_edma_pcie_probe(struct pci_dev
-> > *pdev,
-> > >       if (pdev->vendor == PCI_VENDOR_ID_XILINX) {
-> > >               /*
-> > >                * There is no valid address found for the LL memory
-> > > -              * space on the device side.
-> > > +              * space on the device side. In the absence of LL base
-> > > +              * address use the non-LL mode or simple mode supported by
-> > > +              * the HDMA IP.
-> > >                */
-> > >               if (vsec_data->devmem_phys_off ==
-> > DW_PCIE_AMD_MDB_INVALID_ADDR)
-> > > -                     return -ENOMEM;
-> > > +                     non_ll = true;
-> > >
-> > >               /*
-> > >                * Configure the channel LL and data blocks if number of
-> > >                * channels enabled in VSEC capability are more than the
-> > >                * channels configured in amd_mdb_data.
-> > >                */
-> > > -             dw_edma_set_chan_region_offset(vsec_data, BAR_2, 0,
-> > > -                                            DW_PCIE_XILINX_LL_OFF_GAP,
-> > > -                                            DW_PCIE_XILINX_LL_SIZE,
-> > > -                                            DW_PCIE_XILINX_DT_OFF_GAP,
-> > > -                                            DW_PCIE_XILINX_DT_SIZE);
-> > > +             if (!non_ll)
-> > > +                     dw_edma_set_chan_region_offset(vsec_data, BAR_2, 0,
-> > > +                                                    DW_PCIE_XILINX_LL_OFF_GAP,
-> > > +                                                    DW_PCIE_XILINX_LL_SIZE,
-> > > +                                                    DW_PCIE_XILINX_DT_OFF_GAP,
-> > > +
-> > > + DW_PCIE_XILINX_DT_SIZE);
-> > >       }
-> > >
-> > >       /* Mapping PCI BAR regions */
-> > > @@ -364,6 +377,7 @@ static int dw_edma_pcie_probe(struct pci_dev
-> > *pdev,
-> > >       chip->mf = vsec_data->mf;
-> > >       chip->nr_irqs = nr_irqs;
-> > >       chip->ops = &dw_edma_pcie_plat_ops;
-> > > +     chip->non_ll = non_ll;
-> > >
-> > >       chip->ll_wr_cnt = vsec_data->wr_ch_cnt;
-> > >       chip->ll_rd_cnt = vsec_data->rd_ch_cnt; @@ -372,7 +386,7 @@
-> > > static int dw_edma_pcie_probe(struct pci_dev *pdev,
-> > >       if (!chip->reg_base)
-> > >               return -ENOMEM;
-> > >
-> > > -     for (i = 0; i < chip->ll_wr_cnt; i++) {
-> > > +     for (i = 0; i < chip->ll_wr_cnt && !non_ll; i++) {
-> > >               struct dw_edma_region *ll_region = &chip->ll_region_wr[i];
-> > >               struct dw_edma_region *dt_region = &chip->dt_region_wr[i];
-> > >               struct dw_edma_block *ll_block = &vsec_data->ll_wr[i];
-> > > @@ -383,7 +397,8 @@ static int dw_edma_pcie_probe(struct pci_dev
-> > *pdev,
-> > >                       return -ENOMEM;
-> > >
-> > >               ll_region->vaddr.io += ll_block->off;
-> > > -             ll_region->paddr = pci_bus_address(pdev, ll_block->bar);
-> > > +             ll_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-> > > +                                                      ll_block->bar);
-> > >               ll_region->paddr += ll_block->off;
-> > >               ll_region->sz = ll_block->sz;
-> > >
-> > > @@ -392,12 +407,13 @@ static int dw_edma_pcie_probe(struct pci_dev
-> > *pdev,
-> > >                       return -ENOMEM;
-> > >
-> > >               dt_region->vaddr.io += dt_block->off;
-> > > -             dt_region->paddr = pci_bus_address(pdev, dt_block->bar);
-> > > +             dt_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-> > > +                                                      dt_block->bar);
-> > >               dt_region->paddr += dt_block->off;
-> > >               dt_region->sz = dt_block->sz;
-> > >       }
-> > >
-> > > -     for (i = 0; i < chip->ll_rd_cnt; i++) {
-> > > +     for (i = 0; i < chip->ll_rd_cnt && !non_ll; i++) {
-> > >               struct dw_edma_region *ll_region = &chip->ll_region_rd[i];
-> > >               struct dw_edma_region *dt_region = &chip->dt_region_rd[i];
-> > >               struct dw_edma_block *ll_block = &vsec_data->ll_rd[i];
-> > > @@ -408,7 +424,8 @@ static int dw_edma_pcie_probe(struct pci_dev
-> > *pdev,
-> > >                       return -ENOMEM;
-> > >
-> > >               ll_region->vaddr.io += ll_block->off;
-> > > -             ll_region->paddr = pci_bus_address(pdev, ll_block->bar);
-> > > +             ll_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-> > > +                                                      ll_block->bar);
-> > >               ll_region->paddr += ll_block->off;
-> > >               ll_region->sz = ll_block->sz;
-> > >
-> > > @@ -417,7 +434,8 @@ static int dw_edma_pcie_probe(struct pci_dev
-> > *pdev,
-> > >                       return -ENOMEM;
-> > >
-> > >               dt_region->vaddr.io += dt_block->off;
-> > > -             dt_region->paddr = pci_bus_address(pdev, dt_block->bar);
-> > > +             dt_region->paddr = dw_edma_get_phys_addr(pdev, vsec_data,
-> > > +                                                      dt_block->bar);
-> > >               dt_region->paddr += dt_block->off;
-> > >               dt_region->sz = dt_block->sz;
-> > >       }
-> > > diff --git a/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> > > b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> > > index e3f8db4..ee31c9a 100644
-> > > --- a/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> > > +++ b/drivers/dma/dw-edma/dw-hdma-v0-core.c
-> > > @@ -225,7 +225,7 @@ static void dw_hdma_v0_sync_ll_data(struct
-> > dw_edma_chunk *chunk)
-> > >               readl(chunk->ll_region.vaddr.io);  }
-> > >
-> > > -static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool
-> > > first)
-> > > +static void dw_hdma_v0_core_ll_start(struct dw_edma_chunk *chunk,
-> > > +bool first)
-> > >  {
-> > >       struct dw_edma_chan *chan = chunk->chan;
-> > >       struct dw_edma *dw = chan->dw;
-> > > @@ -263,6 +263,65 @@ static void dw_hdma_v0_core_start(struct
-> > dw_edma_chunk *chunk, bool first)
-> > >       SET_CH_32(dw, chan->dir, chan->id, doorbell,
-> > > HDMA_V0_DOORBELL_START);  }
-> > >
-> > > +static void dw_hdma_v0_core_non_ll_start(struct dw_edma_chunk
-> > *chunk)
-> > > +{
-> > > +     struct dw_edma_chan *chan = chunk->chan;
-> > > +     struct dw_edma *dw = chan->dw;
-> > > +     struct dw_edma_burst *child;
-> > > +     u32 val;
-> > > +
-> > > +     list_for_each_entry(child, &chunk->burst->list, list) {
-> > > +             SET_CH_32(dw, chan->dir, chan->id, ch_en,
-> > > + HDMA_V0_CH_EN);
-> > > +
-> > > +             /* Source address */
-> > > +             SET_CH_32(dw, chan->dir, chan->id, sar.lsb,
-> > > +                       lower_32_bits(child->sar));
-> > > +             SET_CH_32(dw, chan->dir, chan->id, sar.msb,
-> > > +                       upper_32_bits(child->sar));
-> > > +
-> > > +             /* Destination address */
-> > > +             SET_CH_32(dw, chan->dir, chan->id, dar.lsb,
-> > > +                       lower_32_bits(child->dar));
-> > > +             SET_CH_32(dw, chan->dir, chan->id, dar.msb,
-> > > +                       upper_32_bits(child->dar));
-> > > +
-> > > +             /* Transfer size */
-> > > +             SET_CH_32(dw, chan->dir, chan->id, transfer_size,
-> > > + child->sz);
-> > > +
-> > > +             /* Interrupt setup */
-> > > +             val = GET_CH_32(dw, chan->dir, chan->id, int_setup) |
-> > > +                             HDMA_V0_STOP_INT_MASK |
-> > > +                             HDMA_V0_ABORT_INT_MASK |
-> > > +                             HDMA_V0_LOCAL_STOP_INT_EN |
-> > > +                             HDMA_V0_LOCAL_ABORT_INT_EN;
-> > > +
-> > > +             if (!(dw->chip->flags & DW_EDMA_CHIP_LOCAL)) {
-> > > +                     val |= HDMA_V0_REMOTE_STOP_INT_EN |
-> > > +                            HDMA_V0_REMOTE_ABORT_INT_EN;
-> > > +             }
-> > > +
-> > > +             SET_CH_32(dw, chan->dir, chan->id, int_setup, val);
-> > > +
-> > > +             /* Channel control setup */
-> > > +             val = GET_CH_32(dw, chan->dir, chan->id, control1);
-> > > +             val &= ~HDMA_V0_LINKLIST_EN;
-> > > +             SET_CH_32(dw, chan->dir, chan->id, control1, val);
-> > > +
-> > > +             SET_CH_32(dw, chan->dir, chan->id, doorbell,
-> > > +                       HDMA_V0_DOORBELL_START);
-> > > +     }
-> > > +}
-> > > +
-> > > +static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool
-> > > +first) {
-> > > +     struct dw_edma_chan *chan = chunk->chan;
-> > > +
-> > > +     if (!chan->non_ll)
-> > > +             dw_hdma_v0_core_ll_start(chunk, first);
-> > > +     else
-> > > +             dw_hdma_v0_core_non_ll_start(chunk);
-> > > +}
-> > > +
-> > >  static void dw_hdma_v0_core_ch_config(struct dw_edma_chan *chan)  {
-> > >       struct dw_edma *dw = chan->dw;
-> > > diff --git a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> > > b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> > > index eab5fd7..7759ba9 100644
-> > > --- a/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> > > +++ b/drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> > > @@ -12,6 +12,7 @@
-> > >  #include <linux/dmaengine.h>
-> > >
-> > >  #define HDMA_V0_MAX_NR_CH                    8
-> > > +#define HDMA_V0_CH_EN                                BIT(0)
-> > >  #define HDMA_V0_LOCAL_ABORT_INT_EN           BIT(6)
-> > >  #define HDMA_V0_REMOTE_ABORT_INT_EN          BIT(5)
-> > >  #define HDMA_V0_LOCAL_STOP_INT_EN            BIT(4)
-> > > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h index
-> > > 3080747..78ce31b 100644
-> > > --- a/include/linux/dma/edma.h
-> > > +++ b/include/linux/dma/edma.h
-> > > @@ -99,6 +99,7 @@ struct dw_edma_chip {
-> > >       enum dw_edma_map_format mf;
-> > >
-> > >       struct dw_edma          *dw;
-> > > +     bool                    non_ll;
-> > >  };
-> > >
-> > >  /* Export to the platform drivers */
-> > > --
-> > > 1.8.3.1
-> > >
-> >
-> > --
-> > மணிவண்ணன் சதாசிவம்
-
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index bcc51b26d03d..ad5f28f6a8b1 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -320,7 +320,8 @@ int pciehp_check_link_status(struct controller *ctrl)
+ 	}
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA2, &linksta2);
+-	__pcie_update_link_speed(ctrl->pcie->port->subordinate, lnk_status, linksta2);
++	__pcie_update_link_speed(ctrl->pcie->port->subordinate, PCIE_HOTPLUG,
++				 lnk_status, linksta2);
+ 
+ 	if (!found) {
+ 		ctrl_info(ctrl, "Slot(%s): No device found\n",
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 13dbb405dc31..f034e173819f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4550,7 +4550,7 @@ int pcie_retrain_link(struct pci_dev *pdev, bool use_lt)
+ 	 * Link Speed.
+ 	 */
+ 	if (pdev->subordinate)
+-		pcie_update_link_speed(pdev->subordinate);
++		pcie_update_link_speed(pdev->subordinate, PCIE_LINK_RETRAIN);
+ 
+ 	return rc;
+ }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0e67014aa001..c71cfbe78cc3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -5,6 +5,7 @@
+ #include <linux/align.h>
+ #include <linux/bitfield.h>
+ #include <linux/pci.h>
++#include <trace/events/pci.h>
+ 
+ struct pcie_tlp_log;
+ 
+@@ -555,12 +556,28 @@ const char *pci_speed_string(enum pci_bus_speed speed);
+ void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+ void pcie_report_downtraining(struct pci_dev *dev);
+ 
+-static inline void __pcie_update_link_speed(struct pci_bus *bus, u16 linksta, u16 linksta2)
++enum pcie_link_change_reason {
++	PCIE_LINK_RETRAIN,
++	PCIE_ADD_BUS,
++	PCIE_BWCTRL_ENABLE,
++	PCIE_BWCTRL_IRQ,
++	PCIE_HOTPLUG,
++};
++
++static inline void __pcie_update_link_speed(struct pci_bus *bus,
++					    enum pcie_link_change_reason reason,
++					    u16 linksta, u16 linksta2)
+ {
+ 	bus->cur_bus_speed = pcie_link_speed[linksta & PCI_EXP_LNKSTA_CLS];
+ 	bus->flit_mode = (linksta2 & PCI_EXP_LNKSTA2_FLIT) ? 1 : 0;
++
++	trace_pcie_link_event(bus,
++			     reason,
++			     FIELD_GET(PCI_EXP_LNKSTA_NLW, linksta),
++			     linksta & PCI_EXP_LNKSTA_LINK_STATUS_MASK);
+ }
+-void pcie_update_link_speed(struct pci_bus *bus);
++
++void pcie_update_link_speed(struct pci_bus *bus, enum pcie_link_change_reason reason);
+ 
+ /* Single Root I/O Virtualization */
+ struct pci_sriov {
+diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+index 36f939f23d34..32f1b30ecb84 100644
+--- a/drivers/pci/pcie/bwctrl.c
++++ b/drivers/pci/pcie/bwctrl.c
+@@ -199,7 +199,7 @@ static void pcie_bwnotif_enable(struct pcie_device *srv)
+ 	 * Update after enabling notifications & clearing status bits ensures
+ 	 * link speed is up to date.
+ 	 */
+-	pcie_update_link_speed(port->subordinate);
++	pcie_update_link_speed(port->subordinate, PCIE_BWCTRL_ENABLE);
+ }
+ 
+ static void pcie_bwnotif_disable(struct pci_dev *port)
+@@ -234,7 +234,7 @@ static irqreturn_t pcie_bwnotif_irq(int irq, void *context)
+ 	 * speed (inside pcie_update_link_speed()) after LBMS has been
+ 	 * cleared to avoid missing link speed changes.
+ 	 */
+-	pcie_update_link_speed(port->subordinate);
++	pcie_update_link_speed(port->subordinate, PCIE_BWCTRL_IRQ);
+ 
+ 	return IRQ_HANDLED;
+ }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 41183aed8f5d..392b7dc3d391 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -22,6 +22,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/bitfield.h>
++#include <trace/events/pci.h>
+ #include "pci.h"
+ 
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+@@ -824,14 +825,16 @@ const char *pci_speed_string(enum pci_bus_speed speed)
+ }
+ EXPORT_SYMBOL_GPL(pci_speed_string);
+ 
+-void pcie_update_link_speed(struct pci_bus *bus)
++void pcie_update_link_speed(struct pci_bus *bus,
++			    enum pcie_link_change_reason reason)
+ {
+ 	struct pci_dev *bridge = bus->self;
+ 	u16 linksta, linksta2;
+ 
+ 	pcie_capability_read_word(bridge, PCI_EXP_LNKSTA, &linksta);
+ 	pcie_capability_read_word(bridge, PCI_EXP_LNKSTA2, &linksta2);
+-	__pcie_update_link_speed(bus, linksta, linksta2);
++
++	__pcie_update_link_speed(bus, reason, linksta, linksta2);
+ }
+ EXPORT_SYMBOL_GPL(pcie_update_link_speed);
+ 
+@@ -918,7 +921,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 		pcie_capability_read_dword(bridge, PCI_EXP_LNKCAP, &linkcap);
+ 		bus->max_bus_speed = pcie_link_speed[linkcap & PCI_EXP_LNKCAP_SLS];
+ 
+-		pcie_update_link_speed(bus);
++		pcie_update_link_speed(bus, PCIE_ADD_BUS);
+ 	}
+ }
+ 
+diff --git a/include/trace/events/pci.h b/include/trace/events/pci.h
+index 39e512a167ee..9a9122f62fd3 100644
+--- a/include/trace/events/pci.h
++++ b/include/trace/events/pci.h
+@@ -5,6 +5,7 @@
+ #if !defined(_TRACE_HW_EVENT_PCI_H) || defined(TRACE_HEADER_MULTI_READ)
+ #define _TRACE_HW_EVENT_PCI_H
+ 
++#include <uapi/linux/pci_regs.h>
+ #include <linux/tracepoint.h>
+ 
+ #define PCI_HOTPLUG_EVENT						\
+@@ -66,6 +67,62 @@ TRACE_EVENT(pci_hp_event,
+ 	)
+ );
+ 
++#define PCI_EXP_LNKSTA_LINK_STATUS_MASK (PCI_EXP_LNKSTA_LBMS | \
++					 PCI_EXP_LNKSTA_LABS | \
++					 PCI_EXP_LNKSTA_LT | \
++					 PCI_EXP_LNKSTA_DLLLA)
++
++#define LNKSTA_FLAGS					\
++	{ PCI_EXP_LNKSTA_LT,	"LT"},			\
++	{ PCI_EXP_LNKSTA_DLLLA,	"DLLLA"},		\
++	{ PCI_EXP_LNKSTA_LBMS,	"LBMS"},		\
++	{ PCI_EXP_LNKSTA_LABS,	"LABS"}
++
++TRACE_EVENT(pcie_link_event,
++
++	TP_PROTO(struct pci_bus *bus,
++		  unsigned int reason,
++		  unsigned int width,
++		  unsigned int status
++		),
++
++	TP_ARGS(bus, reason, width, status),
++
++	TP_STRUCT__entry(
++		__string(	port_name,	pci_name(bus->self))
++		__field(	unsigned int,	type		)
++		__field(	unsigned int,	reason		)
++		__field(	unsigned int,	cur_bus_speed	)
++		__field(	unsigned int,	max_bus_speed	)
++		__field(	unsigned int,	width		)
++		__field(	unsigned int,	flit_mode	)
++		__field(	unsigned int,	link_status	)
++	),
++
++	TP_fast_assign(
++		__assign_str(port_name);
++		__entry->type			= pci_pcie_type(bus->self);
++		__entry->reason			= reason;
++		__entry->cur_bus_speed		= bus->cur_bus_speed;
++		__entry->max_bus_speed		= bus->max_bus_speed;
++		__entry->width			= width;
++		__entry->flit_mode		= bus->flit_mode;
++		__entry->link_status		= status;
++	),
++
++	TP_printk("%s type:%d, reason:%d, cur_bus_speed:%d, max_bus_speed:%d, width:%u, flit_mode:%u, status:%s\n",
++		__get_str(port_name),
++		__entry->type,
++		__entry->reason,
++		__entry->cur_bus_speed,
++		__entry->max_bus_speed,
++		__entry->width,
++		__entry->flit_mode,
++		__print_flags((unsigned long)__entry->link_status, "|",
++				LNKSTA_FLAGS)
++	)
++);
++
+ #endif /* _TRACE_HW_EVENT_PCI_H */
+ 
+ /* This part must be outside protection */
 -- 
-மணிவண்ணன் சதாசிவம்
+2.39.3
+
