@@ -1,215 +1,305 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013008.outbound.protection.outlook.com [40.93.201.8])
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1F2223EA83;
-	Thu, 11 Dec 2025 01:24:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.8
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765416295; cv=fail; b=Ld1nATb5UDrAyJAWtgBrm3xvD8K6WO2Bf1tG0Z0sjB/RvKIWQH6tIkdunw54yj0JGs2s2n1jR/orQiAEgAPHDV+lcosYUGiEILbhSDgUeTDHbd3z+SjZLaUFTuL/SveixX2BUNd3wUqNrtbgePenRq/X27tjAwnUd/uu2IU+AmY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765416295; c=relaxed/simple;
-	bh=ez9h0pJLpAxzBBFz/v/Q2NFk6NAGSbMdp6wM1t/IrK8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=aTAJ0FWRIY9LAr9qg34BeJDfMsbJziTYhy/tPQwLp/FJ8H78Kx1VPrGQ0kkF6Nm15msPe7Kb38M2brp/CXcCRK+zRRHfKtaNR+UR0cvzcxczZpfCh5+6YBZfkj8Z194x3BrcpJBZbI977k1Kiz0+yzoMPglpg/fWFMqwW0rIISg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=r4rDupcW; arc=fail smtp.client-ip=40.93.201.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5B828F5
+	for <linux-pci@vger.kernel.org>; Thu, 11 Dec 2025 03:01:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1765422098; cv=none; b=DaYNi+CamB6qFj9xpiIZlXhEaCHThUzzQUIjb8DP4m1p8JwReGG56lJB10xVr08lDlm59awEzhb9EjLKVEW28IvfL6w+zTwBsELMCML4/bUlWUELpyJRneWexOFkgbNLKX6om6oaki9qCKqhgUx7cJO5n4Jr1xr+BDJMXFAb4Wo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1765422098; c=relaxed/simple;
+	bh=XDbfySYBWcWjDYaSybZu3kpjhWPfLyPhJ+q+UCuX5W8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UZH8rWjQumnNdPHz1gSRYnMnUJqemdH+1GRHZ9lGg7/ZTGB29d3zVHLWK4D2dYxjRMETAqJ5uaLT7Uz7s5t46rJhl8cVog5LieQpVR6ka7rTQrZM44gtP/a+FiCFrsVdU9IDh6lc9JSvfp56Umz/YhH6/PHZBwxeTiSJwADoS9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=udU2Qls7; arc=none smtp.client-ip=115.124.30.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="r4rDupcW"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Tkf7K71HFYPXK+Mcx+PcpGbXB7f2eU+/hZm4qD1sf1fQstc+qfsjM3UIVXoUIY7dGSFWT8BaLl6fDOSFiTxGZz9Ozn3UjRmLXDm6vqjUEkxaOR38HXRnTLJjpfC5hEv6FdpsbqYV2e7HIfTtrJJSonnBaL1nEXHUPO61gzD++LDdg9+Z/04M0zIsFe9R5OSVo/0Ex9P/qhj0h3sKXdNOqTGtBIbF+NPOXdmLXniHKhZKYLbW9qAxPgfWWhaIsibNdpjBCbV466UUePWpDZ9j2inWiiy1CLx26yaTiBmqmSIz8ETMoV+1a2bCcm41XKUXAbzkO7+6AbneCVyV9N143Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ez9h0pJLpAxzBBFz/v/Q2NFk6NAGSbMdp6wM1t/IrK8=;
- b=ayABOEg3cAD033XUwwvVx1peILOVYbMpys0Ed445LHr6imanoT5x9qKXLCdFSX9y4AIGZWLKNkPo+m2obaokw+7Z7UcFkB+/XidrvykXKp2JmInVuS1yYytLqmM4j98TNvCDGjchB7DMeDltiYVexto8st2n2+iv1BC0ZD5mvXX7j1iQ/xP0caGLbTTubRW+odgkO+rYacVWmquMmzOlghLVyfGc6YNCSbFJyCvsPG4BWMp0kN/hxPT2Y5G2t7ru8gNLnbOSYhUAdoz7uDQQoqB6Ftlq6icwM/m50rkxNyNuSOPaBxT2kd20DHW9MtNmomAycmnnPtpx4WqQCCnpPA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ez9h0pJLpAxzBBFz/v/Q2NFk6NAGSbMdp6wM1t/IrK8=;
- b=r4rDupcWZRgwzAD7x3NZSj5gKmcY01NU2a76SnLeVO2RQTqEO/eY9tevPfsUBhqsJAqQ0QxAoClEb1Uc8W41GUHe8AXZEnlbR5Ze7X9zogDsgDEQL4B4mR6XOm4O7kLtFWndHGtWyGU0wjpBFuXNwrCf7iHJiVmLhWOedcZRNNIb+L8hfxswElKLx47LiUq9dreaM8o8sJ1ZIFc9j1taE65cvejJgAKhTOLWTGLjuc9Vn9IZmaA53APXSmx/OZPERMaTwcCE5ec4WOxNFPcx0BcEoGcjA9/WBbvQVmyBSS9dIjaD2XEyySmiRNeOTOZAW1gY1Es9IBYvDqQo8cs5nA==
-Received: from SN7PR12MB8059.namprd12.prod.outlook.com (2603:10b6:806:32b::7)
- by PH7PR12MB8038.namprd12.prod.outlook.com (2603:10b6:510:27c::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9412.9; Thu, 11 Dec
- 2025 01:24:49 +0000
-Received: from SN7PR12MB8059.namprd12.prod.outlook.com
- ([fe80::4ee2:654e:1fe8:4b91]) by SN7PR12MB8059.namprd12.prod.outlook.com
- ([fe80::4ee2:654e:1fe8:4b91%2]) with mapi id 15.20.9412.005; Thu, 11 Dec 2025
- 01:24:49 +0000
-From: Joel Fernandes <joelagnelf@nvidia.com>
-To: Zhi Wang <zhiw@nvidia.com>
-CC: "rust-for-linux@vger.kernel.org" <rust-for-linux@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"airlied@gmail.com" <airlied@gmail.com>, "dakr@kernel.org" <dakr@kernel.org>,
-	"aliceryhl@google.com" <aliceryhl@google.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"ojeda@kernel.org" <ojeda@kernel.org>, "alex.gaynor@gmail.com"
-	<alex.gaynor@gmail.com>, "boqun.feng@gmail.com" <boqun.feng@gmail.com>,
-	"gary@garyguo.net" <gary@garyguo.net>, "bjorn3_gh@protonmail.com"
-	<bjorn3_gh@protonmail.com>, "lossin@kernel.org" <lossin@kernel.org>,
-	"a.hindborg@kernel.org" <a.hindborg@kernel.org>, "tmgross@umich.edu"
-	<tmgross@umich.edu>, "markus.probst@posteo.de" <markus.probst@posteo.de>,
-	"helgaas@kernel.org" <helgaas@kernel.org>, Neo Jia <cjia@nvidia.com>,
-	"alex@shazbot.org" <alex@shazbot.org>, Surath Mitra <smitra@nvidia.com>,
-	Ankit Agrawal <ankita@nvidia.com>, Aniket Agashe <aniketa@nvidia.com>, Kirti
- Wankhede <kwankhede@nvidia.com>, "Tarun Gupta (SW-GPU)"
-	<targupta@nvidia.com>, Alexandre Courbot <acourbot@nvidia.com>, John Hubbard
-	<jhubbard@nvidia.com>, "zhiwang@kernel.org" <zhiwang@kernel.org>
-Subject: Re: [RFC 7/7] gpu: nova-core: load the scrubber ucode when vGPU
- support is enabled
-Thread-Topic: [RFC 7/7] gpu: nova-core: load the scrubber ucode when vGPU
- support is enabled
-Thread-Index: AQHcZq3ICou07m2NR0qQln4XE6jvOLUVdFkAgAPn+oCAAlA02A==
-Date: Thu, 11 Dec 2025 01:24:49 +0000
-Message-ID: <E8245EE2-887A-447A-8576-DC845FD57DC1@nvidia.com>
-References: <20251206124208.305963-1-zhiw@nvidia.com>
- <20251206124208.305963-8-zhiw@nvidia.com>
- <47c05bcf-7591-4148-8783-0c107b0c3c9d@nvidia.com>
- <20251209160515.6658881a@inno-ThinkPad-X280>
-In-Reply-To: <20251209160515.6658881a@inno-ThinkPad-X280>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN7PR12MB8059:EE_|PH7PR12MB8038:EE_
-x-ms-office365-filtering-correlation-id: 07fe6a33-f752-4872-9960-08de38541401
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|366016|7416014|38070700021;
-x-microsoft-antispam-message-info:
- =?utf-8?B?bVBSaTk0UXN0eXRSYWJOOFdjYnJwQUVuNTZ3K0JHTkVjemNZZ0J4WWdUbkh4?=
- =?utf-8?B?MUJKNDBYeW5hSTk2RkwxRnR3cHZ3Z3dlb0F2Zk9iVWxCcG5vRDV0MlJXSWcy?=
- =?utf-8?B?M0lYL0FHbHlOVGwrdmNWMU51UGZBM2NOYmlyd2hSN2pGNTdSeEE3Z09xNUFV?=
- =?utf-8?B?NlFydzNmci9jd2E1RzdlL0pWcE1ZODljTTZXaEJZSDE2VXh6RDdBRjBtdkxH?=
- =?utf-8?B?VmUwRkRVUzFBTG55U09sMG13cndhVm1vdzkvQTZqU21QQnYxaklydFNBNEhO?=
- =?utf-8?B?MW96MGxhL09LbmJ3QS8xVGZwMGdGUVBDL1hsalloazR3elJoZGhESGM3S0Jn?=
- =?utf-8?B?Ym5NZzJLWWRnTUFCZ2t4UnZBamtUSVRuV1pUYnMvc29nMVJldStaZmFOVkJL?=
- =?utf-8?B?Q0tXUE9xQ3dIckRpNzYweDZQZzZyaUtScUtjc1Z2YzZzT0h4bXNCWmE4MVZZ?=
- =?utf-8?B?UmdlYndsdnhhdW9nTmhmL3dQdGR6SUpTMFRoSVF2WEowbExEODNwa201L1Zv?=
- =?utf-8?B?TC9oMmZ6b2JINmp3K09HZklscWhTV0ZYYWsxOTNUbjNBUmdrVXVKSHFWYUJV?=
- =?utf-8?B?SDZSQmFNUnlkZWtnQ1ZBMSt3Q011S1QzZ1VXSDQ1TnFtckhFc09KdU9yWm9K?=
- =?utf-8?B?YVkrZkVESVFFSEpKVkpZZVRZY3hJQTR1ODlpWmFQemxiNXRiU084RXEwa2hq?=
- =?utf-8?B?MnJRdTBWb1NWRkVnU05zUjRUNjVWVlk1TS9qcmZDN2cxS2wyR3IwaWFZSHZO?=
- =?utf-8?B?ZGE4MTIrWDg2cFMwTnVXbnZ5d0FZMTBoYlNpS08raWNHZkFHQ1pYVGF6R0Fo?=
- =?utf-8?B?VklYWnJvWWNKODRGQ0pVTVRCUWZGUGRTczNvVmJ1Mm9zdXZlSmRZd2ZsemUr?=
- =?utf-8?B?V0hydVJRTGtGaktFVEx1S3RaZFprWW0rMENWQnA2R2dPTTJOcjNLMGtaRTc1?=
- =?utf-8?B?M01GdmJncXM3VUJMZi9mcEE2RkpXTERHbCtHNUlMdmx3T2VNNDN0WGIvTHZh?=
- =?utf-8?B?NzlPMmQrZ1lCeCtDRy9LY0ZVaTZKY0RoZWRpME9tUDltZ2drZDYwY2J5d21U?=
- =?utf-8?B?c2ZvVUtEMENPUm5zRHFRem0wUHgrQU5iTWRiQ1hUNkRJMHJpUUhnWko4Tmcx?=
- =?utf-8?B?bGkwREVRQ1J1WjlYTndFRDlPUmJ4Y1pKb0dTNGg3OUwxdDQvMGs0UEVUMjUy?=
- =?utf-8?B?NGJ6Kzl6OGFvb3hsVTVvZzgzcWs2L2tjNnhiM3lkVUxYMWc0dDc4aDNxeFF2?=
- =?utf-8?B?RGdBVnp1RmJvVEZPeDZ2V1d5eGcrTnJka0IrZWNyWTdrWW9qMEhsNit5eVFu?=
- =?utf-8?B?UytROGJuMlUrTXdLVXp6L2k0dEl4OUJUQy92MG1hSFlPZVdpYVYzbmxFYkhV?=
- =?utf-8?B?UTVYWG5hWUQzK0MrYXBQTWdoVjVxV1RGVUo4NGpmRWlTSjRUWElzSDdwekkv?=
- =?utf-8?B?UmU2UmEySHNwWUQxOUtSbVA2ejFNaWhtL1VrcndaTlRnbDhCbGVOMjM5aENo?=
- =?utf-8?B?TVdFR0FOYUs4WWxmakFITWd6QU1RaEtrTXZMaUZrV3huYW1oK2pLRDdOMStH?=
- =?utf-8?B?K1dBWmorQzl5cjlqUTNkRzBwRDFiYWV4ZXgrc1NBclVOcVpvS3lqcUZuN2ZK?=
- =?utf-8?B?dUpnaS9IMDNSNHFQbUtDcEp1K1pMQlE1dFByNWplNkcyQ1M2M2NqRklncm52?=
- =?utf-8?B?cGFtNDR4RjZKWmZjZ3ZLN0xvZXVacTMrRjRQeVN6T3dodXlqYUU4SjIzaUJ1?=
- =?utf-8?B?TmVoNWtYdUhPc2gvSG1KbGtEOGd2THgzM1Jqb3RRWFl2dDlNalFLRlI0ZDc3?=
- =?utf-8?B?OUh2K1UwOEVWVTdleUxnYWJ5NTlDQ0F2Z1FaM0FpN3dNV3dCOW1HbXVRMy9Z?=
- =?utf-8?B?MUxmYlVWajRDVzhTOThPMmtBVE1GNUVXbGFUd2xIa1JLNXJxQW4xcDJzQlo5?=
- =?utf-8?B?NmNnRzl0bVdBSHBES250OHlpcm04bUp2dTk0ZW9QaWxicDlnSERoR2NsWTdp?=
- =?utf-8?B?aUFLd3pqZ2NJWStGdmlDZUM1QWxyZmdDcGxXckcyWEs2KzFBZlpwT1I0ZnR1?=
- =?utf-8?Q?/XpTWt?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR12MB8059.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7416014)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?Vk1FL3hXd25FYW1hbnZyV0ltVkhGZkFub3ZKbUdja2FoTW1jQ2wwRXJTUVph?=
- =?utf-8?B?bXRqbTRDSmRCSk9ZQzZsbEYrNkNzYkM2ZEo0Z2ovMi9Cd2V4cmRFU0l6ZDZV?=
- =?utf-8?B?ZEZBZHVncnY3T0Z2cjlxVVdFaHhJaDV3bjk2ci9CcFQwNGk0L0ZIVTY1dzFF?=
- =?utf-8?B?b2E2eTJ3U0dYbXV1K1JGNXlCWG0vZCszeDBrOFFSS0trNDRHQm1sak1yK2ZI?=
- =?utf-8?B?UDJXK0VwZUNjU3VLUHlzOXpydmZlY3ViWlVadFlzb0g2a3N4dHJCT0FlSTBV?=
- =?utf-8?B?YU9qdzhCcm1VOVU3SFdtV25xajFQVnhMTHZIQnhFelphKzB1aDcrOFA5eDF1?=
- =?utf-8?B?MXh4WWExRGlDZDFNT1FXQzB3SThnLytaMG9ZZktUTUoreVVENko2ZTNBMHFB?=
- =?utf-8?B?NUZGY0o1Rkh6MU9vVEJIMlBKL1pYY1RoZnFNNGN6VmlZV2hYTWZCSSt1VytU?=
- =?utf-8?B?TEJrZ01kUzg0MklTcFJjUlA5cG9DK3FLR0VySE10UHpjTG9OUmFRM3cyTGll?=
- =?utf-8?B?UnFRS3FKYlRGem5HWFNEM1RDSjVxaS9YeG5oL1BxZ3VLT2NjQjVhN1ZCdEx5?=
- =?utf-8?B?RFg5UFBYRFBmMWJFL0tzUFprbXpyWGd2b3hBUjVyaG12cTVsSUlrdVU2N3Rj?=
- =?utf-8?B?QW1CUnFRdzhzRGhJWHY1R3FDRWJOL0pCa3NmNHJPSDdLSmFacjR6MjNBRWVE?=
- =?utf-8?B?TklxSkJubks3NkFIWGx4cXA1SENJOWljbGN6THh1b3d4WXl5V283Tk9VWTJ2?=
- =?utf-8?B?SW95TW1aTjlNSmVleG1valdiVCtXREl6anVRejRJSmF2QURhcnZzeE0rRUh6?=
- =?utf-8?B?NEVvcVRYdnZFb2s2cDVFbjJXVSs0bzFWUXZqd3Y1cHRTSEo2L1EvU2ZtUFFC?=
- =?utf-8?B?Mlo5bEtLNHVNMHBXR0NkOGF6VUpkT0RBS0JodGpBamtEeGtQdm5vbm1VU1ll?=
- =?utf-8?B?Z1FzdG15bjlvZmxVZ3QrZnV1cVpaMm11NXV2VmswWENuNWZkNE1ISkRqQjF0?=
- =?utf-8?B?UnV6YnRTV1RleTU5NGxLdTlGZVFvRHk2bjdnUDAvVlpHV2J6dEF4MFNBbFNr?=
- =?utf-8?B?aXNySWJOdXRzZTRZcUljZ29GWE1IN0sxaVRHUENwZG1sNkdHekJrK2tzUEJj?=
- =?utf-8?B?Yks0L3NGV3BFOGhOeXdLa1JRd0VnUnh6dWhIeFh2R1N4RkdjNjBlWjM1Znc0?=
- =?utf-8?B?OWpXZE9MWkdFSlNGTHA0YTBSZnhWZERKTzRvbnBIaktlM0JadHFvczRpQWg2?=
- =?utf-8?B?SjVtS1N0V3c4dTBrRHF5eWJPak1nUU9RUDdNZzFkVHFoNnNSQnF0RDdsS2Vv?=
- =?utf-8?B?NGRPelhoY3ozNXQrNWVrRFl2Y2h1VlZGblRGM3lYbGthbml6M1ljVDBBMWRP?=
- =?utf-8?B?Znl1TTA4VVZyeGQyQldhbXFzT0lSNElHNE5ia0ROU214WWZWT2xibTVzdTNB?=
- =?utf-8?B?S2pZUEI5akJwWWUyWXRoblZpVmNzRXptLzkrcmlNS1NiblNyZzZTc2k4cEEy?=
- =?utf-8?B?V0FHRUtnZEsyNlgwcExZcFVRbVVzbjRpb3FuYTRGaUltdkxSUStxdXB2aGhi?=
- =?utf-8?B?Ymo5Y3ZxSHpsdVJmdnk1QlpFbWZpMEcwemQ5Mnh2K0FUd2hzQXMzVFBjdFRn?=
- =?utf-8?B?aVh0TW1sT2I0cktiZDZsOWJwRzNMc2l0cFIvZTR2QzRZM2FRd2x5ZlV2dnBs?=
- =?utf-8?B?M0VLMUlsem5taytmeDhaNWRsd0hreTdVN1ZhVW5qUFVoWHlHQURRRGZuMGk3?=
- =?utf-8?B?WnNXL3NFN1Q4NkNiSHdtRGlRM3c0Ni9rQjQ5Q0J4ODVPcDMzNVpBb1ZHRmRH?=
- =?utf-8?B?TVVjRXgwR2JKaWUzeE5hVnFCZEZzUG83czZqUFVENXhwRHA5SGtabjdSZzFW?=
- =?utf-8?B?TldzR2tQb0pjSlhra3lyZ244Nm5FRlBqdWhZU09UbE9tS3N6RDlKb3NhNUJE?=
- =?utf-8?B?RGNCc0xSUmFGSEdIUnc1NzRMeVM2RHNZQ3BsUmtVbUUwVEs1YnRFcDk3TXha?=
- =?utf-8?B?S2dnVHl3OCtxTEFPMTFIdXhhSVFIT0hXN0VyOE43bGFOVHdGV3NKV2pjeEJp?=
- =?utf-8?B?U29pZ1UycUl0d1B5WXB1dmhMb2tIMkVJQ0pERUdncjFVYUlmaHBmSmxqWFFB?=
- =?utf-8?Q?kzLPtHpDb+tqMoggqn1x94vug?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="udU2Qls7"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1765422092; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=DRtGQZxfOegWLIUDC0yayR4b7tssK1SXlDdmgxnZR0U=;
+	b=udU2Qls7vEKb098hMLIgER26vzkb4OgiyGZ4wnryEM+joteM6+aatwEpCCXyUBjhO//qTJSs7OR8XylWRy2gOl4OIuIEw9lmhLwch5Vx0DmHhggd1ajFCXz2hzmqmpWgfGo+DeEz1tO/mpRcA4QgU0r7Zx5AnUcissOZXv4GmlQ=
+Received: from 30.178.82.227(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WuYkbvM_1765422091 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Thu, 11 Dec 2025 11:01:32 +0800
+Message-ID: <548e3aab-6a7a-4729-965a-78ad8e527028@linux.alibaba.com>
+Date: Thu, 11 Dec 2025 11:01:30 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR12MB8059.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 07fe6a33-f752-4872-9960-08de38541401
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Dec 2025 01:24:49.6960
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YTlWGBvlpkJBGyMlhDjOjef8pqGW86D2q7UnEcWwzA4U/YPb9xYbIUZu1E4mMUCDunEyf9t8ZkR5ByQ8AebbYg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB8038
+User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
+Subject: Re: [PATCH v6] PCI: Check rom header and data structure addr before
+ accessing
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Andy Shevchenko <andriy.shevchenko@intel.com>, linux-pci@vger.kernel.org
+References: <20251210033551.107530-1-kanie@linux.alibaba.com>
+ <f97a1520-a21c-22a4-fd0f-f8a1b5852d6f@linux.intel.com>
+From: Guixin Liu <kanie@linux.alibaba.com>
+In-Reply-To: <f97a1520-a21c-22a4-fd0f-f8a1b5852d6f@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-DQo+IE9uIERlYyA5LCAyMDI1LCBhdCAxMTowNeKAr1BNLCBaaGkgV2FuZyA8emhpd0BudmlkaWEu
-Y29tPiB3cm90ZToNCj4gWy4uXQ0KPj4+ICsNCj4+PiArICAgICAgICAgICAgZGV2X2RiZyEoDQo+
-Pj4gKyAgICAgICAgICAgICAgICBwZGV2LmFzX3JlZigpLA0KPj4+ICsgICAgICAgICAgICAgICAg
-IlNFQzIgTUJPWDA6IHs6I3h9LCBNQk9YMXs6I3h9XG4iLA0KPj4+ICsgICAgICAgICAgICAgICAg
-bWJveDAsDQo+Pj4gKyAgICAgICAgICAgICAgICBtYm94MQ0KPj4+ICsgICAgICAgICAgICApOw0K
-Pj4+ICsNCj4+PiArICAgICAgICAgICAgaWYNCj4+PiAhcmVnczo6TlZfUEdDNl9CU0lfU0VDVVJF
-X1NDUkFUQ0hfMTU6OnJlYWQoYmFyKS5zY3J1YmJlcl9jb21wbGV0ZWQoKQ0KPj4+IHsNCj4+PiAr
-ICAgICAgICAgICAgICAgIHJldHVybiBFcnIoRVRJTUVET1VUKTsgIA0KPj4gDQo+PiBTbyB1bmRl
-ciB3aGljaCBzaXR1YXRpb24gZG8geW91IGdldCB0byB0aGlzIHBvaW50DQo+PiAoIXNjcnViYmVy
-X2NvbXBsZXRlZCkgPyBCYXNpY2FsbHkgSSBhbSBub3Qgc3VyZSBpZiBFVElNRURPVVQgaXMgdGhl
-DQo+PiByaWdodCBlcnJvciB0byByZXR1cm4gaGVyZSwgYmVjYXVzZSBib290KCkgYWxyZWFkeSBy
-ZXR1cm5zIEVUSU1FRE9VVA0KPj4gYnkgd2FpdGluZyBmb3IgdGhlIGhhbHQuDQo+PiANCj4+IElm
-IHlvdSBzdGlsbCB3YW50IHJldHVybiBFVElNRURPVVQgaGVyZSwgdGhlbiBpdCBzb3VuZHMgbGlr
-ZSB5b3UncmUNCj4+IHdhaXRpbmcgZm9yIHNjcnViYmluZyBiZXlvbmQgdGhlIHdhaXRpbmcgYWxy
-ZWFkeSBkb25lIGJ5IGJvb3QoKS4gSWYNCj4+IHNvLCB0aGVuIHNob3VsZG4ndCB5b3UgbmVlZCB0
-byB1c2UgcmVhZF9wb2xsX3RpbWVvdXQoKSBoZXJlPw0KPj4gDQo+PiBwZXJoYXBzIHNvbWV0aGlu
-ZyBsaWtlOg0KPj4gDQo+PiByZWFkX3BvbGxfdGltZW91dCgNCj4+ICAgICB8fA0KPj4gT2socmVn
-czo6TlZfUEdDNl9CU0lfU0VDVVJFX1NDUkFUQ0hfMTU6OnJlYWQoYmFyKS5zY3J1YmJlcl9jb21w
-bGV0ZWQoKSksDQo+PiB8dmFsOiAmYm9vbHwgKnZhbCwgRGVsdGE6OmZyb21fbWlsbGlzKDEwKSwN
-Cj4+ICAgICBEZWx0YTo6ZnJvbV9zZWNzKDUpLA0KPj4gKT87DQo+PiANCj4gDQo+IFRoaXMgaXMg
-dGhlIGlkZW50aWNhbCBpbXBsZW1lbnRhdGlvbiB0byBPcGVuUk0gWzFdLiBBY2NvcmRpbmcgdG8g
-dGhhdA0KPiBwYXJ0cyBvZiBjb2RlLCBJIHRoaW5rIHRoZSBzY3J1YmJlciBydW5zIGluIHRoZSBi
-aW5hcnkgYm9vdGluZyBwcm9jZXNzLg0KPiBXaGVuIGl0IHNpZ25hbHMgdGhlIGZpcm13YXJlIGJv
-b3Rpbmcgc3VjY2Vzc2Z1bGx5LCB0aGUgc2NydWJiaW5nIHNob3VsZA0KPiBiZSBkb25lLiBMZXQg
-bWUgY2hhbmdlIHRvIGFub3RoZXIgZXJybm8uDQo+IA0KPiBbMV1odHRwczovL2dpdGh1Yi5jb20v
-TlZJRElBL29wZW4tZ3B1LWtlcm5lbC1tb2R1bGVzL2Jsb2IvYTViZmIxMGU3NWE0MDQ2YzVkOTkx
-YzY1ZjQ5YjVkMjkxNTFlNjhjZi9zcmMvbnZpZGlhL3NyYy9rZXJuZWwvZ3B1L2dzcC9hcmNoL2Fk
-YS9rZXJuZWxfZ3NwX2FkMTAyLmMjTDQ5DQoNClN1cmUsIGl0IHdhcyBqdXN0IG1pc2xlYWRpbmcg
-aW4gdGhlIHBhdGNoIHRoYXQgd2XigJlyZSByZXR1cm5pbmcgYSB0aW1lb3V0IGVycm9yLCB3aGVu
-IHRoZSBlcnJvciBpcyBzb21ldGhpbmcgZWxzZSAobGlrZSBzY3J1YmJlciBmYWlsZWQpLiBUaGFu
-a3MgZm9yIGNvcnJlY3RpbmcgaXQuDQoNCiAtIEpvZWwNCg0K
+
+
+在 2025/12/10 19:09, Ilpo Järvinen 写道:
+> On Wed, 10 Dec 2025, Guixin Liu wrote:
+>
+>> We meet a crash when running stress-ng on x86_64 machine:
+>>
+>>    BUG: unable to handle page fault for address: ffa0000007f40000
+>>    RIP: 0010:pci_get_rom_size+0x52/0x220
+>>    Call Trace:
+>>    <TASK>
+>>      pci_map_rom+0x80/0x130
+>>      pci_read_rom+0x4b/0xe0
+>>      kernfs_file_read_iter+0x96/0x180
+>>      vfs_read+0x1b1/0x300
+>>
+>> Our analysis reveals that the rom space's start address is
+>> 0xffa0000007f30000, and size is 0x10000. Because of broken rom
+>> space, before calling readl(pds), the pds's value is
+>> 0xffa0000007f3ffff, which is already pointed to the rom space
+>> end, invoking readl() would read 4 bytes therefore cause an
+>> out-of-bounds access and trigger a crash.
+>> Fix this by adding image header and data structure checking.
+>>
+>> We also found another crash on arm64 machine:
+>>
+>>    Unable to handle kernel paging request at virtual address
+>> ffff8000dd1393ff
+>>    Mem abort info:
+>>    ESR = 0x0000000096000021
+>>    EC = 0x25: DABT (current EL), IL = 32 bits
+>>    SET = 0, FnV = 0
+>>    EA = 0, S1PTW = 0
+>>    FSC = 0x21: alignment fault
+>>
+>> The call trace is the same with x86_64, but the crash reason is
+>> that the data structure addr is not aligned with 4, and arm64
+>> machine report "alignment fault". Fix this by adding alignment
+>> checking.
+>>
+>> And also, convert some magic number to named defines.
+>>
+>> Fixes: 47b975d234ea ("PCI: Avoid iterating through memory outside the resource window")
+>> Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com>
+>> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+>> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+>> ---
+>> v5 -> v6:
+>> - Convert some magic number to named defines, suggested by
+>> Ilpo, thanks.
+>>
+>> v4 -> v5:
+>> - Add Andy Shevchenko's rb tag, thanks.
+>> - Change u64 to unsigned long.
+>> - Change pci_rom_header_valid() to pci_rom_is_header_valid() and
+>> change pci_rom_data_struct_valid() to pci_rom_is_data_struct_valid().
+>> - Change rom_end from rom+size to rom+size-1 for more readble,
+>> and also change header_end >= rom_end to header_end > rom_end, same
+>> as data structure end.
+>> - Change if(!last_image) to if (last_image)..
+>> - Use U16_MAX instead of 0xffff.
+>> - Split check_add_overflow() from data_len checking.
+>> - Remove !!() when reading last_image, and Use BIT(7) instead of 0x80.
+>>
+>> v3 -> v4:
+>> - Use "u64" instead of "uintptr_t".
+>> - Invert the if statement to avoid excessive indentation.
+>> - Add comment for alignment checking.
+>> - Change last_image's type from int to bool.
+>>
+>> v2 -> v3:
+>> - Add pci_rom_header_valid() helper for checking image addr and signature.
+>> - Add pci_rom_data_struct_valid() helper for checking data struct add
+>> and signature.
+>> - Handle overflow issue when adding addr with size.
+>> - Handle alignment fault when running on arm64.
+>>
+>> v1 -> v2:
+>> - Fix commit body problems, such as blank line in "Call Trace" both sides,
+>>    thanks, (Andy Shevchenko).
+>> - Remove every step checking, just check the addr is in header or data struct.
+>> - Add Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com> tag.
+>>   drivers/pci/rom.c | 123 +++++++++++++++++++++++++++++++++++++---------
+>>   1 file changed, 101 insertions(+), 22 deletions(-)
+>>
+>> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+>> index e18d3a4383ba..9480589899fa 100644
+>> --- a/drivers/pci/rom.c
+>> +++ b/drivers/pci/rom.c
+>> @@ -12,6 +12,15 @@
+>>   
+>>   #include "pci.h"
+>>   
+>> +#define PCI_ROM_HEADER_SIZE 0x1A
+>> +#define PCI_ROM_POINTER_TO_DATA_STRUCT 0x18
+>> +#define PCI_ROM_LAST_IMAGE_INDICATOR 0x15
+>> +#define PCI_ROM_IMAGE_LEN 0x10
+>> +#define PCI_ROM_IMAGE_LEN_UNIT_BYTES 512
+> SZ_512 + add include.
+Changed in v7.
+>> +#define PCI_ROM_IMAGE_SIGNATURE 0xAA55
+>> +#define PCI_ROM_DATA_STRUCT_SIGNATURE 0x52494350
+>> +#define PCI_ROM_DATA_STRUCT_LEN 0x0A
+> Can you please align the values with tabs.
+Sure.
+>> +
+>>   /**
+>>    * pci_enable_rom - enable ROM decoding for a PCI device
+>>    * @pdev: PCI device to enable
+>> @@ -69,6 +78,86 @@ void pci_disable_rom(struct pci_dev *pdev)
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_disable_rom);
+>>   
+>> +static bool pci_rom_is_header_valid(struct pci_dev *pdev,
+>> +				    void __iomem *image,
+>> +				    void __iomem *rom,
+>> +				    size_t size,
+>> +				    bool last_image)
+>> +{
+>> +	unsigned long rom_end = (unsigned long)rom + size - 1;
+>> +	unsigned long header_end;
+>> +
+>> +	/*
+>> +	 * Some CPU architectures require IOMEM access addresses to
+>> +	 * be aligned, for example arm64, so since we're about to
+>> +	 * call readw(), we check here for 2-byte alignment.
+>> +	 */
+>> +	if (!IS_ALIGNED((unsigned long)image, 2))
+> Add include for IS_ALIGNED().
+Sure, Added in v7.
+>> +		return false;
+>> +
+>> +	if (check_add_overflow((unsigned long)image, PCI_ROM_HEADER_SIZE,
+> Add include.
+Sure.
+>
+>> +	    &header_end))
+> Aligned to a wrong (.
+>
+Changed in v7.
+>> +		return false;
+>> +
+>> +	if (image < rom || header_end > rom_end)
+>> +		return false;
+>> +
+>> +	/* Standard PCI ROMs start out with these bytes 55 AA */
+>> +	if (readw(image) == PCI_ROM_IMAGE_SIGNATURE)
+> Missing include for readw() (a pre-existing problem in this file).
+OK, Added in v7.
+>> +		return true;
+>> +
+>> +	if (last_image)
+>> +		pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
+>> +			 PCI_ROM_IMAGE_SIGNATURE, readw(image));
+>> +	else
+> Add braces as the block is multiple lines.
+Changed in v7.
+>> +		pci_info(pdev, "No more image in the PCI ROM\n");
+>> +
+>> +	return false;
+>> +}
+>> +
+>> +static bool pci_rom_is_data_struct_valid(struct pci_dev *pdev,
+>> +					 void __iomem *pds,
+>> +					 void __iomem *rom,
+>> +					 size_t size)
+>> +{
+>> +	unsigned long rom_end = (unsigned long)rom + size - 1;
+>> +	unsigned long end;
+>> +	u16 data_len;
+>> +
+>> +	/*
+>> +	 * Some CPU architectures require IOMEM access addresses to
+>> +	 * be aligned, for example arm64, so since we're about to
+>> +	 * call readl(), we check here for 4-byte alignment.
+>> +	 */
+>> +	if (!IS_ALIGNED((unsigned long)pds, 4))
+>> +		return false;
+>> +
+>> +	/* Before reading length, check addr range. */
+>> +	if (check_add_overflow((unsigned long)pds, PCI_ROM_DATA_STRUCT_LEN + 1,
+>> +	    &end))
+> Aligned to a wrong (.
+Changed in v7.
+>> +		return false;
+>> +
+>> +	if (pds < rom || end > rom_end)
+>> +		return false;
+>> +
+>> +	data_len = readw(pds + PCI_ROM_DATA_STRUCT_LEN);
+>> +	if (!data_len || data_len == U16_MAX)
+>> +		return false;
+>> +
+>> +	if (check_add_overflow((unsigned long)pds, data_len, &end))
+>> +		return false;
+>> +
+>> +	if (end > rom_end)
+>> +		return false;
+>> +
+>> +	if (readl(pds) == PCI_ROM_DATA_STRUCT_SIGNATURE)
+>> +		return true;
+>> +
+>> +	pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
+>> +		 PCI_ROM_DATA_STRUCT_SIGNATURE, readl(pds));
+>> +	return false;
+>> +}
+>> +
+>>   /**
+>>    * pci_get_rom_size - obtain the actual size of the ROM image
+>>    * @pdev: target PCI device
+>> @@ -84,37 +173,27 @@ static size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom,
+>>   			       size_t size)
+>>   {
+>>   	void __iomem *image;
+>> -	int last_image;
+>> +	bool last_image;
+>>   	unsigned int length;
+>>   
+>>   	image = rom;
+>>   	do {
+>>   		void __iomem *pds;
+>> -		/* Standard PCI ROMs start out with these bytes 55 AA */
+>> -		if (readw(image) != 0xAA55) {
+>> -			pci_info(pdev, "Invalid PCI ROM header signature: expecting 0xaa55, got %#06x\n",
+>> -				 readw(image));
+>> +
+>> +		if (!pci_rom_is_header_valid(pdev, image, rom, size, true))
+>>   			break;
+>> -		}
+>> +
+>>   		/* get the PCI data structure and check its "PCIR" signature */
+>> -		pds = image + readw(image + 24);
+>> -		if (readl(pds) != 0x52494350) {
+>> -			pci_info(pdev, "Invalid PCI ROM data signature: expecting 0x52494350, got %#010x\n",
+>> -				 readl(pds));
+>> +		pds = image + readw(image + PCI_ROM_POINTER_TO_DATA_STRUCT);
+>> +		if (!pci_rom_is_data_struct_valid(pdev, pds, rom, size))
+>>   			break;
+>> -		}
+>> -		last_image = readb(pds + 21) & 0x80;
+>> -		length = readw(pds + 16);
+>> -		image += length * 512;
+>> -		/* Avoid iterating through memory outside the resource window */
+>> -		if (image >= rom + size)
+>> +
+>> +		last_image = readb(pds + PCI_ROM_LAST_IMAGE_INDICATOR) & BIT(7);
+> You forgot to name this BIT(7).
+Added in v7.
+>> +		length = readw(pds + PCI_ROM_IMAGE_LEN);
+>> +		image += length * PCI_ROM_IMAGE_LEN_UNIT_BYTES;
+> I'd have put the define conversion to own patch to reduce extra line
+> changes in the fix itself.
+OK, I will put them to a separate patch.
+
+Thanks for the advice.
+
+Best Regards,
+Guixin Liu
