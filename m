@@ -1,149 +1,262 @@
-Received: from mail-m21468.qiye.163.com (mail-m21468.qiye.163.com [117.135.214.68])
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11011027.outbound.protection.outlook.com [52.101.125.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96A152BE02D
-	for <linux-pci@vger.kernel.org>; Fri, 12 Dec 2025 03:56:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.214.68
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765511774; cv=none; b=CtzmC/8dqnl9WaL3Us9FfSHKqx2j7YSh5D5bETfghLXTKsNm1TDAhdvRAzHqt9csy3R5zrk+wGxj4NDzYL2pe5mjpDlC2ejTsaYIi9Wg8FYPTc+4bDXMMUccnYhygUdzIVRV7vC49BPnErRrtjF1mEdt/V5wi7U+GQGLTA7GFUY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765511774; c=relaxed/simple;
-	bh=TNptboRnam6vEcrO0MOY6j+NO+MkGFge0RvWs+Nr4Ho=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=nKo1CIs2fEEy2P1MSAl3ILoF+MmDHSkIUjUtOJRzY8gGh57GeisIcGHyCw54kg08JL5/LknpC2VHvJFqwX+dCh1SISMNeg3oGltolJfR0ib3ggikznDylZ9NkYXIElTSyjgmjbQdmEJYFAo5p+kj+R14IKHv8Pj2qw8jSGqhQpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=ajQUAVgH; arc=none smtp.client-ip=117.135.214.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5167D29D28B;
+	Fri, 12 Dec 2025 03:57:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.27
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1765511824; cv=fail; b=B7R4jkITZezglfGgfXfeneXRHFhJFig9JyZ70WwhC39/KNxpGsBy/v2lW+pPjWVnsU3YyYbyeoRn/GB1XTiWJ2ehNE3Qsp14yNc0ZyNNFDPuK0bd+qpyjzY71Rfk+aKPhbxKG1LJiDSgkAZdodMtpDlAqsr92tg+8IUmOiGXjMg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1765511824; c=relaxed/simple;
+	bh=7EktyW7Mzv4ASm//1tRJzc72ZakImdiyOxQ36EYn52A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=B7eCKRSklZHDWDTf7h8uNZDUk3dmNDphquETL5Z19ZEP/BKbqn3wtCnfDtRsKaMh19ABqTcxQDtgKf8ausOL6hPtrpANfuIUovixohTRSDteYX+HUPRooLyDv5ercY19Tjx3XY7l+jr3pMTwN1hdQRga89gZ5ST7cDoo4v5GdIM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=cPCthAVM; arc=fail smtp.client-ip=52.101.125.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="ajQUAVgH"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2ced0dd4b;
-	Fri, 12 Dec 2025 09:33:41 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-rockchip@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 2/2] PCI: dw-rockchip: Change get_ltssm() to provide L1 Substates info
-Date: Fri, 12 Dec 2025 09:33:25 +0800
-Message-Id: <1765503205-22184-2-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1765503205-22184-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1765503205-22184-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9b10313f1309cckunm8cda450e102e7a
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGh5MT1YaTEsYGUlJGRpIGENWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=ajQUAVgH8Ox37c0AT3i2esq/AcI/Z8PID6uXJQhx5hO8Pror4pLqOvoEyzWPtxDmTs/uLC02hQ8PPrSW78eSrntRBNh+ldOyVl9Zm8Q1nGDyG6mFJg/AxOR3LG4Enlb603XD0QcgiA6OTYHepHnfF8SP5lKd2FM6lEME1SwdNKs=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=bjvekfuXKUY/QHrOhNIiT7hEMtDBUtJGLlM17jv1XzM=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="cPCthAVM"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=DpeL4lkn1e3S+x/I3ky7ybV0obxUe9stFWMMMBiUlnvhd8PyQG6bdBzJ2CJzdEHlaqOZbXdVnjPqARlkoyP0SNpDMwx9A1xDq9+4eKu4uRoV7b2o13Qan9QEXdosaH8SUt6jcRibahUJdFZ5gU5Y8EjkY6xLC5hpeeudIFNx4DImq03AUltDrhPd1ZXhjzaUYgiSbjU3HiN9nfg+YCFY21DHROAJrhWu/OXBmLPTq9xMBY/Bo+JSrmsKipTdzp7zprXssQG24TLsfeYwFR/giTBra4iTbLTCZ+xt0e+ZhwhGMjrPKTHLodyVka/IpWOESIwNNq8SIciBt7PNMvI90g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1NTDvrgLeX+Mpp9Empu2uAsK26OKje6i6wc3JbnOSd4=;
+ b=VR9OqA6UKEulCAx+jflX+UHSEdo7BT5BvDtpZv5yl6YaBKauuYmlnda1Vjdm9zmwFCelNaEJ+rm8iEqTLZCAmVUFOfSJxU4Ekmqz7K1LcPuR6iqCmKWqUh9W1jcOnxLk/2VjJ0AwCWWgrtRrtWWx2gK7b9sDh7iaEDbgFRzszP4jeDb6BJYQRG026Uo+Nbaiv67zLKXcpP3zNDjx6ElF8RWWrTTkdyOGzC4d2ImY4BXY9sEfvE7Jq/DCI3lRvVQoEZ96tZZPBXFot4YScBrfH3GtvSu670STFJbDgvHhKFZZwUDIw6ndtAXXkYYDWQTDHvrCqeFzZjFxyM7YwFCi+w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1NTDvrgLeX+Mpp9Empu2uAsK26OKje6i6wc3JbnOSd4=;
+ b=cPCthAVMHKAtHdNxrYbl4Wjd49ig8fP2S4/eTXRLiZskOYHM9z7z5XDxhxbe5bqAjoktU+gnMRR2Ez0Wh2N3TbfEmqyq2+cLoaTJscxFWrbuWLZMNK+UgPUKNXqRvLpvmZzWijlaArCzcNVZ2g6+q55ZnPoxzZpT9G8v5zMmGVc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:24c::11)
+ by TYWP286MB2155.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:174::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9412.9; Fri, 12 Dec
+ 2025 03:56:58 +0000
+Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::fb7e:f4ed:a580:9d03]) by TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::fb7e:f4ed:a580:9d03%5]) with mapi id 15.20.9412.005; Fri, 12 Dec 2025
+ 03:56:58 +0000
+Date: Fri, 12 Dec 2025 12:56:57 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
+	dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, Frank.Li@nxp.com, mani@kernel.org, 
+	kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com, corbet@lwn.net, 
+	vkoul@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com, 
+	Basavaraj.Natikar@amd.com, Shyam-sundar.S-k@amd.com, kurt.schwemmer@microsemi.com, 
+	logang@deltatee.com, jingoohan1@gmail.com, lpieralisi@kernel.org, robh@kernel.org, 
+	jbrunet@baylibre.com, fancer.lancer@gmail.com, arnd@arndb.de, pstanner@redhat.com, 
+	elfring@users.sourceforge.net
+Subject: Re: [RFC PATCH v2 19/27] PCI: dwc: ep: Cache MSI outbound iATU
+ mapping
+Message-ID: <il25wipcfl5jvafmfpzan4o3oesivvlyyxqwaayh6duxzudizt@gvqiim3kjyng>
+References: <20251129160405.2568284-1-den@valinux.co.jp>
+ <20251129160405.2568284-20-den@valinux.co.jp>
+ <aTaE3yB7tQ-Homju@ryzen>
+ <aTfavdjoc2ob2j2g@ryzen>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aTfavdjoc2ob2j2g@ryzen>
+X-ClientProxiedBy: TY4P286CA0056.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:36e::8) To TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:24c::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYWP286MB2697:EE_|TYWP286MB2155:EE_
+X-MS-Office365-Filtering-Correlation-Id: ceb79288-690b-4aec-cb0d-08de39327f95
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|10070799003|1800799024|366016|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?rC3m7qRxgAh3+9RfgP2xaHgTmZXTYwZYkzKVXOg02bWyAL97bJolKf8xmhSy?=
+ =?us-ascii?Q?ZjTVShYa1wEcty4s236Xv9/zGuMpbob7UNeNZPQ61afsO7Ybl27XWsbS3oct?=
+ =?us-ascii?Q?CCuf0HkSlONXKU6OfO7hyy+olcBiSrIl1A6zIcDJF+6FVWfo1p9AS9Vhh7zG?=
+ =?us-ascii?Q?0PHmEP90WtUHr8ssh7wqjMR8mkBcb3o2TmSuxZMybg2yQvWSb7uuHMt4tALc?=
+ =?us-ascii?Q?bPPPu5H5ld4ehuiIevmpzRwvFSU8udO2YxW5wRUMz7NLQIV77Lxyphl84RIm?=
+ =?us-ascii?Q?ParVpVitMabuQ+/UkLdLuJ96JsA/AWDZHGPw0btev0uywSrkBpG+BMxFtLOO?=
+ =?us-ascii?Q?vd60qp4tmDm4p7lXwu1AaQeSImdl/wJHb5HE4pt0uEJai1XIULfh/UWUvFl+?=
+ =?us-ascii?Q?+KG4iuk3CdlK63/AItPTsZd9kL6QGrZwCJ8MEtsqdhJwRimB9S3m+lHs2UNW?=
+ =?us-ascii?Q?qbgm+Sdk4KofsVfzFfHwBai/5U/PPNNLJr2A1YbUmziW8qb6TC6l12U/BVRg?=
+ =?us-ascii?Q?kpAvdcDd3/eeY4u7EcdRF0sIEDqXkCv3O3/Elz2b8vi1GsGMhsR2GC2dEdmT?=
+ =?us-ascii?Q?FNEAiAnuGNLGZEK0kTzuEDgfSTyDe6tQ7+0gT2ZHu/CX8EX86pR7rONTQfKq?=
+ =?us-ascii?Q?kM3cZ8mwfehH1wCABU9Jj0x7dynt1tlwP+orfqtc+bgjHUd5253jjRr6uVaf?=
+ =?us-ascii?Q?DiYKXNWWAKo5tmbLBQGiMdH7Zso1o+c1ojieMoVXnhzdZYD2vzs7DQnXwXZt?=
+ =?us-ascii?Q?y7OWP9fVpI26p+iq6fsOrmAQLyVJS/aQ7+D69j/gGJwxt16Dkd09iGlp0RCM?=
+ =?us-ascii?Q?+uYLDjqHH+I2oB3V2XK5ZrE83F8bRbiZw9b/HzboEWsWJMeqR5/YMtRYMuKb?=
+ =?us-ascii?Q?9VjdimVACKCKMvhl+HyJIlpZ+b1vUqRC/dW7VJIedeq4Jl0F6muh8Flia67f?=
+ =?us-ascii?Q?aLQpG/pbFlc3x/eBokODKG+PpX5uNyOur47YpxRuo7xzSsOzNIw+8YplwHtY?=
+ =?us-ascii?Q?l9tInlbEvKdP/zE1JUS0xwOahBPCq31S5kSObudDz3BoEO/moOdX4/QkB8FH?=
+ =?us-ascii?Q?2VWry6WW+7Z/z4cdxxoJnDbs+RahvYF8WIp6JoVhuqodBd/kxuHc+W2RQT0J?=
+ =?us-ascii?Q?1wZtum3//Wfb23RVSHBaKMZ8vJxSKxxA8p4+Ryi9N4ypoTRcNrXgMZ7rmrV5?=
+ =?us-ascii?Q?hSa93JFQ+lDId+phM57VeodvXSa30WsCaodlaiD84WzCW7Va7yibQTUKCNeH?=
+ =?us-ascii?Q?HUXbjosHmfk6HVYqu75L3hRJfKAGwobFzKG6uIOJtcd55MQ1sGsnAE3jWTX6?=
+ =?us-ascii?Q?lR6qdaDhNhfhocVJVRR7O/eMiHckTDY76wUOo9oaol6duxmk2K1Wj3lYzs3Y?=
+ =?us-ascii?Q?7u4MtoikUwguAqCTezzM2u54DBcEM7447Nq7CYvQLxEc0S1CeMYh6E1P4DxT?=
+ =?us-ascii?Q?WA3lUTTusH3aOshv3GbHTcGCxd6RPvGbzTh31Ab3Bud9SiXBMhhIRA=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(10070799003)(1800799024)(366016)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?VVaQVZn6te8EBJfZRPZEgVyvEh/oCxsQ7dIPYd4I/XyZnwRPaLtLfGDzOFRU?=
+ =?us-ascii?Q?U+Bzp7meOQ83caDY9atSBSueK7khjkyV2Gu8PoXvsWfu9AQLI6/gO7TItFxb?=
+ =?us-ascii?Q?eEoL+325iisgtlDc0h8gJIE26xrrHUufdiYz2vWuXh76DvWD6VZ1YdaoXHbH?=
+ =?us-ascii?Q?LcAjYK3Gb6tcsQHgyOkK5NU+33UNfOzb9UqMe23rSkehV7JmF5T04KY0bBgb?=
+ =?us-ascii?Q?FmhsOm07hanL52VA6KMyq6DugtMlODJSqCH+DnUAyQqhiLR63eZj8XQ0nl1z?=
+ =?us-ascii?Q?xwZ78bVHWiWiGljs2N/PxahrfnTI8+dxMCFk0hq5QlswoAeYEWaVr+4OVKNO?=
+ =?us-ascii?Q?eACxGIT241FDD0cKfMu075RPbIa/TVCHCfIDz21J5XJpcZe9lRTps39Uaspj?=
+ =?us-ascii?Q?VPAkDodkXz7foRIU1sjfzfSWZCnBXr3HbrdnSkPZCc8bMWkMg6KG2NObltMO?=
+ =?us-ascii?Q?5yDp7prUZMCrVC/+MlnlhWDMBX8RQ1aAXOgwMdgmqUwVJexIq8RNljzsWfH/?=
+ =?us-ascii?Q?8oy03oV4MeDS0ZsWTfqGIrXt5Hk5v3vxiZ/4ZAS4sqO7wQcwjVej+N0QR4cE?=
+ =?us-ascii?Q?3H56WIlaO/E7ZMzyG1v04Se0ayf0CrGjlVkqExca3At3iClBh78Vfrs0y51O?=
+ =?us-ascii?Q?/XmyqBKbqYUruicbM+GBwAllygGEGTkbx+Ot3lf69btctU0K3XHxif6E/Uwy?=
+ =?us-ascii?Q?zikGsDbuYjXe9jsAttZdvYCDA4GPildGxG1ApgIZk3K8H8d+cz8oRBvB7muw?=
+ =?us-ascii?Q?eDzEAODb6LST6OykPZHcumtp5WaqVUuzaN+KMPXwK3OWWjArccZB+LjV1P9v?=
+ =?us-ascii?Q?kHlePulQ4G2hH/OOT1RuRjwDR5SviM8WsVOUFOQRVxmqnTgWMcxNNGpb/BKu?=
+ =?us-ascii?Q?AaQCmzgv30REPYMgkAbNFCJpQFCBZMXXsvUba1BV36dyVBEc7jdgS1vPU85l?=
+ =?us-ascii?Q?Sq3kPIqrnJpDF6gwKNbFS6KKWmCexZJwijur5MevwEmqnnlaGS/MDrsoVHF4?=
+ =?us-ascii?Q?7ix4fuGTZbnAcJBfnFlq4KXZ8GGSKDzwVxYDZYqLQDdbN1LpIfv6EGEwqtVD?=
+ =?us-ascii?Q?jltwnL5e962yMbgkTcdTPTPXDekKk+UGdcP9ArULkXF0PPzDpk4qEt5VnITe?=
+ =?us-ascii?Q?N7v+K5GE5dOKyFbZjfxiFojW1MH8uo/lyNycgdRL59RjgjAHwiIPZ8gx6HJJ?=
+ =?us-ascii?Q?pbSOBHEIZXJShhU0aaJAjMCaHD5tcoNoq43lcMbv7dnHQjcBMbA7qH+xfgXA?=
+ =?us-ascii?Q?0WcRaf7XXZP+M4OwV2wJAZbg8RvVKSBb3ME1SNUGBXo6YFYzqB2WWNYowmDz?=
+ =?us-ascii?Q?ApXEfKGOsf6V9PlwRS8tt6kYYu6peu7PCWMclUwvAGGawbmdpdwYtGarQwWQ?=
+ =?us-ascii?Q?f2HZkMD+3eun3KfS91i+d/wESCLTD1N+DMQjT+x3k8WfJHhBATOrW6+hsEC5?=
+ =?us-ascii?Q?2PW+UTkfKDMqmZhL1FDvY6yJyY6xh3+NEpM6+oLPsOjgHtBWtDpg1X+Pd0Cd?=
+ =?us-ascii?Q?cbFjeWFp+bVQV7REoHn4a86djAYoP4rHbeMM+rSGqb91ye0FFvDG1yiEKR2O?=
+ =?us-ascii?Q?3Pd0YXlDko4+lAZ1Ufxdvd00Q5Vw7Tnc2nVI4xMWioB2w88LAnDx4FqRDzb/?=
+ =?us-ascii?Q?DMnuadDbhGh41AQGW47VMV8=3D?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: ceb79288-690b-4aec-cb0d-08de39327f95
+X-MS-Exchange-CrossTenant-AuthSource: TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Dec 2025 03:56:58.6175
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YGEJu8l4QKNZzF93tnNbp6vjViMPMjASNfB0OxmF4l5b/qicCqI/hfbYnttmK8DnKQdrOWoDm8zfHp+HrAehxg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWP286MB2155
 
-Rename rockchip_pcie_get_ltssm() to rockchip_pcie_get_ltssm_reg() and add
-rockchip_pcie_get_ltssm() to get_ltssm() callback in order to show the
-proper L1 Substates. The PCIE_CLIENT_LTSSM_STATUS[5:0] register returns
-the same LTSSM layout as enum dw_pcie_ltssm. So we only need to tell L1 PM
-Substates apart and return the proper value defined in pcie-designware.h.
+On Tue, Dec 09, 2025 at 09:15:57AM +0100, Niklas Cassel wrote:
+> On Mon, Dec 08, 2025 at 08:57:19AM +0100, Niklas Cassel wrote:
+> > On Sun, Nov 30, 2025 at 01:03:57AM +0900, Koichiro Den wrote:
+> >
+> > I don't like that this patch modifies dw_pcie_ep_raise_msi_irq() but does
+> > not modify dw_pcie_ep_raise_msix_irq()
+> >
+> > both functions call dw_pcie_ep_map_addr() before doing the writel(),
+> > so I think they should be treated the same.
+> 
+> Btw, when using nvmet-pci-epf:
+> drivers/nvme/target/pci-epf.c
+> 
+> With queue depth == 32, I get:
+> [  106.585811] arm-smmu-v3 fc900000.iommu: event 0x10 received:
+> [  106.586349] arm-smmu-v3 fc900000.iommu:      0x0000010000000010
+> [  106.586846] arm-smmu-v3 fc900000.iommu:      0x0000020000000000
+> [  106.587341] arm-smmu-v3 fc900000.iommu:      0x000000090000f040
+> [  106.587841] arm-smmu-v3 fc900000.iommu:      0x0000000000000000
+> [  106.588335] arm-smmu-v3 fc900000.iommu: event: F_TRANSLATION client: 0000:01:00.0 sid: 0x100 ssid: 0x0 iova: 0x90000f040 ipa: 0x0
+> [  106.589383] arm-smmu-v3 fc900000.iommu: unpriv data write s1 "Input address caused fault" stag: 0x0
+> 
+> (If I only run with queue depth == 1, I cannot trigger this IOMMU error.)
+> 
+> 
+> So, I really think that this patch is important, as it solves a real
+> problem also for the nvmet-pci-epf driver.
+> 
+> 
+> With this patch applied, I cannot trigger the IOMMU error,
+> so I really think that you should send this a a stand alone patch.
+> 
+> 
+> I still think that we need to modify dw_pcie_ep_raise_msix_irq() in a similar
+> way.
 
-  cat /sys/kernel/debug/dwc_pcie_a40000000.pcie/ltssm_status
-  L1_2 (0x142)
+Sorry about my late response, and thank you for handling this:
+https://lore.kernel.org/all/20251210071358.2267494-2-cassel@kernel.org/
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Koichiro
 
-Changes in v2:
-- fix commit log and subject(Bjorn)
-- remove "else" and wrap to fit in 80 columns(Bjorn)
-
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 29 +++++++++++++++++++++++----
- 1 file changed, 25 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index f8605fe..8c1c922 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -68,6 +68,11 @@
- #define  PCIE_CLKREQ_NOT_READY		FIELD_PREP_WM16(BIT(0), 0)
- #define  PCIE_CLKREQ_PULL_DOWN		FIELD_PREP_WM16(GENMASK(13, 12), 1)
- 
-+/* RASDES TBA information */
-+#define PCIE_CLIENT_CDM_RASDES_TBA_INFO_CMN	0x154
-+#define  PCIE_CLIENT_CDM_RASDES_TBA_L1_1	BIT(4)
-+#define  PCIE_CLIENT_CDM_RASDES_TBA_L1_2	BIT(5)
-+
- /* Hot Reset Control Register */
- #define PCIE_CLIENT_HOT_RESET_CTRL	0x180
- #define  PCIE_LTSSM_APP_DLY2_EN		BIT(1)
-@@ -181,11 +186,26 @@ static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
- 	return 0;
- }
- 
--static u32 rockchip_pcie_get_ltssm(struct rockchip_pcie *rockchip)
-+static u32 rockchip_pcie_get_ltssm_reg(struct rockchip_pcie *rockchip)
- {
- 	return rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_LTSSM_STATUS);
- }
- 
-+static enum dw_pcie_ltssm rockchip_pcie_get_ltssm(struct dw_pcie *pci)
-+{
-+	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-+	u32 val = rockchip_pcie_readl_apb(rockchip,
-+			PCIE_CLIENT_CDM_RASDES_TBA_INFO_CMN);
-+
-+	if (val & PCIE_CLIENT_CDM_RASDES_TBA_L1_1)
-+		return DW_PCIE_LTSSM_L1_1;
-+
-+	if (val & PCIE_CLIENT_CDM_RASDES_TBA_L1_2)
-+		return DW_PCIE_LTSSM_L1_2;
-+
-+	return rockchip_pcie_get_ltssm_reg(rockchip) & PCIE_LTSSM_STATUS_MASK;
-+}
-+
- static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
- {
- 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
-@@ -201,7 +221,7 @@ static void rockchip_pcie_disable_ltssm(struct rockchip_pcie *rockchip)
- static bool rockchip_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
--	u32 val = rockchip_pcie_get_ltssm(rockchip);
-+	u32 val = rockchip_pcie_get_ltssm_reg(rockchip);
- 
- 	return FIELD_GET(PCIE_LINKUP_MASK, val) == PCIE_LINKUP;
- }
-@@ -485,6 +505,7 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- 	.link_up = rockchip_pcie_link_up,
- 	.start_link = rockchip_pcie_start_link,
- 	.stop_link = rockchip_pcie_stop_link,
-+	.get_ltssm = rockchip_pcie_get_ltssm,
- };
- 
- static irqreturn_t rockchip_pcie_rc_sys_irq_thread(int irq, void *arg)
-@@ -499,7 +520,7 @@ static irqreturn_t rockchip_pcie_rc_sys_irq_thread(int irq, void *arg)
- 	rockchip_pcie_writel_apb(rockchip, reg, PCIE_CLIENT_INTR_STATUS_MISC);
- 
- 	dev_dbg(dev, "PCIE_CLIENT_INTR_STATUS_MISC: %#x\n", reg);
--	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm(rockchip));
-+	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm_reg(rockchip));
- 
- 	if (reg & PCIE_RDLH_LINK_UP_CHGED) {
- 		if (rockchip_pcie_link_up(pci)) {
-@@ -526,7 +547,7 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
- 	rockchip_pcie_writel_apb(rockchip, reg, PCIE_CLIENT_INTR_STATUS_MISC);
- 
- 	dev_dbg(dev, "PCIE_CLIENT_INTR_STATUS_MISC: %#x\n", reg);
--	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm(rockchip));
-+	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm_reg(rockchip));
- 
- 	if (reg & PCIE_LINK_REQ_RST_NOT_INT) {
- 		dev_dbg(dev, "hot reset or link-down reset\n");
--- 
-2.7.4
-
+> 
+> 
+> Perhaps instead of:
+> 
+> 
+> 	if (!ep->msi_iatu_mapped) {
+> 		ret = dw_pcie_ep_map_addr(epc, func_no, 0,
+> 					  ep->msi_mem_phys, msg_addr,
+> 					  map_size);
+> 		if (ret)
+> 			return ret;
+> 
+> 		ep->msi_iatu_mapped = true;
+> 		ep->msi_msg_addr = msg_addr;
+> 		ep->msi_map_size = map_size;
+> 	} else if (WARN_ON_ONCE(ep->msi_msg_addr != msg_addr ||
+> 				ep->msi_map_size != map_size)) {
+> 		/*
+> 		 * The host changed the MSI target address or the required
+> 		 * mapping size. Reprogramming the iATU at runtime is unsafe
+> 		 * on this controller, so bail out instead of trying to update
+> 		 * the existing region.
+> 		 */
+> 		return -EINVAL;
+> 	}
+> 
+> 	writel(msg_data | (interrupt_num - 1), ep->msi_mem + offset);
+> 
+> 
+> 
+> We could modify both dw_pcie_ep_raise_msix_irq and dw_pcie_ep_raise_msi_irq
+> to do something like:
+> 
+> 
+> 
+> 	if (!ep->msi_iatu_mapped) {
+> 		ret = dw_pcie_ep_map_addr(epc, func_no, 0,
+> 					  ep->msi_mem_phys, msg_addr,
+> 					  map_size);
+> 		if (ret)
+> 			return ret;
+> 
+> 		ep->msi_iatu_mapped = true;
+> 		ep->msi_msg_addr = msg_addr;
+> 		ep->msi_map_size = map_size;
+> 	} else if (WARN_ON_ONCE(ep->msi_msg_addr != msg_addr ||
+> 				ep->msi_map_size != map_size)) {
+> 		/*
+> 		 * Host driver might have changed from MSI to MSI-X
+> 		 * or the other way around.
+> 		 */
+> 		 dw_pcie_ep_unmap_addr(epc, 0, 0, ep->msi_mem_phys);
+> 		 ret = dw_pcie_ep_map_addr(epc, func_no, 0,
+> 		 			   ep->msi_mem_phys, msg_addr,
+> 					   map_size);
+> 		if (ret)
+> 			return ret;
+> 	}
+> 
+> 	writel(msg_data | (interrupt_num - 1), ep->msi_mem + offset);
+> 
+> 
+> 
+> I think that should work without needing to introuce any
+> .start_engine() / .stop_engine() APIs.
+> 
+> 
+> 
+> Kind regards,
+> Niklas
