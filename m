@@ -1,106 +1,164 @@
-Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 805F31FDA
-	for <linux-pci@vger.kernel.org>; Fri, 12 Dec 2025 02:02:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75E29296BD8;
+	Fri, 12 Dec 2025 03:38:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765504972; cv=none; b=R72P7fb3qdl4+6q05JgJYN4h+6MhJ4h1EdhGIsubirdcXbkT2Zb9wOK98SWICUZiXZQgvkOYSV6qVP6/P/L2KeHtwbmfsNFRRNRi7r2YmFyTu2zl84uH3YbzuCEjSmEcKa5UCexF31qOHolAaySdG+j9fKCXzwDwtsF6VJZMz2w=
+	t=1765510692; cv=none; b=IGfy7Xj1djm/p0PsGkOByJTb7ZuesQF3TtOQJYgXnleue8/fyOYS5ylMesyHLp3Jt950gPtxg71vpY42gjpN8QrHF7mz7uQ9m+wNsSzy9Uam7HOmF/vbENKGg0AKEHnLNyEjCHC6VgR0D1voEWjAkSQ99epf8uDZBlZatOS1R1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765504972; c=relaxed/simple;
-	bh=Xj9D1OIlzrgZSasF6eGN3/1dH74HBd5GiVbtv27jRp4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oya4bNlcZr1/Sm887/pyFMp85Zc8cEg0KmR/0ZFxm6u5A3AdF8KWcoN7YPri1BNNXqg1Jf97v9AJyoWjZlUTjDva3h9zpVsULxRF4oBsesqmTXdLTSBlGyJ66T/wK44hgPBRRJvhWpr7l3qZW9ETs/6tX+l7iAsspOC1Zsd69IY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=sqHcDiwO; arc=none smtp.client-ip=115.124.30.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1765510692; c=relaxed/simple;
+	bh=9D6zWgM275kFJjmUhT1myHE47fJbV2AAsrgk9IFLcP8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XMK//QXEcrt6YikUQsRk8v9TB/cG0mq4240o7q8Ib0q1qPxjtc/KEf92TeDBt8hHT2MjcJMixTJ0bsuMLwjCrB7S+OjUqNEajvYfY025VwVOTsMK9XLkMFSaKYLeVqAaei/zL8IkLMS7SFKJvew+4vb4QmN/z/TlYTx81TrYqiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X5rLjdeF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="sqHcDiwO"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1765504967; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=Eqn+45s6QXmQFXVOBIrkB67nWMgMlfLCgbeuVldTBvU=;
-	b=sqHcDiwOqKauiKDfvRobVD5DjwTW3WbpT8bkFlT0ClRoVZI2lPSIslNUCLfpCutYHqs2gZp+SzZ/DB0LbepaF6PkmdZsrk4AhnFvlKrLD+rvTuOOK7yFFhbsA1225fk3q3Igojm+k52FrDvMqJTa3Enf4JBj1CoPtWcKPoytOZk=
-Received: from 30.178.83.32(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WucHl.F_1765504648 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 12 Dec 2025 09:57:29 +0800
-Message-ID: <89e44eda-99c0-4158-946d-21a951a48206@linux.alibaba.com>
-Date: Fri, 12 Dec 2025 09:57:28 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X5rLjdeF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 605DDC4CEF1;
+	Fri, 12 Dec 2025 03:38:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765510692;
+	bh=9D6zWgM275kFJjmUhT1myHE47fJbV2AAsrgk9IFLcP8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=X5rLjdeFyK1iCqTiMKDj1mu2MMFuoThjqZFKqga4z2vySOzox++N2fQ92HkLV20P/
+	 LIN6OECNEB2yU3KW3BKaMNvtnEF/3x0sDgx/n1DecKOl7CnNosKPEDzUBqKAw6WJQW
+	 4/mzuXt9JooDYzZvlvbbTpZnqPezjaGwZipWZVnqNKPFxSQs2Db+IoAHuSlPxBJA6K
+	 3abDhx8Cs9Y9StIPHlzWBNrjTh3jHQIWiZDaw796kTIcwZJhkzFuwa0KaRxpltzUJY
+	 rlZCg/NoOAiTITMqC0FJVS4y2KIjW07LhiB6Wn9/ifLaKU3AwSf54pWRUMQTrXSXIQ
+	 bFciVULY5HbGA==
+Date: Fri, 12 Dec 2025 12:38:02 +0900
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
+	dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, Frank.Li@nxp.com, 
+	kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com, corbet@lwn.net, 
+	vkoul@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com, 
+	Basavaraj.Natikar@amd.com, Shyam-sundar.S-k@amd.com, kurt.schwemmer@microsemi.com, 
+	logang@deltatee.com, jingoohan1@gmail.com, lpieralisi@kernel.org, robh@kernel.org, 
+	jbrunet@baylibre.com, fancer.lancer@gmail.com, arnd@arndb.de, pstanner@redhat.com, 
+	elfring@users.sourceforge.net
+Subject: Re: [RFC PATCH v2 19/27] PCI: dwc: ep: Cache MSI outbound iATU
+ mapping
+Message-ID: <qyrjma57yonkgy4ouopzssyrktcrosjs2v6hnawjkddzwcfm5e@bm5q2isynhet>
+References: <20251129160405.2568284-1-den@valinux.co.jp>
+ <20251129160405.2568284-20-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
-Subject: Re: [PATCH v9 1/2] PCI: Introduce named defines for pci rom
-To: Andy Shevchenko <andriy.shevchenko@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- linux-pci@vger.kernel.org
-References: <20251211125906.57027-1-kanie@linux.alibaba.com>
- <20251211125906.57027-2-kanie@linux.alibaba.com>
- <aTrPtxDdg__tabSE@smile.fi.intel.com>
-From: Guixin Liu <kanie@linux.alibaba.com>
-In-Reply-To: <aTrPtxDdg__tabSE@smile.fi.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251129160405.2568284-20-den@valinux.co.jp>
 
+On Sun, Nov 30, 2025 at 01:03:57AM +0900, Koichiro Den wrote:
+> dw_pcie_ep_raise_msi_irq() currently programs an outbound iATU window
+> for the MSI target address on every interrupt and tears it down again
+> via dw_pcie_ep_unmap_addr().
+> 
+> On systems that heavily use the AXI bridge interface (for example when
+> the integrated eDMA engine is active), this means the outbound iATU
+> registers are updated while traffic is in flight. The DesignWare
+> endpoint spec warns that updating iATU registers in this situation is
+> not supported, and the behavior is undefined.
+> 
 
+When claiming spec violation, you should quote the spec reference such as the
+spec version, section, and actual wording snippet.
 
-在 2025/12/11 22:05, Andy Shevchenko 写道:
-> On Thu, Dec 11, 2025 at 08:59:05PM +0800, Guixin Liu wrote:
->> Convert the magic numbers associated with PCI ROM into named
->> definitions. Some of these definitions will be used in the second
->> fix patch.
-> Please, give at least 24h between the versions in order other being able (quick
-> enough) to review the changes.
->
-> ...
-OK, I will be more carefule next time.
->> +#include <linux/bits.h>
->>   #include <linux/kernel.h>
->>   #include <linux/export.h>
->>   #include <linux/pci.h>
->>   #include <linux/slab.h>
->> +#include <linux/sizes.h>
-> 'i' goes before 'l', yeah it's hard to see in small monospace fonts.
->
-> ...
-OK, changed in v10.
->
->> +#define PCI_ROM_HEADER_SIZE			0x1A
->> +#define PCI_ROM_POINTER_TO_DATA_STRUCT		0x18
->> +#define PCI_ROM_LAST_IMAGE_INDICATOR		0x15
->> +#define PCI_ROM_LAST_IMAGE_INDICATOR_BIT	BIT(7)
->> +#define PCI_ROM_IMAGE_LEN			0x10
->> +#define PCI_ROM_IMAGE_LEN_UNIT_BYTES		SZ_512
-> I'm a bit confused by the naming here.
->
-> There are two definitions that end with _LEN, but the meaning of them is
-> the offset where the respective "len" can be read from.
->
-> Now, there is a _LEN_UNIT_BYTES, which seems related to _LEN, but in unclear
-> way.
->
-> With all the AA55 signature it pretty much sounds to me like a sector division
-> (legacy from the era of floppies).
->
-> That said, I would name the size of the "unit" as
->
-> #define PCI_ROM_IMAGE_SECTOR_SIZE		SZ_512
->
-> (without or with _BYTES on your choice, usually we don't use unit for bytes
->   when there is no room for misinterpretation).
-OK, I will change this to PCI_ROM_IMAGE_SECTOR_SIZE in next version.
->> +#define PCI_ROM_IMAGE_SIGNATURE			0xAA55
-> Despite the below comment explains this, I would explicitly state it here
->
-> /* Data structure signature is "PCIR" in ASCII representation */
-Added in v10, thanks.
+> Under high MSI and eDMA load this pattern results in occasional bogus
+> outbound transactions and IOMMU faults such as:
+> 
+>   ipmmu-vmsa eed40000.iommu: Unhandled fault: status 0x00001502 iova 0xfe000000
+> 
+> followed by the system becoming unresponsive. This is the actual output
+> observed on Renesas R-Car S4, with its ipmmu_hc used with PCIe ch0.
+> 
+> There is no need to reprogram the iATU region used for MSI on every
+> interrupt. The host-provided MSI address is stable while MSI is enabled,
+> and the endpoint driver already dedicates a scratch buffer for MSI
+> generation.
+> 
+> Cache the aligned MSI address and map size, program the outbound iATU
+> once, and keep the window enabled. Subsequent interrupts only perform a
+> write to the MSI scratch buffer, avoiding dynamic iATU reprogramming in
+> the hot path and fixing the lockups seen under load.
+> 
 
-Best Regards,
-Guixin Liu
->> +#define PCI_ROM_DATA_STRUCT_SIGNATURE		0x52494350
->> +#define PCI_ROM_DATA_STRUCT_LEN			0x0A
+iATU windows are very limited (just 8 in some cases), so I don't like allocating
+fixed windows for MSIs.
 
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 48 ++++++++++++++++---
+>  drivers/pci/controller/dwc/pcie-designware.h  |  5 ++
+>  2 files changed, 47 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 3780a9bd6f79..ef8ded34d9ab 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -778,6 +778,16 @@ static void dw_pcie_ep_stop(struct pci_epc *epc)
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> +	/*
+> +	 * Tear down the dedicated outbound window used for MSI
+> +	 * generation. This avoids leaking an iATU window across
+> +	 * endpoint stop/start cycles.
+> +	 */
+> +	if (ep->msi_iatu_mapped) {
+> +		dw_pcie_ep_unmap_addr(epc, 0, 0, ep->msi_mem_phys);
+> +		ep->msi_iatu_mapped = false;
+> +	}
+> +
+>  	dw_pcie_stop_link(pci);
+>  }
+>  
+> @@ -881,14 +891,37 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  	msg_addr = ((u64)msg_addr_upper) << 32 | msg_addr_lower;
+>  
+>  	msg_addr = dw_pcie_ep_align_addr(epc, msg_addr, &map_size, &offset);
+> -	ret = dw_pcie_ep_map_addr(epc, func_no, 0, ep->msi_mem_phys, msg_addr,
+> -				  map_size);
+> -	if (ret)
+> -		return ret;
+>  
+> -	writel(msg_data | (interrupt_num - 1), ep->msi_mem + offset);
+> +	/*
+> +	 * Program the outbound iATU once and keep it enabled.
+> +	 *
+> +	 * The spec warns that updating iATU registers while there are
+> +	 * operations in flight on the AXI bridge interface is not
+> +	 * supported, so we avoid reprogramming the region on every MSI,
+> +	 * specifically unmapping immediately after writel().
+> +	 */
+> +	if (!ep->msi_iatu_mapped) {
+> +		ret = dw_pcie_ep_map_addr(epc, func_no, 0,
+> +					  ep->msi_mem_phys, msg_addr,
+> +					  map_size);
+> +		if (ret)
+> +			return ret;
+>  
+> -	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->msi_mem_phys);
+> +		ep->msi_iatu_mapped = true;
+> +		ep->msi_msg_addr = msg_addr;
+> +		ep->msi_map_size = map_size;
+> +	} else if (WARN_ON_ONCE(ep->msi_msg_addr != msg_addr ||
+> +				ep->msi_map_size != map_size)) {
+> +		/*
+> +		 * The host changed the MSI target address or the required
+> +		 * mapping size. Reprogramming the iATU at runtime is unsafe
+> +		 * on this controller, so bail out instead of trying to update
+> +		 * the existing region.
+> +		 */
+
+I'd perfer having some sort of locking to program the iATU registers during
+runtime instead of bailing out.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
