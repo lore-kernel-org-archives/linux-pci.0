@@ -1,80 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBF8C330B30;
-	Mon, 15 Dec 2025 13:37:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF51C2DFA5B;
+	Mon, 15 Dec 2025 13:59:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765805834; cv=none; b=tAqSarLB0cONoWTxFMdoyzOOXs1jardMakEFhwXL6UAeauqDA26qK+00M91XC8EkhML58qm3H1g3b7JXt0Ql/3cZpd2WuZSMexNcS+eiEcdKIf5h4OzZEUKU89q+g03Hq9zYOn2yBVIrCLWZZICoOo3aZMZjvd+rS0aWksWbzJw=
+	t=1765807154; cv=none; b=FmSeeKOoG031+F3RbQ55OVWHTBfdYY1tNbi/oQSoCwn71+rptDdZfqMBjFOrK5jsBk3/3q/xKBSvKqto77B/FLcAx2pg3dhO/lp+FGwByc+evEwR0XBHj9NX7EE64woz8ASB/b1B3kmG3lU2Ab4PNN4OewuF3QC9EXzULHTOjW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765805834; c=relaxed/simple;
-	bh=1uowNVZ5iB/Udkb1TEVTzDa5CfuL/s8RRv0FRXaqzik=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=nCJWo6FR+5PS78Ea2tYdNIAkYPKqUBnBhbIO9csuUaVqWNxTg7xQoiuiKhYlu+vcwdijSpLIOJlGHpy78+P6S3VH9tAWlcM50nv80x/dVrACyY465DneqaHmrt1hwvkPLyCQeQroHyMi0t5+ow7et9V+4jfAgeHrBMt6g8B6Dtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oYSI7xoI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765807154; c=relaxed/simple;
+	bh=YQ0YmiEKTBiByyCk2XIiAXJahBqdOSyVHDmgyhFstuo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=XzPmMP3YiU3w/pPj9bVYZNR37Ocfcegxmehd7SN8cNL4BDQb4jYt7QkT869spT7vDT6GvDOeML/Yzc7UevPoWIcAYHvWEyQqsVCzyc/mzihy8SaXhMAZoOdTjupu7zfNtXXM30piaX1Js/QMCOjB6e5EEKIo4C+ue3oA1QLym1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K0ZSvqo9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oYSI7xoI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6516CC4CEFB;
-	Mon, 15 Dec 2025 13:37:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K0ZSvqo9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84039C4CEF5;
+	Mon, 15 Dec 2025 13:59:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765805834;
-	bh=1uowNVZ5iB/Udkb1TEVTzDa5CfuL/s8RRv0FRXaqzik=;
-	h=From:To:Cc:Subject:Date:From;
-	b=oYSI7xoIlDImUl1WbelttW9wvwd6oj2VA5UV3aXlTAOrwjkzZlzPIW8vm+D1+UBCj
-	 4jMeARx1CLbt2Y56ZV6GS22otFXc4dCsh/IgzMgrh3shnaVD/6iiYwB/FA+rnNZ3+5
-	 GVFQ2EJlCTDa1W3QMzacNQg08XCaLaP7cZd680+Qmy/UgLPqvCRRxysRb9zFm0Env1
-	 d7z62rnkFoGqj5z2xU8NoELFkEU5tG1fq8arF6TRNjaUs5abk6g9vjvRDSf5ge5ixw
-	 /WJJDPZoFo3hihMDbmGgJGAluPM0wrS60qwr61Waft0V7RRr2fbuxWVfRxPx0tcsTt
-	 IHHEfOAk8QIFw==
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Linux ACPI <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Zhang Rui <rui.zhang@intel.com>, Chen Yu <yu.c.chen@intel.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- Linux PCI <linux-pci@vger.kernel.org>, Alex Hung <alexhung@gmail.com>,
- Hans de Goede <hansg@kernel.org>,
- Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- platform-driver-x86@vger.kernel.org, AceLan Kao <acelan.kao@canonical.com>
-Subject: [PATCH v1 0/4] ACPI: scan: Handle generic system devices directly
-Date: Mon, 15 Dec 2025 14:31:53 +0100
-Message-ID: <7888874.EvYhyI6sBW@rafael.j.wysocki>
-Organization: Linux Kernel Development
+	s=k20201202; t=1765807153;
+	bh=YQ0YmiEKTBiByyCk2XIiAXJahBqdOSyVHDmgyhFstuo=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=K0ZSvqo9FNH+vPZrOVLOU5ZraIN5/Hx4lzXEVk8deQoFTzZrfVB3Sn8wUVb8UaBDT
+	 IPKJL1FeYjBc4++kymDagnMFo+aO6gmHV+UWQO7cqHTOD6VMMtizrJjRFLGRY7Ee7L
+	 w4mP9rPOGGMbKthLu+r5v9Ru7rhk3vDAc1XCmmrB5wHkqvV8acOQhuC1BVzlP5ME/H
+	 H7EzKs7+bvfSkQA41DZXMI2/LRypKRi0eSe24U8EkDVDNspUAYXac7itmfYbMOTmxv
+	 x+MHyD8AednEYtbIisGEt5V/tIfQDU8l0ImBMScwR5yt2mJk+grnKjhIaLlaCyGSER
+	 QNwLC455/HDNw==
+From: Mark Brown <broonie@kernel.org>
+To: rust-for-linux@vger.kernel.org, Alice Ryhl <aliceryhl@google.com>
+Cc: linux-kernel@vger.kernel.org, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+ Leon Romanovsky <leon@kernel.org>, Peter Zijlstra <peterz@infradead.org>, 
+ Boqun Feng <boqun.feng@gmail.com>, Elle Rhumsaa <elle@weathered-steel.dev>, 
+ Carlos Llamas <cmllamas@google.com>, Yury Norov <yury.norov@gmail.com>, 
+ Andreas Hindborg <a.hindborg@kernel.org>, linux-block@vger.kernel.org, 
+ FUJITA Tomonori <fujita.tomonori@gmail.com>, 
+ Miguel Ojeda <ojeda@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ Stephen Boyd <sboyd@kernel.org>, linux-clk@vger.kernel.org, 
+ Benno Lossin <lossin@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ Thomas Gleixner <tglx@linutronix.de>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Viresh Kumar <viresh.kumar@linaro.org>, linux-pm@vger.kernel.org, 
+ Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
+ linux-security-module@vger.kernel.org, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>, 
+ Robin Murphy <robin.murphy@arm.com>, Lyude Paul <lyude@redhat.com>, 
+ Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+ linux-fsdevel@vger.kernel.org, Josh Poimboeuf <jpoimboe@kernel.org>, 
+ Jason Baron <jbaron@akamai.com>, Steven Rostedt <rostedt@goodmis.org>, 
+ Ard Biesheuvel <ardb@kernel.org>, 
+ Brendan Higgins <brendan.higgins@linux.dev>, 
+ David Gow <davidgow@google.com>, linux-kselftest@vger.kernel.org, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ "Liam R. Howlett" <Liam.Howlett@oracle.com>, 
+ Andrew Ballance <andrewjballance@gmail.com>, maple-tree@lists.infradead.org, 
+ linux-mm@kvack.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
+ Uladzislau Rezki <urezki@gmail.com>, Vitaly Wool <vitaly.wool@konsulko.se>, 
+ Rob Herring <robh@kernel.org>, Saravana Kannan <saravanak@google.com>, 
+ devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ linux-pci@vger.kernel.org, Remo Senekowitsch <remo@buenzli.dev>, 
+ "Paul E. McKenney" <paulmck@kernel.org>, rcu@vger.kernel.org, 
+ Will Deacon <will@kernel.org>, Fiona Behrens <me@kloenk.dev>, 
+ Gary Guo <gary@garyguo.net>, Liam Girdwood <lgirdwood@gmail.com>, 
+ Alexandre Courbot <acourbot@nvidia.com>, Vlastimil Babka <vbabka@suse.cz>, 
+ Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>, 
+ Ingo Molnar <mingo@redhat.com>, Waiman Long <longman@redhat.com>, 
+ Mitchell Levy <levymitchell0@gmail.com>, 
+ Frederic Weisbecker <frederic@kernel.org>, 
+ Anna-Maria Behnsen <anna-maria@linutronix.de>, 
+ John Stultz <jstultz@google.com>, linux-usb@vger.kernel.org, 
+ Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
+ Matthew Wilcox <willy@infradead.org>, Tamir Duberstein <tamird@gmail.com>, 
+ Rae Moar <raemoar63@gmail.com>
+In-Reply-To: <20251202-define-rust-helper-v1-0-a2e13cbc17a6@google.com>
+References: <20251202-define-rust-helper-v1-0-a2e13cbc17a6@google.com>
+Subject: Re: (subset) [PATCH 00/46] Allow inlining C helpers into Rust when
+ using LTO
+Message-Id: <176580714194.161338.1959594276727103368.b4-ty@kernel.org>
+Date: Mon, 15 Dec 2025 22:59:01 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15-dev-47773
 
-Hi All,
+On Tue, 02 Dec 2025 19:37:24 +0000, Alice Ryhl wrote:
+> This patch series adds __rust_helper to every single rust helper. The
+> patches do not depend on each other, so maintainers please go ahead and
+> pick up any patches relevant to your subsystem! Or provide your Acked-by
+> so that Miguel can pick them up.
+> 
+> These changes were generated by adding __rust_helper and running
+> ClangFormat. Unrelated formatting changes were removed manually.
+> 
+> [...]
 
-As per the changelog of patch [1/4], there is a long-standing problem with ACPI
-device enumeration that if the given device has a compatible ID which is one of
-the generic system resource device IDs (PNP0C01 and PNP0C02), it will be claimed
-by the PNP scan handler and it will not be represented as a platform device, so
-it cannot be handled by a platform driver.
+Applied to
 
-Obviously, PNP0C01 and PNP0C02 need to be removed from acpi_pnp_device_ids[] to
-address this problem, but it cannot be done without making any other changes
-due to the way the legacy PNP system driver works (see the changelog of patch
-[1/4] for details) and the approach used in patch [1/4] is to reserve the
-"motherboard resources" directly in the ACPI core without creating platform
-devices for "system" devices (whose _HID is either PNP0C01 or PNP0C02).  The
-new code doing works along the lines of the PNP system driver to avoid
-regressions.
-
-The remaining patches in the series are simplifications that can be done on
-top of the first one.
-
-Patches [2-3/4] remove platform device creation code from Intel HID and VBTN
-drivers that don't need to worry about _CID including PNP0C02 any more.
-
-Patch [4/4] drops acpi_nonpnp_device_ids[] that was added as a workaround for
-the issue at hand in the first place.
+   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git for-next
 
 Thanks!
 
+[35/46] rust: regulator: add __rust_helper to helpers
+        commit: 03d281f384768610bf90697bce9e35d3d596de77
 
+All being well this means that it will be integrated into the linux-next
+tree (usually sometime in the next 24 hours) and sent to Linus during
+the next merge window (or sooner if it is a bug fix), however if
+problems are discovered then the patch may be dropped or reverted.
+
+You may get further e-mails resulting from automated or manual testing
+and review of the tree, please engage with people reporting problems and
+send followup patches addressing any issues that are reported if needed.
+
+If any updates are required or you are submitting further changes they
+should be sent as incremental updates against current git, existing
+patches will not be replaced.
+
+Please add any relevant lists and maintainers to the CCs when replying
+to this mail.
+
+Thanks,
+Mark
 
