@@ -1,41 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D4AB3375DD;
-	Mon, 15 Dec 2025 12:49:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D27327202;
+	Mon, 15 Dec 2025 13:36:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765802996; cv=none; b=jvH54FavhcZKTINkTC+gln1yJOo0goSYNOL3eUHCsW+szhxiS24fKkaJR76HaBbSz1AjX5rihWRoApkhdAdP0sGlWd1AQkVX8JU/7HPCjw2IS9bBOeuCC/8u1SzCkpD2Mlotuyxxvqx7+lax+tCIxzSvzGBX1B6SsN7Wrg7oQP0=
+	t=1765805818; cv=none; b=mNq3U8dllQK9ofHnnUVZzrpQw4aApKlp1zndOwdJ2Iu/rReTfF0t0TRxGnrTT+RvZFoblV3MUBfTgTZJXHT7Exucfs0RaLjNnbU/7F5dP3ipJYXMzWUwwLcMTzAUqx0R3Jcxx9x4TxYcJU56zOBrOWUvfDhiDZsfA5Sn0ixCFnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765802996; c=relaxed/simple;
-	bh=fCCPr5iQvOB2jjge0tog4UECpwiMHqoqKpApNJcabb4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fip5qbmVJ+Zwe/TlfoMzGZMwyD14gt5nIHcfsZxQe+TllJlimTNlcb7a6U2dESxYC+kIC1TGh4GEhMteC8j2TU7RtdB8wv8FYwcmu6ke/azeFIUv4W2ePc08vkCI23AXYHr+B/Q7O8iFQ1uMe37kNAvCe6yFmT7Yht0zmNCVfbg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GA8Q0wmO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765805818; c=relaxed/simple;
+	bh=SxFIlck54wFFH4N7Ix/Ab4hh95qP/TLreCxLHycXs9s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=bvRuHf01WB1nEa8qbE6d+RZX2ymJ2R0G7/+lSphXv0ZvV176RJKc87eVe353yyRH79EjUiwLo+VLnq7XX0ZZD/F76ATf89zxiNyQYmXiQTBXXbqgESWyESFHdZFUD/ksWYF/EBXH9MEoFs2AEzfJEoVz8r2y2Tn5BaslJpCDDBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QZNAKkxA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GA8Q0wmO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBE11C4CEF5;
-	Mon, 15 Dec 2025 12:49:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QZNAKkxA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28FC2C4CEF5;
+	Mon, 15 Dec 2025 13:36:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765802995;
-	bh=fCCPr5iQvOB2jjge0tog4UECpwiMHqoqKpApNJcabb4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=GA8Q0wmOEV44uQVrc75rz5gFl4wARSf5ea7fxJaEA6Up0vYKAeCAb9xrIrkXDXzs2
-	 uIisWGQOyqegvv/DT+sPM4jXDWNt9It0KxvW3ZZAdOx2+CsFXltARyjZthzgsMrTgh
-	 J+UJE+wr1gGEWqgBcHlLurtwMGNnsz82X/XeVQc+BRN5s00kuJ1zbcHOMdd5UqHc3n
-	 WFVuy0eyOqzZSlueOJ3/J7dAKDgr5XKe/HXpfi5N0FBPKF2Zzh2ftSRa2/8eLQgQ5M
-	 DwW1rFs+vcE36NPjV/fL3PK1WK3Xo5j5BSGkbZXvwaBXQxr0t6V92Y08rLiHH7c/Me
-	 WKlUEMNLbjPlw==
+	s=k20201202; t=1765805818;
+	bh=SxFIlck54wFFH4N7Ix/Ab4hh95qP/TLreCxLHycXs9s=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=QZNAKkxAZpy40Lt0lmDglR67L6V96McwexlJfrn5lktJtbJPBDRFsYCwwsJt0PKw0
+	 tUZcjqlGrNvclAu8FtU8NHXjQW1LQyjyo554Js2Va1+00v8RKMc0Ae/56+jpdOeEso
+	 zk9nlHQNfVvBdwh6tYVPV2oQ13wo3wKhmk1WWedhpFCcqXjmDvfSiqpYojcHOFJd3i
+	 +oB70nQdaagJP7787lo3VI6JrZQuMHgZ/HfynWUqqdbxvuRPXXqk+pYRB19TCgHkkj
+	 cbZOfNranble9b8JRUgBUa/9tV7UHJyguPLOdr/5w8NOdV6xweI+d3lzCIkptX0v9f
+	 4GQXuN4kss42Q==
 From: "Rafael J. Wysocki" <rafael@kernel.org>
 To: Linux ACPI <linux-acpi@vger.kernel.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
- Linux PCI <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
- Bjorn Helgaas <helgaas@kernel.org>, Armin Wolf <w_armin@gmx.de>
-Subject:
- [RESEND][PATCH v1 0/2] PCI: ACPI: PM: Rework root bus wakeup notification
- setup and wakeup source registration
-Date: Mon, 15 Dec 2025 13:45:17 +0100
-Message-ID: <6223429.lOV4Wx5bFT@rafael.j.wysocki>
+Cc: LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Zhang Rui <rui.zhang@intel.com>, Chen Yu <yu.c.chen@intel.com>,
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Linux PCI <linux-pci@vger.kernel.org>, Alex Hung <alexhung@gmail.com>,
+ Hans de Goede <hansg@kernel.org>,
+ Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ platform-driver-x86@vger.kernel.org, AceLan Kao <acelan.kao@canonical.com>
+Subject: [PATCH v1 4/4] ACPI: PNP: Drop acpi_nonpnp_device_ids[]
+Date: Mon, 15 Dec 2025 14:36:49 +0100
+Message-ID: <3587570.QJadu78ljV@rafael.j.wysocki>
 Organization: Linux Kernel Development
+In-Reply-To: <7888874.EvYhyI6sBW@rafael.j.wysocki>
+References: <7888874.EvYhyI6sBW@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,33 +51,51 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="UTF-8"
 
-Hi All,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This is a resend of
+Now that "system" devices are represented as platform devices, they
+are not claimed by the PNP ACPI scan handler any more and platform
+devices can be created for ACPI device objects listing "system"
+device IDs as their compatible device IDs.
 
-https://lore.kernel.org/linux-acpi/2395536.ElGaqSPkdT@rafael.j.wysocki/
+Accordingly, it should not be necessary any more to add device IDs
+to acpi_nonpnp_device_ids[], so drop it.
 
-which was sent in the middle of the merge window.
+No intentional functional impact.
 
-I have added R-bys from Armin to both patches, but otherwise there are no
-changes, so the version is still 1.  I'd appreciate feedback, but if there's
-none, I'll be queuing up these patches for 6.20.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/acpi_pnp.c |   16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
 
-The description below still applies.
-
-Patch [1/2] updates the registration of PCI root bus wakeup notification setup
-in order to simplify code in pci_acpi_wake_bus() and to prepare for the other
-change.  This is not expected to affect functionality.
-
-Patch [2/2] modifies the ACPI PM notifier registration to add wakeup sources
-under devices that are going to be affected by wakeup handling instead of
-registering them under ACPI companions of those devices (rationale explained
-in the patch changelog).  This will change the sysfs layout (wakeup source
-devices associated with PCI wakeup are now going to appear under PCI devices
-and the host bridge device), but it is not expected to affect user space
-adversely.
-
-Thanks!
+--- a/drivers/acpi/acpi_pnp.c
++++ b/drivers/acpi/acpi_pnp.c
+@@ -344,24 +344,10 @@ static bool acpi_pnp_match(const char *i
+ 	return false;
+ }
+ 
+-/*
+- * If one of the device IDs below is present in the list of device IDs of a
+- * given ACPI device object, the PNP scan handler will not attach to that
+- * object, because there is a proper non-PNP driver in the kernel for the
+- * device represented by it.
+- */
+-static const struct acpi_device_id acpi_nonpnp_device_ids[] = {
+-	{"INT3F0D"},
+-	{"INTC1080"},
+-	{"INTC1081"},
+-	{"INTC1099"},
+-	{""},
+-};
+-
+ static int acpi_pnp_attach(struct acpi_device *adev,
+ 			   const struct acpi_device_id *id)
+ {
+-	return !!acpi_match_device_ids(adev, acpi_nonpnp_device_ids);
++	return true;
+ }
+ 
+ static struct acpi_scan_handler acpi_pnp_handler = {
 
 
 
