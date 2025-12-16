@@ -1,404 +1,428 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012041.outbound.protection.outlook.com [40.107.209.41])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A72334C22;
-	Tue, 16 Dec 2025 05:14:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765862075; cv=fail; b=Z9A+ZNtx3nY9iLrZEBlMarbXyCUMbSYSuCgmEWZ1rUMBVmkU/YtHEFxNFt7PMj7yr/5sVkyH6lwVm8Khyw1hi3I9O6ZB5lfygIIChPApk3tNlCaREir77UchsPwuK8wJ90k54/EL7+MODneyy9DRFRzpdCyFm2w/ASG6/n+AJMY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765862075; c=relaxed/simple;
-	bh=fqeL8OdSB94HaFpA08NNwhWrPA04Crx+49V4C/3YK3M=;
-	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=mSpvtoy4NMYC2430ufT6BKEb75NqXiIOQEZP/K97uniuH32crRzTW/Tlm9tAKf7qJeiXy9Aco01qqmoPP4w0W2uYIBq2ohWstPNDWiiYoeKbSx+sbBjzLBfOf1HlMSi3WB9gC+vykGp0t31172DyZGTvmKdUvJAaMFWg7x1GuwI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=lymxoruU; arc=fail smtp.client-ip=40.107.209.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36FD231A062;
+	Tue, 16 Dec 2025 05:38:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1765863503; cv=none; b=RZLFnOfBv7+aST3O4fhx0xEfZ41IUG+y2hAhBn2pqZgYnz+ZGMj9eIVUU0l2dTgnzCPPQErzqs1Mo4mlvW0mb4BISm8JMdQoN+OvruZRqA7gY67Tc5adRngwaNQX9fqL8LgZC14q+xRDX20HeLYf7zjUDuLGJda/J+bCJxnyM1Q=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1765863503; c=relaxed/simple;
+	bh=F1buwvya74gGcON3baCLsfaqXJ9X4agSHABt0ErTkyc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fHvWX5gtnHmCnEJpZc6OEhgRlsns4BiiM16YqF1zQdj9k9kmVapcwmQkSeKKRwReesSI6v3slwqIfim9j5Pws0MqXXvfOx/ie74E/NRmMGCXJLsZd0cF7o6Iv0iT9EY7Uxv34wkrxQJtaMiyR9zPHrPbr9iCb5XEISVJd1eNbos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q8+UOjOM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="lymxoruU"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GznuBMt7HvJVTmut+7o4xi7uJ5enPeujjqIkAV5xmvb9jIxhiSivBsP/rQY7dQKWl972syKGN4amEJTYoQFzF9LalZ/usAHrR7D1eeLh70vfHjlC+DT+96sA9rvN98sss6JzZjCp/QrV1it+QC0kQFVBtVe48fgTe+zMAdyE8Cf9R6lgtEDqTZQEDBbAj3TcGiJK3z3iCTBVyJF2x984UZsw8h1pep/rnniOL05CvAmZTmP4wmprUjaYbdkSagKllgBOGL6goshR3zBZrskPM+dfIKh6anL40+uUiQca1Dfzws8hlMpDcAuUrqAeQ+RzpuXkkXKU9gV5JncNGBEvKg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/vhbfZZwzZliNSdPtJ7DBOuGoM7eUMZTAzXKb28sPB0=;
- b=ekjS+35KPfrWk+jh4tAUrcXjxlEnHDmspJtvA/vgxlAFQMEg71KV+5yCJ5D8NGp94ot/HYCrSi0w0UXbnDzUrF/n5Gb6kdDilvEMWvK19pNYelow373J427IAS2x/oM6rMIt1UJUk5X4ct3QBluieMhncBaAEpVcqrUnAZZslAi98SAuGxilGek//wxkzJp8HWmbshZFHR+Xq/WyFKfJe8Z+YogKAh5qym0hdhxlZZ2LORYZytUojln2Xrj4Kh7xCIe5SP8eGqvSuNk9wNmldB/d/wE/xFNiLIrOtdkAlS7+OFeyf+qKjFa/DIcKJObmKDNqC46sNMRdloZqcvsccw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/vhbfZZwzZliNSdPtJ7DBOuGoM7eUMZTAzXKb28sPB0=;
- b=lymxoruUj0MXDijmFb+bKCtUcKQLwje8kfc8mfAWUfF8wF8tAjD1s9twU08QOXgq6coxcU8i2by+nB4QGw7W8UE436a9JuFvaqRjhlGF5YmVs2uWwGv+NnE6PjYH2kj9r30/SMWIOMLlOdOStRdUa6AXM5r/hc5HoaMl/WzNMVVmoBay16p1Zc7dEdMDWUmF6EFnFg9b40l8utU+Tv8UO9VcL0vadMhAiDiJpM0rdeM/cZ1UGox+cjiaA8DH5xzSTJNkfDbqSakUF1RHUrxRvXFb4kSbH8wscyPWoz5+C3R3TZhzF941ccdjPQsEW4lxBc+3pioZJ2/Fe7wyAg6Mwg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by DS0PR12MB8816.namprd12.prod.outlook.com (2603:10b6:8:14f::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9412.13; Tue, 16 Dec
- 2025 05:13:54 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%6]) with mapi id 15.20.9412.011; Tue, 16 Dec 2025
- 05:13:54 +0000
-From: Alexandre Courbot <acourbot@nvidia.com>
-Date: Tue, 16 Dec 2025 14:13:32 +0900
-Subject: [PATCH 6/7] gpu: nova-core: send UNLOADING_GUEST_DRIVER GSP
- command GSP upon unloading
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251216-nova-unload-v1-6-6a5d823be19d@nvidia.com>
-References: <20251216-nova-unload-v1-0-6a5d823be19d@nvidia.com>
-In-Reply-To: <20251216-nova-unload-v1-0-6a5d823be19d@nvidia.com>
-To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun.feng@gmail.com>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Trevor Gross <tmgross@umich.edu>
-Cc: John Hubbard <jhubbard@nvidia.com>, 
- Alistair Popple <apopple@nvidia.com>, 
- Joel Fernandes <joelagnelf@nvidia.com>, Timur Tabi <ttabi@nvidia.com>, 
- Edwin Peer <epeer@nvidia.com>, Eliot Courtney <ecourtney@nvidia.com>, 
- nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- rust-for-linux@vger.kernel.org, Alexandre Courbot <acourbot@nvidia.com>
-X-Mailer: b4 0.14.3
-X-ClientProxiedBy: TYCP286CA0046.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b5::6) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q8+UOjOM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7109FC4CEF1;
+	Tue, 16 Dec 2025 05:38:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765863502;
+	bh=F1buwvya74gGcON3baCLsfaqXJ9X4agSHABt0ErTkyc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Q8+UOjOMviWKQySD2609A3EaLLsPu3xHaCZpJvdXMkWVpJcjY091MjBjBn+wr6sAl
+	 m6o8vAWpNLz4XQq5VjrYqwhdGw3ewIjnS58zRryfC4b3OKQv6v47lRN9Zh5JNby0AR
+	 69Gbba/5ZjKHONSqo0xiCHQyu798APjnHSEU3VBkz+u2j88HlC3tTc5IxabIyfddwA
+	 TiM5oUZn5EQFqFkf4k3s7hzbunxUG5QJCeHPRmvMSGGkBwTJalh5SRDrxj9eimhrgT
+	 szwyKiJruekRDEC6ZMsd8dD1pwGE7JxF/jL3rmU40rHMzLVjdH72eyt8MjFa8lW5RG
+	 uvpAirlfStscw==
+Message-ID: <3cd7943c-4d35-4ec9-8826-c20a5d213626@kernel.org>
+Date: Tue, 16 Dec 2025 06:38:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|DS0PR12MB8816:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5f170b89-10ea-4a82-1931-08de3c61e892
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|1800799024|7416014|376014|366016|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Z0JIYlNKK2kxbEdjdTRidElvdHpLUkRXTk8rRWNEOWMvSkpPWXFJaU5QalpX?=
- =?utf-8?B?TzJ5a043MEVGRkZIdjhSTzVXc2FqR2JOQVNPazJkZ2lnS1kwYlFZY2FZR2lG?=
- =?utf-8?B?MXJtWkRUNEtxUmI1bGhLbFE4dXVGZDZydGRuRlJwRFJoNmxSTlVjeVFEM2E5?=
- =?utf-8?B?cS9jWlMyQUJnbk1IbXI5cE9ZNmFabVRwelVUTGdKb2Q1NVd5WWcxMVBFR29R?=
- =?utf-8?B?TWlMd3lidjhHbWlNUTUveU5XYzVGbVVZSHNMWkZwOURvelcyR1ZNSU16SjND?=
- =?utf-8?B?YTFMSEtyalJxWFcxd3k0dmo0cm9IUDFQUjEzSUkySjNpdlRieVFsNUhJWWNF?=
- =?utf-8?B?a2VDeDE1UEsvZVBudmRoUk9hNER1L2JBQ2MwSlZRL0Ewems1cXpoVkVKaHpV?=
- =?utf-8?B?dkpINUhvTDVFKzRVUDBMVGlLKzJOY0lERXVaY2NabVMyT0tJZEZ1VUxFSHVx?=
- =?utf-8?B?a0xXOEsveS95WFc4aVBwSU5GQkdJWkNuL25pQzF3UHRtVWJBMHdvQk4zczdq?=
- =?utf-8?B?ZTRsWS94UGhCRno3UDZ2d3dvVDk5bDlBbER4VGkwNnNIdENhRG1KY3dCZ0Ew?=
- =?utf-8?B?R1ZXdUIybnFMSmd5M25oRExFUWUwMEdEcmJVeEIrd1FkMFluNFZta1k0MVVE?=
- =?utf-8?B?c2NEQUpXanhhdjM0RFMzdVJhTnd1cDdRV3Foc3RGT21acGt1a2ZCcVFuWHl6?=
- =?utf-8?B?c1doY3NPUDdjV0RacmhWT2VXekNIekhRd25Wb0w3NFJ6cTFrWDhPSDh3MmEx?=
- =?utf-8?B?dEhpTzN4TXliTHZud2Job1p2QUNKVWV1SkpIRFJYQm9LOWNkZlk2VGJYa0JX?=
- =?utf-8?B?bGZ6TEZtd3A2Q01tMjBQajE3T1BPOUI3M3d0V1hJYzhCa2RDdUNNYm8wWUxs?=
- =?utf-8?B?dGRwQ3FLSUlFUWNDc2VDa05UZGwrM3BtTURvYTNZYnFBQ3FXbDZkNHovWnRt?=
- =?utf-8?B?TEVtMmcvKzd6Q2ZTcSs0QnJpT2lXMGVFcnI1V3N4NlQ1a1BYNmV2TUJuUWxn?=
- =?utf-8?B?cWtxaHhCZ2xuMEJXdko5RzRINlBhQllYb3BIOTZteXY4NkJiRVV0R2E5dXN0?=
- =?utf-8?B?b3FVUnFBQU51Z3NKNlhSNWsvNnJEdTR3dnRSZm0wYndJRkpSMU1WRytDN0Nz?=
- =?utf-8?B?alNSb3JXaTd1UUViUHMxUkwrNTEvb3RiUnBrUTZoWHo5ZjNIS2lKSnNCbm9E?=
- =?utf-8?B?QlZydHdnejk5SUE5T0Q5azhNRm5HR2N6UlluaDF2VXZQR0Z6UW9rQ3QwWXpr?=
- =?utf-8?B?K3p0SlRWaVBDWlVaTTdoUTZ4d3dwL0pYWFJEZElLbEI0bW16bTBSLzREck10?=
- =?utf-8?B?aXhHQkdyd2RjM3d2UDFmOEpQeVFUT0dsRVkxc2VlTURSclZhVUI2Q3VMV2ll?=
- =?utf-8?B?Sk1qZGZ6RTV0aGJFZDViUFA1eWlrQjU1bFpmOGs0Myt5L2xkR3dQYWJzKzVn?=
- =?utf-8?B?OXgyTnNsVjdaSzRqNGxlM0JHeTA4aktaRlJMS1pyWFpUYVpLNjhlU21Fa3Zh?=
- =?utf-8?B?YlBCY1FnRzdKYjJ1bzEzbE9xS3kxMGdkMHd3bDZJK2ZkS3lLYjhjanpBU25x?=
- =?utf-8?B?Y0VqMndyRmtQYXRvcGpxekFKLzM5ZFdjYUZ2Q2luODlvZmFXZGQ5L1NoaU5I?=
- =?utf-8?B?akRMMVFiQmtuOGpvSTFRZTlhcE1Ybis2T0ZFSnNZOUUyaVVCV294cHRMWVR6?=
- =?utf-8?B?dHh0RVRaWjJ3VHA3WHZmdEs0eVJsekZaaFNjci9QM0pYVXdIeEtBVFVXenc1?=
- =?utf-8?B?T2VzVkFmTVlOSHZKKytrRTdCaEsra283M2hiYnRHNlNYTk9IbFV1VFk4bXE0?=
- =?utf-8?B?VTcyQytkeU8rU01SemZ6NWdoWS9DWlFyOTJybXNTLzlNR2VXVlVBcXVVUkI4?=
- =?utf-8?B?ckdSVDNsSnloSy9NbkxzM056NE1jQUNSeE9jRkpuRFEyekhuY01WYnZsM294?=
- =?utf-8?B?QzNEK0MxdU0zS1A3ZElWOFJ2by9zZUt0TnlicDg3ZmlMMXU1MHFVU01yanFT?=
- =?utf-8?Q?mljaQqYteLnsf8gvfhWP4+p9hxAxjk=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(7416014)(376014)(366016)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?SStWaDgrZjZNZTNuSkFEaEpldE5CUXZDcnRZbkxkNml4ZkJiZ0JmenVFQ3Za?=
- =?utf-8?B?Q1pZaFp1d3ZYbE9XQUhLZmhKQXltelcvOVlrZ3NlNDFGVkV4QW5sYVVaT20y?=
- =?utf-8?B?RWI0MTFmcGM3MXpVUXNrSHl0K1NTYjJBaXdEdFdIRlVxRmtKSDY3Y1Bjbitu?=
- =?utf-8?B?TnEzejJsM205MTNmai96Q21IQ3pOaW5xRmwzVU1nSE5hZXRlR3ZzUnd6azRv?=
- =?utf-8?B?REtCTFVnK3Y1Wmh4bnNtYVBuL24xbmkxc0xQdFBYWkNFdmlYK0NjSUkvVjlY?=
- =?utf-8?B?WkxFL1I0UW5xMFhzT29tY3dwMTNWQkZYLzMvalJoTmFOaWNKSkdWK3VROEQz?=
- =?utf-8?B?Q3JSckp6cXFhSTNYVkFwejU5MkMwbSsyTWJrVHRTVGE3bW9GdDFMN3R1c0N4?=
- =?utf-8?B?R1BNTFFNRHBLNzZrK0R2cnA3VE5jdUFuS2ZqQ2pQaFQ5YlFLbzZSRnBCUlBU?=
- =?utf-8?B?eGZINU56d1lIcUVGRXNnZG9VckhCRlduUXIwa1Z4ZXRJLzFpVGpCb0JVY2NS?=
- =?utf-8?B?aHBpWlNSNWEzNEJWQjZYRTJwSzlBci9SNnZBQ3dOejBWRVZsL3hiTlY0TEdR?=
- =?utf-8?B?alAyUlVscEpmSmt6cW1PVWd4WTc2d1crRjdPcTR5S2huVVd3bHgwbjdxMUxP?=
- =?utf-8?B?Tjc5OWVWZERXMVNoV3JJRVZTQkxjNlp6dlBPeWFGdlZJYjJTNnJSODlxR2tj?=
- =?utf-8?B?Vm5KYW1TRGd4UldONWMzQ1p2bm5sRW1CWURZaUVYS1dnUWdQSzBHRHZ3QVhP?=
- =?utf-8?B?UWE4WnFUYTlCY29aTmdEK0prWWlYcExEcCs4WTJ2c3ZIUGV1elJqT2xKREJI?=
- =?utf-8?B?NXg3NXBFOUFqR0lQS09SWUxISGVLUWFQWEdSYVd0SUdKd2lwUkJrM2dTK2gx?=
- =?utf-8?B?Y2JFd0tZbzhWV0NNanlyTVRkZE5STDF1aXprMmMvcVd2QTFpU1NBZjUxcmFS?=
- =?utf-8?B?b3JpWnQ5QzVBOTBzRFZvYlFEdXVRNzhOcFRnWWZJcnpScnFwRjBuZUEvTmV6?=
- =?utf-8?B?dlI4VWpkLzk3YW4xZncrTXZHTjQvY1orWG1sUEFmaFc3b0czc05mcENRSXlX?=
- =?utf-8?B?Q2pVQ2lhWTFhR3RYNTBoYnNVa2FTZXVQd3ZNdm5OQ1RkVWhNNHdIOG9aWUIr?=
- =?utf-8?B?L2ZqUTdHNWFFTHZEWGl4cXlSdFNYa1lKaXJuRzdvSmpIYlp5ZUJ3enp0cDRq?=
- =?utf-8?B?TkdTa2VCL0Nwbm1keEdWWDhpa0w4cVBhTUlORmR1Q3Uza2xIMkRjVjFuYjVC?=
- =?utf-8?B?ay84OFdQYUY4LzR5TTc4Wk9ETEhPekVCWWpEWHR4RFNJTVpkb1ZVNmZvZXRv?=
- =?utf-8?B?MGY5OUUvWXJMRjJiL3Qxd0lzWGhjMWJpTDhKdjBTQTJoU2hTSkhESGZOOUMw?=
- =?utf-8?B?azNFdWVEdXVNU2psdCtVbDV1aExTWHVLNStkYVdKSHZENElLemZETVZrYlhK?=
- =?utf-8?B?NE5pWnpRQ3lVakZ6emhqd0lLVjVaTUlCMnBHc29qRG84WXphdVFrN0NOd1pL?=
- =?utf-8?B?U2FyVHRxcTROTjNsNTdzZlNycXFKU29LUzRXZ0RDSVVrNTFlUHVJTkcrNDQ3?=
- =?utf-8?B?czV2SFBpaUhhN1VIZEcvZW0wajNMdmlqRDdHZnBCSjJaYSsrODVzZ28vREJY?=
- =?utf-8?B?QWRBcHFxeDZZOHA1a25ZWEwwTStrK0tpRng0eG10bGRhcGJNRkVTYmpscDcx?=
- =?utf-8?B?NFVSTDdEMFJ3enJ4UXNkOWdqRlIrU2FTamR1UUs5d3NkWHYwNlVrT3N0c0Vi?=
- =?utf-8?B?OWdpQlpnTjR5bGpDQzEybUwyZE9FOTdJSTZ3aXFMSFFJbkhHM3hrd0UzK2Y4?=
- =?utf-8?B?dmRKOVZTVUd4R011cktrRDhRd1ZrOUd1b0o1ZnB6Q1ZWQVlERXJQTithd0x5?=
- =?utf-8?B?NXo1V0ZtRGx2aGVzR1A5REsxNFFTaWozYm5RaFgzTlpVSjJzaS96ZVM0YmNX?=
- =?utf-8?B?TU9KMlpqYUdiTjR3OHV2ZXUweXplUm1pbXlMRzFpbFhOMFptZzQrd2NkQ0Ez?=
- =?utf-8?B?eXEyQjhIellaVS91VUlmWFZxRFVqYzZiUkZKc3R2M1BuY292a003Znp0ckNM?=
- =?utf-8?B?UTdqNlg0UmZLQTMrRG02bzV5aFFSakFySW1NcXU3WjdibTZyK3pLSk1uL0o5?=
- =?utf-8?B?RTZaOG4rVWk1b2l2QXI2OGE5MUtUdmttbHlVTTJYdlFkelJhNHlZUDBhMlVj?=
- =?utf-8?Q?06XeCHoGmZWPhvAM2RLz9Ph3q1pV7d7KOtlBKqcJNVOp?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5f170b89-10ea-4a82-1931-08de3c61e892
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Dec 2025 05:13:54.5706
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cbb1kqCh1kitOpCkZCyYZrJndn9J9Suiltercw+62v3mO9nLbuziX+PxjcP2QCNLdfdSQgiVPqGeU31KTZKscw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8816
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/4] dt-bindings: PCI: Convert nvidia,tegra-pcie to DT
+ schema
+To: Anand Moon <linux.amoon@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Thierry Reding <thierry.reding@gmail.com>,
+ Jonathan Hunter <jonathanh@nvidia.com>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>,
+ "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>
+Cc: Mikko Perttunen <mperttunen@nvidia.com>
+References: <20251215141603.6749-1-linux.amoon@gmail.com>
+ <20251215141603.6749-2-linux.amoon@gmail.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20251215141603.6749-2-linux.amoon@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Currently, the GSP is left running after the driver is unbound. This is
-not great for several reasons, notably that it can still access shared
-memory areas that the kernel will now reclaim (especially problematic on
-setups without an IOMMU).
+On 15/12/2025 15:15, Anand Moon wrote:
+> Convert the existing text-based DT bindings documentation for the
+> NVIDIA Tegra PCIe host controller to a DT schema format.
 
-Fix this by sending the `UNLOADING_GUEST_DRIVER` GSP command when
-unbinding. This stops the GSP and let us proceed with the rest of the
-unbind sequence in the next patch.
+You dropped several properties from the original schema without
+explanation. That's a no-go. I don't see any reason of doing that, but
+if you find such reason you must clearly document any change done to the
+binding with reasoning.
 
-Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
----
- drivers/gpu/nova-core/gpu.rs                      |  5 +++
- drivers/gpu/nova-core/gsp/boot.rs                 | 42 +++++++++++++++++++++++
- drivers/gpu/nova-core/gsp/commands.rs             | 42 +++++++++++++++++++++++
- drivers/gpu/nova-core/gsp/fw.rs                   |  4 +++
- drivers/gpu/nova-core/gsp/fw/commands.rs          | 27 +++++++++++++++
- drivers/gpu/nova-core/gsp/fw/r570_144/bindings.rs |  8 +++++
- 6 files changed, 128 insertions(+)
+I won't be doing extensive review of your code, because you are known of
+wasting my time, thus only few nits further.
 
-diff --git a/drivers/gpu/nova-core/gpu.rs b/drivers/gpu/nova-core/gpu.rs
-index ef6ceced350e..b94784f57b36 100644
---- a/drivers/gpu/nova-core/gpu.rs
-+++ b/drivers/gpu/nova-core/gpu.rs
-@@ -291,6 +291,9 @@ pub(crate) fn new<'a>(
- 
-     /// Called when the corresponding [`Device`](device::Device) is unbound.
-     ///
-+    /// Prepares the GPU for unbinding by shutting down the GSP and unregistering the sysmem flush
-+    /// memory page.
-+    ///
-     /// Note: This method must only be called from `Driver::unbind`.
-     pub(crate) fn unbind(self: Pin<&mut Self>, dev: &device::Device<device::Core>) {
-         let this = self.project();
-@@ -299,6 +302,8 @@ pub(crate) fn unbind(self: Pin<&mut Self>, dev: &device::Device<device::Core>) {
-             return;
-         };
- 
-+        let _ = kernel::warn_on_err!(this.gsp.unload(dev, bar, this.gsp_falcon,));
-+
-         this.sysmem_flush.unregister(bar);
-     }
- }
-diff --git a/drivers/gpu/nova-core/gsp/boot.rs b/drivers/gpu/nova-core/gsp/boot.rs
-index ca7efdaa753b..e12e1d3fd53f 100644
---- a/drivers/gpu/nova-core/gsp/boot.rs
-+++ b/drivers/gpu/nova-core/gsp/boot.rs
-@@ -32,6 +32,7 @@
-     },
-     gpu::Chipset,
-     gsp::{
-+        cmdq::Cmdq,
-         commands,
-         sequencer::{
-             GspSequencer,
-@@ -231,4 +232,45 @@ pub(crate) fn boot(
- 
-         Ok(())
-     }
-+
-+    /// Shutdowns the GSP and wait until it is offline.
-+    fn shutdown_gsp(
-+        cmdq: &mut Cmdq,
-+        bar: &Bar0,
-+        gsp_falcon: &Falcon<Gsp>,
-+        suspend: bool,
-+    ) -> Result<()> {
-+        // Send command to shutdown GSP and wait for response.
-+        commands::unload_guest_driver(cmdq, bar, suspend)?;
-+
-+        // Wait until GSP signals it is suspended.
-+        const LIBOS_INTERRUPT_PROCESSOR_SUSPENDED: u32 = 0x8000_0000;
-+        read_poll_timeout(
-+            || Ok(gsp_falcon.read_mailbox0(bar)),
-+            |&mb0| mb0 == LIBOS_INTERRUPT_PROCESSOR_SUSPENDED,
-+            Delta::ZERO,
-+            Delta::from_secs(5),
-+        )
-+        .map(|_| ())
-+    }
-+
-+    /// Attempts to unload the GSP firmware.
-+    ///
-+    /// This stops all activity on the GSP.
-+    pub(crate) fn unload(
-+        self: Pin<&mut Self>,
-+        dev: &device::Device<device::Bound>,
-+        bar: &Bar0,
-+        gsp_falcon: &Falcon<Gsp>,
-+    ) -> Result {
-+        let this = self.project();
-+
-+        /* Shutdown the GSP */
-+
-+        Self::shutdown_gsp(this.cmdq, bar, gsp_falcon, false)
-+            .inspect_err(|e| dev_err!(dev, "unload guest driver failed: {:?}", e))?;
-+        dev_dbg!(dev, "GSP shut down\n");
-+
-+        Ok(())
-+    }
- }
-diff --git a/drivers/gpu/nova-core/gsp/commands.rs b/drivers/gpu/nova-core/gsp/commands.rs
-index 2050771f9b53..0bcfca8c7e42 100644
---- a/drivers/gpu/nova-core/gsp/commands.rs
-+++ b/drivers/gpu/nova-core/gsp/commands.rs
-@@ -225,3 +225,45 @@ pub(crate) fn get_gsp_info(cmdq: &mut Cmdq, bar: &Bar0) -> Result<GetGspStaticIn
-         }
-     }
- }
-+
-+impl CommandToGsp for UnloadingGuestDriver {
-+    const FUNCTION: MsgFunction = MsgFunction::UnloadingGuestDriver;
-+    type Command = Self;
-+    type InitError = Infallible;
-+
-+    fn init(&self) -> impl Init<Self::Command, Self::InitError> {
-+        *self
-+    }
-+}
-+
-+pub(crate) struct UnloadingGuestDriverReply;
-+
-+impl MessageFromGsp for UnloadingGuestDriverReply {
-+    const FUNCTION: MsgFunction = MsgFunction::UnloadingGuestDriver;
-+    type InitError = Infallible;
-+    type Message = ();
-+
-+    fn read(
-+        _msg: &Self::Message,
-+        _sbuffer: &mut SBufferIter<array::IntoIter<&[u8], 2>>,
-+    ) -> Result<Self, Self::InitError> {
-+        Ok(UnloadingGuestDriverReply)
-+    }
-+}
-+
-+/// Send the [`UnloadingGuestDriver`] command to the GSP and await the reply.
-+pub(crate) fn unload_guest_driver(
-+    cmdq: &mut Cmdq,
-+    bar: &Bar0,
-+    suspend: bool,
-+) -> Result<UnloadingGuestDriverReply> {
-+    cmdq.send_command(bar, UnloadingGuestDriver::new(suspend))?;
-+
-+    loop {
-+        match cmdq.receive_msg::<UnloadingGuestDriverReply>(Delta::from_secs(5)) {
-+            Ok(resp) => return Ok(resp),
-+            Err(ERANGE) => continue,
-+            Err(e) => return Err(e),
-+        }
-+    }
-+}
-diff --git a/drivers/gpu/nova-core/gsp/fw.rs b/drivers/gpu/nova-core/gsp/fw.rs
-index 09549f7db52d..228464fd47a0 100644
---- a/drivers/gpu/nova-core/gsp/fw.rs
-+++ b/drivers/gpu/nova-core/gsp/fw.rs
-@@ -209,6 +209,7 @@ pub(crate) enum MsgFunction {
-     GspInitPostObjGpu = bindings::NV_VGPU_MSG_FUNCTION_GSP_INIT_POST_OBJGPU,
-     GspRmControl = bindings::NV_VGPU_MSG_FUNCTION_GSP_RM_CONTROL,
-     GetStaticInfo = bindings::NV_VGPU_MSG_FUNCTION_GET_STATIC_INFO,
-+    UnloadingGuestDriver = bindings::NV_VGPU_MSG_FUNCTION_UNLOADING_GUEST_DRIVER,
- 
-     // Event codes
-     GspInitDone = bindings::NV_VGPU_MSG_EVENT_GSP_INIT_DONE,
-@@ -249,6 +250,9 @@ fn try_from(value: u32) -> Result<MsgFunction> {
-             }
-             bindings::NV_VGPU_MSG_FUNCTION_GSP_RM_CONTROL => Ok(MsgFunction::GspRmControl),
-             bindings::NV_VGPU_MSG_FUNCTION_GET_STATIC_INFO => Ok(MsgFunction::GetStaticInfo),
-+            bindings::NV_VGPU_MSG_FUNCTION_UNLOADING_GUEST_DRIVER => {
-+                Ok(MsgFunction::UnloadingGuestDriver)
-+            }
-             bindings::NV_VGPU_MSG_EVENT_GSP_INIT_DONE => Ok(MsgFunction::GspInitDone),
-             bindings::NV_VGPU_MSG_EVENT_GSP_RUN_CPU_SEQUENCER => {
-                 Ok(MsgFunction::GspRunCpuSequencer)
-diff --git a/drivers/gpu/nova-core/gsp/fw/commands.rs b/drivers/gpu/nova-core/gsp/fw/commands.rs
-index 85465521de32..c7df4783ad21 100644
---- a/drivers/gpu/nova-core/gsp/fw/commands.rs
-+++ b/drivers/gpu/nova-core/gsp/fw/commands.rs
-@@ -125,3 +125,30 @@ unsafe impl AsBytes for GspStaticConfigInfo {}
- // SAFETY: This struct only contains integer types for which all bit patterns
- // are valid.
- unsafe impl FromBytes for GspStaticConfigInfo {}
-+
-+/// Payload of the `UnloadingGuestDriver` command and message.
-+#[repr(transparent)]
-+#[derive(Clone, Copy, Debug, Zeroable)]
-+pub(crate) struct UnloadingGuestDriver {
-+    inner: bindings::rpc_unloading_guest_driver_v1F_07,
-+}
-+
-+impl UnloadingGuestDriver {
-+    pub(crate) fn new(suspend: bool) -> Self {
-+        Self {
-+            inner: bindings::rpc_unloading_guest_driver_v1F_07 {
-+                bInPMTransition: if suspend { 1 } else { 0 },
-+                bGc6Entering: 0,
-+                newLevel: if suspend { 3 } else { 0 },
-+                ..Zeroable::zeroed()
-+            },
-+        }
-+    }
-+}
-+
-+// SAFETY: Padding is explicit and will not contain uninitialized data.
-+unsafe impl AsBytes for UnloadingGuestDriver {}
-+
-+// SAFETY: This struct only contains integer types for which all bit patterns
-+// are valid.
-+unsafe impl FromBytes for UnloadingGuestDriver {}
-diff --git a/drivers/gpu/nova-core/gsp/fw/r570_144/bindings.rs b/drivers/gpu/nova-core/gsp/fw/r570_144/bindings.rs
-index 6d25fe0bffa9..212ccc13c0cc 100644
---- a/drivers/gpu/nova-core/gsp/fw/r570_144/bindings.rs
-+++ b/drivers/gpu/nova-core/gsp/fw/r570_144/bindings.rs
-@@ -879,6 +879,14 @@ fn default() -> Self {
-     }
- }
- #[repr(C)]
-+#[derive(Debug, Default, Copy, Clone, MaybeZeroable)]
-+pub struct rpc_unloading_guest_driver_v1F_07 {
-+    pub bInPMTransition: u8_,
-+    pub bGc6Entering: u8_,
-+    pub __bindgen_padding_0: [u8; 2usize],
-+    pub newLevel: u32_,
-+}
-+#[repr(C)]
- #[derive(Debug, Default, MaybeZeroable)]
- pub struct rpc_run_cpu_sequencer_v17_00 {
-     pub bufferSizeDWord: u32_,
+> 
+> Cc: Jon Hunter <jonathanh@nvidia.com>
+> Signed-off-by: Anand Moon <linux.amoon@gmail.com>
+> ---
+> v2: Tried to address the isssue Rob pointed
+> [1] https://lkml.org/lkml/2025/9/26/704
+> improve the $suject and commit message
+> drop few examples only nvidia,tegra20-pcie and nvidia,tegra210-pcie
+> 
+> $ make dt_binding_check DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/nvidia,tegra-pcie.yaml
+> ---
+>  .../bindings/pci/nvidia,tegra-pcie.yaml       | 380 ++++++++++
+>  .../bindings/pci/nvidia,tegra20-pcie.txt      | 670 ------------------
+>  2 files changed, 380 insertions(+), 670 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra-pcie.yaml
+>  delete mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra-pcie.yaml b/Documentation/devicetree/bindings/pci/nvidia,tegra-pcie.yaml
+> new file mode 100644
+> index 000000000000..e542adfe37b4
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra-pcie.yaml
+> @@ -0,0 +1,380 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/nvidia,tegra-pcie.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: NVIDIA Tegra PCIe Controller
+> +
+> +maintainers:
+> +  - Jon Hunter <jonathanh@nvidia.com>
+> +  - Thierry Reding <treding@nvidia.com>
+> +
+> +description:
+> +  PCIe controller found on NVIDIA Tegra SoCs which supports multiple
+> +  root ports and platform-specific clock, reset, and power supply
+> +  configurations.
+> +
+> +properties:
+> +  compatible:
+> +    enum:
+> +      - nvidia,tegra20-pcie
+> +      - nvidia,tegra30-pcie
+> +      - nvidia,tegra124-pcie
+> +      - nvidia,tegra210-pcie
+> +      - nvidia,tegra186-pcie
+> +
+> +  reg:
+> +    items:
+> +      - description: PADS registers
+> +      - description: AFI registers
+> +      - description: Configuration space region
+> +
+> +  reg-names:
+> +    items:
+> +      - const: pads
+> +      - const: afi
+> +      - const: cs
+> +
+> +  interrupts:
+> +    items:
+> +      - description: Controller interrupt
+> +      - description: MSI interrupt
+> +
+> +  interrupt-names:
+> +    items:
+> +      - const: intr
+> +      - const: msi
+> +
+> +  clocks:
+> +    minItems: 3
+> +    items:
+> +      - description: PCIe clock
+> +      - description: AFI clock
+> +      - description: PLL_E clock
+> +      - description: Optional CML clock
+> +
+> +  clock-names:
+> +    description: Names of clocks used by the PCIe controller
+> +    minItems: 3
+> +    items:
+> +      - const: pex
+> +      - const: afi
+> +      - const: pll_e
+> +      - const: cml
+> +
+> +  resets:
+> +    items:
+> +      - description: PCIe reset
+> +      - description: AFI reset
+> +      - description: PCIe-X reset
+> +
+> +  reset-names:
+> +    items:
+> +      - const: pex
+> +      - const: afi
+> +      - const: pcie_x
+> +
+> +  power-domains:
+> +    maxItems: 1
+> +
+> +  interconnects:
+> +    minItems: 1
+> +    maxItems: 2
 
--- 
-2.52.0
+This does not match the interconnect-names.
 
+> +
+> +  interconnect-names:
+> +    items:
+> +      - const: dma-mem
+> +      - const: write
+> +
+> +  pinctrl-names:
+> +    items:
+> +      - const: default
+> +      - const: idle
+> +
+> +  pinctrl-0: true
+> +  pinctrl-1: true
+> +
+> +  operating-points-v2:
+> +    description:
+> +      Should contain freqs and voltages and opp-supported-hw property, which
+> +      is a bitfield indicating SoC speedo ID mask.
+
+Look at other bindings how this field is described.
+
+> +
+> +patternProperties:
+> +  "^pci@[0-9a-f]+(,[0-9a-f]+)?$":
+> +    type: object
+> +    allOf:
+> +      - $ref: /schemas/pci/pci-pci-bridge.yaml#
+> +
+> +    properties:
+> +      reg:
+> +        maxItems: 1
+> +
+> +      nvidia,num-lanes:
+> +        description: Number of lanes used by this PCIe port
+> +        $ref: /schemas/types.yaml#/definitions/uint32
+> +        enum:
+> +          - 1
+> +          - 2
+> +          - 4
+> +
+> +    required:
+> +      - nvidia,num-lanes
+> +
+> +    unevaluatedProperties: false
+> +
+> +allOf:
+> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - nvidia,tegra20-pcie
+> +              - nvidia,tegra186-pcie
+> +    then:
+> +      properties:
+> +        clocks:
+> +          maxItems: 3
+> +        clock-names:
+> +          items:
+> +            - const: pex
+> +            - const: afi
+> +            - const: pll_e
+> +        resets:
+> +          maxItems: 3
+> +        reset-names:
+> +          items:
+> +            - const: pex
+> +            - const: afi
+> +            - const: pcie_x
+
+Blank line
+
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - nvidia,tegra30-pcie
+> +              - nvidia,tegra124-pcie
+> +              - nvidia,tegra210-pcie
+> +    then:
+> +      properties:
+> +        clocks:
+> +          maxItems: 4
+> +        clock-names:
+> +          items:
+> +            - const: pex
+> +            - const: afi
+> +            - const: pll_e
+> +            - const: cml
+> +        resets:
+> +          maxItems: 3
+> +        reset-names:
+> +          items:
+> +            - const: pex
+> +            - const: afi
+> +            - const: pcie_x
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - nvidia,tegra20-pcie
+> +              - nvidia,tegra30-pcie
+> +    then:
+> +      required:
+> +        - power-domains
+> +        - operating-points-v2
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - nvidia,tegra186-pcie
+> +    then:
+> +      required:
+> +        - interconnects
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - nvidia,tegra210-pcie
+> +    then:
+> +      required:
+> +        - pinctrl-names
+> +        - pinctrl-0
+> +        - pinctrl-1
+> +
+> +unevaluatedProperties: false
+
+This goes after required.
+
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - reg-names
+> +  - clocks
+> +  - clock-names
+> +  - resets
+> +  - reset-names
+> +  - interrupts
+> +  - interrupt-map
+> +  - interrupt-map-mask
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/interrupt-controller/irq.h>
+> +
+> +    bus {
+> +        #address-cells = <1>;
+> +        #size-cells = <1>;
+> +
+> +        pcie@80003000 {
+> +            compatible = "nvidia,tegra20-pcie";
+> +            device_type = "pci";
+> +            reg = <0x80003000 0x00000800>,
+> +                  <0x80003800 0x00000200>,
+> +                  <0x90000000 0x10000000>;
+> +            reg-names = "pads", "afi", "cs";
+> +            interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;
+> +            interrupt-names = "intr", "msi";
+> +            interrupt-parent = <&intc>;
+> +
+> +            #interrupt-cells = <1>;
+> +            interrupt-map-mask = <0 0 0 0>;
+> +            interrupt-map = <0 0 0 0 &intc GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
+> +
+> +            bus-range = <0x00 0xff>;
+> +            #address-cells = <3>;
+> +            #size-cells = <2>;
+> +
+> +            ranges = <0x02000000 0 0x80000000 0x80000000 0 0x00001000>,
+> +                     <0x02000000 0 0x80001000 0x80001000 0 0x00001000>,
+> +                     <0x01000000 0 0          0x82000000 0 0x00010000>,
+> +                     <0x02000000 0 0xa0000000 0xa0000000 0 0x08000000>,
+> +                     <0x42000000 0 0xa8000000 0xa8000000 0 0x18000000>;
+> +
+> +            clocks = <&tegra_car 70>,
+> +                     <&tegra_car 72>,
+> +                     <&tegra_car 118>;
+> +            clock-names = "pex", "afi", "pll_e";
+> +            resets = <&tegra_car 70>,
+> +                     <&tegra_car 72>,
+> +                     <&tegra_car 74>;
+> +            reset-names = "pex", "afi", "pcie_x";
+> +            power-domains = <&pd_core>;
+> +            operating-points-v2 = <&pcie_dvfs_opp_table>;
+> +
+> +            status = "okay";
+
+No statuses in the example. Please look at other files to see how this
+should be written.
+
+
+Best regards,
+Krzysztof
