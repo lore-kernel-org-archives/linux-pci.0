@@ -1,47 +1,47 @@
 Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11011052.outbound.protection.outlook.com [40.107.74.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E675B34D4F1;
-	Wed, 17 Dec 2025 15:16:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D25834DCDD;
+	Wed, 17 Dec 2025 15:16:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765984601; cv=fail; b=ibc6HzLaYLsWhNK6Uq0DzkL2IC2zS5A1BVhhL+c+y8K1EkJSnH3q5U4rm7Xo5ivVIIYDClZ1mzckuBMVXxI5rY/x/Vu/yqA39etFE/PzbsJdZZhyoMYA46wa5WQtZweHXFDoPjbH+u3NyRQEqCOD7PSRil5jpvE0f/ik3DCw724=
+	t=1765984603; cv=fail; b=pVDtT5IKJnwBGkbm0Dd2BiYWdg3EH+GAl44qTniHgpXY7O47TxpENn9n1KPyDwV/lnCVypW82eue8JcvTTneEy2Xo0j0VpvDs5+JLRc9C8hzvwnlH+uqCCSWRICtAHRJExZy60j8IR9YsHuHAyaC07sIINGu2AhfQ1fO7RnIHo4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765984601; c=relaxed/simple;
-	bh=5zqyBJOpEKSXnGAGV2M8EAE84LUa4/L6yLnivtqfkCc=;
+	s=arc-20240116; t=1765984603; c=relaxed/simple;
+	bh=ygpXfay9LIy31jIC4H8offCxBPpJRyPo1Rg9zTYMN2A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=kU+ohEH1o5TL4ASQY9L1vO5rqFTCEzLllvAHxiUdytVVRdGbQyYFPRQ/hY6wR/OfQCLxeVc/Vd+JCbYO3921CxX7S6xQc31KgTHXhOPJ3i0U8uPfu7CML3nycISBTPbNGuQK7X2tDjgNPnCdsTCHDxOk2NcuAfkSLiDzgE/hCqo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=jQ4YC731; arc=fail smtp.client-ip=40.107.74.52
+	 Content-Type:MIME-Version; b=UbUDnGOK2LDio+PWnomzSOrAg/Xd3xz2NMvSNoi5o7WUuapzkr/q4eIKeQ7FqmNYWEZqnaLZZ8qg6rwNfhKxEtFMQzImQO5Jq1aGMYylTsd6FnMPjuPEn69pOvPp8G86xM9A5TzTuAiKAOZiificb3/mw8z7oyfAAGE0tfDSvLM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=BnhLs34r; arc=fail smtp.client-ip=40.107.74.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="jQ4YC731"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="BnhLs34r"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Dt6W/q1T90F9ncxsskAp1q74JgmwRTKmdO8GYVRfVKlEbHYgJOKLF356aiv1DHgcIuW6lhOYnYiv21u9/D4qROiBgNW51/GCOSW9sxSWkRJEPMtsgVJvB9cyW0ggqKm7eaGStaloJ9Pw/wt+qnvyIinl0quSUht4XPzPIbtnu9vHlp47zclI765lC9pw4f0Xo6JRhc/z1KFErWSi0A8vT7TrAYFLt6RZq4NGi5CPRXOcfSVuCN5cU0PPIO5zrVbVVUfpYbtL47xg6J2wFnXgxDeNa546V5TolIiAsPyopJ91ygCeceqPxUfhUYzDFW0oGovq3oM9jsyKj+FDifgPAw==
+ b=LGvyTZIgL/GlLq7oNt2ox0Cmdh9Zut8rrJVwpAIz7Aww4G6Q9z+qkYIdUvvLZBTxdt2t0NY74i2MWEudtmb9YYeyHLcHB9rH/snkGT3/vou6ry23hSlbsFpoBbzopmL3pu6Kw8aAc3gtexQ6onVtFP13BmhOpHX8ItZbtDUDrtTUnFZBLntn0H+vtCtvSev59BcnZXdAC9l/l8DHlga5jvukmaTJd9WgTT2GRvIJAcuPqZ67HDfkQVgcbDaADvhtCo2YLLlS54AYZ7XGVU8semENzXf9mUKvDsARKwYbjdrz3JRVN2mpOsOcucOv3DmF1Md/3mYklBSbfctfbrl5OA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bLzUNjy/oXeER3ILFYYjuUL7EuoIyktAk5SU4q8+TmI=;
- b=abI2IsBsN9/1z03XOFUHBImZn7L1tiVigT42/4/JfQITlwgrvG9fpai6z4Z8sTCMvEdTsu4rk3i5m18SRr13aycYT2tzUz8OvoGPj9n+YuLUO4idg8Fvtox86Mosod/UGck/2D34FKBhedwQdk5RD6jhRWa7mWJP+z8bM/Q3ufEFRTwudaup+BnNG0f6yORHYonwU6rwYqgcxMM0+eEeaJr0Uw+MR04Zhq26Jjj6zLftCDn4ek84RvZBNFAGL2ctcPKyOWTkjOK0yXBjeNS4gGdHDM/xiVgQ4DLsyQycuuHvuzd45TzZv058oMn2OB/M2g/RSMEyAoZIZ/o+2AWc7g==
+ bh=0IQBj+DlAfPQPSnkm2VfGWm6XCIbcSk2iHd9aLxOq/E=;
+ b=LQN7QE1B65qrHSBu6H7ebgiKv4nCh94LOkQqDWHruiDINe3JR2BjCd23VZKezC5jCzmVRUVDFbay8SO8xHNawki6/MFc8c1UGiAC8mOfIrtr9mRae8ScnL5uqIfs/xOJpYohWjpTREb4ub64sQtsQOmA860QTh09b9cIWicChkjBPVr132pZvfkD1zeaUXUJ/4OpoOK85EX/A1shyY94J5+277MUMvZkKdVZihU/17CDysSD9tP13eKVpKVhQqssTAB1GEG5Medn4odTQ4LfR2ZVAhBL6wUzgwjEY62BklnfW101W+z4rNYGMUohReUTl/sScakPYdQWMl+N1A8Y0g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bLzUNjy/oXeER3ILFYYjuUL7EuoIyktAk5SU4q8+TmI=;
- b=jQ4YC731qZbJapXsGOPoGGUr0xm+PJYz7l2ufcFXQIDnyMjj/2Zu+t10+yoUoeu6WdyXRkrTUv2i0dZEqzysBsl5XZVaZ7TH/WRIbTERHtZbjUhJkTO7oj0sztsWcGDQVO9IAQBzCzuvjd4JFrwGDCBqRbwnIbPJH40BqXsItKY=
+ bh=0IQBj+DlAfPQPSnkm2VfGWm6XCIbcSk2iHd9aLxOq/E=;
+ b=BnhLs34r2v7Q457r5rcIfXUorXbeX7/wdeYoFYry9W1I4bXhns4icv8iIS4dqBGe7hLCPOWHAFHJwVW1FR4EOhH8ol5GGYKsiIE/h3gQdsgFwfoaKau112t8j5dXClQ/h97p1IUr0zomc8uz9DavcusdSz2CW7CKXA033/f5Ke4=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:24c::11)
- by TYCP286MB2863.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:306::14) with
+ by OS9P286MB4633.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:2fc::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9434.6; Wed, 17 Dec
- 2025 15:16:30 +0000
+ 2025 15:16:26 +0000
 Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
  ([fe80::fb7e:f4ed:a580:9d03]) by TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
  ([fe80::fb7e:f4ed:a580:9d03%5]) with mapi id 15.20.9434.001; Wed, 17 Dec 2025
- 15:16:30 +0000
+ 15:16:25 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Frank.Li@nxp.com,
 	dave.jiang@intel.com,
@@ -84,16 +84,16 @@ Cc: mani@kernel.org,
 	arnd@arndb.de,
 	elfring@users.sourceforge.net,
 	den@valinux.co.jp
-Subject: [RFC PATCH v3 19/35] dmaengine: dw-edma: Poll completion when local IRQ handling is disabled
-Date: Thu, 18 Dec 2025 00:15:53 +0900
-Message-ID: <20251217151609.3162665-20-den@valinux.co.jp>
+Subject: [RFC PATCH v3 14/35] NTB: epf: Reserve a subset of MSI vectors for non-NTB users
+Date: Thu, 18 Dec 2025 00:15:48 +0900
+Message-ID: <20251217151609.3162665-15-den@valinux.co.jp>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251217151609.3162665-1-den@valinux.co.jp>
 References: <20251217151609.3162665-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0036.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:29d::20) To TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TYCPR01CA0113.jpnprd01.prod.outlook.com
+ (2603:1096:405:4::29) To TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:400:24c::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -102,244 +102,215 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYWP286MB2697:EE_|TYCP286MB2863:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6d74163c-de22-4c25-c9ac-08de3d7f419b
+X-MS-TrafficTypeDiagnostic: TYWP286MB2697:EE_|OS9P286MB4633:EE_
+X-MS-Office365-Filtering-Correlation-Id: 19cf958b-15e1-41d2-2aa8-08de3d7f3ed8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|10070799003|1800799024|366016;
+	BCL:0;ARA:13230040|10070799003|376014|7416014|1800799024|366016;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?1yQnKvRZzomHKbZLBV87yPo6/Aq/w5KzaDJU11N5iYn9RqgsGAXlwcnChCxK?=
- =?us-ascii?Q?atXSuPuh8L2Df7rSYxOn62EHLZwE+dt0Pf3GBSptFOwUbmItLlpIvztn8uSg?=
- =?us-ascii?Q?rOhgVpgoGaI4P0KW0yXWPedlnVeLPwgdNF4EwWSlSWhSumhu9yUaMYK5LQ1c?=
- =?us-ascii?Q?ntq1VkvbHYOvQxxaol+QSz2n7SH1hagtrb8c56IXhlKIpU0MtGpib+djHuBS?=
- =?us-ascii?Q?+VaAMu+tfyutqWz2oamSyAuugUJraOdGqPSzYkedbC8SYHqgK0buBLlzxAaM?=
- =?us-ascii?Q?IsQpZ0tcUixlwju3cF6imaHr1FXJWftwWopj4SK7PZyt3Ss2jBnOGxoH1/1u?=
- =?us-ascii?Q?ajkUtcWsrNYIfFZ9XXiZV28HBVzOeWc3ef7Ahw02hJrNeKyOaNVU09DZOvyO?=
- =?us-ascii?Q?hHepFeS9+HZEd1oMwQOS4Exbz5W1okYYzhWbS7LRCXc9I9UmyGFY1Nuq/MsK?=
- =?us-ascii?Q?+/6R0CJyWyC8nkZ6VVtr/3hq/BuZtupWiw9DzML08k3i9BZMGWVVCVAt/qCC?=
- =?us-ascii?Q?tRVW2aNz75yaISXueJmARq5w6cMGcpEGajgZw0bgKndamG5NM35k8x791UKi?=
- =?us-ascii?Q?ZRZVuyTXEPPBiv9HODIl4gtrHJfq5WD1K9GSlvg/0gMdan+DwXIFk6L37oLw?=
- =?us-ascii?Q?Q1YhoJo7NCKYsn2XCbvBZUkiL87Ar0bvALBe1Y/BBr+aEsvluWAHQf6xdbuy?=
- =?us-ascii?Q?AelfGU3JXYTdvaJ7VcascvfBWGfa1NndOUNlpqklI2LKM1BCyv7wuBsBmS12?=
- =?us-ascii?Q?yiLfwB9mbjUmMYu/VATufmLt2nK57UBDmTiCD6dZf/tzh75uQJ6VeQV665Fu?=
- =?us-ascii?Q?GH23gU9iwyV1lpJ1iHxU5uosEhR1RPh9kjS8PDtU4Y8K3SnJ0e9/tWxzY1cc?=
- =?us-ascii?Q?08mbwUdDFjJInpUa0k/tAnTf+R4Y6OorvjgVcFpn25p33dW7Gp0rEC/gsqsU?=
- =?us-ascii?Q?EPLRX7SG/o/RobGnipLVajRzClbKUPEcm37rQhv7MBMH7fmqaGBWIEoMAT0s?=
- =?us-ascii?Q?Kk4UzOVGTjhPa5c0GqrMEWsozi9PnNUFBb2Gj1WirmlLH+Y0k2RNnLXIUC5/?=
- =?us-ascii?Q?cgsPmDlqJ0CjdeX2FR5Or3IsyF7QCB/BM4TMXtvg0OHb8Ta4eaSP3q1ua+to?=
- =?us-ascii?Q?GK14GMkHnz1LiZf3yj4dMaq+qgrwnhXqtWUOKWIYL1i5uTztcwMXJFDxn/rw?=
- =?us-ascii?Q?I3j7fcJ7dRg5mtc75wQwra99XFWzkdTYURENHSR+0LKv9iJpt2VfRa9GsDpf?=
- =?us-ascii?Q?KWTK96Un8czgBn+n/iTH8mOt0zBctKvxdcIWD+qCRbs4zqiFhYdOPhCtAagp?=
- =?us-ascii?Q?dlFF048LAy+HKGM/6rwqaHO2L8QtUMTNRNsX5gKTkRLLcXTyfUKSnGeH6jdD?=
- =?us-ascii?Q?JmzRDBWl0Lzaenp9KlQP4j2KpgqIu6XC+EpBkIHNi9boiOBEjxEAmDJETl0v?=
- =?us-ascii?Q?s9oUpQKbtcxtr4ThW+Gn9R1Hqo8q27VE?=
+	=?us-ascii?Q?8GPmYHkreRpmA/VQRwr8Fxz/GgxS9VogGdqopfEEj31zs2SF+y8ZJtx0684t?=
+ =?us-ascii?Q?cPjmjanoWXPUx7eE7Npx2MbBty5kjKWLTPKt0BPAS1/WTjXp/ad0tnlrl4C1?=
+ =?us-ascii?Q?YG9E9TM98VQvHINQIXg0661sznO7d4J33JO1zWVIoxY39Psa38NC46I6i2uc?=
+ =?us-ascii?Q?MsDh/E9pJAHfQjsiNWjyslOFPxPkEf0mMkbaamp4/l1uIezlj3CqmzzB8Uyt?=
+ =?us-ascii?Q?TGUiUk6mUjEjjSrvlG6GCN91vmAo4aIip+IQb0O1zF+YEDPwO6BvAibhPxGx?=
+ =?us-ascii?Q?Ei/JoX74KiIOSs7Fl57rB7sSMQlxarrIRWuszK8MCG8Os4iD0vsESV2X3dhu?=
+ =?us-ascii?Q?DonYsh02Vj3dJwnVWTjU/1Oiu3Wz0JGXPApNC09YK+LKjUvMj1nqnxjFTtvG?=
+ =?us-ascii?Q?EYwjXa+MPIvh53m+1ZvhiGdSpi5I2d2ioqjz+IiODvkVSYglLuDF/SOPQxMO?=
+ =?us-ascii?Q?Kd4EJhtF5Eqj31AnF/KhDfvJx1xfE61VEYfE4HSUEaqjftYXU9g2rvI3n8P6?=
+ =?us-ascii?Q?qCujtW6/xzEzUugH5typdZvjPqimmjE/EdAxE4ok19xoJNnajFSxwJ/DkFL1?=
+ =?us-ascii?Q?Rinx+OMN8jWY9iNKYfOeVj/ezmYrMnrUbD82mjQl6xF6mCl1QOPywJDOsEYH?=
+ =?us-ascii?Q?lRQlt2PpjgGlkGB6gjQrXPmdwP/tOovNW8Stz40rjBGMj+G++bxyN11Uce1w?=
+ =?us-ascii?Q?oEmiXgzBuSR46Xr05RKIJ/Ud25ZCo0ILA6rUQPkoDA568+lbzZMWO0f8xM/D?=
+ =?us-ascii?Q?X0v+R6ddTewf6ebSn8Dy/JsICr0wMCZiv9Jq41hnjii/Oz+Xk/o/xroYF9e8?=
+ =?us-ascii?Q?pTqxShQIQkmE027zX9LqAdp4gsPg1aSqUcI502Dgx9oKhHs5Z/RkWjndhaWw?=
+ =?us-ascii?Q?Uy9FnAeXsjSWVZzWQZRczF4EpVLEu1Md6Ht6COI3lOhDCng2GOSUSB41Bat+?=
+ =?us-ascii?Q?gKH1xAUekDwn+Rgx5Y5UAHauW0ErFvz1SvEY4oA18S4I9vwlMHQOuWUnvlvU?=
+ =?us-ascii?Q?0FbQ7+i5t8N0S6MCFg+ovZ1v8kUC1wIXbK2eeluQmDRAlrEB2l0AzWWMUGBG?=
+ =?us-ascii?Q?8zvOl+XwNtuSOhiOWI6uqRiE5m47GpMX7YwcoETwYLe2G2+U1Ql0aqWnNmXZ?=
+ =?us-ascii?Q?l5LzNXPde/lj9BDr1w9GuBD8w2jIM6w3gg9SLg8orT1RUHMUG5ImjAMDY3PF?=
+ =?us-ascii?Q?v+rQ3sQM+OZkn7PBD3F/3WOyYVtN0rsAZMCF8pkXjsq+lVgRblXu9R3/WLrW?=
+ =?us-ascii?Q?ZEtypIR1ThBZAQj5D6BOJC2GgACVnAfJ9JHxfumkupv5gilcMZi4qeBgy64J?=
+ =?us-ascii?Q?1KadAFgxwRORIRfc19ZV1VBlLeXHkb7ToOVtdlKZHev+d+WA5PMmjOsTDLgz?=
+ =?us-ascii?Q?9+suqlHO8MIoHg8j8ARotrRc+FaCebGbDJAkzKOZhMrjaRnKx1H9GBEgbtne?=
+ =?us-ascii?Q?cHA4pO9CMHL1m+Ei8yI7ltB4F8w99iAy?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(10070799003)(1800799024)(366016);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?U9NFYJCjWNQE2pTI/arGeY8s5DR+oIdo/7JjowRy9s0MTZ1SeCfJDMS88w//?=
- =?us-ascii?Q?fiJoUw2AG0yPJlYipu48J7gYu4fL1hjV05ZafDMOVMsBF1qisSBG37pP4OcP?=
- =?us-ascii?Q?tFP3Vp3kcc/NcbDb09wcHjopi2NX8w5DsIzzofJCOqbjp2lUUPdCmgGbW/KA?=
- =?us-ascii?Q?bBJu0dcDHWe5xNOteozjGHQi0FU2+9JczcKoNSkHo+Kd1vPIGJSgFsoViPn7?=
- =?us-ascii?Q?erL7bfO74QZDueN292Za4UBD0IOuZBWck1+c1vJsZHTtJY+5IuqDAxLa7HAD?=
- =?us-ascii?Q?pSEvUhaRI6QS599qbMahqGIkvKqfMqONmeiam1ofArmwYis95FWPKt0B/U3s?=
- =?us-ascii?Q?WAz61Jr8emtmTRHppmWx4elFBNNtojpUI1C6mACPGxIj1dKxSCpTBeTAH0v4?=
- =?us-ascii?Q?vW2R3YyQz93ZYVU/3bAx9F2oGIhWTPcKrqrp25CeviOuMKxjM9JbTL24tBto?=
- =?us-ascii?Q?IArPanIjy5S/CHZ+L24spH0c/y65lAG5zKBAcOkge2HUo+S7sFwAH/zQDW2n?=
- =?us-ascii?Q?l1crjvfygyGVaCX0P4YNJiUw6/+xKDR4pdMcIHTjGQlg2SI4IIWzfM4/7/Os?=
- =?us-ascii?Q?hJ2Hrpp/7CGeZfn/QxDedrfaoYnbZ0vPPj5oRDXC4gFjUiTUzniJObnTenWI?=
- =?us-ascii?Q?kMUsaDbpVVYFSN8BjF7DhX9kKiwHqr+Cpr3e5EUyB0u5PdRyOS1HQrTDot5F?=
- =?us-ascii?Q?bstHg6Hj0Y5twzh+Vv5xMs/6y2n895gMFBmVk8oJlJw6HsoIiq1xh3mnnNG9?=
- =?us-ascii?Q?0EZGoM0V1f2S0R+wW5ncuIjFVA/Sqt0HGgzy6NHt7stze3GcPss5myomuTYw?=
- =?us-ascii?Q?0UXkYl86baLnOjPIUpTWnMhyBJniBk2r/MDlIBGG/aTW/YKurmd83sQiLkDD?=
- =?us-ascii?Q?SB/KRRzwhlOkYP1NWPMk6cmJDNCAgMsQ7Nwk3NQbpnPe2iFEwalE4pAHSEkR?=
- =?us-ascii?Q?XqQY1MppYjjM0ha29QCOv13iazoANw8DfIsd8VTVfwSkMXskDpwQ/NEFYzHN?=
- =?us-ascii?Q?kbfjuRwqaSyEPzsUdailAbSBlVLQqMKKT0t7GhGPcJ2OHfMaii9fbda8HG30?=
- =?us-ascii?Q?f4JOZ9Gu/3/IrktEuDhotUI5G5Nf07owEFG4bkX2YFh3Fd2ZdPyc5rqIpPdY?=
- =?us-ascii?Q?ZqtKw+Gtt1trelhJICuNuqTXY7pb0D2EVJgGs9xZFcWzQ3/rLIkcuNNyPNcn?=
- =?us-ascii?Q?eOQJKmFrKXejx4xChcx6A3gIzLv9HuM5AK5HlEKcKQbL7//hebDwaxmPOXhZ?=
- =?us-ascii?Q?wvECBC5LAGASt4LNqpvtKkXYCtqPQyqbzstW1Y019vvHxZxVRx9LwS00DX7b?=
- =?us-ascii?Q?juRtNeFiXgVJV6luJ4ZvMCH60hjOZds3fLCK8yoKWnS9wdDssntzy2SCyjxD?=
- =?us-ascii?Q?lzzDRz/vEiJxBbPbVEej1z54j1N7l/0Dd37k2KWiV03g/pfoNrsRKTh3BugX?=
- =?us-ascii?Q?KLQ/emLNYjejhphbwdBBn6MI+hZKwCYCkUOPuzllMJH/tkeiyXsJXHqEDiqb?=
- =?us-ascii?Q?CGj/xWjSUOUpCvIqFrnmJ0a8P5I5fbK8cu9iCUQ5gNeuSsZQ3hHB/HhFI3iY?=
- =?us-ascii?Q?rm9VABr82X580gHcC9j2Ofl+QXrX0gzP/biMl4yBat4napxSRpqz+zW3z5CQ?=
- =?us-ascii?Q?0GsN+wsziVjLC3679VYrUsw=3D?=
+	=?us-ascii?Q?ykTbSwdZ6hfbVC09eFyJsPQORkPjsNfjeiMEdDaytNoPPCq6+3v6vSI9k8Pp?=
+ =?us-ascii?Q?z1zw26dUOlT2AlvmjkpfpvcDxjRyQ2q/HrKGYg5naiwCTtNOubcMXn6HlcKY?=
+ =?us-ascii?Q?N5KKOX+Poq1DEJEIRwcSPNeZhufFr6bZp9eyfLW9WX+SJulVF50s6scakq/0?=
+ =?us-ascii?Q?F7tRS/bp8hm4OG4A24tV8ACpPmF+TB/N0iHtI7I63+4RDJi2krS85KBu9MZo?=
+ =?us-ascii?Q?KtdKbuNL6nxySxJjqDkkh3OIpNx555WlFmEBeFjQNRirAgJYRtho8vfiqUZS?=
+ =?us-ascii?Q?RPgwhQbXn3/IBSRLW/ng/VsbbUe6g1b3+mWkcVdCejbao9GEmfNOS6E5wPR/?=
+ =?us-ascii?Q?mK54dlIDypn/WvccLnIqIff5f1AOuCqQFSmDM58qLDYc1f+NujDRaHkMv1bk?=
+ =?us-ascii?Q?BQHfzbWCNkKOrY0q2PXZfH2iWNZTiV8oqSQBFxzP8vlqYFvur7dNDu6ri4o8?=
+ =?us-ascii?Q?UBQA57hlEVUMBfy4G1givdxhl9ECedWY1umJkkrH7vkfJvEUjpkcaZcAxyoa?=
+ =?us-ascii?Q?1WKDVEkpT9PLwOWdLvzalwJWL7BHj/umNfKcIp+TOaOZ5k4U5nGb+4tKlSih?=
+ =?us-ascii?Q?I6LBrIGMT/DIhWeJeuevA3xUo2PZ0F8Zj9aZK6Yhfs4zM4k5/k6XOa0dZnNW?=
+ =?us-ascii?Q?nRxSMohO+6VBfLGlntfEfklZ9ZJz/ORaKWqAaU/NuiUWuxqPCUdQvNVVcvdU?=
+ =?us-ascii?Q?7h7Jx9auYSVSjxkJd4OqmdOSFwKlQcyRl9EWz4kyagcc7dAMwt7En0+rOcdm?=
+ =?us-ascii?Q?HboQ6KG9Y3UqYcf3ojLYd1ZM23+IcUXIw522HY2zCUkkRvJ07XuwcDa33S3C?=
+ =?us-ascii?Q?90Vm+1Wdt/tH+PlxnNksQdc6f+vt6ojrUkwVRHhtDUks0p3o+ZRPgyz8AkS4?=
+ =?us-ascii?Q?sQKjgDofOZY390oO2elpX/c1ZSzGEkTFw1VwvG6gwcrqAgxn1heKx89+O5iw?=
+ =?us-ascii?Q?6u5BtzVhPxV0BTh9ozRcmG0xnVTQWkjTrOb8mTUwNwIhSnTnoxB0Qp+ZDdAF?=
+ =?us-ascii?Q?ECZ5HavU0s3PLAIymwhlgXSCeuREDq8NuxPn1XSS+Ms86S4hqSdXyEqp0Pkm?=
+ =?us-ascii?Q?kCjYs2oNLh5f6oiQm9ynFoQWjhknzR+VL24Itmk/GT2aUyije8R7dTeBab6c?=
+ =?us-ascii?Q?B3dKKmzLykND5SkU9v6zb0WNhmsK9sNfUsfiGpb0sxW8Z1kcDW5//tJ5hmyn?=
+ =?us-ascii?Q?G+d/1mY5M076cCOH/SLDDxFWURVPWel9anGoogUjo7S49FVWGnVrnrj1+cAv?=
+ =?us-ascii?Q?60mIQI/i1/VQhoH137QUZqxQG0td/jKaYiK1a7U5tTj5TewMqGUy2dL5N5eN?=
+ =?us-ascii?Q?GLvbE/of0Hm0nr2FYwpmomSvxIQfJr/epM+UEsnXhNQoggCgmMVOJsyRBLTs?=
+ =?us-ascii?Q?tz3+o367HwpF44mQ4Dcif8QmZAt8BnG3MYfvSdAG4pFmUFAbYLvppmIMvsu0?=
+ =?us-ascii?Q?0mRu41KdwJyenp8ncl7Ti+wg6Ad4dINRuBqvkFP58IgS8tu8C8iX+lgDzqMJ?=
+ =?us-ascii?Q?acHJdPjQkbtcrDWSCWRMz9h6G0zjK7WOBVmY/kqmBgTUeS6ixxxAcEryWY4B?=
+ =?us-ascii?Q?bOhk6y3wVFWvqlqjL8kqEnjz0FdnvoBsrmgQurq7do8qY/EgoaJU/vq0asZZ?=
+ =?us-ascii?Q?RDXGxGpW8yG6UhXI4OJnmp4=3D?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6d74163c-de22-4c25-c9ac-08de3d7f419b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 19cf958b-15e1-41d2-2aa8-08de3d7f3ed8
 X-MS-Exchange-CrossTenant-AuthSource: TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2025 15:16:30.4752
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2025 15:16:25.8360
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +x7B5+xRqtBusGu5r7rTgBc6gaxBmwECwu9v2b+5DsS8NZnV//+pdv0LVZz0e5uzG9kPAnuLo8JqGW8LVmITkA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2863
+X-MS-Exchange-CrossTenant-UserPrincipalName: wQEUVIhL15dE024fG4SdAG4/rzuwdiBP4lem2LQQm9uQvRmUETKFdc+PfNuD1mf16NWZw6jT4MnRg/eEoyQyYA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9P286MB4633
 
-When a channel is configured to suppress host side interruption (RIE=0),
-the host side driver cannot rely on IRQ-driven progress. Add an optional
-polling path for such channels. Polling is only enabled for channels where
-dw_edma_chan_ignore_irq() is true.
+The ntb_hw_epf driver currently uses all MSI/MSI-X vectors allocated for
+the endpoint as doorbell interrupts. On SoCs that also run other
+functions on the same PCIe controller (e.g. DesignWare eDMA), we need to
+reserve some vectors for those other consumers.
+
+Introduce NTB_EPF_IRQ_RESERVE and track the total number of allocated
+vectors in ntb_epf_dev's 'num_irqs' field. Use only (num_irqs -
+NTB_EPF_IRQ_RESERVE) vectors for NTB doorbells and free all num_irqs
+vectors in the teardown path, so that the remaining vectors can be used
+by other endpoint functions such as the integrated DesignWare eDMA.
+
+This makes it possible to share the PCIe controller MSI space between
+NTB and other on-chip IP blocks.
 
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 97 ++++++++++++++++++++++++------
- drivers/dma/dw-edma/dw-edma-core.h |  4 ++
- 2 files changed, 84 insertions(+), 17 deletions(-)
+ drivers/ntb/hw/epf/ntb_hw_epf.c | 34 +++++++++++++++++++++------------
+ 1 file changed, 22 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 0bceca2d56c5..09b10ad1f38a 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -303,23 +303,6 @@ static int dw_edma_device_terminate_all(struct dma_chan *dchan)
- 	return err;
- }
+diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
+index 89a536562abf..4ecc6b2177b4 100644
+--- a/drivers/ntb/hw/epf/ntb_hw_epf.c
++++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
+@@ -49,6 +49,7 @@
  
--static void dw_edma_device_issue_pending(struct dma_chan *dchan)
--{
--	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
--	unsigned long flags;
+ #define NTB_EPF_MIN_DB_COUNT	3
+ #define NTB_EPF_MAX_DB_COUNT	31
++#define NTB_EPF_IRQ_RESERVE	8
+ 
+ #define NTB_EPF_COMMAND_TIMEOUT	1000 /* 1 Sec */
+ 
+@@ -87,6 +88,8 @@ struct ntb_epf_dev {
+ 	unsigned int spad_count;
+ 	unsigned int db_count;
+ 
++	unsigned int num_irqs;
++
+ 	void __iomem *ctrl_reg;
+ 	void __iomem *db_reg;
+ 	void __iomem *peer_spad_reg;
+@@ -341,7 +344,7 @@ static int ntb_epf_init_isr(struct ntb_epf_dev *ndev, int msi_min, int msi_max)
+ 	u32 argument = MSIX_ENABLE;
+ 	int irq;
+ 	int ret;
+-	int i;
++	int i = 0;
+ 
+ 	irq = pci_alloc_irq_vectors(pdev, msi_min, msi_max, PCI_IRQ_MSIX);
+ 	if (irq < 0) {
+@@ -355,33 +358,39 @@ static int ntb_epf_init_isr(struct ntb_epf_dev *ndev, int msi_min, int msi_max)
+ 		argument &= ~MSIX_ENABLE;
+ 	}
+ 
++	ndev->num_irqs = irq;
++	irq -= NTB_EPF_IRQ_RESERVE;
++	if (irq <= 0) {
++		dev_err(dev, "Not enough irqs allocated\n");
++		ret = -ENOSPC;
++		goto err_out;
++	}
++
+ 	for (i = 0; i < irq; i++) {
+ 		ret = request_irq(pci_irq_vector(pdev, i), ntb_epf_vec_isr,
+ 				  0, "ntb_epf", ndev);
+ 		if (ret) {
+ 			dev_err(dev, "Failed to request irq\n");
+-			goto err_request_irq;
++			goto err_out;
+ 		}
+ 	}
+ 
+-	ndev->db_count = irq - 1;
++	ndev->db_count = irq;
+ 
+ 	ret = ntb_epf_send_command(ndev, CMD_CONFIGURE_DOORBELL,
+ 				   argument | irq);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to configure doorbell\n");
+-		goto err_configure_db;
++		goto err_out;
+ 	}
+ 
+ 	return 0;
+ 
+-err_configure_db:
+-	for (i = 0; i < ndev->db_count + 1; i++)
++err_out:
++	while (i-- > 0)
+ 		free_irq(pci_irq_vector(pdev, i), ndev);
+ 
+-err_request_irq:
+ 	pci_free_irq_vectors(pdev);
 -
--	if (!chan->configured)
--		return;
--
--	spin_lock_irqsave(&chan->vc.lock, flags);
--	if (vchan_issue_pending(&chan->vc) && chan->request == EDMA_REQ_NONE &&
--	    chan->status == EDMA_ST_IDLE) {
--		chan->status = EDMA_ST_BUSY;
--		dw_edma_start_transfer(chan);
--	}
--	spin_unlock_irqrestore(&chan->vc.lock, flags);
--}
--
- static enum dma_status
- dw_edma_device_tx_status(struct dma_chan *dchan, dma_cookie_t cookie,
- 			 struct dma_tx_state *txstate)
-@@ -707,6 +690,68 @@ static irqreturn_t dw_edma_interrupt_common(int irq, void *data)
  	return ret;
  }
  
-+static void dw_edma_done_arm(struct dw_edma_chan *chan)
-+{
-+	if (!dw_edma_chan_ignore_irq(&chan->vc.chan))
-+		/* no need to arm since it's not to be ignored */
-+		return;
+@@ -489,7 +498,7 @@ static int ntb_epf_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ 	u32 db_offset;
+ 	u32 db_data;
+ 
+-	if (interrupt_num > ndev->db_count) {
++	if (interrupt_num >= ndev->db_count) {
+ 		dev_err(dev, "DB interrupt %d greater than Max Supported %d\n",
+ 			interrupt_num, ndev->db_count);
+ 		return -EINVAL;
+@@ -499,6 +508,7 @@ static int ntb_epf_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ 
+ 	db_data = readl(ndev->ctrl_reg + NTB_EPF_DB_DATA(interrupt_num));
+ 	db_offset = readl(ndev->ctrl_reg + NTB_EPF_DB_OFFSET(interrupt_num));
 +
-+	queue_delayed_work(system_wq, &chan->poll_work, 1);
-+}
-+
-+static void dw_edma_chan_poll_done(struct dma_chan *dchan)
-+{
-+	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-+	enum dma_status st;
-+
-+	if (!dw_edma_chan_ignore_irq(dchan))
-+		/* no need to poll since it's not to be ignored */
-+		return;
-+
-+	guard(spinlock_irqsave)(&chan->poll_lock);
-+
-+	if (chan->status != EDMA_ST_BUSY)
-+		return;
-+
-+	st = dw_edma_core_ch_status(chan);
-+
-+	switch (st) {
-+	case DMA_COMPLETE:
-+		dw_edma_done_interrupt(chan);
-+		if (chan->status == EDMA_ST_BUSY)
-+			dw_edma_done_arm(chan);
-+		break;
-+	case DMA_IN_PROGRESS:
-+		dw_edma_done_arm(chan);
-+		break;
-+	case DMA_ERROR:
-+		dw_edma_abort_interrupt(chan);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+static void dw_edma_device_issue_pending(struct dma_chan *dchan)
-+{
-+	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-+	unsigned long flags;
-+
-+	if (!chan->configured)
-+		return;
-+
-+	dw_edma_chan_poll_done(dchan);
-+
-+	spin_lock_irqsave(&chan->vc.lock, flags);
-+	if (vchan_issue_pending(&chan->vc) && chan->request == EDMA_REQ_NONE &&
-+	    chan->status == EDMA_ST_IDLE) {
-+		chan->status = EDMA_ST_BUSY;
-+		dw_edma_start_transfer(chan);
-+	} else
-+		dw_edma_done_arm(chan);
-+	spin_unlock_irqrestore(&chan->vc.lock, flags);
-+}
-+
- static int dw_edma_alloc_chan_resources(struct dma_chan *dchan)
- {
- 	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-@@ -1060,6 +1105,19 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+ 	writel(db_data, ndev->db_reg + (db_entry_size * interrupt_num) +
+ 	       db_offset);
+ 
+@@ -581,8 +591,8 @@ static int ntb_epf_init_dev(struct ntb_epf_dev *ndev)
+ 	int ret;
+ 
+ 	/* One Link interrupt and rest doorbell interrupt */
+-	ret = ntb_epf_init_isr(ndev, NTB_EPF_MIN_DB_COUNT + 1,
+-			       NTB_EPF_MAX_DB_COUNT + 1);
++	ret = ntb_epf_init_isr(ndev, NTB_EPF_MIN_DB_COUNT + NTB_EPF_IRQ_RESERVE,
++			       NTB_EPF_MAX_DB_COUNT + NTB_EPF_IRQ_RESERVE);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to init ISR\n");
+ 		return ret;
+@@ -689,7 +699,7 @@ static void ntb_epf_cleanup_isr(struct ntb_epf_dev *ndev)
+ 
+ 	ntb_epf_send_command(ndev, CMD_TEARDOWN_DOORBELL, ndev->db_count + 1);
+ 
+-	for (i = 0; i < ndev->db_count + 1; i++)
++	for (i = 0; i < ndev->num_irqs; i++)
+ 		free_irq(pci_irq_vector(pdev, i), ndev);
+ 	pci_free_irq_vectors(pdev);
  }
- EXPORT_SYMBOL_GPL(dw_edma_remove);
- 
-+static void dw_edma_poll_work(struct work_struct *work)
-+{
-+	struct delayed_work *dwork = to_delayed_work(work);
-+	struct dw_edma_chan *chan =
-+		container_of(dwork, struct dw_edma_chan, poll_work);
-+	struct dma_chan *dchan = &chan->vc.chan;
-+
-+	if (!chan->configured)
-+		return;
-+
-+	dw_edma_chan_poll_done(dchan);
-+}
-+
- int dw_edma_chan_irq_config(struct dma_chan *dchan,
- 			    enum dw_edma_ch_irq_mode mode)
- {
-@@ -1083,6 +1141,11 @@ int dw_edma_chan_irq_config(struct dma_chan *dchan,
- 		 str_write_read(chan->dir == EDMA_DIR_WRITE),
- 		 chan->id, mode);
- 
-+	if (dw_edma_chan_ignore_irq(&chan->vc.chan)) {
-+		spin_lock_init(&chan->poll_lock);
-+		INIT_DELAYED_WORK(&chan->poll_work, dw_edma_poll_work);
-+	}
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(dw_edma_chan_irq_config);
-diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index 8458d676551a..11fe4532f0bf 100644
---- a/drivers/dma/dw-edma/dw-edma-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -11,6 +11,7 @@
- 
- #include <linux/msi.h>
- #include <linux/dma/edma.h>
-+#include <linux/workqueue.h>
- 
- #include "../virt-dma.h"
- 
-@@ -83,6 +84,9 @@ struct dw_edma_chan {
- 
- 	enum dw_edma_ch_irq_mode	irq_mode;
- 
-+	struct delayed_work		poll_work;
-+	spinlock_t			poll_lock;
-+
- 	enum dw_edma_request		request;
- 	enum dw_edma_status		status;
- 	u8				configured;
 -- 
 2.51.0
 
