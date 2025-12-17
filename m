@@ -1,47 +1,47 @@
 Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11011052.outbound.protection.outlook.com [40.107.74.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D572A327C16;
-	Wed, 17 Dec 2025 15:16:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B31E31A570;
+	Wed, 17 Dec 2025 15:16:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765984588; cv=fail; b=JJTmVgRsGAlp0+Wj0gzOVUGq2W5aZDVtemfPlon/2KFm5+DoRwn4j7NO681VFwJbuHiHgtpwKf3k6aHDlqsQopyslH3RcK3ymX5pZbzPTaSOJ/SiFQCLQ0p6HWV7oRnlxPIbFDzKnv8sKB6vtuit/0ziWAwe3HjGEYi2JzfeG4c=
+	t=1765984590; cv=fail; b=antGxER+B31420Uj/GlcOKv5FeflmD0bM9giSE2mw4KT0thNUR9nM1T1P8yb3E5LfUlztALERUOyp+5bNCwzV8E/OQk7hQ9y7vRnN40eYOFfhBeh3WEzMML0haTaWDjqc1PGXPNNscj0U/Q7Rh22+Gon0bBEf4j0dGymhrzj9b4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765984588; c=relaxed/simple;
-	bh=2u3lyzFsEoriGSBKZFVhMcyrxqLnTLHLtKL/GpAejm0=;
+	s=arc-20240116; t=1765984590; c=relaxed/simple;
+	bh=62fZs6md0GVg9qSTUtu4zM67YagAdoPN0Co4kyzuMH4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Gw1rRwTXv9cQ22UQwwtYQuJlQ9flw8fEe/l0P66ZySDyEcHcimZ9397X4JS7CFlySPvpQoUcjGZ/wV7BVmKh+E+3Wgdddmv5BMnWvgn5MRF/mmIiKup6ueRB1ArWQeexLDTinVmyOwIYbBQ8dGo8uLAxm5yrk9+2ZqbEFkOMfcQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=gkDNkU88; arc=fail smtp.client-ip=40.107.74.52
+	 Content-Type:MIME-Version; b=kRg0xYBerojpfdDPGnrGymF9v0bSC9rWDmWuJNOtMcTxrZpzlQn0ver/ssgObdjO5boSofV3eqPmATszR7FsrN7egjNCt+StHOwPUa94q7Y6ApBe1Ba9rvfUBHBGqpfiWlww7Ftq48C3CQnDzuHykdhpM2L4fse8tESaoUFAU/4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=L6Gyjd0r; arc=fail smtp.client-ip=40.107.74.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="gkDNkU88"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="L6Gyjd0r"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=sUDuSmnp2c0WNPCXSYFkp/keXu+jZtOEutVeOnZJ3wH23WBgJDorVKxqwWTRNp324HwQ3s5Xc3RRuef8TcYHLyXiDYaJcUW8fRKkOdNkB3K+s7Bd/zMJ6z5t7Yh91KM+df/tvYbWIjHB6cb1Dfa7+cc23ItK15KJ4yP5cDGUpGpOw5gEPQ0vW5DEV7A2ClLVRdc5Hm6JdQFlm6Oz4sQV/vVI0xszeayiYgb2H2Ag7UBPiGzDb+RlmUpO/m3jh/JuD71c+TLOx35C/a87F9ahe0TBzLm684mzBean+YRyotvCO+LbklLVGPuGk5665Kml5xdOYrvRPpl6UVfZcUstXQ==
+ b=W5fnsjL409InZ9b+w9xMNHqkyFwAfFzwUI/eMDlf9FHoZBYeRHxgwJ289YvP1bF4EN4mVor9Pf4oWZGcCbIzuPkB+dQzZ/TQGPduwPz9GCcsmE/JsGNwHpWWGb79o+TV5GTQnUsDAdS8IUxP+Q02typIlEGkeWq8T05xFEOFL9qnKihgOHIsoncXi3jAWRmpWYVrfdvhiEYQIIZN19DcceqmJEjDKmot9qkm64rYgSxn3nKHuyV79Pi1X3O8foczC9O8DsNfrLhpqJyz2rFnWAHiVGQlVt4PQEW8Di1o8bbUOTLHr0h7fTbrHJcPa0GxK4ygBQKgBscQeokH/k197g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=e0PeFBjEMLUdkexj1/MJOCFfd1OFOpcl4uLb7EqfGkg=;
- b=rv+aQTaWHVLQHAtqvhLJNFHrY0LTFscDkbrKBiWbE0kI86WdcorQzZw3Bgm9vyo4vXfpLGz+UivdMRbSV4Yl0+jcRqzGtgIoUzUNUKkblrg5OCQWbzRjuTeXPCfEczuln/9O7nlPYuSSWPvbUdU/gvhchFmnjtZAeKBNSJUcui5cQWxAP9Q9QRLukp3a8kJbeWCEqXGrFVmaTPz9/ISp2fP2s8j4K1G8srQlpcuoiT8AMPQ2AR590fg/UB5K+L7RDmXZ6XjqvMPJBfphgr6tTlSAa+Wz23Ev30Fv3vSe+Tiw5fGanbaXk8RdVCH1n3SJJ+ipbUoCX3wAMpMixXeOSw==
+ bh=IOhVH5WbbE7TOgwhUWG5IWDXoW2MiIJ5KWF0mB2sGN8=;
+ b=oVCLMe5slr9og5DtXCDgfVQkGqOSsH0i+39J4wtK2obQxMLHaYmO2V6/VQaCgzdmTOVQY1LeY7Q08P5Pk4wM2CiaQMrQgF04a/khers3abfgw07VnjKIEcdX640rANXFgWgQZbX8/Npa3YynAFKcPfXSfFnxF3ifHBVc98nMQuvpmrkd0vrS9Z8HP4e+oug6/qjh4ndPYNcuhjmHglMu7WjQGS5sMNcU7oWtKbdCCspzl6dXymAaF5QBn1WcL7JANTPogkRSs82twI70lrjkr9+GkwW2dFRNbDGnsFE/Bgg5ijsq4FzJjlVYe2LjKnXcIPapW65NrS2/+JOTgT6MjA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e0PeFBjEMLUdkexj1/MJOCFfd1OFOpcl4uLb7EqfGkg=;
- b=gkDNkU8860YgprETxvbd4qJXUnfzJxNUkvH/cVJOcPw7FULUFynfGRaUAC3eSSiACPIpgMto+veGSV0RxcLHuGINtl4f7eZvgSJiv7XyB6/QbNy18ieqLfokZfafX2XvChYJOGIUC9VD0h5SRWoD3NYFqY4DbZAhlWfwPdvUrcU=
+ bh=IOhVH5WbbE7TOgwhUWG5IWDXoW2MiIJ5KWF0mB2sGN8=;
+ b=L6Gyjd0rnIt6L25/zve9O8/ujQPkIFhOcuq4AMo0ZMpX7WTbws8yILAXIP4jvoVyiNQ0RS1AdEF3AS7+4rA4yKwIR35Ek9Ei7BTp7/ONDaNZQKLzmyIAaVG/ojQ6uN7m1QiFQ4zaHp3t6IwUzPOHvOp8e5+vRvSAYuLpnDQZkwo=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:24c::11)
  by OS9P286MB4633.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:2fc::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9434.6; Wed, 17 Dec
- 2025 15:16:17 +0000
+ 2025 15:16:18 +0000
 Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
  ([fe80::fb7e:f4ed:a580:9d03]) by TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
  ([fe80::fb7e:f4ed:a580:9d03%5]) with mapi id 15.20.9434.001; Wed, 17 Dec 2025
- 15:16:17 +0000
+ 15:16:18 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: Frank.Li@nxp.com,
 	dave.jiang@intel.com,
@@ -84,16 +84,16 @@ Cc: mani@kernel.org,
 	arnd@arndb.de,
 	elfring@users.sourceforge.net,
 	den@valinux.co.jp
-Subject: [RFC PATCH v3 04/35] NTB: Add offset parameter to MW translation APIs
-Date: Thu, 18 Dec 2025 00:15:38 +0900
-Message-ID: <20251217151609.3162665-5-den@valinux.co.jp>
+Subject: [RFC PATCH v3 06/35] NTB: ntb_transport: Support partial memory windows with offsets
+Date: Thu, 18 Dec 2025 00:15:40 +0900
+Message-ID: <20251217151609.3162665-7-den@valinux.co.jp>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251217151609.3162665-1-den@valinux.co.jp>
 References: <20251217151609.3162665-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TY4P286CA0003.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:26d::13) To TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TYWPR01CA0033.jpnprd01.prod.outlook.com
+ (2603:1096:400:aa::20) To TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:400:24c::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -103,453 +103,119 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TYWP286MB2697:EE_|OS9P286MB4633:EE_
-X-MS-Office365-Filtering-Correlation-Id: f3ec2af5-4910-4272-2f3b-08de3d7f3990
+X-MS-Office365-Filtering-Correlation-Id: fb65cffe-70ab-44cf-694f-08de3d7f3a9b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|10070799003|376014|7416014|1800799024|366016;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?zQGnDVmMckRaUssL1uD9+uQ4TgsMfRmk1Q1HJCUvrJOwGY3C2OmVhNFZGEkP?=
- =?us-ascii?Q?kthNWG8YVfnvxtdXGkbSI57WzhBS3i8O7isRInBefVDlkDd6YMWKOWyr5Q6r?=
- =?us-ascii?Q?28hZuK0B9XCVsg/d44WySwcVkU/pDfAla0NJIgmdORXkXQ8yQu+S/cHQzzp3?=
- =?us-ascii?Q?06RL1ALxnkDLKf16VsIASilJu1xnucofNXfaY73zpzKbHr8XxENLe8uz5f/f?=
- =?us-ascii?Q?yjnczuXmezJct+TqChAo3C27wd+PcwLwK82NvtQjUh1HACG+4/AozgOVq+dX?=
- =?us-ascii?Q?LMbLbjzKUM5dXNCVsq6VPv4WaiHWacNEnKnJ+str7qyvO9KowfQ1q/AM2T1N?=
- =?us-ascii?Q?O+Qr3PVMek7TeMYaruC97LnESPOn5Ycr+fLt4ntACtXZ7L94SWZuZCs+naTz?=
- =?us-ascii?Q?6vwHW+TCOqIFIgXllp5LYnxDybqvh0j02vI04G4bxpTUcahcJ0UeDV/MtgNl?=
- =?us-ascii?Q?IyXdwppm+J6xr24F3OaiTpxRcaqs62XaJIuaTByXfkI1GyZHEEI5xGvj9OqH?=
- =?us-ascii?Q?cYQzSTE1HtUx0Oz4LKzfPXt5+m/wNXLjnoGHVJCLlpa/S64UuBc2YyyRmywp?=
- =?us-ascii?Q?YPI7ThktE14h8E8mQD/aDUdsKOkGx/wYLsCmVa5YzZwHn1CrdRt7I8pIUkBN?=
- =?us-ascii?Q?ScNNtSfGwxX1EhZGTCdNVvckDTiqVV4h8nmPKcNmH0tVE5IfEVLX/qBphLwu?=
- =?us-ascii?Q?M8VAtI4zdDoEv+Z8rA3++7LlGqbMO3I5bR6NIFfmYKGfPNT8bUx9Phvd5Dh7?=
- =?us-ascii?Q?04ZdldmDQAqqILWkZScv8pdsQeFXhEW6ax7QmHAzolMKuHAyK3sBG1dKxuWj?=
- =?us-ascii?Q?C/C1Yu7s+yIkmIzy6hrtibWU6j9TybXdr50yJlR+kVvaeumAaWLeBUsfnISm?=
- =?us-ascii?Q?3RxLNkvAQmQUt75AWhTurO7uoshSTOSZGM1jrZgQNTfOA6O/kX5zzUOl+6Jr?=
- =?us-ascii?Q?Kg+kKSLIaCyD2y/2qqcJwaGpGXKnbD9Vrpj4xSOCDfATb+fBHBsEdbcH0roN?=
- =?us-ascii?Q?aesCXKCw4NYqlbc9F35WN//ImS7eMgNEHv9se0zE799a4xx5sQ0p3e13Bagl?=
- =?us-ascii?Q?l4o1zFz6CRbMuleKg3bndXRkkQZqvv9IvvO/4schPB+4XFWLiL7opYh1O1m/?=
- =?us-ascii?Q?YdiMN/H5f63TtG3XbPJb6H7CDN7qOfcd6HQ92wfL0ckvL7qz3a9fR/NcSggt?=
- =?us-ascii?Q?VgV5JdZGy4ri3M0eFs/9nlxgoWIOfEMc3GZx4/kxilp5AbhVmwEsNusEgSTe?=
- =?us-ascii?Q?+rudUDjFWwo9PgLQjuOtbgP0QVYWyvoI4R3hJx40fhXf0c2EtDMTH9PauGBn?=
- =?us-ascii?Q?nl+BwuAsLQAUGI7X4brJ30uZhgUgr6jFg5IY2OX/jt67BZnXixn52OzDli45?=
- =?us-ascii?Q?WUhGmr/IPTlsEfDDAqMshB/Dmyw8U6La+uo8DlfgyyfFsHX01hGhlSQnCMuu?=
- =?us-ascii?Q?+d3ByPM8EchweTlnBT6JjVwCR1GpHk5C?=
+	=?us-ascii?Q?8QAUiJzRhtTlEaEf+apec86lvh07hE74dYZ7sn2fVzvpBRMuXqGWKbANeZ6R?=
+ =?us-ascii?Q?ylf3hwMt/GmcaYl2At3gZTo+9kW23lCSjnL9gj8W6SR8IYbgVNNp/NBSemqU?=
+ =?us-ascii?Q?h+YXk40kXdBIGlBKmLxcITUwWBxCw9ZT7JXX82dRtZZOWLbfNnhMVn+tbzwi?=
+ =?us-ascii?Q?0ySwIlo44p+DqI2cvayDU7Ees889ZYCJ5FhWRtgyaQclvp1odGVY+4jYaRZL?=
+ =?us-ascii?Q?TaG0la/+xh/RlpK436D/UqQ2CJ+ilgCxBDlcclFA/4Ux9uWysfzBLDKiK/Ck?=
+ =?us-ascii?Q?ssz2YBcs8b6PCWXaxX0kUaGy3KMZn4nUxT2ry1rNe6uXmfUMkpLuuPO6CW8R?=
+ =?us-ascii?Q?DcimhUpTAsOYhaoJTnGBohVaGeKeNfT+h0tt11gfV8v+ALjBnTAfQ/rO61El?=
+ =?us-ascii?Q?6atZLlC8vG+sMxVyOp4W2Zw4D6isxpRaAijLxG86RxfV0FUHFqk8eFeimVT4?=
+ =?us-ascii?Q?v8RKMiqLRfvtIQMQ+ESmImLUdvs9CGbOZZRtw/Tp3N/EgCq6l3tUe3LyBXP8?=
+ =?us-ascii?Q?6NeHqYEvRqbB5TjdH0zGvqikfhIlmFlorhhq6QamxgPGsk/Tz/YsVEL5ekiS?=
+ =?us-ascii?Q?UpYvxBhB+kFm8jiCMuoi/QhpFlXmSJTU8aAFk5eYFPN6eMg1NzRh0KjRabaE?=
+ =?us-ascii?Q?4ELUFLzOaQsa1NZerjVwnFJDHpdIREGT/Z25GVOf6qWOnBRQFChB2TZOrT4T?=
+ =?us-ascii?Q?2HZRTuPOEKhzat717Z1jDJ4qF0cXME/3kxXTQv8kOmFxUYTL3NtO8Dk0LeRe?=
+ =?us-ascii?Q?n8JaBr4bnXgunNrSY2+jVZlOnqlwDe/Wdt7S5gqc/xGhsSyHCAGY/FFDXtP0?=
+ =?us-ascii?Q?aiihP909+4wmi9swILFXrpD2ETowpUYU47ZNTLGdX166qxbNxpI94Wkh1YwT?=
+ =?us-ascii?Q?Cx0hVjExZMzMNrael6cRiNzaTZcIkZZ6S4qd6YblMUind8Zapvid6bcuivEc?=
+ =?us-ascii?Q?Gxaib69pbsBJK0dBg9sJv4MBPiqwcoPQThgvWYEC0QFN//0sdEBm+SySQAMa?=
+ =?us-ascii?Q?uow1xXnD8YXM+K5lQKqTioB0KIBorEClS2hS/1JdxHEOQh4RtbdBohExwyYc?=
+ =?us-ascii?Q?e/vFhp3S0Gugu9wU/ugesOXWdgI4tWNmc1HzQKwwFEIKcG/mcVTZOngDGDrF?=
+ =?us-ascii?Q?TxwvUNbVH5A2qtr7Cj55k/jjAj3Nd6XfuocO51Sl2D2OOReaMzrsDtqGqvML?=
+ =?us-ascii?Q?CW6IrZ/kJX5XVYy9jqe9wluUxvSL5Yt7XtnwouofkNmoSvepo6j9t2weFbDr?=
+ =?us-ascii?Q?2G1fd/2fFnUM4Uby6w1GAaF+3rT3o1nI8Ak5iLuOuw0In25uywLYe/xBv9/2?=
+ =?us-ascii?Q?QwjYfT0b1Nlcko7YVCM/0QHuAx1qcv17JqcQ0i834NqKzh8w+gw35lDAuCQN?=
+ =?us-ascii?Q?Y9JAgEVQlFscWNNwnWWCZXK4cwpIMw0ZXFRyLQ9BYnoh3P0wSjJM+s+ZctDm?=
+ =?us-ascii?Q?bTGEG9/IO9Xo8k1Udyv2vHi1ZV36yewe?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?YU1tMIj+fo0qo2/9bNef4vIoQkV1pNoR4Dp01atiKxoMK9vqpTSNa993ctiy?=
- =?us-ascii?Q?g8D4rV8vOTC9SM+bzEAdLpXe6jwFI/qpUgkNgiD5xRgr+PSH+s7dk+69zNNu?=
- =?us-ascii?Q?d8eEElnvmTAKaLLENtTjMwkoq5Nbqo2sh60nxSaBgtGMqmwRW2suyG/G0CwY?=
- =?us-ascii?Q?d9GJTFsSjZLOZrhT7TH0WdT6DleWpJHDBcMVVk21pkHiQtk8Oe5x4qxCQzqL?=
- =?us-ascii?Q?rKD6uImA+1Y8bLtHEEB075mdeOWChp0WOF+wkG4umoWEuKZUs5sV1o9Lcu9E?=
- =?us-ascii?Q?2NiX2r0PUYRx+rk234r5w9//PgdQwEm/RZLVUSz9Zb/Znu0v8Vrm2rRNj4wz?=
- =?us-ascii?Q?Lxld47WKQO5eoKovc4DW+A9bYdt35ItoPfHX9hcN380t62lHYNArjGH0teij?=
- =?us-ascii?Q?gg7PPLcDZAy0ZUEyj2izh4aHickLRVP9xdXRJBZysAAykFyOpBgbgqRJAy5Q?=
- =?us-ascii?Q?xfRTLN0/x5bAO+ooW4LMt08dk6uWg+R5zXLAWLFI5Ga2jgak4ZV353sPxFbL?=
- =?us-ascii?Q?T+NQk9ycMN+u+upSEF3+TBEDyZG08O9FLurLZv76Ofg59KXMo5glco3cZqfr?=
- =?us-ascii?Q?StM1Qak5k1/UD3JAlEqdBZix4uWBjoP/iPvQHnWSHhFQK8WyNg/gw1FFFwoK?=
- =?us-ascii?Q?yA6GMpPhpZkv+5tu/RnK8ZM9LML48VYNZCvDHxtucsENdWmtzWMBpkKVZ+QM?=
- =?us-ascii?Q?44R81ib9o7jNrPHqFWLJhXnj2vgqCleJ3j+ZjYflCn+qDwqQ3r4YQQQjt1Iu?=
- =?us-ascii?Q?xPEJkGDKDycSU1YJNLqfSvadm41NGaubFCQw38pSB5kpbrZrERWI1Ju0Xxf4?=
- =?us-ascii?Q?JIxnoWCi8ArAD0937kI6hOQobvcR2b/tKaBGaTtlfQ8h9fTIKdLKrsvH3GDm?=
- =?us-ascii?Q?nVrcmrduiXV6Hh0XHp783OPjHPlE/DDmTjiItgMOJn0lEp8aRNFOQuI4tYg9?=
- =?us-ascii?Q?fPfJS3FKd7j1txAjuW0ZUTTvyHad1uOh82sy5+FqREOCSnlzfqJJg1Eo2RDt?=
- =?us-ascii?Q?koYks4pciSPFSxLxKwOB7JsHrnk6QpZ76tYP8rx1jmcvtZS0RxQQsgzS8hHe?=
- =?us-ascii?Q?LwKdfn0FyJvBpk6Afkucy0J58x6cndosFtwvwNkSKiHm3smRkn5DzdA4M4gZ?=
- =?us-ascii?Q?sDIlJZsC8YxB8gpqF3RWcGmrx5nfP3C1oaYjkDBwBM7JZfMPhn47hjAoeYEY?=
- =?us-ascii?Q?ZOTk67xin+WhBqJ6VMjJ6D77irfJXQigScmptq0NSwdKhKu10q8njupwZTh2?=
- =?us-ascii?Q?tYaj3QzgUlVfeO6tnLRVFWBhf0BMbHXK0dcPYB8MT/Yuuaat0OgEsODB0cg0?=
- =?us-ascii?Q?9H7A1Zb3ZE8+fZvXfjGR3Lkjq0R2tEU+MKsEa1Bq3IQwTdkWmV9lHG7xVEiI?=
- =?us-ascii?Q?xmkmTTwiOX2qfBezcIUF0cr+eSPY2Stk1Dm67DUtBo2OqfFQMAQGpaRCNgsC?=
- =?us-ascii?Q?EuG/B+/rJaRKJMvspash+FJ+YzIkjpSAD0Rxqmm1GqDpVZPlvyHNJbdHH8qi?=
- =?us-ascii?Q?5aiFFcSLDHr+rfMlidGDatj+MI09NJJM67mt4sihDzUA2ApA6wkCYV5y2t63?=
- =?us-ascii?Q?hoNvnu97RshbTqRq+vjcYJLfkvI6HgrisVv/t8s0RoDaMmw4HaZa0/7nvnUb?=
- =?us-ascii?Q?jVw20j2NfQpySgfqpJ2gMv0=3D?=
+	=?us-ascii?Q?dTOL7YAIRajiYIz/ouXcwPPA94jLYVxPNC0Xd36JJUdB9taYPhfMgj8jU/4p?=
+ =?us-ascii?Q?Ns1hjI5+0EU4hOp98sFGOXqbxc8z8WJgYOx/bCMsfsMyArH4QGt1RNCAR7L7?=
+ =?us-ascii?Q?lDrR4NIym87YSbvfL++8Pyx+MNkfTZTopcTeBVCpPebNW0uuIv2Qqr932218?=
+ =?us-ascii?Q?pzVgRWVMkNMXgbsiOn07YO1JYOKrRTYgALQJviBMpXo3sExJlhqTx6TFooY5?=
+ =?us-ascii?Q?BUm6c+3lzKSgbfpl6tLtNNbGXtGtCgNXIYxP6+Y5KwT9//PjuUgBHwgA+dVw?=
+ =?us-ascii?Q?j2lSP4LcRNkBoWEv4U/IA4cCrwdplohgnGbtyEI+agRQBFWmD/qs53m1Ug7Q?=
+ =?us-ascii?Q?MqAB7AvCylIDFu4LOdYSbOIXtvh7R2SLYZxIx5YaND7BPrOV/q2xMQKvTXkT?=
+ =?us-ascii?Q?2QxRRmaTqJASDvf63mf6XRQo7ZwbHye8NvYb6cwzsJ0PQHguPHoiY2IMXBO/?=
+ =?us-ascii?Q?sNqlrnpCUihOpRxjSAdk5UtE78JJdv4tO0r8LizkCnk6R61FX692VhlnMKyb?=
+ =?us-ascii?Q?5UZGfyBmiwZzPVWtvQ1MuoVh8GEa8jpWKMHgYas0tayfNXz71BzLHNxO9CgL?=
+ =?us-ascii?Q?U/hkqkXlgpruXlvdqpCqEfkUp+/MhX0MAz1DopHvLHFbmcjAWXkm3O7FjBrq?=
+ =?us-ascii?Q?Qve0jhida32RJY7PxqTEkXLcksxL03XVbyH/NXWw4ErWWh98YA5CrMR9Nm3a?=
+ =?us-ascii?Q?kWQv4Vh1bUJvmKozdnJNFfW09UrnezuZMFjA1pZY112xVjP0Zc3gj2fI7leg?=
+ =?us-ascii?Q?kAdPHjVuEmtJxpjZXJQmb4v2K+gq0TZLf2f619383XW5sPLkjq5sZhxr8Cmu?=
+ =?us-ascii?Q?nsOD2e0BurfWrVfU3NN2MN0A3qYo+MXmxXLP/4bv02/aUsHlClbrrJ/CE+00?=
+ =?us-ascii?Q?hveDU52t4WffrfbpNqzoSpmTtsaDWHvc7teqFTb+3+UJdDuE+ZwUOUzftBYj?=
+ =?us-ascii?Q?MWfI2/aTbeZLuKLbvUahi3XTRAak2ViXzW3PQ2pBJKMSFSo2XmX98ydvNeKq?=
+ =?us-ascii?Q?kLvfVBCFReo9BIvW8UkH/1My8IMVzeqMt2cUluJqAOBFl59kZNCSqfv37HQ9?=
+ =?us-ascii?Q?zv2LvJ0bR3c2lc/3WMvsTseCJxfgSinioNqECFsv/SnW7B8Hy7nCgH0V7tQO?=
+ =?us-ascii?Q?yMfS4v0HU2dGjRv4mthWH7AGMIt+MqMB9L5ERqfheC5lsAGAALmXI7lLLsgC?=
+ =?us-ascii?Q?jvXnp7KohgwBd8h4UNHMM+jg4Zx0S/8pGaAq3FGEUykykn7CfLnR766zP5il?=
+ =?us-ascii?Q?ckoZc9ZhwQ/ywSHpOAr3jJQhhGfZFoPpNBTjfl/+oOl31JkuSF8d3YMEOtXJ?=
+ =?us-ascii?Q?K3l+i9LA4gyQYMN8ONp2sEcuAhlYLcGa0nesTfIVhtA8e8P3WPvOEsXWKsrT?=
+ =?us-ascii?Q?aNblice1qGbis640yAxvwgfGtAnmc4AYv4VkwpFCbvgxr7gXi73ZO6OvX5qd?=
+ =?us-ascii?Q?7hTJAPZsFI9RxDhn+Oq/8hTSzAzwYAClCvoN4TXOTNAGsvPCTZL1OAsSbOx+?=
+ =?us-ascii?Q?rn4swr/ORvWzrgkdi55hL9y2dP5nUcAUsdbj53cNQ9P4i2ZTgylS9PwWT1Gx?=
+ =?us-ascii?Q?aKYZ5p8qu3mOW+pfyxrqfkOZB/UBP2djh5dhzqoCb6hEFebH5EMjAuA/gqJY?=
+ =?us-ascii?Q?wKjVXTia//vd2qg0RZECT9g=3D?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: f3ec2af5-4910-4272-2f3b-08de3d7f3990
+X-MS-Exchange-CrossTenant-Network-Message-Id: fb65cffe-70ab-44cf-694f-08de3d7f3a9b
 X-MS-Exchange-CrossTenant-AuthSource: TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2025 15:16:16.9787
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2025 15:16:18.7573
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: L5dAGYJD9XIeEwDXzDIutLNUxMMhcvCO4DGuNQngss/tPti/s8/Hs2u8nGNaApAMABWEuJr2QFBhOQd3TFz5vA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: yqzCmVm0eMA58iFalQqTz8rrrqFkirZLEchQ7IY/lx3XgzQxwLBqNQbGs1m+iaILnWiRk3Lid7sJq7mbfDh3Cg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9P286MB4633
 
-Extend ntb_mw_set_trans() and ntb_mw_get_align() with an offset
-argument. This supports subrange mapping inside a BAR for platforms that
-require offset-based translations.
+The NTB API functions ntb_mw_set_trans() and ntb_mw_get_align() now
+support non-zero MW offsets. Update ntb_transport to make use of this
+capability by propagating the offset when setting up MW translations.
 
 Signed-off-by: Koichiro Den <den@valinux.co.jp>
 ---
- drivers/ntb/hw/amd/ntb_hw_amd.c               |  6 ++++--
- drivers/ntb/hw/epf/ntb_hw_epf.c               |  6 ++++--
- drivers/ntb/hw/idt/ntb_hw_idt.c               |  3 ++-
- drivers/ntb/hw/intel/ntb_hw_gen1.c            |  6 ++++--
- drivers/ntb/hw/intel/ntb_hw_gen1.h            |  2 +-
- drivers/ntb/hw/intel/ntb_hw_gen3.c            |  3 ++-
- drivers/ntb/hw/intel/ntb_hw_gen4.c            |  6 ++++--
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c        |  6 ++++--
- drivers/ntb/msi.c                             |  6 +++---
- drivers/ntb/ntb_transport.c                   |  4 ++--
- drivers/ntb/test/ntb_perf.c                   |  4 ++--
- drivers/ntb/test/ntb_tool.c                   |  6 +++---
- drivers/pci/endpoint/functions/pci-epf-vntb.c |  5 +++--
- include/linux/ntb.h                           | 18 +++++++++++-------
- 14 files changed, 49 insertions(+), 32 deletions(-)
+ drivers/ntb/ntb_transport.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ntb/hw/amd/ntb_hw_amd.c b/drivers/ntb/hw/amd/ntb_hw_amd.c
-index 1a163596ddf5..c0137df413c4 100644
---- a/drivers/ntb/hw/amd/ntb_hw_amd.c
-+++ b/drivers/ntb/hw/amd/ntb_hw_amd.c
-@@ -92,7 +92,8 @@ static int amd_ntb_mw_count(struct ntb_dev *ntb, int pidx)
- static int amd_ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- 				resource_size_t *addr_align,
- 				resource_size_t *size_align,
--				resource_size_t *size_max)
-+				resource_size_t *size_max,
-+				resource_size_t *offset)
- {
- 	struct amd_ntb_dev *ndev = ntb_ndev(ntb);
- 	int bar;
-@@ -117,7 +118,8 @@ static int amd_ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- }
- 
- static int amd_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int idx,
--				dma_addr_t addr, resource_size_t size)
-+				dma_addr_t addr, resource_size_t size,
-+				resource_size_t offset)
- {
- 	struct amd_ntb_dev *ndev = ntb_ndev(ntb);
- 	unsigned long xlat_reg, limit_reg = 0;
-diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-index 126ba38e32ea..89a536562abf 100644
---- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-+++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-@@ -167,7 +167,8 @@ static int ntb_epf_mw_count(struct ntb_dev *ntb, int pidx)
- static int ntb_epf_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- 				resource_size_t *addr_align,
- 				resource_size_t *size_align,
--				resource_size_t *size_max)
-+				resource_size_t *size_max,
-+				resource_size_t *offset)
- {
- 	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
- 	struct device *dev = ndev->dev;
-@@ -405,7 +406,8 @@ static int ntb_epf_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
- }
- 
- static int ntb_epf_mw_set_trans(struct ntb_dev *ntb, int pidx, int idx,
--				dma_addr_t addr, resource_size_t size)
-+				dma_addr_t addr, resource_size_t size,
-+				resource_size_t offset)
- {
- 	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
- 	struct device *dev = ndev->dev;
-diff --git a/drivers/ntb/hw/idt/ntb_hw_idt.c b/drivers/ntb/hw/idt/ntb_hw_idt.c
-index f27df8d7f3b9..8c2cf149b99b 100644
---- a/drivers/ntb/hw/idt/ntb_hw_idt.c
-+++ b/drivers/ntb/hw/idt/ntb_hw_idt.c
-@@ -1190,7 +1190,8 @@ static int idt_ntb_mw_count(struct ntb_dev *ntb, int pidx)
- static int idt_ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int widx,
- 				resource_size_t *addr_align,
- 				resource_size_t *size_align,
--				resource_size_t *size_max)
-+				resource_size_t *size_max,
-+				resource_size_t *offset)
- {
- 	struct idt_ntb_dev *ndev = to_ndev_ntb(ntb);
- 	struct idt_ntb_peer *peer;
-diff --git a/drivers/ntb/hw/intel/ntb_hw_gen1.c b/drivers/ntb/hw/intel/ntb_hw_gen1.c
-index 079b8cd79785..6cbbd6cdf4c0 100644
---- a/drivers/ntb/hw/intel/ntb_hw_gen1.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_gen1.c
-@@ -804,7 +804,8 @@ int intel_ntb_mw_count(struct ntb_dev *ntb, int pidx)
- int intel_ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- 			   resource_size_t *addr_align,
- 			   resource_size_t *size_align,
--			   resource_size_t *size_max)
-+			   resource_size_t *size_max,
-+			   resource_size_t *offset)
- {
- 	struct intel_ntb_dev *ndev = ntb_ndev(ntb);
- 	resource_size_t bar_size, mw_size;
-@@ -840,7 +841,8 @@ int intel_ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- }
- 
- static int intel_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int idx,
--				  dma_addr_t addr, resource_size_t size)
-+				  dma_addr_t addr, resource_size_t size,
-+				  resource_size_t offset)
- {
- 	struct intel_ntb_dev *ndev = ntb_ndev(ntb);
- 	unsigned long base_reg, xlat_reg, limit_reg;
-diff --git a/drivers/ntb/hw/intel/ntb_hw_gen1.h b/drivers/ntb/hw/intel/ntb_hw_gen1.h
-index 344249fc18d1..f9ebd2780b7f 100644
---- a/drivers/ntb/hw/intel/ntb_hw_gen1.h
-+++ b/drivers/ntb/hw/intel/ntb_hw_gen1.h
-@@ -159,7 +159,7 @@ int ndev_mw_to_bar(struct intel_ntb_dev *ndev, int idx);
- int intel_ntb_mw_count(struct ntb_dev *ntb, int pidx);
- int intel_ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- 		resource_size_t *addr_align, resource_size_t *size_align,
--		resource_size_t *size_max);
-+		resource_size_t *size_max, resource_size_t *offset);
- int intel_ntb_peer_mw_count(struct ntb_dev *ntb);
- int intel_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
- 		phys_addr_t *base, resource_size_t *size);
-diff --git a/drivers/ntb/hw/intel/ntb_hw_gen3.c b/drivers/ntb/hw/intel/ntb_hw_gen3.c
-index a5aa96a31f4a..98722032ca5d 100644
---- a/drivers/ntb/hw/intel/ntb_hw_gen3.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_gen3.c
-@@ -444,7 +444,8 @@ int intel_ntb3_link_enable(struct ntb_dev *ntb, enum ntb_speed max_speed,
- 	return 0;
- }
- static int intel_ntb3_mw_set_trans(struct ntb_dev *ntb, int pidx, int idx,
--				   dma_addr_t addr, resource_size_t size)
-+				   dma_addr_t addr, resource_size_t size,
-+				   resource_size_t offset)
- {
- 	struct intel_ntb_dev *ndev = ntb_ndev(ntb);
- 	unsigned long xlat_reg, limit_reg;
-diff --git a/drivers/ntb/hw/intel/ntb_hw_gen4.c b/drivers/ntb/hw/intel/ntb_hw_gen4.c
-index 22cac7975b3c..8df90ea04c7c 100644
---- a/drivers/ntb/hw/intel/ntb_hw_gen4.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_gen4.c
-@@ -335,7 +335,8 @@ ssize_t ndev_ntb4_debugfs_read(struct file *filp, char __user *ubuf,
- }
- 
- static int intel_ntb4_mw_set_trans(struct ntb_dev *ntb, int pidx, int idx,
--				   dma_addr_t addr, resource_size_t size)
-+				   dma_addr_t addr, resource_size_t size,
-+				   resource_size_t offset)
- {
- 	struct intel_ntb_dev *ndev = ntb_ndev(ntb);
- 	unsigned long xlat_reg, limit_reg, idx_reg;
-@@ -524,7 +525,8 @@ static int intel_ntb4_link_disable(struct ntb_dev *ntb)
- static int intel_ntb4_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
- 				   resource_size_t *addr_align,
- 				   resource_size_t *size_align,
--				   resource_size_t *size_max)
-+				   resource_size_t *size_max,
-+				   resource_size_t *offset)
- {
- 	struct intel_ntb_dev *ndev = ntb_ndev(ntb);
- 	resource_size_t bar_size, mw_size;
-diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-index e38540b92716..5d8bace78d4f 100644
---- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-+++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -191,7 +191,8 @@ static int peer_lut_index(struct switchtec_ntb *sndev, int mw_idx)
- static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
- 				      int widx, resource_size_t *addr_align,
- 				      resource_size_t *size_align,
--				      resource_size_t *size_max)
-+				      resource_size_t *size_max,
-+				      resource_size_t *offset)
- {
- 	struct switchtec_ntb *sndev = ntb_sndev(ntb);
- 	int lut;
-@@ -268,7 +269,8 @@ static void switchtec_ntb_mw_set_lut(struct switchtec_ntb *sndev, int idx,
- }
- 
- static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
--				      dma_addr_t addr, resource_size_t size)
-+				      dma_addr_t addr, resource_size_t size,
-+				      resource_size_t offset)
- {
- 	struct switchtec_ntb *sndev = ntb_sndev(ntb);
- 	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-diff --git a/drivers/ntb/msi.c b/drivers/ntb/msi.c
-index 6817d504c12a..8875bcbf2ea4 100644
---- a/drivers/ntb/msi.c
-+++ b/drivers/ntb/msi.c
-@@ -117,7 +117,7 @@ int ntb_msi_setup_mws(struct ntb_dev *ntb)
- 			return peer_widx;
- 
- 		ret = ntb_mw_get_align(ntb, peer, peer_widx, &addr_align,
--				       NULL, NULL);
-+				       NULL, NULL, NULL);
- 		if (ret)
- 			return ret;
- 
-@@ -132,7 +132,7 @@ int ntb_msi_setup_mws(struct ntb_dev *ntb)
- 		}
- 
- 		ret = ntb_mw_get_align(ntb, peer, peer_widx, NULL,
--				       &size_align, &size_max);
-+				       &size_align, &size_max, NULL);
- 		if (ret)
- 			goto error_out;
- 
-@@ -142,7 +142,7 @@ int ntb_msi_setup_mws(struct ntb_dev *ntb)
- 			mw_min_size = mw_size;
- 
- 		ret = ntb_mw_set_trans(ntb, peer, peer_widx,
--				       addr, mw_size);
-+				       addr, mw_size, 0);
- 		if (ret)
- 			goto error_out;
- 	}
 diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index d5a544bf8fd6..e16a8147ddc5 100644
+index e16a8147ddc5..57b4c0511927 100644
 --- a/drivers/ntb/ntb_transport.c
 +++ b/drivers/ntb/ntb_transport.c
-@@ -829,7 +829,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+@@ -823,13 +823,14 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+ 	size_t xlat_size, buff_size;
+ 	resource_size_t xlat_align;
+ 	resource_size_t xlat_align_size;
++	resource_size_t offset;
+ 	int rc;
+ 
+ 	if (!size)
  		return -EINVAL;
  
  	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
--			      &xlat_align_size, NULL);
-+			      &xlat_align_size, NULL, NULL);
+-			      &xlat_align_size, NULL, NULL);
++			      &xlat_align_size, NULL, &offset);
  	if (rc)
  		return rc;
  
-@@ -864,7 +864,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+@@ -864,7 +865,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
  
  	/* Notify HW the memory location of the receive buffer */
  	rc = ntb_mw_set_trans(nt->ndev, PIDX, num_mw, mw->dma_addr,
--			      mw->xlat_size);
-+			      mw->xlat_size, 0);
+-			      mw->xlat_size, 0);
++			      mw->xlat_size, offset);
  	if (rc) {
  		dev_err(&pdev->dev, "Unable to set mw%d translation", num_mw);
  		ntb_free_mw(nt, num_mw);
-diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
-index dfd175f79e8f..b842b69e4242 100644
---- a/drivers/ntb/test/ntb_perf.c
-+++ b/drivers/ntb/test/ntb_perf.c
-@@ -573,7 +573,7 @@ static int perf_setup_inbuf(struct perf_peer *peer)
- 
- 	/* Get inbound MW parameters */
- 	ret = ntb_mw_get_align(perf->ntb, peer->pidx, perf->gidx,
--			       &xlat_align, &size_align, &size_max);
-+			       &xlat_align, &size_align, &size_max, NULL);
- 	if (ret) {
- 		dev_err(&perf->ntb->dev, "Couldn't get inbuf restrictions\n");
- 		return ret;
-@@ -604,7 +604,7 @@ static int perf_setup_inbuf(struct perf_peer *peer)
- 	}
- 
- 	ret = ntb_mw_set_trans(perf->ntb, peer->pidx, peer->gidx,
--			       peer->inbuf_xlat, peer->inbuf_size);
-+			       peer->inbuf_xlat, peer->inbuf_size, 0);
- 	if (ret) {
- 		dev_err(&perf->ntb->dev, "Failed to set inbuf translation\n");
- 		goto err_free_inbuf;
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-index 641cb7e05a47..7a7ba486bba7 100644
---- a/drivers/ntb/test/ntb_tool.c
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -578,7 +578,7 @@ static int tool_setup_mw(struct tool_ctx *tc, int pidx, int widx,
- 		return 0;
- 
- 	ret = ntb_mw_get_align(tc->ntb, pidx, widx, &addr_align,
--				&size_align, &size);
-+				&size_align, &size, NULL);
- 	if (ret)
- 		return ret;
- 
-@@ -595,7 +595,7 @@ static int tool_setup_mw(struct tool_ctx *tc, int pidx, int widx,
- 		goto err_free_dma;
- 	}
- 
--	ret = ntb_mw_set_trans(tc->ntb, pidx, widx, inmw->dma_base, inmw->size);
-+	ret = ntb_mw_set_trans(tc->ntb, pidx, widx, inmw->dma_base, inmw->size, 0);
- 	if (ret)
- 		goto err_free_dma;
- 
-@@ -652,7 +652,7 @@ static ssize_t tool_mw_trans_read(struct file *filep, char __user *ubuf,
- 		return -ENOMEM;
- 
- 	ret = ntb_mw_get_align(inmw->tc->ntb, inmw->pidx, inmw->widx,
--			       &addr_align, &size_align, &size_max);
-+			       &addr_align, &size_align, &size_max, NULL);
- 	if (ret)
- 		goto err;
- 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-index 4dfb3e40dffa..4db1fabfd8a4 100644
---- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-@@ -1384,7 +1384,7 @@ static int vntb_epf_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
- }
- 
- static int vntb_epf_mw_set_trans(struct ntb_dev *ndev, int pidx, int idx,
--		dma_addr_t addr, resource_size_t size)
-+		dma_addr_t addr, resource_size_t size, resource_size_t offset)
- {
- 	struct epf_ntb *ntb = ntb_ndev(ndev);
- 	struct pci_epf_bar *epf_bar;
-@@ -1507,7 +1507,8 @@ static u64 vntb_epf_db_read(struct ntb_dev *ndev)
- static int vntb_epf_mw_get_align(struct ntb_dev *ndev, int pidx, int idx,
- 			resource_size_t *addr_align,
- 			resource_size_t *size_align,
--			resource_size_t *size_max)
-+			resource_size_t *size_max,
-+			resource_size_t *offset)
- {
- 	struct epf_ntb *ntb = ntb_ndev(ndev);
- 
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index 8ff9d663096b..d7ce5d2e60d0 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -273,9 +273,11 @@ struct ntb_dev_ops {
- 	int (*mw_get_align)(struct ntb_dev *ntb, int pidx, int widx,
- 			    resource_size_t *addr_align,
- 			    resource_size_t *size_align,
--			    resource_size_t *size_max);
-+			    resource_size_t *size_max,
-+			    resource_size_t *offset);
- 	int (*mw_set_trans)(struct ntb_dev *ntb, int pidx, int widx,
--			    dma_addr_t addr, resource_size_t size);
-+			    dma_addr_t addr, resource_size_t size,
-+			    resource_size_t offset);
- 	int (*mw_clear_trans)(struct ntb_dev *ntb, int pidx, int widx);
- 	int (*peer_mw_count)(struct ntb_dev *ntb);
- 	int (*peer_mw_get_addr)(struct ntb_dev *ntb, int widx,
-@@ -823,13 +825,14 @@ static inline int ntb_mw_count(struct ntb_dev *ntb, int pidx)
- static inline int ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int widx,
- 				   resource_size_t *addr_align,
- 				   resource_size_t *size_align,
--				   resource_size_t *size_max)
-+				   resource_size_t *size_max,
-+				   resource_size_t *offset)
- {
- 	if (!(ntb_link_is_up(ntb, NULL, NULL) & BIT_ULL(pidx)))
- 		return -ENOTCONN;
- 
- 	return ntb->ops->mw_get_align(ntb, pidx, widx, addr_align, size_align,
--				      size_max);
-+				      size_max, offset);
- }
- 
- /**
-@@ -852,12 +855,13 @@ static inline int ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int widx,
-  * Return: Zero on success, otherwise an error number.
-  */
- static inline int ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
--				   dma_addr_t addr, resource_size_t size)
-+				   dma_addr_t addr, resource_size_t size,
-+				   resource_size_t offset)
- {
- 	if (!ntb->ops->mw_set_trans)
- 		return 0;
- 
--	return ntb->ops->mw_set_trans(ntb, pidx, widx, addr, size);
-+	return ntb->ops->mw_set_trans(ntb, pidx, widx, addr, size, offset);
- }
- 
- /**
-@@ -875,7 +879,7 @@ static inline int ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
- static inline int ntb_mw_clear_trans(struct ntb_dev *ntb, int pidx, int widx)
- {
- 	if (!ntb->ops->mw_clear_trans)
--		return ntb_mw_set_trans(ntb, pidx, widx, 0, 0);
-+		return ntb_mw_set_trans(ntb, pidx, widx, 0, 0, 0);
- 
- 	return ntb->ops->mw_clear_trans(ntb, pidx, widx);
- }
 -- 
 2.51.0
 
