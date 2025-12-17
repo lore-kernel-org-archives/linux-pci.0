@@ -1,364 +1,200 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010024.outbound.protection.outlook.com [52.101.229.24])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5622034C986;
-	Wed, 17 Dec 2025 16:51:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.24
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765990289; cv=fail; b=uH0IcDTdumiHbgmDMwkhZ5kJkIEU6LSD2paaaPXXWWfD6EyjD7UF97jKOqxhmR0UTKkd0b71fNSZDLDspP+XooJHlA9ZUZPUqK7jOVs4n3xBhYDUCID+kjVGAep6aOMTIZCbFRaVYE8e5xN/+RUG3LTjrPaVORrpZ/NFnEk9wtA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765990289; c=relaxed/simple;
-	bh=8/qQNmtlnXto+tyqn4YMVyv35slMxXS48SuROZp6/as=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IiopoQHnXqbQNrG9Xt+Uh2QD8ULd57jtMp2ipncHxs0F+UmIyXEtAm1suas1wWEFj4LrvSDsQt/Bq0Km2ufY5/SVJR9DnT4cuaQ5B3TYANmUQZ+72wFGyREGiqG7mQV4C+qFutfC2+kZMMJkc0ZGQIt4aq7ig+COY4j0uH0muk4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=Gc9MiSa2; arc=fail smtp.client-ip=52.101.229.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90D38267B92
+	for <linux-pci@vger.kernel.org>; Wed, 17 Dec 2025 17:01:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1765990918; cv=none; b=SfpcALZqMtpmTLkIY0PO8lHp6KLx8UOSqwKvpScvPjWgs6wK05hr9yQrXGxi+KxXpICcpOvF57WbVy9Xb5+2ssHHDbyvqF2D6AlCKlifEtZZmZW9BjP4SPjamdH1IWrQNoYBtTvhEIrWDxkl/GomNqwGC0U0G/Ue3nyUuttpkIk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1765990918; c=relaxed/simple;
+	bh=2D02SqJKD+nsCsJr8M1rCApsCcKMVZUyPH+0iU3i6ZA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=V2tglWy7dAruF1gyAGlvKyOB0fChLGTGOC+tu5gxMpBPyDJzFoD+w/vZ9APesr6jZQNJhYwUKkj3aQklWpGax2AcfEgGpL6JQjA+4E8Jf199cqfpqEiYhTwDHcLHWEwqwRKomt8T74XX77ZlYDnZZr7bvEDnLtpw43c8qoHASXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ICaVjhJC; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=KfWGWoVB; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="Gc9MiSa2"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XHD8cods0irIIy09MyOugNPY6GA9FcP0QdcezMFDHXq1vQJH92IR7enu2LS8ywJvrlvhOGCS5WqIKAlIvubO7IeSLov79P3aujA1coLEpv/XqoPQam8XhMbjkO4ARM0G7Am6b7H4JRwNtyujTLs9wKS7xIfdfCo181a03A2v60V88crTJG5px/iR34Wv8X+/+MoD9Q/zmuVrTa3RTezXxnTkyB8VPt2qyeSiTHU5beFjqvS96mbs41Osmofv7bZOgnkwLrkhUtRZU3/7Xaru8J7+cVIsdIH1tj9tgP3HUphRNxdANWpqZI3upwgBd6Zp+LMN7nPG4njGdRB4Px5rjA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CJyF2DKW5ad2jiOFfko7k3RP3AiZhrVA2ovXjyjQ77Q=;
- b=Q9ci9XPopzCU/+XuoWaG4fXNJMVa74UieTmoBrHZTxEd8645O4v1WjKm/AU4oYBx6ILC96MSAuJ2sVt7OouJeIgiubvwvaXGDVqXfKKEtI4yoUuesKxf70NG6KdBbTFMDXMHc+XHPP2GHE2OE5G+a63ZzyJob0Wz2ZsnEHsY6pM+L6w858TkFZDL2DJ9JB1LJxqhLml/tZZNjQsnICEu6+ZzN3ybiTMKdPavM+T9rVqd1pp24s3L2VKzc2Xayn4B7mkD15pbtHA2V7R0NjmOqWkfbT+p11W1P3BbIGqNF11JmmFIsucay/D4TR7J12lsTOyQC0glDJQlnI5oq9Kc6w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CJyF2DKW5ad2jiOFfko7k3RP3AiZhrVA2ovXjyjQ77Q=;
- b=Gc9MiSa2Tfr+j3un14KOLs/L9hNedfzAOngxTmLXj82Cmld2fxFmt3kMnC83l3Tz/oAqphI3+MeYcLd2W/GK71nhCBv/EwKj4QjiyC8Wv4uUsCYOTFjwS5SrYrR/4zmV8Durj2s1JzAnA3XdrZ3NdZLNPaGnXYyIBcueC9FdiIA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:24c::11)
- by TYCP286MB2863.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:306::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9434.6; Wed, 17 Dec
- 2025 15:16:38 +0000
-Received: from TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
- ([fe80::fb7e:f4ed:a580:9d03]) by TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
- ([fe80::fb7e:f4ed:a580:9d03%5]) with mapi id 15.20.9434.001; Wed, 17 Dec 2025
- 15:16:38 +0000
-From: Koichiro Den <den@valinux.co.jp>
-To: Frank.Li@nxp.com,
-	dave.jiang@intel.com,
-	ntb@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: mani@kernel.org,
-	kwilczynski@kernel.org,
-	kishon@kernel.org,
-	bhelgaas@google.com,
-	corbet@lwn.net,
-	geert+renesas@glider.be,
-	magnus.damm@gmail.com,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	vkoul@kernel.org,
-	joro@8bytes.org,
-	will@kernel.org,
-	robin.murphy@arm.com,
-	jdmason@kudzu.us,
-	allenbh@gmail.com,
-	andrew+netdev@lunn.ch,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	Basavaraj.Natikar@amd.com,
-	Shyam-sundar.S-k@amd.com,
-	kurt.schwemmer@microsemi.com,
-	logang@deltatee.com,
-	jingoohan1@gmail.com,
-	lpieralisi@kernel.org,
-	utkarsh02t@gmail.com,
-	jbrunet@baylibre.com,
-	dlemoal@kernel.org,
-	arnd@arndb.de,
-	elfring@users.sourceforge.net,
-	den@valinux.co.jp
-Subject: [RFC PATCH v3 27/35] NTB: epf: Provide db_vector_count/db_vector_mask callbacks
-Date: Thu, 18 Dec 2025 00:16:01 +0900
-Message-ID: <20251217151609.3162665-28-den@valinux.co.jp>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251217151609.3162665-1-den@valinux.co.jp>
-References: <20251217151609.3162665-1-den@valinux.co.jp>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0098.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b4::19) To TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:24c::11)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ICaVjhJC";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="KfWGWoVB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1765990915;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=dD5nFNFh+CHq/nzULmKKE12yIQGGBSkgJsl56ofghHQ=;
+	b=ICaVjhJCBc7Z6vRvnFc+v2GlU3Ny51ubvHlo89CWEzPstJ7ovQPCcXMvBZfznJSWiAWbiD
+	4FB8hGJ4usljOH7gRW5wOST1ghuuyuk1N9RrBX5swPAQBtZKK3/Z80UYDgqn7sTu+3xVE2
+	UpAvH9YnPHeKtMQ5HfMHDEC9bD2ipyE=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-690-3hTMDyDONI2PCalqthLslw-1; Wed, 17 Dec 2025 12:01:53 -0500
+X-MC-Unique: 3hTMDyDONI2PCalqthLslw-1
+X-Mimecast-MFC-AGG-ID: 3hTMDyDONI2PCalqthLslw_1765990912
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-43101a351c7so2976353f8f.2
+        for <linux-pci@vger.kernel.org>; Wed, 17 Dec 2025 09:01:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1765990911; x=1766595711; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=dD5nFNFh+CHq/nzULmKKE12yIQGGBSkgJsl56ofghHQ=;
+        b=KfWGWoVB/l6mxGUtQdYJe6v0cGKG6MK4aIQ45f5K4IPOpgUkWjKS5X7i4dZgAg+fPi
+         +QhOK3g56CelitpLkjJ4o77TeDMC9OoT5AExk9Iq3SL2XUAxZLCtB2xQbi2wPjVNZeFq
+         VPA4UnXxe6s7uB4qiV2SUPoPIRmYgcJYTp1xS9NyHhI2ql0oyQRFxUEF6+QTETg0akif
+         5qTKrt7DywoVakjGzvhSFMpgLqiUacbdk1eX6loJbrfqhfFVTf74j872IUymPYcoO3On
+         vKAi8kWiPDcPjT5oKxfuc+V+BC0Dl0wKz3s9zLGYJyTaxQILAF8UgHwTOLvrvLvivk6o
+         xZpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765990911; x=1766595711;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dD5nFNFh+CHq/nzULmKKE12yIQGGBSkgJsl56ofghHQ=;
+        b=mO5v34DdqfDffriN8OX06aq0f03+V3fNol4vkvr5cjDqS/eTgxwnDV353g+dIWlLo4
+         kEdT77ULikPelpNUpiOUaZoffRRkib35gVt7x+jRzHM6+Fo/XUtrDlX4lMi8acMk3L62
+         Od5FvJJTiuExdQ2PJA6z64+sBym5wrXxx/4S7EzINF7HXf6V7DzCEYivrmByYZKC1UGx
+         w6zdeCWYgo1fkHO3BWQyH5/gZE/iqd31L1p5VtsxcDTLCqw5MXMS4aMEnG2rbuyxHAXu
+         STWzn/O+lq7yyfXmckY15Tx+5jMi1L2xLn0VaV5cO7iUn/0IgPO8QgnI1wwvgJA0576/
+         MXLw==
+X-Forwarded-Encrypted: i=1; AJvYcCWBE5ldVwQzx+KKpTBj3LS4aSSkM7vp7H2Cxt2ulUstCiMKvf5JlAMiWiPdUC0fW9Yzl2BsKOcTdKA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwpW2qTrptcukUqnHomJeedCpfNrCBoPEW9NORHbT7F0kod7vMp
+	ABYrhvZ0XO5RMGxcGTwifa6fy469kvbxNbpPqjzovCu7+OrcHrZiXjOqONirflWLf4DNKqZYUbe
+	SNXYYHjTAU0ddCRtoyorlAYXC7QBLwyjRwRa2iG+2XRYVpXDzHpnFMVTcoJNzBg==
+X-Gm-Gg: AY/fxX69+VJ/PlS8MrPdD4s/yerl1NFfXlUNaAvUK7N6LdB2NaGeLo6DNJHPsAzq1a+
+	m2LqMUu4S7v40C+quURFEchCC5hYIAIR7YRkWy87LYTynJHlERcBBuGYhZK8GnOlHZaKR7D2yfh
+	Q8u4twatJKttjyEdxlEN1v726xsI0MXs+z+H5jx1DgWkCT6/pfmCUvKikZZ5YD3enNqGdFm8ZBn
+	hxx3rSV2vbTQD8OinROfQPp77YxmwkRy6z3PkaFmqd8XZyLpIIWCguNPigrUTq3rZC0BPTF4gtV
+	WtyU4GSoqJZ9bLxHnfxx/Wa7E8tFyHHienwAlFy9pfgyEzV0hVft8zgAkQjmTzKoEq69v3AEick
+	PzRR7hX0EBt48b0VvwSBliwWOO169anxgo5d+CJMhLw8/G0RU
+X-Received: by 2002:a5d:64e6:0:b0:430:f5c3:39fe with SMTP id ffacd0b85a97d-430f5c33c72mr16059965f8f.4.1765990911406;
+        Wed, 17 Dec 2025 09:01:51 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH7naa2xfBN81UFldN7VJ60YMv46kr3qq+t2tP1xJU0lrdjUCzUiNloJ8sGrQh5v79JlM1s8w==
+X-Received: by 2002:a5d:64e6:0:b0:430:f5c3:39fe with SMTP id ffacd0b85a97d-430f5c33c72mr16059928f8f.4.1765990910912;
+        Wed, 17 Dec 2025 09:01:50 -0800 (PST)
+Received: from ?IPV6:2a01:e0a:280:24f0:9db0:474c:ff43:9f5c? ([2a01:e0a:280:24f0:9db0:474c:ff43:9f5c])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43244949ba6sm34714f8f.19.2025.12.17.09.01.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Dec 2025 09:01:50 -0800 (PST)
+Message-ID: <9d06837d-7aed-43ef-87c2-1ce4f921dff2@redhat.com>
+Date: Wed, 17 Dec 2025 18:01:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYWP286MB2697:EE_|TYCP286MB2863:EE_
-X-MS-Office365-Filtering-Correlation-Id: bed16d64-fd65-4656-614a-08de3d7f4656
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|10070799003|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?bxnUK0xs6gXzHDZs+BMj+kl3mVIJxFuJqyoW3wNLcrlIIz+m77IoWZYoKKOM?=
- =?us-ascii?Q?YFBbJ0NPfhZcIk+LVbKCCBt2V/oEoavdvgnvk+X8NOn0su/Z4hMxr1hJT4Xh?=
- =?us-ascii?Q?cksdMwGwAARbMDvZyzlFIf+yZwUBwy0/RyS9hng1n8L1g7+DzASdQgt9NyTy?=
- =?us-ascii?Q?FGhpoNKEkRHJqjWMcRHjNNFsaYEJU+Y8ESkR2xVZQsDjaFHnxf8yqaqy7PyI?=
- =?us-ascii?Q?qIHeyVxW1M47zZ6JIFcPpyi27slQbOizQQHpFEE06spobLLSRGWWxgZI0bUt?=
- =?us-ascii?Q?9iX7qOjAD4vYXsN78FpgPFNb4KJX3VWXwkA3mWUyh6VP441eVAlbcV057fos?=
- =?us-ascii?Q?JUZi6uGrjaSjiiihIa5jNPiFVJbboyWs4QgCpURHTHyMzImDrxoWla0Y3ucH?=
- =?us-ascii?Q?Ln49CrVE868amXfIE7UNpqXsWWXEuHZ8n+O99pDyiJLDUqO0RLZOGOgCRVG/?=
- =?us-ascii?Q?/82/CF4CBUAeSjNb0kktPQkd5Q5F8E77kgqVONrHDsmYhwIHd59+FWgQYokI?=
- =?us-ascii?Q?U0rx+slQePmFb4Y/zg1RBBM/anMP/5JE+s1iAs5XKnek09bvU0/fdYQD6mJU?=
- =?us-ascii?Q?soIJH+LnhUSfc0Y7oaXZPqZQLoSIAgHZlyNNPKUPp4SRM8+E6jt/2qi3w8fn?=
- =?us-ascii?Q?R1RES0jBnhdgt7DttZHQ6BMWzPF5oW/aQCgYeT4PCL8J1WC5BZmJ+zt/ASDb?=
- =?us-ascii?Q?oiunxANPekXszQeHWNvityV1QejOnCVsUQV3VraoWLAFNVVqWvqeawouJLhz?=
- =?us-ascii?Q?RJI2v4ek4QItFIW9xl5q4FMUCocsIJ3UXGyy7uO4kcLOF+lLhivQsf9WXS6y?=
- =?us-ascii?Q?HnKboiQTEwsO+gUVCrcBrTJHVa1JXOfXMdmdDjFcnVPVJ4hC5jOBDbGKncAA?=
- =?us-ascii?Q?7vJ5RSB6qEy0rv6cs5SqOhFv/pCvKFQ5/8iKo67lzd28pvkpA5rCRebUkRen?=
- =?us-ascii?Q?0BvkIQKFb3fwitJP4x1KzC1vaN93o18TokhWRw7SID7Gj2Uta5YgQIsiyS+/?=
- =?us-ascii?Q?lFgAzUWn04DqMVC1ggF32HSuDuwHNZIaiJxXiwbEvK9n1eoXh86O+4MvdCL+?=
- =?us-ascii?Q?ji3txYmAF3B/T/VHFLJPZHXQ4J0yqtsUZc8LWOBB9zgv+GUZuXEynFoctx5A?=
- =?us-ascii?Q?TDAavRmpoGMPdOE1qZVvvPhN6TkBcmfRnB/ZwcNs5wiNkABdxeh9msCTSKB/?=
- =?us-ascii?Q?gDhw8kij7jQBYDjDt0RVwT2Z2ms0nPYHwxe7kTLYJoVqDW5PGV2+PnsWNpQq?=
- =?us-ascii?Q?zWFJutpySc5e+o9FtyJj5hzKXn6wnV3xmSOIkBW0hmQA3kTGdHEIAf9BGNZk?=
- =?us-ascii?Q?gqRAP1JOViHGZ7UaZbWFbHvFCSiGW4rNHHk0WbeGByyPM4W+dYlOGwOQ6kEm?=
- =?us-ascii?Q?fD50uC0B3nJA4m+38O9bNSI0pwPmVqtM/kA+RDsZ2Os/WbTkSwvQEcPnIGd8?=
- =?us-ascii?Q?Gnp/Iia+uwN1YNZmgL/e80sMP/RJCOqY?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(10070799003)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?FVV/dTVZFs/i686KLFGOiLpYbOhgHhBJBpswRdHSOsGWvloMFXam/6kakbEE?=
- =?us-ascii?Q?NfTD8aXX5rFT+GVKq8r+uFYP92st8F/08hPSlJJmfWMdXEVPhAIuhlSgaOkA?=
- =?us-ascii?Q?Ko7ToFaU2owSTe7sheFh7MqaMP8nsvGLQOCotUgh9U5r586zkFB93u+hfYdh?=
- =?us-ascii?Q?AN6WR99SaDjt9uapWN/QgpVIM/hps0PDaW8iyUbN53m/jS7KebCQCypJoLb4?=
- =?us-ascii?Q?W6ltQ6XOPb5e2s9erAC4g3RvDIx+HtUnmqcMi+HkBBfaCm+tDWmWK2v+TB/h?=
- =?us-ascii?Q?3D4/zcyj07ykcvH45Qgm7t/yvmXxRJ6OG9lLcTcd0FVBFwYFBBMUw5q0HrjK?=
- =?us-ascii?Q?rCDshhV3QvQ7YXCf18mw+qVr1KN0yitV5Lwf7Zlot+LiTLYJ1R/fXbTLxs3O?=
- =?us-ascii?Q?HtTfXjxpkzr+4NouwM9FTy/rWavUI4O/qpOwuDU8U1sjUwMfswcpZpYpK2bi?=
- =?us-ascii?Q?NVzgK9vCI0fkaTG9MJhhYE6P3iNEeYgm12SzuEkHUgAdtPn62zhx8H03h7e2?=
- =?us-ascii?Q?N5VHwS/49quqCEyRZdhD+hcv5XJKcOKio+cCwEf0OUl0+cM6onzSTD2zy7g7?=
- =?us-ascii?Q?akHsMeDUuJrxGqcwc6F6/v8S43NbQUMxsIC7X++JHdyBhAcQhRngRiUIPeJd?=
- =?us-ascii?Q?7b0podBQHsDKH0xNko6tEQaGxW/fHQJBvNQkYLsSx1W8Vegp0qqFfNshjSd3?=
- =?us-ascii?Q?3MnKmJ+zgUYRpve3SnXGE0HQUbXJlphy0SRxOlEwdrtHpACQ5L8qdydF9UKS?=
- =?us-ascii?Q?Ypk/oEtwGtG62Rg9EbBEgE+BxQYOjXBv7ZaoU1K8v+Gt4lnLSiiuzkjyphM9?=
- =?us-ascii?Q?lDOVF5wX4wDgmWCVTztruhOFjnOkUyhvor91GnQEGtEnbaFJ+0c5WTBHg/zN?=
- =?us-ascii?Q?lPQvsOLZO1H/DdJrUvupF50MiYxOG+A+f4Ne5xBggNYrxaznU2qVTSDddKnQ?=
- =?us-ascii?Q?ImQ7zULa6/Thg6fmWipEz8qkDQn0MrNSwK2oO4VAPsvZKMog3/k+WBdl1R6y?=
- =?us-ascii?Q?LRaKYNEhut1pO+cp2ibtU+G+Bv51C+Lzjj6oe45jOkmps9Qz3XF/4qgKcY0W?=
- =?us-ascii?Q?WUraZJ5/G9hwUQYhXssLn88od9I5xhY3yR2lMK812+jck9gybomwNeTWCJUz?=
- =?us-ascii?Q?qQJISHMQNC36HhNKVx41aSpl4CheKlC2gRuL3ZYcXM2aU+ub7tZV9j5878/Y?=
- =?us-ascii?Q?1jXE/ZgPhE6o/LyDZGGuCAGouYL/R2usJcmtKW2JdTrso4eukQNJHHQ0+52G?=
- =?us-ascii?Q?KQInui7YWlVJa11rolgEcLabnuMRKiemFXjDpBDH3czlyrNAs8l9EGU57HP5?=
- =?us-ascii?Q?EkeDEpvLqElM0SaENgnOagtLh5qAFVhVG/o1UkNcTQuyP9JIX5e/ytTSPlCQ?=
- =?us-ascii?Q?M5wPLPCRuFvZDzcFZRs5BEylrAT0xTCKqhtNBcqPCeyYPKwah8fOhf0pJEMR?=
- =?us-ascii?Q?/S9nXV/jY8h6uIVwaYlPaPtcqJCvi8yM2FVvgTpax07QLsFESzbBDbs3tYXs?=
- =?us-ascii?Q?njTs/PW9a9mzvbW11e2YRmjsBuszdkW1nbXnOqP725U4nR6O1heG6YilFltq?=
- =?us-ascii?Q?auRBmA2R7JOoIUB74tOPKRXWaxiLZUZwVB7cdOefIHAXaTFp6+Ej3uoFtvQb?=
- =?us-ascii?Q?YrONHuQ4U/aEpw64kEsyOC8=3D?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: bed16d64-fd65-4656-614a-08de3d7f4656
-X-MS-Exchange-CrossTenant-AuthSource: TYWP286MB2697.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2025 15:16:38.4206
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2ohPDDGGsA3cX41B+LwtYzL59olKhS28UD7AIV1KW1Yj+CGL+ZiyzCcmDrDzIamGPZPOeo7NUOoQwJP00b1wZA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2863
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 00/11] vfio/pci: Allow MMIO regions to be exported
+ through dma-buf
+To: Nicolin Chen <nicolinc@nvidia.com>, Leon Romanovsky <leon@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe
+ <logang@deltatee.com>, Jens Axboe <axboe@kernel.dk>,
+ Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will@kernel.org>, Marek Szyprowski <m.szyprowski@samsung.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Andrew Morton <akpm@linux-foundation.org>,
+ Jonathan Corbet <corbet@lwn.net>, Sumit Semwal <sumit.semwal@linaro.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Kees Cook <kees@kernel.org>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+ Shameer Kolothum <skolothumtho@nvidia.com>, Kevin Tian
+ <kevin.tian@intel.com>, Krishnakant Jaju <kjaju@nvidia.com>,
+ Matt Ochs <mochs@nvidia.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ iommu@lists.linux.dev, linux-mm@kvack.org, linux-doc@vger.kernel.org,
+ linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ linux-hardening@vger.kernel.org, Vivek Kasireddy <vivek.kasireddy@intel.com>
+References: <20251102-dmabuf-vfio-v6-0-d773cff0db9f@nvidia.com>
+ <aQpRz74RurfhZK15@Asurada-Nvidia>
+Content-Language: en-US, fr
+From: =?UTF-8?Q?C=C3=A9dric_Le_Goater?= <clg@redhat.com>
+Autocrypt: addr=clg@redhat.com; keydata=
+ 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
+ uVKe8BVz4atMOoktmt0GWTOC8P4=
+In-Reply-To: <aQpRz74RurfhZK15@Asurada-Nvidia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Provide db_vector_count() and db_vector_mask() implementations for both
-ntb_hw_epf and pci-epf-vntb so that ntb_transport can map MSI vectors to
-doorbell bits. Without them, the upper layer cannot identify which
-doorbell vector fired and ends up scheduling rxc_db_work() for all queue
-pairs, resulting in a thundering-herd effect when multiple queue pairs
-(QPs) are enabled.
+Hello Nicolin,
 
-With this change, .peer_db_set() must honor the db_bits mask and raise
-all requested doorbell interrupts, so update those implementations
-accordingly.
+On 11/4/25 20:19, Nicolin Chen wrote:
+> On Sun, Nov 02, 2025 at 10:00:48AM +0200, Leon Romanovsky wrote:
+>> Changelog:
+>> v6:
+>>   * Fixed wrong error check from pcim_p2pdma_init().
+>>   * Documented pcim_p2pdma_provider() function.
+>>   * Improved commit messages.
+>>   * Added VFIO DMA-BUF selftest.
+>>   * Added __counted_by(nr_ranges) annotation to struct vfio_device_feature_dma_buf.
+>>   * Fixed error unwind when dma_buf_fd() fails.
+>>   * Document latest changes to p2pmem.
+>>   * Removed EXPORT_SYMBOL_GPL from pci_p2pdma_map_type.
+>>   * Moved DMA mapping logic to DMA-BUF.
+>>   * Removed types patch to avoid dependencies between subsystems.
+>>   * Moved vfio_pci_dma_buf_move() in err_undo block.
+>>   * Added nvgrace patch.
+> 
+> I have verified this v6 using Jason's iommufd dmabuf branch:
+> https://github.com/jgunthorpe/linux/commits/iommufd_dmabuf/
+> 
+> by drafting a QEMU patch on top of Shameer's vSMMU v5 series:
+> https://github.com/nicolinc/qemu/commits/wip/iommufd_dmabuf/
+> 
+> with that, I see GPU BAR memory be correctly fetched in the QEMU:
+> vfio_region_dmabuf Device 0009:01:00.0, region "0009:01:00.0 BAR 0", offset: 0x0, size: 0x1000000
+> vfio_region_dmabuf Device 0009:01:00.0, region "0009:01:00.0 BAR 2", offset: 0x0, size: 0x44f00000
+> vfio_region_dmabuf Device 0009:01:00.0, region "0009:01:00.0 BAR 4", offset: 0x0, size: 0x17a0000000
+> 
+> Tested-by: Nicolin Chen <nicolinc@nvidia.com>
 
-Signed-off-by: Koichiro Den <den@valinux.co.jp>
----
- drivers/ntb/hw/epf/ntb_hw_epf.c               | 47 ++++++++++++-------
- drivers/pci/endpoint/functions/pci-epf-vntb.c | 40 +++++++++++++---
- 2 files changed, 63 insertions(+), 24 deletions(-)
+Do you plan to provide P2P support with IOMMUFD for QEMU ?
 
-diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-index 4ecc6b2177b4..5303a8944019 100644
---- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-+++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-@@ -375,7 +375,7 @@ static int ntb_epf_init_isr(struct ntb_epf_dev *ndev, int msi_min, int msi_max)
- 		}
- 	}
- 
--	ndev->db_count = irq;
-+	ndev->db_count = irq - 1;
- 
- 	ret = ntb_epf_send_command(ndev, CMD_CONFIGURE_DOORBELL,
- 				   argument | irq);
-@@ -409,6 +409,22 @@ static u64 ntb_epf_db_valid_mask(struct ntb_dev *ntb)
- 	return ntb_ndev(ntb)->db_valid_mask;
- }
- 
-+static int ntb_epf_db_vector_count(struct ntb_dev *ntb)
-+{
-+	return ntb_ndev(ntb)->db_count;
-+}
-+
-+static u64 ntb_epf_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-+{
-+	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
-+
-+	db_vector--; /* vector 0 is reserved for link events */
-+	if (db_vector < 0 || db_vector >= ndev->db_count)
-+		return 0;
-+
-+	return ndev->db_valid_mask & BIT_ULL(db_vector);
-+}
-+
- static int ntb_epf_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
- {
- 	return 0;
-@@ -492,26 +508,21 @@ static int ntb_epf_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
- static int ntb_epf_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
- {
- 	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
--	u32 interrupt_num = ffs(db_bits) + 1;
--	struct device *dev = ndev->dev;
-+	u32 interrupt_num;
- 	u32 db_entry_size;
- 	u32 db_offset;
- 	u32 db_data;
--
--	if (interrupt_num >= ndev->db_count) {
--		dev_err(dev, "DB interrupt %d greater than Max Supported %d\n",
--			interrupt_num, ndev->db_count);
--		return -EINVAL;
--	}
-+	int i;
- 
- 	db_entry_size = readl(ndev->ctrl_reg + NTB_EPF_DB_ENTRY_SIZE);
- 
--	db_data = readl(ndev->ctrl_reg + NTB_EPF_DB_DATA(interrupt_num));
--	db_offset = readl(ndev->ctrl_reg + NTB_EPF_DB_OFFSET(interrupt_num));
--
--	writel(db_data, ndev->db_reg + (db_entry_size * interrupt_num) +
--	       db_offset);
--
-+	for_each_set_bit(i, (unsigned long *)&db_bits, ndev->db_count) {
-+		interrupt_num = i + 1;
-+		db_data = readl(ndev->ctrl_reg + NTB_EPF_DB_DATA(interrupt_num));
-+		db_offset = readl(ndev->ctrl_reg + NTB_EPF_DB_OFFSET(interrupt_num));
-+		writel(db_data, ndev->db_reg + (db_entry_size * interrupt_num) +
-+		       db_offset);
-+	}
- 	return 0;
- }
- 
-@@ -541,6 +552,8 @@ static const struct ntb_dev_ops ntb_epf_ops = {
- 	.spad_count		= ntb_epf_spad_count,
- 	.peer_mw_count		= ntb_epf_peer_mw_count,
- 	.db_valid_mask		= ntb_epf_db_valid_mask,
-+	.db_vector_count	= ntb_epf_db_vector_count,
-+	.db_vector_mask		= ntb_epf_db_vector_mask,
- 	.db_set_mask		= ntb_epf_db_set_mask,
- 	.mw_set_trans		= ntb_epf_mw_set_trans,
- 	.mw_clear_trans		= ntb_epf_mw_clear_trans,
-@@ -591,8 +604,8 @@ static int ntb_epf_init_dev(struct ntb_epf_dev *ndev)
- 	int ret;
- 
- 	/* One Link interrupt and rest doorbell interrupt */
--	ret = ntb_epf_init_isr(ndev, NTB_EPF_MIN_DB_COUNT + NTB_EPF_IRQ_RESERVE,
--			       NTB_EPF_MAX_DB_COUNT + NTB_EPF_IRQ_RESERVE);
-+	ret = ntb_epf_init_isr(ndev, NTB_EPF_MIN_DB_COUNT + 1 + NTB_EPF_IRQ_RESERVE,
-+			       NTB_EPF_MAX_DB_COUNT + 1 + NTB_EPF_IRQ_RESERVE);
- 	if (ret) {
- 		dev_err(dev, "Failed to init ISR\n");
- 		return ret;
-diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-index c89f5b0775fa..c47186fe4f75 100644
---- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-@@ -1384,6 +1384,22 @@ static u64 vntb_epf_db_valid_mask(struct ntb_dev *ntb)
- 	return BIT_ULL(ntb_ndev(ntb)->db_count) - 1;
- }
- 
-+static int vntb_epf_db_vector_count(struct ntb_dev *ntb)
-+{
-+	return ntb_ndev(ntb)->db_count;
-+}
-+
-+static u64 vntb_epf_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-+{
-+	struct epf_ntb *ndev = ntb_ndev(ntb);
-+
-+	db_vector--; /* vector 0 is reserved for link events */
-+	if (db_vector < 0 || db_vector >= ndev->db_count)
-+		return 0;
-+
-+	return BIT_ULL(db_vector);
-+}
-+
- static int vntb_epf_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
- {
- 	return 0;
-@@ -1509,20 +1525,28 @@ static int vntb_epf_peer_spad_write(struct ntb_dev *ndev, int pidx, int idx, u32
- 
- static int vntb_epf_peer_db_set(struct ntb_dev *ndev, u64 db_bits)
- {
--	u32 interrupt_num = ffs(db_bits) + 1;
- 	struct epf_ntb *ntb = ntb_ndev(ndev);
- 	u8 func_no, vfunc_no;
--	int ret;
-+	u64 failed = 0;
-+	int i;
- 
- 	func_no = ntb->epf->func_no;
- 	vfunc_no = ntb->epf->vfunc_no;
- 
--	ret = pci_epc_raise_irq(ntb->epf->epc, func_no, vfunc_no,
--				PCI_IRQ_MSI, interrupt_num + 1);
--	if (ret)
--		dev_err(&ntb->ntb.dev, "Failed to raise IRQ\n");
-+	for_each_set_bit(i, (unsigned long *)&db_bits, ntb->db_count) {
-+		/*
-+		 * DB bit i is MSI interrupt (i + 2).
-+		 * Vector 0 is used for link events and MSI vectors are
-+		 * 1-based for pci_epc_raise_irq().
-+		 */
-+		if (pci_epc_raise_irq(ntb->epf->epc, func_no, vfunc_no,
-+				      PCI_IRQ_MSI, i + 2))
-+			failed |= BIT_ULL(i);
-+	}
-+	if (failed)
-+		dev_err(&ntb->ntb.dev, "Failed to raise IRQ (0x%llx)\n", failed);
- 
--	return ret;
-+	return failed ? -EIO : 0;
- }
- 
- static u64 vntb_epf_db_read(struct ntb_dev *ndev)
-@@ -1596,6 +1620,8 @@ static const struct ntb_dev_ops vntb_epf_ops = {
- 	.spad_count		= vntb_epf_spad_count,
- 	.peer_mw_count		= vntb_epf_peer_mw_count,
- 	.db_valid_mask		= vntb_epf_db_valid_mask,
-+	.db_vector_count	= vntb_epf_db_vector_count,
-+	.db_vector_mask		= vntb_epf_db_vector_mask,
- 	.db_set_mask		= vntb_epf_db_set_mask,
- 	.mw_set_trans		= vntb_epf_mw_set_trans,
- 	.mw_clear_trans		= vntb_epf_mw_clear_trans,
--- 
-2.51.0
+Thanks,
+
+C.
 
