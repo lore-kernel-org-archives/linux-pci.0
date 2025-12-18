@@ -1,131 +1,100 @@
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9E4F334C13
-	for <linux-pci@vger.kernel.org>; Thu, 18 Dec 2025 10:17:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE5B339841;
+	Thu, 18 Dec 2025 10:28:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766053023; cv=none; b=n6wq/ipsEEhIjndGURJFH38Z/hihx+JlsN3KRm8cNXZWwv6gaiBRPQ/Ia8RwE1NNSVI0dQWEnmPt3EI+ayrS7JazvDnWmZ7OExLDw1nGRSmhmZ3x/QhsctLY4OmcGi5zN12sxcWZ7QLOlu4ZhI2ebWWTeg0a6pfguwRKd0hDDk8=
+	t=1766053727; cv=none; b=RBzuQGbfU8RqNNBGA/w5QmwP4virEJOMq+XuQuA3vP1fCfF++ZlGcdFF/QjdjcGMZ/ZJNadFJPuXYQFVDgWFixPIQCAtq8E6pXPKAz+EzyDkPPLNxPLY7JtmUo3I7on+V5gr8FCGHscAs8FPI9kgjgyAltUPyprjx1O8NeSMYMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766053023; c=relaxed/simple;
-	bh=EAkSjlqjmEY22zjkNQzyGAWi5UkkUgqMyVWox52S5uk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rnhX2i/BgrJXlWh+qMiNCXq+Kq8Z44ImeyUgwdU7Sbq9Ikt4NLXCvfXRjjr2ri83DsK6Z6FxplVtrLJFxVXzaffdaTaq+gp8WfkxPOOb8IOh6pLHo4/7hdwO+zXYM62d+WaMUeogQ0vIBemM8uIqWqp8xh0SdOLyhWw3FmObze4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=PzXR76ji; arc=none smtp.client-ip=209.85.208.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="PzXR76ji"
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-37b983fbd45so3293771fa.3
-        for <linux-pci@vger.kernel.org>; Thu, 18 Dec 2025 02:17:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1766053020; x=1766657820; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3xZgigcPYCTe787T1RP1QJQQl9rmrKyQCyFERX1ZCJg=;
-        b=PzXR76ji83U+4mfOf9EEhlso7Q8kfRtTQtze7W7sKlfBuxKhtmllT3wxmKyXyYc7Iv
-         WYSXynIclSOcZ4k5gfbJtiaCgJXEuKrNEFz7A/fU7k8BeOB6V//XXgpYeEgslSJzS+PJ
-         bQ0exmvTTfX62OEkoKR/iMzBJW+HyLHilYW78=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766053020; x=1766657820;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=3xZgigcPYCTe787T1RP1QJQQl9rmrKyQCyFERX1ZCJg=;
-        b=SNiWndTUa3ASB+ZV2RcR40eMEcHKu+IindemfS2giNdc8Qe06D3o9Svs/9ZkcM/OJP
-         FVZ8xmrkZNjW9McLT7xoRfK3oW2fplM4AQC0/o+taXRwM3BhQA9hi0bpTcMAVDnolaCH
-         nc7lIWyVKfHZrvkLw+fPVpOQ2ZvP/VbX6D2PARlIzE7ksWMVI2CcqyIltaB7S/bq178D
-         Gu9154gsVs5ClDhkybk/DpwrNh35xq2AC5X2IDmXpSWUEAPwC1z7T1r34DSjkYpzkZSs
-         rUZ4TiyIlA5+6tAG6jYvRbh9Puc6kbvcLBqGb7mwIGMc6x/hLMd1Hh6aaJp4xnQBK88f
-         +Yog==
-X-Forwarded-Encrypted: i=1; AJvYcCUqImZzMQKLZ130ocOoBaH/47/7gJ/8zjUD2l+wHC7uE2G/CJusZ7iryKp+w5C67AGTJeInf4o+6Y4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4J408SON8H3zDLAqfkZlQOzaBV+5afy5YtBsqjsUpTIflKb6/
-	X2eimJ1Gn02U5jhKMBUuSJ+id6cMbwfWgD58V3hMFV2W2+cAmuAT+M3ZiA/o8W/NCb+h19WBxNJ
-	rw4dK+lM3DF119GWhGlqdrmXtFp9tcF7Mwh+PriC6
-X-Gm-Gg: AY/fxX5jRCOxlaEALxkn3dm7LFqfUhZbOWTfJL55aueWkXJol4jQ92n71iR4W9xDAEy
-	dE7HdL8pLqqzr8pqPB1ms5d5hu87caEJ64tCzbaUNySwXpmykdM5USvaDQV9tzJmKQ1xkyoCcei
-	HJ1IRpQXIAHaX66IpAg8kU56Tvyh50Rbql7TlUl3RQeXOzyDzl+jX3MuOtCeMLd2Avutm21SCOe
-	XBhgdXSMLvmKxofha2s4yhoMnlKK49F1w13zO9smTSHvP2BZ/IcTMwZTYlISv8cH03ApsvRo5ZE
-	VZqEluX5LbZ/b8yRzO0VIO+nLg==
-X-Google-Smtp-Source: AGHT+IHB81Hph8P7HruRVDQAIKOQdKRNQiGl+MjA+C8Ci7aTBMAjTA2jqbR6yldsfAEZEnO2RaJwd1MZhXG0cwE2BsE=
-X-Received: by 2002:a05:651c:e17:b0:37c:cf34:536c with SMTP id
- 38308e7fff4ca-37fd071a3bamr62956651fa.3.1766053019890; Thu, 18 Dec 2025
- 02:16:59 -0800 (PST)
+	s=arc-20240116; t=1766053727; c=relaxed/simple;
+	bh=CTlXptqk2mnA2CR8eLBvFSPqp9GtgMnEtWDeDt3waBY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NVGZM0KvBBDzDHrBVH+IHSD3wo7nZND1SFB/EDX0PjJtgUcWsLT7LpxeaKJ4cF1xoFgIGDQgtJ/HAt0nH8koHmeUc/M5gfxORkfzDri68OoVpZ4T+OlLKlqdH88KHdYq/fUC+aBy60BvLuH0TN7FViT2XvE+KQcMEPCWSQ0SRZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from DESKTOP-L0HPE2S (unknown [124.16.141.245])
+	by APP-03 (Coremail) with SMTP id rQCowABnf9ZM10NpPH0YAQ--.22337S2;
+	Thu, 18 Dec 2025 18:28:30 +0800 (CST)
+From: Haotian Zhang <vulab@iscas.ac.cn>
+To: lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org
+Cc: robh@kernel.org,
+	bhelgaas@google.com,
+	michal.simek@amd.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Haotian Zhang <vulab@iscas.ac.cn>
+Subject: [PATCH v2] PCI: xilinx: Fix INTx IRQ domain leak when MSI allocation fails
+Date: Thu, 18 Dec 2025 18:23:14 +0800
+Message-ID: <20251218102314.1474-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1.windows.1
+In-Reply-To: <20251119033301.518-1-vulab@iscas.ac.cn>
+References: <20251119033301.518-1-vulab@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251105062815.966716-1-wenst@chromium.org> <2qojq77l7xeivmvt4mqjpdelj2ph2rht44qzkaf3ikq5qpq6gp@tj542kt77dkg>
-In-Reply-To: <2qojq77l7xeivmvt4mqjpdelj2ph2rht44qzkaf3ikq5qpq6gp@tj542kt77dkg>
-From: Chen-Yu Tsai <wenst@chromium.org>
-Date: Thu, 18 Dec 2025 18:16:48 +0800
-X-Gm-Features: AQt7F2pYozdj3ewu2whsibplWc-nkUoD49f-6hqeRMBbrfWkPAqi5mARhpOxjHs
-Message-ID: <CAGXv+5E1qc7UDUPBz9htA5RC18cPDGeRt1wW5exkoAkUuFxpSA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: mediatek-gen3: Ignore link up timeout
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
-	Ryder Lee <ryder.lee@mediatek.com>, Jianjun Wang <jianjun.wang@mediatek.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org, 
-	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowABnf9ZM10NpPH0YAQ--.22337S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxJr4UXr17Cr4DAw4rGF1UAwb_yoW8XF1xpF
+	WUGw47uF4DJFWUWF4DC3W3ua43Wa9Fyryqyw4agwnrZF13C3yUCFyUKF9Y9F10vFW8JF1U
+	Zr18tF1ruF15CFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9j14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxa
+	n2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4l
+	IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
+	C2KfnxnUUI43ZEXa7VUb8hL5UUUUU==
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwwAA2lDlnP7ogAAse
 
-On Thu, Dec 18, 2025 at 2:11=E2=80=AFPM Manivannan Sadhasivam <mani@kernel.=
-org> wrote:
->
-> On Wed, Nov 05, 2025 at 02:28:14PM +0800, Chen-Yu Tsai wrote:
-> > As mentioned in commit 886a9c134755 ("PCI: dwc: Move link handling into
-> > common code") come up later" in the code, it is possible for link up to
-> > occur later:
-> >
-> >   Let's standardize this to succeed as there are usecases where devices
-> >   (and the link) appear later even without hotplug. For example, a
-> >   reconfigured FPGA device.
-> >
-> > Another case for this is the new PCIe power control stuff. The power
-> > control mechanism only gets triggered in the PCI core after the driver
-> > calls into pci_host_probe(). The power control framework then triggers
-> > a bus rescan. In most driver implementations, this sequence happens
-> > after link training. If the driver errors out when link training times
-> > out, it will never get to the point where the device gets turned on.
-> >
-> > Ignore the link up timeout, and lower the error message down to a
-> > warning.
-> >
-> > This makes PCIe devices that have not-always-on power rails work.
-> > However there may be some reversal of PCIe power sequencing, since now
-> > the PERST# and clocks are enabled in the driver, while the power is
-> > applied afterwards.
-> >
-> > Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
-> > ---
-> > The change works to get my PCIe WiFi device working, but I wonder if
-> > the driver should expose more fine grained controls for the link clock
-> > and PERST# (when it is owned by the controller and not just a GPIO) to
-> > the power control framework. This applies not just to this driver.
-> >
-> > The PCI standard says that PERST# should hold the device in reset until
-> > the power rails are valid or stable, i.e. at their designated voltages.
->
-> I believe this patch is no longer necessary once you adopt to the new pwr=
-ctrl
-> APIs proposed here: https://lore.kernel.org/linux-pci/20251216-pci-pwrctr=
-l-rework-v2-0-745a563b9be6@oss.qualcomm.com/
+In xilinx_pcie_init_irq_domain(), if xilinx_allocate_msi_domains()
+fails after pcie->leg_domain has been successfully created via
+irq_domain_create_linear(), the function returns directly without
+cleaning up the allocated IRQ domain, resulting in a resource leak.
 
-That's right. I already have changes locally based on v1.
+Add irq_domain_remove() call in the error path to properly release the
+IRQ domain before returning the error.
 
-> I plan to get this series merged asap for v6.20 so that we can apply mtk =
-changes
-> on top once you send them.
+Fixes: 313b64c3ae52 ("PCI: xilinx: Convert to MSI domains")
+Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
+Signed-off-by: Haotian Zhang <vulab@iscas.ac.cn>
+---
+Changes in v2:
+  - Correct the Fixes tag to point to the commit that introduced the
+    legacy IRQ domain leak on MSI allocation failure.
+---
+ drivers/pci/controller/pcie-xilinx.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Great news!
+diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+index 937ea6ae1ac4..e8cf320f3764 100644
+--- a/drivers/pci/controller/pcie-xilinx.c
++++ b/drivers/pci/controller/pcie-xilinx.c
+@@ -480,8 +480,10 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie *pcie)
+ 		phys_addr_t pa = ALIGN_DOWN(virt_to_phys(pcie), SZ_4K);
+ 
+ 		ret = xilinx_allocate_msi_domains(pcie);
+-		if (ret)
++		if (ret) {
++			irq_domain_remove(pcie->leg_domain);
+ 			return ret;
++		}
+ 
+ 		pcie_write(pcie, upper_32_bits(pa), XILINX_PCIE_REG_MSIBASE1);
+ 		pcie_write(pcie, lower_32_bits(pa), XILINX_PCIE_REG_MSIBASE2);
+-- 
+2.50.1.windows.1
 
-
-Thanks
-ChenYu
