@@ -1,109 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90BE32C17A1
-	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:22:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5538433BBD6
+	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:22:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766164956; cv=none; b=oedQRu0PIZD98Bc2VO4FjY5zgDbFuBMRF/u9FkzfuWJw5xBxzglO5b7RFu+vBOUFjwfFLFyKQYUjejrAGll8UDdsdVT3f0/CzQIiKB+UNECaibU2EY3P1aWcHguA8ec8p+unkhRgNoCa1K7VttfxwJl1PMf5cA5dG5O4qDIDOGc=
+	t=1766164974; cv=none; b=AZqmpVbKcAw2l4HQVWaxLCNrzsB/NJeGL5bmfY46fpRu//oyvK6ZLWFhfaykc/gGukwFaABtFv7udAlb4LtVinvBajMmlRPw16mKc1CI3/qGAHpzG1zCMpo5UkcAvelwvq62e6MzTJAyRTWi8VobGjJulk4DnnPFyXvSIS9SA34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766164956; c=relaxed/simple;
-	bh=51v80vuIoLBHyp+xqmm+MZ/h09/A74izSzDgSNSD8JA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aHL77MgLtD8AzmCy6DwdH5WagCKutXaqiMvtFDybXZmEbNuMA7HbSImH6K8AOLexSW+tPtZfOwczn1guEzT5l3uoio6y2P9k6e2lde6da5BjNpPS53ffePiCHIGE1ZGJBIDj+spz89V8cvbMtRR/En3EfeuX2BSFhdxeUlZxkcQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SZHsFLCU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766164974; c=relaxed/simple;
+	bh=rqWrSMew6XyEzaPTznoF4DcdhsODTjm9f+jrUcnb+fU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=P63pBuYStUYwGOh1xL8xD81dwN+CWavk4yGfFre+J4ZPqItSiutl8R00yuV/ILCyaYzwYq3MxNiNApuBFXWsmZDsX1am3eIhD4OdzvMwAR2tuydPe+i9piS/VOIvMYTtm4KmAufPmY0sfu3T+b36sVI296bhPcekSPUT9HaqcRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=SFZxQ7/O; arc=none smtp.client-ip=91.218.175.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SZHsFLCU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50772C19424
-	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:22:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766164956;
-	bh=51v80vuIoLBHyp+xqmm+MZ/h09/A74izSzDgSNSD8JA=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=SZHsFLCUG5iOsa0xFmemdqpHdQ0IjuSeQoz/Hn3FCIwpt3sJ7Bqay6a2XLywkCGns
-	 pHuD4zMqFg4sAe5rCTVlJoG0mNLzYI42y9PBtloWhbs8z3i0pwXIgxtWSBkV9OVQdL
-	 b8E1kk5ewORYSYxDMAgREC6hEhSa8HUDScFc2avREtTnME8NkfzXB7POk1LrBWAAt2
-	 mW4AwT3J4phxbEYkGJ4KSEsOsQTdkE+TJb0SfW7gFAy+LDCOT9kORrlMZceUey99FC
-	 p0ti0RkNC+TgkNxElcvxuKywrlWzD+MZ/a8tXTEray1JYaaOeMHKBY0vnGEAiuVZ+S
-	 CWtEFWu8o+JzQ==
-Received: by mail-oo1-f47.google.com with SMTP id 006d021491bc7-659848c994bso992722eaf.3
-        for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 09:22:36 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUpDXe94y3TJNVp/qKNoP5z3bIPracADsNjqeD1DPJgvjoMmKcHkf/+Bvd//S/obhD/ZN78Jj3oKvc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx0v0U91yy0sVu9lkZ/Blzh2pQxrMZazzX7PN2PU2a+ydmGXEUn
-	/QUdeL9EbHJbupaQcn0ZUPluif1syCIrdjTG0/kA2ZbSBXS9qQWXXHTk4WX+Mb3EMtj2QZ2asOx
-	D5FdqcWBNQUSldaxYTr4U/gavXLW7/jk=
-X-Google-Smtp-Source: AGHT+IEPziboAv0SjFN6LRGSAEPjVo0OdDZx8uWJVKPI0XREcCFfiC22XnVGk0v8QKC/wFrNMUW+AHnsnQF7xdeDQko=
-X-Received: by 2002:a05:6820:22a6:b0:659:9a49:9009 with SMTP id
- 006d021491bc7-65d0ea7234dmr1596923eaf.54.1766164955384; Fri, 19 Dec 2025
- 09:22:35 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="SFZxQ7/O"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1766164963;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=NLv+6Y1jID9UqiQBaxZlHhtwEVIiDEDZIj1f/I2KpDo=;
+	b=SFZxQ7/O9zmfmzbn8w1Af2UedAsTgWDT+fYupnVWzl2dNEwZNoEVD+3c4j4mkOG5OxBbSX
+	toDBX+LNwNLSy0sTDm/rQf6r9WDsg4WLXGsujgYlPU0GBouDjJSLmOdmQ91pnm4INubqMN
+	Sx7nADaWl1Tz2yf+Lp3zocyAUaJgeUA=
+From: Sean Anderson <sean.anderson@linux.dev>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bartosz Golaszewski <brgl@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Chen-Yu Tsai <wenst@chromium.org>,
+	linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Brian Norris <briannorris@chromium.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Chen-Yu Tsai <wens@kernel.org>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Alex Elder <elder@riscstar.com>,
+	Sean Anderson <sean.anderson@linux.dev>
+Subject: [PATCH 1/3] PCI/pwrctrl: Bind a pwrctrl device if clocks are present
+Date: Fri, 19 Dec 2025 12:22:20 -0500
+Message-Id: <20251219172222.2808195-1-sean.anderson@linux.dev>
+In-Reply-To: <39e025bd-50f4-407d-8fd4-e254dbed46b2@linux.dev>
+References: <39e025bd-50f4-407d-8fd4-e254dbed46b2@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <5049211.GXAFRqVoOG@rafael.j.wysocki> <3407425.44csPzL39Z@rafael.j.wysocki>
- <20251219124409.00002f4e@huawei.com>
-In-Reply-To: <20251219124409.00002f4e@huawei.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 19 Dec 2025 18:22:24 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0gS1yvORG_+Z80y6McBhu_QLNfY7-RqJKZ1HjGevzGJFQ@mail.gmail.com>
-X-Gm-Features: AQt7F2pQuubjq7dHC5JuGMZJBDhFiLI8iYB6uMa5VMISG27dVolh_1x_vPmFnHY
-Message-ID: <CAJZ5v0gS1yvORG_+Z80y6McBhu_QLNfY7-RqJKZ1HjGevzGJFQ@mail.gmail.com>
-Subject: Re: [PATCH v1 3/8] ACPI: bus: Split _OSC evaluation out of acpi_run_osc()
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, 
-	LKML <linux-kernel@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, 
-	Bjorn Helgaas <helgaas@kernel.org>, 
-	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Hans de Goede <hansg@kernel.org>, 
-	Mario Limonciello <mario.limonciello@amd.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, Dec 19, 2025 at 1:44=E2=80=AFPM Jonathan Cameron
-<jonathan.cameron@huawei.com> wrote:
->
-> On Thu, 18 Dec 2025 21:36:08 +0100
-> "Rafael J. Wysocki" <rafael@kernel.org> wrote:
->
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Split a function for evaluating _OSL called acpi_eval_osc() out of
->
-> _OSC
+Since commit 66db1d3cbdb0 ("PCI/pwrctrl: Add optional slot clock for PCI
+slots"), power supplies are not the only resource PCI slots may create.
+Also create a pwrctrl device if there are any clocks.
 
-Yup, thanks!
+Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
+---
 
-> > acpi_run_osc() to facilitate subsequent changes and add some more
-> > parameters sanity checks to the latter.
-> >
-> > No intentional functional impact.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> One comment on the fun static keyword usage.  Next time I have
-> to ask/answer some silly C questions in an interview that one is definite=
-ly going
-> in :)
-> > ---
-> >  drivers/acpi/bus.c |   89 ++++++++++++++++++++++++++++++--------------=
----------
-> >  1 file changed, 52 insertions(+), 37 deletions(-)
-> >
-> > --- a/drivers/acpi/bus.c
-> > +++ b/drivers/acpi/bus.c
-> > @@ -195,52 +195,67 @@ static void acpi_dump_osc_data(acpi_hand
-> >                        OSC_INVALID_REVISION_ERROR | \
-> >                        OSC_CAPABILITIES_MASK_ERROR)
-> >
-> > -acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *=
-context)
-> > +static int acpi_eval_osc(acpi_handle handle, guid_t *guid, int rev,
-> > +                      struct acpi_buffer *cap,
-> > +                      union acpi_object in_params[static 4],
->
-> This static usage has such non intuitive behavior maybe use
-> the new at_least marking in compiler_types.h to indicate
-> what protection against wrong sizes it can offer.
+ drivers/pci/of.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-I'll have a look at that, thanks!
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 3579265f1198..07546a16ac86 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -847,7 +847,7 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
+  * @np: Device tree node
+  *
+  * Check if the power supply for the PCI device is present in the device tree
+- * node or not.
++ * node or not. Clocks may also create a device.
+  *
+  * Return: true if at least one power supply exists; false otherwise.
+  */
+@@ -860,6 +860,9 @@ bool of_pci_supply_present(struct device_node *np)
+ 		return false;
+ 
+ 	for_each_property_of_node(np, prop) {
++		if (!strcmp(prop->name, "clocks"))
++			return true;
++
+ 		supply = strrchr(prop->name, '-');
+ 		if (supply && !strcmp(supply, "-supply"))
+ 			return true;
+-- 
+2.35.1.1320.gc452695387.dirty
+
