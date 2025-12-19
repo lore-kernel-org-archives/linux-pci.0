@@ -1,185 +1,106 @@
-Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C694033B6E4
-	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:23:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A83422D7A9
+	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:24:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766164989; cv=none; b=T/mO/OGeAWgHzNd6JUaQixf5AHoZyPwIt0xnVa2DqIzOL50SpifaAM0uxgJLCFSCMaNluPUmJHWwagZITP3CBCEJX98KOE/JVkEOhJbBe6wBXFgIFfBuv/ODn035/hTYtZLWVb1uYv0h5BUibI/SW8ApFIS+M3BrhTnyI+oX6PM=
+	t=1766165054; cv=none; b=mXzCcRCwBc3nKD1X1jnBmEuDxslA8fnkKliA8SUUGx2r3R8GR+0u5oaooysWzYWoKbketZakQRXg9vr0cOvgYke/6r8IA71m9flGxMiPVJZ99EAwGxIVinjHmnEYuiX2oXxZgfNPRNlBr09KlS8mn/eFM2D+79TzQsAlXTGOic8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766164989; c=relaxed/simple;
-	bh=UmOXR0V7KlTDGVT1DVPAyTxVyMFk1UfpgURmhro9K6o=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O6KkOtiDiC0jx3KJCfcg53FWA3r93lmMoQOlatrJ74XWuMbRnSp97ynwFQjaIVPhNRHVH7cNQX7/4yNhafxmvmbXsifLN8S+hZ2CgFYFVwemFCaP3SE5n4AjM7NcKBc90KP1a2IfaiXdm0slHcn0pG0ABTwsY5a7zGfaBa47ldA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TENzGW2H; arc=none smtp.client-ip=91.218.175.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1766165054; c=relaxed/simple;
+	bh=g7v7idxZwwl9EGcu0pdn06DUuE6rLau6Cfr+Q033I+o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TXV9FStjNJeGfFJIxYDXjuYMBmACGS8GcJXV3/nwiNCX3tC7B3dhkuY+g6qGg2Toz0rzWYmqllVt27sHYwgrpCtquDJBYxpj968i7jjAHQm7urp9jMDijgDLoi+1j99gRh2CP5S80UXeGJwDZ5AJAQQ3UPgNYLcIzL2DATm1QME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=itZ/5Etn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TENzGW2H"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1766164978;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RfCGsuhor+PCehZ1i9svCLDkgPc0siHPXWlS0C1CvUg=;
-	b=TENzGW2HPKBpvPu7nqFGx7/4eq7Kiz45V1QBTzqZNdxdWdQAfsMteiZdkjhptzB8DPjOjN
-	fkAz2FcSZAAgCyrIKLdX4eZb5IxXXM1X/Mi+mLFpn2rdoCtFHL1Aegd6UOtvsx91T2IV1X
-	3QCJc5VxLeQo30wSzCEfpqT9BqGoHuI=
-From: Sean Anderson <sean.anderson@linux.dev>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bartosz Golaszewski <brgl@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Chen-Yu Tsai <wenst@chromium.org>,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	Brian Norris <briannorris@chromium.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Chen-Yu Tsai <wens@kernel.org>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Alex Elder <elder@riscstar.com>,
-	Sean Anderson <sean.anderson@linux.dev>
-Subject: [PATCH 3/3] PCI/pwrctrl: Support PERST GPIO in slot driver
-Date: Fri, 19 Dec 2025 12:22:22 -0500
-Message-Id: <20251219172222.2808195-3-sean.anderson@linux.dev>
-In-Reply-To: <20251219172222.2808195-1-sean.anderson@linux.dev>
-References: <39e025bd-50f4-407d-8fd4-e254dbed46b2@linux.dev>
- <20251219172222.2808195-1-sean.anderson@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="itZ/5Etn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BF39C4AF09
+	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:24:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1766165054;
+	bh=g7v7idxZwwl9EGcu0pdn06DUuE6rLau6Cfr+Q033I+o=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=itZ/5EtnEndqPtTjKJnR1RtleUdw2kXcGSLxj0H87Zg/3UJXmHlpslli5y8u1y/La
+	 ejZG5+BLxb5/pgqogLP8v7QLXxqQzKi0NT1g/+2+HqFo+0xTZbzBe+oQCatjZ1olnd
+	 FSLh8E8QQ9y8Bv7mNyH7jkW2lcQ9NYBTXBiL7UK9uuBXcwqm3+1Je1MQtlhDbwM4Gr
+	 T36S4XhTYEimZzBacM6tZv65PYBXkNt8+kWK5B9w6J74pe6DZna/IER1hZSf39340v
+	 +Fh9ZAJo70k2t9xZ5iGqMsQsHDAy1Z8+TgAKuY0xjdCYKXZiMqbz4o5alw6nil8xNp
+	 eFJOJVEpLbsFA==
+Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-3ed151e8fc3so1283046fac.2
+        for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 09:24:14 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCV0JRl4A0Q9JMo4xfj91cYapThmAHu9cLpgXH8MLzmok12P8Tz+58/KQl0tQAazojWfTX5qMIxRbwQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwRyfXNKZYug33Z4JjEIbY9d78+dbM5aQHXwztb60o5lHGBSBk/
+	ZuMEnXGaerepnpWp79DeR1CVGJKUNSTnwM8E08QtslaO4JfCDEjYK90cZpYU33HqIkYAOcapiCr
+	wBHkmLbM6RkVVpQh0qjLeBeUZyWuv5Ts=
+X-Google-Smtp-Source: AGHT+IGwlyjxS+61nxvfRvGZ9rI309kSae+Mm1Pms8uRol1tFB8mm6iG65IMAUZY4eUUBrDW2kiD45T2HIC3Zb84K2s=
+X-Received: by 2002:a05:6820:1b06:b0:659:9a49:8f1f with SMTP id
+ 006d021491bc7-65d0ea9d366mr1687515eaf.48.1766165053133; Fri, 19 Dec 2025
+ 09:24:13 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+References: <5049211.GXAFRqVoOG@rafael.j.wysocki> <10786459.nUPlyArG6x@rafael.j.wysocki>
+ <20251219124639.000031c5@huawei.com>
+In-Reply-To: <20251219124639.000031c5@huawei.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 19 Dec 2025 18:24:01 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0gvBHx2AxmuqLQO55OWw1Z9GafsWnUzRKxzaVUc4Va1rQ@mail.gmail.com>
+X-Gm-Features: AQt7F2qMYDZjws0Yn0QZ6Cm0hTKqFUkTw6_fw5L3k2Huc3b2AklP4RFmhLVkhGc
+Message-ID: <CAJZ5v0gvBHx2AxmuqLQO55OWw1Z9GafsWnUzRKxzaVUc4Va1rQ@mail.gmail.com>
+Subject: Re: [PATCH v1 4/8] ACPI: bus: Split _OSC error processing out of acpi_run_osc()
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, 
+	LKML <linux-kernel@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, 
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Hans de Goede <hansg@kernel.org>, 
+	Mario Limonciello <mario.limonciello@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On many embedded platforms PERST is controlled by a GPIO. This was
-traditionally handled by the host bridge. However, PERST may be released
-before slot resources are initialized if there is a pwrctrl device. To
-ensure we follow the power sequence, add support for controlling PERST
-to the slot driver.
+On Fri, Dec 19, 2025 at 1:46=E2=80=AFPM Jonathan Cameron
+<jonathan.cameron@huawei.com> wrote:
+>
+> On Thu, 18 Dec 2025 21:36:57 +0100
+> "Rafael J. Wysocki" <rafael@kernel.org> wrote:
+>
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Split a function for processing _OSL errors called acpi_osc_error_check=
+()
+> _OSC?
+> > out of acpi_run_osc() to facilitate subsequent changes.
+> >
+> > No intentional functional impact.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Minor request inline.
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> > ---
+> >  drivers/acpi/bus.c |   56 ++++++++++++++++++++++++++++++++++----------=
+---------
+> >  1 file changed, 36 insertions(+), 20 deletions(-)
+> >
+> > --- a/drivers/acpi/bus.c
+> > +++ b/drivers/acpi/bus.c
+> > @@ -236,13 +236,46 @@ static int acpi_eval_osc(acpi_handle han
+> >       return 0;
+> >  }
+> >
+> > +static bool acpi_osc_error_check(acpi_handle handle, guid_t *guid, int=
+ rev,
+> > +                              struct acpi_buffer *cap, u32 *retbuf)
+> > +{
+> > +     /* Bit 0 in the query DWORD of the return buffer is reserved. */
+> > +     u32 errors =3D retbuf[OSC_QUERY_DWORD] & OSC_ERROR_MASK;
+> > +     u32 *capbuf =3D cap->pointer;
+> > +
+> > +     /*
+> > +      * If OSC_QUERY_ENABLE is set in the capabilities buffer, ignore =
+bit 4.
+>
+> Maybe add a tiny bit on why?
 
-The host bridge could have already grabbed the GPIO. If this happens the
-power sequence might be violated but there's really nothing we can do so
-we just ignore the GPIO.
-
-PERST must be asserted for at least T_PERST, such as when
-entering/exiting S3/S4. As an optimization, we skip this delay when
-PERST was already asserted, which may be the case when booting (such as
-if the system has a pull-down on the line).
-
-If the link is already up (e.g. the bootloader configured the power
-supplies, clocks, and PERST) we will reset the link anyway. I don't
-really know how to avoid this. I think we're OK because the root port
-will be probed before we probe the endpoint so we shouldn't reset the
-link while we're reading the configuration space.
-
-Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
----
-
- drivers/pci/pwrctrl/slot.c | 52 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 51 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
-index 1c56fcd49f2b..59dc92c4bc04 100644
---- a/drivers/pci/pwrctrl/slot.c
-+++ b/drivers/pci/pwrctrl/slot.c
-@@ -7,6 +7,7 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/device.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/mod_devicetable.h>
- #include <linux/module.h>
- #include <linux/pci-pwrctrl.h>
-@@ -18,6 +19,7 @@ struct pci_pwrctrl_slot_data {
- 	struct pci_pwrctrl ctx;
- 	struct regulator_bulk_data *supplies;
- 	int num_supplies;
-+	struct gpio_desc *perst;
- };
- 
- static void devm_pci_pwrctrl_slot_power_off(void *data)
-@@ -28,6 +30,13 @@ static void devm_pci_pwrctrl_slot_power_off(void *data)
- 	regulator_bulk_free(slot->num_supplies, slot->supplies);
- }
- 
-+static void devm_pci_pwrctrl_slot_assert_perst(void *data)
-+{
-+	struct pci_pwrctrl_slot_data *slot = data;
-+
-+	gpiod_set_value_cansleep(slot->perst, 1);
-+}
-+
- static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
- {
- 	struct pci_pwrctrl_slot_data *slot;
-@@ -66,6 +75,14 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
- 				     "Failed to enable slot clock\n");
- 	}
- 
-+	slot->perst = devm_gpiod_get_optional(dev, "reset", GPIOD_ASIS);
-+	if (IS_ERR(slot->perst)) {
-+		/* The PCIe host bridge may have already grabbed the reset */
-+		if (PTR_ERR(slot->perst) != -EBUSY)
-+			return dev_err_probe(dev, ret, "failed to get PERST\n");
-+		slot->perst = NULL;
-+	}
-+
- 	if (slot->num_supplies)
- 		/*
- 		 * Delay for T_PVPERL. This could be reduced to 1 ms/50 ms
-@@ -76,7 +93,40 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
- 		/* Delay for T_PERST-CLK (100 us for all slot types) */
- 		delay = 100;
- 
--	fsleep(delay)
-+	if (slot->perst) {
-+		/*
-+		 * If PERST is inactive, the following call to
-+		 * gpiod_direction_output will be the first time we assert it
-+		 * and we will need to delay for T_PERST.
-+		 */
-+		if (gpiod_get_value_cansleep(slot->perst) != 1)
-+			delay = 100000;
-+
-+		ret = gpiod_direction_output(slot->perst, 1);
-+		if (ret) {
-+			dev_err(dev, "failed to assert PERST\n");
-+			return ret;
-+		}
-+	}
-+
-+	fsleep(delay);
-+	if (slot->perst) {
-+		gpiod_set_value(slot->perst, 0);
-+		ret = devm_add_action_or_reset(dev,
-+					       devm_pci_pwrctrl_slot_assert_perst,
-+					       slot);
-+		if (ret)
-+			return ret;
-+
-+		/*
-+		 * PCIe section 6.6.1:
-+		 * > ... software must wait a minimum of 100 ms before sending a
-+		 * > Configuration Request to the device immediately below that
-+		 * > Port.
-+		 */
-+		msleep(100);
-+	}
-+
- 	pci_pwrctrl_init(&slot->ctx, dev);
- 
- 	ret = devm_pci_pwrctrl_device_set_ready(dev, &slot->ctx);
--- 
-2.35.1.1320.gc452695387.dirty
-
+OK, I'll expand the comment.
