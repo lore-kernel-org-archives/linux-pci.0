@@ -1,100 +1,109 @@
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DD9C32B992
-	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:21:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90BE32C17A1
+	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:22:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766164893; cv=none; b=g3QEyK16Gzj6GAcIhztN4qT2WbfSsaKi3p66Y4nsh07W9DH+a0yHo+G0MSqCXDWVGMXxKXPrRkUNoS2pDBIvEcirSwi3TPRLJ4jCH9CPlppjYD19ykwCDnBauyACzP7VyhDfoPzZ250aeovqVlt4ofinfEO28y54YwF5Xzv7iAI=
+	t=1766164956; cv=none; b=oedQRu0PIZD98Bc2VO4FjY5zgDbFuBMRF/u9FkzfuWJw5xBxzglO5b7RFu+vBOUFjwfFLFyKQYUjejrAGll8UDdsdVT3f0/CzQIiKB+UNECaibU2EY3P1aWcHguA8ec8p+unkhRgNoCa1K7VttfxwJl1PMf5cA5dG5O4qDIDOGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766164893; c=relaxed/simple;
-	bh=Eu7fYQUBOXyG224eItn2cWpfYezwnojs51HJPGnoyso=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PKggECJgN+jk/yFmr5rblT0KkKSq9vsqnC386XkL749DAUZ90olMLjX+iTdJVTSAfrscVAaPFoQomp9vv0gzRt6jvzgzoOwDaF+dBkzwMJkrFiDuEaCkwH8XVDCs/tr+WfOkUDKSrq+r4FvS0SFxnz+QoigTAj57OXWgDDN2KeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=G22Njx/w; arc=none smtp.client-ip=209.85.208.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
+	s=arc-20240116; t=1766164956; c=relaxed/simple;
+	bh=51v80vuIoLBHyp+xqmm+MZ/h09/A74izSzDgSNSD8JA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aHL77MgLtD8AzmCy6DwdH5WagCKutXaqiMvtFDybXZmEbNuMA7HbSImH6K8AOLexSW+tPtZfOwczn1guEzT5l3uoio6y2P9k6e2lde6da5BjNpPS53ffePiCHIGE1ZGJBIDj+spz89V8cvbMtRR/En3EfeuX2BSFhdxeUlZxkcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SZHsFLCU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="G22Njx/w"
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6419aaced59so3131918a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 09:21:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1766164890; x=1766769690; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=7nzQHHF/S+BccOb8wa9qfv3IuOW99jPcII0xzfB0+Go=;
-        b=G22Njx/w/A+tk6D2UIpMxyoLxg+FQc8iliWhVyb03p5QUZ+uclrlQoU97nW0oLhWKk
-         sAa+kajIYmnum6p/TDC7POEtlalIJabwXKOukAPd9y/u3zLf1KE35JS6nSNmHXvu9tuo
-         wIRbyvE9CnI2tMi2Qk7y/3BDPzCE6qkL70enasONG34gohbMQQ3XWOJGYrCwvOYtZ4Im
-         t5L5WRa4EeCEX8eD4ZT6ls2lxFVXjzGNMnDIGlk22QOYZggCyK8x3VaX2Yj3jTxWbzrU
-         Q09QNqXgiJ+5XS7dAur/jG7JBjPpuILeJhAkIS8gcZzc7UMb2kdRTEhFK1ODJ19r7mjL
-         8FJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766164890; x=1766769690;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7nzQHHF/S+BccOb8wa9qfv3IuOW99jPcII0xzfB0+Go=;
-        b=TZ2dB9G4e80+HutoUaJ4bRFrPfSWvaf6Zp0eJOsaotUK0g9SdciSUnVeVtLsV8IUY9
-         HVcCsHHbbytc/Ak6nZjuZfOZtKg9B09mEHPC2+UZ45x8MfzVTfyJ0KSjv7DLiBVy65bp
-         TAW5RhgXMm/8sIoYBc2XYiwJIk6oO3MCRau3NLRQd59wwkkNUJJV/fUUmp9rLN1PUX8d
-         W3lfdU2ObQnw9DxM83pfCPZ3o8/BzsX72fDd/gv50VYt7SwOPaSS/vQ3wcfYL12Ph0IM
-         hAu4UuqaMwLitDk9aLYKZP31TdE91SE/yrqgDahJ2TZM9anRz/GRkKvf0r/AsPV/SXsZ
-         PeKw==
-X-Forwarded-Encrypted: i=1; AJvYcCW0606+0Y/w2mjvbsfeVUIxt9ChkL4BqUhHV1NpEG7n022bXZkXbktO1vUcbBbosyZzkKlh37QW4aU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwVcNrBm8vZGog6MMhjetfYpkhUQiDC6iGV51ZSBZwYhBZjLS5X
-	i0AdV6YHyKTsYVnzVC25qNb4YR2XxCNLP1oeacAFg0+p/D+ADho9x+yNph3I95W19oE=
-X-Gm-Gg: AY/fxX6CBUniIo044QzLSTrbzKoqCrXj9W4BgPKpbi3cOMQYiLCEyGNmXsP+7+U74f9
-	3KKBm/+Rtqats0rUUVvn7t93OGJYFLyS8eFLvvJHcCcVk8hsxyQ6ZPD+0svtKSWr8qLTKMLIvZE
-	OZnsrdGpbKFoNLGoqJAJf+HCBzy+Mx3cAhWR9D7tq4J3UK3vD99GNrO23Z5sjxvAarj0PclFurx
-	1GgETz51rA37rLLxzaljxafse4BclX6i3peTv11wAGsZiaa0hvhdeYmfPgTN2GOunNTsWT3/B4Y
-	3brVgWTwsfEahqellOYy63PQXEgMAITZfZBnbqOqNW8MyPQsbEiYtWj0rqTx99m26OALozsNKBd
-	1JRPTIgd1UtTpc//Y067kXAjcDz0Z3hG4KDTT2n7WwrnwDc63c1+6QrAzRxQK9FKByndpf6XHq9
-	prBcw+fiQhWfcUXprHXA==
-X-Google-Smtp-Source: AGHT+IE6v83ThLR84HAPweCtmBhiOxhwyezgVI3gOrK46YZQBm9NnevJEXxrckISudnh+58Tk5217w==
-X-Received: by 2002:a05:6402:35c1:b0:64b:6c8f:f99f with SMTP id 4fb4d7f45d1cf-64b8ea4b9dfmr3263450a12.12.1766164889674;
-        Fri, 19 Dec 2025 09:21:29 -0800 (PST)
-Received: from [192.168.50.4] ([82.78.167.17])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-64b91494c0esm2667948a12.20.2025.12.19.09.21.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Dec 2025 09:21:28 -0800 (PST)
-Message-ID: <d1a9a430-ac14-4d19-879b-57287b434cc6@tuxon.dev>
-Date: Fri, 19 Dec 2025 19:21:27 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SZHsFLCU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50772C19424
+	for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 17:22:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1766164956;
+	bh=51v80vuIoLBHyp+xqmm+MZ/h09/A74izSzDgSNSD8JA=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=SZHsFLCUG5iOsa0xFmemdqpHdQ0IjuSeQoz/Hn3FCIwpt3sJ7Bqay6a2XLywkCGns
+	 pHuD4zMqFg4sAe5rCTVlJoG0mNLzYI42y9PBtloWhbs8z3i0pwXIgxtWSBkV9OVQdL
+	 b8E1kk5ewORYSYxDMAgREC6hEhSa8HUDScFc2avREtTnME8NkfzXB7POk1LrBWAAt2
+	 mW4AwT3J4phxbEYkGJ4KSEsOsQTdkE+TJb0SfW7gFAy+LDCOT9kORrlMZceUey99FC
+	 p0ti0RkNC+TgkNxElcvxuKywrlWzD+MZ/a8tXTEray1JYaaOeMHKBY0vnGEAiuVZ+S
+	 CWtEFWu8o+JzQ==
+Received: by mail-oo1-f47.google.com with SMTP id 006d021491bc7-659848c994bso992722eaf.3
+        for <linux-pci@vger.kernel.org>; Fri, 19 Dec 2025 09:22:36 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUpDXe94y3TJNVp/qKNoP5z3bIPracADsNjqeD1DPJgvjoMmKcHkf/+Bvd//S/obhD/ZN78Jj3oKvc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx0v0U91yy0sVu9lkZ/Blzh2pQxrMZazzX7PN2PU2a+ydmGXEUn
+	/QUdeL9EbHJbupaQcn0ZUPluif1syCIrdjTG0/kA2ZbSBXS9qQWXXHTk4WX+Mb3EMtj2QZ2asOx
+	D5FdqcWBNQUSldaxYTr4U/gavXLW7/jk=
+X-Google-Smtp-Source: AGHT+IEPziboAv0SjFN6LRGSAEPjVo0OdDZx8uWJVKPI0XREcCFfiC22XnVGk0v8QKC/wFrNMUW+AHnsnQF7xdeDQko=
+X-Received: by 2002:a05:6820:22a6:b0:659:9a49:9009 with SMTP id
+ 006d021491bc7-65d0ea7234dmr1596923eaf.54.1766164955384; Fri, 19 Dec 2025
+ 09:22:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] PCI: rzg3s-host: Cleanups
-To: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-References: <20251217111510.138848-1-claudiu.beznea.uj@bp.renesas.com>
- <aUU6J5anuzNgSeBr@shikoro>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <aUU6J5anuzNgSeBr@shikoro>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <5049211.GXAFRqVoOG@rafael.j.wysocki> <3407425.44csPzL39Z@rafael.j.wysocki>
+ <20251219124409.00002f4e@huawei.com>
+In-Reply-To: <20251219124409.00002f4e@huawei.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 19 Dec 2025 18:22:24 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0gS1yvORG_+Z80y6McBhu_QLNfY7-RqJKZ1HjGevzGJFQ@mail.gmail.com>
+X-Gm-Features: AQt7F2pQuubjq7dHC5JuGMZJBDhFiLI8iYB6uMa5VMISG27dVolh_1x_vPmFnHY
+Message-ID: <CAJZ5v0gS1yvORG_+Z80y6McBhu_QLNfY7-RqJKZ1HjGevzGJFQ@mail.gmail.com>
+Subject: Re: [PATCH v1 3/8] ACPI: bus: Split _OSC evaluation out of acpi_run_osc()
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, 
+	LKML <linux-kernel@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, 
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Hans de Goede <hansg@kernel.org>, 
+	Mario Limonciello <mario.limonciello@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi, Wolfram,
+On Fri, Dec 19, 2025 at 1:44=E2=80=AFPM Jonathan Cameron
+<jonathan.cameron@huawei.com> wrote:
+>
+> On Thu, 18 Dec 2025 21:36:08 +0100
+> "Rafael J. Wysocki" <rafael@kernel.org> wrote:
+>
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Split a function for evaluating _OSL called acpi_eval_osc() out of
+>
+> _OSC
 
-On 12/19/25 13:42, Wolfram Sang wrote:
-> Hi Claudiu,
-> 
->> Series adds cleanups for the Renesas RZ/G3S host controller driver
->> as discussed in [1].
-> 
-> Is there a branch for testing somewhere? DT parts seem to be not
-> upstream yet and I don't know all the dependencies probably.
-I pushed it here: 
-https://github.com/claudiubeznea/linux/commits/claudiu/pcie/follow-up-v2/
+Yup, thanks!
 
-Thank you for checking it,
-Claudiu
+> > acpi_run_osc() to facilitate subsequent changes and add some more
+> > parameters sanity checks to the latter.
+> >
+> > No intentional functional impact.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> One comment on the fun static keyword usage.  Next time I have
+> to ask/answer some silly C questions in an interview that one is definite=
+ly going
+> in :)
+> > ---
+> >  drivers/acpi/bus.c |   89 ++++++++++++++++++++++++++++++--------------=
+---------
+> >  1 file changed, 52 insertions(+), 37 deletions(-)
+> >
+> > --- a/drivers/acpi/bus.c
+> > +++ b/drivers/acpi/bus.c
+> > @@ -195,52 +195,67 @@ static void acpi_dump_osc_data(acpi_hand
+> >                        OSC_INVALID_REVISION_ERROR | \
+> >                        OSC_CAPABILITIES_MASK_ERROR)
+> >
+> > -acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *=
+context)
+> > +static int acpi_eval_osc(acpi_handle handle, guid_t *guid, int rev,
+> > +                      struct acpi_buffer *cap,
+> > +                      union acpi_object in_params[static 4],
+>
+> This static usage has such non intuitive behavior maybe use
+> the new at_least marking in compiler_types.h to indicate
+> what protection against wrong sizes it can offer.
+
+I'll have a look at that, thanks!
