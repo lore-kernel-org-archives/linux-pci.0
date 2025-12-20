@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60EB827EFE3;
-	Sat, 20 Dec 2025 04:16:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 084BC21E098;
+	Sat, 20 Dec 2025 04:16:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766204177; cv=none; b=pjTUlQp4YeUYKe+w7WUJdylk2QIvSToAa/OLDejg/CnVGd5iI0Lipji0bnAZY7je7hveHbUh7NaRLdaxFD5LN1ytH/Qv1DL9V5f6J84XGCwYpSXDMNZC1NYiWWGkCOo88LkZ+BNVxc9ZiATweIMSfN8+YFubSEBH4PwbnSlNtoc=
+	t=1766204178; cv=none; b=B0f4IRH/OpFp7ppuABcZ8D6XiPFtk/m1wuVZsD1LXPxSUVJyPb7KHr2wbxWtaHnXiyDUEMIeS+ll7WrqABEn/zRBUYcNAJsYMQ6/VR8t1rJR0gSl0Ds8ahv9XfjX/bLy6wvZKa+tP4oUDtrVy38abWTWrtsttgwf1GnX13Jbk8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766204177; c=relaxed/simple;
-	bh=sWxn4m0VtswJJMDsL52vwPsZZi6e7XbRViKbtvda+po=;
+	s=arc-20240116; t=1766204178; c=relaxed/simple;
+	bh=iKNLXXr4e+8/aHGAThSafQxMLjwW7L2hihK8UhLhUxY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=O5i/Mc4fROlD0xzG8EEs/7k/svmMHajURC7j/2CH+4P1WsTwpbo4G6PgH2bwgjngtFmixjyV0GgK9XZutjx88d1RMFjWWn6pHg1L8xxz+oarScq2/pzqzEuMNYLv8QV6E/MdL2f6W1w63g++//ImboAInXGgvpBqhrefbqsptDM=
+	 MIME-Version; b=b8yu5Mi9Tljfx2jRmIVcyqDboYULrWXlAs+duHXbUPcdx/C44deHfvo95s+WCy1YfXPk4q6gwJ7FfRpM8MGwKHAIvsnsshFIxSBNTJkacdquPLZ0h6Oht3FqKi90KUDwLxnZ+S684m0vRJ0c0JXUW5fjCWnhw2OIRK47TF37K+M=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dYB0817ZkzYQtfq;
-	Sat, 20 Dec 2025 12:15:36 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dYB0756gRzYQtfx;
+	Sat, 20 Dec 2025 12:15:35 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 7DF374058F;
+	by mail.maildlp.com (Postfix) with ESMTP id 11EB440574;
 	Sat, 20 Dec 2025 12:16:07 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgD3WPn5IkZpFwpFAw--.56015S12;
-	Sat, 20 Dec 2025 12:16:07 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgD3WPn5IkZpFwpFAw--.56015S7;
+	Sat, 20 Dec 2025 12:16:06 +0800 (CST)
 From: Hou Tao <houtao@huaweicloud.com>
 To: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org,
@@ -44,9 +44,9 @@ Cc: linux-pci@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Sagi Grimberg <sagi@grimberg.me>,
 	houtao1@huawei.com
-Subject: [PATCH 08/13] mm/huge_memory: add helpers to insert huge page during mmap
-Date: Sat, 20 Dec 2025 12:04:41 +0800
-Message-Id: <20251220040446.274991-9-houtao@huaweicloud.com>
+Subject: [PATCH 03/13] kernfs: add support for get_unmapped_area callback
+Date: Sat, 20 Dec 2025 12:04:36 +0800
+Message-Id: <20251220040446.274991-4-houtao@huaweicloud.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20251220040446.274991-1-houtao@huaweicloud.com>
 References: <20251220040446.274991-1-houtao@huaweicloud.com>
@@ -57,138 +57,119 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD3WPn5IkZpFwpFAw--.56015S12
-X-Coremail-Antispam: 1UD129KBjvJXoWxZryfJFyfCF45JrW8WF47twb_yoW5uF17pF
-	97GFn8ZrWIqrnrurnxWFs8Ary3X3yxWayUKFW7WF1ava17t34F9a1kJw15tF15JryUCFs3
-	Xa17GFy5uFyUWa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPlb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-	xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE
-	7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262
-	kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s02
-	6c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GF
-	v_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvE
-	c7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aV
-	AFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZF
-	pf9x07j4fO7UUUUU=
+X-CM-TRANSID:gCh0CgD3WPn5IkZpFwpFAw--.56015S7
+X-Coremail-Antispam: 1UD129KBjvJXoWxArWDZr4ftw1DCry8urWrGrg_yoW5CrW8pF
+	s5KryYqrWxJr92kr13JF95Zr1av3s7Ka42va4Ig3sYyw1jqFnxXr4Y9F98Gr1rX34rAw42
+	yanFgayYkw45JrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPab4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkE
+	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7
+	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxV
+	WUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU
+	xQzVUUUUU
 X-CM-SenderInfo: xkrx3t3r6k3tpzhluzxrxghudrp/
 
 From: Hou Tao <houtao1@huawei.com>
 
-vmf_insert_folio_{pmd,pud}() can be used to insert huge page during page
-fault. However, for simplicity, the mapping of p2pdma memory inserts all
-necessary pages during mmap. Therefore, add vm_insert_folio_{pmd|pud}
-helpers to support inserting pmd-sized and pud-sized page during mmap.
+kernfs has already support ->mmap callback, however it doesn't support
+->get_unmapped_area callback to return PMD-aligned or PUD-aligned
+virtual address. The following patch will need it to support compound
+page for p2pdma device memory, therefore add the necessary support for it.
+
+When the ->get_unmapped_area callback is not defined in kernfs_ops or
+the callback returns -EOPNOTSUPP, kernfs_get_unmapped_area() will
+fallback to mm_get_unmapped_area().
 
 Signed-off-by: Hou Tao <houtao1@huawei.com>
 ---
- include/linux/huge_mm.h |  4 +++
- mm/huge_memory.c        | 66 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 70 insertions(+)
+ fs/kernfs/file.c       | 37 +++++++++++++++++++++++++++++++++++++
+ include/linux/kernfs.h |  3 +++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-index a4d9f964dfde..8cf8bb85be79 100644
---- a/include/linux/huge_mm.h
-+++ b/include/linux/huge_mm.h
-@@ -45,6 +45,10 @@ vm_fault_t vmf_insert_folio_pmd(struct vm_fault *vmf, struct folio *folio,
- 				bool write);
- vm_fault_t vmf_insert_folio_pud(struct vm_fault *vmf, struct folio *folio,
- 				bool write);
-+int vm_insert_folio_pmd(struct vm_area_struct *vma, unsigned long addr,
-+			struct folio *folio);
-+int vm_insert_folio_pud(struct vm_area_struct *vma, unsigned long addr,
-+			struct folio *folio);
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index 9adf36e6364b..9773b5734a2c 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -454,6 +454,39 @@ static const struct vm_operations_struct kernfs_vm_ops = {
+ 	.access		= kernfs_vma_access,
+ };
  
- enum transparent_hugepage_flag {
- 	TRANSPARENT_HUGEPAGE_UNSUPPORTED,
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 40cf59301c21..11d19f8986da 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -1644,6 +1644,41 @@ vm_fault_t vmf_insert_folio_pmd(struct vm_fault *vmf, struct folio *folio,
- }
- EXPORT_SYMBOL_GPL(vmf_insert_folio_pmd);
- 
-+int vm_insert_folio_pmd(struct vm_area_struct *vma, unsigned long addr,
-+			struct folio *folio)
++static unsigned long kernfs_get_unmapped_area(struct file *file, unsigned long uaddr,
++					      unsigned long len, unsigned long pgoff,
++					      unsigned long flags)
 +{
-+	struct mm_struct *mm = vma->vm_mm;
-+	struct folio_or_pfn fop = {
-+		.folio = folio,
-+		.is_folio = true,
-+	};
-+	pgd_t *pgd;
-+	p4d_t *p4d;
-+	pud_t *pud;
-+	pmd_t *pmd;
-+	vm_fault_t fault_err;
++	struct kernfs_open_file *of = kernfs_of(file);
++	const struct kernfs_ops *ops;
++	long addr;
 +
-+	mmap_assert_write_locked(mm);
++	if (!(of->kn->flags & KERNFS_HAS_MMAP))
++		return -ENODEV;
 +
-+	pgd = pgd_offset(mm, addr);
-+	p4d = p4d_alloc(mm, pgd, addr);
-+	if (!p4d)
-+		return -ENOMEM;
-+	pud = pud_alloc(mm, p4d, addr);
-+	if (!pud)
-+		return -ENOMEM;
-+	pmd = pmd_alloc(mm, pud, addr);
-+	if (!pmd)
-+		return -ENOMEM;
++	mutex_lock(&of->mutex);
 +
-+	fault_err = insert_pmd(vma, addr, pmd, fop, vma->vm_page_prot,
-+			       vma->vm_flags & VM_WRITE);
-+	if (fault_err != VM_FAULT_NOPAGE)
-+		return -EINVAL;
++	addr = -ENODEV;
++	if (!kernfs_get_active_of(of))
++		goto out_unlock;
 +
-+	return 0;
++	ops = kernfs_ops(of->kn);
++	if (ops->get_unmapped_area) {
++		addr = ops->get_unmapped_area(of, uaddr, len, pgoff, flags);
++		if (!IS_ERR_VALUE(addr) || addr != -EOPNOTSUPP)
++			goto out_put;
++	}
++	addr = mm_get_unmapped_area(file, uaddr, len, pgoff, flags);
++
++out_put:
++	kernfs_put_active_of(of);
++out_unlock:
++	mutex_unlock(&of->mutex);
++
++	return addr;
 +}
 +
- #ifdef CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD
- static pud_t maybe_pud_mkwrite(pud_t pud, struct vm_area_struct *vma)
+ static int kernfs_fop_mmap(struct file *file, struct vm_area_struct *vma)
  {
-@@ -1759,6 +1794,37 @@ vm_fault_t vmf_insert_folio_pud(struct vm_fault *vmf, struct folio *folio,
- 	return insert_pud(vma, addr, vmf->pud, fop, vma->vm_page_prot, write);
- }
- EXPORT_SYMBOL_GPL(vmf_insert_folio_pud);
-+
-+int vm_insert_folio_pud(struct vm_area_struct *vma, unsigned long addr,
-+			struct folio *folio)
-+{
-+	struct mm_struct *mm = vma->vm_mm;
-+	struct folio_or_pfn fop = {
-+		.folio = folio,
-+		.is_folio = true,
-+	};
-+	pgd_t *pgd;
-+	p4d_t *p4d;
-+	pud_t *pud;
-+	vm_fault_t fault_err;
-+
-+	mmap_assert_write_locked(mm);
-+
-+	pgd = pgd_offset(mm, addr);
-+	p4d = p4d_alloc(mm, pgd, addr);
-+	if (!p4d)
-+		return -ENOMEM;
-+	pud = pud_alloc(mm, p4d, addr);
-+	if (!pud)
-+		return -ENOMEM;
-+
-+	fault_err = insert_pud(vma, addr, pud, fop, vma->vm_page_prot,
-+			       vma->vm_flags & VM_WRITE);
-+	if (fault_err != VM_FAULT_NOPAGE)
-+		return -EINVAL;
-+
-+	return 0;
-+}
- #endif /* CONFIG_HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD */
+ 	struct kernfs_open_file *of = kernfs_of(file);
+@@ -1017,6 +1050,7 @@ const struct file_operations kernfs_file_fops = {
+ 	.write_iter	= kernfs_fop_write_iter,
+ 	.llseek		= kernfs_fop_llseek,
+ 	.mmap		= kernfs_fop_mmap,
++	.get_unmapped_area = kernfs_get_unmapped_area,
+ 	.open		= kernfs_fop_open,
+ 	.release	= kernfs_fop_release,
+ 	.poll		= kernfs_fop_poll,
+@@ -1052,6 +1086,9 @@ struct kernfs_node *__kernfs_create_file(struct kernfs_node *parent,
+ 	unsigned flags;
+ 	int rc;
  
- /**
++	if (ops->get_unmapped_area && !ops->mmap)
++		return ERR_PTR(-EINVAL);
++
+ 	flags = KERNFS_FILE;
+ 
+ 	kn = kernfs_new_node(parent, name, (mode & S_IALLUGO) | S_IFREG,
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index b5a5f32fdfd1..9467b0a2b339 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -324,6 +324,9 @@ struct kernfs_ops {
+ 
+ 	int (*mmap)(struct kernfs_open_file *of, struct vm_area_struct *vma);
+ 	loff_t (*llseek)(struct kernfs_open_file *of, loff_t offset, int whence);
++	unsigned long (*get_unmapped_area)(struct kernfs_open_file *of, unsigned long uaddr,
++					   unsigned long len, unsigned long pgoff,
++					   unsigned long flags);
+ };
+ 
+ /*
 -- 
 2.29.2
 
