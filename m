@@ -1,27 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B37481DD;
-	Sat, 20 Dec 2025 04:16:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60F84285061;
+	Sat, 20 Dec 2025 04:16:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766204177; cv=none; b=QTrpMko/Q2VXPTcxNch3Z1Zl2AOLQdNstYmEAiOedh0OESgShwp3oKSWSO4bpTk8pG2l5ScLobpm67hUHz2xxvw5ebV6WO3TF6t4IJc1+wSa1C/52Y6VP3OVlWNEOA1oyZPF72Wbxq4e78hZRPboSlsgsvazxiyApUhW/kovJ+g=
+	t=1766204177; cv=none; b=XAFSYMr0Zld+ULGIx8SNWro6yiildavPg/gimZaK8Q27X0puG7sOj1Zb3ZbEPP9cjs5Ie/STn/71VEP8oJeBb6H+mysVKu35JjZNGdOuhXVBITpHB03YhgfXGy2hZTGA7/IsOUjo1cZqlBOOHMqBfIv0H1Bnj0Av3N8LwqrfeDs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1766204177; c=relaxed/simple;
-	bh=ovYIvNvdgqPtcKPLAik+qZBYxy+/Gt+CpMQ2oUPrxJM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jgIhB9Vihg1DkExuBF5BxL10/u4q/upP9pUbjRBxs3IIO+I3tGcjjEY11tuofdZQxkdlsyhO8IL8oJ7Slrtuz53I6vKveFSb8Sk+/sgF1m6nkL+89TXzB1tE2g6ngEoDJDJ5xM1E8TUZuvfs1bZgxfICC6laaWOueK+SzAeLEs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	bh=QIqtJpxwLDrBV6EfDAgNIV07fN0e+g4BqWV78NQ76EI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=cXBk3rjkqNAKAVW+uRC6PO+pWNwRMaoewk6+QUyQ7RZsWEu7RS6DvlLv0YCS8a5sKMTk+IMmCht3WJkNTv+ivuX3G8KDP4NYC04UH8o0Wv1Qk4+hBayQ5TiEkL5VD+KdNgVZdPBZo2Ppauye7iPcQIQiTJ9X2Lj/vkOBNIAKNm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dYB0T4nLFzKHM0f;
-	Sat, 20 Dec 2025 12:15:53 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dYB080G58zYQthH;
+	Sat, 20 Dec 2025 12:15:36 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id CA05A40577;
-	Sat, 20 Dec 2025 12:16:06 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 5F3F84058A;
+	Sat, 20 Dec 2025 12:16:07 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgD3WPn5IkZpFwpFAw--.56015S4;
-	Sat, 20 Dec 2025 12:16:06 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgD3WPn5IkZpFwpFAw--.56015S11;
+	Sat, 20 Dec 2025 12:16:07 +0800 (CST)
 From: Hou Tao <houtao@huaweicloud.com>
 To: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org,
@@ -43,10 +44,12 @@ Cc: linux-pci@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Sagi Grimberg <sagi@grimberg.me>,
 	houtao1@huawei.com
-Subject: [PATCH 00/13] Enable compound page for p2pdma memory
-Date: Sat, 20 Dec 2025 12:04:33 +0800
-Message-Id: <20251220040446.274991-1-houtao@huaweicloud.com>
+Subject: [PATCH 07/13] PCI/P2PDMA: create compound page for aligned p2pdma memory
+Date: Sat, 20 Dec 2025 12:04:40 +0800
+Message-Id: <20251220040446.274991-8-houtao@huaweicloud.com>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20251220040446.274991-1-houtao@huaweicloud.com>
+References: <20251220040446.274991-1-houtao@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,86 +57,55 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD3WPn5IkZpFwpFAw--.56015S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxWF1rur4fWw13Zw4DGr4kZwb_yoW5Ar1DpF
-	Z5KF98JrnrG342y3sxAa1DCr13Zw4rKFWUta4fK3sxCw13JF1Iv3yUtF15Xw1UXrsxG3WY
-	qF4xZryxu3Z5XaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4
-	IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x02
-	62kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
-	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
-	GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
-	vEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-	9x07j438nUUUUU=
+X-CM-TRANSID:gCh0CgD3WPn5IkZpFwpFAw--.56015S11
+X-Coremail-Antispam: 1UD129KBjvdXoWrZF1fGF1xWrW3tryUtryrJFb_yoWkZFg_ur
+	WxAwn7XF4kX3Zxtrn0kw1fZryjya97ur1kurs2qa4vyF18uan2vF9rAry5Xw18Ga1IqryD
+	Cr47XF1I9r45KjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbgAYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r126s
+	0DM28IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xG
+	Y2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14
+	v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAF
+	wI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2
+	WlYx0E2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2jsIE14v26r4UJVWxJr1lOx8S6xCaFVCj
+	c4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4
+	kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E
+	5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZV
+	WrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY
+	1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67
+	AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZE
+	Xa7IU0FJmUUUUUU==
 X-CM-SenderInfo: xkrx3t3r6k3tpzhluzxrxghudrp/
 
 From: Hou Tao <houtao1@huawei.com>
 
-Hi,
+Commit c4386bd8ee3a ("mm/memremap: add ZONE_DEVICE support for compound
+pages") has already supported compound page for ZONE_DEVICE memory. It
+not only decreases the memory overhead of ZONE_DEVICE memory through
+the deduplication of vmemmap pages, it also optimize the performance of
+get_user_pages when the memory is used for IO.
 
-device-dax has already supported compound page. It not only reduces the
-cost of struct page significantly, it also improve the performance of
-get_user_pages when 2MB or 1GB page size is used. We are experimenting
-to use p2p dma to directly transfer the content of NVMe SSD into NPU.
-The size of NPU HBM is 32GB or larger and there are at most 8 NPUs in
-the host. When using the base page, the memory overhead is about 4GB for
-128GB HBM, and the mapping of 32GB HBM into userspace takes about 0.8
-second. Considering ZONE_DEVICE memory type has already supported the
-compound page, enabling the compound page support for p2pdma memory as
-well. After applying the patch set, when using the 1GB page, the memory
-overhead is about 2MB and the mmap costs about 0.04 ms.
+As for now, the alignment of p2p dma memory is already known, setting
+vmemmap_shift accordingly to create compound page for p2pdma memory.
 
-The main difference between the compound page support of device-dax and
-p2pdma is that p2pdma inserts the page into user vma during mmap instead
-of page fault. The main reason is simplicity. The patch set is
-structured as shown below:
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+ drivers/pci/p2pdma.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Patch #1~#2: tiny bug fixes for p2pdma
-Patch #3~#5: add callbacks support in kernfs and sysfs, include
-pagesize, may_split and get_unmapped_area. These callbacks are necessary
-for the support of compound page when mmaping sysfs binary file.
-Patch #6~#7: create compound page for p2pdma memory in the kernel. 
-Patch #8~#10: support the mapping of compound page in userspace. 
-Patch #11~#12: support the compound page for NVMe CMB.
-Patch #13: enable the support for compound page for p2pdma memory.
-
-Please see individual patches for more details. Comments and
-suggestions are always welcome.
-
-Hou Tao (13):
-  PCI/P2PDMA: Release the per-cpu ref of pgmap when vm_insert_page()
-    fails
-  PCI/P2PDMA: Fix the warning condition in p2pmem_alloc_mmap()
-  kernfs: add support for get_unmapped_area callback
-  kernfs: add support for may_split and pagesize callbacks
-  sysfs: support get_unmapped_area callback for binary file
-  PCI/P2PDMA: add align parameter for pci_p2pdma_add_resource()
-  PCI/P2PDMA: create compound page for aligned p2pdma memory
-  mm/huge_memory: add helpers to insert huge page during mmap
-  PCI/P2PDMA: support get_unmapped_area to return aligned vaddr
-  PCI/P2PDMA: support compound page in p2pmem_alloc_mmap()
-  PCI/P2PDMA: add helper pci_p2pdma_max_pagemap_align()
-  nvme-pci: introduce cmb_devmap_align module parameter
-  PCI/P2PDMA: enable compound page support for p2pdma memory
-
- drivers/accel/habanalabs/common/hldio.c |   3 +-
- drivers/nvme/host/pci.c                 |  10 +-
- drivers/pci/p2pdma.c                    | 140 ++++++++++++++++++++++--
- fs/kernfs/file.c                        |  79 +++++++++++++
- fs/sysfs/file.c                         |  15 +++
- include/linux/huge_mm.h                 |   4 +
- include/linux/kernfs.h                  |   3 +
- include/linux/pci-p2pdma.h              |  30 ++++-
- include/linux/sysfs.h                   |   4 +
- mm/huge_memory.c                        |  66 +++++++++++
- 10 files changed, 339 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 70482e240304..7180dea4855c 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -447,6 +447,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	pgmap->nr_range = 1;
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
+ 	pgmap->ops = &p2pdma_pgmap_ops;
++	if (align > PAGE_SIZE)
++		pgmap->vmemmap_shift = ilog2(align) - PAGE_SHIFT;
+ 	p2p_pgmap->mem = mem;
+ 
+ 	addr = devm_memremap_pages(&pdev->dev, pgmap);
 -- 
 2.29.2
 
