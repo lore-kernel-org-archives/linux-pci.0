@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5DE0288537;
-	Sat, 20 Dec 2025 04:16:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B71426B95B;
+	Sat, 20 Dec 2025 04:16:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766204177; cv=none; b=PEMzv3epLF7m7CPPSHfIaKMT6wrxVHSTQ+dDzYtpTG3B9zqtCHD/DL5HXLV6jvMvbC4Yk+woMMNn017KzTMLunW4uaNFXT9oaoADwEb08d6tEzninJOkgxbLTKd8TUxvMHNwKCDtr5Iul2LFvTtxA4awcs2HIV1kvgvgQO8vNnw=
+	t=1766204177; cv=none; b=K4xN2UuSxQbH1UZ+qzXID9OCzBl/gw+BTGd+d2csgdxlJl3AGZo1XnN48e6qUTiUDPtAW2WTUXHGXw1aWuuhLWLh2oxjbVlRoKvgzfLNoAJwDKLRO1AQmLRRpPsXb3EOVe0JiLWvW78rhs6heZ5uQ5TssZsYYP09Xh8W08+BuCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1766204177; c=relaxed/simple;
-	bh=MWPqLIbDIy2eCFmEoAxxLAkBRkEpL23GYIkxYSqXz/k=;
+	bh=MBth1yLUg2CLu3tPRgn5EwrWr5zp9XvWm53bJiLMlIQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=X3pxP5J27LedQ+Ocj9P34v++JRvvnengaeNfVulWpYJ+Qg34/+Vl/SmFMYgY5wlA5kBmaSC1lNQZtlonRw2Hqwq4rwne7oAiFoiYJWfxf3uQgTzxAeHit2dZRYYNdeP/b949GUqBcL1mPYY66S9Ak3tAxTzoVrCZ0g7Mqfg84hE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=ixZFjBeYKDlv0VlCyPtZc+GVEOX4yeMbvrZCLiURbKyqJR1Fixd84TxACRyo2wkT0stcpGgMIoQRzqEDV7GFwFU3POPr+JPCqrkTBg7E6mu/PIGc8Ku83iMq4U9PVUqS2z4xtY68w0UTsI2HKByG1InOUDhYjYdJlS1bVtX8bbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dYB0V1HXlzKHMKg;
-	Sat, 20 Dec 2025 12:15:54 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dYB0T57SdzKHM0L;
+	Sat, 20 Dec 2025 12:15:53 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 537AF40574;
-	Sat, 20 Dec 2025 12:16:07 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id D9CB74056F;
+	Sat, 20 Dec 2025 12:16:06 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgD3WPn5IkZpFwpFAw--.56015S10;
-	Sat, 20 Dec 2025 12:16:07 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgD3WPn5IkZpFwpFAw--.56015S5;
+	Sat, 20 Dec 2025 12:16:06 +0800 (CST)
 From: Hou Tao <houtao@huaweicloud.com>
 To: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org,
@@ -44,9 +44,9 @@ Cc: linux-pci@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Sagi Grimberg <sagi@grimberg.me>,
 	houtao1@huawei.com
-Subject: [PATCH 06/13] PCI/P2PDMA: add align parameter for pci_p2pdma_add_resource()
-Date: Sat, 20 Dec 2025 12:04:39 +0800
-Message-Id: <20251220040446.274991-7-houtao@huaweicloud.com>
+Subject: [PATCH 01/13] PCI/P2PDMA: Release the per-cpu ref of pgmap when vm_insert_page() fails
+Date: Sat, 20 Dec 2025 12:04:34 +0800
+Message-Id: <20251220040446.274991-2-houtao@huaweicloud.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20251220040446.274991-1-houtao@huaweicloud.com>
 References: <20251220040446.274991-1-houtao@huaweicloud.com>
@@ -57,189 +57,53 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD3WPn5IkZpFwpFAw--.56015S10
-X-Coremail-Antispam: 1UD129KBjvJXoWxtryrCF4xXw1kZrW3GFy5CFg_yoW7uF45pF
-	yrA3WDGrW8Ka17J34UJa1DAF1Fvwnag34IkrW7Cws3Za43trs5tF1UCFyjkF1fGrWkC3W5
-	tFWjyr1ruw1UJF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPlb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-	xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE
-	7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262
-	kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s02
-	6c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GF
-	v_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvE
-	c7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aV
-	AFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZF
-	pf9x07j4fO7UUUUU=
+X-CM-TRANSID:gCh0CgD3WPn5IkZpFwpFAw--.56015S5
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw4rWF1ktr4DJF45uw4fAFb_yoWDXwb_uF
+	y2vrs7Z3yjkF1vkw1akw1fXryjyas5Wrs29F4rtF93ZFyrurykK3Wjvr98AFy8Gw4YqF98
+	C342vF1xu347CjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbq8YFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r18M2
+	8IrcIa0xkI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
+	021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F
+	4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0
+	oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7V
+	C0I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUVpVb
+	DUUUU
 X-CM-SenderInfo: xkrx3t3r6k3tpzhluzxrxghudrp/
 
 From: Hou Tao <houtao1@huawei.com>
 
-The align parameter is used to align both the mapping of p2p dma memory
-and to enable the compound page for p2p dma memory in the kernel and in
-the userspace.
+When vm_insert_page() fails in p2pmem_alloc_mmap(), p2pmem_alloc_mmap()
+doesn't invoke percpu_ref_put() to free the per-cpu ref of pgmap
+acquired after gen_pool_alloc_owner(), and memunmap_pages() will hang
+forever when trying to remove the PCIe device.
 
+Fix it by adding the missed percpu_ref_put().
+
+Fixes: 7e9c7ef83d78 ("PCI/P2PDMA: Allow userspace VMA allocations through sysfs")
 Signed-off-by: Hou Tao <houtao1@huawei.com>
 ---
- drivers/accel/habanalabs/common/hldio.c |  3 +-
- drivers/nvme/host/pci.c                 |  2 +-
- drivers/pci/p2pdma.c                    | 38 +++++++++++++++++++++----
- include/linux/pci-p2pdma.h              |  4 +--
- 4 files changed, 37 insertions(+), 10 deletions(-)
+ drivers/pci/p2pdma.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/accel/habanalabs/common/hldio.c b/drivers/accel/habanalabs/common/hldio.c
-index 083ae5610875..4d1528dbde9f 100644
---- a/drivers/accel/habanalabs/common/hldio.c
-+++ b/drivers/accel/habanalabs/common/hldio.c
-@@ -372,7 +372,8 @@ int hl_p2p_region_init(struct hl_device *hdev, struct hl_p2p_region *p2pr)
- 	int rc, i;
- 
- 	/* Start by publishing our p2p memory */
--	rc = pci_p2pdma_add_resource(hdev->pdev, p2pr->bar, p2pr->size, p2pr->bar_offset);
-+	rc = pci_p2pdma_add_resource(hdev->pdev, p2pr->bar, p2pr->size, PAGE_SIZE,
-+				     p2pr->bar_offset);
- 	if (rc) {
- 		dev_err(hdev->dev, "error adding p2p resource: %d\n", rc);
- 		goto err;
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 0e4caeab739c..b070095bae5e 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2309,7 +2309,7 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 			     dev->bar + NVME_REG_CMBMSC);
- 	}
- 
--	if (pci_p2pdma_add_resource(pdev, bar, size, offset)) {
-+	if (pci_p2pdma_add_resource(pdev, bar, size, PAGE_SIZE, offset)) {
- 		dev_warn(dev->ctrl.device,
- 			 "failed to register the CMB\n");
- 		hi_lo_writeq(0, dev->bar + NVME_REG_CMBMSC);
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index dd64ec830fdd..70482e240304 100644
+index 4a2fc7ab42c3..218c1f5252b6 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -23,6 +23,7 @@
- 
- struct pci_p2pdma {
- 	struct gen_pool *pool;
-+	size_t align;
- 	bool p2pmem_published;
- 	struct xarray map_types;
- 	struct p2pdma_provider mem[PCI_STD_NUM_BARS];
-@@ -211,7 +212,7 @@ static void p2pdma_folio_free(struct folio *folio)
- 	struct percpu_ref *ref;
- 
- 	gen_pool_free_owner(p2pdma->pool, (uintptr_t)page_to_virt(page),
--			    PAGE_SIZE, (void **)&ref);
-+			    p2pdma->align, (void **)&ref);
- 	percpu_ref_put(ref);
- }
- 
-@@ -323,17 +324,22 @@ struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar)
- }
- EXPORT_SYMBOL_GPL(pcim_p2pdma_provider);
- 
--static int pci_p2pdma_setup_pool(struct pci_dev *pdev)
-+static int pci_p2pdma_setup_pool(struct pci_dev *pdev, size_t align)
- {
- 	struct pci_p2pdma *p2pdma;
- 	int ret;
- 
- 	p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
--	if (p2pdma->pool)
-+	if (p2pdma->pool) {
-+		/* Two p2pdma BARs with different alignment ? */
-+		if (p2pdma->align != align)
-+			return -EINVAL;
- 		/* We already setup pools, do nothing, */
- 		return 0;
-+	}
- 
--	p2pdma->pool = gen_pool_create(PAGE_SHIFT, dev_to_node(&pdev->dev));
-+	p2pdma->align = align;
-+	p2pdma->pool = gen_pool_create(ilog2(p2pdma->align), dev_to_node(&pdev->dev));
- 	if (!p2pdma->pool)
- 		return -ENOMEM;
- 
-@@ -363,18 +369,31 @@ static void pci_p2pdma_unmap_mappings(void *data)
- 				     p2pmem_group.name);
- }
- 
-+static inline int pci_p2pdma_check_pagemap_align(struct pci_dev *pdev, int bar,
-+						 u64 size, size_t align,
-+						 u64 offset)
-+{
-+	if (align == PAGE_SIZE)
-+		return 0;
-+	return -EINVAL;
-+}
-+
- /**
-  * pci_p2pdma_add_resource - add memory for use as p2p memory
-  * @pdev: the device to add the memory to
-  * @bar: PCI BAR to add
-  * @size: size of the memory to add, may be zero to use the whole BAR
-+ * @align: dev memory mapping alignment of the memory to add. It is used
-+ * to optimize the mappings both in userspace and kernel space when
-+ * transparent huge page is supported. The possible values are
-+ * PAGE_SIZE, PMD_SIZE, and PUD_SIZE.
-  * @offset: offset into the PCI BAR
-  *
-  * The memory will be given ZONE_DEVICE struct pages so that it may
-  * be used with any DMA request.
-  */
- int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
--			    u64 offset)
-+			    size_t align, u64 offset)
- {
- 	struct pci_p2pdma_pagemap *p2p_pgmap;
- 	struct p2pdma_provider *mem;
-@@ -395,11 +414,18 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 	if (size + offset > pci_resource_len(pdev, bar))
- 		return -EINVAL;
- 
-+	error = pci_p2pdma_check_pagemap_align(pdev, bar, size, align, offset);
-+	if (error) {
-+		pci_info_ratelimited(pdev, "invalid align 0x%zx for bar %d\n",
-+				     align, bar);
-+		return error;
-+	}
-+
- 	error = pcim_p2pdma_init(pdev);
- 	if (error)
- 		return error;
- 
--	error = pci_p2pdma_setup_pool(pdev);
-+	error = pci_p2pdma_setup_pool(pdev, align);
- 	if (error)
- 		return error;
- 
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index 517e121d2598..2fa671274c45 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -69,7 +69,7 @@ enum pci_p2pdma_map_type {
- int pcim_p2pdma_init(struct pci_dev *pdev);
- struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev, int bar);
- int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
--		u64 offset);
-+			    size_t align, u64 offset);
- int pci_p2pdma_distance_many(struct pci_dev *provider, struct device **clients,
- 			     int num_clients, bool verbose);
- struct pci_dev *pci_p2pmem_find_many(struct device **clients, int num_clients);
-@@ -97,7 +97,7 @@ static inline struct p2pdma_provider *pcim_p2pdma_provider(struct pci_dev *pdev,
- 	return NULL;
- }
- static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
--		size_t size, u64 offset)
-+		size_t size, size_t align, u64 offset)
- {
- 	return -EOPNOTSUPP;
- }
+@@ -152,6 +152,7 @@ static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
+ 		ret = vm_insert_page(vma, vaddr, page);
+ 		if (ret) {
+ 			gen_pool_free(p2pdma->pool, (uintptr_t)kaddr, len);
++			percpu_ref_put(ref);
+ 			return ret;
+ 		}
+ 		percpu_ref_get(ref);
 -- 
 2.29.2
 
