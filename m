@@ -1,150 +1,119 @@
-Received: from fhigh-a1-smtp.messagingengine.com (fhigh-a1-smtp.messagingengine.com [103.168.172.152])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F1B48488;
-	Sat, 20 Dec 2025 00:06:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0852D2253EE;
+	Sat, 20 Dec 2025 04:16:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766189207; cv=none; b=gZFgxCDibFZ66r5NEoI83WID+LzY3BqC8pVumfQzEaxXwXng3WjfYUPT/aplfzUnbgjK1d/YZWSzcioiBp1M/IWL/3zsK/ZVe+/HHwoQvoahke4bbJML6OAXb1HHHSHOaYk3jTw2G7ihwQHfjebv5i+GH112s4yXDgtNzwuR3g4=
+	t=1766204177; cv=none; b=tZGNUScEuq/x9T6TvgbNbcN5lkJ/WATzLIEM6tE9fbI5X+Z+ldOzlHh5c0gXHwuDZz0SEx5fkwhsitaraXAYiNqdWMO5bgg6C0O8mw+Q/2WegJEvIiVDHZvvQLNQM6ew3Q4wjAEuIE2NpCEd3VLhJvY8pQFX2OdxpwqTZ6Gy8aU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766189207; c=relaxed/simple;
-	bh=4M/ENON5+ldxqNSBQHms6uF7rBvjqthFygVjLS1hmnY=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uTrXXsDYRSG+keKYSuFiVMHvHuhxgZFdFyZ7kf1JaaXRN+BGqpbNpOlUgRoeuufY/Vj1pbekq5ALhpMRMK80pjJu4MXaEr6PGiakvUIlUTSQtk5PPj9wXDaMoq/uALbeaiGI6f/sqs07X0hAHVyTio10LoGthiNsRNN2H9WmeoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=CCw2mjCS; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=jIv2rUp5; arc=none smtp.client-ip=103.168.172.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="CCw2mjCS";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="jIv2rUp5"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 4ACB214000C8;
-	Fri, 19 Dec 2025 19:06:42 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-06.internal (MEProxy); Fri, 19 Dec 2025 19:06:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1766189202;
-	 x=1766275602; bh=uP2unCIWDU3A7v1w9Vm1SuytIFKF6aoaLTx9wKRYXoQ=; b=
-	CCw2mjCSiwG8rLbZSlDPJ47f81xTGqW+OEu/4NmMasTnU1XjzXHWrHkEFFojeTHy
-	1M3XXYneLwUNf29DgmdUlZXUmZbtnERxnPiFmNNtw9GNkQCsDAKQyKk1jH814Pua
-	5xXxZW9Hujh8GYJPY80b9joslTBL4Fs3D84Br5KxXfyjfu0iK0WhQnIvtu5LeJ4H
-	DjL4Wdq0oXBEf9JfisCpXDqbf/pm/Kt9O5vkECOcrQs2sLUuF2J/lgIf9MQG2iQA
-	FKM0tVXL2EbiDKBFJ3wxeusVEeWzPb+4w1vihjRgqhoq1+j4cy7kUG9DZfa7XwpV
-	x9ShNAXlpD/fVRviPc7Pdw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1766189202; x=
-	1766275602; bh=uP2unCIWDU3A7v1w9Vm1SuytIFKF6aoaLTx9wKRYXoQ=; b=j
-	Iv2rUp5wIU0K0+VM4VVVXLK9iGPIege+y4RleSWFheISmM+lKYW/RekV63oBdqqm
-	eN8q1jPc+dgAxATYfJHOMKLgxb4vX4vTHZECNWX2Rbjbbu3u8Qr3YAgkSlFoGSmm
-	Lebxd94DuxvmoW0gaN9mmc74IRrNTJXx9RCeq2Tk0sRf0l8kI6HcxslVyTqTEKLw
-	GC75VFowGPIQ05l9tBLpSypPVhgroQ4eoneUAaCZfog+/L7obFYF9vLMq4seQrJV
-	/B3iH3kxpPAeEk5udTE67LG8io7U4ffpw5zSwmJMnoPeOC4H15+03kQ2PJhHMO4l
-	eQtlZUlnF+0thEntOPrzQ==
-X-ME-Sender: <xms:kehFaRtjDe6JPwtTaNnEft1TjxsWvspsMj_uYWmBxKaPfOWIbkNnMQ>
-    <xme:kehFaTbOnS3dYxHgPpaVTyyUDa6-wn0RDl4JX6QN10uxZsuOF8P1j_1QOAXKtXykY
-    ub55tlhrY9n_xAOHkqynemeIZsKBSXBU8K23qt6fJAmGMZ2DxI_0Q>
-X-ME-Received: <xmr:kehFaQWZdncDqWiLg1J5EszKEu7nOQCMWWawwWG7b-QWQTOVcwAjh8rx>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdegleejtdcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefukfgjfhggtgfgsehtqhertddttdejnecuhfhrohhmpeetlhgvgicuhghi
-    lhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrghtth
-    gvrhhnpefgffdvfeejjeeuveefteduhfegteefueehteefkeejvdduvdeuhefftdegjeek
-    teenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlh
-    gvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohephedpmhhouggvpehsmhht
-    phhouhhtpdhrtghpthhtoheprghjrgihghgrrhhgnhhsihhtsehgmhgrihhlrdgtohhmpd
-    hrtghpthhtohepqhgvmhhuqdguvghvvghlsehnohhnghhnuhdrohhrghdprhgtphhtthho
-    pehiohhmmhhusehlihhsthhsrdhlihhnuhigqdhfohhunhgurghtihhonhdrohhrghdprh
-    gtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghp
-    thhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:kehFaYTmBslcgXtrXJ_5iKz90G7PXfNT3B4hNv7UKHyMrVcQdsdKPg>
-    <xmx:kehFaeMYfg3JWoxGiHO2mElYh9OHiJtMl40n2dUTrzRf13gggCVRHQ>
-    <xmx:kehFaWT6PbifTwjvQvjV-LqDh3vjrwaQqWtMq8vGsCAGCXqp-mgfyw>
-    <xmx:kehFachD_xOhNKUgbnKflG_3pToE5rEPcE6NKyyg9b_iS9Iux55LYQ>
-    <xmx:kuhFadwZ0cWOGA2ugIgENtV1gdBZpbRyKCgWumKmqQ4AIIicaF-xTaNA>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 19 Dec 2025 19:06:41 -0500 (EST)
-Date: Fri, 19 Dec 2025 17:06:37 -0700
-From: Alex Williamson <alex@shazbot.org>
-To: Ajay Garg <ajaygargnsit@gmail.com>
-Cc: QEMU Developers <qemu-devel@nongnu.org>,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org, Linux Kernel
- Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: A lingering doubt on PCI-MMIO region of PCI-passthrough-device
-Message-ID: <20251219170637.2c161b7b.alex@shazbot.org>
-In-Reply-To: <CAHP4M8X=e+dP-T_if5eA=gccdbxkkObYvcrwA3qUBONKWW3W_w@mail.gmail.com>
-References: <CAHP4M8Uy7HLiKjnMCdNG+QG+0cizN82c_G87AuzDL6qDCBG5vg@mail.gmail.com>
-	<20251215045203.13d96d09.alex@shazbot.org>
-	<CAHP4M8WeHz-3VbzKb_54C5UuWW-jtqvE=X37CSssUa5gti41GQ@mail.gmail.com>
-	<CAHP4M8X=e+dP-T_if5eA=gccdbxkkObYvcrwA3qUBONKWW3W_w@mail.gmail.com>
+	s=arc-20240116; t=1766204177; c=relaxed/simple;
+	bh=VGvm/RBAbHOoCwU8KD8HI6uHjmNUhOI+disxR/Bn6Gs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=p5gE1vMFdqsGVdUcI8WX/rdZhks03Qi4qvZP+P8UcNElYLgEhHwV6YCNlrEsEqGPVtGMFjAEJGjNggRGBTYwSUfnMAECHy9SHg74M+hUGcb9kw4pNWdLxrphWsYGGEIdOw559Vdjixu5mTtqpl0gU4muc2kjyhbat99jRTMSFlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dYB074NMTzYQtf3;
+	Sat, 20 Dec 2025 12:15:35 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id E928640577;
+	Sat, 20 Dec 2025 12:16:06 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.87.129])
+	by APP4 (Coremail) with SMTP id gCh0CgD3WPn5IkZpFwpFAw--.56015S6;
+	Sat, 20 Dec 2025 12:16:06 +0800 (CST)
+From: Hou Tao <houtao@huaweicloud.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-nvme@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Leon Romanovsky <leonro@nvidia.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Tejun Heo <tj@kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	houtao1@huawei.com
+Subject: [PATCH 02/13] PCI/P2PDMA: Fix the warning condition in p2pmem_alloc_mmap()
+Date: Sat, 20 Dec 2025 12:04:35 +0800
+Message-Id: <20251220040446.274991-3-houtao@huaweicloud.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20251220040446.274991-1-houtao@huaweicloud.com>
+References: <20251220040446.274991-1-houtao@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgD3WPn5IkZpFwpFAw--.56015S6
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr18GF15tF13WF1DAr1DWrg_yoW8Ar13pF
+	W3GF17GrWktr43JF4DJ3Z8ury5Aan3uFWUKFWUXw1UuF13urWjkw48tF95Jry5try8Ar1S
+	qFs8ur1jyF1DAaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPab4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7xkE
+	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7
+	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxV
+	WUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU
+	xXTmDUUUU
+X-CM-SenderInfo: xkrx3t3r6k3tpzhluzxrxghudrp/
 
-On Fri, 19 Dec 2025 11:53:56 +0530
-Ajay Garg <ajaygargnsit@gmail.com> wrote:
+From: Hou Tao <houtao1@huawei.com>
 
-> Hi Alex.
-> Kindly help if the steps listed in the previous email are correct.
->=20
-> (Have added qemu mailing-list too, as it might be a qemu thing too as
-> virtual-pci is in picture).
->=20
-> On Mon, Dec 15, 2025 at 9:20=E2=80=AFAM Ajay Garg <ajaygargnsit@gmail.com=
-> wrote:
-> >
-> > Thanks Alex.
-> >
-> > So does something like the following happen :
-> >
-> > i)
-> > During bootup, guest starts pci-enumeration as usual.
-> >
-> > ii)
-> > Upon discovering the "passthrough-device", guest carves the physical
-> > MMIO regions (as usual) in the guest's physical-address-space, and
-> > starts-to/attempts to program the BARs with the
-> > guest-physical-base-addresses carved out.
-> >
-> > iii)
-> > These attempts to program the BARs (lying in the
-> > "passthrough-device"'s config-space), are intercepted by the
-> > hypervisor instead (causing a VM-exit in the interim).
-> >
-> > iv)
-> > The hypervisor uses the above info to update the EPT, to ensure GPA =3D>
-> > HPA conversions go fine when the guest tries to access the PCI-MMIO
-> > regions later (once gurst is fully booted up). Also, the hypervisor
-> > marks the operation as success (without "really" re-programming the
-> > BARs).
-> >
-> > v)
-> > The VM-entry is called, and the guest resumes with the "impression"
-> > that the BARs have been "programmed by guest".
-> >
-> > Is the above sequencing correct at a bird's view level?
+Commit b7e282378773 has already changed the initial page refcount of
+p2pdma page from one to zero, however, in p2pmem_alloc_mmap() it uses
+"VM_WARN_ON_ONCE_PAGE(!page_ref_count(page))" to assert the initial page
+refcount should not be zero and the following will be reported when
+CONFIG_DEBUG_VM is enabled:
 
-It's not far off.  The key is simply that we can create a host virtual
-mapping to the device BARs, ie. an mmap.  The guest enumerates emulated
-BARs, they're only used for sizing and locating the BARs in the guest
-physical address space.  When the guest BAR is programmed and memory
-enabled, the address space in QEMU is populated at the BAR indicated
-GPA using the mmap backing.  KVM memory slots are used to fill the
-mappings in the vCPU.  The same BAR mmap is also used to provide DMA
-mapping of the BAR through the IOMMU in the legacy type1 IOMMU backend
-case.  Barring a vIOMMU, the IOMMU IOVA space is the guest physical
-address space.  Thanks,
+ page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x380400000
+ flags: 0x20000000002000(reserved|node=0|zone=4)
+ raw: 0020000000002000 ff1100015e3ab440 0000000000000000 0000000000000000
+ raw: 0000000000000000 0000000000000000 00000000ffffffff 0000000000000000
+ page dumped because: VM_WARN_ON_ONCE_PAGE(!page_ref_count(page))
+ ------------[ cut here ]------------
+ WARNING: CPU: 5 PID: 449 at drivers/pci/p2pdma.c:240 p2pmem_alloc_mmap+0x83a/0xa60
 
-Alex
+Fix by using "page_ref_count(page)" as the assertion condition.
+
+Fixes: b7e282378773 ("mm/mm_init: move p2pdma page refcount initialisation to p2pdma")
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+ drivers/pci/p2pdma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 218c1f5252b6..dd64ec830fdd 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -147,7 +147,7 @@ static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
+ 		 * we have just allocated the page no one else should be
+ 		 * using it.
+ 		 */
+-		VM_WARN_ON_ONCE_PAGE(!page_ref_count(page), page);
++		VM_WARN_ON_ONCE_PAGE(page_ref_count(page), page);
+ 		set_page_count(page, 1);
+ 		ret = vm_insert_page(vma, vaddr, page);
+ 		if (ret) {
+-- 
+2.29.2
+
