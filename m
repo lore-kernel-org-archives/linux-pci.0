@@ -1,58 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A53821D599;
-	Sat, 20 Dec 2025 15:44:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52157280A5B;
+	Sat, 20 Dec 2025 15:57:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766245465; cv=none; b=GZSKRCvcHEaFauICyabneV4iGplUENuAF09/6h7hM0b9IQT9hKIIKS0yidhMb/iqdHFk9W3wxYmKVwQdE1UtE86wa4sjI93GIfeIvR+OJtRil3XVNBa8fZy4c1tqD3wVy+M2C8WcE7jIrU/UrZby15GrRDaGUn1QveTYz8rcwqA=
+	t=1766246247; cv=none; b=btH2k3ntADDGlnYL+ms1MzSOUvHT1fqig+5GxttcNT1zNNJSVnB0fyRuiYoytWbAuBNgC+ZQ6/wHZABPB2EN1E6GSlICiWVklf6ziKkN9am2mDHoLkURUlmcnwCiUS1DLpbJ/f5iCSzuC8x0nC9UvOEFKzLGIQzOwjmkb+KAGEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766245465; c=relaxed/simple;
-	bh=i30qgdidF5swEfrY8bISvHkNXQBtVxmPrBDz6HH/8cE=;
+	s=arc-20240116; t=1766246247; c=relaxed/simple;
+	bh=mvgKR5eBPfsudG+7ydx/1/S0torXhJ+RG9LyOYP6tlY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SyGqxaRwvzzJTDdNhlybDgn9bcKILFbTgSVzW3uccv1xrhlq4YPqF721YUZPKM3dFfN2wPPGNMLWLpNlCtHIHIYu5sykX3tijm7omtzx6byWS0wrQal8Gve9OGbNKU3ZEV3olZuUu4UJo4ZtdtOoq8JwsFNXLIGKUb+dIo1m708=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QIsqb+y8; arc=none smtp.client-ip=198.175.65.13
+	 Content-Type:Content-Disposition:In-Reply-To; b=FwxC9O7mvzgGvQ28ePLK+U7nIb3wnclkZ3ytIs3l4m9LqFgsgrRs3DhQ0c4M3ObjutKE0c5f3OX5LhiUJ4aOWLkT8NbPMlbM7gdtwGrQpmiAFzEt3met2Er2WpQCyIGXE54EzaKbWtGrNq73nVe8XBlYZLSWH/xPQvK1SL47srE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NO0H0a5M; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QIsqb+y8"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NO0H0a5M"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1766245464; x=1797781464;
+  t=1766246245; x=1797782245;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=i30qgdidF5swEfrY8bISvHkNXQBtVxmPrBDz6HH/8cE=;
-  b=QIsqb+y823hmSLn7pQLe3rWFE1RvuxZ0wSV4Tzzs5VBQbHZa83sk9NsV
-   ucjbYHQdwDKkyK4KpJiz1VFI9n4BnvspzGdgFYPPV+cLLc1Vie717Xnhn
-   ox8IvhZnpXhbKSGFNjgqRVwpx0cgZ5JuyOckdA5V/zdHZZ4E6XyYy9mqE
-   /V7X0h+lB4eUnAjrMADjDHQWtVpMeI2KdzK7/QWByti8dX5w0NriKTnob
-   38jlDSRaj2qgnR7mQ6THh7kCiHDMQy+PoeCVLFmpyeP1ZkrvazVeFF25F
-   m2mmYTy9zXAjQPRBi2wFH19HUqOaN5od6/jSBuugFqGfcLhKmONL8OGD/
-   g==;
-X-CSE-ConnectionGUID: GVLHAZM8SHGpG3pvynoryw==
-X-CSE-MsgGUID: QYmQIdivSRWOEeLKwjuMCA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11648"; a="79297143"
+  bh=mvgKR5eBPfsudG+7ydx/1/S0torXhJ+RG9LyOYP6tlY=;
+  b=NO0H0a5MsYr0Jer2knJB/bNMZRWdTefJ5sGLsjWkzVgxjqi3DhU88HrO
+   IFmdj2YwPItgBFhYa2FZUxdV7P4fxE86Flod9E3SuYG8/EktIT3DwcaSC
+   1SNcCRWMMJsSEuGZay4U/LMilDxYYdaY+3Wq+nIaT8kwl+tMUtYmXFq7y
+   RnmAOhF/GBVpAlOWFroEcRlDhwPvZCrvwqXHjD86gke1+Wm4HqpgigQzA
+   FfHNwja7NOZdFQTk/FosZc0dMpf4qBvSjQfejHSCxebb+MdZnb/y3EU03
+   ETPm2iqjz7sDCBFPfJJLdL/FH9Qla3U1Z3Dln18mkFbnqnfA/aQP3YaJi
+   w==;
+X-CSE-ConnectionGUID: n4zoVSG+S8mAl+7IFML+gg==
+X-CSE-MsgGUID: TthLt2B8QIOkVksgwdaQ8Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11648"; a="70748105"
 X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
-   d="scan'208";a="79297143"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2025 07:44:24 -0800
-X-CSE-ConnectionGUID: 7rxyLLmsSwu8Qk61HDxw4w==
-X-CSE-MsgGUID: odg2+K3HSBq45ro0hb4fag==
+   d="scan'208";a="70748105"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2025 07:57:24 -0800
+X-CSE-ConnectionGUID: OK5FWqYtSzGM3+TRRKERfw==
+X-CSE-MsgGUID: UyYosMaJTDaoOZl/8+B6Nw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
-   d="scan'208";a="236535410"
+   d="scan'208";a="199642886"
 Received: from lkp-server01.sh.intel.com (HELO 0d09efa1b85f) ([10.239.97.150])
-  by orviesa001.jf.intel.com with ESMTP; 20 Dec 2025 07:44:18 -0800
+  by fmviesa009.fm.intel.com with ESMTP; 20 Dec 2025 07:57:20 -0800
 Received: from kbuild by 0d09efa1b85f with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vWz7v-000000004m1-2LBa;
-	Sat, 20 Dec 2025 15:44:15 +0000
-Date: Sat, 20 Dec 2025 23:43:44 +0800
+	id 1vWzKX-000000004nl-31dx;
+	Sat, 20 Dec 2025 15:57:17 +0000
+Date: Sat, 20 Dec 2025 23:57:06 +0800
 From: kernel test robot <lkp@intel.com>
 To: Hou Tao <houtao@huaweicloud.com>, linux-kernel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org, linux-nvme@lists.infradead.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
 	Logan Gunthorpe <logang@deltatee.com>,
 	Alistair Popple <apopple@nvidia.com>,
 	Leon Romanovsky <leonro@nvidia.com>,
@@ -66,7 +66,7 @@ Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
 	houtao1@huawei.com
 Subject: Re: [PATCH 03/13] kernfs: add support for get_unmapped_area callback
-Message-ID: <202512202307.ewUcqBQV-lkp@intel.com>
+Message-ID: <202512202338.qFqw6FI8-lkp@intel.com>
 References: <20251220040446.274991-4-houtao@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -93,25 +93,28 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Hou-Tao/PCI-P2PDMA-Releas
 base:   driver-core/driver-core-testing
 patch link:    https://lore.kernel.org/r/20251220040446.274991-4-houtao%40huaweicloud.com
 patch subject: [PATCH 03/13] kernfs: add support for get_unmapped_area callback
-config: sh-allnoconfig (https://download.01.org/0day-ci/archive/20251220/202512202307.ewUcqBQV-lkp@intel.com/config)
-compiler: sh4-linux-gcc (GCC) 15.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251220/202512202307.ewUcqBQV-lkp@intel.com/reproduce)
+config: arm-allnoconfig (https://download.01.org/0day-ci/archive/20251220/202512202338.qFqw6FI8-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project b324c9f4fa112d61a553bf489b5f4f7ceea05ea8)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251220/202512202338.qFqw6FI8-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202512202307.ewUcqBQV-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202512202338.qFqw6FI8-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   fs/kernfs/file.c: In function 'kernfs_get_unmapped_area':
->> fs/kernfs/file.c:480:16: error: implicit declaration of function 'mm_get_unmapped_area'; did you mean 'get_unmapped_area'? [-Wimplicit-function-declaration]
+>> fs/kernfs/file.c:480:9: error: call to undeclared function 'mm_get_unmapped_area'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
      480 |         addr = mm_get_unmapped_area(file, uaddr, len, pgoff, flags);
-         |                ^~~~~~~~~~~~~~~~~~~~
-         |                get_unmapped_area
+         |                ^
+   fs/kernfs/file.c:480:9: note: did you mean '__get_unmapped_area'?
+   include/linux/mm.h:3671:1: note: '__get_unmapped_area' declared here
+    3671 | __get_unmapped_area(struct file *file, unsigned long addr, unsigned long len,
+         | ^
+   1 error generated.
 
 
-vim +480 fs/kernfs/file.c
+vim +/mm_get_unmapped_area +480 fs/kernfs/file.c
 
    456	
    457	static unsigned long kernfs_get_unmapped_area(struct file *file, unsigned long uaddr,
