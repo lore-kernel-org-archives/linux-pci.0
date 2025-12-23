@@ -1,44 +1,99 @@
-Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5D3F340A59;
-	Tue, 23 Dec 2025 12:38:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBB0832860B
+	for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2025 12:48:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766493497; cv=none; b=iqNq9SBkwPW1Pv+YCOra8HrRChGvR/dh4nPPGYkLg7wpuzGugDOl1xDuMEt9YmeYWL+ABgrj5WfyobvruCG0jcI6wM2B9zbhwdEMlTSSD4W132H5dcroX6qLowfcNV+AUXn3dI9jkMqYztbzqcUqhaTh/Tz16Z9ijtsgWTFnHIY=
+	t=1766494129; cv=none; b=ixZfECrTLWKIU8Ajy4bfAYIs7BFteDwakIH8lviAhdSfGRoGKU2Hrnc2GU4tGW24yrVOPecn45yBkgIOxK6HvemA2cGt0PyzGcfc8nG2DH4fJm9oYr+GGWWBuJfFMvNIPOTw8qydRguJ5AePd80fRYRSexjbsqUtLjw4oOVwv8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766493497; c=relaxed/simple;
-	bh=+MPOm9EbZoAuq0w8gI0k842S88Dz+otbPBU7WGGFbtU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=SQaDUopa4jLrMREHc+PDzdGIhERV42sH877F5rOtjlEvxjnRVj9Yx1DqO5pMqgW0tvtHirbvTahTwPQ4Y6gsuUsEypOjsVy5zecT+JwnBn+lcoBdWKqwWLF0xU6PnArRjWox+8yfTxEaUugWlR9bMrgKr7b0TaR5JAfEtHnn6Dg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=Fb5nTZ6N; arc=none smtp.client-ip=148.251.105.195
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1766494129; c=relaxed/simple;
+	bh=i59QBVjcipThG8DPnC9H8UaFM7mf6swYhObM6DGBW4Q=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=i/DI4/LUc3OdfhLXDHL9kHfNLJnS2YrsGAJCSZr3Z/3A6ykqHi6YlubaHK21Jp1hcjMqStzMPxhpfUAEWNzmNeQwXO8wbF5Dj4lXy2IOrSgGvVQ8MoMHVMetxIyg5IEioOiCeiujNl8+6K6UB5IC5kJ0NO456zkE5GQXSY318OM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=IjOkuFb6; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=DrzaGE8Q; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="Fb5nTZ6N"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1766493489;
-	bh=+MPOm9EbZoAuq0w8gI0k842S88Dz+otbPBU7WGGFbtU=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=Fb5nTZ6N4+jCD50Qv9E3DYmAG+vt8kRbruQGNvXyM9vFI7XuGkPQgRv01bMediG6U
-	 ZhlrYEf5Zz/mPVrcoE5hQ+QL8NCnVSI4W9flvXH02zi0A4SAZKvNOsQIqJebogv7ia
-	 f2jeEYJpVaYXucTKm+RaACgObcOvEMEW/HdE++pUjZN6aGPb5X69rYciAxb16YZ9Xy
-	 JN6vHjTUC28AhXX8qqFicPcCXWRNGSRD1UyNdcTvAQgjopPIkNglN/IXsJA7I3IER5
-	 ayfP4fxK9hhWNKa9BjP3PWW0eTuPYwPdxVpsKGPwPhVIFMyx5yZrSmubtj/z4Qq3tF
-	 Q2GGmGzw47UMQ==
-Received: from beast.luon.net (unknown [IPv6:2a10:3781:2531:0:f337:3245:2545:b505])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
-	(No client certificate requested)
-	(Authenticated sender: sjoerd)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id C9AC417E1523;
-	Tue, 23 Dec 2025 13:38:09 +0100 (CET)
-Received: by beast.luon.net (Postfix, from userid 1000)
-	id 5C796117A0677; Tue, 23 Dec 2025 13:38:08 +0100 (CET)
-From: Sjoerd Simons <sjoerd@collabora.com>
-Date: Tue, 23 Dec 2025 13:37:55 +0100
-Subject: [PATCH v5 5/8] arm64: dts: mediatek: mt7981b-openwrt-one: Enable
- Ethernet
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="IjOkuFb6";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="DrzaGE8Q"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BN9uY7N1530068
+	for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2025 12:48:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	VpdOzjVXXo3ABXz2GAYCU15x+ZuTtI8ZVsD3AfJvyfo=; b=IjOkuFb6Hd9Bm2lF
+	Tx/CjUBLnLjHnlr1iSdnrGWhbjFmroGVoRtje0NDq6O7O3VzB6z1HppO6kmHP4LJ
+	bVt594axA0kQ9SvzXyizUby2zwKZa3nTfd0OyproWavPFn0+KgRtewYske2dYYYa
+	kihm5XTTi+iQ6nFXy/bav3JAB3M9W6TBdX7tY9VILo/pBAH2pZbTcEoEtWiAhJMp
+	AKQLb3/b9NUysOcg0mx3EMjXuy2r+XefoZpEyUH7zK23SFGX0bsyOrnWRQKtcScP
+	8buJIYz/YNo5b1OZLMe+C9JbR37zY5s5X1phCpbOYxEsmQNDWFeVPQvHltJjgsLV
+	BFUmBQ==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4b758y3xqy-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2025 12:48:45 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-29f1f69eec6so61807905ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 23 Dec 2025 04:48:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1766494125; x=1767098925; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VpdOzjVXXo3ABXz2GAYCU15x+ZuTtI8ZVsD3AfJvyfo=;
+        b=DrzaGE8QWg/0Gh5/I1ng1cb0YAMEnvM9eTA8BmULTh0zU5nTJ1G0GkE6r7jwdVg8qq
+         /+MpiY7YsYXDH/Q+GX2BlI6hKHohJsI67dRSyCvXBirwLxl1m/iyX5HbKGr7V7q2cmmT
+         flmhjV82h+z79l4ERc29ONPxtPfqiBHuX33LieZe+5nFnutmr/oYyFzpmNSTmpYRsxF4
+         woIFzHs3JMGpOEshrhQ5CqpCgUXpPnjMHOsJJjm1u/ol9W/e/qy7m2G9DEXdeyLDeoOA
+         Hk0IMcOqxNCo9BtKAI6UsTiVQiEEt3nOtPt5GnWxCOpIPoGX/Adw43qAUHdumwudHdUs
+         gPLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766494125; x=1767098925;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=VpdOzjVXXo3ABXz2GAYCU15x+ZuTtI8ZVsD3AfJvyfo=;
+        b=YxPoyApTeYpV3zMLORvH3oHVRF7liwyZOWRQepssyB+UajR9D7sjubKjlO7v+4cj+E
+         FrZa5O4bRmyO+JChNyZobqfWMI/p9ujfH+yDjdf8eJYCcp1q30G7yZ61zoyihKagOFhQ
+         14ThwoGpepU0x9HApqVXJ8xOI/RqKgqPFKjulLfTtpZjlsI3LNvJ9kYQz5lYa4cczA6v
+         lSqK0VpQgJVgFnIdcX/pIb28dIqB4nqGse4grvCKTjspcyXoeuc6xrt2AtqzInUBmpei
+         e+rCiGQrkXVUERV0JJXjeE4NLn2w9zTJSj6TfqPI70Z05I948e8M5i3AjARM0QPW/trr
+         yniA==
+X-Gm-Message-State: AOJu0YxktReWgS2jAdpQsH/s2u/bJtOi9FNAh6324zxLldBhPAI5VFe5
+	mlYXbHPvIQX+qYEkIxt2SXJlDDVrXMKrqiGxDBeObVaZwNQsW9VfMBQywRES/tzndL5w1g6dH9v
+	7HyuqQy8fV0s5UHv7NVHsVhq8VRj7K/td2Zh/GN1QM7S6z627eyXmq/GEzvCF0AE=
+X-Gm-Gg: AY/fxX67BGnWXD57b/Xm+FXy1jW/WyMG8cQMB82pqVWJlA3TO7mZTZsJEEbxl7EDDxo
+	TxfqafUgvcXM+EChQXHxqD/hBa/B+KJrlrNrE+Kchhyio1g671ywP0wEv84jizjSPfsfBaa2j5v
+	CZ8rBMXnO4AqYesovEJvKHq5y86SxjJVOmR1gq73fehaQeCjD06zC+uGcFMMOVgBtCC7DUPKCnE
+	6AyE3LosuQhaBVehRMr/oPC3ikW3pAqyRGvPm04iImMK4MFk1Qo9bL5DrxMU4RU/18S5Qv3FkAJ
+	XsXcLzte/1Qpp5JqT8gs8kYiOkapW9l5fFTMcb091CjHVJuWIhQxRgXGI7v5LixNNWl8NCJOJlb
+	Bg70u+PKQ
+X-Received: by 2002:a17:903:b8b:b0:2a1:243:94a8 with SMTP id d9443c01a7336-2a2f2a4f102mr148061965ad.49.1766494124673;
+        Tue, 23 Dec 2025 04:48:44 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH8YWs/Lrk8D8Qax6Yg5cm74s9TOxV44XYaEydl2Aosk2GGRg9fclJgfKsjM+Tlt+pRR6geZw==
+X-Received: by 2002:a17:903:b8b:b0:2a1:243:94a8 with SMTP id d9443c01a7336-2a2f2a4f102mr148061735ad.49.1766494124140;
+        Tue, 23 Dec 2025 04:48:44 -0800 (PST)
+Received: from [192.168.1.102] ([120.60.139.28])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a322d76a19sm80283965ad.101.2025.12.23.04.48.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 23 Dec 2025 04:48:43 -0800 (PST)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Frank Li <Frank.Li@nxp.com>,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, macro@orcam.me.uk,
+        stable@vger.kernel.org
+In-Reply-To: <20251203-ecam_io_fix-v1-0-5cc3d3769c18@oss.qualcomm.com>
+References: <20251203-ecam_io_fix-v1-0-5cc3d3769c18@oss.qualcomm.com>
+Subject: Re: [PATCH 0/2] PCI: dwc: Fix missing iATU setup when ECAM is
+ enabled
+Message-Id: <176649412094.525930.11885393958582645087.b4-ty@kernel.org>
+Date: Tue, 23 Dec 2025 18:18:40 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,135 +102,50 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251223-openwrt-one-network-v5-5-7d1864ea3ad5@collabora.com>
-References: <20251223-openwrt-one-network-v5-0-7d1864ea3ad5@collabora.com>
-In-Reply-To: <20251223-openwrt-one-network-v5-0-7d1864ea3ad5@collabora.com>
-To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Ryder Lee <ryder.lee@mediatek.com>, 
- Jianjun Wang <jianjun.wang@mediatek.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, Lee Jones <lee@kernel.org>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>
-Cc: kernel@collabora.com, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, 
- linux-phy@lists.infradead.org, netdev@vger.kernel.org, 
- Daniel Golle <daniel@makrotopia.org>, Bryan Hinton <bryan@bryanhinton.com>, 
- Sjoerd Simons <sjoerd@collabora.com>
 X-Mailer: b4 0.14.3
+X-Authority-Analysis: v=2.4 cv=TOdIilla c=1 sm=1 tr=0 ts=694a8fad cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=wbxd9xFQoh2bOL7BUxlcyw==:17
+ a=IkcTkHD0fZMA:10 a=wP3pNCr1ah4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=dOtSmj_QbqaLots3hlYA:9
+ a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10 a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-ORIG-GUID: 57C2zwVEoXo_dbfI7r8xp7jZ9ALMizmR
+X-Proofpoint-GUID: 57C2zwVEoXo_dbfI7r8xp7jZ9ALMizmR
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjIzMDEwNCBTYWx0ZWRfX4EJ42eaeCkpl
+ tNbzQDw09l416s/qiJacT+UUwAK2xvy7iSlQyxpeOt5WKYoA4QJtTfaOerQDQ8ZEPoCJPXN2IQZ
+ h06qHWl+PYe9y/8/crMKdXSq0vTanwSMceaDsIX14P7pLprWBsR1XH8UfqPAuKL8uGdB5dUaZ/9
+ KWDa1kKKCUeGiIUV8ZBalqQIToitqx0me5efMSfnEa0nRqwnf2uC4y4SBebbvwjypG8DJxy9cig
+ 4V31Fo7bbJxr2K9KkKe8Ps1iO2QQ/HC7kYGMczEXkp35rDI0Rx4z74sbvgoj4Yjb/mRxmisHHns
+ gTJJYuNG99ykS/6BxJUQ4sdFCMzwPcATR1BiIJOEHnJ41BfMaWG/1xzUq6K48Kb4bdyiWFaLkW/
+ NGHqoiUq2ql04AnVUmpGwqlsdOEbxb9xg1uUtiPsREYmc1BQ+0Fi0sHkTOpudpUuyoyrydXwmZl
+ DJuLhvecGMSRxZm0/2w==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-12-23_03,2025-12-22_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 adultscore=0 lowpriorityscore=0 malwarescore=0 priorityscore=1501
+ clxscore=1015 impostorscore=0 bulkscore=0 suspectscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2512120000 definitions=main-2512230104
 
-Enable the Ethernet subsystem on OpenWrt One board with dual-MAC
-configuration:
-- GMAC0: Connected to external Airoha EN8811H 2.5GbE PHY via SGMII
-  (2500base-x mode) for WAN connectivity with LED indicators
-- GMAC1: Connected to internal MT7981 1GbE PHY (GMII mode) for LAN
 
-Ethernet aliases are defined to provide consistent network interface
-naming (ethernet0 = LAN, ethernet1 = WAN).
+On Wed, 03 Dec 2025 11:50:13 +0530, Krishna Chaitanya Chundru wrote:
+> When ECAM is enabled, the driver skipped calling dw_pcie_iatu_setup()
+> before configuring ECAM iATU entries. This left IO and MEM outbound
+> windows unprogrammed, resulting in broken IO transactions. Additionally,
+> dw_pcie_config_ecam_iatu() was only called during host initialization,
+> so ECAM-related iATU entries were not restored after suspend/resume,
+> leading to failures in configuration space access.
+> 
+> [...]
 
-Signed-off-by: Sjoerd Simons <sjoerd@collabora.com>
----
-V1 -> V2:
-  - Switch gmac0 phy irq to Level
-  - Update mac nvmem label name
----
- .../boot/dts/mediatek/mt7981b-openwrt-one.dts      | 58 ++++++++++++++++++++++
- 1 file changed, 58 insertions(+)
+Applied, thanks!
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-index 7382599cfea2..2aea89900645 100644
---- a/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt7981b-openwrt-one.dts
-@@ -12,6 +12,8 @@ / {
- 	model = "OpenWrt One";
- 
- 	aliases {
-+		ethernet0 = &gmac1;
-+		ethernet1 = &gmac0;
- 		serial0 = &uart0;
- 	};
- 
-@@ -87,6 +89,58 @@ reg_5v: regulator-5v {
- 	};
- };
- 
-+&eth {
-+	status = "okay";
-+
-+	/* WAN interface */
-+	gmac0: mac@0 {
-+		compatible = "mediatek,eth-mac";
-+		reg = <0>;
-+		nvmem-cells = <&wan_factory_mac 0>;
-+		nvmem-cell-names = "mac-address";
-+		phy-mode = "2500base-x";
-+		phy-handle = <&phy15>;
-+	};
-+
-+	/* LAN interface */
-+	gmac1: mac@1 {
-+		compatible = "mediatek,eth-mac";
-+		reg = <1>;
-+		phy-mode = "gmii";
-+		phy-handle = <&int_gbe_phy>;
-+	};
-+};
-+
-+&mdio_bus {
-+	phy15: ethernet-phy@f {
-+		compatible = "ethernet-phy-id03a2.a411";
-+		reg = <0xf>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
-+		reset-gpios = <&pio 39 GPIO_ACTIVE_LOW>;
-+		reset-assert-us = <10000>;
-+		reset-deassert-us = <20000>;
-+		airoha,pnswap-rx;
-+
-+		leds {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			led@0 {
-+				reg = <0>;
-+				function = LED_FUNCTION_WAN;
-+				color = <LED_COLOR_ID_AMBER>;
-+			};
-+
-+			led@1 {
-+				reg = <1>;
-+				function = LED_FUNCTION_WAN;
-+				color = <LED_COLOR_ID_GREEN>;
-+			};
-+		};
-+	};
-+};
-+
- &pcie {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie_pins>;
-@@ -191,6 +245,10 @@ partition@180000 {
- 	};
- };
- 
-+&sgmiisys0 {
-+	mediatek,pnswap;
-+};
-+
- &uart0 {
- 	status = "okay";
- };
+[1/2] PCI: dwc: Correct iATU index increment for MSG TLP region
+      commit: 3c364c9b96f1a0629a29363cdc6239c1ad2f68ad
+[2/2] PCI: dwc: Fix missing iATU setup when ECAM is enabled
+      commit: 37781eb814e16c75abb78dec2f9412d2e4d88298
 
+Best regards,
 -- 
-2.51.0
+Manivannan Sadhasivam <mani@kernel.org>
 
