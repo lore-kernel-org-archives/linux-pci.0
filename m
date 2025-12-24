@@ -1,220 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C9A35B14C;
-	Wed, 24 Dec 2025 13:50:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3061DD543
+	for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2025 15:02:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766584214; cv=none; b=H0RRhxsdPX+t3DvKegt1zGGO+L72TRrea3h6jbhaGR5fupMk31dGuzBPmaVQmh5tW9ljgXrX2GDDWplhouMWDuv6RR5NdCSY1qmUppor52JE2UH1h07GCr/5oxnURuwKB7VreKzzhqfqVMng7hxU+5EmNkzUpQE33iikKu7cHQE=
+	t=1766588573; cv=none; b=aCeygPqRF4DNHpIW8Hw+HWlCeMawnk30kUZDFrToq3H+kv0tj6h/2vG7NhRMfpUvWVmlHoXxZ7IH7ZEFBKMEE7152c0hOjvgabs/h5kRK0+Yu89emIJZON1iTh/jdeEM3nSxs1NTQwr3rhXcNVigM6VKFCFgy4+ahtNGE4AKr3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766584214; c=relaxed/simple;
-	bh=1ThumxDDgpI14i4xI2NJUZlN8OnswY2btiiSypM7sVI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GimD8OR4FDw55PrXGEVErTe1nu7We5u1XqmHJ1VmF58CMM5N1MqiRHIGOJMKA8/6JjRmzkuHtjB24jIwqDRC/Pip169SlO1wxrwfRapMe9Iv4tWSBY4/mVw/w9MIwFwQJEM9P3p4BY+LV47XBixJzAP3MgC+jssAmvTaOp13GY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ahi82J95; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766588573; c=relaxed/simple;
+	bh=aC2cOOdZ9dT1bOJ1hih/tr31peIvlrm8WqOZnDiPQsc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TubYY72veEilmNuk6zzrAsUrULMqdubw85qJp5ueOLEU0vNsbWhP22Ryb8tOynNgamJsYYSsnwiZP0UCDF/5xLIfA6bRv1IkxiIelHwSa+bsqpxP9bthlfsDkZLLgZCcQ3zENt8TaGSApBx7Xz/6UNO7dl5+qazxdG6svk6bCfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=HoQUzQwO; arc=none smtp.client-ip=209.85.208.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ahi82J95"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 270F1C4CEF7;
-	Wed, 24 Dec 2025 13:50:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766584213;
-	bh=1ThumxDDgpI14i4xI2NJUZlN8OnswY2btiiSypM7sVI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ahi82J95Ib/ppDRG2oGNZ9HCy4FO7NwJKzhKKQKG1+UUAadEdmqhM1slQjgCbxhV+
-	 /dcBOeXszn7WHt9ZEfzUfR2usAGjc5uAN/OK3ZHVMN6a/GtbA6m05cxKc30/svswW9
-	 lMaao3gqVfU1DJmnwW9fYJagoqE1abjZ+rGDbjrrUpMuwLIh6DIVlL9d2y7zHGdY30
-	 tfIgeKXtzkXkTpfedG0igUK8LV3+nv7+Y8XcfzegBKyVjUAwe8f8Df0/Q+XXlp1ix+
-	 v4BjeCOmS/tbEvleYYDEWcXyh76TNTsAYQ91xgEDVBUpifl3dY9W3RGxk+qIejrkj/
-	 y+oyfRg4KoKWA==
-From: Frederic Weisbecker <frederic@kernel.org>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Frederic Weisbecker <frederic@kernel.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Chen Ridong <chenridong@huawei.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Gabriele Monaco <gmonaco@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>,
-	Muchun Song <muchun.song@linux.dev>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Phil Auld <pauld@redhat.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Simon Horman <horms@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Waiman Long <longman@redhat.com>,
-	Will Deacon <will@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH 33/33] doc: Add housekeeping documentation
-Date: Wed, 24 Dec 2025 14:45:20 +0100
-Message-ID: <20251224134520.33231-34-frederic@kernel.org>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251224134520.33231-1-frederic@kernel.org>
-References: <20251224134520.33231-1-frederic@kernel.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="HoQUzQwO"
+Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-37b95f87d64so49600391fa.2
+        for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2025 07:02:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1766588569; x=1767193369; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WU68DctuI7lXqLedmpfBXudjncn5CRFPEepwjiQUX7Q=;
+        b=HoQUzQwOyziGoBzOf5rHpTrvyNaMAJLQnIXJRFoTdZRWAeiRwgJUbWWRlf1j6mLSJ6
+         +7l3Mn44AQYlZYQiSAVYC+awyw7/YYcrt4N9Mzp6CdK4e7LyzwEq63Gcfo7Hqo1SX7On
+         197lzcSDpzVrgf74FgUX/4m5dhxFwzVnwDv/v9bjyknKJDHULYeUNxussrVxPwj5H4sl
+         ma4kydBz/9QjgkJXrKycFqOvK9fwrsXg7vAASe/MVePi/5zzuGesnBo93SpRx6J0Ngpb
+         gLOpS6bq2xPXPyEHE3j/JbB6qmsLgGDxDsyTwWNQftBFxu2FZXZNIYYlaHkmu/pHwl32
+         SHaw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766588569; x=1767193369;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=WU68DctuI7lXqLedmpfBXudjncn5CRFPEepwjiQUX7Q=;
+        b=XdPurgwjhQ/SkDNAuT34akvNXoSJpXFyGcs2+TAf7PSsJ98IJ96conL6vwclUmsAkQ
+         w+QlNUmjGsD7e3g3YsgTRT+/jIR6PSgqT8zgvVW0GX8xudUtnpvjC3XfJRMnD/G59n7M
+         8aehgtmjxXsYp6NHq25ecTYzkZAt3s2EVZFdtC+tPJSWaHQxeG//hUL8PyGmSlmq6NK9
+         iIUDziZ1FdgpRRoPZJpa2R8TpoYaS9XZbdZrlINq0Z7IED29C5u3E+gEULctRGUn7bvW
+         FWURLd0Y2vvLbsQrsaEKEm5qNyzK3TjmnDfxhFEw+qsAO3+N51B93WW8tRYT9lwQ6zLx
+         UJOg==
+X-Forwarded-Encrypted: i=1; AJvYcCUsXnwBNTVdxWgsrzRlaknlkqK4Iy1rYBII7QIouscy7wMAutjh7/yL5xcpKOts2OPGVSBP7CLH8Bc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw9qCF0CzQIX9IKCJRFEmPbXVgRULKqB1bKTuW+DngyiRFdY2uG
+	hiJ+462uGEoTXHEoBXZhTqvX6sw9ybrrwxSISwrRCWhjQEJVMegmSonHWrGivNOpDqve/zJrRo9
+	7JWCMsm1iU8b052tPW66Xd4RO1hMEchY5mUdBl3Ijvg==
+X-Gm-Gg: AY/fxX6kIf0YqGcPsRFdly7E101WkajJorL5lCUH1S43VqXLdUQ5mv8xHRg0xv45LJ0
+	0hAKC//pRoAlls4K1s8A1VUrKt7cwFGCW1bXlirHeb243fX8FekUOb4PvfOmnzRGJ5hWb21riuL
+	Dmp4coi2mftmaQio8huWmfRC0ZI5uEkl4XXfLGOTqu/JKtzUKfI2OGtKOMJU4Qk5872TCaZa2HH
+	H0Lk1BMKy9wwwgYjR7rn/xcI62cbtfHRMjEHcpZ45pzgNfInRUINGftuE0LluK2XFHAY2uRyPJn
+	ueKW0Im9ay44yVDrDPPZ5/RAtRhq
+X-Google-Smtp-Source: AGHT+IFOuqHYVuqz8fcxr543tL4rKoA6CjgeFKgxbZk8W0Jx02LZonOOj2ju0HJNwmRhHYYqZe571t/ky9r2X574Y48=
+X-Received: by 2002:a2e:bc18:0:b0:37a:5cb7:968f with SMTP id
+ 38308e7fff4ca-3812161d777mr57692281fa.29.1766588568882; Wed, 24 Dec 2025
+ 07:02:48 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20251105151649.256274-1-marco.crivellari@suse.com>
+In-Reply-To: <20251105151649.256274-1-marco.crivellari@suse.com>
+From: Marco Crivellari <marco.crivellari@suse.com>
+Date: Wed, 24 Dec 2025 16:02:37 +0100
+X-Gm-Features: AQt7F2phZaWQqe8jj4wrj3g7WiheN1zz4zGOQz-lFt8TqDpOfgldeM5I-fnwbyA
+Message-ID: <CAAofZF5sPxY2uTvm6dXcLe5b_QHzPhBQ-Lh+2M5WK5AhAEmhFQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: endpoint: replace use of system_wq with system_percpu_wq
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
+	Frederic Weisbecker <frederic@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Michal Hocko <mhocko@suse.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Krzysztof Wilczynski <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
----
- Documentation/core-api/housekeeping.rst | 111 ++++++++++++++++++++++++
- Documentation/core-api/index.rst        |   1 +
- 2 files changed, 112 insertions(+)
- create mode 100644 Documentation/core-api/housekeeping.rst
+On Wed, Nov 5, 2025 at 4:16=E2=80=AFPM Marco Crivellari
+<marco.crivellari@suse.com> wrote:
+> [...]
+>  drivers/pci/endpoint/pci-ep-cfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/core-api/housekeeping.rst b/Documentation/core-api/housekeeping.rst
-new file mode 100644
-index 000000000000..e5417302774c
---- /dev/null
-+++ b/Documentation/core-api/housekeeping.rst
-@@ -0,0 +1,111 @@
-+======================================
-+Housekeeping
-+======================================
-+
-+
-+CPU Isolation moves away kernel work that may otherwise run on any CPU.
-+The purpose of its related features is to reduce the OS jitter that some
-+extreme workloads can't stand, such as in some DPDK usecases.
-+
-+The kernel work moved away by CPU isolation is commonly described as
-+"housekeeping" because it includes ground work that performs cleanups,
-+statistics maintainance and actions relying on them, memory release,
-+various deferrals etc...
-+
-+Sometimes housekeeping is just some unbound work (unbound workqueues,
-+unbound timers, ...) that gets easily assigned to non-isolated CPUs.
-+But sometimes housekeeping is tied to a specific CPU and requires
-+elaborated tricks to be offloaded to non-isolated CPUs (RCU_NOCB, remote
-+scheduler tick, etc...).
-+
-+Thus, a housekeeping CPU can be considered as the reverse of an isolated
-+CPU. It is simply a CPU that can execute housekeeping work. There must
-+always be at least one online housekeeping CPU at any time. The CPUs that
-+are not	isolated are automatically assigned as housekeeping.
-+
-+Housekeeping is currently divided in four features described
-+by the ``enum hk_type type``:
-+
-+1.	HK_TYPE_DOMAIN matches the work moved away by scheduler domain
-+	isolation performed through ``isolcpus=domain`` boot parameter or
-+	isolated cpuset partitions in cgroup v2. This includes scheduler
-+	load balancing, unbound workqueues and timers.
-+
-+2.	HK_TYPE_KERNEL_NOISE matches the work moved away by tick isolation
-+	performed through ``nohz_full=`` or ``isolcpus=nohz`` boot
-+	parameters. This includes remote scheduler tick, vmstat and lockup
-+	watchdog.
-+
-+3.	HK_TYPE_MANAGED_IRQ matches the IRQ handlers moved away by managed
-+	IRQ isolation performed through ``isolcpus=managed_irq``.
-+
-+4.	HK_TYPE_DOMAIN_BOOT matches the work moved away by scheduler domain
-+	isolation performed through ``isolcpus=domain`` only. It is similar
-+	to HK_TYPE_DOMAIN except it ignores the isolation performed by
-+	cpusets.
-+
-+
-+Housekeeping cpumasks
-+=================================
-+
-+Housekeeping cpumasks include the CPUs that can execute the work moved
-+away by the matching isolation feature. These cpumasks are returned by
-+the following function::
-+
-+	const struct cpumask *housekeeping_cpumask(enum hk_type type)
-+
-+By default, if neither ``nohz_full=``, nor ``isolcpus``, nor cpuset's
-+isolated partitions are used, which covers most usecases, this function
-+returns the cpu_possible_mask.
-+
-+Otherwise the function returns the cpumask complement of the isolation
-+feature. For example:
-+
-+With isolcpus=domain,7 the following will return a mask with all possible
-+CPUs except 7::
-+
-+	housekeeping_cpumask(HK_TYPE_DOMAIN)
-+
-+Similarly with nohz_full=5,6 the following will return a mask with all
-+possible CPUs except 5,6::
-+
-+	housekeeping_cpumask(HK_TYPE_KERNEL_NOISE)
-+
-+
-+Synchronization against cpusets
-+=================================
-+
-+Cpuset can modify the HK_TYPE_DOMAIN housekeeping cpumask while creating,
-+modifying or deleting an isolated partition.
-+
-+The users of HK_TYPE_DOMAIN cpumask must then make sure to synchronize
-+properly against cpuset in order to make sure that:
-+
-+1.	The cpumask snapshot stays coherent.
-+
-+2.	No housekeeping work is queued on a newly made isolated CPU.
-+
-+3.	Pending housekeeping work that was queued to a non isolated
-+	CPU which just turned isolated through cpuset must be flushed
-+	before the related created/modified isolated partition is made
-+	available to userspace.
-+
-+This synchronization is maintained by an RCU based scheme. The cpuset update
-+side waits for an RCU grace period after updating the HK_TYPE_DOMAIN
-+cpumask and before flushing pending works. On the read side, care must be
-+taken to gather the housekeeping target election and the work enqueue within
-+the same RCU read side critical section.
-+
-+A typical layout example would look like this on the update side
-+(``housekeeping_update()``)::
-+
-+	rcu_assign_pointer(housekeeping_cpumasks[type], trial);
-+	synchronize_rcu();
-+	flush_workqueue(example_workqueue);
-+
-+And then on the read side::
-+
-+	rcu_read_lock();
-+	cpu = housekeeping_any_cpu(HK_TYPE_DOMAIN);
-+	queue_work_on(cpu, example_workqueue, work);
-+	rcu_read_unlock();
-diff --git a/Documentation/core-api/index.rst b/Documentation/core-api/index.rst
-index 5eb0fbbbc323..79fe7735692e 100644
---- a/Documentation/core-api/index.rst
-+++ b/Documentation/core-api/index.rst
-@@ -25,6 +25,7 @@ it.
-    symbol-namespaces
-    asm-annotations
-    real-time/index
-+   housekeeping.rst
- 
- Data structures and low-level utilities
- =======================================
--- 
-2.51.1
+Gentle ping.
 
+Many thanks!
+
+--=20
+
+Marco Crivellari
+
+L3 Support Engineer
