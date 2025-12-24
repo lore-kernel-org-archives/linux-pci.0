@@ -1,138 +1,123 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7CAC26158B
-	for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2025 08:04:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 753FE30B529;
+	Wed, 24 Dec 2025 09:01:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766563484; cv=none; b=rE5t2g4OWwwICThXLw+TE1dOJmbLN+w7K0iqmEKGsagNVkPmy7FcEm4S7rAd9Q+PRslgEPSO+9TsbfrSQVzI4xb7zlTiObY0wLmE+vwuthXiR2MZ8k0PpvssvyOlS3QnVpancZxfnp3hyfn0Nlmxh2G8dyRnblrMBxIrBhl0Vj0=
+	t=1766566907; cv=none; b=YX64qAGDbvLJ6Jgxk7rCMgyRi5QjsbrlaMviAipVdddEgYmKSqFU7LUexZ6dFEH6I8oDt886Ftpyu+Hkud00gizilwlMKI/BT0GnOIuP78D2I8hanRnqFCyXf6d8cboX8eVoRhBI1voOBd09HvNbigVeTNp5vC5TRHAgXkGRwkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766563484; c=relaxed/simple;
-	bh=+TfuYlLvMaLWTZmZDZsnA49hO+ryorTTCnTkX2pKAFY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lSv+74M7sgbvTTF/EZMucscKdcmmEsGZiIqopKNvHQhk2OOID7yoL2x2CBt9GW+8kba+SDhB7IUa4uYHtTxTfqWKJj01E4naejQeXdRLtNa00+ob+iHcOveh42NRE9SsiaRqYMiksB8JxyEmVdkYfN/tmLog6pjBEa8AtLg3c/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eHdvNRe9; arc=none smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1766566907; c=relaxed/simple;
+	bh=IdhHESCbfV4q37Zk9vcG4CJ1b0S9nmD+dObf1YGwhrw=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YQI83Pt1pkIunIsP69V6vf6D2KkP2o+naxQTIEEyx49kuF0SLcDRTsokczR6lhQDv3xKg941SD8IZTyLif/j6pb4CRAZSiJm4EAV72rZayHXddxcmXIhRZly4Vp1DMiOLd7+0eeh1a9w9/ey5NPtFGSPVQvI1lqtMZSd0gJ60eg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=JrRlnldj; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eHdvNRe9"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-64951939e1eso8645192a12.1
-        for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2025 00:04:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1766563481; x=1767168281; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+TfuYlLvMaLWTZmZDZsnA49hO+ryorTTCnTkX2pKAFY=;
-        b=eHdvNRe9hkZqROWeFuDWFlc5wcSJy9zW490I34GWsdhhSgtxAcFToSHsGJwgFg2raq
-         AnwMicqHza3dD0uHLZDzYR1Ynjvk9FO5bpodkKYRMSWaffXnRwLnsGesRV9Iufl/Gm6W
-         0iCJD8fXjchWI9LyVnjjC9LoXNrJFkiTaNu00Ejb63kqZjpiMAiM0doIk9ti9XlQKb9z
-         5HEK0fNHFPD+PSYcYR4PccovDC7H22IZcQ4hsJjJVhG7MaH7tMc2cV5OoqT430ms53tZ
-         46eClMPO6msk1+4d2SDonlXKPegBIl/OHaZMdWXTWjAPmHHaAONMLd6M7pw8OOa5HmKq
-         Q2Ag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766563481; x=1767168281;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=+TfuYlLvMaLWTZmZDZsnA49hO+ryorTTCnTkX2pKAFY=;
-        b=VdDzQ8Qv4E+usaZpJe8GEW+kHXN+G+YcUYOqUHGqaNQOKX5vGPsGDnP/WLAi7bvy6U
-         LoN8xPWbg8H5qLmeaNwJ+Rio2j+jMbiX2S6X5PIIZ8k8fX6X1qyv9ro6a7GL06ID9GaX
-         y5E/knQOLO74ttRtjjgeQhRCqGdaptqYi4aeLTLp1BNHGkEy1yWzKWO1af2OfzJAGVcC
-         D2TmXsbOrZZRRMmkXxTvwzwmtRgR7LfimGuzuhA4XzXXVZxm2oabYBlq3hpKyVijJ9yv
-         5R6vX+wqi0KkA8m5mW8191ji1ZNQhEpO3QgB6J/OEyMZkshlCljmwNESSePD/z2xoCam
-         7kPg==
-X-Forwarded-Encrypted: i=1; AJvYcCUH+rvJLhr2Ca05jbbKPUkXQi9BGCwswc1HAAQRXXqFcAuIfUHEq1sxXlIBEZzdj8fX7IeNRSWo74k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YySKiKgrJTp1iHUdMJlBQG3bI55+XjonAcBiswYQqXW1dJlPxh7
-	/d6ypwEk7+ov99RJM1kNQ6RuXlgybWZhH9Chlmk/hrqYotZiK6kBPTlOMA167BNWol8IIg91rl9
-	5uQp08m2oRIH4Fm/hbDttgAl8N/qNDSs=
-X-Gm-Gg: AY/fxX7rcmv9zIwHryNQM8WtJVhHeC/RIRTrRr6UUMPnwGyyyEK/OCr73X/mMtpra+J
-	kwbot5CfrI3jNVOX+cYB+4M2Xo05Scp/d0KOP2Wq042bQFtAmkdzVkM8DwNzxHsbh5QnpMCiVC4
-	/1j3qUpFdQ9fjEehTpgq2kv3GWVUUH+OB4WIpnJqIasxFcMCBOAUCxq+dPtuP3J+1hPqeyKgMj3
-	/4lJavIzxk+Be2xnkfhtgvecBvFTspZdMnjJ2mrAFkFF7tyR8vjJSkU2bAKpOfZ3VM=
-X-Google-Smtp-Source: AGHT+IFNXz2QU01SE+DL2c1ZCqqAJiAT079DS2+XmSlL7nM5RGPoflTCsCJq7MHCePPbrmgdDllZFgH4/zk85C3yl5w=
-X-Received: by 2002:a05:6402:50cc:b0:64d:4a01:fc23 with SMTP id
- 4fb4d7f45d1cf-64d4a020dfamr9289029a12.10.1766563480975; Wed, 24 Dec 2025
- 00:04:40 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="JrRlnldj"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=3zzZNBQowhMsIB/7RZytqeIdQImGje7POVm8OpbwEG4=;
+	b=JrRlnldjD12qHhlyDRBsCCHXi5N6xT6c4SKTN0L1nEBVDHkCE5neZxU1ghIl3+apUebH81G+h
+	W3g9qCRryXk/9svbNIg6w1gZbLDiuGwakbSLu5zd3jsBxAuI6i2Ny3J5bQ1ogI1gxbqqm0fN+Fc
+	jktXraLJqKNEUT1QhHNYQK0=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4dbm4h69cxz12LKW;
+	Wed, 24 Dec 2025 16:58:28 +0800 (CST)
+Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
+	by mail.maildlp.com (Postfix) with ESMTPS id 43C7320104;
+	Wed, 24 Dec 2025 17:01:41 +0800 (CST)
+Received: from localhost.localdomain (10.50.85.180) by
+ kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 24 Dec 2025 17:01:40 +0800
+From: Ziming Du <duziming2@huawei.com>
+To: <bhelgaas@google.com>, <jbarnes@virtuousgeek.org>, <chrisw@redhat.com>,
+	<alex.williamson@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<liuyongqiang13@huawei.com>, <duziming2@huawei.com>
+Subject: [PATCH v2 1/3] PCI/sysfs: Fix null pointer dereference during hotplug
+Date: Wed, 24 Dec 2025 17:27:17 +0800
+Message-ID: <20251224092721.2034529-2-duziming2@huawei.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20251224092721.2034529-1-duziming2@huawei.com>
+References: <20251224092721.2034529-1-duziming2@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1763415705.git.geraldogabriel@gmail.com>
- <eaa9c75ca02a53f8bcc293b8bc73d013e26ec253.1763415706.git.geraldogabriel@gmail.com>
- <CANAwSgQ726J_vnDKEKd94Kq62kx8ToZzUGysz4r3tNAXvfAbGA@mail.gmail.com> <CAEsQvctSY7-RQEQF2TmJU2qKPZOe9TC5g-7Jat0LQKRHYz_6dQ@mail.gmail.com>
-In-Reply-To: <CAEsQvctSY7-RQEQF2TmJU2qKPZOe9TC5g-7Jat0LQKRHYz_6dQ@mail.gmail.com>
-From: Anand Moon <linux.amoon@gmail.com>
-Date: Wed, 24 Dec 2025 13:34:23 +0530
-X-Gm-Features: AQt7F2qzfCdogAfkIVvQ40sYz72XmKQPz1kBLtv40YPxaEuaYu_edJzXc4ZwP9s
-Message-ID: <CANAwSgQPQUBi6VVb+hZNraMt71vnRpki+YK_at=Luo4aPVtOPg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/4] PCI: rockchip: limit RK3399 to 2.5 GT/s to prevent damage
-To: Geraldo Nascimento <geraldogabriel@gmail.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Heiko Stuebner <heiko@sntech.de>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Johan Jonker <jbx6244@gmail.com>, Dragan Simic <dsimic@manjaro.org>, 
-	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	devicetree@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemr500012.china.huawei.com (7.202.195.23)
 
-Hi Geraldo,
+During the concurrent process of creating and rescanning in VF, the
+resource files for the same pci_dev may be created twice. The second
+creation attempt fails, resulting the res_attr in pci_dev to kfree(),
+but the pointer is not set to NULL. This will subsequently lead to
+dereferencing a null pointer when removing the device.
 
-On Wed, 24 Dec 2025 at 11:08, Geraldo Nascimento
-<geraldogabriel@gmail.com> wrote:
->
-> On Wed, Dec 24, 2025 at 2:18=E2=80=AFAM Anand Moon <linux.amoon@gmail.com=
-> wrote:
-> >
-> > Hi Geraldo,
-> >
-> > On Tue, 18 Nov 2025 at 03:17, Geraldo Nascimento
-> > <geraldogabriel@gmail.com> wrote:
-> > >
-> > > Shawn Lin from Rockchip has reiterated that there may be danger in us=
-ing
-> > > their PCIe with 5.0 GT/s speeds. Warn the user if they make a DT chan=
-ge
-> > > from the default and drive at 2.5 GT/s only, even if the DT
-> > > max-link-speed property is invalid or inexistent.
-> > >
-> > > This change is corroborated by RK3399 official datasheet [1], which
-> > > says maximum link speed for this platform is 2.5 GT/s.
-> > >
-> > > [1] https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Dat=
-asheet_V2.1-20200323.pdf
-> > >
-> > To accurately determine the operating speed, we can leverage the
-> > PCIE_CLIENT_BASIC_STATUS0/1 fields.
-> > This provides a dynamic mechanism to resolve the issue.
-> >
-> > [1] https://github.com/torvalds/linux/blob/master/drivers/pci/controlle=
-r/pcie-rockchip-ep.c#L533-L595
-> >
-> > Thanks
-> > -Anand
->
-> Hi Anand,
->
-> not to put you down but I think your approach adds unnecessary complexity=
-.
->
-> All I care really is that the Kernel Project isn't blamed in the
-> future if someone happens to lose their data.
->
-Allow the hardware to negotiate the link speed based on the available
-number of lanes.
-I don=E2=80=99t anticipate any data loss, since PCIe will automatically
-configure the device speed
-with link training..
+When we perform the following operation:
+  echo $vfcount > /sys/class/net/"$pfname"/device/sriov_numvfs &
+  sleep 0.5
+  echo 1 > /sys/bus/pci/rescan
+  pci_remove "$pfname"
+system will crash as follows:
 
-> Thanks,
-> Geraldo Nascimento
+  Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+  Call trace:
+   __pi_strlen+0x14/0x150
+   kernfs_find_ns+0x54/0x120
+   kernfs_remove_by_name_ns+0x58/0xf0
+   sysfs_remove_bin_file+0x24/0x38
+   pci_remove_resource_files+0x44/0x90
+   pci_remove_sysfs_dev_files+0x28/0x40
+   pci_stop_bus_device+0xb8/0x118
+   pci_stop_and_remove_bus_device+0x20/0x40
+   pci_iov_remove_virtfn+0xb8/0x138
+   sriov_disable+0xbc/0x190
+   pci_disable_sriov+0x30/0x48
+   hinic_pci_sriov_disable+0x54/0x138 [hinic]
+   hinic_remove+0x140/0x290 [hinic]
+   pci_device_remove+0x4c/0xf8
+   device_remove+0x54/0x90
+   device_release_driver_internal+0x1d4/0x238
+   device_release_driver+0x20/0x38
+   pci_stop_bus_device+0xa8/0x118
+   pci_stop_and_remove_bus_device_locked+0x28/0x50
+   remove_store+0x128/0x208
 
-Thanks
--Anand
+Fix this by set the pointer to NULL after releasing res_attr immediately.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Ziming Du <duziming2@huawei.com>
+---
+ drivers/pci/pci-sysfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c2df915ad2d2..7e697b82c5e1 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1222,12 +1222,14 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
+ 		if (res_attr) {
+ 			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+ 			kfree(res_attr);
++			pdev->res_attr[i] = NULL;
+ 		}
+ 
+ 		res_attr = pdev->res_attr_wc[i];
+ 		if (res_attr) {
+ 			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+ 			kfree(res_attr);
++			pdev->res_attr_wc[i] = NULL;
+ 		}
+ 	}
+ }
+-- 
+2.43.0
+
