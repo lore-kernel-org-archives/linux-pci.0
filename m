@@ -1,85 +1,104 @@
-Received: from sg-1-100.ptr.blmpb.com (sg-1-100.ptr.blmpb.com [118.26.132.100])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19DA25F96D
-	for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2025 02:50:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CFF922A813;
+	Wed, 24 Dec 2025 03:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766544649; cv=none; b=EqGCaHtq1bFNSQRyqUKKQ8Gj2JD49MQYAjY1q6lVtTSgT68O5JLvaQSQW+i1+a93eHxo8oSEbV7K7fk+jBkD4pXwQEfZon76OASRzKBMEnVPdw1kQ2clCV6MrG6ztiLIkTXtmOIVrhc1eLcohiv1pAROv/7ENfKYvYqaKGGeKs4=
+	t=1766545918; cv=none; b=EioBI5Ad4mWDzZNkY81AcJk+grNx0FVdkg8EXVoNLet7MUdTSGalwVjj1AOqACPGhZLyleTaUE1pVXEuqRyT6iOa5BKs/rRXSmnjDtELjYJnlzN5/uE1VKQUqu4qcJjpgvQm1Qr+Dpd5fNpS+GKFQTfL6087RtMorDjkg8Puo48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766544649; c=relaxed/simple;
-	bh=e5J9U2PBZTp+nSD5ggSqV6j/red+8U7sXfQFl+3BFFI=;
-	h=Subject:Mime-Version:Content-Type:To:Message-Id:References:Cc:
-	 From:Date:In-Reply-To; b=b+SGvtKwu/HAlZYaMSSshPm0evYy7jHodia7bceTA4M3hKoZlyZFx4vmC37nWnAthrt7ZVoqZb6N4Dto8hlV3rvQsMqbaX9GhJJ1/YOUkcLPp27TOLSgNcOfi5jYON+7Cgki8X9BvuCBSzVefDjfXSO+XWrwh3Fw7z03PIipDLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=IdKoGFst; arc=none smtp.client-ip=118.26.132.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="IdKoGFst"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1766544636; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=XAeHn9rSAVJe+8IzICW1NXj8yb4Y0Pr455cExrwCfnA=;
- b=IdKoGFst8fW8KC/nYCjOkieCIYBhVzUKYyHhOmSPMk0Dla28+A+tCc9y5LpSe9J6LzEVvf
- zeW6+i7zAvDmjKpr91slCS9c927vc1LCHoXBl9hHZef42PjcVF9/prFqMu/1owBL38uwrv
- BLHgIMG3n6pQtd0UcaTVGf5jDjUoJVok2FgkXaXCeY4p9/m5IWntDxdLEw3gwf9j50W/sx
- bCHCtVJJ8QxhE/6bFWwM2vLVdxHb6/C/MnztkHodixsBpbw4vxUSYg2a3vK2+TkE3myf5w
- oNDrc8Hb7WxzcIZ1mcuXpGCyMznE7QjTViN1Lakhl72lB60xAY3nPQn7UvYBqA==
-Subject: Re: [RESEND PATCH] vfio/pci: Skip hot reset on Link-Down
+	s=arc-20240116; t=1766545918; c=relaxed/simple;
+	bh=22WFEpVhx6O5d9AfQJ0a+wyuclxh8J0/RzaBW+QazLs=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=idVbUrXzbuN6EueJ4SHccTjVW/rY/SClbB2EwqV6Jk3oLX8QvifFqmLbgvCY0hAaVYrKNhAnOAVexvEq/YeYoyX2kaApDecl3gkWzaMosAxazPSKVnfDFZ7NqFgx09IhcUmVZ6la+FkA+vHcW9lw1UWVacSWJMVPyEYqk3Ycszk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [127.0.0.2] (unknown [114.241.82.59])
+	by APP-05 (Coremail) with SMTP id zQCowADHXBDPWUtpQzS6AQ--.32153S5;
+	Wed, 24 Dec 2025 11:11:12 +0800 (CST)
+From: Vivian Wang <wangruikang@iscas.ac.cn>
+Date: Wed, 24 Dec 2025 11:10:51 +0800
+Subject: [PATCH 3/5] drm/radeon: Raise msi_addr_mask to 40 bits for
+ pre-Bonaire
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: <alex@shazbot.org>
-Message-Id: <20251224025023.715-1-guojinhui.liam@bytedance.com>
-References: <20251223153534.0968cc15.alex@shazbot.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Cc: <guojinhui.liam@bytedance.com>, <kvm@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From: "Jinhui Guo" <guojinhui.liam@bytedance.com>
-Date: Wed, 24 Dec 2025 10:50:23 +0800
-In-Reply-To: <20251223153534.0968cc15.alex@shazbot.org>
-X-Mailer: git-send-email 2.17.1
-X-Original-From: Jinhui Guo <guojinhui.liam@bytedance.com>
-X-Lms-Return-Path: <lba+2694b54fa+c4d4ae+vger.kernel.org+guojinhui.liam@bytedance.com>
+Message-Id: <20251224-pci-msi-addr-mask-v1-3-05a6fcb4b4c0@iscas.ac.cn>
+References: <20251224-pci-msi-addr-mask-v1-0-05a6fcb4b4c0@iscas.ac.cn>
+In-Reply-To: <20251224-pci-msi-addr-mask-v1-0-05a6fcb4b4c0@iscas.ac.cn>
+To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ Alex Deucher <alexander.deucher@amd.com>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ Brett Creeley <brett.creeley@amd.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Takashi Iwai <tiwai@suse.com>
+Cc: Han Gao <gaohan@iscas.ac.cn>, linuxppc-dev@lists.ozlabs.org, 
+ linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org, 
+ dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+ Vivian Wang <wangruikang@iscas.ac.cn>
+X-Mailer: b4 0.14.3
+X-CM-TRANSID:zQCowADHXBDPWUtpQzS6AQ--.32153S5
+X-Coremail-Antispam: 1UD129KBjvJXoW7Wr1xWFW7JryDKr1UWrW7Jwb_yoW8JF1kpa
+	98Ca9xKrZIy34jka9rCa9rZF15Aa18KayrGrZrG3y3Ww1YyFyj9FZIvw17Jw1kXr1vgr4j
+	vFy8Ga1rZF109FJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
+	e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
+	8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
+	jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
+	kIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_
+	Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1V
+	AY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAI
+	cVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMI
+	IF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnI
+	WIevJa73UjIFyTuYvjTRM6wCDUUUU
+X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
 
-On Tue, 23 Dec 2025 15:35:34 -0700, Alex Williamson wrote:
-> On Mon, 15 Dec 2025 20:30:29 +0800
-> "Jinhui Guo" <guojinhui.liam@bytedance.com> wrote:
-> 
-> > On hot-pluggable ports, simultaneous surprise removal of multiple
-> > PCIe endpoints whether by pulling the card, powering it off, or
-> > dropping the link can trigger a system deadlock.
-> 
-> I think this only identifies one small aspect of the problems with
-> surprise removal and vfio-pci.  It's not just the release path of the
-> device that can trigger a reset, there are various user accessible
-> paths as well, ex. the vfio reset and hot-reset ioctls.  I think those
-> can trigger this same deadlock.
-> 
-> Beyond reset, CPU and DMA mappings to the device are still present after
-> a surprise removal.  The latter can really only be revoked using the
-> new dma-buf support for MMIO regions.
-> 
-> I think we should take a more comprehensive look at enabling vfio-pci to
-> support surprise removal beyond this one case where a cooperative guest
-> promptly released the device and encountered a deadlock.
-> 
-> In doing so, I think we're going to see several more cases where we
-> should test for a disconnected device before reset, some of those may
-> suggest that PCI-core is actually the better place for the test rather
-> than the leaf caller.  Thanks,
-> 
-> Alex
+The code was originally written using no_64bit_msi, which restricts the
+device to 32-bit MSI addresses.
 
-Hi, Alex
+Since msi_addr_mask is introduced, use DMA_BIT_MASK(40) instead of
+DMA_BIT_MASK(32) here for msi_addr_mask, describing the restriction more
+precisely and allowing these devices to work on platforms with MSI
+doorbell address above 32-bit space, as long as it is within the
+hardware restriction of 40-bit space.
 
-Thank you for your time and helpful suggestions. I will follow up with
-deeper research on adding surprise-removal support to vfio-pci.
+Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
+---
+ drivers/gpu/drm/radeon/radeon_irq_kms.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Best Regards,
-Jinhui
+diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+index d550554a6f3f..ea519d43348b 100644
+--- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
++++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
+@@ -251,8 +251,8 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
+ 	 * IBM POWER servers, so we limit them
+ 	 */
+ 	if (rdev->family < CHIP_BONAIRE) {
+-		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
+-		rdev->pdev->msi_addr_mask = DMA_BIT_MASK(32);
++		dev_info(rdev->dev, "radeon: MSI limited to 40-bit\n");
++		rdev->pdev->msi_addr_mask = DMA_BIT_MASK(40);
+ 	}
+ 
+ 	/* force MSI on */
+
+-- 
+2.51.2
+
