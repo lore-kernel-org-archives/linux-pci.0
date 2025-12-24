@@ -1,172 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m155106.qiye.163.com (mail-m155106.qiye.163.com [101.71.155.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AAB0194A76;
-	Wed, 24 Dec 2025 09:22:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50CB1330B3E
+	for <linux-pci@vger.kernel.org>; Wed, 24 Dec 2025 10:06:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766568168; cv=none; b=ZJ8sV7PCZg91Zio41nuiHo1SBCs0IVpaBbgsGzU8VYEVYlEFLVzvdsmOmWSjgsLS98rfT+2FoknbXFNJnGo6TjgkhILcBGW4x24wlox6HlJtU9pZOau2swrYx9wsKS0wz+uZZtqaNM+ZEXHTPXBqguVVGB1qEFSkD8uBEZPDSzU=
+	t=1766570792; cv=none; b=JQl5aclklOyz2LHhox3RAFcU/IC7TR1V1JydaiifWJz5950+6R8uctXzLyIsNa0o2BQGeiekIr0RZtfRSOs2qX5VvqWFdFJib2XaRljXm+dbmuHH68WuzXhjNh/Ckc+H3ton4575pV9irYqZI/m18sHUuUDN9E2hVAsqi03+HE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766568168; c=relaxed/simple;
-	bh=9OEO/JCs0BjLukCm//EkrDbgU9VMrzlMsA88lCY5hGc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EgKMS5E75P0Xxdrp8PfHE6TYOxBRUVjQBKVNvRny4q5la9Tinj9t8/ZtWd3nVmbIMYtFoRyR0JTwN6tJhgnM6wciVvYtCMgaSZRZCT0YT6pOGO1sMrlbmPnCCGgHHKCG2vhGa8bzohlXuK/qEjUCmwZahSBkY5uSSxP5Mz8lgmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BCkI51xV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766570792; c=relaxed/simple;
+	bh=ApeN29qgwg0pWjlQfDGpv/UZrZR6jqTxtfsBV2jguAM=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=PHZw8SiEYwgfN5QA75DCaDHQt/a9BePk66eeW+8rQnSVja8UZVNqUnD/AE4dS5WccJLo5sds6mGBZemy8kpTKjpKUFaOoiwOnr6LbEZzJtmgZ1tD1pjls04hleX2+xeOLRkx9OsV7vZx3yf7Z2pwmZG8n39ga+9JKdMH6X8MKmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=R5uSlLo7; arc=none smtp.client-ip=101.71.155.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BCkI51xV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21A6EC4CEFB;
-	Wed, 24 Dec 2025 09:22:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766568167;
-	bh=9OEO/JCs0BjLukCm//EkrDbgU9VMrzlMsA88lCY5hGc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BCkI51xVQCyd338Mh8k6YDydutGxW9LmK1CZQTQOp9ZNqX6dJ8MesvyXVBlPUP5rd
-	 UiAtC+tgEIeqZCTuAG9axT7FHxvnsXz1iPbuLahLRMXMSGzdxvZFuTmF8WQ7V5R5/S
-	 tNBBHQ50i61ChoLK+Gm43OowSe75BX05sloy512mIvMTWtRS0mpc/i44AmziYybD21
-	 U4MC8Hl+0ZCGiGDxAm+HKsa8sWadq6NKd5D3W7Rsk3iyLfdXAvgJYzo0mA9Z5OWIbK
-	 kTTmdzZ/q0bg1IuxI41xhsaQwdjS845Op6Jh/ai49K58EEjfjfay4UD62j5jtnkLwE
-	 tVgdauP5tojoQ==
-Date: Wed, 24 Dec 2025 11:22:43 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Hou Tao <houtao@huaweicloud.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org, linux-nvme@lists.infradead.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
-	Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	houtao1@huawei.com
-Subject: Re: [PATCH 00/13] Enable compound page for p2pdma memory
-Message-ID: <20251224092243.GG11869@unreal>
-References: <20251220040446.274991-1-houtao@huaweicloud.com>
- <20251221121915.GJ13030@unreal>
- <416b2575-f5e7-7faf-9e7c-6e9df170bf1a@huaweicloud.com>
- <996c64ca-8e97-2143-9227-ce65b89ae35e@huaweicloud.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="R5uSlLo7"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 2e6ab1f19;
+	Wed, 24 Dec 2025 18:01:09 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-rockchip@lists.infradead.org,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] PCI: dw-rockchip: Disable BAR 0 and BAR 1 for RC mode
+Date: Wed, 24 Dec 2025 18:01:01 +0800
+Message-Id: <1766570461-138256-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+X-HM-Tid: 0a9b4fce266e09cckunm298113b63e6deb
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGRlDHVYYTB5CTh9DSkpKGUhWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=R5uSlLo7bMODDKI359E3dWoqT+7y4ciKWlllh+fSLdV0NNq5aVTYhCf2M5ZjF29CDjvzkYeFQ4vhrwO8m5i7UFNN4IJE9FwCZiorKoJ04tHldq0M5wMlQ21xt7SCEy8/hEeqN+NQ+eq2vaJrfaQettxkhndJ4KNqusB4klR4YBg=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=gRw7JySXySjIwbtv2EmWdYL6jpAHHp6rm5lyTwVN6Bo=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <996c64ca-8e97-2143-9227-ce65b89ae35e@huaweicloud.com>
 
-On Wed, Dec 24, 2025 at 09:37:39AM +0800, Hou Tao wrote:
-> 
-> 
-> On 12/24/2025 9:18 AM, Hou Tao wrote:
-> > Hi,
-> >
-> > On 12/21/2025 8:19 PM, Leon Romanovsky wrote:
-> >> On Sat, Dec 20, 2025 at 12:04:33PM +0800, Hou Tao wrote:
-> >>> From: Hou Tao <houtao1@huawei.com>
-> >>>
-> >>> Hi,
-> >>>
-> >>> device-dax has already supported compound page. It not only reduces the
-> >>> cost of struct page significantly, it also improve the performance of
-> >>> get_user_pages when 2MB or 1GB page size is used. We are experimenting
-> >>> to use p2p dma to directly transfer the content of NVMe SSD into NPU.
-> >> I’ll admit my understanding here is limited, and lately everything tends  
-> >> to look like a DMABUF problem to me. Could you explain why DMABUF support 
-> >> is not being used for this use case?
-> > I have limited knowledge of dma-buf, so correct me if I am wrong. It
-> > seems that as for now there is no available way to use the dma-buf to
-> > read/write files. For the userspace vaddr backended by  the dma-buf, it
-> > is a PFN mapping, get_user_pages() will reject such address.
-> 
-> Hit the send button too soon :) So In my understanding, the advantage of
-> dma-buf is that it doesn't need struct page.
+To slitence the useless bar allocation error log of RC when
+scanning bus, as RC doesn't need BARs at all.
 
-The primary advantage of dma-buf is that it provides a safe mechanism for
-sharing a DMA region between devices or subsystems. This allows reliable
-p2p communication between two devices. For example, a GPU and an RDMA NIC
-can share a memory region for data transfer.
+  pci 0000:00:00.0: [1d87:3588] type 01 class 0x060400 PCIe Root Port
+  pci 0000:00:00.0: BAR 0 [mem 0x00000000-0x3fffffff]
+  pci 0000:00:00.0: BAR 1 [mem 0x00000000-0x3fffffff]
+  pci 0000:00:00.0: ROM [mem 0x00000000-0x0000ffff pref]
+	...
+  pci 0000:00:00.0: BAR 0 [mem 0x900000000-0x93fffffff]: assigned
+  pci 0000:00:00.0: BAR 1 [mem size 0x40000000]: can't assign; no space
+  pci 0000:00:00.0: BAR 1 [mem size 0x40000000]: failed to assign
+  pci 0000:00:00.0: ROM [mem 0xf0200000-0xf020ffff pref]: assigned
+  pci 0000:00:00.0: BAR 0 [mem 0x900000000-0x93fffffff]: releasing
+  pci 0000:00:00.0: ROM [mem 0xf0200000-0xf020ffff pref]: releasing
+  pci 0000:00:00.0: BAR 0 [mem 0x900000000-0x93fffffff]: assigned
+  pci 0000:00:00.0: BAR 1 [mem size 0x40000000]: can't assign; no space
+  pci 0000:00:00.0: BAR 1 [mem size 0x40000000]: failed to assign
 
-The ability to operate without a struct page is an important part of this
-design.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-> and it also means that it needs special handling to support IO
-> from/to dma-buf (e.g.,  [RFC v2 00/11] Add dmabuf read/write via io_uring [1])
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-It looks like that read/write support is needed for IO data transfer,
-but you talked about CMB.
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index f8605fe..e421fa0 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -80,6 +80,8 @@
+ #define  PCIE_LINKUP_MASK		GENMASK(17, 16)
+ #define  PCIE_LTSSM_STATUS_MASK		GENMASK(5, 0)
+ 
++#define PCIE_TYPE0_HDR_DBI2_OFFSET      0x100000
++
+ struct rockchip_pcie {
+ 	struct dw_pcie pci;
+ 	void __iomem *apb_base;
+@@ -292,6 +294,8 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
+ 	if (irq < 0)
+ 		return irq;
+ 
++	pci->dbi_base2 = pci->dbi_base + PCIE_TYPE0_HDR_DBI2_OFFSET;
++
+ 	ret = rockchip_pcie_init_irq_domain(rockchip);
+ 	if (ret < 0)
+ 		dev_err(dev, "failed to init irq domain\n");
+@@ -302,6 +306,10 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
+ 	rockchip_pcie_configure_l1ss(pci);
+ 	rockchip_pcie_enable_l0s(pci);
+ 
++	/* Disable RC's BAR0 and BAR1 */
++	dw_pcie_writel_dbi2(pci, PCI_BASE_ADDRESS_0, 0x0);
++	dw_pcie_writel_dbi2(pci, PCI_BASE_ADDRESS_1, 0x0);
++
+ 	return 0;
+ }
+ 
+-- 
+2.7.4
 
-I would imagine that NVMe exported CMB through dmabuf and your NPU will
-import it without need to do any read/write at all.
-
-Thanks
-
-> 
-> [1]
-> https://lore.kernel.org/io-uring/cover.1763725387.git.asml.silence@gmail.com/
-> >> Thanks
-> >>
-> >>> The size of NPU HBM is 32GB or larger and there are at most 8 NPUs in
-> >>> the host. When using the base page, the memory overhead is about 4GB for
-> >>> 128GB HBM, and the mapping of 32GB HBM into userspace takes about 0.8
-> >>> second. Considering ZONE_DEVICE memory type has already supported the
-> >>> compound page, enabling the compound page support for p2pdma memory as
-> >>> well. After applying the patch set, when using the 1GB page, the memory
-> >>> overhead is about 2MB and the mmap costs about 0.04 ms.
-> >>>
-> >>> The main difference between the compound page support of device-dax and
-> >>> p2pdma is that p2pdma inserts the page into user vma during mmap instead
-> >>> of page fault. The main reason is simplicity. The patch set is
-> >>> structured as shown below:
-> >>>
-> >>> Patch #1~#2: tiny bug fixes for p2pdma
-> >>> Patch #3~#5: add callbacks support in kernfs and sysfs, include
-> >>> pagesize, may_split and get_unmapped_area. These callbacks are necessary
-> >>> for the support of compound page when mmaping sysfs binary file.
-> >>> Patch #6~#7: create compound page for p2pdma memory in the kernel. 
-> >>> Patch #8~#10: support the mapping of compound page in userspace. 
-> >>> Patch #11~#12: support the compound page for NVMe CMB.
-> >>> Patch #13: enable the support for compound page for p2pdma memory.
-> >>>
-> >>> Please see individual patches for more details. Comments and
-> >>> suggestions are always welcome.
-> >>>
-> >>> Hou Tao (13):
-> >>>   PCI/P2PDMA: Release the per-cpu ref of pgmap when vm_insert_page()
-> >>>     fails
-> >>>   PCI/P2PDMA: Fix the warning condition in p2pmem_alloc_mmap()
-> >>>   kernfs: add support for get_unmapped_area callback
-> >>>   kernfs: add support for may_split and pagesize callbacks
-> >>>   sysfs: support get_unmapped_area callback for binary file
-> >>>   PCI/P2PDMA: add align parameter for pci_p2pdma_add_resource()
-> >>>   PCI/P2PDMA: create compound page for aligned p2pdma memory
-> >>>   mm/huge_memory: add helpers to insert huge page during mmap
-> >>>   PCI/P2PDMA: support get_unmapped_area to return aligned vaddr
-> >>>   PCI/P2PDMA: support compound page in p2pmem_alloc_mmap()
-> >>>   PCI/P2PDMA: add helper pci_p2pdma_max_pagemap_align()
-> >>>   nvme-pci: introduce cmb_devmap_align module parameter
-> >>>   PCI/P2PDMA: enable compound page support for p2pdma memory
-> >>>
-> >>>  drivers/accel/habanalabs/common/hldio.c |   3 +-
-> >>>  drivers/nvme/host/pci.c                 |  10 +-
-> >>>  drivers/pci/p2pdma.c                    | 140 ++++++++++++++++++++++--
-> >>>  fs/kernfs/file.c                        |  79 +++++++++++++
-> >>>  fs/sysfs/file.c                         |  15 +++
-> >>>  include/linux/huge_mm.h                 |   4 +
-> >>>  include/linux/kernfs.h                  |   3 +
-> >>>  include/linux/pci-p2pdma.h              |  30 ++++-
-> >>>  include/linux/sysfs.h                   |   4 +
-> >>>  mm/huge_memory.c                        |  66 +++++++++++
-> >>>  10 files changed, 339 insertions(+), 15 deletions(-)
-> >>>
-> >>> -- 
-> >>> 2.29.2
-> >>>
-> >>>
-> 
-> 
