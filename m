@@ -1,232 +1,89 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mail-m32116.qiye.163.com (mail-m32116.qiye.163.com [220.197.32.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28644313287
-	for <linux-pci@vger.kernel.org>; Fri, 26 Dec 2025 03:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A55DA2417F2;
+	Fri, 26 Dec 2025 05:14:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766719281; cv=none; b=JYgJWyeyWCtRB87iamogoY7ppBxeWQ9iyBspE1OEt5cqcAiSUhx696JyPfFyhskHUIg5ERYaG/loF1irIhepfJ3kDP7tVGSdwnjFh9h2Uklmn58LBOvIwAaNRJ0DexFbv935y4ZvcmeXv3biOYW+rZfkmbvRZgribB9a+y7+DRU=
+	t=1766726101; cv=none; b=rnM60QG0h8RXYt1RspUmo9y9zJQXKMkkzecfXXPKxFj66kVcNsEzwyTNbhKHb2hXNSrzP4KLZRgzCEHcZ2O3n3lrheYdh7uWSTAB7xVIPGmNJEsea43Ax6EP+C/HBxCp0UG2cKS2+J8/bApDTlN2RxDLexQm/KDwUKnfl3FdzeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766719281; c=relaxed/simple;
-	bh=y/+bcKUPZ2qPkgiB+TP48kY5Y7VCKR6l2NOE4CGOIto=;
-	h=From:Message-ID:Date:MIME-Version:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=n3Vd32XAf+OvsMYW0KreURpPPOgyCtxWZVAEjqvo68roJUdvZ1RU5gxVDv/Zg1YuGysFnXM5LAroE9ZTEoEGpMzJbUl9Q5saEPEw/Jv4HRMySH7FJLFsaRYx0PBNIyLvvxW2GkZ4UhwcoIL6E7kG3zsEs3ZE4VB/byPa/y8aBHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SQKBLgM6; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=PRXDXJvE; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1766726101; c=relaxed/simple;
+	bh=mfXfxaKgCYw6qoxlrZsUW3J8KjeqDxuHUi7gTw1kqnU=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=ShigB0Vg+jqD6GGiY5b+lGQl344ybS8IOAt+uKTbBgPth2k4Zdr/EyzHLN9vxI1gpsLz1J44gdegRO80JR3EKq6mK9/po979Y0y2rvSTrecQ8cz4nZ4WVHYxDpsh45xpHVdpaEpPxKtwpjEkrJM6oDbpGN7WdjPOAO/wO+nreG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=IYrtT/aM; arc=none smtp.client-ip=220.197.32.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SQKBLgM6";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="PRXDXJvE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1766719277;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=dKHp6uC5zNb3gZSMB9BQPFV3o9H0iVs2RJyYgnJbrKc=;
-	b=SQKBLgM6bKLYePxUlnJJS61R+Ob/e76i8C5+xTjJmXm43xJ1Ohx/HBC/iP7t9KBJTWTXhl
-	U2ARbSZrwzh5kLIN6xxb+UO6Ezo8mGlWOvU1xCX5GhaEgDAVQVZOlye5xkHuGUITtJ2iNN
-	2q3cjoDHQnzUv4I+XW4ougj1IICB3yE=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-163-j1NiIMvOPhC9UAiIpCUXig-1; Thu, 25 Dec 2025 22:21:15 -0500
-X-MC-Unique: j1NiIMvOPhC9UAiIpCUXig-1
-X-Mimecast-MFC-AGG-ID: j1NiIMvOPhC9UAiIpCUXig_1766719274
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-bc09a8454b9so16783514a12.1
-        for <linux-pci@vger.kernel.org>; Thu, 25 Dec 2025 19:21:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1766719274; x=1767324074; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=dKHp6uC5zNb3gZSMB9BQPFV3o9H0iVs2RJyYgnJbrKc=;
-        b=PRXDXJvEwPCO/NDTuBO+Sy8aPSc3/ThqX//r9y9c+0Sc5GuZ7Pch/T1vn6saYxhAgB
-         baUWlEnY2ZwgybqcuP2u+GauFfXsW86cHdc3XekFVW2WbOvQ7gd2LQWLyjEDsTG9fkFf
-         RRqcmoloU7VBqhkh4EkUU5imUs3Gld+N2hf8xMlXhcVtktoHgXgX4k56PDF1CGGNFfbh
-         NV/YjcQwO0vHdvn3oFCGihDFuIf1h8cJB1gGrJ5EuzWD/Sc5kpD02mjjMHLx50NuOPj2
-         pPZRd4qnktx0QVjRF1PDfP8uO1iXqceo3slvUPrE9Y3GT/XdBzQ7kZGsG35eG0qW4qCm
-         HpBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766719274; x=1767324074;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dKHp6uC5zNb3gZSMB9BQPFV3o9H0iVs2RJyYgnJbrKc=;
-        b=bPBPkYtbnRbQqJZL9p10dECcdIg2i18BAvbjRyk+t0QN7za3s3L40eVg8HhFjh5SpP
-         TgnbrzklR9z/XTztdDqZ5wN7B238vwJbR4+mh8Cufrh02+2/fsbMNue9pnFYAy8/d2oV
-         tZliJ1ShONyBw858TzIN3pC4cqGH61ef7INCcIdz9JWw6IyZX0qDuIeeo04a+e+Y3hzK
-         6XYJ7YfV3H6R37BgYEbSDK8LgOL1/sCtuDg3HTmKL1pMZaqlcPlZk9jy9twme7JqRsOz
-         JTBEdn8WbaJbuk9RsM9ZvxIrDhG/R5fOk2hy9u/WClby/14U/KVb+X+a/rHIErC3aV3h
-         d5ug==
-X-Forwarded-Encrypted: i=1; AJvYcCWwMOtwRv3K6TOyDy8UZFLzhRAkz3zRaVXr6dgbah9O2OidMRZbzRI2f4d1/7V99wKhyOyDl5ILqmU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzGjSvoKvHUc4Q8MZzWM4GfF/7UdOwcmETAxyXz9P6yHllM/uEo
-	DrGnZ8WKr11X6tJwMDm1Bkhurx8uAOyc/srBcd5K8JLccrYG07g+sT1B4gYq1ifVDHBkPKqul04
-	94QmPabRhEwiAu9xkq24ElP4PoNG4KBLYOaY7VAwDRWwSiDCLYjWx7nL3XLZmNg==
-X-Gm-Gg: AY/fxX6eijYIPS/odnVpTsai9KZ7tmhh8uoB+/xGlS7jvAJ9WhDPGnNt5Qpf2rThxW3
-	uFKNT1QCkWN1DR/OOOmCzAk4CSjNsa9Hz25CF4bGc6SQVONn/aEu92OHXLLhj/h3YOm0qW8S3CD
-	VBT/qj4ZgHpMpHjrhogpkGsqAV1azcY30YKKRE1mNjLG8cVo50HivqCFlzMXjzQeF6wOzHBGvC8
-	gtbuZ9TRE6Gx4v5u+aW+EHufHWnfpQjR0p0ojfdGzYFm8mStjAGXwNdgF4L8T4f86q42XR4lJwA
-	h4WC7KvRlWG6VUwQiACQ96isUVTWk1S9jkELKwQRkHoakFf5TUbKoorQqwrnEp+hjVPv/XEno71
-	F+UmpI3efkNBBIhWwwxj2jpfCm9G5HGG2spT0vbF1N42CmWEHovryMEW7
-X-Received: by 2002:a05:7022:f902:20b0:11c:b3ad:1fe1 with SMTP id a92af1059eb24-121722b1a7bmr20900987c88.11.1766719274177;
-        Thu, 25 Dec 2025 19:21:14 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFrRbO/uTv2AgLdwLaHgNpsWrHMXpzUWqpTKYvMicj4UtKVHtP6aAiwD9wbO4xGgVHronC7tQ==
-X-Received: by 2002:a05:7022:f902:20b0:11c:b3ad:1fe1 with SMTP id a92af1059eb24-121722b1a7bmr20900963c88.11.1766719273695;
-        Thu, 25 Dec 2025 19:21:13 -0800 (PST)
-Received: from ?IPV6:2601:600:947f:f020:85dc:d2b2:c5ee:e3c4? ([2601:600:947f:f020:85dc:d2b2:c5ee:e3c4])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-121724cfd95sm80252105c88.1.2025.12.25.19.21.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 25 Dec 2025 19:21:13 -0800 (PST)
-From: Waiman Long <llong@redhat.com>
-X-Google-Original-From: Waiman Long <longman@redhat.com>
-Message-ID: <5b019a5c-1db4-41d9-aca9-2e3eaf1cece9@redhat.com>
-Date: Thu, 25 Dec 2025 22:20:59 -0500
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="IYrtT/aM"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 2e9a89ae4;
+	Fri, 26 Dec 2025 09:45:35 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] Documentation: PCI: Fix typos in msi-howto.rst
+Date: Fri, 26 Dec 2025 09:45:28 +0800
+Message-Id: <1766713528-173281-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+X-HM-Tid: 0a9b58552ba009cckunm31c4f13342403
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGUlOGlZOGU8aTxoYSx5KSx5WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=IYrtT/aMUiSUyux9X4vpZoI8eep4bwFwFg7jefAm0s4iVPKdYddg0Nc3He/5RSVhwGoFxfSkljxkes7vINl2kwtOt+HJ6JOUXYStxuZNZ7VqjoDo7hYXVVxnmEbA+FrGXDFCrxgDYtBplha2FMZmfZJUV5yKU6T57sjuULs14lU=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=+DZC92+bjqJ2ll3eiWRaOZBWxu8Gx0vvt2BNRAllEa0=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 14/33] cpuset: Update HK_TYPE_DOMAIN cpumask from cpuset
-To: Frederic Weisbecker <frederic@kernel.org>,
- LKML <linux-kernel@vger.kernel.org>
-Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Chen Ridong <chenridong@huawei.com>, Danilo Krummrich <dakr@kernel.org>,
- "David S . Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>, Gabriele Monaco <gmonaco@redhat.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
- Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
- Lai Jiangshan <jiangshanlai@gmail.com>,
- Marco Crivellari <marco.crivellari@suse.com>, Michal Hocko
- <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
- Paolo Abeni <pabeni@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Phil Auld <pauld@redhat.com>, "Rafael J . Wysocki" <rafael@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Simon Horman <horms@kernel.org>,
- Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
- Vlastimil Babka <vbabka@suse.cz>, Will Deacon <will@kernel.org>,
- cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-block@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
- netdev@vger.kernel.org
-References: <20251224134520.33231-1-frederic@kernel.org>
- <20251224134520.33231-15-frederic@kernel.org>
- <17aadc7e-7dd6-4335-a748-e66f0239df85@redhat.com>
-Content-Language: en-US
-In-Reply-To: <17aadc7e-7dd6-4335-a748-e66f0239df85@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-On 12/25/25 9:24 PM, Waiman Long wrote:
-> On 12/24/25 8:45 AM, Frederic Weisbecker wrote:
->> Until now, HK_TYPE_DOMAIN used to only include boot defined isolated
->> CPUs passed through isolcpus= boot option. Users interested in also
->> knowing the runtime defined isolated CPUs through cpuset must use
->> different APIs: cpuset_cpu_is_isolated(), cpu_is_isolated(), etc...
->>
->> There are many drawbacks to that approach:
->>
->> 1) Most interested subsystems want to know about all isolated CPUs, not
->>    just those defined on boot time.
->>
->> 2) cpuset_cpu_is_isolated() / cpu_is_isolated() are not synchronized 
->> with
->>    concurrent cpuset changes.
->>
->> 3) Further cpuset modifications are not propagated to subsystems
->>
->> Solve 1) and 2) and centralize all isolated CPUs within the
->> HK_TYPE_DOMAIN housekeeping cpumask.
->>
->> Subsystems can rely on RCU to synchronize against concurrent changes.
->>
->> The propagation mentioned in 3) will be handled in further patches.
->>
->> Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
->> ---
->>   include/linux/sched/isolation.h |  7 +++
->>   kernel/cgroup/cpuset.c          |  3 ++
->>   kernel/sched/isolation.c        | 76 ++++++++++++++++++++++++++++++---
->>   kernel/sched/sched.h            |  1 +
->>   4 files changed, 81 insertions(+), 6 deletions(-)
->>
->> diff --git a/include/linux/sched/isolation.h 
->> b/include/linux/sched/isolation.h
->> index 109a2149e21a..6842a1ba4d13 100644
->> --- a/include/linux/sched/isolation.h
->> +++ b/include/linux/sched/isolation.h
->> @@ -9,6 +9,11 @@
->>   enum hk_type {
->>       /* Revert of boot-time isolcpus= argument */
->>       HK_TYPE_DOMAIN_BOOT,
->> +    /*
->> +     * Same as HK_TYPE_DOMAIN_BOOT but also includes the
->> +     * revert of cpuset isolated partitions. As such it
->> +     * is always a subset of HK_TYPE_DOMAIN_BOOT.
->> +     */
->>       HK_TYPE_DOMAIN,
->>       /* Revert of boot-time isolcpus=managed_irq argument */
->>       HK_TYPE_MANAGED_IRQ,
->> @@ -35,6 +40,7 @@ extern const struct cpumask 
->> *housekeeping_cpumask(enum hk_type type);
->>   extern bool housekeeping_enabled(enum hk_type type);
->>   extern void housekeeping_affine(struct task_struct *t, enum hk_type 
->> type);
->>   extern bool housekeeping_test_cpu(int cpu, enum hk_type type);
->> +extern int housekeeping_update(struct cpumask *isol_mask, enum 
->> hk_type type);
->>   extern void __init housekeeping_init(void);
->>     #else
->> @@ -62,6 +68,7 @@ static inline bool housekeeping_test_cpu(int cpu, 
->> enum hk_type type)
->>       return true;
->>   }
->>   +static inline int housekeeping_update(struct cpumask *isol_mask, 
->> enum hk_type type) { return 0; }
->>   static inline void housekeeping_init(void) { }
->>   #endif /* CONFIG_CPU_ISOLATION */
->>   diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 5e2e3514c22e..e13e32491ebf 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1490,6 +1490,9 @@ static void update_isolation_cpumasks(void)
->>       ret = tmigr_isolated_exclude_cpumask(isolated_cpus);
->>       WARN_ON_ONCE(ret < 0);
->>   +    ret = housekeeping_update(isolated_cpus, HK_TYPE_DOMAIN);
->> +    WARN_ON_ONCE(ret < 0);
->> +
->>       isolated_cpus_updating = false;
->>   }
->>   diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
->> index 83be49ec2b06..a124f1119f2e 100644
->> --- a/kernel/sched/isolation.c
->> +++ b/kernel/sched/isolation.c
->> @@ -29,18 +29,48 @@ static struct housekeeping housekeeping;
->>     bool housekeeping_enabled(enum hk_type type)
->>   {
->> -    return !!(housekeeping.flags & BIT(type));
->> +    return !!(READ_ONCE(housekeeping.flags) & BIT(type));
->>   }
->>   EXPORT_SYMBOL_GPL(housekeeping_enabled);
->>   +static bool housekeeping_dereference_check(enum hk_type type)
->> +{
->> +    if (IS_ENABLED(CONFIG_LOCKDEP) && type == HK_TYPE_DOMAIN) {
->
-> To be more correct, we should use IS_ENABLED(CONFIG_PROVE_LOCKING) as 
-> this is the real kconfig that enables most of the lockdep checking. 
-> PROVE_LOCKING selects LOCKDEP but not vice versa. So for some weird 
-> configs that set LOCKDEP but not PROVE_LOCKING, it can cause 
-> compilation problem. 
+Fix subjject-verb agreement for "has a requirements" as well as
+"neither...or" conjunction mistake. And convert "Message Signalled
+Interrupts" to "Message Signaled Interrupts" to match the PCIe spec.
 
-I think I get confused too. The various lockdep* helpers should be 
-defined when CONFIG_LOCKDEP is enabled even if they may not do anything 
-useful. So using IS_ENABLED(CONFIG_LOCKDEP) should be fine. Sorry for 
-the noise.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Reviewed-by: Waiman Long <longman@redhat.com>
+ Documentation/PCI/msi-howto.rst | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/PCI/msi-howto.rst b/Documentation/PCI/msi-howto.rst
+index 0692c9a..667ebe2 100644
+--- a/Documentation/PCI/msi-howto.rst
++++ b/Documentation/PCI/msi-howto.rst
+@@ -98,7 +98,7 @@ function::
+ 
+ which allocates up to max_vecs interrupt vectors for a PCI device.  It
+ returns the number of vectors allocated or a negative error.  If the device
+-has a requirements for a minimum number of vectors the driver can pass a
++has a requirement for a minimum number of vectors the driver can pass a
+ min_vecs argument set to this limit, and the PCI core will return -ENOSPC
+ if it can't meet the minimum number of vectors.
+ 
+@@ -127,7 +127,7 @@ not be able to allocate as many vectors for MSI as it could for MSI-X.  On
+ some platforms, MSI interrupts must all be targeted at the same set of CPUs
+ whereas MSI-X interrupts can all be targeted at different CPUs.
+ 
+-If a device supports neither MSI-X or MSI it will fall back to a single
++If a device supports neither MSI-X nor MSI it will fall back to a single
+ legacy IRQ vector.
+ 
+ The typical usage of MSI or MSI-X interrupts is to allocate as many vectors
+@@ -203,7 +203,7 @@ How to tell whether MSI/MSI-X is enabled on a device
+ ----------------------------------------------------
+ 
+ Using 'lspci -v' (as root) may show some devices with "MSI", "Message
+-Signalled Interrupts" or "MSI-X" capabilities.  Each of these capabilities
++Signaled Interrupts" or "MSI-X" capabilities.  Each of these capabilities
+ has an 'Enable' flag which is followed with either "+" (enabled)
+ or "-" (disabled).
+ 
+-- 
+2.7.4
 
