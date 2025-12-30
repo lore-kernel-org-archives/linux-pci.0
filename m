@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C63CF21B9FD;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9CAD2E541F;
 	Tue, 30 Dec 2025 15:07:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767107260; cv=none; b=j6p4HsaZd6ccXpKB3FooRTmq8BwPnQ69J2vI/UmBxDZOc/W0JwyyJUTOThCkzsMd7+vnnCdp03o6r59ayOqsdPW8Eaz3t/qltf6bTOKxT3j+jBIICh9CpLR7e9WRPEtczglffdB49UEqm9zwsx1HcqzjxOv7ks046xIjdNCiW+Q=
+	t=1767107260; cv=none; b=hViZ1q/OFxLiMQAKmzeFZMAYdVNG4gEVIsr3by3td1vbcCJzR7myIIu0vx429J95+FDkZvNY8ulmxZs6MFJjsSW1CnGmz2n6rFF8JiCCq5RObKAlbA1fSkqfOxMCo0JFUAI9FLRVmbp05RoemLIbKPQGWNgyEThOOOl8iiqeN9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1767107260; c=relaxed/simple;
-	bh=oDy+EPyaJnAnM/riqZPjUlFELI7OMCcdl4Yu+VC1JyY=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=QNQIElzv3jj44q+Us39QhZ31dVodLLRwe9LJ0SVq3vzHxIZWANfpJnRKOtGIPq/uWT5xU2lNEJ3FdP6tKqFAUOXFwzKDJojXsVSsws/jmkpy9Re/lYrhGNZ9SKiaeeMRcFAPDtxlDqcqWlCcLge38tBQrOQp+/d4gj4bgzzK+L8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nz7DbFj0; arc=none smtp.client-ip=10.30.226.201
+	bh=1Bx83pDKo9jaY2lEHQcpiSEbGnUIKcROGAVfSg3BNeM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=TA1myN3niUQHGhV2yj7dd+D1vLRrNUBE0k+Ax/hyVATkTbvMEZkNYL1hRKmR7/0eijneK4eJaaFV1JUGAjRLykAJtIRfYabW2pI+wNrC56oPyxn6DXNh+IMDQ4K6IWo/EsIiFoiQczjpzv3ZE5AzJHzt9MAdQ9Wmbj52hz1VxZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sU5lb3Dp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nz7DbFj0"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4DAE7C4CEFB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sU5lb3Dp"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 72D8CC19423;
 	Tue, 30 Dec 2025 15:07:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1767107260;
-	bh=oDy+EPyaJnAnM/riqZPjUlFELI7OMCcdl4Yu+VC1JyY=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=nz7DbFj0TDjY1syGx6lEfIq0cLpz+iKf6F5l3Vv5Vb654j526rWcGY+XfQuJJR1W9
-	 9FkMR3bk6LS/uqLpje249iDt1WGX9Dk4C4CwTFC734PTcspfBYzq0uI2v5GfM3UWp2
-	 YAlffGoFhyeRJoVB6FUjxx9Pe0YjJTWUHCTuSwIOuUHDlO3DUsnm8KpDkcv86KrU9w
-	 KcgVM0U8MUW4Oc5ac9jtm0YqgGCenuImEw8BZSKLQYXxcFVpfzB4Arn3mQJLMtyCKD
-	 bm772JSPg4HgczqdefmRP2Gt7r9Fd5vHCzIEIvMoNAJc0CxA0nbbIIUIhx05bpEXg9
-	 qGPdlM8BegB5w==
+	bh=1Bx83pDKo9jaY2lEHQcpiSEbGnUIKcROGAVfSg3BNeM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=sU5lb3DpoafvKMuTWEFb5UHfAwpNhJtsaaEwfFIQwsZe8X9muLW575v0rzT1ver0o
+	 adLEgfZCaoY9kEuXwLcnc2VJqq8Z+wi9T8rPtgNCJU4gItDZzqWX/Yq9JiG/ugRB/n
+	 HEGx60J+W3MLUYUwbvbTsB4nO+8jlSHUN4QMPt5w3EpsLhtpZCL2oY3ftGe9+/FlD5
+	 M+4iYVyAPh5L0jFigdDgIQsDprfPiEzfpmC0hzqQrehaAon/uDUSQ+9WeZANxOwQcv
+	 Qxe7+C4wl1K60e7GsUc6cMUaK7Xmv+qXm3tmFo4YrMsc9NGxqzuvd+C9Kv9WHmm6DL
+	 pPMbX7aRWPkXA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3E3E92FC0;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C31AE92FC0;
 	Tue, 30 Dec 2025 15:07:40 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH v3 0/4] PCI: dwc: Rework the error handling of
- dw_pcie_wait_for_link() API
-Date: Tue, 30 Dec 2025 20:37:31 +0530
-Message-Id: <20251230-pci-dwc-suspend-rework-v3-0-40cd485714f5@oss.qualcomm.com>
+Date: Tue, 30 Dec 2025 20:37:34 +0530
+Subject: [PATCH v3 3/4] PCI: dwc: Rework the error print of
+ dw_pcie_wait_for_link()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,11 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIALPqU2kC/4XNwQ6CMAyA4VchOzuyDgbDk+9hPMxtyqIyXGVoC
- O/u4OJF46XJ36RfJ4I2OItkm00k2OjQ+S5FscmIblV3ttSZ1IQzLgCgob121Iya4oC97QwNdvT
- hQuWRCRCqkFXdkHTcB3tyzxXeH1K3Dh8+vNY/EZbtXzICZVQpA6yUXIqK7zxifh/UVfvbLU+DL
- HLkH42D/KnxpAlV17XUFWtK9UWb5/kNjcbOkREBAAA=
-X-Change-ID: 20251119-pci-dwc-suspend-rework-8b0515a38679
+Message-Id: <20251230-pci-dwc-suspend-rework-v3-3-40cd485714f5@oss.qualcomm.com>
+References: <20251230-pci-dwc-suspend-rework-v3-0-40cd485714f5@oss.qualcomm.com>
+In-Reply-To: <20251230-pci-dwc-suspend-rework-v3-0-40cd485714f5@oss.qualcomm.com>
 To: Jingoo Han <jingoohan1@gmail.com>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -56,16 +54,16 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  Shawn Lin <shawn.lin@rock-chips.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2251;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1068;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=oDy+EPyaJnAnM/riqZPjUlFELI7OMCcdl4Yu+VC1JyY=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpU+q6EaZRACdCf7yoRSVenZw+VK1paZd1LVQKl
- Pigd+ExmXKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaVPqugAKCRBVnxHm/pHO
- 9c3FB/98VgTT2qugab9NRzLkZCj/HRoVqpfmC7svAT31KZl4Ux9razZ+9uI6Ntgi6dM/9tDcUor
- wAN2CHZjEsOLXRciaRCUNjaC/BNyrecdIYwTasJnWKL/8YVqBysqNMjltIl/vu8mHwPudfSbq+S
- BSvJSGcIwfhW5RL7FT256w/G9t18rhVaKWtkQXrc3Fr2eorzZ8YLnrLgL7b1+HGS0CZr7LqmdIZ
- grCVbueLHsXC+zBl1hW1QPtwAfXNNcdzE7AVj1pCa8Q2xrk7ryeHLzsGBKwfEbogSW3hxJpxqBh
- wkwvLx7cLTO4WtdSIL3rWH1e4XtLBRX7SU5QfxbNcWTTlw+v
+ bh=7kXiC+5h1EOCvJw9bEDf4bWdlgkGwkMaGfwFegH0XMU=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpU+q6W7XiwNgYjeIJKO9/5oCTCTTpJXIWw4ERM
+ GMjRyRL+TGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaVPqugAKCRBVnxHm/pHO
+ 9V3GB/9lz+R75Apz6yGZipqwoZk96F4W2VhtMJl8fr9rz2mdwHWme6XPl33nCqj/T1qPbn73B90
+ cPZyekANCa7kPXk1vJxJw3vMcouc6DB0qQsyIwL4SG+fi71kwahO15YPu77mNS/GAKNORm9X78C
+ CK5wwjS/E/hCfNQwp29qqGB5aaXc+MB+QE960T2ooiwHkSS4EzkWSsgFFi+WsjxgP2IHITt6K4z
+ n/GYmnYw7OvO0pYe9Q5cFdNvUNM+CpW/oDxmtanaJ3oEWyxBHgxbGPSlk8elcS8Ce0Q4WK9yE4N
+ Zn8VG9xluChkrtW6+pto4Ne8v1fdGon2PHZCz0MlfyJjr00Q
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -73,59 +71,36 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series reworks the dw_pcie_wait_for_link() API to allow the callers to
-detect the absence of the device on the bus and skip the failure.
+If the link fails to come up even after detecting the device on the bus
+i.e., if the LTSSM is not in Detect.Quiet and Detect.Active states, then
+dw_pcie_wait_for_link() should log it as an error.
 
-Compared to v2, I've reworked the patch 2 to improve the API further and
-dropped the patch 1 that got applied (hence changed the subject). I've also
-modified the error code based on the feedback in v2 to return -ENODEV if device
-is not detected on the bus and -ETIMEDOUT otherwise. This allows the callers to
-skip the failure if device is not detected and handle error for other failure.
-
-Testing
-=======
-
-Tested this series on Rb3Gen2 board without powering on the PCIe switch. Now the
-dw_pcie_wait_for_link() API prints:
-
-	qcom-pcie 1c08000.pcie: Device not found
-
-Instead of the previous log:
-
-	qcom-pcie 1c08000.pcie: Phy link never came up
+So promote dev_info() to dev_err(), reword the error log to make it clear
+and also print the LTSSM state to aid debugging.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Changes in v3:
-- Dropped patch 1 that got appplied
-- Reworked the error handling of dw_pcie_wait_for_link() API further
-- Link to v2: https://lore.kernel.org/r/20251218-pci-dwc-suspend-rework-v2-0-5a7778c6094a@oss.qualcomm.com
+ drivers/pci/controller/dwc/pcie-designware.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Changes in v2:
-- Changed the logic to check for Detect.Quiet/Active states
-- Collected tags and rebased on top of v6.19-rc1
-- Link to v1: https://lore.kernel.org/r/20251119-pci-dwc-suspend-rework-v1-0-aad104828562@oss.qualcomm.com
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 87f2ebc134d6..c2dfadc53d04 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -776,7 +776,8 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+ 			return -ENODEV;
+ 		}
+ 
+-		dev_info(pci->dev, "Phy link never came up\n");
++		dev_err(pci->dev, "Link failed to come up. LTSSM: %s\n",
++			dw_pcie_ltssm_status_string(ltssm));
+ 		return -ETIMEDOUT;
+ 	}
+ 
 
----
-Manivannan Sadhasivam (4):
-      PCI: dwc: Return -ENODEV from dw_pcie_wait_for_link() if device is not found
-      PCI: dwc: Rename and move ltssm_status_string() to pcie-designware.c
-      PCI: dwc: Rework the error print of dw_pcie_wait_for_link()
-      PCI: dwc: Only skip the dw_pcie_wait_for_link() failure if it returns -ENODEV
-
- .../pci/controller/dwc/pcie-designware-debugfs.c   | 54 +---------------
- drivers/pci/controller/dwc/pcie-designware-host.c  |  6 +-
- drivers/pci/controller/dwc/pcie-designware.c       | 75 +++++++++++++++++++++-
- drivers/pci/controller/dwc/pcie-designware.h       |  2 +
- 4 files changed, 80 insertions(+), 57 deletions(-)
----
-base-commit: 68ac85fb42cfeb081cf029acdd8aace55ed375a2
-change-id: 20251119-pci-dwc-suspend-rework-8b0515a38679
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.48.1
 
 
