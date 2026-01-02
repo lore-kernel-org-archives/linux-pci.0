@@ -1,221 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760CF31280A;
-	Thu,  1 Jan 2026 22:18:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF17C4C97
+	for <linux-pci@vger.kernel.org>; Fri,  2 Jan 2026 09:53:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767305925; cv=none; b=QxuyXYOy/gla1m4YyMAUAIk4tsbVHJGqDZNEiwZIGEtI3nq2qrj1f93GaUkxPTehgjF9bL+hbylisEp54pecNwU76MAidljkpWcrTNJHTVL1Hk9NjmlQ9/QC40K1z6e4Gqi8k8b1jljEMHX9WXxNTxwVERhXdz3JhFC8oEw6kSc=
+	t=1767347585; cv=none; b=slheYc0MwtgzGdWv5Ib762IioKWlpzyx3aXdTY8C771FXD9SCuTWHI7XSQZOnDF1jLTL4AFiBB7sjg+MbMNUzbv83/vIw/4R8ZEJmCdOXo2+h/lYBXuj68/CC74r64pG0CIvyLMZC64JAQ2K32J/V6XadjqZPxNz2oL4/gy39uM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767305925; c=relaxed/simple;
-	bh=soOg+pSguRYShDvlBT6z+CExBTh9mpEwKqBDpU+MvVA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jdIwy3WUeopMsD5LEbW70gXRqmh6xo1keBGanz3De/bwQg0RdWuaTYFLPwCdWuvq5cMFix8Au4pcFK9Vh/2+y2vvpPD5VkWMtDZQoN5NhVo+Ba/emGWF+qJB7p+T5MDS1U6lKF4MRcuoHdICmXqbHYtS9s4ubg1WYr76BlrtEs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ch0+O6T9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767347585; c=relaxed/simple;
+	bh=RABTphJbjveLyb+ZVfbZhXGTF+2TZRO1eYngRdD2ACU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NMsPTMV25xXUyVloKXL+K1DgExDMaRl8VKoBuzfQC9c3HXieETrL9OJ/y5e+Jq+vQr8lBQ3+wyUjlgNQTOLLo7rdlw485cQW+0ly7DNhsXCZ5d4X4Q2tyCiW1vDB++4bceiVj6Sy/qrHbdLhCldxVkIpEmRfAsPp0dPip1YohwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b6JVKA9i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ch0+O6T9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5258EC4CEF7;
-	Thu,  1 Jan 2026 22:18:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b6JVKA9i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59345C16AAE
+	for <linux-pci@vger.kernel.org>; Fri,  2 Jan 2026 09:53:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767305925;
-	bh=soOg+pSguRYShDvlBT6z+CExBTh9mpEwKqBDpU+MvVA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Ch0+O6T98cz7FFkRIvS/lrnNxuwEZVtNVKFC3b2uDV4OOAyrOCUNOhusqCS6JNycr
-	 JUpM4y18xsCFl5PanmWQQ56Xf4q84aK9WKNz43EhMZ1cwGEt+l7YTfU8aIyG79LZFm
-	 umUER4Ke8sqCA4evjdGE7hKCxtUMzlRqiHgbST3rqhEnSWxUWB0Ay/pY7a418yRReV
-	 VyWeUpgJ1b01hgn0Knsfb6k0nIunjAL6AWFL2SPFbQ9xuquSJrz5ncySl9dYIZ6+Q+
-	 kw65NtkT6BzpNxo/bs+0zFugLdB4vJmfSkrCoHMfujB2EbbJKcG3Fx7qcV66bUr8Dx
-	 F9u1AJrAhWhAQ==
-From: Frederic Weisbecker <frederic@kernel.org>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Frederic Weisbecker <frederic@kernel.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Chen Ridong <chenridong@huawei.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Gabriele Monaco <gmonaco@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>,
-	Muchun Song <muchun.song@linux.dev>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Phil Auld <pauld@redhat.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Simon Horman <horms@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Waiman Long <longman@redhat.com>,
-	Will Deacon <will@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH 33/33] doc: Add housekeeping documentation
-Date: Thu,  1 Jan 2026 23:13:58 +0100
-Message-ID: <20260101221359.22298-34-frederic@kernel.org>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20260101221359.22298-1-frederic@kernel.org>
-References: <20260101221359.22298-1-frederic@kernel.org>
+	s=k20201202; t=1767347584;
+	bh=RABTphJbjveLyb+ZVfbZhXGTF+2TZRO1eYngRdD2ACU=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=b6JVKA9iBHqMJ2WEl/TJWYBUGGPQG6CxgRpKvjEQA54ozS/+drXSYxg5qcJGt66pl
+	 S8HEWS2B2ItLgOBw5Ev15Iw0zR4xpBt2WcODMA/TB6hbCFIsYG9aKu/0fqDRbm9tYg
+	 BnHl5VWG6ejaJEcJmwJDNX9EWDQjJ2qAF2IPvxZIOld6oS3YTpdi4AWyDtlPow45Rl
+	 fAJFQrcdE58Ox5m/4IGgyr718uqt9yfIcQUAWpGsl3t4s5oVwFGcPfK2wxWWlCD3hB
+	 ayPw7b2YeUM89z2DZy9/h/T+l4b2FzZimXdFJEs6xVsnqbChJaFLfv78LMSqiFm89p
+	 3lIUatnr1ah8A==
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-597d57d8bb3so9819167e87.3
+        for <linux-pci@vger.kernel.org>; Fri, 02 Jan 2026 01:53:04 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXJWF/K0ZSifGyTVrSacyCdxEutAOCmDb+rK5ldx7ZstOn8s10sc9pbFNmFE2aiRGBFMTkkyMcLFDA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzf1oryeHkhkV7ZUgXzBkuGl63fIxWkcZ9JuwwB8KxzmUtPUfDD
+	tjMGA69RknPEqAUkpV38/SHhZ6/+R3tKFTmEzfFV3+ZCl0NfaoopEc67dpvpU1XHp9LQw778mzQ
+	oXaRinztcLUYeTuTkrzC1R7qPWzyZl83ZNHPij2U3Xg==
+X-Google-Smtp-Source: AGHT+IGbECLOdZOOC0s2WEHaaJW0az647jTqeIVtGicekW9VDB0ZTWEU8u1EUtypGYoR7HcDicw4i/ecZGCd4Ioj9Bw=
+X-Received: by 2002:a05:6512:3c9a:b0:599:eee:8f63 with SMTP id
+ 2adb3069b0e04-59a17d093f1mr13859081e87.14.1767347582990; Fri, 02 Jan 2026
+ 01:53:02 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <39e025bd-50f4-407d-8fd4-e254dbed46b2@linux.dev> <20251219172222.2808195-1-sean.anderson@linux.dev>
+In-Reply-To: <20251219172222.2808195-1-sean.anderson@linux.dev>
+From: Bartosz Golaszewski <brgl@kernel.org>
+Date: Fri, 2 Jan 2026 10:52:51 +0100
+X-Gmail-Original-Message-ID: <CAMRc=MdpJqfNzwp4aOSDJAaLmwBPJ6FfNN1pNzeZaXCtyry9mg@mail.gmail.com>
+X-Gm-Features: AQt7F2p2XsoJwFkhUajo7FMNK25yZHddCe-8r-tvrHRa1sDCy05D5PEngPIpFjo
+Message-ID: <CAMRc=MdpJqfNzwp4aOSDJAaLmwBPJ6FfNN1pNzeZaXCtyry9mg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI/pwrctrl: Bind a pwrctrl device if clocks are present
+To: Sean Anderson <sean.anderson@linux.dev>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	Chen-Yu Tsai <wenst@chromium.org>, linux-arm-msm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Brian Norris <briannorris@chromium.org>, Niklas Cassel <cassel@kernel.org>, 
+	Chen-Yu Tsai <wens@kernel.org>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Alex Elder <elder@riscstar.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-Acked-by: Waiman Long <longman@redhat.com>
----
- Documentation/core-api/housekeeping.rst | 111 ++++++++++++++++++++++++
- Documentation/core-api/index.rst        |   1 +
- 2 files changed, 112 insertions(+)
- create mode 100644 Documentation/core-api/housekeeping.rst
+On Fri, Dec 19, 2025 at 6:23=E2=80=AFPM Sean Anderson <sean.anderson@linux.=
+dev> wrote:
+>
+> Since commit 66db1d3cbdb0 ("PCI/pwrctrl: Add optional slot clock for PCI
+> slots"), power supplies are not the only resource PCI slots may create.
+> Also create a pwrctrl device if there are any clocks.
+>
+> Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
+> ---
+>
 
-diff --git a/Documentation/core-api/housekeeping.rst b/Documentation/core-api/housekeeping.rst
-new file mode 100644
-index 000000000000..e5417302774c
---- /dev/null
-+++ b/Documentation/core-api/housekeeping.rst
-@@ -0,0 +1,111 @@
-+======================================
-+Housekeeping
-+======================================
-+
-+
-+CPU Isolation moves away kernel work that may otherwise run on any CPU.
-+The purpose of its related features is to reduce the OS jitter that some
-+extreme workloads can't stand, such as in some DPDK usecases.
-+
-+The kernel work moved away by CPU isolation is commonly described as
-+"housekeeping" because it includes ground work that performs cleanups,
-+statistics maintainance and actions relying on them, memory release,
-+various deferrals etc...
-+
-+Sometimes housekeeping is just some unbound work (unbound workqueues,
-+unbound timers, ...) that gets easily assigned to non-isolated CPUs.
-+But sometimes housekeeping is tied to a specific CPU and requires
-+elaborated tricks to be offloaded to non-isolated CPUs (RCU_NOCB, remote
-+scheduler tick, etc...).
-+
-+Thus, a housekeeping CPU can be considered as the reverse of an isolated
-+CPU. It is simply a CPU that can execute housekeeping work. There must
-+always be at least one online housekeeping CPU at any time. The CPUs that
-+are not	isolated are automatically assigned as housekeeping.
-+
-+Housekeeping is currently divided in four features described
-+by the ``enum hk_type type``:
-+
-+1.	HK_TYPE_DOMAIN matches the work moved away by scheduler domain
-+	isolation performed through ``isolcpus=domain`` boot parameter or
-+	isolated cpuset partitions in cgroup v2. This includes scheduler
-+	load balancing, unbound workqueues and timers.
-+
-+2.	HK_TYPE_KERNEL_NOISE matches the work moved away by tick isolation
-+	performed through ``nohz_full=`` or ``isolcpus=nohz`` boot
-+	parameters. This includes remote scheduler tick, vmstat and lockup
-+	watchdog.
-+
-+3.	HK_TYPE_MANAGED_IRQ matches the IRQ handlers moved away by managed
-+	IRQ isolation performed through ``isolcpus=managed_irq``.
-+
-+4.	HK_TYPE_DOMAIN_BOOT matches the work moved away by scheduler domain
-+	isolation performed through ``isolcpus=domain`` only. It is similar
-+	to HK_TYPE_DOMAIN except it ignores the isolation performed by
-+	cpusets.
-+
-+
-+Housekeeping cpumasks
-+=================================
-+
-+Housekeeping cpumasks include the CPUs that can execute the work moved
-+away by the matching isolation feature. These cpumasks are returned by
-+the following function::
-+
-+	const struct cpumask *housekeeping_cpumask(enum hk_type type)
-+
-+By default, if neither ``nohz_full=``, nor ``isolcpus``, nor cpuset's
-+isolated partitions are used, which covers most usecases, this function
-+returns the cpu_possible_mask.
-+
-+Otherwise the function returns the cpumask complement of the isolation
-+feature. For example:
-+
-+With isolcpus=domain,7 the following will return a mask with all possible
-+CPUs except 7::
-+
-+	housekeeping_cpumask(HK_TYPE_DOMAIN)
-+
-+Similarly with nohz_full=5,6 the following will return a mask with all
-+possible CPUs except 5,6::
-+
-+	housekeeping_cpumask(HK_TYPE_KERNEL_NOISE)
-+
-+
-+Synchronization against cpusets
-+=================================
-+
-+Cpuset can modify the HK_TYPE_DOMAIN housekeeping cpumask while creating,
-+modifying or deleting an isolated partition.
-+
-+The users of HK_TYPE_DOMAIN cpumask must then make sure to synchronize
-+properly against cpuset in order to make sure that:
-+
-+1.	The cpumask snapshot stays coherent.
-+
-+2.	No housekeeping work is queued on a newly made isolated CPU.
-+
-+3.	Pending housekeeping work that was queued to a non isolated
-+	CPU which just turned isolated through cpuset must be flushed
-+	before the related created/modified isolated partition is made
-+	available to userspace.
-+
-+This synchronization is maintained by an RCU based scheme. The cpuset update
-+side waits for an RCU grace period after updating the HK_TYPE_DOMAIN
-+cpumask and before flushing pending works. On the read side, care must be
-+taken to gather the housekeeping target election and the work enqueue within
-+the same RCU read side critical section.
-+
-+A typical layout example would look like this on the update side
-+(``housekeeping_update()``)::
-+
-+	rcu_assign_pointer(housekeeping_cpumasks[type], trial);
-+	synchronize_rcu();
-+	flush_workqueue(example_workqueue);
-+
-+And then on the read side::
-+
-+	rcu_read_lock();
-+	cpu = housekeeping_any_cpu(HK_TYPE_DOMAIN);
-+	queue_work_on(cpu, example_workqueue, work);
-+	rcu_read_unlock();
-diff --git a/Documentation/core-api/index.rst b/Documentation/core-api/index.rst
-index 5eb0fbbbc323..79fe7735692e 100644
---- a/Documentation/core-api/index.rst
-+++ b/Documentation/core-api/index.rst
-@@ -25,6 +25,7 @@ it.
-    symbol-namespaces
-    asm-annotations
-    real-time/index
-+   housekeeping.rst
- 
- Data structures and low-level utilities
- =======================================
--- 
-2.51.1
-
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
