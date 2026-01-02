@@ -1,82 +1,191 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2490831280A
-	for <linux-pci@vger.kernel.org>; Fri,  2 Jan 2026 13:58:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B801E521A;
+	Fri,  2 Jan 2026 15:35:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767362334; cv=none; b=KC9j5q+kiuDR+yfHMIYk7001f6cPL6uMIweZeF4fxx81lGBvcbflCIonHeXH32L++O/ECAKQLCQ8NobyA2NhEzm0PG9mZfLc7/FAQtlZuU4H4gKqTJ5R9VX62XsZ8Tz9ugRWQLHePzO3IdDAQ8SX3OEEm8djj9aT4tMuFLbE+VE=
+	t=1767368105; cv=none; b=mkzFW0a4B0keMPzR/haiLOMsQgK31yvsr7aw/CB/8MCwbE4snI9aqvu62w81VY81ulIvjAF195+B8S0qRwBXmrJpOvdNBfOtQAtUOpGNJAwNClzeoEst61z9ih7vH8GdQfsNO61vE7I6kUJDhJScifAbqDyJptv6ikk+ayna8fE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767362334; c=relaxed/simple;
-	bh=wvqmsm8pwa3AcXMU+cWN4gAqApP3IKcmeV46IKeFCAQ=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=myI2eIVS7oKGsHsCk6avRL6UmvDJ0mIVAFeXObFgT6hVvW16vqyGzdES+M0HUUN9ysaZtvr3UKNBSHmV/BqmsGW35mJm72XHHCVxK6fl7ueIBUmCeocac6+Niap1tBCI6UnhApP6iqU+ZXZuzyDhK5Xmtp33u+Seo5ZcO6iToq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l14sNxua; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767368105; c=relaxed/simple;
+	bh=eR051mZ0G1/+9HNcTwUzIjk/vzoiK3DNwMo+UKelgUw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=jEcAxj9RgUOwMi7gnoQlNC1Y5t7Lbm60ytBxcTI6izNbKbouu7l7jz2Ct4FB92ffLejJ6RdSsSe7Eixt7EHtqcO6dJH04v29Otx4RlVXz1Dsx3aT07sgMrh9GAsR2jsgw4wkixmoi2Y2N90obxS11cvV0b9bb3mTzyn+Rhs1SBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E8FzHFsH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l14sNxua"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC584C116B1
-	for <linux-pci@vger.kernel.org>; Fri,  2 Jan 2026 13:58:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E8FzHFsH"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8DD50C19423;
+	Fri,  2 Jan 2026 15:35:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767362333;
-	bh=wvqmsm8pwa3AcXMU+cWN4gAqApP3IKcmeV46IKeFCAQ=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
-	b=l14sNxuaJO8/XmzNJV8iYPdNofMkI01PUZtaLkV/KYhRHfJfjOr8MzdSedZtqo/jz
-	 FXsr5NQUrd6K2Q90z4Yrre0ZNby3ol4QZXcVB30i9cUIehw6v23lHkyqn7crstQwp8
-	 rHHoLIyAfZ/znpLwKm72Q5XmH9z6NaY2kHEfjyv2G/0D9pIpADNGTPTFMEiouzONnX
-	 jZkZH5KtFR1T9kFg6reRC3R5zYI2kjHbO0iXFTOzvzhXivQ4z+6EiG6K/0iy0gu5vn
-	 /xGJH7+a/v5bXPkpe+NCJSzYRZfvp4iKs3Qp6j4AVRK08Zx3S3fST2l4TwjxZbtfEP
-	 uZtGcQBg+xFaQ==
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5959187c5a9so10417339e87.1
-        for <linux-pci@vger.kernel.org>; Fri, 02 Jan 2026 05:58:53 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVsfmudVkZSXafcFVdJZgC271C8WwGupjDqN59hNNBrvMMvAKM0v4506/ombO06Dre0RcV7Fd+vw2Q=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdHZlBBIGEky5VQu7sztaxjJDs+ww5IugaHEhiqDnzxrSuhNaX
-	MfF/3I4aakvyDQbpZfe9xyFZaUeavYDy/wc6SHvh1hOw+fBNlNRdMVPcKGeLAFeRH27ObqvqNWK
-	LESTmvJp+BklpO1uSuYOeRyRmGJ6kymg9Uwk8UHGhgg==
-X-Google-Smtp-Source: AGHT+IEvS+aGJMddAA3oPXNEoUA6VHabHEFpBL+2G2ttizxV6sDCdsjpLtEqPjr+jFaLnQ0sgFn7F9Q9vSSkaOKIsEI=
-X-Received: by 2002:a05:6512:3e05:b0:598:eb05:c5af with SMTP id
- 2adb3069b0e04-59a17d595f1mr14405321e87.15.1767362332504; Fri, 02 Jan 2026
- 05:58:52 -0800 (PST)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 2 Jan 2026 08:58:51 -0500
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 2 Jan 2026 08:58:51 -0500
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20251229-pci-pwrctrl-rework-v3-7-c7d5918cd0db@oss.qualcomm.com>
+	s=k20201202; t=1767368104;
+	bh=eR051mZ0G1/+9HNcTwUzIjk/vzoiK3DNwMo+UKelgUw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=E8FzHFsH/dTEbP8X2pEhVMLo41MbcXUvGBM55W/6ZFy73f+BPBs1Cs8ttMgNDiW71
+	 PhTmIuFs8D314wDt81F9labAP3mnrDJIDwvV7GEjUYjRO1wHHCXaaqMLZYeuY39w/G
+	 GeCzG/aVjONTcQYm0MKlGsruf5Ro6jEm0q8iqKeyr0lD/sPjw8J7+JNuSwVROHDOtX
+	 QeQpKtcFFGtxyyYvjYrautKk8DsU0SCjkvKWA133DKZFxWJSVTOEh+Mz9FTvovGijS
+	 2RtABPk2o1OobvyyQEnVaX9fSxrKsZF14bi2uw2U0qPbWvyWRYCQMJtnrE+YlTDrDA
+	 F3H6kzJu2As7w==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A241FA374F;
+	Fri,  2 Jan 2026 15:35:04 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Fri, 02 Jan 2026 21:04:48 +0530
+Subject: [PATCH v3 2/4] PCI: Cache ACS capabilities
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251229-pci-pwrctrl-rework-v3-0-c7d5918cd0db@oss.qualcomm.com> <20251229-pci-pwrctrl-rework-v3-7-c7d5918cd0db@oss.qualcomm.com>
-Date: Fri, 2 Jan 2026 08:58:51 -0500
-X-Gmail-Original-Message-ID: <CAMRc=MdAs_r6YaOoSEE_tS=FLU-wJud=W_DkyZ=uKYEi=T6WWQ@mail.gmail.com>
-X-Gm-Features: AQt7F2pO-62B4zO-Wlx0FLP2VFFgiND1pcHAWAUPTvETnJo82ZxurbYa1GW3r60
-Message-ID: <CAMRc=MdAs_r6YaOoSEE_tS=FLU-wJud=W_DkyZ=uKYEi=T6WWQ@mail.gmail.com>
-Subject: Re: [PATCH v3 7/7] PCI: qcom: Rename PERST# assert/deassert helpers
- for uniformity
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Chen-Yu Tsai <wens@kernel.org>, 
-	Brian Norris <briannorris@chromium.org>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Niklas Cassel <cassel@kernel.org>, 
-	Alex Elder <elder@riscstar.com>, Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260102-pci_acs-v3-2-72280b94d288@oss.qualcomm.com>
+References: <20260102-pci_acs-v3-0-72280b94d288@oss.qualcomm.com>
+In-Reply-To: <20260102-pci_acs-v3-0-72280b94d288@oss.qualcomm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ iommu@lists.linux.dev, Naresh Kamboju <naresh.kamboju@linaro.org>, 
+ Pavankumar Kondeti <quic_pkondeti@quicinc.com>, 
+ Xingang Wang <wangxingang5@huawei.com>, 
+ Marek Szyprowski <m.szyprowski@samsung.com>, 
+ Robin Murphy <robin.murphy@arm.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3840;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=WNlj98gnBzP8GjtkwGPs6wt/sfHp/QN3NSkkvAVIXtQ=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpV+Wm0uuebZ0Bh1aSfHkMGH9dvwjaLhS2WLos/
+ KSkWbsN2gGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaVflpgAKCRBVnxHm/pHO
+ 9YEYCACMjcDP3uQy0Rj+omfbOFgbTz9mNX1Y7XE/+f9xXOBH62vc22vblxpTSfhMSx02s0p6qyg
+ WflootAkgPcpAHnDnd0buKCGWFaJojNQRNnznfPCPXqs+gQ+P8EuHsXl86dt2QGDdabPjq9kXqv
+ eY95BzcfEWzCczMSWsre8o0ApDv9PYjcPe0hkmhxI1RfI9OSX8JRRMkaXHyX4o+crl0NrGJieK7
+ v6bOx7gG1Dk1Y0E6lIkqNI2SKZz1/ggKgEfJh8MZCRRsFtft9s9zzeHP0YUFpwhs5b9RHwSjMxI
+ eeMXMyQQMTVOqykGwdF7ZTE1jOwK2uoihGk1gLonxQfuaUAS
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On Mon, 29 Dec 2025 18:26:58 +0100, Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->
-> Rename the PERST# assert/deassert helpers from
-> qcom_ep_reset_{assert/deassert}() to qcom_pcie_perst_{assert/deassert}() to
-> maintain uniformity.
->
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+ACS capabilities are the RO values set by the hardware. Cache them to avoid
+reading it all the time when required and also to override any capability
+in quirks.
+
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Tested-by: Naresh Kamboju <naresh.kamboju@linaro.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/pci/pci.c   | 26 +++++++++++++++-----------
+ include/linux/pci.h |  1 +
+ 2 files changed, 16 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2c3d0a2d6973..d89b04451aea 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -892,7 +892,6 @@ static const char *disable_acs_redir_param;
+ static const char *config_acs_param;
+ 
+ struct pci_acs {
+-	u16 cap;
+ 	u16 ctrl;
+ 	u16 fw_ctrl;
+ };
+@@ -995,27 +994,27 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
+ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
+ {
+ 	/* Source Validation */
+-	caps->ctrl |= (caps->cap & PCI_ACS_SV);
++	caps->ctrl |= (dev->acs_capabilities & PCI_ACS_SV);
+ 
+ 	/* P2P Request Redirect */
+-	caps->ctrl |= (caps->cap & PCI_ACS_RR);
++	caps->ctrl |= (dev->acs_capabilities & PCI_ACS_RR);
+ 
+ 	/* P2P Completion Redirect */
+-	caps->ctrl |= (caps->cap & PCI_ACS_CR);
++	caps->ctrl |= (dev->acs_capabilities & PCI_ACS_CR);
+ 
+ 	/* Upstream Forwarding */
+-	caps->ctrl |= (caps->cap & PCI_ACS_UF);
++	caps->ctrl |= (dev->acs_capabilities & PCI_ACS_UF);
+ 
+ 	/* Enable Translation Blocking for external devices and noats */
+ 	if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
+-		caps->ctrl |= (caps->cap & PCI_ACS_TB);
++		caps->ctrl |= (dev->acs_capabilities & PCI_ACS_TB);
+ }
+ 
+ /**
+  * pci_enable_acs - enable ACS if hardware support it
+  * @dev: the PCI device
+  */
+-static void pci_enable_acs(struct pci_dev *dev)
++void pci_enable_acs(struct pci_dev *dev)
+ {
+ 	struct pci_acs caps;
+ 	bool enable_acs = false;
+@@ -1031,7 +1030,6 @@ static void pci_enable_acs(struct pci_dev *dev)
+ 	if (!pos)
+ 		return;
+ 
+-	pci_read_config_word(dev, pos + PCI_ACS_CAP, &caps.cap);
+ 	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &caps.ctrl);
+ 	caps.fw_ctrl = caps.ctrl;
+ 
+@@ -3514,7 +3512,7 @@ void pci_configure_ari(struct pci_dev *dev)
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+ {
+ 	int pos;
+-	u16 cap, ctrl;
++	u16 ctrl;
+ 
+ 	pos = pdev->acs_cap;
+ 	if (!pos)
+@@ -3525,8 +3523,7 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+ 	 * or only required if controllable.  Features missing from the
+ 	 * capability field can therefore be assumed as hard-wired enabled.
+ 	 */
+-	pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
+-	acs_flags &= (cap | PCI_ACS_EC);
++	acs_flags &= (pdev->acs_capabilities | PCI_ACS_EC);
+ 
+ 	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+ 	return (ctrl & acs_flags) == acs_flags;
+@@ -3647,7 +3644,14 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+  */
+ void pci_acs_init(struct pci_dev *dev)
+ {
++	int pos;
++
+ 	dev->acs_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	pos = dev->acs_cap;
++	if (!pos)
++		return;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CAP, &dev->acs_capabilities);
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 864775651c6f..6195e040b29c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -558,6 +558,7 @@ struct pci_dev {
+ 	struct pci_tsm *tsm;		/* TSM operation state */
+ #endif
+ 	u16		acs_cap;	/* ACS Capability offset */
++	u16		acs_capabilities; /* ACS Capabilities */
+ 	u8		supported_speeds; /* Supported Link Speeds Vector */
+ 	phys_addr_t	rom;		/* Physical address if not from BAR */
+ 	size_t		romlen;		/* Length if not from BAR */
+
+-- 
+2.48.1
+
+
