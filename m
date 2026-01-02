@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B2A3C465;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C5422157E;
 	Fri,  2 Jan 2026 15:35:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767368105; cv=none; b=AwwmkR4O74WoL5tYUMSEZYKUtHOj5oDghy3OANKVEctwRDqb5c/qZmzDSR2BNr0jGB2LvbG8TWEkVkaGiJ+YVYCBEyQ8914bwWAHdGUP5natm+Dfu7hkjeiXRr/97RIkDE2VQ5I13VGbxpj/fHrfusfY73pRKWksala5x02cHYo=
+	t=1767368105; cv=none; b=Kfl7TUUvAuckeZ1YkRQYxA/kcyeJBp7zB1zo6rBHXjv+pRVaPWXpcGXkPclTw/lWqjoHCJUTpZgyS/KeP4EwAEtifHX+AAqbt54MSkqyh33oFbrTc0VbVYAfufAVCIpu3+UvUv8WwsyTxXsnaJpMcg40VU7SvisUpB4rqxnqdmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1767368105; c=relaxed/simple;
-	bh=yKt9mXmVeWjVPM+Kk7KdqbalkLGUCWIr2ZFmKG8rePc=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=LbOvbAu7vHE+R2GWgXA3KuiSr3BpbMEyJ4GB4IK+yHvqMCcpH1+y/ZvHj1EsQ2kq/56e3JEVQudE6iBUV7EhHXj1LakbqwiYnzoTcR/iSSzpmJv7mKoe+zdwucRvf+FRi+/MB0gbzOnW6NQP68yfF2P825mh8StfNScoilz/jZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZumjnFLY; arc=none smtp.client-ip=10.30.226.201
+	bh=63RTubzZMgn/lpxM537Y/oEc4WWZ4p237I10VUTM4vQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=SJhPDBDgi00Yypm5mbCVQu93AvQp6KzkQPwpaKxBGxstfvKs92RB24tDEpAv7nY8tvoNc7mic9mTKu4X9Ll5V5d3IJsFil2P2BzMHqOkZ8mN2Pa3SoA3DaGhFigZ2n0p3hknlO4fuINZ5ZMgI1p6A0KLdCplKeDiL6FmJWvA6r0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PzlXxTCh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZumjnFLY"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4D6B2C116B1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PzlXxTCh"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A305EC19425;
 	Fri,  2 Jan 2026 15:35:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1767368104;
-	bh=yKt9mXmVeWjVPM+Kk7KdqbalkLGUCWIr2ZFmKG8rePc=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=ZumjnFLY2bdbYaMpM6rEPG6egTRiU2gAEgEPQkCqIoLv6FRyFrwRG9lmCSvnNMHIG
-	 sSM4XDuSmRaxJZwNNrbdypDUVFVDSsVDsVXb33099GI/GO7pdjIi3DfbRSsbNzsz3m
-	 qx8dy4WfdkJY+pRejHO//b+onxMv7nmDexq0DxDAAI1vE832E8kKbFoBeutorXkfAF
-	 NM12+fFxLxYXjF2DUPIUYhjOUp2W8mIBWp9mXJbkPjfpZcd5dINts6yqK0KOxV4lti
-	 rag8X+CnJJ8k9cpJjQZk4FNGkApQ61MCuLdijpe2p4tSpQlSV895rVidLKgGVQit4Z
-	 DaEK6CXoU0WbQ==
+	bh=63RTubzZMgn/lpxM537Y/oEc4WWZ4p237I10VUTM4vQ=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=PzlXxTChAECNQMuPekaaqgONjTIGADM5Fv7sGh+h/QI3RW0o9wcFD1HAoWasYZYbD
+	 WE/UkFE5pJA5Phr+aj/xyI9S0jxXs8FOeClTsNoC6k+tgIdlP4FPg+YYyLpuC88AGx
+	 hYH2aHd48gD1qPDxPEUYa8HTBTRVAX+8aGFdxaU6FO2j+ebZ7OdabHP7nAr8rJ6gFj
+	 PzdTMrQCnnye7P881FNQBTcVmpNMRsGduHXdKtFif79JxmVxlBkVptUcGOEunhghk1
+	 ICd3/UV1i2+XxbUkhH9rFwtPCyg4faymChUU1LTqrLji+efd7IJWL1C2yAAZ0Z0q8d
+	 NkWMGc3THBIxA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E425EED628;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9608CEED628;
 	Fri,  2 Jan 2026 15:35:04 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH v3 0/4] PCI: Fix ACS enablement for Root Ports in OF
- platforms
-Date: Fri, 02 Jan 2026 21:04:46 +0530
-Message-Id: <20260102-pci_acs-v3-0-72280b94d288@oss.qualcomm.com>
+Date: Fri, 02 Jan 2026 21:04:49 +0530
+Subject: [PATCH v3 3/4] PCI: Disable ACS SV capability for the broken IDT
+ switches
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,11 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAJblV2kC/z3MQQrCMBCF4auUWZuSTBvSuPIeUiSm0Q7Ypma0K
- KV3NxZ0M/APj28BDokCw75YIIWZmOKYo9oV4Hs3XoOgLjegRK1QKjF5OjnP4qy0c5WtDTYW8np
- K4UKvTTq2uXviR0zvDZ7x+/0Z+DdmFFLoDo22zqi6sYfIXN6f7ubjMJT5QLuu6wdrODPxpQAAA
- A==
-X-Change-ID: 20251201-pci_acs-b15aa3947289
+Message-Id: <20260102-pci_acs-v3-3-72280b94d288@oss.qualcomm.com>
+References: <20260102-pci_acs-v3-0-72280b94d288@oss.qualcomm.com>
+In-Reply-To: <20260102-pci_acs-v3-0-72280b94d288@oss.qualcomm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  iommu@lists.linux.dev, Naresh Kamboju <naresh.kamboju@linaro.org>, 
@@ -56,16 +54,16 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  Manivannan Sadhasivam <mani@kernel.org>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5180;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7330;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=yKt9mXmVeWjVPM+Kk7KdqbalkLGUCWIr2ZFmKG8rePc=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpV+WlUVx/4bTP6BfZNlt9eRALRoMamvKIMXGrS
- rLG5CQHJE2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaVflpQAKCRBVnxHm/pHO
- 9c1yB/9lxtQB67vgbAZABpKAdvNTS9M+n/dB9DGvBp36IZwncJeWKEh5UCXoElnzqv9GazqhCIy
- Ul9O3agybGYO1QOMFtOM5pW5eBM0VW9CUC/9tMK/RVWNRqLzen5WlQDUn7b4ITqBxd4bnfE1vor
- CY/F9/5lFDy8FprwqsRmORYkMAE+MgtayGr5XSKl369u88v8F0gMwYyhwk/sjatOFBQ+FhXxzTS
- i3hr+i5LPqGLVky0X4yeXrBLqXR7Sw22IlwpUR7zRG3MMgB0HUoX6Ob8eXEe6bfSFgqSIiZdSZP
- HBzAXzMoYgdtwKFgT+lrKI03d0GyB0M9X9y579vz/u0J07zk
+ bh=hSq+H8p+b3vKTeIGRylJu/YSgirGGdFRZY95lQVM7wA=;
+ b=owGbwMvMwMUYOl/w2b+J574ynlZLYsgMf7osxH6euZDI7wjG72v4er++yf03tbnvnmO7sJ77n
+ 3wLwwdenYzGLAyMXAyyYoos6UudtRo9Tt9YEqE+HWYQKxPIFAYuTgGYyK3H7P/0jSwP2X58vSFv
+ 4r+O4oNckhL15/hZjOa/Y9d3sc80aLF+xPtlZub7JbFckyR1f+ptli5Pm+9qfPaT3LT5xZGZO6s
+ 5VJM0aq9HbL109TizUdy7X54Xmp/GxycUeH/qjZ5lYj+JLbdMMPfkHKUHxnKtc7LOz2mUs9N5Wr
+ 21clqLqRi/iGGTzqPozj9JZyd27GiQClmvkFmhtOt+d/OMfwcZz7/Zymkv4RjA56k6ec77/EB1v
+ ugHwbxcinE1d3ksLRTc2fgq/i1xlZ4hXPjttc0igZqZXpb5x/K9Naa1bNoWXHnvrvmZ4mP8C+52
+ hcidCi2Pi+3KiLU+uOT/NdcPTl1FdmevBrtbdT705N8GAA==
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -73,108 +71,179 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series fixes the long standing issue with ACS in OF platforms. There are
-two fixes in this series, both fixing independent issues on their own, but both
-are needed to properly enable ACS on OF platforms.
+Some IDT switches behave erratically when ACS Source Validation is enabled.
+For example, they incorrectly flag an ACS Source Validation error on
+completions for config read requests even though PCIe r4.0, sec 6.12.1.1,
+says that completions are never affected by ACS Source Validation.
 
-Issue(s) background
-===================
+Even though IDT suggests working around this issue by issuing a config
+write before the first config read, so that the device caches the bus and
+device number. But it would still be fragile since the device could loose
+the IDs after the reset and any further access may trigger ACS SV
+violation.
 
-Back in 2021, Xingang Wang first noted a failure in attaching the HiSilicon SEC
-device to QEMU ARM64 pci-root-port device [1]. He then tracked down the issue to
-ACS not being enabled for the QEMU Root Port device and he proposed a patch to
-fix it [2].
+Hence, to properly fix the issue, the respective capability needs to be
+disabled. Since the ACS Capabilities are RO values, and are cached in the
+'pci_dev::acs_capabilities' field, remove the cached broken capabilities by
+calling pci_disable_broken_acs_cap() from pci_acs_init(). This will allow
+pci_enable_acs() helper to disable the relevant ACS ctrls.
 
-Once the patch got applied, people reported PCIe issues with linux-next on the
-ARM Juno Development boards, where they saw failure in enumerating the endpoint
-devices [3][4]. So soon, the patch got dropped, but the actual issue with the
-ARM Juno boards was left behind.
+With this, the previous workaround can now be safely removed.
 
-Fast forward to 2024, Pavan resubmitted the same fix [5] for his own usecase,
-hoping that someone in the community would fix the issue with ARM Juno boards.
-But the patch was rightly rejected, as a patch that was known to cause issues
-should not be merged to the kernel. But again, no one investigated the Juno
-issue and it was left behind again.
-
-Now it ended up in my plate and I managed to track down the issue with the help
-of Naresh who got access to the Juno boards in LKFT. The Juno issue was with the
-PCIe switch from Microsemi/IDT, which triggers ACS Source Validation error on
-Completions received for the Configuration Read Request from a device connected
-to the downstream port that has not yet captured the PCIe bus number. As per the
-PCIe spec r6.0 sec 2.2.6.2, "Functions must capture the Bus and Device Numbers
-supplied with all Type 0 Configuration Write Requests completed by the Function
-and supply these numbers in the Bus and Device Number fields of the Requester ID
-for all Requests". So during the first Configuration Read Request issued by the
-switch downstream port during enumeration (for reading Vendor ID), Bus and
-Device numbers will be unknown to the device. So it responds to the Read Request
-with Completion having Bus and Device number as 0. The switch interprets the
-Completion as an ACS Source Validation error and drops the completion, leading
-to the failure in detecting the endpoint device. Though the PCIe spec r6.0, sec
-6.12.1.1, states that "Completions are never affected by ACS Source Validation".
-This behavior is in violation of the spec.
-
-Solution
-========
-
-In September, I submitted a series [6] to fix both issues. For the IDT issue,
-I reused the existing quirk in the PCI core which does a dummy config write
-before issuing the first config read to the device. And for the ACS enablement
-issue, I just resubmitted the original patch from Xingang which called
-pci_request_acs() from devm_of_pci_bridge_init().
-
-But during the review of the series, several comments were received and they
-required the series to be reworked completely. Hence, in this version, I've
-incorported the comments as below:
-
-1. For the ACS enablement issue, I've moved the pci_enable_acs() call from
-pci_acs_init() to pci_dma_configure().
-
-2. For the IDT issue, I've cached the ACS capabilities (RO) in 'pci_dev',
-and disabled the broken capability for the IDT switches in the cache. This also
-allowed to get rid of the earlier workaround for the switch.
-
-[1] https://lore.kernel.org/all/038397a6-57e2-b6fc-6e1c-7c03b7be9d96@huawei.com
-[2] https://lore.kernel.org/all/1621566204-37456-1-git-send-email-wangxingang5@huawei.com
-[3] https://lore.kernel.org/all/01314d70-41e6-70f9-e496-84091948701a@samsung.com
-[4] https://lore.kernel.org/all/CADYN=9JWU3CMLzMEcD5MSQGnaLyDRSKc5SofBFHUax6YuTRaJA@mail.gmail.com
-[5] https://lore.kernel.org/linux-pci/20241107-pci_acs_fix-v1-1-185a2462a571@quicinc.com
-[6] https://lore.kernel.org/linux-pci/20250910-pci-acs-v1-0-fe9adb65ad7d@oss.qualcomm.com
-
-Changes in v3:
-- Dropped the 'acs_broken_cap' field and directly called the quirk from
-  pci_acs_init()
-- Collected tags. Since the delta between v2 and v3 is minimal, I've kept them.
-- Rebased on top of v6.19-rc1 
-- Link to v2: https://lore.kernel.org/r/20251202-pci_acs-v2-0-5d2759a71489@oss.qualcomm.com
-
-Changes in v2:
-
-* Reworked the patches completely as mentioned above.
-* Rebased on top of v6.18-rc7
-
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Tested-by: Naresh Kamboju <naresh.kamboju@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Manivannan Sadhasivam (4):
-      PCI: Enable ACS only after configuring IOMMU for OF platforms
-      PCI: Cache ACS capabilities
-      PCI: Disable ACS SV capability for the broken IDT switches
-      PCI: Extend the pci_disable_broken_acs_cap() quirk for one more IDT switch
+ drivers/pci/pci.c    |  1 +
+ drivers/pci/pci.h    |  3 ++-
+ drivers/pci/probe.c  | 12 -----------
+ drivers/pci/quirks.c | 61 ++++++++++++----------------------------------------
+ 4 files changed, 17 insertions(+), 60 deletions(-)
 
- drivers/pci/pci-driver.c |  8 +++++++
- drivers/pci/pci.c        | 33 ++++++++++++--------------
- drivers/pci/pci.h        |  4 +++-
- drivers/pci/probe.c      | 12 ----------
- drivers/pci/quirks.c     | 62 ++++++++++++------------------------------------
- include/linux/pci.h      |  1 +
- 6 files changed, 42 insertions(+), 78 deletions(-)
----
-base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
-change-id: 20251201-pci_acs-b15aa3947289
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d89b04451aea..e16229e7ff6f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3652,6 +3652,7 @@ void pci_acs_init(struct pci_dev *dev)
+ 		return;
+ 
+ 	pci_read_config_word(dev, pos + PCI_ACS_CAP, &dev->acs_capabilities);
++	pci_disable_broken_acs_cap(dev);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4592ede0ebcc..5fe5d6e84c95 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -432,7 +432,6 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int rrs_timeout);
+ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 					int rrs_timeout);
+-int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *pl, int rrs_timeout);
+ 
+ int pci_setup_device(struct pci_dev *dev);
+ void __pci_size_stdbars(struct pci_dev *dev, int count,
+@@ -944,6 +943,7 @@ void pci_enable_acs(struct pci_dev *dev);
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
+ int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
++void pci_disable_broken_acs_cap(struct pci_dev *pdev);
+ int pcie_failed_link_retrain(struct pci_dev *dev);
+ #else
+ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+@@ -959,6 +959,7 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
+ {
+ 	return -ENOTTY;
+ }
++static inline void pci_disable_broken_acs_cap(struct pci_dev *dev) { }
+ static inline int pcie_failed_link_retrain(struct pci_dev *dev)
+ {
+ 	return -ENOTTY;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 41183aed8f5d..c7304ac5afc2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2547,18 +2547,6 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 				int timeout)
+ {
+-#ifdef CONFIG_PCI_QUIRKS
+-	struct pci_dev *bridge = bus->self;
+-
+-	/*
+-	 * Certain IDT switches have an issue where they improperly trigger
+-	 * ACS Source Validation errors on completions for config reads.
+-	 */
+-	if (bridge && bridge->vendor == PCI_VENDOR_ID_IDT &&
+-	    bridge->device == 0x80b5)
+-		return pci_idt_bus_quirk(bus, devfn, l, timeout);
+-#endif
+-
+ 	return pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
+ }
+ EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b9c252aa6fe0..1571a2ef331e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5778,58 +5778,25 @@ DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 			       PCI_BASE_CLASS_DISPLAY, 16, quirk_nvidia_hda);
+ 
+ /*
+- * Some IDT switches incorrectly flag an ACS Source Validation error on
+- * completions for config read requests even though PCIe r4.0, sec
+- * 6.12.1.1, says that completions are never affected by ACS Source
+- * Validation.  Here's the text of IDT 89H32H8G3-YC, erratum #36:
++ * Some IDT switches behave erratically when ACS Source Validation is enabled.
++ * For example, they incorrectly flag an ACS Source Validation error on
++ * completions for config read requests even though PCIe r4.0, sec 6.12.1.1,
++ * says that completions are never affected by ACS Source Validation.
+  *
+- *   Item #36 - Downstream port applies ACS Source Validation to Completions
+- *   Section 6.12.1.1 of the PCI Express Base Specification 3.1 states that
+- *   completions are never affected by ACS Source Validation.  However,
+- *   completions received by a downstream port of the PCIe switch from a
+- *   device that has not yet captured a PCIe bus number are incorrectly
+- *   dropped by ACS Source Validation by the switch downstream port.
++ * Even though IDT suggests working around this issue by issuing a config write
++ * before the first config read, so that the switch caches the bus and device
++ * number, it would still be fragile since the device could loose the IDs after
++ * the reset.
+  *
+- * The workaround suggested by IDT is to issue a config write to the
+- * downstream device before issuing the first config read.  This allows the
+- * downstream device to capture its bus and device numbers (see PCIe r4.0,
+- * sec 2.2.9), thus avoiding the ACS error on the completion.
+- *
+- * However, we don't know when the device is ready to accept the config
+- * write, so we do config reads until we receive a non-Config Request Retry
+- * Status, then do the config write.
+- *
+- * To avoid hitting the erratum when doing the config reads, we disable ACS
+- * SV around this process.
++ * Hence, a reliable fix would be to assume that these switches don't support
++ * ACS SV.
+  */
+-int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l, int timeout)
++void pci_disable_broken_acs_cap(struct pci_dev *pdev)
+ {
+-	int pos;
+-	u16 ctrl = 0;
+-	bool found;
+-	struct pci_dev *bridge = bus->self;
+-
+-	pos = bridge->acs_cap;
+-
+-	/* Disable ACS SV before initial config reads */
+-	if (pos) {
+-		pci_read_config_word(bridge, pos + PCI_ACS_CTRL, &ctrl);
+-		if (ctrl & PCI_ACS_SV)
+-			pci_write_config_word(bridge, pos + PCI_ACS_CTRL,
+-					      ctrl & ~PCI_ACS_SV);
++	if (pdev->vendor == PCI_VENDOR_ID_IDT && pdev->device == 0x80b5) {
++		pci_info(pdev, "Disabling broken ACS SV\n");
++		pdev->acs_capabilities &= ~PCI_ACS_SV;
+ 	}
+-
+-	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
+-
+-	/* Write Vendor ID (read-only) so the endpoint latches its bus/dev */
+-	if (found)
+-		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
+-
+-	/* Re-enable ACS_SV if it was previously enabled */
+-	if (ctrl & PCI_ACS_SV)
+-		pci_write_config_word(bridge, pos + PCI_ACS_CTRL, ctrl);
+-
+-	return found;
+ }
+ 
+ /*
 
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.48.1
 
 
