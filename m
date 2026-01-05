@@ -1,137 +1,159 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A556286D5C
-	for <linux-pci@vger.kernel.org>; Mon,  5 Jan 2026 13:48:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A774D23D7DD;
+	Mon,  5 Jan 2026 13:55:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767620905; cv=none; b=fUOSvkdiSUluLzEGqOR0/FM7ijk1U8s/i0eD3s+baxvL3sXrQiCxd8+obfVpnLXoD/eiLc8YOxiqToLOLdD4aYAPQ0nt5IQovj/0y+lgTACe657jEDENEFWXezJdBwtmI4FJgdSgf9fkbc38r6CoI7ZUWu7L37Ljx1ek33r89Xw=
+	t=1767621355; cv=none; b=jjGI8JDqI8XfQKA3GBOAPUfS+sS6bgO77fc4pMXafD9EUMTRIiJV3kmXm4zXW+lXfWO/llLMWVwnoH5qxN+udL3fBfK0A8Kyil4jSBqB5a0awZSXWzTBHVJJsHfELkm1rFIN5GcCPbrSIdysZ+dentIHObMCkFSmwxZZNiII4sI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767620905; c=relaxed/simple;
-	bh=KHUCaJ/Ls71BszTMTtJU0oPqKLK070kFZWFzzLSm4cs=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=lsO1DCTcjMsvDVeYOZ90Cbsri1PRC8NRUnyXymfpyW25MWHDXpzGwWdfB0HXbFwd0vfINNs6OTiuS9GAoFFG0Natbd5ZUYHwrlUEzvHdTda4xL3n1Ffd3jVuGsHAdiU0sIEV3Y5Ceybftf7ydsmlvjuSuEG1S/y0QgLHa9UClek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Zw6KGBap; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Zw6KGBap"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-42fbad1fa90so11724013f8f.0
-        for <linux-pci@vger.kernel.org>; Mon, 05 Jan 2026 05:48:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1767620901; x=1768225701; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5pm61tHOxVIMRlo2kMdlbFtWUM1V4vVjtzMYxIxE1KY=;
-        b=Zw6KGBapUqxmW0MRJQ2z9ETicYDDHx//v5iNvGMLBW2mlq1pmYPCHp+APGQNMQazdy
-         gp0ny4geRviKqJQEFnWrC/B9jU6ADIIRPD6Qo07YZNxQtgIkxQdnUkQ1/SzODbWnSkOx
-         YdN91T6bVHpZ2YOfT0yE65UUyGlOo0ZV0e5lCVABrknXa7dN9RtT38e2HiMjq8KmFbK0
-         rVWBkgMYV8kEMWaGYWREVO3EpltwuJugikqcafqHRdtnuSjj/2AFNq7c1OiiOuWHMH7N
-         q+esPvCpeKuXOUoWlN9PtrArRQKy395ftPSRPxc0AZm4TeqKQ+fgDQ5MlzdNKfJm1ZpS
-         jP3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767620901; x=1768225701;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5pm61tHOxVIMRlo2kMdlbFtWUM1V4vVjtzMYxIxE1KY=;
-        b=KH0ticm/MJQjUJW6ziU0CD2yCtxDwSUGR60Y2vYFM96aVwcdm7PQZYf+stq4F7r8av
-         93nQ3/jIBqLH/aZ1WCRFAKlX05PzqN+hkoWafUUVlGZcAIAPW6c8qzxTdWLvr0wrSKKI
-         wLGfC+v5wohik7Hc2Siw8KrCwY9jXKr86xfbXJz9ncj26eW1TZrUQNnztXrTM7zfUzRF
-         LqLMUDws8dmdI/kUnr2Vuq51Qqd+I8qPciZBmVodd6cSedBSriVy2GQlfq0JR5vzc4rp
-         OPRUvRGpmuU/WoKPNGALd9Cs2x8DCFKb6jYAEhgn3nXh+IrUQCpGYvVQSLRCLaRyYat7
-         +XAw==
-X-Forwarded-Encrypted: i=1; AJvYcCXU/jPt2fHJARvkS4q4TI/1sU3uZSFM32Ph7G4PT/Xeew8SmAhBm5I0OmfX1uyMRsqBtA2ERkWlDzQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyong6V7Awmm6n/OmevhmNIujfaR34PXhvfDUBzOr7a/k8IPmnM
-	FGHBbeaxOeEGX0b5LVctrnACYKA+xXqiQLMLqHRKQQ58WmsOAx+CVH7S1zjzYJgzmWY=
-X-Gm-Gg: AY/fxX592vz/FxSZfj4x9wqTtJaOSR28cks36m7Ll9eY9FOae1P92YFcHzejV8HACSX
-	ceMZNh7dK+8I3v/xZWBH1agaOcjc6KiYceQEFk8MUaSGUJrLIvGHI1QG7mFAmf/u/D5zwIR7uHY
-	+7GmFdlEv3yvGxFCz88tfbpzVDHhty0z4/iE3JkJH2294caDFfUAFUEi33TaP6tVqvOoAwOcaHv
-	ZCigLEShcw734XMBFe9lhLiNPPmmq0phrEywDrH8k6Y+Wx7zDmdqlkWh9pLveudvOenoXlkGRim
-	Ps67zA3Yfm8lclx5T9s01NH2ApuT95ZwAzRfUsw8ZZAOQSwqT4OJ0QOKRgdn78OhyibFF7BB09F
-	bGAlsbKv6/RNa8aRWvKpogvevNBstDGDH1GXc7Fx4xWofrNrC6D6yoK9Z8JMXLNoXRqfl0+HubU
-	sXN0/D3t/GZK8hIQj1lFKdiNq+nijI5w5JMY6/xd94GBHP0goT9OylRHgYPPNhix8=
-X-Google-Smtp-Source: AGHT+IFJH9vjvSt9a1g91foUnNhyxduRLS5b5HEkPDAICFvU5f47KylFUeGSvzLd5WqdKzRrR497ng==
-X-Received: by 2002:a05:6000:40dc:b0:432:5bac:3915 with SMTP id ffacd0b85a97d-4325bac3a19mr59539111f8f.39.1767620901179;
-        Mon, 05 Jan 2026 05:48:21 -0800 (PST)
-Received: from ?IPV6:2a01:e0a:3d9:2080:d4c1:5589:eadb:1033? ([2a01:e0a:3d9:2080:d4c1:5589:eadb:1033])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4324ea1b1b1sm100156855f8f.3.2026.01.05.05.48.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Jan 2026 05:48:20 -0800 (PST)
-Message-ID: <46d049cd-3307-4fbb-b33e-69ba05ded106@linaro.org>
-Date: Mon, 5 Jan 2026 14:48:20 +0100
+	s=arc-20240116; t=1767621355; c=relaxed/simple;
+	bh=6Wi8ccELHgOxaAXh0BIHlKDmzpuP4ORk5/SyOh1Pmq0=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YcENHQCm1V7WY6YJR2kc2gKCCb/Zt7mT703OpFmcFwunlmYpDTvLU5ysmmVnV9OAYlyHhqtBH6uLwceDVo11pQmejc4jbOup07IxqhwgyvBVvrDQt3hk7rsjRr6FVKgdQGe/f5c1yAIHsWnWGDHGVj7clPeGGeYzz1xgj2PpKUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.83])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dlG6C3s37zHnGkW;
+	Mon,  5 Jan 2026 21:55:47 +0800 (CST)
+Received: from dubpeml100005.china.huawei.com (unknown [7.214.146.113])
+	by mail.maildlp.com (Postfix) with ESMTPS id D2A4A40569;
+	Mon,  5 Jan 2026 21:55:49 +0800 (CST)
+Received: from localhost (10.48.147.217) by dubpeml100005.china.huawei.com
+ (7.214.146.113) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Mon, 5 Jan
+ 2026 13:55:48 +0000
+Date: Mon, 5 Jan 2026 13:55:45 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>
+CC: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+	Robert Moore <robert.moore@intel.com>, Thomas Gleixner <tglx@linutronix.de>,
+	Hanjun Guo <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@arm.com>, Marc
+ Zyngier <maz@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, <acpica-devel@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 6/7] irqchip/gic-v5: Add ACPI ITS probing
+Message-ID: <20260105135545.00003a59@huawei.com>
+In-Reply-To: <20251218-gicv5-host-acpi-v2-6-eec76cd1d40b@kernel.org>
+References: <20251218-gicv5-host-acpi-v2-0-eec76cd1d40b@kernel.org>
+	<20251218-gicv5-host-acpi-v2-6-eec76cd1d40b@kernel.org>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: neil.armstrong@linaro.org
-Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH] PCI: meson: Drop unused WAIT_LINKUP_TIMEOUT macro
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
- linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- bhelgaas@google.com, robh@kernel.org, mani@kernel.org,
- kwilczynski@kernel.org, lpieralisi@kernel.org, yue.wang@Amlogic.com
-References: <20260105125625.239497-1-martin.blumenstingl@googlemail.com>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <20260105125625.239497-1-martin.blumenstingl@googlemail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500012.china.huawei.com (7.191.174.4) To
+ dubpeml100005.china.huawei.com (7.214.146.113)
 
-On 1/5/26 13:56, Martin Blumenstingl wrote:
-> Commit 113d9712f63b ("PCI: meson: Report that link is up while in ASPM
-> L0s and L1 states") removed the waiting loop in meson_pcie_link_up()
-> making #define WAIT_LINKUP_TIMEOUT now unused.
+On Thu, 18 Dec 2025 11:14:32 +0100
+Lorenzo Pieralisi <lpieralisi@kernel.org> wrote:
+
+> On ACPI ARM64 systems the GICv5 ITS configuration and translate frames
+> are described in the MADT table.
 > 
-> Drop the now unused variable to keep the driver code clean.
+> Refactor the current GICv5 ITS driver code to share common functions
+> between ACPI and OF and implement ACPI probing in the GICv5 ITS driver.
 > 
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> Add iort_msi_xlate() to map a device ID and retrieve an MSI controller
+> fwnode node for ACPI systems and update pci_msi_map_rid_ctlr_node() to
+> use it in its ACPI code path.
+> 
+> Add the required functions to IORT code for deviceID retrieval and IRQ
+> domain registration and look-up so that the GICv5 ITS driver in an
+> ACPI based system can be successfully probed.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Hanjun Guo <guohanjun@huawei.com>
+> Cc: Sudeep Holla <sudeep.holla@arm.com>
+> Cc: Marc Zyngier <maz@kernel.org>
+Hi Lorenzo,
+
+Diff was in a rather unfriendly mood on this one and smashing the xlate
+on top of the wrong function (wrt to what was being replaced).
+
+Ah well. Only one minor comment inline.  Not really my area of expertise
+beyond wanting this to move forwards quickly but none the less,
+
+Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+
 > ---
->   drivers/pci/controller/dwc/pci-meson.c | 1 -
->   1 file changed, 1 deletion(-)
+>  drivers/acpi/arm64/iort.c                |  95 +++++++++++++++++-----
+>  drivers/irqchip/irq-gic-its-msi-parent.c |  39 ++++-----
+>  drivers/irqchip/irq-gic-v5-irs.c         |   7 +-
+>  drivers/irqchip/irq-gic-v5-its.c         | 132 ++++++++++++++++++++++++++++++-
+>  drivers/pci/msi/irqdomain.c              |   2 +
+>  include/linux/acpi_iort.h                |  10 ++-
+>  include/linux/irqchip/arm-gic-v5.h       |   1 +
+>  7 files changed, 241 insertions(+), 45 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-> index a1c389216362..0694084f612b 100644
-> --- a/drivers/pci/controller/dwc/pci-meson.c
-> +++ b/drivers/pci/controller/dwc/pci-meson.c
-> @@ -37,7 +37,6 @@
->   #define PCIE_CFG_STATUS17		0x44
->   #define PM_CURRENT_STATE(x)		(((x) >> 7) & 0x1)
->   
-> -#define WAIT_LINKUP_TIMEOUT		4000
->   #define PORT_CLK_RATE			100000000UL
->   #define MAX_PAYLOAD_SIZE		256
->   #define MAX_READ_REQ_SIZE		256
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index 65f0f56ad753..17dbe66da804 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -595,45 +595,45 @@ u32 iort_msi_map_id(struct device *dev, u32 input_id)
+>  }
+>
+> +/**
+> + * iort_pmsi_get_msi_info() - Get the device id and translate frame PA for a device
+> + * @dev: The device for which the mapping is to be done.
+> + * @dev_id: The device ID found.
+> + * @pa: optional pointer to store translate frame address.
+> + *
+> + * Returns: 0 for successful devid and pa retrieval, -ENODEV on error
+> + */
+> +int iort_pmsi_get_msi_info(struct device *dev, u32 *dev_id, phys_addr_t *pa)
+> +{
+> +	struct acpi_iort_node *node, *parent = NULL;
+> +	struct acpi_iort_its_group *its;
+> +	int i, index;
+> +
+> +	node = iort_find_dev_node(dev);
+> +	if (!node)
+> +		return -ENODEV;
+> +
+> +	index = iort_get_id_mapping_index(node);
+> +	/* if there is a valid index, go get the dev_id directly */
+> +	if (index >= 0) {
+> +		parent = iort_node_get_id(node, dev_id, index);
+> +	} else {
+> +		for (i = 0; i < node->mapping_count; i++) {
+> +			parent = iort_node_map_platform_id(node, dev_id,
+> +						      IORT_MSI_TYPE, i);
+> +			if (parent)
+> +				break;
+> +		}
+> +	}
+> +
+Another borderline comment on what I think is a small readabilty
+improvement.
 
-Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+I'd handle the only error case that would otherwise use the ternary below
+here
+	if (!parent)
+		return -ENODEV;
+
+	if (pa) {
+		...
+	}
+	return 0;
+
+> +	if (parent && pa) {
+> +		int ret;
+> +
+> +		its = (struct acpi_iort_its_group *)node->node_data;
+> +		ret = iort_find_its_base(its->identifiers[0], pa);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	return parent ? 0 : -ENODEV;
+> +}
+
+
