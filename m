@@ -1,159 +1,125 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A774D23D7DD;
-	Mon,  5 Jan 2026 13:55:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0197A2C11CA;
+	Mon,  5 Jan 2026 13:56:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767621355; cv=none; b=jjGI8JDqI8XfQKA3GBOAPUfS+sS6bgO77fc4pMXafD9EUMTRIiJV3kmXm4zXW+lXfWO/llLMWVwnoH5qxN+udL3fBfK0A8Kyil4jSBqB5a0awZSXWzTBHVJJsHfELkm1rFIN5GcCPbrSIdysZ+dentIHObMCkFSmwxZZNiII4sI=
+	t=1767621366; cv=none; b=AHcX1Ds8j4l7hK0sPUj3AfFO3+aQX+WzV8ycIBRrVFmZFJynxMS+6B30kge9KDwwn4+MGy/jxBiQYWEC9mCEarwBdRatitCV+tkP6bd13EmOo78KwCGm8wFOlzjgvJ8caHlv0tUdBdGDB5XyKJMjRZkbYZj+fHFjwWFa+cl3OEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767621355; c=relaxed/simple;
-	bh=6Wi8ccELHgOxaAXh0BIHlKDmzpuP4ORk5/SyOh1Pmq0=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YcENHQCm1V7WY6YJR2kc2gKCCb/Zt7mT703OpFmcFwunlmYpDTvLU5ysmmVnV9OAYlyHhqtBH6uLwceDVo11pQmejc4jbOup07IxqhwgyvBVvrDQt3hk7rsjRr6FVKgdQGe/f5c1yAIHsWnWGDHGVj7clPeGGeYzz1xgj2PpKUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.83])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dlG6C3s37zHnGkW;
-	Mon,  5 Jan 2026 21:55:47 +0800 (CST)
-Received: from dubpeml100005.china.huawei.com (unknown [7.214.146.113])
-	by mail.maildlp.com (Postfix) with ESMTPS id D2A4A40569;
-	Mon,  5 Jan 2026 21:55:49 +0800 (CST)
-Received: from localhost (10.48.147.217) by dubpeml100005.china.huawei.com
- (7.214.146.113) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Mon, 5 Jan
- 2026 13:55:48 +0000
-Date: Mon, 5 Jan 2026 13:55:45 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>
-CC: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
-	Robert Moore <robert.moore@intel.com>, Thomas Gleixner <tglx@linutronix.de>,
-	Hanjun Guo <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@arm.com>, Marc
- Zyngier <maz@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, <acpica-devel@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 6/7] irqchip/gic-v5: Add ACPI ITS probing
-Message-ID: <20260105135545.00003a59@huawei.com>
-In-Reply-To: <20251218-gicv5-host-acpi-v2-6-eec76cd1d40b@kernel.org>
-References: <20251218-gicv5-host-acpi-v2-0-eec76cd1d40b@kernel.org>
-	<20251218-gicv5-host-acpi-v2-6-eec76cd1d40b@kernel.org>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1767621366; c=relaxed/simple;
+	bh=EV5QrWGkig2YkqQcwqpy9xrJBzO9BBKdu7LlEuXELtg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Asbsul37pxOJJx5T3+K+PoTUNZUlUXoOuw00Tbqqoylt980zEM/LQJFtrPRX0a2O4+hdLvrsTd1OrBUX9g7nig7EklGdb//q4bdFf/YHEmgPucCZfbRUWWy5FTStpbj0p58xQISC0YbIluKjeNLGZwpA3ZuV1fu97KD47pf/tfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s/VeN30q; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s/VeN30q"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 66A4CC16AAE;
+	Mon,  5 Jan 2026 13:56:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767621365;
+	bh=EV5QrWGkig2YkqQcwqpy9xrJBzO9BBKdu7LlEuXELtg=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=s/VeN30qvR31CzafjknnZFpce1Mn5J1nbjbEIktwxfoL4EueMs8wczWF+ILeZYrE0
+	 NQhiT3EfmGgD1Ufw4Ncibk0iuhM1vGGU8F5ZBLBDpZbHvXLLfqQZ67tng8Fn5JfBjD
+	 jkIDGKNJom7jPl96iySyvajBy/oen/El3G9KfrXIcZC8jdB7pyyoK/g730dxzSS4Ic
+	 KMWq/PCfdmTGTGYPHXLquKYv/jYCT3knqI0KP+y1Ep5EG81Rw8mPymNC4XiwKiZZ5F
+	 zhF1m4tgJKmY86Fo9SEScO0guDHgA+zMXJljWTe80sYOANS8aWjTHJgnksOBK8XAqr
+	 Iz12cICBOq0KQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 540A5C79F90;
+	Mon,  5 Jan 2026 13:56:05 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Mon, 05 Jan 2026 19:25:41 +0530
+Subject: [PATCH v4 1/8] PCI/pwrctrl: tc9563: Use put_device() instead of
+ i2c_put_adapter()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500012.china.huawei.com (7.191.174.4) To
- dubpeml100005.china.huawei.com (7.214.146.113)
+Message-Id: <20260105-pci-pwrctrl-rework-v4-1-6d41a7a49789@oss.qualcomm.com>
+References: <20260105-pci-pwrctrl-rework-v4-0-6d41a7a49789@oss.qualcomm.com>
+In-Reply-To: <20260105-pci-pwrctrl-rework-v4-0-6d41a7a49789@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Chen-Yu Tsai <wens@kernel.org>, 
+ Brian Norris <briannorris@chromium.org>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Niklas Cassel <cassel@kernel.org>, Alex Elder <elder@riscstar.com>, 
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1698;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=uRiBY5lL1lc1Lvu1lsi1RLw6Jbau7l8e4J6XHZ91N/0=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpW8LyrTB1/7xYHSK+ITndk1QFsfhU23hYFIvL7
+ TBl9/IH+36JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaVvC8gAKCRBVnxHm/pHO
+ 9SxbCACE8dPrXxT6b8mvBa1KwOqhv2aM1gSQjgA4iFsR2qhsm/9KNgzdFO1p2DzSd3pIU4INsMk
+ gMQrUPnL6/O4ZwBlakP41dSbtG+Zja+aJuoH1o5mOvUhaZdiT0mGLZzC06WN1F1RPTLjnwtK8CW
+ Y5M3/YoZ/dG/vCG+jTlOdOXkzMX74ogpnqkoIdxmSVHrY9TEAGBTz1ZojR1/gM4eLD34hRxiN3c
+ sz6DI3o6ikjFEgqYM0NdElK1m3v2bdVJ6lrU2+UCuQK2y0P1T83A9kcbBNyi/tWIDvuMhBva1h2
+ xk3Vs/n/dyeaaf3cVgPd9bkC7ra6CaKHvQi0HUbuJdUHTkR6
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On Thu, 18 Dec 2025 11:14:32 +0100
-Lorenzo Pieralisi <lpieralisi@kernel.org> wrote:
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-> On ACPI ARM64 systems the GICv5 ITS configuration and translate frames
-> are described in the MADT table.
-> 
-> Refactor the current GICv5 ITS driver code to share common functions
-> between ACPI and OF and implement ACPI probing in the GICv5 ITS driver.
-> 
-> Add iort_msi_xlate() to map a device ID and retrieve an MSI controller
-> fwnode node for ACPI systems and update pci_msi_map_rid_ctlr_node() to
-> use it in its ACPI code path.
-> 
-> Add the required functions to IORT code for deviceID retrieval and IRQ
-> domain registration and look-up so that the GICv5 ITS driver in an
-> ACPI based system can be successfully probed.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Hanjun Guo <guohanjun@huawei.com>
-> Cc: Sudeep Holla <sudeep.holla@arm.com>
-> Cc: Marc Zyngier <maz@kernel.org>
-Hi Lorenzo,
+The API comment for of_find_i2c_adapter_by_node() recommends using
+put_device() to drop the reference count of I2C adapter instead of using
+i2c_put_adapter(). So replace i2c_put_adapter() with put_device().
 
-Diff was in a rather unfriendly mood on this one and smashing the xlate
-on top of the wrong function (wrt to what was being replaced).
+Fixes: 4c9c7be47310 ("PCI: pwrctrl: Add power control driver for TC9563")
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Ah well. Only one minor comment inline.  Not really my area of expertise
-beyond wanting this to move forwards quickly but none the less,
+diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+index ec423432ac65..0a63add84d09 100644
+--- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
++++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+@@ -533,7 +533,7 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
+ 	ctx->client = i2c_new_dummy_device(ctx->adapter, addr);
+ 	if (IS_ERR(ctx->client)) {
+ 		dev_err(dev, "Failed to create I2C client\n");
+-		i2c_put_adapter(ctx->adapter);
++		put_device(&ctx->adapter->dev);
+ 		return PTR_ERR(ctx->client);
+ 	}
+ 
+@@ -613,7 +613,7 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
+ 	tc9563_pwrctrl_power_off(ctx);
+ remove_i2c:
+ 	i2c_unregister_device(ctx->client);
+-	i2c_put_adapter(ctx->adapter);
++	put_device(&ctx->adapter->dev);
+ 	return ret;
+ }
+ 
+@@ -623,7 +623,7 @@ static void tc9563_pwrctrl_remove(struct platform_device *pdev)
+ 
+ 	tc9563_pwrctrl_power_off(ctx);
+ 	i2c_unregister_device(ctx->client);
+-	i2c_put_adapter(ctx->adapter);
++	put_device(&ctx->adapter->dev);
+ }
+ 
+ static const struct of_device_id tc9563_pwrctrl_of_match[] = {
 
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-
-> ---
->  drivers/acpi/arm64/iort.c                |  95 +++++++++++++++++-----
->  drivers/irqchip/irq-gic-its-msi-parent.c |  39 ++++-----
->  drivers/irqchip/irq-gic-v5-irs.c         |   7 +-
->  drivers/irqchip/irq-gic-v5-its.c         | 132 ++++++++++++++++++++++++++++++-
->  drivers/pci/msi/irqdomain.c              |   2 +
->  include/linux/acpi_iort.h                |  10 ++-
->  include/linux/irqchip/arm-gic-v5.h       |   1 +
->  7 files changed, 241 insertions(+), 45 deletions(-)
-> 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index 65f0f56ad753..17dbe66da804 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -595,45 +595,45 @@ u32 iort_msi_map_id(struct device *dev, u32 input_id)
->  }
->
-> +/**
-> + * iort_pmsi_get_msi_info() - Get the device id and translate frame PA for a device
-> + * @dev: The device for which the mapping is to be done.
-> + * @dev_id: The device ID found.
-> + * @pa: optional pointer to store translate frame address.
-> + *
-> + * Returns: 0 for successful devid and pa retrieval, -ENODEV on error
-> + */
-> +int iort_pmsi_get_msi_info(struct device *dev, u32 *dev_id, phys_addr_t *pa)
-> +{
-> +	struct acpi_iort_node *node, *parent = NULL;
-> +	struct acpi_iort_its_group *its;
-> +	int i, index;
-> +
-> +	node = iort_find_dev_node(dev);
-> +	if (!node)
-> +		return -ENODEV;
-> +
-> +	index = iort_get_id_mapping_index(node);
-> +	/* if there is a valid index, go get the dev_id directly */
-> +	if (index >= 0) {
-> +		parent = iort_node_get_id(node, dev_id, index);
-> +	} else {
-> +		for (i = 0; i < node->mapping_count; i++) {
-> +			parent = iort_node_map_platform_id(node, dev_id,
-> +						      IORT_MSI_TYPE, i);
-> +			if (parent)
-> +				break;
-> +		}
-> +	}
-> +
-Another borderline comment on what I think is a small readabilty
-improvement.
-
-I'd handle the only error case that would otherwise use the ternary below
-here
-	if (!parent)
-		return -ENODEV;
-
-	if (pa) {
-		...
-	}
-	return 0;
-
-> +	if (parent && pa) {
-> +		int ret;
-> +
-> +		its = (struct acpi_iort_its_group *)node->node_data;
-> +		ret = iort_find_its_base(its->identifiers[0], pa);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
-> +	return parent ? 0 : -ENODEV;
-> +}
+-- 
+2.48.1
 
 
