@@ -1,174 +1,85 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA73336ED8
-	for <linux-pci@vger.kernel.org>; Mon,  5 Jan 2026 17:16:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CF6933A9E9;
+	Mon,  5 Jan 2026 17:19:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767633370; cv=none; b=c5F/S+wglr74i9wG3qHzUzBwdQFDLcvYbJ1ZhPfIywOzXpwp/DIpSPT2eqGME9OSYbf7mvo6+HDnpr6YmEiBbElwBDWraXRwCkVFQCoqvLlRVTLg4JqBLuS153jnOxs4TVXtRppW0KNH8/eNqfqae5f0hbyDSmEShKR8DOp0HTY=
+	t=1767633575; cv=none; b=iuTPaLs+VDlRbx0bjwc5f321QDXlY9+kmBEpPM/aHboXJCCXyepJh7MY6RhDgVWXsNu47e7Frhn3AbeCiXMu1HKAeSDwjWVjFedFOdigJS7gI8gusszIsORHCF2hjqdNDXPZXbcRKxCIlROVP7hfon51BcxWgYHQ99Mt2cMBLpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767633370; c=relaxed/simple;
-	bh=hpKIOZ5A3Cxt7CeuAF9TvNrJ9+kmSTfm9eb1T3pjX2M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JWNjpKirB3vwGZZXNiP50gZFMaN7wo43VV66aKxCVzpaVFIQdMfCHLWzIGS/1nu9BgWMpHyRUdbPny8ELQqtVqIft9rEFIjiiGzihQlkxa3V8m315qVFo05MFvoE3KdGMd1XG8o0stFMTMzyjymhavi6F1ojLEVQh6bnMoTsb0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=iJK2TIcE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=W50QYJVP; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1767633575; c=relaxed/simple;
+	bh=fZ2sAPLOyHq1FxADhZSS8Bg41rmW1I7xXUnD6YLxvm8=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=AbMEBRVVne/EuBjTenHWtNXYt7vAWbyHJII6eQ6+72kusqumXp4rQ0KSVkW46UENJrGpZ1pI/81kzh8J1Il8dDYAUKAJGAzGkyv2Iox47EMqyRFOUATP88UPs8EFISVHFoYJVLkM0cQDc6j1dngw/vLq5IExi0NPKXoFFlhWdaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=rFg/6qqU; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="iJK2TIcE";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="W50QYJVP"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 605FKdAd1751622
-	for <linux-pci@vger.kernel.org>; Mon, 5 Jan 2026 17:16:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	BP6Gu/c4u72ZuJtLgtoBCZcMdP8EzVQc6SErXMu+NVM=; b=iJK2TIcElu/UfXQV
-	UvzgwnNdTKPmjV+ldOkt+wmncU7M/+LJK8zj7oxg0lQnKO9M3nVatd5QseCCMdlm
-	v6Gf9MfKK1QWOptn1ZfV4OUGZGA2OawuLhP1qZo1TY9E493FDAbuSi8QlWI7eVFr
-	0nd6Ie6hremkkOfX5HjfV8L80MUEVI2cu/4akS8xssybFVCiurZ2NnXhfUVhV4cs
-	jEyavDC65WsZZdtzEGDX/Xw0oQcuXrHVEgEzUIu8UWAEdUn0jX7Y/Vmk7z5v3GXM
-	6M1Nk/2oSjIfJIH2QVS+1xTieirzDgWkStxqNKs36epIh5mF/T4c2inJeobU0BMo
-	Od8Z8Q==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bgfv00baw-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 05 Jan 2026 17:16:04 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2a0a0bad5dfso2089575ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 05 Jan 2026 09:16:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1767633364; x=1768238164; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=BP6Gu/c4u72ZuJtLgtoBCZcMdP8EzVQc6SErXMu+NVM=;
-        b=W50QYJVPZT5wKcjumeHMjxGGNSJN9WKF5hXHZc70dx5uYWFWrt0J1JQkWzEbkRuuKR
-         3szlEgfCsSagHfFXnSRjMpjp21Gcu2ax2Zat82+lhYsS2Xbuwahp7cP2pSijBX++Yx8R
-         3N3r5+lUo5sSHfd9pNPtFAasnYwacwwdoJ4Qs1gJVQltYKVdB9I+mRv7YAX0k/UYkkbm
-         2+8Mn7Xkvpn5k5LybFqPDunTPTPobG+QIwk3M5edj+UdNgAVSmQcKOCRZtHTBwpcEKVC
-         RydAnwZR7WH7sK6aOCd4enH6CBV6E7hvetrIGS0cwZ5VHwfi4GRqr679bLP4Nf+NqM4/
-         QyRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767633364; x=1768238164;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BP6Gu/c4u72ZuJtLgtoBCZcMdP8EzVQc6SErXMu+NVM=;
-        b=kUOs/XEAyPWiRCxv3f38+h/IGi7SofCS2+7ZQKm+4yi8tQeqrLfCUIaJ2mSpR31I97
-         jfxNizLuFMNESvplSjaqYl9dtquJsB6VeTJDRcuDShMq9QEeMj3gpyVPG+1EcdfSvF3D
-         jCz864D/w2KXPm7uzy7i7i8RxEBf1CopiDH7uz2lyBGksH+IhHiFcn9cYeJTU3BLeR2U
-         l65JE7C3fpnzLhQseIl+PljYsHrqctqddlgxZsl8fPZ2XxXNUI7JQpSKFaoiLNUXxwGL
-         aymKce1apv0gIaByHyXoO877gs31zugns0E8gQ4Kz000VcbXTcTd9s7GNHd1HSVnG4/0
-         m6FA==
-X-Forwarded-Encrypted: i=1; AJvYcCWxY5CAAIIvc7WWrj76IKlWLrqijvvwHbjSqEFzr1FC1KgQis1WcA89yfpzzT30LdTLgqc2HloUSzY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxcrUrrPWoTmMklqo8Sgj5SvzRV8du6ikLh0ofbGg8296420ZLS
-	J/nO8M/p42v3bCwNsTKm5pf/O91+jZOoTI3Z2oLsvkYM4DJ94/fnsGEIVyWnKGC2ZyRJVs7qH2f
-	f6Dq1tzdgsFQ8AMemWHx7G3McJ3BjxPB7oPpqtn/86fdHEKaOQplA0x8/5nHaZl8=
-X-Gm-Gg: AY/fxX6u3euvRvEx0Nr9YaXtydUhbZZOY6al7d6+AGB2LqGLzB79fgQA93iw+UhCPyb
-	9yZIq1EEfQbSnVyt9fBUE7Z+FywxUV8BNSkh3bXNNrY5RNBG219JeZDxTv1zaRiWXrdL/L4OcfR
-	C0N+beIjqSr2TsEgXVQApnyLN3k4D40HOSrJvMvPqWChayWdg5ESd9UQq6aSRs+/CkI8q9bIuzR
-	nPSD9fixiSjB+PCqugtJVUK+vZlyYcO7BGyWUgRW5t3bN7BB8UQ/pjLZa1R97J+/4envUSEwYb5
-	Q27zfbmztNbY25NHYdw9BerUzk7k6X98U7Pg5x98dKChtpGg4meSnJ2XCCrnS+s5g6+A8PICl5/
-	xbSdQ8N+pnpf6uBHRXh5QwMBlTA==
-X-Received: by 2002:a05:6a20:3c8e:b0:371:53a7:a4ba with SMTP id adf61e73a8af0-389822fca65mr45913637.30.1767633363789;
-        Mon, 05 Jan 2026 09:16:03 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFDb3ibB9yyf+XjsFBKFvP7NjPBf6cbuRzUcRVAfkOINXdA704jnRwHCauACbYKxkz5R4nWrA==
-X-Received: by 2002:a05:6a20:3c8e:b0:371:53a7:a4ba with SMTP id adf61e73a8af0-389822fca65mr45883637.30.1767633363170;
-        Mon, 05 Jan 2026 09:16:03 -0800 (PST)
-Received: from work ([120.56.194.222])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c4bfca6fbccsm199197a12.3.2026.01.05.09.15.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jan 2026 09:16:02 -0800 (PST)
-Date: Mon, 5 Jan 2026 22:45:56 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc: Yue Wang <yue.wang@amlogic.com>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Linnaea Lavia <linnaea-von-lavia@live.com>,
-        FUKAUMI Naoki <naoki@radxa.com>,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        linux-amlogic@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        stable@vger.kernel.org, Ricardo Pardini <ricardo@pardini.net>
-Subject: Re: [PATCH] PCI: meson: Remove meson_pcie_link_up() timeout,
- message, speed check
-Message-ID: <2veit3krpnauq67smexshnknbahup4yuckjgd6bxqisfqswkqe@dbhcgpiaajga>
-References: <20251103221930.1831376-1-helgaas@kernel.org>
- <176603796183.17581.9416209133990924154.b4-ty@kernel.org>
- <CAFBinCAPpiq=M00ZQXAB4Pu2Myjo8gpXC7DByKkGN6Z_Ahqafg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="rFg/6qqU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=Esd1bEU1wPkAmA0IaQdjSvBElZOUGI5f7UFY62l5SlI=; b=rFg/6qqUeMSMhrWH2S2l0a8IAi
+	4SViL3ihtfMXlqgopKedoKZ7WXXl5V3KPEjOcdlBgH2W5SZWQg4vR30Era5zMbMNqFx9jxwhAZi8J
+	8a3204x3GVtmzIpsRLAAl6LJCed61hBTmn6+RIdeHgWDcvuNZuctx+lUNyEpXnZ3zyzhjlqbtwnkD
+	UcbW5DcXUXCnM9qPRC+0lWw6NFkUMcFjky94igmeayLfpAF0mlrAbT6YWG6yLlgu55AEAwAJGDxUP
+	dvHfczzFAxeHvmvlG2R/ND0szQRWaApnle7t6xrpcU5/6LluMGmTuR1T/UpHbyRjpchZc3Py+8AWO
+	mwTEX7UQ==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1vcnc0-00000000kXe-2XQc;
+	Mon, 05 Jan 2026 09:39:21 -0700
+Message-ID: <a8fc3e98-336a-4448-9ce6-db962bde1a1a@deltatee.com>
+Date: Mon, 5 Jan 2026 09:39:17 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAFBinCAPpiq=M00ZQXAB4Pu2Myjo8gpXC7DByKkGN6Z_Ahqafg@mail.gmail.com>
-X-Authority-Analysis: v=2.4 cv=e9YLiKp/ c=1 sm=1 tr=0 ts=695bf1d4 cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=3dEILRYKsVIWdVk4w2Qziw==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=6FUes5m74a-6EvCHSkUA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=uG9DUKGECoFWVXl0Dc02:22
-X-Proofpoint-GUID: Na4EnRBn0CabRraehWEItHU7FyP1rktj
-X-Proofpoint-ORIG-GUID: Na4EnRBn0CabRraehWEItHU7FyP1rktj
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA1MDE1MCBTYWx0ZWRfX6w8aUDJ+xuyL
- nfg/slabJ5nqIXuHd7JamTth2O/dn07and/TmEJEgjFBiCoWxHUboTmM8a93jgpgK2wGxGmX2CC
- c6MJote4HZybsfDVUKE/2PTZB9ywh6USNauyKfo6BgLYPBOPhytk8dWI2pKhjbmUQ/2gc2zO8Ik
- l7FIZPzv7YAmowu/CmJPF1Dk8szZT6SUePpIOjzZTAe+GhMK43QP8Ll0Wi4L4nkMze2pVf7Q0w6
- DTasr8as8soytiSsoXP/5XusohTpYHE2sbl+u35kpNS3t+xC9UHi2TnV7A0gIj5BqD4V6aevjFj
- nGjjoyqLOxrN/+fUHWCHPnw4g4KIRpCqN3pf3LyRuJ4nMFwL8mZrxbWc2tbxe/BF4v2SquYWq9C
- DgM97CWeeFef07axISlG7Lc0gtpflc4RFPm3xBc4X5yd+mlX9IZzFn/WqZG7BWc2gjUh9lWxfRB
- 9tjhtqQmcRblHyfsWPQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-05_01,2026-01-05_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 priorityscore=1501 phishscore=0 malwarescore=0
- suspectscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2512120000 definitions=main-2601050150
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Alex Williamson <alex@shazbot.org>,
+ Ankit Agrawal <ankita@nvidia.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <20260104-fix-p2p-kdoc-v1-1-6d181233f8bc@nvidia.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260104-fix-p2p-kdoc-v1-1-6d181233f8bc@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: leon@kernel.org, bhelgaas@google.com, jgg@ziepe.ca, alex@shazbot.org, ankita@nvidia.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, helgaas@kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH] PCI/P2PDMA: Add missing struct p2pdma_provider
+ documentation
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Mon, Jan 05, 2026 at 05:49:00PM +0100, Martin Blumenstingl wrote:
-> Hi Mani,
+
+
+On 2026-01-04 05:51, Leon Romanovsky wrote:
+> From: Leon Romanovsky <leonro@nvidia.com>
 > 
-> On Thu, Dec 18, 2025 at 7:06 AM Manivannan Sadhasivam
-> <manivannan.sadhasivam@oss.qualcomm.com> wrote:
-> >
-> >
-> > On Mon, 03 Nov 2025 16:19:26 -0600, Bjorn Helgaas wrote:
-> > > Previously meson_pcie_link_up() only returned true if the link was in the
-> > > L0 state.  This was incorrect because hardware autonomously manages
-> > > transitions between L0, L0s, and L1 while both components on the link stay
-> > > in D0.  Those states should all be treated as "link is active".
-> > >
-> > > Returning false when the device was in L0s or L1 broke config accesses
-> > > because dw_pcie_other_conf_map_bus() fails if the link is down, which
-> > > caused errors like this:
-> > >
-> > > [...]
-> >
-> > Applied, thanks!
-> >
-> > [1/1] PCI: meson: Remove meson_pcie_link_up() timeout, message, speed check
-> >       commit: 11647fc772e977c981259a63c4a2b7e2c312ea22
-> My understanding is that this is queued for -next.
-> Ricardo (Cc'ed) reported that this patch fixes PCI link up on his Odroid-HC4.
-> Is there a chance to get this patch into -fixes, so it can be pulled
-> by Linus for one of the next -rc?
+> Two fields in struct p2pdma_provider were not documented, which resulted
+> in the following kernel-doc warning:
 > 
+>   Warning: include/linux/pci-p2pdma.h:26 struct member 'owner' not described in 'p2pdma_provider'
+>   Warning: include/linux/pci-p2pdma.h:26 struct member 'bus_offset' not described in 'p2pdma_provider'
+> 
+> Repro:
+> 
+>   $ scripts/kernel-doc -none include/linux/pci-p2pdma.h
+> 
+> Fixes: f58ef9d1d135 ("PCI/P2PDMA: Separate the mmap() support from the core logic")
+> Reported-by: Bjorn Helgaas <helgaas@kernel.org>
+> Closes: https://lore.kernel.org/all/20260102234033.GA246107@bhelgaas
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-Hmm, I looked at the Fixes tag and mistakenly assumed that the issue existed
-from the beginning.
+LGTM
 
-Bjorn, could you please include this patch in the next fixes PR?
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
