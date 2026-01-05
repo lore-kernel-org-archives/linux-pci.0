@@ -1,117 +1,110 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C25B337688
-	for <linux-pci@vger.kernel.org>; Mon,  5 Jan 2026 16:49:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4095A306D36;
+	Mon,  5 Jan 2026 16:55:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767631756; cv=none; b=XvtxzcQWN1E1gIiEMvKSJExhd7ffykEvglRcm/GsHsjaHZxv0JqcHoNmtt5l5GYKX5PXrOxQiQqKcGDqgbf/HeJ2/nzRAHI15FN0uTcU3AahZ+krHKBHv98S0pYPR1ZCk6nhvWIQrTGYOmSFu9LOdauLIcFTkl136BYCpqJqm9o=
+	t=1767632135; cv=none; b=goSoCUlyMN3PvC1ZmF2fWJkjtjV/oXAR28NBbU/sOdPZVfi41sWsdU/A0fl0DJlix5fecJsz3JDI7gEIPNdOJCj4Tn8tUY7OzWpO1NrN/7vH2wD4xogs18FPphsInAnOfLA/K+LpdGiapqV/Z6wg/68Uhc11u3RaA4DIXXGRo+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767631756; c=relaxed/simple;
-	bh=OpE212T/F9BXcXkqoV8tRgvykPW9UH3BnbLCVGJJS38=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BKPar6mWXH7r5WbGWzjKGcLfEa5UyQBrDGuFfKBlWJ2ocIQZ2S+t1GTmy+veOyOwaybviBUkhEJRd6+g69nkyYm3qG2LR8TyIyEPcD0t0W7in6gmxoelqqW8UDFqDuSbz6KdsAx8hKfpwcY9D+hLoTGVcdvuU/zt9ABCLd/fxes=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=DVq+T/ao; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
+	s=arc-20240116; t=1767632135; c=relaxed/simple;
+	bh=19T6fxz6mE75PtXY5IdipsLtMHkkhxHva4HG1axddtk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LIk7QfVRvhD+ozOMnpfI+9PEyCJwE0qHxuOxDSmMiwI3OxTeF/K1eQEPS6r9FEISSP0yN3ZCLSKWZx1HvbPNytAjoZlmVP97uEtmxgLuQRobri4IElMfhHQZbDaiilEO7XV5lWBfyKLUsRipLCkSgCSlMqSW7rIt/4u2oJoJqJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NlwskDj9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="DVq+T/ao"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2a0fe77d141so1114475ad.1
-        for <linux-pci@vger.kernel.org>; Mon, 05 Jan 2026 08:49:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20230601; t=1767631752; x=1768236552; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1p5G3xJb8go3voJ/ska7MmknNqjaKO20ee89C7s96SI=;
-        b=DVq+T/aogTwlSdL7kfYlA8KAh+bRlYW8BnFj2yi2KWBTyHSrh2gXj0EcxueVFa+rwo
-         9P2Q4I7ZNaRZKtEOOVr6WJzlEOPF75gQD+0HOvvVbTrqeLKXd8HmWZJBcYoeHDy4/mcD
-         ReS+RmaYBBUZHd43YtUUP1qiuXB0ec5ZfRpw8C1MgK6blFNhbiPRQx1ZPdiXzZXS8pXR
-         /UELTIhBEGjUxdejk5XmJ8nkd1zFE61+KXIXtUBlAt28r2KcERhzO82T4FdYoo0BObJg
-         SZw/bMia81j15V0nCOGTLYOyLd5TR1SIrtWnDBcj9lz2h+noNmrr+V2SsR6F99gr6PbY
-         sGeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767631752; x=1768236552;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=1p5G3xJb8go3voJ/ska7MmknNqjaKO20ee89C7s96SI=;
-        b=vwYpAe98QEWv61wYPUZpkvjw+udWcJbIjuCduSe2Bz0oy+6WiiW+rQCvi1488F0Pt1
-         2CUBbqzcezcIWK4BkIII7Qv7BdkoaE63rB5SEtJc1cwf7to+I21Wry4tnA4dJXfib0Sl
-         KKyrGqJuovQ9fnPzhqvIVX5laHxX7SZYp1eikcsrnC9K8+8gycQLkqor7Y8OQcqh1Dsr
-         YzSyFWAWhG71+FrfVvAgMKCznzjWw+Wolamdg1xrsV31Cdwdgw+PG2XBlkSAzpp+zEvH
-         ND10U/ufCUyFEsGoOWGElF3o946GLUKS6De1iE+VTGCUYs71rYCx16NOR4Bw9/9Xba+g
-         J9Tw==
-X-Forwarded-Encrypted: i=1; AJvYcCWbvsh2WKiYzOPigzHg4H5n0v0vJrbpyG+tNHHZCSqTdAel02IqgtL9PGLa+8mw8sn9SdP3pFuSPZo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzmn3MIpUOnwn9p3Pe70H+O4M06tWW9H/EwpqiOkgj3lgSz5Md6
-	a2/OPXIrbQpn7f7myXElDCW1icMwW7P2HB+rSBVWocPDcQXhUARafVSOlE7J5Yfy9MzEHkkmzTZ
-	jE7dGR60DxGhDve2Rcq07iStCirlrXGM=
-X-Gm-Gg: AY/fxX69lgeGn/DMTRvm43x2IjvwmLNavjebgZ+fB0p8djxeb6VoxDEAWHeRRz0f9fw
-	PafpBfzsxMPRN2tH20yYdT/qvoIv3OKEovor++VQKg+YkcmzPur+7zxWBUduWjmEN7u7KPosg3I
-	v131i91seYGz1nKj1maeIFj6cVJF2mPmiMIlHADAcdaLkDirE0oleHF7FcdsgAofUiG5QdkJ+Ar
-	FIsho//oKejOw3tiRsfFptYrMVoe3UAxX3hVRd/RpZ7NyK5+/6DXApba4T5/6uZzWe24+FC4KV6
-	01YmRztSqRPczabPCSf5ksqdIRoW
-X-Google-Smtp-Source: AGHT+IGDtOegmT/WubwoP9uhYGjEyI36HrbbD+HDLKKzlp50hnIAwbFpuvZJAMWfwWQ5Fu7mo4QOpgsR9wCZJW3kUe4=
-X-Received: by 2002:a17:903:28f:b0:29f:5f5:fa91 with SMTP id
- d9443c01a7336-2a3e2cb39ffmr2973425ad.27.1767631752099; Mon, 05 Jan 2026
- 08:49:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NlwskDj9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3689C116D0;
+	Mon,  5 Jan 2026 16:55:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767632134;
+	bh=19T6fxz6mE75PtXY5IdipsLtMHkkhxHva4HG1axddtk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=NlwskDj9hjzIsuHafM9aq1WzmLN4kjMvT4VRb+Z/k6kcXwM1oBambCnxof7ARAuYE
+	 QPKvLezDovqQFzfVKZXuwODIEEaoErqH5lUJVcG6T0SupYfpwLAfnDnoxLtyQHwC6h
+	 3FDjFC1Qv62r7zS3ZcUTpGsI6r3E2t2Fu5W5I6H+vy7xslXDatT2vZnXngt219Cazt
+	 SJVy0qw1IzyhLOhgU+QMbYVjV7Ko4AHNEmweHkZk2v5pPDVXolm3GwZveS3O8RpN7K
+	 +cvuHreQckYqqPygRrAWARDfYrwRqlF1otRtbSBI3xGJYhqi4DwbH7igYyeYdJEczk
+	 kfeQ0hZmED2Ww==
+Date: Mon, 5 Jan 2026 17:55:30 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	Frank.Li@nxp.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: endpoint: BAR subrange mapping support
+Message-ID: <aVvtAkEcg6Qg7K3C@ryzen>
+References: <20260105080214.1254325-1-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251103221930.1831376-1-helgaas@kernel.org> <176603796183.17581.9416209133990924154.b4-ty@kernel.org>
-In-Reply-To: <176603796183.17581.9416209133990924154.b4-ty@kernel.org>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Mon, 5 Jan 2026 17:49:00 +0100
-X-Gm-Features: AQt7F2rVWmf5Npt8HCJJTiZdHZlTavXt7hjPiasOfQo5l2lbIUvVpU46LHb_LE8
-Message-ID: <CAFBinCAPpiq=M00ZQXAB4Pu2Myjo8gpXC7DByKkGN6Z_Ahqafg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: meson: Remove meson_pcie_link_up() timeout, message,
- speed check
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: Yue Wang <yue.wang@amlogic.com>, Neil Armstrong <neil.armstrong@linaro.org>, 
-	Kevin Hilman <khilman@baylibre.com>, Bjorn Helgaas <helgaas@kernel.org>, 
-	Jerome Brunet <jbrunet@baylibre.com>, Linnaea Lavia <linnaea-von-lavia@live.com>, 
-	FUKAUMI Naoki <naoki@radxa.com>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-amlogic@lists.infradead.org, 
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org, 
-	Ricardo Pardini <ricardo@pardini.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260105080214.1254325-1-den@valinux.co.jp>
 
-Hi Mani,
+Hello Koichiro,
 
-On Thu, Dec 18, 2025 at 7:06=E2=80=AFAM Manivannan Sadhasivam
-<manivannan.sadhasivam@oss.qualcomm.com> wrote:
->
->
-> On Mon, 03 Nov 2025 16:19:26 -0600, Bjorn Helgaas wrote:
-> > Previously meson_pcie_link_up() only returned true if the link was in t=
-he
-> > L0 state.  This was incorrect because hardware autonomously manages
-> > transitions between L0, L0s, and L1 while both components on the link s=
-tay
-> > in D0.  Those states should all be treated as "link is active".
-> >
-> > Returning false when the device was in L0s or L1 broke config accesses
-> > because dw_pcie_other_conf_map_bus() fails if the link is down, which
-> > caused errors like this:
-> >
-> > [...]
->
-> Applied, thanks!
->
-> [1/1] PCI: meson: Remove meson_pcie_link_up() timeout, message, speed che=
-ck
->       commit: 11647fc772e977c981259a63c4a2b7e2c312ea22
-My understanding is that this is queued for -next.
-Ricardo (Cc'ed) reported that this patch fixes PCI link up on his Odroid-HC=
-4.
-Is there a chance to get this patch into -fixes, so it can be pulled
-by Linus for one of the next -rc?
+On Mon, Jan 05, 2026 at 05:02:12PM +0900, Koichiro Den wrote:
+> This series proposes support for mapping subranges within a PCIe endpoint
+> BAR and enables controllers to program inbound address translation for
+> those subranges.
+> 
+> The first patch introduces generic BAR subrange mapping support in the
+> PCI endpoint core. The second patch adds an implementation for the
+> DesignWare PCIe endpoint controller using Address Match Mode IB iATU.
+> 
+> This series is a spin-off from a larger RFC series posted earlier:
+> https://lore.kernel.org/all/20251217151609.3162665-4-den@valinux.co.jp/
+> 
+> Base:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+>   branch: controller/dwc
+>   commit: 68ac85fb42cf ("PCI: dwc: Use cfg0_base as iMSI-RX target address
+>                          to support 32-bit MSI devices")
+> 
+> Thank you for reviewing,
+> 
+> Koichiro Den (2):
+>   PCI: endpoint: Add BAR subrange mapping support
+>   PCI: dwc: ep: Support BAR subrange inbound mapping via address-match
+>     iATU
+
+I have nothing against this feature, but the big question here is:
+where is the user?
+
+Usually, we don't add a new feature without having a single user of said
+feature.
 
 
-Best regards,
-Martin
+One thing that I would like to see though:
+stricter verification of the pci_epf_bar_submap array.
+
+For DWC, we know that the minimum size that an iATU can map is stored in:
+(struct dw_pcie *pci) pci->region_align.
+
+Thus, each element in the pci_epf_bar_submap array has to have a size that
+is a multiple of pci->region_align.
+
+I don't see that you ever verify this anywhere.
+
+You should also verify that the sum of all the sizes in the pci_epf_bar_submap
+array adds up to exactly pci_epf_bar->size.
+
+
+Also, we currently have code in dw_pcie_prog_inbound_atu() that verifies
+that the physical memory address is aligned to the size of the BAR, as that
+is a requirement in BAR match mode, see:
+129f6af747b2 ("PCI: dwc: ep: Add 'address' alignment to 'size' check in dw_pcie_prog_ep_inbound_atu()")
+
+This is not a requirement in address match mode, so you probably don't
+want to do that check in address match mode.
+(You will want to keep the check that the physical memory address is
+aligned to pci->region_align though.)
+
+
+Kind regards,
+Niklas
