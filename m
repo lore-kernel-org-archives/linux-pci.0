@@ -1,45 +1,50 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5539218C933;
-	Mon,  5 Jan 2026 12:21:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3211334C2F;
+	Mon,  5 Jan 2026 12:21:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767615697; cv=none; b=SRzI49bia7b1+3sO36PBKvjJF3gEUECjuP198qEQcbaPX8qqNfWhAPRr2x6iY+9/8HCFCgdYaYV3aBkzn1XuKNjJBfYar636KWWcZGoTAzkS9m2v8fd53jF0IHI94FOL0eJpIF0dypDU6aLEI19zoy4GnGS3oNjE185PnDheCis=
+	t=1767615712; cv=none; b=jiVpTgfj+evs4SZ06/NDkRLJ/PbE8sgcwRjA6HxrUztAEacbqlIDjlMDAGrkdfzKCxaRDM3T6kaY9ORiySXPqhacxWyEb6qfNEki67W4vwD/Ej/Nl29vyrGOaHqAfisrBKtQvTgUCZ6kgRNWImi0C/tCWheh1rJP4LcZneoLhvQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767615697; c=relaxed/simple;
-	bh=hJOhi5Vbf202RHsg63yMNniOhNEzOOriE/DJRW383i0=;
+	s=arc-20240116; t=1767615712; c=relaxed/simple;
+	bh=uxx99CMgbHnEytb+BsuxoiP4FLdziAW2KxjSiDGBebA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SQkeXexhOkR2I/DfkpFvsQvPb0hpMArQpEAOFdNxlO7p91oSVTMoMxs0nEOQttTfDcBxbB2awZJsyCcctF38J7pI836ywHggEXHjQVhDYy1getlGntbrXUFd8kc9dmP2L4b9hGuHzM7YpExE/HXQyUL6qtMYzIdIR0Oj8Uli3rc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PUQRt5o6; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aH5akttSmDpcrrfwM3eii9kJP/8wpuIB+rI4SWsPDVjGDuH3sm4/6Uy7h74YXSbiXis62+wNWGr3YGT9GoZhuqCtDR15lO2epnhxM/A8QKyKHcUOOa71aMkRWgWYfsxuYqOahyto7jX1f97w+sd/t8hwto6DmKx823LfNpmd888=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V2DF4sFE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PUQRt5o6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CEA4C19423;
-	Mon,  5 Jan 2026 12:21:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V2DF4sFE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F114AC19421;
+	Mon,  5 Jan 2026 12:21:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767615696;
-	bh=hJOhi5Vbf202RHsg63yMNniOhNEzOOriE/DJRW383i0=;
+	s=k20201202; t=1767615712;
+	bh=uxx99CMgbHnEytb+BsuxoiP4FLdziAW2KxjSiDGBebA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PUQRt5o6LfL5amKf1MOG4X34V5fdgpgGuCrS8rCo6aTrJ9SFl1cvj1++ndz6LB+ni
-	 3cS8MaIAn6E0UgjOZYeUo8+3S2FyS5l73MGPpLEa6PqKY0vRIloEclXmEPuRCHh/AF
-	 b9ck1cUvmLxGvICuON04zeR0P759Hn58XmWDwtDbBBFQXvQA6l7XT+6hUV1QOXDOLD
-	 ue3EybsGH9kRd+yNuPA505cgTQ52QEvAxDNqFtFRpZTKXdgh5BUMBq17RqtVWhzRvk
-	 S9T77XXdm8A699eQduQv7jzYf9XjIL0bPqbBkBnnbp9OBSeCrGyobGMfvNcfhbnV+C
-	 ZcMxm2RanEqSA==
-Date: Mon, 5 Jan 2026 17:51:26 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: Niklas Cassel <cassel@kernel.org>, 
-	Francesco Lavra <flavra@baylibre.com>, thierry.reding@gmail.com, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Mayank Rana <mayank.rana@oss.qualcomm.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Shradha Todi <shradha.t@samsung.com>, Thippeswamy Havalige <thippeswamy.havalige@amd.com>, 
-	Inochi Amaoto <inochiama@gmail.com>, Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+	b=V2DF4sFENG6PrKdXd5tH9tjAY1+sE2/ljzfwKL+UeJnfnT3Cs81Z94bsO9Pug9IZM
+	 Bww/ySfZZ7mIpURkTEUL7SHHHBPeJnWQIRpFB4jOZxnVWcrpy5RIDo5CvrHY059eka
+	 hsnUBIN/GiQQn/dJz+vhPFjOtzJ3EX7va69JHjr3SLTgvrmjbVojyPPun/vY7F7tiM
+	 +JzD0YGen7bvCgmtNiaZj4kTqDjrQintgWfZOJMSbNI5jl6WThvCJT5o5rVMvtv+t7
+	 yt/RNgzC6lrC04WbhMKZhLa+NmcS7LT7Ubduz4Lsqh3jNk6zzGExIfXFvNE8eqsLMK
+	 oBUab4AUdOyZQ==
+Date: Mon, 5 Jan 2026 13:21:46 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Jon Hunter <jonathanh@nvidia.com>,
+	Francesco Lavra <flavra@baylibre.com>, thierry.reding@gmail.com,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Mayank Rana <mayank.rana@oss.qualcomm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Shradha Todi <shradha.t@samsung.com>,
+	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
+	Inochi Amaoto <inochiama@gmail.com>,
+	Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
 Subject: Re: [PATCH] pci: controller: tegra194: remove dependency on Tegra194
  SoC
-Message-ID: <hbhvydcqr7lcpvijw5vu57biqato2znjf4txshfepc7zszsptk@6ft3jujbyvtd>
+Message-ID: <aVus2urjJ3AoHMv3@ryzen>
 References: <20251126102530.4110067-1-flavra@baylibre.com>
  <xh2att7wpqowricyifxmoaijbhtrtoht25pomu4voosfctf36e@4p27y7rezz22>
  <e900f082-fb3e-45c6-a94b-935132190249@nvidia.com>
@@ -48,123 +53,62 @@ References: <20251126102530.4110067-1-flavra@baylibre.com>
  <7bfb3ebc-2e8b-4fcc-8d13-a6f3e0b7141e@nvidia.com>
  <q2iezy4uydlvwgo6m6yv2nlucafyvxgonm2o5q3g32p73vemwb@x33rmfffnwlu>
  <aVurA-MUECufgTw0@ryzen>
- <8b5dc374-77e0-4957-8ecc-6c646aff36a1@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <8b5dc374-77e0-4957-8ecc-6c646aff36a1@nvidia.com>
+In-Reply-To: <aVurA-MUECufgTw0@ryzen>
 
-On Mon, Jan 05, 2026 at 12:18:35PM +0000, Jon Hunter wrote:
-> 
-> On 05/01/2026 12:13, Niklas Cassel wrote:
-> > On Mon, Jan 05, 2026 at 05:38:34PM +0530, Manivannan Sadhasivam wrote:
-> > > On Mon, Jan 05, 2026 at 11:56:37AM +0000, Jon Hunter wrote:
+On Mon, Jan 05, 2026 at 01:14:01PM +0100, Niklas Cassel wrote:
+> > > > So, I think we could just merge:
+> > > > https://lore.kernel.org/linux-pci/20250508051922.4134041-1-vidyas@nvidia.com/
 > > > > 
-> > > > 
-> > > > On 05/01/2026 09:09, Niklas Cassel wrote:
-> > > > > On Mon, Jan 05, 2026 at 02:09:34PM +0530, Manivannan Sadhasivam wrote:
-> > > > > > On Fri, Jan 02, 2026 at 10:58:15AM +0000, Jon Hunter wrote:
-> > > > > > > 
-> > > > > > > On 23/12/2025 06:45, Manivannan Sadhasivam wrote:
-> > > > > > > > On Wed, Nov 26, 2025 at 11:25:30AM +0100, Francesco Lavra wrote:
-> > > > > > > > 
-> > > > > > > > + Tegra maintainers
-> > > > > > > > 
-> > > > > > > > > This driver runs (for both host and endpoint operation) also on other Tegra
-> > > > > > > > > SoCs (e.g. Tegra234).
-> > > > > > > > > Replace the Kconfig dependency on ARCH_TEGRA_194_SOC with a more generic
-> > > > > > > > > dependency on ARCH_TEGRA; in addition, amend the Kconfig help text to
-> > > > > > > > > reflect the fact that this driver is no longer exclusive to Tegra194.
-> > > > > > > > > 
-> > > > > > > > 
-> > > > > > > > I vaguely remember asking about this a while back during some other patch review
-> > > > > > > > and I don't remember what we concluded.
-> > > > > > > > > Thierry, Jon, thoughts?
-> > > > > > > 
-> > > > > > > So ARCH_TEGRA means that this can be enabled for the legacy 32-bit Tegra
-> > > > > > > devices as well as the current 64-bit Tegra devices (such as Tegra194).
-> > > > > > > Given that this driver is only used for Tegra194 and Tegra234, it seems it
-> > > > > > > would be better to only enable this for Tegra194 and Tegra234 instead of any
-> > > > > > > Tegra.
-> > > > > > > 
-> > > > > > 
-> > > > > > The dependency means, whenever someone tries to enable PCIE_TEGRA194_HOST,
-> > > > > > ARCH_TEGRA should be enabled. So as long as someone not trying to enable
-> > > > > > PCIE_TEGRA194_HOST for 32bit Tegra systems, ARCH_TEGRA should work fine and
-> > > > > > PCIE_TEGRA194_HOST is not selected by arch/arm/configs/tegra_defconfig. So I
-> > > > > > don't see any blocker with this patch. In fact, many other archs do the same.
-> > > > > > 
-> > > > > > But I don't like extending the Kconfig with per SoC dependency as it won't
-> > > > > > scale.
-> > > > > 
-> > > > > We already have a patch from Vidya:
-> > > > > [PATCH V4] PCI: dwc: tegra194: Broaden architecture dependency
-> > > > > that was sent 2025-05-08
-> > > > > 
-> > > > > Back then, the reason why it wasn't merged was because it required a
-> > > > > similar change to the PHY driver to go in first:
-> > > > > https://lore.kernel.org/linux-pci/174722268141.85510.14696275121588719556.b4-ty@kernel.org/
-> > > > > 
-> > > > > The PHY driver change was merged in v6.16:
-> > > > > 0c2228731974 ("phy: tegra: p2u: Broaden architecture dependency")
-> > > > > 
-> > > > > So, I think we could just merge:
-> > > > > https://lore.kernel.org/linux-pci/20250508051922.4134041-1-vidyas@nvidia.com/
-> > > > > 
-> > > > > (Assuming it still applies.)
-> > > > 
-> > > > Yes it does and applying Sagar's patch is fine with me. So it you want to
-> > > > apply Sagar's patch please add my ...
-> > > > 
+> > > > (Assuming it still applies.)
 > > > 
-> > > Don't we need:
+> > > Yes it does and applying Sagar's patch is fine with me. So it you want to
+> > > apply Sagar's patch please add my ...
 > > > 
-> > > 	depends on (ARCH_TEGRA && ARM64) || COMPILE_TEST
 > > 
-> > This is exactly what I originally suggested to Vidya:
-> > https://lore.kernel.org/linux-pci/Z6XjWJd9jm0HHNXW@ryzen/
+> > Don't we need:
 > > 
-> > 
-> > > 
-> > > in the above patch?
-> > 
-> > The above patch instead has:
-> > 
-> > depends on ARCH_TEGRA && (ARM64 || COMPILE_TEST)
-> > 
-> > I don't know why Vidya did not use my suggestion exactly, but I guess I
-> > assumed that he had a reason not to use my suggestion exactly.
+> > 	depends on (ARCH_TEGRA && ARM64) || COMPILE_TEST
 > 
-> Looking 0c2228731974 ("phy: tegra: p2u: Broaden architecture
-> dependency") we ended up just merging ...
+> This is exactly what I originally suggested to Vidya:
+> https://lore.kernel.org/linux-pci/Z6XjWJd9jm0HHNXW@ryzen/
 > 
-> diff --git a/drivers/phy/tegra/Kconfig b/drivers/phy/tegra/Kconfig
-> index f30cfb42b210..342fb736da4b 100644
-> --- a/drivers/phy/tegra/Kconfig
-> +++ b/drivers/phy/tegra/Kconfig
-> @@ -13,7 +13,7 @@ config PHY_TEGRA_XUSB
->  config PHY_TEGRA194_P2U
->         tristate "NVIDIA Tegra194 PIPE2UPHY PHY driver"
-> -       depends on ARCH_TEGRA_194_SOC || ARCH_TEGRA_234_SOC || COMPILE_TEST
-> +       depends on ARCH_TEGRA || COMPILE_TEST
->         select GENERIC_PHY
->         help
 > 
-> So I guess we could just merge Francesco's original suggestion for
-> consistency. Otherwise I would be happy with ...
+> > 
+> > in the above patch?
 > 
->  depends on (ARCH_TEGRA && ARM64) || COMPILE_TEST
+> The above patch instead has:
 > 
+> depends on ARCH_TEGRA && (ARM64 || COMPILE_TEST)
+> 
+> I don't know why Vidya did not use my suggestion exactly, but I guess I
+> assumed that he had a reason not to use my suggestion exactly.
 
-I made the above change applied Vidya's patch. Thanks Jon and Niklas!
 
-- Mani
+Looking at drivers/pci/controller/dwc/Kconfig,
+there are a lot of:
 
--- 
-மணிவண்ணன் சதாசிவம்
+depends on OF && (ARM64 || COMPILE_TEST)
+
+So I think Vidya simply followed this pattern and instead did:
+depends on ARCH_TEGRA && (ARM64 || COMPILE_TEST)
+
+
+But, since we don't have an explicit "depends on OF"
+in these entries, I do think that:
+
+depends on (ARCH_TEGRA && ARM64) || COMPILE_TEST
+
+is slightly more correct. (Since if there was a hard requirement on OF,
+it would have been there already).
+
+
+Kind regards,
+Niklas
