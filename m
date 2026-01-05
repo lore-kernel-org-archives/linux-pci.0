@@ -1,157 +1,170 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E014933A707;
-	Mon,  5 Jan 2026 12:21:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5539218C933;
+	Mon,  5 Jan 2026 12:21:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767615681; cv=none; b=MMcM8/bLfqdMoGw7pi2MJ990do7cJi+J0lBy28Ernhzh/6CTsq8De503cvNwji27KUilI5qcBBGMXTJ6mgs/gkPSzBmckZXXpSH3n7h/zqtvKMGgWSxOwvi9P6XMhWjV8QajKplD3jxKiMfOEY4HXa/NnwXtPG6wwhPv433Lqf4=
+	t=1767615697; cv=none; b=SRzI49bia7b1+3sO36PBKvjJF3gEUECjuP198qEQcbaPX8qqNfWhAPRr2x6iY+9/8HCFCgdYaYV3aBkzn1XuKNjJBfYar636KWWcZGoTAzkS9m2v8fd53jF0IHI94FOL0eJpIF0dypDU6aLEI19zoy4GnGS3oNjE185PnDheCis=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767615681; c=relaxed/simple;
-	bh=QhILN9GfG7+4f4OsPbYpKLmWP4QoSZzQlL1umHljmwk=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LbtrelqlKP0fTmHhi3bLterfh4+VxoYlO/IjUN+VLL4XyuuA5g7LhzUpigBo24Qm3rj+BiBQXvGO0FSuxw8s/2JpzYwzlUl278RjIuYQ0XViUV1hAdy2p+80D5qP2Htpd9VYT4cEbJRt5ejstx1HsjQFXtORXXzzljxo7D9B2vw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.150])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dlD004KnWzJ46bf;
-	Mon,  5 Jan 2026 20:20:16 +0800 (CST)
-Received: from dubpeml100005.china.huawei.com (unknown [7.214.146.113])
-	by mail.maildlp.com (Postfix) with ESMTPS id EA91C4056B;
-	Mon,  5 Jan 2026 20:21:16 +0800 (CST)
-Received: from localhost (10.48.157.23) by dubpeml100005.china.huawei.com
- (7.214.146.113) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.36; Mon, 5 Jan
- 2026 12:21:16 +0000
-Date: Mon, 5 Jan 2026 12:21:14 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>
-CC: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
-	Robert Moore <robert.moore@intel.com>, Thomas Gleixner <tglx@linutronix.de>,
-	Hanjun Guo <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@arm.com>, Marc
- Zyngier <maz@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, <acpica-devel@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 4/7] PCI/MSI: Make the pci_msi_map_rid_ctlr_node()
- interface firmware agnostic
-Message-ID: <20260105122114.000035e8@huawei.com>
-In-Reply-To: <20251218-gicv5-host-acpi-v2-4-eec76cd1d40b@kernel.org>
-References: <20251218-gicv5-host-acpi-v2-0-eec76cd1d40b@kernel.org>
-	<20251218-gicv5-host-acpi-v2-4-eec76cd1d40b@kernel.org>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1767615697; c=relaxed/simple;
+	bh=hJOhi5Vbf202RHsg63yMNniOhNEzOOriE/DJRW383i0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SQkeXexhOkR2I/DfkpFvsQvPb0hpMArQpEAOFdNxlO7p91oSVTMoMxs0nEOQttTfDcBxbB2awZJsyCcctF38J7pI836ywHggEXHjQVhDYy1getlGntbrXUFd8kc9dmP2L4b9hGuHzM7YpExE/HXQyUL6qtMYzIdIR0Oj8Uli3rc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PUQRt5o6; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PUQRt5o6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CEA4C19423;
+	Mon,  5 Jan 2026 12:21:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767615696;
+	bh=hJOhi5Vbf202RHsg63yMNniOhNEzOOriE/DJRW383i0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PUQRt5o6LfL5amKf1MOG4X34V5fdgpgGuCrS8rCo6aTrJ9SFl1cvj1++ndz6LB+ni
+	 3cS8MaIAn6E0UgjOZYeUo8+3S2FyS5l73MGPpLEa6PqKY0vRIloEclXmEPuRCHh/AF
+	 b9ck1cUvmLxGvICuON04zeR0P759Hn58XmWDwtDbBBFQXvQA6l7XT+6hUV1QOXDOLD
+	 ue3EybsGH9kRd+yNuPA505cgTQ52QEvAxDNqFtFRpZTKXdgh5BUMBq17RqtVWhzRvk
+	 S9T77XXdm8A699eQduQv7jzYf9XjIL0bPqbBkBnnbp9OBSeCrGyobGMfvNcfhbnV+C
+	 ZcMxm2RanEqSA==
+Date: Mon, 5 Jan 2026 17:51:26 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jon Hunter <jonathanh@nvidia.com>
+Cc: Niklas Cassel <cassel@kernel.org>, 
+	Francesco Lavra <flavra@baylibre.com>, thierry.reding@gmail.com, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Mayank Rana <mayank.rana@oss.qualcomm.com>, Thomas Gleixner <tglx@linutronix.de>, 
+	Shradha Todi <shradha.t@samsung.com>, Thippeswamy Havalige <thippeswamy.havalige@amd.com>, 
+	Inochi Amaoto <inochiama@gmail.com>, Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH] pci: controller: tegra194: remove dependency on Tegra194
+ SoC
+Message-ID: <hbhvydcqr7lcpvijw5vu57biqato2znjf4txshfepc7zszsptk@6ft3jujbyvtd>
+References: <20251126102530.4110067-1-flavra@baylibre.com>
+ <xh2att7wpqowricyifxmoaijbhtrtoht25pomu4voosfctf36e@4p27y7rezz22>
+ <e900f082-fb3e-45c6-a94b-935132190249@nvidia.com>
+ <5cwg6tg2y2q4mkns5zblenvhhovnz52dp5bo4uyghs4yledh3v@7apj6wwy3kjf>
+ <aVt_t3kxtT99wbwi@ryzen>
+ <7bfb3ebc-2e8b-4fcc-8d13-a6f3e0b7141e@nvidia.com>
+ <q2iezy4uydlvwgo6m6yv2nlucafyvxgonm2o5q3g32p73vemwb@x33rmfffnwlu>
+ <aVurA-MUECufgTw0@ryzen>
+ <8b5dc374-77e0-4957-8ecc-6c646aff36a1@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100009.china.huawei.com (7.191.174.83) To
- dubpeml100005.china.huawei.com (7.214.146.113)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8b5dc374-77e0-4957-8ecc-6c646aff36a1@nvidia.com>
 
-On Thu, 18 Dec 2025 11:14:30 +0100
-Lorenzo Pieralisi <lpieralisi@kernel.org> wrote:
-
-> To support booting with OF and ACPI seamlessly, GIC ITS parent code
-> requires the PCI/MSI irqdomain layer to implement a function to retrieve
-> an MSI controller fwnode and map an RID in a firmware agnostic way
-> (ie pci_msi_map_rid_ctlr_node()).
+On Mon, Jan 05, 2026 at 12:18:35PM +0000, Jon Hunter wrote:
 > 
-> Convert pci_msi_map_rid_ctlr_node() to an OF agnostic interface
-> (fwnode_handle based) and update the GIC ITS MSI parent code to reflect
-> the pci_msi_map_rid_ctlr_node() change.
+> On 05/01/2026 12:13, Niklas Cassel wrote:
+> > On Mon, Jan 05, 2026 at 05:38:34PM +0530, Manivannan Sadhasivam wrote:
+> > > On Mon, Jan 05, 2026 at 11:56:37AM +0000, Jon Hunter wrote:
+> > > > 
+> > > > 
+> > > > On 05/01/2026 09:09, Niklas Cassel wrote:
+> > > > > On Mon, Jan 05, 2026 at 02:09:34PM +0530, Manivannan Sadhasivam wrote:
+> > > > > > On Fri, Jan 02, 2026 at 10:58:15AM +0000, Jon Hunter wrote:
+> > > > > > > 
+> > > > > > > On 23/12/2025 06:45, Manivannan Sadhasivam wrote:
+> > > > > > > > On Wed, Nov 26, 2025 at 11:25:30AM +0100, Francesco Lavra wrote:
+> > > > > > > > 
+> > > > > > > > + Tegra maintainers
+> > > > > > > > 
+> > > > > > > > > This driver runs (for both host and endpoint operation) also on other Tegra
+> > > > > > > > > SoCs (e.g. Tegra234).
+> > > > > > > > > Replace the Kconfig dependency on ARCH_TEGRA_194_SOC with a more generic
+> > > > > > > > > dependency on ARCH_TEGRA; in addition, amend the Kconfig help text to
+> > > > > > > > > reflect the fact that this driver is no longer exclusive to Tegra194.
+> > > > > > > > > 
+> > > > > > > > 
+> > > > > > > > I vaguely remember asking about this a while back during some other patch review
+> > > > > > > > and I don't remember what we concluded.
+> > > > > > > > > Thierry, Jon, thoughts?
+> > > > > > > 
+> > > > > > > So ARCH_TEGRA means that this can be enabled for the legacy 32-bit Tegra
+> > > > > > > devices as well as the current 64-bit Tegra devices (such as Tegra194).
+> > > > > > > Given that this driver is only used for Tegra194 and Tegra234, it seems it
+> > > > > > > would be better to only enable this for Tegra194 and Tegra234 instead of any
+> > > > > > > Tegra.
+> > > > > > > 
+> > > > > > 
+> > > > > > The dependency means, whenever someone tries to enable PCIE_TEGRA194_HOST,
+> > > > > > ARCH_TEGRA should be enabled. So as long as someone not trying to enable
+> > > > > > PCIE_TEGRA194_HOST for 32bit Tegra systems, ARCH_TEGRA should work fine and
+> > > > > > PCIE_TEGRA194_HOST is not selected by arch/arm/configs/tegra_defconfig. So I
+> > > > > > don't see any blocker with this patch. In fact, many other archs do the same.
+> > > > > > 
+> > > > > > But I don't like extending the Kconfig with per SoC dependency as it won't
+> > > > > > scale.
+> > > > > 
+> > > > > We already have a patch from Vidya:
+> > > > > [PATCH V4] PCI: dwc: tegra194: Broaden architecture dependency
+> > > > > that was sent 2025-05-08
+> > > > > 
+> > > > > Back then, the reason why it wasn't merged was because it required a
+> > > > > similar change to the PHY driver to go in first:
+> > > > > https://lore.kernel.org/linux-pci/174722268141.85510.14696275121588719556.b4-ty@kernel.org/
+> > > > > 
+> > > > > The PHY driver change was merged in v6.16:
+> > > > > 0c2228731974 ("phy: tegra: p2u: Broaden architecture dependency")
+> > > > > 
+> > > > > So, I think we could just merge:
+> > > > > https://lore.kernel.org/linux-pci/20250508051922.4134041-1-vidyas@nvidia.com/
+> > > > > 
+> > > > > (Assuming it still applies.)
+> > > > 
+> > > > Yes it does and applying Sagar's patch is fine with me. So it you want to
+> > > > apply Sagar's patch please add my ...
+> > > > 
+> > > 
+> > > Don't we need:
+> > > 
+> > > 	depends on (ARCH_TEGRA && ARM64) || COMPILE_TEST
+> > 
+> > This is exactly what I originally suggested to Vidya:
+> > https://lore.kernel.org/linux-pci/Z6XjWJd9jm0HHNXW@ryzen/
+> > 
+> > 
+> > > 
+> > > in the above patch?
+> > 
+> > The above patch instead has:
+> > 
+> > depends on ARCH_TEGRA && (ARM64 || COMPILE_TEST)
+> > 
+> > I don't know why Vidya did not use my suggestion exactly, but I guess I
+> > assumed that he had a reason not to use my suggestion exactly.
 > 
-> Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Marc Zyngier <maz@kernel.org>
-Hi Lorenzo,
-
-A few minor comments inline.  All in the 'up to you' category.
-
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-
-> ---
-
-> diff --git a/drivers/pci/msi/irqdomain.c b/drivers/pci/msi/irqdomain.c
-> index a329060287b5..3136341e802c 100644
-> --- a/drivers/pci/msi/irqdomain.c
-> +++ b/drivers/pci/msi/irqdomain.c
-> @@ -376,23 +376,35 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
->  }
->  
->  /**
-> - * pci_msi_map_rid_ctlr_node - Get the MSI controller node and MSI requester id (RID)
-> + * pci_msi_map_rid_ctlr_node - Get the MSI controller fwnode_handle and MSI requester id (RID)
-> + * @domain:	The interrupt domain
->   * @pdev:	The PCI device
-> - * @node:	Pointer to store the MSI controller device node
-> + * @node:	Pointer to store the MSI controller fwnode_handle
->   *
-> - * Use the firmware data to find the MSI controller node for @pdev.
-> + * Use the firmware data to find the MSI controller fwnode_handle for @pdev.
->   * If found map the RID and initialize @node with it. @node value must
->   * be set to NULL on entry.
->   *
->   * Returns: The RID.
->   */
-> -u32 pci_msi_map_rid_ctlr_node(struct pci_dev *pdev, struct device_node **node)
-> +u32 pci_msi_map_rid_ctlr_node(struct irq_domain *domain, struct pci_dev *pdev,
-> +			      struct fwnode_handle **node)
->  {
-> +	struct device_node *of_node;
->  	u32 rid = pci_dev_id(pdev);
->  
->  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
->  
-> -	return of_msi_xlate(&pdev->dev, node, rid);
-> +	of_node = irq_domain_get_of_node(domain);
-> +	if (of_node) {
-
-I haven't read on but my assumption is of_node is never used for anything else.
-I'd make that explicit by not having the local variable.
-	if (irq_domain_get_of_node(domain))
-
-Might even be worth a comment to say this is just checking of is in use for the
-domain in general?
-
-> +		struct device_node *msi_ctlr_node = NULL;
-> +
-> +		rid = of_msi_xlate(&pdev->dev, &msi_ctlr_node, rid);
-> +		if (msi_ctlr_node)
-
-Do you need the protection? Ultimately that depends on whether
-setting *node = NULL on failure to match is a problem.
-It's a bit subtle, but if your new code matches behavior of old code
-then *node was always NULL at entry to this function so setting it
-to NULL again (which is what happens if ms_ctrl_node == NULL) should
-be fine.
-
-Maybe it's all a bit subtle though so perhaps the check is worth having.
-
-> +			*node = of_fwnode_handle(msi_ctlr_node);
-> +	}
-> +
-> +	return rid;
->  }
->  
->  /**
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 8003e3218c46..8ddb05d5c96a 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -702,7 +702,8 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->  void pci_msi_mask_irq(struct irq_data *data);
->  void pci_msi_unmask_irq(struct irq_data *data);
->  u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
-> -u32 pci_msi_map_rid_ctlr_node(struct pci_dev *pdev, struct device_node **node);
-> +u32 pci_msi_map_rid_ctlr_node(struct irq_domain *domain, struct pci_dev *pdev,
-> +			      struct fwnode_handle **node);
->  struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev);
->  void pci_msix_prepare_desc(struct irq_domain *domain, msi_alloc_info_t *arg,
->  			   struct msi_desc *desc);
+> Looking 0c2228731974 ("phy: tegra: p2u: Broaden architecture
+> dependency") we ended up just merging ...
+> 
+> diff --git a/drivers/phy/tegra/Kconfig b/drivers/phy/tegra/Kconfig
+> index f30cfb42b210..342fb736da4b 100644
+> --- a/drivers/phy/tegra/Kconfig
+> +++ b/drivers/phy/tegra/Kconfig
+> @@ -13,7 +13,7 @@ config PHY_TEGRA_XUSB
+>  config PHY_TEGRA194_P2U
+>         tristate "NVIDIA Tegra194 PIPE2UPHY PHY driver"
+> -       depends on ARCH_TEGRA_194_SOC || ARCH_TEGRA_234_SOC || COMPILE_TEST
+> +       depends on ARCH_TEGRA || COMPILE_TEST
+>         select GENERIC_PHY
+>         help
+> 
+> So I guess we could just merge Francesco's original suggestion for
+> consistency. Otherwise I would be happy with ...
+> 
+>  depends on (ARCH_TEGRA && ARM64) || COMPILE_TEST
 > 
 
+I made the above change applied Vidya's patch. Thanks Jon and Niklas!
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
