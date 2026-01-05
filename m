@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019F42F12BA;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2421F315764;
 	Mon,  5 Jan 2026 13:56:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767621366; cv=none; b=A2AalFett4NtXm7kgFEUw3EA5A8H8CJRI9mv6pACTe6yk9NJroqD+d2VcZcYy/ZECk0APetliMbx4XRN1cpwhQfo7mfoXpsdUOuE3O0S0kL6uZ0QUBTxE7t4G4H2tmAO/ZaH+s/r/fAUDjIrpn2SVc4fJORO9DuM6rc+0EdkxVE=
+	t=1767621366; cv=none; b=uQErM/e5T3MgpxlcuRt28Y3u+UM8w0X6FQgTXcvOX0QvmvIaZPIHZLz4DByadkgLMq0whFqnAh/mcqOuSMjB9RRLmM8qhhe83jJzywsva3/o/+iItTtwX2li1kV4/GQzRgYOY1jcIK6QdFXy9aA9KjT0wWreNlEjI/ksh5IQFoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1767621366; c=relaxed/simple;
-	bh=QAF2L+yosmNKfQhDjh7zsZKYs44u7eMXzl1NoJSMU+4=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=D21HW3rdMHqpvRO9wXhENPb3Raondq+gonIsBFLFUnW3AJjocRM8qNJ9aLCrW4hu7VQoC1m3UD3Q3EZHRWYEbNVcOAj9+PGkTt8zJy4rBEwUaoE3pnkFoEXh6Cjm0cBH+Et6+FzV2Is7x2X+mao8CrPXJyhme2A+rXrJZ4LoWvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oZXB+VgC; arc=none smtp.client-ip=10.30.226.201
+	bh=Ntgzo3Vph+kP0OsAhSnb+mpngFnLkvv+Qtv5ogIVlWk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=crW24vUSvE+YB7M8dgLKYkNuHRiNbUyMrPVRXOULjq1nifr/Tq40uARBtbG0ad6AeR/SpIec+J3TmT6jCfvOuJaKqaE0e0HmhPa24F59JwnFu+eGKzoSdERCW7hSAeTq8syHYavT1etbvs7KJ3oFwi4FKlMeZLxB0Qob4ML9JY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RM5Knto8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oZXB+VgC"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 53B94C116D0;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RM5Knto8"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 71C32C19424;
 	Mon,  5 Jan 2026 13:56:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1767621365;
-	bh=QAF2L+yosmNKfQhDjh7zsZKYs44u7eMXzl1NoJSMU+4=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=oZXB+VgCc7W+fs9cjAHAdOZXm7Q3ppNx6cvCNHpwCPFQeQ3smDu1U0T/sU+r1QQXo
-	 AK3KaJeLSr6fhr0BajtnmVG933QBRQACkPymBSXJiJV4yQtHcajY7UuMLQGLGudJFt
-	 Edq7C+FlnBI9PR1b0xDFKz5cRYModbLZW0vfYyWzHFIoHpSsuWnaMfIQeZBt+c4pP1
-	 9EP4QCvf5+m4FZxOiSEFzEq0/QPI+UK0k6XuOGDxYsUVxr0sV6v4y2T/wdAA6nwcoU
-	 iYMQUe1mqg1101W8XLR8MgFrv0W2rTKatkDLKhJQd6C7+KqZ6IEKubAYcCNWJEFKLb
-	 7KavQV2bB1gaQ==
+	bh=Ntgzo3Vph+kP0OsAhSnb+mpngFnLkvv+Qtv5ogIVlWk=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=RM5Knto83GnocxcisPWnvmvjIM1waWl1JG88LO3XfFmBcA5/aTF5bVh6OHkMjFCnU
+	 b9OA+2/8S058GskKivpZ6JGkp7mXiaF41c5kq9jtpuMm80Vz7bycN8LQXIk3VrlfUU
+	 xFdCIpcxKQITL+T6xjc1Q+Tf9xaROhdqtKURLNvSXDsbKGHSkmsJJBZTgKhCDnWfA+
+	 xTtmfK9EAYhsnqg03C9zabTn/peZjtLpBnX1pBC2X2XFehA2vnkESYX2HEShScONQJ
+	 /bw3TVN2SHn5xf+yRylGvDgDgnN5OdbKLEV0qN84g2ZvSTxAuw0hZ4MxudnZEh409B
+	 0OEsPJHq08fng==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 430E7C79F93;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6250BC79F9A;
 	Mon,  5 Jan 2026 13:56:05 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH v4 0/8] PCI/pwrctrl: Major rework to integrate pwrctrl
- devices with controller drivers
-Date: Mon, 05 Jan 2026 19:25:40 +0530
-Message-Id: <20260105-pci-pwrctrl-rework-v4-0-6d41a7a49789@oss.qualcomm.com>
+Date: Mon, 05 Jan 2026 19:25:42 +0530
+Subject: [PATCH v4 2/8] PCI/pwrctrl: Add 'struct
+ pci_pwrctrl::power_{on/off}' callbacks
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,13 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAN3CW2kC/32QzW7CMBCEXyXyuY6y6/iPE++BenCcDViQBOwQW
- iHevU6o1B5oLyvNSvPtztxZohgosU1xZ5HmkMI4ZFG/Fcwf3LAnHtqsGVYoAbDmZx/4+Rb9FE8
- 80m2MR+4tOEWgPHaKZeM5Uhc+VujuPetDSNMYP9cbMyzbf3Ez8Ipr4zQq1MqIdjumVF6u7uTHv
- i/zYAt1xh8SgnpJwoVUSyeVaGxD6g+S+EVC+5IkMsnrVlowvq3a5gXp8Ywe6XLNNU7P/KynlNx
- a46b4Tq0qAxpMaVBYDrx3Q9geKQ50Kse4Xxt0kz+slkYKCU3laugUmFrIzmpBDr1ALUlCW6uuA
- i8XV+MS8eWfMG2KWZVgefSQH3t8AY29wNHnAQAA
-X-Change-ID: 20251124-pci-pwrctrl-rework-c91a6e16c2f6
+Message-Id: <20260105-pci-pwrctrl-rework-v4-2-6d41a7a49789@oss.qualcomm.com>
+References: <20260105-pci-pwrctrl-rework-v4-0-6d41a7a49789@oss.qualcomm.com>
+In-Reply-To: <20260105-pci-pwrctrl-rework-v4-0-6d41a7a49789@oss.qualcomm.com>
 To: Manivannan Sadhasivam <mani@kernel.org>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
@@ -60,19 +56,18 @@ Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
  Niklas Cassel <cassel@kernel.org>, Alex Elder <elder@riscstar.com>, 
  Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Chen-Yu Tsai <wenst@chromium.org>, 
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+ Chen-Yu Tsai <wenst@chromium.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7654;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8818;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=QAF2L+yosmNKfQhDjh7zsZKYs44u7eMXzl1NoJSMU+4=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpW8LxXC9atPotcdsq9t4BwmdfIXDcmFntls+GA
- Q3z+3BY2B+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaVvC8QAKCRBVnxHm/pHO
- 9SoQB/9sBLjTqbpqpupibHSrhwwseGIxxurOp3T8MAJFeomky3VJsj+WTRFBRxZCpPfEdVu5t/l
- PtRFsgAZ0n3oF4kmR6GPK19YO1278I9Zj4pek5vcsPaiU1AlwGXs3+ush26FRbhdlbfdAzCFcQ9
- W/RzB2Shs2ihjf2mgsuMZVG9XEkip2eKOYcqJvPM28p+jDGKNw+4/7QlKKhw6J7xU52J/h5/KtI
- f3HJN1ttEBbmI4VJjkkHJsRPfmwNFKYdx7hQpV6BahhN1hwK+xFQJ0UxGyU3tOX/Z5WOqCvkbgg
- It/q3JOh0DVAyvua129xk4cVYA7F34giK31Ly3ygKxlEPGMl
+ bh=Y2lIq8uxsjGR+WtNehymfHn7dVjmFrK7/YgN9bRdcL8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpW8LyOIGStqYxyUDpWvFaoTJfWSrKT0poSKort
+ 6cXJrqjLLSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaVvC8gAKCRBVnxHm/pHO
+ 9Wk3B/42I26fQhS89kqJwvNC17RtyhuK/o7KWfh/XCYKSO0kWxmWTvFq/6K0mgAsmcyn0/R4zjo
+ jBdLOUZFKx4Ckcs0zQPGJrvOVPGe6arJK7SW+QqoRUz9wp9gFZqlxYV4KPjVfwlooJrqqvruYeV
+ AoCci4nvjeCE4/FOYRIIVBP9E8Sg3twrK24+Z3+33+TuPhDf5UeWt0/pSpp5JjZaVjsoE8P5C4n
+ ZCknW3Ohkn9BaEbBdkwIuPK0fz/jdvwdgeNbJAJmzvFlMjV+cGZJgOlobWDkrsnZ6HmQjqyDU20
+ fRoXxMToJqGbcGyaNmNppN7BcWZqKuoloPf6cQR0TF7C4U1O
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -80,193 +75,267 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series provides a major rework for the PCI power control (pwrctrl)
-framework to enable the pwrctrl devices to be controlled by the PCI controller
-drivers.
+To allow the pwrctrl core to control the power on/off sequences of the
+pwrctrl drivers, add the 'struct pci_pwrctrl::power_{on/off}' callbacks and
+populate them in the respective pwrctrl drivers.
 
-Problem Statement
-=================
+The pwrctrl drivers still power on the resources on their own now. So there
+is no functional change.
 
-Currently, the pwrctrl framework faces two major issues:
-
-1. Missing PERST# integration
-2. Inability to properly handle bus extenders such as PCIe switch devices
-
-First issue arises from the disconnect between the PCI controller drivers and
-pwrctrl framework. At present, the pwrctrl framework just operates on its own
-with the help of the PCI core. The pwrctrl devices are created by the PCI core
-during initial bus scan and the pwrctrl drivers once bind, just power on the
-PCI devices during their probe(). This design conflicts with the PCI Express
-Card Electromechanical Specification requirements for PERST# timing. The reason
-is, PERST# signals are mostly handled by the controller drivers and often
-deasserted even before the pwrctrl drivers probe. According to the spec, PERST#
-should be deasserted only after power and reference clock to the device are
-stable, within predefined timing parameters.
-
-The second issue stems from the PCI bus scan completing before pwrctrl drivers
-probe. This poses a significant problem for PCI bus extenders like switches
-because the PCI core allocates upstream bridge resources during the initial
-scan. If the upstream bridge is not hotplug capable, resources are allocated
-only for the number of downstream buses detected at scan time, which might be
-just one if the switch was not powered and enumerated at that time. Later, when
-the pwrctrl driver powers on and enumerates the switch, enumeration fails due to
-insufficient upstream bridge resources.
-
-Proposal
-========
-
-This series addresses both issues by introducing new individual APIs for pwrctrl
-device creation, destruction, power on, and power off operations. Controller
-drivers are expected to invoke these APIs during their probe(), remove(),
-suspend(), and resume() operations. This integration allows better coordination
-between controller drivers and the pwrctrl framework, enabling enhanced features
-such as D3Cold support.
-
-The original design aimed to avoid modifying controller drivers for pwrctrl
-integration. However, this approach lacked scalability because different
-controllers have varying requirements for when devices should be powered on. For
-example, controller drivers require devices to be powered on early for
-successful PHY initialization.
-
-By using these explicit APIs, controller drivers gain fine grained control over
-their associated pwrctrl devices.
-
-This series modified the pcie-qcom driver (only consumer of pwrctrl framework)
-to adopt to these APIs and also removed the old pwrctrl code from PCI core. This
-could be used as a reference to add pwrctrl support for other controller drivers
-also.
-
-For example, to control the 3.3v supply to the PCI slot where the NVMe device is
-connected, below modifications are required:
-
-Devicetree
-----------
-
-	// In SoC dtsi:
-
-	pci@1bf8000 { // controller node
-		...
-		pcie1_port0: pcie@0 { // PCI Root Port node
-			compatible = "pciclass,0604"; // required for pwrctrl
-							 driver bind
-			...
-		};
-	};
-
-	// In board dts:
-
-	&pcie1_port0 {
-		reset-gpios = <&tlmm 152 GPIO_ACTIVE_LOW>; // optional
-		vpcie3v3-supply = <&vreg_nvme>; // NVMe power supply
-	};
-
-Controller driver
------------------
-
-	// Select PCI_PWRCTRL_SLOT in controller Kconfig
-
-	probe() {
-		...
-		// Initialize controller resources
-		pci_pwrctrl_create_devices(&pdev->dev);
-		pci_pwrctrl_power_on_devices(&pdev->dev);
-		// Deassert PERST# (optional)
-		...
-		pci_host_probe(); // Allocate host bridge and start bus scan
-	}
-
-	suspend {
-		// PME_Turn_Off broadcast
-		// Assert PERST# (optional)
-		pci_pwrctrl_power_off_devices(&pdev->dev);
-		...
-	}
-
-	resume {
-		...
-		pci_pwrctrl_power_on_devices(&pdev->dev);
-		// Deassert PERST# (optional)
-	}
-
-I will add a documentation for the pwrctrl framework in the coming days to make
-it easier to use.
-
-Testing
-=======
-
-This series is tested on the Lenovo Thinkpad T14s laptop based on Qcom X1E
-chipset and RB3Gen2 development board with TC9563 switch based on Qcom QCS6490
-chipset.
-
-**NOTE**: With this series, the controller driver may undergo multiple probe
-deferral if the pwrctrl driver was not available during the controller driver
-probe. This is pretty much required to avoid the resource allocation issue. I
-plan to replace probe deferral with blocking wait in the coming days.
-
+Co-developed-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Tested-by: Chen-Yu Tsai <wenst@chromium.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Changes in v4:
-- Used platform_device_put()
-- Changed the return value of power_off() callback to 'int'
-- Splitted patch 6 into two and reworded the commit message
-- Collected tags
-- Link to v3: https://lore.kernel.org/r/20251229-pci-pwrctrl-rework-v3-0-c7d5918cd0db@oss.qualcomm.com
+ drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c | 27 ++++++++++++++---
+ drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c | 22 ++++++++++----
+ drivers/pci/pwrctrl/slot.c               | 50 +++++++++++++++++++++++---------
+ include/linux/pci-pwrctrl.h              |  4 +++
+ 4 files changed, 79 insertions(+), 24 deletions(-)
 
-Changes in v3:
-- Integrated TC9563 change
-- Reworked the power_on API to properly power off the devices in error path
-- Fixed the error path in pcie-qcom.c to not destroy pwrctrl devices during
-  probe deferral
-- Rebased on top of pci/controller/dwc-qcom branch and dropped the PERST# patch
-- Added a patch for TC9563 to fix the refcount dropping for i2c adapter
-- Added patches to drop the assert_perst callback and rename the PERST# helpers in
-  pcie-qcom.c
-- Link to v2: https://lore.kernel.org/r/20251216-pci-pwrctrl-rework-v2-0-745a563b9be6@oss.qualcomm.com
+diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+index 4e664e7b8dd2..7e7093cbff3c 100644
+--- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
++++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+@@ -52,11 +52,27 @@ static const struct pci_pwrctrl_pwrseq_pdata pci_pwrctrl_pwrseq_qcom_wcn_pdata =
+ 	.validate_device = pci_pwrctrl_pwrseq_qcm_wcn_validate_device,
+ };
+ 
++static int pci_pwrctrl_pwrseq_power_on(struct pci_pwrctrl *ctx)
++{
++	struct pci_pwrctrl_pwrseq_data *data = container_of(ctx, struct pci_pwrctrl_pwrseq_data,
++							    ctx);
++
++	return pwrseq_power_on(data->pwrseq);
++}
++
++static int pci_pwrctrl_pwrseq_power_off(struct pci_pwrctrl *ctx)
++{
++	struct pci_pwrctrl_pwrseq_data *data = container_of(ctx, struct pci_pwrctrl_pwrseq_data,
++							    ctx);
++
++	return pwrseq_power_off(data->pwrseq);
++}
++
+ static void devm_pci_pwrctrl_pwrseq_power_off(void *data)
+ {
+-	struct pwrseq_desc *pwrseq = data;
++	struct pci_pwrctrl_pwrseq_data *pwrseq_data = data;
+ 
+-	pwrseq_power_off(pwrseq);
++	pci_pwrctrl_pwrseq_power_off(&pwrseq_data->ctx);
+ }
+ 
+ static int pci_pwrctrl_pwrseq_probe(struct platform_device *pdev)
+@@ -85,16 +101,19 @@ static int pci_pwrctrl_pwrseq_probe(struct platform_device *pdev)
+ 		return dev_err_probe(dev, PTR_ERR(data->pwrseq),
+ 				     "Failed to get the power sequencer\n");
+ 
+-	ret = pwrseq_power_on(data->pwrseq);
++	ret = pci_pwrctrl_pwrseq_power_on(&data->ctx);
+ 	if (ret)
+ 		return dev_err_probe(dev, ret,
+ 				     "Failed to power-on the device\n");
+ 
+ 	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_pwrseq_power_off,
+-				       data->pwrseq);
++				       data);
+ 	if (ret)
+ 		return ret;
+ 
++	data->ctx.power_on = pci_pwrctrl_pwrseq_power_on;
++	data->ctx.power_off = pci_pwrctrl_pwrseq_power_off;
++
+ 	pci_pwrctrl_init(&data->ctx, dev);
+ 
+ 	ret = devm_pci_pwrctrl_device_set_ready(dev, &data->ctx);
+diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+index 0a63add84d09..616d3caedb34 100644
+--- a/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
++++ b/drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c
+@@ -434,15 +434,22 @@ static int tc9563_pwrctrl_parse_device_dt(struct tc9563_pwrctrl_ctx *ctx, struct
+ 	return 0;
+ }
+ 
+-static void tc9563_pwrctrl_power_off(struct tc9563_pwrctrl_ctx *ctx)
++static int tc9563_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
+ {
++	struct tc9563_pwrctrl_ctx *ctx = container_of(pwrctrl,
++					struct tc9563_pwrctrl_ctx, pwrctrl);
++
+ 	gpiod_set_value(ctx->reset_gpio, 1);
+ 
+ 	regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
++
++	return 0;
+ }
+ 
+-static int tc9563_pwrctrl_bring_up(struct tc9563_pwrctrl_ctx *ctx)
++static int tc9563_pwrctrl_power_on(struct pci_pwrctrl *pwrctrl)
+ {
++	struct tc9563_pwrctrl_ctx *ctx = container_of(pwrctrl,
++					struct tc9563_pwrctrl_ctx, pwrctrl);
+ 	struct tc9563_pwrctrl_cfg *cfg;
+ 	int ret, i;
+ 
+@@ -502,7 +509,7 @@ static int tc9563_pwrctrl_bring_up(struct tc9563_pwrctrl_ctx *ctx)
+ 		return 0;
+ 
+ power_off:
+-	tc9563_pwrctrl_power_off(ctx);
++	tc9563_pwrctrl_power_off(&ctx->pwrctrl);
+ 	return ret;
+ }
+ 
+@@ -591,7 +598,7 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
+ 			goto remove_i2c;
+ 	}
+ 
+-	ret = tc9563_pwrctrl_bring_up(ctx);
++	ret = tc9563_pwrctrl_power_on(&ctx->pwrctrl);
+ 	if (ret)
+ 		goto remove_i2c;
+ 
+@@ -601,6 +608,9 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
+ 			goto power_off;
+ 	}
+ 
++	ctx->pwrctrl.power_on = tc9563_pwrctrl_power_on;
++	ctx->pwrctrl.power_off = tc9563_pwrctrl_power_off;
++
+ 	ret = devm_pci_pwrctrl_device_set_ready(dev, &ctx->pwrctrl);
+ 	if (ret)
+ 		goto power_off;
+@@ -610,7 +620,7 @@ static int tc9563_pwrctrl_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ power_off:
+-	tc9563_pwrctrl_power_off(ctx);
++	tc9563_pwrctrl_power_off(&ctx->pwrctrl);
+ remove_i2c:
+ 	i2c_unregister_device(ctx->client);
+ 	put_device(&ctx->adapter->dev);
+@@ -621,7 +631,7 @@ static void tc9563_pwrctrl_remove(struct platform_device *pdev)
+ {
+ 	struct tc9563_pwrctrl_ctx *ctx = platform_get_drvdata(pdev);
+ 
+-	tc9563_pwrctrl_power_off(ctx);
++	tc9563_pwrctrl_power_off(&ctx->pwrctrl);
+ 	i2c_unregister_device(ctx->client);
+ 	put_device(&ctx->adapter->dev);
+ }
+diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
+index 3320494b62d8..9f91f04b4ae0 100644
+--- a/drivers/pci/pwrctrl/slot.c
++++ b/drivers/pci/pwrctrl/slot.c
+@@ -17,13 +17,38 @@ struct pci_pwrctrl_slot_data {
+ 	struct pci_pwrctrl ctx;
+ 	struct regulator_bulk_data *supplies;
+ 	int num_supplies;
++	struct clk *clk;
+ };
+ 
+-static void devm_pci_pwrctrl_slot_power_off(void *data)
++static int pci_pwrctrl_slot_power_on(struct pci_pwrctrl *ctx)
+ {
+-	struct pci_pwrctrl_slot_data *slot = data;
++	struct pci_pwrctrl_slot_data *slot = container_of(ctx, struct pci_pwrctrl_slot_data, ctx);
++	int ret;
++
++	ret = regulator_bulk_enable(slot->num_supplies, slot->supplies);
++	if (ret < 0) {
++		dev_err(slot->ctx.dev, "Failed to enable slot regulators\n");
++		return ret;
++	}
++
++	return clk_prepare_enable(slot->clk);
++}
++
++static int pci_pwrctrl_slot_power_off(struct pci_pwrctrl *ctx)
++{
++	struct pci_pwrctrl_slot_data *slot = container_of(ctx, struct pci_pwrctrl_slot_data, ctx);
+ 
+ 	regulator_bulk_disable(slot->num_supplies, slot->supplies);
++	clk_disable_unprepare(slot->clk);
++
++	return 0;
++}
++
++static void devm_pci_pwrctrl_slot_release(void *data)
++{
++	struct pci_pwrctrl_slot_data *slot = data;
++
++	pci_pwrctrl_slot_power_off(&slot->ctx);
+ 	regulator_bulk_free(slot->num_supplies, slot->supplies);
+ }
+ 
+@@ -31,7 +56,6 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
+ {
+ 	struct pci_pwrctrl_slot_data *slot;
+ 	struct device *dev = &pdev->dev;
+-	struct clk *clk;
+ 	int ret;
+ 
+ 	slot = devm_kzalloc(dev, sizeof(*slot), GFP_KERNEL);
+@@ -46,23 +70,21 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	slot->num_supplies = ret;
+-	ret = regulator_bulk_enable(slot->num_supplies, slot->supplies);
+-	if (ret < 0) {
+-		dev_err_probe(dev, ret, "Failed to enable slot regulators\n");
+-		regulator_bulk_free(slot->num_supplies, slot->supplies);
+-		return ret;
+-	}
+ 
+-	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_slot_power_off,
++	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_slot_release,
+ 				       slot);
+ 	if (ret)
+ 		return ret;
+ 
+-	clk = devm_clk_get_optional_enabled(dev, NULL);
+-	if (IS_ERR(clk)) {
+-		return dev_err_probe(dev, PTR_ERR(clk),
++	slot->clk = devm_clk_get_optional(dev, NULL);
++	if (IS_ERR(slot->clk))
++		return dev_err_probe(dev, PTR_ERR(slot->clk),
+ 				     "Failed to enable slot clock\n");
+-	}
++
++	pci_pwrctrl_slot_power_on(&slot->ctx);
++
++	slot->ctx.power_on = pci_pwrctrl_slot_power_on;
++	slot->ctx.power_off = pci_pwrctrl_slot_power_off;
+ 
+ 	pci_pwrctrl_init(&slot->ctx, dev);
+ 
+diff --git a/include/linux/pci-pwrctrl.h b/include/linux/pci-pwrctrl.h
+index 4aefc7901cd1..435b822c841e 100644
+--- a/include/linux/pci-pwrctrl.h
++++ b/include/linux/pci-pwrctrl.h
+@@ -31,6 +31,8 @@ struct device_link;
+ /**
+  * struct pci_pwrctrl - PCI device power control context.
+  * @dev: Address of the power controlling device.
++ * @power_on: Callback to power on the power controlling device.
++ * @power_off: Callback to power off the power controlling device.
+  *
+  * An object of this type must be allocated by the PCI power control device and
+  * passed to the pwrctrl subsystem to trigger a bus rescan and setup a device
+@@ -38,6 +40,8 @@ struct device_link;
+  */
+ struct pci_pwrctrl {
+ 	struct device *dev;
++	int (*power_on)(struct pci_pwrctrl *pwrctrl);
++	int (*power_off)(struct pci_pwrctrl *pwrctrl);
+ 
+ 	/* private: internal use only */
+ 	struct notifier_block nb;
 
-Changes in v2:
-- Exported of_pci_supply_present() API
-- Demoted the -EPROBE_DEFER log to dev_dbg()
-- Collected tags and rebased on top of v6.19-rc1
-- Link to v1: https://lore.kernel.org/r/20251124-pci-pwrctrl-rework-v1-0-78a72627683d@oss.qualcomm.com
-
----
-Krishna Chaitanya Chundru (1):
-      PCI/pwrctrl: Add APIs for explicitly creating and destroying pwrctrl devices
-
-Manivannan Sadhasivam (7):
-      PCI/pwrctrl: tc9563: Use put_device() instead of i2c_put_adapter()
-      PCI/pwrctrl: Add 'struct pci_pwrctrl::power_{on/off}' callbacks
-      PCI/pwrctrl: Add APIs to power on/off the pwrctrl devices
-      PCI/pwrctrl: Switch to the new pwrctrl APIs
-      PCI: qcom: Drop the assert_perst() callbacks
-      PCI: Drop the assert_perst() callback
-      PCI: qcom: Rename PERST# assert/deassert helpers for uniformity
-
- drivers/pci/bus.c                                 |  19 --
- drivers/pci/controller/dwc/pcie-designware-host.c |   9 -
- drivers/pci/controller/dwc/pcie-designware.h      |   9 -
- drivers/pci/controller/dwc/pcie-qcom.c            |  54 +++--
- drivers/pci/of.c                                  |   1 +
- drivers/pci/probe.c                               |  59 -----
- drivers/pci/pwrctrl/core.c                        | 260 ++++++++++++++++++++--
- drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c          |  30 ++-
- drivers/pci/pwrctrl/pci-pwrctrl-tc9563.c          |  48 ++--
- drivers/pci/pwrctrl/slot.c                        |  48 ++--
- drivers/pci/remove.c                              |  20 --
- include/linux/pci-pwrctrl.h                       |  16 +-
- include/linux/pci.h                               |   1 -
- 13 files changed, 367 insertions(+), 207 deletions(-)
----
-base-commit: 3e7f562e20ee87a25e104ef4fce557d39d62fa85
-change-id: 20251124-pci-pwrctrl-rework-c91a6e16c2f6
-prerequisite-message-id: 20251126081718.8239-1-mani@kernel.org
-prerequisite-patch-id: db9ff6c713e2303c397e645935280fd0d277793a
-prerequisite-patch-id: b5351b0a41f618435f973ea2c3275e51d46f01c5
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.48.1
 
 
