@@ -1,629 +1,247 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020133.outbound.protection.outlook.com [52.101.228.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41BCC21018A
-	for <linux-pci@vger.kernel.org>; Tue,  6 Jan 2026 01:51:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767664277; cv=none; b=MKRCvI5UL+HCRx+Qcac+RgGbLREPD/lOo3nCCRLjZmQoqDxwA7UEYMZTyTbIxSLQc0SbcDPZqUN5WtjbUlkKjKM/oXBvD+rf4ASgVVwzkcVt0kgnoj7o8CmO09MEnzft1irMBZAREbzZqExj/UJmzIlOMdF6nLqIvIGxAbEdPbk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767664277; c=relaxed/simple;
-	bh=NrFVmHpqGiFc4KTRNLdR0xr2E6CieYiGK6FSMD985oE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=YWAfu3gafmSFaGIlbBYv+F7qez3TbbOGOAfPP6zCyBKMfXZtoIF3ZbBD3p6awp3sOqybID7EkgvXPz98Jr0P7DOs27IcHTlcf3HGrgSo5IueVAjavExE7LpsG0TYsR2EbP8W3eEuZbZvqx9M70HRh1WQgRDukI7M64akXGSsfqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=qLpHpgx5; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F79F2192F9;
+	Tue,  6 Jan 2026 01:52:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.133
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1767664382; cv=fail; b=iEayAJtWkqw7g7z4lcJz0jgwIXMKBaoUnP63KkiMCZaua8iE5gNjv++y8H/ZJDkMI2b6SXhNffJjji1FFvwUvC3KMglvtSFqoe0NE+aMHWOtifuraj3AJ7TSESD+jvm0rmLAQe8o3wOgRPmJuwN0mLB4G16HOPQlAhFsO7AKmC4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1767664382; c=relaxed/simple;
+	bh=XzcHQUI2OM1OtJ6dKkFyiKwM1Ku09VK4deEAPu1165k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=umCl8iBYLECqtJkCuxX9JlRREUOCzmLNLlThVpwFGW8h2xsL2Fr2QSCL5v+OcNvnc67FkZGPGhebMrmUwCWs4LBJgwLNqt8sJOwCEAyGHQv8YYMBUxLBdvZS+JL5VnkCN4+Mwt5k7FgtbrKCxgUi1tmnswLbdON7CxYnN1Ni8t0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=SjMP8AxI; arc=fail smtp.client-ip=52.101.228.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="qLpHpgx5"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 29975240103
-	for <linux-pci@vger.kernel.org>; Tue,  6 Jan 2026 02:42:53 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1767663773; bh=wme5I2kMCGMxH2FpT6bqyV/3UOhpwx7GsUYd9f0Uhv4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:To:Cc:Autocrypt:OpenPGP:From;
-	b=qLpHpgx5tc7oTEG3ElhrLWJZyJYlJWhlCBlYvS+6MSqIk8EDH3+P13bdz0PgXPK1Y
-	 u7PRMuA6NeyDRiAyv2aqqODDf7c1pRYP6KuTwrb9xvjloTrYIZUlL95vzxP0N+to9T
-	 5vB296SKaoJkaHGpKTWaesj0sIK3ZQK4rFemE1R5CXBrqJVxlehN1QmFObpqpyGnEq
-	 JqGhFvvscc+qHwzc7xe0/0+FmuNyB5JCU7XAi9BeoMEnC5WRgXW8KOoGkpR5KK4nul
-	 JZOsKixd61Cc5Gs6TglpRmYXlnBWxrWCm1yXMceqtPedYcErTtvMnOcPSlW6zxOyU3
-	 QuZtUbRk/3iWg==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4dlYp21lrRz6twR;
-	Tue,  6 Jan 2026 02:42:50 +0100 (CET)
-From: Markus Probst <markus.probst@posteo.de>
-Date: Tue, 06 Jan 2026 01:42:52 +0000
-Subject: [PATCH v10 1/3] rust: leds: add basic led classdev abstractions
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="SjMP8AxI"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=SrkyRcSl0GraG+Jtn4MBapx84XHVO1aXvjfcidiC2qyYchUUkWXZh79ndZYTtchf3iWZY63Q7vQcVveMFvj9a3dSjmvEjDcFyXmwm7Z0IIaRGgwNbC/Mu9+PC0LE3jhGBiFp08CHNm6InMhBvJLLDy8MphuuyUSzliTVCIG6l6lR/lyfI81Wb8UQFL0jmoQYvMuzR4o+kVUsyaBU4g5hWr8iChdIerc+jYN/AbGedzP+Oyzpym0Xt/O+/Mw426OmepZ/WGIRV0fkTafzG97KXn/Ac5r1tmC7Idi4s74CmEfgPkG8bHlvtL563XlubyHPRPFHK6A3LXzFUKh9/WVKZQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Zx/0+hkgyymwYGa7EriBdBsSzoIjvTL/Eok96kLybTg=;
+ b=AyEsSmUiSHuh3EZveKzj0oDq0WV5Rnv4JURIjqPt71T3JVS4rPmeoSdjgixzNxGsjiHTP+idbCpO/RgOt2cIeJkD9Ri0PrpWGpgY+gpw7s3XMQRtFGueh6BseikmLnFH+QlFl4AmwnIi+WvFz09EYpmUchZLtWP52/+k5+6CS6lEIrvmaHhzvUDssVEflxseLLSLoxcc1znNlHImpYTeS48Vd3DjMW2aKhb1ChOYzuO3A2cLXKHHTeNeCNtDyRpfAi37GOQXF6NaUhdF0Lcc2cDkLjhov4AiBV1zIDRL4VN1QIrtgtG2VBEMjwTedx+1Qp0fqup04HBudD8p6/Txmw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Zx/0+hkgyymwYGa7EriBdBsSzoIjvTL/Eok96kLybTg=;
+ b=SjMP8AxI4qx7kdKw4ivaxyiTVDPy4Q/beTLXSzw6RnjVBWosad7obuIqaBHu3ASyeGzBsGj2q71UE14ELkHlUF0lv1kAJCqt2d4PZeuRrXJbwMfv0UrL92zxQA3AC2EkNSEG3NLc1+kj85EswZVhMo5ZYphm+3vqXZkCVYqvMuc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYYP286MB4580.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:193::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9478.5; Tue, 6 Jan
+ 2026 01:52:56 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9478.005; Tue, 6 Jan 2026
+ 01:52:56 +0000
+Date: Tue, 6 Jan 2026 10:52:54 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, Frank.Li@nxp.com, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: endpoint: BAR subrange mapping support
+Message-ID: <gb3mr7onokhufasxaeoxiqft22incwxxlf43m6jcrhrem3477j@63oi3ztvbqku>
+References: <20260105080214.1254325-1-den@valinux.co.jp>
+ <aVvtAkEcg6Qg7K3C@ryzen>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aVvtAkEcg6Qg7K3C@ryzen>
+X-ClientProxiedBy: TYCP286CA0238.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:3c7::11) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260106-rust_leds-v10-1-e0a1564884f9@posteo.de>
-References: <20260106-rust_leds-v10-0-e0a1564884f9@posteo.de>
-In-Reply-To: <20260106-rust_leds-v10-0-e0a1564884f9@posteo.de>
-To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
- Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
- Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng <boqun.feng@gmail.com>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- Markus Probst <markus.probst@posteo.de>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=18142;
- i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=NrFVmHpqGiFc4KTRNLdR0xr2E6CieYiGK6FSMD985oE=;
- b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBpXGiXYDqQ5cytH/Kgla7jO1QBN/cTX+jejIvqd
- 8re+8X9f8qJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaVxolxsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9KbYRAArM8/fS4muuHHc8F5xanwgQLexSIbjhO
- yyWeUWL80YmyOXB2ELA2sV8xt0rl6fJmTxcXKORZjBy6nv1FmoNifavun8utjXz784s/g02RhKi
- WFblHdIPYeVezFnoV9GgPWKOyIEmMskYvjw+GL0YqH3wqn6l7fdyGcJwa8/YjxwP3TTSx45WSfC
- H20/hGqgWnnKYMl0AwLZOWrXKrzuD+TX0WXVZm4OmQO3w4S83NXMUAG3vo1CIU24jHEQ2HwXVV7
- gzPFpTkr+lYape1EtQHGEZSCt8cFwaJEJ0ctQ+XtM9zVWAlXFyUe+f7NERlMv11bnY7ghtW/eUl
- /PQ3oY3lk7x8ue93GnCUWBRPLvKU/ygvXS5NHL7abLpYlttL5kmDoW2gU2ecEHl8qY2aGlO40B8
- NVDR/a7dbmul6pORCYkdrnJTH+pFRG+Z43BnYK023/F7bD12ldP65nF2QD9igZYvVduylewHpXy
- EIJKyrMikuwxHLC2833gFrcPC+shO+LOdR2LwmsAmMjW69pJl5rKg09UqkqhzSDV1bznjC+60Ku
- j4n/3rfqXojtzQ4U/uf6T/TAt+ZvP7NczLzbXaFy3i5LaY0BPm9RZAtla7DR7WTm8AoqreyQ92d
- Ay7fh0KUp068NUdvk7LQSGyWCTUBeyfRqNPUnOuT8UO1J2qrJoKo=
-X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
- fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYYP286MB4580:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6feea9cd-8164-45d1-8de0-08de4cc6500e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|366016|10070799003|1800799024|13003099007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?zWEHIsjyUbDWVKTHBekoaXlsxJmiBrFP92MhBXVhW9Xyi5LzeRl4pY8kxrjY?=
+ =?us-ascii?Q?Marm0BCZvvxUiSx37rHjUIHb9n86vAhruD7LftkWuelG/97TjtmY7lp8/izl?=
+ =?us-ascii?Q?gWZe6JulDwHslsjAc+itNabe/pukISrRTGyucngKwf6CpFVszrXTMDod4+ah?=
+ =?us-ascii?Q?S5bxYjNn/CufQC0gJYA2Oh2Rfdq0Fm/nfjRT1fVQroaR2ScFQwhzDjzUYAsF?=
+ =?us-ascii?Q?2jeN0YHWhymKtMl6Toi2LKOPLesLZQHkNObRPIJHM5WEtTCHqfQgqn/hj260?=
+ =?us-ascii?Q?FeimOXx3f6rBXtKHf7582DoMWphqNI+caDI3kxnY/ylLWq0DTeDA6YrVriCX?=
+ =?us-ascii?Q?zGhRHZHycAN0BLDqaWUt/PlQ0jUO+njr8EW9VzsDwAULfF8uljrvjfK+wQfv?=
+ =?us-ascii?Q?DW9yfE4+739i28GG+sKQiSNhAbpdYAKllfQjZ5AVFAePoBmribsNfuTdiWqp?=
+ =?us-ascii?Q?WpuUv0xoRw0nT7Tm4z+3KlKlnXVL1rh6lFO2SdNi5UGwGuGijhJGMoiJhgEq?=
+ =?us-ascii?Q?xCPBK94f81imB+AaFHtBL/qFQLmrXQYPkUqML2NZ816Gln10WPebbwQPg/7k?=
+ =?us-ascii?Q?fgf9Gf7HyqZzai7mnV9n5LlDwlcLfLRiKkDkyXX3Uu+1kcF2vUdeFlF2nfrY?=
+ =?us-ascii?Q?fgQp+BSoeLgU/u36l2mHCfef1iy+IX9F8++gm8Ok/RPqD8S3dIN7V3J6Lnss?=
+ =?us-ascii?Q?pztBfw1nW6bhGvSjPirveeD9Pd3/Hw815maAlkLqKeYBUQ9lYjDXTkGaOmFC?=
+ =?us-ascii?Q?0Cy2NzDMheEwkwDEtJWSUOXTluClOtTTYS6Eg9UcqA/+fZy0VM4NJRwsvYbF?=
+ =?us-ascii?Q?BFfkeabkGvJd0OW94xiZdHIWgewz3lbrJK7QOa7JZEMszdXnlJl7d+J/34EH?=
+ =?us-ascii?Q?ndkbwZOgDlkkIIA5GIHhTgsYEzvgY9y/azW0A1Fu9SSQhaFqk4g1FMk884RR?=
+ =?us-ascii?Q?kstmVE4Bm52/ioswQYvIFKwCk5Rjvd3UtC4VBf/N50q4baX6QCqv6iIXb7RM?=
+ =?us-ascii?Q?oT1EucKsUWTkfi9DBLzB7hi2YMajqQS9CRQDV/qH0e6oZpenNxxk5J+H5KCB?=
+ =?us-ascii?Q?zmMS/c5Qk//5ZePfsPiMWexTB1y+v9R2S74pXfSFutqp0BkknEX1hm90lgQw?=
+ =?us-ascii?Q?ztW+NTJfi8ViC32aSD6Jt0D90cQVsK2YNjSKKNZ+e4Ru1NQHloi9Tb9mJjvu?=
+ =?us-ascii?Q?1E+WljDSoHV6dRltM2UA/SZfQNyt7hmhOi7Dt2kq7DxfYHaCIHeqKOVdBbV1?=
+ =?us-ascii?Q?+VhUuTMsx/AFR2jbTlzH+mqdYxHPJMhXvsSxn9/oH7OLvjJ23Clse/CVAWMK?=
+ =?us-ascii?Q?axDcLMqC5qOYVFnTt5mBZYTmdu6gCuScrhjpxGtjLMZzjP80EKowoGOGIs2e?=
+ =?us-ascii?Q?Bn3YzmjnO9pfDX3BFP7XAoagSHb1MfdSrLRao+CQSeYEi8Edjo3BObMDVTtU?=
+ =?us-ascii?Q?U9ApYOBWCNI44S/1xPNPYkORZTMxVlMtVLWJwbPJQzmcqkhqDixPYQ=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(10070799003)(1800799024)(13003099007);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?aLeZZmcqf6V0FAFpQR3uOh6mD/E1MwIc2P+wOxsaGFP8pK76/N+VYhXJPLg+?=
+ =?us-ascii?Q?lzOs3sdr8Jk8R4EbSGwCYnim7eDkJYbYF9X72JuuzuZG/V3IcDC0EfNp9GXy?=
+ =?us-ascii?Q?OVEY3IcpIOyw3dlWjiUH9nVxTVdV/Hr/x1h/BfmKLu8hIBxyhdEG5QOLvHai?=
+ =?us-ascii?Q?GSpTdOx2Gq3JsFNZfmrT/IbdD/UmSDzC8ggTY/lKr7eZ1P3gTc7RqPAmi5Ke?=
+ =?us-ascii?Q?GyemGYItiNO/SShKdq4y+JIHUHY5xS4wBN3VBASxoEUa58azNVjJgZUGCyRI?=
+ =?us-ascii?Q?MzFmLuSPNHPlOhM25wTJI2nMrRzJVKrAwR4Mdyp8HpfpgYGiCTjdRj0c3u5g?=
+ =?us-ascii?Q?gNxc7AHhxUzlmHPsocFJqtJ2J9BXJbsp3XGXa8Py1e2kS//BnI7oAgBSZKyc?=
+ =?us-ascii?Q?ZKfCi+g6+xULMj8u8aRi4OP/oWY+zY2nDH+XSLSZG2QUk4sAbsQ6hp4uMT3W?=
+ =?us-ascii?Q?AmNoJBhbIxawEbFBiH4bINMLh/K1gYTsdS4oB15HpjVANDb/uHLOiT3g0SuB?=
+ =?us-ascii?Q?GIrXRo79gB5B9sKtRvAFD+OpwLizOIxJ7FEEhmbELxo+1b8xHLOpHoIGWx3O?=
+ =?us-ascii?Q?fVyRziyPNdwZYnl+dKzbsx2kR/n0ohlFD+VvVkijOAAH/sy74dzRe3SBTckO?=
+ =?us-ascii?Q?NY0yRbG1YOW3aVHGBGP9y2Rf3spLAKgb271m1KXF/8aeKZlU/UIDhhwMDXfV?=
+ =?us-ascii?Q?wFrEQ7XAnq6ZgPidvj/4nbHbbfjNDnMYko0tIoZbZZ6TPh5CbGNqSE/fewBR?=
+ =?us-ascii?Q?aZSju10rhb/pnZXCY0b4iKYKaImRlH7ydaSaVn38Wc1Q35vrQDH9Tr3cOr25?=
+ =?us-ascii?Q?iJoONf5pYQ5owYWTYOvTOqkAhcVKjT7CKxX3y7OK7X7iH5DZIlf5+jyvcE9U?=
+ =?us-ascii?Q?zKF9qyAazb7ANiTRkOx7g4WdToMjR/w3IRwMOlitWJjz7pU07bGuo6DR/5mA?=
+ =?us-ascii?Q?DjEANwrYkmEx3Fj9wV9mqsdke2d9bACgqPdB2bVNR7BgWNSq0y9HuiIQf9ln?=
+ =?us-ascii?Q?Mhuz6md/XiIRRZEYhdvfR171A09B/X27GvnrUeYQgTr1A0bd+hyEKO136qFH?=
+ =?us-ascii?Q?wjIk8fJrIZKzdW8y0nVLm95wznev9+7AHIBdIYGGKIFjscTO4u2sBt5SrYup?=
+ =?us-ascii?Q?7Og/vdaXTUoqAHlutBWQAbU3H01zePAgySfGQxJGlKCFYV90ldJFntU5q/kZ?=
+ =?us-ascii?Q?RaE3qwrnGAUWvJQFsFjmNI4Fk6gGyPyA5SiGR5ver6iWU6aHC1F40uUwXega?=
+ =?us-ascii?Q?j+a0AB9ghaWnJFrVoe+ZzYg/5Iy6AFrxwdSTT3VN1eBV/U5DFxEVI2bS4+h7?=
+ =?us-ascii?Q?gjb7Q8QWcGOyMGyBQZtD62t+Na/7tIbj/kzA7wn9bDB7wYr2fJ85Oc40qxsR?=
+ =?us-ascii?Q?0pVHCczYXv2UEnKttuG+aNCXOImg/YwFfxNvzFiDv7cW/fRFFHPhKi6cpBim?=
+ =?us-ascii?Q?gXtINyPyaJEcNtAfVwuGBC37hW92C+sC1np16QnQbWIOmVL0JShS1e4QQtmO?=
+ =?us-ascii?Q?EdYid9rHUu+lfhwsWnp9Q58aQbHVi/nli1gVAbD28Xp8xjMS0DGl4ZwfPezJ?=
+ =?us-ascii?Q?NSHydp8/xJ2nTJd/fCSTLS05gGytiSlOWoIL0eG8bapYcWhpvDhNOWyzrUQT?=
+ =?us-ascii?Q?AyKXVHKOZLFqSFKo6Y+TkQqEcE5V65nSkxZoP7UisF7FmIME79Q4jKCr0sp0?=
+ =?us-ascii?Q?0jjgXVnO6Egu85seZvwrc3uQ9PmbSCS4RitnsIzRbTWMM8OdB6s/AcG4XG1i?=
+ =?us-ascii?Q?FHYrms273qbqv+UU9JLcRP5MCNzwHsjcnaaV0Qj7C7O+fdlVkBCB?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6feea9cd-8164-45d1-8de0-08de4cc6500e
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jan 2026 01:52:56.4605
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Rm/oQaAvN3TuWydYpgKSvYbVUS1xlEvYEt3mYV9bAkLn/VtDozYLhFMYN6zkBnfb41tqWoU1G1vpQ3ITsDsXdw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB4580
 
-Implement the core abstractions needed for led class devices, including:
+On Mon, Jan 05, 2026 at 05:55:30PM +0100, Niklas Cassel wrote:
+> Hello Koichiro,
+> 
+> On Mon, Jan 05, 2026 at 05:02:12PM +0900, Koichiro Den wrote:
+> > This series proposes support for mapping subranges within a PCIe endpoint
+> > BAR and enables controllers to program inbound address translation for
+> > those subranges.
+> > 
+> > The first patch introduces generic BAR subrange mapping support in the
+> > PCI endpoint core. The second patch adds an implementation for the
+> > DesignWare PCIe endpoint controller using Address Match Mode IB iATU.
+> > 
+> > This series is a spin-off from a larger RFC series posted earlier:
+> > https://lore.kernel.org/all/20251217151609.3162665-4-den@valinux.co.jp/
+> > 
+> > Base:
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+> >   branch: controller/dwc
+> >   commit: 68ac85fb42cf ("PCI: dwc: Use cfg0_base as iMSI-RX target address
+> >                          to support 32-bit MSI devices")
+> > 
+> > Thank you for reviewing,
+> > 
+> > Koichiro Den (2):
+> >   PCI: endpoint: Add BAR subrange mapping support
+> >   PCI: dwc: ep: Support BAR subrange inbound mapping via address-match
+> >     iATU
+> 
+> I have nothing against this feature, but the big question here is:
+> where is the user?
+> 
+> Usually, we don't add a new feature without having a single user of said
+> feature.
+> 
 
-* `led::LedOps` - the trait for handling leds, including
-  `brightness_set`, `brightness_get` and `blink_set`
+The first user will likely be Remote eDMA-backed NTB transport. An RFC
+series,
+https://lore.kernel.org/all/20251217151609.3162665-4-den@valinux.co.jp/
+referenced in the cover letter relies on Address Match Mode support.
+In that sense, this split series is prerequisite work, and if this gets
+acked, I will post another patch series that utilizes this in the NTB code.
 
-* `led::InitData` - data set for the led class device
+At least for Renesas R-Car S4, where 64-bit BAR0/BAR2 and 32-bit BAR4 are
+available, exposing the eDMA regsister and LL regions to the host requires
+at least two mappings (one for register and another for a contiguous LL
+memory). Address Match Mode allows a flexible and extensible layout for the
+required regions.
 
-* `led::Device` - a safe wrapper around `led_classdev`
+> 
+> One thing that I would like to see though:
+> stricter verification of the pci_epf_bar_submap array.
+> 
+> For DWC, we know that the minimum size that an iATU can map is stored in:
+> (struct dw_pcie *pci) pci->region_align.
+> 
+> Thus, each element in the pci_epf_bar_submap array has to have a size that
+> is a multiple of pci->region_align.
+> 
+> I don't see that you ever verify this anywhere.
 
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
- MAINTAINERS        |   7 +
- rust/kernel/led.rs | 450 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- rust/kernel/lib.rs |   1 +
- 3 files changed, 458 insertions(+)
+I missed it, will add the check.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 765ad2daa218..8c8648a26f93 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14269,6 +14269,13 @@ F:	drivers/leds/
- F:	include/dt-bindings/leds/
- F:	include/linux/leds.h
- 
-+LED SUBSYSTEM [RUST]
-+M:	Markus Probst <markus.probst@posteo.de>
-+L:	linux-leds@vger.kernel.org
-+L:	rust-for-linux@vger.kernel.org
-+S:	Maintained
-+F:	rust/kernel/led.rs
-+
- LEGO MINDSTORMS EV3
- R:	David Lechner <david@lechnology.com>
- S:	Maintained
-diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
-new file mode 100644
-index 000000000000..cdd9b0300b72
---- /dev/null
-+++ b/rust/kernel/led.rs
-@@ -0,0 +1,450 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! Abstractions for the leds driver model.
-+//!
-+//! C header: [`include/linux/leds.h`](srctree/include/linux/leds.h)
-+
-+use core::{
-+    marker::PhantomData,
-+    mem::transmute,
-+    ptr::NonNull, //
-+};
-+
-+use crate::{
-+    container_of,
-+    device::{
-+        self,
-+        property::FwNode,
-+        AsBusDevice,
-+        Bound, //
-+    },
-+    devres::Devres,
-+    error::{
-+        from_result,
-+        to_result,
-+        VTABLE_DEFAULT_ERROR, //
-+    },
-+    macros::vtable,
-+    prelude::*,
-+    str::CStrExt,
-+    types::{
-+        ARef,
-+        Opaque, //
-+    }, //
-+};
-+
-+/// The led class device representation.
-+///
-+/// This structure represents the Rust abstraction for a C `struct led_classdev`.
-+#[pin_data(PinnedDrop)]
-+pub struct Device<T: LedOps> {
-+    ops: T,
-+    #[pin]
-+    classdev: Opaque<bindings::led_classdev>,
-+}
-+
-+/// The led init data representation.
-+///
-+/// This structure represents the Rust abstraction for a C `struct led_init_data` with additional
-+/// fields from `struct led_classdev`.
-+#[derive(Default)]
-+pub struct InitData<'a> {
-+    fwnode: Option<ARef<FwNode>>,
-+    devicename: Option<&'a CStr>,
-+    devname_mandatory: bool,
-+    initial_brightness: u32,
-+    default_trigger: Option<&'a CStr>,
-+    color: Color,
-+}
-+
-+impl InitData<'static> {
-+    /// Creates a new [`InitData`].
-+    pub fn new() -> Self {
-+        Self::default()
-+    }
-+}
-+
-+impl<'a> InitData<'a> {
-+    /// Sets the firmware node.
-+    pub fn fwnode(self, fwnode: Option<ARef<FwNode>>) -> Self {
-+        Self { fwnode, ..self }
-+    }
-+
-+    /// Sets the device name.
-+    pub fn devicename(self, devicename: &'a CStr) -> Self {
-+        Self {
-+            devicename: Some(devicename),
-+            ..self
-+        }
-+    }
-+
-+    /// Sets if a device name is mandatory.
-+    pub fn devicename_mandatory(self, mandatory: bool) -> Self {
-+        Self {
-+            devname_mandatory: mandatory,
-+            ..self
-+        }
-+    }
-+
-+    /// Sets the initial brightness value for the led.
-+    ///
-+    /// The default brightness is 0.
-+    /// If [`LedOps::brightness_get`] is implemented, this value will be ignored.
-+    pub fn initial_brightness(self, brightness: u32) -> Self {
-+        Self {
-+            initial_brightness: brightness,
-+            ..self
-+        }
-+    }
-+
-+    /// Set the default led trigger.
-+    ///
-+    /// This value can be overwritten by the "linux,default-trigger" fwnode property.
-+    pub fn default_trigger(self, trigger: &'a CStr) -> Self {
-+        Self {
-+            default_trigger: Some(trigger),
-+            ..self
-+        }
-+    }
-+
-+    /// Sets the color of the led.
-+    ///
-+    /// This value can be overwritten by the "color" fwnode property.
-+    pub fn color(self, color: Color) -> Self {
-+        Self { color, ..self }
-+    }
-+}
-+
-+/// Trait defining the operations for a LED driver.
-+///
-+/// # Examples
-+/// ```
-+/// use kernel::{
-+///      device,
-+///      devres::Devres,
-+///      led,
-+///      macros::vtable,
-+///      platform,
-+///      prelude::*, //
-+///  };
-+///
-+/// struct MyLedOps;
-+///
-+///
-+/// #[vtable]
-+/// impl led::LedOps for MyLedOps {
-+///     type Bus = platform::Device<device::Bound>;
-+///     const BLOCKING: bool = false;
-+///     const MAX_BRIGHTNESS: u32 = 255;
-+///
-+///     fn brightness_set(
-+///         &self,
-+///         _dev: &platform::Device<device::Bound>,
-+///         _classdev: &led::Device<Self>,
-+///         _brightness: u32
-+///     ) -> Result<()> {
-+///         // Set the brightness for the led here
-+///         Ok(())
-+///     }
-+/// }
-+///
-+/// fn register_my_led(
-+///     parent: &platform::Device<device::Bound>,
-+/// ) -> Result<Pin<KBox<Devres<led::Device<MyLedOps>>>>> {
-+///     KBox::pin_init(led::Device::new(
-+///         parent,
-+///         led::InitData::new(),
-+///         MyLedOps,
-+///     ), GFP_KERNEL)
-+/// }
-+/// ```
-+/// Led drivers must implement this trait in order to register and handle a [`Device`].
-+#[vtable]
-+pub trait LedOps: Send + 'static + Sized {
-+    /// The bus device required by the implementation.
-+    #[allow(private_bounds)]
-+    type Bus: AsBusDevice<Bound>;
-+    /// If set true, [`LedOps::brightness_set`] and [`LedOps::blink_set`] must perform the
-+    /// operation immediately. If set false, they must not sleep.
-+    const BLOCKING: bool;
-+    /// The max brightness level.
-+    const MAX_BRIGHTNESS: u32;
-+
-+    /// Sets the brightness level.
-+    ///
-+    /// See also [`LedOps::BLOCKING`].
-+    fn brightness_set(
-+        &self,
-+        dev: &Self::Bus,
-+        classdev: &Device<Self>,
-+        brightness: u32,
-+    ) -> Result<()>;
-+
-+    /// Gets the current brightness level.
-+    fn brightness_get(&self, _dev: &Self::Bus, _classdev: &Device<Self>) -> u32 {
-+        build_error!(VTABLE_DEFAULT_ERROR)
-+    }
-+
-+    /// Activates hardware accelerated blinking.
-+    ///
-+    /// delays are in milliseconds. If both are zero, a sensible default should be chosen.
-+    /// The caller should adjust the timings in that case and if it can't match the values
-+    /// specified exactly. Setting the brightness to 0 will disable the hardware accelerated
-+    /// blinking.
-+    ///
-+    /// See also [`LedOps::BLOCKING`].
-+    fn blink_set(
-+        &self,
-+        _dev: &Self::Bus,
-+        _classdev: &Device<Self>,
-+        _delay_on: &mut usize,
-+        _delay_off: &mut usize,
-+    ) -> Result<()> {
-+        build_error!(VTABLE_DEFAULT_ERROR)
-+    }
-+}
-+
-+/// Led colors.
-+#[derive(Copy, Clone, Debug, Default)]
-+#[repr(u32)]
-+#[non_exhaustive]
-+#[expect(
-+    missing_docs,
-+    reason = "it shouldn't be necessary to document each color"
-+)]
-+pub enum Color {
-+    #[default]
-+    White = bindings::LED_COLOR_ID_WHITE,
-+    Red = bindings::LED_COLOR_ID_RED,
-+    Green = bindings::LED_COLOR_ID_GREEN,
-+    Blue = bindings::LED_COLOR_ID_BLUE,
-+    Amber = bindings::LED_COLOR_ID_AMBER,
-+    Violet = bindings::LED_COLOR_ID_VIOLET,
-+    Yellow = bindings::LED_COLOR_ID_YELLOW,
-+    Ir = bindings::LED_COLOR_ID_IR,
-+    Multi = bindings::LED_COLOR_ID_MULTI,
-+    Rgb = bindings::LED_COLOR_ID_RGB,
-+    Purple = bindings::LED_COLOR_ID_PURPLE,
-+    Orange = bindings::LED_COLOR_ID_ORANGE,
-+    Pink = bindings::LED_COLOR_ID_PINK,
-+    Cyan = bindings::LED_COLOR_ID_CYAN,
-+    Lime = bindings::LED_COLOR_ID_LIME,
-+}
-+
-+impl TryFrom<u32> for Color {
-+    type Error = Error;
-+
-+    fn try_from(value: u32) -> core::result::Result<Self, Self::Error> {
-+        const _: () = {
-+            assert!(bindings::LED_COLOR_ID_MAX == 15);
-+        };
-+        if value < bindings::LED_COLOR_ID_MAX {
-+            // SAFETY:
-+            // - `Color` is represented as `u32`
-+            // - the const block above guarantees that no additional color has been added
-+            // - `value` is guaranteed to be in the color id range
-+            Ok(unsafe { transmute::<u32, Color>(value) })
-+        } else {
-+            Err(EINVAL)
-+        }
-+    }
-+}
-+
-+// SAFETY: A `led::Device` can be unregistered from any thread.
-+unsafe impl<T: LedOps + Send> Send for Device<T> {}
-+
-+// SAFETY: `led::Device` can be shared among threads because all methods of `led::Device`
-+// are thread safe.
-+unsafe impl<T: LedOps + Sync> Sync for Device<T> {}
-+
-+impl<T: LedOps> Device<T> {
-+    /// Registers a new led classdev.
-+    ///
-+    /// The [`Device`] will be unregistered on drop.
-+    pub fn new<'a>(
-+        parent: &'a T::Bus,
-+        init_data: InitData<'a>,
-+        ops: T,
-+    ) -> impl PinInit<Devres<Self>, Error> + 'a {
-+        Devres::new(
-+            parent.as_ref(),
-+            try_pin_init!(Self {
-+                ops,
-+                classdev <- Opaque::try_ffi_init(|ptr: *mut bindings::led_classdev| {
-+                    // SAFETY: `try_ffi_init` guarantees that `ptr` is valid for write.
-+                    // `led_classdev` gets fully initialized in-place by
-+                    // `led_classdev_register_ext` including `mutex` and `list_head`.
-+                    unsafe {
-+                        ptr.write(bindings::led_classdev {
-+                            brightness_set: (!T::BLOCKING)
-+                                .then_some(Adapter::<T>::brightness_set_callback),
-+                            brightness_set_blocking: T::BLOCKING
-+                                .then_some(Adapter::<T>::brightness_set_blocking_callback),
-+                            brightness_get: T::HAS_BRIGHTNESS_GET
-+                                .then_some(Adapter::<T>::brightness_get_callback),
-+                            blink_set: T::HAS_BLINK_SET.then_some(Adapter::<T>::blink_set_callback),
-+                            max_brightness: T::MAX_BRIGHTNESS,
-+                            brightness: init_data.initial_brightness,
-+                            default_trigger: init_data.default_trigger
-+                                .map_or(core::ptr::null(), CStrExt::as_char_ptr),
-+                            color: init_data.color as u32,
-+                            ..bindings::led_classdev::default()
-+                        })
-+                    };
-+
-+                    let mut init_data_raw = bindings::led_init_data {
-+                        fwnode: init_data.fwnode
-+                            .as_ref()
-+                            .map_or(core::ptr::null_mut(), |fwnode| fwnode.as_raw()),
-+                        default_label: core::ptr::null(),
-+                        devicename: init_data
-+                            .devicename
-+                            .map_or(core::ptr::null(), CStrExt::as_char_ptr),
-+                        devname_mandatory: init_data.devname_mandatory,
-+                    };
-+
-+                    // SAFETY:
-+                    // - `parent.as_raw()` is guaranteed to be a pointer to a valid `device`
-+                    //    or a null pointer.
-+                    // - `ptr` is guaranteed to be a pointer to an initialized `led_classdev`.
-+                    to_result(unsafe {
-+                        bindings::led_classdev_register_ext(
-+                            parent.as_ref().as_raw(),
-+                            ptr,
-+                            &raw mut init_data_raw,
-+                        )
-+                    })?;
-+
-+                    core::mem::forget(init_data.fwnode); // keep the reference count incremented
-+
-+                    Ok::<_, Error>(())
-+                }),
-+            }),
-+        )
-+    }
-+
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    unsafe fn from_raw<'a>(led_cdev: *mut bindings::led_classdev) -> &'a Self {
-+        // SAFETY: The function's contract guarantees that `led_cdev` points to a `led_classdev`
-+        // field embedded within a valid `led::Device`. `container_of!` can therefore
-+        // safely calculate the address of the containing struct.
-+        unsafe { &*container_of!(Opaque::cast_from(led_cdev), Self, classdev) }
-+    }
-+
-+    fn parent(&self) -> &device::Device<Bound> {
-+        // SAFETY:
-+        // - `self.classdev.get()` is guaranteed to be a valid pointer to `led_classdev`.
-+        unsafe { device::Device::from_raw((*(*self.classdev.get()).dev).parent) }
-+    }
-+}
-+
-+struct Adapter<T: LedOps> {
-+    _p: PhantomData<T>,
-+}
-+
-+impl<T: LedOps> Adapter<T> {
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// This function is called on setting the brightness of a led.
-+    unsafe extern "C" fn brightness_set_callback(
-+        led_cdev: *mut bindings::led_classdev,
-+        brightness: u32,
-+    ) {
-+        // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+        // `led_classdev` embedded within a `led::Device`.
-+        let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+        // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+        let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+        let _ = classdev.ops.brightness_set(parent, classdev, brightness);
-+    }
-+
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// This function is called on setting the brightness of a led immediately.
-+    unsafe extern "C" fn brightness_set_blocking_callback(
-+        led_cdev: *mut bindings::led_classdev,
-+        brightness: u32,
-+    ) -> i32 {
-+        from_result(|| {
-+            // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+            // `led_classdev` embedded within a `led::Device`.
-+            let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+            // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+            let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+            classdev.ops.brightness_set(parent, classdev, brightness)?;
-+            Ok(0)
-+        })
-+    }
-+
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// This function is called on getting the brightness of a led.
-+    unsafe extern "C" fn brightness_get_callback(led_cdev: *mut bindings::led_classdev) -> u32 {
-+        // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+        // `led_classdev` embedded within a `led::Device`.
-+        let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+        // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+        let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+        classdev.ops.brightness_get(parent, classdev)
-+    }
-+
-+    /// # Safety
-+    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
-+    /// `led::Device`.
-+    /// `delay_on` and `delay_off` must be valid pointers to `usize` and have
-+    /// exclusive access for the period of this function.
-+    /// This function is called on enabling hardware accelerated blinking.
-+    unsafe extern "C" fn blink_set_callback(
-+        led_cdev: *mut bindings::led_classdev,
-+        delay_on: *mut usize,
-+        delay_off: *mut usize,
-+    ) -> i32 {
-+        from_result(|| {
-+            // SAFETY: The function's contract guarantees that `led_cdev` is a valid pointer to a
-+            // `led_classdev` embedded within a `led::Device`.
-+            let classdev = unsafe { Device::<T>::from_raw(led_cdev) };
-+            // SAFETY: `classdev.parent()` is guaranteed to be contained in `T::Bus`.
-+            let parent = unsafe { T::Bus::from_device(classdev.parent()) };
-+
-+            classdev.ops.blink_set(
-+                parent,
-+                classdev,
-+                // SAFETY: The function's contract guarantees that `delay_on` points to a `usize`
-+                // and is exclusive for the period of this function.
-+                unsafe { &mut *delay_on },
-+                // SAFETY: The function's contract guarantees that `delay_off` points to a `usize`
-+                // and is exclusive for the period of this function.
-+                unsafe { &mut *delay_off },
-+            )?;
-+            Ok(0)
-+        })
-+    }
-+}
-+
-+#[pinned_drop]
-+impl<T: LedOps> PinnedDrop for Device<T> {
-+    fn drop(self: Pin<&mut Self>) {
-+        let raw = self.classdev.get();
-+        // SAFETY: The existence of `self` guarantees that `self.classdev.get()` is a pointer to a
-+        // valid `struct led_classdev`.
-+        let dev: &device::Device = unsafe { device::Device::from_raw((*raw).dev) };
-+
-+        let _fwnode = dev
-+            .fwnode()
-+            // SAFETY: the reference count of `fwnode` has previously been
-+            // incremented in `led::Device::new`.
-+            .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode)) });
-+
-+        // SAFETY: The existence of `self` guarantees that `self.classdev` has previously been
-+        // successfully registered with `led_classdev_register_ext`.
-+        unsafe { bindings::led_classdev_unregister(self.classdev.get()) };
-+    }
-+}
-diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
-index f812cf120042..231818e0614b 100644
---- a/rust/kernel/lib.rs
-+++ b/rust/kernel/lib.rs
-@@ -108,6 +108,7 @@
- pub mod jump_label;
- #[cfg(CONFIG_KUNIT)]
- pub mod kunit;
-+pub mod led;
- pub mod list;
- pub mod maple_tree;
- pub mod miscdevice;
+> 
+> You should also verify that the sum of all the sizes in the pci_epf_bar_submap
+> array adds up to exactly pci_epf_bar->size.
 
--- 
-2.51.2
+I didn't think this was a requirement. I experimented with it just now, and
+seems to me that no harm is caused even if the sum of the submap sizes is
+less than the BAR size. Could you point me to any description of this
+requirement in the databook if available?
 
+> 
+> Also, we currently have code in dw_pcie_prog_inbound_atu() that verifies
+> that the physical memory address is aligned to the size of the BAR, as that
+> is a requirement in BAR match mode, see:
+> 129f6af747b2 ("PCI: dwc: ep: Add 'address' alignment to 'size' check in dw_pcie_prog_ep_inbound_atu()")
+> 
+> This is not a requirement in address match mode, so you probably don't
+> want to do that check in address match mode.
+> (You will want to keep the check that the physical memory address is
+> aligned to pci->region_align though.)
+
+With this series, the call graph would change as follows:
+
+  -> dw_pcie_ep_set_bar()
+     # For BAR Match Mode:
+     -> dw_pcie_ep_ib_atu_bar()
+        -> dw_pcie_prog_ep_inbound_atu()
+     # For Address Match Mode:
+     -> dw_pcie_ep_ib_atu_addr()
+        -> dw_pcie_prog_inbound_atu()
+
+and the size check that was introduced in the commit 129f6af747b2 should
+not run for Address Match Mode in any case.
+
+Thank you for the review!
+Koichiro
+
+> 
+> 
+> Kind regards,
+> Niklas
