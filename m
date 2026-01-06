@@ -1,148 +1,130 @@
-Received: from mail-m49246.qiye.163.com (mail-m49246.qiye.163.com [45.254.49.246])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B5DCAD24
-	for <linux-pci@vger.kernel.org>; Tue,  6 Jan 2026 08:26:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.246
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA1392857C1;
+	Tue,  6 Jan 2026 09:16:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767688013; cv=none; b=kzKgqzoYwDLi4agFX+s4/97zeVHKAfp8ZzZ6gPw1Hyq/bcONaXH7b8KGjQeVKFBxGXEdWTpY9YvMqv662wkFM3Oxana76i9Qgt1YnM1spBS3vb0f7XkzJZ0q+Aovt9IL5gEo/U0wXmeu0HMdiXKGCBcVd0qhC8lrWfe3Km+Ik/o=
+	t=1767690981; cv=none; b=EokvZeVQx4xXoDKMT5kcRXN9waV4R8J2ouNsUXGQOVnPrX/XTE5srjmdDeR/WFm/DbgLi9U1sgIO5l6C35THHT/ToNt+VgJIJsDe/dq+7c72Rebpu7zcmhoOwpeaBGT1kScq+fN2MBmSJfonTBPhMlzqZzgGJQfZ40crv/jSbVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767688013; c=relaxed/simple;
-	bh=jMuyBsLDoD2oKU8a5Ool8KImMLbZJO2Y/hZEW41SEj8=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Xb4hO3cdnwCrhJHPCXCCWUBdmI5pGjnzroMQiQjK466zqQLNP0gO16D/JEC1AnSTVd85IvSCAUtMbFXQv9tmEPC1OMGCAqly/FfPmvxfToRwLjwMoz9GOc+Pq7timFymi3usZXbf6GT1wdvHeePy1GsLRxrd4Jc+dv+Ie7/lxK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=dy8CAjWd; arc=none smtp.client-ip=45.254.49.246
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1767690981; c=relaxed/simple;
+	bh=cynLGl5RlxS7Xu40g+HTevna25fZXxq+QHg/HSuAPM4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Yl3ubDRSEQrE/BRqK5ijSu+fZ0DFi+764rznIeWJW0BSgFmnHU3kACUdhD/Pl39dYkmOM7BJ6BSAShBK2rGeGgG2CN0L9YvHHCV3hKrhDAwnGwpLUp8IiAWW6qt7JGYaBvYrszZvOfxm4kTERRa9HneqO01M094xh13j1OeliJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TnrEQDQt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="dy8CAjWd"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2f9aa005e;
-	Tue, 6 Jan 2026 09:37:01 +0800 (GMT+08:00)
-Message-ID: <1ed9d1a4-bd51-408a-9399-f81ac1ea4ba9@rock-chips.com>
-Date: Tue, 6 Jan 2026 09:37:00 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TnrEQDQt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7588C19424;
+	Tue,  6 Jan 2026 09:16:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767690981;
+	bh=cynLGl5RlxS7Xu40g+HTevna25fZXxq+QHg/HSuAPM4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TnrEQDQt4e1hvZugzUohnrjFUNExJ5FxrqUffTKdvbV/TG45H99PW7NA7+kDqsvVQ
+	 zeQCeq/4AE/kXXyHEMCJ0jGiCZTfbRUM4kAIIn3sL7s6DMaE2Pzen0Q6zep6SzVDHN
+	 R8G2f49yuhqS9qEYLaZMQd/QPfndKnn5IK1zBj9rMMZYqSpNcrvXppE7F42kl75YwX
+	 DY+F2yPMsGD1KqMNvTiwFTcVeuuxyKyp2xEDe24IFYbNmCwLM1muIhuRWSVGx64108
+	 aIF98IPgDYX8Jt3GdA5mi1HBFcG+U4CKDxux86xew3Kv/YqDPTRUeJw1xZMmkOmH/C
+	 e8lErTlz5zcwA==
+Date: Tue, 6 Jan 2026 10:16:15 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	Frank.Li@nxp.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: endpoint: BAR subrange mapping support
+Message-ID: <aVzS3_Vx8hXZte1Z@fedora>
+References: <20260105080214.1254325-1-den@valinux.co.jp>
+ <aVvtAkEcg6Qg7K3C@ryzen>
+ <gb3mr7onokhufasxaeoxiqft22incwxxlf43m6jcrhrem3477j@63oi3ztvbqku>
+ <o6swnuf4aplcyd5jpgbyhslxcxuhzt4j6a4oq773eujva6ynqj@wmkorp4mavul>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
- Damien Le Moal <dlemoal@kernel.org>, Koichiro Den <den@valinux.co.jp>,
- linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: ep: Cache MSI outbound iATU mapping
-To: Niklas Cassel <cassel@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>
-References: <20251210071358.2267494-2-cassel@kernel.org>
- <8e00bd1c-29ae-43fd-90e8-ea0943cb02b6@oss.qualcomm.com>
- <s5mbvhnummcegksauc7kyb2442ao27dwc63gyryetuvxojnxfj@a67nopel52tx>
- <aUknSzSpNxLeEN5o@ryzen>
- <3b34aa66-a418-4f6b-930a-0728d87d79b6@oss.qualcomm.com>
- <aUlA7y95SUC-QA4T@ryzen>
- <a24a5d8b-5818-4e11-bc09-47090de164c7@rock-chips.com>
- <63321b7d-74a7-448f-ab20-08cc771beb5d@oss.qualcomm.com>
- <424133b7-bd6b-4602-96ea-4413ce4f985d@rock-chips.com>
- <aVubPUphGP59bH09@ryzen>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <aVubPUphGP59bH09@ryzen>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9b90f3464c09cckunm81268efb792a80
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkwfHVYYTh5CGk5JHkMeQkhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=dy8CAjWd6v56qJC68yiNUUClE0N6jGHg4AIo3Mhw1Gv8FeRkYysw5DZisGarUicVZs/Wh5PfXnwsiab4XI2ttmAJwFj5jlBKNusg+wZDDqXCvCxd3mcy3BUkHpDqUHXwDqOiVKxvcgRtXqww/BWx/0w0Z0jtSP8IdLb2ROVKA4U=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=vpMqSgyqi30rX4JlOAApsUNToyufnl5AYHy3hORa9Xo=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <o6swnuf4aplcyd5jpgbyhslxcxuhzt4j6a4oq773eujva6ynqj@wmkorp4mavul>
 
-在 2026/01/05 星期一 19:06, Niklas Cassel 写道:
-> Hello all,
+On Tue, Jan 06, 2026 at 12:09:24PM +0900, Koichiro Den wrote:
+> On Tue, Jan 06, 2026 at 10:52:54AM +0900, Koichiro Den wrote:
+> > On Mon, Jan 05, 2026 at 05:55:30PM +0100, Niklas Cassel wrote:
+> > > Hello Koichiro,
+> > > 
+> > > On Mon, Jan 05, 2026 at 05:02:12PM +0900, Koichiro Den wrote:
+> > > > This series proposes support for mapping subranges within a PCIe endpoint
+> > > > BAR and enables controllers to program inbound address translation for
+> > > > those subranges.
+> > > > 
+> > > > The first patch introduces generic BAR subrange mapping support in the
+> > > > PCI endpoint core. The second patch adds an implementation for the
+> > > > DesignWare PCIe endpoint controller using Address Match Mode IB iATU.
+> > > > 
+> > > > This series is a spin-off from a larger RFC series posted earlier:
+> > > > https://lore.kernel.org/all/20251217151609.3162665-4-den@valinux.co.jp/
+> > > > 
+> > > > Base:
+> > > >   git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+> > > >   branch: controller/dwc
+> > > >   commit: 68ac85fb42cf ("PCI: dwc: Use cfg0_base as iMSI-RX target address
+> > > >                          to support 32-bit MSI devices")
+> > > > 
+> > > > Thank you for reviewing,
+> > > > 
+> > > > Koichiro Den (2):
+> > > >   PCI: endpoint: Add BAR subrange mapping support
+> > > >   PCI: dwc: ep: Support BAR subrange inbound mapping via address-match
+> > > >     iATU
+> > > 
+> > > I have nothing against this feature, but the big question here is:
+> > > where is the user?
+> > > 
+> > > Usually, we don't add a new feature without having a single user of said
+> > > feature.
+> > > 
+> > 
+> > The first user will likely be Remote eDMA-backed NTB transport. An RFC
+> > series,
+> > https://lore.kernel.org/all/20251217151609.3162665-4-den@valinux.co.jp/
+> > referenced in the cover letter relies on Address Match Mode support.
+> > In that sense, this split series is prerequisite work, and if this gets
+> > acked, I will post another patch series that utilizes this in the NTB code.
+> > 
+> > At least for Renesas R-Car S4, where 64-bit BAR0/BAR2 and 32-bit BAR4 are
+> > available, exposing the eDMA regsister and LL regions to the host requires
+> > at least two mappings (one for register and another for a contiguous LL
+> > memory). Address Match Mode allows a flexible and extensible layout for the
+> > required regions.
+> > 
+> > > 
+> > > One thing that I would like to see though:
+> > > stricter verification of the pci_epf_bar_submap array.
+> > > 
+> > > For DWC, we know that the minimum size that an iATU can map is stored in:
+> > > (struct dw_pcie *pci) pci->region_align.
+> > > 
+> > > Thus, each element in the pci_epf_bar_submap array has to have a size that
+> > > is a multiple of pci->region_align.
+> > > 
+> > > I don't see that you ever verify this anywhere.
+> > 
+> > I missed it, will add the check.
 > 
-> On Tue, Dec 23, 2025 at 02:23:39PM +0800, Shawn Lin wrote:
->>>> I checked the IP configurtion parameters for RK3588 DM controller for
->>>> sure, it sets MSIX_TABLE_EN=1.
->>>>
->>>> Looking into dw_pcie_ep_raise_msix_irq_doorbell(), it doesn't seem to
->>>> match the dwc databook. No matter for non-AXI mode or AXI access mode,
->>>> shouldn't we need to generate a MSI-X table RAM with data/address/
->>>> vector/TC in advanced? Am I missing anything because I didn't look
->>> The MSI-X table will updated automatically when host updates the MSI-X
->>> table, when MSI-X is enabled
->>> by host.
->>
->> Thanks for these details.
->> I re-read the databook, especially "Figure 3-49 iMSIX-TX: MSIX
->> Transmit ". Yes, it's updated automatically when host write access
->> it, which either comes from RX or local DBI(for debug purpose).
-> 
-> With the help of Shawn, I managed to get dw_pcie_ep_raise_msix_irq_doorbell()
-> to work on RK3588.
-> 
-> By default, on RK3588, the MSI-X table is stored in BAR4 at offset 0x4000.
-> 
-> There seems to be a limitation that the iMSIX-TX doorbell feature only
-> works when the MSI-X table is stored in this default location.
-> 
-> 
+> My reply above was wrong, the region_align-related validation is already
+> handled in dw_pcie_prog_inbound_atu(). I don't think we need to duplicate
+> the same check at (A) (see below) in dw_pcie_ep_ib_atu_addr(), and would
+> prefer to keep the code simple as possible since this is not a fast path.
 
-I believe the limitation comes from IP, the databook implies this:
-"When you enable this feature (MSIX_TABLE_EN =1), the upstream
-controller implements the logic and *RAM required* to generate MSI-X
-requests."
+The region align check in dw_pcie_prog_inbound_atu() validates that the
+addresses (pci_addr and parent_bus_addr) are aligned to region_align
+(min iATU size).
 
-Using non-AXI mode(MSIX_DOORBELL_OFF), MSI-X FSM need fetch MSI-X table
-stored in RAM. The IP configuration could decide which type of RAM is
-used by setting CX_RAM_AT_TOP_IF value. And it's also IP integration
-decision to make sure RAM accessable by which BAR. That being said, BAR0
-could store the table to a system memory address(DRAM), not to the RAM.
+You also need to check that the size of the region mapped is aligned to
+region_align (min iATU size).
 
 
-> As you know, by default, pci-epf-test stores the MSI-X table in BAR0,
-> after the registers defined by pci-epf-test itself.
-> This works fine when triggering a MSI-X using dw_pcie_ep_raise_msix_irq(),
-> but does not work when using dw_pcie_ep_raise_msix_irq_doorbell() (at least
-> not or RK3588).
-> 
-> Additionally, on RK3588, at offset 0x0 in BAR4, the eDMA registers are
-> mapped, so we cannot simply use BAR4 as test_reg_bar, as that would conflict
-> with the registers defined by pci-epf-test-itself.
-> 
-> 
-> The solution here is most likely to let EPC drivers define a
-> "HW limitation" of the MSI-X table (BAR number and offset), and create a new
-> API in the PCI endpoint framework that exposes this, and modify all EPF
-> drivers to use this API before calling pci_epc_set_msix().
-> 
-
-Ack, except that it's not HW limitation but IP integration decision,
-because limitation sounds like a workaround for defects.
-
-> 
-> Personally, I'm too busy to work on this right now.
-> For our use case with the NVMe PCI EPF, we can simply force it to only
-> use MSI (instead of MSI-X).
-> 
-> But... I could submit a WARN() in dw_pcie_ep_raise_msix_irq() that explains
-> that this function is broken, and that dw_pcie_ep_raise_msix_irq_doorbell()
-> should be used instead, on platforms that support it.
-> 
-> Or, if it is preferred, we could simply modify all DWC based drivers that is
-> not using dw_pcie_ep_raise_msix_irq_doorbell() (i.e. all except layerspace)
-> to simply not set "msix_capable = true" in epc_features, as we know that all
-> drivers that are using dw_pcie_ep_raise_msix_irq() are broken.
-> 
-> Thoughts?
-> 
-> 
-> Kind regards,
-> Niklas
-> 
-
+Kind regards,
+Niklas
