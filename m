@@ -1,213 +1,112 @@
-Received: from va-2-114.ptr.blmpb.com (va-2-114.ptr.blmpb.com [209.127.231.114])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE53C1ADC97
-	for <linux-pci@vger.kernel.org>; Wed,  7 Jan 2026 18:09:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.114
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658E3318B93
+	for <linux-pci@vger.kernel.org>; Wed,  7 Jan 2026 18:14:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767809405; cv=none; b=rkEfL6vJ+LxgvoFNL7QYniemcxZd2TqilMhroMU2lIwMtNKtibACgLZWdLxa/k9jw0g96uU+mxXZgFDYKl4sDbqkkJ4DzsNHpydvZD9tvIxdtmKvZheaFntbCjV7mCxqWTldgpUs6gshMb0nE4DhQNR+CwHs2KwGH1nawb7/ISs=
+	t=1767809651; cv=none; b=pHhtp5RsTdGp/UzftcIk+Rquxw7QQWyWQdJ5qr5AgbMXnORxgEYj2CRhnE3Hivd5HtfVcrAQWYSiJX2husgmvJcOJ/qfXYAtU+SlTBikMdhU78C7EpzAcEa3t7q4wEhrZ3qVGlJXu9jbaqn2GKxODUJ3rCueHpHrny+JQKTBO+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767809405; c=relaxed/simple;
-	bh=euUvQ4Y+m1NwcCGrMBJ1nu9fJDEqdhilEPh8Wmv5G3M=;
-	h=Cc:Date:Subject:References:In-Reply-To:Mime-Version:To:From:
-	 Message-Id:Content-Type; b=ee4F8dkHSDIffZeTpK4B/FCas+UAkxY4aAjtD2CrrPZqJHnkCZcFEmrQht8F0qtNZFGE8GnF8Jb4+bdgyzKbIUVJ5NzOYKUqvw/o+Eeh1VXBg8l+NVJr36PXa4ecpczu4YBQT+keEOlG6o3I9IqL3DcgiyjMBJ/aC4xbuAFJAKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=UBDUJGEQ; arc=none smtp.client-ip=209.127.231.114
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1767809651; c=relaxed/simple;
+	bh=Or6ZJEKCM1DQ+oX49ElTafjLQdHGJmX8pOss1V/kdWg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=u4xHnNMJpSs0P0jb0/A/9VX71oDb3MjU9fYCjvR7EDR/kHz6zE/5Xd3wJIVVPEcsnjf8/3KiV5xkT/hvFdLHO5fU2T1Qa9J49kEeondfG7Ss74uiNGEyhanzyi4azaw8/+X4YZVOeW1oLBb4gDwWD3FJpJSv0EWBxcs6tQw8qN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e2up+POJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="UBDUJGEQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1767808672; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=tHAaPhycBRyZtfkz6/mgLYSwAX3tMag4G7w4Obd7jlY=;
- b=UBDUJGEQktMPWyxx/H1uRnRjCJKfDhb4AnLTNuAU7sAued9Bg8tm4g620Tb/6w/14igY1V
- CUn3GoR1JRWUq5oK3kNpEesvght9S0BkM/60yENr3Dnb95TROygXxgA8kfa4oYK9nXDu3X
- V3t1IRPptFYqC9NLqz1sMUi6vP5E+UWCtMhGZQGeng8vViNlQfNYhR7fbDSBjLh0BIgh4g
- IArWT3lpdZyXZP1fFB7I9s3YoBKleYSW0E9BXPdw67qaUA4aqFuDAlDzpmUJRhlki3exXC
- T3AqQfht/Ke5Yj9oH3sCtPB/j04a1m4Nf72z+hJl6tcOG8vZ9qM4nvnNg3zgFg==
-Cc: <guojinhui.liam@bytedance.com>, <linux-kernel@vger.kernel.org>, 
-	<linux-pci@vger.kernel.org>
-Date: Thu,  8 Jan 2026 01:55:48 +0800
-Subject: [PATCH 3/3] PCI: Clean up NUMA-node awareness in pci_bus_type probe
-References: <20260107175548.1792-1-guojinhui.liam@bytedance.com>
-In-Reply-To: <20260107175548.1792-1-guojinhui.liam@bytedance.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e2up+POJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 176DDC2BCB1
+	for <linux-pci@vger.kernel.org>; Wed,  7 Jan 2026 18:14:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767809651;
+	bh=Or6ZJEKCM1DQ+oX49ElTafjLQdHGJmX8pOss1V/kdWg=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=e2up+POJUZRa/+5y+IZS/I7bn1n1OwPdh7AWqxQ4J1VKWc2jdw+nhQTkTslNwNb3C
+	 ZnHEkJdF9HqaI+T4FcukWv/p9SsUi/31pnZutKFkIB/clz3Yzq89UIz4oTslbz5JBa
+	 /nCa9uwpp2PypLPM3fEoUEJSiThXavywiR+5ZxsFu7sSY/nmHOLruRb60ZXO4uEAp1
+	 OCj9tTdBfFqOANzYwBL/N1q3UX73XUiWpaf/SlRzBwarhUXOX8bwrzFxRtM6UQZEQf
+	 INiVmr0AD1QwAx4dDqUccEdMGaRuIQlbkeaSRdmT1leB+IMxsAo6PMPZ69sojgkNqS
+	 gVHXsW7XOECRw==
+Received: by mail-oa1-f54.google.com with SMTP id 586e51a60fabf-3ec46e3c65bso1786415fac.0
+        for <linux-pci@vger.kernel.org>; Wed, 07 Jan 2026 10:14:11 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVwohauFGlEG0HOn4vTZrVBPKbm/5hjkXj71+9OINvHrzuJOVvAhuDo3zhO/IbIpOEjIYbtIlZf7i8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxRgfEzhwlr8vQPLfrgvMc6ylaqdJZulXjHL5Las3EfR5elinZr
+	5Pm0YSKYZ4lFqMLWMy90TBiOAk0AEVQx/7YvmlfSC5bxL2Hbl5dmGisLxyXWx8Ns+3XaGDX4Nlf
+	tekuY+6Mnw0YHyxCVzSBgX7ynVe6Q634=
+X-Google-Smtp-Source: AGHT+IFQFfboXe1ofeqeN7BTprvaQHSEdKPyzQ1xSOb+o/SRJ6Ob9srFcSYtEUYh5cJktnzuFPECDtSbWavR1FuObEI=
+X-Received: by 2002:a05:6820:1686:b0:659:9a49:8fc8 with SMTP id
+ 006d021491bc7-65f55085439mr1281374eaf.65.1767809649966; Wed, 07 Jan 2026
+ 10:14:09 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Jinhui Guo <guojinhui.liam@bytedance.com>
-X-Lms-Return-Path: <lba+2695e9e9e+522cb4+vger.kernel.org+guojinhui.liam@bytedance.com>
-Content-Transfer-Encoding: 7bit
-To: <dakr@kernel.org>, <alexander.h.duyck@linux.intel.com>, 
-	<alexanderduyck@fb.com>, <bhelgaas@google.com>, <bvanassche@acm.org>, 
-	<dan.j.williams@intel.com>, <gregkh@linuxfoundation.org>, 
-	<helgaas@kernel.org>, <rafael@kernel.org>, <tj@kernel.org>
-From: "Jinhui Guo" <guojinhui.liam@bytedance.com>
-Message-Id: <20260107175548.1792-4-guojinhui.liam@bytedance.com>
-X-Mailer: git-send-email 2.17.1
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+References: <20251205142831.4063891-1-haakon.bugge@oracle.com>
+ <D49C0D9C-96F9-4D2A-974C-7B6E0CBFB235@oracle.com> <1C290028-E094-48E3-B2CC-29734CEBC97C@oracle.com>
+In-Reply-To: <1C290028-E094-48E3-B2CC-29734CEBC97C@oracle.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 7 Jan 2026 19:13:58 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0hr12dZig=A1sDyDhFN32Yn05Vxd=+q6TuVgzVwurrjsg@mail.gmail.com>
+X-Gm-Features: AQt7F2pgIqh6lHiQQ_62cf_60U9QZ-M0USWaCH3gr_Ftj9YTyulO66mTFpEBfA8
+Message-ID: <CAJZ5v0hr12dZig=A1sDyDhFN32Yn05Vxd=+q6TuVgzVwurrjsg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ACPI: Do not fiddle with ExtTag and RO in program_hpx_type2
+To: Haakon Bugge <haakon.bugge@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Sinan Kaya <okaya@codeaurora.org>, 
+	Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>, 
+	"David S. Miller" <davem@davemloft.net>, dingtianhong <dingtianhong@huawei.com>, 
+	Alexander Duyck <alexander.h.duyck@intel.com>, 
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, 
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>, 
+	=?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-With NUMA-node-aware probing now handled by the driver core,
-the equivalent code in the PCI driver is redundant and can
-be removed.
+On Wed, Jan 7, 2026 at 6:59=E2=80=AFPM Haakon Bugge <haakon.bugge@oracle.co=
+m> wrote:
+>
+> >
+> >
+> >> On 5 Dec 2025, at 13:28, H=C3=A5kon Bugge <Haakon.Bugge@oracle.com> wr=
+ote:
+> >>
+> >> After commit 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if
+> >> supported"), the kernel controls enablement of extended tags
+> >> (ExtTag). Similar, after commit a99b646afa8a ("PCI: Disable PCIe
+> >> Relaxed Ordering if unsupported"), the kernel controls the relaxed
+> >> ordering bit (RO), in the sense that the kernel keeps the bit set (if
+> >> already set) unless the RC does not support it.
+> >>
+> >> On some platforms, when program_hpx_type2() is called and the _HPX
+> >> object's Type2 records are, let's say, dubious, we may end up
+> >> resetting ExtTag and RO, although they were explicit set or kept set
+> >> by the OSPM [1].
+> >>
+> >> The Advanced Configuration and Power Interface (ACPI) Specification
+> >> version 6.6 has a provision that gives the OSPM the ability to
+> >> control these bits any way. In a note in section 6.2.9, it is stated:
+> >>
+> >> "OSPM may override the settings provided by the _HPX object's Type2
+> >> record (PCI Express Settings) or Type3 record (PCI Express Descriptor
+> >> Settings) when OSPM has assumed native control of the corresponding
+> >> feature."
+> >>
+> >> So, in order to preserve the increased performance of ExtTag and RO on
+> >> platforms that support any of these, we make sure program_hpx_type2()
+> >> doesn't reset them.
+> >>
+> >> [1] Operating System-directed configuration and Power Management
+> >>
+> >> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+> >> Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupporte=
+d")
+> >> Signed-off-by: H=C3=A5kon Bugge <haakon.bugge@oracle.com>
+> >
+> > A gentle ping on this one.
+>
+> And a re-ping.
 
-Dropping it speeds up asynchronous probe by 35%; the gain
-comes from eliminating the work_on_cpu() call in pci_call_probe()
-that previously pinned every worker to the same CPU, forcing
-serial probe of devices on the same NUMA node.
+And I'm still hoping to receive some feedback from the PCI side on this.
 
-Testing three NVMe devices on the same NUMA node of an AMD
-EPYC 9A64 2.4 GHz processor shows a 35% probe-time improvement
-with the patch:
-
-Before (all on CPU 0):
-  nvme 0000:01:00.0: CPU: 0, COMM: kworker/0:1, cost: 52266334ns
-  nvme 0000:02:00.0: CPU: 0, COMM: kworker/0:0, cost: 50787194ns
-  nvme 0000:03:00.0: CPU: 0, COMM: kworker/0:2, cost: 50541584ns
-
-After (spread across CPUs 1, 2, 4):
-  nvme 0000:01:00.0: CPU: 1, COMM: kworker/u1025:2, cost: 35399608ns
-  nvme 0000:02:00.0: CPU: 2, COMM: kworker/u1025:3, cost: 35156157ns
-  nvme 0000:03:00.0: CPU: 4, COMM: kworker/u1025:0, cost: 35322116ns
-
-The improvement grows with more PCI devices because fewer probes
-contend for the same CPU.
-
-Signed-off-by: Jinhui Guo <guojinhui.liam@bytedance.com>
----
- drivers/pci/pci-driver.c | 83 ++++------------------------------------
- include/linux/pci.h      |  1 -
- 2 files changed, 8 insertions(+), 76 deletions(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 7c2d9d596258..683bc682e750 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -296,18 +296,9 @@ static struct attribute *pci_drv_attrs[] = {
- };
- ATTRIBUTE_GROUPS(pci_drv);
- 
--struct drv_dev_and_id {
--	struct pci_driver *drv;
--	struct pci_dev *dev;
--	const struct pci_device_id *id;
--};
--
--static long local_pci_probe(void *_ddi)
-+static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
-+			  const struct pci_device_id *id)
- {
--	struct drv_dev_and_id *ddi = _ddi;
--	struct pci_dev *pci_dev = ddi->dev;
--	struct pci_driver *pci_drv = ddi->drv;
--	struct device *dev = &pci_dev->dev;
- 	int rc;
- 
- 	/*
-@@ -319,83 +310,25 @@ static long local_pci_probe(void *_ddi)
- 	 * count, in its probe routine and pm_runtime_get_noresume() in
- 	 * its remove routine.
- 	 */
--	pm_runtime_get_sync(dev);
--	pci_dev->driver = pci_drv;
--	rc = pci_drv->probe(pci_dev, ddi->id);
-+	pm_runtime_get_sync(&dev->dev);
-+	dev->driver = drv;
-+	rc = drv->probe(dev, id);
- 	if (!rc)
- 		return rc;
- 	if (rc < 0) {
--		pci_dev->driver = NULL;
--		pm_runtime_put_sync(dev);
-+		dev->driver = NULL;
-+		pm_runtime_put_sync(&dev->dev);
- 		return rc;
- 	}
- 	/*
- 	 * Probe function should return < 0 for failure, 0 for success
- 	 * Treat values > 0 as success, but warn.
- 	 */
--	pci_warn(pci_dev, "Driver probe function unexpectedly returned %d\n",
-+	pci_warn(dev, "Driver probe function unexpectedly returned %d\n",
- 		 rc);
- 	return 0;
- }
- 
--static bool pci_physfn_is_probed(struct pci_dev *dev)
--{
--#ifdef CONFIG_PCI_IOV
--	return dev->is_virtfn && dev->physfn->is_probed;
--#else
--	return false;
--#endif
--}
--
--static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
--			  const struct pci_device_id *id)
--{
--	int error, node, cpu;
--	struct drv_dev_and_id ddi = { drv, dev, id };
--
--	/*
--	 * Execute driver initialization on node where the device is
--	 * attached.  This way the driver likely allocates its local memory
--	 * on the right node.
--	 */
--	node = dev_to_node(&dev->dev);
--	dev->is_probed = 1;
--
--	cpu_hotplug_disable();
--
--	/*
--	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
--	 * device is probed from work_on_cpu() of the Physical device.
--	 */
--	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
--	    pci_physfn_is_probed(dev)) {
--		cpu = nr_cpu_ids;
--	} else {
--		cpumask_var_t wq_domain_mask;
--
--		if (!zalloc_cpumask_var(&wq_domain_mask, GFP_KERNEL)) {
--			error = -ENOMEM;
--			goto out;
--		}
--		cpumask_and(wq_domain_mask,
--			    housekeeping_cpumask(HK_TYPE_WQ),
--			    housekeeping_cpumask(HK_TYPE_DOMAIN));
--
--		cpu = cpumask_any_and(cpumask_of_node(node),
--				      wq_domain_mask);
--		free_cpumask_var(wq_domain_mask);
--	}
--
--	if (cpu < nr_cpu_ids)
--		error = work_on_cpu(cpu, local_pci_probe, &ddi);
--	else
--		error = local_pci_probe(&ddi);
--out:
--	dev->is_probed = 0;
--	cpu_hotplug_enable();
--	return error;
--}
--
- /**
-  * __pci_device_probe - check if a driver wants to claim a specific PCI device
-  * @drv: driver to call to check if it wants the PCI device
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 864775651c6f..cbc0db2f2b84 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -481,7 +481,6 @@ struct pci_dev {
- 	unsigned int	io_window_1k:1;		/* Intel bridge 1K I/O windows */
- 	unsigned int	irq_managed:1;
- 	unsigned int	non_compliant_bars:1;	/* Broken BARs; ignore them */
--	unsigned int	is_probed:1;		/* Device probing in progress */
- 	unsigned int	link_active_reporting:1;/* Device capable of reporting link active */
- 	unsigned int	no_vf_scan:1;		/* Don't scan for VFs after IOV enablement */
- 	unsigned int	no_command_memory:1;	/* No PCI_COMMAND_MEMORY */
--- 
-2.20.1
+Thanks!
