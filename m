@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E00DA2571A0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 023CF27AC41;
 	Wed,  7 Jan 2026 08:12:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767773521; cv=none; b=TETHoj3ABl7VQjmoywxu9ly8ZzUXF8iZrN9FCUxlgoJ1vIGO+0g9o3bj6js1QOj+JtqqnuoEYStCOBGrgZ/pFcfmrdL5l+u8udlCp+gvkkt5gji4ly+cm5Qn0TWzG5+PXWcgqVVDbwyd2MwjdWaxrI/KShb8KRfbHmmCUIZGRuw=
+	t=1767773521; cv=none; b=SLbTzvRYEenDYiYiUqmTtrPFdaLWcfsFomgg/GBRpRNvVCdsqwq11BcpBEQtAX2kZC/xXr4fjiDl+x7F0iCRxwEDwwHlD/4iA+ajvlRzAVOsHH+ppOQGy/njJzr92ATFebTNY83RngDdjnXRc9XasDnp5iGlE1J/x6mFPP78ce8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1767773521; c=relaxed/simple;
-	bh=o9pWIvqMlzb/PHzIzRlxl4DrSd1mVj3lgO+vQNtuY74=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=X4YEiA24CmSa7cHoq2EMCirDV85p0jzWBPhxu64khSw+fXZ73GucaI8HYOAex5d1fj32y7gwzVSLTN7fC8293TElt0ewgm6e9fG1aUzaogr1B8aXv1A8O2s1e79DcyGb5rGG9JwhUK/FPRUSfU0CCNz79RGu/BUBpDYH+K2YSLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f1djI+os; arc=none smtp.client-ip=10.30.226.201
+	bh=yzF46xfIi50il38mClEBJMWTp3oIYulpE5xmq/3J6PE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=tAM2HYIzhSU/BGnHJ9KsHviSMCyjURco6/1mzE8qgtwwC3yUhiAqDKWV0f8GUdtcLfZtMYsBdfJZVoc0w1TM+9KJihWTDD40ciJyedbIdRwX013Q3EJlwzryRnIt35tRxLToOk7Wad0NLR6hUNt+dK5onX88qbRSIPTtkKVAps0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PaOXDMXC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f1djI+os"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 76B49C19421;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PaOXDMXC"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9A857C2BC86;
 	Wed,  7 Jan 2026 08:12:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1767773520;
-	bh=o9pWIvqMlzb/PHzIzRlxl4DrSd1mVj3lgO+vQNtuY74=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=f1djI+os7+L3WVppHiRgggyqybdMGDTUn/UMaPpaHFypSxQm6YOxDcdFd/A9oa27A
-	 faPRLD+FGw+X5z7bVQtyOnMkyy5S8n4yttisr1RnBxIIREa2jDUdM/t/X8yQK1RCbJ
-	 9vvkkZYlX99u7dZM4z7AhbLp1BnonIS6aL+FItZeOIA+ZMXkcvbUqap0G6vdJuKk/5
-	 fO7LgtU8JHy3dQLOFikw3hCMipjyf3Ov2t/56ALmQclGzIhD9FlVaRqfxeRRqkwnM3
-	 6ByZdm5Jmx8SxKAF0m2go9EHhyHVUu2oL3fi8FwLggshryIVTcOSKAdJ/RSFCkB29K
-	 6HeN4eHLP9moA==
+	bh=yzF46xfIi50il38mClEBJMWTp3oIYulpE5xmq/3J6PE=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=PaOXDMXCV/qYR6b58Pyg2puY5Bbk3LZnNsMrUJg7l2Fj+aItkpEK8rfY4WHl4RePh
+	 4ZBQB/JwHi7Tzs3oUy24BOh7//b8LlIRXNwzfTnpLh3KEppi/XY6U25twpINFZIXKp
+	 t+HJ2FrH4Q4Z7OikM9k/uowUa+kTeRNTJe8/Cy8h85sOsE/GbWEIKGuyw6bj3enD6e
+	 W/RvdU00yejwW/LfjZmJnHsUXRBevf9da22aHtmhcRfO5bsu0pjwBCi2kyGaNlQQvO
+	 IXXopvc8LYOXdstHZYWZUtqHChnJ3QP2KWqvwf+R3DMxgZzjIFtf9svOVbg7YfGjmk
+	 IOytGSNwXWhYQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60718CF6BFD;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88723CF6BFB;
 	Wed,  7 Jan 2026 08:12:00 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH v4 0/6] PCI: dwc: Rework the error handling of
- dw_pcie_wait_for_link() API
-Date: Wed, 07 Jan 2026 13:41:53 +0530
-Message-Id: <20260107-pci-dwc-suspend-rework-v4-0-9b5f3c72df0a@oss.qualcomm.com>
+Date: Wed, 07 Jan 2026 13:41:55 +0530
+Subject: [PATCH v4 2/6] PCI: dwc: Rename and move ltssm_status_string() to
+ pcie-designware.c
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,11 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAEkVXmkC/4XNSw7CIBCA4as0rMUwPAp15T2MCwRqibZUsFVje
- nepG13YuJnkn2S+eaLkoncJbYonim70yYcuB18VyDS6OzrsbW5ECRUAUOHeeGxvBqch9a6zOLp
- biCesDkSA0EyVskL5uI+u9vc3vNvnbny6hvh4/xlh3v4lR8AEa22BcEWVKOk2pLS+DPpsQtuu8
- 0CzPNKPRkEtajRrQksplSlJxfWCxr40RhY1ljVOjOVKSOC1+KFN0/QCXt3C5F8BAAA=
-X-Change-ID: 20251119-pci-dwc-suspend-rework-8b0515a38679
+Message-Id: <20260107-pci-dwc-suspend-rework-v4-2-9b5f3c72df0a@oss.qualcomm.com>
+References: <20260107-pci-dwc-suspend-rework-v4-0-9b5f3c72df0a@oss.qualcomm.com>
+In-Reply-To: <20260107-pci-dwc-suspend-rework-v4-0-9b5f3c72df0a@oss.qualcomm.com>
 To: Jingoo Han <jingoohan1@gmail.com>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -54,19 +52,18 @@ To: Jingoo Han <jingoohan1@gmail.com>,
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  vincent.guittot@linaro.org, zhangsenchuan@eswincomputing.com, 
  Shawn Lin <shawn.lin@rock-chips.com>, Richard Zhu <hongxing.zhu@nxp.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Frank Li <Frank.Li@nxp.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2748;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6823;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=o9pWIvqMlzb/PHzIzRlxl4DrSd1mVj3lgO+vQNtuY74=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpXhVNnNFpj8UPDghdOiSSpSpX3YCWrYv2ZUBJ9
- cKkV/0gk7+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaV4VTQAKCRBVnxHm/pHO
- 9a38B/4z5YcOBkBsZ7y1lk6E/lID3aXAxRJA/h1wexQej17UYQLmOifbj1FEXBlMkpEqmVogflS
- QO/FrQnb0GI5v+W6HnYllgISXCLRh+neQRh/zhiOKmaOvnH8Lk9Y3QqOAztKXD0piAk46tUtwUt
- 6GsETJ1ST6znGPo1OdikleRYRowXxpd2nI0nyFeNonUPKcGJbVnojIQ7b156AzB4qMN7AP0UtRz
- PYOar6qI6R7mihXA0mwmpTcQIDizb2fIbPuNTlMK5ihZLkViYcwL3vBDy2NhbaEIu4U1/UN49kA
- WEsbjuR/hMNEBrn5dYrQkLBXy19sGauXYBipaKFmZFq+/yi7
+ bh=yepoYjCczgLvEC/o4OBX9Hvs3juUiwx1csBdzMDaZpY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpXhVNyuhytwytAlpTjDIfNS/zmIOMaKCsnlbA2
+ 1e33zSwQ/OJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaV4VTQAKCRBVnxHm/pHO
+ 9elLB/9f+K0KfUvkBy/rJIE123WazNmHVHtkRe3lxM4cPV7HTmtiWBs2VKGI+CFey/ygDKM2lPQ
+ c7kLcyDNXLsy/f0ZBIac2yXj8D5dCCvQFnMJg+K/3DQ23swhwSEBwWbNDJM2kmXcn5tB9d4H90g
+ jTlj2akarpikbY2pKNUEDQf7873Eql+3McqWVT9WnB4Aj0EAIgi/Ff9/vZCwf2ZocRX67Vd7KDj
+ CPzpf2BJK2YMcVuHVbCnyO9suylqySPL9GGQ+CfhUcBupWCWhZ5RLgH7tl2U4p6w/Yl9026x2W8
+ HGwGnSRSTrsWKaUgXZF2fQLuU/Iga4hUdgQRO651qRHlp5HD
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -74,67 +71,168 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series reworks the dw_pcie_wait_for_link() API to allow the callers to
-detect the absence of the device on the bus and skip the failure.
-
-Compared to v2, I've reworked the patch 2 to improve the API further and
-dropped the patch 1 that got applied (hence changed the subject). I've also
-modified the error code based on the feedback in v2 to return -ENODEV if device
-is not detected on the bus and -ETIMEDOUT otherwise. This allows the callers to
-skip the failure if device is not detected and handle error for other failure.
-
-Testing
-=======
-
-Tested this series on Rb3Gen2 board without powering on the PCIe switch. Now the
-dw_pcie_wait_for_link() API prints:
-
-	qcom-pcie 1c08000.pcie: Device not found
-
-Instead of the previous log:
-
-	qcom-pcie 1c08000.pcie: Phy link never came up
+Rename ltssm_status_string() to dw_pcie_ltssm_status_string() and move it
+to the common file pcie-designware.c so that this function could be used
+outside of pcie-designware-debugfs.c file.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Changes in v4:
-- Skipped returning failure during resume as well if no device is found
-- Link to v3: https://lore.kernel.org/r/20251230-pci-dwc-suspend-rework-v3-0-40cd485714f5@oss.qualcomm.com
-
-Changes in v3:
-- Dropped patch 1 that got appplied
-- Reworked the error handling of dw_pcie_wait_for_link() API further
-- Link to v2: https://lore.kernel.org/r/20251218-pci-dwc-suspend-rework-v2-0-5a7778c6094a@oss.qualcomm.com
-
-Changes in v2:
-- Changed the logic to check for Detect.Quiet/Active states
-- Collected tags and rebased on top of v6.19-rc1
-- Link to v1: https://lore.kernel.org/r/20251119-pci-dwc-suspend-rework-v1-0-aad104828562@oss.qualcomm.com
-
----
-Manivannan Sadhasivam (6):
-      PCI: dwc: Return -ENODEV from dw_pcie_wait_for_link() if device is not found
-      PCI: dwc: Rename and move ltssm_status_string() to pcie-designware.c
-      PCI: dwc: Rework the error print of dw_pcie_wait_for_link()
-      PCI: dwc: Only skip the dw_pcie_wait_for_link() failure if it returns -ENODEV
-      PCI: host-common: Add an API to check for any device under the Root Ports
-      PCI: dwc: Skip failure during dw_pcie_resume_noirq() if no device is available
-
- .../pci/controller/dwc/pcie-designware-debugfs.c   | 54 +---------------
- drivers/pci/controller/dwc/pcie-designware-host.c  | 23 +++++--
- drivers/pci/controller/dwc/pcie-designware.c       | 75 +++++++++++++++++++++-
+ .../pci/controller/dwc/pcie-designware-debugfs.c   | 54 +---------------------
+ drivers/pci/controller/dwc/pcie-designware.c       | 52 +++++++++++++++++++++
  drivers/pci/controller/dwc/pcie-designware.h       |  2 +
- drivers/pci/controller/pci-host-common.c           | 21 ++++++
- drivers/pci/controller/pci-host-common.h           |  2 +
- 6 files changed, 115 insertions(+), 62 deletions(-)
----
-base-commit: 68ac85fb42cfeb081cf029acdd8aace55ed375a2
-change-id: 20251119-pci-dwc-suspend-rework-8b0515a38679
+ 3 files changed, 55 insertions(+), 53 deletions(-)
 
-Best regards,
+diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+index df98fee69892..0d1340c9b364 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
++++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+@@ -443,65 +443,13 @@ static ssize_t counter_value_read(struct file *file, char __user *buf,
+ 	return simple_read_from_buffer(buf, count, ppos, debugfs_buf, pos);
+ }
+ 
+-static const char *ltssm_status_string(enum dw_pcie_ltssm ltssm)
+-{
+-	const char *str;
+-
+-	switch (ltssm) {
+-#define DW_PCIE_LTSSM_NAME(n) case n: str = #n; break
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_QUIET);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_ACT);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_ACTIVE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_COMPLIANCE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_CONFIG);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_PRE_DETECT_QUIET);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_WAIT);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LINKWD_START);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LINKWD_ACEPT);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LANENUM_WAI);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LANENUM_ACEPT);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_COMPLETE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_IDLE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_LOCK);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_SPEED);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_RCVRCFG);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_IDLE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L0);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L0S);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L123_SEND_EIDLE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_IDLE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L2_IDLE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L2_WAKE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DISABLED_ENTRY);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DISABLED_IDLE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DISABLED);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_ENTRY);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_ACTIVE);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_EXIT);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_EXIT_TIMEOUT);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_HOT_RESET_ENTRY);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_HOT_RESET);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ0);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ1);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ2);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ3);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_1);
+-	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_2);
+-	default:
+-		str = "DW_PCIE_LTSSM_UNKNOWN";
+-		break;
+-	}
+-
+-	return str + strlen("DW_PCIE_LTSSM_");
+-}
+-
+ static int ltssm_status_show(struct seq_file *s, void *v)
+ {
+ 	struct dw_pcie *pci = s->private;
+ 	enum dw_pcie_ltssm val;
+ 
+ 	val = dw_pcie_get_ltssm(pci);
+-	seq_printf(s, "%s (0x%02x)\n", ltssm_status_string(val), val);
++	seq_printf(s, "%s (0x%02x)\n", dw_pcie_ltssm_status_string(val), val);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 55c1c60f7f8f..87f2ebc134d6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -692,6 +692,58 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index)
+ 	dw_pcie_writel_atu(pci, dir, index, PCIE_ATU_REGION_CTRL2, 0);
+ }
+ 
++const char *dw_pcie_ltssm_status_string(enum dw_pcie_ltssm ltssm)
++{
++	const char *str;
++
++	switch (ltssm) {
++#define DW_PCIE_LTSSM_NAME(n) case n: str = #n; break
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_QUIET);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_ACT);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_ACTIVE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_COMPLIANCE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_CONFIG);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_PRE_DETECT_QUIET);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_WAIT);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LINKWD_START);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LINKWD_ACEPT);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LANENUM_WAI);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_LANENUM_ACEPT);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_COMPLETE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_CFG_IDLE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_LOCK);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_SPEED);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_RCVRCFG);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_IDLE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L0);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L0S);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L123_SEND_EIDLE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_IDLE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L2_IDLE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L2_WAKE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DISABLED_ENTRY);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DISABLED_IDLE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DISABLED);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_ENTRY);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_ACTIVE);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_EXIT);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_LPBK_EXIT_TIMEOUT);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_HOT_RESET_ENTRY);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_HOT_RESET);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ0);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ1);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ2);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_RCVRY_EQ3);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_1);
++	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_L1_2);
++	default:
++		str = "DW_PCIE_LTSSM_UNKNOWN";
++		break;
++	}
++
++	return str + strlen("DW_PCIE_LTSSM_");
++}
++
+ /**
+  * dw_pcie_wait_for_link - Wait for the PCIe link to be up
+  * @pci: DWC instance
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index f87c67a7a482..c1def4d9cf62 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -828,6 +828,8 @@ static inline enum dw_pcie_ltssm dw_pcie_get_ltssm(struct dw_pcie *pci)
+ 	return (enum dw_pcie_ltssm)FIELD_GET(PORT_LOGIC_LTSSM_STATE_MASK, val);
+ }
+ 
++const char *dw_pcie_ltssm_status_string(enum dw_pcie_ltssm ltssm);
++
+ #ifdef CONFIG_PCIE_DW_HOST
+ int dw_pcie_suspend_noirq(struct dw_pcie *pci);
+ int dw_pcie_resume_noirq(struct dw_pcie *pci);
+
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.48.1
 
 
