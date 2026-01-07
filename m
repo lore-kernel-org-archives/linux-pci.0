@@ -1,218 +1,226 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012061.outbound.protection.outlook.com [52.101.48.61])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f73.google.com (mail-wm1-f73.google.com [209.85.128.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A524A20E6E2;
-	Wed,  7 Jan 2026 15:20:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.61
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767799242; cv=fail; b=Ls+3uzSl+X2Xs+wRfiPFEKmbeKXxbFQSsX2q/5Jb/m9uEOX0xa+Rgy+mXgypUXyqmkT8MqKukFTCL9fvSGoZNhQ6W0lAsxTr54JbUu98hgiMiW9xLCQiIgtTrfx08JaLVgoiEyyy3CfWgym1oIHIzXYQMSxaptya5BMuw24Xg6E=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767799242; c=relaxed/simple;
-	bh=hxE7NaJf+NTU+QRyolOlK3WYd5J8PzqVLYGhpxrF6Yg=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=JyEowUzaqms7qSIOFCmdwAsOXQjFekWeoG1VMnzV1zeb+Ly6aCIPK2s39uXFRT0tpQrZnMY3Nqaw6tc0EKj7DgJ1MLvIrs4OK7LNqb0rCWzUqCItFJpkRAWbvPRbQGFk0NJrFEX4J7erNeoLXLWkRN5l1Eu3vjcDl01xXl0LuXg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=D3Ea+CEM; arc=fail smtp.client-ip=52.101.48.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E51D7393DEE
+	for <linux-pci@vger.kernel.org>; Wed,  7 Jan 2026 15:52:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.73
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1767801136; cv=none; b=uqGAzK5uhPi/gej1aX0t7hmFWlWKN1nPiGVGajJpyehEBEC6VzIddiqHHeFK5IIeoRrB++x/0e+Bt8Ciesb7UiiaYhbV5gHIwOfVszNF6M0BtMkPjqAOnnVXc7sFGDr7K/+1jBljU4XX2Z8eUlTVR3m3AS9Ksit/1T0U7WgJlVE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1767801136; c=relaxed/simple;
+	bh=WXZMe4HP3vNPReOPTMwzVrsjCdvjsyH5VjpRkjOfyhU=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=MnHxqjZRNEA/faojojhsoKb4+ttrfPo0SWeDJtUFi0mm18pLgn+3HujvDyp5f23cN+v/qNEG2cQ9Fj+1hfMEkW1nF26eK0yN9uskJr+lA2kDl/aoTkmVcNRtyeKF80lPT2qwLsW5uVzvgQwcM0nyPRZipk5j+2wa7xKgH9AQosE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=sVG+Gvxz; arc=none smtp.client-ip=209.85.128.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="D3Ea+CEM"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=VBAa0UIwlYkGK96F6bwxl2XQ6HPR2Bk9/6AfbU8HFzaEgLnRkDJKMqakzirTBDmSH8iYOM1mG3jdK4MHwtOqBbYVNEiCyniIdu61MVD7BnRzG5pR8yzJ2GDLdIhHnDRQqfRMtvA51IjgdyF6sIMuYUBn6CdjwmzbKPy0XB0KDMA/pga+Vh2L5TmeORo5PyIpP/JavvRp4X3IqXGBHSUO25KaMB4EQtZZkGub9uAOK+kGSLD8eBINnbG/5iD5Ukf4dQvsTxaJco2P90D650yFjqh9dV5rsYT6BKq/2jdWSLIrrcl5YSuOzxg5rPe4M7yG5B3XeC2xcD03KK/tz/1Z/w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=K55JKBo8dSw8+kcUZWr/YgVVbJyvSrh4tZwzE/8AgfU=;
- b=L/v7RAwMLboDY2cPVmF1zuhurM/aFmLEkwXQTukLRM45gJNIGh+wbGUINAcXZDRFAxlVBK+k08I2Y2ctM9GFYmdqgKbpBCUzezSPlwapOOZSd2vrLj5prHKC1/S36R5Ul8PM5OkIvZjw2soTBEFyv/MS5PhEmwqTWWuyUNdHCY7DPsXvmToZwobE1rmVO0ZdQQElEXnMSlYLu2iNCRS/dsor9mtIRJkUrlAJC1yOG2TA7T+l0O3BD6BiK0z7XDI1evCPyxjxw5e6+LQLa8T4o/U+tptIPxOurxuQ9smU0gSr2C+1MdfY/PSuFg7fw7WAmzonqXeUq7LzijyDsA7ktw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=K55JKBo8dSw8+kcUZWr/YgVVbJyvSrh4tZwzE/8AgfU=;
- b=D3Ea+CEM/jwLSXa2LA/9ZrE0do7p+RxJm9Dk/vp6qVy+opCjFVfdjRlAZLrn4fPvETLEWC25Qwyeg8gZxDKOPNv/wKaDby94wkzHWEXnmjqBf9F1QDtRVwPF+leWsVY/CuXPvoTXXEwX78vCSq0yx/qFUieMyhAKbVFxdNjpSW8=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
- by DM4PR12MB8500.namprd12.prod.outlook.com (2603:10b6:8:190::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9499.2; Wed, 7 Jan
- 2026 15:20:33 +0000
-Received: from PH7PR12MB5685.namprd12.prod.outlook.com
- ([fe80::46fb:96f2:7667:7ca5]) by PH7PR12MB5685.namprd12.prod.outlook.com
- ([fe80::46fb:96f2:7667:7ca5%4]) with mapi id 15.20.9499.002; Wed, 7 Jan 2026
- 15:20:33 +0000
-Message-ID: <15ec03f3-f0cf-45f7-b7f6-98b075533d3e@amd.com>
-Date: Wed, 7 Jan 2026 16:20:25 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/5] drm/radeon: Raise msi_addr_mask to 40 bits for
- pre-Bonaire
-To: Vivian Wang <wangruikang@iscas.ac.cn>,
- Madhavan Srinivasan <maddy@linux.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>, David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>, Brett Creeley <brett.creeley@amd.com>,
- Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>,
- Takashi Iwai <tiwai@suse.com>
-Cc: Han Gao <gaohan@iscas.ac.cn>, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org
-References: <20251224-pci-msi-addr-mask-v1-0-05a6fcb4b4c0@iscas.ac.cn>
- <20251224-pci-msi-addr-mask-v1-3-05a6fcb4b4c0@iscas.ac.cn>
-Content-Language: en-US
-From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-In-Reply-To: <20251224-pci-msi-addr-mask-v1-3-05a6fcb4b4c0@iscas.ac.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: YT4PR01CA0363.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:fd::12) To PH7PR12MB5685.namprd12.prod.outlook.com
- (2603:10b6:510:13c::22)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="sVG+Gvxz"
+Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-47d3c4468d8so15773725e9.2
+        for <linux-pci@vger.kernel.org>; Wed, 07 Jan 2026 07:52:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1767801120; x=1768405920; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=KzJooJr2ofQffqYH6J44S/NyT0tH1jNqXbKY2GqyAaM=;
+        b=sVG+GvxzA/bIWQCZReXPeS1jCtipHwLFJ8H3+TTr7IHjtw9oscdftuiV7uHVLznSrt
+         ZzbtUYvJiZ03Mf2u/b2ceb9RzILJgjR+prkpzAViQCrI25G/PNz9zCUZLE18eE+KTBl1
+         NjBQDCD8M6YFO7oPZIsM4A++l3HnCICPOZ8DlgwUkjALAlVXlN71d4lm3VwGY7lfSKIw
+         KvSemEGGw8aFqsvdu0U1ml42nsIUGG3Azl4CCSARJLj6rUzdXQrw92zFIe3AhqpukNi8
+         LsShOMI+p8mAfOkMtMqHFEdBRngLc0FWko5NYzAg8WQn2jW9kRVKlJeljJsvRgJsafDZ
+         Yb+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767801120; x=1768405920;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=KzJooJr2ofQffqYH6J44S/NyT0tH1jNqXbKY2GqyAaM=;
+        b=o/GavvX5upqVWEeLvxRARRM+av65wguvdxdxckk9I9y3TcfPgVAuEArdkrtfllnjjV
+         CLdFHfATLQth7xImo5OKEhipzJHF6EAyI/IDVCaHxd4foOPoz4/RLBLwS2paMB7pUG7W
+         RgEZahGz9FtM7voTJzWhO5ac0Xj4XMlFt45MWVNl2gqqleKKbY80+FwgOGkbxFq+AclZ
+         6hnHzfgQTh+u1gS+A9D8vYlgbzVmxneHcMvFQisWYp3eTUvZj1UdS/YTsEkOYhwPVDE+
+         2IIIYK9zcSppRyzgJ6vBohsfmICeSsSyEX2Cd2qtv5ZcwrRmYEN6MS+iyhW/flvSxImx
+         Ujcg==
+X-Forwarded-Encrypted: i=1; AJvYcCUWq9FJx6mQdW2tmsSodVrYIdF6/51X3d5UURrkI54iW2u5/xTuko6SjvY3ZFjwhlJZFMyApNVP6I4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy7+NOEiDuICna2nShRJ2Tx1Ibjz2Ld+fSyl0BAlWyuDl2ig9cG
+	NeHztSEyTSz1pXTcq9bzRrzDbACzlP9RPka1MSEbswKwuamVLHGefTZtsHJDx0P7m2REVsof1CA
+	YoohI2obqZaiJUhmTtA==
+X-Google-Smtp-Source: AGHT+IGf7S57fwqtaG/Y63VwksZsm6MPDrdn5BaGxjtMY+WZa3f+qrbuzEydbLZth9rk78JW5kkgVrJK4VKyKM0=
+X-Received: from wmbz13.prod.google.com ([2002:a05:600c:c08d:b0:479:3624:3472])
+ (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:600c:82c3:b0:477:9392:8557 with SMTP id 5b1f17b1804b1-47d84b3463fmr32388425e9.18.1767801120462;
+ Wed, 07 Jan 2026 07:52:00 -0800 (PST)
+Date: Wed, 7 Jan 2026 15:51:59 +0000
+In-Reply-To: <20260107103511.570525-1-dakr@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|DM4PR12MB8500:EE_
-X-MS-Office365-Filtering-Correlation-Id: b22c36b0-e083-4677-d100-08de4e004cf4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|7416014|376014|921020|7053199007;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?TnptL0pVT0JCdUEzempXS3ZyeW1rbHhxWFlvd3NBMVljSmR0ZVJsa044WlN3?=
- =?utf-8?B?azhVdUVJKzRkaG5WTTJyTEgvUXcyb1hQZnVWZVRxOG5GbHlsZlNadElZQy9R?=
- =?utf-8?B?T2hRanNpSCtTVXlodHo5UTE5dU9iM1U0ZmxOMWpzakdPTmhYOFgybGNTa29M?=
- =?utf-8?B?cG1YdlBreUxaNlBlRDExS3ZSNHJFT1RBQ0ZzdFlKcmY4RmhNRUxkSzAvMS9I?=
- =?utf-8?B?WnZZNnoxME9jWlVDZFBqS3dncnlxUFZRdkdOK21KZXAyVlF4Zi94ZzV6eUtQ?=
- =?utf-8?B?STFRRzFPdCtpT3h1QVkvUWVnZ3dkUFFocFFReDBFY0ZReUlKZ0x6cGRYamtv?=
- =?utf-8?B?QkZLWlRBNU9vL29CUUYrSEFucm0vYS9jaXgrUlloTzJBZ2VpTG5VY04yYWxG?=
- =?utf-8?B?NEo4MG5Eenc0VzJmSHkzT0NZOTRnRXM5clVTUUF2VTRDV1I1blNqU0YrYzlN?=
- =?utf-8?B?VjU2YmJzYmo5allJcndpaU1vVHh1WXljU1Q3UGsrT0NHK2pZVVByQjFjb3Jw?=
- =?utf-8?B?dnh3WmVmRktMQnRtTkdMeGVzV3hQNWJtWGR0UUoyckJOaU1GUlRnenBxOUxR?=
- =?utf-8?B?Qi9vdnZ2VENDN0tlOFhSQTVSdTlFaHp0R3RiczlZejZnY0pXdVFVYkZGTHNB?=
- =?utf-8?B?eGhFNWt3NWRjWXV0aDZvdHN6bnlKY2RKNzRTd3dvU0pQSXRJT0VkQjJzK2RH?=
- =?utf-8?B?eVN6YVhWTTlaaVUxUmpZYzYvQkkvVmQyNkZoNTUyeitvbkpkZVcreFdMOW84?=
- =?utf-8?B?TGdYQ3YyaEwrekUwTXR6T25MeEZDeE1qVXhnazJnMVFrSFlvYkNFU0RZS3Bk?=
- =?utf-8?B?ZktWS282VnkzUFVLbWlMdEZlME5ZOXlXbVVjZS92Q2RRMUZveWxWNkE2cGdk?=
- =?utf-8?B?bGpucFAxcnF3RE9XS2JwNXgxOHlIcVFJdWxNcEphVlQ4ekcwWHZzKzA4RGE1?=
- =?utf-8?B?c1g0a3pNNHYvZzVLVG9CRk1sQlVKSnFuRE1LY2pQYXV5bFB0a1FjUW1RNTdU?=
- =?utf-8?B?ak1aRC8waFBlbjFTaWcreDJ6QUZiSnRYZ0NwYmNxM3BLYWFYTmYyQ3JXVXNt?=
- =?utf-8?B?ZUVrNWttaE42U2ZRa1RoT3VkeDI5bnpVWDRLS3lpWVdiajYzaDNaSUVRNHlO?=
- =?utf-8?B?RHYzZ0xOR3N2Unh6djJTVFFzUFl4UmJJTURmNG1lV0ZQTmFtcm5uU0dXNC9G?=
- =?utf-8?B?cXdLd1RuS0VsQm1jWXNwclVNWnJWYXBPMlFuYzlXTUhVQ3U2NE5mYUliWXZC?=
- =?utf-8?B?Vk84TkVtazZlRFFEWGgvMTJCRmtTbXFLTkdjOTNwdmV4YXB6VnFnOUg1TkF3?=
- =?utf-8?B?L0dtQlR0SWlQelV5dzNmTUJidVNNWi9zbkg5Y0svcXZmeUxWVmJIVGxwaHZ0?=
- =?utf-8?B?UVNRazM3SjRrVjhzNU9hc2hFcnRaTkVjME83eHplU1hFQWRMMVNkSEpEeXZL?=
- =?utf-8?B?MzVLNDZ1UnIrOXZaYzZEN3JRMWw4bzFGV0JReXZQaHAwdDNRdmxsQVhkZVlO?=
- =?utf-8?B?TWhOTERtcjU4MDlXS3FhZzZ5ekk1bjE5L01lZmFwcUZUYkgybDR4YWZERnA5?=
- =?utf-8?B?SjZEZXBOSlRxbzN4bHAyZzdGeG9EcHM1cURXRmkwa2ZIVThoTzNaTzYrTlR4?=
- =?utf-8?B?c0pscUQ4N1BDdndENE94UHJvMmxmU1RjaHc3UTBKNjd2eTB4U0NaWW1vYVVF?=
- =?utf-8?B?ZUk0akYxejgyaFhWQk52Wi95TXRSc3RHY2h5NW1tODZlakE4SWE4S0NXTGkr?=
- =?utf-8?B?SzlsOC9zdkRlRnhSMHNSMlRtOTQ3bUJVUjhEVkx3VEQwVXNqN2IrVHdtSjd2?=
- =?utf-8?B?emJqYkN0K0dCZ28yOURQcUxFcGQxVkk2YmxOdzBzeHFvd0hqU0t5YmZhOGs2?=
- =?utf-8?B?SVlHMXlNeTNiTG1xdXVMc2dnSktKajBteVdLVnJBNUtKMGFNZnhaYnhjN0xF?=
- =?utf-8?B?L0dmNlQzOTRZdkFkZlVZM0NvMm4ycnoxak5xRHNnb29vS3FsYzJQV2lKaGZ3?=
- =?utf-8?Q?NHGfVtlmzKFVXfAH0XdRNiWncAxLfc=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(921020)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VFUxNU52U3NVRGdvaGJTcEZZU25NZU95Qm1XT0w2aVk1MHRDTGk1S3lvN0xT?=
- =?utf-8?B?WTROclpKUVdXeEJudURucWdYbjNNdHRvSkJyR0lVK1NMM054VjBLc1ZuME1z?=
- =?utf-8?B?QTd2eFF3VHBxTE5TSFlkR0doRjlCbnc3aWRxMFZLd29RZGFGNTRiQTF2OEM0?=
- =?utf-8?B?S2JOekZ4RXJBTFk5R3NTMVdmZ09GckJRbElIdXo5ZVNHTmFFVCt4dFYybERP?=
- =?utf-8?B?eTJYUXdnYjRUTnlKNTM5VGZmN2l3M0g1Z2tEVks2NkhpVUQ2eWgrZGM1VDZr?=
- =?utf-8?B?cEV0cFFuWnl4amxwaGRYUlhSV2VxdTAvcVdqRlEvQWFFdG1PWk0zZW9YbFFv?=
- =?utf-8?B?emxFM3c0Wm1FYWpkeTZ3Z0YrZ0tNRVc2am9ZTUM2bDlKR3lsQnBDaEJxdkZk?=
- =?utf-8?B?TDNTcFNxSkVIVm1yMlphd2V6cFdEUDR1YUFnNXRKblJpVFlFZEZzRmU2Tncx?=
- =?utf-8?B?V3g0ZFVWNjZVeVFyT2JkZlhXUXNHTnJOWkcwTUcrOTFvS1JURFZvR0tySmhL?=
- =?utf-8?B?YVZBdkhOdU5idGN3QTRLcFRJdzAyRTY1VlpSVDVvRFFyQVI0WWphelN6VDBL?=
- =?utf-8?B?ZmlxOUVneDBJSUZhS3IyL2Y1Rm8vd3pJOTlxdytmUnF2MnhPWFdQV3JOby9j?=
- =?utf-8?B?aVFuMStPaWxXVEl2N21yMEg4NlE1K1Y5VTdGbnhJZmJwOGM2VC9uUllCdnJ4?=
- =?utf-8?B?Tlh1aEJyZGxWTDcyQ0Z1UVdRMzRuUFNBUmYraUFyMWdSSGQ1Z3RML3pkS3hi?=
- =?utf-8?B?Q3llZzdQdTU2QzdzSGNUK3pBUWhlbk9Kc2k3OXNtYmlWKzgvRW5JOSs5Ymov?=
- =?utf-8?B?dEhMc0lCU1RYOUpoSVV4SUxqWmM0WGdxSy9JdVI3QkE3Qk5PREVrZmk0RUFT?=
- =?utf-8?B?QTFhZ3FYLzNTNFZHMERvT240bXFJMUZBMFNTYmRRdjJnaG00a2libUdDanp2?=
- =?utf-8?B?djhJNFV6dHY0ajVVY2puSERQcHN4bUpmb05KaU1kMDlFMElzWHNBdE9KKzRm?=
- =?utf-8?B?REpGYXBVaHk0S1Z3djR2TS9NUVhPbC9SRTQvTnY5RG56QmpWbE1WdC9YbXBH?=
- =?utf-8?B?SEMzb3FvMnJBa3ZkMm9LYVZNYkVBQTdWZllTTHN4NEtYU2FtalgzVlFlaGli?=
- =?utf-8?B?dEpKZ2dEOXRFR0MxZXJpU05RZVpzTUFTYXU5b2d0WjRnZEkrVHhhZGR1R3Ay?=
- =?utf-8?B?N2NhTXZEL1NiRG5qMFp5akRzOGJBeVk0UlJrck0yUSs5UU1ndUtSZlMvYzQ5?=
- =?utf-8?B?R25mcCs4Q01seDRTSVovQU0wT0JmeEhtUzZpelZabkxtc2NFY250Uk12dE54?=
- =?utf-8?B?Vkc1dTg1V1g2bDFJZHZWaTFTWUJtMXFmRUZsay9aZTVMMUVyTVc0bVVnTFh6?=
- =?utf-8?B?K0hnR3VEUGNzNmFlY0s4d3QwTnhrenVPL0VCUnh6Sk1tYmIrV3VGNUVvWUp4?=
- =?utf-8?B?b3NaN29aTldPSmNuLzRIa3lTOGFDMllSQm4rVjVVSjFEQlU5bWU1RVlUSER6?=
- =?utf-8?B?SUhWWmxrLzFlbzJHaHJjcVcwMzBhQnlZRThtdHM5cWc4c3Jjb2tnU3BZY2lZ?=
- =?utf-8?B?L2Zld0JDaEVMbzY2WnVsNDc5M1l2dTE2ejhjWWFPMzZOcFFBWnZpUlI2RXNa?=
- =?utf-8?B?T2JEYzVYQklFSEhnQ3hqT0NHMTVNRjBpOU5YWTZkenRnL2FicTJVa2JQdmpI?=
- =?utf-8?B?UkcxbVk1MnBncGp4MmdmY2x6STdYZVZQa0E1aE4xNEhITXk3a0FxcXdUVXpn?=
- =?utf-8?B?S1R6TnFzNnUrU0o3emZXMVVUWXAxTFVTRlpZUVM0bmdNODhzRlk4ZE9HWWlP?=
- =?utf-8?B?M2V6SjZ0Zlo5NjN5Y0pISHR5bytMTFVsdjNSUzZhczJ2ZmdMdWVNb3Y0QlZX?=
- =?utf-8?B?TDdyMDZZVlhDVUZGN2NlS0xvZWhoSWJCUlh2cDd6NmVXNXk3V2hNaW0vcndZ?=
- =?utf-8?B?U3VWVzMzdko4amo2a0FMR0lnVkFHZUZ6NHF2TXpTMkRpQ2oxay9CSk9JazJk?=
- =?utf-8?B?cUtZS2JYYWJlK1E0UUxjSUxEV3hzS3lpL1NSdGVVS1M5RGNDTU0vUjdVRndn?=
- =?utf-8?B?R0VibytENXZRbUx6bU9JclRUU3JIQkMyQXdHc3Z5c2luUmFGUkRucXNTVThC?=
- =?utf-8?B?SHc0ZEhhVU5kMXRyMElYOFFHaFExNDJ3aGRlK1puVnZ1ZTVSZWsxakhoV3VC?=
- =?utf-8?B?NEw5V3Z6S2tqNVhIRTNjbkk0Q3pTMEp0VzN5aVNYZlR3YkpoSVFKOW5ycWRV?=
- =?utf-8?B?OENpaVBsazQvTGF5WkV4NmU1V1FNWFg2ajlYOTVMYVlLYzZEaUZTdktJYU9G?=
- =?utf-8?B?SkJrREU0Kzk1RHpjSUcwTXBxeENhYklOMlRqY2kvbWQ5TitPTFVXUT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b22c36b0-e083-4677-d100-08de4e004cf4
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jan 2026 15:20:33.3473
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JwwUVtb0hShOtC2gwiYGWQmn5kYsFT7ZADsUBNzkwDOjkWkdY6ModGWEB5S5c2n8
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB8500
+Mime-Version: 1.0
+References: <20260107103511.570525-1-dakr@kernel.org>
+Message-ID: <aV6BHw-Liv0SVAwO@google.com>
+Subject: Re: [PATCH 0/6] Address race condition with Device::drvdata()
+From: Alice Ryhl <aliceryhl@google.com>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: gregkh@linuxfoundation.org, rafael@kernel.org, 
+	igor.korotin.linux@gmail.com, ojeda@kernel.org, boqun.feng@gmail.com, 
+	gary@garyguo.net, bjorn3_gh@protonmail.com, lossin@kernel.org, 
+	a.hindborg@kernel.org, tmgross@umich.edu, david.m.ertman@intel.com, 
+	ira.weiny@intel.com, leon@kernel.org, bhelgaas@google.com, 
+	kwilczynski@kernel.org, wsa+renesas@sang-engineering.com, 
+	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-i2c@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
 
-On 12/24/25 04:10, Vivian Wang wrote:
-> The code was originally written using no_64bit_msi, which restricts the
-> device to 32-bit MSI addresses.
+On Wed, Jan 07, 2026 at 11:34:59AM +0100, Danilo Krummrich wrote:
+> Currently, the driver's device private data is allocated and initialized
+> from driver core code called from bus abstractions after the driver's
+> probe() callback returned the corresponding initializer.
 > 
-> Since msi_addr_mask is introduced, use DMA_BIT_MASK(40) instead of
-> DMA_BIT_MASK(32) here for msi_addr_mask, describing the restriction more
-> precisely and allowing these devices to work on platforms with MSI
-> doorbell address above 32-bit space, as long as it is within the
-> hardware restriction of 40-bit space.
+> Similarly, the driver's device private data is dropped within the
+> remove() callback of bus abstractions after calling the remove()
+> callback of the corresponding driver.
 > 
-> Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
-> ---
->  drivers/gpu/drm/radeon/radeon_irq_kms.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> However, commit 6f61a2637abe ("rust: device: introduce
+> Device::drvdata()") introduced an accessor for the driver's device
+> private data for a Device<Bound>, i.e. a device that is currently bound
+> to a driver.
 > 
-> diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> index d550554a6f3f..ea519d43348b 100644
-> --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> @@ -251,8 +251,8 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
->  	 * IBM POWER servers, so we limit them
->  	 */
->  	if (rdev->family < CHIP_BONAIRE) {
-> -		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
-> -		rdev->pdev->msi_addr_mask = DMA_BIT_MASK(32);
-> +		dev_info(rdev->dev, "radeon: MSI limited to 40-bit\n");
-> +		rdev->pdev->msi_addr_mask = DMA_BIT_MASK(40);
-
-Well, that is not even remotely correct.
-
-Please move that close to the dma_set_mask_and_coherent() call in radeon_device_init() (file radeon_device.c).
-
-The check there is most likely already what you need. Should be pretty straight forward.
-
-Regards,
-Christian.
-
->  	}
->  
->  	/* force MSI on */
+> Obviously, this is in conflict with dropping the driver's device private
+> data in remove(), since a device can not be considered to be fully
+> unbound after remove() has finished:
 > 
+> We also have to consider registrations guarded by devres - such as IRQ
+> or class device registrations - which are torn down after remove() in
+> devres_release_all().
+> 
+> Thus, it can happen that, for instance, a class device or IRQ callback
+> still calls Device::drvdata(), which then runs concurrently to remove()
+> (which sets dev->driver_data to NULL and drops the driver's device
+> private data), before devres_release_all() started to tear down the
+> corresponding registration. This is because devres guarded registrations
+> can, as expected, access the corresponding Device<Bound> that defines
+> their scope.
+> 
+> In C it simply is the driver's responsibility to ensure that its device
+> private data is freed after e.g. an IRQ registration is unregistered.
+> 
+> Typically, C drivers achieve this by allocating their device private data
+> with e.g. devm_kzalloc() before doing anything else, i.e. before e.g.
+> registering an IRQ with devm_request_threaded_irq(), relying on the
+> reverse order cleanup of devres [1].
+> 
+> Technically, we could do something similar in Rust. However, the
+> resulting code would be pretty messy:
+> 
+> In Rust we have to differentiate between allocated but uninitialized
+> memory and initialized memory in the type system. Thus, we would need to
+> somehow keep track of whether the driver's device private data object
+> has been initialized (i.e. probe() was successful and returned a valid
+> initializer for this memory) and conditionally call the destructor of
+> the corresponding object when it is freed.
+> 
+> This is because we'd need to allocate and register the memory of the
+> driver's device private data *before* it is initialized by the
+> initializer returned by the driver's probe() callback, because the
+> driver could already register devres guarded registrations within
+> probe() outside of the driver's device private data initializer.
+> 
+> Luckily there is a much simpler solution: Instead of dropping the
+> driver's device private data at the end of remove(), we just drop it
+> after the device has been fully unbound, i.e. after all devres callbacks
+> have been processed.
+> 
+> For this, we introduce a new post_unbind() callback private to the
+> driver-core, i.e. the callback is neither exposed to drivers, nor to bus
+> abstractions.
+> 
+> This way, the driver-core code can simply continue to conditionally
+> allocate the memory for the driver's device private data when the
+> driver's initializer is returned from probe() - no change needed - and
+> drop it when the driver-core code receives the post_unbind() callback.
+> 
+> --
+> 
+> Dependency wise we need a common Driver trait that describes the layout of a
+> specific driver structure, such as struct pci_driver or struct platform_driver.
+> Additional to this specific driver type (which was previously the associated
+> type RegType of the RegistrationOps) it provides the offset to the embedded
+> struct device_driver and the type of the driver's device private data.
+> 
+> This patch series contains two additional dependencies:
+> 
+>   (1) A fix for i2c::Driver::shutdown() to not free the driver's device
+>       private data at all, which otherwise causes the exact same bug, and
+>       is not necessary in the first place anyways.
+> 
+>   (2) Add the auxiliary::Driver::unbind() callback. Strictly speaking,
+>       this is not a dependency, but without this patch the main fix of this
+>       series leaves the remove() callback of the auxiliary bus
+>       abstraction with either dead code or quite some code removed;
+>       code that we would otherwise add back immediately afterwards.
+> 
+> --
+> 
+> [1] In fact, the cleanup ordering of devres is a separate challenge in
+>     Rust, since it is technically unsound to rely on the driver to pick
+>     the correct order. I am already working on a solution for this;
+>     luckily this also has some synergies with optimizing the required
+>     synchronize_rcu() calls required by the Rust Devres container
+>     structure down to exactly one per driver unbind.
 
+I don't think these are really separate problems. And I think this may
+be the wrong fix.
+
+If a &Device<Bound> lets you access a given value, then we must not
+destroy that value until after the last &Device<Bound> has expired.
+
+A &Device<Bound> lets you access the driver private data. And a
+&Device<Bound> lets you access the contents of a Devres<T>.
+
+Thus, the last &Device<Bound> must expire before we destroy driver
+private data or values inside of Devres<T>. Etc.
+
+What are sources of &Device<Bound> today?
+
+* Most driver callbacks.
+* IRQ callbacks.
+* Workqueue callbacks. (In the future.)
+* I think that's it ...?
+
+Thus, we must call free_irq() before we destroy *the first* Devres<T>
+resource or the driver private data.
+
+Thus, we must ensure that driver callbacks are somehow synchronized to
+exit before we destroy *the first* Devres<T> resource or the driver
+private data.
+
+One thing is that this means that using a Devres<_> container and
+callback as the mechanism for calling free_irq() is not possible.
+
+I'm thinking that we may need two domains of callbacks:
+
+1. devm_early_*
+2. DEVICE IS NOW CONSIDERED UNBOUND - there must no longer be any &Device<Bound> left
+3. free driver private data
+4. devm_*
+
+And devm_early_*() would be a new set of callbacks where we can run
+things such as free_irq(). It would use a separate DevresEarly<_>
+container, for which &Device<Bound> does *not* let you peek inside. And
+the usual Devres<_> is cleaned up in step 4, where it is legal to peek
+inside given a &Device<Bound>.
+
+We could potentially revoke Devres<_> containers during devm_early_*,
+but actually destroy their contents in devm_*. This gives you a clean
+mechanism to replace the per-Devres<_> synchronize_rcu() calls with a
+single one. (By declaring step 2 must last at least one rcu grace
+period.)
+
+Not sure whether remove() should run before or after step (2). If it
+runs before, then it does not need to be synchronized with other device
+callbacks and can free the driver private data. If it runs after (2),
+then we can't destroy driver private data in remove().
+
+Alice
