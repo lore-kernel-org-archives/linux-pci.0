@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6D9284B58;
-	Wed,  7 Jan 2026 08:12:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FE622868AD;
+	Wed,  7 Jan 2026 08:12:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767773521; cv=none; b=XXU30IER2luXOFw2sDVuiC65HxvSZnfvdUZFHl5ym7xo7B2lljMRowwpDhAZJuxcBD2SS8RpBeH45murx0V0EF+anWeFJ++dkqJVfRzOef/gJ28W56tVBVmMYJdzm80eWh5k5aLIdxmkBH3rjmTy9SFvwAVrZMB34p5o4sOgNRA=
+	t=1767773521; cv=none; b=meNIxSp8Bm6kfQXCyknEBW9s+1kwS1GQYU6YFXQ3pufqik11R9aR0IgPp3FbQmNIPT8vhvI+pd7NBIDAHR6i9p/hx+gaODqE9HGkp7egQBqxLbMmsaXkh84vCTRk+sxzeks0oYrZkQAfuW7oefiiri14ilXhSGFibuK4rXPpgLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1767773521; c=relaxed/simple;
-	bh=1Bx83pDKo9jaY2lEHQcpiSEbGnUIKcROGAVfSg3BNeM=;
+	bh=Z0Pgoi0Qlqa+YgrQg2kILANNAwZXLcX16MIbV8LfX28=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=PeQHL04OJXjxDlWKoYULqf6tzPSAZ/xxRSlKt+0AG4LxpfZ96AjagQmX+ZvCAS8XQDrik0fJsiw7DlumemOnX95QvIPzZCoXdRrr2Q3r1D6Tm2UbzZabPuHhm4jjbQFQBzuC2lNeZ+vX+MWibwh4U2vYc5IMIYcLS5jhabDPFZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+gAtCmC; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=blfK73oGcFq28Khb5OtqAENmtyQTES3FHWg8Zh0ttDX8g1J6DzekkSRsLmtt6gvKDm3LqVfUDbRi8VNTjIlFqcy9vwmySDWVmM6Pcgpm0VdwLZQyWjDHChzvKtw5aOEPefYeM43twiGFkQE4ciV0LBE5nxu2P0YDCxrjxqEI8cs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=urW+Ljg+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+gAtCmC"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id A41B1C19422;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="urW+Ljg+"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BDC91C2BCB3;
 	Wed,  7 Jan 2026 08:12:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1767773520;
-	bh=1Bx83pDKo9jaY2lEHQcpiSEbGnUIKcROGAVfSg3BNeM=;
+	bh=Z0Pgoi0Qlqa+YgrQg2kILANNAwZXLcX16MIbV8LfX28=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=a+gAtCmCacrnISTlyMbHwvjqbEGLX04dC7IW7lwMsSZlRdOe8+uvscfBE2pOfVrRn
-	 e1u2UOhdz5/CMHi30TuIuL51tBDqukB11Iu6EXEgDr+S6MpD3luyPPnihp0NkZqjt/
-	 qmD7yp74LljJuHbQFjiBmiJsxFv8d+j0is4B3ZxwUz9MEiGAbTL6079fDxqR+tkQFM
-	 KrLLzVjdxyqEnJcJpm9l13Ft94k7W5HxPRSvX6MgxpNmynrig0Q6GUgOVvCWAaMs3y
-	 IcavZeyx8iSq7PkFTmE6SfsS62HcubtsQth/ZK4/av1xv2HepTzpQ+37FuDbv9QSeG
-	 Q4gHmJE+X+ePA==
+	b=urW+Ljg+S4QqvwojLPLKIoJF+HDHNXsv6aqzJgYWmrV6bkUwKEqiBT4XZMiTAIVO4
+	 aSm9aZxgsgsRBcMVk5bWgKp1qFWDoHmUd9vp9hWHurrDN2lr3IInD5VFclHvEkWOWY
+	 zHCXTxrSe9Mq9UgWsvtFfLsWVeOKAxWKfgqSm4BsHOddcp3mdLOb8iHOC+K7G+UD7n
+	 5jI5AcdfEZxIMAvsRouvpEnoEWLChjEiSnOg3LJeKjJtGDIjiJ2BFjpPchgmuyXHhg
+	 zR/nrE9jSEk7xvwKLKN7DSmWbqi6ItRaZR+NrpBiJ7IqkdY+vEG/5KAcPk2iqhj7ec
+	 nLRZxEKW0USnQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9712DCF6C00;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B68FBCF6BFB;
 	Wed,  7 Jan 2026 08:12:00 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 07 Jan 2026 13:41:56 +0530
-Subject: [PATCH v4 3/6] PCI: dwc: Rework the error print of
- dw_pcie_wait_for_link()
+Date: Wed, 07 Jan 2026 13:41:58 +0530
+Subject: [PATCH v4 5/6] PCI: host-common: Add an API to check for any
+ device under the Root Ports
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260107-pci-dwc-suspend-rework-v4-3-9b5f3c72df0a@oss.qualcomm.com>
+Message-Id: <20260107-pci-dwc-suspend-rework-v4-5-9b5f3c72df0a@oss.qualcomm.com>
 References: <20260107-pci-dwc-suspend-rework-v4-0-9b5f3c72df0a@oss.qualcomm.com>
 In-Reply-To: <20260107-pci-dwc-suspend-rework-v4-0-9b5f3c72df0a@oss.qualcomm.com>
 To: Jingoo Han <jingoohan1@gmail.com>, 
@@ -52,18 +52,19 @@ To: Jingoo Han <jingoohan1@gmail.com>,
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  vincent.guittot@linaro.org, zhangsenchuan@eswincomputing.com, 
  Shawn Lin <shawn.lin@rock-chips.com>, Richard Zhu <hongxing.zhu@nxp.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Frank Li <Frank.Li@nxp.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1068;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2003;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=7kXiC+5h1EOCvJw9bEDf4bWdlgkGwkMaGfwFegH0XMU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpXhVO+wv6IqrXUHtZZ7pCoWCmyGAxjzy7H7TCb
- gQK13gxUTCJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaV4VTgAKCRBVnxHm/pHO
- 9U2KB/4m72B41t7n/mvH/degieIy7YePSsqP5IBleoaDzPOABR/ntbxCFhi9USstVjCjposC/1Y
- PeBT1LFHVwCe+ZI4a8ZQD8yBGdRVxcUdItAYYUvUuIa78PjPSHy7dJdqhYYqeb45E/812waSWOC
- e44WBUt4/UP8XNNN35fyk8QOoIz3lLo9o6+Ie9zXy2FX3I8tXNY3kb2yxdByomr4HLoQHvJHYqs
- CtZNrWzpvpdW9DmYjd9rLlDbBXVSW4qU8dbqWSxO8G8wFYgO/Kh6R8rNOjFKQMHQ1kWRYlnF8TI
- yvqeok1ufUpEnVSfef6J7BRzeqK9Tko1x1PFTa6hnrQdzeBa
+ bh=kAXCOvQycBkgZ3T8qsZnSaD6+NhiYd0ZqipWoNSX5Vk=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpXhVOYVIGdtRi+M4F8h7//2lgXAskLXBIFa2BF
+ GLD3I535hmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaV4VTgAKCRBVnxHm/pHO
+ 9QveB/9DZrJ+fECJFPzH8rdLobYA+GeygfYwGeFxZv6tJnR09GgwnZ3A6QIPjEW3HGsmy++ZRA9
+ 95FDwS/bDYvmjU1cscQ8ULSEHOPLkWny0xTgjjJrnd2ji8i9bVyWflYa3FZWYyTb3eP30ajFdBo
+ 22Uq3RJa2rkcf8/2k3Xxu+X0G1cBOE3RUMFqaativBvyveclwgz1+IQAE62eFkP+aAk4KMC1hRX
+ N5AIzJH6SqaFPeJNh4xs+bj7AAW/vc06Q0mh8jhdtd9EJZLg5ctzOpgqOuuwof3+8tvPPy6PCn2
+ Z8SC1idM0irQ+T27K3kQ6jTKVPHhLzGBcGlPWkRgd5YKOnbW
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -73,32 +74,60 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-If the link fails to come up even after detecting the device on the bus
-i.e., if the LTSSM is not in Detect.Quiet and Detect.Active states, then
-dw_pcie_wait_for_link() should log it as an error.
+Some controller drivers need to check if there is any device available
+under the Root Ports. So add an API that returns 'true' if a device is
+found under any of the Root Ports, 'false' otherwise.
 
-So promote dev_info() to dev_err(), reword the error log to make it clear
-and also print the LTSSM state to aid debugging.
-
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pci-host-common.c | 21 +++++++++++++++++++++
+ drivers/pci/controller/pci-host-common.h |  2 ++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 87f2ebc134d6..c2dfadc53d04 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -776,7 +776,8 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
- 			return -ENODEV;
- 		}
+diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+index c473e7c03bac..a88622203227 100644
+--- a/drivers/pci/controller/pci-host-common.c
++++ b/drivers/pci/controller/pci-host-common.c
+@@ -17,6 +17,27 @@
  
--		dev_info(pci->dev, "Phy link never came up\n");
-+		dev_err(pci->dev, "Link failed to come up. LTSSM: %s\n",
-+			dw_pcie_ltssm_status_string(ltssm));
- 		return -ETIMEDOUT;
- 	}
+ #include "pci-host-common.h"
  
++/**
++ * pci_root_ports_have_device - Check if the Root Ports under the Root bus have
++ *				any device underneath
++ * @root_bus: Root bus to check for
++ *
++ * Return: true if a device is found, false otherwise
++ */
++bool pci_root_ports_have_device(struct pci_bus *root_bus)
++{
++	struct pci_bus *child;
++
++	/* Iterate over the Root Port busses and look for any device */
++	list_for_each_entry(child, &root_bus->children, node) {
++		if (!list_empty(&child->devices))
++			return true;
++	}
++
++	return false;
++}
++EXPORT_SYMBOL_GPL(pci_root_ports_have_device);
++
+ static void gen_pci_unmap_cfg(void *ptr)
+ {
+ 	pci_ecam_free((struct pci_config_window *)ptr);
+diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
+index b5075d4bd7eb..8088faf94282 100644
+--- a/drivers/pci/controller/pci-host-common.h
++++ b/drivers/pci/controller/pci-host-common.h
+@@ -20,4 +20,6 @@ void pci_host_common_remove(struct platform_device *pdev);
+ 
+ struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
+ 	struct pci_host_bridge *bridge, const struct pci_ecam_ops *ops);
++
++bool pci_root_ports_have_device(struct pci_bus *root_bus);
+ #endif
 
 -- 
 2.48.1
