@@ -1,94 +1,149 @@
-Received: from mail-m49246.qiye.163.com (mail-m49246.qiye.163.com [45.254.49.246])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E3A221FBD;
-	Wed,  7 Jan 2026 09:13:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.246
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 802F82FBDF2;
+	Wed,  7 Jan 2026 09:21:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767777235; cv=none; b=WvQgCeZIliU3Xao1SdgYlwW0eahrtAfVuD3KZCqCtzdLFIsKEjBcU308Wc6XFa5u6ULC+NJQsts2ydg/fEcFGIJzHzVbaVHaeLjdnw14HSC5CGPTPE4jLjHblkNGdzFfJn5NeuKpdA3msQLAQiFSY8/W9eFUIIdoleCEFvGQz8o=
+	t=1767777713; cv=none; b=R+gj1nyfuFh4x3yAnggQJmaAp6QI6G2XAso7KZ93a8iKop2I0/IhCp3Awipn1f4H5Ua1iWhz852WB4hcnjegiJnrHmBl3LFht+26lLOkRNKxbfMR9MAPzpcHwQliXtNSgye8z0GmJeFcU4f9wvlVPIr9U2Ah90/8Vx5y8+zzy0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767777235; c=relaxed/simple;
-	bh=9+sabqTAKXVR8KuD20UJ7DsKZ16mPbrKjHmf1lZrq8k=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=msWHtKtG+TC0EYBNySZKNM0kRTeAW1CK4AOvvPk3C+o9FhqH+E68J3Otxs7059GWPQwi4yxuzAYWD9mFSKXJK++jH/BnTRsY0Y5PhI26AHHJIF5YOwkpTdN5o49jJdR63xB/XJdeGZWKk9FStY5BNzx5jgn4vxyLcEh3C83FswY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=S25RtDC1; arc=none smtp.client-ip=45.254.49.246
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1767777713; c=relaxed/simple;
+	bh=8DINCbuJQD5wwJWcbQ2qfTOQo9DyNZ/cR+d1iKICHx0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oRSGoT4fZY1qPLxPeO8L2OyRk+hSH6MOVDo6+j2GfCsTi7M2NZVXcx2CFFM/FHz9SgLGs/BRvEWn1RvGmYhiEg4VWNjjUaDbwvcyUaZAr9cTYfvMQl4eyy22aX4HZroYdMRWUCzouTEl2UN8XHyu+ATaM8aDYg5WaGwfRiFB1Mk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B6i7g2fH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="S25RtDC1"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2fcc712cd;
-	Wed, 7 Jan 2026 16:38:15 +0800 (GMT+08:00)
-Message-ID: <af7be4b3-93a0-4fb0-aa36-cf62d13c0579@rock-chips.com>
-Date: Wed, 7 Jan 2026 16:38:14 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B6i7g2fH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45B99C4CEF7;
+	Wed,  7 Jan 2026 09:21:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767777713;
+	bh=8DINCbuJQD5wwJWcbQ2qfTOQo9DyNZ/cR+d1iKICHx0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=B6i7g2fHcAv2ATBTCSv0FqR2vlQ505Lrja7YsyJy3Uog16uBI9cthAmju+OuOCB0b
+	 8cCziRMahyuh9dHODb37OVBmEKOJSevUWrbP1+SvOz/kT/xZ/YOeBQ7CDrT2j4Lo9a
+	 tqLWrUl7ejmvLweAqkIp/NbxrlLGw/WbWy2mG+sFTFYkPaQumBC98H21+6acbKwYGK
+	 e3Sa8YQzzjaBFYMDZM/OiVFB58DbmnjsBsMHuekNiYh2VEwTg909mVyvt0BIwDu9tQ
+	 2v9AV4p7GFWQKxsQOqJBu/EIDFX+gluLrHM7nXW6nj0FlzsDXNfAqw3Di08OHyVrVi
+	 4dLreSbP3bK8w==
+Date: Wed, 7 Jan 2026 14:51:45 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Lukas Wunner <lukas@wunner.de>, 
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, Giovanni Cabiddu <giovanni.cabiddu@intel.com>, 
+	Feng Tang <feng.tang@linux.alibaba.com>, linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/portdev: Disable AER for Titan Ridge 4C 2018
+Message-ID: <65j2ah57lotdhzocczw4jq5zsc2w37aj6wskv6zfptpsi6kpmk@qz7oiiovzjgb>
+References: <20260107081445.1100-1-atharvatiwarilinuxdev@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, vincent.guittot@linaro.org,
- zhangsenchuan@eswincomputing.com, Richard Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v4 3/6] PCI: dwc: Rework the error print of
- dw_pcie_wait_for_link()
-To: manivannan.sadhasivam@oss.qualcomm.com, Jingoo Han
- <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20260107-pci-dwc-suspend-rework-v4-0-9b5f3c72df0a@oss.qualcomm.com>
- <20260107-pci-dwc-suspend-rework-v4-3-9b5f3c72df0a@oss.qualcomm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20260107-pci-dwc-suspend-rework-v4-3-9b5f3c72df0a@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9b979b4abe09cckunm9d739e2a8da29e
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkpJH1ZPGR1DQktNHUhNS0tWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=S25RtDC1T5vJVt0cKdxYZWFw8a6VRMKjMFdwabYQ87Ghxsq7mDgIhvubTQzZ5/lGhlsP9ab1mm+aYxKKmr7/HSzA1Ul2X7yLJvf1jLQ+S4C2SMq8KUAhUvYYX3BTbjh8ySoVh7znwoSd6MhIBftK1LaziyzTr/Yno25U7aa397E=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=e/6Z10cVcegjp3tE+yfoBahMZjBikogOt93G++cVhkA=;
-	h=date:mime-version:subject:message-id:from;
+In-Reply-To: <20260107081445.1100-1-atharvatiwarilinuxdev@gmail.com>
 
-在 2026/01/07 星期三 16:11, Manivannan Sadhasivam via B4 Relay 写道:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Wed, Jan 07, 2026 at 08:14:35AM +0000, Atharva Tiwari wrote:
+> Changes since v1:
+> 	Transferred logic to drivers/pci/quicks.c
 > 
-> If the link fails to come up even after detecting the device on the bus
-> i.e., if the LTSSM is not in Detect.Quiet and Detect.Active states, then
-> dw_pcie_wait_for_link() should log it as an error.
+> Disable AER for Intel Titan Ridge 4C 2018
+> (used in T2 iMacs, where the warnings appear)
+> that generate continuous pcieport warnings. such as:
 > 
-> So promote dev_info() to dev_err(), reword the error log to make it clear
-> and also print the LTSSM state to aid debugging.
-
-LTSSM might still be changing, so not sure how much value it would be
-to print it at a singal moment, but anyway
-
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-
+> pcieport 0000:00:1c.4: AER: Correctable error message received from 0000:07:00.0
+> pcieport 0000:07:00.0: PCIe Bus Error: severity=Correctable, type=Data Link Layer, (Receiver ID)
+> pcieport 0000:07:00.0:   device [8086:15ea] error status/mask=00000080/00002000
+> pcieport 0000:07:00.0:    [ 7] BadDLLP
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> (see: https://bugzilla.kernel.org/show_bug.cgi?id=220651)
+> 
+> macOS also disables AER for Thunderbolt devices and controllers in their drivers.
+> 
+> Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+
+Discussion in v1 of this patch is not yet concluded and you have sent v2. This
+is not going to help merge this patch.
+
+Since you don't know why AER is happening, you should wait for a response from
+the Intel/Thunderbolt folks who know more about the hardware.
+
+- Mani
+
 > ---
->   drivers/pci/controller/dwc/pcie-designware.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
+>  drivers/pci/pcie/aer.c     | 3 +++
+>  drivers/pci/pcie/portdrv.c | 2 +-
+>  drivers/pci/quirks.c       | 9 +++++++++
+>  include/linux/pci.h        | 1 +
+>  4 files changed, 14 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 87f2ebc134d6..c2dfadc53d04 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -776,7 +776,8 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
->   			return -ENODEV;
->   		}
->   
-> -		dev_info(pci->dev, "Phy link never came up\n");
-> +		dev_err(pci->dev, "Link failed to come up. LTSSM: %s\n",
-> +			dw_pcie_ltssm_status_string(ltssm));
->   		return -ETIMEDOUT;
->   	}
->   
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index e0bcaa896803..45604564ce6f 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -389,6 +389,9 @@ void pci_aer_init(struct pci_dev *dev)
+>  {
+>  	int n;
+>  
+> +	if (dev->no_aer)
+> +		return;
+> +
+>  	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+>  	if (!dev->aer_cap)
+>  		return;
+> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> index 38a41ccf79b9..ab904a224296 100644
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -240,7 +240,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+>  	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+>               pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
+>  	    dev->aer_cap && pci_aer_available() &&
+> -	    (pcie_ports_native || host->native_aer))
+> +	    (pcie_ports_native || host->native_aer) && !dev->no_aer)
+>  		services |= PCIE_PORT_SERVICE_AER;
+>  #endif
+>  
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b9c252aa6fe0..d36dd3f8bbf6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -6340,4 +6340,13 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+> +
+> +static void pci_disable_aer(struct pci_dev *pdev)
+> +{
+> +	pdev->no_aer = 1;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x15EA, pci_disable_aer);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x15EB, pci_disable_aer);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x15EC, pci_disable_aer);
+> +
+>  #endif
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 864775651c6f..f447f86c6bdf 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -440,6 +440,7 @@ struct pci_dev {
+>  	unsigned int	multifunction:1;	/* Multi-function device */
+>  
+>  	unsigned int	is_busmaster:1;		/* Is busmaster */
+> +	unsigned int	no_aer:1;		/* May not use AER */
+>  	unsigned int	no_msi:1;		/* May not use MSI */
+>  	unsigned int	no_64bit_msi:1;		/* May only use 32-bit MSIs */
+>  	unsigned int	block_cfg_access:1;	/* Config space access blocked */
+> -- 
+> 2.43.0
+> 
 > 
 
+-- 
+மணிவண்ணன் சதாசிவம்
