@@ -1,26 +1,26 @@
-Received: from mail-m15573.qiye.163.com (mail-m15573.qiye.163.com [101.71.155.73])
+Received: from mail-m19731112.qiye.163.com (mail-m19731112.qiye.163.com [220.197.31.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39F993218B3;
-	Wed,  7 Jan 2026 09:43:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ABA8217F24
+	for <linux-pci@vger.kernel.org>; Wed,  7 Jan 2026 09:46:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767779017; cv=none; b=OFWIdvrw4ql9e/KLjxLHC5DH+UODey4g4zRbcIAPfGivBUpmV+Z7mKChSnCU8Zpsqd09w7z3mA/BwdQagSh/Fn/cLhIiQKhqqRnNTFN3ruhIUQtXamjp+J76t/dkiNRzL/uzaFwP/bQ2SO81S43e8Jb5n4OpSdekSulM5f82tt4=
+	t=1767779194; cv=none; b=mtIu8mI1wHNiij9SqhlPMBvB8daOuYyGMpEzODNSRkp3Oc9+xop332UvxmShRXgW9dq//lFJONdzkzSG7fzra+edEx6M9gE/+8CRhihiSf0cXytY1lur5UZlRjXQYBlZb92KapFWBc7X0qCnaolb/hyznUNtZu+mZlZWLIRXL5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767779017; c=relaxed/simple;
-	bh=v6H8Q+5HtRkfi3hLhA2BhgTp5Lo+cHV7DGN0At2ttvQ=;
+	s=arc-20240116; t=1767779194; c=relaxed/simple;
+	bh=//9ADedbLyfcUw1duZOdbEAkFUsZwJwkxjwXrCKI2XU=;
 	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=SafDOtOOsbAyjt4m/yxdSoLvXOwXV1HyxbMhJsehREAbw11muBjM2+3tcleU0lvyYLJJLzNXMnj9Pbv2/MF8dNkQSbhXsFVIkdjJa08qWbZjvLk52/Fg6OxjxhVzpF1okeS8WCC2nfNrgLdFSj38+fdrjhIrt1R2NohsVZUtuP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Ehust4Hh; arc=none smtp.client-ip=101.71.155.73
+	 In-Reply-To:Content-Type; b=muaSDnBmKVLxWb9aZDuhL42zQiUJYBSm61PT1PoUr9kY6dExhauT2WpT4HVYHqpHXJbqwz/NJBrmr00P2BANGPZoixzmzk+j5RcehnginAMqdRYNBErNZCf9IYWGSIo3BmWs3rvDskjMg23ZmO+loFG+YD2dYvsg7aFJuBTwiX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=UKq1DGST; arc=none smtp.client-ip=220.197.31.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Ehust4Hh"
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="UKq1DGST"
 Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2fce93f02;
-	Wed, 7 Jan 2026 17:28:08 +0800 (GMT+08:00)
-Message-ID: <6662785c-7912-4e58-a5b2-613ddac419c0@rock-chips.com>
-Date: Wed, 7 Jan 2026 17:28:07 +0800
+	by smtp.qiye.163.com (Hmail) with ESMTP id 2fcf0e560;
+	Wed, 7 Jan 2026 17:41:14 +0800 (GMT+08:00)
+Message-ID: <014d034f-998d-466c-9c73-181297de83ba@rock-chips.com>
+Date: Wed, 7 Jan 2026 17:41:13 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -28,86 +28,165 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, manivannan.sadhasivam@oss.qualcomm.com,
- Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, vincent.guittot@linaro.org,
- zhangsenchuan@eswincomputing.com, Richard Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v4 3/6] PCI: dwc: Rework the error print of
- dw_pcie_wait_for_link()
-To: Manivannan Sadhasivam <mani@kernel.org>
-References: <20260107-pci-dwc-suspend-rework-v4-0-9b5f3c72df0a@oss.qualcomm.com>
- <20260107-pci-dwc-suspend-rework-v4-3-9b5f3c72df0a@oss.qualcomm.com>
- <af7be4b3-93a0-4fb0-aa36-cf62d13c0579@rock-chips.com>
- <gtgvh7bxfsm7xoigg7tiqs7n42gnfbxsa4aqxtupqnr6ihxswn@gk7dcw2zbh7x>
+Cc: shawn.lin@rock-chips.com, linux-rockchip@lists.infradead.org,
+ Niklas Cassel <cassel@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: dwc: Add LTSSM tracing support to debugfs
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Manivannan Sadhasivam <mani@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+References: <1767691119-28287-1-git-send-email-shawn.lin@rock-chips.com>
+ <8d4e73f5-b4da-4aca-a2b2-b607be8c245a@oss.qualcomm.com>
 From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <gtgvh7bxfsm7xoigg7tiqs7n42gnfbxsa4aqxtupqnr6ihxswn@gk7dcw2zbh7x>
+In-Reply-To: <8d4e73f5-b4da-4aca-a2b2-b607be8c245a@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9b97c8f75409cckunm330a1c758e8aac
+X-HM-Tid: 0a9b97d4f39b09cckunm99824e1a8eb6a8
 X-HM-MType: 1
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkgaHlZKGhhMT09IGR5NHk9WFRQJFh
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQk0dTFZKGB9NSktPHkseHU5WFRQJFh
 	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
 	hVSktLVUpCS0tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=Ehust4HhZ8llb3eboDU8IIqDSzji5gyIlzeR7tIMboQwqjO2egvmvB4f7XuPSW+EPDHa5wfHpT/5CEoycg7yGjytlXPyDdhIAaNWUq4YvUFJBiFumGDprtYTnYyZE1tZBMN2hNI4hEa024Z1Zx5Z93NYOuNy+RkZoLBKkcOTORc=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=VIvMs1i/cn5NY2UPQsH2LMVuLFVSxHC/a7b87moHzDg=;
+	b=UKq1DGSTutbU6hXV6fSMiAZs2lGy14VI5OiPeb0/nltUsCXOiUIeL/eKeEqtDSm8hovSMUG4wgFBx9pbyGb0mGkfQfw90XPswnXY4zNbHGMXAkxM9BFt70HAZWkF8j5ze4v9CyBhSnDFW/ESQowyRboBgGXA3JREsCntKt8pOHg=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=Tn+b1s6Nv5FIXs5nHNOp+r/XH3TXSbuK50ANRcqCEDQ=;
 	h=date:mime-version:subject:message-id:from;
 
-在 2026/01/07 星期三 17:09, Manivannan Sadhasivam 写道:
-> On Wed, Jan 07, 2026 at 04:38:14PM +0800, Shawn Lin wrote:
->> 在 2026/01/07 星期三 16:11, Manivannan Sadhasivam via B4 Relay 写道:
->>> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->>>
->>> If the link fails to come up even after detecting the device on the bus
->>> i.e., if the LTSSM is not in Detect.Quiet and Detect.Active states, then
->>> dw_pcie_wait_for_link() should log it as an error.
->>>
->>> So promote dev_info() to dev_err(), reword the error log to make it clear
->>> and also print the LTSSM state to aid debugging.
->>
->> LTSSM might still be changing, so not sure how much value it would be
->> to print it at a singal moment, but anyway
->>
+在 2026/01/07 星期三 17:12, Krishna Chaitanya Chundru 写道:
 > 
-> It is very unlikely that the LTSSM would be changing after the 1s timeout.
-> Printing the state will allow debugging the link up failure.
+> 
+> On 1/6/2026 2:48 PM, Shawn Lin wrote:
+>> Some platforms may provide LTSSM trace functionality, recording 
+>> historical
+>> LTSSM state transition information. This is very useful for debugging, 
+>> such
+>> as when certain devices cannot be recognized. Add an ltssm_trace 
+>> operation
+>> node in debugfs for platform which could provide these information to 
+>> show
+>> the LTSSM history.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> ---
+>>   .../controller/dwc/pcie-designware-debugfs.c  | 44 +++++++++++++++++++
+>>   drivers/pci/controller/dwc/pcie-designware.h  |  6 +++
+>>   2 files changed, 50 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/ 
+>> drivers/pci/controller/dwc/pcie-designware-debugfs.c
+>> index df98fee69892..569e8e078ef2 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+>> @@ -511,6 +511,38 @@ static int ltssm_status_open(struct inode *inode, 
+>> struct file *file)
+>>       return single_open(file, ltssm_status_show, inode->i_private);
+>>   }
+>> +static struct dw_pcie_ltssm_history *dw_pcie_ltssm_trace(struct 
+>> dw_pcie *pci)
+>> +{
+>> +    if (pci->ops && pci->ops->ltssm_trace)
+>> +        return pci->ops->ltssm_trace(pci);
+>> +
+>> +    return NULL;
+>> +}
+>> +
+>> +static int ltssm_trace_show(struct seq_file *s, void *v)
+>> +{
+>> +    struct dw_pcie *pci = s->private;
+>> +    struct dw_pcie_ltssm_history *history;
+>> +    enum dw_pcie_ltssm val;
+>> +    u32 loop;
+>> +
+>> +    history = dw_pcie_ltssm_trace(pci);
+>> +    if (!history)
+>> +        return 0;
+>> +
+>> +    for (loop = 0; loop < history->count; loop++) {
+>> +        val = history->states[loop];
+>> +        seq_printf(s, "%s (0x%02x)\n", ltssm_status_string(val), val);
+>> +    }
+>> +
+>> +    return 0;
+>> +}
+>> +
+>> +static int ltssm_trace_open(struct inode *inode, struct file *file)
+>> +{
+>> +    return single_open(file, ltssm_trace_show, inode->i_private);
+>> +}
+>> +
+>>   #define dwc_debugfs_create(name)            \
+>>   debugfs_create_file(#name, 0644, rasdes_debug, pci,    \
+>>               &dbg_ ## name ## _fops)
+>> @@ -552,6 +584,11 @@ static const struct file_operations 
+>> dwc_pcie_ltssm_status_ops = {
+>>       .read = seq_read,
+>>   };
+>> +static const struct file_operations dwc_pcie_ltssm_trace_ops = {
+>> +    .open = ltssm_trace_open,
+>> +    .read = seq_read,
+>> +};
+>> +
+>>   static void dwc_pcie_rasdes_debugfs_deinit(struct dw_pcie *pci)
+>>   {
+>>       struct dwc_pcie_rasdes_info *rinfo = pci->debugfs->rasdes_info;
+>> @@ -644,6 +681,12 @@ static void dwc_pcie_ltssm_debugfs_init(struct 
+>> dw_pcie *pci, struct dentry *dir)
+>>                   &dwc_pcie_ltssm_status_ops);
+>>   }
+>> +static void dwc_pcie_ltssm_trace_debugfs_init(struct dw_pcie *pci, 
+>> struct dentry *dir)
+>> +{
+>> +    debugfs_create_file("ltssm_trace", 0444, dir, pci,
+>> +                &dwc_pcie_ltssm_trace_ops);
+> Can we have this as the sysfs, so that if there is some issue in 
+> production devices where debugfs is not available,
+> we can use this to see LTSSM state figure out the issue.
 > 
 
-Most cases, yes. But I saw some reports that the LTSSM is stiling
-changing between RCVRY_* and CFG_* when supporting customers. Especially
-a buggy card I remembered, which sends some hot reset immediately after
-link comes up. If it misses the first 1s wait for link check, then we
-could see ltssm changing here. But better than nothing, keeps a log here
-isn't a big deal I think. :)
+Thanks for the input. I think the ltssm_trace is debug in nature, just 
+like the existing ltssm and rasdes_debug nodes, so it probably fits 
+better under debugfs for consistency. Moreover, given most time we
+combine rasdes_debug and ltssmm history to debug issues, if we split it
+out, we’d end up with two separate debugging areas, which feels a bit
+fragmented and less clear.
 
 
-> - Mani
+> - Krishna Chaitanya.
+>> +}
+>> +
+>>   static int dw_pcie_ptm_check_capability(void *drvdata)
+>>   {
+>>       struct dw_pcie *pci = drvdata;
+>> @@ -922,6 +965,7 @@ void dwc_pcie_debugfs_init(struct dw_pcie *pci, 
+>> enum dw_pcie_device_mode mode)
+>>               err);
+>>       dwc_pcie_ltssm_debugfs_init(pci, dir);
+>> +    dwc_pcie_ltssm_trace_debugfs_init(pci, dir);
+>>       pci->mode = mode;
+>>       pci->ptm_debugfs = pcie_ptm_create_debugfs(pci->dev, pci,
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/ 
+>> pci/controller/dwc/pcie-designware.h
+>> index 5cd27f5739f1..0df18995b7fe 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>> @@ -395,6 +395,11 @@ enum dw_pcie_ltssm {
+>>       DW_PCIE_LTSSM_UNKNOWN = 0xFFFFFFFF,
+>>   };
+>> +struct dw_pcie_ltssm_history {
+>> +    enum dw_pcie_ltssm *states;
+>> +    u32 count;
+>> +};
+>> +
+>>   struct dw_pcie_ob_atu_cfg {
+>>       int index;
+>>       int type;
+>> @@ -499,6 +504,7 @@ struct dw_pcie_ops {
+>>                     size_t size, u32 val);
+>>       bool    (*link_up)(struct dw_pcie *pcie);
+>>       enum dw_pcie_ltssm (*get_ltssm)(struct dw_pcie *pcie);
+>> +    struct dw_pcie_ltssm_history * (*ltssm_trace)(struct dw_pcie *pcie);
+>>       int    (*start_link)(struct dw_pcie *pcie);
+>>       void    (*stop_link)(struct dw_pcie *pcie);
+>>       int    (*assert_perst)(struct dw_pcie *pcie, bool assert);
 > 
->> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->>>
->>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->>> ---
->>>    drivers/pci/controller/dwc/pcie-designware.c | 3 ++-
->>>    1 file changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
->>> index 87f2ebc134d6..c2dfadc53d04 100644
->>> --- a/drivers/pci/controller/dwc/pcie-designware.c
->>> +++ b/drivers/pci/controller/dwc/pcie-designware.c
->>> @@ -776,7 +776,8 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
->>>    			return -ENODEV;
->>>    		}
->>> -		dev_info(pci->dev, "Phy link never came up\n");
->>> +		dev_err(pci->dev, "Link failed to come up. LTSSM: %s\n",
->>> +			dw_pcie_ltssm_status_string(ltssm));
->>>    		return -ETIMEDOUT;
->>>    	}
->>>
->>
 > 
 
