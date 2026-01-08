@@ -1,186 +1,136 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from sg-1-103.ptr.blmpb.com (sg-1-103.ptr.blmpb.com [118.26.132.103])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C621B3ACEEC
-	for <linux-pci@vger.kernel.org>; Thu,  8 Jan 2026 08:25:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D39F364EAB
+	for <linux-pci@vger.kernel.org>; Thu,  8 Jan 2026 08:28:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767860740; cv=none; b=tyAtubIW24Zc6NbQYcv2fRLV14v0x64VcX7SOkvmbNKEng2zKyJwIs2lnuS/biND0ymL/+rNJ07NMwzmkcOHpI/FE5ua+r3p2dUhmQFIT242OcTcv8Su049BPPeKxs9ferimQ7xrfd+/llCFqMs9scQW5BchkKK2riefHPHx+OY=
+	t=1767860932; cv=none; b=AGQhAi8p9Y4RdgKOG4K6cG81e8EXyZhF/NAM+YtSW58mSWoQW5RFsJ0bhVY5cbDOzpABE5LiZUyCi32M4hGj/QOz81eIROyCEh2CXO0NTOBX9vNBV78269qFcBUphvIFA8tUnTrCeVUZcAZNWIErmVTru/ICyUBdYjTQPXVidks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767860740; c=relaxed/simple;
-	bh=KziMa7QNGUm/4xZVgFBikODfU6bmya2+U35lZ61t6IU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EAEUpQyD1Gv+TGoEuSW+JSXtObIjX9HLeWA0FuAQgjnwHMPfXGk7QdkP/U8guN7hgR+7j0o19bnKuMrK1/p5+Z3bNDjt7/ElTxTNwqCI5+RpnQmfe3JluAcGkisGC+GkttrTQxwURBgNLjrHq/uOc7MScOUO2V/WN8Xms3TZ01g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=COHAo9Fa; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1767860932; c=relaxed/simple;
+	bh=mwnJrZWPXIaLG7KaOAcx9poRq9UaSU4JRhalg1pUm6c=;
+	h=In-Reply-To:Content-Type:To:From:Date:Cc:Subject:Message-Id:
+	 Mime-Version:References; b=jPFKcr3I28WeMciMVOxLtHJiu3UOrcQvoUtMf0ddgkIS/6XYmSa3/BWwH1iB0rRi9mwzWkiNXtHKiObARz0L4ktgEh1pCuV+/5oYFmu64MB0mtuP0yT1nLp6nbTdIxRhrcysG8Pnxy2zLOU+HhZy79HKn3+h+oN4MtUDRhMecAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=UA/Hw8uO; arc=none smtp.client-ip=118.26.132.103
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="COHAo9Fa"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2a0ac29fca1so22960765ad.2
-        for <linux-pci@vger.kernel.org>; Thu, 08 Jan 2026 00:25:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1767860724; x=1768465524; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=x8t1+RviBZBkQiz1+F0jLoZoAGkcEhuc2rfeggUJxJA=;
-        b=COHAo9Fadf1BUBEBbBuBuRFX794Igrky/O6OKgvi+ot2aYw8LXRpuPbABRts3k0y3W
-         fTi5ZfvtOsYZHAl1MgA3+wht4f95hpELRmMeu/vpjP5YYngbGvnSbnE9lNd9+xJ5TtQ+
-         2MqgfQ3/YMpHC1csfF9HBF53/D2XpRMONjtBB3wF9SE5/efNfI26+ZahAr35OeFZls3u
-         SrlYcHe3sC6HB8a7ndUahZ5QNWQvxr6IdMo2zF+ACpV/KwNOpb7+P63VZaQ4frVjCpxH
-         6hEej5AgqDi0RDbh2UutrunlgJ958WDyLdzl9gEgC6ZdBicsxc6HSNLEpxYiufpzdZgQ
-         BiOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767860724; x=1768465524;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=x8t1+RviBZBkQiz1+F0jLoZoAGkcEhuc2rfeggUJxJA=;
-        b=WOtVsUQL0rIqRNPrkK8josN8NLmjyUUb+AgIFPbpzfWLOF6Pps4ZjVLLKBFv2A5Otz
-         662ZHxlNibtHjqc6TTjJOLWJ5zAmPmHvSJxVjbc6xy9LFtRYKAaIOdCdMJViN9B1hSf0
-         0qchcA9H2ejVziS0YKxWEteTQpc7zDUsKu+yEBepxNGv1GN9+KGNQxyyEJZzVIH18wpk
-         6weCxu0OpiqpIXf+he0um17LTPAfsoQRIYSeVR2hjE8IrAvr1Sac8RiSy3H/ZMUV0bcN
-         rCm5yHrvty/r7p0FS1aVVR0EWdAZFiuDFYWHlQXhn8/FHOP9hpIMq/7MokwQbWI7sQlN
-         gGwA==
-X-Forwarded-Encrypted: i=1; AJvYcCXbxl0Jq+cEgplCnsrV9bYoyETFTz9wr5vLM7vJk/NqGYL/qwPG8jNb/m2X5UPCnCYe1Ep/LucXf1M=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywae3RWSR4Ak8EPm7NWZmMqig8bWZnwJW8UfAeiFwlKC0TKZX88
-	pL6gKdz3bysIzHMJG5LUGIhKM23RL7Tm1ObjGpe+jBs0Ti+DxeVqGJI=
-X-Gm-Gg: AY/fxX45WgNhFZgqDHVELlZsvW6CSM7isWw5Mzu7kl6aQJ+mQUpewz/Glw9VARFRzoo
-	0Nev/jF3snhl5B48TYQTohtHiX6Ys0wcQ5BedMKJNAjnSaU8WgWqLDH6ydDAFGdZdYKrlpCwGQG
-	GvS7o4/Up/LLIA4W14gsBuaenpRdbSZN13Bg8ZxnvlMPMixGjvs/MOQxQL+knOT3c7rtpoYwz0z
-	f8PglwAzInbVsQ6WldAUeGARuzrqvs4IFepNRgGzFgl9B82Dl4/K8SS9qLK2snyGNZXnmMjInHD
-	qj3/H1voyGkzaTx8qG2AFJNd4BPe3WAn5yCYdJ0hHrv05NBM7h8nEt139CRre26r5f8an1wk1vk
-	s15PBIo20ZELfvZP4gJef2rmVgRaIu7WGBd80ttn80JqWehGm5CYgZurHhoFOGEeCVhRo4EASo2
-	NsIMG9CNiE8khj4b8=
-X-Google-Smtp-Source: AGHT+IFlqu/P/5sh9z5DWE3DsjYa1JH40CTlBeUg8uyttdF4r71Kg5WERp3YCavi1Kt+WDXEmDPaOw==
-X-Received: by 2002:a17:903:3c30:b0:2a0:fe4a:d67c with SMTP id d9443c01a7336-2a3ee437a5dmr49953365ad.10.1767860724001;
-        Thu, 08 Jan 2026 00:25:24 -0800 (PST)
-Received: from at.. ([171.61.166.195])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a3e3c47303sm70625825ad.24.2026.01.08.00.25.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Jan 2026 00:25:23 -0800 (PST)
-From: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
-To: 
-Cc: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	"Oliver O'Halloran" <oohall@gmail.com>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <westeri@kernel.org>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Feng Tang <feng.tang@linux.alibaba.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-usb@vger.kernel.org
-Subject: [PATCH v4] PCI/portdev: Disable AER for Titan Ridge 4C 2018
-Date: Thu,  8 Jan 2026 08:25:03 +0000
-Message-ID: <20260108082509.3028-1-atharvatiwarilinuxdev@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="UA/Hw8uO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1767860913; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=0oFlzEd1qG/Ys1FkKORrFGPUh3+n4nltMfCmkuN0TwI=;
+ b=UA/Hw8uOdUxy7H9LtKJfC2pPFovS81K46NuxVCW7uTl+Zma5ryMbAVbONUThkMoFcn5Txb
+ 0yXuz29rVpmN84+obdivZ2vuFFbfWlYQYAOWN783Zz/DvazIdd0Unmikbq2kJ64P6mDin2
+ kbpVHzYxn8QqqlXXEMjUN37R/+YB4OBWPaCno8Z9ElPAg1wRo8r19FrM+gtlx/6etHQCzq
+ lR9X7CMibGcOkRVxjWCPRFX5wPLGnHpFhxoMqA6WpZeQddcoUBa3KMt1b1KYKMfz3cSG40
+ Zjqkx9PlM+HvohbjkfE0f7g4/7XHntzdAAQcWf3FmvlNZOv2CJ+bTalnLXAcKA==
+In-Reply-To: <DFIKE4Z23Q0O.2ZC7FR40XO8SR@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+X-Mailer: git-send-email 2.17.1
+To: <dakr@kernel.org>
+From: "Jinhui Guo" <guojinhui.liam@bytedance.com>
+Date: Thu,  8 Jan 2026 16:28:15 +0800
+Cc: <alexander.h.duyck@linux.intel.com>, <alexanderduyck@fb.com>, 
+	<bhelgaas@google.com>, <bvanassche@acm.org>, <dan.j.williams@intel.com>, 
+	<gregkh@linuxfoundation.org>, <guojinhui.liam@bytedance.com>, 
+	<helgaas@kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-pci@vger.kernel.org>, <rafael@kernel.org>, <tj@kernel.org>
+Subject: Re: [PATCH 2/3] driver core: Add NUMA-node awareness to the synchronous probe path
+Message-Id: <20260108082815.1876-1-guojinhui.liam@bytedance.com>
+Content-Transfer-Encoding: quoted-printable
+X-Original-From: Jinhui Guo <guojinhui.liam@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+2695f6aaf+b3ce36+vger.kernel.org+guojinhui.liam@bytedance.com>
+References: <DFIKE4Z23Q0O.2ZC7FR40XO8SR@kernel.org>
 
-Disable AER for Intel Titan Ridge 4C 2018
-(used in T2 iMacs, where the warnings appear)
-that generate continuous pcieport warnings. such as:
+On Wed Jan 07, 2026 at 19:22:15 +0100, Danilo Krummrich wrote:
+> On Wed Jan 7, 2026 at 6:55 PM CET, Jinhui Guo wrote:
+> > + * __exec_on_numa_node - Execute a function on a specific NUMA node sy=
+nchronously
+> > + * @node: Target NUMA node ID
+> > + * @func: The wrapper function to execute
+> > + * @arg1: First argument (void *)
+> > + * @arg2: Second argument (void *)
+> > + *
+> > + * Returns the result of the function execution, or -ENODEV if initial=
+ization fails.
+> > + * If the node is invalid or offline, it falls back to local execution=
+.
+> > + */
+> > +static int __exec_on_numa_node(int node, numa_func_t func, void *arg1,=
+ void *arg2)
+> > +{
+> > +	struct numa_work_ctx ctx;
+> > +
+> > +	/* Fallback to local execution if the node is invalid or offline */
+> > +	if (node < 0 || node >=3D MAX_NUMNODES || !node_online(node))
+> > +		return func(arg1, arg2);
+>=20
+> Just a quick drive-by comment (I=E2=80=99ll go through it more thoroughly=
+ later).
+>=20
+> What about the case where we are already on the requested node?
+>=20
+> Also, we should probably set the corresponding CPU affinity for the time =
+we are
+> executing func() to prevent migration.
 
-pcieport 0000:00:1c.4: AER: Correctable error message received from 0000:07:00.0
-pcieport 0000:07:00.0: PCIe Bus Error: severity=Correctable, type=Data Link Layer, (Receiver ID)
-pcieport 0000:07:00.0:   device [8086:15ea] error status/mask=00000080/00002000
-pcieport 0000:07:00.0:    [ 7] BadDLLP
+Hi Danilo,
 
-macOS also disables AER for Thunderbolt devices and controllers in their drivers.
+Thank you for your time and helpful comments.
 
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220651
-Signed-off-by: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+Relying on queue_work_node() for node affinity is safer, even if the thread
+is already on the target CPU.
 
----
-Chnages since v3:
-- Fixed Grammer mistakes
-Changes since v2:
-- Transferred logic to arch/x86/pci/fixup.c to only target x86
-- Added DMI quirk to only target Apple Systems
-Changes since v1:
-- Transferred logic to drivers/pci/quicks.c
----
----
- arch/x86/pci/fixup.c       | 12 ++++++++++++
- drivers/pci/pcie/aer.c     |  3 +++
- drivers/pci/pcie/portdrv.c |  2 +-
- include/linux/pci.h        |  1 +
- 4 files changed, 17 insertions(+), 1 deletion(-)
+Checking the current CPU and then setting affinity ourselves would require
+handling CPU-hotplug and isolated CPUs=E2=80=94corner cases that become com=
+plex
+quickly.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 25076a5acd96..bd72f7cf5db9 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -1081,3 +1081,15 @@ static void quirk_tuxeo_rp_d3(struct pci_dev *pdev)
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1502, quirk_tuxeo_rp_d3);
- #endif /* CONFIG_SUSPEND */
-+
-+#ifdef CONFIG_PCIEAER
-+
-+static void quirk_disable_aer(struct pci_dev *pdev)
-+{
-+	if (dmi_match(DMI_SYS_VENDOR, "Apple"))
-+		pdev->no_aer = 1;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15EA, quirk_disable_aer);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15EB, quirk_disable_aer);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15EC, quirk_disable_aer);
-+#endif /* CONFIG_PCIEAER */
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e0bcaa896803..45604564ce6f 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -389,6 +389,9 @@ void pci_aer_init(struct pci_dev *dev)
- {
- 	int n;
- 
-+	if (dev->no_aer)
-+		return;
-+
- 	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 	if (!dev->aer_cap)
- 		return;
-diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-index 38a41ccf79b9..ab904a224296 100644
---- a/drivers/pci/pcie/portdrv.c
-+++ b/drivers/pci/pcie/portdrv.c
-@@ -240,7 +240,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-              pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
- 	    dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer))
-+	    (pcie_ports_native || host->native_aer) && !dev->no_aer)
- 		services |= PCIE_PORT_SERVICE_AER;
- #endif
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 864775651c6f..f447f86c6bdf 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -440,6 +440,7 @@ struct pci_dev {
- 	unsigned int	multifunction:1;	/* Multi-function device */
- 
- 	unsigned int	is_busmaster:1;		/* Is busmaster */
-+	unsigned int	no_aer:1;		/* May not use AER */
- 	unsigned int	no_msi:1;		/* May not use MSI */
- 	unsigned int	no_64bit_msi:1;		/* May only use 32-bit MSIs */
- 	unsigned int	block_cfg_access:1;	/* Config space access blocked */
--- 
-2.43.0
+The PCI driver tried this years ago and ran into numerous problems; delegat=
+ing
+the decision to queue_work_node() avoids repeating that history.
 
+- Commit d42c69972b85 ("[PATCH] PCI: Run PCI driver initialization on local=
+ node")
+  first added NUMA awareness with set_cpus_allowed_ptr().
+- Commit 1ddd45f8d76f ("PCI: Use cpu_hotplug_disable() instead of get_onlin=
+e_cpus()")
+  handled CPU-hotplug.
+- Commits 69a18b18699b ("PCI: Restrict probe functions to housekeeping CPUs=
+") and
+  9d42ea0d6984 ("pci: Decouple HK_FLAG_WQ and HK_FLAG_DOMAIN cpumask fetch"=
+) dealt
+  with isolated CPUs.
+
+I considered setting CPU affinity, but the performance gain is minimal:
+
+1. Driver probing happens mainly at boot, when load is light, so queuing a =
+worker
+   incurs little delay.
+2. With many devices they are usually spread across nodes, so workers are n=
+ot
+   stalled long within any NUMA node.
+3. Even after pinning, tasks can still be migrated by load balancing within=
+ the
+   NUMA node, so the reduction in context switches versus using queue_work_=
+node()
+   alone is negligible.
+
+Test data [1] shows that queue_work_node() has negligible impact on synchro=
+nous probe time.
+
+[1] https://lore.kernel.org/all/20260107175548.1792-1-guojinhui.liam@byteda=
+nce.com/
+
+If you have any other concerns, please let me know.
+
+Best Regards,
+Jinhui
