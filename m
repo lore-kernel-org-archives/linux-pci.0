@@ -1,100 +1,164 @@
-Received: from sg-1-103.ptr.blmpb.com (sg-1-103.ptr.blmpb.com [118.26.132.103])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDBD7350D75
-	for <linux-pci@vger.kernel.org>; Thu,  8 Jan 2026 08:44:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.103
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BECB3502B0
+	for <linux-pci@vger.kernel.org>; Thu,  8 Jan 2026 08:56:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767861858; cv=none; b=iVF6jWaqWoYMP49JwY6Iv2Yw2nR5uXUlA5+UJt6zyNzfbiI43OCpAUnYFQb2MQhrTDNJH20aH+5QdBUPGpae7hDtHOWSfWM5nCDSwByhw8FO6i/Sa1s2PgCz0+HHE5jS5smDzjYW+zDSRkmsEMeqnRFlDouecI+Mg1d/ahb3Y7g=
+	t=1767862590; cv=none; b=ltoQpEYgfEJBX8P03nuvlk2sDQ6hWeyJDhGivFpQzZ780PVYwwAwNYgTsa9tckSxnDYEMjCr2iAyFMyLASqI8MkFBgxA+Z5vGNQg0z2ufp69UzyfMSwZ3L8j0aR90C0gkMpwoAoJVKAxsjp8JxpfBVoJF1MbsfYxbCMGpjqKTYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767861858; c=relaxed/simple;
-	bh=8XAL+S3qR8EIc++riYq98GXTctvOfapL1gd1t4E9z/0=;
-	h=In-Reply-To:To:Subject:Content-Type:Cc:From:Mime-Version:
-	 References:Date:Message-Id; b=kAuTsfA2bSNrDQhsl71Onn5Gpdi72aTYWZHiKyolHeP09XoT1xAnkjvgSgWqSNHRCxa/1pL3rLlnEd39ZXubRa4GTEzwpvmJxjoRhQs3HtjrlSbAi5eMqRw7jkyg2KMOd69wH/s/+i4LdLNNC993BrqOpu2T6VrSWqZl/Y3ASGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=I7EVdV8+; arc=none smtp.client-ip=118.26.132.103
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	s=arc-20240116; t=1767862590; c=relaxed/simple;
+	bh=8b9Iz5Wz4YPC/2CjXeOQRUuM5WC3H8/Bll6gVLI3r+8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=o3WB/gRHLO22BmcSV6/VXztYUfEnaGzWIMV1+Lo3vWyncyp4jFNMRoQS2lkPbsI4FZ/44zTuJKpnEXFT/X380YJG6l3Gd5g60Br5rc1ueioOsLbnZewEsSMKxcJ72qB+grRJrxsLhAtt+pg0ANZIAfkW4U894KjhwV8AXwt3asM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dJNpHkms; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="I7EVdV8+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1767861839; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=N1FuXjS01s3YMgMgzoZhF0uCB3O/s+D9Jm9fJvlCcWo=;
- b=I7EVdV8+EOk9KvCmJ2bXtrKDnFFxQSlMQ3PDAEY+DGJZDgmBzdwHX0bFiCbNnRx8cpI9r5
- mP/6+1GR4WW6p801cbjP5ynNt6mULVvbNzlk8IelP8eVQhtW0/WXeISYz0OiAIAClZ+ouA
- 4DVMrUmFIeGScfZm6Ygi4e5d4/+Az/ERBFY4+EV3OtSc0HdrhZEwgpxPqrpfvXd/f2GK1r
- /rHYz6iFmAGpTcmeeMMtAS7CWY9Y8QV5Nd3xQSyAiaVIeXhAhQAc4eWNApSBBaJMBuFq4T
- lSrGJDa5L7aJmJ35pXojg2S2tq3O8f/U4BkyzLulRHj3kETpAyfLbTg8Pz0rsw==
-X-Original-From: Jinhui Guo <guojinhui.liam@bytedance.com>
-In-Reply-To: <20260107190534.GA441483@bhelgaas>
-To: <helgaas@kernel.org>
-Subject: Re: [PATCH 01/33] PCI: Prepare to protect against concurrent isolated cpuset change
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Lms-Return-Path: <lba+2695f6e4d+a97eb7+vger.kernel.org+guojinhui.liam@bytedance.com>
-Cc: <akpm@linux-foundation.org>, <axboe@kernel.dk>, <bhelgaas@google.com>, 
-	<catalin.marinas@arm.com>, <cgroups@vger.kernel.org>, 
-	<chenridong@huawei.com>, <dakr@kernel.org>, <davem@davemloft.net>, 
-	<edumazet@google.com>, <frederic@kernel.org>, <gmonaco@redhat.com>, 
-	<gregkh@linuxfoundation.org>, <guojinhui.liam@bytedance.com>, 
-	<hannes@cmpxchg.org>, <horms@kernel.org>, <jiangshanlai@gmail.com>, 
-	<kuba@kernel.org>, <linux-arm-kernel@lists.infradead.org>, 
-	<linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<linux-mm@kvack.org>, <linux-pci@vger.kernel.org>, <longman@redhat.com>, 
-	<marco.crivellari@suse.com>, <mhocko@suse.com>, <mingo@redhat.com>, 
-	<mkoutny@suse.com>, <muchun.song@linux.dev>, <netdev@vger.kernel.org>, 
-	<pabeni@redhat.com>, <pauld@redhat.com>, <peterz@infradead.org>, 
-	<rafael@kernel.org>, <roman.gushchin@linux.dev>, 
-	<shakeel.butt@linux.dev>, <tglx@linutronix.de>, <tj@kernel.org>, 
-	<vbabka@suse.cz>, <will@kernel.org>
-From: "Jinhui Guo" <guojinhui.liam@bytedance.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dJNpHkms"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-47755de027eso17341775e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 08 Jan 2026 00:56:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1767862576; x=1768467376; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jGDJX7M6xo517LZvqyR0ibyOmlrZ1q54/VzLvtp/isA=;
+        b=dJNpHkmsEXL/ia6f59KYliwAAhfjblIiOTCJ/zneKW/uAKzosF4FQYR4LFxqivg6Ou
+         I0aRp3zfhisi8/N0BgKqIxnfsn/POjS4FT44PAw5q7wis/Xnbj2aMwiFjVA8HCzm0ngu
+         RZ8z8LEllJMWrfD/6iV93Ssb8CyCgo/AMmmn3M8k5Kb/2woUv/53LTwPxMk0u0b9zuWB
+         /hvIx7rOm307H9NnZfZV0jBymqDzaFlVEtETIhQk+PMl5yUySHA4kPRHNR2B5HCJUksK
+         QXa9A+Fsy7h1lBFQ9tLgw34ajIYIINh0cDBwpfxRCcCa2qzyAC2kGxjoNyu4wxTph1oM
+         fVhQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767862576; x=1768467376;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=jGDJX7M6xo517LZvqyR0ibyOmlrZ1q54/VzLvtp/isA=;
+        b=Mg25eIXEw/hQs+ubK1bKydyp8VoDCZlC2MDewujFr252pmPhxm4oVbR4T4ztS4Hx1y
+         Bx+Sv5wHfgW5+jVTGnC8ecW1aZ/40b9tqG4lwhl5GuqAKoT8Do+22pZOquFLPvbcpryN
+         zfoTBpLn55hVLqzUmOu26qsUbGbrEGEo8gwYkwvP4tUDk6E97QHV437eQrIMlfU1CIuk
+         TO+RaeuIMys3hz+PBx+0lCb6nGnQKLoxUecuZz+g9wWPnspfmjAtxMjnuKduJLIH1OKZ
+         jd092vR/p9GsKHI/3+Q/17BG0cCJxN2HX5ezH11DADh+ruq7GyPm3zl0nw62IoW+Z/m/
+         nrQg==
+X-Forwarded-Encrypted: i=1; AJvYcCWrA6dVX6iLP9/gtb06qvkdavMgL5hIwZOSP7qYkEeSdDe3TicTJLrjS08BZS+pyJYTP24I0kFvHX8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPGYIbgbFXEiKiHZ19w3ovOHzaNrNyUtDvIPtvc48lmGHXJyPc
+	lv9Qp80HkQtu3xHKowuoDqiE48Xpj70XoCRNdmxSzfXaKxWsJNzCqImm
+X-Gm-Gg: AY/fxX5uR2nhC/gRUHSOnUzKvjl7Wqh4Y5OrfTFE3qN8SB/g0WyaaGSGHkOSjX1Vi9o
+	/5sx1V7LdSy5GGMviN8Do8s81RUkmCQ8ZBT80JhssmnYsfujdLDTA4Zv28uKbq4S7w+d8Sa2LRK
+	OPn90QNr3IbYq2oEqydIyafYIy+RGI7sTOtG/C48OhNsi1vBEfaO4E51ttEMgZA2hVFGyD3TiHv
+	kDu40a/NjMfHl6BcnDXUQHTG4C6Vd75IQLmgN06+DPycz1fRTlBrb5s8dPMkVNtxHIl4gmfU6Kw
+	52U/wbw/PlNNf8n5j5Dv/jZDETcGBTFv3uWfD85dZAW6TZJoSfXRRYmmgGz+C6PpxVmf+9Tv8EB
+	f4OTLvgdu+o3G0SY6JqPbXSVdW/A3LLjtxQVNc5/YQGrP+jMi0AIUqgg97gnXS3ed6x4H+3RRFa
+	LvSfUzoKmNsWsDyqJffw9k2DFUDjQrFditLrMoBTHsqiHJFWdYk/PorZVnXRhU2bc=
+X-Google-Smtp-Source: AGHT+IG7K7RnsQA6msImn+HFw42dCZzuW/6tNNrFqAtAiUVG2Vb71xM9FgjkGHt00Jc0xWoY7O9mnQ==
+X-Received: by 2002:a05:600c:630f:b0:47d:5d27:2a7f with SMTP id 5b1f17b1804b1-47d84b38534mr60337905e9.26.1767862576313;
+        Thu, 08 Jan 2026 00:56:16 -0800 (PST)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47d8702534dsm36882665e9.2.2026.01.08.00.56.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Jan 2026 00:56:16 -0800 (PST)
+Date: Thu, 8 Jan 2026 08:56:11 +0000
+From: David Laight <david.laight.linux@gmail.com>
+To: Ziming Du <duziming2@huawei.com>
+Cc: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <liuyongqiang13@huawei.com>
+Subject: Re: [PATCH v3 3/3] PCI/sysfs: Prohibit unaligned access to I/O port
+ on non-x86
+Message-ID: <20260108085611.0f07816d@pumpkin>
+In-Reply-To: <20260108015944.3520719-4-duziming2@huawei.com>
+References: <20260108015944.3520719-1-duziming2@huawei.com>
+	<20260108015944.3520719-4-duziming2@huawei.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260107190534.GA441483@bhelgaas>
-Date: Thu,  8 Jan 2026 16:43:26 +0800
-Message-Id: <20260108084326.1952-1-guojinhui.liam@bytedance.com>
-X-Mailer: git-send-email 2.17.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Wed Jan 7, 2026 at 13:05:34 -0600, Bjorn Helgaas worte:
-> [+cc Jinhui]
->=20
-> On Thu, Jan 01, 2026 at 11:13:26PM +0100, Frederic Weisbecker wrote:
-> > HK_TYPE_DOMAIN will soon integrate cpuset isolated partitions and
-> > therefore be made modifiable at runtime. Synchronize against the cpumas=
-k
-> > update using RCU.
-> >=20
-> > The RCU locked section includes both the housekeeping CPU target
-> > election for the PCI probe work and the work enqueue.
-> >=20
-> > This way the housekeeping update side will simply need to flush the
-> > pending related works after updating the housekeeping mask in order to
-> > make sure that no PCI work ever executes on an isolated CPU. This part
-> > will be handled in a subsequent patch.
-> >=20
-> > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
->=20
-> Just FYI, Jinhui posted a series that touches this same code and might
-> need some coordination:
->=20
->   https://lore.kernel.org/r/20260107175548.1792-1-guojinhui.liam@bytedanc=
-e.com
->=20
-> IIUC, Jinhui's series adds some more NUMA smarts in the driver core
-> sync probing path and removes corresponding NUMA code from the PCI
-> core probe path.
+On Thu, 8 Jan 2026 09:59:44 +0800
+Ziming Du <duziming2@huawei.com> wrote:
 
-Hi Bjorn,
+> From: Yongqiang Liu <liuyongqiang13@huawei.com>
+> 
+> Unaligned access is harmful for non-x86 archs such as arm64. When we
+> use pwrite or pread to access the I/O port resources with unaligned
+> offset, system will crash as follows:
+> 
+> Unable to handle kernel paging request at virtual address fffffbfffe8010c1
+> Internal error: Oops: 0000000096000061 [#1] SMP
+> Call trace:
+>  _outw include/asm-generic/io.h:594 [inline]
+>  logic_outw+0x54/0x218 lib/logic_pio.c:305
+>  pci_resource_io drivers/pci/pci-sysfs.c:1157 [inline]
+>  pci_write_resource_io drivers/pci/pci-sysfs.c:1191 [inline]
+>  pci_write_resource_io+0x208/0x260 drivers/pci/pci-sysfs.c:1181
+>  sysfs_kf_bin_write+0x188/0x210 fs/sysfs/file.c:158
+>  kernfs_fop_write_iter+0x2e8/0x4b0 fs/kernfs/file.c:338
+>  vfs_write+0x7bc/0xac8 fs/read_write.c:586
+>  ksys_write+0x12c/0x270 fs/read_write.c:639
+>  __arm64_sys_write+0x78/0xb8 fs/read_write.c:648
+> 
+> Powerpc seems affected as well, so prohibit the unaligned access
+> on non-x86 archs.
 
-Thanks for pointing out the series.
+I'm not sure it makes any real sense for x86 either.
+IIRC io space is just like memory space, so a 16bit io access looks the
+same as two 8bit accesses to an 8bit device (some put the 'data fifo' on
+addresses 0 and 1 so the code could use 16bit io accesses to speed things up).
+The same will have applied to misaligned accesses.
+But, in reality, all device registers are aligned.
 
-I=E2=80=99ll resolve the conflicts and send a new patchset once this one is=
- merged.
+I'm not sure EFAULT is the best error code though, EINVAL might be better.
+(EINVAL is returned for other address/size errors.)
+EFAULT is usually returned for errors accessing the user buffer, a least
+one unix system raises SIGSEGV whenever EFAULT is returned.
 
-Best Regards,
-Jinhui
+	David
+
+> 
+> Fixes: 8633328be242 ("PCI: Allow read/write access to sysfs I/O port resources")
+> Signed-off-by: Yongqiang Liu <liuyongqiang13@huawei.com>
+> Signed-off-by: Ziming Du <duziming2@huawei.com>
+> ---
+>  drivers/pci/pci-sysfs.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 7e697b82c5e1..11d8b7ec4263 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -31,6 +31,7 @@
+>  #include <linux/of.h>
+>  #include <linux/aperture.h>
+>  #include <linux/unaligned.h>
+> +#include <linux/align.h>
+>  #include "pci.h"
+>  
+>  #ifndef ARCH_PCI_DEV_GROUPS
+> @@ -1166,12 +1167,20 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+>  			*(u8 *)buf = inb(port);
+>  		return 1;
+>  	case 2:
+> +		#if !defined(CONFIG_X86)
+> +			if (!IS_ALIGNED(port, count))
+> +				return -EFAULT;
+> +		#endif
+>  		if (write)
+>  			outw(*(u16 *)buf, port);
+>  		else
+>  			*(u16 *)buf = inw(port);
+>  		return 2;
+>  	case 4:
+> +		#if !defined(CONFIG_X86)
+> +			if (!IS_ALIGNED(port, count))
+> +				return -EFAULT;
+> +		#endif
+>  		if (write)
+>  			outl(*(u32 *)buf, port);
+>  		else
+
