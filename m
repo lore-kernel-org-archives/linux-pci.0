@@ -1,141 +1,116 @@
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECAC043786E;
-	Thu,  8 Jan 2026 11:50:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E814A5B1B
+	for <linux-pci@vger.kernel.org>; Thu,  8 Jan 2026 12:15:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767873005; cv=none; b=JJeqA2pleSrI9ng1rwNSKsQeHcGQtjh0shtYv/mePmH3ddGnmG4qr5QiJowfqMgt/h9y8H2F1K67BceKT4A1x0AYLy0tN+wwmXFxSuYuZUPHrc8F7Y+9CTg+PAmfbEcfnWMG3tlvk0Eak19pHlMKAUR8hraJZ7Nudu7MHNteh/M=
+	t=1767874527; cv=none; b=txACAzLFKtNA+4uyqQL931ew9EgQle9FQ1PhrMaegrWEIU4SUrxwaWmlWKuCeW6ShdIYgOzf2seWwTMPZqy/j4KihJ0zttQUTcs+EkPXMf3NZ2fqTFOLyMlhJz1poNlqfPVhTkkZw87nW+1fcgVkIg06fupdTSosKZufP3nSByg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767873005; c=relaxed/simple;
-	bh=RZZiXLnQYj7o8vK4ZvmaFTOOYbsFVa18PaFV0h/lnKg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=rmRefyYLgD33GzqDIDdndEv8K4vcWqdFgFftYNR3j9vo3PTEmXXlHaqTyK8c5zZep1U1eT9Uz3Rr3K323USFIziEgth6nEHRA+u66TwUwMVFa2cPdoZffRRSEsDO6dx3jMwLoPsZemwsuINnp8KMy/BiwOl4Thcc3pGnkVfeiFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=6XHm5x1U; arc=none smtp.client-ip=113.46.200.222
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1767874527; c=relaxed/simple;
+	bh=oN3VJ81TR92t72IorUOGx+yYKZ6zgxZk9xFRV4q/Jvs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=rPD8L17Ccf7qUycGM9mIQv8krT5wY+E4008AExuwIQKWUzhsXm7xT3APxpcZdnFeXwHCAwBwHcyGzCUKWH0SIijRuiBlJhbouIiRTNqHbYI40vQrA2fcac+OXCHSqYID/Ul5w/H/qsnBU+5mmXfDh9PXPCABqvJOV6kuGTyuvAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iy5+++A8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="6XHm5x1U"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=IIAYIR1JRujg4RUx1H4Vbdh8dDPd9mYsFWHyjWbLXs0=;
-	b=6XHm5x1UWdHA4OrVzsAF73qiH/VhfJwSX2yZoA4ApxnoASlP8X8I2DXHdeIgQTsym7BV6W9Cv
-	+NiVoKtOqwHAt6z55B5yH9YiVVEJpe/mzFboWgDMSGON7+6HiVLxbWXETVsHxAkRbo+ocwP9Uug
-	4JDiEj/F3ZXY5I2m4+Etkh8=
-Received: from mail.maildlp.com (unknown [172.19.163.163])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4dn35t5zgYzLlVy;
-	Thu,  8 Jan 2026 19:46:42 +0800 (CST)
-Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3AEB340565;
-	Thu,  8 Jan 2026 19:49:58 +0800 (CST)
-Received: from [100.103.109.72] (100.103.109.72) by
- kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 8 Jan 2026 19:49:57 +0800
-Message-ID: <98ecea9b-ca2f-4ef7-9f1a-848faa9c92a3@huawei.com>
-Date: Thu, 8 Jan 2026 19:49:57 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iy5+++A8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B2DFC2BCAF
+	for <linux-pci@vger.kernel.org>; Thu,  8 Jan 2026 12:15:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767874527;
+	bh=oN3VJ81TR92t72IorUOGx+yYKZ6zgxZk9xFRV4q/Jvs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=iy5+++A86Sd4Opbng5Cpq18bXVkT5o3GMVfzsGGk+tSkDWzJntj1FB6j6rsTmvDV7
+	 htk5tpeZs7QIUTy1l81V0iwHwd+ld3bzRnlSLulPMLJgS5+BHEXo2cQsyv09Gs87c1
+	 6U6WuD9E4fHh9FTyCDiwOvTsfJCfMABaKvIEh/hxlznf66fal6a5ELJKAz+QYDHowm
+	 RSYmfVWwSOTYlMrwmhNGfnhOg87uRQ2rCIdg4Z746axEcP2smmEWDVmqa/Kjm2JKzd
+	 cTRPrW2m084iD5VJcJnB63d5nGR5SkqGE+jzjgNUCjYJgR3S/74C1Exn+71ksFN4o/
+	 YNS2z15g0sydA==
+Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-59b6d5bd575so2287337e87.1
+        for <linux-pci@vger.kernel.org>; Thu, 08 Jan 2026 04:15:27 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVyFp/C2v1Pg4hKhMiS+c9takbvzAMnMUSeRcG+v9wD5FW/Xceidyq+FoZasVqgHABEZG2fZ0LPs0w=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOnfW8QR8qHFwQxEEPhu0g8UBeS7zcqcmICLofQyufPsv8TzCI
+	gAUY23qCcGKlALB9PRHE4mY0Ar+TdHQ03HuSX6LlHbnDXl34vSln23dlgVGQRmrnfpsG1v3xONV
+	tinwHp/9e1AIzt/ui87uKMOQbr1YTlQfQmEJlhdpIWQ==
+X-Google-Smtp-Source: AGHT+IF/4koG/MN6sfNsURUrtRSXZrXyRHd0bqi6p5mzExxZBo2GY4yvcJpb3YE7lL2MK6UqIWbaGQBDGlnCB4B6bas=
+X-Received: by 2002:a05:6512:68f:b0:594:35c4:fed1 with SMTP id
+ 2adb3069b0e04-59b6ef03a2dmr1813240e87.13.1767874525775; Thu, 08 Jan 2026
+ 04:15:25 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/3] PCI/sysfs: Prohibit unaligned access to I/O port
- on non-x86
-To: David Laight <david.laight.linux@gmail.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <liuyongqiang13@huawei.com>
-References: <20260108015944.3520719-1-duziming2@huawei.com>
- <20260108015944.3520719-4-duziming2@huawei.com>
- <20260108085611.0f07816d@pumpkin>
-From: duziming <duziming2@huawei.com>
-In-Reply-To: <20260108085611.0f07816d@pumpkin>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemr500012.china.huawei.com (7.202.195.23)
+References: <20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com> <20260107-pci-m2-v5-5-8173d8a72641@oss.qualcomm.com>
+In-Reply-To: <20260107-pci-m2-v5-5-8173d8a72641@oss.qualcomm.com>
+From: Bartosz Golaszewski <brgl@kernel.org>
+Date: Thu, 8 Jan 2026 13:15:12 +0100
+X-Gmail-Original-Message-ID: <CAMRc=Md9TQiSX-gFa5q--JgaGyQ2ky4mOwjSpdxHhvHAj-X5Qw@mail.gmail.com>
+X-Gm-Features: AQt7F2puNlVWjbhiRoX8QQnOlbAAs4UdjLNY6ZTbm-vEXEFSeur6kT9w8kO5QSk
+Message-ID: <CAMRc=Md9TQiSX-gFa5q--JgaGyQ2ky4mOwjSpdxHhvHAj-X5Qw@mail.gmail.com>
+Subject: Re: [PATCH v5 5/5] power: sequencing: Add the Power Sequencing driver
+ for the PCIe M.2 connectors
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	Linus Walleij <linus.walleij@linaro.org>, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-pm@vger.kernel.org, 
+	linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jan 7, 2026 at 3:11=E2=80=AFPM Manivannan Sadhasivam via B4 Relay
+<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> wrote:
+>
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+>
+> This driver is used to control the PCIe M.2 connectors of different
+> Mechanical Keys attached to the host machines and supporting different
+> interfaces like PCIe/SATA, USB/UART etc...
+>
+> Currently, this driver supports only the Mechanical Key M connectors with
+> PCIe interface. The driver also only supports driving the mandatory 3.3v
+> and optional 1.8v power supplies. The optional signals of the Key M
+> connectors are not currently supported.
+>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.=
+com>
 
-在 2026/1/8 16:56, David Laight 写道:
-> On Thu, 8 Jan 2026 09:59:44 +0800
-> Ziming Du <duziming2@huawei.com> wrote:
+This looks good to me, though there are some nits I may fix when applying.
+
+I'll pick it up for v7.0 once the bindings are reviewed.
+
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -0,0 +1,169 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+> + * Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com=
 >
->> From: Yongqiang Liu <liuyongqiang13@huawei.com>
->>
->> Unaligned access is harmful for non-x86 archs such as arm64. When we
->> use pwrite or pread to access the I/O port resources with unaligned
->> offset, system will crash as follows:
->>
->> Unable to handle kernel paging request at virtual address fffffbfffe8010c1
->> Internal error: Oops: 0000000096000061 [#1] SMP
->> Call trace:
->>   _outw include/asm-generic/io.h:594 [inline]
->>   logic_outw+0x54/0x218 lib/logic_pio.c:305
->>   pci_resource_io drivers/pci/pci-sysfs.c:1157 [inline]
->>   pci_write_resource_io drivers/pci/pci-sysfs.c:1191 [inline]
->>   pci_write_resource_io+0x208/0x260 drivers/pci/pci-sysfs.c:1181
->>   sysfs_kf_bin_write+0x188/0x210 fs/sysfs/file.c:158
->>   kernfs_fop_write_iter+0x2e8/0x4b0 fs/kernfs/file.c:338
->>   vfs_write+0x7bc/0xac8 fs/read_write.c:586
->>   ksys_write+0x12c/0x270 fs/read_write.c:639
->>   __arm64_sys_write+0x78/0xb8 fs/read_write.c:648
->>
->> Powerpc seems affected as well, so prohibit the unaligned access
->> on non-x86 archs.
-> I'm not sure it makes any real sense for x86 either.
-> IIRC io space is just like memory space, so a 16bit io access looks the
-> same as two 8bit accesses to an 8bit device (some put the 'data fifo' on
-> addresses 0 and 1 so the code could use 16bit io accesses to speed things up).
-> The same will have applied to misaligned accesses.
-> But, in reality, all device registers are aligned.
->
-> I'm not sure EFAULT is the best error code though, EINVAL might be better.
-> (EINVAL is returned for other address/size errors.)
-> EFAULT is usually returned for errors accessing the user buffer, a least
-> one unix system raises SIGSEGV whenever EFAULT is returned.
->
-> 	David
-Just to confirm: should all architectures prohibit unaligned access to 
-device registers?
->> Fixes: 8633328be242 ("PCI: Allow read/write access to sysfs I/O port resources")
->> Signed-off-by: Yongqiang Liu <liuyongqiang13@huawei.com>
->> Signed-off-by: Ziming Du <duziming2@huawei.com>
->> ---
->>   drivers/pci/pci-sysfs.c | 9 +++++++++
->>   1 file changed, 9 insertions(+)
->>
->> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->> index 7e697b82c5e1..11d8b7ec4263 100644
->> --- a/drivers/pci/pci-sysfs.c
->> +++ b/drivers/pci/pci-sysfs.c
->> @@ -31,6 +31,7 @@
->>   #include <linux/of.h>
->>   #include <linux/aperture.h>
->>   #include <linux/unaligned.h>
->> +#include <linux/align.h>
->>   #include "pci.h"
->>   
->>   #ifndef ARCH_PCI_DEV_GROUPS
->> @@ -1166,12 +1167,20 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
->>   			*(u8 *)buf = inb(port);
->>   		return 1;
->>   	case 2:
->> +		#if !defined(CONFIG_X86)
->> +			if (!IS_ALIGNED(port, count))
->> +				return -EFAULT;
->> +		#endif
->>   		if (write)
->>   			outw(*(u16 *)buf, port);
->>   		else
->>   			*(u16 *)buf = inw(port);
->>   		return 2;
->>   	case 4:
->> +		#if !defined(CONFIG_X86)
->> +			if (!IS_ALIGNED(port, count))
->> +				return -EFAULT;
->> +		#endif
->>   		if (write)
->>   			outl(*(u32 *)buf, port);
->>   		else
+> + */
+> +
+> +#include <linux/device.h>
+> +#include <linux/mod_devicetable.h>
+> +#include <linux/module.h>
+> +#include <linux/of.h>
+> +#include <linux/of_graph.h>
+> +#include <linux/of_platform.h>
+
+It looks like this is a leftover from previous versions and you no
+longer need it?
+
+> +
+> +static void pwrseq_pcie_free_resources(void *data)
+> +{
+> +       struct pwrseq_pcie_m2_ctx *ctx =3D data;
+> +
+> +       regulator_bulk_free(ctx->num_vregs, ctx->regs);
+> +}
+
+I would call it pwrseq_pcie_m2_free_regulators() if you don't mind.
+
+Bart
