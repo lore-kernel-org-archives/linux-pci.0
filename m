@@ -1,178 +1,280 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020079.outbound.protection.outlook.com [52.101.229.79])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 111B02EC562
-	for <linux-pci@vger.kernel.org>; Fri,  9 Jan 2026 07:21:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767943305; cv=none; b=fj3vEAhds8nWU5u/hl4h2lOk45YnkANzvVv/4YslW1wYS2LNnH0xVL2h5F5S6V80Xuu0enybM2chc8ExFodxIhVg5i5tEIIChC/JUsBNrVUPv8zv2naeJzKmRshX/dqKiQLgAkOVfvLb7KgGbFCm8gH1eLx8ZKFWbu1B1ZoB+y0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767943305; c=relaxed/simple;
-	bh=zejg997ZSWXmNp4lbxFPzukiCXSgprPeCxqQHhJcU0U=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Pg/+Y6yxitYlm16Bpp4HIWmzKKA7rYHdEQXh+Ii2DAzyRZKOMqDnx2VXS5Q1sEihD4zhCqBALVAob3Vq2tJYQgA2aoCQpsFqA3tvxH10uycaj/U/xUuqUu65cTmhgQLSc9/UFRgai2xnQUn7LZw7jFAzfXHRd43z6tXzlDHGJdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UfyDZENu; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KGrGTS3L; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F16A82EC557;
+	Fri,  9 Jan 2026 07:29:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.79
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1767943762; cv=fail; b=MpykRfOa09RQmOP2Kz7xazCCCYOm+NlKKPk46PxrjSHCe8MwRXpXHVs7pJliGWzAdisNwYqb6VAyul2EIWv/pZGsteIyhIYxHyhMv/2w5626aMLPpwjye2ns8zS1swQjy8V158+0KnU/BdhfDxcR+Paa5H2RM+8vb7FSfT+llMw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1767943762; c=relaxed/simple;
+	bh=mYXXjCc3VTs4noUvrgVdq3rWwfHDA/quf6l9oaTjkAQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=COdm4Gw0yiR8h2kboA4kAFDtLOLQLGu66zCxUl74r/4nh0dGyrsRhd22nlsnyDgNtQNhEAKNQEWYaHjXrIjxSKwrl4IlTuZIJmCXt6Ixn/kfm5UV3Db9/GbxTZcbNijbQsH0tQHEOb7WZPFy23dDGBAORm+rbuJB8KW02sz/zkg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=MSpFLE8b; arc=fail smtp.client-ip=52.101.229.79
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UfyDZENu";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KGrGTS3L"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6091qk3p3325194
-	for <linux-pci@vger.kernel.org>; Fri, 9 Jan 2026 07:21:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	MWLM+x08j2mwTQLmHLC3ONhPhRCtuCvxS6wZ5AjUj04=; b=UfyDZENurunldCrr
-	Y9/dJ2zroDAmVR/RMM4wHwsVVf7V4nuIDmjOjck7MxdsO5mzrFTnruLU9grlWnzz
-	uNNy3uH87kfxlIBAY4QUJSp2F3wU45tKXtFjNthPtLI7hidI0YAoWQ2sjcNtWTuX
-	mQeBXu9ApZ5A/WntG9zkJB7op6Zc2rK2k/gExs349t8WEzOWaCSG81XCqsjawCtU
-	P4PAJRpJnykjUZW0VCkvhjXUntQZsQrHMpuoPG6a5w7RfupVjtL4NDKGBOY7Jy7W
-	odgHgJrGdoyGiPoIInR67wjarNJUBvF8+rXXjOJd2rESdtNUoIqvFMBjT7HONw7P
-	Pr3NUQ==
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bjrd6gtmx-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2026 07:21:37 +0000 (GMT)
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-7b9321b9312so7280841b3a.1
-        for <linux-pci@vger.kernel.org>; Thu, 08 Jan 2026 23:21:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1767943296; x=1768548096; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=MWLM+x08j2mwTQLmHLC3ONhPhRCtuCvxS6wZ5AjUj04=;
-        b=KGrGTS3L558H8653QzS/ScRlxGM0txsL3PvSA9PJ5i0F51v48WYObpkEZQ/NampKxB
-         +XI7F3trhic0PlGb6sH4Qzs2/l1zacDiXx4GfAuWbAUKDSeKWZV/WOoCGx4vuVFwDbUM
-         qhpJbZIYZvaRsNTVvtl5VXVpVd3mLv4MJJJ1Xti5FX9RHrtkFq9NpzkbuH8YpPJuGIRG
-         kBpWBNVTyeILyvFXVek+3Gmno1/FYh0qA3JOQJCdheLMble4wwgwKcn6eZSdAuzeO5Ny
-         kgJO3g1tBCf1o4rx3rMhXkMK/U+VuQP/PDOB/RITek2dfHhbwCIaxaC7kaOw3T0UHEFX
-         KRiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767943296; x=1768548096;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=MWLM+x08j2mwTQLmHLC3ONhPhRCtuCvxS6wZ5AjUj04=;
-        b=RHD4D8x7v63S2fJQd55VKJ0Qo37eJxJiZYJe2IJjokX7ovhmTRdz3McDBRywcSuKml
-         iyaMkzMxWNU1esr/9om0WoppiddYV2UphWld9sh0Ni6L6S0ce5gWfaLxIoOyqDdIivHL
-         hx4USf0XAB40fIR5EJtSx9AcoYcrEGdS1q1G/yEH63sQoGZB9yk3qPHQlfcg0hijsqnd
-         v/i7KyXJvfBTCG4Mr3AzusAJoT29uYjcRPdtp4GNbnZcY8KSSaz99mh2+Ernfi9jeypA
-         i+qxttjLf6KrLcTY85tCPTKR7/D9415T6GwY6qC68uMBjXimtUIEiIs27whxLlf/3OYs
-         gsFA==
-X-Forwarded-Encrypted: i=1; AJvYcCX+O8IQK7MF6M5EoC42RBZrgY4vCN5G4yl4aKXH7m9FNdO0cObF3167+SR4Fbtni/OL8ZJG/6CY96Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwtWCdnlbfPKvgHTF5lj1Oc7boSuf596bNigb/SO2EERYonnlOi
-	QoRP5QDWwCPtDrtAuXWaKuk8d7vaWFpSsxpYNXarmbiOaWZtTjPNtc95Z9Hh05DZRMs7WaIslRW
-	/36UuEJwu84Lw7V292qYUDYxY8YyoFcYusI6xac/qDuIGjMAB5QZNLZh2SzixSl0=
-X-Gm-Gg: AY/fxX78/0AxlnPWxIZLITSmazJdM/5AleFq4Z+q2CK18+XjKY2JLZCZ7rkukXvd2Ku
-	2uq7sP0lIu97ZCo2lX4/hQ7HPyJGC/u2jk0kRDTpzi6bBAEvE2Ld6fmTmAmixhIxp/a2eZIYLP3
-	/hmEHQI+nN+z9uRF7NKzqh4ecg/n/YguXGVr8ref3LdD4rUuKOa2Yh/ofg05d6CS2z5AqYlUAeA
-	Ka74SetooAtA2P1IPB4nlbuumerkhNH7aQM1u4hjQ6Y/vyx1qSSSztc23aiQKqD4l+fvB7r0KID
-	IQKUj7ZkTqfDfcpdC08nFnb5qvRWKyU9iCWdoffR8pG4JT+LMR/Qgu1iDjyqGqW5sftGhn4hYo8
-	7Wg1p283fn1y15ypEMWbhxDoAC3WhVqg8UST+L9L6Dntq
-X-Received: by 2002:a05:6a00:408c:b0:7e8:43f5:bd21 with SMTP id d2e1a72fcca58-81b7f9d4d7dmr8834825b3a.54.1767943295901;
-        Thu, 08 Jan 2026 23:21:35 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IF5oswvUvt2eSKOV/gIHmGq+k+j9ho0bKbXCQiNsUMKePo3mhru5IonqVUsfFuQd52XyRbzRQ==
-X-Received: by 2002:a05:6a00:408c:b0:7e8:43f5:bd21 with SMTP id d2e1a72fcca58-81b7f9d4d7dmr8834799b3a.54.1767943295422;
-        Thu, 08 Jan 2026 23:21:35 -0800 (PST)
-Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-819bb4c85bfsm9510369b3a.30.2026.01.08.23.21.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Jan 2026 23:21:35 -0800 (PST)
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Date: Fri, 09 Jan 2026 12:51:10 +0530
-Subject: [PATCH 5/5] PCI: qcom: enable Link retain logic for Hamoa
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="MSpFLE8b"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=zJWu0JDFgtRwniLm0OmAkbS11y0d1pgxmEtSQ8yYPd+43J4OvNHIcRMjRdpZ1Q+i+6rounpZv0jZXBm672nO/0mtSktpA3W9dHP1/01OdgPdH+8dQtVQ+NodBZcaHgOdZki+rWrdK21EU0UAQyzdqRHjy8PJpRife6vHHE81kcAJ2mdOn+qLBfTpZC3zX2PM2aNPtsWxOJ6/+8zAo90QZDgQKbcPE8NMKk6zeGlKvwENeQNtOxO1zd4O7IWvtEABCGToMuZLPUbHi78OrMbS4NfQ95C4WFKJjY+RrEFbTUFpub2PikDWr7jITQCVWWttSw6Rjbe4ao6viqeI5l56Iw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=veU9tN9zvF09zNzl0P1xcmIqmWhRyWZWlSWTCLXzXPA=;
+ b=lJPmX4TkrjCC90eFD21f1ZysXf+giemNBXrfW4bvlO/b3N/loAoS/+e1BRTACNn8MFLwrs7iDXqy+q0c8N0XiePClymzhEBZMz78E0vIGqgoepZRVhbcHW+Ydc7c6gcw1rN3O8V//XmjJ1z5uO4Y04zwpfCyCu2hWq3/xEggwrFbnbn3l0PV1GpoEFOvH2YRxdfptlFr60TUCXIKis+9eCUorTxZRb0mjCbPqJxm8jMbpJpAMf7uE92QwMhpQ5S1KkTATuYHi5Mp1SMB6KhmRSD5oHMA1HC3AfTiaKKIdTRvVQxZj53dhXR16noyT3/D9+likWQoLwS/OTZOxpmKwA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=veU9tN9zvF09zNzl0P1xcmIqmWhRyWZWlSWTCLXzXPA=;
+ b=MSpFLE8b5Qm18oi1ZMW8MraSipXiejbbWXnPZFBQcIpzBTy1R9ZPS0qGSVvZFMbLJ0FZjoDVmoLKP4mWxusbssatzNtwBJ6dY0x8XmHH3hPOBQFTPwKS4odyYRy676cZgbAeK/Ba2VH3qGEwTlKnAubYmjXyRRqxALwMU7mFQUc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY7P286MB6304.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:327::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9499.3; Fri, 9 Jan
+ 2026 07:29:16 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9499.003; Fri, 9 Jan 2026
+ 07:29:16 +0000
+Date: Fri, 9 Jan 2026 16:29:14 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, vigneshr@ti.com, 
+	s-vadapalli@ti.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de, 
+	shawnguo@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de, 
+	festevam@gmail.com, minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com, 
+	jesper.nilsson@axis.com, heiko@sntech.de, srikanth.thokala@intel.com, 
+	marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com, geert+renesas@glider.be, 
+	magnus.damm@gmail.com, christian.bruel@foss.st.com, mcoquelin.stm32@gmail.com, 
+	alexandre.torgue@foss.st.com, thierry.reding@gmail.com, jonathanh@nvidia.com, 
+	hayashi.kunihiko@socionext.com, mhiramat@kernel.org, kishon@kernel.org, jirislaby@kernel.org, 
+	rongqianfeng@vivo.com, 18255117159@163.com, shawn.lin@rock-chips.com, 
+	nicolas.frattaroli@collabora.com, linux.amoon@gmail.com, vidyas@nvidia.com, Frank.Li@nxp.com, 
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
+	linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v5 3/3] PCI: dwc: ep: Support BAR subrange inbound
+ mapping via Address Match Mode iATU
+Message-ID: <nqpwi6ewen4kf7jqgon4ljerceqjeaule25dzb6ytas3wslqhp@ddkr3jum6eac>
+References: <20260108172403.2629671-1-den@valinux.co.jp>
+ <20260108172403.2629671-4-den@valinux.co.jp>
+ <aWAZv3ZwdUmo4_wc@ryzen>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aWAZv3ZwdUmo4_wc@ryzen>
+X-ClientProxiedBy: TY4PR01CA0111.jpnprd01.prod.outlook.com
+ (2603:1096:405:378::12) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260109-link_retain-v1-5-7e6782230f4b@oss.qualcomm.com>
-References: <20260109-link_retain-v1-0-7e6782230f4b@oss.qualcomm.com>
-In-Reply-To: <20260109-link_retain-v1-0-7e6782230f4b@oss.qualcomm.com>
-To: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1767943270; l=1470;
- i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
- bh=zejg997ZSWXmNp4lbxFPzukiCXSgprPeCxqQHhJcU0U=;
- b=ecroe9T2ZoReGjqBPMd9o0jNW9qHm6mLLPK+GU5EYr6zawWa3YYes2XYS1rF24v+W69OfgEkE
- LE2BGNylqYfD079R1I5yn0tCkuLwCH2KxX2PO1LpFGylbeXS0VFLHT4
-X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
- pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA5MDA1MCBTYWx0ZWRfX6D3y80jwecE4
- NMngjj4fdoGUAYF+3eXdeKEzgMIQdk/T1vg2+hGyw/errTMzdKHENEfHbZc6Qmg3WYe9Gd715yG
- flHWOmP5BL294p6DI1D5XjymAsbgNJ35j9YulJwGSYlJb7fnNTXfKzlqhHJffxs8Cs8yNx4GC5f
- Lbeb8wNRWEos9bWrBzpbQnUQLb6RtEafiP32sFhQ1/If0T5pOUZqKa3xTLX+OyQeYQW5KAuQxag
- 7+cB6PzQZKeAx67WGVxdG31Qf7fQZm+5JPNXNZ35lcUuj8G6UNkVWo8puHM8wWW4EupnxomiaWv
- U14hNKu3cJG64crhj8LpAB1Nrm+ve0HB4xnCi0BkbGuqORRxMbTLaUiOeGaan95QHDDeZe0gL0S
- gWTdCJ03i5yCGfGc7anUUU01J8BlatW7idQEMnTSOXhxcH81KbCRJ+G+JLXr5S5LbCRRe7VGdW3
- OsCImc3ggDbYVXdA69Q==
-X-Proofpoint-GUID: Rw2bw8YuwLFc7fpKCAs6zOVLBa1O-Gnv
-X-Proofpoint-ORIG-GUID: Rw2bw8YuwLFc7fpKCAs6zOVLBa1O-Gnv
-X-Authority-Analysis: v=2.4 cv=Xtf3+FF9 c=1 sm=1 tr=0 ts=6960ac81 cx=c_pps
- a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=Py5lcOcq67Lbq8UMOfUA:9
- a=QEXdDO2ut3YA:10 a=OpyuDcXvxspvyRM73sMx:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-09_02,2026-01-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 priorityscore=1501 lowpriorityscore=0 impostorscore=0
- malwarescore=0 adultscore=0 clxscore=1015 suspectscore=0 spamscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2512120000
- definitions=main-2601090050
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY7P286MB6304:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4cf8b417-ad3d-4b48-75e3-08de4f50cb6e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|376014|7416014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?7rrogRkJRKyKCKDVsYAQGGuLq8eFtMKxxc3/z/t4amg3fsWv9WOY1nJGVbUf?=
+ =?us-ascii?Q?+GeVqoPGM5Vif/AbtG29642poQmyQznw3L9Ye02mcR1fiiG44pxQMyQ0ZPPh?=
+ =?us-ascii?Q?XQNi37eJm+NTGi6CWAWwZ+pImES58iqT5wtZ0VGkljsr+zcHc+MkK0zFEsAI?=
+ =?us-ascii?Q?QEIXteMgCcqYmuUGo6czo1nufCPq9axNx960tky822PeINDQFuqw3uM/mwlV?=
+ =?us-ascii?Q?JKbMARbwdcB2nDskuXhWAkPHlxsYpJws2RY3roHOuH+2Zk7DSm2f3kofBbwn?=
+ =?us-ascii?Q?dyMLx3hCi3KJUj44DuW40+6Y3PKBHzo0H8AWyiwcBq1RZfNtlB0EyNRPgmzM?=
+ =?us-ascii?Q?8Hu5MY/FJZJi/trI6STZEkmqk008k7BkadaN3uKXw9pBb4hy6qbQS9cmiYd3?=
+ =?us-ascii?Q?jt+yGSAqZyk2rKvgVH9SmpiloOn7yKMf++cI6KVGUademMSmkKnh5WzAo4yS?=
+ =?us-ascii?Q?hYdI+zGS8UJTlA75fW29HbkAL5L8581uXRxqqRiQF9MqQUVD/CJrCtZ20OJA?=
+ =?us-ascii?Q?t29HYokGAcJPvvzeSfkaulPyGgfEfxQxrwCs2mDGtR4CGzKNLbpdn2uNUYht?=
+ =?us-ascii?Q?aSMlAvCE0IMEh2vaKJD5hGv+WCZ1d1TYVi2qWKEQ4EaFqAA2HuAMsn5LPk5K?=
+ =?us-ascii?Q?XVieH3YvYyIsZF3LNQPleniMkOwWku1c2gGTPpePgIerOeEQtRLI5SLQ9Dmw?=
+ =?us-ascii?Q?b3RhIrvOF9NJKPd0yzplEfL07Hrxjthe2SMDzZtMyDK5rtyj6p2lq38B1Est?=
+ =?us-ascii?Q?5MhH3N5CytQm7Tlo0OMlj5MNSg1CeTtrH3ogpokEV3EPC3fhynfG/iGcnTa9?=
+ =?us-ascii?Q?1+h+w+NE/BFADgmlwPKm+3GTVBCEz3m90wHV2YWpAymBTtjEBi1uXbtWNW9R?=
+ =?us-ascii?Q?bs9f3PNNbN8+3XzEo3+JIzx0TdALA1xZa75yqMzhVxCTLunnOzskc3gmqZVv?=
+ =?us-ascii?Q?rOZT5YYxg0fUai2fGcojRSe7St8OYkNyeglbOTw8/+67vWTJL5fBNxNlbb4a?=
+ =?us-ascii?Q?3a4QXLf3cKa78E2xVyLliOtrVe1yYXZCB1QKx3Xo9HXbavwIor0vqd6nSsYd?=
+ =?us-ascii?Q?pZ3iJYur6fWd7Q3WQu2scf1wVrQjxjsaI+sisnr8I9brJ0DypzMDuboxAN05?=
+ =?us-ascii?Q?9/MCDaMgDJcyZJ7F4b6xKSSvUTrjuXjQZgQ2/u/PbXKGPqqe8tw/jedqfpB9?=
+ =?us-ascii?Q?o5dPbek8SngthU8OzUU+BwUDpU+qnc1jD8cQc7SDG3ewFLzKXgcTYWX8+cdg?=
+ =?us-ascii?Q?A7nCHU/jrJhg7OCg467IRa2/uN0VUKF2m93XE5vcVRfPElRLOQxAAmtHI0EL?=
+ =?us-ascii?Q?huOkpJ6IMZqrHWHl6z4ZVF/rnBJSOshaoPwxqj2FXuYS5WP4IcWPHMQt/76b?=
+ =?us-ascii?Q?ZXvKBNYWFAo4qUFTVooWBImXxJri/83hR2kIBZSVkiziG/4wFSkUXcETaAiz?=
+ =?us-ascii?Q?3Jvn0KGuIIhSJONHevGIbn/cdl763n+q?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?GF21yx6dHxf6HHDBRIl6KA9e7SQ72oMXM7pf+yTY+hrC/cW36qcete2yZ9aE?=
+ =?us-ascii?Q?eJoojKQ1mBpxKpPnAyjkqZNGLYSOqASCQ1ghIRbCpOQvRBveOifZrkWtq6Zg?=
+ =?us-ascii?Q?b+jTm+fFvK1TDFqvyUSyEzzr6k54WWIKPRA9PbWdxnh8dOkWVvd54uhMzvaK?=
+ =?us-ascii?Q?YOmqbnV+mQNAC7yHAevQ/sMtm5T9D08aUE3spWPx+L1NXZXWi/LNrni1QGNY?=
+ =?us-ascii?Q?olUtAKvSc0dWEzBc8M8ZQDoglkcVi/Ilb7r03y2p3rNQXjFnxtoTFC/FYwYv?=
+ =?us-ascii?Q?QZvzUIGo+jEMzyF4s5Bv6yJybVGiQFETwx1HocKjjayOvDveuSeFqoTSrwfq?=
+ =?us-ascii?Q?qP38Kaacg3Q9rNkTmRogVWjFGMqnEboCbwb88gtp8/VW0f0yd3ePtSYbBDfV?=
+ =?us-ascii?Q?/JMmJFgpC6iSxiz7+XtOxY8eTl6OGmTTx3ARG0cSKiN1bqlwgFCIBZMI/ItK?=
+ =?us-ascii?Q?F5epYZKdgmBuUSaiXq7Yi98f7nS6sX5BiBQIE+VjRXkmh8pN5aDLCIsJHf87?=
+ =?us-ascii?Q?XnCSsV4dRyiHYtXiNTGtukqRRPUaKwHBOWYaopVfFiQp50yFobrfYIclxaA0?=
+ =?us-ascii?Q?w6/VUMZUkJU6Yxqw9e89Dyjvz/dMnpSrC1zLyHeQFbEq0faVeLNOY8emDiX9?=
+ =?us-ascii?Q?5LCSnvJRKkE6ATd2e3dwl4aP2vlnWCW6xJz4eDNz64o4LEaFrUcufMj0x9v/?=
+ =?us-ascii?Q?qPTifm+8H44vofdBSMBHmAkWirPAYxxhOrqn2zd97R/F0kj/qv2MeQUuryR6?=
+ =?us-ascii?Q?vuFvT76mqk8O9K3Zh5cSBjNxtEV/w7J5Bw1Nrfd7SX2NOgaf6D2KS+7K7083?=
+ =?us-ascii?Q?YPVBZJ0O3xSDYdVY7oHO7i5TeiE5RivKEdHnxanUsy/ET1GvjZ5ad8UwSjrs?=
+ =?us-ascii?Q?4GLRCPP9+ftSmO+rauqYBy1MrQgRQH37czGnWApbGzRS/m0cZAVO9vs/mNsC?=
+ =?us-ascii?Q?3RPF42DkQdZ5kQt+lAGGs3LUjbaE/AZCaimWWziG46VFc/ALVw4lMQfL6WUJ?=
+ =?us-ascii?Q?qt1xKtM59/Eig5JfbpIWHZ6dIhIfcGFp6JowOOYmAZeHLMMlOsdfAKdMUUoT?=
+ =?us-ascii?Q?7dKlQKEUKuIBXgkUUjQ/xn9oUtxc6F4lxEFCKL8XdBv/71suco/Our9JfwW3?=
+ =?us-ascii?Q?NWoo8u3Xl3N4X7/qVMecq1Iox6HQpD4Uab2fgrYyAuGKt9Y++4mQDk93+Xh/?=
+ =?us-ascii?Q?2ZRUTqiu2b/f1owS6D2DwZ0EWzUcba9olPJdJGnUW0LlS3x68ONp2K7bt7kd?=
+ =?us-ascii?Q?9rbx/gecNMD9peZ4zzJshNxteL/qS+aKwtUrHrbNeHzwD+P+YBNQpiuM78t9?=
+ =?us-ascii?Q?/41E+GlEKpcZXlGTwCmjrEoGMZc2ftGH4XSdTew82Zl+0vBxFFx8DC/fi2kL?=
+ =?us-ascii?Q?HfAO21Wm7705a4Uz+f3/NTDp479p15kQ5yH97Y0J0ZyVc44jUcia+lZCRIY3?=
+ =?us-ascii?Q?fjJYJYAnLXaCgPxCZ/mNxz4gpyKQuz8gwNs5v8Ej3L9fWQPUgcQDL4r72qd5?=
+ =?us-ascii?Q?jgwLcdJLTdQqiPrfVbFGfzuwLILQNzHhup66hZg3Pj1TjxJnDlhrRrBAvvaG?=
+ =?us-ascii?Q?NnUgPQ8/PtT7lMLWNv12YkNFUmc9LEXkXSd32Zf8Cnjr/KMki9q4gu5ff9g5?=
+ =?us-ascii?Q?rTT0uXK7YBFFZV5oAR8PvoS+IvaWyLUqHHAi99X9emeiT5uZyinnm580DJiS?=
+ =?us-ascii?Q?wIm5sIdFPc4xMCdbTtYSzucgAZb1/4VEg0rCT4OJEzB3LvGqnX9HGWsBmIfV?=
+ =?us-ascii?Q?3yhyLLlvD8gPLYjPclQZYBOrFczQSsJzuc4qpmHq/fNC5k2diyhT?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4cf8b417-ad3d-4b48-75e3-08de4f50cb6e
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jan 2026 07:29:16.3830
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2AYi5gJQMuOfXriMSAot87G4ZilBhrugThcH60/g3mTMW9DxFdYj5duN0m/03k7Qsqd39WFR/AlJ752KyPSs7Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY7P286MB6304
 
-The Hamoa platform supports keeping the PCIe link active across
-bootloader and kernel handoff. To take advantage of this, introduce a
-specific configuration (cfg_x1e80100) with link_retain = true and
-update the device match table to use it.
+On Thu, Jan 08, 2026 at 09:55:27PM +0100, Niklas Cassel wrote:
+> Hello Koichiro,
+> 
+> On Fri, Jan 09, 2026 at 02:24:03AM +0900, Koichiro Den wrote:
+> 
+> (snip)
+> 
+> > +/* Address Match Mode inbound iATU mapping */
+> > +static int dw_pcie_ep_ib_atu_addr(struct dw_pcie_ep *ep, u8 func_no, int type,
+> > +				  const struct pci_epf_bar *epf_bar)
+> > +{
+> > +	const struct pci_epf_bar_submap *submap = epf_bar->submap;
+> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> > +	enum pci_barno bar = epf_bar->barno;
+> > +	struct device *dev = pci->dev;
+> > +	u64 pci_addr, parent_bus_addr;
+> > +	struct dw_pcie_ib_map *new;
+> > +	u64 size, off, base;
+> > +	unsigned long flags;
+> > +	int free_win, ret;
+> > +	unsigned int i;
+> > +
+> > +	if (!epf_bar->num_submap || !submap || !epf_bar->size)
+> > +		return -EINVAL;
+> > +
+> > +	ret = dw_pcie_ep_validate_submap(ep, submap, epf_bar->num_submap,
+> > +					 epf_bar->size);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	base = dw_pcie_ep_read_bar_assigned(ep, func_no, bar, epf_bar->flags);
+> > +	if (!base) {
+> > +		dev_err(dev,
+> > +			"BAR%u not assigned, cannot set up sub-range mappings\n",
+> > +			bar);
+> > +		return -EINVAL;
+> > +	}
+> 
+> Sorry for giving additional review comments.
 
-Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Thanks again for the detailed feedback.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index bdd5bdb462c5f6814c8311be96411173456b6b14..975671a0dd4757074600d5a0966e94220bb18d8c 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1531,6 +1531,12 @@ static const struct qcom_pcie_cfg cfg_sc8280xp = {
- 	.no_l0s = true,
- };
- 
-+static const struct qcom_pcie_cfg cfg_x1e80100 = {
-+	.ops = &ops_1_21_0,
-+	.no_l0s = true,
-+	.link_retain = true,
-+};
-+
- static const struct qcom_pcie_cfg cfg_fw_managed = {
- 	.firmware_managed = true,
- };
-@@ -2168,7 +2174,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sm8550", .data = &cfg_1_9_0 },
--	{ .compatible = "qcom,pcie-x1e80100", .data = &cfg_sc8280xp },
-+	{ .compatible = "qcom,pcie-x1e80100", .data = &cfg_x1e80100 },
- 	{ }
- };
- 
+> 
+> But there is one thing that I might not be so obvious for someone just
+> reading this source. How is this API supposed to be used in practice?
+> 
+> Most DWC-based controllers are not hotplug capable.
+> 
+> That means that we must boot the EP, create the EPF symlink in configfs,
+> and start link training by writing to configfs, before starting the host.
+> 
+> dw_pcie_ep_ib_atu_addr() reads the PCI address that the host has assigned
+> to the BAR, and returns an error if the host has not already assigned a
+> PCI addres to the BAR.
+> 
+> Does that mean that the usage of this API will be something like:
+> 
+> 1) set_bar() ## using BAR match mode, since BAR match mode can write
+>    the BAR mask to define a BAR size, so that the host can assign a
+>    PCI address to the BAR.
 
--- 
-2.34.1
+BAR sizing is done by dw_pcie_ep_set_bar_{programmable,resizable}() before
+iATU programming regardless of match mode. I keep BAR match mode here just
+because Address match mode requires a valid base address. That's why I
+added the `if (!base)` guard.
 
+> 
+> 2) start() ## start link
+> 
+> 3) link up
+> 
+> 4) wait for some special command, perhaps NTB_EPF_COMMAND
+> CMD_CONFIGURE_DOORBELL or NTB_EPF_COMMAND CMD_CONFIGURE_MW
+> 
+> 5) set_bar() ## using Address match mode. Because address match mode
+>    requires that the host has assigned a PCI address to the BAR, we
+>    can only change the mapping for a BAR after the host has assigned
+>    PCI addresses for all bars.
+> 
+
+The overall usage flow matches what I'm assuming.
+
+> 
+> 
+> Perhaps you should add some text to:
+> Documentation/PCI/endpoint/pci-endpoint.rst
+> 
+> Because right now the documentation for pci_epc_set_bar() says:
+> 
+>    The PCI endpoint function driver should use pci_epc_set_bar() to configure
+>    the Base Address Register in order for the host to assign PCI addr space.
+>    Register space of the function driver is usually configured
+>    using this API.
+> 
+> So it is obviously meant to be called *before* the host assigns a PCI
+> address for the BAR. Now with submap ranges, it appears that it has to
+> be called *after* the host assigned a PCI address for the BAR.
+
+I agree. As I understand it, the current text seems not to reflect mainline
+since commit 4284c88fff0e ("PCI: designware-ep: Allow pci_epc_set_bar()
+update inbound map address"), but anyway I should add explicit
+documentation for this subrange mapping use case.
+
+> 
+> So I can only assume that you will call set_bar() twice.
+> Once with BAR match mode, and then a second time with address map mode.
+> 
+> It might be obvious to you, but I think it makes sense to also have some
+> kind of documentation for this feature.
+
+Ok, I'll update Documentation/PCI/endpoint/pci-endpoint.rst accordingly.
+
+Kind regards,
+Koichiro
+
+> 
+> 
+> Kind regards,
+> Niklas
