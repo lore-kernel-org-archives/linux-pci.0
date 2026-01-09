@@ -1,141 +1,127 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C8713590B5
-	for <linux-pci@vger.kernel.org>; Fri,  9 Jan 2026 09:23:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 493C550097C;
+	Fri,  9 Jan 2026 09:30:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767950608; cv=none; b=aRxL/Y2K4vvJJk4yho7MLiceBOPAFR2rrn+Qcgsfxtl/fN8Ov/vpjCHCoztpcxSy57TPGi3MvmPE62HgKU501cSTweqTunoadvkF3inf67cDizVeAhb5vhB9VuWx0coFS2IsfOoWUVMttjq17M1LZhEadH/5d/PEJjjj2nahnLo=
+	t=1767951062; cv=none; b=uveYHUKFmXuJQvgP3HYk2Y4DXNN9t+5LMPSudkAwEL2kxRVl7Dvnn8AdavS9ppGM1ufe/moOGqQsgbpAp9EZKUmv0Hkg4RrXrF4dUV3iF2wlqIGqq7FRyGFbiw4/cWPmiIQvm05VV7JMDzWmM85az//d6UvP8bC3KCxDDiy1UgI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767950608; c=relaxed/simple;
-	bh=quyxddBCJbdfnj8ezjVDIXfGNJkfQjaJBRecYk19f+k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rQ1FZrlhz8G3DuCNR+Kv1iAxYXJoCx4+D20uUt4J115/b4ox8eRP4l3BZp68flXAcAPoexnyRZ+CWFwe1IO0v6IMau51rP0H4Hen0Zyy1Lq2ZpAoQHiDqjUPbQmJInp9G0qSCWRAWr0PonRZrybZNFDjBU1qLIfsd/4esRJGPKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=IkZmnFp0; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=aACiz/7c; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1767951062; c=relaxed/simple;
+	bh=QRJGco2adxD91Cq8EQFQHc7e4w+y5oAYBWbk5nhv3E8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mvTnztlefnGDb+F7fIsxZuh3yoYimGV8E+wrjZ3t/mDuBrwrIFurpsL6av64zzUhduuRpzioc98exyEvNDqHJWZeejUzJmAdo65sXnenoyNTb34f9hcKzcKwQLOW+jJarRpMIwd7Tu3H56T2A89q1pi/SOqsLwz6Jj1jRgmUBh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=2UA7PTH8; arc=none smtp.client-ip=113.46.200.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="IkZmnFp0";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="aACiz/7c"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6091qTIp3324889
-	for <linux-pci@vger.kernel.org>; Fri, 9 Jan 2026 09:23:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=gbUKEx6h2/06Jgs052NbO21m
-	OGxgS4o/wlcmmWs0HKU=; b=IkZmnFp0ssSEw2M68/WhsH1X67QSMzV/C5LhtGce
-	qKCNDI65tk0PMOFBkqxJWqBWqgfEBi2RQWbc4paLZz+fV3alGtMUM0PJcMOJUu9w
-	q1Q/z0wmdH45Wyw5A2eVXDTkUaj3neguS08kB2okCa0jn9cYqC7g62A9XsiyIpr8
-	pTH9eYnf0AVV3/nWDrGpb94Aqe2Dbf3mNpFvNdNIui5eJtRGtOZ5+Wcw7uFi+FsE
-	eoDYqNCIgmSnjOt+SRW34+KslU7aIOuCNEILlNBk7sk9/uGivfRsa/YysrDni87a
-	DfHdhmnRQOKq9/MIa4ExaCIaFjR0zGRkMB4So9NfuuEAoQ==
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bjrd6h7gd-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2026 09:23:07 +0000 (GMT)
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-8b19a112b75so983580685a.1
-        for <linux-pci@vger.kernel.org>; Fri, 09 Jan 2026 01:23:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1767950586; x=1768555386; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gbUKEx6h2/06Jgs052NbO21mOGxgS4o/wlcmmWs0HKU=;
-        b=aACiz/7cnFp+MDLFFX4jFooYyEvVK+apFyKE72gOK1dIt/0ozDIFrT8+KpqrEcYQ7n
-         GpyopJQaCSs93c+KQsD7xFjW7X6vC3JwchOPSUbS4iqpUURwW2fqNv3X6kp+S7EncFCU
-         0PFAJsdwURM6NANhoTeNu6DrrWWQbD9Ylm8aKTFTPFsLa9b8fruoJby86soiFtHM5jZy
-         18C93q/M+S27FFAEF1YDwpytGjCAzqKEN+5XYZXfZQvarPjf/aMWJ4ZkOYjucIGiskMj
-         qJmdryU1S5S6MVwDMgBG5vCSk0qWmeCws+EINA7FxmjWuKLidsfn8ZioNAW2f7bfYUmT
-         lyTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767950586; x=1768555386;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gbUKEx6h2/06Jgs052NbO21mOGxgS4o/wlcmmWs0HKU=;
-        b=JpPhK5V3obAjQetfmO8V5N1haNsZ+Yao9P+/XoqJnKS9wavGnhjiKffBBPVBA0P1xq
-         IU6TTZooflvFcU0Si+MRSpYfF814ckdmP08o4/dg95pj1AYmz2XaIePPfPsw1dPF98Zq
-         J06fDlkrJXdp4v7vAqXoRcJR9NtcnXQmdFxhzQSKOImH7IGXGGHaydyYRPQg6nZZXXDu
-         KZPkFoa6I/YSYNN0c7dn/jJN3bqtK3iaGn8bWdoiJ2Wxfqw/DpCbyDBdoTdDrAn+/0CQ
-         znA79bUwY+B7Y3vKNsd1gUS86okXv+9YL607y5s/IKLJwRMzmSpe9LaCpnCkD8J0rVYc
-         bWXw==
-X-Forwarded-Encrypted: i=1; AJvYcCU4X2U3R3JzB4lymQawLOc5YTktnl3jG7t948ngKOKc/weAKihuflN5yIgKIaVlEhyYWyCtmKzYoB4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxXsW9SK7kJD8Js45CHrXjCUXTQ2ArvFtK3Yr3A5Jb6qTrAyGXL
-	TLpTiEXZpfnm0Y4QNKQQpxUZs3ijvqgbeZ2EGMNBBVA8sh8bKBEHXDSy9JJ+D6nr7xhvqspBG1Q
-	smsVsdIy4izqH+fVCiqO/CnsJtdIFsXg2ksAwF4jMDV8lUl1UFOeJqoZ0WEHVZXY=
-X-Gm-Gg: AY/fxX6pnm6KjTaXoT7oS3SEKAQwV3Omsc6G3t1gVNoDsUm+MMJpCDsuuwUME9c9H9I
-	k62TjIZWzEvorjEQTNdvZkHFme3DNKIwv74OSDdPvsCAhLwAToGJJTg2YSTloAtqVmjzqexyxi+
-	I/wR3ZRJtSlX8hZv6ljkVCvAKXt6o9BErJgNDmcaey+aepyJVeFe0pqzxH+XLt/kjkm5QQhQ/U4
-	FRJoWd1G7XLSAlokSc0MBh5ttc5wN5GEhP3yc6zVPYdYzRHlnoifXEoMVJUPZfsoFnAgcPyKhzN
-	SByjntkxhJQU+mgFY2pLDrLKbIlVSHumY6DoRqJA0gZgrMcZIt80yU1zRQ8quFL+3Frvaxs98FE
-	reZ704bppS9bqDlPtAdLw
-X-Received: by 2002:a05:620a:410e:b0:8c0:d16b:b0a7 with SMTP id af79cd13be357-8c38938dc0amr1108936885a.2.1767950586024;
-        Fri, 09 Jan 2026 01:23:06 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHDhJ4s/J+LZvq5xGGHQag3lnHCUa0+1Z4v9U1tVSQgONvR2YU99W2TOhbQzi8LO6OYwTHnkw==
-X-Received: by 2002:a05:620a:410e:b0:8c0:d16b:b0a7 with SMTP id af79cd13be357-8c38938dc0amr1108934785a.2.1767950585336;
-        Fri, 09 Jan 2026 01:23:05 -0800 (PST)
-Received: from oss.qualcomm.com ([86.121.7.10])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b842a2340a2sm1072317666b.5.2026.01.09.01.23.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jan 2026 01:23:04 -0800 (PST)
-Date: Fri, 9 Jan 2026 11:23:03 +0200
-From: Abel Vesa <abel.vesa@oss.qualcomm.com>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] phy: qcom: qmp-pcie: Skip PHY reset if already up
-Message-ID: <3h7xe2k7iis4mmowvcq5mghneyyk64epcs2hg7fjrpowl6omfu@ltf6vi6mtx36>
-References: <20260109-link_retain-v1-0-7e6782230f4b@oss.qualcomm.com>
- <20260109-link_retain-v1-1-7e6782230f4b@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="2UA7PTH8"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=vZgTGmgg3ccrRgjkR3XVE7heGz25nMVz+pI3YuuZX38=;
+	b=2UA7PTH8iKIYodY6r2buR5UQ2ZwxW+6qj5kKrY8VmMRyc5Ykt3UF5GsvQ0FEvfsHbk6n8kuDL
+	TmpoOGW+3eU+Z2diG+QZImCRyvV3PAChYZ+lbSonEZk5yz+2WE1089ZwEJDUBlce3dftqizvGwg
+	vx5l+WklM69xRRQul/Mz1pc=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dnbys0DfjzKm5x;
+	Fri,  9 Jan 2026 17:27:33 +0800 (CST)
+Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
+	by mail.maildlp.com (Postfix) with ESMTPS id 4B5684055B;
+	Fri,  9 Jan 2026 17:30:50 +0800 (CST)
+Received: from localhost.localdomain (10.50.85.180) by
+ kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 9 Jan 2026 17:30:49 +0800
+From: Ziming Du <duziming2@huawei.com>
+To: <bhelgaas@google.com>, <okaya@kernel.org>, <keith.busch@intel.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<liuyongqiang13@huawei.com>, <duziming2@huawei.com>
+Subject: [PATCH] PCI: Fix AB-BA deadlock between aer_isr() and device_shutdown()
+Date: Fri, 9 Jan 2026 17:56:03 +0800
+Message-ID: <20260109095603.1088620-1-duziming2@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260109-link_retain-v1-1-7e6782230f4b@oss.qualcomm.com>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA5MDA2NSBTYWx0ZWRfX3QTrL14CHiE0
- 8VkULxxUJXCM/Fs2EzXIKqkFs4waf9uzA/yInlZCFQcueWoMICg+NZKYeN8Jm0Z8ddFlhGy3eKy
- nY9vLXdlFC3+N64YCX8bPcnCS5KI1ph+Y0nNcsZblbOLTX1qawk14ezH4QmIzi6hXnbNrIlE/aF
- doZ/DVFH6KiFpQ9etNPh+k5hWBlglhcZaRxXz8PVOz82Pk9kE0cTw2/d97yXgn6lilNDYYLxiyb
- gesd2WdPRWY+oc6GuPLfwpvdgs4WrbVXd2lWmu9sPCyWRELZrCASANmz3ibtFoii9MJ5a+WStqG
- 03NGPvnWD7SjIHTvolWMaLM7Jr9wAjsAOZsDZY2aRRlPf2RfI3xYELumCdYbpR3l7fVuKZkvB1P
- d1TBDfc6S+zzsVef6TFVIPtAAnrGTnG0oXjP4mPaIz0PTAFUiUvwNiPfp38DzAO0IS3WNvBWW6e
- HGwBK3wW4P4CTLYY9KQ==
-X-Proofpoint-GUID: lcspUuYfjewydZ8-vieEqvMBu-s9l2YO
-X-Proofpoint-ORIG-GUID: lcspUuYfjewydZ8-vieEqvMBu-s9l2YO
-X-Authority-Analysis: v=2.4 cv=Xtf3+FF9 c=1 sm=1 tr=0 ts=6960c8fb cx=c_pps
- a=50t2pK5VMbmlHzFWWp8p/g==:117 a=hZ5Vz02otkLiOpJ15TJmsQ==:17
- a=kj9zAlcOel0A:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=Q_-NVal78LaQRGvTYVYA:9
- a=CjuIK1q_8ugA:10 a=IoWCM6iH3mJn3m4BftBB:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-09_02,2026-01-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 priorityscore=1501 lowpriorityscore=0 impostorscore=0
- malwarescore=0 adultscore=0 clxscore=1011 suspectscore=0 spamscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2512120000
- definitions=main-2601090065
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemr500012.china.huawei.com (7.202.195.23)
 
-On 26-01-09 12:51:06, Krishna Chaitanya Chundru wrote:
-> If the bootloader has already powered up the PCIe PHY, doing a full
-> reset and waiting for it to come up again slows down boot time.
-> 
-> Add a check for PHY status and skip the reset steps when the PHY is
-> already active. In this case, only enable the required resources during
-> power-on. This works alongside the existing logic that skips the init
-> sequence.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+During system shutdown, a deadlock may occur between AER recovery process
+and device shutdown as follows:
 
-Reviewed-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+The device_shutdown path holds the device_lock throughout the entire
+process and waits for the irq handlers to complete when release nodes:
+
+  device_shutdown
+    device_lock                      # A hold device_lock
+    pci_device_shutdown
+      pcie_port_device_remove
+        remove_iter
+          device_unregister
+            device_del
+              bus_remove_device
+                device_release_driver
+                  devres_release_all
+                    release_nodes    # B wait for irq handlers
+
+The aer_isr path will acquire device_lock in pci_bus_reset():
+
+  aer_isr                            # B execute irq process
+    aer_isr_one_error
+      aer_process_err_devices
+        handle_error_source
+          pcie_do_recovery
+          aer_root_reset
+            pci_bus_error_reset
+              pci_bus_reset          # A acquire device_lock
+
+The circular dependency causes system hang. Fix it by using
+pci_bus_trylock() instead of pci_bus_lock() in pci_bus_reset(). When the
+lock is unavailable, return -EAGAIN, as in similar cases.
+
+Fixes: c4eed62a2143 ("PCI/ERR: Use slot reset if available")
+Signed-off-by: Ziming Du <duziming2@huawei.com>
+---
+ drivers/pci/pci.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 13dbb405dc31..7471bfa6f32e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5515,15 +5515,22 @@ static int pci_bus_reset(struct pci_bus *bus, bool probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	pci_bus_lock(bus);
++	/*
++	 * Replace blocking lock with trylock to prevent deadlock during bus reset.
++	 * Same as above except return -EAGAIN if the bus cannot be locked.
++	 */
++	if (pci_bus_trylock(bus)) {
+ 
+-	might_sleep();
++		might_sleep();
+ 
+-	ret = pci_bridge_secondary_bus_reset(bus->self);
++		ret = pci_bridge_secondary_bus_reset(bus->self);
+ 
+-	pci_bus_unlock(bus);
++		pci_bus_unlock(bus);
+ 
+-	return ret;
++		return ret;
++	}
++
++	return -EAGAIN;
+ }
+ 
+ /**
+-- 
+2.43.0
+
