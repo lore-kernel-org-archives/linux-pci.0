@@ -1,111 +1,78 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9709D2ED15F;
-	Fri,  9 Jan 2026 09:40:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55D7B42A80;
+	Fri,  9 Jan 2026 10:08:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767951613; cv=none; b=o/REVyoLD6E8qW7S4eygQ1OJDGlMYhixsaRGErlNfWnrioA7aMxrhJ1aONM6rt/YwXbrFWY/dOCqBPiAbgGGae4VfppdudY/YSYbB9XbjNgGPx7ePK5obnlbMcToPnKPKmBdPKEy4+HF3w/3GQVvyM83xluZH9LNdMg+IZvk8YE=
+	t=1767953327; cv=none; b=YqMA8MQPxaqn95PaiGuOBKhzW9FRiODKFHE8jNz1R67+Rll2O43czPuQwQiF0fs1nS21J02TmHHPF2iFKfbnzCwE0KzN1Kv54xz2k8kRQeMIICszufYWNnYa3A7D102Z1/sjaPhcVHoMjfP+G8jFFVwrvNLGAc8xrU82+hXNEew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767951613; c=relaxed/simple;
-	bh=T2zOYN70bbCbQXXbh/evuuNBHsFRh5jSZVQh4gWJWkE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=JwYMhtVcvHjSawSA6w5GI/31yF7mbho7zWMO2BEsXnWOvyz3pQcySSxsspajhjV2xY+y+UW90dkicSM2BCQb2CdcMhS9CmgSPW3d3xREyV8j+mI3xFr2YrKXKJFuNBWanzlbwpecQzfZCJgU8BjMPLBkalWr5xfOPn9UR4+CT08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ck4Vcf/w; arc=none smtp.client-ip=113.46.200.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1767953327; c=relaxed/simple;
+	bh=wSpJdpCgwYI70QDx2H55GLcEmOq8lwxjbpazYvK7aFc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SZSiVEv3io0e8NF3Y+ODNWXxpEnqCO0n8f93qNlm/NhPoLUloS0rg5nPqF8yPNx01lO/sqQcrhUPgggUuDg9TruQAC4us+jTGMula0Biw8WslRvyI/obwrhM2jkBUY1SEXvbCGCo1ULCWRGMKeV+ID9x54ZapeqVuyFPGtofvOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SwdQ+0rC; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ck4Vcf/w"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=8JsXyhMNbwnp+YKrNedE1boMnhXYzusZORR+vsFIB+s=;
-	b=ck4Vcf/wBGjodRgEDMjv2eTZbM4M+czB/KI30+lZcOl+JgyUgVv7ySutKavAf8d/viirJeX1M
-	w8BMcV2QUXL6Z30OPXTwKDB9brewyT+tRtPz9pUmcXDVF1yZmnzHMO7fwhXK57RZWIZHQPOAtsG
-	2BQki4zw8ShNmo4C0MFM3CM=
-Received: from mail.maildlp.com (unknown [172.19.163.127])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4dnc9b6L6mz1cyQq;
-	Fri,  9 Jan 2026 17:36:51 +0800 (CST)
-Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
-	by mail.maildlp.com (Postfix) with ESMTPS id F2BB7402AB;
-	Fri,  9 Jan 2026 17:40:07 +0800 (CST)
-Received: from [100.103.109.72] (100.103.109.72) by
- kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 9 Jan 2026 17:40:07 +0800
-Message-ID: <422df374-2afd-48c0-be73-834ce95fb55c@huawei.com>
-Date: Fri, 9 Jan 2026 17:40:06 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SwdQ+0rC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1767953327; x=1799489327;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=wSpJdpCgwYI70QDx2H55GLcEmOq8lwxjbpazYvK7aFc=;
+  b=SwdQ+0rCrwBL7yMEZURtBmGgzQ1z1hPVp40dHcTdzByoNQ+QCgAInnIV
+   TdFqMh8ntaaE35eERyEG2dXH7sZZhQsD/m+FJUxJ1O4Tzpcd/FsF5GRab
+   OCLq+8VMs4Y4FX3t4bUBQ5utJF0RH87Gh6Tyt22CS6/EE5ERaW9j3WvA5
+   HX+HBidDtHLLajBxG5EuukSSkoVeP+4K66dwxXzHzPX4hIc8DjF7AKiYI
+   Mbi5qZZseXOx5HH4rmRmiytzknuouo0O3/DjmFnEhUjz1AveKwvZVbYdn
+   XiYMDjzjxgoYsGP//y5zRmEz+Tp5yxem+dmjE3CI8qBsN5C22jBbxzEv4
+   g==;
+X-CSE-ConnectionGUID: H3okMfmrSN+vq6PlxjV25Q==
+X-CSE-MsgGUID: RWCfEPeLTtGQZTAsTliV4g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11665"; a="69073303"
+X-IronPort-AV: E=Sophos;i="6.21,212,1763452800"; 
+   d="scan'208";a="69073303"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2026 02:08:46 -0800
+X-CSE-ConnectionGUID: fau+vArzSbCFPShL6lag4g==
+X-CSE-MsgGUID: jCJZ+NxqRlua/HZuD/aEDA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,212,1763452800"; 
+   d="scan'208";a="234624792"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa001.fm.intel.com with ESMTP; 09 Jan 2026 02:08:42 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id BD9F094; Fri, 09 Jan 2026 11:08:40 +0100 (CET)
+Date: Fri, 9 Jan 2026 11:08:40 +0100
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Atharva Tiwari <atharvatiwarilinuxdev@gmail.com>
+Cc: YehezkelShB@gmail.com, andreas.noever@gmail.com, bhelgaas@google.com,
+	bp@alien8.de, dave.hansen@linux.intel.com,
+	feng.tang@linux.alibaba.com, hpa@zytor.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	lukas@wunner.de, mahesh@linux.ibm.com, mingo@redhat.com,
+	oohall@gmail.com, sathyanarayanan.kuppuswamy@linux.intel.com,
+	tglx@linutronix.de, westeri@kernel.org, x86@kernel.org
+Subject: Re: [PATCH v4] PCI/portdev: Disable AER for Titan Ridge 4C 2018
+Message-ID: <20260109100840.GV2275908@black.igk.intel.com>
+References: <20260109065746.GT2275908@black.igk.intel.com>
+ <20260109081419.2746-1-atharvatiwarilinuxdev@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/3] PCI/sysfs: Prohibit unaligned access to I/O port
- on non-x86
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-CC: David Laight <david.laight.linux@gmail.com>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-	<liuyongqiang13@huawei.com>
-References: <20260108015944.3520719-1-duziming2@huawei.com>
- <20260108015944.3520719-4-duziming2@huawei.com>
- <20260108085611.0f07816d@pumpkin>
- <98ecea9b-ca2f-4ef7-9f1a-848faa9c92a3@huawei.com>
- <0d57b385-410f-3296-ca8b-8b1370a886b1@linux.intel.com>
-From: duziming <duziming2@huawei.com>
-In-Reply-To: <0d57b385-410f-3296-ca8b-8b1370a886b1@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
- kwepemr500012.china.huawei.com (7.202.195.23)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260109081419.2746-1-atharvatiwarilinuxdev@gmail.com>
 
+On Fri, Jan 09, 2026 at 08:14:19AM +0000, Atharva Tiwari wrote:
+> unfourtunatly the GRUB problem isint fixed, and the solution i see, is to
+> wipe the drive which i cant do currently, because of my data
 
-在 2026/1/9 15:21, Ilpo Järvinen 写道:
-> On Thu, 8 Jan 2026, duziming wrote:
->
->> 在 2026/1/8 16:56, David Laight 写道:
->>> On Thu, 8 Jan 2026 09:59:44 +0800
->>> Ziming Du <duziming2@huawei.com> wrote:
->>>
->>>> From: Yongqiang Liu <liuyongqiang13@huawei.com>
->>>>
->>>> Unaligned access is harmful for non-x86 archs such as arm64. When we
->>>> use pwrite or pread to access the I/O port resources with unaligned
->>>> offset, system will crash as follows:
->>>>
->>>> Unable to handle kernel paging request at virtual address fffffbfffe8010c1
->>>> Internal error: Oops: 0000000096000061 [#1] SMP
->>>> Call trace:
->>>>    _outw include/asm-generic/io.h:594 [inline]
->>>>    logic_outw+0x54/0x218 lib/logic_pio.c:305
->>>>    pci_resource_io drivers/pci/pci-sysfs.c:1157 [inline]
->>>>    pci_write_resource_io drivers/pci/pci-sysfs.c:1191 [inline]
->>>>    pci_write_resource_io+0x208/0x260 drivers/pci/pci-sysfs.c:1181
->>>>    sysfs_kf_bin_write+0x188/0x210 fs/sysfs/file.c:158
->>>>    kernfs_fop_write_iter+0x2e8/0x4b0 fs/kernfs/file.c:338
->>>>    vfs_write+0x7bc/0xac8 fs/read_write.c:586
->>>>    ksys_write+0x12c/0x270 fs/read_write.c:639
->>>>    __arm64_sys_write+0x78/0xb8 fs/read_write.c:648
->>>>
->>>> Powerpc seems affected as well, so prohibit the unaligned access
->>>> on non-x86 archs.
->>> I'm not sure it makes any real sense for x86 either.
->>> IIRC io space is just like memory space, so a 16bit io access looks the
->>> same as two 8bit accesses to an 8bit device (some put the 'data fifo' on
->>> addresses 0 and 1 so the code could use 16bit io accesses to speed things
->>> up).
->>> The same will have applied to misaligned accesses.
->>> But, in reality, all device registers are aligned.
->>>
->>> I'm not sure EFAULT is the best error code though, EINVAL might be better.
->>> (EINVAL is returned for other address/size errors.)
->>> EFAULT is usually returned for errors accessing the user buffer, a least
->>> one unix system raises SIGSEGV whenever EFAULT is returned.
->>>
->> Just to confirm: should all architectures prohibit unaligned access to device
->> registers?
-> In my opinion, yes, also x86 should prohibit it (like I already
-> expressed but you ignored that comment until now).
-Oops,  I didn’t quite understand your opinion earlier :(
->
+Okay but how do you then test the patch you keep sending several version if
+you cannot boot to a new kernel?
