@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92B413491D3;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F328347BBE;
 	Sat, 10 Jan 2026 06:57:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768028226; cv=none; b=eyt9WZoBFiAHjXQDn6jbg1bKIq5UgQsurIGgVeVa3/1G59e9q7GL2ZDgiYHWyA/1XmQYNg6IjGkgsQ8TszkcuSAiId/XL2WsP/MmZ/jqDCamW0l242wyW/nx46RQjHpIriJqCb4RfC+3TajVFn0yI0ciiIFN64OPJA6i5qe+274=
+	t=1768028226; cv=none; b=Afvyu5jxc/tCTCj46Beq+K8FAoKdJbKL9nUOMJs9fM0aG3X8Q8S/HLc6FlarKWC8ZLTMhJBlLHcmza/YFxVZS7DBbOh/EgirH9uSqoKJgRLa+HHYiIGFZfZsVjHmkEl5v/5BE74IZh9XTnRcHCVd/4+J5QoI9iBddwam6K9YN0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768028226; c=relaxed/simple;
-	bh=uwW8257EhmouZpvkVKGgdUbE780fBLOlGG44AztWPJU=;
+	bh=GSgBsfmXVqxUIAIe+iFNAZRTMls5onoQDPmqVp33rg4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AVNqXCCWp9ssuGRmx67FaECp1DjcTQYTQ2SGkrcplqtPEgurQSZkUxzUJLSs4JIv5LyxziJASycjHNbFyZn1+OsrAd28mFlWgUw7EsIkIEzdv6lPMjx4u2njpM1AcYRbnXBPON5Js+bRbxQCrrXjZJcD4Fwo6G3tHqM4VPql2ZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kJx9UTMp; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=lS2S2DM5I9swhql3NSm8vJX1Z3ME6OwriuBPkoERJKTCxuwmoE3zXEcDZ46UmBtv8n+OIEj/SEfHfBG4j4/0dvnayLDm7AvU4PcrtPNPnFfBSK+goaZ+ldJZIhYolFSCVZ5SIybLdSHp0sZKqPsmPE0uVLX+EPQCWZTwiWYCK2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vQRW4IOH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kJx9UTMp"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2F7E1C4DDE3;
-	Sat, 10 Jan 2026 06:57:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vQRW4IOH"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C122BC4AF17;
+	Sat, 10 Jan 2026 06:57:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768028226;
-	bh=uwW8257EhmouZpvkVKGgdUbE780fBLOlGG44AztWPJU=;
+	s=k20201202; t=1768028225;
+	bh=GSgBsfmXVqxUIAIe+iFNAZRTMls5onoQDPmqVp33rg4=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=kJx9UTMpx7TrzIfOrJ4DfnNUKzqW1idj0HevDma/2mXKgfygJTk6fSe01IfYyRgDR
-	 RvZeI/1oMYW6AEPzZegWMrIAerRx6TJ8eY6n3DA18RXbirjiISsDv/rF80kQpQNED2
-	 84z5SbrnFWF4yu411MGAQpCe/dWyIVzi4pBsU99IIAbh2BvIIlPaTpg2/+1iXLX6km
-	 QrERoFCiT4v1LNQV6s3NKCRJs2xG3dkjAZNTda4NlA/kTGfj1x0WLQgXd/5Uz98GPn
-	 zlkhOjAIAbEGPUvZzGAkeq7c6LjX0XhwBPR8N81kANy4zF/ksudsIo3T4mEF2A7Agy
-	 iM56azZqmToqg==
+	b=vQRW4IOHlxJGj3ZOQSrJGNJ6KPkjQPyYWq2UnPSRfPD6lw/4ZS4O/z6eaov7Hlszg
+	 uCR5igMXDsBjf42heQGPQ2Co7MlZFcNIQQ/4WjczxqLCx9taNgvhq8YAH5ZBaWGzUZ
+	 ixMf78z+aKZ5DNpHArt6krPUygtRo2PKXFgtD3UQ8QIgrXdYB4woFXgb5bC0I7WMzM
+	 mlUNIgsuDuwic75Ptmh9QZWGWg0ncj4p/2AnOhB+OgkAAFGMmxjE4z7hjwVC7S7NPh
+	 0Jr5wHuEhhud2aU3lXdRxRMOE8MndMzfSXr5QayzbN76h0QQaXj5X2E9yuxv5ZNAUQ
+	 M1YVjmQxot6LA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2651AD277D6;
-	Sat, 10 Jan 2026 06:57:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AED55D277D7;
+	Sat, 10 Jan 2026 06:57:05 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Sat, 10 Jan 2026 12:26:29 +0530
-Subject: [PATCH v3 11/14] dt-bindings: connector: m2: Add M.2 1620 LGA
- soldered down connector
+Date: Sat, 10 Jan 2026 12:26:23 +0530
+Subject: [PATCH v3 05/14] software node: Add software_node_device_uevent()
+ API
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260110-pci-m2-e-v3-11-4faee7d0d5ae@oss.qualcomm.com>
+Message-Id: <20260110-pci-m2-e-v3-5-4faee7d0d5ae@oss.qualcomm.com>
 References: <20260110-pci-m2-e-v3-0-4faee7d0d5ae@oss.qualcomm.com>
 In-Reply-To: <20260110-pci-m2-e-v3-0-4faee7d0d5ae@oss.qualcomm.com>
 To: Rob Herring <robh@kernel.org>, 
@@ -71,16 +71,16 @@ Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-acpi@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1302;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1813;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=RWekJdEKdic9EZu4rQGv0fBKORumjbEDCuN8SBTLMc4=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpYfg+TRCoMWdJ2WYv0cU3v57JOA3eOkhRvc9NM
- QkwIwf2HymJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaWH4PgAKCRBVnxHm/pHO
- 9bSxCACn3aeHjikwTH34ED8GMiwZYePyUD6dpLxapg7iDk895cVBZ1IZOGZcvaOvrNc+F1Koz76
- PsxffieAiZaRoIL3PpDMyaQ49vZ+W/mecd7Q9MmnEPWcU7PF45xDGYGwcU9173vd6GbHICVxJ7a
- SHWSjXXiP8m3Jmu53tOznAuVAz2qfsbzn0TS3YlhlGRHhi96AmM2hux0doiV1dd0iF40NAEYwXd
- +n+dmeVZ2v8xXKF0GOHEzBlhU64ECcqKroJegmOdLcwwUdESsfpJS1GPP2IBN8jngvWuLIBasEn
- LSrsJ1XW1MpT922zo4+84wcVpbNDhq+/x0oz6xMM3qWWq2Y/
+ bh=sTMShVrVQCSRXm+EW6kXtFuYXE2DwqSFk2YRZJf4cuQ=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpYfg9PRR1H3uAQByiIMRu/XB1zyrz9OoHeUCNf
+ 4L6FFChmYqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaWH4PQAKCRBVnxHm/pHO
+ 9XbCCACQfptQOyQpTiKUhc8vhSqZyCZasHVZYWlCas1Fbl7JQeB7Y9xLVrM9p7ww2gN0f5ke6rU
+ HMNHCbyhG8i1RrkaTOXyPIPwEOa+WC7sDA12rKWniG7VO5Rlxd314tcUt8FCuDlYaM6QEwUn10d
+ 9isvFw3GqlHEV4Bk9UkZ+YT/ZYhMfKKeteJFF9fk5nMs3qWmjnQA0uUtD4WL6fE99ewKOYda+ll
+ 7VbubsEx58qxgQgqv36e9bV1EQ6YqVRPxJdSQQt/V0dWC8VDZdrrCXNRRujzNtbMJqW9Sr9mYke
+ xclfAySJhKwjECtCGvkF+aNwM/MXE+C3hzNX7BXrm/xtLTgq
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -90,37 +90,52 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
-LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
-spec, it looks very similar to the M.2 Key M connector. So add the
-"pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
-to reuse the Key M binding.
+Add software_node_device_uevent() API to return the uevent variable for
+swnode using the DT compatible property. The uevent will have the DT prefix
+of "of:N*T*C" to match the DT's module device table.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- .../devicetree/bindings/connector/pcie-m2-e-connector.yaml       | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/base/swnode.c    | 13 +++++++++++++
+ include/linux/property.h |  1 +
+ 2 files changed, 14 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
-index b65b39ddfd19..9757fe92907b 100644
---- a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
-+++ b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
-@@ -17,7 +17,14 @@ description:
+diff --git a/drivers/base/swnode.c b/drivers/base/swnode.c
+index 4a3b367dea02..c33e09300e5f 100644
+--- a/drivers/base/swnode.c
++++ b/drivers/base/swnode.c
+@@ -388,6 +388,19 @@ bool software_node_match_device(struct device *dev, const struct device_driver *
+ }
+ EXPORT_SYMBOL_GPL(software_node_match_device);
  
- properties:
-   compatible:
--    const: pcie-m2-e-connector
-+    oneOf:
-+      - items:
-+          - enum:
-+              - pcie-m2-1620-lga-connector
-+          - const: pcie-m2-e-connector
-+      - items:
-+          - enum:
-+              - pcie-m2-e-connector
++int software_node_device_uevent(const struct device *dev, struct kobj_uevent_env *env)
++{
++	const char *compatible;
++	int ret;
++
++	ret = device_property_read_string(dev, "compatible", &compatible);
++	if (ret)
++		return ret;
++
++	return add_uevent_var(env, "MODALIAS=of:N*T*C%s", compatible);
++}
++EXPORT_SYMBOL_GPL(software_node_device_uevent);
++
+ /* -------------------------------------------------------------------------- */
+ /* fwnode operations */
  
-   vpcie3v3-supply:
-     description: A phandle to the regulator for 3.3v supply.
+diff --git a/include/linux/property.h b/include/linux/property.h
+index 7fe75ab732f6..14f85fd66bfc 100644
+--- a/include/linux/property.h
++++ b/include/linux/property.h
+@@ -599,6 +599,7 @@ int software_node_register(const struct software_node *node);
+ void software_node_unregister(const struct software_node *node);
+ 
+ bool software_node_match_device(struct device *dev, const struct device_driver *drv);
++int software_node_device_uevent(const struct device *dev, struct kobj_uevent_env *env);
+ 
+ struct fwnode_handle *
+ fwnode_create_software_node(const struct property_entry *properties,
 
 -- 
 2.48.1
