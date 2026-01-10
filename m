@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CDF9348865;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92B413491D3;
 	Sat, 10 Jan 2026 06:57:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768028226; cv=none; b=C7V9fM/FiEj2WrmzmbYRqTDfHtSF4OsL548N3yA/PClGU6ak8OQ8rS1/GFDOnkAoilIqq/h5xyQZiOOAdqiMIZKYIvJcBm6cXljjeESZShum58HVOPjgICJkmcgQu2fU1cP7XGPaTBlLL1yddJ0i2NVfnj/9NsSbyDQr/wl63kw=
+	t=1768028226; cv=none; b=eyt9WZoBFiAHjXQDn6jbg1bKIq5UgQsurIGgVeVa3/1G59e9q7GL2ZDgiYHWyA/1XmQYNg6IjGkgsQ8TszkcuSAiId/XL2WsP/MmZ/jqDCamW0l242wyW/nx46RQjHpIriJqCb4RfC+3TajVFn0yI0ciiIFN64OPJA6i5qe+274=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768028226; c=relaxed/simple;
-	bh=/73Is6LSiZFdQQ1Wgzmm55BHcfPO7Tzrd+XL5DP+qdM=;
+	bh=uwW8257EhmouZpvkVKGgdUbE780fBLOlGG44AztWPJU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=p7AZcYlFa7Fi0+CTgYsSO3RxfQG/s10FiOxK5gnUZOtb7TVEZMsWLQdXcTqyV9+QuPL2FiucTllRM3KyMB4Y7Qxrea1PusiZ8u31Q80hbkkkBj/zM5bglq7SxU5ofBkHb/Kh/tGojdIGCg8PAlf4MIiuWF7M2EwTm5LyZjbSkrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PevRFR0h; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=AVNqXCCWp9ssuGRmx67FaECp1DjcTQYTQ2SGkrcplqtPEgurQSZkUxzUJLSs4JIv5LyxziJASycjHNbFyZn1+OsrAd28mFlWgUw7EsIkIEzdv6lPMjx4u2njpM1AcYRbnXBPON5Js+bRbxQCrrXjZJcD4Fwo6G3tHqM4VPql2ZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kJx9UTMp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PevRFR0h"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 0B58FC4AF10;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kJx9UTMp"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2F7E1C4DDE3;
 	Sat, 10 Jan 2026 06:57:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1768028226;
-	bh=/73Is6LSiZFdQQ1Wgzmm55BHcfPO7Tzrd+XL5DP+qdM=;
+	bh=uwW8257EhmouZpvkVKGgdUbE780fBLOlGG44AztWPJU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=PevRFR0huWOxNmIZ2WZdsNenQkI/6u4adPi1dbDkCeDRJRZkUIQ6o1eGNUhFrp5fk
-	 ecaYxjxXrMwXJASUlmwcRltPhU4rAa1VF2DEyo8ihF+5FyJ0UL1LaVyEPMmUf8QJJp
-	 rDQ0CO0DIRApgfcjjT/Vge3rgtQGJu8Vq3QSrARBQfdKOewSSacZ3y3r6PGU/MRFKh
-	 njzX/G3GFTIuyXX2BEKX93NtRP7OnuQGmLGTuIqEc+UzBmDCa6T0Y8peO6qpZ4Q0dU
-	 ocf6NRNdqxrCJ/2kgHdgghvWD49NCUm6OqhlHZZW6NjrJA9AHLLzPljMJwQSgCCIEb
-	 ujppfrKhf/T+g==
+	b=kJx9UTMpx7TrzIfOrJ4DfnNUKzqW1idj0HevDma/2mXKgfygJTk6fSe01IfYyRgDR
+	 RvZeI/1oMYW6AEPzZegWMrIAerRx6TJ8eY6n3DA18RXbirjiISsDv/rF80kQpQNED2
+	 84z5SbrnFWF4yu411MGAQpCe/dWyIVzi4pBsU99IIAbh2BvIIlPaTpg2/+1iXLX6km
+	 QrERoFCiT4v1LNQV6s3NKCRJs2xG3dkjAZNTda4NlA/kTGfj1x0WLQgXd/5Uz98GPn
+	 zlkhOjAIAbEGPUvZzGAkeq7c6LjX0XhwBPR8N81kANy4zF/ksudsIo3T4mEF2A7Agy
+	 iM56azZqmToqg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01D89D277D7;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2651AD277D6;
 	Sat, 10 Jan 2026 06:57:06 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Sat, 10 Jan 2026 12:26:27 +0530
-Subject: [PATCH v3 09/14] dt-bindings: serial: Document the graph port
+Date: Sat, 10 Jan 2026 12:26:29 +0530
+Subject: [PATCH v3 11/14] dt-bindings: connector: m2: Add M.2 1620 LGA
+ soldered down connector
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260110-pci-m2-e-v3-9-4faee7d0d5ae@oss.qualcomm.com>
+Message-Id: <20260110-pci-m2-e-v3-11-4faee7d0d5ae@oss.qualcomm.com>
 References: <20260110-pci-m2-e-v3-0-4faee7d0d5ae@oss.qualcomm.com>
 In-Reply-To: <20260110-pci-m2-e-v3-0-4faee7d0d5ae@oss.qualcomm.com>
 To: Rob Herring <robh@kernel.org>, 
@@ -70,16 +71,16 @@ Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-acpi@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=924;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1302;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=T/idG4KQSOfNt30dCJ08aa+KY4iI2ktYxKaU/4zNwXM=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpYfg9hVx9oXxHFkCZ6ayTfpv7OrIXAlqSTNYnD
- l8BvU8TehGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaWH4PQAKCRBVnxHm/pHO
- 9Zj5B/9FIjw9jA2pUEFQRfVjmhW9kmIDAx8BydxO0AL1yaiDPopbZg6C9WwrJAgtaEx+lk1KRss
- zrY054C1qo2Jo5Sfbhka1l7iXuVZatzbLl/6ahGv6BHdhxCL4SQNRxiYgk3MUaJ5K/pxXq4TOFg
- 2RvYtM8kTOfUyrDkMgNJXSdoUIIVfu/UL2XyaBghe+wtpnuidK7CmT0ZYzV2Gj1xVFwYJnFAunn
- 98Sh/AhLonSS3D7oxftax0zvR64ZtTWh34BjJ5lvYRc8Xxndn+odWCDrJoQP1OEtGmo+9nN6PTy
- IQqGi5soPZwdnGWzXfT4rhVYuHwmvy0BgULtqpWab9rYTznk
+ bh=RWekJdEKdic9EZu4rQGv0fBKORumjbEDCuN8SBTLMc4=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpYfg+TRCoMWdJ2WYv0cU3v57JOA3eOkhRvc9NM
+ QkwIwf2HymJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaWH4PgAKCRBVnxHm/pHO
+ 9bSxCACn3aeHjikwTH34ED8GMiwZYePyUD6dpLxapg7iDk895cVBZ1IZOGZcvaOvrNc+F1Koz76
+ PsxffieAiZaRoIL3PpDMyaQ49vZ+W/mecd7Q9MmnEPWcU7PF45xDGYGwcU9173vd6GbHICVxJ7a
+ SHWSjXXiP8m3Jmu53tOznAuVAz2qfsbzn0TS3YlhlGRHhi96AmM2hux0doiV1dd0iF40NAEYwXd
+ +n+dmeVZ2v8xXKF0GOHEzBlhU64ECcqKroJegmOdLcwwUdESsfpJS1GPP2IBN8jngvWuLIBasEn
+ LSrsJ1XW1MpT922zo4+84wcVpbNDhq+/x0oz6xMM3qWWq2Y/
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -89,29 +90,37 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-A serial controller could be connected to an external connector like PCIe
-M.2 for controlling the serial interface of the card. Hence, document the
-OF graph port.
+Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
+LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
+spec, it looks very similar to the M.2 Key M connector. So add the
+"pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
+to reuse the Key M binding.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- Documentation/devicetree/bindings/serial/serial.yaml | 3 +++
- 1 file changed, 3 insertions(+)
+ .../devicetree/bindings/connector/pcie-m2-e-connector.yaml       | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/serial/serial.yaml b/Documentation/devicetree/bindings/serial/serial.yaml
-index 6aa9cfae417b..96eb1de8771e 100644
---- a/Documentation/devicetree/bindings/serial/serial.yaml
-+++ b/Documentation/devicetree/bindings/serial/serial.yaml
-@@ -87,6 +87,9 @@ properties:
-     description:
-       TX FIFO threshold configuration (in bytes).
+diff --git a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+index b65b39ddfd19..9757fe92907b 100644
+--- a/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
++++ b/Documentation/devicetree/bindings/connector/pcie-m2-e-connector.yaml
+@@ -17,7 +17,14 @@ description:
  
-+  port:
-+    $ref: /schemas/graph.yaml#/properties/port
-+
- patternProperties:
-   "^(bluetooth|bluetooth-gnss|embedded-controller|gnss|gps|mcu|onewire)$":
-     if:
+ properties:
+   compatible:
+-    const: pcie-m2-e-connector
++    oneOf:
++      - items:
++          - enum:
++              - pcie-m2-1620-lga-connector
++          - const: pcie-m2-e-connector
++      - items:
++          - enum:
++              - pcie-m2-e-connector
+ 
+   vpcie3v3-supply:
+     description: A phandle to the regulator for 3.3v supply.
 
 -- 
 2.48.1
