@@ -1,177 +1,134 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mail-m49219.qiye.163.com (mail-m49219.qiye.163.com [45.254.49.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 229E6632
-	for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2026 01:43:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 637D31A724C;
+	Mon, 12 Jan 2026 01:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768182215; cv=none; b=ikZ/LkhEBy4teeueBWkDs7opSsyffriWrfFIFlFL8JsjNmNPGVNVuRLBb++27wuAenBmOBg/hQvq2bdcJLYys/42N8Dmh0RfHeo7GhepreZdUcIjXCRtCBQ8OiArN16VTiR7m32rdWeCvqftWfDbXoY7DpGdrvkrMMqHgnZukgg=
+	t=1768182964; cv=none; b=oab+lxjnf1xTKWLDgmXlZ4IjYSvtNnWRb7V/iieEHpq1dIUn7qZPkdAjtDb9iyeZ/UjSCtfodjzayUOjBpWf1JhRF98+tbQ77EMhEP/1NXwvKeQ8w0puDLpy6iPmuNws62PFgX3dw9GszEI6WGSPcFvkwQFItCXmkWk9RQaxjQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768182215; c=relaxed/simple;
-	bh=hS5M2IBt+XDf18Gy4ts4vK0v+84GrMVmqYQzF/J1aLY=;
-	h=From:Message-ID:Date:MIME-Version:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=oxEz/D+xKsy6o9FIgnmOJKAogvT0dDywclCAb7gah48CiQl/JXjojxJ3nVFimu3exGwGl/s5rjEDo9zoFekZTknQXm2u572Tgi0kSumbg/n1CRfM/lriypr5X37BBvom6JSGWGWbCb/WCtZsmMn2zYdeQ7IXxU07FULhldtwtKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=h20AJA39; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=fM9c3APa; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1768182964; c=relaxed/simple;
+	bh=Ji3o3VTdkNoMJrT598sG6cuYDK2tWPZdX9NSUfmDoHY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=I6yugWDu5tB/GUDnUJzWHhkfkjycU+TEZj7kvDBTI0Wgr8CPQ7uuYgtLQIxpqtFogMV/2qHiPfgIY0ZFXLS7vGswvr5UGWj10JGBG9KR20GBe+p82hDcCoQX+1IZn1HrD5vVsQWnRJe9q3IE3u9HNp9LB+CpLPqau1nwFsjLkBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=DDJXQQXX; arc=none smtp.client-ip=45.254.49.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="h20AJA39";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="fM9c3APa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768182213;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5g0eqFZw+saooIdmg9NsoPWVUWAMnQL8vdrqEmKZ9zg=;
-	b=h20AJA39iueWpUfsWHIyMbWOwGr8njJH8B4VH6UaX9OhjXt+tovB3b7LQHHY5qVQKl6Eei
-	xDpOBfFhSoOh9al/I60XBM719p4XDmEPiDT0H+lkx2j3j7ldZmy1lijmYRRAgUHxUZSg36
-	uwZz3emhbIMqwGSSDShzUQS6iDs908A=
-Received: from mail-vk1-f198.google.com (mail-vk1-f198.google.com
- [209.85.221.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-203-H1a--oH1M7SoHX9nXt6cVQ-1; Sun, 11 Jan 2026 20:43:31 -0500
-X-MC-Unique: H1a--oH1M7SoHX9nXt6cVQ-1
-X-Mimecast-MFC-AGG-ID: H1a--oH1M7SoHX9nXt6cVQ_1768182211
-Received: by mail-vk1-f198.google.com with SMTP id 71dfb90a1353d-563662e2266so6993435e0c.0
-        for <linux-pci@vger.kernel.org>; Sun, 11 Jan 2026 17:43:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1768182211; x=1768787011; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=5g0eqFZw+saooIdmg9NsoPWVUWAMnQL8vdrqEmKZ9zg=;
-        b=fM9c3APaS9aJm3sKodkftW12rE+dqCrcvZJlQSwfYYp7KL3/Y/xN4jk/jSEVwDnpaz
-         7bBln+Xh0dI9j3tuBh9QKGmDbyt0E7wP9SE2I9OJUvkdbdErxkUlN16ucy4/k9W7bPGN
-         AZFMFIN6EPk7/I19Ka2sf+rhZC5iD8DvAjrppEKF6Oks8qFP3kypCAFrnqFct6/rdaJt
-         fjQaHZ+oOsSQhcEt+ZTjCmHL678zidC4VAnb6VlC5JjLQMWznEsiMlboBmzxowUWNCEg
-         DJlLBUab+MHi4Svpsy2LvKLAh5qnh4YxIziY4jgK787VXKkpe1LeRiL2JGkhyZv1iPAG
-         Znzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768182211; x=1768787011;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5g0eqFZw+saooIdmg9NsoPWVUWAMnQL8vdrqEmKZ9zg=;
-        b=r7YOjaYPnhvuG4WZnybl3e0eJGFGtiUJ+r0sWi82AK7ycCkcFc/ysTnEEPhkSoWagb
-         osMsHTx8dtb+iM1x04SxVdVLDA9+zSXeAcdoxY/4taICG7BmuQ3ewy7CBWinaxnS25NA
-         21S5MdSnaiA3GHFt82isrr+kxmhsT/NKKwO9jXCxio2IlfIa54A/b2QArTrN0MTqs4ec
-         w6JY79yNkRyxPOHMnJFMKnxZHfkbtOZ5FI79NyZ4mpzI3s0rb1s8kRB5QK84ZC+iW3Ft
-         WJDTPMeLazYwvqEnUakyRskN/MmAYXlcCrPItGVNieLrzvaRfRxZzQLwETClOtJVADkm
-         gkVw==
-X-Forwarded-Encrypted: i=1; AJvYcCWjf9Mp74WfbEMcb6vSRA7tx4UCeNJ483m+ZO4SO6qYwuNf+YCw0AKTlnL84C9/7HRh1NiZjDE0Yts=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw1mYULFTIJaG1Pvqrxoxb4sjqI6mMmH6HkEejw5Zz+77DCx0+U
-	qiPuQJGCSYvOfyh6ygfhWo4Rdlg0oLcDZGh8l3XeGjR/sNMTbqtfyBymDpBbXtD8bZUhLM9ljRe
-	0frh2YNE5QMpGpaCLVC+zsJKWvC7GSjMHS4NKayRcEXkH7oS7M3nWdHTc73SjHA==
-X-Gm-Gg: AY/fxX4MO6EGmgLCe/uRbHaCVQJIvpmFk0PnXAifu2y5aPnkbWqWtw8W9ylg/r9rsmS
-	r7dn8wnQFDVtutndxWC3u5MP2tY70moQG3o2oU+b7ZTphieGHbJvBsH8rAC+2ItAV2+0bDrJ08g
-	3071FVSjgIQzLRS3IVbpGFTAH4YPd6ACsv0ZlNHbfTakbhixtxf18tqHZ0+NIcCJOfiVT7nlfjK
-	i/SQpO1xpQBetI9NrG/+YCH06ZEXZ19CI1aMZ1Wy5hsjtnBKRIwUXqMqVnsAIBYifLwhY1qAci6
-	UJyQ1A6SJTMkRvlUUP7158oPxSS6T5qCRkwDDAlEAwwHdDaWHgkFuIeOyXvV9PUpUEXd6zSclQ3
-	o4aBN7VWqi6fcWB6dW9frExQJoCmr5YJt/FvrtFNOmc2dAcWYtPRjObUI
-X-Received: by 2002:a05:6122:3383:b0:55e:82c3:e1fb with SMTP id 71dfb90a1353d-563466b1471mr6360630e0c.10.1768182211341;
-        Sun, 11 Jan 2026 17:43:31 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHV+QUILwqeHqopifLZI0TMkyTSwUxskEqEsydIK3wu+6ViPTcpBZklzMvbaEYb1jKTIvUBCg==
-X-Received: by 2002:a05:6122:3383:b0:55e:82c3:e1fb with SMTP id 71dfb90a1353d-563466b1471mr6360599e0c.10.1768182210967;
-        Sun, 11 Jan 2026 17:43:30 -0800 (PST)
-Received: from ?IPV6:2601:188:c102:b180:1f8b:71d0:77b1:1f6e? ([2601:188:c102:b180:1f8b:71d0:77b1:1f6e])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-56375cd7cd6sm4961512e0c.10.2026.01.11.17.43.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 11 Jan 2026 17:43:30 -0800 (PST)
-From: Waiman Long <llong@redhat.com>
-X-Google-Original-From: Waiman Long <longman@redhat.com>
-Message-ID: <e97d96fc-cbdf-4c03-aa1a-b0cde5419681@redhat.com>
-Date: Sun, 11 Jan 2026 20:43:16 -0500
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="DDJXQQXX"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 303e91922;
+	Mon, 12 Jan 2026 09:20:30 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-rockchip@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 2/3] Documentation: tracing: Add PCI controller event documentation
+Date: Mon, 12 Jan 2026 09:19:59 +0800
+Message-Id: <1768180800-63364-3-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1768180800-63364-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1768180800-63364-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Tid: 0a9bafca4f3c09cckunme7c7221b25b204
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQxkdGVYeHxoeGkoZQhpKTElWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=DDJXQQXXevGUrEwIRp2Q+7eNb9izplE0xp8Pm0od0lIqhT/HO0ICHV8QiivaqcP/ocs1q9VFwscyixbDBthnVwElUHYMVWi+yZxvP9VF1d/NHzdG8QlEiyP7DAWg6Du9fvTxMTC27zpLL67AnGUN4Qg//ajDlEY+RQX3DkwzUjI=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=jrtqB0XixpQ4tlxWZHgOuOxBO23AIyReEKgVZo9dQFk=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/33] cpuset: Provide lockdep check for cpuset lock held
-To: Frederic Weisbecker <frederic@kernel.org>,
- LKML <linux-kernel@vger.kernel.org>
-Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Chen Ridong <chenridong@huawei.com>, Danilo Krummrich <dakr@kernel.org>,
- "David S . Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>, Gabriele Monaco <gmonaco@redhat.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
- Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
- Lai Jiangshan <jiangshanlai@gmail.com>,
- Marco Crivellari <marco.crivellari@suse.com>, Michal Hocko
- <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
- Paolo Abeni <pabeni@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Phil Auld <pauld@redhat.com>, "Rafael J . Wysocki" <rafael@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Simon Horman <horms@kernel.org>,
- Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
- Vlastimil Babka <vbabka@suse.cz>, Will Deacon <will@kernel.org>,
- cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-block@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
- netdev@vger.kernel.org
-References: <20260101221359.22298-1-frederic@kernel.org>
- <20260101221359.22298-13-frederic@kernel.org>
-Content-Language: en-US
-In-Reply-To: <20260101221359.22298-13-frederic@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 1/1/26 5:13 PM, Frederic Weisbecker wrote:
-> cpuset modifies partitions, including isolated, while holding the cpuset
-> mutex.
->
-> This means that holding the cpuset mutex is safe to synchronize against
-> housekeeping cpumask changes.
->
-> Provide a lockdep check to validate that.
->
-> Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-> ---
->   include/linux/cpuset.h | 2 ++
->   kernel/cgroup/cpuset.c | 7 +++++++
->   2 files changed, 9 insertions(+)
->
-> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-> index a98d3330385c..1c49ffd2ca9b 100644
-> --- a/include/linux/cpuset.h
-> +++ b/include/linux/cpuset.h
-> @@ -18,6 +18,8 @@
->   #include <linux/mmu_context.h>
->   #include <linux/jump_label.h>
->   
-> +extern bool lockdep_is_cpuset_held(void);
-> +
->   #ifdef CONFIG_CPUSETS
->   
->   /*
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 3afa72f8d579..5e2e3514c22e 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -283,6 +283,13 @@ void cpuset_full_unlock(void)
->   	cpus_read_unlock();
->   }
->   
-> +#ifdef CONFIG_LOCKDEP
-> +bool lockdep_is_cpuset_held(void)
-> +{
-> +	return lockdep_is_held(&cpuset_mutex);
-> +}
-> +#endif
-> +
->   static DEFINE_SPINLOCK(callback_lock);
->   
->   void cpuset_callback_lock_irq(void)
+The available tracepoint, pcie_ltssm_state_transition, monitors the LTSSM state
+transition for debugging purpose. Add description about it.
 
-The cgroup/for-next tree already have a similar 
-lockdep_assert_cpuset_lock_held() defined. So you can drop this patch if 
-this series won't land in the next merge window.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Cheers,
-Longman
+Changes in v3:
+- Add toctree entry in Documentation/trace/index.rst(Bagas Sanjaya)
+- fix mismatch section underline length(Bagas Sanjaya)
+- Make example snippets in code block(Bagas Sanjaya)
+- warp context into 80 columns and fix the file name(Bjorn)
+
+Changes in v2: None
+
+ Documentation/trace/events-pci-controller.rst | 42 +++++++++++++++++++++++++++
+ Documentation/trace/index.rst                 |  1 +
+ 2 files changed, 43 insertions(+)
+ create mode 100644 Documentation/trace/events-pci-controller.rst
+
+diff --git a/Documentation/trace/events-pci-controller.rst b/Documentation/trace/events-pci-controller.rst
+new file mode 100644
+index 0000000..cb9f715
+--- /dev/null
++++ b/Documentation/trace/events-pci-controller.rst
+@@ -0,0 +1,42 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++======================================
++Subsystem Trace Points: PCI Controller
++======================================
++
++Overview
++========
++The PCI controller tracing system provides tracepoints to monitor controller
++level information for debugging purpose. The events normally show up here:
++
++	/sys/kernel/tracing/events/pci_controller
++
++Cf. include/trace/events/pci_controller.h for the events definitions.
++
++Available Tracepoints
++=====================
++
++pcie_ltssm_state_transition
++---------------------------
++
++Monitors PCIe LTSSM state transition including state and rate information
++::
++
++    pcie_ltssm_state_transition  "dev: %s state: %s rate: %s\n"
++
++**Parameters**:
++
++* ``dev`` - PCIe controller instance
++* ``state`` - PCIe LTSSM state
++* ``rate`` - PCIe date rate
++
++**Example Usage**:
++
++.. code-block:: shell
++
++    # Enable the tracepoint
++    echo 1 > /sys/kernel/debug/tracing/events/pci_controller/pcie_ltssm_state_transition/enable
++
++    # Monitor events (the following output is generated when a device is linking)
++    cat /sys/kernel/debug/tracing/trace_pipe
++       kworker/0:0-9       [000] .....     5.600221: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ2 rate: 8.0 GT/s
+diff --git a/Documentation/trace/index.rst b/Documentation/trace/index.rst
+index 0a40bfa..6101317 100644
+--- a/Documentation/trace/index.rst
++++ b/Documentation/trace/index.rst
+@@ -55,6 +55,7 @@ applications.
+    events-nmi
+    events-msr
+    events-pci
++   events-pci-controller
+    boottime-trace
+    histogram
+    histogram-design
+-- 
+2.7.4
 
