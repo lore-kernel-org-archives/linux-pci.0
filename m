@@ -1,118 +1,109 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 919D01AA1D2;
-	Mon, 12 Jan 2026 02:47:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA4D306B05
+	for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2026 03:01:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768186062; cv=none; b=MBu5EZaNKq3CFyk3x53Zu1G014KsPrKFbDDhoktE/lYSVDTK9vM5C68/EhQYGArw+fuDCIzTzaH0DvQjiafWq6F9Y8/YgbjWGgLrrOtehLl6dDcGbF6gVjipxLRLMRNhDkqwIPsD8Z4aVHEdZ53jf1Amhq0g9Fj89tuIg5tzzMs=
+	t=1768186903; cv=none; b=jpDOcyHGXPWoue3z4sQJPF27NfCV9na38niMSbvtv3dqIPcjyWhQ2gD0mUpDN+/KZBk3D8XJXBgk78JVKWAHmYZ608//19z+Ufw0TBzfzn4G+JCcB3KKZFWsbSLnsxuR4odlFJTiusYPyg4keTyJa1OlEK/qybG/SAyIRb/1Apo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768186062; c=relaxed/simple;
-	bh=sKjiMSHw5tbfzA5zXUxgFdCcJgmQX3byUqOgara7lhI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bt5w5BGEBieGmNv49uI65XuwVSxVoUD8qfPJDDoc+NHnKzcnZs7x9wR5pAnL9k8epFDpl/rakjlJeA8rPzADcrJPOE+kcND5xqVh41bNXhZzVwvpFzrWuwUxHaHK5J/RnCZB/AfBcdnMJkLe7X3AHW08EKZgm3GrKXwyDU5wgMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bGHSUOZI; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1768186903; c=relaxed/simple;
+	bh=qG6dXOpBZNFWOEOpxMatYW+hg5h5XbksYXWBdtvNm4g=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:CC:Content-Type; b=nChx1v3je3kzu3QLzu2RallCOIpbgntVEoS3Lr7ybWSPCw7lDKA1ax+I9mFsx01+dckb44tjqMBEK5O/t2K44uMuPtslRsja4YkKAGnEIy0VhzBYkzhqElLRio+Ods2soBwm1YOShcHoWRGUQ8VqTKoQRar7oNyZIxkF/2nxB+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=aGcw30CE; arc=none smtp.client-ip=113.46.200.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bGHSUOZI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768186060; x=1799722060;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=sKjiMSHw5tbfzA5zXUxgFdCcJgmQX3byUqOgara7lhI=;
-  b=bGHSUOZIhNoNr3wVGMyuK+dKslMvr7AzLS/7VWv8Hdgy/rMbjqOfX/hE
-   O6zbx0oQlbsWNrEWyBZ7Tk3OmUD72HRieRV/2NGl+tGsd79R5qCgvdSdK
-   ML6KxzZKcyqBdKt/KCz26m6gHBdBvQZRKiEuv8lqXW4R37DXgCHwVMRqH
-   45qkM9lyv4/JfISbsUSe5xEkJ2/x7Ug/eb1OhdtToLNvSx+CvV21Rlv4i
-   6rC3rCqyxGMtR9Lq6cPGA1H4gKA4MIhATP+wGsFK/zmsmNd4+7ARY62RN
-   XuaA/z/gKADxove4a6c8Wk6OHb89/puXUeCULaM60Sys9mJ0Z7CwXt2wT
-   A==;
-X-CSE-ConnectionGUID: 8zijrvSiTmC7ZgwmKfOwgQ==
-X-CSE-MsgGUID: ICFawCEdREG/JIJNLfSwXw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11668"; a="80913926"
-X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="80913926"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 18:47:39 -0800
-X-CSE-ConnectionGUID: PCwSQgIETh+CL21WB6bnBQ==
-X-CSE-MsgGUID: C+1Vg8WARVGsumylIiEHvQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="204389050"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa009.fm.intel.com with ESMTP; 11 Jan 2026 18:47:37 -0800
-Date: Mon, 12 Jan 2026 10:30:14 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Li Ming <ming.li@zohomail.com>
-Cc: dan.j.williams@intel.com, linux-pci@vger.kernel.org,
-	linux-coco@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI/IDE: Fix using wrong VF ID for RID range
- calculation
-Message-ID: <aWRctnwjEXvUyayb@yilunxu-OptiPlex-7050>
-References: <20260111080631.506487-1-ming.li@zohomail.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="aGcw30CE"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=Hv95OtTcY8ro07ZoCYuf85nIeKGFnZMzCcmh5C5sDuo=;
+	b=aGcw30CEBys+rVkbLB1PPCdjMlP6zZYB9EB+SMtXeaPO8Lm8QxrxFRA6IlgmJD3HW2XlNIf9R
+	BA81VXdPllbKCz/4yFXoDsS3d59iZsFgiqI1Q2t4ydI1RDRpHt1siegWCU9o+nlzTbsb+1FQ4+0
+	ncB1LHaDv7muk5trqlJTMc4=
+Received: from mail.maildlp.com (unknown [172.19.163.0])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4dqH9f3CLlz1T4Jx;
+	Mon, 12 Jan 2026 10:57:42 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1CE094056E;
+	Mon, 12 Jan 2026 11:01:32 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 12 Jan 2026 11:01:31 +0800
+Message-ID: <0cba9df3-8fe5-47ef-929c-6da64d31bf69@huawei.com>
+Date: Mon, 12 Jan 2026 11:01:31 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260111080631.506487-1-ming.li@zohomail.com>
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: <linux-pci@vger.kernel.org>
+From: fengchengwen <fengchengwen@huawei.com>
+Subject: RFC about how to obtain PCIE TPH steer-tag on ARM64 platform
+CC: Wei <wei.huang2@amd.com>, <Eric.VanTassell@amd.com>,
+	<bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
+	<wangzhou1@hisilicon.com>, <wanghuiqiang@huawei.com>,
+	<liuyonglong@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On Sun, Jan 11, 2026 at 04:06:31PM +0800, Li Ming wrote:
-> When allocate a new IDE stream for a pci device in SR-IOV case, the RID
-> range of the new IDE stream should cover all VFs of the device. VF id
-> range of a pci device is [0 - (num_VFs - 1)], so should use (num_VFs - )
-> as the last VF's ID.
-> 
-> Fixes: 1e4d2ff3ae45 ("PCI/IDE: Add IDE establishment helpers")
-> Signed-off-by: Li Ming <ming.li@zohomail.com>
-> ---
->  drivers/pci/ide.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/ide.c b/drivers/pci/ide.c
-> index 26f7cc94ec31..9629f3ceb213 100644
-> --- a/drivers/pci/ide.c
-> +++ b/drivers/pci/ide.c
-> @@ -283,8 +283,8 @@ struct pci_ide *pci_ide_stream_alloc(struct pci_dev *pdev)
->  	/* for SR-IOV case, cover all VFs */
->  	num_vf = pci_num_vf(pdev);
->  	if (num_vf)
-> -		rid_end = PCI_DEVID(pci_iov_virtfn_bus(pdev, num_vf),
-> -				    pci_iov_virtfn_devfn(pdev, num_vf));
-> +		rid_end = PCI_DEVID(pci_iov_virtfn_bus(pdev, num_vf - 1),
-> +				    pci_iov_virtfn_devfn(pdev, num_vf - 1));
+Hi all,
 
-I don't have VF for test but I believe the change is correct.
+We want to enable PCIE TPH feature on ARM64 platform, but we encounter the
+following problem:
+1. The pcie_tph_get_cpu_st() function invokes the ACPI DSM method to obtain
+   the steer-tag of the CPU. According to the definition of the DSM method [1],
+   the cpu_uid should be "ACPI processor uid".
+2. In the current implementation, the ACPI DSM method is invoked directly using
+   the logical core number, which works on the x86 platform but does not work
+   on the ARM64 platform because the logical core ID is not the same as the
+   ACPI processor ID when the PG exists.
 
-The calculated rid_end will be passed to IDE RID association register values,
-which is inclusive according to IDE SPEC.
 
-  void pci_ide_stream_to_regs(...)
-  {
-	...
-	regs->rid1 = FIELD_PREP(PCI_IDE_SEL_RID_1_LIMIT, settings->rid_end);
-	...
-  }
+Because the ARM64 platform generates steer-tag based on the MPIDR information
+(at least for the Kunpeng platform). Therefore, we have two option:
+Option-1: convert logic core ID to ACPI process ID: use get_acpi_id_for_cpu()
+          to get ACPI process ID in pcie_tph_get_cpu_st() before invoke dsm [2],
+          and BIOS/ACPI use process ID to get corresponding MPIDR, and then
+          generate steer-tag from MPIDR.
+Option-2: convert logic core ID to MPIDR: use cpu_logical_map() to get MPIDR
+          in pcie_tph_get_cpu_st() before invoke dsm, and BIOS/ACPI use it
+          to generate steer-tag directly.
 
-Is it better we clarify the kernel-doc a little bit:
+Option-1 complies with _DSM ECN, but requires BIOS/ACPI to maintain a mapping
+table from acpi_process_id to MPIDR.
+Option 2 does not comply with _DSM ECN (if extension is required). But it is easy
+to implement and can be extended to the DT system (ACPI is not supported) I think.
 
---------8<--------
 
-diff --git a/include/linux/pci-ide.h b/include/linux/pci-ide.h
-index 2521a2914294..f0c6975fd429 100644
---- a/include/linux/pci-ide.h
-+++ b/include/linux/pci-ide.h
-@@ -26,7 +26,7 @@ enum pci_ide_partner_select {
- /**
-  * struct pci_ide_partner - Per port pair Selective IDE Stream settings
-  * @rid_start: Partner Port Requester ID range start
-- * @rid_end: Partner Port Requester ID range end
-+ * @rid_end: Partner Port Requester ID range end (inclusive)
-  * @stream_index: Selective IDE Stream Register Block selection
-  * @mem_assoc: PCI bus memory address association for targeting peer partner
-  * @pref_assoc: PCI bus prefetchable memory address association for
+Hope for your feedback.
+
+With best regards,
+Chengwen
+
+
+[1] According to _DSM ECN, the input is defined as: "If the target
+    is a processor, then this field represents the ACPI Processor UID of the
+    processor as specified in the MADT. If the target is a processor
+    container, then this field represents the ACPI Processor UID of the
+    processor container as specified in the PPTT"
+[2] git diff about /drivers/pci/tph.c
+@@ -289,6 +289,9 @@ int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+
+        rp_acpi_handle = ACPI_HANDLE(rp->bus->bridge);
+
++#ifdef CONFIG_ARM64
++       cpu_uid = get_acpi_id_for_cpu(cpu_uid);
++#endif
+        if (tph_invoke_dsm(rp_acpi_handle, cpu_uid, &info) != AE_OK) {
+                *tag = 0;
+                return -EINVAL;
+
+
