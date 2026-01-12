@@ -1,224 +1,204 @@
-Received: from mail-m49238.qiye.163.com (mail-m49238.qiye.163.com [45.254.49.238])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D2DA24BBEB;
-	Mon, 12 Jan 2026 01:56:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.238
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92ED950097C
+	for <linux-pci@vger.kernel.org>; Mon, 12 Jan 2026 02:45:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768182987; cv=none; b=qiGZD0+yeF8kLLYd7j5BCOfNgZIBiIelj2LqZb4V8418unNsJCAbBTEaUhHJ+hJtdK/qB5E81R6cjLYJVa1DfJd6HJ9iXOnyRF5tKcdnHvJdwcmq5BlaNWmFQbZ0B07U5uy0uoLN39J87t9/NK5dwWQ/WO/TmM9o7Y2lcgSQAz4=
+	t=1768185957; cv=none; b=G8AXej7hXnjV3Mv0JuNxX7rFEoJH4zT239jXZArQSJtN7zqK8WlpYeDDFbS7a37d5lIAi/BvXyZef1Wc75SHiV9lR22ij8DGS2POOhLG1sO8nkWazDKUp8HX+O/MIRUyM3vlsgqHlY75Tx0pfL6l6wG+ms105YjETXTpnuoW8Jw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768182987; c=relaxed/simple;
-	bh=85V/kSD5DV50NM9PuhTGBYZFnOYu1dLPby/MWS87gM8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=UvvDYNSRDrSRgFZcCcBK2ZShxNYFk9KSSnHnT5nxYrilnPRpXKBh2OEMV3e8EPEkgeD3hX8dLdLjwXqY8ASRHdK8GvbEyFqgxLit8x1AiF+u/SFzwifuMUVuixtlzwdUZEFn/DSzrFp2CVqfdxxsydWm+POESbELfTl/UGUfa98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Oxd0oj2q; arc=none smtp.client-ip=45.254.49.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1768185957; c=relaxed/simple;
+	bh=t3fqYup1Q4i1hX+rY6sipxB1IioFo7OZLWHTUppIxwE=;
+	h=From:Message-ID:Date:MIME-Version:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=Uocwz+RMC9dll90tx6tYIeeMjbA0hfBW7141UYHHg4xis118qaa3cPxTqYPYcgCUiB11l3v3aMwtYvMCtmenXFagcEZ9ventmiG0vu+oHKMDdwEgXq4Qyfk3YotfjXGSpWjCWOGgrd97BW9viFCbLAYvghs0WVDTr0Ha4PS7tLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RIHtvEL6; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=OQaguD4O; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Oxd0oj2q"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 303e91937;
-	Mon, 12 Jan 2026 09:20:33 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-rockchip@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 3/3] PCI: dw-rockchip: Add pcie_ltssm_state_transition trace support
-Date: Mon, 12 Jan 2026 09:20:00 +0800
-Message-Id: <1768180800-63364-4-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1768180800-63364-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1768180800-63364-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9bafca5b9109cckunme7c7221b25b240
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGksaTFZITBgfQ0hKSB9KTxpWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=Oxd0oj2qIKPgVMH/gYNeLYzPhsF9UrEMkF0ZkPa2uQG/p5D0nhzXQPAdYuKasOkyj87H6dR8vc2E+xAPSGr0RMxCQfHp4nXgIeTOKtjhAmbZsYpSJsQ3bo9ochxnDXSfMnv9bBEdqA7wfDGHxM3QdczLRKI0g6CAMRV7rpl0KtQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=ZgxJOYtEUZZ9lDjUn8KCpSUAe2bzrN8TYgmqnZ6nm/I=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RIHtvEL6";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="OQaguD4O"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1768185954;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=xcS5shRmDCmvz+IoTKqWTzUo+o6AAuc9PAErT+qJLAs=;
+	b=RIHtvEL6WNI17SXaRSRMorIVqYMrxh0ySwzskBkEaln1u8krV+tG1S/A7Lr5TCnZ/xmPyZ
+	KtKNrpQmrQ45jIQpgu6HJ7A1kYnPaFHjPmwVj/b5VXojhbjSh2ImKwg3YSG+yXekkmAAns
+	oUF53XL9SgyNuCR2Z2VN4mMm5KjFmL8=
+Received: from mail-ua1-f72.google.com (mail-ua1-f72.google.com
+ [209.85.222.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-425-lwASzYIfOSijtE-MM4w6iw-1; Sun, 11 Jan 2026 21:45:53 -0500
+X-MC-Unique: lwASzYIfOSijtE-MM4w6iw-1
+X-Mimecast-MFC-AGG-ID: lwASzYIfOSijtE-MM4w6iw_1768185953
+Received: by mail-ua1-f72.google.com with SMTP id a1e0cc1a2514c-93f5f75c1a9so8059539241.0
+        for <linux-pci@vger.kernel.org>; Sun, 11 Jan 2026 18:45:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1768185953; x=1768790753; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=xcS5shRmDCmvz+IoTKqWTzUo+o6AAuc9PAErT+qJLAs=;
+        b=OQaguD4OW/a0PRcKXewnQoJz2HveUAELXWyoGoFSB4eakOiaN7tvkhvroIJENmrFeJ
+         PuXhQwOuoS0ZPVBot7jNgIujYR/bmcdJMtq1VBx7U0wi1aj+iIuW4r/6YuomR+XN0y9v
+         sSRuVS20/+rxYnHwdp+oQyGga1ktao5cj7wHS/C0jbSqfrBDZZVwi5JksbrL92hPebwY
+         fLaRsznU4Ph/uhnaDGP5GyNfrYYkj71sNtZ7TZOgK0l/7FzeYA6/q8LhcJGUMV4nZinF
+         gcNf58MM8flPh5y8Kkcdqu/uhs8VpBTqx5/327LJT+G9ApAPx2w6zzFUoq4SKNY3v0qk
+         QpfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768185953; x=1768790753;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xcS5shRmDCmvz+IoTKqWTzUo+o6AAuc9PAErT+qJLAs=;
+        b=WUCDf5AVryzfbZy1twv8YtfqRd5CfC4bXkZQ5dnTMd7UvMHCpOKIM86yvy6dipLouu
+         wsdRSO9L+uPUO3aZY2Fa2BgN+ukN10yX6s3Tg2gxbfmtJOdH0fCvJSHUbaGcXj4MhhvV
+         7/4k//4yQM4JJtO+dhnOlTV2q8do5lIQuvMNjyKFk0EmH9m/G7p/NWtg3dOeex+3MUbt
+         qRpdHIlblsrN7FnKEAza2R7yP+pPe9AOVA9iE3TbCizaOrsOn0qr3s4js/MaKuATUh27
+         TYfyjjqlciD1FSnfLr5CcQ4RZ36LrSRsUgTJV8qChPbDjoUTeRwoWM/V49FCXi5hJxhD
+         IQPA==
+X-Forwarded-Encrypted: i=1; AJvYcCWdSnhZYZpcKOz45MICjJobniFQ25AtHHGCq5bWqcqV6RMkq27DpGxHQBjAVk8D31Fj1q4ysyPPo3M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzQDAUqOokpZDRDOidel03kRTshd69cZb3aVLutoCPuOaMKc0JV
+	uQY/pBBF8+5eEgeQYG5yRTy0CfsBDR/aSZsww2IYLomEOTCNVGUV7GdM2KSzggkAsj3rtq25TvO
+	4efMZGjkjxQ7mJOFo8YwEKMXpOi915GAnuHvDZK2xpf5RUtVWfcEv5jmGBjZFOA==
+X-Gm-Gg: AY/fxX7BBrlJ7SFqHrj7lNSofO4GvuUp95su8mQ3kumO9Ei2dSOmeH8RJC695DHC25O
+	AAB4N8yky1kMk6YDGV1X3FvXa7HdUUdnfoo3euN1yvZislLUY+RG37hMu7l66tlY2qbtY2i9pO5
+	BAKarVZMMrvo07OGIJF6koVrEPGvMaIOkjqIH4mAGvGbdiX3oO2vCL0qSBviMz7TnRQOvRWi7fp
+	fAkU6OJxu3dtshVC4WNmhibDowZsdFeZNr4orksgZYGHhr+MBswlcgzxVfGu1bPY28W6zYOS8Mp
+	N2XxpkJ6VZHcYhvHDmpDKOMpol+Usb0UP8CIPKym6RMwM6UvpVfBsvpHPISNi+04tef2vWZT1dr
+	QmGQSv5Zw+E+KYIL5UZU9OZRzLS3DeMuYW1K5BMbKy/oqMbNK4+GrlPWd
+X-Received: by 2002:a05:6122:1d4d:b0:55b:1a1b:3273 with SMTP id 71dfb90a1353d-56347d4a0bemr5054223e0c.6.1768185952723;
+        Sun, 11 Jan 2026 18:45:52 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEwOFp6cPvfkUcSbRWdkrghqM2mUWR9n3I0P3Nk8PJy6T841SLsur+1hpT47PiYyZ5sXMn8AA==
+X-Received: by 2002:a05:6122:1d4d:b0:55b:1a1b:3273 with SMTP id 71dfb90a1353d-56347d4a0bemr5054194e0c.6.1768185952291;
+        Sun, 11 Jan 2026 18:45:52 -0800 (PST)
+Received: from ?IPV6:2601:188:c102:b180:1f8b:71d0:77b1:1f6e? ([2601:188:c102:b180:1f8b:71d0:77b1:1f6e])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-563667cf148sm8166160e0c.2.2026.01.11.18.45.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 11 Jan 2026 18:45:51 -0800 (PST)
+From: Waiman Long <llong@redhat.com>
+X-Google-Original-From: Waiman Long <longman@redhat.com>
+Message-ID: <18ee9089-8a08-44ed-8761-7c9db765cd4e@redhat.com>
+Date: Sun, 11 Jan 2026 21:45:36 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 13/33] sched/isolation: Convert housekeeping cpumasks to
+ rcu pointers
+To: Simon Horman <horms@kernel.org>, Frederic Weisbecker <frederic@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Andrew Morton <akpm@linux-foundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Chen Ridong <chenridong@huawei.com>, Danilo Krummrich <dakr@kernel.org>,
+ "David S . Miller" <davem@davemloft.net>, Eric Dumazet
+ <edumazet@google.com>, Gabriele Monaco <gmonaco@redhat.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
+ Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+ Lai Jiangshan <jiangshanlai@gmail.com>,
+ Marco Crivellari <marco.crivellari@suse.com>, Michal Hocko
+ <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
+ Paolo Abeni <pabeni@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
+ Phil Auld <pauld@redhat.com>, "Rafael J . Wysocki" <rafael@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>,
+ Will Deacon <will@kernel.org>, cgroups@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+ linux-mm@kvack.org, linux-pci@vger.kernel.org, netdev@vger.kernel.org
+References: <20260101221359.22298-1-frederic@kernel.org>
+ <20260101221359.22298-14-frederic@kernel.org>
+ <20260107115653.GA196631@kernel.org>
+Content-Language: en-US
+In-Reply-To: <20260107115653.GA196631@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Rockchip platforms provide a 64x4 bytes debug FIFO to trace the
-LTSSM history. Any LTSSM change will be recorded. It's userful
-for debug purpose, for example link failure, etc.
+On 1/7/26 6:56 AM, Simon Horman wrote:
+> On Thu, Jan 01, 2026 at 11:13:38PM +0100, Frederic Weisbecker wrote:
+>> HK_TYPE_DOMAIN's cpumask will soon be made modifiable by cpuset.
+>> A synchronization mechanism is then needed to synchronize the updates
+>> with the housekeeping cpumask readers.
+>>
+>> Turn the housekeeping cpumasks into RCU pointers. Once a housekeeping
+>> cpumask will be modified, the update side will wait for an RCU grace
+>> period and propagate the change to interested subsystem when deemed
+>> necessary.
+>>
+>> Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
+>> ---
+>>   kernel/sched/isolation.c | 58 +++++++++++++++++++++++++---------------
+>>   kernel/sched/sched.h     |  1 +
+>>   2 files changed, 37 insertions(+), 22 deletions(-)
+>>
+>> diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+>> index 11a623fa6320..83be49ec2b06 100644
+>> --- a/kernel/sched/isolation.c
+>> +++ b/kernel/sched/isolation.c
+>> @@ -21,7 +21,7 @@ DEFINE_STATIC_KEY_FALSE(housekeeping_overridden);
+>>   EXPORT_SYMBOL_GPL(housekeeping_overridden);
+>>   
+>>   struct housekeeping {
+>> -	cpumask_var_t cpumasks[HK_TYPE_MAX];
+>> +	struct cpumask __rcu *cpumasks[HK_TYPE_MAX];
+>>   	unsigned long flags;
+>>   };
+>>   
+>> @@ -33,17 +33,28 @@ bool housekeeping_enabled(enum hk_type type)
+>>   }
+>>   EXPORT_SYMBOL_GPL(housekeeping_enabled);
+>>   
+>> +const struct cpumask *housekeeping_cpumask(enum hk_type type)
+>> +{
+>> +	if (static_branch_unlikely(&housekeeping_overridden)) {
+>> +		if (housekeeping.flags & BIT(type)) {
+>> +			return rcu_dereference_check(housekeeping.cpumasks[type], 1);
+>> +		}
+>> +	}
+>> +	return cpu_possible_mask;
+>> +}
+>> +EXPORT_SYMBOL_GPL(housekeeping_cpumask);
+>> +
+> Hi Frederic,
+>
+> I think this patch should also update the access to housekeeping.cpumasks
+> in housekeeping_setup(), on line 200, to use housekeeping_cpumask().
+>
+> As is, sparse flags __rcu a annotation miss match there.
+>
+>    kernel/sched/isolation.c:200:80: warning: incorrect type in argument 3 (different address spaces)
+>    kernel/sched/isolation.c:200:80:    expected struct cpumask const *srcp3
+>    kernel/sched/isolation.c:200:80:    got struct cpumask [noderef] __rcu *
+>
+> ...
+>
+The direct housekeeping.cpumasks[type] reference is in the newly merged 
+check after Federic's initial patch series.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+                 iter_flags = housekeeping.flags & (HK_FLAG_KERNEL_NOISE 
+| HK_FLAG_DOMAIN);
+                 type = find_first_bit(&iter_flags, HK_TYPE_MAX);
+                 /*
+                  * Pass the check if none of these flags were 
+previously set or
+                  * are not in the current selection.
+                  */
+                 iter_flags = flags & (HK_FLAG_KERNEL_NOISE | 
+HK_FLAG_DOMAIN);
+                 first_cpu = (type == HK_TYPE_MAX || !iter_flags) ? 0 :
+cpumask_first_and_and(cpu_present_mask,
+                                     housekeeping_staging, 
+housekeeping.cpumasks[type]);
 
-Changes in v3:
-- reorder variables(Mani)
-- rename loop to i; rename en to enable(Mani)
-- use FIELD_GET(Mani)
-- add comment about how the FIFO works(Mani)
+Maybe that is why it is missed.
 
-Changes in v2:
-- use tracepoint
-
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 104 ++++++++++++++++++++++++++
- 1 file changed, 104 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 352f513..344e0b9 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -22,6 +22,8 @@
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
- #include <linux/reset.h>
-+#include <linux/workqueue.h>
-+#include <trace/events/pci_controller.h>
- 
- #include "../../pci.h"
- #include "pcie-designware.h"
-@@ -73,6 +75,20 @@
- #define  PCIE_CLIENT_CDM_RASDES_TBA_L1_1	BIT(4)
- #define  PCIE_CLIENT_CDM_RASDES_TBA_L1_2	BIT(5)
- 
-+/* Debug FIFO information */
-+#define PCIE_CLIENT_DBG_FIFO_MODE_CON	0x310
-+#define  PCIE_CLIENT_DBG_EN		0xffff0007
-+#define  PCIE_CLIENT_DBG_DIS		0xffff0000
-+#define PCIE_CLIENT_DBG_FIFO_PTN_HIT_D0	0x320
-+#define PCIE_CLIENT_DBG_FIFO_PTN_HIT_D1	0x324
-+#define PCIE_CLIENT_DBG_FIFO_TRN_HIT_D0	0x328
-+#define PCIE_CLIENT_DBG_FIFO_TRN_HIT_D1	0x32c
-+#define  PCIE_CLIENT_DBG_TRANSITION_DATA 0xffff0000
-+#define PCIE_CLIENT_DBG_FIFO_STATUS	0x350
-+#define  PCIE_DBG_FIFO_RATE_MASK	GENMASK(22, 20)
-+#define  PCIE_DBG_FIFO_L1SUB_MASK	GENMASK(10, 8)
-+#define PCIE_DBG_LTSSM_HISTORY_CNT	64
-+
- /* Hot Reset Control Register */
- #define PCIE_CLIENT_HOT_RESET_CTRL	0x180
- #define  PCIE_LTSSM_APP_DLY2_EN		BIT(1)
-@@ -96,6 +112,7 @@ struct rockchip_pcie {
- 	struct irq_domain *irq_domain;
- 	const struct rockchip_pcie_of_data *data;
- 	bool supports_clkreq;
-+	struct delayed_work trace_work;
- };
- 
- struct rockchip_pcie_of_data {
-@@ -206,6 +223,89 @@ static enum dw_pcie_ltssm rockchip_pcie_get_ltssm(struct dw_pcie *pci)
- 	return rockchip_pcie_get_ltssm_reg(rockchip) & PCIE_LTSSM_STATUS_MASK;
- }
- 
-+#ifdef CONFIG_TRACING
-+static void rockchip_pcie_ltssm_trace_work(struct work_struct *work)
-+{
-+	struct rockchip_pcie *rockchip = container_of(work, struct rockchip_pcie,
-+						trace_work.work);
-+	struct dw_pcie *pci = &rockchip->pci;
-+	enum dw_pcie_ltssm state;
-+	u32 i, l1ss, prev_val = DW_PCIE_LTSSM_UNKNOWN, rate, val;
-+
-+	for (i = 0; i < PCIE_DBG_LTSSM_HISTORY_CNT; i++) {
-+		val = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_DBG_FIFO_STATUS);
-+		rate = FIELD_GET(PCIE_DBG_FIFO_RATE_MASK, val);
-+		l1ss = FIELD_GET(PCIE_DBG_FIFO_L1SUB_MASK, val);
-+		val = FIELD_GET(PCIE_LTSSM_STATUS_MASK, val);
-+
-+		/*
-+		 * Hardware Mechanism: The ring FIFO employs two tracking counters:
-+		 * - 'last-read-point': maintains the user's last read position
-+		 * - 'last-valid-point': tracks the hardware's last state update
-+		 *
-+		 * Software Handling: When two consecutive LTSSM states are identical,
-+		 * it indicates invalid subsequent data in the FIFO. In this case, we
-+		 * skip the remaining entries. The dual-counter design ensures that on
-+		 * the next state transition, reading can resume from the last user
-+		 * position.
-+		 */
-+		if ((i > 0 && val == prev_val) || val > DW_PCIE_LTSSM_RCVRY_EQ3)
-+			break;
-+
-+		state = prev_val = val;
-+		if (val == DW_PCIE_LTSSM_L1_IDLE) {
-+			if (l1ss == 2)
-+				state = DW_PCIE_LTSSM_L1_2;
-+			else if (l1ss == 1)
-+				state = DW_PCIE_LTSSM_L1_1;
-+		}
-+
-+		trace_pcie_ltssm_state_transition(dev_name(pci->dev),
-+					dw_pcie_ltssm_status_string(state),
-+					((rate + 1) > pci->max_link_speed) ?
-+					PCI_SPEED_UNKNOWN : PCIE_SPEED_2_5GT + rate);
-+	}
-+
-+	schedule_delayed_work(&rockchip->trace_work, msecs_to_jiffies(5000));
-+}
-+
-+static void rockchip_pcie_ltssm_trace(struct rockchip_pcie *rockchip,
-+				      bool enable)
-+{
-+	if (enable) {
-+		rockchip_pcie_writel_apb(rockchip,
-+					 PCIE_CLIENT_DBG_TRANSITION_DATA,
-+					 PCIE_CLIENT_DBG_FIFO_PTN_HIT_D0);
-+		rockchip_pcie_writel_apb(rockchip,
-+					 PCIE_CLIENT_DBG_TRANSITION_DATA,
-+					 PCIE_CLIENT_DBG_FIFO_PTN_HIT_D1);
-+		rockchip_pcie_writel_apb(rockchip,
-+					 PCIE_CLIENT_DBG_TRANSITION_DATA,
-+					 PCIE_CLIENT_DBG_FIFO_TRN_HIT_D0);
-+		rockchip_pcie_writel_apb(rockchip,
-+					 PCIE_CLIENT_DBG_TRANSITION_DATA,
-+					 PCIE_CLIENT_DBG_FIFO_TRN_HIT_D1);
-+		rockchip_pcie_writel_apb(rockchip,
-+					 PCIE_CLIENT_DBG_EN,
-+					 PCIE_CLIENT_DBG_FIFO_MODE_CON);
-+
-+		INIT_DELAYED_WORK(&rockchip->trace_work,
-+				  rockchip_pcie_ltssm_trace_work);
-+		schedule_delayed_work(&rockchip->trace_work, 0);
-+	} else {
-+		rockchip_pcie_writel_apb(rockchip,
-+					 PCIE_CLIENT_DBG_DIS,
-+					 PCIE_CLIENT_DBG_FIFO_MODE_CON);
-+		cancel_delayed_work_sync(&rockchip->trace_work);
-+	}
-+}
-+#else
-+static void rockchip_pcie_ltssm_trace(struct rockchip_pcie *rockchip,
-+				      bool enable)
-+{
-+}
-+#endif
-+
- static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
- {
- 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
-@@ -289,6 +389,9 @@ static int rockchip_pcie_start_link(struct dw_pcie *pci)
- 	 * 100us as we don't know how long should the device need to reset.
- 	 */
- 	msleep(PCIE_T_PVPERL_MS);
-+
-+	rockchip_pcie_ltssm_trace(rockchip, true);
-+
- 	gpiod_set_value_cansleep(rockchip->rst_gpio, 1);
- 
- 	return 0;
-@@ -299,6 +402,7 @@ static void rockchip_pcie_stop_link(struct dw_pcie *pci)
- 	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
- 
- 	rockchip_pcie_disable_ltssm(rockchip);
-+	rockchip_pcie_ltssm_trace(rockchip, false);
- }
- 
- static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
--- 
-2.7.4
+Cheers,
+Longman
 
