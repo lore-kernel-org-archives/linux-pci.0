@@ -1,286 +1,288 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3126132C924
-	for <linux-pci@vger.kernel.org>; Wed, 14 Jan 2026 20:20:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0EE232C924;
+	Wed, 14 Jan 2026 20:24:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768422021; cv=none; b=lqYcmou+3h1evBEJ5Z+Mehav8MOreDY26jr3JSivO6T9/hyAl3+F1g4qfedq6fyCEO8PwgrDcnA5t9cI1Ueut5SO13RKr4/5nG1E7gx7LhsFAq3HbiElgoIaiXbSZRKN6AbtO7wb+Pmsn17n9LtEbOa761n03+L+KyXeiZMcWdk=
+	t=1768422261; cv=none; b=lVMF/Gx/tWPHpQ2S7DNNEOBXxMv5YB3f7Dnwikj7W465SfRn59djZSJlYHZCYFJ2hp0yUktV6ddPGdChpcifUTT5aM2LWwokMYsTjFzP8tGDYSJ+wzRKaJBrQSiUXSC2hbOfn4V6xljFeLgStLFgB9h3WDR3oj6pw1Ed1s9uA4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768422021; c=relaxed/simple;
-	bh=FDb/Q+XYdIg7O/zdcrzbIX2WUBC1NRdK1CwKtWpGYZI=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=EEisYftZGqVRCwEMDsPF7eeT83vw/fqCXCTWJXPRBDPGNf2h1Gn2VKe5g+JEeHez4we6YY/Inq4llfHtXGvcb+rn+lCbHFe8bIsK3noeZUk0zjNP8GcMcjwvdpcFaW6WVzT4dWo+vxM5tAgWspUiWfywUa05X+JaTkPPAtwoVmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GhyXyrIm; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1768422261; c=relaxed/simple;
+	bh=2QdzLaUu11/vxbPCOmbk67hSo2EwQNx/2DHWgb15TpU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=B3fGkWNJVPvATJ0UusyL7P/4/EhfnqMLgAxb93sOpuq7gyz4r58VYiiEe4GxNfzAS/JMgDBgAxDFsInu6ENvggV+ogCgIEK6SMsKxhntouFPIc+BeDBcW0rDGBGu38d+wkRAc6V8iyzXmEbxDOCQXcP0/qFDR+CkzE8dw0WUazo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OmTQOYP3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GhyXyrIm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768422020; x=1799958020;
-  h=date:from:to:cc:subject:message-id;
-  bh=FDb/Q+XYdIg7O/zdcrzbIX2WUBC1NRdK1CwKtWpGYZI=;
-  b=GhyXyrIms8IOBA2kKt/o+aVm7orE1h+BWCxBE3V0vmJpmwHx/dugevZr
-   LXe5XZDC/RV1DtBWhXjAXEw5xEPIrvEHow+Kr8y997nZwxIyz8Y3zi/lO
-   48Ufr2AXdvra5oIxSiwJd5p2yHv35us3vjElE01plgIHCkmznt3P06oEO
-   4aKZXQn/zJIjoDiF7qzBPjMnZBF/Zzbm5CQOhE/9+MnxGdnUsAV4VS7OI
-   QTxwMcsF70jNwvHt63kVvcnFzJYAxSn+HV9poOP/Qn+TLc/MpRgJM+FVo
-   8NqIEtgzWCNCZgpDURWTyGrTE9Xb+gOHRUCwvJoJJ4Gydxamb3V/h+TE4
-   Q==;
-X-CSE-ConnectionGUID: PLQ4FcPZRLqkL3snXISSrw==
-X-CSE-MsgGUID: GnaJcDT5TVaDOB0E8EE1ow==
-X-IronPort-AV: E=McAfee;i="6800,10657,11671"; a="69788849"
-X-IronPort-AV: E=Sophos;i="6.21,226,1763452800"; 
-   d="scan'208";a="69788849"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jan 2026 12:20:20 -0800
-X-CSE-ConnectionGUID: oFWjRrGOQw6VBi6/6L9gRA==
-X-CSE-MsgGUID: HkL2rARMQfy+/HCn5mnFTA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,226,1763452800"; 
-   d="scan'208";a="209817153"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa005.jf.intel.com with ESMTP; 14 Jan 2026 12:20:18 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vg7Lk-00000000Gxq-08Xm;
-	Wed, 14 Jan 2026 20:20:16 +0000
-Date: Thu, 15 Jan 2026 04:19:25 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc-rockchip] BUILD SUCCESS
- b5d712e5b87fc56ff838684afb1bae359eb8069f
-Message-ID: <202601150419.ryrPzdRt-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OmTQOYP3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62607C4CEF7;
+	Wed, 14 Jan 2026 20:24:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768422260;
+	bh=2QdzLaUu11/vxbPCOmbk67hSo2EwQNx/2DHWgb15TpU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=OmTQOYP3EX/M2oj/bD+vFJbeX6mnzLjYQLa2cIz3urjOTgTfhc/MPyYaZujrYByd2
+	 Hc4rK7TQmPew2HN0QoVmeOI/6izyuzlDrpRPaIqgG0N3/J4whZ7p28Y4ngSBVaOtKt
+	 5tONS8e8fcEjCDmr0FvLBjO0idvYsIG2m7Pc09k3/ZNlJQxBP3d+ZJFQc3bHJhrEhM
+	 T251PSw0oHYDrCaGLsqsUqHfDUrTy5+BZzy58WpALdjhUoolVdtKkT/n8mS6BpY4UZ
+	 41I5+Gh7qeBxQxeOIE2cVTgeRzohe2w4gQaQ4iJt5buorj7PxNyLvHYPPr7CTeH3lp
+	 IiR8ZsqO9iD5A==
+Date: Wed, 14 Jan 2026 14:24:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Badal Nilawar <badal.nilawar@intel.com>
+Cc: intel-xe@lists.freedesktop.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, anshuman.gupta@intel.com,
+	rafael@kernel.org, lenb@kernel.org, bhelgaas@google.com,
+	ilpo.jarvinen@linux.intel.com, rodrigo.vivi@intel.com,
+	varun.gupta@intel.com, ville.syrjala@linux.intel.com,
+	uma.shankar@intel.com, karthik.poosa@intel.com,
+	matthew.auld@intel.com, sk.anirban@intel.com, raag.jadav@intel.com
+Subject: Re: [PATCH v6 01/12] PCI/ACPI: Add D3cold Aux Power Limit_DSM method
+Message-ID: <20260114202419.GA831656@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260113164200.1151788-15-badal.nilawar@intel.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-rockchip
-branch HEAD: b5d712e5b87fc56ff838684afb1bae359eb8069f  PCI: dw-rockchip: Disable BAR 0 and BAR 1 for Root Port
+On Tue, Jan 13, 2026 at 10:12:02PM +0530, Badal Nilawar wrote:
+> From: Anshuman Gupta <anshuman.gupta@intel.com>
+> 
+> Implement _DSM method 0Ah, as per PCI Firmware r3.3, sec 4.6.10,
+> to request auxiliary power required by the device when in D3cold state.
+> 
+> Implementation allows only a single device below the Downstream Port to
+> request for Aux Power Limit under a given Root Port/Downstream Port
+> because it does not track and aggregate requests from all child devices
+> below the Downstream Port as required by PCI Firmware r3.3, sec 4.6.10.
+> 
+> Co-developed-by: Badal Nilawar <badal.nilawar@intel.com>
+> Signed-off-by: Badal Nilawar <badal.nilawar@intel.com>
+> Signed-off-by: Anshuman Gupta <anshuman.gupta@intel.com>
+> ---
+> V2(Bjorn/Rafael):
+>   - Call acpi_dsm_check() to find method 0Ah supported
+>   - Return retry interval to caller
+> V3(Kuppuswamy)
+>   - Add NULL check for retry interval
+> V4
+>   - Define enums for aux power request status (Rafael)
+>   - Add Co-developed-by and clean up Signed-off-by (Kappuswamy)
+>  (Bjorn)
+>   - Instead of root pci device pass the pci device of driver, traverse
+>     up the tree and discover _DSM
+>   - Allow only function 0 of device to request aux power
+>   - Allow retry_interval to be NULL
+>   - Refine commit message and function description
+> V5(Rafael)
+>   - Remove function 0 check and allow first caller of the given
+>     downstream port (with _DSM) to requst aux power including
+>     different function
+>   - Squash Patch v5.02 to this patch
+>   - In the logic, to allow single device to req power, use linked list
+>     instead of adding extra variables to acpi device structure
+>   - return positive code for no main power removal to distinguish from
+>     aux power request granted
+> ---
+>  drivers/pci/pci-acpi.c   | 136 +++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-acpi.h |   9 +++
+>  2 files changed, 145 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 9369377725fa..645d3005ba50 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -1418,6 +1418,142 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
+>  	ACPI_FREE(obj);
+>  }
+>  
+> +static LIST_HEAD(acpi_aux_pwr_list);
+> +static DEFINE_MUTEX(acpi_aux_pwr_lock);
+> +
+> +struct aux_pwr {
+> +	u32 aux_pwr_limit;		/* aux power limit granted by platform firmware */
+> +	struct device *dev;		/* device to which aux power is granted  */
 
-elapsed time: 735m
+Shorten these to fit in 80 columns like the rest of the file.
 
-configs tested: 209
-configs skipped: 2
+> +	struct acpi_device *adev;	/* root port/downstream port */
+> +	struct list_head list;
+> +};
+> +
+> +enum aux_pwr_req_status {
+> +	AUX_PWR_REQ_DENIED               = 0x0,
+> +	AUX_PWR_REQ_GRANTED              = 0x1,
+> +	AUX_PWR_REQ_NO_MAIN_PWR_REMOVAL  = 0x2,
+> +	AUX_PWR_REQ_RETRY_INTERVAL_MIN   = 0x11,
+> +	AUX_PWR_REQ_RETRY_INTERVAL_MAX   = 0x1F
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Use lower-case hex ("0x1f") like the rest of the file.  Also below.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-22
-arc                                 defconfig    gcc-15.2.0
-arc                 nsimosci_hs_smp_defconfig    gcc-15.2.0
-arc                   randconfig-001-20260114    gcc-10.5.0
-arc                   randconfig-001-20260114    gcc-8.5.0
-arc                   randconfig-002-20260114    gcc-10.5.0
-arc                   randconfig-002-20260114    gcc-8.5.0
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                         at91_dt_defconfig    clang-22
-arm                                 defconfig    gcc-15.2.0
-arm                          ep93xx_defconfig    gcc-15.2.0
-arm                          ixp4xx_defconfig    clang-22
-arm                          moxart_defconfig    clang-22
-arm                   randconfig-001-20260114    clang-20
-arm                   randconfig-001-20260114    gcc-10.5.0
-arm                   randconfig-002-20260114    clang-22
-arm                   randconfig-002-20260114    gcc-10.5.0
-arm                   randconfig-003-20260114    clang-22
-arm                   randconfig-003-20260114    gcc-10.5.0
-arm                   randconfig-004-20260114    gcc-10.5.0
-arm                           sama7_defconfig    clang-22
-arm64                            allmodconfig    clang-22
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260114    clang-22
-arm64                 randconfig-002-20260114    clang-22
-arm64                 randconfig-003-20260114    clang-22
-arm64                 randconfig-004-20260114    clang-22
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260114    clang-22
-csky                  randconfig-002-20260114    clang-22
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260114    clang-22
-hexagon               randconfig-002-20260114    clang-22
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386        buildonly-randconfig-001-20260114    gcc-14
-i386        buildonly-randconfig-002-20260114    gcc-14
-i386        buildonly-randconfig-003-20260114    gcc-14
-i386        buildonly-randconfig-004-20260114    gcc-14
-i386        buildonly-randconfig-005-20260114    gcc-14
-i386        buildonly-randconfig-006-20260114    gcc-14
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260114    gcc-14
-i386                  randconfig-002-20260114    gcc-14
-i386                  randconfig-003-20260114    clang-20
-i386                  randconfig-003-20260114    gcc-14
-i386                  randconfig-004-20260114    clang-20
-i386                  randconfig-004-20260114    gcc-14
-i386                  randconfig-005-20260114    gcc-14
-i386                  randconfig-006-20260114    gcc-14
-i386                  randconfig-007-20260114    clang-20
-i386                  randconfig-007-20260114    gcc-14
-i386                  randconfig-011-20260114    gcc-14
-i386                  randconfig-012-20260114    gcc-14
-i386                  randconfig-013-20260114    gcc-14
-i386                  randconfig-014-20260114    gcc-14
-i386                  randconfig-015-20260114    gcc-14
-i386                  randconfig-016-20260114    gcc-14
-i386                  randconfig-017-20260114    gcc-14
-loongarch                        allmodconfig    clang-22
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260114    clang-22
-loongarch             randconfig-002-20260114    clang-22
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                           ip28_defconfig    gcc-15.2.0
-mips                           mtx1_defconfig    gcc-15.2.0
-mips                      pic32mzda_defconfig    clang-22
-mips                          rb532_defconfig    clang-22
-nios2                            allmodconfig    clang-22
-nios2                             allnoconfig    clang-22
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260114    clang-22
-nios2                 randconfig-002-20260114    clang-22
-openrisc                         alldefconfig    gcc-15.2.0
-openrisc                         allmodconfig    clang-22
-openrisc                          allnoconfig    clang-22
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-22
-parisc                           allyesconfig    clang-19
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260114    gcc-10.5.0
-parisc                randconfig-001-20260114    gcc-14.3.0
-parisc                randconfig-001-20260115    clang-22
-parisc                randconfig-002-20260114    gcc-13.4.0
-parisc                randconfig-002-20260114    gcc-14.3.0
-parisc                randconfig-002-20260115    clang-22
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-22
-powerpc                 linkstation_defconfig    clang-22
-powerpc                   lite5200b_defconfig    gcc-15.2.0
-powerpc               randconfig-001-20260114    gcc-11.5.0
-powerpc               randconfig-001-20260114    gcc-14.3.0
-powerpc               randconfig-001-20260115    clang-22
-powerpc               randconfig-002-20260114    gcc-12.5.0
-powerpc               randconfig-002-20260114    gcc-14.3.0
-powerpc               randconfig-002-20260115    clang-22
-powerpc                     tqm8555_defconfig    gcc-15.2.0
-powerpc64             randconfig-001-20260114    gcc-14.3.0
-powerpc64             randconfig-001-20260115    clang-22
-powerpc64             randconfig-002-20260114    gcc-14.3.0
-powerpc64             randconfig-002-20260114    gcc-8.5.0
-powerpc64             randconfig-002-20260115    clang-22
-riscv                            allmodconfig    clang-22
-riscv                             allnoconfig    clang-22
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    clang-22
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260114    gcc-14.3.0
-riscv                 randconfig-001-20260114    gcc-15.2.0
-riscv                 randconfig-002-20260114    gcc-15.2.0
-riscv                 randconfig-002-20260114    gcc-9.5.0
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-22
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260114    gcc-15.2.0
-s390                  randconfig-002-20260114    gcc-15.2.0
-s390                  randconfig-002-20260114    gcc-8.5.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-22
-sh                               allyesconfig    clang-19
-sh                                  defconfig    gcc-14
-sh                          kfr2r09_defconfig    gcc-15.2.0
-sh                    randconfig-001-20260114    gcc-15.2.0
-sh                    randconfig-002-20260114    gcc-12.5.0
-sh                    randconfig-002-20260114    gcc-15.2.0
-sparc                             allnoconfig    clang-22
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260114    clang-20
-sparc                 randconfig-002-20260114    clang-20
-sparc64                          allmodconfig    clang-22
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260114    clang-20
-sparc64               randconfig-002-20260114    clang-20
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-22
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260114    clang-20
-um                    randconfig-002-20260114    clang-20
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-22
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260114    clang-20
-x86_64      buildonly-randconfig-002-20260114    clang-20
-x86_64      buildonly-randconfig-003-20260114    clang-20
-x86_64      buildonly-randconfig-004-20260114    clang-20
-x86_64      buildonly-randconfig-005-20260114    clang-20
-x86_64      buildonly-randconfig-006-20260114    clang-20
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260114    gcc-14
-x86_64                randconfig-002-20260114    clang-20
-x86_64                randconfig-002-20260114    gcc-14
-x86_64                randconfig-003-20260114    clang-20
-x86_64                randconfig-003-20260114    gcc-14
-x86_64                randconfig-004-20260114    gcc-14
-x86_64                randconfig-005-20260114    gcc-14
-x86_64                randconfig-006-20260114    clang-20
-x86_64                randconfig-006-20260114    gcc-14
-x86_64                randconfig-011-20260114    gcc-14
-x86_64                randconfig-012-20260114    gcc-14
-x86_64                randconfig-013-20260114    gcc-14
-x86_64                randconfig-014-20260114    gcc-14
-x86_64                randconfig-015-20260114    gcc-14
-x86_64                randconfig-016-20260114    gcc-14
-x86_64                randconfig-071-20260114    clang-20
-x86_64                randconfig-072-20260114    clang-20
-x86_64                randconfig-073-20260114    clang-20
-x86_64                randconfig-074-20260114    clang-20
-x86_64                randconfig-075-20260114    clang-20
-x86_64                randconfig-076-20260114    clang-20
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-22
-xtensa                           allyesconfig    clang-22
-xtensa                randconfig-001-20260114    clang-20
-xtensa                randconfig-002-20260114    clang-20
+> +};
+> +
+> +/**
+> + * pci_acpi_request_d3cold_aux_power - Request aux power while device is in D3cold
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Shorten or wrap to fit in 80 columns.
+
+> + * @dev: PCI device instance
+> + * @requested_mw: Requested auxiliary power in milliwatts
+> + * @retry_interval: Retry interval returned by platform to retry auxiliary
+> + *                  power request
+> + *
+> + * Request auxilary power to platform firmware, via Root Port/Switch Downstream
+> + * Port ACPI _DSM Function 0Ah, needed for the PCI device when it is in D3cold.
+> + * Evaluate the _DSM and handle the response accordingly.
+
+Drop this last sentence; I don't think it tells us anything new.
+
+> + * For Multi-Function Devices, driver for Function 0 is required to report an
+> + * aggregate power requirement covering all functions contained within the
+> + * device.
+> + *
+> + * Return: 0 Aux power request granted
+> + *	   1 No main power removal
+> + *         errno on failure.
+> + */
+> +int pci_acpi_request_d3cold_aux_power(struct pci_dev *dev, u32 requested_mw,
+> +				      u32 *retry_interval)
+> +{
+> +	union acpi_object in_obj = {
+> +		.integer.type = ACPI_TYPE_INTEGER,
+> +		.integer.value = requested_mw,
+> +	};
+> +
+> +	union acpi_object *out_obj;
+> +	int result;
+> +	struct pci_dev *bdev;
+> +	struct acpi_device *adev;
+> +	acpi_handle handle;
+> +	struct aux_pwr *apwr, *next;
+> +
+> +	if (!dev)
+> +		return -EINVAL;
+
+We talked about only allowing this for function 0:
+https://lore.kernel.org/all/20250904183046.GA1267851@bhelgaas/
+
+> +	for (bdev = dev; bdev; bdev = pci_upstream_bridge(bdev)) {
+
+I think bdev should start with pci_upstream_bridge(dev) as in the
+other patch because this _DSM is only allowed in Downstream Ports.
+
+> +		handle = ACPI_HANDLE(&bdev->dev);
+> +		if (handle &&
+> +		    acpi_check_dsm(handle, &pci_acpi_dsm_guid, 4,
+> +				   1 << DSM_PCI_D3COLD_AUX_POWER_LIMIT))
+> +			break;
+> +	}
+> +
+> +	if (!bdev)
+> +		return -ENODEV;
+> +
+> +	adev = ACPI_COMPANION(&bdev->dev);
+> +	if (!adev)
+> +		return -EINVAL;
+> +
+> +	guard(mutex)(&acpi_aux_pwr_lock);
+> +	/* Check if aux power already granted to different device */
+> +	list_for_each_entry_safe(apwr, next, &acpi_aux_pwr_list, list) {
+> +		if (apwr->adev == adev && apwr->dev != &dev->dev) {
+> +			pci_info(to_pci_dev(apwr->dev),
+> +				 "D3cold Aux Power request already granted: %u mW\n",
+> +				 apwr->aux_pwr_limit);
+> +			return -EALREADY;
+> +		}
+> +		if (apwr->adev == adev && apwr->dev == &dev->dev) {
+> +			list_del(&apwr->list);
+> +			kfree(apwr);
+> +			break;
+> +		}
+> +	}
+> +
+> +	out_obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(&bdev->dev),
+> +					  &pci_acpi_dsm_guid, 4,
+> +					  DSM_PCI_D3COLD_AUX_POWER_LIMIT,
+> +					  &in_obj, ACPI_TYPE_INTEGER);
+> +	if (!out_obj)
+> +		return -EINVAL;
+> +
+> +	result = out_obj->integer.value;
+> +	ACPI_FREE(out_obj);
+> +
+> +	if (retry_interval)
+> +		*retry_interval = 0;
+> +
+> +	switch (result) {
+> +	case AUX_PWR_REQ_DENIED:
+> +		pci_dbg(bdev, "D3cold Aux Power %u mW request denied\n",
+> +			requested_mw);
+> +		return -EINVAL;
+> +	case AUX_PWR_REQ_GRANTED:
+> +		pci_info(bdev, "D3cold Aux Power request granted: %u mW\n",
+> +			 requested_mw);
+> +		apwr = kzalloc(sizeof(*apwr), GFP_KERNEL);
+> +		if (apwr) {
+> +			apwr->aux_pwr_limit = requested_mw;
+> +			apwr->dev = &dev->dev;
+> +			apwr->adev = adev;
+> +			INIT_LIST_HEAD(&apwr->list);
+> +			list_add(&acpi_aux_pwr_list,
+> +				 &apwr->list);
+> +		}
+
+I think we leak this allocation if the device is removed.  I think the
+list idea is more complicated than aggregating would be.
+
+I think we could:
+
+  - add "aux_power_mw" in struct pci_dev
+
+  - walk the tree below bdev, accumulating aux_power_mw
+    (total_aux_power_mw += dev->aux_power_mw)
+
+  - pass "total_aux_power_mw + requested_mw" to the _DSM
+
+  - if successful, set dev->aux_power_mw = requested_mw
+
+> +		return 0;
+> +	case AUX_PWR_REQ_NO_MAIN_PWR_REMOVAL:
+> +		pci_info(bdev, "D3cold Aux Power: Main power won't be removed\n");
+> +		return 2;
+
+Kernel-doc says we return 1 for this case.
+
+> +	case AUX_PWR_REQ_RETRY_INTERVAL_MIN ... AUX_PWR_REQ_RETRY_INTERVAL_MAX:
+> +		pci_info(bdev, "D3cold Aux Power request needs retry, interval: %u seconds\n",
+> +			 result & 0xF);
+
+Lower-case hex.
+
+> +		if (retry_interval) {
+> +			*retry_interval = result & 0xF;
+> +			return -EAGAIN;
+> +		}
+> +		return -EINVAL;
+
+I think we should do:
+
+  case AUX_PWR_REQ_RETRY_INTERVAL_MIN ...  AUX_PWR_REQ_RETRY_INTERVAL_MAX:
+    result &= 0xf;
+    pci_info(bdev, "... needs retry", result);
+    if (retry_interval)
+      *retry_interval = result;
+    return -EAGAIN;
+
+I don't think it's useful to return different errors based on whether
+the caller supplied a "retry_interval" pointer.
+
+> +	default:
+> +		pci_err(bdev, "D3cold Aux Power: Reserved or unsupported response: 0x%x\n",
+> +			result);
+> +		return -EINVAL;
+> +	}
+> +}
+> +EXPORT_SYMBOL_GPL(pci_acpi_request_d3cold_aux_power);
