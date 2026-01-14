@@ -1,87 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 713DB39E6F9
-	for <linux-pci@vger.kernel.org>; Wed, 14 Jan 2026 15:44:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC9C93A0EBC
+	for <linux-pci@vger.kernel.org>; Wed, 14 Jan 2026 15:57:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768405440; cv=none; b=j+AxAzDNCQTXoD/AEnOk6xNdF9CfENSH+KHCdxm+6X+sx3/aCN34YitO70Wxp95xl6GX7cDGXe1qpbYrF2uQHH460MQYY6pwFUD6Wgw5ZPbFbjriUHwuREfj+yabjxDAgVdzxx7Vonu9pC/v2Fzzv0i1hHACtDZzx8jFoL1cTAk=
+	t=1768406225; cv=none; b=BnnDap6M4LXElYxYtnvYosXBZzb+sjquqsrxmWyjkFMQvLtbPZCMsB6IwukqonnI/XNbD+eIklUICoDcDaJvIviD/MvNCXUbeWcOhn80rL6tUNNZ6TzRiV00asGt8JXezLiyrxpZWuyRz1QAZu11l/Q0FWWshE59SGmRnfz8e6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768405440; c=relaxed/simple;
-	bh=ReVz6cPlRsm4lE4yj8qgNYX22f2C5+7rwEPvVzG9M+Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XybR1Cwu7OwYvakc6jqqVFrEgQxNWG2EJpGsFKucMm9mdWHiNNAoyaq4Y5UDiV3Q1vg0XXQWxpxH3rsK21WApISRx2tWexzTKE7P9Q1cnLOM0UpwlS57klM70Y6fBa6SXsiHDrro+3fipAWMetUy8D953WO4SwFNG4+4Mkp2Re0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t6H+7e2d; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768406225; c=relaxed/simple;
+	bh=xsJHSf3/AMwJQdEYVXGOCzU9jiYbWVnUyVT7KumsBhY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=PYeITRYwl5T7EcFXn9aSeO0RdDMyglQgBr9qi7RNuoO0/D2p+tVfXoeV+jFg6nk7CQwBOgP3itBqcN7r5JQ/xNpXXUTSYdUErg89SJV85lgn/yAbd0Elajgfh/HepCB/lnALsHjha5UCT6FVTKv/JHBahTQT1x3unwnGO9xvqrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ciM3mmGa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t6H+7e2d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3155BC16AAE;
-	Wed, 14 Jan 2026 15:43:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ciM3mmGa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C8BDC4CEF7
+	for <linux-pci@vger.kernel.org>; Wed, 14 Jan 2026 15:57:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768405440;
-	bh=ReVz6cPlRsm4lE4yj8qgNYX22f2C5+7rwEPvVzG9M+Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=t6H+7e2dbK9gQEvEZJKxd76IWSbrl5frhABmypwBkBSe9/hSV1JA+4/TRUsjzkl5w
-	 XQEZ1EISjXhn47N72nETB4OFNxb7Lsio8Sz0v77iL/NIBXmw4NRPzMMKcBkmee+gzp
-	 UuJZakX/7QiK0Jto7I52nmYYQUgT7XroBKqdcNCmSVRUM56w1rTDGIm3d9tNZ/wdan
-	 Ds5w84/WQgFGuxoEYkU0ORjWDlKOBID7SYhI6+PAvnT0xOG+wxCIOtA9r7h0AnNA8+
-	 PkMGMTv8WY0Tgb7nY7IsVGFeDpSht3jygHKnLmdBhkyM5alXbV4JdzK270X3LyXATw
-	 vM8Uz3eOiZcVA==
-Date: Wed, 14 Jan 2026 16:43:53 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-phy@lists.infradead.org, Heiko Stuebner <heiko@sntech.de>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Sebastian Reichel <sebastian.reichel@collabora.com>
-Subject: Re: [PATCH 0/5] Add calibration for Synopsys PCIe PHY and Controller
-Message-ID: <aWe5s5mqFt26lRGL@ryzen>
-References: <1766560210-100883-1-git-send-email-shawn.lin@rock-chips.com>
+	s=k20201202; t=1768406225;
+	bh=xsJHSf3/AMwJQdEYVXGOCzU9jiYbWVnUyVT7KumsBhY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=ciM3mmGaLfb4sR3dwp0OsziDDyZMrmjtQv0yE/eWeVkMVjJ4/iDSkJgdMZLah7KNn
+	 mrV365T7U4hSIO3tf2+e84SJkaTTPI0DHyWaBigzsSndOjxhHinfBHCZQ7Cw+dNbUH
+	 3Cm3GgsF4uh60LnQwgBR7FyBfcfa9TjhtsIvOXcWE8PYDk7MhbDlm97c7t7BWqjEke
+	 av0BqCxUCmLGHnjB/lBs7CcOMZqnqbV9gdbpaUCnGJmsUV4MUxq028Ws2mio0/evFj
+	 8QgwA5/o/1QBZfV9qnd34rN/IouI1hHcGlay/WXkaVA8+NEOaBFI673UqL11pjvv+1
+	 975Y5iTV9nVQQ==
+Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-7cfd2be567bso117647a34.2
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jan 2026 07:57:05 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWQD+GbwGM+uYSrKvrosTW5y9cfsakx4TCrRrmPIUfSWmZJeti82sXiZ8TPvdewUgjhZ+8pE3T+D1U=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxZlw20NcayPDlEByjygdv1IWBnkLa5rA00mzqGlk3mP9Ks14Vc
+	N3VLX9Qwg2yOviaYINtkSnUae5XtWS2sAEaV3zThio2aXpWTGVBm7VPdjsQ90JMsG4M/LU+EWVe
+	X1RfH+Cq21v4CoGJlBpNhx5KbIDCsXss=
+X-Received: by 2002:a05:6808:1798:b0:45a:6d11:9895 with SMTP id
+ 5614622812f47-45c715f7907mr2183029b6e.64.1768406224737; Wed, 14 Jan 2026
+ 07:57:04 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1766560210-100883-1-git-send-email-shawn.lin@rock-chips.com>
+References: <20251218-gicv5-host-acpi-v2-0-eec76cd1d40b@kernel.org>
+In-Reply-To: <20251218-gicv5-host-acpi-v2-0-eec76cd1d40b@kernel.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 14 Jan 2026 16:56:53 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0gqso3q8gUZ3wPq1iG7zOBUu2cWMDZiHqCBU5dgdu_KTQ@mail.gmail.com>
+X-Gm-Features: AZwV_QjrZrLf1bCykQ-ryg-5n0xrmuSoINx75tjJllyFFfS_mnMgNK7g8MW_veM
+Message-ID: <CAJZ5v0gqso3q8gUZ3wPq1iG7zOBUu2cWMDZiHqCBU5dgdu_KTQ@mail.gmail.com>
+Subject: Re: [PATCH v2 0/7] irqchip/gic-v5: Code first ACPI boot support
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Robert Moore <robert.moore@intel.com>, Thomas Gleixner <tglx@linutronix.de>, 
+	Hanjun Guo <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@arm.com>, 
+	Marc Zyngier <maz@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org, 
+	acpica-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
+	Jose Marinho <jose.marinho@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 24, 2025 at 03:10:05PM +0800, Shawn Lin wrote:
-> 
-> Currently, when pcie-dw-rockchip uses the Synopsys PHY, it relies on
-> the phy_init() callback of the phy-rockchip-snps-pcie3 driver to
-> perform calibration. This is incorrect because the controller is
-> still held in reset at that time, preventing the PHY from accurately
-> reflecting the actual PLL lock and calibration status.
+On Thu, Dec 18, 2025 at 11:15=E2=80=AFAM Lorenzo Pieralisi
+<lpieralisi@kernel.org> wrote:
+>
+> The ACPI and ACPI IORT specifications were updated to support bindings
+> required to describe GICv5 based systems.
+>
+> The ACPI specification GICv5 bindings ECR [1] were approved and the
+> required changes merged in the ACPICA upstream repository[5].
+>
+> The Arm IORT specification [2] has been updated to include GICv5 IWB
+> specific bindings in revision E.g.
+>
+> Implement kernel code that - based on the aforementioned bindings - adds
+> support for GICv5 ACPI probing.
+>
+> ACPICA changes supporting the bindings are posted with the series; they
+> were cherry-picked from the upcoming ACPICA Linuxised release patches
+> and they should _not_ be merged in any upstream branch because the
+> full set of Linuxised ACPICA changes will be subsequently posted in
+> order to be merged, I added the two ACPICA patches to make the series
+> self-contained.
 
-Hello Shawn,
+The patches in question have been included in this series:
 
-I can see that you move the calibration code from .phy_init() to
-.phy_calibrate().
+https://lore.kernel.org/linux-acpi/12822121.O9o76ZdvQC@rafael.j.wysocki/
 
-And I understandthat the controller is still held in reset.
+and are going to be applied shortly.
 
-I understand that the the PHY calibration is supposed to be done
-when the controller is not held in reset, and that alone is
-enough to warrant a fix.
-
-The Synopsys Gen3 PHY is used in e.g. Rock5b, and link training
-currently works fine with this PHY, so what is the actual
-implications of performing the PHY calibration when the controller
-is held in reset?
-
-Will it somehow it improve signal integrity?
-
-
-Kind regards,
-Niklas
-
-> 
-> To fix this, this series:
-> 1. Calls phy_calibrate() in the pcie-dw-rockchip driver (if supported)
->    after the controller is out of reset, ensuring the PHY can
->    properly synchronize with the controller state.
-> 2. Adds the necessary calibration support in the Synopsys PHY driver
->    to implement this callback.
+Thanks!
