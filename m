@@ -1,224 +1,109 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E352399000;
-	Thu, 15 Jan 2026 14:25:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6738F3A1E8C
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2026 14:26:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768487117; cv=none; b=oCMrcvgCkssSPvd65wf+OShSYr/r7H5LUtEFaPBTiQZrT14zZfeqQPW9/DOd/IHdavbI/miKAuIXaulb+/HD8NudMdlXFCbr9riQssc/xv/CxntXfjlCKTWufE5mSjVfr8oZfYjI8vWs+Vmnf51tr+w8w4ls9NIQjhyBsU2Kypk=
+	t=1768487187; cv=none; b=r1lCDaIqjNh1S3u21kaYQDiZYyYS7MwOACLObqbo9s6B2h3qaXwEvFe/7jh+ung9dyTGGgXoPPcSBRgRxACC1qJVT7MZk0pLbynv0nDdFLqLg+YuBNvBIICj64prdvufFsN6P9NBBALVbUMrlxe0K3Aj3zz0fFHBlSaxkZ8m6cc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768487117; c=relaxed/simple;
-	bh=sysW4MkNR5D/ieE+xD21mNbklbilneOMl2bQIZ4anjA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=omP6BucWaigH5CJ3nKGYJxdzv/+1Dy1SsV3/S/HVrSKLjhZsxOMCbFWx39uFlNZc4XuzsoRQ5T4lGTWfZIaQvLB8blpIOZuQHz4yy4uqF4ahJAfbajgMdBv/S8uMHqS4Ez2vXY+DiVWUucFcVJLf4zhOFIXjVwQs06BKBslrgm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ucw/1zg2; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1768487187; c=relaxed/simple;
+	bh=LSk4RfFwqmeD13QblWAUhreLPvsND2YlkvwhIHz8Lkk=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ccZ0+KoBJ2bJt/+BjtUTmOVl1/Yuw/lVPzEdZ8v6nLoZkEED3d8p/5A6ozCAaDtTnAUNUbpDHde5Sy747aRAc1dkwwwKYREiU+tH1goJpz+ziq+9yy7O5KrJ00gfl7N7uDD6bKIGiCRnCuF3UtfR6fYofUfydKBo2aNFcLaLA8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GiH8tlRc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ucw/1zg2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768487115; x=1800023115;
-  h=from:to:cc:subject:in-reply-to:references:date:
-   message-id:mime-version;
-  bh=sysW4MkNR5D/ieE+xD21mNbklbilneOMl2bQIZ4anjA=;
-  b=Ucw/1zg2fcsNSFGMsXylCG23TzFLX3dKLoY1gdRdp3jVmdg/k5TQdp4a
-   SNjHzsRcyHuvxCol9hKpfcnfXcxXcFmpEoPy0J55Qc+DmQWl+4+hO4cMh
-   ARpfopsPLCoQqbdpnAwmqLTcGE/XxAd8l/8xygKhWIPN4nCXJA7i0/dTy
-   k8XDwO8iysXMFnwxd4XzWjnybrbhmTOw2JFVcS+ISwuw3c+FOfyK003f8
-   P2GkRgOr+n+Cggeh86AYJerRCEt1CRhIAVbGJ9iY3thdGWdLD+X4BXW8e
-   GXxTR4JgaMQbviHbf9AKitZRDiJWh5sYGNBIE65rymn57oiotRfo6imOV
-   Q==;
-X-CSE-ConnectionGUID: sSTdoRm6Soyp1Q4ozAsXMw==
-X-CSE-MsgGUID: ROkXsnedQYS549QcFmn06Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11672"; a="81236421"
-X-IronPort-AV: E=Sophos;i="6.21,228,1763452800"; 
-   d="scan'208";a="81236421"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2026 06:25:14 -0800
-X-CSE-ConnectionGUID: GMIiWiNcS9iOFb/OJPOxMA==
-X-CSE-MsgGUID: Gr3YrumiQlivATe4KDINrA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,228,1763452800"; 
-   d="scan'208";a="204846263"
-Received: from ettammin-desk.ger.corp.intel.com (HELO localhost) ([10.245.246.150])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2026 06:25:09 -0800
-From: Jani Nikula <jani.nikula@linux.intel.com>
-To: Badal Nilawar <badal.nilawar@intel.com>, intel-xe@lists.freedesktop.org,
- linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: anshuman.gupta@intel.com, rafael@kernel.org, lenb@kernel.org,
- bhelgaas@google.com, ilpo.jarvinen@linux.intel.com,
- rodrigo.vivi@intel.com, varun.gupta@intel.com,
- ville.syrjala@linux.intel.com, uma.shankar@intel.com,
- karthik.poosa@intel.com, matthew.auld@intel.com, sk.anirban@intel.com,
- raag.jadav@intel.com
-Subject: Re: [PATCH v6 06/12] drm/xe/vrsr: Enable VRSR on default VGA boot
- device
-In-Reply-To: <20260113164200.1151788-20-badal.nilawar@intel.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park,
- 6 krs Bertel Jungin Aukio 5, 02600 Espoo, Finland
-References: <20260113164200.1151788-14-badal.nilawar@intel.com>
- <20260113164200.1151788-20-badal.nilawar@intel.com>
-Date: Thu, 15 Jan 2026 16:25:06 +0200
-Message-ID: <64894565d5eace99fd65f290ee807dabaa2de04f@intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GiH8tlRc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E9B1C2BC86
+	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2026 14:26:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768487187;
+	bh=LSk4RfFwqmeD13QblWAUhreLPvsND2YlkvwhIHz8Lkk=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
+	b=GiH8tlRcbEYCjeUDESJJAsv2cBvlQxscslskXO6wl7y8D8XxdPqS38wSAjTrgtBJM
+	 I5HuTcSQTtovAi88NA4wNvx5pAIVDl6mho770YAk7zCZ2MrbyCV5GwBji4dCqfOoN3
+	 bObCASPNjfUUZnoiUsJwMWKG8Ltzayq/aAiYzFIf0bKstHjUXaEl2QquN4YYJU/niN
+	 CRRoYiS56Y809e18R7UOd8YpXoPZyHJcKSsBteRjvETlVi9CFUUkMm92/o2WyzXruf
+	 62ibq0u3wO/gTYQ7e0gbmNnOZkvZGgXxH3ik839RbqFSBaGuz+WFClxSvWXo94ZLek
+	 TTHmJouTjNEsA==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-598f8136a24so1205582e87.3
+        for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2026 06:26:27 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXnFpYo4pFMy4l09QYaQHqtuaS9gKfBD5w61o/TWZcoUVyiDd3jLEAn/jNXHXMhbDc6ymW8dombaII=@vger.kernel.org
+X-Gm-Message-State: AOJu0YydqVSeHIXOjJcvG1Qqs67ehg6EkJKVFD6xdyoqYkx9FTs/awob
+	s6OXvH6Jetn2XCfog/6g6XisVRuco0vSUkdZ0pLJjZOsf35CzT55M+hEkiu9U9uEP0BvZY9a7aZ
+	PYTXx21wjsWZACw48SKAqXMGEkhxnOFrbHACWeYv2dQ==
+X-Received: by 2002:a05:6512:138d:b0:59b:7c03:f2ec with SMTP id
+ 2adb3069b0e04-59ba0f8a340mr2357697e87.41.1768487185888; Thu, 15 Jan 2026
+ 06:26:25 -0800 (PST)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 15 Jan 2026 09:26:24 -0500
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 15 Jan 2026 09:26:24 -0500
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260115-pci-pwrctrl-rework-v5-6-9d26da3ce903@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20260115-pci-pwrctrl-rework-v5-0-9d26da3ce903@oss.qualcomm.com> <20260115-pci-pwrctrl-rework-v5-6-9d26da3ce903@oss.qualcomm.com>
+Date: Thu, 15 Jan 2026 09:26:24 -0500
+X-Gmail-Original-Message-ID: <CAMRc=MfFcFm7c3Xj==N4680SdGwhB2WEfbetVdeTDXEJPBk0Mw@mail.gmail.com>
+X-Gm-Features: AZwV_Qh3ZSKWX0rzFw6c-MIT7Mdbqlr5Buv6hz2PQ0rAfqsxnbrMsYF2rSd_XI8
+Message-ID: <CAMRc=MfFcFm7c3Xj==N4680SdGwhB2WEfbetVdeTDXEJPBk0Mw@mail.gmail.com>
+Subject: Re: [PATCH v5 06/15] PCI/pwrctrl: tc9563: Rename private struct and
+ pointers for consistency
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
+	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Chen-Yu Tsai <wens@kernel.org>, 
+	Brian Norris <briannorris@chromium.org>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Niklas Cassel <cassel@kernel.org>, 
+	Alex Elder <elder@riscstar.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Bartosz Golaszewski <brgl@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Jingoo Han <jingoohan1@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 13 Jan 2026, Badal Nilawar <badal.nilawar@intel.com> wrote:
-> The VRSR feature is to enhance the display screen refresh experience
-> when the device exits from the D3cold state. Therefore, apply the VRSR
-> feature to the default VGA boot device and when a display is connected.
-
-I don't understand how you get from the 1st sentence "therefore" the 2nd
-sentence. Please elaborate what you're trying to do here, and why.
-
-So we have xe_pci_probe() -> xe_pm_init() -> xe_pm_vrsr_init() ->
-xe_display_connected() -> intel_display_connected(), and that's the only
-path and point in time to check whether displays are connected. If not,
-the decision is "not VRSR capable", which is just a weird concusion to
-make. The *capability* does not depend on displays, does it?
-
-If you boot a device without a display, and then plug in a display, no
-VRSR for you?
-
-More comments inline.
-
-> v2: Move generic display logic to i915/display (Jani)
+On Thu, 15 Jan 2026 08:28:58 +0100, Manivannan Sadhasivam via B4 Relay
+<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 >
-> Signed-off-by: Badal Nilawar <badal.nilawar@intel.com>
-> Signed-off-by: Anshuman Gupta <anshuman.gupta@intel.com>
+> Previously the pwrseq, tc9563, and slot pwrctrl drivers used different
+> naming conventions for their private data structs and pointers to them,
+> which makes patches hard to read:
+>
+>   Previous names                         New names
+>   ------------------------------------   ----------------------------------
+>   struct pci_pwrctrl_pwrseq_data {       struct pci_pwrctrl_pwrseq {
+>     struct pci_pwrctrl ctx;                struct pci_pwrctrl pwrctrl;
+>   struct pci_pwrctrl_pwrseq_data *data   struct pci_pwrctrl_pwrseq *pwrseq
+>
+>   struct tc9563_pwrctrl_ctx {            struct pci_pwrctrl_tc9563 {
+>   struct tc9563_pwrctrl_ctx *ctx         struct pci_pwrctrl_tc9563 *tc9563
+>
+>   struct pci_pwrctrl_slot_data {         struct pci_pwrctrl_slot {
+>     struct pci_pwrctrl ctx;                struct pci_pwrctrl pwrctrl;
+>   struct pci_pwrctrl_slot_data *slot     struct pci_pwrctrl_slot *slot
+>
+> Rename "struct tc9563_pwrctrl_ctx" to "pci_pwrctrl_tc9563".
+>
+> Move the struct pci_pwrctrl member to be the first element in struct
+> pci_pwrctrl_tc9563, as it is in the other drivers.
+>
+> Rename pointers from "struct tc9563_pwrctrl_ctx *ctx" to
+> "struct pci_pwrctrl_tc9563 *tc9563".
+>
+> No functional change intended.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
->  drivers/gpu/drm/i915/display/intel_display.c | 22 ++++++++++++++++++++
->  drivers/gpu/drm/i915/display/intel_display.h |  1 +
->  drivers/gpu/drm/xe/display/xe_display.c      |  5 +++++
->  drivers/gpu/drm/xe/display/xe_display.h      |  2 ++
->  drivers/gpu/drm/xe/xe_pm.c                   |  5 +++++
->  5 files changed, 35 insertions(+)
->
-> diff --git a/drivers/gpu/drm/i915/display/intel_display.c b/drivers/gpu/drm/i915/display/intel_display.c
-> index 81b3a6692ca2..97c74272fb19 100644
-> --- a/drivers/gpu/drm/i915/display/intel_display.c
-> +++ b/drivers/gpu/drm/i915/display/intel_display.c
-> @@ -8426,3 +8426,25 @@ bool intel_scanout_needs_vtd_wa(struct intel_display *display)
->  {
->  	return IS_DISPLAY_VER(display, 6, 11) && intel_display_vtd_active(display);
->  }
-> +
-> +bool intel_display_connected(struct intel_display *display)
-> +{
-> +	struct drm_connector *list_connector;
-> +	struct drm_connector_list_iter iter;
-> +	bool ret = false;
-> +
-> +	mutex_lock(&display->drm->mode_config.mutex);
-> +	drm_connector_list_iter_begin(display->drm, &iter);
-> +
-> +	drm_for_each_connector_iter(list_connector, &iter) {
-> +		if (list_connector->status == connector_status_connected) {
-> +			ret = true;
-> +			break;
-> +		}
-> +	}
-> +
-> +	drm_connector_list_iter_end(&iter);
-> +	mutex_unlock(&display->drm->mode_config.mutex);
-> +
-> +	return ret;
-> +}
-> diff --git a/drivers/gpu/drm/i915/display/intel_display.h b/drivers/gpu/drm/i915/display/intel_display.h
-> index f8e6e4e82722..20690aa59324 100644
-> --- a/drivers/gpu/drm/i915/display/intel_display.h
-> +++ b/drivers/gpu/drm/i915/display/intel_display.h
-> @@ -560,5 +560,6 @@ bool assert_port_valid(struct intel_display *display, enum port port);
->  
->  bool intel_scanout_needs_vtd_wa(struct intel_display *display);
->  int intel_crtc_num_joined_pipes(const struct intel_crtc_state *crtc_state);
-> +bool intel_display_connected(struct intel_display *display);
->  
->  #endif
-> diff --git a/drivers/gpu/drm/xe/display/xe_display.c b/drivers/gpu/drm/xe/display/xe_display.c
-> index f8a831b5dc7d..54ed39b257ad 100644
-> --- a/drivers/gpu/drm/xe/display/xe_display.c
-> +++ b/drivers/gpu/drm/xe/display/xe_display.c
-> @@ -64,6 +64,11 @@ bool xe_display_driver_probe_defer(struct pci_dev *pdev)
->  	return intel_display_driver_probe_defer(pdev);
->  }
->  
-> +bool xe_display_connected(struct xe_device *xe)
-> +{
-> +	return intel_display_connected(xe->display);
-> +}
-> +
->  /**
->   * xe_display_driver_set_hooks - Add driver flags and hooks for display
->   * @driver: DRM device driver
-> diff --git a/drivers/gpu/drm/xe/display/xe_display.h b/drivers/gpu/drm/xe/display/xe_display.h
-> index 76db95c25f7e..11d4b09808e5 100644
-> --- a/drivers/gpu/drm/xe/display/xe_display.h
-> +++ b/drivers/gpu/drm/xe/display/xe_display.h
-> @@ -37,6 +37,7 @@ void xe_display_pm_resume(struct xe_device *xe);
->  void xe_display_pm_runtime_suspend(struct xe_device *xe);
->  void xe_display_pm_runtime_suspend_late(struct xe_device *xe);
->  void xe_display_pm_runtime_resume(struct xe_device *xe);
-> +bool xe_display_connected(struct xe_device *xe);
->  
->  #else
->  
-> @@ -67,5 +68,6 @@ static inline void xe_display_pm_runtime_suspend(struct xe_device *xe) {}
->  static inline void xe_display_pm_runtime_suspend_late(struct xe_device *xe) {}
->  static inline void xe_display_pm_runtime_resume(struct xe_device *xe) {}
->  
-> +static inline bool xe_display_connected(struct xe_device *xe) { return false; }
 
-There was a blank line before #endif. Please keep it. Ditto throughout
-the series.
+Makes sense, thanks!
 
->  #endif /* CONFIG_DRM_XE_DISPLAY */
->  #endif /* _XE_DISPLAY_H_ */
-> diff --git a/drivers/gpu/drm/xe/xe_pm.c b/drivers/gpu/drm/xe/xe_pm.c
-> index 3fe673f0f87d..e7aa876ce9e0 100644
-> --- a/drivers/gpu/drm/xe/xe_pm.c
-> +++ b/drivers/gpu/drm/xe/xe_pm.c
-> @@ -9,6 +9,7 @@
->  #include <linux/fault-inject.h>
->  #include <linux/pm_runtime.h>
->  #include <linux/suspend.h>
-> +#include <linux/vgaarb.h>
->  
->  #include <drm/drm_managed.h>
->  #include <drm/ttm/ttm_placement.h>
-> @@ -387,6 +388,7 @@ static int pci_acpi_aux_power_setup(struct xe_device *xe)
->  
->  static void xe_pm_vrsr_init(struct xe_device *xe)
->  {
-> +	struct pci_dev *pdev = to_pci_dev(xe->drm.dev);
->  	int ret;
->  
->  	if (!xe->info.has_vrsr)
-> @@ -395,6 +397,9 @@ static void xe_pm_vrsr_init(struct xe_device *xe)
->  	if (!xe_pm_vrsr_capable(xe))
->  		return;
->  
-> +	if (pdev != vga_default_device() || !xe_display_connected(xe))
-
-Simply considering the places in the kernel that call
-vga_default_device(), this just doesn't feel right.
-
-
-BR,
-Jani.
-
-
-> +		return;
-> +
->  	/*
->  	 * If the VRSR initialization fails, the device will proceed with the regular
->  	 * D3cold flow
-
--- 
-Jani Nikula, Intel
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
