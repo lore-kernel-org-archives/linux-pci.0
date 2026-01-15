@@ -1,219 +1,178 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B04730AD11
-	for <linux-pci@vger.kernel.org>; Thu, 15 Jan 2026 06:51:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F30327BE7;
+	Thu, 15 Jan 2026 07:29:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768459902; cv=none; b=tTioihZPhUMrKzX0dgPqyCrUmB8He1CYrs4eWt9GbSC8UPPsO11TPZzKbpbbvQcgkAGKjVTZUAJyId5sU3SCO3n6WYFtPiLcVVheHZVq2bddgRiRuWRDCjIDb17FV6h4ssDLqIHxxvdtT1IcgGzdPudvQUW/yJpez//b8y4S+PY=
+	t=1768462151; cv=none; b=rNkaGIczbmvECwHFBnGlOzJPDj5Lc0oNx1vK2Q0xD88f2yGn6Q4zycSACy9SZmhs37vjRea9vpB9AScAymsA609fRjWdjIGMfl3QI7MoE71BDlCAEqPncYwvOkIVuGGqIbnOf3HwmddUawyMmQmxli4wGWdeX+KSCg7zlzph7zU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768459902; c=relaxed/simple;
-	bh=krcwkRyA/OkDlIF+vLNpkYYr7LP+cp1CUDN0vKH6hYA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jqj8I15iMreyQz0UT3THpG5CafCiy+SdEhcmwfhBY27Ac2Dw+DgxkgEizgSwPG0OFUd8vSODjLI8vYvR1tz68lxf6R3s4vDomcjCIpa/tooDx1QzYDmZCUar9hZpM4GGDwidUpNz/1ragxzrxa8LTohgHxqyVNs4YdU6DySALMU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k4QDjJlM; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1768462151; c=relaxed/simple;
+	bh=3nA72EkIdmKC4EC0a7ioMlai7D1RlpRo3JaSNfWCI+8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ISe3qbA5o4GaaUjsKFbzRbC+uQOXOUyrneK7uRx/91MyEgj112fDTEXVdKXsUY0EELtQwvcgz4c8HWSZN3TQJ2QHGKM/zg3cTBBAIZU9ZhqGmxa2fZwqkLj1VVQVwYf0csXeE6fzZ1009Fkq8cJuRv3A/BXHW47cZayZc3aFaCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=coxmmZnX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k4QDjJlM"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-81345800791so364448b3a.0
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jan 2026 22:51:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768459898; x=1769064698; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xRSrJXNvsYHwr4VvhkeEJyLglskxUKq6CBZCDhkjpfc=;
-        b=k4QDjJlM+Q74FMoqCNocr8m7U1b9UGCwLcoe5042QNxkrnp9s6uXx3sVMEkmdmHYR1
-         8P5Ez+kpivWQk9m2Ptm503ZagfwBeF2mDStSaXZ4+BdaNmwiKCBwKlz106x3XbKiQwd0
-         VcvoHfv1WizDlUQO/FwuOzw7jVZdMJIJrvspnwSf2/fXXCfdVMBBcebVwbGRiEP2BFzt
-         f76ICDNbQw9UJSBa8ewlOGDRpvE21d0rZ2NJZnjTgk0NyYgYyTaElVrapNXXGHxD8fhP
-         wlFr/9FuPPRSMRaqr2aZGPoBoX7aj3JWP7MqNNF2FM3Y660G4gnu8HDCDEBgNGudyCMs
-         DPuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768459898; x=1769064698;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xRSrJXNvsYHwr4VvhkeEJyLglskxUKq6CBZCDhkjpfc=;
-        b=I7+rjQiTpC9+QTlZ8nWYgKX3r6rwvFmpRblM1v17wedTvIEF7kRoFd4NSdRn/DQSrB
-         58gXigiNTBVU4keh8vV1WVXXxoCdmxm6FkWfv8G1D6Qzi9CkfB48INSUgC/uc+9lx/1p
-         Liw+dhR3gdnc6KULOExpXPm9jUSAsHgdxDgjSwivIWPNi7n4atcGAFZJrGxKc6+iwVfq
-         hZay+D8Rh3TJkPqkTdxVxAzVtiv6yMDd025bzF1JNBNDZCEFtl8UaluCq3fUH5GALYri
-         gkWUXCNOmrGAY7eIDRfOvAcuzmMsmKJSBHg/OYTvE7xlnDAtWVaPiLB5Ub1WTg1d25SE
-         62aQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVsAz8B8NIu4qNUq1PC352ssMIEaU3TcljW4Ta+JLGdkgBmEB8kaeuRcVvpgoEWsBouKHHllEpN6IA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz/1ZILyuk9EbcrJg5AfzpusM5X4ddUs5yxSYRqQpArNnXj+Mxu
-	qB2HPfa75a0AYTGv+vimpcl/kIqIa1FNthwKkWQfKxQzbc54FOuGKfGQ
-X-Gm-Gg: AY/fxX7Wef+t3fqfsrRv+ch7ABCSItb4ys3E7g72fSsKkS1iOedEbrEVpumfToTLU6u
-	HJeo5vZ9GtKD4Fz05MQ5ojaf+dS+DQMTAPcGFyGmpVWErQiZOckESadhMl7jdi8jD8jfIV4zSef
-	Onlj6RWx4qN5ZNsyYWrvPUpSg77QSPb6CbKsVbGGAisj20JDwLqlE0QHj/S27FywNTbJ95CaesF
-	0JQ2hDSeuwqle/KeSsCY9cf7NbkDHfHVEzBJi0YxIxqnCwdETrWLuP8jWeR7p4+1htRc3jBC+2D
-	jq8BlKhYhZeoufhB/KqBXHvROVjN5F+YLFu2yv7OWEtnE7AEymv19S8+yWBfaPJDVWnDrZd7e0S
-	eMKYvbbPeeS5q5fnI23dXDOoW/0nWKZ3eAjirnx0BdrwgI+9+mW68jrgSWpu74Fai+LA18j91Xt
-	NFYvWnB6C2PCvRpSOa92sZq5T25MsV
-X-Received: by 2002:a05:6a00:4098:b0:7e8:4471:8d9 with SMTP id d2e1a72fcca58-81f81fffc7dmr4523165b3a.58.1768459897843;
-        Wed, 14 Jan 2026 22:51:37 -0800 (PST)
-Received: from DESKTOP-TIT0J8O.localdomain ([49.47.198.227])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-81f8e4b6ca9sm1452437b3a.4.2026.01.14.22.51.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Jan 2026 22:51:37 -0800 (PST)
-Date: Thu, 15 Jan 2026 10:50:55 +0400
-From: Ahmed Naseef <naseefkm@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [QUESTION] pci_read_bridge_bases: skip prefetch window if
- pref_window not set?
-Message-ID: <aWiOT0Q2rCMHXsIx@DESKTOP-TIT0J8O.localdomain>
-References: <aWdG/9N2C/7L5sFQ@DESKTOP-TIT0J8O.localdomain>
- <20260114175550.GA825847@bhelgaas>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="coxmmZnX"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6AD2CC116D0;
+	Thu, 15 Jan 2026 07:29:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768462151;
+	bh=3nA72EkIdmKC4EC0a7ioMlai7D1RlpRo3JaSNfWCI+8=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=coxmmZnX/Ufzl6IrgZFQfUJlsE/LgSL3ez+FMHzMV9yBLYFxIxUiBbG2tYRuUdpxX
+	 /kHmFNGs1Oolm0Bh1NdVoZaBEv/xpudQBQlRsGuDe4S3JR3JE4OieZuHmEpbf8vpxC
+	 ywM7OnWF2PlB4kytQRuZDp2zU4g1WbKK5q3bBIP76Fe3uq0w1jeWio61ewEe6MWHTB
+	 28rgm1WNqGfv/L3YOd1ErlL98lfwGM7UZaBZtvOV7Gf20kY3aClqHVwkGK8epIavSK
+	 7OBw2XZSq/l3qZim1CwJMZ+nV9tQ54M3NKjWkhSVSLxXlo8wShZU2KPnRSS6D7idgj
+	 r0kPFnKtdjZAQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56DF4D3CCB8;
+	Thu, 15 Jan 2026 07:29:11 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Thu, 15 Jan 2026 12:58:53 +0530
+Subject: [PATCH v5 01/15] PCI/pwrctrl: pwrseq: Rename private struct and
+ pointers for consistency
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260114175550.GA825847@bhelgaas>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260115-pci-pwrctrl-rework-v5-1-9d26da3ce903@oss.qualcomm.com>
+References: <20260115-pci-pwrctrl-rework-v5-0-9d26da3ce903@oss.qualcomm.com>
+In-Reply-To: <20260115-pci-pwrctrl-rework-v5-0-9d26da3ce903@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Bartosz Golaszewski <brgl@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, Jingoo Han <jingoohan1@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Chen-Yu Tsai <wens@kernel.org>, 
+ Brian Norris <briannorris@chromium.org>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Niklas Cassel <cassel@kernel.org>, Alex Elder <elder@riscstar.com>, 
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3529;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=jpzQnoVwEdcn0ySCaLexwQnNRM8TDWqV0v+/dcDxcw4=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpaJdByf+xDF+rD4QxhDJvBJM/UiPjdQLykBm8t
+ VjC+ErqS9CJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaWiXQQAKCRBVnxHm/pHO
+ 9UrPB/9loC6Qt69PW7yqKbaGOnFNC6qSQUxzzSF9zCvCMbCLVADduO5EnZOJ02KdqPefthtD8uX
+ +nXOmsZ+AH/Z47dgQY2nUy34ETJpulIaP7kB5zvxnW8H2Fr+DOzHAZRc930H4aV/sY6Wi7LjCQz
+ tSnZMbB8uCnL2K82/dBUxfQnJysUUzw6fglcRyJOK9Df3X6zjV0Ny+TUaUDhp38/B1QInE0RaFU
+ 16Xrl3okhmBLQ6PYHq12KVxOpMolY5fIhSWTMOh/cvRXmPFrC7m3a1WW7Q7G9F4q4DnccmIVDAw
+ GTPcjkB50vxtPOBQ+8ZWU92UaP+BpJx09yg4KRG/WBBWTrvH
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On Wed, Jan 14, 2026 at 11:55:50AM -0600, Bjorn Helgaas wrote:
-> On Wed, Jan 14, 2026 at 11:34:23AM +0400, Ahmed Naseef wrote:
-> > On Tue, Jan 13, 2026 at 03:02:59PM -0600, Bjorn Helgaas wrote:
-> > > On Mon, Jan 12, 2026 at 01:41:00PM +0400, Ahmed Naseef wrote:
-> > > >   [  160.238227] mtk-pcie 1fb83000.pcie: EN7528: port1 link trained to Gen2
-> > > 
-> > > Can we look forward to a patch to add support for EN7528?
-> > 
-> > Definitely. Someone else is working on PCIe support for EN751221
-> > (same SoC family). Once everything is consolidated, we plan to submit
-> > a unified patch to drivers/pci/controller/pcie-mediatek.c.
-> 
-> Great, will watch for that!
-> 
-> > > > PCI_PREF_MEMORY_LIMIT which both return 0x0000. This results in base = 0
-> > > > and limit = 0. The condition "if (base <= limit)" evaluates to true
-> > > > (since 0 <= 0), so a bogus prefetch window [mem 0x00000000-0x000fffff pref]
-> > > > is created.
-> > > 
-> > > It's too bad we didn't log this in dmesg.  It looks like we claimed
-> > > there was a [mem 0x28100000-0x282fffff pref] window.
-> > 
-> > Should I add logging for this as part of the patch? If so, could you
-> > suggest where and what format would be appropriate?
-> 
-> Apparently there's a place where we figured out that 01:00.0 has a
-> prefetchable window at [mem 0x28100000-0x282fffff pref]:
-> 
->   [  160.546094] pci 0001:00:01.0:   bridge window [mem 0x28100000-0x282fffff pref]
-> 
-> I don't know how we figured that out if PCI_PREF_MEMORY_BASE and
-> PCI_PREF_MEMORY_LIMIT are hardwired to zero.  Another mystery worth
-> exploring.
-> 
-> In any event, it sounds like there's another place later where we make
-> a bogus [mem 0x00000000-0x000fffff pref] window?  That point, where we
-> change the window, is where I would think about adding a message.
-> 
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-If my understanding of the code flow is correct (please correct me if
-I'm mistaken), the order is actually reversed - the bogus window is
-created first, then the proper assignment happens later:
+Previously the pwrseq, tc9563, and slot pwrctrl drivers used different
+naming conventions for their private data structs and pointers to them,
+which makes patches hard to read:
 
-1. pci_read_bridge_windows() tests register writability and finds
-pref_window is not supported (pref_window=0)
+  Previous names                         New names
+  ------------------------------------   ----------------------------------
+  struct pci_pwrctrl_pwrseq_data {       struct pci_pwrctrl_pwrseq {
+    struct pci_pwrctrl ctx;                struct pci_pwrctrl pwrctrl;
+  struct pci_pwrctrl_pwrseq_data *data   struct pci_pwrctrl_pwrseq *pwrseq
 
-2. Later, pci_read_bridge_bases() unconditionally calls
-pci_read_bridge_mmio_pref() with log=false. Since the registers
-return 0, we get base=0, limit=0, and (0 <= 0) creates the bogus
-window [mem 0x0-0xfffff pref]. This sets res->flags with
-IORESOURCE_PREFETCH and res->start=0, res->end=0xfffff. But because
-log=false, this is not logged to dmesg.
+  struct tc9563_pwrctrl_ctx {            struct pci_pwrctrl_tc9563 {
+  struct tc9563_pwrctrl_ctx *ctx         struct pci_pwrctrl_tc9563 *tc9563
 
-3. Then pci_assign_unassigned_root_bus_resources() sizes and assigns
-bridge windows based on downstream device BAR requirements. The mt7615e
-(device 14c3:7663) has prefetchable BARs:
+  struct pci_pwrctrl_slot_data {         struct pci_pwrctrl_slot {
+    struct pci_pwrctrl ctx;                struct pci_pwrctrl pwrctrl;
+  struct pci_pwrctrl_slot_data *slot     struct pci_pwrctrl_slot *slot
 
-	[  160.332147] pci 0001:01:00.0: [14c3:7663] type 00 class 0x000280 PCIe Endpoint
-	[  160.339730] pci 0001:01:00.0: BAR 0 [mem 0x00000000-0x000fffff 64bit pref]
-	[  160.346757] pci 0001:01:00.0: BAR 2 [mem 0x00000000-0x00003fff 64bit pref]
-	[  160.353833] pci 0001:01:00.0: BAR 4 [mem 0x00000000-0x00000fff 64bit pref]
+Rename "struct pci_pwrctrl_pwrseq_data" to "pci_pwrctrl_pwrseq".
 
- The bridge prefetch resource already has IORESOURCE_PREFETCH flag set
-from step 2. The sizing phase calculates the required window size based
-on these device BARs. Then the assignment phase allocates addresses from
-the available address space, overwriting the bogus res->start and
-res->end with proper values.
+Rename the "struct pci_pwrctrl ctx" member to "struct pci_pwrctrl pwrctrl".
 
-	[  160.487241] pci 0001:00:01.0: bridge window [mem 0x28100000-0x282fffff pref]: assigned
+Rename pointers from "struct pci_pwrctrl_pwrseq_data *data" to
+"struct pci_pwrctrl_pwrseq *pwrseq".
 
-4. Finally, pci_setup_bridge_mmio_pref() attempts to program the bridge
-registers and logs the window address. However, since the registers
-are hardwired to zero, the values won't stick.
+No functional change intended.
 
-	[  160.546094] pci 0001:00:01.0:   bridge window [mem 0x28100000-0x282fffff pref]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-The reason for the confusion is that step 2 (bogus window creation) has
-log=false, so it's silent in dmesg, while steps 3 and 4 log the proper
-window address. This makes it appear as if the proper window came first.
+diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+index 4e664e7b8dd2..c0d22dc3a856 100644
+--- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
++++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+@@ -13,8 +13,8 @@
+ #include <linux/slab.h>
+ #include <linux/types.h>
+ 
+-struct pci_pwrctrl_pwrseq_data {
+-	struct pci_pwrctrl ctx;
++struct pci_pwrctrl_pwrseq {
++	struct pci_pwrctrl pwrctrl;
+ 	struct pwrseq_desc *pwrseq;
+ };
+ 
+@@ -62,7 +62,7 @@ static void devm_pci_pwrctrl_pwrseq_power_off(void *data)
+ static int pci_pwrctrl_pwrseq_probe(struct platform_device *pdev)
+ {
+ 	const struct pci_pwrctrl_pwrseq_pdata *pdata;
+-	struct pci_pwrctrl_pwrseq_data *data;
++	struct pci_pwrctrl_pwrseq *pwrseq;
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+ 
+@@ -76,28 +76,28 @@ static int pci_pwrctrl_pwrseq_probe(struct platform_device *pdev)
+ 			return ret;
+ 	}
+ 
+-	data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
+-	if (!data)
++	pwrseq = devm_kzalloc(dev, sizeof(*pwrseq), GFP_KERNEL);
++	if (!pwrseq)
+ 		return -ENOMEM;
+ 
+-	data->pwrseq = devm_pwrseq_get(dev, pdata->target);
+-	if (IS_ERR(data->pwrseq))
+-		return dev_err_probe(dev, PTR_ERR(data->pwrseq),
++	pwrseq->pwrseq = devm_pwrseq_get(dev, pdata->target);
++	if (IS_ERR(pwrseq->pwrseq))
++		return dev_err_probe(dev, PTR_ERR(pwrseq->pwrseq),
+ 				     "Failed to get the power sequencer\n");
+ 
+-	ret = pwrseq_power_on(data->pwrseq);
++	ret = pwrseq_power_on(pwrseq->pwrseq);
+ 	if (ret)
+ 		return dev_err_probe(dev, ret,
+ 				     "Failed to power-on the device\n");
+ 
+ 	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_pwrseq_power_off,
+-				       data->pwrseq);
++				       pwrseq->pwrseq);
+ 	if (ret)
+ 		return ret;
+ 
+-	pci_pwrctrl_init(&data->ctx, dev);
++	pci_pwrctrl_init(&pwrseq->pwrctrl, dev);
+ 
+-	ret = devm_pci_pwrctrl_device_set_ready(dev, &data->ctx);
++	ret = devm_pci_pwrctrl_device_set_ready(dev, &pwrseq->pwrctrl);
+ 	if (ret)
+ 		return dev_err_probe(dev, ret,
+ 				     "Failed to register the pwrctrl wrapper\n");
 
-In contrast, the mt7603 (device 14c3:7603) on port 0 has no pref flags:
+-- 
+2.48.1
 
-	pci 0000:01:00.0: [14c3:7603] type 00 class 0x028000 PCIe Endpoint
-	pci 0000:01:00.0: BAR 0 [mem 0x00000000-0x000fffff]
 
-Since mt7603 has no prefetchable BAR requirements, no prefetch bridge
-window assignment is needed for that port and it works without any issues.
-
-> > From: Ahmed Naseef <naseefkm@gmail.com>
-> > Subject: [PATCH] PCI: Skip bridge window reads when window is not supported
-> > 
-> > pci_read_bridge_io() and pci_read_bridge_mmio_pref() read bridge window
-> > registers unconditionally. If the registers are hardwired to zero
-> > (not implemented), both base and limit will be 0. Since (0 <= 0) is
-> > true, a bogus window [mem 0x00000000-0x000fffff] or [io 0x0000-0x0fff]
-> > gets created.
-> > 
-> > pci_read_bridge_windows() already detects unsupported windows by
-> > testing register writability and sets io_window/pref_window flags
-> > accordingly. Check these flags at the start of pci_read_bridge_io()
-> > and pci_read_bridge_mmio_pref() to skip reading registers when the
-> > window is not supported.
-> > 
-> > Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> > Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
-> > ---
-> > 
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -351,6 +351,9 @@ static void pci_read_bridge_io(struct pc
-> >         unsigned long io_mask, io_granularity, base, limit;
-> >         struct pci_bus_region region;
-> > 
-> > +       if (!dev->io_window)
-> > +               return;
-> > +
-> >         io_mask = PCI_IO_RANGE_MASK;
-> >         io_granularity = 0x1000;
-> >         if (dev->io_window_1k) {
-> > @@ -412,6 +415,9 @@ static void pci_read_bridge_mmio_pref(st
-> >         pci_bus_addr_t base, limit;
-> >         struct pci_bus_region region;
-> > 
-> > +       if (!dev->pref_window)
-> > +               return;
-> > +
-> >         pci_read_config_word(dev, PCI_PREF_MEMORY_BASE, &mem_base_lo);
-> >         pci_read_config_word(dev, PCI_PREF_MEMORY_LIMIT, &mem_limit_lo);
-> >         base64 = (mem_base_lo & PCI_PREF_RANGE_MASK) << 16;
-> 
-> This looks good.  But I guess I would like to understand better how we
-> figured out the addresses for the prefetchable window.  Things like
-> that niggle at me.
-> 
-
-Does above explanation clarify the flow? I'm still learning the PCI subsystem internals,
-so please let me know if any part of my understanding is incorrect.
-
-Best regards,
-Ahmed Naseef
