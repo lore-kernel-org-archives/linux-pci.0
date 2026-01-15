@@ -1,416 +1,452 @@
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011050.outbound.protection.outlook.com [40.93.194.50])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020095.outbound.protection.outlook.com [52.101.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90A5632B9A7;
-	Thu, 15 Jan 2026 08:15:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A939622A4EB;
+	Thu, 15 Jan 2026 08:48:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.95
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768464957; cv=fail; b=rdAVgJrgp+voSzI1xfwUFsYZjkMpy9U4LE1VxOB0dCoNjiwq9S4TEb/PPEEfeZi4+LSgZ5qUAAnMhhNBr3738yIIaL8I7f0cMKHKpb+rZ7dDfck0nexR23xV82bESqX7HhFH7XcF419uM3RrCKyExbFtyR2V/AKNVigBoYkwtQ0=
+	t=1768466914; cv=fail; b=Mdk4OoCx7tdHSLNEJWlb9gcDyacu414teMB2pgnyn6jG5VNMdmIQ2mqOylkdYuKayn1xv8NQJEYizb9czsMWGIuz7ZcuJTF5NIP48ri2nFcGuP9GBYQtv0lwB5zd9/zsqClBTKkKr937rxoQZbshnldNvPuP1PCNii1zJDGeXik=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768464957; c=relaxed/simple;
-	bh=6Lt/6KeySDBdOA7INzNlUFbjwBKFPuGPXA0TfhC3XdI=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aNimnwXsExjI5aIPKUuX/NLB1tekMqxpo6ZRdfrwhOen6QmU+7BcL16v6O/RT+cKwRFYms611H7f4LflVRXPNoDieuheV+dn9fSKXZyxFcThdw3oIIVWOx4iZk1TYFq9u77wp08PsXnN/YJnLTiYCKp2SNOHTg91JmI0ecCEIBc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=gC1PFzxx; arc=fail smtp.client-ip=40.93.194.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1768466914; c=relaxed/simple;
+	bh=FGh9b34yNHOoSdE69E5hj8XJUaHlWIrA2aQiRoMHbcs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=gEdeUHSjDeP/TaexAlCxRmFa2rcPefA5h8ePcNxR2dt5GTipDIf/igrX/vKiHJjAygjeCyEeDBUpD9WrMUz+nb3FFqI8OZPJlOS+X7be7LacIXHaSHou3W2RdymGdZ6ssCTTDakua39Fy+m0DU9RFlV6ZbW5Obuj0Yji1YTqRMQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=nU3esTXL; arc=fail smtp.client-ip=52.101.229.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="gC1PFzxx"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="nU3esTXL"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=wxFqEaOp2T9+goJ76EneEGTD6FgWE52CMp04DPhxpuPYx5AzajHDRbf/apRcheoskFr2tEMruc0dJYyy6WY1mSYuifjPtXqET85aRpdfkmQTBREtXZjsIUAncQrpYMjYFXYxNHVxSrXmf/Yhg3j8JXsK0pBjSHfTkIO9Eh1jXzMZcIcFzO3sR1YXBovZCNxJ9f01qelQGnqcYOlZRVMyUDD4GZSTo7Y/ykRR4IxDZmquZgRl5zl0TVeDLyqYiNZBWJR1CefwC9v9xCyVWdgyNkssgtLRmkUtDN+2SOzbwQNNKIwMemEfMwCOAY3vDc54FfQq2QmXC36RkWdyJy1RTQ==
+ b=bCZg6MS3FpjSL0FSPnxfWk4wl9hNClJiIkuFwV9hkpG40SAsHSarYohYf2QbaxvG4XL6nLYn9mwMIVIvovcGsjQKTCnYNw2xLVcS5ZjV+L0CPuDFoli9rF4RAwcDA+AUfAy3p38tOdZTlaux8Rpkl1ggzNmJR8WRvhgAYB/RBEsYVeG7vkjcJs6SQuk2y9rDsNjfM26qwXvd1pXg4BhBC8gKV0jIEJwZNnfpzpTojlyNOexOb5hAN5GBWm6UG/Nca6VLod9+Mpf/qP3PJjLhFPTdLE8lpcvnWF4H6pJH3JI3nUvRem+Sy2nldYd0hSRzQTxrZi65AjTq+7yEPdGu4Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pqM5xLoq/2Gm8x/5T89OnM0unhZvYIfQv59xQIlrrMg=;
- b=iIidokCBBOlU8qDcjCMP5/TNC7g5h//q/fviQOR1ZAcbLx1RuJpH72AfvTjWtPO1RGWetxLL1VoN+MKzB1Yot9m/3gW+NbpZvym4Kao1Klm1rk2n/ab3VTYcxypJyYnDWVrVrfmsqzIirztD7cTM5C63KMqubQpz2Qwy5Jx0Oj2vhN1V7AtKJWtvbM/AMDmy6J4Ba+VL4E8iCsKaCUaZ00dFo5ezmXGe1H0JBhB4Wlamqz/WS2VZluBemVkyARhcOsiPHb1BlEostoIk5D7zLjXiW7dmEktfoS75XlUJ0O55Lnf/ZxULs6mwpoZknWGcJC2P6qQ2b5HSik7rHd4S5A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=vj6HCua9VgNVLHRLuKsELNBlr1wn7+0YzCgIrfJMghI=;
+ b=x/k7PbgYqUUz/kCOqDa8F4NzE0SsGV50rE+ri0zU8GnVpAz+yjDAbKIoXwmK/QHOBjX/Xlvb4DqWW3KUNWxGyQfw2O09PKJ+JJTWuvmAJnITMzFJ6CORnDrNhhk9xTeusAYN88mrXM48WWZ23Pa/gK2dIZpovqwLpNnk8MTwBfqrPh+IXXGdYcFnjxWQQFeqgqrzdm5/2f9saJr+rInqdJyoiI1U8Kp9YTV3I6HYWJvnLHSX3dZHVuM9azC0TGrHTICS52Ok9JW5jZ0O9I0KHRGb9r92DPadggd7brHkdNN8rFTgnJsDJnhmNl+o51YSvjky+TNzmY8Md8XRlvxiVw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pqM5xLoq/2Gm8x/5T89OnM0unhZvYIfQv59xQIlrrMg=;
- b=gC1PFzxxCHNkq/bY1atJA2zsS6DHi2N1yAJ5aBkB9T/fGImh7J2uQk+QyrlIV9K8zM/t4ye0W2e3zEITinRVltDiFE2kwJuW+D1C+TH2TI0lgBEVbqFat6T0dkOkzNfF3rH0cFp0caNzhh5dpVohh71SWdUjAjOCXmEXnQdGJ2cxqlNIvCITA8vs3geddJdH/MfYOkcvMRQnQ+UAMWVOSqxW0GUN5ecaXHI6MgDZoS+HwkYdn/dVd6Gyn5d9CQi8f/b0/i+9HZ7PPSiRLWAJyo43LGJbk3Fg4WWdPw672XqibTA5vVMHT8zkB8YUnhSvYBOOby937+qa2dNFqsZuLg==
-Received: from CH0PR03CA0270.namprd03.prod.outlook.com (2603:10b6:610:e5::35)
- by LV3PR12MB9096.namprd12.prod.outlook.com (2603:10b6:408:198::22) with
+ bh=vj6HCua9VgNVLHRLuKsELNBlr1wn7+0YzCgIrfJMghI=;
+ b=nU3esTXL3F6PXL0p7iFvGacMAbyb+XolAj1Bn4lFja4TsN+O0HSCEVsuPlL+h31DGhbUTzfeBx+Xt90efVQYKLouk0YdhOfDN9mC7cPxA+ozEj0h11B/FMG5R6aE7/O6fyimhlc/4yc3nlolEQt4lB0m3SpoR9A+v/fiXXbMzO8=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYCP286MB2911.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:303::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.5; Thu, 15 Jan
- 2026 08:15:48 +0000
-Received: from CH3PEPF00000011.namprd21.prod.outlook.com
- (2603:10b6:610:e5:cafe::a7) by CH0PR03CA0270.outlook.office365.com
- (2603:10b6:610:e5::35) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9520.6 via Frontend Transport; Thu,
- 15 Jan 2026 08:15:47 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- CH3PEPF00000011.mail.protection.outlook.com (10.167.244.116) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9542.0 via Frontend Transport; Thu, 15 Jan 2026 08:15:48 +0000
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 15 Jan
- 2026 00:15:33 -0800
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by rnnvmail203.nvidia.com
- (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 15 Jan
- 2026 00:15:33 -0800
-Received: from inno-thin-client (10.127.8.13) by mail.nvidia.com
- (10.129.68.10) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
- Transport; Thu, 15 Jan 2026 00:15:26 -0800
-Date: Thu, 15 Jan 2026 10:15:25 +0200
-From: Zhi Wang <zhiw@nvidia.com>
-To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
-	<kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
-	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
-	<lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
-	<markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
-	<smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
-	<kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
-	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>
-Subject: Re: [PATCH v8 4/5] rust: pci: add config space read/write support
-Message-ID: <20260115101525.7537fb9e.zhiw@nvidia.com>
-In-Reply-To: <20260113092253.220346-5-zhiw@nvidia.com>
-References: <20260113092253.220346-1-zhiw@nvidia.com>
-	<20260113092253.220346-5-zhiw@nvidia.com>
-Organization: NVIDIA
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.33; x86_64-pc-linux-gnu)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.6; Thu, 15 Jan
+ 2026 08:48:28 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9520.005; Thu, 15 Jan 2026
+ 08:48:28 +0000
+Date: Thu, 15 Jan 2026 17:48:27 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Frank Li <Frank.li@nxp.com>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, cassel@kernel.org, 
+	vigneshr@ti.com, s-vadapalli@ti.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de, 
+	shawnguo@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de, 
+	festevam@gmail.com, minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com, 
+	jesper.nilsson@axis.com, heiko@sntech.de, srikanth.thokala@intel.com, 
+	marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com, geert+renesas@glider.be, 
+	magnus.damm@gmail.com, christian.bruel@foss.st.com, mcoquelin.stm32@gmail.com, 
+	alexandre.torgue@foss.st.com, thierry.reding@gmail.com, jonathanh@nvidia.com, 
+	hayashi.kunihiko@socionext.com, mhiramat@kernel.org, kishon@kernel.org, jirislaby@kernel.org, 
+	rongqianfeng@vivo.com, 18255117159@163.com, shawn.lin@rock-chips.com, 
+	nicolas.frattaroli@collabora.com, linux.amoon@gmail.com, vidyas@nvidia.com, 
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
+	linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v7 5/6] PCI: dwc: ep: Support BAR subrange inbound
+ mapping via Address Match Mode iATU
+Message-ID: <g4txrmmww3werfhho6t625ciqknvyhvqhndceyf6z2pqiygnlr@2pktdkpwrcas>
+References: <20260113162719.3710268-1-den@valinux.co.jp>
+ <20260113162719.3710268-6-den@valinux.co.jp>
+ <aWaw4M6FGYWPo1ME@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aWaw4M6FGYWPo1ME@lizhi-Precision-Tower-5810>
+X-ClientProxiedBy: TYCP286CA0297.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:3c8::20) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PEPF00000011:EE_|LV3PR12MB9096:EE_
-X-MS-Office365-Filtering-Correlation-Id: 009647a1-b6ff-4b9f-c696-08de540e4a57
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB2911:EE_
+X-MS-Office365-Filtering-Correlation-Id: caad76d8-208b-450c-bf3e-08de5412da6d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|376014|36860700013|1800799024;
+	BCL:0;ARA:13230040|1800799024|366016|10070799003|7416014|376014;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?S2JPV2FORk04QzNqeGk0OS95Q01lNDNqR0lMb3JVaVB1dHFObVMwbEFDZFN6?=
- =?utf-8?B?bDdING9sdjM1YUJxaitPdWY0ZSttVVFNd0d0MmNLQk5pZ1JRMWgwTlloY0VX?=
- =?utf-8?B?TXlnNjNvOGV5Rlh6TmxvUWM4Vm9HelZYdjVYbXZzSGZZOExCYWxuY01abFlG?=
- =?utf-8?B?ZHZ2REh1cWdwWk1TajFENnR1Q1ZGR2E0ZWk5ai84aHRwSkcwZHdPNjQxOWhS?=
- =?utf-8?B?U2cxVGZ6MkZOcXVNdi94L2FEK3E2R0VNTlp4eHA0UEEweHlyd082Vk5vNEg3?=
- =?utf-8?B?R21EYTdVelJYSzJwdVhLRnc4K0N4NHVKOG5OL3J1RUIwRkdzbHpzNXN3YlJI?=
- =?utf-8?B?WC85eTlBTTkzdU8zNUpwZ1NoRXBmeE54ZWx2TmZQd1RzM3NXMnhGWDdaYW5X?=
- =?utf-8?B?SGRoeTJ5K3MzRDAzM0hUdjhRaUthRnR4RnVPR3VZTXM4V1NMdDZGbUJ3MEZw?=
- =?utf-8?B?dk5LeVJKdStjcUVOZHlrWS8yaE9ubFpVSXc5c3d4aG9sV2d2RHpUSU9yVlFC?=
- =?utf-8?B?dzhjdVczYml3aDFTUzJsdXBaMFJ4NFF2dGQvNk5XN0dIMU9HbWNSOXNVRHpZ?=
- =?utf-8?B?a3RsSHNBRDRTN1JFOU4wZDZyNGY5ZmZDMXYwUTJxWDQ2T1grM0JlRW95ZlJi?=
- =?utf-8?B?ZzI0d1RvV1NVQ2FWTmVUaG9PcWZNNmcrSmtoN0UxM3oySm5ZR1lYbHIzZ0Zm?=
- =?utf-8?B?UWc1TWRuMHdWT3dCYU9TdlhYMW14RlIyRG40UTg2WjFWVmQvUnZDY3BEMkVW?=
- =?utf-8?B?N25mSis1VEhHNUFiekwxZ1g2WUhnREtraHpGSTFYOFZNQ2U0RHZYZE1YVW11?=
- =?utf-8?B?dnkvTk44VnFncmFNTm1GamhBWFJ0eWFrRFFSdStBN3Z0UzNnV0RDT1BZZkR4?=
- =?utf-8?B?RlRzWHIxdlVzVHBqVHdCdjAyNUpGV0Q0dWpMc0lBT2ROcUQ0Nzc4SWRzdWlv?=
- =?utf-8?B?SHhpck9ORGgvcHNkZS9iOWJrTS9DWjY0RmhWdi9XOWZWb3dBTGUrR3lqelh1?=
- =?utf-8?B?UUwxNXc0L2RmWmxmQkFpV0o3SGU4VE4xUlRKTFJTNTgwNmhhSzF2MURsa0lL?=
- =?utf-8?B?NytUbWVRcDYxOFREUmNiWTJPeDVnbGlYbXp2NXRZRTdFakVGRWNSM3BQa3RM?=
- =?utf-8?B?d3J1RWtKUXljRmw2VDdIejNRM0g2TUZFOEx2dEFWQWs4Zkx6SzVKVXk4QXQx?=
- =?utf-8?B?NDI0cENTbjBHRFlIYWFtTVFkbnRHSHVqbXJDejN2ZWdvV29uN2JORW1JZGRx?=
- =?utf-8?B?Z1hqL3RJRlMrK0NuOGpMb2ppelRhTXl0Y1U1WUVlSjhvQWFJeW1NMUFoV0dx?=
- =?utf-8?B?SjEzUjYzVUJlemd3UGVlLzJuRjVIRlNsbUo4SGVwNEJ3QVVhdmxpUVhxaXE5?=
- =?utf-8?B?NkhDbnhWeHNZdE5EQXNoZi9PODU1eklKMVhSb3lTc1lVSGtadlY4K3l4ZVZk?=
- =?utf-8?B?ZVlVOGdwWSt0MTRzT1BLWDZtZURXWHhVNzNYUlNQMnYrV0t3ZFBZWm5rTFdo?=
- =?utf-8?B?UzBPL0dBdHNIaVkyWGZZeldsOU5VV2J0RTJITk9oUjFpTDN4OHpNbFh3WHpn?=
- =?utf-8?B?Nk9SS2ZTOURRRDRvYWFnTTBXUSsxeUl5SXVoVmdJem5POUh2anl5VU8vVS92?=
- =?utf-8?B?d0lTTXB1R1ZRQWo0bTN6RFFrNXVXV1RLencxOVZFMTZrdjI5TlN3UVJzVy90?=
- =?utf-8?B?YnJPWGxuZW05WUFCZ2s0YThWVVUvT0JFZjJmK1B6V3R1OU9sb2RkSWRyd1J6?=
- =?utf-8?B?QWxZM3pRSHJYcnNuRW92cms3eDRWaS9XMnNJd3RXY291a2lZTGFPd1NtbXJJ?=
- =?utf-8?B?VG96bGgxaUdkZ1ZxU2RadGZOSWJtOXBWQkJJeituNnROa1E0ZmlQRnlVZmcx?=
- =?utf-8?B?b0hzeXJGVi83SVhscnNZZDh4VEw0UDVRT20ycmErZUZqbytsS3dieWJoWVR0?=
- =?utf-8?B?RUtJV0JVbGpKRnl1WjJFWW1sdld4OXlsbE1oZTZ3dFByYmYxNzl3RUlXRzZG?=
- =?utf-8?B?WFF1azZQNGY4MkRVTU8wZm5FeFFOTVRqeDZGeVFpTVZpZGVsUlQ1VTRzeEUv?=
- =?utf-8?B?OUhtNENwZ2I2Q1htVkJNSTNkKzFKL244emFnbGxIT0kyNEhIb0hEM3dTM3NQ?=
- =?utf-8?B?ZWxkWXNFUjMva3UxeW1tcEpJaG5NcXN2RkJXUU82NmlvSndwUUhBWGtIYkRn?=
- =?utf-8?B?K05TdDlDcTN6QXNUeWlQVEFIdzBmSU5MSEVmV2g4elJCNTlBWU1HQXFqQUJ2?=
- =?utf-8?B?N25TVWU5aHNiTzVnVzE4c2h0TndRPT0=?=
+	=?us-ascii?Q?3H7drZXyXtfDUzHWOyena2WzwVkKthZUg0H9/2TPqWhqqHr3f/c+O2a4IpOb?=
+ =?us-ascii?Q?Bt57kgbRwFG27VYe1QAMOGbKcHv4/Jx9eiQFCwh8DGtjM+k8k08L4HrQLn59?=
+ =?us-ascii?Q?Gf7aELhf7e1f4qF7XjaHyJBfdyzfuo/vb6eumqvmhQV1/c9KqDJ7y9CIrg+n?=
+ =?us-ascii?Q?lqwPLwKiFfc4ZLr4P7Dbrg4JE4TPPaBJsBYrWsPNWw8vqfw+THCyyN1cMYs0?=
+ =?us-ascii?Q?GaqVBVcUTOYnqA7OuPHBG5sE2Ks8arzQPDz957eynJXks4OIRcaplhhkW4Qd?=
+ =?us-ascii?Q?lV2gLDmCHOJu+ocR0SiQtwXsG4932AMrBXEJsD7N5eCw304Fil3+RML0oBZt?=
+ =?us-ascii?Q?cFYZJ+dOKM6ha7NdXq2rCVhmHI+z46zkBEwyuVyPfnCMB4ozHDVQpE/Uxr34?=
+ =?us-ascii?Q?ioPaRaPQSpwSnI8wy0M+g97JVFy4SfjCGhxn9BlRvVju4sV4g3IqkO8hUhMM?=
+ =?us-ascii?Q?sXVJfgf+PWOjq9MWHnzbihEGRZKOZ37JLYd1gc+SxmnysE1IF8Z0GlznDlbQ?=
+ =?us-ascii?Q?tiocftZaRm1yzjnh4amlroo4PWdlkXv9Iw44be3j1YmOEChy6TE+va03M5e5?=
+ =?us-ascii?Q?oHUDyYSRso1fIzPn6TR8WhcjdkaSA+EPnSV12Yd9FBwbLevz1LGQAs0204yu?=
+ =?us-ascii?Q?OfB8W8Li40VDf6WijLErlLYgoI8p5B6KMgVQEm+nUvH4dVc7+KUyNFYxpj/a?=
+ =?us-ascii?Q?qiL4OpCb3A1ejn009YUGPyzd/whiJpdwr+RTpnNMSWlp40ImOMKmSAerKdsf?=
+ =?us-ascii?Q?jqPihf6hTTlvQRZKEMFf6+XBUXv4V8UxPaJ8od81do3yEd2QojdqMLCCbiRw?=
+ =?us-ascii?Q?PseOEZnaPoIXpaD83WmlYRAyGM9hNPsoj8sHeKh0DU9Po3YvPhPNrxXLnNs2?=
+ =?us-ascii?Q?oWtwHXS2gmbPSNdXcEmkOSa3Xy/o/sNPKlWsgpyZhCRvDswgruT759dXdiI9?=
+ =?us-ascii?Q?3NcjYjL9rx+OZS0iXdEsVAsLlF56H/2KHxpuaf9pmnEGC2es9oFzWoD0Fqo8?=
+ =?us-ascii?Q?D7iSk3XdOTVAD+T6iSh80Tl9FLowxJEXUldPDjHpBay+J0WgxMS9t6UklpT0?=
+ =?us-ascii?Q?1Rp2qf4WNKIZajj4otpzgw4CWT44RLz/RTNZYFWlIIOIL8mOXr38y6cz6tDB?=
+ =?us-ascii?Q?2SZ0vYRyFEcXTQy8riXqQs26WNfYVUf2LxfIMmFdg/x3xT8h+CgMNxkggvtA?=
+ =?us-ascii?Q?v9wyZ9sssyrauIWbCWMLD3hZgAdJBiFjv6eaHXmE4t0SItfJDidOWtx09PJt?=
+ =?us-ascii?Q?Jw4vQ4XNiUc/ioWbZL/mkGoc6VsVPbFUgJz0oqSQGzM8iu3KflgLgEuLMHZ8?=
+ =?us-ascii?Q?vsSwlSOyLiMZmfs2u+Gx0NXQhnJpzxPzkJzpjubSRnqaHbiATQnGB4Lq4R3T?=
+ =?us-ascii?Q?D9fQvZ3kup3Pb6KGtf++eUgIfjBjvGZGnDXhOMpxv+NBw32hCs7e06i4MFE8?=
+ =?us-ascii?Q?aKSL+7+OsvUb/Z90A6OYua0SEI1qSGfhrl/+jYrV6CQfOKOubshbRw9fijTK?=
+ =?us-ascii?Q?ObLDtEEXnFarNPs1xh7cb5ovCcr0aHiluq544WGvc7CDf57PJwDbL6l2FJtl?=
+ =?us-ascii?Q?eDtyedf5fwXJc3etoJc=3D?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(376014)(36860700013)(1800799024);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jan 2026 08:15:48.5014
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(10070799003)(7416014)(376014);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?sfHGT59pOT3JP3tOX1CeUJam/r5hncWu7YSjbZhI5wYXSOznu+nF8pUARj4b?=
+ =?us-ascii?Q?tx5InepPJaV6wvYp3BLklD78Wxgk19XN9u2njsoUlip2zlosJWX2CN4zDxk/?=
+ =?us-ascii?Q?ZSPTpNfNXKNplc2/tnjEsIDmxGkNRsNXEqTDmQDmoSkEZznU59vk8ojuvgYe?=
+ =?us-ascii?Q?b57ybEpbO8e+Ci6nsmastLdRRoYUo8gnXoYSVigyX+rM7AzQKAOaREyB4AYy?=
+ =?us-ascii?Q?rDp88FTsEE24M6OR0+DdF2BxXuryDQVgMdE/sSq4Cr9bCTPIesVFwduD9Mvl?=
+ =?us-ascii?Q?2dpoUXidTsLWmxTGNZLERTZMVZ1qSOJR1W+EoaU0mvrPyMbzMf1lJJMJq7dA?=
+ =?us-ascii?Q?00F2I7U3DrWnIkUW13NHe1q9qBJvyV7Myi0dgZ3JLT7iFSlVOANQrF+Dg6Za?=
+ =?us-ascii?Q?Y7WjXzsDcyJJIUfqg/NcmrIDfdPiLamFZoUa1TuJGdtILjWBohP5M8JrbG5n?=
+ =?us-ascii?Q?PbmoBsmvTUzmpbIgv9wIugmDhqpDdICAiWyuLkLJ9QQhHJdk4323plPoYDFg?=
+ =?us-ascii?Q?mDqmQntjSWqBXIH/JXCEt0ij50en+cz6qPRrowkBRR5Rw/bK+hn2xh3oPZTk?=
+ =?us-ascii?Q?RONuj/B+xN6tleG/APSIuj31U900Yu/suXOJkMmFCpVaJMuBhEgcFcxLMmYp?=
+ =?us-ascii?Q?TynjLn+AJMxdu4qX6MmtloU1TzSLqpQ/O3RzQ5ja1WiWEfcQIJskd/Qe5K0q?=
+ =?us-ascii?Q?OH0DuJ5bePyAL8KdYlFoAOd9rjZSp8CZ9TiPjCViiI7i8ltu+3fNP5KNgysP?=
+ =?us-ascii?Q?9LnzdntjLKzZx+z/TZnoE3lB/0CKAkZUYrXICjk2rH1HE7dx7n74HKPS37Xj?=
+ =?us-ascii?Q?rKx93gTXyFrkYRGA11kxzKESk7UKxdOhd7J/LcW86K7fvjcOgPkEjlDPR8oA?=
+ =?us-ascii?Q?vrydgiyK41RGeAKPHMUGWDauGSsBE2A5j2T3d35qTkDkILnjVwSK6kvdDt/H?=
+ =?us-ascii?Q?ddTdq3DSIqvDKKpm9zS+uBufRR13qAk2zu8wBh320MOy6gfwEPzssnZG9whY?=
+ =?us-ascii?Q?d4ySU4pv1V3hKE+ju7LvUxp/O8hvvPQ6WZbxqjtVeCwoX1a7KsWonDaUPs6T?=
+ =?us-ascii?Q?r0I2Vb0NPKXnRDRPb1BJjHWD6cKYIzkqeucxEjehfTwIIkhCQusMkZPAX0my?=
+ =?us-ascii?Q?o+cE/aAc/r3ADWdeyaqT/6Y61TkGacwgPUdF/1r2k6GXB3IF8Vb1MkJmVm+e?=
+ =?us-ascii?Q?8ZsrxpWRuitjd3fzYi+VULZ8tWiLfvJElHvPAcau6bb14Ak4dCaOTBhbZlfX?=
+ =?us-ascii?Q?vQ0DsPw2g1q6fwxGHZSnwm5upkNGErUJsFgtYHXBs6iX0Yr515Tw6fNyiM0K?=
+ =?us-ascii?Q?X3ZtWgqCrhr0v9b4bmd556cAz9fyDvqgRAmM3+pwsnBxUVPUYLyX+3FLwulm?=
+ =?us-ascii?Q?pchpOYdgMCW76Chj4set+/DtVby7cMGYeZZtvIwnDOA1viEPb2xmTIA+0vU2?=
+ =?us-ascii?Q?rs+soNOmVoVjU5IpUYb6Gm3T26aLrgT44eoTkShJ1s0srYEEg7U6s72D7w+u?=
+ =?us-ascii?Q?LpnjpaakUEM9fI9LWcCFVosL1wITnV0imsZd9IWiq/POznAm/5c+cCgNh4Gg?=
+ =?us-ascii?Q?LwfcFWlP0mcGcJDW/37jGFu1cZAjibqiOBgVkP8MCxCgpJsZIodml8zsMqeJ?=
+ =?us-ascii?Q?H27jhsDn7RH1tDK0UgtjakSqFGAJJORX46aaU7YXgGUE7igiYEAeiib6paSs?=
+ =?us-ascii?Q?1V9muAYENGIsQ1ShEz0fYvo81+igyEn7+dwX2ISk5BbcYdsGQHSirEUWsygJ?=
+ =?us-ascii?Q?OKfX+qxloXV0izrn/yBsJgI4vDtV2wEEcJI+ZGOWt7muVJfzBxvd?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: caad76d8-208b-450c-bf3e-08de5412da6d
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jan 2026 08:48:28.4706
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 009647a1-b6ff-4b9f-c696-08de540e4a57
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH3PEPF00000011.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR12MB9096
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0gVCPRTkeOo4PAYudtqPyWFiD3ldm7YAWSQygbiwjZ1OD3znoExAGLxMrL/fGTmsLgUeIhMniy089/6Yx8cXrg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2911
 
-On Tue, 13 Jan 2026 11:22:51 +0200
-Zhi Wang <zhiw@nvidia.com> wrote:
+On Tue, Jan 13, 2026 at 03:53:52PM -0500, Frank Li wrote:
+> On Wed, Jan 14, 2026 at 01:27:18AM +0900, Koichiro Den wrote:
+> > Extend dw_pcie_ep_set_bar() to support inbound mappings for BAR
+> > subranges using Address Match Mode IB iATU.
+> >
+> > Rename the existing BAR-match helper into dw_pcie_ep_ib_atu_bar() and
+> > introduce dw_pcie_ep_ib_atu_addr() for Address Match Mode. When
+> > use_submap is set, read the assigned BAR base address and program one
+> > inbound iATU window per subrange. Validate the submap array before
+> > programming:
+> > - each subrange is aligned to pci->region_align
+> > - subranges cover the whole BAR (no gaps and no overlaps)
+> > - subranges are sorted in ascending order by offset
+> >
+> > Track Address Match Mode mappings and tear them down on clear_bar() and
+> > on set_bar() error paths to avoid leaving half-programmed state or
+> > untranslated BAR holes.
+> >
+> > Advertise this capability by setting subrange_mapping in the EPC
+> > features returned from dw_pcie_ep_get_features().
+> >
+> > Reviewed-by: Niklas Cassel <cassel@kernel.org>
+> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > ---
+> >  .../pci/controller/dwc/pcie-designware-ep.c   | 230 +++++++++++++++++-
+> >  drivers/pci/controller/dwc/pcie-designware.h  |   2 +
+> >  2 files changed, 222 insertions(+), 10 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> > index 0e5a8d200b00..b2ea2c2c986f 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> > +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> > @@ -139,9 +139,10 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> >  	return 0;
+> >  }
+> >
+> > -static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, u8 func_no, int type,
+> > -				  dma_addr_t parent_bus_addr, enum pci_barno bar,
+> > -				  size_t size)
+> > +/* BAR Match Mode inbound iATU mapping */
+> > +static int dw_pcie_ep_ib_atu_bar(struct dw_pcie_ep *ep, u8 func_no, int type,
+> > +				 dma_addr_t parent_bus_addr, enum pci_barno bar,
+> > +				 size_t size)
+> >  {
+> >  	int ret;
+> >  	u32 free_win;
+> > @@ -174,6 +175,208 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, u8 func_no, int type,
+> >  	return 0;
+> >  }
+> >
+> ...
+> > +static int dw_pcie_ep_validate_submap(struct dw_pcie_ep *ep,
+> > +				      const struct pci_epf_bar_submap *submap,
+> > +				      unsigned int num_submap, size_t bar_size)
+> > +{
+> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> > +	u32 align = pci->region_align;
+> > +	size_t expected = 0;
+> > +	size_t size, off;
+> > +	unsigned int i;
+> > +
+> > +	if (!align || !IS_ALIGNED(bar_size, align))
+> > +		return -EINVAL;
+> > +
+> > +	/*
+> > +	 * The array is expected to be sorted by offset before calling this
+> > +	 * helper. With sorted entries, we can enforce a strict, gapless
+> > +	 * decomposition of the BAR:
+> > +	 *  - each entry has a non-zero size
+> > +	 *  - offset/size/phys_addr are aligned to pci->region_align
+> > +	 *  - each entry lies within the BAR range
+> > +	 *  - entries are contiguous (no overlaps, no holes)
+> > +	 *  - the entries exactly cover the whole BAR
+> > +	 *
+> > +	 * Note: dw_pcie_prog_inbound_atu() also checks alignment for
+> > +	 * offset/phys_addr, but validating up-front avoids partially
+> > +	 * programming iATU windows in vain.
+> > +	 */
+> > +	for (i = 0; i < num_submap; i++) {
+> > +		off = submap[i].offset;
+> > +		size = submap[i].size;
+> > +
+> > +		if (!size)
+> > +			return -EINVAL;
+> > +
+> > +		if (!IS_ALIGNED(size, align) || !IS_ALIGNED(off, align))
+> > +			return -EINVAL;
+> > +
+> > +		if (!IS_ALIGNED(submap[i].phys_addr, align))
+> > +			return -EINVAL;
+> > +
+> > +		if (off > bar_size || size > bar_size - off)
+> > +			return -EINVAL;
+> > +
+> > +		/* Enforce contiguity (no overlaps, no holes). */
+> > +		if (off != expected)
+> > +			return -EINVAL;
+> 
+> submap[i].offset is unnecessary, you can use expected += size as off.
+> code logic will be simple.
 
-Thanks, I will re-spin this today.=20
+Will fix this. as per my earlier response:
+https://lore.kernel.org/all/ngvqrju3bi6sugynhksxsci6rmgqevzpoijjflp2373c6uxlum@vyepxqghbzvn/
 
-> Drivers might need to access PCI config space for querying capability
-> structures and access the registers inside the structures.
->=20
-> For Rust drivers need to access PCI config space, the Rust PCI
-> abstraction needs to support it in a way that upholds Rust's safety
-> principles.
->=20
-> Introduce a `ConfigSpace` wrapper in Rust PCI abstraction to provide safe
-> accessors for PCI config space. The new type implements the `Io` trait to
-> share offset validation and bound-checking logic with others.
->=20
-> Cc: Alexandre Courbot <acourbot@nvidia.com>
-> Cc: Danilo Krummrich <dakr@kernel.org>
-> Cc: Joel Fernandes <joelagnelf@nvidia.com>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-> ---
->  rust/kernel/pci.rs    |  43 ++++++++++++++-
->  rust/kernel/pci/io.rs | 118 +++++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 159 insertions(+), 2 deletions(-)
->=20
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index 82e128431f08..f373413e8a84 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -40,7 +40,10 @@
->      ClassMask,
->      Vendor, //
->  };
-> -pub use self::io::Bar;
-> +pub use self::io::{
-> +    Bar,
-> +    ConfigSpace, //
-> +};
->  pub use self::irq::{
->      IrqType,
->      IrqTypes,
-> @@ -331,6 +334,30 @@ fn as_raw(&self) -> *mut bindings::pci_dev {
->      }
->  }
-> =20
-> +/// Represents the size of a PCI configuration space.
-> +///
-> +/// PCI devices can have either a *normal* (legacy) configuration space
-> of 256 bytes, +/// or an *extended* configuration space of 4096 bytes as
-> defined in the PCI Express +/// specification.
-> +#[repr(usize)]
-> +pub enum ConfigSpaceSize {
-> +    /// 256-byte legacy PCI configuration space.
-> +    Normal =3D 256,
-> +
-> +    /// 4096-byte PCIe extended configuration space.
-> +    Extended =3D 4096,
-> +}
-> +
-> +impl ConfigSpaceSize {
-> +    /// Get the raw value of this enum.
-> +    #[inline(always)]
-> +    pub const fn as_raw(self) -> usize {
-> +        // CAST: PCI configuration space size is at most 4096 bytes, so
-> the value always fits
-> +        // within `usize` without truncation or sign change.
-> +        self as usize
-> +    }
-> +}
-> +
->  impl Device {
->      /// Returns the PCI vendor ID as [`Vendor`].
->      ///
-> @@ -427,6 +454,20 @@ pub fn pci_class(&self) -> Class {
->          // SAFETY: `self.as_raw` is a valid pointer to a `struct
-> pci_dev`. Class::from_raw(unsafe { (*self.as_raw()).class })
->      }
-> +
-> +    /// Returns the size of configuration space.
-> +    fn cfg_size(&self) -> Result<ConfigSpaceSize> {
-> +        // SAFETY: `self.as_raw` is a valid pointer to a `struct
-> pci_dev`.
-> +        let size =3D unsafe { (*self.as_raw()).cfg_size };
-> +        match size {
-> +            256 =3D> Ok(ConfigSpaceSize::Normal),
-> +            4096 =3D> Ok(ConfigSpaceSize::Extended),
-> +            _ =3D> {
-> +                debug_assert!(false);
-> +                Err(EINVAL)
-> +            }
-> +        }
-> +    }
->  }
-> =20
->  impl Device<device::Core> {
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index e3377397666e..c8741f0080ec 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -2,12 +2,19 @@
-> =20
->  //! PCI memory-mapped I/O infrastructure.
-> =20
-> -use super::Device;
-> +use super::{
-> +    ConfigSpaceSize,
-> +    Device, //
-> +};
->  use crate::{
->      bindings,
->      device,
->      devres::Devres,
->      io::{
-> +        define_read,
-> +        define_write,
-> +        IoBase,
-> +        IoKnownSize,
->          Mmio,
->          MmioRaw, //
->      },
-> @@ -16,6 +23,101 @@
->  };
->  use core::ops::Deref;
-> =20
-> +/// The PCI configuration space of a device.
-> +///
-> +/// Provides typed read and write accessors for configuration registers
-> +/// using the standard `pci_read_config_*` and `pci_write_config_*`
-> helpers. +///
-> +/// The generic const parameter `SIZE` can be used to indicate the
-> +/// maximum size of the configuration space (e.g. 256 bytes for legacy,
-> +/// 4096 bytes for extended config space).
-> +pub struct ConfigSpace<'a, const SIZE: usize =3D {
-> ConfigSpaceSize::Extended as usize }> {
-> +    pub(crate) pdev: &'a Device<device::Bound>,
-> +}
-> +
-> +/// Internal helper macros used to invoke C PCI configuration space
-> read functions. +///
-> +/// This macro is intended to be used by higher-level PCI configuration
-> space access macros +/// (define_read) and provides a unified expansion
-> for infallible vs. fallible read semantics. It +/// emits a direct call
-> into the corresponding C helper and performs the required cast to the
-> Rust +/// return type. +///
-> +/// # Parameters
-> +///
-> +/// * `$c_fn` =E2=80=93 The C function performing the PCI configuration =
-space
-> write. +/// * `$self` =E2=80=93 The I/O backend object.
-> +/// * `$ty` =E2=80=93 The type of the value to read.
-> +/// * `$addr` =E2=80=93 The PCI configuration space offset to read.
-> +///
-> +/// This macro does not perform any validation; all invariants must be
-> upheld by the higher-level +/// abstraction invoking it.
-> +macro_rules! call_config_read {
-> +    (infallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr) =3D> {{
-> +        let mut val: $ty =3D 0;
-> +        // SAFETY: By the type invariant `$self.pdev` is a valid
-> address.
-> +        // CAST: The offset is cast to `i32` because the C functions
-> expect a 32-bit signed offset
-> +        // parameter. PCI configuration space size is at most 4096
-> bytes, so the value always fits
-> +        // within `i32` without truncation or sign change.
-> +        // Return value from C function is ignored in infallible
-> accessors.
-> +        let _ret =3D unsafe { bindings::$c_fn($self.pdev.as_raw(), $addr
-> as i32, &mut val) };
-> +        val
-> +    }};
-> +}
-> +
-> +/// Internal helper macros used to invoke C PCI configuration space
-> write functions. +///
-> +/// This macro is intended to be used by higher-level PCI configuration
-> space access macros +/// (define_write) and provides a unified expansion
-> for infallible vs. fallible read semantics. It +/// emits a direct call
-> into the corresponding C helper and performs the required cast to the
-> Rust +/// return type. +///
-> +/// # Parameters
-> +///
-> +/// * `$c_fn` =E2=80=93 The C function performing the PCI configuration =
-space
-> write. +/// * `$self` =E2=80=93 The I/O backend object.
-> +/// * `$ty` =E2=80=93 The type of the written value.
-> +/// * `$addr` =E2=80=93 The configuration space offset to write.
-> +/// * `$value` =E2=80=93 The value to write.
-> +///
-> +/// This macro does not perform any validation; all invariants must be
-> upheld by the higher-level +/// abstraction invoking it.
-> +macro_rules! call_config_write {
-> +    (infallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr,
-> $value:expr) =3D> {
-> +        // SAFETY: By the type invariant `$self.pdev` is a valid
-> address.
-> +        // CAST: The offset is cast to `i32` because the C functions
-> expect a 32-bit signed offset
-> +        // parameter. PCI configuration space size is at most 4096
-> bytes, so the value always fits
-> +        // within `i32` without truncation or sign change.
-> +        // Return value from C function is ignored in infallible
-> accessors.
-> +        let _ret =3D unsafe { bindings::$c_fn($self.pdev.as_raw(), $addr
-> as i32, $value) };
-> +    };
-> +}
-> +
-> +impl<'a, const SIZE: usize> IoBase for ConfigSpace<'a, SIZE> {
-> +    const MIN_SIZE: usize =3D SIZE;
-> +
-> +    /// Returns the base address of the I/O region. It is always 0 for
-> configuration space.
-> +    #[inline]
-> +    fn addr(&self) -> usize {
-> +        0
-> +    }
-> +
-> +    /// Returns the maximum size of the configuration space.
-> +    #[inline]
-> +    fn maxsize(&self) -> usize {
-> +        self.pdev.cfg_size().map_or(0, |v| v as usize)
-> +    }
-> +}
-> +
-> +impl<'a, const SIZE: usize> IoKnownSize for ConfigSpace<'a, SIZE> {
-> +    define_read!(infallible, read8,
-> call_config_read(pci_read_config_byte) -> u8);
-> +    define_read!(infallible, read16,
-> call_config_read(pci_read_config_word) -> u16);
-> +    define_read!(infallible, read32,
-> call_config_read(pci_read_config_dword) -> u32); +
-> +    define_write!(infallible, write8,
-> call_config_write(pci_write_config_byte) <- u8);
-> +    define_write!(infallible, write16,
-> call_config_write(pci_write_config_word) <- u16);
-> +    define_write!(infallible, write32,
-> call_config_write(pci_write_config_dword) <- u32); +}
-> +
->  /// A PCI BAR to perform I/O-Operations on.
->  ///
->  /// I/O backend assumes that the device is little-endian and will
-> automatically @@ -144,4 +246,18 @@ pub fn iomap_region<'a>(
->      ) -> impl PinInit<Devres<Bar>, Error> + 'a {
->          self.iomap_region_sized::<0>(bar, name)
->      }
-> +
-> +    /// Return an initialized config space object.
-> +    pub fn config_space<'a>(
-> +        &'a self,
-> +    ) -> Result<ConfigSpace<'a, { ConfigSpaceSize::Normal.as_raw() }>> {
-> +        Ok(ConfigSpace { pdev: self })
-> +    }
-> +
-> +    /// Return an initialized config space object.
-> +    pub fn config_space_extended<'a>(
-> +        &'a self,
-> +    ) -> Result<ConfigSpace<'a, { ConfigSpaceSize::Extended.as_raw()
-> }>> {
-> +        Ok(ConfigSpace { pdev: self })
-> +    }
->  }
+> 
+> Frank
+> > +
+> > +		expected += size;
+> > +	}
+> > +	if (expected != bar_size)
+> > +		return -EINVAL;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/* Address Match Mode inbound iATU mapping */
+> > +static int dw_pcie_ep_ib_atu_addr(struct dw_pcie_ep *ep, u8 func_no, int type,
+> > +				  const struct pci_epf_bar *epf_bar)
+> > +{
+> > +	const struct pci_epf_bar_submap *submap = epf_bar->submap;
+> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> > +	enum pci_barno bar = epf_bar->barno;
+> > +	struct device *dev = pci->dev;
+> > +	u64 pci_addr, parent_bus_addr;
+> > +	struct dw_pcie_ib_map *new;
+> > +	u64 size, off, base;
+> > +	unsigned long flags;
+> > +	int free_win, ret;
+> > +	unsigned int i;
+> > +
+> > +	if (!epf_bar->num_submap || !submap || !epf_bar->size)
+> > +		return -EINVAL;
+> > +
+> > +	ret = dw_pcie_ep_validate_submap(ep, submap, epf_bar->num_submap,
+> > +					 epf_bar->size);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	base = dw_pcie_ep_read_bar_assigned(ep, func_no, bar, epf_bar->flags);
+> > +	if (!base) {
+> > +		dev_err(dev,
+> > +			"BAR%u not assigned, cannot set up sub-range mappings\n",
+> > +			bar);
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	/* Tear down any existing mappings before (re)programming. */
+> > +	dw_pcie_ep_clear_ib_maps(ep, bar);
+> > +
+> > +	for (i = 0; i < epf_bar->num_submap; i++) {
+> > +		off = submap[i].offset;
+> > +		size = submap[i].size;
+> > +		parent_bus_addr = submap[i].phys_addr;
+> > +
+> > +		if (off > (~0ULL) - base) {
+> > +			ret = -EINVAL;
+> > +			goto err;
+> > +		}
+> > +
+> > +		pci_addr = base + off;
+> > +
+> > +		new = devm_kzalloc(dev, sizeof(*new), GFP_KERNEL);
+> > +		if (!new) {
+> > +			ret = -ENOMEM;
+> > +			goto err;
+> > +		}
+> 
+> Simple alloc an array struct dw_pcie_ib_map[num_submap] should be simpler
+> than link list and alloc some small news.
 
+I'll do so in v8. Thank you for the review!
+
+Koichiro
+
+> 
+> Frank
+> > +
+> > +		spin_lock_irqsave(&ep->ib_map_lock, flags);
+> > +
+> > +		free_win = find_first_zero_bit(ep->ib_window_map,
+> > +					       pci->num_ib_windows);
+> > +		if (free_win >= pci->num_ib_windows) {
+> > +			spin_unlock_irqrestore(&ep->ib_map_lock, flags);
+> > +			devm_kfree(dev, new);
+> > +			ret = -ENOSPC;
+> > +			goto err;
+> > +		}
+> > +		set_bit(free_win, ep->ib_window_map);
+> > +
+> > +		new->bar = bar;
+> > +		new->index = free_win;
+> > +		new->pci_addr = pci_addr;
+> > +		new->parent_bus_addr = parent_bus_addr;
+> > +		new->size = size;
+> > +		list_add_tail(&new->list, &ep->ib_map_list);
+> > +
+> > +		spin_unlock_irqrestore(&ep->ib_map_lock, flags);
+> > +
+> > +		ret = dw_pcie_prog_inbound_atu(pci, free_win, type,
+> > +					       parent_bus_addr, pci_addr, size);
+> > +		if (ret) {
+> > +			spin_lock_irqsave(&ep->ib_map_lock, flags);
+> > +			list_del(&new->list);
+> > +			clear_bit(free_win, ep->ib_window_map);
+> > +			spin_unlock_irqrestore(&ep->ib_map_lock, flags);
+> > +			devm_kfree(dev, new);
+> > +			goto err;
+> > +		}
+> > +	}
+> > +	return 0;
+> > +err:
+> > +	dw_pcie_ep_clear_ib_maps(ep, bar);
+> > +	return ret;
+> > +}
+> > +
+> >  static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep,
+> >  				   struct dw_pcie_ob_atu_cfg *atu)
+> >  {
+> > @@ -204,17 +407,15 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> >  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+> >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> >  	enum pci_barno bar = epf_bar->barno;
+> > -	u32 atu_index = ep->bar_to_atu[bar] - 1;
+> >
+> > -	if (!ep->bar_to_atu[bar])
+> > +	if (!ep->epf_bar[bar])
+> >  		return;
+> >
+> >  	__dw_pcie_ep_reset_bar(pci, func_no, bar, epf_bar->flags);
+> >
+> > -	dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, atu_index);
+> > -	clear_bit(atu_index, ep->ib_window_map);
+> > +	dw_pcie_ep_clear_ib_maps(ep, bar);
+> > +
+> >  	ep->epf_bar[bar] = NULL;
+> > -	ep->bar_to_atu[bar] = 0;
+> >  }
+> >
+> >  static unsigned int dw_pcie_ep_get_rebar_offset(struct dw_pcie *pci,
+> > @@ -408,8 +609,12 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> >  	else
+> >  		type = PCIE_ATU_TYPE_IO;
+> >
+> > -	ret = dw_pcie_ep_inbound_atu(ep, func_no, type, epf_bar->phys_addr, bar,
+> > -				     size);
+> > +	if (epf_bar->use_submap)
+> > +		ret = dw_pcie_ep_ib_atu_addr(ep, func_no, type, epf_bar);
+> > +	else
+> > +		ret = dw_pcie_ep_ib_atu_bar(ep, func_no, type,
+> > +					    epf_bar->phys_addr, bar, size);
+> > +
+> >  	if (ret)
+> >  		return ret;
+> >
+> > @@ -638,6 +843,9 @@ dw_pcie_ep_get_features(struct pci_epc *epc, u8 func_no, u8 vfunc_no)
+> >  	/* All DWC-based glue drivers support dynamic inbound mapping */
+> >  	features->dynamic_inbound_mapping = true;
+> >
+> > +	/* All DWC-based glue drivers support inbound subrange mapping */
+> > +	features->subrange_mapping = true;
+> > +
+> >  	return features;
+> >  }
+> >
+> > @@ -1128,6 +1336,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+> >  	struct device *dev = pci->dev;
+> >
+> >  	INIT_LIST_HEAD(&ep->func_list);
+> > +	INIT_LIST_HEAD(&ep->ib_map_list);
+> > +	spin_lock_init(&ep->ib_map_lock);
+> >  	ep->msi_iatu_mapped = false;
+> >  	ep->msi_msg_addr = 0;
+> >  	ep->msi_map_size = 0;
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> > index 4dda9a38d46b..969b1f32dddf 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware.h
+> > +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> > @@ -479,6 +479,8 @@ struct dw_pcie_ep {
+> >  	phys_addr_t		*outbound_addr;
+> >  	unsigned long		*ib_window_map;
+> >  	unsigned long		*ob_window_map;
+> > +	struct list_head	ib_map_list;
+> > +	spinlock_t		ib_map_lock;
+> >  	void __iomem		*msi_mem;
+> >  	phys_addr_t		msi_mem_phys;
+> >  	struct pci_epf_bar	*epf_bar[PCI_STD_NUM_BARS];
+> > --
+> > 2.51.0
+> >
