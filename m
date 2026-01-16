@@ -1,148 +1,168 @@
-Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAECB36167D
-	for <linux-pci@vger.kernel.org>; Fri, 16 Jan 2026 10:44:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E4DA36165B;
+	Fri, 16 Jan 2026 11:07:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768560293; cv=none; b=BtWGGIe1jqIQAr3NkilRB6WGluuwd1w6wrOL7chJ2QyloUmLjMLz9oVY+xQzqqD4PyzrmKqdrI+K/WEewYx/kLeCe2Tsm+Q7QGJFB2QfGdckyZfHxTZdWIsGmCAFNy8BaFXRlbMnP/+ovwIVbGsjOP0p31PmYxxbUvpTGW5X9pM=
+	t=1768561646; cv=none; b=a/eFzk95jbEf5wXL1xszNRDHgrp0MLS6I9TRUDjUqSscqFtSSmzQvR+ofDdBinj+mDHnrmSXhRSGRCJ/OwTAXVoU6KKWqmnvHFsF1vCbbtn+0nw6p1ww8YofVOe/8/1ZzWJ54/PVkYvt0d0QIhfELn7Dz81oZbizJI7n4uCeRfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768560293; c=relaxed/simple;
-	bh=b7fb2kg9k9dh+/1ZB4RW0gIF9ob0dRm04urz98QiGjM=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=UoRasm9dpSr2P3RmrfgVW+5SHLlIx0s93RlFRUeWbe5ujX1+wYLwwrsz+RZlRzf4+sauDp1KoSu6IT7EB+5JCeAm9MpGPDV1IYxUIALkn+ZBesUJT+Jn2YZBXwuFf8mkXcGJ5aSBCLSvjdRfEWvxiEij82HmapsoVrqRT28cAv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=npVRRZMb; arc=none smtp.client-ip=209.85.128.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="npVRRZMb"
-Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-4801ad6e51cso12594945e9.2
-        for <linux-pci@vger.kernel.org>; Fri, 16 Jan 2026 02:44:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1768560290; x=1769165090; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=lUX7IRgIyUPb4V4ApOigl/qbJl9m0SFY99Aj6A7demw=;
-        b=npVRRZMb1dp8pb4o5o1xfiNBcJfCavVVdZmQBJ8rvljYhOMRDl/VI5txkcmO4pBZ3I
-         /KVSF9or2D4DhzYq9sIEHwG0UyMy/8rEuTg6Cq1vWUOMeFNuWk4onwEJC6Cyg31siZmC
-         lkEqijfwO2WYaiARXRyN4eYrKVfSo3KUX0T60gdnmkh7w38ByzeOzCnTFn27yhMOrsIg
-         HzJaYT0fFq/r1XNy+1RSDgZFGrZWv9uevLPV31blKloPeWEsDbpc3XzRa7npuep1Cf9e
-         BejEez2DCN4LWOmXxSg8oRJFJbVAruLQH0itn99PPdlKowcScGojok4LrH2dS+7PFaod
-         gLmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768560290; x=1769165090;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lUX7IRgIyUPb4V4ApOigl/qbJl9m0SFY99Aj6A7demw=;
-        b=HA9ecHysReTGyTRnkKx+QkbuPeUF5VahAeFQJaYoVTsBB5inmdKLr1UVAtetfCfJVr
-         E6tGHVyGWf2eUpk0jpLu7LWW1kcaxoB4RLC7ojpb7gudlkf66mNxhyGzQ/LfcxgOnD8b
-         SQnpzCXbU3rht7LY4jXTG0Y/4QmR1UMQluhlE1w3MV800jPfz8qtu+wm+lqiBv25G2DM
-         QvuQJ2sqLcOmKcjnnL8G1tZBRHedAOSrq36u3Ucr2Q7PK4mzFPkhvoeRJgtPUjGCIfUl
-         1jF0WRmcnEMpr5iDaZRhjBcLWWY17xEK4nGfLRNDWFL8paokp4/eD5Qistir6qzts1M3
-         HO5A==
-X-Forwarded-Encrypted: i=1; AJvYcCWzhdBM3ZbTcNnmys7li3976JSH3A+vm11lZGbicQDY4uqYTp3EtqOmrCR0re8xxxfy8a/Vj3oNKeo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzrosCEzW99BYbZfMLTxKMdgA6++jFikGWBFAO4qMzVtnj/e1jl
-	g9MrpNa3QaQThiRftAzJbQgomVVVRJPhl18B3/2rzI1d2jQPLgTJhoZ1Zoz76x7ZAp9pc3AEeVC
-	0YNpXI+Kj7E70/VKRVQ==
-X-Received: from wmaq10.prod.google.com ([2002:a05:600c:6c8a:b0:47e:d9ed:20f0])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:c16a:b0:47e:e20e:bbbe with SMTP id 5b1f17b1804b1-4801e33c332mr30124455e9.25.1768560290048;
- Fri, 16 Jan 2026 02:44:50 -0800 (PST)
-Date: Fri, 16 Jan 2026 10:44:46 +0000
-In-Reply-To: <20260115212657.399231-3-zhiw@nvidia.com>
+	s=arc-20240116; t=1768561646; c=relaxed/simple;
+	bh=XXAQraqrAYpGTQG0r7rH6SgyOFZSbzKK5aveXzq9b74=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=bHajTFJrgscI2wfC4ixqyLoC3sWzggPjWPPpX3XgEpAFC1JK6FxtURzfRgIspp8834v+r9sOQwKhOIMb2UdYUZjkBb9ZKFWGTdeMS+e+QC75z9bPeUTP1hklkf0RtknmxcKoqHKjVMHo5SGwaB+eudZf6R66YaR1AkcThZAnx/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
+Received: from mail.andestech.com (ATCPCS34.andestech.com [10.0.1.134])
+	by Atcsqr.andestech.com with ESMTPS id 60GB2fnw031253
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+	Fri, 16 Jan 2026 19:02:41 +0800 (+08)
+	(envelope-from randolph@andestech.com)
+Received: from swlinux02.andestech.com (10.0.15.183) by ATCPCS34.andestech.com
+ (10.0.1.134) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Fri, 16 Jan
+ 2026 19:02:41 +0800
+From: Randolph <randolph@andestech.com>
+To: <linux-kernel@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <jingoohan1@gmail.com>,
+        <mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
+        <robh@kernel.org>, <bhelgaas@google.com>, <krzk+dt@kernel.org>,
+        <conor+dt@kernel.org>, <alex@ghiti.fr>, <aou@eecs.berkeley.edu>,
+        <palmer@dabbelt.com>, <paul.walmsley@sifive.com>,
+        <ben717@andestech.com>, <inochiama@gmail.com>,
+        <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
+        <shradha.t@samsung.com>, <pjw@kernel.org>,
+        <christian.bruel@foss.st.com>, <quic_wenbyao@quicinc.com>,
+        <vincent.guittot@linaro.org>, <elder@riscstar.com>,
+        <s-vadapalli@ti.com>, <randolph.sklin@gmail.com>,
+        <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
+Subject: [PATCH v10 1/4] dt-bindings: PCI: Add Andes QiLai PCIe support
+Date: Fri, 16 Jan 2026 19:02:31 +0800
+Message-ID: <20260116110234.1908263-2-randolph@andestech.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260116110234.1908263-1-randolph@andestech.com>
+References: <20260116110234.1908263-1-randolph@andestech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260115212657.399231-1-zhiw@nvidia.com> <20260115212657.399231-3-zhiw@nvidia.com>
-Message-ID: <aWoWntMxyhBc9Unx@google.com>
-Subject: Re: [PATCH v9 2/5] rust: io: factor common I/O helpers into Io trait
-From: Alice Ryhl <aliceryhl@google.com>
-To: Zhi Wang <zhiw@nvidia.com>
-Cc: rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, dakr@kernel.org, bhelgaas@google.com, 
-	kwilczynski@kernel.org, ojeda@kernel.org, alex.gaynor@gmail.com, 
-	boqun.feng@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com, 
-	lossin@kernel.org, a.hindborg@kernel.org, tmgross@umich.edu, 
-	markus.probst@posteo.de, helgaas@kernel.org, cjia@nvidia.com, 
-	smitra@nvidia.com, ankita@nvidia.com, aniketa@nvidia.com, 
-	kwankhede@nvidia.com, targupta@nvidia.com, acourbot@nvidia.com, 
-	joelagnelf@nvidia.com, jhubbard@nvidia.com, zhiwang@kernel.org, 
-	daniel.almeida@collabora.com
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: ATCPCS33.andestech.com (10.0.1.100) To
+ ATCPCS34.andestech.com (10.0.1.134)
+X-DKIM-Results: atcpcs34.andestech.com; dkim=none;
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:Atcsqr.andestech.com 60GB2fnw031253
 
-On Thu, Jan 15, 2026 at 11:26:46PM +0200, Zhi Wang wrote:
-> The previous Io<SIZE> type combined both the generic I/O access helpers
-> and MMIO implementation details in a single struct.
-> 
-> To establish a cleaner layering between the I/O interface and its concrete
-> backends, paving the way for supporting additional I/O mechanisms in the
-> future, Io<SIZE> need to be factored.
-> 
-> Factor the common helpers into new {Io, Io64} traits, and move the
-> MMIO-specific logic into a dedicated Mmio<SIZE> type implementing that
-> trait. Rename the IoRaw to MmioRaw and update the bus MMIO implementations
-> to use MmioRaw.
-> 
-> No functional change intended.
-> 
-> Cc: Alexandre Courbot <acourbot@nvidia.com>
-> Cc: Alice Ryhl <aliceryhl@google.com>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Danilo Krummrich <dakr@kernel.org>
-> Cc: John Hubbard <jhubbard@nvidia.com>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+From: Randolph Lin <randolph@andestech.com>
 
-> +pub trait IoBase {
-> +pub trait IoKnownSize: IoBase {
-> +pub trait Io: IoBase {
-> +pub trait IoKnownSize64: IoKnownSize {
-> +pub trait Io64: Io {
+Add the Andes QiLai PCIe node, which includes 3 Root Complexes.
+Only one example is required in the DTS bindings YAML file.
 
-The following combinations are possible:
+Signed-off-by: Randolph Lin <randolph@andestech.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+---
+ .../bindings/pci/andestech,qilai-pcie.yaml    | 86 +++++++++++++++++++
+ 1 file changed, 86 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
 
-1. IoBase
-2. IoBase + Io
-3. IoBase + IoKnownSize
-4. IoBase + Io + IoKnownSize
-5. IoBase + Io + Io64
-6. IoBase + Io + Io64 + IoKnownSize
-7. IoBase + IoKnownSize + IoKnownSize64
-8. IoBase + Io + IoKnownSize + IoKnownSize64
-9. IoBase + Io + IoKnownSize + Io64 + IoKnownSize64
+diff --git a/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml b/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
+new file mode 100644
+index 000000000000..7eca3be2c8f3
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
+@@ -0,0 +1,86 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/andestech,qilai-pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Andes QiLai PCIe host controller
++
++description:
++  Andes QiLai PCIe host controller is based on the Synopsys DesignWare
++  PCI core.
++
++maintainers:
++  - Randolph Lin <randolph@andestech.com>
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++
++properties:
++  compatible:
++    const: andestech,qilai-pcie
++
++  reg:
++    items:
++      - description: Data Bus Interface (DBI) registers.
++      - description: APB registers.
++      - description: PCIe configuration space region.
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: apb
++      - const: config
++
++  ranges:
++    maxItems: 2
++
++  interrupts:
++    maxItems: 1
++
++  interrupt-names:
++    items:
++      - const: msi
++
++required:
++  - reg
++  - reg-names
++  - interrupts
++  - interrupt-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++
++    soc {
++      #address-cells = <2>;
++      #size-cells = <2>;
++
++      pcie@80000000 {
++        compatible = "andestech,qilai-pcie";
++        device_type = "pci";
++        reg = <0x0 0x80000000 0x0 0x20000000>,
++              <0x0 0x04000000 0x0 0x00001000>,
++              <0x0 0x00000000 0x0 0x00010000>;
++        reg-names = "dbi", "apb", "config";
++
++        linux,pci-domain = <0>;
++        #address-cells = <3>;
++        #size-cells = <2>;
++        ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x0 0xf0000000>,
++                 <0x43000000 0x01 0x00000000 0x01 0x0000000 0x1f 0x00000000>;
++
++        #interrupt-cells = <1>;
++        interrupts = <0xf>;
++        interrupt-names = "msi";
++        interrupt-parent = <&plic0>;
++        interrupt-map-mask = <0 0 0 7>;
++        interrupt-map = <0 0 0 1 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 2 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 3 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 4 &plic0 0xf IRQ_TYPE_LEVEL_HIGH>;
++      };
++    };
++...
+-- 
+2.34.1
 
-I'm not sure all of them make sense. I can't see a scenario where I
-would pick 1, 3, 6, 7, or 8.
-
-How about this trait hierachy? I believe I suggested something along
-these lines before.
-
-pub trait Io {
-pub trait Io64: Io {
-pub trait IoKnownSize: Io {
-
-With these traits, these scenarios are possible:
-
-1. Io
-2. Io + Io64
-3. Io + IoKnownSize
-4. Io + Io64 + IoKnownSize
-
-which seems to be the actual set of cases we care about.
-
-Note that IoKnownSize can have methods that only apply when Io64 is
-implemented:
-
-trait IoKnownSize: Io {
-    /// Infallible 8-bit read with compile-time bounds check.
-    fn read8(&self, offset: usize) -> u8;
-
-    /// Infallible 64-bit read with compile-time bounds check.
-    fn read64(&self, offset: usize) -> u64
-    where
-    	Self: Io64;
-}
-
-Alice
