@@ -1,46 +1,49 @@
-Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
+Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8752C3C38;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12756224240;
 	Fri, 16 Jan 2026 07:52:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768549948; cv=none; b=b5UYo2Q3XdCNuG450YmPu08rD59wXmnUsbBJmXEzlrP4pMEba9Z0/xAtTQEpiXz9clT1o+lYIHIGdAc8lhpPKX7WyKb0xXSCfCj00lpQdifH9F2q4k7GmLxMWxgjgNPN15s0OpeMiISYX4WJLhkdX93RO7FvI0QtQPxr2R7zz4w=
+	t=1768549949; cv=none; b=r09K8trzA0TNFQv4Ek9S9FFZlRnnXHYSjLbXm5BECbTm16nUCqR8rJD3LxAzYy4g1rdv/q1CjpI27xLREaWxKeRfJbjjdld4R9iLsFwCfQn7h5nrcUDVFL1vqnbg3n5SsAQGR1bugcNfyoJ8HOyr8c/VmK4xp5+lQrEpzCdGr/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768549948; c=relaxed/simple;
-	bh=2SLkKFQrDOzyQBwhViHlyyk3nzemeDJYp3LZQpYzZ8g=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qLLnysOxzYlpqx7bHDxkyNVfA/hqJjzoO/Pl3N/qjBnPAQi34uo7TEF1/f/HLGdO4P2IZI3QaZuJLVmzmvhJrGHOYhT5ptEoahUErG8aQLL+/Ba2OL3T8Jq3KhKM4MnqSBrvAuj+eOGje52528O+gohPhNLPS88XgxbmaHhJx1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=brxNcF90; arc=none smtp.client-ip=113.46.200.221
+	s=arc-20240116; t=1768549949; c=relaxed/simple;
+	bh=Ud2R8irrjHV8oKAesOvvjnfDJQcG9DLau/Q333OJ60E=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=SwJ2kyEFC8C/VTnJNA3SpoYCyIxXmMTBBAfInYEA8hq//Rl+5qWxOD8ehOUa4r/rtDL2Ih864V29yUomUnIrUFtx1gcAu5UAUSKZU+7djROj/gMPITcEaZ7GsxMfLjNzM5YC1DSS4SwDv7L0dVx+htA7qwJBzv+pR4T6UVUiGuk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=gNhT2San; arc=none smtp.client-ip=113.46.200.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="brxNcF90"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="gNhT2San"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=Lbc6s7BfjdYN6UzX1X6BsPBdAHxZSPui8+3X2WI9GcY=;
-	b=brxNcF906Af6UPdkEUUGmdIMZcug3j2sGdZdr3Xcib0/rwTv9S42Ehn2HIOaTJhtCuNFVNxU2
-	wgmhIbhzqVuBfo7Ub2zUOG0sO3tyO2Xh9kQ8g42ARpGn/2MhkynCf9xGvvZim5FbNvievTk+eVe
-	sT2QMKqdC2igpjt5ln8Q+wI=
-Received: from mail.maildlp.com (unknown [172.19.162.144])
-	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4dssRx4B5dzRhRh;
-	Fri, 16 Jan 2026 15:49:01 +0800 (CST)
+	bh=dqybSqFRGWH2S5xIK9Mjnk5ZtSwQkwEhkJIGN6a62is=;
+	b=gNhT2Sanmno83BrnYUVhut8QeP+WLWVvWvc0boguOaRphYR1j67TMTTe7ODcjv+FcHRk4iemW
+	d02a6Y+eM+UakPzFKRvV+QBU4/dSicIB5FQFuENfe6DDPLxsm+yim9glZVnviOUK2ocaPfX9wYE
+	tei1X7EotstbwX88QJeuV30=
+Received: from mail.maildlp.com (unknown [172.19.163.214])
+	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dssSN5sHJznTVR;
+	Fri, 16 Jan 2026 15:49:24 +0800 (CST)
 Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8FC9E40538;
-	Fri, 16 Jan 2026 15:52:22 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id E35734056C;
+	Fri, 16 Jan 2026 15:52:23 +0800 (CST)
 Received: from localhost.localdomain (10.50.85.180) by
  kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 16 Jan 2026 15:52:22 +0800
+ 15.2.1544.11; Fri, 16 Jan 2026 15:52:23 +0800
 From: Ziming Du <duziming2@huawei.com>
 To: <bhelgaas@google.com>, <alex@shazbot.org>, <chrisw@redhat.com>,
 	<jbarnes@virtuousgeek.org>
 CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<liuyongqiang13@huawei.com>
-Subject: [PATCH v4 0/4] Miscellaneous fixes for pci subsystem
-Date: Fri, 16 Jan 2026 16:17:17 +0800
-Message-ID: <20260116081723.1603603-1-duziming2@huawei.com>
+Subject: [PATCH v4 4/4] PCI: Prevent overflow in proc_bus_pci_read()
+Date: Fri, 16 Jan 2026 16:17:21 +0800
+Message-ID: <20260116081723.1603603-5-duziming2@huawei.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260116081723.1603603-1-duziming2@huawei.com>
+References: <20260116081723.1603603-1-duziming2@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,40 +55,42 @@ Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
  kwepemr500012.china.huawei.com (7.202.195.23)
 
-Miscellaneous fixes for pci subsystem
+proc_bus_pci_read() assigns *ppos directly to an unsigned integer variable.
+For large offsets, this implicit conversion may truncate the value and
+cause reads from an incorrect position.
 
-Changes in v4:
-- Remove the architecture-specific #ifdef to apply the alignment
-  check for all platforms (including x86), as device registers are
-  naturally aligned anyway.
-- Fix a potential issue in proc_bus_pci_read() to make it consistent
-  with proc_bus_pci_write(), as suggested by Ilpo Järvinen.
-- Link to v3: https://lore.kernel.org/linux-pci/20260108015944.3520719-1-duziming2@huawei.com/
+proc_bus_pci_write() explicitly validates *ppos and rejects values larger
+than INT_MAX, while proc_bus_pci_read() currently accepts them. This
+difference in position handling is unjustified.
 
-Changes in v3:
-- Check *ppos before assign it to pos.
-- Link to v2: https://lore.kernel.org/linux-pci/20251224092721.2034529-1-duziming2@huawei.com/
+Fix this by validating *ppos in proc_bus_pci_read() and rejecting offsets
+larger than INT_MAX before the assignment, matching proc_bus_pci_write().
 
-Changes in v2:
-- Correct grammer and indentation.
-- Remove unrelated stack traces from the commit message.
-- Modify the handling of pos by adding a non-negative check to ensure
-  that the input value is valid.
-- Use the existing IS_ALIGNED macro and ensure that after modification,
-  other cases still retuen -EINVAL as before.
-- Link to v1: https://lore.kernel.org/linux-pci/20251216083912.758219-1-duziming2@huawei.com/
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Ziming Du <duziming2@huawei.com>
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/pci/proc.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Yongqiang Liu (2):
-  PCI: Prevent overflow in proc_bus_pci_write()
-  PCI/sysfs: Prohibit unaligned access to I/O port
-Ziming Du (2):
-  PCI/sysfs: Fix null pointer dereference during hotplug
-  PCI: Prevent overflow in proc_bus_pci_read()
-
- drivers/pci/pci-sysfs.c |  7 +++++++
- drivers/pci/proc.c      | 11 +++++++++--
- 2 files changed, 16 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 2d51b26edbe74..f4ef7629dc78b 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -29,9 +29,12 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+ 				 size_t nbytes, loff_t *ppos)
+ {
+ 	struct pci_dev *dev = pde_data(file_inode(file));
+-	unsigned int pos = *ppos;
++	int pos;
+ 	unsigned int cnt, size;
+ 
++	if (*ppos > INT_MAX)
++		return -EINVAL;
++	pos = *ppos;
+ 	/*
+ 	 * Normal users can read only the standardized portion of the
+ 	 * configuration space as several chips lock up when trying to read
 -- 
 2.43.0
 
