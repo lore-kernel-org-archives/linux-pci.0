@@ -1,189 +1,156 @@
-Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE43C3659F5;
-	Fri, 16 Jan 2026 11:07:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8387936920F;
+	Fri, 16 Jan 2026 11:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768561647; cv=none; b=ZWduLoogBOp6bGBTRynH7q794230Do1zNrO3nytompcZyQLIBocC1cS3PtsJjK3Gjn/DlxfqeP/kgIUxHT/KFYNfl4Z5ucGYIh7FSyqMQkE7KDvOsGVQ4jVsYemX6AfDmXzuSPC4Q77NXdfq9AbfoqIqmuNS10dziJ6oMREbc+w=
+	t=1768561916; cv=none; b=pVXeeR2lvx2GLB/xjokjBWwa7Ip9hmyd3uXWjLOd0HGZeF6SQvDkj6BuFyRYZqG8uQBIoQWke0HFN2+ftKOYsqhqEY1sMcmxRWvcj20IAfwdIEapzZbog6ydSrW6K5Qn7jH6qyLEMMuWClgNWp4lwYioQtRiMjdQ+lKMwc6qTNQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768561647; c=relaxed/simple;
-	bh=3v7Af6pWGk03W6bNXeT/pJxNN4SEGFnLZ70E1ejvFBQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NTKWHHS5HmMPRAonG4bH5hE+gU5MEtC60FYALsXwGS9h89jaWlLGctFwIlnzYJkL2TLltGa9QUUka4ctP6/lTbiWqol0P2VehLVajYwCyoMw58FbshPpstyjHxKpSTK5zSmUDSiP8XIyGIMfjKIX51rNhPMgooYJs872cemLeUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
-Received: from mail.andestech.com (ATCPCS34.andestech.com [10.0.1.134])
-	by Atcsqr.andestech.com with ESMTPS id 60GB2fnx031253
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-	Fri, 16 Jan 2026 19:02:41 +0800 (+08)
-	(envelope-from randolph@andestech.com)
-Received: from swlinux02.andestech.com (10.0.15.183) by ATCPCS34.andestech.com
- (10.0.1.134) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Fri, 16 Jan
- 2026 19:02:41 +0800
-From: Randolph <randolph@andestech.com>
-To: <linux-kernel@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <jingoohan1@gmail.com>,
-        <mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-        <robh@kernel.org>, <bhelgaas@google.com>, <krzk+dt@kernel.org>,
-        <conor+dt@kernel.org>, <alex@ghiti.fr>, <aou@eecs.berkeley.edu>,
-        <palmer@dabbelt.com>, <paul.walmsley@sifive.com>,
-        <ben717@andestech.com>, <inochiama@gmail.com>,
-        <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
-        <shradha.t@samsung.com>, <pjw@kernel.org>,
-        <christian.bruel@foss.st.com>, <quic_wenbyao@quicinc.com>,
-        <vincent.guittot@linaro.org>, <elder@riscstar.com>,
-        <s-vadapalli@ti.com>, <randolph.sklin@gmail.com>,
-        <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
-Subject: [PATCH v10 2/4] riscv: dts: qilai: Add PCIe node into the QiLai SoC
-Date: Fri, 16 Jan 2026 19:02:32 +0800
-Message-ID: <20260116110234.1908263-3-randolph@andestech.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260116110234.1908263-1-randolph@andestech.com>
-References: <20260116110234.1908263-1-randolph@andestech.com>
+	s=arc-20240116; t=1768561916; c=relaxed/simple;
+	bh=DSlOnTDneF/cIci7EGTLJ5eO7ZkeoiFdIY5ITkDi2pM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B4lATlSHIkdKNMmrf2k0vCzn7KtAuO3PWyLVLtPegQXEoF+ngdpVCvAbPEF0HeGfAmZKDMvdFbF6qQCjnUc5Hq2/FaA6HFjo8o7TrqSIqjUPYGob0s1J/G2GF/7LFPJ4V8MIqGtguq4Y1P/jitsCA/YZjlPRnrCb3Iw7qJS6uWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RBoyDp/z; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RBoyDp/z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B485AC16AAE;
+	Fri, 16 Jan 2026 11:11:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768561915;
+	bh=DSlOnTDneF/cIci7EGTLJ5eO7ZkeoiFdIY5ITkDi2pM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RBoyDp/zqACNrmMW6lYe5ImqGxVpNieojKqdDiozAsmx4GvkU1+UDqGWNbKb8d6uh
+	 vL5TPULmbJiip6PUSZPd7ODESJHLC0hg6vFgwQAdTPrkSJpU+fb6bapt79vMIHghuj
+	 J9SBT6a125pyN0JV9qx7ztNV8JKqbyQGJ5gAbxs2OOG+o2ghxFQQiXfYxZ9AEG4iVf
+	 YcR5R84titE5vfos7+oVf8VkEQaQpdqHbWBuS2f83FRy0I6xdXaNZGuo5po7nRNO/B
+	 r11/Ceiqp3G/pGwwmQBL4Q0XHgSpE+6MILp4XZIXavSLAdC+TPSrXiI+m2GmIqnUZS
+	 n1/8JG8Wf58rQ==
+Date: Fri, 16 Jan 2026 16:41:42 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Pavel Machek <pavel@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, linux-pm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	quic_vbadigan@quicinc.com, quic_mrana@quicinc.com, sherry.sun@nxp.com
+Subject: Re: [PATCH v6 1/2] PM: sleep: wakeirq: Add support for dedicated
+ shared wake IRQ setup
+Message-ID: <p4cci7cup2breet6pluazfeeekdkmx7xoa3ubiuv2i7dsxkrde@53eh4grfndlq>
+References: <20251127-wakeirq_support-v6-0-60f581f94205@oss.qualcomm.com>
+ <20251127-wakeirq_support-v6-1-60f581f94205@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: ATCPCS33.andestech.com (10.0.1.100) To
- ATCPCS34.andestech.com (10.0.1.134)
-X-DKIM-Results: atcpcs34.andestech.com; dkim=none;
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:Atcsqr.andestech.com 60GB2fnx031253
+In-Reply-To: <20251127-wakeirq_support-v6-1-60f581f94205@oss.qualcomm.com>
 
-From: Randolph Lin <randolph@andestech.com>
+On Thu, Nov 27, 2025 at 06:15:42PM +0530, Krishna Chaitanya Chundru wrote:
+> Some devices require more flexibility when configuring their dedicated
+> wake-up interrupts, such as support for IRQF_SHARED or other IRQ flags.
+> This is particularly useful in PCIe systems where multiple endpoints
+> (e.g., Wi-Fi and Bluetooth controllers) share a common WAKE# signal
+> line which requests platform to re-establish power and reference clocks
+> to the components. In such cases, drivers can use this new API
+> dev_pm_set_dedicated_shared_wake_irq() to register a shared wake IRQ.
+> 
+> Update the internal helper __dev_pm_set_dedicated_wake_irq() to accept an
+> irq_flags argument. Modify the existing dev_pm_set_dedicated_wake_irq()
+> and dev_pm_set_dedicated_wake_irq_reverse() to preserve current behavior.
+> 
+> When IRQ regitsered with IRQF_SHARED we can't use IRQF_NO_AUTOEN flag,
+> so after registering for irq, disable it explicitly.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/base/power/wakeirq.c | 39 ++++++++++++++++++++++++++++++++++-----
+>  include/linux/pm_wakeirq.h   |  6 ++++++
+>  2 files changed, 40 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/base/power/wakeirq.c b/drivers/base/power/wakeirq.c
+> index 8aa28c08b2891f3af490175362cc1a759069bd50..df34a891d54bec8737a3ef174bdfa469c19133c4 100644
+> --- a/drivers/base/power/wakeirq.c
+> +++ b/drivers/base/power/wakeirq.c
+> @@ -168,7 +168,8 @@ static irqreturn_t handle_threaded_wake_irq(int irq, void *_wirq)
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -static int __dev_pm_set_dedicated_wake_irq(struct device *dev, int irq, unsigned int flag)
+> +static int __dev_pm_set_dedicated_wake_irq(struct device *dev, int irq, unsigned int flag,
+> +					   unsigned int irq_flags)
+>  {
+>  	struct wake_irq *wirq;
+>  	int err;
+> @@ -197,8 +198,7 @@ static int __dev_pm_set_dedicated_wake_irq(struct device *dev, int irq, unsigned
+>  	 * so we use a threaded irq.
+>  	 */
+>  	err = request_threaded_irq(irq, NULL, handle_threaded_wake_irq,
+> -				   IRQF_ONESHOT | IRQF_NO_AUTOEN,
+> -				   wirq->name, wirq);
+> +				   IRQF_ONESHOT | irq_flags, wirq->name, wirq);
+>  	if (err)
+>  		goto err_free_name;
+>  
+> @@ -234,7 +234,7 @@ static int __dev_pm_set_dedicated_wake_irq(struct device *dev, int irq, unsigned
+>   */
+>  int dev_pm_set_dedicated_wake_irq(struct device *dev, int irq)
+>  {
+> -	return __dev_pm_set_dedicated_wake_irq(dev, irq, 0);
+> +	return __dev_pm_set_dedicated_wake_irq(dev, irq, 0, IRQF_NO_AUTOEN);
+>  }
+>  EXPORT_SYMBOL_GPL(dev_pm_set_dedicated_wake_irq);
+>  
+> @@ -255,10 +255,39 @@ EXPORT_SYMBOL_GPL(dev_pm_set_dedicated_wake_irq);
+>   */
+>  int dev_pm_set_dedicated_wake_irq_reverse(struct device *dev, int irq)
+>  {
+> -	return __dev_pm_set_dedicated_wake_irq(dev, irq, WAKE_IRQ_DEDICATED_REVERSE);
+> +	return __dev_pm_set_dedicated_wake_irq(dev, irq, WAKE_IRQ_DEDICATED_REVERSE,
+> +					       IRQF_NO_AUTOEN);
+>  }
+>  EXPORT_SYMBOL_GPL(dev_pm_set_dedicated_wake_irq_reverse);
+>  
+> +/**
+> + * dev_pm_set_dedicated_shared_wake_irq - Request a dedicated shared wake-up interrupt
+> + *                                        with custom flags
+> + * @dev: Device entry
+> + * @irq: Device wake-up interrupt
+> + * @flags: IRQ flags (e.g., IRQ_TYPE_EDGE_FALLING)
+> + *
+> + * This API sets up a threaded interrupt handler for a device that has
+> + * a shared wake-up interrupt in addition to the device IO interrupt. It also
+> + * sets IRQ flags like IRQ_TYPE_EDGE_FALLING passed by the caller.
+> + *
+> + * Returns 0 on success or a negative error code on failure.
+> + */
+> +int dev_pm_set_dedicated_shared_wake_irq(struct device *dev, int irq, unsigned long flags)
+> +{
+> +	struct wake_irq *wirq;
+> +	int ret;
+> +
+> +	ret =  __dev_pm_set_dedicated_wake_irq(dev, irq, 0, IRQF_SHARED | flags);
+> +	if (!ret) {
+> +		wirq = dev->power.wakeirq;
+> +		disable_irq_nosync(wirq->irq);
+> +	}
 
-Add the Andes QiLai PCIe node, which includes 3 Root Complexes.
+Maybe it is just me, but I'd prefer the below pattern to make it easier to read.
 
-Signed-off-by: Randolph Lin <randolph@andestech.com>
----
- arch/riscv/boot/dts/andes/qilai.dtsi | 106 +++++++++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+	if (ret)
+		return ret;
 
-diff --git a/arch/riscv/boot/dts/andes/qilai.dtsi b/arch/riscv/boot/dts/andes/qilai.dtsi
-index de3de32f8c39..afa7b75a7e7a 100644
---- a/arch/riscv/boot/dts/andes/qilai.dtsi
-+++ b/arch/riscv/boot/dts/andes/qilai.dtsi
-@@ -182,5 +182,111 @@ uart0: serial@30300000 {
- 			reg-io-width = <4>;
- 			no-loopback-test;
- 		};
-+
-+		bus@80000000 {
-+			compatible = "simple-bus";
-+			#address-cells = <2>;
-+			#size-cells = <2>;
-+			dma-ranges = <0x44 0x00000000 0x04 0x00000000 0x04 0x00000000>;
-+			ranges = <0x00 0x80000000 0x00 0x80000000 0x00 0x20000000>,
-+				 <0x00 0x04000000 0x00 0x04000000 0x00 0x00001000>,
-+				 <0x00 0x00000000 0x20 0x00000000 0x20 0x00000000>;
-+
-+			pcie@80000000 {
-+				compatible = "andestech,qilai-pcie";
-+				device_type = "pci";
-+				reg = <0x00 0x80000000 0x00 0x20000000>, /* DBI registers */
-+				      <0x00 0x04000000 0x00 0x00001000>, /* APB registers */
-+				      <0x00 0x00000000 0x00 0x00010000>; /* Configuration registers */
-+				reg-names = "dbi", "apb", "config";
-+
-+				linux,pci-domain = <0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x00 0xf0000000>,
-+					 <0x43000000 0x01 0x00000000 0x01 0x00000000 0x1f 0x00000000>;
-+
-+				#interrupt-cells = <1>;
-+				interrupts = <0xf 0x4>;
-+				interrupt-names = "msi";
-+				interrupt-parent = <&plic>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 1 &plic 0xf 0x4>,
-+						<0 0 0 2 &plic 0xf 0x4>,
-+						<0 0 0 3 &plic 0xf 0x4>,
-+						<0 0 0 4 &plic 0xf 0x4>;
-+			};
-+		};
-+
-+		bus@a0000000 {
-+			compatible = "simple-bus";
-+			#address-cells = <2>;
-+			#size-cells = <2>;
-+			dma-ranges = <0x44 0x00000000 0x04 0x00000000 0x04 0x00000000>;
-+			ranges = <0x00 0xa0000000 0x00 0xa0000000 0x00 0x20000000>,
-+				 <0x00 0x04001000 0x00 0x04001000 0x00 0x00001000>,
-+				 <0x00 0x00000000 0x10 0x00000000 0x08 0x00000000>;
-+
-+			pcie@a0000000 {
-+				compatible = "andestech,qilai-pcie";
-+				device_type = "pci";
-+				reg = <0x00 0xa0000000 0x00 0x20000000>, /* DBI registers */
-+				      <0x00 0x04001000 0x00 0x00001000>, /* APB registers */
-+				      <0x00 0x00000000 0x00 0x00010000>; /* Configuration registers */
-+				reg-names = "dbi", "apb", "config";
-+
-+				linux,pci-domain = <1>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x0 0xf0000000>,
-+					 <0x43000000 0x01 0x00000000 0x01 0x00000000 0x7 0x00000000>;
-+
-+				#interrupt-cells = <1>;
-+				interrupts = <0xe 0x4>;
-+				interrupt-names = "msi";
-+				interrupt-parent = <&plic>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 1 &plic 0xe 0x4>,
-+						<0 0 0 2 &plic 0xe 0x4>,
-+						<0 0 0 3 &plic 0xe 0x4>,
-+						<0 0 0 4 &plic 0xe 0x4>;
-+			};
-+		};
-+
-+		bus@c0000000 {
-+			compatible = "simple-bus";
-+			#address-cells = <2>;
-+			#size-cells = <2>;
-+			dma-ranges = <0x44 0x00000000 0x04 0x00000000 0x04 0x00000000>;
-+			ranges = <0x00 0xc0000000 0x00 0xc0000000 0x00 0x20000000>,
-+				 <0x00 0x04002000 0x00 0x04002000 0x00 0x00001000>,
-+				 <0x00 0x00000000 0x18 0x00000000 0x08 0x00000000>;
-+
-+			pcie@c0000000 {
-+				compatible = "andestech,qilai-pcie";
-+				device_type = "pci";
-+				reg = <0x00 0xc0000000 0x00 0x20000000>, /* DBI registers */
-+				      <0x00 0x04002000 0x00 0x00001000>, /* APB registers */
-+				      <0x00 0x00000000 0x00 0x00010000>; /* Configuration registers */
-+				reg-names = "dbi", "apb", "config";
-+
-+				linux,pci-domain = <2>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x0 0xf0000000>,
-+					 <0x43000000 0x01 0x00000000 0x01 0x00000000 0x7 0x00000000>;
-+
-+				#interrupt-cells = <1>;
-+				interrupts = <0xd 0x4>;
-+				interrupt-names = "msi";
-+				interrupt-parent = <&plic>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 1 &plic 0xd 0x4>,
-+						<0 0 0 2 &plic 0xd 0x4>,
-+						<0 0 0 3 &plic 0xd 0x4>,
-+						<0 0 0 4 &plic 0xd 0x4>;
-+			};
-+		};
-+
- 	};
- };
+	wirq = dev->power.wakeirq;
+	disable_irq_nosync(wirq->irq);
+
+	return 0;
+
+- Mani
+
 -- 
-2.34.1
-
+மணிவண்ணன் சதாசிவம்
