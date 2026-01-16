@@ -1,46 +1,46 @@
-Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12756224240;
-	Fri, 16 Jan 2026 07:52:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C8F2D5950;
+	Fri, 16 Jan 2026 07:52:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768549949; cv=none; b=r09K8trzA0TNFQv4Ek9S9FFZlRnnXHYSjLbXm5BECbTm16nUCqR8rJD3LxAzYy4g1rdv/q1CjpI27xLREaWxKeRfJbjjdld4R9iLsFwCfQn7h5nrcUDVFL1vqnbg3n5SsAQGR1bugcNfyoJ8HOyr8c/VmK4xp5+lQrEpzCdGr/w=
+	t=1768549956; cv=none; b=qnUWNV+xJnqtLS5b4ZVvOxI+L6YQws7I/h1rJQo7aeTku7pIoANyS3QX96vvjFqpC5055PDeogXcsA2GGQpn/1dwUX+HUij8WrDIBGK1werD+W1Nu5qA/2WlsShqEgwjsSSyg5cfprvJ5xorKkIj9WNwoDQrIdo9VD8ASgtqiE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768549949; c=relaxed/simple;
-	bh=Ud2R8irrjHV8oKAesOvvjnfDJQcG9DLau/Q333OJ60E=;
+	s=arc-20240116; t=1768549956; c=relaxed/simple;
+	bh=u92f1kbTpIdKtEEuVeYvX55xieu/6RBt+ks+eV0Jdcc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SwJ2kyEFC8C/VTnJNA3SpoYCyIxXmMTBBAfInYEA8hq//Rl+5qWxOD8ehOUa4r/rtDL2Ih864V29yUomUnIrUFtx1gcAu5UAUSKZU+7djROj/gMPITcEaZ7GsxMfLjNzM5YC1DSS4SwDv7L0dVx+htA7qwJBzv+pR4T6UVUiGuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=gNhT2San; arc=none smtp.client-ip=113.46.200.227
+	 MIME-Version:Content-Type; b=H+U3U3fLuG1zG7UY42PlTY3rBhqLTHpyjCg+4cpRucVJc7f/i9LwIP1poPbVCTSc8+9mDnYjt0HgV9UdxYcacgBZiQXJiisHZpIansLjnZ9hTvL/Ec1RWCWs9t1aZmyez66t4YK5RdMLDGD095NvkR6yQRqrog1YO5DKrxAnPHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=lxVLbGGP; arc=none smtp.client-ip=113.46.200.223
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="gNhT2San"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="lxVLbGGP"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=dqybSqFRGWH2S5xIK9Mjnk5ZtSwQkwEhkJIGN6a62is=;
-	b=gNhT2Sanmno83BrnYUVhut8QeP+WLWVvWvc0boguOaRphYR1j67TMTTe7ODcjv+FcHRk4iemW
-	d02a6Y+eM+UakPzFKRvV+QBU4/dSicIB5FQFuENfe6DDPLxsm+yim9glZVnviOUK2ocaPfX9wYE
-	tei1X7EotstbwX88QJeuV30=
-Received: from mail.maildlp.com (unknown [172.19.163.214])
-	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dssSN5sHJznTVR;
-	Fri, 16 Jan 2026 15:49:24 +0800 (CST)
+	bh=3vxAPAMjiZnbkDd7gTIpK7c4P2xbFpz++FhONFEcjcg=;
+	b=lxVLbGGPAJ1Q2ZkMqwn2Y1+76UEq84emQlyR5k6Tibxp037a6+mhKCE9ZMUIMpZW0/IphQZ/m
+	rkSJ+P5k+TONPtt/biXHy0wmfXqyoMycqT4mZ4EPT3P5aWUrq2uZcuuqyhRf/Lgl5wqIWmWNmjW
+	DeDZ6zJAPAu3uMux3SUeh8c=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4dssRx3nFwzmVWy;
+	Fri, 16 Jan 2026 15:49:01 +0800 (CST)
 Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
-	by mail.maildlp.com (Postfix) with ESMTPS id E35734056C;
-	Fri, 16 Jan 2026 15:52:23 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id DC4684055B;
+	Fri, 16 Jan 2026 15:52:22 +0800 (CST)
 Received: from localhost.localdomain (10.50.85.180) by
  kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 16 Jan 2026 15:52:23 +0800
+ 15.2.1544.11; Fri, 16 Jan 2026 15:52:22 +0800
 From: Ziming Du <duziming2@huawei.com>
 To: <bhelgaas@google.com>, <alex@shazbot.org>, <chrisw@redhat.com>,
 	<jbarnes@virtuousgeek.org>
 CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<liuyongqiang13@huawei.com>
-Subject: [PATCH v4 4/4] PCI: Prevent overflow in proc_bus_pci_read()
-Date: Fri, 16 Jan 2026 16:17:21 +0800
-Message-ID: <20260116081723.1603603-5-duziming2@huawei.com>
+Subject: [PATCH v4 1/4] PCI/sysfs: Prohibit unaligned access to I/O port
+Date: Fri, 16 Jan 2026 16:17:18 +0800
+Message-ID: <20260116081723.1603603-2-duziming2@huawei.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260116081723.1603603-1-duziming2@huawei.com>
 References: <20260116081723.1603603-1-duziming2@huawei.com>
@@ -55,42 +55,67 @@ Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
  kwepemr500012.china.huawei.com (7.202.195.23)
 
-proc_bus_pci_read() assigns *ppos directly to an unsigned integer variable.
-For large offsets, this implicit conversion may truncate the value and
-cause reads from an incorrect position.
+Unaligned access is harmful for non-x86 archs such as arm64. When we
+use pwrite or pread to access the I/O port resources with unaligned
+offset, system will crash as follows:
 
-proc_bus_pci_write() explicitly validates *ppos and rejects values larger
-than INT_MAX, while proc_bus_pci_read() currently accepts them. This
-difference in position handling is unjustified.
+Unable to handle kernel paging request at virtual address fffffbfffe8010c1
+Internal error: Oops: 0000000096000061 [#1] SMP
+Call trace:
+ _outw include/asm-generic/io.h:594 [inline]
+ logic_outw+0x54/0x218 lib/logic_pio.c:305
+ pci_resource_io drivers/pci/pci-sysfs.c:1157 [inline]
+ pci_write_resource_io drivers/pci/pci-sysfs.c:1191 [inline]
+ pci_write_resource_io+0x208/0x260 drivers/pci/pci-sysfs.c:1181
+ sysfs_kf_bin_write+0x188/0x210 fs/sysfs/file.c:158
+ kernfs_fop_write_iter+0x2e8/0x4b0 fs/kernfs/file.c:338
+ vfs_write+0x7bc/0xac8 fs/read_write.c:586
+ ksys_write+0x12c/0x270 fs/read_write.c:639
+ __arm64_sys_write+0x78/0xb8 fs/read_write.c:648
 
-Fix this by validating *ppos in proc_bus_pci_read() and rejecting offsets
-larger than INT_MAX before the assignment, matching proc_bus_pci_write().
+Although x86 might handle unaligned I/O accesses by splitting cycles,
+this approach is still limited because PCI device registers typically
+expect natural alignment. A global prohibition of unaligned accesses
+ensures consistent behavior across all architectures and prevents
+unexpected hardware side effects.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Fixes: 8633328be242 ("PCI: Allow read/write access to sysfs I/O port resources")
+Signed-off-by: Yongqiang Liu <liuyongqiang13@huawei.com>
 Signed-off-by: Ziming Du <duziming2@huawei.com>
 Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/proc.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/pci-sysfs.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index 2d51b26edbe74..f4ef7629dc78b 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -29,9 +29,12 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
- 				 size_t nbytes, loff_t *ppos)
- {
- 	struct pci_dev *dev = pde_data(file_inode(file));
--	unsigned int pos = *ppos;
-+	int pos;
- 	unsigned int cnt, size;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c2df915ad2d29..18e5d4603b472 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -31,6 +31,7 @@
+ #include <linux/of.h>
+ #include <linux/aperture.h>
+ #include <linux/unaligned.h>
++#include <linux/align.h>
+ #include "pci.h"
  
-+	if (*ppos > INT_MAX)
-+		return -EINVAL;
-+	pos = *ppos;
- 	/*
- 	 * Normal users can read only the standardized portion of the
- 	 * configuration space as several chips lock up when trying to read
+ #ifndef ARCH_PCI_DEV_GROUPS
+@@ -1166,12 +1167,16 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 			*(u8 *)buf = inb(port);
+ 		return 1;
+ 	case 2:
++		if (!IS_ALIGNED(port, count))
++			return -EINVAL;
+ 		if (write)
+ 			outw(*(u16 *)buf, port);
+ 		else
+ 			*(u16 *)buf = inw(port);
+ 		return 2;
+ 	case 4:
++		if (!IS_ALIGNED(port, count))
++			return -EINVAL;
+ 		if (write)
+ 			outl(*(u32 *)buf, port);
+ 		else
 -- 
 2.43.0
 
