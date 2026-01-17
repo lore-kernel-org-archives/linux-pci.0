@@ -1,27 +1,28 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012032.outbound.protection.outlook.com [52.101.43.32])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010044.outbound.protection.outlook.com [52.101.193.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81A51327213;
-	Sat, 17 Jan 2026 04:57:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3008D327BFB;
+	Sat, 17 Jan 2026 04:57:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.44
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768625827; cv=fail; b=H8Zjpc0gWO+MLSFNKANi0SRIVa6m/jQz1lTCQ+95r9FuQtKutzWnBfi5JNTSvw4PSjA7P8rCzzym3x9kheKdIf92rhz76ZQJQ0JLt4lCAw4Xa9o98Vmpa49CKTMtmLNuGZQSMqV201IZb4QDSfih/8+p5IUX759W+gpT4XkhmJc=
+	t=1768625828; cv=fail; b=X1GV2T0PsZKO6IVM4mrtEgcw4N2Qu0nOg6pFwSYb0hy+jtWTpJgj7z2Ydwg17tXxbfquzXIe+hwS4y1V5Texl5Hl2ZjP5ucN3vr6XZm4Y24iYNlEEbNebp6Jg7mD7ld2o2lAqGEui1XeXKYPQU+n2K55BWGgYiYDJdTTB7QehT0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768625827; c=relaxed/simple;
-	bh=SvjMpPnUFCW4AOF7NuPWIknPYaWrL7JMLLGMilOb1NA=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JXSkTx3ZwSaMstOQI7UxH0CalKJqMPAagkWhcTRyczv5ljHrf/A6Qq3OHiJedIVD3dAIiFwWRt/gu256rmBT6fHhplhLthuVebpRKnF34/5ak6V6U3eERJ6qOn1EN2oHrsXlZTl0LT1FgY3+VllrP3f256oloCGeB47xYHiDY6c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Ltw3iMGD; arc=fail smtp.client-ip=52.101.43.32
+	s=arc-20240116; t=1768625828; c=relaxed/simple;
+	bh=L6s7n4Jj96TLp3sOIkLqpPAYU7wO1DeiSGijVI4QRRc=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=U8AcpD/bO5SBeR75PkkeXROvQE2OQ9yfjALkagqPwgqaIRnxVxbfVnmT/hWw0R+bdcRmBrkDJppE2TrD50RquTmjJD6E1qBYSuKacKZHmQuxWvcxfSJWqRI5AExKS9ToOQzRSfMBlzfbJnJK8Puu1/pqcdpEvv44Iyx/6vc+ch8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=lwwkHhk1; arc=fail smtp.client-ip=52.101.193.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Ltw3iMGD"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="lwwkHhk1"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ijh3qtR4/SKd/QGpo+FjwQ2mxYTYv+R0r57JFiAJGznHWWVz41Z4PoqBSsjJpenBSKyucCUSBEFxfQycxQbm4NNXObWDLxLxDr7TziKQg4ZMMBEVE1X6P7s0KUqofXdC+gFRyryVG5DBg7vecw+IoXOG6aaTErfqUEmwhnUPuqp2PAT64AQ5h5vXm9Bk6LJyUhoNruLPuQPM4A9QawREZ4drKD/64Crs361gMQpuqFokbpMAtr9eX09Xkt6U5vuvTBIqva3eCcJP6aHpVo2CRjbjW6vlDbdfbhVeKXoTmntrQ7hK+7BOB5tetlRRGspOt6Sqz/TbXzR+otO5bXaj4g==
+ b=zP463cOuE77Jv8et8SZNOOXZe6e7kHLWxJcWy2TPUTtzwForazwdFqpEHsr3xohxEHc3xigIP69xm39dOam6cE20R5fcioiDdDcnbaCN3KQ3jr2lF5q8RDLIGGhd1YsK82AFM8uW4ETVmEDuxPVW7WxHPEbRMmePEX5qRuqai8sPdDcNHibOxGUhbaZpYDIFApoYCOfCCMbrXBid0Rehf0h86DHxQiQFwr+qrSQEYO2TLH57LKMHdL82OOTqwND44LDkSxaGSs+y1qeojuAFttrZbHXkkMCaBbjDTh9WWR6LPHDkSetaOhSuSZWWlyEt7WDqNlMdToD+2oaElfkX9Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EPuGNwE97Qb8kErl0U5jmartNnGLUip5uvix5gQviYA=;
- b=WyTZx/kCPdpsAtAWIsLDcvpPrOffIJLyrWb8KfElgmmozNEUDHC8qlxikYwEa/md8WU5CZJk+w9Stpzk3IuqulmHKntI/L9RnRB4rs9f+sMg3gqeHX8tPM3njNZAkJq+PkxozCBFzLRKkECHzUbEmSYyJSTvq5Z+auNGXoFFNRWkc0YA0WHChcw9vT+CJ5thueyA1TcCpOp5fQ9bompwJzMTsIqD4AXdUAcCuyymkgDXmb0MFG11x3EcTUCnzEEGW4UZiO8vpYDW6UIHRsaZoH8Wx/nLNxE4Q/u9TnlmXro6Hfo1CIi4EUHM1nAZI1gXiJ8FLRQiQvH3nZgkQKJAwA==
+ bh=Ts3PitZ+B6lm33HYovCvYuzGDqhAItkZ5yJ1nVNyBL4=;
+ b=wtPDnCbUs3gfOdjo2OCqi55pMr7B/XO1m+Ceb7ptvg76jxOgF48vL7/zRryI5AtVwakxiOmS/17ht55awXBe8YSjFduGjXeOXwVs0HVkVrSE4eTACriNmK+73mjcmBl5538bxKw7C70ge7eAbHB/XtRlWDMgPbme7uNPxOB5drxOPJFSlaqzJPEXgnA+NxoTJtF0cueaHvL7vwuPIUiu4KCOJpdm7MgCGaa0e3t4ierkWSAaGkpmrIF91XDWcEy7We/5W+DC/2jbjnFtUulM+2QbySk8q+GGpEZC8XXyXa5aQNxCT71XrA3esi59fkSQWhHUT7RARL7ufR2GR2+cYA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.118.233) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -29,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EPuGNwE97Qb8kErl0U5jmartNnGLUip5uvix5gQviYA=;
- b=Ltw3iMGDeyjwBnvDSVvBwk5wMLw/r+nG3cJbsrrJsebsoSGuFkJMQ8VKXlNBKg8gtQjKT6nWTJQIZ64MrXgDNNHtSI56CRTKKy0rlIoAjmZiqRkWEFoVA+6lF/2Tfg4PxLi/CDEZGlnDf4DETS91SDPMiz9P0DvLoC7gMtVHDrqly2x/KkBOMSfRjJXfyKuDukJ4RHEN/YWm6dT0VtkeufUgY+Zcb9h083BnBJejVlTwiWj9BuDRBj0hAyQ2qR5G3FCmtW56SnLGy8vtyUsO6gVuhbxWj3OMYs4CqH5/DLg7GKP1+XtUqph8OGd2wRDFqGTJzyTeHwQQ5TrpooW0cA==
-Received: from BN0PR04CA0171.namprd04.prod.outlook.com (2603:10b6:408:eb::26)
- by SJ1PR12MB6025.namprd12.prod.outlook.com (2603:10b6:a03:48c::7) with
+ bh=Ts3PitZ+B6lm33HYovCvYuzGDqhAItkZ5yJ1nVNyBL4=;
+ b=lwwkHhk1x2NzqzWM3AgXSsuYbQ+6dTNcpsElXKfTfvB266Gp86TIkRSAafLctERVDrRXOiwloe0Go0TXvdCtuqBPC7L30YA2B9Kn2DwFkbl39IJFpI1cLZP4u9JwNWwFP+m8v3dXO0upe/e8C1ARVqEuB743iRErRb6n5yfBB/yStHUruKyWyDIa9g8igiZKjDnTeyorVTlUxezJvSkIVpFajnla1YIdgPvSb7FmkWiWvhcp7einH9YJE8Okw21hK+PGuPnXb9vNe++QVDM789+15vFxNOfLl6fUvEKRe7OK4WSpUvOtRmWCwyasa0iYyNLUEfTI6Lvr9FRDxCl8Rw==
+Received: from BN0PR04CA0164.namprd04.prod.outlook.com (2603:10b6:408:eb::19)
+ by LV9PR12MB9831.namprd12.prod.outlook.com (2603:10b6:408:2e7::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.4; Sat, 17 Jan
- 2026 04:56:54 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.6; Sat, 17 Jan
+ 2026 04:56:57 +0000
 Received: from BN3PEPF0000B370.namprd21.prod.outlook.com
- (2603:10b6:408:eb:cafe::49) by BN0PR04CA0171.outlook.office365.com
- (2603:10b6:408:eb::26) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9520.9 via Frontend Transport; Sat,
- 17 Jan 2026 04:56:34 +0000
+ (2603:10b6:408:eb:cafe::2c) by BN0PR04CA0164.outlook.office365.com
+ (2603:10b6:408:eb::19) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9499.7 via Frontend Transport; Sat,
+ 17 Jan 2026 04:56:28 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -50,18 +51,18 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
 Received: from mail.nvidia.com (216.228.118.233) by
  BN3PEPF0000B370.mail.protection.outlook.com (10.167.243.167) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9564.0 via Frontend Transport; Sat, 17 Jan 2026 04:56:54 +0000
-Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
+ 15.20.9564.0 via Frontend Transport; Sat, 17 Jan 2026 04:56:57 +0000
+Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
  (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 16 Jan
- 2026 20:56:50 -0800
+ 2026 20:56:52 -0800
 Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
+ drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Fri, 16 Jan 2026 20:56:49 -0800
+ 15.2.2562.20; Fri, 16 Jan 2026 20:56:52 -0800
 Received: from Asurada-Nvidia.nvidia.com (10.127.8.14) by mail.nvidia.com
  (10.126.190.180) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
- Transport; Fri, 16 Jan 2026 20:56:49 -0800
+ Transport; Fri, 16 Jan 2026 20:56:51 -0800
 From: Nicolin Chen <nicolinc@nvidia.com>
 To: <jgg@nvidia.com>, <will@kernel.org>, <robin.murphy@arm.com>,
 	<bhelgaas@google.com>
@@ -69,10 +70,12 @@ CC: <joro@8bytes.org>, <praan@google.com>, <baolu.lu@linux.intel.com>,
 	<kevin.tian@intel.com>, <miko.lenczewski@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
 	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH RFCv1 0/3] Allow ATS to be always on for certain ATS-capable devices
-Date: Fri, 16 Jan 2026 20:56:39 -0800
-Message-ID: <cover.1768624180.git.nicolinc@nvidia.com>
+Subject: [PATCH RFCv1 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
+Date: Fri, 16 Jan 2026 20:56:42 -0800
+Message-ID: <09cb6be1f8f7472a2f1ccab72154cc6e22cf570b.1768624181.git.nicolinc@nvidia.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1768624180.git.nicolinc@nvidia.com>
+References: <cover.1768624180.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -84,90 +87,249 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN3PEPF0000B370:EE_|SJ1PR12MB6025:EE_
-X-MS-Office365-Filtering-Correlation-Id: 447014ec-7ef9-41bc-f94b-08de5584d5af
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B370:EE_|LV9PR12MB9831:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9db30133-0751-4fae-40bb-08de5584d7c9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|376014|7416014|1800799024|36860700013|13003099007;
+	BCL:0;ARA:13230040|1800799024|376014|7416014|36860700013|82310400026;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?o9vtOlLT1LnopCyKpPcl09C5oSsd4K2qY8WPrnMVDgtjrEKRRkgB8Uz88V6r?=
- =?us-ascii?Q?KgjGi92+SU38LyRjajT8ACTrEerjrT4Ue94n3+zOnX49dxTK9mJEIdph8DyL?=
- =?us-ascii?Q?HrPuLz0Qiq4Yt8DeHb4GqvjzLTHRvW9mV9rz5HhMvuVscq4n+B/ACTxnsOxL?=
- =?us-ascii?Q?Q1bDX3he8frA7NqQmBQLUgdBdLJkKRLr1JZmSpgYEjb47AU9ktV5JDVuyHbd?=
- =?us-ascii?Q?tgfVSre2x7Cg/LdqHIXhEZfCPZBZ1Y7uaOSMELaiEYq+2Atk4RPgbJyYSqKA?=
- =?us-ascii?Q?zT0UHMzbAIRxUFMWS19dThCTclMKnAJq9onM2lRAW8l81+VLd78Qs+e7Wq+u?=
- =?us-ascii?Q?SEqa+dUUMYix2qe26497EK+xQiw3EfavDuorhCc8a16LbpIEdQIvLBIRzjfQ?=
- =?us-ascii?Q?Bbn4hR3H4FVPXHabtLWOmDvBu1CvXMZ3Vz2deeVvHvxTzz0Pg04+9RoG2OC0?=
- =?us-ascii?Q?3f+iZdGm4MszzYX0wRah5N0p00NHgI5su4uIM7XPGVl2s4BV17kRfk8NyLET?=
- =?us-ascii?Q?Nhx4rs3i6i2NcutsPT2MBHRZTsFOtRPh0Cw9oUMZSyiQVGIa2635gmmkDPUp?=
- =?us-ascii?Q?NlUVOvsqu4rEcNlUZlZDzUXYFRPDwYX+fiklkOzfEpydC3AgL2ZoPbKIsUqO?=
- =?us-ascii?Q?WkNkvQtIhLiYyz9gesdps+VLGHSHqEdoCTmBJtMCnlKZr0T9Y/oK+g7xVtbT?=
- =?us-ascii?Q?zpWizxuy4U4nPsxl2jgsfQypqTwi2dS2qBTSYpILNskc8qC6M8mwtZ6GERXu?=
- =?us-ascii?Q?XgkaGcpP2cuqmhduLjDeR2amqkK0XRqRG/R5okgB6+hkwweyoWuxmr1jgFnq?=
- =?us-ascii?Q?AK/OjDrUo1wthk3OcvxU/eSqMkJqiF8PxsFEDSkaltQ1fW5toYbZWULU0LBt?=
- =?us-ascii?Q?LgXbmvzkFNMKJuS/RIREauVKhCvrHr40Q1nwSvAiy+5SwzJy6WT/YA0U+eWN?=
- =?us-ascii?Q?RQAr4g8a+90Ntscz68kKM6l6faKuvnAR2Aw+Sq84YXvgoQdQjgfTan461kvR?=
- =?us-ascii?Q?zDmYa4wtn74SoTyXX14HgUPjC2w66nP7luedktJYQzU9m1iIrB/wPFMEE1gj?=
- =?us-ascii?Q?duTUDVDZ+DHZaM3JNsrWGKeSlxFLxJC3HzDKgvCJwgVJtOSTrHRx139DQiCh?=
- =?us-ascii?Q?ojUux/8MLT24Nxzz6nz+3Ssud9Ka6z19aubXlO0Trl759+x3Dn91f3Gqvvry?=
- =?us-ascii?Q?DCXeo5PAIefqu9GNs9fe4IMiXNtC6ZYbRySFw1o/IU/eVKOAUIyG3F2NzoJ+?=
- =?us-ascii?Q?KmGqTQHss0WLB6CtGYgqaXDxLDMGK8uBTZOG9BeNLDSEYygOzK0gPd7Kku+L?=
- =?us-ascii?Q?Z/zqpOZRbZxE+4EwmIF+jMN32X9oBGV3Cl3Hcuq4TSEdcZdy+At2pjp2VgSu?=
- =?us-ascii?Q?wjw2atFIPbO5Vq/2YrVrl0peDo+WXsFF2dxNEXj1UNWH1dPz3x1NHdwA8TI7?=
- =?us-ascii?Q?nrB7ikuHcI2ffa5vC+RDX4i2xW/WSlh9NfIb5ZFDUHyodHcmgcvK7pqKYqHA?=
- =?us-ascii?Q?mgF6uxR5DPYNTbJoYzc2hJu9yFfjpMRe6yqyrGUeOSCShX7yxNaMSLi0B+VM?=
- =?us-ascii?Q?/HdHrwN1uufUwxODXa23J+y0JNtSV6ZPnvJW2XL1lFO26xEY8a005wu/9PwS?=
- =?us-ascii?Q?eQlJ1KjmlB27tiyFMCWLN26E9XzLHICJd0KEnyHkbffQTfj5dD+1eeHS+O9F?=
- =?us-ascii?Q?nzSDag=3D=3D?=
+	=?us-ascii?Q?4YDCEvjAWmNijuxDTrEIii8M7PcFBI+rvGo095ekpL5GmJcX/9difJp3VkTg?=
+ =?us-ascii?Q?IJZeT0vs71ONuyFxIA1DyOo7xTYVghvuQoA06Auub7a6IC3n4pVeBfwGwTgd?=
+ =?us-ascii?Q?CjuVoAs6UJvbQZCRdbOU88MaRxYLwQO46eLC+2q59Q7w3pb8JKRdaiuYzIVh?=
+ =?us-ascii?Q?Ci5182H5k4WVtLsiGDX9fbKS94rz1v5j4qc3+E8FD6oWRFcRsXYAlqSe9ws0?=
+ =?us-ascii?Q?PnePnBVcemKbXyqudVUCTcEPCvnx+owOlsx9d9sJX2jDQHHiB1W4fDtMmLBm?=
+ =?us-ascii?Q?GA5MAgLJByoEyf831BVG9jtCi78L/XZ0hHQNRj8q+KLKADbQkSpWfdESIbXu?=
+ =?us-ascii?Q?HrNc5cJMU5JwTNCJMVdV4b+t6eEsYEEiEZPc7xb8ASye6rod02nGtg8Zl+6N?=
+ =?us-ascii?Q?5yjO/Ztb5bxvHA5GUq5dS2oNrAnqhZCmzLHcI8HKkXh1WF5eOAnNolQxcxgY?=
+ =?us-ascii?Q?r9UGR8NDaE22M4MChRUOjb0sLdfFF2ZjojF4FoNN4nXqZ8dMyQWFDiWEEL20?=
+ =?us-ascii?Q?9BF0DsB9xiAhiJ22zplS9tbd1YP72q7KrfIONVHKk+60qP4yGLYEmAPEs3TT?=
+ =?us-ascii?Q?OysyJng91UM/UmuApjZtsjPCSEdd2qVnUMAo6X3Z3GrXyHAU+LF7WLevrPDr?=
+ =?us-ascii?Q?BjNCEQyZOJiMWL2Jx83mWtDYXuSPimT7FBdX6Whalaw08/Z1DMfI2YP+EoNi?=
+ =?us-ascii?Q?TUi4ytb3YTIL+ZiID26iHGX28ldQIcQKz8Nwr8iNH8gEfI8YU24CeEcBDyvP?=
+ =?us-ascii?Q?0OWWd6G2uZUUjizvZAogJSZOssyRZxNdBXVGOjYKezguCPYmLUfafDpC6lMD?=
+ =?us-ascii?Q?S//W83DkuGaVCf6a+DPAd/xikL6rYcyoUtuWubBK4KDLM7DkqUk3Zh9Uy2/b?=
+ =?us-ascii?Q?pXzkCtli2jDDSKWy+1fygcmhsg6tE3sICAUXDzHa8tVYQy5lU3CiJ6YrzfxJ?=
+ =?us-ascii?Q?yh0ysFRu+oRewU0bGPgmcTATpXyQQiVNZrefgQ7XU0CEmI3sLukhB8pB5JTl?=
+ =?us-ascii?Q?ygOzkoApshgn6GvVqKH9Rk3JnwsS3/gPCi9GT2pOgsGJCLVkmt6+7O0V37K6?=
+ =?us-ascii?Q?nNIXmgi9MbL6GIsYOSVgYoi/RP3Pxnq1VwtpAUZBhozIcBjzGTMdgnbsym11?=
+ =?us-ascii?Q?j6f6zHvB/4uoOVMfXFmuv0ct8jzheG+tpP1/jfZsQFmpin5m9RygBuVvtVR3?=
+ =?us-ascii?Q?H37DDNtupvNA8EH+lSLojQY+C1QpZAPtAA4dwKDChyL5qUqmRvaKgGWKh6JR?=
+ =?us-ascii?Q?U7PTbAenFCbt1ImRU3jIKeBtD4YEKD5ZHFLxJ5Vj90AIzarnpzK1376Jl9XA?=
+ =?us-ascii?Q?dXyd0oUj8fEa0M6C7GBJ7HnYET6rQFmGEU0p9fpO6kwlE9Jq0Nv8W+nqELst?=
+ =?us-ascii?Q?R/bOErl21G4fXMTaIXNqAGaY5koC8VUNeyP+vCkx+qB/WrOqwbtJ0PPjYndr?=
+ =?us-ascii?Q?DqFbtzPAfuPH1bD93e065CYrVIDWTJ9XMj8qvZmBS2o/i/ZK3MSiElCFinrt?=
+ =?us-ascii?Q?FiOT3ZqQPg9lxZo9LtQZhlGB3UxUxlBO1S0w8MYHJdoDy0cBvlEKjBQvb5vt?=
+ =?us-ascii?Q?TxPFSR60XJLZgZVtI5O8Po6wXsli8mHPapzSShksf0+50DT4Hcd+9WWTqJHj?=
+ =?us-ascii?Q?fUZsr6gGFvIef55KxJDYrcWuIeepEj5HaFYdao+0U3g28KZUmInZ+tdmJCMJ?=
+ =?us-ascii?Q?FIhLGw=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(1800799024)(36860700013)(13003099007);DIR:OUT;SFP:1101;
+	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(36860700013)(82310400026);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jan 2026 04:56:54.0659
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jan 2026 04:56:57.5793
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 447014ec-7ef9-41bc-f94b-08de5584d5af
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9db30133-0751-4fae-40bb-08de5584d7c9
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	BN3PEPF0000B370.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR12MB6025
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV9PR12MB9831
 
-PCI ATS function is controlled by IOMMU driver calling pci_enable_ats() and
-pci_disable_ats() helpers. In general, IOMMU driver only enables ATS, when
-a translation channel is enabled on a PASID, typically for an SVA use case.
-When a device's RID is IOMMU bypassed and there is no active PASID running
-SVA use case, ATS is always disabled.
+When a device's default substream attaches to an identity domain, the SMMU
+driver currently sets the device's STE between two modes:
 
-However, certain pcie devices support non-PASID ATS on its RID, even if the
-RID is IOMMU bypassed. E.g. CXL.cache capability requires ATS to access the
-physical memory; some NVIDIA GPUs in non-CXL configuration also support ATS
-on a bypassed RID.
+  Mode 1: Cfg=Translate, S1DSS=Bypass, EATS=1
+  Mode 2: Cfg=bypass (EATS is ignored by HW)
 
-Provide a helper function to detect CXL.cache capability and scan through a
-device ID list.
+When there is an active PASID (non-default substream), mode 1 is used. And
+when there is no PASID support or no active PASID, mode 2 is used.
 
-As the initial use case, call the helper in ARM SMMUv3 driver and adapt the
-driver accordingly with a per-device ats_always_on flag.
+The driver will also downgrade an STE from mode 1 to mode 2, when the last
+active substream becomes inactive.
 
-This is on Github:
-https://github.com/nicolinc/iommufd/commits/pci_ats_always_on-rfcv1/
+However, there are PCIe devices that demand ATS to be always on. For these
+devices, their STEs have to use the mode 1 as HW ignores EATS with mode 2.
 
-Nicolin Chen (3):
-  PCI: Allow ATS to be always on for CXL.cache capable devices
-  PCI: Allow ATS to be always on for non-CXL NVIDIA GPUs
-  iommu/arm-smmu-v3: Allow ATS to be always on
+Change the driver accordingly:
+  - always use the mode 1
+  - never downgrade to mode 2
+  - allocate and retain a CD table (see note below)
 
+Note that these devices might not support PASID, i.e. doing non-PASID ATS.
+In such a case, the ssid_bits is set to 0. However, s1cdmax must be set to
+a !0 value in order to keep the S1DSS field effective. Thus, when a master
+requires ats_always_on, set its s1cdmax to minimal 1, meaning the CD table
+will have a dummy entry (SSID=1) that will be never used.
+
+Now, for these device, arm_smmu_cdtab_allocated() will always return true,
+v.s. false prior to this change. When its default substream is attached to
+an IDENTITY domain, its first CD is NULL in the table, which is a totally
+valid case. Thus, drop the WARN_ON().
+
+Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+---
  drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |  1 +
- drivers/pci/pci.h                           |  9 +++
- include/linux/pci-ats.h                     |  3 +
- include/uapi/linux/pci_regs.h               |  5 ++
  drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 74 ++++++++++++++++++---
- drivers/pci/ats.c                           | 45 +++++++++++++
- drivers/pci/quirks.c                        | 23 +++++++
- 7 files changed, 149 insertions(+), 11 deletions(-)
+ 2 files changed, 64 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+index ae23aacc3840..2ed68f43347e 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h
+@@ -850,6 +850,7 @@ struct arm_smmu_master {
+ 	bool				ats_enabled : 1;
+ 	bool				ste_ats_enabled : 1;
+ 	bool				stall_enabled;
++	bool				ats_always_on;
+ 	unsigned int			ssid_bits;
+ 	unsigned int			iopf_refcount;
+ };
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index d16d35c78c06..5b7deb708636 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -1422,7 +1422,7 @@ void arm_smmu_clear_cd(struct arm_smmu_master *master, ioasid_t ssid)
+ 	if (!arm_smmu_cdtab_allocated(&master->cd_table))
+ 		return;
+ 	cdptr = arm_smmu_get_cd_ptr(master, ssid);
+-	if (WARN_ON(!cdptr))
++	if (!cdptr)
+ 		return;
+ 	arm_smmu_write_cd_entry(master, ssid, cdptr, &target);
+ }
+@@ -1436,6 +1436,22 @@ static int arm_smmu_alloc_cd_tables(struct arm_smmu_master *master)
+ 	struct arm_smmu_ctx_desc_cfg *cd_table = &master->cd_table;
+ 
+ 	cd_table->s1cdmax = master->ssid_bits;
++
++	/*
++	 * When a device doesn't support PASID (non default SSID), ssid_bits is
++	 * set to 0. This also sets S1CDMAX to 0, which disables the substreams
++	 * and ignores the S1DSS field.
++	 *
++	 * On the other hand, if a device demands ATS to be always on even when
++	 * its default substream is IOMMU bypassed, it has to use EATS that is
++	 * only effective with an STE (CFG=S1translate, S1DSS=Bypass). For such
++	 * use cases, S1CDMAX has to be !0, in order to make use of S1DSS/EATS.
++	 *
++	 * Set S1CDMAX no lower than 1. This would add a dummy substream in the
++	 * CD table but it should never be used by an actual CD.
++	 */
++	if (master->ats_always_on)
++		cd_table->s1cdmax = max_t(u8, cd_table->s1cdmax, 1);
+ 	max_contexts = 1 << cd_table->s1cdmax;
+ 
+ 	if (!(smmu->features & ARM_SMMU_FEAT_2_LVL_CDTAB) ||
+@@ -3189,7 +3205,8 @@ static int arm_smmu_blocking_set_dev_pasid(struct iommu_domain *new_domain,
+ 	 * When the last user of the CD table goes away downgrade the STE back
+ 	 * to a non-cd_table one, by re-attaching its sid_domain.
+ 	 */
+-	if (!arm_smmu_ssids_in_use(&master->cd_table)) {
++	if (!master->ats_always_on &&
++	    !arm_smmu_ssids_in_use(&master->cd_table)) {
+ 		struct iommu_domain *sid_domain =
+ 			iommu_get_domain_for_dev(master->dev);
+ 
+@@ -3205,7 +3222,7 @@ static void arm_smmu_attach_dev_ste(struct iommu_domain *domain,
+ 				    struct iommu_domain *old_domain,
+ 				    struct device *dev,
+ 				    struct arm_smmu_ste *ste,
+-				    unsigned int s1dss)
++				    unsigned int s1dss, bool ats_always_on)
+ {
+ 	struct arm_smmu_master *master = dev_iommu_priv_get(dev);
+ 	struct arm_smmu_attach_state state = {
+@@ -3224,7 +3241,7 @@ static void arm_smmu_attach_dev_ste(struct iommu_domain *domain,
+ 	 * If the CD table is not in use we can use the provided STE, otherwise
+ 	 * we use a cdtable STE with the provided S1DSS.
+ 	 */
+-	if (arm_smmu_ssids_in_use(&master->cd_table)) {
++	if (ats_always_on || arm_smmu_ssids_in_use(&master->cd_table)) {
+ 		/*
+ 		 * If a CD table has to be present then we need to run with ATS
+ 		 * on because we have to assume a PASID is using ATS. For
+@@ -3260,7 +3277,8 @@ static int arm_smmu_attach_dev_identity(struct iommu_domain *domain,
+ 	arm_smmu_master_clear_vmaster(master);
+ 	arm_smmu_make_bypass_ste(master->smmu, &ste);
+ 	arm_smmu_attach_dev_ste(domain, old_domain, dev, &ste,
+-				STRTAB_STE_1_S1DSS_BYPASS);
++				STRTAB_STE_1_S1DSS_BYPASS,
++				master->ats_always_on);
+ 	return 0;
+ }
+ 
+@@ -3283,7 +3301,7 @@ static int arm_smmu_attach_dev_blocked(struct iommu_domain *domain,
+ 	arm_smmu_master_clear_vmaster(master);
+ 	arm_smmu_make_abort_ste(&ste);
+ 	arm_smmu_attach_dev_ste(domain, old_domain, dev, &ste,
+-				STRTAB_STE_1_S1DSS_TERMINATE);
++				STRTAB_STE_1_S1DSS_TERMINATE, false);
+ 	return 0;
+ }
+ 
+@@ -3521,6 +3539,40 @@ static void arm_smmu_remove_master(struct arm_smmu_master *master)
+ 	kfree(master->streams);
+ }
+ 
++static int arm_smmu_master_prepare_ats(struct arm_smmu_master *master)
++{
++	bool s1p = master->smmu->features & ARM_SMMU_FEAT_TRANS_S1;
++	unsigned int stu = __ffs(master->smmu->pgsize_bitmap);
++	struct pci_dev *pdev = to_pci_dev(master->dev);
++	int ret;
++
++	if (!arm_smmu_ats_supported(master))
++		return 0;
++
++	if (!pci_ats_always_on(pdev))
++		goto out_prepare;
++
++	/*
++	 * S1DSS is required for ATS to be always on for identity domain cases.
++	 * However, the S1DSS field is ignored if !IDR0_S1P or !IDR1_SSIDSIZE.
++	 */
++	if (!s1p || !master->smmu->ssid_bits) {
++		dev_info_once(master->dev,
++			      "SMMU doesn't support ATS to be always on\n");
++		goto out_prepare;
++	}
++
++	master->ats_always_on = true;
++
++	ret = arm_smmu_alloc_cd_tables(master);
++	if (ret)
++		return ret;
++
++out_prepare:
++	pci_prepare_ats(pdev, stu);
++	return 0;
++}
++
+ static struct iommu_device *arm_smmu_probe_device(struct device *dev)
+ {
+ 	int ret;
+@@ -3569,14 +3621,14 @@ static struct iommu_device *arm_smmu_probe_device(struct device *dev)
+ 	    smmu->features & ARM_SMMU_FEAT_STALL_FORCE)
+ 		master->stall_enabled = true;
+ 
+-	if (dev_is_pci(dev)) {
+-		unsigned int stu = __ffs(smmu->pgsize_bitmap);
+-
+-		pci_prepare_ats(to_pci_dev(dev), stu);
+-	}
++	ret = arm_smmu_master_prepare_ats(master);
++	if (ret)
++		goto err_disable_pasid;
+ 
+ 	return &smmu->iommu;
+ 
++err_disable_pasid:
++	arm_smmu_disable_pasid(master);
+ err_free_master:
+ 	kfree(master);
+ 	return ERR_PTR(ret);
 -- 
 2.43.0
 
