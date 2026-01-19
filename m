@@ -1,548 +1,243 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazolkn19013073.outbound.protection.outlook.com [52.103.74.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D8735F8DA;
-	Thu, 15 Jan 2026 09:51:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768470692; cv=none; b=WPdD8whkYBtDOUBAMyChyhGf+pLSTc6otwWPpp8Ix++UDh9YzsyUF6mZSk3GHuhv1S1rSSQ5L6UJKDun/MLZ04eUyAMVzjVtr+LwNzAr8Pc/1o0SeSiR94gHEygnR63UEXpzaKQiE/h9EpzCmBj/CzKna6cwhbKmDX5A6tYlyJw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768470692; c=relaxed/simple;
-	bh=SivqKgXw7pxzLdkxoHg1alNOYwKdrnDTSYrk0OF0ZaE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ch+R5FgBKqEiHq3L4SVYVHSL6Xc2DKBU1HvbrGYGP6Xq97T61q0PtNRdEMlsyGRXT5tiHaVjqxuHPkxx4n21zhYvrUjTnOU4nOlUTG6zRZYd8B/jNfPNpaUCs3Z8SldHgZ1ZDBpela1k+X7JUlA7mt9/yCJSzfS3X1yLYiMyP1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=imhjIHig; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D19E3612CB;
+	Thu, 15 Jan 2026 10:13:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.74.73
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768471998; cv=fail; b=divfL+vTLbKeHuHEaYZNpIWPDzbOA+5+InA7DD7WH8DtRumsIlS7TedlUy4hxHz3hFkBKsacZpa3Mh2vLJ9cJEBYOixhUWcFZS4+Im7z6cQmgLLSc2TI/TMz7UgjX/ZDByW5K2gJvg12zhXgdiJtzS0PdUQVunnDcfAI/oz5C6I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768471998; c=relaxed/simple;
+	bh=AzCYgEzdPYf5Bd84r53qbW/Kozt0kCDQkWWN/o2VUJI=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=F8kYIUBXFQhajLuZE62cR8/ZfJSKJwroAcy/rC4iWpOUfsSob4ounkjPy0lGTZb8LuSTI6SX813DfhREPsHqdOUpehATxdafXGTmhon8/rSaXt2eC44WHOzFCUcBmZ2xeRYNHdnceXQznjwBUPgABr67D0X2KBa4gznjGroRkPE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=owZD1csy; arc=fail smtp.client-ip=52.103.74.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="imhjIHig"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C167BC116D0;
-	Thu, 15 Jan 2026 09:51:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768470688;
-	bh=SivqKgXw7pxzLdkxoHg1alNOYwKdrnDTSYrk0OF0ZaE=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=imhjIHig+KihtVH76ExVagwxmSs1aA5Z6eunysMTGy66Ew/SrCJ8cs+P/PdnusvZn
-	 KEGq2GLR3MpDrCzoVOi7jBVkhWhh/3dcB40kf4JTlmFPtzUzyqOduTaNcZKqcuXGrb
-	 LDVEaCQ6wKsz8uIKEg078WfZTtYeUvTAv5HOKzuP4ssF8MIJKZHB+dk8h40UpCKPTa
-	 7XkKK5zANQMIkVtg+JYkYpQ/x8PCB2bx8t/GwdH2p0S4uZhov9co1vr6VGOphTq6xH
-	 Q+xX00iBAM4kocFQWeYZNW8R7kggEnn+mIwdM7r3KNFBffWeaY9MJV1rkas1HGve7B
-	 Y0z4/84irD2HQ==
-From: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Date: Thu, 15 Jan 2026 10:50:51 +0100
-Subject: [PATCH v3 5/6] irqchip/gic-v5: Add ACPI ITS probing
+	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="owZD1csy"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Ms2YVBu4RfL40OzJEuJepfs0GunBud5qrskeWUO0qcIAzzISMbzjG1td8ZsFikfQ1rAhMHS0HcR/yAMeAudrffVgy2pOQB2gNuKb7z9QZHimW+fIbR5znsvp3O8XJvndALmxcioA/GZKyWdiaG+9lZLwlp5teGTuVU/YXDjP4I2ARoaJitBSAtzwDeMfKo602xS7NFmzgn/YgXLRaEH88+gWZjH48bQ9Db57fi4TlKcYIdg6i9S9/HUMZo2k9qubcPv7n77BnyjKTBrfXgUueKO38MNFFEZLnTYCDNvapyE1kSH46EV7nKvD38Nk8EFLgYGaMs4UeJY5BlNN68cdmw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LxEHC2vcNLJYzq0at203b/qg3FDeKjbGPizn4DEj7M8=;
+ b=g8cp90Ucxdgrr9f7CdN8WgRBTmGVY+GKn7WTHy3qpRFLKUqWdGDxGzr0W2RZkt5IaZLZO836dgDbLf76bTLjatZRkHQVvOYWUh71ApbjKljqHPo47HBYh3On0F/7uNjYyYXLBCKqFxmapYLOTSW/suTZflwzsRnLDd5789uPdSHITD2bhbXFTJpiZPyqUhK8yWJpY5JDMDTgVkCjz3hwIIpPU9yMYFLWLmS2n/gLnkzH6lFI8LuKjNV9DaArIhp73gwSC27+CkPVuPC/yg+Dt8xaNnouXL64CSRMtpU/H6W3DGfO2jwI+EYU31jk7VjC4GT1CUslHWXNKD+0XZicHg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LxEHC2vcNLJYzq0at203b/qg3FDeKjbGPizn4DEj7M8=;
+ b=owZD1csyoSsvUrlrjZMIFrx59mAaCL30z8Fz6ki1WApcSeHDtqo954qO5uswrJdfyUUAzObrJBLNuFLijZCSHdfnoWTbfyTmdiMGhRh2POc8/emLbXCMZR3gOxIVVu71c31pztRvuZY76NU5OHNUmS0PuyADb4pvwEq8WoLyJ1GBLBovTIfwmWscm2lLiyMBql5EdmEgxvg+VQbrG5eFgypEijiUs3+lIquAlpb/AT/XjWCvgx+RAPBCb1cHxYlUiwqeHPAOqnMa2ZOy7oCCBBGM/vYjIKUlwVny5E3rPnIN3yGcEQ1+TNlaEtLjsgK6VH48rlymxvv9NDck698XuA==
+Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:1b0::7) by TYZPR01MB5129.apcprd01.prod.exchangelabs.com
+ (2603:1096:400:338::11) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.6; Thu, 15 Jan
+ 2026 10:13:11 +0000
+Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ ([fe80::5e86:f04a:37e5:64f1]) by SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ ([fe80::5e86:f04a:37e5:64f1%5]) with mapi id 15.20.9499.005; Thu, 15 Jan 2026
+ 10:13:11 +0000
+From: Wei Wang <wei.w.wang@hotmail.com>
+To: bhelgaas@google.com,
+	akpm@linux-foundation.org,
+	bp@alien8.de,
+	rdunlap@infradead.org,
+	alex@shazbot.org,
+	jgg@nvidia.com,
+	kevin.tian@intel.com
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	wei.w.wang@hotmail.com
+Subject: [PATCH v1] PCI: Add support for ACS Enhanced Capability
+Date: Tue, 20 Jan 2026 02:11:30 +0800
+Message-ID:
+ <SI2PR01MB43931A911357962A5E986FFEDC8CA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+X-Mailer: git-send-email 2.51.0
+Content-Type: text/plain; charset=y
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SI2PR02CA0029.apcprd02.prod.outlook.com
+ (2603:1096:4:195::6) To SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:1b0::7)
+X-Microsoft-Original-Message-ID:
+ <20260119181147.312141-1-wei.w.wang@hotmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260115-gicv5-host-acpi-v3-5-c13a9a150388@kernel.org>
-References: <20260115-gicv5-host-acpi-v3-0-c13a9a150388@kernel.org>
-In-Reply-To: <20260115-gicv5-host-acpi-v3-0-c13a9a150388@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
- Robert Moore <robert.moore@intel.com>, Hanjun Guo <guohanjun@huawei.com>, 
- Sudeep Holla <sudeep.holla@arm.com>, Marc Zyngier <maz@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>, 
- Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-pci@vger.kernel.org, Lorenzo Pieralisi <lpieralisi@kernel.org>
-X-Mailer: b4 0.14.3
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SI2PR01MB4393:EE_|TYZPR01MB5129:EE_
+X-MS-Office365-Filtering-Correlation-Id: 52ebf296-2fbc-415a-758d-08de541eb004
+X-MS-Exchange-SLBlob-MailProps:
+	LVbdfIC7uFAyHke/CE1Ui/FW7barhRQEVjLapl3uQ+9XRABt1eOf7M/rJYNNIGTDafIAJW0HL17Y+eUZRWyYzqas6Skk+XJuyP7VLB6QQKOHUpvIgY9fqujikpVjCRLG36sx2yO/Ye6KjZjVhax/+pL/cudUx2hl0VKeUV+jnKzBDYeGoyRi1PlCidfvUWM/483IYpB8cAjGo2U36WqmdNyngq6L5A6e+DUpuSXAslOcnACSG3WQ2O6X1FQbyuCgBoE01/nDEr3jW+9tq850e9kLevw+6bTU56eV3ZShSLZG/dIcqOTZ+0+dDzwg19MbuzBwMLBhZ8BEbk1I0qu8OBeIVK9u95owrg+xD9YsS/DCf0WLlh5KmHcznUYQb+vlrXKxEOyjRBqgjpEbnuTKvPs7tHWhT6S0e79QbdT4r2peTrIC6NuaW9igi6/gDKj64CzOMGlCISRgzbBu30/zEIlwCeUMDD+T9cYE1ycvcftbcWiDozyeykM7q9KOoMBJUIQaPQaehbBGmxcaemMleaQzgtmL0agXimPTraIbuU3HxdtN9uCgb6RKXGk6qvuTzGITu3o71aqqLbOQat0YQtedGxeBSsTwW23mkAqmLZ3uvVB63JciP9SgSOms5/UnDHD204oiRkh13vKD8Z2i6jwt922DaJC8LUNuDSTTTh4uUakiqcp5BmZRr10ceNC94SjeAFsvtt9lJNVP9xM3rlfUo+FLa6xUatBOsK8ko74nrEVYGgyolg==
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|5062599005|461199028|6090799003|37102599003|5072599009|12121999013|23021999003|19110799012|41001999006|15080799012|8060799015|51005399006|3412199025|440099028|40105399003|1710799026;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?55+itiGEK+diUco41CXHtMEdA5kIuUbsYAb1oyIEbzPvhQEtJa1Voh2qpc7e?=
+ =?us-ascii?Q?rH7GB/TVNAInhnjSatyGUFX/XuUjITzsnu9Bd6Cfxdv005O3ZMwPgiFYj3f6?=
+ =?us-ascii?Q?fZBttJhuu2aT9ykVp3oUDFEyO0NHgnGhvixg4mREBy5Io39Npxx+EhLBQKCJ?=
+ =?us-ascii?Q?zhIHgyMsXbGo0h+8jyWdeaQF8/XS0pl+jl5eWKb1TQwDSklPdhmj53SCK97C?=
+ =?us-ascii?Q?9tTL8+vBB+kJCY6hVwWgADZ3PqEdu1kPJvSDWld74EI3iSTjQVpmuFLJmEFM?=
+ =?us-ascii?Q?puLps60AjIBoWayB8NEXvjhoRjBJuCdgCqmPca9pFNvX43cjKCgTViJ/1pCn?=
+ =?us-ascii?Q?KPE7JOjm0FA3rErmqo48I0TKNtJnt67A4JP1NcXOEs7x0PxTINekaKo4xUR2?=
+ =?us-ascii?Q?r1k29Mt0HNwGvKZu812AtHYRtbZb5TiYj/MpA9btEu10+3PpOB9PVQ26a3NT?=
+ =?us-ascii?Q?Vp+N9sDD5wg74Gm8zhPcSTvaAhglcqT0alnB9LrG+4WxFscAwRfkcgW8s822?=
+ =?us-ascii?Q?f7ybSHEAVgt4BnnUHLOK+9q7K6GX+UZkZyccWutu6HmjEJ1U1xTcjds3+qMq?=
+ =?us-ascii?Q?yOTS+T77UxwStLsodjCwFbf2d8J5QdLkrya2fYl/iypDLYAKHqZiAPF87D1D?=
+ =?us-ascii?Q?DnmdotJiNTb9tZDOdFgDFCh9523/wzr6vrEwL2jGkQRVyfH4+wVZXbSQfyV6?=
+ =?us-ascii?Q?EiutmkvQqdSKmdN3ncic46stImBzupPcX9LqOhMU0/+KWyqN1DsrRi7Iif9S?=
+ =?us-ascii?Q?KjOs0pmO6khtehG6TPI4uXeeG7+EAEo9KcKsY+JmoQvpN2Y2oY2Tpf25Wa+y?=
+ =?us-ascii?Q?DMsD1UwYPmEygzW+oG/z2JDwiX1RVdTGVI3aEiC1NETLvjnIycq1XO2LVsTa?=
+ =?us-ascii?Q?RfZh80E8OJQbNtlNYOp7zqpthOEwsh0jS6Iti/dn/bj/nHlcAmka0fbH+/hM?=
+ =?us-ascii?Q?QtFIBSKFvh7yqULsHxW9/pkrKyxHGR6Vz/cMXgpzm87uesZhYR9MJajerZnQ?=
+ =?us-ascii?Q?DZdkbA7CzMsmJZ0ZwjI6iigTop3amNypCY9wYAUVfP9oU2f0C12Q1zERRGrt?=
+ =?us-ascii?Q?mlgAWkmSyToJgRNfz1AzHRxmzbw7uO5TZ6jqB5kg5Jq2aXfo3RBGGD3utxKU?=
+ =?us-ascii?Q?HK9omdoXPhIW99EOayyWtARrrkWIXPajgGaBx4OCzw0t+nMrR+kZDK3vbtfl?=
+ =?us-ascii?Q?T1hCSYQ9M1e5n0Ww7XfNgnj+PQ/FCHGA8vAqj8+3hRrTu2YfU6PlpAzAG9r+?=
+ =?us-ascii?Q?9Jb9hdaWHFCEW4pbDe5GW2seLenHQPLoFyfQVuAjD+sT3LOeXYZXpFlrCHJH?=
+ =?us-ascii?Q?mssaJ1f7XUf7T1kxMB4StdSvdVTrPqmJZ1+NL3f2rUomESrWpaWqw/YHA50d?=
+ =?us-ascii?Q?sNQcNNU=3D?=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?fNHvNk+iyWTOMe0lNqRnn7R8rQpWGYou/vV2/VvgIJUIte4w7vf7cwjhLxXN?=
+ =?us-ascii?Q?WD8euR0bRWaAtYyT8RwXA+jlb/95xAIG6FJW/kZ13j6DakWm26ZT5Tcn3EVz?=
+ =?us-ascii?Q?+ewPulQJTDzQHHbi+qqiCirj30doGO3zqSVI7tOI3ymuyHfxdoP0O8/OXwGv?=
+ =?us-ascii?Q?CB/Y9RWO/7lLLErEZkaRxql8Pu4kKRgE5ncX6moL0MJtztH6MlXrRRNkTMfZ?=
+ =?us-ascii?Q?x2JZN3dMdp2wtvjLMDFzzhWT/Nxmgqe/ZlBLBiVQsj18Wc4dpw/IkDjDY102?=
+ =?us-ascii?Q?lWDr4+AbGGPpNuTKp3tS7BZouAZ/J5EbH9VWrq3uy9HFnZvnwA897N9Db+Qj?=
+ =?us-ascii?Q?nCucJZPP9xdJV3Pi5yTsraqAe/GZGlPSERLmWh6i43yaJf6C3goIovrCMeia?=
+ =?us-ascii?Q?r2HmXpY2Rxxvxrv9f+f1psmmyepeIgYee5u7q1SuAH9w/5PyD4rOVpZdLdEt?=
+ =?us-ascii?Q?TCxFzRZ4/JKlrFaxVrwU/UWdkB2zRYJQj+UJYOpEhWF+mNrrMntA9KtxAXcR?=
+ =?us-ascii?Q?dETj9XI74zsUuJxZBa4NA21UcCs1o9Z4hv10vGxxqBfucb/+7+nAz16IHQrk?=
+ =?us-ascii?Q?LdrqWQJqIifXwrEz8cPpiA7RrVHPkPdge2VkhPw2QawRb0qawCSR9Pxzrt5S?=
+ =?us-ascii?Q?7Fa8jvYTBsZ1xxqeeDRc9q6vCzLukU7ZWFp6ySmwLpFW+QqeqFemzOycxCEX?=
+ =?us-ascii?Q?AGiI3BziDf6nCnaEVwPTNY1xOcvpzsDAogA21VuGeGsI0hi6FWtJ2k6Siibj?=
+ =?us-ascii?Q?fFRwxu06WaO9iseCf7cuTZkFo/Ci+Ine7lRdkk2KOV6Ji0g2IFSOTkwhazHU?=
+ =?us-ascii?Q?kpcW4qeBysXJE5xVc4Hs6wG6Hpjz+C0FWoAI588ydEhHfFDW7bMSHoJCbiVP?=
+ =?us-ascii?Q?hygkAdtOoxxUZtgA92YNRUiCEY6foj8KofYB4BDtM9QiULvi1QlJRnVySeYK?=
+ =?us-ascii?Q?QL6d/PDhXUX2ds3Cuu2Zulq8LRYiycif3JBWzAojz58O0BVvE8ASgbNGbCJ6?=
+ =?us-ascii?Q?pTMC3GQIhPPqGh58tsV8Mge0ae2vDMJ9jOsMYOHJyLEdQM3WSSz7JpbET6Oj?=
+ =?us-ascii?Q?OSma+bjYDUOIsRxgBzXKIO8cy2IWlwzE7TaUnXC/lhsoDRpoYpVJqKfHVMSB?=
+ =?us-ascii?Q?N+fhNHTfpF72Fb1OHFOwlrrJ1soHoMZTnYPonrRmfvpIcbnOSGtDhpVFSYQo?=
+ =?us-ascii?Q?nuWhSjN0BwPUo/SJE0FRi1rlZxzl8U32GW4DhLHXsMkMS2aodsxsprj/ipPM?=
+ =?us-ascii?Q?m3oMQu7d14LgXrRNHmnqmfMiMzlBjq2FiOhgZHXyNlUQ16+gFTk9oXC22oWG?=
+ =?us-ascii?Q?xX1DS87LwfDSM4Npp+p/i0vV7ywpEY4q6dHHU1d5KKHl4aP8f55Dbl6Tg2qN?=
+ =?us-ascii?Q?W4m76Ze1o2PzFQd/KnxUjm9ugcQe?=
+X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-5f51e.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: 52ebf296-2fbc-415a-758d-08de541eb004
+X-MS-Exchange-CrossTenant-AuthSource: SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jan 2026 10:13:11.7692
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR01MB5129
 
-On ACPI ARM64 systems the GICv5 ITS configuration and translate frames
-are described in the MADT table.
+Add support for the ACS (Access Control Services) Enhanced Capability,
+introduced with PCIe Gen 5. These new configuration options can be
+controlled via the config_acs= boot parameter.
 
-Refactor the current GICv5 ITS driver code to share common functions
-between ACPI and OF and implement ACPI probing in the GICv5 ITS driver.
+By default, the ACS Unclaimed Request Redirect Control (URRC) bit is
+enabled if supported by the hardware (i.e., if the ACS Enhanced Capability
+is present). This setting is particularly important for device passthrough
+in virtualization scenarios.
 
-Add iort_msi_xlate() to map a device ID and retrieve an MSI controller
-fwnode node for ACPI systems and update pci_msi_map_rid_ctlr_node() to
-use it in its ACPI code path.
+Without URRC, a DMA transaction from a device may target a guest physical
+address that lies within the memory aperture of the switch's upstream
+port, but not within any memory aperture or BAR space of a downstream
+port. In such cases, the switch would generate an Unsupported Request (UR)
+response to the device, which is undesirable. Enabling URRC ensures that
+these DMA requests are forwarded upstream instead of being rejected.
 
-Add the required functions to IORT code for deviceID retrieval and IRQ
-domain registration and look-up so that the GICv5 ITS driver in an
-ACPI based system can be successfully probed.
-
-Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: Thomas Gleixner <tglx@kernel.org>
-Cc: Hanjun Guo <guohanjun@huawei.com>
-Cc: Sudeep Holla <sudeep.holla@arm.com>
-Cc: Marc Zyngier <maz@kernel.org>
+Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
 ---
- drivers/acpi/arm64/iort.c                |  98 ++++++++++++++++++-----
- drivers/irqchip/irq-gic-its-msi-parent.c |  39 ++++-----
- drivers/irqchip/irq-gic-v5-irs.c         |   7 +-
- drivers/irqchip/irq-gic-v5-its.c         | 132 ++++++++++++++++++++++++++++++-
- drivers/pci/msi/irqdomain.c              |   2 +
- include/linux/acpi_iort.h                |  10 ++-
- include/linux/irqchip/arm-gic-v5.h       |   1 +
- 7 files changed, 244 insertions(+), 45 deletions(-)
+ .../admin-guide/kernel-parameters.txt         | 23 +++++++++++++------
+ drivers/pci/pci.c                             |  7 +++++-
+ include/uapi/linux/pci_regs.h                 |  5 ++++
+ 3 files changed, 27 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 65f0f56ad753..ddd857f05f46 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -595,45 +595,45 @@ u32 iort_msi_map_id(struct device *dev, u32 input_id)
- }
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 31844c70f8bb..c6156a50b249 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -5249,13 +5249,22 @@ Kernel parameters
+ 				flags.
  
- /**
-- * iort_pmsi_get_dev_id() - Get the device id for a device
-+ * iort_msi_xlate() - Map a MSI input ID for a device
-  * @dev: The device for which the mapping is to be done.
-- * @dev_id: The device ID found.
-+ * @input_id: The device input ID.
-+ * @fwnode: Pointer to store the fwnode.
-  *
-- * Returns: 0 for successful find a dev id, -ENODEV on error
-+ * Returns: mapped MSI ID on success, input ID otherwise
-+ *	    On success, the fwnode pointer is initialized to the MSI
-+ *	    controller fwnode handle.
-  */
--int iort_pmsi_get_dev_id(struct device *dev, u32 *dev_id)
-+u32 iort_msi_xlate(struct device *dev, u32 input_id, struct fwnode_handle **fwnode)
- {
--	int i, index;
-+	struct acpi_iort_its_group *its;
- 	struct acpi_iort_node *node;
-+	u32 dev_id;
+ 				ACS Flags is defined as follows:
+-				  bit-0 : ACS Source Validation
+-				  bit-1 : ACS Translation Blocking
+-				  bit-2 : ACS P2P Request Redirect
+-				  bit-3 : ACS P2P Completion Redirect
+-				  bit-4 : ACS Upstream Forwarding
+-				  bit-5 : ACS P2P Egress Control
+-				  bit-6 : ACS Direct Translated P2P
++				  bit-0     : ACS Source Validation
++				  bit-1     : ACS Translation Blocking
++				  bit-2     : ACS P2P Request Redirect
++				  bit-3     : ACS P2P Completion Redirect
++				  bit-4     : ACS Upstream Forwarding
++				  bit-5     : ACS P2P Egress Control
++				  bit-6     : ACS Direct Translated P2P
++				  bit-7     : ACS I/O Request Blocking
++				  bit-9:8   : ACS DSP Memory Target Access Ctrl
++				      00    : Direct Request access enabled
++				      01    : Request blocking enabled
++				      10    : Request redirect enabled
++				      11    : Reserved
++				  bit-11:10 : ACS USP Memory Target Access Ctrl
++				              Same encoding as bit-9:8
++				  bit-12    : ACS Unclaimed Request Redirect Ctrl
+ 				Each bit can be marked as:
+ 				  '0' – force disabled
+ 				  '1' – force enabled
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 382ce8992387..3744d681bcb2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -948,7 +948,8 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
+ 		}
  
- 	node = iort_find_dev_node(dev);
- 	if (!node)
--		return -ENODEV;
-+		return input_id;
+ 		if (mask & ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | PCI_ACS_CR |
+-			    PCI_ACS_UF | PCI_ACS_EC | PCI_ACS_DT)) {
++			    PCI_ACS_UF | PCI_ACS_EC | PCI_ACS_DT | PCI_ACS_IB |
++			    PCI_ACS_DMAC | PCI_ACS_UMAC | PCI_ACS_URRC)) {
+ 			pci_err(dev, "Invalid ACS flags specified\n");
+ 			return;
+ 		}
+@@ -1008,6 +1009,10 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
+ 	/* Upstream Forwarding */
+ 	caps->ctrl |= (caps->cap & PCI_ACS_UF);
  
--	index = iort_get_id_mapping_index(node);
--	/* if there is a valid index, go get the dev_id directly */
--	if (index >= 0) {
--		if (iort_node_get_id(node, dev_id, index))
--			return 0;
--	} else {
--		for (i = 0; i < node->mapping_count; i++) {
--			if (iort_node_map_platform_id(node, dev_id,
--						      IORT_MSI_TYPE, i))
--				return 0;
--		}
--	}
-+	node = iort_node_map_id(node, input_id, &dev_id, IORT_MSI_TYPE);
-+	if (!node)
-+		return input_id;
- 
--	return -ENODEV;
-+	/* Move to ITS specific data */
-+	its = (struct acpi_iort_its_group *)node->node_data;
++	/* Unclaimed Request Redirect Control */
++	if (caps->cap & PCI_ACS_ECAP)
++		caps->ctrl |= PCI_ACS_URRC;
 +
-+	*fwnode = iort_find_domain_token(its->identifiers[0]);
-+
-+	return dev_id;
- }
- 
--static int __maybe_unused iort_find_its_base(u32 its_id, phys_addr_t *base)
-+int iort_its_translate_pa(struct fwnode_handle *node, phys_addr_t *base)
- {
- 	struct iort_its_msi_chip *its_msi_chip;
- 	int ret = -ENODEV;
- 
- 	spin_lock(&iort_msi_chip_lock);
- 	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
--		if (its_msi_chip->translation_id == its_id) {
-+		if (its_msi_chip->fw_node == node) {
- 			*base = its_msi_chip->base_addr;
- 			ret = 0;
- 			break;
-@@ -644,6 +644,62 @@ static int __maybe_unused iort_find_its_base(u32 its_id, phys_addr_t *base)
- 	return ret;
- }
- 
-+static int __maybe_unused iort_find_its_base(u32 its_id, phys_addr_t *base)
-+{
-+	struct fwnode_handle *fwnode = iort_find_domain_token(its_id);
-+
-+	if (!fwnode)
-+		return -ENODEV;
-+
-+	return iort_its_translate_pa(fwnode, base);
-+}
-+
-+/**
-+ * iort_pmsi_get_msi_info() - Get the device id and translate frame PA for a device
-+ * @dev: The device for which the mapping is to be done.
-+ * @dev_id: The device ID found.
-+ * @pa: optional pointer to store translate frame address.
-+ *
-+ * Returns: 0 for successful devid and pa retrieval, -ENODEV on error
-+ */
-+int iort_pmsi_get_msi_info(struct device *dev, u32 *dev_id, phys_addr_t *pa)
-+{
-+	struct acpi_iort_node *node, *parent = NULL;
-+	struct acpi_iort_its_group *its;
-+	int i, index;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node)
-+		return -ENODEV;
-+
-+	index = iort_get_id_mapping_index(node);
-+	/* if there is a valid index, go get the dev_id directly */
-+	if (index >= 0) {
-+		parent = iort_node_get_id(node, dev_id, index);
-+	} else {
-+		for (i = 0; i < node->mapping_count; i++) {
-+			parent = iort_node_map_platform_id(node, dev_id,
-+						      IORT_MSI_TYPE, i);
-+			if (parent)
-+				break;
-+		}
-+	}
-+
-+	if (!parent)
-+		return -ENODEV;
-+
-+	if (pa) {
-+		int ret;
-+
-+		its = (struct acpi_iort_its_group *)node->node_data;
-+		ret = iort_find_its_base(its->identifiers[0], pa);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * iort_dev_find_its_id() - Find the ITS identifier for a device
-  * @dev: The device.
-diff --git a/drivers/irqchip/irq-gic-its-msi-parent.c b/drivers/irqchip/irq-gic-its-msi-parent.c
-index 4d1ad1ee005d..a832cdb2e697 100644
---- a/drivers/irqchip/irq-gic-its-msi-parent.c
-+++ b/drivers/irqchip/irq-gic-its-msi-parent.c
-@@ -19,18 +19,24 @@
- 				 MSI_FLAG_PCI_MSIX      |	\
- 				 MSI_FLAG_MULTI_PCI_MSI)
- 
--static int its_translate_frame_address(struct device_node *msi_node, phys_addr_t *pa)
-+static int its_translate_frame_address(struct fwnode_handle *msi_node, phys_addr_t *pa)
- {
- 	struct resource res;
- 	int ret;
- 
--	ret = of_property_match_string(msi_node, "reg-names", "ns-translate");
--	if (ret < 0)
--		return ret;
-+	if (is_of_node(msi_node)) {
-+		struct device_node *msi_np = to_of_node(msi_node);
- 
--	ret = of_address_to_resource(msi_node, ret, &res);
--	if (ret)
--		return ret;
-+		ret = of_property_match_string(msi_np, "reg-names", "ns-translate");
-+		if (ret < 0)
-+			return ret;
-+
-+		ret = of_address_to_resource(msi_np, ret, &res);
-+		if (ret)
-+			return ret;
-+	} else {
-+		ret = iort_its_translate_pa(msi_node, &res.start);
-+	}
- 
- 	*pa = res.start;
- 	return 0;
-@@ -120,7 +126,7 @@ static int its_v5_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
- 	if (!msi_node)
- 		return -ENODEV;
- 
--	ret = its_translate_frame_address(to_of_node(msi_node), &pa);
-+	ret = its_translate_frame_address(msi_node, &pa);
- 	if (ret)
- 		return -ENODEV;
- 
-@@ -161,7 +167,7 @@ static int of_pmsi_get_msi_info(struct irq_domain *domain, struct device *dev, u
- 				ret = -EINVAL;
- 
- 			if (!ret && pa)
--				ret = its_translate_frame_address(it.node, pa);
-+				ret = its_translate_frame_address(of_fwnode_handle(it.node), pa);
- 
- 			if (!ret)
- 				*dev_id = args;
-@@ -176,11 +182,6 @@ static int of_pmsi_get_msi_info(struct irq_domain *domain, struct device *dev, u
- 	return of_map_id(dev->of_node, dev->id, "msi-map", "msi-map-mask", &msi_ctrl, dev_id);
- }
- 
--int __weak iort_pmsi_get_dev_id(struct device *dev, u32 *dev_id)
--{
--	return -1;
--}
--
- static int its_pmsi_prepare(struct irq_domain *domain, struct device *dev,
- 			    int nvec, msi_alloc_info_t *info)
- {
-@@ -191,7 +192,7 @@ static int its_pmsi_prepare(struct irq_domain *domain, struct device *dev,
- 	if (dev->of_node)
- 		ret = of_pmsi_get_msi_info(domain->parent, dev, &dev_id, NULL);
- 	else
--		ret = iort_pmsi_get_dev_id(dev, &dev_id);
-+		ret = iort_pmsi_get_msi_info(dev, &dev_id, NULL);
- 	if (ret)
- 		return ret;
- 
-@@ -214,10 +215,10 @@ static int its_v5_pmsi_prepare(struct irq_domain *domain, struct device *dev,
- 	u32 dev_id;
- 	int ret;
- 
--	if (!dev->of_node)
--		return -ENODEV;
--
--	ret = of_pmsi_get_msi_info(domain->parent, dev, &dev_id, &pa);
-+	if (dev->of_node)
-+		ret = of_pmsi_get_msi_info(domain->parent, dev, &dev_id, &pa);
-+	else
-+		ret = iort_pmsi_get_msi_info(dev, &dev_id, &pa);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/irqchip/irq-gic-v5-irs.c b/drivers/irqchip/irq-gic-v5-irs.c
-index a27a01f9e7a2..fcd032b5e2fa 100644
---- a/drivers/irqchip/irq-gic-v5-irs.c
-+++ b/drivers/irqchip/irq-gic-v5-irs.c
-@@ -814,8 +814,11 @@ void __init gicv5_irs_its_probe(void)
- {
- 	struct gicv5_irs_chip_data *irs_data;
- 
--	list_for_each_entry(irs_data, &irs_nodes, entry)
--		gicv5_its_of_probe(to_of_node(irs_data->fwnode));
-+	if (acpi_disabled)
-+		list_for_each_entry(irs_data, &irs_nodes, entry)
-+			gicv5_its_of_probe(to_of_node(irs_data->fwnode));
-+	else
-+		gicv5_its_acpi_probe();
- }
- 
- int __init gicv5_irs_of_probe(struct device_node *parent)
-diff --git a/drivers/irqchip/irq-gic-v5-its.c b/drivers/irqchip/irq-gic-v5-its.c
-index 8e22134b9f48..e24ce3d9fb62 100644
---- a/drivers/irqchip/irq-gic-v5-its.c
-+++ b/drivers/irqchip/irq-gic-v5-its.c
-@@ -5,6 +5,8 @@
- 
- #define pr_fmt(fmt)	"GICv5 ITS: " fmt
- 
-+#include <linux/acpi.h>
-+#include <linux/acpi_iort.h>
- #include <linux/bitmap.h>
- #include <linux/iommu.h>
- #include <linux/init.h>
-@@ -1115,7 +1117,7 @@ static int gicv5_its_init_domain(struct gicv5_its_chip_data *its, struct irq_dom
- }
- 
- static int __init gicv5_its_init_bases(void __iomem *its_base, struct fwnode_handle *handle,
--				       struct irq_domain *parent_domain)
-+				       struct irq_domain *parent_domain, bool noncoherent)
- {
- 	struct device_node *np = to_of_node(handle);
- 	struct gicv5_its_chip_data *its_node;
-@@ -1208,7 +1210,8 @@ static int __init gicv5_its_init(struct device_node *node)
- 	}
- 
- 	ret = gicv5_its_init_bases(its_base, of_fwnode_handle(node),
--				   gicv5_global_data.lpi_domain);
-+				   gicv5_global_data.lpi_domain,
-+				   of_property_read_bool(node, "dma-noncoherent"));
- 	if (ret)
- 		goto out_unmap;
- 
-@@ -1231,3 +1234,128 @@ void __init gicv5_its_of_probe(struct device_node *parent)
- 			pr_err("Failed to init ITS %s\n", np->full_name);
- 	}
- }
-+
-+#ifdef CONFIG_ACPI
-+
-+#define ACPI_GICV5_ITS_MEM_SIZE (SZ_64K)
-+
-+static struct acpi_madt_gicv5_translator *current_its_entry __initdata;
-+static struct fwnode_handle *current_its_fwnode __initdata;
-+
-+static int __init gic_acpi_parse_madt_its_translate(union acpi_subtable_headers *header,
-+						    const unsigned long end)
-+{
-+	struct acpi_madt_gicv5_translate_frame *its_frame;
-+	struct fwnode_handle *msi_dom_handle;
-+	struct resource res = {};
-+	int err;
-+
-+	its_frame = (struct acpi_madt_gicv5_translate_frame *)header;
-+	if (its_frame->linked_translator_id != current_its_entry->translator_id)
-+		return 0;
-+
-+	res.start = its_frame->base_address;
-+	res.end = its_frame->base_address + ACPI_GICV5_ITS_MEM_SIZE - 1;
-+	res.flags = IORESOURCE_MEM;
-+
-+	msi_dom_handle = irq_domain_alloc_parented_fwnode(&res.start, current_its_fwnode);
-+	if (!msi_dom_handle) {
-+		pr_err("ITS@%pa: Unable to allocate GICv5 ITS translate domain token\n",
-+		       &res.start);
-+		return -ENOMEM;
-+	}
-+
-+	err = iort_register_domain_token(its_frame->translate_frame_id, res.start,
-+					 msi_dom_handle);
-+	if (err) {
-+		pr_err("ITS@%pa: Unable to register GICv5 ITS domain token (ITS TRANSLATE FRAME ID %d) to IORT\n",
-+		       &res.start, its_frame->translate_frame_id);
-+		irq_domain_free_fwnode(msi_dom_handle);
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init gic_acpi_free_madt_its_translate(union acpi_subtable_headers *header,
-+						   const unsigned long end)
-+{
-+	struct acpi_madt_gicv5_translate_frame *its_frame;
-+	struct fwnode_handle *msi_dom_handle;
-+
-+	its_frame = (struct acpi_madt_gicv5_translate_frame *)header;
-+	if (its_frame->linked_translator_id != current_its_entry->translator_id)
-+		return 0;
-+
-+	msi_dom_handle = iort_find_domain_token(its_frame->translate_frame_id);
-+	if (!msi_dom_handle)
-+		return 0;
-+
-+	iort_deregister_domain_token(its_frame->translate_frame_id);
-+	irq_domain_free_fwnode(msi_dom_handle);
-+
-+	return 0;
-+}
-+
-+static int __init gic_acpi_parse_madt_its(union acpi_subtable_headers *header,
-+					  const unsigned long end)
-+{
-+	struct acpi_madt_gicv5_translator *its_entry;
-+	struct fwnode_handle *dom_handle;
-+	struct resource res = {};
-+	void __iomem *its_base;
-+	int err;
-+
-+	its_entry = (struct acpi_madt_gicv5_translator *)header;
-+	res.start = its_entry->base_address;
-+	res.end = its_entry->base_address + ACPI_GICV5_ITS_MEM_SIZE - 1;
-+	res.flags = IORESOURCE_MEM;
-+
-+	if (!request_mem_region(res.start, resource_size(&res), "GICv5 ITS"))
-+		return -EBUSY;
-+
-+	dom_handle = irq_domain_alloc_fwnode(&res.start);
-+	if (!dom_handle) {
-+		pr_err("ITS@%pa: Unable to allocate GICv5 ITS domain token\n",
-+		       &res.start);
-+		err = -ENOMEM;
-+		goto out_rel_res;
-+	}
-+
-+	current_its_entry = its_entry;
-+	current_its_fwnode = dom_handle;
-+
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GICV5_ITS_TRANSLATE,
-+			      gic_acpi_parse_madt_its_translate, 0);
-+
-+	its_base = ioremap(res.start, ACPI_GICV5_ITS_MEM_SIZE);
-+	if (!its_base) {
-+		err = -ENOMEM;
-+		goto out_unregister;
-+	}
-+
-+	err = gicv5_its_init_bases(its_base, dom_handle, gicv5_global_data.lpi_domain,
-+				   its_entry->flags & ACPI_MADT_GICV5_ITS_NON_COHERENT);
-+	if (err)
-+		goto out_unmap;
-+
-+	return 0;
-+
-+out_unmap:
-+	iounmap(its_base);
-+out_unregister:
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GICV5_ITS_TRANSLATE,
-+			      gic_acpi_free_madt_its_translate, 0);
-+	irq_domain_free_fwnode(dom_handle);
-+out_rel_res:
-+	release_mem_region(res.start, resource_size(&res));
-+	return err;
-+}
-+
-+void __init gicv5_its_acpi_probe(void)
-+{
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GICV5_ITS, gic_acpi_parse_madt_its, 0);
-+}
-+#else
-+void __init gicv5_its_acpi_probe(void) { }
-+#endif
-diff --git a/drivers/pci/msi/irqdomain.c b/drivers/pci/msi/irqdomain.c
-index 3a4038640fda..6e65f0f44112 100644
---- a/drivers/pci/msi/irqdomain.c
-+++ b/drivers/pci/msi/irqdomain.c
-@@ -401,6 +401,8 @@ u32 pci_msi_map_rid_ctlr_node(struct irq_domain *domain, struct pci_dev *pdev,
- 		rid = of_msi_xlate(&pdev->dev, &msi_ctlr_node, rid);
- 		if (msi_ctlr_node)
- 			*node = of_fwnode_handle(msi_ctlr_node);
-+	} else {
-+		rid = iort_msi_xlate(&pdev->dev, rid, node);
- 	}
- 
- 	return rid;
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index d4ed5622cf2b..2d22268677a9 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -27,12 +27,14 @@ int iort_register_domain_token(int trans_id, phys_addr_t base,
- 			       struct fwnode_handle *fw_node);
- void iort_deregister_domain_token(int trans_id);
- struct fwnode_handle *iort_find_domain_token(int trans_id);
--int iort_pmsi_get_dev_id(struct device *dev, u32 *dev_id);
- 
- #ifdef CONFIG_ACPI_IORT
- u32 iort_msi_map_id(struct device *dev, u32 id);
-+u32 iort_msi_xlate(struct device *dev, u32 id, struct fwnode_handle **node);
-+int iort_its_translate_pa(struct fwnode_handle *node, phys_addr_t *base);
- struct irq_domain *iort_get_device_domain(struct device *dev, u32 id,
- 					  enum irq_domain_bus_token bus_token);
-+int iort_pmsi_get_msi_info(struct device *dev, u32 *dev_id, phys_addr_t *pa);
- void acpi_configure_pmsi_domain(struct device *dev);
- void iort_get_rmr_sids(struct fwnode_handle *iommu_fwnode,
- 		       struct list_head *head);
-@@ -46,9 +48,15 @@ phys_addr_t acpi_iort_dma_get_max_cpu_address(void);
- #else
- static inline u32 iort_msi_map_id(struct device *dev, u32 id)
- { return id; }
-+static inline u32 iort_msi_xlate(struct device *dev, u32 id, struct fwnode_handle **node)
-+{ return id; }
-+static inline int iort_its_translate_pa(struct fwnode_handle *node, phys_addr_t *base)
-+{ return -ENODEV; }
- static inline struct irq_domain *iort_get_device_domain(
- 	struct device *dev, u32 id, enum irq_domain_bus_token bus_token)
- { return NULL; }
-+static inline int iort_pmsi_get_msi_info(struct device *dev, u32 *dev_id, phys_addr_t *pa)
-+{ return -ENODEV; }
- static inline void acpi_configure_pmsi_domain(struct device *dev) { }
- static inline
- void iort_get_rmr_sids(struct fwnode_handle *iommu_fwnode, struct list_head *head) { }
-diff --git a/include/linux/irqchip/arm-gic-v5.h b/include/linux/irqchip/arm-gic-v5.h
-index ff5b1a4931d7..334b6986435c 100644
---- a/include/linux/irqchip/arm-gic-v5.h
-+++ b/include/linux/irqchip/arm-gic-v5.h
-@@ -392,4 +392,5 @@ int gicv5_alloc_lpi(void);
- void gicv5_free_lpi(u32 lpi);
- 
- void __init gicv5_its_of_probe(struct device_node *parent);
-+void __init gicv5_its_acpi_probe(void);
- #endif
+ 	/* Enable Translation Blocking for external devices and noats */
+ 	if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
+ 		caps->ctrl |= (caps->cap & PCI_ACS_TB);
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 3add74ae2594..9cbde1ebd14a 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -1018,6 +1018,11 @@
+ #define  PCI_ACS_UF		0x0010	/* Upstream Forwarding */
+ #define  PCI_ACS_EC		0x0020	/* P2P Egress Control */
+ #define  PCI_ACS_DT		0x0040	/* Direct Translated P2P */
++#define  PCI_ACS_ECAP		0x0080  /* ACS Ehanced Capability */
++#define  PCI_ACS_IB		0x0080	/* I/O Request Blocking */
++#define  PCI_ACS_DMAC		0x0300	/* DSP Memory Target Access Control */
++#define  PCI_ACS_UMAC		0x0c00  /* USP Memory Target Access Control */
++#define  PCI_ACS_URRC		0x1000	/* Unclaimed Request Redirect Ctrl */
+ #define PCI_ACS_EGRESS_BITS	0x05	/* ACS Egress Control Vector Size */
+ #define PCI_ACS_CTRL		0x06	/* ACS Control Register */
+ #define PCI_ACS_EGRESS_CTL_V	0x08	/* ACS Egress Control Vector */
 
+base-commit: 9b7977f9e39b7768c70c2aa497f04e7569fd3e00
 -- 
-2.50.1
+2.51.0
 
