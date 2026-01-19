@@ -1,104 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C56F02E762C
-	for <linux-pci@vger.kernel.org>; Mon, 19 Jan 2026 16:49:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019A22C158F;
+	Mon, 19 Jan 2026 16:56:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768841374; cv=none; b=afc7d3zjNq1QWKlSYPLOec/+tyHtT2iI6Wz1fBwntZo2MextpszXKm57eFhhHWuj0FtfPCeDjhwXRJfZFeZZkHgFVEx68B8pSFkdy5sElBwuPzt4Ne0SeboL23cF4aofbRbgTlu2w9x/huYUdNT2+KPJwPeTFg9D8gGt2g/dklk=
+	t=1768841814; cv=none; b=OaiSbjyZbfvZrSsgw4+Z6uOipIn9eeSDsgir6JMV5Q/vGNyuVq/w1+8JzFszngTz1H4sOmD7IsredLa/GQU/yTzeARXyYzTwL2qHCA+3uzmB4qjOKR9pdkddwvQmxAOoSTcC26ECzBhxdM2HfIMXHQNaxml517oyNH1IhCcHJ1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768841374; c=relaxed/simple;
-	bh=k1FvgBS3Py29dGl+fmxY4hqjo5AxP0UD6grp5Fwco2Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NHsUdKp5HJcTjQ/mQzrpZ/F7VrBtY/wpB7qgdKLwvFe3wOIg0VzaXWOXPEY5aR5ylbGBy/bQKFz2fYuuTfMhPWLoRYVBTZX6v5hUSKPNmBushh3MJ41zhBZ9iKDIYGcCDyf+wNEkmr8xiOrZgHRzjY1SyoVNRy0eaVgCicCy2w4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qODxsMCB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768841814; c=relaxed/simple;
+	bh=GYLwx0Hne15W5ZSKTaTY96zz6Id4CzMzEygkuRoJRGI=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=eMxKEL1hE0U1HbV5nE5RX65JSpnzXMHifoWXngiimF5n6WYtBzameub00KtXfUAh+eFRVTLWDV1CvYfEvAasRX56jIhfvgS+t4qoc3/u285vqAqLg3Y/22CvTEHfpcdw/QEqlAbQaCjJbzJV/AFdzvO2BvSjzgRus6Sv9l4Ntk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Dzgbg+ok; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qODxsMCB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E38C0C116C6;
-	Mon, 19 Jan 2026 16:49:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768841374;
-	bh=k1FvgBS3Py29dGl+fmxY4hqjo5AxP0UD6grp5Fwco2Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qODxsMCBQ77LhuxFtst0GkAvcxi3j+o7cCXAwXM1gtD85zbMIH2snlH0Fsj2W/86A
-	 yTa3K1ExOLDQ9Ioh9kkOJ7SfWdmZ+0kC9EijU74qoDQXgmBY3L/FCZazzVfmheW9AH
-	 UhHrQ4246n/Iaj0xoma2xlmSNntYtfyRbtMXd6ooRlxpESQe15Jvl/tGV2A9S3Bcdr
-	 926hCH5OX9MvXh1VVeVP0/GkFeI9s8ZpEgo0vgdC0seHxgc6b1HkJp8sMh+CoFuPVR
-	 4wVqWoHXNNTyvVm9Q9t5CSdrQPwQleUC8DnD+no5KdYabHd91osokGQOQUZA8K0IlJ
-	 JoL/WUwlzn0zQ==
-Date: Mon, 19 Jan 2026 16:49:29 +0000
-From: Will Deacon <will@kernel.org>
-To: Jess <jess@jessie.cafe>
-Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: host-generic: Avoid reporting incorrect "missing
- "reg" property" error
-Message-ID: <aW5gmRDAlqR0Ii5S@willie-the-truck>
-References: <20260119050745.27650-1-jess@jessie.cafe>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Dzgbg+ok"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 60JDcHpb012605;
+	Mon, 19 Jan 2026 16:56:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=fVQAwn
+	ZY3xGcrB47UXLurStptNlnnObHCmQwjyhqQK0=; b=Dzgbg+okFzoC3e5YXfxg97
+	25+9a8+WELWr4ZfvbJ1O0Hzba2Q/AKrhOuUqf/rSNR8sGPQW97ro+nIwj0yYrD6z
+	r6VGRbnyfsafZWNQyyvp71JR4EAhiC3lUoT7to1Sp7BY/HVckMLByV04zUWGNTdc
+	wYoupwIXqc+Nh5m3gawlQZOni+4RUmQZrG5hRuWXiRZFSNwZnIgi740efmUzvl6M
+	OYYLGbp9KuZYjrl1bUBk7RNS6iKoHH9trxROQ9XQ7SntpIwoJS3KskWf4VKX2CHi
+	00v6Y89Fbt4B2wgLcrskkVMP9hGDKBcpxpnLJ0WGVXwadRFeeB21ctEKfna1ZXcg
+	==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4br1x51f1k-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 19 Jan 2026 16:56:46 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 60JGCjXc024583;
+	Mon, 19 Jan 2026 16:56:45 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4brxareb6r-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 19 Jan 2026 16:56:45 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 60JGufBf56295776
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 19 Jan 2026 16:56:41 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 7D1D520043;
+	Mon, 19 Jan 2026 16:56:41 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4F0682004B;
+	Mon, 19 Jan 2026 16:56:41 +0000 (GMT)
+Received: from localhost (unknown [9.52.203.172])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 19 Jan 2026 16:56:41 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260119050745.27650-1-jess@jessie.cafe>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 19 Jan 2026 17:56:41 +0100
+Message-Id: <DFSQ35HIT6YT.3DTUUNUOEEDHM@linux.ibm.com>
+Cc: <helgaas@kernel.org>, <lukas@wunner.de>, <alex@shazbot.org>,
+        <clg@redhat.com>, <stable@vger.kernel.org>, <schnelle@linux.ibm.com>,
+        <mjrosato@linux.ibm.com>
+Subject: Re: [PATCH v7 9/9] vfio: Remove the pcie check for
+ VFIO_PCI_ERR_IRQ_INDEX
+From: "Julian Ruess" <julianr@linux.ibm.com>
+To: "Farhan Ali" <alifm@linux.ibm.com>, <linux-s390@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260107183217.1365-1-alifm@linux.ibm.com>
+ <20260107183217.1365-10-alifm@linux.ibm.com>
+In-Reply-To: <20260107183217.1365-10-alifm@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=R8AO2NRX c=1 sm=1 tr=0 ts=696e624e cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VnNF1IyMAAAA:8 a=Okk2yIgg9Z9Hp2RjL0IA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: QzRipjxLbY9YVaDZM2Fkn7cNSMc88EjY
+X-Proofpoint-GUID: QzRipjxLbY9YVaDZM2Fkn7cNSMc88EjY
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTE5MDE0MCBTYWx0ZWRfX2qlhnSxI8lYN
+ 64rpgvPsXZnrxCNPsQNMp3dBb+j2mqVYVDz8/83NwKlu8BmqgbKzpzt3vQfLkl54MPDcgs3Wr93
+ 1IkZMdEACUdzFn/lV67iNMilfQpFoenS8UNGX4Aavko4j9sbaEuk1kkLJ+GCzDxz/ZfCOlHlbKz
+ u60LV3pbRv+mpNhwsgFB0CiK4ntnVZz951/eGDaipaIQyz7U8XdXTlKAStEPcBdseQY6tp6gtXb
+ S/525lc1B4CQFHltL2ORIcaruSIKj9V36VvLXgITRYUBkbzfs3OsN/Ie8RN4MKLjEEBJyRvO7JW
+ p/8nIzgsYs9o8ey81D/Tc0/AVxZMaXOOu0/6vdQUvvlvMRUV3ph95TqcpACrUKuay2XB7ZfZam4
+ I0vU+NEqDe7bP7FzUsAKvmjPyt3upyUbfXLAwXaMKpSIsYhjZQ0HCeFlt79M6OpdSJryvJphGGm
+ l9X2TNOhDGCfSbSxpow==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2026-01-19_04,2026-01-19_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 priorityscore=1501 bulkscore=0 lowpriorityscore=0 adultscore=0
+ spamscore=0 phishscore=0 malwarescore=0 suspectscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2601150000 definitions=main-2601190140
 
-On Mon, Jan 19, 2026 at 06:06:45PM +1300, Jess wrote:
-> When the function pci_host_common_ecam_create() calls
-> of_address_to_resource() it assumes all errors from that callsite are due
-> to a missing "reg" property in the device tree node.
-> 
-> This can manifest when running the qemu "virt" board, with a 32-bit kernel
-> and `highmem=on`.
-> 
-> After the following calls:
-> of_address_to_resource()
->   -> __of_address_to_resource()
->   -> __of_address_resource_bounds()
-> 
-> this overflow check can fail due to PCI being out of range:
-> if (overflows_type(start, r->start))
-> 	return -EOVERFLOW;
-> 
-> This leads to the very confusing error message:
-> pci-host-generic 4010000000.pcie: host bridge /pcie@10000000 ranges:
-> pci-host-generic 4010000000.pcie:       IO 0x003eff0000..0x003effffff -> 0x0000000000
-> pci-host-generic 4010000000.pcie:      MEM 0x0010000000..0x003efeffff -> 0x0010000000
-> pci-host-generic 4010000000.pcie:      MEM 0x8000000000..0xffffffffff -> 0x8000000000
-> pci-host-generic 4010000000.pcie: missing "reg" property
-> pci-host-generic 4010000000.pcie: probe with driver pci-host-generic failed with error -75
-> 
-> This commit gets rid of the confusing error message.
-> 
-> Link: https://www.qemu.org/docs/master/system/arm/virt.html
-> Signed-off-by: Jess <jess@jessie.cafe>
+On Wed Jan 7, 2026 at 7:32 PM CET, Farhan Ali wrote:
+> We are configuring the error signaling on the vast majority of devices an=
+d
+> it's extremely rare that it fires anyway. This allows userspace to be
+> notified on errors for legacy PCI devices. The Internal Shared Memory (IS=
+M)
+> device on s390x is one such device. For PCI devices on IBM s390x error
+> recovery involves platform firmware and notification to operating system
+> is done by architecture specific way. So the ISM device can still be
+> recovered when notified of an error.
+>
+> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
 > ---
->  drivers/pci/controller/pci-host-common.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-> index c473e7c03bac..04e1fef70c9c 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -31,10 +31,8 @@ struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
->  	struct pci_config_window *cfg;
->  
->  	err = of_address_to_resource(dev->of_node, 0, &cfgres);
-> -	if (err) {
-> -		dev_err(dev, "missing \"reg\" property\n");
-> +	if (err)
->  		return ERR_PTR(err);
-> -	}
+>  drivers/vfio/pci/vfio_pci_core.c  | 6 ++----
+>  drivers/vfio/pci/vfio_pci_intrs.c | 3 +--
+>  2 files changed, 3 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index c92c6c512b24..0fdce5234914 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -778,8 +778,7 @@ static int vfio_pci_get_irq_count(struct vfio_pci_cor=
+e_device *vdev, int irq_typ
+>  			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
+>  		}
+>  	} else if (irq_type =3D=3D VFIO_PCI_ERR_IRQ_INDEX) {
+> -		if (pci_is_pcie(vdev->pdev))
+> -			return 1;
+> +		return 1;
+>  	} else if (irq_type =3D=3D VFIO_PCI_REQ_IRQ_INDEX) {
+>  		return 1;
+>  	}
+> @@ -1157,8 +1156,7 @@ static int vfio_pci_ioctl_get_irq_info(struct vfio_=
+pci_core_device *vdev,
+>  	case VFIO_PCI_REQ_IRQ_INDEX:
+>  		break;
+>  	case VFIO_PCI_ERR_IRQ_INDEX:
+> -		if (pci_is_pcie(vdev->pdev))
+> -			break;
+> +		break;
+>  		fallthrough;
 
-Maybe it would be better to print something more useful rather than removing
-it entirely and leaving the poor luser guessing why their PCI isn't working?
+Isn't the fallthrough unreachable now?
 
-How about one of:
-
-	"missing or malformed \"reg\" property\n"
-	"failed to parse ECAM base address from device-tree\n"
-	"failed to get ECAM resource\n"
-
-Will
+-- snip --
