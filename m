@@ -1,224 +1,220 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C42A3254AC
-	for <linux-pci@vger.kernel.org>; Mon, 19 Jan 2026 12:26:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2A0A35A95D;
+	Mon, 19 Jan 2026 12:53:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768825599; cv=none; b=taOn9P0rChFonJsWZHotrCM7hmAPGTmWR501TJdbK2CNAwbPiS1jyY6WrNQz6uJ1FS23NHPv3G4wA/bYwX/6d7Qa+B5bOJ+oiISRa+pv7QKjvFSZQLm3qdlDal9xKAKpbgs3BcB2wX2yc9HXY8J2rDYaoOqjKC/K3p4uF/kY+1o=
+	t=1768827193; cv=none; b=tC/HyW7kgA0Mx/W/9ZxSfJStznI66ZtyZGIv1yU3CFKZbDq2Jps/uWW51qLcww6izDYp9SI03XfUnwAPBqa/lOWTY19XfUnJox/UwRUAgohGBbkbSjl4gMaxNAGcXr9u+EeE6102oF/76wFQjcA02Y7exBPpqqKquGWk1t2tJlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768825599; c=relaxed/simple;
-	bh=SSIzOzaDE7//KmY5FNsdMbqnfiMffoRKHmOuNKGOaJo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Z47ULuT0e11gODBYprZayu1z6t0wtOAV+7A10T41vNE9aYW7zEcAG7HhCZKd4NfvTN0OoGkHqfUtHff6uUmUPNeM33GHAMGcmW31mHgrGJFprWf2E/rmuSqCviOvv7j7/6YjdH/vfPGsTudNM5cjgTluYuB48uqCMzkPEIWwxB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kk7RWiKB; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kk7RWiKB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3768C2BCB2
-	for <linux-pci@vger.kernel.org>; Mon, 19 Jan 2026 12:26:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768825598;
-	bh=SSIzOzaDE7//KmY5FNsdMbqnfiMffoRKHmOuNKGOaJo=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=kk7RWiKB7H/bDiQh5fEfb8KgwAvcFFVb/Gti6KuNeNjhuVHp0HQvVaspsQ9t8bPQL
-	 vlfZqM8ejjOTD9XcxRGSA7QZBids8ZeTZ1PUiutIB019yJrumMYah12rNKnIQlqW99
-	 0Q2p4wUPIJgi2KWchzfRNUIECvpZhwb95p11XwQHygnRNnlP+91UR9/qs6eAh4boiq
-	 dr/HPm3jpGa07bRuvtPAJyXP43W0eS4zJ57aSXJiATKDLMANcxi9tUSuVi5/yRg0WA
-	 0u5vECjD1CDdmqvg4SZatMM9pBFbKqcsnGGV5QWw+nxranDuG6WF4fme7/qK2/GiEt
-	 wdwXn8uLOEaiQ==
-Received: by mail-oa1-f42.google.com with SMTP id 586e51a60fabf-40444c41a70so2058571fac.1
-        for <linux-pci@vger.kernel.org>; Mon, 19 Jan 2026 04:26:38 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCV1UX5SedVBXIzLLHdBAjqfvGqkhxNs6uKnG9ud6qsXaTGImKeKt1bfFQO2t0WpilKWyOHZmVSIPjw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz10x5lxguD7n3UE2S5GemTTmGRYGoD48oFe07ZyabpVTsiJ9+n
-	Itnd8VxYfqlKf/PWcpGXZvuhNlIKh9rcpEkuUhVUH1QWL8xNukej+mkAV8VMsWK5G/X7aJTmF9i
-	lZ0colMYy+ajP21MOT1rTjQxMLqF02ZI=
-X-Received: by 2002:a05:6820:488d:b0:65d:441:5fbc with SMTP id
- 006d021491bc7-66117a3736amr3743949eaf.79.1768825597715; Mon, 19 Jan 2026
- 04:26:37 -0800 (PST)
+	s=arc-20240116; t=1768827193; c=relaxed/simple;
+	bh=cGzPxUmaEhFMDDElzlC+0Cv5UBY7+PeNviT+AavSgPM=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:Subject:
+	 In-Reply-To:Content-Type; b=XBy6lM7v3xJ0xJpMYMM6NT+KDEG/F1FpeD4+fdrhVa5dfM23+kr1PTCAWxp3PAlgZLnwM/cy9JH5Gak4z8+nxfsUK+7q19696Do4/8X7fBxmYdGzS9Tk/FhtRvarN5bRUqvOjee9bEh6AaZ7U9OlAouFB7VF7Lmp9xCJ91V6TlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr; spf=pass smtp.mailfrom=green-communications.fr; arc=none smtp.client-ip=217.72.192.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=green-communications.fr
+Received: from [192.168.0.66] ([88.171.60.104]) by mrelayeu.kundenserver.de
+ (mreue106 [213.165.67.119]) with ESMTPSA (Nemesis) id
+ 1M3lLh-1vhXll1nPv-00BvaZ; Mon, 19 Jan 2026 13:53:02 +0100
+Message-ID: <154d0ccb-00d8-4e7b-ab6e-c798c86c5e96@green-communications.fr>
+Date: Mon, 19 Jan 2026 13:53:01 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260106222715.GA381397@bhelgaas> <CGME20260114094643eucas1p1a2fdc6c35dd27741c18831b34bbed0c8@eucas1p1.samsung.com>
- <0e35a4e1-894a-47c1-9528-fc5ffbafd9e2@samsung.com> <aWf4KyTSIocWTmXw@google.com>
- <61e8c93c-d096-4807-b2dd-a22657f2e06a@samsung.com> <aWrjhqC_6I2UNXC5@google.com>
- <CAJZ5v0hWt63=0yjFrbTY8zXubh-Uc6ZwAndT73VL7itMkTe81A@mail.gmail.com>
- <CAJZ5v0gKZFWzuFT=cF_Ydjpro+sXzdeZ_+B4GEfiifa-cxpbGw@mail.gmail.com> <d2c006c3-44c3-4270-b1ca-5d1a0d7f4e09@samsung.com>
-In-Reply-To: <d2c006c3-44c3-4270-b1ca-5d1a0d7f4e09@samsung.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 19 Jan 2026 13:26:25 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0j=TM6DoGbW1agbiHUbq46G7pyd25E=ih2at7dvYr83Sg@mail.gmail.com>
-X-Gm-Features: AZwV_Qjr0d4ZRXuwqr_fC6lif0BGKq2UmHdyOHtiSe_Mso2lVi0z1WpKEY3FSh0
-Message-ID: <CAJZ5v0j=TM6DoGbW1agbiHUbq46G7pyd25E=ih2at7dvYr83Sg@mail.gmail.com>
-Subject: Re: [PATCH v4] PCI/PM: Prevent runtime suspend before devices are
- fully initialized
-To: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Brian Norris <briannorris@chromium.org>, 
-	Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-pm@vger.kernel.org, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+To: Robin Murphy <robin.murphy@arm.com>, iommu@lists.linux.dev,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Rob Herring (Arm)"
+ <robh@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Jason Gunthorpe <jgg@nvidia.com>, regressions@lists.linux.dev
+References: <a1d926f0-4cb5-4877-a4df-617902648d80@green-communications.fr>
+ <eb94b379-6e0b-4beb-aaa7-413a4e7f04b9@green-communications.fr>
+ <3780eb61-68e2-42ce-939e-7458cd3a63cb@green-communications.fr>
+ <4da29d46-9a80-4ec4-b6b8-6c9457eed481@arm.com>
+Content-Language: en-US
+From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
+Autocrypt: addr=Nicolas.Cavallari@green-communications.fr; keydata=
+ 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
+Subject: Re: [REGRESSION] Re: imx8 PCI regression since "iommu: Get DT/ACPI
+ parsing into the proper probe path"
+In-Reply-To: <4da29d46-9a80-4ec4-b6b8-6c9457eed481@arm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:qvKrgniDhCDttoq4hx/KpwZ7wvT16Hg+QjDEhqguqFoZvTWbYYU
+ TAdm6qt5OYVkrkzIV5BNU900bXM0nA2ibuHysJmVsMFcS3Dg0a4BXevHAaml5stE7+brjh3
+ G4BzfnZqu694rkvzCdqJNoOeJi8QMlhuL9ygtzBVxeOTgA/J20A8OqLub9ESDr49En8OwaK
+ +/xqqWg7onaVG+Ll/CRpQ==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:EzNrFn9xkI4=;8DWpBIhuMNpzgSwAxfQ7dLLhNe9
+ rJznxzuVIOeaoZU+8zdc6bMAZaWOX191m6YuvJF5zlTkEmbgVD76qPgO2Y1+coVr+LuwZ7JnS
+ vWk0I9WuOlH+m1ytpblAoqYRY96llCe8Pzci9ZO5u1kt1mBzaXWEMUW+eHPPHvvm4cSRd/JXv
+ ah4YpGGGRpYevF3UGKuYeVBPCSL1qwF0iA4n3tRK+B9nx2MHdGv06+qTWpErTQCTYvQy7yok4
+ gdkp/Ee6x25tSvq77PZnH2qECgCo1ZJK7lkeJgCwmtlREFQ0Bnhu8jnkseS6K2SXEinx1v2hf
+ SmZRjmJZQ058ec6scJu2PqT2n3HQq77r41V4DfU+krCzqwEVajaS8roagNgmgcDA1MrzI/bG2
+ UQBgtjxbXPlRYbTf+s4QCcPDfXBSn9NN2gQZLM5L6Uq00VcdMD7ddzpLKIenPuWkA7gIJ6K/x
+ agvLGJ8nCORN15CgDuHgfbh/y2il346tDwqB5nvxV/R1SfZX4JUBBGLCpkmrhYY9rGdNLYAQG
+ roa/daAv/oxjZ4Tvek6wb/Mz7MwDrjQG93OxqqtaTdKGjnTK5ySOEVf+igyeCP9fpfA+AK7oa
+ sSYgMYB0tYEGZVwMXI+NqxaamqdrtpyjpWHHDYF1wfZ/H6qWkIDmYqmIAMeeYZMsmjFeODxtz
+ VGJmFV9wwn75kCh+EbzZ3Fz19QtoKTBD8ozTOUfoYVJkXdwYV9rbTdRTCg4EImIUH4c/KDrhT
+ S7wllpqjgmIWJMkRlIKRwhwMghd8Us8Cyibhid1SnTJwVxh8RGhy/xzqhCpqObd+1TALqC4t/
+ RvHHBbe2TMKQvDM5YKb7idT9v9u4NxABJnzrj2ergxqCnhy+QqsE6yXaEiKA56jbJ+oC7dkcz
+ IESEsG8o1x/twrNAYL1vWJ92u/xPAlfjPn6nb3zFeT2U7ohRnZ6ggzFl6ckw+1mX8lDJXgl2Y
+ F4xyRlSgc6Obeo3vXuF7K+lIfkiWOXILcOQIBec7VzgRmdLKxJ73BdNuG0FMpQ7oD+8Nq3krC
+ +1hR2NDLjxYnvTotm0+fW9PPWIud2zy5I7DT8YImSXU1wK2vFBfj6x9WZXb/2PshORP4fECPi
+ WodrPNUNlqFRPVKI6F50ZHUHZUqJpZpNyBKOG+BEKybe6TH9x/nMy3YSl/HvLf0lb2CqHb8tY
+ KunLjb+t/RYsMZTzWCxqTwKbqyb9L4mm+S3sPyztpRu3Y5wkBOnO8AGJkA1WsSFZcAVwIcWZG
+ JkVlZW3t5a3LBU6y0p8aSU0V723JuuewIFxWJ+nfdsOU2yeKlyIg4PVeeWgzmez+OVMI9k81I
+ dymPt+Cbi4LKFwE2rNpcP/m39WetK5OxfAjAb42vnG6ZGZlVmdm7Z/4sHpXBtXyThpm99aTzX
+ Ett3mzhWu6Wf3B61dj08mRdMuNJWlC9VxeGO1cIOChKqEGGKkhGiaAzUaaIgDakSURwIURcFF
+ ePlfCCSyvVNrywAEcPG8i9zJ7glah4NRtSXEswqJqfieME0kgE4k2qhwRXI+4wnWlWjfqDVPq
+ XRbp+KH4wfyRdQCXXJeh7i11vrZWRNfa8a3E+gH0Xj/jRe9D8d80h5OXHpzKXGUuPPPQoZI/a
+ njzlisWadfTYQDLM6Z4xZhCXxsouGvGNld9dXQji/2C1NWCpSLmAnXP1vj2E9rGGoJ41GXA/8
+ o0d+fXB7Lzn7lioyi0zaeWREgrmHOHgWsxvOc7WkP+8yrij30gT8zTp8TZp5B6SSVBTbnVLTR
+ 3A+45Nf6RjQgu1oaPsoP/Dd9+Ao7WG9EY07XFd4J9JRPvzEsXsUgCqQqy7X5jiodVkYqg1mqB
+ Sjcp
 
-On Mon, Jan 19, 2026 at 11:01=E2=80=AFAM Marek Szyprowski
-<m.szyprowski@samsung.com> wrote:
->
-> On 18.01.2026 12:59, Rafael J. Wysocki wrote:
-> > On Sun, Jan 18, 2026 at 12:53=E2=80=AFPM Rafael J. Wysocki <rafael@kern=
-el.org> wrote:
-> >> On Sat, Jan 17, 2026 at 2:19=E2=80=AFAM Brian Norris <briannorris@chro=
-mium.org> wrote:
-> >>> On Thu, Jan 15, 2026 at 12:14:49PM +0100, Marek Szyprowski wrote:
-> >>>> On 14.01.2026 21:10, Brian Norris wrote:
-> >>>>> On Wed, Jan 14, 2026 at 10:46:41AM +0100, Marek Szyprowski wrote:
-> >>>>>> On 06.01.2026 23:27, Bjorn Helgaas wrote:
-> >>>>>>> On Thu, Oct 23, 2025 at 02:09:01PM -0700, Brian Norris wrote:
-> >>>>>>>> Today, it's possible for a PCI device to be created and
-> >>>>>>>> runtime-suspended before it is fully initialized. When that happ=
-ens, the
-> >>>>>>>> device will remain in D0, but the suspend process may save an
-> >>>>>>>> intermediate version of that device's state -- for example, with=
-out
-> >>>>>>>> appropriate BAR configuration. When the device later resumes, we=
-'ll
-> >>>>>>>> restore invalid PCI state and the device may not function.
-> >>>>>>>>
-> >>>>>>>> Prevent runtime suspend for PCI devices by deferring pm_runtime_=
-enable()
-> >>>>>>>> until we've fully initialized the device.
-> >>>>> ...
-> >>>>>> This patch landed recently in linux-next as commit c796513dc54e
-> >>>>>> ("PCI/PM: Prevent runtime suspend until devices are fully initiali=
-zed").
-> >>>>>> In my tests I found that it sometimes causes the "pci 0000:01:00.0=
-:
-> >>>>>> runtime PM trying to activate child device 0000:01:00.0 but parent
-> >>>>>> (0000:00:00.0) is not active" warning on Qualcomm Robotics RB5 boa=
-rd
-> >>>>>> (arch/arm64/boot/dts/qcom/qrb5165-rb5.dts). This in turn causes a
-> >>>>>> lockdep warning about console lock, but this is just a consequence=
- of
-> >>>>>> the runtime pm warning. Reverting $subject patch on top of current
-> >>>>>> linux-next hides this warning.
-> >>>>>>
-> >>>>>> Here is a kernel log:
-> >>>>>>
-> >>>>>> pci 0000:01:00.0: [17cb:1101] type 00 class 0xff0000 PCIe Endpoint
-> >>>>>> pci 0000:01:00.0: BAR 0 [mem 0x00000000-0x000fffff 64bit]
-> >>>>>> pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
-> >>>>>> pci 0000:01:00.0: 4.000 Gb/s available PCIe bandwidth, limited by =
-5.0
-> >>>>>> GT/s PCIe x1 link at 0000:00:00.0 (capable of 7.876 Gb/s with 8.0 =
-GT/s
-> >>>>>> PCIe x1 link)
-> >>>>>> pci 0000:01:00.0: Adding to iommu group 13
-> >>>>>> pci 0000:01:00.0: ASPM: default states L0s L1
-> >>>>>> pcieport 0000:00:00.0: bridge window [mem 0x60400000-0x604fffff]: =
-assigned
-> >>>>>> pci 0000:01:00.0: BAR 0 [mem 0x60400000-0x604fffff 64bit]: assigne=
-d
-> >>>>>> pci 0000:01:00.0: runtime PM trying to activate child device
-> >>>>>> 0000:01:00.0 but parent (0000:00:00.0) is not active
-> >>>>> Thanks for the report. I'll try to look at reproducing this, or at =
-least
-> >>>>> getting a better mental model of exactly why this might fail (or,
-> >>>>> "warn") this way. But if you have the time and desire to try things=
- out
-> >>>>> for me, can you give v1 a try?
-> >>>>>
-> >>>>> https://lore.kernel.org/all/20251016155335.1.I60a53c170a8596661883b=
-d2b4ef475155c7aa72b@changeid/
-> >>>>>
-> >>>>> I'm pretty sure it would not invoke the same problem.
-> >>>> Right, this one works fine.
-> >>>>
-> >>>>> I also suspect v3
-> >>>>> might not, but I'm less sure:
-> >>>>>
-> >>>>> https://lore.kernel.org/all/20251022141434.v3.1.I60a53c170a85966618=
-83bd2b4ef475155c7aa72b@changeid/
-> >>>> This one too, at least I was not able to reproduce any fail.
-> >>> Thanks for testing. I'm still not sure exactly how to reproduce your
-> >>> failure, but it seems as if the root port is being allowed to suspend
-> >>> before the endpoint is added to the system, and it remains so while t=
-he
-> >>> endpoint is about to probe. device_initial_probe() will be OK with
-> >>> respect to PM, since it will wake up the port if needed. But this
-> >>> particular code is not OK, since it doesn't ensure the parent device =
-is
-> >>> active while preparing the endpoint power state.
-> >>>
-> >>> I suppose one way to "solve" that is (untested):
-> >>>
-> >>> --- a/drivers/pci/bus.c
-> >>> +++ b/drivers/pci/bus.c
-> >>> @@ -380,8 +380,12 @@ void pci_bus_add_device(struct pci_dev *dev)
-> >>>                  put_device(&pdev->dev);
-> >>>          }
-> >>>
-> >>> +       if (dev->dev.parent)
-> >>> +               pm_runtime_get_sync(dev->dev.parent);
-> >>>          pm_runtime_set_active(&dev->dev);
-> >>>          pm_runtime_enable(&dev->dev);
-> >>> +       if (dev->dev.parent)
-> >>> +               pm_runtime_put(dev->dev.parent);
-> >>>
-> >>>          if (!dn || of_device_is_available(dn))
-> >>>                  pci_dev_allow_binding(dev);
-> >>>
-> >>> Personally, I'm more inclined to go back to v1, since it prepares the
-> >>> runtime PM status when the device is first discovered. That way, its
-> >>> ancestors are still active, avoiding these sorts of problems. I'm
-> >>> frankly not sure of all the reasons Rafael recommended I make the
-> >>> v1->v3->v4 changes, and now that they cause problems, I'm inclined to
-> >>> question them again.
-> >>>
-> >>> Rafael, do you have any thoughts?
-> >> Yeah.
-> >>
-> >> Move back pm_runtime_set_active(&dev->dev) back to pm_runtime_init()
-> > Or rather leave it there to be precise, but I think you know what I mea=
-n. :-)
-> >
-> >> because that would prevent the parent from suspending and keep
-> >> pm_runtime_enable() here because that would prevent the device itself
-> >> from suspending between pm_runtime_init() and this place.
-> >>
-> >> And I would add comments in both places.
->
-> Confirmed, the following change (compared to $subject patch) fixed my iss=
-ue:
->
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 3ef60c2fbd89..7e2b7e452d51 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -381,7 +381,6 @@ void pci_bus_add_device(struct pci_dev *dev)
->          }
->
->          pm_runtime_set_active(&dev->dev);
-> -       pm_runtime_enable(&dev->dev);
+Le 16/01/2026 à 18:24, Robin Murphy a écrit :
+> On 2026-01-16 4:52 pm, Nicolas Cavallari wrote:
+>> +cc regressions ML
+>>
+>> Le 13/01/2026 à 10:17, Nicolas Cavallari a écrit :
+>>> +cc patch author & reviewers
+>>>
+>>> On 1/9/26 17:22, Nicolas Cavallari wrote:
+>>>> When upgrading from 6.12 to a 6.18 kernel, I noticed that a PCI
+>>>> Ethernet adapter (Microchip LAN7430) would hang under load and not
+>>>> recover.  When that happens, some of its registers indicate it is
+>>>> failing to do DMA reads, so cannot reclaim entries on its ring buffer.
+>>>>
+>>>> I bisected the problem into this commit:
+>>>>
+>>>> commit bcb81ac6ae3c2ef95b44e7b54c3c9522364a245c
+>>>> Author: Robin Murphy <robin.murphy@arm.com>
+>>>> Date:   Fri Feb 28 15:46:33 2025 +0000
+>>>>
+>>>>        iommu: Get DT/ACPI parsing into the proper probe path
+>>>>
+>>>> The problem still exists on 6.19-rc1, on pci/next (29a77b4897f1) and on
+>>>> iommu/master (360e85353769) trees.  Reverting the commit fixes the
+>>>> issue.
+>>
+>> The problem persists on 6.19-rc5
+>>
+>>>> The system is a Gateworks GW7200, which is a i.MX 8 Mini connected to a
+>>>> Pericom
+>>>> PI7C9X2G404 4-port switch connected to the LAN7430 chip.
+>>>>
+>>>> -[0000:00]---00.0-[01-ff]----00.0-[02-05]--+-01.0-[03]----00.0
+>>>>                                               +-02.0-[04]--
+>>>>                                               \-03.0-[05]----00.0
+>>>>
+>>>> The problem only occurs when there is at least another PCI device in use
+>>>> on the
+>>>> switch.  It does not happen if the LAN7430 is the only PCI device, or if
+>>>> the
+>>>> other devices are not actively used.  For example i can reproduce it
+>>>> with an
+>>>> ath9k wireless network adapter when it is up and running, but not when
+>>>> it is
+>>>> down or its driver is not loaded.
+>>>>
+>>>> I suspect that other PCI devices have similar issues, but the LAN7430 is
+>>>> the
+>>>> easiest one to diagnose, as it hangs within seconds with an iperf3 --
+>>>> bidir -u
+>>>> -b 200M and its register map are public.
+>>>>
+>>>> I couldn't find an way to dump the PCI address translation mapping from
+>>>> userspace.
+>>>> I would be happy to provide more information or test patches.
+>>
+>> I debugged it further, it seems to be mostly a PCI issue since the
+>> system does not actually have an IOMMU.
+> 
+> Indeed, I was figuring this had to be another case of a switch with
+> wonky ACS - do Mani's patches adjusting ACS enablement make any difference?
+> 
+> https://lore.kernel.org/all/20260102-pci_acs-v3-1-72280b94d288@oss.qualcomm.com/
 
-That works too, but it would defeat the purpose of the original
-change, so I mean the other way around.
+With this series, ACS is still enabled and eth1 is still failing under load.
 
-That is, leave the pm_runtime_enable() here and move the
-pm_runtime_set_active() back to the other place.
+> Although in this case I guess the issue is arguably more that we're
+> requesting ACS at all, before we know that there's actually an IOMMU
+> present to warrant it. Clearly the best option would be to figure out if
+> the switch behaviour itself can be fixed somehow, but perhaps something
+> like this might help paper over the issue for now (but I'd have to test
+> it to make sure it doesn't break IOMMUs again...)
+> 
+> ----->8-----
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 6b989a62def2..837cc0b5ace4 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -141,10 +141,12 @@ int of_iommu_configure(struct device *dev, struct
+> device_node *master_np,
+>    			.np = master_np,
+>    		};
+> 
+> -		pci_request_acs();
+>    		err = pci_for_each_dma_alias(to_pci_dev(dev),
+>    					     of_pci_iommu_init, &info);
+> -		of_pci_check_device_ats(dev, master_np);
+> +		if (!err) {
+> +			pci_request_acs();
+> +			of_pci_check_device_ats(dev, master_np);
+> +		}
+>    	} else {
+>    		err = of_iommu_configure_device(master_np, dev, id);
+>    	}
+> -----8<-----
 
->
->          if (!dn || of_device_is_available(dn))
->                  pci_dev_allow_binding(dev);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index fae5a683cf87..22b897416025 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3201,6 +3201,7 @@ void pci_pm_init(struct pci_dev *dev)
->   poweron:
->          pci_pm_power_up_and_verify_state(dev);
->          pm_runtime_forbid(&dev->dev);
-> +       pm_runtime_enable(&dev->dev);
->   }
->
->   static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+With this, ACS is indeed disabled and eth1 no longer fails under load, but I 
+have also identified an errata on the PCIe switch that causes ACS to fail. I've 
+sent another message in this thread.
