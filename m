@@ -1,186 +1,214 @@
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020102.outbound.protection.outlook.com [52.101.229.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41C32EBDD9;
-	Mon, 19 Jan 2026 12:57:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768827460; cv=none; b=m8oaTUKmU+TvvG+HAaJThPbNGazEbrngb7qyK7QPvSEWDDtVylNZAZtkQCDK65WkS8emasS+KZUW0PrLKCS0xJuMPFi0JX3ZPNS/nAv3byJCmPAxldXnJkbW4rwCO0ZqHFIeHK/TLwd19xydVyR+RoyDwGdJjJvv2HYGETZR0Nk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768827460; c=relaxed/simple;
-	bh=r2ff9uDL8xt8n0rYya4z5qBtNjY8LP95g1UfN4rnFqE=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:Subject:
-	 In-Reply-To:Content-Type; b=CUR2irmwLtgESc8MZ0Z06OInxEtJvb7sZGHvY2aFaGMQ/cuhTCvq+aVHBSbZHEcXawY4XHQOWEd8kYYkKi198+B6U3Ke6sL4vlJ3gm9ua9X7PgXKQeihLnPuksDmSSXLY2PXD8mu38m6xdRQPh+kCLjkpjdOGOaNaSuWQoxYFjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr; spf=pass smtp.mailfrom=green-communications.fr; arc=none smtp.client-ip=212.227.17.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=green-communications.fr
-Received: from [192.168.0.66] ([88.171.60.104]) by mrelayeu.kundenserver.de
- (mreue108 [213.165.67.119]) with ESMTPSA (Nemesis) id
- 1N6KQZ-1vtGwY2aMb-00w7w0; Mon, 19 Jan 2026 13:51:43 +0100
-Message-ID: <87fb14ce-d708-414c-8b38-4195b7dd65a3@green-communications.fr>
-Date: Mon, 19 Jan 2026 13:51:42 +0100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8192535B12B;
+	Mon, 19 Jan 2026 13:00:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.102
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768827645; cv=fail; b=t92tZQFRmsg/vkjbAsycY89DQ0lbZ+dNh7XzzgzzzcQktl02ugGZ/duwAeaQ/671ZCoDYlMnqmuTD9+/hRgiNNpNIv10VNrxRWMG+KBvLYPjfIA9xluyjGAbjpXSaCADD6OIuLeMhIHVTsRo9+cU0P2jhB+NCxRC76X1aIZe3L8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768827645; c=relaxed/simple;
+	bh=5yvYvcsCMwEnxsODv26PAt7cYXlxR+Zp/NeW7oMuoa8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=MLYsWCGRd0867m7NtjRy6McHSNQL/9pRbaKRNMBZAllo7+RSoQAlq4kuroDpNt0NaeVFG7yEGUXlWp02pTkParqvQP55FSr9wb9XV6Z8wmeYfJlnlINy0fhjDr810sfjCkF6cnAWVGngKnT4HFTsU7Xte4xtXg0FY++P1Mt55Gg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=ZG7BDXiB; arc=fail smtp.client-ip=52.101.229.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="ZG7BDXiB"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=FSlSz19VyqKYxuFkbe4eY/iRusDhQ7VV5tTUBgLXvd3AIqXYpaqcDTXeYCqPToLz0Cb4syC36S6I1W6F7SPw29Q+gJMXqbcCduyEUUyQu3KM0GpEKcYdsDjM7DyHLpn90LYX8qbBoZR7r3NWvDNLO28X0R4J3vPKkSVJGQ0mrvPeWuyovoRZOsSxQRF/GTNci04fp7Aq6pKXzGvj9kSB6Sw1QRlv8O96/XzjbfrOZ4jADZfEaFrbK2BYsxgaMTD4stJzy5qGRphnynDUMrkc+FDiz8P66iE7BXG6iohp0FX/v8B2H3D4LtJ/JaaVMWgSuziQieeuRAn2XYVzE9AlXw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NqBuenOQPSkzIfRDehZAbxFXsFFS/NxGPwvRCf90uyg=;
+ b=n/7US/sX9WF3xT55vxMCzMkCSzyaKVS9jzVMcIhVceuAxAcnuZkWsbpkZBcDwS6KnSbQy1scOpkACSjYqaqLN9VrCqWdpY+XGWhqc0q+xWyc2BV/qPmsl3viUM6eDH7eDKyhPZoLrNTiRuwEUhxm1G3Tx4wphbdKEi6DXEb4ai+MQbQRijQIVvJebQKoAM1fOey6FzMz93jHGKDXyZDUJmlMcqQkmrtB1Plo8f5832+wC7zaHjsa52mvsCRYbF9pOrAFOWTT5W+iZlx7+eVMmoQXQg9DLIrgnHTxn2OmtZNr7rop5iA3VMnnTH8pFEZmFTOMAydVxg5YM/zKcXnGGQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NqBuenOQPSkzIfRDehZAbxFXsFFS/NxGPwvRCf90uyg=;
+ b=ZG7BDXiBA3Lfe8rovT773Ngg3RJ+89ldQXYVC3NQFdMPVGL90bHH9TvdasCisQSwwiiTmHLdIOLdTxmsaEJbPNLpJk2uLbbcTCiYTzM0ZgmboriuaRHLQIaWEmt7lZ5mip3xnFp/ABmP0f5hFeCwkHRcQqG/HfcERzLYI338xvI=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY4P286MB6428.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:332::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.11; Mon, 19 Jan
+ 2026 13:00:40 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9520.009; Mon, 19 Jan 2026
+ 13:00:39 +0000
+Date: Mon, 19 Jan 2026 22:00:38 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: mani@kernel.org, bhelgaas@google.com
+Cc: kwilczynski@kernel.org, cassel@kernel.org, frank.li@nxp.com, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v8 0/5] PCI: endpoint: BAR subrange mapping support
+Message-ID: <x64g63zkz5t75vxxlzd7rhbvpus2mmhz2phyvxykuax5wm5cnh@zgpomauf75pv>
+References: <20260115084928.55701-1-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260115084928.55701-1-den@valinux.co.jp>
+X-ClientProxiedBy: TY4P286CA0085.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:369::7) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, "Rob Herring (Arm)" <robh@kernel.org>,
- Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Joerg Roedel <joro@8bytes.org>,
- regressions@lists.linux.dev
-References: <a1d926f0-4cb5-4877-a4df-617902648d80@green-communications.fr>
- <eb94b379-6e0b-4beb-aaa7-413a4e7f04b9@green-communications.fr>
- <3780eb61-68e2-42ce-939e-7458cd3a63cb@green-communications.fr>
- <20260116171048.GP961588@nvidia.com>
-Content-Language: en-US
-From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
-Autocrypt: addr=Nicolas.Cavallari@green-communications.fr; keydata=
- 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
-Subject: Re: [REGRESSION] Re: imx8 PCI regression since "iommu: Get DT/ACPI
- parsing into the proper probe path"
-In-Reply-To: <20260116171048.GP961588@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:gOhvnN7z0uHCNgwQGGM9CIBM1Oz3un92068MxFN97zndh8SR9CX
- IVySgViSQp9kfyE4gyZLmhHtfTvcByvw5XKHFUU91+b4AaSmk8UfKA1YXEhAOx9EWF3AQFy
- d5/tQ+t9+F+UfAsQvH8KFSikCHokx9DPzqqhBvMFc8CZ7siK2OF5xiKdJ4am7OSzA7vimug
- TxBH6gHAI8vEi50TcHDMg==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:xJo3KYuFO+8=;HRChcvNLxy8FiHXqL67U2fRPtSS
- 9Ci+gjnzuA2JFi72dfbNTf6aL8vBnG0qXcdm8h9eeV6PNPZ9zErymei3fM4YGVooh8TI3EfUk
- eY5qhJ7obVTDbX3q6GV4knbF/4LHGa5VAyWESActqIXWp3kFNGsHRb0cftEYPwQL3CvSxfJyr
- hc1yMpoyMc+7RKwdFOLIAUQygSI19ubtLL0S5919zOs0IYFVRHRRAWfkRBranznfkHOlpn9XN
- XQHtgJVhsshxAUs6d7G1KC0XmZftSOAsf5c/Oa9R3rpASOl0QLnNBQ/SZ4kQ5PS4hJy7jzwsk
- 7nCr+oojPLojuHkkOrT1T0Y67k18uCUugR5/kOoTMcCGZ+V43oPVzwRNl844j1qrrel4s/QCq
- RiRisnxztImwdd3q94T0Am5OvybaFGl0hN64wtE4KAEONkXvZi12ITQbo4r5FOstmkuH/nWpz
- 9IKnGl7fu4Tn0uhqAYjetRkFqn86cCq8ERxFj6adK7+/zjIXsPv3pmko7hDrgLEJcq8+VV2NG
- 2qgtLUPbjOeUbv0Q0AF1Yip8WQntGqA8laRB8OgGCFyxu4NNG2t6SPUuCZRBH5oOpJVuioHk+
- fJagO28M/4RrROQRlTAvotSjIaHfWrcKkZ7igXRjFqyqlvPAVspoUchqXAl/56baj8dnZ5yP+
- fKRUU7BLJsOBKuPsnvfZT3UgVyAI3Kx8CsmINrjtaWqo0zLy2J8p+Fu+bzcr38G0D4d3AUyWT
- mDT3rXqKxH/MZNu7XFEu4i88BWcnS+eVcXZvqfsdGNNp53BXKhPattDz+u7BipybQFSvXnXeD
- Gwt0aIMW0aT0z/a0Wbe7YPIx3EDz1r32KCSY82755mol3UA4hVnrsjE63NbF/Xr+O3i7ZOjs5
- 8LAqSR/J6yRTUptTRj3lMt7ZsKEc8I0S8jQ/t4HNyumwB+tXQHbjK4tw1SyoLOn58YJtashgk
- EO/PinpsaeTlRu9UkZxX1RNeNjDdp5Wzi6rCyh4HpWX5ikjZK5wFqt/l/AuZJiXW0gBEZLKf0
- WPjxeskGAkGrR6tRkFy0ojtHP3JvkqvozpWG1gXTG1g0ZSMg9XCogDgTRz96AAwgt1XeDEUdO
- 1GHzXGmg+S4WijICZYyQB9PMRtdMli3S2O08SHscUmalaP7fQJOicCk78ObMhevAr8qEm9ZMT
- BkhZtOfqg/Qu14gIvc8XhP0VDgi4XOu3excuI3MpFZqtO2Au33XHB5JVm/BEZ8SxbLPRTjfCt
- ZP/DwCkFMDWxMGSYS2F64RoLA0GPzCqxA54jbVb4ngLvIiE8n7Zww0MXi7hFTxAJbyCHuKwOG
- LOPLKeENFKX5ZdYnnlLkDY/K4s0bsWPPN5tk6roLH75LGUAScmE+fDszJ9e1w2rLXTgXy3ygx
- QqW3UOtJ8WwxVA+58hzg4avapdccZbWcpCN3T3+XwGVVGp8mHkczXVSrN85EXZjwvnEDwqcF+
- Yy8aj7+Bd+bKjZjGkC9H4AaZ1i665nTf0JWT1Q5xrBk59L8Rf2tg0hp1x+AQQvlU9YOqN5+hR
- FTLjW86g6E0l2pb9dHbUWC3bTyD+UPzLFBQ+fDHpM3hvF91l0QRw0j9kl6lmHqE6/uHrLMptk
- MkvQdIYbuR1HWxQGBSVHxTaKfefCXGBGCAVHItAxtA9qk7XztZ67X4bejNejdyC4N2WyAjHf9
- g6QJxLGjzq/U6VKrDBPD49z2fhYurEHY1U0dOegbfkPQYqhIjc4GIRVLRzhJ7EBlhF8HH3Ve1
- GrqWFXwC3xJe8d2/bcRkzCk6RiEaYReutqma4tQatfN1AI4Mfk30f+8w=
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB6428:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9e6ef676-f9b2-4467-3992-08de575abf02
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|10070799003|1800799024|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?RpcvbBDV6DX+iOCs9PsY48uQMkxI7nixUSqAljWTeJv8AJFp4xY7PJAnCsXO?=
+ =?us-ascii?Q?9MR93iEYOYo4hJLIAElVOTI+N/H7Q+bNMqx9clo+ObNg3eo4BuMQ3GI7F9nq?=
+ =?us-ascii?Q?NwXe/DXsVs+zYiFAp1uFlsyvGsXtOMNZksMxkYuljqxvKI+h/TtfsavCs+4h?=
+ =?us-ascii?Q?XiNTQFH7g+9ZBpjhm0nWxJPwdbo1Yob7iBt/A5+rhpr6SYU325t7G5o0iV38?=
+ =?us-ascii?Q?xW61nEGNKnFcpqNE/B+a+2WYo/mbNhRaAThqfYbhHZ34AUtQgEhyFYTmS2I3?=
+ =?us-ascii?Q?h4HENBdDkaflYCjYtuPB0LnlO4R9po9RvPnZGb9dqQ/V+syYv0uYYe3BE20q?=
+ =?us-ascii?Q?/PbviVtYoEX3y/Xd5g1fBq6ePO7M2BT8bHAj19do+S6wXmCrwiZ3aUjqWnaL?=
+ =?us-ascii?Q?5Os74zT5zbwy3yn8xmfjQ3GsOvtb+Nowx2vMmpSwmjmd9SlM0wBO32WLkTMf?=
+ =?us-ascii?Q?YsJURfRCnS39J94m1dHUCMUAkDfMMJqnryQkDG1kRWyr3LXxfOY4vuSN6194?=
+ =?us-ascii?Q?QSozh7iEPiLDLDCyev2zqYbJZ8SVAYf3vIpBq/AEUPy331jFInBCNQz3QQVl?=
+ =?us-ascii?Q?b9E35KtmlfjY44GoXFNB6x6RaPY2zFCEkaELdGymecg3PDIp5pxAY9/fOD1l?=
+ =?us-ascii?Q?8k8C8B9MyhZ8WkFoP00r7+maOEytYdBZwqyDZgf4bb7XI0vBlgDrcQxYCYqW?=
+ =?us-ascii?Q?V6ce1rFcZ4esloX+I3pkRJ1XNyLoZXj7AQs+FP0faOXP078kUdwgdlzsUB32?=
+ =?us-ascii?Q?Ci0WP0zuZlzsx02vUsJtOfBmfmsVvdf1Y5ftrObjtfSFdRksT8TAX8faLWDi?=
+ =?us-ascii?Q?1/Aw7DvW00L6aJjQA657RpyAlGVcVIyG+t9rVCASpEvOeo2Lpqco49DoPic1?=
+ =?us-ascii?Q?0hdtodbQ6V3V/Vti+5CUG94nFJ2L2nd/MofUW0AW67Ee/xtLCgPDhwVUK1oC?=
+ =?us-ascii?Q?jJV61nww9KzX4W0aLaJ6CyTOHazu3oGu0TygfFd719usVzHyRCyqMlsKJYgl?=
+ =?us-ascii?Q?MtSSG3NVgETmweYbTyog/6RbqsV0ErZwdr1z0lMAIjGz4ZWs3JP6D6/YUBJJ?=
+ =?us-ascii?Q?dlHftFnJHez733CaaHJ0YkzFn0p5C61v94dNWaEHuqFP+PqQlAERQxc8gabT?=
+ =?us-ascii?Q?5XHbFlVDbUMTtcmTP+Oe6Z692fqD7Rw5rxuaQugMlhDfqp1LvRet9E0ZlF2s?=
+ =?us-ascii?Q?Vi7LoSDuHIzOAno68Wy1YvijJ4KA/nj+ERI4bCWmElwMMZdM34P1mDX3PzPB?=
+ =?us-ascii?Q?TWFqmAgPkzX7k5rkfsD0eHwGLTGLoPj3ZrF+ye9F3qIxBtMKyfBF2pInHd56?=
+ =?us-ascii?Q?xD9np1Lu7/vuhISgGt82WQSPeeI6p4RazAZsf5M+r3AZSnny+f6ZJstEuccF?=
+ =?us-ascii?Q?ZlCpZ/4XSzD63RwddmT19ePYVjJb3XKvKGGSaK4fm+JlKZP+fsfPH0Pkkzfm?=
+ =?us-ascii?Q?Xz1it/r8/A3RKx+8TkWTbFzI83nVQMgLVeN6zKf34/CwzQopB/AxXaR1yoGC?=
+ =?us-ascii?Q?DpMfJQgxXvCkNFamJqbvu2Ruq1+FMiJWrCNPkhPOz6dp+XhJs6mrhqbuZ0yI?=
+ =?us-ascii?Q?H6H8oOzBVMMs/bXpFOM=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(376014)(366016);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?ZKiFFNJ53O/LZ9n8l9MjAtklH98UFG0RTOPYvNEmL9ZkAxStBh3UV7TIGbCV?=
+ =?us-ascii?Q?NnwioPj03j5RteMGlKXoICRGSdFnWyi+cLcYGZZJg7D28wx1lTWk1q06Uioa?=
+ =?us-ascii?Q?DTtcL03O5agE+EivUaczZ2WsR2uZZtY5vUqLhQ69r4EaVkfIQQOiFlKjp/I+?=
+ =?us-ascii?Q?GizrAvj7hseGrIilDrnKuZFd52hDu02RcXBocXCuoUNdFTUXTfpJGS/qNaTg?=
+ =?us-ascii?Q?+Inn12CS2ilaDwahsil9V4se6inboQdEIS6R96w9QJmnJK5CBML4eW/rnOR0?=
+ =?us-ascii?Q?G5C7tcbB31IcqTYI0RGYNHwof2yBjo+J1yy4WMxGuqK61/7Y1ok61gpGtPLv?=
+ =?us-ascii?Q?SrVLolAnj7d67nuCep7hHUCj8YvKL+Tj7BSr7ldjnvI9j4xGeIj/II+CyMPV?=
+ =?us-ascii?Q?LdPXXScp536gOiwwYafVrlxovvVettX8PEMfmbUAL0Yvs6Ps4kSobXVd8DEu?=
+ =?us-ascii?Q?OOfsQ5/2zGi4ta7s1Ko1j+LCdtBbAi+HXBxkoGhYrIIFIGWX2GkyzuD2Fgbf?=
+ =?us-ascii?Q?kW+UuVitOEvNpHwFWv7/mUl+JPesodFVVfJwls/x71DxhlOhkaScwNopL7em?=
+ =?us-ascii?Q?3ZaZ4iCmfaG4SFcJBFIFc9n4zROjclEVE3uUxIfMv8GDvCOFILmjWervDmWc?=
+ =?us-ascii?Q?YRYdkYiCojDlWozUvXl+NfJ+ffehVPbullyEr2K4Txvn6OtqaeBPAzGVWVDF?=
+ =?us-ascii?Q?e5E+fVCoZnPiu1sNJ8ynenFtbxdU/k8Ylav2V7+FUV5uR+8UR3cQWQqBig5N?=
+ =?us-ascii?Q?x8huT5J0Sy1EqUB+Zl2tf/Sr3MGHbE64dPGXzAqQIM+Il2Cnx42oa9p86aRX?=
+ =?us-ascii?Q?5Bo05kSCm+/qXKexlnWPiHfJyB6OoMMzqmWV/ipbMAbSxFoArytLE2J5zrNs?=
+ =?us-ascii?Q?2+RQEQIDXA1a6ca0lrzKJ1TF5C1HIA+eY2e+oCzZtJuldvaeM4ATCJvPH75M?=
+ =?us-ascii?Q?iluX7vsKuh/xqPmEJjIy+CrR+bB167GTx/qMQOxQN3EY9Uf0GVP53UyvLyG4?=
+ =?us-ascii?Q?Rl8N/paGWCSlJhNrAjRD3Z2Yfl8gq4++Bv5k5LmMGJYXbyVr7kjhm0EtkX6v?=
+ =?us-ascii?Q?RpZXM3G41LmretObKeKgQxkyYW13ufHmzB9AHSMWCNZjQOhqG9Wr2VpSEoh9?=
+ =?us-ascii?Q?glJhbAZjIK5i3ZvnkBllCxMQPu0ONzveSTy5SifR6Wiwm6GoL9CKwh4GUEfk?=
+ =?us-ascii?Q?3/7gR9wGnNWBiWdXWLC+/xq3eN77VwknZrL2mTMSqIWPznXRK55Wv9yqnSSb?=
+ =?us-ascii?Q?Z36DCZEcthuokeHws/Toti8aKC9sxa6qHolqu+eZQXd+m3ilSpTJa5JqDM56?=
+ =?us-ascii?Q?Cfpklr89ewv0ORANV4Z1TMEluqNulOFMXkaNc6/m1fHxj6oLm4UyYGduNs5c?=
+ =?us-ascii?Q?SQq5vTPLOg9PuMAqle8KujO4wvwof375egrLx2vlLs75Cg7cB6/6LA6JDZz2?=
+ =?us-ascii?Q?EOMEwyPrueMV7MuEcf+SfzBtbp3jPy6xMs/wCpBNA86TUyziD/gaekQG/B4e?=
+ =?us-ascii?Q?0+juMjZAJKnhpaQG3T27f3lZW3+sNzVoZrdT0OF6WMjNPCOK89j8XeE7Kax9?=
+ =?us-ascii?Q?YBoltJsph0eB0/3J7dYec2XFVpCqE2kAytlffPhTbNb9yyR5KJOP6UQa6W66?=
+ =?us-ascii?Q?OVUxmWneS+25dWcuQZ/Awzr3+OuFhkg81R6LOznsB4bWh+hYXk79OQpf0ZtV?=
+ =?us-ascii?Q?kFxBW2vR2QYLBcf/HwPeXk50qg8pO+CI79IDmSv4MjDyX1JUYta8pxodIcWV?=
+ =?us-ascii?Q?t29zWSWzrYfRUAGdt+5rn7x+HEHJM/xm6yUy5p1sSHcJJlXcPGLR?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9e6ef676-f9b2-4467-3992-08de575abf02
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jan 2026 13:00:39.7657
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CSyfhU6HwEZ0UbUSQ3UV7RlASaKuSMkJpYlW7iUw9B2yEzr5M2+0c6kRotIUTgtEis7P/rP4pBe4w2i3456zww==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB6428
 
-Le 16/01/2026 à 18:10, Jason Gunthorpe a écrit :
-> On Fri, Jan 16, 2026 at 05:52:36PM +0100, Nicolas Cavallari wrote:
->> I debugged it further, it seems to be mostly a PCI issue since the system
->> does not actually have an IOMMU.
->>
->> When examining changes in the PCI configuration (lspci -vvvv), the main
->> difference is that, with the patch, Access Control Services are enabled on
->> the PCI switch.
->>
->>          Capabilities: [220 v1] Access Control Services
->>                  ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+
->> UpstreamFwd+ EgressCtrl+ DirectTrans+
->> -               ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir-
->> UpstreamFwd- EgressCtrl- DirectTrans-
->> +               ACSCtl: SrcValid+ TransBlk- ReqRedir+ CmpltRedir+
->> UpstreamFwd+ EgressCtrl- DirectTrans-
->>
->> If I manually patch the config space in sysfs and re-disable ACS on the port
->> connected to the LAN7430, I cannot reproduce the problem.  In fact,
->> disabling only ReqRedir is enough to work around the issue.
+On Thu, Jan 15, 2026 at 05:49:23PM +0900, Koichiro Den wrote:
+> This series proposes support for mapping subranges within a PCIe endpoint
+> BAR and enables controllers to program inbound address translation for
+> those subranges.
 > 
-> My guess would be your system has some kind of address alias going on?
+> - Patch 1/5 introduces dynamic_inbound_mapping feature bit. This can be
+>   used as a safeguard to check whether a BAR can really be reconfigured
+>   without clearing/resetting it.
 > 
-> Assuming you are not facing an errata, ACS generally changes the
-> routing of TLPs so if you have a DMA address that could go to two
-> different places then messing with ACS will give you different
-> behaviors.
+> - Patch 2/5 introduces generic BAR subrange mapping support in the PCI
+>   endpoint core.
 > 
-> In specific when you turn all those ACS settings you cannot do P2P
-> traffic anymore. If your system expects this for some reason then you
-> must use the kernel command line option to disable acs.
+> - Patch 3/5 advertises dynamic inbound mapping support via
+>   DWC_EPC_COMMON_FEATURES for all DWC-based glue drivers.
 > 
-> If you are just doing normal netdev stuff then it is doubtful that you
-> are doing P2P at all, so I might guess a bug in the microchip ethernet
-> driver doing a wild DMA? Stricter ACS settings cause it to AER and the
-> device cannot recover?
+> - Patch 4/5 adds an implementation for the DesignWare PCIe endpoint
+>   controller using Address Match Mode IB iATU. It also advertises
+>   subrange_mapping support via DWC_EPC_COMMON_FEATURES.
+> 
+> - Patch 5/5 updates a documentation for pci_epc_set_bar().
+> 
+--(snip)--
+> Koichiro Den (5):
+>   PCI: endpoint: Add dynamic_inbound_mapping EPC feature
+>   PCI: endpoint: Add BAR subrange mapping support
+>   PCI: dwc: Advertise dynamic inbound mapping support
+>   PCI: dwc: ep: Support BAR subrange inbound mapping via Address Match
+>     Mode iATU
+>   Documentation: PCI: endpoint: Clarify pci_epc_set_bar() usage
+> 
+>  Documentation/PCI/endpoint/pci-endpoint.rst   |  24 +++
+>  drivers/pci/controller/dwc/pci-dra7xx.c       |   1 +
+>  drivers/pci/controller/dwc/pci-imx6.c         |   3 +
+>  drivers/pci/controller/dwc/pci-keystone.c     |   1 +
+>  drivers/pci/controller/dwc/pcie-artpec6.c     |   1 +
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 203 +++++++++++++++++-
+>  .../pci/controller/dwc/pcie-designware-plat.c |   1 +
+>  drivers/pci/controller/dwc/pcie-designware.h  |   8 +
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c |   2 +
+>  drivers/pci/controller/dwc/pcie-keembay.c     |   1 +
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c     |   1 +
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.c   |   1 +
+>  drivers/pci/controller/dwc/pcie-stm32-ep.c    |   1 +
+>  drivers/pci/controller/dwc/pcie-tegra194.c    |   1 +
+>  drivers/pci/controller/dwc/pcie-uniphier-ep.c |   2 +
+>  drivers/pci/endpoint/pci-epc-core.c           |   8 +
+>  include/linux/pci-epc.h                       |   9 +
+>  include/linux/pci-epf.h                       |  27 +++
+>  18 files changed, 285 insertions(+), 10 deletions(-)
 
-Yes, i'm just running network throughput tests (iperf3) on eth1 while wlan0 is 
-idling, and those are the only two peripheral on the PCI bus. I don't think 
-there are anything unusual going on (P2P or vendor commands).
+Hi Mani, Bjorn,
 
-Bit it turns out there is an errata for the Pericom PI7C9X2G404 switch that 
-matches my problem, and there is already a workaround in the kernel, but it does 
-not match my PCI ids:
+Based on the feedback so far (thanks to Niklas and Frank), the design seems
+to be converging. At this point, I would appreciate confirmation on the
+following points before proceeding further.
 
-   DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_PERICOM, 0x2404,
-                            pci_fixup_pericom_acs_store_forward);
-   DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_PERICOM, 0x2404,
-                            pci_fixup_pericom_acs_store_forward);
-   DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_PERICOM, 0x2304,
-                            pci_fixup_pericom_acs_store_forward);
-   DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_PERICOM, 0x2304,
-                            pci_fixup_pericom_acs_store_forward);
-   DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_PERICOM, 0x2303,
-                            pci_fixup_pericom_acs_store_forward);
-   DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_PERICOM, 0x2303,
-                            pci_fixup_pericom_acs_store_forward);
+1) Does the current (v8) approach for BAR subrange inbound mapping at the
+   EPC/core level look reasonable?
 
-While my device is 12d8:b404 and lspci still identifies it as PI7C9X2G404:
+2) From a process perspective, does it make sense to continue this as a PCI
+   endpoint subsystem-led series, with the dwc-specific changes layered on
+   top, or would you prefer a different split or ownership?
 
-01:00.0 PCI bridge [0604]: Pericom Semiconductor PI7C9X2G404 EV/SV PCIe2 
-4-Port/4-Lane Packet Switch [12d8:b404] (rev 01) (prog-if 00 [Normal decode])
+Thanks,
+Koichiro
 
-Adding this ID to the quirks.c list fixes the issue. I'll send a patch.
+> 
+> -- 
+> 2.51.0
+> 
