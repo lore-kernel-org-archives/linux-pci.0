@@ -1,58 +1,58 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43D02F2619;
-	Mon, 19 Jan 2026 16:25:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0041D37E2F4;
+	Mon, 19 Jan 2026 16:41:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768839907; cv=none; b=hogzsHMyuIAuypoBW69DOFd/BFq5Lqcb17iU/ylYvcz3REg3rgUptsqiT+ZixgjYDTSHrNBVR92nkLtOGnABsiJHQ68I/ATBTCT919Ine+UqVumYYaUmdvt6n39SXoI+6nMsm7QJ44EbxGUzpdkHxamep1OKFDJwQ6qk4XVfO0Y=
+	t=1768840912; cv=none; b=mOioTsA667Atl55g2+hqu+h2ushu0CfQshnXN6D1cxA+LonFkVDPBmuTnBsW78T33mfN+Sw2GpgTzjcRAW3/quOjmAr1hV1ES2ppvbtHxOJQf2yuJdQhjgZlSRHIsxsVmjgWgkOWW0tjUfMdgE7hmgF4qxc/DDOXNQ5r+wHNVY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768839907; c=relaxed/simple;
-	bh=e3sRnByaIYggujklQ5lFjxbjG2I9RHdUGb40JU+mB1A=;
+	s=arc-20240116; t=1768840912; c=relaxed/simple;
+	bh=8Cly1GNk3mzFV8x9Zkf123bjtN9EA4JdBcM0Ptv/1Cw=;
 	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=hxBULAoR7WqwdXJ9NVnuHOEJbn53IncFSNxAvLHLKFcXwGvODg2TucAoqa/1guXU6inkpO+NCVBpXbyDHeT3BiRO3ug35tI6cNXbYLRuRN/Rx0oFRtRptpgE5jSMKCo6oRfyDvbDP3mnnvGfdU8b1aoHV4C3Z5zsJUZ9Hi9wluA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=H0FHIXqI; arc=none smtp.client-ip=148.163.156.1
+	 References:In-Reply-To; b=R8YdfTFe6CrMo5HUuOHor0CbFoxQQnEsrT0zhn7tWj28yUeAOXMTYSUchN42vOw4F2tNcFe6FRxJr9dIoLYaVJ9jiXcNukhwvwZo06EfzAB9oeGAmC4+uYGy0qH1oL1Y8sZzaYxjP6bV2tuISHDh0V6iX8lnRM85XvtN31RkW2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=nj0Y258/; arc=none smtp.client-ip=148.163.158.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="H0FHIXqI"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 60JEP9vR030111;
-	Mon, 19 Jan 2026 16:24:59 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="nj0Y258/"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 60JD23K7021348;
+	Mon, 19 Jan 2026 16:41:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=a5XMby
-	JyD+gQNUr5gvwAsxtNEoo5BEbxR59Ypv0YNjE=; b=H0FHIXqIn0GUe1kormJ/iA
-	37m9Zz7PUE4SBg9LD6JCHp6FT/nCwnS1cGWF3wWTQ5unPv18/TdUgoVtt30Gb2ay
-	jalnWmcy7YSZzo23bNklNaOLJuK7RloPjpkuBP6LpW9Hv1arMy5p1PusY51Er8Xv
-	3tuIlR/9Js1pX9UvuWoMxNgc7+no3ZXgrN47iweTGfGScWTEQvgtPmy4KkbKIt3+
-	F8MW6c44X6T2C36Mpjq8WsJv20SQ12wAfp+dH8fiGbY4JXK+1O3d3MRReuyfs9z2
-	bGh86vOI7XJV1Exe5nk4yZhrxfrLUY5tjIMewdV1SyE3RG+wuZlmXS79UZfBg/Ag
+	:message-id:mime-version:references:subject:to; s=pp1; bh=Uu1yRz
+	y+SJbnUICqN/kuc63CT+bwXeCFlWsXFTz7C44=; b=nj0Y258/iYDviv7zCPKnQG
+	WOvsMuA7krNcoa7JXMoosBTLoq99V/M5ra1P73Aha1lVAwiK03rkMm0T1pRO915O
+	yD9HIIjke8YL3puTmR3L/sswG/vGVRUPWoDfymZ918Yv21Oe/dmHDwW1NPReHqsL
+	cpSOE/pW7koJ/zGZV0riMszuAJhTjc4FE/aYdvmUfniM/NRoiGTFCPgGhqBB7OwA
+	VaFRK9/PuagTM2Zp6AuW8aJIjrv+mxnZvrSbRy1bz+aaGe2Blnc0TlBv2PQWlt9M
+	CPhmSYuyXLNhC/ag9WA4RBXJRbYkWL4OG9p8ICQwtuWWqgDUXTWyR7h9lS7K23Bg
 	==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4br23rsd9p-1
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4br22u8pcm-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 19 Jan 2026 16:24:58 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 60JESP9H002002;
-	Mon, 19 Jan 2026 16:24:57 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4brpyjfk32-1
+	Mon, 19 Jan 2026 16:41:45 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 60JGBMVg016636;
+	Mon, 19 Jan 2026 16:41:44 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4brn4xr1mj-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 19 Jan 2026 16:24:57 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 60JGOrv836176322
+	Mon, 19 Jan 2026 16:41:44 +0000
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 60JGfeZl56361256
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 19 Jan 2026 16:24:53 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5DBC82004B;
-	Mon, 19 Jan 2026 16:24:53 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 29C7A20043;
-	Mon, 19 Jan 2026 16:24:53 +0000 (GMT)
+	Mon, 19 Jan 2026 16:41:40 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9502F20049;
+	Mon, 19 Jan 2026 16:41:40 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 654F620040;
+	Mon, 19 Jan 2026 16:41:40 +0000 (GMT)
 Received: from localhost (unknown [9.52.203.172])
-	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 19 Jan 2026 16:24:53 +0000 (GMT)
+	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 19 Jan 2026 16:41:40 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,111 +61,91 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Mon, 19 Jan 2026 17:24:53 +0100
-Message-Id: <DFSPESVR3INE.HYERH8O05PYP@linux.ibm.com>
+Date: Mon, 19 Jan 2026 17:41:40 +0100
+Message-Id: <DFSPRNLTB21S.3LEKR3G14X5XD@linux.ibm.com>
 Cc: <helgaas@kernel.org>, <lukas@wunner.de>, <alex@shazbot.org>,
         <clg@redhat.com>, <stable@vger.kernel.org>, <schnelle@linux.ibm.com>,
         <mjrosato@linux.ibm.com>
-Subject: Re: [PATCH v7 7/9] vfio-pci/zdev: Add a device feature for error
- information
+Subject: Re: [PATCH v7 8/9] vfio: Add a reset_done callback for vfio-pci
+ driver
 From: "Julian Ruess" <julianr@linux.ibm.com>
 To: "Farhan Ali" <alifm@linux.ibm.com>, <linux-s390@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
 X-Mailer: aerc 0.21.0-0-g5549850facc2
 References: <20260107183217.1365-1-alifm@linux.ibm.com>
- <20260107183217.1365-8-alifm@linux.ibm.com>
-In-Reply-To: <20260107183217.1365-8-alifm@linux.ibm.com>
+ <20260107183217.1365-9-alifm@linux.ibm.com>
+In-Reply-To: <20260107183217.1365-9-alifm@linux.ibm.com>
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: vVS4aORW9w5U5cWYvuAuClNql5rY9eoD
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTE5MDEzNiBTYWx0ZWRfX1IAHF7/PuqtF
- CKPp0SPCYP6xUxhOslOPIUMVniptmZuvelDP7miQiqHqTQmAwWARI/VBHQVxqnBCZv9HtyRBDgE
- TynsU/BtC1ub+ib+cKtIdQ+X5NuvcmghUNkBcWwGCzVlVqMFG4gx0aciDJa3/dPBGyyVIDrcbKG
- UahDtKN/D3jJ2Fbzf7ZZJ5+SFvQ9sOxBSfJIkAzwm4X9xk1dcKvz3DZ4qWXSaP0WZhPn/Z3Wxjt
- MvqvgrfLSg9c7S337Pn4H1tahS7hjjEAQulhx2eEeWWAsAehK14DqxidP4bmGWAUcKRdGFHmeEJ
- jqtuQV/hmq1nWIMqor+2AdzLufjN9phkLeI+ErghHwFvkhppH/gaaR75zHgz/R4aNNhRuzp6PTL
- cUvnSAun/g744k4CDWufK0iKUtG7epsY6902nL9/jgYajcLEgpJ+XgdkPb0jpofT9w0+1RPRkWT
- Oqw7jHyLi837oz6KWeg==
-X-Authority-Analysis: v=2.4 cv=J9SnLQnS c=1 sm=1 tr=0 ts=696e5ada cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+X-Proofpoint-GUID: bBJNYWwFpTr6Twf6X4K_jIcGoRKR0iga
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTE5MDEzNiBTYWx0ZWRfX2MTGIISrZrNP
+ Mxggeb+oBX0n8Dbb/yqV+d518lFaaTYf12jcLgcSUuBalASpmxm/0iOgSwT25/VsGJ5AxZbC9Ld
+ vC4/WfsC+MT8a0Oqod/t0CqTOPW4zK9PXDDPlVL7nRjSoOcC2ZDE4FKUI4sl5JBhJd/sLyN1l37
+ mKbnQG+WcuFouaK4RxMqdv51m59C9gkKayMMPjZdg+xYGpLhr8c+fooOylRmNvb+T9koJUQ1cVF
+ yQVOnB4CtFaUN93DbZbCaT7uzosNlEwypRO4Mvq4zPApVxVdr6w1QE5hf1uUM3BnsPwCMmq5YFM
+ qVRTIz9PGUTC8BdzDWOiyREc249QK5K8EvKMY7rXy3sfwR4I7Mzhv4voObf8BALK12P6orSO++t
+ rjEWM+zJ694XjF2lA9CqD+liV20g9h0OwLirGKYUP1jb+CHmJn4SLE0bVbjrZEjk/uETtItFxkQ
+ N/T+xoAZGug0K7jlkQQ==
+X-Proofpoint-ORIG-GUID: bBJNYWwFpTr6Twf6X4K_jIcGoRKR0iga
+X-Authority-Analysis: v=2.4 cv=Sp2dKfO0 c=1 sm=1 tr=0 ts=696e5ec9 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
  a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VnNF1IyMAAAA:8 a=47-nCBhZC7b6S0W8LZQA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: vVS4aORW9w5U5cWYvuAuClNql5rY9eoD
+ a=VnNF1IyMAAAA:8 a=ufQ_8dze9sbmFIOUPKIA:9 a=QEXdDO2ut3YA:10
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2026-01-19_04,2026-01-19_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 impostorscore=0 adultscore=0 suspectscore=0 spamscore=0
- lowpriorityscore=0 malwarescore=0 clxscore=1011 bulkscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2601150000 definitions=main-2601190136
+ impostorscore=0 bulkscore=0 spamscore=0 adultscore=0 phishscore=0
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 suspectscore=0
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2601150000
+ definitions=main-2601190136
 
 On Wed Jan 7, 2026 at 7:32 PM CET, Farhan Ali wrote:
-> For zPCI devices, we have platform specific error information. The platfo=
-rm
-> firmware provides this error information to the operating system in an
-> architecture specific mechanism. To enable recovery from userspace for
-> these devices, we want to expose this error information to userspace. Add=
- a
-> new device feature to expose this information.
+> On error recovery for a PCI device bound to vfio-pci driver, we want to
+> recover the state of the device to its last known saved state. The callba=
+ck
+> restores the state of the device to its initial saved state.
 >
 > Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
 > ---
->  drivers/vfio/pci/vfio_pci_core.c |  2 ++
->  drivers/vfio/pci/vfio_pci_priv.h |  9 +++++++++
->  drivers/vfio/pci/vfio_pci_zdev.c | 34 ++++++++++++++++++++++++++++++++
->  include/uapi/linux/vfio.h        | 16 +++++++++++++++
->  4 files changed, 61 insertions(+)
+>  drivers/vfio/pci/vfio_pci_core.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
 >
 > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
 _core.c
-> index 3a11e6f450f7..f677705921e6 100644
+> index f677705921e6..c92c6c512b24 100644
 > --- a/drivers/vfio/pci/vfio_pci_core.c
 > +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1526,6 +1526,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device =
-*device, u32 flags,
->  		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
->  	case VFIO_DEVICE_FEATURE_DMA_BUF:
->  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
-> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
-
-Would it make sense to name this more generically, e.g.
-VFIO_DEVICE_FEATURE_ERROR_RECOVERY, in case other architectures also want t=
-o
-support something like this in the future?
-
--- snip --
-
-> =20
->  static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
-> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci=
-_zdev.c
-> index 2be37eab9279..261954039aa9 100644
-> --- a/drivers/vfio/pci/vfio_pci_zdev.c
-> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
-> @@ -141,6 +141,40 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core=
-_device *vdev,
->  	return ret;
+> @@ -2249,6 +2249,17 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
+ruct pci_dev *pdev,
 >  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
 > =20
-> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
-> +			      void __user *arg, size_t argsz)
+> +static void vfio_pci_core_aer_reset_done(struct pci_dev *pdev)
 > +{
-> +	struct vfio_device_feature_zpci_err err;
-> +	struct vfio_pci_core_device *vdev =3D
-> +		container_of(device, struct vfio_pci_core_device, vdev);
-> +	struct zpci_dev *zdev =3D to_zpci(vdev->pdev);
-> +	int ret;
-> +	int head =3D 0;
+> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
+> +
+> +	if (!vdev->pci_saved_state)
+> +		return;
+> +
+> +	pci_load_saved_state(pdev, vdev->pci_saved_state);
+> +	pci_restore_state(pdev);
+> +}
+> +
+>  int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
+>  				  int nr_virtfn)
+>  {
+> @@ -2313,6 +2324,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
+> =20
+>  const struct pci_error_handlers vfio_pci_core_err_handlers =3D {
+>  	.error_detected =3D vfio_pci_core_aer_err_detected,
+> +	.reset_done =3D vfio_pci_core_aer_reset_done,
+>  };
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_err_handlers);
+> =20
 
-Maybe we should use reverse x-mas notation:
-	struct vfio_device_feature_zpci_err err;
-	struct vfio_pci_core_device *vdev;
-	struct zpci_dev *zdev;
-	int head =3D 0;
-	int ret;
+Feel free to add my
+Reviewed-by: Julian Ruess <julianr@linux.ibm.com>
 
-	vdev =3D container_of(device, struct vfio_pci_core_device, vdev);
-	zdev =3D to_zpci(vdev->pdev);
-
--- snip --
+Thanks,
+Julian
