@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ADEA47CC71;
-	Tue, 20 Jan 2026 19:34:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CCF847CC9B;
+	Tue, 20 Jan 2026 19:34:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768937677; cv=none; b=iGdb942rk79N++TVRL6QcwfNmCVlX2NTdjqJeLl3cwQTgXgnKKGJn8YrpMN0oB4qMHLybhz0+d08M3LYCJ8/ZD8KPG6Re3dHB5gyBNPs9XhZyNNvxwhR5dR/hd5TI4HUHndV3XHlPq7W3n+z0mkJ7CmNUc8sjiT3bB1I5zJJXLg=
+	t=1768937681; cv=none; b=Tbup4LnGWlyzgHvrH4bOfym6ZwcpfhTZZPe/nyP1MamUPTlemQehAS9DrBpU7slki/PpvdQpFI2/VHpMhYK/yK0TNtU/Xm2CyN/uhkEun/1wIKdTTDvAo4UBuxGcqdid/mz4Qwdq+f2+o1KQbe6wLSbrvruP5sn2C9K9kl8xPVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768937677; c=relaxed/simple;
-	bh=4t4iG3UsIyecPbn5LNcw6IZMWnmx38vmO0ANOAg3Mt0=;
+	s=arc-20240116; t=1768937681; c=relaxed/simple;
+	bh=OmjurbsIwvq0EDrylw69BFqyXnnYtIDWZApQZ9tWpyQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZQHx7ePxwlsuEuWbzJxt+ImHYjOPNJ6lGdV33myWiccW85WHj+6S1NO3gCoa2uNSYm5wbY/QuoEKNyxYt78W29y1yW/JUBbjPrL2M2EBu4m3cE2iMuBoFZzxAwWUmJEDxLYkGyX/oSzgKnIc4mFPcWAHuJhUUDM0WF9Pc7G2VC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Oax/upN2; arc=none smtp.client-ip=198.175.65.20
+	 MIME-Version; b=LgX+rNeaXi4cITR1E9FfrAxnYlSiDkVSf8PfzENCQUed533WHWwyFLeNS05E2RNtf2Req4yrNXHVEveWAmEcz5GDN0ZaV/U92lePmuKUQBkhv4/jKbdaUgk4P/pJ7QYZbafFV7uCm9yM4p5kKqYoVruJoxKCXuEqIP5Mju4mIpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JqwHDmEb; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Oax/upN2"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JqwHDmEb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768937675; x=1800473675;
+  t=1768937679; x=1800473679;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=4t4iG3UsIyecPbn5LNcw6IZMWnmx38vmO0ANOAg3Mt0=;
-  b=Oax/upN2+uapuOKFu1GLYqpwuXQvPzu3gWB5ojCFWLMjHTFVrcUUKPrn
-   o6jx/S2Y6bEV1OsMrg1QHbZRYDMk069WPNo/mnf0s3A6hv/d3MBbgYvUs
-   4AcSxNBu8WUh8e1RoMP4Y1OJ/W6lZLDfq7k4lZHcaX2jEHO3TVoryt5vq
-   GpnhL3Y0WZlHUGFmwGQ3RHBY6ECIIQsZQF2crZsOMyGRSHgBFtb+igTOG
-   cJDZQlhMLgTw93i057qFK3gWYJuGndhqdAii3OJvZavid6EBBzI3qVf/4
-   mYHzNyBCnUY++fLWompaHfuKNTPsrwS7sk0+yV4r1zA+OwoU3SlSNCego
-   g==;
-X-CSE-ConnectionGUID: zAg4DmxsQZ67lrIWvZbfqw==
-X-CSE-MsgGUID: Am/qkZ+wTWm+a6O++UVMhQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="69888947"
+  bh=OmjurbsIwvq0EDrylw69BFqyXnnYtIDWZApQZ9tWpyQ=;
+  b=JqwHDmEbIItORFo8HOe3OU30KSxCvVwHU7EBG/75QCqfi9YTTZ+AJC0u
+   X+WFvr4Cqi0YZ8CHZVuzjvk0iiNsdCsjf0M5mGP04057cmgGyy38Fgn0t
+   jpAUTXSWz0md4/poT7VONOUS5woIh7V+2k1Mkf1ziO3HFDW1ZqfDK/uhp
+   u3/R/M23918la9T6boQ5yYOgVwRMpSxJQf9KvaTrDXve3KP/my5blj94G
+   lC/l9NzsR49ITeu/mUjuPMbqN0hxZXNpvRiww+xCs+1N+SjsIhb/Gwf11
+   3xag9My91mbrq7c5ILypriPWrg6rwRzzjD96p43R8feKOYhMN44fVbTDf
+   Q==;
+X-CSE-ConnectionGUID: gkJqKNrPTCSWFygFDMjttQ==
+X-CSE-MsgGUID: xCm/T22yRbidMLyp5HhzWQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="69888955"
 X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
-   d="scan'208";a="69888947"
+   d="scan'208";a="69888955"
 Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 11:34:35 -0800
-X-CSE-ConnectionGUID: 1DAMfrKOSTyWCuTqFgtXlA==
-X-CSE-MsgGUID: BuG2o7ZVT2yJZhYKuwt4xQ==
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 11:34:39 -0800
+X-CSE-ConnectionGUID: 6hCCjzmAQoO32qWB98HG5w==
+X-CSE-MsgGUID: TcFg0ttpQFquZHRQDgBnhw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
-   d="scan'208";a="229165862"
+   d="scan'208";a="229165874"
 Received: from lfiedoro-mobl.ger.corp.intel.com (HELO pujfalus-desk.intel.com) ([10.245.246.99])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 11:34:31 -0800
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 11:34:35 -0800
 From: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
 To: lgirdwood@gmail.com,
 	broonie@kernel.org,
@@ -56,9 +56,9 @@ Cc: linux-sound@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	kw@linux.com,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/4] ASoC: SOF: Intel: add support for Nova Lake NVL
-Date: Tue, 20 Jan 2026 21:35:05 +0200
-Message-ID: <20260120193507.14019-3-peter.ujfalusi@linux.intel.com>
+Subject: [PATCH v2 3/4] ALSA: hda: core: intel-dsp-config: Add support for NVL
+Date: Tue, 20 Jan 2026 21:35:06 +0200
+Message-ID: <20260120193507.14019-4-peter.ujfalusi@linux.intel.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260120193507.14019-1-peter.ujfalusi@linux.intel.com>
 References: <20260120193507.14019-1-peter.ujfalusi@linux.intel.com>
@@ -70,115 +70,32 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add support for Nova Lake (NVL).
-The core count for NVL is different compared to NVL-S (4 vs 2)
+Add entry for NVL variant of Nova Lake family.
 
 Signed-off-by: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
 Reviewed-by: Kai Vehmanen <kai.vehmanen@linux.intel.com>
 Reviewed-by: Liam Girdwood <liam.r.girdwood@intel.com>
 Reviewed-by: Ranjani Sridharan <ranjani.sridharan@linux.intel.com>
+Acked-by: Takashi Iwai <tiwai@suse.de>
 ---
- sound/soc/sof/intel/hda.h     |  1 +
- sound/soc/sof/intel/nvl.c     | 24 ++++++++++++++++++++++++
- sound/soc/sof/intel/pci-nvl.c | 31 +++++++++++++++++++++++++++++++
- 3 files changed, 56 insertions(+)
+ sound/hda/core/intel-dsp-config.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/sound/soc/sof/intel/hda.h b/sound/soc/sof/intel/hda.h
-index 562fe8be79c1..3be39c229c9f 100644
---- a/sound/soc/sof/intel/hda.h
-+++ b/sound/soc/sof/intel/hda.h
-@@ -936,6 +936,7 @@ extern const struct sof_intel_dsp_desc arl_s_chip_info;
- extern const struct sof_intel_dsp_desc lnl_chip_info;
- extern const struct sof_intel_dsp_desc ptl_chip_info;
- extern const struct sof_intel_dsp_desc wcl_chip_info;
-+extern const struct sof_intel_dsp_desc nvl_chip_info;
- extern const struct sof_intel_dsp_desc nvl_s_chip_info;
+diff --git a/sound/hda/core/intel-dsp-config.c b/sound/hda/core/intel-dsp-config.c
+index ddb8db3e8e39..f0a44fd111f3 100644
+--- a/sound/hda/core/intel-dsp-config.c
++++ b/sound/hda/core/intel-dsp-config.c
+@@ -580,6 +580,10 @@ static const struct config_entry config_table[] = {
  
- /* Probes support */
-diff --git a/sound/soc/sof/intel/nvl.c b/sound/soc/sof/intel/nvl.c
-index ff215151af2a..0d763998558f 100644
---- a/sound/soc/sof/intel/nvl.c
-+++ b/sound/soc/sof/intel/nvl.c
-@@ -26,6 +26,30 @@ int sof_nvl_set_ops(struct snd_sof_dev *sdev, struct snd_sof_dsp_ops *dsp_ops)
- };
- EXPORT_SYMBOL_NS(sof_nvl_set_ops, "SND_SOC_SOF_INTEL_NVL");
- 
-+const struct sof_intel_dsp_desc nvl_chip_info = {
-+	.cores_num = 4,
-+	.init_core_mask = BIT(0),
-+	.host_managed_cores_mask = BIT(0),
-+	.ipc_req = MTL_DSP_REG_HFIPCXIDR,
-+	.ipc_req_mask = MTL_DSP_REG_HFIPCXIDR_BUSY,
-+	.ipc_ack = MTL_DSP_REG_HFIPCXIDA,
-+	.ipc_ack_mask = MTL_DSP_REG_HFIPCXIDA_DONE,
-+	.ipc_ctl = MTL_DSP_REG_HFIPCXCTL,
-+	.rom_status_reg = LNL_DSP_REG_HFDSC,
-+	.rom_init_timeout = 300,
-+	.ssp_count = MTL_SSP_COUNT,
-+	.d0i3_offset = MTL_HDA_VS_D0I3C,
-+	.read_sdw_lcount =  hda_sdw_check_lcount_ext,
-+	.check_sdw_irq = lnl_dsp_check_sdw_irq,
-+	.check_sdw_wakeen_irq = lnl_sdw_check_wakeen_irq,
-+	.sdw_process_wakeen = hda_sdw_process_wakeen_common,
-+	.check_ipc_irq = mtl_dsp_check_ipc_irq,
-+	.cl_init = mtl_dsp_cl_init,
-+	.power_down_dsp = mtl_power_down_dsp,
-+	.disable_interrupts = lnl_dsp_disable_interrupts,
-+	.hw_ip_version = SOF_INTEL_ACE_4_0,
-+};
-+
- const struct sof_intel_dsp_desc nvl_s_chip_info = {
- 	.cores_num = 2,
- 	.init_core_mask = BIT(0),
-diff --git a/sound/soc/sof/intel/pci-nvl.c b/sound/soc/sof/intel/pci-nvl.c
-index f75aa996a5bd..bb3c29ef5477 100644
---- a/sound/soc/sof/intel/pci-nvl.c
-+++ b/sound/soc/sof/intel/pci-nvl.c
-@@ -26,6 +26,36 @@ static int sof_nvl_ops_init(struct snd_sof_dev *sdev)
- 	return sof_nvl_set_ops(sdev, &sof_nvl_ops);
- }
- 
-+static const struct sof_dev_desc nvl_desc = {
-+	.use_acpi_target_states	= true,
-+	.machines               = snd_soc_acpi_intel_nvl_machines,
-+	.alt_machines		= snd_soc_acpi_intel_nvl_sdw_machines,
-+	.resindex_lpe_base      = 0,
-+	.resindex_pcicfg_base   = -1,
-+	.resindex_imr_base      = -1,
-+	.irqindex_host_ipc      = -1,
-+	.chip_info		= &nvl_chip_info,
-+	.ipc_supported_mask	= BIT(SOF_IPC_TYPE_4),
-+	.ipc_default		= SOF_IPC_TYPE_4,
-+	.dspless_mode_supported	= true,
-+	.on_demand_dsp_boot	= true,
-+	.default_fw_path = {
-+		[SOF_IPC_TYPE_4] = "intel/sof-ipc4/nvl",
+ 	/* Nova Lake */
+ #if IS_ENABLED(CONFIG_SND_SOC_SOF_NOVALAKE)
++	{
++		.flags = FLAG_SOF | FLAG_SOF_ONLY_IF_DMIC_OR_SOUNDWIRE,
++		.device = PCI_DEVICE_ID_INTEL_HDA_NVL,
 +	},
-+	.default_lib_path = {
-+		[SOF_IPC_TYPE_4] = "intel/sof-ipc4-lib/nvl",
-+	},
-+	.default_tplg_path = {
-+		[SOF_IPC_TYPE_4] = "intel/sof-ipc4-tplg",
-+	},
-+	.default_fw_filename = {
-+		[SOF_IPC_TYPE_4] = "sof-nvl.ri",
-+	},
-+	.nocodec_tplg_filename = "sof-nvl-nocodec.tplg",
-+	.ops = &sof_nvl_ops,
-+	.ops_init = sof_nvl_ops_init,
-+};
-+
- static const struct sof_dev_desc nvl_s_desc = {
- 	.use_acpi_target_states	= true,
- 	.machines               = snd_soc_acpi_intel_nvl_machines,
-@@ -58,6 +88,7 @@ static const struct sof_dev_desc nvl_s_desc = {
- 
- /* PCI IDs */
- static const struct pci_device_id sof_pci_ids[] = {
-+	{ PCI_DEVICE_DATA(INTEL, HDA_NVL, &nvl_desc) }, /* NVL */
- 	{ PCI_DEVICE_DATA(INTEL, HDA_NVL_S, &nvl_s_desc) }, /* NVL-S */
- 	{ 0, }
- };
+ 	{
+ 		.flags = FLAG_SOF | FLAG_SOF_ONLY_IF_DMIC_OR_SOUNDWIRE,
+ 		.device = PCI_DEVICE_ID_INTEL_HDA_NVL_S,
 -- 
 2.52.0
 
