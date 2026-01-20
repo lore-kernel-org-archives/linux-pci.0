@@ -1,484 +1,229 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010005.outbound.protection.outlook.com [52.101.46.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AAD82E7162;
-	Tue, 20 Jan 2026 22:27:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.5
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768948058; cv=fail; b=PpbvgHskjRswqgbaVxqKYnrolqidCkGrdA5L1YtJcvgHrJpMysyiOAxb6XuD72ri0A2ATTFKJDIeftU4f0M/61kudG2dfiBtB+t/8c9y/Ojtix6PW9nLiWmqRfEQCeNpgyDRaNmtYkoWgrWwlSAdRtv+5CMQTn2id5K0MElNVu0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768948058; c=relaxed/simple;
-	bh=u7SfxMf/IQc7J4/80qK74Hw1Gr/RvbhfnEopq/SMYR0=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NoqnkJlhxhkEq62Msnpau286nmcc3fZPbWUUxNIOc3CKh7Th2CNYd+2FqLcy244WzYScgX26voOFwkRRHQqYBYRbJp5FnraVdlsxpEPZd7Q7xs7dZ0/XZZeccJRM5eON0xLcVONtBmQCrYKykEKTrTxbTZ3c9fwVtq4rXnjWHEo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=YqntpdQV; arc=fail smtp.client-ip=52.101.46.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 87AA8329E43;
+	Tue, 20 Jan 2026 22:27:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768948076; cv=none; b=Mb2LyHlrWkAYWHKfUcF07H7nZoHhS3zbaqv0za/wZUpCEHUsOm9O5DbDFafMNkHgVapt+Sld6CU81NpcVJN1R2UlI3qv+6dgnxneth14e1h+LfsXPnaPg4FOHzinzUl44D0NeSe/QQ3Q66ULGb0qWG8iydBeV2y6SmzvgdCBQ2g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768948076; c=relaxed/simple;
+	bh=meBHf+PRAy3RVYIIvJwzRqHHYWt1bKNjploxW9YFjFE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N2zVul4RjuUSzT1mtmTBvG0VWgSG0auSBDJF+x3OTbixdsMOPIt7j2xhQoJ7fZHYIfXLGY+Z6CgbuF8xdOhgAKVy8EXQ7nNAVYFxP+DeK+1kh1h/8QShgq4cpiVRidkgvIwN+Vb0LLZYXVNguxz9iQmvKIhionwDn6CE3NF2MTQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=LR/P3vCX; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="YqntpdQV"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cwKbTVTYYGwI31o3Hff6ud4CaPjbFrt9RYGLWlz4/uGx1KJzXWdvBrxAy6fuD74Qp3DQKbMupAbHtCwxz808+4xaGiwFn49EsSOhhVbSWK2AtqgfGZ2RMjYU426eFpZhLY9oDIgztj3mXoxY81jcUw0rF0OtEFoIFpo1MzC4WFLvDXlz/o7rQalJkLWr1aP8nImOXdVbILZdmZAj5AkmcCN50zhxu3iHdM1iegfg82Gj1YrDO4v4wuzvpi8PvwdGcCQfrlfqm3+UMeKpRvg2tDE73Yo5JaLWXi5axv2P7Q+izlp3YaQbZ48umbfDhJSaPDOzkoaqAC/AudGbDIDjuQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hfEwrrN/JZK8V9LZ9TcOph5XZzU44/rMyCe33Vujhfw=;
- b=bVeEzSg5Sv4q9pqW77lj5sRLT+Fwr6DQRybJw+nxnfobM9t6bnkt5bAK27xZU3dKfu5vD6oLtySq4bPSBBSsX9XI3W1FiFhGp7fK1IXWc3RY19QW3C6JI/cZWxLvNr7TrNV9tYw1oGmO8Yp5CH6Q6fW8o23fz3khSxJAKtD2UMiZtlAcmgxgla3CURWGm1RP0K4sorqHSZbpFdXBZN0bvRrG2i7zXMobeg7etQ54aNnI3k/yqpTfurtTmuYaD7kBkhjZCvs8EYCUAEFMYpLNou0emkzOUFNC1ns3mkTnyEx6Qe5+KQTDj3UOr9ALUJcWsBVgVghp4bucpBYHSK9RTg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=stgolabs.net smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hfEwrrN/JZK8V9LZ9TcOph5XZzU44/rMyCe33Vujhfw=;
- b=YqntpdQVKOPqpCWTSKjXyFxburaS8NGkJW2xyY3orICWxehQ/OK/sOrZQ3IpkeZ2zXOKXfHCdNwRAhoB24yQ6g3yKKBCEB8apczk1++FMLHPntvDv5shE4cJk1xUCvSOLoi2P5ihYq+Wu/e8g85K1nrnd8G5zF3nL0U+GZTUf7zxPZsFV2QiydvtakiVZYX3bCuZeNUMC41qq0pnm1hgEJQm897IOGeky/uXJmxqjc4uf/3OIUgr4+fjvmsbI/yNUEkhCRu5CWloGzGuqK4GTrl6EGPF0eptoNGizeo1RPX9JCvGKUNONehX1HR1Wt2V3rte83XYFHUZxQE58XDuaA==
-Received: from PH8PR02CA0051.namprd02.prod.outlook.com (2603:10b6:510:2da::21)
- by CH3PR12MB7596.namprd12.prod.outlook.com (2603:10b6:610:14b::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.12; Tue, 20 Jan
- 2026 22:27:11 +0000
-Received: from CO1PEPF000044F8.namprd21.prod.outlook.com
- (2603:10b6:510:2da:cafe::ce) by PH8PR02CA0051.outlook.office365.com
- (2603:10b6:510:2da::21) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9542.9 via Frontend Transport; Tue,
- 20 Jan 2026 22:27:11 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- CO1PEPF000044F8.mail.protection.outlook.com (10.167.241.198) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9564.0 via Frontend Transport; Tue, 20 Jan 2026 22:27:11 +0000
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 20 Jan
- 2026 14:26:44 -0800
-Received: from rnnvmail202.nvidia.com (10.129.68.7) by rnnvmail205.nvidia.com
- (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 20 Jan
- 2026 14:26:43 -0800
-Received: from build-smadhavan-jammy-20251112.internal (10.127.8.10) by
- mail.nvidia.com (10.129.68.7) with Microsoft SMTP Server id 15.2.2562.20 via
- Frontend Transport; Tue, 20 Jan 2026 14:26:42 -0800
-From: <smadhavan@nvidia.com>
-To: <dave@stgolabs.net>, <jonathan.cameron@huawei.com>,
-	<dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<vishal.l.verma@intel.com>, <ira.weiny@intel.com>,
-	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <ming.li@zohomail.com>,
-	<rrichter@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<huaisheng.ye@intel.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: <smadhavan@nvidia.com>, <vaslot@nvidia.com>, <vsethi@nvidia.com>,
-	<sdonthineni@nvidia.com>, <vidyas@nvidia.com>, <mochs@nvidia.com>,
-	<jsequeira@nvidia.com>
-Subject: [PATCH v4 10/10] cxl: add HDM decoder and IDE save/restore
-Date: Tue, 20 Jan 2026 22:26:10 +0000
-Message-ID: <20260120222610.2227109-11-smadhavan@nvidia.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260120222610.2227109-1-smadhavan@nvidia.com>
-References: <20260120222610.2227109-1-smadhavan@nvidia.com>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="LR/P3vCX"
+Received: from skinsburskii.localdomain (c-98-225-44-182.hsd1.wa.comcast.net [98.225.44.182])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 96EF920B7167;
+	Tue, 20 Jan 2026 14:27:34 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 96EF920B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1768948055;
+	bh=TtQ2QoYLJn1s3uHte30pNr+WHXuCyKS2txAnzP8/+HE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LR/P3vCX7xx8DrCzcPc++LOlapP4HKNSuldXE0UBzrxPMGofDX924TfgdmPc+ywVP
+	 d9tvKFbY3fAV7eFuRUBoG4HnEtZuxP5pCMeyEkS/5Cmn8OyH6MRx4SYrBQulX7Z+e0
+	 UXW3pctUG9dDqf2MqdXnnpmCFzK3mLQJYhMhM5to=
+Date: Tue, 20 Jan 2026 14:27:33 -0800
+From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
+	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
+	romank@linux.microsoft.com
+Subject: Re: [PATCH v0 11/15] x86/hyperv: Build logical device ids for PCI
+ passthru hcalls
+Message-ID: <aXABVTS6xDb2GB2s@skinsburskii.localdomain>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-12-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000044F8:EE_|CH3PR12MB7596:EE_
-X-MS-Office365-Filtering-Correlation-Id: d6cea009-a64e-492e-0988-08de58730df8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|7416014|376014|1800799024|82310400026|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?sR/ptOFfaDK2cXBLC9g1wyr65NGz28kF7EwLjGCbhxFSG15CxYL10SXtid+Z?=
- =?us-ascii?Q?qYNngUp0CFrGXz2sVVZlW6czOuGYa62lb4OzY96kqecz65GyzMGw7VyuCha5?=
- =?us-ascii?Q?8ftcft/nBizXJQMjKeu3F5y2U6rxULVAMCQwD0lJuzjDEA12DbO5hdHTzILZ?=
- =?us-ascii?Q?75zawsHbXOYDcsQf8t4355qiO9UPcx9nKzglLq1cACRtx1C3e1ExWexdbyle?=
- =?us-ascii?Q?y3f4+WMNH9I6hxI4u8ZNZ4+YseZjcqzDlvo4cycjlAW7rQlyaVnZfX+eQO86?=
- =?us-ascii?Q?/wzVbMXaZN1fwN/OUMxsBwAH55fiCb3yxT6VbyULd+kel+0Psjo4djjuwOnE?=
- =?us-ascii?Q?++XBXMlu0aCguU3bGJg8jfRDrQMGPmJ8MyXS7MCtiXBTHIB1bZ0dkGdjGYr1?=
- =?us-ascii?Q?hhldCxrNIOf0qa4njz9q3NtTMllK3+97J8xRCgeoRnyo/JVj709hBVOKH1Rp?=
- =?us-ascii?Q?DBx56IcmdPhkdksngNmPAFfNWe0FK+JwqW926TQGLv1UxqnNh4mh5Uyfda0h?=
- =?us-ascii?Q?LRNFWeWC0YycGwSWpsFfZxmcjKZ7SOZ+U6CYj/7L8EHLdHSc1yk6pK57Kp2S?=
- =?us-ascii?Q?Iw8ThgifKuE28fl9nhNUdEeoxAiHU9RLrzet6TT1PI2NR0kobWdZYQiu8rf5?=
- =?us-ascii?Q?IEjWOYO8Vk/hQB6AJEn3OOUltIVeQNaV0xn9pzIECv/Gyq+fd3k+qIdztDoy?=
- =?us-ascii?Q?VyxSef1rT+PIHVMhTTCVG3MZqkPTN6+DuzUq2GMW8tc7SEOcsh2akozNc9aF?=
- =?us-ascii?Q?RjPe9QENhk620cg5U0/2fwIIALEStbiFWa8JFfbzdqoCUFwRXaP1mNb9Rran?=
- =?us-ascii?Q?YNmbaBStGspbR9e9xrD5vzNgR1aEUryms4lH1IIgoO582rNDGwYkIg0mKfxM?=
- =?us-ascii?Q?k4SgpSQps12xDQZcedrC5Ai4qsGtWInxn4nr2X3q9N/14BDJ7zUUQ0F9U1iQ?=
- =?us-ascii?Q?i9rkNmU6KAdZ0bsc3bTE9I+yWaPbFRU4UL2xSoaUKnCRmHm6XV/Dg11F3kKD?=
- =?us-ascii?Q?S54NncDL1sRmGUbEqmps5WeLOTjnJuv6zsZnfkbAhx/wkkE8qvi38Cj3rP6N?=
- =?us-ascii?Q?4S4LQ/esMFkZp7LMzo+9yUadCHCPLETLWpUVw0OCH7XN5xkoI5JRYlVq24JM?=
- =?us-ascii?Q?BJb1HUWbnCQg8xVZufpjYF1GmIXvImyqe1JrWbH2ioPm5lBVlROCfhPvdm7I?=
- =?us-ascii?Q?VivQGPDVG/eV7XZ4436FfUnWZh9+DC1imWokwv5zVflX4Ts1Er6pFRuy0JbL?=
- =?us-ascii?Q?L7SM8rht0sg5OHJLNeh1e44BFqdY2TvNurFzi7kOuSVDb318i8At0CjC/4/K?=
- =?us-ascii?Q?H5LPVfWbO0STw3Qh9SpAvqW6nbCRcOoVPek5J8LTwudeDSA/8iwcLxSnbPLP?=
- =?us-ascii?Q?uIeTlD2pp2kwYXsH2MMKjN2VP2wVB5gpHXlcETRV6E7OsirXxA+5tbwASfhn?=
- =?us-ascii?Q?2T809t8qufqT5bgYA0IodzXLMuikEehKEfqnuMCm09gZMzOLGHykN9c8MuIy?=
- =?us-ascii?Q?CDxosDJ4J2s+RYTLjH8o69fDY7lB5wvRFtk/Ax4z7w9YdlYZKEYjNWpsh0E9?=
- =?us-ascii?Q?GxzGJqF404Sxq7EDgGaYnaeDTESjHK41Yjxjo0XxMaeh/xG3ABiK0AO6gbWn?=
- =?us-ascii?Q?I88G7E0MkykO+/0iDavb1hCu04vhaJ6efmbCMGdXMXiU?=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700013)(7416014)(376014)(1800799024)(82310400026)(921020);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2026 22:27:11.0970
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d6cea009-a64e-492e-0988-08de58730df8
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CO1PEPF000044F8.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7596
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260120064230.3602565-12-mrathor@linux.microsoft.com>
 
-From: Srirangan Madhavan <smadhavan@nvidia.com>
+On Mon, Jan 19, 2026 at 10:42:26PM -0800, Mukesh R wrote:
+> From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> 
+> On Hyper-V, most hypercalls related to PCI passthru to map/unmap regions,
+> interrupts, etc need a device id as a parameter. A device id refers
+> to a specific device. A device id is of two types:
+>    o Logical: used for direct attach (see below) hypercalls. A logical
+>               device id is a unique 62bit value that is created and
+>               sent during the initial device attach. Then all further
+>               communications (for interrupt remaps etc) must use this
+>               logical id.
+>    o PCI: used for device domain hypercalls such as map, unmap, etc.
+>           This is built using actual device BDF info.
+> 
+>    PS: Since an L1VH only supports direct attaches, a logical device id
+>        on an L1VH VM is always a VMBus device id. For non-L1VH cases,
+>        we just use PCI BDF info, altho not strictly needed, to build the
+>        logical device id.
+> 
+> At a high level, Hyper-V supports two ways to do PCI passthru:
+>   1. Device Domain: root must create a device domain in the hypervisor,
+>      and do map/unmap hypercalls for mapping and unmapping guest RAM.
+>      All hypervisor communications use device id of type PCI for
+>      identifying and referencing the device.
+> 
+>   2. Direct Attach: the hypervisor will simply use the guest's HW
+>      page table for mappings, thus the host need not do map/unmap
+>      hypercalls. A direct attached device must be referenced
+>      via logical device id and never via the PCI device id. For an
+>      L1VH root/parent, Hyper-V only supports direct attaches.
+> 
+> Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> ---
+>  arch/x86/hyperv/irqdomain.c     | 60 ++++++++++++++++++++++++++++++---
+>  arch/x86/include/asm/mshyperv.h | 14 ++++++++
+>  2 files changed, 70 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
+> index ccbe5848a28f..33017aa0caa4 100644
+> --- a/arch/x86/hyperv/irqdomain.c
+> +++ b/arch/x86/hyperv/irqdomain.c
+> @@ -137,7 +137,7 @@ static int get_rid_cb(struct pci_dev *pdev, u16 alias, void *data)
+>  	return 0;
+>  }
+>  
+> -static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
+> +static u64 hv_build_devid_type_pci(struct pci_dev *pdev)
+>  {
+>  	int pos;
+>  	union hv_device_id hv_devid;
+> @@ -197,7 +197,58 @@ static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
+>  	}
+>  
+>  out:
+> -	return hv_devid;
+> +	return hv_devid.as_uint64;
+> +}
+> +
+> +/* Build device id for direct attached devices */
+> +static u64 hv_build_devid_type_logical(struct pci_dev *pdev)
+> +{
+> +	hv_pci_segment segment;
+> +	union hv_device_id hv_devid;
+> +	union hv_pci_bdf bdf = {.as_uint16 = 0};
+> +	struct rid_data data = {
+> +		.bridge = NULL,
+> +		.rid = PCI_DEVID(pdev->bus->number, pdev->devfn)
+> +	};
+> +
+> +	segment = pci_domain_nr(pdev->bus);
+> +	bdf.bus = PCI_BUS_NUM(data.rid);
+> +	bdf.device = PCI_SLOT(data.rid);
+> +	bdf.function = PCI_FUNC(data.rid);
+> +
+> +	hv_devid.as_uint64 = 0;
+> +	hv_devid.device_type = HV_DEVICE_TYPE_LOGICAL;
+> +	hv_devid.logical.id = (u64)segment << 16 | bdf.as_uint16;
+> +
+> +	return hv_devid.as_uint64;
+> +}
+> +
+> +/* Build device id after the device has been attached */
+> +u64 hv_build_devid_oftype(struct pci_dev *pdev, enum hv_device_type type)
+> +{
+> +	if (type == HV_DEVICE_TYPE_LOGICAL) {
+> +		if (hv_l1vh_partition())
+> +			return hv_pci_vmbus_device_id(pdev);
 
-Extend state save/restore to HDM decoder and IDE registers for Type 2
-devices. The HDM/IDE blocks are located via the component register map,
-then preserved across reset to retain decoder configuration and IDE
-policy. This avoids losing HDM/IDE programming when cxl_reset is issued.
+Should this one be renamed into hv_build_devid_type_vmbus() to align
+with the other two function names?
 
-Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
----
- drivers/cxl/core/regs.c |   7 ++
- drivers/cxl/cxl.h       |   4 ++
- drivers/cxl/pci.c       | 153 ++++++++++++++++++++++++++++++++++++++--
- include/cxl/pci.h       |  43 +++++++++++
- 4 files changed, 201 insertions(+), 6 deletions(-)
+Thanks,
+Stanislav
 
-diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c
-index ecdb22ae6952..76d6869d82ea 100644
---- a/drivers/cxl/core/regs.c
-+++ b/drivers/cxl/core/regs.c
-@@ -93,6 +93,12 @@ void cxl_probe_component_regs(struct device *dev, void __iomem *base,
- 			length = CXL_RAS_CAPABILITY_LENGTH;
- 			rmap = &map->ras;
- 			break;
-+		case CXL_CM_CAP_CAP_ID_IDE:
-+			dev_dbg(dev, "found IDE capability (0x%x)\n",
-+				offset);
-+			length = CXL_IDE_CAPABILITY_LENGTH;
-+			rmap = &map->ide;
-+			break;
- 		default:
- 			dev_dbg(dev, "Unknown CM cap ID: %d (0x%x)\n", cap_id,
- 				offset);
-@@ -212,6 +218,7 @@ int cxl_map_component_regs(const struct cxl_register_map *map,
- 	} mapinfo[] = {
- 		{ &map->component_map.hdm_decoder, &regs->hdm_decoder },
- 		{ &map->component_map.ras, &regs->ras },
-+		{ &map->component_map.ide, &regs->ide },
- 	};
- 	int i;
+> +		else
+> +			return hv_build_devid_type_logical(pdev);
+> +	} else if (type == HV_DEVICE_TYPE_PCI)
+> +		return hv_build_devid_type_pci(pdev);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(hv_build_devid_oftype);
+> +
+> +/* Build device id for the interrupt path */
+> +static u64 hv_build_irq_devid(struct pci_dev *pdev)
+> +{
+> +	enum hv_device_type dev_type;
+> +
+> +	if (hv_pcidev_is_attached_dev(pdev) || hv_l1vh_partition())
+> +		dev_type = HV_DEVICE_TYPE_LOGICAL;
+> +	else
+> +		dev_type = HV_DEVICE_TYPE_PCI;
+> +
+> +	return hv_build_devid_oftype(pdev, dev_type);
+>  }
+>  
+>  /*
+> @@ -221,7 +272,7 @@ int hv_map_msi_interrupt(struct irq_data *data,
+>  
+>  	msidesc = irq_data_get_msi_desc(data);
+>  	pdev = msi_desc_to_pci_dev(msidesc);
+> -	hv_devid = hv_build_devid_type_pci(pdev);
+> +	hv_devid.as_uint64 = hv_build_irq_devid(pdev);
+>  	cpu = cpumask_first(irq_data_get_effective_affinity_mask(data));
+>  
+>  	return hv_map_interrupt(hv_current_partition_id, hv_devid, false, cpu,
+> @@ -296,7 +347,8 @@ static int hv_unmap_msi_interrupt(struct pci_dev *pdev,
+>  {
+>  	union hv_device_id hv_devid;
+>  
+> -	hv_devid = hv_build_devid_type_pci(pdev);
+> +	hv_devid.as_uint64 = hv_build_irq_devid(pdev);
+> +
+>  	return hv_unmap_interrupt(hv_devid.as_uint64, irq_entry);
+>  }
+>  
+> diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
+> index 0d7fdfb25e76..97477c5a8487 100644
+> --- a/arch/x86/include/asm/mshyperv.h
+> +++ b/arch/x86/include/asm/mshyperv.h
+> @@ -188,6 +188,20 @@ bool hv_vcpu_is_preempted(int vcpu);
+>  static inline void hv_apic_init(void) {}
+>  #endif
+>  
+> +#if IS_ENABLED(CONFIG_HYPERV_IOMMU)
+> +static inline bool hv_pcidev_is_attached_dev(struct pci_dev *pdev)
+> +{ return false; }       /* temporary */
+> +u64 hv_build_devid_oftype(struct pci_dev *pdev, enum hv_device_type type);
+> +#else	/* CONFIG_HYPERV_IOMMU */
+> +static inline bool hv_pcidev_is_attached_dev(struct pci_dev *pdev)
+> +{ return false; }
+> +
+> +static inline u64 hv_build_devid_oftype(struct pci_dev *pdev,
+> +				       enum hv_device_type type)
+> +{ return 0; }
+> +
+> +#endif	/* CONFIG_HYPERV_IOMMU */
+> +
+>  u64 hv_pci_vmbus_device_id(struct pci_dev *pdev);
+>  
+>  struct irq_domain *hv_create_pci_msi_domain(void);
+> -- 
+> 2.51.2.vfs.0.1
+> 
 
-diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index ba17fa86d249..a7a6b79755b3 100644
---- a/drivers/cxl/cxl.h
-+++ b/drivers/cxl/cxl.h
-@@ -39,8 +39,10 @@ extern const struct nvdimm_security_ops *cxl_security_ops;
- #define CXL_CM_CAP_PTR_MASK GENMASK(31, 20)
 
- #define   CXL_CM_CAP_CAP_ID_RAS 0x2
-+#define   CXL_CM_CAP_CAP_ID_IDE 0x4
- #define   CXL_CM_CAP_CAP_ID_HDM 0x5
- #define   CXL_CM_CAP_CAP_HDM_VERSION 1
-+#define   CXL_IDE_CAPABILITY_LENGTH 0x20
 
- /* HDM decoders CXL 2.0 8.2.5.12 CXL HDM Decoder Capability Structure */
- #define CXL_HDM_DECODER_CAP_OFFSET 0x0
-@@ -214,6 +216,7 @@ struct cxl_regs {
- 	struct_group_tagged(cxl_component_regs, component,
- 		void __iomem *hdm_decoder;
- 		void __iomem *ras;
-+		void __iomem *ide;
- 	);
- 	/*
- 	 * Common set of CXL Device register block base pointers
-@@ -256,6 +259,7 @@ struct cxl_reg_map {
- struct cxl_component_reg_map {
- 	struct cxl_reg_map hdm_decoder;
- 	struct cxl_reg_map ras;
-+	struct cxl_reg_map ide;
- };
 
- struct cxl_device_reg_map {
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 7d6a0ef70b2d..eb735d0ae175 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -956,7 +956,8 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		dev_dbg(&pdev->dev, "RAS registers not found\n");
 
- 	rc = cxl_map_component_regs(&cxlds->reg_map, &cxlds->regs.component,
--				    BIT(CXL_CM_CAP_CAP_ID_RAS));
-+				    BIT(CXL_CM_CAP_CAP_ID_RAS) |
-+				    BIT(CXL_CM_CAP_CAP_ID_IDE));
- 	if (rc)
- 		dev_dbg(&pdev->dev, "Failed to map RAS capability.\n");
 
-@@ -1203,18 +1204,126 @@ static int cxl_restore_dvsec_state(struct pci_dev *pdev,
- 	return rc;
- }
 
-+/*
-+ * CXL HDM Decoder register save/restore
-+ */
-+static int cxl_save_hdm_state(struct cxl_dev_state *cxlds,
-+			      struct cxl_type2_saved_state *state)
-+{
-+	void __iomem *hdm = cxlds->regs.hdm_decoder;
-+	u32 cap, ctrl;
-+	int i, count;
-+
-+	if (!hdm)
-+		return 0;
-+
-+	cap = readl(hdm + CXL_HDM_DECODER_CAP_OFFSET);
-+	count = cap & CXL_HDM_DECODER_COUNT_MASK;
-+	count = min(count, CXL_MAX_DECODERS);
-+
-+	state->hdm_decoder_count = count;
-+	state->hdm_global_ctrl = readl(hdm + CXL_HDM_DECODER_GLOBAL_CTRL_OFFSET);
-+
-+	for (i = 0; i < count; i++) {
-+		struct cxl_hdm_decoder_state *d = &state->decoders[i];
-+		u32 base_low, base_high, size_low, size_high;
-+		u32 dpa_skip_low, dpa_skip_high;
-+
-+		base_low = readl(hdm + CXL_HDM_DECODER_BASE_LOW(i));
-+		base_high = readl(hdm + CXL_HDM_DECODER_BASE_HIGH(i));
-+		size_low = readl(hdm + CXL_HDM_DECODER_SIZE_LOW(i));
-+		size_high = readl(hdm + CXL_HDM_DECODER_SIZE_HIGH(i));
-+		ctrl = readl(hdm + CXL_HDM_DECODER_CTRL(i));
-+		dpa_skip_low = readl(hdm + CXL_HDM_DECODER_DPA_SKIP_LOW(i));
-+		dpa_skip_high = readl(hdm + CXL_HDM_DECODER_DPA_SKIP_HIGH(i));
-+
-+		d->base = ((u64)base_high << 32) | base_low;
-+		d->size = ((u64)size_high << 32) | size_low;
-+		d->ctrl = ctrl;
-+		d->dpa_skip = ((u64)dpa_skip_high << 32) | dpa_skip_low;
-+		d->enabled = !!(ctrl & CXL_HDM_DECODER_ENABLE);
-+	}
-+
-+	return 0;
-+}
-+
-+static int cxl_restore_hdm_state(struct cxl_dev_state *cxlds,
-+				 const struct cxl_type2_saved_state *state)
-+{
-+	void __iomem *hdm = cxlds->regs.hdm_decoder;
-+	int i;
-+
-+	if (!hdm || state->hdm_decoder_count == 0)
-+		return 0;
-+
-+	writel(state->hdm_global_ctrl, hdm + CXL_HDM_DECODER_GLOBAL_CTRL_OFFSET);
-+
-+	for (i = 0; i < state->hdm_decoder_count; i++) {
-+		const struct cxl_hdm_decoder_state *d = &state->decoders[i];
-+
-+		writel((u32)d->base, hdm + CXL_HDM_DECODER_BASE_LOW(i));
-+		writel((u32)(d->base >> 32), hdm + CXL_HDM_DECODER_BASE_HIGH(i));
-+		writel((u32)d->size, hdm + CXL_HDM_DECODER_SIZE_LOW(i));
-+		writel((u32)(d->size >> 32), hdm + CXL_HDM_DECODER_SIZE_HIGH(i));
-+		writel(d->ctrl, hdm + CXL_HDM_DECODER_CTRL(i));
-+		writel((u32)d->dpa_skip, hdm + CXL_HDM_DECODER_DPA_SKIP_LOW(i));
-+		writel((u32)(d->dpa_skip >> 32), hdm + CXL_HDM_DECODER_DPA_SKIP_HIGH(i));
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * CXL IDE register save/restore
-+ */
-+static int cxl_save_ide_state(struct cxl_dev_state *cxlds,
-+			      struct cxl_type2_saved_state *state)
-+{
-+	void __iomem *ide = cxlds->regs.ide;
-+	u32 cap;
-+
-+	if (!ide)
-+		return 0;
-+
-+	cap = readl(ide + CXL_IDE_CAP_OFFSET);
-+	if (!(cap & CXL_IDE_CAP_CAPABLE))
-+		return 0;
-+
-+	state->ide_cap = cap;
-+	state->ide_ctrl = readl(ide + CXL_IDE_CTRL_OFFSET);
-+	state->ide_key_refresh_time = readl(ide + CXL_IDE_KEY_REFRESH_TIME_CTRL_OFFSET);
-+	state->ide_truncation_delay = readl(ide + CXL_IDE_TRUNCATION_DELAY_CTRL_OFFSET);
-+
-+	return 0;
-+}
-+
-+static int cxl_restore_ide_state(struct cxl_dev_state *cxlds,
-+				 const struct cxl_type2_saved_state *state)
-+{
-+	void __iomem *ide = cxlds->regs.ide;
-+
-+	if (!ide || !(state->ide_cap & CXL_IDE_CAP_CAPABLE))
-+		return 0;
-+
-+	writel(state->ide_ctrl, ide + CXL_IDE_CTRL_OFFSET);
-+	writel(state->ide_key_refresh_time, ide + CXL_IDE_KEY_REFRESH_TIME_CTRL_OFFSET);
-+	writel(state->ide_truncation_delay, ide + CXL_IDE_TRUNCATION_DELAY_CTRL_OFFSET);
-+
-+	return 0;
-+}
-+
- /**
-  * cxl_config_save_state - Save CXL configuration state
-  * @pdev: PCI device
-  * @state: Structure to store saved state
-  *
-- * Saves CXL DVSEC state before reset.
-+ * Saves CXL DVSEC, HDM decoder, and IDE state before reset.
-  */
- int cxl_config_save_state(struct pci_dev *pdev,
- 			  struct cxl_type2_saved_state *state)
- {
- 	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
--	int dvsec;
-+	int rc, dvsec;
 
- 	if (!cxlds || !state)
- 		return -EINVAL;
-@@ -1225,7 +1334,23 @@ int cxl_config_save_state(struct pci_dev *pdev,
- 	if (!dvsec)
- 		return -ENODEV;
-
--	return cxl_save_dvsec_state(pdev, state, dvsec);
-+	rc = cxl_save_dvsec_state(pdev, state, dvsec);
-+	if (rc)
-+		return rc;
-+
-+	if (cxlds->regs.hdm_decoder) {
-+		rc = cxl_save_hdm_state(cxlds, state);
-+		if (rc)
-+			pci_warn(pdev, "Failed to save HDM state: %d\n", rc);
-+	}
-+
-+	if (cxlds->regs.ide) {
-+		rc = cxl_save_ide_state(cxlds, state);
-+		if (rc)
-+			pci_warn(pdev, "Failed to save IDE state: %d\n", rc);
-+	}
-+
-+	return 0;
- }
- EXPORT_SYMBOL_NS_GPL(cxl_config_save_state, "CXL");
-
-@@ -1234,7 +1359,7 @@ EXPORT_SYMBOL_NS_GPL(cxl_config_save_state, "CXL");
-  * @pdev: PCI device
-  * @state: Previously saved state
-  *
-- * Restores CXL DVSEC state after reset.
-+ * Restores CXL DVSEC, HDM decoder, and IDE state after reset.
-  */
- int cxl_config_restore_state(struct pci_dev *pdev,
- 			     const struct cxl_type2_saved_state *state)
-@@ -1257,7 +1382,23 @@ int cxl_config_restore_state(struct pci_dev *pdev,
-
- 	config_locked = !!(lock_reg & CXL_DVSEC_LOCK_CONFIG_LOCK);
-
--	return cxl_restore_dvsec_state(pdev, state, dvsec, config_locked);
-+	rc = cxl_restore_dvsec_state(pdev, state, dvsec, config_locked);
-+	if (rc)
-+		return rc;
-+
-+	if (cxlds->regs.hdm_decoder && state->hdm_decoder_count > 0) {
-+		rc = cxl_restore_hdm_state(cxlds, state);
-+		if (rc)
-+			pci_warn(pdev, "Failed to restore HDM state: %d\n", rc);
-+	}
-+
-+	if (cxlds->regs.ide && (state->ide_cap & CXL_IDE_CAP_CAPABLE)) {
-+		rc = cxl_restore_ide_state(cxlds, state);
-+		if (rc)
-+			pci_warn(pdev, "Failed to restore IDE state: %d\n", rc);
-+	}
-+
-+	return 0;
- }
- EXPORT_SYMBOL_NS_GPL(cxl_config_restore_state, "CXL");
-
-diff --git a/include/cxl/pci.h b/include/cxl/pci.h
-index 2c629ded73cc..9f2a9ad10d75 100644
---- a/include/cxl/pci.h
-+++ b/include/cxl/pci.h
-@@ -4,11 +4,33 @@
- #ifndef __CXL_ACCEL_PCI_H
- #define __CXL_ACCEL_PCI_H
-
-+/* HDM Decoder state for save/restore */
-+struct cxl_hdm_decoder_state {
-+	u64 base;
-+	u64 size;
-+	u32 ctrl;
-+	u64 dpa_skip;
-+	bool enabled;
-+};
-+
-+#define CXL_MAX_DECODERS 10
-+
- /* CXL Type 2 device state for save/restore across reset */
- struct cxl_type2_saved_state {
- 	/* DVSEC registers */
- 	u16 dvsec_ctrl;
- 	u16 dvsec_ctrl2;
-+
-+	/* HDM Decoder registers */
-+	u32 hdm_decoder_count;
-+	u32 hdm_global_ctrl;
-+	struct cxl_hdm_decoder_state decoders[CXL_MAX_DECODERS];
-+
-+	/* IDE registers */
-+	u32 ide_cap;
-+	u32 ide_ctrl;
-+	u32 ide_key_refresh_time;
-+	u32 ide_truncation_delay;
- };
-
- int cxl_config_save_state(struct pci_dev *pdev,
-@@ -58,6 +80,27 @@ int cxl_config_restore_state(struct pci_dev *pdev,
-
- #define CXL_DVSEC_RANGE_MAX		2
-
-+/* CXL HDM Decoder Capability Structure (Section 8.2.4.20) */
-+#define CXL_HDM_DECODER_CAP_OFFSET		0x0
-+#define   CXL_HDM_DECODER_COUNT_MASK		GENMASK(3, 0)
-+#define CXL_HDM_DECODER_GLOBAL_CTRL_OFFSET	0x4
-+#define   CXL_HDM_DECODER_ENABLE		BIT(1)
-+/* CXL HDM Decoder n registers (Offset 20h*n + base) */
-+#define CXL_HDM_DECODER_BASE_LOW(n)		(0x10 + ((n) * 0x20))
-+#define CXL_HDM_DECODER_BASE_HIGH(n)		(0x14 + ((n) * 0x20))
-+#define CXL_HDM_DECODER_SIZE_LOW(n)		(0x18 + ((n) * 0x20))
-+#define CXL_HDM_DECODER_SIZE_HIGH(n)		(0x1C + ((n) * 0x20))
-+#define CXL_HDM_DECODER_CTRL(n)			(0x20 + ((n) * 0x20))
-+#define CXL_HDM_DECODER_DPA_SKIP_LOW(n)		(0x24 + ((n) * 0x20))
-+#define CXL_HDM_DECODER_DPA_SKIP_HIGH(n)	(0x28 + ((n) * 0x20))
-+
-+/* CXL IDE Capability Structure (Section 8.2.4.22) */
-+#define CXL_IDE_CAP_OFFSET			0x00
-+#define   CXL_IDE_CAP_CAPABLE			BIT(0)
-+#define CXL_IDE_CTRL_OFFSET			0x04
-+#define CXL_IDE_KEY_REFRESH_TIME_CTRL_OFFSET	0x18
-+#define CXL_IDE_TRUNCATION_DELAY_CTRL_OFFSET	0x1C
-+
- /* CXL 2.0 8.1.4: Non-CXL Function Map DVSEC */
- #define CXL_DVSEC_FUNCTION_MAP					2
-
---
-2.34.1
 
