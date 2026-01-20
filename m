@@ -1,123 +1,183 @@
-Received: from sg-1-102.ptr.blmpb.com (sg-1-102.ptr.blmpb.com [118.26.132.102])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012053.outbound.protection.outlook.com [40.107.209.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4797350D49
-	for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2026 17:23:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.102
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768929822; cv=none; b=Oj1GzBsVOl6IVDPW3B3HsmQoCqdC7V2fRgxw/wNHNvXRY2I8o6iMloseZKDiJ8fOsy7meeIHWpRgRd2kVMPRspa8v6L2VwKNIbnsDGMMPJzV5a0XIEO/jT5hUzPOzYIZOAnnRZaNr0ljTVfJB351KgkDDIlJ31YIYiJDy0J71Tg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768929822; c=relaxed/simple;
-	bh=SdjSdHKvO8THi45dn6X9NdTRCSJx540D5Bt52gH7aYo=;
-	h=Message-Id:References:Cc:Subject:Date:Mime-Version:Content-Type:
-	 In-Reply-To:To:From; b=TvWdCXwd+1Vu3TPI/YbqqKu0NUxIu2okqvqjI3EOVQNaXBU+hXuKZ80lS+KSIudVmFn3AOOfvENDm7lbt8oAw9u+hUOLmEjVHTBTXI0qNItkSE9FfgBXhlJKcry1gYjDne6AfQQA0lH+rdp7H+0g0c/MKi215jj8B7UFdp8gyQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=AO20+pe8; arc=none smtp.client-ip=118.26.132.102
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F4B33C52F;
+	Tue, 20 Jan 2026 17:27:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768930048; cv=fail; b=mQ8wtKOuGDr10+OobIw8J4q6+e5uuwXxXxFDdzNG/rxShfzAg2IseYJq7x6aXFBpsDOtdexcXhbDRDJ55vYU9jOkDhpxURF0wVXKdZVBKInYS3qbyFjKIm/ymEqoZlhuF8sRIgMwrzin/QgiawilnILdEiDsnX0Fe4ey4y8A/Wc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768930048; c=relaxed/simple;
+	bh=zUavny+K23BYBACKk0bPdmpxKcbZpSXwNM0wbaF7Y2E=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=md01A5k3/66rFytGR/7O9LX2SI4p9nzxMpFSYb9ZiRyFfW+Pb+sTc3ZNkwv6a0f+idRHL7GasWlETzvZPkxTwiJAnc+qctVxpyI1qr4lDOGsFdxIJacEAVE1NSSC10hk9/kOls8YjNvJG5rT/xcggmE0PoO3a/A9a7J+X6r0esA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=IEArwKV+; arc=fail smtp.client-ip=40.107.209.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="AO20+pe8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1768929812; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=xqgOwEl7H5W1IO6M3fF4IcIp7BnqHPSKNoy+L7rxJ/M=;
- b=AO20+pe8JZl0NqRaT1dv6yCsbb6LYmQ6qZfsbeBmhr6iDiti4plA9dh3i1+RWz0MoCpSIF
- p0DPC9ItguLHHaCNAxPGbHSYP7BZEqY5Mqdx1gT9W6q14DIgq8Z/3PxMHHPisCahFNfcwF
- e/tXXAkHPT1FuGt9f8KwXgn7cRNoHTU1Wa/bcIxQlGgU0BdqEVNV+EVJUyua7kGS0nMlZ9
- p/JVa5huAX8ON2yoKrzsCFKRF4S5VomTxYYnfqhff704ywsRgSqVMBPe9eGwGsKIPwL5fy
- tFbyjt2wsJLFtLP1qnB8iRbUeFjtEEkEfYHmKaPIrFq1mdxmo/F+Q2AxBwpDHA==
-Message-Id: <20260120172316.652-1-guojinhui.liam@bytedance.com>
-References: <DFQX56VQ3FAV.3LIDGP9F41X1U@kernel.org>
-X-Original-From: Jinhui Guo <guojinhui.liam@bytedance.com>
-Cc: <alexander.h.duyck@linux.intel.com>, <alexanderduyck@fb.com>, 
-	<bhelgaas@google.com>, <bvanassche@acm.org>, <dan.j.williams@intel.com>, 
-	<gregkh@linuxfoundation.org>, <guojinhui.liam@bytedance.com>, 
-	<helgaas@kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<linux-pci@vger.kernel.org>, <rafael@kernel.org>, <tj@kernel.org>
-Subject: Re: [PATCH 2/3] driver core: Add NUMA-node awareness to the synchronous probe path
-Date: Wed, 21 Jan 2026 01:23:16 +0800
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="IEArwKV+"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=afQYSz9Maf4OxCXoXbrkpgur9ZpOd4ryvh9lXmvVNNjd4R829wDSAGDv181nNY0Regm6StFEDJkuYQMsDqp+YoLPwNLQ+xC/LGd++WBjeHUi8mKlvbKz+Eron5fP5fYThUkt2XKgDwBINVCS08xrXGyVNF3qp9paIgijT0cp3oCFkrmRraPfVt7DxJDQrKMwdqrqsUePC9tDuOIJkkRwKjeJq7/tRLgHYBzZ7IKH9llbcblfuadmdPtcDXsq7xbx8VnY0yVUwpKHNoYYEgHLm7QYkKjMYlitKl5bk8Aqn68UNPcQA18Jpbls8MxELw1ScvuvXpwi3rD0hTp+MxNPIQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=oXqLlZRAo4pSK0JCi+mQkuy4BSunvNGTU+LOmFGJFHk=;
+ b=w2OPNAR79KKQJubbCXbqkqo+BkUjaMype0EdRrFY2r7WbfJGo55fvpwO6NXAm8sKzAEFDc9xisUMGLbMvCKcQ57IC1xRIvDT22HHH75Qbd1U6fM8Vsg+gGs2rSXO1HP3E3oplBXWwzDZ7mi46hWE5D+RGHu3sFQK4OHbrHf71aPj8xSwyPSMkgki3N5caKt/ivo/QKAg8359jxBomEX9wKqiCJlYhQ8m1idAl5BL5JJQGE+6gbOlMc3woBK7D7LxtJUKVTVc9JMbySiRmCxv5gcjXWZe97rsFQImpCN4haz1MY799yP1ZQnadCCgFM0YARGzqXKQROTBhivD+LGn8w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.233) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oXqLlZRAo4pSK0JCi+mQkuy4BSunvNGTU+LOmFGJFHk=;
+ b=IEArwKV+oR1M22BmrYg4TZeYCjAL/OM16SgFMcnNRzmQA5LTTvJazafR7+Y6KWnPuAR0RhVs5I4MaYG74driWhtgW/ZfxQKrcYsNAicEHOxUA6yvBpdFfB0O6S+ysSQFfGrx+Ki9Ljagzw4Ttu6HZOeTZjga0BataU8fLCQYJLp3HWRKKR0208zDKllNMqHRc+ath6R9ibEx7P7yngxThfb74FUkwxETwgbugBGxFIJvcAirijeoY+A5V6lASRmyfvy6LLzxRt+1jfofFnsg56E8RT2xBOgXOGQ9avsDq7MvlgyjPf9c6xMuGW+j3/7zeJVbA8uVpCEu5zQbTStFxA==
+Received: from CH0PR04CA0089.namprd04.prod.outlook.com (2603:10b6:610:74::34)
+ by DM6PR12MB4466.namprd12.prod.outlook.com (2603:10b6:5:2ae::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Tue, 20 Jan
+ 2026 17:27:21 +0000
+Received: from CH1PEPF0000AD77.namprd04.prod.outlook.com
+ (2603:10b6:610:74:cafe::11) by CH0PR04CA0089.outlook.office365.com
+ (2603:10b6:610:74::34) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9542.9 via Frontend Transport; Tue,
+ 20 Jan 2026 17:27:21 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.233) by
+ CH1PEPF0000AD77.mail.protection.outlook.com (10.167.244.55) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9542.4 via Frontend Transport; Tue, 20 Jan 2026 17:27:20 +0000
+Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
+ (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 20 Jan
+ 2026 09:27:02 -0800
+Received: from drhqmail201.nvidia.com (10.126.190.180) by
+ drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Tue, 20 Jan 2026 09:27:01 -0800
+Received: from inno-thin-client (10.127.8.10) by mail.nvidia.com
+ (10.126.190.180) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
+ Transport; Tue, 20 Jan 2026 09:26:56 -0800
+Date: Tue, 20 Jan 2026 19:26:54 +0200
+From: Zhi Wang <zhiw@nvidia.com>
+To: Danilo Krummrich <dakr@kernel.org>
+CC: Alice Ryhl <aliceryhl@google.com>, <rust-for-linux@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+	<alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+	<bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+	<tmgross@umich.edu>, <markus.probst@posteo.de>, <helgaas@kernel.org>,
+	<cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
+	<aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+	<acourbot@nvidia.com>, <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>,
+	<zhiwang@kernel.org>, <daniel.almeida@collabora.com>
+Subject: Re: [PATCH v10 2/5] rust: io: separate generic I/O helpers from
+ MMIO implementation
+Message-ID: <20260120192654.014ba848.zhiw@nvidia.com>
+In-Reply-To: <DFTC434Z6XRK.2RTE2DFC16TDA@kernel.org>
+References: <20260119202250.870588-1-zhiw@nvidia.com>
+	<20260119202250.870588-3-zhiw@nvidia.com>
+	<aW83HV4lVR5MQlDd@google.com>
+	<DFTC434Z6XRK.2RTE2DFC16TDA@kernel.org>
+Organization: NVIDIA
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <DFQX56VQ3FAV.3LIDGP9F41X1U@kernel.org>
-Content-Transfer-Encoding: quoted-printable
-To: <dakr@kernel.org>
-From: "Jinhui Guo" <guojinhui.liam@bytedance.com>
-X-Lms-Return-Path: <lba+2696fba13+a931e8+vger.kernel.org+guojinhui.liam@bytedance.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH1PEPF0000AD77:EE_|DM6PR12MB4466:EE_
+X-MS-Office365-Filtering-Correlation-Id: e0707a8a-d5c7-4a24-99c0-08de58492a95
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|376014|7416014|1800799024|36860700013|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?ALox7BvwZuRBzRy9xnwq1WN+8a+Aha54gPmEz+2naFnTx8QfwGezzZ4UfFNU?=
+ =?us-ascii?Q?EtMYMmHclJ9PVreyAODo6ya5yY6lkZf26Kt14KppaR2mhkJuhJvV53zUYfNB?=
+ =?us-ascii?Q?09HdAq/F0Nr2uwqxuxEbnOtkfgickkoGsBhaTq0RWKTK6V2oaVHIigA2kUJ2?=
+ =?us-ascii?Q?fnHEn+J25hYSZ+/Yv/KfnYch20alWKStbWPyB1c9lovaiGIarh1RQZbKfvh4?=
+ =?us-ascii?Q?EpRme+kXw3ePGEZe3hWQp7GOuAK3lAa7OUJnycKiMPRMXP9F+cox9HMyLwUN?=
+ =?us-ascii?Q?/yhDcQQHphGr/v1D3x9SBFNxKFy285qOfNU+oKdB6HFv/L5xBhg8TreA5SpH?=
+ =?us-ascii?Q?MAmfstRkUu2D86UUJclhrAc/mvmOKul1Nii9m7yXUVqeqTY96a7j1CRsEeDz?=
+ =?us-ascii?Q?xDjtOj5m3RPlcqNo4GwW0gaPaQ39Ts3LuLKwkdWmkO82AkJqnL4kqv/CiV9R?=
+ =?us-ascii?Q?xmRAN9n/nLP84cuXXqHF7NziSKYtYZzNG13b36Me1jI1Uj0C0WNKayKkV/NU?=
+ =?us-ascii?Q?/TDGs8FHfJsxxLQSWD1RACiVIVyWC8oPz8D+0eWSUr8IIb8nqyUxo+Se7/SS?=
+ =?us-ascii?Q?4X63FKXqMvYCAtCg+MOyn77fOjI92X2pmI1Wvumj+OR0uJXtiSXJUu8EN6Eh?=
+ =?us-ascii?Q?EE3XMrnr79HxTNybfXDcJy4yrUuza7Onm+r6K6cIeNrP/+ybzdpT8WzmlBTP?=
+ =?us-ascii?Q?zUIivGOixRq+oTju4uJhvZ0BSFu9lgiiWkYFdwDjM6OF1awuC2RYAjziFFbw?=
+ =?us-ascii?Q?/y45C0azqUAX6LOtIFqgEON49d766+zwxc7tYZ0h1vLfu8GwHePIzg9vmnC7?=
+ =?us-ascii?Q?Wij+qdWdSsrEhnBALGhLxUn6bzLGcQaD38ifIZUPGWjuGOWdH91d8ZNQf/Fv?=
+ =?us-ascii?Q?VAoMTBZM1c1FJy+xA+hSvqHnN1metgn5iJ7nmIOBCO/Cltd4IcPWLAL6LTun?=
+ =?us-ascii?Q?9udOAyPO3OBd49FADfQTeq485JAu9xTRWeLmLV+brmI+tOSrqb6wcEUK6Cx3?=
+ =?us-ascii?Q?XXvOAMTA2nvGciFw9Y/iNkZrs6GPqObO+fW7fGOSgQBo2jMWjZK4RUOwpKrO?=
+ =?us-ascii?Q?XozO4rcO+fDP4EIR2ntgMBl8f20gKKZJkGqnkqK1LXYjscpPzGEUcjE+5QEt?=
+ =?us-ascii?Q?kVxZmCWm/bT+Rx4Db22dLw9uhaNC3Apjbb3oAtea+AAHfcCPDNEQDwXQ6yUU?=
+ =?us-ascii?Q?G7mqDEMwAd2QyXvdqjQnEg9qOLacLZ1chiPffWlKicIqhFb/wqyEzyMkaVq+?=
+ =?us-ascii?Q?CQFpKCs6cxy3bKC99/n68ZMaHvcgEcj5BJt+CIstqdygPTIt4po+D+WXuSYr?=
+ =?us-ascii?Q?RFlAvAVMQVhfB/0vihu+DjPULZcHQauRFOWn8C51SnlkgATHv40NQMqt9wrH?=
+ =?us-ascii?Q?eD8hWF8UblJQer7q7kMqF2/qNZbn4YDLmo0qUbO+kVD76XQK2RB84gz8RSV8?=
+ =?us-ascii?Q?9yuMgsjkjgds3UtF0P7B9mTCqeWH3yLcD2ONuPDPSJ+Ke+GV9UYKEt+TQZkz?=
+ =?us-ascii?Q?p2B9LiM0LxuiYqkyJ4nVVKO+bZfxfmKnepooUn/X6Pxhs7DsIIuL8UL+/EFp?=
+ =?us-ascii?Q?D8o/9bi0rmmBjYe/yLm8RuA1kAoUwstGXr1Cb+jNjbtF+It6dBCKDPBKzM90?=
+ =?us-ascii?Q?Q0dS7uRuTj5lZRx8TCLM4UfwkUdjUhasMpCAsYr62+xmainp/bQfGyHb2xz/?=
+ =?us-ascii?Q?Z79uaQ=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(1800799024)(36860700013)(7053199007);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jan 2026 17:27:20.2159
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: e0707a8a-d5c7-4a24-99c0-08de58492a95
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CH1PEPF0000AD77.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4466
 
-On Sat Jan 17, 2026 15:03:08 +0100, Danilo Krummrich wrote:
-> On Wed Jan 7, 2026 at 6:55 PM CET, Jinhui Guo wrote:
-> > @@ -808,6 +894,8 @@ static int __driver_probe_device(const struct devic=
-e_driver *drv, struct device
-> >  	return ret;
-> >  }
-> > =20
-> > +DEFINE_NUMA_WRAPPER(__driver_probe_device, const struct device_driver =
-*, struct device *)
-> > +
-> >  /**
-> >   * driver_probe_device - attempt to bind device & driver together
-> >   * @drv: driver to bind a device to
-> > @@ -844,6 +932,8 @@ static int driver_probe_device(const struct device_=
-driver *drv, struct device *d
-> >  	return ret;
-> >  }
-> > =20
-> > +DEFINE_NUMA_WRAPPER(driver_probe_device, const struct device_driver *,=
- struct device *)
-> > +
-> >  static inline bool cmdline_requested_async_probing(const char *drv_nam=
-e)
-> >  {
-> >  	bool async_drv;
-> > @@ -1000,6 +1090,8 @@ static int __device_attach_driver_scan(struct dev=
-ice_attach_data *data,
-> >  	return ret;
-> >  }
-> > =20
-> > +DEFINE_NUMA_WRAPPER(__device_attach_driver_scan, struct device_attach_=
-data *, bool *)
->=20
-> Why define three different wrappers? To me it looks like we should easily=
- get
-> away with a single wrapper for __driver_probe_device(), which could just =
-be
-> __driver_probe_device_node().
->=20
->=20
-> __device_attach_driver_scan() already has this information (i.e. we can c=
-heck if
-> need_async =3D=3D NULL). Additionally, we can change the signature of
-> driver_probe_device() to
->=20
-> 	static int driver_probe_device(const struct device_driver *drv, struct d=
-evice *dev, bool async)
->=20
-> This reduces complexity a lot, since it gets us rid of DEFINE_NUMA_WRAPPE=
-R() and
-> EXEC_ON_NUMA_NODE() macros.
+On Tue, 20 Jan 2026 11:12:18 +0100
+"Danilo Krummrich" <dakr@kernel.org> wrote:
 
-Hi Danilo,
+Hey folks:
 
-Thank you for your time and helpful comments.
+Thanks for the comments and RBs! Agreed. I will adopt this approach in
+v11: using a single series of IoCapable<T> traits and retaining
+IoKnownSize.
 
-Apologies for the delayed reply. I understand your concern: before sending =
-this
-patchset I prototyped a version that added __driver_probe_device_node() and
-relied solely on current_is_async() to detect an async worker, without chan=
-ging
-driver_probe_device()=E2=80=99s signature. That proved fragile, so I abando=
-ned it; your
-suggestion is the more reliable path forward.
+Z.
 
-I=E2=80=99ve spent the last couple of days preparing a new patch and will s=
-end it out
-after testing.
+> On Tue Jan 20, 2026 at 9:04 AM CET, Alice Ryhl wrote:
+> > On Mon, Jan 19, 2026 at 10:22:44PM +0200, Zhi Wang wrote:
+> > Overall looks good to me. Some comments below:
+> >
+> > I still think it would make sense to have `IoCapable<T>:
+> > IoTryCapable<T>`, but it's not a big deal.
+> 
+> I think with this approach it's not necessary to have this requirement.
+> In practice, most impls will have both, but I think it's a good thing
+> that we don't have to have an impl even if not used by any driver, i.e.
+> it helps avoiding dead code.
+> 
+> >> +    /// Infallible 64-bit read with compile-time bounds check.
+> >> +    #[cfg(CONFIG_64BIT)]
+> >> +    fn read64(&self, offset: usize) -> u64
+> >> +    #[cfg(CONFIG_64BIT)]
+> >> +    fn try_read64(&self, offset: usize) -> Result<u64>
+> >
+> > These don't really need cfg(CONFIG_64BIT). You can place that cfg on
+> > impl blocks of IoCapable<u64>.
+> 
+> If you agree with the above, I can fix this up when applying the series.
 
-Best Regards,
-Jinhui
