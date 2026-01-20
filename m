@@ -1,121 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7BA3B95F6;
-	Tue, 20 Jan 2026 18:12:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACDF316180;
+	Tue, 20 Jan 2026 18:13:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768932777; cv=none; b=d+xMInm03qGZ4nE85MLs5ftSFrrvGFwg+XWf/juHU3ofbLHjjvf+Pn0jeKScQtLmrQJgX7GgJu0jTweeB3jnn1dcSMH5gXcvTPbKZNViVHElChnTO3C4n9P8JW2ts0/QIh0wjSKci76VNhOSz/1pp/sVCt8MbYVEVAjhiL3GiN4=
+	t=1768932836; cv=none; b=KQQmk5FuITrjJa+VNSUL4u7q2pP5BFeNMYTDntdfZDqDQVQT1aib2qZ2kZCz62eFRtj9XBMCsBiMCGyg3N1iHEa++kd/EaH0p7TffJyW086xefdGifzX2yrxLbs1c0GDeSeAKxpA0Cx4H1qxhRN6X/nbDrEu2zNkwKr8PQQxTv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768932777; c=relaxed/simple;
-	bh=dCIEJ0G6o69ea1Bz0/r/qRT+iH22OxnaGUsP4EaI00g=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Uxb2lnLUJDyf1xORRztSRSsQyVkvYnKyXFlUE7zT2Bgk0FssuJAzdvA2FO2ack4DsIB6Hw+SaSF/pXgSQ2s3LCkeE0hWxho3kuFhK7jOOGPHfTwim8jSrPjfQJxBkb9vTs5DFvACZADa/orLSF1Cft8G74ryQtZVCf9XPqdO5BU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pmoINzgv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768932836; c=relaxed/simple;
+	bh=GZGlrckUb+X6DeKFq+2HExBoXrTDSQ3yJcPYM+hMIp0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=f50UVZioP+q/GjASrGUWbnblrgp0pdjQpxtrzfVmQgRRicJaM3IxasQPvPtWiE53c4bzer5FIqB6oSRr8afnh3m2QuiQLmsU6Ne3DiD+IFz7dh0rU4MN3AYI5/9K8FVx6SttPKjPFYvAK1G6wGiK5BWKD+I0tcv7QDabYxfwvPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hAdGIP/6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pmoINzgv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B860C2BCB6;
-	Tue, 20 Jan 2026 18:12:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hAdGIP/6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFB51C19421;
+	Tue, 20 Jan 2026 18:13:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768932777;
-	bh=dCIEJ0G6o69ea1Bz0/r/qRT+iH22OxnaGUsP4EaI00g=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:Reply-To:From;
-	b=pmoINzgv3VIPGxTRFl4ulPrVpPOnRcLdY0sn1dtmdwtf/gbxUbsrl8OsR93GaynKl
-	 7U5ieD28YEkz4C1wKjutoW6hxi2IsWSZUH/osOiJliJ/f/eLYD5fSn3YPd4LxOQEVX
-	 PqMsDP+AdgSq1pZ/NwH239GCULg7T794odUTezrOooOaOKEmhtMZ+4l4shTYn5q5+u
-	 v67hsSWgAXoPvn5sgkkztkliUovDmhpabg5866xpsV62KZfgZ1OPK/0XGYJ7OqKWMM
-	 Ge0P/FPGLyTKg3G4w9eLQAgjUsuI3oCyHqQtHdloOMFX/MB757GeRNcWAcsDUxjHwv
-	 snm3UJGab4oGw==
-From: Gary Guo <gary@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Boqun Feng <boqun.feng@gmail.com>,
-	Gary Guo <gary@garyguo.net>,
-	=?UTF-8?q?Bj=C3=B6rn=20Roy=20Baron?= <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>,
-	Trevor Gross <tmgross@umich.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>
-Cc: rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org
-Subject: [PATCH 4/4] gpu: tyr: remove redundant `.as_ref()` for `dev_*` print
-Date: Tue, 20 Jan 2026 18:11:09 +0000
-Message-ID: <20260120181152.3640314-4-gary@kernel.org>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260120181152.3640314-1-gary@kernel.org>
-References: <20260120181152.3640314-1-gary@kernel.org>
-Reply-To: Gary Guo <gary@garyguo.net>
+	s=k20201202; t=1768932836;
+	bh=GZGlrckUb+X6DeKFq+2HExBoXrTDSQ3yJcPYM+hMIp0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=hAdGIP/6cI5SwPjtJ+namRDM9kEjhSLv6zc/N7Oze272DJXPQ0DjzDUtmCgA4l5wb
+	 +SoZPuXGLp53g0pJI8FDW8gmkG877Ga24WvHKbM4CRgzDI0R4OkleVvLbzYrm3I+4r
+	 /Hh9LDe+GWk8jNjz/Divri+fY8HSZ4gqmjUmAUb2qbhBKDeM5zzwVdc6kUXiPQAzeV
+	 CWfGKrgVSlgB9xLI2LmQuXmlfvnp2M+aE5FwKT1tbD3fGQnbOoEzHl5GCwq6g93c9P
+	 Ap0czXiVcgq2uEWVCIGML6mDSqBobIDNBgMfGMVnHVesNz4lg+YDfPjjs/GxGVip/M
+	 J2O1nGzeG89mA==
+Date: Tue, 20 Jan 2026 12:13:54 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Cc: lgirdwood@gmail.com, broonie@kernel.org, tiwai@suse.de,
+	bhelgaas@google.com, linux-sound@vger.kernel.org,
+	kai.vehmanen@linux.intel.com, ranjani.sridharan@linux.intel.com,
+	yung-chuan.liao@linux.intel.com, pierre-louis.bossart@linux.dev,
+	linux-kernel@vger.kernel.org, kw@linux.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI: pci_ids: Add Intel Nova Lake audio Device ID
+Message-ID: <20260120181354.GA1159968@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260120083148.12063-2-peter.ujfalusi@linux.intel.com>
 
-From: Gary Guo <gary@garyguo.net>
+On Tue, Jan 20, 2026 at 10:31:45AM +0200, Peter Ujfalusi wrote:
+> Add Nova Lake (NVL) audio Device ID
+> 
+> The ID will be used by HDA legacy, SOF audio stack and the driver
+> to determine which audio stack should be used (intel-dsp-config).
+> 
+> Signed-off-by: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+> Reviewed-by: Kai Vehmanen <kai.vehmanen@linux.intel.com>
+> Reviewed-by: Liam Girdwood <liam.r.girdwood@intel.com>
+> Reviewed-by: Ranjani Sridharan <ranjani.sridharan@linux.intel.com>
 
-This is now handled by the macro itself.
+"git log --oneline include/linux/pci_ids.h" says "pci_ids" in the
+subject is unnecessary.
 
-Signed-off-by: Gary Guo <gary@garyguo.net>
----
- drivers/gpu/drm/tyr/driver.rs | 2 +-
- drivers/gpu/drm/tyr/gpu.rs    | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/gpu/drm/tyr/driver.rs b/drivers/gpu/drm/tyr/driver.rs
-index 2a45d0288825..fe991d8cbb4a 100644
---- a/drivers/gpu/drm/tyr/driver.rs
-+++ b/drivers/gpu/drm/tyr/driver.rs
-@@ -140,7 +140,7 @@ fn probe(
- 
-         // We need this to be dev_info!() because dev_dbg!() does not work at
-         // all in Rust for now, and we need to see whether probe succeeded.
--        dev_info!(pdev.as_ref(), "Tyr initialized correctly.\n");
-+        dev_info!(pdev, "Tyr initialized correctly.\n");
-         Ok(driver)
-     }
- }
-diff --git a/drivers/gpu/drm/tyr/gpu.rs b/drivers/gpu/drm/tyr/gpu.rs
-index bfbf2a1d80e6..04a0a5d5ef3a 100644
---- a/drivers/gpu/drm/tyr/gpu.rs
-+++ b/drivers/gpu/drm/tyr/gpu.rs
-@@ -98,7 +98,7 @@ pub(crate) fn log(&self, pdev: &platform::Device) {
-         };
- 
-         dev_info!(
--            pdev.as_ref(),
-+            pdev,
-             "mali-{} id 0x{:x} major 0x{:x} minor 0x{:x} status 0x{:x}",
-             model_name,
-             self.gpu_id >> 16,
-@@ -108,7 +108,7 @@ pub(crate) fn log(&self, pdev: &platform::Device) {
-         );
- 
-         dev_info!(
--            pdev.as_ref(),
-+            pdev,
-             "Features: L2:{:#x} Tiler:{:#x} Mem:{:#x} MMU:{:#x} AS:{:#x}",
-             self.l2_features,
-             self.tiler_features,
-@@ -118,7 +118,7 @@ pub(crate) fn log(&self, pdev: &platform::Device) {
-         );
- 
-         dev_info!(
--            pdev.as_ref(),
-+            pdev,
-             "shader_present=0x{:016x} l2_present=0x{:016x} tiler_present=0x{:016x}",
-             self.shader_present,
-             self.l2_present,
--- 
-2.51.2
-
+> ---
+>  include/linux/pci_ids.h | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 84b830036fb4..5ed7846639bf 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -3144,6 +3144,7 @@
+>  #define PCI_DEVICE_ID_INTEL_HDA_CML_S	0xa3f0
+>  #define PCI_DEVICE_ID_INTEL_HDA_LNL_P	0xa828
+>  #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
+> +#define PCI_DEVICE_ID_INTEL_HDA_NVL	0xd328
+>  #define PCI_DEVICE_ID_INTEL_HDA_BMG	0xe2f7
+>  #define PCI_DEVICE_ID_INTEL_HDA_PTL_H	0xe328
+>  #define PCI_DEVICE_ID_INTEL_HDA_PTL	0xe428
+> -- 
+> 2.52.0
+> 
