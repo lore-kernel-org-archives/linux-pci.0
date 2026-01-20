@@ -1,81 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59BC938A9B9;
-	Tue, 20 Jan 2026 10:12:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 875E7223324;
+	Tue, 20 Jan 2026 10:16:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768903946; cv=none; b=G8FLMlR3MaqO+OxKnOpfGmj9Z4bKBVd10e3U78yPodIv0STqoc2TPEkPHXlUo6J5O6vuB8k5oS2YLcJW4n2XqAKeRf2+zG3IHAUVzpfWwfZ2rs72kLv6laDfhn2P73qNXQjihjU67w0UsFePy6ItMDnHXNA4M+mBub/JT/bcMEg=
+	t=1768904168; cv=none; b=mrvuAfFVXTxby5RsqheGJplQrIbXrrCimPftlDsL+ZiQH2aZ+pUEpZC9PCQSSkmqdGC7s4IXMUkN7izuCy3bdTPKJTlJpiO2/6I4NkfQRAY6HR00xRvAyr5UMYftW+sKsfd2K2bWEjDCdnhsqbS/fvtaLfc4lXqK+DZS0ebI9vY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768903946; c=relaxed/simple;
-	bh=dxSOR0eN/vdhFUeOV8fumG7yv5nlIzfUzyKHu+4HI9s=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=VtSMqxcEqKTb79xUduJHFFqoEfTVwrFyzv1scUu3cMTcFdwvuwsm3pf1x4AqxymbI7aUD5dginWek8kxD8BWV+KMS3qO6Bb/ATmWvBy3P8BcM++2c94z2m2taeyNPKbpKeC8HqNXCzJ2fQp03UbFGLEZAqSfZRgLtM7Lg8egkn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YwQ8b5Rx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768904168; c=relaxed/simple;
+	bh=iXDM9sQqzNpRwm3a7W6kTb784YafZHJUjqkBDX1rr50=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dPc6Vzgct7s/pfU5MctC1YqGUafNsv82QYlxO5/ZpsukKqVxsMLrYpDKir7XCcUmAB9kOfP8UkOL/2xstEUjS/pZYDX65KvpGLDWfgIEMHPi/+tdSSTURDjcDOj0jXriFWw22KhyhVFX8ynxJiBLu4nFqgFb7/8XBFgoKZiUti0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XyYqUelI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YwQ8b5Rx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A82EFC16AAE;
-	Tue, 20 Jan 2026 10:12:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XyYqUelI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE761C16AAE;
+	Tue, 20 Jan 2026 10:16:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768903945;
-	bh=dxSOR0eN/vdhFUeOV8fumG7yv5nlIzfUzyKHu+4HI9s=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=YwQ8b5RxobMJuydC53XBdRhHGFAUumBN0nRrXwCROoSRN85KxTHEoHCSaxpjlwc03
-	 sT6QMXWmboLZwTb8Bhh8gC0fh8i/wajpyhhO8j6A9KSqm8Y6akCTpk0UIk93kPWnRs
-	 EjajSiRpgmhhqF5eDXcp1bH4WT9vw0giZGpnWAd7ofEDM+5Fyw6bCfdx9Mr3301t+t
-	 9M/zHZCyz11yN2GkTivHuU3dVKG61ZAFGMh0vrhkAoIysTTNrP4lCTXB1W6BHkJZXD
-	 7HutSVlrgR8OauVpm4ccy+mhiySbLLoRqLydhmZCG3gI/q8uzW/wfs6V9ONUAhg2pN
-	 rXG8JpCCVsLHg==
+	s=k20201202; t=1768904168;
+	bh=iXDM9sQqzNpRwm3a7W6kTb784YafZHJUjqkBDX1rr50=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XyYqUelIpqO9hvVWaQPDGsDObTc/l14pEqaWMEXqDTRvmkULuUgQJ+YbgBO1bJdUd
+	 jXF4TUvmeARvig6cC07SCREg4B3IPvGRkgGabtgV6Djhl0QxP0gpLwQntNGnaEODgW
+	 JbdUllLe5Ea1O6tvBFVkJjSzYZCplcF1UrODrwwCuWUYECDqV2Ch6x2goeVGuxnTYJ
+	 m+0AHx5qR+Ya4GrqsHdfmqxNcIvNQM4l8mW2iRkNif4HWUdCUoSeH68cpklAkP/6Rd
+	 1OKfzWm24rQioRqs8Mp7+J4fxktJeUdZ5tLuHciJin1PFgSIub34glcfIWaBe5Mlzk
+	 JuAbtZaKbqq/A==
+Date: Tue, 20 Jan 2026 11:16:00 +0100
+From: Lorenzo Pieralisi <lpieralisi@kernel.org>
+To: Thomas Gleixner <tglx@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Robert Moore <robert.moore@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Sudeep Holla <sudeep.holla@arm.com>, Marc Zyngier <maz@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 0/6] irqchip/gic-v5: Code first ACPI boot support
+Message-ID: <aW9V4A7lTGZWTO9e@lpieralisi>
+References: <20260115-gicv5-host-acpi-v3-0-c13a9a150388@kernel.org>
+ <aWy9T3VDyXpVG41z@lpieralisi>
+ <87sec30yhk.ffs@tglx>
+ <aW3pALPxn4i9fiDO@lpieralisi>
+ <87pl751zeh.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 20 Jan 2026 11:12:18 +0100
-Message-Id: <DFTC434Z6XRK.2RTE2DFC16TDA@kernel.org>
-Subject: Re: [PATCH v10 2/5] rust: io: separate generic I/O helpers from
- MMIO implementation
-Cc: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
- <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
- <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
- <tmgross@umich.edu>, <markus.probst@posteo.de>, <helgaas@kernel.org>,
- <cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
- <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
- <acourbot@nvidia.com>, <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>,
- <zhiwang@kernel.org>, <daniel.almeida@collabora.com>
-To: "Alice Ryhl" <aliceryhl@google.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260119202250.870588-1-zhiw@nvidia.com>
- <20260119202250.870588-3-zhiw@nvidia.com> <aW83HV4lVR5MQlDd@google.com>
-In-Reply-To: <aW83HV4lVR5MQlDd@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87pl751zeh.ffs@tglx>
 
-On Tue Jan 20, 2026 at 9:04 AM CET, Alice Ryhl wrote:
-> On Mon, Jan 19, 2026 at 10:22:44PM +0200, Zhi Wang wrote:
-> Overall looks good to me. Some comments below:
->
-> I still think it would make sense to have `IoCapable<T>: IoTryCapable<T>`=
-,
-> but it's not a big deal.
+On Mon, Jan 19, 2026 at 02:54:14PM +0100, Thomas Gleixner wrote:
+> On Mon, Jan 19 2026 at 09:19, Lorenzo Pieralisi wrote:
+> > On Sun, Jan 18, 2026 at 03:47:03PM +0100, Thomas Gleixner wrote:
+> > I think the simplest way to sort this out is for this series to go via
+> > the ACPI tree if that's OK for Thomas, given that the ACPICA code will
+> > go via the ACPI tree anyway and there are other dependencies on it there
+> > I assume (this series is fairly self-contained).
+> 
+> I'm fine with that
+> 
+> Acked-by: Thomas Gleixner <tglx@kernel.org>
 
-I think with this approach it's not necessary to have this requirement. In
-practice, most impls will have both, but I think it's a good thing that we =
-don't
-have to have an impl even if not used by any driver, i.e. it helps avoiding=
- dead
-code.
+Thank you Thomas, Rafael I hope that works for you too, please let me know
+if there is anything I can/should do.
 
->> +    /// Infallible 64-bit read with compile-time bounds check.
->> +    #[cfg(CONFIG_64BIT)]
->> +    fn read64(&self, offset: usize) -> u64
->> +    #[cfg(CONFIG_64BIT)]
->> +    fn try_read64(&self, offset: usize) -> Result<u64>
->
-> These don't really need cfg(CONFIG_64BIT). You can place that cfg on
-> impl blocks of IoCapable<u64>.
-
-If you agree with the above, I can fix this up when applying the series.
+Thanks,
+Lorenzo
