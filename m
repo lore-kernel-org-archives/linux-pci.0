@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACDF316180;
-	Tue, 20 Jan 2026 18:13:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA6F4418C1;
+	Tue, 20 Jan 2026 18:17:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768932836; cv=none; b=KQQmk5FuITrjJa+VNSUL4u7q2pP5BFeNMYTDntdfZDqDQVQT1aib2qZ2kZCz62eFRtj9XBMCsBiMCGyg3N1iHEa++kd/EaH0p7TffJyW086xefdGifzX2yrxLbs1c0GDeSeAKxpA0Cx4H1qxhRN6X/nbDrEu2zNkwKr8PQQxTv0=
+	t=1768933027; cv=none; b=pihwH5YtgF11XMCQhXsFu9086LswoWp/WrLHaFALOL40E/kpUbRJINNd2RVI12yZUfL/Hnawzu3Uq+UnqwzzOgs3CGLQQYLwt5BKcANP8skIIipVb4znqg6ucEsF5knVDthT3j2BCIK6wvOwgfiqdxpccmw9/RWVUNKribrzrdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768932836; c=relaxed/simple;
-	bh=GZGlrckUb+X6DeKFq+2HExBoXrTDSQ3yJcPYM+hMIp0=;
+	s=arc-20240116; t=1768933027; c=relaxed/simple;
+	bh=gxwaOHzp3uUOewUvUbS26LKL9lEmPjguIBWuVuODAfs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=f50UVZioP+q/GjASrGUWbnblrgp0pdjQpxtrzfVmQgRRicJaM3IxasQPvPtWiE53c4bzer5FIqB6oSRr8afnh3m2QuiQLmsU6Ne3DiD+IFz7dh0rU4MN3AYI5/9K8FVx6SttPKjPFYvAK1G6wGiK5BWKD+I0tcv7QDabYxfwvPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hAdGIP/6; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=b0g4w1+dtlY3QbMMgbDVPCiwnANvsN6pz58skrK8jRSkqemDK8++2EeCP/QBNzujHa5QtMVytwbcQR0D6tEE5rF6sG4sCAnjITxv5Af5d1KQRRhTR8RpvDF9Co7DQgIe+6GlAlvyxrNuqqF2DlwxUS9EHX0QXLFi9GWNrK0d1JE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mq7D6bc0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hAdGIP/6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFB51C19421;
-	Tue, 20 Jan 2026 18:13:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mq7D6bc0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0A96C19421;
+	Tue, 20 Jan 2026 18:17:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768932836;
-	bh=GZGlrckUb+X6DeKFq+2HExBoXrTDSQ3yJcPYM+hMIp0=;
+	s=k20201202; t=1768933024;
+	bh=gxwaOHzp3uUOewUvUbS26LKL9lEmPjguIBWuVuODAfs=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=hAdGIP/6cI5SwPjtJ+namRDM9kEjhSLv6zc/N7Oze272DJXPQ0DjzDUtmCgA4l5wb
-	 +SoZPuXGLp53g0pJI8FDW8gmkG877Ga24WvHKbM4CRgzDI0R4OkleVvLbzYrm3I+4r
-	 /Hh9LDe+GWk8jNjz/Divri+fY8HSZ4gqmjUmAUb2qbhBKDeM5zzwVdc6kUXiPQAzeV
-	 CWfGKrgVSlgB9xLI2LmQuXmlfvnp2M+aE5FwKT1tbD3fGQnbOoEzHl5GCwq6g93c9P
-	 Ap0czXiVcgq2uEWVCIGML6mDSqBobIDNBgMfGMVnHVesNz4lg+YDfPjjs/GxGVip/M
-	 J2O1nGzeG89mA==
-Date: Tue, 20 Jan 2026 12:13:54 -0600
+	b=mq7D6bc0tjOypxE/Mzc2JviiWo/kcebpjtQ8r2fNEemQKvg5NUTFYBbsZnMAx+pAu
+	 XtsIns0n6/v9+OYgxJ0WA3kyGR1BD3+JE3Z5X4omHT+aZRRbQw7gBxMEqCXUlqaP2s
+	 WKPWUdrBKC9KCadu3agP5Q17JuIzFtU/LAvKtcEH+MtGHKRQKZ60gm0ZcS3fihfeKe
+	 5h/XcETiuRtq7GCqDmnNJ4Jw7sioyF3wjfCYPYrDsE6Boc3YxTFTvgtPbh0SM3LqEn
+	 44qo9E9pPfff7f/a4cRFQat8/6+ORYxfpCUVyxMSThIzLiqN1+J6cWtruDLm7acSsk
+	 bJe/I29ye09Vw==
+Date: Tue, 20 Jan 2026 12:17:02 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
 Cc: lgirdwood@gmail.com, broonie@kernel.org, tiwai@suse.de,
@@ -35,8 +35,9 @@ Cc: lgirdwood@gmail.com, broonie@kernel.org, tiwai@suse.de,
 	yung-chuan.liao@linux.intel.com, pierre-louis.bossart@linux.dev,
 	linux-kernel@vger.kernel.org, kw@linux.com,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: pci_ids: Add Intel Nova Lake audio Device ID
-Message-ID: <20260120181354.GA1159968@bhelgaas>
+Subject: Re: [PATCH 3/4] ALSA: hda: core: intel-dsp-config:: Add support for
+ NVL
+Message-ID: <20260120181702.GA1160036@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,40 +46,12 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260120083148.12063-2-peter.ujfalusi@linux.intel.com>
+In-Reply-To: <20260120083148.12063-4-peter.ujfalusi@linux.intel.com>
 
-On Tue, Jan 20, 2026 at 10:31:45AM +0200, Peter Ujfalusi wrote:
-> Add Nova Lake (NVL) audio Device ID
-> 
-> The ID will be used by HDA legacy, SOF audio stack and the driver
-> to determine which audio stack should be used (intel-dsp-config).
-> 
-> Signed-off-by: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
-> Reviewed-by: Kai Vehmanen <kai.vehmanen@linux.intel.com>
-> Reviewed-by: Liam Girdwood <liam.r.girdwood@intel.com>
-> Reviewed-by: Ranjani Sridharan <ranjani.sridharan@linux.intel.com>
+On Tue, Jan 20, 2026 at 10:31:47AM +0200, Peter Ujfalusi wrote:
+> Add entry for NVL variant of Novalake family.
 
-"git log --oneline include/linux/pci_ids.h" says "pci_ids" in the
-subject is unnecessary.
+s/intel-dsp-config::/intel-dsp-config:/ in subject
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  include/linux/pci_ids.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 84b830036fb4..5ed7846639bf 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -3144,6 +3144,7 @@
->  #define PCI_DEVICE_ID_INTEL_HDA_CML_S	0xa3f0
->  #define PCI_DEVICE_ID_INTEL_HDA_LNL_P	0xa828
->  #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
-> +#define PCI_DEVICE_ID_INTEL_HDA_NVL	0xd328
->  #define PCI_DEVICE_ID_INTEL_HDA_BMG	0xe2f7
->  #define PCI_DEVICE_ID_INTEL_HDA_PTL_H	0xe328
->  #define PCI_DEVICE_ID_INTEL_HDA_PTL	0xe428
-> -- 
-> 2.52.0
-> 
+The internet (and other patches in this series) seems to think
+"Novalake" is spelled "Nova Lake".
