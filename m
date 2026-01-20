@@ -1,69 +1,134 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D39B345753;
-	Tue, 20 Jan 2026 18:08:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D36944D029;
+	Tue, 20 Jan 2026 18:12:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768932516; cv=none; b=LeRV7lBE7FB8effkozs2peFU6gNMB/mA2gHmZWBG4VUg91wwPRlcfbqM94ac9PsE0p5m9N//BBlExA+HuD0nil+p++rRHhJcotzHAvN0lxMwFuwGorIVJwtKEbNzzt+fWgp2sCRf8pyRnHqnZ8JKOMuG2m7Mr2FwF41zVGjTxq4=
+	t=1768932755; cv=none; b=EPEmaX3zHaJWi6f5e7JWDj+lJPkZjLABXBPBe8w7lFc2H2eiqd4LVkhVWPW+471nzhlkj5pSDiXhr206txtE0S5mP+OQo+PoTVr5vfhZVqGcuCQqrsv4kJRH3oUwB0QfA5oR3qXP8TiBggnBqjPxxZVNFqKwe7wJUCahF2r6VCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768932516; c=relaxed/simple;
-	bh=iPeLQUClZ+MDpbXM0eSkRUGIDQYyAShv0zDvLJ34TzA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pqQtESSASS1t1bP7NjT2/RUU9VSOrL33GlEYrWg/+qYYusExLQtsAl8WNl2MdpXxlQ9FrcuaYRjVZ1vrF7RkqGmOFex35UCm8xeq/90J0uw6nRI0Qs6Z56z4nKZa83hEXGyXWiSMPKkz4a57i2REAyeU4CTKilStdp1lyt/GqXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eaen7DRr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768932755; c=relaxed/simple;
+	bh=l/arQsEGQi/qLILu8cP6zLjoRx58+KN+O9gMGLNwKm8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qx6Qzky1gPCiXUS91+ofme2Tt3yzcGQUfQ9aPwylxck3R3CHBkQx+g7oFkO9+TL4Nk629WJBPFFQJDx11PyB029Ijw5lH/fizvbecXwko5zBEkfamqwKLOXNss5C2c/Q0XGWiCAI2vZKKyhqNB1ohLji25tHGBL4U65G8azGphY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iISOgMlX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eaen7DRr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16257C19421;
-	Tue, 20 Jan 2026 18:08:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iISOgMlX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5EEFC16AAE;
+	Tue, 20 Jan 2026 18:12:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768932515;
-	bh=iPeLQUClZ+MDpbXM0eSkRUGIDQYyAShv0zDvLJ34TzA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eaen7DRrJQ4BuE/5XfK+2pvuk1wxn8S7+PK/HopD8haSQ4wc6ROsSepDIcG0Ya/xl
-	 WsiJN/in+saOwaV4vxNfkXDKX8vDNC7iJBXc5QpF91qbomrRhw4izBELY7HQtYGPmO
-	 LbqLeZ4YRedpUqptV7WGi451y+rRBxFKXY/oZ5KfTCzTNGviHusZI2N7Y3+3MjDnXm
-	 j19tGlM0nag5TpJsriaMYCclT6NwFryGO4GGrvzl2zKMJYSiDJ7ZvO7EUCnxCWjV8D
-	 02q3IogQYGB2V5S/bKCI/BZgdKp8nztOpzXUayrFfB1x9Pjot3omS5D52bLND+9h5c
-	 P3z5e387X7dzg==
-Date: Tue, 20 Jan 2026 11:08:33 -0700
-From: Keith Busch <kbusch@kernel.org>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, iommu@lists.linux.dev,
-	Joerg Roedel <joro@8bytes.org>, linux-pci@vger.kernel.org,
-	Robin Murphy <robin.murphy@arm.com>, Will Deacon <will@kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Donald Dutile <ddutile@redhat.com>, galshalom@nvidia.com,
-	Joerg Roedel <jroedel@suse.de>, Kevin Tian <kevin.tian@intel.com>,
-	kvm@vger.kernel.org, maorg@nvidia.com, patches@lists.linux.dev,
-	tdave@nvidia.com, Tony Zhu <tony.zhu@intel.com>
-Subject: Re: [PATCH v3 10/11] PCI: Check ACS DSP/USP redirect bits in
- pci_enable_pasid()
-Message-ID: <aW_EoTarUr6LEZgy@kbusch-mbp>
-References: <0-v3-8827cc7fc4e0+23f-pcie_switch_groups_jgg@nvidia.com>
- <10-v3-8827cc7fc4e0+23f-pcie_switch_groups_jgg@nvidia.com>
+	s=k20201202; t=1768932754;
+	bh=l/arQsEGQi/qLILu8cP6zLjoRx58+KN+O9gMGLNwKm8=;
+	h=From:To:Cc:Subject:Date:Reply-To:From;
+	b=iISOgMlXmf5mHMfibqz8OWj9X8eO2grU1getPkSWGmMlk/tyjO509CCAr2bjP0GCW
+	 e/hFf/r8L37QTbVvdOOeqdTPZ+u+opPQXL8TyDHiNeVkJ3COg3zSlUoYWK3EjSmY/Y
+	 bfmT4d2Z1/hlukXeRdis8JRPGMyqN+N8HSirWbTJ9WoH4bE80j9E/Lz4AB9YDQbuOP
+	 6/NCIcBsyWd2fkDYpN8mAbOzFjekxkj54+GW+u54ZvlvUoYz1gYJR9jXxp3CC73O24
+	 H9hVs717JNNnsFbWJTlcxYnZ1RygvhpG9r/YboDlzZrJN4MkhOvn9DG4Q9TKxi2VqV
+	 Ls8F+2gKZcxAA==
+From: Gary Guo <gary@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Boqun Feng <boqun.feng@gmail.com>,
+	Gary Guo <gary@garyguo.net>,
+	=?UTF-8?q?Bj=C3=B6rn=20Roy=20Baron?= <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>,
+	Trevor Gross <tmgross@umich.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 1/4] rust: device: support `dev_printk` on all devices
+Date: Tue, 20 Jan 2026 18:11:06 +0000
+Message-ID: <20260120181152.3640314-1-gary@kernel.org>
+X-Mailer: git-send-email 2.51.2
+Reply-To: Gary Guo <gary@garyguo.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <10-v3-8827cc7fc4e0+23f-pcie_switch_groups_jgg@nvidia.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Sep 05, 2025 at 03:06:25PM -0300, Jason Gunthorpe wrote:
-> +static u16 pci_acs_ctrl_mask(struct pci_dev *pdev, u16 hw_cap)
-> +{
-> +	/*
-> +	 * Egress Control enables use of the Egress Control Vector which is not
-> +	 * present without the cap.
-> +	 */
-> +	u16 mask = PCI_ACS_EC;
-> +
-> +	mask = hw_cap & (PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> +				      PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+From: Gary Guo <gary@garyguo.net>
 
-I think you intended "mask |=", otherwise the initialization to
-PCI_ACS_EC doesn't make sense.
+Currently, `dev_*` only works on the core `Device`, but not on any other
+bus or class device objects. This causes a pattern of
+`dev_info!(pdev.as_ref())` which is not ideal.
+
+This adds support of using these devices directly with `dev_*` macros, by
+adding `AsRef` call inside the macro. To make sure we can still use just
+`kernel::device::Device`, as `AsRef` implementation is added for it; this
+is typical for types that is designed to use with `AsRef` anyway, for
+example, `str` implements `AsRef<str>` and `Path` implements `AsRef<Path>`.
+
+Signed-off-by: Gary Guo <gary@garyguo.net>
+---
+ rust/kernel/device.rs | 9 ++++++++-
+ rust/kernel/pci.rs    | 2 +-
+ rust/kernel/pci/id.rs | 2 +-
+ 3 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+index c7b5db9dcca1..94e0548e7687 100644
+--- a/rust/kernel/device.rs
++++ b/rust/kernel/device.rs
+@@ -601,6 +601,13 @@ impl DeviceContext for Core {}
+ impl DeviceContext for CoreInternal {}
+ impl DeviceContext for Normal {}
+ 
++impl<Ctx: DeviceContext> AsRef<Device<Ctx>> for Device<Ctx> {
++    #[inline]
++    fn as_ref(&self) -> &Device<Ctx> {
++        self
++    }
++}
++
+ /// Convert device references to bus device references.
+ ///
+ /// Bus devices can implement this trait to allow abstractions to provide the bus device in
+@@ -720,7 +727,7 @@ macro_rules! impl_device_context_into_aref {
+ macro_rules! dev_printk {
+     ($method:ident, $dev:expr, $($f:tt)*) => {
+         {
+-            ($dev).$method($crate::prelude::fmt!($($f)*));
++            $crate::device::Device::$method($dev.as_ref(), $crate::prelude::fmt!($($f)*))
+         }
+     }
+ }
+diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+index bea76ca9c3da..3946ca919332 100644
+--- a/rust/kernel/pci.rs
++++ b/rust/kernel/pci.rs
+@@ -351,7 +351,7 @@ impl Device {
+     ///     // Get an instance of `Vendor`.
+     ///     let vendor = pdev.vendor_id();
+     ///     dev_info!(
+-    ///         pdev.as_ref(),
++    ///         pdev,
+     ///         "Device: Vendor={}, Device=0x{:x}\n",
+     ///         vendor,
+     ///         pdev.device_id()
+diff --git a/rust/kernel/pci/id.rs b/rust/kernel/pci/id.rs
+index c09125946d9e..e2d9e8804347 100644
+--- a/rust/kernel/pci/id.rs
++++ b/rust/kernel/pci/id.rs
+@@ -22,7 +22,7 @@
+ /// fn probe_device(pdev: &pci::Device<Core>) -> Result {
+ ///     let pci_class = pdev.pci_class();
+ ///     dev_info!(
+-///         pdev.as_ref(),
++///         pdev,
+ ///         "Detected PCI class: {}\n",
+ ///         pci_class
+ ///     );
+
+base-commit: 053966c344dbd346e71305f530e91ea77916189f
+-- 
+2.51.2
+
