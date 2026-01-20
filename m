@@ -1,300 +1,105 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f73.google.com (mail-ej1-f73.google.com [209.85.218.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD0F236BCCE;
-	Tue, 20 Jan 2026 12:25:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC94E426683
+	for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2026 12:38:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768911941; cv=none; b=Q7rjl49N+Amb/9beIuXZThF6IAkSnIgRs90DvhD8QPf+ZRhPyVz1s8wUPDyGCExE/Sksf/uoFEcHbhzKCyn7zHAfzggaF80jzgakD5ymBvKANiCp9TfvPFPsQFIOngMfC69hS6bGH6DFYUbC/fb+HNcYziaVTHhC9PZnIBhwEGI=
+	t=1768912701; cv=none; b=lCSuQdfrO8cY0N5QRCp4mumbqIkxBSGQ+q3JNFMdOmowa6FsM7if2nj/5X+yag3L8oW/iq5ennMhQNLnPT2fXjPM1o4UC6T2J15pp83NZofJn22+V3WdZ7BiAaONwbv6SYABJimX6jLZPjEATG/tbfH8M4D+rLN4gxd3w7ssY7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768911941; c=relaxed/simple;
-	bh=zOWFyiV9G8Y96lNCKDdy3PRg3H3aNeGAD+Zwtx8cS5g=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oby4dME72P9gzCDbXMrnlbTtG7AcolxDnes7RCa5du5bdNKLYi9F4OQApsDWbv8C6HHXppe3hCu+AcgxfpxRPyPK+RShzu9PUK+FKbgXVaghhXdB2EAIyul71NNtqEph2VOiuntwQZ0L7L4jBqnu6ilEeeZS5nJqC/PUyeMdJnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.107])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dwRNd4YGTzJ46Cf;
-	Tue, 20 Jan 2026 20:25:05 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 125AB40571;
-	Tue, 20 Jan 2026 20:25:30 +0800 (CST)
-Received: from localhost (10.122.19.247) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 20 Jan
- 2026 12:25:29 +0000
-Date: Tue, 20 Jan 2026 12:25:27 +0000
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To: <dan.j.williams@intel.com>
-CC: Terry Bowman <terry.bowman@amd.com>, <dave@stgolabs.net>,
-	<dave.jiang@intel.com>, <alison.schofield@intel.com>, <bhelgaas@google.com>,
-	<shiju.jose@huawei.com>, <ming.li@zohomail.com>,
-	<Smita.KoralahalliChannabasappa@amd.com>, <rrichter@amd.com>,
-	<dan.carpenter@linaro.org>, <PradeepVineshReddy.Kodamati@amd.com>,
-	<lukas@wunner.de>, <Benjamin.Cheatham@amd.com>,
-	<sathyanarayanan.kuppuswamy@linux.intel.com>, <linux-cxl@vger.kernel.org>,
-	<vishal.l.verma@intel.com>, <alucerop@amd.com>, <ira.weiny@intel.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v14 19/34] cxl/port: Fix devm resource leaks around with
- dport management
-Message-ID: <20260120122527.0000680a@huawei.com>
-In-Reply-To: <696eb7f160bbb_875d10053@dwillia2-mobl4.notmuch>
-References: <20260114182055.46029-1-terry.bowman@amd.com>
-	<20260114182055.46029-20-terry.bowman@amd.com>
-	<20260115144605.00000666@huawei.com>
-	<6969c260b7998_34d2a100f6@dwillia2-mobl4.notmuch>
-	<20260116150119.00003bbd@huawei.com>
-	<20260116161607.00005588@huawei.com>
-	<696eb7f160bbb_875d10053@dwillia2-mobl4.notmuch>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1768912701; c=relaxed/simple;
+	bh=TXFVFSzZ/jVdUgcfun/l6Z+4x2xn58VmCP/XffLA3eo=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=jBIGK31vBfJJ0hTiH8W5HXYArZMTTtboV0zy7p4CaHfhq1rlCeQaqk077LOLIsY/5adSnw2VNqlhtNFPLDio8opRJaE04V7xcHIPl9TIE8H+GL7mcWyMKxHudXWrxp4wr1tpPloDKjB6YNaMCDjR9uQvT/0010tSUoc6r2YoShM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aGoD4RTU; arc=none smtp.client-ip=209.85.218.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aGoD4RTU"
+Received: by mail-ej1-f73.google.com with SMTP id a640c23a62f3a-b83c3dd2092so822607866b.1
+        for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2026 04:38:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1768912698; x=1769517498; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=kRu3uxT5l6ryH7K1x56GRVdKqVKTOQ0aBzImZoC0pQU=;
+        b=aGoD4RTU+L6HsoAjns/mR9MWP+FQL8S/Whr5WksEviwbQBAa5TkcGZZHS4NcGbkqr6
+         lQ3LAomAcLGsFfxVgjmMb/Sz+JmY1XFQIPNm2Wq9AvUTCveqyfUCBwz41l0bAOv92ekk
+         9ZRBFjC0d6Sva8hLWWgmA2FW37PMQPdebfaHSrTJ8uwqM1FMVRrGbM/2vzw+Waxxcj9s
+         sKGm0P6sSDz35WXRAhNnZtCsXdEsJuh7nnzY64UUyGludCt0ncq78kQV+2VmEzuMdVA0
+         fGLcClZqZhbo+v8YfyF/dMp08qO8dkHIxjv2yVdkTFGkCXefZyL00p627piK5mAajwFk
+         2oFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768912698; x=1769517498;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=kRu3uxT5l6ryH7K1x56GRVdKqVKTOQ0aBzImZoC0pQU=;
+        b=bpE5hgtIpBxDlg3wwkU1YPOlTWfz5jbca+pTMO3+8GLJGQcrT5kCzSzReJLxyh3UXb
+         D/E9Pwf3PCec+l3THcAKURy+V/cSJhiZE/ZWBOlv29904XIMLmUPAKn8qX+uJiRllOuC
+         d/7DlrxlmM8WinMOtRz1Vf4iuj8IyLmpBSTA9Ho7Dp17p624zTL7HwWy8NCmtmIXvaDD
+         N4nHF9eFDb+u0J/+jxvvjOoUD4tnpLTeyS4aFdmnfdH6+v5R5w3MSDA3dGlk9xTfuPRK
+         3/BMlDJQ27hygVM6QaNIFNUIbSa/zzexvEs0HKPjYKbLrYvz2WmW0skO1nS57MkeuEwq
+         YwqA==
+X-Forwarded-Encrypted: i=1; AJvYcCU7m4+B5nquftwQPazMmet2FNjlRy2skJ8G4qDguGCi5FIgPg860mvu9FtFgzh7R/2So8Ltkr6sbyM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4LZrBpD6cI8P23bjb3L569VFsjPBIVw7pLJRfqGVe6yAP5PLC
+	ql7JaU/kEdBf+39mFPzS2+Q9Oaud/surJw6DVI5a4Re3ZTETIS2pW/tFFVBqMqKlbAvHqrgEv0f
+	HWOQAWOwC8Kqdc10FOA==
+X-Received: from wmbgx18.prod.google.com ([2002:a05:600c:8592:b0:477:5a4b:d57f])
+ (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:600c:8b78:b0:47e:e8c2:905f with SMTP id 5b1f17b1804b1-4801e30a790mr205228475e9.8.1768912686463;
+ Tue, 20 Jan 2026 04:38:06 -0800 (PST)
+Date: Tue, 20 Jan 2026 12:38:05 +0000
+In-Reply-To: <aW9mTHedRc32izbh@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: lhrpeml100010.china.huawei.com (7.191.174.197) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+Mime-Version: 1.0
+References: <20260119202250.870588-1-zhiw@nvidia.com> <20260119202250.870588-3-zhiw@nvidia.com>
+ <aW83HV4lVR5MQlDd@google.com> <DFTC434Z6XRK.2RTE2DFC16TDA@kernel.org> <aW9mTHedRc32izbh@google.com>
+Message-ID: <aW93LS71i01F8FLA@google.com>
+Subject: Re: [PATCH v10 2/5] rust: io: separate generic I/O helpers from MMIO implementation
+From: Alice Ryhl <aliceryhl@google.com>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: Zhi Wang <zhiw@nvidia.com>, rust-for-linux@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, bhelgaas@google.com, 
+	kwilczynski@kernel.org, ojeda@kernel.org, alex.gaynor@gmail.com, 
+	boqun.feng@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com, 
+	lossin@kernel.org, a.hindborg@kernel.org, tmgross@umich.edu, 
+	markus.probst@posteo.de, helgaas@kernel.org, cjia@nvidia.com, 
+	smitra@nvidia.com, ankita@nvidia.com, aniketa@nvidia.com, 
+	kwankhede@nvidia.com, targupta@nvidia.com, acourbot@nvidia.com, 
+	joelagnelf@nvidia.com, jhubbard@nvidia.com, zhiwang@kernel.org, 
+	daniel.almeida@collabora.com
+Content-Type: text/plain; charset="utf-8"
 
-On Mon, 19 Jan 2026 15:02:09 -0800
-dan.j.williams@intel.com wrote:
+On Tue, Jan 20, 2026 at 11:26:04AM +0000, Alice Ryhl wrote:
+> On Tue, Jan 20, 2026 at 11:12:18AM +0100, Danilo Krummrich wrote:
+> > On Tue Jan 20, 2026 at 9:04 AM CET, Alice Ryhl wrote:
+> > > On Mon, Jan 19, 2026 at 10:22:44PM +0200, Zhi Wang wrote:
+> > > Overall looks good to me. Some comments below:
+> > >
+> > > I still think it would make sense to have `IoCapable<T>: IoTryCapable<T>`,
+> > > but it's not a big deal.
+> > 
+> > I think with this approach it's not necessary to have this requirement. In
+> > practice, most impls will have both, but I think it's a good thing that we don't
+> > have to have an impl even if not used by any driver, i.e. it helps avoiding dead
+> > code.
+> > 
+> > >> +    /// Infallible 64-bit read with compile-time bounds check.
+> > >> +    #[cfg(CONFIG_64BIT)]
+> > >> +    fn read64(&self, offset: usize) -> u64
+> > >> +    #[cfg(CONFIG_64BIT)]
+> > >> +    fn try_read64(&self, offset: usize) -> Result<u64>
+> > >
+> > > These don't really need cfg(CONFIG_64BIT). You can place that cfg on
+> > > impl blocks of IoCapable<u64>.
+> > 
+> > If you agree with the above, I can fix this up when applying the series.
+> 
+> Ok with me.
 
-> Jonathan Cameron wrote:
-> [..]
-> > Any thoughts on what I'm missing? =20
->=20
-> Probably:
->=20
->    cxl/port: Map Port component registers before switchport init
->=20
-> ...which really should not be a distinct patch from the one that changes
-> the ordering. I will send out a more patient series to settle this so
-> Terry does not need to keep carrying it.
->=20
-Ah. I stopped looking when I got to this patch :) Spot on - thanks!
-
-Below is my suggestion of another approach. I think it ends up
-a fair bit simpler, but you know this code a lot better than I do, so I may
-be missing some problems! I like the simpler reaping. That approach looks
-like it can be used elsewhere in this file.
-Testing so far is one representative config only.
-
-The patch you highlight above is squashed into this. At least one comment
-I made on your patch applies here too (naughty me :)
-
-=46rom a95567d9e2e3809ca1953a9aec24324ae13f6145 Mon Sep 17 00:00:00 2001
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Date: Tue, 20 Jan 2026 10:53:14 +0000
-Subject: [PATCH] Alternative to Dan's approach for managing dport resources.
-
-Create a devres group to manage a subset of resources.
-On success, close the devres group, but also stash a copy in
-struct cxl_dport so we can use it for dport reaping.
-
-On error, when group open release it.
-
-Somewhat tested, but not what I'd consider exhaustive yet!
-Used a 2 port switch, 2 EP test config.
-
-1. Unbind endpoints, checked reap happened.
-2. Unbind port1, check tear down happened.
-3. Add some errors so some calls fail (stepping through each
-   group that was created) Some cases get setup by
-   it having another try based on a different downstream device
-   arrival triggering the flow, but it seems fine.
-
-  =20
----
- drivers/cxl/core/port.c       | 76 ++++++++++++++++++++---------------
- drivers/cxl/cxl.h             |  2 +
- drivers/cxl/cxlpci.h          |  4 ++
- tools/testing/cxl/test/mock.c |  1 +
- 4 files changed, 51 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index fef3aa0c6680..e3c53b2fc78f 100644
---- a/drivers/cxl/core/port.c
-+++ b/drivers/cxl/core/port.c
-@@ -778,7 +778,7 @@ static int cxl_setup_comp_regs(struct device *host, str=
-uct cxl_register_map *map
- 	return cxl_setup_regs(map);
- }
-=20
--static int cxl_port_setup_regs(struct cxl_port *port,
-+int cxl_port_setup_regs(struct cxl_port *port,
- 			resource_size_t component_reg_phys)
- {
- 	if (dev_is_platform(port->uport_dev))
-@@ -786,6 +786,7 @@ static int cxl_port_setup_regs(struct cxl_port *port,
- 	return cxl_setup_comp_regs(&port->dev, &port->reg_map,
- 				   component_reg_phys);
- }
-+EXPORT_SYMBOL_NS_GPL(cxl_port_setup_regs, "CXL");
-=20
- static int cxl_dport_setup_regs(struct device *host, struct cxl_dport *dpo=
-rt,
- 				resource_size_t component_reg_phys)
-@@ -1065,7 +1066,12 @@ static int add_dport(struct cxl_port *port, struct c=
-xl_dport *dport)
- 			dev_name(dup->dport_dev));
- 		return -EBUSY;
- 	}
--
-+	//comment from original patch here.
-+	if (!port->nr_dports) {
-+		rc =3D cxl_port_setup_regs(port, port->component_reg_phys);
-+		if (rc)
-+			return rc;
-+	}
- 	rc =3D xa_insert(&port->dports, (unsigned long)dport->dport_dev, dport,
- 		       GFP_KERNEL);
- 	if (rc)
-@@ -1181,20 +1187,6 @@ __devm_cxl_add_dport(struct cxl_port *port, struct d=
-evice *dport_dev,
- 	if (rc)
- 		return ERR_PTR(rc);
-=20
--	/*
--	 * Setup port register if this is the first dport showed up. Having
--	 * a dport also means that there is at least 1 active link.
--	 */
--	if (port->nr_dports =3D=3D 1 &&
--	    port->component_reg_phys !=3D CXL_RESOURCE_NONE) {
--		rc =3D cxl_port_setup_regs(port, port->component_reg_phys);
--		if (rc) {
--			xa_erase(&port->dports, (unsigned long)dport->dport_dev);
--			return ERR_PTR(rc);
--		}
--		port->component_reg_phys =3D CXL_RESOURCE_NONE;
--	}
--
- 	get_device(dport_dev);
- 	rc =3D devm_add_action_or_reset(host, cxl_dport_remove, dport);
- 	if (rc)
-@@ -1441,11 +1433,7 @@ static void delete_switch_port(struct cxl_port *port)
-=20
- static void del_dport(struct cxl_dport *dport)
- {
--	struct cxl_port *port =3D dport->port;
--
--	devm_release_action(&port->dev, cxl_dport_unlink, dport);
--	devm_release_action(&port->dev, cxl_dport_remove, dport);
--	devm_kfree(&port->dev, dport);
-+	devres_release_group(&dport->port->dev, dport->devres_group);
- }
-=20
- static void del_dports(struct cxl_port *port)
-@@ -1602,6 +1590,9 @@ static struct cxl_dport *cxl_port_add_dport(struct cx=
-l_port *port,
- 					    struct device *dport_dev)
- {
- 	struct cxl_dport *dport;
-+	struct cxl_dport *new_dport;
-+	struct device *host;
-+	void *devres_group;
- 	int rc;
-=20
- 	device_lock_assert(&port->dev);
-@@ -1615,21 +1606,31 @@ static struct cxl_dport *cxl_port_add_dport(struct =
-cxl_port *port,
- 		return ERR_PTR(-EBUSY);
- 	}
-=20
--	struct cxl_dport *new_dport __free(del_cxl_dport) =3D
--		devm_cxl_add_dport_by_dev(port, dport_dev);
--	if (IS_ERR(new_dport))
--		return new_dport;
-+	if (is_cxl_root(port))
-+		host =3D port->uport_dev;
-+	else
-+		host =3D &port->dev;
-+
-+	devres_group =3D devres_open_group(host, NULL, GFP_KERNEL);
-+	if (!devres_group)
-+		return ERR_PTR(-ENOMEM);
-=20
--	cxl_switch_parse_cdat(new_dport);
-+	if (port->nr_dports =3D=3D 0) {
-+		rc =3D cxl_port_setup_regs(port, port->component_reg_phys);
-+		if (rc)
-+			goto release_group;
-=20
--	if (ida_is_empty(&port->decoder_ida)) {
- 		rc =3D devm_cxl_switch_port_decoders_setup(port);
- 		if (rc)
--			return ERR_PTR(rc);
--		dev_dbg(&port->dev, "first dport%d:%s added with decoders\n",
--			new_dport->port_id, dev_name(dport_dev));
--		return no_free_ptr(new_dport);
-+			goto release_group;
-+	}
-+
-+	new_dport =3D devm_cxl_add_dport_by_dev(port, dport_dev);
-+	if (IS_ERR(new_dport)) {
-+		rc =3D PTR_ERR(new_dport);
-+		goto release_group;
- 	}
-+	cxl_switch_parse_cdat(new_dport);
-=20
- 	/* New dport added, update the decoder targets */
- 	device_for_each_child(&port->dev, new_dport, update_decoder_targets);
-@@ -1637,7 +1638,18 @@ static struct cxl_dport *cxl_port_add_dport(struct c=
-xl_port *port,
- 	dev_dbg(&port->dev, "dport%d:%s added\n", new_dport->port_id,
- 		dev_name(dport_dev));
-=20
--	return no_free_ptr(new_dport);
-+	/*
-+	 * Stash the group for use during reaping when all downstream devices
-+	 * go away.
-+	 */
-+	new_dport->devres_group =3D devres_group;
-+	devres_close_group(host, devres_group);
-+
-+	return new_dport;
-+
-+release_group:
-+	devres_release_group(host, devres_group);
-+	return ERR_PTR(rc);
- }
-=20
- static struct cxl_dport *devm_cxl_create_port(struct device *ep_dev,
-diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index c796c3db36e0..855f7629f5c4 100644
---- a/drivers/cxl/cxl.h
-+++ b/drivers/cxl/cxl.h
-@@ -688,6 +688,7 @@ struct cxl_rcrb_info {
-  * @coord: access coordinates (bandwidth and latency performance attribute=
-s)
-  * @link_latency: calculated PCIe downstream latency
-  * @gpf_dvsec: Cached GPF port DVSEC
-+ * @devres_group: Used to simplify reaping ports.
-  */
- struct cxl_dport {
- 	struct device *dport_dev;
-@@ -700,6 +701,7 @@ struct cxl_dport {
- 	struct access_coordinate coord[ACCESS_COORDINATE_MAX];
- 	long link_latency;
- 	int gpf_dvsec;
-+	void *devres_group;
- };
-=20
- /**
-diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-index 1d526bea8431..a3fbedb66dbb 100644
---- a/drivers/cxl/cxlpci.h
-+++ b/drivers/cxl/cxlpci.h
-@@ -132,4 +132,8 @@ void read_cdat_data(struct cxl_port *port);
- void cxl_cor_error_detected(struct pci_dev *pdev);
- pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
- 				    pci_channel_state_t state);
-+
-+int cxl_port_setup_regs(struct cxl_port *port,
-+			resource_size_t component_reg_phys);
-+
- #endif /* __CXL_PCI_H__ */
-
-
+with cfg(CONFIG_64BIT) adjusted:
+Reviewed-by: Alice Ryhl <aliceryhl@google.com>
