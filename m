@@ -1,155 +1,121 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32356202C48;
-	Tue, 20 Jan 2026 18:56:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E3BA36AB7E;
+	Tue, 20 Jan 2026 18:56:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768935380; cv=none; b=suZEg2kzSvj36LAtt6pLeioIb9ygOl3mfIZTqBIZLI+k8r8lyf2bt4ChitcN82v6qda0I6Vg6KbmXpcdNF8/5sFH/Bx4di0XRbqVPks4yh7MOHu6pXef8aJlmlA7iiUeTR8FPhX8tPxPPQL3f9VNvTEAw6cnZL+5ffmsTRuaGqs=
+	t=1768935394; cv=none; b=PgDWD8udBgbshsq3W9Ij55LFOBBgKD6HtDIeUmbEZGsAzK64UUBsRhA11fJADzo+55qPTQct1hHy9pUHmqGM+Zj3fo49uLfUvTD/0VxZ/YOmaIR0cNYIODM3pOXFQtTDF2ZzW2u9UskWZ9hMyKwihiSKSkHiwq4qhicMguB4qwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768935380; c=relaxed/simple;
-	bh=eErp0S6os9v/Rn+k1cDr5y3HwwsfY7sOBjLAqxzQXDU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DGf5jtIE3DLBPjifGnBoke5ZUnBrIH6IVvwShtA58mshSK135Zyeh6opWs18L5Qih9wD2GEROgtEn5rglrzQbBq7EUk2iJIPxkCV2NsQ+EU1cV2rsVgaKxNbwVQoqKxKNzBEOjA77OhDPCYqTpuAL9cDfCMtcg0kAD376d7ajeE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=JfRphyqx; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1768935394; c=relaxed/simple;
+	bh=lHPeenipo+JjDaxaE0lcp57qJlGdlmz17mZc67T7DuM=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=Hs+nn+C5lIfOzdcoXqW+7oFgXfXgZiY3UymK3cpxO+Y7B3sMj4G7fDHseOBqb7Qh12k3ejP/doDMRQlpAY3XnFAJoMsXfX1UtCgK8H7HH8KtLuzqhczEpcc7THtwlOUX+Y2/cNS6lSEd18+LoVx6jtcnBeUlxpT3Ml43MHqxiGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W2XMNB2I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="JfRphyqx"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 60KElIhh022132;
-	Tue, 20 Jan 2026 18:56:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=C3mPVg
-	t8LUgdxZxYnCbdAa813Umhbt9Ayb6BVH7cBsk=; b=JfRphyqxFnNZHZQidBqp0X
-	tTMt9k8ztG59AekY1FD6NOoP6WgApUkP3d4/hfes/mycMHuA+uI41hUR0bQxCLn4
-	6g7IMqrJMd86o2qBnMMlPKS9yNy2kCX7SkT9vArIQqzxb7j1yC2s5SCSysvkuhD3
-	rS1+OB5ttvxwnAkE5yqrEzawbkMJRGZm8klveiT4A9B7YSWAfp53A8KcTdvyv8cM
-	TTkHBHNTOsJsmReqZIl0/N0rdzXxipResyPJVz8K0ViVaihiTIOwGZG438s7kXTg
-	K65NIM6r0IfsvFM4ISZn2VjWMKM9ALUcrfHEcK37pRDg1gl/XVQW2hhZvtm0jyTg
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4br0ufey7d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 20 Jan 2026 18:56:11 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 60KI18gx024614;
-	Tue, 20 Jan 2026 18:56:10 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4brxarnesq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 20 Jan 2026 18:56:10 +0000
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 60KIu9Nt24773168
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 20 Jan 2026 18:56:10 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A213A5805A;
-	Tue, 20 Jan 2026 18:56:09 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5A4CD5805F;
-	Tue, 20 Jan 2026 18:56:08 +0000 (GMT)
-Received: from [9.61.246.96] (unknown [9.61.246.96])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 20 Jan 2026 18:56:08 +0000 (GMT)
-Message-ID: <0920028c-8084-4a1c-841e-90e0d5485d4a@linux.ibm.com>
-Date: Tue, 20 Jan 2026 10:56:07 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W2XMNB2I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4DB9C16AAE;
+	Tue, 20 Jan 2026 18:56:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768935393;
+	bh=lHPeenipo+JjDaxaE0lcp57qJlGdlmz17mZc67T7DuM=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
+	b=W2XMNB2IJUGQWTAvgXo+9h7Qw6pcALwSh3+VT+WLBHbWZ8iI0GL5mO2PBKtWIlDxl
+	 we+3ieJKTb+XlXZYJSssU4goFRm3s6zAkh306ajEGAia2zFdOs5zFHp4cBXFa99nnw
+	 ftLMJu1oBJMGY9aH2KmxCl69oj8oIN31BkzuK8SQjFbwjTavrkUvY5dPGxl6NwPffh
+	 vP6GZ0eABa1D+I9BL9AZ/YJE/xtB7dE+q3P74Krw1gpop9OE6t2Twqeu2DPfp5+hA8
+	 NqPTeV8+zJ1AKCtNvQ+/dkuTKBEHDdz5WLt1k9w89WrRa2LYl6yIiwZXI2Voh15heD
+	 Ph5EIJGMQTQxg==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 9/9] vfio: Remove the pcie check for
- VFIO_PCI_ERR_IRQ_INDEX
-To: Julian Ruess <julianr@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org, lukas@wunner.de, alex@shazbot.org, clg@redhat.com,
-        stable@vger.kernel.org, schnelle@linux.ibm.com, mjrosato@linux.ibm.com
-References: <20260107183217.1365-1-alifm@linux.ibm.com>
- <20260107183217.1365-10-alifm@linux.ibm.com>
- <DFSQ35HIT6YT.3DTUUNUOEEDHM@linux.ibm.com>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <DFSQ35HIT6YT.3DTUUNUOEEDHM@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: T0mPbojh4hBzIYTTgwRHi9zgte-eVeMT
-X-Proofpoint-ORIG-GUID: T0mPbojh4hBzIYTTgwRHi9zgte-eVeMT
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIwMDE1NyBTYWx0ZWRfX2woT2qKwTkkW
- vKcaq/Lkg1pNSmUBNgpU20B5D44QaPxOkL6NtXbZdvF7LmEo50/3P5/d/OoL9uEgIDpfKjrr3kF
- uu1NI7HV/u8EfOtp3LbBG7fjk/KchpZ31DJuGpLRpP0BBOBkHoBUSr48NK00CFKevGyicdIcMI+
- iFbRczpMkDvsnjhHwZ7bMWX4NZ6Bl3z2cQt4Szdw7tXCzRoHSmqNKFF6/tXphsSgdl9OFegJQE+
- EmCu9lU74D3BIsBxsCg4/3L65ljCBeSS+720XZV2OzzVdIH+cCxjMnFrOIFQsGvS16IJFMBbkEn
- 2829DJhtdOgNz25j4rfoTPe6YcJRJN5uxNtXmbBZ+TcNtVrn7Fb1+MnW/pX1g3DSrKR7jQTYus5
- hYqR2enhEjYcqpfTAe8qO8Eujfq0Ms0Il1c5uqyuqmyHhqmd2zWfMhNYqBRrmtKqoSeN26cIisy
- nX1CQflYpzmnDO9ZRQw==
-X-Authority-Analysis: v=2.4 cv=bopBxUai c=1 sm=1 tr=0 ts=696fcfcb cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VnNF1IyMAAAA:8 a=q_SdFccrKIupyLLHt0MA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
- definitions=2026-01-20_05,2026-01-20_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 adultscore=0 suspectscore=0 impostorscore=0
- phishscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501
- clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2601150000
- definitions=main-2601200157
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 20 Jan 2026 19:56:29 +0100
+Message-Id: <DFTN9F5OGCBS.2CRNLWNC60971@kernel.org>
+Subject: Re: [PATCH 1/4] rust: device: support `dev_printk` on all devices
+Cc: "Gary Guo" <gary@garyguo.net>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun.feng@gmail.com>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
+ Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Bjorn
+ Helgaas" <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+To: "Gary Guo" <gary@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260120181152.3640314-1-gary@kernel.org>
+In-Reply-To: <20260120181152.3640314-1-gary@kernel.org>
 
+On Tue Jan 20, 2026 at 7:11 PM CET, Gary Guo wrote:
+> diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+> index c7b5db9dcca1..94e0548e7687 100644
+> --- a/rust/kernel/device.rs
+> +++ b/rust/kernel/device.rs
+> @@ -601,6 +601,13 @@ impl DeviceContext for Core {}
+>  impl DeviceContext for CoreInternal {}
+>  impl DeviceContext for Normal {}
+> =20
+> +impl<Ctx: DeviceContext> AsRef<Device<Ctx>> for Device<Ctx> {
+> +    #[inline]
+> +    fn as_ref(&self) -> &Device<Ctx> {
+> +        self
+> +    }
+> +}
+> +
+>  /// Convert device references to bus device references.
+>  ///
+>  /// Bus devices can implement this trait to allow abstractions to provid=
+e the bus device in
+> @@ -720,7 +727,7 @@ macro_rules! impl_device_context_into_aref {
+>  macro_rules! dev_printk {
+>      ($method:ident, $dev:expr, $($f:tt)*) =3D> {
+>          {
+> -            ($dev).$method($crate::prelude::fmt!($($f)*));
+> +            $crate::device::Device::$method($dev.as_ref(), $crate::prelu=
+de::fmt!($($f)*))
 
-On 1/19/2026 8:56 AM, Julian Ruess wrote:
-> On Wed Jan 7, 2026 at 7:32 PM CET, Farhan Ali wrote:
->> We are configuring the error signaling on the vast majority of devices and
->> it's extremely rare that it fires anyway. This allows userspace to be
->> notified on errors for legacy PCI devices. The Internal Shared Memory (ISM)
->> device on s390x is one such device. For PCI devices on IBM s390x error
->> recovery involves platform firmware and notification to operating system
->> is done by architecture specific way. So the ISM device can still be
->> recovered when notified of an error.
->>
->> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
->> ---
->>   drivers/vfio/pci/vfio_pci_core.c  | 6 ++----
->>   drivers/vfio/pci/vfio_pci_intrs.c | 3 +--
->>   2 files changed, 3 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
->> index c92c6c512b24..0fdce5234914 100644
->> --- a/drivers/vfio/pci/vfio_pci_core.c
->> +++ b/drivers/vfio/pci/vfio_pci_core.c
->> @@ -778,8 +778,7 @@ static int vfio_pci_get_irq_count(struct vfio_pci_core_device *vdev, int irq_typ
->>   			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
->>   		}
->>   	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX) {
->> -		if (pci_is_pcie(vdev->pdev))
->> -			return 1;
->> +		return 1;
->>   	} else if (irq_type == VFIO_PCI_REQ_IRQ_INDEX) {
->>   		return 1;
->>   	}
->> @@ -1157,8 +1156,7 @@ static int vfio_pci_ioctl_get_irq_info(struct vfio_pci_core_device *vdev,
->>   	case VFIO_PCI_REQ_IRQ_INDEX:
->>   		break;
->>   	case VFIO_PCI_ERR_IRQ_INDEX:
->> -		if (pci_is_pcie(vdev->pdev))
->> -			break;
->> +		break;
->>   		fallthrough;
-> Isn't the fallthrough unreachable now?
->
-> -- snip --
+At a first glance I wasn't sure if we really want to rely on AsRef when hid=
+e it
+in the macro. But on the other hand, if someone would implement AsRef on a =
+class
+or bus device to return some other (unrelated) &Device it would be wrong
+anyways. So I think using AsRef is fine.
 
-Yes indeed, I forget why I still had the fallthrough statement. But I 
-don't think that's needed anymore, since we will have explicit break 
-statements for all the valid cases.
+I think a lot of people will be very happy about this patch. :)
 
-Thanks
+I will pick up patches 1 and 2 this cycle, patch 3 and 4 can go through the
+corresponding subsystem tree next cycle.
 
-Farhan
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index bea76ca9c3da..3946ca919332 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
+> @@ -351,7 +351,7 @@ impl Device {
+>      ///     // Get an instance of `Vendor`.
+>      ///     let vendor =3D pdev.vendor_id();
+>      ///     dev_info!(
+> -    ///         pdev.as_ref(),
+> +    ///         pdev,
+>      ///         "Device: Vendor=3D{}, Device=3D0x{:x}\n",
+>      ///         vendor,
+>      ///         pdev.device_id()
+> diff --git a/rust/kernel/pci/id.rs b/rust/kernel/pci/id.rs
+> index c09125946d9e..e2d9e8804347 100644
+> --- a/rust/kernel/pci/id.rs
+> +++ b/rust/kernel/pci/id.rs
+> @@ -22,7 +22,7 @@
+>  /// fn probe_device(pdev: &pci::Device<Core>) -> Result {
+>  ///     let pci_class =3D pdev.pci_class();
+>  ///     dev_info!(
+> -///         pdev.as_ref(),
+> +///         pdev,
+>  ///         "Detected PCI class: {}\n",
+>  ///         pci_class
+>  ///     );
 
-
+Can you please send a separate patch for those?
