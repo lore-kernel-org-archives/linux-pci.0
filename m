@@ -1,224 +1,188 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010053.outbound.protection.outlook.com [52.101.229.53])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CED9D3A9626;
-	Tue, 20 Jan 2026 20:11:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768939874; cv=fail; b=AyJsYN4TRsstTIofKoOPDYNMXSmgZw1poTnhHsymNFKiOG5Hb/cV+reNEEvrdSAAhIFSqIgy/VUfY1uLYcmSv8xNEoE5S0OAQ8mmGSi1p92xc6jiwD+Bugg3oPII+64bGn3jCae95/RTMptRv++x42+0Xy6fvjYvIE0/tetpkfk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768939874; c=relaxed/simple;
-	bh=h+Bl0Z731MRCXUfB8zhnMTcSCMV1QiQ56qvD0h+moos=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=dOzC3vw8y7jQQTFHuPdm2Sz2afbcHU8Ajfn9pqga/Mz5x1re9zgJx22MetkBLw5MqizeZER3qS/v9OP1CkxgX0zVWr47WDcL16STDhCRTypfECZbAHVRShgOyP341vaogZMaF0sNqj6jBA6UgkQUSiLRr4HslofJw70RN2b8+kI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=ipWDru8I; arc=fail smtp.client-ip=52.101.229.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B471B3A8FED;
+	Tue, 20 Jan 2026 21:10:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768943404; cv=none; b=cCCENc926QOhDt9JFPjJaN7qex5xxD9R/y4LbZwvmMbIiyWqFHm36+LKR/1HLQs0VjiymAODG7UPKJ3odJnbB8dYrfIJihxDbAsi9r0U7DFjiC/sSQwmGrKcDnTnRav0X7r3rpw8fV+xr5+93jddiYef5iO4FJExd4iPLGen+PU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768943404; c=relaxed/simple;
+	bh=ivHtQ6gh6IXT2hO8yZKcCr+q7hqDkcejJS3fvf52Ppo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N4cQdZk9DOhFIiOYHvB7yKWchEuds5yOzzTqKsWT2zAeZPB4GULz20pr6RrQpyTM+YgSXjjozXHNbmNPkKcu/oWHH2O4S3QJw1DbUweWaOt2INTSlxwMLQrK8cOj4oVkLwMTLQriO6wj2Reny93Im6Vsi4/euzfMwmO/WJUyc/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qf/4opCa; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="ipWDru8I"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lL4zlpMYAjcHbJWQ0ZAlM7tUp6n2bIXiU4XcCc1JYackvU4O+DC79zaQ7haOmNpYJNj+GNycRLx3acX+CNw6gq3ZH4gS8qvgOAS3PMwvUbb67nuwppos0wSRDA/9GjtGWLAyEL+utZujBvibjCKz4p9JpWFb8ZrrAkEIY6ByVsSeQ1eE5/M97bW8oYeJeJ9XGfGpOYBfPosB3GukhBZTdthspQMI+8ikUWmwvhIhAZwlBx5IAPd5ypVqzozI8gKvZIHMrx+oAfZX0BFFJpbsK2V8HEVU4vdzFbNSB7HDeMNYpvVnHu6Db0wpYSyIB9YmDnVs+q842OwyW6denhZroA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=h+Bl0Z731MRCXUfB8zhnMTcSCMV1QiQ56qvD0h+moos=;
- b=BEzX2A7EuWcuOM9IgAX8oGwVOZ+GZjBQ9YROJ+7Q75C7QhktQ4lV9Tfg2x0OODIgzdzVvdM4Fjmn3cp9/y6fwJnQ+s6dqDE8caxFcNnQiVHqbeU1g5iFdjArMMoOABrPSX7xQWFAGQhBGfS+ndyh9Scpf3YALpyaimt+PnkKE5rPDbAsIEB3iroqOFmjQisFcVBkjN1oOZ3avQF9T8JmQTAflH3+o4Rt42D7iln6n+IqwozaDLoFfTJR65TJIs0SdejVqGctB7kc9n1o2VwvPwR4XolqsmOqCoiD5lWHIpVURK9GFBoATFR6pOISHwwCOiVqIY5nw38CF9qmb7KKsw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=h+Bl0Z731MRCXUfB8zhnMTcSCMV1QiQ56qvD0h+moos=;
- b=ipWDru8INIwRvcvXp0HlybYSCCumq1INOFqoLGJBo7d1X8GvQ/1q4bw8JOtldvyrDOV338hfkH31Ynoa9gbIUPhHEU5kVg+8kq+M9sev2l8qsRw+p5Tu/+KINfCOqlBWg1ZCDaH0x+//Y5MahySz7Y/edG9XbdQaTgg1T6xfXfA=
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com (2603:1096:405:35b::6)
- by TYRPR01MB12724.jpnprd01.prod.outlook.com (2603:1096:405:1b8::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Tue, 20 Jan
- 2026 20:11:04 +0000
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::aa7e:1460:f303:3fd8]) by TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::aa7e:1460:f303:3fd8%6]) with mapi id 15.20.9542.008; Tue, 20 Jan 2026
- 20:11:04 +0000
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: Claudiu.Beznea <claudiu.beznea@tuxon.dev>, Claudiu Beznea
-	<claudiu.beznea.uj@bp.renesas.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "geert+renesas@glider.be"
-	<geert+renesas@glider.be>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>
-CC: "robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
-	magnus.damm <magnus.damm@gmail.com>, Biju Das <biju.das.jz@bp.renesas.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-clk@vger.kernel.org" <linux-clk@vger.kernel.org>,
-	"john.madieu@gmail.com" <john.madieu@gmail.com>
-Subject: RE: [PATCH 01/16] PCI: rzg3s-host: Fix reset handling in probe error
- path
-Thread-Topic: [PATCH 01/16] PCI: rzg3s-host: Fix reset handling in probe error
- path
-Thread-Index: AQHchWtzpfFST+ihokiR5M7UyuehbrVZjgKAgAH4vcA=
-Date: Tue, 20 Jan 2026 20:11:04 +0000
-Message-ID:
- <TY6PR01MB173771F2A14FDEF6698DCD14EFF89A@TY6PR01MB17377.jpnprd01.prod.outlook.com>
-References: <20260114153337.46765-1-john.madieu.xa@bp.renesas.com>
- <20260114153337.46765-2-john.madieu.xa@bp.renesas.com>
- <fb7ec096-372b-48f4-b6ed-e224a05d55e2@tuxon.dev>
-In-Reply-To: <fb7ec096-372b-48f4-b6ed-e224a05d55e2@tuxon.dev>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=bp.renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY6PR01MB17377:EE_|TYRPR01MB12724:EE_
-x-ms-office365-filtering-correlation-id: 40086c6f-ffa4-44ff-86f7-08de58600a18
-x-ld-processed: 53d82571-da19-47e4-9cb4-625a166a4a2a,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|7416014|366016|1800799024|38070700021;
-x-microsoft-antispam-message-info:
- =?utf-8?B?dkFkcXRXdjZSZDVyck9XVWlnb21QWHl4Yk54Z3E0SXpmVk9pWW5KQm5RRWQz?=
- =?utf-8?B?S2lIK1BuMVBLWTlhQkJGYTgrYjlsSkdzV1hPRWtRZEdjMFVsbElyYlp0SWlH?=
- =?utf-8?B?ckNGV05GWTc5SkpZandlOFFVS1lMS1pjUlI4ZzZtY1FldGdZK0tNNytEM2Vm?=
- =?utf-8?B?VHhmU1FZZlBTRCtrRmRJU1ZwQUpLWWpLZkpZdHV6OVNRNENFMjdHcy9rWUlL?=
- =?utf-8?B?Ym1LV1piaktVekdTUW9YcVZNbHk2cG80UGRhQk1abC9RcVZQUDhkMlhiZHJE?=
- =?utf-8?B?MTZPeFExZTkxemlLTm5KUHR2TjY1a3BrdHRDME9iSFpIampHT2VQVTJkSTdw?=
- =?utf-8?B?K1JLMDhmOXU2U0RxeVNqVEtwWU5Za0V2QWVLNGJhY1FWWFFvclNkeFRCZklL?=
- =?utf-8?B?WTErYmtkaVBmbDVPN0V2dEpoRjAySE5MVVcyVFhiQjZoQ3pMdmVSSTR5cEh6?=
- =?utf-8?B?Q0VGdXFwSFU1SVZsT1dVSjNRM1NzOW05TTV0UTJGT0ppeVJhYndvclBuZHpq?=
- =?utf-8?B?SWVzRFg3UGRoSTdXc1N2R3RuV1lGVFlvSnc3TmtiUmJKMmxTeFNVcUlRcURT?=
- =?utf-8?B?SzJqUzBUNHlpNTNQZTJtMm8yT1JQdDR1NFlzaUJDcEhCYW04dDlOMmtHRUdN?=
- =?utf-8?B?VzJHODYxTU84azE5aTM5K2tUVE1uOGMrdUo0ODk3WUM1OThzUUdJdE5BeWds?=
- =?utf-8?B?TzVSN1duZE43NUJ0RFNxZHUvNE04Vzc2a0l4YWU1Y0ROWEVhUmdIbTQ5Uzcx?=
- =?utf-8?B?Y2IzUUxPSFkxSjROVlUrc1J0MXZ0eUdybUVKdGdTeSt4T1pYR3E3c1hSbjFZ?=
- =?utf-8?B?dXZkbk8rVVJqN3RXT3lsQ0Q1eC9RNy8rZk90czZobjRhVVlndThFYi8wUVpw?=
- =?utf-8?B?UWNDTEFUcEdtVTRQNzZrb0pXYVBIdXBPaDBGcFBjZ3owTzlubmQrUDRQdlV0?=
- =?utf-8?B?QlV1cFpCTmdFWTJpSW5JUm8zNUNTSkNDR204NFdrcjMxWlFITWZmcEZyaEtk?=
- =?utf-8?B?eWVOekJqajNHZ0xXelpmdkVGOW12dEZQMXJZSVBBS0NJc2JNK3BWUHJqM3Zz?=
- =?utf-8?B?cnRyMGNvZ21RZmZDYVIzWFlvS202WkJrVTMyR3k5NVlRNzVyQVZVeTBveTAx?=
- =?utf-8?B?ZXhnWUxTelRYZktXM2VDNGdxWnA5UEdvUkFUNTdGNm5zYXJsMXZ5UWFOV1Fx?=
- =?utf-8?B?ZGkrTFVBK3N2dk95Wnk4QzIrMDNsMHlwVDJic0s1dEdlcEhQOCtFcWhTR1pw?=
- =?utf-8?B?aDIxMzNKaWNmbmg2VlgrVWZrR25Tc3BBa3RuNzZWa0lqWFVUNWJ3YldFZ0J3?=
- =?utf-8?B?QytUS25wREdPd092YWFJUm9WK1JQOGtmQ25TbThpcTZPL1ZLQVJ5TDVrWDlP?=
- =?utf-8?B?ZEFVem5xc090Y05NQ0xkbTZkTGhIczlodVh6TWlKNnA3Z2xBa1BiZGIrR0JQ?=
- =?utf-8?B?OUNCOWpFQzIzMjVERXNDMTYrY3ZHQTJPbUFSR0VQRnFzVUhLNzZtU3h5K0hl?=
- =?utf-8?B?L29hS1RDNUhXUERVWXhaT3V3Z0ZjeUF4MUhQbnRtU3Z3OWQ0eGRMQ3RiaGdB?=
- =?utf-8?B?OHJNZGM5Mzd6aEtya0MwT1U0aU1VMUsyYWt3N0lnRTNqWXF0UHUzaWJRaUZo?=
- =?utf-8?B?dHN6eEJaaTVXdjUzTlVMaHFMd3QvRDd4cXJIdGxxR095c2t6eWN1UXZJS05M?=
- =?utf-8?B?ZStzdlFSUlY2ZnArdWF4VFZGdkowUWgwVXBVcWlyNHBjTjhIWGd4K3JnQTUz?=
- =?utf-8?B?c3c3MFFiaGUzQ21yV1lqcjFuWWw2TndDOEIwYWg4R1NFRi9zc2VQaTUzTFA1?=
- =?utf-8?B?L1VxTVljRkxSUEN0VGlzN1FVSzJKMytSVTh1Z0ZET2VaSlcva1JWYkVKYWY3?=
- =?utf-8?B?R1kxVXRnSjN6VmJYaDJmb0Y3V0RQdFZ2RHkxMk8xT3dIeEltUVBKWjNuUzc2?=
- =?utf-8?B?aVRuMWF1YUtqdUpWOHJyVG5QUGYzbWp0c2I3cHZYaFJzeThPdExFZlEvMTBT?=
- =?utf-8?B?b3ZudWZVQTdUSFM3RG9DMzZyV3NyejBRV1NaVmVZdmVlUmo4aTJOK2FvZDdj?=
- =?utf-8?B?eUZqQUFaaHdhNXZsUTZzRWZFdUUzZXFodVpjU1ROOHZDNllUakIwcEg1d2lz?=
- =?utf-8?B?TVNnQTJpUEU0OWFHeWtWcXRMOE9vYStXYkdJUncyNHZmV3VJWkN2RXRmeE8x?=
- =?utf-8?Q?qgJS8tVIGmUNWk34J6zj65U=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY6PR01MB17377.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?U0lOanZJYVc2ZXA3TFNFVTdNWGN4RTh0L0NrMlZYenBWaGhDSkJjRzJBRXJ1?=
- =?utf-8?B?MExrc3hWbDVnRExab05yVVEwcVNReVdhRzhXckRuc2NScm5BUGNXbTc4R0ts?=
- =?utf-8?B?cUNSM3I0Wk5hczMyNWJmT2krRnU1VksxaFpWN01scFFHaTFnSWt2Z2JiRlZ4?=
- =?utf-8?B?WHk1RzQzMGloRUdweHJ6amtJSkIyb0g2dGh3NXVXNnZJNko3VHRXWGYxcldi?=
- =?utf-8?B?WE4wZnRuMHJCYTVyVXJqZ3RXRWhYNG5zbWIvS0RCSWl5a09uRzJhcFBsVEpV?=
- =?utf-8?B?OC9IS3c5cjM3SEZaOFQ1S1lNN1ZDc01XOGxpcXY0SEhkeEpKZ2tLTWU0QTdX?=
- =?utf-8?B?a2U1V2RkdVp4ZGYvc05NQ0tmK1I4NVhGYVZ6MTFXMnJPeWhlLy9tRmFRazZR?=
- =?utf-8?B?T3NCSU9MY2ZhK20yT2pONkZ5K0pFU1MyRXNqTUZSR1NxdC9RdWplbVRVZE9Z?=
- =?utf-8?B?aG16NmpjcklrVW1ncEp5VVFjSmdjSFBvMlV0d2tpRHpxQXF5UURxRDFEVVhI?=
- =?utf-8?B?SFduTXVURFo2MStNTlk2TS8yeHhpN1lHYjBndnFiczkrRFdLbDd0OGMxSERa?=
- =?utf-8?B?NVYvdmVPdU0wdTJLYVlYRWZuM0JuRmd1b3E4eHZDK25yck9jWkZvcEM0R1Q3?=
- =?utf-8?B?V2gyQzBOVS8vbkhRcHB3ZUY4cDVLUWo3OThZZ1ZOTGxTYVZ1VkdZR1hhMkJa?=
- =?utf-8?B?blBnRjZGUldaMDA5MjZpY0grVDZDS1J3MWtBSUV5Qk91R0lIMnZKQW80M2FW?=
- =?utf-8?B?bEprNCt5VkFPMHNPZllyZDhOR1pkTzhhVWJzNEtscHZqTmx5ZHpPVjQ4Ykpy?=
- =?utf-8?B?Q3ozVWtIQXZ0clZ6S2dmVzh0TExhMGNQbU91R0kxWHFiWS81RUEwdHVLeUpT?=
- =?utf-8?B?TXIwUklxT0poczNKb0gvYitMQ0d5cDJ6N0hqcmVMNHIyREpDZkNvbnNCUmFa?=
- =?utf-8?B?RWd5NE1sS0Q2YmVhU0RLRlNoZ2hpVUxGdzlIOFYvRnFaRGZpUGhTSXdzTmdO?=
- =?utf-8?B?b2VPRmhqeDdvSml5YlBGeXkweURpQk93SWhRZGtiN0gzN1FOb2w1Mm10S0dT?=
- =?utf-8?B?ODExeFpKSTN6bU9ablRpNlNXeDZlNGczYzFXeFVjL1J2NDVaTmQ1dGlrSTZh?=
- =?utf-8?B?QU5XdnZJS2lLc0tEV3JHMFNxemJvUGhNWkx6SVdJOExMRElIYldYeDlhUG9h?=
- =?utf-8?B?ZDFWSXF4M1ZieUxRdGtNNHZXQ2Iyb2pCNmpFdlA0aXdlaXlnR3dGN1RtbExD?=
- =?utf-8?B?YzZ6TUErRzdBUmg3Qjh3Tk4zZ3dpYkwrQk9XeGhMKzZ3NHdMT3ZUcGVkN3hV?=
- =?utf-8?B?OWlsNU5JZkhOQmhiWWZpNEo5cERqRk13V2wrSERKbVhlS0FrVjZiQWZoK3pP?=
- =?utf-8?B?c1N5Q3pFZW1SVFBLZUsxMWZXUUNnaVVhbGFZU00ycTFybEs3dm9aV21ESjBu?=
- =?utf-8?B?T295T2dQKzhFVy9BbGpvMXRNdTV6RWwrdEp6RjNXbjl0UVpDaGJ1dGh3Z3VN?=
- =?utf-8?B?UTlSa1ZSdHluVHlNWHNWTGl6YlVaK2tIbDZpWnJ3UWZMVTIyNTFyQ2lwdnNu?=
- =?utf-8?B?b3NXdngrSEFDWlFrQW4wRHFqd2UwWktjVWZWTC9TWVd6TFhvUlNjS2dTdXNS?=
- =?utf-8?B?cGR0ck0xRmVUOWdVSFNFUFcyNGtBbk5vSnlTZ0d6QldSS24xTnlVY0hmbThF?=
- =?utf-8?B?OE9wV21IeWxrR3JFdCs5enlwL1FCQVlEeXNsS293cDdkSm1kUDFiN1ZadEZw?=
- =?utf-8?B?VkhqQ2VrLzJOL0N1NG91SXZ4elpPbUdjN1JiVnBCTVJFelRtZXd2M0F6Y3Zz?=
- =?utf-8?B?eTkwb3lubU9oMUhyalJXSVoxRCsvU2JVbDFDSkNzRE5rZkRPaXpGdTlKTlNN?=
- =?utf-8?B?Vm8zTzdWb0haYWtWajlIOVhhZEU4T1c0cXNROXZrK3lVQ2JuazdXb0llc1hu?=
- =?utf-8?B?Z2NCRzlERGwwajBYYlA4MVVMWmhMWmdPWVVVTGpYL2J6Q05nSVRvRGNiWno0?=
- =?utf-8?B?QmsrSVpwVTNhSGpQR2Y4QXNnWTVWSHJXdkRMWER5Zy96cG9ldExXdkNJdTNs?=
- =?utf-8?B?eGNoSjFaQTQyaks2MmZXcnpHYzBNRERwdnhCcExUbVZXS1pieDR5SkVYVlpm?=
- =?utf-8?B?MDlTWGN6RjMwTDlPU0U4bUQzdHV1cVZaQy9FbjNPbnVXZGZLVXJQcVJBMVly?=
- =?utf-8?B?dFozZm9sWkJja0lXOEJ3ZE9TVUw3NFVzaFRhSkM2Y1dxeTNGemhGdGVkVkNL?=
- =?utf-8?B?Z1U5bWFvc3R6c0dpUk1sYWZ5ZFozVzRqM3N3TUVFNVJ2bGtKNlBGY2NiWDhS?=
- =?utf-8?B?V3JhaDJibGh6VFRMU2tXZFVCajhaSGJ1aVN4QW01cFVYd053MVI1NGUwTEU2?=
- =?utf-8?Q?uHmU5bKvdSEnRv3Y=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qf/4opCa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1768943402; x=1800479402;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ivHtQ6gh6IXT2hO8yZKcCr+q7hqDkcejJS3fvf52Ppo=;
+  b=Qf/4opCa5ESpQw/lRu/NTfJuA2nWFDkuAr2Pe2lz7WJLivxv01l0ND/Z
+   HMPSxuQ9WLHfFtTatWSdQnrwUnxUEFaHMsOciSXzJYUxqs0pvOC/GeRHC
+   ME7xP2UgaN8WDL2/15YBWVK5hfbwjF3bNCqWbkGllW5U9baQLWvqAxmdl
+   AFWk9fKxIJsIxpYkKyAjscNheDfO/2SHMNNaFQA+agpQHQL5CeGLVZZFw
+   FG14Gm2ukPYJR/oOrtnI0jCo1eNdfB/gwbhS3I6z41IVhFptAT0J0V48x
+   1jmrn1x/B//O4Ggk4U4Y3XqVyMY0VmS+pHCt4BdQWphD20ITPYwD6Z/HJ
+   w==;
+X-CSE-ConnectionGUID: IxF5pwnASuO1cPShdSJq6A==
+X-CSE-MsgGUID: 1ee2jgbARveVhxGhBOmHig==
+X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="80791588"
+X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
+   d="scan'208";a="80791588"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 13:10:01 -0800
+X-CSE-ConnectionGUID: AXjcRiQeSHCcT9bTnSKtZg==
+X-CSE-MsgGUID: g2PZWbUQQhiY3dv6ggSIEw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
+   d="scan'208";a="237482957"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 20 Jan 2026 13:09:54 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1viIz1-00000000PXR-2Z9s;
+	Tue, 20 Jan 2026 21:09:51 +0000
+Date: Wed, 21 Jan 2026 05:09:48 +0800
+From: kernel test robot <lkp@intel.com>
+To: Mukesh R <mrathor@linux.microsoft.com>, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, kys@microsoft.com,
+	haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+	longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org,
+	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
+	romank@linux.microsoft.com
+Subject: Re: [PATCH v0 01/15] iommu/hyperv: rename hyperv-iommu.c to
+ hyperv-irq.c
+Message-ID: <202601210423.wwOrf2K8-lkp@intel.com>
+References: <20260120064230.3602565-2-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY6PR01MB17377.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40086c6f-ffa4-44ff-86f7-08de58600a18
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jan 2026 20:11:04.2188
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: K1wMtb/DjgcK2rqYbWnn8GGB7iWjlEpkHgF3TIeqJ6TzwKSt2j/T5dt+WavuKl7F7GZkYAntSAJPdbZojPRcr0SsZwhX0QNHILnLUBsqsHQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRPR01MB12724
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260120064230.3602565-2-mrathor@linux.microsoft.com>
 
-SGkgQ2xhdWRpdSwNCg0KVGhhbmtzIGZvciB5b3VyIHJldmlldy4NCg0KPiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDbGF1ZGl1IEJlem5lYSA8Y2xhdWRpdS5iZXpuZWFAdHV4
-b24uZGV2Pg0KPiBTZW50OiBNb25kYXksIEphbnVhcnkgMTksIDIwMjYgMzowNCBQTQ0KPiBUbzog
-Sm9obiBNYWRpZXUgPGpvaG4ubWFkaWV1LnhhQGJwLnJlbmVzYXMuY29tPjsgQ2xhdWRpdSBCZXpu
-ZWENCj4gPGNsYXVkaXUuYmV6bmVhLnVqQGJwLnJlbmVzYXMuY29tPjsgbHBpZXJhbGlzaUBrZXJu
-ZWwub3JnOw0KPiBrd2lsY3p5bnNraUBrZXJuZWwub3JnOyBtYW5pQGtlcm5lbC5vcmc7IGdlZXJ0
-K3JlbmVzYXNAZ2xpZGVyLmJlOw0KPiBrcnprK2R0QGtlcm5lbC5vcmcNCj4gQ2M6IHJvYmhAa2Vy
-bmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgY29ub3IrZHRAa2VybmVsLm9yZzsgbWFnbnVz
-LmRhbW0NCj4gPG1hZ251cy5kYW1tQGdtYWlsLmNvbT47IEJpanUgRGFzIDxiaWp1LmRhcy5qekBi
-cC5yZW5lc2FzLmNvbT47IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1yZW5l
-c2FzLXNvY0B2Z2VyLmtlcm5lbC5vcmc7DQo+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBs
-aW51eC1jbGtAdmdlci5rZXJuZWwub3JnOw0KPiBqb2huLm1hZGlldUBnbWFpbC5jb20NCj4gU3Vi
-amVjdDogUmU6IFtQQVRDSCAwMS8xNl0gUENJOiByemczcy1ob3N0OiBGaXggcmVzZXQgaGFuZGxp
-bmcgaW4gcHJvYmUNCj4gZXJyb3IgcGF0aA0KPiANCj4gSGksIEpvaG4sDQo+IA0KPiBPbiAxLzE0
-LzI2IDE3OjMzLCBKb2huIE1hZGlldSB3cm90ZToNCj4gPiBGaXggaW5jb3JyZWN0IHJlc2V0X2Nv
-bnRyb2xfYnVsa19kZWFzc2VydCgpIGNhbGwgaW4gdGhlIHByb2JlIGVycm9yDQo+ID4gcGF0aC4g
-V2hlbiB1bndpbmRpbmcgZnJvbSBhIGZhaWxlZCBwY2lfaG9zdF9wcm9iZSgpLCB0aGUgY29uZmln
-dXJhdGlvbg0KPiA+IHJlc2V0cyBzaG91bGQgYmUgYXNzZXJ0ZWQgdG8gcmVzdG9yZSB0aGUgaGFy
-ZHdhcmUgdG8gaXRzIGluaXRpYWwNCj4gPiBzdGF0ZSwgbm90IGRlYXNzZXJ0ZWQgYWdhaW4uDQo+
-ID4NCj4gPiBGaXhlczogN2VmNTAyZmIzNWIyICgiUENJOiByemczcy1ob3N0OiBBZGQgUmVuZXNh
-cyBSWi9HM1MgU29DIGhvc3QNCj4gPiBkcml2ZXIiKQ0KPiANCj4gVGhlIHRpdGxlIG9mIHRoZSBj
-b21taXQgd2l0aCBTSEExIDdlZjUwMmZiMzViMiBpcyAiUENJOiBBZGQgUmVuZXNhcyBSWi9HM1MN
-Cj4gaG9zdCBjb250cm9sbGVyIGRyaXZlciIuIFdpdGggdGhhdCBhZGRyZXNzZWQ6DQpUaGFua3Mg
-Zm9yIHBvaW50aW5nIHRoYXQgb3V0LiBXaWxsIGZpeCBpbiB2Mi4NCg0KUmVnYXJkcywNCkpvaG4N
-Cj4gDQo+IFJldmlld2VkLWJ5OiBDbGF1ZGl1IEJlem5lYSA8Y2xhdWRpdS5iZXpuZWEudWpAYnAu
-cmVuZXNhcy5jb20+DQo+IA0KPiA+IFNpZ25lZC1vZmYtYnk6IEpvaG4gTWFkaWV1IDxqb2huLm1h
-ZGlldS54YUBicC5yZW5lc2FzLmNvbT4NCj4gPiAtLS0NCj4gPiAgIGRyaXZlcnMvcGNpL2NvbnRy
-b2xsZXIvcGNpZS1yemczcy1ob3N0LmMgfCAyICstDQo+ID4gICAxIGZpbGUgY2hhbmdlZCwgMSBp
-bnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJz
-L3BjaS9jb250cm9sbGVyL3BjaWUtcnpnM3MtaG9zdC5jDQo+ID4gYi9kcml2ZXJzL3BjaS9jb250
-cm9sbGVyL3BjaWUtcnpnM3MtaG9zdC5jDQo+ID4gaW5kZXggNWFhNTg2Mzg5MDNmLi5jMTA1M2Y5
-NWJjOTUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLXJ6ZzNz
-LWhvc3QuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1yemczcy1ob3N0
-LmMNCj4gPiBAQCAtMTU4OCw3ICsxNTg4LDcgQEAgc3RhdGljIGludCByemczc19wY2llX3Byb2Jl
-KHN0cnVjdA0KPiA+IHBsYXRmb3JtX2RldmljZSAqcGRldikNCj4gPg0KPiA+ICAgaG9zdF9wcm9i
-ZV90ZWFyZG93bjoNCj4gPiAgIAlyemczc19wY2llX3RlYXJkb3duX2lycWRvbWFpbihob3N0KTsN
-Cj4gPiAtCXJlc2V0X2NvbnRyb2xfYnVsa19kZWFzc2VydChob3N0LT5kYXRhLT5udW1fY2ZnX3Jl
-c2V0cywNCj4gPiArCXJlc2V0X2NvbnRyb2xfYnVsa19hc3NlcnQoaG9zdC0+ZGF0YS0+bnVtX2Nm
-Z19yZXNldHMsDQo+ID4gICAJCQkJICAgIGhvc3QtPmNmZ19yZXNldHMpOw0KPiA+ICAgcnBtX3B1
-dDoNCj4gPiAgIAlwbV9ydW50aW1lX3B1dF9zeW5jKGRldik7DQoNCg==
+Hi Mukesh,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on tip/x86/core]
+[also build test WARNING on pci/next pci/for-linus arm64/for-next/core clk/clk-next soc/for-next linus/master arnd-asm-generic/master v6.19-rc6 next-20260120]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Mukesh-R/iommu-hyperv-rename-hyperv-iommu-c-to-hyperv-irq-c/20260120-145832
+base:   tip/x86/core
+patch link:    https://lore.kernel.org/r/20260120064230.3602565-2-mrathor%40linux.microsoft.com
+patch subject: [PATCH v0 01/15] iommu/hyperv: rename hyperv-iommu.c to hyperv-irq.c
+config: i386-allmodconfig (https://download.01.org/0day-ci/archive/20260121/202601210423.wwOrf2K8-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260121/202601210423.wwOrf2K8-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202601210423.wwOrf2K8-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   In file included from drivers/iommu/intel/irq_remapping.c:6:
+   include/linux/dmar.h:269:17: error: unknown type name '__u128'; did you mean '__u32'?
+     269 |                 __u128 irte;
+         |                 ^~~~~~
+         |                 __u32
+   drivers/iommu/intel/irq_remapping.c: In function 'modify_irte':
+   drivers/iommu/intel/irq_remapping.c:181:17: error: unknown type name 'u128'
+     181 |                 u128 old = irte->irte;
+         |                 ^~~~
+   In file included from arch/x86/include/asm/bug.h:193,
+                    from arch/x86/include/asm/alternative.h:9,
+                    from arch/x86/include/asm/barrier.h:5,
+                    from include/asm-generic/bitops/generic-non-atomic.h:7,
+                    from include/linux/bitops.h:28,
+                    from include/linux/kernel.h:23,
+                    from include/linux/interrupt.h:6,
+                    from drivers/iommu/intel/irq_remapping.c:5:
+   include/linux/atomic/atomic-arch-fallback.h:326:14: error: void value not ignored as it ought to be
+     326 |         ___r = raw_cmpxchg128((_ptr), ___o, (_new)); \
+         |              ^
+   include/asm-generic/bug.h:110:32: note: in definition of macro 'WARN_ON'
+     110 |         int __ret_warn_on = !!(condition);                              \
+         |                                ^~~~~~~~~
+   include/linux/atomic/atomic-instrumented.h:4956:9: note: in expansion of macro 'raw_try_cmpxchg128'
+    4956 |         raw_try_cmpxchg128(__ai_ptr, __ai_oldp, __VA_ARGS__); \
+         |         ^~~~~~~~~~~~~~~~~~
+   drivers/iommu/intel/irq_remapping.c:182:26: note: in expansion of macro 'try_cmpxchg128'
+     182 |                 WARN_ON(!try_cmpxchg128(&irte->irte, &old, irte_modified->irte));
+         |                          ^~~~~~~~~~~~~~
+   drivers/iommu/intel/irq_remapping.c: In function 'intel_ir_set_vcpu_affinity':
+>> drivers/iommu/intel/irq_remapping.c:1270:40: warning: left shift count >= width of type [-Wshift-count-overflow]
+    1270 |                                 ~(-1UL << PDA_HIGH_BIT);
+         |                                        ^~
+
+Kconfig warnings: (for reference only)
+   WARNING: unmet direct dependencies detected for IRQ_REMAP
+   Depends on [n]: IOMMU_SUPPORT [=y] && X86_64 [=n] && X86_IO_APIC [=y] && PCI_MSI [=y] && ACPI [=y]
+   Selected by [y]:
+   - HYPERV_IOMMU [=y] && IOMMU_SUPPORT [=y] && HYPERV [=y] && X86 [=y]
+
+
+vim +1270 drivers/iommu/intel/irq_remapping.c
+
+b106ee63abccbba drivers/iommu/intel_irq_remapping.c Jiang Liu           2015-04-13  1241  
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1242  static int intel_ir_set_vcpu_affinity(struct irq_data *data, void *info)
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1243  {
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1244  	struct intel_ir_data *ir_data = data->chip_data;
+53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1245  	struct intel_iommu_pi_data *pi_data = info;
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1246  
+ed1e48ea4370300 drivers/iommu/intel/irq_remapping.c Jacob Pan           2024-04-23  1247  	/* stop posting interrupts, back to the default mode */
+53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1248  	if (!pi_data) {
+2454823e97a63d8 drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-03-19  1249  		__intel_ir_reconfigure_irte(data, true);
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1250  	} else {
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1251  		struct irte irte_pi;
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1252  
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1253  		/*
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1254  		 * We are not caching the posted interrupt entry. We
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1255  		 * copy the data from the remapped entry and modify
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1256  		 * the fields which are relevant for posted mode. The
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1257  		 * cached remapped entry is used for switching back to
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1258  		 * remapped mode.
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1259  		 */
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1260  		memset(&irte_pi, 0, sizeof(irte_pi));
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1261  		dmar_copy_shared_irte(&irte_pi, &ir_data->irte_entry);
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1262  
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1263  		/* Update the posted mode fields */
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1264  		irte_pi.p_pst = 1;
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1265  		irte_pi.p_urgent = 0;
+53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1266  		irte_pi.p_vector = pi_data->vector;
+53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1267  		irte_pi.pda_l = (pi_data->pi_desc_addr >>
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1268  				(32 - PDA_LOW_BIT)) & ~(-1UL << PDA_LOW_BIT);
+53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1269  		irte_pi.pda_h = (pi_data->pi_desc_addr >> 32) &
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09 @1270  				~(-1UL << PDA_HIGH_BIT);
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1271  
+688124cc541f60d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-03-19  1272  		ir_data->irq_2_iommu.posted_vcpu = true;
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1273  		modify_irte(&ir_data->irq_2_iommu, &irte_pi);
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1274  	}
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1275  
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1276  	return 0;
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1277  }
+8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1278  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
