@@ -1,323 +1,213 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010013.outbound.protection.outlook.com [52.101.193.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 177983A900F
-	for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2026 22:31:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768948267; cv=none; b=a8o2Nz2c3ACUeoK+qHHQ3S5tg4nLvcpPdr8m2dc4AI4ep2Xrok4MexX/ha1wjwfZfjrhFr+vrtXWh2ca3N1GdEB9pgsjofZ5sa7HMw0nR05bpd7lnxKwH4EYBBDzGbnCSXKwJIomxf4ChiXsoTZSc6rwuOsye5eyLWTyDwrkCS0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768948267; c=relaxed/simple;
-	bh=ilwDOQ+Ky9sEU+XAh3/6e2HFWyE4Td7xc2xIEIOQ8MQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=kAK2PvXm3L1U0ZXXdaba3238P9HqvY4vBnsQaKZwgal3Pl4cMQoKM/yJy2f2ftcirNRqbgfQJ+QmX5XdlxcOQtC/oxeMqh+EfD6P8zvooV6qJ37H4IrRUoeXbpqrvN6MkLNGYPusDoOe1eNBGO9hZg7bBEzhuyjxUJJMoVChs4w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=V4i0dpOI; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=eijwNGU4; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BA528635D;
+	Tue, 20 Jan 2026 22:33:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.13
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768948418; cv=fail; b=AwRblr0jvVwupKXD6QThTkdbdfKhmw3Lgxmsu87J6cc23SiEHNN+PyaDwIDkhgoRUFqHwMZWhQNewCSxMiDmyovIs3fW/4bflyGx+NTMHB5xjjK/g1ZmFW0sojy8pEjk1Ufpi7I6N0w2Z4kcdisAQEgsFWb2nPcZS52mO24Fssk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768948418; c=relaxed/simple;
+	bh=8LrrlbSxFoEq5ksD5yNv38jjmfTcZeVBhVpMucGQcQY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=R4JlGHW8R15jicwYDi4P20K2fWJZ5rkwl+WEyy/gtEdpXEHc9CaYxexIYlX/E7zzDB24yqjhSHD6+4GjjanUdrtPpsQnOjNK0SA0VR+eBYH5bK+OXP0AO/obB3RFq7mAakxnRsYWjllFtK8vW9eq1GNZJbzBh1tqMxs6LM80nKg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=s1QsPvnZ; arc=fail smtp.client-ip=52.101.193.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V4i0dpOI";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="eijwNGU4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768948260;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=huUka6A3EtIZhdtjgUZphztIlPBAes0tkKFnp/8PKFc=;
-	b=V4i0dpOIhbf7se4PM80Fkh3cMIFON7oSOLk77eXJTMEv4Nj7Or7fwdOzZtKIIlnZKKupzb
-	51DMuKGKxd4VjBYpEKNDhz0VQ+912PuA3+ABHPxhZC2imlvi1vSBtSDbGT8G18rf2sQaIv
-	PJrSx6jxM94jxw8QgHDATyfGdwRz6Bw=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-356-Er7q3N9WOIm2i5M4C61cPA-1; Tue, 20 Jan 2026 17:30:59 -0500
-X-MC-Unique: Er7q3N9WOIm2i5M4C61cPA-1
-X-Mimecast-MFC-AGG-ID: Er7q3N9WOIm2i5M4C61cPA_1768948258
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-8c5296c7e57so2012842085a.1
-        for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2026 14:30:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1768948258; x=1769553058; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=huUka6A3EtIZhdtjgUZphztIlPBAes0tkKFnp/8PKFc=;
-        b=eijwNGU4K4j+gnlL+9qCTG8EBtWfs0ZS0SGM2HgumoQ2nhM58x+k6iGgbqXLZzNWKU
-         Hg3R3euZiSbRbudcja/HQoJlBwsUY1RARKavaH3HhrInpevPW52tbmhh69NcWwfoB0TJ
-         7Rv2DKoQ4R+wZHdi/kRdQWdhBT8NYo53qucaq6ilx2VVIperkb7jSqT7cEHvRJ9Yq+9w
-         j/luYLfurX2Mv8tiBxdpanq80499icz6ePJddtaPbJrDThHTjltCeE0yoRGBRM695hzX
-         VZqPKfs1DLAdjtR2GFRxjrBrJ+09w6gHoUi1L8pCh+mPWI5F+P6QYO6ODL7b+ooJ2HZz
-         La6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768948258; x=1769553058;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=huUka6A3EtIZhdtjgUZphztIlPBAes0tkKFnp/8PKFc=;
-        b=G7flLLZboKpSaFENfRJ5GFeb6RzvJ7szqCh80hVlDZheuQLpwC2KBLBbQl9IrQclzf
-         TUG/NPw3sJmiOgb4Yrldm0PUX6cV7KSq/bLed4pxd8PDXejjCSQIxiZsnARej0mXejhV
-         P3vlmkycypY1uRYe77/Z9XMTX1MuuRjnTBq6suQNQmfBqFvpklTx9l54Cpca4kokKOGl
-         9QJIuxqXzSC/wy+HL1ErUXpzBk2ehrdS67rGrkrZLDtvMr06G2z5bLHgj4BU8dL4q/8L
-         7aohC+vtsgLlp55vIGIGo4q7bBEPMus6h0UPp4KKM05tFxJ/QExxCW+lKrxteiOcAC40
-         y78Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXbIvz4NIEKdvX7bCqW/iTF8Ez2/0Tadfoa0B/zCOofpekKljqtfas7jcUXMFU3sUBMTdTRnQYEDh0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLYlon84INO1HJ2AmzIgOQdvjwcMpPMWHg/Td4F5OBdFqmGdxc
-	jVSGuSe8S2Q8ihg6oBmQQyF+wM5dD009pdJZZZdAmdeyPN/R6NqQG0Md3hGNLGzC7nwLohekSmY
-	vvnOFrmzNY/qxn7xoaUYHK64dKHgtdqw3r97/zM2F+hSGqjHS6GZf93xYXHYKOA==
-X-Gm-Gg: AY/fxX5LCltxeXlVTN0ceoO8JyOwTChlmPXtL/0b1ujKvbRCmV9kOu8s6V747T8R3gg
-	rDxKI9xR9/ni8ZWMXGEDnNY19FBMkjUi4rKRW6oJ9cUuzYYVBxqKG3QkPnoHyCM8ISp5zybwQjC
-	btmNh7AfajEJd5gL65Kwuopurqvw6juR8HGnu9oiZqjlDR8f38RM3TIo7O5QdprhXzrHD1IkJcR
-	T0+OtnYMYfHKpGdEei/VTSCj+b4VrsxFMBu8DXRBYDF3mumuRhyG9BO+nx5jRMmQvGb/aUKnp6H
-	Jswsqr2KhVo6yij9UlFVJHB7kGd/z0aGP2CFvnKOGTAAmgfY1JHvNKRNtdM8Td8xMpdkhOJA1LR
-	y4eegjmY423ToiwYXQmNThUeexKvtIUwq+pisK9oyIMQo78IlH9NDr2XS/waC1c5aTyUfm2kaNS
-	nWxA==
-X-Received: by 2002:a05:620a:454d:b0:8a3:1b83:1036 with SMTP id af79cd13be357-8c6a6909e5emr2246459285a.29.1768948258381;
-        Tue, 20 Jan 2026 14:30:58 -0800 (PST)
-X-Received: by 2002:a05:620a:454d:b0:8a3:1b83:1036 with SMTP id af79cd13be357-8c6a6909e5emr2246453585a.29.1768948257850;
-        Tue, 20 Jan 2026 14:30:57 -0800 (PST)
-Received: from thinkpad-p1.localdomain (pool-174-112-193-187.cpe.net.cable.rogers.com. [174.112.193.187])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8c6a71ab272sm1157948285a.2.2026.01.20.14.30.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Jan 2026 14:30:57 -0800 (PST)
-Message-ID: <a8d841e870d6dbbabef7eadb774f2a58a96c57c7.camel@redhat.com>
-Subject: Re: [PATCH v3 3/3] PCI: dwc: Enable MSI affinity support
-From: Radu Rendec <rrendec@redhat.com>
-To: Jon Hunter <jonathanh@nvidia.com>, Thomas Gleixner <tglx@linutronix.de>,
-  Manivannan Sadhasivam	 <mani@kernel.org>
-Cc: Daniel Tsai <danielsftsai@google.com>, Marek =?ISO-8859-1?Q?Beh=FAn?=	
- <kabel@kernel.org>, Krishna Chaitanya Chundru <quic_krichai@quicinc.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
- Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	 <kwilczynski@kernel.org>, Lorenzo
- Pieralisi <lpieralisi@kernel.org>, Jingoo Han	 <jingoohan1@gmail.com>,
- Brian Masney <bmasney@redhat.com>, Eric Chanudet	 <echanude@redhat.com>,
- Alessandro Carminati <acarmina@redhat.com>, Jared Kangas	
- <jkangas@redhat.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,  "linux-tegra@vger.kernel.org"	
- <linux-tegra@vger.kernel.org>
-Date: Tue, 20 Jan 2026 17:30:55 -0500
-In-Reply-To: <4e5b349c-6599-4871-9e3b-e10352ae0ca0@nvidia.com>
-References: <20251128212055.1409093-1-rrendec@redhat.com>
-	 <20251128212055.1409093-4-rrendec@redhat.com>
-	 <4e5b349c-6599-4871-9e3b-e10352ae0ca0@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="s1QsPvnZ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=O25dhlv+FGEdxorIiCEpfOAmQdMj8j93TW5ro3EGTY/P28zhyUx/Iu1x+CGcS2h24SAS3sb/Pkdi83gcpgXd0lPyag1s2/lHZ6rKd3HMgfzMQE6Lke/EQoE8HxmOMenK98Xa6BQeWcekWbxvSZGBzOeOfcVJo4iq3hH0AW9LTov3LN/l+ac1BHxZD1jPwCmdc1IYDRZAF9vDVz7RbFcFFSOvTIql+Wt/UU+lE4zTdcc9g7J/ls1sf7ps2y/qKd0RJCkNTF0vnVUXjeE03YnfeZTkIuXrIoBpdHDdBa8aH2YpwOCMU3vFyB/gAdQ+uLJ5s9McCWF+yKzV5namtbiEjQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8LrrlbSxFoEq5ksD5yNv38jjmfTcZeVBhVpMucGQcQY=;
+ b=mKCTttiv2BMgv2abW346/6lYKuGSd0B00951Ej2pTXfBxpXeq8Y+rcibOUKvfwOVOr3bHQNUeXCdKbrRaF1gumIeDAZ+8zDLuzJGQk4hy/VkyyCWexRP9px2WGNrCuKoPGB90B9ua8KPkns4Xwo9nFWwKrDIkt6p47oC5kFNep3ApdpklCgofwVe5KZVVolBdlzMfJku6+IXpqWMP80a+A2oLE771jC4v0aP7BOTqKWLFOBjsLe+E1x1vFoT1h93D9KOvWOVgnDtOBEaNMERvhgDPeehlXhC0Ya8QQ5aFj6+6ck+7rjlxR8AMVva/xMhu1XDOiNTBjTu1eF39Ib0ug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8LrrlbSxFoEq5ksD5yNv38jjmfTcZeVBhVpMucGQcQY=;
+ b=s1QsPvnZ4XQv2o7rNzrI4Pp7SSUsntAt2PdQxWsCR/2n1giofdYRplkZo0O0qG2epvLfWnthDTxNlg24ZndNv07sQ8fJkICqqViS5hUuuoGSMlbbjb+HdQCARUaKRBLJhI10e2PH0hOJPJhMtbnU5DkD1c1/qSEeXa6ZB+IhXjRTlI8cmGCLS0Ku59xWuJwAgn4263GuYOGxlMsod5wx7tog4v5UV2O038bvh7ysBItzBbboVQqJVOouJlj2CmLC54qoJss5EGi31CI3BqUhHP5LQHnqEzoVQqiqFFuCyhLA/64IGWPiGknY2RKH5aFD7ZQcrLn5FSa4eePk/pzayQ==
+Received: from CY5PR12MB6226.namprd12.prod.outlook.com (2603:10b6:930:22::5)
+ by BN5PR12MB9463.namprd12.prod.outlook.com (2603:10b6:408:2a9::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.13; Tue, 20 Jan
+ 2026 22:33:22 +0000
+Received: from CY5PR12MB6226.namprd12.prod.outlook.com
+ ([fe80::469c:f8fd:4a3d:290d]) by CY5PR12MB6226.namprd12.prod.outlook.com
+ ([fe80::469c:f8fd:4a3d:290d%5]) with mapi id 15.20.9520.011; Tue, 20 Jan 2026
+ 22:33:22 +0000
+From: Srirangan Madhavan <smadhavan@nvidia.com>
+To: Alison Schofield <alison.schofield@intel.com>
+CC: "dave@stgolabs.net" <dave@stgolabs.net>, "jonathan.cameron@huawei.com"
+	<jonathan.cameron@huawei.com>, "dave.jiang@intel.com" <dave.jiang@intel.com>,
+	"vishal.l.verma@intel.com" <vishal.l.verma@intel.com>, "ira.weiny@intel.com"
+	<ira.weiny@intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "ming.li@zohomail.com"
+	<ming.li@zohomail.com>, "rrichter@amd.com" <rrichter@amd.com>,
+	"Smita.KoralahalliChannabasappa@amd.com"
+	<Smita.KoralahalliChannabasappa@amd.com>, "huaisheng.ye@intel.com"
+	<huaisheng.ye@intel.com>, "linux-cxl@vger.kernel.org"
+	<linux-cxl@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Vishal Aslot <vaslot@nvidia.com>, Vikram Sethi
+	<vsethi@nvidia.com>, Shanker Donthineni <sdonthineni@nvidia.com>, Vidya Sagar
+	<vidyas@nvidia.com>, Matt Ochs <mochs@nvidia.com>, Jason Sequeira
+	<jsequeira@nvidia.com>
+Subject: Re: [PATCH v3 0/10] CXL reset support for Type 2 devices
+Thread-Topic: [PATCH v3 0/10] CXL reset support for Type 2 devices
+Thread-Index: AQHcholUpzYGTLanm0ObQ2mvQ0DuarVYhp2AgAMlyt0=
+Date: Tue, 20 Jan 2026 22:33:22 +0000
+Message-ID:
+ <CY5PR12MB62260D968D632960E1422B95C389A@CY5PR12MB6226.namprd12.prod.outlook.com>
+References: <20260116014146.2149236-1-smadhavan@nvidia.com>
+ <aW1ercZMyqh2Ej5F@aschofie-mobl2.lan>
+In-Reply-To: <aW1ercZMyqh2Ej5F@aschofie-mobl2.lan>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: CY5PR12MB6226:EE_|BN5PR12MB9463:EE_
+x-ms-office365-filtering-correlation-id: ec40ffe3-09b5-4360-ec2c-08de5873eb39
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|376014|7416014|1800799024|7053199007|38070700021;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?WityVjV5bXk0UENyVWUwWjlSOStEcXdjL0ZTcU5wSk9uaGpKb2lBbTJCL1Yv?=
+ =?utf-8?B?bjhuZWg0RURmNG5CRDVKVjIvYWczeTVhSmdYYzJNbCtaM0ZZbXhxcWx3YmJm?=
+ =?utf-8?B?a0lBenIyUlBaZzcwVFlZZllQRHBBV3JKL1BVMzdkR3ZNc0F3R0dqdnJrWHly?=
+ =?utf-8?B?ak95QTVxNW5QNGJUU0gyZlMycjYvTitCMzRCVFJTSmdqZUdUQnJMZXNKdE54?=
+ =?utf-8?B?Nm1FVFV1V0R3MWZLRU4yVzhldEZTSVBhVG5wcU5zVnpSRlNoQmZON1FMNWJy?=
+ =?utf-8?B?RnYramxTQlJhNkxPUFg1OXlHMHBqNDZ6cTRVdGZPSDA1QjRvaUllTUF3WnRw?=
+ =?utf-8?B?RmhKeDREY1NnTHpBTkxxQ25KRjFMdG13KzhaREhwOEhMc2FFUnVvL1NRZW03?=
+ =?utf-8?B?Smx6eTZuUUxXcC9LMjNJcEphMFo2YW9iVU8yNFF1dXZLRXh6RWUzYUhVQTB3?=
+ =?utf-8?B?K2ZUeFdidDhIWUxjaFluSWNINnZHcXYzQ2VwUmd6WWJJTE40YnVKNWx5UDNB?=
+ =?utf-8?B?Wk4vNlpkWnIwVFlnbkZDWFpFSmJhMFNheFZ5WlJnVXRUVEEwVkhZYmt5b3RB?=
+ =?utf-8?B?b3ZwcTA2bWttU3QxZDEyWXB5RVZEWjIrUENtRnFZWkNpcmxDYUxoRTQyOThw?=
+ =?utf-8?B?cVJUQTV5eXBabXVsVWp0V2pWWlBjWGRhSHoybitjV2JvZG9lSzMzVFp5SEs1?=
+ =?utf-8?B?UU1tMTRETEFQYk8wZkxOdDFra1R2TzdCVW1ZSjg0aVNBR2l6VTJMQVFMQmIv?=
+ =?utf-8?B?dWwyKzRsakkyaXlUVTdRNmZOa216SmhSRnRiRDNDcU95NkdWd0NodE5mcVFI?=
+ =?utf-8?B?VU1PNnBtbXkzNWdEeVY0Yi9zUmlGRHM1WktTOTE3TFFTYkJRWjRkdVQ0eis4?=
+ =?utf-8?B?Wkh0MEhIRDhadjgrWUVtdVlITzBCTDM3a2lKOTVSOHVTcVlGYU8rSjR5Ynhm?=
+ =?utf-8?B?aEQzaDVEcndPNnhPYndjekovQTVrR3I3ZXRYMFU3U29vclhvTFM1WFNuN2NB?=
+ =?utf-8?B?QWdBcnZkbWNUQytnWHFvRVdObkVKeUNaNng3OHdIL0p4SjU0UmhuTUxnaklC?=
+ =?utf-8?B?ZjYyS3A3V3N1M1N6SFpGZ2JaVnc2ZzNvMFVWSjFobVYrSzFKUlZJL1JuMi9U?=
+ =?utf-8?B?YXN0QlgwSGJZeHVnM0gybkNZRk41UGkzT2hnOGU0WFp4MHZMTWNodXRKRk9t?=
+ =?utf-8?B?eDhxKzdLTTRaNUF2ZktQb1BVTmgrVXl3VEtsNzBDdnJJb1EzajNNYTlDTk5C?=
+ =?utf-8?B?T2QrZUNvd3FQUUQyQ1dMVzc2VjE5QURmNXJxc1huSGJEUHJtUUEyUngvMDhJ?=
+ =?utf-8?B?OHBBMmpmaG05T2pNSGczTEZjZzFmMU9iaTlzQWlkdi8vZEVETGRpTm1aSCty?=
+ =?utf-8?B?MHI3WGRDeThzYm54TFNCcUNSOWh6RHJVK0RVa2kxZWdZdmE2RkpFaEhWam1J?=
+ =?utf-8?B?MWE4S3pZVzIvNEJFNlBDUWtuMjcvY3V6dzN0elZJWndKSFRYanhoZlBJRVdM?=
+ =?utf-8?B?SUVmalFodytkSDdzNC9EeHg1WG1NRzZWQTlLckY0NW8vcWRob25HdGs0cXoy?=
+ =?utf-8?B?bURsK0lhM295TkROVWZXMU1ZQi9xU2pXTmZYdEsvNG9WMDFXZUR0K09GT01G?=
+ =?utf-8?B?OEJCcHA4OFpNcUtUbUVFazFSWHBVcndISXJuZ0tGSUR6WTVIOTNNck5rbTJV?=
+ =?utf-8?B?VUYzczNoajUyRDVUZ1JMMlpIdVBIZDRtZWlyR1djKzRZTndyUHE4WnAvSVIw?=
+ =?utf-8?B?TU42U2c0OEU2angyV201cFBpbE5aWXhSVEZ1SmdZOEhhZ3FQeEtlWWJSVEpE?=
+ =?utf-8?B?MTRqaXowZ3N5WDVlZ0dBZHNDWTFxVG5PbTJ2R1ZOY1JNRlZTT21MQ1R2amZ4?=
+ =?utf-8?B?cGQzcTJSalBIZnp3NitHdjNVV3BxYzB0Wnd3dytCYm5TT2RXRFl2ZHF3OGRL?=
+ =?utf-8?B?RlZZdFh1cTdwU2Y4NS82eHBjeFhzZmFsdnRFc1h2S1V0VHBCR1MwUHpQcjgz?=
+ =?utf-8?B?dGp5ekhyZ29BMG40UWFJUTdUWWFVZklIcURoS1lxV3dSOHZlSXdHdkMvcHR2?=
+ =?utf-8?B?UHNlNXV5T3ZWVXpaZ2ZFMWROY2RQcHpsV3pVQWc1dE4xc1Z4aXpaam1HZmhG?=
+ =?utf-8?B?SVc5RkRMbnNzS21FcjNLa21mdjFuTlhVLzZjaWx1MDZtRUYwR1V2MHRPemdo?=
+ =?utf-8?Q?q1aS/Pv1XGiMaX+tG8KXc78=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY5PR12MB6226.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(7053199007)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?QWk5TkRwZUNubHNJK0VkWnRueWc3YlBlMlVhZkE4OWNoeEh4RkVwOFdaQkVC?=
+ =?utf-8?B?Ump0Tm5uSjZVZWphakVUSWtJZHJyeFVSN0RlL25Ud1RHY0xNbll1NFRsVjhZ?=
+ =?utf-8?B?RnpkZk9wTWJHbmdaZFcxUlZXNDRadGJXWGJ4NVdqNzNneXNOTGdJWEN4S3Q1?=
+ =?utf-8?B?SU8rYlExU0VDdE00RUZ6VTJHb1pxNldtM1RnZGE2UzltajJtMXd0bEQ5dkpQ?=
+ =?utf-8?B?K2hCV0dWcXVDT1FiNGZTMkdaZTV2WTBwR09RZWFGR2ZQQ01tbmpXd1dsMUJs?=
+ =?utf-8?B?MXhZdll4OXZXUEdUekYxL094ZTlVZ1R1Zk14dFNwd2ZGeWF1bjdxVFNmSGJQ?=
+ =?utf-8?B?dENaY2hIMWwySThUZlBpR3hLaXpmYkFhYlJRNkppT1RralhXblZmc0ZLMTc2?=
+ =?utf-8?B?Tnd1MFFHRTlQK2hEazM4WE1Vdk5OWkYwVTRySytTUURXQU0ySUkwRlBKYVcy?=
+ =?utf-8?B?TUlUUFd6U0tkT0ZtM1F2eDFTRHlvUTNkL2RvWVZKdHBkeE9ObW9nZy9GbW9C?=
+ =?utf-8?B?bUNNbklZREt0UTFsSDlFbXRXelZ6enV3c3c3cGhYVlV0TjhDSldZakM4NTZx?=
+ =?utf-8?B?cnpEejV1SHR0cTc1MUFydjJ0V2lQZWVtMUVpQjlNNldXZUppV0VrT2oyOU0z?=
+ =?utf-8?B?cHBiMlNsYlRibTFmbFFiZnd4Ny9JcU9XUFdCQnJUSHUvamJXNkl2T0Vyclhh?=
+ =?utf-8?B?VzliVUM5VC9pUUlFMjEzeUdtU2lhblNRdHZNZGNkQWRNTnBwUzcyaWN2S1Vr?=
+ =?utf-8?B?Nnlwc3ViQ1lZQWZtNldQMUFUUjBYOFczR3d1KzZtd2VQb1A3V1I0SitMR1hj?=
+ =?utf-8?B?aGhSNG5SRi9raW03bTg0RDlhSHR1cUVDb05YWm9WNVlqWjFKdFRMbXh6VVhi?=
+ =?utf-8?B?VU9oVlliSkxLNCtvZ0RjSTZNbWU1cTNLYk13bG5sbmRIcEJWb2N1Ymg1NHhv?=
+ =?utf-8?B?ZU1sVUNTVkJsZmhGS1Y5U3VveGZVSjkzZVd4a3dkZlVuR1dPcXJPclhFR2V5?=
+ =?utf-8?B?Ym5lUm1GSHREM1pKR29MMmpwWlpJbEY4bUNaV2NwTEtFV25nVHcwbklFY082?=
+ =?utf-8?B?QnNvR0xFdmhwQjNVN1ROT3VmSGN1UmFFZHlzMmNPcm9BQnBZak02Vk5PU1pO?=
+ =?utf-8?B?MHFyVTZpTk1RUjJyd2FjRWZESkgyT1IwZmZ4SE1PejVFQU1xT0NXV3ZobVhF?=
+ =?utf-8?B?NG1MNE12MXZhWlVCa0pFcWtKbDNoWXl0a1BoaC9RUHFVejNjOG41QlByTXdZ?=
+ =?utf-8?B?Qkp4NitDOFdjMVBtRDdMNjBpeWJOekFlTW9rWjRqbkNSN2M5LzlMU3JsYnho?=
+ =?utf-8?B?MS8wMWVJTHY4M0JkQmtmTHZnb3U0TzFFUFFnQkhOam5LeDBCMXJxU3lMTHBH?=
+ =?utf-8?B?aVlsUkcxNi9DTFZNKzBmV3lKbVZnaldDN3N5OTM5cU9SZVJZSGRRaUhZclFw?=
+ =?utf-8?B?ejVLR29HRlUvcHVuZWFDd3RlN3Y1YVVNTDY0UnozbTRwZ2JVbWxnRmZpeVR1?=
+ =?utf-8?B?N2l1dHY3WkJ5ZlFudjQ5em82NWRsV2FrODZNYkpscW5BWk5JdndqUlhCenly?=
+ =?utf-8?B?Y2xXanlTZnVPbHBPMVNzVVFDT1l3dTJCMjVud3ZXVnVWMjc5T2V2a3FzWjND?=
+ =?utf-8?B?WU9pL1NsMVBDVm11Qm9iL1dyb1R1SExWZU83TW9QUW9WT0xsZXJscEIxSjhF?=
+ =?utf-8?B?bnFRRmVkSGIwWkFYdVZRSkxDTDFCaFdRZXN6Q3NLT2NPY3pub1hKaUFPejdP?=
+ =?utf-8?B?bWJ4blR4OFhyVXl2YTdmTktuV096dEJBM2FVbEhFT0hNcDJiRWNwWUM4N01T?=
+ =?utf-8?B?cmh2YXA0WVdsL0FIcFIzMHB3cDNSM2JwR20xVHZIWFAwTjZqN3drenNOTHRu?=
+ =?utf-8?B?MXlWclp4aDEyalJXR1AxRDJQSHRmbVZKNU1TQ3QwWUdtQzNxUkVtYzdsWlFw?=
+ =?utf-8?B?WDJ2YVNaZmpQM0dFRHpjcUg4azNXb0VFaDdyNVpUZmh3czloenhSMjFYMzRs?=
+ =?utf-8?B?MThrTy84c1lCWXF1OG1mRlJVL0xBejRmQnVZbVE0aGN0cGVhWlV3dzQ1bUtK?=
+ =?utf-8?B?SDR6Zjh2bE9iVUtPZjBKWlBRbmtWd0plaHppMTdSNTR1TlpoTFlWSmFjc0Vh?=
+ =?utf-8?B?U3JXc0NEaThjeTl3WVlrazBPalZMbnhXeFJFQk4vb01hRGdic2xwMnZjRFhu?=
+ =?utf-8?B?RU9LOHkxb1JIeDdvMFptRDkrdTZZNFl0NHMwcnlYVnpUTmNmYUlpY0REUFdu?=
+ =?utf-8?B?a3ErQTIxVTdXVTJ5bTJvMzJ4UER4WDM4RFRZZnlhTFVyR2N1Yk4vSndBWEl6?=
+ =?utf-8?Q?zjawe+fDiOZCBk4RL6?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CY5PR12MB6226.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ec40ffe3-09b5-4360-ec2c-08de5873eb39
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jan 2026 22:33:22.3506
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: BfShosRSj576+UTvMJ+ufyvT5aEaEUUBdPXjYKFqNW0mHjU/r9MAm+n/aOGCYR8SKdHozmxF8+2A1BBnd14kEQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN5PR12MB9463
 
-Hi Jon,
-
-On Tue, 2026-01-20 at 18:01 +0000, Jon Hunter wrote:
-> On 28/11/2025 21:20, Radu Rendec wrote:
-> > Leverage the interrupt redirection infrastructure to enable CPU affinit=
-y
-> > support for MSI interrupts. Since the parent interrupt affinity cannot
-> > be changed, affinity control for the child interrupt (MSI) is achieved
-> > by redirecting the handler to run in IRQ work context on the target CPU=
-.
-> >=20
-> > This patch was originally prepared by Thomas Gleixner (see Link tag
-> > below) in a patch series that was never submitted as is, and only
-> > parts of that series have made it upstream so far.
-> >=20
-> > Originally-by: Thomas Gleixner <tglx@linutronix.de>
-> > Link: https://lore.kernel.org/linux-pci/878qpg4o4t.ffs@tglx/
-> > Signed-off-by: Radu Rendec <rrendec@redhat.com>
-> > ---
-> > =C2=A0 .../pci/controller/dwc/pcie-designware-host.c | 33 +++++++++++++=
-+++---
-> > =C2=A0 1 file changed, 28 insertions(+), 5 deletions(-)
-> >=20
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/driver=
-s/pci/controller/dwc/pcie-designware-host.c
-> > index aa93acaa579a5..90d9cb45e7842 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > @@ -26,9 +26,27 @@ static struct pci_ops dw_pcie_ops;
-> > =C2=A0 static struct pci_ops dw_pcie_ecam_ops;
-> > =C2=A0 static struct pci_ops dw_child_pcie_ops;
-> > =C2=A0=20
-> > +#ifdef CONFIG_SMP
-> > +static void dw_irq_noop(struct irq_data *d) { }
-> > +#endif
-> > +
-> > +static bool dw_pcie_init_dev_msi_info(struct device *dev, struct irq_d=
-omain *domain,
-> > + =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct irq_domain *real_parent, struct=
- msi_domain_info *info)
-> > +{
-> > + if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
-> > + return false;
-> > +
-> > +#ifdef CONFIG_SMP
-> > + info->chip->irq_ack =3D dw_irq_noop;
-> > + info->chip->irq_pre_redirect =3D irq_chip_pre_redirect_parent;
-> > +#else
-> > + info->chip->irq_ack =3D irq_chip_ack_parent;
-> > +#endif
-> > + return true;
-> > +}
-> > +
-> > =C2=A0 #define DW_PCIE_MSI_FLAGS_REQUIRED (MSI_FLAG_USE_DEF_DOM_OPS | \
-> > =C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 MSI_FLAG_USE_DEF_CHIP_OPS | \
-> > - =C2=A0=C2=A0=C2=A0 MSI_FLAG_NO_AFFINITY | \
-> > =C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 MSI_FLAG_PCI_MSI_MASK_PARENT)
-> > =C2=A0 #define DW_PCIE_MSI_FLAGS_SUPPORTED (MSI_FLAG_MULTI_PCI_MSI | \
-> > =C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0 MSI_FLAG_PCI_MSIX | \
-> > @@ -40,9 +58,8 @@ static const struct msi_parent_ops dw_pcie_msi_parent=
-_ops =3D {
-> > =C2=A0=C2=A0 .required_flags =3D DW_PCIE_MSI_FLAGS_REQUIRED,
-> > =C2=A0=C2=A0 .supported_flags =3D DW_PCIE_MSI_FLAGS_SUPPORTED,
-> > =C2=A0=C2=A0 .bus_select_token =3D DOMAIN_BUS_PCI_MSI,
-> > - .chip_flags =3D MSI_CHIP_FLAG_SET_ACK,
-> > =C2=A0=C2=A0 .prefix =3D "DW-",
-> > - .init_dev_msi_info =3D msi_lib_init_dev_msi_info,
-> > + .init_dev_msi_info =3D dw_pcie_init_dev_msi_info,
-> > =C2=A0 };
-> > =C2=A0=20
-> > =C2=A0 /* MSI int handler */
-> > @@ -63,7 +80,7 @@ void dw_handle_msi_irq(struct dw_pcie_rp *pp)
-> > =C2=A0=C2=A0 continue;
-> > =C2=A0=20
-> > =C2=A0=C2=A0 for_each_set_bit(pos, &status, MAX_MSI_IRQS_PER_CTRL)
-> > - generic_handle_domain_irq(pp->irq_domain, irq_off + pos);
-> > + generic_handle_demux_domain_irq(pp->irq_domain, irq_off + pos);
-> > =C2=A0=C2=A0 }
-> > =C2=A0 }
-> > =C2=A0=20
-> > @@ -140,10 +157,16 @@ static void dw_pci_bottom_ack(struct irq_data *d)
-> > =C2=A0=20
-> > =C2=A0 static struct irq_chip dw_pci_msi_bottom_irq_chip =3D {
-> > =C2=A0=C2=A0 .name =3D "DWPCI-MSI",
-> > - .irq_ack =3D dw_pci_bottom_ack,
-> > =C2=A0=C2=A0 .irq_compose_msi_msg =3D dw_pci_setup_msi_msg,
-> > =C2=A0=C2=A0 .irq_mask =3D dw_pci_bottom_mask,
-> > =C2=A0=C2=A0 .irq_unmask =3D dw_pci_bottom_unmask,
-> > +#ifdef CONFIG_SMP
-> > + .irq_ack =3D dw_irq_noop,
-> > + .irq_pre_redirect =3D dw_pci_bottom_ack,
-> > + .irq_set_affinity =3D irq_chip_redirect_set_affinity,
-> > +#else
-> > + .irq_ack =3D dw_pci_bottom_ack,
-> > +#endif
-> > =C2=A0 };
-> > =C2=A0=20
-> > =C2=A0 static int dw_pcie_irq_domain_alloc(struct irq_domain *domain, u=
-nsigned int virq,
->=20
->=20
-> I am seeing another issue with this patch. On the Tegra194 AGX Xavier
-> platform suspend is failing and reverting this patch fixes the problem.
->=20
-> Unfortunately the logs don't tell me much. In a bad case I see ...
->=20
-> =C2=A0 PM: suspend entry (deep)
-> =C2=A0 Filesystems sync: 0.000 seconds
-> =C2=A0 Freezing user space processes
-> =C2=A0 Freezing user space processes completed (elapsed 0.002 seconds)
-> =C2=A0 OOM killer disabled.
-> =C2=A0 Freezing remaining freezable tasks
-> =C2=A0 Freezing remaining freezable tasks completed (elapsed 0.001 second=
-s)
-> =C2=A0 tegra-xusb 3610000.usb: Firmware timestamp: 2020-09-11 16:55:03 UT=
-C
-> =C2=A0 dwc-eth-dwmac 2490000.ethernet eth0: Link is Down
-> =C2=A0 tegra194-pcie 14100000.pcie: Link didn't transition to L2 state
-> =C2=A0 Disabling non-boot CPUs ...
->=20
-> It appears to hang here. In a good case I see ...
->=20
-> =C2=A0 PM: suspend entry (deep)
-> =C2=A0 Filesystems sync: 0.000 seconds
-> =C2=A0 Freezing user space processes
-> =C2=A0 Freezing user space processes completed (elapsed 0.002 seconds)
-> =C2=A0 OOM killer disabled.
-> =C2=A0 Freezing remaining freezable tasks
-> =C2=A0 Freezing remaining freezable tasks completed (elapsed 0.001 second=
-s)
-> =C2=A0 tegra-xusb 3610000.usb: Firmware timestamp: 2020-09-11 16:55:03 UT=
-C
-> =C2=A0 dwc-eth-dwmac 2490000.ethernet eth0: Link is Down
-> =C2=A0 tegra194-pcie 14100000.pcie: Link didn't transition to L2 state
-> =C2=A0 Disabling non-boot CPUs ...
-> =C2=A0 psci: CPU7 killed (polled 0 ms)
-> =C2=A0 psci: CPU6 killed (polled 4 ms)
-> =C2=A0 psci: CPU5 killed (polled 0 ms)
-> =C2=A0 psci: CPU4 killed (polled 4 ms)
-> =C2=A0 psci: CPU3 killed (polled 4 ms)
-> =C2=A0 psci: CPU2 killed (polled 0 ms)
-> =C2=A0 psci: CPU1 killed (polled 0 ms)
-> =C2=A0 ...
-> =C2=A0 Enabling non-boot CPUs ... (resume starts)
->=20
-> So it looks like it is hanging when disabling the non-boot CPUs. So far=
-=20
-> it only appears to happen on Tegra194.
->=20
-> Let me know if you have any suggestions.
-
-Ouch. I'm afraid this is going to be much harder to figure out than the
-previous one, especially since I can't get access easily to a board to
-test on. I will try to reserve a board and reproduce the bug.
-
-Meanwhile, if you (or someone else in your team) can spare a few cycles,
-could you please try to reproduce the bug again with the debug patch
-below applied, and a few other changes:
- * enable debug messages in kernel/irq/cpuhotplug.c;
- * save the contents of /proc/interrupts to a file before suspending;
- * add "no_console_suspend" to the kernel command line (although it
-   looks like you already have it).
-
-It will be much more verbose during suspend but hopefully we can at
-least figure out how far along it goes and how it's related to the MSI
-affinity configuration.
-
-Thanks,
-Radu
-
----
-
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 84cc4bea773c0..62ae76661f26d 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -1492,6 +1492,8 @@ int irq_chip_redirect_set_affinity(struct irq_data *d=
-ata, const struct cpumask *
- {
- struct irq_redirect *redir =3D &irq_data_to_desc(data)->redirect;
-=20
-+ pr_info("%s: irq %u mask 0x%*pb\n", __func__, data->irq, cpumask_pr_args(=
-dest));
-+
- WRITE_ONCE(redir->target_cpu, cpumask_first(dest));
- irq_data_update_effective_affinity(data, dest);
-=20
-diff --git a/kernel/irq/cpuhotplug.c b/kernel/irq/cpuhotplug.c
-index cd5689e383b00..d8c62547f9d06 100644
---- a/kernel/irq/cpuhotplug.c
-+++ b/kernel/irq/cpuhotplug.c
-@@ -59,6 +59,8 @@ static bool migrate_one_irq(struct irq_desc *desc)
- bool brokeaff =3D false;
- int err;
-=20
-+ pr_info("%s: irq %u cpu %u\n", __func__, d->irq, smp_processor_id());
-+
- /*
- * IRQ chip might be already torn down, but the irq descriptor is
- * still in the radix tree. Also if the chip has no affinity setter,
-diff --git a/kernel/stop_machine.c b/kernel/stop_machine.c
-index 3fe6b0c99f3d8..94bd7ad64c9b7 100644
---- a/kernel/stop_machine.c
-+++ b/kernel/stop_machine.c
-@@ -227,6 +227,7 @@ static int multi_cpu_stop(void *data)
- stop_machine_yield(cpumask);
- newstate =3D READ_ONCE(msdata->state);
- if (newstate !=3D curstate) {
-+ pr_info("%s: cpu %d entering state %d\n", __func__, cpu, newstate);
- curstate =3D newstate;
- switch (curstate) {
- case MULTI_STOP_DISABLE_IRQ:
-
+SGkgQWxpc29uLA0KDQpUaGFuayB5b3UgZm9yIHRoZSBoZWFkc+KAkXVwLiBJ4oCZdmUgcmVzcHVu
+IHRoZSBzZXJpZXMgYXMgdjQgYW5kIHJlYmFzZWQgaXQgb24gcGNpL25leHQgYXMgbWVudGlvbmVk
+IGJ5IHRoZSB0ZXN0Ym90LiBUaGUgdjQgY2hhbmdlcyBhcmUgbGltaXRlZCB0byBidWlsZOKAkWZp
+eGVzIGZyb20gdGhlIGJvdCByZXBvcnQgKyBSZXBvcnRlZOKAkWJ5L0Nsb3NlcyBvbiB0aGUgcmVz
+ZXQgbWV0aG9kIHBhdGNoLiBBbmQgdGhlIHJlcHJvZHVjZSBzdGVwcyBmcm9tIHRlc3Rib3QgY2xl
+YXIgbG9jYWxseSBmb3IgbWUgbm93Lg0KDQpJbiB2NCAmIHYzICwg4oCccmVzZXQgcHJlcGFyZSBh
+bmQgcmVnaW9uIHRlYXJkb3du4oCdIGlzIHBhdGNoIDUgKG5vdCA4KS4gSWYgeW91IHN0aWxsIHNl
+ZSBhIGJ1aWxkIGZhaWx1cmUgYXQgdGhhdCBwb2ludCwgY291bGQgeW91IHNoYXJlIHRoZSBleGFj
+dCBlcnJvci9sb2cgYW5kIHRoZSB0cmVlL2NvbmZpZyB5b3XigJlyZSB1c2luZz8gSeKAmWxsIHRh
+a2UgYSBsb29rIHJpZ2h0IGF3YXkuDQoNClRoYW5rcywNClNyaXJhbmdhbg0KDQpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQpGcm9tOiBBbGlzb24gU2Nob2ZpZWxkIDxh
+bGlzb24uc2Nob2ZpZWxkQGludGVsLmNvbT4NClNlbnQ6IFN1bmRheSwgSmFudWFyeSAxOCwgMjAy
+NiAyOjI5IFBNDQpUbzogU3JpcmFuZ2FuIE1hZGhhdmFuDQpDYzogZGF2ZUBzdGdvbGFicy5uZXQ7
+IGpvbmF0aGFuLmNhbWVyb25AaHVhd2VpLmNvbTsgZGF2ZS5qaWFuZ0BpbnRlbC5jb207IHZpc2hh
+bC5sLnZlcm1hQGludGVsLmNvbTsgaXJhLndlaW55QGludGVsLmNvbTsgZGFuLmoud2lsbGlhbXNA
+aW50ZWwuY29tOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBtaW5nLmxpQHpvaG9tYWlsLmNvbTsgcnJp
+Y2h0ZXJAYW1kLmNvbTsgU21pdGEuS29yYWxhaGFsbGlDaGFubmFiYXNhcHBhQGFtZC5jb207IGh1
+YWlzaGVuZy55ZUBpbnRlbC5jb207IGxpbnV4LWN4bEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmc7IFZpc2hhbCBBc2xvdDsgVmlrcmFtIFNldGhpOyBTaGFua2VyIERv
+bnRoaW5lbmk7IFZpZHlhIFNhZ2FyOyBNYXR0IE9jaHM7IEphc29uIFNlcXVlaXJhDQpTdWJqZWN0
+OiBSZTogW1BBVENIIHYzIDAvMTBdIENYTCByZXNldCBzdXBwb3J0IGZvciBUeXBlIDIgZGV2aWNl
+cw0KDQpFeHRlcm5hbCBlbWFpbDogVXNlIGNhdXRpb24gb3BlbmluZyBsaW5rcyBvciBhdHRhY2ht
+ZW50cw0KDQoNCk9uIEZyaSwgSmFuIDE2LCAyMDI2IGF0IDAxOjQxOjM2QU0gKzAwMDAsIHNtYWRo
+YXZhbkBudmlkaWEuY29tIHdyb3RlOg0KPiBGcm9tOiBTcmlyYW5nYW4gTWFkaGF2YW4gPHNtYWRo
+YXZhbkBudmlkaWEuY29tPg0KPg0KPiBIaSBmb2xrcyENCj4NCj4gVGhpcyBwYXRjaCBzZXJpZXMg
+aW50cm9kdWNlcyBzdXBwb3J0IGZvciB0aGUgQ1hMIFJlc2V0IG1ldGhvZCBmb3IgQ1hMDQo+IGRl
+dmljZXMsIGltcGxlbWVudGluZyB0aGUgcmVzZXQgcHJvY2VkdXJlIG91dGxpbmVkIGluIENYTCBT
+cGVjIFsxXSB2My4yLA0KPiBTZWN0aW9ucyA5LjYgYW5kIDkuNy4NCg0KSGksDQoNClNlZW1zIHNv
+bWV0aGluZyBpcyBtaXNzaW5nIGZyb20gdGhlIHNldCBvciBhIGRlcGVuZGVuY3kgbm90IG5vdGVk
+Lg0KSXQgc3RvcHMgY29tcGlsaW5nIGF0IFBhdGNoIDggY3hsOiBhZGQgcmVzZXQgcHJlcGFyZSBh
+bmQgcmVnaW9uIHRlYXJkb3duDQoNCi0tIEFsaXNvbg0K
