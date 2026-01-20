@@ -1,121 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E3BA36AB7E;
-	Tue, 20 Jan 2026 18:56:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF67D34EF06
+	for <linux-pci@vger.kernel.org>; Tue, 20 Jan 2026 19:07:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768935394; cv=none; b=PgDWD8udBgbshsq3W9Ij55LFOBBgKD6HtDIeUmbEZGsAzK64UUBsRhA11fJADzo+55qPTQct1hHy9pUHmqGM+Zj3fo49uLfUvTD/0VxZ/YOmaIR0cNYIODM3pOXFQtTDF2ZzW2u9UskWZ9hMyKwihiSKSkHiwq4qhicMguB4qwc=
+	t=1768936061; cv=none; b=ifl2vrn/hilcPn3UmRSsaSWq2OS2q4T3rZ+sTaTUoS1rq6Gu6bNvl6OFY/maRJT+kD+gFDSh+zE0JMI1zTxzIvkAdrtXZz1eDrpN4g9YVXOV+BhRIX591+1pFxWf5Zab0yG+Qt1dh6AvpdPUNQPstqZ7BgHg9oQTNcd5lrIw88Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768935394; c=relaxed/simple;
-	bh=lHPeenipo+JjDaxaE0lcp57qJlGdlmz17mZc67T7DuM=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=Hs+nn+C5lIfOzdcoXqW+7oFgXfXgZiY3UymK3cpxO+Y7B3sMj4G7fDHseOBqb7Qh12k3ejP/doDMRQlpAY3XnFAJoMsXfX1UtCgK8H7HH8KtLuzqhczEpcc7THtwlOUX+Y2/cNS6lSEd18+LoVx6jtcnBeUlxpT3Ml43MHqxiGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W2XMNB2I; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768936061; c=relaxed/simple;
+	bh=/QoGK8Xt5gS0+41Fy4DL1+vjrBd3h4rPTW+Pf8FHAlo=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=kyC3/5oNtj+0upHqMQ8yeuvwe0WjTtuThVcP/rHgLG9oQC56X8GaDBTAey4MVyjWfv1UMc+BbjcpHUCYuAOQStpwQmC/E90BqxTa3ZSxmhYK2XWtm25USMFPDB97QaDttBOK+wPSUXuiAgK+X3eDQZIhntMQ9kLND6KPUzeDrq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=H96BX4lm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5qH3MMrj; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=H96BX4lm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5qH3MMrj; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W2XMNB2I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4DB9C16AAE;
-	Tue, 20 Jan 2026 18:56:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768935393;
-	bh=lHPeenipo+JjDaxaE0lcp57qJlGdlmz17mZc67T7DuM=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=W2XMNB2IJUGQWTAvgXo+9h7Qw6pcALwSh3+VT+WLBHbWZ8iI0GL5mO2PBKtWIlDxl
-	 we+3ieJKTb+XlXZYJSssU4goFRm3s6zAkh306ajEGAia2zFdOs5zFHp4cBXFa99nnw
-	 ftLMJu1oBJMGY9aH2KmxCl69oj8oIN31BkzuK8SQjFbwjTavrkUvY5dPGxl6NwPffh
-	 vP6GZ0eABa1D+I9BL9AZ/YJE/xtB7dE+q3P74Krw1gpop9OE6t2Twqeu2DPfp5+hA8
-	 NqPTeV8+zJ1AKCtNvQ+/dkuTKBEHDdz5WLt1k9w89WrRa2LYl6yIiwZXI2Voh15heD
-	 Ph5EIJGMQTQxg==
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="H96BX4lm";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5qH3MMrj";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="H96BX4lm";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5qH3MMrj"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 15DB25BCC3;
+	Tue, 20 Jan 2026 19:07:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1768936056; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zJ1Z8IYZMWTEDeNVFkUDqCyvMkBoL753dOOBuK9zmSk=;
+	b=H96BX4lmrkDW8B9QVcImB3K1isMfcrDrXSSaWceaJfWyxmj2/t3/o8w30xZEyFagxwCEZP
+	i8GFlyZfN9NwEEp0SR4jzAuozgtwPEoRd+2q0/w2ThHOcjw+CGz4ZJ4sqKZlJr/+6xvt6a
+	UXGxbgrjWHVxXMRWa93aDzCTjGmOSUo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1768936056;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zJ1Z8IYZMWTEDeNVFkUDqCyvMkBoL753dOOBuK9zmSk=;
+	b=5qH3MMrjsgb9Pj5YzSKnvvT/Oz2+jJ0g8/CaCT6jmjMvGVYFzaurFAWnHkVjvgvSZg/44A
+	AlloC9As4g4xhmDw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1768936056; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zJ1Z8IYZMWTEDeNVFkUDqCyvMkBoL753dOOBuK9zmSk=;
+	b=H96BX4lmrkDW8B9QVcImB3K1isMfcrDrXSSaWceaJfWyxmj2/t3/o8w30xZEyFagxwCEZP
+	i8GFlyZfN9NwEEp0SR4jzAuozgtwPEoRd+2q0/w2ThHOcjw+CGz4ZJ4sqKZlJr/+6xvt6a
+	UXGxbgrjWHVxXMRWa93aDzCTjGmOSUo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1768936056;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zJ1Z8IYZMWTEDeNVFkUDqCyvMkBoL753dOOBuK9zmSk=;
+	b=5qH3MMrjsgb9Pj5YzSKnvvT/Oz2+jJ0g8/CaCT6jmjMvGVYFzaurFAWnHkVjvgvSZg/44A
+	AlloC9As4g4xhmDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B07A93EA63;
+	Tue, 20 Jan 2026 19:07:35 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id KJmhKXfSb2kXcgAAD6G6ig
+	(envelope-from <tiwai@suse.de>); Tue, 20 Jan 2026 19:07:35 +0000
+Date: Tue, 20 Jan 2026 20:07:35 +0100
+Message-ID: <87fr80rtl4.wl-tiwai@suse.de>
+From: Takashi Iwai <tiwai@suse.de>
+To: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Cc: lgirdwood@gmail.com,
+	broonie@kernel.org,
+	tiwai@suse.de,
+	bhelgaas@google.com,
+	linux-sound@vger.kernel.org,
+	kai.vehmanen@linux.intel.com,
+	ranjani.sridharan@linux.intel.com,
+	yung-chuan.liao@linux.intel.com,
+	pierre-louis.bossart@linux.dev,
+	linux-kernel@vger.kernel.org,
+	kw@linux.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/4] ASoC/SOF/PCI/Intel: Support for Nova Lake
+In-Reply-To: <20260120083148.12063-1-peter.ujfalusi@linux.intel.com>
+References: <20260120083148.12063-1-peter.ujfalusi@linux.intel.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.1 Mule/6.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 20 Jan 2026 19:56:29 +0100
-Message-Id: <DFTN9F5OGCBS.2CRNLWNC60971@kernel.org>
-Subject: Re: [PATCH 1/4] rust: device: support `dev_printk` on all devices
-Cc: "Gary Guo" <gary@garyguo.net>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun.feng@gmail.com>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Bjorn
- Helgaas" <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-To: "Gary Guo" <gary@kernel.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260120181152.3640314-1-gary@kernel.org>
-In-Reply-To: <20260120181152.3640314-1-gary@kernel.org>
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-Spamd-Result: default: False [-3.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	FREEMAIL_CC(0.00)[gmail.com,kernel.org,suse.de,google.com,vger.kernel.org,linux.intel.com,linux.dev,linux.com];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Score: -3.30
+X-Spam-Level: 
 
-On Tue Jan 20, 2026 at 7:11 PM CET, Gary Guo wrote:
-> diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
-> index c7b5db9dcca1..94e0548e7687 100644
-> --- a/rust/kernel/device.rs
-> +++ b/rust/kernel/device.rs
-> @@ -601,6 +601,13 @@ impl DeviceContext for Core {}
->  impl DeviceContext for CoreInternal {}
->  impl DeviceContext for Normal {}
-> =20
-> +impl<Ctx: DeviceContext> AsRef<Device<Ctx>> for Device<Ctx> {
-> +    #[inline]
-> +    fn as_ref(&self) -> &Device<Ctx> {
-> +        self
-> +    }
-> +}
-> +
->  /// Convert device references to bus device references.
->  ///
->  /// Bus devices can implement this trait to allow abstractions to provid=
-e the bus device in
-> @@ -720,7 +727,7 @@ macro_rules! impl_device_context_into_aref {
->  macro_rules! dev_printk {
->      ($method:ident, $dev:expr, $($f:tt)*) =3D> {
->          {
-> -            ($dev).$method($crate::prelude::fmt!($($f)*));
-> +            $crate::device::Device::$method($dev.as_ref(), $crate::prelu=
-de::fmt!($($f)*))
+On Tue, 20 Jan 2026 09:31:44 +0100,
+Peter Ujfalusi wrote:
+> 
+> Hi,
+> 
+> this series adds audio support for the NVL variant of the
+> Nova Lake family.
+> NVL also based on ACE4 audio subsystem, but with higher clock
+> rate, more DSP memory and more DSP cores (4 vs 2) compared to
+> NVL-S.
 
-At a first glance I wasn't sure if we really want to rely on AsRef when hid=
-e it
-in the macro. But on the other hand, if someone would implement AsRef on a =
-class
-or bus device to return some other (unrelated) &Device it would be wrong
-anyways. So I think using AsRef is fine.
+It looks like that the ASoC patch is based on the recent change that
+isn't merged yet in my tree, so this series should go over ASoC tree
+for now, supposedly.
 
-I think a lot of people will be very happy about this patch. :)
+Mark, could you take them (probably with minor corrections of subject
+as Bjorn suggested in the thread)?
 
-I will pick up patches 1 and 2 this cycle, patch 3 and 4 can go through the
-corresponding subsystem tree next cycle.
+For HD-audio stuff:
+Acked-by: Takashi Iwai <tiwai@suse.de>
 
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index bea76ca9c3da..3946ca919332 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -351,7 +351,7 @@ impl Device {
->      ///     // Get an instance of `Vendor`.
->      ///     let vendor =3D pdev.vendor_id();
->      ///     dev_info!(
-> -    ///         pdev.as_ref(),
-> +    ///         pdev,
->      ///         "Device: Vendor=3D{}, Device=3D0x{:x}\n",
->      ///         vendor,
->      ///         pdev.device_id()
-> diff --git a/rust/kernel/pci/id.rs b/rust/kernel/pci/id.rs
-> index c09125946d9e..e2d9e8804347 100644
-> --- a/rust/kernel/pci/id.rs
-> +++ b/rust/kernel/pci/id.rs
-> @@ -22,7 +22,7 @@
->  /// fn probe_device(pdev: &pci::Device<Core>) -> Result {
->  ///     let pci_class =3D pdev.pci_class();
->  ///     dev_info!(
-> -///         pdev.as_ref(),
-> +///         pdev,
->  ///         "Detected PCI class: {}\n",
->  ///         pci_class
->  ///     );
 
-Can you please send a separate patch for those?
+thanks,
+
+Takashi
