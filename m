@@ -1,188 +1,355 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B471B3A8FED;
-	Tue, 20 Jan 2026 21:10:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C80F3EDAB7;
+	Tue, 20 Jan 2026 21:17:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768943404; cv=none; b=cCCENc926QOhDt9JFPjJaN7qex5xxD9R/y4LbZwvmMbIiyWqFHm36+LKR/1HLQs0VjiymAODG7UPKJ3odJnbB8dYrfIJihxDbAsi9r0U7DFjiC/sSQwmGrKcDnTnRav0X7r3rpw8fV+xr5+93jddiYef5iO4FJExd4iPLGen+PU=
+	t=1768943841; cv=none; b=cgoyCMraQvFWM/O2Kv0DB4BICML+3ez8Tow3Jj7rEL/Yj4FUS3AU4+TYfkcGW55AOLhRDiEkZHJOEVa2JPx332XHJIpWrdNYhFigRZ3x7J9ifGgkWjMMouMcGItvG3vcGVgCf6Hg3R3tK6ywaZnxpbMwzH6qDmlBR/1+iAUXG0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768943404; c=relaxed/simple;
-	bh=ivHtQ6gh6IXT2hO8yZKcCr+q7hqDkcejJS3fvf52Ppo=;
+	s=arc-20240116; t=1768943841; c=relaxed/simple;
+	bh=Fj5IrTCfWpLuDR/zNUCOc3krpg/zdgIA4C3q0qM4dMc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N4cQdZk9DOhFIiOYHvB7yKWchEuds5yOzzTqKsWT2zAeZPB4GULz20pr6RrQpyTM+YgSXjjozXHNbmNPkKcu/oWHH2O4S3QJw1DbUweWaOt2INTSlxwMLQrK8cOj4oVkLwMTLQriO6wj2Reny93Im6Vsi4/euzfMwmO/WJUyc/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qf/4opCa; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=lhAzJRQW80SU7c3zEFg0xp5nGi8QA8wZ12W9K4rnpEEZok2zVJeGh0PeAUodAoMPsVBHYBApN3RUR02HMFSwWGnLdcOblyFX8DZmZf441NxYLQCkvBe6zEZSd3nr7vIjHOPI0kq9OMtTel37u3YG00B6GXc4lF/hlyxvYTxiWgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ny+PkBLb; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qf/4opCa"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ny+PkBLb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768943402; x=1800479402;
+  t=1768943839; x=1800479839;
   h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ivHtQ6gh6IXT2hO8yZKcCr+q7hqDkcejJS3fvf52Ppo=;
-  b=Qf/4opCa5ESpQw/lRu/NTfJuA2nWFDkuAr2Pe2lz7WJLivxv01l0ND/Z
-   HMPSxuQ9WLHfFtTatWSdQnrwUnxUEFaHMsOciSXzJYUxqs0pvOC/GeRHC
-   ME7xP2UgaN8WDL2/15YBWVK5hfbwjF3bNCqWbkGllW5U9baQLWvqAxmdl
-   AFWk9fKxIJsIxpYkKyAjscNheDfO/2SHMNNaFQA+agpQHQL5CeGLVZZFw
-   FG14Gm2ukPYJR/oOrtnI0jCo1eNdfB/gwbhS3I6z41IVhFptAT0J0V48x
-   1jmrn1x/B//O4Ggk4U4Y3XqVyMY0VmS+pHCt4BdQWphD20ITPYwD6Z/HJ
-   w==;
-X-CSE-ConnectionGUID: IxF5pwnASuO1cPShdSJq6A==
-X-CSE-MsgGUID: 1ee2jgbARveVhxGhBOmHig==
-X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="80791588"
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=Fj5IrTCfWpLuDR/zNUCOc3krpg/zdgIA4C3q0qM4dMc=;
+  b=Ny+PkBLbgxBpYqmfnVHq4j3Aw+OXOzqj8wwHncc5hoO7blpYgkkJnLiC
+   P9KmAVumFH0yMd7Aw15AKhEFKclRQaFkumeTsp29t5DFQLyuuuan3jBOc
+   OGnbBxmcpFbEhWbWfpiYNehUWjxHbZXXnJBXuh1YY1KpUpNSuQmHuqT8u
+   fTkzsk9TGzOGjyWlW3c7jsgGnzfI/tWGVa2g65Gdg8LQGeHVnRnnubHkM
+   yIgVjyZm4cJmahSXxW7tFxxbj0tdrM4WR/fFpijUxp6HdNLg2aCdO6hdE
+   UaEAXHj2Gt71N5pirvo7f1zHeisIw4gxKvKdkJrwoSI8KvVXaoq73mjT6
+   A==;
+X-CSE-ConnectionGUID: SQIzEcv9Tk6GOCWe3gNosQ==
+X-CSE-MsgGUID: c+gatkskTgCg/vLTU6hm6w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="95640188"
 X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
-   d="scan'208";a="80791588"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 13:10:01 -0800
-X-CSE-ConnectionGUID: AXjcRiQeSHCcT9bTnSKtZg==
-X-CSE-MsgGUID: g2PZWbUQQhiY3dv6ggSIEw==
+   d="scan'208";a="95640188"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 13:17:18 -0800
+X-CSE-ConnectionGUID: tP040WK2QYuIhOCZAg670g==
+X-CSE-MsgGUID: aCdpwMz5Rp++XlW7FOCltw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,241,1763452800"; 
-   d="scan'208";a="237482957"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 20 Jan 2026 13:09:54 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1viIz1-00000000PXR-2Z9s;
-	Tue, 20 Jan 2026 21:09:51 +0000
-Date: Wed, 21 Jan 2026 05:09:48 +0800
-From: kernel test robot <lkp@intel.com>
-To: Mukesh R <mrathor@linux.microsoft.com>, linux-kernel@vger.kernel.org,
-	linux-hyperv@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, kys@microsoft.com,
-	haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-	longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org,
-	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
-	nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
-	romank@linux.microsoft.com
-Subject: Re: [PATCH v0 01/15] iommu/hyperv: rename hyperv-iommu.c to
- hyperv-irq.c
-Message-ID: <202601210423.wwOrf2K8-lkp@intel.com>
-References: <20260120064230.3602565-2-mrathor@linux.microsoft.com>
+   d="scan'208";a="206575787"
+Received: from smoticic-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.13])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 13:17:13 -0800
+Date: Tue, 20 Jan 2026 23:17:10 +0200
+From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
+To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: Alex =?iso-8859-1?Q?Benn=E9e?= <alex.bennee@linaro.org>,
+	Simon Richter <Simon.Richter@hogyros.de>,
+	Lucas De Marchi <lucas.demarchi@intel.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	amd-gfx@lists.freedesktop.org, Bjorn Helgaas <bhelgaas@google.com>,
+	David Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	linux-pci@vger.kernel.org, Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 06/11] PCI: Fix restoring BARs on BAR resize rollback
+ path
+Message-ID: <aW_w1oFQCzUxGYtu@intel.com>
+References: <20251113162628.5946-1-ilpo.jarvinen@linux.intel.com>
+ <20251113162628.5946-7-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20260120064230.3602565-2-mrathor@linux.microsoft.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251113162628.5946-7-ilpo.jarvinen@linux.intel.com>
+X-Patchwork-Hint: comment
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs Bertel Jungin Aukio 5, 02600 Espoo, Finland
 
-Hi Mukesh,
+On Thu, Nov 13, 2025 at 06:26:23PM +0200, Ilpo Järvinen wrote:
+> BAR resize operation is implemented in the pci_resize_resource() and
+> pbus_reassign_bridge_resources() functions. pci_resize_resource() can
+> be called either from __resource_resize_store() from sysfs or directly
+> by the driver for the Endpoint Device.
+> 
+> The pci_resize_resource() requires that caller has released the device
+> resources that share the bridge window with the BAR to be resized as
+> otherwise the bridge window is pinned in place and cannot be changed.
+> 
+> pbus_reassign_bridge_resources() implement rollback of the resources if
+> the resize operation fails, but rollback is performed only for the
+> bridge windows. Because releasing the device resources are done by the
+> caller of the BAR resize interface, these functions performing the BAR
+> resize do not have access to the device resources as they were before
+> the resize.
+> 
+> pbus_reassign_bridge_resources() could try to
+> __pci_bridge_assign_resources() after rolling back the bridge windows
+> as they were, however, it will not guarantee the resource are assigned
+> due to differences how FW and the kernel may want to assign the
+> resources (alignment of the start address and tail).
+> 
+> In order to perform rollback robustly, the BAR resize interface has to
+> be altered to also release the device resources that share the bridge
+> window with the BAR to be resized.
+> 
+> Also, remove restoring from the entries failed list as saved list
+> should now contain both the bridge windows and device resources so
+> the extra restore is duplicated work.
+> 
+> Some drivers (currently only amdgpu) want to prevent releasing some
+> resources. Add exclude_bars param to pci_resize_resource() and make
+> amdgpu to pass its register BAR (BAR 5) which should never be released
+> during resize operation. Normally 64-bit prefetchable resources do not
+> share bridge window with it as the register BAR (32-bit only) but there
+> are various fallbacks in the resource assignment logic which may make
+> the resources to share the bridge window in rare cases.
+> 
+> This change (together with the driver side changes) is to counter the
+> resource releases that had to be done to prevent resource tree
+> corruption in the ("PCI: Release assigned resource before restoring
+> them") change. As such, it likely restores functionality in cases where
+> device resources were released to avoid resource tree conflicts which
+> appeared to be "working" when such conflicts were not correctly
+> detected by the kernel.
 
-kernel test robot noticed the following build warnings:
+This thing completely broke my DG2 + non-reBAR system.  The bisect
+points to commit 4efaa80b3d75 ("drm/i915: Remove driver side BAR
+release before resize") but the real problems seem to be in this
+patch. A had a quick look at the code and spotted a few issues...
 
-[auto build test WARNING on tip/x86/core]
-[also build test WARNING on pci/next pci/for-linus arm64/for-next/core clk/clk-next soc/for-next linus/master arnd-asm-generic/master v6.19-rc6 next-20260120]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+<snip>
+> @@ -2468,34 +2466,78 @@ int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *res)
+>  		free_list(&added);
+>  
+>  	if (!list_empty(&failed)) {
+> -		if (pci_required_resource_failed(&failed, type)) {
+> +		if (pci_required_resource_failed(&failed, type))
+>  			ret = -ENOSPC;
+> -			goto cleanup;
+> -		}
+> -		/* Only resources with unrelated types failed (again) */
+>  		free_list(&failed);
+> +		if (ret)
+> +			return ret;
+> +
+> +		/* Only resources with unrelated types failed (again) */
+>  	}
+>  
+> -	list_for_each_entry(dev_res, &saved, list) {
+> +	list_for_each_entry(dev_res, saved, list) {
+>  		struct pci_dev *dev = dev_res->dev;
+>  
+>  		/* Skip the bridge we just assigned resources for */
+>  		if (bridge == dev)
+>  			continue;
+>  
+> +		if (!dev->subordinate)
+> +			continue;
+> +
+>  		pci_setup_bridge(dev->subordinate);
+>  	}
+>  
+> -	free_list(&saved);
+> -	up_read(&pci_bus_sem);
+>  	return 0;
+> +}
+>  
+> -cleanup:
+> -	/* Restore size and flags */
+> -	list_for_each_entry(dev_res, &failed, list)
+> -		restore_dev_resource(dev_res);
+> -	free_list(&failed);
+> +int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno, int size,
+> +				       int exclude_bars)
+> +{
+> +	struct resource *res = pci_resource_n(pdev, resno);
+> +	struct pci_dev_resource *dev_res;
+> +	struct pci_bus *bus = pdev->bus;
+> +	struct resource *b_win, *r;
+> +	LIST_HEAD(saved);
+> +	unsigned int i;
+> +	int ret = 0;
+> +
+> +	b_win = pbus_select_window(bus, res);
+> +	if (!b_win)
+> +		return -EINVAL;
+> +
+> +	pci_dev_for_each_resource(pdev, r, i) {
+> +		if (i >= PCI_BRIDGE_RESOURCES)
+> +			break;
+> +
+> +		if (exclude_bars & BIT(i))
+> +			continue;
+>  
+> +		if (b_win != pbus_select_window(bus, r))
+> +			continue;
+> +
+> +		ret = add_to_list(&saved, pdev, r, 0, 0);
+> +		if (ret)
+> +			goto restore;
+> +		pci_release_resource(pdev, i);
+> +	}
+> +
+> +	pci_resize_resource_set_size(pdev, resno, size);
+> +
+> +	if (!bus->self)
+> +		goto out;
+> +
+> +	down_read(&pci_bus_sem);
+> +	ret = pbus_reassign_bridge_resources(bus, res, &saved);
+> +	if (ret)
+> +		goto restore;
+> +
+> +out:
+> +	up_read(&pci_bus_sem);
+> +	free_list(&saved);
+> +	return ret;
+> +
+> +restore:
+>  	/* Revert to the old configuration */
+>  	list_for_each_entry(dev_res, &saved, list) {
+>  		struct resource *res = dev_res->res;
+> @@ -2510,13 +2552,21 @@ int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *res)
+>  
+>  		restore_dev_resource(dev_res);
+>  
+> -		pci_claim_resource(dev, i);
+> -		pci_setup_bridge(dev->subordinate);
+> -	}
+> -	up_read(&pci_bus_sem);
+> -	free_list(&saved);
+> +		ret = pci_claim_resource(dev, i);
+> +		if (ret)
+> +			continue;
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Mukesh-R/iommu-hyperv-rename-hyperv-iommu-c-to-hyperv-irq-c/20260120-145832
-base:   tip/x86/core
-patch link:    https://lore.kernel.org/r/20260120064230.3602565-2-mrathor%40linux.microsoft.com
-patch subject: [PATCH v0 01/15] iommu/hyperv: rename hyperv-iommu.c to hyperv-irq.c
-config: i386-allmodconfig (https://download.01.org/0day-ci/archive/20260121/202601210423.wwOrf2K8-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260121/202601210423.wwOrf2K8-lkp@intel.com/reproduce)
+This clobbers 'ret' was supposedly meant to be returned to the
+caller in the end. Thus (at least in my case) the caller always
+sees a return value of 0, and then it forgets to restores the
+reBAR setting back to the original value.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202601210423.wwOrf2K8-lkp@intel.com/
+>  
+> -	return ret;
+> +		if (i < PCI_BRIDGE_RESOURCES) {
+> +			const char *res_name = pci_resource_name(dev, i);
+> +
+> +			pci_update_resource(dev, i);
+> +			pci_info(dev, "%s %pR: old value restored\n",
+> +				 res_name, res);
+> +		}
+> +		if (dev->subordinate)
+> +			pci_setup_bridge(dev->subordinate);
+> +	}
+> +	goto out;
+>  }
+>  
+>  void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index 3d0b0b3f60c4..e4486d7030c0 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -444,8 +444,7 @@ static bool pci_resize_is_memory_decoding_enabled(struct pci_dev *dev,
+>  	return cmd & PCI_COMMAND_MEMORY;
+>  }
+>  
+> -static void pci_resize_resource_set_size(struct pci_dev *dev, int resno,
+> -					 int size)
+> +void pci_resize_resource_set_size(struct pci_dev *dev, int resno, int size)
+>  {
+>  	resource_size_t res_size = pci_rebar_size_to_bytes(size);
+>  	struct resource *res = pci_resource_n(dev, resno);
+> @@ -456,9 +455,9 @@ static void pci_resize_resource_set_size(struct pci_dev *dev, int resno,
+>  	resource_set_size(res, res_size);
+>  }
+>  
+> -int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+> +int pci_resize_resource(struct pci_dev *dev, int resno, int size,
+> +			int exclude_bars)
+>  {
+> -	struct resource *res = pci_resource_n(dev, resno);
+>  	struct pci_host_bridge *host;
+>  	int old, ret;
+>  	u32 sizes;
+> @@ -468,10 +467,6 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+>  	if (host->preserve_config)
+>  		return -ENOTSUPP;
+>  
+> -	/* Make sure the resource isn't assigned before resizing it. */
+> -	if (!(res->flags & IORESOURCE_UNSET))
+> -		return -EBUSY;
+> -
+>  	if (pci_resize_is_memory_decoding_enabled(dev, resno))
+>  		return -EBUSY;
+>  
+> @@ -490,19 +485,13 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+>  	if (ret)
+>  		return ret;
+>  
+> -	pci_resize_resource_set_size(dev, resno, size);
+> -
+> -	/* Check if the new config works by trying to assign everything. */
+> -	if (dev->bus->self) {
+> -		ret = pbus_reassign_bridge_resources(dev->bus, res);
+> -		if (ret)
+> -			goto error_resize;
+> -	}
+> +	ret = pci_do_resource_release_and_resize(dev, resno, size, exclude_bars);
+> +	if (ret)
+> +		goto error_resize;
+>  	return 0;
+>  
+>  error_resize:
+>  	pci_rebar_set_size(dev, resno, old);
+> -	pci_resize_resource_set_size(dev, resno, old);
 
-All warnings (new ones prefixed by >>):
+This new order is very broken because the new reBAR setting
+may have turned some of the originally set bits in the BAR
+to read-only. Thus we may not be able to restore the BAR back
+to the original value.
 
-   In file included from drivers/iommu/intel/irq_remapping.c:6:
-   include/linux/dmar.h:269:17: error: unknown type name '__u128'; did you mean '__u32'?
-     269 |                 __u128 irte;
-         |                 ^~~~~~
-         |                 __u32
-   drivers/iommu/intel/irq_remapping.c: In function 'modify_irte':
-   drivers/iommu/intel/irq_remapping.c:181:17: error: unknown type name 'u128'
-     181 |                 u128 old = irte->irte;
-         |                 ^~~~
-   In file included from arch/x86/include/asm/bug.h:193,
-                    from arch/x86/include/asm/alternative.h:9,
-                    from arch/x86/include/asm/barrier.h:5,
-                    from include/asm-generic/bitops/generic-non-atomic.h:7,
-                    from include/linux/bitops.h:28,
-                    from include/linux/kernel.h:23,
-                    from include/linux/interrupt.h:6,
-                    from drivers/iommu/intel/irq_remapping.c:5:
-   include/linux/atomic/atomic-arch-fallback.h:326:14: error: void value not ignored as it ought to be
-     326 |         ___r = raw_cmpxchg128((_ptr), ___o, (_new)); \
-         |              ^
-   include/asm-generic/bug.h:110:32: note: in definition of macro 'WARN_ON'
-     110 |         int __ret_warn_on = !!(condition);                              \
-         |                                ^~~~~~~~~
-   include/linux/atomic/atomic-instrumented.h:4956:9: note: in expansion of macro 'raw_try_cmpxchg128'
-    4956 |         raw_try_cmpxchg128(__ai_ptr, __ai_oldp, __VA_ARGS__); \
-         |         ^~~~~~~~~~~~~~~~~~
-   drivers/iommu/intel/irq_remapping.c:182:26: note: in expansion of macro 'try_cmpxchg128'
-     182 |                 WARN_ON(!try_cmpxchg128(&irte->irte, &old, irte_modified->irte));
-         |                          ^~~~~~~~~~~~~~
-   drivers/iommu/intel/irq_remapping.c: In function 'intel_ir_set_vcpu_affinity':
->> drivers/iommu/intel/irq_remapping.c:1270:40: warning: left shift count >= width of type [-Wshift-count-overflow]
-    1270 |                                 ~(-1UL << PDA_HIGH_BIT);
-         |                                        ^~
+In my case the original settings are 256MiB / 0x4030000000,
+followed by a failed resize to 8GiB, and finally we see a
+failed restore 'BAR 2: error updating (0x3000000c != 0x0000000c)'
+due to the read-only bits.
 
-Kconfig warnings: (for reference only)
-   WARNING: unmet direct dependencies detected for IRQ_REMAP
-   Depends on [n]: IOMMU_SUPPORT [=y] && X86_64 [=n] && X86_IO_APIC [=y] && PCI_MSI [=y] && ACPI [=y]
-   Selected by [y]:
-   - HYPERV_IOMMU [=y] && IOMMU_SUPPORT [=y] && HYPERV [=y] && X86 [=y]
+i915 limps along after the failure but nothing really works,
+and xe just completely explodes.
 
-
-vim +1270 drivers/iommu/intel/irq_remapping.c
-
-b106ee63abccbba drivers/iommu/intel_irq_remapping.c Jiang Liu           2015-04-13  1241  
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1242  static int intel_ir_set_vcpu_affinity(struct irq_data *data, void *info)
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1243  {
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1244  	struct intel_ir_data *ir_data = data->chip_data;
-53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1245  	struct intel_iommu_pi_data *pi_data = info;
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1246  
-ed1e48ea4370300 drivers/iommu/intel/irq_remapping.c Jacob Pan           2024-04-23  1247  	/* stop posting interrupts, back to the default mode */
-53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1248  	if (!pi_data) {
-2454823e97a63d8 drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-03-19  1249  		__intel_ir_reconfigure_irte(data, true);
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1250  	} else {
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1251  		struct irte irte_pi;
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1252  
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1253  		/*
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1254  		 * We are not caching the posted interrupt entry. We
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1255  		 * copy the data from the remapped entry and modify
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1256  		 * the fields which are relevant for posted mode. The
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1257  		 * cached remapped entry is used for switching back to
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1258  		 * remapped mode.
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1259  		 */
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1260  		memset(&irte_pi, 0, sizeof(irte_pi));
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1261  		dmar_copy_shared_irte(&irte_pi, &ir_data->irte_entry);
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1262  
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1263  		/* Update the posted mode fields */
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1264  		irte_pi.p_pst = 1;
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1265  		irte_pi.p_urgent = 0;
-53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1266  		irte_pi.p_vector = pi_data->vector;
-53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1267  		irte_pi.pda_l = (pi_data->pi_desc_addr >>
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1268  				(32 - PDA_LOW_BIT)) & ~(-1UL << PDA_LOW_BIT);
-53527ea1b70224d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-06-11  1269  		irte_pi.pda_h = (pi_data->pi_desc_addr >> 32) &
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09 @1270  				~(-1UL << PDA_HIGH_BIT);
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1271  
-688124cc541f60d drivers/iommu/intel/irq_remapping.c Sean Christopherson 2025-03-19  1272  		ir_data->irq_2_iommu.posted_vcpu = true;
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1273  		modify_irte(&ir_data->irq_2_iommu, &irte_pi);
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1274  	}
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1275  
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1276  	return 0;
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1277  }
-8541186faf3b596 drivers/iommu/intel_irq_remapping.c Feng Wu             2015-06-09  1278  
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(pci_resize_resource);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d1fdf81fbe1e..cc58abbd2b20 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1428,7 +1428,8 @@ static inline int pci_rebar_bytes_to_size(u64 bytes)
+>  }
+>  
+>  u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar);
+> -int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
+> +int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size,
+> +				     int exlucde_bars);
+>  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+>  bool pci_device_is_present(struct pci_dev *pdev);
+>  void pci_ignore_hotplug(struct pci_dev *dev);
+> -- 
+> 2.39.5
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Ville Syrjälä
+Intel
