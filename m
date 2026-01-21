@@ -1,303 +1,236 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE016332EB7;
-	Wed, 21 Jan 2026 11:20:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60A7E3D34A4
+	for <linux-pci@vger.kernel.org>; Wed, 21 Jan 2026 11:30:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768994414; cv=none; b=LRyhHIktDiG4nKc9qFEUc5QplfrbDIO0j9s4V1JVERCwOC3S2teEviihoPSseV6d59neqQ5eCM4yQca9X6fFVsweTL+5wVNIvRwxZuABzhyeIyUvSg0wxkdTwImAyGaK2ZMcEn3DyDSDuKQwQLPjGmVO5aNkup75iQGjSfren3g=
+	t=1768995037; cv=none; b=uRuSZUNFgk2LWL+LXVzwtyv8ru+BTrFoKfJJKdJILX6PyEJJTeoyhVxik9/PXeK9/XBU3Zq5rson0ETirjHyvGa3bPF33dz732Y4RfqDF59dETUNBBHoQJViWjny7pnSO2kbg3fy5qOP7kEQh/QYWWNPL9If87zu6LXLPEWbiD8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768994414; c=relaxed/simple;
-	bh=R3+USgyBM/rmVMHLbHOALUvlgSfDfE1wSRQ/35wMWW0=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=syOd1wyG4L8yGlViF8mGSo7iegdmHBq5+TbyLKGtpvhPvurJjQ2Z6mof1xyF8JyBUmHTHadg7edDzy9SMQbK730hneA1UqOCseV/4uWsZ/Oha+ItiJttY911T296OvH6M5orfIFbq6e/aTGgvjWVC6jzlmFVkSQ6H1PYMKEPiP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.107])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dx1tZ1YrLzHnHB7;
-	Wed, 21 Jan 2026 19:19:34 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id CB9AD40584;
-	Wed, 21 Jan 2026 19:20:07 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 21 Jan
- 2026 11:20:06 +0000
-Date: Wed, 21 Jan 2026 11:20:05 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: <smadhavan@nvidia.com>
-CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<vishal.l.verma@intel.com>, <ira.weiny@intel.com>,
-	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <ming.li@zohomail.com>,
-	<rrichter@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<huaisheng.ye@intel.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <vaslot@nvidia.com>, <vsethi@nvidia.com>,
-	<sdonthineni@nvidia.com>, <vidyas@nvidia.com>, <mochs@nvidia.com>,
-	<jsequeira@nvidia.com>
-Subject: Re: [PATCH v4 07/10] cxl: add host cache flush and multi-function
- reset
-Message-ID: <20260121112005.00001e80@huawei.com>
-In-Reply-To: <20260120222610.2227109-8-smadhavan@nvidia.com>
-References: <20260120222610.2227109-1-smadhavan@nvidia.com>
-	<20260120222610.2227109-8-smadhavan@nvidia.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1768995037; c=relaxed/simple;
+	bh=foWTJJmYrnEhHgTrsslFkQnNtvKYLTEbvu1nbmhl8ak=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=bzQG0DzZSj+EqpNb/9kWQhN6K6KowhJpufqRdU9cJxOodEy7xMfPWiMLsbGk+XjU45j6x4p8lcfh1Ax+k6Dat29AzDmzcOMLTpRf8q7OvdykRly5fs2OIAnCP0vGgPPyYRj/mD5ugMG1fgI0It9Zf4jOzr9AVdyk52MCw8tq1Y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SUkCCg88; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SUkCCg88"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1768995036; x=1800531036;
+  h=date:from:to:cc:subject:message-id;
+  bh=foWTJJmYrnEhHgTrsslFkQnNtvKYLTEbvu1nbmhl8ak=;
+  b=SUkCCg88yKhGyXCEd52gAZEMXsLRvlYhN545zjgSDosUK6zWJrdN9xSY
+   g49De+72zxzuicNRJfAr1pqngVtAQXa0AlTXqLyEXKiIgwF0BdDDfLzxN
+   Z8dA11iZJG4a46BYZP+xOs0TFcUO8WYGGv1oNOW8ozW6ukbUmEiC8xtl1
+   fnW9DgGy+8ZSebzOBEXQ3aV+Lpx0++FRNjdzE9ZL70JbjB3b6e5N2dChY
+   nwZBz6H/Dk3Zebp458Oa9DBFxbrBKTIE5bEJyBpOBez77QMkHihWWOI6L
+   2U9Y9kFi0DLTljJhgLSEZrfcbZSEZ662vnd7QxIplO1PD2W4eOepgsgoQ
+   Q==;
+X-CSE-ConnectionGUID: 6Real+6NST+snxSYegNvHw==
+X-CSE-MsgGUID: UzOnym8eTf2UxHJN46s40w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="69236881"
+X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
+   d="scan'208";a="69236881"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 03:30:35 -0800
+X-CSE-ConnectionGUID: dfJLw1k2TrqvfxEbWROpmA==
+X-CSE-MsgGUID: wtP70tNOTpGUlor3Vu65NQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
+   d="scan'208";a="206484779"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by orviesa008.jf.intel.com with ESMTP; 21 Jan 2026 03:30:33 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1viWPu-00000000RC1-1hci;
+	Wed, 21 Jan 2026 11:30:30 +0000
+Date: Wed, 21 Jan 2026 19:30:25 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/dwc-qcom] BUILD SUCCESS
+ 8d8db7dbf2181052dc2e8813737ef31d136e4dbd
+Message-ID: <202601211920.Iystrx1t-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
- dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Tue, 20 Jan 2026 22:26:07 +0000
-smadhavan@nvidia.com wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-qcom
+branch HEAD: 8d8db7dbf2181052dc2e8813737ef31d136e4dbd  PCI: qcom: Rename PERST# assert/deassert helpers for uniformity
 
-> From: Srirangan Madhavan <smadhavan@nvidia.com>
-> 
-> Flush host CPU caches for mapped HDM ranges after teardown and prepare
-> sibling Type 2 functions on multi-function devices. The host cache
-> maintenance uses wbinvd_on_all_cpus() on x86 and VA-based PoC clean+
+elapsed time: 1050m
 
-That's not sufficient in general on arm64.  It might flush far enough
-or there might be buffers beyond the point of coherence that are not
-flushed.
+configs tested: 159
+configs skipped: 3
 
-Until there are clarifications from Arm we need something like the
-agents in drivers/cache to do equivalent of wbinvd_on_all_cpus()
-(be it on a PA range to making a tiny bit less horrible)
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Or we need an opt in list for platforms where a flush to PoC is enough.
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260121    gcc-8.5.0
+arc                   randconfig-002-20260121    gcc-10.5.0
+arm                               allnoconfig    clang-22
+arm                              allyesconfig    gcc-15.2.0
+arm                                 defconfig    clang-22
+arm                         mv78xx0_defconfig    clang-19
+arm                   randconfig-001-20260121    clang-20
+arm                   randconfig-002-20260121    gcc-15.2.0
+arm                   randconfig-003-20260121    clang-18
+arm                   randconfig-004-20260121    clang-22
+arm64                            allmodconfig    clang-19
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260121    gcc-15.2.0
+arm64                 randconfig-002-20260121    clang-22
+arm64                 randconfig-003-20260121    clang-22
+arm64                 randconfig-004-20260121    gcc-12.5.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260121    gcc-9.5.0
+csky                  randconfig-002-20260121    gcc-15.2.0
+hexagon                          allmodconfig    clang-17
+hexagon                           allnoconfig    clang-22
+hexagon                             defconfig    clang-22
+hexagon               randconfig-001-20260121    clang-19
+hexagon               randconfig-002-20260121    clang-22
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260121    clang-20
+i386        buildonly-randconfig-002-20260121    gcc-14
+i386        buildonly-randconfig-003-20260121    gcc-13
+i386        buildonly-randconfig-004-20260121    clang-20
+i386        buildonly-randconfig-005-20260121    clang-20
+i386        buildonly-randconfig-006-20260121    clang-20
+i386                                defconfig    clang-20
+i386                  randconfig-001-20260121    gcc-14
+i386                  randconfig-002-20260121    clang-20
+i386                  randconfig-003-20260121    clang-20
+i386                  randconfig-004-20260121    clang-20
+i386                  randconfig-011-20260121    gcc-14
+i386                  randconfig-012-20260121    gcc-14
+i386                  randconfig-013-20260121    clang-20
+i386                  randconfig-014-20260121    gcc-12
+i386                  randconfig-015-20260121    gcc-14
+i386                  randconfig-016-20260121    gcc-14
+i386                  randconfig-017-20260121    clang-20
+loongarch                        allmodconfig    clang-19
+loongarch                         allnoconfig    clang-22
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260121    gcc-15.2.0
+loongarch             randconfig-002-20260121    gcc-15.2.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    gcc-15.2.0
+m68k                                defconfig    gcc-15.2.0
+m68k                        mvme16x_defconfig    gcc-15.2.0
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    gcc-15.2.0
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    gcc-11.5.0
+nios2                 randconfig-001-20260121    gcc-11.5.0
+nios2                 randconfig-002-20260121    gcc-10.5.0
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260121    gcc-9.5.0
+parisc                randconfig-002-20260121    gcc-13.4.0
+parisc64                            defconfig    gcc-15.2.0
+powerpc                    adder875_defconfig    gcc-15.2.0
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc                 linkstation_defconfig    clang-20
+powerpc               randconfig-001-20260121    clang-22
+powerpc               randconfig-002-20260121    clang-22
+powerpc64             randconfig-001-20260121    clang-22
+powerpc64             randconfig-002-20260121    clang-22
+riscv                            allmodconfig    clang-22
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    clang-22
+riscv                 randconfig-001-20260121    clang-16
+riscv                 randconfig-002-20260121    gcc-8.5.0
+s390                             allmodconfig    clang-18
+s390                              allnoconfig    clang-22
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    clang-22
+s390                  randconfig-001-20260121    gcc-9.5.0
+s390                  randconfig-002-20260121    clang-22
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    gcc-15.2.0
+sh                         apsh4a3a_defconfig    gcc-15.2.0
+sh                                  defconfig    gcc-15.2.0
+sh                    randconfig-001-20260121    gcc-14.3.0
+sh                    randconfig-002-20260121    gcc-9.5.0
+sh                           se7343_defconfig    gcc-15.2.0
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260121    gcc-8.5.0
+sparc                 randconfig-002-20260121    gcc-8.5.0
+sparc                       sparc64_defconfig    gcc-15.2.0
+sparc64                          allmodconfig    clang-22
+sparc64                             defconfig    clang-20
+sparc64               randconfig-001-20260121    gcc-13.4.0
+sparc64               randconfig-002-20260121    gcc-15.2.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-22
+um                               allyesconfig    gcc-14
+um                                  defconfig    clang-22
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260121    gcc-14
+um                    randconfig-002-20260121    gcc-14
+um                           x86_64_defconfig    clang-22
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260121    clang-20
+x86_64      buildonly-randconfig-002-20260121    gcc-14
+x86_64      buildonly-randconfig-003-20260121    clang-20
+x86_64      buildonly-randconfig-004-20260121    clang-20
+x86_64      buildonly-randconfig-005-20260121    gcc-13
+x86_64      buildonly-randconfig-006-20260121    clang-20
+x86_64                              defconfig    gcc-14
+x86_64                randconfig-002-20260121    gcc-14
+x86_64                randconfig-003-20260121    gcc-14
+x86_64                randconfig-011-20260121    gcc-14
+x86_64                randconfig-012-20260121    clang-20
+x86_64                randconfig-013-20260121    gcc-14
+x86_64                randconfig-014-20260121    gcc-14
+x86_64                randconfig-016-20260121    gcc-14
+x86_64                randconfig-071-20260121    clang-20
+x86_64                randconfig-072-20260121    clang-20
+x86_64                randconfig-073-20260121    clang-20
+x86_64                randconfig-074-20260121    clang-20
+x86_64                randconfig-075-20260121    clang-20
+x86_64                randconfig-076-20260121    gcc-13
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                randconfig-001-20260121    gcc-14.3.0
+xtensa                randconfig-002-20260121    gcc-8.5.0
+xtensa                    smp_lx200_defconfig    gcc-15.2.0
 
-Needs to some sort of arch_ call as well, not hidden in the cxl driver.
-
-I'd suggest a separate patch to add the necessary infrastructure for arm64
-with the relevant maintainers and lists included.
-
-It needs enough work to be something they'd consider that I haven't +CC them
-on this version.
-
-With that in mind I'll skip reviewing this patch for now.
-
-Jonathan
-
-> invalidate on arm64 via memremap() and on_each_cpu(), matching the
-> required ordering before reset.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/pci.c | 150 +++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 148 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index e4134162e82a..f9cc452ccb8a 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -11,6 +11,10 @@
->  #include <linux/pci.h>
->  #include <linux/aer.h>
->  #include <linux/io.h>
-> +#include <linux/align.h>
-> +#include <linux/cache.h>
-> +#include <linux/cacheflush.h>
-> +#include <linux/smp.h>
->  #include <cxl/mailbox.h>
->  #include <cxl/pci.h>
->  #include "cxlmem.h"
-> @@ -1085,6 +1089,71 @@ bool cxl_is_type2_device(struct pci_dev *pdev)
->  	return cxlds->type == CXL_DEVTYPE_DEVMEM;
->  }
-> 
-> +#ifdef CONFIG_ARM64
-> +struct cxl_cache_flush_ctx {
-> +	void *va;
-> +	size_t len;
-> +};
-> +
-> +static void cxl_flush_by_va_local(void *info)
-> +{
-> +	struct cxl_cache_flush_ctx *ctx = info;
-> +
-> +	dcache_clean_inval_poc((unsigned long)ctx->va,
-> +			       (unsigned long)ctx->va + ctx->len);
-> +	asm volatile("dsb ish" ::: "memory");
-> +}
-> +#endif
-> +
-> +static int cxl_region_flush_host_cpu_caches(struct device *dev, void *data)
-> +{
-> +	struct cxl_endpoint_decoder *cxled = to_cxl_endpoint_decoder(dev);
-> +	struct cxl_region *cxlr = cxled->cxld.region;
-> +	struct resource *res;
-> +
-> +	if (!is_endpoint_decoder(dev))
-> +		return 0;
-> +
-> +	if (!cxlr || !cxlr->params.res)
-> +		return 0;
-> +
-> +	res = cxlr->params.res;
-> +
-> +#ifdef CONFIG_X86
-> +	static bool flushed;
-> +
-> +	if (!flushed) {
-> +		wbinvd_on_all_cpus();
-> +		flushed = true;
-> +	}
-> +#elif defined(CONFIG_ARM64)
-> +	void *va;
-> +	size_t len, line_size = L1_CACHE_BYTES;
-> +	phys_addr_t start, end, aligned_start, aligned_end;
-> +	struct cxl_cache_flush_ctx flush_ctx;
-> +
-> +	start = res->start;
-> +	end = res->end;
-> +
-> +	aligned_start = ALIGN_DOWN(start, line_size);
-> +	aligned_end = ALIGN(end + 1, line_size);
-> +	len = aligned_end - aligned_start;
-> +
-> +	va = memremap(aligned_start, len, MEMREMAP_WB);
-> +	if (!va) {
-> +		pr_warn("Failed to map region for cache flush\n");
-> +		return 0;
-> +	}
-> +
-> +	flush_ctx.va = va;
-> +	flush_ctx.len = len;
-> +	on_each_cpu(cxl_flush_by_va_local, &flush_ctx, 1);
-> +
-> +	memunmap(va);
-> +#endif
-> +	return 0;
-> +}
-> +
->  static int cxl_check_region_driver_bound(struct device *dev, void *data)
->  {
->  	struct cxl_decoder *cxld = to_cxl_decoder(dev);
-> @@ -1245,6 +1314,9 @@ static int cxl_reset_prepare_memdev(struct pci_dev *pdev)
->  		return rc;
->  	}
-> 
-> +	device_for_each_child(&endpoint->dev, NULL,
-> +			      cxl_region_flush_host_cpu_caches);
-> +
->  	/* Keep cxl_region_rwsem held, released by cleanup function */
->  	return 0;
->  }
-> @@ -1259,12 +1331,79 @@ static void cxl_reset_cleanup_memdev(struct pci_dev *pdev)
->  		up_write(&cxl_region_rwsem);
->  }
-> 
-> +static int cxl_reset_prepare_all_functions(struct pci_dev *pdev)
-> +{
-> +	struct pci_dev *func_dev;
-> +	unsigned int devfn;
-> +	int func, rc;
-> +	struct pci_dev *prepared_funcs[8] = { NULL };
-> +	int prepared_count = 0;
-> +
-> +	for (func = 0; func < 8; func++) {
-> +		devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), func);
-> +
-> +		if (devfn == pdev->devfn)
-> +			continue;
-> +
-> +		func_dev = pci_get_slot(pdev->bus, devfn);
-> +		if (!func_dev)
-> +			continue;
-> +
-> +		if (!cxl_is_type2_device(func_dev)) {
-> +			pci_dev_put(func_dev);
-> +			continue;
-> +		}
-> +
-> +		rc = cxl_reset_prepare_memdev(func_dev);
-> +		if (rc) {
-> +			pci_dev_put(func_dev);
-> +			goto cleanup_funcs;
-> +		}
-> +
-> +		prepared_funcs[prepared_count++] = func_dev;
-> +	}
-> +
-> +	return 0;
-> +
-> +cleanup_funcs:
-> +	for (func = 0; func < prepared_count; func++) {
-> +		if (prepared_funcs[func]) {
-> +			cxl_reset_cleanup_memdev(prepared_funcs[func]);
-> +			pci_dev_put(prepared_funcs[func]);
-> +		}
-> +	}
-> +	return rc;
-> +}
-> +
-> +static void cxl_reset_cleanup_all_functions(struct pci_dev *pdev)
-> +{
-> +	struct pci_dev *func_dev;
-> +	unsigned int devfn;
-> +	int func;
-> +
-> +	for (func = 0; func < 8; func++) {
-> +		devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), func);
-> +
-> +		if (devfn == pdev->devfn)
-> +			continue;
-> +
-> +		func_dev = pci_get_slot(pdev->bus, devfn);
-> +		if (!func_dev)
-> +			continue;
-> +
-> +		if (cxl_is_type2_device(func_dev))
-> +			cxl_reset_cleanup_memdev(func_dev);
-> +
-> +		pci_dev_put(func_dev);
-> +	}
-> +}
-> +
->  /**
->   * cxl_reset_prepare_device - Prepare CXL device for reset
->   * @pdev: PCI device being reset
->   *
->   * CXL-reset-specific preparation. Validates memory is offline, flushes
-> - * device caches, and tears down regions.
-> + * device caches, and tears down regions for device and siblings.
->   *
->   * Returns: 0 on success, -EBUSY if memory online, negative on error
->   */
-> @@ -1283,6 +1422,12 @@ int cxl_reset_prepare_device(struct pci_dev *pdev)
->  		return rc;
->  	}
-> 
-> +	rc = cxl_reset_prepare_all_functions(pdev);
-> +	if (rc) {
-> +		cxl_reset_cleanup_memdev(pdev);
-> +		return rc;
-> +	}
-> +
->  	return 0;
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_reset_prepare_device, "CXL");
-> @@ -1291,10 +1436,11 @@ EXPORT_SYMBOL_NS_GPL(cxl_reset_prepare_device, "CXL");
->   * cxl_reset_cleanup_device - Cleanup after CXL reset
->   * @pdev: PCI device that was reset
->   *
-> - * Releases region locks held during reset.
-> + * Releases region locks for device and all sibling functions.
->   */
->  void cxl_reset_cleanup_device(struct pci_dev *pdev)
->  {
-> +	cxl_reset_cleanup_all_functions(pdev);
->  	cxl_reset_cleanup_memdev(pdev);
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_reset_cleanup_device, "CXL");
-> --
-> 2.34.1
-> 
-> 
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
