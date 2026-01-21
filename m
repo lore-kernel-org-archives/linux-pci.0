@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AAEA31ED9F;
-	Wed, 21 Jan 2026 08:23:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 276344418CD;
+	Wed, 21 Jan 2026 08:24:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768983824; cv=none; b=jSBGXGlKfGayIiToRMsyAwDJjWcD72F1ulyPJOQz0ZfNnfpKFrdjGvu8xkSRbVGK9eP/R0wMt3gGHVRhkgUt9lsXTk+8CwA53UudvtzPy2KjCb7xzixUtRddO3Cd7UJes/CXY4TSDBXheyr8CEWqQHwSUNJZcPwzIchf0FipmUI=
+	t=1768983845; cv=none; b=DX00bUu7gr7M9pEJ5FgkSu7t518eeYDMzi2jNZZdk20wgGCc8o7x58fn7KFTxF3NCH3yPVg0msQECUqW3kCRE5XsRWMK4I4MR/MOtv3wx+9V4x4EFEBKfTsHP3MKqh8AdmwsELCQaDJ4zrtIsO9MK3cn7trtJfIZP8xAJNk8kEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768983824; c=relaxed/simple;
-	bh=0FIFmWRDaTwQWfRac5uIGswCMKQtlCeYeNWR97q+tCE=;
+	s=arc-20240116; t=1768983845; c=relaxed/simple;
+	bh=3HQkcEjGCJ1yj66X82L5MXqnsBqdob461Aysn75m7ZI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lVz8ZoIS/zkTqUzVk18XnkDqtan4opHY0kc7j00DmWK1J6QpGLq8lWJ1GrjUntT7S0WIonor/oyfHz+dMhPVIE2rM477yvZRzrzs1pgf/O6VLzxNh9RYzWbli4HJtXUe1GLSACmazHFKI7aoiLQbq/WKVwQIUX/jn/oI6frXyd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C/O2iBAJ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=c5jjqkNHUGY1RvBu8vLaIqq71Cke8xawb4PGagJUTDUwBandXE/UWPwZ3JS09XfUD85DGZOaSrrI1CLi7Jc/fdREFpg3+Q5erIInDxrLu1bOihNEkKuOpaOqtq59NvXAmqsljPZocubLwSznbvGwcFe7NKg/Dtg/TgkCqLEARzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nx544VGv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C/O2iBAJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F33C8C116D0;
-	Wed, 21 Jan 2026 08:23:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nx544VGv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F001C116D0;
+	Wed, 21 Jan 2026 08:24:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768983823;
-	bh=0FIFmWRDaTwQWfRac5uIGswCMKQtlCeYeNWR97q+tCE=;
+	s=k20201202; t=1768983844;
+	bh=3HQkcEjGCJ1yj66X82L5MXqnsBqdob461Aysn75m7ZI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=C/O2iBAJtXBTilnk12YTX/Q6CBJ3SYI3afWqN8plTdsoAP8M99bqlEsUIaA8vHGua
-	 dhSvCLeWXPN/+5iCxQBUYqpc2710p0EZQlIo0efBB3QJaM0m4Sku3/kftmYzpK5+if
-	 qw7eypQlTIYdgJxETjezWKG2I0gJgGdGIKzujWO4TUz+FCZJ0rQH0+iKwe46BzZE6t
-	 PRBWNvxVmOYeOYJLfu0s7DXHNIU0fULBAFam6QwUEFBYkfXRU57vt5ctfPEwqbXbSO
-	 RKKlSF2Y/LYsh3aXVPk61m1BCmVMrJ7HHm8iqmzZ9RAEc6Ac12HQRJ4zb8AxoIEdzF
-	 y2eQuJsRKI8Ng==
-Date: Wed, 21 Jan 2026 09:23:38 +0100
+	b=nx544VGvcMGn44GQA1ApNm5cSU9DOdJGVFG1gQhFREaB+8NRkcUGU4b92izBFa8eT
+	 bC4KFpFjosz/C/ctE3hgXqY9p+m2IN1RHt1Ieq13d5FJO0/oSWWGRLUmm04YRM4e8l
+	 qg2lcBFOCyEwmI6mYZrl9x9T+FAAcCizle30SgnjNAPRGm+D1VXqPqp3WPVvYmNLpn
+	 CfqWIcmO21qNTDgnCtRgrBxxBoWqCkD3RZnOT3YlzUyRC4eXhFiFmgvQRU+WJ+rRYU
+	 DzsL+/Hc06BAqS0TA+Ag9ehWi1TFk4FCsYyvLSW8X7XReisfzF3s/nlwCx5tKFa1kz
+	 QROcQJ0ZyZRKw==
+Date: Wed, 21 Jan 2026 09:23:58 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: manivannan.sadhasivam@oss.qualcomm.com
 Cc: Jingoo Han <jingoohan1@gmail.com>,
@@ -38,11 +38,11 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	vincent.guittot@linaro.org, zhangsenchuan@eswincomputing.com,
 	Shawn Lin <shawn.lin@rock-chips.com>,
 	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v4 3/5] PCI: dwc: Rename and move ltssm_status_string()
- to pcie-designware.c
-Message-ID: <aXCNCqHdDKZpoiI_@ryzen>
+Subject: Re: [PATCH v4 4/5] PCI: dwc: Rework the error print of
+ dw_pcie_wait_for_link()
+Message-ID: <aXCNHnuvXJJZPU3y@ryzen>
 References: <20260120-pci-dwc-suspend-rework-v4-0-2f32d5082549@oss.qualcomm.com>
- <20260120-pci-dwc-suspend-rework-v4-3-2f32d5082549@oss.qualcomm.com>
+ <20260120-pci-dwc-suspend-rework-v4-4-2f32d5082549@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,18 +51,27 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260120-pci-dwc-suspend-rework-v4-3-2f32d5082549@oss.qualcomm.com>
+In-Reply-To: <20260120-pci-dwc-suspend-rework-v4-4-2f32d5082549@oss.qualcomm.com>
 
-On Tue, Jan 20, 2026 at 11:17:42PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+On Tue, Jan 20, 2026 at 11:17:43PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
 > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > 
-> Rename ltssm_status_string() to dw_pcie_ltssm_status_string() and move it
-> to the common file pcie-designware.c so that this function could be used
-> outside of pcie-designware-debugfs.c file.
+> If the link fails to come up even after detecting the device on the bus
+> i.e., if the LTSSM is not in Detect.Quiet and Detect.Active states, then
+> dw_pcie_wait_for_link() should log it as an error.
+
+Nit: maybe you should mention Poll.Active and Poll.Compliance here too?
+
+
+> 
+> So promote dev_info() to dev_err(), reword the error log to make it clear
+> and also print the LTSSM state to aid debugging.
 > 
 > Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
 > Tested-by: Vincent Guittot <vincent.guittot@linaro.org>
 > Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
 
+Regardless:
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
