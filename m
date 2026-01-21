@@ -1,229 +1,356 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC973B9600;
-	Wed, 21 Jan 2026 09:58:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5FC82DE704;
+	Wed, 21 Jan 2026 10:02:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768989509; cv=none; b=FCPiL/5tsmhMcpMYfqFbU2S5cvaxnTHKwxsDKw9fOijwH5xs78yJCWpJDBavCcGL64qqFlZGMJZyWX6kc1+4iUENAfQGvKjHfbXA/oYfGKqcPdlVFBLCyke9Ni/YZTxn3v5xYbR6nJQFBIMC0Vtm7aaMudrctLEJmMtIWnSIlSg=
+	t=1768989769; cv=none; b=LRJ1B6SEceAM3s4MrKIQJiRx4J6qVwA7eZFJyaryLPix0ym/AT/aRj0CoyypM4cxxfQ1blwnNV7f6yhJZdpoR0qTQk83w1JrHqW+eqIT/bR9V5l/KQ0pD0zOeRRpO2E2fFKVp1Z2NQ+vjyCg2BtQFVOrH+vxlm73MLnSuFyIOJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768989509; c=relaxed/simple;
-	bh=TuITjQI+l9XZd2z34A5WDasikeUJsIJbevs9z/2YDQY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cn6ovWwwx/W4ljJ8r87IoYvHL1U2CvtaoCeOoWifmHystyYEzJu1NjVYm3mcOVtRG11AlOtZWAYomJd+fqpNiGmDqSAEi71BBpx5mv9TNYS25xfcCDnn0c3nVt2qwcsrLimblL4v8yzGeCIsqImHJlbKa9VDK09To8xey/gPlew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JxCNhaHi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768989769; c=relaxed/simple;
+	bh=5x1yWRMZo6Yjnl9EgGnZ48kgw7u1ZpJ/OyNDBks1Pvc=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=d8KHs3QO/SAlWb3QWJPWdoCU3B0IPpagopD5GSWkoqX3zljQNmfbF6eH6BErOBcFsJuiv1lnGU9s1nRxOIOwFd3CguYp4pbIDKREtnO4md24PGV964x+mwH1uUMCySYloX1an9WG4KdbphCpptH3zQwNtW3OLfMDG66B7ef+WW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JVEJayuw; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JxCNhaHi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FDBAC116D0;
-	Wed, 21 Jan 2026 09:58:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768989508;
-	bh=TuITjQI+l9XZd2z34A5WDasikeUJsIJbevs9z/2YDQY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JxCNhaHi+1EBywuKa+g8n49cQWJQ2ltfrSCLGl0REvjAtMFMmqLS/BTr7FQr2HP66
-	 RcdYOmcZ9TjmvXZYre7CmntTyCtnMz8Ly/ezHHLDZkUIWRp/AhBrsrAlDsVC/HcaGJ
-	 2y5TNWNefwp/OMy1wdjngTPGoCjkNBaORG0mk1BAD6QKWujl/GM/s/KzT8SEGUGkGm
-	 witdSHE5faVU4Bet/0x6UH+s1UKd4D6dkhnGqmHOMW1Z7tID0I3UEKXTIZCX9tdzLa
-	 fTtlB+k18dEX1bbmhfLG9UeFKxQEHFSgmKTGPfxErghwQ9NFyZyl/a2bPNr6sEloo1
-	 52l8me8YGNq5A==
-Date: Wed, 21 Jan 2026 10:58:23 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Aksh Garg <a-garg7@ti.com>
-Cc: linux-pci@vger.kernel.org, jingoohan1@gmail.com, mani@kernel.org,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	s-vadapalli@ti.com, danishanwar@ti.com
-Subject: Re: [PATCH 1/2] PCI: dwc: ep: Fix resizable BAR support for multi-PF
- configurations
-Message-ID: <aXCjP8KZw1ig8i-W@ryzen>
-References: <20260121054214.274429-1-a-garg7@ti.com>
- <20260121054214.274429-2-a-garg7@ti.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JVEJayuw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1768989767; x=1800525767;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=5x1yWRMZo6Yjnl9EgGnZ48kgw7u1ZpJ/OyNDBks1Pvc=;
+  b=JVEJayuwxMWMB7auObJXx3n2zE4vmNW4O5Jw71TTieFSUOuUou7+AY1S
+   LOXD9qtT3LLKQ9q0rc+7FgQsnXfxDqQy+8qIr8mzO6+9HH92pu7pqvg8J
+   Qc1mJHXik6RxDS5Kyj7GwuJU4f5eec/ZrI5vos8cUSK8mldnEXSh+5Qqr
+   Nt/76DeWsTZmVhazZ5CvyCCtA0nZK321+ZZSmpCcl3KTAqKIgnBbo+8HF
+   +hfbwfDaJngGFA0xGapiua41DA4ujalZM2DxZzqEh2rBbXe3LCnMWgzL4
+   JtJ1jvFsTpPtgntuQZKKzO4iQiXvtldynz9V7A0aN+qW3kx183rZeJUAC
+   w==;
+X-CSE-ConnectionGUID: XYTaaiw8TsiIBOLUSjfwdw==
+X-CSE-MsgGUID: B+1Y6qztQTSq6KIji123rg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="87625897"
+X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
+   d="scan'208";a="87625897"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 02:02:46 -0800
+X-CSE-ConnectionGUID: CPohdRaPRjGLk71wGPUZ9A==
+X-CSE-MsgGUID: EWgQ+mAZSQa/dfE6ACW4Gg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
+   d="scan'208";a="206643649"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.108])
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 02:02:39 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Wed, 21 Jan 2026 12:02:35 +0200 (EET)
+To: =?ISO-8859-15?Q?Ville_Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
+cc: =?ISO-8859-15?Q?Alex_Benn=E9e?= <alex.bennee@linaro.org>, 
+    Simon Richter <Simon.Richter@hogyros.de>, 
+    Lucas De Marchi <lucas.demarchi@intel.com>, 
+    Alex Deucher <alexander.deucher@amd.com>, amd-gfx@lists.freedesktop.org, 
+    Bjorn Helgaas <bhelgaas@google.com>, David Airlie <airlied@gmail.com>, 
+    dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+    intel-xe@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>, 
+    Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
+    linux-pci@vger.kernel.org, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+    Simona Vetter <simona@ffwll.ch>, Tvrtko Ursulin <tursulin@ursulin.net>, 
+    =?ISO-8859-15?Q?Christian_K=F6nig?= <christian.koenig@amd.com>, 
+    =?ISO-8859-15?Q?Thomas_Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>, 
+    =?ISO-8859-2?Q?Micha=B3_Winiarski?= <michal.winiarski@intel.com>, 
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 06/11] PCI: Fix restoring BARs on BAR resize rollback
+ path
+In-Reply-To: <aW_w1oFQCzUxGYtu@intel.com>
+Message-ID: <bf1ece5f-07dd-31e7-db0d-40dfa8ebf7b7@linux.intel.com>
+References: <20251113162628.5946-1-ilpo.jarvinen@linux.intel.com> <20251113162628.5946-7-ilpo.jarvinen@linux.intel.com> <aW_w1oFQCzUxGYtu@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260121054214.274429-2-a-garg7@ti.com>
+Content-Type: multipart/mixed; BOUNDARY="8323328-237514233-1768987075=:1033"
+Content-ID: <c081b2b9-396b-b5f8-3d52-7b064a7fde28@linux.intel.com>
 
-On Wed, Jan 21, 2026 at 11:12:13AM +0530, Aksh Garg wrote:
-> The resizable BAR support added by the commit 3a3d4cabe681
-> ("PCI: dwc: ep: Allow EPF drivers to configure the size of Resizable
-> BARs") incorrectly configures the resizable BARs only for the first
-> Physical Function (PF0) in EP mode.
-> 
-> The resizable BAR configuration functions use generic dw_pcie_*_dbi
-> operations instead of physical function specific dw_pcie_ep_*_dbi
-> operations. This causes resizable BAR configuration to always target
-> PF0 regardless of the requested function number.
-> 
-> Additionally, dw_pcie_ep_init_non_sticky_registers() only initializes
-> resizable BAR registers for PF0, leaving other PFs unconfigured during
-> the execution of this function.
-> 
-> Fix this by using physical function specific configuration space access
-> operations throughout the resizable BAR code path and initializing
-> registers for all the physical functions that support resizable BARs.
-> 
-> Fixes: 3a3d4cabe681 ("PCI: dwc: ep: Allow EPF drivers to configure the size of Resizable BARs")
-> Signed-off-by: Aksh Garg <a-garg7@ti.com>
-> ---
->  .../pci/controller/dwc/pcie-designware-ep.c   | 49 +++++++++++++------
->  1 file changed, 33 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> index 19571ac2b961..f222677a7a87 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -75,6 +75,13 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie_ep *ep, u8 func_no, u8 cap)
->  				 cap, ep, func_no);
->  }
->  
-> +static u16 dw_pcie_ep_find_ext_capability(struct dw_pcie_ep *ep,
-> +					  u8 func_no, u8 cap)
-> +{
-> +	return PCI_FIND_NEXT_EXT_CAP(dw_pcie_ep_read_cfg, 0,
-> +				     cap, ep, func_no);
-> +}
-> +
->  /**
->   * dw_pcie_ep_hide_ext_capability - Hide a capability from the linked list
->   * @pci: DWC PCI device
-> @@ -217,22 +224,22 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->  	ep->bar_to_atu[bar] = 0;
->  }
->  
-> -static unsigned int dw_pcie_ep_get_rebar_offset(struct dw_pcie *pci,
-> +static unsigned int dw_pcie_ep_get_rebar_offset(struct dw_pcie_ep *ep, u8 func_no,
->  						enum pci_barno bar)
->  {
->  	u32 reg, bar_index;
->  	unsigned int offset, nbars;
->  	int i;
->  
-> -	offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
-> +	offset = dw_pcie_ep_find_ext_capability(ep, func_no, PCI_EXT_CAP_ID_REBAR);
->  	if (!offset)
->  		return offset;
->  
-> -	reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-> +	reg = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
->  	nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, reg);
->  
->  	for (i = 0; i < nbars; i++, offset += PCI_REBAR_CTRL) {
-> -		reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-> +		reg = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
->  		bar_index = FIELD_GET(PCI_REBAR_CTRL_BAR_IDX, reg);
->  		if (bar_index == bar)
->  			return offset;
-> @@ -253,7 +260,7 @@ static int dw_pcie_ep_set_bar_resizable(struct dw_pcie_ep *ep, u8 func_no,
->  	u32 rebar_cap, rebar_ctrl;
->  	int ret;
->  
-> -	rebar_offset = dw_pcie_ep_get_rebar_offset(pci, bar);
-> +	rebar_offset = dw_pcie_ep_get_rebar_offset(ep, func_no, bar);
->  	if (!rebar_offset)
->  		return -EINVAL;
->  
-> @@ -283,16 +290,16 @@ static int dw_pcie_ep_set_bar_resizable(struct dw_pcie_ep *ep, u8 func_no,
->  	 * 1 MB to 128 TB. Bits 31:16 in PCI_REBAR_CTRL define "supported sizes"
->  	 * bits for sizes 256 TB to 8 EB. Disallow sizes 256 TB to 8 EB.
->  	 */
-> -	rebar_ctrl = dw_pcie_readl_dbi(pci, rebar_offset + PCI_REBAR_CTRL);
-> +	rebar_ctrl = dw_pcie_ep_readl_dbi(ep, func_no, rebar_offset + PCI_REBAR_CTRL);
->  	rebar_ctrl &= ~GENMASK(31, 16);
-> -	dw_pcie_writel_dbi(pci, rebar_offset + PCI_REBAR_CTRL, rebar_ctrl);
-> +	dw_pcie_ep_writel_dbi(ep, func_no, rebar_offset + PCI_REBAR_CTRL, rebar_ctrl);
->  
->  	/*
->  	 * The "selected size" (bits 13:8) in PCI_REBAR_CTRL are automatically
->  	 * updated when writing PCI_REBAR_CAP, see "Figure 3-26 Resizable BAR
->  	 * Example for 32-bit Memory BAR0" in DWC EP databook 5.96a.
->  	 */
-> -	dw_pcie_writel_dbi(pci, rebar_offset + PCI_REBAR_CAP, rebar_cap);
-> +	dw_pcie_ep_writel_dbi(ep, func_no, rebar_offset + PCI_REBAR_CAP, rebar_cap);
->  
->  	dw_pcie_dbi_ro_wr_dis(pci);
->  
-> @@ -836,20 +843,17 @@ void dw_pcie_ep_deinit(struct dw_pcie_ep *ep)
->  }
->  EXPORT_SYMBOL_GPL(dw_pcie_ep_deinit);
->  
-> -static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
-> +static void __dw_pcie_ep_init_non_sticky_registers(struct dw_pcie_ep *ep, u8 func_no)
->  {
-> -	struct dw_pcie_ep *ep = &pci->ep;
->  	unsigned int offset;
->  	unsigned int nbars;
->  	enum pci_barno bar;
->  	u32 reg, i, val;
->  
-> -	offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
-> -
-> -	dw_pcie_dbi_ro_wr_en(pci);
-> +	offset = dw_pcie_ep_find_ext_capability(ep, func_no, PCI_EXT_CAP_ID_REBAR);
->  
->  	if (offset) {
-> -		reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-> +		reg = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
->  		nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, reg);
->  
->  		/*
-> @@ -870,16 +874,29 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
->  			 * the controller when RESBAR_CAP_REG is written, which
->  			 * is why RESBAR_CAP_REG is written here.
->  			 */
-> -			val = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-> +			val = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_REBAR_CTRL);
->  			bar = FIELD_GET(PCI_REBAR_CTRL_BAR_IDX, val);
->  			if (ep->epf_bar[bar])
->  				pci_epc_bar_size_to_rebar_cap(ep->epf_bar[bar]->size, &val);
->  			else
->  				val = BIT(4);
->  
-> -			dw_pcie_writel_dbi(pci, offset + PCI_REBAR_CAP, val);
-> +			dw_pcie_ep_writel_dbi(ep, func_no, offset + PCI_REBAR_CAP, val);
->  		}
->  	}
-> +}
-> +
-> +static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
-> +{
-> +	struct dw_pcie_ep *ep = &pci->ep;
-> +	u8 func_no, funcs;
-> +
-> +	funcs = ep->epc->max_functions;
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Initialize this on the same line as the variable is declared.
-u8 func_no; will be on a separate line.
+--8323328-237514233-1768987075=:1033
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <42d4d565-d15f-b9b5-c51a-da0923ea45e4@linux.intel.com>
+
+On Tue, 20 Jan 2026, Ville Syrj=E4l=E4 wrote:
+
+> On Thu, Nov 13, 2025 at 06:26:23PM +0200, Ilpo J=E4rvinen wrote:
+> > BAR resize operation is implemented in the pci_resize_resource() and
+> > pbus_reassign_bridge_resources() functions. pci_resize_resource() can
+> > be called either from __resource_resize_store() from sysfs or directly
+> > by the driver for the Endpoint Device.
+> >=20
+> > The pci_resize_resource() requires that caller has released the device
+> > resources that share the bridge window with the BAR to be resized as
+> > otherwise the bridge window is pinned in place and cannot be changed.
+> >=20
+> > pbus_reassign_bridge_resources() implement rollback of the resources if
+> > the resize operation fails, but rollback is performed only for the
+> > bridge windows. Because releasing the device resources are done by the
+> > caller of the BAR resize interface, these functions performing the BAR
+> > resize do not have access to the device resources as they were before
+> > the resize.
+> >=20
+> > pbus_reassign_bridge_resources() could try to
+> > __pci_bridge_assign_resources() after rolling back the bridge windows
+> > as they were, however, it will not guarantee the resource are assigned
+> > due to differences how FW and the kernel may want to assign the
+> > resources (alignment of the start address and tail).
+> >=20
+> > In order to perform rollback robustly, the BAR resize interface has to
+> > be altered to also release the device resources that share the bridge
+> > window with the BAR to be resized.
+> >=20
+> > Also, remove restoring from the entries failed list as saved list
+> > should now contain both the bridge windows and device resources so
+> > the extra restore is duplicated work.
+> >=20
+> > Some drivers (currently only amdgpu) want to prevent releasing some
+> > resources. Add exclude_bars param to pci_resize_resource() and make
+> > amdgpu to pass its register BAR (BAR 5) which should never be released
+> > during resize operation. Normally 64-bit prefetchable resources do not
+> > share bridge window with it as the register BAR (32-bit only) but there
+> > are various fallbacks in the resource assignment logic which may make
+> > the resources to share the bridge window in rare cases.
+> >=20
+> > This change (together with the driver side changes) is to counter the
+> > resource releases that had to be done to prevent resource tree
+> > corruption in the ("PCI: Release assigned resource before restoring
+> > them") change. As such, it likely restores functionality in cases where
+> > device resources were released to avoid resource tree conflicts which
+> > appeared to be "working" when such conflicts were not correctly
+> > detected by the kernel.
+>=20
+> This thing completely broke my DG2 + non-reBAR system.  The bisect
+> points to commit 4efaa80b3d75 ("drm/i915: Remove driver side BAR
+> release before resize") but the real problems seem to be in this
+> patch. A had a quick look at the code and spotted a few issues...
+>=20
+> <snip>
+> > @@ -2468,34 +2466,78 @@ int pbus_reassign_bridge_resources(struct pci_b=
+us *bus, struct resource *res)
+> >  =09=09free_list(&added);
+> > =20
+> >  =09if (!list_empty(&failed)) {
+> > -=09=09if (pci_required_resource_failed(&failed, type)) {
+> > +=09=09if (pci_required_resource_failed(&failed, type))
+> >  =09=09=09ret =3D -ENOSPC;
+> > -=09=09=09goto cleanup;
+> > -=09=09}
+> > -=09=09/* Only resources with unrelated types failed (again) */
+> >  =09=09free_list(&failed);
+> > +=09=09if (ret)
+> > +=09=09=09return ret;
+> > +
+> > +=09=09/* Only resources with unrelated types failed (again) */
+> >  =09}
+> > =20
+> > -=09list_for_each_entry(dev_res, &saved, list) {
+> > +=09list_for_each_entry(dev_res, saved, list) {
+> >  =09=09struct pci_dev *dev =3D dev_res->dev;
+> > =20
+> >  =09=09/* Skip the bridge we just assigned resources for */
+> >  =09=09if (bridge =3D=3D dev)
+> >  =09=09=09continue;
+> > =20
+> > +=09=09if (!dev->subordinate)
+> > +=09=09=09continue;
+> > +
+> >  =09=09pci_setup_bridge(dev->subordinate);
+> >  =09}
+> > =20
+> > -=09free_list(&saved);
+> > -=09up_read(&pci_bus_sem);
+> >  =09return 0;
+> > +}
+> > =20
+> > -cleanup:
+> > -=09/* Restore size and flags */
+> > -=09list_for_each_entry(dev_res, &failed, list)
+> > -=09=09restore_dev_resource(dev_res);
+> > -=09free_list(&failed);
+> > +int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno=
+, int size,
+> > +=09=09=09=09       int exclude_bars)
+> > +{
+> > +=09struct resource *res =3D pci_resource_n(pdev, resno);
+> > +=09struct pci_dev_resource *dev_res;
+> > +=09struct pci_bus *bus =3D pdev->bus;
+> > +=09struct resource *b_win, *r;
+> > +=09LIST_HEAD(saved);
+> > +=09unsigned int i;
+> > +=09int ret =3D 0;
+> > +
+> > +=09b_win =3D pbus_select_window(bus, res);
+> > +=09if (!b_win)
+> > +=09=09return -EINVAL;
+> > +
+> > +=09pci_dev_for_each_resource(pdev, r, i) {
+> > +=09=09if (i >=3D PCI_BRIDGE_RESOURCES)
+> > +=09=09=09break;
+> > +
+> > +=09=09if (exclude_bars & BIT(i))
+> > +=09=09=09continue;
+> > =20
+> > +=09=09if (b_win !=3D pbus_select_window(bus, r))
+> > +=09=09=09continue;
+> > +
+> > +=09=09ret =3D add_to_list(&saved, pdev, r, 0, 0);
+> > +=09=09if (ret)
+> > +=09=09=09goto restore;
+> > +=09=09pci_release_resource(pdev, i);
+> > +=09}
+> > +
+> > +=09pci_resize_resource_set_size(pdev, resno, size);
+> > +
+> > +=09if (!bus->self)
+> > +=09=09goto out;
+> > +
+> > +=09down_read(&pci_bus_sem);
+> > +=09ret =3D pbus_reassign_bridge_resources(bus, res, &saved);
+> > +=09if (ret)
+> > +=09=09goto restore;
+> > +
+> > +out:
+> > +=09up_read(&pci_bus_sem);
+> > +=09free_list(&saved);
+> > +=09return ret;
+> > +
+> > +restore:
+> >  =09/* Revert to the old configuration */
+> >  =09list_for_each_entry(dev_res, &saved, list) {
+> >  =09=09struct resource *res =3D dev_res->res;
+> > @@ -2510,13 +2552,21 @@ int pbus_reassign_bridge_resources(struct pci_b=
+us *bus, struct resource *res)
+> > =20
+> >  =09=09restore_dev_resource(dev_res);
+> > =20
+> > -=09=09pci_claim_resource(dev, i);
+> > -=09=09pci_setup_bridge(dev->subordinate);
+> > -=09}
+> > -=09up_read(&pci_bus_sem);
+> > -=09free_list(&saved);
+> > +=09=09ret =3D pci_claim_resource(dev, i);
+> > +=09=09if (ret)
+> > +=09=09=09continue;
+>=20
+> This clobbers 'ret' was supposedly meant to be returned to the
+> caller in the end. Thus (at least in my case) the caller always
+> sees a return value of 0, and then it forgets to restores the
+> reBAR setting back to the original value.
+
+Thanks for the report.
+
+Yes, you're right it's wrong, I'll move that call inside the if.
+
+> > -=09return ret;
+> > +=09=09if (i < PCI_BRIDGE_RESOURCES) {
+> > +=09=09=09const char *res_name =3D pci_resource_name(dev, i);
+> > +
+> > +=09=09=09pci_update_resource(dev, i);
+> > +=09=09=09pci_info(dev, "%s %pR: old value restored\n",
+> > +=09=09=09=09 res_name, res);
+> > +=09=09}
+> > +=09=09if (dev->subordinate)
+> > +=09=09=09pci_setup_bridge(dev->subordinate);
+> > +=09}
+> > +=09goto out;
+> >  }
+> > =20
+> >  void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> > index 3d0b0b3f60c4..e4486d7030c0 100644
+> > --- a/drivers/pci/setup-res.c
+> > +++ b/drivers/pci/setup-res.c
+> > @@ -444,8 +444,7 @@ static bool pci_resize_is_memory_decoding_enabled(s=
+truct pci_dev *dev,
+> >  =09return cmd & PCI_COMMAND_MEMORY;
+> >  }
+> > =20
+> > -static void pci_resize_resource_set_size(struct pci_dev *dev, int resn=
+o,
+> > -=09=09=09=09=09 int size)
+> > +void pci_resize_resource_set_size(struct pci_dev *dev, int resno, int =
+size)
+> >  {
+> >  =09resource_size_t res_size =3D pci_rebar_size_to_bytes(size);
+> >  =09struct resource *res =3D pci_resource_n(dev, resno);
+> > @@ -456,9 +455,9 @@ static void pci_resize_resource_set_size(struct pci=
+_dev *dev, int resno,
+> >  =09resource_set_size(res, res_size);
+> >  }
+> > =20
+> > -int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+> > +int pci_resize_resource(struct pci_dev *dev, int resno, int size,
+> > +=09=09=09int exclude_bars)
+> >  {
+> > -=09struct resource *res =3D pci_resource_n(dev, resno);
+> >  =09struct pci_host_bridge *host;
+> >  =09int old, ret;
+> >  =09u32 sizes;
+> > @@ -468,10 +467,6 @@ int pci_resize_resource(struct pci_dev *dev, int r=
+esno, int size)
+> >  =09if (host->preserve_config)
+> >  =09=09return -ENOTSUPP;
+> > =20
+> > -=09/* Make sure the resource isn't assigned before resizing it. */
+> > -=09if (!(res->flags & IORESOURCE_UNSET))
+> > -=09=09return -EBUSY;
+> > -
+> >  =09if (pci_resize_is_memory_decoding_enabled(dev, resno))
+> >  =09=09return -EBUSY;
+> > =20
+> > @@ -490,19 +485,13 @@ int pci_resize_resource(struct pci_dev *dev, int =
+resno, int size)
+> >  =09if (ret)
+> >  =09=09return ret;
+> > =20
+> > -=09pci_resize_resource_set_size(dev, resno, size);
+> > -
+> > -=09/* Check if the new config works by trying to assign everything. */
+> > -=09if (dev->bus->self) {
+> > -=09=09ret =3D pbus_reassign_bridge_resources(dev->bus, res);
+> > -=09=09if (ret)
+> > -=09=09=09goto error_resize;
+> > -=09}
+> > +=09ret =3D pci_do_resource_release_and_resize(dev, resno, size, exclud=
+e_bars);
+> > +=09if (ret)
+> > +=09=09goto error_resize;
+> >  =09return 0;
+> > =20
+> >  error_resize:
+> >  =09pci_rebar_set_size(dev, resno, old);
+> > -=09pci_resize_resource_set_size(dev, resno, old);
+>=20
+> This new order is very broken because the new reBAR setting
+> may have turned some of the originally set bits in the BAR
+> to read-only. Thus we may not be able to restore the BAR back
+> to the original value.
+>=20
+> In my case the original settings are 256MiB / 0x4030000000,
+> followed by a failed resize to 8GiB, and finally we see a
+> failed restore 'BAR 2: error updating (0x3000000c !=3D 0x0000000c)'
+> due to the read-only bits.
+>=20
+> i915 limps along after the failure but nothing really works,
+> and xe just completely explodes.
+
+Hmm, I certainly didn't foresee this happening. It seems I need to break=20
+the nice rebar/setup-bus layering to fix this (by moving the=20
+pci_rebar_set_size() calls into pci_do_resource_release_and_resize()).
 
 
-> +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +
-> +	for (func_no = 0; func_no < funcs; func_no++)
-> +		__dw_pcie_ep_init_non_sticky_registers(ep, func_no);
->  
->  	dw_pcie_setup(pci);
->  	dw_pcie_dbi_ro_wr_dis(pci);
-> -- 
-> 2.34.1
-> 
-
-
-Thank you for fixing this!
-
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-
-
-You do need another patch in this series though, that fixes:
-https://github.com/torvalds/linux/blob/v6.19-rc6/drivers/pci/controller/dwc/pcie-designware-ep.c#L972-L986
-
-As currently, ptm_cap_base is fetched using dw_pcie_find_ext_capability()
-instead of your new dw_pcie_ep_find_ext_capability() which takes a func_no.
-
-
-Kind regards,
-Niklas
+--=20
+ i.
+--8323328-237514233-1768987075=:1033--
