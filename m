@@ -1,64 +1,48 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7518E3101B9;
-	Wed, 21 Jan 2026 01:45:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 69F3F321F5E;
+	Wed, 21 Jan 2026 01:53:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768959927; cv=none; b=WePCWAccnnnuH6vA7QF6TCEyCOT6JZoZzgoO39RWr9eL2OjS0l6bjpRvQYpUgUDnAzPCCAK7JauFCNUubiX7te5o4uzybnrU6HwwwVystPHI7c8F8mazKTtCt6bZyLCtYho7jr6lUurIQHCZnf2KKGS2uT3rGdcS1kvqF4jVxEg=
+	t=1768960420; cv=none; b=AK6xRfCWIf+vb3RJvdN5jFWCe3iV+8CQxT5QztvWEVSqi9jSdPxYr9y49ooMHcfFnIKsnTdcVKdl81Hjq+VkKnQecCwbqtsuOVmtx0RkSeYiPSSW4pN3/QluoQdFDO8ie4Ng26bOfJJB6F/U6SbyTmAhA80Pzld72YgrXWk9uTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768959927; c=relaxed/simple;
-	bh=QjFK0kMMFDAdRFm/LzsQoliG7dhY6PehBTq22J+czp4=;
+	s=arc-20240116; t=1768960420; c=relaxed/simple;
+	bh=GWd3kE5nzbALiYd9w/RRKzSE7RaI32EBz0diWTgONxE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UHV4viN67PfLs8vyV8UNAjFmmqYovSw7XYfYfDC7ZeCry+LUZwAZG9ImsllDXSpaWQ1mjLVYbHH7ajIDJnbOqhim1a18QCporalC1eqUs7kJlJrcddcyM+IVuyWFIZ/ja3UnPx3GcAVc/t3zjLQs7LIy/Oan2vteIkQXMsrkkpY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=g8YkxLHl; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=R7IoqbaMMfech09OTtsoECUmhPMME/dQpHQTKjewK6UXIrR05KXC1oHezrQT38t3iCSM//aMDniag5NRTlccYv9x26RCmIEw/vSm+6G7ZHWHTtZeSkyrxCFMXCs5i9yd3aDueBhu+7uZTSa4GCtb9mfaySEahDH3RWhkLHwFH3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=IbluBz1J; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="g8YkxLHl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768959922; x=1800495922;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=QjFK0kMMFDAdRFm/LzsQoliG7dhY6PehBTq22J+czp4=;
-  b=g8YkxLHly0zVttS1KkbPZlcuAAGYC66PLmm/7PkMVo7wGKydF+SGIwXl
-   qJIEeCd7fevuf4padBel3Vsjv3m8GwjFOgkw2qi5VZppXhSh4dcgPmu8K
-   OcirqLFBPlRAk09+h67NOh6dnYDcLBe+lETfogz6wJOLEUHrnwiWGBFNz
-   OUYo3odi4Zf6LEl6QiVqyvhTi+VMJPCblOHihjvTi6QXjPolusiH1JkOG
-   cfh6aKkCDrL0OD8cR0nuXcVqV3hGTjtH8RvBivpE3sDDBgzm35z1hxihr
-   +CfNIs/1JsTUs5uhHa4vZkN8vgwQOphctUKhQ6ijh5jR75HEhifhTicln
-   g==;
-X-CSE-ConnectionGUID: UdnfFoEPTY64TT5u3PxjEQ==
-X-CSE-MsgGUID: kxlgcHB5SdKVk6dQpgfuDQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="87760067"
-X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
-   d="scan'208";a="87760067"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 17:45:18 -0800
-X-CSE-ConnectionGUID: rvCwRibvSN+VNkrkIUPT2Q==
-X-CSE-MsgGUID: VX0O/CDBSYSrbK3W2nQblA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
-   d="scan'208";a="236949224"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa002.jf.intel.com with ESMTP; 20 Jan 2026 17:45:15 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1viNHV-00000000PpT-0owF;
-	Wed, 21 Jan 2026 01:45:13 +0000
-Date: Wed, 21 Jan 2026 09:44:55 +0800
-From: kernel test robot <lkp@intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH v1 1/1] ACPI: PCI: simplify code with
- acpi_get_local_u64_address()
-Message-ID: <202601210924.Az82DHT4-lkp@intel.com>
-References: <20260120154015.1764021-1-andriy.shevchenko@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="IbluBz1J"
+Received: from skinsburskii.localdomain (unknown [20.236.10.163])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 916ED20B7167;
+	Tue, 20 Jan 2026 17:53:30 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 916ED20B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1768960411;
+	bh=Ymw6zhgGVeFVyXTu0csGpSjrM5/LURY8dThwT1pHr1g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IbluBz1JLfnfdfGrhKQDQkff+no9Xt61GmK/MxRcADLiMlxt2AFu4VsDIxwK/r8KE
+	 1M36jL8WfIMUbzlGyoMAAOTNsz1rZ2bN/HcHJMHK30JunRpnZLI6AxGsKP7ofA5SNG
+	 prJ3EYaLv9L0r0x5imz0gAe5MPs+pN/qtNn09OHE=
+Date: Tue, 20 Jan 2026 17:53:29 -0800
+From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
+	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
+	romank@linux.microsoft.com
+Subject: Re: [PATCH v0 15/15] mshv: Populate mmio mappings for PCI passthru
+Message-ID: <aXAxmYm4zbOzGztz@skinsburskii.localdomain>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-16-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,125 +51,184 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260120154015.1764021-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20260120064230.3602565-16-mrathor@linux.microsoft.com>
 
-Hi Andy,
+On Mon, Jan 19, 2026 at 10:42:30PM -0800, Mukesh R wrote:
+> From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> 
+> Upon guest access, in case of missing mmio mapping, the hypervisor
+> generates an unmapped gpa intercept. In this path, lookup the PCI
+> resource pfn for the guest gpa, and ask the hypervisor to map it
+> via hypercall. The PCI resource pfn is maintained by the VFIO driver,
+> and obtained via fixup_user_fault call (similar to KVM).
+> 
+> Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> ---
+>  drivers/hv/mshv_root_main.c | 115 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 115 insertions(+)
+> 
+> diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
+> index 03f3aa9f5541..4c8bc7cd0888 100644
+> --- a/drivers/hv/mshv_root_main.c
+> +++ b/drivers/hv/mshv_root_main.c
+> @@ -56,6 +56,14 @@ struct hv_stats_page {
+>  	};
+>  } __packed;
+>  
+> +bool hv_nofull_mmio;   /* don't map entire mmio region upon fault */
+> +static int __init setup_hv_full_mmio(char *str)
+> +{
+> +	hv_nofull_mmio = true;
+> +	return 0;
+> +}
+> +__setup("hv_nofull_mmio", setup_hv_full_mmio);
+> +
+>  struct mshv_root mshv_root;
+>  
+>  enum hv_scheduler_type hv_scheduler_type;
+> @@ -612,6 +620,109 @@ mshv_partition_region_by_gfn(struct mshv_partition *partition, u64 gfn)
+>  }
+>  
+>  #ifdef CONFIG_X86_64
+> +
+> +/*
+> + * Check if uaddr is for mmio range. If yes, return 0 with mmio_pfn filled in
+> + * else just return -errno.
+> + */
+> +static int mshv_chk_get_mmio_start_pfn(struct mshv_partition *pt, u64 gfn,
+> +				       u64 *mmio_pfnp)
+> +{
+> +	struct vm_area_struct *vma;
+> +	bool is_mmio;
+> +	u64 uaddr;
+> +	struct mshv_mem_region *mreg;
+> +	struct follow_pfnmap_args pfnmap_args;
+> +	int rc = -EINVAL;
+> +
+> +	/*
+> +	 * Do not allow mem region to be deleted beneath us. VFIO uses
+> +	 * useraddr vma to lookup pci bar pfn.
+> +	 */
+> +	spin_lock(&pt->pt_mem_regions_lock);
+> +
+> +	/* Get the region again under the lock */
+> +	mreg = mshv_partition_region_by_gfn(pt, gfn);
+> +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
+> +		goto unlock_pt_out;
+> +
+> +	uaddr = mreg->start_uaddr +
+> +		((gfn - mreg->start_gfn) << HV_HYP_PAGE_SHIFT);
+> +
+> +	mmap_read_lock(current->mm);
 
-kernel test robot noticed the following build warnings:
+Semaphore can't be taken under spinlock.
+Get it instead.
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v6.19-rc6 next-20260120]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> +	vma = vma_lookup(current->mm, uaddr);
+> +	is_mmio = vma ? !!(vma->vm_flags & (VM_IO | VM_PFNMAP)) : 0;
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Andy-Shevchenko/ACPI-PCI-simplify-code-with-acpi_get_local_u64_address/20260121-004826
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260120154015.1764021-1-andriy.shevchenko%40linux.intel.com
-patch subject: [PATCH v1 1/1] ACPI: PCI: simplify code with acpi_get_local_u64_address()
-config: x86_64-randconfig-161-20260121 (https://download.01.org/0day-ci/archive/20260121/202601210924.Az82DHT4-lkp@intel.com/config)
-compiler: gcc-13 (Debian 13.3.0-16) 13.3.0
-smatch version: v0.5.0-8985-g2614ff1a
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260121/202601210924.Az82DHT4-lkp@intel.com/reproduce)
+Why this check is needed again?
+The region type is stored on the region itself.
+And the type is checked on the caller side.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202601210924.Az82DHT4-lkp@intel.com/
+> +	if (!is_mmio)
+> +		goto unlock_mmap_out;
+> +
+> +	pfnmap_args.vma = vma;
+> +	pfnmap_args.address = uaddr;
+> +
+> +	rc = follow_pfnmap_start(&pfnmap_args);
+> +	if (rc) {
+> +		rc = fixup_user_fault(current->mm, uaddr, FAULT_FLAG_WRITE,
+> +				      NULL);
+> +		if (rc)
+> +			goto unlock_mmap_out;
+> +
+> +		rc = follow_pfnmap_start(&pfnmap_args);
+> +		if (rc)
+> +			goto unlock_mmap_out;
+> +	}
+> +
+> +	*mmio_pfnp = pfnmap_args.pfn;
+> +	follow_pfnmap_end(&pfnmap_args);
+> +
+> +unlock_mmap_out:
+> +	mmap_read_unlock(current->mm);
+> +unlock_pt_out:
+> +	spin_unlock(&pt->pt_mem_regions_lock);
+> +	return rc;
+> +}
+> +
+> +/*
+> + * At present, the only unmapped gpa is mmio space. Verify if it's mmio
+> + * and resolve if possible.
+> + * Returns: True if valid mmio intercept and it was handled, else false
+> + */
+> +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp)
+> +{
+> +	struct hv_message *hvmsg = vp->vp_intercept_msg_page;
+> +	struct hv_x64_memory_intercept_message *msg;
+> +	union hv_x64_memory_access_info accinfo;
+> +	u64 gfn, mmio_spa, numpgs;
+> +	struct mshv_mem_region *mreg;
+> +	int rc;
+> +	struct mshv_partition *pt = vp->vp_partition;
+> +
+> +	msg = (struct hv_x64_memory_intercept_message *)hvmsg->u.payload;
+> +	accinfo = msg->memory_access_info;
+> +
+> +	if (!accinfo.gva_gpa_valid)
+> +		return false;
+> +
+> +	/* Do a fast check and bail if non mmio intercept */
+> +	gfn = msg->guest_physical_address >> HV_HYP_PAGE_SHIFT;
+> +	mreg = mshv_partition_region_by_gfn(pt, gfn);
 
-All warnings (new ones prefixed by >>):
+This call needs to be protected by the spinlock.
 
-   drivers/acpi/pci_slot.c: In function 'check_slot':
->> drivers/acpi/pci_slot.c:60:9: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
-      60 |         if (acpi_get_local_u64_address(handle, &adr))
-         |         ^~
-   drivers/acpi/pci_slot.c:63:17: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
-      63 |                 goto out;
-         |                 ^~~~
-   drivers/acpi/pci_slot.c:63:17: error: label 'out' used but not defined
->> drivers/acpi/pci_slot.c:44:13: warning: unused variable 'device' [-Wunused-variable]
-      44 |         int device = -1;
-         |             ^~~~~~
->> drivers/acpi/pci_slot.c:64:9: warning: no return statement in function returning non-void [-Wreturn-type]
-      64 |         }
-         |         ^
-   drivers/acpi/pci_slot.c: At top level:
->> drivers/acpi/pci_slot.c:67:9: warning: data definition has no type or storage class
-      67 |         status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-         |         ^~~~~~
-   drivers/acpi/pci_slot.c:67:9: error: type defaults to 'int' in declaration of 'status' [-Werror=implicit-int]
-   drivers/acpi/pci_slot.c:67:40: error: 'handle' undeclared here (not in a function)
-      67 |         status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-         |                                        ^~~~~~
-   drivers/acpi/pci_slot.c:67:62: error: 'sun' undeclared here (not in a function)
-      67 |         status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-         |                                                              ^~~
-   drivers/acpi/pci_slot.c:68:9: error: expected identifier or '(' before 'if'
-      68 |         if (ACPI_FAILURE(status)) {
-         |         ^~
-   drivers/acpi/pci_slot.c:74:9: warning: data definition has no type or storage class
-      74 |         device = (adr >> 16) & 0xffff;
-         |         ^~~~~~
-   drivers/acpi/pci_slot.c:74:9: error: type defaults to 'int' in declaration of 'device' [-Werror=implicit-int]
-   drivers/acpi/pci_slot.c:74:19: error: 'adr' undeclared here (not in a function); did you mean 'idr'?
-      74 |         device = (adr >> 16) & 0xffff;
-         |                   ^~~
-         |                   idr
-   drivers/acpi/pci_slot.c:75:4: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
-      75 | out:
-         |    ^
-   drivers/acpi/pci_slot.c:77:9: error: expected identifier or '(' before 'return'
-      77 |         return device;
-         |         ^~~~~~
-   drivers/acpi/pci_slot.c:78:1: error: expected identifier or '(' before '}' token
-      78 | }
-         | ^
-   cc1: some warnings being treated as errors
+Thanks,
+Stanislav 
 
-
-vim +/if +60 drivers/acpi/pci_slot.c
-
-    40	
-    41	static int
-    42	check_slot(acpi_handle handle, unsigned long long *sun)
-    43	{
-  > 44		int device = -1;
-    45		unsigned long long sta;
-    46		acpi_status status;
-    47		u64 adr;
-    48		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-    49	
-    50		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-    51		pr_debug("Checking slot on path: %s\n", (char *)buffer.pointer);
-    52	
-    53		if (check_sta_before_sun) {
-    54			/* If SxFy doesn't have _STA, we just assume it's there */
-    55			status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-    56			if (ACPI_SUCCESS(status) && !(sta & ACPI_STA_DEVICE_PRESENT))
-    57				goto out;
-    58		}
-    59	
-  > 60		if (acpi_get_local_u64_address(handle, &adr))
-    61			pr_debug("_ADR returned with failure on %s\n",
-    62				 (char *)buffer.pointer);
-  > 63			goto out;
-  > 64		}
-    65	
-    66		/* No _SUN == not a slot == bail */
-  > 67		status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-    68		if (ACPI_FAILURE(status)) {
-    69			pr_debug("_SUN returned %d on %s\n",
-    70				 status, (char *)buffer.pointer);
-    71			goto out;
-    72		}
-    73	
-    74		device = (adr >> 16) & 0xffff;
-    75	out:
-    76		kfree(buffer.pointer);
-    77		return device;
-    78	}
-    79	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
+> +		return false;
+> +
+> +	rc = mshv_chk_get_mmio_start_pfn(pt, gfn, &mmio_spa);
+> +	if (rc)
+> +		return false;
+> +
+> +	if (!hv_nofull_mmio) {		/* default case */
+> +		gfn = mreg->start_gfn;
+> +		mmio_spa = mmio_spa - (gfn - mreg->start_gfn);
+> +		numpgs = mreg->nr_pages;
+> +	} else
+> +		numpgs = 1;
+> +
+> +	rc = hv_call_map_mmio_pages(pt->pt_id, gfn, mmio_spa, numpgs);
+> +
+> +	return rc == 0;
+> +}
+> +
+>  static struct mshv_mem_region *
+>  mshv_partition_region_by_gfn_get(struct mshv_partition *p, u64 gfn)
+>  {
+> @@ -666,13 +777,17 @@ static bool mshv_handle_gpa_intercept(struct mshv_vp *vp)
+>  
+>  	return ret;
+>  }
+> +
+>  #else  /* CONFIG_X86_64 */
+> +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp) { return false; }
+>  static bool mshv_handle_gpa_intercept(struct mshv_vp *vp) { return false; }
+>  #endif /* CONFIG_X86_64 */
+>  
+>  static bool mshv_vp_handle_intercept(struct mshv_vp *vp)
+>  {
+>  	switch (vp->vp_intercept_msg_page->header.message_type) {
+> +	case HVMSG_UNMAPPED_GPA:
+> +		return mshv_handle_unmapped_gpa(vp);
+>  	case HVMSG_GPA_INTERCEPT:
+>  		return mshv_handle_gpa_intercept(vp);
+>  	}
+> -- 
+> 2.51.2.vfs.0.1
+> 
