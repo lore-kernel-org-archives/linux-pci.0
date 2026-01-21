@@ -1,264 +1,344 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013064.outbound.protection.outlook.com [40.93.196.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA71F346A15;
-	Wed, 21 Jan 2026 20:20:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57ADA341AD8;
+	Wed, 21 Jan 2026 20:22:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.64
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769026831; cv=fail; b=HDw4s72a3+grKql35yi/kZG4o4gOLGGdA9VCrUTioyQ4vQLFCTyuSzUHHoSHlSft9Nxw5lSb/Jx2cnuk8xZLXWm/+TqAZW6N8bPtTN7IJFZY4CPEBNkfmxyZGxo7Lz0xFEN3s5L1C/dxMw0y97yDCMi9e/DoIUJi+Rj/bDn6uxA=
+	t=1769026969; cv=fail; b=jNJQZC8RFijHs+LmaReuWAaFnLxnmH8ZHI/UZLJjg+omImRggh5P4ywwHJQJQBYHOQddybKzp/tXwPfhjNL67qxFbGW7KQcblKkqtIx/VHRNeRY/D6hs1ty0Of7tXIRhdB5teyt3mPV0WG56dq1+SCvhhjv3X4PAl2b3bnxbirk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769026831; c=relaxed/simple;
-	bh=FyXlcN6dlbomCWgVtWIaReRCMtUlDWFSIdWJvnjeqwc=;
-	h=From:Date:To:Message-ID:In-Reply-To:References:Subject:
-	 Content-Type:MIME-Version; b=S99V8py9bp4GMnG5upkLCrgfqLne2HH9VMNsHWFgwhfamcjC+DpC5Ou6IHXU7QzwiV7NZsmIMEY6aOBeD8BXwIRffS2ekUhUDz11tpskRCPC4uMkKcTi5qbuVMbqRaMNZkt7ajeRlZVLQPf9e8pwuNIvY1PlD1LPgO3+0+a+77g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QPu16ruy; arc=fail smtp.client-ip=198.175.65.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1769026969; c=relaxed/simple;
+	bh=/yO1ugSUgzB44iHxMjMDwzbHIqyKLXl/Fh0Z7i6KMc4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cxEvR8tPcc7KFxvCNW4HIf1TKrplKcF6Ul6neubHt84whBpQfoVVOmdl2sJw7h50px2FTOFCeVcG/OtJx3vm3I4VN1MVKaic/4kVu6n2jCxo3ZYGXG7ONkRNivcqbbAKlPbUw7uKvn/jTIFjCJlTfr0oYS9/mjfaT02lQJldO9Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=jK3OgQ4W; arc=fail smtp.client-ip=40.93.196.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QPu16ruy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769026829; x=1800562829;
-  h=from:date:to:message-id:in-reply-to:references:subject:
-   content-transfer-encoding:mime-version;
-  bh=FyXlcN6dlbomCWgVtWIaReRCMtUlDWFSIdWJvnjeqwc=;
-  b=QPu16ruyaHUdF7dPDgDWq0vqANubiwKk3gQljOa6Y9PzeI7eYACUE8Wg
-   PDJ7At6WrgCIODBW3s71j7+nY49vSHhbNR36fz0u0ARt60ODztsivFCK7
-   HhE/i6sEWb05r6y2Sb8fV7bBMR4YkLttzyh86pb3vxA5pcb7QxmuwcI33
-   VeSFN4zhDcTUnMH8ArdqANN4hm4wPV6pIGasadMtE+jerqMMPsrxXSecg
-   DcQ3YdjoZX4A2r+2ywlaCRFfM3QcWyq7qAMl3vT1KTvyTPHU2+66X9ZSp
-   Ay2GXqlE0UUK/mqnFXEGf1R9Y9PKSQ4YUOW1ZpIA+vzwVqVYjMcc3Jhzk
-   w==;
-X-CSE-ConnectionGUID: +a2/CIZ2QAOl2wzPV77h/Q==
-X-CSE-MsgGUID: 4/2J+c5hTP6gJx3DnnsZvg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11678"; a="70429053"
-X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
-   d="scan'208";a="70429053"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 12:20:28 -0800
-X-CSE-ConnectionGUID: ZR3R41GUR+OrFg/1Aqsphw==
-X-CSE-MsgGUID: cbkDN/z6RXq7ssj4Da++4A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
-   d="scan'208";a="210699295"
-Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
-  by orviesa003.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 12:20:28 -0800
-Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
- fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.35; Wed, 21 Jan 2026 12:20:27 -0800
-Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
- FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.35 via Frontend Transport; Wed, 21 Jan 2026 12:20:27 -0800
-Received: from DM5PR21CU001.outbound.protection.outlook.com (52.101.62.41) by
- edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.35; Wed, 21 Jan 2026 12:20:27 -0800
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="jK3OgQ4W"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vZM1UT2LgXKAD4Huvz86xceVsGIKWATnOeRoXTABLkDGbwz5ZoTboYcYMWWEywd3OFjAc3F3dLBHc4lJQQjPtK74BLkymjMpLAl3q+gh9OIlf5n1s2R9B1EJi6f7WrJG1unvYiH1tMeZ9VVT41nE+XsgfN9mMO6HVv5TBRQI1sLPH/agEJE9q41T5xxPzC5WrOT66GXvSjOJcIgoxUijUFgUOUJFeHVnq3iZfX6gMI4U7cDyeLdxwV/fi+P2mJIrRqOmSBcsLc/khkN0XJx1fxtb1sdozfN3rPQktsdIJGlZj4MGIhO/PbVj0Xb8d+lun1/Qy13PnpacnooqHU3FGg==
+ b=lQwmimrDNWlRtqhqIde0GEpFCgwOibOwof2qO4/Y7se79VLrlC/RxC1TX1USaL1Do2QyZ15VJ9gTFQc45p/ji09jBx0rlUlHLq2QWPDlDIBgGDO63alf6O2x5uxMrTV7MclWbUAYN3/FFiM7GiVxP15Kfxd9GlDh6y5WrbBuAAdW7UisofXm99CykioVmgZjDBrRoHqClCfonOaevtsh0ygIjbN48HEFjrEnqYfBc+kCOQUp7+O08BlRaECn8yksAP3St3wZRlaoi4Uob8GmxSHob2HC4amLlocnsnPRSMlARsjHsI19T/7zp/Zyie6aPih7Zf10zNcWk1XYGaaJRw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=d/GEqsbnOQpISapF/WSBR8tOZsfN3JpuQJSwZp2LxpY=;
- b=Qp2gZOTEDXuU9TKKQWtwYysW2MMzERthw9TVy3HTiUPD0r4nEYs3ai4p2KpYk0vlhovtgFkpcGBY22F3HMVBqzUuKRpTr63u/IS8bzRcXt7UHUt7ATHmRLT/28Ye3Uw13npcHc5ZxFVKBpGgCHaNu3JEb+6UluC/uobnQNm3tCyyvqzexnoYJFFpIza8Dv4ecs/exmLMxcZ3w94lLTqOBsDDRvGqOpw2a1ODyMUJSIC8Fg6EsiuZTCut0FfUS+hP6Yg/ivcUBe+Z9dfJyXG9CObfRmZU44KSS/CTI1SR43ofJucZEDg/fV6+tWkeDoAs9eQiauXOOR7ZkmDDnIRuBg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by IA1PR11MB8248.namprd11.prod.outlook.com (2603:10b6:208:447::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Wed, 21 Jan
- 2026 20:20:24 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff%6]) with mapi id 15.20.9542.008; Wed, 21 Jan 2026
- 20:20:24 +0000
-From: <dan.j.williams@intel.com>
-Date: Wed, 21 Jan 2026 12:20:22 -0800
-To: "Anthony Pighin (Nokia)" <anthony.pighin@nokia.com>, "kvm@vger.kernel.org"
-	<kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, =?UTF-8?B?SWxwbyBKw6RydmluZW4=?=
-	<ilpo.jarvinen@linux.intel.com>, Alex Williamson <alex@shazbot.org>,
-	<jgross@suse.com>, <sstabellini@kernel.org>, <oleksandr_tyshchenko@epam.com>
-Message-ID: <697135069627e_309510030@dwillia2-mobl4.notmuch>
-In-Reply-To: <BN0PR08MB695171D3AB759C65B6438B5D838DA@BN0PR08MB6951.namprd08.prod.outlook.com>
-References: <BN0PR08MB695171D3AB759C65B6438B5D838DA@BN0PR08MB6951.namprd08.prod.outlook.com>
-Subject: Re: [PATCH v2] vfio/pci: Lock upstream bridge for 
- vfio_pci_core_disable()
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR05CA0007.namprd05.prod.outlook.com
- (2603:10b6:a03:33b::12) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+ bh=KTSA5Q1V03NZEMP923p1QcDXw9G43eq2RBkV1r/1HxM=;
+ b=Ed4y8uYwNqcB+nu0ckw2G2IerPF97UUz5jwwLAwQNi94ptFrAZftIqTYiCWpjS5skwj9CAZq8/r7tHobqyVtBLFZuWMowtUCT08GMDhWGzi+1uGfJpd5x7ktmWX6TXig82QvrKbfFPIkZYL5Y6Z9bppNWXeP0emfvyVYlLq7XiXZuz9M6YPGIU+oYH2PZYt4vNoseehVVX65AvwZwQmIKzXVgezPxHLxMhweY1U0j8Rlwo5n9SugZczCnaSqrdQTY0Q1424gSW5iJSHetjEwLbZWECdEVRFFZ/Nep6u+UgFwPu/1lD5OGUGKPmMFUINc2NJRbnoFk4TX+SoSVE6a+Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KTSA5Q1V03NZEMP923p1QcDXw9G43eq2RBkV1r/1HxM=;
+ b=jK3OgQ4WuckC0f+U1yz54T7QhmcspPJFvouZBBpsvjzq+yYoXRaFufyGrUtpyvEjZ5lx17NfA+uPYm8En/5aIGRjnmyaXLqRGRR2Z/+5yO3gR7Vp+7JA8LeYicXKmLlA2yDNTFRZhyjChttXGsvHTK0TOWcYC6KQ2Qo9BPGBHv9GfcWRYBdAnzDvdNMTV56+rbV0jO9xw/w5H+CqBJ36Od2vbILTNNqLES9F0sRa6BhoDndCdSDI1LiDoUJXZ7+BOCGZ1Ui9I1eIcxcFhobgtQhnC6Qfm7traMyXqXBcNU/stA8oSQw1K8svaDjY5VPNKngMnlbvLss6SgwLcebmSA==
+Received: from DM6PR03CA0074.namprd03.prod.outlook.com (2603:10b6:5:333::7) by
+ CH2PR12MB4119.namprd12.prod.outlook.com (2603:10b6:610:aa::11) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9542.10; Wed, 21 Jan 2026 20:22:39 +0000
+Received: from DS2PEPF0000343E.namprd02.prod.outlook.com
+ (2603:10b6:5:333:cafe::8a) by DM6PR03CA0074.outlook.office365.com
+ (2603:10b6:5:333::7) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9542.9 via Frontend Transport; Wed,
+ 21 Jan 2026 20:22:31 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ DS2PEPF0000343E.mail.protection.outlook.com (10.167.18.41) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9542.4 via Frontend Transport; Wed, 21 Jan 2026 20:22:38 +0000
+Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 21 Jan
+ 2026 12:22:20 -0800
+Received: from drhqmail203.nvidia.com (10.126.190.182) by
+ drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Wed, 21 Jan 2026 12:22:19 -0800
+Received: from inno-vm-xubuntu (10.127.8.11) by mail.nvidia.com
+ (10.126.190.182) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
+ Transport; Wed, 21 Jan 2026 12:22:14 -0800
+From: Zhi Wang <zhiw@nvidia.com>
+To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
+	<kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+	<lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+	<markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
+	<smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+	<kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
+	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
+	<daniel.almeida@collabora.com>, Zhi Wang <zhiw@nvidia.com>
+Subject: [PATCH v12 0/5] rust: pci: add config space read/write support
+Date: Wed, 21 Jan 2026 22:22:06 +0200
+Message-ID: <20260121202212.4438-1-zhiw@nvidia.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|IA1PR11MB8248:EE_
-X-MS-Office365-Filtering-Correlation-Id: a3a5c0a7-ba9b-4771-fe57-08de592a8217
+X-MS-TrafficTypeDiagnostic: DS2PEPF0000343E:EE_|CH2PR12MB4119:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2d7fd547-3bd9-4cb7-a770-08de592ad295
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024|7053199007;
-X-Microsoft-Antispam-Message-Info: =?utf-8?B?Szc4OHBvTWlSZ0d4OGtDbUgvQUF1VmM4M1FPWHVGS3diR3pWSHViZmVCb3o0?=
- =?utf-8?B?RjB1M1QrekRNM29vV1FaNjUrSWJYUUVXb0hQVWlpbUgvdlF0bXh1N0Q5dzV3?=
- =?utf-8?B?eUVmbGp2dFNpdDdXandiVFFjK1A3YmFKcnBmMGk4UFdMRzRvak81UHVqZjNk?=
- =?utf-8?B?dWczSUU5dFEzWXRqWGdKZ2VBRWk3MDNOek9PZEx4MW5HM2J0YlczckFPQVlx?=
- =?utf-8?B?dEhLWVI2WG94MTA3SXN1TUF1N1E2c3Y4OHdtdHc1OEpCVFhjV1dKZVVrbVps?=
- =?utf-8?B?ckVhZ3FleGl0OHdnTGtJTHlXMVBYazZabENnWGhXWWxMK0JndjFiaHVldHFz?=
- =?utf-8?B?MWF2K1lleFZHQm5oNy9HVEZXT3A3MUZjUHpNRnRodmtHTUxpQmwvQ1FHcWIw?=
- =?utf-8?B?bUo3V3Nsc01Qa3JwMGdxSEZ2dTZBdHJkZ1Q1ZjkzdktQUVUyZkt3VnhMU3hB?=
- =?utf-8?B?aDVSLzh2VTdiVlUxaVdqYW15QTZnUXJCL25oZ0M3WEp5dXpwZzlkN1pTaWh3?=
- =?utf-8?B?MlhYcnVaWHROQ0I5T3pwYzl0NWdXREcvdmFXYkE3eitjM012TjNZVEVhRzZ2?=
- =?utf-8?B?dWMxcGN1MUI4UU1jYXZiS2lqVnRyK3RZUE9BZWtZdFh3VTg4NG1QUG12dHg0?=
- =?utf-8?B?MXFGajZIeHBlNFFSSTRyMjRUZGdzNmJOay9IYVFLYXBEOFl3aXgxS0FVL2xN?=
- =?utf-8?B?UUdSYUlUYjRndjJLK0dldm0zZHBMZmlGQUdObEVWTDE5RUp5bitJc2VCOVZI?=
- =?utf-8?B?QWh2ZkVsMng1U0owZGpIdVJRbW9vdHlVbFNCd0wwZzE5dktqVExJbGk0VFl5?=
- =?utf-8?B?WjkvaEpnY2wyd3daQ0ZwWXhxbi9zNitmUjFkcVdqNzNPaXZLSUgzdTZ6OFVS?=
- =?utf-8?B?M0Vxb0VJT3ZsL2x5Z3QxYkl0LzNQaHlLVXhRU1NnNDQxeklNMG56ejZrSWpo?=
- =?utf-8?B?TElNeUhVbUxzay9EVHRMeGZ6QTh6dEtpVVlsNjBLMnlPWndTdC9hZ081SFNm?=
- =?utf-8?B?bEp5MDhkblVjdng5U0UyLzdFU3pEYWk5RGxaMHNiR0xybnpyRHN2akplVkRD?=
- =?utf-8?B?TzhFV2ZiR1JTK3o5WFJ1QzdTR1hOQlJSdlhPZ1paZHRLOVhwOVRtUkxYYy9i?=
- =?utf-8?B?YnRGc0FNQU1oRXR2LzlsbGlVYytnL1dRdWNGOXpUWmdBZTBlUzlDcEY5UTNC?=
- =?utf-8?B?NTEwQVFoWmlya2N5SmRkR3dtb0l3NFZtMzFxM29KYW92dzRCTUM3VVR0ZDho?=
- =?utf-8?B?NFUrWGwxT3NPOUhUYkpWT0d3c2JlUjJ2UmVRZkVtdGxlUHp5NStrSllqbngv?=
- =?utf-8?B?MVNJcGF6Q0ZRamF2NUg2OXN5Q1BXbFhXb1EvcmZxcXNKeWpieWtrN0wwSjJh?=
- =?utf-8?B?MEY5L0QzTS9wTHhla0VMcFc2RWJmVHU5Y1haZnloWUZ1QXkwRUloaUR2eXo4?=
- =?utf-8?B?WUlQQ0I3M2RabGQzbHp6eEtXQ3NNTlhyMksvTXRPNXJveHZVdHFOVUR2cXh0?=
- =?utf-8?B?VWxQbU1KWGVDbGYxaWxBMDlPdHJoUmc4Ujc1cHNhZ2laZHVaVTd6ckR5eVFI?=
- =?utf-8?B?N2pUc0lMYW9VbjRTdi9VZ0JaYTFyc28xSEwxWlBSU1N5aHFvU3VIK0ozTzZ3?=
- =?utf-8?B?TGNUVXBYVXlmbTRZR3J4eTYvNEV2THdYZ1JQbTlVMXpEeWhSb2ZyNkpTbzRR?=
- =?utf-8?B?RVFhTW41elhRUVRUbEgxc3E3TmE1WUR3MStjQ3FCUWhQcmcyUUtHckRNaXdL?=
- =?utf-8?B?eFYzSjVGRW84N0I0cUU4cVpZUXVqTXhHVXJROHV0RlgvaUFoUlR5a1NZSjNE?=
- =?utf-8?B?YkRabi9FdCtUbVZTNkNkaWdpWDdPWDdsdEFOak5xWFB6SFFUTXpWVExQcXVB?=
- =?utf-8?B?QzdsbHV5azRIWm0vRlBpVlN4b2Mxc0xTdGVFL2JxUmVMUG41SGtFZGpyTHBV?=
- =?utf-8?B?SnQrM3ZBQUhzbFVVbG1MNllKSVhGUHlwTW9ZazJuS0NkTUVteWdXNHRDZStY?=
- =?utf-8?B?UXJkc0ZiWVFDYVc2d2pnNHB5SEJBNDI5TUJjZnZtUzBrLzgvZkV3RmVyWHZw?=
- =?utf-8?B?M05QWGxqdjdnakFCZFY2aVVjSVBaeGR5TDc0Sis1dnYrYy9TdXA4NlNoWDZG?=
- =?utf-8?Q?7S8o=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VFdFMmVUMDV3dGE1UUZMWGtKajRseWlwTjVtZDVPUFJRTkhld053U0FmYmh1?=
- =?utf-8?B?Q0xQNXVYY2hyZU1RbHVaSFZ4WWo4Wjltbm4yd3NTQmJNcExrdnFydWc0UFhw?=
- =?utf-8?B?TGtYRkVwSXhnczBqSWlmckE3b2ZYYXJLSnFiSnVRMHNKRjhpQktpcVpiYkQz?=
- =?utf-8?B?bDc5Wi9TeEI1TW0vVGNJYXZCM05nQk9lazZXV3dJMUk5N05ydUxYTmYrc0My?=
- =?utf-8?B?WStUanV4NjJUOTZzOS9zMDIvS0wzQm1rNThTMG9aaEJqbzBMY1owM0dQTFlS?=
- =?utf-8?B?NGFpNlh4S2pYdjZHRWJPdWdiK1FTZWg4Vk1NWjZqWE4zT2FTV1dLK0pSSWtP?=
- =?utf-8?B?ZFJkYWpYaVJHSnpNcWZYdUVpRVIralB0azkvRHVKR1RTNEZFUm5qSmtwOFZ5?=
- =?utf-8?B?YW9jeStYUzJ4M01oSWhlWlZoOGgrYWViRy90Y0VkT1JOR1JZZTc5eGR4M0JE?=
- =?utf-8?B?OFNla1E4TXJsdHcyNVpIMG1VdlIxKzAwL1A3azh2MTZ2WWhVR3VkMERvTHhm?=
- =?utf-8?B?N3ZOZWd6dHJkNjVDR1Uvd0FRQzhraVI3UFFtVUg5Q2hvTk5BbWZiZ0hQVllB?=
- =?utf-8?B?ZUhWUGZXY3U1N3JDdEtGazFQMXlFZ3h4aWErVnQwU2hRRDROVWFHVDN5Z21P?=
- =?utf-8?B?VW9YN0NybHU1ZEVLSnFYOEpVWWtCdit4SHlaejI5TDJRWWJEQWo3N1NmMTk4?=
- =?utf-8?B?cXo1Mk9GRWttaytmZktqdUVvbnNLUkxkemlXeFd5TXZ4aDdQRFBEWG9hMkVz?=
- =?utf-8?B?VWZNTUxFbEE3TmJxWTM3cmdKT1REOENCQi9mY0tHd3VmRWV3SFp5Si92NmJE?=
- =?utf-8?B?dmFQaCtpMlphQThINDNmdjUrWTNQcTdXYnJUM3NkbXFRd0QyTVlhMDdMUU1G?=
- =?utf-8?B?OU5uSkIxMHIzWWxKZWYxOGljOVlFcnllT1BTK1BaalVNSEo4b0RUQ1dWaEdB?=
- =?utf-8?B?SmNVdGJMSTNZM1NKTGVmU2dxQkFLQ0EvbDBvWVpiaXMxRGQyQWNGUUZyc2Z6?=
- =?utf-8?B?WFhpTlhZOEl4Y1ptQTVWSGFGT2hnNDMxU25DUEJRaHN3d2VTZkNwc2FJbkNj?=
- =?utf-8?B?eWI3TW5aQVZGcGRwcEpURWhsZTQ2dUZqbE5RTVNyREdMUXl4RURuQmplQ0VF?=
- =?utf-8?B?VE45cmRDbVhxNHZWZ2I3YW4zUFJKKzVKTTU1V3JBd0s4eERBeXdmVlZaZVZw?=
- =?utf-8?B?RjRaWU1Ba0ZIa1A1R2g1N1RDaUovMktUMGdFNDBjb2dnUVZpU3A3Tk9vK3Jr?=
- =?utf-8?B?WjM0WWFLRmxKVHJvdWhYbTdja3ZpdmtBVmxMNDdSOHAwdFlzQXhJakplTm1G?=
- =?utf-8?B?K3g4M0VmUXlCbkJLeTN3KzZ4RmF5WHkwNEJNMmNEd2l5bkQrbkx4K0xRU09a?=
- =?utf-8?B?a2lETlFZQXEySklnYWRZMHpQbVRvL09jb1VlWVRmbkZjVVVNTmdVNFNyaDI2?=
- =?utf-8?B?NUZEY01wVDM0VDRZMkpscVU5RHB3SUk3UFV5eGR2dFRMM3VpK1IzbVJ3MHQ2?=
- =?utf-8?B?eU1mcTV6WGlUSzBHWC9icDhCSGlJUU9iUm9kRjBYRWNoenBVb1U3UjM1ZzJp?=
- =?utf-8?B?d1JTTUtpTzdBR2RrcUxRT0ZtZ3RJaHFqc3ZYa0ZGVC9WNWVTRlpBYmtid3FZ?=
- =?utf-8?B?OWZTbWZMYXBLTTJaZDFSVWlmbk90bXNuWVVRY1V2Zm42dnJFTzZiK2V6cjJw?=
- =?utf-8?B?czhSa296SDR3RTdmZk4vRUJpT1lqb2ZoL2IyY002eHFKQThUanJVU3dROTBl?=
- =?utf-8?B?V1pTY1gzSGswL2gybjh6a3B3UEt2aHpyZWlvaVI1c0ROVGNzVGdkMXMrMWF0?=
- =?utf-8?B?UjNqVnJhR1F5YngvWG1NQkxzTmpVMzBuMkQycVpyTnZ5WFg1SXBuTHVvUktn?=
- =?utf-8?B?VXYvYi9xaFdwYzE2WkVRK0lIN3J4aGZJVTU0OG85V01CeFVMcTVta2c2ZElS?=
- =?utf-8?B?Mkw0MXcxMFlqODl2THp3MDRud1BOdExaMi9iQ1VCbnlOTG96bzBXWG5SOXVO?=
- =?utf-8?B?Q2tHZ0Qva2ZNTVd3dzZoMU8rYkhqS3ZoQjhxaTRxVW1MVy9Tai9saGVtb0Rt?=
- =?utf-8?B?K0d5dDRTVnNXTTVYdktnZzd3TWdyUGpIdEo3elBLRUNVZXFvNFBweEVFNStI?=
- =?utf-8?B?RWVFL2hOZjhQOGdpci92M2RTU1Vwd2NWdzFpQU1LVkV2bWNRRW1tTk1vOXZF?=
- =?utf-8?B?VmFwZlllbWx0UmtsT3ZNT0tOS0wyaDRvUHVRQkVEbkZKWlNKb0lwZ2xEdzFm?=
- =?utf-8?B?ekdJYTFSY0hBTStXMEdmNmc2VmJod3QzTjR5cXRJbW1GM3NDVWVFY0NrUGt4?=
- =?utf-8?B?RHpleWp0a01IQmlSM05Ta2R2Rmp3RXBhRXJCTUkwYWRUZlVJKzZtc2U5OU9K?=
- =?utf-8?Q?NrpJwTW4J/OUCsOU=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: a3a5c0a7-ba9b-4771-fe57-08de592a8217
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2026 20:20:24.0478
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|36860700013|376014|7416014|1800799024|13003099007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?tqFlk06wp+bDarKCToS9yAhWiU8vtrmsKTJpWu7kdIle8WUnKbCF9E+jCavF?=
+ =?us-ascii?Q?t8af6iZbcQZz/sokL71kf2UsYf/CWG1wlo57trjhSf+uAQ3SBpUz30d4fWFv?=
+ =?us-ascii?Q?OpYSfexKisNxZ+03Ps4DPIci72ljwI61BOaOzXdme8Zb68ZUmYv7RHtUqFYl?=
+ =?us-ascii?Q?RTso8d4m2W9LZ7zYaYmlL7o0OpoFQepYzRRWC6M9EZr/hLLMdgckFoDVp3bc?=
+ =?us-ascii?Q?X3uIxkwk5jJVwWQFdAWGlx17hp5IETfYTjQq4A1vcuEsnHxwaD0YgQmL6Od7?=
+ =?us-ascii?Q?pIYl01NYR+TIJqNia1+2O5e+/q49hKPzHntFSe7VKFa5MoMk/MXEwCfETGK3?=
+ =?us-ascii?Q?pk+C7+gaXGhYPJ2ex9cVP2CBuabmrSzqPNhmk2mIOCUZeTZCdkYmsJVJKOtY?=
+ =?us-ascii?Q?JiRp/7Epm38Pr/rea+jwHuPcpAzzMiSarIAy1wa4Egz/00Vzvy2XEf0wZvvN?=
+ =?us-ascii?Q?c5BoHH5h63WYCgGg8nltObjycPVL0Amys0b62Ee0VnF9+H92+6/CGAfGxfNZ?=
+ =?us-ascii?Q?UTqJTdvx684MeFOtNxOSSDYrBSScWl6/XEEM0c+QvwXn0EkD4OLprAIPYgVQ?=
+ =?us-ascii?Q?l1cMlEiMxDw4gZNJl9KrxgITMiPdDzsynvlINNInL2IufExoHKwuCSeMOTLw?=
+ =?us-ascii?Q?fviKoB2dGuTxlxZAQyu2NbUXbNHX0FE9541r9GuvCF8pvSw4cFJy9Wsv3TNu?=
+ =?us-ascii?Q?spOH0/XwrddGMzkq/LqovSWhYcjpVRI0VYPP2npN5JXdcvpzQHxZEHMC3i2T?=
+ =?us-ascii?Q?4pITx46a/1Sgx99rDQPz4pzf0byXgESEaeZDQsi9EP4QdYQMlgw5NUzB+JRj?=
+ =?us-ascii?Q?U+AgmAwMgxB2OHaNjpAmpD5bLGjgPOZ3u3H1CAEh9XO/tqdcJyxkuEz0r/e+?=
+ =?us-ascii?Q?QSr1FATVYNl3il2u7vEQWptb4QFRs7ZMB2g0TNROYO0JidoF6vv00AHBgb5A?=
+ =?us-ascii?Q?pvxFjRp6OzGgPrQqDpAfJTHvdsbw/27UnsDZnVLBKDu4R3Iszd2b5UsjTNDl?=
+ =?us-ascii?Q?D0Tg7EcpGpXs52iCwzpy/WBXSE/BJFebXEgF15E8DYNBgp1mIEyy8cYvdTpb?=
+ =?us-ascii?Q?IXJJP/G95MQXUC8/9NONe3u2+W9SyOJS5RWb0JxoVpYfmMAnjdP95jz4FJpJ?=
+ =?us-ascii?Q?afejLlVsCJpBgr7YhMxnFlUFoxzKz7QQ9/6PkOARzKjCTC2Lv99G1pr+BSuM?=
+ =?us-ascii?Q?pBddaS9EQhohVBfibuuGSdJlv9NVSbyLcKl5Rvv4zuhCpVVgk4sCquJd0+XH?=
+ =?us-ascii?Q?4hLHMzCyMki32r9MzqxUgDC3+uumKXpwm7nt8hwuQMmg62y6GDRGxmDisU55?=
+ =?us-ascii?Q?Pg8NkzEQ8grbAEtBKQ9btya4tf4YEfzQ124l+Td6i8PkKr+p1VfK6yEMALvi?=
+ =?us-ascii?Q?uL0MfiAcMD4AMntP4Cnn8EpxA/+0a5rZduzv1vsIp8GysoUMr7Q9KEv6y9Mo?=
+ =?us-ascii?Q?QWeUSkDSTfceRK6PQ6F67kfORveV4fWZPnYZ3owPdw2/dWW/WC04dMtmHqLH?=
+ =?us-ascii?Q?FLz/jT8Sg1/aFKa7ePREvaKkYNz6BlC2xJ7wdlOikOBIw4EPquq9k886t0Ol?=
+ =?us-ascii?Q?FM/KxOqgQOwY04bhk6Q3Ou4kCdvbDS8MlkhLpx+nloD07JmIbjrC/xfA/JXo?=
+ =?us-ascii?Q?R4z4aZmIed64xcLfc6M0V10lfNbxZSi6ZUMSe4ttzv/If+f6/RtFHw+H9ZR5?=
+ =?us-ascii?Q?jgdD4A=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(36860700013)(376014)(7416014)(1800799024)(13003099007);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2026 20:22:38.8417
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: J+lX7kS7Qqny8VdivGuFWfwagU5Ne85f2TPNsV+Dxr6aSEgoMHxzqh32+KzonEmxXJVdtm3hWmlL0LozGeI7K0tjCTJIlhGJurXv85zTwjs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB8248
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2d7fd547-3bd9-4cb7-a770-08de592ad295
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS2PEPF0000343E.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4119
 
-Anthony Pighin (Nokia) wrote:
-> The commit 7e89efc6e9e4 ("Lock upstream bridge for pci_reset_function()")
-> added locking of the upstream bridge to the reset function. To catch
-> paths that are not properly locked, the commit 920f6468924f ("Warn on
-> missing cfg_access_lock during secondary bus reset") added a warning
-> if the PCI configuration space was not locked during a secondary bus reset
-> request.
-> 
-> When a VFIO PCI device is released from userspace ownership, an attempt
-> to reset the PCI device function may be made. If so, and the upstream bridge
-> is not locked, the release request results in a warning:
-> 
->    pcieport 0000:00:00.0: unlocked secondary bus reset via:
->    pci_reset_bus_function+0x188/0x1b8
-> 
-> Add missing upstream bridge locking to vfio_pci_core_disable().
-> 
-> Fixes: 7e89efc6e9e4 ("PCI: Lock upstream bridge for pci_reset_function()")
-> Signed-off-by: Anthony Pighin <anthony.pighin@nokia.com>
-> ---
-> V1 -> V2:
->   - Reworked commit log for clarity
->   - Corrected indentation
->   - Added a Fixes: tag
-> 
-> 
->  drivers/vfio/pci/vfio_pci_core.c | 17 +++++++++++++----
->  1 file changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 3a11e6f450f7..72c33b399800 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -588,6 +588,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_enable);
->  
->  void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  {
-> +	struct pci_dev *bridge;
->  	struct pci_dev *pdev = vdev->pdev;
->  	struct vfio_pci_dummy_resource *dummy_res, *tmp;
->  	struct vfio_pci_ioeventfd *ioeventfd, *ioeventfd_tmp;
-> @@ -694,12 +695,20 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  	 * We can not use the "try" reset interface here, which will
->  	 * overwrite the previously restored configuration information.
->  	 */
-> -	if (vdev->reset_works && pci_dev_trylock(pdev)) {
-> -		if (!__pci_reset_function_locked(pdev))
-> -			vdev->needs_reset = false;
-> -		pci_dev_unlock(pdev);
-> +	if (vdev->reset_works) {
-> +		bridge = pci_upstream_bridge(pdev);
-> +		if (bridge && !pci_dev_trylock(bridge))
-> +			goto out_restore_state;
-> +		if (pci_dev_trylock(pdev)) {
-> +			if (!__pci_reset_function_locked(pdev))
-> +				vdev->needs_reset = false;
-> +			pci_dev_unlock(pdev);
-> +		}
-> +		if (bridge)
-> +			pci_dev_unlock(bridge);
+In the NVIDIA vGPU RFC [1], the PCI configuration space access is
+required in nova-core for preparing gspVFInfo when vGPU support is
+enabled. This series is the following up of the discussion with Danilo
+for how to introduce support of PCI configuration space access in Rust
+PCI abstractions. Alice/Alex/I had a discussion of the next steps of
+this patch series in LPC 2025. We agreed that first introducing the
+functionality before the BoundedInteger work and other refinement is
+settled. [2]
 
-This looks ok, but a bit unfortunate that it duplicates what
-mlxsw_pci_reset_at_pci_disable() is also open coding. It leaves Octeon
-(orphaned) and Xen to rediscover the same bug. At a minimum I copied the Xen
-folks for their awareness, but it feels like __pci_reset_function_locked()
-really is no longer suitable to be exported to drivers with this new locking
-requirement. It wants a wrapper that contains this detail.
+The repo with the patches can be found at [3].
+
+v12:
+
+- Move accessors from IoKnownSize trait to Io trait. (Gary)
+- Turn IoKnownSize into a marker trait. (Gary)
+- Use build_error!() in Io trait default functions. (Gary)
+- Remove extra #[(CONFIG_64BIT)] in Io trait. (Gary/Alice)
+- Introduce marker types for configuration space. (Gary)
+
+v11:
+
+I tried to combine IoCapable and IoTryCapable. I found I have to dump
+the original forwarding call scheme.
+
+In this re-spin, I moved the accessors into the Io/IoKnownSize traits
+and I have to added the default trait functions required by the
+compiler. The IoCapable<T> turns into a pure marker trait. Reaching
+the accessors from a driver are restricted by the where statements
+marked by IoCapable<T>. A backend marks its capablities via implementing
+IoCapable<T>. This is quite close to Gary's orginal suggestions.
+
+I also left a assert in the default trait functions (accessors) to
+catch the case that a backend implements IoCapable<T> to claim it
+support the accessors but forgets to implement the accessors. This
+should be helpful when developing a new backend.
+
+- Combine IoCapable and IoTryCapable. (Danilo/Gary)
+- Keep IoKnownSize trait. (Alice/Gary)
+- Fix the compiling error in pwm_th1520 driver.
+
+v10:
+
+- Merge IoBase trait into Io trait to simplify trait hierarchy.
+- Use IoCapable<T> and IoTryCapable<T> functional traits (not marker
+  traits) to separate infallible and fallible I/O operations. (Danilo/Gary)
+
+I tried implementing the marker traits idea, but I found that the
+compiler still requires a default implementation for each function in
+the main trait to avoid forcing backends to implement unsupported
+methods.
+
+However, Gary's core idea of "capabilities" is extremely valuable. So, I
+adopted a dispatching pattern:
+
+- All I/O accessors are defined in the Io trait. They use default
+  implementations to dispatch calls to the underlying IoCapable and
+  IoTryCapable traits.
+
+This addresses Alice's concern about the complicated trait hierarchy.
+
+It preserves strict compile-time static checks. The compiler can catch
+the case if a driver calls an accessor not implemented by a backend.
+
+- The actual logic resides in IoCapable<T> and IoTryCapable<T>.
+
+Backends can selectively implement IoCapable<T> or IoTryCapable<T> based
+on hardware support.
+
+This addresses Markus's concern regarding backends with limited access
+sizes (e.g., I2C).
+
+For example, the Mmio backend implements both IoCapable and IoTryCapable
+for all sizes, while the PCI config space backend only implements
+IoCapable for u8/u16/u32.
+
+v9:
+
+- Rebase the patches to the latest driver-core-testing.
+- Move ConfigSpaceSize to pci/io.rs. (Danilo)
+- Refine docs. (Danilo)
+- Compiling test on Tyr. (Danilo)
+
+v8:
+
+- Rebase to latest driver-core-testing branch.
+- Refinement of traits name and hierarchy: (Alice)
+  * Rename IoInfallible trait to IoKnownSize trait.
+  * Keep Infallible helpers in Io trait.
+
+v7:
+
+- Rebase to latest driver-core-testing branch.
+- Introduce Io64 trait. (Alice)
+- Add docs for call_{mmio, config}_{read, write}() macros. (Alex)
+- Improve the define_{read, write} macros. (Alex)
+- Add SAFETY/CAST in call_config_{read, write}. (Joel)
+- Fix typo of method name. (Alex/Joel)
+
+v6:
+
+- Implement config_space() and config_space_extended() in device::Bound
+  lifecycle. (Danilo)
+- Fix the "use" in the comment for generating proper rust docs, verify
+  the output of rustdoc. (Miguel)
+- Improve the comments of PCI configuration space when checking the
+  output of rustdoc.
+
+v5:
+
+- Remove fallible accessors of PCI configuration space. (Danilo)
+- Add #[repr(usize)] for enum ConfigSpace. (Danilo)
+- Refine the handling of return value in read accessors. (Danilo)
+- Add debug_assert!() in pdev::cfg_size(). (Danilo)
+- Add ConfigSpace.as_raw() for extracting the raw value. (Danilo)
+- Rebase the patches on top of driver-core-testing branch.
+- Convert imports touched by this series to vertical style.
+
+v4:
+
+- Refactor the SIZE constant to be an associated constant. (Alice)
+- Remove the default method implementations in the Io trait. (Alice)
+- Make cfg_size() private. (Danilo/Bjorn)
+- Implement the infallible accessors of ConfigSpace. (Danilo)
+- Create a new Io64 trait specifically for 64-bit accessors. (Danilo)
+- Provide two separate methods for driver: config_space() and
+  config_space_extended(). (Danilo)
+- Update the sample driver to test the infallible accessors. (Danilo)
+
+v3:
+
+- Turn offset_valid() into a private function of kernel::io:Io. (Alex)
+- Separate try and non-try variants. (Danilo)
+- Move all the {try_}{read,write}{8,16,32,64} accessors to the I/O trait.
+  (Danilo)
+- Replace the hardcoded MMIO type constraint with a generic trait bound
+  so that register! macro can be used in other places. (Danilo)
+- Fix doctest. (John)
+- Add an enum for PCI configuration space size. (Danilo)
+- Refine the patch comments. (Bjorn)
+
+v2:
+
+- Factor out common trait as 'Io' and keep the rest routines in original
+  'Io' as 'Mmio'. (Danilo)
+- Rename 'IoRaw' to 'MmioRaw'. Update the bus MMIO implementation to use
+  'MmioRaw'.
+- Introduce pci::Device<Bound>::config_space(). (Danilo)
+- Implement both infallible and fallible read/write routines, the device
+  driver decicdes which version should be used.
+
+This ideas of this series are:
+
+- Factor out common traits for other accessors to share the same
+  compiling/runtime check like before.
+
+- Introduce IoCapable<T> and IoTryCapable<T> traits to allow backends
+  to selectively implement only the operations they support.
+
+- Factor the MMIO read/write macros from the define_read! and
+  define_write! macros. Thus, define_{read, write}! can be used in other
+  backends.
+
+  In detail:
+
+  * Introduce `call_mmio_read!` and `call_mmio_write!` helper macros
+    to encapsulate the unsafe FFI calls.
+  * Update `define_read!` and `define_write!` macros to delegate to
+    the call macros.
+  * Export `define_read` and `define_write` so they can be reused
+    for other I/O backends (e.g. PCI config space).
+
+- Implement the PCI configuration space access backend in PCI
+  abstractions.
+
+- Add tests for config space routines in rust PCI sample driver.
+
+[1] https://lore.kernel.org/all/20250903221111.3866249-1-zhiw@nvidia.com/
+[2] https://lore.kernel.org/all/DEOMBKIRDXH6.2CF2MR2RB2W2C@nvidia.com/
+[3] https://github.com/zhiwang-nvidia/nova-core/tree/rust-for-linux/pci-configuration-space-v12
+
+Zhi Wang (5):
+  rust: devres: style for imports
+  rust: io: separate generic I/O helpers from MMIO implementation
+  rust: io: factor out MMIO read/write macros
+  rust: pci: add config space read/write support
+  sample: rust: pci: add tests for config space routines
+
+ drivers/gpu/drm/tyr/regs.rs            |   1 +
+ drivers/gpu/nova-core/gsp/sequencer.rs |   5 +-
+ drivers/gpu/nova-core/regs/macros.rs   |  90 +++--
+ drivers/gpu/nova-core/vbios.rs         |   1 +
+ drivers/pwm/pwm_th1520.rs              |   5 +-
+ rust/kernel/devres.rs                  |  35 +-
+ rust/kernel/io.rs                      | 477 ++++++++++++++++++++-----
+ rust/kernel/io/mem.rs                  |  16 +-
+ rust/kernel/io/poll.rs                 |  16 +-
+ rust/kernel/pci.rs                     |   7 +-
+ rust/kernel/pci/io.rs                  | 177 ++++++++-
+ samples/rust/rust_driver_pci.rs        |  29 ++
+ 12 files changed, 713 insertions(+), 146 deletions(-)
+
+-- 
+2.51.0
+
