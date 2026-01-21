@@ -1,41 +1,57 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 083774611C8;
-	Wed, 21 Jan 2026 23:15:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2247926E719;
+	Wed, 21 Jan 2026 23:38:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769037323; cv=none; b=EwR300sDGwpFqFH1U1YhQYWBbiRbeY2FP2pxsD5zHhtu16ygzElNDsa5QHYZ2g1UMUCvtpPnJSVbaveO3nYrQo2T/TxsVw3mwbeleusKb1SKe76c+1C1plBwJFko+DdhUQLNaapRCtZc/aX07c9AsEWEcl3y2ECOf5i2U4zCtpA=
+	t=1769038686; cv=none; b=CBqgvAUMmaH/5AV1aO86edpDo5ZiMHnKEF4DL0wG6jPjXMtH7FnDYUfwetZcBR9JB625iSzXcT8ULlIfwvBdCJFF8k33PBsL5nie9uet9su0MTOeqp8MUl6rii8e5vIUapNSD94juOKrROzX3XHU2HfDvspC+oMRXbtrSiqC9Kw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769037323; c=relaxed/simple;
-	bh=2rZc2CobKJ2bQoD/hgDVC7Ydo265bvJF3lPw6WZX5L4=;
+	s=arc-20240116; t=1769038686; c=relaxed/simple;
+	bh=weaJN1Iequ/ZyzA1DPueH31401FC5DUZbpwwcPNyzmQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=QqDXoPcvLjTy5UfgVDVr27voFebAcNnVvhoFCg/m2UuEeAhwn64YRO1QLiLPIeG3yWnh/lS0ppllyMN87xKs8CoL60EC0VzH0UwIOBH0TXs4QuQQHe4daJn7RMWCIuWsSej1rT4Nf2LdEZjgIUQK/5FsBqlB+CJmu2GRe0wWGgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VpSj4VMF; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=PSu/uhoqpkaoWwWlUi+KefqclK3Qpq9AiFSrGJ89zmZK8jMf0J+vtXjACLp8NYjUs2T1oM1fjFdez+2CaK7GRoJrkGZtdILDaF4+FW/YAZKbpuEgJSUPpA45k5lSKpo8xojR5lUZPG6tyRsLa1APp1mBnJT716FL2vg2Hck+ciA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BeikHttw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VpSj4VMF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27147C4CEF1;
-	Wed, 21 Jan 2026 23:15:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BeikHttw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54A20C4CEF1;
+	Wed, 21 Jan 2026 23:38:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769037322;
-	bh=2rZc2CobKJ2bQoD/hgDVC7Ydo265bvJF3lPw6WZX5L4=;
+	s=k20201202; t=1769038685;
+	bh=weaJN1Iequ/ZyzA1DPueH31401FC5DUZbpwwcPNyzmQ=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=VpSj4VMFqVGMbzmGMViAl5LDSfcWXL/h2dHAoqaDsNIrcXQmwWrK8Zcb2sf+N2u7a
-	 ZHqLqqlZ4F+uHemyycdWQ/O780WPopBDb6tXuPlM8tA0M2ZgkQx35cINO1A3WeV1Eb
-	 hZsaK6Hmn4hKs+elZAOSw0UfViZ2MdAru3i+SVkf91PU3qcXC8YH8xQ/WMcxWl+nAn
-	 HZGEavfk1LVYp3wFysIUQv823hdcUzS/1BWqGh+8Qbiz7JahmzNdJ6To1t5PCYAawd
-	 H0iqZnS3fQLxHbvgmIalYECUK9rmeziD75EOa60eCVhqI5rNPJopXDBNpUGxluzkb4
-	 hv0iRsfgSX/Zw==
-Date: Wed, 21 Jan 2026 17:15:20 -0600
+	b=BeikHttwrCy8vR2Z2txVC+OK5mggBSlKkHUlak+4qJNsLFrRy2lVin2znkr8uhTQV
+	 hDrmRILtEmj7vUJozkGZqTtkC7jUFLFbW93vmaGTVqr/Sn5lqEpjj1cfK583XK2h1W
+	 cWE3lMXXh6kONxTUrzilJiZU5A5Y89Zu2yn7RIUyGceGoUtYvSK8Y5rNZvlAy9u9iN
+	 R2s2BfJMHAxgIvFEovn2WRV21tJsbeLz8tsu8o8CSDoBDHmaPSHQj2jCW8PFkiE8aJ
+	 ocO0pWswC8u3eMGvxOnwCJab2Y+7vdjDnkfCiO1CZLrXf1aJX6D22EoP5AUFp1+EdI
+	 qGoPNveHv3RcA==
+Date: Wed, 21 Jan 2026 17:38:04 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH v2 1/1] ACPI: PCI: simplify code with
- acpi_get_local_u64_address()
-Message-ID: <20260121231520.GA1221379@bhelgaas>
+To: Vivian Wang <wangruikang@iscas.ac.cn>
+Cc: Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	"Creeley, Brett" <bcreeley@amd.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Han Gao <gaohan@iscas.ac.cn>, linuxppc-dev@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+	linux-riscv@lists.infradead.org, sophgo@lists.linux.dev,
+	Thomas Gleixner <tglx@kernel.org>
+Subject: Re: [PATCH v2 2/4] PCI/MSI: Check msi_addr_mask in
+ msi_verify_entries()
+Message-ID: <20260121233804.GA1221537@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,54 +60,56 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260121085105.2282380-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20260121-pci-msi-addr-mask-v2-2-f42593168989@iscas.ac.cn>
 
-On Wed, Jan 21, 2026 at 09:50:49AM +0100, Andy Shevchenko wrote:
-> Now we have a helper so there's no need to open-code.
+[+cc Thomas, thread at https://lore.kernel.org/r/20260121-pci-msi-addr-mask-v2-0-f42593168989@iscas.ac.cn]
+
+On Wed, Jan 21, 2026 at 11:49:38AM +0800, Vivian Wang wrote:
+> Instead of a 32-bit/64-bit dichotomy, check the MSI address against
+> msi_addr_mask.
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Looks like most drivers/acpi commits capitalize the subject line,
-e.g., s/simplify/Simplify/
-
+> This allows platforms with MSI doorbell above 32-bit address space to
+> work with devices without full 64-bit MSI address support, as long as
+> the doorbell is within addressable range of MSI of the device.
+> 
+> Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
+> 
 > ---
+> v2: No changes
+> ---
+>  drivers/pci/msi/msi.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 > 
-> v2: fixed a typo (LKP)
-> 
->  drivers/acpi/pci_slot.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-> index 741bcc9d6d6a..15234b65ea22 100644
-> --- a/drivers/acpi/pci_slot.c
-> +++ b/drivers/acpi/pci_slot.c
-> @@ -42,8 +42,9 @@ static int
->  check_slot(acpi_handle handle, unsigned long long *sun)
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 48f5f03d1479..2ecbcd6c436a 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -321,14 +321,17 @@ static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
+>  static int msi_verify_entries(struct pci_dev *dev)
 >  {
->  	int device = -1;
-> -	unsigned long long adr, sta;
-> +	unsigned long long sta;
->  	acpi_status status;
-> +	u64 adr;
->  	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+>  	struct msi_desc *entry;
+> +	u64 address;
 >  
->  	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> @@ -56,10 +57,9 @@ check_slot(acpi_handle handle, unsigned long long *sun)
->  			goto out;
+>  	if (dev->msi_addr_mask == DMA_BIT_MASK(64))
+>  		return 0;
+>  
+>  	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+> -		if (entry->msg.address_hi) {
+> -			pci_err(dev, "arch assigned 64-bit MSI address %#x%08x but device only supports 32 bits\n",
+> -				entry->msg.address_hi, entry->msg.address_lo);
+> +		address = (u64)entry->msg.address_hi << 32 |
+> +			  entry->msg.address_lo;
+> +		if (address & ~dev->msi_addr_mask) {
+> +			pci_err(dev, "arch assigned 64-bit MSI address %llx above device MSI address mask %llx\n",
+
+Use %#llx so it's clear these addresses are hex.  The previous message
+did that, not sure why you dropped it.
+
+> +				address, dev->msi_addr_mask);
+>  			break;
+>  		}
 >  	}
->  
-> -	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
-> -	if (ACPI_FAILURE(status)) {
-> -		pr_debug("_ADR returned %d on %s\n",
-> -			 status, (char *)buffer.pointer);
-> +	if (acpi_get_local_u64_address(handle, &adr)) {
-> +		pr_debug("_ADR returned with failure on %s\n",
-> +			 (char *)buffer.pointer);
->  		goto out;
->  	}
->  
+> 
 > -- 
-> 2.50.1
+> 2.52.0
 > 
