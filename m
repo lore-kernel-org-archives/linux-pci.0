@@ -1,261 +1,300 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8B7D33E372;
-	Wed, 21 Jan 2026 23:40:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3606D4534AD;
+	Wed, 21 Jan 2026 23:59:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769038811; cv=none; b=TTs8Y+ht2pK1xtEN9pVK54hnhMZ9xVew/IAUj2A48/l4EwHVApCeUBVaHzdIhzuwbAwCWv5jtansosbbb/b75XGdFOrZZ1ZDaEUwpITE83mqtlsdsJKRTZCT+kriVRvr3R2BnPPnoa2mdJoZ/w06bK035/ROB+JbqUPAa/2IJHI=
+	t=1769039957; cv=none; b=ijhA+qzi5R1UrXUKr9LqLUrBTNiGT2A/mnjZdy/vxGW6BmaUVQkEmKKmROiEmcq3gxRM+aIujPncenkwkn3d7rLnEFMDR1Tx+6qzvFH7KYfw7358eEip/9NsTU5l5hQY/A9iGabk9sS19CxbYMXC/g5ygfpy9N527oeWXHyTUQo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769038811; c=relaxed/simple;
-	bh=gQh6gpxVannkjECmoCgbQdX8xQ7iUcZw3F5m/PfebIM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=anRP2MR1K0q/pc4YsFAJJL9Qkn0DZRXMZ7BfEYErM/pdmaQfB4COFVMWVAEtP10lwWVnuR3bMPiRKqYy1NGWky/ZICGPzBMuEpKnAvspZD95p58zCO/BoxDw6SOpFCMTrUVkreFkauLlOyld5E8r1DuV/wTc1I7f02So2YCrHG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RQgBH2k1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769039957; c=relaxed/simple;
+	bh=LqnEp1wtZlAaOjJu7IJmTVX15uAhqFsWciuIQziDmkc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RiTg1g4oQD12bCB+pCaUxaF0DYCyKtsDXb2V+Gb7KLe3pMQKvoKcCzl4UdenM2JQQ0PkRK41BX7NN3pjYkOWCuwrp71CLxcbOFKI28iRDaHiaic/tbxH4vfA+m0HOFd7VJ1aiEN+M7VSpRKQiNDUW7pKaYfKKaCt0SUxundIbQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bmILtSDz; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RQgBH2k1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F22FC4CEF1;
-	Wed, 21 Jan 2026 23:40:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769038810;
-	bh=gQh6gpxVannkjECmoCgbQdX8xQ7iUcZw3F5m/PfebIM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=RQgBH2k1U0UcHMSzn5EnaPerQcXnO/4t15qxcqqreXWyD14N5LIfcyfiJu40n1mMS
-	 6aKDYvy3WXBTkOuV1am69OaLdGqEb9mgSIT2rGW3s6Y0aaWSqBXMSnM6TUW4o8sBxc
-	 PIrqsE95wqXWnkE5eUdjwGG/qZHIL4hvYiagD4U3G/lHzlZfklRoYGcnP7mEMJPG8A
-	 8qQud8Ts0YPtRhFXbMt0XYqvhBnkg3PQLxdw7xZtnzYlBuaWq1O3CmtatF4DOMuHuN
-	 irR3jGvb3oO4ww3vccKCtqqOjKjlZLmBKMCDVK7UZHaefMcMXMaD278dxrCePj34Us
-	 LmG/XYFLz68Ig==
-Date: Wed, 21 Jan 2026 17:40:09 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vivian Wang <wangruikang@iscas.ac.cn>
-Cc: Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	"Creeley, Brett" <bcreeley@amd.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	Han Gao <gaohan@iscas.ac.cn>, linuxppc-dev@lists.ozlabs.org,
-	linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
-	linux-riscv@lists.infradead.org, sophgo@lists.linux.dev,
-	Thomas Gleixner <tglx@kernel.org>
-Subject: Re: [PATCH v2 1/4] PCI/MSI: Conservatively generalize no_64bit_msi
- into msi_addr_mask
-Message-ID: <20260121234009.GA1222599@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bmILtSDz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769039954; x=1800575954;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=LqnEp1wtZlAaOjJu7IJmTVX15uAhqFsWciuIQziDmkc=;
+  b=bmILtSDzkNeLe62HOWoxbpVJn5duXKFDnKQfYuWArUkeJb2geUmbBQfL
+   QyFKFWFI8ExxN+ZNVhxj5Zm9u5IubalYmrmim808RqqjK12Ikz6DY9i3n
+   4enk+sup40OkWtxZwAd4ADhrbo0+3csKPN9QWwd/H7FcZPIwyzDU6Fsm9
+   75AT0jT7Byr5WwW1/C2nlwZNX8WRWqc65/H7Z3a8RBOKmUZbzc54AT26Q
+   UW7HT8CCUjfJo4uVKTkneufqtoggjGm3LOnbLu+QzW2/9BfA0yX7JMHXz
+   1QSBfWBUrPtJXp5VewiSy6vFKKm1EGfSpvXHAdsKJLCCG5831E6l31xzz
+   Q==;
+X-CSE-ConnectionGUID: PMk3TkV8SDGmbeipiGuz/Q==
+X-CSE-MsgGUID: mB/czjwjRs6hivLu60bnGQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11678"; a="70330818"
+X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
+   d="scan'208";a="70330818"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 15:59:13 -0800
+X-CSE-ConnectionGUID: XgWtVWhcROaI55FUX92vLQ==
+X-CSE-MsgGUID: CHhFZhweSHqmPd+sQR7LTQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
+   d="scan'208";a="211432001"
+Received: from rchatre-mobl4.amr.corp.intel.com (HELO [10.125.108.97]) ([10.125.108.97])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 15:59:11 -0800
+Message-ID: <8a252e91-3895-447d-b54c-9ce006595204@intel.com>
+Date: Wed, 21 Jan 2026 16:59:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260121-pci-msi-addr-mask-v2-1-f42593168989@iscas.ac.cn>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 07/10] cxl: add host cache flush and multi-function
+ reset
+To: smadhavan@nvidia.com, dave@stgolabs.net, jonathan.cameron@huawei.com,
+ alison.schofield@intel.com, vishal.l.verma@intel.com, ira.weiny@intel.com,
+ dan.j.williams@intel.com, bhelgaas@google.com, ming.li@zohomail.com,
+ rrichter@amd.com, Smita.KoralahalliChannabasappa@amd.com,
+ linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: vaslot@nvidia.com, vsethi@nvidia.com, sdonthineni@nvidia.com,
+ vidyas@nvidia.com, mochs@nvidia.com, jsequeira@nvidia.com
+References: <20260120222610.2227109-1-smadhavan@nvidia.com>
+ <20260120222610.2227109-8-smadhavan@nvidia.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260120222610.2227109-8-smadhavan@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-[+cc Thomas]
 
-On Wed, Jan 21, 2026 at 11:49:37AM +0800, Vivian Wang wrote:
-> Some PCI devices have PCI_MSI_FLAGS_64BIT in the MSI capability, but
-> implement less than 64 address bits. This breaks on platforms where such
-> a device is assigned an MSI address higher than what's reachable.
+
+On 1/20/26 3:26 PM, smadhavan@nvidia.com wrote:
+> From: Srirangan Madhavan <smadhavan@nvidia.com>
 > 
-> Currently, we deal with this with a single no_64bit_msi flag, and
-> (notably on powerpc) forces 32-bit MSI address for these devices.
-> However, on some platforms the MSI doorbell address is above 32-bit but
-> within device ability.
+> Flush host CPU caches for mapped HDM ranges after teardown and prepare
+> sibling Type 2 functions on multi-function devices. The host cache
+> maintenance uses wbinvd_on_all_cpus() on x86 and VA-based PoC clean+
+> invalidate on arm64 via memremap() and on_each_cpu(), matching the
+> required ordering before reset.
 > 
-> As a first step to enabling MSI on those combinations of devices and
-> platforms, conservatively generalize the single-bit flag no_64bit_msi
-> into msi_addr_mask. (The name msi_addr_mask is chosen to avoid confusion
-> with msi_mask.)
-> 
-> The translation is essentially:
-> 
-> - no_64bit_msi = 1    ->    msi_addr_mask = DMA_BIT_MASK(32)
-> - no_64bit_msi = 0    ->    msi_addr_mask = DMA_BIT_MASK(64)
-> - if (no_64bit_msi)   ->    if (msi_addr_mask < DMA_BIT_MASK(64))
-> 
-> Since no values other than DMA_BIT_MASK(32) and DMA_BIT_MASK(64) is
-> used, no functional change is intended. Future patches that make use of
-> intermediate values of msi_addr_mask will follow, allowing devices that
-> cannot use full 64-bit addresses for MSI to work on platforms with MSI
-> doorbell above 32-bit address space.
-> 
-> Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
-> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 > ---
+>  drivers/cxl/pci.c | 150 +++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 148 insertions(+), 2 deletions(-)
 > 
-> v2: Minor rewording. No code changes.
-> 
-> checkpatch complains about the comment include/linux/pci.h, which I have
-> formatted similarly with other comments in the vicinity.
-> ---
->  arch/powerpc/platforms/powernv/pci-ioda.c           | 2 +-
->  arch/powerpc/platforms/pseries/msi.c                | 4 ++--
->  drivers/gpu/drm/radeon/radeon_irq_kms.c             | 2 +-
->  drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c | 2 +-
->  drivers/pci/msi/msi.c                               | 2 +-
->  drivers/pci/msi/pcidev_msi.c                        | 2 +-
->  drivers/pci/probe.c                                 | 7 +++++++
->  include/linux/pci.h                                 | 8 +++++++-
->  sound/hda/controllers/intel.c                       | 2 +-
->  9 files changed, 22 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index b0c1d9d16fb5..1c78fdfb7b03 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -1666,7 +1666,7 @@ static int __pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
->  		return -ENXIO;
->  
->  	/* Force 32-bit MSI on some broken devices */
-> -	if (dev->no_64bit_msi)
-> +	if (dev->msi_addr_mask < DMA_BIT_MASK(64))
->  		is_64 = 0;
->  
->  	/* Assign XIVE to PE */
-> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-> index a82aaa786e9e..7473c7ca1db0 100644
-> --- a/arch/powerpc/platforms/pseries/msi.c
-> +++ b/arch/powerpc/platforms/pseries/msi.c
-> @@ -383,7 +383,7 @@ static int rtas_prepare_msi_irqs(struct pci_dev *pdev, int nvec_in, int type,
->  	 */
->  again:
->  	if (type == PCI_CAP_ID_MSI) {
-> -		if (pdev->no_64bit_msi) {
-> +		if (pdev->msi_addr_mask < DMA_BIT_MASK(64)) {
->  			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
->  			if (rc < 0) {
->  				/*
-> @@ -409,7 +409,7 @@ static int rtas_prepare_msi_irqs(struct pci_dev *pdev, int nvec_in, int type,
->  		if (use_32bit_msi_hack && rc > 0)
->  			rtas_hack_32bit_msi_gen2(pdev);
->  	} else {
-> -		if (pdev->no_64bit_msi)
-> +		if (pdev->msi_addr_mask < DMA_BIT_MASK(64))
->  			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSIX_FN, nvec);
->  		else
->  			rc = rtas_change_msi(pdn, RTAS_CHANGE_MSIX_FN, nvec);
-> diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> index 9961251b44ba..d550554a6f3f 100644
-> --- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> +++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-> @@ -252,7 +252,7 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
->  	 */
->  	if (rdev->family < CHIP_BONAIRE) {
->  		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
-> -		rdev->pdev->no_64bit_msi = 1;
-> +		rdev->pdev->msi_addr_mask = DMA_BIT_MASK(32);
->  	}
->  
->  	/* force MSI on */
-> diff --git a/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c b/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c
-> index 70d86c5f52fb..0671deae9a28 100644
-> --- a/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c
-> +++ b/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c
-> @@ -331,7 +331,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  
->  #ifdef CONFIG_PPC64
->  	/* Ensure MSI/MSI-X interrupts lie within addressable physical memory */
-> -	pdev->no_64bit_msi = 1;
-> +	pdev->msi_addr_mask = DMA_BIT_MASK(32);
->  #endif
->  
->  	err = ionic_setup_one(ionic);
-> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-> index 34d664139f48..48f5f03d1479 100644
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
-> @@ -322,7 +322,7 @@ static int msi_verify_entries(struct pci_dev *dev)
->  {
->  	struct msi_desc *entry;
->  
-> -	if (!dev->no_64bit_msi)
-> +	if (dev->msi_addr_mask == DMA_BIT_MASK(64))
->  		return 0;
->  
->  	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
-> diff --git a/drivers/pci/msi/pcidev_msi.c b/drivers/pci/msi/pcidev_msi.c
-> index 5520aff53b56..0b0346813092 100644
-> --- a/drivers/pci/msi/pcidev_msi.c
-> +++ b/drivers/pci/msi/pcidev_msi.c
-> @@ -24,7 +24,7 @@ void pci_msi_init(struct pci_dev *dev)
->  	}
->  
->  	if (!(ctrl & PCI_MSI_FLAGS_64BIT))
-> -		dev->no_64bit_msi = 1;
-> +		dev->msi_addr_mask = DMA_BIT_MASK(32);
+> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+> index e4134162e82a..f9cc452ccb8a 100644
+> --- a/drivers/cxl/pci.c
+> +++ b/drivers/cxl/pci.c
+> @@ -11,6 +11,10 @@
+>  #include <linux/pci.h>
+>  #include <linux/aer.h>
+>  #include <linux/io.h>
+> +#include <linux/align.h>
+> +#include <linux/cache.h>
+> +#include <linux/cacheflush.h>
+> +#include <linux/smp.h>
+>  #include <cxl/mailbox.h>
+>  #include <cxl/pci.h>
+>  #include "cxlmem.h"
+> @@ -1085,6 +1089,71 @@ bool cxl_is_type2_device(struct pci_dev *pdev)
+>  	return cxlds->type == CXL_DEVTYPE_DEVMEM;
 >  }
->  
->  void pci_msix_init(struct pci_dev *dev)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 41183aed8f5d..a2bff57176a3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2047,6 +2047,13 @@ int pci_setup_device(struct pci_dev *dev)
->  	 */
->  	dev->dma_mask = 0xffffffff;
->  
-> +	/*
-> +	 * Assume 64-bit addresses for MSI initially. Will be changed to 32-bit
-> +	 * if MSI (rather than MSI-X) capability does not have
-> +	 * PCI_MSI_FLAGS_64BIT. Can also be overridden by driver.
-> +	 */
-> +	dev->msi_addr_mask = DMA_BIT_MASK(64);
+> 
+> +#ifdef CONFIG_ARM64
+
+Please figure out some arch common way to do this. Really do not want CONFIG_$ARCH ifdefs sprinkled all over CXL code. Also this ARCH specific code probably does not belong under CXL anyhow.
+
+DJ
+
+> +struct cxl_cache_flush_ctx {
+> +	void *va;
+> +	size_t len;
+> +};
 > +
->  	dev_set_name(&dev->dev, "%04x:%02x:%02x.%d", pci_domain_nr(dev->bus),
->  		     dev->bus->number, PCI_SLOT(dev->devfn),
->  		     PCI_FUNC(dev->devfn));
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 864775651c6f..0fe32fef0331 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -377,6 +377,13 @@ struct pci_dev {
->  					   0xffffffff.  You only need to change
->  					   this if your device has broken DMA
->  					   or supports 64-bit transfers.  */
-> +	u64		msi_addr_mask;	/* Mask of the bits of bus address for
-> +					   MSI that this device implements.
-> +					   Normally set based on device
-> +					   capabilities. You only need to
-> +					   change this if your device claims
-> +					   to support 64-bit MSI but implements
-> +					   fewer than 64 address bits. */
->  
->  	struct device_dma_parameters dma_parms;
->  
-> @@ -441,7 +448,6 @@ struct pci_dev {
->  
->  	unsigned int	is_busmaster:1;		/* Is busmaster */
->  	unsigned int	no_msi:1;		/* May not use MSI */
-> -	unsigned int	no_64bit_msi:1;		/* May only use 32-bit MSIs */
->  	unsigned int	block_cfg_access:1;	/* Config space access blocked */
->  	unsigned int	broken_parity_status:1;	/* Generates false positive parity */
->  	unsigned int	irq_reroute_variant:2;	/* Needs IRQ rerouting variant */
-> diff --git a/sound/hda/controllers/intel.c b/sound/hda/controllers/intel.c
-> index 1e8e3d61291a..c9542ebdf7e2 100644
-> --- a/sound/hda/controllers/intel.c
-> +++ b/sound/hda/controllers/intel.c
-> @@ -1905,7 +1905,7 @@ static int azx_first_init(struct azx *chip)
->  
->  	if (chip->msi && chip->driver_caps & AZX_DCAPS_NO_MSI64) {
->  		dev_dbg(card->dev, "Disabling 64bit MSI\n");
-> -		pci->no_64bit_msi = true;
-> +		pci->msi_addr_mask = DMA_BIT_MASK(32);
+> +static void cxl_flush_by_va_local(void *info)
+> +{
+> +	struct cxl_cache_flush_ctx *ctx = info;
+> +
+> +	dcache_clean_inval_poc((unsigned long)ctx->va,
+> +			       (unsigned long)ctx->va + ctx->len);
+> +	asm volatile("dsb ish" ::: "memory");
+> +}
+> +#endif
+> +
+> +static int cxl_region_flush_host_cpu_caches(struct device *dev, void *data)
+> +{
+> +	struct cxl_endpoint_decoder *cxled = to_cxl_endpoint_decoder(dev);
+> +	struct cxl_region *cxlr = cxled->cxld.region;
+> +	struct resource *res;
+> +
+> +	if (!is_endpoint_decoder(dev))
+> +		return 0;
+> +
+> +	if (!cxlr || !cxlr->params.res)
+> +		return 0;
+> +
+> +	res = cxlr->params.res;
+> +
+> +#ifdef CONFIG_X86
+> +	static bool flushed;
+> +
+> +	if (!flushed) {
+> +		wbinvd_on_all_cpus();
+> +		flushed = true;
+> +	}
+> +#elif defined(CONFIG_ARM64)
+> +	void *va;
+> +	size_t len, line_size = L1_CACHE_BYTES;
+> +	phys_addr_t start, end, aligned_start, aligned_end;
+> +	struct cxl_cache_flush_ctx flush_ctx;
+> +
+> +	start = res->start;
+> +	end = res->end;
+> +
+> +	aligned_start = ALIGN_DOWN(start, line_size);
+> +	aligned_end = ALIGN(end + 1, line_size);
+> +	len = aligned_end - aligned_start;
+> +
+> +	va = memremap(aligned_start, len, MEMREMAP_WB);
+> +	if (!va) {
+> +		pr_warn("Failed to map region for cache flush\n");
+> +		return 0;
+> +	}
+> +
+> +	flush_ctx.va = va;
+> +	flush_ctx.len = len;
+> +	on_each_cpu(cxl_flush_by_va_local, &flush_ctx, 1);
+> +
+> +	memunmap(va);
+> +#endif
+> +	return 0;
+> +}
+> +
+>  static int cxl_check_region_driver_bound(struct device *dev, void *data)
+>  {
+>  	struct cxl_decoder *cxld = to_cxl_decoder(dev);
+> @@ -1245,6 +1314,9 @@ static int cxl_reset_prepare_memdev(struct pci_dev *pdev)
+>  		return rc;
 >  	}
->  
->  	pci_set_master(pci);
 > 
-> -- 
-> 2.52.0
+> +	device_for_each_child(&endpoint->dev, NULL,
+> +			      cxl_region_flush_host_cpu_caches);
+> +
+>  	/* Keep cxl_region_rwsem held, released by cleanup function */
+>  	return 0;
+>  }
+> @@ -1259,12 +1331,79 @@ static void cxl_reset_cleanup_memdev(struct pci_dev *pdev)
+>  		up_write(&cxl_region_rwsem);
+>  }
 > 
+> +static int cxl_reset_prepare_all_functions(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *func_dev;
+> +	unsigned int devfn;
+> +	int func, rc;
+> +	struct pci_dev *prepared_funcs[8] = { NULL };
+> +	int prepared_count = 0;
+> +
+> +	for (func = 0; func < 8; func++) {
+> +		devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), func);
+> +
+> +		if (devfn == pdev->devfn)
+> +			continue;
+> +
+> +		func_dev = pci_get_slot(pdev->bus, devfn);
+> +		if (!func_dev)
+> +			continue;
+> +
+> +		if (!cxl_is_type2_device(func_dev)) {
+> +			pci_dev_put(func_dev);
+> +			continue;
+> +		}
+> +
+> +		rc = cxl_reset_prepare_memdev(func_dev);
+> +		if (rc) {
+> +			pci_dev_put(func_dev);
+> +			goto cleanup_funcs;
+> +		}
+> +
+> +		prepared_funcs[prepared_count++] = func_dev;
+> +	}
+> +
+> +	return 0;
+> +
+> +cleanup_funcs:
+> +	for (func = 0; func < prepared_count; func++) {
+> +		if (prepared_funcs[func]) {
+> +			cxl_reset_cleanup_memdev(prepared_funcs[func]);
+> +			pci_dev_put(prepared_funcs[func]);
+> +		}
+> +	}
+> +	return rc;
+> +}
+> +
+> +static void cxl_reset_cleanup_all_functions(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *func_dev;
+> +	unsigned int devfn;
+> +	int func;
+> +
+> +	for (func = 0; func < 8; func++) {
+> +		devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), func);
+> +
+> +		if (devfn == pdev->devfn)
+> +			continue;
+> +
+> +		func_dev = pci_get_slot(pdev->bus, devfn);
+> +		if (!func_dev)
+> +			continue;
+> +
+> +		if (cxl_is_type2_device(func_dev))
+> +			cxl_reset_cleanup_memdev(func_dev);
+> +
+> +		pci_dev_put(func_dev);
+> +	}
+> +}
+> +
+>  /**
+>   * cxl_reset_prepare_device - Prepare CXL device for reset
+>   * @pdev: PCI device being reset
+>   *
+>   * CXL-reset-specific preparation. Validates memory is offline, flushes
+> - * device caches, and tears down regions.
+> + * device caches, and tears down regions for device and siblings.
+>   *
+>   * Returns: 0 on success, -EBUSY if memory online, negative on error
+>   */
+> @@ -1283,6 +1422,12 @@ int cxl_reset_prepare_device(struct pci_dev *pdev)
+>  		return rc;
+>  	}
+> 
+> +	rc = cxl_reset_prepare_all_functions(pdev);
+> +	if (rc) {
+> +		cxl_reset_cleanup_memdev(pdev);
+> +		return rc;
+> +	}
+> +
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_reset_prepare_device, "CXL");
+> @@ -1291,10 +1436,11 @@ EXPORT_SYMBOL_NS_GPL(cxl_reset_prepare_device, "CXL");
+>   * cxl_reset_cleanup_device - Cleanup after CXL reset
+>   * @pdev: PCI device that was reset
+>   *
+> - * Releases region locks held during reset.
+> + * Releases region locks for device and all sibling functions.
+>   */
+>  void cxl_reset_cleanup_device(struct pci_dev *pdev)
+>  {
+> +	cxl_reset_cleanup_all_functions(pdev);
+>  	cxl_reset_cleanup_memdev(pdev);
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_reset_cleanup_device, "CXL");
+> --
+> 2.34.1
+> 
+
