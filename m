@@ -1,135 +1,168 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27DB644103D;
-	Wed, 21 Jan 2026 22:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B4A344D6B1;
+	Wed, 21 Jan 2026 22:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769034759; cv=none; b=Ko3BxVqnIryXOoHR9PaNlTZJY70FPaQvGnT/Ca+8A0OEkChTwW1cTyQ9o5rV75pxNDFYX38vt7Vw2BE44fKV7jaxQAQ+6FrtP1ALg9rxrpW7/YFYoe5qog6h+69XPdECvKG+hV7S5wVYzN68XHE1SOkIT5LRtOMfdsRHkg3Pgc0=
+	t=1769035212; cv=none; b=Mrp6WqWi9Sk3tsgdwUG6gZ3YvmFtrsXBXKyKtnQypH2svZscqe0ohRHferh3m8jw8/ltGIVL/oH2INBfvG4Jb0TBPKWA/Y4YWL70hNk6ZfDN0zt0P4ingc4hsVMkQvwIo6Nl0DumJejYmukthXfMuOmdIFWTDtabrF1y4Qp9Z7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769034759; c=relaxed/simple;
-	bh=CANHRjZzXJnK31dIt3IF+oh9BpdgBGk7iy4AtE1Ext0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U5NovssbsAisF2ul3saY1Py74tA5nVGLE3/qu0wrW8y/6aQdtjHO49EWmhoWYlQ4Pz8KHM21InzrHJKlr7icrMJl6DrEzdmOgu4AIq72izWLRZrtYBeS5od7h84MBFpiWtKjN/TNNhui0S+kI9/Xmd1qw/T+/Y1IXYcVjDnmLPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=R59Mlvcf; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1769035212; c=relaxed/simple;
+	bh=1OoQzValVImfU4Ve7dxAJHD/4yHyWo6CASzhgZCF7DI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=iMCtXnvv+WTAMDqzPjvG08EBc6Vy3GUEZzDYfTwA28fVf9Z+pgcZFATprnTEQUr8PXom+GwXe6jwOCSapfOFV6EeKkFzXRPNn72dNoMJHZ2DW5CcBHTH6ZzkTzG4gjVOhLd+Y/HvcOYVxdaDviD3bMcHmfGan8wq9yEgRVbDpwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tAsU31bZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="R59Mlvcf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769034756; x=1800570756;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=CANHRjZzXJnK31dIt3IF+oh9BpdgBGk7iy4AtE1Ext0=;
-  b=R59MlvcfUPPLLS2kVzsN44Z/ssXMAccHGV6so774iRjaq7xso1szrCKi
-   uNBpVocx2H1o6KGidW5kv+I+ko7RLZG9jwl9oX3zlGvuE5XzQwxxOKqrM
-   tI6Pr40paKaCEtyfdxg/LiWhH9St8ty6I57+tVYRvwMsGtJpOGgZp4TCR
-   hxTmvvl9V4m74M2c0QKWwZybIO6eeLDP8DWqxQa8rw0aaAiugw8suSydy
-   1tSRQ8g33Yt/qHLE5U+npbirOoP1UBxVV809JvctRuN76cm0dWmr4AT9O
-   Y0b0DYv4WCxP2L6k7oAj+5Ex5BJoIRkQ0B5xEHCERZWVTs1WEd56fWgrY
-   A==;
-X-CSE-ConnectionGUID: c4bnDXpFSuSVkK/2w+btJQ==
-X-CSE-MsgGUID: UhVYl+99T/KW2MUUR+4NmA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11678"; a="87686366"
-X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
-   d="scan'208";a="87686366"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 14:32:30 -0800
-X-CSE-ConnectionGUID: R4HaSctiQ/uIwh/Vixe5ng==
-X-CSE-MsgGUID: ExJTtxY8SweOsGjgsnzufg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
-   d="scan'208";a="205698725"
-Received: from rchatre-mobl4.amr.corp.intel.com (HELO [10.125.108.97]) ([10.125.108.97])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 14:32:28 -0800
-Message-ID: <a0719ccc-4f2e-4b17-9361-a0759b1fca08@intel.com>
-Date: Wed, 21 Jan 2026 15:32:27 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tAsU31bZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AF23C16AAE;
+	Wed, 21 Jan 2026 22:40:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769035211;
+	bh=1OoQzValVImfU4Ve7dxAJHD/4yHyWo6CASzhgZCF7DI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=tAsU31bZ14z3HVxV9JhfXTUzh4G8EiJKfz4H+Hyuyz2yYEaPl8L429ILJXWLJdCk3
+	 naZ63mft2iU23O3TTZnKMI7sUA43UtdaCcIC42kkiQfOBYm7dhiLEj0vAECbQ59cd0
+	 EmH8WuKsT+pSiq7esKrxnrK/MN6gXKDg6wcDX6Wgjp91Wy9P16USk/kUHNPAimB5Za
+	 oJy8lai5Gfz4weybDk0TBqPBfdkzETGGhEIZ+iQspzeTblliaFm99c0KJv17H4QX4q
+	 oyAwpdWcYxA/TlXSUm6gpncy3SO3g8qFUK2mvIz7eyudKFdhHrSiLn+99zYC0G6D+b
+	 SZJ0sk+69FpIQ==
+Date: Wed, 21 Jan 2026 16:40:10 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?SMOla29u?= Bugge <haakon.bugge@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Johannes Thumshirn <morbidrsa@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Initialize RCB from pci_configure_device
+Message-ID: <20260121224010.GA1217051@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 09/10] PCI: save/restore CXL config around reset
-To: smadhavan@nvidia.com, dave@stgolabs.net, jonathan.cameron@huawei.com,
- alison.schofield@intel.com, vishal.l.verma@intel.com, ira.weiny@intel.com,
- dan.j.williams@intel.com, bhelgaas@google.com, ming.li@zohomail.com,
- rrichter@amd.com, Smita.KoralahalliChannabasappa@amd.com,
- huaisheng.ye@intel.com, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: vaslot@nvidia.com, vsethi@nvidia.com, sdonthineni@nvidia.com,
- vidyas@nvidia.com, mochs@nvidia.com, jsequeira@nvidia.com
-References: <20260120222610.2227109-1-smadhavan@nvidia.com>
- <20260120222610.2227109-10-smadhavan@nvidia.com>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260120222610.2227109-10-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260121113544.4163457-2-haakon.bugge@oracle.com>
 
-
-
-On 1/20/26 3:26 PM, smadhavan@nvidia.com wrote:
-> From: Srirangan Madhavan <smadhavan@nvidia.com>
+On Wed, Jan 21, 2026 at 12:35:40PM +0100, Håkon Bugge wrote:
+> Commit e42010d8207f ("PCI: Set Read Completion Boundary to 128 iff
+> Root Port supports it (_HPX)") fixed a bogus _HPX type 2 record, which
+> instructed program_hpx_type2() to set the RCB in an endpoint,
+> although it's RC did not have the RCB bit set.
 > 
-> Save PCI and CXL configuration state before cxl_reset and restore it
-> after reset completes. This preserves DVSEC state alongside standard
-> PCI state and avoids losing reset-sensitive CXL configuration.
-
-Instead of putting dependency on the cxl core, maybe just move the code in the previous patch here since it's just a few lines of config read/writes. But an explanation of why the DVSEC needs to be preserved on the device regardless of whether a driver is present is needed in the commit log.
-
-DJ
-
-
+> e42010d8207f fixed that by qualifying the setting of the RCB in the
+> endpoint with the RC supporting an 128 byte RCB.
 > 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> In retrospect, the program_hpx_type2() should only modify the AER
+> bits, and stay away from fiddling with the Link Control Register.
+> 
+> Hence, we explicitly program the RCB from pci_configure_device(). RCB
+> is RO in Root Ports, and in VFs, the bit is RsvdP, so for these two
+> cases we skip programming it. Then, if the Root Port has RCB set and
+> it is not set in the EP, we set it.
+> 
+> Fixes: Commit e42010d8207f ("PCI: Set Read Completion Boundary to 128 iff Root Port supports it (_HPX)")
+> Signed-off-by: Håkon Bugge <haakon.bugge@oracle.com>
+> 
 > ---
->  drivers/pci/pci.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 18047c893b0c..0bc85c4cc5fd 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4960,6 +4960,7 @@ static int cxl_reset_init(struct pci_dev *dev, u16 dvsec)
->   */
->  static int cxl_reset(struct pci_dev *dev, bool probe)
->  {
-> +	struct cxl_type2_saved_state cxl_state;
->  	u16 dvsec, reg;
->  	int rc;
+> Note, that the current duplication of pcie_root_rcb_set() will be
+> removed in the next commit.
+> ---
+>  drivers/pci/probe.c | 36 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 36 insertions(+)
 > 
-> @@ -4989,6 +4990,11 @@ static int cxl_reset(struct pci_dev *dev, bool probe)
->  	if (probe)
->  		return 0;
-> 
-> +	pci_save_state(dev);
-> +	rc = cxl_config_save_state(dev, &cxl_state);
-> +	if (rc)
-> +		pci_warn(dev, "Failed to save CXL config state: %d\n", rc);
-> +
->  	/*
->  	 * CXL-reset-specific preparation: validate memory offline,
->  	 * tear down regions, flush device caches.
-> @@ -5004,10 +5010,16 @@ static int cxl_reset(struct pci_dev *dev, bool probe)
->  	if (rc)
->  		goto out_cleanup;
-> 
-> +	pci_restore_state(dev);
-> +	rc = cxl_config_restore_state(dev, &cxl_state);
-> +	if (rc)
-> +		pci_warn(dev, "Failed to restore CXL config state: %d\n", rc);
-> +
->  	cxl_reset_cleanup_device(dev);
->  	return 0;
-> 
->  out_cleanup:
-> +	pci_restore_state(dev);
->  	cxl_reset_cleanup_device(dev);
->  	return rc;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 41183aed8f5d9..347af29868124 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2410,6 +2410,41 @@ static void pci_configure_serr(struct pci_dev *dev)
+>  	}
 >  }
-> --
-> 2.34.1
-> 
+>  
+> +static bool pcie_root_rcb_set(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *rp = pcie_find_root_port(dev);
+> +	u16 lnkctl;
+> +
+> +	if (!rp)
+> +		return false;
+> +
+> +	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
+> +
+> +	return !!(lnkctl & PCI_EXP_LNKCTL_RCB);
+> +}
+> +
+> +static void pci_configure_rcb(struct pci_dev *dev)
+> +{
+> +	/*
+> +	 * Obviously, we need a Link Control register. The RCB is RO
+> +	 * in Root Ports, so no need to attempt to set it for
+> +	 * them. For VFs, the RCB is RsvdP, so, no need to set it.
+> +	 * Then, if the Root Port has RCB set, then we set for the EP
+> +	 * unless already set.
+> +	 */
+> +	if (pcie_cap_has_lnkctl(dev) &&
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
+> +	    !dev->is_virtfn && pcie_root_rcb_set(dev)) {
+> +		u16 lnkctl;
+> +
+> +		pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
+> +		if (lnkctl & PCI_EXP_LNKCTL_RCB)
+> +			return;
+> +
+> +		pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnkctl | PCI_EXP_LNKCTL_RCB);
+> +	}
 
+RCB isn't meaningful for switches, so we'll read their LNKCTL
+unnecessarily.  I propose something like this, which also clears RCB
+if it's set when it shouldn't be (I think this would indicate a
+firmware defect):
+
+        /*
+         * Per PCIe r7.0, sec 7.5.3.7, RCB is only meaningful in Root Ports
+         * (where it is read-only), Endpoints, and Bridges.  It may only be
+         * set for Endpoints and Bridges if it is set in the Root Port.
+         */
+        if (!pci_is_pcie(dev) ||
+            pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+            pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM ||
+            pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
+            dev->is_virtfn)
+                return;
+
+        rcb = pcie_root_rcb_set(dev);
+
+        pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
+        if (rcb) {
+                if (lnkctl & PCI_EXP_LNKCTL_RCB)
+                        return;
+
+                lnkctl |= PCI_EXP_LNKCTL_RCB;
+        } else {
+                if (!(lnkctl & PCI_EXP_LNKCTL_RCB))
+                        return;
+
+                pci_info(FW_INFO "clearing RCB (RCB not set in Root Port)\n");
+                lnkctl &= ~PCI_EXP_LNKCTL_RCB;
+        }
+
+        pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnkctl);
+
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)
+>  {
+>  	pci_configure_mps(dev);
+> @@ -2419,6 +2454,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>  	pci_configure_aspm_l1ss(dev);
+>  	pci_configure_eetlp_prefix(dev);
+>  	pci_configure_serr(dev);
+> +	pci_configure_rcb(dev);
+>  
+>  	pci_acpi_program_hp_params(dev);
+>  }
+> -- 
+> 2.43.5
+> 
