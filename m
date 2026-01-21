@@ -1,356 +1,211 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5FC82DE704;
-	Wed, 21 Jan 2026 10:02:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A22003D3486;
+	Wed, 21 Jan 2026 10:03:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768989769; cv=none; b=LRJ1B6SEceAM3s4MrKIQJiRx4J6qVwA7eZFJyaryLPix0ym/AT/aRj0CoyypM4cxxfQ1blwnNV7f6yhJZdpoR0qTQk83w1JrHqW+eqIT/bR9V5l/KQ0pD0zOeRRpO2E2fFKVp1Z2NQ+vjyCg2BtQFVOrH+vxlm73MLnSuFyIOJk=
+	t=1768989796; cv=none; b=Fck3q7qcVr1hGLjosYRJgDkKPNKfZfbmIT3PkPbq87D4hDqwceYn0+Zj9wD5PhTbL1YB0Omak3oTowDvipEQsdUD+uiD3b+e2mmemCF7thb4BtU85MEgu6+ovCJJSCJujn3IOoZop5yYco9SmfNwMPSNrGRms6i+eFSmv+IfQfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768989769; c=relaxed/simple;
-	bh=5x1yWRMZo6Yjnl9EgGnZ48kgw7u1ZpJ/OyNDBks1Pvc=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=d8KHs3QO/SAlWb3QWJPWdoCU3B0IPpagopD5GSWkoqX3zljQNmfbF6eH6BErOBcFsJuiv1lnGU9s1nRxOIOwFd3CguYp4pbIDKREtnO4md24PGV964x+mwH1uUMCySYloX1an9WG4KdbphCpptH3zQwNtW3OLfMDG66B7ef+WW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JVEJayuw; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JVEJayuw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768989767; x=1800525767;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=5x1yWRMZo6Yjnl9EgGnZ48kgw7u1ZpJ/OyNDBks1Pvc=;
-  b=JVEJayuwxMWMB7auObJXx3n2zE4vmNW4O5Jw71TTieFSUOuUou7+AY1S
-   LOXD9qtT3LLKQ9q0rc+7FgQsnXfxDqQy+8qIr8mzO6+9HH92pu7pqvg8J
-   Qc1mJHXik6RxDS5Kyj7GwuJU4f5eec/ZrI5vos8cUSK8mldnEXSh+5Qqr
-   Nt/76DeWsTZmVhazZ5CvyCCtA0nZK321+ZZSmpCcl3KTAqKIgnBbo+8HF
-   +hfbwfDaJngGFA0xGapiua41DA4ujalZM2DxZzqEh2rBbXe3LCnMWgzL4
-   JtJ1jvFsTpPtgntuQZKKzO4iQiXvtldynz9V7A0aN+qW3kx183rZeJUAC
-   w==;
-X-CSE-ConnectionGUID: XYTaaiw8TsiIBOLUSjfwdw==
-X-CSE-MsgGUID: B+1Y6qztQTSq6KIji123rg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="87625897"
-X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
-   d="scan'208";a="87625897"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 02:02:46 -0800
-X-CSE-ConnectionGUID: CPohdRaPRjGLk71wGPUZ9A==
-X-CSE-MsgGUID: EWgQ+mAZSQa/dfE6ACW4Gg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
-   d="scan'208";a="206643649"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.108])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 02:02:39 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 21 Jan 2026 12:02:35 +0200 (EET)
-To: =?ISO-8859-15?Q?Ville_Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
-cc: =?ISO-8859-15?Q?Alex_Benn=E9e?= <alex.bennee@linaro.org>, 
-    Simon Richter <Simon.Richter@hogyros.de>, 
-    Lucas De Marchi <lucas.demarchi@intel.com>, 
-    Alex Deucher <alexander.deucher@amd.com>, amd-gfx@lists.freedesktop.org, 
-    Bjorn Helgaas <bhelgaas@google.com>, David Airlie <airlied@gmail.com>, 
-    dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
-    intel-xe@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>, 
-    Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
-    linux-pci@vger.kernel.org, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-    Simona Vetter <simona@ffwll.ch>, Tvrtko Ursulin <tursulin@ursulin.net>, 
-    =?ISO-8859-15?Q?Christian_K=F6nig?= <christian.koenig@amd.com>, 
-    =?ISO-8859-15?Q?Thomas_Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>, 
-    =?ISO-8859-2?Q?Micha=B3_Winiarski?= <michal.winiarski@intel.com>, 
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 06/11] PCI: Fix restoring BARs on BAR resize rollback
- path
-In-Reply-To: <aW_w1oFQCzUxGYtu@intel.com>
-Message-ID: <bf1ece5f-07dd-31e7-db0d-40dfa8ebf7b7@linux.intel.com>
-References: <20251113162628.5946-1-ilpo.jarvinen@linux.intel.com> <20251113162628.5946-7-ilpo.jarvinen@linux.intel.com> <aW_w1oFQCzUxGYtu@intel.com>
+	s=arc-20240116; t=1768989796; c=relaxed/simple;
+	bh=SJDG0zKTxQAYGuRzI2QN/I/f6dS+vRmyBTh9Gqbke2k=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jVaOwA6MbEvwPKFdYsB4tzH6mG6R/tprMsnESCXPm11jIF1ilblCs9oa7D+SlH43H0LQbNI1MWbGs8qIznRrbjrkngiM8FEUI+7nZuBJsQBCCEsRwKkINE1XW/IY0+21juXn5FFjtRbX/kzG0wTJyfUTuBFUKoz+63gPLITsfzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dx09m32w0zHnHCX;
+	Wed, 21 Jan 2026 18:02:36 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id E48EE40570;
+	Wed, 21 Jan 2026 18:03:09 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 21 Jan
+ 2026 10:03:09 +0000
+Date: Wed, 21 Jan 2026 10:03:07 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+CC: Nicolin Chen <nicolinc@nvidia.com>, "jgg@nvidia.com" <jgg@nvidia.com>,
+	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
+	<robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>, "joro@8bytes.org"
+	<joro@8bytes.org>, "praan@google.com" <praan@google.com>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "iommu@lists.linux.dev"
+	<iommu@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>
+Subject: Re: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
+Message-ID: <20260121100307.00004e60@huawei.com>
+In-Reply-To: <BL1PR11MB5271F0BDC68C2D7F172122E98C96A@BL1PR11MB5271.namprd11.prod.outlook.com>
+References: <cover.1768624180.git.nicolinc@nvidia.com>
+	<d1768bb6384050a23769f20ca28216f520f77e26.1768624181.git.nicolinc@nvidia.com>
+	<BL1PR11MB5271F0BDC68C2D7F172122E98C96A@BL1PR11MB5271.namprd11.prod.outlook.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-237514233-1768987075=:1033"
-Content-ID: <c081b2b9-396b-b5f8-3d52-7b064a7fde28@linux.intel.com>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Wed, 21 Jan 2026 08:01:36 +0000
+"Tian, Kevin" <kevin.tian@intel.com> wrote:
 
---8323328-237514233-1768987075=:1033
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <42d4d565-d15f-b9b5-c51a-da0923ea45e4@linux.intel.com>
+> +Dan. I recalled an offline discussion in which he raised concern on
+> having the kernel blindly enable ATS for cxl.cache device instead of
+> creating a knob for admin to configure from userspace (in case
+> security is viewed more important than functionality, upon allowing
+> DMA to read data out of CPU caches)...
+> 
 
-On Tue, 20 Jan 2026, Ville Syrj=E4l=E4 wrote:
++CC Linux-cxl
 
-> On Thu, Nov 13, 2025 at 06:26:23PM +0200, Ilpo J=E4rvinen wrote:
-> > BAR resize operation is implemented in the pci_resize_resource() and
-> > pbus_reassign_bridge_resources() functions. pci_resize_resource() can
-> > be called either from __resource_resize_store() from sysfs or directly
-> > by the driver for the Endpoint Device.
-> >=20
-> > The pci_resize_resource() requires that caller has released the device
-> > resources that share the bridge window with the BAR to be resized as
-> > otherwise the bridge window is pinned in place and cannot be changed.
-> >=20
-> > pbus_reassign_bridge_resources() implement rollback of the resources if
-> > the resize operation fails, but rollback is performed only for the
-> > bridge windows. Because releasing the device resources are done by the
-> > caller of the BAR resize interface, these functions performing the BAR
-> > resize do not have access to the device resources as they were before
-> > the resize.
-> >=20
-> > pbus_reassign_bridge_resources() could try to
-> > __pci_bridge_assign_resources() after rolling back the bridge windows
-> > as they were, however, it will not guarantee the resource are assigned
-> > due to differences how FW and the kernel may want to assign the
-> > resources (alignment of the start address and tail).
-> >=20
-> > In order to perform rollback robustly, the BAR resize interface has to
-> > be altered to also release the device resources that share the bridge
-> > window with the BAR to be resized.
-> >=20
-> > Also, remove restoring from the entries failed list as saved list
-> > should now contain both the bridge windows and device resources so
-> > the extra restore is duplicated work.
-> >=20
-> > Some drivers (currently only amdgpu) want to prevent releasing some
-> > resources. Add exclude_bars param to pci_resize_resource() and make
-> > amdgpu to pass its register BAR (BAR 5) which should never be released
-> > during resize operation. Normally 64-bit prefetchable resources do not
-> > share bridge window with it as the register BAR (32-bit only) but there
-> > are various fallbacks in the resource assignment logic which may make
-> > the resources to share the bridge window in rare cases.
-> >=20
-> > This change (together with the driver side changes) is to counter the
-> > resource releases that had to be done to prevent resource tree
-> > corruption in the ("PCI: Release assigned resource before restoring
-> > them") change. As such, it likely restores functionality in cases where
-> > device resources were released to avoid resource tree conflicts which
-> > appeared to be "working" when such conflicts were not correctly
-> > detected by the kernel.
->=20
-> This thing completely broke my DG2 + non-reBAR system.  The bisect
-> points to commit 4efaa80b3d75 ("drm/i915: Remove driver side BAR
-> release before resize") but the real problems seem to be in this
-> patch. A had a quick look at the code and spotted a few issues...
->=20
-> <snip>
-> > @@ -2468,34 +2466,78 @@ int pbus_reassign_bridge_resources(struct pci_b=
-us *bus, struct resource *res)
-> >  =09=09free_list(&added);
-> > =20
-> >  =09if (!list_empty(&failed)) {
-> > -=09=09if (pci_required_resource_failed(&failed, type)) {
-> > +=09=09if (pci_required_resource_failed(&failed, type))
-> >  =09=09=09ret =3D -ENOSPC;
-> > -=09=09=09goto cleanup;
-> > -=09=09}
-> > -=09=09/* Only resources with unrelated types failed (again) */
-> >  =09=09free_list(&failed);
-> > +=09=09if (ret)
-> > +=09=09=09return ret;
+Jonathan
+
+
+> > From: Nicolin Chen <nicolinc@nvidia.com>
+> > Sent: Saturday, January 17, 2026 12:57 PM
+> > 
+> > Controlled by the IOMMU driver, ATS is usually enabled "on demand", when
+> > a
+> > device requests a translation service from its associated IOMMU HW running
+> > on the channel of a given PASID. This is working even when a device has no
+> > translation on its RID, i.e. RID is IOMMU bypassed.
+> > 
+> > On the other hand, certain PCIe device requires non-PASID ATS, when its RID
+> > stream is IOMMU bypassed. Call this "always on".
+> > 
+> > For instance, the CXL spec notes in "3.2.5.13 Memory Type on CXL.cache":
+> > "To source requests on CXL.cache, devices need to get the Host Physical
+> >  Address (HPA) from the Host by means of an ATS request on CXL.io."
+> > In other word, the CXL.cache capability relies on ATS. Otherwise, it won't
+> > have access to the host physical memory.
+> > 
+> > Introduce a new pci_ats_always_on() for IOMMU driver to scan a PCI device,
+> > to shift ATS policies between "on demand" and "always on".
+> > 
+> > Add the support for CXL.cache devices first. Non-CXL devices will be added
+> > in quirks.c file.
+> > 
+> > Suggested-by: Vikram Sethi <vsethi@nvidia.com>
+> > Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
+> > Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+> > ---
+> >  include/linux/pci-ats.h       |  3 +++
+> >  include/uapi/linux/pci_regs.h |  5 ++++
+> >  drivers/pci/ats.c             | 44 +++++++++++++++++++++++++++++++++++
+> >  3 files changed, 52 insertions(+)
+> > 
+> > diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+> > index 75c6c86cf09d..d14ba727d38b 100644
+> > --- a/include/linux/pci-ats.h
+> > +++ b/include/linux/pci-ats.h
+> > @@ -12,6 +12,7 @@ int pci_prepare_ats(struct pci_dev *dev, int ps);
+> >  void pci_disable_ats(struct pci_dev *dev);
+> >  int pci_ats_queue_depth(struct pci_dev *dev);
+> >  int pci_ats_page_aligned(struct pci_dev *dev);
+> > +bool pci_ats_always_on(struct pci_dev *dev);
+> >  #else /* CONFIG_PCI_ATS */
+> >  static inline bool pci_ats_supported(struct pci_dev *d)
+> >  { return false; }
+> > @@ -24,6 +25,8 @@ static inline int pci_ats_queue_depth(struct pci_dev *d)
+> >  { return -ENODEV; }
+> >  static inline int pci_ats_page_aligned(struct pci_dev *dev)
+> >  { return 0; }
+> > +static inline bool pci_ats_always_on(struct pci_dev *dev)
+> > +{ return false; }
+> >  #endif /* CONFIG_PCI_ATS */
+> > 
+> >  #ifdef CONFIG_PCI_PRI
+> > diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> > index 3add74ae2594..84da6d7645a3 100644
+> > --- a/include/uapi/linux/pci_regs.h
+> > +++ b/include/uapi/linux/pci_regs.h
+> > @@ -1258,6 +1258,11 @@
+> >  #define PCI_DVSEC_CXL_PORT_CTL				0x0c
+> >  #define PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR		0x00000001
+> > 
+> > +/* CXL 2.0 8.1.3: PCIe DVSEC for CXL Device */
+> > +#define CXL_DVSEC_PCIE_DEVICE				0
+> > +#define   CXL_DVSEC_CAP_OFFSET				0xA
+> > +#define     CXL_DVSEC_CACHE_CAPABLE			BIT(0)
 > > +
-> > +=09=09/* Only resources with unrelated types failed (again) */
-> >  =09}
-> > =20
-> > -=09list_for_each_entry(dev_res, &saved, list) {
-> > +=09list_for_each_entry(dev_res, saved, list) {
-> >  =09=09struct pci_dev *dev =3D dev_res->dev;
-> > =20
-> >  =09=09/* Skip the bridge we just assigned resources for */
-> >  =09=09if (bridge =3D=3D dev)
-> >  =09=09=09continue;
-> > =20
-> > +=09=09if (!dev->subordinate)
-> > +=09=09=09continue;
-> > +
-> >  =09=09pci_setup_bridge(dev->subordinate);
-> >  =09}
-> > =20
-> > -=09free_list(&saved);
-> > -=09up_read(&pci_bus_sem);
-> >  =09return 0;
-> > +}
-> > =20
-> > -cleanup:
-> > -=09/* Restore size and flags */
-> > -=09list_for_each_entry(dev_res, &failed, list)
-> > -=09=09restore_dev_resource(dev_res);
-> > -=09free_list(&failed);
-> > +int pci_do_resource_release_and_resize(struct pci_dev *pdev, int resno=
-, int size,
-> > +=09=09=09=09       int exclude_bars)
+> >  /* Integrity and Data Encryption Extended Capability */
+> >  #define PCI_IDE_CAP			0x04
+> >  #define  PCI_IDE_CAP_LINK		0x1  /* Link IDE Stream Supported */
+> > diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> > index ec6c8dbdc5e9..1795131f0697 100644
+> > --- a/drivers/pci/ats.c
+> > +++ b/drivers/pci/ats.c
+> > @@ -205,6 +205,50 @@ int pci_ats_page_aligned(struct pci_dev *pdev)
+> >  	return 0;
+> >  }
+> > 
+> > +/*
+> > + * CXL r4.0, sec 3.2.5.13 Memory Type on CXL.cache notes: to source
+> > requests on
+> > + * CXL.cache, devices need to get the Host Physical Address (HPA) from the
+> > Host
+> > + * by means of an ATS request on CXL.io.
+> > + *
+> > + * In other world, CXL.cache devices cannot access physical memory
+> > without ATS.
+> > + */
+> > +static bool pci_cxl_ats_always_on(struct pci_dev *pdev)
 > > +{
-> > +=09struct resource *res =3D pci_resource_n(pdev, resno);
-> > +=09struct pci_dev_resource *dev_res;
-> > +=09struct pci_bus *bus =3D pdev->bus;
-> > +=09struct resource *b_win, *r;
-> > +=09LIST_HEAD(saved);
-> > +=09unsigned int i;
-> > +=09int ret =3D 0;
+> > +	int offset;
+> > +	u16 cap;
 > > +
-> > +=09b_win =3D pbus_select_window(bus, res);
-> > +=09if (!b_win)
-> > +=09=09return -EINVAL;
+> > +	offset = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
+> > +					   CXL_DVSEC_PCIE_DEVICE);
+> > +	if (!offset)
+> > +		return false;
 > > +
-> > +=09pci_dev_for_each_resource(pdev, r, i) {
-> > +=09=09if (i >=3D PCI_BRIDGE_RESOURCES)
-> > +=09=09=09break;
+> > +	pci_read_config_word(pdev, offset + CXL_DVSEC_CAP_OFFSET,
+> > &cap);
+> > +	if (cap & CXL_DVSEC_CACHE_CAPABLE)
+> > +		return true;
 > > +
-> > +=09=09if (exclude_bars & BIT(i))
-> > +=09=09=09continue;
-> > =20
-> > +=09=09if (b_win !=3D pbus_select_window(bus, r))
-> > +=09=09=09continue;
+> > +	return false;
+> > +}
 > > +
-> > +=09=09ret =3D add_to_list(&saved, pdev, r, 0, 0);
-> > +=09=09if (ret)
-> > +=09=09=09goto restore;
-> > +=09=09pci_release_resource(pdev, i);
-> > +=09}
+> > +/**
+> > + * pci_ats_always_on - Whether the PCI device requires ATS to be always
+> > enabled
+> > + * @pdev: the PCI device
+> > + *
+> > + * Returns true, if the PCI device requires non-PASID ATS function on an
+> > IOMMU
+> > + * bypassed configuration.
+> > + */
+> > +bool pci_ats_always_on(struct pci_dev *pdev)
+> > +{
+> > +	if (pci_ats_disabled() || !pci_ats_supported(pdev))
+> > +		return false;
 > > +
-> > +=09pci_resize_resource_set_size(pdev, resno, size);
+> > +	/* A VF inherits its PF's requirement for ATS function */
+> > +	if (pdev->is_virtfn)
+> > +		pdev = pci_physfn(pdev);
 > > +
-> > +=09if (!bus->self)
-> > +=09=09goto out;
+> > +	return pci_cxl_ats_always_on(pdev);
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_ats_always_on);
 > > +
-> > +=09down_read(&pci_bus_sem);
-> > +=09ret =3D pbus_reassign_bridge_resources(bus, res, &saved);
-> > +=09if (ret)
-> > +=09=09goto restore;
-> > +
-> > +out:
-> > +=09up_read(&pci_bus_sem);
-> > +=09free_list(&saved);
-> > +=09return ret;
-> > +
-> > +restore:
-> >  =09/* Revert to the old configuration */
-> >  =09list_for_each_entry(dev_res, &saved, list) {
-> >  =09=09struct resource *res =3D dev_res->res;
-> > @@ -2510,13 +2552,21 @@ int pbus_reassign_bridge_resources(struct pci_b=
-us *bus, struct resource *res)
-> > =20
-> >  =09=09restore_dev_resource(dev_res);
-> > =20
-> > -=09=09pci_claim_resource(dev, i);
-> > -=09=09pci_setup_bridge(dev->subordinate);
-> > -=09}
-> > -=09up_read(&pci_bus_sem);
-> > -=09free_list(&saved);
-> > +=09=09ret =3D pci_claim_resource(dev, i);
-> > +=09=09if (ret)
-> > +=09=09=09continue;
->=20
-> This clobbers 'ret' was supposedly meant to be returned to the
-> caller in the end. Thus (at least in my case) the caller always
-> sees a return value of 0, and then it forgets to restores the
-> reBAR setting back to the original value.
-
-Thanks for the report.
-
-Yes, you're right it's wrong, I'll move that call inside the if.
-
-> > -=09return ret;
-> > +=09=09if (i < PCI_BRIDGE_RESOURCES) {
-> > +=09=09=09const char *res_name =3D pci_resource_name(dev, i);
-> > +
-> > +=09=09=09pci_update_resource(dev, i);
-> > +=09=09=09pci_info(dev, "%s %pR: old value restored\n",
-> > +=09=09=09=09 res_name, res);
-> > +=09=09}
-> > +=09=09if (dev->subordinate)
-> > +=09=09=09pci_setup_bridge(dev->subordinate);
-> > +=09}
-> > +=09goto out;
-> >  }
-> > =20
-> >  void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
-> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> > index 3d0b0b3f60c4..e4486d7030c0 100644
-> > --- a/drivers/pci/setup-res.c
-> > +++ b/drivers/pci/setup-res.c
-> > @@ -444,8 +444,7 @@ static bool pci_resize_is_memory_decoding_enabled(s=
-truct pci_dev *dev,
-> >  =09return cmd & PCI_COMMAND_MEMORY;
-> >  }
-> > =20
-> > -static void pci_resize_resource_set_size(struct pci_dev *dev, int resn=
-o,
-> > -=09=09=09=09=09 int size)
-> > +void pci_resize_resource_set_size(struct pci_dev *dev, int resno, int =
-size)
+> >  #ifdef CONFIG_PCI_PRI
+> >  void pci_pri_init(struct pci_dev *pdev)
 > >  {
-> >  =09resource_size_t res_size =3D pci_rebar_size_to_bytes(size);
-> >  =09struct resource *res =3D pci_resource_n(dev, resno);
-> > @@ -456,9 +455,9 @@ static void pci_resize_resource_set_size(struct pci=
-_dev *dev, int resno,
-> >  =09resource_set_size(res, res_size);
-> >  }
-> > =20
-> > -int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-> > +int pci_resize_resource(struct pci_dev *dev, int resno, int size,
-> > +=09=09=09int exclude_bars)
-> >  {
-> > -=09struct resource *res =3D pci_resource_n(dev, resno);
-> >  =09struct pci_host_bridge *host;
-> >  =09int old, ret;
-> >  =09u32 sizes;
-> > @@ -468,10 +467,6 @@ int pci_resize_resource(struct pci_dev *dev, int r=
-esno, int size)
-> >  =09if (host->preserve_config)
-> >  =09=09return -ENOTSUPP;
-> > =20
-> > -=09/* Make sure the resource isn't assigned before resizing it. */
-> > -=09if (!(res->flags & IORESOURCE_UNSET))
-> > -=09=09return -EBUSY;
-> > -
-> >  =09if (pci_resize_is_memory_decoding_enabled(dev, resno))
-> >  =09=09return -EBUSY;
-> > =20
-> > @@ -490,19 +485,13 @@ int pci_resize_resource(struct pci_dev *dev, int =
-resno, int size)
-> >  =09if (ret)
-> >  =09=09return ret;
-> > =20
-> > -=09pci_resize_resource_set_size(dev, resno, size);
-> > -
-> > -=09/* Check if the new config works by trying to assign everything. */
-> > -=09if (dev->bus->self) {
-> > -=09=09ret =3D pbus_reassign_bridge_resources(dev->bus, res);
-> > -=09=09if (ret)
-> > -=09=09=09goto error_resize;
-> > -=09}
-> > +=09ret =3D pci_do_resource_release_and_resize(dev, resno, size, exclud=
-e_bars);
-> > +=09if (ret)
-> > +=09=09goto error_resize;
-> >  =09return 0;
-> > =20
-> >  error_resize:
-> >  =09pci_rebar_set_size(dev, resno, old);
-> > -=09pci_resize_resource_set_size(dev, resno, old);
->=20
-> This new order is very broken because the new reBAR setting
-> may have turned some of the originally set bits in the BAR
-> to read-only. Thus we may not be able to restore the BAR back
-> to the original value.
->=20
-> In my case the original settings are 256MiB / 0x4030000000,
-> followed by a failed resize to 8GiB, and finally we see a
-> failed restore 'BAR 2: error updating (0x3000000c !=3D 0x0000000c)'
-> due to the read-only bits.
->=20
-> i915 limps along after the failure but nothing really works,
-> and xe just completely explodes.
+> > --
+> > 2.43.0  
+> 
+> 
 
-Hmm, I certainly didn't foresee this happening. It seems I need to break=20
-the nice rebar/setup-bus layering to fix this (by moving the=20
-pci_rebar_set_size() calls into pci_do_resource_release_and_resize()).
-
-
---=20
- i.
---8323328-237514233-1768987075=:1033--
