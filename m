@@ -1,40 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A4F32E7F11;
-	Wed, 21 Jan 2026 15:38:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B4492ECD34;
+	Wed, 21 Jan 2026 15:47:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769009925; cv=none; b=P3pJ903nUukivalJRJBS0hHpaagaaoezOIBI3617smEdxaggozif2Bhp2BuQLm+2BLOXaWhY9Czmu1u0o0TeY2Trv4wK95yUkM53V95RSvkRtKsrgjHURbQgHGPDGuWhcv1sYIvmAMKNvJENSw/CdyabptPLQkgf6pS/dIftVNY=
+	t=1769010456; cv=none; b=sChpCvEsFBMuMzGeUgOkSpYeNJgKkO0RiDEkRG65mQtRt959C+8lFQITZC2pJaQn2NDaWfpKvW3qXdIoj7Xq3UzUWH9kwA8PnCMRtm6DI+Xx8S3OH40ttQgcHn4FBhyMRp/rX1O4s/0MB0uBBZI7d8QM3wWXLxJQxfAqRJlPnC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769009925; c=relaxed/simple;
-	bh=/cVYzMvPGg66Vrzx3Yi95/UVwa8uQUFIqIWw2gNIqhg=;
+	s=arc-20240116; t=1769010456; c=relaxed/simple;
+	bh=QAA059cS60BOW+/VnYbVjCEeIruVELX9mOmmE1IivCg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l3xQfT0HlCsHKcI2yZ38ONWC38Yia14ysovtN6v8zE1s/z2d6YV+qYyi86CUh6j+Z3vUgHsY+oTwOhNIIPP3P2wuhTGRtRV/yOaPLE9r0Lt10cfSxiH5DE2AX+iPcSo+CwZx6GqI9RAWPSlB7hDQJGexejbys89XR2gI1Sgz/r4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P6PkgkSQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=NOD0+c18Uipz+to1oduamAqWG9Hgg5j74FXyw3/0IVTYQAb3P9A86qeEy3gOPIW8tqJ5q0YRlNzCWUAMWvPzxTRnqXGvxiQM2AzIIbX5DqpHgxdreYRvIgyNeSeZDdroYr9I1VuPvlranB4vZcVa79Z+j2p9roNvXUvCTXYAtpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OqTQk0/s; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P6PkgkSQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD779C4CEF1;
-	Wed, 21 Jan 2026 15:38:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OqTQk0/s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77347C4CEF1;
+	Wed, 21 Jan 2026 15:47:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769009925;
-	bh=/cVYzMvPGg66Vrzx3Yi95/UVwa8uQUFIqIWw2gNIqhg=;
+	s=k20201202; t=1769010456;
+	bh=QAA059cS60BOW+/VnYbVjCEeIruVELX9mOmmE1IivCg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P6PkgkSQb3rgd4ZIHBcbFy0V6dCraPgc7hqfXIzxNXQApNgiv6xjUuL1cZj0UN/C4
-	 fmT1jMMOOhjhszS5pTxS0dZPuGRGY/GcpLSekCRnBDi8388HvCtiHNvhQuVYYgKuKA
-	 +2Ejhh0O7wIhuklxP0Ved/cq8pnmac+4WZu8nJvnbpXJoPeBQhVTI4znIEhxbsuhDl
-	 BPDPL/ih2QfD1WKTwnlI7ql3qhGaHYB2AeeFvQH5OuvUPmWDrLNrTftV3aSbHSTxOj
-	 yuJ3aihKlVkt3CB2XVbLSmWwopBZeoPoNhVQDBRV1+8XBgckLRY24BBoYLfMMKMFmE
-	 IT15N5tLaOuUA==
-Date: Wed, 21 Jan 2026 21:08:34 +0530
+	b=OqTQk0/spApyZnRjEWDgyXhYEpyyrCH26PnxT/yFXElQxTMmNQ89xOAIQ0bLvlklM
+	 phH1pqGfqGdvvkVsN9iQoI2VTUFanyYZ0ojfvsRNfC0VD/8YPmaMsJWZINuyeZ62WF
+	 75KifUMaUnrfIaV7OwfuWxuFXiZGhfOZiwIQhdjOILsBM4kt4xDTaTlHOPi4J5nxMr
+	 XQT5Sq6o6m0cbTb89GJ0QbL+HCnWdwhzD4Vy8DyE7pAS4G5UZ3DJm9TtGOwQQB+bMl
+	 pa3wn1cPbLbfG9aqsYLTT/+5AfrmMxkVqKtL/yKMVJlRs6OYhf5+k8YvcMuzVVen56
+	 UBmFaJvxSni5g==
+Date: Wed, 21 Jan 2026 21:17:21 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: bhelgaas@google.com, kwilczynski@kernel.org, cassel@kernel.org, 
-	frank.li@nxp.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v8 0/5] PCI: endpoint: BAR subrange mapping support
-Message-ID: <ugxohcm4tvtjwnhkkz7jw226upm7o5hihohzn2f4eoamhkd77v@mjefdgxneghm>
-References: <20260115084928.55701-1-den@valinux.co.jp>
- <x64g63zkz5t75vxxlzd7rhbvpus2mmhz2phyvxykuax5wm5cnh@zgpomauf75pv>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>, 
+	Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	vincent.guittot@linaro.org, zhangsenchuan@eswincomputing.com, dlemoal@kernel.org, 
+	manivannan.sadhasivam@oss.qualcomm.com
+Subject: Re: [PATCH v3 0/4] PCI: dwc: Rework the error handling of
+ dw_pcie_wait_for_link() API
+Message-ID: <kxppi2denhw3eriam2ryevjdebsjryeggzxbvtftr3ygd4jdzu@ah73wocpvmwj>
+References: <20251230-pci-dwc-suspend-rework-v3-0-40cd485714f5@oss.qualcomm.com>
+ <aVezfq-8bTKczYkp@ryzen>
+ <b7d7ae6b-d0e7-47f2-ac84-8b0fdb395a59@rock-chips.com>
+ <aXDTCQeP3CDv5qv8@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,83 +51,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <x64g63zkz5t75vxxlzd7rhbvpus2mmhz2phyvxykuax5wm5cnh@zgpomauf75pv>
+In-Reply-To: <aXDTCQeP3CDv5qv8@ryzen>
 
-On Mon, Jan 19, 2026 at 10:00:38PM +0900, Koichiro Den wrote:
-> On Thu, Jan 15, 2026 at 05:49:23PM +0900, Koichiro Den wrote:
-> > This series proposes support for mapping subranges within a PCIe endpoint
-> > BAR and enables controllers to program inbound address translation for
-> > those subranges.
-> > 
-> > - Patch 1/5 introduces dynamic_inbound_mapping feature bit. This can be
-> >   used as a safeguard to check whether a BAR can really be reconfigured
-> >   without clearing/resetting it.
-> > 
-> > - Patch 2/5 introduces generic BAR subrange mapping support in the PCI
-> >   endpoint core.
-> > 
-> > - Patch 3/5 advertises dynamic inbound mapping support via
-> >   DWC_EPC_COMMON_FEATURES for all DWC-based glue drivers.
-> > 
-> > - Patch 4/5 adds an implementation for the DesignWare PCIe endpoint
-> >   controller using Address Match Mode IB iATU. It also advertises
-> >   subrange_mapping support via DWC_EPC_COMMON_FEATURES.
-> > 
-> > - Patch 5/5 updates a documentation for pci_epc_set_bar().
-> > 
-> --(snip)--
-> > Koichiro Den (5):
-> >   PCI: endpoint: Add dynamic_inbound_mapping EPC feature
-> >   PCI: endpoint: Add BAR subrange mapping support
-> >   PCI: dwc: Advertise dynamic inbound mapping support
-> >   PCI: dwc: ep: Support BAR subrange inbound mapping via Address Match
-> >     Mode iATU
-> >   Documentation: PCI: endpoint: Clarify pci_epc_set_bar() usage
-> > 
-> >  Documentation/PCI/endpoint/pci-endpoint.rst   |  24 +++
-> >  drivers/pci/controller/dwc/pci-dra7xx.c       |   1 +
-> >  drivers/pci/controller/dwc/pci-imx6.c         |   3 +
-> >  drivers/pci/controller/dwc/pci-keystone.c     |   1 +
-> >  drivers/pci/controller/dwc/pcie-artpec6.c     |   1 +
-> >  .../pci/controller/dwc/pcie-designware-ep.c   | 203 +++++++++++++++++-
-> >  .../pci/controller/dwc/pcie-designware-plat.c |   1 +
-> >  drivers/pci/controller/dwc/pcie-designware.h  |   8 +
-> >  drivers/pci/controller/dwc/pcie-dw-rockchip.c |   2 +
-> >  drivers/pci/controller/dwc/pcie-keembay.c     |   1 +
-> >  drivers/pci/controller/dwc/pcie-qcom-ep.c     |   1 +
-> >  drivers/pci/controller/dwc/pcie-rcar-gen4.c   |   1 +
-> >  drivers/pci/controller/dwc/pcie-stm32-ep.c    |   1 +
-> >  drivers/pci/controller/dwc/pcie-tegra194.c    |   1 +
-> >  drivers/pci/controller/dwc/pcie-uniphier-ep.c |   2 +
-> >  drivers/pci/endpoint/pci-epc-core.c           |   8 +
-> >  include/linux/pci-epc.h                       |   9 +
-> >  include/linux/pci-epf.h                       |  27 +++
-> >  18 files changed, 285 insertions(+), 10 deletions(-)
+On Wed, Jan 21, 2026 at 02:22:17PM +0100, Niklas Cassel wrote:
+> Hello Shawn,
 > 
-> Hi Mani, Bjorn,
+> On Wed, Jan 21, 2026 at 08:45:39PM +0800, Shawn Lin wrote:
+> > 在 2026/01/02 星期五 20:01, Niklas Cassel 写道:
+> > 
+> > Hi Niklas,
+> > 
+> > Sorry for chiming in on this so late. There is a register called
+> > PCIE_CLIENT_GENERAL_DEBUG_CON you may find on RK3588 TRM, you could
+> > hold LTSSM on EP side in DETECT_QUIET before enabling trainning, by
+> > setting BIT(6). And when EP side is ready to go, just clear BIT(6),
+> > so the link is able to be established and host side can rescan to
+> > find the EP properly.
 > 
-> Based on the feedback so far (thanks to Niklas and Frank), the design seems
-> to be converging. At this point, I would appreciate confirmation on the
-> following points before proceeding further.
+> Thank you for the suggestion.
 > 
-> 1) Does the current (v8) approach for BAR subrange inbound mapping at the
->    EPC/core level look reasonable?
+> Reading the register description of this debug control register.
+> For as log as sd_hold_ltssm is set, the controller stays in the
+> current LTSSM.
+> 
+> We could probably set this on the EP side, and only when starting
+> the link do we clear this bit.
 > 
 
-In this series you didn't add a consumer of this subrange mapping, which I
-believe is the epf-vntb driver [1]. Even so I don't see a justification of why
-the BAR needs to be split into multiple subranges. Can you explain that?
+I did consider this option before, but the problem with sd_hold_ltssm is that we
+cannot predict the LTSSM state when the hold happens i.e., it will only hold
+onto the current LTSSM state at the point of set, which might not be DETECT all
+the time.
 
-> 2) From a process perspective, does it make sense to continue this as a PCI
->    endpoint subsystem-led series, with the dwc-specific changes layered on
->    top, or would you prefer a different split or ownership?
+> However, I think that Mani's current proposal:
+> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc&id=01d16b8afb7afcc17f999f8b4a9b9cfe6c6fae71
+> 
+> 
+> Will work with more controllers running in EP mode, not just rk3588.
+> 
+> Also, when powering on both boards at the same time, it is possible that
+> the host side driver gets probed before the EP side.
+> If the EP side driver has not been probed to set bit sd_hold_ltssm,
+> the host will still see a load connected, but link training will fail,
+> so it will still jump to Poll.Compliance.
 > 
 
-Is is OK to have both controller driver and endpoint changes in one series.
+Exactly. By the time the hold happens, LTSSM could've moved to POLL states.
 
 - Mani
-
-[1] https://lore.kernel.org/linux-pci/20260118135440.1958279-14-den@valinux.co.jp
 
 -- 
 மணிவண்ணன் சதாசிவம்
