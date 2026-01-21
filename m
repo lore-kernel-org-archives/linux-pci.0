@@ -1,166 +1,102 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 322D038F24E;
-	Wed, 21 Jan 2026 11:31:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A40D2BF00B;
+	Wed, 21 Jan 2026 11:35:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768995093; cv=none; b=L+bX52E0ncgyXfoxuKqWXEUE0ebqht+42zHNafeQgAJBLV7JKM3HyO4gYUyjLfIwNZ9uDVxUx3ubI/RJ2UoCq2FZpprlz8zq7JV5gSKJ3K7tf2vqCst7qZ0GKKPZkBXeZc2m8+T82cbLyruAPQzbGG42zEybL4xLTGERZseruG8=
+	t=1768995352; cv=none; b=AE5tk1HaBSxU6N1v+Uxzz5C8k8R6ZPErLt+g36YC63lg9VIEjB2bGBPaSu5HQkXyklxaYcrvht2RgKbgVvnf7+8cqRwdDOQEGpRs0bEzHsrVfkpf83UsA1U2GGnCo/xG4b759qe+JESz6biCGoLGK092i+W7HOKYrG1036Pr9qA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768995093; c=relaxed/simple;
-	bh=6K0cGwSm5Nfdo19Vlx2NJijGIQfXQVq9P8ZNa8mF3aQ=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ed2b5hQEz/RQuRy2IQc3GFEdaNpR3BZVGZVtWX8rvDFfrj7SzIj90jXubBRsQUfdKldyRbIK+dZB3xaUFfOfsTEiQuvmNx4DpX3VJBUXOSdxrxe2K6tjXEfzo9fHYPWZqy5RPzPC0e7+CXoUFpmRWDEL/COytmWeRejyCUbpTaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.83])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dx27d6pD9zHnHFs;
-	Wed, 21 Jan 2026 19:30:53 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8F5C640086;
-	Wed, 21 Jan 2026 19:31:27 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 21 Jan
- 2026 11:31:25 +0000
-Date: Wed, 21 Jan 2026 11:31:23 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: <smadhavan@nvidia.com>
-CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<vishal.l.verma@intel.com>, <ira.weiny@intel.com>,
-	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <ming.li@zohomail.com>,
-	<rrichter@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<huaisheng.ye@intel.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <vaslot@nvidia.com>, <vsethi@nvidia.com>,
-	<sdonthineni@nvidia.com>, <vidyas@nvidia.com>, <mochs@nvidia.com>,
-	<jsequeira@nvidia.com>
-Subject: Re: [PATCH v4 08/10] cxl: add DVSEC config save/restore
-Message-ID: <20260121113123.00004ca1@huawei.com>
-In-Reply-To: <20260120222610.2227109-9-smadhavan@nvidia.com>
-References: <20260120222610.2227109-1-smadhavan@nvidia.com>
-	<20260120222610.2227109-9-smadhavan@nvidia.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1768995352; c=relaxed/simple;
+	bh=bHBMPY9HO3NNgD94UBQ6VrNTad3XNzZ6frePlgRVdoE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=G5SWmQh3MkSrNmlBJsXmhmWMkKhwkrycDGO+1n0aiZYss5Tp0CG5ixKAkRfBpa9XEIYz/NAs4HH6N36mhEnI8ubZtJY2zy9GVGs7V53ELBXZJJyoM2er1zAxRVoPsCiRdrWkV36hhiT/+Sduh85l0iHYuKakBbsMri+Z93BIQBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=HZWsLiQg; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HZWsLiQg"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60L5lVSj3867763;
+	Wed, 21 Jan 2026 11:35:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=corp-2025-04-25; bh=8xwYGu06AU1Qt1+9
+	pk3v/UNkW3boHEjjOYdiHPzUxw8=; b=HZWsLiQgzxXi282AAHubvqsMCL8eGksO
+	kBzg/ScvWpaMD33O+IjQYIMfYMePARWSzh3pEykj6UXbO+ZEieaAE3zuPUa9IvE3
+	RJByd1iaq1KJq9avazWkpC3aBq5z3iIgnrmJ5PUS2l4ZuUuC7/yDy6BQ8iXEHBu8
+	/ncVB3vzPGBioguToCZxCtCrAwHics5Mg6x4qGIkeVLWxPaDWQn9VoPOTTVLyJJ3
+	Zx+M4DQHRenLlN+G/VpDD3/JpVfmFWErgCV0ROoqVN/I/KIwFCofCV1h2FxMz1e7
+	LaFlJEE3e1mcwTAKfzMwHnV4496cTmhvW8unYrmYjtdDmjjfPoFAyQ==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4btagd27pj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 21 Jan 2026 11:35:46 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 60LBCIrn019000;
+	Wed, 21 Jan 2026 11:35:46 GMT
+Received: from lab61.no.oracle.com (lab61.no.oracle.com [10.172.144.82])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4bsyrry2rv-1;
+	Wed, 21 Jan 2026 11:35:46 +0000
+From: =?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Johannes Thumshirn <morbidrsa@gmail.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v2 0/2] PCI: Init RCB from pci_configure_device and fix program_hpx_type2
+Date: Wed, 21 Jan 2026 12:35:39 +0100
+Message-ID: <20260121113544.4163457-1-haakon.bugge@oracle.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500010.china.huawei.com (7.191.174.240) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
+ definitions=2026-01-21_01,2026-01-20_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=727 phishscore=0
+ adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2601150000 definitions=main-2601210097
+X-Authority-Analysis: v=2.4 cv=PqqergM3 c=1 sm=1 tr=0 ts=6970ba12 b=1 cx=c_pps
+ a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=M51BFTxLslgA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=lkFEIk0dndTVLs1Xz8EA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 cc=ntf awl=host:12104
+X-Proofpoint-ORIG-GUID: --DKfuDmNZSHM_aw1c2SFXZ7MXmO9D9g
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIxMDA5NyBTYWx0ZWRfX4QwVyPLV1QSo
+ EHSobTm9NlNjy1Wlt8wyj1jj+WHynLg0kQCjgef/92EKy/0Z4V/RYFNRQDMZ2qghB8I+cKIu77I
+ eLkQS7EH0IPzuWStvhlJCdNRZ3aFn5RTWJtf3FZikQDx1lx34RoEDd/XNcQ1FsZfFPA8gqM2Au3
+ eJVppTTzMClEOUEjLBAut5Iy+oCBDm0tNLDv6TxeaZD7/8xkLriBJZ6OKnKFyZyvNUtzV1iGvQT
+ OKiscfYzvdifU0D0pDQ2ZuHRFDhqtYRhM4IbOeN4NvUpbXC+tRVQt/XRzzs9fQeW8/PPFfdKhWX
+ qCp0spOLg5geiSI/yRHHedV1Rk35hlz8iS0BsV4bEsYSGuXLlIvRMKWyXdRSG++ufAG4TOKHJpO
+ 8YVRvqBkEE0pdxtqg7Rbbes76ybYh7fNlX9jFJM5ubGiko7PIQnh2rIKzxLQrtMOyJNI9Bc5K7J
+ VuqKQV6QUPEdu8BZ5TsAADodKRSSbKKYyxTafMWY=
+X-Proofpoint-GUID: --DKfuDmNZSHM_aw1c2SFXZ7MXmO9D9g
 
-On Tue, 20 Jan 2026 22:26:08 +0000
-smadhavan@nvidia.com wrote:
+This series add the initialization of the Link Control register's RCB
+to pci_configure_rcb() called from pci_configure_device() and also
+cleans up the incorrect program_hpx_type2():
 
-> From: Srirangan Madhavan <smadhavan@nvidia.com>
-> 
-> Save and restore CXL DVSEC control registers across reset with
-> CONFIG_LOCK handling so RWL fields are preserved when locked. This
-> maintains device policy and capability state across cxl_reset while
-> avoiding writes to locked fields.
+1. It should only be called when we own the PCIe native hotplug and
+   not the AER ownership
+2. It should only manipulate the AER-bits
 
-Add some more info here on what is protected by the lock and
-preserved across reset.  This is odd enough I think that detail is needed.
-There are other RWL fields outside those registers you are restoring here.
-e.g. the range registers, various things in extended meta data,
+In addition, the second commit adds a warning if the _HPX type2
+record attempts to modify the Link Control register.
 
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/pci.c | 107 ++++++++++++++++++++++++++++++++++++++++++++++
->  include/cxl/pci.h |  15 +++++++
->  2 files changed, 122 insertions(+)
-> 
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index f9cc452ccb8a..7d6a0ef70b2d 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -1154,6 +1154,113 @@ static int cxl_region_flush_host_cpu_caches(struct device *dev, void *data)
->  	return 0;
->  }
-> 
-> +/*
-> + * CXL DVSEC register save/restore
-> + */
-> +static int cxl_save_dvsec_state(struct pci_dev *pdev,
-> +				struct cxl_type2_saved_state *state, int dvsec)
-> +{
-> +	int rc;
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + CXL_DVSEC_CTRL_OFFSET,
-> +				  &state->dvsec_ctrl);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + CXL_DVSEC_CTRL2_OFFSET,
-> +				  &state->dvsec_ctrl2);
-> +	return rc;
-Similar to below. Just combine 2 lines into 1.
-> +}
-> +
-> +static int cxl_restore_dvsec_state(struct pci_dev *pdev,
-> +				   const struct cxl_type2_saved_state *state,
-> +				   int dvsec, bool config_locked)
-> +{
-> +	int rc;
-> +	u16 val_to_restore;
-> +
-> +	if (config_locked) {
-> +		u16 current_val;
-> +
-> +		rc = pci_read_config_word(pdev, dvsec + CXL_DVSEC_CTRL_OFFSET,
-> +					  &current_val);
-> +		if (rc)
-> +			return rc;
-> +
-> +		val_to_restore = (current_val & CXL_DVSEC_CTRL_RWL_MASK) |
-> +				 (state->dvsec_ctrl & ~CXL_DVSEC_CTRL_RWL_MASK);
-> +	} else {
-> +		val_to_restore = state->dvsec_ctrl;
-> +	}
-> +
-> +	rc = pci_write_config_word(pdev, dvsec + CXL_DVSEC_CTRL_OFFSET,
-> +				   val_to_restore);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = pci_write_config_word(pdev, dvsec + CXL_DVSEC_CTRL2_OFFSET,
-> +				   state->dvsec_ctrl2);
-> +	return rc;
+Håkon Bugge (2):
+  PCI: Initialize RCB from pci_configure_device
+  PCI/ACPI: Confine program_hpx_type2 to the AER bits
 
-If this isn't expected to get more complex (I haven't checked) then
-return pci_write_config()
+ drivers/pci/pci-acpi.c | 61 +++++++++++++++++++-----------------------
+ drivers/pci/pci.h      |  3 +++
+ drivers/pci/pcie/aer.c |  3 ---
+ drivers/pci/probe.c    | 27 +++++++++++++++++++
+ 4 files changed, 57 insertions(+), 37 deletions(-)
 
-> +}
-> +
-> +/**
-> + * cxl_config_save_state - Save CXL configuration state
-> + * @pdev: PCI device
-> + * @state: Structure to store saved state
-> + *
-> + * Saves CXL DVSEC state before reset.
-> + */
-> +int cxl_config_save_state(struct pci_dev *pdev,
-> +			  struct cxl_type2_saved_state *state)
-> +{
-> +	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> +	int dvsec;
-> +
-> +	if (!cxlds || !state)
-> +		return -EINVAL;
-> +
-> +	memset(state, 0, sizeof(*state));
-We need to make sure all registers are read, so why is zeroing helpful? 
-
-> +
-> +	dvsec = cxlds->cxl_dvsec;
-> +	if (!dvsec)
-> +		return -ENODEV;
-> +
-> +	return cxl_save_dvsec_state(pdev, state, dvsec);
-> +}
-> +EXPORT_SYMBOL_NS_GPL(cxl_config_save_state, "CXL");
+--
+2.43.5
 
