@@ -1,160 +1,140 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5C9531771B;
-	Wed, 21 Jan 2026 11:42:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.75.44.102])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2E085410D13;
+	Wed, 21 Jan 2026 12:01:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.75.44.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768995733; cv=none; b=dN7NLkuDZMNycCUzvuQrvdb9jv3EgKRxpLtZ8DMg0lG+FAuq3T3ASkbP+17XeMuNR5RgWsMhvZjWrpI1/x1wFKPivLivHfK/29/yWXM+BAonpXDsf2PBid2FgONqCbDFuZtb2vCK5IrS3Y0cY6bHvrFvW+S7P+6qqYwCSGE2YM8=
+	t=1768996867; cv=none; b=cftOKbZq8lR7RscgSr5fiP0X8WFciTgSgIUCYAK6KkaE3jRBER7fbBIboS95cQpi34swzJomuldIDxxzkLepsiecIy0MnD8T4SsYF2IWScuqXDdeSLNM6BA9re1nwaAGV8AwJfoSmNSGC7ZjvqDA3e7dIdCTLD5jpdF08LpybaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768995733; c=relaxed/simple;
-	bh=R5h/qe7C9ZhpNVB0wnfJezOgTApyDNovbHytOlk6nds=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nhwJ3iRo6UaMowNkidtnMDD8YHy5qV/v+ZmDedAAtd8ARpXdBwywTiU2fBlnVvkRmuKa+msf4H0fGL2zw7upFLoHz+irImlWbzHbnzgbli+kk12fbp6AAtCTgYshjeO8OZHH3xq/Oatk3CoblLsZtsNnsR+oZQQWFoOa81UG7Kg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.150])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dx2N51bJ2zJ46Bs;
-	Wed, 21 Jan 2026 19:41:41 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3C37D40563;
-	Wed, 21 Jan 2026 19:42:07 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 21 Jan
- 2026 11:42:06 +0000
-Date: Wed, 21 Jan 2026 11:42:04 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: <smadhavan@nvidia.com>
-CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<vishal.l.verma@intel.com>, <ira.weiny@intel.com>,
-	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <ming.li@zohomail.com>,
-	<rrichter@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<huaisheng.ye@intel.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <vaslot@nvidia.com>, <vsethi@nvidia.com>,
-	<sdonthineni@nvidia.com>, <vidyas@nvidia.com>, <mochs@nvidia.com>,
-	<jsequeira@nvidia.com>
-Subject: Re: [PATCH v4 10/10] cxl: add HDM decoder and IDE save/restore
-Message-ID: <20260121114204.00005d4f@huawei.com>
-In-Reply-To: <20260120222610.2227109-11-smadhavan@nvidia.com>
-References: <20260120222610.2227109-1-smadhavan@nvidia.com>
-	<20260120222610.2227109-11-smadhavan@nvidia.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1768996867; c=relaxed/simple;
+	bh=F5gD4RVtQHitPr4ixCMasUs+IhmSxtRTKSjxaRo61GY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=lYNgv9uVkymV0P4kZXAzrHolCVEowVQfOgvs+nTDlYrbVOyoI+sMZP0sMq2cVkwPvLc1Tb3lzMp3Vu4rhosPpmi3qOcfAOzO+nupq8tyuPbQM4nhh4SHiW8b1HWfUSythS1Ykm5g5mbF/cz0UmT5d2Kqe8RC7xrYrDCP6z+S4gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=13.75.44.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
+ ajax-webmail-app2 (Coremail) ; Wed, 21 Jan 2026 20:00:26 +0800 (GMT+08:00)
+Date: Wed, 21 Jan 2026 20:00:26 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
+To: "Bjorn Helgaas" <helgaas@kernel.org>,
+	"Manivannan Sadhasivam" <mani@kernel.org>
+Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
+	p.zabel@pengutronix.de, jingoohan1@gmail.com,
+	gustavo.pimentel@synopsys.com, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	christian.bruel@foss.st.com, mayank.rana@oss.qualcomm.com,
+	shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com,
+	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com,
+	ningyu@eswincomputing.com, linmin@eswincomputing.com,
+	pinkesh.vaghela@einfochips.com, ouyanghui@eswincomputing.com,
+	"Niklas Cassel" <cassel@kernel.org>
+Subject: Re: Re: Re: [PATCH v9 2/2] PCI: eic7700: Add Eswin PCIe host
+ controller driver
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <6607c5b8.21d6.19ba27df74f.Coremail.zhangsenchuan@eswincomputing.com>
+References: <20260106174348.GA365798@bhelgaas>
+ <6607c5b8.21d6.19ba27df74f.Coremail.zhangsenchuan@eswincomputing.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500010.china.huawei.com (7.191.174.240) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+Message-ID: <58a8c0fe.292f.19be06d6ce0.Coremail.zhangsenchuan@eswincomputing.com>
+X-Coremail-Locale: en_US
+X-CM-TRANSID:TQJkCgAHeizav3BpZR4EAA--.987W
+X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAgEOBmlvr
+	oAgCgABsI
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On Tue, 20 Jan 2026 22:26:10 +0000
-smadhavan@nvidia.com wrote:
-
-> From: Srirangan Madhavan <smadhavan@nvidia.com>
-> 
-> Extend state save/restore to HDM decoder and IDE registers for Type 2
-> devices. The HDM/IDE blocks are located via the component register map,
-> then preserved across reset to retain decoder configuration and IDE
-> policy. This avoids losing HDM/IDE programming when cxl_reset is issued.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-
-Split the two up. One patch for HDM, one for IDE.
-
-Been a while since I read the IDE stuff.
-
-Isn't reset going to trip up the encryption to the extent that we need
-to redo the key exchange etc?
-
-> ---
->  drivers/cxl/core/regs.c |   7 ++
->  drivers/cxl/cxl.h       |   4 ++
->  drivers/cxl/pci.c       | 153 ++++++++++++++++++++++++++++++++++++++--
->  include/cxl/pci.h       |  43 +++++++++++
->  4 files changed, 201 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c
-> index ecdb22ae6952..76d6869d82ea 100644
-> --- a/drivers/cxl/core/regs.c
-> +++ b/drivers/cxl/core/regs.c
-> @@ -93,6 +93,12 @@ void cxl_probe_component_regs(struct device *dev, void __iomem *base,
->  			length = CXL_RAS_CAPABILITY_LENGTH;
->  			rmap = &map->ras;
->  			break;
-> +		case CXL_CM_CAP_CAP_ID_IDE:
-> +			dev_dbg(dev, "found IDE capability (0x%x)\n",
-> +				offset);
-
-Trivial: Fits on one line under 80 chars.
-
-> +			length = CXL_IDE_CAPABILITY_LENGTH;
-> +			rmap = &map->ide;
-> +			break;
-
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index 7d6a0ef70b2d..eb735d0ae175 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-
-> +/*
-> + * CXL HDM Decoder register save/restore
-> + */
-> +static int cxl_save_hdm_state(struct cxl_dev_state *cxlds,
-> +			      struct cxl_type2_saved_state *state)
-> +{
-> +	void __iomem *hdm = cxlds->regs.hdm_decoder;
-> +	u32 cap, ctrl;
-> +	int i, count;
-> +
-> +	if (!hdm)
-> +		return 0;
-> +
-> +	cap = readl(hdm + CXL_HDM_DECODER_CAP_OFFSET);
-> +	count = cap & CXL_HDM_DECODER_COUNT_MASK;
-
-Use FIELD_GET() for this so we don't need to go check the definition to be
-sure there isn't a shift.
-
-> +	count = min(count, CXL_MAX_DECODERS);
-> +
-> +	state->hdm_decoder_count = count;
-> +	state->hdm_global_ctrl = readl(hdm + CXL_HDM_DECODER_GLOBAL_CTRL_OFFSET);
-> +
-> +	for (i = 0; i < count; i++) {
-> +		struct cxl_hdm_decoder_state *d = &state->decoders[i];
-> +		u32 base_low, base_high, size_low, size_high;
-> +		u32 dpa_skip_low, dpa_skip_high;
-> +
-> +		base_low = readl(hdm + CXL_HDM_DECODER_BASE_LOW(i));
-> +		base_high = readl(hdm + CXL_HDM_DECODER_BASE_HIGH(i));
-> +		size_low = readl(hdm + CXL_HDM_DECODER_SIZE_LOW(i));
-> +		size_high = readl(hdm + CXL_HDM_DECODER_SIZE_HIGH(i));
-> +		ctrl = readl(hdm + CXL_HDM_DECODER_CTRL(i));
-> +		dpa_skip_low = readl(hdm + CXL_HDM_DECODER_DPA_SKIP_LOW(i));
-> +		dpa_skip_high = readl(hdm + CXL_HDM_DECODER_DPA_SKIP_HIGH(i));
-> +
-> +		d->base = ((u64)base_high << 32) | base_low;
-> +		d->size = ((u64)size_high << 32) | size_low;
-> +		d->ctrl = ctrl;
-> +		d->dpa_skip = ((u64)dpa_skip_high << 32) | dpa_skip_low;
-> +		d->enabled = !!(ctrl & CXL_HDM_DECODER_ENABLE);
-
-I'm lazy. Why not just stash the register values as a raw block and
-put them back? Do we want to put them back if they aren't locked?
-We ripped down the region so I'd be kind of expecting the type 2
-driver for the specific hardware to need to put this stuff back
-as part of it's own reinit.
-
-
-> +	}
-> +
-> +	return 0;
-> +}
-
-
-
+PiBTdWJqZWN0OiBSZTogUmU6IFtQQVRDSCB2OSAyLzJdIFBDSTogZWljNzcwMDogQWRkIEVzd2lu
+IFBDSWUgaG9zdCBjb250cm9sbGVyIGRyaXZlcgo+IAo+ID4gPiBPbiBUdWUsIEphbiAwNiwgMjAy
+NiBhdCAwODo0MzoxMVBNICswODAwLCB6aGFuZ3NlbmNodWFuIHdyb3RlOgo+ID4gPiA+ID4gT24g
+TW9uLCBEZWMgMjksIDIwMjUgYXQgMDc6MzI6MDdQTSArMDgwMCwgemhhbmdzZW5jaHVhbkBlc3dp
+bmNvbXB1dGluZy5jb20gd3JvdGU6Cj4gPiA+ID4gPiA+IEZyb206IFNlbmNodWFuIFpoYW5nIDx6
+aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbT4KPiA+ID4gPiA+ID4gCj4gPiA+ID4gPiA+
+IEFkZCBkcml2ZXIgZm9yIHRoZSBFc3dpbiBFSUM3NzAwIFBDSWUgaG9zdCBjb250cm9sbGVyLCB3
+aGljaCBpcyBiYXNlZCBvbgo+ID4gPiA+ID4gPiB0aGUgRGVzaWduV2FyZSBQQ0llIGNvcmUsIElQ
+IHJldmlzaW9uIDUuOTZhLiBUaGUgUENJZSBHZW4uMyBjb250cm9sbGVyCj4gPiA+ID4gPiA+IHN1
+cHBvcnRzIGEgZGF0YSByYXRlIG9mIDggR1QvcyBhbmQgNCBjaGFubmVscywgc3VwcG9ydCBJTlR4
+IGFuZCBNU0kKPiA+ID4gPiA+ID4gaW50ZXJydXB0cy4KPiA+ID4gPiA+IAo+ID4gPiA+ID4gPiAr
+Y29uZmlnIFBDSUVfRUlDNzcwMAo+ID4gPiA+ID4gPiArCXRyaXN0YXRlICJFc3dpbiBFSUM3NzAw
+IFBDSWUgY29udHJvbGxlciIKPiA+ID4gPiA+IAo+ID4gPiA+ID4gPiArLyogVmVuZG9yIGFuZCBk
+ZXZpY2UgSUQgdmFsdWUgKi8KPiA+ID4gPiA+ID4gKyNkZWZpbmUgUENJX1ZFTkRPUl9JRF9FU1dJ
+TgkJMHgxZmUxCj4gPiA+ID4gPiA+ICsjZGVmaW5lIFBDSV9ERVZJQ0VfSURfRVNXSU4JCTB4MjAz
+MAo+ID4gPiA+ID4gCj4gPiA+ID4gPiBVc3VhbGx5IHRoZSBkZXZpY2UgbmFtZSBpcyBhIGxpdHRs
+ZSBtb3JlIHRoYW4ganVzdCB0aGUgdmVuZG9yLiAgV2hhdAo+ID4gPiA+ID4gaWYgRXN3aW4gZXZl
+ciBtYWtlcyBhIHNlY29uZCBkZXZpY2U/Cj4gPiA+ID4gCj4gPiA+ID4gT2tleSwgdGhhbmtzLgo+
+ID4gPiA+IFBlcmhhcHMgaXQncyBhIHByb2JsZW0uIE1heWJlIFBDSV9ERVZJQ0VfSURfRUlDNzcw
+MCBpcyBiZXR0ZXI/Cj4gPiAKPiA+IENoZWNrIHBjaV9pZHMuaCBhbmQgZm9sbG93IHRoZSBzdHls
+ZSB1c2VkIHRoZXJlLiAgRGV2aWNlIElEIG1hY3Jvcwo+ID4gdHlwaWNhbGx5IGluY2x1ZGUgYm90
+aCB0aGUgdmVuZG9yIGFuZCB0aGUgZGV2aWNlLgo+IAo+IE9rZXksIHRoYW5rcy4KPiAKPiA+IAo+
+ID4gPiA+ID4gPiArc3RhdGljIHN0cnVjdCBwbGF0Zm9ybV9kcml2ZXIgZWljNzcwMF9wY2llX2Ry
+aXZlciA9IHsKPiA+ID4gPiA+ID4gKwkucHJvYmUgPSBlaWM3NzAwX3BjaWVfcHJvYmUsCj4gPiA+
+ID4gPiAKPiA+ID4gPiA+IFRoaXMgZHJpdmVyIGlzIHRyaXN0YXRlIGJ1dCBoYXMgbm8gLnJlbW92
+ZSgpIGNhbGxiYWNrLiAgU2VlbXMgbGlrZSBpdAo+ID4gPiA+ID4gc2hvdWxkIGhhdmUgb25lPwo+
+ID4gPiA+IAo+ID4gPiA+IEluIHYyIHBhdGNoLCBJIHJlZmVycmVkIHRvIE1hbmkncyBjb21tZW50
+cyBhbmQgcmVtb3ZlZCB0aGUgLnJlbW92ZSgpCj4gPiA+ID4gY2FsbGJhY2ssIGFzIGZvbGxvd3M6
+Cj4gPiA+ID4gIlNpbmNlIHRoaXMgY29udHJvbGxlciBpbXBsZW1lbnRzIGlycWNoaXAgdXNpbmcg
+dGhlIERXQyBjb3JlIGRyaXZlciwKPiA+ID4gPiBpdCBpcyBub3Qgc2FmZSB0byByZW1vdmUgaXQg
+ZHVyaW5nIHJ1bnRpbWUuIgo+ID4gPiA+IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LXBj
+aS9qZ2hvenVyanF5aG10dW5pdm90aXRnczY3aDZ4bzRzYjQ2cWN5Y25iYnd5dmpjbTRla0B2Z3E3
+NW9sYXptb2kvCj4gPiA+ID4gCj4gPiA+ID4gSW4gYWRkaXRpb24sIHJlbW92ZSAucmVtb3ZlKCkg
+Y2FsbGJhY2ssIGJlY2F1c2UgdGhpcyBkcml2ZXIgaGFzIGJlZW4gCj4gPiA+ID4gbW9kaWZpZWQg
+dG8gYnVpbHRpbl9wbGF0Zm9ybV9kcml2ZXIgYW5kIGRvZXMgbm90IHN1cHBvcnQgSG90UGx1Zywg
+Cj4gPiA+ID4gdGhlcmVmb3JlLCB0aGUgLnJlbW92ZSgpIGNhbGxiYWNrIGlzIG5vdCBuZWVkZWQu
+IERvIHlvdSBoYXZlIGFueQo+ID4gPiA+IGJldHRlciBzdWdnZXN0aW9ucz8KPiA+ID4gCj4gPiA+
+IFllcywgYnVpbHRpbl9wbGF0Zm9ybV9kcml2ZXIoKSB3b3VsZG4ndCBhbGxvdyB0aGUgdXNlcnMg
+dG8gcmVtb3ZlCj4gPiA+IHRoZSBtb2R1bGUuIFNvIHJlbW92ZSgpIGNhbGxiYWNrIHdpbGwgYmVj
+b21lIHVzZWxlc3MuIFRoZSByZWFzb24gd2h5Cj4gPiA+IHRoaXMgZHJpdmVyIGlzIHRyaXN0YXRl
+IGlzIHRoYXQgaXQgY291bGQgYmUgbG9hZGVkIGZyb20gcm9vdGZzIGFuZAo+ID4gPiBub3QgYWx3
+YXlzIHN0YXRpY2FsbHkgYnVpbHQgdG8gdGhlIGtlcm5lbCBpbWFnZS4KPiA+IAo+ID4gVGhpcyAu
+cmVtb3ZlKCkgdnMgSVJRIHRoaW5nIGlzIGEgcGVyZW5uaWFsIGlzc3VlIGFuZCBpdCdzIGhhcmQg
+dG8ga25vdwo+ID4gd2hhdCBzdHlsZSBuZXcgZHJpdmVycyBzaG91bGQgY29weS4KPiA+IAo+ID4g
+VGhlcmUgYXJlIGxvdHMgb2YgRFdDLWJhc2VkIGRyaXZlcnMgdGhhdCBhcmUgdHJpc3RhdGUsIGlt
+cGxlbWVudAo+ID4gLnJlbW92ZSgpLCBhbmQgdXNlIG1vZHVsZV9wbGF0Zm9ybV9kcml2ZXIoKSAo
+ZS5nLiwgYnQxLCBraXJpbiwKPiA+IHRlZ3JhMTk0LCByY2FyLWdlbjQsIGV4eW5vcywgazEsIHN0
+bTMyKS4gIElzIHRoZXJlIHNvbWV0aGluZyBkaWZmZXJlbnQKPiA+IGFib3V0IHRoZSB3YXkgdGhl
+eSBpbXBsZW1lbnQgaXJxY2hpcCB0aGF0IG1ha2VzIC5yZW1vdmUoKSBzYWZlPwo+IAo+IEhpIEJq
+b3JuLCBNYW5pLAo+IAo+IFRoZSBjb21tZW50cyBhcmUgYXMgZm9sbG93czoKPiAiWW91IGNhbiBt
+YWtlIGl0IHRyaXN0YXRlIGFzIHlvdSd2ZSB1c2VkIGJ1aWx0aW5fcGxhdGZvcm1fZHJpdmVyKCkg
+d2hpY2gKPiBndWFyYW50ZWVzIHRoYXQgdGhpcyBkcml2ZXIgd29uJ3QgYmUgcmVtb3ZlZCBvbmNl
+IGxvYWRlZC4iCj4gaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvbGludXgtcGNpL3Vpamc0N3N1dmx1
+dmFtZnR5eHdjNjVrbDM0ZW8yZXUyYWYybzVhaWE0bnU0NWhhbnFjQGdyY3IyYmpncGgyaS8KPiAK
+PiBEbyBub3QgYWRkIHRoZSByZW1vdmUgY2FsbGJhY2suIEl0IG5lZWRzIHRvIGJlIHNldCB0byBh
+IGJvb2zvvJoKPiBJbiB2NiBwYXRjaCwgaXQgd2FzIG1lbnRpb25lZCB0byBzZXQgdHJpc3RhdGUu
+IE5vdywgYWZ0ZXIgY2FyZWZ1bCAKPiBjb25zaWRlcmF0aW9uLCBzZXR0aW5nIHRyaXN0YXRlIGNh
+biBhbGxvdyBsb2FkaW5nIGFzIGEgbW9kdWxlLCBidXQgdGhlIAo+IGRyaXZlciBpbXBsZW1lbnRh
+dGlvbiBkb2VzIG5vdCBoYXZlIGEgcmVtb3ZlIGZ1bmN0aW9uLiBJZiBpdCBleGlzdHMgaW4gCj4g
+dGhlIGZvcm0gb2YgYSBtb2R1bGUsIGFmdGVyIHRlc3RpbmcsIFdoZW4gaW5zbW9kIGRyaXZlciBp
+cyBmb2xsb3dlZCBieSAKPiBybW1vZCBkcml2ZXIsIHRoZSByZXNvdXJjZXMgY2Fubm90IGJlIHJl
+bGVhc2VkLCBhbmQgcHJvYmxlbXMgd2lsbCBvY2N1cgo+IHdoZW4gaW5zbW9kIGRyaXZlciBpcyB1
+c2VkIGFnYWluLiBTbyBJIHRoaW5rIHRoYXQgaWYgdGhlIHJlbW92ZSBjYWxsYmFjawo+IGZ1bmN0
+aW9uIGlzIG5vdCBwcm92aWRlZCBpbiB0aGUgZm9ybSBvZiBidWlsdGluLCBpdCBjYW4gb25seSBi
+ZSBzZXQgdG8gCj4gYm9vbC4KPiAKPiBBZGQgdGhlIHJlbW92ZSBjYWxsYmFjay4gSXQgY2FuIG1h
+a2UgaXQgdHJpc3RhdGU6Cj4gUXVlc3Rpb25zIGFib3V0IHJlbW92aW5nIGl0IGR1cmluZyBydW50
+aW1lLiBJIGRvbid0IGhhdmUgYSB2ZXJ5IGdvb2QgaWRlYS4KPiBJIHN0aWxsIGRvbid0IHF1aXRl
+IHVuZGVyc3RhbmQgd2h5IGl0J3Mgbm90IHNhZmUuIENvdWxkIHlvdSBleHBsYWluIGl0IHRvIAo+
+IG1lPwo+IAo+IEF0IHByZXNlbnQsIHJlZmVyIHRvIG90aGVyIG1hbnVmYWN0dXJlcnMsIGkgdGhp
+bmsgdGhlcmUgYXJlIHR3byB3YXlzIHRvIAo+IGFjaGlldmUgaXQuCj4gMS5TZXQgYSBib29sLiBE
+byBub3QgYWRkIHRoZSByZW1vdmUgZnVuY3Rpb24sIG1vZHVsZSBsb2FkaW5nIGlzIG5vdCAKPiBh
+bGxvd2VkLCBhbmQgdGhlIGRyaXZlciBjdXJyZW50bHkgZG9lcyBub3Qgc3VwcG9ydCBIb3RQbHVn
+Lgo+IDIuU2V0IGEgdHJpc3RhdGUsIGFkZCAucmVtb3ZlIGNhbGxiYWNrLgo+IAo+IEkgdGhpbmsg
+dGhlIGZpcnN0IG9uZSBtaWdodCBiZSBiZXR0ZXIgZm9yIG1lLCBiZWNhdXNlIHRoZXJlIGlzIG5v
+IG5lZWQgCj4gdG8gYWRkIHRoZSByZW1vdmUgZnVuY3Rpb24sIG15IHVuZGVyc3RhbmRpbmcgbWln
+aHQgYWxzbyBiZSBpbmNvcnJlY3QuIAo+IFBsZWFzZSByZXZpZXcgaXQgZm9yIG1lLiBUaGFua3Pv
+vIEKPiAKCkhpIEJqb3JuLCBNYW5pLAoKUmVnYXJkaW5nIHRoZSBpc3N1ZSBvZiB3aGV0aGVyIHRv
+IGFkZCB0aGUucmVtb3ZlIGNhbGxiYWNrLCBjb3VsZCB5b3UgCnBsZWFzZSBoZWxwIG1lIHJldmll
+dyBpdCBhZ2Fpbj8gVGhhbmtzIHZlcnkgbXVjaCEKCkJ5IHRoZSB3YXksIGZvciB0aGUgcGF0Y2gg
+dGhhdCBwYXJzZXMgbXVsdGlwbGUgUm9vdCBQb3J0cywgd2lsbCBpdCBiZSAKdXBkYXRlZCBsYXRl
+cj8gRG8gSSBuZWVkIHRvIHdhaXQgZm9yIGl0IHRvIHNlbmQgdGhlIG5leHQgdmVyc2lvbj8KCktp
+bmQgcmVnYXJkcywKU2VuY2h1YW4KCg==
