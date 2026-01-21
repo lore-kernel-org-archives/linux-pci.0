@@ -1,72 +1,78 @@
-Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021123.outbound.protection.outlook.com [52.101.100.123])
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011051.outbound.protection.outlook.com [40.107.130.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5669832BF51;
-	Wed, 21 Jan 2026 15:10:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.123
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26170221DB9;
+	Wed, 21 Jan 2026 15:24:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769008233; cv=fail; b=TBS2Xwxb8qUCR2LQFC2TEHeLcubciklwkSgZg6uIjYt9+5yeGXgggcV8cyCblfgIZDsnXdWZR3XIkAharU1omrwrTBC8GFxBwUCUoO4OOOBe1nnfVjovxzJbb5sq2AeYvrPFykW9CfNM8K7Q3w2b1hIgRYVTo2mcxhFiAyNErhI=
+	t=1769009058; cv=fail; b=C5zMz9469wptVlFNgj7YVHJGQnh5cTBSGc0gmk8KPoIWOWgNYVyNuYYqzIFxmE+RPGOEMDyZ9+Upyj5mtlzp860l2bHR6tvYsllMnotXlm4s+Wddf5BVAjIQdWEqtpdLil1Rur1mNqlyKJz9WJ7wPs6FW2CQ/ofgkii4BDysfaQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769008233; c=relaxed/simple;
-	bh=W4fMOVIV9ecGNJZQ94KyQXPPNCzCLhVcs83QYiKn2vo=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=FFfThIXxR8ZMvpfM7VhD8OXv6d65cNRT4wChyqCZ8myKjmYoIbMmZEvgIN16gpazYZ4eEYpe+BkbHhtSQpqgZo73Ec/Z7hmEk4r/u8DH6r/FGE2mEKaeiOv+yVg7Bc7qp/O+bx77h7YTqY7v4tybdl6OYC3RpprpU+d172gkghY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=IMYNgVYa; arc=fail smtp.client-ip=52.101.100.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1769009058; c=relaxed/simple;
+	bh=1OgAO6lq441B51rHqFjgWT3NUlyLZveY5qZu6AWiAhQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=p6m+sNgwrxY2hGxVqg7/xttk2PR2hp09+zUa/xwSKPpeh/EOPOX0ncymMdkxRhfS1Z9FGTR8yyrs5FVreB/9QzLe3wUQFp/MDpr7DgJvPJhnK20S0oikQMwmLuuEuCm7dZvSnbNwQPBT7Fwf77YKntxrhX25ppyYoAy+uvIzoOg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=RS66Kbty; arc=fail smtp.client-ip=40.107.130.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="IMYNgVYa"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="RS66Kbty"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=igsr7er+VuISjNoASO4auDd3h308b/Wpsks+i4lJ0w0IYfNZCDnG+59Rbi1jHUAHEt0vHODHn99IaBhrHQSUs2PkHhAhdbPm3mXWY+DsCdn/Kbl082NGAWhXjzde89eHgrDU2ZiVPtzwDQlmUw0hM7dDc4f0QhqsaQU9Dd7WgRDsOihYZgvGGYKBsHVADq8wDJ3ywugoPSou51pSM4SSrrWeG1Du4URFUAoev0+k1glCCLgE8JY0QSfceDZ+kMFR/5NS2yj6Wqnc1DxV6xWg1QRWdG7ObL5AK0+DGzG6ZA/17heyfarmnA4/FbLeRMHFw0vgGzPr9Bl+QRiTmFyXFA==
+ b=Wq8ZXydGAObKFFZeIJN9n0DMXllQjL5ZfLT0fz/WhAHm+yeQJx8WqQwHst6EH2y/gPkpXcZpz79IqTblRcqlr8MzSpWxSsOrc3KWvTuGOQPpJ/8T8NMuS/v5RbG843KZxToz1UKReETIjluNo3J9J3GgCGqdzTMV2bue42u/Ql65GVtQFr8IdS5Bm9Y2axefcXGlIfv27XEGrKMy44IV27eejwCU6tGlyz/CZoBrm5XvdK7GX6uF+WgZrGt9sIYxePWLaqCXSIHoyLSTEF/i4LL4H4taEfJIYfLLCcVGt1vUNJ4m1yubNknQpWsMaeQADYaD+lZbVuNFAkLhGZde3A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dzp7RLpvp4URiDmBX0cWL4PaIsZEo8NUkscsCyRUJLE=;
- b=YoBFoLJzMGrjjvnhQpsSvS6HRPmy8BcjeTy6mTIIJnMhUHTNlJNzVvypiG3jmWa07gYwbtGP9a+Hy0E9IZa7EOvZqcXX3Z4L3aZtH9mW5hk6iXhQCu71xj6v9hxR8i1EmoZs7sXrceUtz5UY0A5PZD8PafsrHUUFsa7QfsjNu1rpawYCm/gPu/osQAj76IYzRQk+0EQX5oCoRs/oQkEfBAVgU3I8RLUs+A4BsDfFU8bo412QCRqL7QQQmT3C6N7mwqUO6WRixhbA2SoEEfs85xD2x/iVUIH5KebM2U3jTbv2MZFFk4um64DyDN4C1/AYs8aCK8IzUHLo2hpU1xQVZg==
+ bh=1GT6ICyEycLultmfqSNN0qm9MZSItpnVp1gcD8f1wCw=;
+ b=qWQG+dnlgFiBfDRdWUUc/HsPIm3Rvp2DcfYPhG5Il7vpJJKUm5hR7R/NdDqRueX/z++1cIDgdEtpndlCp+63mdI+9Vb45g7Bdy183U1uFZBDTHHblxADiDEgEHhbKWM/sLQ2IRZL3LiAZXQ5SxyiiI3gsSLHdqQxkXOOV/dTaqrGUK0xvrTUDl3q5v6YBLPvki7tko+ma3XTW2TEMjt0iRDKg7tqPRsYTDvahaQzeVqRYgGJjWGy3jdLueK6B4vEv00zDf64RIgWoQObnTwI9pFs4SulT+y+X/ZqFnJ+n3syd+63G2s+x+/JEd5O52e0sjtkNtLSqEll3HQw+j2JSA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dzp7RLpvp4URiDmBX0cWL4PaIsZEo8NUkscsCyRUJLE=;
- b=IMYNgVYaiwlMi94vAd66CmexchApWWoc5T7tH1nrOLDiC8SJWygNml0B9GqBCwrBklfaoYIeWWHJz72UfZXhGuSRGg8jqejGySlR/BmGyhZHWopyieovrhG3APuts5jG0XkifSgoDfn4RJvKR+a2oILf0RNHNma9WtxLGhgjPtQ=
+ bh=1GT6ICyEycLultmfqSNN0qm9MZSItpnVp1gcD8f1wCw=;
+ b=RS66KbtyeoDBwGLWrrag2BSnRlZ2TTf9VaTiy8+H8A7pFYUl7sjXJKvb18VKdrQGK/c+bh6gWlysoJc7i4570j/JNkvXwOrlCnCueCE+nBJcM/XX61BqyvgEK+3JjfEHvGcXdGtnFJ3RRuL6gyNpyGVnathlH9Fanwvsct2LtGEJM+8npl7y6ZXMtf/VtgrrO8qjduOn2/MqDJM9tTAlDd2trtT/Nhr99H7Ll1Wwr1Q2Of2gTgeDnpkKYKJnTrlqc8jeswLo7PSrMGbHOkI+Xnk1MQ8XvzeoJUj+3DpJ3a+I5gnWiKf3UnFK0GUVr/CAp0BN7+f637MOp+CHJFPIKQ==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO0P265MB6993.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2ea::12) with
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from DU2PR04MB8951.eurprd04.prod.outlook.com (2603:10a6:10:2e2::22)
+ by DU4PR04MB10982.eurprd04.prod.outlook.com (2603:10a6:10:589::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.10; Wed, 21 Jan
- 2026 15:10:26 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9542.008; Wed, 21 Jan 2026
- 15:10:26 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 21 Jan 2026 15:10:25 +0000
-Message-Id: <DFUD2VQGF43V.3AGDOE8K4ANNX@garyguo.net>
-Cc: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
- <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
- <smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
- <kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
- <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
- <daniel.almeida@collabora.com>
-Subject: Re: [PATCH v11 2/5] rust: io: separate generic I/O helpers from
- MMIO implementation
-From: "Gary Guo" <gary@garyguo.net>
-To: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20260121142355.4761-1-zhiw@nvidia.com>
- <20260121142355.4761-3-zhiw@nvidia.com>
-In-Reply-To: <20260121142355.4761-3-zhiw@nvidia.com>
-X-ClientProxiedBy: LO2P265CA0266.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:a1::14) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Wed, 21 Jan
+ 2026 15:24:12 +0000
+Received: from DU2PR04MB8951.eurprd04.prod.outlook.com
+ ([fe80::753c:468d:266:196]) by DU2PR04MB8951.eurprd04.prod.outlook.com
+ ([fe80::753c:468d:266:196%4]) with mapi id 15.20.9520.011; Wed, 21 Jan 2026
+ 15:24:12 +0000
+Date: Wed, 21 Jan 2026 10:24:01 -0500
+From: Frank Li <Frank.li@nxp.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: dave.jiang@intel.com, cassel@kernel.org, mani@kernel.org,
+	kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com,
+	geert+renesas@glider.be, robh@kernel.org, vkoul@kernel.org,
+	jdmason@kudzu.us, allenbh@gmail.com, jingoohan1@gmail.com,
+	lpieralisi@kernel.org, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	dmaengine@vger.kernel.org, iommu@lists.linux.dev,
+	ntb@lists.linux.dev, netdev@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, arnd@arndb.de,
+	gregkh@linuxfoundation.org, joro@8bytes.org, will@kernel.org,
+	robin.murphy@arm.com, magnus.damm@gmail.com, krzk+dt@kernel.org,
+	conor+dt@kernel.org, corbet@lwn.net, skhan@linuxfoundation.org,
+	andriy.shevchenko@linux.intel.com, jbrunet@baylibre.com,
+	utkarsh02t@gmail.com
+Subject: Re: [RFC PATCH v4 05/38] dmaengine: dw-edma: Add a helper to query
+ linked-list region
+Message-ID: <aXDvkRCZXQ/dPwRd@lizhi-Precision-Tower-5810>
+References: <20260118135440.1958279-1-den@valinux.co.jp>
+ <20260118135440.1958279-6-den@valinux.co.jp>
+ <aW0S60D2uALBXdtQ@lizhi-Precision-Tower-5810>
+ <e4y664ylum35wvj4endwprzpp4cvfaggklik5mxvdkgmakuqyj@lgevmhllem72>
+ <tuhaxwmmcjfltih7ckfo2l5ltzicnj6zfc5ka3pvqlljn7ldu2@ibo5eo62lndn>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <tuhaxwmmcjfltih7ckfo2l5ltzicnj6zfc5ka3pvqlljn7ldu2@ibo5eo62lndn>
+X-ClientProxiedBy: PH7PR02CA0024.namprd02.prod.outlook.com
+ (2603:10b6:510:33d::10) To DU2PR04MB8951.eurprd04.prod.outlook.com
+ (2603:10a6:10:2e2::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -74,974 +80,212 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB6993:EE_
-X-MS-Office365-Filtering-Correlation-Id: e2388a06-5dbb-4cd4-88f5-08de58ff352d
+X-MS-TrafficTypeDiagnostic: DU2PR04MB8951:EE_|DU4PR04MB10982:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0863f963-9aa0-42a4-f85d-08de59012148
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|366016|1800799024|7416014|376014|7053199007;
+	BCL:0;ARA:13230040|1800799024|52116014|7416014|376014|366016|19092799006|7053199007|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?alhjKzJjRFRnZENsYU0xcmR4NTYvb01ySkZhdnhiRGh5bVI2eFYxYmMwTXl0?=
- =?utf-8?B?b0lyNHVtRG1HVUkwWEtoNFJ2S2hLNlQxZlFPeHRRZUdiUi9TT2gycDNUSmlO?=
- =?utf-8?B?K09JTGh5d3NKcWJEV0VabEZ5dUJtbHJtU3FQS2FhVDRQZUJwWHZIbFhhN3Rn?=
- =?utf-8?B?MUZKdjg2a0JpZVJSbmNIdHBLYzlqR01USGFsaDd0Y0t3ZUFZbU4xQ05UWEU0?=
- =?utf-8?B?U3BZYnhPQzJkSEQxZ0Y2ZHpwK3I4NWJRWXVxV1o2dlJNWjJxVThuOVJyVVBU?=
- =?utf-8?B?cTdRVkF3Q2ZmUmVXaThsNjhSdzFQZXc3a09VOUlzVEVST1RQY1NCVTB3bTFW?=
- =?utf-8?B?R1NBSEwzdUhBMkg0N1EvSTI1SFJVOFFIeDVqZnNydFE3TDZvY3pPM0RsamVh?=
- =?utf-8?B?UklmbTIzTFBkQVVjM3VVc2RFV1FBL0tSbnBIakZNc3JyVlZTU2h3aWVrV2pV?=
- =?utf-8?B?bFFiOHk5UmxjenBJYVlPaWgxaTRML1ZCOVlCUjdzUG8rZnNIc0Z2VlNsNkdu?=
- =?utf-8?B?d0J1ZUlLRzFyRzhxblFTTG1UdVNicU1mcTR5S1A4Y2RMZHQ3NldCSFVaSE9w?=
- =?utf-8?B?VlJteFpQaE4xaUNzTy9MdWNQaTljTm5sc3VPdTUzWSsvdzlVV0E4SkdmYUdH?=
- =?utf-8?B?WHZib0JuYzAwNTlydFJIZG1FVzhUN0V1OEhHdWFPTGtSczZCTWpHRmdMQ0di?=
- =?utf-8?B?dHRaTXVhOGNtUjhoVUl3YldmK2NQNlJQZC9VMEdnWkJVZWhUZlFJdytSQzlx?=
- =?utf-8?B?Q3pVUVl5ZUFOYzN4dGhYWDZsWFJ0anFMdzlKUEpnRkNtRy9TVlJ3RUt5SW9r?=
- =?utf-8?B?WWF1ajdydFlpOUhSUXAzNVVYdmRzeTd5UTRNeFJNR0hGSXIzbkUxdHViQjRD?=
- =?utf-8?B?VlE2VktBdVRrOWx5TGNaK3NWQ1J5NTlXclp4Wk1ZbWpRZklWVUJuL1l6VHgv?=
- =?utf-8?B?TVRYYVYvOHRTaDNXbmNZVDJXc0NUblZhYjA4bEFhTEdUL1J0QXhjSjJBajFD?=
- =?utf-8?B?NGh2TTlhWDk5TEpSMEJEVGxSSmhpQUtjTUUwQjNYYytIUm8zcGJoSFZOMVE3?=
- =?utf-8?B?RGxuWnJsNDEzMm9LMmNuTWh6b2VLcXJPN1J1aFVHQmd1dVlJc3hmUHAwMEQz?=
- =?utf-8?B?L3drb1p1TFJZcUtDVXRVQWppT2ZHbGh6UHZYdERRc2k4K0R2QmUyUHFNdnMr?=
- =?utf-8?B?cFZhb1VFcUs4NWk5ckJJT1E2MGRlL3hCUGZBRC9SVDl6T3NsUWtrcHgvWlZt?=
- =?utf-8?B?ZEQyQkd3aGtUMXhUUGR4ZEhUTmhLUnBDWWVaZktWS2hUYjdETENuU2dscHVL?=
- =?utf-8?B?NXZJSXU3STlHREMybWdYVUpYancwa0d2QXRibkN1SG5xcHVOdHZudHFweWd3?=
- =?utf-8?B?MkRxNWQrNHJKNDJFY0Q3dFNOa24vdm9pK3Uza2NraHBsTTU5SE42UmllL0w4?=
- =?utf-8?B?d2hOc2JmVEhjTldYV1drNmZnYnFCMi94UlRtbnlLVDJMQnh3M0tPcE1XSzF3?=
- =?utf-8?B?MTdQUTVuUk1xcTdHZ0ZRVExRSm9qRVhXRDlGR3Q1UVZWSkdzTldyMWxzUE54?=
- =?utf-8?B?VTh6Vjd3czIzVm8xVklkTDBRYkVibHFlbE5HVVdZZzlaWE1kN3NPcTVEc3l3?=
- =?utf-8?B?cTVtWlBmdTFza2hxZi92OGUxWmxjSjd5ay9SRnl6UHI3L2paMGdDWlVmazA2?=
- =?utf-8?B?TUJpS0F5MkRVK2EvT2YyMXJXSjNhckVzamRHN3QrQnNjZit2aHhoK1RVaVNC?=
- =?utf-8?B?eEdlZFE4VTd3Mk5oT3RKQWZFaVBRNldlR1VKVTJWSi8zVkRmZDVUWnR6TjV6?=
- =?utf-8?B?UWlGNktIdUUydmhmMVpPaGl4UWVuSjQ4d0toRXI4SFI1V0JPTWFTNHR6bjF3?=
- =?utf-8?B?T0d6NWszLzVlZC9zUVdyL1V4dTZDUWdacXR3azhheG1wZlBvbER6Y1lnZ3FU?=
- =?utf-8?B?MmFMTzBCQnJqQnJ2NDJkU0RwU0N5Mjd5QllQUmNCai9mMzRHeUFoUGw4ZVNN?=
- =?utf-8?B?SzR0Znp0RnJXdndsMjFqVFV6N29CV3FHS3RnMnF3UGdHQUowNVF0dHUraEta?=
- =?utf-8?B?TFIyVU5qRmtEcmcrQ3pjZ3lQdTROaGdSQUdUditoY1VKa2tleUxnWGlZaHl2?=
- =?utf-8?Q?IZbI=3D?=
+	=?us-ascii?Q?RRQMHWjjRZ6eLGVhgUsbNQVaoLuDa5YsA0ngMD0ZR4U5QLlJ2LaNboPBHbTw?=
+ =?us-ascii?Q?OF/KdSgg6M3C7IiHTPvJw6Ix72f1g/PSJj6uFX65OwaCZNejaEfLzgOJFMPu?=
+ =?us-ascii?Q?YSR5gdDp85kQnJkkEOAn3F0QopuNZ2FzgP5QYQ7rknmgeovEvagCysodLDkk?=
+ =?us-ascii?Q?9a/g4G7SGGoYsPLQKkdibzygzBG6Dm/CT8WfiIfysdkl71hR2mxHM9RI9Thb?=
+ =?us-ascii?Q?vSL3ORpR3XNaeS8ebCtbCcRMOtHaCSHfD9tjtBsaMV0YS77VvDbBX5A6bS1S?=
+ =?us-ascii?Q?QzpTe8igWUtT/h8iDmprXJGqCRvvRfMBs9hOO/1e4L72OyUlNk++xWuXWMqa?=
+ =?us-ascii?Q?vLI6Dhm3oLIDXL/F+ZYLPcfbUzVCUsZS+eH0QAnfj3uJUe8ddJy/jf1Jx2Il?=
+ =?us-ascii?Q?STlZZBymMIorwyjkw+pEBqta4X+RVczv78UU/ot/bjORg1ig+GuEY4AyNXsR?=
+ =?us-ascii?Q?upHzJBm3T/yAVKHCmB/hoAl+0qsGEujUiTFwqTz8c8tcRv7xtr7R4W5U7PFY?=
+ =?us-ascii?Q?LVSeyL+iFxfbhuHYRwca0bYN6vr1PHA3TVIlQFq/IN2PIVdv1NkT8HZvym4V?=
+ =?us-ascii?Q?W3csWMY6qHDj9QdQILmZTEqIaK/XwwTp1We8fzO1ROmiUUb9ngDyE6Oj3gfK?=
+ =?us-ascii?Q?pwBcxPLu6QZp6gGBQ+n7KSWHqz2iAtqvvG6ymf66B95iEnV4rQIT6EV0JDST?=
+ =?us-ascii?Q?pmxVl1JWV0tYBhmdizgaz3OB5sFZa0q2tP3Cn8s9vT1NGI0Gf8qz6A5+xR0d?=
+ =?us-ascii?Q?6qY0IqDwzwzD8SGWYMmpPWkm83nnh/HOM4iZR1qJWCqBthmgWQjsnL/sAQBi?=
+ =?us-ascii?Q?c8FLZrfXUNZfSiWFhpWO5zubTHmQcAiu0GoU+UayVmKMBpAfqggIKakj7mJF?=
+ =?us-ascii?Q?1JdzV/J9MKdPadSkWECqo/88GD/7rSYnUUMCyUYVwT+dz11LhwmFEQplWp4l?=
+ =?us-ascii?Q?9pWNCzadaOL9C4hLoqp3stPu8hMYofmy9hRwr0fq+DbFZP8865noUGv3cJo9?=
+ =?us-ascii?Q?bLH0OlotCru3DFTihlyiBPqDe/y62gMT7HCdajRwUiJKp2W4IlUpKZ1XIDjr?=
+ =?us-ascii?Q?bbKsvO1CFdRiV1eg4AjTsjuLRUohjlns4Du4XpbY6G4K343rXaNpILmR2RPk?=
+ =?us-ascii?Q?cnk3fIN/fUZvdEYgnNi+Z8pLFxCC4wMB96PdhnA4TGckw79XW6oVVj5kr/Qn?=
+ =?us-ascii?Q?nU8JMs00MMEIh6Gr8NFpPHcSm5E7+PZijinmsMTBj93gCwMfXsNDNhan6tio?=
+ =?us-ascii?Q?8Qwqx88Fk2/o1GGXJMzwg3C0xtpbT0H4zjP3ezQOA39ninS5XnpRxSFXRqqg?=
+ =?us-ascii?Q?FPKo3kAfjGQNr8sQv/KvB+Fp4U31ruIuBFS7shpflR3W9gusfQTZCyLaqVdx?=
+ =?us-ascii?Q?1umcecBmUuVGPKJ7qYMy4h4epytcXVa2wAMDjpQrs/r8X55YgOGsgtrZ/kAL?=
+ =?us-ascii?Q?jVP+L6gBA6/4Tjqkf5mjQQrRdHNZdn8dh8SgzG7H6tg2c+z+s4oZpbnAzF91?=
+ =?us-ascii?Q?Lg44UY/AceT1WjiHybpua9Yh0wFbEL1STZfLn8ASg54KZYilLGWNaIFxeDrv?=
+ =?us-ascii?Q?eds8U45W5RQExWAL0PWiDGea6AETsGy1VkJ7ZmF5aTEiz+lszS7oNUnqP1Zc?=
+ =?us-ascii?Q?NrrvUCmaPZ/wA5uSgg2QtzA=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(1800799024)(7416014)(376014)(7053199007);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU2PR04MB8951.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(52116014)(7416014)(376014)(366016)(19092799006)(7053199007)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?d3lhSzVwc1M2SktJZGRKcWpMK3YrMFJacUx6MGxlTjZSSzhyVXF4ZmV0OTdF?=
- =?utf-8?B?R0ZIck9vZ3prcWJaRk5CVHhleVh0c0hRV09sRWNzTVNKZm1yamlZci8wbmti?=
- =?utf-8?B?R3FMYmJ3RnpRV3psMWpBM1lGRUQ5ZnBTeDdYOGZtZG9RNklsTFROTlI1bDZE?=
- =?utf-8?B?WFhVRjNQZVJ3dW14aGdCWlJYd295QmRrdDJZbWIwRkRabmNjYnZRRjlWcUxX?=
- =?utf-8?B?WWFYSExIOXFlUURLTS9CeHNCWi9iL2xPejlEaUFDMVdSL2JMa1o0eGhLNFJt?=
- =?utf-8?B?WVdIOW0rc2JLa0hGNDRaSVZGa0taeFJrZnJFMHI3ZVNKWEJxNzlSMEsxRXQ4?=
- =?utf-8?B?UjNSYldwRmYwL2lOcjduNDZGZUxyazJja1R2RlNXMVJNcEwycW9EOWRVSTVN?=
- =?utf-8?B?bTJZUnp1bDhVT1FCb0xKUHRoQUd5ODZJZ3F2QXAwWHMrdzdmRDZzQ2NIL3ln?=
- =?utf-8?B?K2R4R1dRalpacW41dFV0WGxlOUYzdGtlSHd6cG1CVlpMUGZ3MHQ4OE84UjlN?=
- =?utf-8?B?WEJ6bG5zYzRvN2IySFVKL1Roc1Y2N1JwNmtiak5sODU0Wk1JYVB0N1RwaUEy?=
- =?utf-8?B?dXVMVzZWUVhVNCtUejc0N3VHem9XaVBNQ2J5ZVdLdTlnK0dtVjhVNVBRVisw?=
- =?utf-8?B?ZHJSY1FCZE9aQkZCdkpEcmJnVDFMNmpRaHZXeGFXZ2IzN3Z6M3BhMkQ4ak1j?=
- =?utf-8?B?SXFtTmt0U3phY3NzSVN5WHZzZzBkSnJteUhYa2VHVjI2SVRKOG5JQ29jMW1Z?=
- =?utf-8?B?UmR4alNHenFuU2Evdk9IelJERzhLVm5vUXZrMFQzYmFra1BBaHY2QmV0VXcz?=
- =?utf-8?B?T1VZVUdkYVFGSkFJOFBYbVgrWFJ4YTNKZzZxZFhUd1hQQVE3eW5hVUZwN0lr?=
- =?utf-8?B?NmwreTM3QVdUb3JkR05YM1dNWmF3a2JDZ2hyRk5waEYwRytrRjU3Z0V1dWIr?=
- =?utf-8?B?Q1dQamt5NUY4WW5JTkt4dkZvYWVIb0VqWXFRRXFrNlRXZGpnUDlERm4zN1pv?=
- =?utf-8?B?LzhiYXBha2FpaUlKRElwYjA5aUtlNVJNQVlTY3pJMjVhbzl1aUZndzV4WjRM?=
- =?utf-8?B?dlFqcm1xMzM3UUVmY2ZwNFBQODBHK1V2QS9RamN0QzJjVFdZNjJWQk1QL0FF?=
- =?utf-8?B?cHg3cWlzSnBWVXd0aUVaSHpDRWlvZEJMemV5M0ZVdHM3NG5DV245MXFyc05a?=
- =?utf-8?B?RHB6SzZFejMwaG52cXRJZXIzTDZ5R01TWDRaWWY5UHE3cE1VeVEwWU16V0pT?=
- =?utf-8?B?STZCcm9CQWE3bmFaMTNuYlVZNUhZYzRpRnM3ZHpGRXBQQk13dGdwcW9LSFRw?=
- =?utf-8?B?RkdkRmUrVDZyeDU2MnFNRSt4WnRvOXFOTSt2SXU5MEF3SUJnVW9lbzJWRlNm?=
- =?utf-8?B?akdzV2RuM3N1U2V1clYvcEJsZVFQWmxYNVBOZXJocHlPYkpYdlNVRHZ4Y2tz?=
- =?utf-8?B?b2tXTkpTTU5aWlpmNzRFVTNVaFpCODJSYVhLNk13TzhaZHpoK29VQVlqZmZP?=
- =?utf-8?B?SXo5NGFZdXNqQ0xPUkV1NE53RWdtZ0lUT3pVbzF5djI4ajI3bTJFaDVOV3kx?=
- =?utf-8?B?dkJZWTJqQ3V4dWtjL3hGejBkYnhhUUo3L0VxVHFRS3Z4eXoxYkUwbE9FQkk0?=
- =?utf-8?B?Q1BTZTk3RFZZdkZnOVcwUW5aOE5GaElnUzhDU0RNcllRWTlScFZDZThwRGJP?=
- =?utf-8?B?WVFSWUNSTW9zdjJYVURJY2xIa3RtVXNpalRTZWZORmQzV0hkVEd0WTdQS01s?=
- =?utf-8?B?ZWNZeG4rYk1lZ2V6QWFRd0lNWldJblVNWWhVSjhzd1hsOWpBZWtaUURJcVVK?=
- =?utf-8?B?T0pPT2s1OGllR0dsekdxSFpqQmY5alNYbGxjTFlHY0JjZGN3ek9VdWVSK1JV?=
- =?utf-8?B?SjVUY0p5Tkw0ZUMwNy9ZTHhlK1FtSnEzOCtaU1N4SmFQanlLTGwwS25uTlJC?=
- =?utf-8?B?dFZVRnFBU1V4cURBS1VvZlRSdXdvaHB6UlBwREpkanpWWmNIc2F5UDE4YWlL?=
- =?utf-8?B?STNhV1U5VUdzTXZYMzdQT1RyUmxwQlVSVmJEdUdOUWs3Q01pT0wyWFBVdEVR?=
- =?utf-8?B?ektXeURtWExkSTQ5N2QrNDFwYURPbW4rbXFYRWRqR1BRMFJIalQ0Tlc1RENs?=
- =?utf-8?B?RVRjSjRuSm9lRXRnbnM2QnJtbjZVQkNmc1o2SEJURFBiK2xCOS9wRkJFRWZ2?=
- =?utf-8?B?Mit0R1hDelRvQ2ZOMlVRNTR6cGxaM00yellmbmRQRmQ2UlRDWm1VR2EvdXBj?=
- =?utf-8?B?dTA5MmxMQkNzMlBlNnZ0QXRjUWhDdmU2cFJrNHRCTVVHdFB6Qm5iYmJ2Skcx?=
- =?utf-8?B?bzMyb2lOTml0YnJBV1hsOVRMd044RFlWVkx2VExiN3N4T240WXFkQT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: e2388a06-5dbb-4cd4-88f5-08de58ff352d
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+	=?us-ascii?Q?+SPTKHrU1NBch0tnGzibuOmEefVa39qLNxjImfjhBy/4f2gfNAggWBfVTZbh?=
+ =?us-ascii?Q?LNzVpomkqAeFDy3F1ZTXBpq66nxHs8K6fXADGdDWj4Mjwr7vz/NAvjoRjore?=
+ =?us-ascii?Q?Ymwp4Qt3mNHzYDu7sqSt3kcBFERGIzC/7pcJwU6KYZARmfl/2VSm7AXt+tgo?=
+ =?us-ascii?Q?+S6VCLNp/mvXY1H1cnqT9IfwwaFsGCUmDtM0pQezqb9Nafvtni4VDNfy2skC?=
+ =?us-ascii?Q?kmbU53x3bgKmji68ocYznszy+ZgIebkAi/A0qzdrfZEsATfDrqEg9Cc5nXMF?=
+ =?us-ascii?Q?h/A6QTG9myV+12vAJhHwLkLPticNGKR1TPmVJLChl7IXcLevcc8Tz/L6Egjy?=
+ =?us-ascii?Q?tDrn1LQW/wODEQTEveiTdEnFiU+u+JcoECQzZNRc80rErfHaK7lmuU/QPSqO?=
+ =?us-ascii?Q?emQbzeOanmnVwHrBT4Irz+wF2pJFC8OTPAk2izlimnaJtFDLSWUpJkeFEj7Q?=
+ =?us-ascii?Q?Re35eeX7WVpYlUUCUtIYl+1PUj07Gegetk3Ch8w8/azyBu4b62Nmp4Gj4zyv?=
+ =?us-ascii?Q?Xkb1cHqxAeI4Rv+T0hS83Z6aj4ny4PJGN3I+iIvVmsc32Vfkeo+zg2ywI+tU?=
+ =?us-ascii?Q?sucSz0wr4lxnHJ/yxtkc7mP81rhARqeOTkaJBQI2T4VoIgWjFWSZ5DFuxEew?=
+ =?us-ascii?Q?5VGTKBw7tR/aRKtA8ujylpeeotujmj35/kwo7z0YtJXVB76u91k/7pQx2TmA?=
+ =?us-ascii?Q?yt9Uv4UKTYp9vVSkVLN4gT8CBsd8cW5ZhZMnfoj2gC1QuD1ls9gtE6H/B0wi?=
+ =?us-ascii?Q?aYxKnZpdt1f+FThWd+bit+szMyl183MiTkDueds+k+4fIBDKr0keN719nI16?=
+ =?us-ascii?Q?lTkiN2qA7vkE1toOc7xKv6idZRop501rfJ10eP9TXhwiZPi00Vk5S7wbTBmo?=
+ =?us-ascii?Q?KgAa/XUVtK5k8mCIOnN5rAzxoCNWqA3WO6arL+/N3Q8Mz4ERtrKouDS6ajX0?=
+ =?us-ascii?Q?e+OnGjclMkgq4bQaqbKmnAIf7T3FnwtzU7FSz25CTo3JfV1LBRDsUkYvilLI?=
+ =?us-ascii?Q?SLqT2tM6oH2LmavfL/UwWMgFfXDjiCJE099qMiwnCYgkZvgr42/Hzul8vzW0?=
+ =?us-ascii?Q?FgAM9giVlojofUAzwr9iDOoGPJrMBuUu5hDw8f27WVPkN9vu5rUc/O5D8XZU?=
+ =?us-ascii?Q?wRTnRu1pC6yfIFAjL38TKev2ukgjFbJQYSZTP1bPUWHndv8T7O7/ucHWUXtz?=
+ =?us-ascii?Q?b07lwmhjF6Ydg553AOKs2gIbBXHJU/IBgqZP6H8iL/aljxNe+7+EMtxXB2rt?=
+ =?us-ascii?Q?GvyC0iZ5kLeAq39rz9ztIRh5OGY+Bj3Ww/C2gzPoYhI4b2jvbyHKOEBg1o+S?=
+ =?us-ascii?Q?IO0ii9WSOJLnqsdBXwoNkqW02i6Yxk18T7pLjOyYVrdNg/iJKvAMEVOI3fGT?=
+ =?us-ascii?Q?Yl9KHuGnLNZEcdDyyDlSbf/nnZqNBRG6klf1YzKw68+Q3AnTcM9E2uGJtXq2?=
+ =?us-ascii?Q?yKzi6CzD2s3KOIUHGOKX7aDfQSev0KgxoTiZpRGvLn1zzLvTqPvYJ2hFWRqo?=
+ =?us-ascii?Q?BHzhbqvhyXSNF8dtGj6MCtWq6YsmvkfQvfSZIQ8I4sBtcHpwvRsBfgCQoew1?=
+ =?us-ascii?Q?1F0IA3+KSpAYh6NVdmy8FWmyFPU188NUvSHducJKo1s6Qbmq1b8KlUBrz0Da?=
+ =?us-ascii?Q?iCiQS1n8iI4Q4ZyUI/LVHxYT7PidMqkoGpCb7CMkc6UjP5VUYJOuZPObLSXf?=
+ =?us-ascii?Q?4DNBAutwSPFXMm5r0cJoV7a6tsyfGvDFNdt83SbUTzOW+aoX?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0863f963-9aa0-42a4-f85d-08de59012148
+X-MS-Exchange-CrossTenant-AuthSource: DU2PR04MB8951.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2026 15:10:26.6719
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2026 15:24:12.2537
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: vhO2zLV+ECCAQXrnYSBcbdJuAx/c7Eta7bZUbo7aOKDxvYUHXK+PJnrobNBL9BN7rADS000rFYeJ+QOTnnq9IA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB6993
+X-MS-Exchange-CrossTenant-UserPrincipalName: Supy9cjjClTy+5FueGwvGWWk1jcd2BcU4dwI5g4O+69xCEhaTG5GQcxOuHCwRnMXh+zblKq9gKPd+NborIj1zQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR04MB10982
 
-On Wed Jan 21, 2026 at 2:23 PM GMT, Zhi Wang wrote:
-> The previous Io<SIZE> type combined both the generic I/O access helpers
-> and MMIO implementation details in a single struct. This coupling prevent=
-ed
-> reusing the I/O helpers for other backends, such as PCI configuration
-> space.
+On Wed, Jan 21, 2026 at 05:41:11PM +0900, Koichiro Den wrote:
+> On Wed, Jan 21, 2026 at 10:38:53AM +0900, Koichiro Den wrote:
+> > On Sun, Jan 18, 2026 at 12:05:47PM -0500, Frank Li wrote:
+> > > On Sun, Jan 18, 2026 at 10:54:07PM +0900, Koichiro Den wrote:
+> > > > A remote eDMA provider may need to expose the linked-list (LL) memory
+> > > > region that was configured by platform glue (typically at boot), so the
+> > > > peer (host) can map it and operate the remote view of the controller.
+> > > >
+> > > > Export dw_edma_chan_get_ll_region() to return the LL region associated
+> > > > with a given dma_chan.
+> > >
+> > > This informaiton passed from dwc epc driver. Is it possible to get it from
+> > > EPC driver.
+> >
+> > That makes sense, from an API cleanness perspective, thanks.
+> > I'll add a helper function dw_pcie_edma_get_ll_region() in
+> > drivers/pci/controller/dwc/pcie-designware.c, instead of the current
+> > dw_edma_chan_get_ll_region() in dw-edma-core.c.
 >
-> Establish a clean separation between the I/O interface and concrete backe=
-nds
-> by separating generic I/O helpers from MMIO implementation.
+> Hi Frank,
 >
-> Introduce a new trait hierarchy to handle different access capabilities:
+> I looked into exposing LL regions from the EPC driver side, but the key
+> issue is channel identification under possibly concurrent dmaengine users.
+> In practice, the only stable handle a consumer has is a pointer to struct
+> dma_chan, and the only reliable way to map that to the eDMA hardware
+> channel is via dw_edma_chan->id.
+
+If possible, I suggest change to one page pre-channel. So there are a fixed
+ll mapping.
+
+> I think an EPC-facing API would still need
+> that mapping in any case, so keeping the helper in dw-edma seems simpler
+> and more robust.
+> If you have another idea, I'd appreciate your insights.
+
+I suggest add generally DMA engine API to get such property, some likes
+a kind ioctrl \ dma_get_config().
+
+Frank
+
 >
-> - IoCapable<T>: A marker trait indicating that a backend supports I/O
->   operations of a certain type (u8, u16, u32, or u64).
+> Regards,
+> Koichiro
 >
-> - Io trait: Defines fallible I/O methods (try_read8, try_write8, etc.) wi=
-th
->   runtime bounds checking.
->
-> - IoKnownSize trait: Extends Io to define infallible I/O methods (read8,
->   write8, etc.) with compile-time bounds checking for regions where the
->   size is known at compile time.
->
-> Move the MMIO-specific logic into a dedicated Mmio<SIZE> type that
-> implements the Io and IoKnownSize traits. Rename IoRaw to MmioRaw and
-> update consumers to use the new types.
->
-
-Hi Zhi, thanks for doing the work. It looks much nicer now :)
-
-Still, some comments below.
-
-Best,
-Gary
-
-> Cc: Alexandre Courbot <acourbot@nvidia.com>
-> Cc: Alice Ryhl <aliceryhl@google.com>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Gary Guo <gary@garyguo.net>
-> Cc: Danilo Krummrich <dakr@kernel.org>
-> Cc: John Hubbard <jhubbard@nvidia.com>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
-> ---
->  drivers/gpu/drm/tyr/regs.rs            |   1 +
->  drivers/gpu/nova-core/gsp/sequencer.rs |   5 +-
->  drivers/gpu/nova-core/regs/macros.rs   |  90 +++---
->  drivers/gpu/nova-core/vbios.rs         |   1 +
->  drivers/pwm/pwm_th1520.rs              |   5 +-
->  rust/kernel/devres.rs                  |  19 +-
->  rust/kernel/io.rs                      | 415 +++++++++++++++++++++----
->  rust/kernel/io/mem.rs                  |  16 +-
->  rust/kernel/io/poll.rs                 |  16 +-
->  rust/kernel/pci/io.rs                  |  12 +-
->  samples/rust/rust_driver_pci.rs        |   4 +
->  11 files changed, 453 insertions(+), 131 deletions(-)
->
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index a97eb44a9a87..152afdcbaf78 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -32,16 +32,16 @@
->  /// By itself, the existence of an instance of this structure does not p=
-rovide any guarantees that
->  /// the represented MMIO region does exist or is properly mapped.
->  ///
-> -/// Instead, the bus specific MMIO implementation must convert this raw =
-representation into an `Io`
-> -/// instance providing the actual memory accessors. Only by the conversi=
-on into an `Io` structure
-> -/// any guarantees are given.
-> -pub struct IoRaw<const SIZE: usize =3D 0> {
-> +/// Instead, the bus specific MMIO implementation must convert this raw =
-representation into an
-> +/// `Mmio` instance providing the actual memory accessors. Only by the c=
-onversion into an `Mmio`
-> +/// structure any guarantees are given.
-> +pub struct MmioRaw<const SIZE: usize =3D 0> {
->      addr: usize,
->      maxsize: usize,
->  }
-> =20
-> -impl<const SIZE: usize> IoRaw<SIZE> {
-> -    /// Returns a new `IoRaw` instance on success, an error otherwise.
-> +impl<const SIZE: usize> MmioRaw<SIZE> {
-> +    /// Returns a new `MmioRaw` instance on success, an error otherwise.
->      pub fn new(addr: usize, maxsize: usize) -> Result<Self> {
->          if maxsize < SIZE {
->              return Err(EINVAL);
-> @@ -81,14 +81,16 @@ pub fn maxsize(&self) -> usize {
->  ///     ffi::c_void,
->  ///     io::{
->  ///         Io,
-> -///         IoRaw,
-> +///         IoKnownSize,
-> +///         Mmio,
-> +///         MmioRaw,
->  ///         PhysAddr,
->  ///     },
->  /// };
->  /// use core::ops::Deref;
->  ///
->  /// // See also `pci::Bar` for a real example.
-> -/// struct IoMem<const SIZE: usize>(IoRaw<SIZE>);
-> +/// struct IoMem<const SIZE: usize>(MmioRaw<SIZE>);
->  ///
->  /// impl<const SIZE: usize> IoMem<SIZE> {
->  ///     /// # Safety
-> @@ -103,7 +105,7 @@ pub fn maxsize(&self) -> usize {
->  ///             return Err(ENOMEM);
->  ///         }
->  ///
-> -///         Ok(IoMem(IoRaw::new(addr as usize, SIZE)?))
-> +///         Ok(IoMem(MmioRaw::new(addr as usize, SIZE)?))
->  ///     }
->  /// }
->  ///
-> @@ -115,11 +117,11 @@ pub fn maxsize(&self) -> usize {
->  /// }
->  ///
->  /// impl<const SIZE: usize> Deref for IoMem<SIZE> {
-> -///    type Target =3D Io<SIZE>;
-> +///    type Target =3D Mmio<SIZE>;
->  ///
->  ///    fn deref(&self) -> &Self::Target {
->  ///         // SAFETY: The memory range stored in `self` has been proper=
-ly mapped in `Self::new`.
-> -///         unsafe { Io::from_raw(&self.0) }
-> +///         unsafe { Mmio::from_raw(&self.0) }
->  ///    }
->  /// }
->  ///
-> @@ -133,29 +135,31 @@ pub fn maxsize(&self) -> usize {
->  /// # }
->  /// ```
->  #[repr(transparent)]
-> -pub struct Io<const SIZE: usize =3D 0>(IoRaw<SIZE>);
-> +pub struct Mmio<const SIZE: usize =3D 0>(MmioRaw<SIZE>);
-> =20
->  macro_rules! define_read {
-> -    ($(#[$attr:meta])* $name:ident, $try_name:ident, $c_fn:ident -> $typ=
-e_name:ty) =3D> {
-> +    (infallible, $(#[$attr:meta])* $vis:vis $name:ident, $c_fn:ident -> =
-$type_name:ty) =3D> {
->          /// Read IO data from a given offset known at compile time.
->          ///
->          /// Bound checks are performed on compile time, hence if the off=
-set is not known at compile
->          /// time, the build will fail.
->          $(#[$attr])*
->          #[inline]
-> -        pub fn $name(&self, offset: usize) -> $type_name {
-> +        $vis fn $name(&self, offset: usize) -> $type_name {
->              let addr =3D self.io_addr_assert::<$type_name>(offset);
-> =20
->              // SAFETY: By the type invariant `addr` is a valid address f=
-or MMIO operations.
->              unsafe { bindings::$c_fn(addr as *const c_void) }
->          }
-> +    };
-> =20
-> +    (fallible, $(#[$attr:meta])* $vis:vis $try_name:ident, $c_fn:ident -=
-> $type_name:ty) =3D> {
->          /// Read IO data from a given offset.
->          ///
->          /// Bound checks are performed on runtime, it fails if the offse=
-t (plus the type size) is
->          /// out of bounds.
->          $(#[$attr])*
-> -        pub fn $try_name(&self, offset: usize) -> Result<$type_name> {
-> +        $vis fn $try_name(&self, offset: usize) -> Result<$type_name> {
->              let addr =3D self.io_addr::<$type_name>(offset)?;
-> =20
->              // SAFETY: By the type invariant `addr` is a valid address f=
-or MMIO operations.
-> @@ -163,74 +167,95 @@ pub fn $try_name(&self, offset: usize) -> Result<$t=
-ype_name> {
->          }
->      };
->  }
-> +pub(crate) use define_read;
-> =20
->  macro_rules! define_write {
-> -    ($(#[$attr:meta])* $name:ident, $try_name:ident, $c_fn:ident <- $typ=
-e_name:ty) =3D> {
-> +    (infallible, $(#[$attr:meta])* $vis:vis $name:ident, $c_fn:ident <- =
-$type_name:ty) =3D> {
->          /// Write IO data from a given offset known at compile time.
->          ///
->          /// Bound checks are performed on compile time, hence if the off=
-set is not known at compile
->          /// time, the build will fail.
->          $(#[$attr])*
->          #[inline]
-> -        pub fn $name(&self, value: $type_name, offset: usize) {
-> +        $vis fn $name(&self, value: $type_name, offset: usize) {
->              let addr =3D self.io_addr_assert::<$type_name>(offset);
-> =20
->              // SAFETY: By the type invariant `addr` is a valid address f=
-or MMIO operations.
->              unsafe { bindings::$c_fn(value, addr as *mut c_void) }
->          }
-> +    };
-> =20
-> +    (fallible, $(#[$attr:meta])* $vis:vis $try_name:ident, $c_fn:ident <=
-- $type_name:ty) =3D> {
->          /// Write IO data from a given offset.
->          ///
->          /// Bound checks are performed on runtime, it fails if the offse=
-t (plus the type size) is
->          /// out of bounds.
->          $(#[$attr])*
-> -        pub fn $try_name(&self, value: $type_name, offset: usize) -> Res=
-ult {
-> +        $vis fn $try_name(&self, value: $type_name, offset: usize) -> Re=
-sult {
->              let addr =3D self.io_addr::<$type_name>(offset)?;
-> =20
->              // SAFETY: By the type invariant `addr` is a valid address f=
-or MMIO operations.
-> -            unsafe { bindings::$c_fn(value, addr as *mut c_void) }
-> +            unsafe { bindings::$c_fn(value, addr as *mut c_void) };
->              Ok(())
->          }
->      };
->  }
-> -
-> -impl<const SIZE: usize> Io<SIZE> {
-> -    /// Converts an `IoRaw` into an `Io` instance, providing the accesso=
-rs to the MMIO mapping.
-> -    ///
-> -    /// # Safety
-> -    ///
-> -    /// Callers must ensure that `addr` is the start of a valid I/O mapp=
-ed memory region of size
-> -    /// `maxsize`.
-> -    pub unsafe fn from_raw(raw: &IoRaw<SIZE>) -> &Self {
-> -        // SAFETY: `Io` is a transparent wrapper around `IoRaw`.
-> -        unsafe { &*core::ptr::from_ref(raw).cast() }
-> +pub(crate) use define_write;
-> +
-> +/// Checks whether an access of type `U` at the given `offset`
-> +/// is valid within this region.
-> +#[inline]
-> +const fn offset_valid<U>(offset: usize, size: usize) -> bool {
-> +    let type_size =3D core::mem::size_of::<U>();
-> +    if let Some(end) =3D offset.checked_add(type_size) {
-> +        end <=3D size && offset % type_size =3D=3D 0
-> +    } else {
-> +        false
->      }
-> +}
-> +
-> +/// Marker trait indicating that an I/O backend supports operations of a=
- certain type.
-> +///
-> +/// Different I/O backends can implement this trait to expose only the o=
-perations they support.
-> +///
-> +/// For example, a PCI configuration space may implement `IoCapable<u8>`=
-, `IoCapable<u16>`,
-> +/// and `IoCapable<u32>`, but not `IoCapable<u64>`, while an MMIO region=
- on a 64-bit
-> +/// system might implement all four.
-> +pub trait IoCapable<T> {}
-> +
-> +/// Types implementing this trait (e.g. MMIO BARs or PCI config regions)
-> +/// can perform I/O operations on regions of memory.
-> +///
-> +/// This is an abstract representation to be implemented by arbitrary I/=
-O
-> +/// backends (e.g. MMIO, PCI config space, etc.).
-> +///
-> +/// The [`Io`] trait provides:
-> +/// - Base address and size information
-> +/// - Helper methods for offset validation and address calculation
-> +/// - Fallible (runtime checked) accessors for different data widths
-> +///
-> +/// Which I/O methods are available depends on which [`IoCapable<T>`] tr=
-aits
-> +/// are implemented for the type.
-> +///
-> +/// # Examples
-> +///
-> +/// For MMIO regions, all widths (u8, u16, u32, and u64 on 64-bit system=
-s) are typically
-> +/// supported. For PCI configuration space, u8, u16, and u32 are support=
-ed but u64 is not.
-> +pub trait Io {
-> +    /// Minimum usable size of this region.
-> +    const MIN_SIZE: usize;
-> =20
->      /// Returns the base address of this mapping.
-> -    #[inline]
-> -    pub fn addr(&self) -> usize {
-> -        self.0.addr()
-> -    }
-> +    fn addr(&self) -> usize;
-> =20
->      /// Returns the maximum size of this mapping.
-> -    #[inline]
-> -    pub fn maxsize(&self) -> usize {
-> -        self.0.maxsize()
-> -    }
-> -
-> -    #[inline]
-> -    const fn offset_valid<U>(offset: usize, size: usize) -> bool {
-> -        let type_size =3D core::mem::size_of::<U>();
-> -        if let Some(end) =3D offset.checked_add(type_size) {
-> -            end <=3D size && offset % type_size =3D=3D 0
-> -        } else {
-> -            false
-> -        }
-> -    }
-> +    fn maxsize(&self) -> usize;
-> =20
-> +    /// Returns the absolute I/O address for a given `offset`,
-> +    /// performing runtime bound checks.
->      #[inline]
->      fn io_addr<U>(&self, offset: usize) -> Result<usize> {
-> -        if !Self::offset_valid::<U>(offset, self.maxsize()) {
-> +        if !offset_valid::<U>(offset, self.maxsize()) {
->              return Err(EINVAL);
->          }
-> =20
-> @@ -239,50 +264,302 @@ fn io_addr<U>(&self, offset: usize) -> Result<usiz=
-e> {
->          self.addr().checked_add(offset).ok_or(EINVAL)
->      }
-> =20
-> +    /// Returns the absolute I/O address for a given `offset`,
-> +    /// performing compile-time bound checks.
->      #[inline]
->      fn io_addr_assert<U>(&self, offset: usize) -> usize {
-> -        build_assert!(Self::offset_valid::<U>(offset, SIZE));
-> +        build_assert!(offset_valid::<U>(offset, Self::MIN_SIZE));
-> =20
->          self.addr() + offset
->      }
-> =20
-> -    define_read!(read8, try_read8, readb -> u8);
-> -    define_read!(read16, try_read16, readw -> u16);
-> -    define_read!(read32, try_read32, readl -> u32);
-> +    /// Fallible 8-bit read with runtime bounds check.
-> +    #[inline(always)]
-> +    fn try_read8(&self, _offset: usize) -> Result<u8>
-> +    where
-> +        Self: IoCapable<u8>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 8-bit =
-read") };
-> +        unreachable!()
-
-I think this is actually where `build_error!()` make sense. Similar to how =
-we
-use it for vtable methods that are not defined (and hence will be `None`).
-
-This would eliminate `unreachable!()`.
-
-> +    }
-> +
-> +    /// Fallible 16-bit read with runtime bounds check.
-> +    #[inline(always)]
-> +    fn try_read16(&self, _offset: usize) -> Result<u16>
-> +    where
-> +        Self: IoCapable<u16>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 16-bit=
- read") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Fallible 32-bit read with runtime bounds check.
-> +    #[inline(always)]
-> +    fn try_read32(&self, _offset: usize) -> Result<u32>
-> +    where
-> +        Self: IoCapable<u32>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 32-bit=
- read") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Fallible 64-bit read with runtime bounds check.
-> +    #[cfg(CONFIG_64BIT)]
-> +    #[inline(always)]
-> +    fn try_read64(&self, _offset: usize) -> Result<u64>
-> +    where
-> +        Self: IoCapable<u64>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 64-bit=
- read") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Fallible 8-bit write with runtime bounds check.
-> +    #[inline(always)]
-> +    fn try_write8(&self, _value: u8, _offset: usize) -> Result
-> +    where
-> +        Self: IoCapable<u8>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 8-bit =
-write") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Fallible 16-bit write with runtime bounds check.
-> +    #[inline(always)]
-> +    fn try_write16(&self, _value: u16, _offset: usize) -> Result
-> +    where
-> +        Self: IoCapable<u16>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 16-bit=
- write") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Fallible 32-bit write with runtime bounds check.
-> +    #[inline(always)]
-> +    fn try_write32(&self, _value: u32, _offset: usize) -> Result
-> +    where
-> +        Self: IoCapable<u32>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 32-bit=
- write") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Fallible 64-bit write with runtime bounds check.
-> +    #[cfg(CONFIG_64BIT)]
-
-As Alice mentioned previously, the CONFIG_64BIT shouldn't need to exist on =
-the trait.
-
-The cfg on the impl is sufficient (there might be `Io` that provides 64-bit
-access on 32-bit systems anyway).
-
-> +    #[inline(always)]
-> +    fn try_write64(&self, _value: u64, _offset: usize) -> Result
-> +    where
-> +        Self: IoCapable<u64>,
-> +    {
-> +        const { assert!(false, "Backend does not support fallible 64-bit=
- write") };
-> +        unreachable!()
-> +    }
-> +}
-> +
-> +/// Types with a known size at compile time can provide infallible I/O a=
-ccessors.
-> +///
-> +/// This trait extends [`Io`] to provide compile-time bounds-checked I/O=
- operations
-> +/// for regions where the size is known at compile time (e.g., `Mmio<SIZ=
-E>`).
-> +pub trait IoKnownSize: Io {
-> +    /// Infallible 8-bit read with compile-time bounds check.
-> +    #[inline(always)]
-> +    fn read8(&self, _offset: usize) -> u8
-> +    where
-> +        Self: IoCapable<u8>,
-
-I think these *can* be also on `Io` with `Self: IoKnownSize` bound, althoug=
-h in
-practice I don't think it would matter.
-
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 8-bi=
-t read") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Infallible 16-bit read with compile-time bounds check.
-> +    #[inline(always)]
-> +    fn read16(&self, _offset: usize) -> u16
-> +    where
-> +        Self: IoCapable<u16>,
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 16-b=
-it read") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Infallible 32-bit read with compile-time bounds check.
-> +    #[inline(always)]
-> +    fn read32(&self, _offset: usize) -> u32
-> +    where
-> +        Self: IoCapable<u32>,
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 32-b=
-it read") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Infallible 64-bit read with compile-time bounds check.
-> +    #[cfg(CONFIG_64BIT)]
-> +    #[inline(always)]
-> +    fn read64(&self, _offset: usize) -> u64
-> +    where
-> +        Self: IoCapable<u64>,
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 64-b=
-it read") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Infallible 8-bit write with compile-time bounds check.
-> +    #[inline(always)]
-> +    fn write8(&self, _value: u8, _offset: usize)
-> +    where
-> +        Self: IoCapable<u8>,
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 8-bi=
-t write") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Infallible 16-bit write with compile-time bounds check.
-> +    #[inline(always)]
-> +    fn write16(&self, _value: u16, _offset: usize)
-> +    where
-> +        Self: IoCapable<u16>,
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 16-b=
-it write") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Infallible 32-bit write with compile-time bounds check.
-> +    #[inline(always)]
-> +    fn write32(&self, _value: u32, _offset: usize)
-> +    where
-> +        Self: IoCapable<u32>,
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 32-b=
-it write") };
-> +        unreachable!()
-> +    }
-> +
-> +    /// Infallible 64-bit write with compile-time bounds check.
-> +    #[cfg(CONFIG_64BIT)]
-> +    #[inline(always)]
-> +    fn write64(&self, _value: u64, _offset: usize)
-> +    where
-> +        Self: IoCapable<u64>,
-> +    {
-> +        const { assert!(false, "Backend does not support infallible 64-b=
-it write") };
-> +        unreachable!()
-> +    }
-> +}
-> +
-> +// MMIO regions support 8, 16, and 32-bit accesses.
-> +impl<const SIZE: usize> IoCapable<u8> for Mmio<SIZE> {}
-> +impl<const SIZE: usize> IoCapable<u16> for Mmio<SIZE> {}
-> +impl<const SIZE: usize> IoCapable<u32> for Mmio<SIZE> {}
-> +
-> +// MMIO regions on 64-bit systems also support 64-bit accesses.
-> +#[cfg(CONFIG_64BIT)]
-> +impl<const SIZE: usize> IoCapable<u64> for Mmio<SIZE> {}
-> +
-> +impl<const SIZE: usize> Io for Mmio<SIZE> {
-> +    const MIN_SIZE: usize =3D SIZE;
-> +
-> +    /// Returns the base address of this mapping.
-> +    #[inline]
-> +    fn addr(&self) -> usize {
-> +        self.0.addr()
-> +    }
-> +
-> +    /// Returns the maximum size of this mapping.
-> +    #[inline]
-> +    fn maxsize(&self) -> usize {
-> +        self.0.maxsize()
-> +    }
-> +
-> +    define_read!(fallible, try_read8, readb -> u8);
-> +    define_read!(fallible, try_read16, readw -> u16);
-> +    define_read!(fallible, try_read32, readl -> u32);
->      define_read!(
-> +        fallible,
->          #[cfg(CONFIG_64BIT)]
-> -        read64,
->          try_read64,
->          readq -> u64
->      );
-> =20
-> -    define_read!(read8_relaxed, try_read8_relaxed, readb_relaxed -> u8);
-> -    define_read!(read16_relaxed, try_read16_relaxed, readw_relaxed -> u1=
-6);
-> -    define_read!(read32_relaxed, try_read32_relaxed, readl_relaxed -> u3=
-2);
-> +    define_write!(fallible, try_write8, writeb <- u8);
-> +    define_write!(fallible, try_write16, writew <- u16);
-> +    define_write!(fallible, try_write32, writel <- u32);
-> +    define_write!(
-> +        fallible,
-> +        #[cfg(CONFIG_64BIT)]
-> +        try_write64,
-> +        writeq <- u64
-> +    );
-> +}
-> +
-> +impl<const SIZE: usize> IoKnownSize for Mmio<SIZE> {
-> +    define_read!(infallible, read8, readb -> u8);
-> +    define_read!(infallible, read16, readw -> u16);
-> +    define_read!(infallible, read32, readl -> u32);
->      define_read!(
-> +        infallible,
->          #[cfg(CONFIG_64BIT)]
-> -        read64_relaxed,
-> -        try_read64_relaxed,
-> -        readq_relaxed -> u64
-> +        read64,
-> +        readq -> u64
->      );
-> =20
-> -    define_write!(write8, try_write8, writeb <- u8);
-> -    define_write!(write16, try_write16, writew <- u16);
-> -    define_write!(write32, try_write32, writel <- u32);
-> +    define_write!(infallible, write8, writeb <- u8);
-> +    define_write!(infallible, write16, writew <- u16);
-> +    define_write!(infallible, write32, writel <- u32);
->      define_write!(
-> +        infallible,
->          #[cfg(CONFIG_64BIT)]
->          write64,
-> -        try_write64,
->          writeq <- u64
->      );
-> +}
-> +
-> +impl<const SIZE: usize> Mmio<SIZE> {
-> +    /// Converts an `MmioRaw` into an `Mmio` instance, providing the acc=
-essors to the MMIO mapping.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// Callers must ensure that `addr` is the start of a valid I/O mapp=
-ed memory region of size
-> +    /// `maxsize`.
-> +    pub unsafe fn from_raw(raw: &MmioRaw<SIZE>) -> &Self {
-> +        // SAFETY: `Mmio` is a transparent wrapper around `MmioRaw`.
-> +        unsafe { &*core::ptr::from_ref(raw).cast() }
-> +    }
-> +
-> +    define_read!(infallible, pub read8_relaxed, readb_relaxed -> u8);
-> +    define_read!(infallible, pub read16_relaxed, readw_relaxed -> u16);
-> +    define_read!(infallible, pub read32_relaxed, readl_relaxed -> u32);
-> +    define_read!(
-> +        infallible,
-> +        #[cfg(CONFIG_64BIT)]
-> +        pub read64_relaxed,
-> +        readq_relaxed -> u64
-> +    );
-> +
-> +    define_read!(fallible, pub try_read8_relaxed, readb_relaxed -> u8);
-> +    define_read!(fallible, pub try_read16_relaxed, readw_relaxed -> u16)=
-;
-> +    define_read!(fallible, pub try_read32_relaxed, readl_relaxed -> u32)=
-;
-> +    define_read!(
-> +        fallible,
-> +        #[cfg(CONFIG_64BIT)]
-> +        pub try_read64_relaxed,
-> +        readq_relaxed -> u64
-> +    );
-> +
-> +    define_write!(infallible, pub write8_relaxed, writeb_relaxed <- u8);
-> +    define_write!(infallible, pub write16_relaxed, writew_relaxed <- u16=
-);
-> +    define_write!(infallible, pub write32_relaxed, writel_relaxed <- u32=
-);
-> +    define_write!(
-> +        infallible,
-> +        #[cfg(CONFIG_64BIT)]
-> +        pub write64_relaxed,
-> +        writeq_relaxed <- u64
-> +    );
-> =20
-> -    define_write!(write8_relaxed, try_write8_relaxed, writeb_relaxed <- =
-u8);
-> -    define_write!(write16_relaxed, try_write16_relaxed, writew_relaxed <=
-- u16);
-> -    define_write!(write32_relaxed, try_write32_relaxed, writel_relaxed <=
-- u32);
-> +    define_write!(fallible, pub try_write8_relaxed, writeb_relaxed <- u8=
-);
-> +    define_write!(fallible, pub try_write16_relaxed, writew_relaxed <- u=
-16);
-> +    define_write!(fallible, pub try_write32_relaxed, writel_relaxed <- u=
-32);
->      define_write!(
-> +        fallible,
->          #[cfg(CONFIG_64BIT)]
-> -        write64_relaxed,
-> -        try_write64_relaxed,
-> +        pub try_write64_relaxed,
->          writeq_relaxed <- u64
->      );
->  }
-> diff --git a/rust/kernel/io/mem.rs b/rust/kernel/io/mem.rs
-> index e4878c131c6d..620022cff401 100644
-> --- a/rust/kernel/io/mem.rs
-> +++ b/rust/kernel/io/mem.rs
-> @@ -16,8 +16,8 @@
->              Region,
->              Resource, //
->          },
-> -        Io,
-> -        IoRaw, //
-> +        Mmio,
-> +        MmioRaw, //
->      },
->      prelude::*,
->  };
-> @@ -212,7 +212,7 @@ pub fn new<'a>(io_request: IoRequest<'a>) -> impl Pin=
-Init<Devres<Self>, Error> +
->  }
-> =20
->  impl<const SIZE: usize> Deref for ExclusiveIoMem<SIZE> {
-> -    type Target =3D Io<SIZE>;
-> +    type Target =3D Mmio<SIZE>;
-> =20
->      fn deref(&self) -> &Self::Target {
->          &self.iomem
-> @@ -226,10 +226,10 @@ fn deref(&self) -> &Self::Target {
->  ///
->  /// # Invariants
->  ///
-> -/// [`IoMem`] always holds an [`IoRaw`] instance that holds a valid poin=
-ter to the
-> +/// [`IoMem`] always holds an [`MmioRaw`] instance that holds a valid po=
-inter to the
->  /// start of the I/O memory mapped region.
->  pub struct IoMem<const SIZE: usize =3D 0> {
-> -    io: IoRaw<SIZE>,
-> +    io: MmioRaw<SIZE>,
->  }
-> =20
->  impl<const SIZE: usize> IoMem<SIZE> {
-> @@ -264,7 +264,7 @@ fn ioremap(resource: &Resource) -> Result<Self> {
->              return Err(ENOMEM);
->          }
-> =20
-> -        let io =3D IoRaw::new(addr as usize, size)?;
-> +        let io =3D MmioRaw::new(addr as usize, size)?;
->          let io =3D IoMem { io };
-> =20
->          Ok(io)
-> @@ -287,10 +287,10 @@ fn drop(&mut self) {
->  }
-> =20
->  impl<const SIZE: usize> Deref for IoMem<SIZE> {
-> -    type Target =3D Io<SIZE>;
-> +    type Target =3D Mmio<SIZE>;
-> =20
->      fn deref(&self) -> &Self::Target {
->          // SAFETY: Safe as by the invariant of `IoMem`.
-> -        unsafe { Io::from_raw(&self.io) }
-> +        unsafe { Mmio::from_raw(&self.io) }
->      }
->  }
-> diff --git a/rust/kernel/io/poll.rs b/rust/kernel/io/poll.rs
-> index b1a2570364f4..75d1b3e8596c 100644
-> --- a/rust/kernel/io/poll.rs
-> +++ b/rust/kernel/io/poll.rs
-> @@ -45,12 +45,16 @@
->  /// # Examples
->  ///
->  /// ```no_run
-> -/// use kernel::io::{Io, poll::read_poll_timeout};
-> +/// use kernel::io::{
-> +///     Io,
-> +///     Mmio,
-> +///     poll::read_poll_timeout, //
-> +/// };
->  /// use kernel::time::Delta;
->  ///
->  /// const HW_READY: u16 =3D 0x01;
->  ///
-> -/// fn wait_for_hardware<const SIZE: usize>(io: &Io<SIZE>) -> Result {
-> +/// fn wait_for_hardware<const SIZE: usize>(io: &Mmio<SIZE>) -> Result {
->  ///     read_poll_timeout(
->  ///         // The `op` closure reads the value of a specific status reg=
-ister.
->  ///         || io.try_read16(0x1000),
-> @@ -128,12 +132,16 @@ pub fn read_poll_timeout<Op, Cond, T>(
->  /// # Examples
->  ///
->  /// ```no_run
-> -/// use kernel::io::{poll::read_poll_timeout_atomic, Io};
-> +/// use kernel::io::{
-> +///     Io,
-> +///     Mmio,
-> +///     poll::read_poll_timeout_atomic, //
-> +/// };
->  /// use kernel::time::Delta;
->  ///
->  /// const HW_READY: u16 =3D 0x01;
->  ///
-> -/// fn wait_for_hardware<const SIZE: usize>(io: &Io<SIZE>) -> Result {
-> +/// fn wait_for_hardware<const SIZE: usize>(io: &Mmio<SIZE>) -> Result {
->  ///     read_poll_timeout_atomic(
->  ///         // The `op` closure reads the value of a specific status reg=
-ister.
->  ///         || io.try_read16(0x1000),
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index 70e3854e7d8d..e3377397666e 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -8,8 +8,8 @@
->      device,
->      devres::Devres,
->      io::{
-> -        Io,
-> -        IoRaw, //
-> +        Mmio,
-> +        MmioRaw, //
->      },
->      prelude::*,
->      sync::aref::ARef, //
-> @@ -27,7 +27,7 @@
->  /// memory mapped PCI BAR and its size.
->  pub struct Bar<const SIZE: usize =3D 0> {
->      pdev: ARef<Device>,
-> -    io: IoRaw<SIZE>,
-> +    io: MmioRaw<SIZE>,
->      num: i32,
->  }
-> =20
-> @@ -63,7 +63,7 @@ pub(super) fn new(pdev: &Device, num: u32, name: &CStr)=
- -> Result<Self> {
->              return Err(ENOMEM);
->          }
-> =20
-> -        let io =3D match IoRaw::new(ioptr, len as usize) {
-> +        let io =3D match MmioRaw::new(ioptr, len as usize) {
->              Ok(io) =3D> io,
->              Err(err) =3D> {
->                  // SAFETY:
-> @@ -117,11 +117,11 @@ fn drop(&mut self) {
->  }
-> =20
->  impl<const SIZE: usize> Deref for Bar<SIZE> {
-> -    type Target =3D Io<SIZE>;
-> +    type Target =3D Mmio<SIZE>;
-> =20
->      fn deref(&self) -> &Self::Target {
->          // SAFETY: By the type invariant of `Self`, the MMIO range in `s=
-elf.io` is properly mapped.
-> -        unsafe { Io::from_raw(&self.io) }
-> +        unsafe { Mmio::from_raw(&self.io) }
->      }
->  }
-> =20
-> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_p=
-ci.rs
-> index ef04c6401e6a..bfb053059667 100644
-> --- a/samples/rust/rust_driver_pci.rs
-> +++ b/samples/rust/rust_driver_pci.rs
-> @@ -7,6 +7,10 @@
->  use kernel::{
->      device::Core,
->      devres::Devres,
-> +    io::{
-> +        Io,
-> +        IoKnownSize, //
-> +    },
->      pci,
->      prelude::*,
->      sync::aref::ARef, //
-
+> >
+> > Thanks for the review,
+> > Koichiro
+> >
+> > >
+> > > Frank
+> > > >
+> > > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > > > ---
+> > > >  drivers/dma/dw-edma/dw-edma-core.c | 26 ++++++++++++++++++++++++++
+> > > >  include/linux/dma/edma.h           | 14 ++++++++++++++
+> > > >  2 files changed, 40 insertions(+)
+> > > >
+> > > > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> > > > index 0eb8fc1dcc34..c4fb66a9b5f5 100644
+> > > > --- a/drivers/dma/dw-edma/dw-edma-core.c
+> > > > +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> > > > @@ -1209,6 +1209,32 @@ int dw_edma_chan_register_notify(struct dma_chan *dchan,
+> > > >  }
+> > > >  EXPORT_SYMBOL_GPL(dw_edma_chan_register_notify);
+> > > >
+> > > > +int dw_edma_chan_get_ll_region(struct dma_chan *dchan,
+> > > > +			       struct dw_edma_region *region)
+> > > > +{
+> > > > +	struct dw_edma_chip *chip;
+> > > > +	struct dw_edma_chan *chan;
+> > > > +
+> > > > +	if (!dchan || !region || !dchan->device)
+> > > > +		return -ENODEV;
+> > > > +
+> > > > +	chan = dchan2dw_edma_chan(dchan);
+> > > > +	if (!chan)
+> > > > +		return -ENODEV;
+> > > > +
+> > > > +	chip = chan->dw->chip;
+> > > > +	if (!(chip->flags & DW_EDMA_CHIP_LOCAL))
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	if (chan->dir == EDMA_DIR_WRITE)
+> > > > +		*region = chip->ll_region_wr[chan->id];
+> > > > +	else
+> > > > +		*region = chip->ll_region_rd[chan->id];
+> > > > +
+> > > > +	return 0;
+> > > > +}
+> > > > +EXPORT_SYMBOL_GPL(dw_edma_chan_get_ll_region);
+> > > > +
+> > > >  MODULE_LICENSE("GPL v2");
+> > > >  MODULE_DESCRIPTION("Synopsys DesignWare eDMA controller core driver");
+> > > >  MODULE_AUTHOR("Gustavo Pimentel <gustavo.pimentel@synopsys.com>");
+> > > > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+> > > > index 3c538246de07..c9ec426e27ec 100644
+> > > > --- a/include/linux/dma/edma.h
+> > > > +++ b/include/linux/dma/edma.h
+> > > > @@ -153,6 +153,14 @@ bool dw_edma_chan_ignore_irq(struct dma_chan *chan);
+> > > >  int dw_edma_chan_register_notify(struct dma_chan *chan,
+> > > >  				 void (*cb)(struct dma_chan *chan, void *user),
+> > > >  				 void *user);
+> > > > +
+> > > > +/**
+> > > > + * dw_edma_chan_get_ll_region - get linked list (LL) memory for a dma_chan
+> > > > + * @chan: the target DMA channel
+> > > > + * @region: output parameter returning the corresponding LL region
+> > > > + */
+> > > > +int dw_edma_chan_get_ll_region(struct dma_chan *chan,
+> > > > +			       struct dw_edma_region *region);
+> > > >  #else
+> > > >  static inline int dw_edma_probe(struct dw_edma_chip *chip)
+> > > >  {
+> > > > @@ -182,6 +190,12 @@ static inline int dw_edma_chan_register_notify(struct dma_chan *chan,
+> > > >  {
+> > > >  	return -ENODEV;
+> > > >  }
+> > > > +
+> > > > +static inline int dw_edma_chan_get_ll_region(struct dma_chan *chan,
+> > > > +					     struct dw_edma_region *region)
+> > > > +{
+> > > > +	return -EINVAL;
+> > > > +}
+> > > >  #endif /* CONFIG_DW_EDMA */
+> > > >
+> > > >  struct pci_epc;
+> > > > --
+> > > > 2.51.0
+> > > >
