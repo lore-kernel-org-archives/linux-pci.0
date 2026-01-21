@@ -1,191 +1,90 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0A9E4534B6;
-	Wed, 21 Jan 2026 07:15:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B423876AC;
+	Wed, 21 Jan 2026 07:42:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768979745; cv=none; b=ArsksY754hqQMwuwmv1KUSmbQIgmlH8+TReqZU55P2k7Tidvx3jwQrJWr+bVd3Sr9GUWhnpc5sBRSIZgWGCunPqn41ff4Au0U9t6XpYOpqaL4BbQ9BqtbXiLAAlboddclTaw2xhWR3+vsE6SHrQndFjE1Tl5xGq+Tsdj6JWfuQ0=
+	t=1768981347; cv=none; b=ctfHdSdKYPnoSkYyZlK1n/8q5anGw53ybawsG5Us0v1s5THcRFjr4LmOrgbMQHXubSWWuy3UU87S4r+TSBXKoj+/dbbNn0qs0EjD/piLYYCv3a6ceTlBC4hAlLZGnLxIUPEh5LScGCSOwWy6wAX/qeGxZr54+DXls6svWTC7Fl0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768979745; c=relaxed/simple;
-	bh=pf3mRjeC+BlGoli8DPyQtWoOUlZv7J9jx8lHKT80B8Q=;
+	s=arc-20240116; t=1768981347; c=relaxed/simple;
+	bh=bte/XQ4DIY+20st0PFZ4A741YBlWScrZ0zOdXWQH50k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rddnUvWz60AwMk0zbHXIv9ZDwyH672OSIAz7TRFMC0vcyIEpxI/bvaoi046OnBZo3yywjW1t0DF42dBa34KAscWzIIi5pUKMV+478DubcNflJ7w5vwHzN6QZD5UKBTJ8aT6ACe1UyZIChcyy1ya8l1EPA2kl5ov0COGdyAp2vQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S7CshbM7; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=XZVZD2gtiXiVpf1kqIDq49epamDR4PkE2C0W+p6qxqNy/15cqVARVLZ1jmWUmdefe5x5GDDw1fB2s6irUYtFL3stXW47+UrSC8JL0Gwv+PBT9Zn9jiqvz2mPwPnoaPFkcd5QuEjqLEYmyA7I/9LabzKa3XK3BfTWPLRClmC/nUg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rIeP31Ij; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S7CshbM7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768979744; x=1800515744;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=pf3mRjeC+BlGoli8DPyQtWoOUlZv7J9jx8lHKT80B8Q=;
-  b=S7CshbM76KJQFCWrD4G/xxzd74KqJGfb/ZovVnxh1j+WcgkTcaZF9OqO
-   BsVlLnLjX2hit0MuOqOY3Z1kITOEaPQjQJV+00b267aD5/uPNOaubswdD
-   qK2FpjZuK9U41aEeJYjGm4nMZEWfMgPFujmbOslicXgL+0zSt0nngbf5K
-   Mp8Al5Tx13cAm2z1cPBJRjQ8yzkkvfxU8DMB6xnJe9K2ss0bVefeUbxKM
-   hCxM9uzdgp42MUzoeEFjs9x/ZdIokweVQyjgPh+ZHxzT3ezRQ+lWq9J45
-   m0u8O8/SWzoTp4YpkOrHn7OTHcc8yNBBd2Xz4AVs6WQadVZr+9fVyRqoq
-   w==;
-X-CSE-ConnectionGUID: vhrFL4+/SNCQwzl6Ad7q5w==
-X-CSE-MsgGUID: SeIlHX/9RoqWb3S72D1wMQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="57763798"
-X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
-   d="scan'208";a="57763798"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2026 23:15:43 -0800
-X-CSE-ConnectionGUID: IiK/5rXBT2yk2dxdBMzsrw==
-X-CSE-MsgGUID: gLpJM9hoT2+5bZUjhqOyCQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
-   d="scan'208";a="237620931"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 20 Jan 2026 23:15:41 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1viSRG-00000000Q7l-3173;
-	Wed, 21 Jan 2026 07:15:38 +0000
-Date: Wed, 21 Jan 2026 15:15:35 +0800
-From: kernel test robot <lkp@intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH v1 1/1] ACPI: PCI: simplify code with
- acpi_get_local_u64_address()
-Message-ID: <202601211405.APuSRTdE-lkp@intel.com>
-References: <20260120154015.1764021-1-andriy.shevchenko@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rIeP31Ij"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F050C116D0;
+	Wed, 21 Jan 2026 07:42:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768981346;
+	bh=bte/XQ4DIY+20st0PFZ4A741YBlWScrZ0zOdXWQH50k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rIeP31Ij9uGOS5j+Mc24fKtxEPHM9BKYkUtJA3mDe9250G0Mggh8qOGv9UNGLhbXR
+	 DX2XtYCw6ieRnjBon31V4xrq8AbjCcU0BUMcvpcltj2GcNEt/ThHJzwLfqb50iA/bE
+	 ARXyylEX3on9ijQFThfDwjaXPBFD8pW2rcKTOPqnkK+kGMEm5p91ZrHf2slT3YPwgN
+	 Gy+HFFBJaIxQtIW97cD6S5o6AdkyBmz+txMIgaWElD2p6vLRBHIej5bUA5uMiNDE2h
+	 EQoeHS2gHI2ULewogq9xdLMfjQyowOi3oR1u5j6h3y4CA3I468HJbkFMgs6SAllEPT
+	 LCTHAofRoIkQw==
+Date: Wed, 21 Jan 2026 13:12:16 +0530
+From: "mani@kernel.org" <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hongxing Zhu <hongxing.zhu@nxp.com>, Frank Li <frank.li@nxp.com>, 
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
+	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, 
+	"bhelgaas@google.com" <bhelgaas@google.com>, "shawnguo@kernel.org" <shawnguo@kernel.org>, 
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
+	"festevam@gmail.com" <festevam@gmail.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
+	"imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 08/11] PCI: dwc: Invoke post_init in
+ dw_pcie_resume_noirq()
+Message-ID: <dbnnvvpki6oaqaribiuycpshk7qmisl42x3iti24aqzzrw2rfr@afoer4ku4do4>
+References: <20260109152750.GA544801@bhelgaas>
+ <20260120220441.GA1170239@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260120154015.1764021-1-andriy.shevchenko@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260120220441.GA1170239@bhelgaas>
 
-Hi Andy,
+On Tue, Jan 20, 2026 at 04:04:41PM -0600, Bjorn Helgaas wrote:
+> On Fri, Jan 09, 2026 at 09:27:50AM -0600, Bjorn Helgaas wrote:
+> > ...
+> 
+> > The current commit log for this patch is this:
+> > 
+> >   Some SoCs like i.MX95 require enabling REFCLK after resuming from suspend
+> >   in their post_init callback. So invoke the callback at the end of
+> >   dw_pcie_resume_noirq() if available.
+> > 
+> > When .post_init() is called, the link is already up and PCIe devices
+> > have already been enumerated.  I think REFCLK is required for the link
+> > to come up, so it doesn't sound right to me that .post_init() would be
+> > *enabling* REFCLK.
+> 
+> This never got resolved.
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc-imx6&id=199c18221622
+> says imx_pcie_host_post_init() enables REFCLK by applying the
+> IMX_PCIE_FLAG_8GT_ECN_ERR051586 workaround.
+> 
+> I don't think that commit log is correct.  Can you please supply some
+> correct text for that commit?
+> 
 
-kernel test robot noticed the following build warnings:
+Sorry, I messed it up. This callback is not supposed to enable REFCLK, but just
+clear CLKREQ# override to allow the endpoint to drive it low when required.
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v6.19-rc6 next-20260120]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I've just updated the commit text in the controller/dwc-imx6 branch.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Andy-Shevchenko/ACPI-PCI-simplify-code-with-acpi_get_local_u64_address/20260121-004826
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260120154015.1764021-1-andriy.shevchenko%40linux.intel.com
-patch subject: [PATCH v1 1/1] ACPI: PCI: simplify code with acpi_get_local_u64_address()
-config: x86_64-randconfig-161-20260121 (https://download.01.org/0day-ci/archive/20260121/202601211405.APuSRTdE-lkp@intel.com/config)
-compiler: gcc-13 (Debian 13.3.0-16) 13.3.0
-smatch version: v0.5.0-8985-g2614ff1a
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260121/202601211405.APuSRTdE-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202601211405.APuSRTdE-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   drivers/acpi/pci_slot.c: In function 'check_slot':
->> drivers/acpi/pci_slot.c:60:9: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
-      60 |         if (acpi_get_local_u64_address(handle, &adr))
-         |         ^~
-   drivers/acpi/pci_slot.c:63:17: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
-      63 |                 goto out;
-         |                 ^~~~
-   drivers/acpi/pci_slot.c:63:17: error: label 'out' used but not defined
->> drivers/acpi/pci_slot.c:44:13: warning: unused variable 'device' [-Wunused-variable]
-      44 |         int device = -1;
-         |             ^~~~~~
->> drivers/acpi/pci_slot.c:64:9: warning: no return statement in function returning non-void [-Wreturn-type]
-      64 |         }
-         |         ^
-   drivers/acpi/pci_slot.c: At top level:
->> drivers/acpi/pci_slot.c:67:9: warning: data definition has no type or storage class
-      67 |         status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-         |         ^~~~~~
-   drivers/acpi/pci_slot.c:67:9: error: type defaults to 'int' in declaration of 'status' [-Werror=implicit-int]
-   drivers/acpi/pci_slot.c:67:40: error: 'handle' undeclared here (not in a function)
-      67 |         status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-         |                                        ^~~~~~
-   drivers/acpi/pci_slot.c:67:62: error: 'sun' undeclared here (not in a function)
-      67 |         status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-         |                                                              ^~~
-   drivers/acpi/pci_slot.c:68:9: error: expected identifier or '(' before 'if'
-      68 |         if (ACPI_FAILURE(status)) {
-         |         ^~
-   drivers/acpi/pci_slot.c:74:9: warning: data definition has no type or storage class
-      74 |         device = (adr >> 16) & 0xffff;
-         |         ^~~~~~
-   drivers/acpi/pci_slot.c:74:9: error: type defaults to 'int' in declaration of 'device' [-Werror=implicit-int]
-   drivers/acpi/pci_slot.c:74:19: error: 'adr' undeclared here (not in a function); did you mean 'idr'?
-      74 |         device = (adr >> 16) & 0xffff;
-         |                   ^~~
-         |                   idr
-   drivers/acpi/pci_slot.c:75:4: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
-      75 | out:
-         |    ^
-   drivers/acpi/pci_slot.c:77:9: error: expected identifier or '(' before 'return'
-      77 |         return device;
-         |         ^~~~~~
-   drivers/acpi/pci_slot.c:78:1: error: expected identifier or '(' before '}' token
-      78 | }
-         | ^
-   cc1: some warnings being treated as errors
-
-
-vim +/if +60 drivers/acpi/pci_slot.c
-
-    40	
-    41	static int
-    42	check_slot(acpi_handle handle, unsigned long long *sun)
-    43	{
-  > 44		int device = -1;
-    45		unsigned long long sta;
-    46		acpi_status status;
-    47		u64 adr;
-    48		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-    49	
-    50		acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-    51		pr_debug("Checking slot on path: %s\n", (char *)buffer.pointer);
-    52	
-    53		if (check_sta_before_sun) {
-    54			/* If SxFy doesn't have _STA, we just assume it's there */
-    55			status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-    56			if (ACPI_SUCCESS(status) && !(sta & ACPI_STA_DEVICE_PRESENT))
-    57				goto out;
-    58		}
-    59	
-  > 60		if (acpi_get_local_u64_address(handle, &adr))
-    61			pr_debug("_ADR returned with failure on %s\n",
-    62				 (char *)buffer.pointer);
-  > 63			goto out;
-  > 64		}
-    65	
-    66		/* No _SUN == not a slot == bail */
-  > 67		status = acpi_evaluate_integer(handle, "_SUN", NULL, sun);
-    68		if (ACPI_FAILURE(status)) {
-    69			pr_debug("_SUN returned %d on %s\n",
-    70				 status, (char *)buffer.pointer);
-    71			goto out;
-    72		}
-    73	
-    74		device = (adr >> 16) & 0xffff;
-    75	out:
-    76		kfree(buffer.pointer);
-    77		return device;
-    78	}
-    79	
+- Mani
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+மணிவண்ணன் சதாசிவம்
