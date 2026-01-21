@@ -1,106 +1,107 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815A336657B;
-	Wed, 21 Jan 2026 08:51:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EB5F346FA0;
+	Wed, 21 Jan 2026 09:13:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768985472; cv=none; b=WbXSzl9fHUff0AHmsPjAAFJW8LctO8KOISnIy/6JDWpRRs7V/5oTM+Hv84+OPbcQTb1WfK+ixOCApcpxAcYKhcSpSjM0/qDBzYbUc7ZQCU5i1XwjV6AbzzPWjF5TZ8J1pLfnhhK0m87MBO4xC/wwz+1nN6kT09Tbgf+TT0s5JNk=
+	t=1768986797; cv=none; b=BF8vqXVfSkp0GOJejOorlo+nU7eZq5pBb9SNcfowoqzvkNwuP2juuZIlcgi6SeQpDVVIHiD/fA+/q0KuEsnSy0p9QE0dfzF+Hs3oVSM0KD64kBbh+sD6DyzpyogoUVHrgSVkuPL6Tax6Zr3Ov5gMaKqAlTq2EYNeFSs8PNF7jfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768985472; c=relaxed/simple;
-	bh=0p7FqrGTHaYbu4QmCQP4AVNn9vlQWfjeboAHFDbfH9I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qxre0aD/yNogW8grdWGun+KYbcR6tWOYqiez6TLVtyIAY1U4ooLumdf22alNWYyTvB86lf3FdUnjkVQPduKgGy9zcVckcARrQ6U6PCaS098UxUFrbJX/KYyivHFQeU+2Nrb8wbq4sx2AYgSwbAcEuKFDvW1JOgdaZuGlN58OWZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cp1E3dao; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cp1E3dao"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768985471; x=1800521471;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=0p7FqrGTHaYbu4QmCQP4AVNn9vlQWfjeboAHFDbfH9I=;
-  b=cp1E3dao7b/SrWZQzTlRCtnK9XiJuJHte3YkoRwj3ITXZfeJV9MtQtzv
-   kfkrSuGH7FWMnC6UBDnJexq5WM3dH+p/u6EM1YlVO6NcRpgoNIgzJrNDt
-   WsOuh+F0fYpXXQLVQcxfxfCR3/ZJgeIAvRQ+Qy89jUm+Nwq4dOthfA3B6
-   GOEEBJ8lQrzDkEfC6b/cPeB6SrR8gWZ+zNNhTevq404FIewtXDy5aS8hT
-   F/sHPHrB6C0ZC/Kyq/DjXWWVW/6LM5cKMNKnhMw6zUH3ZR1CwtbM0QWPU
-   mlP5o6Cllo3dZI54nvNoP7LXCrVuTB+4Vel9tjCVXgMstkC4U9wmfIu2m
-   A==;
-X-CSE-ConnectionGUID: iS/kbFdOQO6iLMHoDnj8+Q==
-X-CSE-MsgGUID: EZ6UgdGoSOqSxmqaPXW/Bg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="80927323"
-X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
-   d="scan'208";a="80927323"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 00:51:10 -0800
-X-CSE-ConnectionGUID: XYlX7UYzRNq8Lx9XYIiDnA==
-X-CSE-MsgGUID: D1H+aY1mRB6jTBnGcFCTrQ==
-X-ExtLoop1: 1
-Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa003.fm.intel.com with ESMTP; 21 Jan 2026 00:51:08 -0800
-Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 4296898; Wed, 21 Jan 2026 09:51:07 +0100 (CET)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>
-Subject: [PATCH v2 1/1] ACPI: PCI: simplify code with acpi_get_local_u64_address()
-Date: Wed, 21 Jan 2026 09:50:49 +0100
-Message-ID: <20260121085105.2282380-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1768986797; c=relaxed/simple;
+	bh=V7hAMM+aRiYM4Md6WRZjQ7ajcU5VIwA5crlDJxNSaH4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fLP0wyD/L10/RTpk0joffW/DPvlVTQwVu90snKvzadM3sACb7FuBtT4P3BOBbG+Y9TeVo7+r5k8WDNiyNSu8nP11IIojpVERnnq7OAq9/CMpbBR3sCg1+Tprk6qYiLOI+ah7TrzcTQe37L9AW6PJWPISB9NgdNB5fgP5t8qIjIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DD61C116D0;
+	Wed, 21 Jan 2026 09:13:07 +0000 (UTC)
+Date: Wed, 21 Jan 2026 14:43:03 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	vincent.guittot@linaro.org, zhangsenchuan@eswincomputing.com, 
+	Shawn Lin <shawn.lin@rock-chips.com>, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v4 2/5] PCI: dwc: Return -EIO from
+ dw_pcie_wait_for_link() if device is not active
+Message-ID: <wswb6we7iyp3co5u7wcntqogtqmqitbmty5ihqnweno7efdpoh@gekgtcp262zw>
+References: <20260120-pci-dwc-suspend-rework-v4-0-2f32d5082549@oss.qualcomm.com>
+ <20260120-pci-dwc-suspend-rework-v4-2-2f32d5082549@oss.qualcomm.com>
+ <aXCM-ky9PFTKZTcZ@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <aXCM-ky9PFTKZTcZ@ryzen>
 
-Now we have a helper so there's no need to open-code.
+On Wed, Jan 21, 2026 at 09:23:22AM +0100, Niklas Cassel wrote:
+> On Tue, Jan 20, 2026 at 11:17:41PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > 
+> > There are cases where the PCIe device would be physically connected to the
+> > bus, but the device firmware might not be active. So the LTSSM will
+> > get stuck in POLL.{Active/Compliance} states.
+> > 
+> > This behavior is common with endpoint devices controlled by the PCI
+> > Endpoint framework, where the device will wait for the user to start its
+> > operation through configfs.
+> > 
+> > For those cases, print the relevant log and return -EIO to indicate that
+> > the device is present, but not active. This will allow the callers to skip
+> > the failure as the device might become active in the future.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-designware.c | 15 +++++++++++++--
+> >  1 file changed, 13 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> > index 55c1c60f7f8f..aca5bbeade03 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware.c
+> > +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> > @@ -696,8 +696,9 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index)
+> >   * dw_pcie_wait_for_link - Wait for the PCIe link to be up
+> >   * @pci: DWC instance
+> >   *
+> > - * Returns: 0 if link is up, -ENODEV if device is not found, -ETIMEDOUT if the
+> > - * link fails to come up for other reasons.
+> > + * Returns: 0 if link is up, -ENODEV if device is not found, -EIO if the device
+> > + * is found but not active and -ETIMEDOUT if the link fails to come up for other
+> > + * reasons.
+> >   */
+> >  int dw_pcie_wait_for_link(struct dw_pcie *pci)
+> >  {
+> > @@ -722,6 +723,16 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+> >  		    ltssm == DW_PCIE_LTSSM_DETECT_ACT) {
+> >  			dev_info(pci->dev, "Device not found\n");
+> >  			return -ENODEV;
+> > +
+> > +		/*
+> > +		 * If the link is in POLL.{Active/Compliance} state, then the
+> > +		 * device is found to be connected to the bus, but it is not
+> > +		 * active i.e., the device firmware might not yet initialized.
+> > +		 */
+> > +		} else if (ltssm == DW_PCIE_LTSSM_POLL_ACTIVE ||
+> > +			   ltssm == DW_PCIE_LTSSM_POLL_COMPLIANCE) {
+> > +			dev_info(pci->dev, "Device found, but not active\n");
+> > +			return -EIO;
+> >  		}
+> >  
+> >  		dev_info(pci->dev, "Phy link never came up\n");
+> 
+> This should probably be squashed with the previous patch.
+> 
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
+No. I'd like to keep it as a separate patch because I think this deserves its
+own justification.
 
-v2: fixed a typo (LKP)
+- Mani
 
- drivers/acpi/pci_slot.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-index 741bcc9d6d6a..15234b65ea22 100644
---- a/drivers/acpi/pci_slot.c
-+++ b/drivers/acpi/pci_slot.c
-@@ -42,8 +42,9 @@ static int
- check_slot(acpi_handle handle, unsigned long long *sun)
- {
- 	int device = -1;
--	unsigned long long adr, sta;
-+	unsigned long long sta;
- 	acpi_status status;
-+	u64 adr;
- 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
- 
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-@@ -56,10 +57,9 @@ check_slot(acpi_handle handle, unsigned long long *sun)
- 			goto out;
- 	}
- 
--	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
--	if (ACPI_FAILURE(status)) {
--		pr_debug("_ADR returned %d on %s\n",
--			 status, (char *)buffer.pointer);
-+	if (acpi_get_local_u64_address(handle, &adr)) {
-+		pr_debug("_ADR returned with failure on %s\n",
-+			 (char *)buffer.pointer);
- 		goto out;
- 	}
- 
 -- 
-2.50.1
-
+மணிவண்ணன் சதாசிவம்
