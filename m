@@ -1,68 +1,68 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012041.outbound.protection.outlook.com [40.107.209.41])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013008.outbound.protection.outlook.com [40.93.196.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D922748B39C;
-	Wed, 21 Jan 2026 14:24:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 339534963A3;
+	Wed, 21 Jan 2026 14:24:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.8
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769005482; cv=fail; b=ZslvGPoKmEqQDwI6nvb7oyz9wxUCP44p9KHtV/bEzMbNRQVfn46P3r0Fx9Gk83jiPYliLxJqatDspOMaXTA8GYfQDT3LpF64XG5eS84UVL1/AKmdtaIex/MVW8iSROqOaBQhv8PNDalJZG0C26OTWk35zj7Ovm48EO7dgtR5nqg=
+	t=1769005486; cv=fail; b=Ei+EWqFLOlRKM46XAOyhGXRpz10mod7S0+e6fQCpcYrKPTUggwm4CAywGAwJ8MUC2hWeup5HwGZeVjpvR0WmcdqcXedlt6rkqCwLDevXyxHk7bv8DRAKER8/M4dR24bLfDgO4JtG4O0Ivc6mVHotOOFoi46Z18TQLkCHprUCG+A=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769005482; c=relaxed/simple;
-	bh=Lxj4PkBapAtBNnB2X0r047B1aw4vPK6YYG+v7Ht85A0=;
+	s=arc-20240116; t=1769005486; c=relaxed/simple;
+	bh=wPo7UbJ20GJM8UQfExioCiJyIk1r2OWGrEk/aOEUaC4=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AN9ob+qI7hIS4kEnTgcLQ6aFWxlCz0YFjG9K8Z43nQFz8RY1mHmcVWcGTpqwLuhAbNayzgLriNEYsJlKZ7RtvuxmmIKOc3M68r/BfUvlK0WpcKGO4x5+/c7DTJbpzlt+HCyAMOWsRqcuRdVXLtRlXf5mfxV8nlHiy1O52oca7q8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Y8tYoPJE; arc=fail smtp.client-ip=40.107.209.41
+	 MIME-Version:Content-Type; b=RdG/DLNZPqpZpNcmsRjaSMlUm09zkjtfZMKOKkWMoTML20HTSmHkXicL9sI9oHllJeLGleu6ApwdGzf+KwdX7onnK7e3hlRxFk73lHDS9G4WINhma3QWQ1iPRKq41N8dFvGM38dm2zn1d2JWZxHISRkQjHkU0WhqucmANp12oyg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=cMCCVfg8; arc=fail smtp.client-ip=40.93.196.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Y8tYoPJE"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="cMCCVfg8"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=QixhPyaI/DnATTS5rzx5jx0S0LersfSvn4duuZCKiElqq6bACQ7Ys2FysH7i9+sX9JyL34yvH0L2mDboO3+N3hYTTYpnKGTcvb/ebhnxcbI8B+3e0+VzvlyAG2E2EeX1Dpf571fV92DcBq4rS14L4t60LA7aRk8ADJeB1ZKcFPhCjDa1PR+Vvaot0PVoDo2XBf8wExB6X/MddevfYfn+npNOuCl+0AxAjOY4qrm7L7jZHsjG0ImRr9pMg56gfzSMDN2TK9PMvVyXnXKCk1YaXCMrxHU2fIr8eP6a900lNH7T5Y2+WREpT2/3i/A3/js8SkNVUGfyGDz2K0KqNwv41w==
+ b=ThyJWNJZo3PeaM+d30uGUMvszW/Bof+yJek614eQ6av7G0UIgvOBaicJQ8Dh4ACFh/lAhez8LtSIa35DN3brNf3R1MD/QWpnLP0CA+BEPPFYVFX4x4pBGtGUNzZFEeL3+NQ29MTKI22Oe6SS9/ZLJl/EGKuqMRij+3NJZX2+I2v430bAHh7/oDWIyke2HGWP3BPW55lIUzJuYIofUolxG7l4/gKXGKn7FZbGXaLOSRM7nKphkEiJa0xqc9ONHr67lNYzawLCqqma5FOxkhxEP+OXTcfZoM7yNlWKRaL8savYLl0bHuJvYWzvOtXfbw8kxGsd4/VwJnKbQZCLvOQARA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PVr6029GJBT27W7/udV0dd+wNmZk+pMBNPRUNVuJAYA=;
- b=OlUq2j6r0UuUtWYN+lbdflCkfmHLcdsng99K6KxNPZYvtG8a0DuM6UWYIbnLcH44Y0aZuBg/XGxceVEjQqy8bPdiGmZ2Y4kAcoCGeFV/Luli4ZE4VMEDqFratjFQZUDX3sXzCGa8GYolYhTcVmeMTTkof+gbD39o/ZjIiyy4amQ9ZFZ+nuQfE0aBb2DzD7Df2+N+yKL2TngB3FC1KoeMPLCRmZgsRp1wco4RrspauMOItLjUubsQxvf/a4EqiFRxvII21OiYK9ZcxVYsjZKS+3ZPfRJFoyxh79TmLqOoGsmXhyWVEkl/lag84tHRJUjv7HqQ43Pi4FpeMsZNDqnNvg==
+ bh=lai38gIl8gYykPx+C1o8FufpZkIQ/D4JfwW0fTgbeWM=;
+ b=GCzGCf4yRFb+eEphP+jm9zkgLK2F0wq4ZC9De/tUyEcz+CDF1lsrRgRjhVOQo/bUqXUk0UCONk2tLflQ6JMh0r9iXX0rgU3E+oOqAhsKW/AigFdniBiJqwMpSdMCqusF2biwKq0XNzB/PwRxlhHx0vUWNV2ku/5eaqdBUwUF1sig3RtmsoAM9jQoMFSLISFkNyrMlXwR/+R52MoB7CSCWzoLYtMTZ5Qspdcyf7jjmbgenbECGUnH0fWsGkdxcCKwHnbL03oZVmXtGa41vLpBAF1589FFULQ3g8ujBav1TVBHnDKhtbxQqmwJicTDNQxm8yFtxjnAkjRnmuHzNr0p1w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.233) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.118.232) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PVr6029GJBT27W7/udV0dd+wNmZk+pMBNPRUNVuJAYA=;
- b=Y8tYoPJE97cV7BU52jfm7AxC23aGchsBthhdY43cK90NBoAMQH3GYNWo08ksDhxNcCmNKrEaXXn6Hmf97lGtPAcEGUsywiFnzn8EeLhE/C64vmWy6xJB5849qvxtPq5vks9AXVBgfAuCEaDOIgoZPhGuEmNQX3FXsmoB1Ow6MsDq1Rt98QYnVJnNkNxb5XldB2PGts396eaf/NvOghB0M1jEmT0hH4+R8eHuFhVThfnTRHrDnnOOjuW+zAxq7HdJFkj4fLyhY74BVG47RYLa7rCAE8VUe064Ek8Rs/GxBQODwEddoRzaGnckFy/xydyItEpHoTES6ds9VsW3k+6LIg==
-Received: from BYAPR11CA0067.namprd11.prod.outlook.com (2603:10b6:a03:80::44)
- by DS2PR12MB9664.namprd12.prod.outlook.com (2603:10b6:8:27b::10) with
+ bh=lai38gIl8gYykPx+C1o8FufpZkIQ/D4JfwW0fTgbeWM=;
+ b=cMCCVfg8sUOpRx3bysR3osG5sFSvP45EpKeH3B0mPgYEBJ38ws11NLerGZWVdGaIOZ9kRtjyLHsPhPwFDcbVM15GWe5Z2Uzb1k2E+LQhl3HEHbqSqNn0pP54glu+/6B3CV27bZ4FLZXB9wjqdbMGWw1cWilbXk3ER4Y3QCk0KmW0RFyn0cW7OcZO6eAsZcb8fc089ND13lVr3cVkNGhDVPhvUFePbmeAkbkFq8nha4D9mEelfuvmENN2EOp4yUseuUt+/wLwelKkquBiCjM6nl3fzgMa78jUpdnBORyVu6Zbtbpl8OsXZ48BRPOdGGpFHePpThSLtbkHXcEMn+/v1A==
+Received: from BY5PR16CA0012.namprd16.prod.outlook.com (2603:10b6:a03:1a0::25)
+ by SA0PR12MB4495.namprd12.prod.outlook.com (2603:10b6:806:70::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Wed, 21 Jan
- 2026 14:24:33 +0000
-Received: from CO1PEPF000075EF.namprd03.prod.outlook.com
- (2603:10b6:a03:80:cafe::f7) by BYAPR11CA0067.outlook.office365.com
- (2603:10b6:a03:80::44) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 14:24:36 +0000
+Received: from SJ5PEPF000001E8.namprd05.prod.outlook.com
+ (2603:10b6:a03:1a0:cafe::49) by BY5PR16CA0012.outlook.office365.com
+ (2603:10b6:a03:1a0::25) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9542.10 via Frontend Transport; Wed,
- 21 Jan 2026 14:24:30 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
+ 21 Jan 2026 14:24:36 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.233) by
- CO1PEPF000075EF.mail.protection.outlook.com (10.167.249.38) with Microsoft
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ SJ5PEPF000001E8.mail.protection.outlook.com (10.167.242.196) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9542.4 via Frontend Transport; Wed, 21 Jan 2026 14:24:32 +0000
-Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
- (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.9542.4 via Frontend Transport; Wed, 21 Jan 2026 14:24:36 +0000
+Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 21 Jan
- 2026 06:24:10 -0800
+ 2026 06:24:23 -0800
 Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Wed, 21 Jan 2026 06:24:10 -0800
+ 15.2.2562.20; Wed, 21 Jan 2026 06:24:23 -0800
 Received: from inno-vm-xubuntu (10.127.8.11) by mail.nvidia.com
  (10.126.190.180) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
- Transport; Wed, 21 Jan 2026 06:24:04 -0800
+ Transport; Wed, 21 Jan 2026 06:24:17 -0800
 From: Zhi Wang <zhiw@nvidia.com>
 To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -74,11 +74,10 @@ CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
 	<smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
 	<kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
 	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
-	<daniel.almeida@collabora.com>, Zhi Wang <zhiw@nvidia.com>, Miguel Ojeda
-	<miguel.ojeda.sandonis@gmail.com>
-Subject: [PATCH v11 1/5] rust: devres: style for imports
-Date: Wed, 21 Jan 2026 16:23:50 +0200
-Message-ID: <20260121142355.4761-2-zhiw@nvidia.com>
+	<daniel.almeida@collabora.com>, Zhi Wang <zhiw@nvidia.com>
+Subject: [PATCH v11 3/5] rust: io: factor out MMIO read/write macros
+Date: Wed, 21 Jan 2026 16:23:52 +0200
+Message-ID: <20260121142355.4761-4-zhiw@nvidia.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260121142355.4761-1-zhiw@nvidia.com>
 References: <20260121142355.4761-1-zhiw@nvidia.com>
@@ -88,104 +87,344 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000075EF:EE_|DS2PR12MB9664:EE_
-X-MS-Office365-Filtering-Correlation-Id: d318538a-45a1-4f6f-d46b-08de58f8cbc4
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001E8:EE_|SA0PR12MB4495:EE_
+X-MS-Office365-Filtering-Correlation-Id: acd5264f-08a7-4d50-5164-08de58f8ce1a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|36860700013|82310400026;
+	BCL:0;ARA:13230040|36860700013|1800799024|376014|7416014|82310400026;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?9D+Hg4sjkx86h32PqTWJ9ErouQBj9BaEbTcm+lY2CpS3z/f+Fzdq0SFswJ2t?=
- =?us-ascii?Q?RGXWBw80kDBm3CCtiOWrAKLoxkNlQi6JWXsOPO2aw5g/6fc6xAMrD4ls57YU?=
- =?us-ascii?Q?E/u9qkHBpMEQj7qH9L7Mh0tiwaJJTmhSdJ8Lj0YL2hQlH7aLF9smXQ04lx1x?=
- =?us-ascii?Q?0G9jp8GdchO7939aOO8fQuJIm70rZ0ni3a4vygus00EQdhfLf7jz85uIEzYx?=
- =?us-ascii?Q?Qs0idhLqHDb9UjO6U/QcMINm9LzEvuyelG0fggg7p8cN3Wm4oGxn+9qbd2gy?=
- =?us-ascii?Q?MQUnxMwAecREjUUmKa9c9icaiQfINHiLNNbsVTFZQcipj/rJU7mp4fGApHuk?=
- =?us-ascii?Q?oDRJWyxMQFiFOgq4BqFROaaalyvGB/mu1jmpTfnCBw+xEsfieQgWAo9wkJpI?=
- =?us-ascii?Q?hI2ZpztXsJphLUNKSmKSDD5PeKXbL0p8mwd3DiqKfcUGTsHbvmRWat784BaG?=
- =?us-ascii?Q?oSqDFWVUIpDETYrptlDMyQvSXiYB0AmZhMlvOTtL2aDzQKSAczLml5QbFSVq?=
- =?us-ascii?Q?ee5aJDrP1e6AlNjVoqZMOzYxKLqfQLykAxJq+EJkDqXjE0QLylZqx9PK+Vgc?=
- =?us-ascii?Q?faq3/aOVljhTl0vlNJlAjvri9ndhW1BMPma9yJzu0SY0GwChIZ4oxi9Q0jjV?=
- =?us-ascii?Q?pC9jYoBrIUs/Mbv3nCGsMwC7+yLh8S5pv5smarr/FRRUJS7ebTFsI7zom987?=
- =?us-ascii?Q?v8V2kcC51a5wYnWwmhqLx464QrvJWmqHOJnfNZrIHVb4WF1Jiy8FEfjPhH61?=
- =?us-ascii?Q?hCd9+jp9UlZo7YvycWcd8uksUKd5DEN3QOxPSTpClrsEzXY3kpGBCsay3maT?=
- =?us-ascii?Q?OEHKwzON03fCLfyQyHdgIy4Y2aWwUEKLqH8hpy+3Pr3KrYoSmxGdX6CqkxdY?=
- =?us-ascii?Q?hj8NZ0RPcihnwTuUETTBA149gyDol63ABwGk8I3fa+dJMTN6S9n7kHuYgWXS?=
- =?us-ascii?Q?hJQF13GWnIZ6Ruca/UTFC1Q17R/tElKPTXiEPwLkFCeisT3ZZgFBWr+n3mbd?=
- =?us-ascii?Q?FcZg5pzwNTjNrHXvagFXCp2/9OQYwTYTtTtV1UMzPuF+vS8XcwurixiaGU0G?=
- =?us-ascii?Q?tBltSLwf7Y0da/1ESuzqYAVcv6zy2cWurnLZYOJY4jNKhuj9Qn5InQ99Z2gM?=
- =?us-ascii?Q?z6/kk3amh4uSw5myLJtMPVOo6GMV7gPxSq6PPGjREpPk4rlWoXN55EDiAEtD?=
- =?us-ascii?Q?7AgjgDjw5J7X5QiEOsAx5Ia4MLruz9CuBPNcsR679Q8/1LlL/zCMRAo3KhBM?=
- =?us-ascii?Q?W7FjaL3vuRo6TqP835BTBUjC1NZwx8oIMjgipt9IzZSC/3M5nUtcTeGLmE5t?=
- =?us-ascii?Q?DQ9DKQGTB5Oa1C9QMuwx0o3QWlzyQxGfK6kdRIqOIMv6isBcenspfdrS0r05?=
- =?us-ascii?Q?wMM4g/VW8SEiHzEA1qHZz0MpGuenDvj+7dkvVtJwDbNz73xzbSXdVsaK0w4W?=
- =?us-ascii?Q?O1LWUyrf1WJxUuZoXK01L9Jxeo0kyc8fZe2qzFMv17/KWocZjJg6IB9kHk2V?=
- =?us-ascii?Q?RMeg7IhYRtw8hwELkoSJ3CgmBp40yLwrH7rTKSJNDzsKB2LoxtdufDouUNMq?=
- =?us-ascii?Q?KaG7kkCcXbNuczg9KkuYy3+GW+SqNFv3DyuVWKfWt2Zu3V2XZ1dZSjVTo4F1?=
- =?us-ascii?Q?kmS11ANvD25tB7GJsYozK5fGU8nLdvmR6hW1ifZzpolgRgFg+Suc4AC9Vy7L?=
- =?us-ascii?Q?vQVdhA=3D=3D?=
+	=?utf-8?B?ZFZxQVUwa3hhaENNN0Nvc2FRNGpjdnpHQXdUNE5lTnBiMzlJeWlwMjkrSWtE?=
+ =?utf-8?B?b09RSDBKbTVYanFXSjZHcllFcysrWHc4STRoRGMyMG9jRWk2U21kaXI5SENV?=
+ =?utf-8?B?UXdtSC9OYkIyekRwU05ySDBySGc1NHptTWpwcVZFdVlXMGV3bldGbUtTcG11?=
+ =?utf-8?B?TmRpazg0L25iMDB4UUFjNmxlNzJsZmN1d0ltNXcxZDZRaGUvdkRRVkdPRHhV?=
+ =?utf-8?B?WllwVWxoSW10MGV4OEdYSWFORzZxTm9hK3dmOG5vcWlNQStMSWtIMzNnbS96?=
+ =?utf-8?B?S1dIRlV5M01Ud1JpMnV5K1YwL1dhWnpQYkhhS0FpYXRCcEJjR05BNEIwSkZJ?=
+ =?utf-8?B?V2EwUTUzdTVrYzIxZER0Q01RUTBIS09MeDNKdEVtNG43RUNIZDg5OWV6b25M?=
+ =?utf-8?B?T291ek80L1EzdUNkOU9UbisrMStiNEhMOW5WUnBzTm9pb3Z0ajQzaUlLV01T?=
+ =?utf-8?B?TjVKT0xvZ0JGbmE1Uk9pdjZldGs3a2VzbEtieVJpaDM0dUNuMUpWUDlCTms2?=
+ =?utf-8?B?bkhXQ2U1NkliaWx0eUcya1lrSk5wYktyVk9NQ3F4UXg2YkdEMURURVZIUWRi?=
+ =?utf-8?B?TE5xTzJJRlZCY0xGelc4aDhUM0ZaL3MwZzFJTnlOVWJsa0VWWEJrMzJhQ01a?=
+ =?utf-8?B?NG1WMkxVcVovTVE5SWpkbE5GWEhxOWhiQkp5NUFvdTdmRDVvUzJaUHNmSjh2?=
+ =?utf-8?B?WjB2dGx6M0VOTElFMXZlMlVZeHRQdWttelhJNUYwNVZlRllkK0xPK25PZWQ4?=
+ =?utf-8?B?V2wwVzNoZ3BtQnNWUUpRbEpieDhJRTJ6eFBXZFMrbGJyejZtWFdmbWRhOE5n?=
+ =?utf-8?B?Nk5SVWJYVWI1QjJsb0RZQzRkZDdPeU9PQlZiVzlIVnFpVVZZbnJMRFNtTXF0?=
+ =?utf-8?B?aFFydVRSajBVMVNCWU5sclRSOFdvd1Z0eDN5bk9ybHFmWG4rcFFPMHVIb3Zm?=
+ =?utf-8?B?Qjd3OXBTYnpCRktjNHJzTkVjcW5QZWVvRXNibUU1MjVLNDlMS2wwSlVqZ29u?=
+ =?utf-8?B?NzJob0FZcXdIUHVicnR5T1IzS3FMOEpMTkpQUDF2cWRoM3kvWDM3bVAya3FR?=
+ =?utf-8?B?dWJUOHc3clc1UVRXWDQyalRWS1kxVGs2ZkpSYXYveDVNWWZqY3RuNjRQa010?=
+ =?utf-8?B?bDQyZisxd2FnL3NuUHJrZDJQamcxWjJaMjVSTWtIV0Q1cXZGY3dzTXlqdmhz?=
+ =?utf-8?B?UjNZK1JOSDUvbkRzeXdaYTBUbVB5YUxiNDdVOVNOQnIxQlFHcjV1bVNlakIw?=
+ =?utf-8?B?ZFg3TWRTeFk3ZENRTlJYbllJWlQyTkltanBCblRaSjdaZlF2cTdha0ZuK25V?=
+ =?utf-8?B?d2owa1VySm9lSWMvWnRIV0ZkZGc1azFycVMxOHVKTlZYcjl2R01saWQrUWZx?=
+ =?utf-8?B?Qkk4Z2t3ZjFiL1phREREeFptbjZhTTFYdHNXSDZrREtZbE1VRlJtaWRGYXhI?=
+ =?utf-8?B?QmlIMGkzMEd6VTRlcFBlVm5uM3ZqamI3OUlkYXU5dHJQU0w3SU9CQjNhNlNV?=
+ =?utf-8?B?elMwdzRBazRnT2UvS3dGcjE1dEJQTUJNV0t4b0ZWTXN3TzJBdWdLYWs3ZEYw?=
+ =?utf-8?B?SGs4ZldRYjlWS1BqcnFTMHFGdzhYdmdNZFdXZkhzSHppVzRXcUhpalo2dnM4?=
+ =?utf-8?B?QjFOelJCWnR1Y01XNXM4RE5EY3lMNkpOWnFObnQ3Z2YrV2wvOFZwcE5CZ0cz?=
+ =?utf-8?B?ZTZ0SEIyQWd5Q2tGZWJIeFRQYjEraDJEejhyMU9IK3JPNjArQVhBM0R5ZUtj?=
+ =?utf-8?B?ZkZwampydzg3YkRVeHhBUjF3SXFBL0dDVmp6empwWER4WlVVOGtPaFM2Q2l5?=
+ =?utf-8?B?VmlBb2FBWDlaeVNIeVo0TlUvcUZNYm5XcmE3Y0hHQkhEYjRkMVExSXBjTzNM?=
+ =?utf-8?B?cy9BQkxkMWFHOFBFSUVrTlFhN3N1NFp0T2QzbGtYdUhlMGlqS0JNN0pZZ3Uz?=
+ =?utf-8?B?SnhTT2Z3V3F0SDdmd1plcjFZckJSR2NQdy9HZ1g3ZGJvaDM1SXpDR1dmajFR?=
+ =?utf-8?B?eFd6MGh3L2JaOHJzQW9yNWcrc1BOUzFxeWE3aFM2MlpYSWNhaVE4OUZocjFK?=
+ =?utf-8?B?bXJzNi8xZGhaVlBlUGJZUFJkcmJxcEVsdmJvYlZVb0xXZ1BzdnZzbm5lanRn?=
+ =?utf-8?B?U3FRVUtHRGt3clV1TDRHWjkyOTFVak9uSzJaTGt5TmlWdGhqVDRxRnVYQkhP?=
+ =?utf-8?B?N2lBaDRkQ09UMGhaa0RRMzAza3VOWVh5N2k0RkkvZXovaVh6aUJSR3lySVNG?=
+ =?utf-8?B?Wkx5VUpGYzlCM0ZBS0ZTUC9zS0t3PT0=?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(36860700013)(82310400026);DIR:OUT;SFP:1101;
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700013)(1800799024)(376014)(7416014)(82310400026);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2026 14:24:32.6120
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2026 14:24:36.5934
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d318538a-45a1-4f6f-d46b-08de58f8cbc4
+X-MS-Exchange-CrossTenant-Network-Message-Id: acd5264f-08a7-4d50-5164-08de58f8ce1a
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CO1PEPF000075EF.namprd03.prod.outlook.com
+	SJ5PEPF000001E8.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR12MB9664
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4495
 
-Convert all imports in the devres to use "kernel vertical" style.
+Refactor the existing MMIO accessors to use common call macros
+instead of inlining the bindings calls in each `define_{read,write}!`
+expansion.
 
-Cc: Gary Guo <gary@garyguo.net>
-Cc: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+This factoring separates the common offset/bounds checks from the
+low-level call pattern, making it easier to add additional I/O accessor
+families.
+
+No functional change intended.
+
+Cc: Alexandre Courbot <acourbot@nvidia.com>
 Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 ---
- rust/kernel/devres.rs | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ rust/kernel/io.rs | 147 ++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 102 insertions(+), 45 deletions(-)
 
-diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
-index db02f8b1788d..43089511bf76 100644
---- a/rust/kernel/devres.rs
-+++ b/rust/kernel/devres.rs
-@@ -254,8 +254,12 @@ pub fn device(&self) -> &Device {
-     /// # Examples
-     ///
-     /// ```no_run
--    /// # #![cfg(CONFIG_PCI)]
--    /// # use kernel::{device::Core, devres::Devres, pci};
-+    /// #![cfg(CONFIG_PCI)]
-+    /// use kernel::{
-+    ///     device::Core,
-+    ///     devres::Devres,
-+    ///     pci, //
-+    /// };
-     ///
-     /// fn from_core(dev: &pci::Device<Core>, devres: Devres<pci::Bar<0x4>>) -> Result {
-     ///     let bar = devres.access(dev.as_ref())?;
-@@ -358,7 +362,13 @@ fn register_foreign<P>(dev: &Device<Bound>, data: P) -> Result
- /// # Examples
- ///
- /// ```no_run
--/// use kernel::{device::{Bound, Device}, devres};
-+/// use kernel::{
-+///     device::{
-+///         Bound,
-+///         Device, //
-+///     },
-+///     devres, //
-+/// };
- ///
- /// /// Registration of e.g. a class device, IRQ, etc.
- /// struct Registration;
+diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+index 152afdcbaf78..d62fd6714256 100644
+--- a/rust/kernel/io.rs
++++ b/rust/kernel/io.rs
+@@ -137,8 +137,65 @@ pub fn maxsize(&self) -> usize {
+ #[repr(transparent)]
+ pub struct Mmio<const SIZE: usize = 0>(MmioRaw<SIZE>);
+ 
++/// Internal helper macros used to invoke C MMIO read functions.
++///
++/// This macro is intended to be used by higher-level MMIO access macros (define_read) and provides
++/// a unified expansion for infallible vs. fallible read semantics. It emits a direct call into the
++/// corresponding C helper and performs the required cast to the Rust return type.
++///
++/// # Parameters
++///
++/// * `$c_fn` – The C function performing the MMIO read.
++/// * `$self` – The I/O backend object.
++/// * `$ty` – The type of the value to be read.
++/// * `$addr` – The MMIO address to read.
++///
++/// This macro does not perform any validation; all invariants must be upheld by the higher-level
++/// abstraction invoking it.
++macro_rules! call_mmio_read {
++    (infallible, $c_fn:ident, $self:ident, $type:ty, $addr:expr) => {
++        // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
++        unsafe { bindings::$c_fn($addr as *const c_void) as $type }
++    };
++
++    (fallible, $c_fn:ident, $self:ident, $type:ty, $addr:expr) => {{
++        // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
++        Ok(unsafe { bindings::$c_fn($addr as *const c_void) as $type })
++    }};
++}
++
++/// Internal helper macros used to invoke C MMIO write functions.
++///
++/// This macro is intended to be used by higher-level MMIO access macros (define_write) and provides
++/// a unified expansion for infallible vs. fallible write semantics. It emits a direct call into the
++/// corresponding C helper and performs the required cast to the Rust return type.
++///
++/// # Parameters
++///
++/// * `$c_fn` – The C function performing the MMIO write.
++/// * `$self` – The I/O backend object.
++/// * `$ty` – The type of the written value.
++/// * `$addr` – The MMIO address to write.
++/// * `$value` – The value to write.
++///
++/// This macro does not perform any validation; all invariants must be upheld by the higher-level
++/// abstraction invoking it.
++macro_rules! call_mmio_write {
++    (infallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr, $value:expr) => {
++        // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
++        unsafe { bindings::$c_fn($value, $addr as *mut c_void) }
++    };
++
++    (fallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr, $value:expr) => {{
++        // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
++        unsafe { bindings::$c_fn($value, $addr as *mut c_void) };
++        Ok(())
++    }};
++}
++
+ macro_rules! define_read {
+-    (infallible, $(#[$attr:meta])* $vis:vis $name:ident, $c_fn:ident -> $type_name:ty) => {
++    (infallible, $(#[$attr:meta])* $vis:vis $name:ident, $call_macro:ident($c_fn:ident) ->
++     $type_name:ty) => {
+         /// Read IO data from a given offset known at compile time.
+         ///
+         /// Bound checks are performed on compile time, hence if the offset is not known at compile
+@@ -148,12 +205,13 @@ macro_rules! define_read {
+         $vis fn $name(&self, offset: usize) -> $type_name {
+             let addr = self.io_addr_assert::<$type_name>(offset);
+ 
+-            // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            unsafe { bindings::$c_fn(addr as *const c_void) }
++            // SAFETY: By the type invariant `addr` is a valid address for IO operations.
++            $call_macro!(infallible, $c_fn, self, $type_name, addr)
+         }
+     };
+ 
+-    (fallible, $(#[$attr:meta])* $vis:vis $try_name:ident, $c_fn:ident -> $type_name:ty) => {
++    (fallible, $(#[$attr:meta])* $vis:vis $try_name:ident, $call_macro:ident($c_fn:ident) ->
++     $type_name:ty) => {
+         /// Read IO data from a given offset.
+         ///
+         /// Bound checks are performed on runtime, it fails if the offset (plus the type size) is
+@@ -162,15 +220,16 @@ macro_rules! define_read {
+         $vis fn $try_name(&self, offset: usize) -> Result<$type_name> {
+             let addr = self.io_addr::<$type_name>(offset)?;
+ 
+-            // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            Ok(unsafe { bindings::$c_fn(addr as *const c_void) })
++            // SAFETY: By the type invariant `addr` is a valid address for IO operations.
++            $call_macro!(fallible, $c_fn, self, $type_name, addr)
+         }
+     };
+ }
+ pub(crate) use define_read;
+ 
+ macro_rules! define_write {
+-    (infallible, $(#[$attr:meta])* $vis:vis $name:ident, $c_fn:ident <- $type_name:ty) => {
++    (infallible, $(#[$attr:meta])* $vis:vis $name:ident, $call_macro:ident($c_fn:ident) <-
++     $type_name:ty) => {
+         /// Write IO data from a given offset known at compile time.
+         ///
+         /// Bound checks are performed on compile time, hence if the offset is not known at compile
+@@ -180,12 +239,12 @@ macro_rules! define_write {
+         $vis fn $name(&self, value: $type_name, offset: usize) {
+             let addr = self.io_addr_assert::<$type_name>(offset);
+ 
+-            // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            unsafe { bindings::$c_fn(value, addr as *mut c_void) }
++            $call_macro!(infallible, $c_fn, self, $type_name, addr, value);
+         }
+     };
+ 
+-    (fallible, $(#[$attr:meta])* $vis:vis $try_name:ident, $c_fn:ident <- $type_name:ty) => {
++    (fallible, $(#[$attr:meta])* $vis:vis $try_name:ident, $call_macro:ident($c_fn:ident) <-
++     $type_name:ty) => {
+         /// Write IO data from a given offset.
+         ///
+         /// Bound checks are performed on runtime, it fails if the offset (plus the type size) is
+@@ -194,9 +253,7 @@ macro_rules! define_write {
+         $vis fn $try_name(&self, value: $type_name, offset: usize) -> Result {
+             let addr = self.io_addr::<$type_name>(offset)?;
+ 
+-            // SAFETY: By the type invariant `addr` is a valid address for MMIO operations.
+-            unsafe { bindings::$c_fn(value, addr as *mut c_void) };
+-            Ok(())
++            $call_macro!(fallible, $c_fn, self, $type_name, addr, value)
+         }
+     };
+ }
+@@ -468,46 +525,46 @@ fn maxsize(&self) -> usize {
+         self.0.maxsize()
+     }
+ 
+-    define_read!(fallible, try_read8, readb -> u8);
+-    define_read!(fallible, try_read16, readw -> u16);
+-    define_read!(fallible, try_read32, readl -> u32);
++    define_read!(fallible, try_read8, call_mmio_read(readb) -> u8);
++    define_read!(fallible, try_read16, call_mmio_read(readw) -> u16);
++    define_read!(fallible, try_read32, call_mmio_read(readl) -> u32);
+     define_read!(
+         fallible,
+         #[cfg(CONFIG_64BIT)]
+         try_read64,
+-        readq -> u64
++        call_mmio_read(readq) -> u64
+     );
+ 
+-    define_write!(fallible, try_write8, writeb <- u8);
+-    define_write!(fallible, try_write16, writew <- u16);
+-    define_write!(fallible, try_write32, writel <- u32);
++    define_write!(fallible, try_write8, call_mmio_write(writeb) <- u8);
++    define_write!(fallible, try_write16, call_mmio_write(writew) <- u16);
++    define_write!(fallible, try_write32, call_mmio_write(writel) <- u32);
+     define_write!(
+         fallible,
+         #[cfg(CONFIG_64BIT)]
+         try_write64,
+-        writeq <- u64
++        call_mmio_write(writeq) <- u64
+     );
+ }
+ 
+ impl<const SIZE: usize> IoKnownSize for Mmio<SIZE> {
+-    define_read!(infallible, read8, readb -> u8);
+-    define_read!(infallible, read16, readw -> u16);
+-    define_read!(infallible, read32, readl -> u32);
++    define_read!(infallible, read8, call_mmio_read(readb) -> u8);
++    define_read!(infallible, read16, call_mmio_read(readw) -> u16);
++    define_read!(infallible, read32, call_mmio_read(readl) -> u32);
+     define_read!(
+         infallible,
+         #[cfg(CONFIG_64BIT)]
+         read64,
+-        readq -> u64
++        call_mmio_read(readq) -> u64
+     );
+ 
+-    define_write!(infallible, write8, writeb <- u8);
+-    define_write!(infallible, write16, writew <- u16);
+-    define_write!(infallible, write32, writel <- u32);
++    define_write!(infallible, write8, call_mmio_write(writeb) <- u8);
++    define_write!(infallible, write16, call_mmio_write(writew) <- u16);
++    define_write!(infallible, write32, call_mmio_write(writel) <- u32);
+     define_write!(
+         infallible,
+         #[cfg(CONFIG_64BIT)]
+         write64,
+-        writeq <- u64
++        call_mmio_write(writeq) <- u64
+     );
+ }
+ 
+@@ -523,43 +580,43 @@ pub unsafe fn from_raw(raw: &MmioRaw<SIZE>) -> &Self {
+         unsafe { &*core::ptr::from_ref(raw).cast() }
+     }
+ 
+-    define_read!(infallible, pub read8_relaxed, readb_relaxed -> u8);
+-    define_read!(infallible, pub read16_relaxed, readw_relaxed -> u16);
+-    define_read!(infallible, pub read32_relaxed, readl_relaxed -> u32);
++    define_read!(infallible, pub read8_relaxed, call_mmio_read(readb_relaxed) -> u8);
++    define_read!(infallible, pub read16_relaxed, call_mmio_read(readw_relaxed) -> u16);
++    define_read!(infallible, pub read32_relaxed, call_mmio_read(readl_relaxed) -> u32);
+     define_read!(
+         infallible,
+         #[cfg(CONFIG_64BIT)]
+         pub read64_relaxed,
+-        readq_relaxed -> u64
++        call_mmio_read(readq_relaxed) -> u64
+     );
+ 
+-    define_read!(fallible, pub try_read8_relaxed, readb_relaxed -> u8);
+-    define_read!(fallible, pub try_read16_relaxed, readw_relaxed -> u16);
+-    define_read!(fallible, pub try_read32_relaxed, readl_relaxed -> u32);
++    define_read!(fallible, pub try_read8_relaxed, call_mmio_read(readb_relaxed) -> u8);
++    define_read!(fallible, pub try_read16_relaxed, call_mmio_read(readw_relaxed) -> u16);
++    define_read!(fallible, pub try_read32_relaxed, call_mmio_read(readl_relaxed) -> u32);
+     define_read!(
+         fallible,
+         #[cfg(CONFIG_64BIT)]
+         pub try_read64_relaxed,
+-        readq_relaxed -> u64
++        call_mmio_read(readq_relaxed) -> u64
+     );
+ 
+-    define_write!(infallible, pub write8_relaxed, writeb_relaxed <- u8);
+-    define_write!(infallible, pub write16_relaxed, writew_relaxed <- u16);
+-    define_write!(infallible, pub write32_relaxed, writel_relaxed <- u32);
++    define_write!(infallible, pub write8_relaxed, call_mmio_write(writeb_relaxed) <- u8);
++    define_write!(infallible, pub write16_relaxed, call_mmio_write(writew_relaxed) <- u16);
++    define_write!(infallible, pub write32_relaxed, call_mmio_write(writel_relaxed) <- u32);
+     define_write!(
+         infallible,
+         #[cfg(CONFIG_64BIT)]
+         pub write64_relaxed,
+-        writeq_relaxed <- u64
++        call_mmio_write(writeq_relaxed) <- u64
+     );
+ 
+-    define_write!(fallible, pub try_write8_relaxed, writeb_relaxed <- u8);
+-    define_write!(fallible, pub try_write16_relaxed, writew_relaxed <- u16);
+-    define_write!(fallible, pub try_write32_relaxed, writel_relaxed <- u32);
++    define_write!(fallible, pub try_write8_relaxed, call_mmio_write(writeb_relaxed) <- u8);
++    define_write!(fallible, pub try_write16_relaxed, call_mmio_write(writew_relaxed) <- u16);
++    define_write!(fallible, pub try_write32_relaxed, call_mmio_write(writel_relaxed) <- u32);
+     define_write!(
+         fallible,
+         #[cfg(CONFIG_64BIT)]
+         pub try_write64_relaxed,
+-        writeq_relaxed <- u64
++        call_mmio_write(writeq_relaxed) <- u64
+     );
+ }
 -- 
 2.51.0
 
