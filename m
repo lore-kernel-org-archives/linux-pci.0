@@ -1,281 +1,202 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012013.outbound.protection.outlook.com [52.101.48.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B7940B6E4;
-	Wed, 21 Jan 2026 11:36:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768995381; cv=none; b=aFce+Ye3MoYlhJfPrcfP5TQ2WEOcE9stFAGLpeWu4FIfFA6RQGfxWfG6DgQTc7IAoozXVqO9m8hWDrXFaps4GH6qrmLp7z0JevyZ88l1MHo3A0C3Pkl6MPupRZ3M4nIfOO+PCbfw7jaqHeGEzb6GoVMYOIeLbObonQNyelutddU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768995381; c=relaxed/simple;
-	bh=mSmsMtvGwq1jQxsB6FlcxVipMrAkvxQnT9An0dZtQ0Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tVQYWyA9c2fATUHhDnYih1P811QsGDhRpFrHN/9Z62F5iRuzSQIYNZaSpFCw0m7ufNs81dlwNmIOX+yFzSjLb3czCkgKpvcyJOjXH8Y9TLava/ylcg8LhDmGqYW9TuYTWeOVkdpbotNnvUrC/r2HpqpwvkW9qeSNj6lsVlKgQi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MOnnSka8; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC9A81F91E3;
+	Wed, 21 Jan 2026 11:41:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.13
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768995673; cv=fail; b=NQ6jJ/4MqrwkpvyayFNbD3VADZvC2+1o0YxxFSNtWEzKxZ019S0/iX9ToIDa2NXLRY/0uCKM8OnZTj/mDTakdsL4yXBoI6JbXV1yR8AD0WZIeh0BAzMbq+AwkIMqPRyhxUQXh5VQ0CJsfckzMBkJlFxwUyyJnv1kV+RucPVIoCc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768995673; c=relaxed/simple;
+	bh=mKgJgOXtBMtfcJQMIUGX9nDRpqDhYoPGr0TvgbaS0Tk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=SNzEqQBweHRxUhgUOuWuwzQ5nSKiWDbr/Z9iGTGRG3Sf2RyBUnHd5Lvbhj9jevfTjhS0s+GwyacdgUyC+ZYcj4/d2J7ia8r4bYC1PJXpXvdclsDqZL4xLIywuAenK0yiHSwXVD+KnXn4qhlsn7/MwjI1XnV+cFqYrhqcfbJll6Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=WPCfr7eW; arc=fail smtp.client-ip=52.101.48.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MOnnSka8"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60L5DAob3264903;
-	Wed, 21 Jan 2026 11:35:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=8xSmsePBtJ3EW+zKnS0O0ktRO+JFCw7jsgeeT4kz2Qw=; b=
-	MOnnSka8xoIYh/B6oQ1Uphz72FGG+D8EnlDjAb3NBGkkGFD4nuVoeBlraSbBGhPX
-	9h3UwXuM/47qBP7FGg42txUJEogNnBjquRqynSuYafsOxNWYpU0cpt3kP132CA6P
-	pxSm9CN/Gy+/oeiP+MzDimcOCB2r2JEolo2yMN2mjjTjUBuUgh6PbV1hgbjwxWIi
-	+T5QonDVTGQN+IF3Su/pFTB/ypCUh3fhYi4zC1zWNne3bgd00Tw23PqqZD8dS9z4
-	UNpn7cJuS34ZkvO8GbH5SSlqj3Vj3HYgXMwGxeEf/Ofq28+4diKjADDnF4nwU89u
-	nAhnfgtdsRCQ1nzRBeRJfw==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4br1b8dq1n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 21 Jan 2026 11:35:53 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 60LA6OqX019001;
-	Wed, 21 Jan 2026 11:35:52 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4bsyrry2x0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 21 Jan 2026 11:35:52 +0000
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 60LBUlCD025086;
-	Wed, 21 Jan 2026 11:35:52 GMT
-Received: from lab61.no.oracle.com (lab61.no.oracle.com [10.172.144.82])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4bsyrry2rv-3;
-	Wed, 21 Jan 2026 11:35:51 +0000
-From: =?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Greg Kroah-Hartman <gregkh@suse.de>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Johannes Thumshirn <morbidrsa@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        =?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v2 2/2] PCI/ACPI: Confine program_hpx_type2 to the AER bits
-Date: Wed, 21 Jan 2026 12:35:41 +0100
-Message-ID: <20260121113544.4163457-3-haakon.bugge@oracle.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <20260121113544.4163457-1-haakon.bugge@oracle.com>
-References: <20260121113544.4163457-1-haakon.bugge@oracle.com>
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="WPCfr7eW"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jVtwxeWXSnsS1wEBaCcmhjXjI61APKEYBG9Mbi1cljXtaub8QOkWzSvNx2egpOmEYRRJy2nXUnJ0cUTiq9a6rKgzGtz9iXQryxJsTdKnKqVPOCD8aqXNWUMLpceZHI/wEKyyiSWz7um/TtK7Hy9dVxGv9sRoo/fhRPwJO8F3uYZ+zNTNx4d4A6ga7+SOwrmA4nVTVUDzYROH1JHlee25gZO5t+nfGu+mWhf6vhvXlm6PD+JpU86tmawbK2V5RolOntexbTK4YjGTybyIgV+QPBHuqIzHkpKrgmcPwJkjQ5/2WzA/Dmzlk5haYMsY1UX7pivtxH3o6AQfWIW22UQiDw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=yeWATVxIbgoyPwSDxgcLbwpwnGjCImvnVnZ03Uv+wLs=;
+ b=MOxjQhH49EkiLat+FKQd4d/pZlFbjsq05/Vcv738htyjplxXusAhI8iIf1b3LVoSBv65Iknq3+7dw7rMKwcpkz8CU3G5rfBe0lkKE/kIth+F+J3knz89D3N7yJKDoXAnIyXmM4kkyeV1TN8Z3PZ9nD2VAHa+Dy14YP26xQ8tTGrExzTeQYgivL2xdRoYooB9eUAss4iPI4nQ064krbi7f7MXKyzVC6ffBQ+Xd6O1xvtmaBQQpq58cdLL1+dqT+zatMwldJJxs4mptZyHq52qROuq6eV/oxCTFp5SJVDWu49+eJEPEK6rdnFA9dHL14m8yeKmMvtaoBGf8Q+OVmyqrw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.21.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yeWATVxIbgoyPwSDxgcLbwpwnGjCImvnVnZ03Uv+wLs=;
+ b=WPCfr7eWrLxbeX/cFh6G0pICegl+NM/oj6NJrSu97/EIJg9rTpzNUxyObJFVquRT+XVZ/jIj+BYT2hOtpWwdL0kQIWOUOe43mcPhHdEnuGirCIol/kh91ETHA5qE4IRbnO0P1SS9G4PzxNE0RVRwKIXm66M/wzkB+bWE4yIP7qQ=
+Received: from SJ0PR13CA0149.namprd13.prod.outlook.com (2603:10b6:a03:2c6::34)
+ by SJ5PPFB3F166793.namprd10.prod.outlook.com (2603:10b6:a0f:fc02::7c4) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.5; Wed, 21 Jan
+ 2026 11:41:05 +0000
+Received: from CO1PEPF000044EE.namprd05.prod.outlook.com
+ (2603:10b6:a03:2c6:cafe::45) by SJ0PR13CA0149.outlook.office365.com
+ (2603:10b6:a03:2c6::34) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9564.3 via Frontend Transport; Wed,
+ 21 Jan 2026 11:41:05 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
+Received: from flwvzet201.ext.ti.com (198.47.21.195) by
+ CO1PEPF000044EE.mail.protection.outlook.com (10.167.241.68) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9542.4 via Frontend Transport; Wed, 21 Jan 2026 11:41:03 +0000
+Received: from DFLE201.ent.ti.com (10.64.6.59) by flwvzet201.ext.ti.com
+ (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 21 Jan
+ 2026 05:41:00 -0600
+Received: from DFLE210.ent.ti.com (10.64.6.68) by DFLE201.ent.ti.com
+ (10.64.6.59) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 21 Jan
+ 2026 05:40:59 -0600
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE210.ent.ti.com
+ (10.64.6.68) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Wed, 21 Jan 2026 05:40:59 -0600
+Received: from [172.24.231.225] (a0507033-hp.dhcp.ti.com [172.24.231.225])
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 60LBeuYQ2940934;
+	Wed, 21 Jan 2026 05:40:56 -0600
+Message-ID: <d22c37a1-0b75-4f8b-a846-f20bc9a9cca7@ti.com>
+Date: Wed, 21 Jan 2026 17:10:55 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
- definitions=2026-01-21_01,2026-01-20_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2601150000 definitions=main-2601210097
-X-Authority-Analysis: v=2.4 cv=WbcBqkhX c=1 sm=1 tr=0 ts=6970ba19 b=1 cx=c_pps
- a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=M51BFTxLslgA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=yPCof4ZbAAAA:8 a=CF6WusRKGoJ8OkfercgA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 cc=ntf awl=host:12104
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIxMDA5NyBTYWx0ZWRfX9XpsfvLL6NYD
- Uk+YDRag+k2Ud1sE/a096WHh6+TxZ06Cg7PO04mKuliheJH5enV0iCXCsAj6TQwzwjnEi2o2aI5
- JGBih8zwIEE1nKTNDHf1huTMFgQNqRuZFclwJIQuHk9OXI0acADnseIXsfESABLSbiES5sdtH0m
- N+GNIPP5XDHroUnAYzBQm0kxTmAlX+Y1nrF1vbY8qKAsi65h/K0my5JJDMNuZv86nK+zqRgrwNu
- FttEOly85PD+ofOtX0pNCDIcysRetxzTPkr7BPK75Y+Zk93eWU8IpHgNOX0pOAFmdHH4pmTWY3r
- 576sogZHVRM3reU4OwS+SwUjscYoFMvIX/gJRsAy65oIGwicD9cmARfbn3SlszdyJJl1JGvoiCN
- TBCsFeXEOg7DEq5pM2ZvxshTCHZooskdankMJ/Br/VaYLL8F1h1stxvTkiuSuOHC1PxhTCK1xzJ
- QeL6YJQ5NDZTcSNI4yTGznP3MB11R0u2DB4/6AZ8=
-X-Proofpoint-ORIG-GUID: JGxWucj1N6acwkaAvfRYpRanyfa6x2xv
-X-Proofpoint-GUID: JGxWucj1N6acwkaAvfRYpRanyfa6x2xv
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] PCI: dwc: ep: Fix resizable BAR support for multi-PF
+ configurations
+To: Niklas Cassel <cassel@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <jingoohan1@gmail.com>, <mani@kernel.org>,
+	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <robh@kernel.org>,
+	<bhelgaas@google.com>, <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>,
+	<danishanwar@ti.com>
+References: <20260121054214.274429-1-a-garg7@ti.com>
+ <20260121054214.274429-2-a-garg7@ti.com> <aXCjP8KZw1ig8i-W@ryzen>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <aXCjP8KZw1ig8i-W@ryzen>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF000044EE:EE_|SJ5PPFB3F166793:EE_
+X-MS-Office365-Filtering-Correlation-Id: b45e663b-6ca7-4bcf-ceba-08de58e1f55e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|376014|36860700013|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?L1BSaDQwckF0TEx1bE9hZHZYajdBUFh0TUJ2UXI4SGdJTzFldTgwMTdCR25C?=
+ =?utf-8?B?Sk9FUk1vSmNoSzk2WTNNNkxOdlprdDM0Y20vL2U3VVRKWWhLQ05LM044aFc5?=
+ =?utf-8?B?Tk14RjRtQ2c0aHF0R1RvU1hEZFU5VVdqUXF6aXIrNElsZFROT1FqTXdFUnhr?=
+ =?utf-8?B?dDdtWGVqZzlsemQ0TmFOWVFQMWlkTmxiaFBpZXJZWmtJRDM2MFhZZWErbFlU?=
+ =?utf-8?B?NEJ6ZEtqRHVrc2lPc0FlN1VHRzhEdnNRcllQZmM5TWpYUWJpbVNTQzVpVFZ3?=
+ =?utf-8?B?aEVUZFpQVVFFcnJaMkNlRCtUa001MHROcHllRHhiMGZEb0lkZTRqZGxLejBY?=
+ =?utf-8?B?QloycjBTbTRGUmg5VmVrcHBzTDVmZXBVU3lYd0NPN1lTU0I4UktPNnQ4NHpi?=
+ =?utf-8?B?NDJRdEN3MjlVNEVlZnBjRlZzWFM4dWR1dWRLRG9JYXBOaHRRR2hlVE93b3RC?=
+ =?utf-8?B?clJ4bjRpK1RNR2FqNURReERINmNKSmdqRWsxSzVjeWtBN0NsZnVEM3FEbUMy?=
+ =?utf-8?B?ZnlpV1UxOXR6bHRKUEw2YTIyYjM5K3o5emwzdS9YMDJWYzM0M3FQSXloVE0w?=
+ =?utf-8?B?bi9nTUwxSkVYTkMvelBPR1VFRmV5RG9tNzdLVDRqMjJyNWhJWjg0clpCd1FR?=
+ =?utf-8?B?MWJVeUhWRVVGS2hta0tVVHJQelFWTEsxa1hhWWFDcVc3WC81WVFpZ2NGTy92?=
+ =?utf-8?B?blRBTEZNTnRTVHQzMnhwTUVWQ2hoSm93UzJMWWcyelJPQUVNY0FCelJnRU5k?=
+ =?utf-8?B?bDRmQnBUQ0F1WW1nZ2loWmNwbkt3TXI3SHhVSWpoZVc5RkhXYUVTY0RuSlZT?=
+ =?utf-8?B?RStWMlBGQnc4bFhqaEw0TG4yanZPNFYxNTcwK0tuMU9iUFRxS09zWHpiN0l4?=
+ =?utf-8?B?L1lLSFhtYmYrR3J2bDNLUXRKUGwvWFBzeS8xbEZBeDBzc1pkTEtvMDRFZi9H?=
+ =?utf-8?B?ZXZMV0hiS25KR3ZCWmN6dTd6aVVrb0FYdG5TY2RVOUdZeVhGWXR1dlRvMlNS?=
+ =?utf-8?B?T2J2ZHRvQ29YZGxTZDZCYnFac1ZIM2Y1UlY5bHJOc3FXVnJYa1FDTnVHM3lh?=
+ =?utf-8?B?cGxTOU1EOHRUYXVFcFhvMUphOGs4bDhualMxNUt3ZnlaQzdzeGoxTWR1MzBQ?=
+ =?utf-8?B?VFBRTEtrUXFhN1Ywc0hicW4yMTNVTDlIdGp1MFJ3Y0Y0aFZVRHRSby9oTm9p?=
+ =?utf-8?B?RDNrNkZhTm5xZmtmR1Y2VFhHZnBTVGZpMml3bGlLU1VRQ1JFS0YyK05uanE3?=
+ =?utf-8?B?Sy9LZkdlbTBzR1VTNEZRekwwWGRwUTdkTVZQWHR5TENKYlUrUXBUb05KRDNL?=
+ =?utf-8?B?QU9lTERCR0YvZlAzVHNpcDV5ckZ6WllpSHZpb2t4QjIyWTAxRUdOMXE5WGx2?=
+ =?utf-8?B?Y1BSME9lTkNNVml1Uy9ReDJEWWxzRFJJaHBiSzdzZFV6NXBYTW9uNk1FVEhU?=
+ =?utf-8?B?azNkb093dmluUG5oeGhLcGFuUGFGTjlORjlJYTRwM1NmNjF1eGRTblNrQzd1?=
+ =?utf-8?B?dXptS2VFSXR1U05IbWlYNVF0SU9mSDE4YTErTjduUDUyd1I5TEc3dUJPZGtN?=
+ =?utf-8?B?dGR4NjVEeUJib09zNW9NYWFLOHkrOUVDSzBnRkh3bG5Wem9XTisrL3R1cWhP?=
+ =?utf-8?B?QjNNNk5yQlZlaW43d1V1dzRyKzNvWndrOU5yb0o3RkRoZEdIN0VIVjQ2TFdZ?=
+ =?utf-8?B?NFcxY0txckRlUWMyUWJQbHVBcUVFVHlYK09hQll0Zm8rbys5TC9KTXhXbmw4?=
+ =?utf-8?B?RTg3VHdFSU9JVlNlYW53cmZXbGJudHR6RnVuR1N2K2h4SVJtMDRxazhJaVNn?=
+ =?utf-8?B?TmNMWHpCR05oZzlaSmFkRW1xU2pyNldDUCtOem1uRGx1Vmw2UmhSZGRPV3Yw?=
+ =?utf-8?B?OENuQ21ZMzRJcVk3MU1aQWNVTkRLN001dkJ3U0pTRlhHY3cyWTBwNVJ3SEZ0?=
+ =?utf-8?B?ejMwaGFaSk1xTHBkSHZoc2tRQXprN0JwclpUWEJrSXRmaXJ6YzRzK2FYV3Vt?=
+ =?utf-8?B?Q2s5UE40QkJHYzVaUW9jUmpZdTE2REFralRVREhiQVpoSVVkZ2dMK05QWjlT?=
+ =?utf-8?B?blRaNHJoN0IzVDYzV29aTlNHWGxYSXZKWHFUa3IyR1JRYTMxbDR3bTFscmQw?=
+ =?utf-8?B?Rk1kQWVPTnpPdWhBclJLQ0pCUjdNOFRLL1EvN21NRitiVGFCc3l2YmROdE5T?=
+ =?utf-8?B?S2RaTm1EQjVyWFl2MHlLRzYxWVVyek9FOUpDNzBUNGh6MUFLdjBkTEZ0bmdN?=
+ =?utf-8?B?SkpVaU00aFZ5UHBVN1FMbVl6a1lBPT0=?=
+X-Forefront-Antispam-Report:
+	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(82310400026)(376014)(36860700013)(1800799024);DIR:OUT;SFP:1101;
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2026 11:41:03.9313
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: b45e663b-6ca7-4bcf-ceba-08de58e1f55e
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CO1PEPF000044EE.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ5PPFB3F166793
 
-program_hpx_type2() is today unconditionally called, despite the fact
-that when the _HPX was added to the ACPI spec. v3.0, the description
-stated:
 
- OSPM [1] will only evaluate _HPX with Setting Record – Type 2 if OSPM
- is not controlling the PCI Express Advanced Error Reporting
- capability.
 
-Hence, we only call program_hpx_type2() when the OSPM owns the PCIe
-hotplug capability but not the AER.
+> On Wed, Jan 21, 2026 at 11:12:13AM +0530, Aksh Garg wrote:
+>> +static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
+>> +{
+>> +	struct dw_pcie_ep *ep = &pci->ep;
+>> +	u8 func_no, funcs;
+>> +
+>> +	funcs = ep->epc->max_functions;
+> 
+> Initialize this on the same line as the variable is declared.
+> u8 func_no; will be on a separate line.
+> 
 
-The Advanced Configuration and Power Interface (ACPI) Specification
-version 6.6 has a provision that gives the OSPM the ability to control
-the other PCIe Device Control bits any way. In a note in section
-6.2.9, it is stated:
+I will fix this nit.
 
-"OSPM may override the settings provided by the _HPX object's Type2
-record (PCI Express Settings) or Type3 record (PCI Express Descriptor
-Settings) when OSPM has assumed native control of the corresponding
-feature."
+> 
+>> +
+>> +	dw_pcie_dbi_ro_wr_en(pci);
+>> +
+>> +	for (func_no = 0; func_no < funcs; func_no++)
+>> +		__dw_pcie_ep_init_non_sticky_registers(ep, func_no);
+>>  
+>>  	dw_pcie_setup(pci);
+>>  	dw_pcie_dbi_ro_wr_dis(pci);
+>> -- 
+>> 2.34.1
+>> 
+> 
+> 
+> Thank you for fixing this!
+> 
+> Reviewed-by: Niklas Cassel <cassel@kernel.org>
+> 
+> 
+> You do need another patch in this series though, that fixes:
+> https://github.com/torvalds/linux/blob/v6.19-rc6/drivers/pci/controller/dwc/pcie-designware-ep.c#L972-L986
+> 
+> As currently, ptm_cap_base is fetched using dw_pcie_find_ext_capability()
+> instead of your new dw_pcie_ep_find_ext_capability() which takes a func_no.
+> 
 
-So, in order to preserve the non-AER bits in PCIe Device Control, in
-particular the performance sensitive ExtTag and RO, we make sure
-program_hpx_type2() if called, doesn't modify any non-AER bits.
+Thank you for pointing this out. I will add a patch for this fix as well.
 
-Also, when program_hpx_type2() is called, we completely avoid
-modifying any bits in the Link Control register. However, if the _HPX
-type 2 records contains bits indicating such modifications, we print
-an info message.
-
-[1] Operating System-directed configuration and Power Management
-
-Fixes: 40abb96c51bb ("[PATCH] pciehp: Fix programming hotplug parameters")
-Signed-off-by: Håkon Bugge <haakon.bugge@oracle.com>
-
----
-
-v1 -> v2:
-   * Fixed comment style
-   * Simplified the and/or logic when programming the Device Control
-     register
-   * Fixed the incorrect and brutal warning about Link Control
-     register bits set and changed it to an info message about _HPX
-     attempting to set/reset bits therein.
-   * Removed the RCB programming from program_hpx_type2()
-   * Moved the PCI_EXP_AER_FLAGS definition from
-     drivers/pci/pcie/aer.c to drivers/pci/pci.h
----
- drivers/pci/pci-acpi.c | 61 +++++++++++++++++++-----------------------
- drivers/pci/pci.h      |  3 +++
- drivers/pci/pcie/aer.c |  3 ---
- 3 files changed, 30 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 9369377725fa0..34ea22f65a410 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -271,21 +271,6 @@ static acpi_status decode_type1_hpx_record(union acpi_object *record,
- 	return AE_OK;
- }
- 
--static bool pcie_root_rcb_set(struct pci_dev *dev)
--{
--	struct pci_dev *rp = pcie_find_root_port(dev);
--	u16 lnkctl;
--
--	if (!rp)
--		return false;
--
--	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
--	if (lnkctl & PCI_EXP_LNKCTL_RCB)
--		return true;
--
--	return false;
--}
--
- /* _HPX PCI Express Setting Record (Type 2) */
- struct hpx_type2 {
- 	u32 revision;
-@@ -311,6 +296,7 @@ static void program_hpx_type2(struct pci_dev *dev, struct hpx_type2 *hpx)
- {
- 	int pos;
- 	u32 reg32;
-+	const struct pci_host_bridge *host;
- 
- 	if (!hpx)
- 		return;
-@@ -318,6 +304,15 @@ static void program_hpx_type2(struct pci_dev *dev, struct hpx_type2 *hpx)
- 	if (!pci_is_pcie(dev))
- 		return;
- 
-+	host = pci_find_host_bridge(dev->bus);
-+
-+	/*
-+	 * We only do the HP programming if we own the PCIe native
-+	 * hotplug and not the AER ownership
-+	 */
-+	if (!host->native_pcie_hotplug || host->native_aer)
-+		return;
-+
- 	if (hpx->revision > 1) {
- 		pci_warn(dev, "PCIe settings rev %d not supported\n",
- 			 hpx->revision);
-@@ -325,33 +320,31 @@ static void program_hpx_type2(struct pci_dev *dev, struct hpx_type2 *hpx)
- 	}
- 
- 	/*
--	 * Don't allow _HPX to change MPS or MRRS settings.  We manage
--	 * those to make sure they're consistent with the rest of the
-+	 * We only allow _HPX to program the AER registers, namely
-+	 * PCI_EXP_DEVCTL_CERE, PCI_EXP_DEVCTL_NFERE,
-+	 * PCI_EXP_DEVCTL_FERE, and PCI_EXP_DEVCTL_URRE.
-+	 *
-+	 * The other settings in PCIe DEVCTL are managed by OS in
-+	 * order to make sure they're consistent with the rest of the
- 	 * platform.
- 	 */
--	hpx->pci_exp_devctl_and |= PCI_EXP_DEVCTL_PAYLOAD |
--				    PCI_EXP_DEVCTL_READRQ;
--	hpx->pci_exp_devctl_or &= ~(PCI_EXP_DEVCTL_PAYLOAD |
--				    PCI_EXP_DEVCTL_READRQ);
-+	hpx->pci_exp_devctl_and |= ~PCI_EXP_AER_FLAGS;
-+	hpx->pci_exp_devctl_or &= PCI_EXP_AER_FLAGS;
- 
- 	/* Initialize Device Control Register */
- 	pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
- 			~hpx->pci_exp_devctl_and, hpx->pci_exp_devctl_or);
- 
--	/* Initialize Link Control Register */
-+	/* Log if _HPX attempts to modify PCIe Link Control register */
- 	if (pcie_cap_has_lnkctl(dev)) {
--
--		/*
--		 * If the Root Port supports Read Completion Boundary of
--		 * 128, set RCB to 128.  Otherwise, clear it.
--		 */
--		hpx->pci_exp_lnkctl_and |= PCI_EXP_LNKCTL_RCB;
--		hpx->pci_exp_lnkctl_or &= ~PCI_EXP_LNKCTL_RCB;
--		if (pcie_root_rcb_set(dev))
--			hpx->pci_exp_lnkctl_or |= PCI_EXP_LNKCTL_RCB;
--
--		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
--			~hpx->pci_exp_lnkctl_and, hpx->pci_exp_lnkctl_or);
-+		if (hpx->pci_exp_lnkctl_and)
-+			pci_info(dev,
-+				 "_HPX attempts to reset the following bits in PCIe Link Control: 0x%04x\n",
-+				 hpx->pci_exp_lnkctl_and);
-+		if (hpx->pci_exp_lnkctl_or)
-+			pci_info(dev,
-+				 "_HPX attempts to set the following bits in PCIe Link Control: 0x%04x\n",
-+				 hpx->pci_exp_lnkctl_or);
- 	}
- 
- 	/* Find Advanced Error Reporting Enhanced Capability */
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0e67014aa0013..f388d4414dd3a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -88,6 +88,9 @@ struct pcie_tlp_log;
- #define PCI_BUS_BRIDGE_MEM_WINDOW	1
- #define PCI_BUS_BRIDGE_PREF_MEM_WINDOW	2
- 
-+#define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
-+				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
-+
- extern const unsigned char pcie_link_speed[];
- extern bool pci_early_dump;
- 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e0bcaa896803c..9472d86cef552 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -239,9 +239,6 @@ void pcie_ecrc_get_policy(char *str)
- }
- #endif	/* CONFIG_PCIE_ECRC */
- 
--#define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
--				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
--
- int pcie_aer_is_native(struct pci_dev *dev)
- {
- 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
--- 
-2.43.5
+> 
+> Kind regards,
+> Niklas
+> 
 
