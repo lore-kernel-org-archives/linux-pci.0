@@ -1,65 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFD6A3D6469;
-	Wed, 21 Jan 2026 08:50:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815A336657B;
+	Wed, 21 Jan 2026 08:51:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768985459; cv=none; b=qVOKImzpQQfg8kBI1L7hPrGhWiXrtk1qwx2gRgbrZMZgMo/4A4H7Q2d3ZUp/aJ9BS/GXjkM2ZQQxP77Y75VChRc+Bk6XqfkXa42DK77vZaHA+2a87ez0810JUMsD+dzdAdyDj8yTTfaYSUxEjB9cUmItOcR/0LpO6YJ0/9XMEdY=
+	t=1768985472; cv=none; b=WbXSzl9fHUff0AHmsPjAAFJW8LctO8KOISnIy/6JDWpRRs7V/5oTM+Hv84+OPbcQTb1WfK+ixOCApcpxAcYKhcSpSjM0/qDBzYbUc7ZQCU5i1XwjV6AbzzPWjF5TZ8J1pLfnhhK0m87MBO4xC/wwz+1nN6kT09Tbgf+TT0s5JNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768985459; c=relaxed/simple;
-	bh=4yQSagIYK6WDibtEsPnC8mcleAfDCZiCTDQZXgRAD+Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ENcPyc6rSGkx5+m/bD1beqfpTcsCMVjh8Ew1TqLuagTvtlAPSFGIvTTJr5wRT43+zeWEBZ4P1W5iAh8V3YzSATrBcs3bzonep7Q+XfARqhm9pzjD6ucvB8Do0N2E/+FjF5w5WWgy/+3l8/zGbL6TmRXm6Jcug1HAiwoH4J0LAqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KT0tizBa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768985472; c=relaxed/simple;
+	bh=0p7FqrGTHaYbu4QmCQP4AVNn9vlQWfjeboAHFDbfH9I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qxre0aD/yNogW8grdWGun+KYbcR6tWOYqiez6TLVtyIAY1U4ooLumdf22alNWYyTvB86lf3FdUnjkVQPduKgGy9zcVckcARrQ6U6PCaS098UxUFrbJX/KYyivHFQeU+2Nrb8wbq4sx2AYgSwbAcEuKFDvW1JOgdaZuGlN58OWZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cp1E3dao; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KT0tizBa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFA4AC116D0;
-	Wed, 21 Jan 2026 08:50:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768985458;
-	bh=4yQSagIYK6WDibtEsPnC8mcleAfDCZiCTDQZXgRAD+Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KT0tizBaSg04EhRK8B8rSNa0DQe5gJzl+7LyRgqj6yGczfJblsgj9vZQvSUVmXMig
-	 ONbZEM96ggPjLNTXmn2stNwL+KuclpqL+tQW4QsKTqjVNrDXrkQR8dGSDkA3heULXt
-	 /v9FRGMHss5MATOES6kv4eKkQN/8roCCiyiQ5keJjSoCq+49R0mnDknjUg4njJXyn1
-	 nWYcY8S+gP83SIi83yKXI2f6k2m1ciqUO/MrETJB17NW0ddz1TD0pH0spq2MzzTTpN
-	 uK19lBKh6btQ/JGtnzjFJaaEA8HPYCFOhSjpndxlAdNbX4cWRZAxCGwFgj83fiVhl2
-	 NtcyloYl6z0WQ==
-Date: Wed, 21 Jan 2026 09:50:53 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Aksh Garg <a-garg7@ti.com>
-Cc: linux-pci@vger.kernel.org, jingoohan1@gmail.com, mani@kernel.org,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	s-vadapalli@ti.com, danishanwar@ti.com
-Subject: Re: [PATCH 0/2] PCI: dwc: ep: Enhance multi-function endpoint support
-Message-ID: <aXCTbb-0BWAWc2DB@ryzen>
-References: <20260121054214.274429-1-a-garg7@ti.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cp1E3dao"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1768985471; x=1800521471;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=0p7FqrGTHaYbu4QmCQP4AVNn9vlQWfjeboAHFDbfH9I=;
+  b=cp1E3dao7b/SrWZQzTlRCtnK9XiJuJHte3YkoRwj3ITXZfeJV9MtQtzv
+   kfkrSuGH7FWMnC6UBDnJexq5WM3dH+p/u6EM1YlVO6NcRpgoNIgzJrNDt
+   WsOuh+F0fYpXXQLVQcxfxfCR3/ZJgeIAvRQ+Qy89jUm+Nwq4dOthfA3B6
+   GOEEBJ8lQrzDkEfC6b/cPeB6SrR8gWZ+zNNhTevq404FIewtXDy5aS8hT
+   F/sHPHrB6C0ZC/Kyq/DjXWWVW/6LM5cKMNKnhMw6zUH3ZR1CwtbM0QWPU
+   mlP5o6Cllo3dZI54nvNoP7LXCrVuTB+4Vel9tjCVXgMstkC4U9wmfIu2m
+   A==;
+X-CSE-ConnectionGUID: iS/kbFdOQO6iLMHoDnj8+Q==
+X-CSE-MsgGUID: EZ6UgdGoSOqSxmqaPXW/Bg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11677"; a="80927323"
+X-IronPort-AV: E=Sophos;i="6.21,242,1763452800"; 
+   d="scan'208";a="80927323"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 00:51:10 -0800
+X-CSE-ConnectionGUID: XYlX7UYzRNq8Lx9XYIiDnA==
+X-CSE-MsgGUID: D1H+aY1mRB6jTBnGcFCTrQ==
+X-ExtLoop1: 1
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa003.fm.intel.com with ESMTP; 21 Jan 2026 00:51:08 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1003)
+	id 4296898; Wed, 21 Jan 2026 09:51:07 +0100 (CET)
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>
+Subject: [PATCH v2 1/1] ACPI: PCI: simplify code with acpi_get_local_u64_address()
+Date: Wed, 21 Jan 2026 09:50:49 +0100
+Message-ID: <20260121085105.2282380-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260121054214.274429-1-a-garg7@ti.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jan 21, 2026 at 11:12:12AM +0530, Aksh Garg wrote:
-> This series addresses multi-function endpoint configuration issues in
-> the DWC PCIe controller driver. The changes enable proper operations
-> for physical functions and enhance the multi-function endpoint support.
+Now we have a helper so there's no need to open-code.
 
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
 
-Considering that the DWC driver design has always been broken with regards
-to multiple physical functions, as you explain yourself, the iATU to BAR
-mapping has always been per controller, not per PF.
+v2: fixed a typo (LKP)
 
-Thus, it would be nice if you explained how you have actually tested this.
+ drivers/acpi/pci_slot.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Does the controller you are using have both Resizable and Programmable BARs?
+diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+index 741bcc9d6d6a..15234b65ea22 100644
+--- a/drivers/acpi/pci_slot.c
++++ b/drivers/acpi/pci_slot.c
+@@ -42,8 +42,9 @@ static int
+ check_slot(acpi_handle handle, unsigned long long *sun)
+ {
+ 	int device = -1;
+-	unsigned long long adr, sta;
++	unsigned long long sta;
+ 	acpi_status status;
++	u64 adr;
+ 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+@@ -56,10 +57,9 @@ check_slot(acpi_handle handle, unsigned long long *sun)
+ 			goto out;
+ 	}
+ 
+-	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
+-	if (ACPI_FAILURE(status)) {
+-		pr_debug("_ADR returned %d on %s\n",
+-			 status, (char *)buffer.pointer);
++	if (acpi_get_local_u64_address(handle, &adr)) {
++		pr_debug("_ADR returned with failure on %s\n",
++			 (char *)buffer.pointer);
+ 		goto out;
+ 	}
+ 
+-- 
+2.50.1
 
-
-Kind regards,
-Niklas
