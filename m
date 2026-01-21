@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 276344418CD;
-	Wed, 21 Jan 2026 08:24:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FAA1428468;
+	Wed, 21 Jan 2026 08:24:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768983845; cv=none; b=DX00bUu7gr7M9pEJ5FgkSu7t518eeYDMzi2jNZZdk20wgGCc8o7x58fn7KFTxF3NCH3yPVg0msQECUqW3kCRE5XsRWMK4I4MR/MOtv3wx+9V4x4EFEBKfTsHP3MKqh8AdmwsELCQaDJ4zrtIsO9MK3cn7trtJfIZP8xAJNk8kEQ=
+	t=1768983855; cv=none; b=BWLi4sonYyO58bI6j3aJdiy2xAm7ExQ75F7K4FxgeEkQk+zdZYdaQSjtT5XXKdeoVbkTD3mylGkEgMmESKSwydxDqkNUQCOTrD7V5PXKyF/T+Im9RJ4Uukadi/Zd58nRjxa85Q0fjc13YypOZU+HEAthtX/lenizYY4cyi1Pyj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768983845; c=relaxed/simple;
-	bh=3HQkcEjGCJ1yj66X82L5MXqnsBqdob461Aysn75m7ZI=;
+	s=arc-20240116; t=1768983855; c=relaxed/simple;
+	bh=312ckB6v77HdihpJv55jyXboZbnIRTMv2iAxblU3CPg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c5jjqkNHUGY1RvBu8vLaIqq71Cke8xawb4PGagJUTDUwBandXE/UWPwZ3JS09XfUD85DGZOaSrrI1CLi7Jc/fdREFpg3+Q5erIInDxrLu1bOihNEkKuOpaOqtq59NvXAmqsljPZocubLwSznbvGwcFe7NKg/Dtg/TgkCqLEARzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nx544VGv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JpGpj7drbrZTPoyiodVB+xrnI5MgnukoGoJMzIdMXOSpX809ZAwrxSETsW7GnjSQmuG00ovciWMh0uYkssMQ48OE/CBWFAN2lBV1NSft+w408/JU/vSRiRgWSXVtM5hUm6J1kRZUi3EYImvlA6dcC6yCZzAzfqulqxVG49TVYoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XK5Wkl7F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nx544VGv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F001C116D0;
-	Wed, 21 Jan 2026 08:24:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XK5Wkl7F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BF59C19422;
+	Wed, 21 Jan 2026 08:24:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768983844;
-	bh=3HQkcEjGCJ1yj66X82L5MXqnsBqdob461Aysn75m7ZI=;
+	s=k20201202; t=1768983854;
+	bh=312ckB6v77HdihpJv55jyXboZbnIRTMv2iAxblU3CPg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nx544VGvcMGn44GQA1ApNm5cSU9DOdJGVFG1gQhFREaB+8NRkcUGU4b92izBFa8eT
-	 bC4KFpFjosz/C/ctE3hgXqY9p+m2IN1RHt1Ieq13d5FJO0/oSWWGRLUmm04YRM4e8l
-	 qg2lcBFOCyEwmI6mYZrl9x9T+FAAcCizle30SgnjNAPRGm+D1VXqPqp3WPVvYmNLpn
-	 CfqWIcmO21qNTDgnCtRgrBxxBoWqCkD3RZnOT3YlzUyRC4eXhFiFmgvQRU+WJ+rRYU
-	 DzsL+/Hc06BAqS0TA+Ag9ehWi1TFk4FCsYyvLSW8X7XReisfzF3s/nlwCx5tKFa1kz
-	 QROcQJ0ZyZRKw==
-Date: Wed, 21 Jan 2026 09:23:58 +0100
+	b=XK5Wkl7FFD2uI/e7bAd7HEOtnpU8AQBVXAbjRBiUlwzaUSuLHZW57U38M82cetEv+
+	 8xnGnBNl1Fr3QyhrQWi+FuXXpFqKiurA6RSmxJSqz8fIwHbr0Y5X7F1mMonDDEPg52
+	 A+MIkSH2j09ppgk2yx+oVrLyfkauMfe4qXfLG4viXaw1KmSPzVWO3D+UBwqgReVTZB
+	 K+OQfjb/EZ6q8cHmqdG/HxSfmRbCLeUN3rTv37HM0OIGmlpNLGWulRFq5w9GKniRFk
+	 Uyd9I2/oiTd6+ETO5iG3m8i0UOOcEC2IgpEbB970t/zC/OpOUqbMsIvvIOnzkD/MlH
+	 EzaVbY7RQ0Q0Q==
+Date: Wed, 21 Jan 2026 09:24:09 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: manivannan.sadhasivam@oss.qualcomm.com
 Cc: Jingoo Han <jingoohan1@gmail.com>,
@@ -38,11 +38,11 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	vincent.guittot@linaro.org, zhangsenchuan@eswincomputing.com,
 	Shawn Lin <shawn.lin@rock-chips.com>,
 	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v4 4/5] PCI: dwc: Rework the error print of
- dw_pcie_wait_for_link()
-Message-ID: <aXCNHnuvXJJZPU3y@ryzen>
+Subject: Re: [PATCH v4 5/5] PCI: dwc: Fail dw_pcie_host_init() if
+ dw_pcie_wait_for_link() returns -ETIMEDOUT
+Message-ID: <aXCNKeebHq-YUUXR@ryzen>
 References: <20260120-pci-dwc-suspend-rework-v4-0-2f32d5082549@oss.qualcomm.com>
- <20260120-pci-dwc-suspend-rework-v4-4-2f32d5082549@oss.qualcomm.com>
+ <20260120-pci-dwc-suspend-rework-v4-5-2f32d5082549@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,27 +51,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260120-pci-dwc-suspend-rework-v4-4-2f32d5082549@oss.qualcomm.com>
+In-Reply-To: <20260120-pci-dwc-suspend-rework-v4-5-2f32d5082549@oss.qualcomm.com>
 
-On Tue, Jan 20, 2026 at 11:17:43PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+On Tue, Jan 20, 2026 at 11:17:44PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
 > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > 
-> If the link fails to come up even after detecting the device on the bus
-> i.e., if the LTSSM is not in Detect.Quiet and Detect.Active states, then
-> dw_pcie_wait_for_link() should log it as an error.
-
-Nit: maybe you should mention Poll.Active and Poll.Compliance here too?
-
-
+> The dw_pcie_wait_for_link() API now distinguishes link failures more
+> precisely:
 > 
-> So promote dev_info() to dev_err(), reword the error log to make it clear
-> and also print the LTSSM state to aid debugging.
+> -ENODEV: Device not found on the bus.
+> -EIO: Device found but inactive.
+> -ETIMEDOUT: Link failed to come up.
 > 
-> Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Tested-by: Vincent Guittot <vincent.guittot@linaro.org>
-> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Out of these three errors, only -ETIMEDOUT represents a definitive link
+> failure since it signals that something is wrong with the link. For the
+> other two errors, there is a possibility that the link might come up later.
+> So fail dw_pcie_host_init() if -ETIMEDOUT is returned and skip the failure
+> otherwise.
+> 
 > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
 
-Regardless:
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
