@@ -1,168 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B4A344D6B1;
-	Wed, 21 Jan 2026 22:40:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0533BC4DE;
+	Wed, 21 Jan 2026 23:06:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769035212; cv=none; b=Mrp6WqWi9Sk3tsgdwUG6gZ3YvmFtrsXBXKyKtnQypH2svZscqe0ohRHferh3m8jw8/ltGIVL/oH2INBfvG4Jb0TBPKWA/Y4YWL70hNk6ZfDN0zt0P4ingc4hsVMkQvwIo6Nl0DumJejYmukthXfMuOmdIFWTDtabrF1y4Qp9Z7Q=
+	t=1769036762; cv=none; b=YgYB4wTZBDQZtkMACCXuYQdffvUAvRNQAzl30ZnQplY61j24fgOpBTEFfR1MIl/88MRKDncvZEr3lJ+i7ygOYCBpmclSgnxlgK2MwTMFjd7zlCM98mjA/Yhx18F5mRL4Fh4TiZgI3vuM01Cc63ZPtDgasqBIaMPkhJ8mI16Lne0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769035212; c=relaxed/simple;
-	bh=1OoQzValVImfU4Ve7dxAJHD/4yHyWo6CASzhgZCF7DI=;
+	s=arc-20240116; t=1769036762; c=relaxed/simple;
+	bh=A3y3v8DhBf8ak97cYRv8mfNLKyWb9oqjh8kDSSAyi+M=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=iMCtXnvv+WTAMDqzPjvG08EBc6Vy3GUEZzDYfTwA28fVf9Z+pgcZFATprnTEQUr8PXom+GwXe6jwOCSapfOFV6EeKkFzXRPNn72dNoMJHZ2DW5CcBHTH6ZzkTzG4gjVOhLd+Y/HvcOYVxdaDviD3bMcHmfGan8wq9yEgRVbDpwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tAsU31bZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=hM4w0BbvGcdpYM4S7fZF2dK9ophKklxvPkEH/WNPWP28Ok8icSxh8TpL/UjnnZJzzGWaF1R8cecR9SZlR3G1SGdVqmJwF0TqfwNu8wIWmbY4lVB4OVkHoQc4SzZWrxjy4NGuG2Qsen7gEvqMGq8wt8E6zc9nZ9rOLh5xmw/Nz60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eZ4AoHFq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tAsU31bZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AF23C16AAE;
-	Wed, 21 Jan 2026 22:40:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eZ4AoHFq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 865A7C4CEF1;
+	Wed, 21 Jan 2026 23:06:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769035211;
-	bh=1OoQzValVImfU4Ve7dxAJHD/4yHyWo6CASzhgZCF7DI=;
+	s=k20201202; t=1769036761;
+	bh=A3y3v8DhBf8ak97cYRv8mfNLKyWb9oqjh8kDSSAyi+M=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=tAsU31bZ14z3HVxV9JhfXTUzh4G8EiJKfz4H+Hyuyz2yYEaPl8L429ILJXWLJdCk3
-	 naZ63mft2iU23O3TTZnKMI7sUA43UtdaCcIC42kkiQfOBYm7dhiLEj0vAECbQ59cd0
-	 EmH8WuKsT+pSiq7esKrxnrK/MN6gXKDg6wcDX6Wgjp91Wy9P16USk/kUHNPAimB5Za
-	 oJy8lai5Gfz4weybDk0TBqPBfdkzETGGhEIZ+iQspzeTblliaFm99c0KJv17H4QX4q
-	 oyAwpdWcYxA/TlXSUm6gpncy3SO3g8qFUK2mvIz7eyudKFdhHrSiLn+99zYC0G6D+b
-	 SZJ0sk+69FpIQ==
-Date: Wed, 21 Jan 2026 16:40:10 -0600
+	b=eZ4AoHFqcJgCaPcUpFywIssmFyLiu3n7l4xZSN+WbDubyVD1PRsJulu1T9Gb3pcB/
+	 iHS0db6xUkWF/s8Wx2F0yxIqLcvBCx/sa8lFKQShWqNM07WZQLCGR/t4aCdjGCN+DQ
+	 LB12bUXUKoX9l6Cz+RXHft37a/XwydThL/qViFVLvFwgKpsbtxWJMTL4Xmh3C1eVVj
+	 r32kU0TJ6XJ/z9MBXjI/LPjYX23CxXEUOE/RkJcB/4Ol8AxUCh6YWZ/ZbyosVmuCkJ
+	 PAbWZ9zcZZzjqVKYT8gewvS0yR5k/sXHyDxajxo61KTFgmhoorOxq8MikvFPz/Gop1
+	 KMF3LtE4TW0ZQ==
+Date: Wed, 21 Jan 2026 17:06:00 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?SMOla29u?= Bugge <haakon.bugge@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Johannes Thumshirn <morbidrsa@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Initialize RCB from pci_configure_device
-Message-ID: <20260121224010.GA1217051@bhelgaas>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: hongxing.zhu@nxp.com, l.stach@pengutronix.de, bhelgaas@google.com,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+	shawnguo@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com,
+	frank.li@nxp.com, kernel@pengutronix.de, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 00/10] pci-imx6: Add support for parsing the reset
+ property in new Root Port binding
+Message-ID: <20260121230600.GA1220566@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260121113544.4163457-2-haakon.bugge@oracle.com>
+In-Reply-To: <20260119100235.1173839-1-sherry.sun@nxp.com>
 
-On Wed, Jan 21, 2026 at 12:35:40PM +0100, Håkon Bugge wrote:
-> Commit e42010d8207f ("PCI: Set Read Completion Boundary to 128 iff
-> Root Port supports it (_HPX)") fixed a bogus _HPX type 2 record, which
-> instructed program_hpx_type2() to set the RCB in an endpoint,
-> although it's RC did not have the RCB bit set.
+On Mon, Jan 19, 2026 at 06:02:25PM +0800, Sherry Sun wrote:
+> This patch set adds support for parsing the reset property in new Root Port
+> binding in pci-imx6 driver, similar to the implementation in the qcom pcie
+> driver[1].
 > 
-> e42010d8207f fixed that by qualifying the setting of the RCB in the
-> endpoint with the RC supporting an 128 byte RCB.
+> The plan is to add the wake-gpio property to the root port in subsequent
+> patches. Also, the vpcie-supply property will be moved to the root port
+> node later based on the refactoring patch set for the PCI pwrctrl
+> framework[2]. 
 > 
-> In retrospect, the program_hpx_type2() should only modify the AER
-> bits, and stay away from fiddling with the Link Control Register.
-> 
-> Hence, we explicitly program the RCB from pci_configure_device(). RCB
-> is RO in Root Ports, and in VFs, the bit is RsvdP, so for these two
-> cases we skip programming it. Then, if the Root Port has RCB set and
-> it is not set in the EP, we set it.
-> 
-> Fixes: Commit e42010d8207f ("PCI: Set Read Completion Boundary to 128 iff Root Port supports it (_HPX)")
-> Signed-off-by: Håkon Bugge <haakon.bugge@oracle.com>
-> 
+> [1] https://lore.kernel.org/linux-pci/20250702-perst-v5-0-920b3d1f6ee1@qti.qualcomm.com/
+> [2] https://lore.kernel.org/linux-pci/20260115-pci-pwrctrl-rework-v5-0-9d26da3ce903@oss.qualcomm.com/
+
+Is there value in doing this?  It looks like it might be making work
+for no benefit.
+
+Certainly for *new* drivers and DTs, we should put resets in the Root
+Port.  But this looks like you're moving them in existing DTs.  In
+that case, you still have to support the old DTs where the resets are
+in the host bridge.
+
+If you are adding support for hardware that has multiple Root Ports
+with separate resets for each Root Port, then of course you would need
+to put the reset info in per-Root Port stanzas and make changes to
+support that, but this series doesn't mention anything about multiple
+Root Ports.
+
+> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
 > ---
+> Sherry Sun (10):
+>   dt-bindings: PCI: fsl,imx6q-pcie: Add reset GPIO in Root Port node
+>   PCI: imx6: Add support for parsing the reset property in new Root Port
+>     binding
+>   arm: dts: imx6qdl: Add Root Port node and move PERST property to Root
+>     Port node
+>   arm: dts: imx6sx: Add Root Port node and move PERST property to Root
+>     Port node
+>   arm: dts: imx7d: Add Root Port node and move PERST property to Root
+>     Port node
+>   arm64: dts: imx8mm: Add Root Port node and move PERST property to Root
+>     Port node
+>   arm64: dts: imx8mp: Add Root Port node and move PERST property to Root
+>     Port node
+>   arm64: dts: imx8mq: Add Root Port nodes and move PERST property to
+>     Root Port node
+>   arm64: dts: imx8dxl/qm/qxp: Add Root Port nodes and move PERST
+>     property to Root Port node
+>   arm64: dts: imx95: Add Root Port nodes and move PERST property to Root
+>     Port node
 > 
-> Note, that the current duplication of pcie_root_rcb_set() will be
-> removed in the next commit.
-> ---
->  drivers/pci/probe.c | 36 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 36 insertions(+)
+>  .../bindings/pci/fsl,imx6q-pcie.yaml          |  29 ++++
+>  .../arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |   5 +-
+>  arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi        |  11 ++
+>  .../arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts |   5 +-
+>  arch/arm/boot/dts/nxp/imx/imx6sx-sdb.dtsi     |   5 +-
+>  arch/arm/boot/dts/nxp/imx/imx6sx.dtsi         |  11 ++
+>  arch/arm/boot/dts/nxp/imx/imx7d-sdb.dts       |   5 +-
+>  arch/arm/boot/dts/nxp/imx/imx7d.dtsi          |  11 ++
+>  .../boot/dts/freescale/imx8-ss-hsio.dtsi      |  11 ++
+>  arch/arm64/boot/dts/freescale/imx8dxl-evk.dts |   5 +-
+>  arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi |   5 +-
+>  arch/arm64/boot/dts/freescale/imx8mm.dtsi     |  11 ++
+>  arch/arm64/boot/dts/freescale/imx8mp-evk.dts  |   5 +-
+>  arch/arm64/boot/dts/freescale/imx8mp.dtsi     |  11 ++
+>  arch/arm64/boot/dts/freescale/imx8mq-evk.dts  |  10 +-
+>  arch/arm64/boot/dts/freescale/imx8mq.dtsi     |  22 +++
+>  arch/arm64/boot/dts/freescale/imx8qm-mek.dts  |  10 +-
+>  .../boot/dts/freescale/imx8qm-ss-hsio.dtsi    |  22 +++
+>  arch/arm64/boot/dts/freescale/imx8qxp-mek.dts |   5 +-
+>  .../boot/dts/freescale/imx95-15x15-evk.dts    |   5 +-
+>  .../boot/dts/freescale/imx95-19x19-evk.dts    |  10 +-
+>  arch/arm64/boot/dts/freescale/imx95.dtsi      |  22 +++
+>  drivers/pci/controller/dwc/pci-imx6.c         | 128 ++++++++++++++++--
+>  23 files changed, 335 insertions(+), 29 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 41183aed8f5d9..347af29868124 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2410,6 +2410,41 @@ static void pci_configure_serr(struct pci_dev *dev)
->  	}
->  }
->  
-> +static bool pcie_root_rcb_set(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *rp = pcie_find_root_port(dev);
-> +	u16 lnkctl;
-> +
-> +	if (!rp)
-> +		return false;
-> +
-> +	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
-> +
-> +	return !!(lnkctl & PCI_EXP_LNKCTL_RCB);
-> +}
-> +
-> +static void pci_configure_rcb(struct pci_dev *dev)
-> +{
-> +	/*
-> +	 * Obviously, we need a Link Control register. The RCB is RO
-> +	 * in Root Ports, so no need to attempt to set it for
-> +	 * them. For VFs, the RCB is RsvdP, so, no need to set it.
-> +	 * Then, if the Root Port has RCB set, then we set for the EP
-> +	 * unless already set.
-> +	 */
-> +	if (pcie_cap_has_lnkctl(dev) &&
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
-> +	    !dev->is_virtfn && pcie_root_rcb_set(dev)) {
-> +		u16 lnkctl;
-> +
-> +		pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
-> +		if (lnkctl & PCI_EXP_LNKCTL_RCB)
-> +			return;
-> +
-> +		pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnkctl | PCI_EXP_LNKCTL_RCB);
-> +	}
-
-RCB isn't meaningful for switches, so we'll read their LNKCTL
-unnecessarily.  I propose something like this, which also clears RCB
-if it's set when it shouldn't be (I think this would indicate a
-firmware defect):
-
-        /*
-         * Per PCIe r7.0, sec 7.5.3.7, RCB is only meaningful in Root Ports
-         * (where it is read-only), Endpoints, and Bridges.  It may only be
-         * set for Endpoints and Bridges if it is set in the Root Port.
-         */
-        if (!pci_is_pcie(dev) ||
-            pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-            pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM ||
-            pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
-            dev->is_virtfn)
-                return;
-
-        rcb = pcie_root_rcb_set(dev);
-
-        pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
-        if (rcb) {
-                if (lnkctl & PCI_EXP_LNKCTL_RCB)
-                        return;
-
-                lnkctl |= PCI_EXP_LNKCTL_RCB;
-        } else {
-                if (!(lnkctl & PCI_EXP_LNKCTL_RCB))
-                        return;
-
-                pci_info(FW_INFO "clearing RCB (RCB not set in Root Port)\n");
-                lnkctl &= ~PCI_EXP_LNKCTL_RCB;
-        }
-
-        pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnkctl);
-
-> +}
-> +
->  static void pci_configure_device(struct pci_dev *dev)
->  {
->  	pci_configure_mps(dev);
-> @@ -2419,6 +2454,7 @@ static void pci_configure_device(struct pci_dev *dev)
->  	pci_configure_aspm_l1ss(dev);
->  	pci_configure_eetlp_prefix(dev);
->  	pci_configure_serr(dev);
-> +	pci_configure_rcb(dev);
->  
->  	pci_acpi_program_hp_params(dev);
->  }
 > -- 
-> 2.43.5
+> 2.37.1
 > 
