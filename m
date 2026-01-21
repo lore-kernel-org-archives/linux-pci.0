@@ -1,48 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B423876AC;
-	Wed, 21 Jan 2026 07:42:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6784F3A7855;
+	Wed, 21 Jan 2026 07:54:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768981347; cv=none; b=ctfHdSdKYPnoSkYyZlK1n/8q5anGw53ybawsG5Us0v1s5THcRFjr4LmOrgbMQHXubSWWuy3UU87S4r+TSBXKoj+/dbbNn0qs0EjD/piLYYCv3a6ceTlBC4hAlLZGnLxIUPEh5LScGCSOwWy6wAX/qeGxZr54+DXls6svWTC7Fl0=
+	t=1768982051; cv=none; b=pzf8G3TXq42ljyOPUoXFT4M5JGcgLY3e8V0PkykQl3jd54f0MB3qEDXFIsicYKDERYkkCL4T0qjVFjaDU54AehfxTueCfPaF+4KZtz/wBpINhfwm74h97PK3yLSePl4WqF3U6QW26db99mkDk9aVRRjumOIL2j3gr2OQQv+Y56c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768981347; c=relaxed/simple;
-	bh=bte/XQ4DIY+20st0PFZ4A741YBlWScrZ0zOdXWQH50k=;
+	s=arc-20240116; t=1768982051; c=relaxed/simple;
+	bh=TC2tcJfS2vWZBe0m/+BUUBgTB+Yd6OYy+mlQ7DX9l5A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XZVZD2gtiXiVpf1kqIDq49epamDR4PkE2C0W+p6qxqNy/15cqVARVLZ1jmWUmdefe5x5GDDw1fB2s6irUYtFL3stXW47+UrSC8JL0Gwv+PBT9Zn9jiqvz2mPwPnoaPFkcd5QuEjqLEYmyA7I/9LabzKa3XK3BfTWPLRClmC/nUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rIeP31Ij; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bt4zcX2V/VgOH0osuOa1l5we17AOX0WlWqiyVR/Asqrnf3i7Q7t6uFyGITjI1Ux+ff/sUuuRnLGONjJti6vQeZHo9Nrfz7U3bRA8nzsRfvZxHhJwkwzZxZjaKYcH6mymGv/JL6u5k8i48N7Owr2YMiZfjhL398rerK3+KMOnIiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZZAiZ1YE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rIeP31Ij"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F050C116D0;
-	Wed, 21 Jan 2026 07:42:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZZAiZ1YE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E80DAC116D0;
+	Wed, 21 Jan 2026 07:54:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768981346;
-	bh=bte/XQ4DIY+20st0PFZ4A741YBlWScrZ0zOdXWQH50k=;
+	s=k20201202; t=1768982050;
+	bh=TC2tcJfS2vWZBe0m/+BUUBgTB+Yd6OYy+mlQ7DX9l5A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rIeP31Ij9uGOS5j+Mc24fKtxEPHM9BKYkUtJA3mDe9250G0Mggh8qOGv9UNGLhbXR
-	 DX2XtYCw6ieRnjBon31V4xrq8AbjCcU0BUMcvpcltj2GcNEt/ThHJzwLfqb50iA/bE
-	 ARXyylEX3on9ijQFThfDwjaXPBFD8pW2rcKTOPqnkK+kGMEm5p91ZrHf2slT3YPwgN
-	 Gy+HFFBJaIxQtIW97cD6S5o6AdkyBmz+txMIgaWElD2p6vLRBHIej5bUA5uMiNDE2h
-	 EQoeHS2gHI2ULewogq9xdLMfjQyowOi3oR1u5j6h3y4CA3I468HJbkFMgs6SAllEPT
-	 LCTHAofRoIkQw==
-Date: Wed, 21 Jan 2026 13:12:16 +0530
-From: "mani@kernel.org" <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Hongxing Zhu <hongxing.zhu@nxp.com>, Frank Li <frank.li@nxp.com>, 
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, "shawnguo@kernel.org" <shawnguo@kernel.org>, 
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
-	"festevam@gmail.com" <festevam@gmail.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
-	"imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v6 08/11] PCI: dwc: Invoke post_init in
- dw_pcie_resume_noirq()
-Message-ID: <dbnnvvpki6oaqaribiuycpshk7qmisl42x3iti24aqzzrw2rfr@afoer4ku4do4>
-References: <20260109152750.GA544801@bhelgaas>
- <20260120220441.GA1170239@bhelgaas>
+	b=ZZAiZ1YE6AiRjIWAhVzofjXAwpVtlMftLzINR9Foi5IBYGEqBk1/OAY+Ddvjl+i+S
+	 HJDBwTQs3pdOnyCQ8rfsjZauZ7H2ZJSlvTfuSi1VvT0grFVC8yYDQxCNOi7nJcPzSZ
+	 JurscrLIXiiwYjavr2jeR2mvyXsGHzu+h98xwN161zMF7215uPhpdRuFunx4Oli0e7
+	 LPWmQ4cjB2gH5Y7tSGQdFDujYHnZv7bDjseRgXJ5NHlnSiJ1ZK+1Ox0aEhiFn1g3JH
+	 4g0sPvi0rwDbcffy++1aRiTN7nayp/Q94w1q1AN9uK8ypPZWL35JZlYmuGQ6rDCXPI
+	 Xe1cNNZFn0y8w==
+Date: Wed, 21 Jan 2026 13:23:57 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: frank.li@nxp.com, jingoohan1@gmail.com, l.stach@pengutronix.de, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+	shawnguo@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de, 
+	festevam@gmail.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	imx@lists.linux.dev, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v9] PCI: dwc: Don't poll L2 if skip_l23_wait is true
+Message-ID: <drqhmcl5vzuk7dx5g4fjhrsfstu2tssmmotychgyf3vcus2tz5@rqsrsrbpjc2o>
+References: <20260114083300.3689672-1-hongxing.zhu@nxp.com>
+ <20260114083300.3689672-2-hongxing.zhu@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,39 +47,129 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260120220441.GA1170239@bhelgaas>
+In-Reply-To: <20260114083300.3689672-2-hongxing.zhu@nxp.com>
 
-On Tue, Jan 20, 2026 at 04:04:41PM -0600, Bjorn Helgaas wrote:
-> On Fri, Jan 09, 2026 at 09:27:50AM -0600, Bjorn Helgaas wrote:
-> > ...
+On Wed, Jan 14, 2026 at 04:33:00PM +0800, Richard Zhu wrote:
+> Refer to PCIe r6.0, sec 5.2, fig 5-1 Link Power Management State Flow
+> Diagram. Both L0 and L2/L3 Ready can be transferred to LDn directly.
 > 
-> > The current commit log for this patch is this:
-> > 
-> >   Some SoCs like i.MX95 require enabling REFCLK after resuming from suspend
-> >   in their post_init callback. So invoke the callback at the end of
-> >   dw_pcie_resume_noirq() if available.
-> > 
-> > When .post_init() is called, the link is already up and PCIe devices
-> > have already been enumerated.  I think REFCLK is required for the link
-> > to come up, so it doesn't sound right to me that .post_init() would be
-> > *enabling* REFCLK.
+> It's harmless to let dw_pcie_suspend_noirq() proceed suspend after the
+> PME_Turn_Off is sent out, whatever the LTSSM state is in L2 or L3 after
+> a recommended 10ms max wait refer to PCIe r6.0, sec 5.3.3.2.1 PME
+> Synchronization.
 > 
-> This never got resolved.
+> The LTSSM states are inaccessible on i.MX6QP and i.MX7D after the
+> PME_Turn_Off is sent out.
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc-imx6&id=199c18221622
-> says imx_pcie_host_post_init() enables REFCLK by applying the
-> IMX_PCIE_FLAG_8GT_ECN_ERR051586 workaround.
-> 
-> I don't think that commit log is correct.  Can you please supply some
-> correct text for that commit?
+> To support this case, don't poll L2 state and apply a simple delay of
+> PCIE_PME_TO_L2_TIMEOUT_US(10ms) if the skip_l23_wait flag is true in
+> suspend.
 > 
 
-Sorry, I messed it up. This callback is not supposed to enable REFCLK, but just
-clear CLKREQ# override to allow the endpoint to drive it low when required.
+I think this patch should simply say:
 
-I've just updated the commit text in the controller/dwc-imx6 branch.
+"In i.MX6QP and i.MX7D SoCs, LTSSM registers are not accessible once
+PME_Turn_Off is broadcasted to the link. So there is no way to verify whether
+the link has entered L2/L3 state or not.
+
+Hence, add a new flag 'dw_pcie_rp::skip_l23_wait' and set it for the above
+mentioned SoCs. This flag when set, will allow the DWC core to skip the L23 poll
+and just wait for 10ms as per the delay mentioned in PCIe spec r6.0 sec
+5.3.3.2.1."
+
+Does it look good?
 
 - Mani
+
+> Cc: stable@vger.kernel.org
+> Fixes: 4774faf854f5 ("PCI: dwc: Implement generic suspend/resume functionality")
+> Fixes: a528d1a72597 ("PCI: imx6: Use DWC common suspend resume method")
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c             |  5 +++++
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 15 +++++++++++++++
+>  drivers/pci/controller/dwc/pcie-designware.h      |  1 +
+>  3 files changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 4668fc9648bf..cbe98824427b 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -114,6 +114,7 @@ enum imx_pcie_variants {
+>  #define IMX_PCIE_FLAG_BROKEN_SUSPEND		BIT(9)
+>  #define IMX_PCIE_FLAG_HAS_LUT			BIT(10)
+>  #define IMX_PCIE_FLAG_8GT_ECN_ERR051586		BIT(11)
+> +#define IMX_PCIE_FLAG_SKIP_L23_WAIT		BIT(12)
+>  
+>  #define imx_check_flag(pci, val)	(pci->drvdata->flags & val)
+>  
+> @@ -1777,6 +1778,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
+>  		 */
+>  		imx_pcie_add_lut_by_rid(imx_pcie, 0);
+>  	} else {
+> +		if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_SKIP_L23_WAIT))
+> +			pci->pp.skip_l23_wait = true;
+>  		pci->pp.use_atu_msg = true;
+>  		ret = dw_pcie_host_init(&pci->pp);
+>  		if (ret < 0)
+> @@ -1838,6 +1841,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.variant = IMX6QP,
+>  		.flags = IMX_PCIE_FLAG_IMX_PHY |
+>  			 IMX_PCIE_FLAG_SPEED_CHANGE_WORKAROUND |
+> +			 IMX_PCIE_FLAG_SKIP_L23_WAIT |
+>  			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+>  		.dbi_length = 0x200,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+> @@ -1854,6 +1858,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.variant = IMX7D,
+>  		.flags = IMX_PCIE_FLAG_SUPPORTS_SUSPEND |
+>  			 IMX_PCIE_FLAG_HAS_APP_RESET |
+> +			 IMX_PCIE_FLAG_SKIP_L23_WAIT |
+>  			 IMX_PCIE_FLAG_HAS_PHY_RESET,
+>  		.gpr = "fsl,imx7d-iomuxc-gpr",
+>  		.mode_off[0] = IOMUXC_GPR12,
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index fad0cbedefbc..5aa7f23bb58e 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -1194,6 +1194,21 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+>  			return ret;
+>  	}
+>  
+> +	/*
+> +	 * Skip L23 poll and wait to avoid the read hang, when LTSSM is
+> +	 * not powered in L2/L3/LDn properly.
+> +	 *
+> +	 * Refer to PCIe r6.0, sec 5.2, fig 5-1 Link Power Management
+> +	 * State Flow Diagram. Both L0 and L2/L3 Ready can be
+> +	 * transferred to LDn directly. On the LTSSM states poll broken
+> +	 * platforms, add a max 10ms delay refer to PCIe r6.0,
+> +	 * sec 5.3.3.2.1 PME Synchronization.
+> +	 */
+> +	if (pci->pp.skip_l23_wait) {
+> +		mdelay(PCIE_PME_TO_L2_TIMEOUT_US/1000);
+> +		goto stop_link;
+> +	}
+> +
+>  	ret = read_poll_timeout(dw_pcie_get_ltssm, val,
+>  				val == DW_PCIE_LTSSM_L2_IDLE ||
+>  				val <= DW_PCIE_LTSSM_DETECT_WAIT,
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index f87c67a7a482..b31f8061f23a 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -442,6 +442,7 @@ struct dw_pcie_rp {
+>  	struct pci_config_window *cfg;
+>  	bool			ecam_enabled;
+>  	bool			native_ecam;
+> +	bool                    skip_l23_wait;
+>  };
+>  
+>  struct dw_pcie_ep_ops {
+> -- 
+> 2.37.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
