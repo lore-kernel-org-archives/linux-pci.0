@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 575523242BE;
-	Thu, 22 Jan 2026 18:53:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A06034EF02;
+	Thu, 22 Jan 2026 18:58:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769108008; cv=none; b=AM0j9dTqLzvJW0o7fCnZ/pnyY0iXr8yG7n/fn608C2uIa99qICV50LqzFk2RZOiuorNpDQwSw2+vTWVUyJjGohLBpbzClLT9rJeb6CjXJQTTGDXrdCk2MBr5h7OQLp/bh0E5E9CQQUGwkJh3chfLzZTXJribD/KeYaPDSqIyudg=
+	t=1769108330; cv=none; b=r1cy8waAmGekIzEr1Nj8kIU4D/07rvNAN8RSWgwAs2l7MdqK33qpQM8YR4wub33m5+8H5gYT3qkJ41tEZP/9AQRzhnVDWayLyPBYDd7TXQMfqkNiFCU/ISGpsdf114oZvbyxF47kMEfhMfnljzI5R15OLBsoA0Xk9FD2GZ5o/kk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769108008; c=relaxed/simple;
-	bh=BWzDJw1sesbcEpn/bhLSg2tpu5uz0dzb3AVFvyKeMj4=;
+	s=arc-20240116; t=1769108330; c=relaxed/simple;
+	bh=xiwxQP9YVaQ4UDNDTrIloPNh+bXc8i3QSpGEZBDwKmc=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=kBd1Wbjlxj0Q/no/sGHQAm6vKHKz2LZJ1FLEsPa5iZJFhwx/GTVe5X3rhEzk9tt90vCV4Xm5AoWcHHtJSM/dO8yffTC3GKUbU3oyT0jx+ysu+IfwEcvWKEXHQ/BdFxseZJ0xrCnBjZd0Z9zAj6/ZjTWaWl1tCNgjPRijG6j21nA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g819z9GZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=kmuCUISZuY2yId5ovhgsWyYdq8dUvNk3nWAHi7R8vfxuhk1FIy981M2tmIW4kWfHr0X/jLHAl2dcV19bJRcSTuSKSt0GFUb5H1bhzqUQTC9cF3TwDwU9pZK+B5BfhdwHL3SFImuq0vwE3W65dVu+W3iSyK9VlOQBSxbafN9RNl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jdHuHS57; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g819z9GZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C923C116C6;
-	Thu, 22 Jan 2026 18:53:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jdHuHS57"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EFFCC116C6;
+	Thu, 22 Jan 2026 18:58:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769108007;
-	bh=BWzDJw1sesbcEpn/bhLSg2tpu5uz0dzb3AVFvyKeMj4=;
+	s=k20201202; t=1769108328;
+	bh=xiwxQP9YVaQ4UDNDTrIloPNh+bXc8i3QSpGEZBDwKmc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=g819z9GZ98DWjYEYiChC3FQHotQ8imxQ1J47/T/L/fxsVKvdrk6qdVv6COoIoKc5g
-	 IIuNA1cIxo+RqcXuOMNdhFYFNqNb8J/27OqealruAnZa87JKAD7ed+gJw0pPXExh8r
-	 yVd29c/MRMm38HNgug0pSFNKOU1AlaJfOOrDT6Inj8ABKltczKagz86iZpe/jv3tbV
-	 B4XiePt2m4y/cg9kyl+BR4aTcXUtp7YI5KRjlzlv4Xql9VbV3IWfxj7QChVUFtUrdQ
-	 xr6vl0ZruhpcMOnU4fKIfhk5kF0S0csY3t93b9F8Raa8gHPVRXEBg8uZEv80g/A7bH
-	 z4qvlhAy1GJjA==
-Date: Thu, 22 Jan 2026 12:53:26 -0600
+	b=jdHuHS57uSCrc/shmx9VKJTWGcsP0/d4LmWCEBL4wg9cGqUNt6nSHMaGysElurMaC
+	 eS0YNZ/sAhga+kDy4lZ0/ImHEggq79hlmTwfOfk2EA6/cZOuC1wCu+Iha4xIH9/+8S
+	 Sq/tTC+5CX223QIPXPIak+n6b6MNn/Hd83OUcflGVy8dEihMWKau3QOqxEBbX4hm6m
+	 iqm4iO+QWVK3RT3hPXkeIcxiCAHlajcNsno5RpedNNX0xdr2ocmABIMsR2ofYPllPY
+	 HRN7ACYZdZ73zxmznzkAlbQgIi95kjxYX4h1zhvk5QxxzZ3sZzYZnM9h87oVdgxL+5
+	 nkm1FlSAMKPcg==
+Date: Thu, 22 Jan 2026 12:58:47 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Terry Bowman <terry.bowman@amd.com>
 Cc: dave@stgolabs.net, jonathan.cameron@huawei.com, dave.jiang@intel.com,
@@ -39,9 +39,9 @@ Cc: dave@stgolabs.net, jonathan.cameron@huawei.com, dave.jiang@intel.com,
 	linux-cxl@vger.kernel.org, vishal.l.verma@intel.com,
 	alucerop@amd.com, ira.weiny@intel.com, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v14 11/34] PCI/AER: Move CXL RCH error handling to
- aer_cxl_rch.c
-Message-ID: <20260122185326.GA33842@bhelgaas>
+Subject: Re: [PATCH v14 01/34] PCI: Move CXL DVSEC definitions into
+ uapi/linux/pci_regs.h
+Message-ID: <20260122185847.GA36294@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,335 +50,202 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260114182055.46029-12-terry.bowman@amd.com>
+In-Reply-To: <20260114182055.46029-2-terry.bowman@amd.com>
 
-On Wed, Jan 14, 2026 at 12:20:32PM -0600, Terry Bowman wrote:
-> The Restricted CXL Host (RCH) AER error handling logic currently resides
-> in the AER driver file, aer.c. CXL specific changes conditionally compiled
-> using #ifdefs.
-> 
-> Improve the AER driver maintainability by separating the RCH specific logic
-> from the AER driver's core functionality and removing the ifdefs. Introduce
-> drivers/pci/pcie/aer_cxl_rch.c for moving the RCH AER logic into. Conditionally
-> compile the file using the CONFIG_CXL_RCH_RAS Kconfig.
-> 
-> Move the CXL logic into the new file but leave CXL helper function
-> is_internal_error() in aer.c for now as it will be moved in future patch
-> for CXL Virtual Hierarchy handling.
-> 
-> To maintain compilation after the move other changes are required. Change
-> cxl_rch_handle_error(), cxl_rch_enable_rcec(), and is_internal_error() to
-> be non-static inorder for accessing from the AER driver.
+On Wed, Jan 14, 2026 at 12:20:22PM -0600, Terry Bowman wrote:
+> The CXL DVSECs are currently defined in cxl/core/cxlpci.h. These are not
+> accessible to other subsystems. Move these to uapi/linux/pci_regs.h.
 
-s/inorder for accessing from the/so they can be used by the/
+I'm looking a little bit askance at adding things to
+uapi/linux/pci_regs.h and then renaming them.  I know it's OCD to
+worry about that momentary blip, but changes in uapi potentially break
+userspace.
 
-> Update the new file with the SPDX and 2023 AMD copyright notations because
-> the RCH bits were initially contributed in 2023 by AMD. See commit:
-> commit 0a867568bb0d ("PCI/AER: Forward RCH downstream port-detected errors to the CXL.mem dev handler")
+Maybe we could rename them first, then move them to pci_regs.h?
+
+Either way:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> The CXL DVSEC definitions will be renamed and reformatted to fit better
+> with existing defines.
 > 
 > Signed-off-by: Terry Bowman <terry.bowman@amd.com>
 > Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 > Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-> Reviewed-by: Ben Cheatham <benjamin.cheatham@amd.com>
 > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
+> 
+> ----
 > 
 > Changes in v13->v14:
-> - Add review-by and signed-off for Dan
-> - Commit message fixup (Dan)
-> - Update commit message with use-case description (Dan, Lukas)
-> - Make cxl_error_is_native() static (Dan)
+> - Add Jonathan's and Dan's review-by
+> - Update commit title prefix (Bjorn)
+> - Revert format fix for cxl_sbr_masked() (Jonathan)
+> - Update 'Compute Express Link' comment block (Jonathan)
+> - Move PCI_DVSEC_CXL_FLEXBUS definitions to later patch where
+>   used (Jonathan)
+> - Removed stray change (Bjorn)
 > 
 > Changes in v12->v13:
-> - Add forward declararation of 'struct aer_err_info' in pci/pci.h (Terry)
-> - Changed copyright date from 2025 to 2023 (Jonathan)
-> - Add David Jiang's, Jonathan's, and Ben's review-by
-> - Re-add 'struct aer_err_info' (Bot)
+> - Add Dave Jiang's reviewed-by
+> - Remove changes to existing PCI_DVSEC_CXL_PORT* defines. Update commit
+>   message. (Jonathan)
 > 
-> Changes in v11->v12:
-> - Rename drivers/pci/pcie/cxl_rch.c to drivers/pci/pcie/aer_cxl_rch.c (Lukas)
-> - Removed forward declararation of 'struct aer_err_info' in pci/pci.h (Terry)
+> Changes in v11 -> v12:
+> - Change formatting to be same as existing definitions
+> - Change GENMASK() -> __GENMASK() and BIT() to _BITUL()
 > 
-> Changes in v10->v11:
-> - Remove changes in code-split and move to earlier, new patch
-> - Add #include <linux/bitfield.h> to cxl_ras.c
-> - Move cxl_rch_handle_error() & cxl_rch_enable_rcec() declarations from pci.h
->   to aer.h, more localized.
-> - Introduce CONFIG_CXL_RCH_RAS, includes Makefile changes, ras.c
->   ifdef changes
+> Changes in v10 -> v11:
+> - New commit
 > ---
->  drivers/pci/pcie/Makefile      |   1 +
->  drivers/pci/pcie/aer.c         |  99 +-----------------------------
->  drivers/pci/pcie/aer_cxl_rch.c | 106 +++++++++++++++++++++++++++++++++
->  drivers/pci/pcie/portdrv.h     |   9 ++-
->  4 files changed, 114 insertions(+), 101 deletions(-)
->  create mode 100644 drivers/pci/pcie/aer_cxl_rch.c
+>  drivers/cxl/cxlpci.h          | 53 -----------------------------
+>  include/uapi/linux/pci_regs.h | 64 ++++++++++++++++++++++++++++++++---
+>  2 files changed, 59 insertions(+), 58 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-> index 173829aa02e6..b0b43a18c304 100644
-> --- a/drivers/pci/pcie/Makefile
-> +++ b/drivers/pci/pcie/Makefile
-> @@ -8,6 +8,7 @@ obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o bwctrl.o
+> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+> index 1d526bea8431..cdb7cf3dbcb4 100644
+> --- a/drivers/cxl/cxlpci.h
+> +++ b/drivers/cxl/cxlpci.h
+> @@ -7,59 +7,6 @@
 >  
->  obj-y				+= aspm.o
->  obj-$(CONFIG_PCIEAER)		+= aer.o err.o tlp.o
-> +obj-$(CONFIG_CXL_RAS)		+= aer_cxl_rch.o
->  obj-$(CONFIG_PCIEAER_INJECT)	+= aer_inject.o
->  obj-$(CONFIG_PCIE_PME)		+= pme.o
->  obj-$(CONFIG_PCIE_DPC)		+= dpc.o
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 2527e8370186..b1e6ee7468b9 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1145,27 +1145,7 @@ void pci_aer_unmask_internal_errors(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_aer_unmask_internal_errors);
+>  #define CXL_MEMORY_PROGIF	0x10
 >  
-> -#ifdef CONFIG_PCIEAER_CXL
-> -static bool is_cxl_mem_dev(struct pci_dev *dev)
-> -{
-> -	/*
-> -	 * The capability, status, and control fields in Device 0,
-> -	 * Function 0 DVSEC control the CXL functionality of the
-> -	 * entire device (CXL 3.0, 8.1.3).
-> -	 */
-> -	if (dev->devfn != PCI_DEVFN(0, 0))
-> -		return false;
+> -/*
+> - * See section 8.1 Configuration Space Registers in the CXL 2.0
+> - * Specification. Names are taken straight from the specification with "CXL" and
+> - * "DVSEC" redundancies removed. When obvious, abbreviations may be used.
+> - */
+> -#define PCI_DVSEC_HEADER1_LENGTH_MASK	GENMASK(31, 20)
 > -
-> -	/*
-> -	 * CXL Memory Devices must have the 502h class code set (CXL
-> -	 * 3.0, 8.1.12.1).
-> -	 */
-> -	if ((dev->class >> 8) != PCI_CLASS_MEMORY_CXL)
-> -		return false;
+> -/* CXL 2.0 8.1.3: PCIe DVSEC for CXL Device */
+> -#define CXL_DVSEC_PCIE_DEVICE					0
+> -#define   CXL_DVSEC_CAP_OFFSET		0xA
+> -#define     CXL_DVSEC_MEM_CAPABLE	BIT(2)
+> -#define     CXL_DVSEC_HDM_COUNT_MASK	GENMASK(5, 4)
+> -#define   CXL_DVSEC_CTRL_OFFSET		0xC
+> -#define     CXL_DVSEC_MEM_ENABLE	BIT(2)
+> -#define   CXL_DVSEC_RANGE_SIZE_HIGH(i)	(0x18 + (i * 0x10))
+> -#define   CXL_DVSEC_RANGE_SIZE_LOW(i)	(0x1C + (i * 0x10))
+> -#define     CXL_DVSEC_MEM_INFO_VALID	BIT(0)
+> -#define     CXL_DVSEC_MEM_ACTIVE	BIT(1)
+> -#define     CXL_DVSEC_MEM_SIZE_LOW_MASK	GENMASK(31, 28)
+> -#define   CXL_DVSEC_RANGE_BASE_HIGH(i)	(0x20 + (i * 0x10))
+> -#define   CXL_DVSEC_RANGE_BASE_LOW(i)	(0x24 + (i * 0x10))
+> -#define     CXL_DVSEC_MEM_BASE_LOW_MASK	GENMASK(31, 28)
 > -
-> -	return true;
-> -}
+> -#define CXL_DVSEC_RANGE_MAX		2
 > -
-> +#ifdef CONFIG_CXL_RAS
->  bool is_aer_internal_error(struct aer_err_info *info)
->  {
->  	if (info->severity == AER_CORRECTABLE)
-> @@ -1173,83 +1153,6 @@ bool is_aer_internal_error(struct aer_err_info *info)
+> -/* CXL 2.0 8.1.4: Non-CXL Function Map DVSEC */
+> -#define CXL_DVSEC_FUNCTION_MAP					2
+> -
+> -/* CXL 2.0 8.1.5: CXL 2.0 Extensions DVSEC for Ports */
+> -#define CXL_DVSEC_PORT_EXTENSIONS				3
+> -
+> -/* CXL 2.0 8.1.6: GPF DVSEC for CXL Port */
+> -#define CXL_DVSEC_PORT_GPF					4
+> -#define   CXL_DVSEC_PORT_GPF_PHASE_1_CONTROL_OFFSET		0x0C
+> -#define     CXL_DVSEC_PORT_GPF_PHASE_1_TMO_BASE_MASK		GENMASK(3, 0)
+> -#define     CXL_DVSEC_PORT_GPF_PHASE_1_TMO_SCALE_MASK		GENMASK(11, 8)
+> -#define   CXL_DVSEC_PORT_GPF_PHASE_2_CONTROL_OFFSET		0xE
+> -#define     CXL_DVSEC_PORT_GPF_PHASE_2_TMO_BASE_MASK		GENMASK(3, 0)
+> -#define     CXL_DVSEC_PORT_GPF_PHASE_2_TMO_SCALE_MASK		GENMASK(11, 8)
+> -
+> -/* CXL 2.0 8.1.7: GPF DVSEC for CXL Device */
+> -#define CXL_DVSEC_DEVICE_GPF					5
+> -
+> -/* CXL 2.0 8.1.8: PCIe DVSEC for Flex Bus Port */
+> -#define CXL_DVSEC_PCIE_FLEXBUS_PORT				7
+> -
+> -/* CXL 2.0 8.1.9: Register Locator DVSEC */
+> -#define CXL_DVSEC_REG_LOCATOR					8
+> -#define   CXL_DVSEC_REG_LOCATOR_BLOCK1_OFFSET			0xC
+> -#define     CXL_DVSEC_REG_LOCATOR_BIR_MASK			GENMASK(2, 0)
+> -#define	    CXL_DVSEC_REG_LOCATOR_BLOCK_ID_MASK			GENMASK(15, 8)
+> -#define     CXL_DVSEC_REG_LOCATOR_BLOCK_OFF_LOW_MASK		GENMASK(31, 16)
+> -
+>  /*
+>   * NOTE: Currently all the functions which are enabled for CXL require their
+>   * vectors to be in the first 16.  Use this as the default max.
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 3add74ae2594..6c4b6f19b18e 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -1253,11 +1253,6 @@
+>  #define PCI_DEV3_STA		0x0c	/* Device 3 Status Register */
+>  #define  PCI_DEV3_STA_SEGMENT	0x8	/* Segment Captured (end-to-end flit-mode detected) */
 >  
->  	return info->status & PCI_ERR_UNC_INTN;
->  }
+> -/* Compute Express Link (CXL r3.1, sec 8.1.5) */
+> -#define PCI_DVSEC_CXL_PORT				3
+> -#define PCI_DVSEC_CXL_PORT_CTL				0x0c
+> -#define PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR		0x00000001
 > -
-> -static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
-> -{
-> -	struct aer_err_info *info = (struct aer_err_info *)data;
-> -	const struct pci_error_handlers *err_handler;
-> -
-> -	if (!is_cxl_mem_dev(dev) || !pcie_aer_is_native(dev))
-> -		return 0;
-> -
-> -	/* Protect dev->driver */
-> -	device_lock(&dev->dev);
-> -
-> -	err_handler = dev->driver ? dev->driver->err_handler : NULL;
-> -	if (!err_handler)
-> -		goto out;
-> -
-> -	if (info->severity == AER_CORRECTABLE) {
-> -		if (err_handler->cor_error_detected)
-> -			err_handler->cor_error_detected(dev);
-> -	} else if (err_handler->error_detected) {
-> -		if (info->severity == AER_NONFATAL)
-> -			err_handler->error_detected(dev, pci_channel_io_normal);
-> -		else if (info->severity == AER_FATAL)
-> -			err_handler->error_detected(dev, pci_channel_io_frozen);
-> -	}
-> -out:
-> -	device_unlock(&dev->dev);
-> -	return 0;
-> -}
-> -
-> -static void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
-> -{
-> -	/*
-> -	 * Internal errors of an RCEC indicate an AER error in an
-> -	 * RCH's downstream port. Check and handle them in the CXL.mem
-> -	 * device driver.
-> -	 */
-> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
-> -	    is_aer_internal_error(info))
-> -		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
-> -}
-> -
-> -static int handles_cxl_error_iter(struct pci_dev *dev, void *data)
-> -{
-> -	bool *handles_cxl = data;
-> -
-> -	if (!*handles_cxl)
-> -		*handles_cxl = is_cxl_mem_dev(dev) && pcie_aer_is_native(dev);
-> -
-> -	/* Non-zero terminates iteration */
-> -	return *handles_cxl;
-> -}
-> -
-> -static bool handles_cxl_errors(struct pci_dev *rcec)
-> -{
-> -	bool handles_cxl = false;
-> -
-> -	if (pci_pcie_type(rcec) == PCI_EXP_TYPE_RC_EC &&
-> -	    pcie_aer_is_native(rcec))
-> -		pcie_walk_rcec(rcec, handles_cxl_error_iter, &handles_cxl);
-> -
-> -	return handles_cxl;
-> -}
-> -
-> -static void cxl_rch_enable_rcec(struct pci_dev *rcec)
-> -{
-> -	if (!handles_cxl_errors(rcec))
-> -		return;
-> -
-> -	pci_aer_unmask_internal_errors(rcec);
-> -	pci_info(rcec, "CXL: Internal errors unmasked");
-> -}
-> -
-> -#else
-> -static inline void cxl_rch_enable_rcec(struct pci_dev *dev) { }
-> -static inline void cxl_rch_handle_error(struct pci_dev *dev,
-> -					struct aer_err_info *info) { }
->  #endif
+>  /* Integrity and Data Encryption Extended Capability */
+>  #define PCI_IDE_CAP			0x04
+>  #define  PCI_IDE_CAP_LINK		0x1  /* Link IDE Stream Supported */
+> @@ -1338,4 +1333,63 @@
+>  #define  PCI_IDE_SEL_ADDR_3(x)		(28 + (x) * PCI_IDE_SEL_ADDR_BLOCK_SIZE)
+>  #define PCI_IDE_SEL_BLOCK_SIZE(nr_assoc)  (20 + PCI_IDE_SEL_ADDR_BLOCK_SIZE * (nr_assoc))
 >  
->  /**
-> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
-> new file mode 100644
-> index 000000000000..6b515edb12c1
-> --- /dev/null
-> +++ b/drivers/pci/pcie/aer_cxl_rch.c
-> @@ -0,0 +1,106 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/* Copyright(c) 2023 AMD Corporation. All rights reserved. */
+> +/* Compute Express Link (CXL r3.1, sec 8.1.5) */
+> +#define PCI_DVSEC_CXL_PORT				3
+> +#define PCI_DVSEC_CXL_PORT_CTL				0x0c
+> +#define PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR		0x00000001
 > +
-> +#include <linux/pci.h>
-> +#include <linux/aer.h>
-> +#include <linux/bitfield.h>
-> +#include "../pci.h"
-> +#include "portdrv.h"
+> +/*
+> + * Compute Express Link (CXL r3.2, sec 8.1)
+> + *
+> + * Note that CXL DVSEC id 3 and 7 to be ignored when the CXL link state
+> + * is "disconnected" (CXL r3.2, sec 9.12.3). Re-enumerate these
+> + * registers on downstream link-up events.
+> + */
+> +#define PCI_DVSEC_HEADER1_LENGTH_MASK  __GENMASK(31, 20)
 > +
-> +static bool is_cxl_mem_dev(struct pci_dev *dev)
-> +{
-> +	/*
-> +	 * The capability, status, and control fields in Device 0,
-> +	 * Function 0 DVSEC control the CXL functionality of the
-> +	 * entire device (CXL 3.0, 8.1.3).
-> +	 */
-> +	if (dev->devfn != PCI_DEVFN(0, 0))
-> +		return false;
+> +/* CXL 3.2 8.1.3: PCIe DVSEC for CXL Device */
+> +#define CXL_DVSEC_PCIE_DEVICE				0
+> +#define  CXL_DVSEC_CAP_OFFSET				0xA
+> +#define   CXL_DVSEC_MEM_CAPABLE				_BITUL(2)
+> +#define   CXL_DVSEC_HDM_COUNT_MASK			__GENMASK(5, 4)
+> +#define  CXL_DVSEC_CTRL_OFFSET				0xC
+> +#define   CXL_DVSEC_MEM_ENABLE				_BITUL(2)
+> +#define  CXL_DVSEC_RANGE_SIZE_HIGH(i)			(0x18 + (i * 0x10))
+> +#define  CXL_DVSEC_RANGE_SIZE_LOW(i)			(0x1C + (i * 0x10))
+> +#define   CXL_DVSEC_MEM_INFO_VALID			_BITUL(0)
+> +#define   CXL_DVSEC_MEM_ACTIVE				_BITUL(1)
+> +#define   CXL_DVSEC_MEM_SIZE_LOW_MASK			__GENMASK(31, 28)
+> +#define  CXL_DVSEC_RANGE_BASE_HIGH(i)			(0x20 + (i * 0x10))
+> +#define  CXL_DVSEC_RANGE_BASE_LOW(i)			(0x24 + (i * 0x10))
+> +#define   CXL_DVSEC_MEM_BASE_LOW_MASK			__GENMASK(31, 28)
 > +
-> +	/*
-> +	 * CXL Memory Devices must have the 502h class code set (CXL
-> +	 * 3.0, 8.1.12.1).
-> +	 */
-> +	if ((dev->class >> 8) != PCI_CLASS_MEMORY_CXL)
-> +		return false;
+> +#define CXL_DVSEC_RANGE_MAX				2
 > +
-> +	return true;
-> +}
+> +/* CXL 3.2 8.1.4: Non-CXL Function Map DVSEC */
+> +#define CXL_DVSEC_FUNCTION_MAP				2
 > +
-> +static bool cxl_error_is_native(struct pci_dev *dev)
-> +{
-> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+> +/* CXL 3.2 8.1.5: Extensions DVSEC for Ports */
+> +#define CXL_DVSEC_PORT					3
+> +#define   CXL_DVSEC_PORT_CTL				0x0c
+> +#define    CXL_DVSEC_PORT_CTL_UNMASK_SBR		0x00000001
 > +
-> +	return (pcie_ports_native || host->native_aer);
-> +}
+> +/* CXL 3.2 8.1.6: GPF DVSEC for CXL Port */
+> +#define CXL_DVSEC_PORT_GPF				4
+> +#define  CXL_DVSEC_PORT_GPF_PHASE_1_CONTROL_OFFSET	0x0C
+> +#define   CXL_DVSEC_PORT_GPF_PHASE_1_TMO_BASE_MASK	__GENMASK(3, 0)
+> +#define   CXL_DVSEC_PORT_GPF_PHASE_1_TMO_SCALE_MASK	__GENMASK(11, 8)
+> +#define  CXL_DVSEC_PORT_GPF_PHASE_2_CONTROL_OFFSET	0xE
+> +#define   CXL_DVSEC_PORT_GPF_PHASE_2_TMO_BASE_MASK	__GENMASK(3, 0)
+> +#define   CXL_DVSEC_PORT_GPF_PHASE_2_TMO_SCALE_MASK	__GENMASK(11, 8)
 > +
-> +static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
-> +{
-> +	struct aer_err_info *info = (struct aer_err_info *)data;
-> +	const struct pci_error_handlers *err_handler;
+> +/* CXL 3.2 8.1.7: GPF DVSEC for CXL Device */
+> +#define CXL_DVSEC_DEVICE_GPF				5
 > +
-> +	if (!is_cxl_mem_dev(dev) || !cxl_error_is_native(dev))
-> +		return 0;
+> +/* CXL 3.2 8.1.9: Register Locator DVSEC */
+> +#define CXL_DVSEC_REG_LOCATOR				8
+> +#define  CXL_DVSEC_REG_LOCATOR_BLOCK1_OFFSET		0xC
+> +#define   CXL_DVSEC_REG_LOCATOR_BIR_MASK		__GENMASK(2, 0)
+> +#define   CXL_DVSEC_REG_LOCATOR_BLOCK_ID_MASK		__GENMASK(15, 8)
+> +#define   CXL_DVSEC_REG_LOCATOR_BLOCK_OFF_LOW_MASK	__GENMASK(31, 16)
 > +
-> +	device_lock(&dev->dev);
-> +
-> +	err_handler = dev->driver ? dev->driver->err_handler : NULL;
-> +	if (!err_handler)
-> +		goto out;
-> +
-> +	if (info->severity == AER_CORRECTABLE) {
-> +		if (err_handler->cor_error_detected)
-> +			err_handler->cor_error_detected(dev);
-> +	} else if (err_handler->error_detected) {
-> +		if (info->severity == AER_NONFATAL)
-> +			err_handler->error_detected(dev, pci_channel_io_normal);
-> +		else if (info->severity == AER_FATAL)
-> +			err_handler->error_detected(dev, pci_channel_io_frozen);
-> +	}
-> +out:
-> +	device_unlock(&dev->dev);
-> +	return 0;
-> +}
-> +
-> +void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
-> +{
-> +	/*
-> +	 * Internal errors of an RCEC indicate an AER error in an
-> +	 * RCH's downstream port. Check and handle them in the CXL.mem
-> +	 * device driver.
-> +	 */
-> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
-> +	    is_aer_internal_error(info))
-> +		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
-> +}
-> +
-> +static int handles_cxl_error_iter(struct pci_dev *dev, void *data)
-> +{
-> +	bool *handles_cxl = data;
-> +
-> +	if (!*handles_cxl)
-> +		*handles_cxl = is_cxl_mem_dev(dev) && cxl_error_is_native(dev);
-> +
-> +	/* Non-zero terminates iteration */
-> +	return *handles_cxl;
-> +}
-> +
-> +static bool handles_cxl_errors(struct pci_dev *rcec)
-> +{
-> +	bool handles_cxl = false;
-> +
-> +	if (pci_pcie_type(rcec) == PCI_EXP_TYPE_RC_EC &&
-> +	    pcie_aer_is_native(rcec))
-> +		pcie_walk_rcec(rcec, handles_cxl_error_iter, &handles_cxl);
-> +
-> +	return handles_cxl;
-> +}
-> +
-> +void cxl_rch_enable_rcec(struct pci_dev *rcec)
-> +{
-> +	if (!handles_cxl_errors(rcec))
-> +		return;
-> +
-> +	pci_aer_unmask_internal_errors(rcec);
-> +	pci_info(rcec, "CXL: Internal errors unmasked");
-> +}
-> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-> index e7a0a2cffea9..cc58bf2f2c84 100644
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -126,10 +126,13 @@ struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
->  
->  struct aer_err_info;
->  
-> -#ifdef CONFIG_PCIEAER_CXL
-> +#ifdef CONFIG_CXL_RAS
->  bool is_aer_internal_error(struct aer_err_info *info);
-> +void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info);
-> +void cxl_rch_enable_rcec(struct pci_dev *rcec);
->  #else
->  static inline bool is_aer_internal_error(struct aer_err_info *info) { return false; }
-> -#endif /* CONFIG_PCIEAER_CXL */
-> -
-> +static inline void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info) { }
-> +static inline void cxl_rch_enable_rcec(struct pci_dev *rcec) { }
-> +#endif /* CONFIG_CXL_RAS */
->  #endif /* _PORTDRV_H_ */
+>  #endif /* LINUX_PCI_REGS_H */
 > -- 
 > 2.34.1
 > 
