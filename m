@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4150333ADBE;
-	Thu, 22 Jan 2026 09:07:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5662835F8BD;
+	Thu, 22 Jan 2026 09:23:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769072872; cv=none; b=XRjYmFzjEtBYXysx1nucEYhCepYdqETa5Aj73/NQc+lDWLKAOzJi5OtVWI8zcv4DO8fvmdR8q/bKv4DkAZJHN5nItk6FDUJUXO0uqJn7ER+ofewiKrQEylZjuEqO4LQ5F78jea+ElVgJy77fgG9Zw8M6+RD3FA9uLgWkpjpatjQ=
+	t=1769073798; cv=none; b=QXYk9FcuXVJp6Nm5NjgfUq1NFFZvPPjBl61HXMBbb3918/z9MO9YnlnBhvYel006qs+/E4HzUGV1K4vMoSYA20hrfZ4Wk+JkLr4xwK97gpa/iNQT7/0ODwxRSzfYRUZw9H53XggJqwDuq96Mw5HSTp/uB75k+QjWJV+ycZXkpzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769072872; c=relaxed/simple;
-	bh=AgonMyAfa9uiPAYfh9C/Bgq2TL9WZTm/OGzex9FWfw4=;
+	s=arc-20240116; t=1769073798; c=relaxed/simple;
+	bh=yJdKxIhYOUpUaBpsLGMKL4pD24z5wQ6BB3Ktu++YZqY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VHYfevWIb7PLsIrGal6ewtFLqn4kmWRmVZHLRnioccnqLYZMb4PcFP9Y0+pl041Dlpwov9PthaE0X1l5OFMNFoJQVQCPOWEsCBr/CqbqBC2070pnvl5dcLOxhNEv2h/eEIpDj8YzODLLTej5h0XmJ04wQV8Y2cM2b8Vx4EVNJJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hgCpabng; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jOu+NIpgDgDa2sAFBOsTTZFgWHBFM/cqxUOIs9HgBgs6wB6Mstik5tzogHMDb93qWtNpFvcOv330BUbyLul6WopWCGGeGSAmR+3gQgFFhNQ6N0xJwm4UK3UO/L6d2SFc62/5I/WNoyDdNZxtEaw9PyoUQ36RVo/Z/dQgoFfKzb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i/d07n/X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hgCpabng"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 850BEC116C6;
-	Thu, 22 Jan 2026 09:07:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i/d07n/X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 884DDC19423;
+	Thu, 22 Jan 2026 09:23:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769072871;
-	bh=AgonMyAfa9uiPAYfh9C/Bgq2TL9WZTm/OGzex9FWfw4=;
+	s=k20201202; t=1769073797;
+	bh=yJdKxIhYOUpUaBpsLGMKL4pD24z5wQ6BB3Ktu++YZqY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hgCpabng6JJHn8xRpFIZe3jTHR9hU+5UBwyWFBOynni6OUUO5/1LoqwoNeWABlfHH
-	 gFmvsu+Ub6HroBHFQTsKy+WnxPMz/gQd32yzv35wwosxYpo/r5KPPNHf3S8poDZQ1t
-	 HISyuOKpUtPye2gQr26v0sinjWCgnIQYxi5rUZ8wg/pqcqs5ipg8mXkbJumpMhnWR7
-	 EXBy2GsYM/M4JjzUfFP3ECw10Z7D8Bfohlp4OSOeSOPVyRSQRir/Lo2mT1CUbha70Z
-	 A3+ca+pqctDTrEzrRZ1OKIfJYqzm2ukB26n/6MxUMKSJjmcRWe9D5UpYHAncWnxW3r
-	 TwSzrWaOtE4jA==
-Date: Thu, 22 Jan 2026 10:07:37 +0100
+	b=i/d07n/XiyO/GYZA1Yd61IttxQ1mcR7bpCASWYbyei4lGJrH3PzHwefIKkxhhG09v
+	 s9iROZk+AcPE1TdQ6wq2CuzVLOdZLG00uls+kKsGdO7o2a835s1hR7nfr3lHNKxahc
+	 WInb/vUcRfD54E3+d9LLeGUTAFbeRlunWUOAe7Sg475DZoOrmt5E9Y11BEfWsTnxEA
+	 jcCrYjAyE3xNwG+HYbDG5Sk3kA5856FxsG5fQfOuOxTSCbemYdcpjucRZIE2C2vRE4
+	 iENgMKmwOc/YEnCZixdTiAK1LlKU1woO2U5+vPN+6Mvz69683ULDROGOXRqdESB3gr
+	 dFtW0t7lKni2Q==
+Date: Thu, 22 Jan 2026 10:23:03 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: Koichiro Den <den@valinux.co.jp>
 Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
@@ -52,11 +52,11 @@ Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
 	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
 	linux-stm32@st-md-mailman.stormreply.com,
 	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v9 5/5] Documentation: PCI: endpoint: Clarify
- pci_epc_set_bar() usage
-Message-ID: <aXHo2YDMkMnFb2LI@ryzen>
+Subject: Re: [PATCH v9 4/5] PCI: dwc: ep: Support BAR subrange inbound
+ mapping via Address Match Mode iATU
+Message-ID: <aXHsd7-WWAGyhy_w@ryzen>
 References: <20260122084909.2390865-1-den@valinux.co.jp>
- <20260122084909.2390865-6-den@valinux.co.jp>
+ <20260122084909.2390865-5-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -65,25 +65,117 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260122084909.2390865-6-den@valinux.co.jp>
+In-Reply-To: <20260122084909.2390865-5-den@valinux.co.jp>
 
-On Thu, Jan 22, 2026 at 05:49:09PM +0900, Koichiro Den wrote:
-> The current documentation implies that pci_epc_set_bar() is only used
-> before the host enumerates the endpoint.
+On Thu, Jan 22, 2026 at 05:49:08PM +0900, Koichiro Den wrote:
+> Extend dw_pcie_ep_set_bar() to support inbound mappings for BAR
+> subranges using Address Match Mode IB iATU when pci_epf_bar.num_submap
+> is non-zero.
 > 
-> In practice, some Endpoint Controllers support calling pci_epc_set_bar()
-> multiple times for the same BAR (without clearing it) in order to update
-> inbound address translations after the host has programmed the BAR base
-> address, which some Endpoint Functions such as vNTB already rely on.
-> Add document text for that.
+> Rename the existing BAR-match helper into dw_pcie_ep_ib_atu_bar() and
+> introduce dw_pcie_ep_ib_atu_addr() for Address Match Mode. When
+> num_submap is non-zero, read the assigned BAR base address and program
+> one inbound iATU window per subrange. Validate the submap array before
+> programming:
+> - each subrange is aligned to pci->region_align
+> - subranges cover the whole BAR (no gaps and no overlaps)
+> - subranges are sorted in ascending order by offset
 > 
-> Also document the expected call flow for BAR subrange mapping
-> (pci_epf_bar.num_submap / pci_epf_bar.submap), which may require a
-> second pci_epc_set_bar() call after the host has programmed the BAR base
-> address.
+> Track Address Match Mode mappings and tear them down on clear_bar() and
+> on set_bar() error paths to avoid leaving half-programmed state or
+> untranslated BAR holes.
+> 
+> Advertise this capability by extending the common feature bit
+> initializer macro (DWC_EPC_COMMON_FEATURES).
+> 
+> This enables multiple inbound windows within a single BAR, which is
+> useful on platforms where usable BARs are scarce but EPFs need multiple
+> inbound regions.
 > 
 > Reviewed-by: Frank Li <Frank.Li@nxp.com>
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 > ---
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+
+> @@ -331,6 +503,13 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  		    ep->epf_bar[bar]->flags != flags)
+>  			return -EINVAL;
+>  
+> +		/*
+> +		 * When dynamically changing a BAR, tear down any existing
+> +		 * mappings before re-programming.
+> +		 */
+> +		if (ep->epf_bar[bar]->num_submap || epf_bar->num_submap)
+> +			dw_pcie_ep_clear_ib_maps(ep, bar);
+> +
+>  		/*
+>  		 * When dynamically changing a BAR, skip writing the BAR reg, as
+>  		 * that would clear the BAR's PCI address assigned by the host.
+> @@ -369,8 +548,12 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  	else
+>  		type = PCIE_ATU_TYPE_IO;
+>  
+> -	ret = dw_pcie_ep_inbound_atu(ep, func_no, type, epf_bar->phys_addr, bar,
+> -				     size);
+> +	if (epf_bar->num_submap)
+> +		ret = dw_pcie_ep_ib_atu_addr(ep, func_no, type, epf_bar);
+> +	else
+> +		ret = dw_pcie_ep_ib_atu_bar(ep, func_no, type,
+> +					    epf_bar->phys_addr, bar, size);
+
+If someone calls set_bar() with a submap, without having called set_bar() first
+without a submap, we will still call dw_pcie_ep_ib_atu_addr() here.
+
+To make sure that dw_pcie_ep_ib_atu_addr() cannot be called without already
+having a BAR configured, to we perhaps want something like:
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 0567552b784c..fe26b7f7b212 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -487,6 +487,9 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+        if ((flags & PCI_BASE_ADDRESS_MEM_TYPE_64) && (bar & 1))
+                return -EINVAL;
+ 
++       if (!ep->epf_bar[bar] && epf_bar->num_submap)
++               return -EINVAL;
++
+        /*
+         * Certain EPF drivers dynamically change the physical address of a BAR
+         * (i.e. they call set_bar() twice, without ever calling clear_bar(), as
+
+
+or
+
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 0567552b784c..8aeaa6fe53f9 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -475,6 +475,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+        struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+        struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+        enum pci_barno bar = epf_bar->barno;
++       bool use_addr_match_mode = false;
+        size_t size = epf_bar->size;
+        enum pci_epc_bar_type bar_type;
+        int flags = epf_bar->flags;
+@@ -510,6 +511,9 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+                if (ep->epf_bar[bar]->num_submap || epf_bar->num_submap)
+                        dw_pcie_ep_clear_ib_maps(ep, bar);
+ 
++               if (epf_bar->num_submap)
++                       use_addr_match_mode = true;
++
+                /*
+                 * When dynamically changing a BAR, skip writing the BAR reg, as
+                 * that would clear the BAR's PCI address assigned by the host.
+@@ -548,7 +552,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+        else
+                type = PCIE_ATU_TYPE_IO;
+ 
+-       if (epf_bar->num_submap)
++       if (use_addr_match_mode)
+                ret = dw_pcie_ep_ib_atu_addr(ep, func_no, type, epf_bar);
+        else
+                ret = dw_pcie_ep_ib_atu_bar(ep, func_no, type,
