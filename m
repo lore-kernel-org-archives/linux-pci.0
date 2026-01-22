@@ -1,338 +1,185 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011023.outbound.protection.outlook.com [52.101.52.23])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6377392C2A;
-	Thu, 22 Jan 2026 21:00:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.23
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769115623; cv=fail; b=fRoEZLVzdQdyKKgfv1HZlZ0rvSyCRRHhMEHgvHH7GvgS+IAlbb7uL+mD1I5L6K4NvRFoLNToWylOi5NDGmy6Y6WxUaGNw3NYjFu/t1qJALcEp7PEWPrSY7Ud5dv1tw6msaDj6s/7uCVaKhbZnf3TFeE2HLF1uVioK7cJ6ePFZWI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769115623; c=relaxed/simple;
-	bh=38IuTkEPXPuOy7xAfjGfGmEoZ7L7OoUt2O5K2aXks54=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=g4GcaDmHy16FH8YqRjMmHWmOTFiF6U7NwTsdDdTDPXJ3nJCsejgNTG3QCsNBolcwszvm3Hww7B4VosfJsi8J0kq+dj1iBLFTgSPX3ztqNGL0AABV3mxrOFDWwmuUnUkA4AjIA+7lM5zb9Ub+aFhiL/dDEXQrbzW+5PvQX9vxteM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=jYmr3Bu+; arc=fail smtp.client-ip=52.101.52.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 997E639573D
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 21:02:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769115764; cv=none; b=jCIjr1wPyMUfYqsajatgu4awce0/1JYZnLmX8Z5tgB3RYR3T61yMlMuI2AfSiLaF0ixll7Rcdw3Mhbygh5+Ti1bd+e4kPMY6KshaNcmfH8m3GEpdGhpzLJz4SgBqyCSs/icSi1ylGSyZk1dRhxZdpP8l7Iow7q70cRT91t/XVeM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769115764; c=relaxed/simple;
+	bh=oAFXsolpLVS81H4XxdMWZRZdchsPhbHdxR3JKCSxYTk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dF4F7FjvQmA7PE54XHxQ88CMo9g9s634NxofWLliaO7oU+fj/T5+DbqzEde4Ewq9susqL0l1QJmcf6i1fFaPuLBPVxsTM3lyNebvuUGEQGD++s/6qiFT8fNniWVxOS+/THPqtBGUWCJEkU3o5cYiadlYO4k0Bg7iHBFOntQiJSQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t/c5tw6L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="jYmr3Bu+"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fpCv9B0QrryOqU1TlRTihqbxd7ROYgHLf5ZBrMMFrGtBBF+OModSM02AyF84zDJO8fHUqY5JMQriQ5JDnbLFDnGtekSYQjCmDJSf+kgZgsrg+szcq4lkwmvsFd/xkCBH9QURPAjBAzWuJEq8oamo0zv4IJafB7fK4fTbMCNRv92+JB/HjKfeHfLoJvMxsmVnakqocw3fgcBbuan60DfLM16Ne6sve6H0NoZ6E2zUB6kE52Ne+ewqeosMW+xNzUncWJh2SLeTPoBkHTgKQuDdgX+h3nuyiK1R9vc5kDG5h/lB8sUCgsmgj9MCx8QtfMns9XmJ1dg/Wqsk+KMgDwM8RA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HsIK77hQFJrLddVsg0DgyO0xQICSpWSe1A5LCoCvd7I=;
- b=AOm4C11Lf7oQX43Ybnb8gdGhbWp9Thqit7hud7a8rzOSefNszqslkIRq+UHwX18pUMGifcTn6//cTGY0Ouolt8TKeXlVrMP8Y4Ad8bIvn4hItiKUGoDU1LIsmxgkP8uxUFKW1FbPddWjqVSt8oSUMY6lckd8/poKRowEUg0cdjtTxadB66UJFCLYCo5sgRoFtHaVQscQt7HYXYz1UJ1DKyQjl60yCSx1JHczktuDq5ALn6hd058CgCsK/tJ2RuRZveOJOcjvQ70vsBCcZA8WgXlOK+baUfYdx+1WyMrOxP2ABmlKMy/PeQs9lXfFWsbRcWl1x2oarPHFJVL0ebChFg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HsIK77hQFJrLddVsg0DgyO0xQICSpWSe1A5LCoCvd7I=;
- b=jYmr3Bu+RBvVskQ759SKYkhk8OFEHtn8dNG6P2Jqns6lSWHhbhX/Tx6enf54nZKqIwhd8+XfieqI02uYsVqiZUP0/pRF7ART8i2DyJ+/1iPW81iMd4SoFx7JXmmRsPxRt1c6rSG+nvYO/ZPMbzrd+/yqUDEWQLZiEwhN/sbJPNfXLVK+ejxvwyimqM7y1YNGUxz7bEDEEXCd6D20JKR8y43Yo+ndmTP7+TcsBB+I76+gzbnHnc5I6EF0M/3RQul9riWbLcmAO8novhV32spZ9dROUmgjng8CNVH6nxZ2hvHCBsvg/5f3cU0uARFQDc3mCBqNQLKaOtJqMht1L6kaEw==
-Received: from BY3PR04CA0010.namprd04.prod.outlook.com (2603:10b6:a03:217::15)
- by MN2PR12MB4471.namprd12.prod.outlook.com (2603:10b6:208:26f::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.11; Thu, 22 Jan
- 2026 21:00:13 +0000
-Received: from SJ5PEPF000001D4.namprd05.prod.outlook.com
- (2603:10b6:a03:217:cafe::9f) by BY3PR04CA0010.outlook.office365.com
- (2603:10b6:a03:217::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9542.11 via Frontend Transport; Thu,
- 22 Jan 2026 21:00:02 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- SJ5PEPF000001D4.mail.protection.outlook.com (10.167.242.56) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9564.3 via Frontend Transport; Thu, 22 Jan 2026 21:00:13 +0000
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 22 Jan
- 2026 12:42:54 -0800
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by rnnvmail205.nvidia.com
- (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 22 Jan
- 2026 12:42:54 -0800
-Received: from inno-vm-xubuntu (10.127.8.13) by mail.nvidia.com (10.129.68.10)
- with Microsoft SMTP Server id 15.2.2562.20 via Frontend Transport; Thu, 22
- Jan 2026 12:42:47 -0800
-From: Zhi Wang <zhiw@nvidia.com>
-To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
-	<kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
-	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
-	<lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
-	<markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
-	<smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
-	<kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
-	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
-	<daniel.almeida@collabora.com>, Zhi Wang <zhiw@nvidia.com>, Jason Gunthorpe
-	<jgg@nvidia.com>
-Subject: [PATCH v2 2/2] samples: rust: fwctl: add sample code for fwctl
-Date: Thu, 22 Jan 2026 22:42:31 +0200
-Message-ID: <20260122204232.15988-3-zhiw@nvidia.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260122204232.15988-1-zhiw@nvidia.com>
-References: <20260122204232.15988-1-zhiw@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t/c5tw6L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C972C116C6;
+	Thu, 22 Jan 2026 21:02:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769115763;
+	bh=oAFXsolpLVS81H4XxdMWZRZdchsPhbHdxR3JKCSxYTk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=t/c5tw6L4fmzZdN3p7WM4DmGYf5Iqfw72Dz1GIcjd3mIzAiNQmzdLfOWCEnVuMlyg
+	 g87/gZwTzWsmgltidKLvMI3aE/oZeDJUbs1/2yeQuhZwqnUEPyoDe3qIKmAoEo5dEK
+	 kty8nTDJFo0eZfJ75rmyU/OBV7IsZKffPzkCrZb7n41yMaISWlSf5CJa4AEFkDxDdd
+	 mBHYzZlfPSc3f4xPdh7y+t68mpUaQaX8MXIfMub+L48UABQMgMrptRfYu5NzXO8sfu
+	 XxxHcEipkHBCdItLeDVCsJ1I1zPGo4feT95fDxLbURAsFv2s1NilHIP6L0SMPR7Vr7
+	 hJJz+CoDsngJw==
+Date: Thu, 22 Jan 2026 22:02:38 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Frank Li <Frank.li@nxp.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Samuel Holland <samuel.holland@sifive.com>,
+	Charles Mirabile <cmirabil@redhat.com>, tim609@andestech.com,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: dwc: Clean up iatu index usage in
+ dw_pcie_iatu_setup()
+Message-ID: <aXKQbo5WYstLY2T9@ryzen>
+References: <20260122145411.453291-4-cassel@kernel.org>
+ <20260122145411.453291-6-cassel@kernel.org>
+ <aXKMKAfhkOy6bP0G@lizhi-Precision-Tower-5810>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ5PEPF000001D4:EE_|MN2PR12MB4471:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5c008297-4ead-4391-11c4-08de59f93c9a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|1800799024|376014|82310400026|36860700013;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?/AiToN5WXUoUjU5y4C/FZvAtAYnssCZ3IAFcr5xCSRMSGCr+ySutaF7pCYq2?=
- =?us-ascii?Q?JMo0RFlDlO+kHanf01HWtie/vGcKt3uESY6Wa6x2B+GlkP9VQMBFEyTbh3qr?=
- =?us-ascii?Q?RFt5gLeXmFHU+4H0YRNvCVD3XvC758mQIbjCxfGZRD/snzNyUicnFXWPzUSf?=
- =?us-ascii?Q?7duVQiVEDcPB9L18yNh9GbUNKy0DB17rAC3S91iNkNnywodQdtvlHqMbE0N1?=
- =?us-ascii?Q?F6yvx8S68LRigqIxjtn4Ev6tKPCvZSJKYl2d2yPBVsG72NS1+8fKxNmskJ79?=
- =?us-ascii?Q?FW2Nqf8XX8jJMx4H0NbusHYBgfTEkGE3Y5PvHPrN7btYTBMZUKrwvxFmPJt3?=
- =?us-ascii?Q?HVUycqxpUl9NNThCGnLu1Bd1hRm154t1bmBiVTa1kNKtwJC5T+HH3mGPf9nM?=
- =?us-ascii?Q?wAwoBAp1s810tvRB5sBC+uUhg1Vnk48OfqtX6aD0nyW1Lb6sNvILUnGeP3RW?=
- =?us-ascii?Q?ZIArG7kVrrRgapqZ9mkoBwY/uCeKHL7oA5DdumM7F/vLTev0ZjPH6zU4e0cv?=
- =?us-ascii?Q?B7cT2BVb7AdRtY2HJwuM82ORgH7tzCq6WkVecO5Q4OyYwBZUaj2GoodhjGI5?=
- =?us-ascii?Q?MgwSG106hcjj8Gqd580z4qPjxFI9p8/jLAxZ2lHgBIB8TRGaHvwqKReKBNPW?=
- =?us-ascii?Q?PJ9KnqY4J7HnMQKeGlRmW+3vMz05pJ+ZMA+pbymIE4o0MRlOFU+j9WPd85bi?=
- =?us-ascii?Q?Lk4BqVfA4TOIJ3hWW6ZuEiXmmvyUD+RPq7Zu5SVSkM0lJ4gmtZqqSkm0vhdo?=
- =?us-ascii?Q?HGb1/uOfqoOcWuEuTmFIultQvj4dt/ort4+ArANXzyavK2Rxtxsi0YX8EI95?=
- =?us-ascii?Q?TDXEq3LwdVE/IRWibF9FQmpnlKO1qilhern9QDa0XOh67l8M6ebu8Rk+HFhJ?=
- =?us-ascii?Q?IEz1A6Rz57PfgUzrIpENFS+WY2UlHC4HS++e10/k90t0G+b0C79V2bOQHJ0h?=
- =?us-ascii?Q?u5nfAwwzyl1TbFVB8mTEdlwVxjUhsEzdEVeRQCXhDr4mcE61qxhkQ9x3f0C4?=
- =?us-ascii?Q?kOOqhp/r5VtsjUxdtLSUyEJYKwTykfrfdpAanttx62bUnhm/mZbc4IeiouJa?=
- =?us-ascii?Q?sr1QsFg0O23k+QMvO/zsClLg+ZY+Hdi7NBRnfTmDiipnm/VHLIfdHCgG9qn0?=
- =?us-ascii?Q?YkP06foCdqm83xEFWL0+GQnswGZxI6Oh+lJRnbKfbngRW/mjvnCyVeOl4gjP?=
- =?us-ascii?Q?kGwQk4YMxpj4ar94wnWjZ07uctub14WEyreN13OsHYEL2Pp9wn+sNTW6afc3?=
- =?us-ascii?Q?gUGgtW9j7eRn9B6WtdAej5bH12ZxnulctU0UMplALobUYf7KERNEvXIykM0r?=
- =?us-ascii?Q?Q9Z49iaotwQrDQmLGNpetnT+gQc8N1IEeLa02mkhcHJ+Bsay9BfTAH2MqpHS?=
- =?us-ascii?Q?Yn5smXELXO1tnf3blJBAbd6NY+rh6Ea13Rylsr5TXKSll3sFwielTYo3gTvx?=
- =?us-ascii?Q?580Fi5Sr1LOPHyEzeCQruTl4ohT/eIAfRLDQIws4v76FUsTZwfqdJUmJcw6a?=
- =?us-ascii?Q?OEyd5gZhViLtZVWoaveQDDgovKIlIydNg7ZP0w0U3k0V9WYnW9Lk8FkCma2m?=
- =?us-ascii?Q?mRFw1fNrN4tryxnI64Ke73vID8bxQaMCccc8sf64CNZxtUWgLLFSUPrvlfWE?=
- =?us-ascii?Q?1R2BmI+QdT9kqS65eSKEis/Faw7XJHa1UCHDLn4VjuKck78pLHyQxzjdvQSp?=
- =?us-ascii?Q?i3KWrQ=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(82310400026)(36860700013);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 21:00:13.0348
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5c008297-4ead-4391-11c4-08de59f93c9a
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ5PEPF000001D4.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4471
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aXKMKAfhkOy6bP0G@lizhi-Precision-Tower-5810>
 
-This patch adds a sample Rust driver demonstrating the usage of the fwctl
-Rust abstractions. Add sample code for creating a FwCtl device, getting
-device info and issuing an RPC.
+On Thu, Jan 22, 2026 at 03:44:24PM -0500, Frank Li wrote:
+> On Thu, Jan 22, 2026 at 03:54:14PM +0100, Niklas Cassel wrote:
+> > The current iatu index usage in dw_pcie_iatu_setup() is a mess.
+> >
+> > For outbound address translation the index is incremented before usage.
+> > For inbound address translation the index is incremented after usage.
+> >
+> > Incrementing the index after usage make much more sense, and:
+> > Make the index usage consistent for both outbound and inbound address
+> > translation.
+> >
+> > Most likely, the overly complicated logic for the outbound address
+> > translation is because the iatu at index 0 is reserved for CFG IOs
+> > (dw_pcie_other_conf_map_bus()), however, we should be able to use the
+> > exact same logic for the indexing of the outbound and inbound iatus.
+> > (Only the starting index should be different.)
+> >
+> > Create two new variables ob_iatu_index_to_use, ib_iatu_index_to_use,
+> > which makes it clear from the name itself that it is the index before
+> > increment.
+> >
+> > Since we always check if there is an index available immediately before
+> > programming the iATU, we can remove the useless "ranges exceed outbound
+> > iATU size" warnings, as the code is already unreachable.
+> >
+> > Because we always check if there is an index available immediately before
+> > programming the iATU, we can also remove the useless breaks outside of
+> > while loop.
+> 
+> The condition is the same. So combine two paragraph
 
-Cc: Danilo Krummrich <dakr@kernel.org>
-Cc: Jason Gunthorpe <jgg@nvidia.com>
-Signed-off-by: Zhi Wang <zhiw@nvidia.com>
----
- samples/rust/Kconfig              |  11 +++
- samples/rust/Makefile             |   1 +
- samples/rust/rust_driver_fwctl.rs | 136 ++++++++++++++++++++++++++++++
- 3 files changed, 148 insertions(+)
- create mode 100644 samples/rust/rust_driver_fwctl.rs
+Sure.
 
-diff --git a/samples/rust/Kconfig b/samples/rust/Kconfig
-index c49ab9106345..3d0b223caa89 100644
---- a/samples/rust/Kconfig
-+++ b/samples/rust/Kconfig
-@@ -172,6 +172,17 @@ config SAMPLE_RUST_SOC
- 
- 	  If unsure, say N.
- 
-+config SAMPLE_RUST_DRIVER_FWCTL
-+	tristate "Fwctl Driver"
-+	depends on FWCTL
-+	help
-+	  This option builds the Rust Fwctl driver sample.
-+
-+	  To compile this as a module, choose M here:
-+	  the module will be called rust_driver_fwctl.
-+
-+	  If unsure, say N.
-+
- config SAMPLE_RUST_HOSTPROGS
- 	bool "Host programs"
- 	help
-diff --git a/samples/rust/Makefile b/samples/rust/Makefile
-index 6c0aaa58cccc..6f6030e64727 100644
---- a/samples/rust/Makefile
-+++ b/samples/rust/Makefile
-@@ -14,6 +14,7 @@ obj-$(CONFIG_SAMPLE_RUST_DRIVER_PLATFORM)	+= rust_driver_platform.o
- obj-$(CONFIG_SAMPLE_RUST_DRIVER_USB)		+= rust_driver_usb.o
- obj-$(CONFIG_SAMPLE_RUST_DRIVER_FAUX)		+= rust_driver_faux.o
- obj-$(CONFIG_SAMPLE_RUST_DRIVER_AUXILIARY)	+= rust_driver_auxiliary.o
-+obj-$(CONFIG_SAMPLE_RUST_DRIVER_FWCTL)		+= rust_driver_fwctl.o
- obj-$(CONFIG_SAMPLE_RUST_CONFIGFS)		+= rust_configfs.o
- obj-$(CONFIG_SAMPLE_RUST_SOC)			+= rust_soc.o
- 
-diff --git a/samples/rust/rust_driver_fwctl.rs b/samples/rust/rust_driver_fwctl.rs
-new file mode 100644
-index 000000000000..ac5f979fd73b
---- /dev/null
-+++ b/samples/rust/rust_driver_fwctl.rs
-@@ -0,0 +1,136 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! Rust fwctl API test (based on QEMU's `pci-testdev`).
-+//!
-+//! To make this driver probe, QEMU must be run with `-device pci-testdev`.
-+
-+use kernel::{
-+    bindings,
-+    device,
-+    device::Core,
-+    devres::Devres,
-+    fwctl,
-+    pci,
-+    prelude::*,
-+    sync::aref::ARef,
-+    types,
-+};
-+
-+struct FwctlSampleUserCtx {
-+    _drvdata: u32,
-+}
-+
-+struct FwctlSampleOps;
-+
-+impl fwctl::Operations for FwctlSampleOps {
-+    type UserCtx = FwctlSampleUserCtx;
-+
-+    const DEVICE_TYPE: fwctl::DeviceType = fwctl::DeviceType::RustFwctlTest;
-+
-+    fn open(
-+        fwctl_uctx: &types::Opaque<bindings::fwctl_uctx>
-+    ) -> Result<impl PinInit<Self::UserCtx, Error>, Error> {
-+        let dev = fwctl::UserCtx::<Self::UserCtx>::parent_device_from_raw(fwctl_uctx);
-+
-+        dev_info!(dev, "fwctl test driver: open_uctx()");
-+
-+        // Return an initializer for the user context.
-+        // The framework will initialize this in-place in the C-allocated memory.
-+        Ok(try_init!(FwctlSampleUserCtx {
-+            _drvdata: 0,
-+        }))
-+    }
-+
-+    fn close(uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>) {
-+        let dev = uctx.get_parent_device();
-+
-+        dev_info!(dev, "fwctl test driver: close_uctx()");
-+    }
-+
-+    fn info(uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>) -> Result<KVec<u8>, Error> {
-+        let dev = uctx.get_parent_device();
-+
-+        dev_info!(dev, "fwctl test driver: info()");
-+
-+        let mut infobuf = KVec::<u8>::new();
-+        infobuf.push(0xef, GFP_KERNEL)?;
-+        infobuf.push(0xbe, GFP_KERNEL)?;
-+        infobuf.push(0xad, GFP_KERNEL)?;
-+        infobuf.push(0xde, GFP_KERNEL)?;
-+
-+        Ok(infobuf)
-+    }
-+
-+    fn fw_rpc(
-+        uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>,
-+        scope: u32,
-+        rpc_in: &mut [u8],
-+        _out_len: *mut usize,
-+    ) -> Result<Option<KVec<u8>>, Error> {
-+        let dev = uctx.get_parent_device();
-+
-+        dev_info!(dev, "fwctl test driver: fw_rpc() scope {}", scope);
-+
-+        if rpc_in.len() != 4 {
-+            return Err(EINVAL);
-+        }
-+
-+        dev_info!(
-+            dev,
-+            "fwctl test driver: inbuf len{} bytes[0-3] {:x} {:x} {:x} {:x}",
-+            rpc_in.len(),
-+            rpc_in[0],
-+            rpc_in[1],
-+            rpc_in[2],
-+            rpc_in[3]
-+        );
-+
-+        let mut outbuf = KVec::<u8>::new();
-+        outbuf.push(0xef, GFP_KERNEL)?;
-+        outbuf.push(0xbe, GFP_KERNEL)?;
-+        outbuf.push(0xad, GFP_KERNEL)?;
-+        outbuf.push(0xde, GFP_KERNEL)?;
-+
-+        Ok(Some(outbuf))
-+    }
-+}
-+
-+#[pin_data]
-+struct FwctlSampleDriver {
-+    pdev: ARef<pci::Device>,
-+    #[pin]
-+    fwctl: Devres<fwctl::Registration<FwctlSampleOps>>,
-+}
-+
-+kernel::pci_device_table!(
-+    PCI_TABLE,
-+    MODULE_PCI_TABLE,
-+    <FwctlSampleDriver as pci::Driver>::IdInfo,
-+    [(pci::DeviceId::from_id(pci::Vendor::REDHAT, 0x5), ())]
-+);
-+
-+impl pci::Driver for FwctlSampleDriver {
-+    type IdInfo = ();
-+    const ID_TABLE: pci::IdTable<Self::IdInfo> = &PCI_TABLE;
-+
-+    fn probe(pdev: &pci::Device<Core>, _info: &Self::IdInfo) -> impl PinInit<Self, Error> {
-+        dev_info!(pdev.as_ref(), "Probe fwctl test driver");
-+
-+        // `pdev` is `Device<Core>`, which derefs to `Device<Bound>` during probe.
-+        let pdev_bound: &pci::Device<device::Bound> = pdev;
-+
-+        try_pin_init!(Self {
-+            pdev: pdev.into(),
-+            fwctl <- fwctl::Registration::<FwctlSampleOps>::new(pdev_bound.as_ref()),
-+        })
-+    }
-+}
-+
-+kernel::module_pci_driver! {
-+    type: FwctlSampleDriver,
-+    name: "rust_driver_fwctl",
-+    authors: ["Zhi Wang"],
-+    description: "Rust fwctl test",
-+    license: "GPL v2",
-+    imports_ns: ["FWCTL"],
-+}
--- 
-2.51.0
 
+> 
+> >
+> > Also switch to use the more logical, but equivalent check if index is
+> > smaller than length, which is the most common pattern when e.g. looping
+> > through an array which has length items (0 to length-1), such that it is
+> > even clearer to the reader that this is a zeroes based index.
+> >
+> > No functional changes intended.
+> >
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> > ---
+> >  .../pci/controller/dwc/pcie-designware-host.c | 59 ++++++++++---------
+> >  1 file changed, 32 insertions(+), 27 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > index 991fe5b9a7b3..eda94db04b63 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > @@ -892,9 +892,10 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+> >  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> >  	struct dw_pcie_ob_atu_cfg atu = { 0 };
+> >  	struct resource_entry *entry;
+> > +	int ob_iatu_index_to_use = 0;
+> > +	int ib_iatu_index_to_use = 0;
+> >  	int i, ret;
+> >
+> > -	/* Note the very first outbound ATU is used for CFG IOs */
+> >  	if (!pci->num_ob_windows) {
+> >  		dev_err(pci->dev, "No outbound iATU found\n");
+> >  		return -EINVAL;
+> > @@ -910,16 +911,19 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+> >  	for (i = 0; i < pci->num_ib_windows; i++)
+> >  		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, i);
+> >
+> > -	i = 0;
+> > +	/*
+> > +	 * NOTE: For outbound address translation, outbound iATU at index 0 is
+> > +	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
+> > +	 * index 1.
+> > +	 */
+> > +	ob_iatu_index_to_use++;
+> > +
+> >  	resource_list_for_each_entry(entry, &pp->bridge->windows) {
+> >  		resource_size_t res_size;
+> >
+> >  		if (resource_type(entry->res) != IORESOURCE_MEM)
+> >  			continue;
+> >
+> > -		if (pci->num_ob_windows <= i + 1)
+> > -			break;
+> > -
+> >  		atu.type = PCIE_ATU_TYPE_MEM;
+> >  		atu.parent_bus_addr = entry->res->start - pci->parent_bus_offset;
+> >  		atu.pci_addr = entry->res->start - entry->offset;
+> > @@ -937,13 +941,13 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+> >  			 * middle. Otherwise, we would end up only partially
+> >  			 * mapping a single resource.
+> >  			 */
+> > -			if (pci->num_ob_windows <= ++i) {
+> > -				dev_err(pci->dev, "Exhausted outbound windows for region: %pr\n",
+> > +			if (!(ob_iatu_index_to_use < pci->num_ob_windows)) {
+> 
+> Is it better "if (ob_iatu_index_to_use >= pci->num_ob_windows)"
+
+Personally, I think no, since if you look at the condition
+now used (after this patch) in:
+
+if (pp->io_size) {
+	if (ob_iatu_index_to_use < pci->num_ob_windows) {
+		...
+
+if (pp->use_atu_msg) {
+	if (ob_iatu_index_to_use < pci->num_ob_windows) {
+		...
+
+
+
+The difference is that
+if (pp->io_size) { and
+if (pp->use_atu_msg) {
+
+only does something if (condition)
+
+while the loops over the memory windows have:
+if (!condition)
+	return -ENOMEM;
+
+For consistency, and to try to avoid this function becoming a mess again,
+I think it makes sense to use the exact same condition everywhere, and
+only negate the condition if needed.
+
+
+Kind regards,
+Niklas
