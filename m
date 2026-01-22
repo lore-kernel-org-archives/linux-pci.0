@@ -1,134 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 335D83DB255;
-	Thu, 22 Jan 2026 23:27:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D693A3D729E;
+	Thu, 22 Jan 2026 23:28:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769124456; cv=none; b=lonuHmZ5sUYM7gn0n48O1nL+zPh/egP1i84BoEOjSuuu7inraRop/+C5vdy28M4fLkv0NnYO7LVKxFgZbGKRVj4cxs7WQ/zfC2nckH4gLF+M56jnc8a4iuoU0U+aqZ72Fr2b0MvITYcgrmKXNASMYETdZpTN7VYVqdUxcZQG0IM=
+	t=1769124512; cv=none; b=WF+0O5w6FYYfjD0jQQOVoqync8KPm24IfOyRXl+Jwwftg9UVY9mhEP5jjFoMNLusHrYD1BLX+uZo1OYep7r9GowE2XbQtpsXPND8C3rcW5cj2ixmJXEBYuhY5jmq99hoIu3vzwc/TdmwJ3R+CYx+wHDhyI9yg8Zuj48mLFP9IKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769124456; c=relaxed/simple;
-	bh=TpTvuO5OGPCFjh5XFxTMY09tgERrKThZNyQvlUN/g8Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=I+q9T0grv9m7uHZwQIj9wKjNZfwAQZx9hkJPjnQt/G3syQKjX+Bk0xmYfumqocoiOGtvjRo7jx79tRsrgOcGK+Ny0U6yAiTVFo48xQ6phdnnKv7xYxwyqhdnDizfFvlpLOLEfx3mclK6qAgMsNCYuatu0NU6ZoYmXG3mTbu8GGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCnv/kW6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769124512; c=relaxed/simple;
+	bh=BUOzpStFRDOGeqBZpPfVQ9oRePuFvr0ez3ACS9i6JHk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V3deFyUdLqmny8c+K8cV2U9p2LP/0UQkAkT4VNC4lFTZXEC06sgkn5OE4mNsOSv+dE2O8ggWVaCrmuR+tCgGrQaiuIVr4pkkcJKBhp9d9rSWBKJwBwkRIV5oPe3N8fPrg7XuYtKxsdtOHaceoQPV4qpe2gPNoKAGuUC631nQL9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FhQgitGK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCnv/kW6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B871AC116C6;
-	Thu, 22 Jan 2026 23:27:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FhQgitGK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3C92C116C6;
+	Thu, 22 Jan 2026 23:28:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769124454;
-	bh=TpTvuO5OGPCFjh5XFxTMY09tgERrKThZNyQvlUN/g8Q=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=eCnv/kW66JgUyYthhTx4hls2d3Mf8RMNWBA5dZCbs4Q83J7DI/CZ66KGPPbw35290
-	 tLYHqgH/uAkCgXzG3J29QndIfL14nynk8k0jc/OWSlFxv04n/Zg50LWv9wCw15x8zq
-	 rgUg4KHK/n3f8/H8FqUW5sHnRLRrMyikqGTaB7Yx9uoBa9bCPKmwweyyJ837kk9VCP
-	 5Xjh4IHicmcVCTRXWQQqNrlZ4SyW+90coyQULEg+d06uKvo5RQB7d+j1prY8gbw/Dh
-	 cnSBTllpvDVQzJXrzH/cgKQnHLda1DzHYLAo12Jb1AyLAf1/xNMEMFe7fdXikNfsFc
-	 ZxlF6Satpm01A==
-Date: Thu, 22 Jan 2026 17:27:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Nilawar, Badal" <badal.nilawar@intel.com>
-Cc: intel-xe@lists.freedesktop.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, anshuman.gupta@intel.com,
-	rafael@kernel.org, lenb@kernel.org, bhelgaas@google.com,
-	ilpo.jarvinen@linux.intel.com, rodrigo.vivi@intel.com,
-	varun.gupta@intel.com, ville.syrjala@linux.intel.com,
-	uma.shankar@intel.com, karthik.poosa@intel.com,
-	matthew.auld@intel.com, sk.anirban@intel.com, raag.jadav@intel.com
-Subject: Re: [PATCH v6 02/12] PCI/ACPI: Add PERST# Assertion Delay _DSM method
-Message-ID: <20260122232733.GA46175@bhelgaas>
+	s=k20201202; t=1769124509;
+	bh=BUOzpStFRDOGeqBZpPfVQ9oRePuFvr0ez3ACS9i6JHk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FhQgitGKoJyty28sLybglYMAn/8V6ilZR7kMhiOu0Yq5McwN3DJ+vqZCZxrqWRRz0
+	 kqFRqaNM4U5dBeWYyHI9uN+guHgeqqkLhCKVRuKfKNzqcvQad7xkmcSq4SGAGvPUqe
+	 8OFlkbDKDtUJOrw+psbZgNBkIE3iOKHUVVVE3ALT1NK7ox9keZuh8yidu8z+32JASP
+	 NaFC1pL3wCkZbbjvzTihiSP1gTrWmTlLpitId/IVyjjx6hXZSyDmczq28JSM/Q9xsR
+	 r4aiBFL16YH/jM8dPToiBpUjhbIQNZzMpS47uf/WiA37k0k/fjMxAlXtpy5ugDc6Qe
+	 YIo94AILZcvqQ==
+Date: Thu, 22 Jan 2026 17:28:28 -0600
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Stephan Gerhold <stephan.gerhold@linaro.org>,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Conor Dooley <conor+dt@kernel.org>, linux-kernel@vger.kernel.org,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, devicetree@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	Manivannan Sadhasivam <mani@kernel.org>
+Subject: Re: [PATCH v6 1/4] dt-bindings: connector: Add PCIe M.2 Mechanical
+ Key M connector
+Message-ID: <176912450807.3729991.5158858975024322086.robh@kernel.org>
+References: <20260122-pci-m2-v6-0-575da9f97239@oss.qualcomm.com>
+ <20260122-pci-m2-v6-1-575da9f97239@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <531f2fe7-7a17-42cc-8747-ea122fe1c95f@intel.com>
+In-Reply-To: <20260122-pci-m2-v6-1-575da9f97239@oss.qualcomm.com>
 
-On Tue, Jan 20, 2026 at 09:29:16PM +0530, Nilawar, Badal wrote:
-> On 15-01-2026 01:25, Bjorn Helgaas wrote:
-> > On Tue, Jan 13, 2026 at 10:12:03PM +0530, Badal Nilawar wrote:
-> > > From: Anshuman Gupta <anshuman.gupta@intel.com>
-> > > 
-> > > Implement _DSM Method 0Bh as per PCI Firmware r3.3, sec 4.6.10, to request
-> > > fixed delay in timing between the time the PME_TO_Ack message is received
-> > > at the PCI Express Downstream Port that originated the PME_Turn_Off
-> > > message, and the time the platform asserts PERST# to the slot during the
-> > > corresponding Endpoint’s or PCI Express Upstream Port’s transition to
-> > > D3cold while the system is in an ACPI operational state.
-> > > Host platform supporting this feature ensures that device is observing
-> > > this delay in every applicable D3Cold transition.
 
-> > > +int pci_acpi_add_perst_assertion_delay(struct pci_dev *dev, u32 delay_us)
-> > > +{
-> ...
-
-> > > +	if (!dev)
-> > > +		return -EINVAL;
-
-Calling this with "dev == NULL" is a bug in the caller, so I don't
-think we should check for this.  That way we will take the NULL
-pointer dereference, cause an oops, and can fix the bug.  If we check
-for NULL, the bug is likely to be unnoticed.
-
-> > Sec 4.6.11 also says we should track this per Downstream Port and
-> > request the maximum of delays requested by any child.  So I think we
-> > need to:
-> > 
-> >    - add a perst_delay in struct pci_dev
-> > 
-> >    - when we find this _DSM, set
-> >      bdev.perst_delay = max(bdev.perst_delay, delay_us)
-> > 
-> >    - pass bdev.perst_delay to the _DSM instead of delay_us
+On Thu, 22 Jan 2026 22:46:51 +0530, Manivannan Sadhasivam wrote:
+> Add the devicetree binding for PCIe M.2 Mechanical Key M connector defined
+> in the PCI Express M.2 Specification, r4.0, sec 5.3. This connector
+> provides interfaces like PCIe and SATA to attach the Solid State Drives
+> (SSDs) to the host machine along with additional interfaces like USB, and
+> SMBus for debugging and supplementary features.
 > 
-> For vrsr use case delay requested is 10ms, which is maximum allowed by this
-> _DSM.
-> I think we should take care of above suggestion when we implement aux power
-> aggregation.
-> For now, I can create another list let's call it acpi_perst_delay_list,
-> similar to acpi_aux_power_list, and
-> allow a only one device to request a PERST delay.
+> The connector provides a primary power supply of 3.3v, along with an
+> optional 1.8v VIO supply for the Adapter I/O buffer circuitry operating at
+> 1.8v sideband signaling.
+> 
+> The connector also supplies optional signals in the form of GPIOs for fine
+> grained power management.
+> 
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+>  .../bindings/connector/pcie-m2-m-connector.yaml    | 145 +++++++++++++++++++++
+>  1 file changed, 145 insertions(+)
+> 
 
-I think lists will be a maintenance headache.
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 
-> > > +		handle = ACPI_HANDLE(&bdev->dev);
-> > > +		if (handle &&
-> > > +		    acpi_check_dsm(handle, &pci_acpi_dsm_guid, 4,
-> > > +				   1 << DSM_PCI_PERST_ASSERTION_DELAY))
-> > > +			break;
-> > > +	}
-> > > +
-> > > +	if (!bdev)
-> > > +		return -ENODEV;
-> > > +
-> > > +	out_obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(&bdev->dev),
-> > > +					  &pci_acpi_dsm_guid, 4,
-> > > +					  DSM_PCI_PERST_ASSERTION_DELAY,
-> > > +					  &in_obj, ACPI_TYPE_INTEGER);
-> > > +	if (!out_obj)
-> > > +		return -EINVAL;
-> > > +
-> > > +	result = out_obj->integer.value;
-> > > +	ACPI_FREE(out_obj);
-> > > +
-> > > +	if (result == delay_us) {
-> > > +		pci_info(dev, "PERST# Assertion Delay set to %u microseconds\n", delay_us);
-> >
-> > I think this message should use "bdev" instead of "dev".  I know the
-> > request is for "dev", but the delay connected to bdev and applies to
-> > all functions below the Downstream Port.
->
-> Since it is set for the device which as requested I kept dev.
-
-It's set for *all* devices below bdev, so I think the message should
-give a clue about that.  If we only include "dev", there is no
-indication that other devices are affected.  Maybe we could include
-both dev and bdev?
-
-  pci_info(bdev, "PERST# assertion delay %u microseconds set as requested by %s\n",
-           delay_us, pci_name(bdev));
