@@ -1,67 +1,68 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013021.outbound.protection.outlook.com [40.107.201.21])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011023.outbound.protection.outlook.com [52.101.52.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC46E3A89CD;
-	Thu, 22 Jan 2026 20:59:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6377392C2A;
+	Thu, 22 Jan 2026 21:00:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.23
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769115568; cv=fail; b=W0k40m1xfZ0VBW3n87jX9DNyqeDiivqIgH5dmlMxLYxAZXolUa18Ngjpez5oIT5OVVYItXBHRevpcfZtI8VIrMQERhFpUpexxytm1l3QNHXoFAwbuQpmzUtQe8zm1MhTJZ1YX1PNxY91Jav2bnEpWd23kfE86LCyGqhodOGNPDw=
+	t=1769115623; cv=fail; b=fRoEZLVzdQdyKKgfv1HZlZ0rvSyCRRHhMEHgvHH7GvgS+IAlbb7uL+mD1I5L6K4NvRFoLNToWylOi5NDGmy6Y6WxUaGNw3NYjFu/t1qJALcEp7PEWPrSY7Ud5dv1tw6msaDj6s/7uCVaKhbZnf3TFeE2HLF1uVioK7cJ6ePFZWI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769115568; c=relaxed/simple;
-	bh=eC6y95uz0nTdgdeAtLLZ91BqgkrFwYClBQ1CItPhpWg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pi9uqEuuDOxIzvaL76tIr7zDbPyCsWr9EdwfyXUYsD5bHo9sUmQGcBNcnCYaRMw3m7iE1uNYpJmRNH0Ffzs44a6ZfS6OyEWE9Uw2gsxRKJaBGUXTs6ueCxXMfWjbOx3E6LCeBEU4x9wN7PThOx4FWBAl5HfDHpC904MPC8Ja0Qs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=LlhmAjrz; arc=fail smtp.client-ip=40.107.201.21
+	s=arc-20240116; t=1769115623; c=relaxed/simple;
+	bh=38IuTkEPXPuOy7xAfjGfGmEoZ7L7OoUt2O5K2aXks54=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=g4GcaDmHy16FH8YqRjMmHWmOTFiF6U7NwTsdDdTDPXJ3nJCsejgNTG3QCsNBolcwszvm3Hww7B4VosfJsi8J0kq+dj1iBLFTgSPX3ztqNGL0AABV3mxrOFDWwmuUnUkA4AjIA+7lM5zb9Ub+aFhiL/dDEXQrbzW+5PvQX9vxteM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=jYmr3Bu+; arc=fail smtp.client-ip=52.101.52.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="LlhmAjrz"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="jYmr3Bu+"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UmJaLVrzDn0fTIFuTyd4d7STUmywI6csYUu6UUWh+DfSB0DJ/jGQnGU972Yal5gRsKRILR4pzuL7Tl2V2o50xyItnZEv8J0wEKykX5kMTedbbHr1xe2xEY0w5EET3PfMvqk3beiFDqezajFrEkhasc0BEvugwUxF0tCuz6m6tknSXLaxniy9cyztiZRMOfi28/cG2C7RojauJI/1+9oYyxnhHXMlMqrnNPK0eHPV41l1xqg/3t+4Ag4D8dkyeGoeeymPh025V2gtaaDqBoRwZGsYoF1IJSQMS3e/Mjb7Ydnt870AFh2J8+6j7pD4NtO0dPJKXg+bwY4ky3gvdhpXuA==
+ b=fpCv9B0QrryOqU1TlRTihqbxd7ROYgHLf5ZBrMMFrGtBBF+OModSM02AyF84zDJO8fHUqY5JMQriQ5JDnbLFDnGtekSYQjCmDJSf+kgZgsrg+szcq4lkwmvsFd/xkCBH9QURPAjBAzWuJEq8oamo0zv4IJafB7fK4fTbMCNRv92+JB/HjKfeHfLoJvMxsmVnakqocw3fgcBbuan60DfLM16Ne6sve6H0NoZ6E2zUB6kE52Ne+ewqeosMW+xNzUncWJh2SLeTPoBkHTgKQuDdgX+h3nuyiK1R9vc5kDG5h/lB8sUCgsmgj9MCx8QtfMns9XmJ1dg/Wqsk+KMgDwM8RA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Au+sNWCerbfU3uF+yDwILBID3nw3tmObPa30oZpXa/8=;
- b=w3JzyYB1ByRe1UyQN/lJsjpSILegbSC+1uUbRH4qXH0g7FjOpNkfltCjuzA2mqQPrADYfzlKiqVEMDoilgU0XMva1Fdt4adXcyJXKswj2DrBL9Uvu2Xj61Ax+vW21l6Fbibhp3DYoyEQAIvwMTCClX2pfie0e7iuknizNWeCEgiayKJ2zpv27HdNFi9FvjBlDPGJ64ExS453ECXFr2MDj/SXLbhuAOZ+e3lTxf8a+7lv8J8ZsJiaZtNqfyKzpgqXELey/hHN/RkXQDQTNIF29K4X7ZKNUrOjWRfkNhufjMH5GQI+LlO6fsJpSg61eHR3l1XQ6PW1aMMiIBtZJc4vtA==
+ bh=HsIK77hQFJrLddVsg0DgyO0xQICSpWSe1A5LCoCvd7I=;
+ b=AOm4C11Lf7oQX43Ybnb8gdGhbWp9Thqit7hud7a8rzOSefNszqslkIRq+UHwX18pUMGifcTn6//cTGY0Ouolt8TKeXlVrMP8Y4Ad8bIvn4hItiKUGoDU1LIsmxgkP8uxUFKW1FbPddWjqVSt8oSUMY6lckd8/poKRowEUg0cdjtTxadB66UJFCLYCo5sgRoFtHaVQscQt7HYXYz1UJ1DKyQjl60yCSx1JHczktuDq5ALn6hd058CgCsK/tJ2RuRZveOJOcjvQ70vsBCcZA8WgXlOK+baUfYdx+1WyMrOxP2ABmlKMy/PeQs9lXfFWsbRcWl1x2oarPHFJVL0ebChFg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Au+sNWCerbfU3uF+yDwILBID3nw3tmObPa30oZpXa/8=;
- b=LlhmAjrzUwan6vvNed7gXC6/HPg/+RGKJFSbI/InesJQCbuYlbLmjqfOUI8kow6r2oGAfZIvfbEFbOi16HG7vlXJtvP6/xZUGX5ixlGuRkcTZHMacCZ67i2dPuN0+Dxdhq+rauUdJpVWRdxfP0VKsQJ7fVEs2vZIel18lTxXQhygZ8Csv765qKpmKgy7kpZcJ4CJOTY7WtpGwHyOzYFluqwB9HplVGQ+brdEYDFgTsOpsxtnDctRd9CPshPe5YXtYNE4KG9HQKE0FpTYw3i2DcCIj4tcwHdw/cceGlYPKnqolTpm+sb7Pa26oSN1+yYHi2uU1bvw3QnOFfaKIMcFRA==
-Received: from BN0PR04CA0031.namprd04.prod.outlook.com (2603:10b6:408:e8::6)
- by SA1PR12MB8988.namprd12.prod.outlook.com (2603:10b6:806:38e::22) with
+ bh=HsIK77hQFJrLddVsg0DgyO0xQICSpWSe1A5LCoCvd7I=;
+ b=jYmr3Bu+RBvVskQ759SKYkhk8OFEHtn8dNG6P2Jqns6lSWHhbhX/Tx6enf54nZKqIwhd8+XfieqI02uYsVqiZUP0/pRF7ART8i2DyJ+/1iPW81iMd4SoFx7JXmmRsPxRt1c6rSG+nvYO/ZPMbzrd+/yqUDEWQLZiEwhN/sbJPNfXLVK+ejxvwyimqM7y1YNGUxz7bEDEEXCd6D20JKR8y43Yo+ndmTP7+TcsBB+I76+gzbnHnc5I6EF0M/3RQul9riWbLcmAO8novhV32spZ9dROUmgjng8CNVH6nxZ2hvHCBsvg/5f3cU0uARFQDc3mCBqNQLKaOtJqMht1L6kaEw==
+Received: from BY3PR04CA0010.namprd04.prod.outlook.com (2603:10b6:a03:217::15)
+ by MN2PR12MB4471.namprd12.prod.outlook.com (2603:10b6:208:26f::16) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Thu, 22 Jan
- 2026 20:59:16 +0000
-Received: from BN3PEPF0000B078.namprd04.prod.outlook.com
- (2603:10b6:408:e8:cafe::b4) by BN0PR04CA0031.outlook.office365.com
- (2603:10b6:408:e8::6) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.11; Thu, 22 Jan
+ 2026 21:00:13 +0000
+Received: from SJ5PEPF000001D4.namprd05.prod.outlook.com
+ (2603:10b6:a03:217:cafe::9f) by BY3PR04CA0010.outlook.office365.com
+ (2603:10b6:a03:217::15) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9542.11 via Frontend Transport; Thu,
- 22 Jan 2026 20:59:00 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ 22 Jan 2026 21:00:02 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- BN3PEPF0000B078.mail.protection.outlook.com (10.167.243.123) with Microsoft
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ SJ5PEPF000001D4.mail.protection.outlook.com (10.167.242.56) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9564.3 via Frontend Transport; Thu, 22 Jan 2026 20:59:15 +0000
+ 15.20.9564.3 via Frontend Transport; Thu, 22 Jan 2026 21:00:13 +0000
 Received: from rnnvmail205.nvidia.com (10.129.68.10) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 22 Jan
- 2026 12:42:40 -0800
+ 2026 12:42:54 -0800
 Received: from rnnvmail205.nvidia.com (10.129.68.10) by rnnvmail205.nvidia.com
  (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 22 Jan
- 2026 12:42:40 -0800
+ 2026 12:42:54 -0800
 Received: from inno-vm-xubuntu (10.127.8.13) by mail.nvidia.com (10.129.68.10)
  with Microsoft SMTP Server id 15.2.2562.20 via Frontend Transport; Thu, 22
- Jan 2026 12:42:34 -0800
+ Jan 2026 12:42:47 -0800
 From: Zhi Wang <zhiw@nvidia.com>
 To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
@@ -73,161 +74,265 @@ CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
 	<smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
 	<kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
 	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
-	<daniel.almeida@collabora.com>, Zhi Wang <zhiw@nvidia.com>
-Subject: [PATCH v2 0/2] rust: introduce abstractions for fwctl
-Date: Thu, 22 Jan 2026 22:42:29 +0200
-Message-ID: <20260122204232.15988-1-zhiw@nvidia.com>
+	<daniel.almeida@collabora.com>, Zhi Wang <zhiw@nvidia.com>, Jason Gunthorpe
+	<jgg@nvidia.com>
+Subject: [PATCH v2 2/2] samples: rust: fwctl: add sample code for fwctl
+Date: Thu, 22 Jan 2026 22:42:31 +0200
+Message-ID: <20260122204232.15988-3-zhiw@nvidia.com>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260122204232.15988-1-zhiw@nvidia.com>
+References: <20260122204232.15988-1-zhiw@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN3PEPF0000B078:EE_|SA1PR12MB8988:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2f3d75d5-188b-4c7a-bf2a-08de59f91a8e
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001D4:EE_|MN2PR12MB4471:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5c008297-4ead-4391-11c4-08de59f93c9a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700013|7416014|82310400026|376014;
+	BCL:0;ARA:13230040|7416014|1800799024|376014|82310400026|36860700013;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?L2JSQWhsY0pYbEtRT3Y2d1hzWk01YkU5bStDOVlVNXJOcXh1a0FSVEVJNlhw?=
- =?utf-8?B?VzBKZmZjSm0rMnJ6RUt0MWVTT1R3aGlFQTJkWHJRYVA3V1N3SjlnekFvTUdN?=
- =?utf-8?B?UjZEbjhBQzBrOTJRdlJleEVveitjaTBremU1a0xKeVFKSE1JL2Y0MXhIODAw?=
- =?utf-8?B?cmdzQ1d0d1pGck5YS0wyajR4UnY4c2hwN0YxTVBWZEtWdDFZaTFiYk9GUUZm?=
- =?utf-8?B?akZmWHRwM3dHMTRLbU94ZFhvdllnaWxXZ2k0MlZBNFhROG1COWFmbTJ4aXNn?=
- =?utf-8?B?a2ZDQjdYNDJudStaWmVWN05xYzQ2bW4yMVh4VDBYU1NpYk10cWdpNytPNElK?=
- =?utf-8?B?dXAvNG5SWmpRRGc1eU55Z3lMODZOUDA0SG9rOW8yKzM1VDd4VW01Q0RxWnNu?=
- =?utf-8?B?Z2o3eUoveVlpZ1ljd1JlcW1IZ0Ntd1BWbkg1M044TmpPK0RYdWZKUHZrMlN2?=
- =?utf-8?B?Y0FoTjN0OHN4Vi9VRXN1OEt0OHZtU0hYS1NkWm1ueXY3dU1jQmhQVEpCRXhW?=
- =?utf-8?B?dE95TlI5WTVmdUJURjF4RnJrM1NOWmZ1c0tMMVVnRmw1dmMwd295WlREK0hL?=
- =?utf-8?B?Z3FYeUJxNmRpQ044SWVSclJ2K1hTd2F2dFovWnM0cTNZYi9CY0xCUGsxY2c5?=
- =?utf-8?B?V3QvWEZFQWFZcWlnU0RYV1htekVVLzBjUlZRMkRRMkI4UHZrcFRWKzh3VHdh?=
- =?utf-8?B?Tkw1Nm0wYm5VM3lzbzk2b2o0TkJsQ1NyRFVqMUY0aXFnMDFvRjBHeHZSazNM?=
- =?utf-8?B?eVdLWjJXOWtKYlYzb1JnL2lDemJPejQzd3NFWGZSODVWa0lyVERqN3dFaDhW?=
- =?utf-8?B?eGJiUWsvZndBaXQvZlprWnppN0tRaHc1dHRhQ2k2MTZXY0xaQU14Q2p1THBt?=
- =?utf-8?B?OCt3M3p3dVE4M29aYTJvMnhGcGY0V2h1L29ZaHVOQmNoSkFMTzBnYS9LekFD?=
- =?utf-8?B?TFRHaStRSFlXckY5SDZmSzRUMi9mRHV3ajJCcDMyeWllU3ZDUHpsK3hUcGpC?=
- =?utf-8?B?S0w3SUQyMFhOSWVNdkg0cnNnRFBNaHVYZDNOS0YvOE5WQzVtczFQcG55Snk5?=
- =?utf-8?B?b2JjNlE1N0s3SHZRck1qa1lPeWNjUGVLZzlGWExaa1p6RjFJQ3BQemE0eVRW?=
- =?utf-8?B?aDBadXIrb1FFZ2pnblp5dHVwbVJCSHYxN2kvalVyYTBzUU1kUFo5cVh4VCtO?=
- =?utf-8?B?cEE0dHk0a2F0UCs3RnB1NnVMeXoyNFZJUysyeHpjZVJUclJZbGViaEdUU0Ji?=
- =?utf-8?B?NjZXMk5pWWlUOTZteGt1Nlg1enovb1BjekpLVDhDUk9OREJGdk9sVFZVS1o1?=
- =?utf-8?B?RklaTC8wM1JKek1hajRmZmR3N3JSc2dtaHRjOHJNZTV6ZDgyeDBTbUx4QnZB?=
- =?utf-8?B?a2d5WEZKSFdUZCtydXVhcVh2U0J0dWp0Tnc4aW5aTDVUVzdUTFhpWUhHa2dH?=
- =?utf-8?B?QUdTUFRlUm1RT3kzVEZFbnZHUGk4NVRrRjhUbklqOFpJTE1ZbEgrWE05K3hL?=
- =?utf-8?B?Q1dpdGZBbGhjUkpJdzJTRk94NWdDWUxTVm1QOHUrVTlxVC96ek41QWlsTzVR?=
- =?utf-8?B?RjhFMmlXM0lYZEQ2bWZEWCtEcnVHSTFxc0x5V2hzN2JPMGxPRDlmenQ0b0tJ?=
- =?utf-8?B?b3RRYSthVDBxWGVLb1pyMjE5Q1BjV0dmRk5EMEhUZlAyTjdXT0FWcm1kWjZJ?=
- =?utf-8?B?U2NXSnYvd2prNnFqTXhITWRiRHB2UnNYTGM3SGIwaHdpTGg0djRoVW1ocXZn?=
- =?utf-8?B?Nm0xbDhEZzVzMHJGOS9JbW1iRXZRR0lRR2ZXMFpTK3dZenhxcjdyMGJ2Y2Rp?=
- =?utf-8?B?clRhcmlCWkhXVU9GMzdPbk11SWZpRTB5YVVOZlErYW5WR3RhZVBzdml6L1h5?=
- =?utf-8?B?dXVBS2dobExESTFqUStEaE81bWJnRkc2b2FFV1RnY2NMeFh1K2QvT0VadlhK?=
- =?utf-8?B?dW5qS1pWSHNVNVNIcHY0S29oWWRsMW1LRzJ4Z3pCRDAvRThyR3dVY0EyUEZK?=
- =?utf-8?B?ci9NRUpTVUNsdkVTTUhRQUovdmxlcTZZdW1CUzU3MFc2Z0E3c2dJcGM1d0NT?=
- =?utf-8?B?ZlJXUC9RZ3BGZk5YM1kzRTV1RUJJcXFWcWhWaHZzVVlGRGdrZjZHTnJKVG5Z?=
- =?utf-8?B?ZENVN25kSUppWUpCTWhSMnl6OUdnbVFhdUs2UGs0ZUM1eTlLZDZFdmEwOTRl?=
- =?utf-8?B?MDNCZGQyU3l5Y0tHb1ZSblpvVjVGTGVLb1drQ3NVa1hJQzh0cDdiZlllNUpo?=
- =?utf-8?B?bG4rS0pxUU9lUmxVS01tU2ErVkxBPT0=?=
+	=?us-ascii?Q?/AiToN5WXUoUjU5y4C/FZvAtAYnssCZ3IAFcr5xCSRMSGCr+ySutaF7pCYq2?=
+ =?us-ascii?Q?JMo0RFlDlO+kHanf01HWtie/vGcKt3uESY6Wa6x2B+GlkP9VQMBFEyTbh3qr?=
+ =?us-ascii?Q?RFt5gLeXmFHU+4H0YRNvCVD3XvC758mQIbjCxfGZRD/snzNyUicnFXWPzUSf?=
+ =?us-ascii?Q?7duVQiVEDcPB9L18yNh9GbUNKy0DB17rAC3S91iNkNnywodQdtvlHqMbE0N1?=
+ =?us-ascii?Q?F6yvx8S68LRigqIxjtn4Ev6tKPCvZSJKYl2d2yPBVsG72NS1+8fKxNmskJ79?=
+ =?us-ascii?Q?FW2Nqf8XX8jJMx4H0NbusHYBgfTEkGE3Y5PvHPrN7btYTBMZUKrwvxFmPJt3?=
+ =?us-ascii?Q?HVUycqxpUl9NNThCGnLu1Bd1hRm154t1bmBiVTa1kNKtwJC5T+HH3mGPf9nM?=
+ =?us-ascii?Q?wAwoBAp1s810tvRB5sBC+uUhg1Vnk48OfqtX6aD0nyW1Lb6sNvILUnGeP3RW?=
+ =?us-ascii?Q?ZIArG7kVrrRgapqZ9mkoBwY/uCeKHL7oA5DdumM7F/vLTev0ZjPH6zU4e0cv?=
+ =?us-ascii?Q?B7cT2BVb7AdRtY2HJwuM82ORgH7tzCq6WkVecO5Q4OyYwBZUaj2GoodhjGI5?=
+ =?us-ascii?Q?MgwSG106hcjj8Gqd580z4qPjxFI9p8/jLAxZ2lHgBIB8TRGaHvwqKReKBNPW?=
+ =?us-ascii?Q?PJ9KnqY4J7HnMQKeGlRmW+3vMz05pJ+ZMA+pbymIE4o0MRlOFU+j9WPd85bi?=
+ =?us-ascii?Q?Lk4BqVfA4TOIJ3hWW6ZuEiXmmvyUD+RPq7Zu5SVSkM0lJ4gmtZqqSkm0vhdo?=
+ =?us-ascii?Q?HGb1/uOfqoOcWuEuTmFIultQvj4dt/ort4+ArANXzyavK2Rxtxsi0YX8EI95?=
+ =?us-ascii?Q?TDXEq3LwdVE/IRWibF9FQmpnlKO1qilhern9QDa0XOh67l8M6ebu8Rk+HFhJ?=
+ =?us-ascii?Q?IEz1A6Rz57PfgUzrIpENFS+WY2UlHC4HS++e10/k90t0G+b0C79V2bOQHJ0h?=
+ =?us-ascii?Q?u5nfAwwzyl1TbFVB8mTEdlwVxjUhsEzdEVeRQCXhDr4mcE61qxhkQ9x3f0C4?=
+ =?us-ascii?Q?kOOqhp/r5VtsjUxdtLSUyEJYKwTykfrfdpAanttx62bUnhm/mZbc4IeiouJa?=
+ =?us-ascii?Q?sr1QsFg0O23k+QMvO/zsClLg+ZY+Hdi7NBRnfTmDiipnm/VHLIfdHCgG9qn0?=
+ =?us-ascii?Q?YkP06foCdqm83xEFWL0+GQnswGZxI6Oh+lJRnbKfbngRW/mjvnCyVeOl4gjP?=
+ =?us-ascii?Q?kGwQk4YMxpj4ar94wnWjZ07uctub14WEyreN13OsHYEL2Pp9wn+sNTW6afc3?=
+ =?us-ascii?Q?gUGgtW9j7eRn9B6WtdAej5bH12ZxnulctU0UMplALobUYf7KERNEvXIykM0r?=
+ =?us-ascii?Q?Q9Z49iaotwQrDQmLGNpetnT+gQc8N1IEeLa02mkhcHJ+Bsay9BfTAH2MqpHS?=
+ =?us-ascii?Q?Yn5smXELXO1tnf3blJBAbd6NY+rh6Ea13Rylsr5TXKSll3sFwielTYo3gTvx?=
+ =?us-ascii?Q?580Fi5Sr1LOPHyEzeCQruTl4ohT/eIAfRLDQIws4v76FUsTZwfqdJUmJcw6a?=
+ =?us-ascii?Q?OEyd5gZhViLtZVWoaveQDDgovKIlIydNg7ZP0w0U3k0V9WYnW9Lk8FkCma2m?=
+ =?us-ascii?Q?mRFw1fNrN4tryxnI64Ke73vID8bxQaMCccc8sf64CNZxtUWgLLFSUPrvlfWE?=
+ =?us-ascii?Q?1R2BmI+QdT9kqS65eSKEis/Faw7XJHa1UCHDLn4VjuKck78pLHyQxzjdvQSp?=
+ =?us-ascii?Q?i3KWrQ=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700013)(7416014)(82310400026)(376014);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(82310400026)(36860700013);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 20:59:15.8459
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 21:00:13.0348
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2f3d75d5-188b-4c7a-bf2a-08de59f91a8e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5c008297-4ead-4391-11c4-08de59f93c9a
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN3PEPF0000B078.namprd04.prod.outlook.com
+	SJ5PEPF000001D4.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8988
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4471
 
-In the NVIDIA vGPU RFC [1], the vGPU type blobs must be provided to the GSP
-before userspace can enumerate available vGPU types and create vGPU
-instances. The original design relied on the firmware loading interface,
-but fwctl is a more natural fit for this use case, as it is designed for
-uploading configuration or firmware data required before the device becomes
-operational.
+This patch adds a sample Rust driver demonstrating the usage of the fwctl
+Rust abstractions. Add sample code for creating a FwCtl device, getting
+device info and issuing an RPC.
 
-This patch introduces a Rust abstraction over the fwctl subsystem,
-providing safe and idiomatic bindings.
-
-The new `fwctl` module allows Rust drivers to integrate with the existing
-C-side fwctl core through a typed trait interface. It provides:
-
-  - `Operations` trait — defines driver-specific operations such as
-    `open_uctx()`, `close_uctx()`, `info()`, and `fw_rpc()`.  
-    Each Rust driver implements this trait to describe its own per-FD
-    user-context behavior and RPC handling.
-
-  - `UserCtx<T>` — a generic wrapper around `struct fwctl_uctx`
-    embedding driver-specific context data, providing safe conversion
-    from raw C pointers and access to the parent device.
-
-  - `Registration<T>` — safe registration and automatic unregistration
-    of `struct fwctl_device` objects using the kernel's device model.
-
-  - `VTable<T>` — a static vtable bridging C callbacks and Rust
-    trait methods, ensuring type safety across the FFI boundary.
-
-`rust/kernel/lib.rs` is updated to conditionally include this module
-under `CONFIG_FWCTL`.
-
-The repo with the patches can be found at [2].
-
-v2:
-
-- Don't open fwctl_put(). Add a rust helper. (Jason/Danilo)
-- Wrap Registration with Devres to guarantee proper lifetime management.
-  (Jason/Danilo)
-- Rename FwctlOps to Operations, FwctlUserCtx to UserCtx, FwctlDevice to
-  Device. (Danilo)
-- Use fwctl::DeviceType enum instead of raw u32 for DEVICE_TYPE. (Danilo)
-- Change fwctl_uctx field in UserCtx to Opaque<bindings::fwctl_uctx> and
-  make it private. (Danilo)
-- Provide Deref and DerefMut implementations for UserCtx::uctx. (Danilo)
-- Add UserCtx::parent_device_from_raw() to simplify parent device access.
-- Use cast() and cast_mut() instead of manual pointer casts. (Danilo)
-- Implement AlwaysRefCounted for Device and use ARef<Device> in
-  Registration. (Danilo)
-- Add rust_helper_fwctl_get() for reference counting.
-- Improve safety comments for slice::from_raw_parts_mut() in
-  fw_rpc_callback. (Danilo)
-- Convert imports to vertical style.
-- Fix all clippy warnings.
-
-v1:
-
-- Initial submission introducing fwctl Rust abstractions.
-
-[1] https://lore.kernel.org/all/20250903221111.3866249-1-zhiw@nvidia.com/
-[2] https://github.com/zhiwang-nvidia/driver-core/tree/fwctl-rust-abstraction-v2
-
-Zhi Wang (2):
-  rust: introduce abstractions for fwctl
-  samples: rust: fwctl: add sample code for fwctl
-
- drivers/fwctl/Kconfig             |  12 +
- include/uapi/fwctl/fwctl.h        |   1 +
- rust/bindings/bindings_helper.h   |   1 +
- rust/helpers/fwctl.c              |  17 ++
- rust/helpers/helpers.c            |   3 +-
- rust/kernel/fwctl.rs              | 456 ++++++++++++++++++++++++++++++
- rust/kernel/lib.rs                |   2 +
- samples/rust/Kconfig              |  11 +
+Cc: Danilo Krummrich <dakr@kernel.org>
+Cc: Jason Gunthorpe <jgg@nvidia.com>
+Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+---
+ samples/rust/Kconfig              |  11 +++
  samples/rust/Makefile             |   1 +
- samples/rust/rust_driver_fwctl.rs | 136 +++++++++
- 10 files changed, 639 insertions(+), 1 deletion(-)
- create mode 100644 rust/helpers/fwctl.c
- create mode 100644 rust/kernel/fwctl.rs
+ samples/rust/rust_driver_fwctl.rs | 136 ++++++++++++++++++++++++++++++
+ 3 files changed, 148 insertions(+)
  create mode 100644 samples/rust/rust_driver_fwctl.rs
 
+diff --git a/samples/rust/Kconfig b/samples/rust/Kconfig
+index c49ab9106345..3d0b223caa89 100644
+--- a/samples/rust/Kconfig
++++ b/samples/rust/Kconfig
+@@ -172,6 +172,17 @@ config SAMPLE_RUST_SOC
+ 
+ 	  If unsure, say N.
+ 
++config SAMPLE_RUST_DRIVER_FWCTL
++	tristate "Fwctl Driver"
++	depends on FWCTL
++	help
++	  This option builds the Rust Fwctl driver sample.
++
++	  To compile this as a module, choose M here:
++	  the module will be called rust_driver_fwctl.
++
++	  If unsure, say N.
++
+ config SAMPLE_RUST_HOSTPROGS
+ 	bool "Host programs"
+ 	help
+diff --git a/samples/rust/Makefile b/samples/rust/Makefile
+index 6c0aaa58cccc..6f6030e64727 100644
+--- a/samples/rust/Makefile
++++ b/samples/rust/Makefile
+@@ -14,6 +14,7 @@ obj-$(CONFIG_SAMPLE_RUST_DRIVER_PLATFORM)	+= rust_driver_platform.o
+ obj-$(CONFIG_SAMPLE_RUST_DRIVER_USB)		+= rust_driver_usb.o
+ obj-$(CONFIG_SAMPLE_RUST_DRIVER_FAUX)		+= rust_driver_faux.o
+ obj-$(CONFIG_SAMPLE_RUST_DRIVER_AUXILIARY)	+= rust_driver_auxiliary.o
++obj-$(CONFIG_SAMPLE_RUST_DRIVER_FWCTL)		+= rust_driver_fwctl.o
+ obj-$(CONFIG_SAMPLE_RUST_CONFIGFS)		+= rust_configfs.o
+ obj-$(CONFIG_SAMPLE_RUST_SOC)			+= rust_soc.o
+ 
+diff --git a/samples/rust/rust_driver_fwctl.rs b/samples/rust/rust_driver_fwctl.rs
+new file mode 100644
+index 000000000000..ac5f979fd73b
+--- /dev/null
++++ b/samples/rust/rust_driver_fwctl.rs
+@@ -0,0 +1,136 @@
++// SPDX-License-Identifier: GPL-2.0
++
++//! Rust fwctl API test (based on QEMU's `pci-testdev`).
++//!
++//! To make this driver probe, QEMU must be run with `-device pci-testdev`.
++
++use kernel::{
++    bindings,
++    device,
++    device::Core,
++    devres::Devres,
++    fwctl,
++    pci,
++    prelude::*,
++    sync::aref::ARef,
++    types,
++};
++
++struct FwctlSampleUserCtx {
++    _drvdata: u32,
++}
++
++struct FwctlSampleOps;
++
++impl fwctl::Operations for FwctlSampleOps {
++    type UserCtx = FwctlSampleUserCtx;
++
++    const DEVICE_TYPE: fwctl::DeviceType = fwctl::DeviceType::RustFwctlTest;
++
++    fn open(
++        fwctl_uctx: &types::Opaque<bindings::fwctl_uctx>
++    ) -> Result<impl PinInit<Self::UserCtx, Error>, Error> {
++        let dev = fwctl::UserCtx::<Self::UserCtx>::parent_device_from_raw(fwctl_uctx);
++
++        dev_info!(dev, "fwctl test driver: open_uctx()");
++
++        // Return an initializer for the user context.
++        // The framework will initialize this in-place in the C-allocated memory.
++        Ok(try_init!(FwctlSampleUserCtx {
++            _drvdata: 0,
++        }))
++    }
++
++    fn close(uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>) {
++        let dev = uctx.get_parent_device();
++
++        dev_info!(dev, "fwctl test driver: close_uctx()");
++    }
++
++    fn info(uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>) -> Result<KVec<u8>, Error> {
++        let dev = uctx.get_parent_device();
++
++        dev_info!(dev, "fwctl test driver: info()");
++
++        let mut infobuf = KVec::<u8>::new();
++        infobuf.push(0xef, GFP_KERNEL)?;
++        infobuf.push(0xbe, GFP_KERNEL)?;
++        infobuf.push(0xad, GFP_KERNEL)?;
++        infobuf.push(0xde, GFP_KERNEL)?;
++
++        Ok(infobuf)
++    }
++
++    fn fw_rpc(
++        uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>,
++        scope: u32,
++        rpc_in: &mut [u8],
++        _out_len: *mut usize,
++    ) -> Result<Option<KVec<u8>>, Error> {
++        let dev = uctx.get_parent_device();
++
++        dev_info!(dev, "fwctl test driver: fw_rpc() scope {}", scope);
++
++        if rpc_in.len() != 4 {
++            return Err(EINVAL);
++        }
++
++        dev_info!(
++            dev,
++            "fwctl test driver: inbuf len{} bytes[0-3] {:x} {:x} {:x} {:x}",
++            rpc_in.len(),
++            rpc_in[0],
++            rpc_in[1],
++            rpc_in[2],
++            rpc_in[3]
++        );
++
++        let mut outbuf = KVec::<u8>::new();
++        outbuf.push(0xef, GFP_KERNEL)?;
++        outbuf.push(0xbe, GFP_KERNEL)?;
++        outbuf.push(0xad, GFP_KERNEL)?;
++        outbuf.push(0xde, GFP_KERNEL)?;
++
++        Ok(Some(outbuf))
++    }
++}
++
++#[pin_data]
++struct FwctlSampleDriver {
++    pdev: ARef<pci::Device>,
++    #[pin]
++    fwctl: Devres<fwctl::Registration<FwctlSampleOps>>,
++}
++
++kernel::pci_device_table!(
++    PCI_TABLE,
++    MODULE_PCI_TABLE,
++    <FwctlSampleDriver as pci::Driver>::IdInfo,
++    [(pci::DeviceId::from_id(pci::Vendor::REDHAT, 0x5), ())]
++);
++
++impl pci::Driver for FwctlSampleDriver {
++    type IdInfo = ();
++    const ID_TABLE: pci::IdTable<Self::IdInfo> = &PCI_TABLE;
++
++    fn probe(pdev: &pci::Device<Core>, _info: &Self::IdInfo) -> impl PinInit<Self, Error> {
++        dev_info!(pdev.as_ref(), "Probe fwctl test driver");
++
++        // `pdev` is `Device<Core>`, which derefs to `Device<Bound>` during probe.
++        let pdev_bound: &pci::Device<device::Bound> = pdev;
++
++        try_pin_init!(Self {
++            pdev: pdev.into(),
++            fwctl <- fwctl::Registration::<FwctlSampleOps>::new(pdev_bound.as_ref()),
++        })
++    }
++}
++
++kernel::module_pci_driver! {
++    type: FwctlSampleDriver,
++    name: "rust_driver_fwctl",
++    authors: ["Zhi Wang"],
++    description: "Rust fwctl test",
++    license: "GPL v2",
++    imports_ns: ["FWCTL"],
++}
 -- 
 2.51.0
 
