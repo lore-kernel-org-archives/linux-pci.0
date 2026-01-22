@@ -1,84 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72EBF279792
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 00:18:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3D2B34A3AC;
+	Thu, 22 Jan 2026 01:17:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769041091; cv=none; b=ckIwd2Cb+gSzK0eEmx2qial/bnepi51ztnVg2i1KiCL5PwVT0f1ompT9kEI8I6fjsSRKl3D5YYW/wuew7Jzn1d9jjZMXJapYFASjBYHP60XAi0bzDwEw3DP0TldUDF4oqVpjD/dGG6F8VIS/qwHZ+hHorzb0mxMi9Aww6vVWtMQ=
+	t=1769044667; cv=none; b=EZjO+/4KuwzQE0u5TkhEus2ujE7DwbnpxZsp8oyH2fZ5MEb0sP7N2C5yGy0CLSrErdh6fAhQ1hx182ILmEUFWqeguK6WcjVNgkS6tmnX517ee6KjABYmBcDNrzcC6H6WB7BE315LMCQilsgAo4o2GMkg5tODkqgyiJWWAxhctFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769041091; c=relaxed/simple;
-	bh=RvY3CWGtgvRFdFn9FaPl6TtsowWqn9t9vFU9KNYnNn8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=IUvJA8rRizniWJGvwnzcj0+/32hbfe/6K/JNfipZknRoE/zVs3qcm6/Ad/HT5SdI6Q6ZzzTsGwVRDqhnVlivSVzR6fX258ybf2s4FMi16QIbPi/36tdej5AweUz52LLowGj1Ovk9uH80r83oj9J+6nef/lbZ3rzoXTx/SkmAeHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uu++wl3t; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769044667; c=relaxed/simple;
+	bh=X/ZqB3F3uxrlq5fnYhJF9YmflnuXgYbIuIyXLKPZrBg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MgmGC0ZXWAXIulWQnJ0cO4yz+uixoRxVbxM7rp1KM3ck+meIYWeYfyKb7Ugh9DyirrJP2gv6qEwJF86hrs0DTTJiZ0wlLOydHZtnd3zFeK7AgiCr9/5fCfoEkH2h8WF9TXe2bPNT38PZ+CMuSV6xBfKqojf0qt3dsMUtWjosq0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=g2LIQrzO; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uu++wl3t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D84DAC4CEF1;
-	Thu, 22 Jan 2026 00:18:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769041091;
-	bh=RvY3CWGtgvRFdFn9FaPl6TtsowWqn9t9vFU9KNYnNn8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=uu++wl3tpTckZsn6eKA5id3lgKVUJnQaFgcjB7BKA4BugqXLEaM/WUI5Esl5S5z7G
-	 SJvcz/QNoQaxcA8L+G6tzsqnyCQGzChlrAKEzDCXa5QI8orNiJA9QvdXtZ8K3h4WQ6
-	 nAKDwgRQfcWnUh9HCeGZmjkt8Eel3ItMI5b+YfgRiGuWYy/s6zkwPsnoapI7BROwKZ
-	 pMyBr+Q5Y9pDo9krkLJaHuWCo/kg6laiffuOt1ufgIqeABK70z20/53kHcKRUkDxSI
-	 lGDwedM7Z3abeG4OkubzqM0UxSNDHKj8LH231we0+BsRbXWOU01HXm6+MerMiZmfM0
-	 GmgphrBXRCD3A==
-Date: Wed, 21 Jan 2026 18:18:09 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?SsO2cmc=?= Wedekind <joerg@wedekind.de>
-Cc: linux-pci@vger.kernel.org, aradford@gmail.com
-Subject: Re: PCI: Mark 3ware-9650SA Root Port Extended Tags as broken
-Message-ID: <20260122001809.GA1225722@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="g2LIQrzO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769044665; x=1800580665;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=X/ZqB3F3uxrlq5fnYhJF9YmflnuXgYbIuIyXLKPZrBg=;
+  b=g2LIQrzOL6/g6roedPhAcsi1NzF3d7V0/jmrsxBEPBcvwTBgeuwiBsrV
+   OcgwZ2bIZyVTFtTGpGdsuZtGQtAcSv2mwDKd9tHCA/NZAD9+D5RCzX+Yq
+   WKh6LK8eHMVYf330Rlv8fF9eJt4HW3z5YSzsnzE/L1iB+am2G66wnMQl5
+   +IpS2h9BzGynM8FpXE7F38rpRQY0ALJejYy52UwaHG7LMvHzKsaWDUoWv
+   XKAcpeK947ahguFCeOTk7wiEmdpuXxyB0rNRnAAR1qKBUxohor2xWQ2dh
+   ea40fanPbbdeclXxU7l7fw0sCq1jHX2eiKypoxhwbl5CiWkyB6lrInsmn
+   w==;
+X-CSE-ConnectionGUID: bFyTSJWRRSS0tO2w+vYeQg==
+X-CSE-MsgGUID: O58ZeufQRkSNisxCyFGhow==
+X-IronPort-AV: E=McAfee;i="6800,10657,11678"; a="69480623"
+X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
+   d="scan'208";a="69480623"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 17:17:38 -0800
+X-CSE-ConnectionGUID: TRMk+zZkTl2jUQY/JKcenQ==
+X-CSE-MsgGUID: dNgfp8zFQiqosj5IRWLZPw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,244,1763452800"; 
+   d="scan'208";a="211449798"
+Received: from allen-sbox.sh.intel.com (HELO [10.239.159.30]) ([10.239.159.30])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2026 17:17:34 -0800
+Message-ID: <fa3e55e1-3cf4-4b73-8b5e-192a19a18f3b@linux.intel.com>
+Date: Thu, 22 Jan 2026 09:17:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260119143114.21948-1-joerg@wedekind.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
+To: Jason Gunthorpe <jgg@nvidia.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: "Tian, Kevin" <kevin.tian@intel.com>, Nicolin Chen <nicolinc@nvidia.com>,
+ "will@kernel.org" <will@kernel.org>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "Williams, Dan J" <dan.j.williams@intel.com>,
+ "joro@8bytes.org" <joro@8bytes.org>, "praan@google.com" <praan@google.com>,
+ "miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ linux-cxl@vger.kernel.org
+References: <cover.1768624180.git.nicolinc@nvidia.com>
+ <d1768bb6384050a23769f20ca28216f520f77e26.1768624181.git.nicolinc@nvidia.com>
+ <BL1PR11MB5271F0BDC68C2D7F172122E98C96A@BL1PR11MB5271.namprd11.prod.outlook.com>
+ <20260121100307.00004e60@huawei.com> <20260121130315.GE1134360@nvidia.com>
+Content-Language: en-US
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <20260121130315.GE1134360@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jan 19, 2026 at 03:31:10PM +0100, Jörg Wedekind wrote:
-> Per PCIe r6.1, sec 2.2.6.2 and 7.5.3.4, a Requester may not use 8-bit Tags
-> unless its Extended Tag Field Enable is set, but all Receivers/Completers
-> must handle 8-bit Tags correctly regardless of their Extended Tag Field
-> Enable.
+On 1/21/26 21:03, Jason Gunthorpe wrote:
+> On Wed, Jan 21, 2026 at 10:03:07AM +0000, Jonathan Cameron wrote:
+>> On Wed, 21 Jan 2026 08:01:36 +0000
+>> "Tian, Kevin"<kevin.tian@intel.com> wrote:
+>>
+>>> +Dan. I recalled an offline discussion in which he raised concern on
+>>> having the kernel blindly enable ATS for cxl.cache device instead of
+>>> creating a knob for admin to configure from userspace (in case
+>>> security is viewed more important than functionality, upon allowing
+>>> DMA to read data out of CPU caches)...
+>>>
+>> +CC Linux-cxl
+> A cxl.cache device supporting ATS will automatically enable ATS today
+> if the kernel option to enable translation is set.
 > 
-> Some devices do not handle 8-bit Tags as Completers, so add a quirk for
-> them.  If we find such a device, we disable Extended Tags for the entire
-> hierarchy to make peer-to-peer DMA possible.
-> 
-> The 3ware 9650SA seems to have issues with handling 8-bit tags. Mark it as
-> broken.
-> 
-> This fixes PCI Parity Errors like :
-> 
->   3w-9xxx: scsi0: ERROR: (0x06:0x000C): PCI Parity Error: clearing.
->   3w-9xxx: scsi0: ERROR: (0x06:0x000D): PCI Abort: clearing.
->   3w-9xxx: scsi0: ERROR: (0x06:0x000E): Controller Queue Error: clearing.
->   3w-9xxx: scsi0: ERROR: (0x06:0x0010): Microcontroller Error: clearing.
-> 
-> Link: https://lore.kernel.org/r/20240219132811.8351-1-joerg@wedekind.de
-> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=202425
-> Signed-off-by: Jörg Wedekind <joerg@wedekind.de>
+> Even if the device is marked untrusted by the PCI layer (eg an
+> external port).
 
-Applied to pci/enumeration for v6.20, thanks!
+I don't follow here. The untrusted check is now in pci_ats_supported():
 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 280cd50d693b..211b7f72d103 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5581,6 +5581,7 @@ static void quirk_no_ext_tags(struct pci_dev *pdev)
->  	pci_walk_bus(bridge->bus, pci_configure_extended_tags, NULL);
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_3WARE, 0x1004, quirk_no_ext_tags);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_3WARE, 0x1005, quirk_no_ext_tags);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0132, quirk_no_ext_tags);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140, quirk_no_ext_tags);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0141, quirk_no_ext_tags);
+/**
+  * pci_ats_supported - check if the device can use ATS
+  * @dev: the PCI device
+  *
+  * Returns true if the device supports ATS and is allowed to use it, false
+  * otherwise.
+  */
+bool pci_ats_supported(struct pci_dev *dev)
+{
+         if (!dev->ats_cap)
+                 return false;
+
+         return (dev->untrusted == 0);
+}
+EXPORT_SYMBOL_GPL(pci_ats_supported);
+
+The iommu drivers (intel/amd/arm-smmuv3) all call pci_ats_supported()
+before enabling ATS on a device. Anything I missed?
+
+> 
+> Yes this is effectively a security issue, but it is not really a CXL
+> specific problem.
+> 
+> We might perfer to not enable ATS for untrusted devices and then fail to
+> load drivers for "ats always on" cases.
+> 
+> Or maybe we can enable one of the ATS security features someday,
+> though I wonder if those work for CXL..
+
+Thanks,
+baolu
