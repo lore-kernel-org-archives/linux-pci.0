@@ -1,242 +1,161 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azolkn19012015.outbound.protection.outlook.com [52.103.23.15])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1C5133EAEC;
-	Thu, 22 Jan 2026 07:10:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.23.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769065852; cv=fail; b=B+ixcH/bGkDloV/qdL3+LGm/6yjEn4pSY08TQPxLjp+x3eeNhZ+SN1Mu9TsWmBmxIa7IKu6iM5vJdOZeQpdMlLU5cI4QdQP43kVnfq4RF4EaTPpV4lVwDYkLDoI7n2EWoUVNYM7JSstw2QJMM5FF78Dp4GOguOZA1L8O70aWru8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769065852; c=relaxed/simple;
-	bh=XGUmEL3iyWSPhTgXjqdlV0mKDCf8FLqvc1p40vUzrl4=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=kQhkfwbCE7VcvQVeyKfEZ6pPEhOVbfhpRqOh0X6SKQi1/XdBZvd5+UqK3u9AvnpMZMY1o9xaYqcHC6cNhkW+nwLXFisa/pVu4TOpsT4AAviZCDwjm05lM+upWCcSPoYcbPoCYxL4mW/w/EgLy0F5CuMcRd5Y3mCn7qvgiGYB9zI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=pC/xGsQN; arc=fail smtp.client-ip=52.103.23.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D652FA0C6
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 07:45:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769067934; cv=none; b=IFLZG1Bqx0WMkzjewc3ky/kL8LVp2XK31NG70l6ngTHdIcGj9gZZyfE1ZkrCPmlyW3uEFrXTtLNrohQxt4YUxZPKXUvF716ZfrUgyHA9tg2nl4mpSFhGTyG+WVJWhDaL1toLUJdowpUL3KYqoliRNeY2NLrQiRsANbfV9vbafqA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769067934; c=relaxed/simple;
+	bh=PMstPFg1QN7a4XoG9VnKG/9ifAd+dRDq/L+1XKm6iRc=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=O76DsZK0yJKk6wPTeOiy3L00808LHM6IqXV27mYCRb8iUC5tPkReNFxLvqLApgjX/uDPfW4wZzwWPraD0ZYakdBXMt6x3h1ZsPwh41kH8BzGXn9hmXBROV8LpmG4F8crSUopAWJhwrzn8D2XI6mitnRZCo5SAIHtjNn23KPfFcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=LPyfvjzV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=DqFavM5H; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="pC/xGsQN"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=y0EVbzlguzvjf7JvWBlJWbhZsAKqFN+2iKZ/g5NRUxznOFiIXlHN1Gzrp+AKilLFGUgg1Bl2Pdd5ACe72m9lztYE2PHdp4gYw7rWCnGtSXp/WXI7J5t35jd555j4t0mZtnUv2IwXDTx4d+hGr+ZpxOKERqVKdz8tpGc/WqjqYDjqy1mLBwGNB/1VoCzAXWdF73U5Ha6z7JmTI3ovUY+3bWAh3IRrr/BmcLf8CMDfWXjOoJfwEXk2OPa/jF3qdIX20UbH6mr6JDj4lZBQ2iuqHd2N7k7eTT4ByjtLNIEMR99XLscLd4Z5K7TLCH3LEtCxBCAeqOS28hScAC6/myYYDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kHAKnWWLTwZ5jXgpdw5sMY/IANnqNwAv6t5WGOT3Ss0=;
- b=JSoj7d0g1yium88JI7FuxH9nLpScEA9AXjNBRG7Y5Xzsg1hmtkT34mKG18pnA5jl69s7vPCfNocgU0kOI7tX+b+q/X6yIJrIV2c6fkUi3npBPirLXQNxjbc5ylCfUsrsHO/Xt2HMbO71V+clgPOBYv5JdZ2DvB2nmqPlGP9TXwAzPnCz4udRN45hiB+QkzpIn0KjTs2z7SsxAYMX9fbmArxDEzIaXMF/1Mz0tkhfYc6AHhv76c3iLaN1ZRn9mW/sF89ZzdLumR76Gx1CL1qGtoTwVa+uD4Vm+QYmniXu4TuVfUZ7Q3kRlNDdNi1hN7yICslea2+IcIn6QjJJRFWZnA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kHAKnWWLTwZ5jXgpdw5sMY/IANnqNwAv6t5WGOT3Ss0=;
- b=pC/xGsQNALJo4ZI8N761fKh+t3/Au3pAHnktgC7JKnX81/orx+fGWgvMPnq/Ae5B2iuuippShxIAyDI7piwFCAIdj3BgDK/mBzzrc8M/4mhwlRF4XkXwxvIUPbhV2S50oAzAJYVG3FYPHf55TzN5AmgDuIYhX/cJpUgT06vOJowFHry75OE9XV591reKIKliNivYzMQU278QOjLqVB0dHkLtnt5ty2lBVJYEEmelYUdIevGGgwzBPJNzfR9evIQsDx5OYTEEF62sNDHCawHLR/OpAOk8PoQl6lQ6mmzL2WRpNzGvkdk+A1AlUvWggS9DcndRBnDljJ2s2kJZJQ3Rgw==
-Received: from BN7PR02MB4148.namprd02.prod.outlook.com (2603:10b6:406:f6::17)
- by CH0PR02MB8106.namprd02.prod.outlook.com (2603:10b6:610:10b::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Thu, 22 Jan
- 2026 07:10:33 +0000
-Received: from BN7PR02MB4148.namprd02.prod.outlook.com
- ([fe80::6007:d1a1:bcf9:58ef]) by BN7PR02MB4148.namprd02.prod.outlook.com
- ([fe80::6007:d1a1:bcf9:58ef%3]) with mapi id 15.20.9542.008; Thu, 22 Jan 2026
- 07:10:33 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Dexuan Cui <decui@microsoft.com>, "kys@microsoft.com" <kys@microsoft.com>,
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
-	<wei.liu@kernel.org>, "longli@microsoft.com" <longli@microsoft.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "jakeo@microsoft.com" <jakeo@microsoft.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Topic: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Index: AQHci0NePIGSa/9NGkCUvIR93cd3gLVdwUXw
-Date: Thu, 22 Jan 2026 07:10:32 +0000
-Message-ID:
- <BN7PR02MB41486A6DBF839D5BC5D5BC2ED497A@BN7PR02MB4148.namprd02.prod.outlook.com>
-References: <20260122020337.94967-1-decui@microsoft.com>
-In-Reply-To: <20260122020337.94967-1-decui@microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BN7PR02MB4148:EE_|CH0PR02MB8106:EE_
-x-ms-office365-filtering-correlation-id: 7376c28b-f9ba-4070-9ec9-08de5985555a
-x-ms-exchange-slblob-mailprops:
- Cq7lScuPrnr9cOglUl1urTSFBsjx1OD0RkGOmUOhulYG0UrzW4DLpn9iw7djZ3nyqbHkoiTKFh/q0v1e+uOn31q0wO+tXQMW0sarPIMhr7EDCtc+U51jeJn6ON/ZdvItsmJ2xct6rLj6vK5cfJmYVlKFHKhDjleTXwMw80Y/cwTDVzD3UO8mgmkmlkOwMODo+P3V6AbHalwOZCIiq7rsPfeoz8EGFKYywPAjgOy2rjsKjYnkadZOmkrAfBh6pPCcBiSukGSVOQ7KFaAFfz54myvbnHzyHWyEcE7NHkHyBOFVI4Nn67mvQpycINfkfxLdFZAyy5ud3lNnvVITwIxz5CLJka5Yja2DJLHWBcSeFX7psqNhWBs/h6/rtW4nCHcf/Ei9ekfZqDfpU2xs7SqsR5hoWWPCTptlxf0w1fr8t7OsWrD+fXtH1tWG+5SD3i1HaSHaG2RbCRbfGv4Z9o1J6viVc0LLQbQBbeuPT0FtXvsoEFFjPDgqvm9ylWe40P76RzZbAXq4PSNXKitsG/y0wdW1WzuQ7zm/0tUxZ4oFBGCgnvBrNTWp6veB98JoBWcv+sqzoi+Fyx2HjZLd2G8pYTLqnWgT/aph7VW1KwLN+Jx0L1M8xuneQDu2u1Rop6ZH4WoxZj1b2YWoS2eqZ4gZOQQxCogA5s1WwwY5d4DzAffjULLWLn2kScNMwpjAY8lrtE0g1qm/CjPvT/3w3P47/qUKPmIYXA8BhN/QvFusDZnFq+VjhTkWFmcGAHlE8HaqUsDBCitQWWg=
-x-microsoft-antispam:
- BCL:0;ARA:14566002|8062599012|8060799015|19110799012|13091999003|15080799012|31061999003|41001999006|12121999013|461199028|52005399003|40105399003|3412199025|440099028|102099032;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?XdjkHXOMzYmgqAQe6YFEaJmXUQFw9Ebr4DGigHkIjp5RKenxX5kLyZouLqE+?=
- =?us-ascii?Q?8sq5cfCCtEnOJUMuaVla1S+IGEjPNiutubepWLhn4ibPnB6Y0H3+bUHlQjX9?=
- =?us-ascii?Q?bpQmriaCQBSatXAUBHH58e6nH+zlmNCL+a6VJ7X0Zz6Wrt9LsOSLwYAhdBQF?=
- =?us-ascii?Q?UJRaKteH2KzZRLfl0w7opg7Ki02555tP+Mq4zw93ssjgtd1mWCLfAzRCa/90?=
- =?us-ascii?Q?mv/YiM3d4WqBCL8TKXDPJoKHgvurPW/G2Ej0+DfOCMs/y0PRtoxat0y27l64?=
- =?us-ascii?Q?B4mGJYThh3LfHdnxzv2/mmsgOgfHmRQmoyQMoOof6uKhQMvlrwvItD+5oYSa?=
- =?us-ascii?Q?SNUELBGA3lggw8wkTcE8DB9GS+qgXL/NStYWeF7Hv0w20MmEG6uu7G/10kmz?=
- =?us-ascii?Q?4fGybsBFKReHiO3ZNmK14srFRK/UQ2phWAfzgSXA2XXh6adt2iRnmLbarTI5?=
- =?us-ascii?Q?UTiogSDyg9hqe2bDMwqxXpgcolHI15xdHOyGiKvir+fhF7t1KlgcPwKeS0bK?=
- =?us-ascii?Q?3VtJyIljNOKu0cr9re2R0TzfZD+Uk+jrSH4lM04chOef94YA5j2bbysjiUxC?=
- =?us-ascii?Q?/aonykCdnQgGJh4ApLzk2N7H4cV97PrNX8HIdMSt2u2eBPEhYf1k7/EIBn4b?=
- =?us-ascii?Q?ZIpgN1GnlwF6ufE5J0RYokmKEIb/7YCx1wsUSEL1S9dGYYQH0Cc+ohrsqOdG?=
- =?us-ascii?Q?LZ9hS0ov9yRiOqJCe92XKXEsLdwl3BYqpg0nBKlsv5hn+KXYS4V/vYZ7js4O?=
- =?us-ascii?Q?LpJzZzgtQSdXai3T7jmRWMWjm340U7HIz+0YawmtaoBeT8sm3uTiPL8nZIAx?=
- =?us-ascii?Q?BYSlIrDgM24eETd0AzBB62Nt4T9Di/uv1V9bkI1xPdIXgge1pdpmuOsFlSar?=
- =?us-ascii?Q?/mSECdTpB1nLbT2h9TOQ3fDvvfUIcb0zIi2Ac2sfJy+uk26hNzVYEnFF3TsW?=
- =?us-ascii?Q?lXcoM1/HBUa1b/DlTHDGv6NVp1glYOX3obAVasPs3Te1qXduOpAsf9K5eGZX?=
- =?us-ascii?Q?3QQIqPLrMDVXLCSGAw5m4klj5BvFqc9S/k/4t7kosxfXu9p5bOV/EqwJ4yiO?=
- =?us-ascii?Q?IzzFxUNjtwLX1vPkOTKFBbVm1RLRisR9/P4uQx6BDQXFnlqnyMZRqsw+cFhQ?=
- =?us-ascii?Q?05v7X3Qe73OWwBpgxyO2UjEMwyTRTA/7n0GoabZodvF5I64fgnzrOKG4SQOu?=
- =?us-ascii?Q?cyY7qxPWuBAGjBtovUVdFtJOO+vFSuzt16s0r8X78o1EUKdhlvGjLcCTivb5?=
- =?us-ascii?Q?L22ka6OcIGY1Ljpng8EemjT1PAUBvwweeLUcSW4zrQ=3D=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?fGMsf9AVfusQamuoezCRkPgC3xYlLMLMMguB8pgAXHvk4YyrYyKroLljG1sr?=
- =?us-ascii?Q?gdEoOp2trmr5SoGkWOs8JJgT8XjW1dKc3N3la/gW44fahsd2NylulbR7kDSS?=
- =?us-ascii?Q?x+Q7IGXJS6IVceSTO8yb+L2ZHA6vRRPwu9Yq7QFLjId6RSRfyZoo7Yb3FPt/?=
- =?us-ascii?Q?GxxQnFQQwFxD7bXKToRApvDfvqrQiO9ct0DY7O+AL+8/RfJn2tT+xZSgEOy+?=
- =?us-ascii?Q?numHLEZp5MPAx717hzGETpHXHLOZ9xCup/h7swpXBy7UuBe3YBv/hQHYRR+l?=
- =?us-ascii?Q?rUzrM6JRmtPxSULyE8UcsRrJODRviZjT06yX9rbs3XspkI/b46UDbr7EZQFK?=
- =?us-ascii?Q?VwwD6P+Iqokm7nJM8/YU9kgSd6O1H7UOsJxC0Gcj+DKNJCoVzszHMPqURdJY?=
- =?us-ascii?Q?O/mG70Fo5DNtJEXVHhmAMIForFpMODIVvMuGDcCBMydIQ6N11s/ERLmVpPVn?=
- =?us-ascii?Q?bcA7NkOQoTfw9IHcyBrkW8QsZP1d8//VkTBKRPqBQoIXWMtYn++OeKbMI+M9?=
- =?us-ascii?Q?QbKXwbNdBm7SQ8nql8W6NdZKSiMEv7VXzyuaozrBBA9WTooEYyCbeYhIEg2+?=
- =?us-ascii?Q?om7hsbUmx725l32p9zJkfUfszACIga05vI2QtAyW9mWnbXBnu0n5TpQ4kY0C?=
- =?us-ascii?Q?j9PoZAGCaWL/+n/p3he+IiHkpmt9XgpMIczYjOtwdhGW+rrW7t64kddrhPwa?=
- =?us-ascii?Q?w5pmtBE/l9JpDAv+txC8R+70FEJTZqqENu6PFUjUAjsDKL72DtiXUnfgh53N?=
- =?us-ascii?Q?Kk82YZaq8L3nlkYlCFc9fSE75g5p5ZdjC166kRc30XGg4CQklT4nl3QdWaqp?=
- =?us-ascii?Q?hI/b5CE9aH5dOTsygVIVIckZgmVmgl3T5ltronefAhjoY/HWcgcr60iuE1VQ?=
- =?us-ascii?Q?pNPJpGsQuDnyBlCLzU8aB8ULHIpUnxQbUUQ8dep9v4yD13UxNxRgYWf1IMXR?=
- =?us-ascii?Q?B9y2ucdDaF9EHS6lOA3ZFglzJEMG1x9hB3krDsLmMY+15gDOGuthe6dkdfil?=
- =?us-ascii?Q?/frXoV0Ul2iDXjZJ02YFia9M9dmjb7VPrqCYLCV7KVG5Z0LDqiPW70A1pkbZ?=
- =?us-ascii?Q?5r9EBlmwkmfvfGVEUFLruaDsFamL0tW6BgIEHTuSzih1sSNhNuIk9f1V93/S?=
- =?us-ascii?Q?X82O6JaECFq2i5htZpPt8stxtoTpJG4X9PapEXsII/L3YkGBLMC246rk7h4g?=
- =?us-ascii?Q?23CUcFIvySTMZFj1BiEruBW80a/7x0fFf5UiP8yj5tTv2MWT9ZnBfoHWUJEM?=
- =?us-ascii?Q?Hv23sCCSzFuneDbYGwAIneM9YlXRYaOs+LgsNmyIWoUhQcqQf9+D8ByxUvjX?=
- =?us-ascii?Q?4+bxUaLNTqh+kvgj6KoLW3xZ9nt4dMn2SgpcyuBXx/h/22qAP+NiVdrUOHuV?=
- =?us-ascii?Q?hoWHSmE=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="LPyfvjzV";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="DqFavM5H"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60LLagtF3867416
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 07:45:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=6lhG8ds9fGZW56ZjCR5UpZ
+	AcAwZrWWFB1JgpuJ3VisA=; b=LPyfvjzV+L6BqiC08W89GS54332xskpIvGSV0y
+	ACCzFGBpHZcX67gke9KbCte13YJcs8XKmjfsXPJo/6UzfZTQK2oiOYF5/SY9oOkU
+	7klSDmkxSYqpSi6pzMrOwGRhApijVy1b+aMTimxZvvXk9yf+KAcqhW0wmOzxlHgM
+	0dRO5CGBejcugzSDkYMnlwjhw1/0I+bI7izT36ALHQRZMgCseX53nDwKCykfPqvA
+	F2eEtfTguqIiYvJ5yyDKonYV7+1SheYoUUN7mAB3ivewwSTjs5W2Ww+6sK2sEYlz
+	ylgAUc0A/K9wSW7zh+zrDzFeBT4xjBKMBCRPjCpKYdeB+Ilg==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4btyrpk3yh-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 07:45:26 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-2b724ff60e6so596934eec.0
+        for <linux-pci@vger.kernel.org>; Wed, 21 Jan 2026 23:45:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1769067926; x=1769672726; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6lhG8ds9fGZW56ZjCR5UpZAcAwZrWWFB1JgpuJ3VisA=;
+        b=DqFavM5HYU851FOd1rWWPO0TOzlX7oRQZxcvzS2UipF0QvwtGAx0aGo8RoB75x9oVG
+         c7xjuDiK5w/Q+HVJ1nMwQV3NySp3XkHoZbM9L5XfWjnJsdnEvtIkkeEUCNleTJ3mJS/V
+         r/N5Ea/j/KH8bHEb3kkT8yB3x90b6giGUNS3TEEYYPmm1Jtj/48OsCpqDeUTk6O3UDYt
+         jwP4vQODxQ1Hsyyqahu7GQ39zWhQwNkFBZByEnj9VgXHEJAdc4fdLRZJOKVnCkhR+jge
+         n9A5i2C56j/8IBp+NrD/Skpg6L1jIOGy/+FOSkYNGeP3sCzaaf8D03raKhzdjdmPoC59
+         CC0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769067926; x=1769672726;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6lhG8ds9fGZW56ZjCR5UpZAcAwZrWWFB1JgpuJ3VisA=;
+        b=rItPrK9rksR7/t6RISAQkZm7CIA4BwwuRVpAUUglR+1Cgo6AIqnCg1YiDiflCPsxdW
+         5Bc8PRdDUNp7Ykr9NcOGx2rWrlAeFZ7/oZvhyU4MsFoHBZt4NwlY1fIDGBWxypfDuxu0
+         ztSK4eEmlZQ5xZNKlKckqInsDYkFAeFAGCvv7r1cuSaqrBvyH7b4PKZPqOxhfwCKJCuc
+         kRNzt3EtRSFvhif6DBXU3gG9FuV+FFSGQi0iCeesLmdrfRQAQLHXHlbBmJR8hH1zTBlr
+         wjtDNBdMzOVIl/lRaBPmceQR3mzMwTjgnaQRDsrqhH29AEAuD2tV8vVgvizokP/Pi+pW
+         HZpQ==
+X-Gm-Message-State: AOJu0YyYF2nqK2OEHOwTgTLvzJUMC0ymSYGdI4zDXhRWEijxTFplTUxc
+	fxiD/BK9/2YYQOmlR3CaqNTOgsmYXNULq3l+Tr8WwRoXyuaz8Hfdd2QxqrkHQtU3xC/SnwzkBV7
+	NMEJn8ArM4aaKQY3Xs2J04j60s4K8NyHCKLXOLVfHRx+NVZuahrlY69BUzwnsI+bOlB1G4fU=
+X-Gm-Gg: AZuq6aJv8sn4rO14rYMGTS8BOsCA5z0ue4cHwvUhmuvUBA8vmz+gM65fWnXAAU5P3vs
+	5LO7MWTiDO0+ItikVBbZuD5z+rXmD4pMWHD4d8hnAnVYD8HyLFUC47zYUB81TwW851W81uhvLGb
+	8fy0hp2UXuHPRkeiFyGfsBpP6NP6pxt0ALw5I5q0AJAqIXFNFXc7o9rBmc8fce2+D8U45iXtmwd
+	bjywLVY/K9xrTRf47mDRRGu1eAZi58tFnYNEH+9BpfFAE1IC0Et+HNvfPcKwmCdQni+wsnV69kE
+	al0RDari/K0awTJLfMxc0CjH60ExzTydqu6+SFqkf740f36eAFBwFkGLiDtzBdi4mqUfIK6E8+2
+	9Wr+u234bcZiA126obzoO76163IfRZmSeedRDfFiuuxMQ5xlwzKVE3Cua
+X-Received: by 2002:a05:7300:1489:b0:2a4:7b58:1a25 with SMTP id 5a478bee46e88-2b6fd7905c1mr5388083eec.27.1769067926043;
+        Wed, 21 Jan 2026 23:45:26 -0800 (PST)
+X-Received: by 2002:a05:7300:1489:b0:2a4:7b58:1a25 with SMTP id 5a478bee46e88-2b6fd7905c1mr5388071eec.27.1769067925498;
+        Wed, 21 Jan 2026 23:45:25 -0800 (PST)
+Received: from hu-qianyu-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b36550dfsm24875278eec.25.2026.01.21.23.45.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Jan 2026 23:45:24 -0800 (PST)
+From: Qiang Yu <qiang.yu@oss.qualcomm.com>
+Subject: [PATCH 0/2] PCI: dwc: Code clean up and formatting improvements
+Date: Wed, 21 Jan 2026 23:45:17 -0800
+Message-Id: <20260121-remove_cap_clean_up-v1-0-e78115e5d467@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BN7PR02MB4148.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7376c28b-f9ba-4070-9ec9-08de5985555a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Jan 2026 07:10:32.9926
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR02MB8106
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAI3VcWkC/x3MQQqAIBBA0avErBNUsKirRIjZVAOloiRBePek5
+ Vv8/0LCSJhgbF6ImCmRdxWibcAexu3IaK0GyWXHhRQs4uUzamuCticap+/Ahp4vHbebGpSBWoa
+ IGz3/dZpL+QCjpR2iZQAAAA==
+X-Change-ID: 20260121-remove_cap_clean_up-970b60cf595a
+To: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Qiang Yu <qiang.yu@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1769067924; l=1237;
+ i=qiang.yu@oss.qualcomm.com; s=20250513; h=from:subject:message-id;
+ bh=PMstPFg1QN7a4XoG9VnKG/9ifAd+dRDq/L+1XKm6iRc=;
+ b=nyhpBvhNqaf9xnsUAmzmG2COrkUEmNi7pENUEklDiiz7lSmjc85aMlR7DpjlEt2akzqVKqUAa
+ FcWoLbmSjbVBIR07L1gLfICrCsXmhDDued2jLqJZH6fDIn1z+pfIlo1
+X-Developer-Key: i=qiang.yu@oss.qualcomm.com; a=ed25519;
+ pk=Rr94t+fykoieF1ngg/bXxEfr5KoQxeXPtYxM8fBQTAI=
+X-Proofpoint-ORIG-GUID: IqhKpzsOOArlx-ARtidEG_50DTpN1uZW
+X-Proofpoint-GUID: IqhKpzsOOArlx-ARtidEG_50DTpN1uZW
+X-Authority-Analysis: v=2.4 cv=KpdAGGWN c=1 sm=1 tr=0 ts=6971d596 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=y6s2foKJdXeFtfApewsA:9
+ a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIyMDA1MCBTYWx0ZWRfX8GIBU4tnxc8e
+ CqRNpXcfR6KzPg1xqkdK7jThjNFGAE1UrDZ1KduPNH3JYnmqvLSQqV6u/7o9y929EC//BScDsLA
+ FzthrKNlOHEm0U3U+dZaAxf80BwUs+QaZdUA/XDiQLRZS08AhYN2PW5jvQHaEfUoA2AxLPx8Zvv
+ iA9jhK6pFYO70jctMUo4ocJhe3mv+MxY0mVckzqUpWM5/b+sjFHlNgnDM/9K80Iivff+guqyP/g
+ KbAy5z019UJ62X62UTuU1+28JLNmPqWw/UUo3NP0Jnl2kv9OvndiDsvIJaExfh8A58wlfCZNHyY
+ 4MnnUZ8B0FXtoBuhpZEeK0gS/RMnZEONKOFycPBRBwjrTlQmFBvV1iM3eVGNTGqu+JWsavK3L5B
+ TVduaFmc04j7KEgoyUICylRghzCE6pQOgcrt0koczdBpqVIgvBbi5UyTEaQxZU99Z1YKVquSQjn
+ ummdE3AsOYpuDZt6Ymw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
+ definitions=2026-01-21_04,2026-01-20_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 bulkscore=0 priorityscore=1501 clxscore=1015 suspectscore=0
+ phishscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601220050
 
-From: Dexuan Cui <decui@microsoft.com> Sent: Wednesday, January 21, 2026 6:=
-04 PM
->=20
-> There has been a longstanding MMIO conflict between the pci_hyperv
-> driver's config_window (see hv_allocate_config_window()) and the
-> hyperv_drm (or hyperv_fb) driver (see hyperv_setup_vram()): typically
-> both get MMIO from the low MMIO range below 4GB; this is not an issue
-> in the normal kernel since the VMBus driver reserves the framebuffer
-> MMIO in vmbus_reserve_fb(), so the drm driver's hyperv_setup_vram() can
-> always get the reserved framebuffer MMIO; however, a Gen2 VM's kdump
-> kernel fails to reserve the framebuffer MMIO in vmbus_reserve_fb() becaus=
-e
-> the screen_info.lfb_base is zero in the kdump kernel: the screen_info
-> is not initialized at all in the kdump kernel, because the EFI stub
-> code, which initializes screen_info, doesn't run in the case of kdump.
+This series contains two cleanup patches for the PCI DWC subsystem that
+improve code readability and maintainability without any functional
+changes.
 
-I don't think this is correct. Yes, the EFI stub doesn't run, but screen_in=
-fo
-should be initialized in the kdump kernel by the code that loads the
-kdump kernel into the reserved crash memory. See discussion in the commit
-message for commit 304386373007.
+The first patch addresses a naming issue where the "has_msi_ctrl" flag
+name was misleading. The flag specifically indicates when a platform uses
+the iMSI-RX module for MSI handling, rather than having any generic MSI
+controller. Renaming it to "uses_imsi_rx" makes the code's intent much
+clearer.
 
-I wonder if commit a41e0ab394e4 broke the initialization of screen_info
-in the kdump kernel. Or perhaps there is now a rev-lock between the kernel
-with this commit and a new version of the user space kexec command.
+The second patch fixes a grammatical error and improves code formatting.
 
-There's a parameter to the kexec() command that governs whether it
-uses the kexec_file_load() system call or the kexec_load() system call.
-I wonder if that parameter makes a difference in the problem described
-for this patch.
+Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+---
+Qiang Yu (2):
+      PCI: dwc: Fix grammar and formatting in dw_pcie_remove_ext_capability()
+      PCI: dwc: Rename has_msi_ctrl to uses_imsi_rx for clarity
 
-I can't immediately remember if, when I was working on commit
-304386373007, I tested kdump in a Gen 2 VM with an NVMe OS disk to
-ensure that MMIO space was properly allocated to the frame buffer
-driver (either hyperv_fb or hyperv_drm). I'm thinking I did, but tomorrow
-I'll check for any definitive notes on that.
+ drivers/pci/controller/dwc/pcie-designware-host.c | 16 ++++++++--------
+ drivers/pci/controller/dwc/pcie-designware.c      |  3 ++-
+ drivers/pci/controller/dwc/pcie-designware.h      |  2 +-
+ drivers/pci/controller/dwc/pcie-qcom.c            |  4 ++--
+ 4 files changed, 13 insertions(+), 12 deletions(-)
+---
+base-commit: 86291f774fe8524178446cb2c792939640b4970c
+change-id: 20260121-remove_cap_clean_up-970b60cf595a
 
-Michael
-
->=20
-> When vmbus_reserve_fb() fails to reserve the framebuffer MMIO in the
-> kdump kernel, if pci_hyperv in the kdump kernel loads before hyperv_drm
-> loads, pci_hyperv's vmbus_allocate_mmio() gets the framebuffer MMIO
-> and tries to use it, but since the host thinks that the MMIO range is
-> still in use by hyperv_drm, the host refuses to accept the MMIO range
-> as the config window, and pci_hyperv's hv_pci_enter_d0() errors out:
-> "PCI Pass-through VSP failed D0 Entry with status c0370048".
->=20
-> This PCI error in the kdump kernel was not fatal in the past because
-> the kdump kernel normally doesn't reply on pci_hyperv, and the root
-> file system is on a VMBus SCSI device.
->=20
-> Now, a VM on Azure can boot from NVMe, i.e. the root FS can be on a
-> NVMe device, which depends on pci_hyperv. When the PCI error occurs,
-> the kdump kernel fails to boot up since no root FS is detected.
->=20
-> Fix the MMIO conflict by allocating MMIO above 4GB for the
-> config_window.
->=20
-> Note: we still need to figure out how to address the possible MMIO
-> conflict between hyperv_drm and pci_hyperv in the case of 32-bit PCI
-> MMIO BARs, but that's of low priority because all PCI devices available
-> to a Linux VM on Azure should use 64-bit BARs and should not use 32-bit
-> BARs -- I checked Mellanox VFs, MANA VFs, NVMe devices, and GPUs in
-> Linux VMs on Azure, and found no 32-bit BARs.
->=20
-> Fixes: 4daace0d8ce8 ("PCI: hv: Add paravirtual PCI front-end for Microsof=
-t Hyper-V VMs")
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/pci/controller/pci-hyperv.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
-/pci-hyperv.c
-> index 1e237d3538f9..a6aecb1b5cab 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -3406,9 +3406,13 @@ static int hv_allocate_config_window(struct
-> hv_pcibus_device *hbus)
->=20
->  	/*
->  	 * Set up a region of MMIO space to use for accessing configuration
-> -	 * space.
-> +	 * space. Use the high MMIO range to not conflict with the hyperv_drm
-> +	 * driver (which normally gets MMIO from the low MMIO range) in the
-> +	 * kdump kernel of a Gen2 VM, which fails to reserve the framebuffer
-> +	 * MMIO range in vmbus_reserve_fb() due to screen_info.lfb_base being
-> +	 * zero in the kdump kernel.
->  	 */
-> -	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, 0, -1,
-> +	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, SZ_4G, -1,
->  				  PCI_CONFIG_MMIO_LENGTH, 0x1000, false);
->  	if (ret)
->  		return ret;
-> --
-> 2.43.0
+Best regards,
+-- 
+Qiang Yu <qiang.yu@oss.qualcomm.com>
 
