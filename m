@@ -1,126 +1,163 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88298357A29;
-	Thu, 22 Jan 2026 16:59:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11CB038F950;
+	Thu, 22 Jan 2026 17:02:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769101162; cv=none; b=GoGyk6Q7P3doZhoCvzLekpVxjn+jfRyZH4GK70MSfGNFCwqOgInrwLifpTq8993ytI/N7e3iJjWqiHqlQ9obOBtj19rpARUpIXVUJkIT++mnWTezaLB/InzevbkJLJVhEVDlhJQ5DXtIiLoJsZOyVlLj/VAo/3MjiUK0FxyQqfo=
+	t=1769101322; cv=none; b=M+SA/jr08Q6w7NclDXVmv3LzXiLpo4+yDnlVUL6AzLodSgRX/uNKrDvUbD0zD8DwmftKP3sz9LnKXAJfHaFdQiQmSrvIqsudpa8cXvM7hH3QPcaIjUFbU0XVBir8GFBTDMgHsSZiI1gy8/ogEnB5HnlsPtObiT1MAy+s8sh40Lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769101162; c=relaxed/simple;
-	bh=J5VqdBfB3qJLKokwNzHgugj/xR5O2h1qw7xFVlfjZa4=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=kdVv66cO9V25zknpSrBPGzvo/bTFhjspeHbx0Xr4Uvgz8dqhdjBf2UtAmW9Nc7k9YPGZvQz57y1WD84lME4Of3Jzm1Burw08Dv8ISPf4trnAzlucasSRIpFqbVUoKS8PBfExv7Dg/2pQhGvv7FO4HCds2IBqe2HdQg2tDzgH1Os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WK8Qdiy+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769101322; c=relaxed/simple;
+	bh=TPAxVo8Je7LBB6w1OgAl2SBsCio85y7ZhAg7mwaob/k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MVE/IRXuhP+ceLrzCe6GNv+Mr7zgx4y5AiRqovlsNfNT4ilANCijOUoXhRGlaysG03+wtOkRjW82HTneroheI8a/DDaBBKY/BHtr1lGYu1maCLChslsKeP2KpTBkORMZoWZ1lCHDdAiBua+lbvsea5f26pX0x5k+XVjhuyOVLcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ldyC/2RN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WK8Qdiy+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2E2BC116D0;
-	Thu, 22 Jan 2026 16:59:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ldyC/2RN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04DF7C116C6;
+	Thu, 22 Jan 2026 17:01:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769101161;
-	bh=J5VqdBfB3qJLKokwNzHgugj/xR5O2h1qw7xFVlfjZa4=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=WK8Qdiy+OYob7AaCGw51BnlD5QnCxxjuxB5EckU4dxg2pceWfpf2hxcKJkAGzgwFv
-	 OYvOTfFdeWLftjTHM3KIMbaNG3YhhMm3cp18/6v/6az/gI/YGsh+WTX1ANIJxUNjYh
-	 cl/mjuaSdgT3rWYuCgUTf6UHnlg/1tRcJrYbOBdEOp6sNTpKOEKcgzWV5UUBmJd0NX
-	 F4SohSFUcSgon4U5tz/wv89xMjr8qloLQOeEn/d6QBDjT0SbWdWqo9mkOmFYG0Sf7l
-	 MKr9b6ddz/dSiwuBXDx4us3AZ2sp9epXfvMoT66uX2n8zu/GB8+2jbN0aSSOs+eDIg
-	 xXk9RSb1r82KA==
-Date: Thu, 22 Jan 2026 17:59:18 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-CC: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
- kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
- vigneshr@ti.com, s-vadapalli@ti.com, hongxing.zhu@nxp.com,
- l.stach@pengutronix.de, shawnguo@kernel.org, s.hauer@pengutronix.de,
- kernel@pengutronix.de, festevam@gmail.com, minghuan.Lian@nxp.com,
- mingkai.hu@nxp.com, roy.zang@nxp.com, jesper.nilsson@axis.com,
- heiko@sntech.de, srikanth.thokala@intel.com, marek.vasut+renesas@gmail.com,
- yoshihiro.shimoda.uh@renesas.com, geert+renesas@glider.be,
- magnus.damm@gmail.com, christian.bruel@foss.st.com,
- mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
- thierry.reding@gmail.com, jonathanh@nvidia.com,
- hayashi.kunihiko@socionext.com, mhiramat@kernel.org, kishon@kernel.org,
- jirislaby@kernel.org, rongqianfeng@vivo.com, 18255117159@163.com,
- shawn.lin@rock-chips.com, nicolas.frattaroli@collabora.com,
- linux.amoon@gmail.com, vidyas@nvidia.com, Frank.Li@nxp.com,
- linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- linux-stm32@st-md-mailman.stormreply.com, linux-tegra@vger.kernel.org
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v9_4/5=5D_PCI=3A_dwc=3A_ep=3A_Support_BAR_sub?=
- =?US-ASCII?Q?range_inbound_mapping_via_Address_Match_Mode_iATU?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <s6bnqkbuugi7oio7ybekdbk3dokpbe2bui2wjltdwajxix2app@wosgmhrfsriv>
-References: <20260122084909.2390865-1-den@valinux.co.jp> <20260122084909.2390865-5-den@valinux.co.jp> <aXHsd7-WWAGyhy_w@ryzen> <s6bnqkbuugi7oio7ybekdbk3dokpbe2bui2wjltdwajxix2app@wosgmhrfsriv>
-Message-ID: <19D609EC-F850-4B43-A83C-0B8C70E641B5@kernel.org>
+	s=k20201202; t=1769101321;
+	bh=TPAxVo8Je7LBB6w1OgAl2SBsCio85y7ZhAg7mwaob/k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ldyC/2RNsLzuo+dmdhcSQl2Lsm+MaFjhwWiz5vU/CE4I0SNwJMniv9WdvqPIzub/8
+	 WSTzATYjUAS6k5btQyOu2yTVqC/4902f+3Xcw75W9mDW/fxsVB7YzCXK4i8gCtWPs+
+	 4RA/xoorE+BmqGY6suSZi0NSUZ48nW/FfqRjkPpgYdRCa8qxF7oX7WO6MXXhvqLSyy
+	 Wrwlth1qliNglURiJ/PbS/dWl6+xeNZygwO6N7oHIEjr/79TJKSOddy0fmWex3tkB9
+	 0us42nFupsxpVha6bt5xAEeZh27srjXhoo3NHYw8VrH4ZMUOE5ewERi648ucFoD5YY
+	 JcHAhXSpb4xIw==
+Date: Thu, 22 Jan 2026 22:31:50 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, Jon Hunter <jonathanh@nvidia.com>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	"David E. Box" <david.e.box@linux.intel.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Heiner Kallweit <hkallweit1@gmail.com>, 
+	Chia-Lin Kao <acelan.kao@canonical.com>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, 
+	Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, 
+	Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
+ set by BIOS for devicetree platforms
+Message-ID: <5z7c25nkb35prvax6vq6ud7eaeuhzsswbf7fqvmlgys3xftgwb@odocboejrdrv>
+References: <7306256a-b380-489b-8248-b774e6d3d80e@nvidia.com>
+ <20260122152903.GA1247682@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260122152903.GA1247682@bhelgaas>
 
-On 22 January 2026 15:29:02 CET, Koichiro Den <den@valinux=2Eco=2Ejp> wrote=
-:
->
->> To make sure that dw_pcie_ep_ib_atu_addr() cannot be called without alr=
-eady
->> having a BAR configured, to we perhaps want something like:
->
->Thanks for the review=2E
->Isn't the existing guard in dw_pcie_ep_ib_atu_addr sufficient?
->
->        [=2E=2E=2E]
->        base =3D dw_pcie_ep_read_bar_assigned(ep, func_no, bar, epf_bar->=
-flags);
->        if (!base) {
->                dev_err(dev,
->                        "BAR%u not assigned, cannot set up sub-range mapp=
-ings\n",
->                        bar);
->                return -EINVAL;
->        }
->
+On Thu, Jan 22, 2026 at 09:29:03AM -0600, Bjorn Helgaas wrote:
+> [+cc NVMe folks]
+> 
+> On Thu, Jan 22, 2026 at 12:12:42PM +0000, Jon Hunter wrote:
+> > ...
+> 
+> > Since this commit was added in Linux v6.18, I have been observing a suspend
+> > test failures on some of our boards. The suspend test suspends the devices
+> > for 20 secs and before this change the board would resume in about ~27 secs
+> > (including the 20 sec sleep). After this change the board would take over 80
+> > secs to resume and this triggered a failure.
+> > 
+> > Looking at the logs, I can see it is the NVMe device on the board that is
+> > having an issue, and I see the reset failing ...
+> > 
+> >  [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
+> >   flow control rx/tx
+> >  [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
+> >   0 timeout, reset controller
+> >  [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
+> >  [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
+> >  [ 1003.050481] OOM killer enabled.
+> >  [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
+> > 
+> > From the above timestamps the delay is coming from the NVMe. I see this
+> > issue on several boards with different NVMe devices and I can workaround
+> > this by disabling ASPM L0/L1 for these devices ...
+> > 
+> >  DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
+> >  DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
+> >  DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
+> >  DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
+> > 
+> > I am curious if you have seen any similar issues?
+> > 
+> > Other PCIe devices seem to be OK (like the realtek r8169) but just
+> > the NVMe is having issues. So I am trying to figure out the best way
+> > to resolve this?
+> 
+> For context, "this commit" refers to f3ac2ff14834, modified by
+> df5192d9bb0e:
+> 
+>   f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for devicetree platforms")
+>   df5192d9bb0e ("PCI/ASPM: Enable only L0s and L1 for devicetree platforms")
+> 
+> The fact that this suspend issue only affects NVMe reminds me of the
+> code in dw_pcie_suspend_noirq() [1] that bails out early if L1 is
+> enabled because of some NVMe expectation:
+> 
+>   dw_pcie_suspend_noirq()
+>   {
+>     ...
+>     /*
+>      * If L1SS is supported, then do not put the link into L2 as some
+>      * devices such as NVMe expect low resume latency.
+>      */
+>     if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
+>       return 0;
+>     ...
+> 
+> That suggests there's some NVMe/ASPM interaction that the PCI core
+> doesn't understand yet.
+> 
 
-Well, for a driver that does not call dw_pcie_ep_reset_bar() in their =2Ei=
-nit() to disable all BARs that are enabled in the controller by default, th=
-e host side will assign an PCI address even if no EPF has called set_bar() =
-on that BAR=2E
+We have this check in place since NVMe driver keeps the device in D0 and expects
+the link to be in L1ss on platforms not passing below checks:
 
-See e=2Eg=2E
-https://git=2Ekernel=2Eorg/pub/scm/linux/kernel/git/pci/pci=2Egit/commit/d=
-rivers/pci/controller/dwc/pcie-tegra194=2Ec?h=3Dcontroller/dwc&id=3D42f9c66=
-a6d0cc45758dab77233c5460e1cf003df
+        if (pm_suspend_via_firmware() || !ctrl->npss ||
+            !pcie_aspm_enabled(pdev) ||
+            (ndev->ctrl.quirks & NVME_QUIRK_SIMPLE_SUSPEND))
 
-There might be other EPC drivers that don't disable all BARs in their =2Ei=
-nit(), so I would say that simply checking if the BAR has an address is not=
- sufficient to guarantee that an EPF driver has called set_bar()=2E
+Since the majority of the DWC platforms do not pass the above checks, we don't
+transition the device to D3Cold or link to L2/L3 in dw_pcie_suspend_noirq() if
+the link is in L1ss. Though I think we should be checking for D0 state instead
+of L1ss here.
 
+I think what is going on here is that since before commits f3ac2ff14834 and
+df5192d9bb0e, !pcie_aspm_enabled() check was passing as ASPM was not enabled for
+the device (and upstream port) and after those commits, this check is not
+passing and the NVMe driver is not shutting down the controller and expects the
+link to be in L0/L1ss. But the Tegra controller driver initiates L2/L3
+transition, and also turns off the device. So all the NVMe context is lost
+during suspend and while resuming, the NVMe driver got confused due to lost
+context.
 
-I think the safest option is my second suggestion because then we know tha=
-t we will only call
-dw_pcie_ep_ib_atu_addr()
+Jon, could you please try the below hack and see if it fixes the issue?
 
-When:
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 0e4caeab739c..4b8d261117f5 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -3723,7 +3723,7 @@ static int nvme_suspend(struct device *dev)
+         * state (which may not be possible if the link is up).
+         */
+        if (pm_suspend_via_firmware() || !ctrl->npss ||
+-           !pcie_aspm_enabled(pdev) ||
++           pcie_aspm_enabled(pdev) ||
+            (ndev->ctrl.quirks & NVME_QUIRK_SIMPLE_SUSPEND))
+                return nvme_disable_prepare_reset(ndev, true);
+ 
+This will confirm whether the issue is due to Tegra controller driver breaking
+the NVMe driver assumption or not.
 
-1) If ep->epf_bar[bar] is set:
-https://github=2Ecom/torvalds/linux/blob/v6=2E19-rc6/drivers/pci/controlle=
-r/dwc/pcie-designware-ep=2Ec#L363
+- Mani
 
-
-2) All the other requirements to dynamically update a BAR is also met:
-
-https://github=2Ecom/torvalds/linux/blob/v6=2E19-rc6/drivers/pci/controlle=
-r/dwc/pcie-designware-ep=2Ec#L368-L370
-
-
-
-Kind regards,
-Niklas
-
+-- 
+மணிவண்ணன் சதாசிவம்
