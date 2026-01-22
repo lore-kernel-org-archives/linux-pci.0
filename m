@@ -1,47 +1,47 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010023.outbound.protection.outlook.com [52.101.84.23])
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012038.outbound.protection.outlook.com [52.101.66.38])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85CFB39F31C
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 20:33:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F473A7056
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 20:44:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.38
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769114019; cv=fail; b=igAOQChmXwTrNusEbbA3ZQa+tKJXFRNtBZpdrNzLU1dXa/ary6xE0iR1FDK9ar52B1UmmtqDar3rd4To8b6vhfprpgbyfKMADoEFRy5mMTa2TrR7WrN04ZnQqlHadnIYzIfSDBJHFGShQ82keo+b/iJxcUDC0W+FIeYPsb4MRLU=
+	t=1769114682; cv=fail; b=bObKIqRWGdlnFFAfTF/hVcuGKaLkssKVbLZ8vGSGhVGsly5y888J6TIGGYwO8nZG/VD3TEzyYiKuFHT3ourYoDlxXcWPB3MoXAlvDrR1mnv5jEqifqHggdlgyjAiSpXM0viqPLeW5tL3eHwM73X68MpoMBkKVzZwAKAiWDV3DjY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769114019; c=relaxed/simple;
-	bh=JM5vGl0mnd8HiGd1Ls7jULuajMO3f3hmsQiIsRCzjHE=;
+	s=arc-20240116; t=1769114682; c=relaxed/simple;
+	bh=UV4gJr/ovl5xT/s3du7eYtrdFC0XtuiP++zK9l0LU2o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=apIxiMbsFpFvxy/tj5tma/2rvGtiNK1oS7HMsUWgQJ72w2akheWXSP9UBwiBYoimbkAX6yvSirta3kchhWaPoMlLxS6hq/225nHZrLeNDJGcmd1IagYC0IrK3nf79LiQAAFiHEX9dcl3nr3N5dcFLoORWb6dpWxOcc3afT/jfag=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=F9qPInOG; arc=fail smtp.client-ip=52.101.84.23
+	 Content-Disposition:In-Reply-To:MIME-Version; b=UCCt1yHEX94gsogP4hvRX2LaGyzoSZZNGVa0jOwKs2YuZ5u99Nsn4moFTpkko3HRBEP5srGEhPE2pZ0w3aMaC6BP8uXcd6Ok2iFiZU+CFKs/iSOdHdLV/CuhyeR7KOoGyM+/zLS7WTxUzEWxxMBGw0UWSpe1ar+pE1lE0HoiUb0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=Z8CIOsnj; arc=fail smtp.client-ip=52.101.66.38
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="F9qPInOG"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="Z8CIOsnj"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Faf4hVjtKU3vyUQCto9biT8fTGHvbc88EaiGwletye/ohzNBnVFAit1Ep+dmNqkePg+gXgUYUBmdJPcKfKPs3i2jXTOWwULND+kDTWBx2BDxxR/vrusj1MPUwjfHXTj3KJw96iNBZW0dmoTFSs/vlzUrAnmcglavdwItnT/096Mcaj0ka7K0TB1rR3MS7YiGXy+SJA/K3Q+x1JnGuIYADB9lH3Bg34zL7YAy22wJ4b6piWvKYhYgpWwOoLinX+yZ1li+TgZdr5sOXC8A1DvSXIQh5S6lwZEsKgs4dSgP0sPAdPPKMTNGEtACyaI81cyhaX2YXTBT7vrQevhUVN2J6g==
+ b=OtW4H17Isovyn/yvAORwhsSbFOTcs/f1O5oHKEfjOV3mOfjgDNpSxQ+vNWKZx5degD1iEtxGTCWcTHF1dYaiHCzRTK9jXj0M5ffQbm4sveArfk1ScIx/aXcUUlAcrl025HTrIxVszSgFZbGwCdPQQ3+jzaaW+P/zEqMk9Fsbk3rjD8rpAzZnudYhMvmPtps+8PRlnPW3vx4i2Z+dFJXJQRVRCxYu77SkpvSGWwyJlhhtIRf3AVAusWkbxBjC4rnIb4JBn1gKKEWpltBlKvzlupflfjEVAhYz3lJeikCgOCK1kScgQ/RDtzFbfHdyx+C/N8tK8qgPr5/OK5HpdvhrpA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hCmpY0e1HAqdJ2K7S2vmOZK62UVd2W8leIqLxrPBCvA=;
- b=wCl/0aNzPOAYrDO4gPstj4piujAA/UIiI43008izHS9jLQD4sllCO1814KIfFR07xZ8QOmL0StztZEvpXpcMk31b8Czc/t6K6/Cl43kCLxm89WTsaO4X+Ts9wkudirpSWKhBsmr10EFqUTEO/lzaMkR/+YhLSE41Xg41PcG468VkWAASWYi5ZWauRu/cIRm54VRnHkcs96eyMMBdjAy658IZN1UFV35zUe24VS9njizq93fciJ+ZFHw+t00pIP3+9qswwE8NPFBkr1yImUVA76sB1gn4B58CAN+TJ21avwmTtY6tUn1OQXNXZjwGV0Gzsx8ILn9hSmUC9PNFFNSmog==
+ bh=AVts4Ka+T1siotOnzIUzn+YddtKjfzBYGFLhbDf8o8s=;
+ b=OIesYP7p/Ihr4eDJUqr8CLONvvk0EgNtTbLO3nNyosU6QGequ4apvkLd5X5cf/kG8RHFJHuBaqfaglI0IUsEi3kuWSv+Gj6twGYkHrK753lVmU/sDn4Il+czamYjiqVtHxv4RI20wONkw1B9DvXMg8eQn3td72y1FwcKYhoQI4OocjUSIEID1QzBfcXI3hN1OCgsPGrK9e2zMiSzt5Ik0GEu3qCXudaicygOhbjzLgXRQmLombE0S30swcae3drLpc/NJE1DjlemO3zYz6OvneDnYKxWiRyyrvICTUQjZrNP5V9TaW6PyAYgrdI5tPqqe1/cLmrrtYqgrJSzoUehrg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hCmpY0e1HAqdJ2K7S2vmOZK62UVd2W8leIqLxrPBCvA=;
- b=F9qPInOG70CapgOkTBW1fhZOWxy/dnCa+Vba7lpUvDJRlwUk+czlKglFArfqemidFxCQH4AnPb+rceILgDMO8BE1ds+Lb9oWbyNlhMVUd9LQPwDozbgzKICA1ZXVBvywqUvM9qO02nHr/KsbkYhqNIyz2kniZtcHGNM2Ty62jgd7DNnRe6FmahY3V7aIx4wi17tAK+jTTFKyXwmlMpC8m0MSU3iitljvZs+yMNVllWShFs+rozXNuAXl9Bz0Rm1zgi7mpvkKuTBktBSeJJ3dKdsk4xOE2XLxP16qbvpzlo9h3U4sPTiwYojsVb/Sl2vZ03zHWB11yi/SnERSV6/NdA==
+ bh=AVts4Ka+T1siotOnzIUzn+YddtKjfzBYGFLhbDf8o8s=;
+ b=Z8CIOsnjgKZyuSREU5HpLpucR8SKj6QqWirdZcsdS5Li+iMryH3azh0hcd9wWq05GIIVY/A3OoMnhT//Vw6neEG9cZawWZePB09Rcq/vNiGqIFKCYypAALRamQAea+WWhjWpR0d847utyY/TrZ/oQhBAtUMZSoiSwnnky6rNTwAF0bvnrsVuitJDBpbpkijPDQE5th0S9c+yVEvcLZsy0byrSdprVQNOQLTBOT6VcG/tdMA4f2+dz/rV8Mhy0lAJ3W0UPNID6h2+2vTfrs2bQiMhU1sag7ItEdHX33JBw0nlsXJGYphy3mt2NP62W4b0igYwrUoPiBq77DDt7jmpow==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from DU2PR04MB8951.eurprd04.prod.outlook.com (2603:10a6:10:2e2::22)
- by DB8PR04MB6809.eurprd04.prod.outlook.com (2603:10a6:10:11b::24) with
+ by GV2PR04MB12165.eurprd04.prod.outlook.com (2603:10a6:150:339::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.10; Thu, 22 Jan
- 2026 20:33:25 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Thu, 22 Jan
+ 2026 20:44:31 +0000
 Received: from DU2PR04MB8951.eurprd04.prod.outlook.com
  ([fe80::753c:468d:266:196]) by DU2PR04MB8951.eurprd04.prod.outlook.com
  ([fe80::753c:468d:266:196%4]) with mapi id 15.20.9520.011; Thu, 22 Jan 2026
- 20:33:24 +0000
-Date: Thu, 22 Jan 2026 15:33:15 -0500
+ 20:44:31 +0000
+Date: Thu, 22 Jan 2026 15:44:24 -0500
 From: Frank Li <Frank.li@nxp.com>
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Jingoo Han <jingoohan1@gmail.com>,
@@ -54,15 +54,16 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	Charles Mirabile <cmirabil@redhat.com>, tim609@andestech.com,
 	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: dwc: Improve msg_atu_index error handling
-Message-ID: <aXKJixHd9SSKcNsg@lizhi-Precision-Tower-5810>
+Subject: Re: [PATCH 3/3] PCI: dwc: Clean up iatu index usage in
+ dw_pcie_iatu_setup()
+Message-ID: <aXKMKAfhkOy6bP0G@lizhi-Precision-Tower-5810>
 References: <20260122145411.453291-4-cassel@kernel.org>
- <20260122145411.453291-5-cassel@kernel.org>
+ <20260122145411.453291-6-cassel@kernel.org>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260122145411.453291-5-cassel@kernel.org>
-X-ClientProxiedBy: PH8P221CA0050.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:510:346::11) To DU2PR04MB8951.eurprd04.prod.outlook.com
+In-Reply-To: <20260122145411.453291-6-cassel@kernel.org>
+X-ClientProxiedBy: PH8PR07CA0018.namprd07.prod.outlook.com
+ (2603:10b6:510:2cd::15) To DU2PR04MB8951.eurprd04.prod.outlook.com
  (2603:10a6:10:2e2::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -71,122 +72,293 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DU2PR04MB8951:EE_|DB8PR04MB6809:EE_
-X-MS-Office365-Filtering-Correlation-Id: ce10f9a0-d008-4441-de31-08de59f57df3
+X-MS-TrafficTypeDiagnostic: DU2PR04MB8951:EE_|GV2PR04MB12165:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4e9a8f83-08f6-4f12-c4c4-08de59f70b43
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|7416014|52116014|376014|1800799024|366016|7053199007|38350700014;
+	BCL:0;ARA:13230040|1800799024|7416014|52116014|376014|19092799006|366016|38350700014|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?fggKVp0STAHUWDB5UnKtdI5js2xflqcPvJkyL48mWw8kJh6nMBEV1/ANXAvq?=
- =?us-ascii?Q?YgGkCT4RJvg9ipgSbkBEkl9Er3paKGe6//9eqz6y0tawsl92bk0X/qQeBnms?=
- =?us-ascii?Q?eIguxvEpS6OV3XlY93oRFWNxu+xTlw33Ejs5Th92hE1Huv9iA1qWX5ThbH0q?=
- =?us-ascii?Q?TjqcxChw20DgtWRZuoqvb7RMFCT8iccekV1OgkHMwA4QQar532TX0ZKlX8jt?=
- =?us-ascii?Q?2thc4AR2RM1oesEMu9owmsMRxu8JLpLy4ogmQK5S0LyR1I3AIecNtb9UtReT?=
- =?us-ascii?Q?Z77gaBUWZZeV8JRjhg+UdxD4d8E0beyGMoJcRXljxHfjKPOzXnDf67hWI2vq?=
- =?us-ascii?Q?niOQ/VYPKcRQHc/0GCGK4eK//SxF3wp+TIWa0Almsdu/1cdBO4Uiw5xvASuF?=
- =?us-ascii?Q?fryl7xR2DPnyd83RlgkYyPaWw8Q7NtLYZ/1hdDdwhIEhJZmn4dTX18sRyGrA?=
- =?us-ascii?Q?oNsenWESs3+C9w9sEFpKBNW8TG1QTxMcqX2af7h8rcSM5jMmql3iavwuakI5?=
- =?us-ascii?Q?0jKev9APEEFtZW5NGJLbvdFVfTNqbJ3nFAz+b9fucwfuyPdcbHvLWamqGknC?=
- =?us-ascii?Q?pnSS8A44l0Q1z1jqMDV7pJp9e+gYYlFa0aXqFoHsab5VY48fnR0EwnDjt907?=
- =?us-ascii?Q?TrzbU7li80I/IPcKm0IHLcaaLbmrf8b5S0W9tly9dLesdt2FTThmssr25AvQ?=
- =?us-ascii?Q?m+qcJH1mhjejtFLXRLs9GZkL/WqbtwTtxrK+cNMp9NfH/vqDETH4/+17sqjx?=
- =?us-ascii?Q?VdDpN3DJ3P3kYXyI35qq3uZfF57XKQ/d/adiGvPVzldvxUoQ4rTy4KvIZoA4?=
- =?us-ascii?Q?ElHTUj29z3zqJ5Cf1LaVbQ0QZNinGM0USPTKJzxRYrl0kyTOFquDQFGmst2x?=
- =?us-ascii?Q?NhoYzBxxor/QtvTsUsNX+0OohZaiRIBMxum89qMMyvtCNv6uLx6FnhEFiUqf?=
- =?us-ascii?Q?UBj0SzAiss5dTyCryCd8eFYsv5Lbrih7ew4SYZ4C87Pb6jvMBB7sssncz6oN?=
- =?us-ascii?Q?y5B4HMN4NVDfvweP+6nCKITGmT0yCmsKPH+TzpaoYIGwQsSrlVIWPZeJcTqd?=
- =?us-ascii?Q?YSTw3zBL45Iwy9ynDm3MrmOB1UXKoxVVP/OW7gD3quuMKSnNBRtffSosnghw?=
- =?us-ascii?Q?XD3cQtcycYc1NRjeHMaYe3Aap2SBXc+3FF4ErtJYRdZlQsl3H7qrgC6zJ+Zu?=
- =?us-ascii?Q?Ock9Zki0qrkzSkDv7UtcmpiGZqL4ebD9bRTLuZfanepuiBRBmfBACc4AGwbB?=
- =?us-ascii?Q?K37GToGr1WLCl1n3llEx25fGsd7LksY5mgSd1iAElmY/Ic09fu/RiCWPbaEE?=
- =?us-ascii?Q?XfePIqvBSuuiw5He1kdL4vji7eSABy9tYuejYbwJTLQcVANTdCgY2v+CfG2s?=
- =?us-ascii?Q?5/N73XpSgWE+cyXdiH4y60OPXnFIUnjtCAANS3ZtwuWis8n27FFRebzNFp2K?=
- =?us-ascii?Q?fQpIIGg81fbiOxbeguuySzHlHPWVq2laWDdAOE4g517/6sP5mVhXSpFkAtjs?=
- =?us-ascii?Q?QkU8YhH4Jzk3zelnLXHhpJaJbVVIAOeG/uvYFcb9+2VQJh/1lsvrrXqWf3O2?=
- =?us-ascii?Q?gI3D1BIZL/mIRPRfuMa7BFqGbygApxz0lJRd0HKx526XunTh3UzkzlWYsSIp?=
- =?us-ascii?Q?DAP9yrfd5n9nIcacLZO4+Tw=3D?=
+	=?us-ascii?Q?mmRPzbkplD+fzSfWgwBpjTWnL0Llhfwr/Fu/ewWEtCZ1nCiYS1Qg+6PxueOQ?=
+ =?us-ascii?Q?DBAfwZMBsPrq8Una5K/SuNoPVsW29o4LSbJKy5/ZMd1Ldu55+CB1eH9SNlVQ?=
+ =?us-ascii?Q?HnRRmPtyp1+f/eulu0zhbjCxbb77z9LNIZKB8EGG6JA5rLtY0n6F+cUbOKKU?=
+ =?us-ascii?Q?TpKvf0HkirUfvlzjzWarEtcVZr7BeyYqQj7adDivcKMGc+ktC00dZ4CXBW9k?=
+ =?us-ascii?Q?b4VgtlKqqVxHNCMzRNHsrecruQMwv8i+ADySxw/4/YOdf11/ioiQ/Gp1AvrJ?=
+ =?us-ascii?Q?giNXW27XZEXcvcd3XjbznjfcV9Jt2p3aXpEAy1xkEytpiWVokSQIAsJ4eFbu?=
+ =?us-ascii?Q?ccZ0gHBOFAQql+jRH9wR3YjI0CYzTqHhm9BNx6PSv9EfR49T+Nrd0pG5DAXs?=
+ =?us-ascii?Q?Bb+lsAUqUekd5136IZRnrt3knkWxsnIQnwdT2T7Evi19UAqtVy93bEC867ke?=
+ =?us-ascii?Q?ssJbru5Pzb5DGz/XxfPBbuQKZ4rrM0puUxamKQUwVCrlWI5orp9Ell3x7GwH?=
+ =?us-ascii?Q?+ubruIAOjrGdGuK9VodHPDQIlfoB87cQoWz/1CIMhuwerh2GbrZvj0A/TfaA?=
+ =?us-ascii?Q?cwyypi2JDnMcnGhiwqD8jGptQEcF22gqZy/kVQuG9Pg9VSfQiXbfv7NAcePq?=
+ =?us-ascii?Q?KmQwWsU02rV58+usc+6mdvhUxXenyk/AxGF5k9/oRMYAIXuDjjb9n6Hb7ZUC?=
+ =?us-ascii?Q?ypeEZ4pDa4GOjUUhASa/gBbxhLorOM5G0sOhxifIRZed5xmrtLTD4XGeoPBN?=
+ =?us-ascii?Q?w6yiLFlQUcDe7qYI0ri/Zk4gemnFhhucWFwzYJrsF4bVH0noiiPv5n6WiqVB?=
+ =?us-ascii?Q?gYPxNlWhYK1I2dVFuBAg0VZoZ+Hy/q4jjN7RAMvkVLOqEsiuUp12ZqOqsgeT?=
+ =?us-ascii?Q?iH3bTwDdfXAR3NBOUYvdDRtmUALM2gVKKv4AIh5Mo7JAH9nwBlf1x1FU9yyr?=
+ =?us-ascii?Q?LOB9v8RPYpbcWkYvpJ3p2H6b9HdN2sqcyKpVhU3ZSdc+j73z262MZqpX+zpt?=
+ =?us-ascii?Q?Sz0OjwvBda2cEC41G1lOP5lOVhGzd1irJSm1Qey8HUNlsfe/kjJQBqXInXnj?=
+ =?us-ascii?Q?y//V70V8cShLRLt7D/23jFmlr9phccazAE48Rg/VmboDGD7cyGrCxni8y5ix?=
+ =?us-ascii?Q?OZ9j8PlmB6E2bNhVmUAkm/WfPcFKI9/5Ky96Yz5BYJCwIJVi1NbYVzbZN5td?=
+ =?us-ascii?Q?zYbg2Gc0DOUCQQD7Y4sSOUP41TGHY5C/IzNRf8lUUYCj2uf/K1UWOLlhXHlv?=
+ =?us-ascii?Q?YqhxpK1bKXuYlHiJJE1rc16QVwVvH7tJWlyn7Ww/Hs6bfmRHmz3b8wCAAZt5?=
+ =?us-ascii?Q?RDVYLhoeUWQCRPpoNWNuQGalgIuVjyE6d35WjYcsBeAMUK795+vtmFXON+Zn?=
+ =?us-ascii?Q?B9FDwk9SmTPCkRkmt37AgG7jGh5C2BAfzEj1mgidq8lUqbc5ak9n526SPbE5?=
+ =?us-ascii?Q?pR/4XQ+d1fD2Ynj56WuyzsdEjZqqaOwXVDYlDgWOkKWezrmtVemaSeel5AW9?=
+ =?us-ascii?Q?aTK8cE2QstfuYcpB5wKwZgmbh/sPDy101gGRhxMaUVK/jxEqTEJ7sQfgo3LV?=
+ =?us-ascii?Q?6zf1nDNVPNa6mWe1mln9ve34h9GUaDkp54UV0F0qPLkuV78QIXyUoltgb+dJ?=
+ =?us-ascii?Q?yeZUsgkxI010wTRd2pBfk5o=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU2PR04MB8951.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(7416014)(52116014)(376014)(1800799024)(366016)(7053199007)(38350700014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU2PR04MB8951.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(52116014)(376014)(19092799006)(366016)(38350700014)(7053199007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?0YaTPFSFvztZTxBWz4zxgkFdOsG0kOtHQHTr9QTASX9l1qaruAeRprPSyAIV?=
- =?us-ascii?Q?IwpAzeOus15aIJrs1bPpwV1KMsGoeJHjwgMQ5lS9mv1XkPGXf6ORESeM4pxG?=
- =?us-ascii?Q?5UCr2LGKn2EiXMoOsEkEXaImpidu385Rol2+kB3NM4SphdmoZcGSGSRPP41S?=
- =?us-ascii?Q?3qKiWf6UtLLRMP+Q9ONwlw5oFtg/sL6ZROYDMsoifGww3hbyaglx+8c4RdtM?=
- =?us-ascii?Q?1XsWi/tZIj6y6Uysz7I18hDdLglx55E0Z9Ex3vByHGXAL4z8oQdB/bWdv55/?=
- =?us-ascii?Q?/eBb4alpZxKXJsKclGeUQWpYvzNYl/Q3AlQUPvoIBADvWpVj15mAaeIhpqKg?=
- =?us-ascii?Q?LqEgvAmzkmglxAzzZEmlsPVbzEr8gXZGkhoVKkTl44KbEqdydPxazKQqCQcf?=
- =?us-ascii?Q?MXdI4+TFScy13j/9B3vxCr8M4y0GMZg36gYsc7aR+R0NF6GGHiY+cJ9a9aLk?=
- =?us-ascii?Q?nW1DycujcQyWsmdLk6SDsS7r/Y9OhDzat8I0KDYVHG20HwqZGuu1lvXpG4J4?=
- =?us-ascii?Q?wzDi6wifx+TAnGV6bopYgx6an6tzDpPdJjQbQuzEu734caw0eXnPIpm8TtBT?=
- =?us-ascii?Q?mT9mvZF9JjuhaIXYL+kHIdwD7cDLYIKN3v14iQwTieRR9YLQIRyCQgqEJf6A?=
- =?us-ascii?Q?ge6XPXJ9bJFQdZXQNG+YMi8JsqPJGQfjEf6O7HuuIBOpsrtCbNxMBDYeBZJT?=
- =?us-ascii?Q?g2AAycuN5DgGVuJIa0lV0Sg24hYrG/hxQUanoXb7yItZfi1R7tvlXJ4xnJ2z?=
- =?us-ascii?Q?K2eL6v4d02EoT2k0HHncv14XcOEb+QCIC3HEUXuOJgzJddCDVVdp+JnaO+Se?=
- =?us-ascii?Q?rWit41rrnKbC1RquWNUqpk0kKFOgbUWwZrTsw/KtyyN2mPDBAtqugsFeqPJc?=
- =?us-ascii?Q?6JOa3s82xKr6zNuS5rE/lTYDVr0iKmpORtd7MLHYW/ccL0tYJKMZ5enKcYmK?=
- =?us-ascii?Q?UiXMrGudmnRc734T+1EO3o7jfrCpayCwPYidWVY8d5NLlG9xOo0EXYGjEJpa?=
- =?us-ascii?Q?gmnqkaOZk3jb5M/9jaeNLiFvfBIrNE+TYYf1Rdh3tXl4oPfhmgekW/gxDzHl?=
- =?us-ascii?Q?PnHnNYghtJI3YW1AzfLPzeVYHtRVMrsvGuUl0x0tyofERK1H6YkWoUnL4EIC?=
- =?us-ascii?Q?nagEB5Hc4nNVBlsDcCVQkVbySDIskaWVLjFzSFrhdtQdNC+QX/9MmL7g3Chu?=
- =?us-ascii?Q?7JR60StB6JOC3hRXjR62jS/PIrFu7rCGoGMkD2da0l9yOc7fTijZN0xIf8wn?=
- =?us-ascii?Q?dSY17noNBeYnayus/SLxgrTLvSjBZfHcGO255r8YEpUodAXQK5Jy/eUB78Gl?=
- =?us-ascii?Q?PoLbfrCol+61LFdwqZrbAhscjHwKiapQVmKeIZ5o0YxR6qOZMmxhYOvjfb/g?=
- =?us-ascii?Q?IXWKB2b0zhQIXGKg/fusM+Lmrp+cOdyFNpYJqNY0G3oE/5aLSUHELayhME9Q?=
- =?us-ascii?Q?aj7kaICREtQeYbNBrmb1CxCooklM8pO4L6fyDeoLyYSXqtXQyFiqEMQTSJ9T?=
- =?us-ascii?Q?hJgMtWjDEnb7r6Sv0MUk4EzmcGi+UMQLhU10fwXM00VNaeSgCpIfVvQ7r8ne?=
- =?us-ascii?Q?bNn4AaC89wo4zYZaFyAVPrx6A4qCFUocKFysOierMnu3zOB6JnSdi2CBRF3u?=
- =?us-ascii?Q?CX5aDhaCcfq0Ooq6RB9XmWWVNDBMeFYXcEsKtcuqbUKZP3uvSsfmGJf+y5K/?=
- =?us-ascii?Q?plcgVQLJ72QDEvbV07aK1TiTCF6sd9Hotc1Kfsbqj9qHR0SP8xF7LgwVjivm?=
- =?us-ascii?Q?mOeFxmNXyA=3D=3D?=
+	=?us-ascii?Q?5ocNkUwxBNHNmbZ4KBgrWtPRjGGEJIcrBw8VvpoW6Y4+qQeJvF4c4Ujcnalm?=
+ =?us-ascii?Q?/IjtD2YejcNVqtk/Tbl1Ifw3WkmvmZG17aXzw5Rh76msM9PzdTaEM3JRtftR?=
+ =?us-ascii?Q?BE81BnW43kOMpCBor+KdHwDNZiSQW+x/Cqyi4ZoHzizwJgW2kpYvnkQWdU1e?=
+ =?us-ascii?Q?51ib8u2nzbeRoT3IDLEF7FqUIqVPTTETxPYB2U4LX+AeGeLeQkh1Qc132+K5?=
+ =?us-ascii?Q?XM644uWfx38GPC8CfdcswveLNEhLTk4Fpw2R4lei4nx7aiemms8x+oYURzRC?=
+ =?us-ascii?Q?du9y/gg0Jw02mVQc/UZFQ/YXG1ix3XNgIaPdYQravaZAkzUM2l8g6pTb3Wj8?=
+ =?us-ascii?Q?n0wcX0MG9xjurX7qddwJcYfOVOM0k8SXL6CqEx+7/Fmm2KaAUyFsRvBNgUUU?=
+ =?us-ascii?Q?5AEVMImxVhOK4txXrK4Ft029dgenC25BlHILefelLLBT0DwBdyTd9/Av/vNe?=
+ =?us-ascii?Q?S1Zy40hFYr+ahmqdJ6f1jXm4r9rXe/2JtOEHFRhWmn37HY1E/Rtqe93T4kSm?=
+ =?us-ascii?Q?Frqa1x1FP0RBlQlg/T0nr3dtZR6H7cr57PA6OW6WMExNeufQE58b0S9ntfXJ?=
+ =?us-ascii?Q?xx5RAjdJ0F7BhzwTb63pJ7BGtY76tih1Eww8p7miuQ0F4iU+geS7wy+QioEa?=
+ =?us-ascii?Q?G158ninb0PVMJCCPN4uOBvK2Ds+rpjk2ALsi6BAFZWKN1zBBeY+SFtI1EhVO?=
+ =?us-ascii?Q?PYcj6k2uqmASMC8i5KgiFeN45qiyYmkD1+tv69ap4i/w8dyhEFAAqD+gj7K+?=
+ =?us-ascii?Q?WE+2vzYPSUC+NiW8c9ln9LFJqGQ9TFfD5ATQthPtoqO2i4cPprdG7hGN4FKj?=
+ =?us-ascii?Q?4ITkY+o66hf2k2cxSabsfvCuSuovcYMcfLRmio77n28LIh6NUnsNnowI61tT?=
+ =?us-ascii?Q?QTXcLPr1j9xGzjkxsC2u2koQm6sRZyJSXlPP+sH85q3NGrb2E84H/FXSxk5Q?=
+ =?us-ascii?Q?L3b8o98gmmY8Fo1eLjlAMqMwGGhf4RnFh1kqcl2RkXmOr2kB+Co12BZDVG8m?=
+ =?us-ascii?Q?sRHarxEofuE7Ng+O/zgZvmjE3jlTue5Xh1wYQcNJ7N3IKy+c9T6xGY66YrdM?=
+ =?us-ascii?Q?DSYxplzj+WdN1W+NOY8g2wkmMroRRl7s7Rtw0qT7tH6QubQGrI3aMVSZWkVu?=
+ =?us-ascii?Q?kiB1AI/XfAij3R6tZ5+SzBww7kG6vzJ0lwwJs6PEs47Wec7K4mWitxtNavbr?=
+ =?us-ascii?Q?BLiGd07Rt4UzyZTH32AdWmTZrsvBFldn2Fhu2fG5z44Gt4XbLW4K104M0iIi?=
+ =?us-ascii?Q?q41ml3Qs/lHUUGKAM4d9VBt1LAkdzsd+M/qxo5qwGi9UqibmEia+G4uE/5J2?=
+ =?us-ascii?Q?+6/xkp0Ku586cxwMFDO8pZwIMNrL/m1ORnJJCTJFuqXoT5NvwKYuo3a53Z/S?=
+ =?us-ascii?Q?yZsxex2B9hlu5WqAK84d+YkHheC7FkqCcpocGM0QsAe3VjYvMSV5zl4e6jeW?=
+ =?us-ascii?Q?UDcAfkTtX3ULNK6nh32kY7k53IWfEGya2s6QX7wZxw7Y9mjV8MMH4vV3zPSV?=
+ =?us-ascii?Q?2yjffwC+/fqBAmUpMzydLXtc09Kmnr3ILW6lCkYDGJR6yx5+rV5f3ghKFhj0?=
+ =?us-ascii?Q?e0PYfngGkRX5y0LogoMBxOKVeUJQFQBPmwT2GXrl06CVlY2R1JPRcBTxdili?=
+ =?us-ascii?Q?IIxs2rAmZBZfWijx/gRfXPKcBVPnfPRVhID5LYqo8YvP9YvagQcffZsNDyyG?=
+ =?us-ascii?Q?VQb8U4M5hVCVUjK8OMj0nVyUcXzl/Lipg6P9s+K+OS+XRvKKvif55YpKXEZ8?=
+ =?us-ascii?Q?Gwxn2Ms9uA=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ce10f9a0-d008-4441-de31-08de59f57df3
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4e9a8f83-08f6-4f12-c4c4-08de59f70b43
 X-MS-Exchange-CrossTenant-AuthSource: DU2PR04MB8951.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 20:33:24.9234
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 20:44:31.5121
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: F3oCo80+j8Nmg4YgFWK1UmXzfeCrVCJm8zsMnURbi9pofMShwYMR+RKwtWcd8NbO8fmfNWlo6rroxCSciqVJzQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8PR04MB6809
+X-MS-Exchange-CrossTenant-UserPrincipalName: A/FjdY3IGANCxPpm4WwjnA4z6GVpmQEVBD1l8O9C9UpU2AWgVAGMMJmPmvS+X1JhixuIN9Y8FxQcilQ8zMCCbQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB12165
 
-On Thu, Jan 22, 2026 at 03:54:13PM +0100, Niklas Cassel wrote:
-> Only try to dedicate an outbound iATU to MSG TLP if use_atu_msg is set.
-> If use_atu_msg is not set, it is completely useless to bump the index.
+On Thu, Jan 22, 2026 at 03:54:14PM +0100, Niklas Cassel wrote:
+> The current iatu index usage in dw_pcie_iatu_setup() is a mess.
 >
-> Additionally, if use_atu_msg is set, and there is no available outbound
-> iatu available, return an error.
+> For outbound address translation the index is incremented before usage.
+> For inbound address translation the index is incremented after usage.
 >
-> Fixes: e1a4ec1a9520 ("PCI: dwc: Add generic MSG TLP support for sending PME_Turn_Off when system suspend")
+> Incrementing the index after usage make much more sense, and:
+> Make the index usage consistent for both outbound and inbound address
+> translation.
+>
+> Most likely, the overly complicated logic for the outbound address
+> translation is because the iatu at index 0 is reserved for CFG IOs
+> (dw_pcie_other_conf_map_bus()), however, we should be able to use the
+> exact same logic for the indexing of the outbound and inbound iatus.
+> (Only the starting index should be different.)
+>
+> Create two new variables ob_iatu_index_to_use, ib_iatu_index_to_use,
+> which makes it clear from the name itself that it is the index before
+> increment.
+>
+> Since we always check if there is an index available immediately before
+> programming the iATU, we can remove the useless "ranges exceed outbound
+> iATU size" warnings, as the code is already unreachable.
+>
+> Because we always check if there is an index available immediately before
+> programming the iATU, we can also remove the useless breaks outside of
+> while loop.
+
+The condition is the same. So combine two paragraph
+
+>
+> Also switch to use the more logical, but equivalent check if index is
+> smaller than length, which is the most common pattern when e.g. looping
+> through an array which has length items (0 to length-1), such that it is
+> even clearer to the reader that this is a zeroes based index.
+>
+> No functional changes intended.
+>
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > ---
-
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
->  drivers/pci/controller/dwc/pcie-designware-host.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+>  .../pci/controller/dwc/pcie-designware-host.c | 59 ++++++++++---------
+>  1 file changed, 32 insertions(+), 27 deletions(-)
 >
 > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index cca5fc886409..991fe5b9a7b3 100644
+> index 991fe5b9a7b3..eda94db04b63 100644
 > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -982,7 +982,14 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->  		dev_warn(pci->dev, "Ranges exceed outbound iATU size (%d)\n",
->  			 pci->num_ob_windows);
+> @@ -892,9 +892,10 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>  	struct dw_pcie_ob_atu_cfg atu = { 0 };
+>  	struct resource_entry *entry;
+> +	int ob_iatu_index_to_use = 0;
+> +	int ib_iatu_index_to_use = 0;
+>  	int i, ret;
 >
-> -	pp->msg_atu_index = ++i;
-> +	if (pp->use_atu_msg) {
-> +		if (pci->num_ob_windows > ++i) {
-> +			pp->msg_atu_index = i;
-> +		} else {
-> +			dev_err(pci->dev, "Cannot add outbound window for MSG TLP\n");
-> +			return -ENOMEM;
-> +		}
-> +	}
+> -	/* Note the very first outbound ATU is used for CFG IOs */
+>  	if (!pci->num_ob_windows) {
+>  		dev_err(pci->dev, "No outbound iATU found\n");
+>  		return -EINVAL;
+> @@ -910,16 +911,19 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  	for (i = 0; i < pci->num_ib_windows; i++)
+>  		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, i);
 >
->  	i = 0;
+> -	i = 0;
+> +	/*
+> +	 * NOTE: For outbound address translation, outbound iATU at index 0 is
+> +	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
+> +	 * index 1.
+> +	 */
+> +	ob_iatu_index_to_use++;
+> +
+>  	resource_list_for_each_entry(entry, &pp->bridge->windows) {
+>  		resource_size_t res_size;
+>
+>  		if (resource_type(entry->res) != IORESOURCE_MEM)
+>  			continue;
+>
+> -		if (pci->num_ob_windows <= i + 1)
+> -			break;
+> -
+>  		atu.type = PCIE_ATU_TYPE_MEM;
+>  		atu.parent_bus_addr = entry->res->start - pci->parent_bus_offset;
+>  		atu.pci_addr = entry->res->start - entry->offset;
+> @@ -937,13 +941,13 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  			 * middle. Otherwise, we would end up only partially
+>  			 * mapping a single resource.
+>  			 */
+> -			if (pci->num_ob_windows <= ++i) {
+> -				dev_err(pci->dev, "Exhausted outbound windows for region: %pr\n",
+> +			if (!(ob_iatu_index_to_use < pci->num_ob_windows)) {
+
+Is it better "if (ob_iatu_index_to_use >= pci->num_ob_windows)"
+
+Frank
+> +				dev_err(pci->dev, "Cannot add outbound window for region: %pr\n",
+>  					entry->res);
+>  				return -ENOMEM;
+>  			}
+>
+> -			atu.index = i;
+> +			atu.index = ob_iatu_index_to_use;
+>  			atu.size = MIN(pci->region_limit + 1, res_size);
+>
+>  			ret = dw_pcie_prog_outbound_atu(pci, &atu);
+> @@ -953,6 +957,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  				return ret;
+>  			}
+>
+> +			ob_iatu_index_to_use++;
+>  			atu.parent_bus_addr += atu.size;
+>  			atu.pci_addr += atu.size;
+>  			res_size -= atu.size;
+> @@ -960,8 +965,8 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  	}
+>
+>  	if (pp->io_size) {
+> -		if (pci->num_ob_windows > ++i) {
+> -			atu.index = i;
+> +		if (ob_iatu_index_to_use < pci->num_ob_windows) {
+> +			atu.index = ob_iatu_index_to_use;
+>  			atu.type = PCIE_ATU_TYPE_IO;
+>  			atu.parent_bus_addr = pp->io_base - pci->parent_bus_offset;
+>  			atu.pci_addr = pp->io_bus_addr;
+> @@ -973,34 +978,36 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  					entry->res);
+>  				return ret;
+>  			}
+> +			ob_iatu_index_to_use++;
+>  		} else {
+> +			/*
+> +			 * If there are not enough outbound windows to give I/O
+> +			 * space its own iATU, the outbound iATU at index 0 will
+> +			 * be shared between I/O space and CFG IOs, by
+> +			 * temporarily reconfiguring the iATU to CFG space, in
+> +			 * order to do a CFG IO, and then immediately restoring
+> +			 * it to I/O space.
+> +			 */
+>  			pp->cfg0_io_shared = true;
+>  		}
+>  	}
+>
+> -	if (pci->num_ob_windows <= i)
+> -		dev_warn(pci->dev, "Ranges exceed outbound iATU size (%d)\n",
+> -			 pci->num_ob_windows);
+> -
+>  	if (pp->use_atu_msg) {
+> -		if (pci->num_ob_windows > ++i) {
+> -			pp->msg_atu_index = i;
+> +		if (ob_iatu_index_to_use < pci->num_ob_windows) {
+> +			pp->msg_atu_index = ob_iatu_index_to_use;
+> +			ob_iatu_index_to_use++;
+>  		} else {
+>  			dev_err(pci->dev, "Cannot add outbound window for MSG TLP\n");
+>  			return -ENOMEM;
+>  		}
+>  	}
+>
+> -	i = 0;
 >  	resource_list_for_each_entry(entry, &pp->bridge->dma_ranges) {
+>  		resource_size_t res_start, res_size, window_size;
+>
+>  		if (resource_type(entry->res) != IORESOURCE_MEM)
+>  			continue;
+>
+> -		if (pci->num_ib_windows <= i)
+> -			break;
+> -
+>  		res_size = resource_size(entry->res);
+>  		res_start = entry->res->start;
+>  		while (res_size > 0) {
+> @@ -1009,14 +1016,15 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  			 * middle. Otherwise, we would end up only partially
+>  			 * mapping a single resource.
+>  			 */
+> -			if (pci->num_ib_windows <= i) {
+> -				dev_err(pci->dev, "Exhausted inbound windows for region: %pr\n",
+> +			if (!(ib_iatu_index_to_use < pci->num_ib_windows)) {
+> +				dev_err(pci->dev, "Cannot add inbound window for region: %pr\n",
+>  					entry->res);
+>  				return -ENOMEM;
+>  			}
+>
+>  			window_size = MIN(pci->region_limit + 1, res_size);
+> -			ret = dw_pcie_prog_inbound_atu(pci, i++, PCIE_ATU_TYPE_MEM, res_start,
+> +			ret = dw_pcie_prog_inbound_atu(pci, ib_iatu_index_to_use,
+> +						       PCIE_ATU_TYPE_MEM, res_start,
+>  						       res_start - entry->offset, window_size);
+>  			if (ret) {
+>  				dev_err(pci->dev, "Failed to set DMA range %pr\n",
+> @@ -1024,15 +1032,12 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  				return ret;
+>  			}
+>
+> +			ib_iatu_index_to_use++;
+>  			res_start += window_size;
+>  			res_size -= window_size;
+>  		}
+>  	}
+>
+> -	if (pci->num_ib_windows <= i)
+> -		dev_warn(pci->dev, "Dma-ranges exceed inbound iATU size (%u)\n",
+> -			 pci->num_ib_windows);
+> -
+>  	return 0;
+>  }
+>
 > --
 > 2.52.0
 >
