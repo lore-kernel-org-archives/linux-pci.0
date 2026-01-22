@@ -1,214 +1,245 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011002.outbound.protection.outlook.com [40.107.208.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FA383ACA7A;
-	Thu, 22 Jan 2026 21:18:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.2
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769116688; cv=fail; b=Lv4z2GMUHBdC8tUPwGijV7NZPeqHMqh3oakLnnO9x3ZBTKgwZT+r8vsSWpSvJfzaQH/jaLhgoly4czsgTase1yLlaHzsKuRLPe7kxr7svpoYuKMB79RziWhFo+56TrC/YCPHHBbAbKTH3lsFPVkS/hUW+P9CfaDw90cHd2JffLo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769116688; c=relaxed/simple;
-	bh=CHJ83vlPTVGnuNDsjTaEXnSXBcdiFZQDBlIKRTkumnw=;
-	h=Message-ID:Date:From:Subject:To:Cc:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=r2++rzXK6UJGW+JPWZdrYQ0JFiOhzgWLr4sigiMcsmCxmCjHERW4Q/qaTVcvL5L35vG2HXQoGq1pKBVlBiA6ClFQDiPPHcfFGLrMv910kHcIDzEtOA+6VC4zMrCamNpGe9SVtb6I7QTJaP7AQNat0OHNd86bT6uO+KGR8iOA4V8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=a+5nwSah; arc=fail smtp.client-ip=40.107.208.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6EB2D8396;
+	Thu, 22 Jan 2026 21:19:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769116768; cv=none; b=GBlNvpx4W94tB9ZmTH+xYDUYHp3ckQb6L+WYIQslRRpsnDL6BPg5aKTu9vqPjphjtHS7b6g0o8hsAvQssk/95et6Mr4zAbOdaJGiILafvUWAUE+ZhVI0uXw6FUhzB2GV5x7avP2acR7U9jjacbjtp6ia2fgzHsDO5Wd/CUltXC0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769116768; c=relaxed/simple;
+	bh=bystnSK/iqbWozZ7hbo6gpEx8M3AERXWdK58MlZ2V44=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=E+YizOlLo2I28L8GwvV4dhZNDBjwY9+B1P4hql982dCTAapmjSHQf+q/vUprnKMaOxKAkxEYs/+uOzePk4o7rlvxkGwCQqEIV/63PII+qyExAYKuf+ALgftBkV3fuukHYBuBmDA0OH3jVqsYUvSNjHrdQkjI4NUL0waywGPaJcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BFoEAKIm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="a+5nwSah"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=TJLGtCDd4thUyFJv0JtxOyysni2UzPhvXuATtY2NU1RFwgHY8lvFSLweIsBacAhN3QAP515lZQ+h2FtTLnawZK+5y4eI/bW674icAs1tkxXcoFOI+Ybhvqw6hKWH2VwgQaj2c7ImC03xO4LqD5D3i9VJG3kyt8CkYO6gzDDwVJQ5PE2+Skx0Toew9luFwI+taH+HEYla/mIK6/uoxvRa6xFGzYM6q+Fh6OyDTc2v8wJ6cbGwVr3wjfsCUDq0R0XU+X64RkiLnmdPWnVxpVDsF/MmFkKeJ9USkUrleErraT3s4tgase+hzY5YSwNiRiQuwbBnKz62yvSE/KWjPz7psA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bsmAxTuKp950QbUScO9/A3jQpfW2ZLxu6vKQBs85DPg=;
- b=CqXGca7KYdWX44Yn8+zhrB1jl2ZMRXiKOVNEmKKMGK8Sn+PhWJsJgcmSaEAM+tw+fSQCtB7zWOqG6DzpKzRYzMHbQqeb6pMe3hXDVuZKMsSJRfQqNkuPYjg48COMPYjobIMAvd+9Lq61X4A55bSMDCboMKC5QTjAAvLxydGPrEuv/xxeD/EdqIpeNSYN1NmK10uCoP6UQJLwdiE5SX4TqhFsWLn/GKs/ypE6VuScUz7BXwfVOx1v8GFG4k4jqUSjasioWP8XrfAKfsI6f46tmS1rN/FCZGFqBvn9MQPhb/bNXVg53+0tD66mRIu6pHmLTuIzgrWZ+hqaehT5nm+9lg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bsmAxTuKp950QbUScO9/A3jQpfW2ZLxu6vKQBs85DPg=;
- b=a+5nwSah+AzyLgtDn/Yfj1GD9n1KmqGWqjKA2jmSMM2DuMi/EqDsNfoGQfzQrMRW0yuMTv0tB9q0i6L/61vzPfrAqStwuxMOhH2lufLHd7IjT8ahK7RoMv8bk3eq+coTEnt/x6f7e82DwICBImZ2yev0GziGtlvyKVesB3lgAwCvTDmVBxJSvGXbvvG1tvRBUjOZhqC1BLQBtJI38QEpeqVGIZBI4k0mXUnMI1/AYSSHSSbrc4NDMMx3hPv/PP4uhJsYOV3gzwJ7TARg76uBsTnLJbd/L9Z43QoHnBwBKAVTXOFBzwmHMQZYTl1I1jvxk0DEqtkKfDct4Vsp2vH/1A==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS0PR12MB6486.namprd12.prod.outlook.com (2603:10b6:8:c5::21) by
- DM6PR12MB4329.namprd12.prod.outlook.com (2603:10b6:5:211::9) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9542.11; Thu, 22 Jan 2026 21:18:00 +0000
-Received: from DS0PR12MB6486.namprd12.prod.outlook.com
- ([fe80::88a9:f314:c95f:8b33]) by DS0PR12MB6486.namprd12.prod.outlook.com
- ([fe80::88a9:f314:c95f:8b33%4]) with mapi id 15.20.9542.008; Thu, 22 Jan 2026
- 21:18:00 +0000
-Message-ID: <29a1e16a-e50b-4d69-a6fd-41d11ca9e393@nvidia.com>
-Date: Thu, 22 Jan 2026 16:17:55 -0500
-User-Agent: Mozilla Thunderbird
-From: Joel Fernandes <joelagnelf@nvidia.com>
-Subject: Re: [PATCH v2 1/2] rust: introduce abstractions for fwctl
-To: Zhi Wang <zhiw@nvidia.com>
-Cc: rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, dakr@kernel.org, aliceryhl@google.com,
- jgg@nvidia.com
-References: <20260122204232.15988-1-zhiw@nvidia.com>
- <20260122204232.15988-2-zhiw@nvidia.com>
-Content-Language: en-US
-In-Reply-To: <20260122204232.15988-2-zhiw@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0245.namprd03.prod.outlook.com
- (2603:10b6:a03:3a0::10) To DS0PR12MB6486.namprd12.prod.outlook.com
- (2603:10b6:8:c5::21)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BFoEAKIm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A4ABC116C6;
+	Thu, 22 Jan 2026 21:19:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769116768;
+	bh=bystnSK/iqbWozZ7hbo6gpEx8M3AERXWdK58MlZ2V44=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BFoEAKImmRrF0iBubHmvI7C5xPKsb1k1+A5ekvmjLDN8EhFd3c3rntizCJzF5xE+V
+	 4STZ5pqHpfeARb0FKKtL8x1Y4qyzOGohJyg2tfSdeVq/GCa8bAndc7GzDW00GoILfP
+	 KNJTcgStKu3x5gJ3M1bLhCW+vXPY8/myr4+4mqGXyRjY3y04Fnlm0DQlh6bDHOLJMY
+	 TM1kBWiCDmNbXFMscsoJaJoD5V6DuxLfad5eHMzJrrxeTaQ9dYCOj6g1AaIp58Il6w
+	 zttkHAl2v82ITe2gQ8MeOkBpvZHMouJcU98wY9K/GSMduYgVxARcdaAJi2qH85YyH8
+	 G15fO2RMNfL9Q==
+Date: Thu, 22 Jan 2026 22:19:23 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] PCI: dwc: Fix skipped index 0 in outbound ATU
+ setup
+Message-ID: <aXKUW8euDVaRJofR@ryzen>
+References: <20251229-ecam_io_fix-v2-0-41a0e56a6faa@oss.qualcomm.com>
+ <20251229-ecam_io_fix-v2-1-41a0e56a6faa@oss.qualcomm.com>
+ <aXI8ByG3RlLpIRRa@ryzen>
+ <alpine.DEB.2.21.2601221806080.6421@angie.orcam.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR12MB6486:EE_|DM6PR12MB4329:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4b94e11c-1691-4f64-52f6-08de59fbb81c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?bjZ6d0k4dVdWcndRS0VMVlhNTEl6blRCTk9zaGdiTklZOVZobHpYY256cEdq?=
- =?utf-8?B?ajdRWlZ3MUxiNjkrVGhCeUgvU3Ard3ZxMGFpQXZINXM4OEF0cFpvMStJTE9U?=
- =?utf-8?B?Q3JqU2RtUFRBSXdOZ0NYYlNwTVR0SHQ1VjRuS3d0MTQ3OGNaVTA4UkdKWHAw?=
- =?utf-8?B?cElDRjdqaUVoK2J5U2QvM2dPWjE3RUJVWWJTRlFCdk5CUlV5ZTBHdjZjK29B?=
- =?utf-8?B?Nk5OSlFSUnNoODFzL05BcHpUZSs2a0J4UWUzNFZqZUpTUmxCbWlhc1pFeU1T?=
- =?utf-8?B?UVlCUldtM3c2RkZVWk5HZlF5ZXFiWk1SRnZLWm1uejN1dTN5SHp4dkJsTkpO?=
- =?utf-8?B?cG0rdU80d1NOZm0vY2JSWE1LbTVoL0dUUitmSHRkbzNtdjFnK3VPNHljS3lt?=
- =?utf-8?B?YkF6Q09XZjIzeE9GUWdKeUE1ZER6YnRBcGl5RmtlRDZwYmQ2dmhvZ2xiakdu?=
- =?utf-8?B?ODZMN2djVEt6aHR1NGVaQitJeHkxdzBOVVpFMXdld3NJaVFJTEhFU2JUUUdu?=
- =?utf-8?B?dTg1K3JUaVNmakw5WWVJcHhuUEExRHVVOCtTdUpqRllINXJ5VFVtTHJRcG5m?=
- =?utf-8?B?QVIycXBpT2N6SXBHWXE1V3FIMDhudkYwL2xzZlRKWVVHMEo2bXBDZ0tRSmxn?=
- =?utf-8?B?VnFZOEVNWmRuZTNtZlRhYW9PUlJaMStUSUJ3Sy93RnZVVXpzbU5pRmthN2Zh?=
- =?utf-8?B?eWQ0RUd2bllManNPVTM3Wnc2QWRGbzJhQkcvMWxQMUo3OFU0UzB2ZUR5eU80?=
- =?utf-8?B?UHFwREw1NmphM1lad0NhNXplK1NsVlgzNCthZnBlR3F5SVBGVm5rQUZRaFlQ?=
- =?utf-8?B?QzVOa3FtTDkyNDBBbFpGaEpzUVhLeGprbnlzNTNqMkVSTVN1cUxwbmhuMDdM?=
- =?utf-8?B?L2k2VE9PTG1nMGZoczZ1SW9FM0d2aVJLYmVuWEk3TzZuV0NucFFnRUI4elZM?=
- =?utf-8?B?U0JLTWdoWEFnNmRKZk9Ta2YvckpkOGJZYTkyd2F5aC9WNXdMSnBTOG1zcTJD?=
- =?utf-8?B?SVhjTzBFRjJlcHFSd0xwbEV1RFdhTkVTdjE5Ymg0Vi8wM1I4NUhTUnlyQXZw?=
- =?utf-8?B?WEhhSzFrd3ZSMXhIWG90bXIrdmxsMWt5NjRUNllaaXRCQmxEOWMycyt0bmhi?=
- =?utf-8?B?dm5RTVJWNjlCNGlDWVBwck8rcGpNRUVjWHlLUEdkRlY0SUtLdTBVYm8rbldZ?=
- =?utf-8?B?dzVqRmpXeWpqb21Ta01FbDVqQVZDU0QwOGJGSldsMnBxYXRuR1BLNkNVWG5x?=
- =?utf-8?B?RTFtc3JPekx5dzdjTGFyUzJ1M1BJdDhqWFN5aVROa3EzTytZSVhzZTZVV2J3?=
- =?utf-8?B?eU9tTjY0T3l2eVBtZVI3c1o4QSt1NzBQTzI5bDFSY2l5azRCUWtQdEpWYTVY?=
- =?utf-8?B?NkxMWW14eW1WRitYb0VJeG5PbVBTa1ZENStiZ0E1Y3dFQnBKSVNMYjJ5Wktx?=
- =?utf-8?B?TUdrVjFVelloU1htNW5QWVJIdC9DTExSRGl3N0ZFZmdpRExPeExiczN2dk9z?=
- =?utf-8?B?eXRPcUhGNS9NRVJET1QxNlNrWGM3QnRlNEI5a2lHZVFyckRnaXRNWllDTFZD?=
- =?utf-8?B?U2ZHRmI0SG9uaitSci9qSDdwK2RBV3BydzdTZVdTU05VMmVKelpnK09RQkUr?=
- =?utf-8?B?aUZjRTdUSm12b2t1NTJlVjVINFhwczhzUlFvbGhIbnVyaUlaQUpmNkFnTlNC?=
- =?utf-8?B?Tm1OckNId255SGV3NWR4T1hsM3pVZlZJaWd4QkJOYno0RVZ4Uk12Q3I4T3py?=
- =?utf-8?B?YlJ0blBnQlgrYkJFajU5MWRrVnpDQmwvK1Mrb2hzVzlaVExCZ1JZOGRuLzk1?=
- =?utf-8?B?RzBPdEkvTWUzcU5FM2U3OSs0bjVLdWJCUG0rOHBmbUZQcU8vRnloQjVTKzBN?=
- =?utf-8?B?eDNuUEpwYTFaSTJxWkNoWFRqRWJUZ1RyZFJsaUhqa2JJUGNCOXVSZXp5T1Ux?=
- =?utf-8?B?WFhKQmJUMDRoa0ZzQTh2QzNRbkZpcW9aR3BTZ28rcldDYlBpcTMyclNTN0xi?=
- =?utf-8?B?VlZ4ZG03Ym4xejdrTVpWTjhzN3ZCcGhZYUxUSHdoMDdFOFBBeEM0YUdHZmVL?=
- =?utf-8?B?N0tzWFNabStaT3Z1WERWRGtocEN0RXVLZkxpMmhEODVlOGdxMnZaYmVaUVl1?=
- =?utf-8?Q?zqow=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB6486.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?TlVFSWg2dW5SUEZWakVFS25rMDdKcENoeDl2dXU5TUFLTHhhUDRlaGdxQzlG?=
- =?utf-8?B?RGZzYmhJWWp5VkJoRTNGQ21MUnAxeEhLbWF3a1VkT20zVTFFbURSUjhCekd1?=
- =?utf-8?B?V2MrNGRnN1dOaHp0TjFmSFZEZmRnZWNuRGVCc1JxZTNvMEJWSWV4QUsyNjUy?=
- =?utf-8?B?ZTRSMXg1Kzhhd0h4a0pXS2ZuNUo4cmdsZFEvNGhZTkM3V1ZCeDRCWEJzUmdC?=
- =?utf-8?B?UU5xVXozemlwNGQzMlRSQVZvaktpUkcySDdXZkNuTWY0RDEwcSt4VkVTWmtk?=
- =?utf-8?B?Y3hKbXNndVh5dDdHMzkvYWxPOVJmQjRRT3pxcHlraHlmU2hQZi9oUHhrVi91?=
- =?utf-8?B?OVJUdUUrbHU5cUdwZjhLcmN3blQ0ZnJpRU4wRWNPWFpWcWhUVGhkaVZmMzFp?=
- =?utf-8?B?clJlMkJlaFVtUStxQnF5RWFZQTluSVN3eDQ3cTVUS08rL0Z4TURwT09oWi9C?=
- =?utf-8?B?ejRhL0pvSlFFNjl5ZEtDYk5vMW50aTNUTjh2bUZhYVZwL3Ivb0VmNUtPT2ZX?=
- =?utf-8?B?R1k5eUwwRWNFMUU3N05XcEV4T2k5QURQam1wUXFlcllKc0tKUGNCQUhQV2hE?=
- =?utf-8?B?eDFLbHJtSVZjTCtvbEsxMCtQTXBibUJxK2hoRnFIb2o1L1R5YnlRRngxVFEy?=
- =?utf-8?B?L0ZzMlRWdkZRV2hjc28wTXRhQVhTWmJQYUtvKzB2UWpKeVFndWpjaEF3ZGpH?=
- =?utf-8?B?RDVOckpTQlZKNmpRV1A0eHovYVBacUh5QTlHYnExWkJoeW9KcWpSUHREbkFR?=
- =?utf-8?B?U3FYa0YrRWxiOTJPSVJnQ0Q0cmZIbHl6cHA2NjNtelZBOG5iY3ROdVRZT2I0?=
- =?utf-8?B?OWhtcE4zSml1OE9wMWdDZWNyRXFIc0gxQ0QrOEJCUVhwTW8zMGhtdVFCaisw?=
- =?utf-8?B?cGxkQUE0N25vQXQ4TGt5VXVSQzBvdmVGSTNad1I4VE8yaEF1MDhyN0ZzNThL?=
- =?utf-8?B?RUFIMVM2K1V1WGk3UXpjcHBIRTI4bzdaTmhNRk9kcW9kZlhnSUJDN3FmNVhu?=
- =?utf-8?B?TDdGWHViTlk3OENtOUZLWVhyYUJSWDRqQzVzWk4zZ0pDYnN0d1hnN0F2eDli?=
- =?utf-8?B?UE52dDhIQWFzVTEvN3JoNlNzaS9EaHlYYkFRSkRjV0JEZllFbWlnL2phLzdK?=
- =?utf-8?B?cXVVOWI3UXRoL1RybUZDbXdYeFhmWjdyMjdjeFZxVnYzM1B0elpVK2R2dVlq?=
- =?utf-8?B?aTY1dzBwSm1XdjI2Tmc2WE9XS0l4Zmp5OXUveHc0QSsvZmxTOCtxU1RRaWw2?=
- =?utf-8?B?NHl3L3A3eE1Za3dWb2VxUmN1ZUYzR0tWWUoyYTVZZkd2UTFsTFlHMjRyaUhz?=
- =?utf-8?B?ZWNtU0s3MDcwU1hrQjhYVVB5WXBlbmhwWmFRMUs2R0dQQjM2U1N3ZGVFZVNj?=
- =?utf-8?B?VG50b1BCNHhkeDBFL2tTVkRHM0NPbENtN24yaWNWT0ppNDg1Ni85SG1NKzV3?=
- =?utf-8?B?dzZSbVZKS3diVlNyNXVGbTVjR2hzY2NNR3VuOUNxVkk3VFpsRkV1Q3pXY1Rv?=
- =?utf-8?B?NTA1My9WS3B6aVZJNDlScGh6Z2JZLzM5OGVUdnR3UVZuWGpuZnltT3g0bklp?=
- =?utf-8?B?b05IZ1gySjUzaWVsMGlOWkkwcGpvYS9NR0pPaHhEbDNJdnU0L0Q3QUFIQkVG?=
- =?utf-8?B?dTJVUUgxZjFjbnQ5QkY3UENXSGJ3ZlEvMUVqbldwYllGbkRqZlhnZmZTMzFL?=
- =?utf-8?B?RlBibUR6YnBuOFAxS2RvUWx5c05oUngvQ1RDL3o5UlJZTm5YY05WbktsWm02?=
- =?utf-8?B?M0s0RDF5QmdwU0oySHp1V2hBQlpXUEoyRzZzMmhhWGxwT3JvdGhUQ0tQZzVm?=
- =?utf-8?B?bHUxZlo2U01CbytzYnJRemlrck1zVU5yQ0tld2UvNjA4Nlhxb3RRRjhpT2hP?=
- =?utf-8?B?OUlZMGNMUlVCSXhhZHJIcWd2Q2xRK1dsYXVqWFJ0bGxMRUprM2FQT0liS01w?=
- =?utf-8?B?VHU4ajB4WDNMbTRtRjUrL0U2SzJDV2pkaEtEay9oQnZkTEhJWXBKZ0RsNWk1?=
- =?utf-8?B?ZHZYM0NYcGpWcnVhVkEzYU5raEZhTmNmbzQ4K093MktycGgrK3dOdS81OURZ?=
- =?utf-8?B?RFNsSEltbTF1RUFveXpRb2dGNSsxbmlNRll2Z0Q3VWJjMlQxK3dsQmdGSEVR?=
- =?utf-8?B?YlM5L04zbnJROUxVTUZoVjFvZ1gvYnd5YVNudVpYMXVVVmlBVHVkYUdxOFd6?=
- =?utf-8?B?TnpkanJndzY0UWYwbTFtd1VCVzJUakhnWTBQNEJKeXZSWGhmUEFDc3dLdGox?=
- =?utf-8?B?clpVRUFhalhrdEJabEVFMjJPQTl6Q052RXFjZFM5QVc3VTg1dXdmTk9mQmZI?=
- =?utf-8?B?ZTBrN2JRY1QzcnJrYnVYdzM3bFdmWGlmVHRyY00rUWU3VUlOYWpMeDlveU16?=
- =?utf-8?Q?5PgcVgVfcfFDbOcU=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b94e11c-1691-4f64-52f6-08de59fbb81c
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB6486.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 21:17:59.5691
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: lML7UuhpKSjc3qWBk12E0fHxDQ8dVc1ldrq0mbdAG0W+yj2McmdoKfJbEAGse6aOqZp88HvYuPV2tkl/QoUWpA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4329
+Content-Type: multipart/mixed; boundary="PQqAQjSSbpBNymFr"
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.21.2601221806080.6421@angie.orcam.me.uk>
 
-On Thu, Jan 22, 2026 at 10:42:30PM +0200, Zhi Wang wrote:
-> +    /// Called when a userspace RPC request is received.
-> +    fn fw_rpc(
-> +        uctx: &mut UserCtx<Self::UserCtx>,
-> +        scope: u32,
-> +        rpc_in: &mut [u8],
-> +        out_len: *mut usize,
-> +    ) -> Result<Option<KVec<u8>>, Error>;
 
-Exposing a raw pointer in the trait API means drivers that want to "reuse input
-buffer" need to write unsafe code right?
+--PQqAQjSSbpBNymFr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-    unsafe { *out_len = ... };
+On Thu, Jan 22, 2026 at 06:16:11PM +0000, Maciej W. Rozycki wrote:
+> On Thu, 22 Jan 2026, Niklas Cassel wrote:
+> 
+> > Also see my series here:
+> > https://lore.kernel.org/linux-pci/20260122145411.453291-4-cassel@kernel.org/T/
+> > 
+> > That tries to clean up this mess.
+> 
+>  Is your patchset referred meant to replace this one or does it apply on 
+> top?
 
-I believe the unsafe code should be confined to the abstraction layer instead,
-not in the driver.
+This series does no longer apply, as it collides with a commit queued on
+controller/dwc branch:
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc&id=e9a5415adb209f86a05e55b850127ada82e070f1
 
-How about using using an enum return type instead to properly wrap inplace
-versus driver allocated outputs?
+My patches are based on top of the above commit.
+(I saw the big mess we currently have with regards to iatu indexing,
+so I decided to clean it up, but making things consistent.)
 
-    pub enum RpcOutput {
-        Allocated(KVec<u8>),
-        InPlace(usize),
-    }
 
-    fn fw_rpc(
-        uctx: &mut UserCtx<Self::UserCtx>,
-        scope: u32,
-        rpc_in: &mut [u8],
-    ) -> Result<RpcOutput, Error>;
+So first of all, this series needs to be rebased.
+If you ask me personally, I would prefer if Krishna could rebase on top
+of my cleanups.
 
-Then the abstraction handles the pointer write:
 
-    match T::fw_rpc(ctx, scope, rpc_in_slice) {
-        Ok(RpcOutput::Allocated(kvec)) => {
-            ...
-        }
-        Ok(RpcOutput::InPlace(len)) => {
-            unsafe { *out_len = len };
-	    ...
-        }
-    }
+Patch 1/3 in this series is simply wrong, so it should be dropped.
 
-fw_rpc() as a bonus also gets 1 less function parameter and cleaner return
-signature.
+Patch 2/3 in this series is similar to patch 1/3 in my series, but seems
+to also have some extra prints that seem to be unrelated to fixing the issue
+at hand. (Fine to add extra prints in some other function, but don't do it in
+the fix patch itself that will be backported to stable releases.)
 
---
-Joel Fernandes
+Patch 3/3 is the only patch that needs to be rebased, and seem to be the
+patch that solves your issue.
+
+
+I don't like the way that patch 3/3 is implemented.
+
+ECAM will use two iATUs, one for PCIE_ATU_TYPE_CFG0 one for
+PCIE_ATU_TYPE_CFG1. But this patch completely disregards that
+this driver already reserves iATU index 0 for PCIE_ATU_TYPE_CFG0,
+but for non-ECAM versions.
+
+Now I understand why they have patch 1/3 in this series.
+
+But it is still wrong. It has to change the indexing based on ECAM
+is used or not.
+
+Please try the attached patch on top of my series.
+
+It avoids the need to introduce a new struct member.
+
+
+Kind regards,
+Niklas
+
+--PQqAQjSSbpBNymFr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=0001-PCI-dwc-Fix-ECAM.patch
+
+From b3d345d7075a4757c10b8fbf85154da66bccfebf Mon Sep 17 00:00:00 2001
+From: Niklas Cassel <cassel@kernel.org>
+Date: Thu, 22 Jan 2026 22:05:39 +0100
+Subject: [PATCH] PCI: dwc: Fix ECAM ...
+
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ .../pci/controller/dwc/pcie-designware-host.c | 34 +++++++++++--------
+ drivers/pci/controller/dwc/pcie-designware.c  |  6 ++++
+ 2 files changed, 26 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index eda94db04b63..ef66a031f0bb 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -441,7 +441,7 @@ static int dw_pcie_config_ecam_iatu(struct dw_pcie_rp *pp)
+ 	/*
+ 	 * Root bus under the host bridge doesn't require any iATU configuration
+ 	 * as DBI region will be used to access root bus config space.
+-	 * Immediate bus under Root Bus, needs type 0 iATU configuration and
++	 * Immediate bus under Root Bus needs type 0 iATU configuration and
+ 	 * remaining buses need type 1 iATU configuration.
+ 	 */
+ 	atu.index = 0;
+@@ -641,14 +641,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+ 	if (ret)
+ 		goto err_free_msi;
+ 
+-	if (pp->ecam_enabled) {
+-		ret = dw_pcie_config_ecam_iatu(pp);
+-		if (ret) {
+-			dev_err(dev, "Failed to configure iATU in ECAM mode\n");
+-			goto err_free_msi;
+-		}
+-	}
+-
+ 	/*
+ 	 * Allocate the resource for MSG TLP before programming the iATU
+ 	 * outbound window in dw_pcie_setup_rc(). Since the allocation depends
+@@ -892,8 +884,8 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct dw_pcie_ob_atu_cfg atu = { 0 };
+ 	struct resource_entry *entry;
+-	int ob_iatu_index_to_use = 0;
+-	int ib_iatu_index_to_use = 0;
++	int ob_iatu_index_to_use;
++	int ib_iatu_index_to_use;
+ 	int i, ret;
+ 
+ 	if (!pci->num_ob_windows) {
+@@ -915,8 +907,20 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 	 * NOTE: For outbound address translation, outbound iATU at index 0 is
+ 	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
+ 	 * index 1.
++	 *
++	 * If using ECAM, outbound iATU at index 0 and index 1 is reserved for
++	 * CFG IOs.
+ 	 */
+-	ob_iatu_index_to_use++;
++	if (pp->ecam_enabled) {
++		ob_iatu_index_to_use = 2;
++		ret = dw_pcie_config_ecam_iatu(pp);
++		if (ret) {
++			dev_err(pci->dev, "Failed to configure iATU in ECAM mode\n");
++			return ret;
++		}
++	} else {
++		ob_iatu_index_to_use = 1;
++	}
+ 
+ 	resource_list_for_each_entry(entry, &pp->bridge->windows) {
+ 		resource_size_t res_size;
+@@ -1002,6 +1006,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 		}
+ 	}
+ 
++	ib_iatu_index_to_use = 0;
+ 	resource_list_for_each_entry(entry, &pp->bridge->dma_ranges) {
+ 		resource_size_t res_start, res_size, window_size;
+ 
+@@ -1157,9 +1162,10 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
+ 	/*
+ 	 * If the platform provides its own child bus config accesses, it means
+ 	 * the platform uses its own address translation component rather than
+-	 * ATU, so we should not program the ATU here.
++	 * ATU, so we should not program the ATU here. If ECAM is enabled,
++	 * config space access goes through ATU, so set up ATU here.
+ 	 */
+-	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
++	if (pp->bridge->child_ops == &dw_child_pcie_ops || pp->ecam_enabled) {
+ 		ret = dw_pcie_iatu_setup(pp);
+ 		if (ret)
+ 			return ret;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 2fa9f6ee149e..766df22fe46e 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -531,6 +531,9 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+ 	u32 retries, val;
+ 	u64 limit_addr;
+ 
++	if (atu->index > pci->num_ob_windows)
++		return -ENOSPC;
++
+ 	limit_addr = parent_bus_addr + atu->size - 1;
+ 
+ 	if ((limit_addr & ~pci->region_limit) != (parent_bus_addr & ~pci->region_limit) ||
+@@ -604,6 +607,9 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
+ 	u64 limit_addr = pci_addr + size - 1;
+ 	u32 retries, val;
+ 
++	if (index > pci->num_ib_windows)
++		return -ENOSPC;
++
+ 	if ((limit_addr & ~pci->region_limit) != (pci_addr & ~pci->region_limit) ||
+ 	    !IS_ALIGNED(parent_bus_addr, pci->region_align) ||
+ 	    !IS_ALIGNED(pci_addr, pci->region_align) || !size) {
+-- 
+2.52.0
+
+
+--PQqAQjSSbpBNymFr--
