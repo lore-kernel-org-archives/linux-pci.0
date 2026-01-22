@@ -1,148 +1,195 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-102.ptr.blmpb.com (sg-1-102.ptr.blmpb.com [118.26.132.102])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB2BE343D7F;
-	Thu, 22 Jan 2026 14:40:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F1A315D5A
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 14:53:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769092801; cv=none; b=XZvXaV/9W6NXsLfiYmIofdolWZp1VqHWbTFk2riPV7mvDHdn47yOAcOPNGix+ItaLs393M9kz3bK//fvyqaNHsjtb39W0RlaRq8if+znxU1Ejy+cw/M5uM3vj2WD4Zs5FNaQGuAzZPLOzVvuvbUR7363+xw3yRaCuOwoWxL+j4s=
+	t=1769093594; cv=none; b=H0r/L6f6pFgELDSi4WEKkHK6+Ed++Cml+wii+NiZeX4nfhYVVhxYdbbw71E7OXFCQNsnCSPW+oKtrBbAkeKEx9l5DR85Z4nEe/YUYRV0nd4X3eXD31rx+hBra6z8QXVcq/FBdw2h8dKw17GiZBkGBhxSOi84XdBU9jEigfckjB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769092801; c=relaxed/simple;
-	bh=1ieLDIlqa3rrEJoM3l1ytVw+31Xyr7caHGb5FP+IeH0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pDr7j340aDcIwJNRhcLmeufzLYZpKr/PCUPjnTPaxoeDCyMGhe1vrOwUzcHUjcXi2vT6Pv+ypJqoPR55urFY0aZch++ODQbQyAS//EoVs7iQ2O+aaqv6wU/xvtpQAIByWL5n9ihUEeHTJt0cqPPwkai2Pkzwu4mu34ZGVsgs2Ew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hN6y9gqA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769093594; c=relaxed/simple;
+	bh=AI+fpNkvzKsjXNqo1sKeZnU6L1alw0hSpubZwaWowvc=;
+	h=Message-Id:Subject:Date:To:Mime-Version:Content-Type:Cc:From; b=S9kVA0PgjFI9KLS0W5iwDPJOyP9KMLr+PExrcCjLO617LmihLXvdApl9ysrQsRTtkjR0vK/xNZhfIaKwLEkCCWe4pOVgsDLNm5gBNrOCBlAht4nnHipaADeFXgfJWhLGSCft36/rwoRPFPcPvMC72HlXglzZ8O2zMcgug/bmXDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=NRVJ85Hz; arc=none smtp.client-ip=118.26.132.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hN6y9gqA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FC1BC116C6;
-	Thu, 22 Jan 2026 14:39:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769092801;
-	bh=1ieLDIlqa3rrEJoM3l1ytVw+31Xyr7caHGb5FP+IeH0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hN6y9gqAWxAcQsPwSSNk6yDY0nA/2zMjHltdGPEYl32qpcc756s/+sUezdnA5xT2a
-	 g+JcA26d40PYgkM5c65D4eQgm33IOUbjc68X9eSb2HN3Ieb0rFa68JBdTci6t/Fxmr
-	 ahoZp1wZpSoDAPDs7x2VfXnd4kD3oUv+QSfhSn5vCykEyKgWtJQiH9eJymSoXC2SoC
-	 qjkWRHymFFXa9XrCdmAXNvOGRZy3Yo3odm3eqAbR0MAMKDmU2P9Uo9fQmEbJm7NhI1
-	 WSuDgmkzsnr0G1gkovOOBlfhAEi9BA3yooLMxccj/atS+iDSbvD19S6wV8Ah+lTQ5K
-	 CBPac2Zv4CdFQ==
-Date: Thu, 22 Jan 2026 20:09:45 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	"David E. Box" <david.e.box@linux.intel.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Heiner Kallweit <hkallweit1@gmail.com>, 
-	Chia-Lin Kao <acelan.kao@canonical.com>, Bjorn Helgaas <helgaas@kernel.org>, 
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
- set by BIOS for devicetree platforms
-Message-ID: <4ywec7ifq4s2hqd3rg4mxcwkj345vvifpyihsywz3unn77fkdu@74wzarashnul>
-References: <20250922-pci-dt-aspm-v2-0-2a65cf84e326@oss.qualcomm.com>
- <20250922-pci-dt-aspm-v2-1-2a65cf84e326@oss.qualcomm.com>
- <7306256a-b380-489b-8248-b774e6d3d80e@nvidia.com>
- <76sr3yuwdaon3o3u5dfjycwlxhxcarid5tevgtao6aaapvwbzd@e7bam35dzt3k>
- <9a76a4a7-c02c-436a-8f69-57606a6b2bed@nvidia.com>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="NRVJ85Hz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1769093578; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=X3ztz+XDnlkRxS///+z4HFvJtNYD146sae4/QUhcKpE=;
+ b=NRVJ85HzyDcTk+yh6Zt/OvgcOIevBmpch+Fd4+SwqffPFSkKETalk8OenhQfmvH+XnjpFD
+ PskAL9L5wjLxb7ZXU5T4/rBBCcGlY+7arTbmXUV+8viZG+/UktCE2QFemO701CPjs+dn8e
+ nQ8QNcEoJN36cRg7cg+Kshp1qmX5VyT2Thaz2oDzuP+KxziMmyQDRL3zIDhcUFdqfZ5C0r
+ KrbuIj/n89Tcxs0JEkP7frzEVBNwU7zoSQARbtizR6S2Uc98CdTS0q20MdR4lAqz7SgizA
+ 2e81LqDbeSS3r1XtYmcfdJyJuRYTgPgdtQcv89euTsnri8K1psFhkdHJYaVycw==
+Message-Id: <20260122145208.1013-1-guojinhui.liam@bytedance.com>
+Content-Transfer-Encoding: quoted-printable
+X-Lms-Return-Path: <lba+2697239c8+6393cd+vger.kernel.org+guojinhui.liam@bytedance.com>
+Subject: [PATCH v2 0/3] Add NUMA-node-aware synchronous probing to driver core
+Date: Thu, 22 Jan 2026 22:52:05 +0800
+X-Mailer: git-send-email 2.17.1
+To: <dakr@kernel.org>, <alexanderduyck@fb.com>, <bhelgaas@google.com>, 
+	<bvanassche@acm.org>, <dan.j.williams@intel.com>, 
+	<gregkh@linuxfoundation.org>, <helgaas@kernel.org>, <rafael@kernel.org>, 
+	<tj@kernel.org>, <frederic@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9a76a4a7-c02c-436a-8f69-57606a6b2bed@nvidia.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Original-From: Jinhui Guo <guojinhui.liam@bytedance.com>
+Cc: <guojinhui.liam@bytedance.com>, <linux-kernel@vger.kernel.org>, 
+	<linux-pci@vger.kernel.org>
+From: "Jinhui Guo" <guojinhui.liam@bytedance.com>
 
-On Thu, Jan 22, 2026 at 01:43:41PM +0000, Jon Hunter wrote:
-> 
-> On 22/01/2026 13:17, Manivannan Sadhasivam wrote:
-> 
-> ...
-> 
-> > > Since this commit was added in Linux v6.18, I have been observing a suspend
-> > > test failures on some of our boards. The suspend test suspends the devices
-> > > for 20 secs and before this change the board would resume in about ~27 secs
-> > > (including the 20 sec sleep). After this change the board would take over 80
-> > > secs to resume and this triggered a failure.
-> > > 
-> > > Looking at the logs, I can see it is the NVMe device on the board that is
-> > > having an issue, and I see the reset failing ...
-> > > 
-> > >   [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
-> > >    flow control rx/tx
-> > >   [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
-> > >    0 timeout, reset controller
-> > >   [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
-> > >   [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
-> > >   [ 1003.050481] OOM killer enabled.
-> > >   [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
-> > > 
-> > >  From the above timestamps the delay is coming from the NVMe. I see this
-> > > issue on several boards with different NVMe devices and I can workaround
-> > > this by disabling ASPM L0/L1 for these devices ...
-> > > 
-> > >   DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
-> > >   DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
-> > >   DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
-> > >   DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
-> > > 
-> > > I am curious if you have seen any similar issues?
-> > > 
-> > 
-> > Marek reported a similar issue on ARM Juno board [1] on which one of the switch
-> > downstream port failed to come up while *entering* system suspend. But I was
-> > clueless as to why the device fails to function only while entering system
-> > suspend and not during runtime. I suspect something is going wrong in the
-> > suspend path.
-> > 
-> > In your case, looks like the device is failing while resuming from suspend. Did
-> > you see any error log during suspend as well?
-> 
-> I don't see any errors on entering suspend, just resuming from suspend. One
-> other thing that I notice, on resuming in a good case I see ...
-> 
->  tegra194-pcie 141e0000.pcie: Link didn't transition to L2 state
-> 
-> In a bad case I see ...
-> 
->  tegra194-pcie 141e0000.pcie: Link didn't transition to L2 state
->  tegra194-pcie 14160000.pcie: Link didn't transition to L2 state
->  tegra194-pcie 14160000.pcie: Link didn't go to detect state
-> 
+Hi all,
 
-But this error print is coming from:
+** Overview **
 
-	tegra_pcie_dw_suspend_noirq()
-		\__ tegra_pcie_dw_pme_turnoff()
+This patchset introduces NUMA-node-aware synchronous probing.
 
-This function broadcasts PME_Turn_Off message and expects the PME_TO_Ack
-response from the device. But in both working and non-working cases, response is
-not being received. Then the driver *deasserts* PERST# without asserting it
-before (which is weird) and then restarts LTSSM expecting the LTSSM to be in
-Detect state. And this one is not happening in non-working case. I don't know
-why, maybe the device got crashed?
+Drivers can initialize and allocate memory on the device=E2=80=99s local
+node without scattering kmalloc_node() calls throughout the code.
+NUMA-aware probing was added to PCI drivers in 2005 and has
+benefited them ever since.
 
-Can you also try skipping the suspend/resume handlers to isolate the issue with
-PME_Turn_Off?
+The asynchronous probe path already supports NUMA-node-aware
+probing via async_schedule_dev() in the driver core. Since NUMA
+affinity is orthogonal to sync/async probing, this patchset adds
+NUMA-node-aware support to the synchronous probe path.
 
-diff --git drivers/pci/controller/dwc/pcie-tegra194.c drivers/pci/controller/dwc/pcie-tegra194.c
-index 0ddeef70726d..a5bb122a9477 100644
---- drivers/pci/controller/dwc/pcie-tegra194.c
-+++ drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -2490,7 +2490,7 @@ static struct platform_driver tegra_pcie_dw_driver = {
-        .shutdown = tegra_pcie_dw_shutdown,
-        .driver = {
-                .name   = "tegra194-pcie",
--               .pm = &tegra_pcie_dw_pm_ops,
-+//             .pm = &tegra_pcie_dw_pm_ops,
-                .of_match_table = tegra_pcie_dw_of_match,
-        },
- };
+** Background **
 
-- Mani
+The idea arose from a discussion with Bjorn and Danilo about a
+PCI-probe issue [1]:
 
--- 
-மணிவண்ணன் சதாசிவம்
+when PCI devices on the same NUMA node are probed asynchronously,
+pci_call_probe() calls work_on_cpu(), pins every probe worker to
+the same CPU inside that node, and forces the probes to run serially.
+
+Testing three NVMe devices on the same NUMA node of an AMD EPYC 9A64
+2.4 GHz processor (all on CPU 0):
+
+  nvme 0000:01:00.0: CPU: 0, COMM: kworker/0:1, probe cost: 53372612 ns
+  nvme 0000:02:00.0: CPU: 0, COMM: kworker/0:2, probe cost: 49532941 ns
+  nvme 0000:03:00.0: CPU: 0, COMM: kworker/0:3, probe cost: 47315175 ns
+
+Since the driver core already provides NUMA-node-aware asynchronous
+probing, we can extend the same capability to the synchronous probe
+path. This solves the issue and lets other drivers benefit from
+NUMA-local initialization as well.
+
+[1] https://lore.kernel.org/all/20251227113326.964-1-guojinhui.liam@bytedan=
+ce.com/
+
+** Changes **
+
+The series makes three main changes:
+
+1. Adds helper __device_attach_driver_scan() to eliminate duplication
+   between __device_attach() and __device_attach_async_helper().
+2. Introduce helper __driver_probe_device_node() and use it to enable
+   NUMA-local synchronous probing in __device_attach(), device_driver_attac=
+h(),
+   and __driver_attach().
+3. Removes the now-redundant NUMA code from the PCI driver.
+
+** Test **
+
+I added debug prints to nvme, mlx5, usbhid, and intel_rapl_msr and
+ran tests on an AMD EPYC 9A64 system (Updated test results for the
+new patchset are provided below):
+
+NUMA topology of the test machine:
+  # lscpu |grep NUMA
+  NUMA node(s):                            2
+  NUMA node0 CPU(s):                       0-63,128-191
+  NUMA node1 CPU(s):                       64-127,192-255
+
+1. Without the patchset
+   - PCI drivers (nvme, mlx5) probe sequentially on CPU 0
+   - USB and platform drivers pick random CPUs in the udev worker
+
+   nvme 0000:01:00.0: CPU: 0, COMM: kworker/0:1, cost: 54013202 ns
+   nvme 0000:02:00.0: CPU: 0, COMM: kworker/0:2, cost: 53968911 ns
+   nvme 0000:03:00.0: CPU: 0, COMM: kworker/0:4, cost: 48077276 ns
+
+   mlx5_core 0000:41:00.0: CPU: 0, COMM: kworker/0:2 cost: 506256717 ns
+   mlx5_core 0000:41:00.1: CPU: 0, COMM: kworker/0:2 cost: 514289394 ns
+
+   usb 1-2.4: CPU: 163, COMM: (udev-worker), cost 854131 ns
+   usb 1-2.6: CPU: 163, COMM: (udev-worker), cost 967993 ns
+
+   intel_rapl_msr intel_rapl_msr.0: CPU: 61, COMM: (udev-worker), cost: 371=
+7567 ns
+
+2. With the patchset
+   - PCI probes are spread across CPUs inside the device=E2=80=99s NUMA nod=
+e
+   - Asynchronous nvme probes are ~35 % faster; synchronous mlx5 times
+     are unchanged
+   - USB probe times are virtually identical
+   - Platform driver (no NUMA node) falls back to the original path
+
+   nvme 0000:01:00.0: CPU: 3, COMM: kworker/u1025:1, cost: 34244206 ns
+   nvme 0000:02:00.0: CPU: 1, COMM: kworker/u1025:2, cost: 33883391 ns
+   nvme 0000:03:00.0: CPU: 2, COMM: kworker/u1025:3, cost: 33943040 ns
+
+   mlx5_core 0000:41:00.0: CPU: 3, COMM: kworker/u1025:1, cost: 507206174 n=
+s
+   mlx5_core 0000:41:00.1: CPU: 3, COMM: kworker/u1025:1, cost: 514927642 n=
+s
+
+   usb 1-2.4: CPU: 4, COMM: kworker/u1025:8, cost: 991417 ns
+   usb 1-2.6: CPU: 2, COMM: kworker/u1025:5, cost: 935112 ns
+
+   intel_rapl_msr intel_rapl_msr.0: CPU: 17, COMM: (udev-worker), cost: 484=
+9967 ns
+
+3. With the patchset, unbind/bind cycles also spread PCI probes across
+   CPUs within the device=E2=80=99s NUMA node:
+
+   nvme 0000:02:00.0: CPU: 130, COMM: kworker/u1025:4, cost: 35086209 ns
+
+** Final **
+
+Comments and suggestions are welcome.
+
+Best Regards,
+Jinhui
+
+---
+v1: https://lore.kernel.org/all/20260107175548.1792-1-guojinhui.liam@byteda=
+nce.com/
+
+Changelog in v1 -> v2:
+ - Reword the first patch=E2=80=99s commit message for accuracy and add
+   Reviewed-by tags; no code changes.
+ - Refactor the second patch to reduce complexity: introduce
+   __driver_probe_device_node() and update the signature of
+   driver_probe_device() to support NUMA-node-aware synchronous
+   probing. (suggested by Danilo)
+ - The third patch resolves conflicts with three patches from
+   patchset [2] that have since been merged into linux-next.git.
+ - Update the test data in the cover letter for the new patchset.
+
+[2] https://lore.kernel.org/all/20260101221359.22298-1-frederic@kernel.org/
+
+Jinhui Guo (3):
+  driver core: Introduce helper function __device_attach_driver_scan()
+  driver core: Add NUMA-node awareness to the synchronous probe path
+  PCI: Clean up NUMA-node awareness in pci_bus_type probe
+
+ drivers/base/dd.c        | 147 +++++++++++++++++++++++++++++----------
+ drivers/pci/pci-driver.c | 116 +++---------------------------
+ include/linux/pci.h      |   4 --
+ kernel/sched/isolation.c |   2 -
+ 4 files changed, 118 insertions(+), 151 deletions(-)
+
+--=20
+2.20.1
