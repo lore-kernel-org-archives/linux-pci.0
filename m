@@ -1,256 +1,289 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB1439BA48;
-	Thu, 22 Jan 2026 19:45:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769111132; cv=none; b=HcCb5yQYOWEmveWn6prhH8HYxj51TCNh38wqg37a6Y/I3yCwyUI3UmgVGj4d42GN9RzDrhZ+cmHHdqpBqFj40cNG9+fpdxayZeCnO+zmf902LvrTvyYX8qcDcFoBtkZBh0nFv+s8XyT8Swq45ob0pqkd8lu5ARg8mD7vTjtNpos=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769111132; c=relaxed/simple;
-	bh=BLiCdqknto/ayI6crtjR5Zr6UgXyLqxN/SxFgDgKQyQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UAiQLpz2cGGBoDDFu9A8laWN31bkIWmO5ksNATOPnC8RVqVCQ9Lm3STRnZqtk6pTc8XQ+TmoM8QwknE5fcpKqm32wFciBECK2Q4W4nRLegkf0IiCg300Js/hq3TBZAz92+6LJQMi6in8JDgYxjwQ5HKpWrqOhI57wqJFZwd6Eic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=KibJa0pB; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF94337B9A;
+	Thu, 22 Jan 2026 19:46:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769111192; cv=fail; b=NGsftG6k4esOyvMbBJHXCPtarNz7+huCy3rsxmI+QC/5cl4Kz/TPTq8e7nd/4ssMnej1qY75p1iqVWqsGAsTDLKvH2TR4hJwjOuBlFlAoDvA5vyusX7rYtdNsbSGYt5bTtfsQiE1pz/DRTC2RdUeUTvLvabC5KwneiRyrzvVe+g=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769111192; c=relaxed/simple;
+	bh=owF4gU4elaCKD7lupaMRi1+ifVl5cFP0igirvVkcK5M=;
+	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
+	 Content-Type:MIME-Version; b=tNhh+RmGSLuYx2HoQ4fqCOqbN8iUUNwasOxtfE3fW2ERyW0qagRdRm4h5puQYpOAoEBZotUg3GcdmAKz0wRTX+74D/bv6M88SrGrHeyDZMMeFuAkEk6DhH6gPYa4UwhxIFIXeBzNpLCnh3WLX7HO5wbUYykQtOoc68007IpoWG4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IUDNwf/K; arc=fail smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="KibJa0pB"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 60MFoop1028455;
-	Thu, 22 Jan 2026 19:44:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=5v7SNCiRnD9Isx5cUuwUHtst3+0KmR4FcRQZIb4D0
-	7U=; b=KibJa0pBzbKaL0DEe00eITSyhBCZVPyntCaPdjMMHMDFlwuigeVcgnm5+
-	uAFVcTQUcWEEO1lPa/cXda//OtSiIv5AuaV5ut80XNqZlR6XK4dvq+HwstfutN2K
-	yTujxXVaMkN/sa0KGkfFHNqUtDsvgZjJ17HpZREYSnw1gHwsx4owTAOAwF3QFonA
-	BgwBXoaQnhAx8QDI3Zcyq8UlWXU7iJxpkNP/L6d87RiK9G6Db/z2zGMS40IHYX2Q
-	sgtDEYHERIq8qBbwPuFW/BB+tK+AkDG/QK7kDH44RI62n8hzY+c6lND+4kLn7dgC
-	cQl6Z26cNSBsb+e9yP5Mgk0uRyn3Q==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4bt60eycxe-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 22 Jan 2026 19:44:42 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 60MIwFUw027382;
-	Thu, 22 Jan 2026 19:44:41 GMT
-Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4brnrncg22-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 22 Jan 2026 19:44:41 +0000
-Received: from smtpav03.dal12v.mail.ibm.com (smtpav03.dal12v.mail.ibm.com [10.241.53.102])
-	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 60MJidHS25035300
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 22 Jan 2026 19:44:40 GMT
-Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 95AE25805A;
-	Thu, 22 Jan 2026 19:44:39 +0000 (GMT)
-Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AAF6958056;
-	Thu, 22 Jan 2026 19:44:38 +0000 (GMT)
-Received: from IBM-D32RQW3.ibm.com (unknown [9.61.248.216])
-	by smtpav03.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 22 Jan 2026 19:44:38 +0000 (GMT)
-From: Farhan Ali <alifm@linux.ibm.com>
-To: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org, lukas@wunner.de, alex@shazbot.org, clg@redhat.com,
-        stable@vger.kernel.org, alifm@linux.ibm.com, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com, julianr@linux.ibm.com
-Subject: [PATCH v8 0/9] Error recovery for vfio-pci devices on s390x
-Date: Thu, 22 Jan 2026 11:44:28 -0800
-Message-ID: <20260122194437.1903-1-alifm@linux.ibm.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IUDNwf/K"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769111186; x=1800647186;
+  h=from:date:to:cc:message-id:in-reply-to:references:
+   subject:content-transfer-encoding:mime-version;
+  bh=owF4gU4elaCKD7lupaMRi1+ifVl5cFP0igirvVkcK5M=;
+  b=IUDNwf/KQ3DTq3doitfz+Hhx1b4oFq0mPkkmraZ6jtDrChwnV/FmhOx1
+   yT7mqAAk5TjGQFflVBzx6TutPVH7acA8ZxoP4WkxkGazGZWQsltYsNotg
+   vHSh0sjWL7hT0MDIE/1wu1IPZF/3unawrQl7udrEcWBlFRv1L/vQQQIgJ
+   g2a86/JXfZUXApDSaEzwuZEYN46inC2sy11Bxd9soJpShGwJm4TKuSZ0D
+   01REj9c3pduVDVuwyx4HsCswXdmUyaAoqAXe2l0q3dhZr5oTm6H9igX0d
+   VzTtMahmwqZ9l6K8aWpis7YjTeixXVjz/UfIlrodQ1/ctEq3DnaG7BWtI
+   Q==;
+X-CSE-ConnectionGUID: ShGNo7UaQ06K4exUILavlA==
+X-CSE-MsgGUID: RavwJ/6DRSW33KyzeQFL9g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11679"; a="80990337"
+X-IronPort-AV: E=Sophos;i="6.21,246,1763452800"; 
+   d="scan'208";a="80990337"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2026 11:46:20 -0800
+X-CSE-ConnectionGUID: Jscm2n4BTM6ZpCH7V6MHFg==
+X-CSE-MsgGUID: prGllr40TK2RjzoWgr3W1w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,246,1763452800"; 
+   d="scan'208";a="207080130"
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by fmviesa008.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2026 11:46:20 -0800
+Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Thu, 22 Jan 2026 11:46:19 -0800
+Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35 via Frontend Transport; Thu, 22 Jan 2026 11:46:19 -0800
+Received: from BL2PR02CU003.outbound.protection.outlook.com (52.101.52.26) by
+ edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Thu, 22 Jan 2026 11:46:18 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cv8nqhO0o8/OFm55Vso1KideXnSuwW2TJYf7W2zJ34khBu8sqSn53VPUyOt/SWliNKYK6RyR6W5jxZ7rqZb2hsMXz23At8DI3xIQreGJCP5EzbiCWEAh5/5hlenKs8+vSdB0OOHSABPpk9LvKOefzCze2WGz1GtZejLBcCPNygR968No32vKV3PguD7aFtfPqBeKTPuWU/9jRMd5Mw0uBSI0bvT2rIGy9bJekZ0BGGdxclntjGMSoofLIxcd8s0GvjOwpTWzGxAYPQPztrNRs66w5Np/E0E7KHOensjc5McC390SpF4eauO5aLpv/jkqmojBRPlgQtRFn+akJCBoUQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KpxL4jASNYd7ROdFDAU8TdZT8uvMJWPVA+klQo2FTzg=;
+ b=ZDDjLmpmrhuFJaLzRnVhoiiOuafo3BUo66srgS57Zf0iaQ7kG+x8g0aqfPQeOV316++g6G+5yP5ewUH5Y43cb17OTPqSbmZKxZ+NUMX/q6QGaWkqdntCXOXh/iChX/bo35GLR6Re6GJ1oIj7hSjNUjWvstO+km9K14UxFIlF03b23R1iqNVS/Ql+Xe84irJgBxN8v5SJln0zrZYZvPkqMD94EGtpyOTFcysvtzipS4Sst/XVyNOlpVbyyEadgTIQ79LE793moeEOvyDeRoHevnxx+GdFdEH2W6EgLNh2olAZmI1Xt5KAmb/Vwk7U4UiTVPi64U4oafK2+hWpXJKVLA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by CYXPR11MB8755.namprd11.prod.outlook.com (2603:10b6:930:e3::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.10; Thu, 22 Jan
+ 2026 19:46:10 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff%6]) with mapi id 15.20.9542.008; Thu, 22 Jan 2026
+ 19:46:07 +0000
+From: <dan.j.williams@intel.com>
+Date: Thu, 22 Jan 2026 11:46:05 -0800
+To: Jason Gunthorpe <jgg@nvidia.com>, <dan.j.williams@intel.com>
+CC: Jonathan Cameron <jonathan.cameron@huawei.com>, "Tian, Kevin"
+	<kevin.tian@intel.com>, Nicolin Chen <nicolinc@nvidia.com>, "will@kernel.org"
+	<will@kernel.org>, "robin.murphy@arm.com" <robin.murphy@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "joro@8bytes.org"
+	<joro@8bytes.org>, "praan@google.com" <praan@google.com>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "iommu@lists.linux.dev"
+	<iommu@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>
+Message-ID: <69727e7ded712_3095100ab@dwillia2-mobl4.notmuch>
+In-Reply-To: <20260122131432.GJ1134360@nvidia.com>
+References: <cover.1768624180.git.nicolinc@nvidia.com>
+ <d1768bb6384050a23769f20ca28216f520f77e26.1768624181.git.nicolinc@nvidia.com>
+ <BL1PR11MB5271F0BDC68C2D7F172122E98C96A@BL1PR11MB5271.namprd11.prod.outlook.com>
+ <20260121100307.00004e60@huawei.com>
+ <20260121130315.GE1134360@nvidia.com>
+ <6971b9406d069_1d33100df@dwillia2-mobl4.notmuch>
+ <20260122131432.GJ1134360@nvidia.com>
+Subject: Re: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SJ0PR05CA0131.namprd05.prod.outlook.com
+ (2603:10b6:a03:33d::16) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=WMdyn3sR c=1 sm=1 tr=0 ts=69727e2b cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=Qtm5l5LcizsofoGoYxAA:9
-X-Proofpoint-GUID: H_Q4x0ahxOzZPlj0rIx5RG9P0gZWyk66
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIyMDE0OCBTYWx0ZWRfXxcLrEReAC1Qe
- KdCRHJO8dx9RZEpvN9HRFvN2CjSKFoimGDIQ1KQ45K02pkF6uSHht1JraQgPPOYQBknv95zYk45
- FUaec3KLjrH/L415XJ03o/hiMYfsAzrekyAuu0hNzEXlWCe1Qrz5K8c9Ex9qwMl2MEE0WjwAWqx
- dn0fQOUUu+NtNL8NgTY3Z9GpseXZspIQbxZDMqd1jJD67nywoi3ahfHPA9V/wKkPVQayIDt5Z+o
- Dip9yXpgphPUmxBia10n6gx52Ra7lWNLcu54DHHP3BbOiI5auCAL7+UVkEFL+nCN/72JpB4NO+M
- Ie3/tekO7uyHjGQlisWprIsY4bPrqWfXPjXXOhhSeF646DzNb0ccKeLW9fT2MXtkz399w70Q7oU
- K2AXHdJWbv+oq+fLQzlvkkZzNmra8xD8gfoOdq01ILFNVWSvQ1dTvJKoLt7Yiex9rA3wIvgnxsy
- G3IlvQlMDBD5KVVvfMg==
-X-Proofpoint-ORIG-GUID: H_Q4x0ahxOzZPlj0rIx5RG9P0gZWyk66
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
- definitions=2026-01-22_04,2026-01-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 malwarescore=0 suspectscore=0 bulkscore=0 adultscore=0
- impostorscore=0 spamscore=0 clxscore=1015 priorityscore=1501
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2601150000
- definitions=main-2601220148
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|CYXPR11MB8755:EE_
+X-MS-Office365-Filtering-Correlation-Id: ce3af05c-4a19-407d-780b-08de59eee2d9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|7416014|1800799024;
+X-Microsoft-Antispam-Message-Info: =?utf-8?B?S3I1ejR4eUcwck5vTm1ENkw5VnBPMXJXTTE5aGI4ejkzN1ZtK3Jlc2xaM0dH?=
+ =?utf-8?B?V3U0b3ZCRmNqT1N3dmlvZEsybmlxTDFDMzRhZ1dmcHJqYWxMTHJaaVFVcnh3?=
+ =?utf-8?B?M1o1UU10aVhrUlBYb0p0VlZCYzZBc0V0Z0ErMEgwOEtiNCtSUEhFSklMcTZ5?=
+ =?utf-8?B?VGNJaWk2WnJXK0ZmZHJ1SGd4R1lDNkhrVGRXTDFRT2NmK04waTBOdzIvQVIx?=
+ =?utf-8?B?UnA0M0hMSXE1U2RtMWVlK3MvZTFSNlM3Z1gvZjl6dThqK1VOdkp0eis2eHIv?=
+ =?utf-8?B?b3JBbHQ0TkZIVExoM1RIMlgyUmNqWGNWOEQ0WTZtelU1bWlISFhQVkZwS2JV?=
+ =?utf-8?B?MnJrazVLNWtBRG5wdVVyUVB6ZTJ5MllUdHNxcXQrUWVVRDVua1k2V0orN0N6?=
+ =?utf-8?B?cDJNdENvUUJuZkIwN0h2THR0Sy9DQncxaE8xYU83RHMzNVU3Rms1MWFrU2dO?=
+ =?utf-8?B?UWVzeW1OZHVacXZ5TGxCOXVFMFBmRlJ4N0N5Z0s4N0pPNzVWREY2TUhEcGlN?=
+ =?utf-8?B?VzZvOHo3STVvd3RKV09VUUZtRlBIVkM4Rk9PWVd0cU9xa25xcDZHYjM0RUVj?=
+ =?utf-8?B?OFFKRkhhOXVSYkY3cHhVMDk2MkRoOUYzclhuaFNEeFRCSXpUeDcwZlZOd3BE?=
+ =?utf-8?B?UlIyTUFFWDcxd1EvUlNjc2M2VVNuWFRYWVhSSTBEdmg3aVlETkV0VXprZ2pG?=
+ =?utf-8?B?V2NBRWRNQ1BZZWh0Q3RsUUFVZzlaY3NHN2pYWTIxRnRveDN0cVZkbklpbCs3?=
+ =?utf-8?B?aE9KNjVOR1JKM3BTdU8zcHZUUG1aRUFIMm1nUlBNeUp1T2hwbUJaMFBxenNo?=
+ =?utf-8?B?Q0VyZHJqVzNLbDlWdlFITnRFaEY3SnM4RTdmSWNhcFZrVXJnS2dEN2tjdlVM?=
+ =?utf-8?B?cms1VkIrLzNpWTZXdWFBU2RBWU9WNjQ4d3NrRUs3dFFxTnJ4UEY4T2w2b3pq?=
+ =?utf-8?B?U0MzeWhFZUVXOW5Iamc2czFIY0crcC8rRnAxTmFNZzFFWXFvRmlxNkNTOTJw?=
+ =?utf-8?B?ckJsalpTR1JyZUpNbHQ3Zm5LT2VhYmlTdmZhb1E4R1pqU1ZMbCtJaXdKaVRl?=
+ =?utf-8?B?K2hhVFU1aWJEdk9zSUYwVmc3bjRKY1lYaFVUUlNoRjBrS2wyZWxSV2lyK0Ny?=
+ =?utf-8?B?c0FwREFHQVJuQ0xMOEdiVDA0SjNJL2xybGpJdHV1MEU5U0pETXFrSFVNenpo?=
+ =?utf-8?B?SkZrbDR4WklCR3QybG8xc2M2N0NJeGdkM2hmZU84Mkk3RU1XUUVTMExESXp5?=
+ =?utf-8?B?ckZyZEpUOC9lUUpTZWVVYWRTdnpGdmZlSHlmZW56VXdwMXVqVzdjbEM2U1k0?=
+ =?utf-8?B?MlJnVEVNS0dMcVlvSEVtYUxxbGlMZVpLcFFQU2orM1MrMXg5YXFYYUNFcXh3?=
+ =?utf-8?B?NGtOUTg1S0RXWjJ5R0pOdGxNeVE4d0pUWjJmU0NQUy8ydlltQzNKT24ybmUw?=
+ =?utf-8?B?VlhuSVlOZHNKcHp5YjZpOEtnUkFldDZqMTVDMklRUHNkcVZEYW80djdmNDRH?=
+ =?utf-8?B?UnpPQmUyZ2RYN3A5NHlhdXBRYkpRVUl2VElrRHMyOWx1bUI4bGQwV2JtNXZ2?=
+ =?utf-8?B?T2grLzRqZWRaa1pPQzdGSUpaSzB4Y1M1Q2l5bHg0TnpDa3pMSWNNQkFBSko0?=
+ =?utf-8?B?OEtJZ0kzeWpYZkhINUF1b3EwdWcrNVJFc0pyZmkzcGVta1NsOGFPOERaMWNx?=
+ =?utf-8?B?SE83MzBFS0h4UENXOTM2eHFWdHhTVHlGKzNaZ1hxdklLUU95eTM3Z1JaaU1G?=
+ =?utf-8?B?T2hUUTJOYWtxenQ0S1VBUlllK0dwTkZWWnErUkUrcFVycU1CMzRGMTVxZVhL?=
+ =?utf-8?B?dFp6K2dNbEQ4MWxFYjJNS3RiZDdXN0MzSE9wTFRiM09OVnlMcFVjcjFpbG11?=
+ =?utf-8?B?SUV3Mmx2aHVoTEtrazE3di80QzB2RmpvZS9SVWFJQWxuL2t3L1ltUFluVSta?=
+ =?utf-8?B?b2U2ZEhCUkxyR0JaZlpSRG9wK2hyTkJpWXJXR3djb3dSTUpwZ2sxVHV2ZFNv?=
+ =?utf-8?B?clFhdU5DZkhuSnhRZFpia1gvUjJDc084SUxzMndIS0ZYVW56c3Rwb2RBcWcv?=
+ =?utf-8?B?cnQ2aVIxQmZoNzlFdEs1U3ZZa0FHb0VVT1J2Mmk5NzNsZStSbG1lUW84TjBq?=
+ =?utf-8?Q?45T4=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(7416014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?WFhRejdIbmFPUmRWVjdTSG5lL0VTM2N2ekJ2MWVzNko0TUZIUnpORXJwdmFB?=
+ =?utf-8?B?UmNXb01BZHFtSW96WVRBS2dwbWR3SnpIQW5FS1B6TG00dWdZQ2dteEtsNjAy?=
+ =?utf-8?B?OXo1THIvOFpKdE1BWloxaWxCVmFhL2Q3aTlkWUhhRmcvNndFWFEyT2ZCVnFw?=
+ =?utf-8?B?SUNIYk5GM2lwWkhXRm5wT1lhRTF2RC9OSVJCYWh0Q0NpTHd5UU92bGl3Tmd6?=
+ =?utf-8?B?UlBsbVlaa2plUHZ1UGJRbFYraTVKSHpCblVPREhmNDhLc2dMUnRON3VmSVE2?=
+ =?utf-8?B?MmNtNURrN0FCZUg0WXBhN2krTytIYWZDY0dGUXNhTXNQV2NZeUQ4SnJYbkt5?=
+ =?utf-8?B?eGQvVEx0SHVUVnFEay9XNFZyRmo4ZTZYZHFZUzlFNnVGWFNYVVlDV2hseERl?=
+ =?utf-8?B?V3Z5S1d4dzM4SWYzWVhrQUs4RFVreWIzRll6OHJRckt5eTQwKzNVMzdPWXJR?=
+ =?utf-8?B?blY1Rk1tY3pydTlQSWNlVjRiM2xBMlJNajFSZEFTOU00aXJza3BHRVdhZW0z?=
+ =?utf-8?B?OStqNWcvMXVhVitwdmRwOUJYWjN6L3hpc0ttYW4yVGdWb0dDWEorbUJqc0l3?=
+ =?utf-8?B?UHh2c0dnMUFrMms1cnJpaUdBRVFMNmZKM0lxL3c0bE9UT2xLeHZnWW03akNi?=
+ =?utf-8?B?Qm9QSGozRHlBSlhJNG9EL045VjFJbnAyYjg1Y0lBdFpNb0V0NVVQT0dLQXBN?=
+ =?utf-8?B?QzJTQUR1SlZRc25NcElpM2hteFB4bFRXZENBa244OHErSTA0cXdWalRIZmkx?=
+ =?utf-8?B?RkRmcVB0WVJEYnRZMFpNYW1FSUxSRGIycnMrVzlTbWxRK01OaStvM1d1TjEy?=
+ =?utf-8?B?cWQwOHNRKzV5RkhXcHZGbUJRSEZtK3A4Q0dvb3A1Q2ZuWlVKK2pYVXhrdnp3?=
+ =?utf-8?B?aEFFWDN6SVdaUmt5cUpnUDcwUVRxbmsxQVpSMzVMejJ1amlOWFJhZ1Z4REVN?=
+ =?utf-8?B?ZFpDTFMrSHdmdEVxcGxKT0MyZDNtdDhNZGpkMzFnTHdsSDhOY3Bvc0x3VHFB?=
+ =?utf-8?B?MTdYWEhSMi8xZ1g4amVoMWZZYU9HYTlwNHBmalpBQVd2QUJQNlJHUGpBUnBr?=
+ =?utf-8?B?MGpYcVZ5SnZkSnNvUWpMOUVKMHdRUDJjTmZ6VkRSbFRvUlk3MnAycW5UbVRJ?=
+ =?utf-8?B?RWtOZFhrNENlUjltbCtqQTRSNmFEdWFsYzZUNUlCM2tKNUFCdm1qWEExSUJF?=
+ =?utf-8?B?cUwzZ21vdkprQVNkZldVMnFXQ1FlanJSeXZOekdkc0IwL1h0L3VhTW9kS0lR?=
+ =?utf-8?B?K2FaamFsaUZYbE9aY1dtODEzTFBxT2JGeDltN3lWcUdOc0tWWVpTNlkxTFY0?=
+ =?utf-8?B?eEtFMXVkakNLU05KemdrS3EvRFlSak9uNmxybFdweUQ0NEthSmJ6RWk5Tm1H?=
+ =?utf-8?B?Y0NNcjVoTHZtcGNiNmR2dVltY2FRT3BMa3RISFptbU5kQy9TWmNpaTVQUWFY?=
+ =?utf-8?B?Q1JaRmRhRWZGSEsyN3IzT09pY084bGpaQzJHL2lockV6cEFYVzdFV0Z1eVc3?=
+ =?utf-8?B?NnlmR3dFRWJ0VTJydkpFNmVEa0sveUJvN1UwRldZT1FJTTh2R2R2U245Q2Rl?=
+ =?utf-8?B?eXJpVUxsSE5xaE1wRjZaOTZ5KzZUdG0rTEYzV3RMSU5vTUo0RVhWMzRwNnF2?=
+ =?utf-8?B?MVhwVWpDVXJCK2hGQTN1U1g4S05Zd0RvbFhvNjdpanFmazB0Um1qbDRBTVM3?=
+ =?utf-8?B?aTFxWWR5RUg3TE9GRjVsSWo5UFVGVWt1ZHdMUjZqRWcwY1dncUo0OEkvWUZp?=
+ =?utf-8?B?MUJ3TGU3R0Z6RHNsZE5sbm5uTlljU0lBcDVPWVVTenEyZjdDYjFjS1NuQVY1?=
+ =?utf-8?B?bmdaUlNPQXEzSUR1N2pBZWk4OFRHWDRoekM0RXpBZmZ2bDdtWkM0U05ybzU4?=
+ =?utf-8?B?aWdRVnY3eDV5MTg2MnA1c1V1dEtCUkR0NWpnM3o0bkZQcC8xRVJKWTR1T0Fh?=
+ =?utf-8?B?SCtDWUpLRm5EcVN2VFZOWW91UENiYWxtcy96eXlPaU1Vb2llcitVRXhxd21t?=
+ =?utf-8?B?eTRsUVV3M0FCaS90Nm1mS2RLdEtkRTk3ck80eTFua2MzQlJuWE43SkNJM0xv?=
+ =?utf-8?B?TGxJYnN1WVNyUDM1ajFid00ydkd6VjRvZ0xuL050YXhaT2ZYUmMxdmVlNzAy?=
+ =?utf-8?B?RVpqdGxZTkxTNDF3RlloVkIyRWxPWExqVlRVR2F0eUxvOVc0eXMxdjRmMks0?=
+ =?utf-8?B?S2FLMUt5aG8xdDZmKzBYNHJkTmZWZ3hXeVI5R05TaVoyVTFCOXdXdGl4c21v?=
+ =?utf-8?B?R1lMWk1WeXFDZzlnU241azgxUyszNmM4cXJGTTlrVU1PTXBPdURrRjVnK0sr?=
+ =?utf-8?B?T2R3Si93UUltU2JGMHVHMjVMUlJKVGVqUUlzcWQzbldRcVhWRG8zTkp3cHRN?=
+ =?utf-8?Q?7EbRVqC7QNn0XHfQ=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: ce3af05c-4a19-407d-780b-08de59eee2d9
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 19:46:07.7460
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: lv9pN4RIlZajdGMmZ6/KgcKokuynJkMv0NCoXfLMLLU6u3216w/OqFFq+lC2Z6feyefl7PPE6ySi894EHdwHnsAv5UrJGHID/BT0dL8veJk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYXPR11MB8755
+X-OriginatorOrg: intel.com
 
-Hi,
+Jason Gunthorpe wrote:
+> On Wed, Jan 21, 2026 at 09:44:32PM -0800, dan.j.williams@intel.com wrote:
+> > Jason Gunthorpe wrote:
+> > > On Wed, Jan 21, 2026 at 10:03:07AM +0000, Jonathan Cameron wrote:
+> > > > On Wed, 21 Jan 2026 08:01:36 +0000
+> > > > "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> > > > 
+> > > > > +Dan. I recalled an offline discussion in which he raised concern on
+> > > > > having the kernel blindly enable ATS for cxl.cache device instead of
+> > > > > creating a knob for admin to configure from userspace (in case
+> > > > > security is viewed more important than functionality, upon allowing
+> > > > > DMA to read data out of CPU caches)...
+> > > > > 
+> > > > 
+> > > > +CC Linux-cxl
+> > > 
+> > > A cxl.cache device supporting ATS will automatically enable ATS today
+> > > if the kernel option to enable translation is set.
+> > > 
+> > > Even if the device is marked untrusted by the PCI layer (eg an
+> > > external port).
+> > > 
+> > > Yes this is effectively a security issue, but it is not really a CXL
+> > > specific problem.
+> > 
+> > My contention is that it is a worse or at least different problem in the
+> > CXL case because now you have a new toolkit in an attack that wants to
+> > exfiltrate data from CPU caches.
+> 
+> ?? I don't see CXL as meaningfully different than PCI in terms of what
+> data can be accessed with Translated requests. If the IOMMU doesn't
+> block Translated requests the whole systems is open. CXL doesn't make
+> it more open.
 
-This Linux kernel patch series introduces support for error recovery for
-passthrough PCI devices on System Z (s390x). 
+Right, the game is mostly over in the current case, but CXL.cache still
+deserves to be treated carefully. Consider a world where we do have limitations
+against requests to HPAs that were never translated for the device.  In that
+scenario the device can help side channel the contents of HPAs it does not
+otherwise have access by messing with aliased lines it does have access.
 
-Background
-----------
-For PCI devices on s390x an operating system receives platform specific
-error events from firmware rather than through AER.Today for
-passthrough/userspace devices, we don't attempt any error recovery and
-ignore any error events for the devices. The passthrough/userspace devices
-are managed by the vfio-pci driver. The driver does register error handling
-callbacks (error_detected), and on an error trigger an eventfd to
-userspace.  But we need a mechanism to notify userspace
-(QEMU/guest/userspace drivers) about the error event. 
+At a minimum CXL.cache is not improving the security story, so no time like the
+present to put a policy mechanism in place that improves upon the PCI untrusted
+flag.
 
-Proposal
---------
-We can expose this error information (currently only the PCI Error Code)
-via a device feature. Userspace can then obtain the error information 
-via VFIO_DEVICE_FEATURE ioctl and take appropriate actions such as driving 
-a device reset.
+> > "We have a less than perfect legacy way (PCI untrusted flag) to nod at
+> >  ATS security problems. Let us ignore even that for a new class of
+> >  devices that advertise they can trigger all the old security problems
+> >  plus new ones."
+> 
+> Ah, I missed that we are already force disabling ATS in this untrusted
+> case, so we should ensure that continues to be the case here
+> too. Nicolin does it need a change?
+> 
+> > I do not immediately see what is wrong with requiring userspace policy
+> > opt-in. That naturally gets replaced by installing the device's
+> > certificate (for native PCI CMA), authenticating the device with the
+> > TSM (for PCI IDE), or obviated by secure-ATS if that arrives.
+> 
+> I think that goes back to the discussion about not loading drivers
+> before validating the device.
+> 
+> It would also make alot of sense to leave the IOMMU blocking until the
+> driver is loaded for these secure situations. The blocking translation
+> should block ATS too.
+> 
+> Then the flow you are describing will work well:
+> 
+> 1) At pre-boot the IOMMU will block all DMA including Translated.
+> 2) The OS activates the IOMMU driver and keeps blocking.
+> 3) Instead of immediately binding a default domain the IOMMU core
+>    leaves the translation blocking.
+> 4) The OS defers loading the driver to userspace.
+> 5) Userspace measures the device and "accepts" it by loading the
+>    driver
+> 6) IOMMU core attaches a non-blocking default domain and activates ATS
 
-This is how a typical flow for passthrough devices to a VM would work:
-For passthrough devices to a VM, the driver bound to the device on the host 
-is vfio-pci. vfio-pci driver does support the error_detected() callback 
-(vfio_pci_core_aer_err_detected()), and on an PCI error s390x recovery 
-code on the host will call the vfio-pci error_detected() callback. The 
-vfio-pci error_detected() callback will notify userspace/QEMU via an 
-eventfd, and return PCI_ERS_RESULT_CAN_RECOVER. At this point the s390x 
-error recovery on the host will skip any further action(see patch 6) and 
-let userspace drive the error recovery.
-
-Once userspace/QEMU is notified, it then injects this error into the VM 
-so device drivers in the VM can take recovery actions. For example for a 
-passthrough NVMe device, the VM's OS NVMe driver will access the device. 
-At this point the VM's NVMe driver's error_detected() will drive the 
-recovery by returning PCI_ERS_RESULT_NEED_RESET, and the s390x error 
-recovery in the VM's OS will try to do a reset. Resets are privileged 
-operations and so the VM will need intervention from QEMU to perform the 
-reset. QEMU will invoke the VFIO_DEVICE_RESET ioctl to now notify the 
-host that the VM is requesting a reset of the device. The vfio-pci driver 
-on the host will then perform the reset on the device to recover it.
-
-
-Thanks
-Farhan
-
-ChangeLog
----------
-v7 series https://lore.kernel.org/all/20260107183217.1365-1-alifm@linux.ibm.com/
-v7 - v8
-   - Rebase on 6.19-rc4
-
-   - Address feedback from Niklas and Julien.
-
-
-v6 series https://lore.kernel.org/all/2c609e61-1861-4bf3-b019-a11c137d26a5@linux.ibm.com/
-v6 -> v7
-    - Rebase on 6.19-rc4
-
-    - Update commit message based on Niklas's suggestion (patch 3).
-
-v5 series https://lore.kernel.org/all/20251113183502.2388-1-alifm@linux.ibm.com/
-v5 -> v6
-   - Rebase on 6.18 + Lukas's PCI: Universal error recoverability of
-   devices series (https://lore.kernel.org/all/cover.1763483367.git.lukas@wunner.de/)
-
-   - Re-work config space accessibility check to pci_dev_save_and_disable() (patch 3).
-   This avoids saving the config space, in the reset path, if the device's config space is
-   corrupted or inaccessible.
-
-v4 series https://lore.kernel.org/all/20250924171628.826-1-alifm@linux.ibm.com/
-v4 -> v5
-    - Rebase on 6.18-rc5
-
-    - Move bug fixes to the beginning of the series (patch 1 and 2). These patches
-    were posted as a separate fixes series 
-https://lore.kernel.org/all/a14936ac-47d6-461b-816f-0fd66f869b0f@linux.ibm.com/
-
-    - Add matching pci_put_dev() for pci_get_slot() (patch 6).
-
-v3 series https://lore.kernel.org/all/20250911183307.1910-1-alifm@linux.ibm.com/
-v3 -> v4
-    - Remove warn messages for each PCI capability not restored (patch 1)
-
-    - Check PCI_COMMAND and PCI_STATUS register for error value instead of device id 
-    (patch 1)
-
-    - Fix kernel crash in patch 3
-
-    - Added reviewed by tags
-
-    - Address comments from Niklas's (patches 4, 5, 7)
-
-    - Fix compilation error non s390x system (patch 8)
-
-    - Explicitly align struct vfio_device_feature_zpci_err (patch 8)
-
-
-v2 series https://lore.kernel.org/all/20250825171226.1602-1-alifm@linux.ibm.com/
-v2 -> v3
-   - Patch 1 avoids saving any config space state if the device is in error
-   (suggested by Alex)
-
-   - Patch 2 adds additional check only for FLR reset to try other function 
-     reset method (suggested by Alex).
-
-   - Patch 3 fixes a bug in s390 for resetting PCI devices with multiple
-     functions. Creates a new flag pci_slot to allow per function slot.
-
-   - Patch 4 fixes a bug in s390 for resource to bus address translation.
-
-   - Rebase on 6.17-rc5
-
-
-v1 series https://lore.kernel.org/all/20250813170821.1115-1-alifm@linux.ibm.com/
-v1 - > v2
-   - Patches 1 and 2 adds some additional checks for FLR/PM reset to 
-     try other function reset method (suggested by Alex).
-
-   - Patch 3 fixes a bug in s390 for resetting PCI devices with multiple
-     functions.
-
-   - Patch 7 adds a new device feature for zPCI devices for the VFIO_DEVICE_FEATURE 
-     ioctl. The ioctl is used by userspace to retriece any PCI error
-     information for the device (suggested by Alex).
-
-   - Patch 8 adds a reset_done() callback for the vfio-pci driver, to
-     restore the state of the device after a reset.
-
-   - Patch 9 removes the pcie check for triggering VFIO_PCI_ERR_IRQ_INDEX.
-
-Farhan Ali (9):
-  PCI: Allow per function PCI slots
-  s390/pci: Add architecture specific resource/bus address translation
-  PCI: Avoid saving config space state if inaccessible
-  PCI: Add additional checks for flr reset
-  s390/pci: Update the logic for detecting passthrough device
-  s390/pci: Store PCI error information for passthrough devices
-  vfio-pci/zdev: Add a device feature for error information
-  vfio: Add a reset_done callback for vfio-pci driver
-  vfio: Remove the pcie check for VFIO_PCI_ERR_IRQ_INDEX
-
- arch/s390/include/asm/pci.h       |  29 ++++++++
- arch/s390/pci/pci.c               |  75 +++++++++++++++++++++
- arch/s390/pci/pci_event.c         | 107 +++++++++++++++++-------------
- drivers/pci/host-bridge.c         |   8 +--
- drivers/pci/pci.c                 |  26 +++++++-
- drivers/pci/slot.c                |  25 ++++++-
- drivers/vfio/pci/vfio_pci_core.c  |  22 ++++--
- drivers/vfio/pci/vfio_pci_intrs.c |   3 +-
- drivers/vfio/pci/vfio_pci_priv.h  |   9 +++
- drivers/vfio/pci/vfio_pci_zdev.c  |  46 ++++++++++++-
- include/linux/pci.h               |   1 +
- include/uapi/linux/vfio.h         |  16 +++++
- 12 files changed, 302 insertions(+), 65 deletions(-)
-
--- 
-2.43.0
-
+That works for me. Give the paranoid the ability to have a point where they can
+be assured that the shields were not lowered prematurely.
