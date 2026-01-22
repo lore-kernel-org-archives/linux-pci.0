@@ -1,238 +1,170 @@
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010006.outbound.protection.outlook.com [52.101.193.6])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D9B30F7EF;
-	Thu, 22 Jan 2026 10:25:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.6
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769077543; cv=fail; b=c5H/oIN86VjjkPytDWz9odV8/jMXYBN7YDN3hI00HivcTs9lrVDRoe8orsiQSur8EiajSWZStTIsL+FU7XrD/+536RST110PsVEEovKDGYszJ7Sm5ZULGRvFz7TTfZY0LvlQdfNtJX5wifNA/uA+jjiwovapFDxBF92zyf5iDyk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769077543; c=relaxed/simple;
-	bh=HKEGjvaf64vjQAgCkZSimOGSeWgrw0gUCAYVLo6qHAc=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=OpA4Zd2kRR0B5MKhnaFf5H1zwd6C0CYF/LXxW5R/2jJWyaJm5UjReZuNpNjuonGgwX+uyPXTbNqd/d3+Iox+Srky01FPiqyQ2Nqd3qIcbHWl4g1WUF0EjxzeV2f3l0Q+R5IhBlGx62x9pwXO6ABl0VBYCDVnPe99ikQ1nXIHOds=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=15mqkIwh; arc=fail smtp.client-ip=52.101.193.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="15mqkIwh"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cX6roxmy1QPbTnYrCOmqTFeaoE0nJzIxFzDhZ2GqHh65Y9I/imWDA9HZXahDI/gQvG88rznwCXsCj3j24Jn61TYjxrg/XQE/mOaccFMVf1UsaHUZAzUpY7gXTWkCKD/sdsQs7WyNJzNJX1pbhHZPrXIe5Ppe/NDSsvCJEJJzKX7o/1pj3RbhZJRZqAFysmRbxUPi+4naBqJCdfp+0oNGCujtcvb/Sok4qbVELLihJjaqRSQSl8a5QQ3u8f1TpdxfzIxie5AHLFjWDIvwNPpjU+n8WHFim22uB2ztvVeT+ZE6xgdJLZTDjDaxQGLh5tdWJcYo78xWmtkA7XUHKQNJrQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wXDPqyiLdtmkhDH20FlxniffaDaFHsn7ICjIijsgMVg=;
- b=aofN4Sq7fHVrvOi5S7ttncSq5WM44vyd+FNulwU8cOi6BqCIiYxk0xc+TxPXugx8tdtgSNZhUC7Wk1JrTUg94hpEQTElIqpXmiXaFlb2rTdpFhFldYBE//dQZ68U2OsfMQHC6LB7RmD1W7tq6O/KCbspcFMPabTlgX1lpPn0v44BFMagS/YoPH0VEla06z4H8aaYZXJyj8fXPRLYOVV8f2WbL9vEEAbgQWDej1OgqizkxsQsjkXaAfaVO2fasJx10xJAdkHLo1wzH/Zu2w+m/pjjZZXQkGkqQeeieZ0qszjkAvqrXK+Dh0I0MkCVek/cgkBSIHyGDH6Wl/dE9Tp/6A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wXDPqyiLdtmkhDH20FlxniffaDaFHsn7ICjIijsgMVg=;
- b=15mqkIwhrW9rHMcZmEht6XgWgxbbhJhsfGJS0Xs7oRcFXCeAfWKkX74f/U+3jg1kf0DovFQsDngt0wBkl9391uqbksg2/eaiXJXkZsY7Wz7UBSXDqdtLK6NBHWyWapXCU5CMDC8S5P1Ds0HmeveN/IQMbi2ZeMU4xvNQC+dJEwM=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from MN2PR12MB4205.namprd12.prod.outlook.com (2603:10b6:208:198::10)
- by IA1PR12MB7710.namprd12.prod.outlook.com (2603:10b6:208:422::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.11; Thu, 22 Jan
- 2026 10:25:38 +0000
-Received: from MN2PR12MB4205.namprd12.prod.outlook.com
- ([fe80::cdcb:a990:3743:e0bf]) by MN2PR12MB4205.namprd12.prod.outlook.com
- ([fe80::cdcb:a990:3743:e0bf%6]) with mapi id 15.20.9542.010; Thu, 22 Jan 2026
- 10:25:38 +0000
-Message-ID: <adf64600-1124-4e9e-9d31-b0f18f66496a@amd.com>
-Date: Thu, 22 Jan 2026 10:24:58 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
- capable devices
-Content-Language: en-US
-To: Jason Gunthorpe <jgg@nvidia.com>,
- Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: "Tian, Kevin" <kevin.tian@intel.com>, Nicolin Chen <nicolinc@nvidia.com>,
- "will@kernel.org" <will@kernel.org>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "Williams, Dan J" <dan.j.williams@intel.com>,
- "joro@8bytes.org" <joro@8bytes.org>, "praan@google.com" <praan@google.com>,
- "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
- "miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- linux-cxl@vger.kernel.org
-References: <cover.1768624180.git.nicolinc@nvidia.com>
- <d1768bb6384050a23769f20ca28216f520f77e26.1768624181.git.nicolinc@nvidia.com>
- <BL1PR11MB5271F0BDC68C2D7F172122E98C96A@BL1PR11MB5271.namprd11.prod.outlook.com>
- <20260121100307.00004e60@huawei.com> <20260121130315.GE1134360@nvidia.com>
-From: Alejandro Lucero Palau <alucerop@amd.com>
-In-Reply-To: <20260121130315.GE1134360@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DU2PR04CA0263.eurprd04.prod.outlook.com
- (2603:10a6:10:28e::28) To DM6PR12MB4202.namprd12.prod.outlook.com
- (2603:10b6:5:219::22)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9280349AEB;
+	Thu, 22 Jan 2026 10:31:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769077878; cv=none; b=W3+GTzAsqVhhf7MxhgXliycdy4lJYoiZPVzO/OTzuNKzhavqzJJGuvbts6k2VIUsugkK99Kuv2wLyFlV7mZxHNGDS07bVn8JyP7R2wsHg2OXOoAS1elmi9Yd65mi0zeqk+thE27C0xMcm9KMGxe8OArhWBTGpIhRVZBMlooB+rg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769077878; c=relaxed/simple;
+	bh=cqS7KKnEw2XlLBSCbeCJMDjXnGZt5elRteE1142HIMU=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=C0Nwii9CSuzZNvLhnM0sZ7htoQTvHnroOFwJ12xlYQgmx/586xmkcmBpmMin5WpUFSEQCIz3DO0nE9Upfq9ohLOUZipQg85rQ4LbQzJm9LaLsoG73dLK2TRTejt3MB0niQmCWxEE2fEFfx+JEH1xCnJLJ9/6F6c8ZqS2uslAINc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.83])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dxcll6J5LzJ46Cx;
+	Thu, 22 Jan 2026 18:30:43 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7031E40086;
+	Thu, 22 Jan 2026 18:31:11 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 22 Jan
+ 2026 10:31:10 +0000
+Date: Thu, 22 Jan 2026 10:31:09 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Vikram Sethi <vsethi@nvidia.com>
+CC: Srirangan Madhavan <smadhavan@nvidia.com>, "dave@stgolabs.net"
+	<dave@stgolabs.net>, "dave.jiang@intel.com" <dave.jiang@intel.com>,
+	"alison.schofield@intel.com" <alison.schofield@intel.com>,
+	"vishal.l.verma@intel.com" <vishal.l.verma@intel.com>, "ira.weiny@intel.com"
+	<ira.weiny@intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "ming.li@zohomail.com"
+	<ming.li@zohomail.com>, "rrichter@amd.com" <rrichter@amd.com>,
+	"Smita.KoralahalliChannabasappa@amd.com"
+	<Smita.KoralahalliChannabasappa@amd.com>, "huaisheng.ye@intel.com"
+	<huaisheng.ye@intel.com>, "linux-cxl@vger.kernel.org"
+	<linux-cxl@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Vishal Aslot <vaslot@nvidia.com>, "Shanker
+ Donthineni" <sdonthineni@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>, Matt
+ Ochs <mochs@nvidia.com>, Jason Sequeira <jsequeira@nvidia.com>, Souvik
+ Chakravarty <souvik.chakravarty@arm.com>, <james.morse@arm.com>
+Subject: Re: [PATCH v4 07/10] cxl: add host cache flush and multi-function
+ reset
+Message-ID: <20260122103109.000049d6@huawei.com>
+In-Reply-To: <PH7PR12MB9175CDFC163843BB497073CEBD96A@PH7PR12MB9175.namprd12.prod.outlook.com>
+References: <20260120222610.2227109-1-smadhavan@nvidia.com>
+	<20260120222610.2227109-8-smadhavan@nvidia.com>
+	<20260121112005.00001e80@huawei.com>
+	<PH7PR12MB9175CDFC163843BB497073CEBD96A@PH7PR12MB9175.namprd12.prod.outlook.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR12MB4205:EE_|IA1PR12MB7710:EE_
-X-MS-Office365-Filtering-Correlation-Id: 133c675d-a8a7-4914-c44b-08de59a0886f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|7416014|376014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?WStpUlJ2Q0xXb3FyNWFvNlJlMXpzemZZY0IwUzVzbTdCQWxwRE52VlVRMDhn?=
- =?utf-8?B?bTdyWG5VcThqRldxTzZIU1dERThGQmNuWGxYRkVaWkFJdFhvVy9taE81SXM0?=
- =?utf-8?B?b0FLK04yRElqVlFxbWlSWGZaRmVNWXd3YUVYUjFEeGc3SmhEUGdSeGVoQUVP?=
- =?utf-8?B?Sy9Kbm5CdW5zR2Y1UWJSM3B0QWxlR3JQQzhYRlkwQm9NVEVhUWJvUSt3MEt5?=
- =?utf-8?B?SU5zZjJvYjlyZ2wvaDN1M1gydEpBejVSQ2JNRlo4UlJMWktzalVlTHdiNVlT?=
- =?utf-8?B?eTBjQmdSUnloV3A1T1VSdGU4Wi9SZXlaRGlWM0ErNlh2YmJCRVFTTXFlcGxI?=
- =?utf-8?B?T3A5N0JySU50eWVKeFRwSkdkcGVsWDFKRmFkdlpGa1k4Q0thc1JXajVlYzJo?=
- =?utf-8?B?SlZ4SHpOOXkwWFVUaFYzNmZnUDJNZjM3TkZjUW9QdFM1R0xJbXkwdzFIcUho?=
- =?utf-8?B?enlZY2orK2JBU0xpQ25RSnRRcTNaU2ZZSkhkUitZNWQ4bjBaUDhybTdPcE4r?=
- =?utf-8?B?dWtNK0lMdExRTTdYeVcrU3o3MEtvbXJWYVpVc0RzTnBXRTlsZFVYUzIzWGJN?=
- =?utf-8?B?K1RiQXlYOGg3UmkraXg0N29tbSt1WW5KYWVuS3JlTzVPVkVhMmlpR3RTa1dP?=
- =?utf-8?B?NlFvd1M1SjQ3Z1dBRERTNmdISU9mV2Z6TEh6Q2ZseFU2QkVKS0FvdC9UbXBM?=
- =?utf-8?B?UGRIcytJZnI4VjNvSE5jNDFzUTdBdngzaTk3eDZraGJwb2NEaTJnWHJBWTMw?=
- =?utf-8?B?YzBlUTNWdFc5VytjamlhSlJEd1pIZlQvOU1wNno2czVoOGk0MFhNWXJCQnY2?=
- =?utf-8?B?WDBnS0pNUG95ZFFPQ0JBcksvczdJSlRTdTlNWFhOZ2dzY29PbjlOV1pBTU9k?=
- =?utf-8?B?a0pTa0RkRGNPRGc3YmhrR1cvcCtUUXFTYjB6L25XRWg4amliTjBrdk9ndFcr?=
- =?utf-8?B?Wjd6QVRha05xMmZTWDI0ZkhwaGF6VXp6V2ptanBPSXhvRGQzcVVrdUpBR2lm?=
- =?utf-8?B?TGUwMWdFM2VLTUl0S3FvYkJRNEx0b3haWkRpT25BTytwR01RZlBJSXZKZlp5?=
- =?utf-8?B?SlBlWW10RFlDNDhrZ0pucXNrOFlhUDdMblFXVHRmT2xEalpOcU9COUlUSTlR?=
- =?utf-8?B?YVM5TzZDYVZ0YlptcW80ck9KMmhtb2dnd2QvcytBakpETktrbGNlK1dheFVr?=
- =?utf-8?B?Yko1SVFmNEh0UWhYZXlRVmVSVnBKdTNWYTJIdjhVaG9ZUlNtVTd4QkVaejJB?=
- =?utf-8?B?MGxRZTQzM2ljVmdIakZ4eTFRaGgvOFZKK3pHK24xWTlib1BabmRibExjRUdh?=
- =?utf-8?B?OXNJZjN4blJob2xvYXE5M0p3bEd1NXoxM09SRy8yT1NZZ0x6VGlvNXlGV1M1?=
- =?utf-8?B?RkxFakhpVU81R1NiMnIwdWh2MWJiRC9JYlJvTU4ySkxvWDBsbzJvWkFpVEl5?=
- =?utf-8?B?MXMyMTk1QWR1cWM4aW1LdXdWZE1wT1I5VU52cE8reld6a0F4RXFaSmRzWFQ2?=
- =?utf-8?B?SzZSeHZuNUY1TDlsVE52cVNZa2hJVTZqRXovR3BmYnIxdjBlaVJyS3Qrc3ox?=
- =?utf-8?B?aHZwQXVEQjRmV0x6M0kxZmt5UW9uS0lHYlBpaTRKQmg1RGErTEtHcWZoK2xB?=
- =?utf-8?B?WWEzM3JmNnBHOW1nRVRtRitHQVhXUXY5WTdRcHdNWXdicjNESXNOUTdTSWR1?=
- =?utf-8?B?QWFncEY1UVlLcWxZUmxBMU5jY1cwZXBESys3bjcwaHlUWHlMbWpndk9xMnNO?=
- =?utf-8?B?UkFVUDJWYkhnQ2ZEUURGZHAwekFsWFVDbk1TNyt6OEpIdGRNdm9yTTYrTkI1?=
- =?utf-8?B?N1I4cDBkUWxEcVVWVzdJSWhBK1VFSXlLSEtGNHNZNDNwNzZQT0ZPY2grb0l4?=
- =?utf-8?B?eEM4eHg0U2dxOThrVkFIVHptTHNSNTk1WU9DM29EUWh3RDk2cE0weE50QWpJ?=
- =?utf-8?B?SHVZbTZHRlNOOFI1Zlc1RmZJYTNMSDdkbXRkOFZFVFBSZWhzcDY3RTc1ajJE?=
- =?utf-8?B?ZlhzNjBFeXRoTGxxeUdSUWY2WFl6VjRzdE41dElHUldGbVYrU3hGcjF1UHli?=
- =?utf-8?Q?3anO6f?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4205.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N2FBYWllN3NKaVpjcGg4dysxQ2hEQTFmamNTZDF3TlY0Q292MUd6RXJqVDdV?=
- =?utf-8?B?Q29DSTR4eXJyZnhpR0Q3ditkU24wSGFEalppTHVLWWZnWXRlMWVQa1oyZ3Fy?=
- =?utf-8?B?VG5HK0RvRWEvR3VWYUV3RHdydVUvd3N3UG1MNk5sRVhNcjduYnd1bFIvTVVk?=
- =?utf-8?B?cmJ2L0laYUJlK3k1U0UxSzkwN3hTTUc5RXVDNG1UUkttU1B1eVREZWRrWW1J?=
- =?utf-8?B?Q201MUw1Z2tuRHoyUm1NZHZYR28wZU9TYmdmckhsOUF1L0hNdGFvdERaRVFw?=
- =?utf-8?B?TGU0Nk52bWJBandCWU9vZmw4Vi9RZVdGalBzYmJFbHBQNkZMUVBVb0FVU0lL?=
- =?utf-8?B?dFFEOTdvMkxNMENBckNwa2laK3B3TE8yUTVMR2hOOXZIMnJmbXpucWdhNUhv?=
- =?utf-8?B?aEMyS0dIa3IzcWJrKy9iWWJRMHhrUllmTDZ3Ym43bCsxSXFlWlhRb1BKVHdu?=
- =?utf-8?B?OW5pTUI4UTFkQ29jNWVpeWFERkFaOHo5RFkvYWhHcWswVnpJeGJEbkJ5NkpS?=
- =?utf-8?B?NGY0Y1JsYU9YZkhXQ3dreEZ5UjJWQUhmQVpyeDkxQjNmdkZlYTJ4SUV6Z1BH?=
- =?utf-8?B?OEJSY1RoOE1oUXlsRFE4U29RNTNpcWtVZlVIdkhzV0RBRi9qc1NMSmpKemxY?=
- =?utf-8?B?SlZTWmllVy96WEZFYlU4SzRra3JDL3BaekFiZExiQXFYR1VyMUNWKzV6V2tB?=
- =?utf-8?B?akFBK2k4MzYxVEpDaUV4dnpFbEgzMXNhK0pJbU85dDRMazBhWjN2cm5yV25E?=
- =?utf-8?B?OGV5aUdVK1BhNEZENkNnbEJENFlwUG1IWE1EMUdHODJtVjlTcVJTWUJWVnND?=
- =?utf-8?B?ZmlqRTZJeFFxVFFyNjk3emNnYWI0QjJmU0tYWW8zVGdweFB2U2hyV3QzcDll?=
- =?utf-8?B?YXBNRXVSQ0FmZEVZL01pMXFnREhjOThzLzQ4ZkZtRlZMM21tckh5Uk9OMUpx?=
- =?utf-8?B?VHpTeHMzT1ZKdER2SHNLVTVzSTdQR1BiTTM4TVc4bERxZGNTbVhMZENZcUlw?=
- =?utf-8?B?dVpLNlF6NGNxbi80Y1c5b1B6dGpyeTlkRE1nZ2pwZ0pKUXFRRkFPNmoxc215?=
- =?utf-8?B?dzhRclFRRjl6OVRXSisvbmhJWW5ZU2N2TjN0cGt5bm5yWGRlam5oak9hYURm?=
- =?utf-8?B?UjU0YVFHNHBCQVV5OUpZZVhjL0pFNUxGNlJlejR1SWQ4N1ZhcmpQdEhPdFZD?=
- =?utf-8?B?YWRyQSszQW9IN3BBdFZCZzlscTFkbGkxNEMvT2tSeTZTYmd6ZjNpVkxwWDdM?=
- =?utf-8?B?QkxNbzU5L2NzenRNbWh3RnFSR3lJWnNhOHM4eHRkV3E4aWQxVmsrTlBCaHFI?=
- =?utf-8?B?Ym5hbXpBaU1tL3Q4c045MFZMRFltT2YyZnY4Yzk4dFlPY2Jaa1dBVDVyZUlJ?=
- =?utf-8?B?RFhubFlYVUU2SXhWQkFOUGJmblhWZi9VWXgydEJTeHRlckREaVFOSGdJUDlw?=
- =?utf-8?B?TW16eXVRZVpyU0Vtd2JKVTNTTktOU1U2U1ZCRitYdVZzWWdnZ0JTRWc5UVBq?=
- =?utf-8?B?ZVNsSkF1a0VWMXJEOFVVKzNDME5VS3MzRlNZNEZJYkc1YlFiWU1FenhtQTYx?=
- =?utf-8?B?TERDWG9tQTFXdkFGQ0xxUFIydTljeitwcGdYSC9TNFBxRUYyUXR5Y0ptNTJi?=
- =?utf-8?B?cHlJamMyREd6UjgyMGhEU2h5SHVGL1RDSlpOVHNMSkg2a0hlWGoxR2wzdW5W?=
- =?utf-8?B?cGxrREk1aExhUmFWTE1jSXM1VW9yaTNiWWs3RXRsYjh4TlJxUElielpSblEy?=
- =?utf-8?B?RnV2NEJQVjNzWHNWRFNvMExLeThrOVMwOE03M1hSN1VrTXpwaE1JOVl0Y2F1?=
- =?utf-8?B?dzlnbXZ6N2JEZUJqWG5MRUlwSEVIb0hqRlRPNFJTWGtFblZUMk1BSEwwNVZK?=
- =?utf-8?B?Q1VnS0JoVFZxcGN2d2hWQ3doa3NlNW4yZEFSbGFLOGJ1Kyt4QUVOV1lmdTVM?=
- =?utf-8?B?WVJFYUFaZEUrRG9aelo2d2w3RjBBbE9VeWJqVkhKV1AveWxVY3IxbEtNOHAw?=
- =?utf-8?B?VjdNaWFjSzBsUGl3UTREcnpPN2JydVk2WElXQW80Z3pqUDZ1NVM2SjFieDhm?=
- =?utf-8?B?TVVLb2FUR29QQllPaFRQSDYwTFBQNlIrZHZSUzdtWUYxR3lVdnRhcWdrVDJY?=
- =?utf-8?B?OHVndzJ5VkVhV1dCOUZJZ0VVWjlBY1lGaGpjcktLUlY4L2xUNndTMFhSeHVD?=
- =?utf-8?B?M2VhWnB4RWtIUFM2RU43MnRGa3hJK3pVMFEvdGEvYkc4WG1oOGNFM3NtMHgr?=
- =?utf-8?B?REM5QSt2dEMzUkw0TVZCczVWRHZwakJsVEd1NFlvUDE1aHR6Y00xZjMxM0pE?=
- =?utf-8?B?MXVlNlE3L1pHRXpzTUQ4L1RobitJMDc0UmttOWdoWGFGd3JFcDZ3UT09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 133c675d-a8a7-4914-c44b-08de59a0886f
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB4202.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 10:25:38.6380
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BBGj7luZOrz6HeYDU0yjS0woIXVAlS/GAHI6Kv2onqCfzthhqLoRuHgcVp4zMqO5iJUbI98SE7p685vwNy//ug==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB7710
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: lhrpeml100012.china.huawei.com (7.191.174.184) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
+On Wed, 21 Jan 2026 20:36:01 +0000
+Vikram Sethi <vsethi@nvidia.com> wrote:
 
-On 1/21/26 13:03, Jason Gunthorpe wrote:
-> On Wed, Jan 21, 2026 at 10:03:07AM +0000, Jonathan Cameron wrote:
->> On Wed, 21 Jan 2026 08:01:36 +0000
->> "Tian, Kevin" <kevin.tian@intel.com> wrote:
->>
->>> +Dan. I recalled an offline discussion in which he raised concern on
->>> having the kernel blindly enable ATS for cxl.cache device instead of
->>> creating a knob for admin to configure from userspace (in case
->>> security is viewed more important than functionality, upon allowing
->>> DMA to read data out of CPU caches)...
->>>
->> +CC Linux-cxl
-> A cxl.cache device supporting ATS will automatically enable ATS today
-> if the kernel option to enable translation is set.
->
-> Even if the device is marked untrusted by the PCI layer (eg an
-> external port).
->
-> Yes this is effectively a security issue, but it is not really a CXL
-> specific problem.
->
-> We might perfer to not enable ATS for untrusted devices and then fail to
-> load drivers for "ats always on" cases.
->
-> Or maybe we can enable one of the ATS security features someday,
-> though I wonder if those work for CXL..
+> Hi Jonathan,
+>=20
+> From: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Date: Wednesday, January 21, 2026 at 5:20=E2=80=AFAM
+> To: Srirangan Madhavan <smadhavan@nvidia.com>
+> Cc: dave@stgolabs.net <dave@stgolabs.net>, dave.jiang@intel.com <dave.jia=
+ng@intel.com>, alison.schofield@intel.com <alison.schofield@intel.com>, vis=
+hal.l.verma@intel.com <vishal.l.verma@intel.com>, ira.weiny@intel.com <ira.=
+weiny@intel.com>, dan.j.williams@intel.com <dan.j.williams@intel.com>, bhel=
+gaas@google.com <bhelgaas@google.com>, ming.li@zohomail.com <ming.li@zohoma=
+il.com>, rrichter@amd.com <rrichter@amd.com>, Smita.KoralahalliChannabasapp=
+a@amd.com <Smita.KoralahalliChannabasappa@amd.com>, huaisheng.ye@intel.com =
+<huaisheng.ye@intel.com>, linux-cxl@vger.kernel.org <linux-cxl@vger.kernel.=
+org>, linux-pci@vger.kernel.org <linux-pci@vger.kernel.org>, Vishal Aslot <=
+vaslot@nvidia.com>, Vikram Sethi <vsethi@nvidia.com>, Shanker Donthineni <s=
+donthineni@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>, Matt Ochs <mochs@n=
+vidia.com>, Jason Sequeira <jsequeira@nvidia.com>
+> Subject: Re: [PATCH v4 07/10] cxl: add host cache flush and multi-functio=
+n reset
+>=20
 
+Hi Vikram, Happy new year!
 
-I raised my concerns about CXL.cache and virtualization at LPC: 
-https://lpc.events/event/19/contributions/2173/attachments/1842/3940/LPC_2025_CXL_CACHE.pdf
+> On Tue, 20 Jan 2026 22:26:07 +0000
+> smadhavan@nvidia.com wrote:
+>=20
+> >> From: Srirangan Madhavan <smadhavan@nvidia.com>
+> >>Flush host CPU caches for mapped HDM ranges after teardown and prepare
+> >> sibling Type 2 functions on multi-function devices. The host cache
+> > >maintenance uses wbinvd_on_all_cpus() on x86 and VA-based PoC clean+ =
+=20
+>=20
+> >That's not sufficient in general on arm64.  It might flush far enough
+> >or there might be buffers beyond the point of coherence that are not
+> >flushed. =20
+> snip
+>=20
+> >Needs to some sort of arch_ call as well, not hidden in the cxl driver. =
+=20
+>=20
+> Yes, and in fact it cannot be a cache flush by VA while PTE mappings
+> to the memory are valid, as the core can prefetch the lines back
+> right away, and later evictions post device reset can cause device
+> errors as the device snoop filter isn=E2=80=99t aware of host having any
+> lines.
 
+Prefetching should (hopefully) not make any dirty lines. Hopefully
+no one does clean writebacks (and there is a way to check if they
+do in the ACPI tables).  You need to flush again after to force out
+that stale stuff though before any demand fetches occur.
 
-I expose there some concerns, although I admit some could be due to my 
-twisted understanding of what CXL specs states, but regarding IOMMU/ATS, 
-my view is ATS is not safe enough ... what I guess is a matter of 
-opinion (trusted device based on vendor confirming it is an "official" 
-device not enough for paranoid mode with vendors subjected to 
-governments "agencies" actions/pressures). But this links to what I 
-think Jason points out about ATS security features where the IOMMU 
-hardware can be configured for checking those translated PCIe accesses 
-as well, if the host owner/admin paranoid mind decides so. With CXL 
-cache that is not possible since the route is through a different link 
-and AFAIK, there is no support for something like this by current 
-implementations. I think it could be implemented without impacting the 
-gains from CXL.cache, but that is another story.
++ don't forget PA based prefetchers.  Doesn't even need to
+be a mapping for fetches into distance caches to happen.  A given
+platform might have restrictions on where those PA prefetchers will
+go but we currently have no way to discover that.
 
+I need to think a bit more on this as there are some scary
+comments in the spec on CXL.reset such as all CXL.mem reads
+are dropped (timeout fun). Mind you a device is permitted
+to do that anyway before cxl.mem is enabled, so hopefully n
+one times out if a prefetcher hits the device before that's on..
 
-So, FWIW, I think it should not be enabled by default.
+> The only way to do this correctly is via a SMC call to Arm
+> trusted Firmware to handle in SOC specific way (after the memory has
+> been offlined and removed from the PTEs), since there is no
+> architectural way to flush by PA (set/way isn=E2=80=99t usable in the
+> kernel). There was a SMC call defined for this in the PSCI spec 2
+> years ago, but was removed for some reason. I had a discussion with
+> some ARM folks maintaining the PSCI and SMCCC specifications and the
+> direction was to bring the SMC call back in SMCCC specification. Like
+> you say, that can be a separate patch series. Adding Souvik for SMCCC
+> specification details once it is available.
+>=20
 
+There are other possible paths which is where drivers/cache stuff
+came from.+CC James Morse.
 
-Thank you,
+=46rom a kernel point of view SMCCC needs to be just one option as a
+bunch of hardware (I'll only point at ours as not sure what else is
+public) provide MMIO accessible agents to do this stuff and going via
+EL3 to talk to an engine the kernel can poke directly is silly.
 
-Alejandro
+I'm not against the PSCI thing coming back though if someone needs it.
+Preferably without the CPU rendezvous stuff though -> or Linux can
+just reject anyone who does that.
 
+We could also revisit the approach of using an AML op region to issue
+the SMCCC, thus allowing us to support vendor SMCCC calls (+ a general
+one if ARM do bring that back) or whatever magic they want to use.
+https://lore.kernel.org/all/20250820102950.175065-8-Jonathan.Cameron@huawei=
+.com/
 
+Advantage of that is you can wrap SMCCC, MMIO or whatever else you like
+up and the kernel only needs one driver.  Disadvantage is need a spec
+and only ACPI etc so we need a driver anyway if anyone cares on DT systems.=
+..
 
-> Jason
->
+If you want to mess with that I can dig out the QEMU emulation and rebase
+that driver.  I thought it was kind of cute, just a solution we didn't need
+at the time!
+
+Jonathan
+
