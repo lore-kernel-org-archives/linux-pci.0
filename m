@@ -1,51 +1,54 @@
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020134.outbound.protection.outlook.com [52.101.195.134])
+Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020072.outbound.protection.outlook.com [52.101.195.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B02433242B8;
-	Thu, 22 Jan 2026 11:59:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.134
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC9813C1FDE;
+	Thu, 22 Jan 2026 12:00:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.72
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769083162; cv=fail; b=sDr289Q5gIqpxHfI6oq0F4+YwinfEIZTkVUOxrykG9mbCRjAeSdFALSXNnw5oKWpiRCfoz7PvpIP9iCfLfgYEeLnXzxCVj2sOeanBvpuXL7NzSkX8keYJ4KlnAsfWVAMy3+0oGFrwCp20sszUzS8jbcjedszSUf3JzE9QIPB114=
+	t=1769083219; cv=fail; b=OTOhl49Ql1DyXdmHXREDeg0p+U6GDULXFfQvAel833WgmOpuBh63lk9bOmXxyFvPhilvUOJhFLo+jWHJHBe7xIMYrJtQpH9nxHKLhAp5JWDFcC2s4lEEZA7Yw7CzNkcrF1QlDOuC3sMm67aTkaqOp6EePW4W9SxOt9y/UzlY+W0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769083162; c=relaxed/simple;
-	bh=Yn/Bwjop6kMRqpcJ3ZWjWQVprme7uonBotGw4R5maTw=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=RMLOutLrLRDrye4Xk+IwZCyMmEzAZ2PjCAZOaYbdFaT0GU+Y3If9tffBwMOCZTLSq7eQ0qnAQzH6BfgvJCkUsFCBuvwIQEjrS1WCcRXoeXoYSt02aYlPo66Q0DB3+pYxGifmwCvIEGnAQ0rk2hCFfQFQAt2qJFRfDvgXZSDhmNM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=r54yjx5f; arc=fail smtp.client-ip=52.101.195.134
+	s=arc-20240116; t=1769083219; c=relaxed/simple;
+	bh=14ymO6+y9XJjB/ManoNxtovqo0RmIdHg60nK6C0KEYY=;
+	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
+	 In-Reply-To:MIME-Version; b=GxCB/V8s2BTY75j76k0NH9UzDfd1HyF/669dsCmpwlljtUksvtJSe9kIq5MkNhnjg3ZEXuXmEepJGlslr4czeO8lJQ8YPib/9wVag2Qqdup7EnRMJddY4Mfs9rNnJJQyP+iXfBvhzaA17KTLdLcAHbrF6cMapISgwzkojcorByM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=C3RPgICL; arc=fail smtp.client-ip=52.101.195.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="r54yjx5f"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="C3RPgICL"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=M6NfYlcFlfEHS12X78GAnMAbOfMDFhOnYcFh/dk53tnhs1/cdVcKXN6SJBvmwQGHdZUZfxqcPUq5GD4yY8rJnfl3yBMtIcmn1UMTA4coxb7KNpO3wi+odzmASPXP4d+aHI4Hv+PfI6M0ycYSF+aTYwLDAzaELU7b0gn1LyytEJgMGZ/OfZCX+56CIdgVIh2GlrfkAoAxKeWgXcGKDn6nB2y7uftu9e6+dgJIKDxfN173NDjlYFhL2hceFNGlwExqVNKPuL2MGWmu/Ez94UBYn42XjpKrqdC1t//5EmxuUgW6r8EaCaYXeQP4oSEdxOIo5grYin2u3hkITRf7YGWBKg==
+ b=MVj5MTj5N2GDd64d0OcHZUDJPgp1sXbjL+UOFwPtiG3o4+OqzO1Oh4Ac3m2FmfaDwyncfe47+8X2rYTDev/Rqgnx8qP24au3qR1CarYj0UFGcvLNOoKg5k7TleMUoafiVAK17bDZH1LeHMN+JFHxwynsnQUCSq6vGeoHengzNrC6MDowgASUwELu7oKk0fb+PsoDnutB/m5Gy01nrEbvXAtLco0wOJMn0SZWQtVlFhI0cC/9t8cJXffRurYeSEKQM16zZOyWdCPcZNvzc9bmnmVi28J+BlrO0yJjFAfx9bxnzk3Wg6X7MxOe6yblJM64yJ4+V7GHqI7vLqs7VvdtZQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=B608Nr9iGcEAAABK6T2Sev2ctGQUUeMPWDE7+eODDtc=;
- b=iE0t+jhvzezblxNHzMBq7X7ZN1YmgFdFE0EBhbPpD/7VHzLoUR1vZ8XWDYZIi62/o4pmFEScOVU0jg3Wq5hzHvSH7ev8nKvr07y+fEKiEzpleniRnTFhAvwzqXwGYnvabATYLV81S3Xt7CrffgZIRY/v+nXMyHAMTi/6z2B9PulNRF1pvKadFVXqgtILn3gdBiVDdJh1h/krB1cHSe/gKKGM9IkXeL6B3tvntSa2sYLC9OLFfws+WPoGIEThxVcffnaqCdEtedx4aVVTlb8v59YpBsv5qI5Ry8XW47Kq5xSLkngJQ/Iz5lyVvh12f6cFVUWfNYwPwmBat9aSwkVmCQ==
+ bh=hSIrFeKX5HPKNAPFUfT4pIs6uqx5GKbFTj9wq/ydvpA=;
+ b=QqmTkY+ltO8F5bVQZZBn+MuiLEyULbBrkPpFAVwzQGlyba1RMOwxwHyQgrjPdb35E5O+HPR7nV4rfzjjTsjHIC+G0fITbIYpoV5ZPmZNwSoiL6lFGYk7UNHuQ9ll0nW7c180/yjY+qe9Yiw02SPcg3dTQm0tqfrDrw5MsgYcebKVWKotzbBLku7aPUtIc7Uhl8/jApvJPT0QGTPd1nixiKGemw0o/EiFvSsu+9pzMsElYnXDdF0N9AELls9XMW7PnEr+UiOwi/cnMc8YHuKWF+OkGq6MJr4uP+i75nhn0UTzS8c646WH6XOTpiF48pSVAgAf91BNrEfCI1WjC0l3LA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=B608Nr9iGcEAAABK6T2Sev2ctGQUUeMPWDE7+eODDtc=;
- b=r54yjx5f7XydfFB5j4IPZT56KYUCoMXHsy1hRdEQ834DwVkMcy1jm+JJBYWTPfcUGvTt0TieXsxUty4jdg6ZahehlTNGJrgahdJbIMwgOIhsr/Z1+m2z5heTe/dmoAgspEcDJkP497pRez1Ui9W9PEIqEskPWeU/9e9EmofZw/g=
+ bh=hSIrFeKX5HPKNAPFUfT4pIs6uqx5GKbFTj9wq/ydvpA=;
+ b=C3RPgICLjtO1ygPNTX2naRf+iwxx1wWoFVuHighyuQZHjM3E56V/UE0u0XcJq3Yj6IECo+KgqR3MWOFjzvJ2Drfj6/fx6dgU4dmYEAW7eNR8VP8GbNzMufHUd6X8F30Cgc9FroV2+VjOuP5DYrgJ6kCtXm7ULrK9TXNNqf4C6OE=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO0P265MB6405.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2ca::9) with
+ by LO3P265MB1947.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:102::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.10; Thu, 22 Jan
- 2026 11:59:15 +0000
+ 2026 12:00:10 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9542.009; Thu, 22 Jan 2026
- 11:59:15 +0000
+ 12:00:10 +0000
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Thu, 22 Jan 2026 11:59:14 +0000
-Message-Id: <DFV3N1SHS8SK.338Z25H89HINU@garyguo.net>
+Date: Thu, 22 Jan 2026 12:00:10 +0000
+Message-Id: <DFV3NR7XHW2G.3TH0LG5VYT2VF@garyguo.net>
+From: "Gary Guo" <gary@garyguo.net>
+To: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 Cc: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
  <kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
  <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
@@ -55,16 +58,14 @@ Cc: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
  <kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
  <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
  <daniel.almeida@collabora.com>
-Subject: Re: [PATCH v12 4/5] rust: pci: add config space read/write support
-From: "Gary Guo" <gary@garyguo.net>
-To: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v12 5/5] sample: rust: pci: add tests for config space
+ routines
 X-Mailer: aerc 0.21.0
 References: <20260121202212.4438-1-zhiw@nvidia.com>
- <20260121202212.4438-5-zhiw@nvidia.com>
-In-Reply-To: <20260121202212.4438-5-zhiw@nvidia.com>
-X-ClientProxiedBy: LO6P123CA0030.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:313::10) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ <20260121202212.4438-6-zhiw@nvidia.com>
+In-Reply-To: <20260121202212.4438-6-zhiw@nvidia.com>
+X-ClientProxiedBy: LO4P265CA0204.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:318::14) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -73,390 +74,113 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB6405:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8ff4f13e-f6a9-4329-805d-08de59adaa35
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO3P265MB1947:EE_
+X-MS-Office365-Filtering-Correlation-Id: 59a2f763-1746-49d8-dca7-08de59adcb35
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|7053199007;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?aDVUZHFQbHQxVS9mM0hGY01IakQzSHlrRzZaNUtMc3VlaVlUeEtpSUkxZWZE?=
- =?utf-8?B?U1R5WjlQVkk0MTE2NG4xQ1drb3kvaGU5TzNibWF4WFYzaHhlUTBsdDJpRWFl?=
- =?utf-8?B?Y1JLd3BndzdLTVJKd3htNVROdFBCVEZ5UEsrZnVIZVRIMVRscEFxV0JPL1dS?=
- =?utf-8?B?OHlCakViZ0U5aE5SMXV2TlhmRXhvSDdVSzJ3WjEwcUlvRklaRTN1d0c4RjUx?=
- =?utf-8?B?c1JDZTR3MVVwbnl3ZFBUdlc0ZzJqTDRKV2VleFk0MmdJaHBzcUlwM29Qc1Zr?=
- =?utf-8?B?bVRmTi8rUncrZmcvT0thSzllQnVWOEUyd25heTVkZlJSb002a29rSHM2OFhQ?=
- =?utf-8?B?clowbml1R29PbG5NYXJ0TEdhb2xLcG9NVGxJbFNKeFFyNTZrUjN1cTF3eXRr?=
- =?utf-8?B?cnRxZmVWUFI2NHpaQ0c0VVFFK3E2cXJnQ1NHYk94cjRGd1dRanBVazRDZWpQ?=
- =?utf-8?B?Q3dTK080cFRlU0xIQUZVVmJRUFE0YlJXdlY5SmI5WDlmY20xS2xxUXh4LytM?=
- =?utf-8?B?MmZLcUlmK0EzYkJoNWgvU2FRMTVIT0RYYTcrNVQrZWh2TkYwK1RMNVpuYjQy?=
- =?utf-8?B?RWVrV25XcytXdzZhVGR2NXhkcitWb1hVVVpvVmdTYnlNem5nVzVySGQ3elE4?=
- =?utf-8?B?ZWdZQnVZNjh4dWM4SDhGdkoreFJSbS9BdVlUVDFqMzdwbU1CSGZmRFFhelFp?=
- =?utf-8?B?bENTQWFJcjhBWTI4SlNIb2U3enVMYWo2NnM2eUNicWZrYXM0bGMxTThOYUVU?=
- =?utf-8?B?MU5GVG5JaDVhcm5CM2c0bmZYMXBlYkV4ekdpMG1kS2Jrb1JyNjRDVGNxaWhB?=
- =?utf-8?B?c2RjWUZsd0YwSEpNVUhsNXFQNXRKN09OeTc3UTZZYXd1dUZvemJvWmkvNEN5?=
- =?utf-8?B?cSt4aHFqMGxxNmNnaERQSDZEUGY1VXlDakh1YUcrN0lHUlk5REM2ODFWRk00?=
- =?utf-8?B?RERVU2xabkMxYUtjQ0QxalhsaWNIbkYxWE1VRU9wYW1PTkVYc0V0Zko3VER3?=
- =?utf-8?B?aGc2V2ZtTDJzdGdBKzcxek9qYlhXMzh2dUhEZlB2d2xxOVU0S0ZCWVIveWNk?=
- =?utf-8?B?ektsRlVKNkJvZ25SUnpjK2pPZldHeUgxdHp2QmE3WnM1ZGQwRUZzQTlhK2hK?=
- =?utf-8?B?YlpHRHZlVVduQUJrdVVuSC9DSTNaamk4cGZHT1ZNbzkvUW0xcXVNT2RMV0I3?=
- =?utf-8?B?L2RWOW5QcmR1SmcvRFdzWGduRTFxM2UybFVkVUZERlVwS2hLRWxSZS9LOWgw?=
- =?utf-8?B?L0ZTblFDNXE2V3RMUVpqcStRcCtlNEh0Nk5qQU9ucmVkMHUrMUtkczJPWnpM?=
- =?utf-8?B?amFEZUVsd1g2dS9GNVZlV3RIVUtXaHVBaFhUdm1neGo2VFJBV0NvOGxjejMx?=
- =?utf-8?B?OUtaMzlPVlRjL0VwOVd6V3B0SHhLdmN0SVE4L3pDZGd6ejRDU2dlc1R1NUVr?=
- =?utf-8?B?Vis4cHFmaTI2bzBzcDEyNWtvdStwMG5wS3NoQnZGTWdnL0FGams4anlmS0F6?=
- =?utf-8?B?UXU0bktvcjBWajByQm5xeDFLYWRSR0FyTEhYNjRYbjVpcloyNFY1MlliNXlS?=
- =?utf-8?B?WHNrZG92cG1QN0FpWkxKZitDTktIVENJS0FVRTNWTDA2aVVXQXlTMXNpbW55?=
- =?utf-8?B?YitEVG1VREFOWnVtVFk1YmQwNnIxbzVDZVJUNGQweGhxSkVsMTRIaTZRYnJl?=
- =?utf-8?B?QkJ6VktDMThCSXl3UUlWRGVUem9qMGZqbVRLRS93S3A2eEszQmpVZ2k0Y2I2?=
- =?utf-8?B?dGpXUEtyaHB4VXNVMHVpODJXMlZESmlwR2FMaUMwNHZzTklZUkRIMWl0a3hO?=
- =?utf-8?B?bEN6dmtGbFhIMktTdmprU3cyNjZDeU50OEs4VG42UDJVREYzSGJOZzMvRXFM?=
- =?utf-8?B?VG5HeTlkNXpMeWpGNGoyZnFCYklHeGxleXRsazZST1IyNUdodmxuZTZXckZJ?=
- =?utf-8?B?dm5NRkpJL2NnTzh2RjZzK28waGdjYVlKVThVRGpJY0RxY3ZqR0RTVldoZEF3?=
- =?utf-8?B?ajdvNDFVNzBUczl3TDFuR2tDWDJoQUhjS1FhODJnUWYwcGYydkk2QnFRUGto?=
- =?utf-8?B?NE5LTG1MME5VNXVzNEJtdEZmTWViNzBQcS8xSTNtZnBxZjNINGRNVlFaeXZW?=
- =?utf-8?Q?3rHQ=3D?=
+	=?utf-8?B?VEZmZSs3RXAvUGFoSGxRVzFqeFZQcGt1UWRmSWZkWEh5YmdSN3l5ajhwUzkz?=
+ =?utf-8?B?R0VkQTg2T3pjUEpFajJUWkJhZytYbnNPUERQSE9UWnNGM0ZSOXpUVmNkZCtj?=
+ =?utf-8?B?bkkxWEtBTk1kcTN3Ym85b0VnUGJqWVdMS2xWbUNZYzdwNXVVSTN1Vyt1WnRy?=
+ =?utf-8?B?MWRIYkZXT1hlUC9QRGNoWVU4eEJicUF3azBPblhkVThLbExWS3hDYUF2VmFL?=
+ =?utf-8?B?OXN3UlVGblkzc1FvcnNYV29PWGJPYTJXZ0R4Wk1lVklIMWNoVndEalFkMy8r?=
+ =?utf-8?B?NXVVWVgyazErRnNQd0xCMnFXU2krVjg5UkkzczRJeFhOMWY3b2lvL21DRFQ4?=
+ =?utf-8?B?aXo5N09HUkVpdmluenBDVC9seVJGT0tOTlBURUlWVlRES0QwRGRvN0wzYThC?=
+ =?utf-8?B?UGV3VFFWMjR6dkFicDlsMENjcUlyWlpzVllwREg2OFFBd0wxK3pCem1nWDlL?=
+ =?utf-8?B?R0IzSytPaDl4VXhiWWhXR3B3TFk0TVhZcDFUbzhxS2k5UmxDb0dDbjBLQTNj?=
+ =?utf-8?B?R0JsNTJyUWFoMkE4S3JTWi9iVkZKTmFoVUIrczdNRWo0cW91ZVBKakFzL1Y2?=
+ =?utf-8?B?bzJMRmFGQmxzWlgwbXVkSEI0eWgwZW9vSllBNTRQZWsvMUZWaTRVRThZb3dM?=
+ =?utf-8?B?MlZvNlVhZmNyMlE4RGZ1VndxMk1FZ0lVMDhVMC9xajVld1FLSWlQZVVRVUY3?=
+ =?utf-8?B?NVBESmFiak1RdXFXSktQd3ljOVF1SXpKWXR0dFAweE13MWxKKzE2R204aWd5?=
+ =?utf-8?B?bG9EQWU0b1BWRkE4Q0NjcFJqNHphUm5tRzl0Q2UzTzQrUE5GY1FPMnN4dTVs?=
+ =?utf-8?B?bFhLZWJRci9Za2lHaWxqeUFaNXRBTFUzQmxyWWgwNnJCY0h5cWpHU0lRSXBF?=
+ =?utf-8?B?N1hUUG1nZkJoaUZFbkEzUFhyMW90U3hCSVNYUmFUcUoxdG1UK1M5cGp0Sit4?=
+ =?utf-8?B?WmhBeDd6bEduYnVFdFVIRDZmVlo0aHFqb2dSV0tTd2FWVk8rbTdSd0FMbW9N?=
+ =?utf-8?B?allRYmk5ekthelp4clN3YjBpblQ4R2t4c1QzTmt6NWw2ZUEvN0ZtZ0l4OVN3?=
+ =?utf-8?B?SHRteWEyTXN1amYyRzJBM3ZQZ2taNXdmMmRIbkpLajlmL3VsY1JUV1Jzemtz?=
+ =?utf-8?B?TXcrNUlJQWhsdmlicWh0aFU4UTlCckI3eTVPUllGM1ZMNTJ4VURVdlRkTVRB?=
+ =?utf-8?B?VHQ2RUVZdTd6c2JTdFI2dHBQSjNsL09KdzBWOFNvME9GczVFNEgzcEttMURH?=
+ =?utf-8?B?RDFSamFDVVh1UEVRWWJyODBGUUdZd2ZDSkZoMTdKOExSQ1ZkUU9yREhRSkpp?=
+ =?utf-8?B?NWFJZ1orZUZ4YXM3dHhhUzJtSEhSN1l1ak43V2ZKNmNsTUdjTlBVQm0yQ096?=
+ =?utf-8?B?VnJKSkVjYS9YRFROWWRZOCtGK09TZ3RPejF6Z0V3cWZKcDNNayszMHUvNHVv?=
+ =?utf-8?B?QkZBMXlaOHZJeEg0QmJrZnBSekoycVBtbVBOWU54dFBlSHRyUTdHMmo2NVo5?=
+ =?utf-8?B?K2hkZ2NpVEJjK2V1VVFOWmx3V29KRWxybCtuYTNyWkZFbFNPaHVlTUQvOEZ3?=
+ =?utf-8?B?TlJXOFV2enBKLzZnODBWY0JVOEFjZWh2WlVuQmJmZVpPNkxCdnFvdEkxSThI?=
+ =?utf-8?B?R0Y2Q1hXcGlMeUc0cysvWkdvRG5Gam9WcCszQ1p0aWVYYS92YzZ1MWk3ZXl1?=
+ =?utf-8?B?YTd2UHV1ZnFjTXlUemhkVEpabUlWZlp6aXpZZWRuVGVvU2NPbHhzMVBDOTFa?=
+ =?utf-8?B?WkZCclRHMUkxTjJ6SFc3elBpQ3NlVzU2ZFZuTlo5Q0NCOHFHUlFzWFk1UGlO?=
+ =?utf-8?B?dkUvSnVKcXlRQS9FSDRWR3piZkcxQVhxSWtTWjJHK20vQks2bERVcFJ2NTJL?=
+ =?utf-8?B?RllETCsxVlFTcGMxZUdjWXNZRDF4bDVyZFRmZ2VXUEpTdXR2Z2Mvd3RSM3hz?=
+ =?utf-8?B?Z04zSXNkcG1vKzRIQVV2WUJ0d0kwWDR1cmFiclZEL0FJNzd4TW1oRndoMnUy?=
+ =?utf-8?B?M1dIUm56WXc5MmZ4VTRQaCtJbThaUWhCN3VsV3NlV1lQQUVKdWZzdzg4K1ht?=
+ =?utf-8?B?VEtQczZJbGVkcU90WFVqejFYNVFCdFNFdVJUczlCblovU2hDTzgxRi9CZ3Jq?=
+ =?utf-8?Q?foXU=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(7053199007);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(7053199007);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?REdLUWRkeWttYzY5a0lOOUp3NGxJd1NHdXBjTmV1cEdqd0M0b2ZBakNEb0lO?=
- =?utf-8?B?cDZtMENVVXhrMk5JUUVlNWsxNmw2a1M1dmVyZzFNRlliVlZtWHFIRjVjb1FF?=
- =?utf-8?B?YnVQb1U4dkI0bkNzdEJ1Y1gxVFhncDhtSEpwaXhWa002ODB3VXFnbVNiMDdU?=
- =?utf-8?B?VTErcFNDVFkyY1hxMUViR3ZYUXBKeDJvQVBhclI0VjZ5ZGJqVFRpdDdYamc1?=
- =?utf-8?B?Q1lER3lFNlZjQXhJc3F4V3lkK091ZzJBV0dEazhrQ080amZBcTVwcThiNFRz?=
- =?utf-8?B?QTFJMEd2VDZuQjlwVzM3SlJjVGRBTkhYeUZoYm1OTE02bm9peUhSWXp3c2VD?=
- =?utf-8?B?bUVwc05ZRkpCazBFc2xRNmhUaGlWS0g2Sm9rOEhWcnJFWmRjUkRVdEJJUG5U?=
- =?utf-8?B?SG1ZbmpyVVFxVTJXb3hUaWdETnlWZTRYUFVTOUZ6WDJsakM2NklwOVdYOUd6?=
- =?utf-8?B?ZlV4czUyMzRWYkl6VDUzVk1vcTVqSC9ZSlNMVDBNajNFejlMc1FkczhkRWw4?=
- =?utf-8?B?SklqazBuZnhzUy9zU05wY09LUDZVZ3A1eDVzVEIwMmZuTXRPSXJDQTdld0tE?=
- =?utf-8?B?cExQMTdXelRQeG9vK2o4djFCcjhwSFY0dzF1WXZFdUZZMXlIa3lQZjN1Y3VG?=
- =?utf-8?B?M2p3cVhHY1NteEVnUGF2RjN4QTdKVXovMkZSYURhN09MTDhIeUk1dm04UkNm?=
- =?utf-8?B?MGdNdWZwQ21CeSs3d0x4T1d1cG83TzFETUtHdlZ2dHc3eU9QSDAra01hRElN?=
- =?utf-8?B?T3ErY2FLM2pmV1gxYWZwNUg3aFFOaHdPQlVzRjVtd0VLcjBZbjFvT2VDOHQw?=
- =?utf-8?B?UzhZRnhNSnk3YmxVZEhGYUc5N2pQTVFYdW82bkUyU1htQytPRi84WE1Id2dT?=
- =?utf-8?B?eXJDRGNLWlVoVFBlLzYyN01kYWhxNVgzODk0eFRYNFJkVTRjSkxVay9JeWts?=
- =?utf-8?B?alQyb1NVMHJ0TitpeVNXR3Bna01TZVZXd0MrL2VMS2EzR0cwcDR5Q284b29G?=
- =?utf-8?B?NVd5Y0VtS0oxbWR0anhWOXJyUllsamtKVlVRNFYveURxN3lrZm5KYVh2ZEtw?=
- =?utf-8?B?WVl4OU5iV1oxNkVPM09jQkVyZkphNGtCenBIMnIvN05rbWNoVnk4WUJaOTM3?=
- =?utf-8?B?RURiOG9kTlFwUWd2US9Cb0NycWs4Vlh1SmdjVGw4V2JmcFk2TVJFNDBoMHFw?=
- =?utf-8?B?Y0xIbEpoMFVjVGF4TVRZNUdORGE5cVBqMzJMdnZUUktneDRSTWdlRVJlWXRQ?=
- =?utf-8?B?QVFyOTB6RGJZTkhkSUlUWUZNOUFnQzh2U05BWlp6ZUR3bjFHRUFnMGNvcXlw?=
- =?utf-8?B?MGNNd2pYNC9mZy9mZk9jaGp0dnROZkFpUWl0K3F4WFJmejJEMU5NekVTdWR1?=
- =?utf-8?B?OUk3NmFBdlhFQXRMRk9VMWVqbVM1SVRkMXNXYmhLM3U3MzlHMzF4a0VZaXgz?=
- =?utf-8?B?elUvemlGZjdrYmdaMGRWOFZsV0hQRXBWeDd4R24rL01yK0d2Q0drRXVHb0w1?=
- =?utf-8?B?dUY5Qk1QRkZXZWVCS2cxSm1TSVBPeExaZk9mN2hxK1FuTktiMFJTMzBZbFR3?=
- =?utf-8?B?MGRBRjZvVUdzQk1Gb1pxaVRFQUt6c0FYbXdUK1RSWjBUdjlPdUQ3emdUbzBY?=
- =?utf-8?B?azZvcC9rWDBVOGxhdHE0R2gvK1FjZklWUnc1bjF2WStYRWVHVXdhRnFteWI1?=
- =?utf-8?B?VlBQbnhacjRkeWR2TE5PZjIwTG5uRFJxQ3FtNnI0Z3hpK1loTE9Wem9tempK?=
- =?utf-8?B?NGhDb2ZpNnBmOW9pYU9lZkE0bVlST1prMzFuMGMvdnl1ZHZtZXFQdkhUNWJz?=
- =?utf-8?B?dGd5R2haOFJrbElqOW1QelBHMnZSYUlkcUJCREpLdDdLVVc4YlFOaDhpbEo5?=
- =?utf-8?B?NGRsNEpTckdhc0JkU3RvT1lnNm50Zk5ucDAyQmd6NzFobW9ZeDBjOUozeGZ0?=
- =?utf-8?B?ZXVPV3JFN2ZIbktUUytSK3p5NHAzekhheDY3RkxGZUdpT2pkNFZYa0gwdHUw?=
- =?utf-8?B?aERDdmVINkdCR2RBOVZUZE9OVTJtNVREUUNPZHBBYmowS1ZCNDcvSmpVWStF?=
- =?utf-8?B?WVowaSsycG1wTFlhSDY2ZkZFVUpOemoyWHRkS2wrZGlFZkkwWWhmV0I1cmlZ?=
- =?utf-8?B?Wmt6cGVqbVVUcy8xYlNlV3dNN2pCVFZlQ1NLZmM3T2ViRlBnS05IeFNHOXBv?=
- =?utf-8?B?SlFXeUtXaTRsWDVKdS9qRFo2ZjJNOEhiVWZpakRKMjA0MVdqRGMrOHZ1V2o1?=
- =?utf-8?B?RWxzUkNOZzRvVUZNc29aRGJSUi9STHRJQVovUEVOaGhRWUkrb0RjbW1MTmZw?=
- =?utf-8?B?dnA0anNIa01QOWZFZXJmVDZNWDY1U2hSZktOQ1lhRDhuK3FZUkRIUT09?=
+	=?utf-8?B?QVdBVWNEalZJUVVJek1hbnpHQ09jdVhNQUNCcHkzKzcwamx6alhzN3pXb2Vy?=
+ =?utf-8?B?SjhNZEFXcVlaaXJZWlNRZ1VQOE90SGhBQmZMZHpURWhVTnRKQlRuNzRvYTZS?=
+ =?utf-8?B?V1VIVlkwL2UvcVlLN3JZSUIwYmJzV2xhZ2s0UHVXYWNHY2dhakt2dk5VMHMr?=
+ =?utf-8?B?Wkk2Wm1aS0NRUWN2Y0QwYU5mczBFRHlBZWxEaXhzTFN1UjJNcFgwd3dWa1Jm?=
+ =?utf-8?B?VUxLMzJPMXZteWQ5dHdWUlg0VnBlV1dmbDhNVER6cHZubzV3dmUxaE9ubERm?=
+ =?utf-8?B?T2VseVVhZHpKNDBCOHkxQmZOT0laeHk4dVJKREptU29EWndwRGxLSWErYjVK?=
+ =?utf-8?B?eWZvNVUxVDZTa3NER3lrUjNDTklkMUVJTDZ5bGlCaVhUL0VYaXhPMlMrbWc2?=
+ =?utf-8?B?ZGd0Ny80WGQ1aXNwUlphL2d1VFE0Q1ZLellNZ09aalVBejJlbnNxeEJhdEdy?=
+ =?utf-8?B?RGJCSzFFdWV1YWEyZi9ycm02U1YwNTZYeUtzS0Vpb0J6N1hxanUvemozZDB4?=
+ =?utf-8?B?eTd1aEZTUzB3WXFWNVR3Q25HWCtpUnZScGQwMDM3bHVFODNLNVplajdQZ1JR?=
+ =?utf-8?B?VlRFUUp3UVpkUFh3RHovY1o0UmJ1cG43N25RbDRRelpKVHBBS3oyYVRmUWNC?=
+ =?utf-8?B?dXVnaXovZkplRUM5Skc4TDFkSVByWkdaSG5iLzBTRUhlNm40cnJYdHkzRG5I?=
+ =?utf-8?B?NURHU1E5eTN1YnEvVGpVQWZkcVA3aTFLRzN0NEZSU05iMW9Oay9KUFZINHlO?=
+ =?utf-8?B?UEUrTHY5dkg4aHRicG1oK3hVWStTS0ZaWDdrS1IxazN1RVNMbWRMMDdvVTY0?=
+ =?utf-8?B?TkIwOExDbXh2anV4Sk9Rc1l3cHZ6K3lCZXBZSG9JZ3hTVnBxT2h3d2FQc3Vx?=
+ =?utf-8?B?Z1JBV25xL0RyeDJvbnFscnRBb1QwcVE3U3dVMUFJZWVNeG5hTTdwTUkzSU00?=
+ =?utf-8?B?bE1JT3kyUmFuSDRTUFEzeWYvaGxGNldMUCszV2dGZlBQVHovZDA3TWsvb3Zh?=
+ =?utf-8?B?VWFlOWc3azNZZFc1RWRwcFcxeDgvOHV0UU1PaXBhU2xGTFpZakZDTlRCcy85?=
+ =?utf-8?B?Uk5FZkQwUDQzOSt4STYycDZhYUt0V0VQUG1sa1VTRnVhVHdQTXdZOFNRWE9l?=
+ =?utf-8?B?NlpHdUp3eVRER1RXUTVuQlZVSU53eXNMRXFwVlZkangySVpsNHVvejFHWFZ5?=
+ =?utf-8?B?NVgydTFhWHFlNVQxS0V5VjBWYmhzcmpnaGQ3SENxNzNiQmw3LzVCNXpLb2tN?=
+ =?utf-8?B?THlRVDlFSmdKWXBGbmtIMkdsVC9lWUp3S0FoU1NjR0lWQnMrYkMzUEVYWE9Z?=
+ =?utf-8?B?c0V2TU8xRS91ZHptNUpveTVkUDVORDRaa05IemhndnlMekJYUTk0ajY4aHBz?=
+ =?utf-8?B?OVdCR0diSm1YalpzeExZRm5pLzg3M1pzSnNOQk8zdmZ0My9iZXZDL0hsUzNt?=
+ =?utf-8?B?Ulk0NHFXNEliSEVyY0hZVU41Q3pPTW5teVYrak8rd2F4VkprZ1BPMmdBcjlL?=
+ =?utf-8?B?a3NORGpZL3BVazI2dGVPTzkzemovbzBQNm0wMUw2S3ZqZXZRNk1ZeUl0TUc0?=
+ =?utf-8?B?MEk0aS9wRkh6U240NmdaRG9QZDV1bGxvYXJmenU1b05mRzQ3dnVyOFhqU1Qz?=
+ =?utf-8?B?SkRPQVVxYVgzNG4zVXhxbUQ5OEhUZldPTERERGN1b0NIMmVURzlNU2llR29l?=
+ =?utf-8?B?RXBJTWlFMElyenpOdllIZi9qWGNOTVpPOXZ5RXYxbVBKUktjUEVoSHFaMHAy?=
+ =?utf-8?B?MEVsVnUrZWlGaEJuRHFHMm1JeXhQdmEwLzVkaTc0T0dTTEMvZXlwUWh3RWRC?=
+ =?utf-8?B?bDlFbnExNitQZm9JM1M2VEt2UGk2RlN0c2l5SVE5anJ4Tk8wTnFQZjhSZzRX?=
+ =?utf-8?B?aGlIMzFKVnk2SCtPS3VnMThNTngwWk5xTDV6TS9UQThITis5S3BFRzJWQ1Fw?=
+ =?utf-8?B?SHR5S2Rqa0V6ZDQzL1FTZ3NsZGg5SnMvcjR0SlhTVjlwV1FRMHZGMURndnp3?=
+ =?utf-8?B?a2FPRGhya0dBdDlTVHN6dlNkWHQ5OFFKcnJjdW5ibFFJTmJhMEQ5L1R5VFh2?=
+ =?utf-8?B?QS9zYm43RHlPKytpZjlSTE4xZ0dNRXR1aFR4bm9YVCtxQnVMQ2NMSUtGZlUv?=
+ =?utf-8?B?bFQ5ejVyZ1MzRFg3VFhFQ3RQdWY3WFZnaFhRQ2x1MHVBdHI2R2VaamhzMUoz?=
+ =?utf-8?B?cGZuNEloR1ZFNkhTV1krZ3JUVnJUWHl0dzAyMU5leGpzZS9XTlZhYkhVdXVy?=
+ =?utf-8?B?dDAwMzlHa0EyYlNoQTVScENPdGdPYWU5eUJzR3BnaDJUMmJpOE5kdC95ZlZy?=
+ =?utf-8?B?Y3R2alRJdHB0a0p1cFdqSUZjNGpQRW0zNnpwTFBzSnpNNnZVZ1ZkQT09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8ff4f13e-f6a9-4329-805d-08de59adaa35
+X-MS-Exchange-CrossTenant-Network-Message-Id: 59a2f763-1746-49d8-dca7-08de59adcb35
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 11:59:15.4024
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 12:00:10.7468
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iwbe60cNPzNpGisDR+5zqbTHC0WRWfYNvQv2mYPndDI/n6YFgI4rMfjzLYwXhYulZul42/270P/A3AZDDwdu7g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB6405
+X-MS-Exchange-CrossTenant-UserPrincipalName: BUWR26BLoyH6HIQP7cN3No8bw209nLTu6S9tqAxnaqA0uTARZITCgwJcN84g8v3myf01IGBwIka0USboTKxH9w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO3P265MB1947
 
 On Wed Jan 21, 2026 at 8:22 PM GMT, Zhi Wang wrote:
-> Drivers might need to access PCI config space for querying capability
-> structures and access the registers inside the structures.
->
-> For Rust drivers need to access PCI config space, the Rust PCI abstractio=
-n
-> needs to support it in a way that upholds Rust's safety principles.
->
-> Introduce a `ConfigSpace` wrapper in Rust PCI abstraction to provide safe
-> accessors for PCI config space. The new type implements the `Io` trait an=
-d
-> `IoCapable<T>` for u8, u16, and u32 to share offset validation and
-> bound-checking logic with other I/O backends.
->
-> The `ConfigSpace` type uses marker types (`Normal` and `Extended`) to
-> represent configuration space sizes at the type level.
->
-> Cc: Alexandre Courbot <acourbot@nvidia.com>
-> Cc: Danilo Krummrich <dakr@kernel.org>
-> Cc: Gary Guo <gary@garyguo.net>
-> Cc: Joel Fernandes <joelagnelf@nvidia.com>
+> Add tests exercising the PCI configuration space helpers.
+>=20
+> Suggested-by: Danilo Krummrich <dakr@kernel.org>
 > Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+
+Reviewed-by: Gary Guo <gary@garyguo.net>
+
 > ---
->  rust/kernel/pci.rs    |   7 +-
->  rust/kernel/pci/io.rs | 167 +++++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 172 insertions(+), 2 deletions(-)
->
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index 82e128431f08..9020959ce0c7 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -40,7 +40,12 @@
->      ClassMask,
->      Vendor, //
->  };
-> -pub use self::io::Bar;
-> +pub use self::io::{
-> +    Bar,
-> +    ConfigSpaceSize,
-> +    Extended,
-> +    Normal, //
-> +};
->  pub use self::irq::{
->      IrqType,
->      IrqTypes,
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index e3377397666e..39df41d0eaab 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -8,13 +8,149 @@
->      device,
->      devres::Devres,
->      io::{
-> +        define_read,
-> +        define_write,
-> +        Io,
-> +        IoCapable,
-> +        IoKnownSize,
->          Mmio,
->          MmioRaw, //
->      },
->      prelude::*,
->      sync::aref::ARef, //
->  };
-> -use core::ops::Deref;
-> +use core::{
-> +    marker::PhantomData,
-> +    ops::Deref, //
-> +};
-> +
-> +/// Marker type for normal (256-byte) PCI configuration space.
-> +pub struct Normal;
-> +
-> +/// Marker type for extended (4096-byte) PCIe configuration space.
-> +pub struct Extended;
-> +
-> +/// Trait for PCI configuration space size markers.
-> +///
-> +/// This trait is implemented by [`Normal`] and [`Extended`] to provide
-> +/// compile-time knowledge of the configuration space size.
-> +pub trait ConfigSpaceSize {
-> +    /// The size of this configuration space in bytes.
-> +    const SIZE: usize;
-> +}
-> +
-> +impl ConfigSpaceSize for Normal {
-> +    const SIZE: usize =3D 256;
-> +}
-> +
-> +impl ConfigSpaceSize for Extended {
-> +    const SIZE: usize =3D 4096;
-> +}
-> +
-> +/// The PCI configuration space of a device.
-> +///
-> +/// Provides typed read and write accessors for configuration registers
-> +/// using the standard `pci_read_config_*` and `pci_write_config_*` help=
-ers.
-> +///
-> +/// The generic parameter `S` indicates the maximum size of the configur=
-ation space.
-> +/// Use [`Normal`] for 256-byte legacy configuration space or [`Extended=
-`] for
-> +/// 4096-byte PCIe extended configuration space (default).
-> +pub struct ConfigSpace<'a, S: ConfigSpaceSize =3D Extended> {
-> +    pub(crate) pdev: &'a Device<device::Bound>,
-> +    _marker: PhantomData<S>,
-> +}
-> +
-> +/// Internal helper macros used to invoke C PCI configuration space read=
- functions.
-> +///
-> +/// This macro is intended to be used by higher-level PCI configuration =
-space access macros
-> +/// (define_read) and provides a unified expansion for infallible vs. fa=
-llible read semantics. It
-> +/// emits a direct call into the corresponding C helper and performs the=
- required cast to the Rust
-> +/// return type.
-> +///
-> +/// # Parameters
-> +///
-> +/// * `$c_fn` =E2=80=93 The C function performing the PCI configuration =
-space write.
-> +/// * `$self` =E2=80=93 The I/O backend object.
-> +/// * `$ty` =E2=80=93 The type of the value to read.
-> +/// * `$addr` =E2=80=93 The PCI configuration space offset to read.
-> +///
-> +/// This macro does not perform any validation; all invariants must be u=
-pheld by the higher-level
-> +/// abstraction invoking it.
-> +macro_rules! call_config_read {
-> +    (infallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr) =3D> {{
-> +        let mut val: $ty =3D 0;
-> +        // SAFETY: By the type invariant `$self.pdev` is a valid address=
-.
-> +        // CAST: The offset is cast to `i32` because the C functions exp=
-ect a 32-bit signed offset
-> +        // parameter. PCI configuration space size is at most 4096 bytes=
-, so the value always fits
-> +        // within `i32` without truncation or sign change.
-> +        // Return value from C function is ignored in infallible accesso=
-rs.
-> +        let _ret =3D unsafe { bindings::$c_fn($self.pdev.as_raw(), $addr=
- as i32, &mut val) };
-> +        val
-> +    }};
-> +}
-> +
-> +/// Internal helper macros used to invoke C PCI configuration space writ=
-e functions.
-> +///
-> +/// This macro is intended to be used by higher-level PCI configuration =
-space access macros
-> +/// (define_write) and provides a unified expansion for infallible vs. f=
-allible read semantics. It
-> +/// emits a direct call into the corresponding C helper and performs the=
- required cast to the Rust
-> +/// return type.
-> +///
-> +/// # Parameters
-> +///
-> +/// * `$c_fn` =E2=80=93 The C function performing the PCI configuration =
-space write.
-> +/// * `$self` =E2=80=93 The I/O backend object.
-> +/// * `$ty` =E2=80=93 The type of the written value.
-> +/// * `$addr` =E2=80=93 The configuration space offset to write.
-> +/// * `$value` =E2=80=93 The value to write.
-> +///
-> +/// This macro does not perform any validation; all invariants must be u=
-pheld by the higher-level
-> +/// abstraction invoking it.
-> +macro_rules! call_config_write {
-> +    (infallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr, $value:ex=
-pr) =3D> {
-> +        // SAFETY: By the type invariant `$self.pdev` is a valid address=
-.
-> +        // CAST: The offset is cast to `i32` because the C functions exp=
-ect a 32-bit signed offset
-> +        // parameter. PCI configuration space size is at most 4096 bytes=
-, so the value always fits
-> +        // within `i32` without truncation or sign change.
-> +        // Return value from C function is ignored in infallible accesso=
-rs.
-> +        let _ret =3D unsafe { bindings::$c_fn($self.pdev.as_raw(), $addr=
- as i32, $value) };
-> +    };
-> +}
-> +
-> +// PCI configuration space supports 8, 16, and 32-bit accesses.
-> +impl<'a, S: ConfigSpaceSize> IoCapable<u8> for ConfigSpace<'a, S> {}
-> +impl<'a, S: ConfigSpaceSize> IoCapable<u16> for ConfigSpace<'a, S> {}
-> +impl<'a, S: ConfigSpaceSize> IoCapable<u32> for ConfigSpace<'a, S> {}
-> +
-> +impl<'a, S: ConfigSpaceSize> Io for ConfigSpace<'a, S> {
-> +    const MIN_SIZE: usize =3D S::SIZE;
-> +
-> +    /// Returns the base address of the I/O region. It is always 0 for c=
-onfiguration space.
-> +    #[inline]
-> +    fn addr(&self) -> usize {
-> +        0
-> +    }
-> +
-> +    /// Returns the maximum size of the configuration space.
-> +    #[inline]
-> +    fn maxsize(&self) -> usize {
-> +        self.pdev.cfg_size().map_or(0, |v| v)
-> +    }
-> +
-> +    // PCI configuration space does not support fallible operations.
-> +    // The default implementations from the Io trait are not used.
-> +
-> +    define_read!(infallible, read8, call_config_read(pci_read_config_byt=
-e) -> u8);
-> +    define_read!(infallible, read16, call_config_read(pci_read_config_wo=
-rd) -> u16);
-> +    define_read!(infallible, read32, call_config_read(pci_read_config_dw=
-ord) -> u32);
-> +
-> +    define_write!(infallible, write8, call_config_write(pci_write_config=
-_byte) <- u8);
-> +    define_write!(infallible, write16, call_config_write(pci_write_confi=
-g_word) <- u16);
-> +    define_write!(infallible, write32, call_config_write(pci_write_confi=
-g_dword) <- u32);
-> +}
-> +
-> +/// Marker trait indicating ConfigSpace has a known size at compile time=
-.
-> +impl<'a, S: ConfigSpaceSize> IoKnownSize for ConfigSpace<'a, S> {}
-> =20
->  /// A PCI BAR to perform I/O-Operations on.
->  ///
-> @@ -144,4 +280,33 @@ pub fn iomap_region<'a>(
->      ) -> impl PinInit<Devres<Bar>, Error> + 'a {
->          self.iomap_region_sized::<0>(bar, name)
->      }
-> +
-> +    /// Returns the size of configuration space in bytes.
-> +    fn cfg_size(&self) -> Result<usize> {
-> +        // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev=
-`.
-> +        let size =3D unsafe { (*self.as_raw()).cfg_size };
-> +        match size {
-> +            256 | 4096 =3D> Ok(size as usize),
-> +            _ =3D> {
-> +                debug_assert!(false);
-> +                Err(EINVAL)
-> +            }
-> +        }
-> +    }
-
-This method is only invoked from maxsize, which turns error into `0`. Do ap=
-art
-from the debug assertion, the error code is pointless. I think this functio=
-n
-should just return `usize` as it's specified in the device (we should trust=
- the
-C side that the value is sensible).
-
-The check, as Alex mentioned, need to be done when ConfigSpace is created i=
-n
-the first place and is too late when you already hand out `Ok(ConfigSpace)`=
-.
-
-Best,
-Gary
-
-> +
-> +    /// Return an initialized normal (256-byte) config space object.
-> +    pub fn config_space<'a>(&'a self) -> Result<ConfigSpace<'a, Normal>>=
- {
-> +        Ok(ConfigSpace {
-> +            pdev: self,
-> +            _marker: PhantomData,
-> +        })
-> +    }
-> +
-> +    /// Return an initialized extended (4096-byte) config space object.
-> +    pub fn config_space_extended<'a>(&'a self) -> Result<ConfigSpace<'a,=
- Extended>> {
-> +        Ok(ConfigSpace {
-> +            pdev: self,
-> +            _marker: PhantomData,
-> +        })
-> +    }
->  }
+>  samples/rust/rust_driver_pci.rs | 28 ++++++++++++++++++++++++++++
+>  1 file changed, 28 insertions(+)
 
