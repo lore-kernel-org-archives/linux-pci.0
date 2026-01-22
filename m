@@ -1,206 +1,256 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012071.outbound.protection.outlook.com [40.107.209.71])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE78727FD5B;
-	Thu, 22 Jan 2026 13:15:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.71
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769087725; cv=fail; b=mBh5u6sSgusYHcJR5+zGUnsuF0CxbKG+quIJRWeMvomGGKlSSYt0gtSJIPgaj8uXm7tp59U96jLB63G/Fmtxfz3/5YBp52y4f/Uz469g57BJIbkdzilM+iccrvau9itvjkiRRW3SxiFU8+1uqzIh+ErlAiA0C2hgyOxqLuQ1hn8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769087725; c=relaxed/simple;
-	bh=lXR2Qse3BuGfxbhoamN3G9Pp9GS3rT8Z/jNKB01Atxc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=XV60ACrocaGUtVK/93O7vMyD2nznclitBlnmCbBLQffUdtwyxfRJWvGpqyzwYjqvB1StX94AL+HFz6ogvlWwZgJwFCIKQRX7gNazlZjSEElg/oMBZMB3rS/pfmZP9ZfrJue5vWrQIWC1HuV6FwZGUXcoFHhrFVU+HJrw+W3bdB8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=kjGqEFJ/; arc=fail smtp.client-ip=40.107.209.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0F752DC763;
+	Thu, 22 Jan 2026 13:17:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769087844; cv=none; b=ondynYT0SVmdcmcj7HUsiePaVvft+/RD96lQGjPYYj5HnvY5xVgLzNVCQjnTDChfQjoV3t/G1GwawDF8IjXbPkIlMfkGKRMq+0BE86yv2pHSG8+w0WbjUo4udoxgvsv6PBHM2yysP8w5/LPbLo7HAqjOKo3qs4OZif6l3oRUs4k=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769087844; c=relaxed/simple;
+	bh=BboKZC7lJjpQsIwQ8SNg8wIaBhGEiugaek244I4OWiQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=axce/cRFbAbu/f+2xnPyjwcf7JwoReubBmAI4tJHn+le0r6PZfyKRHRL/PoGk9yVggrajf0APSSLJcue9fdLASLt4261laclCS7Xnpybq9kqZuLrcVcWL4mrr/RCZe8UQ5dp0LmTePXurDiC93U+NFcdBqHgrve+6JuE4DFj45I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vu/vaqZq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="kjGqEFJ/"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=SDaN8m9aVjVQIwxOa+KiwDX9f77prhjcCK6E4gZzwpQbBi1t+wYxbjkIx5oWFbSdatrf1Rk6OFkP3/ZNQ+DHhndHD2YJyzMZwMDNVm4Mvs4JVAC0CahDn0xORDnZWewr8oKldi+SEfQcDJ3RgGeKbAl6LIGgV9LBECzH7hdSG8Hg5qDkOpnqgH0eSddKtr7hVDmkhFAAPGf+pZKixoTi/OmdxZtQJmf9BVxJQIIdlNbOL5tjDkehqvH40I9mL/5AO9I+YdAevcjwxxzfYk2LueWD4+WYDiqwTJFLYaMJRMB4nnaTaBXMo6sfiHQdAU/vn+QTyWB08hnSr08EpGvJNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Y/vRGL//8GR92XWYhPnuG4DJzKHcQ/4KivMC2IqL6/k=;
- b=PcFHqPY4Rs2GJA5pAgu46P8NacDBtO0CpsS0O6dQ2yl0mXZCSGHSNss55vw4zuWRB60Z3rvIcRGAgmzqUQbDwV976jN6gj+Pi9/iyVJvy2BLztESJsMmT2FRMwtEy0nJzjl1LDNTPkmlRN5WwREtwvmCW8UAtYHT+8AY6MGVDfRqH7UMMpoOyYmVSedBInoyMMQjQBszRyB1DO4Ffk1kGC/VT8Ggrbpngch1RqgivuGa+XfamwVCHhsHwu4U9WToSjL7p2yO6tyE9TKJCrdhn/8XwV0jSMWgojKYvg4M+Gby5LUeX1vXLBP7Zeeq9/iQTsxpGRWd0KnSZzv/A+Sfbg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Y/vRGL//8GR92XWYhPnuG4DJzKHcQ/4KivMC2IqL6/k=;
- b=kjGqEFJ/8m0J7FeWZiet9F3P95LligNR/oio7Bf0jyXAkCUKq9hqSPVT3RZ1BXtWrHAzSMcyREAO7vt0l7Sq0CuYUQeZd/IFXbuhFHhGv3AiTPz5IMKh6t/nBVJ/9H+jI0LyE0JHniFz3tmZ6tj6pikTi3EunaJbLhJaMX3HQm06hLG1PcVZXCrdgXq0iugSkJGWB5QRlQEVrVgKkT0699EugtjkoXrC3pv6r0FytDFm1sAX2N2RSr5Zjn7z4FOlPxDnZZN96xPm9DmErVb+hsQe3Wwp8pAYppCo+5z77sT6R8lYzDt1jJxNpyZ2tMjqWcnRtCix+SyeVTJVkRC2SQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by PH0PR12MB7983.namprd12.prod.outlook.com (2603:10b6:510:28e::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Thu, 22 Jan
- 2026 13:15:20 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::1b59:c8a2:4c00:8a2c]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::1b59:c8a2:4c00:8a2c%3]) with mapi id 15.20.9542.010; Thu, 22 Jan 2026
- 13:15:20 +0000
-Date: Thu, 22 Jan 2026 09:15:19 -0400
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Baolu Lu <baolu.lu@linux.intel.com>
-Cc: Jonathan Cameron <jonathan.cameron@huawei.com>,
-	"Tian, Kevin" <kevin.tian@intel.com>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	"will@kernel.org" <will@kernel.org>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Williams, Dan J" <dan.j.williams@intel.com>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"praan@google.com" <praan@google.com>,
-	"miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-cxl@vger.kernel.org
-Subject: Re: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
- capable devices
-Message-ID: <20260122131519.GK1134360@nvidia.com>
-References: <cover.1768624180.git.nicolinc@nvidia.com>
- <d1768bb6384050a23769f20ca28216f520f77e26.1768624181.git.nicolinc@nvidia.com>
- <BL1PR11MB5271F0BDC68C2D7F172122E98C96A@BL1PR11MB5271.namprd11.prod.outlook.com>
- <20260121100307.00004e60@huawei.com>
- <20260121130315.GE1134360@nvidia.com>
- <fa3e55e1-3cf4-4b73-8b5e-192a19a18f3b@linux.intel.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fa3e55e1-3cf4-4b73-8b5e-192a19a18f3b@linux.intel.com>
-X-ClientProxiedBy: MN2PR06CA0010.namprd06.prod.outlook.com
- (2603:10b6:208:23d::15) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vu/vaqZq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8657CC116C6;
+	Thu, 22 Jan 2026 13:17:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769087844;
+	bh=BboKZC7lJjpQsIwQ8SNg8wIaBhGEiugaek244I4OWiQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Vu/vaqZqS7AZZ1hiNQ//DWxncpJcqp2APCwNpEoAS7w06EwvT/CQ5oEesuZqpdj9U
+	 NH/O2YuNqLMSPoovHGJOBeyu+n7T6JAjqs03HQ+hJEoWLkgLYXpACTV9oPqc3duejH
+	 ZTj4T0eiyANOjllj6ZAFaN3kUbn3Y24bDKdXLxBL2xGNhSK8KUDqSa9bMhcrXscx/x
+	 74/Jq52YNXz0zYUu2mqo+LtqF+5bBjdmtbKFodXSQdRBSMpIn8PIS+IaXlEVM5hv0S
+	 W8TiSMPcncJvueHm9C+/KHyRuHiPojkccruUAfO9YeV0kaSK9J3COpudAS+Q9HEL6Y
+	 VtcURRO5cyDbQ==
+Date: Thu, 22 Jan 2026 18:47:09 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jon Hunter <jonathanh@nvidia.com>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	"David E. Box" <david.e.box@linux.intel.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Heiner Kallweit <hkallweit1@gmail.com>, 
+	Chia-Lin Kao <acelan.kao@canonical.com>, Bjorn Helgaas <helgaas@kernel.org>, 
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
+ set by BIOS for devicetree platforms
+Message-ID: <76sr3yuwdaon3o3u5dfjycwlxhxcarid5tevgtao6aaapvwbzd@e7bam35dzt3k>
+References: <20250922-pci-dt-aspm-v2-0-2a65cf84e326@oss.qualcomm.com>
+ <20250922-pci-dt-aspm-v2-1-2a65cf84e326@oss.qualcomm.com>
+ <7306256a-b380-489b-8248-b774e6d3d80e@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|PH0PR12MB7983:EE_
-X-MS-Office365-Filtering-Correlation-Id: fd2f2008-708b-4cad-7722-08de59b84b21
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024|7416014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?4F8WlaOA6VwJCNL5lB59+ldhWCxyojee88FkNzO3y1I9JdTzz2zzqhEHwlsI?=
- =?us-ascii?Q?zOGaPhH6UrhIKWNnQaCtrOu+6h3o9hFh08IpM4LbbW7lFWWFQa3PHs8WjVYj?=
- =?us-ascii?Q?Yy9lXAiwliDevW26wqn4kSyjhuXAmPIyaVbwNUmkSSmIE8nkXfULmGtX2F4G?=
- =?us-ascii?Q?xo/WFtiVOm1J2g0ByVjEZv/q+b9XTVhUd5/9Mz0Yyk99hEthLU3n9/S51yRK?=
- =?us-ascii?Q?yA+TSOHqre/cQhH/xIeoRvaf15KNhAiwK7Dw8E94HoDrayU0PIBQFw9MW5dT?=
- =?us-ascii?Q?4nqQLABNeQbguE05e98OdnKhiWNzK9M3pLCjPtDQQx+HuVvN192MRFu2YMoU?=
- =?us-ascii?Q?dU8xcaVEIQUj0fHdgRpkw/cc/blb/4Bp+joYzXvB0SiCRb6cXzXUZ5jJ37fk?=
- =?us-ascii?Q?g8LHxzIzvFCgkGjFGtf1ykYBRHXGrK8EQGvD6ycNHzlZJfW1rLDLyPbldPqt?=
- =?us-ascii?Q?wc40DjgYklZiw3LQ+Z1GBzCgIdicxPB4XWJoFx+4T/pokAHMnE8qZx0rq2a9?=
- =?us-ascii?Q?zAKs22QBzdLuNXmtOypuLYd1v1Rp2NT6plud078wmrUYswI4wedm3tMijzq6?=
- =?us-ascii?Q?Jpz261NzjHrwWj9NZHDQS0dAN9qxnmporc7H//Ey9DjwMD1YX92syq7fA+GG?=
- =?us-ascii?Q?c7WoauHiCzwIvYfrgmyv4YzdIhm0+HEfo/T49s14ovDgUDxQJor7qvm3Zfc/?=
- =?us-ascii?Q?UA/jJ6Dir/zuyYRQJt1bRyK4SUjAIo4AR26hd/dtPlLmVKa135TJl1xqSM5/?=
- =?us-ascii?Q?L7BPuADYqCKmc8fHYuNKTwDV/AQfXib6QSsiTZDiDmncYZSc++j0ABa8ttpl?=
- =?us-ascii?Q?g2MU57Pla+j5Sl0Fjo2HkgwsKxsxzc9XtCUxDlnZ9B8/pcGAJ3Ts213mU+fw?=
- =?us-ascii?Q?oRw9JSVLi03xmzTz3I15CByZ8Ilm0ppNR5FHweZVbyX1EbkgUweCpQOqAA4n?=
- =?us-ascii?Q?jVx+77JxhHFLQd8Neu0prTR6SLogYY83gHgOLewQtLG9dX+fgWanqhYLFbnh?=
- =?us-ascii?Q?4EDxwnnyWaO6YBLgQFJsK6xNYfmImxpFol6vfaPgksNeKn3RJjfFv4BdqQSU?=
- =?us-ascii?Q?gtbxlWaTuWJ4VQaRTCj7RJJJT//Q2EYxKC+I2CB3Bslgj4Iy3C+t51GBlLgZ?=
- =?us-ascii?Q?0/QafXigOZCTqe/CGo3sSPxukke3t5adlmRaGvfSNVrv4GlgbAHcWOBI7HNl?=
- =?us-ascii?Q?m1ugl30pqaheka7eJxnOjjNm+GeVFqnOmh6J8/sLvykeD14L3Lp9TYfpuMPg?=
- =?us-ascii?Q?0Jq4CjZh2ck3wwWSGlx489m2XACLueL2Iz0fbUdgEgNojAlPAM4GCKLUWzai?=
- =?us-ascii?Q?D7Hpf+E3b3gE+s8bLp8px/8+O6KWfFQn6+XK7FG7GvsTS2ss9uW2zKrBmFfa?=
- =?us-ascii?Q?1/64NTXxRDh2SDeUirg2KCRT094b5gPslovNoGf9rvncBC+hBSz8+ZOZ/b1L?=
- =?us-ascii?Q?eXQHV53LFlNigoXRQlnYhkzFZA+Y75CVAqjoh3tbvA5ngi0DpXMh2/NPovKa?=
- =?us-ascii?Q?m4mHJbF3N7U0zs6J1FkPOzSiIWZCAajHSfA6QicqbAPriNMUE/GFtvexjTGM?=
- =?us-ascii?Q?w7DIxOGAVPjpvwPuNuc=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(7416014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?aDXZ69YsVKWATR+MaTnqjZ3LWzeDqE+hsq9vT/uWMcCh0dfNyAbaonBOMDgj?=
- =?us-ascii?Q?a1AmRfE/6RMW6DWcOns4013OLD388bHtIHvxUomHf3T7ZXvhGqkSBP4Xodt3?=
- =?us-ascii?Q?Xpuw/6WnYK4CX9bEdNN6pPs2t1K6RLHr2WKoUyws9rstcPb+EmqJ5SbaRby4?=
- =?us-ascii?Q?y4XSiuTyLVlwT4jyiYKUptr2cc3AGInOiKXia3ngIm69X/4sBUpakLli3AkX?=
- =?us-ascii?Q?W1r12og0Hqr2DcG/RNuRxoEePy67EmPAJPm4/c0VgoBkdVy+yCsdAjSL4rUf?=
- =?us-ascii?Q?q+WqD3bye7Y5K73rgmFOujLCqFYeRqPby5hBZ9uQqPIYvRk+kZGGpyNI34Mw?=
- =?us-ascii?Q?CvSd01oplYWBH2jXK92h6sL1i5/h3Jdf54HhidT47bpqfKLG7KOaGXpnQsMD?=
- =?us-ascii?Q?xXOjz1g0Ok3riOJYvhATylKUgJlaEvbV/fXhPSqg71JuCznqEss8w83ZKcAU?=
- =?us-ascii?Q?cJ/kmLH/hnVZQ0RMsbYahS3eCdCA28awNn+ALsDBS+GBwOG7IJ29bzJCaWK0?=
- =?us-ascii?Q?HEORohhs5Kz4+W9JwozcocMiQvtZic+idBtLyPCK5eWlxhj5kNstxMx+ViuK?=
- =?us-ascii?Q?4On44fipPJiwrcux3RaDZN+yIzhhHSoKbyxJveCpl12bYlk9IQdrP3O5gwGn?=
- =?us-ascii?Q?ZWpgtrPiCqCSEsiHn4CsxQ+g9B+gpKSsSVjjncvSTlKcgqpUVzCnS2RmsKjO?=
- =?us-ascii?Q?CTrcfgkZo3SNrAGTrW8HGTnjPYakXDsUvAwUq9Xe/CwZpgEzPvL2YLAzXs+V?=
- =?us-ascii?Q?aMbu9tH8ZZxsbYi0pcfIhqkNGzG3VfKJLNRlVuiv5nxueY/hKHyaCCu+CUDX?=
- =?us-ascii?Q?vec/f7PJdHdm3m/OPef3WOKk6tbSqTDbayWODwo34F7UcBR+WBy3jcjhnlIx?=
- =?us-ascii?Q?hzbnbH/RFQszp3zO1cibB4KBOLVTVR8IyBxuzfiOElIN/VnXub7/qCoYe5eS?=
- =?us-ascii?Q?EpZ+YHNMa9996ilGa8ZIyuPtOIrTNpPgwH7WpG3+IdlrLNho/+qX2+9wGCUI?=
- =?us-ascii?Q?XvSLsbsi32FWWuKOJbyKyo2R5t/vg6IM9g0sjKhvEN4RYd6+YaCwwveiY9Dl?=
- =?us-ascii?Q?X4RVFBnkGC5aJwXollUXd02xrDgoI7MF2hXoW9hYtwJn1ORwBar6+OTY57V/?=
- =?us-ascii?Q?Xp0aoXy2DSLrxO6g3hOU1/rxjuwz7teF0pVrOSM4+CJt8HbEWj9GKauMWeqQ?=
- =?us-ascii?Q?zJth5pqUSj9+B9w8al7abWtvqPB7xqkcko34Fh18zrp4SSb1i4+ows5NXU9d?=
- =?us-ascii?Q?+zr3zNg2KRQPOpWvejXcBOtKMpEiHPvz7nuBr+zrD57NKMcftBh0sS79xj16?=
- =?us-ascii?Q?qMy5/DKO0VJCeWZmEW6iWUyxXGzg8p0OdUegPokmKp4n8BLsEUOGyTL0op1k?=
- =?us-ascii?Q?VCD8p1Ij/Zo0HiUF71Hkk3RG6C4pCLSYczkjb+eboxbW5DXbEn264XU8/1Qh?=
- =?us-ascii?Q?Nsgyd1P1kk5O6cgecxD+7Ybn7je6vxk8Ts0V2GO1iHneE2atdNki3MEclB3Q?=
- =?us-ascii?Q?jaQANGOu8Mh5ZiEbwPg9ADB8RaWHPaV+EHWHDP1jOKuFCQzK6d2QGHW1SGQU?=
- =?us-ascii?Q?ntSa9E984/UchIyavtvE9sk67nDdUy5iN9RcgAalO5wn1h9qknqyeatmBzpn?=
- =?us-ascii?Q?v52R+9h1TsY5cosbkY+nC7j4BsiXj2Izex8xXjgKOIC9RgQofzwTjS2VviO/?=
- =?us-ascii?Q?zSbvK1NEE/UTcwp+6DSUc3vEalF5fIxcAsa4qug/6RinujS9F858YdhoB7Tu?=
- =?us-ascii?Q?DnxwpuIU7A=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fd2f2008-708b-4cad-7722-08de59b84b21
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 13:15:20.4443
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CyqemZ606Fv7o7HhRLI++3Zho4irAT9dJny+K5vP6efrq/rWqp3Yjt0EanfiZnxQ
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB7983
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7306256a-b380-489b-8248-b774e6d3d80e@nvidia.com>
 
-On Thu, Jan 22, 2026 at 09:17:27AM +0800, Baolu Lu wrote:
-> On 1/21/26 21:03, Jason Gunthorpe wrote:
-> > On Wed, Jan 21, 2026 at 10:03:07AM +0000, Jonathan Cameron wrote:
-> > > On Wed, 21 Jan 2026 08:01:36 +0000
-> > > "Tian, Kevin"<kevin.tian@intel.com> wrote:
-> > > 
-> > > > +Dan. I recalled an offline discussion in which he raised concern on
-> > > > having the kernel blindly enable ATS for cxl.cache device instead of
-> > > > creating a knob for admin to configure from userspace (in case
-> > > > security is viewed more important than functionality, upon allowing
-> > > > DMA to read data out of CPU caches)...
-> > > > 
-> > > +CC Linux-cxl
-> > A cxl.cache device supporting ATS will automatically enable ATS today
-> > if the kernel option to enable translation is set.
+On Thu, Jan 22, 2026 at 12:12:42PM +0000, Jon Hunter wrote:
+> Hi Manivannan,
+> 
+> On 22/09/2025 17:16, Manivannan Sadhasivam via B4 Relay wrote:
+> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > > 
-> > Even if the device is marked untrusted by the PCI layer (eg an
-> > external port).
+> > So far, the PCI subsystem has honored the ASPM and Clock PM states set by
+> > the BIOS (through LNKCTL) during device initialization, if it relies on the
+> > default state selected using:
+> > 
+> > * Kconfig: CONFIG_PCIEASPM_DEFAULT=y, or
+> > * cmdline: "pcie_aspm=off", or
+> > * FADT: ACPI_FADT_NO_ASPM
+> > 
+> > This was done conservatively to avoid issues with the buggy devices that
+> > advertise ASPM capabilities, but behave erratically if the ASPM states are
+> > enabled. So the PCI subsystem ended up trusting the BIOS to enable only the
+> > ASPM states that were known to work for the devices.
+> > 
+> > But this turned out to be a problem for devicetree platforms, especially
+> > the ARM based devicetree platforms powering Embedded and *some* Compute
+> > devices as they tend to run without any standard BIOS. So the ASPM states
+> > on these platforms were left disabled during boot and the PCI subsystem
+> > never bothered to enable them, unless the user has forcefully enabled the
+> > ASPM states through Kconfig, cmdline, and sysfs or the device drivers
+> > themselves, enabling the ASPM states through pci_enable_link_state() APIs.
+> > 
+> > This caused runtime power issues on those platforms. So a couple of
+> > approaches were tried to mitigate this BIOS dependency without user
+> > intervention by enabling the ASPM states in the PCI controller drivers
+> > after device enumeration, and overriding the ASPM/Clock PM states
+> > by the PCI controller drivers through an API before enumeration.
+> > 
+> > But it has been concluded that none of these mitigations should really be
+> > required and the PCI subsystem should enable the ASPM states advertised by
+> > the devices without relying on BIOS or the PCI controller drivers. If any
+> > device is found to be misbehaving after enabling ASPM states that they
+> > advertised, then those devices should be quirked to disable the problematic
+> > ASPM/Clock PM states.
+> > 
+> > In an effort to do so, start by overriding the ASPM and Clock PM states set
+> > by the BIOS for devicetree platforms first. Separate helper functions are
+> > introduced to override the BIOS set states by enabling all of them if
+> > of_have_populated_dt() returns true. To aid debugging, print the overridden
+> > ASPM and Clock PM states as well.
+> > 
+> > In the future, these helpers could be extended to allow other platforms
+> > like VMD, newer ACPI systems with a cutoff year etc... to follow the path.
+> > 
+> > Link: https://lore.kernel.org/linux-pci/20250828204345.GA958461@bhelgaas
+> > Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > Link: https://patch.msgid.link/20250916-pci-dt-aspm-v1-1-778fe907c9ad@oss.qualcomm.com
+> > ---
+> >   drivers/pci/pcie/aspm.c | 42 ++++++++++++++++++++++++++++++++++++++++--
+> >   1 file changed, 40 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> > index 919a05b9764791c3cc469c9ada62ba5b2c405118..cda31150aec1b67b6a48b60569222ea3d1c3d41f 100644
+> > --- a/drivers/pci/pcie/aspm.c
+> > +++ b/drivers/pci/pcie/aspm.c
+> > @@ -15,6 +15,7 @@
+> >   #include <linux/math.h>
+> >   #include <linux/module.h>
+> >   #include <linux/moduleparam.h>
+> > +#include <linux/of.h>
+> >   #include <linux/pci.h>
+> >   #include <linux/pci_regs.h>
+> >   #include <linux/errno.h>
+> > @@ -235,13 +236,15 @@ struct pcie_link_state {
+> >   	u32 aspm_support:7;		/* Supported ASPM state */
+> >   	u32 aspm_enabled:7;		/* Enabled ASPM state */
+> >   	u32 aspm_capable:7;		/* Capable ASPM state with latency */
+> > -	u32 aspm_default:7;		/* Default ASPM state by BIOS */
+> > +	u32 aspm_default:7;		/* Default ASPM state by BIOS or
+> > +					   override */
+> >   	u32 aspm_disable:7;		/* Disabled ASPM state */
+> >   	/* Clock PM state */
+> >   	u32 clkpm_capable:1;		/* Clock PM capable? */
+> >   	u32 clkpm_enabled:1;		/* Current Clock PM state */
+> > -	u32 clkpm_default:1;		/* Default Clock PM state by BIOS */
+> > +	u32 clkpm_default:1;		/* Default Clock PM state by BIOS or
+> > +					   override */
+> >   	u32 clkpm_disable:1;		/* Clock PM disabled */
+> >   };
+> > @@ -373,6 +376,18 @@ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
+> >   	pcie_set_clkpm_nocheck(link, enable);
+> >   }
+> > +static void pcie_clkpm_override_default_link_state(struct pcie_link_state *link,
+> > +						   int enabled)
+> > +{
+> > +	struct pci_dev *pdev = link->downstream;
+> > +
+> > +	/* Override the BIOS disabled Clock PM state for devicetree platforms */
+> > +	if (of_have_populated_dt() && !enabled) {
+> > +		link->clkpm_default = 1;
+> > +		pci_info(pdev, "Clock PM state overridden: ClockPM+\n");
+> > +	}
+> > +}
+> > +
+> >   static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
+> >   {
+> >   	int capable = 1, enabled = 1;
+> > @@ -395,6 +410,7 @@ static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
+> >   	}
+> >   	link->clkpm_enabled = enabled;
+> >   	link->clkpm_default = enabled;
+> > +	pcie_clkpm_override_default_link_state(link, enabled);
+> >   	link->clkpm_capable = capable;
+> >   	link->clkpm_disable = blacklist ? 1 : 0;
+> >   }
+> > @@ -788,6 +804,26 @@ static void aspm_l1ss_init(struct pcie_link_state *link)
+> >   		aspm_calc_l12_info(link, parent_l1ss_cap, child_l1ss_cap);
+> >   }
+> > +static void pcie_aspm_override_default_link_state(struct pcie_link_state *link)
+> > +{
+> > +	struct pci_dev *pdev = link->downstream;
+> > +	u32 override;
+> > +
+> > +	/* Override the BIOS disabled ASPM states for devicetree platforms */
+> > +	if (of_have_populated_dt()) {
+> > +		link->aspm_default = PCIE_LINK_STATE_ASPM_ALL;
+> > +		override = link->aspm_default & ~link->aspm_enabled;
+> > +		if (override)
+> > +			pci_info(pdev, "ASPM states overridden: %s%s%s%s%s%s\n",
+> > +				 (override & PCIE_LINK_STATE_L0S) ? "L0s+, " : "",
+> > +				 (override & PCIE_LINK_STATE_L1) ? "L1+, " : "",
+> > +				 (override & PCIE_LINK_STATE_L1_1) ? "L1.1+, " : "",
+> > +				 (override & PCIE_LINK_STATE_L1_2) ? "L1.2+, " : "",
+> > +				 (override & PCIE_LINK_STATE_L1_1_PCIPM) ? "L1.1 PCI-PM+, " : "",
+> > +				 (override & PCIE_LINK_STATE_L1_2_PCIPM) ? "L1.2 PCI-PM+" : "");
+> > +	}
+> > +}
+> > +
+> >   static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+> >   {
+> >   	struct pci_dev *child = link->downstream, *parent = link->pdev;
+> > @@ -868,6 +904,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+> >   	/* Save default state */
+> >   	link->aspm_default = link->aspm_enabled;
+> > +	pcie_aspm_override_default_link_state(link);
+> > +
+> >   	/* Setup initial capable state. Will be updated later */
+> >   	link->aspm_capable = link->aspm_support;
 > 
-> I don't follow here. The untrusted check is now in pci_ats_supported():
 > 
-> /**
->  * pci_ats_supported - check if the device can use ATS
->  * @dev: the PCI device
->  *
->  * Returns true if the device supports ATS and is allowed to use it, false
->  * otherwise.
->  */
-> bool pci_ats_supported(struct pci_dev *dev)
-> {
->         if (!dev->ats_cap)
->                 return false;
+> Since this commit was added in Linux v6.18, I have been observing a suspend
+> test failures on some of our boards. The suspend test suspends the devices
+> for 20 secs and before this change the board would resume in about ~27 secs
+> (including the 20 sec sleep). After this change the board would take over 80
+> secs to resume and this triggered a failure.
 > 
->         return (dev->untrusted == 0);
-> }
-> EXPORT_SYMBOL_GPL(pci_ats_supported);
+> Looking at the logs, I can see it is the NVMe device on the board that is
+> having an issue, and I see the reset failing ...
 > 
-> The iommu drivers (intel/amd/arm-smmuv3) all call pci_ats_supported()
-> before enabling ATS on a device. Anything I missed?
+>  [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
+>   flow control rx/tx
+>  [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
+>   0 timeout, reset controller
+>  [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
+>  [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
+>  [ 1003.050481] OOM killer enabled.
+>  [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
+> 
+> From the above timestamps the delay is coming from the NVMe. I see this
+> issue on several boards with different NVMe devices and I can workaround
+> this by disabling ASPM L0/L1 for these devices ...
+> 
+>  DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
+>  DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
+>  DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
+>  DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
+> 
+> I am curious if you have seen any similar issues?
+> 
 
-No, not at all, I forgot about this!
+Marek reported a similar issue on ARM Juno board [1] on which one of the switch
+downstream port failed to come up while *entering* system suspend. But I was
+clueless as to why the device fails to function only while entering system
+suspend and not during runtime. I suspect something is going wrong in the
+suspend path.
 
-Jason
+In your case, looks like the device is failing while resuming from suspend. Did
+you see any error log during suspend as well?
+
+> Other PCIe devices seem to be OK (like the realtek r8169) but just the NVMe
+> is having issues. So I am trying to figure out the best way to resolve this?
+> 
+
+First let's try to isolate the issue to L0s or L1. Can you try disabling L0s
+first, then L1?
+
+I will also inspect the suspend/resume path in the meantime.
+
+- Mani
+
+[1] https://lore.kernel.org/linux-pci/cae5cb24-a8b0-4088-bacd-14368f32bdc5@samsung.com/
+
+-- 
+மணிவண்ணன் சதாசிவம்
