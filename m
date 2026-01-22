@@ -1,105 +1,75 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49EF122F388
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 10:22:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 322D822F388;
+	Thu, 22 Jan 2026 10:22:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769077366; cv=none; b=tF8vyLiCfRYvSvaqzqIrsOa8aRXp4n1pjMkMvk/X9hVcZOFhsQoDzqiQ1RrQmfLiMp+5kcF27WIohNs0WByiXQ5xtKT0Lh7yap8KnhZr0ezmpAIJM+jR9/62m9lYGxX3M80hYmpKCq7eL0g6elnXzQ4/EuisvZcNVwhufyHe12k=
+	t=1769077379; cv=none; b=DaGnONje+ecBPeoTxw+MqkpedjnDxZm46cspfHKQz1WM0Cf+nsSlBZwXQic3gDGjExIcKdR71p4LYnmvX3E8LOn8Qkg/o4RP8r0N9U3b7RqO3LT4FCErH+GgGXCQfvQqBwIl17jneYwjp7IJjACzc2H2iUQZxP4KvXszjHBtCbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769077366; c=relaxed/simple;
-	bh=v46SqU54Dgjifn4xpkFEcLb7euLxjO6P3KYR+OQ7hj0=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=STwDKfOgfw+/yWwkGV4cvNVxk/P97lDXX/PgbJpU2DpUeEbrZbmS4LYq/X5acIoz0r1hUAVDS4H/qDc5Tuii7B94XH3cfhvw8TvGD2B8jCuHKKcdVwRFbg5nmyALIEXaLtxBy/Ra6wE5sancouatII4NsHSdCBVokFYC6NjXx1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EIE5KeAM; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1769077379; c=relaxed/simple;
+	bh=kT4mlWylBTehL4zttxMz1bZDT7RsJT3UKca38Q2+FGQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=rP3mmO0F7Jo/yIWjmKqexvpeIt/r2safBwsfe7C00pt62Q+v2pXr2sgs7uKwfSgCiOfHJHKpATX86qa4zlheDzMX7I2Vl7OqR8mSXbB/rv5uFQVfCkumpip+NWqbc+f1gGU8sv9QSRxUvOhqpewxA2JO4e1fqaPa52rCf2XH0a0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z4+YbGt0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EIE5KeAM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769077365; x=1800613365;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=v46SqU54Dgjifn4xpkFEcLb7euLxjO6P3KYR+OQ7hj0=;
-  b=EIE5KeAMZEbAL5hUWJvJHyYTQtfyI+ts2XENxcEUj2ASXJfzha0bJMCC
-   mkKvwTvVsiX4vHNYS8ly54/3oQg3PIKGID0t9cwxoybzago0asRKHWxGt
-   u/CROyP5T99dmgSnIV7bQtILyaLTXZnXSRGzBzWMW+Q+MbYWL4u7ui0n8
-   yc0gQOBW08exkfc0cAzYYARjucmRIU86gQuGbToJg9cARRxxk5ag+sj8l
-   pyLdX+jYe4Ql7jn8bcym+yd9v7f6iNJA9lNJoEgRjIYqIfCSO70hJJPeG
-   sAdXx647eWrDXwWTSfYKHSTMgaEhHDsQru9tB6LpzCojlOksX0St+SrcI
-   w==;
-X-CSE-ConnectionGUID: 2xv7fDI5RKqq4aVrDRngWA==
-X-CSE-MsgGUID: nlXIMCfqTaGZUfEHE0qUiQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11678"; a="70038321"
-X-IronPort-AV: E=Sophos;i="6.21,246,1763452800"; 
-   d="scan'208";a="70038321"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2026 02:22:44 -0800
-X-CSE-ConnectionGUID: 1vLyTaxeTQGBzEwRRGgNVw==
-X-CSE-MsgGUID: GcAe+rDGRi+zuqohbeRyEA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,246,1763452800"; 
-   d="scan'208";a="244303717"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.15])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2026 02:22:43 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Thu, 22 Jan 2026 12:22:39 +0200 (EET)
-To: Lukas Wunner <lukas@wunner.de>
-cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/PME: Replace RMW of Root Status register with direct
- write
-In-Reply-To: <39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de>
-Message-ID: <4264eef0-c7c8-18c3-2461-d1fdcf2ba532@linux.intel.com>
-References: <39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z4+YbGt0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1ED8C116C6;
+	Thu, 22 Jan 2026 10:22:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769077379;
+	bh=kT4mlWylBTehL4zttxMz1bZDT7RsJT3UKca38Q2+FGQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Z4+YbGt0EmMwS3RGo8HvrjHlLUTH1r1IGaR7g3wmuvJw47MW8qV3hLYZxAfsWxb6J
+	 N2WCyOZpXhjYxB8NIBBb2By6KYm6gIMdlGNGjbvDV5wzK5RANt1nN9Oq5Q/KjC+LI9
+	 9FbcviqlQSA9xxhI+pa4V4HlydvJf+A3uQ1URBf9TdH0VVGOU0NdML1R+aqu/k8enV
+	 o54UUy8Z7dQubUMWqAwNypLN3UOMDyNZnAMtreVL6EOQ/Exw3x6hDbI8HIW++lrQlf
+	 3kcGwT0VQmP/B/tfh0vRgWMU/jldIqLyUSgFkvVMH95IiTSA+hXq8b02qDmAadmj2L
+	 HGnELr2WMLXkQ==
+Date: Thu, 22 Jan 2026 04:22:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Haakon Bugge <haakon.bugge@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Johannes Thumshirn <morbidrsa@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] PCI: Initialize RCB from pci_configure_device
+Message-ID: <20260122102257.GA1239174@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-631596342-1769077359=:1059"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2C6ECE99-B9CD-4325-87D2-A2E212BDBDA3@oracle.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, Jan 22, 2026 at 09:42:46AM +0000, Haakon Bugge wrote:
+> > On Wed, Jan 21, 2026 at 12:35:40PM +0100, Håkon Bugge wrote:
+> > [snip]
+> 
+> > RCB isn't meaningful for switches, so we'll read their LNKCTL
+> > unnecessarily.  I propose something like this, which also clears RCB
+> > if it's set when it shouldn't be (I think this would indicate a
+> > firmware defect):
+> > 
+> >        /*
+> >         * Per PCIe r7.0, sec 7.5.3.7, RCB is only meaningful in Root Ports
+> >         * (where it is read-only), Endpoints, and Bridges.  It may only be
+> >         * set for Endpoints and Bridges if it is set in the Root Port.
+> >         */
+> >        if (!pci_is_pcie(dev) ||
+> >            pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+> >            pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM ||
+> >            pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
+> >            dev->is_virtfn)
+> 
+> I see that sec 1.3.2 defines "Endpoints are classified as either
+> legacy, PCI Express, or Root Complex Integrated Endpoints (RCiEPs)."
+> But, shouldn't we also exclude Root Complex Event Collectors
+> (PCI_EXP_TYPE_RC_EC)?
 
---8323328-631596342-1769077359=:1059
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Sun, 26 Oct 2025, Lukas Wunner wrote:
-
-> As of PCIe r7.0, the Root Status register contains a single writeable bit
-> (PME Status, type RW1C) and otherwise just read-only bits and RsvdZ bits
-> (which software must write as zero, PCIe r7.0 sec 7.4).
->=20
-> Thus, when clearing the PME Status bit, there's no need to perform a
-> read-modify-write of the register.  Instead, the bit can be written
-> directly.
->=20
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pci.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b14dd064006c..411a0b88841e 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2285,7 +2285,7 @@ void pcie_clear_device_status(struct pci_dev *dev)
->   */
->  void pcie_clear_root_pme_status(struct pci_dev *dev)
->  {
-> -=09pcie_capability_set_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
-> +=09pcie_capability_write_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
->  }
-> =20
->  /**
->=20
-
-Reviewed-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
-
---=20
- i.
-
---8323328-631596342-1769077359=:1059--
+Yes, probably so.
