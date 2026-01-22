@@ -1,144 +1,194 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AA003D3D11;
-	Thu, 22 Jan 2026 11:36:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D413D1CC1;
+	Thu, 22 Jan 2026 11:41:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769081792; cv=none; b=tIOd3/N+QwjkrVBgbD080JJZxPXmpcZecXE+zK5YwmX/LCgLzvsFvrDyGxcPNQgSFONxv44Du1e4wXw2DrAR2fW+Vsa8l+mevbCmBATFPxlyagwy/LcFych6Yrr28Xp2CjVQxUQFGmCk7wX4RKNs/HOx2F6ghHy9ZQ2mY7D7mdc=
+	t=1769082103; cv=none; b=EiJmlUlpZxHuVARh19hK0meJ/VN1No/S8lkniZ652/UZCl3LHCIyBFS27Nrwrp3bpKCc1kFldFvhka+7LdOrBr4OvvBsLuc4Z/HvEZLHe438xWZvQ5HIGz6GEpRtILOjdzf/mCwHz6BBlmevJ0h2JS6df/o6kpepYquAbJDr+7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769081792; c=relaxed/simple;
-	bh=ENaX1Ni1MjEYqWK5DUAycRHraRvMcIc+oNSelx9/l2Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VD1BNqB4pCqKFZoesgG6bjN3hlgpWukjuN9DzSv/nE8qiH3pODBBxjyHgC/dm71fDU2frsfnEGkWuaAxxpV+qIDw2XDQX+XSNrfIRy8B4RraCEjD6PS9qSrHjtETICbBGicyXC+gEvDj/ygasCtrd1DhtCwnG3dYK2ttQ/HqKJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZDryn4r3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769082103; c=relaxed/simple;
+	bh=NqQtXUERc3v4NzNZ99SDCcNfgBv7D/bmH0cyLocfDQo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ul6cWuiCd23bPKmADpeCXysr8QJCQMbn1PfsbJgGfT69ncBuwDVxZwk5A0qeMndfbRpYSybHfQma7BIjBxnTQsHHujPLrcIrVbl9ESyEZOaogiUuVGNPhKm+rFOHTufL9clbWijnpWAe4rQy7KnAtsjrsFcovhmywXog2FbQNyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=UEFpYXOg; arc=none smtp.client-ip=185.246.85.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZDryn4r3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A76CC116C6;
-	Thu, 22 Jan 2026 11:36:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769081791;
-	bh=ENaX1Ni1MjEYqWK5DUAycRHraRvMcIc+oNSelx9/l2Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZDryn4r3pVEndSSCPyKyGmEaA5BTct8VAHmY8jYwQGX6bZIuzGBK2tyiehlMSViCM
-	 Ei7gUubm2NpO0vLH1gLLEG7shYisa/qu58z1kPKCeHT7psSLc0dFIUNS20igfaqR8y
-	 H0JYR5Y3GLo2UHCzTKrQTDQA5CIsBsQX04/nfiZiuS1HDLzqsOcDFUUSDSixFNi2cA
-	 bcka/tqaxHdr2hWnQ1CWDAu9Vo3BBVN03Rl8iRMbmoAtVSYCecBSZ7PNzldFeiHaHe
-	 bmQniStX0qxItibPa8e+b/txibvQDRMzP6YVhz2gBqk8YlXoX44FzT/wg3EmzCppge
-	 Qf8lkGFsAGPRA==
-Date: Thu, 22 Jan 2026 11:36:21 +0000
-From: Will Deacon <will@kernel.org>
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Chen Ridong <chenridong@huawei.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Gabriele Monaco <gmonaco@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vlastimil Babka <vbabka@suse.cz>, Waiman Long <longman@redhat.com>,
-	cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 29/33] sched/arm64: Move fallback task cpumask to
- HK_TYPE_DOMAIN
-Message-ID: <aXILtazyRtpb3Yjy@willie-the-truck>
-References: <20260101221359.22298-1-frederic@kernel.org>
- <20260101221359.22298-30-frederic@kernel.org>
- <aW-cAlJCtI5Qtify@willie-the-truck>
- <aXEHf5nbZMI8LT4b@localhost.localdomain>
- <aXH0TZU7UNowTmwc@willie-the-truck>
- <aXIKDduX5qUXvOUX@localhost.localdomain>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="UEFpYXOg"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-03.galae.net (Postfix) with ESMTPS id 1D6934E421EE;
+	Thu, 22 Jan 2026 11:41:38 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id D41D760740;
+	Thu, 22 Jan 2026 11:41:37 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B0CD5119B0105;
+	Thu, 22 Jan 2026 12:41:16 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1769082094; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=Fl2SnsCgDRhlccmCWpsQ4CBlDuamahnW5kxpsohCwvo=;
+	b=UEFpYXOgJL+WIY89Mx/EpOyceBBILQiL0TxFQWpW01yiEySAJH2g1HcWGNeQm8jHeKv+xN
+	O2csc+HhLdo2gWFITsAzh6mTWYo9h+2QnQHxO2GdqZlsPvpTAG/XFqvOefokUsJca73PWu
+	919NjC9kftG/xECA0iNKY+BT7G6XeddTLl+YrGq6EFQ7innqv2Qzt9u7ZQzupbkT37WFhV
+	mgEsWUeGSzIj/19gb+Tq8BosxVfyi4TFbwa3Kmjo2kuM+uE7HxnX7idMvi9PAvs7Wiw+OR
+	Jl3h0x9NzvUaJ7inKLTNk1kZu+isqj/tgMXHTzscOm2flBtD/RFBursuZs9FuQ==
+Date: Thu, 22 Jan 2026 12:41:14 +0100
+From: Herve Codina <herve.codina@bootlin.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Matti Vaittinen <mazziesaccount@gmail.com>, Rob Herring
+ <robh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Ulf Hansson
+ <ulf.hansson@linaro.org>, Kalle Niemi <kaleposti@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Danilo Krummrich <dakr@kernel.org>, Shawn Guo <shawnguo@kernel.org>, Sascha
+ Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team
+ <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, Michael
+ Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, Andi
+ Shyti <andi.shyti@kernel.org>, Wolfram Sang
+ <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, Arnd
+ Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>, Charles
+ Keepax <ckeepax@opensource.cirrus.com>, Richard Fitzgerald
+ <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, Linus
+ Walleij <linus.walleij@linaro.org>, Mark Brown <broonie@kernel.org>, Andy
+ Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Scally
+ <djrscally@gmail.com>, Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+ Sakari Ailus <sakari.ailus@linux.intel.com>, Len Brown <lenb@kernel.org>,
+ Davidlohr Bueso <dave@stgolabs.net>, Jonathan Cameron
+ <jonathan.cameron@huawei.com>, Dave Jiang <dave.jiang@intel.com>, Alison
+ Schofield <alison.schofield@intel.com>, Vishal Verma
+ <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>, Dan Williams
+ <dan.j.williams@intel.com>, Wolfram Sang <wsa@kernel.org>,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ imx@lists.linux.dev, linux-clk@vger.kernel.org, linux-i2c@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+ patches@opensource.cirrus.com, linux-gpio@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-spi@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, Allan Nielsen
+ <allan.nielsen@microchip.com>, Horatiu Vultur
+ <horatiu.vultur@microchip.com>, Steen Hegelund
+ <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Saravana Kannan
+ <saravanak@kernel.org>
+Subject: Re: [PATCH v4 01/29] Revert "treewide: Fix probing of devices in DT
+ overlays"
+Message-ID: <20260122124114.44812cc7@bootlin.com>
+In-Reply-To: <CAMuHMdWGk5ig3v9tGy1cMOg1LmKu3KrxQq2HO1vcQeZPuRxWBQ@mail.gmail.com>
+References: <20251015071420.1173068-1-herve.codina@bootlin.com>
+	<5cf2a12a-7c66-4622-b4a9-14896c6df005@gmail.com>
+	<CAL_JsqJjm12LxpDg6LmpY=Ro_keHwnrWiYMLVnG=s_pSP4X2WQ@mail.gmail.com>
+	<072dde7c-a53c-4525-83ac-57ea38edc0b5@gmail.com>
+	<CAL_JsqKyG98pXGKpL=gxSc92izpzN7YCdq62ZJByhE6aFYs1fw@mail.gmail.com>
+	<55076f4b-d523-4f8c-8bd4-0645b790737e@gmail.com>
+	<20251202102619.5cd971cc@bootlin.com>
+	<088af3ff-bd04-4bc9-b304-85f6ed555f2a@gmail.com>
+	<20251202175836.747593c0@bootlin.com>
+	<dc813fc2-28d2-4f2c-a2a3-08e33eec8ec7@gmail.com>
+	<20251204083839.4fb8a4b1@bootlin.com>
+	<CAMuHMdXdwf7La1EYBWTJadsTAJG3nKQVW6wtBn-bUqshA=XHRw@mail.gmail.com>
+	<20251210132140.32dbc3d7@bootlin.com>
+	<c50c40cc-69f6-436c-a94e-94a3a10f6727@gmail.com>
+	<20251211132044.10f5b1ea@bootlin.com>
+	<1b9fa77b-d74a-4fa7-b2e7-8b389d59a5a0@gmail.com>
+	<20251211161902.11ef4248@bootlin.com>
+	<CAMuHMdWGk5ig3v9tGy1cMOg1LmKu3KrxQq2HO1vcQeZPuRxWBQ@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.49; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <aXIKDduX5qUXvOUX@localhost.localdomain>
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Thu, Jan 22, 2026 at 12:29:17PM +0100, Frederic Weisbecker wrote:
-> Le Thu, Jan 22, 2026 at 09:56:29AM +0000, Will Deacon a Ècrit :
-> > On Wed, Jan 21, 2026 at 06:06:07PM +0100, Frederic Weisbecker wrote:
-> > > Le Tue, Jan 20, 2026 at 03:15:14PM +0000, Will Deacon a Ècrit :
-> > > > Hi Frederic,
-> > > > 
-> > > > On Thu, Jan 01, 2026 at 11:13:54PM +0100, Frederic Weisbecker wrote:
-> > > > > When none of the allowed CPUs of a task are online, it gets migrated
-> > > > > to the fallback cpumask which is all the non nohz_full CPUs.
-> > > > > 
-> > > > > However just like nohz_full CPUs, domain isolated CPUs don't want to be
-> > > > > disturbed by tasks that have lost their CPU affinities.
-> > > > > 
-> > > > > And since nohz_full rely on domain isolation to work correctly, the
-> > > > > housekeeping mask of domain isolated CPUs should always be a superset of
-> > > > > the housekeeping mask of nohz_full CPUs (there can be CPUs that are
-> > > > > domain isolated but not nohz_full, OTOH there shouldn't be nohz_full
-> > > > > CPUs that are not domain isolated):
-> > > > > 
-> > > > > 	HK_TYPE_DOMAIN | HK_TYPE_KERNEL_NOISE == HK_TYPE_DOMAIN
-> > > > > 
-> > > > > Therefore use HK_TYPE_DOMAIN as the appropriate fallback target for
-> > > > > tasks and since this cpumask can be modified at runtime, make sure
-> > > > > that 32 bits support CPUs on ARM64 mismatched systems are not isolated
-> > > > > by cpusets.
-> > > > > 
-> > > > > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-> > > > > Reviewed-by: Waiman Long <longman@redhat.com>
-> > > > > ---
-> > > > >  arch/arm64/kernel/cpufeature.c | 18 +++++++++++++++---
-> > > > >  include/linux/cpu.h            |  4 ++++
-> > > > >  kernel/cgroup/cpuset.c         | 17 ++++++++++++++---
-> > > > >  3 files changed, 33 insertions(+), 6 deletions(-)
-> > > > 
-> > > > tbh, I'd also be fine just saying that isolation isn't reliable on these
-> > > > systems and then you don't need to add the extra arch hook.
-> > > 
-> > > Hmm, I think I heard about nohz_full usage on arm64 but I'm not sure.
-> > > And I usually expect isolcpus or cpuset isolated partitions to be even
-> > > more broadly used, it's lighter isolation with less constraints.
-> > > 
-> > > Anyway you're probably right that we could remove isolation support here
-> > > but I don't want to break any existing user.
-> > 
-> > fwiw, I think it's only some Android markets using the mismatched 32-bit
-> > support and we're definitely not using nohz_full there.
+Hi Geert,
+
+On Wed, 21 Jan 2026 13:59:26 +0100
+Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+
+> Hi Herv√©,
 > 
-> Now that removal becomes appealing. And what about isolcpus= / isolated cpuset
-> which only consist in scheduler domain isolation? Probably not used by android
-> either.
+> Revisiting his old thread (sorry for the delay)...
 > 
-> Ok but is there a way to detect on early boot that the system has mismatched
-> 32 bits support? Because I need to fail nohz_full= and isolcpus= boot parameters
-> early on top of this information without waiting for secondary CPUs boot.
+> On Thu, 11 Dec 2025 at 16:19, Herve Codina <herve.codina@bootlin.com> wrote:
+> > On Thu, 11 Dec 2025 15:52:28 +0200
+> > Matti Vaittinen <mazziesaccount@gmail.com> wrote:  
+> > > On 11/12/2025 14:20, Herve Codina wrote:  
+> > > > On Thu, 11 Dec 2025 10:34:46 +0200
+> > > > Matti Vaittinen <mazziesaccount@gmail.com> wrote:
+> > > > Do you see the same trace with:
+> > > > - "pinctrl-0 = <&i2c1_pins>;" in your overlay
+> > > > - fragment0 removed from the overlay (i2c1_pins definition removed from
+> > > >    the overlay.
+> > > > - i2c1_pins node defined in your base DT.  
+> > >
+> > > Just tested. The i2c1 appears and the test-overlay probe gets called,
+> > > when the i2c1_pins is in the base-dt and not in the overlay.  
+> >
+> > Geert, do you expirement same results?  
+> 
+> Yes, after moving the pin control subnode from the overlay[1] to the
+> base DTS, the SPI bus and FLASH work after loading the overlay for
+> the first time.
 
-Honestly, I'm not sure I'd bother trying to be smart here. Even if the
-system has enabled support for mismatched 32-bit CPUs, things should
-still work properly with nohz_full/isolcpus if all the tasks are 64-bit,
-right?
+Ok. What I said for Matti's use-case is also valid for your use-case.
 
-In which case, I'd just document whatever weird behaviour you get if
-somebody throws 32-bit tasks into the mix. Adding hooks to the generic
-code for this use-case just seems like a waste, as they're not going to
-be used in practice and it increases the maintenance burden.
+> 
+> > > > In other word, is the issues related to adding a pinctrl sub-node (pinctrl
+> > > > pins definition) in the overlay or is it something else?  
+> > >
+> > > Seems to be related to the pinctrl.  
+> >
+> > I don't think that the issue is related to pinctrl itself.
+> >
+> > IMHO, I think the issue is related to overlays and fw_devlink.
+> > The distinction between "a new node is going to lead to a device" vs "a new
+> > node is just data and will never been attached to a new device" when an
+> > overlay is applied is broken.
+> >
+> > This is broken with the upstream "treewide: Fix probing of devices in DT
+> > overlays" commit I've tried to revert. Indeed, on the LAN966x PCI device
+> > use case devlinks created are not correct with this commit applied.
+> >
+> > I am not sure also that devlinks created with a more complex overlay will be
+> > correct. For instance, Matti, with your overlay not sure that a phandle from
+> > the oscillator node referencing the pmic node will lead to a correct
+> > provider/consumer devlink between the pmic device and the oscillator device.
+> >
+> > On the other hand, this is broken with "of: dynamic: Fix overlayed devices
+> > not probing because of fw_devlink" works for the LAN966x PCI device use case
+> > an lead to correct devlinks but breaks your use cases.  
+> 
+> Loading my overlay[1] causes the following changes under
+> /sys/class/devlink/:
+> 
+>     + genpd_provider:ca53-cpu0--platform:e6e90000.spi ->
+> ../../devices/virtual/devlink/genpd_provider:ca53-cpu0--platform:e6e90000.spi
+>     + platform:e6055000.gpio--platform:e6e90000.spi ->
+> ../../devices/virtual/devlink/platform:e6055000.gpio--platform:e6e90000.spi
+>     + platform:e6060000.pinctrl--platform:e6e90000.spi ->
+> ../../devices/virtual/devlink/platform:e6060000.pinctrl--platform:e6e90000.spi
+>     - platform:e6060000.pinctrl--platform:keys ->
+> ../../devices/virtual/devlink/platform:e6060000.pinctrl--platform:keys
+>     + platform:e6150000.clock-controller--platform:e6e90000.spi ->
+> ../../devices/virtual/devlink/platform:e6150000.clock-controller--platform:e6e90000.spi
+>     + platform:soc--platform:e6e90000.spi ->
+> ../../devices/virtual/devlink/platform:soc--platform:e6e90000.spi
+> 
+> Note that these changes are exactly the same in the working and the
+> non-working case.
+> 
+> Removing the overlay again removes all added links, but does not
+> restore the keys link:
 
-Will
+I think you should have the exact same behavior with and without my
+modification.
+
+Can you confirm?
+
+Best regards,
+Herv√©
