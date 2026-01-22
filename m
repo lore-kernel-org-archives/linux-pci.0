@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BDFC30EF67;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF21372B28;
 	Thu, 22 Jan 2026 17:16:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769102219; cv=none; b=DaBUs0OBuuGjduksLuBXbGwjXZCUxzk6iPgTNOI0AZJY++BkADqvzt3aSkGXewZl6JhwDUshVFfCNUmHYkIFa+Pu7R6WaYtJrqjOl9E3yxWaoa3WCPTEvXuEMWlFlcJKHa67+SDimwtF9HjBxq1+Uh3hhVAou9RQfkX6YieY2jg=
+	t=1769102219; cv=none; b=jGUPg4KQ+uuEJ8T3pdY7hALHkTRoEf5cBabZLgW6aiAWt8G6LrqxVtWcAfIZwdR3vtb2nARNpLYyfY5ENI70E64lGAT/sF+kOj406n7C+WQ+5skxe3cJ2w1jr6bJwrh9GIewVxv+0AKh4k8nDi5DqAADXIh2o/OUlESntkSFHNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1769102219; c=relaxed/simple;
-	bh=RebAKdOcdLux7Bzs3USnBVZCC294iJ88uiAmw8sBU+c=;
+	bh=czhrt6qU9W53d83wWXZNXSUrEG4WPODCrM75X7CHTjM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=CarL06w/4BfoMmz6PyVUvb+ft9u7c9hk1kUv7GL9cYTNvqL3K4nDjm+cpypTQOuScrM72SXFwB/+nHSu7KQ2ahlBmKZGrPC6Z7jMs0B7wVBE8iUXPGmO00flP0QCPmF1fJJhVY32Jak6DA3mGE7d5rD9M48QFCnDEQx04Q77CnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ilre768F; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=L0fdesjo6o1W38FzD6EJWGDuY74qz55CmOFJuHdxCjacJdpP1VqA2yu2Rv6OxmLtdot0xZf8l0fH4IdFLb3gRS7GUNFPi3Zo0Ukc1weaGXBH+zM7ttVL1qBMZr3e8EzxPN4MnMsITPiKJ5HetEGjeqs+onQGR9FrXVlQgr9Hn6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h1WWek2/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ilre768F"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 784A4C116D0;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h1WWek2/"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9378FC2BCB2;
 	Thu, 22 Jan 2026 17:16:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1769102217;
-	bh=RebAKdOcdLux7Bzs3USnBVZCC294iJ88uiAmw8sBU+c=;
+	bh=czhrt6qU9W53d83wWXZNXSUrEG4WPODCrM75X7CHTjM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=ilre768FSl+v+eNpRPqlnMZv+QuGcAuyqq2V5gOnsgCs5SeaRt6dB9XsqxTQNTPEO
-	 wpVI5Eic23g9SL2Dnp8LxSdue1lYtX6lOsEDM6K+XkNfK0AoONvEAFXFIwmNBBzSqe
-	 Ixlfr86ayMwnTo3lXrYuQaxohkx5myvRETcsNAVSPQQqBD6Mw8bIXM6SxiPpIVicZs
-	 D8ml4UcA52igw8JwgtZqBk8YEsuPeaHl85zj5tgSqRoar0vLeubQn8Imkula2eWoqp
-	 ySkWaFNcQB0qJy8sMdmKT7WSFepKYsiIZhJwyjEV8SU24fM6i5kXYCsJN3B4LpIj70
-	 uII917TJ2YRsg==
+	b=h1WWek2/5jcqZdn4fVlQo+m553ZImFYTaqn5kLRgxSQX6oo++iB4VyfP6Y8qpOkYP
+	 Y6fwm/MRHOrWfJfP1ZSqXGmkSH5ejzDH92uvu4KKKDNMww27LnmBuzU8jRzkENek+M
+	 Stskzhu3YcfqOc8Se6ClFNe43jpfu4XTJb7EYYuEb9A4oearHzXQBJ0lj/LLgBzXGu
+	 YjzbXx68tMCm2n0/NvZ6sAPGt5cN0SZ0LuaDZe4tzQ1H68bpc4bJWWfbeKBKSMTv4S
+	 vlUTk7Yo2s4NnODexudSr4YRL3TAF9Ti4jiZruQhQDEwaG2k/63SYi3dUHAji+5F99
+	 LzsAt5TFhwVEw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6785FD3EE99;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BA9D3EE9E;
 	Thu, 22 Jan 2026 17:16:57 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Thu, 22 Jan 2026 22:46:52 +0530
-Subject: [PATCH v6 2/4] PCI/pwrctrl: Add support for handling PCIe M.2
- connectors
+Date: Thu, 22 Jan 2026 22:46:54 +0530
+Subject: [PATCH v6 4/4] power: sequencing: Add the Power Sequencing driver
+ for the PCIe M.2 connectors
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260122-pci-m2-v6-2-575da9f97239@oss.qualcomm.com>
+Message-Id: <20260122-pci-m2-v6-4-575da9f97239@oss.qualcomm.com>
 References: <20260122-pci-m2-v6-0-575da9f97239@oss.qualcomm.com>
 In-Reply-To: <20260122-pci-m2-v6-0-575da9f97239@oss.qualcomm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -56,19 +56,18 @@ Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
  Stephan Gerhold <stephan.gerhold@linaro.org>, 
  Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
  linux-pm@vger.kernel.org, linux-ide@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3872;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7812;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=ZDVloXuAnO5BeZ3Skc5JZ2mUrMigYYbAnv9HygHmgvQ=;
- b=owGbwMvMwMUYOl/w2b+J574ynlZLYsgsim7PCz6YI33g9rXvN9hzzsdcXsjbIKPvGipr/OnRa
- mGH2QyqnYzGLAyMXAyyYoos6UudtRo9Tt9YEqE+HWYQKxPIFAYuTgGYSEcS+19Zi/uH/zz3WvIv
- 0uavk1t5WcYmp5P6983ca1RWm+sf/KdYYOmoG+q6+dP2InHVmOup9ha2Pe9nzon26mjZMLfJQOW
- mK/9+xor3TzaEGFp7b5h38vKJ4MYJzUZZHp6OqZHVSyqkl7hs1LVKu1fEo6nAtPNxd1dc5/GzB2
- 5+m/Rmes3nfcffPTtcNctIk9Wi6qp/sV3KhAA/K9/wLL8VOyPu82V37jRfbeE/xcEzr+pp+a3Az
- xKt4nHT5OwtS/z/1alsOnfse/eBD9XLVjnMLGyRnil0/f21qct9NntG6xoYt5a5SNh5vTk4/+7D
- FVwOG5RKPv/qUjcT/yUg8VYhKnpR4W1fXpHgCzqCUpNUAQ==
+ bh=MrmblrG2JUxLhRhHQkVgoN7g+pVLmcvg9aZ9Ii+xtN8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpcluHN3RueTwQ/o3zdxZcr6aj+Ny3g+qnSPyCX
+ RI/5CTvL0mJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaXJbhwAKCRBVnxHm/pHO
+ 9WbiB/98lvib3si3lbW+GSz8HT/YeqkOOxmZfVBQZ2VIxZe5fqwxu7ryxWOngkDxAMsySUSb6Jd
+ umwrPa3RVCWhilEs3rP1K6OFK5Opiwu9746mIHpYXYC3rMgqZ6J8mhJji9Ml4nLF64/AKwc9Sos
+ g4agtEoXH1O0CisnLMg8QhxWOo5G7oq46Dz9RieyxkZ1cLaG2jJrSZHH+PRaVJ91YKXHPBylRKk
+ jjOsZzrm66NzL6aNZ+WixH0KlDgcHROC7HRW5V7pDjg1C7S/mQBKMKnRLqaRajlwp3oeY86pVyC
+ ROOl7IUCPjuafsjqJfZIcBPYmDKZ3xpu14AHmvZPiYKx1LOZ
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -78,120 +77,241 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Add support for handling the PCIe M.2 connectors as Power Sequencing
-devices. These connectors are exposed as the Power Sequencing devices
-as they often support multiple interfaces like PCIe/SATA, USB/UART to the
-host machine and each interfaces could be driven by different client
-drivers at the same time.
+This driver is used to control the PCIe M.2 connectors of different
+Mechanical Keys attached to the host machines and supporting different
+interfaces like PCIe/SATA, USB/UART etc...
 
-This driver handles the PCIe interface of these connectors. It first checks
-for the presence of the graph port in the Root Port node with the help of
-of_graph_is_present() API, if present, it acquires/poweres ON the
-corresponding pwrseq device.
+Currently, this driver supports only the Mechanical Key M connectors with
+PCIe interface. The driver also only supports driving the mandatory 3.3v
+and optional 1.8v power supplies. The optional signals of the Key M
+connectors are not currently supported.
 
-Once the pwrseq device is powered ON, the driver will skip parsing the Root
-Port/Slot resources and registers with the pwrctrl framework.
-
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/pci/pwrctrl/Kconfig |  1 +
- drivers/pci/pwrctrl/slot.c  | 35 ++++++++++++++++++++++++++++++-----
- 2 files changed, 31 insertions(+), 5 deletions(-)
+ MAINTAINERS                               |   7 ++
+ drivers/power/sequencing/Kconfig          |   8 ++
+ drivers/power/sequencing/Makefile         |   1 +
+ drivers/power/sequencing/pwrseq-pcie-m2.c | 168 ++++++++++++++++++++++++++++++
+ 4 files changed, 184 insertions(+)
 
-diff --git a/drivers/pci/pwrctrl/Kconfig b/drivers/pci/pwrctrl/Kconfig
-index e0f999f299bb..cd3aa15bad00 100644
---- a/drivers/pci/pwrctrl/Kconfig
-+++ b/drivers/pci/pwrctrl/Kconfig
-@@ -13,6 +13,7 @@ config PCI_PWRCTRL_PWRSEQ
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5b11839cba9d..2eb7b6d26573 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20791,6 +20791,13 @@ F:	Documentation/driver-api/pwrseq.rst
+ F:	drivers/power/sequencing/
+ F:	include/linux/pwrseq/
  
- config PCI_PWRCTRL_SLOT
- 	tristate "PCI Power Control driver for PCI slots"
-+	select POWER_SEQUENCING
- 	select PCI_PWRCTRL
- 	help
- 	  Say Y here to enable the PCI Power Control driver to control the power
-diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
-index 3320494b62d8..d46c2365208a 100644
---- a/drivers/pci/pwrctrl/slot.c
-+++ b/drivers/pci/pwrctrl/slot.c
-@@ -8,8 +8,10 @@
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
- #include <linux/module.h>
++PCIE M.2 POWER SEQUENCING
++M:	Manivannan Sadhasivam <mani@kernel.org>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/connector/pcie-m2-m-connector.yaml
++F:	drivers/power/sequencing/pwrseq-pcie-m2.c
++
+ POWER STATE COORDINATION INTERFACE (PSCI)
+ M:	Mark Rutland <mark.rutland@arm.com>
+ M:	Lorenzo Pieralisi <lpieralisi@kernel.org>
+diff --git a/drivers/power/sequencing/Kconfig b/drivers/power/sequencing/Kconfig
+index 280f92beb5d0..f5fff84566ba 100644
+--- a/drivers/power/sequencing/Kconfig
++++ b/drivers/power/sequencing/Kconfig
+@@ -35,4 +35,12 @@ config POWER_SEQUENCING_TH1520_GPU
+ 	  GPU. This driver handles the complex clock and reset sequence
+ 	  required to power on the Imagination BXM GPU on this platform.
+ 
++config POWER_SEQUENCING_PCIE_M2
++	tristate "PCIe M.2 connector power sequencing driver"
++	depends on OF || COMPILE_TEST
++	help
++	  Say Y here to enable the power sequencing driver for PCIe M.2
++	  connectors. This driver handles the power sequencing for the M.2
++	  connectors exposing multiple interfaces like PCIe, SATA, UART, etc...
++
+ endif
+diff --git a/drivers/power/sequencing/Makefile b/drivers/power/sequencing/Makefile
+index 96c1cf0a98ac..0911d4618298 100644
+--- a/drivers/power/sequencing/Makefile
++++ b/drivers/power/sequencing/Makefile
+@@ -5,3 +5,4 @@ pwrseq-core-y				:= core.o
+ 
+ obj-$(CONFIG_POWER_SEQUENCING_QCOM_WCN)	+= pwrseq-qcom-wcn.o
+ obj-$(CONFIG_POWER_SEQUENCING_TH1520_GPU) += pwrseq-thead-gpu.o
++obj-$(CONFIG_POWER_SEQUENCING_PCIE_M2)	+= pwrseq-pcie-m2.o
+diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+new file mode 100644
+index 000000000000..96ea4adc9d22
+--- /dev/null
++++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+@@ -0,0 +1,168 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
++ */
++
++#include <linux/device.h>
++#include <linux/mod_devicetable.h>
++#include <linux/module.h>
++#include <linux/of.h>
 +#include <linux/of_graph.h>
- #include <linux/pci-pwrctrl.h>
- #include <linux/platform_device.h>
-+#include <linux/pwrseq/consumer.h>
- #include <linux/regulator/consumer.h>
- #include <linux/slab.h>
- 
-@@ -17,12 +19,18 @@ struct pci_pwrctrl_slot_data {
- 	struct pci_pwrctrl ctx;
- 	struct regulator_bulk_data *supplies;
- 	int num_supplies;
-+	struct pwrseq_desc *pwrseq;
- };
- 
- static void devm_pci_pwrctrl_slot_power_off(void *data)
- {
- 	struct pci_pwrctrl_slot_data *slot = data;
- 
-+	if (slot->pwrseq) {
-+		pwrseq_power_off(slot->pwrseq);
-+		return;
++#include <linux/platform_device.h>
++#include <linux/pwrseq/provider.h>
++#include <linux/regulator/consumer.h>
++#include <linux/slab.h>
++
++struct pwrseq_pcie_m2_pdata {
++	const struct pwrseq_target_data **targets;
++};
++
++struct pwrseq_pcie_m2_ctx {
++	struct pwrseq_device *pwrseq;
++	struct device_node *of_node;
++	const struct pwrseq_pcie_m2_pdata *pdata;
++	struct regulator_bulk_data *regs;
++	size_t num_vregs;
++	struct notifier_block nb;
++};
++
++static int pwrseq_pcie_m2_m_vregs_enable(struct pwrseq_device *pwrseq)
++{
++	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++
++	return regulator_bulk_enable(ctx->num_vregs, ctx->regs);
++}
++
++static int pwrseq_pcie_m2_m_vregs_disable(struct pwrseq_device *pwrseq)
++{
++	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++
++	return regulator_bulk_disable(ctx->num_vregs, ctx->regs);
++}
++
++static const struct pwrseq_unit_data pwrseq_pcie_m2_vregs_unit_data = {
++	.name = "regulators-enable",
++	.enable = pwrseq_pcie_m2_m_vregs_enable,
++	.disable = pwrseq_pcie_m2_m_vregs_disable,
++};
++
++static const struct pwrseq_unit_data *pwrseq_pcie_m2_m_unit_deps[] = {
++	&pwrseq_pcie_m2_vregs_unit_data,
++	NULL
++};
++
++static const struct pwrseq_unit_data pwrseq_pcie_m2_m_pcie_unit_data = {
++	.name = "pcie-enable",
++	.deps = pwrseq_pcie_m2_m_unit_deps,
++};
++
++static const struct pwrseq_target_data pwrseq_pcie_m2_m_pcie_target_data = {
++	.name = "pcie",
++	.unit = &pwrseq_pcie_m2_m_pcie_unit_data,
++};
++
++static const struct pwrseq_target_data *pwrseq_pcie_m2_m_targets[] = {
++	&pwrseq_pcie_m2_m_pcie_target_data,
++	NULL
++};
++
++static const struct pwrseq_pcie_m2_pdata pwrseq_pcie_m2_m_of_data = {
++	.targets = pwrseq_pcie_m2_m_targets,
++};
++
++static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
++				 struct device *dev)
++{
++	struct pwrseq_pcie_m2_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++	struct device_node *endpoint __free(device_node) = NULL;
++
++	/*
++	 * Traverse the 'remote-endpoint' nodes and check if the remote node's
++	 * parent matches the OF node of 'dev'.
++	 */
++	for_each_endpoint_of_node(ctx->of_node, endpoint) {
++		struct device_node *remote __free(device_node) =
++				of_graph_get_remote_port_parent(endpoint);
++		if (remote && (remote == dev_of_node(dev)))
++			return PWRSEQ_MATCH_OK;
 +	}
 +
- 	regulator_bulk_disable(slot->num_supplies, slot->supplies);
- 	regulator_bulk_free(slot->num_supplies, slot->supplies);
- }
-@@ -38,6 +46,20 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
- 	if (!slot)
- 		return -ENOMEM;
- 
-+	if (of_graph_is_present(dev_of_node(dev))) {
-+		slot->pwrseq = devm_pwrseq_get(dev, "pcie");
-+		if (IS_ERR(slot->pwrseq))
-+			return dev_err_probe(dev, PTR_ERR(slot->pwrseq),
-+				     "Failed to get the power sequencer\n");
++	return PWRSEQ_NO_MATCH;
++}
 +
-+		ret = pwrseq_power_on(slot->pwrseq);
-+		if (ret)
-+			return dev_err_probe(dev, ret,
-+				     "Failed to power-on the device\n");
++static void pwrseq_pcie_m2_free_resources(void *data)
++{
++	struct pwrseq_pcie_m2_ctx *ctx = data;
 +
-+		goto skip_resources;
-+	}
++	regulator_bulk_free(ctx->num_vregs, ctx->regs);
++}
 +
- 	ret = of_regulator_bulk_get_all(dev, dev_of_node(dev),
- 					&slot->supplies);
- 	if (ret < 0) {
-@@ -53,17 +75,20 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
--	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_slot_power_off,
--				       slot);
--	if (ret)
--		return ret;
--
- 	clk = devm_clk_get_optional_enabled(dev, NULL);
- 	if (IS_ERR(clk)) {
-+		regulator_bulk_disable(slot->num_supplies, slot->supplies);
-+		regulator_bulk_free(slot->num_supplies, slot->supplies);
- 		return dev_err_probe(dev, PTR_ERR(clk),
- 				     "Failed to enable slot clock\n");
- 	}
- 
-+skip_resources:
-+	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_slot_power_off,
-+				       slot);
++static int pwrseq_pcie_m2_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct pwrseq_pcie_m2_ctx *ctx;
++	struct pwrseq_config config = {};
++	int ret;
++
++	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++
++	ctx->of_node = of_node_get(dev->of_node);
++	ctx->pdata = device_get_match_data(dev);
++	if (!ctx->pdata)
++		return dev_err_probe(dev, -ENODEV,
++				     "Failed to obtain platform data\n");
++
++	/*
++	 * Currently, of_regulator_bulk_get_all() is the only regulator API that
++	 * allows to get all supplies in the devicetree node without manually
++	 * specifying them.
++	 */
++	ret = of_regulator_bulk_get_all(dev, dev_of_node(dev), &ctx->regs);
++	if (ret < 0)
++		return dev_err_probe(dev, ret,
++				     "Failed to get all regulators\n");
++
++	ctx->num_vregs = ret;
++
++	ret = devm_add_action_or_reset(dev, pwrseq_pcie_m2_free_resources, ctx);
 +	if (ret)
 +		return ret;
 +
- 	pci_pwrctrl_init(&slot->ctx, dev);
- 
- 	ret = devm_pci_pwrctrl_device_set_ready(dev, &slot->ctx);
++	config.parent = dev;
++	config.owner = THIS_MODULE;
++	config.drvdata = ctx;
++	config.match = pwrseq_pcie_m2_match;
++	config.targets = ctx->pdata->targets;
++
++	ctx->pwrseq = devm_pwrseq_device_register(dev, &config);
++	if (IS_ERR(ctx->pwrseq))
++		return dev_err_probe(dev, PTR_ERR(ctx->pwrseq),
++				     "Failed to register the power sequencer\n");
++
++	return 0;
++}
++
++static const struct of_device_id pwrseq_pcie_m2_of_match[] = {
++	{
++		.compatible = "pcie-m2-m-connector",
++		.data = &pwrseq_pcie_m2_m_of_data,
++	},
++	{ }
++};
++MODULE_DEVICE_TABLE(of, pwrseq_pcie_m2_of_match);
++
++static struct platform_driver pwrseq_pcie_m2_driver = {
++	.driver = {
++		.name = "pwrseq-pcie-m2",
++		.of_match_table = pwrseq_pcie_m2_of_match,
++	},
++	.probe = pwrseq_pcie_m2_probe,
++};
++module_platform_driver(pwrseq_pcie_m2_driver);
++
++MODULE_AUTHOR("Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>");
++MODULE_DESCRIPTION("Power Sequencing driver for PCIe M.2 connector");
++MODULE_LICENSE("GPL");
 
 -- 
 2.51.0
