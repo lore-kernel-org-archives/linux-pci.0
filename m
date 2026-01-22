@@ -1,62 +1,36 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37093491F4;
-	Thu, 22 Jan 2026 09:00:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9BAA27AC41
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 09:01:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769072425; cv=none; b=C7OcrArKBO+aUirE234wUDTAk15hFm7VluxBlITAqUnL9yWsz5qs1Ef85qB5BJcx8U/zlHVrUMlrg3l82wrEFl7Gk1oQKqm3SKaQKL0B6i7D1IsZMUT9O6MC1J6FqRkbxdiG2jCwlViMF5qZMylZVlFxF6uLlrTcUXvjMnYROjI=
+	t=1769072481; cv=none; b=sDSfLSGRRoPl0kpKUHcjidZw7nhWE0g4qWv9++4le0l/2TUcb8E5F2nr0Jx5IuGpjXKF0sR020xaNTi9YSPkv6vWF/EPPPj+yIsi8GysSV2cIGPo0djnQDj3JKdzoF9O8tL7cymEtrfss0C8hRoiPu5urSkec2HSTh+sauYG0Hg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769072425; c=relaxed/simple;
-	bh=AZFYl95tZw83k2fEE48wfdvR4CXEcLULoc8pMv1G/Bo=;
+	s=arc-20240116; t=1769072481; c=relaxed/simple;
+	bh=OEsc/oFbafBXsySfpvbb/EcFFG7wIIq7aGAbVJcjTVo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LhN+Xs8/wyYMEx3zTpIkRna+RD2rOHOPsa7xv1+t2ThlLu413Bk3ZlYs0UJs1FldKXm4/G9yOgBefMstc8NtjKXxtIIHqdWC/t4dx2NKnTgHpml4ETC3t3LYRFzEAtyph8P9lrqz2GJkUmkPBlor8LnCegMN3mTSjdTrWap5xcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mp8ENmYQ; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mp8ENmYQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06C6BC116C6;
-	Thu, 22 Jan 2026 09:00:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769072425;
-	bh=AZFYl95tZw83k2fEE48wfdvR4CXEcLULoc8pMv1G/Bo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Mp8ENmYQVtJ1EMYz0X8bkcVxWU+gCr8Fgt+QaEj8GkJ+34FS+nBT+LQC9OkGsQezu
-	 5MApqwdB08KOLxvl+IburfuHXNQwD8Hy3mGkN83wSQCKFWXy8QOF21LPMxQAnImFrV
-	 SkRbS529Iy5egC5SypGHdJ0kyuctrmmCIyqot1zcplQxuH6Qlu5SFF+stcyxOJXr5c
-	 uzdOee9LlPwxuBMCk/ODtg5TSEF4vV4AqMSBKNX0vNQbRYxGG7YWc/VADSk+i4tTdb
-	 9OPXRV7NVJwsOJhuvpYlIs4O+x+cHQX67sgm2Pis2uH67qGA4dAmdBaLXIBiD1b50T
-	 DVt46F3Vf1GSg==
-Date: Thu, 22 Jan 2026 10:00:11 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	vigneshr@ti.com, s-vadapalli@ti.com, hongxing.zhu@nxp.com,
-	l.stach@pengutronix.de, shawnguo@kernel.org, s.hauer@pengutronix.de,
-	kernel@pengutronix.de, festevam@gmail.com, minghuan.Lian@nxp.com,
-	mingkai.hu@nxp.com, roy.zang@nxp.com, jesper.nilsson@axis.com,
-	heiko@sntech.de, srikanth.thokala@intel.com,
-	marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com,
-	geert+renesas@glider.be, magnus.damm@gmail.com,
-	christian.bruel@foss.st.com, mcoquelin.stm32@gmail.com,
-	alexandre.torgue@foss.st.com, thierry.reding@gmail.com,
-	jonathanh@nvidia.com, hayashi.kunihiko@socionext.com,
-	mhiramat@kernel.org, kishon@kernel.org, jirislaby@kernel.org,
-	rongqianfeng@vivo.com, 18255117159@163.com,
-	shawn.lin@rock-chips.com, nicolas.frattaroli@collabora.com,
-	linux.amoon@gmail.com, vidyas@nvidia.com, Frank.Li@nxp.com,
-	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
-	linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v9 3/5] PCI: dwc: Advertise dynamic inbound mapping
- support
-Message-ID: <aXHnFskw9InGNuuR@ryzen>
-References: <20260122084909.2390865-1-den@valinux.co.jp>
- <20260122084909.2390865-4-den@valinux.co.jp>
+	 Content-Type:Content-Disposition:In-Reply-To; b=YwnehQGFTlfCN4YwP4HTJxNwg5ee91OoZD9hp1yK09ygvR+ZovRoUnvukr4zBPlnu4/UlMWl+WOKMOrjC5p7wmLo/FEWAORX88a1FthGhNXtFGozKjiG8ZMCffJ8jcZwVQiCzH5JSz08IZTWlXLG/SojME4TkQg3+ux1DFrxbP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 883D92007FF3;
+	Thu, 22 Jan 2026 10:01:08 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 7FEC22D3E7; Thu, 22 Jan 2026 10:01:08 +0100 (CET)
+Date: Thu, 22 Jan 2026 10:01:08 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/PME: Replace RMW of Root Status register with direct
+ write
+Message-ID: <aXHnVK2NRa-uQ2cM@wunner.de>
+References: <39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -65,25 +39,28 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260122084909.2390865-4-den@valinux.co.jp>
+In-Reply-To: <39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de>
 
-On Thu, Jan 22, 2026 at 05:49:07PM +0900, Koichiro Den wrote:
-> The DesignWare EP core has supported updating the inbound iATU mapping
-> for an already configured BAR (i.e. allowing pci_epc_set_bar() to be
-> called again without a prior pci_epc_clear_bar()) since commit
-> 4284c88fff0e ("PCI: designware-ep: Allow pci_epc_set_bar() update
-> inbound map address").
+On Sun, Oct 26, 2025 at 05:57:57PM +0100, Lukas Wunner wrote:
+> As of PCIe r7.0, the Root Status register contains a single writeable bit
+> (PME Status, type RW1C) and otherwise just read-only bits and RsvdZ bits
+> (which software must write as zero, PCIe r7.0 sec 7.4).
 > 
-> Now that this capability is exposed via the dynamic_inbound_mapping EPC
-> feature bit, set it for DWC-based EP glue drivers using a common
-> initializer macro to avoid duplicating the same flag in each driver.
-> 
-> Note that pci-layerscape-ep.c is untouched. It currently constructs the
-> feature struct dynamically in ls_pcie_ep_init(). Once converted to a
-> static feature definition, it will use DWC_EPC_COMMON_FEATURES as well.
-> 
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
+> Thus, when clearing the PME Status bit, there's no need to perform a
+> read-modify-write of the register.  Instead, the bit can be written
+> directly.
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Hm, I just noticed that this patch is marked "Not Applicable" in patchwork:
+
+https://patchwork.kernel.org/project/linux-pci/patch/39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de/
+
+It didn't get any on-list replies and didn't get applied AFAICS.
+I'm not sure why it's marked this way in patchwork or what to do about it.
+
+There's one other patch sharing the same fate:
+
+https://patchwork.kernel.org/project/linux-pci/patch/75e4ae507fa4faddd063a3a9e17d319ed84529b6.1757562971.git.lukas@wunner.de/
+
+Thanks!
+
+Lukas
