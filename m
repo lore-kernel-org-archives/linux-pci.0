@@ -1,171 +1,194 @@
-Received: from mout.web.de (mout.web.de [212.227.15.3])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f41.google.com (mail-dl1-f41.google.com [74.125.82.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39FA3994D4;
-	Thu, 22 Jan 2026 17:24:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F28A73009D4
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 17:49:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769102687; cv=none; b=MnjoJqPfaNl5UPIUtq3pl0GO9UTqubXiyfucNu7jqvsCPyy926vfwbVxGiqblIH6hXfUgH18EOa0y1XvobCPsbXIQRAz7sJ7bqiXJo0hQZ0KsMIzS6m9VlvciaolvMHnyL3JoaGlaYfeCYGnd73r6ECIfL0I/rXzqfCDq3UQ/Dw=
+	t=1769104175; cv=none; b=PPoAApZtnpUQmFAuddc4NWB5Hl1MXF7cHyBZRQ7pEAdwtF78SsfcjAuTwxIYx79PZoA1iwpqy4Qtl4TWDPhf05mHj/E6B37FNyAZXFLt6RmMT6y+TGRdabEGuT2YDl8Hdhhv6xjQDsYKYESJA0grc1xFvdlSD/Av0o6zBzgNDQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769102687; c=relaxed/simple;
-	bh=Uim+gHiucovrUtCmviBxcekb8kgb+BJiT5AjE+uaH2c=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=GlOfmKqFYas15gDEnvpHG2Kt8+iasbZfg2tkq6uecMUj4JSy7f44UgY63s1Z99n/C0Gypf8fKrjs1ajhtoxTvjIkJXTBjoTEMc+Un+XAZugMCDvrCoaFgGi218NWhVGGXM133JfuvUQigz6YWwnedFPsF7ZbGvQif/Ve550mwE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=dw5V5Rvr; arc=none smtp.client-ip=212.227.15.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1769104175; c=relaxed/simple;
+	bh=PPSbiTfVEGExWa8EuuY6a6EN8vMNdxghuY659RvCiCI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j1CK1bwmOf7Ev+sSQ87YeF1API3jleduUYniLI8iNxz355WtzB+94j/Y5Cd7FALYnczyOr1NZbZj8MOPHj+SIYh2S0ZgrK0XKA75CE9xgCDKqUSS/XpZ/feu1YnjG2eWkyyGp9oydJQfKuugGIiE5ZVp+bYDzodojPu4M16PluA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=OQXnEp90; arc=none smtp.client-ip=74.125.82.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="dw5V5Rvr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1769102645; x=1769707445; i=markus.elfring@web.de;
-	bh=pd+dD7JdFhpQb2s812uG2qOIlnvTfk/PkLLFFAnWZGk=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=dw5V5Rvrlj80fo62zoBEWNy/nAqBH/d8xL8dIqBX9F0LQc6uPs3WpT/4dcoCTpSp
-	 cxAKOPO7jnK24rvr8c3PuSpknlb9LF5BNN1/M+vrxOGZwyEGJeuHepvHKoQKggyMu
-	 j43pSNP8yM64PwaeLpcPOewmGCSUsna6B5tx3FfvPZ+pz/a3RuYKkvQxFkciomF22
-	 jhmFJL9oxII/g+ZOw/awhNvZ/itno5+EEWXgEiL3kP1ORH3f7meadT30sxhjUWoy0
-	 j2DanpSrjC/XfbqWWqp5jn8XZwEe4lpRohGYcrEvLIQ2WUProJenVnlRFDEliSPkN
-	 XCrmqSy5cQwCL+b47A==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.92.239]) by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MZB01-1vEOiz3sB7-00J1IT; Thu, 22
- Jan 2026 18:24:05 +0100
-Message-ID: <bfdd40ff-43e5-4a84-a98d-522d4178626a@web.de>
-Date: Thu, 22 Jan 2026 18:23:58 +0100
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OQXnEp90"
+Received: by mail-dl1-f41.google.com with SMTP id a92af1059eb24-121bf277922so2268295c88.0
+        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 09:49:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1769104145; x=1769708945; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=E3WbKmVrq7sm/5pwwqVvAut+xxxGLtgFYQpauTPoz70=;
+        b=OQXnEp90kPXwTCa2gO7xkl/5bNSZs9gW56JSbAhBCXgNyrTa8fEUdjmcwGvXh5yrgl
+         CpJrbsh94R0REe5TcF1qA/S7dc8DicsXjOVUCGQiUlIzsW5Gga0fZxjmeoG3yBUteyYN
+         WL+JdjWSDsUgn4Viqg0ISIm+ihWz+B9i+9I0A=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769104145; x=1769708945;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=E3WbKmVrq7sm/5pwwqVvAut+xxxGLtgFYQpauTPoz70=;
+        b=KaS+EaBEyea1XbL2GiOHdDRHG5F3KYfFbp0RSMX13l+HkfAApyYxvBlwZOV6/53Y4h
+         8IroObT1sFemCWy3zp86k7OOzfKif1hOFItPacUj4Ngt8x6Lo9ZGMKr4JUm3WXWJp0B8
+         LRF2KS6VQaKGHB0QdjIcURzOYzq5bm5y2JQutE2TXynrgWfa0w8D+/RToVVkgYW3hEou
+         xgrjBffomrBykrO3afBLvCw0BGLlizl8Gvg/9r1S0mSHQ71FEZSfVJb6zgjLCuxN9LpL
+         fB2Ymv8IMBTXMB6cM3kHveSTCxT74RGuoNCUQ7eimAUA7grYgOLfOmGgcleikUYglnH2
+         QjDQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUTJUndIhvBJicW6XG5y7hilOepJJzReEd+v4zni8r6Bqva7fQc5q6CtLg0FqxUW6DZ1WcJNTeXVL0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwVdYdumrYMNJR8YSUJL6aeIhCAAWmZHoCj9hHfZ5w/Jis5LsZS
+	CClBzDDnzGhaJeyOlrgJ7Bn1ZoPyAfTiv+Xxyn3VtkZd/uaJHZMOcYu8gbJ2wdgcQw==
+X-Gm-Gg: AZuq6aJAD460QppQNIo8zEJIDZlTOM4gUhyX2dcaBa/fD0IzAIY+8EvcM//zFTXBtqj
+	pqDfRrlVRzqv/KZtU/91jC4PYaq8Y3VQwv+bw40auT4XcSXQ/0KWIrijeX0JYY97NEBv2bvqMBc
+	Dqu1D1SDewlEf/G2SkDM5CCu9OkpYgCCh8a3RJxG+Jcxkh0M1Y3FwhNIjVCh34cX95piImuxZNS
+	eaAldRdrSjhmJ1JUB7Jt2cfl65cPJv1Q3iqwzNjc6CDrONooNFS+EIWUuaXQ/KissuemIU8rFSG
+	Vj71rpFLbPr1PMHnOVk0OikWl6SCVgEshBusLIvmLVf9HwXbnEJ15uY3b7dW0ZC8PnsC9+QZWV5
+	cHs4OIeYE1zk7aw3D/OdtGBMndDib0yNbz7IoPSVLG7q4qipOweckE1kTLLeTgsbHU88+wOa3uH
+	unbWHBUwvCbOl7KhiF2TL5M6clqunz5xh/F2mIfPsFQS9/+fqmUQ==
+X-Received: by 2002:a05:7022:126:b0:123:2d38:928e with SMTP id a92af1059eb24-1247dc082b1mr61654c88.35.1769104144779;
+        Thu, 22 Jan 2026 09:49:04 -0800 (PST)
+Received: from localhost ([2a00:79e0:2e7c:8:f995:553f:5ab5:f684])
+        by smtp.gmail.com with UTF8SMTPSA id a92af1059eb24-1247d9981a4sm164342c88.9.2026.01.22.09.49.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Jan 2026 09:49:04 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-pm@vger.kernel.org,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v5] PCI/PM: Prevent runtime suspend until devices are fully initialized
+Date: Thu, 22 Jan 2026 09:48:15 -0800
+Message-ID: <20260122094815.v5.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid>
+X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Terry Bowman <terry.bowman@amd.com>, linux-pci@vger.kernel.org,
- linux-cxl@vger.kernel.org, Alejandro Lucero Palau <alucerop@amd.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Benjamin Cheatham <benjamin.cheatham@amd.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dan Carpenter
- <dan.carpenter@linaro.org>, Dan Williams <dan.j.williams@intel.com>,
- Dave Jiang <dave.jiang@intel.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Ira Weiny <ira.weiny@intel.com>,
- Jonathan Cameron <Jonathan.Cameron@huawei.com>,
- Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
- Lukas Wunner <lukas@wunner.de>, Li Ming <ming.li@zohomail.com>,
- Pradeep Vinesh Reddy Kodamati <PradeepVineshReddy.Kodamati@amd.com>,
- Robert Richter <rrichter@amd.com>, Shiju Jose <shiju.jose@huawei.com>,
- Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
- Vishal Verma <vishal.l.verma@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>
-References: <20260114182055.46029-12-terry.bowman@amd.com>
-Subject: Re: [PATCH v14 11/34] PCI/AER: Move CXL RCH error handling to
- aer_cxl_rch.c
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20260114182055.46029-12-terry.bowman@amd.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:Ryubp8ExKq9a89UcQDfkL0gEDl/fnhZFwysTut0hHSv+jYJsTxs
- XeLiPbq67/F87S800WFA0jQuPLicpLWKxN4h/lwZHw5gCCchybZdwBWsRSQiUlD0xpqK1vr
- em+Tste+WQhaiBwrelIEdgBZBonnCVgtCdxVtfg8PgnhlWFIr82U4EuorFVgxYMlhuM2aW0
- p8xun9+6dSgjYPNFEsOjg==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:B3M5g+o7r4U=;LdDqQthsp9acGHANXCGPqCX9oDs
- +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
- vs+2qCaMPvodUHlfUnZv/f3De+jP/i4PjCuzl+
+Content-Transfer-Encoding: 8bit
 
-=E2=80=A6
-> +++ b/drivers/accel/thames/thames_gem.c
-> @@ -0,0 +1,353 @@
-=E2=80=A6
-> +static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
-> +{
-=E2=80=A6
-> +	device_lock(&dev->dev);
-> +
-> +	err_handler =3D dev->driver ? dev->driver->err_handler : NULL;
-=E2=80=A6
-> +out:
-> +	device_unlock(&dev->dev);
-> +	return 0;
-> +}
-=E2=80=A6
+Previously, it was possible for a PCI device to be runtime-suspended before
+it was fully initialized. When that happened, the suspend process could
+save invalid device state, for example, before BAR assignment. Restoring
+the invalid state during resume may leave the device non-functional.
 
-Under which circumstances would you become interested to apply a statement
-like =E2=80=9Cguard(device)(&dev->dev);=E2=80=9D?
-https://elixir.bootlin.com/linux/v6.19-rc5/source/include/linux/device.h#L=
-913
+Prevent runtime suspend for PCI devices until they are fully initialized by
+deferring pm_runtime_enable().
 
-Regards,
-Markus
+More details on how exactly this may occur:
+
+  1. PCI device is created by pci_scan_slot() or similar
+
+  2. As part of pci_scan_slot(), pci_pm_init() puts the device in D0 and
+     prevents runtime suspend prevented via pm_runtime_forbid()
+
+  3. pci_device_add() adds the underlying 'struct device' via device_add(),
+     which means user space can allow runtime suspend, e.g.,
+
+       echo auto > /sys/bus/pci/devices/.../power/control
+
+  4. PCI device receives BAR configuration
+     (pci_assign_unassigned_bus_resources(), etc.)
+
+  5. pci_bus_add_device() applies final fixups, saves device state, and
+     tries to attach a driver
+
+The device may potentially be suspended between #3 and #5, so this is racy
+with user space (udev or similar).
+
+Many PCI devices are enumerated at subsys_initcall time and so will not
+race with user space, but devices created later by hotplug or modular
+pwrctrl or host controller drivers are susceptible to this race.
+
+More runtime PM details at the first Link: below.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: stable@vger.kernel.org
+Link: https://lore.kernel.org/all/20251016155335.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid/
+Link: https://lore.kernel.org/all/0e35a4e1-894a-47c1-9528-fc5ffbafd9e2@samsung.com/
+
+Link: https://lore.kernel.org/all/20251016155335.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid/
+Cc: <stable@vger.kernel.org>
+---
+
+Changes in v5:
+ * Put pm_runtime_set_active() back where it was, to ensure our parent
+   can't suspend before we're really ready. (See bug report in 2nd
+   "Link:")
+ * Add comments
+ * Update commit description with Bjorn's rewrite
+ * Add Marek's Tested-by
+
+Changes in v4:
+ * Move pm_runtime_set_active() too
+
+Changes in v3:
+ * Add Link to initial discussion
+ * Add Rafael's Reviewed-by
+ * Add lengthier footnotes about forbid vs allow vs sysfs
+
+Changes in v2:
+ * Update CC list
+ * Rework problem description
+ * Update solution: defer pm_runtime_enable(), instead of trying to
+   get()/put()
+
+ drivers/pci/bus.c | 7 +++++++
+ drivers/pci/pci.c | 5 ++++-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4383a36fd6ca..90954f81962b 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -15,6 +15,7 @@
+ #include <linux/of.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/proc_fs.h>
+ #include <linux/slab.h>
+ 
+@@ -379,6 +380,12 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 		put_device(&pdev->dev);
+ 	}
+ 
++	/*
++	 * Enable runtime PM (and potentially suspend) only after we've fully
++	 * configured the PCI state.
++	 */
++	pm_runtime_enable(&dev->dev);
++
+ 	if (!dn || of_device_is_available(dn))
+ 		pci_dev_allow_binding(dev);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 13dbb405dc31..07b0d029aa51 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3196,8 +3196,11 @@ void pci_pm_init(struct pci_dev *dev)
+ poweron:
+ 	pci_pm_power_up_and_verify_state(dev);
+ 	pm_runtime_forbid(&dev->dev);
++	/*
++	 * Mark ourselves active now, to prevent our parent from suspending
++	 * while we finish configuring the PCI device.
++	 */
+ 	pm_runtime_set_active(&dev->dev);
+-	pm_runtime_enable(&dev->dev);
+ }
+ 
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+-- 
+2.52.0.457.g6b5491de43-goog
+
