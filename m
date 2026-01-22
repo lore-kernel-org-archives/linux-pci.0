@@ -1,193 +1,125 @@
-Received: from mail-m1973179.qiye.163.com (mail-m1973179.qiye.163.com [220.197.31.79])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 970BA33D6CD;
-	Thu, 22 Jan 2026 12:51:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.79
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E2935EDBA;
+	Thu, 22 Jan 2026 12:52:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769086326; cv=none; b=VBHH80oVeOhS906CbPpOUD5Aowu1NyUxyeo8trbD/vTV+c43Vk1pHJi/ux0YQ8eg7MF2HR0PHoW5pnbJJL5sblA+ZRg8cC0cogXFA1dLUMtJnStDdGvoFxpHTpL00HP+E7fPml7rDop1OKCYUYf4cEvcVgQR/osZPymSX83w3Dw=
+	t=1769086357; cv=none; b=rheynuBSjsfAzBt2/kqMjqF+6F+TovTpfIvK9V8o/THnHr3XpnCF2rH5Y6GLF69bGDMS7KGWIIK4aglR+j11fiLKCem32XE+OMnUdDwpvya1c5tgA0J6dGMb59+1epjzG3b3zyWwATZNwFmZAscCAAJJ551FHbFhPp3dJZf7sck=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769086326; c=relaxed/simple;
-	bh=oH4OPF0tawrZSboWsqQV8Wk5V/Ve1JkWG943xoj6I/U=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=VLbO2MmNM9oCAyVPlbB7LuulnXPicEIfPf3zXFk65XjspdyKkKNzCsDubVZJCrpr9D2zqgT2z3eE/xSOSouVMT2ZtW/zxDkMJPBf1dtZ7gILfvLWpXcm5no4ZoWXfwA2hYwf1A7JOZj4uvDtYo6teiDDcSegQz9HCQ+6pSZQz+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=IIzq8JcI; arc=none smtp.client-ip=220.197.31.79
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1769086357; c=relaxed/simple;
+	bh=JHyfsLNz6xHNu6YUkIGqk67NfobRT5uwjtCGqEc7p3M=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=firx1vn8799zri9CAWLCT3smGqqY4WyAfo8yokeBxUPoZMwBLhOe5Fo7x4PPJfvfyN87/W1Dcjp7wMbmGKXD/CkEJuZyQ94QKdakDxAsfB6/JhFzCDWas+YNoyrPG4JEIWxCO7pA3Je0JAxP+iX2l01T3Fcr75+rpVtoahfL6I0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TlrFLAIl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="IIzq8JcI"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3192b0431;
-	Thu, 22 Jan 2026 16:15:54 +0800 (GMT+08:00)
-Message-ID: <09f9acc1-d1ad-4971-8488-f0268cf08799@rock-chips.com>
-Date: Thu, 22 Jan 2026 16:15:52 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TlrFLAIl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FA0DC116C6;
+	Thu, 22 Jan 2026 12:52:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769086357;
+	bh=JHyfsLNz6xHNu6YUkIGqk67NfobRT5uwjtCGqEc7p3M=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
+	b=TlrFLAIlSVw3ZIIWin45aHzlxJ1QN6JunYK2iLRD1FRx/Z7XTjYB8Bot8Wtl2p1+5
+	 bpFn9jOKwy2XrWNA9iGI/PjBenJ9IHNlJcGVKIrjRyxrYQUUjnCDme/zML29bpq1c6
+	 fxmUt/+JgGMqzVWKg2Oh0wF6J+NKmj84LrJX0/xX7tpUyvXTK7ZYKLDSmvHnld+ko7
+	 GdR/j6jl77ypFDCnY0NZ6aUxPO3nNzO4vRIQfKXCcNPqKEpLMgACOv0I5kfzBxz3kW
+	 WjCufu97ubNNCOPa4iinXRf2z9afcrbyRH8Sq26tKM5oQrv5iukx2VCIT7uhPF6fJ1
+	 6LZbMGERWrNkw==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: dwc: Rename has_msi_ctrl to uses_imsi_rx for
- clarity
-To: Qiang Yu <qiang.yu@oss.qualcomm.com>, Jingoo Han <jingoohan1@gmail.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20260121-remove_cap_clean_up-v1-0-e78115e5d467@oss.qualcomm.com>
- <20260121-remove_cap_clean_up-v1-2-e78115e5d467@oss.qualcomm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20260121-remove_cap_clean_up-v1-2-e78115e5d467@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9be4c636e609cckunm14ea87cebf7b7
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGh4ZTFZNSkMaTEIYGUxNSUJWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=IIzq8JcI67qI+Dej9wE1vfiMIsKuAUdRsUki9Ewyc7/ZpxtxzVmnNKLSNyKh82lfwWaWUAdIg1aYu1obrvEdqH62PYny5b6liDg6SbF5mbVWmFt1N31hJz9v1Ebv7a2eTmE9GntwawGWNoEGh5gyD2xBOI6tVVdyT7pFV/AgHoQ=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=G7KAe8O/EONhIsPqZsYfU/8r+5SxhjqCO/8SBOh5FdI=;
-	h=date:mime-version:subject:message-id:from;
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 22 Jan 2026 13:52:29 +0100
+Message-Id: <DFV4RTLGQU1C.1FNHL8AC2DW2L@kernel.org>
+Subject: Re: [PATCH v12 2/5] rust: io: separate generic I/O helpers from
+ MMIO implementation
+Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
+ <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <tmgross@umich.edu>, <markus.probst@posteo.de>, <helgaas@kernel.org>,
+ <cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
+ <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <acourbot@nvidia.com>, <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>,
+ <zhiwang@kernel.org>, <daniel.almeida@collabora.com>,
+ <ukleinek@kernel.org>, <m.wilczynski@samsung.com>
+To: "Zhi Wang" <zhiw@nvidia.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260121202212.4438-1-zhiw@nvidia.com>
+ <20260121202212.4438-3-zhiw@nvidia.com>
+In-Reply-To: <20260121202212.4438-3-zhiw@nvidia.com>
 
-Hi Qiang,
+(Cc: Uwe, Michal)
 
-在 2026/01/22 星期四 15:45, Qiang Yu 写道:
-> The current "has_msi_ctrl" flag name is misleading because it suggests the
-> presence of any MSI controller, while it is specifically set for platforms
-> that lack .msi_init() callback and don't have "msi-parent" or "msi-map"
-> device tree properties, indicating they rely on the iMSI-RX module for MSI
-> functionality.
-> 
-> Rename it to "uses_imsi_rx" to make the intent clear:
-> - When true: Platform uses the iMSI-RX module for MSI handling
-> - When false: Platform has other MSI controller support (ITS/MBI, custom
-> handlers)
-> 
-> No functional changes, only improves code readability and eliminates
-> naming confusion.
-> 
-
-I love this patch, it's indeed confusing. But I noticed the naming
-seems inconsistency, for instance, there are already use_atu_msg,
-use_parent_dt_ranges, etc. Should we use use_imsi_rx instead?
-
-But in any case,
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-> Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+On Wed Jan 21, 2026 at 9:22 PM CET, Zhi Wang wrote:
+> The previous Io<SIZE> type combined both the generic I/O access helpers
+> and MMIO implementation details in a single struct. This coupling prevent=
+ed
+> reusing the I/O helpers for other backends, such as PCI configuration
+> space.
+>
+> Establish a clean separation between the I/O interface and concrete
+> backends by separating generic I/O helpers from MMIO implementation.
+>
+> Introduce a new trait hierarchy to handle different access capabilities:
+>
+> - IoCapable<T>: A marker trait indicating that a backend supports I/O
+>   operations of a certain type (u8, u16, u32, or u64).
+>
+> - Io trait: Defines fallible (try_read8, try_write8, etc.) and infallibil=
+e
+>   (read8, write8, etc.) I/O methods with runtime bounds checking and
+>   compile-time bounds checking.
+>
+> - IoKnownSize trait: The marker trait for types support infallible I/O
+>   methods.
+>
+> Move the MMIO-specific logic into a dedicated Mmio<SIZE> type that
+> implements the Io traits. Rename IoRaw to MmioRaw and update consumers to
+> use the new types.
+>
+> Cc: Alexandre Courbot <acourbot@nvidia.com>
+> Cc: Alice Ryhl <aliceryhl@google.com>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>
+> Cc: Gary Guo <gary@garyguo.net>
+> Cc: Danilo Krummrich <dakr@kernel.org>
+> Cc: John Hubbard <jhubbard@nvidia.com>
+> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 > ---
->   drivers/pci/controller/dwc/pcie-designware-host.c | 16 ++++++++--------
->   drivers/pci/controller/dwc/pcie-designware.h      |  2 +-
->   drivers/pci/controller/dwc/pcie-qcom.c            |  4 ++--
->   3 files changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index a17833dd6f9d4b4aa06dc1fe09ffed5e2c28a82f..e7dbdf3670b426783e778be5064def10d2b209b1 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -255,7 +255,7 @@ void dw_pcie_msi_init(struct dw_pcie_rp *pp)
->   	u64 msi_target = (u64)pp->msi_data;
->   	u32 ctrl, num_ctrls;
->   
-> -	if (!pci_msi_enabled() || !pp->has_msi_ctrl)
-> +	if (!pci_msi_enabled() || !pp->uses_imsi_rx)
->   		return;
->   
->   	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-> @@ -603,15 +603,15 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->   	}
->   
->   	if (pci_msi_enabled()) {
-> -		pp->has_msi_ctrl = !(pp->ops->msi_init ||
-> +		pp->uses_imsi_rx = !(pp->ops->msi_init ||
->   				     of_property_present(np, "msi-parent") ||
->   				     of_property_present(np, "msi-map"));
->   
->   		/*
-> -		 * For the has_msi_ctrl case the default assignment is handled
-> +		 * For the uses_imsi_rx case the default assignment is handled
->   		 * in the dw_pcie_msi_host_init().
->   		 */
-> -		if (!pp->has_msi_ctrl && !pp->num_vectors) {
-> +		if (!pp->uses_imsi_rx && !pp->num_vectors) {
->   			pp->num_vectors = MSI_DEF_NUM_VECTORS;
->   		} else if (pp->num_vectors > MAX_MSI_IRQS) {
->   			dev_err(dev, "Invalid number of vectors\n");
-> @@ -623,7 +623,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->   			ret = pp->ops->msi_init(pp);
->   			if (ret < 0)
->   				goto err_deinit_host;
-> -		} else if (pp->has_msi_ctrl) {
-> +		} else if (pp->uses_imsi_rx) {
->   			ret = dw_pcie_msi_host_init(pp);
->   			if (ret < 0)
->   				goto err_deinit_host;
-> @@ -701,7 +701,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->   	dw_pcie_edma_remove(pci);
->   
->   err_free_msi:
-> -	if (pp->has_msi_ctrl)
-> +	if (pp->uses_imsi_rx)
->   		dw_pcie_free_msi(pp);
->   
->   err_deinit_host:
-> @@ -729,7 +729,7 @@ void dw_pcie_host_deinit(struct dw_pcie_rp *pp)
->   
->   	dw_pcie_edma_remove(pci);
->   
-> -	if (pp->has_msi_ctrl)
-> +	if (pp->uses_imsi_rx)
->   		dw_pcie_free_msi(pp);
->   
->   	if (pp->ops->deinit)
-> @@ -1130,7 +1130,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
->   	 * the MSI and MSI-X capabilities of the Root Port to allow the drivers
->   	 * to fall back to INTx instead.
->   	 */
-> -	if (pp->has_msi_ctrl) {
-> +	if (pp->uses_imsi_rx) {
->   		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
->   		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
->   	}
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 53b65428fadb3d905b02bdcc06667065574f4f9d..33154bc89dd3b7d7fbe0ea749ca22bdc8292489c 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -416,7 +416,7 @@ struct dw_pcie_host_ops {
->   };
->   
->   struct dw_pcie_rp {
-> -	bool			has_msi_ctrl:1;
-> +	bool			uses_imsi_rx:1;
->   	bool			cfg0_io_shared:1;
->   	u64			cfg0_base;
->   	void __iomem		*va_cfg0_base;
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 13e6c334e10d21b9ebfe5f82de0aff3bce6191e3..999f5e083cef4e78b85a0111d2a90c3de65c83b5 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1633,7 +1633,7 @@ static void qcom_pci_free_msi(void *ptr)
->   {
->   	struct dw_pcie_rp *pp = (struct dw_pcie_rp *)ptr;
->   
-> -	if (pp && pp->has_msi_ctrl)
-> +	if (pp && pp->uses_imsi_rx)
->   		dw_pcie_free_msi(pp);
->   }
->   
-> @@ -1657,7 +1657,7 @@ static int qcom_pcie_ecam_host_init(struct pci_config_window *cfg)
->   	if (ret)
->   		return ret;
->   
-> -	pp->has_msi_ctrl = true;
-> +	pp->uses_imsi_rx = true;
->   	dw_pcie_msi_init(pp);
->   
->   	return devm_add_action_or_reset(dev, qcom_pci_free_msi, pp);
-> 
+>  drivers/gpu/drm/tyr/regs.rs            |   1 +
+>  drivers/gpu/nova-core/gsp/sequencer.rs |   5 +-
+>  drivers/gpu/nova-core/regs/macros.rs   |  90 +++---
+>  drivers/gpu/nova-core/vbios.rs         |   1 +
+>  drivers/pwm/pwm_th1520.rs              |   5 +-
+>  rust/kernel/devres.rs                  |  19 +-
+>  rust/kernel/io.rs                      | 398 ++++++++++++++++++++-----
+>  rust/kernel/io/mem.rs                  |  16 +-
+>  rust/kernel/io/poll.rs                 |  16 +-
+>  rust/kernel/pci/io.rs                  |  12 +-
+>  samples/rust/rust_driver_pci.rs        |   1 +
+>  11 files changed, 433 insertions(+), 131 deletions(-)
 
+<snip>
+
+> diff --git a/drivers/pwm/pwm_th1520.rs b/drivers/pwm/pwm_th1520.rs
+> index e3b7e77356fc..616ca398b2c5 100644
+> --- a/drivers/pwm/pwm_th1520.rs
+> +++ b/drivers/pwm/pwm_th1520.rs
+> @@ -26,7 +26,10 @@
+>      clk::Clk,
+>      device::{Bound, Core, Device},
+>      devres,
+> -    io::mem::IoMem,
+> +    io::{
+> +        mem::IoMem,
+> +        Io, //
+> +    },
+>      of, platform,
+>      prelude::*,
+>      pwm, time,
