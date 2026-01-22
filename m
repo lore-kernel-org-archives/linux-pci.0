@@ -1,122 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF7A318EE3;
-	Thu, 22 Jan 2026 09:56:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56F017B418;
+	Thu, 22 Jan 2026 10:07:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769075800; cv=none; b=N8VBB/9Fx7LyAvlLNzlL0+YlgozB715tlvvtMzy5T3CvKIhIGTLIgItYz/RDBlJi/BJAzq6nmQntYed+bQsB3RSk+s8hYzgGaQ6QzoIp+8y3F6aygIvJxVS6XliSnApwvbeEwKLQonVzyMmL/C1gVWhWXE89bVvro4toIlagaM0=
+	t=1769076469; cv=none; b=cg+VtsMjLVlx2RBAtMkXrwwsWB6nin0LMGQyOKkK52dNrzgC3YIEan0sP/lwBvhGOf7MkXBGuIysAH1VMXpdOxwm6nUkGxZIsbNpjJmdV3p0HHtm2M1+CumjRaOO1JBjjVBvt1EBqDpoIsAtrRN0Y2FEtZCX0yTx8HbQ4AMKokI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769075800; c=relaxed/simple;
-	bh=dcxoVFz6LVoWrvVHVZ3y55Q4k5TKYzriByuTAgV3hWY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b/SKv0cOMFAWBxvHiZuzzu6R4F9fi0hpvihkDZLlEsudkWNcRcoSNibRIqjU6Zb6YeoiU6iqwbo3bR0XYhGV+833SeD43w6eXMSlw0goyfpwChQH47oH/CyPKHzZXliPFpwpb2NiSTx7Tc/k7VlUtYdVOK+nNKGH2jMbUBNS32w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hyxzfZGL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769076469; c=relaxed/simple;
+	bh=qDFRoSolpCrXVZeKn+ruAlpM5zDryWsQ+UEokS3Y4Kc=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=TD/v6mibu1bfUA6mhiKE7O/MvOVztj0npLqZantcTP7oI2W+nDFGdBj4nPaC+AZaANT7IL5k9oidg5t2q0yGOQD9N1cFX4ZONrzB+qnZri1kLwegxFIixxgAyFIH0C7JaQMziM/NhxlPem+oGQcX9CMWloQzGhuLSdLbwee76WM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KKMiHIh0; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hyxzfZGL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C295C116C6;
-	Thu, 22 Jan 2026 09:56:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769075799;
-	bh=dcxoVFz6LVoWrvVHVZ3y55Q4k5TKYzriByuTAgV3hWY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hyxzfZGLcbvHXsYMNZmY0TclxVsCDges/uNr7rTIWjU7dEvvZWpe3y8gLjHiYPb4P
-	 gQ8LoHdGdjymvWkmBREjtD/TG+AEf+cNOi5i4o70izpt1KJpjylatpowbVYkbk7pcP
-	 CYG9UP7rOsgwnKAYwORRJM/imqq2YlfQqXjjGRf+llG3fqyyNKe9qA6NTgQgEwPWK+
-	 4+DoR3K0+SIxnm4RP+gCIp20fsGJqFTdW3y9d/2ZeCn3W21XRuLsQe7Cps94/KFLsY
-	 n7FdKC9l8vf+Jalgv6nJj7/fkB0Dp2sCnCpXPIvgQZsI0TX7LhQzCf/hGB0UgxDjcv
-	 PJXfg+UrhfKbw==
-Date: Thu, 22 Jan 2026 09:56:29 +0000
-From: Will Deacon <will@kernel.org>
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Chen Ridong <chenridong@huawei.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Gabriele Monaco <gmonaco@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vlastimil Babka <vbabka@suse.cz>, Waiman Long <longman@redhat.com>,
-	cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 29/33] sched/arm64: Move fallback task cpumask to
- HK_TYPE_DOMAIN
-Message-ID: <aXH0TZU7UNowTmwc@willie-the-truck>
-References: <20260101221359.22298-1-frederic@kernel.org>
- <20260101221359.22298-30-frederic@kernel.org>
- <aW-cAlJCtI5Qtify@willie-the-truck>
- <aXEHf5nbZMI8LT4b@localhost.localdomain>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KKMiHIh0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769076467; x=1800612467;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=qDFRoSolpCrXVZeKn+ruAlpM5zDryWsQ+UEokS3Y4Kc=;
+  b=KKMiHIh01+oIiUvFY5aHDeacLncx2ggw3FtNdiHPvr6JjNjdk5HUXJ0R
+   L51w/1ysfgEl5PlIwohdvFtRj+yE0ROs6ucg8rOJzSYF9i6w9bYJt26kJ
+   eBV5Grn/AjA18g6l/N9Q+C113ZCyPV9f2vFo8wZbJLdc1IVXaOU6kwyve
+   +DlbvbOiUKZ8pkNupvI07lhGdVxDw6gk3Bh2PpzJPSEuqrL7gg0MMbgbJ
+   jGkmro2M2J2mIZHrZIBfDcrJZPMhDaNo3znOGwoEvNFhISKniRlJey230
+   yqceYpsnMlAi/eaYTCkZurm2lGE/yCyYFf8iLcexhDdE6FBMpzAcuGoV6
+   Q==;
+X-CSE-ConnectionGUID: 4G3cTZ3XRNeMSqWvtEVaDQ==
+X-CSE-MsgGUID: zfReiEMmQSi8RwbfYvZqnA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11678"; a="95789151"
+X-IronPort-AV: E=Sophos;i="6.21,246,1763452800"; 
+   d="scan'208";a="95789151"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2026 02:07:46 -0800
+X-CSE-ConnectionGUID: H5pMFzRBQbWYwdxzz4jPWA==
+X-CSE-MsgGUID: RnzKkF8CTlePfZXR05rTvQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,246,1763452800"; 
+   d="scan'208";a="205945594"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.15])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2026 02:07:43 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 22 Jan 2026 12:07:40 +0200 (EET)
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: =?ISO-8859-15?Q?Ville_Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>, 
+    linux-pci@vger.kernel.org, 
+    =?ISO-8859-15?Q?Christian_K=F6nig?= <christian.koenig@amd.com>, 
+    LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: Fix BAR resize rollback path overwriting ret
+In-Reply-To: <20260121131417.9582-2-ilpo.jarvinen@linux.intel.com>
+Message-ID: <dd05361e-39a2-b8f4-d30a-38ce96799982@linux.intel.com>
+References: <20260121131417.9582-1-ilpo.jarvinen@linux.intel.com> <20260121131417.9582-2-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aXEHf5nbZMI8LT4b@localhost.localdomain>
+Content-Type: multipart/mixed; boundary="8323328-574382717-1769076460=:1059"
 
-On Wed, Jan 21, 2026 at 06:06:07PM +0100, Frederic Weisbecker wrote:
-> Le Tue, Jan 20, 2026 at 03:15:14PM +0000, Will Deacon a écrit :
-> > Hi Frederic,
-> > 
-> > On Thu, Jan 01, 2026 at 11:13:54PM +0100, Frederic Weisbecker wrote:
-> > > When none of the allowed CPUs of a task are online, it gets migrated
-> > > to the fallback cpumask which is all the non nohz_full CPUs.
-> > > 
-> > > However just like nohz_full CPUs, domain isolated CPUs don't want to be
-> > > disturbed by tasks that have lost their CPU affinities.
-> > > 
-> > > And since nohz_full rely on domain isolation to work correctly, the
-> > > housekeeping mask of domain isolated CPUs should always be a superset of
-> > > the housekeeping mask of nohz_full CPUs (there can be CPUs that are
-> > > domain isolated but not nohz_full, OTOH there shouldn't be nohz_full
-> > > CPUs that are not domain isolated):
-> > > 
-> > > 	HK_TYPE_DOMAIN | HK_TYPE_KERNEL_NOISE == HK_TYPE_DOMAIN
-> > > 
-> > > Therefore use HK_TYPE_DOMAIN as the appropriate fallback target for
-> > > tasks and since this cpumask can be modified at runtime, make sure
-> > > that 32 bits support CPUs on ARM64 mismatched systems are not isolated
-> > > by cpusets.
-> > > 
-> > > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-> > > Reviewed-by: Waiman Long <longman@redhat.com>
-> > > ---
-> > >  arch/arm64/kernel/cpufeature.c | 18 +++++++++++++++---
-> > >  include/linux/cpu.h            |  4 ++++
-> > >  kernel/cgroup/cpuset.c         | 17 ++++++++++++++---
-> > >  3 files changed, 33 insertions(+), 6 deletions(-)
-> > 
-> > tbh, I'd also be fine just saying that isolation isn't reliable on these
-> > systems and then you don't need to add the extra arch hook.
-> 
-> Hmm, I think I heard about nohz_full usage on arm64 but I'm not sure.
-> And I usually expect isolcpus or cpuset isolated partitions to be even
-> more broadly used, it's lighter isolation with less constraints.
-> 
-> Anyway you're probably right that we could remove isolation support here
-> but I don't want to break any existing user.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-fwiw, I think it's only some Android markets using the mismatched 32-bit
-support and we're definitely not using nohz_full there.
+--8323328-574382717-1769076460=:1059
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Will
+On Wed, 21 Jan 2026, Ilpo J=C3=A4rvinen wrote:
+
+> The commit 337b1b566db0 ("PCI: Fix restoring BARs on BAR resize
+> rollback path") added BAR rollback to
+> pci_do_resource_release_and_resize() in case of resize failure.
+>=20
+> On the rollback, pci_claim_resource() is called which can fail and the
+> code is prepared for that possibility. pci_claim_resource()'s return
+> value, however, overwrites the original value of ret so
+> pci_claim_resource() will return incorrect value in the end (as
+
+Hi Bjorn,
+
+I noticed this should have been:
+
+"pci_do_resource_release_and_resize() will return incorrect value in the=20
+end ..."
+
+(used a wrong function name).
+
+Could you please adjust the commit message in your tree if it's not too=20
+late yet?
+
+I'm sorry about the extra hassle.
+
+--
+ i.
+
+> pci_claim_resource() normally succeeds, in practice ret will be 0).
+>=20
+> Fix the issue by directly calling pci_claim_resource() inside the if ().
+>=20
+> Fixes: 337b1b566db0 ("PCI: Fix restoring BARs on BAR resize rollback path=
+")
+> Link: https://lore.kernel.org/linux-pci/aW_w1oFQCzUxGYtu@intel.com/
+> Cc: stable@vger.kernel.org
+> Reported-by: Ville Syrj=C3=A4l=C3=A4 <ville.syrjala@linux.intel.com>
+> Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+> ---
+>  drivers/pci/setup-bus.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 6e90f46f52af..9c374feafc77 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -2556,8 +2556,7 @@ int pci_do_resource_release_and_resize(struct pci_d=
+ev *pdev, int resno, int size
+> =20
+>  =09=09restore_dev_resource(dev_res);
+> =20
+> -=09=09ret =3D pci_claim_resource(dev, i);
+> -=09=09if (ret)
+> +=09=09if (pci_claim_resource(dev, i))
+>  =09=09=09continue;
+> =20
+>  =09=09if (i < PCI_BRIDGE_RESOURCES) {
+>=20
+
+--8323328-574382717-1769076460=:1059--
