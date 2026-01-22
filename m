@@ -1,36 +1,61 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9BAA27AC41
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 09:01:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6067033FE17;
+	Thu, 22 Jan 2026 09:03:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769072481; cv=none; b=sDSfLSGRRoPl0kpKUHcjidZw7nhWE0g4qWv9++4le0l/2TUcb8E5F2nr0Jx5IuGpjXKF0sR020xaNTi9YSPkv6vWF/EPPPj+yIsi8GysSV2cIGPo0djnQDj3JKdzoF9O8tL7cymEtrfss0C8hRoiPu5urSkec2HSTh+sauYG0Hg=
+	t=1769072630; cv=none; b=aD+VR2QM9SfDdL3Co6TEjgbO8wJGGMON1Tqi/NA94rp1H6IlPhIzuBnGo8hOZDlPThuyr4lDXuOVHh8TSCspUmF3kaBylu7T82ZslS4PFAyg4zhbK4Ad+2DZxlL7GRfoaNLvYyOpo/TWB3iyI2Z/uGBAsO9ReWcI30EorTJffVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769072481; c=relaxed/simple;
-	bh=OEsc/oFbafBXsySfpvbb/EcFFG7wIIq7aGAbVJcjTVo=;
+	s=arc-20240116; t=1769072630; c=relaxed/simple;
+	bh=/MehKJmORgEwpJF+msBgFBXkm59BZbIQr2N6eBZwaBU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YwnehQGFTlfCN4YwP4HTJxNwg5ee91OoZD9hp1yK09ygvR+ZovRoUnvukr4zBPlnu4/UlMWl+WOKMOrjC5p7wmLo/FEWAORX88a1FthGhNXtFGozKjiG8ZMCffJ8jcZwVQiCzH5JSz08IZTWlXLG/SojME4TkQg3+ux1DFrxbP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 883D92007FF3;
-	Thu, 22 Jan 2026 10:01:08 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 7FEC22D3E7; Thu, 22 Jan 2026 10:01:08 +0100 (CET)
-Date: Thu, 22 Jan 2026 10:01:08 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/PME: Replace RMW of Root Status register with direct
- write
-Message-ID: <aXHnVK2NRa-uQ2cM@wunner.de>
-References: <39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=RVZilleJ97NAvbRgk7VgNjTFRg721I1B6lCsgxQ5AuaHnkhBRlIkiw/ou6mW6ZJkVkxcsP49BRQv32js1Rmc2/FEz/OuIuGItRGPnv/A6etfLmtwpBQvjj8f9ZJLPU6svGFnD0hCFxwDi/xVfyB0HVPcvISJyhs8HH2lZwRUbks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mzS2xZFu; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mzS2xZFu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84B24C116C6;
+	Thu, 22 Jan 2026 09:03:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769072627;
+	bh=/MehKJmORgEwpJF+msBgFBXkm59BZbIQr2N6eBZwaBU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mzS2xZFueyQor31YESEgMROI8UCRsNdNneVBo50jCEGgFSMndbkcVLiq094C9Jgwo
+	 35xH5C7NvzIFyWXvYPRYokoInGijcOBS0s7kTSD2rs1/MqN9zduYtpaudJCO+JuAqG
+	 qcWHYywg7hKt7GdHjeGmWDOUYJB6iwtmm/ueYCQLgRuZFzV2GbCuKXuU2MXYlJakLG
+	 aH44EBU6o0ftXLIKcH4ybHu24Fk6i93FHqusQwGGBCq7PliSXGB5LtBmwErA8ofuSI
+	 1bNHoT4dAhRVT8PtymGXeVJ7cNMHyPdS0U6tbkBKYlgKT3Kc03EbDVdYMvih9iEmwv
+	 v/QGCAMt1Lw/Q==
+Date: Thu, 22 Jan 2026 10:03:33 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	vigneshr@ti.com, s-vadapalli@ti.com, hongxing.zhu@nxp.com,
+	l.stach@pengutronix.de, shawnguo@kernel.org, s.hauer@pengutronix.de,
+	kernel@pengutronix.de, festevam@gmail.com, minghuan.Lian@nxp.com,
+	mingkai.hu@nxp.com, roy.zang@nxp.com, jesper.nilsson@axis.com,
+	heiko@sntech.de, srikanth.thokala@intel.com,
+	marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com,
+	geert+renesas@glider.be, magnus.damm@gmail.com,
+	christian.bruel@foss.st.com, mcoquelin.stm32@gmail.com,
+	alexandre.torgue@foss.st.com, thierry.reding@gmail.com,
+	jonathanh@nvidia.com, hayashi.kunihiko@socionext.com,
+	mhiramat@kernel.org, kishon@kernel.org, jirislaby@kernel.org,
+	rongqianfeng@vivo.com, 18255117159@163.com,
+	shawn.lin@rock-chips.com, nicolas.frattaroli@collabora.com,
+	linux.amoon@gmail.com, vidyas@nvidia.com, Frank.Li@nxp.com,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v9 2/5] PCI: endpoint: Add BAR subrange mapping support
+Message-ID: <aXHn3zuxxfBN1yps@ryzen>
+References: <20260122084909.2390865-1-den@valinux.co.jp>
+ <20260122084909.2390865-3-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -39,28 +64,32 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de>
+In-Reply-To: <20260122084909.2390865-3-den@valinux.co.jp>
 
-On Sun, Oct 26, 2025 at 05:57:57PM +0100, Lukas Wunner wrote:
-> As of PCIe r7.0, the Root Status register contains a single writeable bit
-> (PME Status, type RW1C) and otherwise just read-only bits and RsvdZ bits
-> (which software must write as zero, PCIe r7.0 sec 7.4).
+On Thu, Jan 22, 2026 at 05:49:06PM +0900, Koichiro Den wrote:
+> Some endpoint platforms have only a small number of usable BARs. At the
+> same time, EPF drivers (e.g. vNTB) may need multiple independent inbound
+> regions (control/scratchpad, one or more memory windows, and optionally
+> MSI or other feature-related regions). Subrange mapping allows these to
+> share a single BAR without consuming additional BARs that may not be
+> available, or forcing a fragile layout by aggressively packing into a
+> single contiguous memory range.
 > 
-> Thus, when clearing the PME Status bit, there's no need to perform a
-> read-modify-write of the register.  Instead, the bit can be written
-> directly.
+> Extend the PCI endpoint core to support mapping subranges within a BAR.
+> Add an optional 'submap' field in struct pci_epf_bar so an endpoint
+> function driver can request inbound mappings that fully cover the BAR.
+> 
+> Introduce a new EPC feature bit, subrange_mapping, and reject submap
+> requests from pci_epc_set_bar() unless the controller advertises both
+> subrange_mapping and dynamic_inbound_mapping features.
+> 
+> The submap array describes the complete BAR layout (no overlaps and no
+> gaps are allowed to avoid exposing untranslated address ranges). This
+> provides the generic infrastructure needed to map multiple logical
+> regions into a single BAR at different offsets, without assuming a
+> controller-specific inbound address translation mechanism.
+> 
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
 
-Hm, I just noticed that this patch is marked "Not Applicable" in patchwork:
-
-https://patchwork.kernel.org/project/linux-pci/patch/39f87c99f6c44be3c0371c79e454e6fde7be0d4d.1761497583.git.lukas@wunner.de/
-
-It didn't get any on-list replies and didn't get applied AFAICS.
-I'm not sure why it's marked this way in patchwork or what to do about it.
-
-There's one other patch sharing the same fate:
-
-https://patchwork.kernel.org/project/linux-pci/patch/75e4ae507fa4faddd063a3a9e17d319ed84529b6.1757562971.git.lukas@wunner.de/
-
-Thanks!
-
-Lukas
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
