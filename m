@@ -1,72 +1,74 @@
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020072.outbound.protection.outlook.com [52.101.195.72])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011041.outbound.protection.outlook.com [52.101.62.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC9813C1FDE;
-	Thu, 22 Jan 2026 12:00:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2726F43E48D;
+	Thu, 22 Jan 2026 12:12:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.41
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769083219; cv=fail; b=OTOhl49Ql1DyXdmHXREDeg0p+U6GDULXFfQvAel833WgmOpuBh63lk9bOmXxyFvPhilvUOJhFLo+jWHJHBe7xIMYrJtQpH9nxHKLhAp5JWDFcC2s4lEEZA7Yw7CzNkcrF1QlDOuC3sMm67aTkaqOp6EePW4W9SxOt9y/UzlY+W0=
+	t=1769083975; cv=fail; b=INQMY3J1tXuaOtnqR+FCODaFRKXYQOzYSjksIQSlietY3zSd435G8EQlwvkK7s7hOfoq0xHBQ6OY2u8HXp/2o3COFgqre/YyJYe2rwMHRmk8O/CXhzN1EDsLz0giKOMAL6Lne8u7eorHy3uxHC85tfF9cXD14+3H3Z0HCjepZTY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769083219; c=relaxed/simple;
-	bh=14ymO6+y9XJjB/ManoNxtovqo0RmIdHg60nK6C0KEYY=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
-	 In-Reply-To:MIME-Version; b=GxCB/V8s2BTY75j76k0NH9UzDfd1HyF/669dsCmpwlljtUksvtJSe9kIq5MkNhnjg3ZEXuXmEepJGlslr4czeO8lJQ8YPib/9wVag2Qqdup7EnRMJddY4Mfs9rNnJJQyP+iXfBvhzaA17KTLdLcAHbrF6cMapISgwzkojcorByM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=C3RPgICL; arc=fail smtp.client-ip=52.101.195.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1769083975; c=relaxed/simple;
+	bh=6ZdnX84P2lPwK8fhIZPPS0GZ+7+lrvxuNl7pVPj8mw8=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=FonyaEt8hldXJa6lnhSMMzNf9xexadPAUAHg4cW7N7wTwB/VG+h1WnVkyOEeBMbFxfazrHKCiMs6IvUfvkGJ9mMs+MC84yr80xSXV9cYVdIEX6mMUtH390qs1q0CEpCMwT9ixmbQdMdDnAqH0KksC4y2CIqAM468h1SViluHFoE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=JHSq9r3P; arc=fail smtp.client-ip=52.101.62.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="C3RPgICL"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="JHSq9r3P"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MVj5MTj5N2GDd64d0OcHZUDJPgp1sXbjL+UOFwPtiG3o4+OqzO1Oh4Ac3m2FmfaDwyncfe47+8X2rYTDev/Rqgnx8qP24au3qR1CarYj0UFGcvLNOoKg5k7TleMUoafiVAK17bDZH1LeHMN+JFHxwynsnQUCSq6vGeoHengzNrC6MDowgASUwELu7oKk0fb+PsoDnutB/m5Gy01nrEbvXAtLco0wOJMn0SZWQtVlFhI0cC/9t8cJXffRurYeSEKQM16zZOyWdCPcZNvzc9bmnmVi28J+BlrO0yJjFAfx9bxnzk3Wg6X7MxOe6yblJM64yJ4+V7GHqI7vLqs7VvdtZQ==
+ b=OraBreEc0Nv34aoQ4L1eB65UMEB57mxdPYWg6LIEf5+944VJILDWnwCnYuxJ11YHxZC/fVQKT7B4he4KVpV13+YHO3VP5kMyDObQ1RC1/rt2hXtxM2GEXHfcUjKFBDGA282CXZ4KDudAbgSgavkFEob3gl/OOGrAs5tEEDtzdbzz1bKEI/3YwjtyHBqSQiVhOjcjXTWGwm39F+dMjM+R36BHT1F+wyvB5L1ltaGReR4anebhQ5lEFQsmgC0KV7fWjTtreEy0SVMRCgIJ+Gb2KEioMXnJE4eQiN8Ik8nBKv07xJ3V48B6gbOyVXEcj4Sd86OHiHT1UYnTELJIYYY/ew==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hSIrFeKX5HPKNAPFUfT4pIs6uqx5GKbFTj9wq/ydvpA=;
- b=QqmTkY+ltO8F5bVQZZBn+MuiLEyULbBrkPpFAVwzQGlyba1RMOwxwHyQgrjPdb35E5O+HPR7nV4rfzjjTsjHIC+G0fITbIYpoV5ZPmZNwSoiL6lFGYk7UNHuQ9ll0nW7c180/yjY+qe9Yiw02SPcg3dTQm0tqfrDrw5MsgYcebKVWKotzbBLku7aPUtIc7Uhl8/jApvJPT0QGTPd1nixiKGemw0o/EiFvSsu+9pzMsElYnXDdF0N9AELls9XMW7PnEr+UiOwi/cnMc8YHuKWF+OkGq6MJr4uP+i75nhn0UTzS8c646WH6XOTpiF48pSVAgAf91BNrEfCI1WjC0l3LA==
+ bh=mpNsVZhYVwMpYRNbryLAMwOw8dlD5Hs95kxlwr3yPBk=;
+ b=IfwhSHsaL0KnPdJ3PeON7oFd6VEwXNxRSLtZuyLLSzQxkwTp0yp/F2snY2N8GaJqD1HolZCYcEK3oRW6nvRkSi46D+2fmp3U21MFKaaGMTmrPcqUY+fwY40N7WjCS0hyRDCpEzgo+tkFA/78JHwFEahMKysQ7I6g5BT87TIsM9UIrdz/bu2XzQvn/U7f2Lp/W1ol56gif0FbgWBS0Q/mS2kS5tKT0VGx/P7pXMoIR++8BAz+018sgdQR/q09xtnvruEC87+EqPm527P76TjDUQzsVEWbSNqGavwtk0ktsdAzHUKw8MIaSASI/JEGaoyyUGaaV5h2T+K0Wz0qAya7BA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hSIrFeKX5HPKNAPFUfT4pIs6uqx5GKbFTj9wq/ydvpA=;
- b=C3RPgICLjtO1ygPNTX2naRf+iwxx1wWoFVuHighyuQZHjM3E56V/UE0u0XcJq3Yj6IECo+KgqR3MWOFjzvJ2Drfj6/fx6dgU4dmYEAW7eNR8VP8GbNzMufHUd6X8F30Cgc9FroV2+VjOuP5DYrgJ6kCtXm7ULrK9TXNNqf4C6OE=
+ bh=mpNsVZhYVwMpYRNbryLAMwOw8dlD5Hs95kxlwr3yPBk=;
+ b=JHSq9r3PQbpSXNkrIo7zX3LUUvEiCNgwFwOqYAn6QlBpFtzImdT1MvBi7kCdjR5iSSEX4DCs14TA++qmPFsHtwH1z7bC5oQfxDwYfM88zTwi8wi1q8UHFJK/qAx3RM0UsnCrcOoZRV6693Lsoko202/YrXrx7WtiAreB046oMB88bawCySRuEiPMyZU28hEUyx4lJA4C70DQX/vyYpzhZ0hWgu9cc0ZLqd1Eo7ZJ9yTIJtOk3tMfNMH0CnWZFkQnC8dj//5GMefaDHzRpCjN6rC18cMBn6GHVYYiItudy6BJVGDz2XrifCo78TgKKsqKcU5z1wz+oXo3cGIZst6UAQ==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO3P265MB1947.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:102::7) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
+ by IA1PR12MB6114.namprd12.prod.outlook.com (2603:10b6:208:3ea::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.10; Thu, 22 Jan
- 2026 12:00:10 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9542.009; Thu, 22 Jan 2026
- 12:00:10 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 22 Jan 2026 12:00:10 +0000
-Message-Id: <DFV3NR7XHW2G.3TH0LG5VYT2VF@garyguo.net>
-From: "Gary Guo" <gary@garyguo.net>
-To: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Cc: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
- <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
- <smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
- <kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
- <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
- <daniel.almeida@collabora.com>
-Subject: Re: [PATCH v12 5/5] sample: rust: pci: add tests for config space
- routines
-X-Mailer: aerc 0.21.0
-References: <20260121202212.4438-1-zhiw@nvidia.com>
- <20260121202212.4438-6-zhiw@nvidia.com>
-In-Reply-To: <20260121202212.4438-6-zhiw@nvidia.com>
-X-ClientProxiedBy: LO4P265CA0204.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:318::14) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Thu, 22 Jan
+ 2026 12:12:48 +0000
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391%5]) with mapi id 15.20.9542.008; Thu, 22 Jan 2026
+ 12:12:48 +0000
+Message-ID: <7306256a-b380-489b-8248-b774e6d3d80e@nvidia.com>
+Date: Thu, 22 Jan 2026 12:12:42 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
+ set by BIOS for devicetree platforms
+To: manivannan.sadhasivam@oss.qualcomm.com,
+ Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, "David E. Box" <david.e.box@linux.intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Heiner Kallweit <hkallweit1@gmail.com>,
+ Chia-Lin Kao <acelan.kao@canonical.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+References: <20250922-pci-dt-aspm-v2-0-2a65cf84e326@oss.qualcomm.com>
+ <20250922-pci-dt-aspm-v2-1-2a65cf84e326@oss.qualcomm.com>
+From: Jon Hunter <jonathanh@nvidia.com>
+Content-Language: en-US
+In-Reply-To: <20250922-pci-dt-aspm-v2-1-2a65cf84e326@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0322.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:390::16) To DS2PR12MB9750.namprd12.prod.outlook.com
+ (2603:10b6:8:2b0::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -74,113 +76,290 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO3P265MB1947:EE_
-X-MS-Office365-Filtering-Correlation-Id: 59a2f763-1746-49d8-dca7-08de59adcb35
+X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|IA1PR12MB6114:EE_
+X-MS-Office365-Filtering-Correlation-Id: f8f45e30-1085-40e0-722d-08de59af8e89
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|7053199007;
+	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?VEZmZSs3RXAvUGFoSGxRVzFqeFZQcGt1UWRmSWZkWEh5YmdSN3l5ajhwUzkz?=
- =?utf-8?B?R0VkQTg2T3pjUEpFajJUWkJhZytYbnNPUERQSE9UWnNGM0ZSOXpUVmNkZCtj?=
- =?utf-8?B?bkkxWEtBTk1kcTN3Ym85b0VnUGJqWVdMS2xWbUNZYzdwNXVVSTN1Vyt1WnRy?=
- =?utf-8?B?MWRIYkZXT1hlUC9QRGNoWVU4eEJicUF3azBPblhkVThLbExWS3hDYUF2VmFL?=
- =?utf-8?B?OXN3UlVGblkzc1FvcnNYV29PWGJPYTJXZ0R4Wk1lVklIMWNoVndEalFkMy8r?=
- =?utf-8?B?NXVVWVgyazErRnNQd0xCMnFXU2krVjg5UkkzczRJeFhOMWY3b2lvL21DRFQ4?=
- =?utf-8?B?aXo5N09HUkVpdmluenBDVC9seVJGT0tOTlBURUlWVlRES0QwRGRvN0wzYThC?=
- =?utf-8?B?UGV3VFFWMjR6dkFicDlsMENjcUlyWlpzVllwREg2OFFBd0wxK3pCem1nWDlL?=
- =?utf-8?B?R0IzSytPaDl4VXhiWWhXR3B3TFk0TVhZcDFUbzhxS2k5UmxDb0dDbjBLQTNj?=
- =?utf-8?B?R0JsNTJyUWFoMkE4S3JTWi9iVkZKTmFoVUIrczdNRWo0cW91ZVBKakFzL1Y2?=
- =?utf-8?B?bzJMRmFGQmxzWlgwbXVkSEI0eWgwZW9vSllBNTRQZWsvMUZWaTRVRThZb3dM?=
- =?utf-8?B?MlZvNlVhZmNyMlE4RGZ1VndxMk1FZ0lVMDhVMC9xajVld1FLSWlQZVVRVUY3?=
- =?utf-8?B?NVBESmFiak1RdXFXSktQd3ljOVF1SXpKWXR0dFAweE13MWxKKzE2R204aWd5?=
- =?utf-8?B?bG9EQWU0b1BWRkE4Q0NjcFJqNHphUm5tRzl0Q2UzTzQrUE5GY1FPMnN4dTVs?=
- =?utf-8?B?bFhLZWJRci9Za2lHaWxqeUFaNXRBTFUzQmxyWWgwNnJCY0h5cWpHU0lRSXBF?=
- =?utf-8?B?N1hUUG1nZkJoaUZFbkEzUFhyMW90U3hCSVNYUmFUcUoxdG1UK1M5cGp0Sit4?=
- =?utf-8?B?WmhBeDd6bEduYnVFdFVIRDZmVlo0aHFqb2dSV0tTd2FWVk8rbTdSd0FMbW9N?=
- =?utf-8?B?allRYmk5ekthelp4clN3YjBpblQ4R2t4c1QzTmt6NWw2ZUEvN0ZtZ0l4OVN3?=
- =?utf-8?B?SHRteWEyTXN1amYyRzJBM3ZQZ2taNXdmMmRIbkpLajlmL3VsY1JUV1Jzemtz?=
- =?utf-8?B?TXcrNUlJQWhsdmlicWh0aFU4UTlCckI3eTVPUllGM1ZMNTJ4VURVdlRkTVRB?=
- =?utf-8?B?VHQ2RUVZdTd6c2JTdFI2dHBQSjNsL09KdzBWOFNvME9GczVFNEgzcEttMURH?=
- =?utf-8?B?RDFSamFDVVh1UEVRWWJyODBGUUdZd2ZDSkZoMTdKOExSQ1ZkUU9yREhRSkpp?=
- =?utf-8?B?NWFJZ1orZUZ4YXM3dHhhUzJtSEhSN1l1ak43V2ZKNmNsTUdjTlBVQm0yQ096?=
- =?utf-8?B?VnJKSkVjYS9YRFROWWRZOCtGK09TZ3RPejF6Z0V3cWZKcDNNayszMHUvNHVv?=
- =?utf-8?B?QkZBMXlaOHZJeEg0QmJrZnBSekoycVBtbVBOWU54dFBlSHRyUTdHMmo2NVo5?=
- =?utf-8?B?K2hkZ2NpVEJjK2V1VVFOWmx3V29KRWxybCtuYTNyWkZFbFNPaHVlTUQvOEZ3?=
- =?utf-8?B?TlJXOFV2enBKLzZnODBWY0JVOEFjZWh2WlVuQmJmZVpPNkxCdnFvdEkxSThI?=
- =?utf-8?B?R0Y2Q1hXcGlMeUc0cysvWkdvRG5Gam9WcCszQ1p0aWVYYS92YzZ1MWk3ZXl1?=
- =?utf-8?B?YTd2UHV1ZnFjTXlUemhkVEpabUlWZlp6aXpZZWRuVGVvU2NPbHhzMVBDOTFa?=
- =?utf-8?B?WkZCclRHMUkxTjJ6SFc3elBpQ3NlVzU2ZFZuTlo5Q0NCOHFHUlFzWFk1UGlO?=
- =?utf-8?B?dkUvSnVKcXlRQS9FSDRWR3piZkcxQVhxSWtTWjJHK20vQks2bERVcFJ2NTJL?=
- =?utf-8?B?RllETCsxVlFTcGMxZUdjWXNZRDF4bDVyZFRmZ2VXUEpTdXR2Z2Mvd3RSM3hz?=
- =?utf-8?B?Z04zSXNkcG1vKzRIQVV2WUJ0d0kwWDR1cmFiclZEL0FJNzd4TW1oRndoMnUy?=
- =?utf-8?B?M1dIUm56WXc5MmZ4VTRQaCtJbThaUWhCN3VsV3NlV1lQQUVKdWZzdzg4K1ht?=
- =?utf-8?B?VEtQczZJbGVkcU90WFVqejFYNVFCdFNFdVJUczlCblovU2hDTzgxRi9CZ3Jq?=
- =?utf-8?Q?foXU=3D?=
+	=?utf-8?B?dTJiWFNtOWIxTHVsZllLVzVQQ2VPcDVRZE5IWWsyY3pES2ZoaVZRQnNHR0pZ?=
+ =?utf-8?B?UHcvby9TdnBJSGNsa0xyVE9kZU8rZ2pNWGRLRUdId05keGpyQmk4YXhKZVRN?=
+ =?utf-8?B?TVppUGp0aXN0TEFOOXpDQllIR2xLdVRvZElYY3QvRmNWb3FqNXB5VzJQNXUw?=
+ =?utf-8?B?Ykx3dFZGUmVJcnIvTVhWVE5kcmszZVVoQ3RCbStTT3hqRm1QU2RzWU11SDdi?=
+ =?utf-8?B?VnIxMHA4NGxIWmZXVHNRTXIvNENtcEdDR3c4bjlOWmJ2MXc3OTlrajEvUjVu?=
+ =?utf-8?B?UUNEU3RnVk50aXMzZkhzRjJUa1ZQSE5IMkVoSmRPeWRkc3NHT3Job1lYdVdi?=
+ =?utf-8?B?cm0reXZJenF2QmZ0VzRrUW5CRk5Jbys4allvRnA4Yk5OUC9lWHV6T29WSEpC?=
+ =?utf-8?B?T3JScDY5WUNZR1VvYXRVQWdWV2ptSzM0LzkvaTc5UURpdkJPVDVZVVZwSE1L?=
+ =?utf-8?B?bnl2VlZCN3llSTVFTG9RdVU4L01Ma1hSYVA1M2RIUWY1Tnk1M2NRQ3V3b3Bz?=
+ =?utf-8?B?YmJEVW5uWmhtUDRKQ1l2SDhrcXVmK3l4TnFJd0tXU05Kd3pQUXI4QjFPVEoy?=
+ =?utf-8?B?ZFdRWXNGQU9lZG9YL1VXVURIeUEyTkRYQ0NoeEY2SnpZMG13Rk1tMjJkZUJs?=
+ =?utf-8?B?TnRmZS9zZnVPSmJ5dktHSndlMHBHVVRYTFU2QXpZL295b3lCbllKMTQyMWp3?=
+ =?utf-8?B?TXJxNzBKcnpwcFRtc3BLYUJXanQ3NHBidnJzdXprdGhjWk1zY1lTRXZZTmNa?=
+ =?utf-8?B?MFBlZG40SzdlekZuNjR2djRYVXBjS2hXK2lOcm1Dbm5mMWtjYi9uU01ZRlZ1?=
+ =?utf-8?B?ZnB3VjVyaGFNZTJpQU11elIzeVlDNUhTL2tnck9POVRpWFJOREtHZ1JCKzlt?=
+ =?utf-8?B?VWdkVTE1bzUyQitjUGcyWDFZNy9aVGRYa0l0YUpkdmRjeFZCRWhCUHo0elVG?=
+ =?utf-8?B?NVllOHl0UU5vSExYZTJLcStsRE1HVU9SeHV6V2NSQ1VCeFZ0Z0plYUtXeTVF?=
+ =?utf-8?B?c1d6aDNXcWwvdVl0a2l0SFljUmtZQlFVMy9KQ0N5UzJabjdHTHlMZXhjNXFl?=
+ =?utf-8?B?ZnFLS0Y2UnFKMjlKam5TcjdZSUFnUUZHVC9yQnlFbVBKdjk5VjdBRk82VmYx?=
+ =?utf-8?B?RThQREZWb3NNSGpuMWVzcTNNQm1kY3FQakNrZmR5YXJDbERWU0pLamlOMngw?=
+ =?utf-8?B?NlpzdHhpZ1hSdGo2ZWdpUzhOMWJWemdpODNUTGFCbTRyd0dnR0t1d082ZUtk?=
+ =?utf-8?B?Z2hrTy9WUUt2OEptaVVqZVBhM25qaHRnaWJQWjdlSmJhbXRDM3pONHVPYWxD?=
+ =?utf-8?B?T2JZQ04xSWxVd1ZvRHJpeWMreHVRdEFhK3Y5RElqK3ZFQTRycW45cmN4R3J6?=
+ =?utf-8?B?eTBCdWRaMmMxU3JUdTJHRHZYRnN5K041eHNscHYzbnZscDUveWp1N0NORjdD?=
+ =?utf-8?B?T3NTUUxHNEY0end1b3lscSs2cmJVRWIzSEhKN0VIdThKd3dETDhxMFprTldz?=
+ =?utf-8?B?SHUzcitLSTdUS1ZtVlVsLzMxd20xczlCaERjN3lOQmN4bytLbjIrOWlES2Ey?=
+ =?utf-8?B?VlU0MXFLOEU0UEZncTNKcEQrc3FMejBjYzRpdVBTeDdQaklBTUhqWUZuWEpW?=
+ =?utf-8?B?OWNWMEpjNXhUY004U2hYNFdEZWcwakVBWWlVSGNTQUZJNWxhQy9qek9obVBr?=
+ =?utf-8?B?b3J5LzQ5blBSbEcvbVNmQnZFT25xUmRHT1VmdnNRRlBmRjRITmdXMmM1d3Fy?=
+ =?utf-8?B?ZWIyK1JkL3hjQ3JlOTdkTkxjMmVmdlhsa3ZVaUNDNkk3L0FiWXUzai9wUFI0?=
+ =?utf-8?B?Ly9YdWJQNFRrZU0wc3ZaNHB0M3l4WU9nMVlYZHVoSVdSSWR6SFNOazNSaENP?=
+ =?utf-8?B?b2ZEUnZNdk5BYzNvS3NOT1dsWUQvNEZpZGFXb0w4RGtUalNFSnBIK3BLMkpW?=
+ =?utf-8?B?MDk5ZDFyOHJqc0p1TzFmMVZhRjVnZDI4Ukt5MDRvVFVkWXdOREcwWnBRVEN3?=
+ =?utf-8?B?WkhWYVlMcDFWTFUwcytZdTQwc1BzcGlDNlhQK3FYbVhTbVJFYkFTcTVRUDRk?=
+ =?utf-8?B?SmhtVDBOZE9MaXh5RkJzeVpWdEhGWkxYelVTQ2JtcDkwOWh0UlVKM2tHZVdw?=
+ =?utf-8?Q?ztKg=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(7053199007);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(7053199007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QVdBVWNEalZJUVVJek1hbnpHQ09jdVhNQUNCcHkzKzcwamx6alhzN3pXb2Vy?=
- =?utf-8?B?SjhNZEFXcVlaaXJZWlNRZ1VQOE90SGhBQmZMZHpURWhVTnRKQlRuNzRvYTZS?=
- =?utf-8?B?V1VIVlkwL2UvcVlLN3JZSUIwYmJzV2xhZ2s0UHVXYWNHY2dhakt2dk5VMHMr?=
- =?utf-8?B?Wkk2Wm1aS0NRUWN2Y0QwYU5mczBFRHlBZWxEaXhzTFN1UjJNcFgwd3dWa1Jm?=
- =?utf-8?B?VUxLMzJPMXZteWQ5dHdWUlg0VnBlV1dmbDhNVER6cHZubzV3dmUxaE9ubERm?=
- =?utf-8?B?T2VseVVhZHpKNDBCOHkxQmZOT0laeHk4dVJKREptU29EWndwRGxLSWErYjVK?=
- =?utf-8?B?eWZvNVUxVDZTa3NER3lrUjNDTklkMUVJTDZ5bGlCaVhUL0VYaXhPMlMrbWc2?=
- =?utf-8?B?ZGd0Ny80WGQ1aXNwUlphL2d1VFE0Q1ZLellNZ09aalVBejJlbnNxeEJhdEdy?=
- =?utf-8?B?RGJCSzFFdWV1YWEyZi9ycm02U1YwNTZYeUtzS0Vpb0J6N1hxanUvemozZDB4?=
- =?utf-8?B?eTd1aEZTUzB3WXFWNVR3Q25HWCtpUnZScGQwMDM3bHVFODNLNVplajdQZ1JR?=
- =?utf-8?B?VlRFUUp3UVpkUFh3RHovY1o0UmJ1cG43N25RbDRRelpKVHBBS3oyYVRmUWNC?=
- =?utf-8?B?dXVnaXovZkplRUM5Skc4TDFkSVByWkdaSG5iLzBTRUhlNm40cnJYdHkzRG5I?=
- =?utf-8?B?NURHU1E5eTN1YnEvVGpVQWZkcVA3aTFLRzN0NEZSU05iMW9Oay9KUFZINHlO?=
- =?utf-8?B?UEUrTHY5dkg4aHRicG1oK3hVWStTS0ZaWDdrS1IxazN1RVNMbWRMMDdvVTY0?=
- =?utf-8?B?TkIwOExDbXh2anV4Sk9Rc1l3cHZ6K3lCZXBZSG9JZ3hTVnBxT2h3d2FQc3Vx?=
- =?utf-8?B?Z1JBV25xL0RyeDJvbnFscnRBb1QwcVE3U3dVMUFJZWVNeG5hTTdwTUkzSU00?=
- =?utf-8?B?bE1JT3kyUmFuSDRTUFEzeWYvaGxGNldMUCszV2dGZlBQVHovZDA3TWsvb3Zh?=
- =?utf-8?B?VWFlOWc3azNZZFc1RWRwcFcxeDgvOHV0UU1PaXBhU2xGTFpZakZDTlRCcy85?=
- =?utf-8?B?Uk5FZkQwUDQzOSt4STYycDZhYUt0V0VQUG1sa1VTRnVhVHdQTXdZOFNRWE9l?=
- =?utf-8?B?NlpHdUp3eVRER1RXUTVuQlZVSU53eXNMRXFwVlZkangySVpsNHVvejFHWFZ5?=
- =?utf-8?B?NVgydTFhWHFlNVQxS0V5VjBWYmhzcmpnaGQ3SENxNzNiQmw3LzVCNXpLb2tN?=
- =?utf-8?B?THlRVDlFSmdKWXBGbmtIMkdsVC9lWUp3S0FoU1NjR0lWQnMrYkMzUEVYWE9Z?=
- =?utf-8?B?c0V2TU8xRS91ZHptNUpveTVkUDVORDRaa05IemhndnlMekJYUTk0ajY4aHBz?=
- =?utf-8?B?OVdCR0diSm1YalpzeExZRm5pLzg3M1pzSnNOQk8zdmZ0My9iZXZDL0hsUzNt?=
- =?utf-8?B?Ulk0NHFXNEliSEVyY0hZVU41Q3pPTW5teVYrak8rd2F4VkprZ1BPMmdBcjlL?=
- =?utf-8?B?a3NORGpZL3BVazI2dGVPTzkzemovbzBQNm0wMUw2S3ZqZXZRNk1ZeUl0TUc0?=
- =?utf-8?B?MEk0aS9wRkh6U240NmdaRG9QZDV1bGxvYXJmenU1b05mRzQ3dnVyOFhqU1Qz?=
- =?utf-8?B?SkRPQVVxYVgzNG4zVXhxbUQ5OEhUZldPTERERGN1b0NIMmVURzlNU2llR29l?=
- =?utf-8?B?RXBJTWlFMElyenpOdllIZi9qWGNOTVpPOXZ5RXYxbVBKUktjUEVoSHFaMHAy?=
- =?utf-8?B?MEVsVnUrZWlGaEJuRHFHMm1JeXhQdmEwLzVkaTc0T0dTTEMvZXlwUWh3RWRC?=
- =?utf-8?B?bDlFbnExNitQZm9JM1M2VEt2UGk2RlN0c2l5SVE5anJ4Tk8wTnFQZjhSZzRX?=
- =?utf-8?B?aGlIMzFKVnk2SCtPS3VnMThNTngwWk5xTDV6TS9UQThITis5S3BFRzJWQ1Fw?=
- =?utf-8?B?SHR5S2Rqa0V6ZDQzL1FTZ3NsZGg5SnMvcjR0SlhTVjlwV1FRMHZGMURndnp3?=
- =?utf-8?B?a2FPRGhya0dBdDlTVHN6dlNkWHQ5OFFKcnJjdW5ibFFJTmJhMEQ5L1R5VFh2?=
- =?utf-8?B?QS9zYm43RHlPKytpZjlSTE4xZ0dNRXR1aFR4bm9YVCtxQnVMQ2NMSUtGZlUv?=
- =?utf-8?B?bFQ5ejVyZ1MzRFg3VFhFQ3RQdWY3WFZnaFhRQ2x1MHVBdHI2R2VaamhzMUoz?=
- =?utf-8?B?cGZuNEloR1ZFNkhTV1krZ3JUVnJUWHl0dzAyMU5leGpzZS9XTlZhYkhVdXVy?=
- =?utf-8?B?dDAwMzlHa0EyYlNoQTVScENPdGdPYWU5eUJzR3BnaDJUMmJpOE5kdC95ZlZy?=
- =?utf-8?B?Y3R2alRJdHB0a0p1cFdqSUZjNGpQRW0zNnpwTFBzSnpNNnZVZ1ZkQT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 59a2f763-1746-49d8-dca7-08de59adcb35
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+	=?utf-8?B?WTlObjgzNUVUeG9lRG05NjdPK2cxcFpLZGk2cjNTTzFHS1JSZnlKTFFwTFFw?=
+ =?utf-8?B?dEUyd0IxOW9WckFoWGwzdzRBRzJQbFhlNXc5YUthNnhsY215UWtCdnE2WW15?=
+ =?utf-8?B?N1NvNTN0b3M1T0F0N1Z6Q1phODRtNlFNdURiRHJFM2hYUnI4MUJvMzZPUUVo?=
+ =?utf-8?B?UUdsRms2dWdIVlRkV0dsano0NEJJS2NGdUtSdDdtY1FDVFZYQkJleU9Vb0Zr?=
+ =?utf-8?B?Q1pCTENqWFVaVUtjZSt4aCtjOVJKRG5JK3VpRmtybDMyeGd5Q1dvaXpaNmJJ?=
+ =?utf-8?B?RHhKR2Z0UnJjZURlcnh1NU1ON05pK0c0Z1F6MUwwVVpOODdQNU1KQ2FmZFpY?=
+ =?utf-8?B?OVV5TXBNbFkrNEFVSS8vbk8wRWMrSm12a0hNM01DcVliUUV5UFRzL25xK1J5?=
+ =?utf-8?B?OTM3ZFk0WlpScjBxbmlncHZpZnU1WFNkMFBUZ05mSUNTUlBzWlNVL211Ymxx?=
+ =?utf-8?B?SWZqUUUvL3VaRklTKzQxOWNQcEtOM1k4UnFiaVZ1OWdKTXVOZ1pBeno5SmFT?=
+ =?utf-8?B?cVNxWDdkNzdwQnpzUzNCYndDblJQUHRIV09ybk1FdW9RSmRxclYxazhhK0xa?=
+ =?utf-8?B?STlvRXZJakhDY05KQXNvV05RdElHNnpkTm5IazRlNXovaFhRN3Q3NDFMQzNZ?=
+ =?utf-8?B?ZENuelc4d3pLckhaUnFERHdUZm8zTEhuaUduVVBRQjZuaTJqR0trMGNjVkVq?=
+ =?utf-8?B?RnpqU3ZQY1lBOGVtR0s3RGhYckp5NTduc3JEV1hWMnJZOXFHRlpSN1dLS0VW?=
+ =?utf-8?B?V2wxWm5wUmxKQTRNMUZGMDFMVGxGSlN4K3VtSU9nQ2YyNjVSZU4xZCthV1Zs?=
+ =?utf-8?B?aUlLdVZ0eGhBajR2T3VLS2U5OUdGU0RiMm9NZU5DcllrUlJXVWFCTWVyaUxT?=
+ =?utf-8?B?RkZJRUtQWkRPekxmUHcrZC80TmQycTZpTHVOb29nTXJldS8rZ2ZNQnlzTWxL?=
+ =?utf-8?B?YlVqdDNoUVpzaXZmbDdWb1FKYTg4TnBTakh5ZGxQcWNLZmx0Umt4NlNnSml3?=
+ =?utf-8?B?WExQdlEvRlRKQ2w3aC9id0x5eGg4UFBDdzZ1WXh2dldnbUpXYU5waTBDcmp5?=
+ =?utf-8?B?TlhPTHd1RGcvRlJDWlJIdjU4dzFRT1RaTURZcEZjcTVNWHhjaHdtc09xTGht?=
+ =?utf-8?B?WjFGTTFHNkFsdktaeVVNekhSa1NyWC9Vb3FXd2hzNk1ZejdhYUtsTElMRjl3?=
+ =?utf-8?B?VVRoWnBxVXBnajU1eDZmVlVsNXJzd3JNVTB2djRzMm42NHM0UmVvZWxoY2t3?=
+ =?utf-8?B?Q0N4NXBkTzh1VEJKOVl6bzdtMnY5a1gxY0lGckpkSXNYMGdTWlQ5a1p6VDJw?=
+ =?utf-8?B?NDBicjlaaDlaZEFSYTkway8wV3hFSHExS2Y4bnBIekkwM1owVGtBMFFVa3Bs?=
+ =?utf-8?B?eHRLL1lnU2sxVkhmWklOemppeXg0SGxtWC9wS3pIS0dxMzZLd05mZE9wcmRn?=
+ =?utf-8?B?alhadzZ6bVRJaFBtcnBQemtYK0I5Vm80cHNlYmdSWW9Ga1NsaFJxd1F4eXpR?=
+ =?utf-8?B?U1dzdG9oWW9HMyt0ekw0elFJdU4wUjhVVGNDSTBYR3llaTJaaGFLbkFnNnNz?=
+ =?utf-8?B?bUZFZmpDakVWY0ZEYkdGZnlVblhMZ08zTDgyVDBEZUx5dCtDZEI2emQwNFp6?=
+ =?utf-8?B?THlacXhWRmYzTUJ2YlZqUzhKZWFjeExFVFR4dG9TVi85ZGR5RG02bk5ydHlQ?=
+ =?utf-8?B?LzFNUTM0dVBmbHRwVmlKZ09lTXJBWUg0U0haKzNmM1lCQXpzZndqcmdha2hO?=
+ =?utf-8?B?QjdmVUlINWM3TmhuVUp3aExGQXlDeUZSQ1dYbTZBQXltSUNoUjdEaFRlU3Er?=
+ =?utf-8?B?VW5NREFId0JUbm9zOUwyNFZaV3hBL1hLMW5TRUpaYUNuWjdub0pNQUNtWHds?=
+ =?utf-8?B?OE5uZ0l2ZWdsamlRRjY0UWlPSUlsUHI0ZU9YNzVNQUZQb0xJZTJQVlZYQVlY?=
+ =?utf-8?B?YVBTcDlvclRibGFYbVBGY1V1VURyeFJKVjEzS0tMY1c5YXQ5SDNISHJSU3c1?=
+ =?utf-8?B?WGovaVFmNU5MMWZIaDJiWVl4SWVIeGI1VXBPZFJTdXhEMmtEU3ZTSGNTQW0z?=
+ =?utf-8?B?RU9mM0Z2WHZiZmRZRHUxOGZPaXMxSlJDMnppNDRBT3BQWTlCejNYcHhvbnhl?=
+ =?utf-8?B?THF3b2JtNXo0YXVBaEVQSTUyc1IzQnNTRmtteGpHbk8xTUErTjJxeWVaeUZl?=
+ =?utf-8?B?d0FmRE14OTAvOXZaRXQyczVFQXdtL1pTejhQcGFDRGp0ZWx3aVEwOGVrYWpt?=
+ =?utf-8?B?OUpUYjFYbk5BRFhIZHhLUmR1Vkt4RVBCbllpN216bitaNUZGbGg4ZXo2anI1?=
+ =?utf-8?B?TDVNVmJSMk53R1U2WW1lRy9hbkZQR3lCUDViS1QzNWhEVGdjZU5oQT09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f8f45e30-1085-40e0-722d-08de59af8e89
+X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 12:00:10.7468
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 12:12:48.0797
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BUWR26BLoyH6HIQP7cN3No8bw209nLTu6S9tqAxnaqA0uTARZITCgwJcN84g8v3myf01IGBwIka0USboTKxH9w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO3P265MB1947
+X-MS-Exchange-CrossTenant-UserPrincipalName: rqzyek2T56DHreVQe5MNfluFmg5C7XIQSAbpMJyyUt5z1OpnYCn73l0tgATjPndhVQkq7iJUGIdlkBuxkikAIQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6114
 
-On Wed Jan 21, 2026 at 8:22 PM GMT, Zhi Wang wrote:
-> Add tests exercising the PCI configuration space helpers.
->=20
-> Suggested-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+Hi Manivannan,
 
-Reviewed-by: Gary Guo <gary@garyguo.net>
-
+On 22/09/2025 17:16, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> So far, the PCI subsystem has honored the ASPM and Clock PM states set by
+> the BIOS (through LNKCTL) during device initialization, if it relies on the
+> default state selected using:
+> 
+> * Kconfig: CONFIG_PCIEASPM_DEFAULT=y, or
+> * cmdline: "pcie_aspm=off", or
+> * FADT: ACPI_FADT_NO_ASPM
+> 
+> This was done conservatively to avoid issues with the buggy devices that
+> advertise ASPM capabilities, but behave erratically if the ASPM states are
+> enabled. So the PCI subsystem ended up trusting the BIOS to enable only the
+> ASPM states that were known to work for the devices.
+> 
+> But this turned out to be a problem for devicetree platforms, especially
+> the ARM based devicetree platforms powering Embedded and *some* Compute
+> devices as they tend to run without any standard BIOS. So the ASPM states
+> on these platforms were left disabled during boot and the PCI subsystem
+> never bothered to enable them, unless the user has forcefully enabled the
+> ASPM states through Kconfig, cmdline, and sysfs or the device drivers
+> themselves, enabling the ASPM states through pci_enable_link_state() APIs.
+> 
+> This caused runtime power issues on those platforms. So a couple of
+> approaches were tried to mitigate this BIOS dependency without user
+> intervention by enabling the ASPM states in the PCI controller drivers
+> after device enumeration, and overriding the ASPM/Clock PM states
+> by the PCI controller drivers through an API before enumeration.
+> 
+> But it has been concluded that none of these mitigations should really be
+> required and the PCI subsystem should enable the ASPM states advertised by
+> the devices without relying on BIOS or the PCI controller drivers. If any
+> device is found to be misbehaving after enabling ASPM states that they
+> advertised, then those devices should be quirked to disable the problematic
+> ASPM/Clock PM states.
+> 
+> In an effort to do so, start by overriding the ASPM and Clock PM states set
+> by the BIOS for devicetree platforms first. Separate helper functions are
+> introduced to override the BIOS set states by enabling all of them if
+> of_have_populated_dt() returns true. To aid debugging, print the overridden
+> ASPM and Clock PM states as well.
+> 
+> In the future, these helpers could be extended to allow other platforms
+> like VMD, newer ACPI systems with a cutoff year etc... to follow the path.
+> 
+> Link: https://lore.kernel.org/linux-pci/20250828204345.GA958461@bhelgaas
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> Link: https://patch.msgid.link/20250916-pci-dt-aspm-v1-1-778fe907c9ad@oss.qualcomm.com
 > ---
->  samples/rust/rust_driver_pci.rs | 28 ++++++++++++++++++++++++++++
->  1 file changed, 28 insertions(+)
+>   drivers/pci/pcie/aspm.c | 42 ++++++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 40 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 919a05b9764791c3cc469c9ada62ba5b2c405118..cda31150aec1b67b6a48b60569222ea3d1c3d41f 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -15,6 +15,7 @@
+>   #include <linux/math.h>
+>   #include <linux/module.h>
+>   #include <linux/moduleparam.h>
+> +#include <linux/of.h>
+>   #include <linux/pci.h>
+>   #include <linux/pci_regs.h>
+>   #include <linux/errno.h>
+> @@ -235,13 +236,15 @@ struct pcie_link_state {
+>   	u32 aspm_support:7;		/* Supported ASPM state */
+>   	u32 aspm_enabled:7;		/* Enabled ASPM state */
+>   	u32 aspm_capable:7;		/* Capable ASPM state with latency */
+> -	u32 aspm_default:7;		/* Default ASPM state by BIOS */
+> +	u32 aspm_default:7;		/* Default ASPM state by BIOS or
+> +					   override */
+>   	u32 aspm_disable:7;		/* Disabled ASPM state */
+>   
+>   	/* Clock PM state */
+>   	u32 clkpm_capable:1;		/* Clock PM capable? */
+>   	u32 clkpm_enabled:1;		/* Current Clock PM state */
+> -	u32 clkpm_default:1;		/* Default Clock PM state by BIOS */
+> +	u32 clkpm_default:1;		/* Default Clock PM state by BIOS or
+> +					   override */
+>   	u32 clkpm_disable:1;		/* Clock PM disabled */
+>   };
+>   
+> @@ -373,6 +376,18 @@ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
+>   	pcie_set_clkpm_nocheck(link, enable);
+>   }
+>   
+> +static void pcie_clkpm_override_default_link_state(struct pcie_link_state *link,
+> +						   int enabled)
+> +{
+> +	struct pci_dev *pdev = link->downstream;
+> +
+> +	/* Override the BIOS disabled Clock PM state for devicetree platforms */
+> +	if (of_have_populated_dt() && !enabled) {
+> +		link->clkpm_default = 1;
+> +		pci_info(pdev, "Clock PM state overridden: ClockPM+\n");
+> +	}
+> +}
+> +
+>   static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
+>   {
+>   	int capable = 1, enabled = 1;
+> @@ -395,6 +410,7 @@ static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
+>   	}
+>   	link->clkpm_enabled = enabled;
+>   	link->clkpm_default = enabled;
+> +	pcie_clkpm_override_default_link_state(link, enabled);
+>   	link->clkpm_capable = capable;
+>   	link->clkpm_disable = blacklist ? 1 : 0;
+>   }
+> @@ -788,6 +804,26 @@ static void aspm_l1ss_init(struct pcie_link_state *link)
+>   		aspm_calc_l12_info(link, parent_l1ss_cap, child_l1ss_cap);
+>   }
+>   
+> +static void pcie_aspm_override_default_link_state(struct pcie_link_state *link)
+> +{
+> +	struct pci_dev *pdev = link->downstream;
+> +	u32 override;
+> +
+> +	/* Override the BIOS disabled ASPM states for devicetree platforms */
+> +	if (of_have_populated_dt()) {
+> +		link->aspm_default = PCIE_LINK_STATE_ASPM_ALL;
+> +		override = link->aspm_default & ~link->aspm_enabled;
+> +		if (override)
+> +			pci_info(pdev, "ASPM states overridden: %s%s%s%s%s%s\n",
+> +				 (override & PCIE_LINK_STATE_L0S) ? "L0s+, " : "",
+> +				 (override & PCIE_LINK_STATE_L1) ? "L1+, " : "",
+> +				 (override & PCIE_LINK_STATE_L1_1) ? "L1.1+, " : "",
+> +				 (override & PCIE_LINK_STATE_L1_2) ? "L1.2+, " : "",
+> +				 (override & PCIE_LINK_STATE_L1_1_PCIPM) ? "L1.1 PCI-PM+, " : "",
+> +				 (override & PCIE_LINK_STATE_L1_2_PCIPM) ? "L1.2 PCI-PM+" : "");
+> +	}
+> +}
+> +
+>   static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+>   {
+>   	struct pci_dev *child = link->downstream, *parent = link->pdev;
+> @@ -868,6 +904,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+>   	/* Save default state */
+>   	link->aspm_default = link->aspm_enabled;
+>   
+> +	pcie_aspm_override_default_link_state(link);
+> +
+>   	/* Setup initial capable state. Will be updated later */
+>   	link->aspm_capable = link->aspm_support;
+
+
+Since this commit was added in Linux v6.18, I have been observing a 
+suspend test failures on some of our boards. The suspend test suspends 
+the devices for 20 secs and before this change the board would resume in 
+about ~27 secs (including the 20 sec sleep). After this change the board 
+would take over 80 secs to resume and this triggered a failure.
+
+Looking at the logs, I can see it is the NVMe device on the board that 
+is having an issue, and I see the reset failing ...
+
+  [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
+   flow control rx/tx
+  [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
+   0 timeout, reset controller
+  [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
+  [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
+  [ 1003.050481] OOM killer enabled.
+  [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
+
+ From the above timestamps the delay is coming from the NVMe. I see this 
+issue on several boards with different NVMe devices and I can workaround 
+this by disabling ASPM L0/L1 for these devices ...
+
+  DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
+  DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
+  DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
+  DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
+
+I am curious if you have seen any similar issues?
+
+Other PCIe devices seem to be OK (like the realtek r8169) but just the 
+NVMe is having issues. So I am trying to figure out the best way to 
+resolve this?
+
+Thanks
+Jon
+
+-- 
+nvpublic
 
