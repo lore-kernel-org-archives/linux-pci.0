@@ -1,96 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB27D35581F;
-	Thu, 22 Jan 2026 21:57:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 264553C23D9
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 22:29:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769119047; cv=none; b=D13lSWAcTAYhbdD5bv3VyMGAjWMiqU8k3+iCT/eVRI6FaLcoSoMb3LUP+kUu1aKjwe6Rbe2pTJ4rU17Gm5ULBPzFpMfMhakJTp3Cr1hEgmAOSqigYNjYzvRXu0lkaNszgX80GMjyGArHbIh7GeBCGTDN9qwdvuYEcfP4VydN9jk=
+	t=1769120963; cv=none; b=Y1oxIDxtamTdLIvB3UPM9Hruh4g6uVN/skr+Qrvtj2IpuLc124kIXriAhG6hy+AAFbaUdTYs1QmOizQfPjSUv/Dar+Ks9aytyX1xUTtUOWJppY9Kqs0ZWfMkmmmZYTbg9BZcISFjcWo7Tgd4Zrdv9DsaVxYxdmcrUDSwHMovuWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769119047; c=relaxed/simple;
-	bh=0Q0zyAy9zV7dwwb1OCxjfkZlprPGqSNsWWmjT4yZCZI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ojvrWxwn16XZG/UB/8Dc5U0OwIY9xMw92S+v1zbW20OtM6kLESTtu1S1UNwhBEmlxPpET8XixMp1Q9dE4R3CPSwK2QoXMHhnVnmX/SAfAXc8Di0BMB04twzix4wygSgBSyn/l4O02eUI0Ho6dU+Naj+XGAH8vph9uEScDto5/V4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ETJpASJE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769120963; c=relaxed/simple;
+	bh=jZ+GwXaHld1JIHylYiSQt7CpAKN4r0mAXG+hD99m+ss=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=enGf3JIqA7eP94ZwEsWmAiO0xCCDlEJ774BpGbEXSvEWDoccU/vigOWS45mQ7VEdJAjvYlujWtEINsipZndCzOc4aPfFgz9mSTWFCt1THwESMwW1BWVts3hoVBhItg8XTKbG09/Df9eohbPK6JA6/jbvjGLR1KB5xWv+2dsTcoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZLBPhAjo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ETJpASJE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57DDFC116C6;
-	Thu, 22 Jan 2026 21:57:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZLBPhAjo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 895ACC116C6;
+	Thu, 22 Jan 2026 22:29:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769119045;
-	bh=0Q0zyAy9zV7dwwb1OCxjfkZlprPGqSNsWWmjT4yZCZI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ETJpASJESIE3KFlXLeVXEXTU3eN2Mp4WkK5P1vMqE0C4Yyr6Fsz1z+eQ0K/pePWzh
-	 LSO+YwbmQIA9XcfS1dzLenXyiEEXbpcYJqJE7JcSRgm4CqDdkw+KhxzFuSTUf5JG+K
-	 CkpzEPluJ82gHeSqzXSVP3Hxpzccs1h4PV0MSA35MgN9DtZWXCnq8UQnlo/ZiRcrOT
-	 TYIZ1cmlUEIuDcPhUZhgpR6BIBo15vGv4iU6BsSd1d7ayP6nzByp/0q0/YmWu/ULXW
-	 gr1EAlUA1W4zXAmFq9u4nm+r65IAF4XFL4gGdN2pAWiYogp0zHYFLcyAaeU3Hlrdwu
-	 yqyHWAmzlEGTw==
-Date: Thu, 22 Jan 2026 22:57:20 +0100
+	s=k20201202; t=1769120962;
+	bh=jZ+GwXaHld1JIHylYiSQt7CpAKN4r0mAXG+hD99m+ss=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ZLBPhAjogRdHioalnlmi9fqjdTqhRHvvzzBA9DQPCPbv7tS/hnoV+SAhmCc+u8j0j
+	 7Mw/ZVq5/PKV4J1dwJ7pbPxreUfNw1A4AhnxodyM3yggXIv6zbDWkAfMKjvoK7P3V3
+	 qJyhIDrYtwQAkC06QwtRZtVrsn10bejGjlYO3VXuqzmyaMlOj2SUQsLdgNGht3RNcw
+	 QRdAdg6Z89QbbeMBL79fDl1xqW4/4PjuCSCCLkFXgmW/agvy1gD06iIeBMgFbjCpgA
+	 khSLWIUWb7TICDsH6Vf49i2dk3EV2eAf48pkYxlgRCX7e+WjOGgfER0Qm9K8LlNsU4
+	 acc8/Gc806DMg==
 From: Niklas Cassel <cassel@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
+To: Jingoo Han <jingoohan1@gmail.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Frank Li <Frank.Li@nxp.com>,
-	Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	macro@orcam.me.uk
-Subject: Re: [PATCH v2 3/3] PCI: dwc: Fix missing iATU setup when ECAM is
- enabled
-Message-ID: <aXKdQFTjz5O14ZZ8@ryzen>
-References: <20251229-ecam_io_fix-v2-0-41a0e56a6faa@oss.qualcomm.com>
- <20251229-ecam_io_fix-v2-3-41a0e56a6faa@oss.qualcomm.com>
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Randolph Lin <randolph@andestech.com>,
+	Samuel Holland <samuel.holland@sifive.com>,
+	Charles Mirabile <cmirabil@redhat.com>,
+	tim609@andestech.com,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 0/4] PCI: dwc: Clean up iatu index mess
+Date: Thu, 22 Jan 2026 23:29:14 +0100
+Message-ID: <20260122222914.523238-6-cassel@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251229-ecam_io_fix-v2-3-41a0e56a6faa@oss.qualcomm.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1013; i=cassel@kernel.org; h=from:subject; bh=jZ+GwXaHld1JIHylYiSQt7CpAKN4r0mAXG+hD99m+ss=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDKLluzSzp/QPqFzt4H5gumL6xdzplXLSmoJec4Qq/uqP 3Wmj/+XjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAExEqpfhf8Ku5R84b72WZs3o Xdzo9CvYsMFiWVTnjP0uOoy7GCY7CzAynLZ5v2l3XveFFcmOrsu2sn9y1/oVnHGpQXZ6qzXzo5g yfgA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Mon, Dec 29, 2025 at 04:12:43PM +0530, Krishna Chaitanya Chundru wrote:
-> @@ -476,6 +476,9 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
->  	u32 retries, val;
->  	u64 limit_addr;
->  
-> +	if (atu->index > pci->num_ob_windows)
-
-This should be:
-
-if (atu->index >= pci->num_ob_windows)
+This series tries to clean up the iatu index mess, by treating
+iatu indexing for outbound and inbound address translation in
+a consistent way (increment the index after assignment, and only
+if the function call succeeded).
 
 
-> +		return -ENOSPC;
-> +
->  	limit_addr = parent_bus_addr + atu->size - 1;
->  
->  	if ((limit_addr & ~pci->region_limit) != (parent_bus_addr & ~pci->region_limit) ||
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index e995f692a1ecd10130d3be3358827f801811387f..efbcc141a26e179cb2e4acf6d2d19d75535ddb91 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -424,7 +424,6 @@ struct dw_pcie_rp {
->  	raw_spinlock_t		lock;
->  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  	bool			use_atu_msg;
-> -	int			msg_atu_index;
->  	struct resource		*msg_res;
->  	bool			use_linkup_irq;
->  	struct pci_eq_presets	presets;
-> @@ -502,6 +501,7 @@ struct dw_pcie {
->  	resource_size_t		atu_phys_addr;
->  	size_t			atu_size;
->  	resource_size_t		parent_bus_offset;
-> +	int			ob_atu_index;
->  	u32			num_ib_windows;
->  	u32			num_ob_windows;
->  	u32			region_align;
-> 
-> -- 
-> 2.34.1
-> 
+Changes since v1:
+-Added patch 4/4 from Krishna which fixes iatu indexing when using ECAM.
+ I've adapted the patch to my clean up series and fixed some bugs.
+
+
+Link to v1:
+https://lore.kernel.org/linux-pci/20260122145411.453291-4-cassel@kernel.org/
+
+
+Krishna Chaitanya Chundru (1):
+  PCI: dwc: Fix missing iATU setup when ECAM is enabled
+
+Niklas Cassel (3):
+  PCI: dwc: Fix msg_atu_index assignment
+  PCI: dwc: Improve msg_atu_index error handling
+  PCI: dwc: Clean up iatu index usage in dw_pcie_iatu_setup()
+
+ .../pci/controller/dwc/pcie-designware-host.c | 92 +++++++++++--------
+ drivers/pci/controller/dwc/pcie-designware.c  |  6 ++
+ 2 files changed, 61 insertions(+), 37 deletions(-)
+
+
+base-commit: e9a5415adb209f86a05e55b850127ada82e070f1
+-- 
+2.52.0
+
