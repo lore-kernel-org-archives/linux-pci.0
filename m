@@ -1,75 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 322D822F388;
-	Thu, 22 Jan 2026 10:22:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59AF6310635;
+	Thu, 22 Jan 2026 10:23:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769077379; cv=none; b=DaGnONje+ecBPeoTxw+MqkpedjnDxZm46cspfHKQz1WM0Cf+nsSlBZwXQic3gDGjExIcKdR71p4LYnmvX3E8LOn8Qkg/o4RP8r0N9U3b7RqO3LT4FCErH+GgGXCQfvQqBwIl17jneYwjp7IJjACzc2H2iUQZxP4KvXszjHBtCbk=
+	t=1769077424; cv=none; b=ZYX0cVd8j0fBxb2frufnL56VOfoXWF0wdCnOHx/+Q+oWMLOh9bCHnKw6ukLZGtQ6RREcku1svfk8drsutVrM6kOO2pXhJLNKrv/t0H991bqrsAOU6qe7f8VI984znXQgIKEd/7SgXsw81S2Od+4A5RlY8WutuNK/viU1CMJkdf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769077379; c=relaxed/simple;
-	bh=kT4mlWylBTehL4zttxMz1bZDT7RsJT3UKca38Q2+FGQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=rP3mmO0F7Jo/yIWjmKqexvpeIt/r2safBwsfe7C00pt62Q+v2pXr2sgs7uKwfSgCiOfHJHKpATX86qa4zlheDzMX7I2Vl7OqR8mSXbB/rv5uFQVfCkumpip+NWqbc+f1gGU8sv9QSRxUvOhqpewxA2JO4e1fqaPa52rCf2XH0a0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z4+YbGt0; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z4+YbGt0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1ED8C116C6;
-	Thu, 22 Jan 2026 10:22:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769077379;
-	bh=kT4mlWylBTehL4zttxMz1bZDT7RsJT3UKca38Q2+FGQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=Z4+YbGt0EmMwS3RGo8HvrjHlLUTH1r1IGaR7g3wmuvJw47MW8qV3hLYZxAfsWxb6J
-	 N2WCyOZpXhjYxB8NIBBb2By6KYm6gIMdlGNGjbvDV5wzK5RANt1nN9Oq5Q/KjC+LI9
-	 9FbcviqlQSA9xxhI+pa4V4HlydvJf+A3uQ1URBf9TdH0VVGOU0NdML1R+aqu/k8enV
-	 o54UUy8Z7dQubUMWqAwNypLN3UOMDyNZnAMtreVL6EOQ/Exw3x6hDbI8HIW++lrQlf
-	 3kcGwT0VQmP/B/tfh0vRgWMU/jldIqLyUSgFkvVMH95IiTSA+hXq8b02qDmAadmj2L
-	 HGnELr2WMLXkQ==
-Date: Thu, 22 Jan 2026 04:22:57 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Haakon Bugge <haakon.bugge@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Johannes Thumshirn <morbidrsa@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] PCI: Initialize RCB from pci_configure_device
-Message-ID: <20260122102257.GA1239174@bhelgaas>
+	s=arc-20240116; t=1769077424; c=relaxed/simple;
+	bh=yD2/iPO1Re6uMZvT5xcs+mmWcDT9/QLo5MO/p+6UnGg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VKJ9sf7DFcjz2QghGFuXIpV1H9JaLHqdXeKxKi63aDOGB3BeeIsFl4Y8vCoHvPl9lk622nwpkImeP9c+/ki1AecGfdR8dpU3043TC8amP/l4Diy2jMg279R4BLHNisx8SsKAtDxU/kbrd1NoWlIhlIlmJvl1By3j5y3xr5+anRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [10.213.20.167] (unknown [210.73.43.101])
+	by APP-03 (Coremail) with SMTP id rQCowABXZ85++nFpwkNDBg--.14326S2;
+	Thu, 22 Jan 2026 18:22:56 +0800 (CST)
+Message-ID: <8e0cae73-3ca0-47a8-8ac7-aa8edba3e0f9@iscas.ac.cn>
+Date: Thu, 22 Jan 2026 18:22:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2C6ECE99-B9CD-4325-87D2-A2E212BDBDA3@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/4] PCI/MSI: Check msi_addr_mask in
+ msi_verify_entries()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Madhavan Srinivasan <maddy@linux.ibm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ "Creeley, Brett" <bcreeley@amd.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, Han Gao <gaohan@iscas.ac.cn>,
+ linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+ amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+ netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, linux-riscv@lists.infradead.org,
+ sophgo@lists.linux.dev, Thomas Gleixner <tglx@kernel.org>
+References: <20260121233804.GA1221537@bhelgaas>
+Content-Language: en-US
+From: Vivian Wang <wangruikang@iscas.ac.cn>
+In-Reply-To: <20260121233804.GA1221537@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:rQCowABXZ85++nFpwkNDBg--.14326S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7tFy3GF15Cr48tryxAFy3twb_yoW8CFyxpa
+	yDKa1qyrsYk3yUJrsFqw1UXF1jvFZYqayfGrWUK34Y9FnIvFnFyrySka47u3srXF1xGw10
+	vF1Yya1UJFs09aDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvK14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
+	c2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
+	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
+	67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
+	IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
+	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxh
+	VjvjDU0xZFpf9x0pRVVbgUUUUU=
+X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
 
-On Thu, Jan 22, 2026 at 09:42:46AM +0000, Haakon Bugge wrote:
-> > On Wed, Jan 21, 2026 at 12:35:40PM +0100, Håkon Bugge wrote:
-> > [snip]
-> 
-> > RCB isn't meaningful for switches, so we'll read their LNKCTL
-> > unnecessarily.  I propose something like this, which also clears RCB
-> > if it's set when it shouldn't be (I think this would indicate a
-> > firmware defect):
-> > 
-> >        /*
-> >         * Per PCIe r7.0, sec 7.5.3.7, RCB is only meaningful in Root Ports
-> >         * (where it is read-only), Endpoints, and Bridges.  It may only be
-> >         * set for Endpoints and Bridges if it is set in the Root Port.
-> >         */
-> >        if (!pci_is_pcie(dev) ||
-> >            pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> >            pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM ||
-> >            pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
-> >            dev->is_virtfn)
-> 
-> I see that sec 1.3.2 defines "Endpoints are classified as either
-> legacy, PCI Express, or Root Complex Integrated Endpoints (RCiEPs)."
-> But, shouldn't we also exclude Root Complex Event Collectors
-> (PCI_EXP_TYPE_RC_EC)?
 
-Yes, probably so.
+On 1/22/26 07:38, Bjorn Helgaas wrote:
+> [+cc Thomas, thread at https://lore.kernel.org/r/20260121-pci-msi-addr-mask-v2-0-f42593168989@iscas.ac.cn]
+>
+> On Wed, Jan 21, 2026 at 11:49:38AM +0800, Vivian Wang wrote:
+>> Instead of a 32-bit/64-bit dichotomy, check the MSI address against
+>> msi_addr_mask.
+>>
+>> This allows platforms with MSI doorbell above 32-bit address space to
+>> work with devices without full 64-bit MSI address support, as long as
+>> the doorbell is within addressable range of MSI of the device.
+>>
+>> Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
+>>
+>> ---
+>> v2: No changes
+>> ---
+>>  drivers/pci/msi/msi.c | 9 ++++++---
+>>  1 file changed, 6 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+>> index 48f5f03d1479..2ecbcd6c436a 100644
+>> --- a/drivers/pci/msi/msi.c
+>> +++ b/drivers/pci/msi/msi.c
+>> @@ -321,14 +321,17 @@ static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
+>>  static int msi_verify_entries(struct pci_dev *dev)
+>>  {
+>>  	struct msi_desc *entry;
+>> +	u64 address;
+>>  
+>>  	if (dev->msi_addr_mask == DMA_BIT_MASK(64))
+>>  		return 0;
+>>  
+>>  	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+>> -		if (entry->msg.address_hi) {
+>> -			pci_err(dev, "arch assigned 64-bit MSI address %#x%08x but device only supports 32 bits\n",
+>> -				entry->msg.address_hi, entry->msg.address_lo);
+>> +		address = (u64)entry->msg.address_hi << 32 |
+>> +			  entry->msg.address_lo;
+>> +		if (address & ~dev->msi_addr_mask) {
+>> +			pci_err(dev, "arch assigned 64-bit MSI address %llx above device MSI address mask %llx\n",
+> Use %#llx so it's clear these addresses are hex.  The previous message
+> did that, not sure why you dropped it.
+
+Thanks for catching. I misunderstood the purpose of the original message
+formatting.
+
+I will fix this in v3.
+
+Vivian "dramforever" Wang
+
