@@ -1,241 +1,193 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+Received: from mail-m1973179.qiye.163.com (mail-m1973179.qiye.163.com [220.197.31.79])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA4543AE6E0
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 12:51:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 970BA33D6CD;
+	Thu, 22 Jan 2026 12:51:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.79
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769086298; cv=none; b=ucg+YLMojvzFM8wYFOWgA5u69QNaV02QQZzLN3L+h9wmLFY5nJP5ZbNSNizWxmojWA0AAwN0iaI55urpqh6fLZaRxmPG4O5u8sDfd0BCYOjegTGRF6rf+MDsvNB05GCOcUH0xgXV4yoK3jQ280Jv4gkUJTJPIIg/BPForvJtV6Y=
+	t=1769086326; cv=none; b=VBHH80oVeOhS906CbPpOUD5Aowu1NyUxyeo8trbD/vTV+c43Vk1pHJi/ux0YQ8eg7MF2HR0PHoW5pnbJJL5sblA+ZRg8cC0cogXFA1dLUMtJnStDdGvoFxpHTpL00HP+E7fPml7rDop1OKCYUYf4cEvcVgQR/osZPymSX83w3Dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769086298; c=relaxed/simple;
-	bh=YTUoMiMvmALkqCTyfatdyMPygfkUCYqDU3rvdHQ1f30=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VHfKUiZCZqATmku07TLpc7qKkv3FCK26FHrRlTzdgIZJ19U9vnn3zrruHBEsi/BqtPvCbouVUnLCezmy371vLaAbMPoV3Ox4IFde1RML6BUO2fNh+jucznvrqMkGD/bv4MjZ6Bw1eqwkvic30rLlXlPVZDzlcyHz5t4xFAklSM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=eziGV2S8; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1769086326; c=relaxed/simple;
+	bh=oH4OPF0tawrZSboWsqQV8Wk5V/Ve1JkWG943xoj6I/U=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=VLbO2MmNM9oCAyVPlbB7LuulnXPicEIfPf3zXFk65XjspdyKkKNzCsDubVZJCrpr9D2zqgT2z3eE/xSOSouVMT2ZtW/zxDkMJPBf1dtZ7gILfvLWpXcm5no4ZoWXfwA2hYwf1A7JOZj4uvDtYo6teiDDcSegQz9HCQ+6pSZQz+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=IIzq8JcI; arc=none smtp.client-ip=220.197.31.79
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="eziGV2S8"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 8174824002A
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 13:42:07 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1769085727; bh=sZ1lXBwnqBcy25rguzwRQgOv8RFUDK2HqRA30fULMTU=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
-	b=eziGV2S8Z6LimuDExWfGdtwpqLrBPDLd7cxsQGgUWL/xboG4jR8Rx0b08RrC5h2cj
-	 kzlfz7plrjngO88F6rD7lWYcP7VhFwUOZ/Lq8TFHbvvu5ZhtaSKhVFk0laxLwiwjr0
-	 eaCJydx5OCEUX4NzhH96m8R+KUL3ikfnvR28zQMn7hpn1T8AfxgLaGKx7Z9gAyRUn5
-	 02r/XEtFx56o/P53rnijL3Ish5VQE2u+VgRaDXvo976CuilCzBvkDZZXQGbGBsioZs
-	 nmPKUFo+yvN3jHaRGKvdxa/eBI1bVPSJ4dCtwWx/Z1aNcge1Bh/z3q9G6fxxi3ikZy
-	 +GxNTc+rn0MUQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4dxggF324tz6v45;
-	Thu, 22 Jan 2026 13:42:01 +0100 (CET)
-From: Markus Probst <markus.probst@posteo.de>
-Subject: [PATCH RESEND v10 0/3] rust: leds: add led classdev abstractions
-Date: Thu, 22 Jan 2026 12:42:05 +0000
-Message-Id: <20260122-rust_leds-v10-0-fb9edb04b080@posteo.de>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="IIzq8JcI"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 3192b0431;
+	Thu, 22 Jan 2026 16:15:54 +0800 (GMT+08:00)
+Message-ID: <09f9acc1-d1ad-4971-8488-f0268cf08799@rock-chips.com>
+Date: Thu, 22 Jan 2026 16:15:52 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: dwc: Rename has_msi_ctrl to uses_imsi_rx for
+ clarity
+To: Qiang Yu <qiang.yu@oss.qualcomm.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+References: <20260121-remove_cap_clean_up-v1-0-e78115e5d467@oss.qualcomm.com>
+ <20260121-remove_cap_clean_up-v1-2-e78115e5d467@oss.qualcomm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20260121-remove_cap_clean_up-v1-2-e78115e5d467@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
- Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
- Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng <boqun.feng@gmail.com>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- Markus Probst <markus.probst@posteo.de>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4767;
- i=markus.probst@posteo.de; h=from:subject:message-id;
- bh=YTUoMiMvmALkqCTyfatdyMPygfkUCYqDU3rvdHQ1f30=;
- b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBpchsCTb0N03WkFC2xqkoiERSMsVD1exe6zRKKn
- osGG/5EO0eJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaXIbAhsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9KyyBAAgpGQQhPZKLRcI3CqkhvbARDjGbAPqbI
- DYq6wN6ixk7+q8KBNfailYvGuZ/CAgnapeGAzV373CGsi+LcNRl/vgV6yw11tjhjJXHx6tafaA0
- sqKyspabR+i8z1TeTBwpCAtMRPRGKuKHsgbzN9xC8C5mW2px5gmU++oPX/Gr35ErsM2+ooBP2kp
- yVZW3bla5BPvH+BoS0tMjZsWTiXfSYN5t6ua3HWw2JaDJ1dL8wce1z/39xLPMwJ2xr7mjdY+Xkp
- ewMjqNs5MO+602w5Qe0Vq6myC0chEKn8KggrMS2QTF6mywBLKyuW+PooVlSsRAWD1uDTyxSU5sj
- PVeng3UfGwRgpC8aOTrQifkgG36zLFr0SYmJwQfH5W7ZPOOJtSVV19ZQxoWCb/gpG93tTcA2+7a
- PcRG0VptdsmQ8J94oksEBPZt5FNUCTJaEnodzplv+HA3rCMwicHzdIBI9/xBVauIW95bPkkPyWo
- 5aGAb6IVKCENCeqKN3HXVKJ3kCZB5opEcHpK9orAH+s0wux4/vXA2swGsBqE9qqRe0686YZ3MKx
- uteAM0WuZ0/GnO8OeOBONC8mq0wCQ+7OuRuXYWlSJdIuMLz9IP/hG6O1xqXn5dUn0Vmsd3+BdD/
- CsDkz+mNm6wvk5rah0cfZ39cLxS4vVa+f/XdKm9WOyAJLDErpx1Q=
-X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
- fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+X-HM-Tid: 0a9be4c636e609cckunm14ea87cebf7b7
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGh4ZTFZNSkMaTEIYGUxNSUJWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=IIzq8JcI67qI+Dej9wE1vfiMIsKuAUdRsUki9Ewyc7/ZpxtxzVmnNKLSNyKh82lfwWaWUAdIg1aYu1obrvEdqH62PYny5b6liDg6SbF5mbVWmFt1N31hJz9v1Ebv7a2eTmE9GntwawGWNoEGh5gyD2xBOI6tVVdyT7pFV/AgHoQ=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=G7KAe8O/EONhIsPqZsYfU/8r+5SxhjqCO/8SBOh5FdI=;
+	h=date:mime-version:subject:message-id:from;
 
-This patch series has previously been contained in
-https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
-which added a rust written led driver for a microcontroller via i2c.
+Hi Qiang,
 
-As the reading and writing to the i2c client via the register!
-macro has not been implemented yet [1], the patch series will only
-contain the additional abstractions required.
+在 2026/01/22 星期四 15:45, Qiang Yu 写道:
+> The current "has_msi_ctrl" flag name is misleading because it suggests the
+> presence of any MSI controller, while it is specifically set for platforms
+> that lack .msi_init() callback and don't have "msi-parent" or "msi-map"
+> device tree properties, indicating they rely on the iMSI-RX module for MSI
+> functionality.
+> 
+> Rename it to "uses_imsi_rx" to make the intent clear:
+> - When true: Platform uses the iMSI-RX module for MSI handling
+> - When false: Platform has other MSI controller support (ITS/MBI, custom
+> handlers)
+> 
+> No functional changes, only improves code readability and eliminates
+> naming confusion.
+> 
 
-[1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@kernel.org/
+I love this patch, it's indeed confusing. But I noticed the naming
+seems inconsistency, for instance, there are already use_atu_msg,
+use_parent_dt_ranges, etc. Should we use use_imsi_rx instead?
 
-The following changes were made:
-* add basic led classdev abstractions to register and unregister leds
+But in any case,
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-* add basic led classdev abstractions to register and unregister
-  multicolor leds
-
-Changes since v9:
-* add missing periods in documentation
-* duplicate `led::Device` and `led::Adapter` instead of using a complex
-  trait
-* fix imports not using prelude
-* adapt to CStr change
-* documented `led::Color::Multi` and `led::Color::Rgb`
-
-Changes since v8:
-* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
-* make functions in `MultiColorSubLed` const
-* drop the "rust: Add trait to convert a device reference to a bus
-  device reference" patch, as it has been picked into driver-core
-
-Changes since v7:
-* adjusted import style
-* added classdev parameter to callback functions in `LedOps`
-* implement `led::Color`
-* extend `led::InitData` with
-  - initial_brightness
-  - default_trigger
-  - default_color
-* split generic and normal led classdev abstractions up (see patch 3/4)
-* add multicolor led class device abstractions (see patch 4/4)
-* added MAINTAINERS entry
-
-Changes since v6:
-* fixed typos
-* improved documentation
-
-Changes since v5:
-* rename `IntoBusDevice` trait into `AsBusDevice`
-* fix documentation about `LedOps::BLOCKING`
-* removed dependency on i2c bindings
-* added `AsBusDevice` implementation for `platform::Device`
-* removed `device::Device` fallback implementation
-* document that `AsBusDevice` must not be used by drivers and is
-  intended for bus and class device abstractions only.
-
-Changes since v4:
-* add abstraction to convert a device reference to a bus device
-  reference
-* require the bus device as parent device and provide it in class device
-  callbacks
-* remove Pin<Vec<_>> abstraction (as not relevant for the led
-  abstractions)
-* fixed formatting in `led::Device::new`
-* fixed `LedOps::BLOCKING` did the inverse effect
-
-Changes since v3:
-* fixed kunit tests failing because of example in documentation
-
-Changes since v2:
-* return `Devres` on `led::Device` creation
-* replace KBox<T> with T in struct definition
-* increment and decrement reference-count of fwnode
-* make a device parent mandatory for led classdev creation
-* rename `led::Handler` to `led::LedOps`
-* add optional `brightness_get` function to `led::LedOps`
-* use `#[vtable]` instead of `const BLINK: bool`
-* use `Opaque::cast_from` instead of casting a pointer
-* improve documentation
-* improve support for older rust versions
-* use `&Device<Bound>` for parent
-
-Changes since v1:
-* fixed typos noticed by Onur Özkan
-
-Signed-off-by: Markus Probst <markus.probst@posteo.de>
----
-Markus Probst (3):
-      rust: leds: add basic led classdev abstractions
-      rust: leds: split generic and normal led classdev abstractions up
-      rust: leds: add multicolor classdev abstractions
-
- MAINTAINERS                     |   8 +
- rust/bindings/bindings_helper.h |   1 +
- rust/kernel/led.rs              | 300 +++++++++++++++++++++++++++++++
- rust/kernel/led/multicolor.rs   | 384 ++++++++++++++++++++++++++++++++++++++++
- rust/kernel/led/normal.rs       | 223 +++++++++++++++++++++++
- rust/kernel/lib.rs              |   1 +
- 6 files changed, 917 insertions(+)
----
-base-commit: 9ace4753a5202b02191d54e9fdf7f9e3d02b85eb
-change-id: 20251114-rust_leds-a959f7c2f7f9
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmlcaKAbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSBEUP/33pKBKvhSWu8N/AOXvw
-umj6JGGpUjRxhrcsuD7S1J4sdGrr2CHg8zCD6OYKlmCY5mEi/7tS9MtdZHnYAv35
-etsYgGpJZOn0yb+anoE2jP2ks0nNUSR3ZN4he+BizrKr0jjeljrgezyAV9vvb6to
-sQDSMSnsJEcORBtIUZn8ONTJb2lbmKzgnrGc1xS7oXiMOO2mEt4A3m6zPuT0kzzd
-l2Wtu2N0Sc28TWJHC3c10h6o0ZSUQrduNcFjHe/KmCXTJLV0ozdmKCMiyNvzYbEK
-0/ch4T8SFVNu3qAJIX2H4ceWXnl3QSaFrcv5FRFA1SRySF6sNa3G2Dssu8CX9HrW
-yqpX0USXDXPAL1p+nnsKwAF4LE0xr+hEicaRZhezQGxkm7DsPmJrwAtRRvmog5OS
-a/0C2H/j6h/Zm7Y43ttME4krkTyx3ZdN1mVLZPOo9ednUzU4OYaMruwADr2jsLNH
-DiVBcgjIbuWpDAFx0+ApEHmfzpkAlSZz4MYE+Ny0vrXbUyvipx+rLuQJvuFI8wp0
-24T9/femehee5b4hzkhnCdZ06JqnO8yVSseMVHTWrjyYtsUdkm75kWdn0ixRJrxR
-MgsKnEjIOAQLQC1i174+FBi/QbTz4TeTKKEYaYlWX0TQ9kyCDvjb9aQzpg9SjQGq
-EWc8LddS+CRAAd3V3DrLSOTh
-=zjT9
------END PGP SIGNATURE-----
--- 
-Markus Probst <markus.probst@posteo.de>
+> Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+> ---
+>   drivers/pci/controller/dwc/pcie-designware-host.c | 16 ++++++++--------
+>   drivers/pci/controller/dwc/pcie-designware.h      |  2 +-
+>   drivers/pci/controller/dwc/pcie-qcom.c            |  4 ++--
+>   3 files changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index a17833dd6f9d4b4aa06dc1fe09ffed5e2c28a82f..e7dbdf3670b426783e778be5064def10d2b209b1 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -255,7 +255,7 @@ void dw_pcie_msi_init(struct dw_pcie_rp *pp)
+>   	u64 msi_target = (u64)pp->msi_data;
+>   	u32 ctrl, num_ctrls;
+>   
+> -	if (!pci_msi_enabled() || !pp->has_msi_ctrl)
+> +	if (!pci_msi_enabled() || !pp->uses_imsi_rx)
+>   		return;
+>   
+>   	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+> @@ -603,15 +603,15 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   	}
+>   
+>   	if (pci_msi_enabled()) {
+> -		pp->has_msi_ctrl = !(pp->ops->msi_init ||
+> +		pp->uses_imsi_rx = !(pp->ops->msi_init ||
+>   				     of_property_present(np, "msi-parent") ||
+>   				     of_property_present(np, "msi-map"));
+>   
+>   		/*
+> -		 * For the has_msi_ctrl case the default assignment is handled
+> +		 * For the uses_imsi_rx case the default assignment is handled
+>   		 * in the dw_pcie_msi_host_init().
+>   		 */
+> -		if (!pp->has_msi_ctrl && !pp->num_vectors) {
+> +		if (!pp->uses_imsi_rx && !pp->num_vectors) {
+>   			pp->num_vectors = MSI_DEF_NUM_VECTORS;
+>   		} else if (pp->num_vectors > MAX_MSI_IRQS) {
+>   			dev_err(dev, "Invalid number of vectors\n");
+> @@ -623,7 +623,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   			ret = pp->ops->msi_init(pp);
+>   			if (ret < 0)
+>   				goto err_deinit_host;
+> -		} else if (pp->has_msi_ctrl) {
+> +		} else if (pp->uses_imsi_rx) {
+>   			ret = dw_pcie_msi_host_init(pp);
+>   			if (ret < 0)
+>   				goto err_deinit_host;
+> @@ -701,7 +701,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   	dw_pcie_edma_remove(pci);
+>   
+>   err_free_msi:
+> -	if (pp->has_msi_ctrl)
+> +	if (pp->uses_imsi_rx)
+>   		dw_pcie_free_msi(pp);
+>   
+>   err_deinit_host:
+> @@ -729,7 +729,7 @@ void dw_pcie_host_deinit(struct dw_pcie_rp *pp)
+>   
+>   	dw_pcie_edma_remove(pci);
+>   
+> -	if (pp->has_msi_ctrl)
+> +	if (pp->uses_imsi_rx)
+>   		dw_pcie_free_msi(pp);
+>   
+>   	if (pp->ops->deinit)
+> @@ -1130,7 +1130,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
+>   	 * the MSI and MSI-X capabilities of the Root Port to allow the drivers
+>   	 * to fall back to INTx instead.
+>   	 */
+> -	if (pp->has_msi_ctrl) {
+> +	if (pp->uses_imsi_rx) {
+>   		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
+>   		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
+>   	}
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 53b65428fadb3d905b02bdcc06667065574f4f9d..33154bc89dd3b7d7fbe0ea749ca22bdc8292489c 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -416,7 +416,7 @@ struct dw_pcie_host_ops {
+>   };
+>   
+>   struct dw_pcie_rp {
+> -	bool			has_msi_ctrl:1;
+> +	bool			uses_imsi_rx:1;
+>   	bool			cfg0_io_shared:1;
+>   	u64			cfg0_base;
+>   	void __iomem		*va_cfg0_base;
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 13e6c334e10d21b9ebfe5f82de0aff3bce6191e3..999f5e083cef4e78b85a0111d2a90c3de65c83b5 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -1633,7 +1633,7 @@ static void qcom_pci_free_msi(void *ptr)
+>   {
+>   	struct dw_pcie_rp *pp = (struct dw_pcie_rp *)ptr;
+>   
+> -	if (pp && pp->has_msi_ctrl)
+> +	if (pp && pp->uses_imsi_rx)
+>   		dw_pcie_free_msi(pp);
+>   }
+>   
+> @@ -1657,7 +1657,7 @@ static int qcom_pcie_ecam_host_init(struct pci_config_window *cfg)
+>   	if (ret)
+>   		return ret;
+>   
+> -	pp->has_msi_ctrl = true;
+> +	pp->uses_imsi_rx = true;
+>   	dw_pcie_msi_init(pp);
+>   
+>   	return devm_add_action_or_reset(dev, qcom_pci_free_msi, pp);
+> 
 
