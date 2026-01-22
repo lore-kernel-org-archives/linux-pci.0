@@ -1,213 +1,236 @@
-Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020104.outbound.protection.outlook.com [52.101.228.104])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE8FD328B77;
-	Thu, 22 Jan 2026 14:02:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.104
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769090569; cv=fail; b=Q3DkHX7J/4+WUIwdor9Iq8MxB7c/+CTngmbSsVPOZjBnumE2/0DuLfbJRQcAf/kfURj9khxpZJOh/v1dq5d6j8y0QXSmV5nNvtKF1RpvJTUQ66uvQRC6BxW7nIz+6AAZyuaqiTdL0Nhj6pGjLTEgULA7SUultoxcf0XEJ0JeWCU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769090569; c=relaxed/simple;
-	bh=AIkp+RZFP9Xm8dsniBDwdUXH+2GQLosjb6Zh/WXHWlM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=hO314kIhFjjb3ywxVVTmnNUBUEYZzf4z31ShuG0i+qgYiCxVindgfJArqSR6dngo8Z9olYOfOXGz8cHnSU1Ykxub16/oIy2TMR9qJvfWj7/1X5PvQqwg2y70yd7XR1gJPHxp49/H2JQu8Qttj4UcO7LlYwokPtHle4NmqP9dRls=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=Qi9EEVRq; arc=fail smtp.client-ip=52.101.228.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D46F926D4EF;
+	Thu, 22 Jan 2026 14:25:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769091954; cv=none; b=XNNechYRG55Ggd7uaFvco5uVDlHXpv/wxZ40FR4x7pWLriIHajwc5bAxGiE/xX2OIaJB2zEH3QovXgG0mQP9e56JRRSzbtVkoYTW0QFnmHgD1CcuYlTiq78eXvvLxjPBEV4MR+KTlR8ufATe8AIpCe3cT2Sq9j9gJejmCy+qYhU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769091954; c=relaxed/simple;
+	bh=Yl2qHTWE9Fz/7zZDgzhuQhCUpz24c+UW8s5oFbDoqv4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=D/w9kR0YH2ueJ7Rylrql9TFAWEIAmNiXXu7/ODCFx+/v6igMliu+V/I4kSCxSiicgRU2NH4uLu94JD9gF+ek+WnQ/7YEjvb+XIwX2bc16x1ijd6N5abNgcwqpjiVllTBSaqAj1C8cPpOvW8bk6hHP9kpXJ2EnjZUFaAwo2M/ar4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dgksenNL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="Qi9EEVRq"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PxPpEI8+pM0ZpgUjDhipoC9/Uls4fl4wCJJ8OqieM7oinLIaM6FZxotN/pWAW8iWOnr8ECdlztM1vBklCOxBYAVZaZxo9u/YDIR95jldhpYo9TFkA42CpufnfvyHEeEt0Tat/ZGV+mkwAb4slHDk7bWzN04xgoDD3Z6RCgluNCVlY/hT2KN63OxJRTW94htnMkAlXGxQlPVjGge4SmrDm85sFkh7OSO+jGx6nQnz5LXgnfxdqUvbXcN9Gke8yYPAXluoGbRR+pswwgzesktmFH3L3ehi5FraiM3F3sjZXPAAU3d2xirkPUN0fpMB5URarW8ELThZBeTUIHk1wZle5g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VUPgWgfusOPXy52CxispRMA5dmu0o5/+a9WebDUxnpA=;
- b=tHRgcwaqYeU0dxM3XZeXoG2aNg4zQt9yYIo98dwIWIvOvmezrfEmqYbg68Saycz4ZfFfVkarchXSIJFO4w8wxNinLDaxjli7Um8FFMTJ4XSJiJi4C1ZI66Bb7j1ST7Jgzqo2l4yix05+TAxTCI4z4l/srLZ9B5F8WJ11H6m63MiT+4DWEO8DuE363q+z2FctjIvwS3E2exGlw8MDS64DmTMq1qnFvAq3ciyqW2AfScgqcdobV8/C0Sm2u2q6G6/8LPOloP4AzgEovxwuzvuuJQb0vjUDM06xEJHR6aDXoFhIUa21o0U7oRw/BcQ3rcc35lXMd+di057+uToKuW7VOg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VUPgWgfusOPXy52CxispRMA5dmu0o5/+a9WebDUxnpA=;
- b=Qi9EEVRqVW7wUc+CiECTPaQvY5ow9sXBf2A9hQ1ofdhY0DnJUwi4HGK8AZBMb7DVl8mWsVPLK3tDFwjvedXdv2NSirYBqlZQv8ZYJIfbXQSH6Yrs3IFSzJLxK9tWAbYAHx5nRl6i0rLYlfnjdZGA3dTz05gRZWTSD3lSApoDmog=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by OS7P286MB6262.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:41c::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.10; Thu, 22 Jan
- 2026 14:02:44 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9542.009; Thu, 22 Jan 2026
- 14:02:43 +0000
-Date: Thu, 22 Jan 2026 23:02:42 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, bhelgaas@google.com, 
-	kwilczynski@kernel.org, frank.li@nxp.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v8 0/5] PCI: endpoint: BAR subrange mapping support
-Message-ID: <tvaumsi4ahosz4herbxoc636fj3lhetjzqlwp5n4e34tthmn26@bld32k6xntmw>
-References: <20260115084928.55701-1-den@valinux.co.jp>
- <x64g63zkz5t75vxxlzd7rhbvpus2mmhz2phyvxykuax5wm5cnh@zgpomauf75pv>
- <ugxohcm4tvtjwnhkkz7jw226upm7o5hihohzn2f4eoamhkd77v@mjefdgxneghm>
- <waapztvy6jyjqtfcoo3rbgvagi4z3p5afw6x2acgf5bxatcui6@nkodhtqqtetr>
- <aXHfUyd0EPFnoVBO@ryzen>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aXHfUyd0EPFnoVBO@ryzen>
-X-ClientProxiedBy: TY4P286CA0120.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:37c::9) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dgksenNL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3070C116C6;
+	Thu, 22 Jan 2026 14:25:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769091953;
+	bh=Yl2qHTWE9Fz/7zZDgzhuQhCUpz24c+UW8s5oFbDoqv4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dgksenNLm8vVcFnylVsW42Tv+ZdtC5W29o1qOctfuLKEDknRSTgAq8uzfYssEItmI
+	 1/wOROGwmmKK4A6J0Uf0YffnAOAuPW+Z6RN9LrRJxi0cMAMDPJW+sHCCBqhwnraKRy
+	 kJJ07EzgsYxVOO45tD2+zF7iBGbuIZkGKgSP05MJZvD+tcbKYbrvLKNW11VeHgFWi+
+	 VU9GuE9ZZl3qbAvIeLSbzdH7Yue/O7ulWuBcayymCEG/yFqi3DTV/nqppK2pyvu/Jm
+	 wh4/199cda1IpN1SL0mJt6msWh7JYksIQOb9a5HPcwS51wHfuEWcY3g1/EH2SLxa1V
+	 CSmkUrJoC7XpQ==
+Date: Thu, 22 Jan 2026 15:25:50 +0100
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Will Deacon <will@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Chen Ridong <chenridong@huawei.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	"David S . Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Gabriele Monaco <gmonaco@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Vlastimil Babka <vbabka@suse.cz>, Waiman Long <longman@redhat.com>,
+	cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-block@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 29/33] sched/arm64: Move fallback task cpumask to
+ HK_TYPE_DOMAIN
+Message-ID: <aXIzbmitdoJIMFCP@localhost.localdomain>
+References: <20260101221359.22298-1-frederic@kernel.org>
+ <20260101221359.22298-30-frederic@kernel.org>
+ <aW-cAlJCtI5Qtify@willie-the-truck>
+ <aXEHf5nbZMI8LT4b@localhost.localdomain>
+ <aXH0TZU7UNowTmwc@willie-the-truck>
+ <aXIKDduX5qUXvOUX@localhost.localdomain>
+ <aXILtazyRtpb3Yjy@willie-the-truck>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS7P286MB6262:EE_
-X-MS-Office365-Filtering-Correlation-Id: 116aa3a9-eda8-4fbf-6154-08de59beea02
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|10070799003|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?+uJZYiO/h9IxfRlmYJ0mt0ObHFgXkiGyYtd8VZCAJATzEtPXBpKxwfsN0RWG?=
- =?us-ascii?Q?sqgELZ3YMIdXHsvK4gc+mMUoU2lhp0YYadI66SbWnLZOJQ8FKDKuiHm1vO+W?=
- =?us-ascii?Q?4i0HLFqhenz6G1ntt07HThj8cHHLzR/IDD6KdMDX97I4+ms8CEHLx6G0DgbG?=
- =?us-ascii?Q?mE7+4OYuJkUyd+R18dUMZjFf8rTAZgFay1AbXJ+VbIJqlFWv+p+rMD3qmgXR?=
- =?us-ascii?Q?9lJNovn2sa+nUnH2d2fA0kXbZh64+lgpJW2kY0WtxMgsCWxo+000hFVsOFyO?=
- =?us-ascii?Q?ahGKYD7nxVIc8A93oxzXYZTUQ4b2qNGf7Li3MUCRCWhHLmNmTaM7ErFn+ZmZ?=
- =?us-ascii?Q?L/tKolENTKwBGtPjSAkV5KanhHONsOrqJ7POPrJIwMsNm3HJxcN34SExjHhZ?=
- =?us-ascii?Q?2QHnyv5e3seZd/O9KsaOYFnHU4OYmVy0a/SaiVFMiVenjSolkPPB5AN4Q+mz?=
- =?us-ascii?Q?iBJIo0aRbuwOtKjEfoEsetH7nEOoU0NjbGVQTfO1BOc/bamMH3QizMisGkRD?=
- =?us-ascii?Q?y7GNFsjVG+jH0sDtKHPS4U71VpuDAjFDyjaYwArKDgGC8Ogb6/RRpi7Mia4h?=
- =?us-ascii?Q?JjdlA2bcMJDpVHjwqP+Ge4nh+QA3/CDHMnCps+zWngnWOTZFaYDxYvRBJgf1?=
- =?us-ascii?Q?MgXAbWw4mL472tqwtXr/NzSATt6UDLgO7xP/m7Y8P5g5yIgBw36mKf7KyayL?=
- =?us-ascii?Q?86F3RE9dd8pGpXGbCyNjuHv2nDEMJjouxVqXz7mIeVG5nlNjYPQ1RuSNb+KU?=
- =?us-ascii?Q?Hi4TjQ85p6iTyN+DQS6WNdHwlY9sMe/r8re0k20BlpubR448RO1oVz1Q+Bx4?=
- =?us-ascii?Q?m1nSuVXofhoNSnxmzoJc8Sgr7qCsSMfASWMlfMlTUOcicHxSt3m1xju8OnT/?=
- =?us-ascii?Q?4Ei5kllcCA/qZpagT5fPQK070GJMaMhvxWSSWX83awk/FYXFNYRlJjvLymwJ?=
- =?us-ascii?Q?ZGBiU8AtZXTl7th3ACw1H3PX/2fsRLTyUkqcdmhGu4B1l1A1QqzdT2dfUThl?=
- =?us-ascii?Q?5a2y+MqXzrl8UL+hwOE466qQlxIcKn//BMVoAnQZvc2Q3SspQwhNvPoEjXl1?=
- =?us-ascii?Q?rzRouxWR4Jb1cu0Vg8dl5HcGuUDqq3ELa5ZRRnSnFrXugqfBm87pS37C6MKD?=
- =?us-ascii?Q?Umx8iBuWHHwGJywDwFpgsVWns700CN3N015tSTEHRd40bOF6Ph2MQi1bf2bq?=
- =?us-ascii?Q?Q1poKSHWE5npR7SiltHa6DFsY6HwvcT7uNbrT5TkQ17wyPQHAKxY7htzN1l7?=
- =?us-ascii?Q?3fC9hBC+hjm5j0RvsCv/a4T98bsovXrEQj1Rw2xVfXYXhUsroU3s395piRMP?=
- =?us-ascii?Q?BWMGDCSXN5OdHndf07Rkzz0kdoJ+r1c9NUmtnhNl7KLquImMvVp61rZxUm2C?=
- =?us-ascii?Q?jSYqnztnIbUxG19jvKnqBeRTzgebzJ7WY6Ql25I3TCQaQLRDP44UQZci2MhR?=
- =?us-ascii?Q?n8mE+B0PC2n3UGjIj+zJJPfBjIMgRycNchoFniosxiN8aHc59cNSYeiobSR/?=
- =?us-ascii?Q?hdXP4edJz+kAMqBlW8Y6CVeThtKC33defLP5v4KitCfpyNyR5vo0gIu4rbdP?=
- =?us-ascii?Q?zWiYMhP+fKKgsejDL7I=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(10070799003)(1800799024);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?XFTcJl4wU+hRafqxgIGRibFJp9X9tTOMtyAsKncCQ1HQ1CJ+HoFNLcVZGx6n?=
- =?us-ascii?Q?jHG9Jjo9kc+8ObDqYu+ebkaalseYcYu/mHjj1Y7+eiHv+jvLxI82jCSV4wRk?=
- =?us-ascii?Q?6I3msZABQCiz5trzdAFj1hXBNlGJjvkOfOe3jdyb3isQakUm45czXCumCEFF?=
- =?us-ascii?Q?QHJ3orfyOP06fJoI3KSU6eDeKXPsf/H6AOAfBbkERMbBLceRNZC/hfG2rQHA?=
- =?us-ascii?Q?D6i0RqUKKU087VcjofHelyGYjdjMD65j/UuyTRXKNYIPl0CuL39OmlChc7Hv?=
- =?us-ascii?Q?H4VZoNwu/sxFe3ugcfvvXMcCDfE9UTB4H74VA4rEbNE64GGVK1B8RjfwH7l8?=
- =?us-ascii?Q?Lltu1rIXz5Pfn9s0FWxfjxz041dfopa5zDHG3khe35Kf4LtzoDjfE8PA0CiT?=
- =?us-ascii?Q?KKN1SazR5whiT/eouCYBg5fBzL+iWBgruuX+f8T6TOWBGfWaekrf6IwR3jPO?=
- =?us-ascii?Q?IFBi0KeL72Yz7vMpaOJg28C77QXGuCNW9hsiUon1E/tqnfsvVAmM16HFs5Tb?=
- =?us-ascii?Q?kQSnQI5ILkaHB6GFdB2u+Nn+U6SqYdaGPALPbZ8gUJUkZGQ9R2UAD94LEqro?=
- =?us-ascii?Q?IllhvaGz0e9Dcm68TcoaOo6u+3Vnd8g18GDjm+gxEd2b/BxC48S+h5eFeBA4?=
- =?us-ascii?Q?bqYUsw10AREpTM32pLzNap4OKSmihC4pAdyAhsxObRL/WDpiMacimZsLMb7c?=
- =?us-ascii?Q?fJiMGrmcDP3y4qQUrHHOJhIuzSG9NVNgE2pINdkUXL6c9k0nn5ErvrzPUIqZ?=
- =?us-ascii?Q?i/t+vo4Vm0I4Gp469/y15XklNkHBSD2Fju6jQWWSrNoraXFuLSOE7TTIYNMo?=
- =?us-ascii?Q?Ha8hQ38tyvt4LJ3Iun9OFOtY3yjHM0lxb0mnqSpfHbSQM4gSYxDHsd+UR9jh?=
- =?us-ascii?Q?xwSJLVJTtPVo+y9R1/2Q2HDqwbyD01GAuNFzaw1QLpAmxNloqSjaLwMAWlqS?=
- =?us-ascii?Q?3u6KydhnH3ku0BUCqtETHlq9dxB2Slca3Z2/QK2sTa5TxSKfUT8VOFt7YiRq?=
- =?us-ascii?Q?T1YmZXRgd3gjEwxH5s5l6B/yuSy7kMfCwrYERcW9hJLYWqhqHSwNPaHJDuUm?=
- =?us-ascii?Q?VCZKk+5Zks7cU+zPGF6NsJ68aR5+qSMeO4h4vHpL6odFfxmPLtQM6QqvNz5l?=
- =?us-ascii?Q?q7k5V1FrHJ4P4hlv67tS9mxWX10d27O3Im4XM7585BNyCzM5xwBEYFFcpkp6?=
- =?us-ascii?Q?9P3BgaNsTI8zpBRjWyPHdlJbnwT407M7QETKPHUC6om+VIuaH+gpI3MEfOcr?=
- =?us-ascii?Q?7cq0ONjD3pPQaV1fxvzyCo3/tRJUsnHvwe6v4hVIdftDe1K6eVIrx2XVyBq4?=
- =?us-ascii?Q?+Vt25G8kTCaCcxBTi2qEE6LUPF6MAR8O7lYro2qOHo8PU0Z4/Ek72xUVveWg?=
- =?us-ascii?Q?FQFhPv6ouGdTzMwacVvoq57GoFkp9pOyXokrGKmTb9gRiVyKvjGkWA5/s5p5?=
- =?us-ascii?Q?qCCPP/ODEtkkhR5dv41lWjP8yRP1me4tFUSxZ68zP7ldbvyThGMQ4t8gltvD?=
- =?us-ascii?Q?HV+2GMdQ/jwgKyN9lVwUn8vAazSD5OSvkg2NRUNE2Neue7AlcAuf210xCvJi?=
- =?us-ascii?Q?l9GhBITFQoXTr8NKLVEYszKQfRB9fcD65qQqF4BG7/0gAK372x8Q6yBShtmF?=
- =?us-ascii?Q?KPFId4g85qZvD3wN5KObIvyHk9H1XJFe93mJijMZJIPCT+GGd93K6OS7E4pw?=
- =?us-ascii?Q?+TreDIVOQIuvVDIzOVQ4kDhsRF9gjnhK88djWdk9g05MMR4wLsuMg65fllm2?=
- =?us-ascii?Q?Grfjle90K4duzyDjeZHun68p/IEbRWzGDZDE1nT1SlIVjwEuwRP0?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 116aa3a9-eda8-4fbf-6154-08de59beea02
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jan 2026 14:02:43.8548
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mEAEugz9A81LIkAYXAiMs/3KFcVcXsr0tPv8FH5meTF9uzL9/u+bqmNhEunTS8lGlozoE0dZeoAPE2XlYYHxlg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS7P286MB6262
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aXILtazyRtpb3Yjy@willie-the-truck>
 
-On Thu, Jan 22, 2026 at 09:45:13AM +0100, Niklas Cassel wrote:
-> Hello Koichiro,
-> 
-> On Thu, Jan 22, 2026 at 10:52:31AM +0900, Koichiro Den wrote:
+Le Thu, Jan 22, 2026 at 11:36:21AM +0000, Will Deacon a écrit :
+> On Thu, Jan 22, 2026 at 12:29:17PM +0100, Frederic Weisbecker wrote:
+> > Le Thu, Jan 22, 2026 at 09:56:29AM +0000, Will Deacon a écrit :
+> > > On Wed, Jan 21, 2026 at 06:06:07PM +0100, Frederic Weisbecker wrote:
+> > > > Le Tue, Jan 20, 2026 at 03:15:14PM +0000, Will Deacon a écrit :
+> > > > > Hi Frederic,
+> > > > > 
+> > > > > On Thu, Jan 01, 2026 at 11:13:54PM +0100, Frederic Weisbecker wrote:
+> > > > > > When none of the allowed CPUs of a task are online, it gets migrated
+> > > > > > to the fallback cpumask which is all the non nohz_full CPUs.
+> > > > > > 
+> > > > > > However just like nohz_full CPUs, domain isolated CPUs don't want to be
+> > > > > > disturbed by tasks that have lost their CPU affinities.
+> > > > > > 
+> > > > > > And since nohz_full rely on domain isolation to work correctly, the
+> > > > > > housekeeping mask of domain isolated CPUs should always be a superset of
+> > > > > > the housekeeping mask of nohz_full CPUs (there can be CPUs that are
+> > > > > > domain isolated but not nohz_full, OTOH there shouldn't be nohz_full
+> > > > > > CPUs that are not domain isolated):
+> > > > > > 
+> > > > > > 	HK_TYPE_DOMAIN | HK_TYPE_KERNEL_NOISE == HK_TYPE_DOMAIN
+> > > > > > 
+> > > > > > Therefore use HK_TYPE_DOMAIN as the appropriate fallback target for
+> > > > > > tasks and since this cpumask can be modified at runtime, make sure
+> > > > > > that 32 bits support CPUs on ARM64 mismatched systems are not isolated
+> > > > > > by cpusets.
+> > > > > > 
+> > > > > > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
+> > > > > > Reviewed-by: Waiman Long <longman@redhat.com>
+> > > > > > ---
+> > > > > >  arch/arm64/kernel/cpufeature.c | 18 +++++++++++++++---
+> > > > > >  include/linux/cpu.h            |  4 ++++
+> > > > > >  kernel/cgroup/cpuset.c         | 17 ++++++++++++++---
+> > > > > >  3 files changed, 33 insertions(+), 6 deletions(-)
+> > > > > 
+> > > > > tbh, I'd also be fine just saying that isolation isn't reliable on these
+> > > > > systems and then you don't need to add the extra arch hook.
+> > > > 
+> > > > Hmm, I think I heard about nohz_full usage on arm64 but I'm not sure.
+> > > > And I usually expect isolcpus or cpuset isolated partitions to be even
+> > > > more broadly used, it's lighter isolation with less constraints.
+> > > > 
+> > > > Anyway you're probably right that we could remove isolation support here
+> > > > but I don't want to break any existing user.
 > > > 
-> > > In this series you didn't add a consumer of this subrange mapping, which I
-> > > believe is the epf-vntb driver [1]. Even so I don't see a justification of why
-> > > the BAR needs to be split into multiple subranges. Can you explain that?
+> > > fwiw, I think it's only some Android markets using the mismatched 32-bit
+> > > support and we're definitely not using nohz_full there.
 > > 
-> > Yes, the first consumer I have in mind is epf-vntb / remote eDMA-backed NTB
-> > work referenced in [1].
+> > Now that removal becomes appealing. And what about isolcpus= / isolated cpuset
+> > which only consist in scheduler domain isolation? Probably not used by android
+> > either.
+> > 
+> > Ok but is there a way to detect on early boot that the system has mismatched
+> > 32 bits support? Because I need to fail nohz_full= and isolcpus= boot parameters
+> > early on top of this information without waiting for secondary CPUs boot.
 > 
-> Another consumer in your RFC series is pci-epf-test, specifically:
-> [RFC PATCH v4 35/38] PCI: endpoint: pci-epf-test: Add pci_epf_test_next_free_bar() helper
-> [RFC PATCH v4 36/38] PCI: endpoint: pci-epf-test: Add remote eDMA-backed mode
-> [RFC PATCH v4 37/38] misc: pci_endpoint_test: Add remote eDMA transfer test mode
-> [RFC PATCH v4 38/38] selftests: pci_endpoint: Add remote eDMA transfer coverage
+> Honestly, I'm not sure I'd bother trying to be smart here. Even if the
+> system has enabled support for mismatched 32-bit CPUs, things should
+> still work properly with nohz_full/isolcpus if all the tasks are 64-bit,
+> right?
 > 
-> where the pci-epf-test exports the eDMA registers (using subranges) over a
-> BAR, and then in the host side driver, calls dw_edma_probe() on this subrange
-> and uses the host side driver to control the eDMA residing in the endpoint.
-> 
-> Most of your patches in [RFC PATCH v4 35/38] have NTB prefix.
-> 
-> Would it not be possible to simply include patches 35-38 in this series,
-> so we actually have a consumer, or do you need some other patches as well?
+> In which case, I'd just document whatever weird behaviour you get if
+> somebody throws 32-bit tasks into the mix. Adding hooks to the generic
+> code for this use-case just seems like a waste, as they're not going to
+> be used in practice and it increases the maintenance burden.
 
-Sorry, I sent v9 just a few minutes after your email, without noticing it,
-and then I was AFK for several hours.
+Ok, how does this updated version look now?
 
-> 
-> E.g., perhaps
-> [RFC PATCH v4 01/38] dmaengine: dw-edma: Export helper to get integrated register window
-> 
-> Would also be required?
+---
+From: Frederic Weisbecker <frederic@kernel.org>
+Date: Thu, 24 Jul 2025 23:38:48 +0200
+Subject: [PATCH] sched/arm64: Move fallback task cpumask to HK_TYPE_DOMAIN
 
-Yes, please see the section "Patch layout" in:
-https://lore.kernel.org/all/20260118135440.1958279-1-den@valinux.co.jp/
+When none of the allowed CPUs of a task are online, it gets migrated
+to the fallback cpumask which is all the non nohz_full CPUs.
 
-  [...]
-  1. dw-edma / DesignWare EP helpers needed for remote embedded-DMA (export
-     register/LL windows, IRQ routing control, etc.)
+However just like nohz_full CPUs, domain isolated CPUs don't want to be
+disturbed by tasks that have lost their CPU affinities.
 
-     Patch 01 : dmaengine: dw-edma: Export helper to get integrated register window
-     Patch 02 : dmaengine: dw-edma: Add per-channel interrupt routing control
-     Patch 03 : dmaengine: dw-edma: Poll completion when local IRQ handling is disabled
-     Patch 04 : dmaengine: dw-edma: Add notify-only channels support
-     Patch 05 : dmaengine: dw-edma: Add a helper to query linked-list region
+And since nohz_full rely on domain isolation to work correctly, the
+housekeeping mask of domain isolated CPUs should always be a subset of
+the housekeeping mask of nohz_full CPUs (there can be CPUs that are
+domain isolated but not nohz_full, OTOH there shouldn't be nohz_full
+CPUs that are not domain isolated):
 
-Patches [RFC PATCH v4 01/38] through [RFC PATCH v4 05/38] are prerequisites
-for the PCI test update, in addition to this "PCI: endpoint: BAR subrange
-mapping support" series. Note that this series is described in "Kernel
-base / dependencies" section of the large RFC series cover letter.
+	HK_TYPE_DOMAIN & HK_TYPE_KERNEL_NOISE == HK_TYPE_DOMAIN
 
-For this reason, those test cases cannot be included in this series.
+Therefore use HK_TYPE_DOMAIN as the appropriate fallback target for
+tasks. Note that cpuset isolated partitions are not supported on those
+systems and may result in undefined behaviour.
 
-Kind regards,
-Koichiro
+Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Marco Crivellari <marco.crivellari@suse.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Waiman Long <longman@redhat.com>
+Cc: Will Deacon <will@kernel.org>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ Documentation/arch/arm64/asymmetric-32bit.rst | 12 ++++++++----
+ arch/arm64/kernel/cpufeature.c                |  6 +++---
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
-> 
-> 
-> 
-> Kind regards,
-> Niklas
+diff --git a/Documentation/arch/arm64/asymmetric-32bit.rst b/Documentation/arch/arm64/asymmetric-32bit.rst
+index 57b8d7476f71..fc0c350c5e00 100644
+--- a/Documentation/arch/arm64/asymmetric-32bit.rst
++++ b/Documentation/arch/arm64/asymmetric-32bit.rst
+@@ -154,10 +154,14 @@ mode will return to host userspace with an ``exit_reason`` of
+ ``KVM_EXIT_FAIL_ENTRY`` and will remain non-runnable until successfully
+ re-initialised by a subsequent ``KVM_ARM_VCPU_INIT`` operation.
+ 
+-NOHZ FULL
+----------
++SCHEDULER DOMAIN ISOLATION
++--------------------------
+ 
+-To avoid perturbing an adaptive-ticks CPU (specified using
+-``nohz_full=``) when a 32-bit task is forcefully migrated, these CPUs
++To avoid perturbing a boot-defined domain isolated CPU (specified using
++``isolcpus=[domain]``) when a 32-bit task is forcefully migrated, these CPUs
+ are treated as 64-bit-only when support for asymmetric 32-bit systems
+ is enabled.
++
++However as opposed to boot-defined domain isolation, runtime-defined domain
++isolation using cpuset isolated partition is not advised on asymmetric
++32-bit systems and will result in undefined behaviour.
+diff --git a/arch/arm64/kernel/cpufeature.c b/arch/arm64/kernel/cpufeature.c
+index c840a93b9ef9..f0e66cb27d17 100644
+--- a/arch/arm64/kernel/cpufeature.c
++++ b/arch/arm64/kernel/cpufeature.c
+@@ -1669,7 +1669,7 @@ const struct cpumask *system_32bit_el0_cpumask(void)
+ 
+ const struct cpumask *task_cpu_fallback_mask(struct task_struct *p)
+ {
+-	return __task_cpu_possible_mask(p, housekeeping_cpumask(HK_TYPE_TICK));
++	return __task_cpu_possible_mask(p, housekeeping_cpumask(HK_TYPE_DOMAIN));
+ }
+ 
+ static int __init parse_32bit_el0_param(char *str)
+@@ -3987,8 +3987,8 @@ static int enable_mismatched_32bit_el0(unsigned int cpu)
+ 	bool cpu_32bit = false;
+ 
+ 	if (id_aa64pfr0_32bit_el0(info->reg_id_aa64pfr0)) {
+-		if (!housekeeping_cpu(cpu, HK_TYPE_TICK))
+-			pr_info("Treating adaptive-ticks CPU %u as 64-bit only\n", cpu);
++		if (!housekeeping_cpu(cpu, HK_TYPE_DOMAIN))
++			pr_info("Treating domain isolated CPU %u as 64-bit only\n", cpu);
+ 		else
+ 			cpu_32bit = true;
+ 	}
+-- 
+2.51.1
+
