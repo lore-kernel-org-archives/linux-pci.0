@@ -1,245 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6EB2D8396;
-	Thu, 22 Jan 2026 21:19:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6003A89D7;
+	Thu, 22 Jan 2026 21:32:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769116768; cv=none; b=GBlNvpx4W94tB9ZmTH+xYDUYHp3ckQb6L+WYIQslRRpsnDL6BPg5aKTu9vqPjphjtHS7b6g0o8hsAvQssk/95et6Mr4zAbOdaJGiILafvUWAUE+ZhVI0uXw6FUhzB2GV5x7avP2acR7U9jjacbjtp6ia2fgzHsDO5Wd/CUltXC0=
+	t=1769117532; cv=none; b=AHFD5k05HcNIzQd6ffFKfJHv7UfcDfl64o5GAU8uopdbgFMGx4rx5QGQHOY9y4OoZI2WC5eOyEf7gGSlXcRqtwjCJxpDtz3k1ziBsl8pS3E3Rqks3oz2rnBeJJqYWNGqlOuGoxLBwVNilan4/XrxQ15ufxeCGhohYgAcXjzNf7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769116768; c=relaxed/simple;
-	bh=bystnSK/iqbWozZ7hbo6gpEx8M3AERXWdK58MlZ2V44=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E+YizOlLo2I28L8GwvV4dhZNDBjwY9+B1P4hql982dCTAapmjSHQf+q/vUprnKMaOxKAkxEYs/+uOzePk4o7rlvxkGwCQqEIV/63PII+qyExAYKuf+ALgftBkV3fuukHYBuBmDA0OH3jVqsYUvSNjHrdQkjI4NUL0waywGPaJcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BFoEAKIm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769117532; c=relaxed/simple;
+	bh=1PDNyXAIynEOO+eic1VjYIz8RbSq0HPkr5SAsLsuc90=;
+	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
+	 References:In-Reply-To; b=tlbTJwoA+MCKvScMc43UnIOjo9gclKSHDRxlt2YpUVDVI4icUrk5NrlbuxpoZA8DjjZeSVEstQgtMKbi+Kju6akDksBHsIakIPCEBGWs+fGMe/oexusz6nmJwITo+QpYuP/peHmKfop7CcNigotLMrYv6ugfFYIDxGXaK6TaLqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NR3Kv19x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BFoEAKIm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A4ABC116C6;
-	Thu, 22 Jan 2026 21:19:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NR3Kv19x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E59AFC116C6;
+	Thu, 22 Jan 2026 21:32:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769116768;
-	bh=bystnSK/iqbWozZ7hbo6gpEx8M3AERXWdK58MlZ2V44=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BFoEAKImmRrF0iBubHmvI7C5xPKsb1k1+A5ekvmjLDN8EhFd3c3rntizCJzF5xE+V
-	 4STZ5pqHpfeARb0FKKtL8x1Y4qyzOGohJyg2tfSdeVq/GCa8bAndc7GzDW00GoILfP
-	 KNJTcgStKu3x5gJ3M1bLhCW+vXPY8/myr4+4mqGXyRjY3y04Fnlm0DQlh6bDHOLJMY
-	 TM1kBWiCDmNbXFMscsoJaJoD5V6DuxLfad5eHMzJrrxeTaQ9dYCOj6g1AaIp58Il6w
-	 zttkHAl2v82ITe2gQ8MeOkBpvZHMouJcU98wY9K/GSMduYgVxARcdaAJi2qH85YyH8
-	 G15fO2RMNfL9Q==
-Date: Thu, 22 Jan 2026 22:19:23 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] PCI: dwc: Fix skipped index 0 in outbound ATU
- setup
-Message-ID: <aXKUW8euDVaRJofR@ryzen>
-References: <20251229-ecam_io_fix-v2-0-41a0e56a6faa@oss.qualcomm.com>
- <20251229-ecam_io_fix-v2-1-41a0e56a6faa@oss.qualcomm.com>
- <aXI8ByG3RlLpIRRa@ryzen>
- <alpine.DEB.2.21.2601221806080.6421@angie.orcam.me.uk>
+	s=k20201202; t=1769117531;
+	bh=1PDNyXAIynEOO+eic1VjYIz8RbSq0HPkr5SAsLsuc90=;
+	h=Date:From:Subject:Cc:To:References:In-Reply-To:From;
+	b=NR3Kv19x8Z6z2qTprUD87A1L9gPpiCixpTx6139cRYAUTlB7mWLVM4nL5iIcd0aXK
+	 NAurF9sQEeHNocPoEEoYiyxtwn8qhf3Mz//Ye/TiVio7Z/kr7mhM+vMV5y5T+DF4R7
+	 xRPdLF2eGR8m0qTMQS+DzGb/VVVFQqkQtTemqS1Q9GkLPOCEizkSjRq8lay3ZMONi4
+	 eg4X3VmH4ulL3pFJL+AJ4Thfz/Tinxi1hAdofSMY3gt7i+zgI+NmNT0Rrn6eMKmJu3
+	 FEWR/0S9akJOxyyLW7RMxOfE0EH0D66DWBrvISHNg6dB+T6oABIa+ce5SeC1+Y1Hg+
+	 eFdm3t3Hl6VLQ==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="PQqAQjSSbpBNymFr"
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.2601221806080.6421@angie.orcam.me.uk>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 22 Jan 2026 22:32:03 +0100
+Message-Id: <DFVFTMRD9LM8.HGKSL57RYD1D@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v2 0/2] rust: introduce abstractions for fwctl
+Cc: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <aliceryhl@google.com>,
+ <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>, <gary@garyguo.net>,
+ <bjorn3_gh@protonmail.com>, <lossin@kernel.org>, <a.hindborg@kernel.org>,
+ <tmgross@umich.edu>, <markus.probst@posteo.de>, <helgaas@kernel.org>,
+ <cjia@nvidia.com>, <smitra@nvidia.com>, <ankita@nvidia.com>,
+ <aniketa@nvidia.com>, <kwankhede@nvidia.com>, <targupta@nvidia.com>,
+ <acourbot@nvidia.com>, <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>,
+ <zhiwang@kernel.org>, <daniel.almeida@collabora.com>, "Jason Gunthorpe"
+ <jgg@nvidia.com>
+To: "Zhi Wang" <zhiw@nvidia.com>
+References: <20260122204232.15988-1-zhiw@nvidia.com>
+In-Reply-To: <20260122204232.15988-1-zhiw@nvidia.com>
 
+(Cc: Jason)
 
---PQqAQjSSbpBNymFr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Looks like you used the recipient list of another patch series by accident.=
+ :)
 
-On Thu, Jan 22, 2026 at 06:16:11PM +0000, Maciej W. Rozycki wrote:
-> On Thu, 22 Jan 2026, Niklas Cassel wrote:
-> 
-> > Also see my series here:
-> > https://lore.kernel.org/linux-pci/20260122145411.453291-4-cassel@kernel.org/T/
-> > 
-> > That tries to clean up this mess.
-> 
->  Is your patchset referred meant to replace this one or does it apply on 
-> top?
+On Thu Jan 22, 2026 at 9:42 PM CET, Zhi Wang wrote:
+> In the NVIDIA vGPU RFC [1], the vGPU type blobs must be provided to the G=
+SP
+> before userspace can enumerate available vGPU types and create vGPU
+> instances. The original design relied on the firmware loading interface,
+> but fwctl is a more natural fit for this use case, as it is designed for
+> uploading configuration or firmware data required before the device becom=
+es
+> operational.
+>
+> This patch introduces a Rust abstraction over the fwctl subsystem,
+> providing safe and idiomatic bindings.
+>
+> The new `fwctl` module allows Rust drivers to integrate with the existing
+> C-side fwctl core through a typed trait interface. It provides:
+>
+>   - `Operations` trait =E2=80=94 defines driver-specific operations such =
+as
+>     `open_uctx()`, `close_uctx()`, `info()`, and `fw_rpc()`. =20
+>     Each Rust driver implements this trait to describe its own per-FD
+>     user-context behavior and RPC handling.
+>
+>   - `UserCtx<T>` =E2=80=94 a generic wrapper around `struct fwctl_uctx`
+>     embedding driver-specific context data, providing safe conversion
+>     from raw C pointers and access to the parent device.
+>
+>   - `Registration<T>` =E2=80=94 safe registration and automatic unregistr=
+ation
+>     of `struct fwctl_device` objects using the kernel's device model.
+>
+>   - `VTable<T>` =E2=80=94 a static vtable bridging C callbacks and Rust
+>     trait methods, ensuring type safety across the FFI boundary.
+>
+> `rust/kernel/lib.rs` is updated to conditionally include this module
+> under `CONFIG_FWCTL`.
+>
+> The repo with the patches can be found at [2].
+>
+> v2:
+>
+> - Don't open fwctl_put(). Add a rust helper. (Jason/Danilo)
+> - Wrap Registration with Devres to guarantee proper lifetime management.
+>   (Jason/Danilo)
+> - Rename FwctlOps to Operations, FwctlUserCtx to UserCtx, FwctlDevice to
+>   Device. (Danilo)
+> - Use fwctl::DeviceType enum instead of raw u32 for DEVICE_TYPE. (Danilo)
+> - Change fwctl_uctx field in UserCtx to Opaque<bindings::fwctl_uctx> and
+>   make it private. (Danilo)
+> - Provide Deref and DerefMut implementations for UserCtx::uctx. (Danilo)
+> - Add UserCtx::parent_device_from_raw() to simplify parent device access.
+> - Use cast() and cast_mut() instead of manual pointer casts. (Danilo)
+> - Implement AlwaysRefCounted for Device and use ARef<Device> in
+>   Registration. (Danilo)
+> - Add rust_helper_fwctl_get() for reference counting.
+> - Improve safety comments for slice::from_raw_parts_mut() in
+>   fw_rpc_callback. (Danilo)
+> - Convert imports to vertical style.
+> - Fix all clippy warnings.
+>
+> v1:
+>
+> - Initial submission introducing fwctl Rust abstractions.
+>
+> [1] https://lore.kernel.org/all/20250903221111.3866249-1-zhiw@nvidia.com/
+> [2] https://github.com/zhiwang-nvidia/driver-core/tree/fwctl-rust-abstrac=
+tion-v2
+>
+> Zhi Wang (2):
+>   rust: introduce abstractions for fwctl
+>   samples: rust: fwctl: add sample code for fwctl
+>
+>  drivers/fwctl/Kconfig             |  12 +
+>  include/uapi/fwctl/fwctl.h        |   1 +
+>  rust/bindings/bindings_helper.h   |   1 +
+>  rust/helpers/fwctl.c              |  17 ++
+>  rust/helpers/helpers.c            |   3 +-
+>  rust/kernel/fwctl.rs              | 456 ++++++++++++++++++++++++++++++
+>  rust/kernel/lib.rs                |   2 +
+>  samples/rust/Kconfig              |  11 +
+>  samples/rust/Makefile             |   1 +
+>  samples/rust/rust_driver_fwctl.rs | 136 +++++++++
+>  10 files changed, 639 insertions(+), 1 deletion(-)
+>  create mode 100644 rust/helpers/fwctl.c
+>  create mode 100644 rust/kernel/fwctl.rs
+>  create mode 100644 samples/rust/rust_driver_fwctl.rs
+>
+> --=20
+> 2.51.0
 
-This series does no longer apply, as it collides with a commit queued on
-controller/dwc branch:
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc&id=e9a5415adb209f86a05e55b850127ada82e070f1
-
-My patches are based on top of the above commit.
-(I saw the big mess we currently have with regards to iatu indexing,
-so I decided to clean it up, but making things consistent.)
-
-
-So first of all, this series needs to be rebased.
-If you ask me personally, I would prefer if Krishna could rebase on top
-of my cleanups.
-
-
-Patch 1/3 in this series is simply wrong, so it should be dropped.
-
-Patch 2/3 in this series is similar to patch 1/3 in my series, but seems
-to also have some extra prints that seem to be unrelated to fixing the issue
-at hand. (Fine to add extra prints in some other function, but don't do it in
-the fix patch itself that will be backported to stable releases.)
-
-Patch 3/3 is the only patch that needs to be rebased, and seem to be the
-patch that solves your issue.
-
-
-I don't like the way that patch 3/3 is implemented.
-
-ECAM will use two iATUs, one for PCIE_ATU_TYPE_CFG0 one for
-PCIE_ATU_TYPE_CFG1. But this patch completely disregards that
-this driver already reserves iATU index 0 for PCIE_ATU_TYPE_CFG0,
-but for non-ECAM versions.
-
-Now I understand why they have patch 1/3 in this series.
-
-But it is still wrong. It has to change the indexing based on ECAM
-is used or not.
-
-Please try the attached patch on top of my series.
-
-It avoids the need to introduce a new struct member.
-
-
-Kind regards,
-Niklas
-
---PQqAQjSSbpBNymFr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=0001-PCI-dwc-Fix-ECAM.patch
-
-From b3d345d7075a4757c10b8fbf85154da66bccfebf Mon Sep 17 00:00:00 2001
-From: Niklas Cassel <cassel@kernel.org>
-Date: Thu, 22 Jan 2026 22:05:39 +0100
-Subject: [PATCH] PCI: dwc: Fix ECAM ...
-
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- .../pci/controller/dwc/pcie-designware-host.c | 34 +++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.c  |  6 ++++
- 2 files changed, 26 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index eda94db04b63..ef66a031f0bb 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -441,7 +441,7 @@ static int dw_pcie_config_ecam_iatu(struct dw_pcie_rp *pp)
- 	/*
- 	 * Root bus under the host bridge doesn't require any iATU configuration
- 	 * as DBI region will be used to access root bus config space.
--	 * Immediate bus under Root Bus, needs type 0 iATU configuration and
-+	 * Immediate bus under Root Bus needs type 0 iATU configuration and
- 	 * remaining buses need type 1 iATU configuration.
- 	 */
- 	atu.index = 0;
-@@ -641,14 +641,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		goto err_free_msi;
- 
--	if (pp->ecam_enabled) {
--		ret = dw_pcie_config_ecam_iatu(pp);
--		if (ret) {
--			dev_err(dev, "Failed to configure iATU in ECAM mode\n");
--			goto err_free_msi;
--		}
--	}
--
- 	/*
- 	 * Allocate the resource for MSG TLP before programming the iATU
- 	 * outbound window in dw_pcie_setup_rc(). Since the allocation depends
-@@ -892,8 +884,8 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct dw_pcie_ob_atu_cfg atu = { 0 };
- 	struct resource_entry *entry;
--	int ob_iatu_index_to_use = 0;
--	int ib_iatu_index_to_use = 0;
-+	int ob_iatu_index_to_use;
-+	int ib_iatu_index_to_use;
- 	int i, ret;
- 
- 	if (!pci->num_ob_windows) {
-@@ -915,8 +907,20 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 	 * NOTE: For outbound address translation, outbound iATU at index 0 is
- 	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
- 	 * index 1.
-+	 *
-+	 * If using ECAM, outbound iATU at index 0 and index 1 is reserved for
-+	 * CFG IOs.
- 	 */
--	ob_iatu_index_to_use++;
-+	if (pp->ecam_enabled) {
-+		ob_iatu_index_to_use = 2;
-+		ret = dw_pcie_config_ecam_iatu(pp);
-+		if (ret) {
-+			dev_err(pci->dev, "Failed to configure iATU in ECAM mode\n");
-+			return ret;
-+		}
-+	} else {
-+		ob_iatu_index_to_use = 1;
-+	}
- 
- 	resource_list_for_each_entry(entry, &pp->bridge->windows) {
- 		resource_size_t res_size;
-@@ -1002,6 +1006,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 		}
- 	}
- 
-+	ib_iatu_index_to_use = 0;
- 	resource_list_for_each_entry(entry, &pp->bridge->dma_ranges) {
- 		resource_size_t res_start, res_size, window_size;
- 
-@@ -1157,9 +1162,10 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
- 	/*
- 	 * If the platform provides its own child bus config accesses, it means
- 	 * the platform uses its own address translation component rather than
--	 * ATU, so we should not program the ATU here.
-+	 * ATU, so we should not program the ATU here. If ECAM is enabled,
-+	 * config space access goes through ATU, so set up ATU here.
- 	 */
--	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
-+	if (pp->bridge->child_ops == &dw_child_pcie_ops || pp->ecam_enabled) {
- 		ret = dw_pcie_iatu_setup(pp);
- 		if (ret)
- 			return ret;
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 2fa9f6ee149e..766df22fe46e 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -531,6 +531,9 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 	u32 retries, val;
- 	u64 limit_addr;
- 
-+	if (atu->index > pci->num_ob_windows)
-+		return -ENOSPC;
-+
- 	limit_addr = parent_bus_addr + atu->size - 1;
- 
- 	if ((limit_addr & ~pci->region_limit) != (parent_bus_addr & ~pci->region_limit) ||
-@@ -604,6 +607,9 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
- 	u64 limit_addr = pci_addr + size - 1;
- 	u32 retries, val;
- 
-+	if (index > pci->num_ib_windows)
-+		return -ENOSPC;
-+
- 	if ((limit_addr & ~pci->region_limit) != (pci_addr & ~pci->region_limit) ||
- 	    !IS_ALIGNED(parent_bus_addr, pci->region_align) ||
- 	    !IS_ALIGNED(pci_addr, pci->region_align) || !size) {
--- 
-2.52.0
-
-
---PQqAQjSSbpBNymFr--
