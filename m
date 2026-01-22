@@ -1,194 +1,144 @@
-Received: from mail-dl1-f41.google.com (mail-dl1-f41.google.com [74.125.82.41])
+Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F28A73009D4
-	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 17:49:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 932E02BEFE1
+	for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 17:49:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769104175; cv=none; b=PPoAApZtnpUQmFAuddc4NWB5Hl1MXF7cHyBZRQ7pEAdwtF78SsfcjAuTwxIYx79PZoA1iwpqy4Qtl4TWDPhf05mHj/E6B37FNyAZXFLt6RmMT6y+TGRdabEGuT2YDl8Hdhhv6xjQDsYKYESJA0grc1xFvdlSD/Av0o6zBzgNDQk=
+	t=1769104195; cv=none; b=nNdCqabuoUycaz2cJfH/AApPHNUGr1l/15FixiyD9pM0U9uXQStQTJn/AsVztyFsQIobawQAbOFUcNYE+X18sV64HsCz64Ih+Hu5M4baSq2Fm/8aDvLK8FdQ3dbxrE9UrCz1GKTC9RLenwMMioTWiYqsCo/bCsNh58SduDQKcz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769104175; c=relaxed/simple;
-	bh=PPSbiTfVEGExWa8EuuY6a6EN8vMNdxghuY659RvCiCI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j1CK1bwmOf7Ev+sSQ87YeF1API3jleduUYniLI8iNxz355WtzB+94j/Y5Cd7FALYnczyOr1NZbZj8MOPHj+SIYh2S0ZgrK0XKA75CE9xgCDKqUSS/XpZ/feu1YnjG2eWkyyGp9oydJQfKuugGIiE5ZVp+bYDzodojPu4M16PluA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=OQXnEp90; arc=none smtp.client-ip=74.125.82.41
+	s=arc-20240116; t=1769104195; c=relaxed/simple;
+	bh=Fy3XirdW3o4O+QTo79Ey4FXxvk1xhYIcaqrUFj49MDY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U4A8rlpbHZYuQ1SnrhQQ4rdRToYydbUD1D17y/oS0hLNDeAHkDJfhbhJFSmD7RkDR+R1H68tyItmJDFQCpXLdKI/9rZnWwqtCIJpnh2smiLuLaO+GNuW6xN2zjBkSgtWO0pXbqB0xodpXs+ovTAaBA0v9VWbYLaXWz6I9w5g/9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=FUnbEHcI; arc=none smtp.client-ip=74.125.82.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OQXnEp90"
-Received: by mail-dl1-f41.google.com with SMTP id a92af1059eb24-121bf277922so2268295c88.0
-        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 09:49:07 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="FUnbEHcI"
+Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-1233b953bebso2763302c88.1
+        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 09:49:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1769104145; x=1769708945; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=E3WbKmVrq7sm/5pwwqVvAut+xxxGLtgFYQpauTPoz70=;
-        b=OQXnEp90kPXwTCa2gO7xkl/5bNSZs9gW56JSbAhBCXgNyrTa8fEUdjmcwGvXh5yrgl
-         CpJrbsh94R0REe5TcF1qA/S7dc8DicsXjOVUCGQiUlIzsW5Gga0fZxjmeoG3yBUteyYN
-         WL+JdjWSDsUgn4Viqg0ISIm+ihWz+B9i+9I0A=
+        d=chromium.org; s=google; t=1769104183; x=1769708983; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Cts/XmrIsitUkgW4W0CPI9+Y5A4oJrjzrlI5Y9vqVAc=;
+        b=FUnbEHcINfzrYaeQhEuTNy4kGslu9mp46Mq5Qinf3z8vY1geZH0osl34Mtmw3GXf35
+         rDX3D+99W8wn0o1SVPrYJHun4mo5OzD7LC8w7Rn3I6h82TW8FPRszv7Y5RwWBzj8oEzd
+         SZJrnu5rkwXwao29Wmo3IuwpMzm5OQr4pToyI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769104145; x=1769708945;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=E3WbKmVrq7sm/5pwwqVvAut+xxxGLtgFYQpauTPoz70=;
-        b=KaS+EaBEyea1XbL2GiOHdDRHG5F3KYfFbp0RSMX13l+HkfAApyYxvBlwZOV6/53Y4h
-         8IroObT1sFemCWy3zp86k7OOzfKif1hOFItPacUj4Ngt8x6Lo9ZGMKr4JUm3WXWJp0B8
-         LRF2KS6VQaKGHB0QdjIcURzOYzq5bm5y2JQutE2TXynrgWfa0w8D+/RToVVkgYW3hEou
-         xgrjBffomrBykrO3afBLvCw0BGLlizl8Gvg/9r1S0mSHQ71FEZSfVJb6zgjLCuxN9LpL
-         fB2Ymv8IMBTXMB6cM3kHveSTCxT74RGuoNCUQ7eimAUA7grYgOLfOmGgcleikUYglnH2
-         QjDQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUTJUndIhvBJicW6XG5y7hilOepJJzReEd+v4zni8r6Bqva7fQc5q6CtLg0FqxUW6DZ1WcJNTeXVL0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwVdYdumrYMNJR8YSUJL6aeIhCAAWmZHoCj9hHfZ5w/Jis5LsZS
-	CClBzDDnzGhaJeyOlrgJ7Bn1ZoPyAfTiv+Xxyn3VtkZd/uaJHZMOcYu8gbJ2wdgcQw==
-X-Gm-Gg: AZuq6aJAD460QppQNIo8zEJIDZlTOM4gUhyX2dcaBa/fD0IzAIY+8EvcM//zFTXBtqj
-	pqDfRrlVRzqv/KZtU/91jC4PYaq8Y3VQwv+bw40auT4XcSXQ/0KWIrijeX0JYY97NEBv2bvqMBc
-	Dqu1D1SDewlEf/G2SkDM5CCu9OkpYgCCh8a3RJxG+Jcxkh0M1Y3FwhNIjVCh34cX95piImuxZNS
-	eaAldRdrSjhmJ1JUB7Jt2cfl65cPJv1Q3iqwzNjc6CDrONooNFS+EIWUuaXQ/KissuemIU8rFSG
-	Vj71rpFLbPr1PMHnOVk0OikWl6SCVgEshBusLIvmLVf9HwXbnEJ15uY3b7dW0ZC8PnsC9+QZWV5
-	cHs4OIeYE1zk7aw3D/OdtGBMndDib0yNbz7IoPSVLG7q4qipOweckE1kTLLeTgsbHU88+wOa3uH
-	unbWHBUwvCbOl7KhiF2TL5M6clqunz5xh/F2mIfPsFQS9/+fqmUQ==
-X-Received: by 2002:a05:7022:126:b0:123:2d38:928e with SMTP id a92af1059eb24-1247dc082b1mr61654c88.35.1769104144779;
-        Thu, 22 Jan 2026 09:49:04 -0800 (PST)
+        d=1e100.net; s=20230601; t=1769104183; x=1769708983;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Cts/XmrIsitUkgW4W0CPI9+Y5A4oJrjzrlI5Y9vqVAc=;
+        b=KB+RIFDeIupfLlMfoC0iBowS5pE7ya8l512DvZltF5z4YIO3sJeOSwB+nrMkIN2dd5
+         ZEp4QwkPAjuLrpa2fmCUp1QtjEFlRKFEMSqkbJpZI+KpNrcDMB0i2TI/3LIPC+zC69xG
+         2wWgj0JLxQqxTa4kkAMyPNZgwHENeICG7X5OcG16n8Z0CbXDk3+UG5EQ0crvvEWtqU33
+         bjn1KinRX7V9HQlbBMUgfPk9IV/CcZtpHUEPLvwZT+FAc6aWPdO4N56rdV46jYtwi80p
+         JFAuhDJbvmaLrYvhPXJgMa8u4X9nxpTEq7EMfBglnhSopdb2uEM72Dg/r9oC/+/bcpTs
+         aFeA==
+X-Forwarded-Encrypted: i=1; AJvYcCVPc0D4WPhqjc2dMI3YBx7TDbYlHN7tmjSK3J++Z6S+zyu4vxC/tubKHI8Kdcz/Rw24dwndJXbUCA8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzk1G7kKIZXHE4I+m6u18vUjBa9dSJyu5uN6oqf2sAZwduGTuqk
+	A1bVjQB9bTsezrLSCTLfrW1e4pxLD1OSnm10yV+8cYL4KtPx4CIQiN72J0+G6i+6XQ==
+X-Gm-Gg: AZuq6aIv4qc7JSD26Hk7hGtlju+qpBoGy2Dnf8xS2ETyWroqFupwYr4L+D63oUotQvJ
+	O0mgWZ5fIP31KUiYihHQuBHm3AoGL2Zj+9I55NfA6+ZSFUv+uuoL1XvjvGEZjmlJhPmBIKqBznN
+	y8L7Fp4UMHdVQC14wDylbivMc6BBGiQ2V8F7sYbEtGntYpYJyyZBa3fkmpNlMqoIoOUdEzSuJds
+	u+IU95IiePccGC8nPWfZCCGSTjF44J5wCskeHoyRYtuirjGB00qd/EQNOToml5Hez3QpdoxWYT7
+	RSPOMge30CMSV8J1ALZmUrZ+4J6B8DA6oV4/nCFwfe74cv94oaUzMViinWJPn/SEHORFeozm8Uv
+	l5EHudfm21otNAAgwIi0x84bQxibx6AENEzoxwMCrALOxggXNDBKrdyok9AHsJ/D+rFr+xcE2t6
+	kEmAoZ+uS8MTujKI3W8cMjKFUmk8W+KAOzpqkiixq13hgIF5ASvA==
+X-Received: by 2002:a05:7022:660c:b0:119:e56b:c75a with SMTP id a92af1059eb24-1247dbf8d14mr61525c88.31.1769104183224;
+        Thu, 22 Jan 2026 09:49:43 -0800 (PST)
 Received: from localhost ([2a00:79e0:2e7c:8:f995:553f:5ab5:f684])
-        by smtp.gmail.com with UTF8SMTPSA id a92af1059eb24-1247d9981a4sm164342c88.9.2026.01.22.09.49.03
+        by smtp.gmail.com with UTF8SMTPSA id a92af1059eb24-1247d997f7bsm197174c88.11.2026.01.22.09.49.41
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 Jan 2026 09:49:04 -0800 (PST)
+        Thu, 22 Jan 2026 09:49:42 -0800 (PST)
+Date: Thu, 22 Jan 2026 09:49:41 -0800
 From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v5] PCI/PM: Prevent runtime suspend until devices are fully initialized
-Date: Thu, 22 Jan 2026 09:48:15 -0800
-Message-ID: <20260122094815.v5.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid>
-X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: Re: [PATCH v4] PCI/PM: Prevent runtime suspend before devices are
+ fully initialized
+Message-ID: <aXJjNfqcZrXw1_h2@google.com>
+References: <20260106222715.GA381397@bhelgaas>
+ <CGME20260114094643eucas1p1a2fdc6c35dd27741c18831b34bbed0c8@eucas1p1.samsung.com>
+ <0e35a4e1-894a-47c1-9528-fc5ffbafd9e2@samsung.com>
+ <aWf4KyTSIocWTmXw@google.com>
+ <61e8c93c-d096-4807-b2dd-a22657f2e06a@samsung.com>
+ <aWrjhqC_6I2UNXC5@google.com>
+ <CAJZ5v0hWt63=0yjFrbTY8zXubh-Uc6ZwAndT73VL7itMkTe81A@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJZ5v0hWt63=0yjFrbTY8zXubh-Uc6ZwAndT73VL7itMkTe81A@mail.gmail.com>
 
-Previously, it was possible for a PCI device to be runtime-suspended before
-it was fully initialized. When that happened, the suspend process could
-save invalid device state, for example, before BAR assignment. Restoring
-the invalid state during resume may leave the device non-functional.
+Hi Rafael,
 
-Prevent runtime suspend for PCI devices until they are fully initialized by
-deferring pm_runtime_enable().
+Thanks for your thoughts!
 
-More details on how exactly this may occur:
+On Sun, Jan 18, 2026 at 12:53:21PM +0100, Rafael J. Wysocki wrote:
+> On Sat, Jan 17, 2026 at 2:19 AM Brian Norris <briannorris@chromium.org> wrote:
+> > I suppose one way to "solve" that is (untested):
+> >
+> > --- a/drivers/pci/bus.c
+> > +++ b/drivers/pci/bus.c
+> > @@ -380,8 +380,12 @@ void pci_bus_add_device(struct pci_dev *dev)
+> >                 put_device(&pdev->dev);
+> >         }
+> >
+> > +       if (dev->dev.parent)
+> > +               pm_runtime_get_sync(dev->dev.parent);
+> >         pm_runtime_set_active(&dev->dev);
+> >         pm_runtime_enable(&dev->dev);
+> > +       if (dev->dev.parent)
+> > +               pm_runtime_put(dev->dev.parent);
+> >
+> >         if (!dn || of_device_is_available(dn))
+> >                 pci_dev_allow_binding(dev);
+> >
+> > Personally, I'm more inclined to go back to v1, since it prepares the
+> > runtime PM status when the device is first discovered. That way, its
+> > ancestors are still active, avoiding these sorts of problems. I'm
+> > frankly not sure of all the reasons Rafael recommended I make the
+> > v1->v3->v4 changes, and now that they cause problems, I'm inclined to
+> > question them again.
+> >
+> > Rafael, do you have any thoughts?
+> 
+> Yeah.
+> 
+> Move back pm_runtime_set_active(&dev->dev) back to pm_runtime_init()
+> because that would prevent the parent from suspending and keep
+> pm_runtime_enable() here because that would prevent the device itself
+> from suspending between pm_runtime_init() and this place.
 
-  1. PCI device is created by pci_scan_slot() or similar
+I'll admit, I was a little fuzzy on the details of the first part of the
+sentence here -- specifically, that an "active" (but still "disabled")
+device will prevent suspend of its parent. I suppose I'm more familiar
+with the typical "disabled and suspended" device, which essentially has
+no effect on its parent.
 
-  2. As part of pci_scan_slot(), pci_pm_init() puts the device in D0 and
-     prevents runtime suspend prevented via pm_runtime_forbid()
+Anyway, that's basically v3, so I rerolled a v5 that looks similar.
 
-  3. pci_device_add() adds the underlying 'struct device' via device_add(),
-     which means user space can allow runtime suspend, e.g.,
+> And I would add comments in both places.
 
-       echo auto > /sys/bus/pci/devices/.../power/control
+I tried to add a short comment to each. It's an art form to write
+exactly the right size of comment to make everyone happy (people
+complain about too much commenting, and then others complain about
+non-obvious behaviors that could have used more comments), especially
+when it comes to something as tricky as runtime PM. At least I tried...
 
-  4. PCI device receives BAR configuration
-     (pci_assign_unassigned_bus_resources(), etc.)
-
-  5. pci_bus_add_device() applies final fixups, saves device state, and
-     tries to attach a driver
-
-The device may potentially be suspended between #3 and #5, so this is racy
-with user space (udev or similar).
-
-Many PCI devices are enumerated at subsys_initcall time and so will not
-race with user space, but devices created later by hotplug or modular
-pwrctrl or host controller drivers are susceptible to this race.
-
-More runtime PM details at the first Link: below.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/all/20251016155335.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid/
-Link: https://lore.kernel.org/all/0e35a4e1-894a-47c1-9528-fc5ffbafd9e2@samsung.com/
-
-Link: https://lore.kernel.org/all/20251016155335.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid/
-Cc: <stable@vger.kernel.org>
----
-
-Changes in v5:
- * Put pm_runtime_set_active() back where it was, to ensure our parent
-   can't suspend before we're really ready. (See bug report in 2nd
-   "Link:")
- * Add comments
- * Update commit description with Bjorn's rewrite
- * Add Marek's Tested-by
-
-Changes in v4:
- * Move pm_runtime_set_active() too
-
-Changes in v3:
- * Add Link to initial discussion
- * Add Rafael's Reviewed-by
- * Add lengthier footnotes about forbid vs allow vs sysfs
-
-Changes in v2:
- * Update CC list
- * Rework problem description
- * Update solution: defer pm_runtime_enable(), instead of trying to
-   get()/put()
-
- drivers/pci/bus.c | 7 +++++++
- drivers/pci/pci.c | 5 ++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4383a36fd6ca..90954f81962b 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -15,6 +15,7 @@
- #include <linux/of.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
- #include <linux/proc_fs.h>
- #include <linux/slab.h>
- 
-@@ -379,6 +380,12 @@ void pci_bus_add_device(struct pci_dev *dev)
- 		put_device(&pdev->dev);
- 	}
- 
-+	/*
-+	 * Enable runtime PM (and potentially suspend) only after we've fully
-+	 * configured the PCI state.
-+	 */
-+	pm_runtime_enable(&dev->dev);
-+
- 	if (!dn || of_device_is_available(dn))
- 		pci_dev_allow_binding(dev);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 13dbb405dc31..07b0d029aa51 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3196,8 +3196,11 @@ void pci_pm_init(struct pci_dev *dev)
- poweron:
- 	pci_pm_power_up_and_verify_state(dev);
- 	pm_runtime_forbid(&dev->dev);
-+	/*
-+	 * Mark ourselves active now, to prevent our parent from suspending
-+	 * while we finish configuring the PCI device.
-+	 */
- 	pm_runtime_set_active(&dev->dev);
--	pm_runtime_enable(&dev->dev);
- }
- 
- static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
--- 
-2.52.0.457.g6b5491de43-goog
-
+Brian
