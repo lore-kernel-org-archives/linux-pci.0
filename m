@@ -1,185 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A034B2E0418;
-	Thu, 22 Jan 2026 10:36:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7EAE3D410B;
+	Thu, 22 Jan 2026 10:47:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769078217; cv=none; b=t1kzQqJOImz4xgp8Kaz6xaGAgwX2xgiHsmGt7fkgMPAwBUCmoi+hLXxie/LDo1KWrc3y1B4dya//EuuNBLzfTE0HMxrQmvtpz3bHshBdo0MR439vbXdcMY+OdIgyHiUHkVaAvGKcdEs+YxKxMvI+mRWU/mtuewRJ7N6Hq06qH68=
+	t=1769078874; cv=none; b=kEW/imjQ5OzjqdezXxPmVTRkMRF2Ug8lLWb6aFHGOG9hlPzd709/vQGZ1VThvrBydjkMdPuXEWDukhWcgAbEcD6qiYL3lx7XELH8V5HmBvjikQ6y6pRcuCRgaz9h9O6fNMZBi4jVpS/dDQnslyTiMtoOm+6MMxF73LnuKvDiNMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769078217; c=relaxed/simple;
-	bh=U5k51CTPcDGxpProE1+yEoE+jxtXYEFD9mPke+QZJz8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=fTENkNouI6hd8fDZyCAPKSrOek41qyvEprisHMjhykwRMzkusVL7zKmfGxXxNyv8OYjJq00SIMqh3LngomD2Kx0hWa1ni+H8iTxF5QFjrSr+sj4UzaT1as+xrhVfwiTR2luNA9IdOUcuu6/VPaxTBLPdDFTw13atptZkDb0WUoo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JvslIZXI; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JvslIZXI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14DCFC116C6;
-	Thu, 22 Jan 2026 10:36:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769078217;
-	bh=U5k51CTPcDGxpProE1+yEoE+jxtXYEFD9mPke+QZJz8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=JvslIZXIf4I+7t042IRh9iUtyxzU0X9uEpYgkqypNtFJt3PhYIfLXFHHYfnLxUfRU
-	 gwz1jUq1GFnGLZiNAQxcTt80bSShyMQ6XTBYE+62jekv+UOIiUCqPjRnRgK2hypdsW
-	 m52LYXyOayXj/skVDfh/KkpdzlO+Da1SLbOgiENyyBP/zK1J8Ea9M0RvdYbkFe89X8
-	 YzteBh83Ng1cdBz0mJSHaRIcYmhZpowM8leJS9KksqlMh2FoGHLeZqUbfqszZKIZqx
-	 4l1qhLJrwKl1qzu+gTtY7jy5+emg3ByvXsEKKx+JT8zvg/av6R435USEsNZTtKwyM+
-	 g/cFrvKWUQboQ==
-Date: Thu, 22 Jan 2026 04:36:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?SMOla29u?= Bugge <haakon.bugge@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Johannes Thumshirn <morbidrsa@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Alex Williamson <alex@shazbot.org>,
-	Niklas Schnelle <schnelle@linux.ibm.com>
-Subject: Re: [PATCH v2 1/2] PCI: Initialize RCB from pci_configure_device
-Message-ID: <20260122103655.GA1239220@bhelgaas>
+	s=arc-20240116; t=1769078874; c=relaxed/simple;
+	bh=l7jVi52ioWfWY9WDGWpQ38Gn+k0Kvx/HI3I3BWo3NEg=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JT4ctHNeRUsbM2HtAAlms36rAUWGd22uGJk0yDgTRLLup2IJqaLbPlsKGyylBR54R5pglMVxFq0ZZsyl8bP4VBIXh+QbW3Fqoc/x09f6GveYIl1Ddj2jhQu51q4Ey/ZQ5sKdwXj95zXwxdmqm0l0TjYODJYaFNAeeG0TMbkZZ4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.83])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4dxd6m5kB5zHnHGk;
+	Thu, 22 Jan 2026 18:47:12 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5447F40086;
+	Thu, 22 Jan 2026 18:47:48 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 22 Jan
+ 2026 10:47:47 +0000
+Date: Thu, 22 Jan 2026 10:47:45 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Lukas Wunner <lukas@wunner.de>
+CC: <smadhavan@nvidia.com>, <dave@stgolabs.net>, <dave.jiang@intel.com>,
+	<alison.schofield@intel.com>, <vishal.l.verma@intel.com>,
+	<ira.weiny@intel.com>, <dan.j.williams@intel.com>, <bhelgaas@google.com>,
+	<ming.li@zohomail.com>, <rrichter@amd.com>,
+	<Smita.KoralahalliChannabasappa@amd.com>, <huaisheng.ye@intel.com>,
+	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<vaslot@nvidia.com>, <vsethi@nvidia.com>, <sdonthineni@nvidia.com>,
+	<vidyas@nvidia.com>, <mochs@nvidia.com>, <jsequeira@nvidia.com>, "Terry
+ Bowman" <terry.bowman@amd.com>
+Subject: Re: [PATCH v4 09/10] PCI: save/restore CXL config around reset
+Message-ID: <20260122104745.00001fea@huawei.com>
+In-Reply-To: <aXH1lfR8g1q--oJc@wunner.de>
+References: <20260120222610.2227109-1-smadhavan@nvidia.com>
+	<20260120222610.2227109-10-smadhavan@nvidia.com>
+	<aXH1lfR8g1q--oJc@wunner.de>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260121224010.GA1217051@bhelgaas>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100009.china.huawei.com (7.191.174.83) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-[+cc Alex, Niklas]
+On Thu, 22 Jan 2026 11:01:57 +0100
+Lukas Wunner <lukas@wunner.de> wrote:
 
-On Wed, Jan 21, 2026 at 04:40:10PM -0600, Bjorn Helgaas wrote:
-> On Wed, Jan 21, 2026 at 12:35:40PM +0100, Håkon Bugge wrote:
-> > Commit e42010d8207f ("PCI: Set Read Completion Boundary to 128 iff
-> > Root Port supports it (_HPX)") fixed a bogus _HPX type 2 record, which
-> > instructed program_hpx_type2() to set the RCB in an endpoint,
-> > although it's RC did not have the RCB bit set.
+> On Tue, Jan 20, 2026 at 10:26:09PM +0000, smadhavan@nvidia.com wrote:
+> > +++ b/drivers/pci/pci.c
+> > @@ -4989,6 +4990,11 @@ static int cxl_reset(struct pci_dev *dev, bool probe)
+> >  	if (probe)
+> >  		return 0;
 > > 
-> > e42010d8207f fixed that by qualifying the setting of the RCB in the
-> > endpoint with the RC supporting an 128 byte RCB.
-> > 
-> > In retrospect, the program_hpx_type2() should only modify the AER
-> > bits, and stay away from fiddling with the Link Control Register.
-> > 
-> > Hence, we explicitly program the RCB from pci_configure_device(). RCB
-> > is RO in Root Ports, and in VFs, the bit is RsvdP, so for these two
-> > cases we skip programming it. Then, if the Root Port has RCB set and
-> > it is not set in the EP, we set it.
-> > 
-> > Fixes: Commit e42010d8207f ("PCI: Set Read Completion Boundary to 128 iff Root Port supports it (_HPX)")
-> > Signed-off-by: Håkon Bugge <haakon.bugge@oracle.com>
-> > 
-> > ---
-> > 
-> > Note, that the current duplication of pcie_root_rcb_set() will be
-> > removed in the next commit.
-> > ---
-> >  drivers/pci/probe.c | 36 ++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 36 insertions(+)
-> > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 41183aed8f5d9..347af29868124 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -2410,6 +2410,41 @@ static void pci_configure_serr(struct pci_dev *dev)
-> >  	}
-> >  }
-> >  
-> > +static bool pcie_root_rcb_set(struct pci_dev *dev)
-> > +{
-> > +	struct pci_dev *rp = pcie_find_root_port(dev);
-> > +	u16 lnkctl;
-> > +
-> > +	if (!rp)
-> > +		return false;
-> > +
-> > +	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
-> > +
-> > +	return !!(lnkctl & PCI_EXP_LNKCTL_RCB);
-> > +}
-> > +
-> > +static void pci_configure_rcb(struct pci_dev *dev)
-> > +{
-> > +	/*
-> > +	 * Obviously, we need a Link Control register. The RCB is RO
-> > +	 * in Root Ports, so no need to attempt to set it for
-> > +	 * them. For VFs, the RCB is RsvdP, so, no need to set it.
-> > +	 * Then, if the Root Port has RCB set, then we set for the EP
-> > +	 * unless already set.
-> > +	 */
-> > +	if (pcie_cap_has_lnkctl(dev) &&
-> > +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
-> > +	    !dev->is_virtfn && pcie_root_rcb_set(dev)) {
-> > +		u16 lnkctl;
-> > +
-> > +		pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
-> > +		if (lnkctl & PCI_EXP_LNKCTL_RCB)
-> > +			return;
-> > +
-> > +		pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnkctl | PCI_EXP_LNKCTL_RCB);
-> > +	}
+> > +	pci_save_state(dev);
+> > +	rc = cxl_config_save_state(dev, &cxl_state);
+> > +	if (rc)
+> > +		pci_warn(dev, "Failed to save CXL config state: %d\n", rc);
+> > +  
 > 
-> RCB isn't meaningful for switches, so we'll read their LNKCTL
-> unnecessarily.  I propose something like this, which also clears RCB
-> if it's set when it shouldn't be (I think this would indicate a
-> firmware defect):
+> Hm, shouldn't the call to cxl_config_save_state() be moved to
+> pci_save_state() (and likewise, cxl_config_restore_state() moved to
+> pci_restore_state())?
 > 
->         /*
->          * Per PCIe r7.0, sec 7.5.3.7, RCB is only meaningful in Root Ports
->          * (where it is read-only), Endpoints, and Bridges.  It may only be
->          * set for Endpoints and Bridges if it is set in the Root Port.
->          */
->         if (!pci_is_pcie(dev) ||
->             pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
->             pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM ||
->             pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
->             dev->is_virtfn)
->                 return;
-> 
->         rcb = pcie_root_rcb_set(dev);
-> 
->         pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnkctl);
->         if (rcb) {
->                 if (lnkctl & PCI_EXP_LNKCTL_RCB)
->                         return;
-> 
->                 lnkctl |= PCI_EXP_LNKCTL_RCB;
->         } else {
->                 if (!(lnkctl & PCI_EXP_LNKCTL_RCB))
->                         return;
-> 
->                 pci_info(FW_INFO "clearing RCB (RCB not set in Root Port)\n");
->                 lnkctl &= ~PCI_EXP_LNKCTL_RCB;
+> E.g. when a DPC event occurs, I assume CXL registers need to
+> be restored as well on recovery, right?
+The CXL spec has some comic language around DPC that basically says
+"use with care, DPC trigger will bring down physical link, reset devicestate,
+disrupt CXL.cache and CXL.mem traffic".
+or in shorter words
+'Good luck'
 
-On second thought, I think this is too aggressive.  I think VM guests
-will often see endpoints but not the Root Port.  In that case,
-pcie_root_rcb_set() would return false because it couldn't find the
-RP, but the RP might actually have RCB set.  Then we would clear the
-endpoint RCB unnecessarily, which should be safe but would reduce
-performance and will result in annoying misleading warnings.
+If a CXL device undergoes DPC high chance you'll either trigger CXL isolation
+which we aren't handing yet in Linux because we aren't convinced software
+can really recover form it, or stall a CPU and end up rebooting.
 
-Could either ignore this case (as in your original patch) or bring
-pcie_root_rcb_set() inline here and return early if we can't find the
-RP.
+Maybe we'll one day we'll figure this out. Today turn off DPC on CXL ports! :)
 
->         }
+
+J
+
+
 > 
->         pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnkctl);
+> Note that since v6.19-rc1, state is saved on enumeration and
+> thus always available for recovery, see a2f1e22390ac.
 > 
-> > +}
-> > +
-> >  static void pci_configure_device(struct pci_dev *dev)
-> >  {
-> >  	pci_configure_mps(dev);
-> > @@ -2419,6 +2454,7 @@ static void pci_configure_device(struct pci_dev *dev)
-> >  	pci_configure_aspm_l1ss(dev);
-> >  	pci_configure_eetlp_prefix(dev);
-> >  	pci_configure_serr(dev);
-> > +	pci_configure_rcb(dev);
-> >  
-> >  	pci_acpi_program_hp_params(dev);
-> >  }
-> > -- 
-> > 2.43.5
-> > 
+> As a general remark on this series, it seems to have considerable
+> overlap with Terry's work on AER support for CXL, particularly in
+> patch [01/10], as Jonathan has remarked.  Please cc Terry on future
+> submissions and coordinate with him on conflicting parts of your
+> patches:
+> 
+> https://lore.kernel.org/all/20260114182055.46029-1-terry.bowman@amd.com/
+> 
+> Thanks,
+> 
+> Lukas
+> 
+
