@@ -1,53 +1,63 @@
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1FD1B3EBF2D;
-	Fri, 23 Jan 2026 20:35:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 339AC2E36F1;
+	Fri, 23 Jan 2026 21:24:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769200517; cv=none; b=sLj1YPNBidbqsNZWzPjt5xhMb7KB2WwL0RDQaOBuL6NYyMsYjZKu232MHgK3fiV/7eXv+PxCXAKqnJ0riu/2VpnNvKzrRUHtvSdDJ41IPr/TO66UvXolaDLn4Db0N1fgEyO1jn1kgYqwyNZLXL40/cr+u885SxsAQWKwaal6rY8=
+	t=1769203494; cv=none; b=XO99CHejviXMR/2uYOdxbfX1UjZIuI1Xl+Ar+31MONoNny6kppMoN0ZZwirt/oSCiD0ZWt0dU0GW+klJtVO/YAJMZQW9593aAKcTYH69BrZtN16q8h6AoyiF/51tIJJfKBPKe1cwkm3Ccnz0Ari8m5ZoDhT/CJ5k7ESbsqn9Iss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769200517; c=relaxed/simple;
-	bh=Jufdx5gjKnMdqzyOFkhlLU+jeTukE08/+DiozNd9DHE=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=tZtfJuJ1zI8avECguo3aN09QOTbeDLC5UhDLdvVzYfqwUV9raOJZYdOzN6c6kUIPAYHpSAxBnTwdzhSfcM5Ekxcfg5Tmso6G4mLKT7g5n2arZsp3NbtfJG53A47UYHZb+EmhxHQ4PFG9oLV8vS9WXPjXQsO87qPA3104OQ0NpzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 1D98592009C; Fri, 23 Jan 2026 21:35:07 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 191AC92009B;
-	Fri, 23 Jan 2026 20:35:07 +0000 (GMT)
-Date: Fri, 23 Jan 2026 20:35:07 +0000 (GMT)
-From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Niklas Cassel <cassel@kernel.org>
-cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-    Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-    =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-    Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-    Frank Li <Frank.Li@nxp.com>, 
-    Serge Semin <Sergey.Semin@baikalelectronics.ru>, linux-pci@vger.kernel.org, 
-    linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] PCI: dwc: Fix skipped index 0 in outbound ATU
- setup
-In-Reply-To: <aXKUW8euDVaRJofR@ryzen>
-Message-ID: <alpine.DEB.2.21.2601232033100.6421@angie.orcam.me.uk>
-References: <20251229-ecam_io_fix-v2-0-41a0e56a6faa@oss.qualcomm.com> <20251229-ecam_io_fix-v2-1-41a0e56a6faa@oss.qualcomm.com> <aXI8ByG3RlLpIRRa@ryzen> <alpine.DEB.2.21.2601221806080.6421@angie.orcam.me.uk> <aXKUW8euDVaRJofR@ryzen>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+	s=arc-20240116; t=1769203494; c=relaxed/simple;
+	bh=bTcICixCG9J8Xx59AGJSrW6Z5YeRjGsXXDad+0OGHy0=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=W5izGNNJJHRvLO5hjsojfC+tfwMJxqL+FLe+G3g6bWtJMBnWMxnW3RHjs7aJ57ifkylF7JEKBJfM0IYIVs2aKFWlyPYaJ6SCmfEB7Vfmed22osktvS5Jjh1jVY8gPXqeGjprGGgdNtwm23T+KQ/zMxhyQj/lANmHgOQU3U4E8lI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FmFPnJBZ; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FmFPnJBZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B508AC4CEF1;
+	Fri, 23 Jan 2026 21:24:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769203493;
+	bh=bTcICixCG9J8Xx59AGJSrW6Z5YeRjGsXXDad+0OGHy0=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=FmFPnJBZSXw4ljXaTQTRTFioHY0s9cXAQoMA3pkRY4wroHuCWDA7XXRHyJR2hJdTg
+	 IrEEHOpqcCQS0wn3CkKAfZlKfCsCQ0fomD++/ergZ/cKWoDF5mntq8f5mi99oNHd5b
+	 eUtGbGhoN9W2ZigdwFjKLMoy4bvGJIWjVs0xnMIoGjfrfCO4EJ3TJQtE3jpaJ5rSeA
+	 KY0Y34PvcPCsd2CXU0Iy09FDX5+fjVpfAseYX2NIyoXCNK7+NX5DX2135FrjjRcNcN
+	 s8ePRaZigMjQhH2uWhxNGCbM87PJ3bM7d2n62De4apLPm3JCTG7lDUTD/tCwR9wVBe
+	 USXOq47HCm7Uw==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id C89AF3808200;
+	Fri, 23 Jan 2026 21:24:50 +0000 (UTC)
+Subject: Re: [GIT PULL] PCI fixes for v6.19
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20260123180624.GA84249@bhelgaas>
+References: <20260123180624.GA84249@bhelgaas>
+X-PR-Tracked-List-Id: <linux-pci.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20260123180624.GA84249@bhelgaas>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v6.19-fixes-4
+X-PR-Tracked-Commit-Id: 5528fd38f230c906fcebb202cc94fbb8ed8f122a
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 5bde837031a3e0465b8c8413d45e45d7927b958a
+Message-Id: <176920348935.2720183.9472346264087505944.pr-tracker-bot@kernel.org>
+Date: Fri, 23 Jan 2026 21:24:49 +0000
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Ville =?utf-8?B?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 
-On Thu, 22 Jan 2026, Niklas Cassel wrote:
+The pull request you sent on Fri, 23 Jan 2026 12:06:24 -0600:
 
-> Please try the attached patch on top of my series.
+> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v6.19-fixes-4
 
- Thank you for the clarification and the updated patches.  I can see you 
-have posted new versions since.  I'll try them sometime next week as I'm 
-out of time right now.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/5bde837031a3e0465b8c8413d45e45d7927b958a
 
-  Maciej
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
