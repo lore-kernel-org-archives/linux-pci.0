@@ -1,24 +1,24 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id CE0C12ECD1D;
-	Fri, 23 Jan 2026 14:01:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8A678299AAC;
+	Fri, 23 Jan 2026 14:01:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769176904; cv=none; b=GH50rQATOOL3UHPyazX1jyWRQoSeolLrnj/dWUtWVxJVzttX9CKmIoANUE5/12vO/kvNkuH4aJaurbHXdw1TaBGps2FvWw1cuW7np8bSfD12sVKxHhhAiC5EvozYDgTGF+1BnzLobNpqycvAl4UXy+/oTFF17eZ4BkYa1zPsr7I=
+	t=1769176911; cv=none; b=VMQBPWHPhs+TCQMlk7Rsrq4ZT4QXFtjnQnrEDarbAnlg1GOR9a/ke8lKP+5KGCL9vfXvAdrr5pDfekPMe76hxia55jFYSnaZkFradCtFSbRKTDINS5WuTWU5bfAX56jN/AcOJMETBlzG+DY+CpaU71WNc+ZPnUsXTaU06ma/OO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769176904; c=relaxed/simple;
-	bh=myRWF7HrBVgiW3R/up1GqN/IxJPu2VHUVzTtShXYDqQ=;
+	s=arc-20240116; t=1769176911; c=relaxed/simple;
+	bh=pdMY4Ltn80BAph2gCnpf0AGaVI0TJiNZYTEg4w7mtkc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TMi4N8V+eFaEo6YRLYmI+eu7LhsCxE0h8ryBevvDrUFcUgSwHmI+hvtllALd3Rn62WWZH7Z9CIwZXBbUOYdDdb4dE1jRYFJKX+vL9AE8AufolLPKvs/l20PuXgtRBEwvJGxqq2JNgBxEpff1D6SpcWod0OM4RIghZRfMA6fiMHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
+	 MIME-Version; b=G6aZ1u1P/2hAZ8rtXstHARzmMAI6vDhkbazLCaRwF/ZEX0C6UENyE/HV2td7jCTQlx8l5c4Uyf77KO1QYTVDqF5Gj20kC92zcxwd3xfQj1bX7u0bYwlPbj+DgnJ2HNUG2jzMsqjzp78aMdZq6c2hwUQHlKs9klLs6ogXQVS/OqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: 56cIJbSOS6O1e/zLN0I4rQ==
-X-CSE-MsgGUID: bW7z11+HSKyAM0FzG0Hslg==
+X-CSE-ConnectionGUID: aU54wQc1Q7++0l/4J+4FMQ==
+X-CSE-MsgGUID: gQjnUyHhQUKYTNGOY9hk8w==
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 23 Jan 2026 23:01:42 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 23 Jan 2026 23:01:48 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.92])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 81E5040703E7;
-	Fri, 23 Jan 2026 23:01:37 +0900 (JST)
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 19B54406E3FB;
+	Fri, 23 Jan 2026 23:01:42 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,9 +37,9 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v2 04/15] clk: renesas: r9a09g047: Add PCIe clocks and reset
-Date: Fri, 23 Jan 2026 15:00:20 +0100
-Message-ID: <20260123140031.94752-5-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v2 05/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix typo in interrupt-names
+Date: Fri, 23 Jan 2026 15:00:21 +0100
+Message-ID: <20260123140031.94752-6-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260123140031.94752-1-john.madieu.xa@bp.renesas.com>
 References: <20260123140031.94752-1-john.madieu.xa@bp.renesas.com>
@@ -51,42 +51,32 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add necessary clocks and reset entries for the PCIe controller
+Fix a typo in the interrupt-names property description: "ser_cor"
+should be "serr_cor" (System Error Correctable).
 
+Fixes: e7534e790557 ("dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3E SoC")
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
 
 Changes:
-v2:
- - Fixed clock names
- - Used assert-variant for reset
+v2: New patch
 
- drivers/clk/renesas/r9a09g047-cpg.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ .../devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml         | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/clk/renesas/r9a09g047-cpg.c b/drivers/clk/renesas/r9a09g047-cpg.c
-index 1e9896742a06..748339cd6d70 100644
---- a/drivers/clk/renesas/r9a09g047-cpg.c
-+++ b/drivers/clk/renesas/r9a09g047-cpg.c
-@@ -438,6 +438,10 @@ static const struct rzv2h_mod_clk r9a09g047_mod_clks[] __initconst = {
- 						BUS_MSTOP(3, BIT(4))),
- 	DEF_MOD("tsu_1_pclk",			CLK_QEXTAL, 16, 10, 8, 10,
- 						BUS_MSTOP(2, BIT(15))),
-+	DEF_MOD_INIT_OFF("pcie_0_aclk",		CLK_PLLDTY_ACPU_DIV2, 12, 4, 6, 4,
-+						BUS_MSTOP(1, BIT(15))),
-+	DEF_MOD_INIT_OFF("pcie_0_clk_pmu",	CLK_PLLDTY_ACPU_DIV2, 12, 5, 6, 5,
-+						BUS_MSTOP(1, BIT(15))),
- };
- 
- static const struct rzv2h_reset r9a09g047_resets[] __initconst = {
-@@ -503,6 +507,7 @@ static const struct rzv2h_reset r9a09g047_resets[] __initconst = {
- 	DEF_RST(10, 15, 5, 0),		/* USB2_0_PRESETN */
- 	DEF_RST(11, 0, 5, 1),		/* GBETH_0_ARESETN_I */
- 	DEF_RST(11, 1, 5, 2),		/* GBETH_1_ARESETN_I */
-+	DEF_RST_INIT_ASSERTED(11, 2, 5, 3),		/* PCIE_0_ARESETN */
- 	DEF_RST(12, 5, 5, 22),		/* CRU_0_PRESETN */
- 	DEF_RST(12, 6, 5, 23),		/* CRU_0_ARESETN */
- 	DEF_RST(12, 7, 5, 24),		/* CRU_0_S_RESETN */
+diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+index d668782546a2..df30f729d4b3 100644
+--- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+@@ -42,7 +42,7 @@ properties:
+   interrupt-names:
+     items:
+       - description: serr
+-      - description: ser_cor
++      - description: serr_cor
+       - description: serr_nonfatal
+       - description: serr_fatal
+       - description: axi_err
 -- 
 2.25.1
 
