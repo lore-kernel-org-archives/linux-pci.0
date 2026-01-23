@@ -1,184 +1,323 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0704A2749DC
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 18:29:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id ABE893EBF04;
+	Fri, 23 Jan 2026 18:32:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769192941; cv=none; b=Gc+FvhKeeWbeqStsgQG194epgw943TsYAZ7Vi23fs4wAyLHNeHZjy3ZfTeGVPeCC+qHl0JF1Z153shuhJfdlpi5dHO2tFl3th/Bf6ZdBoOCBv0aoHVQhEYMLr6uIcDbAJoU4Y2a3e1HiG1R5XDiiMgfI8rUjnMPItce7bT5WPUo=
+	t=1769193133; cv=none; b=LyteiBxwXPV/UXo0YSKyDKPns9Ao+5yVYl9L/kS5YzVPz2RWCr/IhhhjEae29ryC4mcs5gaKAX9pQAeimeAmj0NqV+EgB1WoKJiKqOTYlFA4aM0mDipHW71PjKXFo+OoYp9A20iKwz+1iHcRhARbAag1ZkxrkW/9+mXvDHzBoC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769192941; c=relaxed/simple;
-	bh=IKm87XmnnaEtDSFbMKhMwRrR38oSjzjka/Yn+UjmN90=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ngFfxcteU8wAXFGEdS4k3uVa99o8BKTnl1A+5sJEPNrVgvjxs4NOiaOX0Xr5i8QqZjEsz0CCpkJ+NiIO9r3WC9FvihDCkdW0HSqLcIGbXyU/XiHxJpsgpj1RXHijufvQS2UnfXSu6Itap6rJl4QCfLNk/XDW4WERSzQ6YxfNND8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N6ErS7+N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769193133; c=relaxed/simple;
+	bh=fe+7znZTJfEkVd9lWg3nIOXuSN9UvwR8nJNmfq213Uw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YaecOipvmYxP1ah9S5OEqFkQb3cFgtkihdCnCAb5VHadgdgHQRFDWz/aJMNLdWTsUR3fPWNllQk30d2V/vQ+sFC60K2bHq2GC+eHd5I0l2+mpCBOKl83eLEphr4VO09gO/yRKxTAuUFKJrBvycw5d5az1qdlNkYeuBGYTCkvwLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=mVFmwEB6; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N6ErS7+N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 792ACC4CEF1;
-	Fri, 23 Jan 2026 18:28:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769192940;
-	bh=IKm87XmnnaEtDSFbMKhMwRrR38oSjzjka/Yn+UjmN90=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=N6ErS7+Nf+GsDnGiKSBXrTid6c+hAjERUY5qAu0pV+lr1mdGvOO5TkWQMcav2FWGx
-	 +i7fBwcbVNCpWr/k6L7mHnokbXSXDFC4jxCFbJO4HaB2e5mQloFKJ2HmICuscoplE9
-	 VmZa17ytQgtEuhl/3fSrNxVIf2pWgBr6PeqG5639EI701th1aT53iDgCbnKeJr++sC
-	 ARRGhW1hP7AjRnXOgjhfpxrbHKYQC9qRRzzcmXGeC9VNKReqfe7Jqh/0fjuEYYng14
-	 bRksI1uZQnG+5/J9RAliWnGIxoP9pNkUfnSHz5A0hrTFy6ABpv8JhjSffXtl4hZzzB
-	 fcLmiluYG5yxQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Randolph Lin <randolph@andestech.com>,
-	Samuel Holland <samuel.holland@sifive.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Charles Mirabile <cmirabil@redhat.com>,
-	tim609@andestech.com,
-	dlemoal@kernel.org,
-	"Maciej W. Rozycki" <macro@orcam.me.uk>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 4/4] PCI: dwc: Fix missing iATU setup when ECAM is enabled
-Date: Fri, 23 Jan 2026 19:28:39 +0100
-Message-ID: <20260123182835.831710-10-cassel@kernel.org>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260123182835.831710-6-cassel@kernel.org>
-References: <20260123182835.831710-6-cassel@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="mVFmwEB6"
+Received: from [100.65.200.94] (unknown [20.236.11.185])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 75C0E20B7167;
+	Fri, 23 Jan 2026 10:32:10 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 75C0E20B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1769193131;
+	bh=PR6z6GPJq0iWQpb7yn8bJsX4OzmaTEOBXMrzD47WGoo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=mVFmwEB63pYU4wq0GsN/n45tf2rziTWSvpMG1zgCYncexD2J7OunjirP9kptmN8rm
+	 smgrkqeQgjeB817l9mTwTGk6upRV/KOa2jTMQvSIlrnR00bvwXCmXAvNPig7kQgJaT
+	 Mk0D0b29RJoagWXshB/uJDTGCouSgd0KC3Lg13S8=
+Message-ID: <82082744-2e2f-4ea2-8ab4-cdd3e69ffd8f@linux.microsoft.com>
+Date: Fri, 23 Jan 2026 10:32:09 -0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4797; i=cassel@kernel.org; h=from:subject; bh=GWt7Hy5TQpeo5aVLChQ6dxObySAWS8DurjRgy25l0r0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDKL9159t+Dto/vqOja17TOYJmZnhGomO2hLlYbOvTGTe ffC+3qGHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZgI1zeG/5G/zuyT8clftG2n aE9LVMLiE7K7enZZy97WeKrJwfvEYCPD/7ze3+kpVn5Cjws+Bhk2Lkxx+n531uq9LiIn9/pffP3 3Ny8A
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v0 06/15] mshv: Implement mshv bridge device for VFIO
+To: Mukesh R <mrathor@linux.microsoft.com>, linux-kernel@vger.kernel.org,
+ linux-hyperv@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ iommu@lists.linux.dev, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+ decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
+ will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+ dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, arnd@arndb.de, mhklinux@outlook.com,
+ romank@linux.microsoft.com
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-7-mrathor@linux.microsoft.com>
+Content-Language: en-US
+From: Nuno Das Neves <nunodasneves@linux.microsoft.com>
+In-Reply-To: <20260120064230.3602565-7-mrathor@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+On 1/19/2026 10:42 PM, Mukesh R wrote:
+> From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> 
+> Add a new file to implement VFIO-MSHV bridge pseudo device. These
+> functions are called in the VFIO framework, and credits to kvm/vfio.c
+> as this file was adapted from it.
+> 
+> Original author: Wei Liu <wei.liu@kernel.org>
+> (Slightly modified from the original version).
+> 
+> Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
 
-When ECAM is enabled, the driver skipped calling dw_pcie_iatu_setup()
-before configuring ECAM iATU entries. This left IO and MEM outbound
-windows unprogrammed, resulting in broken IO transactions. Additionally,
-dw_pcie_config_ecam_iatu() was only called during host initialization,
-so ECAM-related iATU entries were not restored after suspend/resume,
-leading to failures in configuration space access
+Since the code is very similar to Wei's original commit, the way I'd
+recommend to do it is:
+1. Change the commit author to Wei, using git commit --amend --author=
+and
+2. Put his signed-off line before yours:
 
-To resolve these issues, the ECAM iATU configuration is moved into
-dw_pcie_iatu_setup(), and dw_pcie_iatu_setup() is invoked when ECAM is
-enabled.
+Signed-off-by: Wei Liu <wei.liu@kernel.org>
+Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
 
-Furthermore, error checks are added in dw_pcie_prog_outbound_atu() and
-dw_pcie_prog_inbound_atu() such that an error is returned if trying to
-program an iATU that is outside the number of iATUs provided by the
-controller.
+This shows he is the author of the commit but you ported it.
 
-Fixes: f6fd357f7afb ("PCI: dwc: Prepare the driver for enabling ECAM mechanism using iATU 'CFG Shift Feature'")
-Reported-by: Maciej W. Rozycki <macro@orcam.me.uk>
-Closes: https://lore.kernel.org/all/alpine.DEB.2.21.2511280256260.36486@angie.orcam.me.uk/
-Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Co-developed-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- .../pci/controller/dwc/pcie-designware-host.c | 33 ++++++++++++-------
- drivers/pci/controller/dwc/pcie-designware.c  |  6 ++++
- 2 files changed, 28 insertions(+), 11 deletions(-)
+If you feel you changed it enough that it should be considered
+co-authored, you can instead keep your authorship of the commit and
+put:
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 87e6a32dbb9a..bc2e08ec515e 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -641,14 +641,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		goto err_free_msi;
- 
--	if (pp->ecam_enabled) {
--		ret = dw_pcie_config_ecam_iatu(pp);
--		if (ret) {
--			dev_err(dev, "Failed to configure iATU in ECAM mode\n");
--			goto err_free_msi;
--		}
--	}
--
- 	/*
- 	 * Allocate the resource for MSG TLP before programming the iATU
- 	 * outbound window in dw_pcie_setup_rc(). Since the allocation depends
-@@ -915,8 +907,21 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 	 * NOTE: For outbound address translation, outbound iATU at index 0 is
- 	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
- 	 * index 1.
-+	 *
-+	 * If using ECAM, outbound iATU at index 0 and index 1 is reserved for
-+	 * CFG IOs.
- 	 */
--	ob_iatu_index = 1;
-+	if (pp->ecam_enabled) {
-+		ob_iatu_index = 2;
-+		ret = dw_pcie_config_ecam_iatu(pp);
-+		if (ret) {
-+			dev_err(pci->dev, "Failed to configure iATU in ECAM mode\n");
-+			return ret;
-+		}
-+	} else {
-+		ob_iatu_index = 1;
-+	}
-+
- 	resource_list_for_each_entry(entry, &pp->bridge->windows) {
- 		resource_size_t res_size;
- 
-@@ -985,8 +990,14 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 			 * be shared between I/O space and CFG IOs, by
- 			 * temporarily reconfiguring the iATU to CFG space, in
- 			 * order to do a CFG IO, and then immediately restoring
--			 * it to I/O space.
-+			 * it to I/O space. This is only implemented when using
-+			 * dw_pcie_other_conf_map_bus(), which is not the case
-+			 * when using ECAM.
- 			 */
-+			if (pp->ecam_enabled) {
-+				dev_err(pci->dev, "Cannot add outbound window for I/O\n");
-+				return -ENOMEM;
-+			}
- 			pp->cfg0_io_shared = true;
- 		}
- 	}
-@@ -1157,7 +1168,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
- 	 * the platform uses its own address translation component rather than
- 	 * ATU, so we should not program the ATU here.
- 	 */
--	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
-+	if (pp->bridge->child_ops == &dw_child_pcie_ops || pp->ecam_enabled) {
- 		ret = dw_pcie_iatu_setup(pp);
- 		if (ret)
- 			return ret;
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 18331d9e85be..5741c09dde7f 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -532,6 +532,9 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 	u32 retries, val;
- 	u64 limit_addr;
- 
-+	if (atu->index >= pci->num_ob_windows)
-+		return -ENOSPC;
-+
- 	limit_addr = parent_bus_addr + atu->size - 1;
- 
- 	if ((limit_addr & ~pci->region_limit) != (parent_bus_addr & ~pci->region_limit) ||
-@@ -605,6 +608,9 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
- 	u64 limit_addr = pci_addr + size - 1;
- 	u32 retries, val;
- 
-+	if (index >= pci->num_ib_windows)
-+		return -ENOSPC;
-+
- 	if ((limit_addr & ~pci->region_limit) != (pci_addr & ~pci->region_limit) ||
- 	    !IS_ALIGNED(parent_bus_addr, pci->region_align) ||
- 	    !IS_ALIGNED(pci_addr, pci->region_align) || !size) {
--- 
-2.52.0
+Co-developed-by: Wei Liu <wei.liu@kernel.org>
+Signed-off-by: Wei Liu <wei.liu@kernel.org>
+Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+
+> ---
+>  drivers/hv/Makefile    |   3 +-
+>  drivers/hv/mshv_vfio.c | 210 +++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 212 insertions(+), 1 deletion(-)
+>  create mode 100644 drivers/hv/mshv_vfio.c
+> 
+> diff --git a/drivers/hv/Makefile b/drivers/hv/Makefile
+> index a49f93c2d245..eae003c4cb8f 100644
+> --- a/drivers/hv/Makefile
+> +++ b/drivers/hv/Makefile
+> @@ -14,7 +14,8 @@ hv_vmbus-y := vmbus_drv.o \
+>  hv_vmbus-$(CONFIG_HYPERV_TESTING)	+= hv_debugfs.o
+>  hv_utils-y := hv_util.o hv_kvp.o hv_snapshot.o hv_utils_transport.o
+>  mshv_root-y := mshv_root_main.o mshv_synic.o mshv_eventfd.o mshv_irq.o \
+> -	       mshv_root_hv_call.o mshv_portid_table.o mshv_regions.o
+> +	       mshv_root_hv_call.o mshv_portid_table.o mshv_regions.o \
+> +               mshv_vfio.o
+>  mshv_vtl-y := mshv_vtl_main.o
+>  
+>  # Code that must be built-in
+> diff --git a/drivers/hv/mshv_vfio.c b/drivers/hv/mshv_vfio.c
+> new file mode 100644
+> index 000000000000..6ea4d99a3bd2
+> --- /dev/null
+> +++ b/drivers/hv/mshv_vfio.c
+> @@ -0,0 +1,210 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * VFIO-MSHV bridge pseudo device
+> + *
+> + * Heavily inspired by the VFIO-KVM bridge pseudo device.
+> + */
+> +#include <linux/errno.h>
+> +#include <linux/file.h>
+> +#include <linux/list.h>
+> +#include <linux/module.h>
+> +#include <linux/mutex.h>
+> +#include <linux/slab.h>
+> +#include <linux/vfio.h>
+> +
+> +#include "mshv.h"
+> +#include "mshv_root.h"
+> +
+> +struct mshv_vfio_file {
+> +	struct list_head node;
+> +	struct file *file;	/* list of struct mshv_vfio_file */
+> +};
+> +
+> +struct mshv_vfio {
+> +	struct list_head file_list;
+> +	struct mutex lock;
+> +};
+> +
+> +static bool mshv_vfio_file_is_valid(struct file *file)
+> +{
+> +	bool (*fn)(struct file *file);
+> +	bool ret;
+> +
+> +	fn = symbol_get(vfio_file_is_valid);
+> +	if (!fn)
+> +		return false;
+> +
+> +	ret = fn(file);
+> +
+> +	symbol_put(vfio_file_is_valid);
+> +
+> +	return ret;
+> +}
+> +
+> +static long mshv_vfio_file_add(struct mshv_device *mshvdev, unsigned int fd)
+> +{
+> +	struct mshv_vfio *mshv_vfio = mshvdev->device_private;
+> +	struct mshv_vfio_file *mvf;
+> +	struct file *filp;
+> +	long ret = 0;
+> +
+> +	filp = fget(fd);
+> +	if (!filp)
+> +		return -EBADF;
+> +
+> +	/* Ensure the FD is a vfio FD. */
+> +	if (!mshv_vfio_file_is_valid(filp)) {
+> +		ret = -EINVAL;
+> +		goto out_fput;
+> +	}
+> +
+> +	mutex_lock(&mshv_vfio->lock);
+> +
+> +	list_for_each_entry(mvf, &mshv_vfio->file_list, node) {
+> +		if (mvf->file == filp) {
+> +			ret = -EEXIST;
+> +			goto out_unlock;
+> +		}
+> +	}
+> +
+> +	mvf = kzalloc(sizeof(*mvf), GFP_KERNEL_ACCOUNT);
+> +	if (!mvf) {
+> +		ret = -ENOMEM;
+> +		goto out_unlock;
+> +	}
+> +
+> +	mvf->file = get_file(filp);
+> +	list_add_tail(&mvf->node, &mshv_vfio->file_list);
+> +
+> +out_unlock:
+> +	mutex_unlock(&mshv_vfio->lock);
+> +out_fput:
+> +	fput(filp);
+> +	return ret;
+> +}
+> +
+> +static long mshv_vfio_file_del(struct mshv_device *mshvdev, unsigned int fd)
+> +{
+> +	struct mshv_vfio *mshv_vfio = mshvdev->device_private;
+> +	struct mshv_vfio_file *mvf;
+> +	long ret;
+> +
+> +	CLASS(fd, f)(fd);
+> +
+> +	if (fd_empty(f))
+> +		return -EBADF;
+> +
+> +	ret = -ENOENT;
+> +	mutex_lock(&mshv_vfio->lock);
+> +
+> +	list_for_each_entry(mvf, &mshv_vfio->file_list, node) {
+> +		if (mvf->file != fd_file(f))
+> +			continue;
+> +
+> +		list_del(&mvf->node);
+> +		fput(mvf->file);
+> +		kfree(mvf);
+> +		ret = 0;
+> +		break;
+> +	}
+> +
+> +	mutex_unlock(&mshv_vfio->lock);
+> +	return ret;
+> +}
+> +
+> +static long mshv_vfio_set_file(struct mshv_device *mshvdev, long attr,
+> +			      void __user *arg)
+> +{
+> +	int32_t __user *argp = arg;
+> +	int32_t fd;
+> +
+> +	switch (attr) {
+> +	case MSHV_DEV_VFIO_FILE_ADD:
+> +		if (get_user(fd, argp))
+> +			return -EFAULT;
+> +		return mshv_vfio_file_add(mshvdev, fd);
+> +
+> +	case MSHV_DEV_VFIO_FILE_DEL:
+> +		if (get_user(fd, argp))
+> +			return -EFAULT;
+> +		return mshv_vfio_file_del(mshvdev, fd);
+> +	}
+> +
+> +	return -ENXIO;
+> +}
+> +
+> +static long mshv_vfio_set_attr(struct mshv_device *mshvdev,
+> +			      struct mshv_device_attr *attr)
+> +{
+> +	switch (attr->group) {
+> +	case MSHV_DEV_VFIO_FILE:
+> +		return mshv_vfio_set_file(mshvdev, attr->attr,
+> +					  u64_to_user_ptr(attr->addr));
+> +	}
+> +
+> +	return -ENXIO;
+> +}
+> +
+> +static long mshv_vfio_has_attr(struct mshv_device *mshvdev,
+> +			      struct mshv_device_attr *attr)
+> +{
+> +	switch (attr->group) {
+> +	case MSHV_DEV_VFIO_FILE:
+> +		switch (attr->attr) {
+> +		case MSHV_DEV_VFIO_FILE_ADD:
+> +		case MSHV_DEV_VFIO_FILE_DEL:
+> +			return 0;
+> +		}
+> +
+> +		break;
+> +	}
+> +
+> +	return -ENXIO;
+> +}
+> +
+> +static long mshv_vfio_create_device(struct mshv_device *mshvdev, u32 type)
+> +{
+> +	struct mshv_device *tmp;
+> +	struct mshv_vfio *mshv_vfio;
+> +
+> +	/* Only one VFIO "device" per VM */
+> +	hlist_for_each_entry(tmp, &mshvdev->device_pt->pt_devices,
+> +			     device_ptnode)
+> +		if (tmp->device_ops == &mshv_vfio_device_ops)
+> +			return -EBUSY;
+> +
+> +	mshv_vfio = kzalloc(sizeof(*mshv_vfio), GFP_KERNEL_ACCOUNT);
+> +	if (mshv_vfio == NULL)
+> +		return -ENOMEM;
+> +
+> +	INIT_LIST_HEAD(&mshv_vfio->file_list);
+> +	mutex_init(&mshv_vfio->lock);
+> +
+> +	mshvdev->device_private = mshv_vfio;
+> +
+> +	return 0;
+> +}
+> +
+> +/* This is called from mshv_device_fop_release() */
+> +static void mshv_vfio_release_device(struct mshv_device *mshvdev)
+> +{
+> +	struct mshv_vfio *mv = mshvdev->device_private;
+> +	struct mshv_vfio_file *mvf, *tmp;
+> +
+> +	list_for_each_entry_safe(mvf, tmp, &mv->file_list, node) {
+> +		fput(mvf->file);
+> +		list_del(&mvf->node);
+> +		kfree(mvf);
+> +	}
+> +
+> +	kfree(mv);
+> +	kfree(mshvdev);
+> +}
+> +
+> +struct mshv_device_ops mshv_vfio_device_ops = {
+> +	.device_name = "mshv-vfio",
+> +	.device_create = mshv_vfio_create_device,
+> +	.device_release = mshv_vfio_release_device,
+> +	.device_set_attr = mshv_vfio_set_attr,
+> +	.device_has_attr = mshv_vfio_has_attr,
+> +};
 
