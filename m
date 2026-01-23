@@ -1,148 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1B95266565;
-	Fri, 23 Jan 2026 13:56:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 630A842A96;
+	Fri, 23 Jan 2026 14:01:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769176591; cv=none; b=lZmJ9dbLQVTlHlRSrdDdzaTZbgJWUgDrRMHfWh+7fPeSg8vkoxvbkPlf7c9pg7fSNoOzXL03Bq3TlGcgOq6VdJ4fXTMcVF5nQ2oyqXcFgg2jgscomw0VG2an64VhbHoLL12OAfN7URG36QrKpm/xpdW9z29MFw89RuRAGXyKvEs=
+	t=1769176890; cv=none; b=k08jAV4+t+2Mc5cIG/M9UHTX3hVbfQWhFKaa0X7OlqX3z5GOowa6FYiWyliF2qxS4iuM8X2T/SLefnnYmXYnsHCMG7D8bzioJAUsQqx7BrRIf2vhD2UyatZ6NozMC4PGjmk6mCAUWyflMJ8thpIzIp5WPyEjqkXXPyKGoMnDHUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769176591; c=relaxed/simple;
-	bh=GrLa4Ipr5uuNIx8FLflnc5DZHfapIQatDZ883pAbvVk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rP/68Amsp/97ebVi9A5Z3y+IpLFDFftgze/STeaZ9l9GYV+edxVwOzLwGeO1+Licawn5LsCx/UxXCbQiILCo0O+4UoLXyj8kDadoI3M2U/7+TJIHKZ+BeBSmimS/wouMFdR1mN5qcxil9ZLkXl5JB3MqjyLzGNLV8MC169CAcd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fVj/Og6D; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fVj/Og6D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D6DEC19424;
-	Fri, 23 Jan 2026 13:56:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769176591;
-	bh=GrLa4Ipr5uuNIx8FLflnc5DZHfapIQatDZ883pAbvVk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fVj/Og6Dsam87eSwc/fSklA6b6iRd/S5y9Cq/EqOYRct5TAlVy2wrfRwMPHan/EOO
-	 xrBs8TR9glOT/Z0+/NpougmXdcqF/xEN4KJddW1acGRb1KMFKiTEu/zyCUCRFbg2HY
-	 uWpFZjJfr4pETvIsuLWZb+1iiSzW/kTaxRLha/lsEODM5VZNlQAjbEjaGfONVlPpca
-	 Bf59ufWV4Tbf7u5x8DXIDER1vjZPpsQ5BgHe4qO8HdlGuYymvZ9UFA5+NDAjF9QUs5
-	 PWwLeDEGX5BDoDZNOEPfHzAu8A2uM2yNMdt4UCT3luCzpqa3AbBB4tK2vU0Jy+6WVp
-	 K7TUPuejLZtwg==
-Date: Fri, 23 Jan 2026 19:26:14 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	manivannan.sadhasivam@oss.qualcomm.com, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, "David E. Box" <david.e.box@linux.intel.com>, 
-	Kai-Heng Feng <kai.heng.feng@canonical.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Chia-Lin Kao <acelan.kao@canonical.com>, 
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, 
-	krishna.chundru@oss.qualcomm.com
-Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
- set by BIOS for devicetree platforms
-Message-ID: <unc5zefwndgcv7wufaezz3gkg3qtaymkjlmymhyqdqwzn3wybl@ow2rhbyt772h>
-References: <7306256a-b380-489b-8248-b774e6d3d80e@nvidia.com>
- <20260122152903.GA1247682@bhelgaas>
- <5z7c25nkb35prvax6vq6ud7eaeuhzsswbf7fqvmlgys3xftgwb@odocboejrdrv>
- <e44c330b-778b-4fa1-b678-fa909cc05b03@nvidia.com>
- <bf37b6a5-268d-4c07-a536-a826b3d5953b@nvidia.com>
+	s=arc-20240116; t=1769176890; c=relaxed/simple;
+	bh=RKfjzbjiV94nnLtWQm77NbNdGr9Vz7/jc4kt6Nb22OI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PS0qMhqFTPaA/yCwBsisv2ifsMjCx1tuE5Vs//N8m/FKVqS70ZGI/CrH7y3cR+7pH00mL/b5cKzZLeWhwiJOzpkB+6RR+qTuOjRmhDwnaiVBTazrhPkcaRs8HtfdrT904KIHz2orT5FxCQsKvI/AiPmN5iCSaqnFFMUMfIljYk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+X-CSE-ConnectionGUID: AUUGP9uVTRGdGgMUUG516w==
+X-CSE-MsgGUID: 8q9pyuHvSdWWoWGEmIZfAg==
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 23 Jan 2026 23:01:20 +0900
+Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.92])
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 4F0D4406E3FB;
+	Fri, 23 Jan 2026 23:01:15 +0900 (JST)
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+To: claudiu.beznea.uj@bp.renesas.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	geert+renesas@glider.be,
+	krzk+dt@kernel.org
+Cc: robh@kernel.org,
+	bhelgaas@google.com,
+	conor+dt@kernel.org,
+	magnus.damm@gmail.com,
+	biju.das.jz@bp.renesas.com,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-clk@vger.kernel.org,
+	john.madieu@gmail.com,
+	John Madieu <john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v2 00/15]  PCI: renesas: Add RZ/G3E PCIe controller support
+Date: Fri, 23 Jan 2026 15:00:16 +0100
+Message-ID: <20260123140031.94752-1-john.madieu.xa@bp.renesas.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <bf37b6a5-268d-4c07-a536-a826b3d5953b@nvidia.com>
 
-+ Krishna
+The Renesas RZ/G3E SoC features a PCIe controller that shares similarities with
+the existing RZ/G3S PCIe controller, but with several key differences.
+This series adds support for the RZ/G3E PCIe controller by extending the existing
+RZ/G3S driver and device tree bindings.
 
-On Fri, Jan 23, 2026 at 10:55:28AM +0000, Jon Hunter wrote:
-> 
-> On 22/01/2026 19:14, Jon Hunter wrote:
-> 
-> ...
-> 
-> > > I think what is going on here is that since before commits
-> > > f3ac2ff14834 and
-> > > df5192d9bb0e, !pcie_aspm_enabled() check was passing as ASPM was not
-> > > enabled for
-> > > the device (and upstream port) and after those commits, this check is not
-> > > passing and the NVMe driver is not shutting down the controller and
-> > > expects the
-> > > link to be in L0/L1ss. But the Tegra controller driver initiates L2/L3
-> > > transition, and also turns off the device. So all the NVMe context
-> > > is lost
-> > > during suspend and while resuming, the NVMe driver got confused due
-> > > to lost
-> > > context.
-> > > 
-> > > Jon, could you please try the below hack and see if it fixes the issue?
-> > > 
-> > > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> > > index 0e4caeab739c..4b8d261117f5 100644
-> > > --- a/drivers/nvme/host/pci.c
-> > > +++ b/drivers/nvme/host/pci.c
-> > > @@ -3723,7 +3723,7 @@ static int nvme_suspend(struct device *dev)
-> > >           * state (which may not be possible if the link is up).
-> > >           */
-> > >          if (pm_suspend_via_firmware() || !ctrl->npss ||
-> > > -           !pcie_aspm_enabled(pdev) ||
-> > > +           pcie_aspm_enabled(pdev) ||
-> > >              (ndev->ctrl.quirks & NVME_QUIRK_SIMPLE_SUSPEND))
-> > >                  return nvme_disable_prepare_reset(ndev, true);
-> > > This will confirm whether the issue is due to Tegra controller
-> > > driver breaking
-> > > the NVMe driver assumption or not.
-> > 
-> > Yes that appears to be working! I will test some more boards to confirm.
-> 
-> So yes with the above all boards appear to be working fine.
-> 
-> How is this usually coordinated between the NVMe driver and Host controller
-> driver? It is not clear to me exactly where the problem is and if the NVMe
-> is not shutting down, then what should be preventing the Host controller
-> from shutting down.
-> 
+Key differences between RZ/G3E and RZ/G3S PCIe controllers:
 
-Well if the NVMe driver is not shutting down the device, then it expects the
-device to be in APST (NVMe low power state if supported) state and retain all
-the context across the suspend/resume cycle.
+Link Speed Support:
+ - RZ/G3E: Supports PCIe Gen3 (8.0 GT/s) alongside Gen2 (5.0 GT/s)
+ - RZ/G3S: Supports PCIe Gen2 (5.0 GT/s) only
 
-But if the host controller powers down the device, then during resume, the
-device will start afresh and would've lost all the context (like queue info
-etc..). So when the NVMe driver resumes, it would expect the device to retain
-the context and try to use the device as such. But it won't work as the device
-will be in an unconfigured state and you'll see failures as you reported.
+Reset Control:
+ - RZ/G3E: Uses register-based reset control mechanism
+ - RZ/G3S: Uses exclusively external reset control signals
 
-Apparently, most host controller drivers never cared about it because either
-they were not tested with NVMe or they haven't enabled ASPM before. So the NVMe
-driver ended up shutting down the controller during suspend. But since we
-started enabling ASPM by default since 6.18, this issue is being uncovered.
+Inbound Window Configuration:
+ - RZ/G3E: Requires precise power-of-2 window coverage with strict address
+   alignment constraints. Non-power-of-2 memory regions must be split into
+   multiple windows to avoid over-mapping, ensuring proper hardware address
+   decoding for DMA operations.
+ - RZ/G3S: Uses a simpler approach that rounds up to the next power-of-2,
+   creating single larger windows. The hardware tolerates over-mapped regions.
 
-So to properly fix it, we need the controller drivers to perform below checks
-for all devices under the Root bus(ses) before initiating D3Cold:
+Class/Revision IDs:
+ - RZ/G3E: Requires explicit setting of class/revision values
+ - RZ/G3S: Has default values in hardware
 
-1. Check if the device state is D3Hot. If it is not D3Hot, then the device is
-expected to stay in the current D-state by the client driver, so D3Cold should
-not be initiated.
+Clock Naming:
+ - RZ/G3E: Uses "clkpmu" clock for power management
+ - RZ/G3S: Uses "clkl1pm" PM control clock while CLKREQ_B is deasserting
 
-2. Check if the device is wakeup capable. If it is, then check if it can support
-wakeup from D3Cold (with WAKE#).
+Phy Settings:
+ - RZ/G3E: Does not need PHY settings as it works with default hw values
+ - RZ/G3S: Requires explicit PHY settings
 
-Only if both conditions are satisfied for all the devices under the Root busses,
-then the host controller driver should initiate D3Cold sequence.
+This series extends the existing driver to detect the SoC type from the device
+tree compatible string and configure the controller appropriately. The updates
+are minimal and focused on the hardware-specific differences while keeping the
+common code paths unified.
 
-Krishna is going to post a patch that performs the above checks for
-pcie-designware-host driver. But since the above checks are platform agnostic,
-we should introduce a helper and resuse it across other controllers as well.
+Changes:
 
-Hope this clarifies.
+v2:
+ - Address Bjorn typo comments
+ - Address Claidiu's comment on stylish
+ - Use single inbound-window-configuration function for both G3E/G3S
+ - Refactor goto laballing as per Claudiu's comments
+ - Update bindings and reused G3S's interrupt ordering
+   * This involves reordering interrupts in dt
+ - Remove Board-specific PCIe dma-range.
 
-- Mani
+John Madieu (15):
+  PCI: rzg3s-host: Fix reset handling in probe error path
+  PCI: renesas: rzg3s: Rework inbound window algorithm for multi-SoC
+    support
+  clk: renesas: rzv2h-cpg: Add support for init_{off|asserted}
+    clocks/resets
+  clk: renesas: r9a09g047: Add PCIe clocks and reset
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix typo in
+    interrupt-names
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3E SoC
+  PCI: rzg3s-host: Make SYSC register offsets SoC-specific
+  PCI: rzg3s-host: Make configuration reset lines optional
+  PCI: rzg3s-host: Add SoC-specific configuration and initialization
+    callbacks
+  PCI: rzg3s-host: Explicitly set class code for RZ/G3E compatibility
+  PCI: rzg3s-host: Add PCIe Gen3 (8.0 GT/s) link speed support
+  PCI: rzg3s-host: Add support for RZ/G3E PCIe controller
+  arm64: dts: renesas: r9a09g047: Add PCIe node
+  arm64: dts: renesas: r9a09g047e57-smarc-som: Add PCIe reference clock
+  arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
+
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 127 ++++--
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi    |  69 ++++
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts   |  17 +
+ .../boot/dts/renesas/rzg3e-smarc-som.dtsi     |  11 +
+ drivers/clk/renesas/r9a09g047-cpg.c           |   5 +
+ drivers/clk/renesas/rzv2h-cpg.c               |  27 +-
+ drivers/clk/renesas/rzv2h-cpg.h               |  34 +-
+ drivers/pci/controller/pcie-rzg3s-host.c      | 387 ++++++++++++++----
+ 8 files changed, 554 insertions(+), 123 deletions(-)
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.25.1
+
