@@ -1,44 +1,43 @@
-Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazolkn19013073.outbound.protection.outlook.com [52.103.43.73])
+Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazolkn19013081.outbound.protection.outlook.com [52.103.74.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7662A292936;
-	Fri, 23 Jan 2026 01:50:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.43.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21938328B43;
+	Fri, 23 Jan 2026 01:50:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.74.81
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769133045; cv=fail; b=CfX6tTXcEnlfQepnAFQte3nsXRcDGC8vkMWKoy+qcX/1kxdx4YEFS8ToodVzt8GX2MLZerWuAW3mZGa8aoo9Z5TWHJ8NeM/ACyReWHgJWHdkJfTBdPjLktapkFGw4SsBttpCuFx+zyjIINLiWDOjdDuGGgRNcKdmHJRy/Ywz+cA=
+	t=1769133052; cv=fail; b=g88b86aZnqExvC/8pR3vvUp7cLggy8fyDjMzoae87FdRMJT7tsOrxO+HukzX4gYRCiCaehBlqdZlcrZQb/S4EiwoTc3KAtHNw3tSRQOdWETwQxo5U4nD+AUCpRZyzV9skXWLO60riEdDU9VsvuXg7pNsf6cAE7edpQSd8iUFpOY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769133045; c=relaxed/simple;
-	bh=4K9Z1HeMCLSBOJ/GkO0cwZzM0Kf6XsKJksiQIrdzfYo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Yi5MFXajQjaYD7W2jXeXBQMrJzjsbZX2+M/Bzk5nqhrMcuOnFTekFWCGD1vkHVpUB0YY6UXJTTuSpazS3TrTU1ZcewuAgAKNmXhjzuuxzooD+/8P4C6KRJsDCRY4LGfWX/+7bAYI0OQ+YZwSLQl/fTk4ZaJrIYb+nbNbZZJ+M0E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=aMzSclIF; arc=fail smtp.client-ip=52.103.43.73
+	s=arc-20240116; t=1769133052; c=relaxed/simple;
+	bh=5MTkE/MfgrCpkj1Rm0GHGRD0Bcf56Qa1MPNPGX9an7s=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Y4AOR1tHLs62i70Bcah3uLkWaZ8mwZmsMOkI/i97f73PhnITQ39/km020LHbTLLvneCQ7VzY9KqR5KtSUeA7P/cNdJRTQYm5GmntO0TcHXNLarzzkSJrs7u5BHDAdNDDmF36Ep8yF/M8yz+uCh3ifZA8TcGd9GhYy7mhVomstjo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=UEMR7W83; arc=fail smtp.client-ip=52.103.74.81
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="aMzSclIF"
+	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="UEMR7W83"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=e7QOeeifKWXyX3H+Zd/bEcO92aRQ7yuxQrCwgldnrhp24Pb5mcEmT9H41MsYMGTrMg3FRbeWDAeYINw1dgN4qxQMFKMUVmHzt34QzqIESyfFC6ogjX3Y8ey8Q+b1BYyxbMokwboF8M73RVQWO2n8V+q+H5YafjbyNTCI5qcZDgoIIXcF0odUa/UvfNKF7kTkGy0nUHUlA/kfhoqsKGfLyPCMakbjdVo67GVxfwacfvU+Av9HOLicreI31dOnUU9I08TrsVbTcUOQ8bfCEqd2g7n3HTxUNqXyKHQkIpsbbe61T0fLLnl/oh3Ok5MJVnnmugTvZHxp3QS/HyNob78OiA==
+ b=zUgCXfnZ3mDJvJGSzUUs8ASm3hmwTPfzgaGgcm8kcuPJP1No32vESwofex1/4IVweAmeTKgWNHnUnCet+vGuWaEymdzVtBbmttv/zdSjJBuO8i1fHubQTmseQSLy3AjjrLD+K19Cbjlt9iJKra7A2gopnkwyaWrvkdWDIBNFM5X9HXFgN9P7TkzzMLxD921r7EzGFemjO4jN2fTjzKpSEpUjUvDy9+Sqv+HOEj6Bcdyq3lBNzjjPRKHMZpNQTzoELJbYo2Qa/9ufk1PkWf/yiDrkMdJK18pDmFhWqIYD88SMEmdO9ZSv8YDTVOaAKuMqYU/sfKzIAtXMSNLldQTNYQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=p/FV+OWrEpWimE03GCdNoKz1/b6VYrumkAt9/5GXGyQ=;
- b=c8vwQCeRIz1lmFYTgVgOE4EecK4GRNW69mIryeMUyL2ehKt3FZj9Yu0IbX9tkEPHb9QVlDQ8gG7AzOr5ff3dWFdhpofULYZTE7Ex7H9wz6oWtJb37JnNvlRX1/6DhHr9+3fbgAGsyczq3pLe8XEHliNd5A1c70jZYIlQi15RuW5GkBKB9ShMXrESMHiI8RsKNp3nRTH3oGEGgS7RmsYHaAVsseDI45KmM4469w1Y0tU9ZkNe6a1jbYyrVNeeQmkCjnZ/rILgs9GBUYIqkkcW2MsL47NVhCgAlRbtw6f9Bkx09JXKZ6UPhuq3OXt+6LrR3inoMoswx5UJ7348F5j3TQ==
+ bh=2NJA3MQA5I3wQ3PEw7nhr++SlYJAT+vitWFZJLu9Wqs=;
+ b=Gujxi7P8mkrGWeONjJCzCqmb+uJqz10JucpJQBciSK5rfez4uYQEIzpjEv9UiVDm/vGYmHERCHUOurR1xpdh1b4DtrP5Iu5oPak7VzG4cWbh6NsAu8niP6+TdHjD79gDc/ge00kea3dH/7IS5HDgyREpgWPLaH8DPAR1fqMRMFcPBrPnzZ4Y2LRJ9TxIRZin3OfnaLleJMZRvLDadb+RcPXdOpbhCCAVswixy4CDabODG8Sb4EiVgaglzHBvRF7qD+rPWaJFrtGjyqRt8uuMMz3SWldvB+L3DbTRVO9RQk8N9ONwERjGJ9CPRZKzbUb+H9D/Xhfobpo8OjrN2viIdQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=p/FV+OWrEpWimE03GCdNoKz1/b6VYrumkAt9/5GXGyQ=;
- b=aMzSclIFgoek+rh8qNh5tEjsKwZXJtbqfBU/OW6sSqXyipBtLF0YK9Fh66oFtOKqrR7KFKULM7olMNPafmSYVm2nYKXPKJ3XiTh19Z+8HiBB9qh2ONuAOsulaBjC/z2z4ETbN8vuDzJQEtrLBP02mKVpNgMNGaEejF12f3sZUymTGsG7lWvNeJ/auYYZPXl6j1a5W0vFeqnCLoPcya+C1lvtx7YGa3Rh29WiaAAV/GTXdJj6l58zcKwAOJzzaurknVroRD57m5TZEZKAxLY8xfAf/5xuSPYpvqi/rNZpBRz5sfdCvMDnFgCEk8QT5ihg5R3pKLIZM1QLU5tfkLosYw==
+ bh=2NJA3MQA5I3wQ3PEw7nhr++SlYJAT+vitWFZJLu9Wqs=;
+ b=UEMR7W83d/f4M0+Bmg7pNOGN0sS4frmHLTUPeVS3yslv56a+J6SA0dLoN4y87rZa3zVr+u13OgMzD+wpOYzhPIvfUfqkN2sNDsZHZ4W+Vh931TVIlm3Uj3jXUMjw4CW/fGBraePHAlNkQojyrxPB+K+bg+FmbXsXZmL+YoAA+XPRXlU0WWY3wLtHHpsm4rkfIzVBTPANCmpLVDSoodSKrKh+wuOdOWaLFPAMiJbBC7zWjG2B8SD/eYT1kNNAWeVa1xaGcVum2fPWajEiLgvOvUdp+rymjKjcFLKWt5UDOAoogBTYrEUcyGVlINSoo/7oUDQuUqKX7/86yPodCqJRjQ==
 Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  (2603:1096:4:1b0::7) by KL1PR01MB5198.apcprd01.prod.exchangelabs.com
  (2603:1096:820:d3::7) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Fri, 23 Jan
- 2026 01:49:57 +0000
+ 2026 01:49:56 +0000
 Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  ([fe80::c735:fab8:6e3d:6d1c]) by SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  ([fe80::c735:fab8:6e3d:6d1c%4]) with mapi id 15.20.9542.010; Fri, 23 Jan 2026
- 01:49:57 +0000
+ 01:49:56 +0000
 From: Wei Wang <wei.w.wang@hotmail.com>
 To: bhelgaas@google.com,
 	jgg@nvidia.com,
@@ -50,20 +49,18 @@ To: bhelgaas@google.com,
 Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	wei.w.wang@hotmail.com
-Subject: [PATCH v2 1/2] PCI: Enable the enhanced ACS controls introduced by PCI_ACS_ECAP
-Date: Fri, 23 Jan 2026 09:49:42 +0800
+Subject: [PATCH v2 0/2] PCI: Add support for ACS Enhanced Capability
+Date: Fri, 23 Jan 2026 09:49:41 +0800
 Message-ID:
- <SI2PR01MB43939A4D62F08C873D3954D2DC94A@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+ <SI2PR01MB4393B836EA4FEDD1823483BADC94A@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 X-Mailer: git-send-email 2.51.0
-In-Reply-To: <SI2PR01MB4393B836EA4FEDD1823483BADC94A@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
-References: <SI2PR01MB4393B836EA4FEDD1823483BADC94A@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: SG2PR01CA0110.apcprd01.prod.exchangelabs.com
  (2603:1096:4:40::14) To SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  (2603:1096:4:1b0::7)
 X-Microsoft-Original-Message-ID:
- <20260123014943.1311157-2-wei.w.wang@hotmail.com>
+ <20260123014943.1311157-1-wei.w.wang@hotmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -73,82 +70,82 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SI2PR01MB4393:EE_|KL1PR01MB5198:EE_
-X-MS-Office365-Filtering-Correlation-Id: bd59d3b3-ffda-48b4-2822-08de5a21b64e
+X-MS-Office365-Filtering-Correlation-Id: e3d637c7-5cb8-452e-1785-08de5a21b4e4
 X-MS-Exchange-SLBlob-MailProps:
-	znQPCv1HvwXZ5XHxNrJCjRnjimRBgM6SR9Vkfig/MaD8tjRJoAeFiZSDvi8hXTPAVkJgQ4yBxp3OSDKZXJQOYoQU7uPnHef/7A0alMl8YUYlxT/xwk55s5YwAnt49uURL/E0PaoBwIuxfBYQYSnlUddEICEF6IlNSPC9Dn+I3Q7at3DkwIw1BTznA2Eyo0p+nSzJpJw5VInVNn7cI2W0RUetafuf4886rTFuYOYkeXmj67nNCZS5CkmVb3UJ6/H80uinqrl4t9cxAZoa0fAVgNIiwea5+3O39RTfZKDzvqbuF4TRH6qnF2hAPzi/QVUWQfaXKqRcxS0D9LmWfHntPxh+Xm0LMKkoMa3yFPnIv3LShJuN8Pt895vrGBnrs8J9ERuVPeqcT39qYSNi6K9waSZFYXpCnW+iN9vYpfjksw+vCnLVMa0BlzjSLhnlQisUaLVYJgg2Iw6jK1f6c/EI426AV6XRSynuc6/BSHNNEbifW1V0QRga1bXJC1xr/1R8FCZa7ZqQ2SVfdEGelHE+GzBgkkmzpVFSbYU/66CkwBqPiFCyHuwgPx/YQ85YyeZePW1ISsxdRDjBllpWcVdIp4etpCViSW7JAjbrDqnAPog9SXSRPtu8DHmC97qA6J7KhcUI65vIb6/f6BsdNt4HzTGWFzfhlkJ3jWdgLNLJpYMy3Dm9okOtAgAJciXigT94Qyj7GUEXA4Nw6xyn3tN0ThPDa2xrHWN3dQ6FhQjfiPq41gJww/BhaXChtsKJzQPdE8uDz/1KmKs=
+	znQPCv1HvwXZ5XHxNrJCjRnjimRBgM6SpLJQB2HbV02gEHmJtp/Q2dmSNe1WJCFgfc8ocuU6Y3RgRz2FCB77cCWGJ75zLjfAXAj8LtDm6vn8Hqi4Gx8hIfWXrXsxQPVe1ojceAoj5bGYcwhusYRvAUIE0d81EfE/MhC6RnrguY4P1Y4XKoCun7MHiLJuesKSnoM9okWswZ/IpXheZ0PbxREQv4UJ3M/vWA84GFzaZVz6RN6UFFIXWDcE08xMbe51gL6q91dOZb5ll9dPAl+pVhCbI3BKdcblk47dhTOecXJA2Pfacg1sDe+6sDFd9hW8nm7Ufd4SRiufmca+bOoqcohu1Ttiv2ADZ4G6O0BhN8ypJE/h4pIGKBbbRVQH5QNxMSBAOEJLK/w80sYolsEOaT1ETk9GffqAY5NaAkbLLfOW2FO/jGGvygboW03voxHtOGzoMKONHjBzNkAC7c9W2lD6OUpWDm11U3TNGC1TbBnvzk6Xq6zPPsN9j8yaQRqlsfS1oB9Z+jbl2mCG8cLNZFR569umsvNE2HKGrh5mNuu7U7cLO3aUeP1MqYfOQzkYeJT6fp2qOOHepKL5dsaDx6x+rC74Ha1nnUTErHc+8ErZs+RREh31GYyiY/wOWXopUT4b5A2JySNF/wrMuQ1QDW2seTi2Pmq5Vu3tSu+wpCCz5cmJjKV9ZfgH6YnyCayh0B9kr/vkqxTzRxH7y4IRnGQLBpsTSPyD9Lab9b61M2htg506/YBiwwzsmAYT6SaqDNJEnlevagI=
 X-Microsoft-Antispam:
 	BCL:0;ARA:14566002|19110799012|37102599003|8060799015|12121999013|51005399006|6090799003|461199028|15080799012|5072599009|23021999003|41001999006|40105399003|440099028|3412199025|1710799026;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?ODY2THlmV1ZwRTVOZU4zajNjamFLZHRJVU9hUjJWb0hJZ01pKzdBYXlvWWJT?=
- =?utf-8?B?b0dpZTNpVEN4elNtNlpuYW56LzZxWHBSeVJjQ3dqQk5mcVA5TEl2ek1lT1ls?=
- =?utf-8?B?L1dxenI4Z3lkWnRjVTdtYmlIMVFNaXJ6THFjdHdIdit3aXVwcysrNWw4U2dP?=
- =?utf-8?B?bWNOVEpMRUhYUUpJZXNYaWJJMXpwN2J2TVVESmttMUhRTkNEM3crZEhHS0hz?=
- =?utf-8?B?OCsrN0xQZlVZYVF1WktyUUh5ZzgzWFZKL1g3UjduUk1WYVBMcFFTSTk1UlVT?=
- =?utf-8?B?WU1CRFV1WWlJdC83SmdZMndIK2Y0NGh4bXdRRExyNVVwazdrbEhBNGNMQ1F6?=
- =?utf-8?B?R0x4UUF4MG5OUytLQWRKdld1Qm5Ma29OdENlUnNSa21USUpSQ2ExSStzdHQ0?=
- =?utf-8?B?eVpObmduQ0NBSTFaSVNRaG91UHArdVkveWxkaTJaTkNyS0Z1Qkp6RDdWVEZU?=
- =?utf-8?B?QUdwSVoyZlJ1U3MwSzlpa2ZReTVTMmk3Tk1LWHBwdmhXUGx6Y3d0MUhlaEZi?=
- =?utf-8?B?aFpBQ1VqZU5rM3Q1MXVPQStBTWpwdzVSQlQvUXNUZEpWR29HSldTREwrMkl5?=
- =?utf-8?B?VW5LdElFSnk1MThXNUNrb0FmNW10QU90cE5EVW5vVTRBTjF1NzA3T1FJVU1H?=
- =?utf-8?B?YjMxQXVnNE5nL3MvN0xMR0htVHVSWFZBbnZpZUx3ZlVEc1N0ZlhJTzVPM1V2?=
- =?utf-8?B?OElPNWp2ZlM5YmNoTEdYZjJtNXdocW1HTEFpM0psUmpqYlI4OWEvaHQ2WUR1?=
- =?utf-8?B?cjZndUxHVmJSSkNtY29PSWpJbkJLWCtLYzRBc3Q1SlBicUVVTmtYWE5hMFYv?=
- =?utf-8?B?NmxQMUpmVlY4ZGNJMzZKZHdwZC9Zb0V3OEo4RHdpRWFwZVdHWU9vQURmT3JV?=
- =?utf-8?B?dElySWZqS1hwaGQwanRPdlZmSy9VSjFWL1ZCWnhNbEJCTUsrY3ZFSEFscTNZ?=
- =?utf-8?B?NyttYTFFelRTRmlyZmFCdEdtOStkajdqZXdoTnBGQ05oa1FldWpxUU5MeEls?=
- =?utf-8?B?SlZ2VVFWbWVyN2tYeWpuVmduWVhUaHZZYWNVU2hNYTF4ZDVBU05qYisrUU8y?=
- =?utf-8?B?dVNQNG4yaEVLWXZ3SnZMQ0RQMjhROFZ5NFhTYzAwcHIwYXYwZjBtM1hWV2o2?=
- =?utf-8?B?R0FiRlYzaTkrVHRDNVpjekxWMHhmbVlXY1BsSnlTdFg3QjU0RDJkNEx3Q0FX?=
- =?utf-8?B?dXU1NFRGY2ErYTBpT1RSdkQ2NjRhYklHWkZYUVJrR2lkZS9kK2hrWDliaHpn?=
- =?utf-8?B?UWlzZlE3Tkp1NFVnM1E0M3M1MEk2SUVPRk9FUXloVVJxWDVPR29kVWg4bDJj?=
- =?utf-8?B?WnBOcXZQaFR1YXNnLzJKN1JBcTZ1QmJCTDBIR2Qrb1dVMlBaWVhscStPT3Zy?=
- =?utf-8?B?N25nR04rVmk2RjRUYmtPVUxibVVRbVFiMmNlaGU4SUNESDdEQnRtQndLNm53?=
- =?utf-8?B?SnpsNm5pOWVWZmp0MkhDYnRLejZLMFBJYXM4bDhMTWNjRWlzM2hFS0hIVWJL?=
- =?utf-8?B?YTI1ZUM4QkdoZ2NYK2hENG1wRWkwVWtBU2R6MnI5UWRNdWd1bVFKOElIbnUr?=
- =?utf-8?B?SUtFSVVHOUVXQmZoNjVrN1VOYnNRR2FvV2NxOVRMQkVaOXVMb2c1Q3A5MDRG?=
- =?utf-8?B?c3ZERE1xVll4VllIbGkyY29uYjczMjNMbEFDU282SG5ZTlk4aWZReGo4YVlw?=
- =?utf-8?B?RUhCanJMM2xXZnhtTzRKRnBHeW9YTWFHLzdMRjJJcDJMY1R4SXdhL1BhY0Q1?=
- =?utf-8?B?cC9MQm44eXlnL3lsYnpraTZ2Z29vOWhXb1YyZGFJRWJHdUxyZTFQWmRGRUtO?=
- =?utf-8?B?VFBKb3NzcDFKaXRNWHhPZz09?=
+	=?utf-8?B?RkFhaHVWTVBna3FyZksxQjdUVkZFTFBaRUlKM3JKTGJGaEtpVmRHd0wxekpN?=
+ =?utf-8?B?V1kwOUlwcGp0dXYyaW1Rb0pJZmxHeHZUSllVWm5VMFNXaFNSVzhCY0UzaU5z?=
+ =?utf-8?B?eWVES1BNVGk5eEUrbVN1QnUzbGpFcVVzRnJvWUFESTErM0xKczJZYU01cDNY?=
+ =?utf-8?B?aDZ4cFFHSW1tOWlvME1YNWk0VlNleU5JYUxKR3pBWU94QVpIbDB2dkRmVmZt?=
+ =?utf-8?B?cVkxbXRoQ2dDN1hINjF5M2RmMGtUZzAvOG5zYzRWWFhvNE9XbWpvUFRPSE5w?=
+ =?utf-8?B?U2FadUdMRzAxOEJqOGVwczZBZjRXdVBOOWVGcVNrQTBGbEVoMzljamMrQ25H?=
+ =?utf-8?B?OXJEZXR4MmtER0VOVWVZMmR4QURZeWc0UDFySWNmSXo4ZE91RnNSdUV2OXky?=
+ =?utf-8?B?L21DVFRuYlBIdytJUEVBaUYwKzA4L2xKbFdqL3E0RlJwZjh2WDhKQURFTlhK?=
+ =?utf-8?B?VDJQSnp5VUMwQms5TDVDajlHTzY0VVJLOTd0SDc3d0tzUFR5UEdVRXNLSTFN?=
+ =?utf-8?B?OVEydmhES3lWRW4rdDV4cHRCZ0ZuamJmVVhLSWpteSt0TmE5VzI0R1NIRjBS?=
+ =?utf-8?B?Zkl3WnRNaUtoSEdCSXVEdGhhYmptVUxHOTg2OE5hbzlGenA1Ukl3UVVocHZ1?=
+ =?utf-8?B?eWhWQ1pEQ0JITkV6d0tVU2tvZlMrejR2OXlROVhkOHdHeVpWMG95V0RVRjNq?=
+ =?utf-8?B?eWVxRTJjSlNUZVBRelNZYWFjcWRwVXJKb29ja3RKREF0ZVBzVEwxcnc2M2xN?=
+ =?utf-8?B?SW0rVDFZeHB6QnpoZTdWYmVXbExKMlVNV0N2QnRwam16M0VLZnhEQUx6TEJa?=
+ =?utf-8?B?ZzJUaWRWTENvckRiSG1rTVVsZ0JDSGo2OFFhSFlQZGR5ZnlVTmNLbE9MdmEy?=
+ =?utf-8?B?V0NxSXhvbDJpaFZpeENEemUwakZ0OUs2ZjN6MFVWZzBRY0pST2U4dEQ3YWhO?=
+ =?utf-8?B?d0orOW9DRmoveEI5RkM2RkZqeHNubnlLZ1o0ekhGTjNSd29wdmFBOG5NN1Uy?=
+ =?utf-8?B?SGVoVDh1TFpoSHluUHBJR2tFdEh6TDBWdTdLSGRhTDRlcVYva1ZQRk11U0Jt?=
+ =?utf-8?B?cC9QUnlsWmhLNUY5UHpXZnhNMTIwNkVwdVp0NkJOdEQrTTh4ZGhpUlBYUHda?=
+ =?utf-8?B?NlRsU21RM1BNUmwydnQ1RWxLQ0FTZEdFOUxOalMvQUhtbDVXYVA0bi9LeUZH?=
+ =?utf-8?B?NGxiODcwRklYNFpVYU43Z21tbHpOVUNoV2o5YkIra29BSUpxb2ZVQW1uVmtX?=
+ =?utf-8?B?ZEhyWElVQUVQa2JvckFqekdGTXk4VGU5SzFrYzhsTWZHMk4vaWc2WkhrU1lw?=
+ =?utf-8?B?eEM5bEd3YXFVVWQvZGRGaGpXaXZJbFR4RWUvb1hEMW9RM3RxaGVmWDRFM2xk?=
+ =?utf-8?B?amQ1bm5qT2RicWJ0QkxaR3BITWZJMDM4djQ0R2liWUxjaCtudCtmKzRnUW9C?=
+ =?utf-8?B?cTNFbUs3U2pVZkhOOUJQMWpySzlHaFpVdXdDTGlUMExMY2tQR2s0RXlIOGlx?=
+ =?utf-8?B?dDZZZU8zVCtleHFqemNwNzQwLytZSFNCQUEwc0hrU0pqRWJ4Y0p5VHdTdTZ4?=
+ =?utf-8?B?M2pNZ2ZWa3p5QlV6cG1JMXJ0c0pQVWIrdWE1WkZSQkxNazRSZ3pyZmoxOGhU?=
+ =?utf-8?B?ViswQzNBdUVWUElSSUpiaFQrS3RxSytoZG5ueFdrdThyNmswQ2ovM1dOdEZx?=
+ =?utf-8?B?bHovL0xSa3dlSTJ0UEUwZDhnaFBZdWloS29TNzE0U29IdUtrL2RlcjVYRkJP?=
+ =?utf-8?B?SkVENFZtQ243V0NrS3hXTkVwNXh6OGNQMzRHRkZ0aHNBWmZyZWFzblp0T2Yr?=
+ =?utf-8?B?R2poemVlcDNDN251U0g2dz09?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Uzd6c2dFUTRBTFVzR1Z6dVRueVlDa2lDOWowRW10NG1QMVUvaVJMNW9Tbkhk?=
- =?utf-8?B?ZzcxMmtsNktwRVFSZ1VaMDRNZkF4cDExM3VBQ05lZWFCU1gzWHNFY1Bnakxs?=
- =?utf-8?B?T0wxYTdqN01jUmpId0FqYllzWjZJRnd5VzdORHJVOTZ4Z3ZsM1JhVnlBaVY2?=
- =?utf-8?B?ZENPb3huaTZhZSt5SkFsOEJaUFBmNmlrNXZoVEtyVDY0QUFkZk8vblVUbUxp?=
- =?utf-8?B?eGhCWHBYbTYyM2Izd2VMYzJ1VlNUcjRIMkJZWW56aG5jNTJLcmM3OFF5T3dK?=
- =?utf-8?B?WTYrNmROUTEwWmVlMWt1ajNIWVJzaHhlSSs0Ry9lWDRpa3k5MEpGWUpzcGYy?=
- =?utf-8?B?S3RqV0tNMU16d3lHSFRhaU90eWRGN0EwRVdEWThlT091UE8vay9YZTgxSkJq?=
- =?utf-8?B?L0czY3Z1Z3V4anAvbXlIQmtYSWhoTU95VWE0VGFia0pSeXNOVlJYdGVCa0VK?=
- =?utf-8?B?aXRWR2tRME55NWd0WWJ4Z1pqT2JScDVPaGdDWld1dTNJQVc5My93ckhmWGNP?=
- =?utf-8?B?NE9xSWI2ZXVBa09Lb3pkaTFpVU1jMldIajF1WmYzcDJxQ0VheUpac3ljTThT?=
- =?utf-8?B?K1VSSHIvYXBXaEdVOXVYRUU3V0lhNCs0d3FWM1lNZUdlTG1NcUZBWm0yR0pM?=
- =?utf-8?B?bytXV3p1RWZIS0tNQW5uMjdKZTRna2YyaGUyc2JQUElzdklTdGJjenBFUCsz?=
- =?utf-8?B?K3l5SEUxK0NjbVFiS1oxYnR5WHg5QVFRNlVVRVRkVndyaXFpbWNCT0x5SEc5?=
- =?utf-8?B?azAvUEdXWlcya2VaK3QzVEVHd2h1V0tDL3R3K0YrdTVLb0R5L2ZIZ0pUWlpw?=
- =?utf-8?B?ZHMxV0EybnA4OUZHQnpBb2lLTGJtSVc5VlRaQjM4ZDVRSlR2R3BLakZCM1pD?=
- =?utf-8?B?TnNKVzFFdlE4S1p1QXJJVm94UVVILzY5S2pjSnB0OC9MWUlpbmVZWHlCbFVQ?=
- =?utf-8?B?YUx3a1BvQ3hoVXQrNDVwWkhKVlQ2VW9FcmVmRVoxdnhTanRGbFJibDlNTlhl?=
- =?utf-8?B?QjVrNnRvb2czQ0lSV1dUaVp5WkpQYklXRFlGaVZGc3BQUkR5SFJHZ1FuU2Rr?=
- =?utf-8?B?ak1GSDRQWml2THZUMU1kWWhTMFNjZFdKZzhNelRVaGU2V2M1OEN3NEFGeFBH?=
- =?utf-8?B?aUF3cnZNWkZMNldtRnNTbElEREwvMks2QTRqc2w0OUNDY3pLdjdaM3VhN0Fp?=
- =?utf-8?B?WktJQTV1a0Rjak82NTc3Z2hXSjBWajF0UTNEczAwN1J2RXg5MW9lNmFPemo5?=
- =?utf-8?B?SWx4ZUptcXU3SzNsNmV1VkcvY0lVLzQ3bWJMdzIrTFUwc1BOdSs5TEQ5UGM2?=
- =?utf-8?B?SVRNVStLaE5tVTAyRnJDbFFqa3FjZnV2TXdvUlk0QUhqdnBpRDUzNlVwK3FP?=
- =?utf-8?B?Z1NZRll1V2xIWlZSQWlXTWtXSkNqVnRmVnk1cWRyeWhFcVlRbVVDczhpaFJm?=
- =?utf-8?B?SW42cGJkWGlOK29vRC9jbDI2ZHJFU1AzVWZTYWJDb3p2aUtuM3F5YlFIbkxP?=
- =?utf-8?B?elcveHREUFhXYXBEL01TR2hMb1MzQ3IzeUl1bVNuOU9MQnNsay9oVE5BRGg2?=
- =?utf-8?B?eEwzcmdPY1dCTlBiSGM0N3NCMlZCU3RnQUZORnQwdmlNV1RmUEp5ZlJnTDJS?=
- =?utf-8?B?bW9aeHZyRENiY2xIQXdsaHFWRVBqckNidnlCT01wRGJpMzlSc1RUaUlxbjN6?=
- =?utf-8?B?NE1mZGl4TDErTGozL2U2L0d0V3QxZnhIaWFVcVBiNjVldHBRUjkzTnl4eDhO?=
- =?utf-8?B?aW04c2s4eHZOWFR1Ny9CU0FWR0E1N3kxVEZvcWxWRzB1M25rNEJzbno5cjd2?=
- =?utf-8?B?WXFERFBkMlhhZXdxT3UvcGlNb0l2TUM4Y1RoMFdiOXpOcmJmbU84aXhSZ2ZX?=
- =?utf-8?Q?ImL/yBeBBayAw?=
+	=?utf-8?B?VDRSLzFDWWVxNXRVZGtwWUdmcnEyZFdkNHZVNStlOHdsSWU4SllVbGpUSkwz?=
+ =?utf-8?B?dzFxanl2ZWdDRXAyNmpDcXBNcW80Rk9jV0U1aUYxbjhna3NLQ2hva1kzVVFk?=
+ =?utf-8?B?blAvYmVuTHFkSnRkR2svbGtBT0JqY3JYeFU1NVFPL09TUWhxK1VvK0tuU2Jn?=
+ =?utf-8?B?ZWJJdm1UaEtiaU0yQWk2MGk0YjVucWpzeVdYSlNDdkFleS9mblQxWW9vQ3lQ?=
+ =?utf-8?B?WG9ZeGRIb1J2em5oU0R2VHlvRnVHanRVeitRNHBRNVNCZ0ZyWjd4a3QveWNY?=
+ =?utf-8?B?NVNUWVhtRWZoT0swbENWQ2p1REczVWoxeFJDeTh0aW9MS0xzQ3NIMzBJN3Zk?=
+ =?utf-8?B?MGxESlFBWVB6TXdQNjM3ZkhOeFZhK1FQZktlVVdYWWVhTkRpOS9meUJHYyt2?=
+ =?utf-8?B?WWhOdERFN29MR00rMkMySGM0Q0lKTEJpM0EyOGNMTmJvYjYySlBYb1U0MkJX?=
+ =?utf-8?B?MHBoZ3A4ZWd4OVc0dmREaG93cHppTlNra3RPMHRRRmlIRXVyUk5oY2xaTjNN?=
+ =?utf-8?B?bVJWT3A2OTJmWE0vamVHQnJZay9nSk1qY1lTK01WK3Q2YWVGa21XaTJ2QlZE?=
+ =?utf-8?B?NWYxa1lEaFpHZXNBNDcyWGFKdEE2TlhCaW5TU0gxYjBqYnpRY1J1ZlJmbWNo?=
+ =?utf-8?B?eHBqVnd6alY1bnBBb3dwcWVRa2Nmd3VXR3pFd0Q0NWVKR2ZDeER1TEwwRU1X?=
+ =?utf-8?B?RkFweTJOR0gza3c2SG44dkpNdFlIYitQSG50NVpKSG9GLzl0c21oTmI5QnRN?=
+ =?utf-8?B?S092MWQwaDJNK1BwZEFJTnBlMlZtMERaRUY0dVYzU2UxODNzem9jbnB4WTN2?=
+ =?utf-8?B?eEVCWjNNYStQUDBSdWsxRnlORHhHTytNOEZ5TUV1WGE4ZFVzdGJiZzhrZEVy?=
+ =?utf-8?B?MTM5M0RLS1FPMjVrR3hOQ1dQYnRya3Q4L3E2L3J5OEtmaTRybkFEVEN5Q1Jr?=
+ =?utf-8?B?OVhQSEthSU9LNWNoZTRCZ0d1R2hMQU5yU0N6a0ZJWkR1azhKN05UaWxLRGh0?=
+ =?utf-8?B?MGFpNUVvWnpVekpRQzFUelFkaXZjbG9hTE56OSt1L0NWMUVISWxnVngyTmFW?=
+ =?utf-8?B?RHVEcU0vRm5qc09HZ1d5R1lUSFNZL2tENjRhdW5hTmJwZWo4djFDbjhUR3VM?=
+ =?utf-8?B?dXdFa0VaTDF2emV6TE5lN3dpc3hxS2xFZ0p3bEhpU2hGS0pXaTVLR0ZkNWh1?=
+ =?utf-8?B?dndrd0dPUWdEejdSZWdtc0JkaFZiRXpNTmFiTi8wUmZQMFBseWZGUEFyOHVW?=
+ =?utf-8?B?Z1Q0WlJwVkNKZjZJdUtUMzVsQVpRSGJWMmFCc1lrVHNIR3grS3Y4eWs3eDBU?=
+ =?utf-8?B?RU92Rk9TOVQxK2k2R1BYMXVoWU1QWXQrdEZoc0NyejRrYkl4ckU4dEliYlVM?=
+ =?utf-8?B?TTJrWmVzbzhhMUZpK2prenlGOE1pTDd3MElIcGNXLzlCTDR6M3FtbHR4dXNa?=
+ =?utf-8?B?RWdwdDJobCtaL0VaYllHR1cvdUdaNFRmK0ZOVkxub1Rwd1crYlUrbVRKM0h3?=
+ =?utf-8?B?QWV0d2dsRS9CUGdWcjJGRTdRTUduMS9BTldrUjR6dzZIbnMxejVmN3hUcU9N?=
+ =?utf-8?B?UWg2bU9DSktsdkRqNmxDR2JPOTFnY29WT1dPTUpGTklsZENRZnJaak83WVow?=
+ =?utf-8?B?OGhwWS8vYnJXdUZuanNmdG9keGg3VFEyU1NaQ2NXYmU3Z3NqZkVJWEpRdWQy?=
+ =?utf-8?B?ZXJyMGdkMCtwNGZyUzI1NkpnaWt5YmZTbEVNYzNHSWtjVExxRTF6N0lXVFhL?=
+ =?utf-8?B?VFdKczVHZEJvaDN0VGozeURNMmtpUEJ0VnlWRzdNS2RDTDF3VGRrMFJLK25u?=
+ =?utf-8?B?QksrZTIxa0NHZWZuTE5EZ1VKWFhDVHExMjJsMXJaM3cxUGdGZnpPWWdVMzNE?=
+ =?utf-8?Q?6/g0CafxMXZwy?=
 X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-5f51e.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: bd59d3b3-ffda-48b4-2822-08de5a21b64e
+X-MS-Exchange-CrossTenant-Network-Message-Id: e3d637c7-5cb8-452e-1785-08de5a21b4e4
 X-MS-Exchange-CrossTenant-AuthSource: SI2PR01MB4393.apcprd01.prod.exchangelabs.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jan 2026 01:49:57.5648
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jan 2026 01:49:55.6662
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
@@ -156,122 +153,47 @@ X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR01MB5198
 
-The ACS Enhanced Capability introduces several new access controls to
-improve device isolation. These new controls are particularly important
-for device passthrough in virtualization scenarios.
+This patchset adds support for the Access Control Services (ACS) Enhanced
+Capability, introduced with PCIe Gen 5. The ACS Enhanced Capability
+provides additional access control features that improve device isolation
+— particularly important in virtualization scenarios where devices are
+passed through to different virtual machines (VMs). Strong isolation is
+critical to ensure security between devices assigned to different VMs and
+the host.
 
-For example, a DMA transaction from a device may target a guest physical
-address that lies within the memory aperture of the switch's upstream
-port, but not within any memory aperture or BAR space of a downstream
-port. In such cases, the switch would generate an Unsupported Request (UR)
-response to the device, which is undesirable. Enabling Unclaimed Request
-Redirect Control ensures that these DMA requests are forwarded upstream
-instead of being rejected.
+In Linux, device grouping assumes that devices in separate IOMMU groups
+are properly isolated. To uphold this assumption, the enhanced ACS
+controls are enabled by default on hardware that supports the PCI_ACS_ECAP
+capability. As with other basic ACS access controls, these new controls
+can be configured via the config_acs= boot parameter.
 
-The ACS DSP and USP Memory Target Access Control and ACS I/O Request
-Blocking features similarly enhance device isolation. Device grouping in
-Linux assumes that devices are properly isolated. Therefore, enable these
-controls by default if PCI_ACS_ECAP is supported by the hardware. As with
-other basic ACS access controls, these new controls can be configured via
-the config_acs= boot parameter.
+Support for checking the enhanced ACS controls on Root and Downstream
+Ports has been added to pci_acs_enabled(). On devices that support
+PCI_ACS_ECAP, these controls must be properly enabled. To maintain
+compatibility with legacy devices that lack PCI_ACS_ECAP support,
+pci_acs_enabled() skips the check and logs a warning to indicate that
+isolation may be incomplete.
 
-Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
----
- .../admin-guide/kernel-parameters.txt         | 23 +++++++++++++------
- drivers/pci/pci.c                             | 13 ++++++++++-
- include/uapi/linux/pci_regs.h                 |  7 ++++++
- 3 files changed, 35 insertions(+), 8 deletions(-)
+v1->v2 changes:
+- Enabled all enhanced ACS controls by default, rather than just Unclaimed
+  Request Redirect (which addressed the primary issue we encountered).
+- Added checks for enhanced ACS controls on Root and Downstream Ports in
+  pci_acs_enabled() to ensure proper enablement when grouping devices or
+  enabling features such as IOMMU PASID.
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 5637bb35cb75..8f99f6d728b9 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -5261,13 +5261,22 @@ Kernel parameters
- 				flags.
- 
- 				ACS Flags is defined as follows:
--				  bit-0 : ACS Source Validation
--				  bit-1 : ACS Translation Blocking
--				  bit-2 : ACS P2P Request Redirect
--				  bit-3 : ACS P2P Completion Redirect
--				  bit-4 : ACS Upstream Forwarding
--				  bit-5 : ACS P2P Egress Control
--				  bit-6 : ACS Direct Translated P2P
-+				  bit-0     : ACS Source Validation
-+				  bit-1     : ACS Translation Blocking
-+				  bit-2     : ACS P2P Request Redirect
-+				  bit-3     : ACS P2P Completion Redirect
-+				  bit-4     : ACS Upstream Forwarding
-+				  bit-5     : ACS P2P Egress Control
-+				  bit-6     : ACS Direct Translated P2P
-+				  bit-7     : ACS I/O Request Blocking
-+				  bit-9:8   : ACS DSP Memory Target Access Ctrl
-+				      00    : Direct Request access enabled
-+				      01    : Request blocking enabled
-+				      10    : Request redirect enabled
-+				      11    : Reserved
-+				  bit-11:10 : ACS USP Memory Target Access Ctrl
-+				              Same encoding as bit-9:8
-+				  bit-12    : ACS Unclaimed Request Redirect Ctrl
- 				Each bit can be marked as:
- 				  '0' – force disabled
- 				  '1' – force enabled
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 382ce8992387..c4cf835ec8ba 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -948,7 +948,10 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
- 		}
- 
- 		if (mask & ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | PCI_ACS_CR |
--			    PCI_ACS_UF | PCI_ACS_EC | PCI_ACS_DT)) {
-+			    PCI_ACS_UF | PCI_ACS_EC | PCI_ACS_DT | PCI_ACS_IB |
-+			    PCI_ACS_DMAC_RB | PCI_ACS_DMAC_RR |
-+			    PCI_ACS_UMAC_RB | PCI_ACS_UMAC_RR |
-+			    PCI_ACS_URRC)) {
- 			pci_err(dev, "Invalid ACS flags specified\n");
- 			return;
- 		}
-@@ -1008,6 +1011,14 @@ static void pci_std_enable_acs(struct pci_dev *dev, struct pci_acs *caps)
- 	/* Upstream Forwarding */
- 	caps->ctrl |= (caps->cap & PCI_ACS_UF);
- 
-+	/*
-+	 * Downstream and Upstream Port Memory Target Access Redirect,
-+	 * Redirect Unclaimed Request Redirect Control
-+	 */
-+	if (caps->cap & PCI_ACS_ECAP)
-+		caps->ctrl |= PCI_ACS_DMAC_RR | PCI_ACS_UMAC_RR |
-+			      PCI_ACS_URRC | PCI_ACS_IB;
-+
- 	/* Enable Translation Blocking for external devices and noats */
- 	if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
- 		caps->ctrl |= (caps->cap & PCI_ACS_TB);
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 3add74ae2594..2b026aa91647 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1011,6 +1011,7 @@
- 
- /* Access Control Service */
- #define PCI_ACS_CAP		0x04	/* ACS Capability Register */
-+#define  PCI_ACS_ECAP		0x0080  /* ACS Enhanced Capability */
- #define  PCI_ACS_SV		0x0001	/* Source Validation */
- #define  PCI_ACS_TB		0x0002	/* Translation Blocking */
- #define  PCI_ACS_RR		0x0004	/* P2P Request Redirect */
-@@ -1018,6 +1019,12 @@
- #define  PCI_ACS_UF		0x0010	/* Upstream Forwarding */
- #define  PCI_ACS_EC		0x0020	/* P2P Egress Control */
- #define  PCI_ACS_DT		0x0040	/* Direct Translated P2P */
-+#define  PCI_ACS_IB		0x0080	/* I/O Request Blocking */
-+#define  PCI_ACS_DMAC_RB	0x0100  /* DSP Memory Target Access Blocking */
-+#define  PCI_ACS_DMAC_RR	0x0200  /* DSP Memory Target Access Redirect */
-+#define  PCI_ACS_UMAC_RB	0x0400  /* USP Memory Target Access Blocking */
-+#define  PCI_ACS_UMAC_RR	0x0800  /* USP Memory Target Access Redirect */
-+#define  PCI_ACS_URRC		0x1000	/* Unclaimed Request Redirect Ctrl */
- #define PCI_ACS_EGRESS_BITS	0x05	/* ACS Egress Control Vector Size */
- #define PCI_ACS_CTRL		0x06	/* ACS Control Register */
- #define PCI_ACS_EGRESS_CTL_V	0x08	/* ACS Egress Control Vector */
+Thanks to Jason Gunthorpe for reviewing the patchset.
+
+Wei Wang (2):
+  PCI: Enable the enhanced ACS controls introduced by PCI_ACS_ECAP
+  PCI: Add the enhanced ACS controls check to pci_acs_flags_enabled()
+
+ .../admin-guide/kernel-parameters.txt         | 23 ++++--
+ drivers/pci/pci.c                             | 80 ++++++++++++++++++-
+ include/uapi/linux/pci_regs.h                 |  7 ++
+ 3 files changed, 102 insertions(+), 8 deletions(-)
+
+
+base-commit: e3b32dcb9f23e3c3927ef3eec6a5842a988fb574
 -- 
 2.51.0
 
