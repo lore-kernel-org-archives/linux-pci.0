@@ -1,141 +1,317 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 971132E54DE;
-	Fri, 23 Jan 2026 08:51:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6003732254E
+	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 08:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769158292; cv=none; b=cyoMO9zVzQSXkybhoabL5k3HM20uldq1YKqaf82claNMR4t6L5ALNfE7BBLUWQE+yUPICK5w53S6Q8fzMto5P6UQZJ+hxuMu3J2ASp2HkSS3b/mSH80KS3xNdQRl4oqd4Ug+goUZhcGo1oinVkfKdm7tB7XydlFly4VNxiDARl4=
+	t=1769158731; cv=none; b=jKmnItkNbZAZTeEqSnb5hHVXrPAV8364qalwF6065wdtt/T0ZkxbBZGcmCrJ9KDHHNqU0GJ25Cwt7vghiIsMd78jnKkbX1u8aHqhJ5UuKxJLawIOVF6iNuAfDOSV46EMuo4ZIoeOxM6O5SKsr3ar01N7O70BOcricHxlOrDV/4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769158292; c=relaxed/simple;
-	bh=uHLu75YU3d5LFuDqYhNdrTluLj4QmEkgMjijx82wFVo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cAIToSmVChxu6b6IOpDtjudx+XvTjpG+LQ04rj/lCRmdiH+wzal94Lodzx9kvf+y5HgyF30wD/VnqXCNw0lYAxsw/JMMylEbY5VhovvZwmTFH1WGx6QzD1k/tn4F1J55WtfDAThQEb21RuARgqq0/YKmga7DWzoTM9oKeTdU/5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P2x/rDF+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769158731; c=relaxed/simple;
+	bh=pftByndV0xsl18X4ti4xVB/KnEHiOV4d9oxYzUgk7EU=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=B82EKJv+Sdq00MDnP1SLcDLIxqzCg9AV8U3bJPBfBl/WYTF9R9CuoYFavLWCCmYiryLVk881Rni0X6x4WlZWYzSsoxzIgKosRiwlkkVWENTmt2XTgqTuG+WL0i3ndWiylCFgg4S4eih82HYxx30YpBWlHbGTkdH0TJbp/QkOxGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c829xwAb; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P2x/rDF+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F06FC4CEF1;
-	Fri, 23 Jan 2026 08:51:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769158292;
-	bh=uHLu75YU3d5LFuDqYhNdrTluLj4QmEkgMjijx82wFVo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P2x/rDF+V1S8nsKTuKOnD9QTwc41mF+XW6CEW4Lczf+0Sd6Nq5HQYPZljIkT06Qsr
-	 wIpsWwJl7SNWJGjLv6Eul2oOhcXM+uSeslFw7p/fqlD351FGaNP7tTEeORpdakVZ2x
-	 TqvkKLgYvEcqDaF0pIhEqdOwsfBiNwfz73XPMMzNpH57FqZjOmS6Ef5yIk1U5pEv3/
-	 sDhbSopJR642hfZEnALQcni3Jw5qQtapD3e7lk65oHsqDb0Bur+Ix0+UDcHnBGwPU1
-	 //bi+O56i4qSkHisywxprWy1WySWG064VdIew5tpiaTSmeiHZoS4N3KNcwNWuzGqID
-	 JclBA/sfEIjRQ==
-Date: Fri, 23 Jan 2026 09:51:19 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	vigneshr@ti.com, s-vadapalli@ti.com, hongxing.zhu@nxp.com,
-	l.stach@pengutronix.de, shawnguo@kernel.org, s.hauer@pengutronix.de,
-	kernel@pengutronix.de, festevam@gmail.com, minghuan.Lian@nxp.com,
-	mingkai.hu@nxp.com, roy.zang@nxp.com, jesper.nilsson@axis.com,
-	heiko@sntech.de, srikanth.thokala@intel.com,
-	marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com,
-	geert+renesas@glider.be, magnus.damm@gmail.com,
-	christian.bruel@foss.st.com, mcoquelin.stm32@gmail.com,
-	alexandre.torgue@foss.st.com, thierry.reding@gmail.com,
-	jonathanh@nvidia.com, hayashi.kunihiko@socionext.com,
-	mhiramat@kernel.org, kishon@kernel.org, jirislaby@kernel.org,
-	rongqianfeng@vivo.com, 18255117159@163.com,
-	shawn.lin@rock-chips.com, nicolas.frattaroli@collabora.com,
-	linux.amoon@gmail.com, vidyas@nvidia.com, Frank.Li@nxp.com,
-	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	imx@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
-	linux-arm-kernel@axis.com, linux-rockchip@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v9 4/5] PCI: dwc: ep: Support BAR subrange inbound
- mapping via Address Match Mode iATU
-Message-ID: <aXM2hwCrziK2I8OL@ryzen>
-References: <20260122084909.2390865-1-den@valinux.co.jp>
- <20260122084909.2390865-5-den@valinux.co.jp>
- <aXHsd7-WWAGyhy_w@ryzen>
- <s6bnqkbuugi7oio7ybekdbk3dokpbe2bui2wjltdwajxix2app@wosgmhrfsriv>
- <19D609EC-F850-4B43-A83C-0B8C70E641B5@kernel.org>
- <l7wknbayighcczjkqfwhbaqrepjtbgxxstgkntoqvnrs7dnm6g@wvmy67ky37pv>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c829xwAb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769158726; x=1800694726;
+  h=date:from:to:cc:subject:message-id;
+  bh=pftByndV0xsl18X4ti4xVB/KnEHiOV4d9oxYzUgk7EU=;
+  b=c829xwAbsLkSbNEiMl9nO2R+jYanuolIfSvy6dYEYZpuFfXXr8mCwKDM
+   8h15ryGwXt3wCUxM1+6FQFpT6sjA6X6iYhGAJaytB8xfB/JHiA78BCv59
+   MN/T2aAGlG11+qJuC8D0lPZ8OpeUKWsGtP5xgkeP1l1OXHsGtok6ja7a5
+   Z1vOKAfnK7kCJ54eYj71IJzAtp953cdqEzjwNkCtZw4u3ui0nanfs6Fwl
+   JCtSPIpISOfmuCOYgsyxg+ny/AEONK1xib7zhjX6ZQz1/aE+5XXTkrlDJ
+   YPhYcX6VPvrO2UyK/jrWy8+ysdMz3rWc1ve/dwNKBeeZ1e2sbefPq+evC
+   w==;
+X-CSE-ConnectionGUID: i7DLuhGfRL+nP+wAofsJWA==
+X-CSE-MsgGUID: 5jdSN0SXRQ2JZkQjBZftmA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11679"; a="74269935"
+X-IronPort-AV: E=Sophos;i="6.21,248,1763452800"; 
+   d="scan'208";a="74269935"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jan 2026 00:58:43 -0800
+X-CSE-ConnectionGUID: KbwgqD3zQamA41d21wfaEg==
+X-CSE-MsgGUID: 78d9vhjTSGKqS9ib7aMV2A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,248,1763452800"; 
+   d="scan'208";a="211479319"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by orviesa004.jf.intel.com with ESMTP; 23 Jan 2026 00:58:42 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vjD03-00000000Tj4-2pGV;
+	Fri, 23 Jan 2026 08:58:39 +0000
+Date: Fri, 23 Jan 2026 16:58:22 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:for-linus] BUILD SUCCESS
+ 5528fd38f230c906fcebb202cc94fbb8ed8f122a
+Message-ID: <202601231617.zyePKSOl-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <l7wknbayighcczjkqfwhbaqrepjtbgxxstgkntoqvnrs7dnm6g@wvmy67ky37pv>
 
-On Fri, Jan 23, 2026 at 10:16:21AM +0900, Koichiro Den wrote:
-> >
-> > There might be other EPC drivers that don't disable all BARs in their .init(), so I would say that simply checking if the BAR has an address is not sufficient to guarantee that an EPF driver has called set_bar().
-> >
->
-> Even if an EPC driver does not reset the BAR in their .init() and some
-> default translation is left exposed, wouldn't it be safe as long as
-> dw_pcie_ep_ib_atu_addr() succeeds in programming inbound mappings for the
-> entire BAR?
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
+branch HEAD: 5528fd38f230c906fcebb202cc94fbb8ed8f122a  PCI: Fix Resizable BAR restore order
 
-For e.g. on RK3588, the default HW configuration of the DWC controller has
-all 5 BARs as enabled, with a size of 1 GB.
+elapsed time: 972m
 
-There is no inbound address translation for these BARs by default.
+configs tested: 240
+configs skipped: 4
 
-So for it to be safe, the size of the set_bar() call would have to
-match the current size of the BAR, but how should the EPF driver know
-that when it has not called set_bar() yet?
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-dw_pcie_ep_read_bar_assigned() does not return the current size of the
-BAR. So you can't verify that the set_bar() call has the same size as
-the BARs "default size".
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-22
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                     nsimosci_hs_defconfig    gcc-15.2.0
+arc                   randconfig-001-20260123    gcc-10.5.0
+arc                   randconfig-001-20260123    gcc-8.5.0
+arc                   randconfig-002-20260123    gcc-10.5.0
+arc                   randconfig-002-20260123    gcc-8.5.0
+arm                               allnoconfig    clang-22
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                              allyesconfig    gcc-15.2.0
+arm                        clps711x_defconfig    gcc-15.2.0
+arm                     davinci_all_defconfig    gcc-15.2.0
+arm                                 defconfig    clang-22
+arm                                 defconfig    gcc-15.2.0
+arm                      integrator_defconfig    gcc-15.2.0
+arm                          moxart_defconfig    gcc-15.2.0
+arm                        mvebu_v7_defconfig    gcc-15.2.0
+arm                          pxa168_defconfig    gcc-15.2.0
+arm                   randconfig-001-20260123    clang-18
+arm                   randconfig-001-20260123    gcc-10.5.0
+arm                   randconfig-002-20260123    clang-22
+arm                   randconfig-002-20260123    gcc-10.5.0
+arm                   randconfig-003-20260123    gcc-10.5.0
+arm                   randconfig-004-20260123    gcc-10.5.0
+arm                   randconfig-004-20260123    gcc-15.2.0
+arm                         s5pv210_defconfig    gcc-15.2.0
+arm64                            allmodconfig    clang-19
+arm64                            allmodconfig    clang-22
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260123    gcc-15.2.0
+arm64                 randconfig-002-20260123    gcc-15.2.0
+arm64                 randconfig-003-20260123    gcc-15.2.0
+arm64                 randconfig-004-20260123    gcc-15.2.0
+csky                             alldefconfig    gcc-15.2.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260123    gcc-15.2.0
+csky                  randconfig-002-20260123    gcc-15.2.0
+hexagon                          allmodconfig    clang-17
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    clang-22
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    clang-22
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260123    gcc-12.5.0
+hexagon               randconfig-002-20260123    gcc-12.5.0
+i386                             allmodconfig    clang-20
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260123    clang-20
+i386        buildonly-randconfig-002-20260123    clang-20
+i386        buildonly-randconfig-002-20260123    gcc-14
+i386        buildonly-randconfig-003-20260123    clang-20
+i386        buildonly-randconfig-003-20260123    gcc-14
+i386        buildonly-randconfig-004-20260123    clang-20
+i386        buildonly-randconfig-004-20260123    gcc-14
+i386        buildonly-randconfig-005-20260123    clang-20
+i386        buildonly-randconfig-006-20260123    clang-20
+i386                                defconfig    clang-20
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260123    clang-20
+i386                  randconfig-001-20260123    gcc-14
+i386                  randconfig-002-20260123    clang-20
+i386                  randconfig-002-20260123    gcc-14
+i386                  randconfig-003-20260123    gcc-14
+i386                  randconfig-004-20260123    gcc-14
+i386                  randconfig-005-20260123    clang-20
+i386                  randconfig-005-20260123    gcc-14
+i386                  randconfig-006-20260123    gcc-14
+i386                  randconfig-007-20260123    gcc-13
+i386                  randconfig-007-20260123    gcc-14
+i386                  randconfig-011-20260123    clang-20
+i386                  randconfig-012-20260123    clang-20
+i386                  randconfig-012-20260123    gcc-14
+i386                  randconfig-013-20260123    clang-20
+i386                  randconfig-013-20260123    gcc-14
+i386                  randconfig-014-20260123    clang-20
+i386                  randconfig-015-20260123    clang-20
+i386                  randconfig-015-20260123    gcc-14
+i386                  randconfig-016-20260123    clang-20
+i386                  randconfig-017-20260123    clang-20
+i386                  randconfig-017-20260123    gcc-14
+loongarch                        allmodconfig    clang-19
+loongarch                        allmodconfig    clang-22
+loongarch                         allnoconfig    clang-22
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260123    gcc-12.5.0
+loongarch             randconfig-002-20260123    gcc-12.5.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                             allyesconfig    gcc-15.2.0
+m68k                          atari_defconfig    gcc-15.2.0
+m68k                                defconfig    clang-19
+m68k                                defconfig    gcc-15.2.0
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+microblaze                          defconfig    gcc-15.2.0
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+mips                           ci20_defconfig    gcc-15.2.0
+mips                         cobalt_defconfig    gcc-15.2.0
+mips                     cu1000-neo_defconfig    gcc-15.2.0
+mips                           ip27_defconfig    gcc-15.2.0
+nios2                            allmodconfig    clang-22
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-22
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                               defconfig    gcc-11.5.0
+nios2                 randconfig-001-20260123    gcc-12.5.0
+nios2                 randconfig-002-20260123    gcc-12.5.0
+openrisc                         allmodconfig    clang-22
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    clang-22
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-22
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260123    gcc-12.5.0
+parisc                randconfig-002-20260123    gcc-12.5.0
+parisc64                            defconfig    clang-19
+parisc64                            defconfig    gcc-15.2.0
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-22
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc                      mgcoge_defconfig    gcc-15.2.0
+powerpc                 mpc837x_rdb_defconfig    gcc-15.2.0
+powerpc               randconfig-001-20260123    gcc-12.5.0
+powerpc               randconfig-002-20260123    gcc-12.5.0
+powerpc64             randconfig-001-20260123    gcc-12.5.0
+powerpc64             randconfig-002-20260123    gcc-12.5.0
+riscv                            allmodconfig    clang-22
+riscv                             allnoconfig    clang-22
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260123    clang-22
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-22
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260123    gcc-8.5.0
+s390                  randconfig-002-20260123    gcc-14.3.0
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-22
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                        edosk7705_defconfig    gcc-15.2.0
+sh                    randconfig-001-20260123    gcc-13.4.0
+sh                    randconfig-002-20260123    gcc-15.2.0
+sh                           se7712_defconfig    gcc-15.2.0
+sh                           se7721_defconfig    gcc-15.2.0
+sparc                             allnoconfig    clang-22
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260123    gcc-13.4.0
+sparc                 randconfig-002-20260123    gcc-13.4.0
+sparc64                          allmodconfig    clang-22
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260123    gcc-13.4.0
+sparc64               randconfig-002-20260123    gcc-13.4.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-22
+um                               allyesconfig    gcc-14
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260123    gcc-13.4.0
+um                    randconfig-002-20260123    gcc-13.4.0
+um                           x86_64_defconfig    gcc-14
+um                           x86_64_defconfig    gcc-15.2.0
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-22
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260123    clang-20
+x86_64      buildonly-randconfig-002-20260123    clang-20
+x86_64      buildonly-randconfig-003-20260123    clang-20
+x86_64      buildonly-randconfig-004-20260123    clang-20
+x86_64      buildonly-randconfig-005-20260123    clang-20
+x86_64      buildonly-randconfig-006-20260123    clang-20
+x86_64      buildonly-randconfig-006-20260123    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260123    gcc-14
+x86_64                randconfig-002-20260123    gcc-14
+x86_64                randconfig-003-20260123    gcc-14
+x86_64                randconfig-004-20260123    gcc-14
+x86_64                randconfig-005-20260123    gcc-14
+x86_64                randconfig-006-20260123    gcc-14
+x86_64                randconfig-011-20260123    gcc-14
+x86_64                randconfig-012-20260123    gcc-14
+x86_64                randconfig-013-20260123    gcc-14
+x86_64                randconfig-014-20260123    gcc-14
+x86_64                randconfig-015-20260123    gcc-14
+x86_64                randconfig-016-20260123    gcc-14
+x86_64                randconfig-071-20260123    clang-20
+x86_64                randconfig-072-20260123    clang-20
+x86_64                randconfig-073-20260123    clang-20
+x86_64                randconfig-074-20260123    clang-20
+x86_64                randconfig-075-20260123    clang-20
+x86_64                randconfig-076-20260123    clang-20
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-22
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-22
+xtensa                           allyesconfig    gcc-15.2.0
+xtensa                randconfig-001-20260123    gcc-13.4.0
+xtensa                randconfig-002-20260123    gcc-13.4.0
+xtensa                    smp_lx200_defconfig    gcc-15.2.0
 
-
->
-> That said, such usage apparently contradicts the documented usage (1st
-> set_bar with no submap, then with submap) described in the docs and commit
-> messages in this series, and allowing it would make things unnecessarily
-> complicated. So I agree that adding such a safeguard is the right approach.
->
-> >
-> > I think the safest option is my second suggestion because then we know that we will only call
-> > dw_pcie_ep_ib_atu_addr()
-> >
-> > When:
-> >
-> > 1) If ep->epf_bar[bar] is set:
-> > https://github.com/torvalds/linux/blob/v6.19-rc6/drivers/pci/controller/dwc/pcie-designware-ep.c#L363
-> >
-> >
-> > 2) All the other requirements to dynamically update a BAR is also met:
-> >
-> > https://github.com/torvalds/linux/blob/v6.19-rc6/drivers/pci/controller/dwc/pcie-designware-ep.c#L368-L370
-> >
->
-> That makes sense, and it ensures that the behavior always accords with the
-> docs and commit messages in this series.
-
-I think it makes most sense to put the "use_addr_translation = true"
-
-after the check:
-
-		/*
-		 * We can only dynamically change a BAR if the new BAR size and
-		 * BAR flags do not differ from the existing configuration.
-		 */
-		if (ep->epf_bar[bar]->barno != bar ||
-		    ep->epf_bar[bar]->size != size ||
-		    ep->epf_bar[bar]->flags != flags)
-			return -EINVAL;
-
-
-So we know that dw_pcie_ep_ib_atu_addr() is only called when the size is the
-same.
-
-
-Kind regards,
-Niklas
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
