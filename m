@@ -1,73 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1BBD310652;
-	Fri, 23 Jan 2026 15:26:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B01E27CCF0;
+	Fri, 23 Jan 2026 15:38:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769182018; cv=none; b=UdYhqfG0XO3KP59bADsvp9iBna8hXREjatpfoIVS9v6DGRmlUVvahL+juJUJBE5I604OQWa2XR5xE5QP1szvuJEdSLTQ1izZSKh09peSxYbecOXCBYTMPw0zSmbYSfaUBW+TxUV7tt0Ps6LE5uxWi5aUiHynzR47h3DWcL6iAXc=
+	t=1769182713; cv=none; b=HqCDG+zSadlJCuRn1IAeN5vsghmsf5d5bIM+nDYkcsgF9eWAKTyuzr4ELcEIZxrUBKoFPaKBeEmBzq1ycHh0TOE8hjZXSDWqNf1QYs3wdQHK+ZZvkB4uVf8MAXLBNnJjaGF/UK0qZUxfXnxAeyb5dYuzAou34vpb+B1xqa/JNHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769182018; c=relaxed/simple;
-	bh=d4wpaWx5ORbvwJBDLcX+V/I3s5UELrZTGcPCzvsTwys=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bIzdrhnE1F0k/46j73qZCFJM8sto7Vx0uu8ZkzJkxTDfWaHx8D1wimfhCvqGQ9fNo0ANAkPo0UPkfHHYwzXmtVgXM/A/LEgTvGuUGYhyUe8XBWGCG/yIkyVHmacdNfkLOtZibPnHfyT1j1HXJHGFf8sTBw+LclhWBQqx39gFxlM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IyTUlJ7A; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769182713; c=relaxed/simple;
+	bh=USnlgfT/ZGNTEXTWlzmQfKhta1kQIV4DdpxEHcZH41I=;
+	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
+	 Message-Id:Subject; b=rm0vDSqsV+KCqchXEcwoHKS2qLbFXPnHx6bXshLwAS7U0HxcwnrEuNeig+fddyPylPKDyVljX3ZFnBqXoUmJYC4uXvSQdDtiGUIRXbJgnV8b0yAROAHxvYYFtvDdMXugGm5JA3Zy2/k+FbNbv0wkUBgcoqfGnuH+5kq2g51+6fI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GdI2exVD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IyTUlJ7A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD977C19421;
-	Fri, 23 Jan 2026 15:26:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GdI2exVD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFFE1C4CEF1;
+	Fri, 23 Jan 2026 15:38:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769182018;
-	bh=d4wpaWx5ORbvwJBDLcX+V/I3s5UELrZTGcPCzvsTwys=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IyTUlJ7ABtmQXHrdQc/TA8t7GGz2s6fmFaFB2N8RgLtoG1uV/HmNoHbZup7IS12gt
-	 Ga+fZmoMN8sfVCCvkfm+pUXtU9mdE46BqaccBPfB9coQozMqsbo5WYAiiyPkF5t+3R
-	 QHU8hLDEln6mehEgRvY6gGCoonM5CQMi7HddsQgA8RmUZLH4TYSLMBdxy76fzMKPUc
-	 gnlWeFhivq0wrZ+jHGvokPK+3rUJUhHQgQaWNNOdomBJQxvHRM8BX+0RcUrJIne5+d
-	 gn6NHOG1TTdD/cx+ivp+FEhzN+eDHhP+PIcrMZNdWZ8lrmucIKclYM6VpcdhPU/MQt
-	 DpV/PQ7rmmS7Q==
-Date: Fri, 23 Jan 2026 16:26:54 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, bhelgaas@google.com,
-	kwilczynski@kernel.org, frank.li@nxp.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v8 0/5] PCI: endpoint: BAR subrange mapping support
-Message-ID: <aXOTPnSsfqluUiVw@ryzen>
-References: <20260115084928.55701-1-den@valinux.co.jp>
- <x64g63zkz5t75vxxlzd7rhbvpus2mmhz2phyvxykuax5wm5cnh@zgpomauf75pv>
- <ugxohcm4tvtjwnhkkz7jw226upm7o5hihohzn2f4eoamhkd77v@mjefdgxneghm>
- <waapztvy6jyjqtfcoo3rbgvagi4z3p5afw6x2acgf5bxatcui6@nkodhtqqtetr>
- <aXHfUyd0EPFnoVBO@ryzen>
- <tvaumsi4ahosz4herbxoc636fj3lhetjzqlwp5n4e34tthmn26@bld32k6xntmw>
- <aXI_ny1-5NlN8r_z@ryzen>
- <ajuq5dpbzzoghd2hk7cz6w4t6jzcxfmygbyiciqjjhhg6ipkoh@usuhzmne6cap>
- <nrvamhbpi4372c4qmb2q3h74irrqkntlb2rwfasiorgavylp25@rx2lp6ldk64j>
- <aXMytcJTIeBHatIF@ryzen>
+	s=k20201202; t=1769182712;
+	bh=USnlgfT/ZGNTEXTWlzmQfKhta1kQIV4DdpxEHcZH41I=;
+	h=Date:From:Cc:To:In-Reply-To:References:Subject:From;
+	b=GdI2exVDLt45OOmu3tLo20vyLFAUM1i0ZuPvouchQGcNnKp/iRfsrQBGOfmyUkayk
+	 03+3a8LkMCdLns4Lbw09XWbX5iFHuC4ShYkQQhYjEQjIOQywK6PXiII7QRYQrBhxL5
+	 ddBAOTzK3KPGvl77I2oYiWv7aMQv/ioIBtCsDT/UOnMkEPrs+3ztjjOegCdTnvKd87
+	 U0o/Cbj6Xm0VdTdQ9IVpHlDoTlZGKrvrjomxP2ziTGR9mqxCl4CfYubNCue7ABl4O6
+	 9CEwxNXCLyHASfE0jekDLsMCCdAidbSPcsMtctlulrwfTww5kOm5DaSjmH9Uv7pgSs
+	 +VF/oVAnSayKQ==
+Date: Fri, 23 Jan 2026 09:38:31 -0600
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aXMytcJTIeBHatIF@ryzen>
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: linux-clk@vger.kernel.org, biju.das.jz@bp.renesas.com, 
+ john.madieu@gmail.com, linux-renesas-soc@vger.kernel.org, 
+ kwilczynski@kernel.org, lpieralisi@kernel.org, mani@kernel.org, 
+ bhelgaas@google.com, magnus.damm@gmail.com, devicetree@vger.kernel.org, 
+ linux-pci@vger.kernel.org, geert+renesas@glider.be, 
+ claudiu.beznea.uj@bp.renesas.com, krzk+dt@kernel.org, conor+dt@kernel.org
+To: John Madieu <john.madieu.xa@bp.renesas.com>
+In-Reply-To: <20260123140031.94752-7-john.madieu.xa@bp.renesas.com>
+References: <20260123140031.94752-1-john.madieu.xa@bp.renesas.com>
+ <20260123140031.94752-7-john.madieu.xa@bp.renesas.com>
+Message-Id: <176918271191.2157131.3302295737226885391.robh@kernel.org>
+Subject: Re: [PATCH v2 06/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie:
+ Document RZ/G3E SoC
 
-On Fri, Jan 23, 2026 at 09:35:01AM +0100, Niklas Cassel wrote:
-> On Fri, Jan 23, 2026 at 04:11:08PM +0900, Koichiro Den wrote:
+
+On Fri, 23 Jan 2026 15:00:22 +0100, John Madieu wrote:
+> Extend the existing device tree bindings for Renesas RZ/G3S PCIe
+> controller to include support for the RZ/G3E (renesas,r9a09g047e57-pcie) PCIe
+> controller. The RZ/G3E PCIe controller is similar to RZ/G3S but has some key
+> differences:
 > 
-> pci_epf_test_enable_doorbell() simply does:
-> pci_epc_get_next_free_bar() to get a BAR, then writes the BAR
-> number in the in the pci-epf-test command registers, offset:
-> PCI_ENDPOINT_TEST_DB_BAR                0x34
+>  - Uses a different device ID
+>  - Supports PCIe Gen3 (8.0 GT/s) link speeds
+>  - Uses a different clock naming (clkpmu vs clkl1pm)
+>  - Has a different set of interrupts, interrupt ordering, and reset signals
 > 
-> (Which represent the offset in struct pci_epf_test, for
-> struct member db_bar)
+> Add device tree bindings for renesas,r9a09g047e57-pcie compatible IPs.
+> 
+> Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+> ---
+> 
+> Changes:
+> 
+> v2: Reuse G3S names
+> 
+>  .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 127 +++++++++++++-----
+>  1 file changed, 96 insertions(+), 31 deletions(-)
+> 
 
-Correction: Which represents the offset in struct pci_epf_test_reg, for
-struct member doorbell_bar.
+My bot found errors running 'make dt_binding_check' on your patch:
 
+yamllint warnings/errors:
 
-Kind regards,
-Niklas
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml: properties:reset-names: {'minItems': 1, 'maxItems': 7, 'items': [{'const': 'aresetn'}, {'const': 'rst_b'}, {'const': 'rst_gp_b'}, {'const': 'rst_ps_b'}, {'const': 'rst_rsm_b'}, {'const': 'rst_cfg_b'}, {'const': 'rst_load_b'}]} should not be valid under {'required': ['maxItems']}
+	hint: "maxItems" is not needed with an "items" list
+	from schema $id: http://devicetree.org/meta-schemas/items.yaml
+
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.kernel.org/project/devicetree/patch/20260123140031.94752-7-john.madieu.xa@bp.renesas.com
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
+
