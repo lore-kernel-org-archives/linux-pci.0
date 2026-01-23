@@ -1,152 +1,116 @@
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (unknown [159.226.251.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F33C3451BD
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 05:39:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.188.122
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77BFE36AB56;
+	Fri, 23 Jan 2026 06:08:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769146782; cv=none; b=E0fDLntKUZmrzPF8Yi2hM3FXpIj7GerOQSSibG9aWAiIS7eC0EUqUenj68yTYLO9BHwVRgD3OUVZA4fLtLLPm7GvgkjpfQAM5h34kOQiYGAzuwXK6F4F3bIQDTcmKJvrS2hS7pp6HeobFjPn6aZ0aVHQ9FWdVWCxCLp8BuNQnZo=
+	t=1769148492; cv=none; b=dNT1J7zuJqaic6x5btMJWIxudjp7Q9U25iaEVqvDapU2BncHhE6+owRAAT25I8zzFrtA+2X17rC8959xE0I5h7g1xmA0udg6KJSXKDevxQmSyUVMTf6S7GlVdYt4FpPr5iIdeZZmQ2x3QpHKyNwWBs/ww5bq6oVKboGv1YehkPE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769146782; c=relaxed/simple;
-	bh=I8rYsPArjClMI0OlY9LdFMlzeRq2tpFxbh33gFcF2Zk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=vA3JV51pXCDu781/yVgQYshvdnUF93us7vLfZFzz79mH2XaKc6ns9YI0Rh8lInPgH/fLiWw5TB/ILwgQfxeylyMqFFQ6uH1ocpgbM9rbrdE0pV4g6H3eFE2FAmFeabLfOqqyg5xzpQL9DRZIqO40eUDftJBDcL7GRlNmJM59fMo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=p6FF3561; arc=none smtp.client-ip=185.125.188.122
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="p6FF3561"
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 91F813FAE8
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 05:39:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-	s=20251003; t=1769146767;
-	bh=zLCXslpHHlmT4bEIPeZoanKUUqxnGQJncWC/wm2gT8A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version;
-	b=p6FF3561yXGfz5fqeqQz2r4udX3FHAQUJXjNi7jt9JjUqkTwwT1KfEwklwzMs36Wx
-	 LqrAR0m01vr7iwk7fgS9JednvyYJ+kbwS1arr49in5duzpBb5AnHnmuCJ1d/YeWM3l
-	 cJ4Tuzj7vBy82hfSmdzE2xMk2k2tNvXHh0OWooul/qyGVZsgcvw3ZL0sYEI8+HAeL4
-	 vmJw+MSbRTYfmT4rWq+mk6ZHw6OpmS10/uW0LhGBcMClkjlhpAhnzcdNP4MNLPUU2B
-	 C20zXIuunk8sTD/7cOI5i0NRYhVP7M/q0LP6qGfbW++6YSiBb3thlo+eTW6eWxUp/v
-	 f6Rueb74GcszESsYmqPPtVRPCVG8cJyPuez+NC+NNe0DxZvAxiNhP/+LNxIHZb1L87
-	 dUX8/8QY4ItBbDFN383HP0o1JIqAtxyGHYSkTJmN5cP7iPiweXxEZv9mJoaLUoIumv
-	 jmKxH3bSFprk9+vrDjsp3cHv2hZdAv+AakLSGI3ibfpz0BYe3NHkBl08x7NQUmFMlG
-	 lgxIyAeLPycjdmOM9Dg2GQ/7bA2G22pBgsqhpyhPJ4aiRzn0sxyo8Mqe6Pq+EDdA/p
-	 jw/Q5YzY7yglKmRWXAD7xd2aDkrdnBY0RHei8qgvdjmyNhEaeWUe6uf/B2OvKqHplI
-	 p5KLi3k9zaFwMaZbOgMiDWhw=
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2a08cbeb87eso19340825ad.3
-        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 21:39:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769146766; x=1769751566;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=zLCXslpHHlmT4bEIPeZoanKUUqxnGQJncWC/wm2gT8A=;
-        b=pGsR8SS5R4GliCbx43ce1jytsAMhccRjZ9SClGMpY/uFHSjROnUHiNbp8xn33WiShs
-         hZrZlmnisC0Ois8jv2knRkubPkw7kj6U8CCZ2luMjWW0Sid1daUasoPhkv+Ef6NyZRaJ
-         To8M+I4KWj/omJzMyisIvxypNqXGgpIQLwztIcnEixQOy4is3cP7RNBQhoebJD2rgHWd
-         ZaD1g5ZOIAPomHLi6d5JSlQFyAvJ5PEdExsODgPgcp2UrjvClvSlYnuhruf/wkPvRkLu
-         h3ePOZEADB/b/IL9Agka9IsBnN4RESWCqosaNUIeFOu7QECI4dtUTgMtylFWyWFUkKJy
-         /fYQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVDQGhiFKkjBPFXefuSgnDaplLkgHWKdM0ia8rfbWJfN1G0IF1/wYcig/wAG+Aifz7U4ANpPIzJHaI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxy9Wi/vn5ZVkUjN//CrBueIBqjaYWZA8lV9EdjVaJk/oDpB3IF
-	Whhxg03T1s5GugsZD5+3L28hB5oQbo2YmyjHS0blbwLovdhoXdVNzfoy0zkh2cPiLwZZzcNBIDS
-	zhR4kRFR5bsKTNHJhXkTOb4bIICHg/uikdOzea4HdwASqRa0XTEgLWyUzQs56UAQWNpgJfdRgVO
-	tANg==
-X-Gm-Gg: AZuq6aLZ2ujmye+0jih6kp3nEVmpuFiRyWyOhW2kXdCzz6I9r9gcOvR4eT80bLkogu5
-	ND+K1NpAA5EVh/BbPLhY7SuCGmR1OQ8HRwlDrHkYqzMf23xv1DqwKSmAUs5UQp/Mjv64kfkur57
-	rkT1CSWLcw+5cxA157XAbHioV+Nb1GjP9KfWv91VyYAXMAbgMFxZNE19kiFtoa00/1Sm0vZmUA8
-	fZydyOEyoXI4kAEcVxwkdYDPSOpLT2ppvFVqAv8A7SmEyDpLWenQ7tXbCuR37uW8PTlIsQ1RKlW
-	Vd+MDZqPmH/8nl2xCgoIL/o/ou8Pbj3nWy3Wd9zVTx/1UpXtI61YAOn1emNPdWWI6WTIZ3RQA9i
-	r2GUJbDSujpfVTYeyWm9RNxc1rgHm5cnZmzjV89cQw91pUop3D5o=
-X-Received: by 2002:a17:90b:5625:b0:352:bdcd:118a with SMTP id 98e67ed59e1d1-3536894d548mr1542082a91.21.1769146766169;
-        Thu, 22 Jan 2026 21:39:26 -0800 (PST)
-X-Received: by 2002:a17:90b:5625:b0:352:bdcd:118a with SMTP id 98e67ed59e1d1-3536894d548mr1542072a91.21.1769146765830;
-        Thu, 22 Jan 2026 21:39:25 -0800 (PST)
-Received: from Garunix (122-58-172-36-adsl.sparkbb.co.nz. [122.58.172.36])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3536f25c4c5sm417930a91.6.2026.01.22.21.39.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jan 2026 21:39:25 -0800 (PST)
-From: Matthew Ruffell <matthew.ruffell@canonical.com>
-To: mhklinux@outlook.com
-Cc: DECUI@microsoft.com,
-	bhelgaas@google.com,
-	haiyangz@microsoft.com,
-	jakeo@microsoft.com,
-	kwilczynski@kernel.org,
-	kys@microsoft.com,
-	linux-hyperv@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	longli@microsoft.com,
-	lpieralisi@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	stable@vger.kernel.org,
-	wei.liu@kernel.org
-Subject: RE: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config window
-Date: Fri, 23 Jan 2026 18:39:09 +1300
-Message-ID: <20260123053909.95584-1-matthew.ruffell@canonical.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <SN6PR02MB4157545DAFDCCE0028439DB2D497A@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <SN6PR02MB4157545DAFDCCE0028439DB2D497A@SN6PR02MB4157.namprd02.prod.outlook.com>
+	s=arc-20240116; t=1769148492; c=relaxed/simple;
+	bh=MpTxXaaQr28qUBNtrfTyN44MX9ojvMkGhwveMjD2MxI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=gMA55JfYlRXz1fojGxadkpcCw208h/pjz38JppEauT2h+KfXmKQTXrn4QwttVNpcj/VVHoy6mDy57J0SXlU4PLVUgEdM68uCYexp+TnhzN+1dMOrlgEYDH7s7QCVWghbQu4Zd1UCM8EaQqAiFVlUFAFVojvrs7wi/+/NeZXprCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [127.0.0.2] (unknown [210.73.43.101])
+	by APP-05 (Coremail) with SMTP id zQCowACnPBAiEHNp9tMuBg--.1678S4;
+	Fri, 23 Jan 2026 14:07:32 +0800 (CST)
+From: Vivian Wang <wangruikang@iscas.ac.cn>
+Date: Fri, 23 Jan 2026 14:07:29 +0800
+Subject: [PATCH v3 2/4] PCI/MSI: Check msi_addr_mask in
+ msi_verify_entries()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260123-pci-msi-addr-mask-v3-2-9f9baa048524@iscas.ac.cn>
+References: <20260123-pci-msi-addr-mask-v3-0-9f9baa048524@iscas.ac.cn>
+In-Reply-To: <20260123-pci-msi-addr-mask-v3-0-9f9baa048524@iscas.ac.cn>
+To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ Alex Deucher <alexander.deucher@amd.com>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ "Creeley, Brett" <bcreeley@amd.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Takashi Iwai <tiwai@suse.com>
+Cc: Han Gao <gaohan@iscas.ac.cn>, Vivian Wang <wangruikang@iscas.ac.cn>, 
+ Thomas Gleixner <tglx@kernel.org>, linuxppc-dev@lists.ozlabs.org, 
+ linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org, 
+ dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+ linux-riscv@lists.infradead.org, sophgo@lists.linux.dev
+X-Mailer: b4 0.14.3
+X-CM-TRANSID:zQCowACnPBAiEHNp9tMuBg--.1678S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFy5JryfGw1kur43Aw45trb_yoW8GF4fpF
+	WqgayDAr4Fkw15JFsxXw1vqF15ZFZ0qa4fGrW8G34a9FsIqwnFyw13K347K3WfXF18Gw15
+	ZFyYyw4UGFs8AFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
+	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2
+	KfnxnUUI43ZEXa7sREIzutUUUUU==
+X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
 
-Hi Michael,
+Instead of a 32-bit/64-bit dichotomy, check the MSI address against
+msi_addr_mask.
 
-> > I wonder if commit a41e0ab394e4 broke the initialization of screen_info in the
-> > kdump kernel. Or perhaps there is now a rev-lock between the kernel with this
-> > commit and a new version of the user space kexec command.
+This allows platforms with MSI doorbell above 32-bit address space to
+work with devices without full 64-bit MSI address support, as long as
+the doorbell is within addressable range of MSI of the device.
 
-a41e0ab394e4 isn't a mainline commit. Can you please mention the commit subject
-so I can have a read.
+Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
 
-> > There's a parameter to the kexec() command that governs whether it uses the
-> > kexec_file_load() system call or the kexec_load() system call.
-> > I wonder if that parameter makes a difference in the problem described for this
-> > patch.
+---
+v3: %llx -> %#llx (Bjorn)
+---
+ drivers/pci/msi/msi.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Yes, it does indeed make a difference. I have been debugging this the past few
-days, and my colleague Melissa noticed that the problem reproduces when secure
-boot is disabled, but it does not reproduce when secure boot is enabled. 
-Additionally, it reproduces on jammy, but not noble. It turns out that 
-kexec-tools on jammy defaults to kexec_load() when secure boot is disabled,
-and when enabled, it instead uses kexec_file_load(). On noble, it defaults to
-first trying kexec_file_load() before falling back to kexec_load(), so the
-issue does not reproduce.
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 48f5f03d1479..77713f89a10b 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -321,14 +321,17 @@ static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
+ static int msi_verify_entries(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
++	u64 address;
+ 
+ 	if (dev->msi_addr_mask == DMA_BIT_MASK(64))
+ 		return 0;
+ 
+ 	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+-		if (entry->msg.address_hi) {
+-			pci_err(dev, "arch assigned 64-bit MSI address %#x%08x but device only supports 32 bits\n",
+-				entry->msg.address_hi, entry->msg.address_lo);
++		address = (u64)entry->msg.address_hi << 32 |
++			  entry->msg.address_lo;
++		if (address & ~dev->msi_addr_mask) {
++			pci_err(dev, "arch assigned 64-bit MSI address %#llx above device MSI address mask %#llx\n",
++				address, dev->msi_addr_mask);
+ 			break;
+ 		}
+ 	}
 
-> > >  	/*
-> > >  	 * Set up a region of MMIO space to use for accessing configuration
-> > > -	 * space.
-> > > +	 * space. Use the high MMIO range to not conflict with the hyperv_drm
-> > > +	 * driver (which normally gets MMIO from the low MMIO range) in the
-> > > +	 * kdump kernel of a Gen2 VM, which fails to reserve the framebuffer
-> > > +	 * MMIO range in vmbus_reserve_fb() due to screen_info.lfb_base being
-> > > +	 * zero in the kdump kernel.
-> > >  	 */
-> > > -	ret = vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, 0, -1,
-> > > +	ret = vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, SZ_4G, -1,
-> > >  				  PCI_CONFIG_MMIO_LENGTH, 0x1000, false);
-> > >  	if (ret)
-> > >  		return ret;
-> > > --
+-- 
+2.52.0
 
-Thank you for the patch Dexuan.
-
-This patch fixes the problem on Ubuntu 5.15, and 6.8 based kernels
-booting V6 instance types on Azure with Gen 2 images.
-
-Tested-by: Matthew Ruffell <matthew.ruffell@canonical.com>
-
-Thanks,
-Matthew
