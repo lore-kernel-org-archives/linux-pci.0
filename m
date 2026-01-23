@@ -1,221 +1,121 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010065.outbound.protection.outlook.com [52.101.84.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f175.google.com (mail-vk1-f175.google.com [209.85.221.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF0912877FE;
-	Fri, 23 Jan 2026 14:15:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.65
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769177755; cv=fail; b=DHr/INcO48DYrQl9K5zRDF0TDbp9OmgaCle9Sc1tcM2xT97sWBiKqjxRyHiI6ICsDlwenE774cz/fDPgjw3ZPNpQLe769XAeZj0V5qS3UkBCzDJEU3qOFSBTdhvsxiIiYj5q32vqGlvrrzKc3nseSyJ9JZ6OsbiS2ufL53t7OzY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769177755; c=relaxed/simple;
-	bh=HwVFKpNXyI63LGtKgqvBxYs013ReIq0zNKueGGJdwgY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=ey+sjj/NchFplueWE4IvfuokC/Zn/IYPSezuyG8d4rLgHmF2/hFa+Crap42xILAV9LSeM7L5CsqUZJZCGhTXPRKf2uzVHLvC3B4YTut4Qp8L/OSG2vJHKQAZwKwNHzTd6tD/VKdsHe2/V+u0bcY1ItxvUyJpX1WvLH/WIGR5y10=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=O+XvBg4V; arc=fail smtp.client-ip=52.101.84.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="O+XvBg4V"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vRS9i1EG720vRTidiO4eXL2dywp9i3xyiLqdfVr2e0loW2ItvKxxtdJJ3VwaA6nxrrZqOxyfaINyWnJYIXAqEqCTwM3o/dA+HTmmaJFavleDQ53DK/m2T1fZAJSgM8eDClzNKJ/zU4qt6TOmmoGc47/fAw24D9Nqq236rYnqMZ5M3lnNdpSLrXcI/4BMDH1DmnvGuHSXrQg4oNGhUPvjnn/H7uPEzj4PbpOweVnaRy3qRSAg5jxdSZ0EuDAfIME51e4kz+aNCnewsvZssmQmocYtVH1GhcO0LmTWTVmEtDXJsNrgFu5YXMAVdRbMmGdib4jbUFg0AGNMzvjlTb/mCg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=s+Fsp78axgwdL5lAQuDsX9tQIt3SvVFSvczUiQ8GWvo=;
- b=lr2ndwFB6lIiMtVhj9RA2TcW8rL3F54WoehWRcX5mYI1Ds74UjwVDTyXoifsrR3HzvMSuXcH74sXc6WZE7EMsqgQUZHMUeYwv+OOFrsZu1379/i66U3Vn9RQco7B98dRNocuQUvs6ol9JyseyhCmb3RjmFdu4PoNYxYARDAt+RYsbUTJoVdi8sziWV/+v4iFnwBnNQioECnVGsZUBno7yueoj2Rjo2ADMBpQKDDnDklJ/J1aoVJfpqSuTH0tiTRO1NIe50m91Bu3kKRdcRGjVFT37VKg/GuR6tL3wkVb6rKd+6/feplIYB8QplPnu+qSIqHdnsj2tqk13+qccrZvfw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=s+Fsp78axgwdL5lAQuDsX9tQIt3SvVFSvczUiQ8GWvo=;
- b=O+XvBg4V88vk88jYAoApOmCUBj1Atrh27gghquI3S6YVXHMUguGz+a+J1gWK4BeTMMkzHGD74SpcpfUCcaL6ZXKawuh+p0jLoGb6lRKnFmL5YIT2pkvWwrfXNwy6VzFEWKs6VNNOK7r2HtayxOuyRB35/Yw6+2XJKnop5n4URAj2KakdYkqQjEJPq5PT8dJ5BZmjt10/5R0BwCoW+HxDyG7tHf+8i0F4khIMAye8+VI1uLjNEyrljJ7DM7YFI9xJQv9sRS6KPTvrSQYW7MRaiGiBqofg+VyaedwYyFpd8r6KwqLrfMusJdCMN4qUX4LxJdxfovrZYcZEfJmmdbPbgw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PAXPR04MB8957.eurprd04.prod.outlook.com (2603:10a6:102:20c::5)
- by DU2PR04MB8695.eurprd04.prod.outlook.com (2603:10a6:10:2de::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.11; Fri, 23 Jan
- 2026 14:15:50 +0000
-Received: from PAXPR04MB8957.eurprd04.prod.outlook.com
- ([fe80::9c5d:8cdf:5a78:3c5]) by PAXPR04MB8957.eurprd04.prod.outlook.com
- ([fe80::9c5d:8cdf:5a78:3c5%3]) with mapi id 15.20.9499.005; Fri, 23 Jan 2026
- 14:15:50 +0000
-Date: Fri, 23 Jan 2026 09:15:38 -0500
-From: Frank Li <Frank.li@nxp.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, Vinod Koul <vkoul@kernel.org>,
-	Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-	Kees Cook <kees@kernel.org>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>,
-	dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, Damien Le Moal <dlemoal@kernel.org>,
-	imx@lists.linux.dev
-Subject: Re: [PATCH RFT 4/5] dmaengine: dw-edma: Dynamitc append new request
- during dmaengine running
-Message-ID: <aXOCiqeJtx5rmo9M@lizhi-Precision-Tower-5810>
-References: <20260109-edma_dymatic-v1-0-9a98c9c98536@nxp.com>
- <20260109-edma_dymatic-v1-4-9a98c9c98536@nxp.com>
- <aXNQcowVEMaE1xr5@ryzen>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aXNQcowVEMaE1xr5@ryzen>
-X-ClientProxiedBy: SA0PR11CA0201.namprd11.prod.outlook.com
- (2603:10b6:806:1bc::26) To PAXPR04MB8957.eurprd04.prod.outlook.com
- (2603:10a6:102:20c::5)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F51B27B352
+	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 14:17:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.175
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769177862; cv=none; b=Z2X8G2tveJj+1N5zoSNNgB9jZD85V0JL7BpczWUpxYR0hpHfMsVeBOkE0qyv1GiMcLJqHpWctN2WCGrT9MSGnTsZc1/Gfg3LfmoPfZS4JDV2gsy1SmVQkhhGu3pqgjBISmlIgSzLnxqbQq8MmkzgmnJTjEzNzO3gD5/91sKuCcQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769177862; c=relaxed/simple;
+	bh=r9HsTXgn1GaeqU1gNHwX8oVvaVI1l0Q1W0dpN3P42O8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QQZsMs51ipWo/NFa5q8eZZ9IWx98ihR6f9n3EiIRlRjpSKggFAGYwTO/58ASUf7Kh+PThbtU3wsy6TETezYKqH6MKDHsJBhyjnvCdbnkEzmQVIwUedjI78qnHKZXRlOOFiedxG7kQR0fanGJszxHrPEzrdTpieeJsBxuTtxcZ3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f175.google.com with SMTP id 71dfb90a1353d-5663601fe8bso1778400e0c.1
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 06:17:41 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769177860; x=1769782660;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qLnfjU65RvqkFmzX5x5XUooORBFON/JkVFQYLPFc2VI=;
+        b=HXcCWFSNiE29CVHNRdh0WG6dZicXeOy6JgJKrUoxFgpvrYBeCkjMSwukX9TUA793nN
+         dkUIluXtt4zrocUZsbCKSJLp7JKwkg4siE/hoV5ucKZdmCEtCv4Q9L1dYMHJoWAYcxgv
+         kepOvFbnctNSCaQxvlqtnrh7pmSf0/ZFL3FmZsGezTojUg7HLtMhC7Ya5GtBL87RGyS+
+         kiChvuljACTYqx/A/0VYUY73mKngO7Tfe9NQleCUsvg7HCOjSoXfn5Ohrx4PxBimqpzS
+         vqUjogEDaP3r38SCJkpvA/JagR4bAP0YS/YJ7O10xXTRfeTFEpJqzdmkKHCDGKGpRtMN
+         8yMQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXB3mg7XTVw0VAskUH4TEz0TPeMT1gsqtEEXLUpfbfW0KCIloKh6FJJ5+R6OcRXUWu8NDSFPpekYes=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyYgNxYyhfMGEw0n7FbRj+RIHT9luUHgYTMu7bJSuelUqM0nec0
+	sUSfLwjWBjMb4ZHJgilq0nZA/jRKamJqd9PuxWYuAGLoQ13bif+H0F6sZiL5QGaW
+X-Gm-Gg: AZuq6aIMsrnlZosNMRz/NZ9sXRhlMA+uZfgvLi4yV4WdDtLhrDU8TL5ZI/KamBYaJu8
+	eGgm8uCG5f7+8zNdZ4H2NFs3dXjcIwdY4JJIi93SruDPZXDxl3F/qU8LNXz4A2bhOj7LaNk82Gn
+	HlyXnyd61sOLSqD/XZ5j01Ebup7GJV2YMveHD1+AJyPmp/MGvVGWb9Jai9GJEYX88hIjSLcr/Hk
+	7xI2Ksp+h/jmtFKTNY+6isNKGmjfX5RTjNtmh2XYZAuuiezf0VKmj+LxKNcyXb8VpOFTqsptHoU
+	nX00acWhMZWms4j/uKrxCMHw8GlbqLSbmCG/XQ6GtaF421XkBO09BRnf19n3RXNThHm9eKiY2YM
+	OQP6zC1gjeTMaHNwOZz5vLFDqo8JkTWdJFJTuR/tppGX1SZDHwE9aFJT3B/3gYTdsTDcru74lkd
+	qFk4ot7gwoRwkPzxfng5gOV2yNUbXfz3yByh25A9ZUJ5xbjhx0EV1q
+X-Received: by 2002:a05:6122:1799:b0:54a:992c:815e with SMTP id 71dfb90a1353d-5663eaa47acmr835252e0c.8.1769177860262;
+        Fri, 23 Jan 2026 06:17:40 -0800 (PST)
+Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com. [209.85.221.179])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5663fa82a3dsm503862e0c.8.2026.01.23.06.17.39
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 23 Jan 2026 06:17:39 -0800 (PST)
+Received: by mail-vk1-f179.google.com with SMTP id 71dfb90a1353d-5663601fe8bso1778382e0c.1
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 06:17:39 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUfV20V1qblbtiMqkI7HdSIhFYdoU90EKSql1PG2FOgU6YWzt8YyOBAy04A/sREsg1Srk+sR8PZ/TY=@vger.kernel.org
+X-Received: by 2002:a05:6102:3f0f:b0:5db:1fbc:4462 with SMTP id
+ ada2fe7eead31-5f54bcc01d2mr1080831137.31.1769177859213; Fri, 23 Jan 2026
+ 06:17:39 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PAXPR04MB8957:EE_|DU2PR04MB8695:EE_
-X-MS-Office365-Filtering-Correlation-Id: c787c872-7217-469b-390b-08de5a89e8ba
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|52116014|7416014|376014|19092799006|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?/Gvw31zCQcGcr+X/G8aRKLZO3d569ZgGtU/x/naahXkF9ojsU2ZXEtj/ekTX?=
- =?us-ascii?Q?zY4zdjNT/1wd8ySTYZ7H9FWX0vOhYSnLT+xe9mE4Znm0GU5JSWgxgQY+WT9M?=
- =?us-ascii?Q?IHEU8pExoB7IwJ8QHPWS1ulb6sTlo4DF8ukRNezvqPCXMAgtZs+lYLmI60TN?=
- =?us-ascii?Q?/+UyKZHaPxjuh4DekVWx4+iQtZs69P/vHqxTBgt2xHHuouXmH6Vz/uiwC/Ef?=
- =?us-ascii?Q?qXF/yXnzl2AoMT1IejNgoEr7ZpA4RX1jm69FcOnxh2QNMmRaV9rw4ZNQDP1Q?=
- =?us-ascii?Q?zrz6qIi/SmUfZnU1DVmTDSFZpu+8e253V6clj2ebkT09+AxBJu3B9ly+yfK/?=
- =?us-ascii?Q?gTiSCpaVEtynsJZVWnJznt+vEd7fkHkL5/5CCE00XtAV0f8TDHLCPV8oymUC?=
- =?us-ascii?Q?3kDDyh1d6yAUkYQI9325zOteCLCrCRWqCBz00QOfcJM0UKWHiYkvHsSQqYw/?=
- =?us-ascii?Q?B9okZeFQc4ovz9X50PkyeH16SYXKwtODhEARKP6Es5BIYmXY5x0V/lN7d91W?=
- =?us-ascii?Q?z/eb3oXCHZ2xhpE/o96B7pPKPi2tXuV65JB143Be+2HlKWpJ3AZVNOobsEPX?=
- =?us-ascii?Q?/gfBZvu3ziBPD5u5SETLV6uxJmwEZXLEoBAmWtcJeHN/xEYYSTIGrNo0sCVo?=
- =?us-ascii?Q?/SIxlfdEVJNXZo+JcZJU2QWPoriESw0MrkNAkA9mFCUcFVG+FQKNvqkvOLcH?=
- =?us-ascii?Q?sgelamzy3YwJE1ifAGOzFqCVMal8ElzT9E71zuppU+Xl//pQ+TzeItUdnIC5?=
- =?us-ascii?Q?VnwmraHHbJib+luedBepXBham7YdPuBqhJZwqlCdVM3mKoppFb3xMpwRImi2?=
- =?us-ascii?Q?Z/UViO04oSImVdRmkbNg2hmueGioIm2oKPV3kfqlaK/AD0wud48vT6hdgrBE?=
- =?us-ascii?Q?UUp7ooNQ9pmq4vCknhjrcXxU4e6ja4OWcSxfdsymfAMd2wj2DEfG5v1m56Fe?=
- =?us-ascii?Q?xElfhXf+6L3DKQbGgYlrj/viOdG6GIOcndKVulk1tnVL6r7SvcA/0PK60BEc?=
- =?us-ascii?Q?UI4G9EmQQQFof9MVFu6vB0mA5lxJrbDTeV6jhhYOkQF7hOOYJEACvPbdSCqn?=
- =?us-ascii?Q?cXgCC0QYM68H9IkqQqYwRsVOnDnBRMT1p76v/9cUqVuoWti82FnVYefWrFQ2?=
- =?us-ascii?Q?dW+7MJYEjMKjzHrDA05WQ2CK6Z68YJFRxCLNc8J9Pssp/L8++AxtwseR6wWm?=
- =?us-ascii?Q?NzIfBGcxiJBw5ulQy8rZv1m8uQ/PJdSQXEyAKWvse/HcjP6qvaa8rQzfFKY2?=
- =?us-ascii?Q?hvU/0fsxlQzp34MixQYZdq+4b4iVpeTaHj2kY6AZq2dD1R4TXX2EBGFbUhze?=
- =?us-ascii?Q?5Uz+KRP6/t8cZSI0pL/ZlqnhP/E1kSbkexzJ3Z6UiRIXhueGjMmtWwK78h3a?=
- =?us-ascii?Q?ROASDi+bgfcvJuzcyL+y1KvcnWnBxmD5Z87XyPu1GV6dFe/mcsQFQ4yiRoa3?=
- =?us-ascii?Q?1XTJlL/tKeBBmjetcfHIjFv49e8LsLImPyhbUeFPGayZS3hscIrOcUxcIYc5?=
- =?us-ascii?Q?m3V7r8Pbtb6Jg5q2h0lj3lRIrZvvsPoIo+X7N7m+yD1sSGP0pkviTEhedTYj?=
- =?us-ascii?Q?WqNTEWp49DFpkFPc/7yl05Up6iF7gwr5kdtNJYsCYidsoYXmGnE17iXTHJwm?=
- =?us-ascii?Q?7ZqMmgi6hSfe6OAmHkFC0oo=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB8957.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(52116014)(7416014)(376014)(19092799006)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?RjGGSMOvNXxgvG0sFkhXGDg+h1P1sZQxDZS+wasnS7QXCchbSS/JfLsIURQj?=
- =?us-ascii?Q?qANrXZHV/CHPhD5zmrbeDE0ACGWVe/l+RjYRpeE62D+2UbC1r97hXGSUtehg?=
- =?us-ascii?Q?UmRlry8Ek9ZrPuqnDDZ3x0RMtYWcubPQmRIT+fSaeajQIuonXwr809H5AYzB?=
- =?us-ascii?Q?mfGkQgkzxzxXnMZckyYjvp7plHK0Y4MVMymXPquK6TrzaCI4/UuQ6JUoNpSt?=
- =?us-ascii?Q?lt/Ya9ypbPS6vAOrnLFqYPPD21x51d2AOGRUkadcrX/4XaTsHjho93B6RcBV?=
- =?us-ascii?Q?9b/7qD5MHecnJFL9iv5ea2MPrfQ7NrRLElucjRyTM52xQUjGcdWJcCuBuqEn?=
- =?us-ascii?Q?1saXEkupeJNQvOdJ6yWzDlj62OxygNy3JgtdhzZSXRr4oViZhbLewwhKe1de?=
- =?us-ascii?Q?Vtb76bXzuo+/djD6pxz1QCjafktYyEdXt7ut4Fd8EHg9L8n87bBgjTC6q8QP?=
- =?us-ascii?Q?MnaMd1DDPlEcNzxBswI/OIQXfRQ4gLZI/7CMr4wn3RaNsmCsUqaI9adZKBCQ?=
- =?us-ascii?Q?DawhMeEAsyBxUWtOt2w/V4ouGVk4QJJ/2fpQXTMBRYMgp+NLC70dtdRBunTU?=
- =?us-ascii?Q?GX1PFmiX3G6e+r00oxAvaELBLXc6JouMlmOCGwHa16JThNKef8UwIocl7kZL?=
- =?us-ascii?Q?PQKVr9DcbhXKiydEaXQ4PLBGxmSvziic48wgbikcY00MRrU8iI9b5M7MdW8p?=
- =?us-ascii?Q?h1HkD+sJYVSXOIj1Jyz3WOwhR3TwmbZj3b0+UZnJc1qnmgCQh/YM9yE1+g3c?=
- =?us-ascii?Q?+Bwunh4EtT0gsQpjKTW1jLArsdD+M9YzM4JJbh3kmAIUqvNF2QQqPkb3yANt?=
- =?us-ascii?Q?HPzHn8qIP6uPpeguqKJVPOYECv+qM+2QWg+DFNZvuFFoE2DGV/yMU9bHEPls?=
- =?us-ascii?Q?gfd0ihBPvLmQdIfvpKLEMY2aHfKxpYM6ylb4eOUVpFNVBYIkmZEijy+qkwMc?=
- =?us-ascii?Q?puPjvYVIzE61H+zO0rRShE1yA6dtqw4YYAvFpw93IomiJGQ1cZ2wnSA+X5//?=
- =?us-ascii?Q?LMdKY2vE8VHpSdDmnx4Pzs5zZZlQn8kXH2OnpEhUkNZumYUSrpKpdycHI++B?=
- =?us-ascii?Q?MpHRbIpskL5aU+KjVIkHq/NKL1nSCGuwkSpvhSFxqa/wGM6eAJvD2/bEiV/l?=
- =?us-ascii?Q?cqwcIzTtZhz4yv1roDBRT3sCLScy3iemuA8cfuKteRPEGqhnzntplAF5sK9A?=
- =?us-ascii?Q?XCt/56Hl+EBCBGjT2MfIhlLpKvXfJ6vPxgBJLz4N2a+FESIahaloVDFcj08O?=
- =?us-ascii?Q?NIXEZy7hgofqw07ddowI4XTkmTgAdbJ179j3E+K6prCa/V0bME2wHUvrJdYC?=
- =?us-ascii?Q?uvBjc/inFofnO7raOCkYrKUDnD+EqaLWDI6ZyL331LwCvCHhuoNZ3c0nwpzh?=
- =?us-ascii?Q?2XvW0r5cbwjf7h2EcDhvhVmVBWChlduJQkR9DgdVAONpNR3zTyP328/CVYC2?=
- =?us-ascii?Q?O7BaRhKLmrBR7FrHQvOtnRyBDryaS5H7hwf9AMOsnxy6hJyln2vXtQAQy5vE?=
- =?us-ascii?Q?PjjdphlzWOxN2nv3LWNYKkzr5t04H9qMdmcJsm2tDtAdC04bV3lGBp+j5En9?=
- =?us-ascii?Q?D52BkT2xzD2C6FJj9c6zNLuLJ5+1RNw7m3BknfN6UGIHHdHzz2tGD7VaRD00?=
- =?us-ascii?Q?nQemB1efa0d6J8+x1zWj7yYh7PlkmITv7sghwrSK9YXlklGQbjEIea6SMXHq?=
- =?us-ascii?Q?YjNbrf/CSWyIgxS22MgY01H3MPMmb1WpX2/qfcP2azO4twqm?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c787c872-7217-469b-390b-08de5a89e8ba
-X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB8957.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jan 2026 14:15:49.9706
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FbeCoUCU34zhtzbwSxtoVG3J765fRjs3F+DEGJXKCCoHHXpC0vl7KMrS5CtEkVq9l6SHl92G0Sc1GxISS09t9g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU2PR04MB8695
+References: <20260123140031.94752-1-john.madieu.xa@bp.renesas.com> <20260123140031.94752-6-john.madieu.xa@bp.renesas.com>
+In-Reply-To: <20260123140031.94752-6-john.madieu.xa@bp.renesas.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 23 Jan 2026 15:17:27 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdWxNbJaDhpOsJRCkDWvqqu4e63Z+cMRndFA6F+McdbuRg@mail.gmail.com>
+X-Gm-Features: AZwV_QiB25G7U1c5HmJJDzyb95Uh8yyZZslQ3E5dHn2oE_aXz9DOubj9nIVp0gs
+Message-ID: <CAMuHMdWxNbJaDhpOsJRCkDWvqqu4e63Z+cMRndFA6F+McdbuRg@mail.gmail.com>
+Subject: Re: [PATCH v2 05/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix
+ typo in interrupt-names
+To: John Madieu <john.madieu.xa@bp.renesas.com>
+Cc: claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, mani@kernel.org, krzk+dt@kernel.org, robh@kernel.org, 
+	bhelgaas@google.com, conor+dt@kernel.org, magnus.damm@gmail.com, 
+	biju.das.jz@bp.renesas.com, linux-pci@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-clk@vger.kernel.org, john.madieu@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Jan 23, 2026 at 11:41:54AM +0100, Niklas Cassel wrote:
-> On Fri, Jan 09, 2026 at 03:13:28PM -0500, Frank Li wrote:
-> > This use PCS-CCS-CB-TCB Producer-Consumer Synchronization module, which
-> > support append new DMA request during dmaengine runnings.
-> >
-> > Append new request during dmaengine runnings.
-> >
-> > But look like hardware have bug, which missed doorbell when engine is
-> > running. So add workaround to push doorbelll again when found engine stop.
-> >
-> > Get more than 10% performance gain.
-> >
-> > The before
-> >   Rnd read,    4KB, QD=32, 4 jobs:  IOPS=33.4k, BW=130MiB/s (137MB/s)
-> >
-> > After
-> >   Rnd read,    4KB, QD=32, 4 jobs:  IOPS=38.8k, BW=151MiB/s (159MB/s)
-> >
-> > Signed-off-by: Frank Li <Frank.Li@nxp.com>
-> > ---
->
-> Hello Frank,
->
-> First of all, I hope that your:
-> [PATCH v3 0/9] dmaengine: Add new API to combine configuration and descriptor preparation
-> series will make it to the upcoming 6.20/7.0 merge window.
->
->
-> This RFT series however breaks pci-epf-test:
->
-> Before:
-> #  RUN           pci_ep_data_transfer.dma.READ_TEST ...
-> #            OK  pci_ep_data_transfer.dma.READ_TEST
-> ok 14 pci_ep_data_transfer.dma.READ_TEST
-> #  RUN           pci_ep_data_transfer.dma.WRITE_TEST ...
-> #            OK  pci_ep_data_transfer.dma.WRITE_TEST
-> ok 15 pci_ep_data_transfer.dma.WRITE_TEST
->
-> After:
-> #  RUN           pci_ep_data_transfer.dma.READ_TEST ...
-> # READ_TEST: Test terminated by timeout
-> #          FAIL  pci_ep_data_transfer.dma.READ_TEST
-> not ok 14 pci_ep_data_transfer.dma.READ_TEST
-> #  RUN           pci_ep_data_transfer.dma.WRITE_TEST ...
-> # WRITE_TEST: Test terminated by timeout
-> #          FAIL  pci_ep_data_transfer.dma.WRITE_TEST
-> not ok 15 pci_ep_data_transfer.dma.WRITE_TEST
->
->
-> After a bisect, first bad commit:
-> commit 352fd8d5ed468ea616eb4974b5ac19203528b207
-> Author: Frank Li <Frank.Li@nxp.com>
-> Date:   Fri Jan 9 15:13:28 2026 -0500
->
->     dmaengine: dw-edma: Dynamitc append new request during dmaengine running
->
+Hi John,
 
-Thanks, let me try to fix it.
-
-Frank
-
+On Fri, 23 Jan 2026 at 15:01, John Madieu <john.madieu.xa@bp.renesas.com> wrote:
+> Fix a typo in the interrupt-names property description: "ser_cor"
+> should be "serr_cor" (System Error Correctable).
 >
->
-> Kind regards,
-> Niklas
+> Fixes: e7534e790557 ("dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3E SoC")
+> Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+
+Thanks for your patch!
+
+> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> @@ -42,7 +42,7 @@ properties:
+>    interrupt-names:
+>      items:
+>        - description: serr
+> -      - description: ser_cor
+> +      - description: serr_cor
+>        - description: serr_nonfatal
+>        - description: serr_fatal
+>        - description: axi_err
+
+Nice catch!
+
+Looks like the DTS is actually correct. So why wasn't this caught
+before by "make dtbs_check"?
+
+<dramatical silence>
+
+Because "description" should have been "const".
+The same is true for clock-names and reset-names.
+So please fix all of these, together with the typo.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
