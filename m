@@ -1,109 +1,161 @@
-Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CDFB333436
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 09:13:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20CCE23EAA3
+	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 09:31:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769159629; cv=none; b=MnyEsrxXH45zDWPPY/ZbN837RspimEUvcQqolLbS5MVQsoDE+ipF7jCtnLODc09c6fxQiArCWyzRINY+aJHfRP56sr2mOqvOx6gQqXnmyZ9GzGsw8HqoJ5OmV/v2oiYTp4eylw+SSa4bwoRvTXirPPzh4CM7G31L244R1ozU2QM=
+	t=1769160715; cv=none; b=CB3Ve5oSK41oydxMT/ETZGXSYp1ONVEduAV6pJae6PGQ+p8BSTVQR113+aQGf+dRNcHn0Ut1nhb86gn/HRxWiNgdVOEHiKEhT3yhSqPp/uEXPkgPErGNqVJReKiG8oUBsk/mtMOl/PX7PT/YX2v0upMoPR+zbnvM8APjRCSblTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769159629; c=relaxed/simple;
-	bh=ciIrAmJYe/LBIP/e1tyFLCknBE3Ef5Fr7mcY8gWZqaA=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=enEcBWzFLaiANMtrQhDNBUgLIkF0PW8qGKJBcSHCg7Osy2UuX5IanSTGjnaebmmQv2H1HeHNEe4bFi3Lgawv9/BBborD16hzf8sIBY8D/kjH6oo7qPImNXrwRB8tKOSL1vr7yrvruU1QKMdu7h0LyuLCX2zw+dfx1P58boFJYbI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=WkSIJajr; arc=none smtp.client-ip=209.85.128.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+	s=arc-20240116; t=1769160715; c=relaxed/simple;
+	bh=LAdtpN1rCikqAOAR5EK+0Wp5HeQ/8qzoaZ/iaXhGfFc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=V9kuKlRFUslErgyo9ABUE73O59bavxPg8CRHNQbJEYFLl588rIfl/s/6PyqA32cu9ZheW+bF2O/RS+J+IiYoGXDEgIElMUSuX7iRih5CF+1GwONHRBQlMgh2/0VM7jP45SRr6MyEqtErWLXoa9Cz1yKmnZOGHW71xwa7TYdLa5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=GUyuQBKB; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cRt+xBbm; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WkSIJajr"
-Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-47edee0b11cso11200315e9.1
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 01:13:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="GUyuQBKB";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cRt+xBbm"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60N5I0DO3705183
+	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 09:31:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	26CDK72HEOnmUsZ1CXy1/05/oLpi5raMr9WBDPBMZ7k=; b=GUyuQBKBtsywwiSU
+	R1OwPXA81vidDquGqqc28No1zzt67cVhsgBYp2pCqS9pfqgkULNner+r+hB817tG
+	EYcSBfrlnwB49/42tOhjioOI+F64teuAOEUVcNI10lgBcw3D2oAxFfdxtxgz7SfN
+	uYKcMGab6GlKl9wD5NgmD58lb179KAkvVMcLRX1gTjkK9+3PNUVzcs7z/J3jaIZg
+	sjxjwF3FLLRhGB/vjiCA0YFJzM3cXV4xxATTVthnybzHIySwKD0LPRdYuzNwnLVM
+	V2nR/ELYU3+1GXzsarPhdbq++Q0Cy1lWqFZYsgEJEIBRTD5ihz5rPOaSoAVge8ge
+	6qs6Qg==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4buuayt7mq-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 09:31:42 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-8c6a5bc8c43so552257785a.2
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 01:31:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1769159625; x=1769764425; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=dA7sHJ8V5XB9t/C7Z7mv34QdmVApd5UJk+OAhQYXxaY=;
-        b=WkSIJajrHOKd8/xjsyofoNFm3EQ9ZXUM1Gjtb+KyGil+P/8yVvVRfC35OVW8l1h8n4
-         xBgJnP2OfC/852SYrAXftiE95uAHfoeE5jfPKY/Ne43UMWd3c5Gxe6/c9jt/Gl8Hjrrp
-         nszV/oGG57IfeQT8nZ2uAIA+XUIcBODFhKqToiRe4kINVYlGVjibMxcBJxflQynn4bH5
-         TtHi+0sg+mycv59ryiL0l3EzDtyMw9D28ef3ghy2BnXtO/YQL5wO15KvFho3UILa7H93
-         TdxCjg152O0Jvn9gnlus6dPbp1tuk8Q+RSlHLulFnZEW+6CadahlEegeF9eJHf9S+0Tj
-         viHA==
+        d=oss.qualcomm.com; s=google; t=1769160702; x=1769765502; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=26CDK72HEOnmUsZ1CXy1/05/oLpi5raMr9WBDPBMZ7k=;
+        b=cRt+xBbm3pM1SRIk9kYNM1W9X/WSF/Ury95PMCX1O1OCV+EW1M5h+A1QoRBlYstQGQ
+         9yL7USz/IdZvi+wn70+of4uApJdIt7zF1ceKWh30fbo3PDjotcW60BPo3/wShGvq3GGR
+         n6exb+hpXk59oJCu3SJBAlzyw3nZVcUkjcDSH/AsQk/CfT7V0De17OuCA4plNOeKTWVb
+         gHo3Fl9CXetlsymKsQQUP6CbTx3EuuOr/7ciJfUh2t6+KBtwPPq4PxzihtZJNJVX/dW5
+         W2OPr65bk0YKbxuefxv3VmxfuyDwem3eVrqu7z3pTRIbWCMSPwCSdpR2yofD4UvEnhwE
+         EELQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769159625; x=1769764425;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dA7sHJ8V5XB9t/C7Z7mv34QdmVApd5UJk+OAhQYXxaY=;
-        b=Ua+u5yCdVL5irIsMxQ/3KYfK9qZ5ZhzjvjYygY6J0Z1aiWz9hUwHNMt5lPO7t2svma
-         54ekjAGOB5PFgtS1++cUlF+vF9/mPr1gI9w63wQcMEYORVxe2kqU2IYTkQWOQe7gLWQp
-         Qq0XKsUFJ2Ky9zVg60b2MUSpvUqFahB5cZq5J/B3ZKJmlj55TbpweiseLSjbpSjTu9OO
-         FjUw0MPEeB/yi2taze8EG2agLsuXOAbEHTgTfR6d8lrMAZoyfLYbh4GiFSatrz1EwfxI
-         E5Lxh0ao9byFia/g7CkJA1LhSitUMsYdlp4wa++GeLsbD6f70xjGM/qe0OGFkXw69Z0d
-         Yaug==
-X-Forwarded-Encrypted: i=1; AJvYcCWsKVEFaUisin1E/mgfhsCYzcjqhP6MVGg7H3TfWs1STu19n0bI/aC1NfcIZoiiSoTH24qjku1XxjA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxz14o7+kbT96/+SgVKIR+ydliQE7cg1pWa4rN7/eaR9n8YuWAI
-	IM+FkjhYEL+HQyHjmlaqM935xbHvXpvkUMCjZqUUm5+M5FYYyTkKPAdMdyCNuS3Xcgtbc8oa9C8
-	a3mY69zV7u0DxiYv+mQ==
-X-Received: from wmjf20.prod.google.com ([2002:a7b:cd14:0:b0:47d:47dc:d5d4])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:190b:b0:47e:e949:37e8 with SMTP id 5b1f17b1804b1-4804c9c8d1fmr35402515e9.30.1769159624587;
- Fri, 23 Jan 2026 01:13:44 -0800 (PST)
-Date: Fri, 23 Jan 2026 09:13:43 +0000
-In-Reply-To: <20260121202212.4438-3-zhiw@nvidia.com>
+        d=1e100.net; s=20230601; t=1769160702; x=1769765502;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=26CDK72HEOnmUsZ1CXy1/05/oLpi5raMr9WBDPBMZ7k=;
+        b=CzpolEvXxChhsH9P7X8QB3vJLwLYJFsQy579qNgcQvvdBSoffnNOUWGElHPR4x/fFu
+         Kr+YAtnzNlYypHDrww7BcNCSIz7PdGEB+2A2sTydeXesUByHsFAJCKnSx+KJJOt267N4
+         HAhYHNs51aSNaDMpp17T8xFtjJ6K0mTjcjZVRk7DpfFSyMIZYnk8Y7lQxgAJ1BwR9uCl
+         nu3KcE7WocdxS1nDh4OgQiJTJFLhjuc2C5WM7cdbS0PP3Hzi3foUsKXivewKsydoHq9H
+         k+5sSN7zLHtoa3Uysybv67Sgd0k5xxNmk0HWNg9rdUl/UUhHqocuZTIt/7Mf4sfy5uEW
+         J23g==
+X-Forwarded-Encrypted: i=1; AJvYcCVqQ3kmWZcbS1sp5l7PYEnhGFWNOYAIYDgHkdGPFQx7+ZwiMBZvrdumq/GJEP9fWHHI3kdXdTCwm3I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YycohINiFsIOnYhvKJTKzjeAIy9SAtRRhh9QUSSug7+rHzm2faR
+	eWwyO6jub7Kx9oxrcitzveEhe8zBtS9BXe/q+v0cnge1fkEI3TpIypJXxiqOY/6yVZL6zizHM/s
+	ZFsI4Fny/luBZfTWab6oHRvH7C0w92alIvGOUTdRDivVv7E60CA6VeCcayPNtTKM=
+X-Gm-Gg: AZuq6aJxGidXaBVgmuCCEJOEDiHOz6vPPUUM2id+oNhE32JcW/xuH4y/wJ+mcrB5L8f
+	qnHG5w+kfKVWY4Gc+BwuQsZqxyepWUX1lMYgb+4NrABBlA+0bvHGrFtUsb0B6KYGGcM95hFVgMb
+	mnyPOq1YkEsqoB1c3Lai5oQOXalllEhEQBWrSLP3i4vD4FYFP46G9E8lYfQMzPYdbAl2OqEItI6
+	Uv/t+mE9zxSnlUWx6BGJwXgCQnJA64CA/tRyYtQrHfsFnikhhiHNrZswi0U05FRf6K/eJMi2A54
+	aiu3c4FTfBoEZ+QyWBr9Vjo4w3J8fVv1GLSIqU6ASIcM1wXzWZcAwVUOL4Xdide43qJge1tc0Bk
+	qwd1rxeP4+iP3aujVsvfZoVoEbBFZ5MnkCumRFhU=
+X-Received: by 2002:a05:620a:2a01:b0:8c6:b001:c1d5 with SMTP id af79cd13be357-8c6e910a7dcmr53104985a.5.1769160701637;
+        Fri, 23 Jan 2026 01:31:41 -0800 (PST)
+X-Received: by 2002:a05:620a:2a01:b0:8c6:b001:c1d5 with SMTP id af79cd13be357-8c6e910a7dcmr53103085a.5.1769160701228;
+        Fri, 23 Jan 2026 01:31:41 -0800 (PST)
+Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:1c86:c19d:d843:dd83])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-435b1c30293sm5717115f8f.19.2026.01.23.01.31.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jan 2026 01:31:40 -0800 (PST)
+From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Stephan Gerhold <stephan.gerhold@linaro.org>,
+        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+        linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
+        Frank Li <Frank.Li@nxp.com>,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Subject: Re: (subset) [PATCH v6 0/4] PCI: Add initial support for handling PCIe M.2 connectors in devicetree
+Date: Fri, 23 Jan 2026 10:31:38 +0100
+Message-ID: <176916069326.12678.16550242235025273411.b4-ty@oss.qualcomm.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260122-pci-m2-v6-0-575da9f97239@oss.qualcomm.com>
+References: <20260122-pci-m2-v6-0-575da9f97239@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260121202212.4438-1-zhiw@nvidia.com> <20260121202212.4438-3-zhiw@nvidia.com>
-Message-ID: <aXM7xwP-A4qUvnBI@google.com>
-Subject: Re: [PATCH v12 2/5] rust: io: separate generic I/O helpers from MMIO implementation
-From: Alice Ryhl <aliceryhl@google.com>
-To: Zhi Wang <zhiw@nvidia.com>
-Cc: rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, dakr@kernel.org, bhelgaas@google.com, 
-	kwilczynski@kernel.org, ojeda@kernel.org, alex.gaynor@gmail.com, 
-	boqun.feng@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com, 
-	lossin@kernel.org, a.hindborg@kernel.org, tmgross@umich.edu, 
-	markus.probst@posteo.de, helgaas@kernel.org, cjia@nvidia.com, 
-	smitra@nvidia.com, ankita@nvidia.com, aniketa@nvidia.com, 
-	kwankhede@nvidia.com, targupta@nvidia.com, acourbot@nvidia.com, 
-	joelagnelf@nvidia.com, jhubbard@nvidia.com, zhiwang@kernel.org, 
-	daniel.almeida@collabora.com
+MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Authority-Analysis: v=2.4 cv=GP4F0+NK c=1 sm=1 tr=0 ts=69733ffe cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=EUspDBNiAAAA:8 a=JrKmLYXSX60uSqAbQrQA:9 a=QEXdDO2ut3YA:10
+ a=bTQJ7kPSJx9SKPbeHEYW:22
+X-Proofpoint-ORIG-GUID: xXuIC-mVbhBUCXRem3VfcIefG_ey0RQu
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIzMDA3NSBTYWx0ZWRfX6h48ozCCqou6
+ SNSeDHTAwMSvkb9tjukoeyZ18oWqR5Va3DJz5XXpwQ8cmkUsqs+b7yTBF9DlDoMEp0Q44M1miIx
+ ygZgARVdoe6gkbptXTwehg4CFBxidF1yzDKqZk9Rl9+nRy1DuCIPlqcjesBuhDVbErMP1KWlw1Y
+ 6lGMJLx1QmvID5PNF84KA7vZg8a+rrH/locn7t7BcplmiDB2h1RWVRP87sDu6+nQyqmnsjjSX2y
+ 191W8iAFYW/eJJ+6YHoPnLbWXXDJyG8B8fejWOeCFluJovRQFi6borG5r4lV08kAp8Uo7VkL9dd
+ Tq38vhx2/zx/YNT/WUNiq/Yg/Zk+HO8nXOayKRHZQMrMeKh+0QnOqeLTIsv5jSLhgFy6xSMZ/3c
+ E4zEsdCRDHW/yc8Ua7u7sTtPI8HDruUFvLJ0EoDcJ2l1UEtE8hFz3MTUpSXKO+EvpgN6mforExN
+ noAvSEJ02f/mUelAqBQ==
+X-Proofpoint-GUID: xXuIC-mVbhBUCXRem3VfcIefG_ey0RQu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
+ definitions=2026-01-23_01,2026-01-22_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 suspectscore=0 priorityscore=1501 spamscore=0 lowpriorityscore=0
+ malwarescore=0 phishscore=0 clxscore=1011 bulkscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601230075
 
-On Wed, Jan 21, 2026 at 10:22:08PM +0200, Zhi Wang wrote:
-> The previous Io<SIZE> type combined both the generic I/O access helpers
-> and MMIO implementation details in a single struct. This coupling prevented
-> reusing the I/O helpers for other backends, such as PCI configuration
-> space.
-> 
-> Establish a clean separation between the I/O interface and concrete
-> backends by separating generic I/O helpers from MMIO implementation.
-> 
-> Introduce a new trait hierarchy to handle different access capabilities:
-> 
-> - IoCapable<T>: A marker trait indicating that a backend supports I/O
->   operations of a certain type (u8, u16, u32, or u64).
-> 
-> - Io trait: Defines fallible (try_read8, try_write8, etc.) and infallibile
->   (read8, write8, etc.) I/O methods with runtime bounds checking and
->   compile-time bounds checking.
-> 
-> - IoKnownSize trait: The marker trait for types support infallible I/O
->   methods.
-> 
-> Move the MMIO-specific logic into a dedicated Mmio<SIZE> type that
-> implements the Io traits. Rename IoRaw to MmioRaw and update consumers to
-> use the new types.
-> 
-> Cc: Alexandre Courbot <acourbot@nvidia.com>
-> Cc: Alice Ryhl <aliceryhl@google.com>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Gary Guo <gary@garyguo.net>
-> Cc: Danilo Krummrich <dakr@kernel.org>
-> Cc: John Hubbard <jhubbard@nvidia.com>
-> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 
-Reviewed-by: Alice Ryhl <aliceryhl@google.com>
+On Thu, 22 Jan 2026 22:46:50 +0530, Manivannan Sadhasivam wrote:
+> This series is an initial attempt to support the PCIe M.2 connectors in the
+> kernel and devicetree binding. The PCIe M.2 connectors as defined in the PCI
+> Express M.2 Specification are widely used in Notebooks/Tablet form factors (even
+> in PCs). On the ACPI platforms, power to these connectors are mostly handled by
+> the firmware/BIOS and the kernel never bothered to directly power manage them as
+> like other PCIe connectors. But on the devicetree platforms, the kernel needs to
+> power manage these connectors with the help of the devicetree description. But
+> so far, there is no proper representation of the M.2 connectors in devicetree
+> binding. This forced the developers to fake the M.2 connectors as PMU nodes [1]
+> and fixed regulators in devicetree.
+> 
+> [...]
+
+Applied, thanks!
+
+[1/4] dt-bindings: connector: Add PCIe M.2 Mechanical Key M connector
+      commit: 926194a6675a9cd5943f85820508648b74669fc6
+[4/4] power: sequencing: Add the Power Sequencing driver for the PCIe M.2 connectors
+      commit: 52e7b5bd62bab3851f25d8b70ad7eae9e94aba60
+
+Best regards,
+-- 
+Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
