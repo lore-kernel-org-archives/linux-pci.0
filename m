@@ -1,269 +1,97 @@
-Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazolkn19012074.outbound.protection.outlook.com [52.103.11.74])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F07BE28D8FD;
-	Fri, 23 Jan 2026 18:28:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.11.74
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769192892; cv=fail; b=Oe+ncVWSEMZaIGIpKFu8X31joLEuna6rW3LHklQg03TUsG6uQuofqhXJYIIiUlHKnPA3eRh1GGbFO3i8MfcQ5hQ2irN1W7+uQakGqRIXY04ZYWdEywhih4gOHGZbjcl63ompXHUiJeCXYOAyhNcWyND6hjYDzlUR5U+JgPYuilI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769192892; c=relaxed/simple;
-	bh=cWttfYhQOMO4sRwBjwgXOJDaATPIXVhvk0hIZXgzY6g=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=qgvo0m4/WfWugDm+qhqJwCfslkG1K7SCGfP6ya33zX6+l5hI0jLXJHHCTSfc5ZrytcuMmhe3eUZK8TCPT/6HbIkI0HFI32y73+JauTjTybLt4kPat8/YKMqHbXhFmoCSiyN07GQdnXrOavJ05OmVrQbZ72AHTAxI7/33JsRaST4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=kbkCgQ+V; arc=fail smtp.client-ip=52.103.11.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F92728D8DA
+	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 18:28:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769192924; cv=none; b=jQGnUF5/aduW154T3DAzvfvHJvQPAnyDQ15rAjchMiIkmUwSHccBC3HPom2PJZYJw1xEBqe3iAJfVTW/m0V5q0jMlTv7e57vvI/sO4FIas1t7RQQDtXSyaKtk74q9oJF8BhtSo2mormOcQd4aUKWGVzcYzAZfweNQh9RfObyQaQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769192924; c=relaxed/simple;
+	bh=NDCO0BuqTbPOlMtMCnCz8aavhVwQY0bYs2+7VGl4ktw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rka0p8T/p8vXA/7pdq3zVZg2LxAe5u0JcEVgHEpojzScjGazczdUp7JldZyIy5OI3peaJxeo6nXtE7lavJbB8wx5qAA9ei7J+xQwmmrcSJxVHSCKbVky7ip/aUqhKMxKA05mnorV6kPd/TY6mMNi31QSSyhVYaSuDWDXA0R3bl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=loSXo3W2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="kbkCgQ+V"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mbycO4nB471YEgxs5OTa4ehrokI07UOwjhnQ4kcL8yTvmTjekY4UrSPIhWLxm8zOdWYX6sXwJ2YveidEHg1Cplyfe19zTatD4vThXg/WZNe2qmekAwGHK1QZMNRWF7dXdG2mudwoQIvoxokp9bWkbJ+D0AGGyGmeT71uzbo458lqCSNKu/ZLdHO7m/gMHNg/1c+w19FMLnKu5zf83u54i0qr/dH35rZiXiHUfnZvy5H7aSg9kAQSqOl5hPjv4oKpoGZMB0OoUpQL0Ii1K3aftB89pwBLNjB3R2WJHgQbCU0EenBK6PODb/warbW0n7Kt3St9gsUMA5AuKi/A+CJSJA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=e8+9HE3tgQUPGP+vrgXQulyLUKSmsjX4M8mujypjJQY=;
- b=OqdPqhBvLmQYyLAmxDgXj5Pyp+alUl3NVjp2W+GNk2AsvRTSea9anKyvfy6+a+V7MWNBuqH2Y0hDqwi5kQ9ibId7Ac+E4C+ti++Ydte7brrijre9tWfFz9poApOYfvGqPKjoA/lggCYSfI2wvjcQbhGKaDb71b/nbQt7uThNGm4SSrbN79kSajJjzT4Hw7NplUTjNcqxfFmFwgsbtMnO5DJPFpoyNfx9E1sLptC0B/ftGtXtvzduettgOASavFX/wZEOLbG/4OllATymo/YqhktjCCZY6ZooaVx0WODMPVco1vviA82BguusqlRZ05IQfU7EU9eZ8fijw1LFEhZeVQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e8+9HE3tgQUPGP+vrgXQulyLUKSmsjX4M8mujypjJQY=;
- b=kbkCgQ+V/wrNXCweC7oEw0qd2TUljFrZWl6zpvprRFKynKYOnlUxt5FSrJkr1wYSylxTXE9MQbEC5L5PGbTpfyuicm2Ju0h4Ads5QwGjLZfEL/zk7GRj4aS1qsxY9EpTFgcFczuMboh0PC1BRp+7Zm2QHu5QW847i5wuWcK8FhwCOkba8KM+TGeddash9MEo4foLq1EPLbkcucHS1iJSMlBxDj/QHVuGxuJDKiWIMsBmhzn8nBG/WRYj3HXGhWWWhOFH1ihRoNWkk/b0aRv01SGErnTsoefFPJ3pZez1W8FRRX6ZU5bnKyGN2EF1ATXkG4DZM4/5QnvmoJjgutUfDA==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by DS0PR02MB11038.namprd02.prod.outlook.com (2603:10b6:8:293::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.12; Fri, 23 Jan
- 2026 18:28:08 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9542.008; Fri, 23 Jan 2026
- 18:28:08 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Michael Kelley <mhklinux@outlook.com>, Matthew Ruffell
-	<matthew.ruffell@canonical.com>
-CC: "DECUI@microsoft.com" <DECUI@microsoft.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
-	"jakeo@microsoft.com" <jakeo@microsoft.com>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "kys@microsoft.com" <kys@microsoft.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"longli@microsoft.com" <longli@microsoft.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>, "wei.liu@kernel.org" <wei.liu@kernel.org>
-Subject: RE: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Topic: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Index:
- AQHci0NePIGSa/9NGkCUvIR93cd3gLVdwUXwgADOvQCAABBuYIAAnjqAgAALUwCAAMhuoA==
-Date: Fri, 23 Jan 2026 18:28:08 +0000
-Message-ID:
- <SN6PR02MB415759DBA9428256D379841AD494A@SN6PR02MB4157.namprd02.prod.outlook.com>
-References:
- <SN6PR02MB4157545DAFDCCE0028439DB2D497A@SN6PR02MB4157.namprd02.prod.outlook.com>
- <20260123053909.95584-1-matthew.ruffell@canonical.com>
- <SN6PR02MB41573CD2EA6CD82A0C238F66D494A@SN6PR02MB4157.namprd02.prod.outlook.com>
-In-Reply-To:
- <SN6PR02MB41573CD2EA6CD82A0C238F66D494A@SN6PR02MB4157.namprd02.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|DS0PR02MB11038:EE_
-x-ms-office365-filtering-correlation-id: a091076f-7014-44b0-cc63-08de5aad2884
-x-ms-exchange-slblob-mailprops:
- Z68gl6A5j29AnTtbLKjpqQ4tPEUmeMtb+Ho6HadzQP+kN1yzaexRjN2FNTq/ZrGrwdTEKlbHrWPGZEFS6DvlM9GUSSvV0GO6OdIwM1DhX7x3Qr5haC+O089LgLbmj0PBjqGtlutoGs+szUKDaBYoPhNqDhOTH6I9CNq+si5FRzifnm09PKRhUxoXVUoa5qnATtLxzadjYq0gGWt76Bn30TynldPTu0FKSvELOvPw6Bsc53wwOwHpg2lzwHtxI2xTE5gr4FMU2YqPmXpcOGhmtX/ext6vQVkiwRISn2IR7Bt2sW9jBG7LTN6m7/gWg1GhyMzOJmp8jIVLXf0wPuPJ0uWrE8Ny6JUah9p0zieSm+dlOhHbzoje89A0FZMH28KiWOJE5MOD04HQbRa8od4lR/mv1ff+NmzxlpEpR3Obk3596EPae/g4nUcV5rDtY4q5gHjyih3nEJn7T3AWIu6b+bQe0ciBnxMXV4570HMVt2qHq/MbqfTVRrfl31nz+VpnQ5N/TCSSzKFgI3PZPbunEPje45s+U/ARNOnqjQe9kEXxmLpewCgNzkOV/v+rLbb0N8/vnZRF495rJv/M/RKS0sKI8sVJRkW01H/Fc8o5n7eFSWPyZ7lE1VB3LOJXzYVhqdl8qqHhR/Y2mOGVBnSGF9r/jWPeFopUtlPBKVNfUxe5uYE5xEnFV52k2IGaL9LGudwDzqZrOzjJB3BbBMFPdQOsTer7rQ1ooIYWg3Tl6jttw73tYuShFN4iWFqYR273lnMnYCBM/BRZ5U7rjuIWsDZpismH2SYOcAZA0OEt6yvg7/WRxk8KBqiEwzUokxYS
-x-microsoft-antispam:
- BCL:0;ARA:14566002|41001999006|31061999003|15080799012|461199028|51005399006|8062599012|19110799012|13091999003|8060799015|4302099013|3412199025|10035399007|440099028|40105399003|102099032|1602099012|56899033|1710799026;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?B2VAcchGtKKhDenEsWLU2TBYpL7jINFQYWE3AMrcf/ZPIff4kjamaPaLwd7C?=
- =?us-ascii?Q?0s6iG3JuV21IZLifAohkD9+KvQNIPuAs0amZkogPVXEbqMmz9EXFWWNhGRMn?=
- =?us-ascii?Q?kWf7Eb1qVzROMe+KtQPjSD7lOCIbrm7UwkjAoBfYfpsEFyhhoLfN0i+2ANqq?=
- =?us-ascii?Q?aHyKb0B6jnraoeCSn6+o2eyEaCErujh/+kKxeUQy5LxrcMA0xP3IS7zuoO6H?=
- =?us-ascii?Q?NLjVHa4fgAzqYiOITN7tBw+BUqQhJQe/pO45feV5qcPkkYzrYsWl157rzhe1?=
- =?us-ascii?Q?f5Rbl/z7/1XeVY2/8ZHbGuYnNbt7L8rCH0HDhyBSuGUTT1W03tXr+Yb7Io/A?=
- =?us-ascii?Q?yIiNH+h1QJLwB9Se5+Hybkq0ALW9g3Gjf5YCJ7PNRxJuQ/oa5aTX5x57CHqD?=
- =?us-ascii?Q?qkN/Xk4+yT66mC8jtTsWqSL//sbRzH+VqtkRh3pBRAF6pO5f8WM/TWiZlVeH?=
- =?us-ascii?Q?cvh0g62VApn84hMaHBT/9ofY7cYLXTSL4pxDtGOsYsb8JohpsZZ375SllM3+?=
- =?us-ascii?Q?VdcrnfgOETN+Gu/xKOZBTePex10S/r+7qIPLH5+ilyvpTPI8gnrJ1AcAuB6w?=
- =?us-ascii?Q?dOFneDij+jeX8cZtMUKtS3ZaWiCaVPmeQwcyyLcQRo8onscATgUatH31OUKQ?=
- =?us-ascii?Q?zxQu709vrYVka5VPwWSPdoPNf5/e4Id1rfYwcxNMOo7lNnjR6BstiodPBn6N?=
- =?us-ascii?Q?PzVwA1/nKo77XZsZ8/xD4t75bBaqokJCzzsNevMjNJhDRTvLKukDA8AqNt80?=
- =?us-ascii?Q?0XboRVlLgdsWZkVMwTZh56gcvzdgXtSOoA++2xuaj2HciaylXcOLIuPMX1a+?=
- =?us-ascii?Q?rnskowR+zO40CT4rPKl3FNiX3r8GmIYxs2rKJT1pz5gAndnLFC2OHsRUQnP4?=
- =?us-ascii?Q?3WQnYeqvVzi8wdigeiNnsPgGjb9u6WOtZTOYF6InN1DLxHVtoWbHD1U8nq3E?=
- =?us-ascii?Q?EpfvwQ66ce6YhESd5IqkAsiIejb3MARF5x1zd/QWLoXOf9CuSbijK0r6E9Gr?=
- =?us-ascii?Q?ocDGraZHiF5/Eynem33MxwtbooBsXkVrG6rAjAYe11RZHfhfj0LeogsrokYo?=
- =?us-ascii?Q?/eUGs1ac7h8yk066BzGiRjSwJBuha826G541xjxXFQE99oOQfbVzKppZbj2Q?=
- =?us-ascii?Q?Qs+vrkflSjYSP36LRypcQJ4jaO5OIDfqqFk/yv8sSjVMRRReucBkWKwFO0pv?=
- =?us-ascii?Q?k8ukMvgPZ/wIoCSbMzU4WoChq/jaYP/b58CHKWozghrpx/tuPDG1WAT2nlm+?=
- =?us-ascii?Q?u0voRjceGRqkqqR40Kj1YjQyePdU8yl3yua6Duc1WLmD4unUy40RosyYtYXI?=
- =?us-ascii?Q?WkN8rn4feDqfVq4gso5X4kzuyGATzsX43ATLWk3WXdfxR5iTc24RSFb/ooS0?=
- =?us-ascii?Q?eAv7gJ2jgBROCVqFGkOaxJTvzleFG8NUcessk1R28uWA0TzubQ=3D=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?AV08R6ASOC+lyyAJPzQ+AQY/xFKp9mWvgD2XedSEJbDTXBdVM9D5ithjkKGM?=
- =?us-ascii?Q?jzx5Y+yLVvlLxiee60vepaGWlJkQELkYDr+zKVK7oOp2PbOfyqIZf+3Rcfqa?=
- =?us-ascii?Q?d9RML5iAmQLtEM5I32UMhuwgI0La+lP8cRs27ena5pgsrNHOXpZqwOqKl8dG?=
- =?us-ascii?Q?2uTujVNQLqJd357gYmnA6Aw8W7LGTBwDAckilIPHv4b4dj+ruv2T3DW7TfxL?=
- =?us-ascii?Q?GqrRNcG7/vZd32dNVH3AKAb+TIZwmscYM/emV1/2tFg7DcjliC+yj2K9skAS?=
- =?us-ascii?Q?AZklDLkE/6v9HZrLxIcxCx/WQD66Xaja29/MusBSIW0GMXy/ms+kxEJIt8j+?=
- =?us-ascii?Q?zlf2Qyj8X6wYmm/cwAypq/OwAJzuaSZALr7rSsvuMtqhRSBd+/lhzOEaURMx?=
- =?us-ascii?Q?yyZ6UEmy0+gFVvRJAtXIEtrB2a22q4Yx8qD+VgT4lnHdOhcJ5su0n353Vtax?=
- =?us-ascii?Q?oWEqs5xlH67dgnkO/HbrMdH2UxgnpxvH+pJ0Gmm2HxIQxzQoJoJV6Fi4HqCO?=
- =?us-ascii?Q?rQh9ja+acObmLVlMSgb4o8pT3At/SDtsNsoH4Rsnh7zc6xr5t9k037xD6ezc?=
- =?us-ascii?Q?Yom5sZg5bawU693vxeWjbJTqJVzl/44A7cUwCpNvMmMS5CeGzWwUgHDTq7OK?=
- =?us-ascii?Q?N8bC6vKDXsJ2SZo4pdmfEMDv7NujU8acn5DWhuSHEFlTulNGrOvXB7CEEv+/?=
- =?us-ascii?Q?qnb8JEFVdPk7a9QlYu0lxcVllyAUsNEH6sOLau27b7uKRrQeXl8SdM9a192G?=
- =?us-ascii?Q?q4fcMSZvv2kfxsam8kaUHdEdzp8cD1Ed80JYp1e9boyc/gft17uUOIDQurOc?=
- =?us-ascii?Q?URnoj0T07bTVo30vD+cYj7wvP99hV5vCV3CGla5KbXA6/0ZImpp74zsT+0UA?=
- =?us-ascii?Q?7QFahyuvqKwb7WHlRVU/CS7NjNmnRbES17h4Krw/yykDEBPPZvOo4tfIYtiV?=
- =?us-ascii?Q?H6cnb0noEChcIQUegSdgNbITJ5zOFc/Ak9SYqVNG0T5/EbAQe/KxJCRJHfEb?=
- =?us-ascii?Q?4NGme/k1LtQl39gXi4sQD7yQlGCt/uqFrlR5ARnaH21A4UVIODiIqsVXB0c2?=
- =?us-ascii?Q?ibY4yYhevGW5jXzx203lhzviItQigIUe78h9vHVto00TyiWRH3goAwewA4/q?=
- =?us-ascii?Q?s/Q4W4pLDx6aClD49TdM8iK+onh5Q+zucUN/FHbljyPER8YJJYH8afWvUZ/X?=
- =?us-ascii?Q?QH8NdKlSHeDLQeW/S5sWPx2zI6sQ3IzNlQiEh8ufuu69M0nuv0oaJTJbJs0S?=
- =?us-ascii?Q?WM0fSKMVgT5qXwh29HhYUaDXJtJKNUS5FJQnJMPzfCFXprnqVShcDpmNdObG?=
- =?us-ascii?Q?hbZ06PE6NWmVxio00HbOGJM2bzq71nz8kRyvze8+ncYJtftZ66QnRXFIxvP0?=
- =?us-ascii?Q?HIcuEVI=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="loSXo3W2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0451C4CEF1;
+	Fri, 23 Jan 2026 18:28:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769192924;
+	bh=NDCO0BuqTbPOlMtMCnCz8aavhVwQY0bYs2+7VGl4ktw=;
+	h=From:To:Cc:Subject:Date:From;
+	b=loSXo3W2XAHCKYD8Ahnf+J022kuI59tHocb6Jdb8qvG/pTl1Im1vxXkDwpKBrWLNU
+	 I5YBIl4u0Wwl49uo8gMR81ngjCHqCw4T6sN6CMGbsBzF1BimDXpLKGGHCLjsjN3yKo
+	 aE3MWb4bNALJM85cxErB131+akrMZv1GLvtNIb4lw86f1KjgzXB7HpHq3BpdztE0vh
+	 9u4qCO16CR3G+T96Mul5DuqtUtw7QukWRAqhc0KMttIGaIZbTv1Aq3cCGmqdRi9qnL
+	 arc/0A063Tc1k22dAjcykmibohfDwtlcvMHTMzis/Uzi6vXAHFUQWv3ppXGXJoQik7
+	 1GOiNHw1kU1NA==
+From: Niklas Cassel <cassel@kernel.org>
+To: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Randolph Lin <randolph@andestech.com>,
+	Samuel Holland <samuel.holland@sifive.com>,
+	Charles Mirabile <cmirabil@redhat.com>,
+	tim609@andestech.com,
+	dlemoal@kernel.org,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4 0/4] PCI: dwc: Clean up iATU index mess
+Date: Fri, 23 Jan 2026 19:28:35 +0100
+Message-ID: <20260123182835.831710-6-cassel@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: a091076f-7014-44b0-cc63-08de5aad2884
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jan 2026 18:28:08.8445
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR02MB11038
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1254; i=cassel@kernel.org; h=from:subject; bh=NDCO0BuqTbPOlMtMCnCz8aavhVwQY0bYs2+7VGl4ktw=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDKL917ONN0wcbUUy5/dYgJ2HxuUhOdPun9BVELZvKPW7 3Thp+mPOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRxDUM/32vJL5tqH7EHrMv ZsqZPat1rlxmTnfdGuKilLyO6+PkpFCG/+UbPrfnrWbLPXlEbuOLzkcB23ce6KjbpCV68M7Lrz8 CJjMDAA==
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-From: Michael Kelley <mhklinux@outlook.com> Sent: Thursday, January 22, 202=
-6 10:39 PM
->=20
-> From: Matthew Ruffell <matthew.ruffell@canonical.com> Sent: Thursday, Jan=
-uary 22, 2026 9:39 PM
-> >
-> > Hi Michael,
-> >
-> > > > I wonder if commit a41e0ab394e4 broke the initialization of screen_=
-info in the
-> > > > kdump kernel. Or perhaps there is now a rev-lock between the kernel=
- with this
-> > > > commit and a new version of the user space kexec command.
-> >
-> > a41e0ab394e4 isn't a mainline commit. Can you please mention the commit=
- subject
-> > so I can have a read.
->=20
-> It's this patch:
->=20
-> https://lore.kernel.org/lkml/20251126160854.553077-5-tzimmermann@suse.de/=
-=20
->=20
-> which is in linux-next, but not yet in mainline. Since you are dealing wi=
-th older
-> kernels, it's not the culprit.
->=20
-> >
-> > > > There's a parameter to the kexec() command that governs whether it =
-uses the
-> > > > kexec_file_load() system call or the kexec_load() system call.
-> > > > I wonder if that parameter makes a difference in the problem descri=
-bed for this
-> > > > patch.
-> >
-> > Yes, it does indeed make a difference. I have been debugging this the p=
-ast few
-> > days, and my colleague Melissa noticed that the problem reproduces when=
- secure
-> > boot is disabled, but it does not reproduce when secure boot is enabled=
-.
-> > Additionally, it reproduces on jammy, but not noble. It turns out that
-> > kexec-tools on jammy defaults to kexec_load() when secure boot is disab=
-led,
-> > and when enabled, it instead uses kexec_file_load(). On noble, it defau=
-lts to
-> > first trying kexec_file_load() before falling back to kexec_load(), so =
-the
-> > issue does not reproduce.
->=20
-> This is good info, and definitely a clue. So to be clear, the problem rep=
-ros
-> only when kexec_load() is used. With kexec_file_load(), it does not repro=
-. Is that
-> right? I saw a similar distinction when working on commit 304386373007,
-> though in the opposite direction!
->=20
-> >
-> > > > >  	/*
-> > > > >  	 * Set up a region of MMIO space to use for accessing configura=
-tion
-> > > > > -	 * space.
-> > > > > +	 * space. Use the high MMIO range to not conflict with the hype=
-rv_drm
-> > > > > +	 * driver (which normally gets MMIO from the low MMIO range) in=
- the
-> > > > > +	 * kdump kernel of a Gen2 VM, which fails to reserve the frameb=
-uffer
-> > > > > +	 * MMIO range in vmbus_reserve_fb() due to screen_info.lfb_base=
- being
-> > > > > +	 * zero in the kdump kernel.
-> > > > >  	 */
-> > > > > -	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, 0, -=
-1,
-> > > > > +	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, SZ_4=
-G, -1,
-> > > > >  				  PCI_CONFIG_MMIO_LENGTH, 0x1000, false);
-> > > > >  	if (ret)
-> > > > >  		return ret;
-> > > > > --
-> >
-> > Thank you for the patch Dexuan.
-> >
-> > This patch fixes the problem on Ubuntu 5.15, and 6.8 based kernels
-> > booting V6 instance types on Azure with Gen 2 images.
->=20
-> Are you seeing the problem on x86/64 or arm64 instances in Azure?
-> "V6 instance types" could be either, I think, but I'm guessing you
-> are on x86/64.
->=20
-> And just to confirm: are you seeing the problem with the
-> Hyper-V DRM driver, or the Hyper-V FB driver? This patch mentions
-> the DRM driver, so I assume that's the problematic config.
->=20
-> >
-> > Tested-by: Matthew Ruffell <matthew.ruffell@canonical.com>
->=20
-> While this patch may solve the observed problem, I'm interested in
-> understanding the root cause of why vmbus_reserve_fb() is seeing
-> screen_info.lfb_base set to zero. It may be next week before I can
-> take a look, and I may need follow up with you on more details of the
-> scenario to reproduce the problem.
+This series tries to clean up the iATU index mess, by treating
+iATU indexing for outbound and inbound address translation in
+a consistent way (increment the index after assignment, and only
+if the function call succeeded).
 
-One more thought here: Is commit 96959283a58d relevant? The
-commit message describes a scenario where vmbus_reserve_fb()
-doesn't do anything because CONFIG_SYSFB is not set. Looking at
-the code for vmbus_reserve_fb(), it doing nothing might imply that
-screen_info.lfb_base is 0. But when CONFIG_SYSFB is not set,
-screen_info.lfb_base is just ignored, with the same result. This behavior
-started with the 6.7 kernel due to commit a07b50d80ab6.
 
-Note that commit 96959283a58d has a follow-on to correct a
-problem when CONFIG_EFI is not set.  See commit 7b89a44b2e8c.
-If there's a reason to backport 96959283a58d, also get
-7b89a44b2e8c.
+Changes since v3:
+-The ECAM config space accessors do not support cfg0_io_shared, thus if
+ running in ECAM mode, and we are out of outbound iATUs, return an error
+ instead of enabling the cfg0_io_shared feature.
 
-Michael
+
+Link to v3:
+https://lore.kernel.org/linux-pci/20260123093208.593506-6-cassel@kernel.org/
+
+Link to v2:
+https://lore.kernel.org/linux-pci/20260122222914.523238-6-cassel@kernel.org/
+
+Link to v1:
+https://lore.kernel.org/linux-pci/20260122145411.453291-4-cassel@kernel.org/
+
+
+Krishna Chaitanya Chundru (1):
+  PCI: dwc: Fix missing iATU setup when ECAM is enabled
+
+Niklas Cassel (3):
+  PCI: dwc: Fix msg_atu_index assignment
+  PCI: dwc: Improve msg_atu_index error handling
+  PCI: dwc: Clean up iATU index usage in dw_pcie_iatu_setup()
+
+ .../pci/controller/dwc/pcie-designware-host.c | 91 ++++++++++++-------
+ drivers/pci/controller/dwc/pcie-designware.c  |  6 ++
+ 2 files changed, 62 insertions(+), 35 deletions(-)
+
+
+base-commit: 0ecd890e3cf54a0586247b9a384702703277e4fd
+-- 
+2.52.0
+
