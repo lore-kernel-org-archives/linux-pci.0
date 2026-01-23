@@ -1,118 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E3781DF27D;
-	Fri, 23 Jan 2026 18:11:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7EFB26E6FB
+	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 18:18:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769191918; cv=none; b=BYc1ZMNaNLt3XmN79TIDCIavz0WOvcbC4Hj+cXNUqAc3iP/UCwQ5QGC7e/wcah4Hvqa+Rznru6CTG2YHD7+JmjfquwDWMYXiQV03qoBldHVZPQ6MxbGshaPHCFg6q1m5lhDeKxbo7he+J0w/OdFjItTSqezTIohQ9VKdid26llQ=
+	t=1769192340; cv=none; b=XnOrR1etq/i+1U6dfAX6novL2vsx/jWSHqfSSpEvCf2H3Yx/rXHnjsnRlwaGt20c/fofnItXazCDXZO3NWKEp3Ip+4xzkMLwsA3jfIClKmNvzrhctronsEzXscUQSx6T8lVJdY/UngU8Xv2nJG8i1aUuJD45iov4L/+kyEkAa4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769191918; c=relaxed/simple;
-	bh=gAu59N+pafJqOnym+UnaH+Jh421RCCkXaq2oHeKQwyc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=FP3bwLHfS0MH0qPhW5RhUYNPEFHVNGGTDdy1q0xPuObqFj2oeyJP+TfxsTPYJWa9vdnNMfTqvnsAWGvEPYRdnlcVj9SfTS90ZqjL7zChqVp/h4Y8mkmeCvPJ0dMfbwmWec9Nb6KNIbgajb+wkV7LzuWrNc4gCkMEeTWiG0ok2qY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvwePtsh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769192340; c=relaxed/simple;
+	bh=5m2pAtLwQAG5n3tjRHX6phbB0BVWp/5Ljs87oOwdj8o=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=OBVWfV97+Sg7zAdqxLSuHJPMXPs9FXQ3DtGnddzJEa4nKiMTyRJ9KrdHuHuXTX5nC7F0L03RvLMzQfiuXbfu+aBC1ho99IfG4Q+uyf9jMe3hHRgtbsfIIt3hfRw2flq8zuFoPswgOQjxv72ysHqpSyOPkIk15LQbz2+3IDnykdc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Iii85N5P; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvwePtsh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BA38C4CEF1;
-	Fri, 23 Jan 2026 18:11:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769191917;
-	bh=gAu59N+pafJqOnym+UnaH+Jh421RCCkXaq2oHeKQwyc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=LvwePtshB6UIxrIW7FGsza5eXIE59STNMmWVvsp2x4a0k7oWK6L/nkvXpMny6Y0N0
-	 t1cdNdNtomNAL3LXCy81O3+dMW1wArBcJCl+kTme6UinW/FePbJLAAar2b2SDVFT37
-	 PaylQ2U63tbJdsnNnJHNmqToZ0U+MctQUu60NCBxSfkfQQyfIOro8BndVP7AzGfySX
-	 2dCTNodn3jt9yar2BXHmcyWJQ8BRNrjOiSTV8OP3+A2n86eGGvfxkDSYZbZAs0Hp0p
-	 T7BiYPgnI7LNHfD+t1UwdrFrqfbNWOeRRTX4v3Mt34WgC66PjoejENdtnUgLXhIovk
-	 A+IwYQ8ILJicQ==
-Date: Fri, 23 Jan 2026 12:11:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-Cc: netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	linux-s390@vger.kernel.org, rust-for-linux@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>, Jonathan Corbet <corbet@lwn.net>,
-	Linas Vepstas <linasvepstas@gmail.com>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun.feng@gmail.com>,
-	Gary Guo <gary@garyguo.net>,
-	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Martin =?utf-8?Q?Kepplinger-Novakovi=C4=87?= <martink@posteo.de>,
-	Pavel Machek <pavel@ucw.cz>, MD Danish Anwar <danishanwar@ti.com>,
-	Mengyuan Lou <mengyuanlou@net-swift.com>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Huacai Chen <chenhuacai@kernel.org>, Theodore Ts'o <tytso@mit.edu>,
-	Takashi Iwai <tiwai@suse.de>, Eric Biggers <ebiggers@google.com>,
-	Madadi Vineeth Reddy <vineethr@linux.ibm.com>,
-	Ard Biesheuvel <ardb@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Frederic Barrat <fbarrat@linux.ibm.com>,
-	Andrew Donnellan <ajd@linux.ibm.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Dong Yibo <dong100@mucse.com>,
-	Lukas Bulwahn <lukas.bulwahn@redhat.com>,
-	Vivian Wang <wangruikang@iscas.ac.cn>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH net-next] net: ethernet: neterion: s2io: remove unused
- driver
-Message-ID: <20260123181156.GA84531@bhelgaas>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iii85N5P"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-8230d228372so1092736b3a.1
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 10:18:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769192338; x=1769797138; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=PWeU1UwAO4pe3zvezy5Kiy+/X4gvo5C+nKCDnSN6RYs=;
+        b=Iii85N5Pi/y/INIcmqQdLiO2X9IdeQaJKJLNO8jGLxiuIIspC2f3zmjCxi3GaLbLCQ
+         dI9knMV0dNphJwPAUlc0a22V8SA0tNlMLSJdBTclPixLlYGPkjnGSDqP0KtQwKgR25c5
+         DDl61Zaytny/zEIikAsrCrNLi2KZqGpAvwIcB0Tk45AkIPqz3ef3/RFC7JI4F2gCCx5i
+         OCg5bpaqwYVkrW+m1UmofH0oSeONcL95YDJVP26osTbLLuKL+d56UiX/oR5+Z2/fQy7p
+         pWPEi4YHmRMvAhl4GPDFOUGtpMBAp6bnpUawmTiqqyye8jf5HeNXdXLtfWo7H7FYB7Oz
+         tguw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769192338; x=1769797138;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PWeU1UwAO4pe3zvezy5Kiy+/X4gvo5C+nKCDnSN6RYs=;
+        b=PzZCXmV0t7XKlHqo2Tio7n1bDPHq5FvIGLjmhZKp2aFrqv9jaLgBU4PyFTyvK8QnGt
+         9iT46ztd+FttBEO9o1dOdTeWUYGmIpderomNIdieLqgwoVGGDejqL/rw0xblPFB1GBm/
+         W5VanZyVPOtKuwkyQ7CVMpYY49IW+lB5mM/We8e/UdR7F8obn7Hgpd5p6CTOHGqoFqxV
+         wpv0RO7g1tJJNWAeLueCJvuqGQy069WVoLjg4Ou8AFVcGspedsc+h0VtV6oFp0xY4Yna
+         3olOJBOK95+9VKvzEJglLCc2qDqJYnoNXFt6qQqsRYb5Oy4rxCaNxa9oFHAHJGOGLxVe
+         daHg==
+X-Gm-Message-State: AOJu0YwquDIBU/eL1ufLfQqDCKZC6SPtbinvH9XhnH6tAWCWTLUxAFVV
+	9NmSO5pfQ1ONcbBJw06EZPGk4xtkfsTbisx/w8Uvs/j7PHQ5dD1YqTIq
+X-Gm-Gg: AZuq6aLerL3Mxw6vokz4i6zHHjQt0silU5ogSawA2abSJaRUMX3XVTSzMGiExsoMoP4
+	NwmdiHYihCZg/ocf/X2MrqMcFqpZrVhnuF4EJ0LH2d8XQuOmuH3+570VJuuPoV7rrfktCHS+foX
+	1NX3r1Obkt4Rsh9jfpbbsdrRSEuQkbv/+n0dhGYxpKVRre+xgb6gkYDr9LoZwMD8g1mixh1/LFw
+	LHnJ9ykU90vdhAVCyTgmLQBYOKFXXTRMScXr+jQamXzcbcbOZMQKgAvz1zmWvcScjVzc32RbVHL
+	iXFoxGeh1vfC7EV20QfaJsE1JOsuKthWlFv3U4ozZJjnGbTxQgrumi+ab8QRDlWtl7ld1P/EAmx
+	mppc8alcewsqnzS/tVSOMQGkI/6vgkHaaVKXmOx81erX9iaY7pdhvVd3LspdL81wI1O3pCysLgP
+	/CTxTYwJHCAKHslVIL9h1VzK/p
+X-Received: by 2002:a05:6a00:e0a:b0:81e:63b9:5830 with SMTP id d2e1a72fcca58-823215d894cmr1814046b3a.18.1769192337818;
+        Fri, 23 Jan 2026 10:18:57 -0800 (PST)
+Received: from junjungu-PC.localdomain ([188.253.124.89])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8231873fa99sm2737765b3a.58.2026.01.23.10.18.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jan 2026 10:18:57 -0800 (PST)
+From: Felix Gu <ustc.gu@gmail.com>
+Date: Sat, 24 Jan 2026 02:18:49 +0800
+Subject: [PATCH] PCI: imx6: Fix device node reference leak in
+ imx_pcie_probe()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260123033233.16906-1-enelsonmoore@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260124-pci_imx6-v1-1-6f4379fc5160@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAIi7c2kC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzMDQyMT3YLkzPjM3Aoz3TRL8xRzAwsL85S0ZCWg8oKi1LTMCrBR0bG1tQD
+ csCPOWgAAAA==
+X-Change-ID: 20260124-pci_imx6-f97d70887dfc
+To: Richard Zhu <hongxing.zhu@nxp.com>, 
+ Lucas Stach <l.stach@pengutronix.de>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>, 
+ Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>, Trent Piepho <tpiepho@impinj.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ imx@lists.linux.dev, linux-kernel@vger.kernel.org, 
+ Felix Gu <ustc.gu@gmail.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1769192332; l=1059;
+ i=ustc.gu@gmail.com; h=from:subject:message-id;
+ bh=5m2pAtLwQAG5n3tjRHX6phbB0BVWp/5Ljs87oOwdj8o=;
+ b=c1kmFZYTjUboD6aDt5uIFJ4j1wdUwKwQCWHZWpd6SRlVQvVyjHEumpT4BDWjLBheMuh5h0/MJ
+ gOEw7yXl6kNAAkxZ6ysWS9FtiCJsvPbL0qMBG7hJkMn20pzp7jVkVau
+X-Developer-Key: i=ustc.gu@gmail.com; a=ed25519;
+ pk=fjUXwmjchVN7Ja6KGP55IXOzFeCl9edaHoQIEUA+/hw=
 
-On Thu, Jan 22, 2026 at 07:30:41PM -0800, Ethan Nelson-Moore wrote:
+In imx_pcie_probe, np is obtained by of_parse_phandle() and must
+be released with of_node_put() when it is no longer needed.
+Add the missing of_node_put() after of_address_to_resource() to fix the
+leak.
 
-> ... Remove the driver, and move the former maintainer
-> to the CREDITS file (restoring credit for the vxge driver, which was
-> removed in commit f05643a0f60b ("eth: remove neterion/vxge").
+Fixes: 1df82ec46600 ("PCI: imx: Add workaround for e10728, IMX7d PCIe PLL failure")
+Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 1 +
+ 1 file changed, 1 insertion(+)
 
->  include/linux/pci_ids.h                       |    6 -
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 1d8677d7de04..3ae02712d3f0 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -1675,6 +1675,7 @@ static int imx_pcie_probe(struct platform_device *pdev)
+ 		struct resource res;
+ 
+ 		ret = of_address_to_resource(np, 0, &res);
++		of_node_put(np);
+ 		if (ret) {
+ 			dev_err(dev, "Unable to map PCIe PHY\n");
+ 			return ret;
 
-Not sure there's value in removing the IDs from pci_ids.h.  It may
-lead to unnecessary conflicts later for stable and other backports.
+---
+base-commit: a0c666c25aeefd16f4b088c6549a6fb6b65a8a1d
+change-id: 20260124-pci_imx6-f97d70887dfc
 
-> +++ b/include/linux/pci_ids.h
-> @@ -2445,12 +2445,6 @@
->  #define PCI_DEVICE_ID_ARECA_1680	0x1680
->  #define PCI_DEVICE_ID_ARECA_1681	0x1681
->  
-> -#define PCI_VENDOR_ID_S2IO		0x17d5
-> -#define	PCI_DEVICE_ID_S2IO_WIN		0x5731
-> -#define	PCI_DEVICE_ID_S2IO_UNI		0x5831
-> -#define PCI_DEVICE_ID_HERC_WIN		0x5732
-> -#define PCI_DEVICE_ID_HERC_UNI		0x5832
-> -
->  #define PCI_VENDOR_ID_SITECOM		0x182d
->  #define PCI_DEVICE_ID_SITECOM_DC105V2	0x3069
+Best regards,
+-- 
+Felix Gu <ustc.gu@gmail.com>
+
