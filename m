@@ -1,101 +1,116 @@
-Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7A573596EC
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 10:41:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DE3B36B065;
+	Fri, 23 Jan 2026 10:42:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769164901; cv=none; b=j+CA0VsaoaaFosv1tExwhJ/upj/Ph1SPfQo4fOvRAtUqegXMbBrdmaNhKrLGEOrXhPCNyNxLisk0bBOMaYb7kQea69TVM2S2aEqhWyNFUI70bA7ldLh0hPqzpNTe6bheA4a/D0BapLwbyL82gV70i/mM0DpZleE6DGF7kMRbeHI=
+	t=1769164920; cv=none; b=IOi4WulMeOYjTz6lD8QE6PzZU/VgXkQgHWXZTgMFV4Me5YoiWz30WxZZgbmXK0IhyVo8g53u/LLS4jDy21w4MBWlUF+Ezb+P0XpXyOxIpBNW6uJ5NddIVroobGX4cTL5maUUavz9xnXT/q05vwNZNN4yNo9oRa5Ud7hvAcKPfBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769164901; c=relaxed/simple;
-	bh=BlxJFuEvXJdNRfE6mEwRufDvigHI8H/m6FK4e/ESLHQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KGCbnPiJForDeL+Wh7XjlT/R6Ya32IGELTkYhaYTbkVIIPge7RMF9Y97HUifJgp2NB1x0IPVE7ERZH0fBFYmpHMEwu0nRvt2LfBkb2kmgtNeWTLOLKLxcXVco+fVisNvXzCk7ufjU86VOVH+X7FHwfqm8APnawOzyGjkJ8gaQTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
-X-ASG-Debug-ID: 1769164884-086e2306f936500002-0c9NHn
-Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx1.zhaoxin.com with ESMTP id zi7TNQI7lFCBKrup (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Fri, 23 Jan 2026 18:41:27 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX2.zhaoxin.com
- (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Fri, 23 Jan
- 2026 18:41:26 +0800
-Received: from ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85]) by
- ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85%7]) with mapi id
- 15.01.2507.059; Fri, 23 Jan 2026 18:41:26 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-Received: from HX007EA1.lan (10.32.64.5) by ZXBJMBX03.zhaoxin.com
- (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Fri, 23 Jan
- 2026 18:40:34 +0800
-From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
-To: <mahesh@linux.ibm.com>, <oohall@gmail.com>, <bhelgaas@google.com>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>
-Subject: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
-Date: Fri, 23 Jan 2026 18:40:34 +0800
-X-ASG-Orig-Subj: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
-Message-ID: <20260123104034.429060-1-LeoLiu-oc@zhaoxin.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1769164920; c=relaxed/simple;
+	bh=HLrViGVqTC3/G0gsvexqTtXtxspwQxSEDDyxgTv7J0E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TBj0Sxg/0rRPFPncLgDap7TI/zrUmiH2mcGRR1z9wMjciZ1o8+cW44UfV8qs9w/mxQC+Td2XKNlW5d7U2ooiEscWe5kbbKKWdHGHGdZbL7rprDErrfyHA2cdQ8AYU1OoX49Ed2lwohlXscx39nBScZu9FVh0nWBLwy7QjXG4q48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K88/W9CP; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K88/W9CP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD424C4CEF1;
+	Fri, 23 Jan 2026 10:41:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769164920;
+	bh=HLrViGVqTC3/G0gsvexqTtXtxspwQxSEDDyxgTv7J0E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=K88/W9CP38VNlsvsGY4cizpdtUmca1k9hFtwHK6PhgaPrnWH2CuKqJNx2ce/1927M
+	 z23lyd1zE8UmSTz14bfD0pUa+rz3qzLSS3Gejq+50Di+KpU/4d5+UwtA2hPwwcKCQw
+	 kfIBJcXPFtTQrxF11z1ZKTAgs+14yWjmqzr6G8gaUCSb7GY8R+LvDYI/JTEXRpG4xY
+	 T563JVc+Z6dfwEZml6RKjN6FWTXb0TDprK6z1oRVCxsnbpX7vAUDYAHQCWqGTqzWW/
+	 dIY1/0GXJC4d0etgGilNFSXTaohdoNdfOvXOnorf7evKJdma7+vkcUuZfBooAn9fJp
+	 yREIVdvmIZieg==
+Date: Fri, 23 Jan 2026 11:41:54 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Frank Li <Frank.Li@nxp.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+	Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+	Kees Cook <kees@kernel.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>,
+	dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, Damien Le Moal <dlemoal@kernel.org>,
+	imx@lists.linux.dev
+Subject: Re: [PATCH RFT 4/5] dmaengine: dw-edma: Dynamitc append new request
+ during dmaengine running
+Message-ID: <aXNQcowVEMaE1xr5@ryzen>
+References: <20260109-edma_dymatic-v1-0-9a98c9c98536@nxp.com>
+ <20260109-edma_dymatic-v1-4-9a98c9c98536@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Moderation-Data: 1/23/2026 6:41:25 PM
-X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
-X-Barracuda-Start-Time: 1769164884
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://mx2.zhaoxin.com:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 1355
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -2.02
-X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.153451
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260109-edma_dymatic-v1-4-9a98c9c98536@nxp.com>
 
-Commit a97396c6eb13 ("PCI: pciehp: Ignore Link Down/Up caused by DPC")
-amended PCIe hotplug to not bring down the slot upon Data Link Layer State
-Changed events caused by Downstream Port Containment.
+On Fri, Jan 09, 2026 at 03:13:28PM -0500, Frank Li wrote:
+> This use PCS-CCS-CB-TCB Producer-Consumer Synchronization module, which
+> support append new DMA request during dmaengine runnings.
+> 
+> Append new request during dmaengine runnings.
+> 
+> But look like hardware have bug, which missed doorbell when engine is
+> running. So add workaround to push doorbelll again when found engine stop.
+> 
+> Get more than 10% performance gain.
+> 
+> The before
+>   Rnd read,    4KB, QD=32, 4 jobs:  IOPS=33.4k, BW=130MiB/s (137MB/s)
+> 
+> After
+>   Rnd read,    4KB, QD=32, 4 jobs:  IOPS=38.8k, BW=151MiB/s (159MB/s)
+> 
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> ---
 
-However, PCIe hotplug (pciehp) waits up to 4 seconds before assuming that
-DPC recovery has failed and disabling the slot. This timeout period is
-insufficient for some PCIe devices.
-For example, the E810 dual-port network card driver needs to take over
-10 seconds to execute its err_detected() callback.
-Since this exceeds the maximum wait time allowed for DPC recovery by the
-hotplug IRQ threads, a race condition occurs between the hotplug thread and
-the dpc_handler() thread.
+Hello Frank,
 
-Signed-off-by: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
----
- drivers/pci/pcie/dpc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+First of all, I hope that your:
+[PATCH v3 0/9] dmaengine: Add new API to combine configuration and descriptor preparation
+series will make it to the upcoming 6.20/7.0 merge window.
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index fc18349614d7..08b5f275699a 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -121,7 +121,7 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
- 	 * but reports indicate that DPC completes within 4 seconds.
- 	 */
- 	wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
--			   msecs_to_jiffies(4000));
-+			   msecs_to_jiffies(16000));
-=20
- 	return test_and_clear_bit(PCI_DPC_RECOVERED, &pdev->priv_flags);
- }
---=20
-2.43.0
 
+This RFT series however breaks pci-epf-test:
+
+Before:
+#  RUN           pci_ep_data_transfer.dma.READ_TEST ...
+#            OK  pci_ep_data_transfer.dma.READ_TEST
+ok 14 pci_ep_data_transfer.dma.READ_TEST
+#  RUN           pci_ep_data_transfer.dma.WRITE_TEST ...
+#            OK  pci_ep_data_transfer.dma.WRITE_TEST
+ok 15 pci_ep_data_transfer.dma.WRITE_TEST
+
+After:
+#  RUN           pci_ep_data_transfer.dma.READ_TEST ...
+# READ_TEST: Test terminated by timeout
+#          FAIL  pci_ep_data_transfer.dma.READ_TEST
+not ok 14 pci_ep_data_transfer.dma.READ_TEST
+#  RUN           pci_ep_data_transfer.dma.WRITE_TEST ...
+# WRITE_TEST: Test terminated by timeout
+#          FAIL  pci_ep_data_transfer.dma.WRITE_TEST
+not ok 15 pci_ep_data_transfer.dma.WRITE_TEST
+
+
+After a bisect, first bad commit:
+commit 352fd8d5ed468ea616eb4974b5ac19203528b207
+Author: Frank Li <Frank.Li@nxp.com>
+Date:   Fri Jan 9 15:13:28 2026 -0500
+
+    dmaengine: dw-edma: Dynamitc append new request during dmaengine running
+
+
+
+Kind regards,
+Niklas
