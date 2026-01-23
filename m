@@ -1,258 +1,246 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazolkn19010016.outbound.protection.outlook.com [52.103.2.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C72329C69
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 06:10:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769148658; cv=none; b=YNc9GkFAvkAXhOQqRRxTNYleMGu+ekwKmhy13RkIY8K/jxl/TMj8r4lT8UznAo9oWBfs9YGTbaP7g8r0v6k4J9ojY421E+j9gpDhy/441Y3wq+xj7PsIMx7aPFH9pP1gvNrcong8nJD0EnaolGtkL/8EcFRd5wgX1d79iI5Pk/Y=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769148658; c=relaxed/simple;
-	bh=7DwBEXQwbuM8V0RjiIN3bpWAFKhbhLnErqDoHuo25S4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZENyjf87Bsae6JcaIeAywQx9pRAWK3FUAVUnydvOEDVrlD+ureXPP63nekNLzy276YtEoTr9X2E1y4aE4vHwkESGioJ7nQ8M5TvGRFazLJr/h1uitAJvq8E55DjnXYD+1yLp6EuKaSnGRJuTK+hOd6HKSOzsWNAcYVZne56XubU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=pRxdSwgT; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HM4NHCFk; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E83727E07A;
+	Fri, 23 Jan 2026 06:39:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.2.16
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769150369; cv=fail; b=nbmdffSkKrCPPXYdVslcevCBtYrLt8OfxlK7FHuFsdkxzFnZUhJk0NpFncwZ+JEgime4W8xVMryZosspSi0/K6F8wdLplxJ9CZaOrTYS6Co5sbkmPyDbRilL0gnNVcKqB+lWbBOPTUiZpXCzTbGvqXEIvhyqSKm1Rnh5d2ErDnc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769150369; c=relaxed/simple;
+	bh=8YNDzZtGiWVFcifpkAROgTY6ML17zoAalC0rmjM4LEo=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=USAFQgGPOglkMbZEPSqn1BGFICGYmPeaFUCJWbe8mRbBOiQVYYaGvJQS10/qoMuD7BoAD/7To9hmL53bF5zvl7GQjAfpesNTjxRcFB1Pf8kteQMNiQzHD23i/UZ8sfeatuJ5/yuQHlgOKmR+z7YNec8vwB9EH2EoGXMSDnQbgfY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=mPhUfdpT; arc=fail smtp.client-ip=52.103.2.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="pRxdSwgT";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HM4NHCFk"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60N1CwOd3648929
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 06:10:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	MVdVZL5ikcWAyrZ57t/De6njehpr5hrw/dpfdhPE7mg=; b=pRxdSwgT9R6Ed/B0
-	65wqjlYuo5PLzwTW/FpsGFJzOWrWJ8fEy7u4TuzVJkcjB41wny3tK+CVTipjlO2s
-	uh/UUi6KG0ZVP8/N3+J4ZOB7Fa/+YMbxsQXDXLVzn8R0AlX/+pALqzAlzdSS7Rq0
-	fndLVaXOKGDqm8Rkyf8lXr7RPOfz5hxF9lfzm7/Tauy8ttC09Omr+1+xUSjGnFIe
-	Ci9Pzf6gVAYsCJWH3lG5JkSjlNK8x1mczScnN45NDbvBrFn1Moxxcq+8yJb+HoqH
-	m/cne1BSybpAowzwc1G4QrHyzcHlSjBVBO3FJaTM3EEMLFQrtYVde4oj/wYwrSFo
-	D466YQ==
-Received: from mail-dl1-f70.google.com (mail-dl1-f70.google.com [74.125.82.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4buy4ns02x-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 23 Jan 2026 06:10:37 +0000 (GMT)
-Received: by mail-dl1-f70.google.com with SMTP id a92af1059eb24-11b94abc09dso2735944c88.1
-        for <linux-pci@vger.kernel.org>; Thu, 22 Jan 2026 22:10:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1769148637; x=1769753437; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=MVdVZL5ikcWAyrZ57t/De6njehpr5hrw/dpfdhPE7mg=;
-        b=HM4NHCFkZaBIP4yMXGDuRR7dXA5kWAfAqQHlBX4iVYkoziYA5zaFl0nJV0d3v0ugpN
-         91VguCzqqfduEw63nxFT1GqVYUdXGYHq2lXCMZK+DzvIiIFoHRfPA86h07hGF6plQTie
-         cjQ/0lQTKjxeUwxmcv5DvwokgmfrGddlC+iLVvc+mfHUBKOj82rLHfQk3LwbGpR5Z+pq
-         lc8YleifZxM2GPj4uOdugjmAEhTyModsEEXkNun6016X/sJXZ09GuUxSU6n0rb22uyve
-         8oOrKJZnNQUmhrGOzH2ZC9bY08AjPEVW3aPce3ucrwqdehf3Q71U30KCMyrNctZ8dP+n
-         uoIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769148637; x=1769753437;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MVdVZL5ikcWAyrZ57t/De6njehpr5hrw/dpfdhPE7mg=;
-        b=eErhncThD0eg5xijZ8wGxETRZEHiXdGDVYCKqiB8KbstOTU4pmcMLuBF8qq5lq+TBP
-         zCzrJw9tAIyUN5CYhv0eSmaB4cKAD3X1+IyVSsN0ZsxlcbpgFZ7wqrZem5FQEX7c/Kad
-         VPrJT+kxTgf3tzCZTd1rG2ZXxMDEcex2gzifdBXVEdN2FtKffaGdO7rL4YgrxNEG73XO
-         SdNGwldrOkmSDh1hlFIf8QdfWTEUJkpxFpWEhfyRgMBxXP6VkEP43FH1UlHr0GJzHEvV
-         U/6EioaHlgsQtbbElClInJs6+unzCaZ5RVyHHUs24upwf/TMv2+p14E66PUE2eTMKujH
-         mc8g==
-X-Forwarded-Encrypted: i=1; AJvYcCVieGCTYm7TBCrIt8MDfJ4TdOtHbeTL0KM1sNdVITYA58eN/z2qyg2BIAaEkFi7ZPrrcT9C6/ZhtP4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxIXE0eKNVn4CY+GWAnkBWijvD2Csn0zChU/Ffb60zkJ2QdYCfv
-	1YSOaheTf8Hbjq7D703V+vu+WM9tNGfvSRniLnHr/7LUwYag5tvlQhp5Nvhymc3z4Eee2rn0cki
-	zUvQN2mdt2B+S2bbm45uV6AlDOIU/ox83JRFnR3Dl/zJM6uMF7hcMHvNp+Yx8xzg=
-X-Gm-Gg: AZuq6aI5pJxzQ9S/7p2ST97kCD/IJsNLxSGmBe5qxad2d9QrAu24ZC9O405NPxe6DRV
-	cuQU6lrhSD6fCdwNYUW5KqRt/HxOJNGeoezt5DUjJ+ISpUWS6LNzieQlxrKfhN4I2KPqhsev+rl
-	Hqjrq5TYVglSPAcbn1D7VJp0WzaespANUgDz4LqOtouk0nzEox2tVcqqeaX56SGaISmAJKqb4yF
-	2zyI/T0WiS5DdE3RvZ/ZB/nkHTJat09YwuRHUFTXi7sRnD5p1f/7L8Hvx12iHmOGBXLjmQLqe13
-	WxJZS36WT23qfDAOvRAB2cw6iNkxdJQVR/2s7rN5r6qDOf0cV0mRMnyk6maZNu/hR7GnTa0qNYs
-	27X1AkuqiPRTKxd1JFZ097xz2x73lQHOsTvouSmApukaR1fuWltc4Rn+B
-X-Received: by 2002:a05:7022:b8d:b0:121:9f05:c4c2 with SMTP id a92af1059eb24-1247dbf5560mr892473c88.23.1769148636744;
-        Thu, 22 Jan 2026 22:10:36 -0800 (PST)
-X-Received: by 2002:a05:7022:b8d:b0:121:9f05:c4c2 with SMTP id a92af1059eb24-1247dbf5560mr892460c88.23.1769148636169;
-        Thu, 22 Jan 2026 22:10:36 -0800 (PST)
-Received: from hu-qianyu-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12480a8277bsm1055277c88.9.2026.01.22.22.10.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jan 2026 22:10:35 -0800 (PST)
-Date: Thu, 22 Jan 2026 22:10:34 -0800
-From: Qiang Yu <qiang.yu@oss.qualcomm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: dwc: Rename has_msi_ctrl to uses_imsi_rx for
- clarity
-Message-ID: <aXMQ2r1UKgAaYvNx@hu-qianyu-lv.qualcomm.com>
-References: <20260121-remove_cap_clean_up-v1-0-e78115e5d467@oss.qualcomm.com>
- <20260121-remove_cap_clean_up-v1-2-e78115e5d467@oss.qualcomm.com>
- <09f9acc1-d1ad-4971-8488-f0268cf08799@rock-chips.com>
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="mPhUfdpT"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=O/9HXpsyNh0+2W01OVd/lvCW0d2SMsUDOndCEHIgqFlQvR+Db2LlW1CRX2d3PAiaHvz6YLcXSIQm4kxdqPJFrzMcc/ja6eU8OM603G8OC9ePSwZ87m/SfYy9iAPi4IP1HC6COS56GS+NPp78+XLHLkt6n0UufxKWds2OCrHXGd0yAS8dzAngyWCtL55sf5vAHndsdQmECTVkSq7IgZ8adjtSWz1NB9HPIpH6NiO5W3UU9BPL1BdEzOcWoET8kt7P/P4N5SZ0aKNdwbBEwOPAarxd2VnT1tSlitnJV/V6Sig1PRrpSEAYQgDID+WsFDYM7O84WouVDpERNSIQEr1j0g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KoKXFUs6o2LZzpP3wiZekrhlVR6xu9ONBg4AS7yW4RU=;
+ b=EEjqirwIze02ZkcNmqfuEsyllHv8O+BJT3pdfFmEvTn8oC9HKmUZduJC7AFKKxAGJTP5Pv0htsIpVxSmg8JVKH6dtliH3WwSB8rHjX+/7DLYZaGUotmBqog5nmuyLiQfeJVboiELD5ckevbVinwWpHr0d43layH8iwH+aqZtD1w26pI7LbcpPi/A40wB3YT0z9d5Skv5X44YiDCkYGddE1rSq0s1MCIft+qUHZjzim8aqSJH+tSeU2Q8d+C41dUdCC4IgSgnwy/Iojrzc4XL9U4qN6Patl03GPyvaIzws1/o6gZ7+PiseJima0XPks7qSUzGgVDBCFBt5cGStu85eQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KoKXFUs6o2LZzpP3wiZekrhlVR6xu9ONBg4AS7yW4RU=;
+ b=mPhUfdpT4uu7b8/9hI5IJNlSuqr7R0SNk4YiprV823WbxPyVGimZ/vUGqmq3chvO+BFzQiSHwPQungNT1sDX/zgtNecSjMWzPj84Y4aGupZgvybpdMFfdet+m1Qqj/CEeA0qqsUtaKlN9iIyASj6tBoLJvsBKhZiFDEcGJLRHmV7mD0q99L07/XUQ4r8oY6BYRt2rRCI8dtP0GFiNeZJpzc+KBdPhyf4wS63KURMlpC+u8OnXlRlEyPeBno3EooTVfvuISRc7NlHB4BfA3Q2oAzYIS2zF/K7Ix2MhL/qVf0jjeu/hnf9h8XbXgHzxENv0JM8sB53G3gGrAFKqCcIFg==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by LV3PR02MB10762.namprd02.prod.outlook.com (2603:10b6:408:28a::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.11; Fri, 23 Jan
+ 2026 06:39:25 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9542.008; Fri, 23 Jan 2026
+ 06:39:24 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: Matthew Ruffell <matthew.ruffell@canonical.com>
+CC: "DECUI@microsoft.com" <DECUI@microsoft.com>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
+	"jakeo@microsoft.com" <jakeo@microsoft.com>, "kwilczynski@kernel.org"
+	<kwilczynski@kernel.org>, "kys@microsoft.com" <kys@microsoft.com>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"longli@microsoft.com" <longli@microsoft.com>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>, "wei.liu@kernel.org" <wei.liu@kernel.org>
+Subject: RE: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
+ window
+Thread-Topic: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
+ window
+Thread-Index: AQHci0NePIGSa/9NGkCUvIR93cd3gLVdwUXwgADOvQCAABBuYIAAnjqAgAALUwA=
+Date: Fri, 23 Jan 2026 06:39:24 +0000
+Message-ID:
+ <SN6PR02MB41573CD2EA6CD82A0C238F66D494A@SN6PR02MB4157.namprd02.prod.outlook.com>
+References:
+ <SN6PR02MB4157545DAFDCCE0028439DB2D497A@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <20260123053909.95584-1-matthew.ruffell@canonical.com>
+In-Reply-To: <20260123053909.95584-1-matthew.ruffell@canonical.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|LV3PR02MB10762:EE_
+x-ms-office365-filtering-correlation-id: ee46c156-2693-409e-d77a-08de5a4a2632
+x-ms-exchange-slblob-mailprops:
+ vuaKsetfIZmcv7cN2CQdJd4XVKwegu/4gmvfM/dqyPaNcPd/UUQlYe+uQK9A9zupr1DB2js7WBBYCQ+KmdDQQ7j/gLpX00XMZPOOlAeRfADB5/pCSUbf4BqqJiN/DGLP5pcWHN3MXFndMRk0rNKT3kjo1zErlrfSRKHxbTSITTs1ppYWBSia4E0iLfspwSWmS3DQdS75Dfr9rJK+kAVtqRwaXATr0qLolAW6sZnnaqmBtAUG74nk1wsiKtTkaLhuq8AGuRDpPHxOjH7Y+zUCbG8uZd7oIz5iMnBodz6oNWvMNwbtR2NG2idJ3ADCgxYm0GNBm7oaBRrwMH7CpzoC4raK+F8snRNyHFN44rxJ5xpdvofEb1v0ssDWZDWLbJp8LZ2v38YaFdGBDqRWiF42PymJ7ODohdlrh/RMrhLKa+DN9xIML2Lah5VW9uF8tfR9WDOM2J1Nx7KKonfNpiWnG9CZXqZrSj9lwDo2FwL3KGBQENudhirvOz5ZmSEhUtQz1xi1UlrTl2RCdqAzAvZUEc98ByXTyFdcTnQmmTrznEY+7xvVWLvAp7W6LgoAbowCW7lSZy+VH5xANnxHgcGwSSSIhUx2j2CWoIxNUNvwreKWx1VWepAqtgY40YuFuHUIVZlKqHhigye47k5gx3Hdi7maht7D3+4zKEVauJgNpzAu62EjIgqSKaw/h14jzEj3tmwUnEZd4MxTNrWMw+juxi9Q6OvKSETvveRuL+Bj1hVz47jsZ3Y5RBq1cTr60Ub0pac//NpBqRaNE9DKHxSak1GW7++o8ryq7EXLPu5KP6HfrlfbHhu6fBKrMLRj/nSV
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|41001999006|461199028|31061999003|51005399006|19110799012|13091999003|8062599012|8060799015|15080799012|4302099013|3412199025|440099028|10035399007|40105399003|102099032|1602099012|56899033;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?D0ZlDfY3xSSzOYROfqgtR6Uz8DihgLuCjVEeSDVjahoEHUerQNzCFfUmz1k+?=
+ =?us-ascii?Q?2GCb/F1IWbR1Hg+Vi+qApllIiud8SKgdPNOX6WFgDz3/XYOAVuNpPFdvBPTa?=
+ =?us-ascii?Q?MTGV2xrSEm+1ub59VfRQMfvmuXcyMF1i134rLcydIG/EA4i6uaP//ZldRpf0?=
+ =?us-ascii?Q?T2L3jpl4gmOJnYHhW+mpiynojhbhqxA82Oez6Mpq1p3cJTcgH+3caJAHUb2/?=
+ =?us-ascii?Q?blHd+in2mqDHf4mKs9ZosPoMf7x/MHNpFfuB632RPljTA8Tf9AuhMGJ2xFct?=
+ =?us-ascii?Q?xeKiJ5vjKhLov1RA9SGUfSgKJ4s7Af5kWdkUGgat76q76BIAJb7n0vrxL+vO?=
+ =?us-ascii?Q?hWF7edKVgoKtyBOrD4hgA06/pUdTgPvAhyYASjcZ+6aEMjJzrEmMkzNQfsuZ?=
+ =?us-ascii?Q?p3QTyJDEcR2GtqzTmD5FU72YEfPLCI6tj2au4qC9a163XApHG1JrmVlah85X?=
+ =?us-ascii?Q?gtCnR1hcas1p/fS8wQFbCrcE+gfyw5sr3YUPSGFzpUhuoItttcJbelBRYDON?=
+ =?us-ascii?Q?C/Mm7p6/P7K4iNTK3pCtIFXi2zWesdm1cagw5//dNmdPAWHgu30sgmXM3yE1?=
+ =?us-ascii?Q?1cOkvP6Kj7jx6npYSf/TjC3JJeg/kMpLuCTlEttn9WKecBUc4lbkgitd3Eas?=
+ =?us-ascii?Q?nicSF+LcZ2r5FBAeehI5ZFU9ZRVfeSig4UAlmEMji0uB4o0yShgPZEHvRPWl?=
+ =?us-ascii?Q?lQWQkohd1n/cOG3KTzmG+ErBhsWKzne7URw3od3Kcsq2/sBwuR49bqlEMVUN?=
+ =?us-ascii?Q?2oYVt0ojPgYNrhANu5GjAEzfUh9IwVP+QO9qUVXdA7IqrBZY/qurR478YUvG?=
+ =?us-ascii?Q?TIirRFfX9szXLgmN8oImW2afgSoLqqNjt6VKxTmngwFKtLcdFu1nYCYD7m7q?=
+ =?us-ascii?Q?395j0T512Qo11Nzud4w71m53pznVsVCqVRZeiEWoYSKDsnemQORvPNmH6bEN?=
+ =?us-ascii?Q?KREEuduqYPf6Aa6kdC3W57Ge/J+FmY6VHCDa0XX5293b8XbvYUGR+gJ5+vxB?=
+ =?us-ascii?Q?LpeU1Aj4Vu8ySJ8P989wTuCphDFOVZ8koDa8e7pE/dowr6LkCNRa/aTs1lYx?=
+ =?us-ascii?Q?NY5JFKNOe9Cy5QJvf0R+C81fRqC7yrI4nXINYOYIC2Xro644N4c74rBgCmfs?=
+ =?us-ascii?Q?uyWtpqcyHSDAjAT+tFsS4x0krpVDe+Se8xLTi7vXea2H9gth9G/fMfXeD04K?=
+ =?us-ascii?Q?urNOYMi2qvg/198Sjc6KGQzLf1eMICZ2uO6oMZkt4amTWFFYFozu4JWoe1vy?=
+ =?us-ascii?Q?QlP2flRzrUEbndFNoskrZ/byb8euBGtdtvBdlRv14O0qiHzVe2+f05VI+0lg?=
+ =?us-ascii?Q?8YYtcf4oFsCPLe8c+J5wO8I5XMnfoEzeM+7m3EG0BF/Ue6GWyhiSGAP/P17w?=
+ =?us-ascii?Q?1ADYZ4V8k6L7R4E+7a2vDbjWVy2V?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?OrL+mZWTM++UYX3kg8oXDdn/Luwdpk12rqgqLWlyptHVCEzteHiKzzlPTI7l?=
+ =?us-ascii?Q?DyFPynKjygn1Mdq9+JvEiFAYif2jhahPKnfCSgDrXZp3YSEt8KYuo09iwZQb?=
+ =?us-ascii?Q?EJCRP/EkAfVke2Jams7MPZX9IB/k5SNulfk+Ay+hsmYzukthu2x54nWhvVrY?=
+ =?us-ascii?Q?MR7TyF1EmI7Lbi6N8pssGmknol6hYEQhqMA2clbW+hcxtt7TD9Oyv3D4QjTq?=
+ =?us-ascii?Q?OpbUpdyPoFfaEkO0uqUY2M+gPxk6YpwSqF7jcXM7alFWPcV1yZpwEV7r86PN?=
+ =?us-ascii?Q?VadWLS+kDufyKedDhFvFU1/b4GiN75mrpML1PEqX4qKic7s/1vRHkEU4kEYD?=
+ =?us-ascii?Q?AF3SbkYv3XStJ84P6EbTDWDAOaqmhD7cNfdg5HaYhS7L8jRfQa/DSK5nDmDW?=
+ =?us-ascii?Q?HWU0UARAFHqfeKfopXeMLa8FC/rO4RY45cwD8EGmFMBsQk9j+f72lDUCdvAT?=
+ =?us-ascii?Q?xACpDcsu5H9thqjYjvad1Hxe21Hi4imd0+3nlnpzTq3WisUHrPVxn1WNc8ki?=
+ =?us-ascii?Q?h/IH5mCi7ulEPjGIR0PbRx+TI26Qo6+qIUJ3oYW6d91NEjoOCXdKFB3WlQDJ?=
+ =?us-ascii?Q?TbSGhH7BifFtGyBEy1bjfWuw0XO5+/5JGOkUT3TDcD/I0UtxmHMPB8VzFIXJ?=
+ =?us-ascii?Q?Or5cjZO9oTvUjhAepeuQ9KU6ZgrQUG925G0n4PjR8got9anuYOeZ4SRdkIvz?=
+ =?us-ascii?Q?hAIH92/lCcD7Ci103/V4guTditohH+V+ZjdzEjaQ0rG8Vnwc46NDJzl70sXL?=
+ =?us-ascii?Q?wBnoVjYrRLRxJxUFIpGFh18OumPG3Nn2n6SEkrX4/WiHkV+pJOiutbbkzg+L?=
+ =?us-ascii?Q?Nq7Ia4YBIvGUtUPWftyxmNbnvwknixPyfYLlFbNFS6lWuL3luLOgsBm5Y2f2?=
+ =?us-ascii?Q?xIpwCG5v0AOzBMurn7ePLjOf5xZjw5KB+hWzg3TbheMvXp/m1N/P1jWJaGT6?=
+ =?us-ascii?Q?RZj292Pu8WA08/H1QsF1x4EFS8z8+1DzbYKpPatCFZ1ibQplQBlEJ9mXADUi?=
+ =?us-ascii?Q?Fq+0OdWcrB3fu8qSTOCLynDlMHQ5U87FZO2Vea2yDI/C8FaEmWO+nIsmpar5?=
+ =?us-ascii?Q?xqaWvTcDW1/DCNRiRjkJ4q3QUgpppXZZnhgcn9t2iiRPcIaWzwwK9DKnpwzC?=
+ =?us-ascii?Q?5tLA4kgpiNFizB3JSCE79KKA+J9x19yd4vd7NpcDLBn4Fo7LTq3jOjiyJmOE?=
+ =?us-ascii?Q?NUCJfZrZBi+D6IPZwXhhW5eg/fVHcm1FS0ria/DfWCe52+Dy4xvAV+DO7uI7?=
+ =?us-ascii?Q?J713UvCWZ0myazZ4KmFXMj1aqxtsgaBSHiCrPlDKJCSAAMXPz5+dJWbzI/sT?=
+ =?us-ascii?Q?MbIcTBv4DK/Wbwh+t14kYlhtHZYCo/P4ozoYqSHqnDNGHIWO0cE0sJsU7yef?=
+ =?us-ascii?Q?oRxAvKc=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <09f9acc1-d1ad-4971-8488-f0268cf08799@rock-chips.com>
-X-Proofpoint-GUID: QOFkidiAnO6AmOSysypNCyTDkljXgpjF
-X-Authority-Analysis: v=2.4 cv=I5lohdgg c=1 sm=1 tr=0 ts=697310dd cx=c_pps
- a=SvEPeNj+VMjHSW//kvnxuw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=s8YR1HE3AAAA:8 a=EUspDBNiAAAA:8
- a=TCKWscKuthCW2cRljzYA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=Kq8ClHjjuc5pcCNDwlU0:22 a=jGH_LyMDp9YhSvY-UuyI:22
-X-Proofpoint-ORIG-GUID: QOFkidiAnO6AmOSysypNCyTDkljXgpjF
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIzMDA0NSBTYWx0ZWRfX1pInEGykSMj/
- Hqbmy2OLUKoKp/oqXlqA/uwy5md7UJ5nbxXietoGHAxdcvStGZGKNAtWdHrd6TKYwfaSSTSzts4
- ZzOAM9iPteBYBbIfkjThTSXHMIvPU0wCQjeoNXae1ttM4bX5AgMIT2lfYx28kbrGNpJxpyNmljq
- 56RaQZaRlZNTjioHMpgpFORvkKMTpH74QSxyMNrAtyqij8br5QsexfdIXgrHlrglqktHsmtjcFV
- /XHKyt0D2ajQKh9VzmnSPOB94q1I4HxGvxlYxjdiQg4D8ZN5/WlVxAGy6gPeab0nplW4zfMiiA4
- f16Eeog3lvbH0+OvahzYxDhsO77E5sNa3PUhcD9e0Q9y5qG2qax/pxf2WT+0iK/bLi8GQV0uMPj
- q1Wg1zhBzRfjWOptguRMm/VTGvjSx4wVjollyn9Tp5CJwwCSJxSSPMGf3mOv+ER6J+acNjUfpeg
- V5lEYD6c6Xgue3uIiZw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
- definitions=2026-01-22_06,2026-01-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0 phishscore=0
- spamscore=0 bulkscore=0 suspectscore=0 adultscore=0 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601230045
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: ee46c156-2693-409e-d77a-08de5a4a2632
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jan 2026 06:39:24.8097
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR02MB10762
 
-On Thu, Jan 22, 2026 at 04:15:52PM +0800, Shawn Lin wrote:
-> Hi Qiang,
-> 
-> 在 2026/01/22 星期四 15:45, Qiang Yu 写道:
-> > The current "has_msi_ctrl" flag name is misleading because it suggests the
-> > presence of any MSI controller, while it is specifically set for platforms
-> > that lack .msi_init() callback and don't have "msi-parent" or "msi-map"
-> > device tree properties, indicating they rely on the iMSI-RX module for MSI
-> > functionality.
-> > 
-> > Rename it to "uses_imsi_rx" to make the intent clear:
-> > - When true: Platform uses the iMSI-RX module for MSI handling
-> > - When false: Platform has other MSI controller support (ITS/MBI, custom
-> > handlers)
-> > 
-> > No functional changes, only improves code readability and eliminates
-> > naming confusion.
-> > 
-> 
-> I love this patch, it's indeed confusing. But I noticed the naming
-> seems inconsistency, for instance, there are already use_atu_msg,
-> use_parent_dt_ranges, etc. Should we use use_imsi_rx instead?
+From: Matthew Ruffell <matthew.ruffell@canonical.com> Sent: Thursday, Janua=
+ry 22, 2026 9:39 PM
+>=20
+> Hi Michael,
+>=20
+> > > I wonder if commit a41e0ab394e4 broke the initialization of screen_in=
+fo in the
+> > > kdump kernel. Or perhaps there is now a rev-lock between the kernel w=
+ith this
+> > > commit and a new version of the user space kexec command.
+>=20
+> a41e0ab394e4 isn't a mainline commit. Can you please mention the commit s=
+ubject
+> so I can have a read.
 
-Thank you. You are right. Use_imsi_rx is more consistency.
+It's this patch:
 
-- Qiang Yu
-> 
-> But in any case,
-> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> > Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
-> > ---
-> >   drivers/pci/controller/dwc/pcie-designware-host.c | 16 ++++++++--------
-> >   drivers/pci/controller/dwc/pcie-designware.h      |  2 +-
-> >   drivers/pci/controller/dwc/pcie-qcom.c            |  4 ++--
-> >   3 files changed, 11 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > index a17833dd6f9d4b4aa06dc1fe09ffed5e2c28a82f..e7dbdf3670b426783e778be5064def10d2b209b1 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > @@ -255,7 +255,7 @@ void dw_pcie_msi_init(struct dw_pcie_rp *pp)
-> >   	u64 msi_target = (u64)pp->msi_data;
-> >   	u32 ctrl, num_ctrls;
-> > -	if (!pci_msi_enabled() || !pp->has_msi_ctrl)
-> > +	if (!pci_msi_enabled() || !pp->uses_imsi_rx)
-> >   		return;
-> >   	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-> > @@ -603,15 +603,15 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
-> >   	}
-> >   	if (pci_msi_enabled()) {
-> > -		pp->has_msi_ctrl = !(pp->ops->msi_init ||
-> > +		pp->uses_imsi_rx = !(pp->ops->msi_init ||
-> >   				     of_property_present(np, "msi-parent") ||
-> >   				     of_property_present(np, "msi-map"));
-> >   		/*
-> > -		 * For the has_msi_ctrl case the default assignment is handled
-> > +		 * For the uses_imsi_rx case the default assignment is handled
-> >   		 * in the dw_pcie_msi_host_init().
-> >   		 */
-> > -		if (!pp->has_msi_ctrl && !pp->num_vectors) {
-> > +		if (!pp->uses_imsi_rx && !pp->num_vectors) {
-> >   			pp->num_vectors = MSI_DEF_NUM_VECTORS;
-> >   		} else if (pp->num_vectors > MAX_MSI_IRQS) {
-> >   			dev_err(dev, "Invalid number of vectors\n");
-> > @@ -623,7 +623,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
-> >   			ret = pp->ops->msi_init(pp);
-> >   			if (ret < 0)
-> >   				goto err_deinit_host;
-> > -		} else if (pp->has_msi_ctrl) {
-> > +		} else if (pp->uses_imsi_rx) {
-> >   			ret = dw_pcie_msi_host_init(pp);
-> >   			if (ret < 0)
-> >   				goto err_deinit_host;
-> > @@ -701,7 +701,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
-> >   	dw_pcie_edma_remove(pci);
-> >   err_free_msi:
-> > -	if (pp->has_msi_ctrl)
-> > +	if (pp->uses_imsi_rx)
-> >   		dw_pcie_free_msi(pp);
-> >   err_deinit_host:
-> > @@ -729,7 +729,7 @@ void dw_pcie_host_deinit(struct dw_pcie_rp *pp)
-> >   	dw_pcie_edma_remove(pci);
-> > -	if (pp->has_msi_ctrl)
-> > +	if (pp->uses_imsi_rx)
-> >   		dw_pcie_free_msi(pp);
-> >   	if (pp->ops->deinit)
-> > @@ -1130,7 +1130,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
-> >   	 * the MSI and MSI-X capabilities of the Root Port to allow the drivers
-> >   	 * to fall back to INTx instead.
-> >   	 */
-> > -	if (pp->has_msi_ctrl) {
-> > +	if (pp->uses_imsi_rx) {
-> >   		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSI);
-> >   		dw_pcie_remove_capability(pci, PCI_CAP_ID_MSIX);
-> >   	}
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> > index 53b65428fadb3d905b02bdcc06667065574f4f9d..33154bc89dd3b7d7fbe0ea749ca22bdc8292489c 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware.h
-> > +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> > @@ -416,7 +416,7 @@ struct dw_pcie_host_ops {
-> >   };
-> >   struct dw_pcie_rp {
-> > -	bool			has_msi_ctrl:1;
-> > +	bool			uses_imsi_rx:1;
-> >   	bool			cfg0_io_shared:1;
-> >   	u64			cfg0_base;
-> >   	void __iomem		*va_cfg0_base;
-> > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> > index 13e6c334e10d21b9ebfe5f82de0aff3bce6191e3..999f5e083cef4e78b85a0111d2a90c3de65c83b5 100644
-> > --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> > @@ -1633,7 +1633,7 @@ static void qcom_pci_free_msi(void *ptr)
-> >   {
-> >   	struct dw_pcie_rp *pp = (struct dw_pcie_rp *)ptr;
-> > -	if (pp && pp->has_msi_ctrl)
-> > +	if (pp && pp->uses_imsi_rx)
-> >   		dw_pcie_free_msi(pp);
-> >   }
-> > @@ -1657,7 +1657,7 @@ static int qcom_pcie_ecam_host_init(struct pci_config_window *cfg)
-> >   	if (ret)
-> >   		return ret;
-> > -	pp->has_msi_ctrl = true;
-> > +	pp->uses_imsi_rx = true;
-> >   	dw_pcie_msi_init(pp);
-> >   	return devm_add_action_or_reset(dev, qcom_pci_free_msi, pp);
-> > 
-> 
+https://lore.kernel.org/lkml/20251126160854.553077-5-tzimmermann@suse.de/
+
+which is in linux-next, but not yet in mainline. Since you are dealing with=
+ older
+kernels, it's not the culprit.
+
+>=20
+> > > There's a parameter to the kexec() command that governs whether it us=
+es the
+> > > kexec_file_load() system call or the kexec_load() system call.
+> > > I wonder if that parameter makes a difference in the problem describe=
+d for this
+> > > patch.
+>=20
+> Yes, it does indeed make a difference. I have been debugging this the pas=
+t few
+> days, and my colleague Melissa noticed that the problem reproduces when s=
+ecure
+> boot is disabled, but it does not reproduce when secure boot is enabled.
+> Additionally, it reproduces on jammy, but not noble. It turns out that
+> kexec-tools on jammy defaults to kexec_load() when secure boot is disable=
+d,
+> and when enabled, it instead uses kexec_file_load(). On noble, it default=
+s to
+> first trying kexec_file_load() before falling back to kexec_load(), so th=
+e
+> issue does not reproduce.
+
+This is good info, and definitely a clue. So to be clear, the problem repro=
+s
+only when kexec_load() is used. With kexec_file_load(), it does not repro. =
+Is that
+right? I saw a similar distinction when working on commit 304386373007,
+though in the opposite direction!
+
+>=20
+> > > >  	/*
+> > > >  	 * Set up a region of MMIO space to use for accessing configurati=
+on
+> > > > -	 * space.
+> > > > +	 * space. Use the high MMIO range to not conflict with the hyperv=
+_drm
+> > > > +	 * driver (which normally gets MMIO from the low MMIO range) in t=
+he
+> > > > +	 * kdump kernel of a Gen2 VM, which fails to reserve the framebuf=
+fer
+> > > > +	 * MMIO range in vmbus_reserve_fb() due to screen_info.lfb_base b=
+eing
+> > > > +	 * zero in the kdump kernel.
+> > > >  	 */
+> > > > -	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, 0, -1,
+> > > > +	ret =3D vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, SZ_4G,=
+ -1,
+> > > >  				  PCI_CONFIG_MMIO_LENGTH, 0x1000, false);
+> > > >  	if (ret)
+> > > >  		return ret;
+> > > > --
+>=20
+> Thank you for the patch Dexuan.
+>=20
+> This patch fixes the problem on Ubuntu 5.15, and 6.8 based kernels
+> booting V6 instance types on Azure with Gen 2 images.
+
+Are you seeing the problem on x86/64 or arm64 instances in Azure?
+"V6 instance types" could be either, I think, but I'm guessing you
+are on x86/64.
+
+And just to confirm: are you seeing the problem with the
+Hyper-V DRM driver, or the Hyper-V FB driver? This patch mentions
+the DRM driver, so I assume that's the problematic config.
+
+>=20
+> Tested-by: Matthew Ruffell <matthew.ruffell@canonical.com>
+
+While this patch may solve the observed problem, I'm interested in
+understanding the root cause of why vmbus_reserve_fb() is seeing
+screen_info.lfb_base set to zero. It may be next week before I can
+take a look, and I may need follow up with you on more details of the
+scenario to reproduce the problem.
+
+Michael
