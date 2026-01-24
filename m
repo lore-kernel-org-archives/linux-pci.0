@@ -1,27 +1,27 @@
 Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B151C01;
-	Sat, 24 Jan 2026 07:46:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302C5171C9;
+	Sat, 24 Jan 2026 07:46:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769240792; cv=none; b=ZNBpa5YJ7AdxlQ+7JkWtkx4aYFWkEh+SW+uJmZ7cHTTzctQygNWRXYdauofuSOcmZhA5XO7WOi6j/FxdiM2uSXZgbPAoOTQ8Y7JKnL4IkPTpQAzT/6C24BlIsDz8CVR+0UWwLckZ/4z+uTZbX3RFrVssRndlRC7kdC1RxuMaQO0=
+	t=1769240793; cv=none; b=f7qrkJndjvr91QiF27aYi3uxv6PAVvjphKv9z9y3eNlEWejnrOHsSNkE2qZroLE+AGVW82517nrV9gL/B6JJ27C+DRXh6q4MJmlCUEzz09d/JupagB3NX4XP6cT0kS+aWyPyVXfN7GCvIaCmR64/MXzgQIuy9sDqo9wrDjZrRqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769240792; c=relaxed/simple;
-	bh=RgE9a2Wwt1gIeZtjLdK3dH8CQ0YGAe86n6qWlq1YJS4=;
+	s=arc-20240116; t=1769240793; c=relaxed/simple;
+	bh=QJ8vCKcz1McGYRsdrAKJFHAVKZvVbELR6t+Nv0ULOPo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Z3qGsx49NHXpgSvkNXMx4kMAHwaesH7eTc0HSDbPKOdy3MK12jqeFEu9iNuMEOkfXHDm0WUVf/BC78YRj8rgTgy7OfqbHn28O8mV91hyRV/ugK1J4CXc5V+nghnPSmMRutD+8xzPkoW76X+4B/0NpdXJ9IHJWsU3Z7PpLdyZdp0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=x7859l9F; arc=none smtp.client-ip=115.124.30.110
+	 MIME-Version; b=Xs9zRwxbIQLyqAuN5+miCyKZxO7ekHwoylwzdmjkzgTd5uxdAk1k7EaHv33dRLU2HHSMqscMlarPVCVWiO/Fs6/HGn0kkh1P8aw0bGUBpGjnL8C5yoWcz8yHgeG4v4lbpAm2BLDRrRdCN9DEGHqIjwpN/gXt36OGkkAwnzdRPWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=Wy7bTqRD; arc=none smtp.client-ip=115.124.30.110
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="x7859l9F"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="Wy7bTqRD"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1769240786; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=gdJzXK+D/+LAbE0E0SHsIWq9BjPFdGgwrb0qI4bTG8Y=;
-	b=x7859l9FF17Y5zfJ3cKID4MNtRqRyuUO4v2XrYteCFthFDbF5o3HxGJjd+zwfV/6NjmWfZCr1Vx82wAJya+vnaHRMraigmKVLu6jGsFZ4fbRLkVa8inm2imqb7TIxO+THfQ7D4ZNr61cbHhuLKAQLQ80gHHiNO7Ngpq0a/1EYco=
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WxiIIAV_1769240785 cluster:ay36)
+	t=1769240787; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=Lai+WgHyyBBA7L8Dsr49RmuA+H1xMDngo1aaMmEEBco=;
+	b=Wy7bTqRDrcToZxm8nw8Z4XGqnuo97StG1UNGeT/LLdVb3LpyQ9cEucLkHVnZK7dUVm2NPjBs8RqqtSwWidtmD6/IDrTaLsZ6MkVnK+UtALCA/9cx6FdmSqs+s2BBB/neVINtXtReRaI1qFr7CPMs1KdSU7OkgGZUbk4VHx6vB5A=
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WxiIIB1_1769240786 cluster:ay36)
           by smtp.aliyun-inc.com;
           Sat, 24 Jan 2026 15:46:26 +0800
 From: Shuai Xue <xueshuai@linux.alibaba.com>
@@ -38,9 +38,9 @@ Cc: mahesh@linux.ibm.com,
 	terry.bowman@amd.com,
 	tianruidong@linux.alibaba.com,
 	lukas@wunner.de
-Subject: [PATCH v7 2/5] PCI/DPC: Run recovery on device that detected the error
-Date: Sat, 24 Jan 2026 15:45:54 +0800
-Message-Id: <20260124074557.73961-3-xueshuai@linux.alibaba.com>
+Subject: [PATCH v7 3/5] PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
+Date: Sat, 24 Jan 2026 15:45:55 +0800
+Message-Id: <20260124074557.73961-4-xueshuai@linux.alibaba.com>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 In-Reply-To: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
 References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
@@ -52,150 +52,169 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The current implementation of pcie_do_recovery() assumes that the
-recovery process is executed for the device that detected the error.
-However, the DPC driver currently passes the error port that experienced
-the DPC event to pcie_do_recovery().
+The AER driver has historically avoided reading the configuration space of
+an endpoint or RCiEP that reported a fatal error, considering the link to
+that device unreliable. Consequently, when a fatal error occurs, the AER
+and DPC drivers do not report specific error types, resulting in logs like:
 
-Use the SOURCE ID register to correctly identify the device that
-detected the error. When passing the error device, the
-pcie_do_recovery() will find the upstream bridge and walk bridges
-potentially AER affected. And subsequent commits will be able to
-accurately access AER status of the error device.
+  pcieport 0015:00:00.0: EDR: EDR event received
+  pcieport 0015:00:00.0: EDR: Reported EDR dev: 0015:00:00.0
+  pcieport 0015:00:00.0: DPC: containment event, status:0x200d, ERR_FATAL received from 0015:01:00.0
+  pcieport 0015:00:00.0: AER: broadcast error_detected message
+  pcieport 0015:00:00.0: AER: broadcast mmio_enabled message
+  pcieport 0015:00:00.0: AER: broadcast resume message
+  pcieport 0015:00:00.0: pciehp: Slot(21): Link Down/Up ignored
+  pcieport 0015:00:00.0: AER: device recovery successful
+  pcieport 0015:00:00.0: EDR: DPC port successfully recovered
+  pcieport 0015:00:00.0: EDR: Status for 0015:00:00.0: 0x80
 
-Should not observe any functional changes.
+AER status registers are sticky and Write-1-to-clear. If the link recovered
+after hot reset, we can still safely access AER status and TLP header of the
+error device. In such case, report fatal errors which helps to figure out the
+error root case.
 
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+After this patch, the logs like:
+
+  pcieport 0015:00:00.0: EDR: EDR event received
+  pcieport 0015:00:00.0: EDR: Reported EDR dev: 0015:00:00.0
+  pcieport 0015:00:00.0: DPC: containment event, status:0x200d, ERR_FATAL received from 0015:01:00.0
+  pcieport 0015:00:00.0: AER: broadcast error_detected message
++ vfio-pci 0015:01:00.0: AER: Errors reported prior to reset
++ vfio-pci 0015:01:00.0: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
++ vfio-pci 0015:01:00.0:   device [144d:a80a] error status/mask=00001000/00400000
++ vfio-pci 0015:01:00.0:    [12] TLP                    (First)
++ vfio-pci 0015:01:00.0: AER:   TLP Header: 0x4a004010 0x00000040 0x01000000 0xffffffff
+  pcieport 0015:00:00.0: AER: broadcast mmio_enabled message
+  pcieport 0015:00:00.0: AER: broadcast resume message
+  pcieport 0015:00:00.0: pciehp: Slot(21): Link Down/Up ignored
+  pcieport 0015:00:00.0: AER: device recovery successful
+  pcieport 0015:00:00.0: EDR: DPC port successfully recovered
+  pcieport 0015:00:00.0: EDR: Status for 0015:00:00.0: 0x80
+
 Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
 ---
- drivers/pci/pci.h      |  2 +-
- drivers/pci/pcie/dpc.c | 25 +++++++++++++++++++++----
- drivers/pci/pcie/edr.c |  7 ++++---
- 3 files changed, 26 insertions(+), 8 deletions(-)
+ drivers/pci/pci.h      |  4 +++-
+ drivers/pci/pcie/aer.c | 32 ++++++++++++++++++++++++++++----
+ drivers/pci/pcie/dpc.c |  2 +-
+ drivers/pci/pcie/err.c |  5 +++++
+ 4 files changed, 37 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0e67014aa001..58640e656897 100644
+index 58640e656897..bd020ba0cef0 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -771,7 +771,7 @@ struct rcec_ea {
- void pci_save_dpc_state(struct pci_dev *dev);
- void pci_restore_dpc_state(struct pci_dev *dev);
- void pci_dpc_init(struct pci_dev *pdev);
--void dpc_process_error(struct pci_dev *pdev);
-+struct pci_dev *dpc_process_error(struct pci_dev *pdev);
- pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
- bool pci_dpc_recovered(struct pci_dev *pdev);
- unsigned int dpc_tlp_log_len(struct pci_dev *dev);
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index bff29726c6a5..f6069f621683 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -260,10 +260,20 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+@@ -746,8 +746,10 @@ struct aer_err_info {
+ 	struct pcie_tlp_log tlp;	/* TLP Header */
+ };
+ 
+-int aer_get_device_error_info(struct aer_err_info *info, int i);
++int aer_get_device_error_info(struct aer_err_info *info, int i,
++			      bool link_healthy);
+ void aer_print_error(struct aer_err_info *info, int i);
++void aer_report_frozen_error(struct pci_dev *dev);
+ 
+ int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
+ 		      unsigned int tlp_len, bool flit,
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index e0bcaa896803..4c0a2bbe9197 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1384,12 +1384,14 @@ EXPORT_SYMBOL_GPL(aer_recover_queue);
+  * aer_get_device_error_info - read error status from dev and store it to info
+  * @info: pointer to structure to store the error record
+  * @i: index into info->dev[]
++ * @link_healthy: link is healthy or not
+  *
+  * Return: 1 on success, 0 on error.
+  *
+  * Note that @info is reused among all error devices. Clear fields properly.
+  */
+-int aer_get_device_error_info(struct aer_err_info *info, int i)
++int aer_get_device_error_info(struct aer_err_info *info, int i,
++			      bool link_healthy)
+ {
+ 	struct pci_dev *dev;
+ 	int type, aer;
+@@ -1420,7 +1422,8 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
+ 	} else if (type == PCI_EXP_TYPE_ROOT_PORT ||
+ 		   type == PCI_EXP_TYPE_RC_EC ||
+ 		   type == PCI_EXP_TYPE_DOWNSTREAM ||
+-		   info->severity == AER_NONFATAL) {
++		   info->severity == AER_NONFATAL ||
++		   (info->severity == AER_FATAL && link_healthy)) {
+ 
+ 		/* Link is still healthy for IO reads */
+ 		pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS,
+@@ -1447,17 +1450,38 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
  	return 1;
  }
  
--void dpc_process_error(struct pci_dev *pdev)
-+/**
-+ * dpc_process_error - handle the DPC error status
-+ * @pdev: the port that experienced the containment event
-+ *
-+ * Return: the device that detected the error.
-+ *
-+ * NOTE: The device reference count is increased, the caller must decrement
-+ * the reference count by calling pci_dev_put().
-+ */
-+struct pci_dev *dpc_process_error(struct pci_dev *pdev)
++void aer_report_frozen_error(struct pci_dev *dev)
++{
++	struct aer_err_info info;
++	int type = pci_pcie_type(dev);
++
++	if (type != PCI_EXP_TYPE_ENDPOINT && type != PCI_EXP_TYPE_RC_END)
++		return;
++
++	info.error_dev_num = 0;
++	info.severity = AER_FATAL;
++	info.level = KERN_ERR;
++	add_error_device(&info, dev);
++
++	if (aer_get_device_error_info(&info, 0, true)) {
++		pci_err(dev, "Errors reported prior to reset\n");
++		aer_print_error(&info, 0);
++	}
++
++	pci_dev_put(dev); /* pairs with pci_dev_get() in add_error_device() */
++}
++
+ static inline void aer_process_err_devices(struct aer_err_info *e_info)
  {
- 	u16 cap = pdev->dpc_cap, status, source, reason, ext_reason;
- 	struct aer_err_info info = {};
-+	struct pci_dev *err_dev;
+ 	int i;
  
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 
-@@ -279,6 +289,7 @@ void dpc_process_error(struct pci_dev *pdev)
+ 	/* Report all before handling them, to not lose records by reset etc. */
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+-		if (aer_get_device_error_info(e_info, i))
++		if (aer_get_device_error_info(e_info, i, false))
+ 			aer_print_error(e_info, i);
+ 	}
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+-		if (aer_get_device_error_info(e_info, i))
++		if (aer_get_device_error_info(e_info, i, false))
+ 			handle_error_source(e_info->dev[i], e_info);
+ 	}
+ }
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index f6069f621683..21c4e8371279 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -284,7 +284,7 @@ struct pci_dev *dpc_process_error(struct pci_dev *pdev)
+ 		pci_warn(pdev, "containment event, status:%#06x: unmasked uncorrectable error detected\n",
+ 			 status);
+ 		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
+-		    aer_get_device_error_info(&info, 0)) {
++		    aer_get_device_error_info(&info, 0, false)) {
+ 			aer_print_error(&info, 0);
  			pci_aer_clear_nonfatal_status(pdev);
  			pci_aer_clear_fatal_status(pdev);
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index bebe4bc111d7..0780ea09478b 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -253,6 +253,11 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 			pci_warn(bridge, "subordinate device reset failed\n");
+ 			goto failed;
  		}
-+		err_dev = pci_dev_get(pdev);
- 		break;
- 	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_NFE:
- 	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE:
-@@ -290,6 +301,8 @@ void dpc_process_error(struct pci_dev *pdev)
- 				"ERR_FATAL" : "ERR_NONFATAL",
- 			 pci_domain_nr(pdev->bus), PCI_BUS_NUM(source),
- 			 PCI_SLOT(source), PCI_FUNC(source));
-+		err_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+					    PCI_BUS_NUM(source), source & 0xff);
- 		break;
- 	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_IN_EXT:
- 		ext_reason = status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT;
-@@ -304,8 +317,11 @@ void dpc_process_error(struct pci_dev *pdev)
- 		if (ext_reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_RP_PIO &&
- 		    pdev->dpc_rp_extensions)
- 			dpc_process_rp_pio_error(pdev);
-+		err_dev = pci_dev_get(pdev);
- 		break;
- 	}
 +
-+	return err_dev;
- }
- 
- static void pci_clear_surpdn_errors(struct pci_dev *pdev)
-@@ -361,7 +377,7 @@ static bool dpc_is_surprise_removal(struct pci_dev *pdev)
- 
- static irqreturn_t dpc_handler(int irq, void *context)
- {
--	struct pci_dev *err_port = context;
-+	struct pci_dev *err_port = context, *err_dev;
- 
- 	/*
- 	 * According to PCIe r6.0 sec 6.7.6, errors are an expected side effect
-@@ -372,10 +388,11 @@ static irqreturn_t dpc_handler(int irq, void *context)
- 		return IRQ_HANDLED;
++		/* Link recovered, report fatal errors of RCiEP or EP */
++		if (state == pci_channel_io_frozen)
++			aer_report_frozen_error(dev);
++
  	}
  
--	dpc_process_error(err_port);
-+	err_dev = dpc_process_error(err_port);
- 
- 	/* We configure DPC so it only triggers on ERR_FATAL */
--	pcie_do_recovery(err_port, pci_channel_io_frozen, dpc_reset_link);
-+	pcie_do_recovery(err_dev, pci_channel_io_frozen, dpc_reset_link);
-+	pci_dev_put(err_dev);
- 
- 	return IRQ_HANDLED;
- }
-diff --git a/drivers/pci/pcie/edr.c b/drivers/pci/pcie/edr.c
-index 521fca2f40cb..b6e9d652297e 100644
---- a/drivers/pci/pcie/edr.c
-+++ b/drivers/pci/pcie/edr.c
-@@ -150,7 +150,7 @@ static int acpi_send_edr_status(struct pci_dev *pdev, struct pci_dev *edev,
- 
- static void edr_handle_event(acpi_handle handle, u32 event, void *data)
- {
--	struct pci_dev *pdev = data, *err_port;
-+	struct pci_dev *pdev = data, *err_port, *err_dev;
- 	pci_ers_result_t estate = PCI_ERS_RESULT_DISCONNECT;
- 	u16 status;
- 
-@@ -190,7 +190,7 @@ static void edr_handle_event(acpi_handle handle, u32 event, void *data)
- 		goto send_ost;
- 	}
- 
--	dpc_process_error(err_port);
-+	err_dev = dpc_process_error(err_port);
- 	pci_aer_raw_clear_status(err_port);
- 
- 	/*
-@@ -198,7 +198,8 @@ static void edr_handle_event(acpi_handle handle, u32 event, void *data)
- 	 * or ERR_NONFATAL, since the link is already down, use the FATAL
- 	 * error recovery path for both cases.
- 	 */
--	estate = pcie_do_recovery(err_port, pci_channel_io_frozen, dpc_reset_link);
-+	estate = pcie_do_recovery(err_dev, pci_channel_io_frozen, dpc_reset_link);
-+	pci_dev_put(err_dev);
- 
- send_ost:
- 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
 -- 
 2.39.3
 
