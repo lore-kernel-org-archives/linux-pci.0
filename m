@@ -1,29 +1,28 @@
-Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
+Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302C5171C9;
-	Sat, 24 Jan 2026 07:46:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AEA429BD87;
+	Sat, 24 Jan 2026 07:46:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769240793; cv=none; b=f7qrkJndjvr91QiF27aYi3uxv6PAVvjphKv9z9y3eNlEWejnrOHsSNkE2qZroLE+AGVW82517nrV9gL/B6JJ27C+DRXh6q4MJmlCUEzz09d/JupagB3NX4XP6cT0kS+aWyPyVXfN7GCvIaCmR64/MXzgQIuy9sDqo9wrDjZrRqo=
+	t=1769240796; cv=none; b=JMbulhnyU4zNY93uyW3Ukr9EPU44/d73fv5HYBxmP1wvMFyVjN2WbbccKF2EWRpc+EGr7J6JLpJo0YSOoevsiteqcWCp2zclAKIpyxrN61hXJdIQrfnw8HzLeayFvTMXJIH+3oS4gf/DWCpdFRGwYD4QOJr2UvvBhTViCpeMiGY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769240793; c=relaxed/simple;
-	bh=QJ8vCKcz1McGYRsdrAKJFHAVKZvVbELR6t+Nv0ULOPo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Xs9zRwxbIQLyqAuN5+miCyKZxO7ekHwoylwzdmjkzgTd5uxdAk1k7EaHv33dRLU2HHSMqscMlarPVCVWiO/Fs6/HGn0kkh1P8aw0bGUBpGjnL8C5yoWcz8yHgeG4v4lbpAm2BLDRrRdCN9DEGHqIjwpN/gXt36OGkkAwnzdRPWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=Wy7bTqRD; arc=none smtp.client-ip=115.124.30.110
+	s=arc-20240116; t=1769240796; c=relaxed/simple;
+	bh=5B0X5YXmYQOWpEiKUDGpmIUjtJPZkg60k6NHDEwvSvY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CUUueI2/U7ZR3SGclKcluMPzNHBGUDNscMCXXu+Rc6NUXO4lFTJTtHYzZKmtvhgRmqBM9G/PKhteG/b5wnWYrWNIqpRkbLuWrzVzCozLLM6t5HZkppUNowLkXjtPyjG2RfEe6MRIfmZblNPRkqzYlnfvjUL4epbOB93jODX8U7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=PtWvAsfr; arc=none smtp.client-ip=115.124.30.132
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="Wy7bTqRD"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="PtWvAsfr"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1769240787; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=Lai+WgHyyBBA7L8Dsr49RmuA+H1xMDngo1aaMmEEBco=;
-	b=Wy7bTqRDrcToZxm8nw8Z4XGqnuo97StG1UNGeT/LLdVb3LpyQ9cEucLkHVnZK7dUVm2NPjBs8RqqtSwWidtmD6/IDrTaLsZ6MkVnK+UtALCA/9cx6FdmSqs+s2BBB/neVINtXtReRaI1qFr7CPMs1KdSU7OkgGZUbk4VHx6vB5A=
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WxiIIB1_1769240786 cluster:ay36)
+	t=1769240784; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=sfwn3vAlAEvOJl0PVnmLd7EuSg5hGkhTYxpMGlXDYDw=;
+	b=PtWvAsfroy15zujnhA+X1XZaq8KeHXQPHJqee31CPZCfzAs0O283nz04xend8InlUQ9CKCC8IIq+8gDvMpV/NaVXsQV5owM+tLRVNR6tknYswLmoMlQjuesgdjnbHeLxNA4b3DZZGCnCL71If4X/b0XW/Qn0OyoHM8O+uW2NXmM=
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WxiII9l_1769240782 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Sat, 24 Jan 2026 15:46:26 +0800
+          Sat, 24 Jan 2026 15:46:24 +0800
 From: Shuai Xue <xueshuai@linux.alibaba.com>
 To: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
@@ -38,12 +37,10 @@ Cc: mahesh@linux.ibm.com,
 	terry.bowman@amd.com,
 	tianruidong@linux.alibaba.com,
 	lukas@wunner.de
-Subject: [PATCH v7 3/5] PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
-Date: Sat, 24 Jan 2026 15:45:55 +0800
-Message-Id: <20260124074557.73961-4-xueshuai@linux.alibaba.com>
+Subject: [PATCH v7 0/5] PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
+Date: Sat, 24 Jan 2026 15:45:52 +0800
+Message-Id: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
-In-Reply-To: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
-References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,10 +49,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The AER driver has historically avoided reading the configuration space of
-an endpoint or RCiEP that reported a fatal error, considering the link to
-that device unreliable. Consequently, when a fatal error occurs, the AER
-and DPC drivers do not report specific error types, resulting in logs like:
+changes since v6:
+- add aer_report_frozen_error helper per Lukas
+- add explicit log for reset case per Lukas
+- add comments for pci_dev_put per Kuppuswamy and Lukas
+- init info in call site per Kuppuswamy
+- rename back to add_error_device per Kuppushwamy and Lukas
+- highlight newly added log per Kuppuswamy 
+- drop origin patch 4 due to useless aer_cap check per Lukas
+- add fixes tag and cc stable for patch 4 per Kuppuswamy
+- add new patch 5 to fix pcie_clear_device_status per Lukas
+
+changes since v5:
+- rebase to 6.18-rc1
+- add separate patches to clear device fatal status per Kuppuswamy
+
+changes since v4:
+- rebase to 6.17-rc6
+- pick up Reviewed-by tag for PATCH[2] from Sathyanarayanan
+- minor typos in commit log per Manivannan
+
+changes since v3:
+- squash patch 1 and 2 into one patch per Sathyanarayanan
+- add comments note for dpc_process_error per Sathyanarayanan
+- pick up Reviewed-by tag for PATCH[1] from Sathyanarayanan
+
+changes since v2:
+- moving the "err_port" rename to a separate patch per Sathyanarayanan
+- rewrite comments of dpc_process_error per Sathyanarayanan
+- remove NULL initialization for err_dev per Sathyanarayanan
+
+changes since v1:
+- rewrite commit log per Bjorn
+- refactor aer_get_device_error_info to reduce duplication per Keith
+- fix to avoid reporting fatal errors twice for root and downstream ports per Keith
+
+The AER driver has historically avoided reading the configuration space of an
+endpoint or RCiEP that reported a fatal error, considering the link to that
+device unreliable. Consequently, when a fatal error occurs, the AER and DPC
+drivers do not report specific error types, resulting in logs like:
 
   pcieport 0015:00:00.0: EDR: EDR event received
   pcieport 0015:00:00.0: EDR: Reported EDR dev: 0015:00:00.0
@@ -91,130 +123,23 @@ After this patch, the logs like:
   pcieport 0015:00:00.0: EDR: DPC port successfully recovered
   pcieport 0015:00:00.0: EDR: Status for 0015:00:00.0: 0x80
 
-Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
----
- drivers/pci/pci.h      |  4 +++-
- drivers/pci/pcie/aer.c | 32 ++++++++++++++++++++++++++++----
- drivers/pci/pcie/dpc.c |  2 +-
- drivers/pci/pcie/err.c |  5 +++++
- 4 files changed, 37 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 58640e656897..bd020ba0cef0 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -746,8 +746,10 @@ struct aer_err_info {
- 	struct pcie_tlp_log tlp;	/* TLP Header */
- };
- 
--int aer_get_device_error_info(struct aer_err_info *info, int i);
-+int aer_get_device_error_info(struct aer_err_info *info, int i,
-+			      bool link_healthy);
- void aer_print_error(struct aer_err_info *info, int i);
-+void aer_report_frozen_error(struct pci_dev *dev);
- 
- int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
- 		      unsigned int tlp_len, bool flit,
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e0bcaa896803..4c0a2bbe9197 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1384,12 +1384,14 @@ EXPORT_SYMBOL_GPL(aer_recover_queue);
-  * aer_get_device_error_info - read error status from dev and store it to info
-  * @info: pointer to structure to store the error record
-  * @i: index into info->dev[]
-+ * @link_healthy: link is healthy or not
-  *
-  * Return: 1 on success, 0 on error.
-  *
-  * Note that @info is reused among all error devices. Clear fields properly.
-  */
--int aer_get_device_error_info(struct aer_err_info *info, int i)
-+int aer_get_device_error_info(struct aer_err_info *info, int i,
-+			      bool link_healthy)
- {
- 	struct pci_dev *dev;
- 	int type, aer;
-@@ -1420,7 +1422,8 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
- 	} else if (type == PCI_EXP_TYPE_ROOT_PORT ||
- 		   type == PCI_EXP_TYPE_RC_EC ||
- 		   type == PCI_EXP_TYPE_DOWNSTREAM ||
--		   info->severity == AER_NONFATAL) {
-+		   info->severity == AER_NONFATAL ||
-+		   (info->severity == AER_FATAL && link_healthy)) {
- 
- 		/* Link is still healthy for IO reads */
- 		pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS,
-@@ -1447,17 +1450,38 @@ int aer_get_device_error_info(struct aer_err_info *info, int i)
- 	return 1;
- }
- 
-+void aer_report_frozen_error(struct pci_dev *dev)
-+{
-+	struct aer_err_info info;
-+	int type = pci_pcie_type(dev);
-+
-+	if (type != PCI_EXP_TYPE_ENDPOINT && type != PCI_EXP_TYPE_RC_END)
-+		return;
-+
-+	info.error_dev_num = 0;
-+	info.severity = AER_FATAL;
-+	info.level = KERN_ERR;
-+	add_error_device(&info, dev);
-+
-+	if (aer_get_device_error_info(&info, 0, true)) {
-+		pci_err(dev, "Errors reported prior to reset\n");
-+		aer_print_error(&info, 0);
-+	}
-+
-+	pci_dev_put(dev); /* pairs with pci_dev_get() in add_error_device() */
-+}
-+
- static inline void aer_process_err_devices(struct aer_err_info *e_info)
- {
- 	int i;
- 
- 	/* Report all before handling them, to not lose records by reset etc. */
- 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
--		if (aer_get_device_error_info(e_info, i))
-+		if (aer_get_device_error_info(e_info, i, false))
- 			aer_print_error(e_info, i);
- 	}
- 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
--		if (aer_get_device_error_info(e_info, i))
-+		if (aer_get_device_error_info(e_info, i, false))
- 			handle_error_source(e_info->dev[i], e_info);
- 	}
- }
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index f6069f621683..21c4e8371279 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -284,7 +284,7 @@ struct pci_dev *dpc_process_error(struct pci_dev *pdev)
- 		pci_warn(pdev, "containment event, status:%#06x: unmasked uncorrectable error detected\n",
- 			 status);
- 		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
--		    aer_get_device_error_info(&info, 0)) {
-+		    aer_get_device_error_info(&info, 0, false)) {
- 			aer_print_error(&info, 0);
- 			pci_aer_clear_nonfatal_status(pdev);
- 			pci_aer_clear_fatal_status(pdev);
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index bebe4bc111d7..0780ea09478b 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -253,6 +253,11 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 			pci_warn(bridge, "subordinate device reset failed\n");
- 			goto failed;
- 		}
-+
-+		/* Link recovered, report fatal errors of RCiEP or EP */
-+		if (state == pci_channel_io_frozen)
-+			aer_report_frozen_error(dev);
-+
- 	}
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+Shuai Xue (5):
+  PCI/DPC: Clarify naming for error port in DPC Handling
+  PCI/DPC: Run recovery on device that detected the error
+  PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
+  PCI/AER: Clear both AER fatal and non-fatal status
+  PCI/AER: Only clear error bits in pcie_clear_device_status()
+
+ drivers/pci/pci.c             |  2 +-
+ drivers/pci/pci.h             |  6 ++++--
+ drivers/pci/pcie/aer.c        | 32 ++++++++++++++++++++++++++++----
+ drivers/pci/pcie/dpc.c        | 31 ++++++++++++++++++++++++-------
+ drivers/pci/pcie/edr.c        | 35 ++++++++++++++++++-----------------
+ drivers/pci/pcie/err.c        |  7 ++++++-
+ include/uapi/linux/pci_regs.h |  1 +
+ 7 files changed, 82 insertions(+), 32 deletions(-)
+
 -- 
 2.39.3
 
