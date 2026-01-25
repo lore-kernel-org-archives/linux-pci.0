@@ -1,117 +1,93 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C26413AD05
-	for <linux-pci@vger.kernel.org>; Sun, 25 Jan 2026 09:25:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A4373233F4;
+	Sun, 25 Jan 2026 14:45:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769333153; cv=none; b=G09wOWo3BE9YetAx8NCmv23ByiJcEa+SjUU68oas/zkgvAByjFvq4oHjyEN2pH1UTMFPrD6g81x10AmAPhNIfn3B/wUtdZ2+nyWKaNzRjYFt+CoF/+HCkuP0btuLeMK8hhTnpDuL0WZ/Jneyv0DUMkdoIUykMosYC5Zj8oDhogU=
+	t=1769352306; cv=none; b=MWn2eO4pVdjcDwz6e+PePdBU6Tb23M3jfnzHa6d5w3lYvmsNJFpE+M973ZysavSN+Q/42QASvc0neLVTIk6v7SRb4lQ+MwNwO9vprYgicQGVxU9TKJQHh+cimFR6PvIhsqvTSfhW9Bwb9Zg+X4pN2uWj4COG3IrqR65/L5ikENU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769333153; c=relaxed/simple;
-	bh=uDbycAXlVr8sPFbEHYvcJBTlZXR9eFiF/FhVI3RAthI=;
-	h=Message-Id:From:Date:Subject:To:Cc; b=dj8D/BP75XZ8cxpVbiAXnC1KVDwAP9lUJqHm4hyQGGV1bG8cgVneaEpFf02QssKbv7HCfRk4QyZFMPm4yO/JcMCkIO++QOOd/8YyfKMY2SbBB8F96DikLWf9FADflUwA0b4Fj8HSGDpAP5DYjL/40wXZC12yCzkkz8sFhdpRqVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 511A52007F87;
-	Sun, 25 Jan 2026 10:25:41 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 2FE622FE8B; Sun, 25 Jan 2026 10:25:41 +0100 (CET)
-Message-Id: <3011c2ed30c11f858e35e29939add754adea7478.1769332702.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 25 Jan 2026 10:25:51 +0100
-Subject: [PATCH] PCI/AER: Clear stale errors on reporting agents upon probe
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Terry Bowman <terry.bowman@amd.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, linux-pci@vger.kernel.org, Shuai Xue <xueshuai@linux.alibaba.com>, tianruidong@linux.alibaba.com, Keith Busch <kbusch@kernel.org>, "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, "Oliver OHalloran" <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org
+	s=arc-20240116; t=1769352306; c=relaxed/simple;
+	bh=fYFGfUrN9ZS8RfgpDJ2xduMlAYjoRpkfKBhiR0eVrp4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oH9Ih1gW8DSGr6UCB0cJmOLv34GKsjTpgxo5gf4pQFWiILB4ZMXt3BknK0zsxM/rr0poJ6G2ZKiU0OBGfrR6W8XNxNeB1MypI3dPnKhBxs8BAJA1u3eb3J5tHFWe05AUWozUhjUxEQxFmfc90XIHSPrvwJBWAwXnIQaTgXH8S3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn; spf=pass smtp.mailfrom=isrc.iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=isrc.iscas.ac.cn
+Received: from localhost.localdomain (unknown [36.112.3.223])
+	by APP-03 (Coremail) with SMTP id rQCowAAXNt1lLHZpzeStBg--.35060S2;
+	Sun, 25 Jan 2026 22:44:53 +0800 (CST)
+From: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
+To: bhelgaas@google.com,
+	tglx@linutronix.de,
+	jgross@suse.com,
+	hans.zhang@cixtech.com,
+	himanshu.madhani@oracle.com,
+	roger.pau@citrix.com,
+	chrisl@kernel.org
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
+Subject: [PATCH] PCI/MSI: add iounmap in msix_capability_init()
+Date: Sun, 25 Jan 2026 22:44:52 +0800
+Message-Id: <20260125144452.2103812-1-lihaoxiang@isrc.iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowAAXNt1lLHZpzeStBg--.35060S2
+X-Coremail-Antispam: 1UD129KBjvdXoWruryUuF4kWry8ur48GrWktFb_yoWDuFb_ur
+	nYvr9xGr4DKF18Ga4jyr13Zryjk34rWF4xuws2qFyayasrZrs8AFWqvr1ktFykur43AryU
+	G39rJw15ur1xJjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb3xFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Jr0_
+	Gr1l84ACjcxK6I8E87Iv67AKxVWUJVW8JwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr0_Gr
+	1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxa
+	n2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+	IF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4l
+	IxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
+	C2KfnxnUUI43ZEXa7VUbGQ6JUUUUU==
+X-CM-SenderInfo: 5olkt0x0ld0ww6lv2u4olvutnvoduhdfq/1tbiDAgSE2l1qZug7QAAsm
 
-Correctable and Uncorrectable Error Status Registers on reporting agents
-are cleared upon PCI device enumeration in pci_aer_init() to flush past
-events.  They're cleared again when an error is handled by the AER driver.
+In msix_capability_init(), if msix_setup_interrupts()
+fails, call iounmap() to release the memory allocated
+by msix_map_region().
 
-If an agent reports a new error after pci_aer_init() and before the AER
-driver has probed on the corresponding Root Port or Root Complex Event
-Collector, that error is not handled by the AER driver:  It clears the
-Root Error Status Register on probe, but neglects to re-clear the
-Correctable and Uncorrectable Error Status Registers on reporting agents.
-
-The error will eventually be reported when another error occurs.  Which
-is irritating because to an end user it appears as if the earlier error
-has just happened.
-
-Amend the AER driver to clear stale errors on reporting agents upon probe.
-
-Skip reporting agents which have not invoked pci_aer_init() yet to avoid
-using an uninitialized pdev->aer_cap.  They're recognizable by the error
-bits in the Device Control register still being clear.
-
-Reporting agents may execute pci_aer_init() after the AER driver has
-probed, particularly when devices are hotplugged or removed/rescanned via
-sysfs.  For this reason, it continues to be necessary that pci_aer_init()
-clears Correctable and Uncorrectable Error Status Registers.
-
-Reported-by: Lucas Van <lucas.van@intel.com> # off-list
-Tested-by: Lucas Van <lucas.van@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
 ---
- drivers/pci/pcie/aer.c | 26 +++++++++++++++++++++++++-
- 1 file changed, 25 insertions(+), 1 deletion(-)
+ drivers/pci/msi/msi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e0bcaa8..4299c55 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1608,6 +1608,20 @@ static void aer_disable_irq(struct pci_dev *pdev)
- 	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
- }
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 34d664139f48..e010ecd9f90d 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -737,7 +737,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
  
-+static int clear_status_iter(struct pci_dev *dev, void *data)
-+{
-+	u16 devctl;
-+
-+	/* Skip if pci_enable_pcie_error_reporting() hasn't been called yet */
-+	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &devctl);
-+	if (!(devctl & PCI_EXP_AER_FLAGS))
-+		return 0;
-+
-+	pci_aer_clear_status(dev);
-+	pcie_clear_device_status(dev);
-+	return 0;
-+}
-+
- /**
-  * aer_enable_rootport - enable Root Port's interrupts when receiving messages
-  * @rpc: pointer to a Root Port data structure
-@@ -1629,9 +1643,19 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
- 	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
- 				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+ 	ret = msix_setup_interrupts(dev, entries, nvec, affd);
+ 	if (ret)
+-		goto out_disable;
++		goto out_unmap;
  
--	/* Clear error status */
-+	/* Clear error status of this Root Port or RCEC */
- 	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, &reg32);
- 	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, reg32);
-+
-+	/* Clear error status of agents reporting to this Root Port or RCEC */
-+	if (reg32 & AER_ERR_STATUS_MASK) {
-+		if (pci_pcie_type(pdev) == PCI_EXP_TYPE_RC_EC)
-+			pcie_walk_rcec(pdev, clear_status_iter, NULL);
-+		else if (pdev->subordinate)
-+			pci_walk_bus(pdev->subordinate, clear_status_iter,
-+				     NULL);
-+	}
-+
- 	pci_read_config_dword(pdev, aer + PCI_ERR_COR_STATUS, &reg32);
- 	pci_write_config_dword(pdev, aer + PCI_ERR_COR_STATUS, reg32);
- 	pci_read_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, &reg32);
+ 	/* Disable INTX */
+ 	pci_intx_for_msi(dev, 0);
+@@ -758,6 +758,8 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
+ 	pcibios_free_irq(dev);
+ 	return 0;
+ 
++out_unmap:
++	iounmap(dev->msix_base);
+ out_disable:
+ 	dev->msix_enabled = 0;
+ 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE, 0);
 -- 
-2.51.0
+2.25.1
 
