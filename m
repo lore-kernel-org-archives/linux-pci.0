@@ -1,357 +1,134 @@
-Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11010027.outbound.protection.outlook.com [52.101.228.27])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12BB2347FD0;
-	Mon, 26 Jan 2026 16:47:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.27
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769446030; cv=fail; b=rOWDcozLroJTyw0ACN6AOh5uErhEy6GPg13m6bcUWPGtA/tC2hTwLAsVdPbBbXlu/vNXTVnqmJZiW30V4/1VxrE7F7i2CHgDsHdrEBcGE5Oa2cfdUuH7zSAqWbSC4oZElA/Vxz/UlpYADRvRwsnBwfZQUAjp0/FbQLogPup5Pjg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769446030; c=relaxed/simple;
-	bh=gPHMuFU+yyhYVjPmOdv9cWzGykwFszeuTuzsvGnf86s=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=o4eHOy7CDCCSKNTLuf5zCZxgznQY8n2zcFVRdr8fgs3IMFunSANlaKS8A0r0A89evN6S1qAckust6CtCRRj+V2P/T5H/jW2JxRmIVvB/aSY2WrohEQhHOhe95DNi1YqZODsyTCaAd5aegzG7JY9GOTqvIq350LL2pREAbrHhdjs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=lj5B0Hjy; arc=fail smtp.client-ip=52.101.228.27
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 804B334A786;
+	Mon, 26 Jan 2026 16:47:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769446075; cv=none; b=s5tSNzTdhLf3uCUCeYIUyoMopBJpTAOcaNDJ7ZLt3cYjLwzuq1HRuxKhVoH3ldP80eXfuAdf6mJW8vZ3Zlp1LnM1tnIvy1Q9dO1fq4B1sGHswZE9twWfalLqA///puwtEWNrkr3bBN+GZJb/QJvs2eP8v/twCXJw4+n2tdsuWKM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769446075; c=relaxed/simple;
+	bh=OTgN+AOgoWAXyZjcPvOX/MFtQjNRVU5usZ1XNPxTrto=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VbQoyHdpeWz9NIS/Mmy6gMj+MmI5IlvxIdZHo0F55WN4NYPGAtztEQmtcmEEs9YKE5Z6RzauUwUighrMdUHZrNPpIYyA+YqjQd2h+3UOaqU/MeHZqlfm/zY57mb6PLhYAfRHDm2w+SwT1ajbiAOUP08+q3peia/f14JqvkEasm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gErd8LZp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="lj5B0Hjy"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=TGY6R/2HB+PDUyQZ2sh9r3bnWPQ/EW7pWAPm+5bGvrhjH5lokkG7U4/AE/PDrhCUdFTFvF0UmntltlksjG/KIrJzQa/wHI3vjQJ/bzVCh2Xeso+vMgcoXrbbcnXXeD77n+wxb1HdUTezqZNFRFCAzQIoXMAWo8krFBiawVLtZpK6JpoKnclxeABxLE9o4bPglOyaJba2WfPemC2BsEv7ebYF5TterTpKasekdHvS3VBY2DiBe892otO4DMXOA1Adg051B2nyLFDLh5L/tpxb7gXCnlpfZ8+Te/xP0W9P4W9W21Na0hNLGBNqbQEwDDoViUJZD5FO6gY/Aq/wh5FPeQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=6UUc1ySr6gphVcS42Q09L3ojVWzBjNANuBVqkCFcWKg=;
- b=QReSWjwuKvNgy5m8Re5mAsacSqj2REqChHmWZnplVQSWdQ62P7pM9AtmiIpBCaIJ2RJQhN/sJ2stnWMP/ni06vFzLLBgprDgzl95qmOfBoF+ojxUlIgV+2Ht3KjXm8Hkxmt1mk7fEsgP8c1tMd/Lqu/URH5t5kf7OMJh2ClvLPWZqh5fgvnSkFSKyKEQ7KY7ZtOoDdjyLs7LPI9JlSa3PSmmNRfpiXUmIp6Z2zxRUyR9FQdxzLJ5eXhHo95rwQxQcIwRTdoefGfTQwaZ21KM1TFqpV9Rordt4Z6fRRKwkeQBWAthfRlonujDMrZ7Wz94NpjabfcdjnK7eJsCQhsgtw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6UUc1ySr6gphVcS42Q09L3ojVWzBjNANuBVqkCFcWKg=;
- b=lj5B0Hjyxi+nNOJF55v0bGEtg7hGcfckZBGDLgPmXaYClKVKUfoZfE+NMdDYNQJxA25q4ha9m393zOG9daodEFLPUE2ab27fRscENlfhD6sXhvsc6rNES0Rn4wnii/pjJxbd3OJzLQrkutmg7Ho0fRwosv5+yF11a/p9gRsOTPg=
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com (2603:1096:405:35b::6)
- by OSZPR01MB6908.jpnprd01.prod.outlook.com (2603:1096:604:138::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.15; Mon, 26 Jan
- 2026 16:46:59 +0000
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::aa7e:1460:f303:3fd8]) by TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::aa7e:1460:f303:3fd8%6]) with mapi id 15.20.9542.015; Mon, 26 Jan 2026
- 16:46:55 +0000
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: Rob Herring <robh@kernel.org>
-CC: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "geert+renesas@glider.be"
-	<geert+renesas@glider.be>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, "conor+dt@kernel.org"
-	<conor+dt@kernel.org>, magnus.damm <magnus.damm@gmail.com>, Biju Das
-	<biju.das.jz@bp.renesas.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "linux-clk@vger.kernel.org"
-	<linux-clk@vger.kernel.org>, "john.madieu@gmail.com" <john.madieu@gmail.com>
-Subject: RE: [PATCH v2 06/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie:
- Document RZ/G3E SoC
-Thread-Topic: [PATCH v2 06/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie:
- Document RZ/G3E SoC
-Thread-Index: AQHcjHDWKVQGsQL56EK3j19qoXP9lbVkh/cAgAAelaA=
-Date: Mon, 26 Jan 2026 16:46:55 +0000
-Message-ID:
- <TY6PR01MB1737770235BF9F3D29E4E71DAFF93A@TY6PR01MB17377.jpnprd01.prod.outlook.com>
-References: <20260123140031.94752-1-john.madieu.xa@bp.renesas.com>
- <20260123140031.94752-7-john.madieu.xa@bp.renesas.com>
- <20260126143114.GA2223879-robh@kernel.org>
-In-Reply-To: <20260126143114.GA2223879-robh@kernel.org>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=bp.renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY6PR01MB17377:EE_|OSZPR01MB6908:EE_
-x-ms-office365-filtering-correlation-id: 0f772eba-cd32-43a5-eb48-08de5cfa83b6
-x-ld-processed: 53d82571-da19-47e4-9cb4-625a166a4a2a,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|7416014|366016|38070700021;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?P10xi6sRhMALSxTT7cqEB5V13k9G9rQxA0TPJHfr5anq32HQMbaS60V1NJrM?=
- =?us-ascii?Q?IzaUc9dwPq0jS8uOFpUcGRQOShMdElCTvVeZdNAKXG2f/gEhkoxK5Pr0J3wx?=
- =?us-ascii?Q?IBTQtX+xZJ1IXajo/1TvrWfGsJvAd5gx394LPiGYnUISPHymC/CB5yI7i7+3?=
- =?us-ascii?Q?BOIaZ/5qMRTlaja2ANQyBiziQlm8NwIJTXZvKJSOBOg3q7WhxZcib5PGOf8Q?=
- =?us-ascii?Q?vDoOr5kIAz/n5IoVmRx78db9PsW9Nd4KTPP5hpDFsV1n0YKxy8Zc5ugIXCbf?=
- =?us-ascii?Q?7dp8l/3IQiSlJoP858JP8O56WbLob8MWQa/KK9TImLNjrl9LKf2Q6ObZv5DH?=
- =?us-ascii?Q?ooLJTEcg5qTG4b9JAijeikEA6u9SjJkZhNFy+IVSxpyN+xE/97PyY3q5utY7?=
- =?us-ascii?Q?9FcqrT2PQsK7Aj3eVnf7rmczv3458ThZukPvEtqTHvMOlVN8LqeuTdQBUhEk?=
- =?us-ascii?Q?M5tiiQN+JGyKcl2ln5Z/g3X6UxqiLIdNkgDXA2UAJtmfwsJ29BwhdacrvzmV?=
- =?us-ascii?Q?5qoTX+nmaddxd4n8SR1kD4O4fK02KTaCxDBtvRjJxk8m68FgVqzCOt8sx0aE?=
- =?us-ascii?Q?9FOuYGcvXY01SlO9L9c6sDmD5S2QWFpzJcI/9yxM3BczsJ5E7VMY/Mgaelp/?=
- =?us-ascii?Q?heMngp2zBTPhiQabkssOJbNjcfLCIG3KSlMB98lQm2+0MW4pVQHHxeCKZcIy?=
- =?us-ascii?Q?Fn52GiUV5pEuy3MP3VrmWu7dgxs0QGqIGJhEk1IXtLL+KSsrbR8a/95/w6U1?=
- =?us-ascii?Q?9qxMFiN4SBukZRaCoughp1ff5oNKB/WBgD3p2Aqv+lTDzpcesxz+PoJqYXoU?=
- =?us-ascii?Q?sfy4eM5tT5b62UqY4JFG0uKcEc59uiMASOcx18TAjr/NS8F7u79PdzQY1umY?=
- =?us-ascii?Q?qS3/g8kcaUZ9KGf8JyWbchjQdy7+/jnUcmrxqXzZ0R6g5ASiqtzvg/wGDo/b?=
- =?us-ascii?Q?qCnxFNkpjp7H2GC3U0GARmYjNthkAnFASepf58J+bTT2W8UV2Yb7vCx0UT9v?=
- =?us-ascii?Q?VOEf9uN/aHZioKdSOaYk/sFyaCXC9/S7v3cu91KD4jQUdxbQf/l5qRR2gvEn?=
- =?us-ascii?Q?F3TogKzTqhWOI5TxZ3forVwIf7/CTXNYQfrCGDFnjD39E8LW2X3U8VDHFEEW?=
- =?us-ascii?Q?FwYg/Yor38OH91AuqoEXgS9DaNULIg1fTe6CO2Qp0ppaxiaZSckMKTSE/mK8?=
- =?us-ascii?Q?E98RNi3TTZpp4qyp0HNhiH2wIu/djKgupFY40f7JEWJ9Mr6IWsnduMCtSLW1?=
- =?us-ascii?Q?+6ebrCDJ0+W2ivlH/h4fOPabsugkU/7CqFjFwUivHMojHLnFPfcPa5/00R4C?=
- =?us-ascii?Q?qI4Vwxvxm4bU+N5UWPyLxE16tU9Gs8Cf0InqIVuiL9vnetFp/9CbEvn3vOiX?=
- =?us-ascii?Q?3RaMG8UU02zuBNFz3iVgHK/w6PmVdV7SBPNlpmhLfAzFW2sjX10IyCz37pDR?=
- =?us-ascii?Q?j2nWwXjpUfYRylYfyBrneNtpEcH0yJQATI+L/2lJ4cZOHTfPLLSxUbsITeNX?=
- =?us-ascii?Q?+JyBLSYK72L5bpH7NfeUNbK4TFHC7tdcenJFYXMoXcrFskiyDTVcvvzmOPOt?=
- =?us-ascii?Q?SI+THkI+IU1L+UyxC49lQVFzbSWjuknVL5sAIutXDPtfeHzqbYfrJ+MU2nCD?=
- =?us-ascii?Q?jUZfkzCTGgCtJOFma3joVdE=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY6PR01MB17377.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?q5FrG+ad8vvBxk3d/TQ57QUcopEvsg0J4KQllV1D7WPvOxq2IltAXLRp7QiM?=
- =?us-ascii?Q?EsPEKx6RO50ROnDfXQ7QxkCHDkOpnXUTYxFlJDCofz6nI3VqfMVBKmQYOvM2?=
- =?us-ascii?Q?35vZNVsh6NamIKNWBTe1oZoy464cR/MzTyBp7Ym5AePPoT1Ga6ZfXwR/iNM4?=
- =?us-ascii?Q?C8NAfi38HhCRrr1K8gGrGZt6WiM7gguMhM2HUNDx78H1/E4XqALzK0JJLOnl?=
- =?us-ascii?Q?BSwARbnxVJBEe7kOaydQznthWrJrp5L2c8fOHQA447ef58YCNrTXVCsKZnSZ?=
- =?us-ascii?Q?PS83JWx5wUz+mskhlOX6rZtwkvGqWwdcgbz5BcYjq8k3GhsR2ZXSB5J/Xej/?=
- =?us-ascii?Q?k30yRCrlmpYSyhmDQ5FMI3rgiWldMryVquRwKDlyfZA+7bC0q33pIWjnQD+/?=
- =?us-ascii?Q?H7WnxqyFCAWOtRIL11HwHDMzx6pFkSZXetC1rXRNid7wBB0mnSkvQ2ipOzKz?=
- =?us-ascii?Q?6X1HHRFwwhtYcIiGZU0NvaPCok9yvV1Jo8CJh4djGIRHxeypngcTzhzcc/jP?=
- =?us-ascii?Q?LsRbqcdQgIJaXsIdkaougZSpqJEKb+hA3VDzXP+5SE5LVKkxRg3ZN6nyca74?=
- =?us-ascii?Q?XtgG0jNrAgPR4ji9f0qFC+mYh6pQBbFShF1YwDvxp6BwQds7R/nq+PST7Bif?=
- =?us-ascii?Q?H6tbqOB+NKOzABIw0INNN06D6mM8fZtGyRR1B5fFtDCa6CG+e9CEQWT6aH89?=
- =?us-ascii?Q?PmjLp5jGFGoKdk2p5N6Ou0zIBqUIQEwSsFUOLvU1VAZzof4Nj+cunVhGSa1j?=
- =?us-ascii?Q?xVXGKft8sqnyf1dafejZVKI6bk+Kj4h6KPcQ4T94O7IoT3yFwR7wSZQ7v3Rl?=
- =?us-ascii?Q?IUk+u6AVq4P7uEMe1oi9+H6lTfK64IpvLwjNzsI3tADR+L3RHXBjQ4Q5eYKK?=
- =?us-ascii?Q?YZl0fRQZoyk2o2F6/wVVj1q0q3kLQ7koJ5wGEmORglg9/N7Vp7wkHgOh1ev+?=
- =?us-ascii?Q?c3iogmjOtTkyTflcfaSgF8xyWa8HjYeRNPz+TnYv3luOxhyHABsec3P/QMxE?=
- =?us-ascii?Q?a47pPGnYAorBYWVGfLhvctTpkymWioD+DcdzXEDriBdwEkybKn/19ckH0FKQ?=
- =?us-ascii?Q?Wg+nSn9+voBwW1K1NOs7U1MrojEp6yuFs0vrXz9GPQ+nXViW0gZy/oIduPpI?=
- =?us-ascii?Q?0czhwzHzucc1Dos5WFXs9K8Mq0ws2e3P/hfH4k5b2H7ahXXanNzhhXkQ/vPD?=
- =?us-ascii?Q?tA5Xf+jdzbPKsSBKv40Cpe+tI/R1DnaSkbNrJhMS79CPTfXedO/3C7psZPUo?=
- =?us-ascii?Q?kwkDywPmzB4gXjvOmMuzgWGTgcEfDt0s1+tWst/4eUXjYgs7JSYD2xZPuoty?=
- =?us-ascii?Q?cSMzlsSNrJoNFUMtfN/HEulnb85aLuegWCgvqGKAKcBxgqkrBG96PYeieby5?=
- =?us-ascii?Q?481SkXKsE5u13JpACu4lhRJhkFwbdJTs5U7P/309RSkcaQiXd5J+/8KNxiHT?=
- =?us-ascii?Q?UA3A+6iAodivguyUHh+b1/YicU6ABDc3xKe5YYrkl/zyz4pO56qrtg/VaPDA?=
- =?us-ascii?Q?C2E4KswWgNhrJEuRAK4TqytKRpERMMjfekw7CBR6eS2yXBp9zuLkNwNgamVL?=
- =?us-ascii?Q?Gf4q2qn912jSpFOv+MS0zmtkmQLu0/11LOvpI4YIv3KaoolfXZ6kfHzrOUvp?=
- =?us-ascii?Q?ZPOCj0kCNfm9Hc9cV3wDRxcUNX62MRjHXCq/nkZDp6H259hQNDoagnCjbnai?=
- =?us-ascii?Q?kcDHLgV9+ykRjJtkKu1Gp1MBFTTAgcn7L3mr0YTf/9quFemV0X/HrplkTpQx?=
- =?us-ascii?Q?gGCAHR/JJ5Y6C6rsNy40yxn9bisjYQI=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gErd8LZp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86717C116C6;
+	Mon, 26 Jan 2026 16:47:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769446074;
+	bh=OTgN+AOgoWAXyZjcPvOX/MFtQjNRVU5usZ1XNPxTrto=;
+	h=From:To:Cc:Subject:Date:From;
+	b=gErd8LZpO5mnHe4QTq3JaXLDMcIO0Qvh7d0yzXw2Vlt5xjkum5A8fqyAj8CeZ0p0S
+	 S9pVAXmkr28yvW9DSiBNMFXULNCcW34EwKisF1i2F6rHUnyHDPjbz/J1GkVasmW8HQ
+	 GxNn19iw7dXyWE/LkOiq+Y7uEdRyQCkPWiJJ5/yPduqz2196ely+CFRorga3Lw5LHh
+	 e8e4iq/Dju5KBxWCFWEO7zuh9EdIM2vMGLnmzxowevpkhBy8PaOpyFUmaLZBukrJ2S
+	 aq+MqhzXYi4F0rYtsLbuD850v8aoM9wNxsyjVf5V7uyscdH1+ePuzL0xcX+yVxYgy4
+	 Fj2KTAmcpnB9w==
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Guenter Roeck <linux@roeck-us.net>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Christopher Ruehl <chris.ruehl@gtsys.com.hk>,
+	"Jason A. Donenfeld" <Jason@zx2c4.com>,
+	Matthias Schiffer <matthias.schiffer@ew.tq-group.com>,
+	Vincent Huang <vincent.huang@tw.synaptics.com>,
+	Inki Dae <inki.dae@samsung.com>,
+	Seung-Woo Kim <sw0312.kim@samsung.com>,
+	Frank Li <Frank.Li@nxp.com>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>,
+	linux-hwmon@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] dt-bindings: Fix emails with spaces or missing brackets
+Date: Mon, 26 Jan 2026 10:47:22 -0600
+Message-ID: <20260126164724.2832009-1-robh@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY6PR01MB17377.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0f772eba-cd32-43a5-eb48-08de5cfa83b6
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Jan 2026 16:46:55.4403
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: dfQki+qO63DOHDYEMligXXzvbM54IbBmD+pdkfT+bWpcvGFiRRGSCtguIDfyxYQK4gWLsoRY5Z5k2Pjlb7Vh/22gsnSG0uMZA0hfY02E548=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSZPR01MB6908
+Content-Transfer-Encoding: 8bit
 
-Hi Rob,
+Fix email addresses with spaces or missing brackets. A pending
+dtschema meta-schema change will check for these.
 
-Thanks for your review.
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml    | 2 +-
+ Documentation/devicetree/bindings/input/syna,rmi4.yaml          | 2 +-
+ .../devicetree/bindings/media/samsung,exynos5250-gsc.yaml       | 2 +-
+ Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml     | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-> -----Original Message-----
-> From: Rob Herring <robh@kernel.org>
-> Sent: Monday, January 26, 2026 3:31 PM
-> To: John Madieu <john.madieu.xa@bp.renesas.com>
-> Subject: Re: [PATCH v2 06/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie=
-:
-> Document RZ/G3E SoC
->=20
-> On Fri, Jan 23, 2026 at 03:00:22PM +0100, John Madieu wrote:
-> > Extend the existing device tree bindings for Renesas RZ/G3S PCIe
-> > controller to include support for the RZ/G3E
-> > (renesas,r9a09g047e57-pcie) PCIe controller. The RZ/G3E PCIe
-> > controller is similar to RZ/G3S but has some key
-> > differences:
-> >
-> >  - Uses a different device ID
-> >  - Supports PCIe Gen3 (8.0 GT/s) link speeds
-> >  - Uses a different clock naming (clkpmu vs clkl1pm)
-> >  - Has a different set of interrupts, interrupt ordering, and reset
-> > signals
-> >
-> > Add device tree bindings for renesas,r9a09g047e57-pcie compatible IPs.
-> >
-> > Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
-> > ---
-> >
-> > Changes:
-> >
-> > v2: Reuse G3S names
-> >
-> >  .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 127
-> > +++++++++++++-----
-> >  1 file changed, 96 insertions(+), 31 deletions(-)
-> >
-> > diff --git
-> > a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> > b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> > index df30f729d4b3..9565f1774720 100644
-> > ---
-> > a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> > +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yam
-> > +++ l
-> > @@ -10,17 +10,21 @@ maintainers:
-> >    - Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> >
-> >  description:
-> > -  Renesas RZ/G3S PCIe host controller complies with PCIe Base
-> > Specification
-> > -  4.0 and supports up to 5 GT/s (Gen2).
-> > +  Renesas RZ/G3{E,S} PCIe host controllers comply with PCIe  Base
-> > + Specification 4.0 and support up to 5 GT/s (Gen2) for RZ/G3S and  up
-> > + to 8 GT/s (Gen3) for RZ/G3E.
-> >
-> >  properties:
-> >    compatible:
-> > -    const: renesas,r9a08g045-pcie # RZ/G3S
-> > +    enum:
-> > +      - renesas,r9a08g045-pcie # RZ/G3S
-> > +      - renesas,r9a09g047-pcie # RZ/G3E
-> >
-> >    reg:
-> >      maxItems: 1
-> >
-> >    interrupts:
-> > +    minItems: 16
-> >      items:
-> >        - description: System error interrupt
-> >        - description: System error on correctable error interrupt @@
-> > -38,39 +42,54 @@ properties:
-> >        - description: PCIe event interrupt
-> >        - description: Message interrupt
-> >        - description: All interrupts
-> > +      - description: Link equalization request interrupt
-> > +      - description: Turn off event interrupt
-> > +      - description: PMU power off interrupt
-> > +      - description: D3 event function 0 interrupt
-> > +      - description: D3 event function 1 interrupt
-> > +      - description: Configuration PMCSR write clear function 0
-> interrupt
-> > +      - description: Configuration PMCSR write clear function 1
-> > + interrupt
-> >
-> >    interrupt-names:
-> > +    minItems: 16
-> >      items:
-> > -      - description: serr
-> > -      - description: serr_cor
-> > -      - description: serr_nonfatal
-> > -      - description: serr_fatal
-> > -      - description: axi_err
-> > -      - description: inta
-> > -      - description: intb
-> > -      - description: intc
-> > -      - description: intd
-> > -      - description: msi
-> > -      - description: link_bandwidth
-> > -      - description: pm_pme
-> > -      - description: dma
-> > -      - description: pcie_evt
-> > -      - description: msg
-> > -      - description: all
->=20
-> Well, that was really wrong... Fixing it should be a separate patch befor=
-e
-> adding the new chip.
->=20
-Will address this as separate patch in v3. Thanks.
+diff --git a/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml b/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml
+index 3d14d5fc96c5..7b38f2182ffa 100644
+--- a/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml
++++ b/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml
+@@ -7,7 +7,7 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
+ title: Sensirion SHTC1 Humidity and Temperature Sensor IC
+ 
+ maintainers:
+-  - Christopher Ruehl chris.ruehl@gtsys.com.hk
++  - Christopher Ruehl <chris.ruehl@gtsys.com.hk>
+ 
+ description: |
+   The SHTC1, SHTW1 and SHTC3 are digital humidity and temperature sensors
+diff --git a/Documentation/devicetree/bindings/input/syna,rmi4.yaml b/Documentation/devicetree/bindings/input/syna,rmi4.yaml
+index f369385ffaf0..8685ef4481f4 100644
+--- a/Documentation/devicetree/bindings/input/syna,rmi4.yaml
++++ b/Documentation/devicetree/bindings/input/syna,rmi4.yaml
+@@ -8,7 +8,7 @@ title: Synaptics RMI4 compliant devices
+ 
+ maintainers:
+   - Jason A. Donenfeld <Jason@zx2c4.com>
+-  - Matthias Schiffer <matthias.schiffer@ew.tq-group.com
++  - Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
+   - Vincent Huang <vincent.huang@tw.synaptics.com>
+ 
+ description: |
+diff --git a/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml b/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml
+index 878397830a4d..9196cf5dac0f 100644
+--- a/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml
++++ b/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml
+@@ -9,7 +9,7 @@ title: Samsung Exynos SoC G-Scaler
+ maintainers:
+   - Inki Dae <inki.dae@samsung.com>
+   - Krzysztof Kozlowski <krzk@kernel.org>
+-  - Seung-Woo Kim <sw0312.kim@samsung.com
++  - Seung-Woo Kim <sw0312.kim@samsung.com>
+ 
+ description:
+   G-Scaler is used for scaling and color space conversion on Samsung Exynos
+diff --git a/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml b/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml
+index d286b77921e0..8f5d33050348 100644
+--- a/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml
+@@ -7,7 +7,7 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
+ title: Mobiveil AXI PCIe Host Bridge
+ 
+ maintainers:
+-  - Frank Li <Frank Li@nxp.com>
++  - Frank Li <Frank.Li@nxp.com>
+ 
+ description:
+   Mobiveil's GPEX 4.0 is a PCIe Gen4 host bridge IP. This configurable IP
+-- 
+2.51.0
 
-> > +      - const: serr
-> > +      - const: serr_cor
-> > +      - const: serr_nonfatal
-> > +      - const: serr_fatal
-> > +      - const: axi_err
-> > +      - const: inta
-> > +      - const: intb
-> > +      - const: intc
-> > +      - const: intd
-> > +      - const: msi
-> > +      - const: link_bandwidth
-> > +      - const: pm_pme
-> > +      - const: dma
-> > +      - const: pcie_evt
-> > +      - const: msg
-> > +      - const: all
-> > +      - const: link_equalization_request
-> > +      - const: turn_off_event
-> > +      - const: pmu_poweroff
-> > +      - const: d3_event_f0
-> > +      - const: d3_event_f1
-> > +      - const: cfg_pmcsr_writeclear_f0
-> > +      - const: cfg_pmcsr_writeclear_f1
-> >
-> >    interrupt-controller: true
-> >
-> >    clocks:
-> > +    minItems: 2
-> >      items:
-> >        - description: System clock
-> >        - description: PM control clock
-> > +      - description: PMU clock
->=20
-> I don't see 3 clocks being valid.
->=20
-
-If I get it well, I should use a generic description here
-for the second clock (keeping only 2 items) and specify exact
-description (PM vs PMU) per compatible.
-
-> >
-> > -  clock-names:
-> > -    items:
-> > -      - description: aclk
-> > -      - description: pm
-> > +  clock-names: true
->=20
-> This should keep at least minItems/maxItems constraints.
-
-Will add both constraints in v3.
-
->=20
->=20
-> > +        clock-names:
-> > +          items:
-> > +            - const: aclk
-> > +            - const: pm
->=20
-> > +        clock-names:
-> > +          items:
-> > +            - const: aclk
-> > +            - const: pmu
->=20
->=20
-> pm vs. pmu? Are these really different? The "P" here is never defined.
-> If it is always "power", then use the same name.
->=20
-Regarding these clocks, on RZ/G3E, it is described as Power Management cloc=
-k,
-while on RZ/G3S, it is described as PM control clock while CLKREQ_B is deas=
-serting,
-and RZ/G3E does not have this control clock.
-
-Other than that, some upcoming SoCs (such as RZ/G3L) have both PM and PMU c=
-locks,
-distinctively.
-
-Regards,
-John
-
-> Rob
