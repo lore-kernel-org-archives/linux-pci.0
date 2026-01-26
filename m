@@ -1,62 +1,71 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013054.outbound.protection.outlook.com [40.107.159.54])
+Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021098.outbound.protection.outlook.com [52.101.95.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90D05227BA4;
-	Mon, 26 Jan 2026 17:48:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 737D3238C0D;
+	Mon, 26 Jan 2026 17:48:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.98
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769449684; cv=fail; b=R1Qb4XongvMi2vj73r4uKz/NLWMpMbxw+OzHHeJqbhDm1KO1irkPV0eFjeYXemv5yAIXV+mWyz6TvrVhwz9Il/dL2EvkTsV9jZj8Esfv6/FqsADF1dnEtwFg8r6N9OdwY3NLLTP81w4YpNlVfe4T3AjYskmJnyKN5CSuRW7Syd0=
+	t=1769449696; cv=fail; b=Ov+RlU6Bct9ho8wyJ8KAu3MzXUAiQJ1DH18JLu+ItwvDOxF7E5cMPjMe3PtUTHtFTMzOMVgn+21SMX2DiDzqmRWzMV1L89rxsOqU1YyMmoDZJ7TOHlBCDyXtAAs/pNSmLyXIcuZ/V7Bvf5Ai2LIzmKUUlOGUW8QXo1IAvPGxlxA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769449684; c=relaxed/simple;
-	bh=MIjnM+Z9qcJwP0rQdDYiR/sJZhV+Ox8HtWng1Bmnzuc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=dfmYhBwRRbp43q6PE69oPKgn8G4Xe1cn6C4DifgW+2nL1ImfA4oaOvW2dCU+dV/fdw5KBYaXwP9Bl2a7taC03+iVy9FiGYL3S++xqpHMsrU961mntoAEg/SiumF3YJ6IBWbkV4LgKN7dUcuvtltdyxrZzxzqc5kJ52cukWXpE3M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=GfFYZjm5; arc=fail smtp.client-ip=40.107.159.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1769449696; c=relaxed/simple;
+	bh=0y1Sule8I7ssy9c/2dm9x1b6rEfFWA8DCbc9C+aU27o=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=SZm8M/UPSO00NMBkV3R80BbBbN0p9e8GlTZ7dkvz+P4l/lAHyDNPAgxeSNeAhOpwB4kkIaIUTsEmv0K3+nqMs/Wl5b5JLy7YxGoIt0dtYQeGAoBTySGgT7UhFRvls5OcF7nkMlDKeBtCD8QjN4Rw0Zwxa1jqMnPQwu3bzl2OBNI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=pphnbUDx; arc=fail smtp.client-ip=52.101.95.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="GfFYZjm5"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="pphnbUDx"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=LI0yV37kvNbio4xo9iM28JeksS3O7Qp2pjb6/8IF69Ll83Zybtui1BEiCP2r978FH1caleQqXR03MT2NKZ/4zs280pCRm/FgxbeFQlR1RyOIuYMXySnrp0pskhmBSWO2vB1lgWD5q6fB+i4KHhtfv5BC8XvFj8N4L5046PuEs/muHeCFZsMyM3DzJWFGHJN8NUpNNUeLiUf9mY4poa/+aK0jTxmfntWElkN3ZEwhubpFz81INJBraXWWCRIq3xLFVvLbOToJB4bOO8TG39w2fV0UyK4kpqJa8oeOuva+j9KuuSloDjQKsfXX5fyHjSkFdOtoWYUoG2p+su9ppn3tDQ==
+ b=S7YBBsYDFmAeZstBwOI86p9mu1G2UiFqxKmaO86umdj7hsgQnwXuhujjr1FE7jMrGQEAgRA+XNnyHu1jptpwbzDXQZ7SmVNvMp1ZW0b6nZMwo6detf2unC2hflLJ3qW2SiUvwRBwjnzMxRqEu80NyZmo8wRrlJmxRx7iUAlAZ/f7UaiLnOzqs7/qH/p32+CX+fe+aSvh/qcbJqz0gHaChgcfyFQJXCgVgnAumD3S65OCf+uvEkjtyaolsNESebCDYPM1RB68azIiw1i0jDP2BwHvOqdikkVpGgXA9W2oNB0ge7f5qBIBuL+jQOmhx4fSTFBoqkrxmllYE/TGd+nAQA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7OxO4CVl4eX0Jq4vHD44QgNt0IkR1R52eSsbKPy71RQ=;
- b=MOoPMUC+H8q1G1djivl6BBV71HxEEoTJ8035lGiqajdvwl2WKrSxejbp6eoT1NxRye4MItbBsZUhNzpqrx83+LdUHR+3KDq0dmiMxCUSsXSVJA89oMxkPgISiFguLSt2LE3leC0tQYU9fPJqKI/bxMsvxPveUiKJDm0bLwU9B3Y7fvDFsMeBRZDuq4Rtuy9DIr2bX3LI4l9i3bJXffAYOsbgE8iMyFe/2V3d5pyEr2OzKzjOlmA+XC7c8PTc7dMW2QxpQxhxy4xM+G049zu/3FPnW+7NWE9g2aai04DI9V7spNX5oDKtNe/wGTTnPgefR/pplyvYL/bJTL1oVCQVmA==
+ bh=oK0awZSmN5ROiTMdp4Fn5QwQLonQWf8UU9f29x+XNPs=;
+ b=bQlHCXzt9NrDXPbA0GGHfjypUqXSAoDPqfPi8szwBf7LUEB2SOGRhPxmtFnMGkOU+GC8U0Ww7NtT/zjsAXD8aGGZ9NT4gQqowvuUSVJ38SASWlBCvwTaCc8MVOHx206fD7uHFFL4rFPetyjSPwJ+3I9ChZh+OBq/OimeedVXR2spoURaTh1z65mz8rZc3xtU2YDwmSKN/kd5vOXJBFLCGhuMt8dm+MV03RFOhN3XIPZsGFbhgKGFGAX7Vo0JWaXGmJqjLX9nbjPCTthakTGlLlcb7Fx9AhVM7e1dHjxC3+S91aJ5djo+vqoEhJOFKc4THJ67v9fC5rK1lR5WM4gsdQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7OxO4CVl4eX0Jq4vHD44QgNt0IkR1R52eSsbKPy71RQ=;
- b=GfFYZjm5KDrvtJo7GhWTOIrWZLXYg4ON+7ryZZ+OSjaDpyYN7vw0tWUWNRxNK4CoAF8LWz1AK1Ot0I/u8wjA4DSxSGiq+2OMQ7vYavmlgn6EbgkfyQ7Y93omTPlJP8CAkAUioT5m6RIcqljr1xePYYaWIQZrmMmGb1BKZAhYEvK6dF6VeVX/Iizspl2YNXMs84sTLnzto/lh67MlI3+xRWa8ny2bCwK+uW42qjj6aIYPvWmB5BvQiyuXQM2NQSYsMmaqCnWJ7iYNlUgiPbKphUbcwE6D+VQixH5KR83rFi1JDlMT6vDf+jO50Py91Tp60HEeS4NoDpkbumwm33GF8Q==
+ bh=oK0awZSmN5ROiTMdp4Fn5QwQLonQWf8UU9f29x+XNPs=;
+ b=pphnbUDxtaFMqSYhLjbeopgBxOM+dhuUQ2C7rHE8DMpEFKADTUaiv1zycimHqcrAugeqEO68JyKyCh2mJzjdhOuHfKlATdo5gILCCYSpdc6262MShYWyNQYWg/f7J9OPDDWC7u4jIcy6Qta9J8vnMe32HgBczoS1nhJonxcR8KU=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by DB9PR04MB11558.eurprd04.prod.outlook.com (2603:10a6:10:60c::21) with
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by CWXP265MB3029.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:c6::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.15; Mon, 26 Jan
- 2026 17:48:00 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9520.005; Mon, 26 Jan 2026
- 17:48:00 +0000
-Date: Mon, 26 Jan 2026 12:47:51 -0500
-From: Frank Li <Frank.li@nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: dwc: Expose integrated DesignWare eDMA windows
-Message-ID: <aXeoxxG+9cFML1sx@lizhi-Precision-Tower-5810>
-References: <20260126071550.3233631-1-den@valinux.co.jp>
- <x4cilkxvg5ccqqx244ttxgh2kgj7x6bf2e35suwguels5yiqxc@ij53hgrert7j>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <x4cilkxvg5ccqqx244ttxgh2kgj7x6bf2e35suwguels5yiqxc@ij53hgrert7j>
-X-ClientProxiedBy: SJ0PR03CA0183.namprd03.prod.outlook.com
- (2603:10b6:a03:2ef::8) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+ 2026 17:48:11 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9542.010; Mon, 26 Jan 2026
+ 17:48:09 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 26 Jan 2026 17:48:09 +0000
+Message-Id: <DFYPKDARUMSH.21DBL43XL21S2@garyguo.net>
+Cc: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+ <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+ <markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
+ <smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+ <kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
+ <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
+ <daniel.almeida@collabora.com>, "Jason Gunthorpe" <jgg@nvidia.com>
+Subject: Re: [PATCH v2 1/2] rust: introduce abstractions for fwctl
+From: "Gary Guo" <gary@garyguo.net>
+To: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+X-Mailer: aerc 0.21.0
+References: <20260122204232.15988-1-zhiw@nvidia.com>
+ <20260122204232.15988-2-zhiw@nvidia.com>
+In-Reply-To: <20260122204232.15988-2-zhiw@nvidia.com>
+X-ClientProxiedBy: LO2P123CA0104.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:139::19) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -64,141 +73,282 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DB9PR04MB11558:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4b300547-2771-4ae3-417b-08de5d030bec
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWXP265MB3029:EE_
+X-MS-Office365-Filtering-Correlation-Id: 982e142f-5403-4ce4-4137-08de5d0311bd
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|19092799006|376014|52116014|7053199007|38350700014;
+	BCL:0;ARA:13230040|1800799024|376014|7416014|366016|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?VaL9X5aRnw3FYKE8zTwv7Kh+U96bVFw88YQQIvtnHgiPEHCHcN6D/CzYqKE/?=
- =?us-ascii?Q?/0wMUzPA2MS/VwrEovV+Gl54DwVYo+bpCHWbklt/dQqBFCg55oBH3U7b8xco?=
- =?us-ascii?Q?JtGVo7P521QoYR81BZlIa2OyuaIkyo8nE8/UVPim0mxemSmPafz57dtwCwp6?=
- =?us-ascii?Q?3H817CiDyDq5a8vYr3Rk1tN6E9hOp00ynBfaZej4FfkjOrv1FbwZTQQSiOBy?=
- =?us-ascii?Q?8/xEuAaCI9eQMaIvubKygCiLZ2zlRA8Q1b6SPyDqYzkOQMGf4K/DVtu9bXbD?=
- =?us-ascii?Q?Q6ATwjRokoOAm7nuct/3Kn8zAHtJLr62pyzj6jll3r5SiqcT4STZNr/RCkZ1?=
- =?us-ascii?Q?TR1ahb0+bNKqC7zrqKzEuJIW1mNjbckquZ02gPj82lHOFRlSnKls3wFHTp6p?=
- =?us-ascii?Q?y1vj96j4L8c1d6NrFTlOqh55pW6tWU32ch39xKVpLcw7WSJIhrichyiWQrbv?=
- =?us-ascii?Q?GE7UzBGkDbWqntlg7wSsoC6sdX6yGtDWFJE0doe/89CeTIyygF8h8+8c7dUi?=
- =?us-ascii?Q?JuU0axCo8qf5HxjPGlYVoSa5snlOmOOSq5hpqUMj+5JMSWiYVbE1cx+wpeVv?=
- =?us-ascii?Q?pW7rk0swTl3fzapGaODo/fyCdNnHCmyFbVrzCJ3Akn99q9Vjxke94jD2uj44?=
- =?us-ascii?Q?GWyx69wOMRqR3Bvi9DYEmlmvJtyCcCzzZaT4c3GTV6vtmL5mQkTiqCH+7jez?=
- =?us-ascii?Q?gztOuapIB89A6pmrYFR3xRdk+m65K/vZ1EddugUiHJrINTBHhyukh9tD9cED?=
- =?us-ascii?Q?JLkd4VQx0h0VjPhNdl/ulLqxSdONTBenX17eXo/Mu5yjcg2p9a9OAkP6cDry?=
- =?us-ascii?Q?BzFdShl3/zVWYBXf+QF4R9CUaAmXset6RiiJpAomdG/V+eONymNWHZpGJVom?=
- =?us-ascii?Q?OkFe84noUnGQLoocNSGXwNESP5O2Y2KXbIqLGjdGCmw5KtFYKX01Ey6IZXL7?=
- =?us-ascii?Q?HI3ophgaRyC2SE9UeftPtbt9zSLfAt8xvgGSo+YSvZ/RfE/OXn6nT1awDj/G?=
- =?us-ascii?Q?1RhBH9DQJE507pYgIo9s6RQnvMI3Pqhmc0zFMm9BmjUu6M4cO8TnHrV8S80Z?=
- =?us-ascii?Q?o9uuvXGSlzbSrJBfccwBrDjeGZcPWQOpypoPFl90iHjJDThs7K+v8B5f9toC?=
- =?us-ascii?Q?YYjUKum30tjn9AHj1Rbkix7iDT0mo68j0eaHBJcrMZQB1fFQ21YnuijzecB7?=
- =?us-ascii?Q?IVPVSOoeIyDIVH98Iw24GUYcJxF/uxb2iSC3WAUkIDo9HLP6a2d3Z8EDMNQa?=
- =?us-ascii?Q?qQiqmrYLHHeJL69WQb+hnXGnX4MvMZXoRiOg/wKpfCbirzUDKf4/b5I68JDc?=
- =?us-ascii?Q?hIZR9HBIb+s2inJydLKEhHYHOmuwaXOVSg93ZHd+/xPefB+wm3A4USOc0xNA?=
- =?us-ascii?Q?jk2Xxh+hi9XPT3pJIMwtVc4RFCJf385CXEwuieuR/ofc+c3Qk8cyqTKCJKcP?=
- =?us-ascii?Q?ZhbhY5Sp/HQERYq+8exwNdAi+BdZLqsettyFOzjUkRaZo+94zh6JoZ5yCv4b?=
- =?us-ascii?Q?OWvkJ2FWhFUxWOoHKChcPSM9HUP9RfSTaJKsJl4FQRBHY5EODhpGd8MjOT0j?=
- =?us-ascii?Q?hm+/MYSrDPK0cPF2LinWe2ds5dq+uUmHHHTLB8sRMLJlFFqA/scBwao8e9m6?=
- =?us-ascii?Q?ENOgX5vi2DtDIfZTV7hrjHs=3D?=
+	=?utf-8?B?SFgwUkUyOVJKWHZJRGpuMXduWEovNjNwV1JDQXJXejVxeWExQmQzLy9jWmd2?=
+ =?utf-8?B?MWpJN0hiUzYya09uNWlEMWtsblF0TndnM3JNSE1UUm5HNXlvV0VrMlZUczdF?=
+ =?utf-8?B?Nmp3S0JBbkZUdU0zTElLYUVGOEVOdzJ1NVowSVJQZFRvM0hlVW1iWHg1NU9u?=
+ =?utf-8?B?QU8yN08va0Uya015TFJWeUowalNtZTRZOG15NzBzd2d5WG1nQWw5RWVsRHJp?=
+ =?utf-8?B?RFJpN0Vab1NoUTJKQmxzTExYK2M3VlJLU1JUUTA0N0ZJeC92S2Q3QkhPMXp0?=
+ =?utf-8?B?N0VMYWd0VFhKRHA4dU9NNlk3R3E4R1pRaHNjL0wwOStQVzgzWGlVQjFZSDZj?=
+ =?utf-8?B?SUkyQUttR1ZVc3pmMzR4TnB5ZU0wdFJvVVFmSVR0Ull0MVhmT2czTUlkYWlD?=
+ =?utf-8?B?SEJEakJEQ3VHL1BnSDZPQkoyYmgvb1lYQUJjbzhWSlFJcGpZN05VZkRUdk1u?=
+ =?utf-8?B?WnZtQXJjQStoK3hSSFlPWmZ1VjdhOWZqL3ZqSXQ2SkNYbjVBVGFxTGxVOGJU?=
+ =?utf-8?B?MmtqVGRIamhNUlF1SHJCOTJsK1RTLyszT01vU2xOVzVhZWxQMWVGZjlDTU5j?=
+ =?utf-8?B?TmVCUWxHcml0aXB0TFV4TG84VXArWGJSbFZIZWZJdHI4dnB5SHdTR3NYN2VW?=
+ =?utf-8?B?MDM3SFVFS3hNZHZjcnVyZDZDSHhCVHQxZ3YwdkxNbllEdWJLMnRPc2dNNktF?=
+ =?utf-8?B?dE1IYzZLeUhHVXFhaHJhMVNhMkh6ZVgyUVd2OEJpOHp0eCtud29wQWhxOVNz?=
+ =?utf-8?B?dVhtbkdtdC9Qc05PWjVxbkg0U21QMDE1d25XVkRubWI0SThrdUZ1MGxhYmIw?=
+ =?utf-8?B?M1BHZXZxalF2YkRLQ2R4aGVRVWl3ZkFlREJIWUx1TTFycG9JcGpQeFFTSGtX?=
+ =?utf-8?B?WmhocnJueUZzZ0V3M2NuUEtubnNDSmd5UTFESjEvWXdvMm1wTXJ6RHM5QmQ3?=
+ =?utf-8?B?bzhBbGtDeG44RjRPaW53Mk1RTVlvN002REdUbjU0bngvQWx2NUpncklUUXJs?=
+ =?utf-8?B?bURPRUxETWl4eExIbjA1cS9DMlR6Qk9DWkJNZFNncG81cjVjSHZRUm52R3pK?=
+ =?utf-8?B?bWpFQUhXSXhseFlnOE94RkpKVlplcWxIaWxTREFWZlNvdVFHcGFHMGhNaDNh?=
+ =?utf-8?B?UVpTVnQ4S1RhZUdKWXhHaThta1hmeW1ud3l2T2p3V0E0V2hpYnVGSjMyL1Zn?=
+ =?utf-8?B?Ti9wUG9WdFN0YjlsbVZxR1ovY0gybWRqeXBKUEUwVVQ5bGlna0ZZbHpRZGsr?=
+ =?utf-8?B?YURrNGxIOFpBM1lHYUkyU0FGODhjRStVemNEbm1CYTI1cFdHYUlxSCs0UjAx?=
+ =?utf-8?B?SW9UOHVGYm1DN0dqRzA4bnpVaHk3SXJTMmpSYVkwZVdUSTVVZUNQNTIzbytr?=
+ =?utf-8?B?OUI2Yi9XTmVXTW1kVVk1eUFwbFdBWTFqUUhBZGVrMGw4WkRiVGJ2SzM2MGI2?=
+ =?utf-8?B?dTNReEhNSFYwbW93WFVqNHUxbVluVytwajFmenRDdkVnNnVxKzloZkc1VEQ3?=
+ =?utf-8?B?bkQrTjJ1cnh1RlNmS0FmV0NDK3pZOWFseUtxUFNPK0RUZ2NiTllBcUs0QTJS?=
+ =?utf-8?B?UTQwaXpKSHY2T1B5d2RoaVovdEhSRFQ5QXdJZHJ1SjA5UW9KTzhoUlQyVTkx?=
+ =?utf-8?B?ajQxUGZTZHRydXZpdHVDUWZNbldzeUFlVHBpaXRqQWl6eGswVlFwYU5JU3NS?=
+ =?utf-8?B?QXVUUTc1MGVQU2MzKzBzYnpuRithMThGS3diKzJLU0FVeEtyNEZTb090eC8r?=
+ =?utf-8?B?dllERTlkQXhqK08zUm16Y0hkVmFpY1JXaTdFUjdlcXpvZHQ4N01NOXUzQmI3?=
+ =?utf-8?B?Skd5ampVTTNzNHEyQm5wRWEvV3BkTzcvR3RjSHZKZkN4cGUvYm1sTVNOYWta?=
+ =?utf-8?B?OWE0eUUzNTlodzVhL0EzM0JTekpReGxYTXlGelVZVVVUc0hkc29NQnpIbks4?=
+ =?utf-8?B?UWt6WUlwTTIzbE1qV1ZlZW15bi9YZzRiT1AvN1lFQjdMSlg3dkNOYkRueWl2?=
+ =?utf-8?B?dVJPZWVjWEZ1SWwxazNoT1NSc0JXaGRjemNHUHNWLzJ0UjNuU3hEeE9IaWVu?=
+ =?utf-8?B?VklDOTVOQ2RXeUpETTU0SW83Q1IrS0JUMWd1WXdyQjVlRXVsMkN5N1VaY2Jt?=
+ =?utf-8?Q?R5gY=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(376014)(52116014)(7053199007)(38350700014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(7053199007);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?i+mLk7XdN/TlWHazdPGM9nxCzzcZsDp2J4i2QmbimguFCFWJSNCwnWi+CZNe?=
- =?us-ascii?Q?Q0+DGYQHbyXkvh3x3eZvYr2PIO3bKHyyzC9IovHKr9PC0brbIbq+tia09hZn?=
- =?us-ascii?Q?BUCLaWMD3l/n0di5jVwi8lb9cK5M3uXxW+Pg/dV/oIQipFg/P5zLzhv3o/qZ?=
- =?us-ascii?Q?w05Ixt/9qoCsLwQ7+U9wJjnwNerl5gYmATpFaMU0qi+fSpQ8wWlkVr1jU7vM?=
- =?us-ascii?Q?IMx9AhpsxQupubbstyckNCIuyQXodf10GRlR13pEk6ke9btHBjk2v4pw2d4B?=
- =?us-ascii?Q?2XHNxXqOO9txVStU2zOF9fsSO8n39D+HVfBshtoKZJTf5pb1SrebA6HS6xyv?=
- =?us-ascii?Q?Ih24kPt5ee8so/n7mE1bpgJ6vZoLB9DFB541nIxmfQH/XwkFMqPwsjGJQcVV?=
- =?us-ascii?Q?82iQLKOFgRHH+yJJxnyGdpYd6fcWPFftKRziBKUsdSH0LaDALcn1ZhEmWgPV?=
- =?us-ascii?Q?dKAxWleoLq0veint/VhW/YDsi7uoGS/gkQdbRGIHn6t2lho7X+UpsohPHc5a?=
- =?us-ascii?Q?+PVvFocVteh8p2+L023GC4NZ98e8FdxhVm3rDr8oXnsZCQ7yPKnzrRRZKgEe?=
- =?us-ascii?Q?IKlYyM5YXFfhhmz7zMmTGMHPk75tEQ8bgSj7j4FBdUShKYB7cX/oWHvyjvNT?=
- =?us-ascii?Q?2QzVMtuHKmGhtsCm0wwCwy/X+XoTaiHo7VH/St0LFortBwRus5JtGSSppAGR?=
- =?us-ascii?Q?P/qcaZ4MFcq1TUNKcg3iUAg1Wr5lCN7W2+eV0gGk/X2PNZPZ7XV91aHNTU8j?=
- =?us-ascii?Q?RoOhwi+cDKJlFAd4pW8rZCoKgfRMy6Lk1mVz99hk326MvG6dGDe1C6ip3H1J?=
- =?us-ascii?Q?LoP1/tn8KOF90MbS/k4IvuwO7E0peikdzMESCLaEE54kcfYkV7Q/wxCGTsBe?=
- =?us-ascii?Q?6eZ2aCWWlcE+hG80JFRyQPK4ucczTiR+ucaml47+6+j7YBd7ONloDihfmAfZ?=
- =?us-ascii?Q?s8JjoR35JhsO3UpCOa4e+jWdSaejE9sytrmaHi1snGedOIDB9MqjCCG+aGqs?=
- =?us-ascii?Q?M2vqQ/NEHoXAlaE1JHwPszdZS1BpIXVYffO4osdn0vm+1/3gqNciWKFTaFek?=
- =?us-ascii?Q?ijW7cIinaz9boe4RcMNNMV+qoZJzDjK6wjdtKymvaMWxT3TaShulQySU+bb8?=
- =?us-ascii?Q?IChxHXkJIN/GILtGLn8SCI6l5dOUiSSLy9wXQf2bf5zXoKPwsHwYmSUBWG3+?=
- =?us-ascii?Q?lQ/wrPnBfsC8XyU2QAf9e5Gl2UX9W5wPgbYjMzEWyo8S2tdEZTSm/6oLws5g?=
- =?us-ascii?Q?Q3XOzEFYpP9dK374p65KqrYMb6kFzt63m5PGETuNA7cGC/vUXZjNFpEG5lhu?=
- =?us-ascii?Q?knV5L23jXBFakBcJaTwCcxGfFq+176H/WimEIhTHTQon5Z6uzmcjk5m4lNMB?=
- =?us-ascii?Q?Wwno9b7dQnY5ZADX1EPJerHmk+923jivVdJTG8l9NDAO/smL9wh4O4481vmK?=
- =?us-ascii?Q?7VeB04eQF+caZjfgguwM6H2Ck2VtwQkiGcAAfj8Lg/Y4AchT1I5jCoyi+LzF?=
- =?us-ascii?Q?GPsN5i4WcZGg+vwxq9CCNqWUudkdQRZidvTbiUKQ4HUktlWBgc4k2CeXiu+Z?=
- =?us-ascii?Q?6guQAUCh4HxqJVFhMwOyit536kjKqapBF6Ko2xXAyF1TwClGLRZGHLpnMjPe?=
- =?us-ascii?Q?yLLE+PpyjP6EXjpJuFbJSPIYcz4Y3D6A464vS4J3vLY1mX9Lx9DrSx9pbYrc?=
- =?us-ascii?Q?eZtTInoPIIwneSUUBtNygDhZrP7vc+GYbN/2gfM5OqDBmdB4?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b300547-2771-4ae3-417b-08de5d030bec
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+	=?utf-8?B?eE52TDNpSmxCN20vZnU5eDdZb2NqaXJ4RXJzeGd6d0E0aUpWMTVXVmxCejFn?=
+ =?utf-8?B?S3ljUG9vSXBCc01BS1ZjVklWMTlZTWtKanFtN2l1cDRqdUZNbDRHbVU2aXlz?=
+ =?utf-8?B?a2U5VGhyVGxkZWFyazFnTDk2a2wzZ3hvSG1mNnJ3MlhEREQxR280bGJqck1W?=
+ =?utf-8?B?NHVLaUhlZXBzaGVTbGZtb1FLeHdRQkVnNjRWbXhGb0FtS0Naa2syK1g3VDF5?=
+ =?utf-8?B?T0pLWE9NUGl6WGVINTVhODVKQk5rY3hNN3VNTzZTL2ZGZk5yQk1BVmo2Ti90?=
+ =?utf-8?B?cUNMbkVPd0hDa3RURDNoemJPbU0weWJOOFl0V0hVRFdzRE9VOTJCN2pWRnFH?=
+ =?utf-8?B?QUNTSXRMUlppMmRyZlZmRCticW1mSzFPTFBSeW05NGVpMjRvUnlFMUpHTzBv?=
+ =?utf-8?B?S0RGQTRQcDV4dEROQUF1a09leWNJREY2dzNFYjRtVW1URDdFcTNjbXN0S3Vq?=
+ =?utf-8?B?elQ0ekxvMXdOaGdhYnBYc0orT2JESGlTWm1iVjZWTk1raVJqd2d6S0NhWnhk?=
+ =?utf-8?B?SUZCaTlRRE5XRWNDK3htNStVQWxOUHhVaURoekxhZ0FzNDlDMEZTMHNJakdp?=
+ =?utf-8?B?MzMyYXVVWkIzZzg2UUNGeXJGbzF2UjBBOEFNKzJ3S29RaFlFMzZsQ2VRMjNG?=
+ =?utf-8?B?VENIRmV4dUJvRUo3Ryt4RFVvTjNoOTdUSEhjVXl1WHhqL2lYRWtYRjFWbkV1?=
+ =?utf-8?B?b1hTbFJCQURJd2w2Sit6QUwyRWZPd24vNVRWenpzTjNjTnVlbE8zd0FPN2Jm?=
+ =?utf-8?B?am1jL2lMTU9rdXlxZDdvMy9GeGFyYk5oSkRiVmdac09GaXRsRDFINGdreU1J?=
+ =?utf-8?B?YmUzQTZPVEhSRWhrc0ttL1IvZmQ4ODFKcjB6WEV5dWhyZ2RZaE5MSUlNSjhz?=
+ =?utf-8?B?OTlzbmE5MCsrWTdjSnMrVytkbHo3bFp6dHIwb0tWcnpySHZYWC90RXcyTFFi?=
+ =?utf-8?B?VUhQd01Ed2pad0VhZVlFdVJiTmxKaWQ1VDBPbVduaG9PSFV1SG9naTdZb2NP?=
+ =?utf-8?B?SmVlcDBKNEJ0dGNpQnVhblhCR2NqRUxvd2s5Znk2NVBqR09UaWoyZXN3NUlj?=
+ =?utf-8?B?V1M1WDNMWTRPcU1oMSsyckpNc2d5SCtGUWprWmx4RjZ0eG9MVFhzYkdnMUd0?=
+ =?utf-8?B?eGY2bUMwYWRFbkx2ZUdxTFJINEYwaVRCZXEya3lOYTBGaGlHejc1VlBoVG9T?=
+ =?utf-8?B?ZFUrcFVMNkg4S0ZTaXdiQUtBN2Z6RDNqclYzMWp4bzNhQkovTTBybEhuRzl4?=
+ =?utf-8?B?d1VVVlgwR0lHWEpXME1EM0wzaiswYi9hUVFzbWdLemVFUWt6TTJMbDhKRTZa?=
+ =?utf-8?B?VDJ3VEk5NzdCSEtMRndFcG13RzhPWHRtUUtuU2Z2dlhieFFqYzBxWHl1QzRX?=
+ =?utf-8?B?amRvb0Z3VVVnbnJQUFB1THMxakdHSHkrckFaeDFVR2x0RTRXdEtNVWJEcEwz?=
+ =?utf-8?B?OGtxa1BJUlkxK3lnK1k2SWtQNTJWVURaSVQwWlFiNzVRTjVQOFBEdVYzaFZ6?=
+ =?utf-8?B?c1Y3TjloeTA0MkFBZWcwOHlGd1JteWJXRWRGdGc2eWpPRWpEbjFnSW1lTU9M?=
+ =?utf-8?B?VVJwb2RBV2VFMythcDJNUGFsSVBiWE10bUlQTTUzL2h0NlR5eVNDUDdObGk4?=
+ =?utf-8?B?T3IxNCtDNHU3ci9mU1dQT2x0M3l2eUw4dUxLelMrTkJmVEE0cnlhVWtiTGIy?=
+ =?utf-8?B?VzMvUC9qVjUwU2Ewb1Q5aUFtdzBYbHJlODBEbm5VcXdWN1BFdVlrZGVhUWRp?=
+ =?utf-8?B?Ni9PYStYRzloOHMvRitDdW95N0FFYkZ2V1EvejA2aHk5YzhCMjczRWRJL3gv?=
+ =?utf-8?B?eXFWcEFGeW1ueXJIUnk2YlFIOEpIbWZyQnpOdzRwb1hWa1NWQmdFYmdrd2N6?=
+ =?utf-8?B?ZFM5NG1VNTQ5WGpjVFBTeU9uRTBiSzh3bHU3VUhvckJqK0JpM1RKSXFDSGhZ?=
+ =?utf-8?B?OVlVU2FiZ3BMbU5WNEtUSTNBSUIvQU5yc3kvU0wrZEovUEpDTkx3ZFEvSHRF?=
+ =?utf-8?B?MWFhaGovazF3OVhEaWFpS2tNcjNMOGR2akczclVoVGt4NEpSNVFQMkhtWSs0?=
+ =?utf-8?B?OGJLcUJ3d3NtVWVxVGMzYkxzWFE3b2RPN0gyNEhaMEJrdzJ4a1lCM2dSSzNC?=
+ =?utf-8?B?QVhRdGxEVnNoNzBTS21OM0l6eXJEdzhWTzhaWkNZS0tjYS9lZ3lxMUJEcXNY?=
+ =?utf-8?B?aDRnNVZXMWJPT09hUG5OcklyUlZVdUhkN1VyaGtuRi9TWUNkQzh2eDFUS1BE?=
+ =?utf-8?B?dEI3eDF5Zk1QMFZsRHNTM2xSbUFBd3hCMWtwSHVoVSs5bVk0MEJNOGN0MnFq?=
+ =?utf-8?B?eFNGMmdWVGRKd1c1eXRMaVdZQmxTL0MyR2QxanBoSFlkcWR0dlhudz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 982e142f-5403-4ce4-4137-08de5d0311bd
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 17:48:00.1169
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 17:48:09.8143
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: vxfYAamXzRJTpg+O6L92b4GXSJMN3+lYc4H8plfcS18xZ9ZRrhWT606HAMClHT3fzOaokpt/Y/V5Bl2nP4yAaw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB11558
+X-MS-Exchange-CrossTenant-UserPrincipalName: VWRIoBX8OM//i1aUu+NDCEZddu5cXmDSB0G62UuZ8rw1ifPkuvHM2tWxY3YI2bcJ2qZB6aHfNtjlJgAy2poaTA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP265MB3029
 
-On Mon, Jan 26, 2026 at 04:55:58PM +0900, Koichiro Den wrote:
-> On Mon, Jan 26, 2026 at 04:15:48PM +0900, Koichiro Den wrote:
-> > This series adds small, query-only helper APIs to the DesignWare PCIe
-> > endpoint controller driver to expose resources of an integrated
-> > DesignWare eDMA instance. Specifically, it allows querying:
-> >
-> >   - the physical base address and size of the integrated eDMA register
-> >     aperture, and
-> >   - the per-channel linked-list (LL) region base and size, keyed by
-> >     transfer direction and hardware channel identifier.
-> >
-> > The motivation is that some DesignWare PCIe endpoint platforms integrate
-> > an eDMA engine that can be driven either locally by the endpoint or
-> > remotely by the host. Remote eDMA use cases (e.g. [1]) need to expose
-> > the eDMA register block and LL regions to the host through PCIe BARs,
-> > while still allowing the endpoint to boot with a standard EP settings,
-> > without DT changes to hide the eDMA instance from the endpoint itself.
-> >
-> > The hardware channel identifier used by the LL-region helper can be
-> > obtained via dma_get_slave_caps().hw_id, introduced by a dmaengine
-> > series posted separately.
+On Thu Jan 22, 2026 at 8:42 PM GMT, Zhi Wang wrote:
+> Introduce safe wrappers around `struct fwctl_device` and
+> `struct fwctl_uctx`, allowing rust drivers to register fwctl devices and
+> implement their control and RPC logic in safe rust.
 >
-> For reference, the series has been submitted here:
+> Cc: Danilo Krummrich <dakr@kernel.org>
+> Cc: Jason Gunthorpe <jgg@nvidia.com>
+> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+> ---
+>  drivers/fwctl/Kconfig           |  12 +
+>  include/uapi/fwctl/fwctl.h      |   1 +
+>  rust/bindings/bindings_helper.h |   1 +
+>  rust/helpers/fwctl.c            |  17 ++
+>  rust/helpers/helpers.c          |   3 +-
+>  rust/kernel/fwctl.rs            | 456 ++++++++++++++++++++++++++++++++
+>  rust/kernel/lib.rs              |   2 +
+>  7 files changed, 491 insertions(+), 1 deletion(-)
+>  create mode 100644 rust/helpers/fwctl.c
+>  create mode 100644 rust/kernel/fwctl.rs
 >
->   [PATCH 0/5] dmaengine: dw-edma: Add helpers for remote eDMA use scenarios
->   https://lore.kernel.org/dmaengine/20260126073652.3293564-1-den@valinux.co.jp/
+> diff --git a/drivers/fwctl/Kconfig b/drivers/fwctl/Kconfig
+> index b5583b12a011..d8538249f3ae 100644
+> --- a/drivers/fwctl/Kconfig
+> +++ b/drivers/fwctl/Kconfig
+> @@ -8,6 +8,18 @@ menuconfig FWCTL
+>  	  manipulating device FLASH, debugging, and other activities that don't
+>  	  fit neatly into an existing subsystem.
+> =20
+> +config RUST_FWCTL_ABSTRACTIONS
+> +	bool "Rust fwctl abstractions"
+> +	depends on RUST
+> +	select FWCTL
+> +	help
+> +	  This enables the Rust abstractions for the fwctl device firmware
+> +	  access framework. It provides safe wrappers around struct fwctl_devic=
+e
+> +	  and struct fwctl_uctx, allowing Rust drivers to register fwctl device=
+s
+> +	  and implement their control and RPC logic in safe Rust.
+> +
+> +	  If unsure, say N.
+> +
+>  if FWCTL
+>  config FWCTL_MLX5
+>  	tristate "mlx5 ConnectX control fwctl driver"
+> diff --git a/include/uapi/fwctl/fwctl.h b/include/uapi/fwctl/fwctl.h
+> index 716ac0eee42d..eea1020ad180 100644
+> --- a/include/uapi/fwctl/fwctl.h
+> +++ b/include/uapi/fwctl/fwctl.h
+> @@ -45,6 +45,7 @@ enum fwctl_device_type {
+>  	FWCTL_DEVICE_TYPE_MLX5 =3D 1,
+>  	FWCTL_DEVICE_TYPE_CXL =3D 2,
+>  	FWCTL_DEVICE_TYPE_PDS =3D 4,
+> +	FWCTL_DEVICE_TYPE_RUST_FWCTL_TEST =3D 8,
 
-It'd better post together. It needs API user.
+This is UAPI, adding new device type just for testing is not ideal.
 
-Frank
->
-> Kind regards,
-> Koichiro
->
-> >
-> > [1] [RFC PATCH v4 00/38] NTB transport backed by PCI EP embedded DMA
-> >     https://lore.kernel.org/linux-pci/20260118135440.1958279-1-den@valinux.co.jp/
-> >
-> > Developed on PCI controller/dwc:
-> >   commit 0ecd890e3cf5 ("PCI: dwc: Rename dw_pcie_rp::has_msi_ctrl to
-> >                         dw_pcie_rp::use_imsi_rx for clarity")
-> >
-> > Kind regards,
-> >
-> > Koichiro Den (2):
-> >   PCI: dwc: Add helper to query integrated dw-edma register window
-> >   PCI: dwc: Add helper to query integrated dw-edma linked-list region
-> >
-> >  MAINTAINERS                                  |  2 +-
-> >  drivers/pci/controller/dwc/pcie-designware.c | 74 ++++++++++++++++++++
-> >  drivers/pci/controller/dwc/pcie-designware.h |  2 +
-> >  include/linux/pcie-dwc-edma.h                | 72 +++++++++++++++++++
-> >  4 files changed, 149 insertions(+), 1 deletion(-)
-> >  create mode 100644 include/linux/pcie-dwc-edma.h
-> >
-> > --
-> > 2.51.0
-> >
+>  };
+> =20
+>  /**
+> diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_hel=
+per.h
+> index 9fdf76ca630e..2c50d5bab0cf 100644
+> --- a/rust/bindings/bindings_helper.h
+> +++ b/rust/bindings/bindings_helper.h
+> @@ -56,6 +56,7 @@
+>  #include <linux/fdtable.h>
+>  #include <linux/file.h>
+>  #include <linux/firmware.h>
+> +#include <linux/fwctl.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/fs.h>
+>  #include <linux/i2c.h>
+> diff --git a/rust/helpers/fwctl.c b/rust/helpers/fwctl.c
+> new file mode 100644
+> index 000000000000..bb4a028e7afb
+> --- /dev/null
+> +++ b/rust/helpers/fwctl.c
+> @@ -0,0 +1,17 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +#include <linux/fwctl.h>
+> +
+> +#if IS_ENABLED(CONFIG_RUST_FWCTL_ABSTRACTIONS)
+> +
+> +struct fwctl_device *rust_helper_fwctl_get(struct fwctl_device *fwctl)
+
+Helpers need to have __rust_helper.
+
+> +{
+> +	return fwctl_get(fwctl);
+> +}
+> +
+> +void rust_helper_fwctl_put(struct fwctl_device *fwctl)
+> +{
+> +	fwctl_put(fwctl);
+> +}
+> +
+> +#endif
+> diff --git a/rust/helpers/helpers.c b/rust/helpers/helpers.c
+> index 79c72762ad9c..19a505473bef 100644
+> --- a/rust/helpers/helpers.c
+> +++ b/rust/helpers/helpers.c
+> @@ -27,8 +27,9 @@
+>  #include "dma.c"
+>  #include "drm.c"
+>  #include "err.c"
+> -#include "irq.c"
+>  #include "fs.c"
+> +#include "fwctl.c"
+> +#include "irq.c"
+>  #include "io.c"
+>  #include "jump_label.c"
+>  #include "kunit.c"
+> diff --git a/rust/kernel/fwctl.rs b/rust/kernel/fwctl.rs
+> new file mode 100644
+> index 000000000000..4065c948784d
+> --- /dev/null
+> +++ b/rust/kernel/fwctl.rs
+> @@ -0,0 +1,456 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +
+> +//! Abstractions for the fwctl.
+> +//!
+> +//! This module provides bindings for working with fwctl devices in kern=
+el modules.
+> +//!
+> +//! C header: [`include/linux/fwctl.h`]
+> +
+> +use crate::{
+> +    bindings,
+> +    container_of,
+> +    device,
+> +    devres::Devres,
+> +    prelude::*,
+> +    types::{
+> +        ARef,
+> +        Opaque, //
+> +    }, //
+> +};
+> +use core::{
+> +    marker::PhantomData,
+> +    ptr::NonNull,
+> +    slice, //
+> +};
+> +
+> +/// Represents a fwctl device type.
+> +///
+> +/// This enum corresponds to the C `enum fwctl_device_type` and is used =
+to identify
+> +/// the specific firmware control interface implemented by a device.
+> +#[repr(u32)]
+> +#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+> +pub enum DeviceType {
+> +    /// Error/invalid device type.
+> +    Error =3D bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_ERROR,
+
+Does this need to be present? I took a look at the C side, this isn't used =
+at
+all. It'll be a bug if `Operations` impl uses this value as their `DEVICE_T=
+YPE`.
+
+Best,
+Gary
+
+> +    /// MLX5 device type.
+> +    Mlx5 =3D bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_MLX5,
+> +    /// CXL device type.
+> +    Cxl =3D bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_CXL,
+> +    /// PDS device type.
+> +    Pds =3D bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_PDS,
+> +    /// Rust fwctl test device type.
+> +    RustFwctlTest =3D bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_RUST=
+_FWCTL_TEST,
+> +}
+> +
+> +impl From<DeviceType> for u32 {
+> +    fn from(device_type: DeviceType) -> Self {
+> +        device_type as u32
+> +    }
+> +}
