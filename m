@@ -1,64 +1,157 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7FEF33DEE0;
-	Mon, 26 Jan 2026 17:02:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03BA83EBF3A;
+	Mon, 26 Jan 2026 17:16:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769446952; cv=none; b=EMENJk85aSptt+v1WJA37GNCAF0rkUcm+jFzMFijHjnR4cVoWDGYqvOktw7VpihjaVbCQCUsj250Wv1wUjwVX/UJdu6hBf2C1AHurUd7UZuUEe7GvoRkC97LssghmCKiN/1mL3BZM2ffJtDpzDkoCHZJLo7odNaEE/qobOH9dZ0=
+	t=1769447763; cv=none; b=oueXTqZyAx596k5Bmj/rzq2yU+s+rG7wMCuCgMwojY2/zVaucfLGllLyvrgly4kJd7XMa3FHK9TcrxVqsyd2cS7IH4tBxdu00/CTIrMXFPkpotNsf0DGT5u02vBK2s4QszQULcFaRdu4Sl+WQzB+b8ZkUNZnQqr+LhUru8Hha+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769446952; c=relaxed/simple;
-	bh=db0GnOuz3Ol+4rvOMvMgPdDAyvAv8l4NNhFQLSuCUe8=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=BNzbJ7D96qGQu2ztD5M1sShhzXqFmqTT9FyWMogeZBYbzN7+Usz0kXu4+9vLecRzezzlgeJSTCVgWW6DZrQOc3Vmp+OunyyVpCrtmoIZ1pffpzCtPqhowHieOD5L63s/v38/xhXlc/GqSoCWM3xxbF9+DMw3TJQwVIj6+dQ3O1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oB894Lnt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769447763; c=relaxed/simple;
+	bh=kyQtZPiIwsROlfuDUsgggehD1gGURxpMF7Wbdy1oZcE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=nbM4ffOVuMcHR8ReBuZczcicc37PsrGXvi+jz5/bBCJ8xhd9Ap90NvQP2oL1q4q6IqoeQmptKgkWui7/l72+5TkyEWFpZopfvUB/uFvZ3lZHV5UUYkDML908OKhRD7AXdJfEFeIkg9KwR8mrPk31IjUj38J2rlO1BI6S9ZyvPnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RYzuxHO5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oB894Lnt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0717C116C6;
-	Mon, 26 Jan 2026 17:02:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RYzuxHO5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82A72C116C6;
+	Mon, 26 Jan 2026 17:16:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769446952;
-	bh=db0GnOuz3Ol+4rvOMvMgPdDAyvAv8l4NNhFQLSuCUe8=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=oB894Lnt2S+YifLfbZn3eWGNIm3hrZJQFPSwIRD50/BtyQJN+lBwOxX7BLwjhvqvx
-	 AVkHRJ3aBle1/aRHZ0QhyJV2vdYGblDuD5rQ11LUg/W0QBSVRC0wWDF7AYHD3UXcZB
-	 hOSsWUnja6m7mDYdxuFNYDDNlB8Kvoi/SvrDbNTozu+raQKCsz5chAvDa/79FROOSI
-	 ljITWQUQ9vL+bXhWvmtj89ppPJTcRe9+Ce2L7oOXy17J5old5nnqiU94yvWCLQmw6u
-	 SAuhYuopsdxnf0firHvFGqcg8BDP5oyK+r30AjejKPursZ7nPQlEaAxMab/yOxKF9b
-	 XLBqj++1Kx60w==
+	s=k20201202; t=1769447762;
+	bh=kyQtZPiIwsROlfuDUsgggehD1gGURxpMF7Wbdy1oZcE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=RYzuxHO5xbWP9s0kGB63EHII8gOKrdvEb3djQKDDjnvB1hgoqAmrvwkhI2lGUlC5R
+	 HlMVibFUWhd+y8OTSDaE9DyzutwqUsiY4MnqCd5ReIwAQGtaHnYP1GuVIynWojx+iK
+	 7hPdN4pzftpZTD0hbAcPLdXhC1HD/3xGpKoLpgQDs24AVBct1SAn6X/btgmGzOgEOw
+	 6O797ZWUB/F+BqyVjZsyMhzsvWWjgjhIcDfJtHoecTcGgdkUuluQRht5RsQRZD/xqI
+	 NZZI0dc+J8/J0D5IUvVBHNZZZqoE7wmR8jsm36Wt9btrKmXuHMlCOBtQorriyxBPdM
+	 d7K8bcTSMoYrA==
+Date: Mon, 26 Jan 2026 11:16:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	linux-kernel@vger.kernel.org,
+	Simon Richter <Simon.Richter@hogyros.de>
+Subject: Re: [PATCH 05/23] PCI: Remove old_size limit from bridge window
+ sizing
+Message-ID: <20260126171601.GA249217@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 26 Jan 2026 18:02:26 +0100
-Message-Id: <DFYOLDG7ZXZ4.1X9G9U2SS05FN@kernel.org>
-Subject: Re: [PATCH 4/4] gpu: tyr: remove redundant `.as_ref()` for `dev_*`
- print
-Cc: "Gary Guo" <gary@garyguo.net>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun.feng@gmail.com>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Daniel
- Almeida" <daniel.almeida@collabora.com>, "David Airlie"
- <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>,
- <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>
-To: "Alice Ryhl" <aliceryhl@google.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260120181152.3640314-1-gary@kernel.org>
- <20260120181152.3640314-4-gary@kernel.org> <aXcxMShqvHzYMllD@google.com>
- <DFYKD4MRY9BK.7O6YH0H3RHOO@kernel.org>
- <CAH5fLgiOMJ_6bUfhRiHorg9HkNeDknSO0bjK61wry1ZaNO0A4Q@mail.gmail.com>
-In-Reply-To: <CAH5fLgiOMJ_6bUfhRiHorg9HkNeDknSO0bjK61wry1ZaNO0A4Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251219174036.16738-6-ilpo.jarvinen@linux.intel.com>
 
-On Mon Jan 26, 2026 at 4:06 PM CET, Alice Ryhl wrote:
-> I don't mind either way, but if there are no conflicts, it would be
-> nice to take it off our plate now.
+On Fri, Dec 19, 2025 at 07:40:18PM +0200, Ilpo Järvinen wrote:
+> calculate_memsize() applies lower bound to the resource size before
+> aligning the resource size making it impossible to shrink bridge window
+> resources. I've not found any justification for this lower bound and
+> nothing indicated it was to work around some HW issue.
+> 
+> Prior to the commit 3baeae36039a ("PCI: Use pci_release_resource()
+> instead of release_resource()"), releasing a bridge window during BAR
+> resize resulted in clearing start and end address of the resource.
+> Clearing addresses destroys the resource size as a side-effect,
+> therefore nullifying the effect of the old size lower bound.
+> 
+> After the commit 3baeae36039a ("PCI: Use pci_release_resource() instead
+> of release_resource()"), BAR resize uses the aligned old size, which
+> results in exceeding what fits into the parent window in some cases:
+> 
+> xe 0030:03:00.0: [drm] Attempting to resize bar from 256MiB -> 16384MiB
+> xe 0030:03:00.0: BAR 0 [mem 0x620c000000000-0x620c000ffffff 64bit]: releasing
+> xe 0030:03:00.0: BAR 2 [mem 0x6200000000000-0x620000fffffff 64bit pref]: releasing
+> pci 0030:02:01.0: bridge window [mem 0x6200000000000-0x620001fffffff 64bit pref]: releasing
+> pci 0030:01:00.0: bridge window [mem 0x6200000000000-0x6203fbff0ffff 64bit pref]: releasing
+> pci 0030:00:00.0: bridge window [mem 0x6200000000000-0x6203fbff0ffff 64bit pref]: was not released (still contains assigned resources)
+> pci 0030:00:00.0: Assigned bridge window [mem 0x6200000000000-0x6203fbff0ffff 64bit pref] to [bus 01-04] free space at [mem 0x6200400000000-0x62007ffffffff 64bit pref]
+> pci 0030:00:00.0: Assigned bridge window [mem 0x6200000000000-0x6203fbff0ffff 64bit pref] to [bus 01-04] cannot fit 0x4000000000 required for 0030:01:00.0 bridging to [bus 02-04]
+> 
+> The old size of 0x6200000000000-0x6203fbff0ffff resource was used as
+> the lower bound which results in 0x4000000000 size request due to
+> alignment. That exceed what can fit into the parent window.
+> 
+> Since the lower bound never even was enforced fully because the
+> resource addresses were cleared when the bridge window is released,
+> remove the old_size lower bound entirely and trust the calculated
+> bridge window size is enough.
+> 
+> This same problem may occur on io window side but seems less likely to
+> cause issues due to general difference in alignment. Removing the lower
+> bound may have other unforeseen consequences in case of io window so
+> it's better to do leave as -next material if no problem is reported
+> related to io window sizing (BAR resize shouldn't touch io windows
+> anyway).
+> 
+> Reported-by: Simon Richter <Simon.Richter@hogyros.de>
 
-Applied to driver-core-testing, thanks!
+I guess this report was
+https://lore.kernel.org/r/f9a8c975-f5d3-4dd2-988e-4371a1433a60@hogyros.de/,
+right?
+
+> Fixes: 3baeae36039a ("PCI: Use pci_release_resource() instead of release_resource()")
+> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> ---
+>  drivers/pci/setup-bus.c | 11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 612288716ba8..8660449f59bd 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1071,16 +1071,13 @@ static resource_size_t calculate_memsize(resource_size_t size,
+>  					 resource_size_t min_size,
+>  					 resource_size_t add_size,
+>  					 resource_size_t children_add_size,
+> -					 resource_size_t old_size,
+>  					 resource_size_t align)
+>  {
+>  	if (size < min_size)
+>  		size = min_size;
+> -	if (old_size == 1)
+> -		old_size = 0;
+>  
+>  	size = max(size, add_size) + children_add_size;
+> -	return ALIGN(max(size, old_size), align);
+> +	return ALIGN(size, align);
+>  }
+>  
+>  resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus,
+> @@ -1298,7 +1295,6 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
+>  	resource_size_t children_add_size = 0;
+>  	resource_size_t children_add_align = 0;
+>  	resource_size_t add_align = 0;
+> -	resource_size_t old_size;
+>  
+>  	if (!b_res)
+>  		return;
+> @@ -1364,11 +1360,10 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
+>  		}
+>  	}
+>  
+> -	old_size = resource_size(b_res);
+>  	win_align = window_alignment(bus, b_res->flags);
+>  	min_align = calculate_head_align(aligns, max_order);
+>  	min_align = max(min_align, win_align);
+> -	size0 = calculate_memsize(size, min_size, 0, 0, old_size, win_align);
+> +	size0 = calculate_memsize(size, min_size, 0, 0, win_align);
+>  
+>  	if (size0) {
+>  		resource_set_range(b_res, min_align, size0);
+> @@ -1378,7 +1373,7 @@ static void pbus_size_mem(struct pci_bus *bus, unsigned long type,
+>  	if (realloc_head && (add_size > 0 || children_add_size > 0)) {
+>  		add_align = max(min_align, add_align);
+>  		size1 = calculate_memsize(size, min_size, add_size, children_add_size,
+> -					  old_size, win_align);
+> +					  win_align);
+>  	}
+>  
+>  	if (!size0 && !size1) {
+> -- 
+> 2.39.5
+> 
