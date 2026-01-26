@@ -1,483 +1,230 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012006.outbound.protection.outlook.com [40.107.209.6])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010006.outbound.protection.outlook.com [52.101.56.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3A952FC024;
-	Mon, 26 Jan 2026 22:00:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E95B284B3E;
+	Mon, 26 Jan 2026 22:07:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.6
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769464852; cv=fail; b=nygsNrkh5jIwpsZvGzLkExw29o2yY5Ni/iI6jg+4nHiJg2E49BDGUDBphHrkXn19hI4yABxbQavY5LHn8HkSe3dXMqx4Ycd4lZtbfNlEpM32RT7ALggZDt2hz+i6mWrMIZ/uTneMDheCRQk4ebDL95uzUyCybHlYlYBdUslfM9Y=
+	t=1769465232; cv=fail; b=JedLmcQ9N70pJigDIcRA3Idqd0XbHs8sriJjMQLQZi8AH3ADMx59u6H8HUottnmfwDM1eaRNgpS5iP6xje+6uHfYkrSPP6cHoMv8vKzKNhvNP/iYh51bYd6S/9siQPofnVhmdeYzUArtZ0rdWmm9b7r+7M2miDXSV4MxGnouyDU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769464852; c=relaxed/simple;
-	bh=qRBhYq1P2NlEOKovp9/x9vJtLGd/PBImQFJY2qS5Vyc=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZlXkuYm5D6WC0m6KuTBC452t6VS6yZNZuSuan4SzNt0bO5ZPFeUaEmzyLQnsB+F4BeQ2zntOgLuvxM0vK3QN023S1DtUphU34YHOOICVwUrSPO1/r4lo9YNI+Ed77E+XGkMmcWcIIrqkp1w7g86sjyOPlAFl/+qZ1jeIwyH94Lo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=TOGDojOu; arc=fail smtp.client-ip=40.107.209.6
+	s=arc-20240116; t=1769465232; c=relaxed/simple;
+	bh=xFvlt5TdOhPbMAUK+MjUrIn7YM2y1lhNagV1oHZINKQ=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=ZkZ5R8jouiZQOLventHG5X6YJ3fq1vD2YCpUSzrFmDSwuAcIqvVGynKt7lHC9Hy8FlLwrFyqsgXjBuKbWYnpyWJe9fMfCRTFs89NcwNByrzpyGhnSp9ZxyDfHHVXCp9z8j2M+pNqIJu2BBBXcj67IQ78rzxNkNsqhQuvA3TSkH8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=egXlXHWw; arc=fail smtp.client-ip=52.101.56.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="TOGDojOu"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="egXlXHWw"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pH2GpqT81kZ5HCZI44i4vY3jujrwx9uKYcQXHsj1bs5+jXvUwReZuNlI/IUSvweVCHFl0RDA9uDyPdsEDaOE5Z8caFB9BZN/ORD87B9oRnACMnnLMpcUFknXxpB7rd3IbtCOafO/JyD1ENkQgoJNNRJk8vUjcSCAjYRFziyiPcevhKtT9tP+L2nHoeNdkqA1sjr4OrddsxS8o6S1qZ4BfsAdMs2SzmRttI8aS+6q2egyksErtOsT/i8nFuVaHrSSJU8KHLP7g2+w8BRbAjQvE3Zmf4DfcAu6cxu130M+gFWtwxhszMpvele05z1sNLJmHriKccHFDpy4jY84PiMqZQ==
+ b=L0wILYTdLx+y/xZ2+VjzAw9RN7yLcZBhsAGneS9037uqiMdVZFSbbv4o1CkaYLQpbNqJiV8uL7m+wCYuLPn6jK3P4pe8JiKRdScdmYLVNlY+nyF0l2towQMrQgXCAK5tsPh9utUgDnzPUFRsvYDxoicpgN3J25UsOZOnsT3K2sW41V9RbfmO+5pV/0I9YjknI2dOrais8n8FqDyEczuyjevCDGpmGEOIt47fkzjqG75sDYKp/MHgU5LrsZzdHzJnaVXqUz16+4/tlcFHY591icwU1gKTtVWAZr0MF0ALW3xO/rNR0VSuYQzdJHDNXysu79Iz3tejtGE5vEeITzyB4Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AfMrxCtCw8NscMP9prJecgYgFA+l9RqRkeoeJK5qzZQ=;
- b=aytkOwjl622ZZh0d51F12cbNA28n2SAXJ7zjjQnzRQvdp8aD4A3Df4zol48zYq50K5AXovOiij9Jfx2Da1cvA0JuMnO7EBQvEIxGdPaQGutaws9Q8cwqay4pt6C5gtKIoT4EZgYyTjnKI2bP3WBSaK1M2FbjivebrnQZjjs6qhaWV7aGMwglkNxSu1oc0x/ncO+viL19aeYFnk6kkFGkMAId/C6k2wib4MLYbs3iF4MyRrklYPy3Pz5yfq1xQ618v82ea4gstdnKWRNPeKqQO9MJRWdfnYo0ZHPfiJ5lgBSvLklRi+aE8n8jqp/eZ3UNxbsPojwEmd8LQYh3+ExznQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.233) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
+ bh=bvtzPtHQVQRNeh08V4L+cC9jNW8YC2NpDgcA1mSWarU=;
+ b=ZqixeM7IawS19ilqVmj7aIHudHDjKVPFU/VkTgkXia8OtyMSb1UpBuxM325SViV8kPIzaBK3C03K4peo78tO0etqc/B8oh5wksbNO5RLSmok0MIBIAWDpljChkqmEx6L0ef9YyL30Vmc2jDSY4ah4ntvECbd/fBG5N8EW1zfa7+Ql7V8PaYkwG8WA8PsZYyz0Dr/tfpMw2o+wDbji0DO0VnLNxrcJ8C8/+aYK1k8aTR0ncW4MiL4SGAjbEPIaZUByQETQW+/c5RZ4RmKbiupuGkRhbWaW5YwVGBKiD06uKftfEW8/wFIVIhtha1Gi5O8CB0FGEZJ/KJu2vDP9FJxIQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AfMrxCtCw8NscMP9prJecgYgFA+l9RqRkeoeJK5qzZQ=;
- b=TOGDojOuV3l10HI9j2ELKKznUazf/rEEeagzhNZ/yPK/TaLlmzXlhvBoTU/TeqWzTovhIwmR6LjSSMvoS4nT/Oxnp8dGbBs0Lo603M+XaXXtokFud2domxECilA5Gn5V290wmFh4XF+Ro6+oXTtWUUWmgfcRJW6CAgi8boPAuaBiGZIIiCT09wAwsm7RzFpMkZm7HpabsiiwLAOvE4RV9kO4pAVpxUTK+r3JI7hu4q0eDEB1QFwwcJ6X88W9Zj98DiiQgGnh/99eqySHa1qP3AI8m+qtOCNUzeTR0UQjWLaLYF31smJcMmPgc0noJAZrEo+STM4YkSshTQrc6Wcrig==
-Received: from MN2PR19CA0047.namprd19.prod.outlook.com (2603:10b6:208:19b::24)
- by DM4PR12MB5987.namprd12.prod.outlook.com (2603:10b6:8:6a::21) with
+ bh=bvtzPtHQVQRNeh08V4L+cC9jNW8YC2NpDgcA1mSWarU=;
+ b=egXlXHWwmmoem5HbCgzlNgz6zn5rtDa+bPEjkO2wRDOpnqmD3PZiejKWvhnM5wW+f1g75XxuQPNFT22sdOM+r+TtU+LPXhPRBppuys5jvxTTMzKc4pDFJc1cKgF5a/4CCIZDhYVJ7G/nfil2hmIYyZH9/xadaquZHWFUJ5YwXbQg8k8gYEHs1wIkyw5S2Bu5PvDYsijpHQTNI1On+clCtBEfhuYH+A8NQj5WdK4J24XWKsKue0oJAyCozDDh0Nt+r8yB6Wqo1fJ/aAh8xwUOw+EBkrygTVecHIlqLI2N7q7aqblAGLXPoBuDIfMxiw8LGXDvD4kkalbga1+u7tYqJw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
+ by IA1PR12MB7661.namprd12.prod.outlook.com (2603:10b6:208:426::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.10; Mon, 26 Jan
- 2026 22:00:45 +0000
-Received: from MN1PEPF0000ECD7.namprd02.prod.outlook.com
- (2603:10b6:208:19b:cafe::c6) by MN2PR19CA0047.outlook.office365.com
- (2603:10b6:208:19b::24) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9542.15 via Frontend Transport; Mon,
- 26 Jan 2026 22:00:44 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.233) by
- MN1PEPF0000ECD7.mail.protection.outlook.com (10.167.242.136) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9564.3 via Frontend Transport; Mon, 26 Jan 2026 22:00:44 +0000
-Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
- (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 26 Jan
- 2026 14:00:18 -0800
-Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 26 Jan 2026 14:00:18 -0800
-Received: from inno-vm-xubuntu (10.127.8.9) by mail.nvidia.com
- (10.126.190.180) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
- Transport; Mon, 26 Jan 2026 14:00:12 -0800
-From: Zhi Wang <zhiw@nvidia.com>
-To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
-	<kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
-	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
-	<lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
-	<markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
-	<smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
-	<kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
-	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
-	<daniel.almeida@collabora.com>, Zhi Wang <zhiw@nvidia.com>
-Subject: [RFC 2/2] pci: Add PCI capability infrastructure and SR-IOV capability support
-Date: Mon, 26 Jan 2026 23:59:57 +0200
-Message-ID: <20260126215957.541180-3-zhiw@nvidia.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260126215957.541180-1-zhiw@nvidia.com>
-References: <20260126215957.541180-1-zhiw@nvidia.com>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.16; Mon, 26 Jan
+ 2026 22:07:08 +0000
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391%5]) with mapi id 15.20.9542.010; Mon, 26 Jan 2026
+ 22:07:08 +0000
+Message-ID: <255713ca-bf91-4f7e-8df2-33b7b614a1bb@nvidia.com>
+Date: Mon, 26 Jan 2026 22:07:02 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 3/3] PCI: dwc: Enable MSI affinity support
+To: Thomas Gleixner <tglx@kernel.org>, Radu Rendec <rrendec@redhat.com>,
+ Manivannan Sadhasivam <mani@kernel.org>
+Cc: Daniel Tsai <danielsftsai@google.com>, =?UTF-8?Q?Marek_Beh=C3=BAn?=
+ <kabel@kernel.org>, Krishna Chaitanya Chundru <quic_krichai@quicinc.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Jingoo Han
+ <jingoohan1@gmail.com>, Brian Masney <bmasney@redhat.com>,
+ Eric Chanudet <echanude@redhat.com>,
+ Alessandro Carminati <acarmina@redhat.com>, Jared Kangas
+ <jkangas@redhat.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+References: <20251128212055.1409093-1-rrendec@redhat.com>
+ <20251128212055.1409093-4-rrendec@redhat.com>
+ <4e5b349c-6599-4871-9e3b-e10352ae0ca0@nvidia.com>
+ <a8d841e870d6dbbabef7eadb774f2a58a96c57c7.camel@redhat.com>
+ <cfe44924-3419-4f31-8ab3-87b769d21a5b@nvidia.com>
+ <96c9d483f67be02fa1dba736fea465216d0c3269.camel@redhat.com>
+ <87sebsdcte.ffs@tglx>
+From: Jon Hunter <jonathanh@nvidia.com>
+Content-Language: en-US
+In-Reply-To: <87sebsdcte.ffs@tglx>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO2P265CA0201.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:9e::21) To DS2PR12MB9750.namprd12.prod.outlook.com
+ (2603:10b6:8:2b0::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN1PEPF0000ECD7:EE_|DM4PR12MB5987:EE_
-X-MS-Office365-Filtering-Correlation-Id: 537f8885-59b0-41cf-9cba-08de5d265aea
+X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|IA1PR12MB7661:EE_
+X-MS-Office365-Filtering-Correlation-Id: 774f1986-da56-4d7a-e301-08de5d273f6b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|376014|36860700013|1800799024;
+	BCL:0;ARA:13230040|7416014|376014|366016|10070799003|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?6CoJSCxqlhwKCJASnqecRsoIRows0WyXlSuJ0LOXR+CJQ1d3B0DreleTpgAB?=
- =?us-ascii?Q?VQkZisJpBCViZNTduCVy32Gbs8FGhOLM5HDQWdZdB+t1HwpfnBRW+SYXPr0p?=
- =?us-ascii?Q?pu3KRIzO12JAHfCYPJjURgfdEmcsDTJOxqOw1JpT668pqLCRsa7tog0x0eAt?=
- =?us-ascii?Q?+4cPfL4wY8KGQ3gk1sT9cmhh6XX/lVB/ej+2T+a3pMm/GDKySPYTxxg1maUx?=
- =?us-ascii?Q?hpM4K0oQEHrZnYS/y+zuvDNqOJkzgaNjf8mxCgNLXF7iwOTXH0vO2dMswYDu?=
- =?us-ascii?Q?Q04Z2CreCXv7mOSn01tOx0d9ZwxJthLmcUiF6YKlp7zb5FIPs1I5Q5dRdX1p?=
- =?us-ascii?Q?ynPuG9UJdml4PBBtI1203XrhGY9XHMq+/bDM+vVDFqiRFySt57nsVK+fIjVX?=
- =?us-ascii?Q?pJNQTpohPYL4pGxb/RcJmNs1oHNjjK0Wbc7tvrhgN4i9FF2Z6I09GqaCUUNo?=
- =?us-ascii?Q?V7252L0EQMvycbtgIJSY7rxf4Uc0oemvJ6ZDmPHPs6f8frWVK66T756DBFae?=
- =?us-ascii?Q?OpBoe/JdghYaUlTnrY0SN9bzB6lhtrcsTRkvWy1yaHzHYfuHdSc0XtHoXjCo?=
- =?us-ascii?Q?uhtUtd6aWVwIblex1SMOZx/jnTcp/eb68fP/onIPkFUoDfmoId9gb7JwI3fD?=
- =?us-ascii?Q?5O6UBBm/Eo8MMJxOfNUJMrAp8NG6Mp5+AHFrtls0GheTU2eH5es9YfGSndZA?=
- =?us-ascii?Q?Dx9F8otzcIsSQ2IF+ywrFqJ6vNVqh7jSSid9L6KM/IzCCBML/uYcRA8nn4Ft?=
- =?us-ascii?Q?elK7/6CQoT5iBfhvs+yBSDHkypUhEiKm8mj8BhOVrOOjZ+N3HGjtHKIMAAgx?=
- =?us-ascii?Q?ow0aSf0pGix3+lNibj3amwRzkiy7gZWUy98JtWXN8KDiKyZ1bFBiR3G3W3Hb?=
- =?us-ascii?Q?9Wud0WpLrkamKR09R2wMwj17cbhuU0KsfQTfBDlTMyK7+ZKO7T3BJhc4kgRI?=
- =?us-ascii?Q?q2+K8Ui2zNzLJsmOyp1kInKlBAIhZZ2LPnyS9MnpZlPwhdEhpgVgWNk1AHPx?=
- =?us-ascii?Q?/gTUjWt+NYN6ZDTNVWYjNHFLhuT/4g/WkfOiUXg8dlB3ciWL7m62NTkmqnX/?=
- =?us-ascii?Q?wPx+RTAwCHRDn7ziNvNeptZ7qbUjxCIcnF7hP0EbEVODqnj2Fe0rETVX+QRv?=
- =?us-ascii?Q?PTjxbQQhm954r5v+zv2GNyq9xHqWoC/2Q8Fk1LjD3M8ILZ2IsWOwbPSvEgL0?=
- =?us-ascii?Q?nEVSWVk3j1dDVs/yViDjYlUacAusJqjsfGv48b22WCpRrbbs/FUej54EPguU?=
- =?us-ascii?Q?mo6ixqMjvqc5QlvePAXaOzwmDga5/kiFroJyIzkVKb5Ij5M4cq9FDUdF1FHP?=
- =?us-ascii?Q?BN/sDUoECGD+yc9WCtnfY1baP+pdlCXKsmNA1ExM4+oWHQCHOqQR46BiKLgZ?=
- =?us-ascii?Q?BCJOCn6dWjAsE0AhOuYFTfAUvz56IacnnvllJujCaqCAbyDWba8mMxdSjwrc?=
- =?us-ascii?Q?r4FJEEyfrsvYp7cjKskpvarq59o401+iPkVPTpqJqhadbH/1EcJc/wCcs0Qt?=
- =?us-ascii?Q?SGjAshmJVc61J/Qofb30JLyveTRm1vxAlKRWCLHhRSJVKdUcpXp6mRQg1xH+?=
- =?us-ascii?Q?AumWiOfOaAzaDnCynj+7qfiZ2ohNz0OA1ZnerE/k42V5uuoDz+HIUhvZ703S?=
- =?us-ascii?Q?XWKC9ExyRdFC+5lkTmsX4UkjM10XLIRNYhoVvduxCXxcOWd5RjxwikpsGfTh?=
- =?us-ascii?Q?PLWTNQ=3D=3D?=
+	=?utf-8?B?Nk5kVUFYeEdiOUxMc055NFZaTzBpd3ZnWnRSMUl3b0IySDlwdFU2aHdiNlFa?=
+ =?utf-8?B?dDVtSjRZODZmcG1hbnpIdW5KSWttdER3T0dzMG1OdXlRYStCMlNGb3dFQjhj?=
+ =?utf-8?B?QmU5a1RrZkEyUjJhK1RWQ3poZEFEU1Jhd0x2SGpxeUtGWGJhTzlOdVk3MENC?=
+ =?utf-8?B?dWw3TktIclNEbHJ1OSs4TU1PSTlkZWhYa2VrV2hMSFFhMFdDeFhoN29FQ1Mz?=
+ =?utf-8?B?bWlNRWtZc3UzbDJqaEZhemROK1dNTFlIeFZXOGlFODRyNmlVZ3lHSWtDV1dZ?=
+ =?utf-8?B?MzM4UmhDTmV6blBSUHhKTVlEeURNTnVjZjkyeVZzL3NSMjNZZ2dHSmJkMEFM?=
+ =?utf-8?B?RXpJV3lkeStaN2t6NUVGaE5tNEpXRFM2cFRHOElCaTFORHFwVFZNZ2psWEcy?=
+ =?utf-8?B?dC8xaE1kNGZKd2I0SFZ6OUQ5SnZoNHJtR3JjQVRzeGlINHZyQkdhcVRBYzJu?=
+ =?utf-8?B?endXQ2labVhuVjdoZG5DbUllUmQwVkF0M3pKNUl5YmFyMGQwSW1meGkvQUd2?=
+ =?utf-8?B?a3pKUmQwQjZQVVpiUEhUWCtoUFh0ZnhXV1hQemRadlVzT2FWak9GaDBGVzZQ?=
+ =?utf-8?B?a3ZvQ1cyaENlcjdjWXVvOEV0cUl6NXpXdWp0WU5DeU1wYXhXbjZmT3RLUSsr?=
+ =?utf-8?B?OXJYa1lkMEoxbm96VmxLb1Y4U1VlYUl2a2xvNHpCUHcrcElOSXRMT0ZPTUl3?=
+ =?utf-8?B?aTRVRVkvNWdDd0loR1lYN3ZOU1E5d0g0UVo1T1VMNzFSK0U5V2NmM01JOFlY?=
+ =?utf-8?B?bEdkZHJRTlpFb0Z5M0hGdjZvVU1XeGd2ODlkNE1sTkEyUldpdnVGcDdhd1RT?=
+ =?utf-8?B?RHlvUHlKSjY3UythV2VEU25lNkRvRXBVRWo0TEhwa3ZvVzFGV082TWtPTjI5?=
+ =?utf-8?B?T0hJd05EZStwR1EwNzN6cUpLM05kMUc0bktoL2ttdlo3UDR0K0J6MFU2TVc3?=
+ =?utf-8?B?YkJVU0Q0NjBMRCtYNEU0SXNlUXNRTWRIQUUxTUw5OS9Wd0ZxcG9INXJnNEVz?=
+ =?utf-8?B?MWozdUhaY2hRdW41ZXdjQ1IwZExTa012c3RUNXB5SGU1QmtDdnNSRTNsMFNp?=
+ =?utf-8?B?WHVVMGpJckExRk1GTXN6ZXJhREIxWlRzRXBDWlNoVmlYdnFNVG94dDdHTXdk?=
+ =?utf-8?B?NDRmbHhsOGdQVDl3d0lySzZJTStwMk9PODRLOVdlTzl3elZZS2FQUmJvT2pT?=
+ =?utf-8?B?ZVQ5NjYzQXlpRnh1VFZnRktIdlBUWHJ0bVlHMlMzQVZTVlQySE1NcWhXcDhW?=
+ =?utf-8?B?WW5NUVRLMFNKb1k3TTQ4SnFVMTFNQTA3b3JMOTJtamthSEZzMzlaRDJIQnBG?=
+ =?utf-8?B?Mm1yU2l1YW82T0c3NzZFWFZreVpqQlNJU215eGlOUnNwSXoyTTlsT2RsdHAw?=
+ =?utf-8?B?QTZCU3NsT1hkbjhvcmVGa1NmNnphemo4MFhWcXQ3d3hibDRseXN1aFg3TzY5?=
+ =?utf-8?B?RzU1dDdCaDdTcmN0YSt1d3N1R1hteENwcmY5MkxLVnB5S0ZqN0x0OUJ5aEpq?=
+ =?utf-8?B?dHNIYXZBT01kSm53eHJ0ejg3TkxKa2QvRTlCaVQ4emMwTU9teDZoRzlFTTFq?=
+ =?utf-8?B?R1dUbEZWTGcwd01BUTdiYWFsbTV6cHlJU3J6dW5aWVFXN2VxQkhXOGc2d01z?=
+ =?utf-8?B?OU9uMjVDZVNLNml5RkVrYWloMmN3NVgxRytpSDl1bHVkb1R2UkJWTldnS0E4?=
+ =?utf-8?B?ZmlDTDdER2FzKzdnbDRxS2FZVUFlNGczNVp4VnZBdTlodUVrbGpqbStMemlB?=
+ =?utf-8?B?N1RCNEhVdjhiSnlQZVd1TS9GRXlZdXN0anc2RTIycS9XNGlTcm5qVkt6NWFC?=
+ =?utf-8?B?K3ZTQWlTVzVsZndSdkF6cm9LeXpLU3NRdm4zMXdpUkh2NjZ5NGN6RnpCc1Vx?=
+ =?utf-8?B?QmEwcWZWbzVOTXFrOTBrTEVGdm5pWlRCTi9BaVdiU2RyWG1KWGNCYm1nRjB5?=
+ =?utf-8?B?d05FS2diMUtSNXJ0RzU0QUJyRnlJVzVabTZTbmtrekl6UlVLYnk3bWFBNW5X?=
+ =?utf-8?B?K0MzRHJrUk5BeFdKNTBhamNKRkRoWXR6b2pKaTZWSlRsTUYyNVgrNGhnV1hX?=
+ =?utf-8?B?SGcwRkZRY3R3dXBXaDZNOUhkYi9qbHhJYnVXZEVWVzhGZWRINFBmQTFEdmNN?=
+ =?utf-8?Q?rfGU=3D?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(376014)(36860700013)(1800799024);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(10070799003)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?QTlDNEZvRDJXS0h6K1BYaFVYTXZZYjVXODB4UDJtd3BFQWVLQldnUzJlUU13?=
+ =?utf-8?B?bEZOUm02R2trUjRSOU83dTEzd0t0eDlNY3A3cS9wYXd2SExwUjNUZ3B3M1l0?=
+ =?utf-8?B?d3FkcGpQR2FmVjA4S0poYnV5UGtGbWhUbVcxWDltaWdNMkJkNFZXeFk1RzBQ?=
+ =?utf-8?B?ZjhLMUZjcEhiemRtOG5laW4rM0I2d1Zvc2hkR2JZc2lGNTdjc092eHlaWU9n?=
+ =?utf-8?B?RG9vSVJpMVVncGYvMEFQbkJzSnNseVF1WjJKRThaQXI4UEFBZlA1N0Zndmps?=
+ =?utf-8?B?b1BNaTFIdEZ3SjVPTWxiODJlMitFMnEyOVpXbURubkw2QmdWclFnMUEyVGFq?=
+ =?utf-8?B?Znk5QnN6TVlXU3NCdW5lS1RGT3J4R2EwUFg5anRMWjhkalVwNUFJZGlCZitt?=
+ =?utf-8?B?eG8zSnNoMkZXbTZYTVY2VzJEQVkwOXBzUnVDVkpEVlZJM1Y1emZsaHpGOTFW?=
+ =?utf-8?B?dUtKNGNXVUZDNFcrL1d0UWdFcjFxWjFLU3Qrcit2Z3crTG84WHREdkZMUy9Z?=
+ =?utf-8?B?Q0lNYktwakMwb2FYR1RtNkNmdmxySGwxQ3IyQVd3WlBxYlJXQjdobDhxTVVC?=
+ =?utf-8?B?eS9FczdEclp2NTJNMVdWQ0oyaFVEOVdZTkZjQVZjR3ZncWhLNkdCSkZPcHQ5?=
+ =?utf-8?B?Ymxna0RNaHRlNXgreUdxMkIrS08rTVFyNVVIZXdUSk5aYUJnd2FrcFdIWnRU?=
+ =?utf-8?B?RkVkNFk1b2xJYjFwR1dCRzh1SVl2YmtTRzl0SVpGczhZN2tnSFdhZTRWeDM5?=
+ =?utf-8?B?OGgxaDg4YzZZMjA2RG5SNzhLUVc5L2V6TXFsNEhHcVc2eVhPYjM2RkRmNWZE?=
+ =?utf-8?B?cmVkUFRHbGxKNzlVbFI3bXgyZTJVdkdRK0IvWWNhZ3pjMUJlVCtoZG15bFhn?=
+ =?utf-8?B?MjZwaEViRllKcTcyYkFZc2hpZkR4VlVUVlNLemh3MTFyL1lZdkljb0tBRTNM?=
+ =?utf-8?B?T3ppMWM2VElxNnB4WmdXRldJYmxIWGNHTGFXNnR2SWhjMmpuU0JUaTVIWTBR?=
+ =?utf-8?B?aXJMK1JIam1RNWhpSEFyU1JJaDVzZjVpemJQYXk0QzRsU2lrcER2dWxtbXpS?=
+ =?utf-8?B?Rk1mdTZMNmhZWjJzNGxuOXNhak90WkYyam5uTDVUenJZdnZBWUFjQjE4Yzdr?=
+ =?utf-8?B?dFZEWTJmK0loSmM2Qkl4ZitDdlJ4M2JpUjFqQnhweGxlVU5TbVB5T2E4ZTRn?=
+ =?utf-8?B?MWxhOE4vRnRMMlljWGNpV2VpSkhzY2IvdE4zMEwxMWlSYlRYUFM4Z1VWcHRi?=
+ =?utf-8?B?UlZLNVNMSVQ2a1hRUTl3WUtFVmh2TkMyZ2EwTndZd3VraVRCL0NESERuQVpL?=
+ =?utf-8?B?MXROU0hwUmpkVUkrcnhCcGRla3l0RGwzRXgxVllkZGtMdENvL1hSQjQwblRH?=
+ =?utf-8?B?Nkozd2ZCQVhicUMxQjVtYjdCejNvMWtVZ29hc0JKRlJKUmRWR1p5UHVjdTdR?=
+ =?utf-8?B?ZkNORVFRZ2ZUZEUxT2xYcnB6L1VId01XREVUSjRGdkhPTFYxckdtRjJrQUF0?=
+ =?utf-8?B?Q1YwVG1KRnBabU9vdGx6UEt6RGZ1cVYwemYvT21ZR0RLdVlaN3Uyb2l5c3Fq?=
+ =?utf-8?B?Z2JPQzJiZFlSeHNnL2tpaHFCWFF2MUtTckNSKzRzdzFrYVJPaEZqQ2gyNFFj?=
+ =?utf-8?B?Z1l5R1AxbnZ4V1h5THErZGJ5NStWUFZ0M1dycUJCZEVGd0lqaXhxVXVDMXIr?=
+ =?utf-8?B?QVZURGJOWmxTM1VXVUpaVFNYUFE4NTM5QnJtSkxxNjBxL0liRXlDZzFmSFpr?=
+ =?utf-8?B?M2VjQmFTMnlMeGpxeWRxMVVtM1F1eTFpdTh2M0ZRU2dHdFBFNy9VVUpWckpm?=
+ =?utf-8?B?ZEQrbHhFNWZnbTdNdWtyUE0veng5dW5wZUFSY0MydS9wR2lYRVcwdnJZeXVZ?=
+ =?utf-8?B?c2MvUW8rcVpZZzNqdEZHYU1tTFBQeitPeEZwaFB3QTJ6TU1rZUEwSlBuR1Fl?=
+ =?utf-8?B?Yk1xOGtsN3VlTXJpVGhDa3NacllMUjJaeG1zdVRUem1JdnhIM045Ymxsbmdh?=
+ =?utf-8?B?b0NsTDdhTys3cTlNNVdzSkM2SlJWa2pMVDNDcllFWXJ1SUQ2ZzkyWGtTSFIy?=
+ =?utf-8?B?VlRack5VUUxoNkIwVk0zSS9MRVVveFh3bnJqN0I1UU8zcHN2L0FQOE1OeXFk?=
+ =?utf-8?B?VGRRMlpOWDIrMnh3aTZ3M3RVSGVPcm52VGdNOGxscitMNVVvUC9iKzZxWEw5?=
+ =?utf-8?B?TURZYW1hYlJDakZXaHN2RVR5emEzZGo5ZXFXZjNmMmFRVzA2RjBCOVNvQUdn?=
+ =?utf-8?B?Zi9zWTJLcURQSUZMMThYZmF3VFAwVHhsZzFLY090RFJOaXAweTQ3Mm1HeXVC?=
+ =?utf-8?B?YytYZ0dDRDBhbnVBWlQrTmovUExWdWQrdzN0b1Y0dEIwRmVEOXhLb1laTmM5?=
+ =?utf-8?Q?7jaguXkfpmXQUWOe3AZZWLu5zaVoWu2HE1eezgOH/2wVl?=
+X-MS-Exchange-AntiSpam-MessageData-1: 72rDDBvPKLFffA==
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 22:00:44.7454
+X-MS-Exchange-CrossTenant-Network-Message-Id: 774f1986-da56-4d7a-e301-08de5d273f6b
+X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 22:07:08.3621
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 537f8885-59b0-41cf-9cba-08de5d265aea
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	MN1PEPF0000ECD7.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5987
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: edvZvmqJFQCAkBMz3idc2dvdRDm3HMHsaQZtxLvtjqt62QywMr5jxcOhpygYra9iELS7I4L0zMp3PGbeNpm+uw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB7661
 
-Rust drivers may need to access PCI capabilities (such as SR-IOV) to
-configure firmware metadata.
+Hi Thomas,
 
-Add a generic Capability<S, K> structure that:
-- Wraps capability discovery via kernel's pci_find_ext_capability()
-- Dynamically calculates capability size by reading next capability
-  pointers (using 0xffc mask per PCI_EXT_CAP_NEXT for extended caps)
-- Implements fallible I/O via the Io trait with runtime bounds checking
+On 26/01/2026 07:59, Thomas Gleixner wrote:
+> On Thu, Jan 22 2026 at 18:31, Radu Rendec wrote:
+>> The CPUs are taken offline one by one, starting with CPU 7. The code in
+>> question runs on the dying CPU, and with hardware interrupts disabled
+>> on all CPUs. The (simplified) call stack looks like this:
+>>
+>> irq_migrate_all_off_this_cpu
+>>    for_each_active_irq
+>>      migrate_one_irq
+>>        irq_do_set_affinity
+>>          irq_chip_redirect_set_affinity (via chip->irq_set_affinity)
+>>
+>> The debug patch I gave you adds:
+>>   * a printk to irq_chip_redirect_set_affinity (which is very small)
+>>   * a printk at the beginning of migrate_one_irq
+>>
+>> Also, the call to irq_do_set_affinity is almost the last thing that
+>> happens in migrate_one_irq, and that for_each_active_irq loop is quite
+>> small too. So, there isn't much happening between the printk in
+>> irq_chip_redirect_set_affinity for the msi irq (which we do see in the
+>> log) and the printk in migrate_one_irq for the next irq (which we don't
+>> see).
+> 
+> This doesn't make any sense at all. irq_chip_redirect_set_affinity() is
+> only accessing interrupt descriptor associated memory and the new
+> redirection CPU is the same as the previous one as the mask changes from
+> 0xff to 0x7f and therefore cpumask_first() yields 0 in both cases.
+> 
+> According to the provided dmesg, this happens on linux-next.
+> 
+> Jon, can you please validate that this happens as well on
+> 
+>       git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git irq/msi
 
-Add SR-IOV (Single Root I/O Virtualization) capability support:
-- SriovCapability wraps Capability<Extended, Extended>
-- read_vf_offset() reads PCI_SRIOV_VF_OFFSET register
-- read_vf_bar(n) reads PCI_SRIOV_BAR + n*4 (32-bit BAR)
-- read_vf_bar64(n) reads 64-bit BAR by combining two 32-bit reads
 
-Signed-off-by: Zhi Wang <zhiw@nvidia.com>
----
- rust/kernel/pci.rs     |   9 ++
- rust/kernel/pci/cap.rs | 274 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 283 insertions(+)
- create mode 100644 rust/kernel/pci/cap.rs
+I tried this branch and I see suspend failing with that branch too. If I 
+revert this change on top of your branch or -next, I don't see any 
+problems.
 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index cd46ac12812c..2deb26fb3775 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -31,6 +31,7 @@
-     },
- };
- 
-+mod cap;
- mod id;
- mod io;
- mod irq;
-@@ -42,6 +43,7 @@
- };
- pub use self::io::{
-     Bar,
-+    ConfigSpace,
-     ConfigSpaceKind,
-     ConfigSpaceSize,
-     Extended,
-@@ -52,6 +54,13 @@
-     IrqTypes,
-     IrqVector, //
- };
-+pub use self::cap::{
-+    Capability,
-+    CapabilityId,
-+    CapabilityKind,
-+    ExtCapabilityId,
-+    SriovCapability, //
-+};
- 
- /// An adapter for the registration of PCI drivers.
- pub struct Adapter<T: Driver>(T);
-diff --git a/rust/kernel/pci/cap.rs b/rust/kernel/pci/cap.rs
-new file mode 100644
-index 000000000000..e3a903b79299
---- /dev/null
-+++ b/rust/kernel/pci/cap.rs
-@@ -0,0 +1,274 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+//! PCI Capability support.
-+//!
-+//! This module provides abstractions for discovering and accessing PCI capabilities.
-+
-+use super::{
-+    ConfigSpace,
-+    ConfigSpaceKind,
-+    Extended,
-+    Normal, //
-+};
-+use crate::{
-+    bindings,
-+    io::{
-+        define_read,
-+        define_write,
-+        Io,
-+        IoCapable, //
-+    },
-+    prelude::*,
-+};
-+
-+/// Internal helper macro to call ConfigSpace fallible methods from Capability.
-+macro_rules! call_cap_read {
-+    (fallible, $method:ident, $self:ident, $ty:ty, $addr:expr) => {
-+        $self.config_space.$method($self.offset() + $addr)
-+    };
-+}
-+
-+/// Internal helper macro to call ConfigSpace fallible write methods from Capability.
-+macro_rules! call_cap_write {
-+    (fallible, $method:ident, $self:ident, $ty:ty, $addr:expr, $value:expr) => {
-+        $self.config_space.$method($value, $self.offset() + $addr)
-+    };
-+}
-+
-+/// PCI Capability IDs for normal capabilities (in 256-byte config space).
-+///
-+/// These are not currently implemented, but the enum is provided for API completeness.
-+#[repr(u8)]
-+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-+pub enum CapabilityId {
-+    /// Power Management
-+    PM = bindings::PCI_CAP_ID_PM as u8,
-+    /// Message Signalled Interrupts
-+    MSI = bindings::PCI_CAP_ID_MSI as u8,
-+    /// MSI-X
-+    MSIX = bindings::PCI_CAP_ID_MSIX as u8,
-+    /// PCI Express
-+    Express = bindings::PCI_CAP_ID_EXP as u8,
-+    /// Vendor Specific
-+    VendorSpecific = bindings::PCI_CAP_ID_VNDR as u8,
-+}
-+
-+/// PCI Extended Capability IDs (in 4096-byte config space).
-+///
-+/// Currently only SR-IOV is implemented.
-+#[repr(u16)]
-+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-+pub enum ExtCapabilityId {
-+    /// Single Root I/O Virtualization
-+    SRIOV = bindings::PCI_EXT_CAP_ID_SRIOV as u16,
-+}
-+
-+/// Trait for capability kinds (Normal or Extended).
-+pub trait CapabilityKind {
-+    /// The capability ID type for this kind.
-+    type IdType: Copy + PartialEq;
-+
-+    /// Start offset for capability scanning.
-+    const START_OFFSET: usize;
-+}
-+
-+/// Marker for normal (legacy) PCI capabilities.
-+impl CapabilityKind for Normal {
-+    type IdType = u8;
-+    const START_OFFSET: usize = bindings::PCI_CAPABILITY_LIST as usize;
-+}
-+
-+/// Marker for extended PCI capabilities.
-+impl CapabilityKind for Extended {
-+    type IdType = u16;
-+    const START_OFFSET: usize = bindings::PCI_CFG_SPACE_SIZE as usize;
-+}
-+
-+/// A PCI capability.
-+///
-+/// This type represents a discovered PCI capability and provides safe access
-+/// to its registers. All I/O operations are relative to the capability's
-+/// base offset in configuration space.
-+pub struct Capability<'a, S: ConfigSpaceKind, K: CapabilityKind> {
-+    config_space: &'a ConfigSpace<'a, S>,
-+    offset: usize,
-+    id: K::IdType,
-+    size: usize,
-+}
-+
-+impl<'a, S: ConfigSpaceKind, K: CapabilityKind> Capability<'a, S, K> {
-+    /// Creates a new capability handle.
-+    fn new(
-+        config_space: &'a ConfigSpace<'a, S>,
-+        offset: usize,
-+        id: K::IdType,
-+        size: usize,
-+    ) -> Self {
-+        Self {
-+            config_space,
-+            offset,
-+            id,
-+            size,
-+        }
-+    }
-+
-+    /// Returns the offset of this capability in configuration space.
-+    pub fn offset(&self) -> usize {
-+        self.offset
-+    }
-+
-+    /// Returns the capability ID.
-+    pub fn id(&self) -> K::IdType {
-+        self.id
-+    }
-+
-+    /// Returns the size of this capability in bytes.
-+    pub fn size(&self) -> usize {
-+        self.size
-+    }
-+}
-+
-+// Implement IoCapable for Capability
-+impl<'a, S: ConfigSpaceKind, K: CapabilityKind> IoCapable<u8> for Capability<'a, S, K> {}
-+impl<'a, S: ConfigSpaceKind, K: CapabilityKind> IoCapable<u16> for Capability<'a, S, K> {}
-+impl<'a, S: ConfigSpaceKind, K: CapabilityKind> IoCapable<u32> for Capability<'a, S, K> {}
-+
-+// Implement Io trait for Capability using fallible methods (runtime checks)
-+impl<'a, S: ConfigSpaceKind, K: CapabilityKind> Io for Capability<'a, S, K> {
-+    const MIN_SIZE: usize = S::SIZE; // Use config space size for fallible bounds checking
-+
-+    #[inline]
-+    fn addr(&self) -> usize {
-+        0  // Offsets are relative to capability base, not absolute
-+    }
-+
-+    #[inline]
-+    fn maxsize(&self) -> usize {
-+        self.size()
-+    }
-+
-+    // Only implement fallible methods (no IoKnownSize, so infallible methods not available)
-+    define_read!(fallible, try_read8, call_cap_read(try_read8) -> u8);
-+    define_read!(fallible, try_read16, call_cap_read(try_read16) -> u16);
-+    define_read!(fallible, try_read32, call_cap_read(try_read32) -> u32);
-+
-+    define_write!(fallible, try_write8, call_cap_write(try_write8) <- u8);
-+    define_write!(fallible, try_write16, call_cap_write(try_write16) <- u16);
-+    define_write!(fallible, try_write32, call_cap_write(try_write32) <- u32);
-+}
-+
-+impl<'a> ConfigSpace<'a, Extended> {
-+    /// Finds a specific extended capability by ID using the kernel's `pci_find_ext_capability`.
-+    pub fn find_ext_capability(&self, id: u16) -> Option<Capability<'_, Extended, Extended>> {
-+        // SAFETY: pdev is valid by ConfigSpace invariants
-+        let offset = unsafe { bindings::pci_find_ext_capability(self.pdev.as_raw(), id as i32) };
-+
-+        if offset == 0 {
-+            return None;
-+        }
-+
-+        let size = self.calculate_ext_cap_size(offset as usize);
-+        Some(Capability::new(self, offset as usize, id, size))
-+    }
-+
-+    fn calculate_ext_cap_size(&self, offset: usize) -> usize {
-+        // Extended capability header: [31:20] = next capability offset
-+        // Use 0xffc mask (not 0xfff) to match kernel's PCI_EXT_CAP_NEXT macro
-+        let header = self.try_read32(offset).unwrap_or(0);
-+        let next_ptr = ((header >> 20) & 0xffc) as usize;
-+
-+        if next_ptr == 0 {
-+            // Last capability, size goes to end of config space
-+            self.pdev.cfg_size().into_raw() - offset
-+        } else {
-+            // Size is distance to next capability
-+            next_ptr - offset
-+        }
-+    }
-+
-+    /// Finds the next occurrence of a specific extended capability starting from a given position.
-+    pub fn find_next_ext_capability(
-+        &self,
-+        start_pos: u16,
-+        id: u16,
-+    ) -> Option<Capability<'_, Extended, Extended>> {
-+        // SAFETY: pdev is valid by ConfigSpace invariants
-+        let offset = unsafe {
-+            bindings::pci_find_next_ext_capability(self.pdev.as_raw(), start_pos, id as i32)
-+        };
-+
-+        if offset == 0 {
-+            return None;
-+        }
-+
-+        // Calculate real capability size
-+        let size = self.calculate_ext_cap_size(offset as usize);
-+        Some(Capability::new(self, offset as usize, id, size))
-+    }
-+}
-+
-+/// SR-IOV register offsets (relative to the capability base).
-+mod sriov_offsets {
-+    use crate::bindings;
-+
-+    /// First VF Offset register offset
-+    pub(super) const VF_OFFSET: usize = bindings::PCI_SRIOV_VF_OFFSET as usize;
-+    /// VF BAR0 register offset (first of 6 VF BARs)
-+    pub(super) const VF_BAR0: usize = bindings::PCI_SRIOV_BAR as usize;
-+}
-+
-+/// SR-IOV capability structure.
-+///
-+/// This structure provides typed access to the SR-IOV extended capability
-+/// registers using the PCI configuration space backend.
-+pub struct SriovCapability<'a> {
-+    cap: Capability<'a, Extended, Extended>,
-+}
-+
-+impl<'a> SriovCapability<'a> {
-+    /// Creates a new SR-IOV capability from an extended capability.
-+    pub fn new(cap: Capability<'a, Extended, Extended>) -> Result<Self> {
-+        if cap.id() != ExtCapabilityId::SRIOV as u16 {
-+            return Err(EINVAL);
-+        }
-+        Ok(Self { cap })
-+    }
-+
-+    /// Tries to find and create an SR-IOV capability from a config space.
-+    pub fn from_config_space(config_space: &'a ConfigSpace<'a, Extended>) -> Result<Self> {
-+        let cap = config_space
-+            .find_ext_capability(ExtCapabilityId::SRIOV as u16)
-+            .ok_or(ENODEV)?;
-+        Self::new(cap)
-+    }
-+
-+    /// Returns the offset of this capability in configuration space.
-+    pub fn offset(&self) -> usize {
-+        self.cap.offset()
-+    }
-+
-+    /// Reads the First VF Offset register.
-+    pub fn read_vf_offset(&self) -> Result<u16> {
-+        self.cap.try_read16(sriov_offsets::VF_OFFSET)
-+    }
-+
-+    /// Reads a VF BAR register (32-bit).
-+    /// Returns the 32-bit value of the specified VF BAR register.
-+    pub fn read_vf_bar(&self, bar_index: usize) -> Result<u32> {
-+        if bar_index >= 6 {
-+            return Err(EINVAL);
-+        }
-+        self.cap.try_read32(sriov_offsets::VF_BAR0 + bar_index * 4)
-+    }
-+
-+    /// Reads a 64-bit VF BAR register.
-+    /// Returns the 64-bit address combining BAR[n] (low) and BAR[n+1] (high).
-+    pub fn read_vf_bar64(&self, bar_index: usize) -> Result<u64> {
-+        if bar_index >= 5 {
-+            return Err(EINVAL);
-+        }
-+        let low = self.read_vf_bar(bar_index)?;
-+        let high = self.read_vf_bar(bar_index + 1)?;
-+        Ok((u64::from(high) << 32) | u64::from(low))
-+    }
-+}
+Thanks
+Jon
+
 -- 
-2.51.0
+nvpublic
 
