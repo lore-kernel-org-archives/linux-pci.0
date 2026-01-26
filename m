@@ -1,50 +1,25 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 735322264CF
-	for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2026 18:42:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A97E22AEF5;
+	Mon, 26 Jan 2026 18:49:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769452930; cv=none; b=LsAjqENKZwBsMwKMLY6djJhVUcBpsBmAjYqHIBoRoOFHIOIWT4mtqoJq6aHM795mFDAgusFcHdIq7R+NbIuK700Q1ncXLIBUHeiySu6PD6mnCtqDl+y9Ws8smRKojI2krlDmotg2D45Gkw/RBEqE5W1GktXRQn5KmhIlp6Ndyis=
+	t=1769453354; cv=none; b=EXBgKhsaJ4j1Xx7jRG8RXQWO5BM2AkIcRsyNUiwpmNNbHla3Bc67v2HfgfAXn2x8eP07pVFh+d41tQ9t+EDobEb32dL1z9VVfdEa8m6VsxAN1MpI+2fwhxY1RhVKFXprmwxHu4I/UT2TmYVtKWN5ppvEHVc8SWxm8EL/gU5z7aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769452930; c=relaxed/simple;
-	bh=aS9CbmgY+AE+YomBTccWVmA0YpzUUIeFUkHHsdJIMz0=;
+	s=arc-20240116; t=1769453354; c=relaxed/simple;
+	bh=BjevpJtv6JdMvGyZ4+3HDmYp0JsItGorquKWgvQc8uE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WQxeU2bwCrWAP4UBiqzPLkPoX/YBr4PQu/e3NZN0dgc3zL+Y3WBrC5OzxfH8uew5kfg9Pjr/xPVM8pib3HCASqD3JzdVEiCX0xGSjrxHMsQV/I7K6HwPEG34LNLn32KGE1K6tD6AaY+p0JzF78zEtHuq7DKH7hmjnYewvy4lH5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kW1QUIcL; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kW1QUIcL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769452929; x=1800988929;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=aS9CbmgY+AE+YomBTccWVmA0YpzUUIeFUkHHsdJIMz0=;
-  b=kW1QUIcLr+lJl088M+8W9FGkgLNb3JXGZGtVy7sEMTdgENroEhBQyfd3
-   9LPTnzNnZ8BQoAZUZYxip+Lj7dzmL7LSlgrog+wUJBqLD5DASuFN/A1bV
-   Sntz1JTORdocl6Kxu+B2ZbgSQf4sU77w+G9U1nKepONHWXzGUjjV8ic2e
-   xCJAYwVsXdZWGWBRVhBr65kx65128EeC6Iw5EdN5p2GP0rSLA0jiEre+S
-   Az8bomI2HQhaWg5UfIIfWbkeAufAL1bRSIMlKnSi1Xf5L1geWT1bZjkpJ
-   z0l2CTWS/K8eIQ8TlE+gmBmLET/ILbPMqbq6LVQFZ7DhnPdncYG5XNXV1
-   A==;
-X-CSE-ConnectionGUID: o+Jb4X9qTtWFDkfk7IAqXA==
-X-CSE-MsgGUID: O9RfWYZVSVS9YlTXwXQkIg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11683"; a="70351470"
-X-IronPort-AV: E=Sophos;i="6.21,255,1763452800"; 
-   d="scan'208";a="70351470"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jan 2026 10:42:08 -0800
-X-CSE-ConnectionGUID: EFde78KTRz6/CeyOU2w2Pg==
-X-CSE-MsgGUID: v60C9EKQQLG3CEucScpJSg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,255,1763452800"; 
-   d="scan'208";a="207629537"
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jan 2026 10:42:07 -0800
-Message-ID: <06fcb922-458c-473c-999a-1dd8518976f1@linux.intel.com>
-Date: Mon, 26 Jan 2026 10:42:06 -0800
+	 In-Reply-To:Content-Type; b=eMHNMp7HKE/A9ihlhFTEQ6cPyynaM7jg6yVxwZYYDRfaDDXpWuOtAXG9BmSw6IXk3TyGBJLScAi1T/nvXRAup+cpAZPS7IqIEQ4Ji+aMZ5Z5zzd/p6JrIICuK3J1/8ZOALSoxtl9OhmMw3UkOjG+Mzw7OIhdwt7gLJjUjHY3lSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 62AD3339;
+	Mon, 26 Jan 2026 10:49:05 -0800 (PST)
+Received: from [10.57.51.176] (unknown [10.57.51.176])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C9EA63F73F;
+	Mon, 26 Jan 2026 10:49:09 -0800 (PST)
+Message-ID: <0a60797a-fbb9-4a83-adc6-ad62baf5915b@arm.com>
+Date: Mon, 26 Jan 2026 18:49:07 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,113 +27,64 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/AER: Clear stale errors on reporting agents upon
- probe
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Terry Bowman <terry.bowman@amd.com>, linux-pci@vger.kernel.org,
- Shuai Xue <xueshuai@linux.alibaba.com>, tianruidong@linux.alibaba.com,
- Keith Busch <kbusch@kernel.org>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org
-References: <3011c2ed30c11f858e35e29939add754adea7478.1769332702.git.lukas@wunner.de>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <3011c2ed30c11f858e35e29939add754adea7478.1769332702.git.lukas@wunner.de>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH RFCv1 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
+To: Jason Gunthorpe <jgg@nvidia.com>, Will Deacon <will@kernel.org>
+Cc: Nicolin Chen <nicolinc@nvidia.com>, bhelgaas@google.com, joro@8bytes.org,
+ praan@google.com, baolu.lu@linux.intel.com, kevin.tian@intel.com,
+ miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
+ iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <cover.1768624180.git.nicolinc@nvidia.com>
+ <09cb6be1f8f7472a2f1ccab72154cc6e22cf570b.1768624181.git.nicolinc@nvidia.com>
+ <aXdgljWHHPVMTmya@willie-the-truck> <20260126172020.GP1134360@nvidia.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <20260126172020.GP1134360@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-
-On 1/25/2026 1:25 AM, Lukas Wunner wrote:
-> Correctable and Uncorrectable Error Status Registers on reporting agents
-> are cleared upon PCI device enumeration in pci_aer_init() to flush past
-> events.  They're cleared again when an error is handled by the AER driver.
+On 2026-01-26 5:20 pm, Jason Gunthorpe wrote:
+> On Mon, Jan 26, 2026 at 12:39:50PM +0000, Will Deacon wrote:
+>>> +	ret = arm_smmu_alloc_cd_tables(master);
+>>> +	if (ret)
+>>> +		return ret;
+>>
+>> Were do you allocate the second level entry for ssid 0 if we're using
+>> 2-level cd tables?
 > 
-> If an agent reports a new error after pci_aer_init() and before the AER
-> driver has probed on the corresponding Root Port or Root Complex Event
-> Collector, that error is not handled by the AER driver:  It clears the
-> Root Error Status Register on probe, but neglects to re-clear the
-> Correctable and Uncorrectable Error Status Registers on reporting agents.
+> I don't think we need to. The entire design here has a non-valid CD entry
+> for SSID 0.
 > 
-> The error will eventually be reported when another error occurs.  Which
-> is irritating because to an end user it appears as if the earlier error
-> has just happened.
+> The spec is really weird here, on one hand it explicitly says that with
+> S1DSS the CD entry is ignored.
 > 
-> Amend the AER driver to clear stale errors on reporting agents upon probe.
+> On the other hand, you are also required to have a CD table pointer of
+> at least size one for some reason.
+
+Because it is not possible to enable 0 SubStreams, since that wouldn't 
+make any sense, hence S1CDMax also acts as the "enable SubStreams" 
+control (assuming SSIDSIZE > 0 and it does anything at all - note that 
+strictly we cannot assume this bypass trick is *always* possible, since 
+an SMMU is permitted to support ATS without supporting SubStreams).
+
+> So, I think a CD table pointer to a fully invalid L1 table of at least
+> size 1 should be OK?
 > 
-> Skip reporting agents which have not invoked pci_aer_init() yet to avoid
-> using an uninitialized pdev->aer_cap.  They're recognizable by the error
-> bits in the Device Control register still being clear.
-> 
-> Reporting agents may execute pci_aer_init() after the AER driver has
-> probed, particularly when devices are hotplugged or removed/rescanned via
-> sysfs.  For this reason, it continues to be necessary that pci_aer_init()
-> clears Correctable and Uncorrectable Error Status Registers.
-> 
+> Or stated another way, why would ie be OK to have a 1 level table with
+> an non-valid CD table entry for SSID0 but not OK to have a 2 level
+> table that returns non-valid at the first walk?
 
-Can you include details about where and in what configuration you observed 
-this issue?
+S1ContextPtr itself is reachable since S1 is enabled, so it cannot point 
+to nonsense. But the S1DSS==Bypass behaviour does state:
 
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+"Note: Such a transaction does not fetch a CD, and therefore does not 
+report F_CD_FETCH, C_BAD_CD or a stage 2 Translation-related fault with 
+CLASS == CD."
 
+So if we're not intending to actually allow traffic on the SubStream(s), 
+then it should be fine to use either a 1-level table of invalid CDs, or 
+a 2-level format with an empty L1CD table to gracefully terminate any 
+config prefetches.
 
-> Reported-by: Lucas Van <lucas.van@intel.com> # off-list
-> Tested-by: Lucas Van <lucas.van@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pcie/aer.c | 26 +++++++++++++++++++++++++-
->  1 file changed, 25 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index e0bcaa8..4299c55 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -1608,6 +1608,20 @@ static void aer_disable_irq(struct pci_dev *pdev)
->  	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
->  }
->  
-> +static int clear_status_iter(struct pci_dev *dev, void *data)
-> +{
-> +	u16 devctl;
-> +
-> +	/* Skip if pci_enable_pcie_error_reporting() hasn't been called yet */
-> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &devctl);
-> +	if (!(devctl & PCI_EXP_AER_FLAGS))
-> +		return 0;
-> +
-> +	pci_aer_clear_status(dev);
-> +	pcie_clear_device_status(dev);
-
-Should pci_aer_init() also clear device status along with uncor/cor error status?
-
-> +	return 0;
-> +}
-> +
->  /**
->   * aer_enable_rootport - enable Root Port's interrupts when receiving messages
->   * @rpc: pointer to a Root Port data structure
-> @@ -1629,9 +1643,19 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
->  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
->  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
->  
-> -	/* Clear error status */
-> +	/* Clear error status of this Root Port or RCEC */
->  	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, &reg32);
->  	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, reg32);
-> +
-> +	/* Clear error status of agents reporting to this Root Port or RCEC */
-> +	if (reg32 & AER_ERR_STATUS_MASK) {
-> +		if (pci_pcie_type(pdev) == PCI_EXP_TYPE_RC_EC)
-> +			pcie_walk_rcec(pdev, clear_status_iter, NULL);
-> +		else if (pdev->subordinate)
-> +			pci_walk_bus(pdev->subordinate, clear_status_iter,
-> +				     NULL);
-> +	}
-> +
->  	pci_read_config_dword(pdev, aer + PCI_ERR_COR_STATUS, &reg32);
->  	pci_write_config_dword(pdev, aer + PCI_ERR_COR_STATUS, reg32);
->  	pci_read_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, &reg32);
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
-
+Thanks,
+Robin.
