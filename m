@@ -1,72 +1,71 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013015.outbound.protection.outlook.com [52.101.83.15])
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020081.outbound.protection.outlook.com [52.101.196.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7719B344D8E;
-	Mon, 26 Jan 2026 17:49:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7066A2356D9;
+	Mon, 26 Jan 2026 17:59:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.81
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769449793; cv=fail; b=F+Zczq9l/FqbXODzEaxh7dViWDUflNBYlNE8Z2YVk3hgaxEh2P2B2lJ3EINn45QJ+TuUGbCX1SG7CGT8Wu7+JyCnfk1YCJgX0q2HQG9SrsHty4nH6wneItETfSyA99QeiPAfV7zAlR3dQnfnxWUTaC35+boRoMN/Y9unw1SmO5c=
+	t=1769450352; cv=fail; b=dfUjB11Qq9MqXsozWiQ27ajaSDMVx/ba1gduB3eENOhby+Hg/3cdobeqI16jLwsK26rS0pid2DCBXxNxhqHSmTDGka3PZHfXjdkbjeuw6Thcn17i+leiOXxaGGdg3eeZA6vmuNucFHE4oCt1QlWWHyvU7xETcArZ7pMbnCm3v4M=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769449793; c=relaxed/simple;
-	bh=Ju2hUIpcLgGILM7lkF3zFL0ktYp99eyP61CPKGttgY4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=ZL8dCQFNe5Nk5OKbnVETqOIaMoLq2Ese+iFJ94pV8yIT+7EWoTtb+fdkSfqgJEF8rHYs0FQ2M4QZR1Y8Bw8bp2BDZCAZrqjccTU5Z7df9U7tMrxqrNjHVkpOuE8P1PA7U9gmS5IjiKkwjHdKM3V45nIXPBCoba7xQiEC+3nOWoE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=Sj2JDsBQ; arc=fail smtp.client-ip=52.101.83.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1769450352; c=relaxed/simple;
+	bh=Kkm0DlawlUzFmicdoGm7FAxBLKmIy96JZFVeGAji468=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=F8dAn4INCyChqHuMzgeHrV9hF+Ps8KEIa3c4nwkqQfjFptvCRsPCR2zwd+jBL+QCcO85oVHWvKlDtLsplpRUsYmPxWEw3E1rRKx40gA6fLheeEnO8YCKYPdBi9SdHzt5JU5aK5qC6aQ+p6r4lzcODBmYYCmq3gJ0u/yzrvfnFTg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=xztxHjA8; arc=fail smtp.client-ip=52.101.196.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="Sj2JDsBQ"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="xztxHjA8"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=T5ioW9aOhtplDbKDCbYPxydKHzqIX4xjAEWk0kicyP3BcDhp89Vz9LPMzi0o3aahXavdWGoJiponOHBeNTxTLgCvRx9egmx91xgR4Q/XKt3ibOrKsxvgVzkBVa3MshmdE2Yjru+tbFF1C8Fin6qhxxI8kKOZp1sHoBqEut/CMd2NqEVYgG4py37El0CSQaMfaj2sqN6MtiwhlB7HgY++SLnxhExWbjIEaFyavVKSW/ZyCQY26Xi9fLr8KWwHUqdYpcx3H/xNa58X8+2ayt7AAZcRf5kIS7FV3m+U8subVBig6YxFRF8+0cbrzw2rPjJWN2sVL5swXdbsO8VvKwaRbg==
+ b=hZdZ2KfUItVb2YDT3fW+Hzb8N9nTRe2fSn6rQHPg/2EXUmNAZDF4dHkhEorPZs9uBVYJHtIP/+YgOWypu1LTFvt5o5OWCtE7IkS6bGm0fvIfm9yUQwV5Cajdk4xgdHhSRvOp6Mu6raKyVH3mDRGnMtkazg3ucxPwhJF8lHmQEndSUvHq61Gx8TnRpfydOX5tLixhWFlB+AhS5niBtNwWCLpKOk15uGJoBZeTqajtMfvVXYeEj+966XFR6SCXd5Yt/awNWgDGaKG2C8uIL0ra15hsCtmIOsteRtM8GDVjygRPBpmoYd0VBPlM4wD35CCvAj6bBiKmCsFLdWbyanaT6g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oQxarEQnATFJDykVCV7vIQFPjE/G8DbJxNyaID9eh/Y=;
- b=sygGz88PH0K7r4hABJlm2O4ROUHtLKcG29Sako0lR4zPx3lZ1WGOYtPY9jQ38T+5I4MrDLP9N90Hob1vm8JvRxGbOLu83ofe9FfjS8dewot/xmoYPv+jSPJodJApi8Xgq/8gflrJ4WDxefOEKcvsojsnd53pp1Q4nLMO0OG+izuHTcIxdVlS1DKBFC0eHGZe/44Ji5FvB4sSgh8HwymcyzdkGGx4aRtwXrwS+7p8E7YLSclLAV7tdu88xNxjcTDvcF0u/zKNAvaruiUjbW3Px6cCGx2eYVqTKwki3qT69CG/ow1Jh/cI0tIk8x9q1rDBJ+ckYYFKxoHFgt/HVTEMvA==
+ bh=+kXeS/nccBTO3Dw3N55isdg51xpEuvJA/FGe4sC/uGk=;
+ b=goonW9i+AopqGGSzzcklkMy+3MXjBPC5pXbJ+Kordtl5JrIidqoyGJjLu5d8tSCrYTF2PAz2oQmIYyQxg6iAQU4WuAPxDYNTOnXNrrGmDv6D0XMmmkjRle7aXNwBkSwtzvCyxjDGxnQw68TuOzMxrPor9cj5WymM78yEJt+hgEi3f5HpAJz2RAwop2dNHVxQFzi5gOwEAy9fE07e8zRq0fCAjajORx4d+UlsOXZCM/uHUBFvV0ZO/TzC6m/BeaHrDw04fdKsin1RGKQ/MlpiWJnIdKvyAIqoeosX2JDtT8Fm32miK68oHe+0IQXbQ2vBLR9cZl66WyIbBgBm8VnuXw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oQxarEQnATFJDykVCV7vIQFPjE/G8DbJxNyaID9eh/Y=;
- b=Sj2JDsBQYnPLj2WZVQBZDyGGi6n5lYCtZ2BmUsdtf4YYj3Utla7mT/cNHR2PaLNVCdA1qFqdtbvj0lhNZe1P3dIH1pJlhvoBQC24k2zglOOjiW5XBUsedrHCkTebWQ4BTKG/blHkc1mof/0z77BPtoY/y87RJz1f07BGs98/VOW1dpRP3BCpd3pAjvhS+m9/vlGos5u6m9XOWkE9vtrUZUe4CrFi4PhoWTTn4HUH2aa0nFgkqwmmmxxZgXj2uB0aEkZ/hxP64msbY93oDs++eUxZK2hVOXdZuY8MTHy1rVhd/eA8vtri2ETTb9XVg+SiBi9C9uK7tIbKQ5f93YS7oA==
+ bh=+kXeS/nccBTO3Dw3N55isdg51xpEuvJA/FGe4sC/uGk=;
+ b=xztxHjA8IoNZoq4byMeFmqY8SWgk2RfVxyFTBZ2hEVC0ddeN6VscsXhJKs/D4PzSM3I8aAP6XRGksXfV5U3BYAneyDnv3M6uu2uu4QQWSk+y+2xt/hBORU0HyLZ8/F8uOFpw758Lw+YsO4cERI2Dvq76QQbisIaOwvdqmLbF184=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by DB9PR04MB11558.eurprd04.prod.outlook.com (2603:10a6:10:60c::21) with
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by CWLP265MB1924.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:69::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.15; Mon, 26 Jan
- 2026 17:49:49 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9520.005; Mon, 26 Jan 2026
- 17:49:49 +0000
-Date: Mon, 26 Jan 2026 12:49:39 -0500
-From: Frank Li <Frank.li@nxp.com>
-To: Felix Gu <ustc.gu@gmail.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Trent Piepho <tpiepho@impinj.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: imx6: Fix device node reference leak in
- imx_pcie_probe()
-Message-ID: <aXepMzJJXRz9G2rf@lizhi-Precision-Tower-5810>
-References: <20260124-pci_imx6-v2-1-acb8d5187683@gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260124-pci_imx6-v2-1-acb8d5187683@gmail.com>
-X-ClientProxiedBy: SJ0PR03CA0270.namprd03.prod.outlook.com
- (2603:10b6:a03:3a0::35) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+ 2026 17:59:06 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9542.010; Mon, 26 Jan 2026
+ 17:59:06 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 26 Jan 2026 17:59:06 +0000
+Message-Id: <DFYPSR8ECE0O.2BYC40RIOVHCX@garyguo.net>
+Cc: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+ <boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+ <markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
+ <smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+ <kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
+ <joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <zhiwang@kernel.org>,
+ <daniel.almeida@collabora.com>, "Jason Gunthorpe" <jgg@nvidia.com>
+Subject: Re: [PATCH v2 2/2] samples: rust: fwctl: add sample code for fwctl
+From: "Gary Guo" <gary@garyguo.net>
+To: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+X-Mailer: aerc 0.21.0
+References: <20260122204232.15988-1-zhiw@nvidia.com>
+ <20260122204232.15988-3-zhiw@nvidia.com>
+In-Reply-To: <20260122204232.15988-3-zhiw@nvidia.com>
+X-ClientProxiedBy: LO3P265CA0013.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:bb::18) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -74,136 +73,313 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DB9PR04MB11558:EE_
-X-MS-Office365-Filtering-Correlation-Id: 17fa414c-08e4-434f-991c-08de5d034cec
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWLP265MB1924:EE_
+X-MS-Office365-Filtering-Correlation-Id: f81c8849-ab79-4b5a-3758-08de5d049964
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|19092799006|376014|52116014|7416014|7053199007|38350700014;
+	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?S/AwcNvCHXQoU7ZYx6MzptmkjEPgLNH9hVPzi23o3hSaqsK+p/sEwOGB9Xaa?=
- =?us-ascii?Q?RaCdhbH2Mynx8ctrX71riY7DfxwmDJcMObIfPuS37dbOn+kG/IIYXMZRo4tq?=
- =?us-ascii?Q?//1lkZiQXOxW0lKNwwtccQ8BzQ/N7Qk+l/kx6p0tVLi7oSlsbGMSOL8NLVJh?=
- =?us-ascii?Q?7ufR1rbZYjmuyX+yp0QLwp5DUXtJqoWsQGuXWwv+RwFpamqbmAF30S8FTsRl?=
- =?us-ascii?Q?TrHIJdtTCo3lxG7b26+TWMiMn8mjM5XypYxrv5CBXKR+8gpHLJJDBQB58OEF?=
- =?us-ascii?Q?UKaGhoKxt1TpMBQCDxYI4EuWJllz4YbyE5javdRnxqwV8E54dY03SKfoHM7Q?=
- =?us-ascii?Q?0HRFoYzvZWgjzEQjwoUOU9sApS2DcdaInCMcXQa3ok+jo+gxSPJI5k0hdoCd?=
- =?us-ascii?Q?U4BUG6o52dqdVnAd/FTuW3Q6NJBpsfrtxoeFyog1Lvt5Un1cDtxxDMevUIcS?=
- =?us-ascii?Q?Vy4tX51nXo2SN3bm9di2AemIUBBh6CtZxrPaP+GQSjio/Uvc2jTwUdgfo80w?=
- =?us-ascii?Q?IwR5v/2ShjuEhrUy1+oM2ba3wWICMsK8arTiq0C/XeOgeLfif6KEyaIuyQQW?=
- =?us-ascii?Q?fCUKf6J2ZGcT3nAfArOkmtRTUuzQjHYqdHW2YGQqell7qgzY/zJatURlneJK?=
- =?us-ascii?Q?rq5HXml8mtNS9MHQ7KA2Iq89WX+iLJzzQIPkYN/C7w3PPPTFiXawTC3C3C5N?=
- =?us-ascii?Q?e0pwwhktSvloGbUtJBTI95rE+pT1jnn45/f0Ze7NPmFhC1jvm1kq29jJgniZ?=
- =?us-ascii?Q?rSV6bdLYGjuwly13E85po2nyDLZ2GdCqq6xTc/SfV1U1lqfxi2Er6j7mvWVE?=
- =?us-ascii?Q?gz6wI9Kys2E2goYyz+ipGwj2zD9gVeNHgYFOTDJfF9RdMcNlv9KxL0/8RlnU?=
- =?us-ascii?Q?NcXWbZaf+R0/wqaHXBikNWCoCQaUJsB+hhIGQbvG3EajMAhN12Udw3idXrId?=
- =?us-ascii?Q?EQGEouCqwJtb6ZydCTwFOTIIUhQSUDkvADbsEKyy/qQvekOUaGaU6Dz34jZn?=
- =?us-ascii?Q?7GJf9dHZWMtO0ggn51T60wcfrs9xWjCrAtatwNSLFw39EfK3K6JmU4w+O4Uj?=
- =?us-ascii?Q?1Mnylc4y/Z/Zw0PWXcw/igZn/uQROKAHw26RwHkJLuLWOHNv2t85qfiMknzT?=
- =?us-ascii?Q?Csss/9gGx+WaJvsqF+K2RcG9TEh5apz1WuGC4+RMhYBJnFuoqpemUH/LnqgH?=
- =?us-ascii?Q?RKXPx09qub00whAhGl7w84/tW2tQkh7h5UylDKAVKT3A+8pYPPw+xtRpEgPU?=
- =?us-ascii?Q?8Fn632Sklobm3aX4fSHIj2Rj25eTnaEWf2+WgYP15nXXnLlj3qFTTL0coDHx?=
- =?us-ascii?Q?PGUoPr6vSsvgAJBXQo98jntglx2k7Xrh070n6oIRmDKvk3NUM6fmoj8fSSss?=
- =?us-ascii?Q?EKPzkhu9YWsDhhcp+A+iPgkeE13lkOXPE47OpKl+iOm75VI+GZ91TWfEzfOE?=
- =?us-ascii?Q?PExSCc29YCkO6MUwUHLfbNM/KXViubCfleQHtEsNxUJgoze0RnEs3HlADc2K?=
- =?us-ascii?Q?XavrQrpaTX1U54GPR3ZLnfnH1A8mCKnKOruZZBjxLndOTOp5jacc7FDnViXX?=
- =?us-ascii?Q?wTKrOtKtu3YpLklp+QDWBFJTmeJKB22JyVQZuESBtysendjvwdFNkTlZf/rf?=
- =?us-ascii?Q?u7rh//DLsVUCbc0SH7Zj+qE=3D?=
+	=?utf-8?B?dnNZdmxJaTZqZi8vZlVXeWQ2eXdGS05aTFREaGFza1J5RmozTDkzRXNUNjRL?=
+ =?utf-8?B?OFhQRmtGUnU4bUNkZlRCbExmRzlzN0JocUxVc0ZzQk05WXRSOVNUUzZJZTJY?=
+ =?utf-8?B?Y2YzV0tWdG8vVXhYeXpjRU5zTWtTTEZMbXdPVUk1d3J0NHVZazU5bDZWem5Z?=
+ =?utf-8?B?RHlvblI1cVloQlliTVlvYURtRjgyYk1lQTFTOXFwQlV6WDJSdVJqK2NCWHNM?=
+ =?utf-8?B?cHVGWkl6OXk4c3hTOGdqdjd3ekhZYWpxcm0vZDRpcWZjS1BKc3doTXFYTUZD?=
+ =?utf-8?B?Y2N0V1dEYzZ1bG5GRUlBMlR5K0FvaHhwdjVwTXo0UDBBZGpEZFBpaytKcWl5?=
+ =?utf-8?B?VEI4UHV0NUt1Sm0xTEZFT1J2bjNCTkdTZTNCUVMxUGd0R090ZllkaTl4cDMz?=
+ =?utf-8?B?VjZtMDJEaThPRVVtUmE4emFDaHdMelU2UFZpSkZQbnNTblVPU0FhNTg2VlFa?=
+ =?utf-8?B?dGQrTHZ6NWJMZjBXSVprMHZYMVdGWUNOVlJOc3dNdjZmRW1kN0FsVnpEMk1U?=
+ =?utf-8?B?WjJPZG5ySTA4ZndXaGNvdklLUHZSYWF0SjMreFRJaWdTZVhlbG4zWWQ3anFr?=
+ =?utf-8?B?d0RvVU1RT1kvdEpkVEcvQmFhcS94RWZCeUgvdG9NM015aFphM0RWL3czNk9p?=
+ =?utf-8?B?WG54QmJ5NFNoTTBRYmZiM0Qvdm1ENkp1aGlFL0JadHNydUdMZkVKLzhPbmlD?=
+ =?utf-8?B?cUxLemtTZFpmanYwY1BhR2ZIekFWKzlFSHdiWXNzYzY1YXdhZlFrbTVwbGcv?=
+ =?utf-8?B?ei9Ccllha3lUZjdZeWxPWDhRNUZLQitYTlFTUlUybUZ4eTBlcHJkQlJCNi8y?=
+ =?utf-8?B?K3I0SUxPdkVxZjBJSzUxMlNYcFBsejkrVGVwTDVtdjNBdGV4aWhGWEI0WVBH?=
+ =?utf-8?B?NzNQVUZCT3p3YUgvK0kyMG9BRlEwcFRVbE9DK3FCaEcxaXBLVktEa2NRQUVw?=
+ =?utf-8?B?Z05aeGd3dnJjN2dwTDZpMFcyUUtYc2FBd0M1eVBjVWloNnR5YU5sajRoMU8y?=
+ =?utf-8?B?VStzZnNhRGI1c2NSQWYxWVdHbzV4Z3JqQnpRMHlDK3NURWJCaWNkaWlSQ0pi?=
+ =?utf-8?B?Qk56ODJDeFBsZHlKM1MzNGJVeUEzalQ1N3lMSlZEK3cwWEZtVEVpTGNnU0Zi?=
+ =?utf-8?B?TGcxWGRtbXBDS2lIaE1saVM2UGE4Z3huaGNjemhwQ2dFOXpnaWNLblhHMElX?=
+ =?utf-8?B?Z2YyTVN1NkdoMytYdlRXcjExUktGdHhIWEFUbnZjWm9RQmVUdmwraGQ5Vkxk?=
+ =?utf-8?B?Zm9zMnN4cTFQUk1MZ0dnR1g2UFlCeGZKZVNkQWhvTmN5WUY0U0s5T0ErRnRQ?=
+ =?utf-8?B?TVZhNU9mNUtSajhBVjBJcSt0Ri91ZFN3aEJjZ2FhaEU2WGhWUkRINStvM3Y3?=
+ =?utf-8?B?OXkxT0NtcUxnM3BIYlpEZXRZYy8vQkN2OGw0MGdBL2lTZDVHbmdTdmRFSlZR?=
+ =?utf-8?B?Wk1VUS92OWEvNGQxQTJEV3AwY281aWExYUFyS0xQdU4rakdqODVtbFRHNFQ1?=
+ =?utf-8?B?bVdDRmtQTWZ5Y2ZKMEwraFRYUUNibXpTb1NlOWVlN0RvckUyVkhhV1lFZUtu?=
+ =?utf-8?B?YnZYcDZtOW5nUlNlZDNKL3F4VW40TDkzYk03UzhLTlNiQTlCb1RIdkExZnV2?=
+ =?utf-8?B?VVpxbk9ZdUJ0c0h1b3JBMlVXODc2NE1XZzZvc2JiVnI2MXN5RDhPRG90dFJx?=
+ =?utf-8?B?Z3pQalc4a0dCWVF6WmlxTWs3Qmxsa3BUZURhb0Q4Z3pGa3FkRGN3bzZhaVE3?=
+ =?utf-8?B?YWw2bFdsUE1jbUhFYUUwTnlncTFXZkhUMGVHSERJc1REbWszRGEzSjRPUDZT?=
+ =?utf-8?B?YlRFNU9kcHhIZkhwUGFIcVE3VkJXQm81QlR6eEl2dGJRaHl0STdyblJPQ3NR?=
+ =?utf-8?B?akFnTzZTQnJPdXoweWd5VWhuc3d4V3V2ZlBjN3h6d3V4Y2tIVFp3SVMyc3ZJ?=
+ =?utf-8?B?b3Zsby9VL1N4dUV5L3FHQjRtVzRFVU0zVEZZekM1Qi9PZWVRSFYwQUxLVnRm?=
+ =?utf-8?B?aDN1c0N4TnJPYjVrczRYK1lEaEhFM0Z4dVZyaExLbndINEorK3IwY2p1dWcx?=
+ =?utf-8?B?bUFGRHJSdVZaYTZZa09lNXNMekg2bzR1YTM1bFg1RjBvdEJVMDkvNG5UdjVT?=
+ =?utf-8?Q?J748=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(376014)(52116014)(7416014)(7053199007)(38350700014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(7053199007);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?qWJ9lIAD3txm9B5H1htFUOmWlwi4y6PwqKw4ykF41v59ass1YfHmcw39lGFU?=
- =?us-ascii?Q?k0FdUFjFIP5CtaSe9YddpfrID9J+/vERqy/4RMkOAgrCQGOAb6tKNPXk9CnS?=
- =?us-ascii?Q?4HlpF5C1f3jNeRTCwpvTXZYMr3J6Jt4kuQt/OCWv1XLnuauEpxtbm+UeY6Rz?=
- =?us-ascii?Q?97LTpVBOp/12vo8GNf6hdlyQZNPIKBfYMRlHWhNQwN9yRCCrOpjmbtPtdt2g?=
- =?us-ascii?Q?7KjC+B/XHrYC98+lgkY7O7CVVehl16uR6jpUdvjfr4sp5cZu7B2VR2Z+MLWj?=
- =?us-ascii?Q?kgjaVcDFY3VbDrkNcuP0nJ7s4lqrcQ9xffJNMwVCuRhGyCHkMTP/Dx+BrSn4?=
- =?us-ascii?Q?09yTTSvEte4JLwVZCY32Gks5wEeZS1owgYFQKEHBAuH17z22k00TcCBT2Ff3?=
- =?us-ascii?Q?S/3uU7cl5KPeXfbsGy7eHB+0ds+hjN1Z8BDVxOCtkfz+eRMRUXp7LG9jIvwZ?=
- =?us-ascii?Q?x/t/5dIUl5+8qz7jwpr9JeQclwCo86o2dSvDHWlakHM2NEOx8oadBYKti6+O?=
- =?us-ascii?Q?Sn0uIweHqJtlPFRYFYr+iTxRjrf9rhQTdsdb4ZMwKXjUPfp61S78grMj6Z7d?=
- =?us-ascii?Q?D28fWjztVKPm7MvF07RC3UxmbU5Eo1Y+W+pKu7XU0/PvMcJLJ3N01o6UXOxy?=
- =?us-ascii?Q?XZuMvyksM9YWuEUzvUMX1vf4n7Z/qaE7niz42AdaW5i7onhqoFWQkfen0kO1?=
- =?us-ascii?Q?0Wjof7YiLtkBkwxXTGGDf7w9o4bLC8NQYiPdalmsp/0bpo2+/YJQDQI8LXYw?=
- =?us-ascii?Q?Y+w1SQ9DlGl8pppGqMkU3t1hAbEarNtF4YOfRILi09qTV08qRNCqvwbHTmiF?=
- =?us-ascii?Q?NnK7X8jLLqmjXIwUmioE4FqeAiHzBPhTUDb86gsAdMUwJvsN2iXfG/JZ0UIe?=
- =?us-ascii?Q?Pjmk9DISl44I6+rvwKnGjvi59kRp1omT4ID2+ZWOp78K5o2soTfoe0TG0QY8?=
- =?us-ascii?Q?en6j8t/dmdLYi6Lpy2C4471OwidEH85uWgtYn6cr3tA1Qb+h/OuGBl6lFEZ/?=
- =?us-ascii?Q?/3C+7cBjaqAllBW+GmG2Dq0W2Cs1kUE2v5jE/s0i8yDgteEKMSggW4rlGWTF?=
- =?us-ascii?Q?qGA2n7c6cKC6awp3/c/+dXiYjab3FFRvinBP15nm1xku0yO1j45WaplEauF+?=
- =?us-ascii?Q?r0ijV9pA+bEKllzzO9u7CBilkUMTnnqJPONYG8W4SZ4rSqTIF1ZhjqdWsyPP?=
- =?us-ascii?Q?WSaeXKxY5nIJrreyYHXEK1AKbUXvCW1/Fbmf6XfKV6nneMlphZNMX4S1aH72?=
- =?us-ascii?Q?O1zze6OqwRQvFEfIEzuQvbcx5Yp5iTdYsgXgWJCcBdfZcJa0x6Pfradu9Z1+?=
- =?us-ascii?Q?pItZ3L9GQe7hzm7W9jTjtrESB3QWgDFQUVlGtlLjuNGdoNfiPkUrA4Y2VNjA?=
- =?us-ascii?Q?cU4FYFAreCePkVNKlhEhW0nqaGYIGRrwrmtT6ZvvLd00E1DooBhud4PoF+9e?=
- =?us-ascii?Q?TVBGN5JKWOjH59aHRebN4p32GewVBTIkGrWcLIeLOpqmnafXyGeQcHdYZ7RI?=
- =?us-ascii?Q?vnNJw5l3cgYPK+/k/4JUdvk3RlIksOBo1Yo0t0AmjcN5rFIT30B/JnItMscq?=
- =?us-ascii?Q?LDGq1VchZh0E/qV54hGiftWxWD0JWjlTJgROdy7IDgSUbEK2IGCK+RTzyNDr?=
- =?us-ascii?Q?KUjaxQbV1vhlH6oj7BEa/wKQvKt9LYNXX9sKJ8IJQh3t/YJGbLJoLD6Czqlc?=
- =?us-ascii?Q?XOS7gTduaxmc0PtAJJjV35lJ9+c6KjiA8M+C0upkGXtzWg76?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 17fa414c-08e4-434f-991c-08de5d034cec
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+	=?utf-8?B?K1F3Ty9FaEZnNmJWa240MXdCL2lZSGNYUVlla2FnTU9mb2c2QXNGN1BKSy80?=
+ =?utf-8?B?Q1F1aEZKbjQ4ampseVhxN20xT1VWRW8zV2NSWmEvWGI1VGRLMUVsQTFFWElW?=
+ =?utf-8?B?Skp2WE40cUNVakRDVVdzc0RBbjNDSjBDMTlvQllPUzN0L1VMYzVXVlFNQ29s?=
+ =?utf-8?B?WFBHREdYMEJFWjR3UXE2ajgwUmEzQ2pEdjE2MDRRRDUvdHlCamNNZGRodm1U?=
+ =?utf-8?B?bTlMeHVwNTlVU0lta2pOa1lnTDJOOU1mRkZvbmYzdk11QXRLaWdSU1dneVlh?=
+ =?utf-8?B?Tmg1SXJycmJ2T1JFZGZobkYzR1dCSUlTaGtVaTFQV1RRM1BseDl5QU1zQSs0?=
+ =?utf-8?B?UVFDdEtteUljV3ZxaUNiSlY4SDRtb0Z5NGRLeVg4SkxDMEUycWthczYrSU9Y?=
+ =?utf-8?B?M0gvUTljekhLVVR2ajJYcnBjSkdKRTRZNFY4NldRcWM2WHNCN1dVdUtFUGE1?=
+ =?utf-8?B?NFZRbEdWTG9PcnRRQXpKeFI2SGF0K1hjQzdXTS8zVGNSUnhuZ2Vwb0NwTzNE?=
+ =?utf-8?B?MUJlRndnd1lEMVQrK2swSC9WSzA1V0NWaHNRbE1Xa1RRSkJaMllrcDlhdldy?=
+ =?utf-8?B?N3pKMjdqa0pUaThHb1JYc1FzYUZPZEtGUzJrbWlkRjRFUnQybWZTNlpKNWZ6?=
+ =?utf-8?B?VFpOZVFjR2VlNmhSaFd3UGs3SzJMOVNIRE9McVhjVjU2TXZ0cm5IZUdVbWdF?=
+ =?utf-8?B?NGNIa29jNnRGeHkzSjRDZEkzdEsxOUJZcmlXRUcyTW92d3I1dHNYU2FFNW9Z?=
+ =?utf-8?B?UUNkUmgvSDh5V1FUbXFEdlNpVkF6SFVXQ0pScW1NTUxZbnMyWDVHUGdLSmU4?=
+ =?utf-8?B?Nm5SdnJ6cUxsVXI3eUcrbFM1bHhrTXhyaS9kK0JOY1A2U3VDMWRZemU1bzhI?=
+ =?utf-8?B?U05pTVlKWGs1RVF1TWxSd1V4emM2N0piSGhxZU93K1M4cEV5amc1bDhsckxY?=
+ =?utf-8?B?Wi9xa2FVd1oyWUhoaENjbHJrdGZuTHV4YndhUk9TaG5DTGJEOWJSemhqTEd4?=
+ =?utf-8?B?T1N0ZGorY0FHK1psSE9RODh1WUlTZk1mclB4R1E2M2JnSk9JYm9MODJpVSt1?=
+ =?utf-8?B?VUw3WkVBeHJ5Skw2YlBUajhUTVM1Y0xaRERCa2hPNUVJOFpKUkloUHNORm9R?=
+ =?utf-8?B?NSs0SVZCcjVmdERtc0lFZXJyY1YzY3dJdjY0S2lYSWN3T1lWbzhYYnVTakhP?=
+ =?utf-8?B?eC9DYzVDeVYrb0xGVEl1d0FGMzQwZUFZbWl6WHduK1NUUGNPOW9MTUhIMlRz?=
+ =?utf-8?B?RU5qSmR0VCtLWXp4eTZxZlhEYytEMXoyaTRlN1dVZzJoVGVXVVgvMnp4QVVC?=
+ =?utf-8?B?NTBBeXRPU1RKMlB3ZXM0QkR5SWlhazVtTVgxdW55L0JiVk8xYk9jSURCa0R6?=
+ =?utf-8?B?UjVsemlDbEtQTEJUbTg3a2FySGJDTWhGbGZuUTh5QVFhQTBxamZHM3lqK3c1?=
+ =?utf-8?B?YXpWYjJGU09ET2Y5RUZyTC8wbUN1NTM1bXJCRDhlUDNDZm50Y3FBUDROYUt2?=
+ =?utf-8?B?cFg5R2s3enBsY21NeXVNQ05uNEtieDgyRkFvZDJoMkpnbVF5UVZmUkhLZnZT?=
+ =?utf-8?B?QTBJdGhkcEx0MVh3ME9KaUtNc2JUT29vT0FVWUMyV2JZQy83Q3FvY1hQQUlF?=
+ =?utf-8?B?TTg4WHovRWNkejJpSEo5M3BraGhJRTFScHEwOFNodFhqS1d5d2xFcTR3VHVD?=
+ =?utf-8?B?enV5emZtN0NHYXZoRlJZSWJ6WnJPTTdhQnZ3VUFwUmpTYTVXejZ2MCt3T2ZJ?=
+ =?utf-8?B?RkdpMDI3UWdLQUhXckZGaktCZ2FkUVRIY0tSNTZWeUxiSENqV2lTUGk3SVFQ?=
+ =?utf-8?B?NUxXL2Z2Qk9iWlZvdFVIVFRvL2x5OHBVWkIzYkYycENMeWJRazlnYmtuYVpt?=
+ =?utf-8?B?cFRRMUpSYWN1c25VenRPTkZLMHQ3a0tmUXc0TmdVbVRQZFEzcVAyQ3hIYnJN?=
+ =?utf-8?B?THllTE4vcVdyVS95Yk1wVUxsaHJ0ZytSd205eWNTVGlOSjh6SzFIelBNcXFP?=
+ =?utf-8?B?cVlUeE9DL2NNUzZyZzJYcTVCMkwwc1JCM3U5RGhoYVFRSHZYV1VXWHJ1Rm5O?=
+ =?utf-8?B?MzF5TTVzY282VGxYekNzUkRQSVV1Z0I3NGR1V1FEY2laRG8zNzFKYmRybGxQ?=
+ =?utf-8?B?eWVtM2h0TkdueGdXNitEV0NpZzluZ3JQODVKVnZpMTZoMkxJT3dYVUgvZ0dl?=
+ =?utf-8?B?clNWdllodmpvdmdDSXJ6WHdkZGVheHpBc2U2eE9CZmdsQTBxUnhHQSt4ZTZr?=
+ =?utf-8?B?dkNFTEJVa3dJb2J3M01uQWR5R09jVUhrUi94dWxPM3g4NGd0WGltSy9SSFRX?=
+ =?utf-8?B?SXMzaEdiWE5XeWJLbVBwRno1ekE4VS9NZ2toTzV4Qy9QQXE0Zmo3dz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: f81c8849-ab79-4b5a-3758-08de5d049964
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 17:49:49.2750
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 17:59:06.8562
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ONGob71POxvLkPf1YRQklwuPFE7SZ03lVK4S1aJq4mDjLGNH9Dz7bwoSaFitb4O00NWAEtO9fnrSaeRmx440mQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB11558
+X-MS-Exchange-CrossTenant-UserPrincipalName: 07s06O61P1/7A9xudT9gNR8v1UWJbVYi5ZpukVStx4VipET1RjOMVmlltc7akkSw5X1ri7/9yoxKGNYVlaUnUw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB1924
 
-On Sat, Jan 24, 2026 at 11:42:45PM +0800, Felix Gu wrote:
-> In imx_pcie_probe, np is obtained by of_parse_phandle() and must be
-> released when it's no longer needed. However, it doesn't release the
-> reference, which cuases a reference leak.
-> Fix this by using the __free(device_node) cleanup handler to release the
-> reference when it goes out of scope.
+On Thu Jan 22, 2026 at 8:42 PM GMT, Zhi Wang wrote:
+> This patch adds a sample Rust driver demonstrating the usage of the fwctl
+> Rust abstractions. Add sample code for creating a FwCtl device, getting
+> device info and issuing an RPC.
 >
-> Fixes: 1df82ec46600 ("PCI: imx: Add workaround for e10728, IMX7d PCIe PLL failure")
-> Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+> Cc: Danilo Krummrich <dakr@kernel.org>
+> Cc: Jason Gunthorpe <jgg@nvidia.com>
+> Signed-off-by: Zhi Wang <zhiw@nvidia.com>
 > ---
+>  samples/rust/Kconfig              |  11 +++
+>  samples/rust/Makefile             |   1 +
+>  samples/rust/rust_driver_fwctl.rs | 136 ++++++++++++++++++++++++++++++
+>  3 files changed, 148 insertions(+)
+>  create mode 100644 samples/rust/rust_driver_fwctl.rs
+>
+> diff --git a/samples/rust/Kconfig b/samples/rust/Kconfig
+> index c49ab9106345..3d0b223caa89 100644
+> --- a/samples/rust/Kconfig
+> +++ b/samples/rust/Kconfig
+> @@ -172,6 +172,17 @@ config SAMPLE_RUST_SOC
+> =20
+>  	  If unsure, say N.
+> =20
+> +config SAMPLE_RUST_DRIVER_FWCTL
+> +	tristate "Fwctl Driver"
+> +	depends on FWCTL
+> +	help
+> +	  This option builds the Rust Fwctl driver sample.
+> +
+> +	  To compile this as a module, choose M here:
+> +	  the module will be called rust_driver_fwctl.
+> +
+> +	  If unsure, say N.
+> +
+>  config SAMPLE_RUST_HOSTPROGS
+>  	bool "Host programs"
+>  	help
+> diff --git a/samples/rust/Makefile b/samples/rust/Makefile
+> index 6c0aaa58cccc..6f6030e64727 100644
+> --- a/samples/rust/Makefile
+> +++ b/samples/rust/Makefile
+> @@ -14,6 +14,7 @@ obj-$(CONFIG_SAMPLE_RUST_DRIVER_PLATFORM)	+=3D rust_dri=
+ver_platform.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_USB)		+=3D rust_driver_usb.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_FAUX)		+=3D rust_driver_faux.o
+>  obj-$(CONFIG_SAMPLE_RUST_DRIVER_AUXILIARY)	+=3D rust_driver_auxiliary.o
+> +obj-$(CONFIG_SAMPLE_RUST_DRIVER_FWCTL)		+=3D rust_driver_fwctl.o
+>  obj-$(CONFIG_SAMPLE_RUST_CONFIGFS)		+=3D rust_configfs.o
+>  obj-$(CONFIG_SAMPLE_RUST_SOC)			+=3D rust_soc.o
+> =20
+> diff --git a/samples/rust/rust_driver_fwctl.rs b/samples/rust/rust_driver=
+_fwctl.rs
+> new file mode 100644
+> index 000000000000..ac5f979fd73b
+> --- /dev/null
+> +++ b/samples/rust/rust_driver_fwctl.rs
+> @@ -0,0 +1,136 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +//! Rust fwctl API test (based on QEMU's `pci-testdev`).
+> +//!
+> +//! To make this driver probe, QEMU must be run with `-device pci-testde=
+v`.
+> +
+> +use kernel::{
+> +    bindings,
+> +    device,
+> +    device::Core,
+> +    devres::Devres,
+> +    fwctl,
+> +    pci,
+> +    prelude::*,
+> +    sync::aref::ARef,
+> +    types,
+> +};
+> +
+> +struct FwctlSampleUserCtx {
+> +    _drvdata: u32,
+> +}
+> +
+> +struct FwctlSampleOps;
+> +
+> +impl fwctl::Operations for FwctlSampleOps {
+> +    type UserCtx =3D FwctlSampleUserCtx;
+> +
+> +    const DEVICE_TYPE: fwctl::DeviceType =3D fwctl::DeviceType::RustFwct=
+lTest;
+> +
+> +    fn open(
+> +        fwctl_uctx: &types::Opaque<bindings::fwctl_uctx>
+> +    ) -> Result<impl PinInit<Self::UserCtx, Error>, Error> {
+> +        let dev =3D fwctl::UserCtx::<Self::UserCtx>::parent_device_from_=
+raw(fwctl_uctx);
 
-After fix Bjons's comments.
+Why does this raw binding need to be handled by the user?
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> +
+> +        dev_info!(dev, "fwctl test driver: open_uctx()");
+> +
+> +        // Return an initializer for the user context.
+> +        // The framework will initialize this in-place in the C-allocate=
+d memory.
+> +        Ok(try_init!(FwctlSampleUserCtx {
+> +            _drvdata: 0,
+> +        }))
+> +    }
+> +
+> +    fn close(uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>) {
+> +        let dev =3D uctx.get_parent_device();
+> +
+> +        dev_info!(dev, "fwctl test driver: close_uctx()");
+> +    }
+> +
+> +    fn info(uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>) -> Result<KVe=
+c<u8>, Error> {
 
-> Changes in v2:
-> - Use __free(device_node) clean handler to fix the leak.
-> - Link to v1: https://lore.kernel.org/r/20260124-pci_imx6-v1-1-6f4379fc5160@gmail.com
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 1d8677d7de04..f459d05ecd7d 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1643,7 +1643,6 @@ static int imx_pcie_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct dw_pcie *pci;
->  	struct imx_pcie *imx_pcie;
-> -	struct device_node *np;
->  	struct device_node *node = dev->of_node;
->  	int i, ret, domain;
->  	u16 val;
-> @@ -1670,7 +1669,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
->  		pci->pp.ops = &imx_pcie_host_dw_pme_ops;
->
->  	/* Find the PHY if one is defined, only imx7d uses it */
-> -	np = of_parse_phandle(node, "fsl,imx7d-pcie-phy", 0);
-> +	struct device_node *np __free(device_node) =
-> +		of_parse_phandle(node, "fsl,imx7d-pcie-phy", 0);
->  	if (np) {
->  		struct resource res;
->
->
-> ---
-> base-commit: a0c666c25aeefd16f4b088c6549a6fb6b65a8a1d
-> change-id: 20260124-pci_imx6-f97d70887dfc
->
-> Best regards,
-> --
-> Felix Gu <ustc.gu@gmail.com>
->
+This can just be `Result<KVec<u8>>`.
+
+Best,
+Gary
+
+> +        let dev =3D uctx.get_parent_device();
+> +
+> +        dev_info!(dev, "fwctl test driver: info()");
+> +
+> +        let mut infobuf =3D KVec::<u8>::new();
+> +        infobuf.push(0xef, GFP_KERNEL)?;
+> +        infobuf.push(0xbe, GFP_KERNEL)?;
+> +        infobuf.push(0xad, GFP_KERNEL)?;
+> +        infobuf.push(0xde, GFP_KERNEL)?;
+> +
+> +        Ok(infobuf)
+> +    }
+> +
+> +    fn fw_rpc(
+> +        uctx: &mut fwctl::UserCtx<FwctlSampleUserCtx>,
+> +        scope: u32,
+> +        rpc_in: &mut [u8],
+> +        _out_len: *mut usize,
+> +    ) -> Result<Option<KVec<u8>>, Error> {
+> +        let dev =3D uctx.get_parent_device();
+> +
+> +        dev_info!(dev, "fwctl test driver: fw_rpc() scope {}", scope);
+> +
+> +        if rpc_in.len() !=3D 4 {
+> +            return Err(EINVAL);
+> +        }
+> +
+> +        dev_info!(
+> +            dev,
+> +            "fwctl test driver: inbuf len{} bytes[0-3] {:x} {:x} {:x} {:=
+x}",
+> +            rpc_in.len(),
+> +            rpc_in[0],
+> +            rpc_in[1],
+> +            rpc_in[2],
+> +            rpc_in[3]
+> +        );
+> +
+> +        let mut outbuf =3D KVec::<u8>::new();
+> +        outbuf.push(0xef, GFP_KERNEL)?;
+> +        outbuf.push(0xbe, GFP_KERNEL)?;
+> +        outbuf.push(0xad, GFP_KERNEL)?;
+> +        outbuf.push(0xde, GFP_KERNEL)?;
+> +
+> +        Ok(Some(outbuf))
+> +    }
+> +}
+> +
+> +#[pin_data]
+> +struct FwctlSampleDriver {
+> +    pdev: ARef<pci::Device>,
+> +    #[pin]
+> +    fwctl: Devres<fwctl::Registration<FwctlSampleOps>>,
+> +}
+> +
+> +kernel::pci_device_table!(
+> +    PCI_TABLE,
+> +    MODULE_PCI_TABLE,
+> +    <FwctlSampleDriver as pci::Driver>::IdInfo,
+> +    [(pci::DeviceId::from_id(pci::Vendor::REDHAT, 0x5), ())]
+> +);
+> +
+> +impl pci::Driver for FwctlSampleDriver {
+> +    type IdInfo =3D ();
+> +    const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PCI_TABLE;
+> +
+> +    fn probe(pdev: &pci::Device<Core>, _info: &Self::IdInfo) -> impl Pin=
+Init<Self, Error> {
+> +        dev_info!(pdev.as_ref(), "Probe fwctl test driver");
+> +
+> +        // `pdev` is `Device<Core>`, which derefs to `Device<Bound>` dur=
+ing probe.
+> +        let pdev_bound: &pci::Device<device::Bound> =3D pdev;
+> +
+> +        try_pin_init!(Self {
+> +            pdev: pdev.into(),
+> +            fwctl <- fwctl::Registration::<FwctlSampleOps>::new(pdev_bou=
+nd.as_ref()),
+> +        })
+> +    }
+> +}
+> +
+> +kernel::module_pci_driver! {
+> +    type: FwctlSampleDriver,
+> +    name: "rust_driver_fwctl",
+> +    authors: ["Zhi Wang"],
+> +    description: "Rust fwctl test",
+> +    license: "GPL v2",
+> +    imports_ns: ["FWCTL"],
+> +}
+
