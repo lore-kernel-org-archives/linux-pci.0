@@ -1,100 +1,181 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93CF72D77FA
-	for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2026 20:43:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E42A528643A;
+	Mon, 26 Jan 2026 20:50:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769460188; cv=none; b=KSZybnEoat+fwJnE96+o5/8d370jS4bRbssp9kzS3FkIm0UKnH3tbv3WNAC1wv7CjsWuGP79ohE5VM+5aPN4wiKs4rKGH0jTk/hC1T3bNcbdNh3a4Qm6vhgogENj30L3vaTwG+QidAyFa2R3UBGVMOC1wu6Tk6y0/q7uTynQbss=
+	t=1769460607; cv=none; b=UFlMe9LS2otAzx8t2rkklyhLh46v22ffwgZfJy7+D2IrRHiyLW89IzptC6dTWUGBGdPu0ug3WrahHGPX52xtNKkkb+lU3wD4GyKK15dcUp7uOZqKlYb576zdnju0Mi6F6W/SR0nz5CEhbQNXDSGewTTcoP0s6A3D44ORqHqNfl0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769460188; c=relaxed/simple;
-	bh=qkLYQ+xttW3yQLEX/26eoBKkIwpMcw+WYxW9ZXrxbR4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gXcMtKKnzNlyKdTlygo2W8lYGlj8C8QW4MSOm7VeHKkMT0Z01zG0GaPCYHLA7xG8eukwbkFSacj4fbwQQNMgS4CuMUIrQn0u6/KMZ7YOvr/zTVjNzs3NJhPFGV/M4Ve2UHTbH8qAeHUrGBDzVfQYhDlF6S5sqeq6ZeylhdSgvSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=od98iYzi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769460607; c=relaxed/simple;
+	bh=S1uSk3BD8ULucBF3SDqkazr75drJ3at/HYBKxGFswEY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A1LNzBy4+3dlQQe6/TEDuW1gARWB+KM1zOzjiDqDHXfJmq4Z4NNCi9+rDtPmOaG1c1dwSP8EJQlbFOiXO9YfXgRYgoC2motd3TSNA0QbGaE6Zh2yXg7nA/yJOUSieWMuZ8FrPLJZNXRF5qeI6yTNEgsz5bxcpYSYGxt8q3vOG9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=K74TQNGc; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="od98iYzi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76EEEC2BC86
-	for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2026 20:43:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769460188;
-	bh=qkLYQ+xttW3yQLEX/26eoBKkIwpMcw+WYxW9ZXrxbR4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=od98iYziNKyiPtw8ldGa9AyuAo/5IjH4LBM762m+6AteHKURno1rOT9HT2tPLdM0M
-	 CKo8bWbdU0wMVUWUZQgzTt0YIAXyxe+cdbigJKeDVTqKXXtqQG7sUubHaDVRWTVFkw
-	 HoCDuEH92ptJ2VJoJ6e88NLVR8wgfmwk5xfwxTvPoAXwfm+xZgVFzvpk2Xjb4JjtNw
-	 HfafeejKzSRGX0sIKoJd2t5qr4YQJa46eaZrslKGq472pKZgqd9T1tDnwjhDtgpe3H
-	 YCGJGxVLjyE/0II9IMo89i42MoUc9jHWH0/8cXRqOdEkJ9VzOKi/Tl+vlgN6ZY0Ala
-	 GM9wTYG9h2KHg==
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-66297aaf39dso1427956eaf.2
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2026 12:43:08 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWIH5L1CZT1ky++eN4igWUbgUg1XErk5UdUyuCn656sbLuY2Nk9ebHTE2lqYd7Q6dW2vm8UioS//T4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxMDyV6XWhtiW4JYqZKey6iOdbBQU6nXgY5ICy9Jd71ObX9bW09
-	HFD3ySrP63ocE2GV1WIEjigVt0f/YOZymdDOSVpxYcwmBHf/uU8y9ccf0DXtE4KwbsSKkI8084V
-	m2tNVef6Ury2fFm/HG3IrWXI8YXIF/uk=
-X-Received: by 2002:a05:6820:4dcb:b0:662:c114:b29e with SMTP id
- 006d021491bc7-662e02de9ccmr2478764eaf.24.1769460187481; Mon, 26 Jan 2026
- 12:43:07 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="K74TQNGc"
+Received: from skinsburskii.localdomain (c-98-225-44-182.hsd1.wa.comcast.net [98.225.44.182])
+	by linux.microsoft.com (Postfix) with ESMTPSA id E3D6220B716E;
+	Mon, 26 Jan 2026 12:50:04 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E3D6220B716E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1769460605;
+	bh=aMPla4QrmCDTRq11ONPUsMeTtcU4Ek4C0hGQgcBMl74=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=K74TQNGczFpAfhA3gfdl31xMldWM2jUiuWpBExIFe8FFA6T5VENcXMxblu6H+Fd5J
+	 q31ZsLv/+62nFidQMGJr5Cq+fCxyk5SPvvE1q3mXtZMAVywKuoK9pr5vk4Vvdey2oC
+	 u17S0GoZNJ5mz+dz8ev/+3idfQ7uW/nxPVpCrXyE=
+Date: Mon, 26 Jan 2026 12:50:03 -0800
+From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
+	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
+	romank@linux.microsoft.com
+Subject: Re: [PATCH v0 10/15] PCI: hv: Build device id for a VMBus device
+Message-ID: <aXfTezmeX52VWFx6@skinsburskii.localdomain>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-11-mrathor@linux.microsoft.com>
+ <aXAAH4G9ztAGDWuy@skinsburskii.localdomain>
+ <a2e54fff-3cbb-e332-c35e-7520c36eceed@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260115-gicv5-host-acpi-v3-0-c13a9a150388@kernel.org>
- <aWy9T3VDyXpVG41z@lpieralisi> <87sec30yhk.ffs@tglx> <aW3pALPxn4i9fiDO@lpieralisi>
- <87pl751zeh.ffs@tglx> <aW9V4A7lTGZWTO9e@lpieralisi> <aXM0dVthp33yUqj8@lpieralisi>
-In-Reply-To: <aXM0dVthp33yUqj8@lpieralisi>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 26 Jan 2026 21:42:55 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0hOVO7N77nnyWsh_vhGcm-TzavrGBgci=a+o_-LKhkuXg@mail.gmail.com>
-X-Gm-Features: AZwV_QgIu0Sq3ZvSpiujHJcegyl-N4Pxcc67Z0kbWXZrvS3aL-fZTGN44hcX9YU
-Message-ID: <CAJZ5v0hOVO7N77nnyWsh_vhGcm-TzavrGBgci=a+o_-LKhkuXg@mail.gmail.com>
-Subject: Re: [PATCH v3 0/6] irqchip/gic-v5: Code first ACPI boot support
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Thomas Gleixner <tglx@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Robert Moore <robert.moore@intel.com>, Hanjun Guo <guohanjun@huawei.com>, 
-	Sudeep Holla <sudeep.holla@arm.com>, Marc Zyngier <maz@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Jonathan Cameron <jonathan.cameron@huawei.com>, 
-	linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a2e54fff-3cbb-e332-c35e-7520c36eceed@linux.microsoft.com>
 
-Hi Lorenzo,
+On Fri, Jan 23, 2026 at 04:42:54PM -0800, Mukesh R wrote:
+> On 1/20/26 14:22, Stanislav Kinsburskii wrote:
+> > On Mon, Jan 19, 2026 at 10:42:25PM -0800, Mukesh R wrote:
+> > > From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > 
+> > > On Hyper-V, most hypercalls related to PCI passthru to map/unmap regions,
+> > > interrupts, etc need a device id as a parameter. This device id refers
+> > > to that specific device during the lifetime of passthru.
+> > > 
+> > > An L1VH VM only contains VMBus based devices. A device id for a VMBus
+> > > device is slightly different in that it uses the hv_pcibus_device info
+> > > for building it to make sure it matches exactly what the hypervisor
+> > > expects. This VMBus based device id is needed when attaching devices in
+> > > an L1VH based guest VM. Before building it, a check is done to make sure
+> > > the device is a valid VMBus device.
+> > > 
+> > > Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > ---
+> > >   arch/x86/include/asm/mshyperv.h     |  2 ++
+> > >   drivers/pci/controller/pci-hyperv.c | 29 +++++++++++++++++++++++++++++
+> > >   2 files changed, 31 insertions(+)
+> > > 
+> > > diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
+> > > index eef4c3a5ba28..0d7fdfb25e76 100644
+> > > --- a/arch/x86/include/asm/mshyperv.h
+> > > +++ b/arch/x86/include/asm/mshyperv.h
+> > > @@ -188,6 +188,8 @@ bool hv_vcpu_is_preempted(int vcpu);
+> > >   static inline void hv_apic_init(void) {}
+> > >   #endif
+> > > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev);
+> > > +
+> > >   struct irq_domain *hv_create_pci_msi_domain(void);
+> > >   int hv_map_msi_interrupt(struct irq_data *data,
+> > > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > > index 8bc6a38c9b5a..40f0b06bb966 100644
+> > > --- a/drivers/pci/controller/pci-hyperv.c
+> > > +++ b/drivers/pci/controller/pci-hyperv.c
+> > > @@ -579,6 +579,8 @@ static void hv_pci_onchannelcallback(void *context);
+> > >   #define DELIVERY_MODE		APIC_DELIVERY_MODE_FIXED
+> > >   #define HV_MSI_CHIP_FLAGS	MSI_CHIP_FLAG_SET_ACK
+> > > +static bool hv_vmbus_pci_device(struct pci_bus *pbus);
+> > > +
+> > 
+> > Why not moving this static function definition above the called instead of
+> > defining the prototype?
+> 
+> Did you see the function implementation? It has other dependencies that
+> are later, it would need code reorg.
+> 
 
-On Fri, Jan 23, 2026 at 9:42=E2=80=AFAM Lorenzo Pieralisi <lpieralisi@kerne=
-l.org> wrote:
->
-> On Tue, Jan 20, 2026 at 11:16:00AM +0100, Lorenzo Pieralisi wrote:
-> > On Mon, Jan 19, 2026 at 02:54:14PM +0100, Thomas Gleixner wrote:
-> > > On Mon, Jan 19 2026 at 09:19, Lorenzo Pieralisi wrote:
-> > > > On Sun, Jan 18, 2026 at 03:47:03PM +0100, Thomas Gleixner wrote:
-> > > > I think the simplest way to sort this out is for this series to go =
-via
-> > > > the ACPI tree if that's OK for Thomas, given that the ACPICA code w=
-ill
-> > > > go via the ACPI tree anyway and there are other dependencies on it =
-there
-> > > > I assume (this series is fairly self-contained).
-> > >
-> > > I'm fine with that
-> > >
-> > > Acked-by: Thomas Gleixner <tglx@kernel.org>
-> >
-> > Thank you Thomas, Rafael I hope that works for you too, please let me k=
-now
-> > if there is anything I can/should do.
->
-> Hi Rafael,
->
-> forgive me for another ping, can you please let me know whether you can p=
-ull
-> this series on top of acpica changes for v7.0 or it needs to take a diffe=
-rent
-> route ?
+Why not placing the caller side after the function definition then?
 
-Sure, I can queue it up.
+Thanks,
+Stanislav
 
-Thanks!
+> Thanks,
+> -Mukesh
+> 
+> 
+> > >   static int hv_pci_irqchip_init(void)
+> > >   {
+> > >   	return 0;
+> > > @@ -598,6 +600,26 @@ static unsigned int hv_msi_get_int_vector(struct irq_data *data)
+> > >   #define hv_msi_prepare		pci_msi_prepare
+> > > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev)
+> > > +{
+> > > +	u64 u64val;
+> > 
+> > This variable is redundant.
+> 
+> Not really. It helps with debug by putting a quick print, and is
+> harmless.
+> 
+> > > +	struct hv_pcibus_device *hbus;
+> > > +	struct pci_bus *pbus = pdev->bus;
+> > > +
+> > > +	if (!hv_vmbus_pci_device(pbus))
+> > > +		return 0;
+> > > +
+> > > +	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+> > > +	u64val = (hbus->hdev->dev_instance.b[5] << 24) |
+> > > +		 (hbus->hdev->dev_instance.b[4] << 16) |
+> > > +		 (hbus->hdev->dev_instance.b[7] << 8) |
+> > > +		 (hbus->hdev->dev_instance.b[6] & 0xf8) |
+> > > +		 PCI_FUNC(pdev->devfn);
+> > > +
+> > 
+> > It looks like this value always fits into 32 bit, so what is the value
+> > in returning 64 bit?
+> 
+> The ABI has device id defined as 64bits where this is assigned.
+> 
+> Thanks,
+> -Mukesh
+> 
+> 
+> 
+> 
+> > Thanks,
+> > Stanislav
+> > 
+> > > +	return u64val;
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(hv_pci_vmbus_device_id);
+> > > +
+> > >   /**
+> > >    * hv_irq_retarget_interrupt() - "Unmask" the IRQ by setting its current
+> > >    * affinity.
+> > > @@ -1404,6 +1426,13 @@ static struct pci_ops hv_pcifront_ops = {
+> > >   	.write = hv_pcifront_write_config,
+> > >   };
+> > > +#ifdef CONFIG_X86
+> > > +static bool hv_vmbus_pci_device(struct pci_bus *pbus)
+> > > +{
+> > > +	return pbus->ops == &hv_pcifront_ops;
+> > > +}
+> > > +#endif /* CONFIG_X86 */
+> > > +
+> > >   /*
+> > >    * Paravirtual backchannel
+> > >    *
+> > > -- 
+> > > 2.51.2.vfs.0.1
+> > > 
