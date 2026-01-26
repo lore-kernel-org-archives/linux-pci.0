@@ -1,198 +1,156 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 317982FFF97
-	for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2026 22:26:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 207172BEFE4;
+	Mon, 26 Jan 2026 22:34:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769466413; cv=none; b=oktoWR/QBQObRAYTlfRmslZGHZLH9OJPR5RzxhP1dGNFk+ogu9O3My04XjMwGzmI476Xs1NpH2zt8/C0sPWJu8PxWv7I36hJwtDxcsPC24L6VHxuF587Yw9s1JW1wP+YUOA88KrT1XDVklcf7warwKhEWte+guoUpBr6L6cf24E=
+	t=1769466883; cv=none; b=X5Bn1UcIbYNr7n3WaHWQqEgHlDl4IWSNKMWn5TL32beAolxgxixCar1P1sX3aXugcS9w7OVApMaPhl4O7VOcQ+5WhVLCfIHESp5w7i0bzgQU4I3pe/MxysX1SvSd1qOKgTtM3WpxchBQ94DzYdZ2xKtS1OBtKthhRvia4uK2YGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769466413; c=relaxed/simple;
-	bh=2mX1cWmGt8Ks1WEyR33TG6bXZsri+b5CFYYtGfOS7k0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QY9hMvp/ZY4QrihkTHW5kVaGDrQU2AWM2TVF4hbqtN9NZRQNjMM8pC3aDi0GQEVO/xDOHVzDz+pKAKit/qB0QF8J1PSBA4ZPbrtK63wt+IJZF0iG2dIW2Zg8Odg4BWmqKKk3/pZQlR1qtLomnO9TWFUhuRaXR1yu009HliZKwoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DGiaZ8vW; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=owffNDpw; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1769466883; c=relaxed/simple;
+	bh=ro51QC27+W5I88V/nGtYSebVxQoU2s5nrfOhLYNVzEY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=cEXTZ0ylII3l7v3188noQWvz8cHZ3Ch4E2aJ7y2M0ljAnDbfUuAJMYEpDtWmuWb2OLy/Q3QrfAjqR0zNiYLIRGgzVFoEQhE3rXuACMoq30dmfOmOQzz1Pu3bYCIBvgCFDTGhXNv+4PV9xjh1Cv/XB558t0DiQ2ArEpPM8/BOj9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=TkSg2s7M; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=bP6xUZlb; arc=none smtp.client-ip=103.168.172.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DGiaZ8vW";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="owffNDpw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1769466411;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=G+jcQN2bBzkIEmcI+6XiXbVVbmmQ3Up+uCvq5fTtM8c=;
-	b=DGiaZ8vWRd4OY8jZdt9nsgN93/up+RHubw1EbT8mCLMr62R9H7dB39b8rUQYUicsU3AXWN
-	NqDqe/jIFHCRYPZAJ7VyRDTQxh8M7oGMYysQlAfaAtKwY3Sbg3bj19KVeWHD34iiF+KC+1
-	uPme9U9SWfeJROdkbkAV/hdD1Mok0O4=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-633-c57TZH2UNma7CmuUYTFurQ-1; Mon, 26 Jan 2026 17:26:50 -0500
-X-MC-Unique: c57TZH2UNma7CmuUYTFurQ-1
-X-Mimecast-MFC-AGG-ID: c57TZH2UNma7CmuUYTFurQ_1769466410
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-89470bda22aso135800846d6.1
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jan 2026 14:26:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1769466409; x=1770071209; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=G+jcQN2bBzkIEmcI+6XiXbVVbmmQ3Up+uCvq5fTtM8c=;
-        b=owffNDpwkbfXDISA4KnPNecgYGEvJVCWmIESeLSn+0/HES4xhBP2OTj60z+YbGUuqa
-         AjTtqcgoHRfzuaXTfCPzhRhUeEP5ixnMOSkl/FsT87I2/J5aqpbGGLj4/pK18BKcG0TN
-         DzRf/ejP80RelRlakXzFpYijNb2lAuGgtPjaB96GVzj9HbOGeWn+bWaYKJfWFVU/pPSQ
-         eLUE16eD0IQc17B0C1+hGCZRU+R0hg39V54SoWGJF6cLrt4AKG8wfJ5CbuiDK5cfQ3xt
-         JspZCHjzbwkrqvM/wHWRmtkx9e0csPzdfKcPjeurNC0Dd4vgQ15Hb50bFhb2CJbV5v1s
-         jolQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769466409; x=1770071209;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=G+jcQN2bBzkIEmcI+6XiXbVVbmmQ3Up+uCvq5fTtM8c=;
-        b=JKFBdpyUMXD23EKpcT3fpKZgC9JE11v1CQ1vwwfdY85JooDSMkyy3GNcGsI24YK0S0
-         biSlLuxE+RZKHlXvgkcBDTWUbOwd4EFUWw25b5JpoHXQYY6Mah6ibydBd3O+lTQNO4E3
-         jIfni9gHoVXvtcSiK386XKRmy4QYC3CWPw6jWmHvtw8ro49K45MhiaD43suI3ejtDCbC
-         onAFny2rTo+DiALHnRAiOuMTThAPbEQa9zq5pgEpZnAbhDB61bA/5LxBxwXBUOPcCzdt
-         19mHfqy1RqMf8Kr03Wl7L/DeGXb2cAbVSVHYUQnrrqxuQfWhqX5PZpNhpEroVhs5zMyX
-         MA2g==
-X-Forwarded-Encrypted: i=1; AJvYcCWnBqFsQLLaOtQJJRo8S4uO6QGC7HL/4CYFe1oQlqHU4jnzhHAFXQpzEBMv/v5nDm8iRZ/Lontuxcs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxI0LYBJt1Kwyy4QlIFrv3ucQVlQAeKGd53Jjdzm7L2DWGLqhRA
-	rFG1EqTE5YQI9zNjjfvI1z9FDNq5C5mhfMcI1wbYW17LF4+w99GyisJ+rjxjKf9qs63zfFphc0n
-	NBMnv/DoRlGAJ3VEaInHySvmra3GcO35+IxUKyl+wiZMrYPbTVtABuTwkum/LEA==
-X-Gm-Gg: AZuq6aJ4XyxekQbMbconi1ps5nDelcptl51SNekjEEdsojoElbqNwAqFgD+8KvXgjIp
-	RYsPx7CRFTvDAW+Z02oVJCfXlk5f7Y6qzXG9ONeCVIW7zI+nYglZDwl3mOsoSdPKucooUZk5dgj
-	l4J0GQR3xaQl65570Z/74BzqvADTZLFbV5gq7MowKARlHiR4GdDUB3YTShULa87ONBmdJei3VCq
-	YLLjt/EcbuEVXY1FvSmGtDyykoLMiUP5sP6ht9diiwX0RARXU7jLf6qiihgKwXZ/K/c19KU5Mq9
-	MWrk6XyQziYYMRSnmTU/T387oaEyaBzgHAC72YO8PkAdiujOrt3e4ByY63jRO3Qf6fl9RPmlYdd
-	heq5rZ1hIEi3BDYAzo5ZdJM8D/+yw4sl7TzpTVzVkOYgbbGwDApQaG/yzavsPaAfcAuV76kJQ41
-	HCoQ==
-X-Received: by 2002:a05:622a:389:b0:501:f6f7:d979 with SMTP id d75a77b69052e-50314cdc7b8mr71285271cf.73.1769466409403;
-        Mon, 26 Jan 2026 14:26:49 -0800 (PST)
-X-Received: by 2002:a05:622a:389:b0:501:f6f7:d979 with SMTP id d75a77b69052e-50314cdc7b8mr71284991cf.73.1769466408937;
-        Mon, 26 Jan 2026 14:26:48 -0800 (PST)
-Received: from thinkpad-p1.localdomain (pool-174-112-193-187.cpe.net.cable.rogers.com. [174.112.193.187])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8c6e37c8fa6sm1124018185a.4.2026.01.26.14.26.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Jan 2026 14:26:48 -0800 (PST)
-Message-ID: <221f6dadb6d8ce06f30a24baaa2777e90d75b130.camel@redhat.com>
-Subject: Re: [PATCH v3 3/3] PCI: dwc: Enable MSI affinity support
-From: Radu Rendec <rrendec@redhat.com>
-To: Jon Hunter <jonathanh@nvidia.com>, Thomas Gleixner <tglx@kernel.org>, 
- Manivannan Sadhasivam
-	 <mani@kernel.org>
-Cc: Daniel Tsai <danielsftsai@google.com>, Marek =?ISO-8859-1?Q?Beh=FAn?=	
- <kabel@kernel.org>, Krishna Chaitanya Chundru <quic_krichai@quicinc.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
- Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	 <kwilczynski@kernel.org>, Lorenzo
- Pieralisi <lpieralisi@kernel.org>, Jingoo Han	 <jingoohan1@gmail.com>,
- Brian Masney <bmasney@redhat.com>, Eric Chanudet	 <echanude@redhat.com>,
- Alessandro Carminati <acarmina@redhat.com>, Jared Kangas	
- <jkangas@redhat.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,  "linux-tegra@vger.kernel.org"	
- <linux-tegra@vger.kernel.org>
-Date: Mon, 26 Jan 2026 17:26:47 -0500
-In-Reply-To: <255713ca-bf91-4f7e-8df2-33b7b614a1bb@nvidia.com>
-References: <20251128212055.1409093-1-rrendec@redhat.com>
-	 <20251128212055.1409093-4-rrendec@redhat.com>
-	 <4e5b349c-6599-4871-9e3b-e10352ae0ca0@nvidia.com>
-	 <a8d841e870d6dbbabef7eadb774f2a58a96c57c7.camel@redhat.com>
-	 <cfe44924-3419-4f31-8ab3-87b769d21a5b@nvidia.com>
-	 <96c9d483f67be02fa1dba736fea465216d0c3269.camel@redhat.com>
-	 <87sebsdcte.ffs@tglx> <255713ca-bf91-4f7e-8df2-33b7b614a1bb@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="TkSg2s7M";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="bP6xUZlb"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 469E5140015A;
+	Mon, 26 Jan 2026 17:34:40 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-10.internal (MEProxy); Mon, 26 Jan 2026 17:34:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1769466880;
+	 x=1769553280; bh=xAGPvojhta1VuvbsrbWfrWy+3cZRbKMd7diWfHMZx6k=; b=
+	TkSg2s7M0F8x1dJ4J3+BJsYh961kXdsrnIgS+kKKLLY9/XdrFpXMte8VstnZfyrx
+	G1vOisOt8NVHH4trkZBrXdFy/OHi9AmX1hzOPF4OYuM7EaSCr++tnC/QcQacRUUx
+	V1+gXc31tVpy5lenuXAJMZP0/HHgL5OXDH1IBrWHdHt5WOy3vWBVQsYUTokXHO7Y
+	yF2UASehqENnizFbm86uejnj6fVvRfqqeEyhGmEeoNTWcndXCck5N483jB58wZYe
+	APOYOmfjWhyjC/9Gnalx5nLUQvT7IFspiJ72U5NFOxxJXmBNfygU9iG0S9DuCFQX
+	BOpwpXvH7jKdIwiRd8e5jQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1769466880; x=
+	1769553280; bh=xAGPvojhta1VuvbsrbWfrWy+3cZRbKMd7diWfHMZx6k=; b=b
+	P6xUZlbt39eKg2mCYbGmGX9PZJdpVZLhgQTNEQGs8Wl8Op6QVr+XidZaGfhRo6fT
+	YgG+q6UK9HmwNihuA+yiPK+MeMVgnl6cV6CkgBBWOJv969NNrSjUEX/4EsWabqR9
+	A0MbLDau0506LhLVlIxp9FnbvGghRCws4LJZ1DLkC8mDBUBMeljl7ORy3JNR9EG1
+	cei4Cy7E7JLlqRTHwR+R+z2M+GaizZg5ivjb0bnIbbw1MtjHpXqpN0HcaW5b6wgS
+	bflOLJ6Os+Y3D0cHYf0iSsXpeg1P5EzOzGpljKjJEasNdAEDoE4PtElDu0Ol8sdo
+	cONEmFVZVUIAtA5ZidX+g==
+X-ME-Sender: <xms:_-t3aagA6faN5mzxmNpM5WMaA89nWoVXB008JjcS7nTTg6dUX_HWkQ>
+    <xme:_-t3aSqwY7rQmA0aRZDVY2qvUHcJumF_GXp8eO1LAXo_RAdLhB7qixMfa0-bAzLub
+    5o1F7iOeqtpy4jhtk2GGm9LFm8luoSaGCdSGigp-cH28Ewk2z44Qg>
+X-ME-Received: <xmr:_-t3aSTFONXapY8uLk_V8gcIZSj6_3BS3g0DbN3S6blwoteYeCrRe3_vTko>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdduheekkeelucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
+    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
+    htthgvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudeg
+    veeuueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepvdefpdhmohguvgep
+    shhmthhpohhuthdprhgtphhtthhopehjohhnrghthhgrnhdrtggrmhgvrhhonheshhhurg
+    ifvghirdgtohhmpdhrtghpthhtoheplhhukhgrshesfihunhhnvghrrdguvgdprhgtphht
+    thhopehsmhgrughhrghvrghnsehnvhhiughirgdrtghomhdprhgtphhtthhopegurghvvg
+    esshhtghholhgrsghsrdhnvghtpdhrtghpthhtohepuggrvhgvrdhjihgrnhhgsehinhht
+    vghlrdgtohhmpdhrtghpthhtoheprghlihhsohhnrdhstghhohhfihgvlhgusehinhhtvg
+    hlrdgtohhmpdhrtghpthhtohepvhhishhhrghlrdhlrdhvvghrmhgrsehinhhtvghlrdgt
+    ohhmpdhrtghpthhtohepihhrrgdrfigvihhnhiesihhnthgvlhdrtghomhdprhgtphhtth
+    hopegurghnrdhjrdifihhllhhirghmshesihhnthgvlhdrtghomh
+X-ME-Proxy: <xmx:_-t3abQtPCYW28zwH7SDTJntf7QRL0IcA_nX_28nRLGSjvGoU_lTMw>
+    <xmx:_-t3aYXUsFgiNJFwFV0Gha_gDMoTdIf50XiFIka_KqOYxLCe6hwNjg>
+    <xmx:_-t3aQ2X0LDEITVxtYVW77JDVr4rR5GG0b2wMIh3tGIwMwY27Nccbw>
+    <xmx:_-t3af_x0jgackgaeVEAwlgm5GM2kwrI8jOnvdy9SknqaDOLmsAGEw>
+    <xmx:AOx3aSgf7PAaXQj-n81710s0w_DHhBvRPwZTKo1gumB-BRmZtEGHFoGI>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 26 Jan 2026 17:34:37 -0500 (EST)
+Date: Mon, 26 Jan 2026 15:34:35 -0700
+From: Alex Williamson <alex@shazbot.org>
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: Lukas Wunner <lukas@wunner.de>, <smadhavan@nvidia.com>,
+ <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
+ <vishal.l.verma@intel.com>, <ira.weiny@intel.com>,
+ <dan.j.williams@intel.com>, <bhelgaas@google.com>, <ming.li@zohomail.com>,
+ <rrichter@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+ <huaisheng.ye@intel.com>, <linux-cxl@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <vaslot@nvidia.com>, <vsethi@nvidia.com>,
+ <sdonthineni@nvidia.com>, <vidyas@nvidia.com>, <mochs@nvidia.com>,
+ <jsequeira@nvidia.com>, "Terry Bowman" <terry.bowman@amd.com>
+Subject: Re: [PATCH v4 09/10] PCI: save/restore CXL config around reset
+Message-ID: <20260126153435.5f1557df@shazbot.org>
+In-Reply-To: <20260122104745.00001fea@huawei.com>
+References: <20260120222610.2227109-1-smadhavan@nvidia.com>
+	<20260120222610.2227109-10-smadhavan@nvidia.com>
+	<aXH1lfR8g1q--oJc@wunner.de>
+	<20260122104745.00001fea@huawei.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Jon,
+On Thu, 22 Jan 2026 10:47:45 +0000
+Jonathan Cameron <jonathan.cameron@huawei.com> wrote:
 
-On Mon, 2026-01-26 at 22:07 +0000, Jon Hunter wrote:
-> On 26/01/2026 07:59, Thomas Gleixner wrote:
-> > On Thu, Jan 22 2026 at 18:31, Radu Rendec wrote:
-> > > The CPUs are taken offline one by one, starting with CPU 7. The code =
-in
-> > > question runs on the dying CPU, and with hardware interrupts disabled
-> > > on all CPUs. The (simplified) call stack looks like this:
-> > >=20
-> > > irq_migrate_all_off_this_cpu
-> > > =C2=A0=C2=A0 for_each_active_irq
-> > > =C2=A0=C2=A0=C2=A0=C2=A0 migrate_one_irq
-> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 irq_do_set_affinity
-> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 irq_chip_redirect_se=
-t_affinity (via chip->irq_set_affinity)
-> > >=20
-> > > The debug patch I gave you adds:
-> > > =C2=A0 * a printk to irq_chip_redirect_set_affinity (which is very sm=
-all)
-> > > =C2=A0 * a printk at the beginning of migrate_one_irq
-> > >=20
-> > > Also, the call to irq_do_set_affinity is almost the last thing that
-> > > happens in migrate_one_irq, and that for_each_active_irq loop is quit=
-e
-> > > small too. So, there isn't much happening between the printk in
-> > > irq_chip_redirect_set_affinity for the msi irq (which we do see in th=
-e
-> > > log) and the printk in migrate_one_irq for the next irq (which we don=
-'t
-> > > see).
-> >=20
-> > This doesn't make any sense at all. irq_chip_redirect_set_affinity() is
-> > only accessing interrupt descriptor associated memory and the new
-> > redirection CPU is the same as the previous one as the mask changes fro=
-m
-> > 0xff to 0x7f and therefore cpumask_first() yields 0 in both cases.
-> >=20
-> > According to the provided dmesg, this happens on linux-next.
-> >=20
-> > Jon, can you please validate that this happens as well on
-> >=20
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 git://git.kernel.org/pub/scm/linux/kerne=
-l/git/tip/tip.git irq/msi
->=20
->=20
-> I tried this branch and I see suspend failing with that branch too. If I=
-=20
-> revert this change on top of your branch or -next, I don't see any=20
-> problems.
+> On Thu, 22 Jan 2026 11:01:57 +0100
+> Lukas Wunner <lukas@wunner.de> wrote:
+> 
+> > On Tue, Jan 20, 2026 at 10:26:09PM +0000, smadhavan@nvidia.com wrote:  
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -4989,6 +4990,11 @@ static int cxl_reset(struct pci_dev *dev, bool probe)
+> > >  	if (probe)
+> > >  		return 0;
+> > > 
+> > > +	pci_save_state(dev);
+> > > +	rc = cxl_config_save_state(dev, &cxl_state);
+> > > +	if (rc)
+> > > +		pci_warn(dev, "Failed to save CXL config state: %d\n", rc);
+> > > +    
+> > 
+> > Hm, shouldn't the call to cxl_config_save_state() be moved to
+> > pci_save_state() (and likewise, cxl_config_restore_state() moved to
+> > pci_restore_state())?
+> > 
+> > E.g. when a DPC event occurs, I assume CXL registers need to
+> > be restored as well on recovery, right?  
+> The CXL spec has some comic language around DPC that basically says
+> "use with care, DPC trigger will bring down physical link, reset devicestate,
+> disrupt CXL.cache and CXL.mem traffic".
+> or in shorter words
+> 'Good luck'
+> 
+> If a CXL device undergoes DPC high chance you'll either trigger CXL isolation
+> which we aren't handing yet in Linux because we aren't convinced software
+> can really recover form it, or stall a CPU and end up rebooting.
+> 
+> Maybe we'll one day we'll figure this out. Today turn off DPC on CXL ports! :)
 
-The closest hardware I have access to is Jetson Xavier NX, and you
-already mentioned you couldn't reproduce the issue there (and it looks
-like I can't even get a hold of that board anyway). So I'm going to ask
-you to test a few more things for me.
+Even if we hand-wave that DPC isn't an issue, save/restore of the PCI
+state happens at a higher level for every other PCI reset method and
+we're creating inconsistency here.
 
-Can you please apply the patch below on top of the previous one I sent?
-The suspect is the spinlock lock in irq_migrate_all_off_this_cpu(),
-although I can't think of any reason why it shouldn't be free. But I
-don't have any better idea, and I would like to narrow down the spot
-where hotplug gets stuck.
+PCI-core includes interfaces for saving PCI state, offloading PCI state
+as an opaque blob, reloading, and restoring that state, and performing
+resets without saving and restoring state.  This has a couple users,
+including vfio.
 
-diff --git a/kernel/irq/cpuhotplug.c b/kernel/irq/cpuhotplug.c
-index d8c62547f9d06..69c44da68e3a9 100644
---- a/kernel/irq/cpuhotplug.c
-+++ b/kernel/irq/cpuhotplug.c
-@@ -178,9 +178,11 @@ void irq_migrate_all_off_this_cpu(void)
- 	for_each_active_irq(irq) {
- 		bool affinity_broken;
-=20
-+		pr_info("%s: irq %u\n", __func__, irq);
- 		desc =3D irq_to_desc(irq);
- 		scoped_guard(raw_spinlock, &desc->lock) {
- 			affinity_broken =3D migrate_one_irq(desc);
-+			pr_info("%s: migrate_one_irq -> %u\n", __func__, affinity_broken);
- 			if (affinity_broken && desc->affinity_notify)
- 				irq_affinity_schedule_notify_work(desc);
- 		}
+If we want similar behavior for CXL type2 devices for a future vfio use
+case, we shouldn't create unnecessary differentiation here with saving
+the CXL state separately and making the reset method behave
+differently.  Thanks,
 
---=20
-Thanks,
-Radu
-
+Alex
