@@ -1,70 +1,66 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010054.outbound.protection.outlook.com [52.101.56.54])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013067.outbound.protection.outlook.com [40.107.162.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04D3E1DE8BE;
-	Mon, 26 Jan 2026 18:19:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED77E1DE8BE;
+	Mon, 26 Jan 2026 18:20:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.67
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769451562; cv=fail; b=uQt8EBJa0cJvlTRSzL3nBEgChfrvH5hOprZY6J/CZp3erebP9VusC0FsCiK/mL48m7T5hMlT9UOaQUpqvGSS7QEcp2lTmCMLj5y2wBixGPz3Irl5qqVgFLMGdSIiWumVsNTQFy475qxGdD0vjsFg4UN9GfiRXhvur1K9w4KMXgs=
+	t=1769451633; cv=fail; b=pKS6d4g3T+nzWpUhOekUT4pKcqCz88rLhLimQT42uHO6ZjFzKwuUWGp/CrfnhjOqFb3TJAL09RXkM8Fas/L5NasS1ETKw4MeUjPDJWVVR55L4NqIDIRTUtjcvaBXoLW3Az71y1z9I0U4s9aPr4dxceYCBxdu3SttiJqb3/6WmdA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769451562; c=relaxed/simple;
-	bh=jvHJPB9BiwUNvOi2APPnlwHTVtlUpcuJ80QbgjDTsCA=;
+	s=arc-20240116; t=1769451633; c=relaxed/simple;
+	bh=Wc7qWDdTVQixZyvozdhBiGwRFMuUmlhCllRF3npBUOc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=mbsqflw69kIzg2Wk7UiJ2U63wxt5YU7foEmHHM7FIUMVmtHtF1tOaR0jSGMbgPNqt/70xIXqJ8i++5oFwU3gNpOdermwCiKJB6KLi9b/Jq7cWEfRwaTRsvTjq+bhh7ATpiPfLQXvprD5/cLZ9SFD37YxqM7qCk4fyZs7pk7BEEs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=MXffpTth; arc=fail smtp.client-ip=52.101.56.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	 Content-Disposition:In-Reply-To:MIME-Version; b=NSWxnLJEURNE1LrNuUC0VMRiemkdDVqmj+/vTw7Y5Ng9WdEMCiJAs2e1LRkr1msciQ15MC5PzxAcasZyM/UGx0U1RFvA9GDCTZp6wB9q+3dZCDVhSc6EbUnuJ4Id2OF0sV6pOpSrq+5Inrq0dhNOAcnw+BPHBB/dXch05Ck7v2E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=dZKqFd2J; arc=fail smtp.client-ip=40.107.162.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="MXffpTth"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="dZKqFd2J"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ObwFkMx86pqhlC8CNvPIObRxTMwaHj0dFBNvEdQQcChXBgJaBS0QpWNJ0AcnO3ibhuAnOPULqhgqTUdsys1d1bde5/48cH5kIp/PrBegJQegzdCW1Tl6f5ag9ubZ/BLEc/3hKuc7ZhHBt8mMoS6Sxm8uBXrlYUseLgvBg8vIZTfa7hOcY3wpQJ4tdfmvD+bRScEhb90FfNzZ8y57vcLFmPNJFJGJbDItcYF4ipFTDj+WYlCP9w1wmFOktgYTEr5JZT9tsXLPgbD0t8FFi4AuUJ6gfbCXz12yyzX22Cxxloy8qcul/GeCA8qriNgn4nMGedxa27+RWFyHsxe01XbI2A==
+ b=qgo90f54C3BFfRkDe3ROZFbDN2vBAEcgZ8apr9QcSlmVBEoA9PcfUVjHYUyX1dsuUPJHDrbRR/4Kn5j7S3wPbK5IcI0otvl1ysn4S0DCi68kk+D633foiwXPGjQCUCjJmZctcqapTeq7i6cB02XABtwsFGuriJD1lZWpNIPPv1wjlSXL3BXzZ8ZU1avOLpnEc+K0b7tkCnd7qWdAXp6eIllQ+XiSFakfiyq44IGYtsbbFPvVr1GZl1uip2G/KuBB+s0fQmGFBZ8S2rwxUAdGtTJwIFTzqyv0ecfjQBLYQrNoMLYl7508NfxHXl8UorZbiZA16EjEQLtTZsBiLbxdwA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=H++95ao5JiJt6IktGNi2k7zbKKcq6GWcjpGUVXO428Y=;
- b=hf4B2w5jc2g98J10oFY4PVy9HvcTJrgiPLMxJ9oD4SRRJsZpINzV4Iks2TByBLQIjTNTJRFhxKRCAvY35cyFs0HDyWw/1HGO4wdSkNiNf/czHiICJwSjXM15AV7EXSpRHlfx7SKq4GQ69hflGamccrHSEw2GRozDIg6vW/ar8iHYaWeJkfC22nUCAjmHz3kLkcepzrJ051W3ZRqp02UJnmXNC0deqOj+F8u1ERJYqz1e0JdNWqxDzPA3QjiDLGm0fkzznLPevDcwjJvyI6/LGcZ3w+FtPURwSLfIIgtin8TrTcl53RPn89AnfRx1DXYzPoaiIsfYE9jA9YW/5bgaxQ==
+ bh=t3skV+d/8bKl0U+ow3EwfnpYa03vPZGUM0VYoCnqvGk=;
+ b=YAeWrvMaGdO51szIOTSbnvnkF1j4Eh63P53FoWbmfGFrX/NvmiFbDPMO9bsED65WLZ8PeKSrkr5jL7Q3awf4Bmcb8XvZt0pJ+DypKh8gK1OxlIBF6b4fy3lQpPlbSKdTqYbpG6AVILVgssC91/OquYjPAY2byvGkSL1iduXgsKVOzYpjYW+O4k9cxfhotZ3Ues2HOjKtAvVo6RNNQJPDB4wpPxKJSxKuVK9hxLc0MoW2HUkkxtUdL3x8feNGpgSSF48brYLp2NHcKzAYptV+Cdz7EFrcQMe3CzitzY1Hs+pmm/cKJnKyCm0oZC6T1rREFNejXOI3FlFu6iyhwtxygw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=H++95ao5JiJt6IktGNi2k7zbKKcq6GWcjpGUVXO428Y=;
- b=MXffpTthPUPKsttmsTG0hBccOZHmMV8+ogG5G8pVgYrBGmKaTmJA6rW4zdNQTN93B9Zeyk49ZzvU9eyqMSn7MC/xdWoplV4FWBt4DshdFzgd+8pgmcxnT0cZvINik2th5/fNTLIbODJtVzEM5Bd7mukmpBE810OqwPq7ZXFiWWbFQIa9wBcBr48DHwe7BK6Bq84qQyvlLE0TLBuca/mqHEjhkiFmF4rhU7onPpSIPCVQMuGeYFtbWbhC0rf8iwQCcP0Abm1F2Lz9iGdP6/LR910/jeOkpHrcbEGvxn7aTYmLQIa/P/1EY3MEGN2E+BlI8wnbxui4otbSW3LvVcJZtA==
+ bh=t3skV+d/8bKl0U+ow3EwfnpYa03vPZGUM0VYoCnqvGk=;
+ b=dZKqFd2JJ3+mbJFwPJpy+1a2RY+5zX6rh8q35ZvXX7djQ8mQ7GXow9ju9wK6ZLTtxuap5IkASmcI75/t9te50m1HRXJOhchCx86rnE04ou5n6vDa5eKzJAGC59BRICaK71YUwkS/pPyxXRjuySV8JiPGsuTmbH9mhoeaaRvMLk3pU5A804OkeEkhj9ZJ86Topc16O+fGEmA/nO2IoaSBdgtBoPQth48tqTrAOH+NGUMqsM1NLDD2Tc1vs8xBuLTqo2gVkMXA7RhoD5sV4D/zAHp+8MxsoERrFFHZDigZPzQdhcTQtVvoM7JUG0ujxe3XItAGPhseM4msaLWO+KlpIg==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by SA1PR12MB6969.namprd12.prod.outlook.com (2603:10b6:806:24c::14) with
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by DB9PR04MB8187.eurprd04.prod.outlook.com (2603:10a6:10:24a::13) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.14; Mon, 26 Jan
- 2026 18:19:13 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::1b59:c8a2:4c00:8a2c]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::1b59:c8a2:4c00:8a2c%3]) with mapi id 15.20.9542.015; Mon, 26 Jan 2026
- 18:19:13 +0000
-Date: Mon, 26 Jan 2026 14:19:12 -0400
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Zhi Wang <zhiw@nvidia.com>
-Cc: rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dakr@kernel.org, aliceryhl@google.com,
-	bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org,
-	alex.gaynor@gmail.com, boqun.feng@gmail.com, gary@garyguo.net,
-	bjorn3_gh@protonmail.com, lossin@kernel.org, a.hindborg@kernel.org,
-	tmgross@umich.edu, markus.probst@posteo.de, helgaas@kernel.org,
-	cjia@nvidia.com, smitra@nvidia.com, ankita@nvidia.com,
-	aniketa@nvidia.com, kwankhede@nvidia.com, targupta@nvidia.com,
-	acourbot@nvidia.com, joelagnelf@nvidia.com, jhubbard@nvidia.com,
-	zhiwang@kernel.org, daniel.almeida@collabora.com
-Subject: Re: [PATCH v2 1/2] rust: introduce abstractions for fwctl
-Message-ID: <20260126181912.GA2131321@nvidia.com>
-References: <20260122204232.15988-1-zhiw@nvidia.com>
- <20260122204232.15988-2-zhiw@nvidia.com>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.15; Mon, 26 Jan
+ 2026 18:20:30 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9520.005; Mon, 26 Jan 2026
+ 18:20:29 +0000
+Date: Mon, 26 Jan 2026 13:20:21 -0500
+From: Frank Li <Frank.li@nxp.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>, dlemoal@kernel.org,
+	Koichiro Den <den@valinux.co.jp>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: Allow overriding default
+ BAR sizes
+Message-ID: <aXewZYkk46B11zho@lizhi-Precision-Tower-5810>
+References: <20260123180747.827357-2-cassel@kernel.org>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260122204232.15988-2-zhiw@nvidia.com>
-X-ClientProxiedBy: MN2PR19CA0059.namprd19.prod.outlook.com
- (2603:10b6:208:19b::36) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+In-Reply-To: <20260123180747.827357-2-cassel@kernel.org>
+X-ClientProxiedBy: PH8PR07CA0018.namprd07.prod.outlook.com
+ (2603:10b6:510:2cd::15) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,267 +68,283 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SA1PR12MB6969:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7e38f86e-cef5-4397-38c9-08de5d076881
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DB9PR04MB8187:EE_
+X-MS-Office365-Filtering-Correlation-Id: e4fcb55c-4165-4c9f-50a1-08de5d0795d3
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016;
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|52116014|1800799024|7416014|19092799006|376014|366016|7053199007|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?/ayv9tXMui4ljPK7Aq1kXKaeOXKLMjkbNNGHObwDTXHXaLdz8LVgwsaOik/+?=
- =?us-ascii?Q?IP9mzSpyXJlKIveO9iIvTfGu9Z2G9hTYQJALSevwgXYIlCeLiA6GDamGzuY5?=
- =?us-ascii?Q?VinTjsAIR+phvBs9dfoaodr1JlZu9xgohl9LZjKr4OWOjZSNafftcZdwMD/I?=
- =?us-ascii?Q?lZLR0n7Ytvev8EBZsoAGdPeKXWH1xbWo0n/nIJ0jr+Z71PVfWSqF7WzszEr2?=
- =?us-ascii?Q?XO6Vae+Wr8PLX24/YL/xFAGqtXjxlyF46LPwZ+uv80hyAKQ3UDDVNR5xwx1D?=
- =?us-ascii?Q?2RQmjKsv0e9KnzrWr9GUBAydGZG9ODztIvqBfHHhyrMpKLOnMh+TcqJp/1B5?=
- =?us-ascii?Q?NsL6r5JlQSrko3N92iBr51n5L3Ni3tzUgK1+frsOe4UMGBSHMNFxIUaP56tZ?=
- =?us-ascii?Q?d11Y5FololI9HGz8I+WJud3JU2e8AKDS7vsGVGSqIDY0RGyagcnNqghyUN75?=
- =?us-ascii?Q?AkCCJvyl7AGzRNXRmjhjiEaImKyC+TU1oWa8cacDD+wLtPP6V3GaMdpfuNDf?=
- =?us-ascii?Q?moH7NGiukwvHms7da5U0wg9W9rGHA6EiBopjNqdgK6gfFZX5XYFii/14IUEa?=
- =?us-ascii?Q?b5VqbJJCqnH28CkyaJM9TseDx9K1Y8CBbp3yR8uqpxEfevgVvX8TaseYFHno?=
- =?us-ascii?Q?9t1VoqVO/T8P1z3KfzdZjjQ9vFcbGwtcW++KfACQ17dyQU2fdo6Pwy01ayZ2?=
- =?us-ascii?Q?Jr8MzcdskpSbreDVx+S2xzWtWg8y5u2aZNcSvXtbmALOjRprENUjYhMbN12W?=
- =?us-ascii?Q?pWSjD9pNeCey/citZzWiXkLHpjW8TE5m+qrxqebwSKSxiZrTem9bqTtupQ1s?=
- =?us-ascii?Q?Kq+TC1PGQn0NXPDiKjtrn1hO1N/pVtdUkV9JWQ+OZlW4u+yhEOZwfQgo826n?=
- =?us-ascii?Q?ASZ9snEtdOxZfXMNrckiCiFy1Jmz6Ndn4lRK7QXqu0rw0443c7ecQ3WhfhJn?=
- =?us-ascii?Q?8FloBYSpiERic033MAWCRscJXqUi2RGfipt82jkENjGqkGYP11n/Rfs4Df00?=
- =?us-ascii?Q?gm/MWddlTn+ErrArrcJo7Ad1kq9r7r2DWJrN1c2BSKPNotNXsrqvLKg0u2i6?=
- =?us-ascii?Q?OlItZzcwU/krZggW052jDNYc4FeK1dUhlurNlguGQkfvvz8eX79o/Y8mQpR6?=
- =?us-ascii?Q?PlfWXJKrHfG+2GKSyQnDqACGTASnBmvDT8VbKokykfz+4WuRik2DeAaX+u4A?=
- =?us-ascii?Q?6JejlXp/p/YBWNNDjGBe8CukRTkNQS+Z2YsIjwQcDAWChA+5K539IBaEZQtc?=
- =?us-ascii?Q?VBSnAiCU1mfUFgsi1zRR9BmPQhu8tvxowB9IpxVDpKVcEZMVbJKvVhYwsj/Q?=
- =?us-ascii?Q?7HFFflKzqiI/03SriJ489aHAoUkxJC9bxX0bhXVS2SGVgEy2pOTlJcXphHha?=
- =?us-ascii?Q?9g6PrSR2YemVC20OIOEd3odn7KRV6Im/Kfqiqz9dTRyygWwEYr8lhEPWuvtC?=
- =?us-ascii?Q?W6ag5sPPsrrb5A0WIAC8NwAPJr5mSJoqr0oUmC5rZTViQ0kUxuHtT7i1uKAk?=
- =?us-ascii?Q?dUy0Whcn8lGO/eztj87Su5xb6zVQUhDiJxPITdGfe2Lj2wWbT3wEanSEb8uI?=
- =?us-ascii?Q?QGtyWvxhSSwPxrre3hQ=3D?=
+	=?us-ascii?Q?UIJg7bHx+23fJa4MXB/m/hdaczRCYTkdKP+rYl1ZaotekRaakCmGq2KAcgQo?=
+ =?us-ascii?Q?U11je7Y8ERHNUrVfysdcdHdfdPClU99ujEN//olB2xU1bTS9vSmREYVJ77Tm?=
+ =?us-ascii?Q?I8/WQDRBoPB5OlLPZwwT/wqr32yyQ6tYp0LZHhXns03W6mn+XHNJDqWV+xiW?=
+ =?us-ascii?Q?ttglvaF94hAUdzUwMG7PmSZannunEXHHLaS5qNSH3GvRM8s3cmOuF/BF7PM2?=
+ =?us-ascii?Q?xjKVwPVleQ7/9J56NX3XTEOdbVpnIEgwMM3rXlZDTao07OUKH83yqJnebrBn?=
+ =?us-ascii?Q?qo5nPxfquga3mAwjH8KVduU15L0V2qRC/bjOpya51JdfGmaDbPggllhfTbmf?=
+ =?us-ascii?Q?bBp4PdpkdB/LdTI+slG395uF9hfC2HUGwKp/nd+nC4OSQyzlWxU3qQwEFlia?=
+ =?us-ascii?Q?Id6G2FXyYqU3cne6ySo0I/xE0Gboa5yVBTZoy9BBjyMCBK2etcFxzba0P68l?=
+ =?us-ascii?Q?EhCOO/pWrxXkopBJP51RM2agpy1mmPsw0K4Z1eOioV4qta6SEz9C9dTZMsWC?=
+ =?us-ascii?Q?9ojSZu/SdtD52aNNd8YXbQHJmIZX4cKZgweNRyl+0/3whkkziPLbUXRyalnq?=
+ =?us-ascii?Q?W1Y3XRGBHQ+CTKK6ISoxnE818AInuFNtKu23SLocI9i0N8uC9o3W5eVF2Z0x?=
+ =?us-ascii?Q?ahJatn8PLNmjgBBRjvHeILTp3PF4UiC513JN5x5y9qmO2W/DAOtzMmQu628M?=
+ =?us-ascii?Q?t1jUi/+NYK/cp19EkyAu1SxLK7OaIoyBWwu4YReJ/kh0zxJqANgFCMdxZOyI?=
+ =?us-ascii?Q?UZVPjtXYPzSCOvNI5sHuWB6R/5peUSXBV1+GVl4JtwLXHJlrwh/wyb4aXn/T?=
+ =?us-ascii?Q?mq+KzqAri11LwkujZsIOOEnbjL6WMQ0VmKkRRYAcN7tDqsVyqnALWREcj1la?=
+ =?us-ascii?Q?YyJDcOSdRXl7mZ/fdbW25qC8U7YnXnVfumgGWiqIaqa/4IxvytU+NcY6IgtV?=
+ =?us-ascii?Q?JZr+N3FgWHdV0elA/2n0J+4NZdL3uovX2rlpwGaJ2fWI1dSwV7SRsP8y8tlW?=
+ =?us-ascii?Q?2CvU4R7KZLLTKYFkPuKvP6L2KxQZioR3ZoB80FBNor9Vyk1MX45kGzL9b8MV?=
+ =?us-ascii?Q?mKVd5W++rxIMtwYrWfV8U77Oe2A+8J6bS6EXM5wvShMO6TreEBG6H5NvIN0d?=
+ =?us-ascii?Q?Evdyv4R3Xeg3RtQPvTO1GBuWy0gVGIr+eX8j619aadtu/wYqRrbnWj39+arj?=
+ =?us-ascii?Q?dpUY7RCuIXiRWC9Iwjv5yPn7Ymo671fj1zt2jAMBWEdQ7P6FzX6SpdtQgvSz?=
+ =?us-ascii?Q?xffQ56OCwj72bK2NwJxbh/BdW8cdIZ4uKGot5p2qMDtYKrmX0NqozDhOnkqW?=
+ =?us-ascii?Q?f/rB9/EqhJSpB8CrbLfhC/IzurynAHyGk1EBZ+venvW9bTsRho2v3c4d0Shm?=
+ =?us-ascii?Q?IXyKKoNEWWu4dRAktdS7qiwaFoYLJSbyRxEoq2dKwwRHyXpwhefN+W1/3YVE?=
+ =?us-ascii?Q?oijaNkr82hIzlow4sgUHRyQGgjUbVA9G/0J/UqqgVBOgn/FPN4I5kd0rpoVD?=
+ =?us-ascii?Q?LQcPrBJMHOFbxsEPT+jN1RMFI0jGNkdVBeskV8HJSEjru93NOTvId9qhS4zP?=
+ =?us-ascii?Q?l3cBGnjjfrWqUPk95dnJAzyHlKwvWwlTiaDVNnaXBptdYhu8ru4vLN0/zRBQ?=
+ =?us-ascii?Q?5HGbmAAsXgzFsGL6Cet+AR4=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(1800799024)(7416014)(19092799006)(376014)(366016)(7053199007)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?TsYbMGWgws6t3QhaA5Kz3Fu5hf1iu7f5WcHlLXTPmt42Fx8m8f5sIUlr1C3+?=
- =?us-ascii?Q?FcLPFdA5CbkZYemSBazxzZEDYK+Amfv0TxVZD1xMSNUzQbjwPi0iccontchI?=
- =?us-ascii?Q?0qFViOcrbRavhSUAKGG91Jw3bb+0mnfenpcvoRwQm9uCbr1SA574k3TZUxx8?=
- =?us-ascii?Q?sftGYefCvbcc4PswLyQIqENUwDJev6e0fGo2lexaGYa12k1DFP+3Er6sknOU?=
- =?us-ascii?Q?Wf/ZpxgCGrTyld5a4ZApx0/IA4lXPn/jCVpBJpmJg8z1JbsoUDzdavpC12c2?=
- =?us-ascii?Q?aEr9/b2YbE3guZLGpmTT0Gs0Fj8uc0F8rHk6wMkXY87vKsWcnh5rstDwphjT?=
- =?us-ascii?Q?vHL6XUnjcgGFf8TFo0duKnbvuV25OlliPdBlEKtwLHAdU9H7VqqT3mtxSNJ4?=
- =?us-ascii?Q?QPHq9GUZDbiPPmHERPL23wZAQGneW+fmUhIvsLH666F9QIO3DHj1fRAJuPDh?=
- =?us-ascii?Q?PcTgEguhcrXYjUDERaYocxe0yyusToXyKqrRQuTH7CByuRcM/4dtZQvLZ5ZV?=
- =?us-ascii?Q?IEuv8SBvXVNj1b1aQiXAgJiQnJUjoTD1gAIcVX75iSKc61wEc53XCp16idKB?=
- =?us-ascii?Q?gOrAfPqaIK94WBClQ2MspznekdGO5r1fBB5kD3nLjkEWHuoqi3G8SaWAugI1?=
- =?us-ascii?Q?BHEEAZcj1U2+VXlUNW/iudMs36fTgVkLAnyV0xGs7vtyWRo/JhdvfKJX8atF?=
- =?us-ascii?Q?zu1g/t2HPsiF3m+nbqPo475ZA6X0Z3/uRlDmB9FY2PvmIDUV1yGkVTqhXe0Y?=
- =?us-ascii?Q?Bs4AUu9Kc7OsrVk3A0LzeAehpu64y8YWotyZfH6EbmVXrbxwG403rRVd4ey4?=
- =?us-ascii?Q?MsYrGy2etg5Wft7C6CVn9t3IKe5MgQNYlCOe/RRB2y38LKWQYSGcqyiKRiDo?=
- =?us-ascii?Q?xQejb9qc/nMskHLPTLikYwIQjNE4SfyKPC/m0ZGifUa10FV4uvAxwg90Akbu?=
- =?us-ascii?Q?ZoM1Gx2leIRMdMc8z2WyVsDK/7bKkpeiJlgXR6OJksDyCjs+4FBPeTEPkL5m?=
- =?us-ascii?Q?UMoQTPZrvs6vwA8xUDwweN9IqqYi6UBPD+ib2wDlrQn0N+RkMV2cT8kVqDly?=
- =?us-ascii?Q?GzwgTtDfMxYNL/ys2LuiTK1D5CZ5mUIEP+uZVf5EM90fe5dXSLS38xZbR3op?=
- =?us-ascii?Q?bxVv1q6ZjLp+EEBzC3LC6v1uTlOX93wo9B48nXqHvg3dsv41ORFHoU1+3AFm?=
- =?us-ascii?Q?ntd0Yd15b9xLxk3ssHg1wZ4QPlkhJlUEeLDNPOyUWigB9cJkqqQZGfrvhmQD?=
- =?us-ascii?Q?lTctmKXHvM0ndJY/PSk12xyeBafS/usDgoJ6bY4L4vbd2Ldiy/wy3/DcdzPW?=
- =?us-ascii?Q?2ItRriTmL3p0WqrGF9UjFX+xH4AMEpEmGtA8Qt+6vwEc1vbjCKRzSb1tJjh7?=
- =?us-ascii?Q?2xQJjS2zNOdtAfbhRfUSM9AfM4r6MSOW4+Nh1nsKhNEyQWYt3P5vwr5qcnBT?=
- =?us-ascii?Q?VcOtLbvUMlQ+NR1M5KhjAJ1GLx9Wh5YHnSJk8ujJD9uKEK4CYk5ofw31MVMv?=
- =?us-ascii?Q?ojJHrRZQWzDzv1PqKm2Ta/LPJkSPAniLn35Fw0QKq6M5ysNALooC9LvfVHax?=
- =?us-ascii?Q?UgdGlWJWRqeRy9bIxnzNas/zGobKOuCu1eXGiRUiZYhkYEEhaW4CCB4kBwc4?=
- =?us-ascii?Q?8Pb/trPLm91ImctXUF61EU054RbWUivd3HzhgFsDcO3IjhxL9JVy8CFuVzAV?=
- =?us-ascii?Q?NGWuQJ0kl9vR+T9LLm3H6LXdghKH421aIsrTJrY7dL7X4SR0RxmiyKIsab2q?=
- =?us-ascii?Q?/3D9/fDXWA=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7e38f86e-cef5-4397-38c9-08de5d076881
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+	=?us-ascii?Q?2T9yP5cvwe4KdGI/pBxB64MzV+yLl0gUJjLAa7P5pY8YdX38mP8BjvMivfDb?=
+ =?us-ascii?Q?yzsDktmH/ZATupv9xLn3Cs7L33QloH9RHWUSa/FgUBiSElkcTMfAYeZrdNpR?=
+ =?us-ascii?Q?Aa//jgCykBoL41ACIbIMUgLbaLrSy5gnpPabbvnvsE+bBFynHNIdIUka/Zk7?=
+ =?us-ascii?Q?5nQnqKZJZTVd5MeZro/ZWwgZF+8OI3uckAHiBSTePkFwH/YoiNkW/i4Yt+IA?=
+ =?us-ascii?Q?x3pbV/gxR96Okq3t0+nZKmQ/aOWydYGcIscS/PlD6UJWRC8XxlEsQ9O/BfHC?=
+ =?us-ascii?Q?qhbRF21yzypVCzumrLqIJH1JcZ+Aq4vmpCwAdqD35VsxuFH5/Q18bnpVKR8e?=
+ =?us-ascii?Q?EQTE3dfvyZsftwz2j9gVBc8MlGQ7ZmVDs2SY5TkyNd/kHl4pqcVX07oBXqVV?=
+ =?us-ascii?Q?l1Pcffi6pOxMElOd9jDQ4rUFaP4EY3YsaXyXp5mnj0fH9sw50Dx8NHen0IUK?=
+ =?us-ascii?Q?wFTEs9cQQH7hjrMiasBEuX6v2CZzmFamX4364wRWMdSp3o9jk6BfFQW/hrCR?=
+ =?us-ascii?Q?/RnrztogLWLNDUfC5XsTT1RF1AO4wIRlmID1NWYnkmbNMU3b4lSpuoibzfFw?=
+ =?us-ascii?Q?jR9D8o8lNt5V1ax8b4Lnw2e/1r9BkSEGDJeKEZVdWGpQjSZR/RdWzAs3bvhK?=
+ =?us-ascii?Q?qg1VZuZudjupV6m/aUq9hGzc0+bX+DpbMhiFOaqAf/hNwQn7VCri4/6YK+Yl?=
+ =?us-ascii?Q?yV8CyZyMFd7HIqObr8gJKWI0GxcXym/4rTrs1trt2JdR7FKcL++MDKy1qBFI?=
+ =?us-ascii?Q?RXRKlEV/M/8B+mQ4rvN5B2/rJUKy1rfNzNwAgJXHGJQ0pRoAcgeqKdUwnKTL?=
+ =?us-ascii?Q?9h+MXABTEeUEn9Xgdnck8OBQWUQ/I1dbFkRO9QbWV9HPYRAUy1uLMkLZbSjw?=
+ =?us-ascii?Q?+NZm+ShMjaL4JKeJ8ThteX1/3Vi5gfxzrZOm6MyfXOU5SpGBZKYcSyEz6R4p?=
+ =?us-ascii?Q?XQZI1P4CPSbFmqMZOXRDAp+Zja6zCszfkhxkREJhCqb4RwKWNGD91iZmER+d?=
+ =?us-ascii?Q?KbKo6WdJPkwCFi8dAGvELC9mLJ+3oLTuMLlMmpE8QbsfBu4V2KGTXcV67Vop?=
+ =?us-ascii?Q?dgbwRI33bXBA/Mz2j2ZUMfX6oTP8ZAwYMW6VOHjjCasAW8H92iIr8i67Fz0L?=
+ =?us-ascii?Q?jzlXotwOGav2cm7Kq2IVkIGSzvJ/C03f+0CVQ1ApDBIGzdYpKnYPekf08x7A?=
+ =?us-ascii?Q?J6YK5EYOmfZNqFEilzEqTMi/5G1JOcCkmOxeBgQ5H7p7Xxas0L8ywAAmRCTm?=
+ =?us-ascii?Q?CrTah3dbJ2R2vxbYAE6CXoHQeeHofi15j0mCeBm+uTRixpoPpy8KfDgt0enh?=
+ =?us-ascii?Q?QmNFyS5VtFTPU+WqxUxuHCp9Gs5Qma/c08RFVBODDV75RfwBDTdDpgqh2+CV?=
+ =?us-ascii?Q?lGCjEmPix45OV6iMLddAZ7Rv+FNr/WZk+oWeohS+YPU6cf8S2qx4cBouD4XT?=
+ =?us-ascii?Q?xYvsbzPSof4lV0NtUYqLrUdNM/O90sM2Th6aEhc9snsfo87OdjkcC7mmMKmo?=
+ =?us-ascii?Q?EzZg+JPV6nC9V59fTVXUUomWNb+dlfPzyXCil9g29/v8+q/Zc2mIskq47jjv?=
+ =?us-ascii?Q?lOM0o1sryQqPSzPxThlnTX5rpbHp9IwGV0E5S4eN1bCAiJC06kfX80nOOco1?=
+ =?us-ascii?Q?6iSerqwfpP1lxf1SIgYXC+vLm3FNforWaJ+B03EJXOaffllLgj1usNrACekg?=
+ =?us-ascii?Q?Jy0jTApd4jdnqqjw3gKGF8hgx/0gy2CleclhEeTz1tsPZF0mc0fZfS4W4nEz?=
+ =?us-ascii?Q?YfLLuKMyKg=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e4fcb55c-4165-4c9f-50a1-08de5d0795d3
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 18:19:13.5056
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jan 2026 18:20:29.6652
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: WJ9hwykO/Wxj/0dpwYR8IMVFZp2gOwTEM/9zJ9FYdxUvmihA2tCt04H/PWyPGlDv
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB6969
+X-MS-Exchange-CrossTenant-UserPrincipalName: h/N/xkNXKIbTxk6SrzRLSmpGl9GjmzMR2/ZZNWIuQGnJNtH3CEW0tz4dttb6JZCjQg6QzRqzlVnFFEC6gozKWg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB8187
 
-On Thu, Jan 22, 2026 at 10:42:30PM +0200, Zhi Wang wrote:
-> --- a/drivers/fwctl/Kconfig
-> +++ b/drivers/fwctl/Kconfig
-> @@ -8,6 +8,18 @@ menuconfig FWCTL
->  	  manipulating device FLASH, debugging, and other activities that don't
->  	  fit neatly into an existing subsystem.
->  
-> +config RUST_FWCTL_ABSTRACTIONS
-> +	bool "Rust fwctl abstractions"
-> +	depends on RUST
-> +	select FWCTL
-> +	help
-> +	  This enables the Rust abstractions for the fwctl device firmware
-> +	  access framework. It provides safe wrappers around struct fwctl_device
-> +	  and struct fwctl_uctx, allowing Rust drivers to register fwctl devices
-> +	  and implement their control and RPC logic in safe Rust.
+On Fri, Jan 23, 2026 at 07:07:48PM +0100, Niklas Cassel wrote:
+> Add bar{0,1,2,3,4,5}_size attributes in configfs, so that the user is not
+> restricted to run pci-epf-test with the hardcoded BAR size values defined
+> in pci-epf-test.c.
+>
+> This code is shamelessly more or less copy pasted from pci-epf-vntb.c
+>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> ---
+>  Documentation/PCI/endpoint/pci-test-howto.rst | 16 ++++
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 92 ++++++++++++++++++-
+>  2 files changed, 106 insertions(+), 2 deletions(-)
+>
+> diff --git a/Documentation/PCI/endpoint/pci-test-howto.rst b/Documentation/PCI/endpoint/pci-test-howto.rst
+> index dd66858cde46..71975721cfd5 100644
+> --- a/Documentation/PCI/endpoint/pci-test-howto.rst
+> +++ b/Documentation/PCI/endpoint/pci-test-howto.rst
+> @@ -84,6 +84,22 @@ device, the following commands can be used::
+>  	# echo 32 > functions/pci_epf_test/func1/msi_interrupts
+>  	# echo 2048 > functions/pci_epf_test/func1/msix_interrupts
+>
+> +By default, pci-epf-test uses the following BAR sizes::
 > +
-> +	  If unsure, say N.
+> +	# grep . functions/pci_epf_test/func1/pci_epf_test.0/bar?_size
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar0_size:512
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar1_size:512
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar2_size:1024
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar3_size:16384
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar4_size:131072
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar5_size:1048576
 > +
->  if FWCTL
->  config FWCTL_MLX5
-
-It should be below the if and not use "select FWCTL"
-
-> --- a/include/uapi/fwctl/fwctl.h
-> +++ b/include/uapi/fwctl/fwctl.h
-> @@ -45,6 +45,7 @@ enum fwctl_device_type {
->  	FWCTL_DEVICE_TYPE_MLX5 = 1,
->  	FWCTL_DEVICE_TYPE_CXL = 2,
->  	FWCTL_DEVICE_TYPE_PDS = 4,
-> +	FWCTL_DEVICE_TYPE_RUST_FWCTL_TEST = 8,
+> +The user can override a default value using e.g.::
+> +	# echo 1048576 > functions/pci_epf_test/func1/pci_epf_test.0/bar1_size
+> +
+> +Note: Some endpoint controllers might have fixed size BARs, or reserved BARs,
+> +for such controllers, the corresponding BAR size in configfs will be ignored.
+> +
+>
+>  Binding pci-epf-test Device to EP Controller
+>  --------------------------------------------
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index b785d488c284..fda257e46920 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -63,6 +63,7 @@ static struct workqueue_struct *kpcitest_workqueue;
+>  struct pci_epf_test {
+>  	void			*reg[PCI_STD_NUM_BARS];
+>  	struct pci_epf		*epf;
+> +	struct config_group	group;
+>  	enum pci_barno		test_reg_bar;
+>  	size_t			msix_table_offset;
+>  	struct delayed_work	cmd_handler;
+> @@ -76,6 +77,7 @@ struct pci_epf_test {
+>  	bool			dma_private;
+>  	const struct pci_epc_features *epc_features;
+>  	struct pci_epf_bar	db_bar;
+> +	size_t			bar_size[PCI_STD_NUM_BARS];
 >  };
-
-Put this in the patch adding the test and maybe this is a reason not
-to merge it..
-
-> +/// Represents a fwctl device type.
-> +///
-> +/// This enum corresponds to the C `enum fwctl_device_type` and is used to identify
-> +/// the specific firmware control interface implemented by a device.
-> +#[repr(u32)]
-> +#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-> +pub enum DeviceType {
-> +    /// Error/invalid device type.
-> +    Error = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_ERROR,
-> +    /// MLX5 device type.
-> +    Mlx5 = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_MLX5,
-> +    /// CXL device type.
-> +    Cxl = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_CXL,
-> +    /// PDS device type.
-> +    Pds = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_PDS,
-> +    /// Rust fwctl test device type.
-> +    RustFwctlTest = bindings::fwctl_device_type_FWCTL_DEVICE_TYPE_RUST_FWCTL_TEST,
+>
+>  struct pci_epf_test_reg {
+> @@ -102,7 +104,8 @@ static struct pci_epf_header test_header = {
+>  	.interrupt_pin	= PCI_INTERRUPT_INTA,
+>  };
+>
+> -static size_t bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
+> +/* default BAR sizes, can be overridden by the user using configfs */
+> +static size_t default_bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
+>
+>  static void pci_epf_test_dma_callback(void *param)
+>  {
+> @@ -1070,7 +1073,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+>  		if (epc_features->bar[bar].type == BAR_FIXED)
+>  			test_reg_size = epc_features->bar[bar].fixed_size;
+>  		else
+> -			test_reg_size = bar_size[bar];
+> +			test_reg_size = epf_test->bar_size[bar];
+>
+>  		base = pci_epf_alloc_space(epf, test_reg_size, bar,
+>  					   epc_features, PRIMARY_INTERFACE);
+> @@ -1142,6 +1145,87 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
+>  	pci_epf_test_free_space(epf);
+>  }
+>
+> +#define PCI_EPF_TEST_BAR_SIZE_R(_name, _id)				\
+> +	static ssize_t pci_epf_test_##_name##_show(struct config_item *item,	\
+> +						   char *page)		\
+> +	{								\
+> +		struct config_group *group = to_config_group(item);	\
+> +		struct pci_epf_test *epf_test = container_of(group,	\
+> +					struct pci_epf_test, group);	\
+> +									\
+> +		return sprintf(page, "%zu\n", epf_test->bar_size[_id]);	\
+> +	}
+> +
+> +#define PCI_EPF_TEST_BAR_SIZE_W(_name, _id)				\
+> +	static ssize_t pci_epf_test_##_name##_store(struct config_item *item, \
+> +						    const char *page, size_t len) \
+> +	{								\
+> +		struct config_group *group = to_config_group(item);	\
+> +		struct pci_epf_test *epf_test = container_of(group,	\
+> +					struct pci_epf_test, group);	\
+> +		int val;						\
+> +		int ret;						\
+> +									\
+> +		ret = kstrtouint(page, 0, &val);			\
+> +		if (ret)						\
+> +			return ret;					\
+> +									\
+> +		if (!is_power_of_2(val))				\
+> +			return -EINVAL;					\
+> +									\
+> +		epf_test->bar_size[_id] = val;				\
+> +									\
+> +		return len;						\
+> +	}
+> +
+> +PCI_EPF_TEST_BAR_SIZE_R(bar0_size, BAR_0)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar0_size, BAR_0)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar1_size, BAR_1)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar1_size, BAR_1)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar2_size, BAR_2)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar2_size, BAR_2)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar3_size, BAR_3)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar3_size, BAR_3)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar4_size, BAR_4)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar4_size, BAR_4)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar5_size, BAR_5)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar5_size, BAR_5)
+> +
+> +CONFIGFS_ATTR(pci_epf_test_, bar0_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar1_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar2_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar3_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar4_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar5_size);
+> +
+> +static struct configfs_attribute *pci_epf_test_attrs[] = {
+> +	&pci_epf_test_attr_bar0_size,
+> +	&pci_epf_test_attr_bar1_size,
+> +	&pci_epf_test_attr_bar2_size,
+> +	&pci_epf_test_attr_bar3_size,
+> +	&pci_epf_test_attr_bar4_size,
+> +	&pci_epf_test_attr_bar5_size,
+> +	NULL,
+> +};
+> +
+> +static const struct config_item_type pci_epf_test_group_type = {
+> +	.ct_attrs	= pci_epf_test_attrs,
+> +	.ct_owner	= THIS_MODULE,
+> +};
+> +
+> +static struct config_group *pci_epf_test_add_cfs(struct pci_epf *epf,
+> +						 struct config_group *group)
+> +{
+> +	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
+> +	struct config_group *epf_group = &epf_test->group;
+> +	struct device *dev = &epf->dev;
+> +
+> +	config_group_init_type_name(epf_group, dev_name(dev),
+> +				    &pci_epf_test_group_type);
+> +
+> +	return epf_group;
 > +}
-
-Do we really need these contentless comments?
-
-> +impl Device {
-> +    /// # Safety
-> +    ///
-> +    /// `ptr` must be a valid pointer to a `struct fwctl_device`.
-> +    unsafe fn from_raw<'a>(ptr: *mut bindings::fwctl_device) -> &'a Self {
-> +        // CAST: `Self` is a transparent wrapper around `bindings::fwctl_device`.
-> +        // SAFETY: By the safety requirement, `ptr` is valid.
-> +        unsafe { &*ptr.cast() }
-> +    }
 > +
-> +    fn as_raw(&self) -> *mut bindings::fwctl_device {
-> +        self.0.get()
-> +    }
-> +
-> +    /// Returns the parent device.
-> +    pub fn parent(&self) -> &device::Device {
-> +        // SAFETY: By the type invariant, `self.as_raw()` is a valid pointer to a
-> +        // `struct fwctl_device`, which always has a parent device.
-> +        let parent_dev = unsafe { (*self.as_raw()).dev.parent };
-> +        // SAFETY: `parent_dev` points to a valid `struct device`. The parent device
-> +        // is guaranteed to be valid for the lifetime of the fwctl_device.
-> +        unsafe { device::Device::from_raw(parent_dev) }
-> +    }
-> +}
-> +
-> +impl AsRef<device::Device> for Device {
-> +    fn as_ref(&self) -> &device::Device {
-> +        // SAFETY: By the type invariant of `Self`, `self.as_raw()` is a pointer to a valid
-> +        // `struct fwctl_device`.
-> +        let dev = unsafe { core::ptr::addr_of_mut!((*self.as_raw()).dev) };
-> +
-> +        // SAFETY: `dev` points to a valid `struct device`.
-> +        unsafe { device::Device::from_raw(dev) }
-> +    }
-> +}
-> +
-> +// SAFETY: The fwctl_device is reference counted through the embedded `struct device`,
-> +// and inc_ref/dec_ref use fwctl_get/fwctl_put to manage its lifetime.
-> +unsafe impl crate::sync::aref::AlwaysRefCounted for Device {
-> +    fn inc_ref(&self) {
-> +        // SAFETY: The existence of a shared reference guarantees that the refcount is non-zero.
-> +        // `self.as_raw()` is a valid pointer to a `struct fwctl_device`.
-> +        unsafe { bindings::fwctl_get(self.as_raw()) };
-> +    }
-> +
-> +    unsafe fn dec_ref(obj: NonNull<Self>) {
-> +        // CAST: `Self` is a transparent wrapper of `bindings::fwctl_device`.
-> +        let fwctl: *mut bindings::fwctl_device = obj.cast().as_ptr();
-> +
-> +        // SAFETY: By the type invariant, `fwctl` is a valid pointer to a `struct fwctl_device`.
-> +        unsafe { bindings::fwctl_put(fwctl) };
-> +    }
-> +}
-> +
-> +// SAFETY: A `Device` is always reference-counted and can be released from any thread.
-> +unsafe impl Send for Device {}
-> +
-> +// SAFETY: `Device` can be shared among threads because all methods are thread-safe.
-> +unsafe impl Sync for Device {}
-> +
-> +/// The registration of a fwctl device.
-> +///
-> +/// This type represents the registration of a [`struct fwctl_device`]. It should always be
-> +/// used within a [`Devres`] wrapper to ensure proper lifetime management. When dropped,
-> +/// the fwctl device will be unregistered and freed.
-> +///
-> +/// [`Devres`] guarantees that the device is unregistered before the parent device is unbound.
-> +///
-> +/// [`struct fwctl_device`]: srctree/include/linux/device/fwctl.h
-> +pub struct Registration<T: Operations> {
-> +    device: ARef<Device>,
-> +    _marker: PhantomData<T>,
-> +}
-> +
-> +impl<T: Operations> Registration<T> {
-> +    /// Allocate and register a new fwctl device under the given parent device.
-> +    ///
-> +    /// The returned [`Devres`] wrapper ensures that the fwctl device is unregistered
-> +    /// before the parent device is unbound.
-> +    pub fn new<'a>(
-> +        parent: &'a device::Device<device::Bound>,
-> +    ) -> impl PinInit<Devres<Self>, Error> + 'a
-> +    where
-> +        T: 'a,
-> +    {
-> +        pin_init::pin_init_scope(move || {
-> +            let ops = core::ptr::from_ref::<bindings::fwctl_ops>(&VTable::<T>::VTABLE).cast_mut();
-> +
-> +            // SAFETY: `_fwctl_alloc_device()` allocates a new `fwctl_device`
-> +            // and initializes its embedded `struct device`. The `ops` pointer
-> +            // points to a static VTABLE that outlives the device. The parent
-> +            // device is guaranteed to be bound to a driver (Device<Bound>),
-> +            // ensuring it remains valid during allocation.
-> +            let dev = unsafe {
-> +                bindings::_fwctl_alloc_device(
-> +                    parent.as_raw(),
-> +                    ops,
-> +                    core::mem::size_of::<bindings::fwctl_device>(),
-> +                )
-> +            };
-> +
-> +            if dev.is_null() {
-> +                return Err(ENOMEM);
-> +            }
-> +
-> +            // SAFETY: dev is guaranteed to be a valid pointer from `_fwctl_alloc_device()`.
-> +            let ret = unsafe { bindings::fwctl_register(dev) };
-> +            if ret != 0 {
-> +                // SAFETY: dev is guaranteed to be a valid pointer from `_fwctl_alloc_device()`.
-> +                unsafe {
-> +                    bindings::fwctl_put(dev);
-> +                }
-> +                return Err(Error::from_errno(ret));
-> +            }
-
-This looks weirdly sequenced, the driver's object has to be fully
-initialized before you can call register, so it is quite strange to
-see a wrapper that does both alloc and register in one function.
-
-> +// SAFETY: `Registration` can be sent to other threads because:
-> +// - It only contains a `NonNull<fwctl_device>` pointer and a PhantomData marker
-> +// - The underlying C fwctl_device is thread-safe with internal locking
-> +// - `Drop` calls `fwctl_unregister()/fwctl_put()` which are safe from any sleepable context
-
-fwctl_unregister is not safe from any context, it must be called
-while the Device is still bound.
-
-Jason
+>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+>  	{
+>  		.name = "pci_epf_test",
+> @@ -1154,6 +1238,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+>  {
+>  	struct pci_epf_test *epf_test;
+>  	struct device *dev = &epf->dev;
+> +	enum pci_barno bar;
+>
+>  	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
+>  	if (!epf_test)
+> @@ -1161,6 +1246,8 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+>
+>  	epf->header = &test_header;
+>  	epf_test->epf = epf;
+> +	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++)
+> +		epf_test->bar_size[bar] = default_bar_size[bar];
+>
+>  	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
+>
+> @@ -1173,6 +1260,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+>  static const struct pci_epf_ops ops = {
+>  	.unbind	= pci_epf_test_unbind,
+>  	.bind	= pci_epf_test_bind,
+> +	.add_cfs = pci_epf_test_add_cfs,
+>  };
+>
+>  static struct pci_epf_driver test_driver = {
+>
+> base-commit: c0dbaab0524adbc90d693aa15ab84354dd71acb2
+> --
+> 2.52.0
+>
