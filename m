@@ -1,75 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.auroraos.dev (unknown [95.181.193.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECDAC1E7C34;
-	Tue, 27 Jan 2026 20:09:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0949230BE9
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 20:40:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.181.193.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769544594; cv=none; b=pMbTi9rL+TS2rG8PD2y7FJDmFPP+WqrJ9nDiP83coiDlTj1zvaFg5UGjWsya+8U3C51F1aiEHoBkKf0wNiq7rD9ZG2irLRrSpEhpK4Gin8icqoIOuCfpNjwaU57TQkqhOJ9QnTz7rfKz197apU1mAFicNONYccjPu28esowKB+k=
+	t=1769546432; cv=none; b=OlCjj46Tt71w5doElcAspaqhCBwcW7oBzNUbPWBlzxp2GVDLBV6y6ggNHIZIGIaUX2chljY2+8h5hoF5wWy0MyXPQ6TpYqp3kVpHLbTtIGpLces/q/fkF2EUL06/buOIJcaWtt60ctnWm3utII9wgzFEqKVab0IItqkaJdeCIfE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769544594; c=relaxed/simple;
-	bh=li5PgsPeyDOaDUR6nHT6meMbGY+B1SiSJCuUR+pQMJ0=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:From:Subject:Cc:
-	 References:In-Reply-To; b=ADUsDdpGxyS6u1cvMmKS3KxhFmJd/RbS8xF1T5ktCaWSlm3LGSG0wZYgPX6d8Amt+nCn9E07fhz45DGEnQNyi1rOLY0z9rwn8+UXFmC48kHTXNW5/r3dtJqDkdoEEHKCaEBpt/C/ZQFOQTmZoaxr7WSpNvP3n2u/rjfA3FDSFo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RsrtyYeg; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RsrtyYeg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A69EAC116C6;
-	Tue, 27 Jan 2026 20:09:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769544593;
-	bh=li5PgsPeyDOaDUR6nHT6meMbGY+B1SiSJCuUR+pQMJ0=;
-	h=Date:To:From:Subject:Cc:References:In-Reply-To:From;
-	b=RsrtyYegpZDrntAoBTgmkIO+CYQZRO9exn0Kk1TtUixbVcZHek9bx7jG/IJcmY55J
-	 6UprJ4VdqttW0ENoQh1Srd0ZMqLg+pOG6Kp+Fc9yRQI3goNGQzwq2SogruMSY7qiHI
-	 2/TMd07fwg58WUBgZUOQqoZ0oyXxzQ31qqRqjWBO32Gg7V7J60nHBWBNXXt+LOXdpJ
-	 SD1ycHIocnl+bFKiX6AjlUBoIHADfM23NSkW4Cf0iBhbCnKveiHFuuSPl+ovGTj9eI
-	 Z8HBlDvU/xuYxrG0SGnAVefaU9OCi9oiw74hN74Ygrp/3yIPkBs8zoOSCPX+h3KveO
-	 67TDPfev1ujoA==
+	s=arc-20240116; t=1769546432; c=relaxed/simple;
+	bh=uz8S12ycOsiMjO1j4ZoL+w51wPe5Q0RZgD6+OSMHZc4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=IiD2PJ3HHlFgDZvNV4tMXLrrbQAvRv1QD5U3BmUd6pKDEd2UA2/lCJM976mMCa68F94lc/DPsNBmhmpLAg9H75mpqFEUOJp3MLVUSyKpypux4ENful7RXMawSdfBi+C+EzZj+kpjYc9HBNKUvjjPFh4kNHnFyblS+fG7K7zN5/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=auroraos.dev; spf=pass smtp.mailfrom=auroraos.dev; arc=none smtp.client-ip=95.181.193.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=auroraos.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=auroraos.dev
+Received: from wasted (213.87.160.169) by exch16.corp.auroraos.dev
+ (10.189.209.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1847.3; Tue, 27 Jan
+ 2026 23:40:19 +0300
+From: Sergey Shtylyov <s.shtylyov@auroraos.dev>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Sergey Shtylyov <s.shtylyov@auroraos.dev>, =?UTF-8?q?Pali=20Roh=C3=A1r?=
+	<pali@kernel.org>
+Subject: [PATCH] PCI: Check parent for NULL in of_pci_bus_release_domain_nr()
+Date: Tue, 27 Jan 2026 23:39:42 +0300
+Message-ID: <20260127203944.28588-1-s.shtylyov@auroraos.dev>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 27 Jan 2026 21:09:45 +0100
-Message-Id: <DFZN7C8P37RK.3IF24Z1YUVVOX@kernel.org>
-To: "Zhi Wang" <zhiw@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v2 1/2] rust: introduce abstractions for fwctl
-Cc: "Jason Gunthorpe" <jgg@nvidia.com>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <aliceryhl@google.com>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <markus.probst@posteo.de>,
- <helgaas@kernel.org>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
- <targupta@nvidia.com>, <acourbot@nvidia.com>, <joelagnelf@nvidia.com>,
- <jhubbard@nvidia.com>, <zhiwang@kernel.org>, <daniel.almeida@collabora.com>
-References: <20260122204232.15988-1-zhiw@nvidia.com>
- <20260122204232.15988-2-zhiw@nvidia.com>
- <20260126181912.GA2131321@nvidia.com>
- <20260127215744.332380fe.zhiw@nvidia.com>
-In-Reply-To: <20260127215744.332380fe.zhiw@nvidia.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: exch16.corp.auroraos.dev (10.189.209.38) To
+ exch16.corp.auroraos.dev (10.189.209.38)
 
-On Tue Jan 27, 2026 at 8:57 PM CET, Zhi Wang wrote:
-> On Mon, 26 Jan 2026 14:19:12 -0400
-> Jason Gunthorpe <jgg@nvidia.com> wrote:
->> fwctl_unregister is not safe from any context, it must be called
->> while the Device is still bound.
->>=20
->
-> The registration is wrapped in Devres<> in the sample driver, which
-> guarantees that drop is called while the Device is still bound.
->
-> I agree that the current abstraction itself does not strictly enforce thi=
-s
-> (e.g., if the object is moved out of Devres). I will investigate an
-> approach to enforce this requirement in the next re-spin.
+of_pci_bus_find_domain_nr() allows its parent parameter to be NULL but
+of_pci_bus_release_domain_nr() (that undoes its effect) doesn't -- that
+means it's going to blow up while calling of_get_pci_domain_nr() if the
+parent parameter indeed happens to be NULL.  Add the missing NULL check.
 
-The code is fine, the Registration object can't be moved out of devres safe=
-ly.
-You just need to update the safety comment accordingly. :)
+Found by Linux Verification Center (linuxtesting.org) with the Svace static
+analysis tool.
+
+Fixes: c14f7ccc9f5d ("PCI: Assign PCI domain IDs by ida_alloc()")
+Signed-off-by: Sergey Shtylyov <s.shtylyov@auroraos.dev>
+---
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 13dbb405dc31..9fc4c2226b03 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6591,7 +6591,7 @@ static void of_pci_bus_release_domain_nr(struct device *parent, int domain_nr)
+ 		return;
+ 
+ 	/* Release domain from IDA where it was allocated. */
+-	if (of_get_pci_domain_nr(parent->of_node) == domain_nr)
++	if (parent && of_get_pci_domain_nr(parent->of_node) == domain_nr)
+ 		ida_free(&pci_domain_nr_static_ida, domain_nr);
+ 	else
+ 		ida_free(&pci_domain_nr_dynamic_ida, domain_nr);
+-- 
+2.52.0
+
