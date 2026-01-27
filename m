@@ -1,30 +1,30 @@
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6140342507;
-	Tue, 27 Jan 2026 10:40:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65A8C3446AD;
+	Tue, 27 Jan 2026 10:45:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769510412; cv=none; b=gN4sSIBVXN3afD2ye0TUPHZDL/BgmtcWb9W58n83LRZxZSqVeTICmBUTJS4C7YoaKfB24ZFpB+yqjpBufxSfaazYF5ziuD6nFxiyGYGCFFecy2+LkKLsXu0idtEfhGfxpgpU5EIE3Pm5rYfezfBBfSpkJciHHkeIMFa75cQJwWw=
+	t=1769510734; cv=none; b=JbN3gL0ZpoDq2Zq7F4rA7SEZcqtr7MeXP10YGeNYW1MlCpkG8WCFJ1EyqrPQ/aJNO5dgsGmBETEC1fnygv4INYq7KOGv6D7cMBkbEeks26YOLJgsfn1Tf3vcxlgjs6hha8i3nfMIEyaZoeMTfbvMD+yCq3v1LZi5QU5eOkwmBt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769510412; c=relaxed/simple;
-	bh=RhMDW66jJzShSPyLcxa+n/Druwp8ki9Nu3SCAZoABSo=;
+	s=arc-20240116; t=1769510734; c=relaxed/simple;
+	bh=xTtVALUdMr+r7W7dO8MJ0af1qOaq5dM3KGDJHhdyzOY=;
 	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=irR0ZMZXD1JksEf6Ck5owHHNLpT+4y0ERpkGVaQjUrxCDWFbBHutsuFz9nkQkLjEPJYUU1PY7TXpWj3EoimRiFrmdP6+/HFBE6mmQHTieVvICIRZYuRMhm/UQYC//TYYS/jWRbZDocNHR1v11AoQEqvVcglOQ63e773wk32xg3Q=
+	 MIME-Version:Content-Type; b=YhBIn9qNJ+NgyCorrcMRZ/63uoEOH5cTwidNvrJa9/YjkolA4ng+eB7nDRBEsP6z3F3LUZoaJbTXE5H8LVj5sMD9t4WcJRLYvIFdV1wpPAE+pCYhMIih16XL7hDPM8b2PhHbC0no8kX2vLNc+H2xLlIIrblA6W04q48rZppzVeY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.83])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f0hjb5JWNzJ46BB;
-	Tue, 27 Jan 2026 18:39:31 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f0hqp2vBWzJ46dV;
+	Tue, 27 Jan 2026 18:44:54 +0800 (CST)
 Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7F1AA40569;
-	Tue, 27 Jan 2026 18:40:07 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 2E6344056A;
+	Tue, 27 Jan 2026 18:45:30 +0800 (CST)
 Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
  (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 27 Jan
- 2026 10:39:32 +0000
-Date: Tue, 27 Jan 2026 10:39:31 +0000
+ 2026 10:45:22 +0000
+Date: Tue, 27 Jan 2026 10:45:20 +0000
 From: Jonathan Cameron <jonathan.cameron@huawei.com>
 To: Shuai Xue <xueshuai@linux.alibaba.com>
 CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
@@ -32,12 +32,12 @@ CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<sathyanarayanan.kuppuswamy@linux.intel.com>, <mahesh@linux.ibm.com>,
 	<oohall@gmail.com>, <terry.bowman@amd.com>, <tianruidong@linux.alibaba.com>,
 	<lukas@wunner.de>
-Subject: Re: [PATCH v7 4/5] PCI/AER: Clear both AER fatal and non-fatal
- status
-Message-ID: <20260127103931.000058bb@huawei.com>
-In-Reply-To: <20260124074557.73961-5-xueshuai@linux.alibaba.com>
+Subject: Re: [PATCH v7 5/5] PCI/AER: Only clear error bits in
+ pcie_clear_device_status()
+Message-ID: <20260127104520.0000579c@huawei.com>
+In-Reply-To: <20260124074557.73961-6-xueshuai@linux.alibaba.com>
 References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
-	<20260124074557.73961-5-xueshuai@linux.alibaba.com>
+	<20260124074557.73961-6-xueshuai@linux.alibaba.com>
 X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -50,42 +50,65 @@ Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: lhrpeml500012.china.huawei.com (7.191.174.4) To
  dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Sat, 24 Jan 2026 15:45:56 +0800
+On Sat, 24 Jan 2026 15:45:57 +0800
 Shuai Xue <xueshuai@linux.alibaba.com> wrote:
 
-> The DPC driver clears AER fatal status for the port that reported the
-> error, but not for the downstream device that deteced the error.  The
-> current recovery code only clears non-fatal AER status, leaving fatal
-> status bits set in the error device.
+> Currently, pcie_clear_device_status() clears the entire PCIe Device
+> Status register (PCI_EXP_DEVSTA), which includes both error status bits
+> and other status bits such as AUX Power Detected (AUXPD) and
+> Transactions Pending (TRPND).
 > 
-> Use pci_aer_raw_clear_status() to clear both fatal and non-fatal error
-> status in the error device, ensuring all AER status bits are properly
-> cleared after recovery.
+> Clearing non-error status bits can interfere with other drivers or
+> subsystems that may rely on these bits. To fix it, only clear the error
+> bits (0xf) while preserving other status bits.
 > 
-> Fixes: aa344bc8b727 ("PCI/ERR: Clear AER status only when we control AER")
+> Fixes: ec752f5d54d7 ("PCI/AER: Clear device status bits during ERR_FATAL and ERR_NONFATAL")
 > Cc: stable@vger.kernel.org
+> Suggested-by: Lukas Wunner <lukas@wunner.de>
 > Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
-Shouldn't this be first patch in series to make it easier to backport?
+Similar to previous. Drag to start of series to make backports easier if
+we think this is a fix that affects real cases.  For stuff that's defined
+in the PCI 6.2 spec, AUX power and Transactions Pending are RO, but
+the interesting one is Emergency Power Reduction Detected which is RW1C
+and hence reason this fix is potentially needed  + future features using
+remaining bits.
 
-Otherwise seems reasonable to me, but others know these flows better than me
-so hopefully we'll get some more review.
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+I'd be more explicit in the commit message for that.  Talk about it not
+mattering for AUXPD or TRPND because they are RO, vs the ones we
+aren't using yet in Linux with the emergency power reduction detected
+as an example that clearly shows we need to mask this!
+
+J
+
 
 > ---
->  drivers/pci/pcie/err.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/pci.c             | 2 +-
+>  include/uapi/linux/pci_regs.h | 1 +
+>  2 files changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index 0780ea09478b..5e463efc3d05 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -285,7 +285,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->  	 */
->  	if (host->native_aer || pcie_ports_native) {
->  		pcie_clear_device_status(dev);
-> -		pci_aer_clear_nonfatal_status(dev);
-> +		pci_aer_raw_clear_status(dev);
->  	}
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 13dbb405dc31..0b947f90c333 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2246,7 +2246,7 @@ void pcie_clear_device_status(struct pci_dev *dev)
+>  	u16 sta;
 >  
->  	pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
+>  	pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &sta);
+> -	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, sta);
+> +	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, sta & PCI_EXP_DEVSTA_ERR);
+>  }
+>  #endif
+>  
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 3add74ae2594..f4b68203bc4e 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -534,6 +534,7 @@
+>  #define  PCI_EXP_DEVSTA_NFED	0x0002	/* Non-Fatal Error Detected */
+>  #define  PCI_EXP_DEVSTA_FED	0x0004	/* Fatal Error Detected */
+>  #define  PCI_EXP_DEVSTA_URD	0x0008	/* Unsupported Request Detected */
+> +#define  PCI_EXP_DEVSTA_ERR	0xf	/* Error bits */
+>  #define  PCI_EXP_DEVSTA_AUXPD	0x0010	/* AUX Power Detected */
+>  #define  PCI_EXP_DEVSTA_TRPND	0x0020	/* Transactions Pending */
+>  #define PCI_CAP_EXP_RC_ENDPOINT_SIZEOF_V1	12	/* v1 endpoints without link end here */
 
