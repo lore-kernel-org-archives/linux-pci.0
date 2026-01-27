@@ -1,124 +1,193 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 375FE22129B;
-	Tue, 27 Jan 2026 21:30:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1989A28CF6F;
+	Tue, 27 Jan 2026 21:44:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769549420; cv=none; b=BdBfkeBK4veDbdJghOIoC2kP3gOyuWzFsI70m9ocHeyiQn23gsxwqXA11B9ydpeXgEFmZcEZUDZIpHUXxLACXIv1jd6ntm2zKVpBYaumEBRnp1J6vgrkIWd2pC+Su05L7S1kZa/OXzi5h/wcd/XheNWarRNW6ypjmeVkJUF9jp4=
+	t=1769550262; cv=none; b=KTl8SLWQ3vz2W+G0KvZe0TCgxxoBLRoztwfYw30ukCNxNCmjbV0pK6MapPO9dcM7EOjvBjiZgCnUcPDB3gg6XrusQBfOuR6C3mpFznZR3hW88Ap3dlorVP4jfLCY1+Yb39Bvg2E5XmZoVQSe/YqKzgNw+m1kffa8QI+7eQWBKzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769549420; c=relaxed/simple;
-	bh=X/DyL3htn4ICmaXSKDEv8M3FS9tX32N0mfBoLLW/kkM=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=RM5G0AukL1IXF7vxwPVgFPTSVP9d6Q1D0yDO2lNybDQfx51MMAwvSrRPlJ9jPa/ieRI3hvw0Ola4wVQMH+l9rOfDCRoYuETyaXKj+OUsGgDsQdM89I7+Z2ZNXg3ijLKYIUujutX5KmwPvJnre9sCCkB9E709vXexW+J9HbAQqUA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WijDDMwr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769550262; c=relaxed/simple;
+	bh=6l4bw1Yd2nKjt4FYBBDoW4HOZYcuu8LUi8DIaDhYbaI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gFPkHs/pE5zpdQJj554uhJOKIjNz9OIG5TWSrLoWffCdwS3XEUkpojcl0/wmmMQwoDspMjO8jwRZ0ri8SSavOW0+Qf114Qd7Dt0p/lTAOLp5JON4CUQqXe/Je0iY/L3cIOVRHgobr2NfFsAX/GxAGaugX+CfQf1qpwCoWmigFVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=bLmWIGcQ; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WijDDMwr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C832C116C6;
-	Tue, 27 Jan 2026 21:30:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769549419;
-	bh=X/DyL3htn4ICmaXSKDEv8M3FS9tX32N0mfBoLLW/kkM=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=WijDDMwrDlC0yAJeSE7e/a7UUpJVMqW00N65/Izb6qD72C7Bn8jKEz78nFOhZvU+g
-	 QUYm88brO3yU+ppBtnO1DSIgXD0W2eLdtLMtlPQV3nz27CL2AWsG+1M+hAeGEaxliS
-	 2fYs8HXjPVThkYlmFrc3l6A9U4up+iQHxlHcmd4wcu2A6yTo4ZO3rXaabQdhJBJsUo
-	 kiTUmKAhMoCNgo8zCSKM/gVvWrXD2PP+f7kggd7I/I6mscaN3B8LqrfFps2YWYwjwo
-	 UBU0AEm5KpUOWcbTbzWXAc8whnj9A4ihpuGoPGS7nTMOdLiMXhSBRr8DCjOLve2Ae0
-	 iEXLI51H5bQgQ==
-From: Thomas Gleixner <tglx@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>, Radu Rendec <rrendec@redhat.com>,
- Manivannan Sadhasivam <mani@kernel.org>
-Cc: Daniel Tsai <danielsftsai@google.com>, Marek =?utf-8?Q?Beh=C3=BAn?=
- <kabel@kernel.org>,
- Krishna Chaitanya Chundru <quic_krichai@quicinc.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, Krzysztof
- =?utf-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Jingoo Han <jingoohan1@gmail.com>, Brian Masney <bmasney@redhat.com>, Eric
- Chanudet <echanude@redhat.com>, Alessandro Carminati
- <acarmina@redhat.com>, Jared Kangas <jkangas@redhat.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-Subject: [PATCH] genirq/redirect: Prevent writing MSI message on affinity
- change
-In-Reply-To: <b5e33957-1b8d-436b-888e-2b6f13d30782@nvidia.com>
-References: <20251128212055.1409093-1-rrendec@redhat.com>
- <20251128212055.1409093-4-rrendec@redhat.com>
- <4e5b349c-6599-4871-9e3b-e10352ae0ca0@nvidia.com>
- <a8d841e870d6dbbabef7eadb774f2a58a96c57c7.camel@redhat.com>
- <cfe44924-3419-4f31-8ab3-87b769d21a5b@nvidia.com>
- <96c9d483f67be02fa1dba736fea465216d0c3269.camel@redhat.com>
- <87sebsdcte.ffs@tglx> <255713ca-bf91-4f7e-8df2-33b7b614a1bb@nvidia.com>
- <221f6dadb6d8ce06f30a24baaa2777e90d75b130.camel@redhat.com>
- <87h5s7bb5s.ffs@tglx> <87ecnbb2mn.ffs@tglx>
- <b5e33957-1b8d-436b-888e-2b6f13d30782@nvidia.com>
-Date: Tue, 27 Jan 2026 22:30:16 +0100
-Message-ID: <87tsw6aglz.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="bLmWIGcQ"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 60RFbcJF000830;
+	Tue, 27 Jan 2026 21:44:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=rn+QcU
+	wSICptGaK9tl4YzxIYdrdZLakI0LXwRLBdivM=; b=bLmWIGcQ4pQUlTqEndBgBb
+	UW4OGds6qWBJdCxRkJsigOZ9Blm1fYf0a1tKLUdMuo1sgaO89ax/ABPEeIyWKdaY
+	E0wefxCrU/4sxJruVMSHMmv1h8pRMFyNBbIxrKL4Xf+YBOkPSt9mdUddf7FejCYp
+	UtHiUs70wzxe8vM3u7uXJLn/K6lT4heYkwPyO3iUWYSg+Kqb3BYLXzuJTBWgJ6wv
+	JKRoFtI4HhYyL1aH4qk2JxUbqKugo2LxgSAMXTgSWwfvcsZaoklu4ppkru0NZUjg
+	u9xy0I4DIZu9OD7pEC37bPudd8vTRmmEqN1gc3lUlVrIIdPbdDtNmqqTVyerdP1Q
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4bvmgfx2ja-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 27 Jan 2026 21:44:14 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 60RL5DOp006737;
+	Tue, 27 Jan 2026 21:44:14 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4bw8syanmq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 27 Jan 2026 21:44:14 +0000
+Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
+	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 60RLiCwF25231898
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 27 Jan 2026 21:44:12 GMT
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C715A58063;
+	Tue, 27 Jan 2026 21:44:12 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9B9C55804B;
+	Tue, 27 Jan 2026 21:44:11 +0000 (GMT)
+Received: from [9.61.255.161] (unknown [9.61.255.161])
+	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 27 Jan 2026 21:44:11 +0000 (GMT)
+Message-ID: <88289f74-3d4f-4dd9-8f2a-8871d150fd50@linux.ibm.com>
+Date: Tue, 27 Jan 2026 13:44:11 -0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 7/9] vfio-pci/zdev: Add a device feature for error
+ information
+To: Niklas Schnelle <schnelle@linux.ibm.com>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, lukas@wunner.de, alex@shazbot.org, clg@redhat.com,
+        stable@vger.kernel.org, mjrosato@linux.ibm.com, julianr@linux.ibm.com
+References: <20260122194437.1903-1-alifm@linux.ibm.com>
+ <20260122194437.1903-8-alifm@linux.ibm.com>
+ <74ce68664925fa4cc4207c97d431b851b8ec8afc.camel@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <74ce68664925fa4cc4207c97d431b851b8ec8afc.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=Z4vh3XRA c=1 sm=1 tr=0 ts=697931ae cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VnNF1IyMAAAA:8 a=qNG8fd7tPmr0NF9BgyQA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: rf2bCnUKEYgdWetLimMC-RmEyjUMLDSw
+X-Proofpoint-ORIG-GUID: rf2bCnUKEYgdWetLimMC-RmEyjUMLDSw
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI3MDE3MyBTYWx0ZWRfX2Ldxx74P60Km
+ TlUUCpI9vH0oT5W1464PJ+4dr8UlLTRd1BfrK2MqAUCdKTFYwJXSCEOBXbcZLBF2MVpF0QZWHxK
+ nfhA0wQku/Po/a4JlshMZtsb8+DREXvs/w4YBh1blVTZn6HXuxDXku4s/z0w2Er/7f/uhbemQMO
+ IM5Ntml1iQuZTMovmbXA597VrYnvklhnNX+2yN/fawqf0z3ViYDYeEWax40lKB+ru26081YNsr+
+ 8iI2Xx1H2SlhHQ4HRnZlAV7lZCoXt0iWGRy9t3nqhJBeyHgi4sIHlf5aEn/pv8Az3idKziZqnSo
+ Cn/KqxYX6lo1/hYpn2E41TMpRg9xXOVJCnrcNrgJ7MT9WIDkzmRcAu2YS5T8vxLbZVHGCBUNqDz
+ cSDx3nn1dlc1NSALCDPCwHIYRUQzuBEnJGMJkBWYPNxBkyXBtaqJOADKuObpM/rfyYyF6EZPkG5
+ nSACBR9GYZ0pElxprRA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-01-27_04,2026-01-27_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 malwarescore=0 phishscore=0 priorityscore=1501 bulkscore=0
+ adultscore=0 clxscore=1015 lowpriorityscore=0 impostorscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2601150000 definitions=main-2601270173
 
-The interrupts which are handled by the redirection infrastructure provide
-a irq_set_affinity() callback, which solely determines the target CPU for
-redirection via irq_work and und updates the effective affinity mask.
 
-Contrary to regular MSI interrupts this affinity setting does not change
-the underlying interrupt message as the message is only created at setup
-time to deliver to the demultiplexing interrupt.
+On 1/27/2026 2:53 AM, Niklas Schnelle wrote:
+> On Thu, 2026-01-22 at 11:44 -0800, Farhan Ali wrote:
+>> For zPCI devices, we have platform specific error information. The platform
+>> firmware provides this error information to the operating system in an
+>> architecture specific mechanism. To enable recovery from userspace for
+>> these devices, we want to expose this error information to userspace. Add a
+>> new device feature to expose this information.
+>>
+>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+>> ---
+>>   drivers/vfio/pci/vfio_pci_core.c |  2 ++
+>>   drivers/vfio/pci/vfio_pci_priv.h |  9 ++++++++
+>>   drivers/vfio/pci/vfio_pci_zdev.c | 35 ++++++++++++++++++++++++++++++++
+>>   include/uapi/linux/vfio.h        | 16 +++++++++++++++
+>>   4 files changed, 62 insertions(+)
+>>
+> --- snip ---
+>>   
+>> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+>> +			      void __user *arg, size_t argsz)
+>> +{
+>> +	struct vfio_device_feature_zpci_err err;
+>> +	struct vfio_pci_core_device *vdev;
+>> +	struct zpci_dev *zdev;
+>> +	int head = 0;
+>> +	int ret;
+>> +
+>> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
+>> +	zdev = to_zpci(vdev->pdev);
+>> +	if (!zdev)
+>> +		return -ENODEV;
+>> +
+>> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
+>> +				 sizeof(err));
+>> +	if (ret != 1)
+>> +		return ret;
+>> +
+>> +	mutex_lock(&zdev->pending_errs_lock);
+>> +	if (zdev->pending_errs.count) {
+>> +		head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
+>> +		err.pec = zdev->pending_errs.err[head].pec;
+> In the previous patch you saved the entire struct zpci_ccdf_err now you
+> only copy out and expose the PCI event code, though? If you do want to
+> only expose that the commit message should state this and the reason
+> for this restriction. Additionally I think the struct
+> vfio_device_feature_zpci_err should include a mechanism (version +
+> size?) to allow upgrading it to the full error information in the
+> future.
 
-Therefore the message write in msi_domain_set_affinity() is a pointless
-exercise. In principle the write is harmless, but a Tegra system exposes a
-full system hang during suspend due to that write.
+I think having explicit version variable in the struct should be 
+sufficient (the __pad can be replaced with version). I don't think we 
+need explicit size variable? I have looked at some of the capability 
+structures in vfio_zdev.h, as examples and so we could use a similar 
+approach here when we need to extend the vfio_device_feature_zpci_err?
 
-It's unclear why the check for the PCI device state PCI_D0 in
-pci_msi_domain_write_msg(), which prevents the actual hardware access if
-a device is powered down state, fails on this particular system, but
-that's a different problem which needs to be investigated by the Tegra
-experts.
+Though I don't see any other vfio device feature structure being 
+explicitly versioned. I am open to any guidance/suggestions on the best 
+practices on how to we version VFIO device feature structs.
 
-The irq_set_affinity() callback can advise msi_domain_set_affinity() not to
-write the MSI message by returning IRQ_SET_MASK_OK_DONE instead of
-IRQ_SET_MASK_OK. Do exactly that.
 
-Just to make it clear again:
+>
+> Then again why not just expose the entire CCDF? It's an architected
+> data structure without and if you add it at the end of struct
+> vfio_device_feature_zpci_err and add a size you should even be able to
+> handle if it ever needs to grow. Of course you'd have to create a copy
+> of the struct to use the the uAPI types so I'd probably also add a
+> BUILD_BUG_ON() check on matching size. Or am I missing a reason to keep
+> just the PEC?
 
-This is not a correctness issue of the redirection code as returning
-IRQ_SET_MASK_OK in that context is completely correct. From the core
-code point of view this is solely a optimization to avoid an redundant
-hardware write.
+I wanted to keep the information exposed to userspace minimal. The CCDF 
+exposes far more information and may not be needed by userspace/VM. 
+Today the PEC is sufficient for user space(QEMU) to take bubble up to a 
+VM. I also wanted to avoid having a copy of the struct in 2 places.
 
-As a byproduct it papers over the underlying problem on the Tegra platform,
-which fails to put the PCIe device[s] out of PCI_D0 despite the fact that
-the devices and busses have been shut down. The redirect infrastructure
-just unearthed the underlying issue, which is prone to happen in quite some
-other code paths which use the PCI_D0 check to prevent hardware access to
-powered down devices.
+Thanks
 
-This therefore has neither a 'Fixes:' nor a 'Closes:' tag associated as the
-underlying problem, which is outside the scope of the interrupt code, is
-still unresolved.
+Farhan
 
-Reported-by: Jon Hunter <jonathanh@nvidia.com>
-Signed-off-by: Thomas Gleixner <tglx@kernel.org>
-Tested-by: Jon Hunter <jonathanh@nvidia.com>
-Link: https://lore.kernel.org/all/4e5b349c-6599-4871-9e3b-e10352ae0ca0@nvidia.com
----
- kernel/irq/chip.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -1495,7 +1495,7 @@ int irq_chip_redirect_set_affinity(struc
- 	WRITE_ONCE(redir->target_cpu, cpumask_first(dest));
- 	irq_data_update_effective_affinity(data, dest);
- 
--	return IRQ_SET_MASK_OK;
-+	return IRQ_SET_MASK_OK_DONE;
- }
- EXPORT_SYMBOL_GPL(irq_chip_redirect_set_affinity);
- #endif
+>> +		zdev->pending_errs.head++;
+>> +		zdev->pending_errs.count--;
+>> +		err.pending_errors = zdev->pending_errs.count;
+>> +	}
+>> +	mutex_unlock(&zdev->pending_errs_lock);
+>> +
+>> +	if (copy_to_user(arg, &err, sizeof(err)))
+>> +		return -EFAULT;
+>> +
+>> +	return 0;
+>> +}
+>> +
