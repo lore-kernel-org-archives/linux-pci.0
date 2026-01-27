@@ -1,104 +1,165 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f66.google.com (mail-wm1-f66.google.com [209.85.128.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46FF35C1AC
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 14:34:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D304B36074A
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 14:42:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769524456; cv=none; b=PTkfjUeOlH9Zg4dZyIuLmBIpOC/5bfQLjlZys6qEXTsvdq2duS0zcl8GYbzhiYxd+xBTinx9W3h8KB8v9jdtaDee9ykoVABXbxoqJ7af5hv0lGTNtSNN9lZirVKEbEyknZTzSmYFVKRX4QWIkGEV8dMvAM/ILoX9CrzpHX9DPCQ=
+	t=1769524928; cv=none; b=VRp/ZS1CDiiZXMoxFt7aCdQxO9C/cWGxYxMtYqBYYA8w9maVA0M3yYFpNAzs3nprj8eYD0T5+6efWlS4qr9efgV1grDNr+P9LabuHbQrWu/uCJyvVtR9jh1NXq59EesVAvkKFbqJiXiKK+6BvGmWNsvHru3DgHi3Wkd9o1bO4yg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769524456; c=relaxed/simple;
-	bh=nLP5WPSJ4MT6lYx0a9IOsqeVgLkh+TkHWnXIWRvaeXg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lL5MzeJkT5tNw1KSfkSHx6oTG6Y1/s6Vidv4V2drzh+aiUnAaVwsChGMXFd9wBsGbFsRbIJMU7Kc9BeBfBqShWaqzs+UL6F17C/HFWhYcbo9Oyw8Gr8lO0zBQSsS95NBvmZGJXkTj5eo2awSSt6b7+ggLsL254dRCj5lCW56bUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cFQ8eKyp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769524928; c=relaxed/simple;
+	bh=1CaflWjkNhcQDANOir4hWMeC+w06SKx7wZJtD8EFIbE=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=WqS8nUJwKXfMR+5DtvMMYQLXK6iM6rk7RUNw52nDyDdM7w+lM+xljFpkZszfnoMxHCM3JusdNXuzrU2v7zifoCexh3A33XTZxKRxJfPcsqcDZz4K4W62mR0ILVjIolIiyuBlAXtERvxCDGbI0oLk9kfXRB/gmQ3Vjqr+nxkS1bw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=PHukeZO1; arc=none smtp.client-ip=209.85.128.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cFQ8eKyp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B7C9C2BCB4
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 14:34:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769524456;
-	bh=nLP5WPSJ4MT6lYx0a9IOsqeVgLkh+TkHWnXIWRvaeXg=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=cFQ8eKypCxJneIg4jM9c7+W0y87mV9/GiLxNnhaswgztLBP78Vz/06/PbHJdEzzEY
-	 aHF4Z9GTm3cTSjU/wQbAeKE6rQWSexI5MfvM78RJ0ot1doS6Db9RBwS/xxGuGpOBju
-	 yPeL8c4QTVuKxU7VsBz1cmo3NX9+1zle0SN969vtt/Gb0zid/QrFxhBwb6B4Dsq4du
-	 ME69Q+CuXcxq+PHoKzNBiNW3uGRf9wF7mgTbK+bGWKPyhCPeGj5dPDSMuHQI0Z+Jl0
-	 0UZinsUPOrdT+E8ETs5KgZZaXT7POvxYtjjLi3QYSPO81xkQ3YJBcENqVtpM9UGJwf
-	 Y7nzhsgWCmJAg==
-Received: by mail-oo1-f50.google.com with SMTP id 006d021491bc7-662f485e58aso107239eaf.0
-        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 06:34:16 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWMPlrgRMexJuEK9DzD1hDeDM3QxHl4r/D7KPxAzlwGhIufMbIjdZtrfX+KYiUgfmfk7dPeS+IVG5k=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4cGbrRwsoOBE20pLfYqozbMdvgPoSDDeomCPmWvpeYETyTVYP
-	PptFE0IuNtYM3G5PEznpmUoTdyGgmEzzhur2669tz4vPjrjmhjcg/MnMDsKmB9bA6m95fhu++WQ
-	UUJCx1nxDlMSUyQmV1qczrMj02ehpgn4=
-X-Received: by 2002:a05:6820:498c:b0:65f:564f:34b1 with SMTP id
- 006d021491bc7-662f2021f39mr972139eaf.16.1769524455545; Tue, 27 Jan 2026
- 06:34:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PHukeZO1"
+Received: by mail-wm1-f66.google.com with SMTP id 5b1f17b1804b1-4801d7c72a5so45058335e9.0
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 06:42:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1769524924; x=1770129724; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ljVMpWRKvY2+1qzoFSak0+AlpoDAqSEsFhtFylZkNe0=;
+        b=PHukeZO1WoDCeoTJrWV4I6B/BObVkQT9MR22i9od8OD0fh2mrMrrTv0wQhmcZbqpfO
+         52OwUVQluRkampP8I59oJYWZP2gcnp4hM6B21TBoA5GQTeYZXLCdcMLOnqIJ4jzpaVD0
+         iA2fT4AQhA4g79+pEMFlPRZZZXLNDk8HB+TfrWXLJbKBVoDPdr/dMOZakT5GEBZxS6gS
+         DsmdxGYngBNViZ1+Lhm17nwoBndjzT2xj6zUYeGj0aVVnfLPpIXyWeNdOHSwfU5EePIT
+         xzOjCrLKJOUmH3pah9e0NnPZGZn+zhkA6kSpy5dNfyEI4+eNIcmr1KAIYUBvFBl7MxV/
+         Bong==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769524924; x=1770129724;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ljVMpWRKvY2+1qzoFSak0+AlpoDAqSEsFhtFylZkNe0=;
+        b=W78TyQb57qvrwbkGX4Psth9RA6RZFBIck2enaIa1mWYebMdUjxZmcs8Turxl70pXWO
+         0HCeQQ8Y6ZtP35wQTs2h+YUvXyY/TM6ar7CtVDIRomyqWE0dz6KIxoEgDnv8hb7Fgx4t
+         ozSCZumTCReHsAzBCs2juuzfbWW0vkX+B5q4bhXAWY+C0HgRlidBDEogjzRYaJCNd8KS
+         3SxajQLivUiPFvL/IA5Muilf6pHLvGDXpgZcX/Igef1WRvsd0M+FVzD9i3jpNoNXJKSH
+         lRsI6rH1d/VBm5H/VzNhn7t9Xf+bViUXGXcNZObpsTvcSJpBJ0SeE3vOURcgamkzELjv
+         zV4w==
+X-Forwarded-Encrypted: i=1; AJvYcCVTBXmM+pBBowx++atCG6kXXhWRuPu3LhcCmiQd6fgAJZBZUJh95GKwnvPvOuHcEoxrnNdKvcy51Kc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwVC8TsX8g8FUdniCgfkL7HGLR4vk57c7T4Y2V63Di+6sxbLle4
+	6UniEPLQJITKcq19DQb0pVw/yr0HpqHpVXyMr7YdaiNz9BLkDFZIr5Lwfv10bt7pTmo=
+X-Gm-Gg: AZuq6aIxiQtaogwJkWcPhoFqr0A1UVUnqJNXlTyzdaAKESVRky8rEitCYJr5xTq0JXt
+	FFZ7O2/JciCtd9hG9reJDV654MUof/9WsFy91+rKH7L9evJ9H7q58/i896rB9zvpoaV4i/CkCQN
+	OHtOGjLl7LeRRs/lX9AylvE0sHO55yIvEgYdjzZPMFgYDZPYed9TX0eKtzwDoUZiqzpbVxj+FGf
+	OSndFLLi/JMDq0TM+7mT+s2KClTg91dKi4wsv9kBhOhlIkpX4/SVGEn6JMfOxcuDBdvUDKKDmAF
+	dMykF54FssqbdPgOeOx62BGwWtNnjnULv+dz/gGJkKfr2+XPnRxYaPy0PeuS8f6/YfmK2Suv4TO
+	4yJXFoQDXJK0UvH67igLiEdB9ZeJf1Esv076y5i9m0JwmrczHe2AdBfvsESsTBMqdSOiSuUPAb/
+	kRo6YBWLIR78FuqqhA68isNx31Wggk2+vijYLxrEOM9T1inTV1hZ1s7v2MiyInmPQ=
+X-Received: by 2002:a05:600c:8b16:b0:480:1a9a:e571 with SMTP id 5b1f17b1804b1-48069c8c109mr22743065e9.22.1769524924086;
+        Tue, 27 Jan 2026 06:42:04 -0800 (PST)
+Received: from ?IPV6:2a01:e0a:3d9:2080:53a6:bd3c:8e65:509d? ([2a01:e0a:3d9:2080:53a6:bd3c:8e65:509d])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48066c4f3edsm63317125e9.15.2026.01.27.06.42.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 Jan 2026 06:42:03 -0800 (PST)
+Message-ID: <d66687d5-cd11-47ae-9f6b-090feaf8761a@linaro.org>
+Date: Tue, 27 Jan 2026 15:42:02 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260115-gicv5-host-acpi-v3-0-c13a9a150388@kernel.org>
- <aWy9T3VDyXpVG41z@lpieralisi> <87sec30yhk.ffs@tglx> <aW3pALPxn4i9fiDO@lpieralisi>
- <87pl751zeh.ffs@tglx> <aW9V4A7lTGZWTO9e@lpieralisi> <aXM0dVthp33yUqj8@lpieralisi>
- <CAJZ5v0hOVO7N77nnyWsh_vhGcm-TzavrGBgci=a+o_-LKhkuXg@mail.gmail.com>
-In-Reply-To: <CAJZ5v0hOVO7N77nnyWsh_vhGcm-TzavrGBgci=a+o_-LKhkuXg@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 27 Jan 2026 15:34:04 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0jotTEm87Ks70_EHUs68T_3fPvG04GAxoC3gueiS-askw@mail.gmail.com>
-X-Gm-Features: AZwV_QgMPgceilNqa1ohd2X40nvwnD9QGS8uSFdUczKAi0SenvBlTvAaDiWKd9M
-Message-ID: <CAJZ5v0jotTEm87Ks70_EHUs68T_3fPvG04GAxoC3gueiS-askw@mail.gmail.com>
-Subject: Re: [PATCH v3 0/6] irqchip/gic-v5: Code first ACPI boot support
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, Thomas Gleixner <tglx@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Robert Moore <robert.moore@intel.com>, Hanjun Guo <guohanjun@huawei.com>, 
-	Sudeep Holla <sudeep.holla@arm.com>, Marc Zyngier <maz@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Jonathan Cameron <jonathan.cameron@huawei.com>, 
-	linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
+Subject: Re: [PATCH v2 4/7] dt-binding: vendor-prefixes: document the Ayaneo
+ brand
+To: Rob Herring <robh@kernel.org>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Rob Clark <robin.clark@oss.qualcomm.com>, Dmitry Baryshkov
+ <lumag@kernel.org>, Abhinav Kumar <abhinav.kumar@linux.dev>,
+ Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+ Marijn Suijten <marijn.suijten@somainline.org>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+ linux-usb@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+References: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
+ <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-4-c55ec1b5d8bf@linaro.org>
+ <20260127142729.GA1622953-robh@kernel.org>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <20260127142729.GA1622953-robh@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jan 26, 2026 at 9:42=E2=80=AFPM Rafael J. Wysocki <rafael@kernel.or=
-g> wrote:
->
-> Hi Lorenzo,
->
-> On Fri, Jan 23, 2026 at 9:42=E2=80=AFAM Lorenzo Pieralisi <lpieralisi@ker=
-nel.org> wrote:
-> >
-> > On Tue, Jan 20, 2026 at 11:16:00AM +0100, Lorenzo Pieralisi wrote:
-> > > On Mon, Jan 19, 2026 at 02:54:14PM +0100, Thomas Gleixner wrote:
-> > > > On Mon, Jan 19 2026 at 09:19, Lorenzo Pieralisi wrote:
-> > > > > On Sun, Jan 18, 2026 at 03:47:03PM +0100, Thomas Gleixner wrote:
-> > > > > I think the simplest way to sort this out is for this series to g=
-o via
-> > > > > the ACPI tree if that's OK for Thomas, given that the ACPICA code=
- will
-> > > > > go via the ACPI tree anyway and there are other dependencies on i=
-t there
-> > > > > I assume (this series is fairly self-contained).
-> > > >
-> > > > I'm fine with that
-> > > >
-> > > > Acked-by: Thomas Gleixner <tglx@kernel.org>
-> > >
-> > > Thank you Thomas, Rafael I hope that works for you too, please let me=
- know
-> > > if there is anything I can/should do.
-> >
-> > Hi Rafael,
-> >
-> > forgive me for another ping, can you please let me know whether you can=
- pull
-> > this series on top of acpica changes for v7.0 or it needs to take a dif=
-ferent
-> > route ?
->
-> Sure, I can queue it up.
+On 1/27/26 15:27, Rob Herring wrote:
+> On Tue, Jan 27, 2026 at 10:57:31AM +0100, Neil Armstrong wrote:
+>> Document the Ayaneo from the Anyun Intelligent Technology
+>> (Hong Kong) Co., Ltd company.
+>> Website: https://www.ayaneo.com/product/ayaneobrand.html
+>>
+>> Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+>> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+>> ---
+>>   Documentation/devicetree/bindings/vendor-prefixes.yaml | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/vendor-prefixes.yaml b/Documentation/devicetree/bindings/vendor-prefixes.yaml
+>> index c7591b2aec2a..1f83979e0d09 100644
+>> --- a/Documentation/devicetree/bindings/vendor-prefixes.yaml
+>> +++ b/Documentation/devicetree/bindings/vendor-prefixes.yaml
+>> @@ -216,6 +216,8 @@ patternProperties:
+>>     "^axiado,.*":
+>>       description: Axiado Corporation
+>>     "^axis,.*":
+>> +    description: Anyun Intelligent Technology (Hong Kong) Co., Ltd
+>> +  "^ayaneo,.*":
+>>       description: Axis Communications AB
+> 
+> description is in the wrong place. Bad rebase?
 
-Applied as 6.20/7.0 material now, thanks!
+Ok wow thanks I just missed it, somehow it looks good for me...
+
+Neil
+
+> 
+>>     "^azoteq,.*":
+>>       description: Azoteq (Pty) Ltd
+>>
+>> -- 
+>> 2.34.1
+>>
+
