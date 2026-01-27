@@ -1,204 +1,135 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7364CC8F0
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 03:54:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 246071F2B8D;
+	Tue, 27 Jan 2026 04:44:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769486053; cv=none; b=UIzOtiD0ikp05XjGfesfbRBZe31xIrM4OQfvcRhpNxntwO3K2anX7UrwOUjBG64AH3KolaVF9G743NA7xpMiwRda6lLno4B18yOY1P90CEqBRrHLQiCoRhkofZ6teVax2mlO3mlIeTdgPAr1Hdc0b9qNaRdzPRrseLHTD/O6PTw=
+	t=1769489084; cv=none; b=F6kZcoJCDnkt72FS+5svpbdLMSCCTLswYO2bF5ALbut6UkYBl7c8JIZutHKVse6e4Rxh6JBZk0FI+geD7bgu39lkr9/FUxFresD2DwblTL0GhdHMbV6JBbMlSdwU63g8X587n17Jhb5MNkFfh0RvtcdgKBRQZ3a2hPUX3ujFdcc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769486053; c=relaxed/simple;
-	bh=mYzrd3t0U+JAgdo0dneMB/fCKurUQ5Zy7fngGZSnrSQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mWXvUql5bQkIe3Ibsqpydp+6NbqRMFPlCGlQswt0ow4cgiOdqYMCbT0gVImgsltyMx7e8HWm6c2eysDelXERAs6P1RpaTAuSjq/GeougqPmI+DHh7r8hqVgfPR9JJdOzroJi8wMolBTpO548zlc7DGqerBzSMXlTF4XmdKXtcOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=zvRzB4e+; arc=none smtp.client-ip=113.46.200.217
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1769489084; c=relaxed/simple;
+	bh=N4/dTgsSkKgyPM4oXZP0ylgXW3yR83HN4AMrwnF75aw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CbZ5EVseRActX1YCtzwsBEVAFpDuxvQsZYMz1F3BdI1J5Jdbba8O8njQi+kYVluZKq6csyqogbzQi5+tMq6GH88l3W+ueRRVo092B41NfHlu7vUMDYoI1rVFIo1D1e1vVcvGcgjW8i3j2dZfKBcHEuuk+eFuC4f/0SEr3KQ1aEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WF5Kbspl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="zvRzB4e+"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=BAvQiyMewX7+Ex0rVhk5qw04kNlGxjt9gdgw0x3jaV0=;
-	b=zvRzB4e+PEHHzd+8XQKbslxu6nW9SpTOo+VcjBibr5brVYjw4OvuGYo7uq7BSRZWi2YiLnyti
-	V0cz1ufTLvxOwOZ8FJ3J3kGiggLs2+ug3M4CO71XfDnkgTwiAJLf1JBx4g9toCr4y5FkWumQK8e
-	RlSOKRGRVt5H1PabkL66Ukk=
-Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4f0Wd26NK5zcb0S
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 11:49:58 +0800 (CST)
-Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8C96B40537
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 11:54:06 +0800 (CST)
-Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
- dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 27 Jan 2026 11:54:06 +0800
-Received: from huawei.com (10.50.163.32) by kwepemn200012.china.huawei.com
- (7.202.194.135) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 27 Jan
- 2026 11:54:05 +0800
-From: Sizhe Liu <liusizhe5@huawei.com>
-To: <bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
-	<shiju.jose@huawei.com>, <pandoh@google.com>
-CC: <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
-	<prime.zeng@hisilicon.com>, <fanghao11@huawei.com>, <shenyang39@huawei.com>,
-	<liusizhe5@huawei.com>
-Subject: [PATCH] PCI/AER: Fix AER log missing in DPC case
-Date: Tue, 27 Jan 2026 11:54:05 +0800
-Message-ID: <20260127035405.712271-1-liusizhe5@huawei.com>
-X-Mailer: git-send-email 2.33.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WF5Kbspl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF17FC116C6;
+	Tue, 27 Jan 2026 04:44:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769489083;
+	bh=N4/dTgsSkKgyPM4oXZP0ylgXW3yR83HN4AMrwnF75aw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WF5KbspleVHuga8JwYh3EeefwmK+a6HDYpdOtJsIEhYhKi7SjlC1BWgGttTO8iTES
+	 pnKiYzRN97JT9hPs+Xudm2RzaPx98OGJgd+B3CBaqga4r97b7UtC15r35QPKKKbGic
+	 g02pRSd4SNV7lnfw0eCqPWJw6Ah31X1pRK9m2IP1udWZfsqBjAeOeTtyE+qzVFfxk2
+	 6ACAOnIzIBkZ1r8gU/Fx2cWitvXT0Fr1JhoPMmBvXFRBnky5QC6k1Z0MSkoaI88pA1
+	 xd/3vU1teyEqQuJhZpxRloBEM7oHKMRQHGs7yXbdPxjH1TaTVN+qPqm1+G1+MYw7bc
+	 HP4pwwMayARyw==
+Date: Tue, 27 Jan 2026 10:14:25 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Guenter Roeck <linux@roeck-us.net>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Christopher Ruehl <chris.ruehl@gtsys.com.hk>, "Jason A. Donenfeld" <Jason@zx2c4.com>, 
+	Matthias Schiffer <matthias.schiffer@ew.tq-group.com>, Vincent Huang <vincent.huang@tw.synaptics.com>, 
+	Inki Dae <inki.dae@samsung.com>, Seung-Woo Kim <sw0312.kim@samsung.com>, 
+	Frank Li <Frank.Li@nxp.com>, Krzysztof Kozlowski <krzk@kernel.org>, 
+	linux-hwmon@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-input@vger.kernel.org, linux-media@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: Fix emails with spaces or missing brackets
+Message-ID: <2pmaiz2yvgtmfjg6wtduoksjr34znalkvapr3dn3v6fqlxcdde@xkmnuvww7v37>
+References: <20260126164724.2832009-1-robh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemn200012.china.huawei.com (7.202.194.135)
+In-Reply-To: <20260126164724.2832009-1-robh@kernel.org>
 
-In the current DPC error reporting case, some AER log information
-is missing.
+On Mon, Jan 26, 2026 at 10:47:22AM -0600, Rob Herring (Arm) wrote:
+> Fix email addresses with spaces or missing brackets. A pending
+> dtschema meta-schema change will check for these.
+> 
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+> ---
+>  Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml    | 2 +-
+>  Documentation/devicetree/bindings/input/syna,rmi4.yaml          | 2 +-
+>  .../devicetree/bindings/media/samsung,exynos5250-gsc.yaml       | 2 +-
+>  Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml     | 2 +-
 
--- Error log abnormal (line breaks adjusted)
-[  976.604003] pcieport 0000:20:00.0: DPC: containment event, status:
-0x1f11: unmasked uncorrectable error detected
-(------ AER error log supposed to be printed here, but missing ------)
-[  976.604030] nvme nvme0: frozen state error detected, reset controller
-[  977.812932] {4}[Hardware Error]: Hardware error from APEI
-Generic Hardware Error Source: 0
+For PCI controllers,
 
-Cause:
-In aer_print_error(), PCIe AER errors is reported, and is rate-limited
-by info->ratelimit_print[i]. There are two entry points for
-aer_print_error().
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 
-1) Native AER
-aer_isr_one_error_type() -> aer_process_err_devices() ->
-aer_print_error()
-2) DPC
-dpc_process_error() -> aer_print_error()
+- Mani
 
-The value of info->ratelimit_print[i] is initialized correctly in
-the native AER case:
-aer_isr_one_error_type() -> find_source_device() ->
-find_device_iter() -> add_error_device()
+>  4 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml b/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml
+> index 3d14d5fc96c5..7b38f2182ffa 100644
+> --- a/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml
+> +++ b/Documentation/devicetree/bindings/hwmon/sensirion,shtc1.yaml
+> @@ -7,7 +7,7 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
+>  title: Sensirion SHTC1 Humidity and Temperature Sensor IC
+>  
+>  maintainers:
+> -  - Christopher Ruehl chris.ruehl@gtsys.com.hk
+> +  - Christopher Ruehl <chris.ruehl@gtsys.com.hk>
+>  
+>  description: |
+>    The SHTC1, SHTW1 and SHTC3 are digital humidity and temperature sensors
+> diff --git a/Documentation/devicetree/bindings/input/syna,rmi4.yaml b/Documentation/devicetree/bindings/input/syna,rmi4.yaml
+> index f369385ffaf0..8685ef4481f4 100644
+> --- a/Documentation/devicetree/bindings/input/syna,rmi4.yaml
+> +++ b/Documentation/devicetree/bindings/input/syna,rmi4.yaml
+> @@ -8,7 +8,7 @@ title: Synaptics RMI4 compliant devices
+>  
+>  maintainers:
+>    - Jason A. Donenfeld <Jason@zx2c4.com>
+> -  - Matthias Schiffer <matthias.schiffer@ew.tq-group.com
+> +  - Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
+>    - Vincent Huang <vincent.huang@tw.synaptics.com>
+>  
+>  description: |
+> diff --git a/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml b/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml
+> index 878397830a4d..9196cf5dac0f 100644
+> --- a/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml
+> +++ b/Documentation/devicetree/bindings/media/samsung,exynos5250-gsc.yaml
+> @@ -9,7 +9,7 @@ title: Samsung Exynos SoC G-Scaler
+>  maintainers:
+>    - Inki Dae <inki.dae@samsung.com>
+>    - Krzysztof Kozlowski <krzk@kernel.org>
+> -  - Seung-Woo Kim <sw0312.kim@samsung.com
+> +  - Seung-Woo Kim <sw0312.kim@samsung.com>
+>  
+>  description:
+>    G-Scaler is used for scaling and color space conversion on Samsung Exynos
+> diff --git a/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml b/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml
+> index d286b77921e0..8f5d33050348 100644
+> --- a/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/mbvl,gpex40-pcie.yaml
+> @@ -7,7 +7,7 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
+>  title: Mobiveil AXI PCIe Host Bridge
+>  
+>  maintainers:
+> -  - Frank Li <Frank Li@nxp.com>
+> +  - Frank Li <Frank.Li@nxp.com>
+>  
+>  description:
+>    Mobiveil's GPEX 4.0 is a PCIe Gen4 host bridge IP. This configurable IP
+> -- 
+> 2.51.0
+> 
 
-In the DPC case, info->ratelimit_print[i] is not initialized and
-alloc by 0 , so in aer_print_error(), it will directly return at line
-if (!info->ratelimit_print[i])
-This will result in lossing the AER log messages in the DPC case.
-
-Solution:
-1. Move the initialization of info->ratelimit_print[i] to
-aer_ratelimit_print_init().
-2. Add aer_ratelimit_print_init() in dpc_process_error().
-3. Replace the initialization by aer_ratelimit_print_init()in
-Native AER case.
-
-Test with AER inject:
-Set the DPC reporting priority in the BIOS and send
-MalfTLP(AER FATAL ERROR) to device.
-
--- Error log normal (line breaks adjusted)
-[ 5366.943807] pcieport 0000:20:00.0: DPC: containment event,
-status:0x1f11: unmasked uncorrectable error detected
-[ 5366.943826] pcieport 0000:20:00.0: PCIe Bus Error:
-severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
-[root@localhost ~]# [ 5366.943830] pcieport 0000:20:00.0:
-device [19e5:a120] error status/mask=00040000/04580000
-[ 5366.943833] pcieport 0000:20:00.0:    [18] MalfTLP   (First)
-[ 5366.943836] pcieport 0000:20:00.0: AER:   TLP Header:
-0x00000000 0x00000000 0x00000000 0x00000000
-[ 5366.943843] nvme nvme0: frozen state error detected, reset controller
-[ 5368.156778] {2}[Hardware Error]: Hardware error from APEI Generic
-Hardware Error Source: 0
-
-Fixes: a57f2bfb4a58 ("PCI/AER: Ratelimit correctable and non-fatal error logging")
-Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
----
- drivers/pci/pci.h      |  1 +
- drivers/pci/pcie/aer.c | 35 +++++++++++++++++++++++------------
- drivers/pci/pcie/dpc.c |  1 +
- 3 files changed, 25 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0e67014aa001..0cbcbcd52354 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -748,6 +748,7 @@ struct aer_err_info {
- 
- int aer_get_device_error_info(struct aer_err_info *info, int i);
- void aer_print_error(struct aer_err_info *info, int i);
-+void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info, int idx);
- 
- int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
- 		      unsigned int tlp_len, bool flit,
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e0bcaa896803..b73915b63327 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -925,6 +925,28 @@ int cper_severity_to_aer(int cper_severity)
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
- #endif
- 
-+/**
-+ * aer_ratelimit_print_init - set flag whether error message is printed
-+ * @dev: pointer to pci_dev to be rate-limited
-+ * @e_info: pointer to error info
-+ * @idx: index for ratelimit_print array
-+ */
-+void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info, int idx)
-+{
-+	/*
-+	 * Ratelimit AER log messages.  "dev" is either the source
-+	 * identified by the root's Error Source ID or it has an unmasked
-+	 * error logged in its own AER Capability.  Messages are emitted
-+	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
-+	 * for a downstream device, make sure we print the Error Source ID
-+	 * from the root as well.
-+	 */
-+	if (aer_ratelimit(dev, e_info->severity)) {
-+		e_info->ratelimit_print[idx] = 1;
-+		e_info->root_ratelimit_print = 1;
-+	}
-+}
-+
- void pci_print_aer(struct pci_dev *dev, int aer_severity,
- 		   struct aer_capability_regs *aer)
- {
-@@ -990,18 +1012,7 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
- 	e_info->dev[i] = pci_dev_get(dev);
- 	e_info->error_dev_num++;
- 
--	/*
--	 * Ratelimit AER log messages.  "dev" is either the source
--	 * identified by the root's Error Source ID or it has an unmasked
--	 * error logged in its own AER Capability.  Messages are emitted
--	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
--	 * for a downstream device, make sure we print the Error Source ID
--	 * from the root as well.
--	 */
--	if (aer_ratelimit(dev, e_info->severity)) {
--		e_info->ratelimit_print[i] = 1;
--		e_info->root_ratelimit_print = 1;
--	}
-+	aer_ratelimit_print_init(dev, e_info, i);
- 	return 0;
- }
- 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index fc18349614d7..d17adc642781 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -275,6 +275,7 @@ void dpc_process_error(struct pci_dev *pdev)
- 			 status);
- 		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
- 		    aer_get_device_error_info(&info, 0)) {
-+			aer_ratelimit_print_init(pdev, &info, 0);
- 			aer_print_error(&info, 0);
- 			pci_aer_clear_nonfatal_status(pdev);
- 			pci_aer_clear_fatal_status(pdev);
 -- 
-2.33.0
-
+மணிவண்ணன் சதாசிவம்
