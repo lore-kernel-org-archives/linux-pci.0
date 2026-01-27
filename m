@@ -1,168 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 051C21D9A54
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 15:01:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26DBA1F130B
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 15:02:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769526062; cv=none; b=QfxI3ROJ87BTFOwvUOHtYZ8YucLAiEzHL19qG+sbTgS5532sSV884Lk/0iE28Cy8WrYEwbnoWaPjXaB3sdJ0pyysGYpEjxd1U02yS9PXjreLt2pGXKiU9jcQckSHEY80EF+ApGGPRmp3gxQR7s+RKONF4DfUnhEh0lJcY1w3Jzo=
+	t=1769526176; cv=none; b=Dy5N1b11v9z4jVPyBsYLPNGdkTf/FTyjiPtnLSO1ooDEfL4C/CrXINhIcIcOtjq5mA9ZXzpeTVMIxzFeHIFI3upWkhlMdRWdoypw0s40HM3CzON/5zijJcgrc+JqPLJ6/16sZBk+s0Dkxd9a1OuHqBGDGP5oonfzv0OYYDqQ9Q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769526062; c=relaxed/simple;
-	bh=TC2ojBnEzKjSm02vnSKbJc6xd4kHdDdbya/Bgqu9H9k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GkuCz1wsUwgQzg/sGW+8GPKPTL+NhB+A5aq07wc3+e9HvYI0ypBlib3aLH2yqDO6ECA2ffM1MFIXjLp0EnjL8f4wp+2l6cU6bg2PrYLgWJ55x49ZrgzyW/Cpu7MxHWcI3vgvMrL56U3uX3CGt3Xy8twtNTT5nkDSrDP4VQh4/lE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L9QWfm9R; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769526176; c=relaxed/simple;
+	bh=p+NXcJQmGrevEoT3eyGQSWcoRHdh2wj1IE2LS+y87kc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GxCmhB1Yut56IHG/0jsCH8YE3LDhdD0JAtbn/Ud1NQJLzxIq079EUhXXKaBNjRwinRC5gf7yijiC/k6rzksPJIYPvUjQMZU0zQ8ducnoLyUTXuxXJvvbvUJXZdtWEbllpQTZFxKsfDGS20zPMir6Mp6ikFvLfVswXtO+4jR0jI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mwvFB1T9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L9QWfm9R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACDE4C2BCB4
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 15:01:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mwvFB1T9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17469C116C6;
+	Tue, 27 Jan 2026 15:02:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769526061;
-	bh=TC2ojBnEzKjSm02vnSKbJc6xd4kHdDdbya/Bgqu9H9k=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=L9QWfm9RXkIZ4/Woq7bsw0TyNn9g1Dc9kE8KU8Xd/kMwY1grTDmnhJlugeLCzdoiI
-	 g6pIWwvLsiblw07hoJZyrS0eo6vwMB2p4m1NAXB5E8u2dGor2EoqfH1tydPB102iMn
-	 kIDkG2gVUfz/PsqFGcws8Nn8dVUhyhxv6IzTiKH0iVA/fN2+zKNt1LbMQ+QHEfGNKJ
-	 clKgGbhJZOs78b4lx8bSz7ufWBwmeALzjIzAQgNHlxjyc5GgBhU7xDZRpVW+LqNYYz
-	 aN6GaCvydntTHaLKjahmWKWwZjsEkpD8dsDa7CKgoEAj9/oQveJki5FLs3BOGxt9IH
-	 tyW3u2oEpaftA==
-Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-45c9fdf2a06so3656660b6e.2
-        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 07:01:01 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXsuArPlr4iULiXNEvxsmuFsg7EFCk6lGbEkthDgOdYSeoHSwXYrFvSX7FZuF7CcZIw/brFYATI1qY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy/3o0Vkzhsqhgy+Yl2vDJ2BRLo3e7UeXcoeQ4h/1GjPi6aQtvy
-	a9NMbTXCGAPMRnEwD4VwNM7PNjYtd4rn9/Mbhc7s3Mq0P6FHPVw0GuhQV23z8r31MsNMrAmxZLd
-	kTEjPniz/eGgxBv9M8G8Bk/o+QnGOruo=
-X-Received: by 2002:a05:6808:2e4d:b0:450:bc28:c883 with SMTP id
- 5614622812f47-45efc6f7349mr1237514b6e.58.1769526060517; Tue, 27 Jan 2026
- 07:01:00 -0800 (PST)
+	s=k20201202; t=1769526175;
+	bh=p+NXcJQmGrevEoT3eyGQSWcoRHdh2wj1IE2LS+y87kc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mwvFB1T9jwL0A1q2xNHkw2EkHGkjqDNvq2uagou3Sf4qhE5w6Bs7L3TmYSw7+Qjxc
+	 J5pwbt0DQZ+KDoxls8OaYhnH2w0DItgDis0kkkxJb5G/3DMIlEO39BXlkg/IcCpFYg
+	 XIS89W3Cagl+OhgCWVhgyubkka/qRlIDVTeK0FtaJkfTu2B+DJQTfuXIps/TUgYExG
+	 i7IXgU9+jd7jv6jh9PS5kijNhmiPqD92OKFwe6D777NoqQtXzB8ZZ6yMDy0aAU6jBu
+	 aN3hlCpapm3+PvHUUrFVvxr0zsUewDn+9J54U2WvFulhTwADrXn/itTB/JSTlwxc8x
+	 SkezymjtJ1DUQ==
+Date: Tue, 27 Jan 2026 16:02:49 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Samuel Holland <samuel.holland@sifive.com>,
+	Frank Li <Frank.Li@nxp.com>, Charles Mirabile <cmirabil@redhat.com>,
+	tim609@andestech.com, "Maciej W. Rozycki" <macro@orcam.me.uk>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 4/4] PCI: dwc: Fix missing iATU setup when ECAM is
+ enabled
+Message-ID: <aXjTmX6R2f4bZNgN@fedora>
+References: <20260123182835.831710-6-cassel@kernel.org>
+ <20260123182835.831710-10-cassel@kernel.org>
+ <7fd4fced-86c0-4fe9-843e-60a30a9b74a9@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251203140716.3065-1-huyuye812@163.com> <20260112141630.2869-1-huyuye812@163.com>
-In-Reply-To: <20260112141630.2869-1-huyuye812@163.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 27 Jan 2026 16:00:49 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0ixBFGHwvSEp3Ae_s0tyhK338Gju=1+vb+O3_pH2mHyGA@mail.gmail.com>
-X-Gm-Features: AZwV_Qip_BNTk6ncmyWz97jQ9rPE2aPWnHrEh9T9xbERPrdO3mOUpXGjtm_GQ24
-Message-ID: <CAJZ5v0ixBFGHwvSEp3Ae_s0tyhK338Gju=1+vb+O3_pH2mHyGA@mail.gmail.com>
-Subject: Re: [PATCH v2] ACPI: pci_root: Clear the acpi dependencies after PCI
- root bridge initialization on RISC-V
-To: huyuye <huyuye812@163.com>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sunil V L <sunilvl@ventanamicro.com>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Alexandre Ghiti <alex@ghiti.fr>, Robert Moore <robert.moore@intel.com>, linux-pci@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-riscv@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, dai.hualiang@zte.com.cn, 
-	deng.weixian@zte.com.cn, guo.chang2@zte.com.cn, liu.qingtao2@zte.com.cn, 
-	wu.jiabao@zte.com.cn, lin.yongchun@zte.com.cn, hu.yuye@zte.com.cn, 
-	zhang.longxiang@zte.com.cn, zuo.jiang@zte.com.cn, li.kunpeng@zte.com.cn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7fd4fced-86c0-4fe9-843e-60a30a9b74a9@kernel.org>
 
-On Mon, Jan 12, 2026 at 3:17=E2=80=AFPM huyuye <huyuye812@163.com> wrote:
->
-> Hi Rafael,
-> Thank you for your thorough review and valuable comments on v1.
-> I've updated the patch as follows:
-> 1. Removed the redundant #ifdef CONFIG_ACPI and if (!acpi_disabled)
-> guard as you pointed out. The entire code block indeed already depends
-> on CONFIG_ACPI at a higher level, making the inner guard unnecessary.
-> 2. Moved acpi_dev_clear_dependencies to RISC-V specific architecture
-> code (driver/acpi/riscv/acpi_pci.c). This ensures that ACPI dependency
-> clearing is handled within the appropriate architectural context.
->
-> Best regards
-> Signed-off-by: huyuye <huyuye812@163.com>
-> ---
->  drivers/acpi/pci_root.c       |  6 ++++++
->  drivers/acpi/riscv/Makefile   |  2 +-
->  drivers/acpi/riscv/acpi_pci.c | 11 +++++++++++
->  include/acpi/acpi_bus.h       |  1 +
->  4 files changed, 19 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/acpi/riscv/acpi_pci.c
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 9d7f85dadc48..a16eb9097cdc 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -30,6 +30,11 @@ static int acpi_pci_root_add(struct acpi_device *devic=
-e,
->                              const struct acpi_device_id *not_used);
->  static void acpi_pci_root_remove(struct acpi_device *device);
->
-> +
-> +void __weak arch_acpi_pci_root_add_clear_dep(struct acpi_device *device)
-> +{
-> +}
-> +
->  static int acpi_pci_root_scan_dependent(struct acpi_device *adev)
->  {
->         acpiphp_check_host_bridge(adev);
-> @@ -760,6 +765,7 @@ static int acpi_pci_root_add(struct acpi_device *devi=
-ce,
->         pci_lock_rescan_remove();
->         pci_bus_add_devices(root->bus);
->         pci_unlock_rescan_remove();
-> +       arch_acpi_pci_root_add_clear_dep(device);
+On Sat, Jan 24, 2026 at 05:53:36AM +1100, Damien Le Moal wrote:
+> On 2026/01/24 5:28, Niklas Cassel wrote:
+> > From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > 
+> > When ECAM is enabled, the driver skipped calling dw_pcie_iatu_setup()
+> > before configuring ECAM iATU entries. This left IO and MEM outbound
+> > windows unprogrammed, resulting in broken IO transactions. Additionally,
+> > dw_pcie_config_ecam_iatu() was only called during host initialization,
+> > so ECAM-related iATU entries were not restored after suspend/resume,
+> > leading to failures in configuration space access
+> > 
+> > To resolve these issues, the ECAM iATU configuration is moved into
+> > dw_pcie_iatu_setup(), and dw_pcie_iatu_setup() is invoked when ECAM is
+> > enabled.
+> > 
+> > Furthermore, error checks are added in dw_pcie_prog_outbound_atu() and
+> > dw_pcie_prog_inbound_atu() such that an error is returned if trying to
+> > program an iATU that is outside the number of iATUs provided by the
+> > controller.
+> > 
+> > Fixes: f6fd357f7afb ("PCI: dwc: Prepare the driver for enabling ECAM mechanism using iATU 'CFG Shift Feature'")
+> > Reported-by: Maciej W. Rozycki <macro@orcam.me.uk>
+> > Closes: https://lore.kernel.org/all/alpine.DEB.2.21.2511280256260.36486@angie.orcam.me.uk/
+> > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > Co-developed-by: Niklas Cassel <cassel@kernel.org>
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> 
+> It looks like this patch depends on patch 3, which does not have a Fixes tag. So
+> why not squash together patches 3 and 4 ?
 
-Actually, this could be as simple as
+I think it would be wrong to squash the patches.
 
-       if (IS_ENABLED(CONFIG_RISCV))
-              acpi_dev_clear_dependencies(device);
+This patch is mostly written by Krishna, and I think it is wrong to squash
+a cleanup patch with a fix patch.
 
-with a brief comment explaining why it is needed.
+It is okay to have a fix patch that is done on top of a cleanup patch.
+(It would require a lot more effort to write a fix without the cleanup
+having been done first.)
 
-Bjorn, any thoughts?
+Therefore, I will simply add:
+Cc: stable+noautosel@kernel.org # depends on Clean up iATU index usage in dw_pcie_iatu_setup()
 
->         return 1;
->
->  remove_dmar:
-> diff --git a/drivers/acpi/riscv/Makefile b/drivers/acpi/riscv/Makefile
-> index 1284a076fa88..5b1bd0298fb9 100644
-> --- a/drivers/acpi/riscv/Makefile
-> +++ b/drivers/acpi/riscv/Makefile
-> @@ -1,5 +1,5 @@
->  # SPDX-License-Identifier: GPL-2.0-only
-> -obj-y                                  +=3D rhct.o init.o irq.o
-> +obj-y                                  +=3D rhct.o init.o irq.o acpi_pci=
-.o
->  obj-$(CONFIG_ACPI_PROCESSOR_IDLE)      +=3D cpuidle.o
->  obj-$(CONFIG_ACPI_CPPC_LIB)            +=3D cppc.o
->  obj-$(CONFIG_ACPI_RIMT)                        +=3D rimt.o
-> diff --git a/drivers/acpi/riscv/acpi_pci.c b/drivers/acpi/riscv/acpi_pci.=
-c
-> new file mode 100644
-> index 000000000000..368ff113e5c6
-> --- /dev/null
-> +++ b/drivers/acpi/riscv/acpi_pci.c
-> @@ -0,0 +1,11 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * Copyright (C) 2026, ZTE Corporation
-> + *  Author: Yu Ye Hu <hu.yuye@zte.com.cn>
-> + */
-> +#include <linux/acpi.h>
-> +
-> +void arch_acpi_pci_root_add_clear_dep(struct acpi_device *device)
-> +{
-> +       acpi_dev_clear_dependencies(device);
-> +}
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index aad1a95e6863..c00b523a6ebd 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -996,6 +996,7 @@ int acpi_wait_for_acpi_ipmi(void);
->
->  int acpi_scan_add_dep(acpi_handle handle, struct acpi_handle_list *dep_d=
-evices);
->  u32 arch_acpi_add_auto_dep(acpi_handle handle);
-> +void arch_acpi_pci_root_add_clear_dep(struct acpi_device *device);
->  #else  /* CONFIG_ACPI */
->
->  static inline int register_acpi_bus_type(void *bus) { return 0; }
-> --
-> 2.43.0
->
+Such that stable will see that this patch requires a small dependency.
+
+
+Kind regards,
+Niklas
