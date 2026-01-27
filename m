@@ -1,67 +1,67 @@
-Received: from mail-wm1-f65.google.com (mail-wm1-f65.google.com [209.85.128.65])
+Received: from mail-wm1-f66.google.com (mail-wm1-f66.google.com [209.85.128.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A342E33AD98
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 09:57:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9706C33B6FB
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 09:57:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769507871; cv=none; b=Ix4kolxVUxDwCPTEgo1WFDJGvlTL3UKEsc0KTzyTeZbbWFrONgGJPJLfXODblaOgP030VR+MJ/hxWi8TwpUCNiQAP3zdse2ucAixwXNQl4nctDp737xiB7MaXPevyTkZpTScfetI6tDej0vM055xMuF1J9F1dAYsj+Vzfd6ApsI=
+	t=1769507873; cv=none; b=AjWZUrTaf+qPnURJm7UUraVScBdGoGRVuLopEiT0hsP5v410fs1gCYyGZvtWrIYK3bC63BM+DGx5q5GyzGuC0tBQMRZOpz94dOc+WxhGVCOmSf2B0k5VX3ctjzstwFvHP15sb5Byx7ZuuY53IYRATlHHfj8t7klxHC3pitTcgYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769507871; c=relaxed/simple;
-	bh=pirzvUMS8i50SX74B9DHasjEK/A+JFKmccu8rvH6JXg=;
+	s=arc-20240116; t=1769507873; c=relaxed/simple;
+	bh=gSbiWZ3nnwhx0HYBWb2dVDb/9iL5lwNnvS44cVKbvhY=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Rfzj/4mWoPxi6vd4gKh6si+2ivmRQelbiydBJ0Dzug3QiKJ/mS6p0XOIgrYQddngACLUVP4cWUhxlX2UT1WbHxWULt9XETn4V0GeRJ4OlxF0754WRbHsHR0JrxVReLQBA+PJYc4NRGcg+TIDwZuQMTjp21im8Hjcxc1Vc2MEvIE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=DVJ4L/G9; arc=none smtp.client-ip=209.85.128.65
+	 In-Reply-To:To:Cc; b=e/Vh4iPs7HgNAIoZZDTHTk/cyPLMIedqGzAw6w0AqHBid2rFr9bssrqu8FKTW9ITiRpEFgo3wTGIKeKwu5ukjkc3IvJH+yDtsTOKMxiMdsdPe626tH5zLEK4/SoyifG2Dj0s2IjkyX4lw6DeqK/eqXPDWlrUyyC6A9nyTUq1woE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=t2RuSAy3; arc=none smtp.client-ip=209.85.128.66
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DVJ4L/G9"
-Received: by mail-wm1-f65.google.com with SMTP id 5b1f17b1804b1-48039fdc8aeso28824135e9.3
-        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 01:57:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="t2RuSAy3"
+Received: by mail-wm1-f66.google.com with SMTP id 5b1f17b1804b1-47ee76e8656so79742355e9.0
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 01:57:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1769507868; x=1770112668; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1769507869; x=1770112669; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=/72d5PFTHkT60QbelpzW/GReN1mxIpLMWRlkdIN95Hk=;
-        b=DVJ4L/G9jNhAiDu8bQG12PnQqDrAVD7z2J0rEBczEt+Ax1Miyo2b8Y2Pl3imp9MsiH
-         6AUdJVd23Syw1UxP4Amrnghve4056g8QKM75MyUor3WFQX0Diof06Quksi110n4/Kxls
-         qxAuGmhvhCqR/DUU9mBYtVeu4XwEJo6wuOw0gnTssNleLPnB0mOkRFEuIQsJ8duTLf5O
-         XhwBEu5uZmiuJj57YTPows1Wko3vrHDgsXMt1yPBwPO1TYOuOTlu2TA4dgfiCQ1PPOUh
-         46iYQ5Pr0gHAbHjUFoggBkS6i64B8I0O8FbNSGfsOR8oHDq2Az6CUq3Ij4IDbsNYL1Jy
-         ELsg==
+        bh=BpvSM11iZ+VIl5UylAE730s9GzN2gw5t3lFduUFl6UQ=;
+        b=t2RuSAy3K15j69TUhkNGVZl2RYSlDVL/TOOhVSqoW/NJO3GqYzu5B1zFk6qG8TLSzM
+         VUkSlRJMtBVrVXu2JmHX8Zlq9ILqtmB5mDS2/cwemVYP2zbRHHaKCJPqXNkeeHdN44fl
+         +qY/3e2MKrlanhHaUgaG9u8UTBqF1Yg5ZX/ZbXu8vUNx0XGwfImQYF/0Y1wKg+4rh3xM
+         pD2GPLcVvTTKLFVXUFq/0ZkkKq7uX0CaFYht/FkKVhorHMZ6TLKDWmWIGju5vjpzWtCx
+         kwwrQKQ5wdUjpsTUONeavcXIIjj4Wmt6xU827mLK6mwQdJgIOprb1VASq8ZD0c5mT+3B
+         7d3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769507868; x=1770112668;
+        d=1e100.net; s=20230601; t=1769507869; x=1770112669;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=/72d5PFTHkT60QbelpzW/GReN1mxIpLMWRlkdIN95Hk=;
-        b=DMUQfn83daEYX7uZU0kLa3uibvJvpv6I9DkbLDwFLFKTz0CkbyrlMQ8fbciTtPhMiT
-         KJT+78gbPIqkPoV/iuK2ifj0OR0Yste8ubq0iA+NHvQXB4C3PhuByoHggbhjt9Kl0nj1
-         9c94gf5c1fV40VYFZoq3Ld2Tx3ivLN05GAqk+X5szhSsDawTUiLQXtwgCnoDTArMrPUJ
-         AfW9KX4j+ueLHLlXQr1h8JXB3zQlf9wCPem3FjLydJqZKlbtrdLF3eVMse4lNTtWyue0
-         10hH5+0z2fVB+oGlwjy8tzjPR3NitGtel97NMwVrgMAxfuqvAK3e73+OYS37y2TniJdz
-         +OGw==
-X-Forwarded-Encrypted: i=1; AJvYcCUMjmviF1QJdTea7LUcd21Q3buQ+QXiUAtJOqEzRGNEC3PE0KFVkNaqHE/+XB+Tcrx/wuvs7MNtMD0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwzGaqh0m4CvWnCu/17lbjowcAn6UoUHwCbqphPtmg17bJVzYeI
-	Hqv3mmWI4VquUzlxVdPoR53mAnWUmunhVnws91hpxrYgsP/BMwGdVRoODkXbLReedpk=
-X-Gm-Gg: AZuq6aKl4DYHQjKWnmdF3M4t/AduaNuLSVpcB7KBnj4z21eQEEXc7dhBkugbtO8NPNl
-	5+fgPi0646ep/Du/C/Lc1auPuzDJqSd5hfOOice7Bxk9SlbBYe/py07zBnsN00mCuk5WYGpLjk9
-	282HLagqsXS0vxptSeU8Nu4N46GZ7V4+DRC80ubgOX8XuFj2BxM7byp4/IbAh5pHhUdOJ1o7M4C
-	r3UKOYYuqe9TWKWnHMs5IAs2qKes2VrO5J+URYHKU1klAk64sF1Vp+7y0/rXuW+sb+eE+dEzi29
-	73vVwM+MaYrTv4KjuXlQyDYa+ohyviuH9mPbr9H9riVHPIy8ER3/WMdMlG3aQqA69DftU3EhLLo
-	VDrv1cQOQrDPQA4DYZ6PVE5XXwmEw8jEkxHPyClVMRPAlr1lrf9p1ChbZ6/RZGHKUBq2ZDm6145
-	Q/rn4SKMtJqkZMmfwAOvTmarGudkX4qiFZZ5SiNV80+w==
-X-Received: by 2002:a05:600c:34d0:b0:480:683f:76e8 with SMTP id 5b1f17b1804b1-48069c7c265mr12611895e9.26.1769507867692;
-        Tue, 27 Jan 2026 01:57:47 -0800 (PST)
+        bh=BpvSM11iZ+VIl5UylAE730s9GzN2gw5t3lFduUFl6UQ=;
+        b=uyuio1bmeQrMOEwRqAFtJG0L0HJbWga6eZv3X1NJrZNwNI+4iCjJUOS+SYEPlAVGrN
+         7nYlUwIn+AWNZiQNUoTyjhUX3syw+uBQ/lN03UmBAUHSQ6Vdy7wCpcIlXju/7WTe42S7
+         2p3E1DlJbs7A9o1WZePJjs/uNySPOVn6cpBUVhwkHTbcxGonljYgwa1hKqfuwfK2FcOl
+         FsW48KACSTPQgMpcOb3tm747eW5eqfKrlfj8cW6VWSiOA57t89vHhefHafGJZtGdkHxf
+         T/G7Yjvy/JMxoZGbK5SdTJya1OzxYqp/wru0Y5DLAu4UJah1cBiYJ4K4eiWEz+5Ijtnb
+         OKJQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVV+C6Lx1BTKyE3DnoI9bm1qZbJKagW6MLDOdDFmhQy66ECAL3pxk80ptVTD+tN+EHXLG8llZ0jty8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz73VVhqyRnSlNZLzxVFeXs8MWwfjuNlucNnJS+yEMSoHKNDUI7
+	nCYcGboBQc6lnTGIhDZy8O7VEz1vfHTIq5r9nb1mbHnLHde0a0whgG4IIPZX/KEn0jo=
+X-Gm-Gg: AZuq6aKijfGOpkZqgG2SjWmv+/j75BedgDcoHrppzYtbdLRc+P+tulrMwNLJXUj2M8O
+	H8iS8hs/yQ7YsgEd3DeWYXnXQ34y5Dk99RzJzVYcWSL7Ki/G2u8nxE+xmAq0wpmpefdzGJ9n5Wj
+	iE2eMNLS2sNvso1NNS/x3HmqjBIcA5bwrm/aBMtm9A4BfuGe/Q9FRhL7MBGetqq9a5e6QWFCUdG
+	MzkMni2uprnDGZ/XZJV0Q+DGzRv5lK0mCUeHfVz9pCoZsOmR76DyKUGfDzgSuyTeXZaqZJNIL3g
+	gjXWHJ9K4BddLhbmmOQYCExpyN5TQWXgBGi/AC+nqrL9PC+j/wUw7hKOQvBsRNje1jz3GQh4jEB
+	pL7iLXSl1HrgQpLrBoUKHcQXRsGD1FyAdTBPI3zW6IKXthd6/P6IIYB6vtZiqrmvTcT2M2m2lx9
+	8lHDlK+kne8fXSbz1rM42w5PRj92Sk/4Y=
+X-Received: by 2002:a05:600c:8b26:b0:477:6d96:b3e5 with SMTP id 5b1f17b1804b1-48069c164d8mr13882815e9.7.1769507868824;
+        Tue, 27 Jan 2026 01:57:48 -0800 (PST)
 Received: from arrakeen.starnux.net ([2a01:e0a:3d9:2080:8261:5fff:fe11:bdda])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48066bf93cesm49056225e9.9.2026.01.27.01.57.46
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48066bf93cesm49056225e9.9.2026.01.27.01.57.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jan 2026 01:57:47 -0800 (PST)
+        Tue, 27 Jan 2026 01:57:48 -0800 (PST)
 From: Neil Armstrong <neil.armstrong@linaro.org>
-Date: Tue, 27 Jan 2026 10:57:32 +0100
-Subject: [PATCH v2 5/7] dt-bindings: arm: qcom: document the Ayaneo Pocket
- S2
+Date: Tue, 27 Jan 2026 10:57:33 +0100
+Subject: [PATCH v2 6/7] arm64: dts: qcom: sm8650: Add sound DAI prefix for
+ DP
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,7 +70,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-5-c55ec1b5d8bf@linaro.org>
+Message-Id: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-6-c55ec1b5d8bf@linaro.org>
 References: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
 In-Reply-To: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
 To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -93,42 +93,44 @@ Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
  Neil Armstrong <neil.armstrong@linaro.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=716;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=783;
  i=neil.armstrong@linaro.org; h=from:subject:message-id;
- bh=pirzvUMS8i50SX74B9DHasjEK/A+JFKmccu8rvH6JXg=;
- b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBpeIwTWMafMrwJi/UrUblmDswBaoYuUWQ2fwrzpDVA
- O9HMxsmJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCaXiMEwAKCRB33NvayMhJ0UFBEA
- DPXxue632XoOKUO20a+YCsKF2UAhWuEgIA/+CWcQ8AAkzX0mKU7Ada7O5tgYC+2C6JOx2B2DQX43te
- +5aBc/dnZY90jLZ3DsrXJS2l5r3LPEBqFYiU8u0M+pLDYuDucZBdExoCYmTVshHoXtkJ9LSKSo6nnD
- gqQ0rEjVHTYrjcLYTIxxrgyNitSAFvzcgsm572Gu4urrwcWKJPKHg+PGxRimxRLB53vR1LXsM4m9Eq
- 3I/aPsGIlOU4qsl+NSziBRL0bQrh8FLncxI33/Yq+ApgJtf9GIFw5omCPOdmxRT2H87qAV5D4sbJYO
- iw7Ewf9u7IoCJgr9dhpmee043Nnnj9HipdhsM83tbrjn2mJPoSIgufB9qjTvP46AlXiEYtz+rDvilE
- iXYM+wcORtdDgiJgLxqX9LkYxY2s8syHgTWBQBm25ZuTUDuXoW1Ze5IVTFbnJzOY2klsyaFf+2V0Y4
- Ipxpetfml5c9XHYicXC1Kc31vpoAToQckxTjybcua6AmKRLOqqQiRbb0RoQgLEqWbw0QUeEXu97Do1
- fUEazfXdUSif4MYm7YFXrQuMnegrrN039OGFUJXegyNxbBjUSgsvyDGO4woBlxzYT6LmqCIThzJrIF
- gQq3gUt21+BhhuVP8g6tOCoqo602mIWnf7znRDzCQeo3vM7RmUPLTXT1z3jQ==
+ bh=gSbiWZ3nnwhx0HYBWb2dVDb/9iL5lwNnvS44cVKbvhY=;
+ b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBpeIwUQjm7QH1p8rQRVenNqQ0wOOWP6xu0215VvBsl
+ 7jSVnguJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCaXiMFAAKCRB33NvayMhJ0fKYEA
+ DKjj+Z8YzdOvfOnzStvABIT7k4x4isAu30Z5CXb+Mvz29hh03cTeG7wTRJH565eZRDWPoHI6hlsk+O
+ lghQtth1j1Bj9A6xh4ECqzUHAiG0TQjV7q5fUMkW8SzWm26L1+5CGPtVcm87qS3Yen0b+5tvYvgxz6
+ TTEgeEYgtRwcHdadkjNJ5G0JqU14qQjbBe5SuUL1vBl+ZDk9Qv1kCm91KFO6Gn/g/CuQ6QDgrGx7Fq
+ mJgLoa5rQgtu/Y1NwpO3isuBN/rJQ591y6uAhIIeeB0Ho6nONRW9w6FCp5ov06tnHm86iQ4AHaPs/t
+ L618s3sK3FI+ATlXqBeL4YEezrCQrNJp4jrDOwCzuuS+m/VA2+kua1owqZZJE/kb2HapTJuOQ33/Uv
+ 9VjRaS1Qei63ln293HLt10bstkYS24I+dIJSPDUVM7O3GZOPswnUGaMcdXorpGME0zWJsQ72lkpeQ8
+ oW7/+EdpozmLT9C+2KvgvBFX6Qk2tPU31WH+mCLLJ6l0cz8QgRYSEgJVuiAKVtZeeWif1IuCWFEBA/
+ YC9wa0qsGXDhQAhu/iuSBZ0STVVAUOEL3HDtOKj6mLoJZIzhlbX9ST0yC6b+WT2Tr7oP3k74sff++m
+ /XygLVHFHkC5UgxtwsQ1BypETfBo+w+LJx4oldHPIS4V/P464LimH/eMgrnA==
 X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
  fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
 
-Document the Qualcomm SM8650 based Ayaneo Pocket S2 gaming console.
+Sound DAI devices exposing same set of mixers, e.g. each DisplayPort
+controller, need to add dedicated prefix for these mixers to avoid
+conflicts and to allow ALSA to properly configure given instance.
 
 Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
- Documentation/devicetree/bindings/arm/qcom.yaml | 1 +
+ arch/arm64/boot/dts/qcom/sm8650.dtsi | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/arm/qcom.yaml b/Documentation/devicetree/bindings/arm/qcom.yaml
-index d84bd3bca201..351cc2eff14a 100644
---- a/Documentation/devicetree/bindings/arm/qcom.yaml
-+++ b/Documentation/devicetree/bindings/arm/qcom.yaml
-@@ -1042,6 +1042,7 @@ properties:
+diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+index ec79ba904f5d..db769baf4d58 100644
+--- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+@@ -5721,6 +5721,7 @@ mdss_dp0: displayport-controller@af54000 {
+ 				phy-names = "dp";
  
-       - items:
-           - enum:
-+              - ayaneo,pocket-s2
-               - qcom,sm8650-hdk
-               - qcom,sm8650-mtp
-               - qcom,sm8650-qrd
+ 				#sound-dai-cells = <0>;
++				sound-name-prefix = "DisplayPort0";
+ 
+ 				status = "disabled";
+ 
 
 -- 
 2.34.1
