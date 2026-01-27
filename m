@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5402028489E;
-	Tue, 27 Jan 2026 20:07:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECDAC1E7C34;
+	Tue, 27 Jan 2026 20:09:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769544465; cv=none; b=p56g4SKM9IFwgnESWoOwVs9FCroEjYYSDepIORW0yyGy0U7khBPdwUI2IuU9TWKtoONKRYg0vv0j9kwNn1HYDlPuWaPEuKbDGVFeM7qmrvdUoIhjAnF+5gqYu6J53rtvDeAuj3DwXajIRt8XhpnACGZyeew75B2tY6HMke+Dtfc=
+	t=1769544594; cv=none; b=pMbTi9rL+TS2rG8PD2y7FJDmFPP+WqrJ9nDiP83coiDlTj1zvaFg5UGjWsya+8U3C51F1aiEHoBkKf0wNiq7rD9ZG2irLRrSpEhpK4Gin8icqoIOuCfpNjwaU57TQkqhOJ9QnTz7rfKz197apU1mAFicNONYccjPu28esowKB+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769544465; c=relaxed/simple;
-	bh=7I39B7v6bBEAU+4Xj3CQ9pEZcn+u64aQs9BmvUsFSAo=;
-	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
-	 References:In-Reply-To; b=ADEv6oIjW23pmftESa7z19y1Hra5HsxwYUSmU3IRbs+sLG9dSlmKEim9R3+iorpUG4boHAU0SZzBf8KP7SB1fy7lhUrUpZEeBeLluWiKNeHb9m9xnDkc9wQONBdBuoGHs3adD/hNq5qjSLZtjgZlHZ7jMNC5bWywL9cJ6lg7Yrs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gpBeUXxJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769544594; c=relaxed/simple;
+	bh=li5PgsPeyDOaDUR6nHT6meMbGY+B1SiSJCuUR+pQMJ0=;
+	h=Mime-Version:Content-Type:Date:Message-Id:To:From:Subject:Cc:
+	 References:In-Reply-To; b=ADUsDdpGxyS6u1cvMmKS3KxhFmJd/RbS8xF1T5ktCaWSlm3LGSG0wZYgPX6d8Amt+nCn9E07fhz45DGEnQNyi1rOLY0z9rwn8+UXFmC48kHTXNW5/r3dtJqDkdoEEHKCaEBpt/C/ZQFOQTmZoaxr7WSpNvP3n2u/rjfA3FDSFo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RsrtyYeg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gpBeUXxJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10465C116C6;
-	Tue, 27 Jan 2026 20:07:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RsrtyYeg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A69EAC116C6;
+	Tue, 27 Jan 2026 20:09:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769544465;
-	bh=7I39B7v6bBEAU+4Xj3CQ9pEZcn+u64aQs9BmvUsFSAo=;
-	h=Date:From:Subject:Cc:To:References:In-Reply-To:From;
-	b=gpBeUXxJwFBIWiYsOiqUmNLhrXxdpMM3KxZ745FQUL+D25dvLG1pAHVPi+UisovRF
-	 dLCUbZM5qOAkDbLB50pGi4NkKLbrhnkgn1taOT1HYu/8IONe8ewA+9ptwiBtVLFK2+
-	 DXQhgsUSQJx7rBkObtavHEpRh1DYgvesRdw6fSlaJuugxMfVKxrBq0OuwjRjZsNgOm
-	 +fFOeuhQ1N2yrXj/HHYJKV25u0ZwrFH+mJfpyopA+uNOU/BYrY9ck5/q6gWr56Gndx
-	 aCWW32fE8vA8W4X31z4oYGUmspeNThclPvNYLxZqYYFFX9U7Gdjca3NaQ3s6KFCh0H
-	 fdoxGAIYcC2wA==
+	s=k20201202; t=1769544593;
+	bh=li5PgsPeyDOaDUR6nHT6meMbGY+B1SiSJCuUR+pQMJ0=;
+	h=Date:To:From:Subject:Cc:References:In-Reply-To:From;
+	b=RsrtyYegpZDrntAoBTgmkIO+CYQZRO9exn0Kk1TtUixbVcZHek9bx7jG/IJcmY55J
+	 6UprJ4VdqttW0ENoQh1Srd0ZMqLg+pOG6Kp+Fc9yRQI3goNGQzwq2SogruMSY7qiHI
+	 2/TMd07fwg58WUBgZUOQqoZ0oyXxzQ31qqRqjWBO32Gg7V7J60nHBWBNXXt+LOXdpJ
+	 SD1ycHIocnl+bFKiX6AjlUBoIHADfM23NSkW4Cf0iBhbCnKveiHFuuSPl+ovGTj9eI
+	 Z8HBlDvU/xuYxrG0SGnAVefaU9OCi9oiw74hN74Ygrp/3yIPkBs8zoOSCPX+h3KveO
+	 67TDPfev1ujoA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,8 +34,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Tue, 27 Jan 2026 21:07:37 +0100
-Message-Id: <DFZN5P8G6MQG.2DYXNFSRIL450@kernel.org>
+Date: Tue, 27 Jan 2026 21:09:45 +0100
+Message-Id: <DFZN7C8P37RK.3IF24Z1YUVVOX@kernel.org>
+To: "Zhi Wang" <zhiw@nvidia.com>
 From: "Danilo Krummrich" <dakr@kernel.org>
 Subject: Re: [PATCH v2 1/2] rust: introduce abstractions for fwctl
 Cc: "Jason Gunthorpe" <jgg@nvidia.com>, <rust-for-linux@vger.kernel.org>,
@@ -48,7 +49,6 @@ Cc: "Jason Gunthorpe" <jgg@nvidia.com>, <rust-for-linux@vger.kernel.org>,
  <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
  <targupta@nvidia.com>, <acourbot@nvidia.com>, <joelagnelf@nvidia.com>,
  <jhubbard@nvidia.com>, <zhiwang@kernel.org>, <daniel.almeida@collabora.com>
-To: "Zhi Wang" <zhiw@nvidia.com>
 References: <20260122204232.15988-1-zhiw@nvidia.com>
  <20260122204232.15988-2-zhiw@nvidia.com>
  <20260126181912.GA2131321@nvidia.com>
@@ -56,30 +56,20 @@ References: <20260122204232.15988-1-zhiw@nvidia.com>
 In-Reply-To: <20260127215744.332380fe.zhiw@nvidia.com>
 
 On Tue Jan 27, 2026 at 8:57 PM CET, Zhi Wang wrote:
-> The fwctl_alloc_device() helper allocates a raw struct fwctl_device
-> without private driver data here. The Rust driver object should be
-> already allocated and initialized separately before reaching this
-> point.
+> On Mon, 26 Jan 2026 14:19:12 -0400
+> Jason Gunthorpe <jgg@nvidia.com> wrote:
+>> fwctl_unregister is not safe from any context, it must be called
+>> while the Device is still bound.
+>>=20
 >
-> We rely on the standard dev->parent chain to access the rust driver
-> object from the fwctl callbacks.
+> The registration is wrapped in Devres<> in the sample driver, which
+> guarantees that drop is called while the Device is still bound.
+>
+> I agree that the current abstraction itself does not strictly enforce thi=
+s
+> (e.g., if the object is moved out of Devres). I will investigate an
+> approach to enforce this requirement in the next re-spin.
 
-(I will go for a thorough review soon, but for now a quick drive-by comment=
-.)
-
-IIUC, you are saying that the user is supposed to use the private data of t=
-he
-parent device in fwctl callbacks. Let's not make this a design choice pleas=
-e.
-Instead, allow the user pass in separate private data for the fwctl device =
-as
-well.
-
-This serves the purpose of clear ownership and lifetime of the data. E.g. t=
-he
-fwctl device does not necessarily exist as long as the parent device is bou=
-nd.
-
-It is a good thing if driver authors are forced to take a decision about wh=
-ich
-object owns the data and what's the scope of the data.
+The code is fine, the Registration object can't be moved out of devres safe=
+ly.
+You just need to update the safety comment accordingly. :)
