@@ -1,216 +1,306 @@
-Received: from out-177.mta1.migadu.com (out-177.mta1.migadu.com [95.215.58.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9B3835CB9F
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 18:51:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.177
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5D187324B30;
+	Tue, 27 Jan 2026 18:57:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769539913; cv=none; b=JAZkvVURGhUVBQwgMT7cIMdmj+eRU5AmVAuHMyhxPH1XNWLinjFmFhD/XLgTMlNjkTxlvVign/w/3/tYrtMnSWk3z1z5DQW3O+lA3pGDgjuKmuiKxP7+hP0w+43rZ4hlW1HCrWzLCljABIzx8wkvtknRRueEUDAJ6V+TCjV+Kcw=
+	t=1769540233; cv=none; b=GkLUd9QDrxszSXhT2PGyUtp3lzIZ0bjmqFQg4jOuHP/yIvArGTYbrZ90irGmHxnarZi/ouC0a5ZNsMBjcyUGnBuFGMiRppw2Ra0BWr2AqXc+Jyvc4QX6KBU28JVWDMzv8JvUxSf/HDKeR8DBr6ql5BnjzAVfyKKPgGE1pP14ASc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769539913; c=relaxed/simple;
-	bh=erJUJiAEmDLRFw566lElBB8tTijm9VmJ4tueJvty3ao=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=mM9tv6fJ++BdQNxjXyDKIEcb+619SjDCvNaTG4DUXTo2yXNTIfYm3pyzw4wlEeqvkSuYZ6QTcLkK/GgspeDFJ5Zi28stWf8ZjS5DEIUso9wpzwX/O3w/xJBZBQ38A8vxh2/77DYXdjkYJlIdof8JB1tSVexTugtW54mSrlRLanE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wgS6UDFc; arc=none smtp.client-ip=95.215.58.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1769540233; c=relaxed/simple;
+	bh=WNqwyAIwmgcduwurvopJW6qxoBDcsPdL9nAwJEqEBrk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vg/9Q8bI2O9Gq4dA++C2RMryWVSfgTRx9i/PDg9/z5YI2MUFTcPg5M+br+3BSFrMkNsHhjVNNbnPhyN0NlbqX8ZSZvycnseb1ZIT8+FofUeVTrQzu1hmO7BhrC99k0Nk9QA8Zpx7MkCnEaEorqGRA7MNgeZKlCTSV8cDmk4G29k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=gJbwhtfy; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wgS6UDFc"
-Message-ID: <2b0a1123-ad70-42ff-b5b7-088bf195080d@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1769539908;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=WG5JJDoaEsNEcyvZQzh8G+hpoZfTo8CkNcYCQmNbptk=;
-	b=wgS6UDFcoGav1Q/g53abbA/c89W8yVyGq0n1I1nVa7GJpAUaN5/jyGHN0LyqyQnfVjL7aS
-	bO94zfXCU115GTbrDthbwKYEdHZ3eh/Y4miirUZnoI5ZxpA93Hgud4gwA6Mqzz3zbCphmh
-	VdVVvXrzRCMtUvwsxWkerqiURU7wdfk=
-Date: Tue, 27 Jan 2026 18:51:38 +0000
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="gJbwhtfy"
+Received: from skinsburskii.localdomain (c-98-225-44-182.hsd1.wa.comcast.net [98.225.44.182])
+	by linux.microsoft.com (Postfix) with ESMTPSA id C97C420B7167;
+	Tue, 27 Jan 2026 10:57:10 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C97C420B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1769540231;
+	bh=T7Uce1YfhW38W9E8QyYE8CfkjYi3VASgZ5OoZbhZxr4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gJbwhtfyQ40yioY/vZ3Ivr33GPk/srD+XeuzmpKZF7T3DsRguD+iWQOtyXsDXA1ph
+	 1NDW490ySAe7b63Ms+KRUv3V/vHpqhqs9MkxQ9leB0p8c/XDUEepxG5fudWSv0VdFC
+	 DxwgJZxeCeTEYe+wqlDwqYzK3qRpm9evT3Z4IHHc=
+Date: Tue, 27 Jan 2026 10:57:08 -0800
+From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
+	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com
+Subject: Re: [PATCH v0 15/15] mshv: Populate mmio mappings for PCI passthru
+Message-ID: <aXkKhGvpaHUGclI-@skinsburskii.localdomain>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-16-mrathor@linux.microsoft.com>
+ <aXAxmYm4zbOzGztz@skinsburskii.localdomain>
+ <45e7a4c0-f1d8-b8b4-8c03-56d06845323b@linux.microsoft.com>
+ <aXevWXolgNrrLltF@skinsburskii.localdomain>
+ <f39a501e-478f-66ff-26c8-229ca3991f4f@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Igor Korotin <igor.korotin@linux.dev>
-Subject: Re: [PATCH 2/4] rust: samples: remove redundant `.as_ref()` for
- `dev_*` print
-To: Gary Guo <gary@garyguo.net>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
- Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun.feng@gmail.com>,
- =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>,
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Abdiel Janulgue <abdiel.janulgue@gmail.com>,
- Daniel Almeida <daniel.almeida@collabora.com>,
- Robin Murphy <robin.murphy@arm.com>, Dave Ertman <david.m.ertman@intel.com>,
- Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
- Igor Korotin <igor.korotin.linux@gmail.com>
-Cc: rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260120181152.3640314-1-gary@kernel.org>
- <20260120181152.3640314-2-gary@kernel.org>
-Content-Language: en-US
-In-Reply-To: <20260120181152.3640314-2-gary@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f39a501e-478f-66ff-26c8-229ca3991f4f@linux.microsoft.com>
 
-Hi
-
-On 1/20/2026 6:11 PM, Gary Guo wrote:
-> From: Gary Guo <gary@garyguo.net>
+On Mon, Jan 26, 2026 at 07:07:22PM -0800, Mukesh R wrote:
+> On 1/26/26 10:15, Stanislav Kinsburskii wrote:
+> > On Fri, Jan 23, 2026 at 06:19:15PM -0800, Mukesh R wrote:
+> > > On 1/20/26 17:53, Stanislav Kinsburskii wrote:
+> > > > On Mon, Jan 19, 2026 at 10:42:30PM -0800, Mukesh R wrote:
+> > > > > From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > > > 
+> > > > > Upon guest access, in case of missing mmio mapping, the hypervisor
+> > > > > generates an unmapped gpa intercept. In this path, lookup the PCI
+> > > > > resource pfn for the guest gpa, and ask the hypervisor to map it
+> > > > > via hypercall. The PCI resource pfn is maintained by the VFIO driver,
+> > > > > and obtained via fixup_user_fault call (similar to KVM).
+> > > > > 
+> > > > > Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > > > ---
+> > > > >    drivers/hv/mshv_root_main.c | 115 ++++++++++++++++++++++++++++++++++++
+> > > > >    1 file changed, 115 insertions(+)
+> > > > > 
+> > > > > diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
+> > > > > index 03f3aa9f5541..4c8bc7cd0888 100644
+> > > > > --- a/drivers/hv/mshv_root_main.c
+> > > > > +++ b/drivers/hv/mshv_root_main.c
+> > > > > @@ -56,6 +56,14 @@ struct hv_stats_page {
+> > > > >    	};
+> > > > >    } __packed;
+> > > > > +bool hv_nofull_mmio;   /* don't map entire mmio region upon fault */
+> > > > > +static int __init setup_hv_full_mmio(char *str)
+> > > > > +{
+> > > > > +	hv_nofull_mmio = true;
+> > > > > +	return 0;
+> > > > > +}
+> > > > > +__setup("hv_nofull_mmio", setup_hv_full_mmio);
+> > > > > +
+> > > > >    struct mshv_root mshv_root;
+> > > > >    enum hv_scheduler_type hv_scheduler_type;
+> > > > > @@ -612,6 +620,109 @@ mshv_partition_region_by_gfn(struct mshv_partition *partition, u64 gfn)
+> > > > >    }
+> > > > >    #ifdef CONFIG_X86_64
+> > > > > +
+> > > > > +/*
+> > > > > + * Check if uaddr is for mmio range. If yes, return 0 with mmio_pfn filled in
+> > > > > + * else just return -errno.
+> > > > > + */
+> > > > > +static int mshv_chk_get_mmio_start_pfn(struct mshv_partition *pt, u64 gfn,
+> > > > > +				       u64 *mmio_pfnp)
+> > > > > +{
+> > > > > +	struct vm_area_struct *vma;
+> > > > > +	bool is_mmio;
+> > > > > +	u64 uaddr;
+> > > > > +	struct mshv_mem_region *mreg;
+> > > > > +	struct follow_pfnmap_args pfnmap_args;
+> > > > > +	int rc = -EINVAL;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Do not allow mem region to be deleted beneath us. VFIO uses
+> > > > > +	 * useraddr vma to lookup pci bar pfn.
+> > > > > +	 */
+> > > > > +	spin_lock(&pt->pt_mem_regions_lock);
+> > > > > +
+> > > > > +	/* Get the region again under the lock */
+> > > > > +	mreg = mshv_partition_region_by_gfn(pt, gfn);
+> > > > > +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
+> > > > > +		goto unlock_pt_out;
+> > > > > +
+> > > > > +	uaddr = mreg->start_uaddr +
+> > > > > +		((gfn - mreg->start_gfn) << HV_HYP_PAGE_SHIFT);
+> > > > > +
+> > > > > +	mmap_read_lock(current->mm);
+> > > > 
+> > > > Semaphore can't be taken under spinlock.
+> > 
+> > > 
+> > > Yeah, something didn't feel right here and I meant to recheck, now regret
+> > > rushing to submit the patch.
+> > > 
+> > > Rethinking, I think the pt_mem_regions_lock is not needed to protect
+> > > the uaddr because unmap will properly serialize via the mm lock.
+> > > 
+> > > 
+> > > > > +	vma = vma_lookup(current->mm, uaddr);
+> > > > > +	is_mmio = vma ? !!(vma->vm_flags & (VM_IO | VM_PFNMAP)) : 0;
+> > > > 
+> > > > Why this check is needed again?
+> > > 
+> > > To make sure region did not change. This check is under lock.
+> > > 
+> > 
+> > How can this happen? One can't change VMA type without unmapping it
+> > first. And unmapping it leads to a kernel MMIO region state dangling
+> > around without corresponding user space mapping.
 > 
-> This is now handled by the macro itself.
+> Right, and vm_flags would not be mmio expected then.
 > 
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-> ---
->   samples/rust/rust_dma.rs              |  2 +-
->   samples/rust/rust_driver_auxiliary.rs |  2 +-
->   samples/rust/rust_driver_faux.rs      |  2 +-
->   samples/rust/rust_driver_i2c.rs       |  4 ++--
->   samples/rust/rust_driver_pci.rs       |  6 +++---
->   samples/rust/rust_driver_platform.rs  |  2 +-
->   samples/rust/rust_i2c_client.rs       | 10 ++--------
->   7 files changed, 11 insertions(+), 17 deletions(-)
+> > This is similar to dangling pinned regions and should likely be
+> > addressed the same way by utilizing MMU notifiers to destpoy memoty
+> > regions is VMA is detached.
 > 
-> diff --git a/samples/rust/rust_dma.rs b/samples/rust/rust_dma.rs
-> index f53bce2a73e3..a9ac7937ebaf 100644
-> --- a/samples/rust/rust_dma.rs
-> +++ b/samples/rust/rust_dma.rs
-> @@ -57,7 +57,7 @@ impl pci::Driver for DmaSampleDriver {
->   
->       fn probe(pdev: &pci::Device<Core>, _info: &Self::IdInfo) -> impl PinInit<Self, Error> {
->           pin_init::pin_init_scope(move || {
-> -            dev_info!(pdev.as_ref(), "Probe DMA test driver.\n");
-> +            dev_info!(pdev, "Probe DMA test driver.\n");
->   
->               let mask = DmaMask::new::<64>();
->   
-> diff --git a/samples/rust/rust_driver_auxiliary.rs b/samples/rust/rust_driver_auxiliary.rs
-> index f148124fe81f..c20961f16835 100644
-> --- a/samples/rust/rust_driver_auxiliary.rs
-> +++ b/samples/rust/rust_driver_auxiliary.rs
-> @@ -39,7 +39,7 @@ impl auxiliary::Driver for AuxiliaryDriver {
->   
->       fn probe(adev: &auxiliary::Device<Core>, _info: &Self::IdInfo) -> impl PinInit<Self, Error> {
->           dev_info!(
-> -            adev.as_ref(),
-> +            adev,
->               "Probing auxiliary driver for auxiliary device with id={}\n",
->               adev.id()
->           );
-> diff --git a/samples/rust/rust_driver_faux.rs b/samples/rust/rust_driver_faux.rs
-> index 5330b77ea986..99876c8e3743 100644
-> --- a/samples/rust/rust_driver_faux.rs
-> +++ b/samples/rust/rust_driver_faux.rs
-> @@ -26,7 +26,7 @@ fn init(_module: &'static ThisModule) -> Result<Self> {
->   
->           let reg = faux::Registration::new(c"rust-faux-sample-device", None)?;
->   
-> -        dev_info!(reg.as_ref(), "Hello from faux device!\n");
-> +        dev_info!(reg, "Hello from faux device!\n");
->   
->           Ok(Self { _reg: reg })
->       }
-> diff --git a/samples/rust/rust_driver_i2c.rs b/samples/rust/rust_driver_i2c.rs
-> index 6be79f9e9fb5..e71b77196163 100644
-> --- a/samples/rust/rust_driver_i2c.rs
-> +++ b/samples/rust/rust_driver_i2c.rs
-> @@ -56,11 +56,11 @@ fn probe(
->       }
->   
->       fn shutdown(idev: &i2c::I2cClient<Core>, _this: Pin<&Self>) {
-> -        dev_info!(idev.as_ref(), "Shutdown Rust I2C driver sample.\n");
-> +        dev_info!(idev, "Shutdown Rust I2C driver sample.\n");
->       }
->   
->       fn unbind(idev: &i2c::I2cClient<Core>, _this: Pin<&Self>) {
-> -        dev_info!(idev.as_ref(), "Unbind Rust I2C driver sample.\n");
-> +        dev_info!(idev, "Unbind Rust I2C driver sample.\n");
->       }
->   }
->   
-> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_pci.rs
-> index ef04c6401e6a..d50828b642e5 100644
-> --- a/samples/rust/rust_driver_pci.rs
-> +++ b/samples/rust/rust_driver_pci.rs
-> @@ -75,7 +75,7 @@ fn probe(pdev: &pci::Device<Core>, info: &Self::IdInfo) -> impl PinInit<Self, Er
->           pin_init::pin_init_scope(move || {
->               let vendor = pdev.vendor_id();
->               dev_dbg!(
-> -                pdev.as_ref(),
-> +                pdev,
->                   "Probe Rust PCI driver sample (PCI ID: {}, 0x{:x}).\n",
->                   vendor,
->                   pdev.device_id()
-> @@ -91,7 +91,7 @@ fn probe(pdev: &pci::Device<Core>, info: &Self::IdInfo) -> impl PinInit<Self, Er
->                       let bar = bar.access(pdev.as_ref())?;
->   
->                       dev_info!(
-> -                        pdev.as_ref(),
-> +                        pdev,
->                           "pci-testdev data-match count: {}\n",
->                           Self::testdev(info, bar)?
->                       );
-> @@ -112,7 +112,7 @@ fn unbind(pdev: &pci::Device<Core>, this: Pin<&Self>) {
->   #[pinned_drop]
->   impl PinnedDrop for SampleDriver {
->       fn drop(self: Pin<&mut Self>) {
-> -        dev_dbg!(self.pdev.as_ref(), "Remove Rust PCI driver sample.\n");
-> +        dev_dbg!(self.pdev, "Remove Rust PCI driver sample.\n");
->       }
->   }
->   
-> diff --git a/samples/rust/rust_driver_platform.rs b/samples/rust/rust_driver_platform.rs
-> index 9537dc38c563..f2229d176fb9 100644
-> --- a/samples/rust/rust_driver_platform.rs
-> +++ b/samples/rust/rust_driver_platform.rs
-> @@ -180,7 +180,7 @@ fn properties_parse(dev: &device::Device) -> Result {
->   
->   impl Drop for SampleDriver {
->       fn drop(&mut self) {
-> -        dev_dbg!(self.pdev.as_ref(), "Remove Rust Platform driver sample.\n");
-> +        dev_dbg!(self.pdev, "Remove Rust Platform driver sample.\n");
->       }
->   }
->   
-> diff --git a/samples/rust/rust_i2c_client.rs b/samples/rust/rust_i2c_client.rs
-> index 8d2c12e535b0..72da5499f150 100644
-> --- a/samples/rust/rust_i2c_client.rs
-> +++ b/samples/rust/rust_i2c_client.rs
-> @@ -113,10 +113,7 @@ fn probe(
->           pdev: &platform::Device<device::Core>,
->           _info: Option<&Self::IdInfo>,
->       ) -> impl PinInit<Self, Error> {
-> -        dev_info!(
-> -            pdev.as_ref(),
-> -            "Probe Rust I2C Client registration sample.\n"
-> -        );
-> +        dev_info!(pdev, "Probe Rust I2C Client registration sample.\n");
->   
->           kernel::try_pin_init!( Self {
->               parent_dev: pdev.into(),
-> @@ -130,10 +127,7 @@ fn probe(
->       }
->   
->       fn unbind(pdev: &platform::Device<device::Core>, _this: Pin<&Self>) {
-> -        dev_info!(
-> -            pdev.as_ref(),
-> -            "Unbind Rust I2C Client registration sample.\n"
-> -        );
-> +        dev_info!(pdev, "Unbind Rust I2C Client registration sample.\n");
->       }
->   }
->   
+> I don't think we need that. Either it succeeds if the region did not
+> change at all, or just fails.
+> 
 
-Acked-by: Igor Korotin <igor.korotin.linux@gmail.com>
+I'm afraid we do, as if the driver mapped a page with the previous
+memory region, and then the region is unmapped, the page will stay
+mapped in the hypervisor, but will be considered free by kernel, which
+in turn will lead to GPF upn next allocation.
 
-Thanks
-Igor
+With pinned regions we issue is similar but less impacting: pages can't
+be released by user space unmapping and thus will be simply leaked, but
+the system stays intact.
+
+MMIO regions are simila to movable region in this regard: they don't
+reference the user pages, and thus this guest region replaement is a
+stright wat to kernel panic.
+
+> 
+> > > > The region type is stored on the region itself.
+> > > > And the type is checked on the caller side.
+> > > > 
+> > > > > +	if (!is_mmio)
+> > > > > +		goto unlock_mmap_out;
+> > > > > +
+> > > > > +	pfnmap_args.vma = vma;
+> > > > > +	pfnmap_args.address = uaddr;
+> > > > > +
+> > > > > +	rc = follow_pfnmap_start(&pfnmap_args);
+> > > > > +	if (rc) {
+> > > > > +		rc = fixup_user_fault(current->mm, uaddr, FAULT_FLAG_WRITE,
+> > > > > +				      NULL);
+> > > > > +		if (rc)
+> > > > > +			goto unlock_mmap_out;
+> > > > > +
+> > > > > +		rc = follow_pfnmap_start(&pfnmap_args);
+> > > > > +		if (rc)
+> > > > > +			goto unlock_mmap_out;
+> > > > > +	}
+> > > > > +
+> > > > > +	*mmio_pfnp = pfnmap_args.pfn;
+> > > > > +	follow_pfnmap_end(&pfnmap_args);
+> > > > > +d
+> > > > > +unlock_mmap_out:
+> > > > > +	mmap_read_unlock(current->mm);
+> > > > > +unlock_pt_out:
+> > > > > +	spin_unlock(&pt->pt_mem_regions_lock);
+> > > > > +	return rc;
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * At present, the only unmapped gpa is mmio space. Verify if it's mmio
+> > > > > + * and resolve if possible.
+> > > > > + * Returns: True if valid mmio intercept and it was handled, else false
+> > > > > + */
+> > > > > +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp)
+> > > > > +{
+> > > > > +	struct hv_message *hvmsg = vp->vp_intercept_msg_page;
+> > > > > +	struct hv_x64_memory_intercept_message *msg;
+> > > > > +	union hv_x64_memory_access_info accinfo;
+> > > > > +	u64 gfn, mmio_spa, numpgs;
+> > > > > +	struct mshv_mem_region *mreg;
+> > > > > +	int rc;
+> > > > > +	struct mshv_partition *pt = vp->vp_partition;
+> > > > > +
+> > > > > +	msg = (struct hv_x64_memory_intercept_message *)hvmsg->u.payload;
+> > > > > +	accinfo = msg->memory_access_info;
+> > > > > +
+> > > > > +	if (!accinfo.gva_gpa_valid)
+> > > > > +		return false;
+> > > > > +
+> > > > > +	/* Do a fast check and bail if non mmio intercept */
+> > > > > +	gfn = msg->guest_physical_address >> HV_HYP_PAGE_SHIFT;
+> > > > > +	mreg = mshv_partition_region_by_gfn(pt, gfn);
+> > > > 
+> > > > This call needs to be protected by the spinlock.
+> > > 
+> > > This is sorta fast path to bail. We recheck under partition lock above.
+> > > 
+> > 
+> > Accessing the list of regions without lock is unsafe.
+> 
+> I am not sure why? This check is done by a vcpu thread, so regions
+> will not have just gone away.
+> 
+
+This is shared resources. Multiple VP thread get into this function
+simultaneously, so there is a race already. But this one we can live
+with without locking as they don't mutate the list of the regions.
+
+The issue happens when VMM adds or removed another region as it mutates
+the list and races with VP threads doing this lookup.
+
+Thanks,
+Stanislav
+
+
+> Thanks,
+> -Mukesh
+> 
+> 
+> > Thanks,
+> > Stanislav
+> > 
+> > > Thanks,
+> > > -Mukesh
+> > > 
+> > > 
+> > > > Thanks,
+> > > > Stanislav
+> > > > 
+> > > > > +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
+> > > > > +		return false;
+> > > > > +
+> > > > > +	rc = mshv_chk_get_mmio_start_pfn(pt, gfn, &mmio_spa);
+> > > > > +	if (rc)
+> > > > > +		return false;
+> > > > > +
+> > > > > +	if (!hv_nofull_mmio) {		/* default case */
+> > > > > +		gfn = mreg->start_gfn;
+> > > > > +		mmio_spa = mmio_spa - (gfn - mreg->start_gfn);
+> > > > > +		numpgs = mreg->nr_pages;
+> > > > > +	} else
+> > > > > +		numpgs = 1;
+> > > > > +
+> > > > > +	rc = hv_call_map_mmio_pages(pt->pt_id, gfn, mmio_spa, numpgs);
+> > > > > +
+> > > > > +	return rc == 0;
+> > > > > +}
+> > > > > +
+> > > > >    static struct mshv_mem_region *
+> > > > >    mshv_partition_region_by_gfn_get(struct mshv_partition *p, u64 gfn)
+> > > > >    {
+> > > > > @@ -666,13 +777,17 @@ static bool mshv_handle_gpa_intercept(struct mshv_vp *vp)
+> > > > >    	return ret;
+> > > > >    }
+> > > > > +
+> > > > >    #else  /* CONFIG_X86_64 */
+> > > > > +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp) { return false; }
+> > > > >    static bool mshv_handle_gpa_intercept(struct mshv_vp *vp) { return false; }
+> > > > >    #endif /* CONFIG_X86_64 */
+> > > > >    static bool mshv_vp_handle_intercept(struct mshv_vp *vp)
+> > > > >    {
+> > > > >    	switch (vp->vp_intercept_msg_page->header.message_type) {
+> > > > > +	case HVMSG_UNMAPPED_GPA:
+> > > > > +		return mshv_handle_unmapped_gpa(vp);
+> > > > >    	case HVMSG_GPA_INTERCEPT:
+> > > > >    		return mshv_handle_gpa_intercept(vp);
+> > > > >    	}
+> > > > > -- 
+> > > > > 2.51.2.vfs.0.1
+> > > > > 
