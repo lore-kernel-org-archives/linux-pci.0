@@ -1,120 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8499242A82
-	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 14:31:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46FF35C1AC
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 14:34:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769524308; cv=none; b=uYkoHtMFxlxM17thI2hUZYj1/EsP6Wg1dkFJcXs3mPVYrbtwyIHDCW/jDCuSTI0JVTSLDjDijjUlfkjYu8IC+rNu1demSIuqjF1KJE9qNKguoH/WDe/+C0XeyMHs7l77xPfZl8DtjSR3XKfFGLzhpxvmBbWBmUCtWzTzaqpdLJQ=
+	t=1769524456; cv=none; b=PTkfjUeOlH9Zg4dZyIuLmBIpOC/5bfQLjlZys6qEXTsvdq2duS0zcl8GYbzhiYxd+xBTinx9W3h8KB8v9jdtaDee9ykoVABXbxoqJ7af5hv0lGTNtSNN9lZirVKEbEyknZTzSmYFVKRX4QWIkGEV8dMvAM/ILoX9CrzpHX9DPCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769524308; c=relaxed/simple;
-	bh=o0cupKma8Rf34chOdAcD9rEzjyqx7Xo1bV/h+BtfQmo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=o2EtTzcj4KSUXo9HmQLBt41d8hiJuMaa0i8kXZI3OwDKVIt3d1OS65zUoZ0ATC/3vEkwCkSbWWvUtWPhCRdDWaa6kCunnO354A0eHt6TYGxasSWkvpAEswVrTHqfKps4kqI75Bt9iw/dA5ajw/1yRuN+MdW2LW1p882lhp9YS+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xv2SdWmp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769524456; c=relaxed/simple;
+	bh=nLP5WPSJ4MT6lYx0a9IOsqeVgLkh+TkHWnXIWRvaeXg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lL5MzeJkT5tNw1KSfkSHx6oTG6Y1/s6Vidv4V2drzh+aiUnAaVwsChGMXFd9wBsGbFsRbIJMU7Kc9BeBfBqShWaqzs+UL6F17C/HFWhYcbo9Oyw8Gr8lO0zBQSsS95NBvmZGJXkTj5eo2awSSt6b7+ggLsL254dRCj5lCW56bUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cFQ8eKyp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xv2SdWmp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EC2CC116C6;
-	Tue, 27 Jan 2026 14:31:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cFQ8eKyp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B7C9C2BCB4
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 14:34:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769524308;
-	bh=o0cupKma8Rf34chOdAcD9rEzjyqx7Xo1bV/h+BtfQmo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xv2SdWmpSTkuxQt0e/VVCBxEC0+BPKhtND0KHBQFVMOIlAHs0eQBFv7xnnj0fzqzV
-	 f9J8ADhjJgw0Ym3mI385YGmBZk7u7iNoi89ULxKNX+z+d4ja/9ZkzLfUf+do3WFd+H
-	 byMuCnjL2uH5aH/8aEeZMH5m2urGZovGoO1v0lVnqUfPNH5Df8rs9UrJaAdof1EhKP
-	 dwzFo3/D5Wavm2agk62S8Utu0TZSDM+75gZqLKndxFuTFR/0a6lZU2FWnv9BSU4kWH
-	 6pmZ2Ufy/EYT8aMX6YtZEkxN9v+9IrzLsWqu8vz1kXze+7w5CRDdbXq65P1qHERnjl
-	 9fYLrbAJFdcUQ==
-Date: Tue, 27 Jan 2026 16:31:43 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Qinyun Tan <qinyuntan@linux.alibaba.com>,
-	Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org,
-	Xunlei Pang <xlpang@linux.alibaba.com>,
-	Guixin Liu <kanie@linux.alibaba.com>, oliver.yang@linux.alibaba.com,
-	Guanghui Feng <guanghuifeng@linux.alibaba.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V1] nvme-pci: disable SR-IOV VFs on driver unbind
-Message-ID: <20260127143143.GW13967@unreal>
-References: <20260127073344.2489873-1-qinyuntan@linux.alibaba.com>
- <20260127084807.GA342@lst.de>
+	s=k20201202; t=1769524456;
+	bh=nLP5WPSJ4MT6lYx0a9IOsqeVgLkh+TkHWnXIWRvaeXg=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=cFQ8eKypCxJneIg4jM9c7+W0y87mV9/GiLxNnhaswgztLBP78Vz/06/PbHJdEzzEY
+	 aHF4Z9GTm3cTSjU/wQbAeKE6rQWSexI5MfvM78RJ0ot1doS6Db9RBwS/xxGuGpOBju
+	 yPeL8c4QTVuKxU7VsBz1cmo3NX9+1zle0SN969vtt/Gb0zid/QrFxhBwb6B4Dsq4du
+	 ME69Q+CuXcxq+PHoKzNBiNW3uGRf9wF7mgTbK+bGWKPyhCPeGj5dPDSMuHQI0Z+Jl0
+	 0UZinsUPOrdT+E8ETs5KgZZaXT7POvxYtjjLi3QYSPO81xkQ3YJBcENqVtpM9UGJwf
+	 Y7nzhsgWCmJAg==
+Received: by mail-oo1-f50.google.com with SMTP id 006d021491bc7-662f485e58aso107239eaf.0
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 06:34:16 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWMPlrgRMexJuEK9DzD1hDeDM3QxHl4r/D7KPxAzlwGhIufMbIjdZtrfX+KYiUgfmfk7dPeS+IVG5k=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4cGbrRwsoOBE20pLfYqozbMdvgPoSDDeomCPmWvpeYETyTVYP
+	PptFE0IuNtYM3G5PEznpmUoTdyGgmEzzhur2669tz4vPjrjmhjcg/MnMDsKmB9bA6m95fhu++WQ
+	UUJCx1nxDlMSUyQmV1qczrMj02ehpgn4=
+X-Received: by 2002:a05:6820:498c:b0:65f:564f:34b1 with SMTP id
+ 006d021491bc7-662f2021f39mr972139eaf.16.1769524455545; Tue, 27 Jan 2026
+ 06:34:15 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260127084807.GA342@lst.de>
+References: <20260115-gicv5-host-acpi-v3-0-c13a9a150388@kernel.org>
+ <aWy9T3VDyXpVG41z@lpieralisi> <87sec30yhk.ffs@tglx> <aW3pALPxn4i9fiDO@lpieralisi>
+ <87pl751zeh.ffs@tglx> <aW9V4A7lTGZWTO9e@lpieralisi> <aXM0dVthp33yUqj8@lpieralisi>
+ <CAJZ5v0hOVO7N77nnyWsh_vhGcm-TzavrGBgci=a+o_-LKhkuXg@mail.gmail.com>
+In-Reply-To: <CAJZ5v0hOVO7N77nnyWsh_vhGcm-TzavrGBgci=a+o_-LKhkuXg@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 27 Jan 2026 15:34:04 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0jotTEm87Ks70_EHUs68T_3fPvG04GAxoC3gueiS-askw@mail.gmail.com>
+X-Gm-Features: AZwV_QgMPgceilNqa1ohd2X40nvwnD9QGS8uSFdUczKAi0SenvBlTvAaDiWKd9M
+Message-ID: <CAJZ5v0jotTEm87Ks70_EHUs68T_3fPvG04GAxoC3gueiS-askw@mail.gmail.com>
+Subject: Re: [PATCH v3 0/6] irqchip/gic-v5: Code first ACPI boot support
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, Thomas Gleixner <tglx@kernel.org>, Len Brown <lenb@kernel.org>, 
+	Robert Moore <robert.moore@intel.com>, Hanjun Guo <guohanjun@huawei.com>, 
+	Sudeep Holla <sudeep.holla@arm.com>, Marc Zyngier <maz@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Jonathan Cameron <jonathan.cameron@huawei.com>, 
+	linux-acpi@vger.kernel.org, acpica-devel@lists.linux.dev, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jan 27, 2026 at 09:48:07AM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 27, 2026 at 03:33:44PM +0800, Qinyun Tan wrote:
-> > The NVMe PCI driver exports the sriov_configure callback via
-> > pci_sriov_configure_simple(), which allows userspace to enable SR-IOV
-> > VFs through sysfs. However, when the PF driver is unbound, the driver
-> > does not disable SR-IOV, leaving VFs orphaned in the system.
-> 
-> That sounds dangerous.
+On Mon, Jan 26, 2026 at 9:42=E2=80=AFPM Rafael J. Wysocki <rafael@kernel.or=
+g> wrote:
+>
+> Hi Lorenzo,
+>
+> On Fri, Jan 23, 2026 at 9:42=E2=80=AFAM Lorenzo Pieralisi <lpieralisi@ker=
+nel.org> wrote:
+> >
+> > On Tue, Jan 20, 2026 at 11:16:00AM +0100, Lorenzo Pieralisi wrote:
+> > > On Mon, Jan 19, 2026 at 02:54:14PM +0100, Thomas Gleixner wrote:
+> > > > On Mon, Jan 19 2026 at 09:19, Lorenzo Pieralisi wrote:
+> > > > > On Sun, Jan 18, 2026 at 03:47:03PM +0100, Thomas Gleixner wrote:
+> > > > > I think the simplest way to sort this out is for this series to g=
+o via
+> > > > > the ACPI tree if that's OK for Thomas, given that the ACPICA code=
+ will
+> > > > > go via the ACPI tree anyway and there are other dependencies on i=
+t there
+> > > > > I assume (this series is fairly self-contained).
+> > > >
+> > > > I'm fine with that
+> > > >
+> > > > Acked-by: Thomas Gleixner <tglx@kernel.org>
+> > >
+> > > Thank you Thomas, Rafael I hope that works for you too, please let me=
+ know
+> > > if there is anything I can/should do.
+> >
+> > Hi Rafael,
+> >
+> > forgive me for another ping, can you please let me know whether you can=
+ pull
+> > this series on top of acpica changes for v7.0 or it needs to take a dif=
+ferent
+> > route ?
+>
+> Sure, I can queue it up.
 
-It is not. In a real SR-IOV device, VFs are created by the hardware and
-are independent of their PF. There are several use cases where an
-operator unbinds the PF and reuses it to improve overall device
-utilization.
-
-We have already discussed this in the context of Rust.
-https://lore.kernel.org/all/20251122185701.GZ18335@unreal/
-
-> 
-> > According to Documentation/PCI/pci-iov-howto.rst, PCI drivers that
-> > support SR-IOV should call pci_disable_sriov() in their remove callback
-> > to properly clean up VFs before the driver is unloaded.
-
-I could not find that claim in Documentation/PCI/pci-iov-howto.rst.  
-Can you point to the specific sentence that supports it?
-
-> 
-> Bjorn and other PCI folks: is there any reason to not do this in
-> the PCI code and leave a landmine for the drivers?
-
-It will break a lot of real users.
-
-> 
-> > Fix this by disabling SR-IOV in nvme_remove(). If VFs are not assigned
-> > to a guest, disable SR-IOV. If VFs are still assigned, emit a warning
-> > since forcibly disabling would disrupt the guest.
-> 
-> Well, I think we have to distrupt it, at least for hot unplug.  This
-> sounds like we need some better handling in the core code as well.
-
-As mentioned earlier, there are valid users of this functionality relying on
-legitimate devices that operate correctly regardless of whether the PF is
-bound.
-
-> 
-> > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> > index 58f3097888a7..4f2dc13de48b 100644
-> > --- a/drivers/nvme/host/pci.c
-> > +++ b/drivers/nvme/host/pci.c
-> > @@ -3666,6 +3666,15 @@ static void nvme_remove(struct pci_dev *pdev)
-> >  	nvme_stop_ctrl(&dev->ctrl);
-> >  	nvme_remove_namespaces(&dev->ctrl);
-> >  	nvme_dev_disable(dev, true);
-> > +
-> > +	if (pci_num_vf(pdev)) {
-> > +		if (pci_vfs_assigned(pdev))
-> > +			dev_warn(&pdev->dev,
-> > +				 "WARNING: Removing PF while VFs are assigned - VFs will not be deallocated!\n");
-> > +		else
-> > +			pci_disable_sriov(pdev);
-> > +	}
-> > +
-> >  	nvme_free_host_mem(dev);
-> >  	nvme_dev_remove_admin(dev);
-> >  	nvme_dbbuf_dma_free(dev);
-> > -- 
-> > 2.43.5
-> ---end quoted text---
-> 
+Applied as 6.20/7.0 material now, thanks!
