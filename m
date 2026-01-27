@@ -1,156 +1,216 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8FEDC329E53;
-	Tue, 27 Jan 2026 18:46:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from out-177.mta1.migadu.com (out-177.mta1.migadu.com [95.215.58.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9B3835CB9F
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 18:51:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769539614; cv=none; b=inqZ/J3S/RCk1R8EV17HI0cThIb4pwgbZKIMgPZs3Ydb8ZIn/MkWNbbmpxAyA+/4LWWnbk/wVxtxA3g/Wq/0hYCs7ORges1y9JEUXjD75USCGSozxQl4YesRMaqoQmKtbbYQDApjo2o+HO9Yn1umkrW7ADBDdxMzac/Fkjt12dk=
+	t=1769539913; cv=none; b=JAZkvVURGhUVBQwgMT7cIMdmj+eRU5AmVAuHMyhxPH1XNWLinjFmFhD/XLgTMlNjkTxlvVign/w/3/tYrtMnSWk3z1z5DQW3O+lA3pGDgjuKmuiKxP7+hP0w+43rZ4hlW1HCrWzLCljABIzx8wkvtknRRueEUDAJ6V+TCjV+Kcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769539614; c=relaxed/simple;
-	bh=mC/iqwtZCuKzewIUkFzu/ACz1juL0mSJrn1dp0Vj+CA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CDPX55r9h2GFH/KzHXrB9hL6IDGj/y65Jm/47DJc72oJqNkUsMW6Zl4F4h5xkwUupROtk9ZlqkI7A4ghjIWjgYWVLoJbtYjgmBhDvbXKHVd7i4E88QPBPGkOfBPMlE3zL9Peb0Hz4bUFmpyIvK+7HZHKzrE4uJzF7QBFzYFJAqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=KfA8t0yc; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1769539913; c=relaxed/simple;
+	bh=erJUJiAEmDLRFw566lElBB8tTijm9VmJ4tueJvty3ao=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=mM9tv6fJ++BdQNxjXyDKIEcb+619SjDCvNaTG4DUXTo2yXNTIfYm3pyzw4wlEeqvkSuYZ6QTcLkK/GgspeDFJ5Zi28stWf8ZjS5DEIUso9wpzwX/O3w/xJBZBQ38A8vxh2/77DYXdjkYJlIdof8JB1tSVexTugtW54mSrlRLanE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wgS6UDFc; arc=none smtp.client-ip=95.215.58.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="KfA8t0yc"
-Received: from skinsburskii.localdomain (c-98-225-44-182.hsd1.wa.comcast.net [98.225.44.182])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 87A2D20B7165;
-	Tue, 27 Jan 2026 10:46:51 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 87A2D20B7165
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1769539612;
-	bh=1e4oSHFrcFoT6MCe9M2loFr8ezu3DpCgZa4h2G9Bg+c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KfA8t0ycPr0ZXVV61FD2wHGv1yA+vaVu70mo5o6KiWjFcAr+6XBmpjL8fPsaWPagS
-	 dTjjYbjChgBB8NMthtRP4QM/ttne2XxdMchgBZKeeF8Cwn1hxRNkEx3JK56tLSu8i/
-	 +rmmRqnHQgLPb7G0Q49P0YjegKtxxCjcCd9Laclw=
-Date: Tue, 27 Jan 2026 10:46:49 -0800
-From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
-To: Mukesh R <mrathor@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
-	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
-	nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
-	romank@linux.microsoft.com
-Subject: Re: [PATCH v0 12/15] x86/hyperv: Implement hyperv virtual iommu
-Message-ID: <aXkIGfos4l0kv_lF@skinsburskii.localdomain>
-References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
- <20260120064230.3602565-13-mrathor@linux.microsoft.com>
- <aXAZ-r1PeUBAHwaK@skinsburskii.localdomain>
- <54fd73b9-ade6-f1bb-08fc-17571aeadb20@linux.microsoft.com>
- <aXeO7wh7bpacJ1Sk@skinsburskii.localdomain>
- <c40e6dc8-8e42-b0f3-f8e5-3c637adb7f13@linux.microsoft.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wgS6UDFc"
+Message-ID: <2b0a1123-ad70-42ff-b5b7-088bf195080d@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1769539908;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WG5JJDoaEsNEcyvZQzh8G+hpoZfTo8CkNcYCQmNbptk=;
+	b=wgS6UDFcoGav1Q/g53abbA/c89W8yVyGq0n1I1nVa7GJpAUaN5/jyGHN0LyqyQnfVjL7aS
+	bO94zfXCU115GTbrDthbwKYEdHZ3eh/Y4miirUZnoI5ZxpA93Hgud4gwA6Mqzz3zbCphmh
+	VdVVvXrzRCMtUvwsxWkerqiURU7wdfk=
+Date: Tue, 27 Jan 2026 18:51:38 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c40e6dc8-8e42-b0f3-f8e5-3c637adb7f13@linux.microsoft.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Igor Korotin <igor.korotin@linux.dev>
+Subject: Re: [PATCH 2/4] rust: samples: remove redundant `.as_ref()` for
+ `dev_*` print
+To: Gary Guo <gary@garyguo.net>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun.feng@gmail.com>,
+ =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>,
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+ Daniel Almeida <daniel.almeida@collabora.com>,
+ Robin Murphy <robin.murphy@arm.com>, Dave Ertman <david.m.ertman@intel.com>,
+ Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
+ Igor Korotin <igor.korotin.linux@gmail.com>
+Cc: rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260120181152.3640314-1-gary@kernel.org>
+ <20260120181152.3640314-2-gary@kernel.org>
+Content-Language: en-US
+In-Reply-To: <20260120181152.3640314-2-gary@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-On Mon, Jan 26, 2026 at 07:02:29PM -0800, Mukesh R wrote:
-> On 1/26/26 07:57, Stanislav Kinsburskii wrote:
-> > On Fri, Jan 23, 2026 at 05:26:19PM -0800, Mukesh R wrote:
-> > > On 1/20/26 16:12, Stanislav Kinsburskii wrote:
-> > > > On Mon, Jan 19, 2026 at 10:42:27PM -0800, Mukesh R wrote:
-> > > > > From: Mukesh Rathor <mrathor@linux.microsoft.com>
-> > > > > 
-> > > > > Add a new file to implement management of device domains, mapping and
-> > > > > unmapping of iommu memory, and other iommu_ops to fit within the VFIO
-> > > > > framework for PCI passthru on Hyper-V running Linux as root or L1VH
-> > > > > parent. This also implements direct attach mechanism for PCI passthru,
-> > > > > and it is also made to work within the VFIO framework.
-> > > > > 
-> > > > > At a high level, during boot the hypervisor creates a default identity
-> > > > > domain and attaches all devices to it. This nicely maps to Linux iommu
-> > > > > subsystem IOMMU_DOMAIN_IDENTITY domain. As a result, Linux does not
-> > > > > need to explicitly ask Hyper-V to attach devices and do maps/unmaps
-> > > > > during boot. As mentioned previously, Hyper-V supports two ways to do
-> > > > > PCI passthru:
-> > > > > 
-> > > > >     1. Device Domain: root must create a device domain in the hypervisor,
-> > > > >        and do map/unmap hypercalls for mapping and unmapping guest RAM.
-> > > > >        All hypervisor communications use device id of type PCI for
-> > > > >        identifying and referencing the device.
-> > > > > 
-> > > > >     2. Direct Attach: the hypervisor will simply use the guest's HW
-> > > > >        page table for mappings, thus the host need not do map/unmap
-> > > > >        device memory hypercalls. As such, direct attach passthru setup
-> > > > >        during guest boot is extremely fast. A direct attached device
-> > > > >        must be referenced via logical device id and not via the PCI
-> > > > >        device id.
-> > > > > 
-> > > > > At present, L1VH root/parent only supports direct attaches. Also direct
-> > > > > attach is default in non-L1VH cases because there are some significant
-> > > > > performance issues with device domain implementation currently for guests
-> > > > > with higher RAM (say more than 8GB), and that unfortunately cannot be
-> > > > > addressed in the short term.
-> > > > > 
-> > > > 
-> > > > <snip>
-> > > > 
-> > 
-> > <snip>
-> > 
-> > > > > +static void hv_iommu_detach_dev(struct iommu_domain *immdom, struct device *dev)
-> > > > > +{
-> > > > > +	struct pci_dev *pdev;
-> > > > > +	struct hv_domain *hvdom = to_hv_domain(immdom);
-> > > > > +
-> > > > > +	/* See the attach function, only PCI devices for now */
-> > > > > +	if (!dev_is_pci(dev))
-> > > > > +		return;
-> > > > > +
-> > > > > +	if (hvdom->num_attchd == 0)
-> > > > > +		pr_warn("Hyper-V: num_attchd is zero (%s)\n", dev_name(dev));
-> > > > > +
-> > > > > +	pdev = to_pci_dev(dev);
-> > > > > +
-> > > > > +	if (hvdom->attached_dom) {
-> > > > > +		hv_iommu_det_dev_from_guest(hvdom, pdev);
-> > > > > +
-> > > > > +		/* Do not reset attached_dom, hv_iommu_unmap_pages happens
-> > > > > +		 * next.
-> > > > > +		 */
-> > > > > +	} else {
-> > > > > +		hv_iommu_det_dev_from_dom(hvdom, pdev);
-> > > > > +	}
-> > > > > +
-> > > > > +	hvdom->num_attchd--;
-> > > > 
-> > > > Shouldn't this be modified iff the detach succeeded?
-> > > 
-> > > We want to still free the domain and not let it get stuck. The purpose
-> > > is more to make sure detach was called before domain free.
-> > > 
-> > 
-> > How can one debug subseqent errors if num_attchd is decremented
-> > unconditionally? In reality the device is left attached, but the related
-> > kernel metadata is gone.
+Hi
+
+On 1/20/2026 6:11 PM, Gary Guo wrote:
+> From: Gary Guo <gary@garyguo.net>
 > 
-> Error is printed in case of failed detach. If there is panic, at least
-> you can get some info about the device. Metadata in hypervisor is
-> around if failed.
+> This is now handled by the macro itself.
 > 
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> ---
+>   samples/rust/rust_dma.rs              |  2 +-
+>   samples/rust/rust_driver_auxiliary.rs |  2 +-
+>   samples/rust/rust_driver_faux.rs      |  2 +-
+>   samples/rust/rust_driver_i2c.rs       |  4 ++--
+>   samples/rust/rust_driver_pci.rs       |  6 +++---
+>   samples/rust/rust_driver_platform.rs  |  2 +-
+>   samples/rust/rust_i2c_client.rs       | 10 ++--------
+>   7 files changed, 11 insertions(+), 17 deletions(-)
+> 
+> diff --git a/samples/rust/rust_dma.rs b/samples/rust/rust_dma.rs
+> index f53bce2a73e3..a9ac7937ebaf 100644
+> --- a/samples/rust/rust_dma.rs
+> +++ b/samples/rust/rust_dma.rs
+> @@ -57,7 +57,7 @@ impl pci::Driver for DmaSampleDriver {
+>   
+>       fn probe(pdev: &pci::Device<Core>, _info: &Self::IdInfo) -> impl PinInit<Self, Error> {
+>           pin_init::pin_init_scope(move || {
+> -            dev_info!(pdev.as_ref(), "Probe DMA test driver.\n");
+> +            dev_info!(pdev, "Probe DMA test driver.\n");
+>   
+>               let mask = DmaMask::new::<64>();
+>   
+> diff --git a/samples/rust/rust_driver_auxiliary.rs b/samples/rust/rust_driver_auxiliary.rs
+> index f148124fe81f..c20961f16835 100644
+> --- a/samples/rust/rust_driver_auxiliary.rs
+> +++ b/samples/rust/rust_driver_auxiliary.rs
+> @@ -39,7 +39,7 @@ impl auxiliary::Driver for AuxiliaryDriver {
+>   
+>       fn probe(adev: &auxiliary::Device<Core>, _info: &Self::IdInfo) -> impl PinInit<Self, Error> {
+>           dev_info!(
+> -            adev.as_ref(),
+> +            adev,
+>               "Probing auxiliary driver for auxiliary device with id={}\n",
+>               adev.id()
+>           );
+> diff --git a/samples/rust/rust_driver_faux.rs b/samples/rust/rust_driver_faux.rs
+> index 5330b77ea986..99876c8e3743 100644
+> --- a/samples/rust/rust_driver_faux.rs
+> +++ b/samples/rust/rust_driver_faux.rs
+> @@ -26,7 +26,7 @@ fn init(_module: &'static ThisModule) -> Result<Self> {
+>   
+>           let reg = faux::Registration::new(c"rust-faux-sample-device", None)?;
+>   
+> -        dev_info!(reg.as_ref(), "Hello from faux device!\n");
+> +        dev_info!(reg, "Hello from faux device!\n");
+>   
+>           Ok(Self { _reg: reg })
+>       }
+> diff --git a/samples/rust/rust_driver_i2c.rs b/samples/rust/rust_driver_i2c.rs
+> index 6be79f9e9fb5..e71b77196163 100644
+> --- a/samples/rust/rust_driver_i2c.rs
+> +++ b/samples/rust/rust_driver_i2c.rs
+> @@ -56,11 +56,11 @@ fn probe(
+>       }
+>   
+>       fn shutdown(idev: &i2c::I2cClient<Core>, _this: Pin<&Self>) {
+> -        dev_info!(idev.as_ref(), "Shutdown Rust I2C driver sample.\n");
+> +        dev_info!(idev, "Shutdown Rust I2C driver sample.\n");
+>       }
+>   
+>       fn unbind(idev: &i2c::I2cClient<Core>, _this: Pin<&Self>) {
+> -        dev_info!(idev.as_ref(), "Unbind Rust I2C driver sample.\n");
+> +        dev_info!(idev, "Unbind Rust I2C driver sample.\n");
+>       }
+>   }
+>   
+> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_pci.rs
+> index ef04c6401e6a..d50828b642e5 100644
+> --- a/samples/rust/rust_driver_pci.rs
+> +++ b/samples/rust/rust_driver_pci.rs
+> @@ -75,7 +75,7 @@ fn probe(pdev: &pci::Device<Core>, info: &Self::IdInfo) -> impl PinInit<Self, Er
+>           pin_init::pin_init_scope(move || {
+>               let vendor = pdev.vendor_id();
+>               dev_dbg!(
+> -                pdev.as_ref(),
+> +                pdev,
+>                   "Probe Rust PCI driver sample (PCI ID: {}, 0x{:x}).\n",
+>                   vendor,
+>                   pdev.device_id()
+> @@ -91,7 +91,7 @@ fn probe(pdev: &pci::Device<Core>, info: &Self::IdInfo) -> impl PinInit<Self, Er
+>                       let bar = bar.access(pdev.as_ref())?;
+>   
+>                       dev_info!(
+> -                        pdev.as_ref(),
+> +                        pdev,
+>                           "pci-testdev data-match count: {}\n",
+>                           Self::testdev(info, bar)?
+>                       );
+> @@ -112,7 +112,7 @@ fn unbind(pdev: &pci::Device<Core>, this: Pin<&Self>) {
+>   #[pinned_drop]
+>   impl PinnedDrop for SampleDriver {
+>       fn drop(self: Pin<&mut Self>) {
+> -        dev_dbg!(self.pdev.as_ref(), "Remove Rust PCI driver sample.\n");
+> +        dev_dbg!(self.pdev, "Remove Rust PCI driver sample.\n");
+>       }
+>   }
+>   
+> diff --git a/samples/rust/rust_driver_platform.rs b/samples/rust/rust_driver_platform.rs
+> index 9537dc38c563..f2229d176fb9 100644
+> --- a/samples/rust/rust_driver_platform.rs
+> +++ b/samples/rust/rust_driver_platform.rs
+> @@ -180,7 +180,7 @@ fn properties_parse(dev: &device::Device) -> Result {
+>   
+>   impl Drop for SampleDriver {
+>       fn drop(&mut self) {
+> -        dev_dbg!(self.pdev.as_ref(), "Remove Rust Platform driver sample.\n");
+> +        dev_dbg!(self.pdev, "Remove Rust Platform driver sample.\n");
+>       }
+>   }
+>   
+> diff --git a/samples/rust/rust_i2c_client.rs b/samples/rust/rust_i2c_client.rs
+> index 8d2c12e535b0..72da5499f150 100644
+> --- a/samples/rust/rust_i2c_client.rs
+> +++ b/samples/rust/rust_i2c_client.rs
+> @@ -113,10 +113,7 @@ fn probe(
+>           pdev: &platform::Device<device::Core>,
+>           _info: Option<&Self::IdInfo>,
+>       ) -> impl PinInit<Self, Error> {
+> -        dev_info!(
+> -            pdev.as_ref(),
+> -            "Probe Rust I2C Client registration sample.\n"
+> -        );
+> +        dev_info!(pdev, "Probe Rust I2C Client registration sample.\n");
+>   
+>           kernel::try_pin_init!( Self {
+>               parent_dev: pdev.into(),
+> @@ -130,10 +127,7 @@ fn probe(
+>       }
+>   
+>       fn unbind(pdev: &platform::Device<device::Core>, _this: Pin<&Self>) {
+> -        dev_info!(
+> -            pdev.as_ref(),
+> -            "Unbind Rust I2C Client registration sample.\n"
+> -        );
+> +        dev_info!(pdev, "Unbind Rust I2C Client registration sample.\n");
+>       }
+>   }
+>   
 
-With this approach the only thing left is a kernel message.
-But if the state is kept intact, one could collect a kernel core and
-analyze it.
+Acked-by: Igor Korotin <igor.korotin.linux@gmail.com>
 
-And note, that there won't be a hypervisor core by default: our main
-context with the usptreamed version of the driver is L1VH and a kernel
-core is the only thing a third party customer can provide for our
-analysis.
-
-Thanks,
-Stanislav
-
+Thanks
+Igor
