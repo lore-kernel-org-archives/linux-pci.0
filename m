@@ -1,79 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C040284690;
-	Tue, 27 Jan 2026 22:26:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 36B77286D4B;
+	Tue, 27 Jan 2026 22:31:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769552769; cv=none; b=CVSDZLKJCC6t1ac+ChtAyX0qrFJUPrcbxw7brnQrNBD+wmPnec96inxdBdE8Zb55H3zXlGyYKIAsa8FKXEeqierfL7lwUl3cRpRPieGA5rMr7bjHvWu1XXgfJqKireIZfbaekDGwuHSU66Et1bLwgYA0GTU3T6Y57MDVEKnf3+I=
+	t=1769553084; cv=none; b=PJtHjqTspFGeR7/y9DRJhvPFG+sEpLjk1ONyvpHvnor3kuc4TjZ8nDTUXanq3EtDqfAuZLWX6VDjjxVKcAagBw6sEBOpgNxmRCEVIVuabCYBuFlCNEN4G/nQdLT/x62boiVUQTtvc7IclfkYo2KCtYW07tmuRDNrCA+XeM1t0II=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769552769; c=relaxed/simple;
-	bh=hOESQfi/mcB2OvWXOXQ+Rx2MANJ14AZw9LBZgfJgdr4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=JVYtnb2eHPaRUdSYvr6BD/RLtKQq77Dm/WJDR/JdrX+7NOuci0iLSAlGVwmljChyHTNHns3wOS44qwpcT6YafGMEO+6qT2yVghke7ZlBfGPUNSq4YsM6+7YTOVaXwFKOeJ81vPWOjIMz+5GApMn3gfzdl7lI3Q3zm02Awc+LzQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gxtNCvvy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769553084; c=relaxed/simple;
+	bh=M7OTPa9CFRukaUgTXMHL3iHKOsHBdZB2KAce7e7QMz4=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Op8UqaS8GAwurrebF9+HN2zMRSMogolEqgxvub02peM5n6DzVXO52LZlIOhc7gY5g7ipCqmNKohIJs/lwzJoHuogib1Nqg5+aG8eu1MQiOjfyrQMDxuV6UKh1BDUeIf8L+WtEltggBv8TodgccrSxHP/zV9bQ+Zfkc6cbTgZIwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=F1si3MiQ; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxtNCvvy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9FB6C116C6;
-	Tue, 27 Jan 2026 22:26:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769552769;
-	bh=hOESQfi/mcB2OvWXOXQ+Rx2MANJ14AZw9LBZgfJgdr4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=gxtNCvvyjeIMnwD3W+/JsVjaP9mZNM6H6JzZ5jIY4goJ5UoCDXbZinm+wgo7Nakow
-	 5JdH0h3bhCHKl4vbewCA9uW4XQyoxNxEBHuiyQZRSnmP8mpXnIEnej79LiaFsDpBf/
-	 2TpuTCqqbk4pqeQ1QDyTh1kDk5YcUSnMuvexK4rgd7gSXMgxGaR9/PQUNRjcGwMTHz
-	 RnUHsn5nhj2ybhNytESQFGyrxqrIUIhGZ15TBT9VIDtSopFRW5RAtNVFzWdtq5yURe
-	 cRAY3+uHWmOcpznArOe+2iTgdFPnRs91ju+6XOOtOu5iNNvlHGYqrlJ+1A9wVJlftc
-	 NH6pCUpGzidFQ==
-Date: Tue, 27 Jan 2026 16:26:07 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-usb@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/7] pci: pwrctrl: add PCI pwrctrl driver for the
- UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-Message-ID: <20260127222607.GA379611@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="F1si3MiQ"
+Received: from localhost (unknown [20.236.10.66])
+	by linux.microsoft.com (Postfix) with ESMTPSA id B8ED720B7165;
+	Tue, 27 Jan 2026 14:31:21 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com B8ED720B7165
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1769553082;
+	bh=9Y87uN8apxJlmpJ0adW57fWqDfRG/gwUC83x8atmq9o=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=F1si3MiQathZr4J82s8s0tPHsEM5HHu3iS0KWgyiIFmh8t2z/1riF5H5xeqL6uiuf
+	 AOSvepTJcBbjh7av4ZpznQmyzGXf8lMs9q1Z9SaOKsW9NyFqjtoOkeHsLcJPT2cZXK
+	 bl7roCyARz3JMk+uDttCnod8Mzv/bdsqjOGEPfig=
+Date: Tue, 27 Jan 2026 14:31:19 -0800
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, kys@microsoft.com,
+ haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+ longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org,
+ tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+ dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+ nunodasneves@linux.microsoft.com, mhklinux@outlook.com
+Subject: Re: [PATCH v0 12/15] x86/hyperv: Implement hyperv virtual iommu
+Message-ID: <20260127143119.00006d2f@linux.microsoft.com>
+In-Reply-To: <20260127112144.00002991@linux.microsoft.com>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+	<20260120064230.3602565-13-mrathor@linux.microsoft.com>
+	<20260121211806.000006aa@linux.microsoft.com>
+	<34de2049-912e-fc9e-9fc1-727fade0480f@linux.microsoft.com>
+	<20260127112144.00002991@linux.microsoft.com>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0104896e-44d0-485a-a44e-694864c819b7@linaro.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jan 27, 2026 at 10:53:50PM +0100, Neil Armstrong wrote:
-> On 1/27/26 16:53, Manivannan Sadhasivam wrote:
-> > On Tue, Jan 27, 2026 at 10:57:29AM +0100, Neil Armstrong wrote:
-> > > Add support fo the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-> > > power control which connects over PCIe and requires specific power supplies
-> > > to start up.
+Hi Mukesh,
+
+> > >> +
+> > >> +	if (hv_l1vh_partition() && !hv_curr_thread_is_vmm() &&
+> > >> !hv_no_attdev) {
+> > >> +		pr_err("Hyper-V: l1vh iommu does not support
+> > >> host devices\n");    
+> > > why is this an error if user input choose not to do direct
+> > > attach?    
 > > 
-> > This driver only handles the supplies. So why can't you use the existing
-> > pwrctrl-slot driver as a fallback?
+> > Like the error message says: on l1vh, direct attaches of host
+> > devices (eg dpdk) is not supported. and l1vh only does direct
+> > attaches. IOW, no host devices on l1vh.
+> >   
+> This hv_no_attdev flag is really confusing to me, by default
+> hv_no_attdev is false, which allows direct attach. And you are saying
+> l1vh allows it.
 > 
-> It would fit with no change, but the name "slot" doesn't match the
-> goal here, it's not a slot at all, it's an actual pcie IC.
+> Why is this flag also controls host device attachment in l1vh? If you
+> can tell the difference between direct host device attach and other
+> direct attach, why don't you reject always reject host attach in l1vh?
+On second thought, if the hv_no_attdev knob is only meant to control
+host domain attach vs. direct attach, then it is irrelevant on L1VH.
 
-"slot" is probably an overly specific name.  Maybe we can solve it
-with a better name.
+Would it make more sense to rename this to something like
+hv_host_disable_direct_attach? That would better reflect its scope and
+allow it to be ignored under L1VH, and reduce the risk of users
+misinterpreting or misusing it.
