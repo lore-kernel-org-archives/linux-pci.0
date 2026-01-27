@@ -1,212 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89F681E8836;
-	Tue, 27 Jan 2026 15:53:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BE2828AAEE
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 15:56:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769529206; cv=none; b=R45lqwn/1hKF/8AiFPMvWx9gJEAcTySV4GiENUwlP0RjakrvDCVzzdpq0LxykdHb4em7eRMm6Sd5JNFoAabC0fUaAC24rDaOlMGeUVbrkdtiga9YldJ8F7jqMRTiWgONPpr8o5pu3I4ypyDA1fanNtvZ9MEV4IygtsMc0BTcTfI=
+	t=1769529420; cv=none; b=eg+97EsER3L931SM/ljoXFkMis5lCo5EBoXhz4oTdtUx1VZeVICd8Si+kRGI8oHew9ie5rqCd2dNBqI8nrA7ojmZdd7kxGmCmoTQktV/yG+6DQeUata5tf5Bg8+TamSKRbXwq376fb32bW+MxV+mmssCqYTjmWyrecmE5o4gAyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769529206; c=relaxed/simple;
-	bh=C3gromy2eb16W2gWD5WJsKh1zrKRXY062g+k/w1mXxg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QoijahrOMJM5zs98J/mKFyqiNjtl/gq1j8lRtyHUXC1WrLQBT9wy01D9cIB/6kmilkfeowPa/A00WRLAo+3tTGpGbzg+EH+hIrCdvog5sBhY4uk0zsLAo9CYGn7wUXj7lt/KprY2CCZ52VEWiPbhTQSy9WKdURntkPtWn+yO8sc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVfiQz6C; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVfiQz6C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 977EFC116C6;
-	Tue, 27 Jan 2026 15:53:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769529206;
-	bh=C3gromy2eb16W2gWD5WJsKh1zrKRXY062g+k/w1mXxg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MVfiQz6CBax7gqQIZxr7fEty1JrtQDbm28ZBkAjyTU+MlEwhQMUCTZarNP6XI7IU9
-	 MqKJukvU9AhPg+iwzJNAHgxFJcBOeG1cBjcclmpePUXSPMxhG08Aa7C/me/2tJWtn7
-	 2Hx8iLibQXZWCtDYaBojyhLdO7hQDYkEgR4Nyh92yXHXSVqtGuEmsjiZZc1fBH1osU
-	 6Iusk+Uu6DJXDrM1m9phJ/xheLy2c3qQrJc4Bvdek3tjOdD4IWk9JWKksqf0lLySbJ
-	 JUl/oEPdDYUQ9okzzQIuDi2+uAaCIMkqg/kPTTHfOd51V9a2kK4zofeStJXvT9G58X
-	 hCPgOc43ZEdwg==
-Date: Tue, 27 Jan 2026 21:23:14 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Rob Clark <robin.clark@oss.qualcomm.com>, Dmitry Baryshkov <lumag@kernel.org>, 
-	Abhinav Kumar <abhinav.kumar@linux.dev>, Jessica Zhang <jesszhan0024@gmail.com>, 
-	Sean Paul <sean@poorly.run>, Marijn Suijten <marijn.suijten@somainline.org>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, 
-	linux-usb@vger.kernel.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/7] pci: pwrctrl: add PCI pwrctrl driver for the
- UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-Message-ID: <llbnkm72mgcsrucnp7pdkwbgyzenvhe4kudxkdixplgaoirdem@3q3me34o5drf>
-References: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
- <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-2-c55ec1b5d8bf@linaro.org>
+	s=arc-20240116; t=1769529420; c=relaxed/simple;
+	bh=T/xf1x3wH2GOcECBoheOSuq002BHVp+ADXz0G5VL5jM=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=N+dSu+Lrh3Nu2MGaYbsm6cBPRR7vT60CZjpC14hOwt+gpe2pURHUXfwWALes8Bk9fifA/ZzLWAntbdkTG/kEJb2OFpXSf1MxJ358LPntoGW+3/ABsW+H6ad1IBu84L7fsGFNCVqjHwejbvO6UsCHUArNZPFeb9ihDCxvlL98Zr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f0ql63bpvzJ46gt
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 23:56:18 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 9F4CC40571
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 23:56:54 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 27 Jan
+ 2026 15:56:53 +0000
+Date: Tue, 27 Jan 2026 15:56:52 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Sizhe Liu <liusizhe5@huawei.com>
+CC: <bhelgaas@google.com>, <shiju.jose@huawei.com>, <pandoh@google.com>,
+	<linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+	<prime.zeng@hisilicon.com>, <fanghao11@huawei.com>, <shenyang39@huawei.com>
+Subject: Re: [PATCH] PCI/AER: Fix AER log missing in DPC case
+Message-ID: <20260127155652.00006bc1@huawei.com>
+In-Reply-To: <20260127035405.712271-1-liusizhe5@huawei.com>
+References: <20260127035405.712271-1-liusizhe5@huawei.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-2-c55ec1b5d8bf@linaro.org>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500009.china.huawei.com (7.191.174.84) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Tue, Jan 27, 2026 at 10:57:29AM +0100, Neil Armstrong wrote:
-> Add support fo the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-> power control which connects over PCIe and requires specific power supplies
-> to start up.
+On Tue, 27 Jan 2026 11:54:05 +0800
+Sizhe Liu <liusizhe5@huawei.com> wrote:
+
+> In the current DPC error reporting case, some AER log information
+> is missing.
+
+Wrap commit messages up to 75 chars, this is about 65.
+Only do that for stuff where the formatting isn't fixed for other
+reasons, such as the log below.
+
 > 
-
-This driver only handles the supplies. So why can't you use the existing
-pwrctrl-slot driver as a fallback?
-
-- Mani
-
-> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
-> ---
->  drivers/pci/pwrctrl/Kconfig                 | 10 ++++
->  drivers/pci/pwrctrl/Makefile                |  2 +
->  drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c | 88 +++++++++++++++++++++++++++++
->  3 files changed, 100 insertions(+)
+> -- Error log abnormal (line breaks adjusted)
+> [  976.604003] pcieport 0000:20:00.0: DPC: containment event, status:
+> 0x1f11: unmasked uncorrectable error detected
+> (------ AER error log supposed to be printed here, but missing ------)
+> [  976.604030] nvme nvme0: frozen state error detected, reset controller
+> [  977.812932] {4}[Hardware Error]: Hardware error from APEI
+> Generic Hardware Error Source: 0
 > 
-> diff --git a/drivers/pci/pwrctrl/Kconfig b/drivers/pci/pwrctrl/Kconfig
-> index e0f999f299bb..5a94e60d0d3e 100644
-> --- a/drivers/pci/pwrctrl/Kconfig
-> +++ b/drivers/pci/pwrctrl/Kconfig
-> @@ -11,6 +11,16 @@ config PCI_PWRCTRL_PWRSEQ
->  	select POWER_SEQUENCING
->  	select PCI_PWRCTRL
->  
-> +config PCI_PWRCTRL_UPD720201
-> +	tristate "PCI Power Control driver for the UPD720201 USB3 Host Controller"
-> +	select PCI_PWRCTRL
-> +	help
-> +	  Say Y here to enable the PCI Power Control driver of the UPD720201
-> +	  USB3 Host Controller.
-> +
-> +	  The voltage regulators powering the rails of the PCI slots
-> +	  are expected to be defined in the devicetree node of the PCI device.
-> +
->  config PCI_PWRCTRL_SLOT
->  	tristate "PCI Power Control driver for PCI slots"
->  	select PCI_PWRCTRL
-> diff --git a/drivers/pci/pwrctrl/Makefile b/drivers/pci/pwrctrl/Makefile
-> index 13b02282106c..a99f85de8a3d 100644
-> --- a/drivers/pci/pwrctrl/Makefile
-> +++ b/drivers/pci/pwrctrl/Makefile
-> @@ -5,6 +5,8 @@ pci-pwrctrl-core-y			:= core.o
->  
->  obj-$(CONFIG_PCI_PWRCTRL_PWRSEQ)	+= pci-pwrctrl-pwrseq.o
->  
-> +obj-$(CONFIG_PCI_PWRCTRL_UPD720201)	+= pci-pwrctrl-upd720201.o
-> +
->  obj-$(CONFIG_PCI_PWRCTRL_SLOT)		+= pci-pwrctrl-slot.o
->  pci-pwrctrl-slot-y			:= slot.o
->  
-> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c b/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c
-> new file mode 100644
-> index 000000000000..db96bbb69c21
-> --- /dev/null
-> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c
-> @@ -0,0 +1,88 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * Based on upd720201.c:
-> + * Copyright (C) 2024 Linaro Ltd.
-> + * Author: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> + */
-> +
-> +#include <linux/device.h>
-> +#include <linux/mod_devicetable.h>
-> +#include <linux/module.h>
-> +#include <linux/pci-pwrctrl.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/regulator/consumer.h>
-> +#include <linux/slab.h>
-> +
-> +struct pci_pwrctrl_upd720201_data {
-> +	struct pci_pwrctrl ctx;
-> +	struct regulator_bulk_data *supplies;
-> +	int num_supplies;
-> +};
-> +
-> +static void devm_pci_pwrctrl_upd720201_power_off(void *data)
-> +{
-> +	struct pci_pwrctrl_upd720201_data *upd720201 = data;
-> +
-> +	regulator_bulk_disable(upd720201->num_supplies, upd720201->supplies);
-> +	regulator_bulk_free(upd720201->num_supplies, upd720201->supplies);
-> +}
-> +
-> +static int pci_pwrctrl_upd720201_probe(struct platform_device *pdev)
-> +{
-> +	struct pci_pwrctrl_upd720201_data *upd720201;
-> +	struct device *dev = &pdev->dev;
-> +	int ret;
-> +
-> +	upd720201 = devm_kzalloc(dev, sizeof(*upd720201), GFP_KERNEL);
-> +	if (!upd720201)
-> +		return -ENOMEM;
-> +
-> +	ret = of_regulator_bulk_get_all(dev, dev_of_node(dev),
-> +					&upd720201->supplies);
-> +	if (ret < 0) {
-> +		dev_err_probe(dev, ret, "Failed to get upd720201 regulators\n");
-> +		return ret;
-> +	}
-> +
-> +	upd720201->num_supplies = ret;
-> +	ret = regulator_bulk_enable(upd720201->num_supplies, upd720201->supplies);
-> +	if (ret < 0) {
-> +		dev_err_probe(dev, ret, "Failed to enable upd720201 regulators\n");
-> +		regulator_bulk_free(upd720201->num_supplies, upd720201->supplies);
-> +		return ret;
-> +	}
-> +
-> +	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_upd720201_power_off,
-> +				       upd720201);
-> +	if (ret)
-> +		return ret;
-> +
-> +	pci_pwrctrl_init(&upd720201->ctx, dev);
-> +
-> +	ret = devm_pci_pwrctrl_device_set_ready(dev, &upd720201->ctx);
-> +	if (ret)
-> +		return dev_err_probe(dev, ret, "Failed to register pwrctrl driver\n");
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id pci_pwrctrl_upd720201_of_match[] = {
-> +	{
-> +		.compatible = "pci1912,0014",
-> +	},
-> +	{ }
-> +};
-> +MODULE_DEVICE_TABLE(of, pci_pwrctrl_upd720201_of_match);
-> +
-> +static struct platform_driver pci_pwrctrl_upd720201_driver = {
-> +	.driver = {
-> +		.name = "pci-pwrctrl-upd720201",
-> +		.of_match_table = pci_pwrctrl_upd720201_of_match,
-> +	},
-> +	.probe = pci_pwrctrl_upd720201_probe,
-> +};
-> +module_platform_driver(pci_pwrctrl_upd720201_driver);
-> +
-> +MODULE_AUTHOR("Neil Armstrong <neil.armstrong@linaro.org>");
-> +MODULE_DESCRIPTION("PCI Power Control driver for UPD720201 USB3 Host Controller");
-> +MODULE_LICENSE("GPL");
-> 
-> -- 
-> 2.34.1
-> 
+This, but do remove timestamps as those don't matter to anyone.
+Not wrapping helps if anyone is searching for this later.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Abnormal error log
+
+  pcieport 0000:20:00.0: DPC: containment event, status: 0x1f11: unmasked uncorrectable error detected
+(------ AER error log supposed to be printed here, but missing ------)
+  nvme nvme0: frozen state error detected, reset controller
+{4}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
+
+
+> Cause:
+> In aer_print_error(), PCIe AER errors is reported, and is rate-limited
+> by info->ratelimit_print[i]. There are two entry points for
+> aer_print_error().
+> 
+> 1) Native AER
+> aer_isr_one_error_type() -> aer_process_err_devices() ->
+> aer_print_error()
+> 2) DPC
+> dpc_process_error() -> aer_print_error()
+> 
+> The value of info->ratelimit_print[i] is initialized correctly in
+> the native AER case:
+
+> aer_isr_one_error_type() -> find_source_device() ->
+> find_device_iter() -> add_error_device()
+> 
+> In the DPC case, info->ratelimit_print[i] is not initialized and
+> alloc by 0 , so in aer_print_error(), it will directly return at line
+> if (!info->ratelimit_print[i])
+> This will result in lossing the AER log messages in the DPC case.
+
+losing
+
+> 
+> Solution:
+> 1. Move the initialization of info->ratelimit_print[i] to
+> aer_ratelimit_print_init().
+> 2. Add aer_ratelimit_print_init() in dpc_process_error().
+> 3. Replace the initialization by aer_ratelimit_print_init()in
+> Native AER case.
+> 
+> Test with AER inject:
+> Set the DPC reporting priority in the BIOS and send
+> MalfTLP(AER FATAL ERROR) to device.
+> 
+> -- Error log normal (line breaks adjusted)
+> [ 5366.943807] pcieport 0000:20:00.0: DPC: containment event,
+> status:0x1f11: unmasked uncorrectable error detected
+> [ 5366.943826] pcieport 0000:20:00.0: PCIe Bus Error:
+> severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
+> [root@localhost ~]# [ 5366.943830] pcieport 0000:20:00.0:
+> device [19e5:a120] error status/mask=00040000/04580000
+> [ 5366.943833] pcieport 0000:20:00.0:    [18] MalfTLP   (First)
+> [ 5366.943836] pcieport 0000:20:00.0: AER:   TLP Header:
+> 0x00000000 0x00000000 0x00000000 0x00000000
+> [ 5366.943843] nvme nvme0: frozen state error detected, reset controller
+> [ 5368.156778] {2}[Hardware Error]: Hardware error from APEI Generic
+> Hardware Error Source: 0
+Reformat this and drop timestamps as well:
+
+Normal error log
+
+  pcieport 0000:20:00.0: DPC: containment event, status:0x1f11: unmasked uncorrectable error detected
+  pcieport 0000:20:00.0: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
+  pcieport 0000:20:00.0: device [19e5:a120] error status/mask=00040000/04580000
+  pcieport 0000:20:00.0:    [18] MalfTLP   (First)
+  pcieport 0000:20:00.0: AER:   TLP Header: 0x00000000 0x00000000 0x00000000 0x00000000
+  nvme nvme0: frozen state error detected, reset controller
+  {2}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
+
+> 
+> Fixes: a57f2bfb4a58 ("PCI/AER: Ratelimit correctable and non-fatal error logging")
+> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
+
+Otherwise looks good to me.
+
+Thanks,
+
+Jonathan
+
+
