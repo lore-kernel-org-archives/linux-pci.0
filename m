@@ -1,239 +1,191 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs1-f66.google.com (mail-vs1-f66.google.com [209.85.217.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27AE9346AFF;
-	Tue, 27 Jan 2026 11:39:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61962346766
+	for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 12:17:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769513988; cv=none; b=SRX0dbl0tsJJz9QyZp9y9Xi2rSbIc+aDuzebIbksQcuoGzo28NjL7R7r+pysW1Ze0NOwmJFwIAYbxCTZTGFAssE3Mekqs3ngD168dJqUCYCTU0UDCssR+BqX6uYF8yhIzUPPhorC0rfz3GSAly2txQ79HKn/wU8AoJ1zPcjD2LI=
+	t=1769516244; cv=none; b=Ithd4oVMw6dQazRboIyy2haIixv5Y9mgSbbIANy7ktxQsFvdnjQeahoPdBgvRwmrp/E8mXz++pzaYxYM6hzCXCqqOHkM8IYwY8EH7IlcdF670CkHZT604Yqb5O9d15n7HeewUb51UvSSQvZh9e5F5aUf8TXUhGa3r2a6yUxT+U0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769513988; c=relaxed/simple;
-	bh=ZqDDHYcca7Gm0rf13vV0WwrqmmANuJJmCTlAH44KGp8=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=PinSzwa8Z9tLqG9XhEPQF9KlXvNXwpItyuoXtdCJd1Iy9w6k9R85oD1ceRKTsif2PyMFW0gJVHuBI6u6AdRp3orYz/MKS886SLx4razo+qaG9HOnvD83F/h40uT+Hvc8LsK/FcI3ZSTPVmS4yw6Cm8EtXF17lF0HBoq4dHI8Fok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PejYDn4w; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PejYDn4w"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769513986; x=1801049986;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=ZqDDHYcca7Gm0rf13vV0WwrqmmANuJJmCTlAH44KGp8=;
-  b=PejYDn4wPMltZz5n4HtaQUE4wiQK0gPQa2du5Zcompdrl0e8xD0gg4xS
-   2iCKci9pJQwd7LjAD6dDTNRCqCa0iv9AW5jrYhoFwepyNtJletUWRATUo
-   aSa+qUzmlYXiIIlhVgy1Z0SmecUqPUKCf8wKi/ICn4NnkkxeTFTEf2ImJ
-   JMwC0PqcEx1o+lMNd5GabAy5bKCJw3TO7wij5GGG9YaZ9KUowcMwf0+zk
-   Wa1uPkwJL3NNiu9NbTMoQVI8f5i00sIiE2ucvquClbk13XaTzCv6sK/Za
-   cAM1ChQVkEeFlm94ND3ZpWJFE+gv/lFjw87U2Y9QQcgPj86E9HSQuGYJk
-   Q==;
-X-CSE-ConnectionGUID: XKYzNysWTICkF73cwxcEag==
-X-CSE-MsgGUID: fy6+8hJPTTCxtsgDmgewvg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11683"; a="70609325"
-X-IronPort-AV: E=Sophos;i="6.21,257,1763452800"; 
-   d="scan'208";a="70609325"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2026 03:39:45 -0800
-X-CSE-ConnectionGUID: HqYXD6W4TGqzRTnHOJHC9g==
-X-CSE-MsgGUID: 6L7T1XXtSLiUYgZcqBrP8w==
-X-ExtLoop1: 1
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.67])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2026 03:39:43 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 27 Jan 2026 13:39:39 +0200 (EET)
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
-    Dominik Brodowski <linux@dominikbrodowski.net>, 
-    LKML <linux-kernel@vger.kernel.org>, 
-    Simon Richter <Simon.Richter@hogyros.de>
-Subject: Re: [PATCH 05/23] PCI: Remove old_size limit from bridge window
- sizing
-In-Reply-To: <20260126200951.GA301074@bhelgaas>
-Message-ID: <fb05789e-6a9a-6051-e3fa-ce9ac168c5df@linux.intel.com>
-References: <20260126200951.GA301074@bhelgaas>
+	s=arc-20240116; t=1769516244; c=relaxed/simple;
+	bh=VR7NKRn1EzgAvvzhExxtxmFQMZZBrouxWpYgT74wAco=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=S3YAs7FX9G0Fidq+w8CI0iUtzqAzPCgbWmreocxw+F/zT+3UZQb2zKYwFItaPFxW1JXqno19ecByi538sviHx7YuTuK6ooK0Ve9AxAP92cfHg1pBLregSRYqStWlLTc9Z0MZxkFbjF7Fau1e7JEOaBnF9KIaMT+QAghh1N1tUmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.217.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vs1-f66.google.com with SMTP id ada2fe7eead31-5f52ed75c45so3809316137.2
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 04:17:23 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769516242; x=1770121042;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=h95kKSGuxlIi6DsiBy3i3OTVnWNnI1FQj5Fv8XU8C14=;
+        b=omOa2PPirDERURpt1rRDambyOZdMa9RS2zG68fz/acpVxVvYgmvt7v2pTdARqYBc1c
+         GjVUGxfYXbClbBiBGeSTuo8c4uzNoY2ZpcKc0MRqWKxtjiW+fE0VDPX2DPJ8kCf/YfeW
+         LJHv4glZiIS6HZmRUEaSCsh1R2Nf+EZmIWi5vw8OLDXX5odDRV4xYRBzSACmT+agzWB6
+         CHTMroVriNw7KUVOumXq7Qz9Ie8duKQEqn1I+/ay9HNb/zLxK+EePZHE9lmQv9TDAeFI
+         gszmkY694EYqGbOPB/HeXml6QPg2CriX5IPpy8RUzjmluKeJ2EjUUYu+I6kdrWoM+Pd2
+         kcNw==
+X-Forwarded-Encrypted: i=1; AJvYcCUuYG5AcFJZojadR74vlx9IsDuI5XAk3J7OWpuEf4hB2GW/5OXDrUw4jGHKDNYwlOMPvMqaRhXPR/M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxJBUGMLL8HJZNZPN2ln66FSvnhOL6bYKPSaV6uLcwsUrjDp3qa
+	A6tDvySv7E864V2+FqO64u9aBsPuV15oQGwZ+YtilAM5g1Hb4HRjYwfMlSgstIjH4mc=
+X-Gm-Gg: AZuq6aKYejt6SBZ02cCsBsK/JchA4qOWgIMwe5lDwaS0pR8E73hSaS08OmrIvOeX5n3
+	Q/7mQrd//9UQZLCOZhwsFRk30fgnu6i1XiwYd64DNZ4IdmCgHT+eSoWciELjQyI1zXlLBa6UaBP
+	f2KRNKDhCPp/QLOTm3GmVvcptl2qpC9hlN6QiET1AH0wOiGM2GcJeA9XPoQQsvDINOIQTnfIsMo
+	dwydfKrSKTr+JL9hjFaheSkhOr649Z/cOyIlfN5srG+StmNS4U4lzcsyYXFVW2IZj5A2kq/xlYG
+	6iWvrhT5xdHRqKNtaJ2VXnyMTJYeXavFyQJTgLGgy53ANNKrDPMY+6JazFupd64/QaOr5GzJLID
+	P4OLS0ftGuQ9N4HkyLBAN/iwJdtSSrPwHunYzCewop5QKkXLRKef3BcBhLVdJLyhNdPhTcCFpyw
+	ictp54gqxp0MCUA+Q2FSOnC0zNjUhbUyrlHng/VW4tFrKAN9HNuTbY
+X-Received: by 2002:a05:6214:2407:b0:894:6a0a:b0cc with SMTP id 6a1803df08f44-894cc7c406bmr13220846d6.7.1769509575088;
+        Tue, 27 Jan 2026 02:26:15 -0800 (PST)
+Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com. [209.85.222.169])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8949a5666e5sm100230526d6.48.2026.01.27.02.26.14
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 Jan 2026 02:26:14 -0800 (PST)
+Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-8c70c6b2bcaso33098185a.3
+        for <linux-pci@vger.kernel.org>; Tue, 27 Jan 2026 02:26:14 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVJOQnTjzGECruWN7wLZuZECbeymS1dYdT+g0Y/y48mvHDzEgcI+eTbsgEQtwkkDBJn2EzI9cs294U=@vger.kernel.org
+X-Received: by 2002:a05:6102:32c4:b0:5db:ca9e:b57d with SMTP id
+ ada2fe7eead31-5f72368a7cbmr661077137.19.1769509270640; Tue, 27 Jan 2026
+ 02:21:10 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-2105239277-1769511962=:1055"
-Content-ID: <643a117e-909a-8c31-0693-17c5097d4369@linux.intel.com>
+References: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
+ <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-1-c55ec1b5d8bf@linaro.org>
+In-Reply-To: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-1-c55ec1b5d8bf@linaro.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 27 Jan 2026 11:20:59 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdU9HcK3xX=itqe2di1HS1SJvV6=ySqKyrtj7Yr1yXyuqQ@mail.gmail.com>
+X-Gm-Features: AZwV_QgWv7FB_90Ca_fAZmW1VQjnUFaVdHL_S5QmJWKKvUrnnNh7whB0F4bfOtQ
+Message-ID: <CAMuHMdU9HcK3xX=itqe2di1HS1SJvV6=ySqKyrtj7Yr1yXyuqQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/7] dt-bindings: usb: document the Renesas
+ UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+To: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Rob Clark <robin.clark@oss.qualcomm.com>, 
+	Dmitry Baryshkov <lumag@kernel.org>, Abhinav Kumar <abhinav.kumar@linux.dev>, 
+	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>, 
+	Marijn Suijten <marijn.suijten@somainline.org>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	freedreno@lists.freedesktop.org, linux-usb@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Neil,
 
---8323328-2105239277-1769511962=:1055
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <12889a23-00d1-dd0d-1509-d6d3355f4799@linux.intel.com>
+On Tue, 27 Jan 2026 at 10:57, Neil Armstrong <neil.armstrong@linaro.org> wrote:
+> Document the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller,
+> which connects over PCIe and requires specific power supplies to
 
-On Mon, 26 Jan 2026, Bjorn Helgaas wrote:
+Here: "requires"...
 
-> On Mon, Jan 26, 2026 at 11:16:01AM -0600, Bjorn Helgaas wrote:
-> > On Fri, Dec 19, 2025 at 07:40:18PM +0200, Ilpo J=E4rvinen wrote:
-> > > calculate_memsize() applies lower bound to the resource size before
-> > > aligning the resource size making it impossible to shrink bridge wind=
-ow
-> > > resources. I've not found any justification for this lower bound and
-> > > nothing indicated it was to work around some HW issue.
-> > >=20
-> > > Prior to the commit 3baeae36039a ("PCI: Use pci_release_resource()
-> > > instead of release_resource()"), releasing a bridge window during BAR
-> > > resize resulted in clearing start and end address of the resource.
-> > > Clearing addresses destroys the resource size as a side-effect,
-> > > therefore nullifying the effect of the old size lower bound.
-> > >=20
-> > > After the commit 3baeae36039a ("PCI: Use pci_release_resource() inste=
-ad
-> > > of release_resource()"), BAR resize uses the aligned old size, which
-> > > results in exceeding what fits into the parent window in some cases:
-> > >=20
-> > > xe 0030:03:00.0: [drm] Attempting to resize bar from 256MiB -> 16384M=
-iB
-> > > xe 0030:03:00.0: BAR 0 [mem 0x620c000000000-0x620c000ffffff 64bit]: r=
-eleasing
-> > > xe 0030:03:00.0: BAR 2 [mem 0x6200000000000-0x620000fffffff 64bit pre=
-f]: releasing
-> > > pci 0030:02:01.0: bridge window [mem 0x6200000000000-0x620001fffffff =
-64bit pref]: releasing
-> > > pci 0030:01:00.0: bridge window [mem 0x6200000000000-0x6203fbff0ffff =
-64bit pref]: releasing
-> > > pci 0030:00:00.0: bridge window [mem 0x6200000000000-0x6203fbff0ffff =
-64bit pref]: was not released (still contains assigned resources)
-> > > pci 0030:00:00.0: Assigned bridge window [mem 0x6200000000000-0x6203f=
-bff0ffff 64bit pref] to [bus 01-04] free space at [mem 0x6200400000000-0x62=
-007ffffffff 64bit pref]
-> > > pci 0030:00:00.0: Assigned bridge window [mem 0x6200000000000-0x6203f=
-bff0ffff 64bit pref] to [bus 01-04] cannot fit 0x4000000000 required for 00=
-30:01:00.0 bridging to [bus 02-04]
-> > >=20
-> > > The old size of 0x6200000000000-0x6203fbff0ffff resource was used as
-> > > the lower bound which results in 0x4000000000 size request due to
-> > > alignment. That exceed what can fit into the parent window.
-> > >=20
-> > > Since the lower bound never even was enforced fully because the
-> > > resource addresses were cleared when the bridge window is released,
-> > > remove the old_size lower bound entirely and trust the calculated
-> > > bridge window size is enough.
-> > >=20
-> > > This same problem may occur on io window side but seems less likely t=
-o
-> > > cause issues due to general difference in alignment. Removing the low=
-er
-> > > bound may have other unforeseen consequences in case of io window so
-> > > it's better to do leave as -next material if no problem is reported
-> > > related to io window sizing (BAR resize shouldn't touch io windows
-> > > anyway).
-> > >=20
-> > > Reported-by: Simon Richter <Simon.Richter@hogyros.de>
-> >=20
-> > I guess this report was
-> > https://lore.kernel.org/r/f9a8c975-f5d3-4dd2-988e-4371a1433a60@hogyros.=
-de/,
-> > right?
->=20
-> And this looks like a regression in v6.18 that will persist in v6.19.
->=20
-> Is that the right thing?  I wonder if we should move these first five
-> patches to pci/for-linus so they land in v6.19?
+> start up.
+>
+> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> ---
+>  .../bindings/usb/renesas,upd720201-pci.yaml        | 55 ++++++++++++++++++++++
+>  1 file changed, 55 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml b/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml
+> new file mode 100644
+> index 000000000000..df3cdcf44747
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml
+> @@ -0,0 +1,55 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/usb/renesas,upd720201-pci.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: UPD720201/UPD720202 USB 3.0 xHCI Host Controller (PCIe)
+> +
+> +maintainers:
+> +  - Neil Armstrong <neil.armstrong@linaro.org>
+> +
+> +description:
+> +  UPD720201 USB 3.0 xHCI Host Controller via PCIe x1 Gen2 interface.
+> +  The UPD720202 up to two downstream ports, while UPD720201 supports up to
+> +  four downstream USB 3.0 rev1.0 ports.
+> +
+> +properties:
+> +  compatible:
+> +    const: pci1912,0014
 
-Fine with me if you want to do that. Stable people would pick things that=
-=20
-landing in the merge window into Linus' tree anyway so the difference=20
-isn't going to be that huge.
+Just wondering: how does having a new driver
+drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c matching against this
+compatible play well with normal PCI discovery and probing of
+drivers/usb/host/xhci-pci-renesas.c?
 
-Patch 3 is the scariest of the changes and is not strictly even a fix=20
-(without it there are two parallel alignment approaches though which=20
-wastes some stack space). It will have some impact on resource allocation=
-=20
-when the new approach is enabled for everything were as previously the new=
-=20
-sizing/alignment approached were only used in the relative safe haven of=20
-relaxed tail alignment cases; though in my tests, surprisingly few changes=
-=20
-did occur.
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  avdd33-supply:
+> +    description: +3.3 V power supply for analog circuit
+> +
+> +  vdd10-supply:
+> +    description: +1.05 V power supply
+> +
+> +  vdd33-supply:
+> +    description: +3.3 V power supply
+> +
+> +required:
+> +  - compatible
+> +  - reg
 
-The patch 4 too is on the edge, if you want to push that through for-linus=
-=20
-(but it's not dangerous and is useful for complex topos).
+... but no power supplies are listed here? ...
 
-I don't know how you are going to handle the pci/resource branch then=20
-though as I expect the rest of the series to not apply cleanly without=20
-those 5 patches.
+> +
+> +allOf:
+> +  - $ref: usb-xhci.yaml
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    pcie@0 {
+> +        reg = <0x0 0x1000>;
+> +        ranges = <0x02000000 0x0 0x100000 0x10000000 0x0 0x0>;
+> +        #address-cells = <3>;
+> +        #size-cells = <2>;
+> +        device_type = "pci";
+> +
+> +        usb@0 {
 
---=20
- i.
+The actual DTS uses "usb-controller".
 
-> > > Fixes: 3baeae36039a ("PCI: Use pci_release_resource() instead of rele=
-ase_resource()")
-> > > Signed-off-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
-> > > ---
-> > >  drivers/pci/setup-bus.c | 11 +++--------
-> > >  1 file changed, 3 insertions(+), 8 deletions(-)
-> > >=20
-> > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > > index 612288716ba8..8660449f59bd 100644
-> > > --- a/drivers/pci/setup-bus.c
-> > > +++ b/drivers/pci/setup-bus.c
-> > > @@ -1071,16 +1071,13 @@ static resource_size_t calculate_memsize(reso=
-urce_size_t size,
-> > >  =09=09=09=09=09 resource_size_t min_size,
-> > >  =09=09=09=09=09 resource_size_t add_size,
-> > >  =09=09=09=09=09 resource_size_t children_add_size,
-> > > -=09=09=09=09=09 resource_size_t old_size,
-> > >  =09=09=09=09=09 resource_size_t align)
-> > >  {
-> > >  =09if (size < min_size)
-> > >  =09=09size =3D min_size;
-> > > -=09if (old_size =3D=3D 1)
-> > > -=09=09old_size =3D 0;
-> > > =20
-> > >  =09size =3D max(size, add_size) + children_add_size;
-> > > -=09return ALIGN(max(size, old_size), align);
-> > > +=09return ALIGN(size, align);
-> > >  }
-> > > =20
-> > >  resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus,
-> > > @@ -1298,7 +1295,6 @@ static void pbus_size_mem(struct pci_bus *bus, =
-unsigned long type,
-> > >  =09resource_size_t children_add_size =3D 0;
-> > >  =09resource_size_t children_add_align =3D 0;
-> > >  =09resource_size_t add_align =3D 0;
-> > > -=09resource_size_t old_size;
-> > > =20
-> > >  =09if (!b_res)
-> > >  =09=09return;
-> > > @@ -1364,11 +1360,10 @@ static void pbus_size_mem(struct pci_bus *bus=
-, unsigned long type,
-> > >  =09=09}
-> > >  =09}
-> > > =20
-> > > -=09old_size =3D resource_size(b_res);
-> > >  =09win_align =3D window_alignment(bus, b_res->flags);
-> > >  =09min_align =3D calculate_head_align(aligns, max_order);
-> > >  =09min_align =3D max(min_align, win_align);
-> > > -=09size0 =3D calculate_memsize(size, min_size, 0, 0, old_size, win_a=
-lign);
-> > > +=09size0 =3D calculate_memsize(size, min_size, 0, 0, win_align);
-> > > =20
-> > >  =09if (size0) {
-> > >  =09=09resource_set_range(b_res, min_align, size0);
-> > > @@ -1378,7 +1373,7 @@ static void pbus_size_mem(struct pci_bus *bus, =
-unsigned long type,
-> > >  =09if (realloc_head && (add_size > 0 || children_add_size > 0)) {
-> > >  =09=09add_align =3D max(min_align, add_align);
-> > >  =09=09size1 =3D calculate_memsize(size, min_size, add_size, children=
-_add_size,
-> > > -=09=09=09=09=09  old_size, win_align);
-> > > +=09=09=09=09=09  win_align);
-> > >  =09}
-> > > =20
-> > >  =09if (!size0 && !size1) {
-> > > --=20
-> > > 2.39.5
-> > >=20
->=20
---8323328-2105239277-1769511962=:1055--
+> +            compatible = "pci1912,0014";
+> +            reg = <0x0 0x0 0x0 0x0 0x0>;
+
+... also not in the example?
+
+> +        };
+> +    };
+>
+> --
+> 2.34.1
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
