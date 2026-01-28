@@ -1,29 +1,29 @@
-Received: from bg1.exmail.qq.com (bg1.exmail.qq.com [114.132.124.171])
+Received: from smtpbgau2.qq.com (smtpbgau2.qq.com [54.206.34.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B80B732FA3D
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 06:11:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=114.132.124.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40995156236
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 06:13:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.206.34.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769580683; cv=none; b=e7aZLcr3sgPSz9omsIGAhpnS9d/aFp8u6Q7n8NkyZzLyyYTDdLcHT3IxffHemjxZD7TvMCcomu5YiyEGA43DhNi0ffG/3H/65pMgSHNlfTBfZz0/siUkSH7skteQtEGKytQbpp+9EJ4KFceFQNMKe6HQGVy9+7+9xOBQgq1LGSg=
+	t=1769580793; cv=none; b=FaK+I8aVu8vjRfsMXp36CKvWNFK/25Q5XaNjKLBbV8m2EesGL29ULvuMYyOseF/3Va+YVdSIV1qhWUI38mFsB9SHkJvfnF/bnq5ud8+8OlrJ8UqZQLuPyJCjZ+2lr4JNHDxrArySn+qJmNE1hQxnrEaWcvxzbLFBNROGsJRL1n4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769580683; c=relaxed/simple;
-	bh=2k9cOjlgSiwfRJrPV/9G3xqvU6n1iJHH/PLdCV2ldHk=;
+	s=arc-20240116; t=1769580793; c=relaxed/simple;
+	bh=jT9WhzgxnQnkwLSYPn4UcTksmhGjeBYUVt4K+UspRpo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PnH70Dl+QrwxzKNwaOWdNGRNlmiqWml8SGQP/japw8f8VITSg4T10QjgK3gEndnrewum9HpZcHc4+OClw+KQzH3bNbPWbymg3/yMc1so0DiU1q+w1iY9aAXH6x8ar+IMKqOWpCo1A9bwTf21aRoV8pEpjPNvnis6jiD904GpSxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ecosda.com; spf=pass smtp.mailfrom=ecosda.com; arc=none smtp.client-ip=114.132.124.171
+	 In-Reply-To:Content-Type; b=R4Oj7Rq8fzm0DqNxi+VSbyQNY379oeY/RJ/H17qfVxTC/B+/s9sR5y7IAbwwoSfnnZ8J853+bPUJUxFBBHOUrK4bthquvBhrzFwEr3+UBTDU1yGZzqrgAInfSw1PCZyRvtLtC0VDTgcLZ/2uqyV53HwMqG6RFNyR2OE13wAoPzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ecosda.com; spf=pass smtp.mailfrom=ecosda.com; arc=none smtp.client-ip=54.206.34.216
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ecosda.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ecosda.com
-X-QQ-mid: zesmtpgz5t1769580629t499fb279
-X-QQ-Originating-IP: /frwJUCmhWx8H9pQrtVabHfKfSt5REl8XfI9nr78Bpg=
+X-QQ-mid: esmtpgz12t1769580719t7a23f7d0
+X-QQ-Originating-IP: BsNZ+3YR15Y5ItxMOI2v3pmaVnmb2ezihpX8wcoS86M=
 Received: from [192.168.51.35] ( [140.206.53.66])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Wed, 28 Jan 2026 14:10:26 +0800 (CST)
+	id ; Wed, 28 Jan 2026 14:11:56 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 8772503142100557548
-Message-ID: <67B225764BC63278+75eacdb8-8879-4d62-904c-f03995d78dc4@ecosda.com>
-Date: Wed, 28 Jan 2026 14:10:26 +0800
+X-BIZMAIL-ID: 4577222137846970871
+Message-ID: <D757144492686280+d1430db0-5d2a-40ee-bf56-09ee9689035a@ecosda.com>
+Date: Wed, 28 Jan 2026 14:11:56 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -31,240 +31,174 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] PCI: dwc: Clean up iATU index usage in
- dw_pcie_iatu_setup()
+Subject: Re: [PATCH v5 3/3] PCI: dwc: Fix missing iATU setup when ECAM is
+ enabled
 To: Niklas Cassel <cassel@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
  Manivannan Sadhasivam <mani@kernel.org>,
  Lorenzo Pieralisi <lpieralisi@kernel.org>,
  =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 Cc: Randolph Lin <randolph@andestech.com>,
  Samuel Holland <samuel.holland@sifive.com>, Frank Li <Frank.Li@nxp.com>,
  Charles Mirabile <cmirabil@redhat.com>, tim609@andestech.com,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
  dlemoal@kernel.org, "Maciej W. Rozycki" <macro@orcam.me.uk>,
- linux-pci@vger.kernel.org
+ stable+noautosel@kernel.org, linux-pci@vger.kernel.org
 References: <20260127151038.1484881-5-cassel@kernel.org>
- <20260127151038.1484881-7-cassel@kernel.org>
+ <20260127151038.1484881-8-cassel@kernel.org>
 Content-Language: en-US
 From: Hans Zhang <zhanghuabing@ecosda.com>
-In-Reply-To: <20260127151038.1484881-7-cassel@kernel.org>
+In-Reply-To: <20260127151038.1484881-8-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpgz:ecosda.com:qybglogicsvrgz:qybglogicsvrgz5b-2
-X-QQ-XMAILINFO: MhHYuF7Otq+o1UyR6L05RlNRuTq2/q/Rk1pMydlJA29UxCZI78P7QVrF
-	rERyHtt9PGGpbGHhqdkkIbY38xFdm1Z/ko1gglN3T7bm9vsi0dGFenIqipiR2M1+HdZnod0
-	lYQLcgJ+WouWa70KubLV9P/1XfObK0K7Mw4j4tdWCUWnXVa9PhWY2sY6/sDZVfj0rPzZiSy
-	+8FrfETCyo0gIaxFCDaXzUwFto6pyTdy+zTiJMo5dtMF8Jmdt+ojalgJo7rtqxBKG5814TK
-	Bv7/TSfZI5+Z96KlJPaihla5kt3XsmWjBLNp8f4Ggb1dDM9+QfxAvSqMKuhtSZbrc8AwGJr
-	K+OuIG0HRcBRGCxE0uCW3j0bmK8bBs/pOLTwvk8I4sCp1A1//9QDYro0tGEDSH6K/9DMXXw
-	1z60sblBc3A3WPoAV/LcKz0Sj61NIwEWuK08NE6QAPsNnmvFMfMGjGOXhvtkK1vDCmsVqbG
-	zgYkhP63OmWvf/h1GykBo6zPT8xvMNdb+jJaANnOxerYjk605SnG7v4ninOS5rIku2DGxHU
-	cmNkGL4XDnzR47F3lpUHSsN87I93MrCjoPtef25HX71POXibSDAuAJh17bDCFqgJzuk2qvD
-	AL8+a78PNaGpHio8zhpz9h1VoTnRdnfBNvGd9c3VjdjOjfYf87qniqq8/t/bSEvsf0DN70t
-	W3Bzd1+aePbY3s3AYbBBzXVkXXCvJ3Hmz19HsG0y8ADe0s+gK3a7GwDHCXtUY2UNdxZqut5
-	5hwS+DaDq7AxwFo0CsZ70q3mgsAz7m30bKUd+d+zOQ1l3Bc3LurhDnP692wY+YevFQU2uZW
-	k2oWc1oXthSOq6ottdCG9INhOICMImrPW9a2VuUTizP+HnCh9dKZG+5NmJnmZi821mwx3qq
-	VQb9JhhI4Gs8pe1piawx9Waam64+KAurMbT0540ZFI8lv+JHFmf0CARebD2Ts0B0zqx12o2
-	9zeqeZCU39lRuEGbBRaCVmKL5ZDKSAYAszBJko6Bot196FJxFCLERvPbxKTqhETD0B2MsAT
-	di2yAClOPA/aQ+gwbs
-X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+Feedback-ID: esmtpgz:ecosda.com:qybglogicsvrgz:qybglogicsvrgz5b-2
+X-QQ-XMAILINFO: NNF5uPB+5DRWPT0OJg2zcsrGNZxkgoq2fh25t9xHY1aIHM4QPg4iDQ2C
+	oRz6lRAf/AX4iYTgjrkxF5O38KagDxOLbOqdbtvETDkWmA/hZPWkmLTrIOnLbjsr23ioynZ
+	ipW0YiGfQra6VkUKKuaN5aBsJfVufjhq1osrWnzLjtvq4XPcTufgkSRV39m0RuF+6vBb5CT
+	7yQPhfZq4TPLuyie4sd2bUmNmMb2cRoo+J5J8ALUlKdPyOKGt+UuEHT4fUwzpR2UU/YZeQW
+	UtLfOhsUqQ7q0NcXWueewR3V4Z8PA4/5gc3av64f1hFjmP+hZTJcRrMTFIUhcEcjdcHMVsz
+	UmmOMewB51jKJtu0xUP9IE9R9m4y6dQCcGgCC+Y3//HMv95/ZCm3g/xlb7ceT+UMD/vdsNq
+	OJsMWoiUMLM5erCmUMOW8XjWSJ5vFU2m8q9gKlLHjW3fQJ0hBEN4RTTfoHsgnaBaV513Knw
+	K5PgwwBgsLewqRiQN9xbwRhzV/oqOBwJIT7aL0rqimxRz5R8dN3CiukhNhlSlG4nrciZRn6
+	1WoFFgI7qAVtpO4RK3ta7U9savVajn5yeVALNPs+U32+U+VpK+YyqaodB0KXhROkJG+2qAS
+	iioJKcrby2JIX6eQEI7jcmOInCOUxjCGlJud+Cz2XWJp+74YrUJQY3+R2ys6FPblk98zfpM
+	B9eaGYawWKlWgbtlK2ZoF8faF9peHpRtOao0ymOXQ3VuM9mfog7KdzlcXh5BTGRegvrOTkL
+	Fp5QHn9egNxwX7fK5Ojp3cK7miGMfNQgoWCmjRCpT6UABr8lpehPLTuvXLTL5UA3031WVRF
+	qLh+veUYrxtey1qfbqgoxVbi937s5WCBZHfJOwrqJ9zoPtTzZ+A4iX7o1zGkE3cdVlTZbUC
+	1HICbUIV78bzDl+hkBYnfDdRAsdn9I/t93mbqTeS1Zp1+mnxmQB5YlLhDPvhItTWBjwqwdd
+	13PC4Uf8Y66fhIMorQlsyQSZ3r3cKGZCj2QQesjz/FBZ/QBCVAcCCC21MsJ+GFkH5U1TKga
+	zjo8O8Ok2hWjdWOFNPBs7WXYmuRplCSYITIZ2xOXvIo9+Dv1oW3DCGC5rcJm6Ftn+2xGFEC
+	nwinuxORDvF
+X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
 X-QQ-RECHKSPAM: 0
 
 
 
 On 1/27/2026 11:10 PM, Niklas Cassel wrote:
-> The current iATU index usage in dw_pcie_iatu_setup() is a mess.
+> From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 > 
-> For outbound address translation the index is incremented before usage.
-> For inbound address translation the index is incremented after usage.
+> When ECAM is enabled, the driver skipped calling dw_pcie_iatu_setup()
+> before configuring ECAM iATU entries. This left IO and MEM outbound
+> windows unprogrammed, resulting in broken IO transactions. Additionally,
+> dw_pcie_config_ecam_iatu() was only called during host initialization,
+> so ECAM-related iATU entries were not restored after suspend/resume,
+> leading to failures in configuration space access
 > 
-> Incrementing the index after usage make much more sense, and make the
-> index usage consistent for both outbound and inbound address translation.
+> To resolve these issues, the ECAM iATU configuration is moved into
+> dw_pcie_iatu_setup(), and dw_pcie_iatu_setup() is invoked when ECAM is
+> enabled.
 > 
-> Most likely, the overly complicated logic for the outbound address
-> translation is because the iATU at index 0 is reserved for CFG IOs
-> (dw_pcie_other_conf_map_bus()), however, we should be able to use the
-> exact same logic for the indexing of the outbound and inbound iATUs.
-> (Only the starting index should be different.)
+> Furthermore, error checks are added in dw_pcie_prog_outbound_atu() and
+> dw_pcie_prog_inbound_atu() such that an error is returned if trying to
+> program an iATU that is outside the number of iATUs provided by the
+> controller.
 > 
-> Create two new variables ob_iatu_index and ib_iatu_index, which makes
-> it more clear from the name itself that it is a zeroes based index,
-> and only increment the index if the iATU configuration call succeeded.
-> 
-> Since we always check if there is an index available immediately before
-> programming the iATU, we can remove the useless "ranges exceed outbound
-> iATU size" warnings, as the code is already unreachable. For the same
-> reason, we can also remove the useless breaks outside of the while loops.
-> 
-> No functional changes intended.
-> 
+> Fixes: f6fd357f7afb ("PCI: dwc: Prepare the driver for enabling ECAM mechanism using iATU 'CFG Shift Feature'")
+> Cc: stable+noautosel@kernel.org # depends on Clean up iATU index usage in dw_pcie_iatu_setup()
+> Reported-by: Maciej W. Rozycki <macro@orcam.me.uk>
+> Closes: https://lore.kernel.org/all/alpine.DEB.2.21.2511280256260.36486@angie.orcam.me.uk/
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> Co-developed-by: Niklas Cassel <cassel@kernel.org>
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
 Reviewed-by: Hans Zhang <zhanghuabing@ecosda.com>
 
 > ---
->   .../pci/controller/dwc/pcie-designware-host.c | 59 ++++++++++---------
->   1 file changed, 31 insertions(+), 28 deletions(-)
+>   .../pci/controller/dwc/pcie-designware-host.c | 33 ++++++++++++-------
+>   drivers/pci/controller/dwc/pcie-designware.c  |  6 ++++
+>   2 files changed, 28 insertions(+), 11 deletions(-)
 > 
 > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index d7f57d77bdf5..87e6a32dbb9a 100644
+> index 87e6a32dbb9a..bc2e08ec515e 100644
 > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -892,9 +892,10 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->   	struct dw_pcie_ob_atu_cfg atu = { 0 };
->   	struct resource_entry *entry;
-> +	int ob_iatu_index;
-> +	int ib_iatu_index;
->   	int i, ret;
+> @@ -641,14 +641,6 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>   	if (ret)
+>   		goto err_free_msi;
 >   
-> -	/* Note the very first outbound ATU is used for CFG IOs */
->   	if (!pci->num_ob_windows) {
->   		dev_err(pci->dev, "No outbound iATU found\n");
->   		return -EINVAL;
-> @@ -910,16 +911,18 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   	for (i = 0; i < pci->num_ib_windows; i++)
->   		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, i);
->   
-> -	i = 0;
-> +	/*
-> +	 * NOTE: For outbound address translation, outbound iATU at index 0 is
-> +	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
-> +	 * index 1.
-> +	 */
-> +	ob_iatu_index = 1;
+> -	if (pp->ecam_enabled) {
+> -		ret = dw_pcie_config_ecam_iatu(pp);
+> -		if (ret) {
+> -			dev_err(dev, "Failed to configure iATU in ECAM mode\n");
+> -			goto err_free_msi;
+> -		}
+> -	}
+> -
+>   	/*
+>   	 * Allocate the resource for MSG TLP before programming the iATU
+>   	 * outbound window in dw_pcie_setup_rc(). Since the allocation depends
+> @@ -915,8 +907,21 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>   	 * NOTE: For outbound address translation, outbound iATU at index 0 is
+>   	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
+>   	 * index 1.
+> +	 *
+> +	 * If using ECAM, outbound iATU at index 0 and index 1 is reserved for
+> +	 * CFG IOs.
+>   	 */
+> -	ob_iatu_index = 1;
+> +	if (pp->ecam_enabled) {
+> +		ob_iatu_index = 2;
+> +		ret = dw_pcie_config_ecam_iatu(pp);
+> +		if (ret) {
+> +			dev_err(pci->dev, "Failed to configure iATU in ECAM mode\n");
+> +			return ret;
+> +		}
+> +	} else {
+> +		ob_iatu_index = 1;
+> +	}
+> +
 >   	resource_list_for_each_entry(entry, &pp->bridge->windows) {
 >   		resource_size_t res_size;
 >   
->   		if (resource_type(entry->res) != IORESOURCE_MEM)
->   			continue;
->   
-> -		if (pci->num_ob_windows <= i + 1)
-> -			break;
-> -
->   		atu.type = PCIE_ATU_TYPE_MEM;
->   		atu.parent_bus_addr = entry->res->start - pci->parent_bus_offset;
->   		atu.pci_addr = entry->res->start - entry->offset;
-> @@ -937,13 +940,13 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   			 * middle. Otherwise, we would end up only partially
->   			 * mapping a single resource.
+> @@ -985,8 +990,14 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>   			 * be shared between I/O space and CFG IOs, by
+>   			 * temporarily reconfiguring the iATU to CFG space, in
+>   			 * order to do a CFG IO, and then immediately restoring
+> -			 * it to I/O space.
+> +			 * it to I/O space. This is only implemented when using
+> +			 * dw_pcie_other_conf_map_bus(), which is not the case
+> +			 * when using ECAM.
 >   			 */
-> -			if (pci->num_ob_windows <= ++i) {
-> -				dev_err(pci->dev, "Exhausted outbound windows for region: %pr\n",
-> +			if (ob_iatu_index >= pci->num_ob_windows) {
-> +				dev_err(pci->dev, "Cannot add outbound window for region: %pr\n",
->   					entry->res);
->   				return -ENOMEM;
->   			}
->   
-> -			atu.index = i;
-> +			atu.index = ob_iatu_index;
->   			atu.size = MIN(pci->region_limit + 1, res_size);
->   
->   			ret = dw_pcie_prog_outbound_atu(pci, &atu);
-> @@ -953,6 +956,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   				return ret;
->   			}
->   
-> +			ob_iatu_index++;
->   			atu.parent_bus_addr += atu.size;
->   			atu.pci_addr += atu.size;
->   			res_size -= atu.size;
-> @@ -960,8 +964,8 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   	}
->   
->   	if (pp->io_size) {
-> -		if (pci->num_ob_windows > ++i) {
-> -			atu.index = i;
-> +		if (ob_iatu_index < pci->num_ob_windows) {
-> +			atu.index = ob_iatu_index;
->   			atu.type = PCIE_ATU_TYPE_IO;
->   			atu.parent_bus_addr = pp->io_base - pci->parent_bus_offset;
->   			atu.pci_addr = pp->io_bus_addr;
-> @@ -973,34 +977,35 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   					entry->res);
->   				return ret;
->   			}
-> +			ob_iatu_index++;
->   		} else {
-> +			/*
-> +			 * If there are not enough outbound windows to give I/O
-> +			 * space its own iATU, the outbound iATU at index 0 will
-> +			 * be shared between I/O space and CFG IOs, by
-> +			 * temporarily reconfiguring the iATU to CFG space, in
-> +			 * order to do a CFG IO, and then immediately restoring
-> +			 * it to I/O space.
-> +			 */
+> +			if (pp->ecam_enabled) {
+> +				dev_err(pci->dev, "Cannot add outbound window for I/O\n");
+> +				return -ENOMEM;
+> +			}
 >   			pp->cfg0_io_shared = true;
 >   		}
 >   	}
+> @@ -1157,7 +1168,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
+>   	 * the platform uses its own address translation component rather than
+>   	 * ATU, so we should not program the ATU here.
+>   	 */
+> -	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
+> +	if (pp->bridge->child_ops == &dw_child_pcie_ops || pp->ecam_enabled) {
+>   		ret = dw_pcie_iatu_setup(pp);
+>   		if (ret)
+>   			return ret;
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 18331d9e85be..5741c09dde7f 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -532,6 +532,9 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+>   	u32 retries, val;
+>   	u64 limit_addr;
 >   
-> -	if (pci->num_ob_windows <= i)
-> -		dev_warn(pci->dev, "Ranges exceed outbound iATU size (%d)\n",
-> -			 pci->num_ob_windows);
-> -
->   	if (pp->use_atu_msg) {
-> -		if (pci->num_ob_windows > ++i) {
-> -			pp->msg_atu_index = i;
-> -		} else {
-> +		if (ob_iatu_index >= pci->num_ob_windows) {
->   			dev_err(pci->dev, "Cannot add outbound window for MSG TLP\n");
->   			return -ENOMEM;
->   		}
-> +		pp->msg_atu_index = ob_iatu_index++;
->   	}
+> +	if (atu->index >= pci->num_ob_windows)
+> +		return -ENOSPC;
+> +
+>   	limit_addr = parent_bus_addr + atu->size - 1;
 >   
-> -	i = 0;
-> +	ib_iatu_index = 0;
->   	resource_list_for_each_entry(entry, &pp->bridge->dma_ranges) {
->   		resource_size_t res_start, res_size, window_size;
+>   	if ((limit_addr & ~pci->region_limit) != (parent_bus_addr & ~pci->region_limit) ||
+> @@ -605,6 +608,9 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
+>   	u64 limit_addr = pci_addr + size - 1;
+>   	u32 retries, val;
 >   
->   		if (resource_type(entry->res) != IORESOURCE_MEM)
->   			continue;
->   
-> -		if (pci->num_ib_windows <= i)
-> -			break;
-> -
->   		res_size = resource_size(entry->res);
->   		res_start = entry->res->start;
->   		while (res_size > 0) {
-> @@ -1009,14 +1014,15 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   			 * middle. Otherwise, we would end up only partially
->   			 * mapping a single resource.
->   			 */
-> -			if (pci->num_ib_windows <= i) {
-> -				dev_err(pci->dev, "Exhausted inbound windows for region: %pr\n",
-> +			if (ib_iatu_index >= pci->num_ib_windows) {
-> +				dev_err(pci->dev, "Cannot add inbound window for region: %pr\n",
->   					entry->res);
->   				return -ENOMEM;
->   			}
->   
->   			window_size = MIN(pci->region_limit + 1, res_size);
-> -			ret = dw_pcie_prog_inbound_atu(pci, i++, PCIE_ATU_TYPE_MEM, res_start,
-> +			ret = dw_pcie_prog_inbound_atu(pci, ib_iatu_index,
-> +						       PCIE_ATU_TYPE_MEM, res_start,
->   						       res_start - entry->offset, window_size);
->   			if (ret) {
->   				dev_err(pci->dev, "Failed to set DMA range %pr\n",
-> @@ -1024,15 +1030,12 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->   				return ret;
->   			}
->   
-> +			ib_iatu_index++;
->   			res_start += window_size;
->   			res_size -= window_size;
->   		}
->   	}
->   
-> -	if (pci->num_ib_windows <= i)
-> -		dev_warn(pci->dev, "Dma-ranges exceed inbound iATU size (%u)\n",
-> -			 pci->num_ib_windows);
-> -
->   	return 0;
->   }
->   
+> +	if (index >= pci->num_ib_windows)
+> +		return -ENOSPC;
+> +
+>   	if ((limit_addr & ~pci->region_limit) != (pci_addr & ~pci->region_limit) ||
+>   	    !IS_ALIGNED(parent_bus_addr, pci->region_align) ||
+>   	    !IS_ALIGNED(pci_addr, pci->region_align) || !size) {
 
 
