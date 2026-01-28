@@ -1,120 +1,109 @@
-Received: from mail-qt1-f194.google.com (mail-qt1-f194.google.com [209.85.160.194])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DF12FF164
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 16:57:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93617314D0D;
+	Wed, 28 Jan 2026 16:59:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769619462; cv=none; b=JcP6zLTASwEHq1TAA/hYM1knU/4xwFxCkaIsSTl9HW+FQ+moW2MopEtnZe/UF/xfWpyuqSY6RV8Zz4Na5sBVgU4n5DONSfGsz/d0t5fDC6IYfcpcrBFaSw7/CPbYYv6BJ8xmCVkdNFgEdhmYNpJ2TjDHUu3zku+QBJlixBooZ0I=
+	t=1769619542; cv=none; b=sPj5VDWZGBTG7b2q6dB/0bUNS3JRMQHLB3DLcJ6I2yjBoPyuViExy+qU9ysp30fKdsupp7iXEYyybuotw5IhqcX889qfxuiTDyTkitsOJRuOGu0eBg59kme1FfCFbUz5BZwJ5cQVazlkFJSJwP/GCqJusgKeWBByoyTImDhM8so=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769619462; c=relaxed/simple;
-	bh=4K4OLHaqM/t/HXgyCFJoyTmAZzqjtCmqUqovtxJuMsU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W5XWKZqDPvq5q+rJ+Adq9dLyRDlp5rvcQ+HB1z6zsva2Dqb6ViQjSGnaQLImSakQRtsMZPkwQf0asdUOAyKLft6p7WTqEK60ukvmUYlJ6BEytkg8fYesZB0sWYIcMp24/JR5JqxTo/rHRzd0C8RWWzvT5zRSh68IFxIamrEh0Gg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=NSvCk+PI; arc=none smtp.client-ip=209.85.160.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1769619542; c=relaxed/simple;
+	bh=bnHXPMPNgHRvQiG4GLdo6odlzdOHxKJIHAHU+qCgXrA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YfCCCw4k0y3W5aaYEWK+0fe6W8HVS0zmNbHhV89Uk8L8P4GWEsLbzm+F5Fo4wxwQwe89QzcMDi3t8h+9ketf72t0ocWpNSHe/WjNdIq7VIFSSweimNvIUpuzwmcNQWvUc4I8cuzEHlEN2H7DbJx79ft+XDOMgIaGV1u5tJyGLek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ncEs/GNY; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="NSvCk+PI"
-Received: by mail-qt1-f194.google.com with SMTP id d75a77b69052e-502f101d1cfso69152761cf.1
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 08:57:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1769619460; x=1770224260; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=x5PPbKkTts0Y3gVIJ6pivviiM6v1XzmJpI/qsHikqnY=;
-        b=NSvCk+PIgibHYCb0s3AdIGmdLI4QoBnFvDwKJuBP5DmiVW4yY79sJBf8qYBpOmDO5W
-         s8uZeICawl1lVSPl0j34z6nCA3cC8ov0GbfWxFDPCYv1SaI3ci/SCe5k3h8tsfigeUsY
-         RvLaI+VQqmAxSVnTJk47FWIRbTEfLfdLiT4oJ7Pa5gNT9oLy5IOaTMH34pLKFzUbPqvy
-         KbQGVbRBLnVQ9UsP21MMKtDg6LPsUeLR9BRcU593Nmdr9qhbLnsy5O5phNWpSAojHfip
-         oxPPubyWn1/0lV1ho0SvwtUhVoXMzhD3/k7PzFHAWVXpEi1TqTuv/tXK54d994vX3vkm
-         9MPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769619460; x=1770224260;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=x5PPbKkTts0Y3gVIJ6pivviiM6v1XzmJpI/qsHikqnY=;
-        b=oy1R61fhW9hK+fdjaVATw58y63OenDWlwTYNXYInNlYzqTGhfhG8CImCQKHaStNpZY
-         ykC+ilPKyvTUoYBhDToukgR5f67wk27VLtb6bAr2LCbzQ6GIV11r7phA2whWDFF0QWJC
-         CtuK6dGtLKGr/yDYovP8uL5lTE6jw4ATPTLPAk22D/eBBgw1Ja0R+TbrC5OPRqP26McB
-         Ztc+Fz0Cp5ca3QYxHC5XZhxM3ji6DhFZutUgWG7pcPO3i1RMLZgQ3QI7RNPrhHHhjx+S
-         5bfdbU4shDLbE4g5EpGSI5K7Qao5JRBqrJQQye9Dg7/9/25IGo8sp9Pyq8jpyoTT+ywN
-         Znxg==
-X-Forwarded-Encrypted: i=1; AJvYcCVK0h+Ex2Vanc+ChFfRfqU9IG4eWI29s+3s1cmSi/7BF42jL35wFOylc8ntQTep0slJhbDZ7IMdCEA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwbCictpZqRfDdj9uHor+3UHxzFtxcsMP1rchNLdQt3jBdCx7zW
-	gR9aRlE8RKjsHAGgOMU69A3NyjWz8PURNZO99Nk3aWAurHw9mJP0qyynuIGBtu9OdQM=
-X-Gm-Gg: AZuq6aIgwSv/9Csssk68iyLLQ4ofRRsahjcUV54I54Xz1cq1DL6Nez0/TnkhdyN+vuA
-	DoXmKWOUlgWbZ8gRg3hBqIYx2Yzh1Ox4TE0SVmn7Y3NoNx+K8xrEMtiA6fcRVUD3St9bo+IE+uq
-	9/DCdqHS59gaF8w5Cc/apwl98UOFVXUNtRtMBfvB5W+QM6dk/TSjzs6ZL3q42OrTCxKFb7HB2qL
-	oCkV7E/MCjmZg1mAB23BKNP7+V4v4ePa9sF/KGqTBPdiuFKQMNw+qhX/Al5Edm6vDyI9wlZwNtK
-	z/05TCsjqpHcywNQoEvDxO8SMVpmIJykdJwW0AvReI0nPQgYE4CtM/LDwkcFVnqa/5MZjDbq0TN
-	PWhd8YFj5PSLvkU91XlF9vxlKo4ZD3hRHpws/QfnuJEp7AAlCdJuc/JXP26QafvMtwJ+n+oEwRS
-	Q17rfZODp99Rhoy6aoMow0ujPg6FByiHzngaZ9V9o5+nwENufWcetYKqloNXeSdP9K0z0=
-X-Received: by 2002:a05:622a:592:b0:4e8:a6f8:e3c1 with SMTP id d75a77b69052e-5032f886480mr76621061cf.18.1769619460454;
-        Wed, 28 Jan 2026 08:57:40 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-894d36c85b9sm20499826d6.24.2026.01.28.08.57.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Jan 2026 08:57:39 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1vl8rL-00000009KeE-1DOy;
-	Wed, 28 Jan 2026 12:57:39 -0400
-Date: Wed, 28 Jan 2026 12:57:39 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
-	Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>
-Subject: Re: [RFC 2/2] Set steering-tag directly for PCIe P2P memory access
-Message-ID: <20260128165739.GQ1641016@ziepe.ca>
-References: <20260113164923.GQ745888@ziepe.ca>
- <20260124011436.172058-1-zhipingz@meta.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ncEs/GNY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769619541; x=1801155541;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=bnHXPMPNgHRvQiG4GLdo6odlzdOHxKJIHAHU+qCgXrA=;
+  b=ncEs/GNYfawWCLJuynJ7BNNWL3O5l/sbxh5rf1LiJU9ciSA2birt7L4g
+   +WO0QgQPNf5Y8fhSv4zxP0v8s+ruMjKZLK3YIt8BbyyyFGjAKllxdFs17
+   B/hWj2Io3sD+KXWNbWNNO7OsyFDFuRNjMQleTFyxJ0ssSasD5mMMxTwwy
+   ViWVVoV42qHySiEa9nDwzg/IXMc8xR/UXq1GAo7wMkWzY6r8eVsbz1aEm
+   O82w1eQm7LKGmJzOOG57avORQ92Fq4USwkQRX1cX0iDDOewDf7ZVIza52
+   hl/hWR3Gh0bgtPEwLh3CAy7yO/pAKiEtfw74+ozctxLPAQaEuABgKIrXH
+   Q==;
+X-CSE-ConnectionGUID: XSGUep0hRm2/IS6GVv7I0Q==
+X-CSE-MsgGUID: Qcl4VCoVQHuZ4JBAqMZCGw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11685"; a="88257690"
+X-IronPort-AV: E=Sophos;i="6.21,258,1763452800"; 
+   d="scan'208";a="88257690"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2026 08:59:01 -0800
+X-CSE-ConnectionGUID: S6k9xmHPR7qDkRvMokBb7Q==
+X-CSE-MsgGUID: MijA/aemRcKq3WeA4g3K1w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,258,1763452800"; 
+   d="scan'208";a="208225520"
+Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2026 08:59:00 -0800
+Message-ID: <f98c4da6-502a-4d9c-8df7-8db3b3ea5d15@linux.intel.com>
+Date: Wed, 28 Jan 2026 08:58:59 -0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260124011436.172058-1-zhipingz@meta.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 4/5] PCI/AER: Clear both AER fatal and non-fatal status
+To: Shuai Xue <xueshuai@linux.alibaba.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ bhelgaas@google.com, kbusch@kernel.org
+Cc: mahesh@linux.ibm.com, oohall@gmail.com, Jonathan.Cameron@huawei.com,
+ terry.bowman@amd.com, tianruidong@linux.alibaba.com, lukas@wunner.de
+References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
+ <20260124074557.73961-5-xueshuai@linux.alibaba.com>
+Content-Language: en-US
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20260124074557.73961-5-xueshuai@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jan 23, 2026 at 05:13:19PM -0800, Zhiping Zhang wrote:
-> On Tue, 13 Jan 2026 12:49:23 -0400, Jason Gunthorpe wrote:
-> 
-> > On Mon, Jan 12, 2026 at 11:43:13PM -0800, Zhiping Zhang wrote:
-> > > Got it, thanks for pointing out the security concern! To address this, I
-> > > propose that we still pass the TPH value when allocating the dmah, but we add
-> > > a verification callback in the reg_mr_dmabuf flow to the dmabuf exporter. This
-> > > callback will ensure that the TPH value is correctly linked to the exporting
-> > > device’s MMIO, and only the exporter can authorize the TPH/tag association.
-> 
-> > That still sounds messy because we have to protect CPU memory.
-> 
-> > I think you should not use dmah possibly and make it so the dmabuf
-> entirely supplies the TPH value.
-> 
-> > Jason
-> 
-> Thanks Jason.
-> 
-> We already have an end-to-end workflow around dmah (perftest → rdma-core → kernel)
-> to carry the TPH hint, across multiple patch sets. References:
->   https://github.com/linux-rdma/perftest/commit/98bfb3679a1e71ec96df6a6d6c8124ac66ebce25
->   https://github.com/linux-rdma/rdma-core/pull/1623/commits
->   https://lore.kernel.org/all/cover.1752752567.git.leon@kernel.org/
-> 
-> Given that, I’d like to minimize churn and use the existing dmah-based flow, while
-> addressing the CPU-memory protection concern you raised. Would you be open to
-> reconsidering this approach?
 
-You would need to initialize the dmah from the dmabuf and then lock it
-to only be usable with that dmabuf. It doesn't avoid any dmabuf work,
-it just makes the whole flow more convoluted.
 
-Jason
+On 1/23/2026 11:45 PM, Shuai Xue wrote:
+> The DPC driver clears AER fatal status for the port that reported the
+> error, but not for the downstream device that deteced the error.  The
+> current recovery code only clears non-fatal AER status, leaving fatal
+> status bits set in the error device.
+> 
+> Use pci_aer_raw_clear_status() to clear both fatal and non-fatal error
+> status in the error device, ensuring all AER status bits are properly
+> cleared after recovery.
+> 
+> Fixes: aa344bc8b727 ("PCI/ERR: Clear AER status only when we control AER")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+> ---
+
+Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+
+
+>  drivers/pci/pcie/err.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 0780ea09478b..5e463efc3d05 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -285,7 +285,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  	 */
+>  	if (host->native_aer || pcie_ports_native) {
+>  		pcie_clear_device_status(dev);
+> -		pci_aer_clear_nonfatal_status(dev);
+> +		pci_aer_raw_clear_status(dev);
+>  	}
+>  
+>  	pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
+
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
+
