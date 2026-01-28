@@ -1,63 +1,137 @@
-Received: from mail.auroraos.dev (unknown [95.181.193.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19574372B4C
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 19:34:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.181.193.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 629F923D281;
+	Wed, 28 Jan 2026 19:48:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769628854; cv=none; b=EmqAhlNg6Fs31P3z50QefYgJEzlP6epWk6HhnmclHFYf51/Ras9+tu+z2p8sKD5tIYlsCBUnPL8iM7lSerfTRTBYGSsToieHcYlgdANNlb3IutQu+9kow8zGCUwMYEAEdq0mjJQjc9qBmh4zox1zZX+lp3nGxMplFD2Mi7gpQmc=
+	t=1769629717; cv=none; b=nyvkc8TZmcI/hnPaea5RUzDF/oth91jb2l7YYoqjqf7Vs9T4WoNbG3pylnQmfBUUfvaUCIT3LE2WPD9MuWCBSApiLY2xO3A3LJhx+koI60XxnMMZ0zP8AOb48VU0qDsC+6bdjTeFjPeJthurtTnhJXuOffwqDZ8sDc14lBEUpEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769628854; c=relaxed/simple;
-	bh=JxSWirymdqmQT+YiHb86d+U8M5o7XJ/ugz12CwOe2Tk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=BsCqZ4q1UNzdqKRgOK1xSmf+UKIgEvvpsL1uExqg2MLuYmjQOgAQesHb8wCEWPC38eqvIbCzqta2Wl5HdHik9FDiqcTPxR/x1hLiVByiSSXoNYHL7ou5PYcswO52921ymZrpsC8DIxTyznYPAuXbHWPizzvWgSjIliWvNwTvI0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=auroraos.dev; spf=pass smtp.mailfrom=auroraos.dev; arc=none smtp.client-ip=95.181.193.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=auroraos.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=auroraos.dev
-Received: from [192.168.2.104] (213.87.162.117) by exch16.corp.auroraos.dev
- (10.189.209.38) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1847.3; Wed, 28 Jan
- 2026 22:34:07 +0300
-Message-ID: <3e41a321-9110-49ba-afd1-4cafd4649546@auroraos.dev>
-Date: Wed, 28 Jan 2026 22:34:06 +0300
+	s=arc-20240116; t=1769629717; c=relaxed/simple;
+	bh=8k2zqY2UBXcb3AiTXacsupFOjChTmeLUTb28Hj18CAU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ljlHprYIW35Mj/2oN8zq97d1Zn2Aov/q8U185L0XJNw/dscLVkCGfZfT+PYizDKSX/FOXypsMkyZgvgZa2YC1EwzzhjYfsTPe6LRj1IsxAKCF4KpGXXpJ+TDOItbd+n5bT1ET3RZHxOwMqR1Ke5WxvjNkjhMV6LCFSPoUYFwGwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hx0jjySL; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hx0jjySL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D67C4C4CEF1;
+	Wed, 28 Jan 2026 19:48:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769629717;
+	bh=8k2zqY2UBXcb3AiTXacsupFOjChTmeLUTb28Hj18CAU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Hx0jjySLGN4z+8gLrEhJ4woQo+uDtf80aNCEIuBDjq+vQ4Ny5aELMVf5tKZkrBJ//
+	 Rs1EN8Ufzoh+4B/rVDbaae4HaPYUikiBFJEgqeOVA5vBhCZWdPrugN4BBUAX8hKsQ/
+	 x6WY6h1DsbW8zdB+BY9w2UhmfpjsI/+OnyfiEFii3Rh14Otl7a37UYGhq5+8iiErwz
+	 DAK3t2flUIinGO2J8JQx53z9kMTUfwb/j6p4rLOj6b1wAO7+ZIMQdN2pZE+vxLwyNJ
+	 jVFyArNi4gLSLYygsYPTkkezpPt6+xydKt8P9prY81iduqId4UUcZiTkIYJKDBqh/6
+	 50thK54RmXKtQ==
+Date: Wed, 28 Jan 2026 13:48:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
+Cc: mahesh@linux.ibm.com, oohall@gmail.com, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, CobeChen@zhaoxin.com,
+	TonyWWang@zhaoxin.com, ErosZhang@zhaoxin.com,
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
+Message-ID: <20260128194835.GA429644@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: Check parent for NULL in
- of_pci_bus_release_domain_nr()
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
-References: <20260127203944.28588-1-s.shtylyov@auroraos.dev>
-Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@auroraos.dev>
-In-Reply-To: <20260127203944.28588-1-s.shtylyov@auroraos.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: exch16.corp.auroraos.dev (10.189.209.38) To
- exch16.corp.auroraos.dev (10.189.209.38)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3af9f754-d282-485c-a3f2-49a230bfe143@zhaoxin.com>
 
-On 1/27/26 11:39 PM, Sergey Shtylyov wrote:
+On Wed, Jan 28, 2026 at 06:07:51PM +0800, LeoLiu-oc wrote:
+> 在 2026/1/24 4:21, Bjorn Helgaas 写道:
+> > [这封邮件来自外部发件人 谨防风险]
+> > On Fri, Jan 23, 2026 at 06:40:34PM +0800, LeoLiu-oc wrote:
+> >> Commit a97396c6eb13 ("PCI: pciehp: Ignore Link Down/Up caused by DPC")
+> >> amended PCIe hotplug to not bring down the slot upon Data Link Layer State
+> >> Changed events caused by Downstream Port Containment.
+> >>
+> >> However, PCIe hotplug (pciehp) waits up to 4 seconds before assuming that
+> >> DPC recovery has failed and disabling the slot. This timeout period is
+> >> insufficient for some PCIe devices.
+> >> For example, the E810 dual-port network card driver needs to take over
+> >> 10 seconds to execute its err_detected() callback.
+> >> Since this exceeds the maximum wait time allowed for DPC recovery by the
+> >> hotplug IRQ threads, a race condition occurs between the hotplug thread and
+> >> the dpc_handler() thread.
 
-> of_pci_bus_find_domain_nr() allows its parent parameter to be NULL but
-> of_pci_bus_release_domain_nr() (that undoes its effect) doesn't -- that
-> means it's going to blow up while calling of_get_pci_domain_nr() if the
-> parent parameter indeed happens to be NULL.  Add the missing NULL check.
+> > Include the name of the E810 driver so we can easily find the
+> > .err_detected() callback in question.  Actually, including the *name*
+> > of that callback would be a very direct way of doing this :)
+
+AFAICS there is no ".err_detected()" callback.  I assume you mean the
+".error_detected()" callback in struct pci_error_handlers.  Sorry to
+be pedantic, but it makes things a lot harder to review if we don't
+refer to the actual names in the code.
+
+And my guess is that E810 means the Intel E810 NIC, probably claimed
+by the "ice" driver, which would mean ice_pci_err_detected() is the
+callback in question?
+
+> > I guess the problem this fixes is that there was a PCIe error that
+> > triggered DPC, and the E810 .err_detected() works but takes longer
+> > than expected, which results in pciehp disabling the slot when it
+> > doesn't need to?  So the user basically sees a dead E810 device?
+>
+> Yes, this patch is to solve this problem.
 > 
-> Found by Linux Verification Center (linuxtesting.org) with the Svace static
-> analysis tool.
+> > It seems unfortunate that we have this dependency on the time allowed
+> > for .err_detected() to execute.  It's nice if adding arbitrary delay
+> > doesn't break things, but maybe we can't always achieve that.
+> > 
+> I think this is a feasible solution. For some PCIE devices, executing
+> the .err_detect() within 4 seconds will not have any impact, for a few
+> PCIE devices, it might increase the execution time of pciehp_ist().
+> Without this patch, PCIE devices may not be usable and could even cause
+> more serious errors, such as a kernel panic. For example, the following
+> log is encountered in hardware testing:
 > 
-> Fixes: c14f7ccc9f5d ("PCI: Assign PCI domain IDs by ida_alloc()")
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@auroraos.dev>
-> ---
+> list_del corruption, ffff8881418b79e8->next is LIST_POISON1
+> (dead000000000100)
+> ------------[ cut here ]------------
+> kernel BUG at lib/list_debug.c:56!
+> invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+> ...
+> Kernel panic - not syncing: Fatal exception
 
-   Forgot to add that this patch was done against the for-linus branch of
-the pci.git repo...
+This is an interesting panic and looks like it might have been hard to
+debug.
 
-[...]
+Do you have any idea what exactly caused this and how it's related to
+the timeout in pci_dpc_recovered()?  Is there a race where pciehp
+disables the slot and removes the driver, but eventually
+ice_pci_err_detected() completes and we're running some ice driver
+code while it's being removed or something?
 
-MBR, Sergey
+Simply increasing the timeout doesn't feel like a very robust way of
+solving the problem.  What happens when some other device needs 17
+seconds?
 
+But if increasing the timeout is the best we can do, maybe a warning
+message in pci_dpc_recovered() when we time out would at least be a
+hint that we might be heading for trouble?
+
+> > I see that pci_dpc_recovered() is called from pciehp_ist().  Are we
+> > prepared for long delays there?
+>
+> This patch may affect the hotplug IRQ threads execution time triggered
+> by DPC, but it has no effect for normal HotPlug operation, e.g.
+> Attention Button Pressed or Power Fault Detected. If you have better
+> modification suggestions, I will update to the next version.
+
+> >> +++ b/drivers/pci/pcie/dpc.c
+> >> @@ -121,7 +121,7 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+> >>        * but reports indicate that DPC completes within 4 seconds.
+> >>        */
+> >>       wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
+> >> -                        msecs_to_jiffies(4000));
+> >> +                        msecs_to_jiffies(16000));
