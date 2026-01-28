@@ -1,161 +1,231 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363E6337BBB
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 08:45:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB87133892C
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 08:47:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769589909; cv=none; b=W7CTLGirUa0bRoogY+PuraSh/wtYs/Q/XblnSzVfZJ4T/nBg38FIlk5rpfgLP3jfyjgv9mam+34NeVQYjphAOFRDB5p1Z7ojbfopMLIFmQ9UjOF5F3Q4VsgxuGx4Bkacl69ZhN8YoOuLa1MKZTSKLep1mL4+yQbHpc+Fhp7GQ3M=
+	t=1769590043; cv=none; b=FBmJICYzic3HN386ex075qqoBkj342ifmiGQJ//6dVExLr6FkY6UukuSRZ7AL+UTd/n10ImN+n0SL/grw5FOLZ79oRgETb6JXP5pcVqoeD8ErBusJUOt96zlNNnNLeC0Ms3FeGKtUiY335rG0Y8Wbbp7sTpqZMz/91nIWrC+6ho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769589909; c=relaxed/simple;
-	bh=RmjPdOoSLN83hdmAOBaQ60Ic1/65Z53zJZ8NP4f3+Rw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LNmyCVXlsrKxweUql6H9b5y2Z6hQKsxu9dt/K3DXJioyu8Dd41oi4l/v/3TsfdaVnb+LRKCRXPgc667mGP08BEkAcXF6D5qsqso1ZZc13Btyz7VfzswTdFUBTIuIOPrCAruAX0x7tYP/+pfr9hdcjppG4C516FmQRQkTtjRRyG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=SZIbsb4u; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1769590043; c=relaxed/simple;
+	bh=khrPDqCGTN5tnjPlkTiyZMZqvVOJ9sgSO4C4yr0b8Jo=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XUpDeaQSQAbYHt5+JTHnGkCS1Tjn8/3montxmrJhR5YALB5ueEiomAcNsxjZcl/Si+8e8C+64hkUa9sPWtuAmSjtbXDY/S/onPmKpXSGHYvu1vhoYnbXoCm3reCp4mTncalZekfJ7CqoH+PNljC1h3GlkciwrDq2VJwMGNTtn+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aAV7Gp9z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="SZIbsb4u"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4801eb2c0a5so63199155e9.3
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 00:45:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1769589905; x=1770194705; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=yzZ5aaJur2cGbo3tv1Z3AlCZuGpqhSu9RlDH7L/IIPI=;
-        b=SZIbsb4uqLo2GtuIKPa3bbLA7N6dH7jjl6viB/R0/10DmYtuzJlEe7d0Lgh3AsecRy
-         Jb04vA7E9/uLgkJZj1z+cgSxI3Pw1kEmK8VTCRIPmIz0NhYj96oATGrLZoy7Q77sTuDw
-         mGjKnzWQTVqorHggE4D4U6/8Mf1kmcypiioWs0sIzDr+ORIOuLY1V6G4ENM7uvS7yfSs
-         ZNvihc9rHZx9imvV17/9Oe01/vYcd1kY83/3Hw76N9KkKngapUjdwLQYcCYYynsVx+y9
-         1Jbevjw8z6Hb9P7DLqp8t2bANC8o9Q00TSBYdZxWguV1RtcG2SS3gAKfvOKvJZxcgBXk
-         4HcQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769589905; x=1770194705;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=yzZ5aaJur2cGbo3tv1Z3AlCZuGpqhSu9RlDH7L/IIPI=;
-        b=IRR3/tua0EX3MpE3V01Z1JlnbWVTMKga5ewV57RlINx6Wh+XbCxuD86DPJivOQr0gw
-         bNFsXHo+VotBHjl2qx9PiE6qlihj2XmaoDPv220BSCkOFEr05k0cAZ3OMD61DScTO1qx
-         vH8wK9OnprxGMKJTvf3XALp6hqbvKRNErq/5/Cgt9PSstkgVQNK19b7VVKcnbTW40X2l
-         O4TDtuCyhoKSfmLPi5jodNqyLClP2MO3XurtzgvSBNXQBcQjXN/BI9QDS6KR5SWne8/A
-         oTsPUitjE55RguHxCrOs+0GgnjHbEjHwIhRXh4tk+KDEDrtpCQH6GZrVH+V2k2n35xrj
-         lpug==
-X-Forwarded-Encrypted: i=1; AJvYcCVEmELuX56v5M2dgmxWR6OaRKsUMChg7D9o3GEW3UllBNNJU3vJ6rXlGeIoOfgMnOT0Cz1q+N18peY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwqM6Ne3b+Qrbdx4WkNvo50AH3/zAJhyIFydokwO4ehH7JQ1ru2
-	hwTuvRzCO5TwbVSbPkKvak07IdMeSkztEGPHxtIfgOepHLUBeBU+m/SPitM3feE15OE=
-X-Gm-Gg: AZuq6aL0WRAFIsiGZrrlqruC6oNyt017OD3pEcbDK/PMIZqvPwpMbCsy8Tko60I8UFr
-	40zsCmrBv2n/qet4gPh4PbpQo3gG72NwnO4RZSJgHmA96EBFD/4PVao5HizR3Rvsa5BMzDAB6gK
-	FZdiD31cRhiuKCXgD9S0nWtz3GLP87nceQV/nFgliilkUKWIXIUnbN6T9l3H1FouXDiCDbOzucI
-	GY0GBFDc3gRArmQNNhCCt8xAk+QxRxu1kBGisaAj7AUuG08Hskc3XiNuDzylCv8wLxyjJBOi30P
-	iKGYTN/u+kP/5jp7WURfi5kJU0EQ4Gx3xdqx40Otm5SdWaaXrkoUz48CaUIXdTuJLiBkCWFBX6j
-	RuWHqk4dQqWzQ9X7HciuNJX/bFU0F+pbpPIl5uyA1+G+9pDjhdI6S2NWEof0KYmSUO+8N3qlNQ8
-	7BgfpQrJlhfoU1luRDTTVmtk5s
-X-Received: by 2002:a05:600c:4e12:b0:480:6873:b2f6 with SMTP id 5b1f17b1804b1-48069c557d0mr54819185e9.20.1769589905328;
-        Wed, 28 Jan 2026 00:45:05 -0800 (PST)
-Received: from localhost (109-81-26-156.rct.o2.cz. [109.81.26.156])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48066bee7d0sm121124905e9.4.2026.01.28.00.45.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Jan 2026 00:45:04 -0800 (PST)
-Date: Wed, 28 Jan 2026 09:45:03 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Chen Ridong <chenridong@huawei.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Gabriele Monaco <gmonaco@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Muchun Song <muchun.song@linux.dev>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Vlastimil Babka <vbabka@suse.cz>, Waiman Long <longman@redhat.com>,
-	Will Deacon <will@kernel.org>, cgroups@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
-	linux-mm@kvack.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 03/33] memcg: Prepare to protect against concurrent
- isolated cpuset change
-Message-ID: <aXnMj1phN3TJZkNz@tiehlicka>
-References: <20260125224541.50226-1-frederic@kernel.org>
- <20260125224541.50226-4-frederic@kernel.org>
- <aXeZQoSHJ9QX7B6W@tiehlicka>
- <aXizUsfywjtIIN50@localhost.localdomain>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aAV7Gp9z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ED95C2BCF5
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 08:47:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769590043;
+	bh=khrPDqCGTN5tnjPlkTiyZMZqvVOJ9sgSO4C4yr0b8Jo=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
+	b=aAV7Gp9zgZdRc7KJh8R8OOeLontofODPP9Ox37X1U4RRytrMXtyFwpHI2uCafsA6O
+	 N4M8SxdUBGEB6GG6wq9mldtPbeI3mWQ5Xhs5LSn4NPXoBCiQuI+RRzQ33rHJwB7ZJ9
+	 mG4MR1ghW1OsEQjStQ9BdK9fclJC7XbBn5Txfz8ZbZwRzM5jv+29aGAdeRRy68ORsq
+	 x22q+CT4ibKqsnVx4xg+c4tPQ/QgrPb4BYkxFqRLxsmkiF8rrDxZcNpUpZM9jwkGXe
+	 IlOgm6h98tLMgRQTmXJUJkYGOrC9P3V5At5uPhTMiH878BkQMhVSuBuu7c+scobBaC
+	 dDFw0NJqx1RVA==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-59dd22b9895so821674e87.0
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 00:47:23 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCW1LCPxg3zLmkfCbabAUosBMU3Z5Hvr2+hjz865i/mg3sn2j+cFfooZ5JBSD1W5IqTtCsHVzTziV2U=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxJVP9MqA3TLgYDdUg0Iq3S5qGPdreOlVMLkbW1FKVyo04UW8HG
+	Ned/C+IbhcPtnyr1LOT9lOVd0ZvQZ7mKD71w0QJirfZWNNjauOoXQgP9IFXepFflB5vOlf/k99a
+	jOv1F0YFrvzefWrXS0UiHe6T+6QSom05brDw0J7MZrA==
+X-Received: by 2002:ac2:464c:0:b0:59e:6f4:d224 with SMTP id
+ 2adb3069b0e04-59e06f4d2demr780740e87.26.1769590041709; Wed, 28 Jan 2026
+ 00:47:21 -0800 (PST)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 28 Jan 2026 00:47:19 -0800
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 28 Jan 2026 00:47:19 -0800
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-2-c55ec1b5d8bf@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aXizUsfywjtIIN50@localhost.localdomain>
+References: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
+ <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-2-c55ec1b5d8bf@linaro.org>
+Date: Wed, 28 Jan 2026 00:47:19 -0800
+X-Gmail-Original-Message-ID: <CAMRc=MfOjd0RzAma+NgCVZvvaar+Wwe+jH6dYxzJ02h4GEBJdw@mail.gmail.com>
+X-Gm-Features: AZwV_QhXUdGdxJQ8EWE3IEaSkM8UzBdAeGOMqY6dnujEk2icHg1EteXYkrLHpqM
+Message-ID: <CAMRc=MfOjd0RzAma+NgCVZvvaar+Wwe+jH6dYxzJ02h4GEBJdw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] pci: pwrctrl: add PCI pwrctrl driver for the
+ UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+To: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Rob Clark <robin.clark@oss.qualcomm.com>, 
+	Dmitry Baryshkov <lumag@kernel.org>, Abhinav Kumar <abhinav.kumar@linux.dev>, 
+	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>, 
+	Marijn Suijten <marijn.suijten@somainline.org>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	freedreno@lists.freedesktop.org, linux-usb@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue 27-01-26 13:45:06, Frederic Weisbecker wrote:
-> Le Mon, Jan 26, 2026 at 05:41:38PM +0100, Michal Hocko a écrit :
-> > On Sun 25-01-26 23:45:10, Frederic Weisbecker wrote:
-> > > The HK_TYPE_DOMAIN housekeeping cpumask will soon be made modifiable at
-> > > runtime. In order to synchronize against memcg workqueue to make sure
-> > > that no asynchronous draining is pending or executing on a newly made
-> > > isolated CPU, target and queue a drain work under the same RCU critical
-> > > section.
-> > > 
-> > > Whenever housekeeping will update the HK_TYPE_DOMAIN cpumask, a memcg
-> > > workqueue flush will also be issued in a further change to make sure
-> > > that no work remains pending after a CPU has been made isolated.
-> > > 
-> > > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-> > > ---
-> > >  mm/memcontrol.c | 21 +++++++++++++++++----
-> > >  1 file changed, 17 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > index be810c1fbfc3..2289a0299331 100644
-> > > --- a/mm/memcontrol.c
-> > > +++ b/mm/memcontrol.c
-> > > @@ -2003,6 +2003,19 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
-> > >  	return flush;
-> > >  }
-> > >  
-> > > +static void schedule_drain_work(int cpu, struct work_struct *work)
-> > > +{
-> > > +	/*
-> > > +	 * Protect housekeeping cpumask read and work enqueue together
-> > > +	 * in the same RCU critical section so that later cpuset isolated
-> > > +	 * partition update only need to wait for an RCU GP and flush the
-> > > +	 * pending work on newly isolated CPUs.
-> > > +	 */
-> > > +	guard(rcu)();
-> > > +	if (!cpu_is_isolated(cpu))
-> > > +		schedule_work_on(cpu, work);
-> > 
-> > Shouldn't this in the guarded rcu section?
-> 
-> This is what guard(rcu)() does, right?
-> Or am I missing something?
+On Tue, 27 Jan 2026 10:57:29 +0100, Neil Armstrong
+<neil.armstrong@linaro.org> said:
+> Add support fo the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+> power control which connects over PCIe and requires specific power supplies
+> to start up.
+>
+> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> ---
+>  drivers/pci/pwrctrl/Kconfig                 | 10 ++++
+>  drivers/pci/pwrctrl/Makefile                |  2 +
+>  drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c | 88 +++++++++++++++++++++++++++++
+>  3 files changed, 100 insertions(+)
+>
+> diff --git a/drivers/pci/pwrctrl/Kconfig b/drivers/pci/pwrctrl/Kconfig
+> index e0f999f299bb..5a94e60d0d3e 100644
+> --- a/drivers/pci/pwrctrl/Kconfig
+> +++ b/drivers/pci/pwrctrl/Kconfig
+> @@ -11,6 +11,16 @@ config PCI_PWRCTRL_PWRSEQ
+>  	select POWER_SEQUENCING
+>  	select PCI_PWRCTRL
+>
+> +config PCI_PWRCTRL_UPD720201
+> +	tristate "PCI Power Control driver for the UPD720201 USB3 Host Controller"
+> +	select PCI_PWRCTRL
+> +	help
+> +	  Say Y here to enable the PCI Power Control driver of the UPD720201
+> +	  USB3 Host Controller.
+> +
+> +	  The voltage regulators powering the rails of the PCI slots
+> +	  are expected to be defined in the devicetree node of the PCI device.
+> +
+>  config PCI_PWRCTRL_SLOT
+>  	tristate "PCI Power Control driver for PCI slots"
+>  	select PCI_PWRCTRL
+> diff --git a/drivers/pci/pwrctrl/Makefile b/drivers/pci/pwrctrl/Makefile
+> index 13b02282106c..a99f85de8a3d 100644
+> --- a/drivers/pci/pwrctrl/Makefile
+> +++ b/drivers/pci/pwrctrl/Makefile
+> @@ -5,6 +5,8 @@ pci-pwrctrl-core-y			:= core.o
+>
+>  obj-$(CONFIG_PCI_PWRCTRL_PWRSEQ)	+= pci-pwrctrl-pwrseq.o
+>
+> +obj-$(CONFIG_PCI_PWRCTRL_UPD720201)	+= pci-pwrctrl-upd720201.o
+> +
+>  obj-$(CONFIG_PCI_PWRCTRL_SLOT)		+= pci-pwrctrl-slot.o
+>  pci-pwrctrl-slot-y			:= slot.o
+>
+> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c b/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c
+> new file mode 100644
+> index 000000000000..db96bbb69c21
+> --- /dev/null
+> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c
+> @@ -0,0 +1,88 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Based on upd720201.c:
+> + * Copyright (C) 2024 Linaro Ltd.
+> + * Author: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> + */
+> +
+> +#include <linux/device.h>
+> +#include <linux/mod_devicetable.h>
+> +#include <linux/module.h>
+> +#include <linux/pci-pwrctrl.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/regulator/consumer.h>
+> +#include <linux/slab.h>
+> +
+> +struct pci_pwrctrl_upd720201_data {
+> +	struct pci_pwrctrl ctx;
+> +	struct regulator_bulk_data *supplies;
+> +	int num_supplies;
+> +};
+> +
+> +static void devm_pci_pwrctrl_upd720201_power_off(void *data)
+> +{
+> +	struct pci_pwrctrl_upd720201_data *upd720201 = data;
+> +
+> +	regulator_bulk_disable(upd720201->num_supplies, upd720201->supplies);
+> +	regulator_bulk_free(upd720201->num_supplies, upd720201->supplies);
+> +}
+> +
+> +static int pci_pwrctrl_upd720201_probe(struct platform_device *pdev)
+> +{
+> +	struct pci_pwrctrl_upd720201_data *upd720201;
+> +	struct device *dev = &pdev->dev;
+> +	int ret;
+> +
+> +	upd720201 = devm_kzalloc(dev, sizeof(*upd720201), GFP_KERNEL);
+> +	if (!upd720201)
+> +		return -ENOMEM;
+> +
+> +	ret = of_regulator_bulk_get_all(dev, dev_of_node(dev),
+> +					&upd720201->supplies);
+> +	if (ret < 0) {
+> +		dev_err_probe(dev, ret, "Failed to get upd720201 regulators\n");
 
-I am probably misreading the patch. But I've had the following in mind
+dev_err_probe()?
 
-	scoped_guard(rcu) {
-		if (!cpu_is_isolated(cpu))
-			schedule_work_on(cpu, work);
-	}
--- 
-Michal Hocko
-SUSE Labs
+> +		return ret;
+> +	}
+> +
+> +	upd720201->num_supplies = ret;
+> +	ret = regulator_bulk_enable(upd720201->num_supplies, upd720201->supplies);
+> +	if (ret < 0) {
+> +		dev_err_probe(dev, ret, "Failed to enable upd720201 regulators\n");
+> +		regulator_bulk_free(upd720201->num_supplies, upd720201->supplies);
+> +		return ret;
+
+Save a line by returning dev_err_probe() here?
+
+> +	}
+> +
+> +	ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_upd720201_power_off,
+> +				       upd720201);
+> +	if (ret)
+> +		return ret;
+> +
+> +	pci_pwrctrl_init(&upd720201->ctx, dev);
+> +
+> +	ret = devm_pci_pwrctrl_device_set_ready(dev, &upd720201->ctx);
+> +	if (ret)
+> +		return dev_err_probe(dev, ret, "Failed to register pwrctrl driver\n");
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id pci_pwrctrl_upd720201_of_match[] = {
+> +	{
+> +		.compatible = "pci1912,0014",
+> +	},
+> +	{ }
+> +};
+> +MODULE_DEVICE_TABLE(of, pci_pwrctrl_upd720201_of_match);
+> +
+> +static struct platform_driver pci_pwrctrl_upd720201_driver = {
+> +	.driver = {
+> +		.name = "pci-pwrctrl-upd720201",
+> +		.of_match_table = pci_pwrctrl_upd720201_of_match,
+> +	},
+> +	.probe = pci_pwrctrl_upd720201_probe,
+> +};
+> +module_platform_driver(pci_pwrctrl_upd720201_driver);
+> +
+> +MODULE_AUTHOR("Neil Armstrong <neil.armstrong@linaro.org>");
+> +MODULE_DESCRIPTION("PCI Power Control driver for UPD720201 USB3 Host Controller");
+> +MODULE_LICENSE("GPL");
+>
+> --
+> 2.34.1
+>
+>
+
+Just nits with dev_err_probe(). With these LGTM.
+
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+
+Bartosz
