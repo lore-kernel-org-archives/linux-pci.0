@@ -1,196 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65C762AF1B;
-	Wed, 28 Jan 2026 01:21:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C52F2C2346;
+	Wed, 28 Jan 2026 03:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769563306; cv=none; b=HkKEKKxmNMKJN5bG+KaNcJAzAmBgaveg0sugx8j1mBr5JFx/6RdTagqV5IQoRQ4YBspwPMQ5aQ0/lisz5k41xvdmdRX3E7q0dx5vGIYt/UwjFG0HTK4BbKpqPDbHI5OrFeI22jg3LyATrWJRirpsE3YdomoULuHKxuzY+z2G+HY=
+	t=1769571623; cv=none; b=JHLm90ZdYW1rC6o7nzqkcOc0e5BPMGRhOc4elq9VGyiehs1dxO8vxukBTPpCnWU9cRlbZl+OwFP0q6y55I5RZGx7pZDnIDQgZTdYFtcp7InR3601BT2qwMQbSMSa/cuTc8PQvNy8K++a0k+n6vD8Hgl29C8Xmi+CSgkHv2ivpKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769563306; c=relaxed/simple;
-	bh=nI7NlYDFjZ4HtSOAdOB4GQL+OVvn1g0ZEzDYbz0cwhI=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=kWSq5N16+i7bmfbIUuw0dAm5J4OWt5R1pHwwR1mx7/bEfiNS6CxTQEEUb6DDKZX6nedbtqZdmz2g5m6wsOUEDVk8BXmk5cMaT6WzL/s7tt+pVjm9gUmQBLPvVwy/Rx68CI67e5kP0jW3mnZAQ6xuPqYF8pO92JabDf0aDY6+j7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wg3KV8NF; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wg3KV8NF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8CA3C116C6;
-	Wed, 28 Jan 2026 01:21:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769563306;
-	bh=nI7NlYDFjZ4HtSOAdOB4GQL+OVvn1g0ZEzDYbz0cwhI=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=Wg3KV8NF1w3DUlu+JrYtM76tt93fuJWGf2K1wjhUJZ4Y+QwFVzDIWKCrdwdrtdBNL
-	 6ZeK9gSA3aE8NRHLEZETVK3CM58c4AFwTSrop/2Qv7fiBybFpkMj9HwOd1mINY4m4Y
-	 9LGZfvlQomljp+X1q7b5ekvph4KpQbFUWTERhkMSNnB60liM/DhlxsYeQ+iOd58sxf
-	 /iaXsCLV+XF7w4CRom8zEt0Etud8HoBA4QRr422WTjDdWJwqpjSys8i0FaqleuoYPe
-	 t2m7N789jpHZ38DqqqM1V0wByLrnNaVV6He7pT6EZ3jGLcw7qAoEjrHv0z9RuCRwgE
-	 Nh1EmyXJsjG6g==
+	s=arc-20240116; t=1769571623; c=relaxed/simple;
+	bh=zqCXqmNXUJ7W1NhgHlgGJdn677YyT7F7XqW9V1liAgo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sfb+4lJ76aG0BXLZ7LwX9dskafiMEoM0C6bg/+FlXjhTNIqiaSh+VkZYXSfH7Mfl3Cv/Qcx92s8eQmaI3JvzCyo1aqoHKvXSVzs3F+jXT7RBldcI+0oHoPuO3E9H7OpDYE7OsoAeFpJV/M6o5ibX3605yVdudvLdJVYWQjy7xvY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [192.168.0.109] (unknown [123.118.222.47])
+	by APP-01 (Coremail) with SMTP id qwCowADHcW0DhXlpfl6GBg--.10567S2;
+	Wed, 28 Jan 2026 11:39:47 +0800 (CST)
+Message-ID: <91bf33e2-4588-419f-aedc-1f1b4e99fc56@iscas.ac.cn>
+Date: Wed, 28 Jan 2026 11:39:47 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/4] PCI/MSI: Check msi_addr_mask in
+ msi_verify_entries()
+To: Thomas Gleixner <tglx@kernel.org>,
+ Madhavan Srinivasan <maddy@linux.ibm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ "Creeley, Brett" <bcreeley@amd.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>
+Cc: Han Gao <gaohan@iscas.ac.cn>, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+ linux-riscv@lists.infradead.org, sophgo@lists.linux.dev
+References: <20260123-pci-msi-addr-mask-v3-0-9f9baa048524@iscas.ac.cn>
+ <20260123-pci-msi-addr-mask-v3-2-9f9baa048524@iscas.ac.cn>
+ <87jyx3be1t.ffs@tglx>
+Content-Language: en-US
+From: Vivian Wang <wangruikang@iscas.ac.cn>
+In-Reply-To: <87jyx3be1t.ffs@tglx>
 Content-Type: text/plain; charset=UTF-8
-Date: Wed, 28 Jan 2026 02:21:38 +0100
-Message-Id: <DFZTU4ZFFCM0.3N8LJ8XBN3DF@kernel.org>
-Subject: Re: [PATCH v2 1/2] rust: introduce abstractions for fwctl
-Cc: "Zhi Wang" <zhiw@nvidia.com>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <aliceryhl@google.com>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <markus.probst@posteo.de>,
- <helgaas@kernel.org>, <cjia@nvidia.com>, <smitra@nvidia.com>,
- <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
- <targupta@nvidia.com>, <acourbot@nvidia.com>, <joelagnelf@nvidia.com>,
- <jhubbard@nvidia.com>, <zhiwang@kernel.org>, <daniel.almeida@collabora.com>
-To: "Jason Gunthorpe" <jgg@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260122204232.15988-1-zhiw@nvidia.com>
- <20260122204232.15988-2-zhiw@nvidia.com>
- <20260126181912.GA2131321@nvidia.com>
- <20260127215744.332380fe.zhiw@nvidia.com>
- <DFZN5P8G6MQG.2DYXNFSRIL450@kernel.org>
- <20260128000410.GT1134360@nvidia.com>
-In-Reply-To: <20260128000410.GT1134360@nvidia.com>
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:qwCowADHcW0DhXlpfl6GBg--.10567S2
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYk7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E
+	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
+	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8I
+	cVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2js
+	IEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
+	5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
+	CFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxG
+	xcIEc7CjxVA2Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_GF
+	v_Wryl4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2I
+	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
+	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
+	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUojjgUUUUU
+X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
 
-On Wed Jan 28, 2026 at 1:04 AM CET, Jason Gunthorpe wrote:
-> On Tue, Jan 27, 2026 at 09:07:37PM +0100, Danilo Krummrich wrote:
->> On Tue Jan 27, 2026 at 8:57 PM CET, Zhi Wang wrote:
->> > The fwctl_alloc_device() helper allocates a raw struct fwctl_device
->> > without private driver data here. The Rust driver object should be
->> > already allocated and initialized separately before reaching this
->> > point.
->> >
->> > We rely on the standard dev->parent chain to access the rust driver
->> > object from the fwctl callbacks.
->>=20
->> (I will go for a thorough review soon, but for now a quick drive-by comm=
-ent.)
->>=20
->> IIUC, you are saying that the user is supposed to use the private data o=
-f the
->> parent device in fwctl callbacks. Let's not make this a design choice pl=
-ease.
->> Instead, allow the user pass in separate private data for the fwctl devi=
-ce as
->> well.
->>=20
->> This serves the purpose of clear ownership and lifetime of the data. E.g=
-. the
->> fwctl device does not necessarily exist as long as the parent device is =
-bound.
->>=20
->> It is a good thing if driver authors are forced to take a decision about=
- which
->> object owns the data and what's the scope of the data.
+Hi Thomas,
 
-I think we were talking about different things. :)
+On 1/27/26 17:27, Thomas Gleixner wrote:
+> [...]
+>
+> Other than those nits:
+>
+> Reviewed-by: Thomas Gleixner <tglx@kernel.org>
 
-Zhi mentioned the private data of the parent device being used in fwctl
-callbacks, but we should use private data stored in fwctl_device::dev inste=
-ad.
+I will fix these and patch 1 as well in v4. Thanks for your review.
 
-> I'm not sure what the model is in rust, but the expection here is for
-> the driver to have a window between alloc and register where the
-> driver can fill in any information into the core structures that is
-> needed before calling registration.
+Vivian "dramforever" Wang
 
-Yes, in Rust you can't have an instance of a structure without initializing=
- it
-(unless you put it in a MaybeUninit container, etc.).
-
-For dynamic allocations Rust solves this with initializers. For instance, w=
-here
-C does:
-
-	struct foo *foo =3D kzalloc(sizeof(*foo), GFP_KERNEL);
-
-	/* Maybe broken if foo is used here already. */
-
-	foo_initialize(foo, ...);
-
-you'd have something like this in Rust:
-
-	struct Foo {
-	    data: Mutex<Data>,
-	    index: u32,
-	}
-
-	impl Foo {
-	    fn new(index: u32, args: Args) -> impl PinInit<Self, Error> {
-	        try_pin_init!(Self {
-	            data <- new_mutex!(args.to_data()?),
-	            index.
-	        })
-	    }
-	}
-
-The returned object is not an instance of struct Foo yet, it is an initiali=
-zer,
-i.e. impl PinInit<Foo, Error>; no memory has been allocated yet. Note that =
-this
-initializer can also fail if executed, since args.to_data() can fail.
-
-Let's allocate the memory now:
-
-	let foo =3D KBox::pin_init(Foo::new(...), GFP_KERNEL)?;
-
-This allocates the memory (i.e. KBox::pin_init() calls kmalloc() eventually=
-) and
-executes the initializer. (The call fails if either the memory allocation f=
-ails,
-or the initializer fails.) This way there is no way for the caller to use f=
-oo
-before it has been initialized.
-
-(What about the "pin" thing? Let's assume Data contains something
-self-referential, in this case pin-init does prevent the user from moving d=
-ata
-out of Foo, which would be a bug since it is a self-referential structure.
-Actually, the mutex must not be moved either.)
-
-Back to this abstraction. :)
-
-In this case Registration::new() returns an initializer, but also allocates=
- the
-C struct fwctl_device within the initializer.
-
-AFAICS, _fwctl_alloc_device() already initializes the structure properly, s=
-o it
-seems there is nothing to be done. But let's assume there is. In this case =
-it
-wouldn't help much if we would create a separate fwctl::Device structure be=
-fore,
-as this one also has to be properly initialized once created. So the constr=
-uctor
-of fwctl::Device has to take the corresponding arguments.
-
-Though, sometimes there are cases where we have to defer some initializatio=
-n.
-This is where we usually use separate types or type states. Let's assume
-something in the device only ever gets initialized after registration for s=
-ome
-reason. In this case you could have a fwctl::Device<Unregistred> and a
-fwctl::Device<Registered> and correspondingly treat the inner data as parti=
-ally
-uninitialized (which requires unsafe code).
-
-Either way, I think it would be cleaner if fwctl::Device has a constructor
-
-	impl Device<T> {
-	    fn new(
-	        parent: &Device<Bound>,
-	        data: impl PinInit<T, Error>
-	    ) -> Result<ARef<Self>>;
-	}
-
-where T is the driver's private data for the struct fwctl_device.
-
-And Registration::new() can take a &fwctl::Device<T> and the parent
-&Device<Bound> of course. This would also be in line with what we do in oth=
-er
-class device abstractions.
