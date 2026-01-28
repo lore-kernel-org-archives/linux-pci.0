@@ -1,263 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32576332EDA;
-	Wed, 28 Jan 2026 17:40:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D9731E0F0;
+	Wed, 28 Jan 2026 17:40:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769622024; cv=none; b=H6/kcCwZmciyUBgj1Vrs9X006MJ4ip3+XiK4XShovs6un2qhlvREn6N6Me3J234o+Lc+coPEYUi/Q5B5EmKq97ZY+Pmk8fxWZxYGaXUi8XN+bmIIEUG3xw/KuOMJ2c/UH4jUDtqjg4nDBER2v4oWk+d9Si5OY9vloVPb4eYJCrQ=
+	t=1769622029; cv=none; b=iSgzM7JjWfYEvKTRMAsR6vn/fzIju2yZlOPJgnogHGcuX4nFWionRLDetDLfMdnW661P6p+/L1Cx5VQvdnAuASiqo8GzTBvNVxYLTfgTC5T/dK0AkbAdC/eNA65PrM3PtZWb9MCBsZt4EdA1vWSMCBry9TV4f2Rj5SP1s14r3ME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769622024; c=relaxed/simple;
-	bh=khyrGQmf+Ce2tJlN2PNwOqd2PrW3aF+HgKMEhC8haeQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iPUnWGBjlfq//0Xyipjv4U4gsa1fvdwuuDX1X+tkgSTv43zmw/t4eD/GYxuhwWWJPOdFYtINK4BW1Tla8NRsx3eGERJrjsfekiGmUR8zyMv+Gwo+FAGzYE6TvW660eLXPcKVvPEbmyCp3f6Hf+survzGmKwTky/8bPDPPzIGLUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UjEp3Zxe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769622029; c=relaxed/simple;
+	bh=fs7KfRgUYE33Y5OCMQeQCkUyZVHSnpAgkJipqC4hxsE=;
+	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
+	 References:In-Reply-To; b=SKXSbVWr8a71ido2kX4dl7GbtSiA9zY1Yt7I22QmLmE6MBbNgXrZMKquFDxNKkIteUCWQmnmgwwm4H3eELBw/n1qhjdpF/FWQwkD0xtN++vrFk5DwqDO6BAa4cOzR1cWAeU95JIk9DPfij0n9oJNjx+VVbUn7mQ0jf1Ctx3+p30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TuuQNG0c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UjEp3Zxe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C77BBC4CEF1;
-	Wed, 28 Jan 2026 17:40:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TuuQNG0c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2730FC2BC86;
+	Wed, 28 Jan 2026 17:40:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769622022;
-	bh=khyrGQmf+Ce2tJlN2PNwOqd2PrW3aF+HgKMEhC8haeQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UjEp3Zxehx9gWAZSXqMQ8igZwLHRrZ1g377H1xLrs4yvIazCgxpqC9eHBqeT4ud2T
-	 3juwhogKwd/twIu6zig2RHaKR6ZYAqByIvHf6adeux9BG4t9fmXd5CWeruLHS349x7
-	 RiPlNBFWDNW5od04LCbLdM9Fq5BDtHLYix7vnGgcwFdVs3tzV3VkyaGTNh9s6JtK7R
-	 VBTRtrJh+A+E0gWrZEcxDoFU/B1dDKCZvZ5cJMi6RD9+83LPP2XcKOGMqYfZsuW7Ye
-	 PlA9lsX7L0gcqLQl1Mr/et16dNZTTWeSRBz8YHHQ4P5tTrfmZs8a1bMwD+pFN8gvgA
-	 o6hqIl31EKXDA==
-Date: Wed, 28 Jan 2026 17:40:17 +0000
-From: Conor Dooley <conor@kernel.org>
-To: John Madieu <john.madieu.xa@bp.renesas.com>
-Cc: claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, geert+renesas@glider.be,
-	krzk+dt@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	conor+dt@kernel.org, magnus.damm@gmail.com,
-	biju.das.jz@bp.renesas.com, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-clk@vger.kernel.org, john.madieu@gmail.com
-Subject: Re: [PATCH v3 06/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie:
- Document RZ/G3E SoC
-Message-ID: <20260128-chaperone-hydrogen-421d911b964b@spud>
-References: <20260128131647.120511-1-john.madieu.xa@bp.renesas.com>
- <20260128131647.120511-7-john.madieu.xa@bp.renesas.com>
+	s=k20201202; t=1769622029;
+	bh=fs7KfRgUYE33Y5OCMQeQCkUyZVHSnpAgkJipqC4hxsE=;
+	h=Date:From:Subject:Cc:To:References:In-Reply-To:From;
+	b=TuuQNG0cirvni8MhMOmQFa8K1WBRrYBCwQOZZLGKBjoWCSbHSFNQHxlcWWIpOBbx/
+	 +LwPEB5BzUS6rqUvHPdNlhjNniGXSx+hpU/toHwmlYP2DlTKrHmAQfze8BWZM17bA2
+	 Jmqh9//AwLQ6R6z4nvVMHBB5kCPLnLMfhstD2rvdWv67XjMyNgYMCGZ//wABUoHN5s
+	 /l8s2MQ2fz3KWrmZViCmQzOg8f1FRupFnbXp5cxCfzuMqD4ix+8pY/c9WJwpQGYqUP
+	 5NiHcBnjel8+bciNXmkZ0AQIExdU5gT/Qh5MBL0nHuls523VBnGFP3tDfGu9QayTnQ
+	 cP5DXbmg31OLA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="wjTx5M0CprSqHCjp"
-Content-Disposition: inline
-In-Reply-To: <20260128131647.120511-7-john.madieu.xa@bp.renesas.com>
-
-
---wjTx5M0CprSqHCjp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 28 Jan 2026 18:40:21 +0100
+Message-Id: <DG0ENHNJE4X4.14T1ENBL0SOSE@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v2 1/2] rust: introduce abstractions for fwctlg
+Cc: "Jason Gunthorpe" <jgg@nvidia.com>, <rust-for-linux@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <aliceryhl@google.com>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <markus.probst@posteo.de>,
+ <helgaas@kernel.org>, <cjia@nvidia.com>, <smitra@nvidia.com>,
+ <ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
+ <targupta@nvidia.com>, <acourbot@nvidia.com>, <joelagnelf@nvidia.com>,
+ <jhubbard@nvidia.com>, <zhiwang@kernel.org>, <daniel.almeida@collabora.com>
+To: "Zhi Wang" <zhiw@nvidia.com>
+References: <20260122204232.15988-2-zhiw@nvidia.com>
+ <20260126181912.GA2131321@nvidia.com>
+ <20260127215744.332380fe.zhiw@nvidia.com>
+ <DFZN5P8G6MQG.2DYXNFSRIL450@kernel.org>
+ <20260128000410.GT1134360@nvidia.com>
+ <DFZTU4ZFFCM0.3N8LJ8XBN3DF@kernel.org>
+ <20260128132029.GX1134360@nvidia.com>
+ <DG09ZUY530SW.K62KDIT4LIXN@kernel.org>
+ <20260128145906.GZ1134360@nvidia.com>
+ <DG0CABK2DQE8.1TDN35GOJ0DYI@kernel.org>
+ <20260128155646.GB1134360@nvidia.com>
+ <DG0D9I9P5BO9.6Q9H2BQN5AWU@kernel.org>
+ <20260128193011.3294f41e.zhiw@nvidia.com>
+In-Reply-To: <20260128193011.3294f41e.zhiw@nvidia.com>
 
-On Wed, Jan 28, 2026 at 02:16:37PM +0100, John Madieu wrote:
-> Extend the existing device tree bindings for Renesas RZ/G3S PCIe
-> controller to include support for the RZ/G3E (renesas,r9a09g047e57-pcie) =
-PCIe
-> controller. The RZ/G3E PCIe controller is similar to RZ/G3S but has some =
-key
-> differences:
->=20
->  - Uses a different device ID
->  - Supports PCIe Gen3 (8.0 GT/s) link speeds
->  - Uses a different clock naming (clkpmu vs clkl1pm)
->  - Has a different set of interrupts, interrupt ordering, and reset signa=
-ls
->=20
-> Add device tree bindings for renesas,r9a09g047e57-pcie compatible IPs.
->=20
-> Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
-> ---
->=20
-> Changes:
->=20
-> v3:
->  - Moved interrupt/clock description in distinct PATCH
->  - Fixed clock name constraints
+On Wed Jan 28, 2026 at 6:30 PM CET, Zhi Wang wrote:
+> On Wed, 28 Jan 2026 17:35:04 +0100
+> "Danilo Krummrich" <dakr@kernel.org> wrote:
+>
+>> On Wed Jan 28, 2026 at 4:56 PM CET, Jason Gunthorpe wrote:
+>> > On Wed, Jan 28, 2026 at 04:49:07PM +0100, Danilo Krummrich wrote:
+>
+> snip
+>
+>> > Or is it needed to add the typestate?
+>>=20
+>> This is something we should consider when a fwctl::Device would have
+>> different states it can be in, where calling certain methods of a
+>> fwctl::Device is only valid for a certain state and would cause
+>> undefined behavior if called from the wrong state.
+>
+> Are you saying we should define typestate like Device<Bound/Core> also fo=
+r
+> fwctl device? I haven't thought about this and some design consideration
+> would be helpful, as the rust PCI subsystem has it, while some of other
+> abstractions don't have it. I could start to picture about this if this
+> is necessary.
 
-Can you explain why "pm" isn't close enough to "pmu", when it suffices
-for "l1pm", and therefore the same across both devices?
+No, I don't see a need for a type state for fwctl::Device.
 
->  - Updated clock descriptions
->=20
-> v2: Reuse G3S names
->=20
->  .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 76 +++++++++++++++++--
->  1 file changed, 68 insertions(+), 8 deletions(-)
->=20
-> diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie=
-=2Eyaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> index d1eb92995e2c..d48187ca0849 100644
-> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> @@ -10,17 +10,21 @@ maintainers:
->    - Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-> =20
->  description:
-> -  Renesas RZ/G3S PCIe host controller complies with PCIe Base Specificat=
-ion
-> -  4.0 and supports up to 5 GT/s (Gen2).
-> +  Renesas RZ/G3{E,S} PCIe host controllers comply with PCIe
-> +  Base Specification 4.0 and support up to 5 GT/s (Gen2) for RZ/G3S and
-> +  up to 8 GT/s (Gen3) for RZ/G3E.
-> =20
->  properties:
->    compatible:
-> -    const: renesas,r9a08g045-pcie # RZ/G3S
-> +    enum:
-> +      - renesas,r9a08g045-pcie # RZ/G3S
-> +      - renesas,r9a09g047-pcie # RZ/G3E
-> =20
->    reg:
->      maxItems: 1
-> =20
->    interrupts:
-> +    minItems: 16
->      items:
->        - description: System error interrupt
->        - description: System error on correctable error interrupt
-> @@ -38,8 +42,16 @@ properties:
->        - description: PCIe event interrupt
->        - description: Message interrupt
->        - description: All interrupts
-> +      - description: Link equalization request interrupt
-> +      - description: Turn off event interrupt
-> +      - description: PMU power off interrupt
-> +      - description: D3 event function 0 interrupt
-> +      - description: D3 event function 1 interrupt
-> +      - description: Configuration PMCSR write clear function 0 interrupt
-> +      - description: Configuration PMCSR write clear function 1 interrupt
-> =20
->    interrupt-names:
-> +    minItems: 16
->      items:
->        - const: serr
->        - const: serr_cor
-> @@ -57,20 +69,27 @@ properties:
->        - const: pcie_evt
->        - const: msg
->        - const: all
-> +      - const: link_equalization_request
-> +      - const: turn_off_event
-> +      - const: pmu_poweroff
-> +      - const: d3_event_f0
-> +      - const: d3_event_f1
-> +      - const: cfg_pmcsr_writeclear_f0
-> +      - const: cfg_pmcsr_writeclear_f1
-> =20
->    interrupt-controller: true
-> =20
->    clocks:
->      items:
->        - description: System clock
-> -      - description: PM control clock
-> +      - description: PM control clock or clock for L1 substate and CLKRE=
-Q_B handling
-> =20
->    clock-names:
-> -    items:
-> -      - const: aclk
-> -      - const: pm
-
-and I'd like to see an attempt to keep an items list here, by making the
-second item and enum if you keep using "pm" and "pmu".
-
-Cheers,
-Conor.
-
-> +    minItems: 2
-> +    maxItems: 2
-> =20
->    resets:
-> +    minItems: 1
->      items:
->        - description: AXI2PCIe Bridge reset
->        - description: Data link layer/transaction layer reset
-> @@ -81,6 +100,7 @@ properties:
->        - description: Configuration register reset
-> =20
->    reset-names:
-> +    minItems: 1
->      items:
->        - const: aresetn
->        - const: rst_b
-> @@ -128,7 +148,9 @@ patternProperties:
->          const: 0x1912
-> =20
->        device-id:
-> -        const: 0x0033
-> +        enum:
-> +          - 0x0033
-> +          - 0x0039
-> =20
->        clocks:
->          items:
-> @@ -167,6 +189,44 @@ required:
-> =20
->  allOf:
->    - $ref: /schemas/pci/pci-host-bridge.yaml#
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: renesas,r9a08g045-pcie
-> +    then:
-> +      properties:
-> +        interrupts:
-> +          maxItems: 16
-> +        interrupt-names:
-> +          maxItems: 16
-> +        clock-names:
-> +          items:
-> +            - const: aclk
-> +            - const: pm
-> +        resets:
-> +          minItems: 7
-> +        reset-names:
-> +          minItems: 7
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: renesas,r9a09g047-pcie
-> +    then:
-> +      properties:
-> +        interrupts:
-> +          minItems: 23
-> +        interrupt-names:
-> +          minItems: 23
-> +        clock-names:
-> +          items:
-> +            - const: aclk
-> +            - const: pmu
-> +        resets:
-> +          maxItems: 1
-> +        reset-names:
-> +          maxItems: 1
-> =20
->  unevaluatedProperties: false
-> =20
-> --=20
-> 2.25.1
->=20
-
---wjTx5M0CprSqHCjp
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaXpKAQAKCRB4tDGHoIJi
-0j8zAQCLl8L/BlS/FFu8f6MeHM/NILku/Tonb1mbi0VujQSNWgEAwSYggayT+Xvw
-DzeQuEWX7xE/qxptSExUedDNC4cwmAY=
-=DB1o
------END PGP SIGNATURE-----
-
---wjTx5M0CprSqHCjp--
+The DeviceContext type states, such as Core, Bound, etc. are type states fo=
+r bus
+devices only. If you find other device structures that don't have this, the=
+n
+those are not bus devices, but class devices (such as {pwm,drm,fwctl}::Devi=
+ce).
