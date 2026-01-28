@@ -1,108 +1,169 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mx2.zhaoxin.com (mx2.zhaoxin.com [61.152.208.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 803361EB5C2
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 09:16:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD92C2D7DF3
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 10:09:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=61.152.208.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769591774; cv=none; b=qGBbx5JO8ZUJHvkWX/scbBi2gA6FAg14wXrL8t32to5h/kjOjuyuJ5DuB25u76lrpKCepd1W9HxU8Ci3h+88bbyMCQXxZW7CwYgDj36AbYnqVErhFbDLv4RTKi0EO/VZ2MmviNkf4xAVa3fQSaIzLRuS83LlATA7zFR1446mD88=
+	t=1769594978; cv=none; b=T1l2fe3K4PCxOR0VoB09M3sHmZiV34V+V5iYenINBoohgK/ukvbodzHs0p33spHehsBnBe2ET6HQLERPhbM4tgTb7dwFpwYwHFFQOm+HbVBYBQlTo4Xe2x10InFRP3dulAp7SxjB0UuyJ3HuLiWvYvCHaYhp9q2q5ZMmzdoR0Ug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769591774; c=relaxed/simple;
-	bh=j1CnYGmZIfQr+2TUxkEO7VRSWGiBDvRuGUQLR2nTqDA=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=IcCHHWp19/IVUrfhbrv7eNwiYk+OWsgqMrgpxQvSotI2zjh9j4t7Yh/64ZIXHcqGGq9SujrFBtaD4lhvbXXOixzKDgNIv1TK5XDTERSHu6N2Uptug8GYDJUQXt9QOHWaxv9zSWX2e2peiS309wdo6aJc0hUfCpxzJTsnSJDGpxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AbOqfS1H; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AbOqfS1H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769591773; x=1801127773;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=j1CnYGmZIfQr+2TUxkEO7VRSWGiBDvRuGUQLR2nTqDA=;
-  b=AbOqfS1HuB6VP5Ynb7ZqyAwdqqfaDHmMHHvJ+Zzs35/YpfO7ZdhBu6AF
-   q/nS6cqB3zPrw69f+xkfvsCgcwEMGUXZNQTMUi7yOU9M6xPU6o60/xh3+
-   wpCPeB1IfBtKCWmUXZRGtFhgm1+DkjtzbAzISbrbFs5PlkHuwLcbRB8uw
-   FrAVnpX6Q/I6d8K+9NbDiO0DMrf4rdyP/6tcdDCYtcZuBh3sSEB5AT8/c
-   QMdeMKLo0zH9B5ig8LDQHUorJueoZrPsupa8aY5r/aqa70VtvFHTW/PKB
-   KLRC+YJHTU1To6Cgn1BHrDP7Wnpb5PNAhIoVJmyEufd4utYiBQAgPHmNq
-   A==;
-X-CSE-ConnectionGUID: YyctKJBHQcWwEBV01eMVVg==
-X-CSE-MsgGUID: 6OjmVwXzRWmgTDdDHR65Zg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11684"; a="82166269"
-X-IronPort-AV: E=Sophos;i="6.21,258,1763452800"; 
-   d="scan'208";a="82166269"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2026 01:16:12 -0800
-X-CSE-ConnectionGUID: k5XTbrU3Tk2V1c1GDlWUtA==
-X-CSE-MsgGUID: Ikcr9+HfR76W+n9eirlVLQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,258,1763452800"; 
-   d="scan'208";a="208453197"
-Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.14])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2026 01:16:09 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Wed, 28 Jan 2026 11:16:06 +0200 (EET)
-To: Keith Busch <kbusch@kernel.org>
-cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org, 
-    bhelgaas@google.com, alex@shazbot.org, Lukas Wunner <lukas@wunner.de>, 
-    helgaas@kernel.org
-Subject: Re: [PATCH 1/2] pci: fix slot trylock error handling
-In-Reply-To: <aXji6yYImTyT26Wm@kbusch-mbp>
-Message-ID: <0637bc5b-afe5-80f0-8d80-7e6d1e2eea15@linux.intel.com>
-References: <20260116184150.3013258-1-kbusch@meta.com> <aXji6yYImTyT26Wm@kbusch-mbp>
+	s=arc-20240116; t=1769594978; c=relaxed/simple;
+	bh=TPJPDOme66fAODIgH95etwF5kwEVW4NpCyBrbrnv8PE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=oJagfHE/sLq4C0IFQ/tDRqfp61i0vxaoiUyrKcW0NGk0xnW0ozV9jWTBqU9/jYYAvXxLYl8EYYHbJBkxFCf3ENDuS6l/poZAhpVZcwfIhnhppwuVfMu/jGK3D35OHhGpG4nASh9Jk+Q27oPNv875VeiT0KlFGjZW8AYPtiaa3wE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=61.152.208.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
+X-ASG-Debug-ID: 1769594970-1eb14e7c0137290001-0c9NHn
+Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx2.zhaoxin.com with ESMTP id O3s3E7PRvfVJ8Zj0 (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Wed, 28 Jan 2026 18:09:30 +0800 (CST)
+X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX2.zhaoxin.com
+ (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Wed, 28 Jan
+ 2026 18:09:30 +0800
+Received: from ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85]) by
+ ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85%7]) with mapi id
+ 15.01.2507.059; Wed, 28 Jan 2026 18:09:30 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Received: from [10.32.64.5] (10.32.64.5) by ZXBJMBX03.zhaoxin.com
+ (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Wed, 28 Jan
+ 2026 18:08:46 +0800
+Message-ID: <3af9f754-d282-485c-a3f2-49a230bfe143@zhaoxin.com>
+Date: Wed, 28 Jan 2026 18:07:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
+To: Bjorn Helgaas <helgaas@kernel.org>
+X-ASG-Orig-Subj: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
+CC: <mahesh@linux.ibm.com>, <oohall@gmail.com>, <bhelgaas@google.com>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <CobeChen@zhaoxin.com>,
+	<TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>, Lukas Wunner
+	<lukas@wunner.de>
+References: <20260123202140.GA84703@bhelgaas>
+From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
+In-Reply-To: <20260123202140.GA84703@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ ZXBJMBX03.zhaoxin.com (10.29.252.7)
+X-Moderation-Data: 1/28/2026 6:09:29 PM
+X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
+X-Barracuda-Start-Time: 1769594970
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://10.28.252.36:4443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 3796
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: -2.02
+X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.153689
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
 
-On Tue, 27 Jan 2026, Keith Busch wrote:
 
-> On Fri, Jan 16, 2026 at 10:41:49AM -0800, Keith Busch wrote:
-> > From: Keith Busch <kbusch@kernel.org>
-> > 
-> > The device lock isn't held if pci_bus_trylock() fails, so the code had
-> > been attempting to improperly unlock it.
-> > 
-> > Fixes: a4e772898f8bf2 ("PCI: Add missing bridge lock to pci_bus_lock()")
-> > Signed-off-by: Keith Busch <kbusch@kernel.org>
-> 
-> Ping?
 
-There's the older patch from Jinhui for the same thing:
+=E5=9C=A8 2026/1/24 4:21, Bjorn Helgaas =E5=86=99=E9=81=93:
+>=20
+>=20
+> [=E8=BF=99=E5=B0=81=E9=82=AE=E4=BB=B6=E6=9D=A5=E8=87=AA=E5=A4=96=E9=83=A8=
+=E5=8F=91=E4=BB=B6=E4=BA=BA =E8=B0=A8=E9=98=B2=E9=A3=8E=E9=99=A9]
+>=20
+> [+cc Lukas, pciehp expert and author of a97396c6eb13]
+>=20
+> On Fri, Jan 23, 2026 at 06:40:34PM +0800, LeoLiu-oc wrote:
+>> Commit a97396c6eb13 ("PCI: pciehp: Ignore Link Down/Up caused by DPC")
+>> amended PCIe hotplug to not bring down the slot upon Data Link Layer Sta=
+te
+>> Changed events caused by Downstream Port Containment.
+>>
+>> However, PCIe hotplug (pciehp) waits up to 4 seconds before assuming tha=
+t
+>> DPC recovery has failed and disabling the slot. This timeout period is
+>> insufficient for some PCIe devices.
+>> For example, the E810 dual-port network card driver needs to take over
+>> 10 seconds to execute its err_detected() callback.
+>> Since this exceeds the maximum wait time allowed for DPC recovery by the
+>> hotplug IRQ threads, a race condition occurs between the hotplug thread =
+and
+>> the dpc_handler() thread.
+>=20
+> Add blank lines between paragraphs.
+>=20
+> Include the name of the E810 driver so we can easily find the
+> .err_detected() callback in question.  Actually, including the *name*
+> of that callback would be a very direct way of doing this :)
+>=20
+> I guess the problem this fixes is that there was a PCIe error that
+> triggered DPC, and the E810 .err_detected() works but takes longer
+> than expected, which results in pciehp disabling the slot when it
+> doesn't need to?  So the user basically sees a dead E810 device?
+>=20
+Yes, this patch is to solve this problem.
 
-https://patchwork.kernel.org/project/linux-pci/patch/20251212145528.2555-1-guojinhui.liam@bytedance.com/
+> It seems unfortunate that we have this dependency on the time allowed
+> for .err_detected() to execute.  It's nice if adding arbitrary delay
+> doesn't break things, but maybe we can't always achieve that.
+>=20
+I think this is a feasible solution. For some PCIE devices, executing
+the .err_detect() within 4 seconds will not have any impact, for a few
+PCIE devices, it might increase the execution time of pciehp_ist().
+Without this patch, PCIE devices may not be usable and could even cause
+more serious errors, such as a kernel panic. For example, the following
+log is encountered in hardware testing:
 
-> > ---
-> >  drivers/pci/pci.c | 4 +---
-> >  1 file changed, 1 insertion(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 72d88ea95f3cc..3378221c5723a 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -5494,10 +5494,8 @@ static int pci_slot_trylock(struct pci_slot *slot)
-> >  		if (!dev->slot || dev->slot != slot)
-> >  			continue;
-> >  		if (dev->subordinate) {
-> > -			if (!pci_bus_trylock(dev->subordinate)) {
-> > -				pci_dev_unlock(dev);
-> > +			if (!pci_bus_trylock(dev->subordinate))
-> >  				goto unlock;
-> > -			}
-> >  		} else if (!pci_dev_trylock(dev))
-> >  			goto unlock;
-> >  	}
-> > -- 
-> > 2.47.3
-> > 
-> 
+list_del corruption, ffff8881418b79e8->next is LIST_POISON1
+(dead000000000100)
+------------[ cut here ]------------
+kernel BUG at lib/list_debug.c:56!
+invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+...
+Kernel panic - not syncing: Fatal exception
 
--- 
- i.
+> I see that pci_dpc_recovered() is called from pciehp_ist().  Are we
+> prepared for long delays there?
+>=20
+This patch may affect the hotplug IRQ threads execution time triggered
+by DPC, but it has no effect for normal HotPlug operation, e.g.
+Attention Button Pressed or Power Fault Detected. If you have better
+modification suggestions, I will update to the next version.
+
+>> Signed-off-by: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
+>> ---
+>>  drivers/pci/pcie/dpc.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+>> index fc18349614d7..08b5f275699a 100644
+>> --- a/drivers/pci/pcie/dpc.c
+>> +++ b/drivers/pci/pcie/dpc.c
+>> @@ -121,7 +121,7 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+>>        * but reports indicate that DPC completes within 4 seconds.
+>>        */
+>>       wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
+>> -                        msecs_to_jiffies(4000));
+>> +                        msecs_to_jiffies(16000));
+>=20
+> It looks like this breaks the connection between the "completes within
+> 4 seconds" comment and the 4000ms wait_event timeout.
+>=20
+Thanks for your suggestion, I will change it in the next version.
+
+Yours sincerely.
+LeoLiu-oc
+
+>>       return test_and_clear_bit(PCI_DPC_RECOVERED, &pdev->priv_flags);
+>>  }
+>> --
+>> 2.43.0
+>>
 
