@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0850929E114
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 06:42:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D5A3358BA
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 06:45:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769582571; cv=none; b=TrqiHwiidfSkI85vH4t0Var+Ldki+ewqBI1XFWG8bVl8Snu/ZLCe6fK5o7NFZinCcBhxXXYlCyj/jNRIJrrw2kjqvVeJU7B/xIZZuXxmtjuO56I4CPwwGOSlxxlfbzk+7rxjqF9SILGNcRmCzQ2Od9mhy6ahR7F4TUOCUZlTWS0=
+	t=1769582704; cv=none; b=okxonEuYWyEi0F8N5f6pf7MS1D1SA+gMdS24BpYbPqvIlIxEAaMe2sInB01reIU2w8SC3ttAN5MzooXzP2yoylAQYGL7Y5iskh7IJuypvYGXHg2TFTZbBVJ7KMdnArVAfWkeuBfzFd0BdVF8ypSB3CXNZANR87U+Mx9HlkhINdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769582571; c=relaxed/simple;
-	bh=kh1mvFOHKgqBooZw/y6lqdpStWF+zuPqTBN1qemLe48=;
+	s=arc-20240116; t=1769582704; c=relaxed/simple;
+	bh=mKd6gsYVdB4UdneLrcbH0Y+iktTVZrdto1kBwsznBVw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BeAT/7SxZnN/byozjf47caWuj+sc6AHVuGjF5meN93Vn6Yiqa6A3EXbBRVNTAM5Cy3KL6kiFC5CUVq2Mc7cGhoJkqDu1sL3jKcjGj4NmTlrXRrtqlG3ETcuQ3lRePFguqPj0N9VLaLwsV/4stwFJqXX2fs+iAuviZdmjRB2NOgI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CECzCSh4; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Nvo2gPLy5OzD3dT1zheJO9rvvKCroJwXiHpuG4/HtmNqP98bD2gmiUUU/1CjjhcV9KFANlt42Ju+15/zboL80v6MH37L5m9sMPy0BVE84noAieF5qo6apnomZKca52N9EmboOtk8xTUrdwpMG3eHWz1HA5ru6t4RP5CfynnxH3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JJ/uSeTl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CECzCSh4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 026E4C4CEF1;
-	Wed, 28 Jan 2026 06:42:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JJ/uSeTl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCF86C19421;
+	Wed, 28 Jan 2026 06:45:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769582570;
-	bh=kh1mvFOHKgqBooZw/y6lqdpStWF+zuPqTBN1qemLe48=;
+	s=k20201202; t=1769582703;
+	bh=mKd6gsYVdB4UdneLrcbH0Y+iktTVZrdto1kBwsznBVw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=CECzCSh4sWVJ/Qus3LhQTvqlzDCq5708HWP2V03TysSZTTuoYNlBewfwPAHxn00GV
-	 O22p+ce0R3WnRwVk3bBQlqD78Xbtzc9ZFxzLDAI38AGy5OvbwQTFxj+9G1HOoaIqT3
-	 p3C7fnpaju4xxBhHKJS8PEHtITcilJZltWYanEPCv3nC0qEUQJWkFH3a5hExUX44sx
-	 Wbm7Q+wdYLEL4/r2cSr8dWzi2idP/lLWcEnsLRTNMw2JAA5cRHLE+8mcN4JwqJu9mv
-	 fsUL5E1yYcik5U98ilEE5trvegOmGdXj99r5OyzMtReLky+sNZO3aSBaPb4SmeI0Kx
-	 au75HV4ttDm0Q==
-Message-ID: <ab6f9322-c52a-4fbe-a426-c0d752a75022@kernel.org>
-Date: Wed, 28 Jan 2026 15:37:50 +0900
+	b=JJ/uSeTlAhh0hdfnxWu0LPTHAb0a+qu3/v1ahM/3SFmlot66dLL+yJwgrZ4rzSIos
+	 +2sDxJYFom6cxVSUMCWrE1blH7t2YA1tdceOiI7z4fe8mbU0k81abV+m3NZCOKKX8N
+	 gcguqhMdn4GATu9ewgf26axOhr9Vbw3SEQFLJEA2s6+JHBj3VkKa89pdfhMzbMIOM3
+	 yZqJERXmSydPKJdMUVtRZMT1RWH7vvW0U7wVJg1/oUDUfzeFRUp8rAC3/FAfvXoZ5p
+	 YTqi/3dGtSoEhJvq4CJVRIrxRvqARoesqWuK7sWaLdYi2MGwr683cykp+qPG5YVqdM
+	 JKEVgerkNVv3w==
+Message-ID: <b0921701-3ce1-4d03-9a55-436ba09b8eb2@kernel.org>
+Date: Wed, 28 Jan 2026 15:40:03 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,58 +35,89 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] PCI: dwc: Clean up iATU index usage in
- dw_pcie_iatu_setup()
+Subject: Re: [PATCH v5 3/3] PCI: dwc: Fix missing iATU setup when ECAM is
+ enabled
 To: Niklas Cassel <cassel@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
  Manivannan Sadhasivam <mani@kernel.org>,
  Lorenzo Pieralisi <lpieralisi@kernel.org>,
  =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 Cc: Randolph Lin <randolph@andestech.com>,
  Samuel Holland <samuel.holland@sifive.com>, Frank Li <Frank.Li@nxp.com>,
  Charles Mirabile <cmirabil@redhat.com>, tim609@andestech.com,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- "Maciej W. Rozycki" <macro@orcam.me.uk>, linux-pci@vger.kernel.org
+ "Maciej W. Rozycki" <macro@orcam.me.uk>, stable+noautosel@kernel.org,
+ linux-pci@vger.kernel.org
 References: <20260127151038.1484881-5-cassel@kernel.org>
- <20260127151038.1484881-7-cassel@kernel.org>
+ <20260127151038.1484881-8-cassel@kernel.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260127151038.1484881-7-cassel@kernel.org>
+In-Reply-To: <20260127151038.1484881-8-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 1/28/26 12:10 AM, Niklas Cassel wrote:
-> The current iATU index usage in dw_pcie_iatu_setup() is a mess.
+> From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 > 
-> For outbound address translation the index is incremented before usage.
-> For inbound address translation the index is incremented after usage.
+> When ECAM is enabled, the driver skipped calling dw_pcie_iatu_setup()
+> before configuring ECAM iATU entries. This left IO and MEM outbound
+> windows unprogrammed, resulting in broken IO transactions. Additionally,
+> dw_pcie_config_ecam_iatu() was only called during host initialization,
+> so ECAM-related iATU entries were not restored after suspend/resume,
+> leading to failures in configuration space access
 > 
-> Incrementing the index after usage make much more sense, and make the
-> index usage consistent for both outbound and inbound address translation.
+> To resolve these issues, the ECAM iATU configuration is moved into
+> dw_pcie_iatu_setup(), and dw_pcie_iatu_setup() is invoked when ECAM is
+> enabled.
 > 
-> Most likely, the overly complicated logic for the outbound address
-> translation is because the iATU at index 0 is reserved for CFG IOs
-> (dw_pcie_other_conf_map_bus()), however, we should be able to use the
-> exact same logic for the indexing of the outbound and inbound iATUs.
-> (Only the starting index should be different.)
+> Furthermore, error checks are added in dw_pcie_prog_outbound_atu() and
+> dw_pcie_prog_inbound_atu() such that an error is returned if trying to
+> program an iATU that is outside the number of iATUs provided by the
+> controller.
 > 
-> Create two new variables ob_iatu_index and ib_iatu_index, which makes
-> it more clear from the name itself that it is a zeroes based index,
-> and only increment the index if the iATU configuration call succeeded.
-> 
-> Since we always check if there is an index available immediately before
-> programming the iATU, we can remove the useless "ranges exceed outbound
-> iATU size" warnings, as the code is already unreachable. For the same
-> reason, we can also remove the useless breaks outside of the while loops.
-> 
-> No functional changes intended.
-> 
+> Fixes: f6fd357f7afb ("PCI: dwc: Prepare the driver for enabling ECAM mechanism using iATU 'CFG Shift Feature'")
+> Cc: stable+noautosel@kernel.org # depends on Clean up iATU index usage in dw_pcie_iatu_setup()
+> Reported-by: Maciej W. Rozycki <macro@orcam.me.uk>
+> Closes: https://lore.kernel.org/all/alpine.DEB.2.21.2511280256260.36486@angie.orcam.me.uk/
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> Co-developed-by: Niklas Cassel <cassel@kernel.org>
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Looks good to me.
+Looks OK to me.
+(one nit below)
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+
+
+> @@ -915,8 +907,21 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+>  	 * NOTE: For outbound address translation, outbound iATU at index 0 is
+>  	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
+>  	 * index 1.
+> +	 *
+> +	 * If using ECAM, outbound iATU at index 0 and index 1 is reserved for
+
+s/is/are
+
+> +	 * CFG IOs.
+>  	 */
+> -	ob_iatu_index = 1;
+> +	if (pp->ecam_enabled) {
+> +		ob_iatu_index = 2;
+> +		ret = dw_pcie_config_ecam_iatu(pp);
+> +		if (ret) {
+> +			dev_err(pci->dev, "Failed to configure iATU in ECAM mode\n");
+> +			return ret;
+> +		}
+> +	} else {
+> +		ob_iatu_index = 1;
+> +	}
+> +
+>  	resource_list_for_each_entry(entry, &pp->bridge->windows) {
+>  		resource_size_t res_size;
+
+
 
 -- 
 Damien Le Moal
