@@ -1,24 +1,24 @@
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EA518225408;
-	Wed, 28 Jan 2026 13:18:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 68E453502B6;
+	Wed, 28 Jan 2026 13:18:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769606298; cv=none; b=IhvPsU6G9SO/J3VFtra6x3etaysbLSzBuNhg/Bo66YRVOlXT91elQqeKmB3idqqPr3+9k2fev5zHXWXmuW0wCINFo0dtQ3CtNyVcKZVO129Hb8lwdqKfQuEaHE48Lv6R0a73BZJBMtZd6m2hQOwhpX9WPVMlfqr49nWZmiovxiQ=
+	t=1769606303; cv=none; b=txdqXjicZr0C3u/Zz4IGdd1SNvx6OqpWv0RZZopQn53jJg52zvS2qmLaXafLHJ80Od8gSeL3mK2FL8JPJlvpv01xM0xShnMNjb5iCo6gaBStwwK38QmaGLXR2WKYz895L/1UuZIzQeGaNKTKwaR1ib3k1rlqj7jv3+Um4cAuCXM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769606298; c=relaxed/simple;
-	bh=wIeszbuUWzi+U5TwIlKeKJw7HnH/i0IRFgcrmyj/UvE=;
+	s=arc-20240116; t=1769606303; c=relaxed/simple;
+	bh=NM8CjY08IEFe/f7hPAEG4MtXxU97yFYYroRAFHzSC8E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bj1pAab3gJISIFfb1Dj+amQeHG5JMjFntiEJl8T92P4bgrZ3BV+dGb0VkpsqJuUTFPwACp/6CUTgsyTucfARZdMeEDIdhIKyRCmSvkPhp1HY9VB/jVMZYduEgPqgDfhzadoMUjZBdqInkDeFuJUtU6hi3ki8ziJlP4WRTGFA+DA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
+	 MIME-Version; b=NU66fPpsR5iSO6WXbW8S5LHOoUbAIUppQnRpOHMx/GEQstJO4tF8+Kzy+b3G/dwW1K9ZGQ4RpO7BPGam0KA/MdFIdnW49zcJpnqIC+zusWkqWlCPZYagCxX8Hpn0J8nQgOHKBaq6VHRJPVvfIGK54k3rrWkC03rmaZth8yyhC1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: JikUI6eEQhKzWTIiYxbOuw==
-X-CSE-MsgGUID: QVrlFg9kTFat327N7To7xw==
+X-CSE-ConnectionGUID: LM26aIvLSJyFeNPqmYA75w==
+X-CSE-MsgGUID: jpSQejqDQM+GGWNYr7uVfQ==
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 28 Jan 2026 22:18:14 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 28 Jan 2026 22:18:20 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.93.11])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 9261241665EF;
-	Wed, 28 Jan 2026 22:18:09 +0900 (JST)
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 508CC4166997;
+	Wed, 28 Jan 2026 22:18:15 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,9 +37,9 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v3 10/15] PCI: rzg3s-host: Explicitly set class code for RZ/G3E compatibility
-Date: Wed, 28 Jan 2026 14:16:41 +0100
-Message-ID: <20260128131647.120511-11-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v3 11/15] PCI: rzg3s-host: Add PCIe Gen3 (8.0 GT/s) link speed support
+Date: Wed, 28 Jan 2026 14:16:42 +0100
+Message-ID: <20260128131647.120511-12-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260128131647.120511-1-john.madieu.xa@bp.renesas.com>
 References: <20260128131647.120511-1-john.madieu.xa@bp.renesas.com>
@@ -51,51 +51,89 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Program the class code register explicitly during PCIe configuration
-initialization. RZ/G3E requires this register to be set, while RZ/G3S
-has these values as hardware defaults.
+Extend the link speed configuration to support Gen3 (8.0 GT/s) in addition
+to Gen2 (5.0 GT/s). This is required for RZ/G3E PCIe host support, which is
+Gen3 capable.
 
-This configuration is harmless for RZ/G3S where these match the hardware
-defaults, and necessary for RZ/G3E to properly identify the device as a
-PCI bridge.
+Instead of relying on DT max-link-speed for configuration, read the hardware
+capabilities from the PCI_EXP_LNKCAP register to determine the maximum
+supported speed. The DT max-link-speed property is now only used as an
+optional limit when explicitly specified, which aligns with PCIe subsystem
+expectations.
 
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
 
 Changes:
 
 v3: No changes
-v2: No changes
+v2: Collected tag.
 
- drivers/pci/controller/pcie-rzg3s-host.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/pci/controller/pcie-rzg3s-host.c | 26 ++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index 15ccd9095a3e..76f6d940ba45 100644
+index 76f6d940ba45..985414076a85 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1054,6 +1054,7 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
- static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
+@@ -977,8 +977,9 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
  {
- 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
-+	u32 mask = GENMASK(31, 8);
- 	struct resource_entry *ft;
- 	struct resource *bus;
- 	u8 subordinate_bus;
-@@ -1077,6 +1078,13 @@ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
- 	writel_relaxed(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00L);
- 	writel_relaxed(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00U);
+ 	u32 remote_supported_link_speeds, max_supported_link_speeds;
+ 	u32 cs2, tmp, pcie_cap = RZG3S_PCI_CFG_PCIEC;
+-	u32 cur_link_speed, link_speed;
++	u32 cur_link_speed, link_speed, hw_max_speed;
+ 	u8 ltssm_state_l0 = 0xc;
++	u32 lnkcap;
+ 	int ret;
+ 	u16 ls;
  
-+	/*
-+	 * Explicitly program class code. RZ/G3E requires this configuration.
-+	 * Harmless for RZ/G3S where this matches the hardware default.
-+	 */
-+	rzg3s_pcie_update_bits(host->pcie, PCI_CLASS_REVISION, mask,
-+			       FIELD_PREP(mask, PCI_CLASS_BRIDGE_PCI_NORMAL));
+@@ -998,7 +999,22 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ 	ls = readw_relaxed(host->pcie + pcie_cap + PCI_EXP_LNKSTA);
+ 	cs2 = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
+ 
+-	switch (pcie_link_speed[host->max_link_speed]) {
++	/* Read hardware supported link speed from Link Capabilities Register */
++	lnkcap = readl_relaxed(host->pcie + pcie_cap + PCI_EXP_LNKCAP);
++	hw_max_speed = FIELD_GET(PCI_EXP_LNKCAP_SLS, lnkcap);
 +
- 	/* Disable access control to the CFGU */
- 	writel_relaxed(0, host->axi + RZG3S_PCI_PERM);
++	/*
++	 * Use DT max-link-speed only as a limit. If specified and lower
++	 * than hardware capability, cap to that value.
++	 */
++	if (host->max_link_speed > 0 && host->max_link_speed < hw_max_speed)
++		hw_max_speed = host->max_link_speed;
++
++	switch (pcie_link_speed[hw_max_speed]) {
++	case PCIE_SPEED_8_0GT:
++		max_supported_link_speeds = GENMASK(PCI_EXP_LNKSTA_CLS_8_0GB - 1, 0);
++		link_speed = PCI_EXP_LNKCTL2_TLS_8_0GT;
++		break;
+ 	case PCIE_SPEED_5_0GT:
+ 		max_supported_link_speeds = GENMASK(PCI_EXP_LNKSTA_CLS_5_0GB - 1, 0);
+ 		link_speed = PCI_EXP_LNKCTL2_TLS_5_0GT;
+@@ -1014,10 +1030,10 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ 	remote_supported_link_speeds &= max_supported_link_speeds;
  
+ 	/*
+-	 * Return if max link speed is already set or the connected device
++	 * Return if target link speed is already set or the connected device
+ 	 * doesn't support it.
+ 	 */
+-	if (cur_link_speed == host->max_link_speed ||
++	if (cur_link_speed == hw_max_speed ||
+ 	    remote_supported_link_speeds != max_supported_link_speeds)
+ 		return 0;
+ 
+@@ -1609,8 +1625,6 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	host->pcie = host->axi + RZG3S_PCI_CFG_BASE;
+ 
+ 	host->max_link_speed = of_pci_get_max_link_speed(np);
+-	if (host->max_link_speed < 0)
+-		host->max_link_speed = 2;
+ 
+ 	ret = rzg3s_pcie_host_parse_port(host);
+ 	if (ret)
 -- 
 2.25.1
 
