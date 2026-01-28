@@ -1,115 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AA312FCBE3;
-	Wed, 28 Jan 2026 14:28:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988A0350A14;
+	Wed, 28 Jan 2026 14:36:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769610528; cv=none; b=lQw9Mcr5dBHpmj0WVsXd9bQaB0dH0Vx/EWSQn1AotcfVzVS9acV8MBuNz7nwwEHNx66PsWNR/zTtZ2AdNHCfMXNXcgwSUoiIZWJAAASJYCQd9I+DID+BRvIDNftoW/fXiDO9i1DAheUkAMOV1Bm9s7UEA+9M8FkRe3pOQ3AsLvg=
+	t=1769610994; cv=none; b=OxAESKj6ExPuqv8S5LVblWi9rN87B/gPCQNBEJz33P4mUEAk0ROSXLIlBrbukYuO2Z22pZTLVS6tXXZUBlmYndoF1/2v8UYqWD4X+XMVDNt98V5VcpXwHb7oJM31vNKC2KaGMs0X98QhLLQMWOHLi9UnCy+SwJ1nC32B6LP67tc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769610528; c=relaxed/simple;
-	bh=yVK+1rGXEFwbGHm+y9dP2+QQA05aUnWbOsxkvUrgglI=;
+	s=arc-20240116; t=1769610994; c=relaxed/simple;
+	bh=w7RrBBzZIuz8xqrWdZPUre+AvVJylwUW9queAH7gzkE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fJC2Drpvfbq572Bzt1Kc5djCYAEQE8zaBPSi9jSn41/UnbbiX5Igd20aX9f8t7j7NbWPIL5IpBbJmqilq5uBXgV9sRamHV6fkKwURpbBEW+6XUkW+karZEwX7OrGJnOEtQfXTKE6NdAEN77RcJZEEUJn4eS9gyhur6JF22TjllU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sEJ4Hdxd; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=dG258EeYvedlFQQYkhekzd5JjfRxMI1t6+3GcFrwNAIjhp5oVuqv6JlpcS+Ppqk/Sw3n4heSIsDhGVF9GMABmS2bh626I8Z3cr1AA8Q5Of0ls3I/ECPAy9O48ZVCMRnr/JMeFWAwZNTx8hlyepD1UNmh6HE4YNAaS6UfyDJe7eo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dLgYQaz3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sEJ4Hdxd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E738C4CEF7;
-	Wed, 28 Jan 2026 14:28:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dLgYQaz3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2DEBC4CEF1;
+	Wed, 28 Jan 2026 14:36:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769610528;
-	bh=yVK+1rGXEFwbGHm+y9dP2+QQA05aUnWbOsxkvUrgglI=;
+	s=k20201202; t=1769610994;
+	bh=w7RrBBzZIuz8xqrWdZPUre+AvVJylwUW9queAH7gzkE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sEJ4HdxdHqoT5usmyr5CzYmdSDIUsy2yb8Q7Wfgo4BOctdBuAq+uvmf9k1VbAwJHl
-	 2vltzlVx13lerrW/ce+XHP+39ufSDtafc0z170juseGExhSWircnGp94Iw6yYmUxjE
-	 fAZjfpVsggYd5VHX3c10z4W8nqnhGl2uP3LY3P7Q/gAd9sKQKwo3gUc2LtOpt0Ji2H
-	 EOyY+21K3DKX4gugOVAdIECT1MQTCtXXLyT9cgSVFkMIPc2AIFnjsDUk9HK0bpve7F
-	 IP+NgMzRA5VrA4SQDmzKN/FYp6E1KT7oxvS427CAietuBA3ZQg+YJNHmBniit6gWE2
-	 M/YZ0MIWnlpog==
-Date: Wed, 28 Jan 2026 08:28:45 -0600
-From: Bjorn Andersson <andersson@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com
-Subject: Re: [PATCH 2/3] PCI: dwc: Use common D3cold eligibility helper in
- suspend path
-Message-ID: <oygssx4tnd7uwofk4ucqj2ypok2zssnzbauzar2f65lzougr3a@vp6b7y4j56k3>
-References: <20260128-d3cold-v1-0-dd8f3f0ce824@oss.qualcomm.com>
- <20260128-d3cold-v1-2-dd8f3f0ce824@oss.qualcomm.com>
+	b=dLgYQaz3hk08B66xJru+tcLyUXLfa2syE5i0+ySVr5hp2pTvBHFoYfN2RUqzL63xr
+	 TnXnJYFbFmIqK0F84CfWyeINuD4unEvDN9HxQVQpR/uTo8mtdSMIA6pEe+dNcxk18+
+	 GJWNXS6LU16HcUVNJhaTri8i7hdJOaZhFOZIGyFlK0gMlXsenBJFkcC3m/5zQ2SFWZ
+	 +B/2/0DdD9Gu9ZhaCDQ83hv55zLYP27Yhesox8Sh5yOEZs5Yoo8RrDJpPH27u9fRnr
+	 t222h4hNov3WoLGJ3NJjV9LL8kcHxUjOdj1AeqOS02hJaBhsfWFJNWnVbZiExRrfSs
+	 w+hRuUqcOcsYA==
+Date: Wed, 28 Jan 2026 20:06:21 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>, 
+	linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-arch@vger.kernel.org, kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org, 
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org, 
+	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, 
+	hpa@zytor.com, joro@8bytes.org, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de, 
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com, romank@linux.microsoft.com
+Subject: Re: [PATCH v0 10/15] PCI: hv: Build device id for a VMBus device
+Message-ID: <323krpkmg4zmswo567ccah2g7ymprs66nfei3eo6saobl2azda@35jdfloq5g3g>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-11-mrathor@linux.microsoft.com>
+ <aXAAH4G9ztAGDWuy@skinsburskii.localdomain>
+ <a2e54fff-3cbb-e332-c35e-7520c36eceed@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260128-d3cold-v1-2-dd8f3f0ce824@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <a2e54fff-3cbb-e332-c35e-7520c36eceed@linux.microsoft.com>
 
-On Wed, Jan 28, 2026 at 05:10:42PM +0530, Krishna Chaitanya Chundru wrote:
-> Previously, the driver skipped putting the link into L2/device state in
-> D3cold whenever L1 ASPM was enabled, since some devices (e.g. NVMe) expect
-> low resume latency and may not tolerate deeper power states. However, such
-> devices typically remain in D0 and are already covered by the new helper's
-> requirement that all endpoints be in D3hot before the host bridge may
-> enter D3cold.
+On Fri, Jan 23, 2026 at 04:42:54PM -0800, Mukesh R wrote:
+> On 1/20/26 14:22, Stanislav Kinsburskii wrote:
+> > On Mon, Jan 19, 2026 at 10:42:25PM -0800, Mukesh R wrote:
+> > > From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > 
+> > > On Hyper-V, most hypercalls related to PCI passthru to map/unmap regions,
+> > > interrupts, etc need a device id as a parameter. This device id refers
+> > > to that specific device during the lifetime of passthru.
+> > > 
+> > > An L1VH VM only contains VMBus based devices. A device id for a VMBus
+> > > device is slightly different in that it uses the hv_pcibus_device info
+> > > for building it to make sure it matches exactly what the hypervisor
+> > > expects. This VMBus based device id is needed when attaching devices in
+> > > an L1VH based guest VM. Before building it, a check is done to make sure
+> > > the device is a valid VMBus device.
+> > > 
+> > > Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > ---
+> > >   arch/x86/include/asm/mshyperv.h     |  2 ++
+> > >   drivers/pci/controller/pci-hyperv.c | 29 +++++++++++++++++++++++++++++
+> > >   2 files changed, 31 insertions(+)
+> > > 
+> > > diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
+> > > index eef4c3a5ba28..0d7fdfb25e76 100644
+> > > --- a/arch/x86/include/asm/mshyperv.h
+> > > +++ b/arch/x86/include/asm/mshyperv.h
+> > > @@ -188,6 +188,8 @@ bool hv_vcpu_is_preempted(int vcpu);
+> > >   static inline void hv_apic_init(void) {}
+> > >   #endif
+> > > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev);
+> > > +
+> > >   struct irq_domain *hv_create_pci_msi_domain(void);
+> > >   int hv_map_msi_interrupt(struct irq_data *data,
+> > > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > > index 8bc6a38c9b5a..40f0b06bb966 100644
+> > > --- a/drivers/pci/controller/pci-hyperv.c
+> > > +++ b/drivers/pci/controller/pci-hyperv.c
+> > > @@ -579,6 +579,8 @@ static void hv_pci_onchannelcallback(void *context);
+> > >   #define DELIVERY_MODE		APIC_DELIVERY_MODE_FIXED
+> > >   #define HV_MSI_CHIP_FLAGS	MSI_CHIP_FLAG_SET_ACK
+> > > +static bool hv_vmbus_pci_device(struct pci_bus *pbus);
+> > > +
+> > 
+> > Why not moving this static function definition above the called instead of
+> > defining the prototype?
 > 
-> So, replace the local L1/L1SS-based check in dw_pcie_suspend_noirq() with
-> the shared pci_host_common_can_enter_d3cold() helper to decide whether the
-> DesignWare host bridge can safely transition to D3cold.
+> Did you see the function implementation? It has other dependencies that
+> are later, it would need code reorg.
 > 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 7 +------
->  drivers/pci/controller/dwc/pcie-designware.h      | 1 +
->  2 files changed, 2 insertions(+), 6 deletions(-)
+> Thanks,
+> -Mukesh
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 372207c33a857b4c98572bb1e9b61fa0080bc871..2c8056761addf7febc1b0e06ddf8ba4dd4ad1684 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -1157,15 +1157,10 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
->  
->  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  {
-> -	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
->  	u32 val;
->  	int ret;
->  
-> -	/*
-> -	 * If L1SS is supported, then do not put the link into L2 as some
-> -	 * devices such as NVMe expect low resume latency.
-> -	 */
-> -	if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
-> +	if (!pci_host_common_can_enter_d3cold(pci->pp.bridge))
->  		return 0;
->  
->  	if (pci->pp.ops->pme_turn_off) {
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 31685951a080456b8834aab2bf79a36c78f46639..18d8f7d5d23088b2fa177e84a21d900c98850fcd 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -26,6 +26,7 @@
->  #include <linux/pci-epc.h>
->  #include <linux/pci-epf.h>
->  
-> +#include "../pci-host-common.h"
+> 
+> > >   static int hv_pci_irqchip_init(void)
+> > >   {
+> > >   	return 0;
+> > > @@ -598,6 +600,26 @@ static unsigned int hv_msi_get_int_vector(struct irq_data *data)
+> > >   #define hv_msi_prepare		pci_msi_prepare
+> > > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev)
+> > > +{
+> > > +	u64 u64val;
+> > 
+> > This variable is redundant.
+> 
+> Not really. It helps with debug by putting a quick print, and is
+> harmless.
+> 
 
-Why doesn't this include go in the c file? I don't see that all c files
-including pcie-designware.h now needs this.
+Such debug print do not exist now. So there is no need of a variable, drop it.
 
-Regards,
-Bjorn
+- Mani
 
->  #include "../../pci.h"
->  
->  /* DWC PCIe IP-core versions (native support since v4.70a) */
-> 
-> -- 
-> 2.34.1
-> 
-> 
+-- 
+மணிவண்ணன் சதாசிவம்
