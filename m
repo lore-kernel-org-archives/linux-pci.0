@@ -1,33 +1,26 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m1973184.qiye.163.com (mail-m1973184.qiye.163.com [220.197.31.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D5A3358BA
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 06:45:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4F0938DF9;
+	Wed, 28 Jan 2026 06:58:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769582704; cv=none; b=okxonEuYWyEi0F8N5f6pf7MS1D1SA+gMdS24BpYbPqvIlIxEAaMe2sInB01reIU2w8SC3ttAN5MzooXzP2yoylAQYGL7Y5iskh7IJuypvYGXHg2TFTZbBVJ7KMdnArVAfWkeuBfzFd0BdVF8ypSB3CXNZANR87U+Mx9HlkhINdk=
+	t=1769583516; cv=none; b=llm7aKksMgzJnHV+A1x4MGwrycHE/rh/ck4kjuoSx6/dQetqj4HNGZuM20K9eT7zwkOxPaQfLHj6EnW2D9/8S0vJ3L2PmOXEMinYVkIlFrvN8qivWjN695Oahvz9iZe2XwQ52P4NUIj1KYECS4+vp82LWMXd/m2ni6pcFDVWFjc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769582704; c=relaxed/simple;
-	bh=mKd6gsYVdB4UdneLrcbH0Y+iktTVZrdto1kBwsznBVw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Nvo2gPLy5OzD3dT1zheJO9rvvKCroJwXiHpuG4/HtmNqP98bD2gmiUUU/1CjjhcV9KFANlt42Ju+15/zboL80v6MH37L5m9sMPy0BVE84noAieF5qo6apnomZKca52N9EmboOtk8xTUrdwpMG3eHWz1HA5ru6t4RP5CfynnxH3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JJ/uSeTl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769583516; c=relaxed/simple;
+	bh=LsMBBI8dZt9lK7TD9B4uXQKjmlMXrO/V8MQb2+8Pkh0=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=O0d7tUIckPrHsGwG95TAKRrPhmP7LN3QwMRosFtimWsumjMddtXcH6sR46Sq55kzSVQY1CnvgJhOigi96fhdL6HUZlfRVxtYXleeeQlNIrmLCRBOt8A/hf8UqE/h7GNskbUA5QM1mqS8IUCeuSkjLO7AjPb4lSl0dllHqCJbHFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=de5YgG5y; arc=none smtp.client-ip=220.197.31.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JJ/uSeTl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCF86C19421;
-	Wed, 28 Jan 2026 06:45:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769582703;
-	bh=mKd6gsYVdB4UdneLrcbH0Y+iktTVZrdto1kBwsznBVw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=JJ/uSeTlAhh0hdfnxWu0LPTHAb0a+qu3/v1ahM/3SFmlot66dLL+yJwgrZ4rzSIos
-	 +2sDxJYFom6cxVSUMCWrE1blH7t2YA1tdceOiI7z4fe8mbU0k81abV+m3NZCOKKX8N
-	 gcguqhMdn4GATu9ewgf26axOhr9Vbw3SEQFLJEA2s6+JHBj3VkKa89pdfhMzbMIOM3
-	 yZqJERXmSydPKJdMUVtRZMT1RWH7vvW0U7wVJg1/oUDUfzeFRUp8rAC3/FAfvXoZ5p
-	 YTqi/3dGtSoEhJvq4CJVRIrxRvqARoesqWuK7sWaLdYi2MGwr683cykp+qPG5YVqdM
-	 JKEVgerkNVv3w==
-Message-ID: <b0921701-3ce1-4d03-9a55-436ba09b8eb2@kernel.org>
-Date: Wed, 28 Jan 2026 15:40:03 +0900
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="de5YgG5y"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 323dec204;
+	Wed, 28 Jan 2026 14:22:51 +0800 (GMT+08:00)
+Message-ID: <33bbb3ec-5659-4d50-a5ff-dafa44e291dd@rock-chips.com>
+Date: Wed, 28 Jan 2026 14:22:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,90 +28,224 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 3/3] PCI: dwc: Fix missing iATU setup when ECAM is
- enabled
-To: Niklas Cassel <cassel@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Randolph Lin <randolph@andestech.com>,
- Samuel Holland <samuel.holland@sifive.com>, Frank Li <Frank.Li@nxp.com>,
- Charles Mirabile <cmirabil@redhat.com>, tim609@andestech.com,
- "Maciej W. Rozycki" <macro@orcam.me.uk>, stable+noautosel@kernel.org,
+Cc: shawn.lin@rock-chips.com, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Rob Clark <robin.clark@oss.qualcomm.com>, Dmitry Baryshkov
+ <lumag@kernel.org>, Abhinav Kumar <abhinav.kumar@linux.dev>,
+ Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+ Marijn Suijten <marijn.suijten@somainline.org>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+ linux-usb@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
  linux-pci@vger.kernel.org
-References: <20260127151038.1484881-5-cassel@kernel.org>
- <20260127151038.1484881-8-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260127151038.1484881-8-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 2/7] pci: pwrctrl: add PCI pwrctrl driver for the
+ UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+To: Neil Armstrong <neil.armstrong@linaro.org>,
+ Manivannan Sadhasivam <mani@kernel.org>
+References: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
+ <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-2-c55ec1b5d8bf@linaro.org>
+ <llbnkm72mgcsrucnp7pdkwbgyzenvhe4kudxkdixplgaoirdem@3q3me34o5drf>
+ <0104896e-44d0-485a-a44e-694864c819b7@linaro.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <0104896e-44d0-485a-a44e-694864c819b7@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9c0344df9609cckunmfeac2e531bd066
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkxLSFZNSUsaHkMZQ01MGB5WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpKQk
+	xVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=de5YgG5yXN9uH1U/29igFPjzMtVXZjG11RVK1ox3PS+J0OxMUsWTNCOPROu8id+oUwcmJpuixHyc9xQu9wm+e011mhPVPHSDxOEQqVX7UmuUb4yIv1FjZ8cKPaXr4zOp8OU4D4CKufl7NjYy2zQtn0eUL36w0+D3ewWucOSsJ/4=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=MAfz+13K76TPUxvO+5QDm/lgQXp/YWJ9M/nw8Kebqcw=;
+	h=date:mime-version:subject:message-id:from;
 
-On 1/28/26 12:10 AM, Niklas Cassel wrote:
-> From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+在 2026/01/28 星期三 5:53, Neil Armstrong 写道:
+> On 1/27/26 16:53, Manivannan Sadhasivam wrote:
+>> On Tue, Jan 27, 2026 at 10:57:29AM +0100, Neil Armstrong wrote:
+>>> Add support fo the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host 
+>>> Controller
+>>> power control which connects over PCIe and requires specific power 
+>>> supplies
+>>> to start up.
+>>>
+>>
+>> This driver only handles the supplies. So why can't you use the existing
+>> pwrctrl-slot driver as a fallback?
 > 
-> When ECAM is enabled, the driver skipped calling dw_pcie_iatu_setup()
-> before configuring ECAM iATU entries. This left IO and MEM outbound
-> windows unprogrammed, resulting in broken IO transactions. Additionally,
-> dw_pcie_config_ecam_iatu() was only called during host initialization,
-> so ECAM-related iATU entries were not restored after suspend/resume,
-> leading to failures in configuration space access
+> It would fit with no change, but the name "slot" doesn't match the goal 
+> here,
+> it's not a slot at all, it's an actual pcie IC.
 > 
-> To resolve these issues, the ECAM iATU configuration is moved into
-> dw_pcie_iatu_setup(), and dw_pcie_iatu_setup() is invoked when ECAM is
-> enabled.
+
+How about renaming slot.cto something like pci-pwrctrl-simple.c, 
+especially if most power sequences fit into this category? This would 
+follow the naming example seen in other subsystems, such as 
+drivers/mmc/core/pwrseq_simple.c.
+
+> Neil
 > 
-> Furthermore, error checks are added in dw_pcie_prog_outbound_atu() and
-> dw_pcie_prog_inbound_atu() such that an error is returned if trying to
-> program an iATU that is outside the number of iATUs provided by the
-> controller.
+>>
+>> - Mani
+>>
+>>> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+>>> ---
+>>>   drivers/pci/pwrctrl/Kconfig                 | 10 ++++
+>>>   drivers/pci/pwrctrl/Makefile                |  2 +
+>>>   drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c | 88 ++++++++++++++++++ 
+>>> +++++++++++
+>>>   3 files changed, 100 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/pwrctrl/Kconfig b/drivers/pci/pwrctrl/Kconfig
+>>> index e0f999f299bb..5a94e60d0d3e 100644
+>>> --- a/drivers/pci/pwrctrl/Kconfig
+>>> +++ b/drivers/pci/pwrctrl/Kconfig
+>>> @@ -11,6 +11,16 @@ config PCI_PWRCTRL_PWRSEQ
+>>>       select POWER_SEQUENCING
+>>>       select PCI_PWRCTRL
+>>> +config PCI_PWRCTRL_UPD720201
+>>> +    tristate "PCI Power Control driver for the UPD720201 USB3 Host 
+>>> Controller"
+>>> +    select PCI_PWRCTRL
+>>> +    help
+>>> +      Say Y here to enable the PCI Power Control driver of the 
+>>> UPD720201
+>>> +      USB3 Host Controller.
+>>> +
+>>> +      The voltage regulators powering the rails of the PCI slots
+>>> +      are expected to be defined in the devicetree node of the PCI 
+>>> device.
+>>> +
+>>>   config PCI_PWRCTRL_SLOT
+>>>       tristate "PCI Power Control driver for PCI slots"
+>>>       select PCI_PWRCTRL
+>>> diff --git a/drivers/pci/pwrctrl/Makefile b/drivers/pci/pwrctrl/Makefile
+>>> index 13b02282106c..a99f85de8a3d 100644
+>>> --- a/drivers/pci/pwrctrl/Makefile
+>>> +++ b/drivers/pci/pwrctrl/Makefile
+>>> @@ -5,6 +5,8 @@ pci-pwrctrl-core-y            := core.o
+>>>   obj-$(CONFIG_PCI_PWRCTRL_PWRSEQ)    += pci-pwrctrl-pwrseq.o
+>>> +obj-$(CONFIG_PCI_PWRCTRL_UPD720201)    += pci-pwrctrl-upd720201.o
+>>> +
+>>>   obj-$(CONFIG_PCI_PWRCTRL_SLOT)        += pci-pwrctrl-slot.o
+>>>   pci-pwrctrl-slot-y            := slot.o
+>>> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c b/drivers/ 
+>>> pci/pwrctrl/pci-pwrctrl-upd720201.c
+>>> new file mode 100644
+>>> index 000000000000..db96bbb69c21
+>>> --- /dev/null
+>>> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-upd720201.c
+>>> @@ -0,0 +1,88 @@
+>>> +// SPDX-License-Identifier: GPL-2.0-only
+>>> +/*
+>>> + * Based on upd720201.c:
+>>> + * Copyright (C) 2024 Linaro Ltd.
+>>> + * Author: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+>>> + */
+>>> +
+>>> +#include <linux/device.h>
+>>> +#include <linux/mod_devicetable.h>
+>>> +#include <linux/module.h>
+>>> +#include <linux/pci-pwrctrl.h>
+>>> +#include <linux/platform_device.h>
+>>> +#include <linux/regulator/consumer.h>
+>>> +#include <linux/slab.h>
+>>> +
+>>> +struct pci_pwrctrl_upd720201_data {
+>>> +    struct pci_pwrctrl ctx;
+>>> +    struct regulator_bulk_data *supplies;
+>>> +    int num_supplies;
+>>> +};
+>>> +
+>>> +static void devm_pci_pwrctrl_upd720201_power_off(void *data)
+>>> +{
+>>> +    struct pci_pwrctrl_upd720201_data *upd720201 = data;
+>>> +
+>>> +    regulator_bulk_disable(upd720201->num_supplies, upd720201- 
+>>> >supplies);
+>>> +    regulator_bulk_free(upd720201->num_supplies, upd720201->supplies);
+>>> +}
+>>> +
+>>> +static int pci_pwrctrl_upd720201_probe(struct platform_device *pdev)
+>>> +{
+>>> +    struct pci_pwrctrl_upd720201_data *upd720201;
+>>> +    struct device *dev = &pdev->dev;
+>>> +    int ret;
+>>> +
+>>> +    upd720201 = devm_kzalloc(dev, sizeof(*upd720201), GFP_KERNEL);
+>>> +    if (!upd720201)
+>>> +        return -ENOMEM;
+>>> +
+>>> +    ret = of_regulator_bulk_get_all(dev, dev_of_node(dev),
+>>> +                    &upd720201->supplies);
+>>> +    if (ret < 0) {
+>>> +        dev_err_probe(dev, ret, "Failed to get upd720201 
+>>> regulators\n");
+>>> +        return ret;
+>>> +    }
+>>> +
+>>> +    upd720201->num_supplies = ret;
+>>> +    ret = regulator_bulk_enable(upd720201->num_supplies, upd720201- 
+>>> >supplies);
+>>> +    if (ret < 0) {
+>>> +        dev_err_probe(dev, ret, "Failed to enable upd720201 
+>>> regulators\n");
+>>> +        regulator_bulk_free(upd720201->num_supplies, upd720201- 
+>>> >supplies);
+>>> +        return ret;
+>>> +    }
+>>> +
+>>> +    ret = devm_add_action_or_reset(dev, 
+>>> devm_pci_pwrctrl_upd720201_power_off,
+>>> +                       upd720201);
+>>> +    if (ret)
+>>> +        return ret;
+>>> +
+>>> +    pci_pwrctrl_init(&upd720201->ctx, dev);
+>>> +
+>>> +    ret = devm_pci_pwrctrl_device_set_ready(dev, &upd720201->ctx);
+>>> +    if (ret)
+>>> +        return dev_err_probe(dev, ret, "Failed to register pwrctrl 
+>>> driver\n");
+>>> +
+>>> +    return 0;
+>>> +}
+>>> +
+>>> +static const struct of_device_id pci_pwrctrl_upd720201_of_match[] = {
+>>> +    {
+>>> +        .compatible = "pci1912,0014",
+>>> +    },
+>>> +    { }
+>>> +};
+>>> +MODULE_DEVICE_TABLE(of, pci_pwrctrl_upd720201_of_match);
+>>> +
+>>> +static struct platform_driver pci_pwrctrl_upd720201_driver = {
+>>> +    .driver = {
+>>> +        .name = "pci-pwrctrl-upd720201",
+>>> +        .of_match_table = pci_pwrctrl_upd720201_of_match,
+>>> +    },
+>>> +    .probe = pci_pwrctrl_upd720201_probe,
+>>> +};
+>>> +module_platform_driver(pci_pwrctrl_upd720201_driver);
+>>> +
+>>> +MODULE_AUTHOR("Neil Armstrong <neil.armstrong@linaro.org>");
+>>> +MODULE_DESCRIPTION("PCI Power Control driver for UPD720201 USB3 Host 
+>>> Controller");
+>>> +MODULE_LICENSE("GPL");
+>>>
+>>> -- 
+>>> 2.34.1
+>>>
+>>
 > 
-> Fixes: f6fd357f7afb ("PCI: dwc: Prepare the driver for enabling ECAM mechanism using iATU 'CFG Shift Feature'")
-> Cc: stable+noautosel@kernel.org # depends on Clean up iATU index usage in dw_pcie_iatu_setup()
-> Reported-by: Maciej W. Rozycki <macro@orcam.me.uk>
-> Closes: https://lore.kernel.org/all/alpine.DEB.2.21.2511280256260.36486@angie.orcam.me.uk/
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> Co-developed-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> 
+> 
 
-Looks OK to me.
-(one nit below)
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-
-
-> @@ -915,8 +907,21 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->  	 * NOTE: For outbound address translation, outbound iATU at index 0 is
->  	 * reserved for CFG IOs (dw_pcie_other_conf_map_bus()), thus start at
->  	 * index 1.
-> +	 *
-> +	 * If using ECAM, outbound iATU at index 0 and index 1 is reserved for
-
-s/is/are
-
-> +	 * CFG IOs.
->  	 */
-> -	ob_iatu_index = 1;
-> +	if (pp->ecam_enabled) {
-> +		ob_iatu_index = 2;
-> +		ret = dw_pcie_config_ecam_iatu(pp);
-> +		if (ret) {
-> +			dev_err(pci->dev, "Failed to configure iATU in ECAM mode\n");
-> +			return ret;
-> +		}
-> +	} else {
-> +		ob_iatu_index = 1;
-> +	}
-> +
->  	resource_list_for_each_entry(entry, &pp->bridge->windows) {
->  		resource_size_t res_size;
-
-
-
--- 
-Damien Le Moal
-Western Digital Research
