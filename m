@@ -1,82 +1,174 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 913A52EA169
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 21:11:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 591C82D94A4
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 21:18:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769634669; cv=none; b=W1zxsSA6kl1SJBtDcvIjqIuJTD4fYrcz5MCStea955m78uKjMzjXx3Rv6Eh141fG5z0S+hZ4HaxUgtnpqU+x6qsl/mW4g/7IGKzp/4nNEd0Ml5uZTaCeB5PsC4Dms27ZT+Ba0uHdyEuchLqtsI1XpmdoXKa8q19CBPvFbcHXZFQ=
+	t=1769635089; cv=none; b=uCvqLq3aY63P3eJaHlUP6NdbNNEHhidRUsAN87+LBmEpp9uuSqu2f/EaaM7/LMcZa8dKmlb0DyxHvqm3NFGAyksVm3yD5EPAsldN+JAsfjseadFFDTMgpMqTcFc+kbtxXA1F6bFuCnMhdJOebtDCfrR62QNtEjFojMnvXDScayQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769634669; c=relaxed/simple;
-	bh=kTOaPNhNYoTCD+Y3dzaBmVOZZ/YJX6h+UQxBHWF8uwQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=eHvEnkOQEjJzLXq95ZnRdL5ApN0U1PRzlIHOYrrINPlG2TarvrS2pb8jagljcLEYXRGrdfqLfQ0p4djFEtNOn5K2IZNEYbemFnhxVgsxm1Hz3NNz7z8IZjyp/xblvfwSDrlzDPH5BnBpH94/c061nVk9qYN4jYppK3i/zrR7suI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tghv5d7q; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769635089; c=relaxed/simple;
+	bh=kjFXNlbmAL0BO92rYrTkCSuMABiMP5ofoNy2abW+ap8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aM1SCOoQdErEyochIHSxgYSILVqtHtnB9e7Y8JCdUV5uX41YD4DveOBHOhpOqVXpx9z4Uo5UgaD1Vz0DwWk8864WEMBFNhOumMN3KNYfN0Y3/eYqz8neMHLxrN1TYFlf1ga+waeS+qM2aActxXU5sFQBFFAZLG6xcBo4urTl4Mw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=VcAbRWxC; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tghv5d7q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01E76C4CEF1;
-	Wed, 28 Jan 2026 21:11:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769634669;
-	bh=kTOaPNhNYoTCD+Y3dzaBmVOZZ/YJX6h+UQxBHWF8uwQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=tghv5d7qbpBH2YfYdnTJVPXf3r/2FR6zh6nBnTB7yt2FFZuPX7BqzGsZJtab3oz4b
-	 +j1+WZs9OczDud985QmJJtF/9oFjRVjsa0hnfkpx5aFRLDDRlY3X5OkEyTo4bZszNV
-	 MJon2hIt8zJPKUPqriJomJcZdgXU0j8/kO/mjrdSauhgBi+cIPi4yuonuCU15DKzkJ
-	 01SfmkmnO0Xo0JmrBQpRdsysGGSqIpqU1RAFY2S2qxZFT0keX0Yyxvw29iSByCAuIg
-	 21MNCeT9s8RCV5AVtRG/6C2eKgn3zeEwVwsyG8fS+dwC/BFfJrT1FF3HfGQRRMNlFz
-	 YP6BwF91G/d+Q==
-Date: Wed, 28 Jan 2026 15:11:07 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: dan.j.williams@intel.com
-Cc: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, alex@shazbot.org,
-	Lukas Wunner <lukas@wunner.de>, Keith Busch <kbusch@kernel.org>,
-	Jinhui Guo <guojinhui.liam@bytedance.com>
-Subject: Re: [PATCH 2/2] pci: fix slot reset device locking
-Message-ID: <20260128211107.GA433824@bhelgaas>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="VcAbRWxC"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-47edd9024b1so2129475e9.3
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 13:18:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1769635085; x=1770239885; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ZU7FEnl0OZQVA7ODIpy0SKJAEacHqZRjK4EaXTvPIzs=;
+        b=VcAbRWxCx1sqsR7wsEPCek4TghMY0a1vc9GxEknZR59yeMCqkqjg1CaJoLrqOfymzc
+         LYIMCKsdWDcGTXFFAeHuG1vHMeb1H+qG5dYzKoFl7O7O7tffhq8wkVwb943kpXJavfS0
+         JXZsmZ0mietseQsxHDXU+1WCIwSUXbjThkfHww+t/wfYahNCHJc0k2smjB2CrMlHRT1J
+         oIQsBhMzeHlO8saKSiNKhXA9/h9DM4jnwQKUtbAdkzeoYpUc8uBTKgDNTO8n/XeLXBVg
+         zwGU85oRqLdKHO38LyxQs5lZtHxrEalkUPEs9Yf3ZRzRT6Goe8iMzyZqQbtbc0i++cMy
+         lmNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769635085; x=1770239885;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZU7FEnl0OZQVA7ODIpy0SKJAEacHqZRjK4EaXTvPIzs=;
+        b=OGZ2ZNv4W8A9V6r97M1nim/Sq+K22j8c3/SyD6dowoj4Y08g3oHlUqf05ksblJ/cCE
+         tfiDBZCI1uZrya+6wBn2CGu/xKtTZ65c7bSvhet8l+/R03Qk1bfsriL/8syAFaXeD4Ow
+         DjLoU/rIssDXQWExf4ipBMBs61n26BHPIj8+jRHlhu8XprmlqDcFvX8GvDTtxcRPF9Qj
+         PvlDbkK/vGK5dw6Vok4qQOepMgvNMFBfX1eOMs4yYS1qg4Pc2wvuvf2r1xZiar/rsO44
+         cYbu/T/lzxMW+oAv5CgFtH+bWLncX5PmBpzyATHfDWyUzG1/3g/b6B41yREtnHPC9wax
+         rTCg==
+X-Forwarded-Encrypted: i=1; AJvYcCVEwP76hSabg3H03qmWejJHBnKexMg4tbpdMsNtaCZfM6IoNxTaniT5BugGds2V9YaH6ZcQPdtFvXg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5X5/1oQHI7VKGz0Wp5b+NQ+0proZrf694sicr7QF9holGuiZD
+	+M+rsfzncaJcB4/G47DoWohi2kEg2rm8jXW1IxDKlXD3WpIPTRBSLW1w0BqtnGw3flo=
+X-Gm-Gg: AZuq6aJgYp4KW7i3kmP/u/mcPU9KrWmCp8sYp3fu63oB2188zVrpaBFXDnpulo/0x7S
+	21lajn9uSh/rKA+FvzWgRMy3hTHtKMIOqI77TUtGNBIhw+HsvyYHt4mt4P0qbS3eigH/wnUn76Q
+	f8BkMR5VTZgrCH1RBEGwVqPbIcdswdW0TW5ei2cnMvglAt0378GTUNRahnfMRE5r18lWIzqoZb/
+	8Hfr1bYEYhsUFOLe7Vznhq0N8cxpwNZ37Z35nr2uNZ9PU7eL+CSDEr3U+JhVzquwVrLL0uA+Pt4
+	Sh+6oAa8OFNoQlmAZ2/YQmi/TV953IOv9Q5XknPo2kEwCbYZ+yzDITX8BFYQ8Ms3SFkMdFJEUwN
+	gl9Hve3YCyazj89MWNHfCWhg7FxQ6EFgTeHQ0AH2LYNAHLq5igu+9F4nP+7ubDt9jZPDoC3aPLo
+	hH+bafs1Ilg6Rpszil59HEb6Sn
+X-Received: by 2002:a05:600c:154c:b0:47e:e9bf:dd8a with SMTP id 5b1f17b1804b1-48069cb2fddmr85513805e9.37.1769635084662;
+        Wed, 28 Jan 2026 13:18:04 -0800 (PST)
+Received: from localhost (109-81-26-156.rct.o2.cz. [109.81.26.156])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4806ce4c515sm85708295e9.11.2026.01.28.13.18.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Jan 2026 13:18:04 -0800 (PST)
+Date: Wed, 28 Jan 2026 22:18:03 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: Frederic Weisbecker <frederic@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Chen Ridong <chenridong@huawei.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	"David S . Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Gabriele Monaco <gmonaco@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Muchun Song <muchun.song@linux.dev>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Vlastimil Babka <vbabka@suse.cz>, Waiman Long <longman@redhat.com>,
+	Will Deacon <will@kernel.org>, cgroups@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 03/33] memcg: Prepare to protect against concurrent
+ isolated cpuset change
+Message-ID: <aXp9CzgCTBEhlDqM@tiehlicka>
+References: <20260125224541.50226-1-frederic@kernel.org>
+ <20260125224541.50226-4-frederic@kernel.org>
+ <aXeZQoSHJ9QX7B6W@tiehlicka>
+ <aXizUsfywjtIIN50@localhost.localdomain>
+ <aXnMj1phN3TJZkNz@tiehlicka>
+ <aXnymtIZSc-fw1b8@localhost.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <697a7a9913e11_309510010@dwillia2-mobl4.notmuch>
+In-Reply-To: <aXnymtIZSc-fw1b8@localhost.localdomain>
 
-On Wed, Jan 28, 2026 at 01:07:37PM -0800, dan.j.williams@intel.com wrote:
-> Ilpo JÃ¤rvinen wrote:
-> > On Wed, 28 Jan 2026, Bjorn Helgaas wrote:
-> > > On Fri, Jan 16, 2026 at 10:41:50AM -0800, Keith Busch wrote:
-> > > > From: Keith Busch <kbusch@kernel.org>
+On Wed 28-01-26 12:27:22, Frederic Weisbecker wrote:
+> Le Wed, Jan 28, 2026 at 09:45:03AM +0100, Michal Hocko a écrit :
+> > On Tue 27-01-26 13:45:06, Frederic Weisbecker wrote:
+> > > Le Mon, Jan 26, 2026 at 05:41:38PM +0100, Michal Hocko a écrit :
+> > > > On Sun 25-01-26 23:45:10, Frederic Weisbecker wrote:
+> > > > > The HK_TYPE_DOMAIN housekeeping cpumask will soon be made modifiable at
+> > > > > runtime. In order to synchronize against memcg workqueue to make sure
+> > > > > that no asynchronous draining is pending or executing on a newly made
+> > > > > isolated CPU, target and queue a drain work under the same RCU critical
+> > > > > section.
+> > > > > 
+> > > > > Whenever housekeeping will update the HK_TYPE_DOMAIN cpumask, a memcg
+> > > > > workqueue flush will also be issued in a further change to make sure
+> > > > > that no work remains pending after a CPU has been made isolated.
+> > > > > 
+> > > > > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
+> > > > > ---
+> > > > >  mm/memcontrol.c | 21 +++++++++++++++++----
+> > > > >  1 file changed, 17 insertions(+), 4 deletions(-)
+> > > > > 
+> > > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > > > index be810c1fbfc3..2289a0299331 100644
+> > > > > --- a/mm/memcontrol.c
+> > > > > +++ b/mm/memcontrol.c
+> > > > > @@ -2003,6 +2003,19 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
+> > > > >  	return flush;
+> > > > >  }
+> > > > >  
+> > > > > +static void schedule_drain_work(int cpu, struct work_struct *work)
+> > > > > +{
+> > > > > +	/*
+> > > > > +	 * Protect housekeeping cpumask read and work enqueue together
+> > > > > +	 * in the same RCU critical section so that later cpuset isolated
+> > > > > +	 * partition update only need to wait for an RCU GP and flush the
+> > > > > +	 * pending work on newly isolated CPUs.
+> > > > > +	 */
+> > > > > +	guard(rcu)();
+> > > > > +	if (!cpu_is_isolated(cpu))
+> > > > > +		schedule_work_on(cpu, work);
 > > > > 
-> > > > Like pci_bus_lock, pci_slot_lock needs to lock the bridge device to
-> > > > prevent the warning:
+> > > > Shouldn't this in the guarded rcu section?
 > > > 
-> > > I *think* this actually refers to pci_bus_trylock() and
-> > > pci_slot_trylock() (not pci_bus_lock() and pci_slot_lock()), since
-> > > that's what this patch changes?
-> > > 
-> > > It's unfortunate that pci_bus_trylock() and pci_slot_trylock() are so
-> > > similar but separate.  If there were combined, this kind of issue
-> > > where one is fixed but the other isn't wouldn't happen.
-> > > 
-> > > But what about pci_bus_lock() and pci_slot_lock()?  They are also
-> > > almost identical, but pci_bus_lock() locks bus->self while
-> > > pci_slot_lock() does not.  Should it?
-> > >
-> > > All these almost-but-not-quite identical paths make my head hurt ;)
+> > > This is what guard(rcu)() does, right?
+> > > Or am I missing something?
 > > 
-> > My series does attempt to consolidation them (check the pending patches 
-> > from me).
+> > I am probably misreading the patch. But I've had the following in mind
 > > 
-> > (It doesn't consider this fix patch though but the other one is taken 
-> > into account, the series was build on top of it).
+> > 	scoped_guard(rcu) {
+> > 		if (!cpu_is_isolated(cpu))
+> > 			schedule_work_on(cpu, work);
+> > 	}
 > 
-> Lore link?
+> guard(...)() protects everything that follows within the same block
+> (here the whole function) whereas scoped_guard only applies to the
+> following scope (here what is inside the {} in your example).
+> 
+> So both work.
 
-I think it's
-https://lore.kernel.org/all/20260116125742.1890-1-ilpo.jarvinen@linux.intel.com/
+I see. Thanks for the clarification. I would probably prefer a more
+explicit call convention but no strong opinion on that.
+-- 
+Michal Hocko
+SUSE Labs
