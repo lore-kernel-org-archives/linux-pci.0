@@ -1,151 +1,146 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBEFB270552
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 12:31:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363D234EEEF;
+	Wed, 28 Jan 2026 12:36:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769603511; cv=none; b=SsfbG12DtvhicZVUitATSCxgeeR7vPQEHoRowXNabUFVlueDsTu6b1hTORSkulu01Hphbx4iUGjW0z6U8MgEOC/UmP9FMaQdpRQohxztGZfHBPeyzULPgbdFHmJgZT1+JS3SLnx2+iZ3l739tbpXQakqWDcy7LnlRQKQZNxFIw0=
+	t=1769603822; cv=none; b=nzQ8VSc/MH26EqBKapkjHrP3PoOCk8qBQSwFHzfCQa8N3K3elBx6J4BUi21fYZFaB6aj4TfWsFwZ4ZMOTXFTtfnt0KshAv3Go3SsaFcpCyl8/SFAo2rVnXlRrJuiO9b3uBtmMkrEGaqZX6Y7FMOZSsxWV+l7fUbS9UDI9Z85JBw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769603511; c=relaxed/simple;
-	bh=tYo9u5QXjBzdVOM3n8bZ3egw7knCKbpodAuAnu7Q7GM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a3aQBgNnEDDhllRQF8YrFG0qz34tPwgi5ZEfsofFaJzmdIFF+iyKEL4EwaJ6aI5oUImIfduB1cgOMMeu7sfFrtPtwkSWZrJ510P81n5gaHVJYojoSu2+94uU6NpshY7Felib8yvzmPktaZwlvRxgLBD2guyu/3kduXthyyKnLIc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DnC5nSJ8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=TsdCp/J1; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DnC5nSJ8";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="TsdCp/J1"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60S929tX3921059
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 12:31:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Aka7Tv0bzP3IlquIu30uTYsQNXrdKO9r+dm+vThfXYg=; b=DnC5nSJ8xHw3Ls6l
-	sXORxqrp+LryKufJnflxjHf2BqkJQApT0yFGEkOc2TgNgaCFKBBiB+RmnPh+vFfr
-	m8QNZpu3fw3m1q4D5tTdW7ZdhREilMz8ygBx5D41jxRPfFjDPh5OlCEA4nuy1Tno
-	K+b/fFKK5w+jqx8JmwHQ+0CT54OsFu9J3QkP8S0uOuVnYzeqasm2GWYrRxOFqpg2
-	cPSETPHXQqNGrw1fv4Ooz1JAs3in+f9Waad5FOuJ+H63yCm94mXyfF1mZ3EzMlwV
-	IHAf4z43fNvgrxaQmfcrCiDn98nG8Rfo9MUYAMFRRO+S9/PsRy/7xHBDqDBf3aHp
-	aSAXrA==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4by211bb4e-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 12:31:49 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-8c710279d57so50091485a.3
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 04:31:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1769603508; x=1770208308; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Aka7Tv0bzP3IlquIu30uTYsQNXrdKO9r+dm+vThfXYg=;
-        b=TsdCp/J1GaVDWihLD8YrFUgb6PLITj0CbdhuCZZzDCuT5Zplo7ZTN/eyjbNvEjqqal
-         K0u8JdjIBLvWmfGwkTzK5H7O6un/sviu4hYUxMNoIqa9wZyjXAoeu/nLEAVLTq4RUFZY
-         8HUPxA0qVYOMLg7U4qO1iU5KPuv/CM5Up//eg9XUa76aNadOwLVDL9AplbLtfiX02kCJ
-         PNVLIzofODf+QlQBaWOWwkqkbQIiQPjXdfWjB3gdKemQzw8sPeWJEC2m04DG+GfJAmkb
-         80SSIHcFpt8g+IIJ/9IPtKrmemXMvpNExW6x6Gas7NiHn9YJqHrjj4FVVqg8NGmmCD2V
-         Dc3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769603508; x=1770208308;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Aka7Tv0bzP3IlquIu30uTYsQNXrdKO9r+dm+vThfXYg=;
-        b=R9ho2J2hh2AhtSNWlzj7JRQ51XXOwB6FQt+KL3Cj9qHla5r8RmU/7zU2ygRSp91qXn
-         wLgFgqP0oN0bRmlhDkLwiWADEA6SjuicZh17QFLrLb1RNU4zLfVsNm1FvoaN/AtzsK2D
-         c05TjmFb99nP/TDbjOXH4VOsTew1LRgcth1+e+ZjWjy3CXZvCi13I7G8ACErzt9zYf6r
-         9YwKjbZyU6TiKi12bOInpw9mCgB2vqr3exveS8XCO/tXCG5FIWIgBR4RVFPj91f3SwPu
-         PZ8HlQN8GacQdn6xG7BZPoL1Bm0qeu78FFqiLiqIHxPJj6YTmia2wXEzd8P+SQQdsGf/
-         aPmg==
-X-Forwarded-Encrypted: i=1; AJvYcCUZyoZlF8eF6soFqGKssrGbJR/8HdVhRPEdx9UZd881GOpduNALJE9RCJrMjnKQ3xti3JWaJ5OH7ss=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4ITo3VND1rLnjnqc29eL1ZBLqJ/YUv+s9HLijK22bjP6mD0rf
-	MbZkiNjao++nKHh4PBfHkPCuDbuZ6NofwgrFzhY9HEMbouDDzfYLGIy08Fp1Tcr6HANqt3MiC2L
-	nkSdlnJ1QWUN0K/K85tRxlMsLkUkEY3wRkxTLIqF+sjHgboARbMBz0PGKAUmzdjI=
-X-Gm-Gg: AZuq6aIUiNoZ4YPw9QYR7XimfxpsZ+ialQBWQRoXcOFsbU9j6xybsXOwIQDfjRpfjOa
-	I9BUFoLWKILa8jFAGuyCGFRhsKU/WUyZsxxrU33QBLeAOz+f1AFohEbr6QqXvwjW8C1mm7hjoM3
-	jBL1WAAK720CKbyh7LPR5cVTnXVfM6WQrOSzfIlpmfCf/Aktoo8QMZlZWVOKQC8rXzLywQ9izJD
-	dQ/ejO3NNalZbItdKrwbq5U9SMLg29fpUofB9nkAmVulvY4LNjyNartTKpKFd7CpcqgARYWYzZo
-	JDtDSbGgCmRwP8reJsQPvh8jzPSwT4PzZR0NXyS8nyDmjrQiwe5i32sKqGrI5Yaqu2V/bo/tDki
-	GGyL6xdfanTFEVki9Uz9P5lb5G/y+BXqVkI+9huBlLlE+/XEUdnE4QBhZKqe/hTOZ6uU=
-X-Received: by 2002:a05:620a:4508:b0:8b2:1f8d:f11d with SMTP id af79cd13be357-8c714b440e8mr153438285a.2.1769603508296;
-        Wed, 28 Jan 2026 04:31:48 -0800 (PST)
-X-Received: by 2002:a05:620a:4508:b0:8b2:1f8d:f11d with SMTP id af79cd13be357-8c714b440e8mr153435385a.2.1769603507851;
-        Wed, 28 Jan 2026 04:31:47 -0800 (PST)
-Received: from [192.168.119.254] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b8dbf183cbesm117532566b.38.2026.01.28.04.31.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Jan 2026 04:31:46 -0800 (PST)
-Message-ID: <30e971d3-90ea-4f08-bc5b-ff25030130b6@oss.qualcomm.com>
-Date: Wed, 28 Jan 2026 13:31:44 +0100
+	s=arc-20240116; t=1769603822; c=relaxed/simple;
+	bh=kNaws1xCzyQVOVgfLs5bTUmNdvu/jmnMakEwKN4/ads=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EUI5MGyK9h2fQc8X9WVOyQjU75w9lCZSvFteIq1KP7AJqJSV/OrVrbgoirwOOBzNN11bzHow37Vkbl/i9dDKKRDMMMgXJl5sp7dI4O0FLa+IhTxeWqiDMX7PJP8oPJNFNeQPmH4j/cgfbtikH/PJIyyfmlNpZoLMRvDWMldmlF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.83])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f1MFZ4Vt1zHnGdR;
+	Wed, 28 Jan 2026 20:36:02 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 253FE40569;
+	Wed, 28 Jan 2026 20:36:50 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 28 Jan
+ 2026 12:36:48 +0000
+Date: Wed, 28 Jan 2026 12:36:47 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: <dan.j.williams@intel.com>
+CC: Vikram Sethi <vsethi@nvidia.com>, Alex Williamson <alex@shazbot.org>,
+	Srirangan Madhavan <smadhavan@nvidia.com>, "dave@stgolabs.net"
+	<dave@stgolabs.net>, "dave.jiang@intel.com" <dave.jiang@intel.com>,
+	"alison.schofield@intel.com" <alison.schofield@intel.com>,
+	"vishal.l.verma@intel.com" <vishal.l.verma@intel.com>, "ira.weiny@intel.com"
+	<ira.weiny@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"ming.li@zohomail.com" <ming.li@zohomail.com>, "rrichter@amd.com"
+	<rrichter@amd.com>, "Smita.KoralahalliChannabasappa@amd.com"
+	<Smita.KoralahalliChannabasappa@amd.com>, "huaisheng.ye@intel.com"
+	<huaisheng.ye@intel.com>, "linux-cxl@vger.kernel.org"
+	<linux-cxl@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Vishal Aslot <vaslot@nvidia.com>, "Shanker
+ Donthineni" <sdonthineni@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>, "Jason
+ Gunthorpe" <jgg@nvidia.com>, Matt Ochs <mochs@nvidia.com>, Jason Sequeira
+	<jsequeira@nvidia.com>
+Subject: Re: [PATCH v4 0/10] CXL Reset support for Type 2 devices
+Message-ID: <20260128123647.0000602f@huawei.com>
+In-Reply-To: <697985c2c622_1d33100a2@dwillia2-mobl4.notmuch>
+References: <20260120222610.2227109-1-smadhavan@nvidia.com>
+	<20260127093343.67715d5e@shazbot.org>
+	<6978ef9919421_1d3310036@dwillia2-mobl4.notmuch>
+	<LV8PR12MB9182DEE18D9F83194A6E0034BD90A@LV8PR12MB9182.namprd12.prod.outlook.com>
+	<697985c2c622_1d33100a2@dwillia2-mobl4.notmuch>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: qcom: Prevent GDSC power down on suspend
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260128-genpd_fix-v1-1-cd45a249d12f@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20260128-genpd_fix-v1-1-cd45a249d12f@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI4MDEwMiBTYWx0ZWRfX5/U2utNdt+ya
- 9BMylviJo4zF7ecyJ2uo2LnY2RGDBE4HpfzLXBc9SO1osBLijJVqcY7d1ySLzm3bBs7hBzPZAZG
- /ymWi+wV7rs/v6N0ahgwi9Ltms0xklLQjFYSgyMD0QNWhMELrrfRoZFHiHz1uKL7rYe0NROZUuw
- Kx92HONMEalxTbk3zCTWj8vkBVSdr7pNOS9YHTSkxiG0GuMFQ6KZ09QlCdtnx3VjGA0VspzNg5T
- 28xFJ9LVvf8UFt2J6LMwMCu2LDbOkdwVqgYSzUbXTkip3MIiVXGgHeCpkKQveLw8UIKTEySKPvG
- lgVeitID4LcToXCLtQsxAOqFCcedzFRMeK2ubl8e0ATDhMs75IIfV8K+9EeBLMvJTNLF1Brgtn+
- OF44YpXHdnfzHWD6fEPGGr57tID+Pt0w6fxNK3Wum3cGa3bNHfmCMeka86apeWyuo0fqIXJjmcY
- D2HcStHmDlvKskuox5g==
-X-Authority-Analysis: v=2.4 cv=GuxPO01C c=1 sm=1 tr=0 ts=697a01b5 cx=c_pps
- a=HLyN3IcIa5EE8TELMZ618Q==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=jU-KX4cHS3eJyRZ3RZEA:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
- a=bTQJ7kPSJx9SKPbeHEYW:22
-X-Proofpoint-GUID: O3MtzjUpiecB2gK_QFVUboEDrp-o9e0J
-X-Proofpoint-ORIG-GUID: O3MtzjUpiecB2gK_QFVUboEDrp-o9e0J
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-01-28_02,2026-01-28_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 adultscore=0 malwarescore=0 lowpriorityscore=0 phishscore=0
- bulkscore=0 impostorscore=0 spamscore=0 clxscore=1015 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601280102
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On 1/28/26 1:22 PM, Krishna Chaitanya Chundru wrote:
-> Currently, the driver expects the devices to remain in D0 across system
-> suspend, but the genpd framework may still power down the associated
-> GDSC during suspend. When that happens, the PCIe link goes down and
-> cannot be recovered on resume.
+On Tue, 27 Jan 2026 19:42:58 -0800
+dan.j.williams@intel.com wrote:
+
+> Vikram Sethi wrote:
+> > Hi Dan,
+> >   
+> > >Once the protocol error handling series has landed there is a potential
+> > >to extend that with CXL Reset recovery. However, that needs a clear
+> > >error model defined as to which resets have a chance of recovering
+> > >*system* operation when CXL.cache/mem fails. In Terry's series, panic /
+> > >reboot is the recovery, not reset.  
+> > 
+> > It's not just about CXL protocol error handling though. Type2 Device
+> > passthrough will be a common usecase for CXL reset (entire device is
+> > assigned to VM) across different VM assignment.  
 > 
-> Prevent genpd from turning off the PCIe GDSC by using
-> dev_pm_genpd_rpm_always_on() so that the power domain stays on while
-> the controller is suspended. This preserves the link state across
-> suspend/resume and avoids unrecoverable link failures.
+> I understand. The point about CXL Protocol Error handling series is that
+> it at least enlightens the PCIe core about the presence of active CXL
+> links.
 > 
-> Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
+> It is also the case that it much closer to being upstream than this set
+> which still has fundamental questions.
+> 
+> > The cache and mem of the device must be cleared via CXL reset for full
+> > device passthrough in addition to the PCIe/CXL.IO reset. Another
+> > usecase is when the device is reconfigured either in baremetal or in
+> > VM for passthrough usecase. Such usecases often require a reset of the
+> > device, and it's cache, mem and not a narrow "memregion" reset, so I'm
+> > not in favor of exposing it via CXL.mem sysfs entries. IMO, device
+> > sysfs attribute reset method is appropriate for type2 devices.  
+> 
+> That case is already handled today with secondary bus reset to
+> completely reset an entire device. That path is problematic for CXL
+> because PCI reset has no idea about how to manage caches or handle
+> memory unplug.
+> 
+> Administrator is responsible for making sure that event is not a
+> surprise memory removal or cache protocol corruption event. That is a
+> level of explosiveness that PCI reset has never needed to consider.
+> 
+> CXL Reset wants to be more surgical than secondary bus reset. The only
+> way to be more surgical is to cooperate with the CXL core that knows
+> whether the explosives have been rendered inert.
+> 
+> > Finally, there is the error usecase, which in the common case is as
+> > simple as an uncorrected ECC error in the HDM. While not strictly
+> > necessary, it is common practice to reset the device in such cases, to
+> > recover the bad page/row via PPR on device reset. You want reset of
+> > the memory controller as part of the CXL reset here, FLR is not
+> > enough.  
+> 
+> ??
+> 
+> CXL memory repair is already upstream without CXL Reset, see
+> CONFIG_CXL_EDAC_MEM_REPAIR.
 
-How does this play along with your D3Cold series?
+To actually do it we rely on tear down of all access to the device
+(if it it's disruptive).
+There is new spec stuff covering asking a device to just do it next reset
+that would fit more closely with this flow. No support yet I think.
 
-Is this patch supposed to be applied first?
+Mind you we are talking type 2, so who knows what people will implement.
+Nice if they used that part of the spec but I doubt we can rely on it!
 
-Konrad
+Jonathan
+
+
+> 
+> > Regarding scope, and "recoverability", we have significant experience
+> > with recovering "pre-CXL" coherent GB200 devices for device errors:
+> > memory ECC or other, by killing the application using device memory,
+> > unloading driver, resetting the device, and reloading driver. The CXL
+> > protocol error series can use CXL reset series, but I don't see that
+> > this series needs to wait for protocol error handling to be merged.    
+> 
+> I do want to get to the point where device memory error recovery is a
+> first class citizen. CXL Protocol Error handling just happens to be at
+> the top of the review queue and safe to assume it can be a foundation
+> for further RAS features.
+> 
+> 
+
