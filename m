@@ -1,154 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f194.google.com (mail-qt1-f194.google.com [209.85.160.194])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2382536BCE6;
-	Wed, 28 Jan 2026 16:54:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DF12FF164
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 16:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769619247; cv=none; b=Q4jIO0/aNYlisLJ/zLApbaTou7Xb0Yq77HbpGHWRWUnkCZS1xcaF9tkCKFUA9cMUC4Kxd/t/i3z8YarWFRzFk0AYj8ZqD2KqovAsshRkpxerkHGUGG4sj0rn1CcpcRjRvLJVeE4GytoKphLPoVfNR5GoCWpFiL8AEa/sgaDZ/yA=
+	t=1769619462; cv=none; b=JcP6zLTASwEHq1TAA/hYM1knU/4xwFxCkaIsSTl9HW+FQ+moW2MopEtnZe/UF/xfWpyuqSY6RV8Zz4Na5sBVgU4n5DONSfGsz/d0t5fDC6IYfcpcrBFaSw7/CPbYYv6BJ8xmCVkdNFgEdhmYNpJ2TjDHUu3zku+QBJlixBooZ0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769619247; c=relaxed/simple;
-	bh=wjD1JjU+ufMC6qAGdcVwazuGSHIwkRbdDsek0eB02g0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=GY7qNexGX08N67LHDODYbgJxMbhm1qGzWDMHK5w9AJCmnXvuXS5IaQCmnE0ljKyOB2KxN+amg/Xopb6gB2mZZkC6yWa8A7poKs2S/VxaYtGs/ternqAgI5Wq8ROOjAMtwrucYGznpgX6P3AVFocRxltuwcEJfXAfsKGnQATQiRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f71woEqR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769619462; c=relaxed/simple;
+	bh=4K4OLHaqM/t/HXgyCFJoyTmAZzqjtCmqUqovtxJuMsU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=W5XWKZqDPvq5q+rJ+Adq9dLyRDlp5rvcQ+HB1z6zsva2Dqb6ViQjSGnaQLImSakQRtsMZPkwQf0asdUOAyKLft6p7WTqEK60ukvmUYlJ6BEytkg8fYesZB0sWYIcMp24/JR5JqxTo/rHRzd0C8RWWzvT5zRSh68IFxIamrEh0Gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=NSvCk+PI; arc=none smtp.client-ip=209.85.160.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f71woEqR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70ABCC4CEF1;
-	Wed, 28 Jan 2026 16:54:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769619246;
-	bh=wjD1JjU+ufMC6qAGdcVwazuGSHIwkRbdDsek0eB02g0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=f71woEqR3TUr+lS24Y4wNcYEiO6+oCU4HWInsmAWCYA1950UIl6+PYOG6Meoz/M5b
-	 i78IMS/LFpX7BMHpXqZ0iX3CmegKGCyiytk0l0J1zrEgR+b2OV/Me9v+EqlszCDPP/
-	 DsoN2t9EUwlT7yCuZ5hEbFAI2m22a8rswfn6/YKXMJmsXR3pfP6U7YUtqToVSCSZkK
-	 fJFzwRbs0FNej8C30P0BzPokpFD9HcQ/i5okTPETjUJfEdQmi71nzMDrIAfxZLJihU
-	 4vXsEtQVK8KwVyIyWWTlIyoB8WfgNkgt80yBX1Elq1e7fuMzIKO+9wwSU6DQ5lMcXP
-	 DWESbn/ZURc7g==
-Date: Wed, 28 Jan 2026 10:54:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	Stephan Gerhold <stephan.gerhold@linaro.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: Re: [PATCH v7 0/2] PCI: Add initial support for handling PCIe M.2
- connectors in devicetree
-Message-ID: <20260128165404.GA421308@bhelgaas>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="NSvCk+PI"
+Received: by mail-qt1-f194.google.com with SMTP id d75a77b69052e-502f101d1cfso69152761cf.1
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 08:57:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1769619460; x=1770224260; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=x5PPbKkTts0Y3gVIJ6pivviiM6v1XzmJpI/qsHikqnY=;
+        b=NSvCk+PIgibHYCb0s3AdIGmdLI4QoBnFvDwKJuBP5DmiVW4yY79sJBf8qYBpOmDO5W
+         s8uZeICawl1lVSPl0j34z6nCA3cC8ov0GbfWxFDPCYv1SaI3ci/SCe5k3h8tsfigeUsY
+         RvLaI+VQqmAxSVnTJk47FWIRbTEfLfdLiT4oJ7Pa5gNT9oLy5IOaTMH34pLKFzUbPqvy
+         KbQGVbRBLnVQ9UsP21MMKtDg6LPsUeLR9BRcU593Nmdr9qhbLnsy5O5phNWpSAojHfip
+         oxPPubyWn1/0lV1ho0SvwtUhVoXMzhD3/k7PzFHAWVXpEi1TqTuv/tXK54d994vX3vkm
+         9MPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769619460; x=1770224260;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=x5PPbKkTts0Y3gVIJ6pivviiM6v1XzmJpI/qsHikqnY=;
+        b=oy1R61fhW9hK+fdjaVATw58y63OenDWlwTYNXYInNlYzqTGhfhG8CImCQKHaStNpZY
+         ykC+ilPKyvTUoYBhDToukgR5f67wk27VLtb6bAr2LCbzQ6GIV11r7phA2whWDFF0QWJC
+         CtuK6dGtLKGr/yDYovP8uL5lTE6jw4ATPTLPAk22D/eBBgw1Ja0R+TbrC5OPRqP26McB
+         Ztc+Fz0Cp5ca3QYxHC5XZhxM3ji6DhFZutUgWG7pcPO3i1RMLZgQ3QI7RNPrhHHhjx+S
+         5bfdbU4shDLbE4g5EpGSI5K7Qao5JRBqrJQQye9Dg7/9/25IGo8sp9Pyq8jpyoTT+ywN
+         Znxg==
+X-Forwarded-Encrypted: i=1; AJvYcCVK0h+Ex2Vanc+ChFfRfqU9IG4eWI29s+3s1cmSi/7BF42jL35wFOylc8ntQTep0slJhbDZ7IMdCEA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwbCictpZqRfDdj9uHor+3UHxzFtxcsMP1rchNLdQt3jBdCx7zW
+	gR9aRlE8RKjsHAGgOMU69A3NyjWz8PURNZO99Nk3aWAurHw9mJP0qyynuIGBtu9OdQM=
+X-Gm-Gg: AZuq6aIgwSv/9Csssk68iyLLQ4ofRRsahjcUV54I54Xz1cq1DL6Nez0/TnkhdyN+vuA
+	DoXmKWOUlgWbZ8gRg3hBqIYx2Yzh1Ox4TE0SVmn7Y3NoNx+K8xrEMtiA6fcRVUD3St9bo+IE+uq
+	9/DCdqHS59gaF8w5Cc/apwl98UOFVXUNtRtMBfvB5W+QM6dk/TSjzs6ZL3q42OrTCxKFb7HB2qL
+	oCkV7E/MCjmZg1mAB23BKNP7+V4v4ePa9sF/KGqTBPdiuFKQMNw+qhX/Al5Edm6vDyI9wlZwNtK
+	z/05TCsjqpHcywNQoEvDxO8SMVpmIJykdJwW0AvReI0nPQgYE4CtM/LDwkcFVnqa/5MZjDbq0TN
+	PWhd8YFj5PSLvkU91XlF9vxlKo4ZD3hRHpws/QfnuJEp7AAlCdJuc/JXP26QafvMtwJ+n+oEwRS
+	Q17rfZODp99Rhoy6aoMow0ujPg6FByiHzngaZ9V9o5+nwENufWcetYKqloNXeSdP9K0z0=
+X-Received: by 2002:a05:622a:592:b0:4e8:a6f8:e3c1 with SMTP id d75a77b69052e-5032f886480mr76621061cf.18.1769619460454;
+        Wed, 28 Jan 2026 08:57:40 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-894d36c85b9sm20499826d6.24.2026.01.28.08.57.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Jan 2026 08:57:39 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1vl8rL-00000009KeE-1DOy;
+	Wed, 28 Jan 2026 12:57:39 -0400
+Date: Wed, 28 Jan 2026 12:57:39 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
+	Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>
+Subject: Re: [RFC 2/2] Set steering-tag directly for PCIe P2P memory access
+Message-ID: <20260128165739.GQ1641016@ziepe.ca>
+References: <20260113164923.GQ745888@ziepe.ca>
+ <20260124011436.172058-1-zhipingz@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260128-pci-m2-v7-0-9b3a5fe3d244@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260124011436.172058-1-zhipingz@meta.com>
 
-On Wed, Jan 28, 2026 at 09:07:14PM +0530, Manivannan Sadhasivam wrote:
-> Hi,
+On Fri, Jan 23, 2026 at 05:13:19PM -0800, Zhiping Zhang wrote:
+> On Tue, 13 Jan 2026 12:49:23 -0400, Jason Gunthorpe wrote:
 > 
-> This series is an initial attempt to support the PCIe M.2 connectors in the
-> kernel and devicetree binding. The PCIe M.2 connectors as defined in the PCI
-> Express M.2 Specification are widely used in Notebooks/Tablet form factors (even
-> in PCs). On the ACPI platforms, power to these connectors are mostly handled by
-> the firmware/BIOS and the kernel never bothered to directly power manage them as
-> like other PCIe connectors. But on the devicetree platforms, the kernel needs to
-> power manage these connectors with the help of the devicetree description. But
-> so far, there is no proper representation of the M.2 connectors in devicetree
-> binding. This forced the developers to fake the M.2 connectors as PMU nodes [1]
-> and fixed regulators in devicetree.
+> > On Mon, Jan 12, 2026 at 11:43:13PM -0800, Zhiping Zhang wrote:
+> > > Got it, thanks for pointing out the security concern! To address this, I
+> > > propose that we still pass the TPH value when allocating the dmah, but we add
+> > > a verification callback in the reg_mr_dmabuf flow to the dmabuf exporter. This
+> > > callback will ensure that the TPH value is correctly linked to the exporting
+> > > device’s MMIO, and only the exporter can authorize the TPH/tag association.
 > 
-> So to properly support the M.2 connectors in devicetree platforms, this series
-> introduces the devicetree binding for Mechanical Key M connector as an example
-> and also the corresponding pwrseq driver and PCI changes in kernel to driver the
-> connector.
+> > That still sounds messy because we have to protect CPU memory.
 > 
-> The Mechanical Key M connector is used to connect SSDs to the host machine over
-> PCIe/SATA interfaces. Due to the hardware constraints, this series only adds
-> support for driving the PCIe interface of the connector in the kernel.
+> > I think you should not use dmah possibly and make it so the dmabuf
+> entirely supplies the TPH value.
 > 
-> Also, the optional interfaces supported by the Key M connectors are not
-> supported in the driver and left for the future enhancements.
+> > Jason
 > 
-> Testing
-> =======
+> Thanks Jason.
 > 
-> This series, together with the devicetree changes [2] [3] were tested on the
-> Qualcomm X1e based Lenovo Thinkpad T14s Laptop which has the NVMe SSD connected
-> over PCIe.
+> We already have an end-to-end workflow around dmah (perftest → rdma-core → kernel)
+> to carry the TPH hint, across multiple patch sets. References:
+>   https://github.com/linux-rdma/perftest/commit/98bfb3679a1e71ec96df6a6d6c8124ac66ebce25
+>   https://github.com/linux-rdma/rdma-core/pull/1623/commits
+>   https://lore.kernel.org/all/cover.1752752567.git.leon@kernel.org/
 > 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/arch/arm64/boot/dts/qcom/x1e80100-qcp.dts?h=v6.18-rc4&id=d09ab685a8f51ba412d37305ea62628a01cbea57
-> [2] https://github.com/Mani-Sadhasivam/linux/commit/40120d02219f34d2040ffa6328f0d406b1e4c04d
-> [3] https://github.com/Mani-Sadhasivam/linux/commit/ff6c3075836cc794a3700b0ec6a4a9eb21d14c6f
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
-> Changes in v7:
-> - Dropped the pwrseq and binding patches as they got applied
-> - Rebased on top of pci/pwrctrl branch
-> - Link to v6: https://lore.kernel.org/r/20260122-pci-m2-v6-0-575da9f97239@oss.qualcomm.com
-> 
-> Changes in v6:
-> - Used 'ports' to describe interfaces instead of endpoints in the binding
-> - Added GPIOs and USB to the example in binding
-> - Incorporated minor comments in the pwrseq driver
-> - Dropped the ata binding patch as it got applied
-> - Link to v5: https://lore.kernel.org/r/20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com
-> 
-> Changes in v5:
-> - used of_node_get() and devm_action to free regulators
-> - Link to v4: https://lore.kernel.org/r/20251228-pci-m2-v4-0-5684868b0d5f@oss.qualcomm.com
-> 
-> Changes in v4:
-> - Added graph property to SATA in this series and PCI to dtschema:
->   https://github.com/devicetree-org/dt-schema/pull/180
-> - Used 'i2c-parent' instead of SMBus port
-> - Reworded the -gpios property description
-> - Rebased on top of v6.19-rc1
-> - Link to v3: https://lore.kernel.org/r/20251125-pci-m2-v3-0-c528042aea47@oss.qualcomm.com
-> 
-> Changes in v3:
-> - Changed the VIO supply name as per dtschema
-> - Added explicit endpoint properties to port 0 node for host I/F
-> - Used scope based cleanup for OF node in pwrseq driver
-> - Collected review tags
-> - Link to v2: https://lore.kernel.org/r/20251108-pci-m2-v2-0-e8bc4d7bf42d@oss.qualcomm.com
-> 
-> Changes in v2:
-> - Incorporated comments from Bartosz and Frank for pwrseq and dt-binding
->   patches, especially adding the pwrseq match() code.
-> - Link to v1: https://lore.kernel.org/r/20251105-pci-m2-v1-0-84b5f1f1e5e8@oss.qualcomm.com
-> 
-> ---
-> Manivannan Sadhasivam (2):
->       PCI/pwrctrl: Add support for handling PCIe M.2 connectors
->       PCI/pwrctrl: Create pwrctrl device if the graph port is found
-> 
->  drivers/pci/pwrctrl/Kconfig |  1 +
->  drivers/pci/pwrctrl/core.c  |  7 ++++---
->  drivers/pci/pwrctrl/slot.c  | 31 +++++++++++++++++++++++++++----
->  3 files changed, 32 insertions(+), 7 deletions(-)
-> ---
-> base-commit: 3e7f562e20ee87a25e104ef4fce557d39d62fa85
-> change-id: 20251103-pci-m2-7633631b6faa
-> 
-> Best regards,
-> -- 
-> Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> 
+> Given that, I’d like to minimize churn and use the existing dmah-based flow, while
+> addressing the CPU-memory protection concern you raised. Would you be open to
+> reconsidering this approach?
 
-Applied to pci/pwrctrl for v6.20, thanks!
+You would need to initialize the dmah from the dmabuf and then lock it
+to only be usable with that dmabuf. It doesn't avoid any dmabuf work,
+it just makes the whole flow more convoluted.
+
+Jason
