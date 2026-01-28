@@ -1,31 +1,85 @@
-Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7614E2D0C7B;
-	Wed, 28 Jan 2026 12:28:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67DC934DCF2
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 12:28:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769603302; cv=none; b=S2EilQTnkvr/NgFxLRWHoakKmBdexMLu7r3B1qOR0MpdRCxNg/HrsKOE3UviLiXlkpinFms2UjHDJPFIaKyXZKOC6jrMM9XP9ZdFMxd8kCRa8KRY2r/MB+Tvr58L006UeEiR0BbS87qXpb0EEat7zqqKWxxamkvtCF37uXD4R6U=
+	t=1769603312; cv=none; b=P3pjEKSf+hd5fgvkBZdvdk5JUmGv0nOZ39a+uxPXINKyZbHU2MNYklrlVFS5jDStWtoOK/3LiJpfKnaFewVhqgrjhO6LEJ5UKbFv3RBXISaXj9LYLODLAYeddjKl0C8sMTd4XghzYjKe2KEFj8vWxV82l8lNyd9mro24jf7LmqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769603302; c=relaxed/simple;
-	bh=TEsbgfCjkK50Hp+lxmtEomnLLMAmp64lAtrsAstm9nc=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=G71TZDh1UJBV+JRZFsXkAT7MeaDcDFInylWLaA1otOKaKUEasQpShaGJOfZNMDGYXqR/nw7Eg0x59h9VmnR7nqS1U00aL67C5/3v7nxBMuumTw/Z9eLDLjpdPHSSUQQzqqCkn1KkZI31BL3P43cgzJXJg0BOOREon84zwDhP37o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=MfXLGDzF; arc=none smtp.client-ip=115.124.30.132
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1769603312; c=relaxed/simple;
+	bh=ZUX9XnVeoQciorqnBH2esQT3/fsNfcIkrEvDlXEi4gw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B8FL3PV+Zfmvz7YNd9Zb7QZL09H817tTPaCBE43UpKnxEIacqiOGs+Kwo8vu9plYu5mwm34KxaIW1kLM/M0D45vXtomem1K2rRlcgvBAkC2xM604FI2qpGSZpbGS4FkVMiMMzgXuys52msVlAX5W61rKYZAHA+YBxDicqmU1kH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=aoe/GZK3; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HLf1D8WX; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="MfXLGDzF"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1769603290; h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type;
-	bh=WwAx+UlouUkOpUHrVPVThJ4hvVbsghTqW21747RuCBY=;
-	b=MfXLGDzFCr6rB6E23QARv9WRaJLSZ0Q5KEKZOJSAvNcwKq690XN99NRMZUwlTl474D89SWc28Wrf0Zj0IyrQh0NCc506j7BD1s62sYQfq+vnKstF7MOI9e11dmRNh9WrkiXCyvoE9/jW/nA1rLEoUAmb5u/4EWLZ3oGfhF17ZZQ=
-Received: from 30.246.162.115(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0Wy3MKEh_1769603288 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 28 Jan 2026 20:28:09 +0800
-Message-ID: <09cf1319-619d-4a6b-97f7-188c1a73aea0@linux.alibaba.com>
-Date: Wed, 28 Jan 2026 20:27:31 +0800
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="aoe/GZK3";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HLf1D8WX"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60SBdt761750353
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 12:28:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	N07p+s1dUgvFBMxNpW2da12jwTaJJ6ibvwkL6xYgEWI=; b=aoe/GZK3vTUzRy/w
+	MoHBh8zCcW3mXfkwfyhi/TU9963Zu9VzJ27aTykGkNqRPURJ7+Mj+G70TYN3Kfqp
+	qvCdottrWm3epCbfL9lhgC70jAvXY419vKb07waHP+Hpsod2FueJeF0vLwdB+E/F
+	mnwc5w+NScWcERrq3VLamDsv20gfaNjcUndJ93W8JS0qGOLCjEWx2+X2EGSFCQgy
+	6fvk1t95Q6aWj4OrHf/Z/bp+rHDpPqNIWEQIe3qzJlXWOGjwSrO0nxOaegpJ27NE
+	9GjQESAS0mQUAvInGR0BOUVrQuDUXp6GYrk4dC/fGtenEeuqufzHaBWemYku5qpP
+	ZBy5aQ==
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4byhsj85a7-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 12:28:30 +0000 (GMT)
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-8c522c44febso103606085a.0
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 04:28:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1769603310; x=1770208110; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=N07p+s1dUgvFBMxNpW2da12jwTaJJ6ibvwkL6xYgEWI=;
+        b=HLf1D8WXbaElre1ZRkHnCEXAHUVKhkiACYVcPnj3J0olPBMksE5k47X4BiSkTTLNG4
+         LONzq+GWJjdbP8ALyXJV0jc3OBMnK02yeNHGl/850s1Ixxp/y6wn7wrF+UFe+uNBX/ln
+         OTnmvLbIhAw7ecNS1WuBmvUB/61BvTqBv/L1E9NWmTlNtZ1bxi0EmDkO1N38nMlDFyti
+         VreJj/BuxGJBiqnc5zpuvd2bC1ZZt1acaN5sDrwfJZJcyb/63dUgy9mQNgMlTxRw1dEI
+         PsZykW5ZZYGrGiLlWu1pMtMXG1quL8lXO5T/LQcC2l0tjsghIvy0n81oVq20TrvpiFTV
+         OOwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769603310; x=1770208110;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=N07p+s1dUgvFBMxNpW2da12jwTaJJ6ibvwkL6xYgEWI=;
+        b=WNHoPJK2HhaE2v6wDJ2MY9+TdOAdblK69/aLO+lC0NL1rYdSv6cgGJyOBu5KuCkZpj
+         Nq9MX3bGWLSwHKrDyaHSg5sPsjHdfnOuz1VWFe1PucOCYulv4MNUq6EkLKuxgxxruOv5
+         Bi/o4ZwlaBpGTrARRL4PNHM74uwrzpLOZ4NqeVul9lhoJ2ssMQnpH6fQJp05iraGtimz
+         lrtTj3ex9XnCqKxp0Xqt5ePtrN1e6IqMV7oQbcKfKcnzchmkuNKykYzXhUJo74wYIRnN
+         0CM8e0pcPTv8IRzr15g4G6K5yaHoVr2aHe9g+qrclbHLkc8ww841c2Bs9mDJvagVm0Av
+         3dUA==
+X-Gm-Message-State: AOJu0YwhROaTW/vOYYibaWtYcMJxsFudK7AzsV8v4dy5RNYSGSJ7s8Dg
+	cU201USQ4rdK0rjWt8RkNOQ2lxc38rt0CeYY0FM9O6+ON5GVPCEyXBf8TFjvB8Ezu/neD10x985
+	AjKRwMoWZsOxO7TIQP1CpKwTv8Utu3UOVcoS4bqNR1NLQMGaKpD1GSHwpJW6LRwk=
+X-Gm-Gg: AZuq6aJdY1x+MwF0hd5UTU0V0ETcf4qApCRnr3NXq9wy12z1vQggytNxdpgRVv1nIYD
+	mKm/Og1MBeHfn6YhtbxKFUsD5J9Q/ZZSJUEMuPZzuvcAfR28c0Cc1w8zVizIoOysNBX8nN16o8a
+	YMKoo06MGu3ZsugCVnHKgrXo1xwER8z7FFT13StELlyv1lvswidJVaw4Bk8frrvoiU+GyhulP2n
+	0ki3wQ1TZwo7ueNmypyGeRMqe6AwHaGH6TYKoMz8xyZIzAxmk/9wiigylY0HZxzeaFlD919T38d
+	q0x4gsN5R4YgEsuJp5yN5TGa7LTanbVYQZjqqfUsc7PrxoWvtjfoPSIfm4Bfe/YEdcy76wsXNjF
+	TQ+sMckkW0VnmW6sLG1CqTlHOV5aZmCAZNND16u8jid/gjmH+d96LemZ5m3dIpVuwyPk=
+X-Received: by 2002:a05:620a:46a0:b0:896:ead2:a657 with SMTP id af79cd13be357-8c71ab1cc92mr355485a.0.1769603309693;
+        Wed, 28 Jan 2026 04:28:29 -0800 (PST)
+X-Received: by 2002:a05:620a:46a0:b0:896:ead2:a657 with SMTP id af79cd13be357-8c71ab1cc92mr353085a.0.1769603309287;
+        Wed, 28 Jan 2026 04:28:29 -0800 (PST)
+Received: from [192.168.119.254] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b8dcb4b1186sm60595566b.39.2026.01.28.04.28.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Jan 2026 04:28:28 -0800 (PST)
+Message-ID: <63531057-ea7c-4a87-9848-04e502bffc32@oss.qualcomm.com>
+Date: Wed, 28 Jan 2026 13:28:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -33,170 +87,73 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-Subject: Re: [PATCH v7 2/5] PCI/DPC: Run recovery on device that detected the
- error
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Subject: Re: [PATCH 3/3] PCI: qcom: Add D3cold support
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Will Deacon <will@kernel.org>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com, kbusch@kernel.org,
- sathyanarayanan.kuppuswamy@linux.intel.com, mahesh@linux.ibm.com,
- oohall@gmail.com, terry.bowman@amd.com, tianruidong@linux.alibaba.com,
- lukas@wunner.de
-References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
- <20260124074557.73961-3-xueshuai@linux.alibaba.com>
- <20260127102402.00004da2@huawei.com>
-In-Reply-To: <20260127102402.00004da2@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        jonathanh@nvidia.com
+References: <20260128-d3cold-v1-0-dd8f3f0ce824@oss.qualcomm.com>
+ <20260128-d3cold-v1-3-dd8f3f0ce824@oss.qualcomm.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20260128-d3cold-v1-3-dd8f3f0ce824@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: s7ktj2tGdyFwA0GtFoWSH9O5z5EQsWfy
+X-Authority-Analysis: v=2.4 cv=GbMaXAXL c=1 sm=1 tr=0 ts=697a00ee cx=c_pps
+ a=qKBjSQ1v91RyAK45QCPf5w==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=gkRObvzxmN_HJK3DEhcA:9
+ a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10 a=zZCYzV9kfG8A:10
+ a=NFOGd7dJGGMPyQGDc5-O:22
+X-Proofpoint-GUID: s7ktj2tGdyFwA0GtFoWSH9O5z5EQsWfy
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI4MDEwMiBTYWx0ZWRfX06pBGUvOKtio
+ LbqU92wBoZ8kFyuIhbavrUfUkkaGXYN6JuYMfXs2H/TDZddlmeGTIXAMJ/sV4Zm81EEvsBOPL6B
+ aE2VUq8f62Zqq69VqRlIiJkEtLN31M4wXflXEdp8XTY0CSqRckcc458oVq1BNSVBCPoHeWamtrr
+ IyUaFGOh+opWaa3RH88QGl05yVXvJovmqZjqC6CsTXbVh934VbpIQpi8Hhck5F+MoJ3LLITBkI3
+ s4Wt5ttc4cdrx03uby06bZnskrRDo28nLHqyiAR8TvJO0dve3H2Ovq/KhqFpbmjMxlOM07qX8iM
+ PmL3HHMExHUzfTZFAZ4vNlgQmIoTzyJaM/TAGOw9BDctiuTmExT+OA9AYkfShTMCNWuws8Pl9rB
+ uHqunx5flJ6BiVqxrmzjYQsNd7j6vTHWxkEapLhJ+L3jxNwD4+o3gMJBv3FWOjtEoOVI1265kJ/
+ y81Wx09fa5bI6flVjeA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-01-28_02,2026-01-28_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 lowpriorityscore=0 bulkscore=0 phishscore=0 clxscore=1015
+ priorityscore=1501 impostorscore=0 suspectscore=0 malwarescore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601280102
 
-
-
-On 1/27/26 6:24 PM, Jonathan Cameron wrote:
-> On Sat, 24 Jan 2026 15:45:54 +0800
-> Shuai Xue <xueshuai@linux.alibaba.com> wrote:
+On 1/28/26 12:40 PM, Krishna Chaitanya Chundru wrote:
+> Add pme_turn_off() support and use DWC common suspend resume methods
+> for device D3cold entry & exit. If the device is not kept in D3cold
+> use existing methods like keeping icc votes, opp votes etc.. intact.
 > 
->> The current implementation of pcie_do_recovery() assumes that the
->> recovery process is executed for the device that detected the error.
->> However, the DPC driver currently passes the error port that experienced
->> the DPC event to pcie_do_recovery().
->>
->> Use the SOURCE ID register to correctly identify the device that
->> detected the error. When passing the error device, the
->> pcie_do_recovery() will find the upstream bridge and walk bridges
->> potentially AER affected. And subsequent commits will be able to
->> accurately access AER status of the error device.
->>
->> Should not observe any functional changes.
->>
->> Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
->> Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
->> ---
->>   drivers/pci/pci.h      |  2 +-
->>   drivers/pci/pcie/dpc.c | 25 +++++++++++++++++++++----
->>   drivers/pci/pcie/edr.c |  7 ++++---
->>   3 files changed, 26 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index 0e67014aa001..58640e656897 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -771,7 +771,7 @@ struct rcec_ea {
->>   void pci_save_dpc_state(struct pci_dev *dev);
->>   void pci_restore_dpc_state(struct pci_dev *dev);
->>   void pci_dpc_init(struct pci_dev *pdev);
->> -void dpc_process_error(struct pci_dev *pdev);
->> +struct pci_dev *dpc_process_error(struct pci_dev *pdev);
->>   pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
->>   bool pci_dpc_recovered(struct pci_dev *pdev);
->>   unsigned int dpc_tlp_log_len(struct pci_dev *dev);
->> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> index bff29726c6a5..f6069f621683 100644
->> --- a/drivers/pci/pcie/dpc.c
->> +++ b/drivers/pci/pcie/dpc.c
->> @@ -260,10 +260,20 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
->>   	return 1;
->>   }
->>   
->> -void dpc_process_error(struct pci_dev *pdev)
->> +/**
->> + * dpc_process_error - handle the DPC error status
->> + * @pdev: the port that experienced the containment event
->> + *
->> + * Return: the device that detected the error.
->> + *
->> + * NOTE: The device reference count is increased, the caller must decrement
->> + * the reference count by calling pci_dev_put().
->> + */
->> +struct pci_dev *dpc_process_error(struct pci_dev *pdev)
+> In qcom_pcie_deinit_2_7_0(), explicitly disable PCIe clocks and resets
+> in the controller.
 > 
-> Maybe it makes sense to carry the err_port naming for the pci_dev
-> in here as well?  Seems stronger than just relying on people
-> reading the documentation you've added.
-
-Good point. I think renaming the parameter would improve clarity. However,
-I'd prefer to handle it in a separate patch to keep this change focused on
-the functional modification. Would that work for you?
-
->   
->>   {
->>   	u16 cap = pdev->dpc_cap, status, source, reason, ext_reason;
->>   	struct aer_err_info info = {};
->> +	struct pci_dev *err_dev;
->>   
->>   	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
->>   
->> @@ -279,6 +289,7 @@ void dpc_process_error(struct pci_dev *pdev)
->>   			pci_aer_clear_nonfatal_status(pdev);
->>   			pci_aer_clear_fatal_status(pdev);
->>   		}
->> +		err_dev = pci_dev_get(pdev);
->>   		break;
->>   	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_NFE:
->>   	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE:
->> @@ -290,6 +301,8 @@ void dpc_process_error(struct pci_dev *pdev)
->>   				"ERR_FATAL" : "ERR_NONFATAL",
->>   			 pci_domain_nr(pdev->bus), PCI_BUS_NUM(source),
->>   			 PCI_SLOT(source), PCI_FUNC(source));
->> +		err_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
->> +					    PCI_BUS_NUM(source), source & 0xff);
+> Remove suspended flag from qcom_pcie structure as it is no longer needed.
 > 
-> Bunch of replication in her with the pci_warn(). Maybe some local variables?
-> Maybe even rebuild the final parameter from PCI_DEVFN(slot, func) just to make the
-> association with the print really obvious?
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
 
-Agreed. Here's the improved version:
+[...]
 
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -293,17 +293,28 @@ struct pci_dev *dpc_process_error(struct pci_dev *pdev)
-                 break;
-         case PCI_EXP_DPC_STATUS_TRIGGER_RSN_NFE:
-         case PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE:
--               pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
--                                    &source);
-+       {
-+               int domain, bus;
-+               u8 slot, func, devfn;
-+               const char *err_type;
-+
-+               pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
-+
-+               /* Extract source device location */
-+               domain = pci_domain_nr(pdev->bus);
-+               bus = PCI_BUS_NUM(source);
-+               slot = PCI_SLOT(source);
-+               func = PCI_FUNC(source);
-+               devfn = PCI_DEVFN(slot, func);
-+
-+               err_type = (reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE) ?
-+                          "ERR_FATAL" : "ERR_NONFATAL";
-+
-                 pci_warn(pdev, "containment event, status:%#06x, %s received from %04x:%02x:%02x.%d\n",
--                        status,
--                        (reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE) ?
--                               "ERR_FATAL" : "ERR_NONFATAL",
--                        pci_domain_nr(pdev->bus), PCI_BUS_NUM(source),
--                        PCI_SLOT(source), PCI_FUNC(source));
--               err_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
--                                           PCI_BUS_NUM(source), source & 0xff);
-+                        status, err_type, domain, bus, slot, func);
-+               err_dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
-                 break;
-+       }
-         case PCI_EXP_DPC_STATUS_TRIGGER_RSN_IN_EXT:
-                 ext_reason = status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT;
-                 pci_warn(pdev, "containment event, status:%#06x: %s detected\n",
+> +		/*
+> +		 * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
+> +		 * Because on some platforms, DBI access can happen very late during the
+> +		 * S2RAM and a non-active CPU-PCIe interconnect path may lead to NoC
+> +		 * error.
+> +		 */
 
-> 
-> Is there any chance that this might return NULL?   Feels like maybe that's
-> only a possibility on a broken setup, but I'm not sure of all the wonderful
-> races around hotplug and DPC occurring before the OS has caught up.
+I think someone internally once tracked down what that access was
 
-Surprise Down events are handled separately in
-dpc_handle_surprise_removal() and won't reach dpc_process_error().
-Please correct me if I missed anything.
+Can we fix that instead?
 
-Thanks for valuable comments.
-
-Best Regards,
-Shuai
+Konrad
