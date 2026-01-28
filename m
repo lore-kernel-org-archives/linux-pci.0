@@ -1,234 +1,258 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81F763164B6
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 17:10:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 629A9487BE;
+	Wed, 28 Jan 2026 17:13:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769620233; cv=none; b=FW8SrWHZzmOo8wyU3z9FIixsKBaplC/zl3oD2TfjPprqhm2+UPL/jAApAlDQqI0voybi16xtuEYMGlNg/AdLp01hNHUuGgruemjJAIkiuTY4nTRqJBg5SXEqclW4MfssMxD0ciLTYVCj649EGe3s8Z1r6BLlscLJDt+CtW4Kz0s=
+	t=1769620383; cv=none; b=PVdfjPp44avIcv2sFa1jSZcA/Sb81jFdrE0tBapgSKgWG4EdAZmS+1sLZmZS6+lh/0jdNDbIojZ5OL5233kDImUMxFrzEdJoF5XxvaSFDXO59K6sYx5TTsatK1d+GMy9rNIContdyHppQpiDNb/jM6TULhHJ+nL4ID3nqVrcycw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769620233; c=relaxed/simple;
-	bh=QoL6w4QerqdccAj3iCCpGTqrAgsBP0Xb93N+LVfhez8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=jM2oHrCC8FEzOhLSS3ghVZ83SIRmm9Xzo63a9CslU4B8FcngxppbPBjZQHBR8+rj/GY/oE5F/visl1IuELWqJnZUAaJi1DWvVYNSEEgUuwofjaRHatm3G62gfxcnqa6HTP2a5EcHGt/HpWXWkRAd0GjuJQjF4ZVg3gkfCWePftg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DQydzdIo; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1769620383; c=relaxed/simple;
+	bh=JVS5mAhybJmpS6sDahaQJbUWKOx4qO/x7GUI9lF9ueU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PxoCYiZO2+0pr1pioA+q84LOi0JoePpxsM15nNgKZNHLW7DHe9YfvLxuzfUSK0B5K0SnRNIB7DZBKeMS3E6/+rXU9vWUAO3vtd0F0L37ebzSoRhIaT4m691KReDKWrR5moeDVQjMXpPPp4Y2iytuWNv68sFge4pR+JHHOLgmHSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UG1aWbtj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DQydzdIo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769620231; x=1801156231;
-  h=date:from:to:cc:subject:message-id;
-  bh=QoL6w4QerqdccAj3iCCpGTqrAgsBP0Xb93N+LVfhez8=;
-  b=DQydzdIoY+DQXJPajx7LE8kPJLGXTK+t3YoJmpPc/3acFy24/9TLMWgL
-   pRnb5vbhQ9jD4lKoTvZgxu6yuQN85qGd0ZWFDO4P9DvZuStiHGQpREpwh
-   3lwhsQcpCdWimETKjp9FjBaClrYsRY91bDKAcb9ac2hZ+dR+fQIjVpJuM
-   hBeAXrUh07K//b+RmMwMYqlFSfTfgRohnBMrN0yhTnCMIlw6wsbLpSVgA
-   S4dZ4NEEVrSe8ZPgMTcn/biyuWl+gyNVu7RqqwVlGo6AtIDb2KeF+CzVK
-   y6D6lA5JC8KwyAWWwTu5/Kvl/DRBzM26q/14WMunlw7+3FFXJXp7qgm74
-   w==;
-X-CSE-ConnectionGUID: JV4ndAuqTZClzDFov533CA==
-X-CSE-MsgGUID: Nn5bs1nfTMCUjfNJBLN2Xg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11685"; a="81953091"
-X-IronPort-AV: E=Sophos;i="6.21,258,1763452800"; 
-   d="scan'208";a="81953091"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2026 09:10:31 -0800
-X-CSE-ConnectionGUID: jyQhZI28Sx2Qa2S+LuFZDQ==
-X-CSE-MsgGUID: pgdv97gbSWSWAqU+hOIeuw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,258,1763452800"; 
-   d="scan'208";a="213191884"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 28 Jan 2026 09:10:29 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vl93j-00000000acb-2I33;
-	Wed, 28 Jan 2026 17:10:27 +0000
-Date: Thu, 29 Jan 2026 01:09:28 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- 97f308dcfed586d61b0265e793aaf086d4acbafe
-Message-ID: <202601290122.oB8yf0l2-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UG1aWbtj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC476C4CEF1;
+	Wed, 28 Jan 2026 17:13:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769620383;
+	bh=JVS5mAhybJmpS6sDahaQJbUWKOx4qO/x7GUI9lF9ueU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=UG1aWbtjj63UBMTVUskU5TMOoAg/8aU1xfj9NXcqzqUHzx7scO+0ZJzNCUBceFgiI
+	 wyDzqCM1webvq656iwRCyXURwFuvKWOa5XNKL1DbfbJamnxDDZ2JT8eQEm8jU58BGp
+	 3Uj1xILNugDnvJR7qgwqBAk6Q3rDy3ok0vOx+dEGvflnRlRhnXquazdphV820byeBH
+	 tJZMpKGV9v+FsZesf1O8jMTg9PacSqDwffy3NZKqBVLPH3R68b1HH0Q5y4lentXqf6
+	 0shAGSdP8XnVPGa3DQdKtTjXZpfzWh6lllA+lT9YTtNyOJ7g3oFTUQvll7zMQO6Vgw
+	 0gpzMNIBrVCww==
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>
+Cc: Frank.Li@nxp.com,
+	dlemoal@kernel.org,
+	Koichiro Den <den@valinux.co.jp>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Subject: [PATCH v2] PCI: endpoint: pci-epf-test: Allow overriding default BAR sizes
+Date: Wed, 28 Jan 2026 18:11:57 +0100
+Message-ID: <20260128171157.1795146-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7529; i=cassel@kernel.org; h=from:subject; bh=JVS5mAhybJmpS6sDahaQJbUWKOx4qO/x7GUI9lF9ueU=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDKrnGNnx61M2ao8YTYD23sdlfcJ/y4mXJ5zr/wda1j0f vm/Mv3dHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjI4leMDDOnTzjrp18pGdYy 4ej64PxFU1b5x/xk5CuqWFpT9ma2XSLD//JV74WU1ty+FZszkX37pdaj1klORzpkHs95+nP27ma eLB4A
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: 97f308dcfed586d61b0265e793aaf086d4acbafe  Merge branch 'pci/misc'
+Add bar{0,1,2,3,4,5}_size attributes in configfs, so that the user is not
+restricted to run pci-epf-test with the hardcoded BAR size values defined
+in pci-epf-test.c.
 
-elapsed time: 1109m
+This code is shamelessly more or less copy pasted from pci-epf-vntb.c
 
-configs tested: 157
-configs skipped: 7
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Tested-by: Koichiro Den <den@valinux.co.jp>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+Changes since v1:
+-Rebased on branch controller/dwc since this branch contains changes
+ to pci-epf-test.c which conflicted with V1 of this patch.
+-Updated the documentation to show the current BAR sizes after other
+ changes on branch controller/dwc.
+-Picked up tags.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+ Documentation/PCI/endpoint/pci-test-howto.rst | 16 ++++
+ drivers/pci/endpoint/functions/pci-epf-test.c | 92 ++++++++++++++++++-
+ 2 files changed, 106 insertions(+), 2 deletions(-)
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260128    gcc-9.5.0
-arc                   randconfig-002-20260128    gcc-8.5.0
-arm                               allnoconfig    clang-22
-arm                              allyesconfig    gcc-15.2.0
-arm                         bcm2835_defconfig    clang-22
-arm                        neponset_defconfig    gcc-15.2.0
-arm                          pxa910_defconfig    gcc-15.2.0
-arm                   randconfig-001-20260128    gcc-15.2.0
-arm                   randconfig-002-20260128    gcc-15.2.0
-arm                   randconfig-003-20260128    gcc-8.5.0
-arm                   randconfig-004-20260128    gcc-8.5.0
-arm                             rpc_defconfig    clang-18
-arm64                            allmodconfig    clang-19
-arm64                             allnoconfig    gcc-15.2.0
-arm64                 randconfig-001-20260128    clang-22
-arm64                 randconfig-002-20260128    gcc-12.5.0
-arm64                 randconfig-003-20260128    gcc-14.3.0
-arm64                 randconfig-004-20260128    gcc-13.4.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                  randconfig-001-20260128    gcc-15.2.0
-csky                  randconfig-002-20260128    gcc-14.3.0
-hexagon                          allmodconfig    clang-17
-hexagon                           allnoconfig    clang-22
-hexagon               randconfig-001-20260128    clang-20
-hexagon               randconfig-002-20260128    clang-20
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260128    gcc-14
-i386        buildonly-randconfig-002-20260128    clang-20
-i386        buildonly-randconfig-003-20260128    gcc-14
-i386        buildonly-randconfig-004-20260128    clang-20
-i386        buildonly-randconfig-005-20260128    gcc-14
-i386        buildonly-randconfig-006-20260128    clang-20
-i386                  randconfig-001-20260128    gcc-14
-i386                  randconfig-002-20260128    gcc-14
-i386                  randconfig-003-20260128    gcc-14
-i386                  randconfig-004-20260128    gcc-14
-i386                  randconfig-005-20260128    gcc-14
-i386                  randconfig-006-20260128    gcc-14
-i386                  randconfig-007-20260128    gcc-14
-i386                  randconfig-011-20260128    clang-20
-i386                  randconfig-012-20260128    gcc-14
-i386                  randconfig-013-20260128    gcc-14
-i386                  randconfig-014-20260128    clang-20
-i386                  randconfig-015-20260128    clang-20
-i386                  randconfig-016-20260128    gcc-14
-i386                  randconfig-017-20260128    clang-20
-loongarch                        allmodconfig    clang-19
-loongarch                         allnoconfig    clang-22
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260128    clang-22
-loongarch             randconfig-002-20260128    clang-20
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    gcc-15.2.0
-m68k                        m5407c3_defconfig    gcc-15.2.0
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    gcc-11.5.0
-nios2                 randconfig-001-20260128    gcc-8.5.0
-nios2                 randconfig-002-20260128    gcc-11.5.0
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260128    gcc-11.5.0
-parisc                randconfig-002-20260128    gcc-12.5.0
-parisc64                            defconfig    gcc-15.2.0
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc                      pasemi_defconfig    clang-22
-powerpc               randconfig-001-20260128    clang-22
-powerpc               randconfig-002-20260128    gcc-8.5.0
-powerpc64             randconfig-001-20260128    clang-22
-powerpc64             randconfig-002-20260128    clang-22
-riscv                            allmodconfig    clang-22
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    clang-22
-riscv                 randconfig-001-20260128    gcc-13.4.0
-riscv                 randconfig-002-20260128    gcc-15.2.0
-s390                             allmodconfig    clang-18
-s390                              allnoconfig    clang-22
-s390                          debug_defconfig    gcc-15.2.0
-s390                                defconfig    clang-22
-s390                  randconfig-001-20260128    gcc-13.4.0
-s390                  randconfig-002-20260128    gcc-8.5.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-15.2.0
-sh                    randconfig-001-20260128    gcc-15.2.0
-sh                    randconfig-002-20260128    gcc-15.2.0
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260128    gcc-8.5.0
-sparc                 randconfig-002-20260128    gcc-8.5.0
-sparc64                          allmodconfig    clang-22
-sparc64                             defconfig    clang-20
-sparc64               randconfig-001-20260128    gcc-12.5.0
-sparc64               randconfig-002-20260128    gcc-10.5.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-22
-um                               allyesconfig    gcc-14
-um                                  defconfig    clang-22
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260128    gcc-12
-um                    randconfig-002-20260128    clang-22
-um                           x86_64_defconfig    clang-22
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260128    gcc-14
-x86_64      buildonly-randconfig-002-20260128    gcc-14
-x86_64      buildonly-randconfig-003-20260128    gcc-14
-x86_64      buildonly-randconfig-004-20260128    gcc-12
-x86_64      buildonly-randconfig-005-20260128    clang-20
-x86_64      buildonly-randconfig-006-20260128    clang-20
-x86_64                              defconfig    gcc-14
-x86_64                randconfig-001-20260128    clang-20
-x86_64                randconfig-002-20260128    clang-20
-x86_64                randconfig-003-20260128    clang-20
-x86_64                randconfig-004-20260128    gcc-14
-x86_64                randconfig-005-20260128    gcc-13
-x86_64                randconfig-006-20260128    gcc-14
-x86_64                randconfig-011-20260128    clang-20
-x86_64                randconfig-012-20260128    gcc-14
-x86_64                randconfig-013-20260128    clang-20
-x86_64                randconfig-014-20260128    clang-20
-x86_64                randconfig-015-20260128    gcc-14
-x86_64                randconfig-016-20260128    clang-20
-x86_64                randconfig-071-20260128    clang-20
-x86_64                randconfig-072-20260128    clang-20
-x86_64                randconfig-073-20260128    gcc-12
-x86_64                randconfig-074-20260128    gcc-14
-x86_64                randconfig-075-20260128    gcc-14
-x86_64                randconfig-076-20260128    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                randconfig-001-20260128    gcc-8.5.0
-xtensa                randconfig-002-20260128    gcc-11.5.0
+diff --git a/Documentation/PCI/endpoint/pci-test-howto.rst b/Documentation/PCI/endpoint/pci-test-howto.rst
+index dd66858cde46..497251d53b12 100644
+--- a/Documentation/PCI/endpoint/pci-test-howto.rst
++++ b/Documentation/PCI/endpoint/pci-test-howto.rst
+@@ -84,6 +84,22 @@ device, the following commands can be used::
+ 	# echo 32 > functions/pci_epf_test/func1/msi_interrupts
+ 	# echo 2048 > functions/pci_epf_test/func1/msix_interrupts
+ 
++By default, pci-epf-test uses the following BAR sizes::
++
++	# grep . functions/pci_epf_test/func1/pci_epf_test.0/bar?_size
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar0_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar1_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar2_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar3_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar4_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar5_size:1048576
++
++The user can override a default value using e.g.::
++	# echo 1048576 > functions/pci_epf_test/func1/pci_epf_test.0/bar1_size
++
++Note: Some endpoint controllers might have fixed size BARs, or reserved BARs,
++for such controllers, the corresponding BAR size in configfs will be ignored.
++
+ 
+ Binding pci-epf-test Device to EP Controller
+ --------------------------------------------
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 1cc630a2ee75..e8dff291f116 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -72,6 +72,7 @@ static struct workqueue_struct *kpcitest_workqueue;
+ struct pci_epf_test {
+ 	void			*reg[PCI_STD_NUM_BARS];
+ 	struct pci_epf		*epf;
++	struct config_group	group;
+ 	enum pci_barno		test_reg_bar;
+ 	size_t			msix_table_offset;
+ 	struct delayed_work	cmd_handler;
+@@ -85,6 +86,7 @@ struct pci_epf_test {
+ 	bool			dma_private;
+ 	const struct pci_epc_features *epc_features;
+ 	struct pci_epf_bar	db_bar;
++	size_t			bar_size[PCI_STD_NUM_BARS];
+ };
+ 
+ struct pci_epf_test_reg {
+@@ -111,7 +113,8 @@ static struct pci_epf_header test_header = {
+ 	.interrupt_pin	= PCI_INTERRUPT_INTA,
+ };
+ 
+-static size_t bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
++/* default BAR sizes, can be overridden by the user using configfs */
++static size_t default_bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
+ 
+ static void pci_epf_test_dma_callback(void *param)
+ {
+@@ -1240,7 +1243,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+ 		if (epc_features->bar[bar].type == BAR_FIXED)
+ 			test_reg_size = epc_features->bar[bar].fixed_size;
+ 		else
+-			test_reg_size = bar_size[bar];
++			test_reg_size = epf_test->bar_size[bar];
+ 
+ 		base = pci_epf_alloc_space(epf, test_reg_size, bar,
+ 					   epc_features, PRIMARY_INTERFACE);
+@@ -1312,6 +1315,87 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
+ 	pci_epf_test_free_space(epf);
+ }
+ 
++#define PCI_EPF_TEST_BAR_SIZE_R(_name, _id)				\
++	static ssize_t pci_epf_test_##_name##_show(struct config_item *item,	\
++						   char *page)		\
++	{								\
++		struct config_group *group = to_config_group(item);	\
++		struct pci_epf_test *epf_test = container_of(group,	\
++					struct pci_epf_test, group);	\
++									\
++		return sprintf(page, "%zu\n", epf_test->bar_size[_id]);	\
++	}
++
++#define PCI_EPF_TEST_BAR_SIZE_W(_name, _id)				\
++	static ssize_t pci_epf_test_##_name##_store(struct config_item *item, \
++						    const char *page, size_t len) \
++	{								\
++		struct config_group *group = to_config_group(item);	\
++		struct pci_epf_test *epf_test = container_of(group,	\
++					struct pci_epf_test, group);	\
++		int val;						\
++		int ret;						\
++									\
++		ret = kstrtouint(page, 0, &val);			\
++		if (ret)						\
++			return ret;					\
++									\
++		if (!is_power_of_2(val))				\
++			return -EINVAL;					\
++									\
++		epf_test->bar_size[_id] = val;				\
++									\
++		return len;						\
++	}
++
++PCI_EPF_TEST_BAR_SIZE_R(bar0_size, BAR_0)
++PCI_EPF_TEST_BAR_SIZE_W(bar0_size, BAR_0)
++PCI_EPF_TEST_BAR_SIZE_R(bar1_size, BAR_1)
++PCI_EPF_TEST_BAR_SIZE_W(bar1_size, BAR_1)
++PCI_EPF_TEST_BAR_SIZE_R(bar2_size, BAR_2)
++PCI_EPF_TEST_BAR_SIZE_W(bar2_size, BAR_2)
++PCI_EPF_TEST_BAR_SIZE_R(bar3_size, BAR_3)
++PCI_EPF_TEST_BAR_SIZE_W(bar3_size, BAR_3)
++PCI_EPF_TEST_BAR_SIZE_R(bar4_size, BAR_4)
++PCI_EPF_TEST_BAR_SIZE_W(bar4_size, BAR_4)
++PCI_EPF_TEST_BAR_SIZE_R(bar5_size, BAR_5)
++PCI_EPF_TEST_BAR_SIZE_W(bar5_size, BAR_5)
++
++CONFIGFS_ATTR(pci_epf_test_, bar0_size);
++CONFIGFS_ATTR(pci_epf_test_, bar1_size);
++CONFIGFS_ATTR(pci_epf_test_, bar2_size);
++CONFIGFS_ATTR(pci_epf_test_, bar3_size);
++CONFIGFS_ATTR(pci_epf_test_, bar4_size);
++CONFIGFS_ATTR(pci_epf_test_, bar5_size);
++
++static struct configfs_attribute *pci_epf_test_attrs[] = {
++	&pci_epf_test_attr_bar0_size,
++	&pci_epf_test_attr_bar1_size,
++	&pci_epf_test_attr_bar2_size,
++	&pci_epf_test_attr_bar3_size,
++	&pci_epf_test_attr_bar4_size,
++	&pci_epf_test_attr_bar5_size,
++	NULL,
++};
++
++static const struct config_item_type pci_epf_test_group_type = {
++	.ct_attrs	= pci_epf_test_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_group *pci_epf_test_add_cfs(struct pci_epf *epf,
++						 struct config_group *group)
++{
++	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
++	struct config_group *epf_group = &epf_test->group;
++	struct device *dev = &epf->dev;
++
++	config_group_init_type_name(epf_group, dev_name(dev),
++				    &pci_epf_test_group_type);
++
++	return epf_group;
++}
++
+ static const struct pci_epf_device_id pci_epf_test_ids[] = {
+ 	{
+ 		.name = "pci_epf_test",
+@@ -1324,6 +1408,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+ {
+ 	struct pci_epf_test *epf_test;
+ 	struct device *dev = &epf->dev;
++	enum pci_barno bar;
+ 
+ 	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
+ 	if (!epf_test)
+@@ -1331,6 +1416,8 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+ 
+ 	epf->header = &test_header;
+ 	epf_test->epf = epf;
++	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++)
++		epf_test->bar_size[bar] = default_bar_size[bar];
+ 
+ 	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
+ 
+@@ -1343,6 +1430,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+ static const struct pci_epf_ops ops = {
+ 	.unbind	= pci_epf_test_unbind,
+ 	.bind	= pci_epf_test_bind,
++	.add_cfs = pci_epf_test_add_cfs,
+ };
+ 
+ static struct pci_epf_driver test_driver = {
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+base-commit: 0ebf8e7943e01b2c38c199228f51adbb89c02425
+-- 
+2.52.0
+
