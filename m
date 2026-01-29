@@ -1,80 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C512F13959D
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 18:31:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA69C2FABE1;
+	Thu, 29 Jan 2026 18:50:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769711490; cv=none; b=X8ml8JL+ObInEfPB/zJcbFYtNSNWp8LDutv6jzjv9pEpunNkdupB8tfI0WxLuG1Q6bu3hU8FeYYDG8rYvfBKrjxGebEzDHonSiKByIGcVTAhEui776pkKhFSNLcjgETsEN3l9EcxrDtaaGvXXbxfA+dFq1HH/nex435jAc+Eaz0=
+	t=1769712637; cv=none; b=QVYE1pKqpUdAkEg1iL6jas0t6nyascCltuYJqFPZdzQDVyBEeOsrWZYWZtxwo4rPJLiz0c3H2p6vJJHm+vSt2g9x8WwutJzcMMs52X1dtwh2McmRgvbhgZrThu4A1a+a3WFBxdgMhQe5ChJs/D/d2PH8LsjS/LEBx389K380Ogs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769711490; c=relaxed/simple;
-	bh=ykLaeq5otJwmNWDNmdJVUBbHc5uhFWoyYt2qSezCtB4=;
+	s=arc-20240116; t=1769712637; c=relaxed/simple;
+	bh=cNrkc1YUDoFxcbq7+xlAnNvtemzG3rnBhBRuybwfbrA=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=pdJWSwq7Pto7VuWE2CXEJuGm80JlweGVJjKtNcq/zJUIR0a7P5MBq49h8bJ6VZkr/nvJlnYt8B53vjHNExGSVEIfSJxjlDiM9w+/IPYdWSWZeWGWBmk/vdjUd5ktIfZJig0eIZuow5pRSNhZkRMXr7vMcgm8QWuXUgg5zGSpZPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n4t1NGAq; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=JOJgu/+8YYZYy+w+jIavNSzD+Rmw+1PfGetXdjiNGJYOu5IXja21gHZaIz6KzZL8vfyF+Oboig/SrmsuifWbZkB5MV2F+ShEkE7g1aum4mAs9nb+P+hY/bdLI3dh3eTrWP8Jp9DdyFabc75TmdiIjUjgBjNDybxTNQ0CDwH70ZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iTyCFz9n; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n4t1NGAq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A945C116D0;
-	Thu, 29 Jan 2026 18:31:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iTyCFz9n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 709FCC4CEF7;
+	Thu, 29 Jan 2026 18:50:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769711490;
-	bh=ykLaeq5otJwmNWDNmdJVUBbHc5uhFWoyYt2qSezCtB4=;
+	s=k20201202; t=1769712636;
+	bh=cNrkc1YUDoFxcbq7+xlAnNvtemzG3rnBhBRuybwfbrA=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=n4t1NGAq6iJlar86bg9wtc8jsOcfC7eQ60tamGJ2TpjOCwZ2DruNHHh/vH6d7Lx/O
-	 r0L+LREBf/wAltIknVAYTNN/3++Nx95hB/SO9EL4+Hw8hLGtwiSmcKrx/wye5ykD5H
-	 F5EnFnklhLlIdfPywtOD0Z2p7s4UdwcH6JdCazwI5GdXqM8UgAD4/UD7pOTyRB6LNz
-	 yJ5O7920k9ZVta8sFDigThkQBcqxvSWgGzxyj/nnqWSPDWLKZyL3QloBX+uekE19cs
-	 Zmdkm8taTlNSlMpJv3YW+GfmAZh1EW1fOWpLN47XChYJzMSp+IQBT26S+TMdLL6+4Q
-	 VelhRBwd52odw==
-Date: Thu, 29 Jan 2026 12:31:28 -0600
+	b=iTyCFz9ns7rhPXyFXD5AuvWLqKpku46Ah6AWucQDNnnnOJNvDMgOIMyRqWMKhGzhg
+	 2jUdRGzpFu0f56sryrZqUvN+nZX2DTYDe0yJK7KMUIPe3umijhOOKN+pZbdsP78WU7
+	 D0w/KXPIE8IC9XrDXtg4PiLoPL17bHqdKA30Z8ija3d2ZuqYRalozLl55+xyG/TujV
+	 uuLYp0VCKJWdtEhn9sQe/AktJgvyy3XnPTLFzJVmOuqYmqFG5XBhLowd1Fbcm2ZoXh
+	 vVviMlRilruGtKb55I4gHqyix0IlNZIImzX/pK8QIv+oRkCQXYz6cm0Jm1RgIPg/yY
+	 +x0sxF0CbhKeQ==
+Date: Thu, 29 Jan 2026 12:50:35 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sergey Shtylyov <s.shtylyov@auroraos.dev>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-Subject: Re: [PATCH] PCI: Check parent for NULL in
- of_pci_bus_release_domain_nr()
-Message-ID: <20260129183128.GA471057@bhelgaas>
+To: =?utf-8?B?SMOla29u?= Bugge <haakon.bugge@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Johannes Thumshirn <morbidrsa@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v4 0/2] PCI: Init RCB from pci_configure_device and fix
+ program_hpx_type2
+Message-ID: <20260129185035.GA473061@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260127203944.28588-1-s.shtylyov@auroraos.dev>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260129175237.727059-1-haakon.bugge@oracle.com>
 
-On Tue, Jan 27, 2026 at 11:39:42PM +0300, Sergey Shtylyov wrote:
-> of_pci_bus_find_domain_nr() allows its parent parameter to be NULL but
-> of_pci_bus_release_domain_nr() (that undoes its effect) doesn't -- that
-> means it's going to blow up while calling of_get_pci_domain_nr() if the
-> parent parameter indeed happens to be NULL.  Add the missing NULL check.
+On Thu, Jan 29, 2026 at 06:52:31PM +0100, Håkon Bugge wrote:
+> This series add the initialization of the Link Control register's RCB
+> to pci_configure_rcb() called from pci_configure_device() and also
+> cleans up the incorrect program_hpx_type2():
 > 
-> Found by Linux Verification Center (linuxtesting.org) with the Svace static
-> analysis tool.
+> 1. It should only be called when we own the PCIe native hotplug and
+>    not the AER ownership
+> 2. It should only manipulate the AER-bits
 > 
-> Fixes: c14f7ccc9f5d ("PCI: Assign PCI domain IDs by ida_alloc()")
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@auroraos.dev>
+> In addition, the second commit adds a warning if the _HPX type2
+> record attempts to modify the Link Control register.
+> 
+> The programming of the device's RCB is constrained to the device types
+> where it is applicable and also skips VFs. If the Root Port's RCB
+> cannot be determined, we also skip the programming of the device's
+> RCB.
+> 
+> Then, we program the device's RCB according to the Root Port's setting.
+> 
+> Håkon Bugge (2):
+>   PCI: Initialize RCB from pci_configure_device()
+>   PCI/ACPI: Restrict program_hpx_type2() to AER bits
+> 
+>  drivers/pci/pci-acpi.c | 65 ++++++++++++++++++------------------------
+>  drivers/pci/pci.h      |  3 ++
+>  drivers/pci/pcie/aer.c |  3 --
+>  drivers/pci/probe.c    | 33 +++++++++++++++++++++
+>  4 files changed, 63 insertions(+), 41 deletions(-)
 
-Applied to pci/enumeration for v6.20, thanks!
+Applied to pci/enumeration for v6.20.
 
-> ---
->  drivers/pci/pci.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 13dbb405dc31..9fc4c2226b03 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -6591,7 +6591,7 @@ static void of_pci_bus_release_domain_nr(struct device *parent, int domain_nr)
->  		return;
->  
->  	/* Release domain from IDA where it was allocated. */
-> -	if (of_get_pci_domain_nr(parent->of_node) == domain_nr)
-> +	if (parent && of_get_pci_domain_nr(parent->of_node) == domain_nr)
->  		ida_free(&pci_domain_nr_static_ida, domain_nr);
->  	else
->  		ida_free(&pci_domain_nr_dynamic_ida, domain_nr);
-> -- 
-> 2.52.0
-> 
+Thanks for your patience and persistence, I think this all looks great!
