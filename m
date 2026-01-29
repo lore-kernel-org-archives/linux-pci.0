@@ -1,126 +1,84 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id CC7C4364EA2;
-	Thu, 29 Jan 2026 21:43:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66ACF311C21;
+	Thu, 29 Jan 2026 21:51:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769723011; cv=none; b=ad57aTrfVBXG0Nw6kBn+y2NkMwBz02+0Rc96C5qSOEOYkkEcNCYR3Dlqz39Zwkrxi3OAH5LYHDHWNvBDObDGhW3qb/cPg3DzlTzv8MDXKMvkn0AG6RX+c8yutQfaClmIwo3bqKzInFekcHvqil2XGPbIEC2QFg255Gb/Fj8SL5w=
+	t=1769723476; cv=none; b=uYj41XNItOgzBOxza98eIVYd4qGLqZz98SUb5a2T/a+LvxAiadD6tlz/DS2E/h8W3hW1BaM0rtF5HJFiz6uRrv1Un53MG7ADBl1uaVZrdnZAm0KhribhPwIxX/GKJ+uaIuzgUW1K0y0kRlxROS0iiPDgFhHYKNcBAXeDcMW6YcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769723011; c=relaxed/simple;
-	bh=CaoVe4DoenYysaU/+0Z5eyf9BKiKiOFsVOTKW2hNf0U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=heBtBy7Of3Sk2u5V0KCQ7O+6X250MklM6TZW4fzaYfo4L6KC4qoaT15YJYFD+TQgoYc2UVGIuXIZKw+Z/+Zz/0/bvMXTTUcaye9k8s5r+qhjqG8z76LA4+DtRa7rVBR1jjB5UfYGAo/yxG+nwVIh10V84KYpaj3p04j2aKULq+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: 6tj8rkpyQp6ninNaNYQLTQ==
-X-CSE-MsgGUID: wK/9Om6tTwy3h5KMswiEtg==
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 30 Jan 2026 06:43:27 +0900
-Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.73])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id D0747408FDE1;
-	Fri, 30 Jan 2026 06:43:22 +0900 (JST)
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: claudiu.beznea.uj@bp.renesas.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	geert+renesas@glider.be,
-	krzk+dt@kernel.org
-Cc: robh@kernel.org,
-	bhelgaas@google.com,
-	conor+dt@kernel.org,
-	magnus.damm@gmail.com,
-	biju.das.jz@bp.renesas.com,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-clk@vger.kernel.org,
-	john.madieu@gmail.com,
-	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v4 15/15] arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
-Date: Thu, 29 Jan 2026 22:41:29 +0100
-Message-ID: <20260129214130.16067-16-john.madieu.xa@bp.renesas.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260129214130.16067-1-john.madieu.xa@bp.renesas.com>
-References: <20260129214130.16067-1-john.madieu.xa@bp.renesas.com>
+	s=arc-20240116; t=1769723476; c=relaxed/simple;
+	bh=Q3zSRrovWIg3qmOPSQjV0l/EKEt3ItdS6bxMEwS5hy8=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=OOjhpMNfh1J+RYR/aa5Opgu8eLxR5l7+v78qG+kIGQBocWMQQpJS5OvpRaGKe246EltU8rmWhMMag21oOCH3psY0fBTU095OtjLxUwZUMGUjPJsAR3yQ20Kiho33YZEqAhKwqBKL5NKbolnR3wWBHStWw9IUbHghsGG5c4T8/Zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FaqBH9Q4; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FaqBH9Q4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41EC8C4CEF7;
+	Thu, 29 Jan 2026 21:51:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769723476;
+	bh=Q3zSRrovWIg3qmOPSQjV0l/EKEt3ItdS6bxMEwS5hy8=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=FaqBH9Q4U7OFys5R54AL4OyCg9MohsuSenTOYbfovDHiAFJImhToOKL8cibZML05A
+	 pLzDda4TwEdLJuUvW2ZVAPUGm+zZZEHs+G3NKafjtHBZqzrzBoSrN/3URg9JtalS3K
+	 4tG+stzA4gyXCw+UAjlhzlPMt+pYWNs48CoaJMMAhQgj4KjmtIpsH3Du60NoD/xx7K
+	 Z8R0skKUd6D2YIfUeagvZ/7G1xyhK2QCemCyGnyCai3m29eeQtqEt08Q796miVEWbk
+	 uOAZS0dsfhwZ9hF4Kud/pB3ZbnDobW+SsvkA1/uRkVRBECfwr7FM5H25AyySQUsQJg
+	 2XmxC14tZ94kw==
+From: Thomas Gleixner <tglx@kernel.org>
+To: Vivian Wang <wangruikang@iscas.ac.cn>, Madhavan Srinivasan
+ <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, Nicholas
+ Piggin <npiggin@gmail.com>, "Christophe Leroy (CS GROUP)"
+ <chleroy@kernel.org>, Alex Deucher <alexander.deucher@amd.com>, Christian
+ =?utf-8?Q?K=C3=B6nig?= <christian.koenig@amd.com>, David Airlie
+ <airlied@gmail.com>, Simona
+ Vetter <simona@ffwll.ch>, Andrew Lunn <andrew+netdev@lunn.ch>, "David S.
+ Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
+ Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai
+ <tiwai@suse.com>, Brett Creeley <brett.creeley@amd.com>
+Cc: Han Gao <gaohan@iscas.ac.cn>, Vivian Wang <wangruikang@iscas.ac.cn>,
+ linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+ amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+ netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, linux-riscv@lists.infradead.org,
+ sophgo@lists.linux.dev, Takashi Iwai <tiwai@suse.de>
+Subject: Re: [PATCH v4 0/4] PCI/MSI: Generalize no_64bit_msi into msi_addr_mask
+In-Reply-To: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
+References: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
+Date: Thu, 29 Jan 2026 22:51:12 +0100
+Message-ID: <87ecn8m6jz.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-The RZ Smarc Crarrier-II board has PCIe slots mounted on it.
-Enable PCIe support.
+On Thu, Jan 29 2026 at 09:56, Vivian Wang wrote:
+> I would appreciate if driver maintainers can take a look and see whether
+> the masks I've set makes sense, although I believe they shouldn't cause
+> problems on existing platforms. I'm also not familiar with PPC enough to
+> touch the arch/powerpc firmware calls further - help would be
+> appreciated.
+>
+> My intention is that the first two patches are taken up by PCI
+> maintainers, and the rest go through the maintainers of individual
+> drivers since they could use more device-specific testing and review. If
+> this is not convenient I'll be happy to split it up or something.
 
-Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
----
+I'm happy to take the first two right away.
 
-Changes:
+I can pick up the driver specific ones as well if there are no
+objections; they both have been looked at by the relevant maintainers
+and they obviously depend on the first ones so they have either to go
+together or postponed for the next window, which doesn't make a lot of
+sense.
 
-v4: No changes
+If nobody complains I pick up the lot tomorrow morning.
 
-v3:
- - Splitted enablement into common carrier dtsi and board dts
+Thanks,
 
-v2:
- - Removed board-specific dma-ranges.
- - Merged enablement and pinmux assignment in same file
-
- .../boot/dts/renesas/r9a09g047e57-smarc.dts      | 16 ++++++++++++++++
- arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi  |  4 ++++
- 2 files changed, 20 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-index 696903dc7a63..1ba50512f4ef 100644
---- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-+++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-@@ -122,6 +122,11 @@ key-sleep {
- #endif
- };
- 
-+&pcie {
-+	pinctrl-0 = <&pcie_pins>;
-+	pinctrl-names = "default";
-+};
-+
- &pinctrl {
- 	canfd_pins: canfd {
- 		can1_pins: can1 {
-@@ -167,6 +172,17 @@ rsci9_pins: rsci9 {
- 		bias-pull-up;
- 	};
- 
-+	pcie-clkreq-n {
-+		gpio-hog;
-+		gpios = <RZG3E_GPIO(4, 5) GPIO_ACTIVE_HIGH>;
-+		output-low;
-+		line-name = "pcie_clkreq_n";
-+	};
-+
-+	pcie_pins: pcie {
-+		pinmux = <RZG3E_PORT_PINMUX(G, 7, 1)>; /* PCIE_RST_OUT# */
-+	};
-+
- 	scif_pins: scif {
- 		pins = "SCIF_TXD", "SCIF_RXD";
- 		renesas,output-impedance = <1>;
-diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
-index b607b5d6c259..e2a34577a1a1 100644
---- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
-+++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
-@@ -96,6 +96,10 @@ &i2c0 {
- 	clock-frequency = <400000>;
- };
- 
-+&pcie {
-+	status = "okay";
-+};
-+
- &scif0 {
- 	status = "okay";
- };
--- 
-2.25.1
-
+        tglx
