@@ -1,62 +1,65 @@
 Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D6BE35B14C
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 21:25:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DFF35B631
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 21:25:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769721941; cv=none; b=tVyUbghnIon1QFhmQcdyLT/Tngrdb3m5r3+pV6GUy9PjkzWTfN8ueik84Klax9tkPe73c81iyyhvvdnJaBjw8DoTVX/3dDLT5ScqtgajwJN1aDEZCN068O8Uo9RxSRMvO2GabL/vClSrWW8tnXIbma+Uapfzxdj0RefsNbffBCg=
+	t=1769721942; cv=none; b=uuXjY9P+0Ja7VRmz3MNO0oL7WK2id6547Catz7yfCjGaKkzN2/yjeexsLvRgGGAWMUsqZfrM/3CG2uX8T6xvQB9FonbtD48M/IiSz2LC4Q16DPw0wSdqWhF0KBnF0VW+HODnctIZrDPoRWm+uCJG/EfjQAQXPY26V6Hv1xmtJqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769721941; c=relaxed/simple;
-	bh=i4fTBf4JlgeFGGBKcJxBa5kh3xL/047pYN73iqANQCo=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=W29eFpuDZrwDPUQdWGHP651YBiXRKxqTo8ZZgTX8kdad4r5Ev8daIX3ZKCF9Nek4ShkXbZibx2b8yiMoVjz8GUNELA04z5kDRdK8HdIccHDtMJPz9R/VHsLTY4PpI3EddVnLj0N13tHpcDuaONXmW+doTLWEIf01fNArTXbY9mE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=rabo/T+8; arc=none smtp.client-ip=209.85.216.73
+	s=arc-20240116; t=1769721942; c=relaxed/simple;
+	bh=pGh11QoBfatNNPcD3UbRdXhxdT0MMITx2WqEtn8eFss=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=rLOB5n/9onikf2jEtHD4m6B1FVUusa5RUCke0UOMC7SJngoW2xqvBCJNcGfBQ7r4kMnkLZBF7aG2nAcuyE/L1+YngfB2k2IX6pUzJf63Mhym4WN6rKLYgpbXwWuC23z1VYnbu28H6n7s01+9hAiDbcTwTHeVFpNLKiqikpgSuJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YgClsBSQ; arc=none smtp.client-ip=209.85.216.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rabo/T+8"
-Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-34ab8693a2cso2888630a91.0
-        for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 13:25:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YgClsBSQ"
+Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-34ab8693a2cso2888700a91.0
+        for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 13:25:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1769721938; x=1770326738; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=F7w0g/nR8ml7KkZqbualmYDfY5KbOVPfKhgZAMsaNL0=;
-        b=rabo/T+8aRjoD7P1QZ8TCY/4/GS6vNQ0egChJrpISJiM+F4VCOxEzL4le8ycju9fEv
-         lp0GcuNU/MOaAixSrbDVjoFVONl0TI3BBA5GWqC9CYxrZwicUgBVaWYNKKn77KqX/Sam
-         dgtIaJ6EpfOsEbSRTkKdBejlCF5Y+2nJBto+ehl1JsW1z85GvFmk8GSbx9IBrZKZJ29Z
-         Hg6XVlKxnWX0iRwa/GV15HYmLxTAnYA/Felbe1nyCkhHpKoaa1J6A9O1Ls8XDSteQjpo
-         D8hJxDHZnBxji1UpYMpx0rcJEL5b52AvCY6qrAVTWe9RAxZbr1przjpCsKcAmX4JqKzX
-         bUgA==
+        d=google.com; s=20230601; t=1769721939; x=1770326739; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=iXsfpp7fYjSPi1nIw2ScrDnrjqTlWGi7ZArDWIRjDgk=;
+        b=YgClsBSQkemOJVm7JMV99ev6GYocZTi+wpSdSxrIQAl42Bql7Vr4oGTqoEtm0Hz9vX
+         24FOanK/YWsgGM16o/756RCi/TOKqOzj6j+/XBtzZ6F5BPmRulnQtrHlb2JCAgnW64xI
+         wNDMI/jZXzuZhvw5/SCsFa8VhoGxUbJKTZNI+6kQ30ZrMLTCUyccCV5JxCzWHXbKh3JW
+         Q2FnBxQj9+z5NNXKrQFB9QPKJiGtxr5vgr5VXI9hJjIvAQXV7wmRW9xO9nrwSm3foyaO
+         u23daigvanFsWEXNf1FeMaLkRRSNf4xQ68YAVvzmWfN9o6GimsOztC2hSdEGDi2TCgLu
+         3L6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769721938; x=1770326738;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=F7w0g/nR8ml7KkZqbualmYDfY5KbOVPfKhgZAMsaNL0=;
-        b=D+RQ5OPA5ej5bPjrtyvA8GC7mmA3JNDFIXm8FcnDtHnKhG95nutjrxw6jKLSC1SHfO
-         kHEGoCpB0Frv3w87a8s0+Dh3sgC+vw/f3QZmdgYELY//y39Edw5kKcRgTgUZK0dZFWRi
-         zxqHWg8Vdb3W8ej7194F8DePRum8f72RwEezz+3nhlg7m/KB5ww5wO5ukl5EfLkDDbYe
-         tPf4x2iszVOUtYEUDLngLydgk+ktKctI44IFqfzi4tra4YEiTyLgJou4QVAxwA+zI4mM
-         qVlAl3pxZkS9tSUjZQ0SD3rQp+9dVm57fQ6JfHhR6dhj7N36FXMlS5k3hRL/IJKUE2Eo
-         Bjkg==
-X-Forwarded-Encrypted: i=1; AJvYcCWSFkGy5NDvUSEB79htxdR5daevws1i9DdmKrvc+ICoUw1Ex8Xj0MO46terz8IzXjqZOLwb4DtATYE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxGFMLPV+vf6093dM6w0ucvLkc6qGFx9dcTiA/IFth6MpRuhRSi
-	ZZi5VPqMACBiB9DH1TMU/7ScJxhzNWs362BMCypowiTcfIhyjlMnxmjrGSwE6bQvegbTiOqxwca
-	Gi96CPXblrjhP1w==
-X-Received: from pjd16.prod.google.com ([2002:a17:90b:54d0:b0:32e:ca6a:7ca9])
+        d=1e100.net; s=20230601; t=1769721939; x=1770326739;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=iXsfpp7fYjSPi1nIw2ScrDnrjqTlWGi7ZArDWIRjDgk=;
+        b=W21Ks/CHSzusCZVgek2iW5Hpj1YaoxME82RDN/CPUeZQBx9QS1nP6pOpGgln4aZo1j
+         bPyvX+OX8fkx4dCaY7EPvry594NRjOo2bqqkJB0FWAW17u5vFUUdeMooPvC+itBasvCV
+         Wfsq+aG0ygnIG0csv2vPJcZECKNC2X5RFbVZeVpt2KYQSqDfYoUwWgpSt5VUMHNPssWp
+         4PJvgfYavPAVUpoVG1EztPxQobEQb9spcBO1y5Bx5JfWq27vGcZzDKSLtJ0cG0ke9S59
+         JBqkrjqqqgo6p6kggGe3Ti8dQz2BIo9I0Zq+bkd1zgGK5JhN/DFgquS6pP1lwnwSTt0V
+         pL0A==
+X-Forwarded-Encrypted: i=1; AJvYcCXJgjibJ75XQKF/j840S01MDQGpgR/CzHi/pMPgvpu0ue6P9D+Cq6MDTQFLYZSO46lKq0DIYxnk2d0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyyeEw8bNQqb4/7tq4E60kpH6jYL9bid0x2XWyNZWg9pzG4buHB
+	uwKAOao2Tfu+L2cLq0iVKJD9odm7Nu85WeJW5LFxLfR9xDaP5RZplX9Yll4Q6gHDtkYQ6lvb2ls
+	EqqLjChmtdtanCA==
+X-Received: from pjyu17.prod.google.com ([2002:a17:90a:e011:b0:353:454:939c])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:4d06:b0:340:d81d:7874 with SMTP id 98e67ed59e1d1-3543b3b43f0mr808394a91.26.1769721937697;
- Thu, 29 Jan 2026 13:25:37 -0800 (PST)
-Date: Thu, 29 Jan 2026 21:24:47 +0000
+ 2002:a17:90b:17c9:b0:353:356c:6840 with SMTP id 98e67ed59e1d1-3543b31688fmr768863a91.14.1769721939368;
+ Thu, 29 Jan 2026 13:25:39 -0800 (PST)
+Date: Thu, 29 Jan 2026 21:24:48 +0000
+In-Reply-To: <20260129212510.967611-1-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+References: <20260129212510.967611-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.53.0.rc1.225.gd81095ad13-goog
-Message-ID: <20260129212510.967611-1-dmatlack@google.com>
-Subject: [PATCH v2 00/22] vfio/pci: Base Live Update support for VFIO device files
+Message-ID: <20260129212510.967611-2-dmatlack@google.com>
+Subject: [PATCH v2 01/22] liveupdate: Export symbols needed by modules
 From: David Matlack <dmatlack@google.com>
 To: Alex Williamson <alex@shazbot.org>
 Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
@@ -81,171 +84,45 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.
 	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
 Content-Type: text/plain; charset="UTF-8"
 
-This series can be found on GitHub:
+Export liveupdate_enabled(), liveupdate_register_file_handler(), and
+liveupdate_unregister_file_handler(). All of these will be used by
+vfio-pci in a subsequent commit, which can be built as a module.
 
-  https://github.com/dmatlack/linux/tree/liveupdate/vfio/cdev/v2
+Signed-off-by: David Matlack <dmatlack@google.com>
+---
+ kernel/liveupdate/luo_core.c | 1 +
+ kernel/liveupdate/luo_file.c | 2 ++
+ 2 files changed, 3 insertions(+)
 
-This series adds the base support to preserve a VFIO device file across
-a Live Update. "Base support" means that this allows userspace to
-safely preserve a VFIO device file with LIVEUPDATE_SESSION_PRESERVE_FD
-and retrieve it with  LIVEUPDATE_SESSION_RETRIEVE_FD, but the device
-itself is not preserved in a fully running state across Live Update.
-
-This series aims to provide a foundation on which to build the rest of
-the device preservation infrastructure, including:
-
- - Preservation of iommufd files [1]
- - Preservation of IOMMU driver state
- - Preservation of PCI state (BAR resources, device state, bridge state, ...)
- - Preservation of vfio-pci driver state
-
-Testing
--------
-
-The patches at the end of this series provide comprehensive selftests
-for the new code added by this series. The selftests have been validated
-in both a VM environment using a virtio-net PCIe device, and in a
-baremetal environment on an Intel EMR server with an Intel DSA PCIe
-device.
-
-Here is an example of how to run the new selftests:
-
-vfio_pci_liveupdate_uapi_test:
-
-  $ tools/testing/selftests/vfio/scripts/setup.sh 0000:00:04.0
-  $ tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test 0000:00:04.0
-  $ tools/testing/selftests/vfio/scripts/cleanup.sh
-
-vfio_pci_liveupdate_kexec_test:
-
-  $ tools/testing/selftests/vfio/scripts/setup.sh 0000:00:04.0
-  $ tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test --stage 1 0000:00:04.0
-  $ kexec ...
-
-  $ tools/testing/selftests/vfio/scripts/setup.sh 0000:00:04.0
-  $ tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test --stage 2 0000:00:04.0
-  $ tools/testing/selftests/vfio/scripts/cleanup.sh
-
-It is also possible to run vfio_pci_liveupdate_kexec_test multiple times
-to preserve multiple devices simultaneously across a Live Update. This
-series has been tested with up to 8 devices concurrently preserved.
-
-Changelog
----------
-
-v2:
- - Rebase on top of linux-next (tag: next-20260115)
- - Add missing EXPORT_SYMBOL_GPLs in LUO (Zhu)
- - Add Missing EXPORT_SYMBOL_GPLs for vfio_device_fops (Zhu)
- - Fix circular dependency between vfio-pci-core and vfio-pci (Zhu)
- - Handle pci=assign-busses (Lukas)
- - Drop driver_override patch (Jason)
- - Use kho_alloc_preserve(), kho_unpreserve_free(), kho_restore_free() (Pasha)
- - Don't access PCI FLB after device initialization (Jason)
- - Fix folio leak in vfio_pci_liveupdate_retrieve() (Alex)
- - Add Documentation (Pasha)
-
-v1: https://lore.kernel.org/kvm/20251126193608.2678510-1-dmatlack@google.com/
-
-rfc: https://lore.kernel.org/kvm/20251018000713.677779-1-vipinsh@google.com/
-
-Cc: Saeed Mahameed <saeedm@nvidia.com>
-Cc: Adithya Jayachandran <ajayachandra@nvidia.com>
-Cc: Jason Gunthorpe <jgg@nvidia.com>
-Cc: Parav Pandit <parav@nvidia.com>
-Cc: Leon Romanovsky <leonro@nvidia.com>
-Cc: William Tu <witu@nvidia.com>
-Cc: Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>
-Cc: Mike Rapoport <rppt@kernel.org>
-Cc: Pratyush Yadav <pratyush@kernel.org>
-Cc: Samiullah Khawaja <skhawaja@google.com>
-Cc: Chris Li <chrisl@kernel.org>
-Cc: Josh Hilke <jrhilke@google.com>
-Cc: David Rientjes <rientjes@google.com>
-
-[1] https://lore.kernel.org/linux-iommu/20251202230303.1017519-1-skhawaja@google.com/
-
-David Matlack (13):
-  liveupdate: Export symbols needed by modules
-  PCI: Add API to track PCI devices preserved across Live Update
-  PCI: Inherit bus numbers from previous kernel during Live Update
-  vfio/pci: Notify PCI subsystem about devices preserved across Live
-    Update
-  vfio: Enforce preserved devices are retrieved via
-    LIVEUPDATE_SESSION_RETRIEVE_FD
-  vfio/pci: Store incoming Live Update state in struct
-    vfio_pci_core_device
-  docs: liveupdate: Document VFIO device file preservation
-  vfio: selftests: Add Makefile support for TEST_GEN_PROGS_EXTENDED
-  vfio: selftests: Add vfio_pci_liveupdate_uapi_test
-  vfio: selftests: Expose iommu_modes to tests
-  vfio: selftests: Expose low-level helper routines for setting up
-    struct vfio_pci_device
-  vfio: selftests: Verify that opening VFIO device fails during Live
-    Update
-  vfio: selftests: Add continuous DMA to vfio_pci_liveupdate_kexec_test
-
-Vipin Sharma (9):
-  vfio/pci: Register a file handler with Live Update Orchestrator
-  vfio/pci: Preserve vfio-pci device files across Live Update
-  vfio/pci: Retrieve preserved device files after Live Update
-  vfio/pci: Skip reset of preserved device after Live Update
-  selftests/liveupdate: Move luo_test_utils.* into a reusable library
-  selftests/liveupdate: Add helpers to preserve/retrieve FDs
-  vfio: selftests: Build liveupdate library in VFIO selftests
-  vfio: selftests: Initialize vfio_pci_device using a VFIO cdev FD
-  vfio: selftests: Add vfio_pci_liveupdate_kexec_test
-
- Documentation/userspace-api/liveupdate.rst    | 144 ++++++++++
- MAINTAINERS                                   |   1 +
- drivers/pci/Makefile                          |   1 +
- drivers/pci/liveupdate.c                      | 212 +++++++++++++++
- drivers/pci/probe.c                           |  23 +-
- drivers/vfio/device_cdev.c                    |  25 +-
- drivers/vfio/group.c                          |   9 +
- drivers/vfio/pci/Makefile                     |   1 +
- drivers/vfio/pci/vfio_pci.c                   |  11 +-
- drivers/vfio/pci/vfio_pci_core.c              |  24 +-
- drivers/vfio/pci/vfio_pci_liveupdate.c        | 246 +++++++++++++++++
- drivers/vfio/pci/vfio_pci_priv.h              |  16 ++
- drivers/vfio/vfio.h                           |  13 -
- drivers/vfio/vfio_main.c                      |  23 +-
- include/linux/kho/abi/pci.h                   |  55 ++++
- include/linux/kho/abi/vfio_pci.h              |  45 +++
- include/linux/pci.h                           |  47 ++++
- include/linux/vfio.h                          |  58 ++++
- include/linux/vfio_pci_core.h                 |   2 +
- kernel/liveupdate/luo_core.c                  |   1 +
- kernel/liveupdate/luo_file.c                  |   2 +
- tools/testing/selftests/liveupdate/.gitignore |   1 +
- tools/testing/selftests/liveupdate/Makefile   |  14 +-
- .../include/libliveupdate.h}                  |  11 +-
- .../selftests/liveupdate/lib/libliveupdate.mk |  20 ++
- .../{luo_test_utils.c => lib/liveupdate.c}    |  43 ++-
- .../selftests/liveupdate/luo_kexec_simple.c   |   2 +-
- .../selftests/liveupdate/luo_multi_session.c  |   2 +-
- tools/testing/selftests/vfio/Makefile         |  23 +-
- .../vfio/lib/include/libvfio/iommu.h          |   2 +
- .../lib/include/libvfio/vfio_pci_device.h     |   8 +
- tools/testing/selftests/vfio/lib/iommu.c      |   4 +-
- .../selftests/vfio/lib/vfio_pci_device.c      |  60 ++--
- .../vfio/vfio_pci_liveupdate_kexec_test.c     | 256 ++++++++++++++++++
- .../vfio/vfio_pci_liveupdate_uapi_test.c      |  93 +++++++
- 35 files changed, 1410 insertions(+), 88 deletions(-)
- create mode 100644 drivers/pci/liveupdate.c
- create mode 100644 drivers/vfio/pci/vfio_pci_liveupdate.c
- create mode 100644 include/linux/kho/abi/pci.h
- create mode 100644 include/linux/kho/abi/vfio_pci.h
- rename tools/testing/selftests/liveupdate/{luo_test_utils.h => lib/include/libliveupdate.h} (80%)
- create mode 100644 tools/testing/selftests/liveupdate/lib/libliveupdate.mk
- rename tools/testing/selftests/liveupdate/{luo_test_utils.c => lib/liveupdate.c} (89%)
- create mode 100644 tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test.c
- create mode 100644 tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c
-
-
-base-commit: 9b7977f9e39b7768c70c2aa497f04e7569fd3e00
+diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
+index dda7bb57d421..59d7793d9444 100644
+--- a/kernel/liveupdate/luo_core.c
++++ b/kernel/liveupdate/luo_core.c
+@@ -255,6 +255,7 @@ bool liveupdate_enabled(void)
+ {
+ 	return luo_global.enabled;
+ }
++EXPORT_SYMBOL_GPL(liveupdate_enabled);
+ 
+ /**
+  * DOC: LUO ioctl Interface
+diff --git a/kernel/liveupdate/luo_file.c b/kernel/liveupdate/luo_file.c
+index 35d2a8b1a0df..32759e846bc9 100644
+--- a/kernel/liveupdate/luo_file.c
++++ b/kernel/liveupdate/luo_file.c
+@@ -872,6 +872,7 @@ int liveupdate_register_file_handler(struct liveupdate_file_handler *fh)
+ 	luo_session_resume();
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(liveupdate_register_file_handler);
+ 
+ /**
+  * liveupdate_unregister_file_handler - Unregister a liveupdate file handler
+@@ -917,3 +918,4 @@ int liveupdate_unregister_file_handler(struct liveupdate_file_handler *fh)
+ 	liveupdate_test_register(fh);
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(liveupdate_unregister_file_handler);
 -- 
 2.53.0.rc1.225.gd81095ad13-goog
 
