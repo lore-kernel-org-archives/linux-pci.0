@@ -1,142 +1,271 @@
-Received: from mail-qv1-f68.google.com (mail-qv1-f68.google.com [209.85.219.68])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE6613563FC
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 03:55:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.68
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769658947; cv=pass; b=t33A9RW/T5/2QmnOMIx5/BhnAuewzfd9reGD/HXYBPGYM3uUKuimo4Wa0EZybqPF1uQGmI43Ui5QerLyuKEaPBpVCsYJSfuTekzX4ymTtRb1/stL0YyAt3CU95Mn79v4FG3R0qKDYpVqYVeGShXTSDTUNp1ZkFnXSd1YYsV4bos=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769658947; c=relaxed/simple;
-	bh=dreyxwAadnjRw4GmLNjYV9KTAhpZn4PH/bUL/r3ljrU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Nr4hOa+8pe2H4GWTKoAoKnLzpEJjklPQtit68UpWrfOiqOAw49tn17HQSqX4ENT23sI8HSpoStPHHPPULSRy5rwjG+C5h0GByp2sY7V0ozA+jnqiJpQsWUznDYQZ8yeJfpsDWmSyny3o6UqEXvQuQgf0hYJvmPEk4PgDOzG5jik=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lb5j6+FE; arc=pass smtp.client-ip=209.85.219.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63DA323C4F4;
+	Thu, 29 Jan 2026 04:33:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769661228; cv=none; b=T9caxfcrHpk5kSBaD+AxQIA/JT4+XS0G/gIVP1v2c8XVykoTyCk+Fh+4vaEu7m0Uh9G5FDmcaiPUe1f0Yh99jmAgZoPs1JMh52PiCpbweiuWKKha/XbrbYRTkx80v3QTKMFm32l2uIg33qr9rkA1RbSR7q+OjMbOm2PTgbFDhOE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769661228; c=relaxed/simple;
+	bh=4+DiUJn3sQ7OzwTbYE1622pe/KYupOEu+6bdseH86Ok=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AbsA18ifL9uOTVv9J7HIqLBQNeGtLnNSBSaCKyY8tsx/J1MgM0UxG/yp98F3JeHxwPAFn/YKugEVyZvsYwKWo5RSEElH9ysHC1v+/FWZz6LYqxySLJD8Wvste7NUaouxH6vqIcGAyh7UMZOFkMUoeWEngLqf5yfb8OAi2/BTunU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a/P081Du; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lb5j6+FE"
-Received: by mail-qv1-f68.google.com with SMTP id 6a1803df08f44-894703956b8so9599516d6.1
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 19:55:45 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769658945; cv=none;
-        d=google.com; s=arc-20240605;
-        b=GtgZc8m0/YikOBJEY3JPmkwY3kHM7pN87fJhYz8Q2gOU94ty/HtiMjJ+lLbkmL1oZo
-         dXPJH1rXQ+sHp2eSH89oqqGYeiXiQ5HrbUflkm6S32dlSRjHy3zyVgYaLTF7kDFjAM6t
-         ovgZQiWEnzJnPv0w9jhsx0IxXD4z9Wsc94VbBdnYUgf/3zGhB7ELRxc/ifPGCv18K+OV
-         KIIAE16fhPr9ehJ7q3E8Zyrthfk5l5qKxGFvMLQOp8/TovVQcoHB4K4qJ655+x9N43oG
-         ReRgneWMn5FSYxwmUzcqdYHuZGUP7+0+EcJiaOGURkJ2S5Wmcpy4EfXRAcSel+X6V6VN
-         uOJQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=dreyxwAadnjRw4GmLNjYV9KTAhpZn4PH/bUL/r3ljrU=;
-        fh=VHDYXthQ0bJ+3aXTTMe3Z7AL/qpPNiJZbSaSkqS+mbs=;
-        b=U/6kebZNdq1tta9SX/61+THYnUZGAL5idpCbpvJPrVcWGrE0FQcXbam4P3J+XhtNRs
-         a77hm2IKANYCvXfC9e40cG7yeFlRLprVKLpfuqzTqSMXmP0c08DaGqDYSmCQnjJGqP8U
-         TFoQpm12BvsADBQS6cLtkWurs1OnrOPtJVEJnPKeH7S1VtEwh2iY8c9eCXM40dMADmXn
-         cljCh4uR/8xe0WQaXwBzJYEhxxyDanNKm9F2126rx6+Ula47U05kp9syFc6rU4IXAUDL
-         kXJMYKp2LdJFWKfWyEIbprnIv2zahcg1wqnRfDMbNyfgSZzWUUrtk1ksg+CQDfDtzSRn
-         sgmA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769658945; x=1770263745; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dreyxwAadnjRw4GmLNjYV9KTAhpZn4PH/bUL/r3ljrU=;
-        b=lb5j6+FE2O0Pl62pBEhMsNfLi2bWioImX+YbzHIDJk4U2UjdvonV9hoEojHeu1HDGU
-         ba9+vJKWf1JgciuIV0brHuUb2cXLpY+i87GPeZ3NzF2nlRluwxkLtohrda4B2cyDQmuv
-         QKBBR4tT++0NpInsKX2COkILgZq4+SO1iCr99j6B1qV8SSxithPR44AxSL9unhlsMynZ
-         WvZxyvrSYf/7P3kQ1uEPugknX2eFqjtca+Q6W68zkBAH2dcFkWm7rkGxxuJp0ZME/a28
-         +Hcmnnd1SMohD30jCpLbPFXK5AnpHyZz/JP4CVz2Kz4GBOQSSW1rOFr3rDLAQ4IfnJa7
-         6dDg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769658945; x=1770263745;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=dreyxwAadnjRw4GmLNjYV9KTAhpZn4PH/bUL/r3ljrU=;
-        b=P4ONlCdpDL1j00RZ6fTIPudFMSiOzh54e72weSzkUe7Oxt+qGHuAcHsD5kQ3HIhLqb
-         CUGr0wKeMi0IkCRWryh79IwF0yO5nhwf0Ex7I4WMtTgr9mZr2kWq0DxfSvyFS7hwQJGm
-         V2Ra0M7nm3MfhGl7lAUIEEn5rs2db/DNZ75GxPD3/EvVz/+4iS1yqNpd2ZlmxLblhjjg
-         X07iTorXu5zqu1R5oxVeT3T1pO+pyhyGoYvjVfYPSWy6HaUCkcVHmk+Um5y/bexQKo7n
-         3hcIiErfFtt2B1gtWdbhRtGnUU+Sz7mS4AVaX+aGVy3NjnAANIDKRHTSk+0YOBgNHVsy
-         9e4Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXDEC9IzQ7Pm5eAY+gYWpkEzikWRo/cUtA7OydiWIvPyhZpdOevlZzz+PVnkRAR6wAu2LiVa66Js5g=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxmhSKxW+X9FwEh/vGF+DiofgF/Yp1dfwHPaXiLdbyg5aPVjNRi
-	6TcrOLcTrge3y0IQeNdgfiDYn2QuqF9qSRKYYiLqYahToqiLgqL6mGxx2eabeJhDhLAYUPSvL/0
-	xLyJiQyD3SqPKcaPFN4LeeN+MRSrG6r0=
-X-Gm-Gg: AZuq6aIZ3gjZ4qt+NsvVAFB1jXZPySy2GqHwUpsqRm5Swq2suoQsvsCdTkARh+7tHHE
-	B0Vpu/0y6DepqXz6uSZTVHfKfujTnjyqUEkd4tNKZQL/SvlL8A1E5Hktawp6t1x4vTCAZLjR1QW
-	xNo68HYAakXxJpf2POcP5JJcNCMgT4yJAd1pGbpWOjp4BXdNcQGw6okHnhTxGhCtcd6LkG9m44J
-	8TRUYmObklc5jS2o45tt8Qd9vvNy7pjk2uhVNu6nGQ5aVSREbNC5my7uyb/iY4s0jaCqoGW4iyc
-	QMPILhiMlpb0BAbtwtFin1KwvWLnkd3Nwfa2/tU0L85y4U951hvivOxx
-X-Received: by 2002:a05:6214:d47:b0:894:2d44:509e with SMTP id
- 6a1803df08f44-894cc821c27mr116372646d6.23.1769658944665; Wed, 28 Jan 2026
- 19:55:44 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a/P081Du"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 479EFC116D0;
+	Thu, 29 Jan 2026 04:33:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769661227;
+	bh=4+DiUJn3sQ7OzwTbYE1622pe/KYupOEu+6bdseH86Ok=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=a/P081DufMplUwoWxestflu1piRJKbtzIRBkPyuAivcpDFsbzd/+FDAy5+qCKxR+9
+	 MWLk4/nLfRxrI5JDgNbDPyv866yEJka1zsvl/vgLU9DLrx1d6U7owGBnbiV2qy+/3T
+	 X9Ogk1aEu1oE/OiEjBZU4kbiiuRlPhUUKyGG4xJEnRmY4qkdr3U16sD3a0dLtNKoK+
+	 psMNhX65DI9SUyBG76Ju9xPJM1rEL1oZqYJkdOoo+5tLM+TuDzbFM077WtmvSfyJal
+	 JaUDXNnZ16g5ngzfL8aEwhre8fFgK0H7wXuXVuqYZJ/JXBLrRZohpPyoN+9J7ybuch
+	 QaDY/sV+rjIKw==
+Message-ID: <a802b522-5084-41de-9ecd-cfcc9c6eebcf@kernel.org>
+Date: Thu, 29 Jan 2026 13:33:45 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260126031352.22997-1-enelsonmoore@gmail.com>
- <alpine.DEB.2.21.2601270110590.40317@angie.orcam.me.uk> <20260127155607.3f80ec99@kernel.org>
-In-Reply-To: <20260127155607.3f80ec99@kernel.org>
-From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-Date: Wed, 28 Jan 2026 19:55:33 -0800
-X-Gm-Features: AZwV_Qjhl5q7xOvj31R-bM_rs_0zlvr3v6oaj-AmWEWA1eTbTy2My24hcAGKR1E
-Message-ID: <CADkSEUjfBQLqibc2zrcWHhOwu7kUf8FceYDfevAFHV4rCqsUUQ@mail.gmail.com>
-Subject: Re: [PATCH net-next v2] net: ethernet: neterion: s2io: remove unused driver
-To: Jakub Kicinski <kuba@kernel.org>
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, netdev@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-mips@vger.kernel.org, 
-	linux-s390@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, 
-	Linas Vepstas <linasvepstas@gmail.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
-	"Oliver O'Halloran" <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, Madhavan Srinivasan <maddy@linux.ibm.com>, 
-	Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, 
-	Andrew Lunn <andrew+netdev@lunn.ch>, Andrew Morton <akpm@linux-foundation.org>, 
-	=?UTF-8?Q?Martin_Kepplinger=2DNovakovi=C4=87?= <martink@posteo.de>, 
-	Pavel Machek <pavel@ucw.cz>, MD Danish Anwar <danishanwar@ti.com>, 
-	Mengyuan Lou <mengyuanlou@net-swift.com>, Pablo Neira Ayuso <pablo@netfilter.org>, 
-	Takashi Iwai <tiwai@suse.de>, Huacai Chen <chenhuacai@kernel.org>, "Theodore Ts'o" <tytso@mit.edu>, 
-	Eric Biggers <ebiggers@google.com>, Madadi Vineeth Reddy <vineethr@linux.ibm.com>, 
-	Shrikanth Hegde <sshegde@linux.ibm.com>, Geert Uytterhoeven <geert@linux-m68k.org>, 
-	Ard Biesheuvel <ardb@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Frederic Barrat <fbarrat@linux.ibm.com>, Andrew Donnellan <ajd@linux.ibm.com>, 
-	Herbert Xu <herbert@gondor.apana.org.au>, Konstantin Shkolnyy <kshk@linux.ibm.com>, 
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>, Lorenzo Bianconi <lorenzo@kernel.org>, 
-	Lukas Bulwahn <lukas.bulwahn@redhat.com>, Dong Yibo <dong100@mucse.com>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@kernel.org>, 
-	Lukas Wunner <lukas@wunner.de>, Giovanni Cabiddu <giovanni.cabiddu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: endpoint: pci-epf-test: Allow overriding default
+ BAR sizes
+To: Niklas Cassel <cassel@kernel.org>, Manivannan Sadhasivam
+ <mani@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>
+Cc: Frank.Li@nxp.com, Koichiro Den <den@valinux.co.jp>,
+ linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
+References: <20260128171157.1795146-2-cassel@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260128171157.1795146-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jan 27, 2026 at 3:56=E2=80=AFPM Jakub Kicinski <kuba@kernel.org> wr=
-ote:
-> We deleted the vxge which I think(?) was for a newer version of this HW
-> 3+ years ago and nobody complained.
-Yes, it was for the newer PCIe version of this hardware. Since no one
-complained about that (unlike when fealnx and sundance were removed
-and then restored on request), it's even less likely someone is using
-the PCI-X version. FWIW, 64-bit PCI and 66MHz PCI are even rarer than
-PCI-X, so there's basically no way to use this card with reasonable
-performance nowadays.
+On 1/29/26 02:11, Niklas Cassel wrote:
+> Add bar{0,1,2,3,4,5}_size attributes in configfs, so that the user is not
+> restricted to run pci-epf-test with the hardcoded BAR size values defined
+> in pci-epf-test.c.
+> 
+> This code is shamelessly more or less copy pasted from pci-epf-vntb.c
+> 
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Tested-by: Koichiro Den <den@valinux.co.jp>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+> Changes since v1:
+> -Rebased on branch controller/dwc since this branch contains changes
+>  to pci-epf-test.c which conflicted with V1 of this patch.
+> -Updated the documentation to show the current BAR sizes after other
+>  changes on branch controller/dwc.
+> -Picked up tags.
+> 
+>  Documentation/PCI/endpoint/pci-test-howto.rst | 16 ++++
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 92 ++++++++++++++++++-
+>  2 files changed, 106 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/PCI/endpoint/pci-test-howto.rst b/Documentation/PCI/endpoint/pci-test-howto.rst
+> index dd66858cde46..497251d53b12 100644
+> --- a/Documentation/PCI/endpoint/pci-test-howto.rst
+> +++ b/Documentation/PCI/endpoint/pci-test-howto.rst
+> @@ -84,6 +84,22 @@ device, the following commands can be used::
+>  	# echo 32 > functions/pci_epf_test/func1/msi_interrupts
+>  	# echo 2048 > functions/pci_epf_test/func1/msix_interrupts
+>  
+> +By default, pci-epf-test uses the following BAR sizes::
+> +
+> +	# grep . functions/pci_epf_test/func1/pci_epf_test.0/bar?_size
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar0_size:131072
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar1_size:131072
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar2_size:131072
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar3_size:131072
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar4_size:131072
+> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar5_size:1048576
+> +
+> +The user can override a default value using e.g.::
+> +	# echo 1048576 > functions/pci_epf_test/func1/pci_epf_test.0/bar1_size
+> +
+> +Note: Some endpoint controllers might have fixed size BARs, or reserved BARs,
+> +for such controllers, the corresponding BAR size in configfs will be ignored.
+> +
+>  
+>  Binding pci-epf-test Device to EP Controller
+>  --------------------------------------------
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 1cc630a2ee75..e8dff291f116 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -72,6 +72,7 @@ static struct workqueue_struct *kpcitest_workqueue;
+>  struct pci_epf_test {
+>  	void			*reg[PCI_STD_NUM_BARS];
+>  	struct pci_epf		*epf;
+> +	struct config_group	group;
+>  	enum pci_barno		test_reg_bar;
+>  	size_t			msix_table_offset;
+>  	struct delayed_work	cmd_handler;
+> @@ -85,6 +86,7 @@ struct pci_epf_test {
+>  	bool			dma_private;
+>  	const struct pci_epc_features *epc_features;
+>  	struct pci_epf_bar	db_bar;
+> +	size_t			bar_size[PCI_STD_NUM_BARS];
+>  };
+>  
+>  struct pci_epf_test_reg {
+> @@ -111,7 +113,8 @@ static struct pci_epf_header test_header = {
+>  	.interrupt_pin	= PCI_INTERRUPT_INTA,
+>  };
+>  
+> -static size_t bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
+> +/* default BAR sizes, can be overridden by the user using configfs */
+> +static size_t default_bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
+>  
+>  static void pci_epf_test_dma_callback(void *param)
+>  {
+> @@ -1240,7 +1243,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+>  		if (epc_features->bar[bar].type == BAR_FIXED)
+>  			test_reg_size = epc_features->bar[bar].fixed_size;
+>  		else
+> -			test_reg_size = bar_size[bar];
+> +			test_reg_size = epf_test->bar_size[bar];
+>  
+>  		base = pci_epf_alloc_space(epf, test_reg_size, bar,
+>  					   epc_features, PRIMARY_INTERFACE);
+> @@ -1312,6 +1315,87 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
+>  	pci_epf_test_free_space(epf);
+>  }
+>  
+> +#define PCI_EPF_TEST_BAR_SIZE_R(_name, _id)				\
+> +	static ssize_t pci_epf_test_##_name##_show(struct config_item *item,	\
 
-> On Tue, 27 Jan 2026 01:19:34 +0000 (GMT) Maciej W. Rozycki wrote:
-[...]
-> > What's the gain from removing a driver unless say it's broken and
-> > does not build?
-It very well might be broken. When vxge was removed it emerged that
-someone had reported it as having last worked in 4.1 and broken
-somewhere between there and 4.4 - see:
-https://bugzilla.kernel.org/show_bug.cgi?id=3D197881
+Drop the extra indentation at the beginning of the ligne. Many Macro defined
+functions use that style.
 
-Ethan
+> +						   char *page)		\
+> +	{								\
+> +		struct config_group *group = to_config_group(item);	\
+> +		struct pci_epf_test *epf_test = container_of(group,	\
+> +					struct pci_epf_test, group);	\
+
+Splitting this line after the "=" would be nicer.
+
+> +									\
+> +		return sprintf(page, "%zu\n", epf_test->bar_size[_id]);	\
+
+sysfs_emit() ?
+
+> +	}
+> +
+> +#define PCI_EPF_TEST_BAR_SIZE_W(_name, _id)				\
+> +	static ssize_t pci_epf_test_##_name##_store(struct config_item *item, \
+> +						    const char *page, size_t len) \
+> +	{								\
+> +		struct config_group *group = to_config_group(item);	\
+> +		struct pci_epf_test *epf_test = container_of(group,	\
+> +					struct pci_epf_test, group);	\
+> +		int val;						\
+> +		int ret;						\
+> +									\
+> +		ret = kstrtouint(page, 0, &val);			\
+> +		if (ret)						\
+> +			return ret;					\
+> +									\
+> +		if (!is_power_of_2(val))				\
+> +			return -EINVAL;					\
+> +									\
+> +		epf_test->bar_size[_id] = val;				\
+> +									\
+> +		return len;						\
+> +	}
+> +
+> +PCI_EPF_TEST_BAR_SIZE_R(bar0_size, BAR_0)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar0_size, BAR_0)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar1_size, BAR_1)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar1_size, BAR_1)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar2_size, BAR_2)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar2_size, BAR_2)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar3_size, BAR_3)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar3_size, BAR_3)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar4_size, BAR_4)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar4_size, BAR_4)
+> +PCI_EPF_TEST_BAR_SIZE_R(bar5_size, BAR_5)
+> +PCI_EPF_TEST_BAR_SIZE_W(bar5_size, BAR_5)
+> +
+> +CONFIGFS_ATTR(pci_epf_test_, bar0_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar1_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar2_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar3_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar4_size);
+> +CONFIGFS_ATTR(pci_epf_test_, bar5_size);
+> +
+> +static struct configfs_attribute *pci_epf_test_attrs[] = {
+> +	&pci_epf_test_attr_bar0_size,
+> +	&pci_epf_test_attr_bar1_size,
+> +	&pci_epf_test_attr_bar2_size,
+> +	&pci_epf_test_attr_bar3_size,
+> +	&pci_epf_test_attr_bar4_size,
+> +	&pci_epf_test_attr_bar5_size,
+> +	NULL,
+> +};
+> +
+> +static const struct config_item_type pci_epf_test_group_type = {
+> +	.ct_attrs	= pci_epf_test_attrs,
+> +	.ct_owner	= THIS_MODULE,
+> +};
+> +
+> +static struct config_group *pci_epf_test_add_cfs(struct pci_epf *epf,
+> +						 struct config_group *group)
+> +{
+> +	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
+> +	struct config_group *epf_group = &epf_test->group;
+> +	struct device *dev = &epf->dev;
+> +
+> +	config_group_init_type_name(epf_group, dev_name(dev),
+> +				    &pci_epf_test_group_type);
+> +
+> +	return epf_group;
+> +}
+> +
+>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+>  	{
+>  		.name = "pci_epf_test",
+> @@ -1324,6 +1408,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+>  {
+>  	struct pci_epf_test *epf_test;
+>  	struct device *dev = &epf->dev;
+> +	enum pci_barno bar;
+>  
+>  	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
+>  	if (!epf_test)
+> @@ -1331,6 +1416,8 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+>  
+>  	epf->header = &test_header;
+>  	epf_test->epf = epf;
+> +	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++)
+> +		epf_test->bar_size[bar] = default_bar_size[bar];
+>  
+>  	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
+>  
+> @@ -1343,6 +1430,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+>  static const struct pci_epf_ops ops = {
+>  	.unbind	= pci_epf_test_unbind,
+>  	.bind	= pci_epf_test_bind,
+> +	.add_cfs = pci_epf_test_add_cfs,
+>  };
+>  
+>  static struct pci_epf_driver test_driver = {
+> 
+> base-commit: 0ebf8e7943e01b2c38c199228f51adbb89c02425
+
+
+-- 
+Damien Le Moal
+Western Digital Research
