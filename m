@@ -1,123 +1,70 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB132877D8;
-	Thu, 29 Jan 2026 14:45:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE04F335098
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 15:59:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769697951; cv=none; b=GqmqeEnEpZTbVtHPN5lmZxQY97vmgqXgL9QClRQvn6TL8A0qR1iNNSp3dGbzD7nb/wCrO0FY7hOqDeAnSxaAtA0p+JBnQGR4h5TZJamD+7fElgyFqpokW4zUcwQIZ055eur0whtz8xfRQXOTwgLLvhkhqob/Ksbwf2ajergdfu4=
+	t=1769702380; cv=none; b=mPNEcfa8dkIvdc1NWtUlf8kEFCR99+CGLR9QdttV5mcuPVsaXz2iFyXK+PAekqTnNcAhLzC33Dz1IUtbR8DzdoUXjCTSAxvqbd3W95vaJVIdUsrTtwiMVbTcisBLZ++uW2L1bjxaclt9W7dzPOyu2YH9e3Z18hs7+XfdLduCy/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769697951; c=relaxed/simple;
-	bh=u/nOmzIjlMYybE6p6AlMcA31VZSKr+V4w0ZtXo9OfK8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uI9lTMmdPDplHi4X9SHJpSpUukZuREullDQ7I+iY8F7NNYbRsHqjMOJX1p1LFruUK/WB0sz6ER34aZ0x+zTe+yLFycMmm6E+46sZEsEC63lqYHV87HAc7oTPNpyYBs8KimPEnETpBMNzoo/Oa3tYEMHBBPrHIKaDOXPiZE4/FZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=JYPg1UM9; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1769702380; c=relaxed/simple;
+	bh=13C5Zk+FhoB0t1H0UpAuCva814AAeXat2a6Peo0FsAc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZIfFqaKnNyK95Kysyx9N78vtNjCu3umfh29k2XnaHOifdpo8WZCli6YCmpVDSLFL7DS96iRbYMIVlSPOHUB6HNFBbHfp24M6uR0tePsxkzLz/UDP9LhLQtYrVKpRHBSiLL6Udds0GVuGZKyNesheA0unbIndXIVtRvX0CCEYT0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ivky7Iay; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="JYPg1UM9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=dv
-	8Y7hYtYYZLX8fj2VaW0neCRg6TzrLuobtBO2O6I/E=; b=JYPg1UM9PirOw7C+Rj
-	IQfA/N1jVYOZiXCjgiDot6nTXeWRie/Ey6/ksIcMjPqwJ+W/9kQsp9zrfjMGZs01
-	vzGIXCFxxoKcEpUil5l1OZKl8tl2MUpGz7c41OxHdQmZ2wVZKl1qWv6DCfM4D3Ke
-	oGCjTiEBXwPQJoNw3zX2nPf7g=
-Received: from emily-VMware-Virtual-Platform.. (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wAHBJjkcXtpfHbFIg--.5424S2;
-	Thu, 29 Jan 2026 22:42:46 +0800 (CST)
-From: huyuye <huyuye812@163.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Sunil V L <sunilvl@ventanamicro.com>,
-	linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	dai.hualiang@zte.com.cn,
-	deng.weixian@zte.com.cn,
-	guo.chang2@zte.com.cn,
-	liu.qingtao2@zte.com.cn,
-	wu.jiabao@zte.com.cn,
-	lin.yongchun@zte.com.cn,
-	hu.yuye@zte.com.cn,
-	zhang.longxiang@zte.com.cn,
-	zuo.jiang@zte.com.cn,
-	li.kunpeng@zte.com.cn,
-	huyuye <huyuye812@163.com>
-Subject: [PATCH v4] ACPI: pci_root: Clear the acpi dependencies after PCI root bridge initialization on RISC-V
-Date: Thu, 29 Jan 2026 22:42:41 +0800
-Message-ID: <20260129144242.8730-1-huyuye812@163.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260114123205.4019-1-huyuye812@163.com>
-References: <20260114123205.4019-1-huyuye812@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ivky7Iay"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A034C19422;
+	Thu, 29 Jan 2026 15:59:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769702380;
+	bh=13C5Zk+FhoB0t1H0UpAuCva814AAeXat2a6Peo0FsAc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Ivky7IaypOEyEvKQ5QRhpEnDzjmFh/Z1bnc95qMKMc9kgeeQs6dPSk1OXllGHsAex
+	 mcYA1pVUEBFNfoN2i9vzCORs3adSceoNVoRAFpndUu+708UvTfim+MHF3Z04JYrhO/
+	 Z7Ons5GgnjrFtJLlMANIuVV6BvibAXoqJdQQ9m1SQ6moP0oYXeP6MH3X/O2vW+FGhD
+	 MyRmCTjg49muOJr9DBxTys0Rzrxt34N/rL4UYj0jdIO8zzotWJVtXzv3qeiCGCQG6J
+	 c8grT7OdcIt3GScUFm3ugjOhwK2eEVpki0jVvq094/Ly6LqmcZyrPVwLAuBCABknE6
+	 Uma1fVvFX17fw==
+Date: Thu, 29 Jan 2026 08:59:38 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, alex@shazbot.org, lukas@wunner.de,
+	Dan Williams <dan.j.williams@intel.com>,
+	Jinhui Guo <guojinhui.liam@bytedance.com>
+Subject: Re: [PATCH 2/2] pci: fix slot reset device locking
+Message-ID: <aXuD6uYNIeYVJVL5@kbusch-mbp>
+References: <aXpf0OkCsiw6kePd@kbusch-mbp>
+ <20260128225359.GA437372@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAHBJjkcXtpfHbFIg--.5424S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7KFW8tr18JFy5JrWUCw45Jrb_yoW8tF1xpF
-	Wj9a43ta4kJwnIkrnrAw40gry5Xan3C3yUJrZrW34qka1kuFySqFyIyFWUAFy7XF4kAr1a
-	qFZFqF1kAF1qvaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziFfO5UUUUU=
-X-CM-SenderInfo: 5kx135bhyrjqqrwthudrp/xtbC-wbO1ml7ceYDUgAA31
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260128225359.GA437372@bhelgaas>
 
-On RISC-V platforms with multiple PCI root bridges, the enumeration
-order varies randomly across reboots due to APLIC driver initialization
-occurring after ACPI device scanning. This defers PCI probing to a
-unbound workqueue, resulting in non-deterministic device discovery
-sequences.
+On Wed, Jan 28, 2026 at 04:53:59PM -0600, Bjorn Helgaas wrote:
+> 
+> I have no idea why the pci_slot_lock() hunk got applied in
+> pci_slot_restore_locked().  I do notice that the line offsets in your
+> patch are much different than mine, so you must have other changes in
+> pci.c; maybe that accounts for the confusion.
 
-Such random enumeration leads to changes in device naming across each
-boot, which disrupts storage configurations, network settings, and
-severely impacts the stability of server maintenance.
+Oh weird. I'd hope that patch just wouldn't have applied in that case
+instead of appearing successful.
 
-By adding the acpi_dev_clear_dependencies() call in acpi_pci_root_add(),
-this patch enables the firmware to actively control the enumeration order
-of multiple PCI root bridges through the ACPI _DEP method, providing the
-firmware with the opportunity to initialize devices in the intended order,
-thereby ensuring consistent enumeration results across multiple boots.
-
-Signed-off-by: huyuye <huyuye812@163.com>
----
-v3 -> v4:
--Removed __weak function
-
-v2 -> v3:
-- Added back the missing commit description from v1
-- Moved v2 changelog to correct location after "---"
-
-v1 -> v2:
-- Removed the redundant #ifdef CONFIG_ACPI and if (!acpi_disabled) guard
-- Moved acpi_dev_clear_dependencies to RISC-V specific architecture code
- drivers/acpi/pci_root.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 9d7f85dadc48..5169104b9d13 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -760,6 +760,18 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	pci_lock_rescan_remove();
- 	pci_bus_add_devices(root->bus);
- 	pci_unlock_rescan_remove();
-+	/*
-+	 * On RISC-V platforms with ACPI, PCIe host bridge dependencies may be
-+	 * explicitly defined via the _DEP method in the DSDT.
-+	 *
-+	 * The firmware uses _DEP to enforce initialization ordering: if host bridge B
-+	 * depends on host bridge A, ACPI will delay B's enumeration until A is ready.
-+	 *
-+	 * Once this host bridge is fully initialized, we clear its _DEP entries to
-+	 * release dependent bridges (like B) for enumeration.
-+	 */
-+	if (IS_ENABLED(CONFIG_RISCV))
-+		acpi_dev_clear_dependencies(device);
- 	return 1;
+I was using a newer branch that also included some other fixes I'm
+working on, so not surprised the line numbers didn't match up. I'll
+rebase future patches to v6.19-rc1.
  
- remove_dmar:
--- 
-2.43.0
+> Can you regenerate this patch based on v6.19-rc1?  And maybe
+> incorporate Dan's "bridge = slot->bus->self" idea at the same time?
 
+I've got a new proposal about ready that just drops the slot specific
+lock/unlock and save/restore instead. We kind of need to do that since
+slot reset breaks devices with more than 8 functions. I'll send the
+patch with the details in a few minutes.
