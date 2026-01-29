@@ -1,101 +1,240 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91581EB5FD;
-	Thu, 29 Jan 2026 05:00:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BED52D6400
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 05:23:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769662825; cv=none; b=jvQYIggpc4Ayvb1YyM2Yl6iqfcHWfG4etTvKKyEWY1kVgYukfpaxQ3N3GQ85zL2qUuR+JCEY1nd17BnWpD8wPEDopF9lUod/M+w613N3a8dtXZbWUQxcWbSKA94uvvMPlxggsJ0SW0gMvReVE6YPUgzGLql+0BK094Sk9CqSvf8=
+	t=1769664233; cv=none; b=OLJq0fY6/IezpLvSoIpFkveJtENiSTIl7NjDVqKT/mDgY0tORQGG8CfNGgOe4cK8ggCiZ3Rko0tRS6H3pwXeOieqrjboHTHlIgxDwEDFCq7IJ71nx29e9Ya1CZiFn5ciad+dAuVZuK7odt9iNuX20w0j/cfPrgFdiQoMx5qmaRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769662825; c=relaxed/simple;
-	bh=U9ISJ2KDjOyPzPKwTm6AD9pt7euDC4veAsPtcj8Du54=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=WoeqW4ZdMzaUSQqvArfCYFuLa8CBVndgrxCnLl7f7Z7nB5+wvi5aMfcLni7Ljgi27VmWAkpG78/M2YU5DrnRjqJk/IxaM2Bn0rbhdQT7mfEUUWLUNiyWpgLDflGxxbvGJJKyKUjUNn0E86BzNsF3LejyxyAVrr6kRMYnWA2/DnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=da88MNC9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769664233; c=relaxed/simple;
+	bh=A8ELThvyDSw7bzTxOnET/hnFtmbsB5pdUvsMGPcjp1M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FKX+lcf1Eezqjo4wmHDxYUZ2c9RKUkc/2jFRZAbeUfySijU+mFlSQnvV/xpvgHIokrtjPSKlnBzvWnPtnAXRBAPoLbXf8521uGJQpqyDvt35d61rwSmy2mygb4kbXFs/T8jjnS5wed5tWg4R4zFrYRuLl/Z5iw6BXsTPTcbSDfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=oNMNyL2a; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ee9HktB9; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="da88MNC9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ECF1C116D0;
-	Thu, 29 Jan 2026 05:00:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769662825;
-	bh=U9ISJ2KDjOyPzPKwTm6AD9pt7euDC4veAsPtcj8Du54=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=da88MNC9sKTq68aX+hdCzQbV7WEIc/oJPndbWzWJbGhOMCmKEsU/MkyVLPl9Z0FTx
-	 nQvKUs1Y+JVmAdVmoNoQsHj6WeLv4XzjCS4L4Q2O9evTj9oZPjeFkgbbzt4oJGLypA
-	 C7BgDdirTJFNSjpPJNURqh7xSko4RKom22yUHVb+6epWHdGgtaxqij8nQku1PowpFM
-	 dwrce6ITTtU9hBCJ/NmFwUMsv8oMlQ5tUGJyQzXiiI8rG7KQopQvWcXk/JT+SZ9bhP
-	 EJt6zcPXX08BeTd7xvmNKACuFFYapRimMFMUMqoIJwQLaLNoAuMcdVyYb8EmWfLE4+
-	 sbDxglOu2XInA==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id C8DAF380AA69;
-	Thu, 29 Jan 2026 05:00:19 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="oNMNyL2a";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ee9HktB9"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60T2oxEf2034129
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 05:23:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	xUPoMpMVlEL3H0ESGc+sM4Kb5NFh5pqIaVsEHs+9/rk=; b=oNMNyL2aRmFPZ1wo
+	yrTN5iDhAY4/dtyj3zgDH9VPm8jUxSVPhpGL5eEH0wRi434nONRF+h+PycTToS5o
+	HSKzoGvHLTeiwIedB+yx5wGmmBmeicYBc13LMC59ghPiyEnZ7rcaEsjQn9nNy/Yt
+	yjrQ1OwOesSSefEslhlXdJhz+NruQFAnxGEsQTxihPZ8czaS5m5gomCSrjFXdzfl
+	Wpufcmaa1Rg57/LE6/qrrHsEZ3CMmzrQ+qvIB9xqhBiiFUgeSmE7+BZL4mw8Nsrw
+	cccIpmsZVDbJImQ4YSDbMsVq9oqAD1+lhZ8i/wKou0z2HxEiSyOrQh1eh1b/LJ9y
+	8OosGw==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4byna7j9y1-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 05:23:50 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-353049e6047so426307a91.3
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 21:23:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1769664230; x=1770269030; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xUPoMpMVlEL3H0ESGc+sM4Kb5NFh5pqIaVsEHs+9/rk=;
+        b=ee9HktB93EG31bmMkFIV2JS5tUc965d/erLnHPIlE03+81f+ClscVoU3ZC7YsU3Qr6
+         xJ55exAlgnbWzNeVMvJqEqNudI7bQuwHrsY3CfCrgIRnPMo53fjRFrRQnSYFOy+k4rS6
+         N4Vl0a5iwgL+EPyeMDjm4ljz/IXq9pC8EoRzi9fXoPA5rfYC8ArmFa+J1LU2ELOFdfXj
+         /kQJfcNtCwIofc5IHa+Le4MOk/wDI+JmvaU1jzwih1uIM2Z2mISi45xInkGppGLgtsZm
+         AIXmdIua+rrEASqi9NwvjgrIT9rCqBhX3NcCjbeBVtJcnSibhkcSvFTM27dLukHU8cj5
+         KaFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769664230; x=1770269030;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xUPoMpMVlEL3H0ESGc+sM4Kb5NFh5pqIaVsEHs+9/rk=;
+        b=AFWK5v3mcfysVShgpIGvM9VQE0RvPS0AVDCoKofKPwS5+P7wg6xjMpUxvB9l4sB7H8
+         FQZootfkbgixrfMD1rQCtvOhyFVui5U2L7PIX4DeuhZMo21yYOCQ4gsA7y4lRqYc91zM
+         qkBww4QyVlTfIJi4vGzV1CkmsrkoYkbq9xkwNKcqM2OWEmwzso2WapvooUT3kkj1VMrq
+         Dhgcv+dhEnbuWCIKVAWSddsGHost7eaCqDzP4u/Q2dFSPfdY7aJceXlFM3Kw/N1x9U81
+         qrr4wwi9P7yiqMWHZutJbyUOGYC09Ewmsy9kuL/CcoKDO/Gz8GxMtC7OjSezDMcXhRgs
+         V35Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWD9NTrhoF7MC2UWj1WsXCTUAiW5vyiJfEdYxb+FPkHTEcnn9mzOIkoChJkcuX8JGOoE/diMIkGohg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwUYi4u1HCbtLRS3NT1WUvYQAETV79Fp46m/wVL2E+2xVNlSw3P
+	SuA1IlzyV1mVJ7TTpv9Xhins9zq7/Q1BBNsiPgp2sXlaZM6DUoDICJbvyygG3CcZvxYWIK7NuPO
+	ujvjBETpxVwVhGZNIKqSoDvtcW7skM0pmtynh6j00KbLmRWNdHluv8EUgjdlVu20=
+X-Gm-Gg: AZuq6aL8WRP4XYyi3VpBjac1l4ldO/FoechFuU5ZARxPLzyG6Sfy0QG4JbBg1mQ/qm+
+	Yhrn8f3cmCf1b2xmBWwrDBw40NWTq4yO0r7iq60GoxJwur41q9acjK6DKbN69jggKCuabp2h6/M
+	kxwjyeegUX3jn05Dgg/vjmhk7txawcS7uPqFMH0B5ZMS71tWnQGueMSYaJBSviDT5IxCfy1Divn
+	cT3Mzw+kGQgf3Z5EDMcBM85fuKDT8FwNNNqsEAboa3ENSK/WYl1fyPCGpBE5tEtlI5/7s9nr3sB
+	GaVaG81YhpckzxKWVEU6HZp8cIT3dZ4awdPs6P2tdMu9LOQlvMl5Q7wH5cY3jnM15ZHW7PvmrEr
+	00wPOXEPigs8LhrV/4oclf2/Lv7/HyHAqW9HzEU9ilA==
+X-Received: by 2002:a17:903:2291:b0:28e:a70f:e879 with SMTP id d9443c01a7336-2a870d49b23mr64883965ad.1.1769664229785;
+        Wed, 28 Jan 2026 21:23:49 -0800 (PST)
+X-Received: by 2002:a17:903:2291:b0:28e:a70f:e879 with SMTP id d9443c01a7336-2a870d49b23mr64883845ad.1.1769664229201;
+        Wed, 28 Jan 2026 21:23:49 -0800 (PST)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a88b4c3ddfsm38873735ad.66.2026.01.28.21.23.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Jan 2026 21:23:48 -0800 (PST)
+Message-ID: <1787b076-a07f-4ac2-bd50-55914c70461a@oss.qualcomm.com>
+Date: Thu, 29 Jan 2026 10:53:43 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH net-next v2] net: ethernet: neterion: s2io: remove unused
- driver
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <176966281835.2353118.1929748319198442783.git-patchwork-notify@kernel.org>
-Date: Thu, 29 Jan 2026 05:00:18 +0000
-References: <20260126031352.22997-1-enelsonmoore@gmail.com>
-In-Reply-To: <20260126031352.22997-1-enelsonmoore@gmail.com>
-To: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-Cc: netdev@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
- linux-s390@vger.kernel.org, corbet@lwn.net, linasvepstas@gmail.com,
- mahesh@linux.ibm.com, oohall@gmail.com, bhelgaas@google.com,
- davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
- horms@kernel.org, tsbogend@alpha.franken.de, maddy@linux.ibm.com,
- mpe@ellerman.id.au, npiggin@gmail.com, chleroy@kernel.org, hca@linux.ibm.com,
- gor@linux.ibm.com, agordeev@linux.ibm.com, borntraeger@linux.ibm.com,
- svens@linux.ibm.com, andrew+netdev@lunn.ch, akpm@linux-foundation.org,
- martink@posteo.de, pavel@ucw.cz, danishanwar@ti.com,
- mengyuanlou@net-swift.com, pablo@netfilter.org, tiwai@suse.de,
- chenhuacai@kernel.org, tytso@mit.edu, ebiggers@google.com,
- vineethr@linux.ibm.com, sshegde@linux.ibm.com, geert@linux-m68k.org,
- ardb@kernel.org, martin.petersen@oracle.com, fbarrat@linux.ibm.com,
- ajd@linux.ibm.com, herbert@gondor.apana.org.au, kshk@linux.ibm.com,
- vadim.fedorenko@linux.dev, lorenzo@kernel.org, lukas.bulwahn@redhat.com,
- dong100@mucse.com, hkallweit1@gmail.com, tglx@kernel.org, mingo@kernel.org,
- lukas@wunner.de, giovanni.cabiddu@intel.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] PCI: qcom: Add D3cold support
+To: Bjorn Andersson <andersson@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com
+References: <20260128-d3cold-v1-0-dd8f3f0ce824@oss.qualcomm.com>
+ <leonjtaswjzgibn4p5rmgegtad4fhi2y47qwtagilewebm3o4y@pc6eydqfujm4>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <leonjtaswjzgibn4p5rmgegtad4fhi2y47qwtagilewebm3o4y@pc6eydqfujm4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: fqABfK-7pNNeWzvDWiWkQo-ig3jJYpuh
+X-Authority-Analysis: v=2.4 cv=J72nLQnS c=1 sm=1 tr=0 ts=697aeee6 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
+ a=FNQ6HaZGGcLT-iQI5j0A:9 a=QEXdDO2ut3YA:10 a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-ORIG-GUID: fqABfK-7pNNeWzvDWiWkQo-ig3jJYpuh
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI5MDAzMiBTYWx0ZWRfX/wZ2xLEOuKqZ
+ DVVJO+99PKKqhhwak5TznqCeio3FUnStPQQSh/VoazyGjXcYcBgo50h+6caLqPDETBiF5T1gFMk
+ 7DKFteeIruGczPN3/wqXwb556/rPNT/0uPzPxutWlrH30eCL4rsTap4lWxZ3QZgEE7rKgcP9lzF
+ r8huxJR3jk1whUDgOWhbX9/4zVbCV8rLztiQEsL0GTiBeZWTDP+/AEzAGJnNb6mRfjB/amfIBeP
+ idq3MxnrFdIaEvyeEqlmT0eramG7dqPD1f5Y4QjfeZnvt+vcuRT9toJSeUjQp3hZcmTT+US0h+2
+ cP2TwGIxmXdxCswYw5/N6huJEUzW38Ple7Mc5e/IoyYPuVTHo6uIv63XMqacaGbI9CiqNqwqmMX
+ Hxp2LYb6rh84LTpJJPnqmy4lxlU56MJcSA01xaEF3SyXtZ0hW/r3vcUmzSgWIrsDcxxXjyeFEUf
+ h2hZLAw/oMpJkIrh6hQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-01-28_06,2026-01-28_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 phishscore=0 malwarescore=0 lowpriorityscore=0 spamscore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 suspectscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601290032
 
-Hello:
 
-This patch was applied to netdev/net-next.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
 
-On Sun, 25 Jan 2026 19:08:07 -0800 you wrote:
-> The s2io driver supports Exar (formerly Neterion and S2io) PCI-X 10
-> Gigabit Ethernet cards. Hardware supporting PCI-X has not been
-> manufactured in years. On x86, it was quickly replaced by PCIe. While
-> it stuck around longer on POWER hardware, the last POWER hardware to
-> support it was POWER7, which is not supported by ppc64le Linux
-> distributions. The last supported mainstream ppc64 Linux distribution
-> was RHEL 7; while it is still supported under ELS, ELS is only
-> available for x86 and IBM Z. It is possible to use many PCI-X cards in
-> standard PCI slots (which are still available on new motherboards), but
-> it does not make sense to do so for 10 Gigabit Ethernet because the
-> maximum bandwidth of standard PCI is only 1067 Mbps. It is therefore
-> highly unlikely that this driver is still being used. Remove the
-> driver, and move the former maintainer to the CREDITS file (restoring
-> credit for the vxge driver, which was removed in commit f05643a0f60b
-> ("eth: remove neterion/vxge").
-> 
-> [...]
+On 1/28/2026 8:25 PM, Bjorn Andersson wrote:
+> On Wed, Jan 28, 2026 at 05:10:40PM +0530, Krishna Chaitanya Chundru wrote:
+>> This series adds a common helper to determine when a PCIe host bridge
+>> can safely enter D3cold, converts the DesignWare host driver to use that
+>> helper, and enables D3cold support for Qualcomm PCIe controllers.
+>>
+> You only modify qcom_pcie_deinit_2_7_0() so which targets is this
+> expected to work on and which targets have you tested it on. How can I
+> test it and what outcome should I expect?
+we modified qcom_pcie_deinit_2_7_() because we are trying to undo what 
+we are doing as part of init for other platforms, in init() we are just 
+turning on the resources. I tested this on lemans evk device. After this 
+series we can expect PCIe link will go to D3cold(provided there is no 
+NVMe attach), and cxpc can be achieved. For NVMe devices, mani is 
+working on, in which requires some psci changes[1]
+>> The first patch introduces pci_host_common_can_enter_d3cold() in
+>> pci-host-common. The helper walks all devices on the bridge's bus and
+>> only allows the host bridge to enter D3cold if all PCIe endpoints are
+>> already in PCI_D3hot. For devices that may wake the system, it
+>> additionally requires that the device support PME wakeup from D3cold
+>> (via WAKE#). Devices without wakeup enabled are not restricted by this
+>> check and may be left in D3cold.
+>>
+>> The second patch updates the DesignWare host driver to use this common
+>> helper in dw_pcie_suspend_noirq(). Previously, the driver skipped
+>> putting the link into L2 / device D3cold whenever L1 ASPM was enabled,
+>> since some devices (e.g. NVMe) expect low resume latency and may not
+>> tolerate deeper power states. However, such devices typically remain in
+>> D0 and are already covered by the helper's requirement that all
+>> endpoints be in D3hot before the host bridge may enter D3cold. Using the
+>> shared helper removes this coarse heuristic and centralizes the D3cold
+>> eligibility policy.
+>>
+>> The third patch enables D3cold support for Qualcomm PCIe controllers. It
+>> adds pme_turn_off() support and switches to the DesignWare common
+>> suspend/resume methods for device D3cold entry and exit. If the
+>> controller is not kept in D3cold, the existing paths are used so that
+>> ICC votes, OPP votes, and other resources remain managed as before. In
+>> addition, qcom_pcie_deinit_2_7_0() is updated to explicitly disable
+>> PCIe clocks and resets in the controller, and the now-unused "suspended"
+>> flag is removed from struct qcom_pcie.
+>>
+> This is effectively just duplicating the commit messages. Lacking from
+> both is a good explanation of the problem statement, but that might just
+> be me not getting it?
+We are adding support for D3cold for qcom controllers, this is a PCIe 
+feature,
+I haven't added reference to qcom internal power state like CXPC since 
+this alone
+will not achieve this. But I should have added to this as ultimate 
+purpose is to
+have CXPC and main blocking is currently PCIe.
+>
+> Could you please help me understand what the actual outcome of this
+> series is? I was under the impression that this work would lead us
+> towards unblocking CXPC, but the other patch you sent will prevent CXPC.
+This will keep PCIe in D3cold and achieve CXPC if there is no NVMe 
+endpoints.
 
-Here is the summary with links:
-  - [net-next,v2] net: ethernet: neterion: s2io: remove unused driver
-    https://git.kernel.org/netdev/net-next/c/aba0138eb7d7
+No other patch is not preventing CXPC, it is just trying to tell genpd 
+framework that
+don't turn off GENPD, if the controller is not suspended. if we don't 
+have that patch
+when device is not suspended i.e not kept in D3cold the gdsc is getting 
+turned off
+and PCIe link is going down. Until PCIe state is in D3cold, gdsc should 
+not be off
+even in cxpc case.
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+Mani,
+To avoid the confusion, can I club this patch[2] to this series in next 
+verision
 
+[1] 
+https://lore.kernel.org/all/20251231162126.7728-1-manivannan.sadhasivam@oss.qualcomm.com
+[2] [PATCH] PCI: qcom: Prevent GDSC power down on suspend - Krishna 
+Chaitanya Chundru 
+<https://lore.kernel.org/all/20260128-genpd_fix-v1-1-cd45a249d12f@oss.qualcomm.com/>
+
+- Krishna Chaitanya.
+>
+> Regards,
+> Bjorn
+>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>> Krishna Chaitanya Chundru (3):
+>>        PCI: host-common: Add shared D3cold eligibility helper for host bridges
+>>        PCI: dwc: Use common D3cold eligibility helper in suspend path
+>>        PCI: qcom: Add D3cold support
+>>
+>>   drivers/pci/controller/dwc/pcie-designware-host.c |   7 +-
+>>   drivers/pci/controller/dwc/pcie-designware.h      |   1 +
+>>   drivers/pci/controller/dwc/pcie-qcom.c            | 114 +++++++++++++---------
+>>   drivers/pci/controller/pci-host-common.c          |  29 ++++++
+>>   drivers/pci/controller/pci-host-common.h          |   2 +
+>>   5 files changed, 101 insertions(+), 52 deletions(-)
+>> ---
+>> base-commit: 590a64365d9bcc13ee644a3e73ffdc3df26cf23c
+>> change-id: 20251229-d3cold-bf99921960bb
+>>
+>> Best regards,
+>> -- 
+>> Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>>
+>>
 
