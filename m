@@ -1,304 +1,99 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A64A6347BA5;
-	Thu, 29 Jan 2026 17:53:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05209291C10
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 18:06:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769709184; cv=none; b=gREP9jWUZpXj/kPPbtPCSXNmvwAUd2Op4RE+Qv0RzL64UO7CKNlT3+QK13KL9XMJF2Dwm3TYO7emM5HDkmmzKTYp5/4ioJmsm/FiBVv0IxaAmXbI1LF8ZjlyQ4LyPP13A8yLX1h4Ya/Hwtfryq0XURuYzogkrDYD1XTXD3h/IA0=
+	t=1769710003; cv=none; b=SCi9UsCCxmtP+2kXDQhWVRC1K3ZS3mMamZlnJJfz9VP1tDavYfXgSo1tbwj1cuLSEwVbUZ/iJZDsklCBgcFkga1/2XqGCJvX8gqUtZhh3yEXbZs3f1AT6y2SUBBArO3feMMdPuy1nW6dmfMi2lvo3PXdJgIHCYQh2f0XvV2uvKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769709184; c=relaxed/simple;
-	bh=elBqTdEPPPDTgZ9JFYnkaLSnM7vZKoaXZiXofSjZedI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jWfZhxX/Pk5eOitZlRk7hAeq+GfWyKCU3YPa9NzoGwurLPcQcdt+94nUzOmz/Q1AA1r36wo1qq6aUw61oT2A7G7ExMVdCF+s1xmvpmV5Y/5jLAm7ul4eLxNIyoxk/DINDuHhvL0EzKo0SZVmm+huCUEl9jzqgMLOKvgF8wu/nS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VsWJ2VKR; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1769710003; c=relaxed/simple;
+	bh=jbPVSAPrjwCZ1QgFLEq2EkAZjF01jNgD4rg/XY2hQcs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L33aFtHt/m460SR3q5A/1K/lJ3vD/Ji1XC1/o7m61SKbIcHu5ihfoJ2mVWcKodWvbHpiBNLU+GMPixG/4KXnftNhHuxiSE6oj8XwyC6COUfKdecGaGyXFsoZDIgvWEkwHRRN/kHJhsCSu5epfNZ2ZgHbBeX0BNoDvXW8RNoziEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jkQzAg0/; arc=none smtp.client-ip=209.85.219.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VsWJ2VKR"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60TDgJNf1278673;
-	Thu, 29 Jan 2026 17:52:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=fwb2FMXA5tJtyDq/Zqal//2M2OPh3VodiSxTtoTaLBU=; b=
-	VsWJ2VKRf3OjE1laDkpNztObe9cr/Rf1nFHxMq/69fqkJmT9h89cVc6xH+ISzCUE
-	tqKgZjunorm5a6iWAz1fJqzS60ynjbzKpsPZW2I1mPOKx6JbdK0f4RVvrUtq06GR
-	UpFVjkSPdT1UDPS5b4dja6UoPWAQjMzlaAsOHTdiLY2A875kDcBvgNxLNRdlXTUw
-	8y7cqgpRGLxNKyjuWOWkmaaNA64ryENQm9+Y/vwXIPkAVEnz9KHmua+nQa+MfaC1
-	DL6GTQfDTkC1PAulgOJwCUH0mzmp0QaAB+I5IUjx6qsi7VRuRYWtjVKI3/DPWIlW
-	wfskegk/uQbPtTIBwgaBTQ==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4by2xquu2a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 29 Jan 2026 17:52:46 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 60TH18iq019819;
-	Thu, 29 Jan 2026 17:52:46 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4bvmhhyfff-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 29 Jan 2026 17:52:46 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 60THllYh012086;
-	Thu, 29 Jan 2026 17:52:45 GMT
-Received: from lab61.no.oracle.com (lab61.no.oracle.com [10.172.144.82])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4bvmhhyfc3-3;
-	Thu, 29 Jan 2026 17:52:45 +0000
-From: =?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-        Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Alex Williamson <alex@shazbot.org>,
-        Johannes Thumshirn <morbidrsa@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        =?UTF-8?q?H=C3=A5kon=20Bugge?= <haakon.bugge@oracle.com>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v4 2/2] PCI/ACPI: Restrict program_hpx_type2() to AER bits
-Date: Thu, 29 Jan 2026 18:52:33 +0100
-Message-ID: <20260129175237.727059-3-haakon.bugge@oracle.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <20260129175237.727059-1-haakon.bugge@oracle.com>
-References: <20260129175237.727059-1-haakon.bugge@oracle.com>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jkQzAg0/"
+Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-88a288811a4so12445156d6.3
+        for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 10:06:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1769710001; x=1770314801; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Fvou5EnfC6erSqFqmm4M1vH3YCXBRlE30VyZs921xdw=;
+        b=jkQzAg0/Fttj1eTXAoI3vJ8NKSPPc9FB8P1M2b/77gt0ivll1HOgfxCollSvMumVht
+         t3dDtwDXdiEDmtNBZUK8v50TqSkFsEBPmZSc8GKBIhezu+laQO3reezceCuXi9/KmILO
+         dnwrtAdcGqZWYFhSFaRXFxGg9cgFt1PmwCEeBDeeoCft+cQejJR3maz1doZSkmO0oNuy
+         jMX9of4ENPl0TVOTWyEpQ53AZP9+cDd+0Dl8fTnSWwFTnThOmCVd0gb53IT80NJ7XHVj
+         2n6ytoWWbufieV1HfSogfIDZ/jXjD/gFH5LCJgv9t11RZEG8pw78ylu4X8FuzBqAlRlk
+         KsYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769710001; x=1770314801;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Fvou5EnfC6erSqFqmm4M1vH3YCXBRlE30VyZs921xdw=;
+        b=qnGfla4UX7SlwcOTc1AbZNfytekPn2cf+j73Q0MiLpPtG/9XA65sYecVRISBtgamw5
+         VazFtAsaNJd7WXoM8HOWM71svY2rdNrasiAvdPWEpsMspaxk8B6OUIFZuE+gmgiwXCVK
+         9o1zkPrChJXN9PUk0vx6G42t9wtqlyYycOQFycllMQA9vVB3dd9q0+MNcCZdW2qHELAw
+         qvPD6o2axc9YqNpbS5meTpi4lcptHBfV04bhLeLq8yoc2iOdwVGL8qIFjKnh7D57i9Ca
+         XVv0PO7eZ2MfsMWsk/HtnPzIAG7xdDRHhqdJ4p1I3mkYTbFRvuSmsOiNnM316x/5R1uB
+         siMA==
+X-Forwarded-Encrypted: i=1; AJvYcCXyJA531ypX5C7HAUDdtW2BV9javyQB70Z/7E1ae1r4ec1MzJgrI4meRqQxGv+Qte9NPxHSY0k4j9E=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw0/ULP0x0jjBd0EET6/BLd/VBb2x/t5rMD8H1XcROXA/PEewIm
+	MoK6O/0/eMrVk6iEvfcwUzjsmU/SesEuPqq4WS//bov+ACE/YAJQVMCPYK89NJ4geMTq3wJBmwW
+	hnXQ4
+X-Gm-Gg: AZuq6aKiLHX7wMZYTwPZJHgI0shciCZ9xZUM8GrwGFHKALf01r3p/BT32v3MbZmcTLU
+	4Es7GEW+y3keJYlwnIPGMC9PWmPeU8drFTAMtcSJtiBl65H46+MFy2Pl+Sb7xoUf03vhPv4CfQ1
+	EkpiXPo9+hef3aVV7OeA4t4yhJj6ExPI/pIE9BXm25/Lhs2DcBn+PEoJ6pYmYNE6yk7ttS7DguH
+	ttuRe7Ad8ieSxYxi1R/L9g5aeiECRsJ+Nq36oZ0qNmXfI/5ZdWtmlAVx1SexIQMEJMpLMRN6Zz/
+	RiuorUUi418V8pBydWjQYSIj9TjhecETXx05Y5oAMilWB9GWkLURCO+RmoN2G/Pgl9kl315adDJ
+	TqLQgvS0Nv9DQ/P28ce3wl0BjJHn+iWbecN604W0IKBY6CBsVW4J6LMPsQz9V9xuZTLaUvSFTSq
+	SXHwO/qSdZrhDKWW3P4y/3DrNjvvoOfIHwbvr+aXnLaCRnPsKvW4qlBaeps0DbfpG4aSM=
+X-Received: by 2002:a05:6214:f0e:b0:894:2d0c:5de4 with SMTP id 6a1803df08f44-894ea058de0mr3910776d6.34.1769710000756;
+        Thu, 29 Jan 2026 10:06:40 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-894d376e65bsm41852446d6.55.2026.01.29.10.06.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Jan 2026 10:06:39 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1vlWPf-00000009mLl-22aB;
+	Thu, 29 Jan 2026 14:06:39 -0400
+Date: Thu, 29 Jan 2026 14:06:39 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com,
+	Robin Murphy <robin.murphy@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+	Naresh Kamboju <naresh.kamboju@linaro.org>,
+	Pavankumar Kondeti <quic_pkondeti@quicinc.com>,
+	Xingang Wang <wangxingang5@huawei.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: [PATCH v3 0/4] PCI: Fix ACS enablement for Root Ports in OF
+ platforms
+Message-ID: <20260129180639.GA2328995@ziepe.ca>
+References: <20260102-pci_acs-v3-0-72280b94d288@oss.qualcomm.com>
+ <2hua2e6admppbj5ttscqmclngfkvqpccix4n35vc4xc44o2bnr@yzw6hyvmar2c>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-01-29_02,2026-01-29_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2601150000
- definitions=main-2601290126
-X-Proofpoint-GUID: jTAJP50xMzHjPyfLiE3zB8lMmrucg_11
-X-Proofpoint-ORIG-GUID: jTAJP50xMzHjPyfLiE3zB8lMmrucg_11
-X-Authority-Analysis: v=2.4 cv=UepciaSN c=1 sm=1 tr=0 ts=697b9e6e b=1 cx=c_pps
- a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=M51BFTxLslgA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=yPCof4ZbAAAA:8 a=SsKr03gcbRYbsVN0MpsA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 cc=ntf awl=host:12103
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI5MDEyNiBTYWx0ZWRfX1fAyVDYiClBu
- z17eEuc0YoENcle/VRABxs8D4vTxTXhqx9QGV4lBx7bdJ+k9IGdDW1sqQTxTG0xJBVJmotgBVZm
- vsc3IFJXZRha6liP7elgozwPwNiFGbunTG27JDrxDTFeC7OjaFrRkFNwUwOk1sAnkOUey0ozYlR
- 14FO5bqN2i+0tgpkZDFxVinNeL7EMl0ExdzcIlGGG5R3BYiNpfdRzngGN7GmEMeyLQyKF4DFTtP
- 4+AM0gQHVt8PEL+mhvMxiJsFhWtjtB4/F5G05rOdvogA/5cKuhj0E6936S+sS1tCTJHR8MzMAyU
- ACZiM7A/FohAgx/vHSnmVIaHjV6io9htTqU2fj+ThvgvFWWl3zSeEmNZcTgJiCAFA6sAOt0DXnB
- 542AhQvQVt3lvbck9aGa3VWNq1kQpfKoFduLtr7wEGxr659rndEj90gZ5A5ndywvoOInYNv8kyX
- 2Yio5A4ROwzWd1cfAi85Z0v9gZsAVZLfyZgmXxZ4=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2hua2e6admppbj5ttscqmclngfkvqpccix4n35vc4xc44o2bnr@yzw6hyvmar2c>
 
-Previously program_hpx_type2() applied PCIe settings unconditionally,
-which could incorrectly change bits like Extended Tag Field Enable and
-Enable Relaxed Ordering.
+On Thu, Jan 29, 2026 at 11:12:07PM +0530, Manivannan Sadhasivam wrote:
+> > Manivannan Sadhasivam (4):
+> >       PCI: Cache ACS capabilities
+> >       PCI: Disable ACS SV capability for the broken IDT switches
+> >       PCI: Extend the pci_disable_broken_acs_cap() quirk for one more IDT switch
 
-When _HPX was added to ACPI r3.0, the intent of the PCIe Setting
-Record (Type 2) in sec 6.2.7.3 was to configure AER registers when the
-OS does not own the AER Capability:
+I'm OK with these patches
 
-  The PCI Express setting record contains ... [the AER] Uncorrectable
-  Error Mask, Uncorrectable Error Severity, Correctable Error Mask
-  ... to be used when configuring registers in the Advanced Error
-  Reporting Extended Capability Structure ...
-
-  OSPM [1] will only evaluate _HPX with Setting Record – Type 2 if
-  OSPM is not controlling the PCI Express Advanced Error Reporting
-  capability.
-
-ACPI r3.0b, sec 6.2.7.3, added more AER registers, including registers
-in the PCIe Capability with AER-related bits, and the restriction that
-the OS use this only when it owns PCIe native hotplug:
-
-  ... when configuring PCI Express registers in the Advanced Error
-  Reporting Extended Capability Structure *or PCI Express Capability
-  Structure* ...
-
-  An OS that has assumed ownership of native hot plug but does not
-  ... have ownership of the AER register set must use ... the Type 2
-  record to program the AER registers ...
-
-  However, since the Type 2 record also includes register bits that
-  have functions other than AER, the OS must ignore values ... that
-  are not applicable.
-
-Restrict program_hpx_type2() to only the intended purpose:
-
-  - Apply settings only when OS owns PCIe native hotplug but not AER,
-
-  - Only touch the AER-related bits (Error Reporting Enables) in Device
-    Control
-
-  - Don't touch Link Control at all, since nothing there seems AER-related,
-    but log _HPX settings for debugging purposes
-
-Note that Read Completion Boundary is now configured elsewhere, since it is
-unrelated to _HPX.
-
-[1] Operating System-directed configuration and Power Management
-
-Fixes: 40abb96c51bb ("[PATCH] pciehp: Fix programming hotplug parameters")
-Signed-off-by: Håkon Bugge <haakon.bugge@oracle.com>
-
----
-
-v3 -> v4:
-   * Improved commit message
-   * Corrected info log when _HPX attempts to modify the Link Control
-     register
-
-v2 -> v3:
-   * No changes
-
-v1 -> v2:
-   * Fixed comment style
-   * Simplified the and/or logic when programming the Device Control
-     register
-   * Fixed the incorrect and brutal warning about Link Control
-     register bits set and changed it to an info message about _HPX
-     attempting to set/reset bits therein.
-   * Removed the RCB programming from program_hpx_type2()
-   * Moved the PCI_EXP_AER_FLAGS definition from
-     drivers/pci/pcie/aer.c to drivers/pci/pci.h
----
- drivers/pci/pci-acpi.c | 58 +++++++++++++++++-------------------------
- drivers/pci/pci.h      |  3 +++
- drivers/pci/pcie/aer.c |  3 ---
- 3 files changed, 27 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 9369377725fa0..3ffceaa7603c0 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -271,21 +271,6 @@ static acpi_status decode_type1_hpx_record(union acpi_object *record,
- 	return AE_OK;
- }
- 
--static bool pcie_root_rcb_set(struct pci_dev *dev)
--{
--	struct pci_dev *rp = pcie_find_root_port(dev);
--	u16 lnkctl;
--
--	if (!rp)
--		return false;
--
--	pcie_capability_read_word(rp, PCI_EXP_LNKCTL, &lnkctl);
--	if (lnkctl & PCI_EXP_LNKCTL_RCB)
--		return true;
--
--	return false;
--}
--
- /* _HPX PCI Express Setting Record (Type 2) */
- struct hpx_type2 {
- 	u32 revision;
-@@ -311,6 +296,7 @@ static void program_hpx_type2(struct pci_dev *dev, struct hpx_type2 *hpx)
- {
- 	int pos;
- 	u32 reg32;
-+	const struct pci_host_bridge *host;
- 
- 	if (!hpx)
- 		return;
-@@ -318,6 +304,15 @@ static void program_hpx_type2(struct pci_dev *dev, struct hpx_type2 *hpx)
- 	if (!pci_is_pcie(dev))
- 		return;
- 
-+	host = pci_find_host_bridge(dev->bus);
-+
-+	/*
-+	 * We only do the HP programming if we own the PCIe native
-+	 * hotplug and not the AER ownership
-+	 */
-+	if (!host->native_pcie_hotplug || host->native_aer)
-+		return;
-+
- 	if (hpx->revision > 1) {
- 		pci_warn(dev, "PCIe settings rev %d not supported\n",
- 			 hpx->revision);
-@@ -325,33 +320,28 @@ static void program_hpx_type2(struct pci_dev *dev, struct hpx_type2 *hpx)
- 	}
- 
- 	/*
--	 * Don't allow _HPX to change MPS or MRRS settings.  We manage
--	 * those to make sure they're consistent with the rest of the
-+	 * We only allow _HPX to program the AER registers, namely
-+	 * PCI_EXP_DEVCTL_CERE, PCI_EXP_DEVCTL_NFERE,
-+	 * PCI_EXP_DEVCTL_FERE, and PCI_EXP_DEVCTL_URRE.
-+	 *
-+	 * The other settings in PCIe DEVCTL are managed by OS in
-+	 * order to make sure they're consistent with the rest of the
- 	 * platform.
- 	 */
--	hpx->pci_exp_devctl_and |= PCI_EXP_DEVCTL_PAYLOAD |
--				    PCI_EXP_DEVCTL_READRQ;
--	hpx->pci_exp_devctl_or &= ~(PCI_EXP_DEVCTL_PAYLOAD |
--				    PCI_EXP_DEVCTL_READRQ);
-+	hpx->pci_exp_devctl_and |= ~PCI_EXP_AER_FLAGS;
-+	hpx->pci_exp_devctl_or &= PCI_EXP_AER_FLAGS;
- 
- 	/* Initialize Device Control Register */
- 	pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
- 			~hpx->pci_exp_devctl_and, hpx->pci_exp_devctl_or);
- 
--	/* Initialize Link Control Register */
-+	/* Log if _HPX attempts to modify PCIe Link Control register */
- 	if (pcie_cap_has_lnkctl(dev)) {
--
--		/*
--		 * If the Root Port supports Read Completion Boundary of
--		 * 128, set RCB to 128.  Otherwise, clear it.
--		 */
--		hpx->pci_exp_lnkctl_and |= PCI_EXP_LNKCTL_RCB;
--		hpx->pci_exp_lnkctl_or &= ~PCI_EXP_LNKCTL_RCB;
--		if (pcie_root_rcb_set(dev))
--			hpx->pci_exp_lnkctl_or |= PCI_EXP_LNKCTL_RCB;
--
--		pcie_capability_clear_and_set_word(dev, PCI_EXP_LNKCTL,
--			~hpx->pci_exp_lnkctl_and, hpx->pci_exp_lnkctl_or);
-+		if (hpx->pci_exp_lnkctl_and != 0xffff ||
-+		    hpx->pci_exp_lnkctl_or != 0)
-+			pci_info(dev, "_HPX attempts Link Control setting (AND %#06x OR %#06x)\n",
-+				 hpx->pci_exp_lnkctl_and,
-+				 hpx->pci_exp_lnkctl_or);
- 	}
- 
- 	/* Find Advanced Error Reporting Enhanced Capability */
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0e67014aa0013..f388d4414dd3a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -88,6 +88,9 @@ struct pcie_tlp_log;
- #define PCI_BUS_BRIDGE_MEM_WINDOW	1
- #define PCI_BUS_BRIDGE_PREF_MEM_WINDOW	2
- 
-+#define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
-+				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
-+
- extern const unsigned char pcie_link_speed[];
- extern bool pci_early_dump;
- 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e0bcaa896803c..9472d86cef552 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -239,9 +239,6 @@ void pcie_ecrc_get_policy(char *str)
- }
- #endif	/* CONFIG_PCIE_ECRC */
- 
--#define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
--				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
--
- int pcie_aer_is_native(struct pci_dev *dev)
- {
- 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
--- 
-2.43.5
-
+Jason
