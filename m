@@ -1,271 +1,180 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazolkn19013095.outbound.protection.outlook.com [52.103.20.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63DA323C4F4;
-	Thu, 29 Jan 2026 04:33:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769661228; cv=none; b=T9caxfcrHpk5kSBaD+AxQIA/JT4+XS0G/gIVP1v2c8XVykoTyCk+Fh+4vaEu7m0Uh9G5FDmcaiPUe1f0Yh99jmAgZoPs1JMh52PiCpbweiuWKKha/XbrbYRTkx80v3QTKMFm32l2uIg33qr9rkA1RbSR7q+OjMbOm2PTgbFDhOE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769661228; c=relaxed/simple;
-	bh=4+DiUJn3sQ7OzwTbYE1622pe/KYupOEu+6bdseH86Ok=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AbsA18ifL9uOTVv9J7HIqLBQNeGtLnNSBSaCKyY8tsx/J1MgM0UxG/yp98F3JeHxwPAFn/YKugEVyZvsYwKWo5RSEElH9ysHC1v+/FWZz6LYqxySLJD8Wvste7NUaouxH6vqIcGAyh7UMZOFkMUoeWEngLqf5yfb8OAi2/BTunU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a/P081Du; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98D222586FE;
+	Thu, 29 Jan 2026 04:35:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.20.95
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769661333; cv=fail; b=uJrefodRtFaglVFrV4U75EQU75g44NgzaaOJ9tLB3exL3xoDQQl+nFgwf+cX95DKj6YgXwPKhyQED9RdFGmxV77GBja2gPhhIy5u0rEvJzD8x/vHVVJUJ8rlwgo9PA5E1X0wycVBzEx6gVnqVXvqx9dvhrXBqKFcZZ5kp1UisRE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769661333; c=relaxed/simple;
+	bh=XlEoM7m2NlSvDveCRuMu5rhp6+AFM13wtaFBB86s9WM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=chErCIoh8ZH8ySTY3TT0idoe7/y7zTRcfdrGu2CkXfsuR9KBC8jY0Vg6JlEL4QkwyaQ1UrJ1csMztAExfYtgT9xc7QHXFKP/dQrT1ysq3SOuNVHF2vPNb7x3+ZHDZJrRcQ7Ia9QtGv1hHYdjC2Z7U0BXTe5fJoaHSir3TLy32EM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=kVXURQ+d; arc=fail smtp.client-ip=52.103.20.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a/P081Du"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 479EFC116D0;
-	Thu, 29 Jan 2026 04:33:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769661227;
-	bh=4+DiUJn3sQ7OzwTbYE1622pe/KYupOEu+6bdseH86Ok=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=a/P081DufMplUwoWxestflu1piRJKbtzIRBkPyuAivcpDFsbzd/+FDAy5+qCKxR+9
-	 MWLk4/nLfRxrI5JDgNbDPyv866yEJka1zsvl/vgLU9DLrx1d6U7owGBnbiV2qy+/3T
-	 X9Ogk1aEu1oE/OiEjBZU4kbiiuRlPhUUKyGG4xJEnRmY4qkdr3U16sD3a0dLtNKoK+
-	 psMNhX65DI9SUyBG76Ju9xPJM1rEL1oZqYJkdOoo+5tLM+TuDzbFM077WtmvSfyJal
-	 JaUDXNnZ16g5ngzfL8aEwhre8fFgK0H7wXuXVuqYZJ/JXBLrRZohpPyoN+9J7ybuch
-	 QaDY/sV+rjIKw==
-Message-ID: <a802b522-5084-41de-9ecd-cfcc9c6eebcf@kernel.org>
-Date: Thu, 29 Jan 2026 13:33:45 +0900
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="kVXURQ+d"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mKDajKvwO+bYe1hV5sqHoOaeBVWAEyTUzp7z2a/KrWusa4uFF/MicTLtLedDF0JpPJWq49Plwgvif6hGmhC+Axm87HEzfBZGjwoSZD3z/9Z1CNYUI2TD/EHZvdhs7FN7t2YSqxlidWLlDaYwhNxgjlR92x2amOxB+hRb1aohOcC+5QNacVDp4v9oq99zvAgrcRtIqdLWmkjkuIDj5AiC8HguTscpZZpIy2V4psSPW6BL3tH5OZ+x9JKaWwT7BD4T4lg911Nwq1H1bGTYCdB2xG2YGZXd15HgPtQ2Z7PaKN6nFLXiHTZzV1FYcrA7KeiqmXZCLaZNM8s6XWVfu76hxA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2J0Mcds6n2nyiGLSo2/OdxoubcDtQ56U0x1MIWqNrMk=;
+ b=d45Qep+/eBO/gKfT6ee6viUF8k9S1jKmjnWi2+0yVATdRMrOHxtdrN63JqcBW3KXozQ/PzcG+2ztnHUaULUJEMkdcM0XqoV6ZV9+JYyQWNJDcDSJNjwuSPY9RkZxtmdkgfWn5YK4i8utjoqnrovlVIOl1wa/umacltFMhAawq9LsEiFhg/4wK1x2Js19j5ZLSUgtbI8uWBJipISUixpx2JTjAA+nOXYKOpfw8ErdJUEpJ//WJqVs40kbzU6lzpBF14QcyQ/c13td73iHfBFswTIG/CFQXgU6C2ZZCcMQm6xqXpdUPy4I2eyXjxCkv0Dr/bYLVbfbNYF6MMogElr18Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2J0Mcds6n2nyiGLSo2/OdxoubcDtQ56U0x1MIWqNrMk=;
+ b=kVXURQ+dIs9EQOLARhawwixRMMbEBU/PjXvRLOgCzEJAEPCbMKhcWkEYy2Y+9f/QIg7/8HdAsk5njuvNwmHs0VrFi6pCInRhKeaeIPIYNrZThbIsCMzUfiMKLIDdS5GPenWcjWkmoQSCuROZwkfWTarfkQxrhpPguNkRzZTGxxOzr0iDglpmKxtMv2ym9lVZdG81v0tM0fLZNwJw9lCk0YAcI90JSEDWr4zPYFeFxOX8wLsGB+qLF8EvZvhx1Pi2nvX/u3QLcaOjUgAnqcIfi8mamdu84w9wYlxXB/Mpu3ypwBWJBxPdulhhWQIsJFzkGd2hSMtrFNzEMjknVex5vQ==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by SJ0PR02MB8561.namprd02.prod.outlook.com (2603:10b6:a03:3f0::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.15; Thu, 29 Jan
+ 2026 04:35:30 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9564.006; Thu, 29 Jan 2026
+ 04:35:30 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: "lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
+	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, Michael Kelley
+	<mhklinux@outlook.com>, "kys@microsoft.com" <kys@microsoft.com>,
+	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
+	<wei.liu@kernel.org>, "decui@microsoft.com" <decui@microsoft.com>,
+	"longli@microsoft.com" <longli@microsoft.com>
+Subject: RE: [PATCH 1/1] PCI: hv: Remove unused field pci_bus in struct
+ hv_pcibus_device
+Thread-Topic: [PATCH 1/1] PCI: hv: Remove unused field pci_bus in struct
+ hv_pcibus_device
+Thread-Index: AQHcgxvbxTpq11Tjn06iuwMa8TiYF7VoqkXQ
+Date: Thu, 29 Jan 2026 04:35:29 +0000
+Message-ID:
+ <SN6PR02MB41575DE702FAF2BCE5FD38CFD49EA@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20260111170034.67558-1-mhklinux@outlook.com>
+In-Reply-To: <20260111170034.67558-1-mhklinux@outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|SJ0PR02MB8561:EE_
+x-ms-office365-filtering-correlation-id: 94c625e4-0c32-499e-1ea4-08de5eefd52b
+x-ms-exchange-slblob-mailprops:
+ Cq7lScuPrnr9cOglUl1urTSFBsjx1OD0huxaSd7s7v4s8+NnFQi03yyqMOHCMLlUNNJii47drNusAr1GTk81rvLxmTSSYfdTqIbWQ6jdTTf80FicyHvYZ0eEqeJGa8bSE7Rcfa8h9Ly/AHsa2PHcxHgkuRFQhpn98daJ+dJQN/7HALvIJ8Wdvt9L75aI94PrLfpeAK7298ReJsrkugPezXklT2WtGZvFC5tLmudisb8k9k9O6Fp0H7DEl9a67/w5QUBABXDTRZv3rr50QCFEBTfMTtdTgIhNT1PzhGHDRf8xSPbyRS2HLS6aIiicpyzGEaclqobxthstZ5SnfkmbN+pW/0U1rC1xJT0XEKNdEwA80Dot75sw9GMyB833dwJKkyVmOP65Ac9bYhhyrfedqzp1W1ngN0Sq/D/6UGC6HNeL3W2yK+DE5kT+Wt8471z63tVDj8/JHDaGn/UTmGmsjchmhN5oMPSxC1SbkDjEzVkjRNNhTKRgYPYBt6FvC/xZomcPjgFyLAN678XLNd5M2+oZBnZla4V2g3sgZHgdgS132F6knx72FP/CgMnJel14epf6Ek0TxfnW2vKp3Ef0W+vRXfvR1FQBq2LTtzmSikZAjNrZCtg6Ju/BxeIcEixSsV7amR1OQ9gAAS23hyDBZCBIgw2GHvzTJivXr0mZPzks4H3Mv+CJUmcoWZIeWc6IyrWizy9Ocm0iwp9w/Z7sGxkSwyZW6bZR88QftbgKULDv+b0iJ8oLIJz4+bHQAY922i8/Pkqq1NI=
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|13091999003|19110799012|15080799012|8060799015|51005399006|8062599012|461199028|31061999003|440099028|3412199025|40105399003|102099032|1710799026;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?mzBMecDAO3X0vfJMaz7gpW0nvrdO8VvxgsCW6IFqIDs8VOLEbKIJgVfpwH+5?=
+ =?us-ascii?Q?pB2CsDlN97v3Ngh0APoxTZvD6FaSw8l/fQ1cAzperghi4VfxRQYiYBy1i8GV?=
+ =?us-ascii?Q?QeIGoP745WdTur1L2wzRjsULuI0ylEfsGDt3eMbqzKZH3scuR1w8Tn6Umv1j?=
+ =?us-ascii?Q?9HsKC7+Rw3riDkocJftVUuP2ZuK27sDBSE2/5+ujgWTqOkXWqXAp8SEQr5ED?=
+ =?us-ascii?Q?9rPLxs2HQoxQ/PnrTPfVCfAfAO/s2Ys42jIFwM9Off/S09UA5uHVpROqFYAf?=
+ =?us-ascii?Q?PfOqu7dMbFxNjDp7hGOnZedk5hQL2seTmq26E0Ysmh0t5UGPem3zHHs3gs6F?=
+ =?us-ascii?Q?jREaCriV2z0NYGqtG0iwajN1UHoUywSQIuBQzXz76ZnCbmWwqzlQILfVXHLE?=
+ =?us-ascii?Q?SN5UHhcEdMnvoa8PfUTqrYjdQ606zRmrXGAbQosPrgJ5nlwzCj+ucRJc/9C/?=
+ =?us-ascii?Q?59/FaxJj5ieob+D3nkdtoQXgfPIv0zDnRL3+SfAQZGkUZ4eBGiiP/7a0rU9G?=
+ =?us-ascii?Q?g1uxpY2xUe4/zYjZ81Uz5rPrfU2ClUC0b4i127vVQIDTdeGWO3rdDFL7dXmp?=
+ =?us-ascii?Q?jHdsGK/vxVDp7AEp69HNvuqqK3FrKkS/4VmujPjhhWIGYsop7fhXm2bPa+WE?=
+ =?us-ascii?Q?aJcAkqHRI8undNjTSvcJkXweoJtZTVmpy51brK3WVB+ND/ePEj5b/gPNg3k7?=
+ =?us-ascii?Q?ot9fe+tFF8OUluiY3bDfyvQ2Sz7cOZrlXkLC6Zd98dIH42xjV2wTNfvgKelR?=
+ =?us-ascii?Q?aS/Oy42N3NDLacAjRwjkMxQ8IuA/5QxOLlFUwPtsJQ5wuIJmSmxRA6slzs89?=
+ =?us-ascii?Q?SS0lIrsBuaqXPU+Wk9aHPVJxeGhzaltK9hKTfFPmq+5bk3FVJ2xO1f7ZlnOM?=
+ =?us-ascii?Q?q5ctvTNEoW83mCsVI2kb8a16IU92eg/de8y11Ud7RASxPQmAyOx4kawNCwRI?=
+ =?us-ascii?Q?X+hF5SNqiT+ISvxzsyTpFI1fnl7vNj1zFvNzlf5VKDpAP97TZyhxLOXLHSXC?=
+ =?us-ascii?Q?dvCE2cYV7IyyGSpzZmYtSggkL0ebvuMlpEBe7tIe/rE5wMAKa/07Zdj40P80?=
+ =?us-ascii?Q?W+Wz5hAfyQeR8sR5UKN74GyF6CCXyZ0cJxmVfip49RmvrQ5P3/Kf+d5bxPSz?=
+ =?us-ascii?Q?w2fqLARlsIzvAz16nIRQwA9jcTEi/ex65eLrNW2gmD2iZl30yZDS6zig08D9?=
+ =?us-ascii?Q?zG7QkR570NIN9t9UnvWvHKavrVvdizQG8iPnsCSqQKOITBu5z7tPeJuvpS4?=
+ =?us-ascii?Q?=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?axtgk6uD+hAYN77Pv2LNVj7cTYKiwn+t1yZyz9VVj7noEf/+UvdTTfyOdKal?=
+ =?us-ascii?Q?K0E1+K5kjB+hL2x55B5tdqwHANGMDU4MWER0yxr7m0Vd0XYAuekRTxh+HPJd?=
+ =?us-ascii?Q?leTW3bB28gJQsPSLopMS77Knf3qqTXvSengyKRxVDKpYkcLCqXNkf2Ta6SIE?=
+ =?us-ascii?Q?bQUNXPhGTg1hMOC1QMUngw4BmyQWTY6AK6hfABhHSFb1crHurRq27oQd4iJQ?=
+ =?us-ascii?Q?c2DJbzlaktYhW4Uv2PugA9fX7ZiBxQj5b02rDZkMLdIVyCXgzapgQ/R7dlvl?=
+ =?us-ascii?Q?c2MKh0nzjK8pLDjaopoJnZzsAASMtHFTp1bcRMDL8ntfosN6L5C+cYccAsl/?=
+ =?us-ascii?Q?V0kCPGisKG/ySQvEvcjfoGgSkWvkY4jnTIjnzHiHnuJgtRgHJNsTGNtpDKZw?=
+ =?us-ascii?Q?IbRJHpJjHhr7h5V2wVOkAhOh3nRHIBT03Dl1rsdfyxoS/1gdJbtOEAZnYUel?=
+ =?us-ascii?Q?oXpiECo/MnaVwwgU4F3H8S1AQBL3lVAan3+NuAdfM/yxhqV5wrTFOGuilplY?=
+ =?us-ascii?Q?KH82SnjQYIcSjKVvEMXntp7RbNeyMBWxt4H+O7aHvn2ErCg2CELCexXKIvAd?=
+ =?us-ascii?Q?qp4DdyHr46lu4UeMEcRzkkqQyBI0SHv78NYM1a30zvxk+s9Eus7JFCW7C/J0?=
+ =?us-ascii?Q?+zxS7b+/tes5JQwgBIWYe0ZuPk2ybXvl5QfZOYfIISQ0y6yo7YqwjlELGMuY?=
+ =?us-ascii?Q?0eftTQp3q/qpPlH7HzJSkPk2m884vwsnev0Bx/Mb8eQg5BLVyaCBqvNwVwLB?=
+ =?us-ascii?Q?WZ2SL3oxi78ZDSpAfEmzWNMGYZtK5lW7nz7XfzGjYlCLcSTbC8UNgwCgFpeF?=
+ =?us-ascii?Q?e30So9zwYZxdPCWoOud4bNkdGjBaCJNC8wL9JQxJx/XqVYwoAZHgpMZycBR0?=
+ =?us-ascii?Q?65MxtRW+N5a4FvYxIyzsJkJFa0ka/OC8xWG4c69K2u/U4sownyVy6mkpAjkh?=
+ =?us-ascii?Q?iYkFTh614cQ+tocnTLSfDJaSqkQa7T5qw+fBHPuURb7l9tNWYJ4S2Bf/hJuP?=
+ =?us-ascii?Q?qwRK+AgZF947Hkq7AD2sbjXaKGqsHatWJ3sDIHCePBoS/pnpXqFn0GdwDfVj?=
+ =?us-ascii?Q?OEuErVaKniE+Pr2+2JQL37WtvLlRMoobbL+kCdjfW7Nnc9ja0AQFtn0fkY+V?=
+ =?us-ascii?Q?W1o7pDVLQVZUACAYcXqqvaJhPLielQWq01QjWg8YeOCbbVl8/rI0l+PcqCax?=
+ =?us-ascii?Q?RPeJ6kf98mzyntQ14kZGTkTHwROw0fVAfW8XOu6BI2joNgSA8CakjNfdMaqt?=
+ =?us-ascii?Q?z+345qf3K4H+m8030l7c1Il/gR541087mM6TifMCFUDARdFZ9ZPYReNYcmM8?=
+ =?us-ascii?Q?YkOOLLuZHmqfzOPZivHHOS3VIGjXsxec0WkeZsm6KL02PYKc2CIvtkTa+WEo?=
+ =?us-ascii?Q?QAQjteE=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI: endpoint: pci-epf-test: Allow overriding default
- BAR sizes
-To: Niklas Cassel <cassel@kernel.org>, Manivannan Sadhasivam
- <mani@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>
-Cc: Frank.Li@nxp.com, Koichiro Den <den@valinux.co.jp>,
- linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
-References: <20260128171157.1795146-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260128171157.1795146-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 94c625e4-0c32-499e-1ea4-08de5eefd52b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2026 04:35:29.9170
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR02MB8561
 
-On 1/29/26 02:11, Niklas Cassel wrote:
-> Add bar{0,1,2,3,4,5}_size attributes in configfs, so that the user is not
-> restricted to run pci-epf-test with the hardcoded BAR size values defined
-> in pci-epf-test.c.
-> 
-> This code is shamelessly more or less copy pasted from pci-epf-vntb.c
-> 
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Tested-by: Koichiro Den <den@valinux.co.jp>
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+From: mhkelley58@gmail.com <mhkelley58@gmail.com> Sent: Sunday, January 11,=
+ 2026 9:01 AM
+>=20
+> From: Michael Kelley <mhklinux@outlook.com>
+>=20
+> Field pci_bus in struct hv_pcibus_device is unused since
+> commit 418cb6c8e051 ("PCI: hv: Generify PCI probing"). Remove it.
+>=20
+> No functional change.
+>=20
+> Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+
+Could a PCI maintainer give an Ack for this trivial patch?
+
+Thx, Michael
+
 > ---
-> Changes since v1:
-> -Rebased on branch controller/dwc since this branch contains changes
->  to pci-epf-test.c which conflicted with V1 of this patch.
-> -Updated the documentation to show the current BAR sizes after other
->  changes on branch controller/dwc.
-> -Picked up tags.
-> 
->  Documentation/PCI/endpoint/pci-test-howto.rst | 16 ++++
->  drivers/pci/endpoint/functions/pci-epf-test.c | 92 ++++++++++++++++++-
->  2 files changed, 106 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/PCI/endpoint/pci-test-howto.rst b/Documentation/PCI/endpoint/pci-test-howto.rst
-> index dd66858cde46..497251d53b12 100644
-> --- a/Documentation/PCI/endpoint/pci-test-howto.rst
-> +++ b/Documentation/PCI/endpoint/pci-test-howto.rst
-> @@ -84,6 +84,22 @@ device, the following commands can be used::
->  	# echo 32 > functions/pci_epf_test/func1/msi_interrupts
->  	# echo 2048 > functions/pci_epf_test/func1/msix_interrupts
->  
-> +By default, pci-epf-test uses the following BAR sizes::
-> +
-> +	# grep . functions/pci_epf_test/func1/pci_epf_test.0/bar?_size
-> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar0_size:131072
-> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar1_size:131072
-> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar2_size:131072
-> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar3_size:131072
-> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar4_size:131072
-> +	  functions/pci_epf_test/func1/pci_epf_test.0/bar5_size:1048576
-> +
-> +The user can override a default value using e.g.::
-> +	# echo 1048576 > functions/pci_epf_test/func1/pci_epf_test.0/bar1_size
-> +
-> +Note: Some endpoint controllers might have fixed size BARs, or reserved BARs,
-> +for such controllers, the corresponding BAR size in configfs will be ignored.
-> +
->  
->  Binding pci-epf-test Device to EP Controller
->  --------------------------------------------
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 1cc630a2ee75..e8dff291f116 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -72,6 +72,7 @@ static struct workqueue_struct *kpcitest_workqueue;
->  struct pci_epf_test {
->  	void			*reg[PCI_STD_NUM_BARS];
->  	struct pci_epf		*epf;
-> +	struct config_group	group;
->  	enum pci_barno		test_reg_bar;
->  	size_t			msix_table_offset;
->  	struct delayed_work	cmd_handler;
-> @@ -85,6 +86,7 @@ struct pci_epf_test {
->  	bool			dma_private;
->  	const struct pci_epc_features *epc_features;
->  	struct pci_epf_bar	db_bar;
-> +	size_t			bar_size[PCI_STD_NUM_BARS];
->  };
->  
->  struct pci_epf_test_reg {
-> @@ -111,7 +113,8 @@ static struct pci_epf_header test_header = {
->  	.interrupt_pin	= PCI_INTERRUPT_INTA,
->  };
->  
-> -static size_t bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
-> +/* default BAR sizes, can be overridden by the user using configfs */
-> +static size_t default_bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
->  
->  static void pci_epf_test_dma_callback(void *param)
->  {
-> @@ -1240,7 +1243,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
->  		if (epc_features->bar[bar].type == BAR_FIXED)
->  			test_reg_size = epc_features->bar[bar].fixed_size;
->  		else
-> -			test_reg_size = bar_size[bar];
-> +			test_reg_size = epf_test->bar_size[bar];
->  
->  		base = pci_epf_alloc_space(epf, test_reg_size, bar,
->  					   epc_features, PRIMARY_INTERFACE);
-> @@ -1312,6 +1315,87 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
->  	pci_epf_test_free_space(epf);
->  }
->  
-> +#define PCI_EPF_TEST_BAR_SIZE_R(_name, _id)				\
-> +	static ssize_t pci_epf_test_##_name##_show(struct config_item *item,	\
+>  drivers/pci/controller/pci-hyperv.c | 1 -
+>  1 file changed, 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
+/pci-hyperv.c
+> index 1e237d3538f9..7fcba05cec30 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -501,7 +501,6 @@ struct hv_pcibus_device {
+>  	struct resource *low_mmio_res;
+>  	struct resource *high_mmio_res;
+>  	struct completion *survey_event;
+> -	struct pci_bus *pci_bus;
+>  	spinlock_t config_lock;	/* Avoid two threads writing index page */
+>  	spinlock_t device_list_lock;	/* Protect lists below */
+>  	void __iomem *cfg_addr;
+> --
+> 2.25.1
+>=20
 
-Drop the extra indentation at the beginning of the ligne. Many Macro defined
-functions use that style.
-
-> +						   char *page)		\
-> +	{								\
-> +		struct config_group *group = to_config_group(item);	\
-> +		struct pci_epf_test *epf_test = container_of(group,	\
-> +					struct pci_epf_test, group);	\
-
-Splitting this line after the "=" would be nicer.
-
-> +									\
-> +		return sprintf(page, "%zu\n", epf_test->bar_size[_id]);	\
-
-sysfs_emit() ?
-
-> +	}
-> +
-> +#define PCI_EPF_TEST_BAR_SIZE_W(_name, _id)				\
-> +	static ssize_t pci_epf_test_##_name##_store(struct config_item *item, \
-> +						    const char *page, size_t len) \
-> +	{								\
-> +		struct config_group *group = to_config_group(item);	\
-> +		struct pci_epf_test *epf_test = container_of(group,	\
-> +					struct pci_epf_test, group);	\
-> +		int val;						\
-> +		int ret;						\
-> +									\
-> +		ret = kstrtouint(page, 0, &val);			\
-> +		if (ret)						\
-> +			return ret;					\
-> +									\
-> +		if (!is_power_of_2(val))				\
-> +			return -EINVAL;					\
-> +									\
-> +		epf_test->bar_size[_id] = val;				\
-> +									\
-> +		return len;						\
-> +	}
-> +
-> +PCI_EPF_TEST_BAR_SIZE_R(bar0_size, BAR_0)
-> +PCI_EPF_TEST_BAR_SIZE_W(bar0_size, BAR_0)
-> +PCI_EPF_TEST_BAR_SIZE_R(bar1_size, BAR_1)
-> +PCI_EPF_TEST_BAR_SIZE_W(bar1_size, BAR_1)
-> +PCI_EPF_TEST_BAR_SIZE_R(bar2_size, BAR_2)
-> +PCI_EPF_TEST_BAR_SIZE_W(bar2_size, BAR_2)
-> +PCI_EPF_TEST_BAR_SIZE_R(bar3_size, BAR_3)
-> +PCI_EPF_TEST_BAR_SIZE_W(bar3_size, BAR_3)
-> +PCI_EPF_TEST_BAR_SIZE_R(bar4_size, BAR_4)
-> +PCI_EPF_TEST_BAR_SIZE_W(bar4_size, BAR_4)
-> +PCI_EPF_TEST_BAR_SIZE_R(bar5_size, BAR_5)
-> +PCI_EPF_TEST_BAR_SIZE_W(bar5_size, BAR_5)
-> +
-> +CONFIGFS_ATTR(pci_epf_test_, bar0_size);
-> +CONFIGFS_ATTR(pci_epf_test_, bar1_size);
-> +CONFIGFS_ATTR(pci_epf_test_, bar2_size);
-> +CONFIGFS_ATTR(pci_epf_test_, bar3_size);
-> +CONFIGFS_ATTR(pci_epf_test_, bar4_size);
-> +CONFIGFS_ATTR(pci_epf_test_, bar5_size);
-> +
-> +static struct configfs_attribute *pci_epf_test_attrs[] = {
-> +	&pci_epf_test_attr_bar0_size,
-> +	&pci_epf_test_attr_bar1_size,
-> +	&pci_epf_test_attr_bar2_size,
-> +	&pci_epf_test_attr_bar3_size,
-> +	&pci_epf_test_attr_bar4_size,
-> +	&pci_epf_test_attr_bar5_size,
-> +	NULL,
-> +};
-> +
-> +static const struct config_item_type pci_epf_test_group_type = {
-> +	.ct_attrs	= pci_epf_test_attrs,
-> +	.ct_owner	= THIS_MODULE,
-> +};
-> +
-> +static struct config_group *pci_epf_test_add_cfs(struct pci_epf *epf,
-> +						 struct config_group *group)
-> +{
-> +	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-> +	struct config_group *epf_group = &epf_test->group;
-> +	struct device *dev = &epf->dev;
-> +
-> +	config_group_init_type_name(epf_group, dev_name(dev),
-> +				    &pci_epf_test_group_type);
-> +
-> +	return epf_group;
-> +}
-> +
->  static const struct pci_epf_device_id pci_epf_test_ids[] = {
->  	{
->  		.name = "pci_epf_test",
-> @@ -1324,6 +1408,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
->  {
->  	struct pci_epf_test *epf_test;
->  	struct device *dev = &epf->dev;
-> +	enum pci_barno bar;
->  
->  	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
->  	if (!epf_test)
-> @@ -1331,6 +1416,8 @@ static int pci_epf_test_probe(struct pci_epf *epf,
->  
->  	epf->header = &test_header;
->  	epf_test->epf = epf;
-> +	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++)
-> +		epf_test->bar_size[bar] = default_bar_size[bar];
->  
->  	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
->  
-> @@ -1343,6 +1430,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
->  static const struct pci_epf_ops ops = {
->  	.unbind	= pci_epf_test_unbind,
->  	.bind	= pci_epf_test_bind,
-> +	.add_cfs = pci_epf_test_add_cfs,
->  };
->  
->  static struct pci_epf_driver test_driver = {
-> 
-> base-commit: 0ebf8e7943e01b2c38c199228f51adbb89c02425
-
-
--- 
-Damien Le Moal
-Western Digital Research
