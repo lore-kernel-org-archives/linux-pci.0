@@ -1,86 +1,31 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3DEF2E7F39
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 05:39:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA6B364EA6;
+	Thu, 29 Jan 2026 05:50:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769665147; cv=none; b=RKrak7jwNe2htVmPjUTeHRVPjQp5S6f301yChpbCWFlFCAWFsWP6oJPSZwrPUAxgr64NAXjh5bEiR3zkzL2FANwCASL1liTOgcOnOI9O/7DVylhAKBJA59xcdT28O56/DyVI20m5PpBG6RAFFk5U8pR4ijWyMiPj1V+kNoBKMPQ=
+	t=1769665847; cv=none; b=kEkWw2xOfu9mSL37SWZh3ekqYI9jE3NGLby2LqimNPOEeRzQEKl/OKbQ4OtUnE27V7/uEr4/mXNZaySY9/g+wdGrT6jEBmslDOMVZrup7uYBR1e0se+hxXI8N95IbNytNXyeLGS0PCG/EfnmZtuagJHmRf1+EZFBVolRXy9nBAI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769665147; c=relaxed/simple;
-	bh=HyJko60eCRtF4DyCZl7x2QscYp8gyL6nycvJrzkIlL4=;
+	s=arc-20240116; t=1769665847; c=relaxed/simple;
+	bh=/YgiqNLLojuo5+joBzu1WbnPc+KwfsVaQn4nYQDCk/Y=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aifmPjgCTByOqdOWXl0q6O6rn+B+0qSyO01QN46RbhXCW6IfoNWH2Y2H5SJnYZffCiT82svQGAkuy4cLuvfbIh1OHIEaWJkAdzqOl0fy8Cto1Ghd1/JStvJLzk6Z+s6PFUSvJ9JGXI8tZw/WNuOKC95KVJF7vTnb219o7gqSeus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=HOZGFFK8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dYcJw+q7; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=bzxUwgMF8HyAbdEESTAGheuYjMEjccIXkhUYCqT/R8a78KQj9cyxBkGYOycn0a7Nr1nBt+mI2IDAilh7iZOND/FXfd/1blFP2bHLlYc2H6m2VRp7TX8VbvCGIlrhy/eFWvbnGqfyPL2Ls7mjvZC2JJY++2LQxAZfrompjP1pSDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=MjCL+UQn; arc=none smtp.client-ip=115.124.30.132
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="HOZGFFK8";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dYcJw+q7"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60T2p7nG2061110
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 05:39:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	VkukUrhkikTfn5enumCD8SQWrFh8BVcAlcVi1tx2nYg=; b=HOZGFFK8wpj0xw1g
-	UE1nkYDP7qUKO0k0bGR5HP5oK7OIMpZUCsKSoc/fkrRjAdGmP7OLbjQzi+rYl8Sr
-	L42BdhvPKhCre9Q+1ZBk3jCbJWOXd5rdOqtsZOs0GWJR6WLa7F1xafkUkgYZ06Wm
-	Lyc6gWGDM2uwUupe+ntb6vyp5lzA/wUsgX6PMyQwYFHDVBwI0t9i1MVpaaDpalGu
-	rx726EM5vIP4NUh+5TyJ4e5amm0Q0DnCjdLTm1+ulnzzQHBJumbM2upTUFyIerBl
-	IXy02z8MHoY+Ujhq+GjOGswfOkovHH8/n71QHtQXT7yfnChwZUGXnTAvHhxdoqq7
-	w6X+HQ==
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bypgrj37e-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 05:39:05 +0000 (GMT)
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-82181ef69ceso291565b3a.2
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 21:39:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1769665144; x=1770269944; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=VkukUrhkikTfn5enumCD8SQWrFh8BVcAlcVi1tx2nYg=;
-        b=dYcJw+q7xVdXI+1PJh6N5qhvA05KDfr7ZruG8UXZxJXjB1julNU/AOACY9TdZ7d5rn
-         lVjRAAICtTK+EW1oeOvAijtRZpIXzl37QmUyVfaBo2F0iqyxeDcbCEAWSV3FYh2Fz7kn
-         Ku71EsW2DOpNjDV7W1E3JIfwWFBLNcp3Ae9gF5z/1gKMcHzKW/VzJ22OeFQmNGSLoMvz
-         OfObPENQe3y9KhUQUK61ZNrDpOwEqKbzLC9j0McjU9R1d0gpqQNrV4hKA8llz7mQuE9c
-         HLYEedMErzmncYhwT1m2dThzDW5fBCWDlytEpPfw/EYwt5FiZnFjU0MtaZ+g1YYIhkGQ
-         /YRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769665144; x=1770269944;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=VkukUrhkikTfn5enumCD8SQWrFh8BVcAlcVi1tx2nYg=;
-        b=mQSBtftcTtJZ1vBjTFkIKGEm9IXcnSLMQUCRUrsELuP0ToQ9JBFhobNejpzra1FRJM
-         qwqx2OTDIQByqeAxa6jlemA00+nkqiaunA6TYaX/MQg68XWdgtFMNVZDjVRSkdwfImqA
-         Gp0ffvb+1FSIHlLUd8XNh02wWb0tYC/dP3YZqQEN1lz2p0KcTa7MHjx7yqZHoyuCWJ3U
-         5nYRbdzOz5O6Nh8I7pxCcZ3sE8+60glGa4jy0ClnAj2GIV0YPHSeAosFW/KbO4KOBvXF
-         0nTKQ+Mn5Nci0i/gU5FB/TIFFOTWyEL/dYNbT0pSauSjnow7CPZ15krzSq2kbH7N5OgL
-         7xOQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVDH9CM+jAeOhkYph7r7YDmaAmpvhiNKoHbDbuanx7kSBT1CeOECPl5yD6VWQE70CEjTRsmFHs8RqA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YykYYYsbO5L5DMUAmwWtJMfAWiBR6AuYMbkPz7N2v3H/ZRkU6fM
-	56/7g8du6fmHgrT0TE4eM/ZkYEfVilLZE+FnhnJXfqgolJJKKcIzA1E4jrqTxlfRNrhuwpE+fIL
-	IRL20LEJEUN0uaV7g19+vSb5Snd0t+6O6U028TG0PhBHyv1ue+k1+vfgazMpFhvM=
-X-Gm-Gg: AZuq6aL94x9hudeJZMUmp4EbyksNgvpwHthSsru/e6YVJU0idSd/cFexoLLTBdRGucL
-	iPypeEaIpxLfqS7SXKBwyOjRxSGbTJMwz8PUXYJh0KCAgg1J/G8h3UO25yOzG1PSGjvbkW2OVkA
-	6SYjbdeKeo6Fukl4WTaYKGjdYisq971Ilye+34kd15yiKevoR/Fahccr/Tr8ipB/rpU17WqKxw/
-	g26XHTepGEDM0l9xWcVp/1dCekRBDLMjVPUG7UlyRJbC9msLxGStmK6Tb0E7+m5ETvRDyf2iMla
-	bXPHdfdC15m64DrJu3sO4/pbAh0Rd8nwPQApnFbkoeqzFnEsLCPqq7VmtNQcsoKuj6KA/EpDye0
-	Gz5ppxnDxCSxCUBREoiNBMou/Sa0FwyyFeN17h7bPkw==
-X-Received: by 2002:a05:6a00:9a6:b0:81f:a85e:a627 with SMTP id d2e1a72fcca58-8236917dcd2mr7727722b3a.27.1769665144378;
-        Wed, 28 Jan 2026 21:39:04 -0800 (PST)
-X-Received: by 2002:a05:6a00:9a6:b0:81f:a85e:a627 with SMTP id d2e1a72fcca58-8236917dcd2mr7727702b3a.27.1769665143884;
-        Wed, 28 Jan 2026 21:39:03 -0800 (PST)
-Received: from [10.218.35.45] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82379c5a190sm4725770b3a.68.2026.01.28.21.38.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Jan 2026 21:39:03 -0800 (PST)
-Message-ID: <832e8ea4-2b85-4513-a285-9d4ab1dd66b0@oss.qualcomm.com>
-Date: Thu, 29 Jan 2026 11:08:57 +0530
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="MjCL+UQn"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1769665840; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=47L8+0gFyYpLebjc0X12jOfbcSPJ3pEN7OCUUjygrzE=;
+	b=MjCL+UQnon6wXV/CmqVbtAPjkQcFiV+rA0QkZipJ3A1Ws0LwrnRONwKN72jyKfCluQD8vLpOVr29DAWa6pzbj6cG8CwU/5itHT283lx3ruGePYx+yvj/2Inbf4oU5GdhyIPdP24qPFIMzDNpREuw7SSG6EyRIgtLHq2fb1FSxpw=
+Received: from 30.246.162.115(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0Wy6D9kt_1769665838 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Thu, 29 Jan 2026 13:50:39 +0800
+Message-ID: <40cb885e-278a-43ee-a2ac-18c529256c45@linux.alibaba.com>
+Date: Thu, 29 Jan 2026 13:49:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -88,161 +33,186 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] PCI: host-common: Add shared D3cold eligibility
- helper for host bridges
-To: Bjorn Andersson <andersson@kernel.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Manivannan Sadhasivam
- <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com
-References: <20260128-d3cold-v1-0-dd8f3f0ce824@oss.qualcomm.com>
- <20260128-d3cold-v1-1-dd8f3f0ce824@oss.qualcomm.com>
- <kztudduots342zz7gnx3twtlvjm5pd7sde627zxcsbe6c2imqk@7mmp7vjght5j>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <kztudduots342zz7gnx3twtlvjm5pd7sde627zxcsbe6c2imqk@7mmp7vjght5j>
+Subject: Re: [PATCH v7 2/5] PCI/DPC: Run recovery on device that detected the
+ error
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com, kbusch@kernel.org,
+ sathyanarayanan.kuppuswamy@linux.intel.com, mahesh@linux.ibm.com,
+ oohall@gmail.com, terry.bowman@amd.com, tianruidong@linux.alibaba.com,
+ lukas@wunner.de
+References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
+ <20260124074557.73961-3-xueshuai@linux.alibaba.com>
+ <20260127102402.00004da2@huawei.com>
+ <09cf1319-619d-4a6b-97f7-188c1a73aea0@linux.alibaba.com>
+ <20260128150243.000012d8@huawei.com>
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+In-Reply-To: <20260128150243.000012d8@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=d7T4CBjE c=1 sm=1 tr=0 ts=697af279 cx=c_pps
- a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=kJBpcOZ6olZWUerAqwAA:9 a=QEXdDO2ut3YA:10 a=-_B0kFfA75AA:10
- a=OpyuDcXvxspvyRM73sMx:22
-X-Proofpoint-GUID: YOKhlgjZ96oP8jLLuca0TsnvWOxH5pZ_
-X-Proofpoint-ORIG-GUID: YOKhlgjZ96oP8jLLuca0TsnvWOxH5pZ_
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI5MDAzMyBTYWx0ZWRfXxKd7+qJO6ocz
- 5CwdjnGx/ZHxNf8/7tPfy/l2Z4If4JsDWKYp0DLJWn9UEF9sEQVVgwbsJiN4bLURV8LMK+GyqWG
- E36PLxwX/ml5tLarvN3me30BU+2ezXFkSJiDE+l8qytXWhrNU0QQiHCigmJ0KH6sVA1UX1ZFl07
- yfNLMDJ7BbvqO6YEevOPFjvon5aac6ehAiFuuWEo/Y/RZ3v2RepeuQKA6npbUUFv5x7SNL+C6+S
- hReVX8lXSaQ5dKGoIv8ftJdncC3Cjjo3shW8uX8co1/cUKETYRqqwHRBVMxk7lpXplC8NTqXRcX
- i34qTZGyTFII0qChATPGN8k6+2QiJ8RYN1G5zvUP1MuDHHRoR0oJ9svh/INemna6lexaqDzb8U1
- Prnj8GqN4lJFwhQeDDfTq2ak+ROpEevP3cHjt0LlVAYkqNyUk3S2JLgXJghNjf7mWh3rEw0/gQI
- NLs10kigGMpQqPgpAag==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-01-28_06,2026-01-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 lowpriorityscore=0 suspectscore=0 adultscore=0
- malwarescore=0 impostorscore=0 bulkscore=0 spamscore=0 clxscore=1015
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
- definitions=main-2601290033
 
 
 
-On 1/28/2026 7:56 PM, Bjorn Andersson wrote:
-> On Wed, Jan 28, 2026 at 05:10:41PM +0530, Krishna Chaitanya Chundru wrote:
->> Add a common helper, pci_host_common_can_enter_d3cold(), to determine
->> whether a PCI host bridge can safely transition to D3cold.
-> Please read https://docs.kernel.org/process/submitting-patches.html#describe-your-changes
->
-> It clearly says that you're supposed to start your commit message with a
-> description of the problem you're solving. In fact, even after reading
-> the entire commit message a few times I only know what the patch does,
-> but it's not clear to me why this patch exists.
->
->> The helper walks all devices on the bridge's bus and only allows the
->> host bridge to enter D3cold if all PCIe endpoints are already in
->> PCI_D3hot.
-> The code below does walk the bus, but it doesn't allow/disallow anything
-> as far as I can tell, it queries their type, state, and if they are wake
-> capable?
->
->> For devices that may wake the system, it additionally
->> requires that the device supports PME wakeup from D3cold(with WAKE#).
->> Devices without wakeup enabled are not restricted by this check and can
->> be allowed to keep device in D3cold.
+On 1/28/26 11:02 PM, Jonathan Cameron wrote:
+> On Wed, 28 Jan 2026 20:27:31 +0800
+> Shuai Xue <xueshuai@linux.alibaba.com> wrote:
+> 
+>> On 1/27/26 6:24 PM, Jonathan Cameron wrote:
+>>> On Sat, 24 Jan 2026 15:45:54 +0800
+>>> Shuai Xue <xueshuai@linux.alibaba.com> wrote:
+>>>    
+>>>> The current implementation of pcie_do_recovery() assumes that the
+>>>> recovery process is executed for the device that detected the error.
+>>>> However, the DPC driver currently passes the error port that experienced
+>>>> the DPC event to pcie_do_recovery().
+>>>>
+>>>> Use the SOURCE ID register to correctly identify the device that
+>>>> detected the error. When passing the error device, the
+>>>> pcie_do_recovery() will find the upstream bridge and walk bridges
+>>>> potentially AER affected. And subsequent commits will be able to
+>>>> accurately access AER status of the error device.
+>>>>
+>>>> Should not observe any functional changes.
+>>>>
+>>>> Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+>>>> Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+> Hi Shuai,
+> 
+>>>> ---
+>>>>    drivers/pci/pci.h      |  2 +-
+>>>>    drivers/pci/pcie/dpc.c | 25 +++++++++++++++++++++----
+>>>>    drivers/pci/pcie/edr.c |  7 ++++---
+>>>>    3 files changed, 26 insertions(+), 8 deletions(-)
+>>>>
+> ...
+> 
+>>>> -void dpc_process_error(struct pci_dev *pdev)
+>>>> +/**
+>>>> + * dpc_process_error - handle the DPC error status
+>>>> + * @pdev: the port that experienced the containment event
+>>>> + *
+>>>> + * Return: the device that detected the error.
+>>>> + *
+>>>> + * NOTE: The device reference count is increased, the caller must decrement
+>>>> + * the reference count by calling pci_dev_put().
+>>>> + */
+>>>> +struct pci_dev *dpc_process_error(struct pci_dev *pdev)
+>>>
+>>> Maybe it makes sense to carry the err_port naming for the pci_dev
+>>> in here as well?  Seems stronger than just relying on people
+>>> reading the documentation you've added.
 >>
-> Again, this code doesn't perform any action, it doesn't
-> allow/disallow/restrict the devices from doing anything, it merely
-> queries a bunch of things across all devices, and the commit message
-> fails to capture why this is useful.
-This is a helper function used by controller drivers, to know if the 
-controller
-driver can keep in D3cold state or not. we use endpoint states and their 
-wakeup
-capability support to determine d3cold can be supported or not. The 
-return value
-of this function will tell controller drivers to know if we can allow 
-D3cold or not.
->> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->> ---
->>   drivers/pci/controller/pci-host-common.c | 29 +++++++++++++++++++++++++++++
->>   drivers/pci/controller/pci-host-common.h |  2 ++
->>   2 files changed, 31 insertions(+)
+>> Good point. I think renaming the parameter would improve clarity. However,
+>> I'd prefer to handle it in a separate patch to keep this change focused on
+>> the functional modification. Would that work for you?
 >>
->> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
->> index c473e7c03bacad2de07c798768f99652443431e0..225472c5ac82c6c5b44257d68a0fc503ec046ff1 100644
->> --- a/drivers/pci/controller/pci-host-common.c
->> +++ b/drivers/pci/controller/pci-host-common.c
->> @@ -106,5 +106,34 @@ void pci_host_common_remove(struct platform_device *pdev)
->>   }
->>   EXPORT_SYMBOL_GPL(pci_host_common_remove);
->>   
->> +static int pci_host_common_check_d3cold(struct pci_dev *pdev, void *userdata)
->> +{
->> +	bool *d3cold_allow = userdata;
->> +
->> +	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ENDPOINT)
->> +		return 0;
->> +
->> +	if (pdev->current_state != PCI_D3hot)
->> +		goto exit;
->> +
->> +	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
->> +		goto exit;
->> +
->> +	return 0;
->> +exit:
->> +	*d3cold_allow = false;
->> +	return -EBUSY;
->> +}
->> +
->> +bool pci_host_common_can_enter_d3cold(struct pci_host_bridge *bridge)
-> Please add kernel-doc for any EXPORT_SYMBOL() functions, so that it's
-> clear to the next guy what the API does.
-Initially, I had a change in my workspace which has kernel-doc, but 
-after seeing this
-file I see none of the exported API's had a kernel-doc. Following it I 
-dropped the kernel
--doc at last minute. I will add this in v2.
+> Sure. Ideal would be a precursor patch, but if it's much easier to
+> do on top of this I'm fine with that.
+> 
+> You are absolutely correct that it should be a separate patch!
 
-- Krishna Chaitanya.
->
-> Regards,
-> Bjorn
->
->> +{
->> +	bool d3cold_allow = true;
->> +
->> +	pci_walk_bus(bridge->bus, pci_host_common_check_d3cold, &d3cold_allow);
->> +
->> +	return d3cold_allow;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_host_common_can_enter_d3cold);
->> +
->>   MODULE_DESCRIPTION("Common library for PCI host controller drivers");
->>   MODULE_LICENSE("GPL v2");
->> diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
->> index b5075d4bd7eb31fbf1dc946ef1a6afd5afb5b3c6..18a731bca058828340bca84776d0e91da1edbbf7 100644
->> --- a/drivers/pci/controller/pci-host-common.h
->> +++ b/drivers/pci/controller/pci-host-common.h
->> @@ -20,4 +20,6 @@ void pci_host_common_remove(struct platform_device *pdev);
->>   
->>   struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
->>   	struct pci_host_bridge *bridge, const struct pci_ecam_ops *ops);
->> +
->> +bool pci_host_common_can_enter_d3cold(struct pci_host_bridge *bridge);
->>   #endif
+Got it.
+
+>>>      
+>>>>    {
+>>>>    	u16 cap = pdev->dpc_cap, status, source, reason, ext_reason;
+>>>>    	struct aer_err_info info = {};
+>>>> +	struct pci_dev *err_dev;
+>>>>    
+>>>>    	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+>>>>    
+>>>> @@ -279,6 +289,7 @@ void dpc_process_error(struct pci_dev *pdev)
+>>>>    			pci_aer_clear_nonfatal_status(pdev);
+>>>>    			pci_aer_clear_fatal_status(pdev);
+>>>>    		}
+>>>> +		err_dev = pci_dev_get(pdev);
+>>>>    		break;
+>>>>    	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_NFE:
+>>>>    	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE:
+>>>> @@ -290,6 +301,8 @@ void dpc_process_error(struct pci_dev *pdev)
+>>>>    				"ERR_FATAL" : "ERR_NONFATAL",
+>>>>    			 pci_domain_nr(pdev->bus), PCI_BUS_NUM(source),
+>>>>    			 PCI_SLOT(source), PCI_FUNC(source));
+>>>> +		err_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
+>>>> +					    PCI_BUS_NUM(source), source & 0xff);
+>>>
+>>> Bunch of replication in her with the pci_warn(). Maybe some local variables?
+>>> Maybe even rebuild the final parameter from PCI_DEVFN(slot, func) just to make the
+>>> association with the print really obvious?
 >>
->> -- 
->> 2.34.1
+>> Agreed. Here's the improved version:
 >>
+>> --- a/drivers/pci/pcie/dpc.c
+>> +++ b/drivers/pci/pcie/dpc.c
+>> @@ -293,17 +293,28 @@ struct pci_dev *dpc_process_error(struct pci_dev *pdev)
+>>                   break;
+>>           case PCI_EXP_DPC_STATUS_TRIGGER_RSN_NFE:
+>>           case PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE:
+>> -               pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
+>> -                                    &source);
+>> +       {
+>> +               int domain, bus;
+>> +               u8 slot, func, devfn;
+>> +               const char *err_type;
+>> +
+>> +               pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
+>> +
+>> +               /* Extract source device location */
+>> +               domain = pci_domain_nr(pdev->bus);
+>> +               bus = PCI_BUS_NUM(source);
+>> +               slot = PCI_SLOT(source);
+>> +               func = PCI_FUNC(source);
+>> +               devfn = PCI_DEVFN(slot, func);
+>> +
+>> +               err_type = (reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE) ?
+>> +                          "ERR_FATAL" : "ERR_NONFATAL";
+>> +
+>>                   pci_warn(pdev, "containment event, status:%#06x, %s received from %04x:%02x:%02x.%d\n",
+>> -                        status,
+>> -                        (reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE) ?
+>> -                               "ERR_FATAL" : "ERR_NONFATAL",
+>> -                        pci_domain_nr(pdev->bus), PCI_BUS_NUM(source),
+>> -                        PCI_SLOT(source), PCI_FUNC(source));
+>> -               err_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
+>> -                                           PCI_BUS_NUM(source), source & 0xff);
+>> +                        status, err_type, domain, bus, slot, func);
+>> +               err_dev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+> Maybe don't bother with local variables for the things only used once.
+> e.g.
+> 
+> 		err_dev = pci_get_domain_bus_and_slot(domain, bus, PCI_DEVFN(slot, func));
+> 
+> and possibly the same for err_type.
+> 
+> I don't mind though if you prefer to use locals for everything.
+
+Sure, will remove local devfn and err_type.
+
+> 
+> 
+> 
+>>                   break;
+>> +       }
+>>           case PCI_EXP_DPC_STATUS_TRIGGER_RSN_IN_EXT:
+>>                   ext_reason = status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT;
+>>                   pci_warn(pdev, "containment event, status:%#06x: %s detected\n",
 >>
+>>>
+>>> Is there any chance that this might return NULL?   Feels like maybe that's
+>>> only a possibility on a broken setup, but I'm not sure of all the wonderful
+>>> races around hotplug and DPC occurring before the OS has caught up.
+>>
+>> Surprise Down events are handled separately in
+>> dpc_handle_surprise_removal() and won't reach dpc_process_error().
+>> Please correct me if I missed anything.
+> 
+> Probably fine. I just didn't check particularly closely.
+> 
+> Jonathan
+
+
+Thanks for valuable comments.
+
+Best Regards,
+Shuai
 
