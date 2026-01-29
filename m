@@ -1,24 +1,24 @@
 Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7925235FF6D;
-	Thu, 29 Jan 2026 21:43:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id AEBA1364044;
+	Thu, 29 Jan 2026 21:43:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769722998; cv=none; b=JKbMyy2E68dtWUAbhtFkjImifMsDZ+jycx2CcPeZIXz0rfiMIS16Cdtv9vasfGoz7uaJ+MLbTfFaJyBq0QmNZ6fiPAJ4bFAemx1KUCT54HqQweHasnNOgUdMq5mHFXrIFTDRvdTgSgiISn8S4b7JUNHXmVPLH9XZ4Af9ltGkn9M=
+	t=1769723004; cv=none; b=owCL1VcTwd1KOXlMtmFZvtMhPQGmID+7TT2pTNBOXz7lDG6uZjhCnqnZfN4hNSOqAtxtUSki5mXOFzrSDO4srK8w+5C/V+c+ZtaI3ayIvq5vzoqaiKS90UFV4xf3xWeq09b6Dr8MbIdbgAXpyjPCbxwKxVBiEu08DPO0N/diHTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769722998; c=relaxed/simple;
-	bh=6wV7/qA6rKkz7vgNZjQofejddvnuEJr25ZOi7Gew7Zc=;
+	s=arc-20240116; t=1769723004; c=relaxed/simple;
+	bh=Sdm9jUYz3gUd6CXxzUF+zr+d4iqsrwWxrpYTcXnEKVQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aFYao9HZHhkHEnQBUOMU/XwGMQYd5+oAOmXNQ5k7t3/9Jm+jh348ACNE1WO9ZBgfv/vgZjSo1683Wl2kkgiQPoACL7hcYLoBKKrh11r02b5d3sorqgGt3l0QYcw6v7PNSFa0u/FJv5uKpVpgihD76BxsnV36VbstzTObXb7FbrM=
+	 MIME-Version; b=uTLDOB2hxhL4076HcR4WOyr+lu3TClddSXV6knMdjfVogYEaYDLlAHflyO5Bx50iFFd7nhIWOlaJ0tuTCNnlfLPICcQ2NcIuMThRzBOlHQ6jJKMKw91TAhOeY3vgx5b4kdeWkoMzQHZKXT+brZo332IWKZS1YQLLLVaTaqneUBY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: WG0A3SN6Qye1Pr6I6foSFg==
-X-CSE-MsgGUID: aw+YfBLxRfKzScDsXwXaVw==
+X-CSE-ConnectionGUID: wQkPVKL/Qk2OF5OinkxlcQ==
+X-CSE-MsgGUID: OKWg+UMSThCMm8t1NlrGsQ==
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 30 Jan 2026 06:43:16 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 30 Jan 2026 06:43:22 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.73])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id EF546408FDE1;
-	Fri, 30 Jan 2026 06:43:10 +0900 (JST)
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 8B1E2410E3B9;
+	Fri, 30 Jan 2026 06:43:16 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,9 +37,9 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v4 13/15] arm64: dts: renesas: r9a09g047: Add PCIe node
-Date: Thu, 29 Jan 2026 22:41:27 +0100
-Message-ID: <20260129214130.16067-14-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v4 14/15] arm64: dts: renesas: r9a09g047e57-smarc-som: Add PCIe reference clock
+Date: Thu, 29 Jan 2026 22:41:28 +0100
+Message-ID: <20260129214130.16067-15-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260129214130.16067-1-john.madieu.xa@bp.renesas.com>
 References: <20260129214130.16067-1-john.madieu.xa@bp.renesas.com>
@@ -51,7 +51,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The RZ/G3E SoC family features an x2 PCIe IP. Add the PCIe node.
+The RZ/G3E SMARC SoM has a fixed 100 MHz reference clock generator
+for PCIe. Model it as a fixed-clock and assign it to the PCIe port.
 
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
@@ -60,92 +61,40 @@ Changes:
 
 v4: No changes
 v3: No changes
-v2:
- - Roerder interrupts and interrupt names to match binding
+v2: No changes
 
- arch/arm64/boot/dts/renesas/r9a09g047.dtsi | 69 ++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+ arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
-index cbb48ff5028f..2eccaa7ed1c5 100644
---- a/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r9a09g047.dtsi
-@@ -841,6 +841,75 @@ wdt3: watchdog@13000400 {
- 			status = "disabled";
- 		};
+diff --git a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+index eb0de21d6716..7e2345bb9918 100644
+--- a/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
++++ b/arch/arm64/boot/dts/renesas/rzg3e-smarc-som.dtsi
+@@ -43,6 +43,12 @@ memory@48000000 {
+ 		reg = <0x0 0x48000000 0x0 0xf8000000>;
+ 	};
  
-+		pcie: pcie@13400000 {
-+			compatible = "renesas,r9a09g047-pcie";
-+			reg = <0 0x13400000 0 0x10000>;
-+			ranges = <0x02000000 0 0x30000000 0 0x30000000 0 0x8000000>,
-+				 <0x43000000 4 0x40000000 4 0x40000000 6 0x00000000>;
-+			dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 2 0x00000000>;
-+			bus-range = <0x0 0xff>;
-+			interrupts = <GIC_SPI 800 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 801 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 802 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 803 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 806 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 792 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 793 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 794 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 795 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 796 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 797 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 799 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 804 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 805 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 807 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 791 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 798 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 808 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 809 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 810 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 811 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 812 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 813 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "serr", "serr_cor", "serr_nonfatal",
-+					  "serr_fatal", "axi_err", "inta",
-+					  "intb", "intc", "intd", "msi",
-+					  "link_bandwidth", "pm_pme", "dma",
-+					  "pcie_evt", "msg", "all",
-+					  "link_equalization_request",
-+					  "turn_off_event", "pmu_poweroff",
-+					  "d3_event_f0", "d3_event_f1",
-+					  "cfg_pmcsr_writeclear_f0",
-+					  "cfg_pmcsr_writeclear_f1";
-+			#interrupt-cells = <1>;
-+			interrupt-controller;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie 0 0 0 0>, /* INTA */
-+					<0 0 0 2 &pcie 0 0 0 1>, /* INTB */
-+					<0 0 0 3 &pcie 0 0 0 2>, /* INTC */
-+					<0 0 0 4 &pcie 0 0 0 3>; /* INTD */
-+			clocks = <&cpg CPG_MOD 0xc4>, <&cpg CPG_MOD 0xc5>;
-+			clock-names = "aclk", "pmu";
-+			resets = <&cpg 0xb2>;
-+			reset-names = "aresetn";
-+			power-domains = <&cpg>;
-+			device_type = "pci";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			renesas,sysc = <&sys>;
-+			status = "disabled";
++	pcie_refclk: clock-pcie-ref {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <100000000>;
++	};
 +
-+			pcie_port0: pcie@0,0 {
-+				reg = <0x0 0x0 0x0 0x0 0x0>;
-+				ranges;
-+				device_type = "pci";
-+				vendor-id = <0x1912>;
-+				device-id = <0x0039>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+			};
-+		};
+ 	reg_1p8v: regulator-1p8v {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "fixed-1.8V";
+@@ -168,6 +174,11 @@ phy1: ethernet-phy@7 {
+ 	};
+ };
+ 
++&pcie_port0 {
++	clocks = <&pcie_refclk>;
++	clock-names = "ref";
++};
 +
- 		tsu: thermal@14002000 {
- 			compatible = "renesas,r9a09g047-tsu";
- 			reg = <0 0x14002000 0 0x1000>;
+ &pinctrl {
+ 	eth0_pins: eth0 {
+ 		clk {
 -- 
 2.25.1
 
