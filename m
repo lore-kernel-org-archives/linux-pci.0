@@ -1,54 +1,54 @@
-Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
+Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D272436403F
-	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 21:25:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F2C364E92
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 21:25:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769721957; cv=none; b=QIdA37a8o3NLbUUUNsc+je0S475Zl0fKQNAT66gL4EEq99EFx/mMfeLFXIthvbunUw1R3OC2YRkh50bEScplWkaW1H0gNu9xWlYDJcEib86Jdp2VN8N9MIzzMzxZyCqHXJTf4Xp09S2NMiZwts0DkB3SLugvTyE9DI1bM4LkoaI=
+	t=1769721958; cv=none; b=eI1LCWDozJ1r8rp/z48BfaN3z/3PKEPurDzT6tfruaeuhjpuRG+C24th6B+RiCy+SAS5Fe73DnewSTFJZJ3VJlHX93k8qndoaRpz27YbmacV0o5iGxWa2/Y8KA7EYrTucsAiXzjT/cCzyadVppFh0rM0CyOuDYd5JrBsdVU5jTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769721957; c=relaxed/simple;
-	bh=a+0/tE04p22lp6sOOwH4YlMRI/tEgdEnUCc2v9hrZNg=;
+	s=arc-20240116; t=1769721958; c=relaxed/simple;
+	bh=Fptw60PqRkYzWIuTBN2mK+X1wys6jPz6VcpFsR3yJlM=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=fA7sezA92QGcqDIohrA7BfGWilwvddF3xwjKDLPM5XBK7DN7MjTKIjf0Ad1FqD47BI9SiZPjM2OwhfBWxy752SfjPyXhb48Jj88EgkwrQ309GqZo2nN32hZkldAj7bw6qiuMEiBs+VUaVduGz7zha6P1QuPGXJxF63aoxsQbzWE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=V+wI6RtB; arc=none smtp.client-ip=209.85.214.201
+	 To:Cc:Content-Type; b=e5Q5kihq9VKZ4Mgv2I2eDYrZyaEGo5oIC9pCO8QET9gRTLjmG/eKH1fPy5F1OFsAVY1WHdRt3CCkwLrOIlkdkTANYXYIAN7GyaKEiiTP72tKx5bfVi6CSDz+OOwptTXJ918yQxR+NXJW9avnqeVh+yejbImDqhuNm9ftTDUa2LY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aP8+0eiA; arc=none smtp.client-ip=209.85.216.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="V+wI6RtB"
-Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-2a13be531b2so13517565ad.2
-        for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 13:25:54 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aP8+0eiA"
+Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-34ab459c051so2563726a91.0
+        for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 13:25:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1769721954; x=1770326754; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1769721956; x=1770326756; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ha2krivTi79qOGY9TNrpoF2Kn7NOugjkcaAbsESD6eI=;
-        b=V+wI6RtBEKGX/Fwog7ZpkPux3Grm+DRByFarIYW9X9UZUWZw08uoezcY3k3//4eVLK
-         Ii0d4yLzLzwB1oR/oTfl+qsqVyBgtpR+9jYzC7XAAxZendDZJdtq/Z5CwAhzCg8TkpBr
-         7oQLtRpXEM1CiXVXJxM6IvwOuX/DXkKmhyC71s/JLwRVdFFIOVk+bFTW14kDQyQhZenT
-         +js8UIHWg8KBT9LbpO1KtROQF2CI6T47CC2G85sUIye9WsmbF7FiFfSrj9DEAKbbceR7
-         J6T2AH3sczRVsTrjPNYx/l5ECouQE1pHCyimQ49l4hsuIxhoTyBcwWmpSF8WthM2Y/YH
-         Q+Aw==
+        bh=ibCvH5eZEobsLpnry66xHV5xBXd91tAWSqhhlaOXScs=;
+        b=aP8+0eiArsIVTvtj7o4LSZBOiYFcpm8isKZLT2N+x+NokzE1S91UrUx2UMIGAt30gw
+         5hDPtgzFsLczo/KKP7qTLwA2Ywm/oA/qL2DPBHoiRyFayDjk8RtnzfjRkaJQvgN+5upp
+         YgxKRwWUSrtL6Ap+r/ohSX5tDHFa3n8CzRb8Oe4e+ab+S3Nd60Sfowe+tboV5/BPWn93
+         0/rruoBRES59bxrvygKvX62Lm31AJAa2z7Ucftv9W1vSlKuIDI04oix8WwVjHMOAeYqe
+         XqOTUV++UcionZ9h9ekwVJ5IrqdlvwKDp7lCKnb64VYdBfnLJKKa7oIxufYJId0Uqkao
+         fg6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769721954; x=1770326754;
+        d=1e100.net; s=20230601; t=1769721956; x=1770326756;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ha2krivTi79qOGY9TNrpoF2Kn7NOugjkcaAbsESD6eI=;
-        b=V6/rCvrd8EjTHVKQcjfkTP8pS5//7bPdv3+K4RK4y9OvBmBQ5woQcNg2p558MLSpa1
-         IPiEdbIR1pQA3syW82Ua6IkAhMgWLr4zIQZZncXiyUzxl0fOSIvN1kKC4mGaCrI37RED
-         JFxhlpPbA3B+OU+rMO6hSBrpFxdNAeLmPiPRRvBzVpaj0YFaBkcOQoD3ptPiWurxLS4i
-         YNqr3vV371OHiiWekkSurcWmhh7GhsQflUNmHbox1M8AbnTeTNE8peJNAxUIZJijOLdv
-         SKLmd/i/yqKBnDKRWec9UMVplQ+8qnj/nD06lDllAk3+mqBCXQOzRVVJkaWEdRnY6tDN
-         bWvA==
-X-Forwarded-Encrypted: i=1; AJvYcCWe3dFusmRhZFLjqnbq9lHbROuUytGM8v4ww84sUpTvS+KHIUEwdBThTl74VC/D2miBJjiVLcqpSns=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPFgJxBar9LTy//eNIvX2Ae3XzX6I1sJd3R3aQGgoaqQHfocHV
-	/qHgS2F5YVI3akYNR9bzh3JOHpMer5+QOnwD6THWl5WUELb8Oklyz7sWHquj7H3KV8Ms0+QZ3Yr
-	c/O9pL8LGxN99Cg==
-X-Received: from plba14.prod.google.com ([2002:a17:903:100e:b0:29f:1fb1:be7e])
+        bh=ibCvH5eZEobsLpnry66xHV5xBXd91tAWSqhhlaOXScs=;
+        b=GEl6ypKaubIBsEaBKQgn7MZVn5lju2Sbv1JyDhQs/JhO9MQ9j6rwuFF+dOz0TiJpEr
+         /36I42909ZSlaVuIJsfNExHqa785IXA+qFd+haa3KjnpWAkLfZoSgD6/LC2jQaM0EFAi
+         WzTuNGmZttgKoyO5acJQSOhvsD9mrixb5D4BSTP4WhiOPlrvv3E2qavqVypc+C4f9vhB
+         C/IvlL0S37xEohLkGPQl2EUBafDnGSSalDU2kzBQnjKlFeIOrx0/Q8x1yjCkTt6vIhWa
+         GQkn6TqzyZKjdHuv4+b5fc2YfAmBp3s9JRcCU+nWLLFaZZV9TyBHLTF4DjTDflrVXvRG
+         q9Rg==
+X-Forwarded-Encrypted: i=1; AJvYcCWj6isvpOBUIgGGHPI7xUVoaBqVu0F1R4fDvX68Qgj3xgPSSzrWSLyuXeImZQ8fEWakRptvy39sl1g=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzIAyV3Sq4wlTGD4Bc+xN/ZsQsDWoDAYuFoA7jjt/QF/aKs0i/k
+	VvPdrN9KBGcX4wBM6EHXck1hl3I07QElF/EbrNJOB+pGmM0+oKFqcMif9hMmRnskcE7wk2pe/up
+	y2/i5f1vHdiffuw==
+X-Received: from pjbpv18.prod.google.com ([2002:a17:90b:3c92:b0:33b:ba24:b207])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:902:d4c9:b0:2a7:99c9:1086 with SMTP id d9443c01a7336-2a8d9a56c95mr4558805ad.47.1769721953965;
- Thu, 29 Jan 2026 13:25:53 -0800 (PST)
-Date: Thu, 29 Jan 2026 21:24:57 +0000
+ 2002:a17:90b:3ccd:b0:352:bd7c:ddbd with SMTP id 98e67ed59e1d1-3543b38af32mr802532a91.23.1769721955711;
+ Thu, 29 Jan 2026 13:25:55 -0800 (PST)
+Date: Thu, 29 Jan 2026 21:24:58 +0000
 In-Reply-To: <20260129212510.967611-1-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -58,8 +58,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260129212510.967611-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.53.0.rc1.225.gd81095ad13-goog
-Message-ID: <20260129212510.967611-11-dmatlack@google.com>
-Subject: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after Live Update
+Message-ID: <20260129212510.967611-12-dmatlack@google.com>
+Subject: [PATCH v2 11/22] docs: liveupdate: Document VFIO device file preservation
 From: David Matlack <dmatlack@google.com>
 To: Alex Williamson <alex@shazbot.org>
 Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
@@ -84,101 +84,171 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.
 	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
 Content-Type: text/plain; charset="UTF-8"
 
-From: Vipin Sharma <vipinsh@google.com>
+Add documentation for preserving VFIO device files across a Live Update,
+as well as some generic file preservation documentation. This
+documentation will be extended in the future as new types of files are
+supported and new dependency/ordering requirements are added.
 
-Do not reset the device when a Live Update preserved vfio-pci device is
-retrieved and first enabled. vfio_pci_liveupdate_freeze() guarantees the
-device is reset prior to Live Update, so there's no reason to reset it
-again after Live Update.
-
-Since VFIO normally uses the initial reset to detect if the device
-supports function resets, pass that from the previous kernel via
-struct vfio_pci_core_dev_ser.
-
-Signed-off-by: Vipin Sharma <vipinsh@google.com>
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c       | 22 +++++++++++++++++-----
- drivers/vfio/pci/vfio_pci_liveupdate.c |  1 +
- include/linux/kho/abi/vfio_pci.h       |  2 ++
- include/linux/vfio_pci_core.h          |  1 +
- 4 files changed, 21 insertions(+), 5 deletions(-)
+ Documentation/userspace-api/liveupdate.rst | 144 +++++++++++++++++++++
+ 1 file changed, 144 insertions(+)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index b01b94d81e28..c9f73f597797 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -515,12 +515,24 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- 	if (ret)
- 		goto out_power;
+diff --git a/Documentation/userspace-api/liveupdate.rst b/Documentation/userspace-api/liveupdate.rst
+index 41c0473e4f16..dbf1e4aeddd7 100644
+--- a/Documentation/userspace-api/liveupdate.rst
++++ b/Documentation/userspace-api/liveupdate.rst
+@@ -14,6 +14,150 @@ ioctl uAPI
+ ===========
+ .. kernel-doc:: include/uapi/linux/liveupdate.h
  
--	/* If reset fails because of the device lock, fail this path entirely */
--	ret = pci_try_reset_function(pdev);
--	if (ret == -EAGAIN)
--		goto out_disable_device;
-+	if (vdev->liveupdate_incoming_state) {
-+		/*
-+		 * This device was preserved by the previous kernel across a
-+		 * Live Update, so it does not need to be reset.
-+		 */
-+		vdev->reset_works = vdev->liveupdate_incoming_state->reset_works;
-+	} else {
-+		/*
-+		 * If reset fails because of the device lock, fail this path
-+		 * entirely.
-+		 */
-+		ret = pci_try_reset_function(pdev);
-+		if (ret == -EAGAIN)
-+			goto out_disable_device;
++File Preservation
++=================
 +
-+		vdev->reset_works = !ret;
-+	}
++Files can be preserved across Live Update in sessions. Since only one process
++can open /dev/liveupdate, sessions must be created by a centralized process
++(e.g. "luod") and then passed via UDS to lower privilege processes (e.g. VMMs)
++for them to preserve their own files.
++
++luod::
++
++  luo_fd = open("/dev/liveupdate", ...);
++
++  ...
++
++  // Create a new session with the given name.
++  struct liveupdate_ioctl_create_session arg = {
++          .size = sizeof(arg),
++	  .name = SESSION_NAME,
++  };
++  ioctl(luo_fd, LIVEUPDATE_IOCTL_CREATE_SESSION, &arg);
++
++  // Send session_fd to the VMM over UDS.
++  send_session_fd(..., arg.fd);
++
++VMM::
++
++  // Receive the newly created session from luod over UDS
++  session_fd = create_session(SESSION_NAME);
++
++  ...
++
++  // Preserve a file with a unique token value in the session.
++  struct liveupdate_session_preserve_fd arg = {
++          .size = sizeof(arg),
++          .fd = fd,
++          .token = TOKEN,
++  }
++  ioctl(session_fd, LIVEUPDATE_SESSION_PRESERVE_FD, &arg);
++
++Files can be unpreserved with the LIVEUPDATE_SESSION_UNPRESERVE_FD ioctl. They
++are also unpreserved once the last reference to the session is dropped.  To
++carry preserved files across a Live Update, references must be kept on the
++session files through the reboot(LINUX_REBOOT_CMD_KEXEC) syscall.
++
++While a file is preserved in a session, the kernel holds an extra reference
++to it to prevent it from being destroyed.
++
++Only the following types of files support LIVEUPDATE_SESSION_PRESERVE_FD. More
++types of files are expected to be added in the future.
++
++ - memfd
++ - VFIO character device files (vfio-pci only)
++
++File Retrieval
++==============
++
++Files that are preserved in a session retrieved after
++reboot(LINUX_REBOOT_CMD_KEXEC).
++
++luod::
++
++  luo_fd = open("/dev/liveupdate", ...);
++
++  ...
++
++  struct liveupdate_ioctl_retrieve_session arg = {
++          .size = sizeof(arg),
++	  .name = SESSION_NAME,
++  };
++  ioctl(luo_fd, LIVEUPDATE_IOCTL_RETRIEVE_SESSION, &arg);
++
++  // Send session_fd to VMM over UDS.
++  send_session_fd(..., arg.fd);
++
++VMM::
++
++  // Receive the retrieved session from luod over UDS
++  session_fd = retrieve_session(SESSION_NAME);
++
++  ...
++
++  // Retrieve the file associated with the token from the session.
++  struct liveupdate_session_retrieve_fd arg = {
++          .size = sizeof(arg),
++          .token = TOKEN,
++  };
++  ioctl(session_fd, LIVEUPDATE_SESSION_RETRIEVE_FD, &arg);
++
++  ...
++
++  ioctl(session_fd, LIVEUPDATE_SESSION_FINISH, ...);
++
++A session can only be finished once all of the files within it have been
++retrieved, and are fully restored from the kernel's perspective. The exact
++requirements will vary by file type.
++
++VFIO Character Device (cdev) Files
++==================================
++
++The kernel supports preserving VFIO character device files across Live Update
++within a session::
++
++  device_fd = open("/dev/vfio/devices/X");
++
++  ...
++
++  ioctl(session_fd, LIVEUPDATE_SESSION_PRESERVE_FD, { ..., device_fd, ...});
++
++Attempting to preserve files acquired via VFIO_GROUP_GET_DEVICE_FD will fail.
++
++Since the kernel holds an extra reference to files preserved in sessions, there
++is no way for the underlying PCI device to be unbound from vfio-pci while it
++is being preserved.
++
++When a VFIO device file is preserved in a session, interrupts must be disabled
++on the device prior to reboot(LINUX_REBOOT_CMD_KEXEC), or the kexec will fail.
++
++Preserved VFIO device files can be retrieved after a Live Update just like any
++other preserved file::
++
++  ioctl(session_fd, LIVEUPDATE_SESSION_RETRIEVE_FD, &arg);
++  device_fd = arg.fd;
++
++  ...
++
++  ioctl(session_fd, LIVEUPDATE_SESSION_FINISH, ...);
++
++Prior to LIVEUPDATE_SESSION_FINISH, preserved devices must be retrieved from
++the session and bound to an iommufd. Attempting to open the device through
++its character device (/dev/vfio/devices/X) or VFIO_GROUP_GET_DEVICE_FD will
++fail with -EBUSY.
++
++The eventual goal of these support is to preserve devices running uninterrupted
++across a Live Update. However there are many steps still needed to achieve this
++(see Future Work below). So for now, VFIO will reset and restore the device
++back into an idle state during reboot(LINUX_REBOOT_CMD_KEXEC).
++
++Future work:
++
++ - Preservation of iommufd files
++ - Preservation of IOMMU driver state
++ - Preservation of PCI state (BAR resources, device state, bridge state, ...)
++ - Preservation of vfio-pci driver state
++
+ See Also
+ ========
  
--	vdev->reset_works = !ret;
- 	pci_save_state(pdev);
- 	vdev->pci_saved_state = pci_store_saved_state(pdev);
- 	if (!vdev->pci_saved_state)
-diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/vfio_pci_liveupdate.c
-index 1ad7379c70c4..c52d6bdb455f 100644
---- a/drivers/vfio/pci/vfio_pci_liveupdate.c
-+++ b/drivers/vfio/pci/vfio_pci_liveupdate.c
-@@ -57,6 +57,7 @@ static int vfio_pci_liveupdate_preserve(struct liveupdate_file_op_args *args)
- 
- 	ser->bdf = pci_dev_id(pdev);
- 	ser->domain = pci_domain_nr(pdev->bus);
-+	ser->reset_works = vdev->reset_works;
- 
- 	args->serialized_data = virt_to_phys(ser);
- 	return 0;
-diff --git a/include/linux/kho/abi/vfio_pci.h b/include/linux/kho/abi/vfio_pci.h
-index 9bf58a2f3820..6c3d3c6dfc09 100644
---- a/include/linux/kho/abi/vfio_pci.h
-+++ b/include/linux/kho/abi/vfio_pci.h
-@@ -34,10 +34,12 @@
-  *
-  * @bdf: The device's PCI bus, device, and function number.
-  * @domain: The device's PCI domain number (segment).
-+ * @reset_works: Non-zero if the device supports function resets.
-  */
- struct vfio_pci_core_device_ser {
- 	u16 bdf;
- 	u16 domain;
-+	u8 reset_works;
- } __packed;
- 
- #endif /* _LINUX_LIVEUPDATE_ABI_VFIO_PCI_H */
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 350c30f84a13..95835298e29e 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -16,6 +16,7 @@
- #include <linux/types.h>
- #include <linux/uuid.h>
- #include <linux/notifier.h>
-+#include <linux/kho/abi/vfio_pci.h>
- 
- #ifndef VFIO_PCI_CORE_H
- #define VFIO_PCI_CORE_H
 -- 
 2.53.0.rc1.225.gd81095ad13-goog
 
