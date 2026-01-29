@@ -1,40 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A6027703A
-	for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 22:54:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A8BA29BDAA
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 00:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769640841; cv=none; b=SaOFrOzo5n++qxZwNCNS3WqZbFDIXuGC0bsYzDZxXypw/R6ISzt88i28XRFZoq/GwQwdEevlXEOGqOnwe2kj8eJwzfcWvQNMM7sWbSV2HQ8fcR+cFYhdzBi8eDJTqCRMeQOyUbulKM8MdPHtAshySAiJQ4yJTrDUCxdfYk1HVxc=
+	t=1769647872; cv=none; b=rpXemR/Q2p0MQ8Uab6ceKRPk3N0rY57tWeybRyczK3dkPwBK8jJs2GxMlPyvthUY6DPJnDX4P5Pa8Z4nVTyGFqeV5iiSus4DSk7qrVBApeV+TOrTRDZt23ufjNdNIFZ2xY3BhyPuvfJ8usxZnQaShegpU2UJeR0G2ub0ozTXlyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769640841; c=relaxed/simple;
-	bh=XH3Oazv6O3HkSMweOQaToClHG2NbCbnIKSqdQHabDe4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=V1rW1AXIIcV6KoqrmH33kcKsBHcTwxFXio/CSWhFaHO4+nAOdnwHdXtmV3G7mQzcjS04RFws1coY9Tv29ow6ltA6SD8qvqnC8CDOEVYApNZOv+sv0EU2XAEDTQmFap9iHmkd6DhmsHNxZAWJTttNofgggLzaJHlPTUnprRDfcbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oNlqCwYW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769647872; c=relaxed/simple;
+	bh=XbGhdM5R6kglST7aIewJwl4vmHrrkLI83o4LjzUAOWs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cJXgXvPXMem383vFwqF12RaegPlsg7XYh2XgegRs2SrNo6m5rfh80cqY6cFZXxoyUL1riifxtfRYbwTWyACA5XSEnHH1KaQinon2A+hJfKWR0qam0eoYgGS30VOsb9z/lWWTK+Kkxl71NImSA0fIuVucAVYB4OwTByyvEAk4NFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=nhizYGFE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ev+WyEJO; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oNlqCwYW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97646C4CEF1;
-	Wed, 28 Jan 2026 22:54:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769640840;
-	bh=XH3Oazv6O3HkSMweOQaToClHG2NbCbnIKSqdQHabDe4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=oNlqCwYWRFYL1Hmb2wk3M16tweQICgv8szIE79/mKXjzorfUiI9QVzaox3ysZiTt2
-	 WUeztqdQYcEIQQdCGm+V8+b7e2xiWLx1juvHY9ASTTu0qb4vPjdOtZDG0WkHkwux/z
-	 3LKcYollCr+HKxXXSiI4eA9h11ERTbSv7NsVxqnCFTd+sLsEyPASI69vNO6yjFCFlA
-	 XRRzLEXpt6yFWqLTa2A4s5/05c40/cAtyXJT8EoU7/srUeQlcoXqtxOmjnmXQq8oWP
-	 qMQ8GNiI1vmpSNN2zrrwCsJdb4nLtfq/9RohzxjrdOjKKnw6L1tu0rqs+XyPvXnz4g
-	 Ryi+6oUorat1Q==
-Date: Wed, 28 Jan 2026 16:53:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, alex@shazbot.org, lukas@wunner.de,
-	Dan Williams <dan.j.williams@intel.com>,
-	Jinhui Guo <guojinhui.liam@bytedance.com>
-Subject: Re: [PATCH 2/2] pci: fix slot reset device locking
-Message-ID: <20260128225359.GA437372@bhelgaas>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="nhizYGFE";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ev+WyEJO"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60SIGV513906099
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 00:51:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=M+WZ5p12VkpfX832o5SO9e+P
+	vKsqNe/lB/hAlOK3sLU=; b=nhizYGFEF52633CDuU4F8TIdryih2X4NqIejN8db
+	TKdy7A8NYkqNhc+Xi5PQxc1HNdOln9lnwsCGcruzVQ0+aSBkhlp70Q5OFHICsuB4
+	MTEcbA2Ra3cVw50EckPewbdt/0beA62X/XXBpPjoHYcBty5zEkOdMqgU2GCks9xi
+	x3yi3EG0NG00xZwwV5KqabVpDNqT2c2ms6dpHPY6f4Fmfw03abvBoUOz4K3DefJJ
+	6kerEiNnk1Uv53ysq09ZZa85w3UeD231qQbITqfeBLl5H3gzpsWzP+lS0DPizhVx
+	31+suTnwCsbBugiFlLj9BWIFYdetlurQubsok5wkwseR0w==
+Received: from mail-ua1-f72.google.com (mail-ua1-f72.google.com [209.85.222.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4byjxht8n2-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 29 Jan 2026 00:51:07 +0000 (GMT)
+Received: by mail-ua1-f72.google.com with SMTP id a1e0cc1a2514c-94839e09cddso402101241.2
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jan 2026 16:51:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1769647866; x=1770252666; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=M+WZ5p12VkpfX832o5SO9e+PvKsqNe/lB/hAlOK3sLU=;
+        b=ev+WyEJOZGfLx8/S8IfymMcaj/6GGK3Ip0qeQb2i0VkBUBvmb1HZNgWRBFRHmrNPD2
+         qXIrT/WiDAUxfe39r6KLzVp4YExGJ/50l+fZ4mONFr58sJnoVXOcSkjU/qthc4y3/2O2
+         g0jVHC8iFY7T/GkK1QE7rXYk12nF+zbaVFkwLfhHkM6IPNhODR/UCwfcr19c0AFQZWhx
+         Hr5bZ1Wn8E50Q/PA++06LKRwrIYc9C2+9gxEJvhnLDFtQBzSjXg1Qv8HaPA7+KtbB1o0
+         ZN6+kbsfB0vbdNAAvKpCKGf6MSaGbQYO0o8Yytru6P3UTaeDDV7XzYBK6MtwxA8XuEJN
+         voFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769647866; x=1770252666;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=M+WZ5p12VkpfX832o5SO9e+PvKsqNe/lB/hAlOK3sLU=;
+        b=haqE8d/4hWy1DS2IP5Cg3U8mTCb1xWH4e+DZbOt2gSzN6ZAR6wG2135/nGUO3GHoL8
+         uU+kL9u8Ll5oq0iD7jZNsYxCErHWklMDMXbDqvDa0hkrcLpUKOlqZo7Qimg08A5m+pBe
+         UQ1aMaQOTeiszOeHzr5euA1sikDMsB2kIPl1Wz2A/KedfInMkqXmbrLB2mMC3p44HhCR
+         9d+3dmirufhLe9CxhX2lTzYfGaicjnBjoMZWiTuu05viF3GV0M7WI22Omc20RpGzX6WC
+         NJ1kJLDZKqRjQUUpUZfPDsplct4Z67SZeJkqcnuEvK7ftH+qPqSPMwd5oTq7TB3VolgJ
+         QeTA==
+X-Forwarded-Encrypted: i=1; AJvYcCXPH4LwBaGe5OkzesYzZg8G8yKMn8jpGR/IgUTPUR+zQKXgSYcwIjTeNdJ9d8/c0e1pnZ8irScNNTA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwTGULFv1kH9Gcv5jN2C7FgZxWUaTj2JolTOwbcDcs0QFeJ7/2y
+	vXimJ6LvkYYXKIeIaoaCFXByfvuRI8LCIqaFL+fob/ixbH8hR8PQW+eXy3Z0lRqjdQVj8CGCmVu
+	vzLMXlhEf7FaLMfs8HcJcnxdcCjGXybPsDUORJ3LaXKpB4p6/JDA4H0Zb1LlXiRU=
+X-Gm-Gg: AZuq6aIXKAvVS/rhOXlGeMWLRq2FxX4Z7Uwkba0b40f8u/X3k9W7sVBmkorfwyj8vr4
+	bEwZNn7qqAPIY3PR+01ntkX1L9di9tF9nWodpt1gFbf1N8huKCTve52ykKKPBVrvNUj0TK//6jU
+	aacwW+BeKksiMAoEYMBfMzzAe9mWFM82GFjT2KmgELUbLBwXNNOs/VjBqQIpH/OHeRWiZSYV0fu
+	6Mg3dYIQXIqMYSzAyMXDVfATskC+oNcfeWXRaPXFz9CxT+n8v7Tqe9+YHY95gqv4W+oZpC/ybMQ
+	wGczuWuaPCObpWlLXGJmYFgMrNqNxM3B1fzXBXrfKdlXcnhM6k3uw7I1JNJ8RkqNUuN6l0hcmrG
+	J/QcMGzrnzULvtsx/pLbY6TGc2Dl18q/g6gwsESHrkKPnCu1vHuIM6V3z2Z4SRdDHXxqwGnFXeq
+	jHFBii3BgJLMrzKXiRHJO9cbQ=
+X-Received: by 2002:a05:6102:32c3:b0:5db:cc69:739c with SMTP id ada2fe7eead31-5f723631147mr2251792137.17.1769647866483;
+        Wed, 28 Jan 2026 16:51:06 -0800 (PST)
+X-Received: by 2002:a05:6102:32c3:b0:5db:cc69:739c with SMTP id ada2fe7eead31-5f723631147mr2251767137.17.1769647866075;
+        Wed, 28 Jan 2026 16:51:06 -0800 (PST)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-59e074bbf55sm856387e87.90.2026.01.28.16.51.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Jan 2026 16:51:04 -0800 (PST)
+Date: Thu, 29 Jan 2026 02:51:02 +0200
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Rob Clark <robin.clark@oss.qualcomm.com>,
+        Dmitry Baryshkov <lumag@kernel.org>,
+        Abhinav Kumar <abhinav.kumar@linux.dev>,
+        Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+        Marijn Suijten <marijn.suijten@somainline.org>,
+        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+        linux-usb@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 6/7] arm64: dts: qcom: sm8650: Add sound DAI prefix
+ for DP
+Message-ID: <77qi3wlmjzdios6a6kqifsbsyusohcddz737fmdgmrgxcqlpsb@f2wkl7sw7nci>
+References: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org>
+ <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-6-c55ec1b5d8bf@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,213 +113,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aXpf0OkCsiw6kePd@kbusch-mbp>
+In-Reply-To: <20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-6-c55ec1b5d8bf@linaro.org>
+X-Proofpoint-ORIG-GUID: UUtc208YEm_KdrhL4jul1gbY9B2yUj1S
+X-Proofpoint-GUID: UUtc208YEm_KdrhL4jul1gbY9B2yUj1S
+X-Authority-Analysis: v=2.4 cv=b9G/I9Gx c=1 sm=1 tr=0 ts=697aaefb cx=c_pps
+ a=ULNsgckmlI/WJG3HAyAuOQ==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=KKAkSRfTAAAA:8 a=EUspDBNiAAAA:8 a=YAN0IDdG5KZRBbBB4vcA:9 a=CjuIK1q_8ugA:10
+ a=zZCYzV9kfG8A:10 a=1WsBpfsz9X-RYQiigVTh:22 a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI5MDAwNCBTYWx0ZWRfX1YyPFPxDny/e
+ reYzWECHiCt7f9TLLIwXhf99VuGJs+FFzss6gIFY1rbcIvTlkw22pWHTEmxxw9/5jiWmuwXAZQ9
+ 71Bt67lKeXgi3+hhZaTJNOpwynREl3aQj+UMatZ2iGqvMB7xrCzeubZu1ahglCa0Jn/76X44I98
+ w+/Wb/HP6uAWLA0BBXeF49+EgKT6CtaeJw16QLknQDD9iIvh+IPzlzJySO314XKmAGPly18B+Zd
+ oeS2jQJ8TaYrQ+FuMMgmOXXemLempnrDRRo0bEbWwWOGEe+uoBkwgOSsJzw7o8VOMSkCPvcEBru
+ 9BhpC/+qs3FzqD9Wt4iFMnMBmqQiQfchwHu4YkJmA5HkyzQwOI4/7ZhDlRp+I6CtOAf4EAQ6Neo
+ g9mc+J4yCNsjxSLWWOi6lstpncfXc72Yzvk4/8Bvu9f0L70wknUIMNr2ni0L1z+ytbjia7wuOtK
+ 05qd8bn8SgraUDEYlDA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-01-28_06,2026-01-28_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 suspectscore=0 bulkscore=0 clxscore=1015
+ impostorscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601290004
 
-On Wed, Jan 28, 2026 at 12:13:20PM -0700, Keith Busch wrote:
-> On Wed, Jan 28, 2026 at 12:03:38PM -0600, Bjorn Helgaas wrote:
-> > On Fri, Jan 16, 2026 at 10:41:50AM -0800, Keith Busch wrote:
-> > > From: Keith Busch <kbusch@kernel.org>
-> > > 
-> > > Like pci_bus_lock, pci_slot_lock needs to lock the bridge device to
-> > > prevent the warning:
-> > 
-> > I *think* this actually refers to pci_bus_trylock() and
-> > pci_slot_trylock() (not pci_bus_lock() and pci_slot_lock()), since
-> > that's what this patch changes?
+On Tue, Jan 27, 2026 at 10:57:33AM +0100, Neil Armstrong wrote:
+> Sound DAI devices exposing same set of mixers, e.g. each DisplayPort
+> controller, need to add dedicated prefix for these mixers to avoid
+> conflicts and to allow ALSA to properly configure given instance.
 > 
-> Oh, this patch is changing both pci_slot_trylock and pci_slot_lock since
-> they were both missing the equivalent locks that the "bus" version of
-> those functions were doing.
-
-Wow. The patch has hunks for:
-
-  pci_slot_lock()               # lock bridge
-  pci_slot_unlock()             # unlock bridge
-  pci_slot_trylock()            # lock bridge
-
-which makes perfect sense.
-
-But when I apply it on either pci/main (v6.19-rc1) or pci/next, "git
-am" puts those hunks in:
-
-  pci_slot_unlock()             # unlock bridge (as expected)
-  pci_slot_trylock()            # lock bridge (as expected)
-  pci_slot_restore_locked()     # lock bridge (completely wrong spot)
-
-I have no idea why the pci_slot_lock() hunk got applied in
-pci_slot_restore_locked().  I do notice that the line offsets in your
-patch are much different than mine, so you must have other changes in
-pci.c; maybe that accounts for the confusion.
-
-Can you regenerate this patch based on v6.19-rc1?  And maybe
-incorporate Dan's "bridge = slot->bus->self" idea at the same time?
-
-I'll attach my "git log -p" at the bottom if you want to see why I was
-so confused.  What a day ;)
-
-> > It's unfortunate that pci_bus_trylock() and pci_slot_trylock() are so
-> > similar but separate.  If there were combined, this kind of issue
-> > where one is fixed but the other isn't wouldn't happen.
+> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> ---
+>  arch/arm64/boot/dts/qcom/sm8650.dtsi | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Honestly I think the _slot versions should go away. Those don't handle
-> resetting a bus with multiple device's on it: only some functions get
-> saved and restored even though the bus reset hits all the devices. I'm
-> working on a fix for that, but it's more difficult than these patches.
-> 
-> > But what about pci_bus_lock() and pci_slot_lock()?  They are also
-> > almost identical, but pci_bus_lock() locks bus->self while
-> > pci_slot_lock() does not.  Should it?
-> 
-> It should, and this patch is changing pci_slot_lock() to do that.
-> 
-> > All these almost-but-not-quite identical paths make my head hurt ;)
-> 
-> I agree! And the functions that sound almost the same but work quite
-> different? Looking at "pci_bus_reset" vs "pci_reset_bus" :)
->  
-> > >   pcieport 0000:e2:05.0: unlocked secondary bus reset via: pciehp_reset_slot+0x55/0xa0
-> > > 
-> > > Signed-off-by: Keith Busch <kbusch@kernel.org>
-> > > ---
-> > >  drivers/pci/pci.c | 12 +++++++++++-
-> > >  1 file changed, 11 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 3378221c5723a..5f8b0d06a1459 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -5460,6 +5460,8 @@ static void pci_slot_lock(struct pci_slot *slot)
-> > >  {
-> > >  	struct pci_dev *dev;
-> > >  
-> > > +	if (slot->bus->self)
-> > > +		pci_dev_lock(slot->bus->self);
-> > >  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-> > >  		if (!dev->slot || dev->slot != slot)
-> > >  			continue;
-> > > @@ -5483,12 +5485,17 @@ static void pci_slot_unlock(struct pci_slot *slot)
-> > >  		else
-> > >  			pci_dev_unlock(dev);
-> > >  	}
-> > > +	if (slot->bus->self)
-> > > +		pci_dev_unlock(slot->bus->self);
-> > >  }
-> > >  
-> > >  /* Return 1 on successful lock, 0 on contention */
-> > >  static int pci_slot_trylock(struct pci_slot *slot)
-> > >  {
-> > > -	struct pci_dev *dev;
-> > > +	struct pci_dev *dev, *bridge = slot->bus->self;
-> > > +
-> > > +	if (bridge && !pci_dev_trylock(bridge))
-> > > +		return 0;
-> > >  
-> > >  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-> > >  		if (!dev->slot || dev->slot != slot)
-> > > @@ -5511,6 +5518,9 @@ static int pci_slot_trylock(struct pci_slot *slot)
-> > >  		else
-> > >  			pci_dev_unlock(dev);
-> > >  	}
-> > > +
-> > > +	if (bridge)
-> > > +		pci_dev_unlock(bridge);
-> > >  	return 0;
-> > >  }
-> > >  
-> > > -- 
-> > > 2.47.3
+
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 
 
-$ git log -p v6.19-rc1.. | cat
-commit 44c651ea87f9 ("pci: fix slot reset device locking")
-Author: Keith Busch <kbusch@kernel.org>
-Date:   Fri Jan 16 10:41:50 2026 -0800
-
-    pci: fix slot reset device locking
-    
-    Like pci_bus_lock, pci_slot_lock needs to lock the bridge device to
-    prevent the warning:
-    
-      pcieport 0000:e2:05.0: unlocked secondary bus reset via: pciehp_reset_slot+0x55/0xa0
-    
-    Signed-off-by: Keith Busch <kbusch@kernel.org>
-    Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-    Link: https://patch.msgid.link/20260116184150.3013258-2-kbusch@meta.com
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 59319e08fca6..73764e66cabd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5335,12 +5335,17 @@ static void pci_slot_unlock(struct pci_slot *slot)
- 		else
- 			pci_dev_unlock(dev);
- 	}
-+	if (slot->bus->self)
-+		pci_dev_unlock(slot->bus->self);
- }
- 
- /* Return 1 on successful lock, 0 on contention */
- static int pci_slot_trylock(struct pci_slot *slot)
- {
--	struct pci_dev *dev;
-+	struct pci_dev *dev, *bridge = slot->bus->self;
-+
-+	if (bridge && !pci_dev_trylock(bridge))
-+		return 0;
- 
- 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
- 		if (!dev->slot || dev->slot != slot)
-@@ -5363,6 +5368,9 @@ static int pci_slot_trylock(struct pci_slot *slot)
- 		else
- 			pci_dev_unlock(dev);
- 	}
-+
-+	if (bridge)
-+		pci_dev_unlock(bridge);
- 	return 0;
- }
- 
-@@ -5425,6 +5433,8 @@ static void pci_slot_restore_locked(struct pci_slot *slot)
- {
- 	struct pci_dev *dev;
- 
-+	if (slot->bus->self)
-+		pci_dev_lock(slot->bus->self);
- 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
- 		if (!dev->slot || dev->slot != slot)
- 			continue;
-commit 3f2aea31058a ("pci: fix slot trylock error handling")
-Author: Keith Busch <kbusch@kernel.org>
-Date:   Fri Jan 16 10:41:49 2026 -0800
-
-    pci: fix slot trylock error handling
-    
-    The device lock isn't held if pci_bus_trylock() fails, so the code had
-    been attempting to improperly unlock it.
-    
-    Fixes: a4e772898f8bf2 ("PCI: Add missing bridge lock to pci_bus_lock()")
-    Signed-off-by: Keith Busch <kbusch@kernel.org>
-    Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-    Link: https://patch.msgid.link/20260116184150.3013258-1-kbusch@meta.com
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 13dbb405dc31..59319e08fca6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5346,10 +5346,8 @@ static int pci_slot_trylock(struct pci_slot *slot)
- 		if (!dev->slot || dev->slot != slot)
- 			continue;
- 		if (dev->subordinate) {
--			if (!pci_bus_trylock(dev->subordinate)) {
--				pci_dev_unlock(dev);
-+			if (!pci_bus_trylock(dev->subordinate))
- 				goto unlock;
--			}
- 		} else if (!pci_dev_trylock(dev))
- 			goto unlock;
- 	}
-
+-- 
+With best wishes
+Dmitry
