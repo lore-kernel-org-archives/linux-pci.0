@@ -1,24 +1,24 @@
 Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6F7AC35FF6D;
-	Thu, 29 Jan 2026 21:42:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E58C436215A;
+	Thu, 29 Jan 2026 21:42:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769722976; cv=none; b=N4++6R22Ea/pVSI8an9BCR7cYVTqHNE7/vEC5U5n9SQwvaWyRbmlZDg/4hurFdG4Rbum986vruXUy3rWZjf1iXvSWzaRhi7r+Rby5EEDx10rcQdrVPmPsRK3+JO7w0lmg4UCL0TXV4JpCgy484UbBvi9MQWuGfkMnB8zu+L1VYc=
+	t=1769722980; cv=none; b=CjTqtLmfiaY5jWiQffSpWe6+pRuYxnVHDbu7FU6AmZ+GwtixmZkpjWuEGvcjGswwisQ+iVw9mKspnmKaiQxKbrNUffoUF9KMzjhI/CTv8k4m+Y2km2pMq9bezN3+RKdNw9SJjAL4dTzQZWSJOh4r75ASn+PAQgARvdwsc1ohCqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769722976; c=relaxed/simple;
-	bh=hGCvc5a/cn7l3mvbNDXCKauGUHV/C8167gFht/EUMYA=;
+	s=arc-20240116; t=1769722980; c=relaxed/simple;
+	bh=pjNdXs1XG7FSLytHcYFQJ/7f09hF3Z8HlOIASNDhvOM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fg9bIAaVQO+E9L+oWypPJyPh/JsIoyamckIZ2lOn9arMsbaJAcaIuEe+kGDboAB6ifdD3PXjOI4+p8y6f+qgHZxPs8P167o4xaIgoRA5cT+7iRJCxUYEufNZj97eQK3drfll15+TUwG0OPrCra+bcfyC+ki9vRI5nx8hHwemBB8=
+	 MIME-Version; b=plSu9YMX0SwtVAsPjvIoZafohM9mL8x88H7MnGNY2ckCrIfnpc2cExrWj7LCKTiIpwMKuZj1bKcN7sMxw+iyOGpppPrlhD1rWNCMXhzpgcjmdNlOnMu+eL40El+UxczhW9P9vos7QphyUH2lN/Dl5b9chvr7xbE7fWbA/aXSGuY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: D0uwQvevQXuvk38+7tec7w==
-X-CSE-MsgGUID: A52LQG0vQh2J4BoTWnIELA==
+X-CSE-ConnectionGUID: TSzdQVGNS5OIqlokyihhag==
+X-CSE-MsgGUID: GHfsmsCnRdKwcXrtzduXbw==
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 30 Jan 2026 06:42:53 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 30 Jan 2026 06:42:58 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.73])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id F127E4091DC5;
-	Fri, 30 Jan 2026 06:42:47 +0900 (JST)
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id A7DC1408FDE1;
+	Fri, 30 Jan 2026 06:42:53 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,9 +37,9 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v4 09/15] PCI: rzg3s-host: Add SoC-specific configuration and initialization callbacks
-Date: Thu, 29 Jan 2026 22:41:23 +0100
-Message-ID: <20260129214130.16067-10-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v4 10/15] PCI: rzg3s-host: Explicitly set class code for RZ/G3E compatibility
+Date: Thu, 29 Jan 2026 22:41:24 +0100
+Message-ID: <20260129214130.16067-11-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260129214130.16067-1-john.madieu.xa@bp.renesas.com>
 References: <20260129214130.16067-1-john.madieu.xa@bp.renesas.com>
@@ -51,24 +51,13 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add optional cfg_pre_init, cfg_post_init, and cfg_deinit callbacks
-to handle SoC-specific configuration methods. While RZ/G3S uses the Linux
-reset framework with dedicated reset lines, other SoC variants like RZ/G3E
-control configuration resets through PCIe AXI registers.
+Program the class code register explicitly during PCIe configuration
+initialization. RZ/G3E requires this register to be set, while RZ/G3S
+has these values as hardware defaults.
 
-As Linux reset bulk API gracefully handles optional NULL reset lines
-(num_cfg_resets = 0 for RZ/G3E), the driver continues to use the standard
-reset framework when reset lines are available, while custom callbacks
-are only invoked when provided.
-
-This provides a balanced pattern where:
-- RZ/G3S: Uses reset framework only, no callbacks needed
-- RZ/G3E: Sets num_cfg_resets=0, provides cfg_pre_init/cfg_post_init/cfg_deinit
-- In addition to that, RZ/G3E requires explicit cfg reset and clock turned off
-  to put the PCIe IP in a known state.
-
-Add cfg_pre_init, cfg_post_init, and cfg_deinit callbacks to support
-custom configuration mechanism in preparation to RZ/G3E PCIe support.
+This configuration is harmless for RZ/G3S where these match the hardware
+defaults, and necessary for RZ/G3E to properly identify the device as a
+PCI bridge.
 
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
@@ -76,176 +65,38 @@ Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 Changes:
 
 v4: No changes
-
 v3: No changes
+v2: No changes
 
-v2:
- - Renamed callbacks as per Claudiu's comments
- - Reworded goto labels to be consistents with callbacks
-
- drivers/pci/controller/pcie-rzg3s-host.c | 66 +++++++++++++++++-------
- 1 file changed, 46 insertions(+), 20 deletions(-)
+ drivers/pci/controller/pcie-rzg3s-host.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index a6fb2ec4a341..15ccd9095a3e 100644
+index 15ccd9095a3e..76f6d940ba45 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -223,6 +223,9 @@ struct rzg3s_pcie_host;
- /**
-  * struct rzg3s_pcie_soc_data - SoC specific data
-  * @init_phy: PHY initialization function
-+ * @config_pre_init: Optional callback for SoC-specific pre-configuration
-+ * @config_post_init: Callback for SoC-specific post-configuration
-+ * @config_deinit: Callback for SoC-specific de-initialization
-  * @power_resets: array with the resets that need to be de-asserted after
-  *                power-on
-  * @cfg_resets: array with the resets that need to be de-asserted after
-@@ -233,6 +236,9 @@ struct rzg3s_pcie_host;
-  */
- struct rzg3s_pcie_soc_data {
- 	int (*init_phy)(struct rzg3s_pcie_host *host);
-+	void (*config_pre_init)(struct rzg3s_pcie_host *host);
-+	int (*config_post_init)(struct rzg3s_pcie_host *host);
-+	int (*config_deinit)(struct rzg3s_pcie_host *host);
- 	const char * const *power_resets;
- 	const char * const *cfg_resets;
- 	struct rzg3s_sysc_info sysc_info;
-@@ -1082,6 +1088,18 @@ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
- 	return 0;
- }
- 
-+static int rzg3s_config_post_init(struct rzg3s_pcie_host *host)
-+{
-+	return reset_control_bulk_deassert(host->data->num_cfg_resets,
-+					   host->cfg_resets);
-+}
-+
-+static int rzg3s_config_deinit(struct rzg3s_pcie_host *host)
-+{
-+	return reset_control_bulk_assert(host->data->num_cfg_resets,
-+					 host->cfg_resets);
-+}
-+
- static void rzg3s_pcie_irq_init(struct rzg3s_pcie_host *host)
+@@ -1054,6 +1054,7 @@ static int rzg3s_pcie_set_max_link_speed(struct rzg3s_pcie_host *host)
+ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
  {
- 	/*
-@@ -1229,20 +1247,24 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
- 	u32 val;
- 	int ret;
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
++	u32 mask = GENMASK(31, 8);
+ 	struct resource_entry *ft;
+ 	struct resource *bus;
+ 	u8 subordinate_bus;
+@@ -1077,6 +1078,13 @@ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
+ 	writel_relaxed(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00L);
+ 	writel_relaxed(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00U);
  
-+	/* SoC-specific pre-configuration */
-+	if (host->data->config_pre_init)
-+		host->data->config_pre_init(host);
++	/*
++	 * Explicitly program class code. RZ/G3E requires this configuration.
++	 * Harmless for RZ/G3S where this matches the hardware default.
++	 */
++	rzg3s_pcie_update_bits(host->pcie, PCI_CLASS_REVISION, mask,
++			       FIELD_PREP(mask, PCI_CLASS_BRIDGE_PCI_NORMAL));
 +
- 	/* Initialize the PCIe related registers */
- 	ret = rzg3s_pcie_config_init(host);
- 	if (ret)
--		return ret;
-+		goto config_deinit;
+ 	/* Disable access control to the CFGU */
+ 	writel_relaxed(0, host->axi + RZG3S_PCI_PERM);
  
- 	ret = rzg3s_pcie_host_init_port(host);
- 	if (ret)
--		return ret;
-+		goto config_deinit;
- 
- 	/* Initialize the interrupts */
- 	rzg3s_pcie_irq_init(host);
- 
--	ret = reset_control_bulk_deassert(host->data->num_cfg_resets,
--					  host->cfg_resets);
-+	/* SoC-specific post-configuration */
-+	ret = host->data->config_post_init(host);
- 	if (ret)
- 		goto disable_port_refclk;
- 
-@@ -1253,19 +1275,22 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
- 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
- 				 PCIE_LINK_WAIT_MAX_RETRIES);
- 	if (ret)
--		goto cfg_resets_deassert;
-+		goto config_deinit_post;
- 
- 	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
- 	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
- 
- 	return 0;
- 
--cfg_resets_deassert:
--	reset_control_bulk_assert(host->data->num_cfg_resets,
--				  host->cfg_resets);
-+config_deinit_post:
-+	host->data->config_deinit(host);
- disable_port_refclk:
- 	clk_disable_unprepare(host->port.refclk);
- 	return ret;
-+
-+config_deinit:
-+	host->data->config_deinit(host);
-+	return ret;
- }
- 
- static void rzg3s_pcie_set_inbound_window(struct rzg3s_pcie_host *host,
-@@ -1631,7 +1656,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
- 
- host_probe_teardown:
- 	rzg3s_pcie_teardown_irqdomain(host);
--	reset_control_bulk_assert(host->data->num_cfg_resets, host->cfg_resets);
-+	host->data->config_deinit(host);
- rpm_put:
- 	pm_runtime_put_sync(dev);
- rpm_disable:
-@@ -1666,32 +1691,31 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
- 
- 	clk_disable_unprepare(port->refclk);
- 
--	ret = reset_control_bulk_assert(data->num_power_resets,
--					host->power_resets);
-+	/* SoC-specific de-initialization */
-+	ret = data->config_deinit(host);
- 	if (ret)
--		goto refclk_restore;
-+		goto config_reinit;
- 
--	ret = reset_control_bulk_assert(data->num_cfg_resets,
--					host->cfg_resets);
-+	ret = reset_control_bulk_assert(data->num_power_resets,
-+					host->power_resets);
- 	if (ret)
--		goto power_resets_restore;
-+		goto config_reinit;
- 
- 	ret = regmap_update_bits(sysc->regmap, sysc->info->rst_rsm_b.offset,
- 				 sysc->info->rst_rsm_b.mask,
- 				 field_prep(sysc->info->rst_rsm_b.mask, 0));
- 	if (ret)
--		goto cfg_resets_restore;
-+		goto power_resets_restore;
- 
- 	return 0;
- 
- 	/* Restore the previous state if any error happens */
--cfg_resets_restore:
--	reset_control_bulk_deassert(data->num_cfg_resets,
--				    host->cfg_resets);
- power_resets_restore:
- 	reset_control_bulk_deassert(data->num_power_resets,
- 				    host->power_resets);
--refclk_restore:
-+config_reinit:
-+	data->config_post_init(host);
-+
- 	clk_prepare_enable(port->refclk);
- 	pm_runtime_resume_and_get(dev);
- 	return ret;
-@@ -1759,6 +1783,8 @@ static const struct rzg3s_pcie_soc_data rzg3s_soc_data = {
- 	.num_power_resets = ARRAY_SIZE(rzg3s_soc_power_resets),
- 	.cfg_resets = rzg3s_soc_cfg_resets,
- 	.num_cfg_resets = ARRAY_SIZE(rzg3s_soc_cfg_resets),
-+	.config_post_init = rzg3s_config_post_init,
-+	.config_deinit = rzg3s_config_deinit,
- 	.init_phy = rzg3s_soc_pcie_init_phy,
- 	.sysc_info = {
- 		.rst_rsm_b = {
 -- 
 2.25.1
 
