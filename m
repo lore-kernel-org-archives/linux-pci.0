@@ -1,268 +1,249 @@
-Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C43320A00;
-	Thu, 29 Jan 2026 01:56:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769651818; cv=none; b=BJBaBnZJgefxRTJX9/G7Jov+QTlf5Z8YYf2HxMr6zz5/lrtAbIh3WASH3wAgLBWriwdUHcF6aQHjvoMlrUxvBfrz5XM1kWjbYLaTzb7ENvaeiBOMDR7Hhh88l6tY86Gwy9RWiC9i42A5Ew7bqNNT9urNhy8W85MasS2VvfX7vno=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769651818; c=relaxed/simple;
-	bh=IqxIpMieum29Js0GqHoIO1rknN/6jq93T0gkC6EKroQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=kGOpLi5xOV2iFxfy6AtfwKjyYfoRrkwDmlVoNh8qDxxvxIAezBjHyS1n7TAEtevcseujKrnZ7xC35lgowRNEbArnFbgM5lxBcCfVVgyo57aUN5DP1iyjSNaNWygzuMwVJD7gBHIj/TFGTLR12meG0DwTs68X+zZCF4NgTXBtdXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from [127.0.0.2] (unknown [210.73.43.101])
-	by APP-05 (Coremail) with SMTP id zQCowAAntwpDvnpps5z0Bg--.39391S3;
-	Thu, 29 Jan 2026 09:56:19 +0800 (CST)
-From: Vivian Wang <wangruikang@iscas.ac.cn>
-Date: Thu, 29 Jan 2026 09:56:06 +0800
-Subject: [PATCH v4 1/4] PCI/MSI: Conservatively generalize no_64bit_msi
- into msi_addr_mask
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D83334A797;
+	Thu, 29 Jan 2026 03:28:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.10
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769657289; cv=fail; b=oyugw9N8+VY5IEvRhOSKKwHsuY9Eo5zUV6yoaeuiLw72U+5R4+uU5sIj7TCOLCBkG0lnnZHP2yMKYfne4M2ywsmRmB6uf6t7L6DcAvEitWUxCcfpwYkfxZn99FkGt4wCcnb9rdNdn1Jy9AnBhVcXJqSprGiPlxW8b578J1YspS8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769657289; c=relaxed/simple;
+	bh=3BmHjUM0BiK8E+BLat32ca754PpJd88Om4ltiZIstp4=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Zs0Or/qo64GD9pWhe3Ek1wPMXRZ4t2YFGXtke52zv26NjYjBI4IrN47gNyS263VfVn37haLNHsNiuE0BX+yIvwCjGl5IXsKIqLcxZssl4a4hliX4Kox0pr/KJGlTWN4MDtFJBU7d583ROWUDGXse6ciYwRRKNT/rmMUE5YXLiog=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q7ETT01d; arc=fail smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q7ETT01d"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769657289; x=1801193289;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=3BmHjUM0BiK8E+BLat32ca754PpJd88Om4ltiZIstp4=;
+  b=Q7ETT01dXhAIxB4vbnl76ImbKuPas+NrtTVYeWAIJ7D6EqQhm/x9SGXw
+   QuA/hVg33+sllYIIvPVJOBsklWufxahi+1uSRaj8uxJCSaGwAQBrHn51n
+   AVBGdb0Py+H5PDcWz3hQHMBsAf3gvEGWeTn7g3ZZmbTXX0INWL1kQ62qu
+   4cHMbfYAT+j25kNzyXJfE6tbL+Vz7fjgNscsvGTT62eY0KW9TynC4uUUI
+   5ezHSc28/iQ9qD+iFlN8JJxzVPCE4DFVDm2FqRF5Q67Bs4EtebKt80ybz
+   SNh0dMvTlQJ6jmlPKZw5ANlpQbuw8bo2UzgCxlFpO7MRX/ImKgQSJuOMY
+   g==;
+X-CSE-ConnectionGUID: jYP2joiFRbKO94H/Ioj5/w==
+X-CSE-MsgGUID: h7L0yG0UTNK5+1vimFfbHg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11685"; a="88301281"
+X-IronPort-AV: E=Sophos;i="6.21,260,1763452800"; 
+   d="scan'208";a="88301281"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2026 19:28:08 -0800
+X-CSE-ConnectionGUID: Sma15Z4TR9GUm10HZCSFGQ==
+X-CSE-MsgGUID: c0EOM+WNS025EPGbx/Q8vg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,260,1763452800"; 
+   d="scan'208";a="208801755"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by fmviesa010.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2026 19:28:07 -0800
+Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Wed, 28 Jan 2026 19:28:06 -0800
+Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
+ FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35 via Frontend Transport; Wed, 28 Jan 2026 19:28:06 -0800
+Received: from PH7PR06CU001.outbound.protection.outlook.com (52.101.201.62) by
+ edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Wed, 28 Jan 2026 19:28:06 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=YxIghJ9rzxJWHeWToore79Xmf6wZ2aEx77Vi2PFNznP96h0rZ86cgkZqzhPLp3vk9lF9Funv9c8W2zVDuPv2/NxZHS9HTcc7KLZjYp9KkoZ1ao+IxcG0YgOfsTZjlB3QUHQMtVB634nB6ZbDTQbufYrfpiT9Du2yRLXptunirPJ7dtBMSu8EWVSdQchmNf5iiWGlcwfkMfUQ28tv5Hv6c6LheVQzCVwk0oyBIU/qY/hBypJRUqjO9E4XFVTHJe3KqWvW652vWnv7myjl/ohwcPBFBpwWXnFhsCEpnFNLdjFD2hqw5KIryiAhyc0Tr2aYpYotZYNKIAY7JV/8mMX24g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1J0QQEYsLja46NKI4IIIqWBEX798K3yTqKi42qkkq8A=;
+ b=GNZr7CKmAYOjqltui/z2kccj9ImgbYqCvgF9bWDH5U4gWqjmjgrYNHQAn2qvrhRICJgXAJrTXLTB33aUcd3HfqAuhVc7E4JhSn9doboi2hvvQkDNYCAzM6V3BulYv1OuWOUdav9IbKp/AtmQYbrZiXGD4s9gSWuFmn0SKE6gJ59JLRsrot36eAEpujLTo19zwPP3hlie7r62xb6HjlkPADWriYcgsrZvdzhl6xYDMy6PKDold1HAkf9BztBC4T8kwszUnwOHiVHKXpp5Ri51Bw4JGL20P1Z8sAr06lPbUhnLzwyaWeGSnMdVmKQgI/w+VdFqUyoV5vyGMq5GE+fFAg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com (2603:10b6:408:135::18)
+ by CH0PR11MB8086.namprd11.prod.outlook.com (2603:10b6:610:190::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.7; Thu, 29 Jan
+ 2026 03:28:03 +0000
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f]) by BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::f997:762f:f079:134f%5]) with mapi id 15.20.9542.010; Thu, 29 Jan 2026
+ 03:28:03 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+CC: "Williams, Dan J" <dan.j.williams@intel.com>, Jonathan Cameron
+	<jonathan.cameron@huawei.com>, Nicolin Chen <nicolinc@nvidia.com>,
+	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
+	<robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"joro@8bytes.org" <joro@8bytes.org>, "praan@google.com" <praan@google.com>,
+	"baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+	"miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "iommu@lists.linux.dev"
+	<iommu@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-cxl@vger.kernel.org"
+	<linux-cxl@vger.kernel.org>
+Subject: RE: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
+Thread-Topic: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
+Thread-Index: AQHch228OMA01jUUyEiv70mzhaALBrVcR9QggAAjmICAADJUgIABF8EAgAB9uwCAAG1mgIAHDgXwgAB/AgCAAJ1EwIAA1Y6AgADt7EA=
+Date: Thu, 29 Jan 2026 03:28:03 +0000
+Message-ID: <BN9PR11MB52769F0A4DE065DD1A5CA8108C9EA@BN9PR11MB5276.namprd11.prod.outlook.com>
+References: <d1768bb6384050a23769f20ca28216f520f77e26.1768624181.git.nicolinc@nvidia.com>
+ <BL1PR11MB5271F0BDC68C2D7F172122E98C96A@BL1PR11MB5271.namprd11.prod.outlook.com>
+ <20260121100307.00004e60@huawei.com> <20260121130315.GE1134360@nvidia.com>
+ <6971b9406d069_1d33100df@dwillia2-mobl4.notmuch>
+ <20260122131432.GJ1134360@nvidia.com>
+ <69727e7ded712_3095100ab@dwillia2-mobl4.notmuch>
+ <BN9PR11MB527649A0049CA195E7BCF9218C90A@BN9PR11MB5276.namprd11.prod.outlook.com>
+ <20260127150440.GF1134360@nvidia.com>
+ <BN9PR11MB52760F8EE835B4D06BAF0C248C91A@BN9PR11MB5276.namprd11.prod.outlook.com>
+ <20260128131153.GW1134360@nvidia.com>
+In-Reply-To: <20260128131153.GW1134360@nvidia.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BN9PR11MB5276:EE_|CH0PR11MB8086:EE_
+x-ms-office365-filtering-correlation-id: e9ac235b-89f8-49b9-12c7-08de5ee66960
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|7416014|376014|38070700021;
+x-microsoft-antispam-message-info: =?us-ascii?Q?8CICS33dovwyEKKiqGvayb+C+oUsTnWGYea0M0KnVBKWEdoMonaF2MwHoJF3?=
+ =?us-ascii?Q?Lrv01YR/auf3qVsQPZaPJFMjM6944kE6Ry4+dTKInxrIR8SD+pHFl/C/H+XO?=
+ =?us-ascii?Q?UmQeaGS8eMl7XUTccwPgHHKXCsrlR1yZYgIXDLwq2bOkaGMUqxM8gMtuVbMG?=
+ =?us-ascii?Q?4DVihymB6Wv872m9hWH1no5iWWbsFCSLxdIveZppsVxWQa92pdbihf9qZN59?=
+ =?us-ascii?Q?UJbgjj3GPyUHbqkyo+EML9HWgIkYSvGs4HWTNPjWOBlpoEv91YbJwpPziNA4?=
+ =?us-ascii?Q?3ynDa6lT+G7YC7woGn5nRViZp6HYxlsXromWhaM8+/4wkKALjCy7nadeWa6O?=
+ =?us-ascii?Q?/n3CddTlIcZ3rACi0JsTMdSpJmb/z2Qmd1cUsLRgBWz6KSiiRmdz4HzK9rbh?=
+ =?us-ascii?Q?IenlCDocouIl9beUJIW3WSjvWGnO7xlUBLqwtOKV/b6uyMpX1BDiTXoz/kzA?=
+ =?us-ascii?Q?ULzKS+PsVNiIkR3NdtkuIIUHgKmAbfVMWNK5o/f8dUz34vCHwRRIhUMIu2qj?=
+ =?us-ascii?Q?iHPqDOB/DpMY8Gl+nVpJdtFln6e7NI41TkgtWWlFOkrAyCtKGa70V4eCnHLs?=
+ =?us-ascii?Q?+Xg6rGN32w6RI48+SVNmSEksf9/gz1AUHXSW+kw4zNB4adOxiCEr3AeTt5Oc?=
+ =?us-ascii?Q?9ALXiS5GTm2fLkCqtofK7i3yRikPTSRdT3xgyIpd0pvB+nW6wtKHgwFb+DOo?=
+ =?us-ascii?Q?5fFWiozCP/m2eoOh5pLyk7H/vdnweyDQr65V0v+zzbdXH6emEFcSU7/MYoyY?=
+ =?us-ascii?Q?FvDgYPtX04Np2dUEdKa6TJw8YTxSYXYC/+MMQDVerQ3a38A9d/R4PhK6yl25?=
+ =?us-ascii?Q?62km1QpHGHLyb6Lv9OrPeE+Rd+Zs5OKpuN4sRNe+vowanLD5M4dklAWzUqIc?=
+ =?us-ascii?Q?5X9/+BIXXEDZuP5it4lvIJfJEHIh7uy/ScPSogloq+/64c5/rniUgps4nicw?=
+ =?us-ascii?Q?A4aFHuJ45uHPtzPbiQ8f/1uoiT2P6xLiLYvqWFPdRZfc2vW+vPUsUDaiylHe?=
+ =?us-ascii?Q?XtE5XjM6sfzb66WMUzDNc8Oa/wOgv2zz9SOe0JiV761V14d0BDcDe2C4SPix?=
+ =?us-ascii?Q?FXhQYr7wCHxw4xlpSAIYjxzDMDXs82CzspIznX3Xgj5XmoB+zfWUwNRs98UW?=
+ =?us-ascii?Q?EKlG8s9TtvksskmsOoUsekyCL5IlO2cUhq5MLRghPgrBRFwB+So/aJ9K/zK3?=
+ =?us-ascii?Q?Do98wJFWwZXx/PrksWgLkOj6UulR9zrpnpc47MkwdPsXClIbO79obngqqJXz?=
+ =?us-ascii?Q?OXxGS5a2uSGmMQNCrpOHfVqYWsob5Ky72F4dXVtxrgqUoLeXmHJ4WDD8wAiM?=
+ =?us-ascii?Q?SzVWnKYxWsybGT7nfATe76LoRRZa/DHui+VNWOTdhb6M7BjKeCbMQsRtbyNd?=
+ =?us-ascii?Q?3+5ChkhHjSZ0OBbIAFMo6v+24HbRPUK9MbGe5NC1TiNadEoK4uR3zR5V3aey?=
+ =?us-ascii?Q?orUEM4w4T1oeFzAe20Afiv/mF6r2kJo6y0Fm2BoefabalABymlWSG1MdPuHm?=
+ =?us-ascii?Q?Ywt5IskxB2r62uANa4aeElxMJIED8iq9lRGsNR9OKX/vLFdCaZh6LIrCeZpp?=
+ =?us-ascii?Q?+nyQ9+JHm/ofr2QjYctXeeBMbXSfJxG9xUi5YGygYnNokFAImSicFE9xrTG1?=
+ =?us-ascii?Q?Ws1qiXE3R4ljlb7Q7R/lXyU=3D?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR11MB5276.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?8VPTsG3CTvl+H57Ou4bggqYibXPiyd7KBoOWjWT8QXGO1S2eUx75LNyCfI3I?=
+ =?us-ascii?Q?oUICQgKoqNmVR0lTTBS7ncoVQkEPjG/BXVBetGEZvBu0gD4neT6uNmfGlyZ2?=
+ =?us-ascii?Q?LmIWOJIB1VgGrFrOqsKzbmNc5GsY4858wsdKj/IC+kwa24+G9lN4NaMkUYAE?=
+ =?us-ascii?Q?jc1FhA19pIZ7uWo6jTpF1Ir24XyfuK7xOAB9B5KdHxy95oGbCx0nHh8sOTU/?=
+ =?us-ascii?Q?D6WaJT1DbrTISg0WjrEgh2hXCvfiUCe3SiXntoWVAPWeYeEPZg234NmAWUDc?=
+ =?us-ascii?Q?R2Ms5eFoMZUzAYAJysuCBXaQN1zDbI+6H0fqhAyj1Xu3Z/NGobqbBg5XGitx?=
+ =?us-ascii?Q?F2J0z/oaClTXrf4EIF+QsIAEJQvjeBN/tsq3xssgWqE2lF/NqOvQTNZEJo/B?=
+ =?us-ascii?Q?Earb9AOsJgtzt2D2LYOJZPjbLyTAjJKgQSbuwngKxjd5e36vcTI0oEcujXJ7?=
+ =?us-ascii?Q?Y+UUG4b7pZNq0XarkwGmrkXFvjcxNaUJxDB56DS+l4rQ3fQaC+Ugw0whEb1w?=
+ =?us-ascii?Q?qc8ME348ABhyCJYVenPGEIB8HBjeyt4RBA3bN62/H17ysv/5aMXdJvo4Jua9?=
+ =?us-ascii?Q?KIyx1yrL8c1ukx7nyxAV3ra/77rf7uHvEXuyXWJbpBs6Bwd/ZmgBJ0T5a8BZ?=
+ =?us-ascii?Q?V7yPaeaAtBeqbluQ5R1I2Jy/GiDnXTenv9j2vGhUdsZIzzcbc4/12cTPlV4+?=
+ =?us-ascii?Q?KKJpL5/RE/D5R9QqM3nUI9Bnm3rtyR8u0ErtcG7otuiWBopNUwuFELX895jq?=
+ =?us-ascii?Q?MPchUwwAk1uXCevwptwoFHK6tVY8YI/OLd/xej7IpgW7eTwFYnUOpJRjX1mH?=
+ =?us-ascii?Q?LUQoYKiOMRyetHykGZenF0KNqAh9l6eWUdLP1vEdtJ0zZNKMm/OWMKiKHzyg?=
+ =?us-ascii?Q?qUJWiynuO4Szr4gVaU65wQvLIPdla12nif99N4xPkQn9G8gPwnuGCKAniM5Y?=
+ =?us-ascii?Q?rAGVXr9se5Oit85JE09SuzQ6rTFj0SMIGGHvPYxZs0IHYaiymNXgPPxaN7hQ?=
+ =?us-ascii?Q?JZxtRMMGiwuomC08iWJoF1KExLYL8LE+oUk208RLjyi6fesMgUz73hYYNN6a?=
+ =?us-ascii?Q?xpSNLBHbWoEFkfDbGW4QjSbiCy2KamGCGefa6U9UuFNDwIXxkaSPLiER4m7c?=
+ =?us-ascii?Q?gIELQ5ZcietLXpG/AoJJItnpb+EVlIcShWUPmLkU0mbZav9MdyL5SoMUObXk?=
+ =?us-ascii?Q?kz6+U2T/rbVFYpxuK0pcL3AOHWvLMZS8qcsQ9QbH/4TCyZQprl1SeE5Prwbz?=
+ =?us-ascii?Q?Xq6NXot1IXNYD1Bifps64WeH9c4+oCCN1Q3K6xaMRDYUg7elm3tVoVj7PTBs?=
+ =?us-ascii?Q?uyq1hKSjKxT9hxseGo0MXxw8lsN7Ii1sDy6KnU1YG2r5SOyNHafvUksREBnn?=
+ =?us-ascii?Q?WYJiXqZF3vY4LhTeQXy+5plOfpZURzoKp5jWA8e4bI12iIv0e7BYz74Jug+T?=
+ =?us-ascii?Q?kyUUd/krDaS+l7+hujZ2e2dy+ceHXwCzsxsNaUqMpQHrijzJJlKOH1j5rYDa?=
+ =?us-ascii?Q?tynD0Awhj5p0AsIUv2E1v16X1naXco+JaS8p3ZgtVEbn0qLbXVbVZuNxIQwr?=
+ =?us-ascii?Q?V+eAuaK8vLaQn7tdaCw2rv83pcs7wmTbxvl9Oj2Pa4eNP0Dgf0011SqMQzfm?=
+ =?us-ascii?Q?xjTDnsK/4sKoqBy6YOP5eu7MpLCC4YwG6q480FtUIhSzXAhjaM0qxGHwPW7b?=
+ =?us-ascii?Q?0NTMCKeYCqYBdSe6+vEwY5KgtHl0vcqbNfuwm5TBbsrM7rGItft0O5e491XT?=
+ =?us-ascii?Q?y830WzflGQ=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260129-pci-msi-addr-mask-v4-1-70da998f2750@iscas.ac.cn>
-References: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
-In-Reply-To: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
-To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
- Alex Deucher <alexander.deucher@amd.com>, 
- =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>, 
- Takashi Iwai <tiwai@suse.com>, Brett Creeley <brett.creeley@amd.com>
-Cc: Han Gao <gaohan@iscas.ac.cn>, Vivian Wang <wangruikang@iscas.ac.cn>, 
- Thomas Gleixner <tglx@kernel.org>, linuxppc-dev@lists.ozlabs.org, 
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org, 
- dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, 
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
- linux-riscv@lists.infradead.org, sophgo@lists.linux.dev, 
- Takashi Iwai <tiwai@suse.de>
-X-Mailer: b4 0.14.3
-X-CM-TRANSID:zQCowAAntwpDvnpps5z0Bg--.39391S3
-X-Coremail-Antispam: 1UD129KBjvJXoW3WryfWw1rKrWUXFW3Ar43Jrb_yoW3Arykpa
-	yDGFWfKrWrK3yUJayqy3WUZF13Xan093yfWrWUK3sa9anIvFyUXFn7try3Jwn7XrsFkF4a
-	qFyDKw4UWFnxX3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UM2
-	8EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr0_GcWl
-	e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
-	8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
-	jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
-	kIwI1lc7CjxVAaw2AFwI0_GFv_Wrylc2xSY4AK67AK6w4l42xK82IYc2Ij64vIr41l4I8I
-	3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxV
-	WUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAF
-	wI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20x
-	vaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8
-	JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRREfO7UUUUU==
-X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR11MB5276.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e9ac235b-89f8-49b9-12c7-08de5ee66960
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2026 03:28:03.6262
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RrtJNLVB5SHImR423XEZum8LoyQbesVUgiF4ozT4GTFXkksPvpI5Ezkd4sKaKKh8tmafA9tezhEYmWYv1C8czQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR11MB8086
+X-OriginatorOrg: intel.com
 
-Some PCI devices have PCI_MSI_FLAGS_64BIT in the MSI capability, but
-implement less than 64 address bits. This breaks on platforms where such
-a device is assigned an MSI address higher than what's reachable.
+> From: Jason Gunthorpe <jgg@nvidia.com>
+> Sent: Wednesday, January 28, 2026 9:12 PM
+>=20
+> On Wed, Jan 28, 2026 at 12:57:59AM +0000, Tian, Kevin wrote:
+> > > > - Intel: ATS is enabled when a device is probed by intel-iommu driv=
+er
+> > > >   (incompatible with the suggested flow)
+> > >
+> > > This is definately not a good choice :)
+> > >
+> > > IMHO it is security required that the IOMMU driver block Translated
+> > > requests while a BLOCKED domain is attached, and while the IOMMU is
+> > > refusing ATS then device's ATS enable should be disabled.
+> >
+> > It was made that way by commit 5518f239aff1 ("iommu/vt-d: Move
+> > scalable mode ATS enablement to probe path "). The old policy was
+> > same as AMD side, and changed to current way so domain change
+> > in RID won't affect the ATS requirement for PASIDs.
+>=20
+> That's a legimiate thing, but always on is a heavy handed solution.
 
-Currently, the no_64bit_msi bit is set for these devices, meaning that
-only 32-bit MSI addresses are allowed for them. However, on some
-platforms the MSI doorbell address is above the 32-bit limit but within
-the addressable range of the device.
+yes. at that point the rationale was made purely based on functionality
+instead of security.
 
-As a first step to enabling MSI on those combinations of devices and
-platforms, conservatively generalize the single-bit flag no_64bit_msi
-into msi_addr_mask. (The name msi_addr_mask is chosen to avoid confusion
-with msi_mask.)
+>=20
+> The driver should track what is going on with the PASID and enable ATS
+> if required.
+>=20
+> Which also solves this:
+>=20
+> > there is one scenario, e.g. VFIO allows domains attached to RID and
+> > PASIDs being changed independently. It's a sane situation to have
+> > userspace change RID domain via attach/detach/re-attach, while
+> > PASID domains are still active. 'detach' will attach RID to a BLOCKED
+> > domain, then disabling ATS in that window may break PASIDs.
+>=20
+> > How does ARM address this scenario? Is it more suitable to have
+> > a new interface specific for driver bind/unbind to enable/disable
+> > ATS instead of toggling it based on BLOCKED?
+>=20
+> And is what SMMUv3 is doing already. With an IDENTITY translation on
+> the RID it starts out with ATS disabled and switches to IDENTITY with
+> ATS enabled when the first PASID appears. Switches back when the PASID
+> goes away.
+>=20
 
-The translation is essentially:
-
-- no_64bit_msi = 1    ->    msi_addr_mask = DMA_BIT_MASK(32)
-- no_64bit_msi = 0    ->    msi_addr_mask = DMA_BIT_MASK(64)
-- if (no_64bit_msi)   ->    if (msi_addr_mask < DMA_BIT_MASK(64))
-
-Since no values other than DMA_BIT_MASK(32) and DMA_BIT_MASK(64) are
-used, no functional change is intended. Future patches that make use of
-intermediate values of msi_addr_mask will follow, allowing devices that
-cannot use full 64-bit addresses for MSI to work on platforms with MSI
-doorbell above the 32-bit limit.
-
-Acked-by: Takashi Iwai <tiwai@suse.de> # sound
-Reviewed-by: Brett Creeley <brett.creeley@amd.com> # ionic
-Reviewed-by: Thomas Gleixner <tglx@kernel.org>
-Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
----
-v4: Patch message rewording (Thomas)
-
-checkpatch complains about the comment include/linux/pci.h, which I have
-formatted similarly with other comments in the vicinity.
----
- arch/powerpc/platforms/powernv/pci-ioda.c           | 2 +-
- arch/powerpc/platforms/pseries/msi.c                | 4 ++--
- drivers/gpu/drm/radeon/radeon_irq_kms.c             | 2 +-
- drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c | 2 +-
- drivers/pci/msi/msi.c                               | 2 +-
- drivers/pci/msi/pcidev_msi.c                        | 2 +-
- drivers/pci/probe.c                                 | 7 +++++++
- include/linux/pci.h                                 | 8 +++++++-
- sound/hda/controllers/intel.c                       | 2 +-
- 9 files changed, 22 insertions(+), 9 deletions(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index b0c1d9d16fb5..1c78fdfb7b03 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1666,7 +1666,7 @@ static int __pnv_pci_ioda_msi_setup(struct pnv_phb *phb, struct pci_dev *dev,
- 		return -ENXIO;
- 
- 	/* Force 32-bit MSI on some broken devices */
--	if (dev->no_64bit_msi)
-+	if (dev->msi_addr_mask < DMA_BIT_MASK(64))
- 		is_64 = 0;
- 
- 	/* Assign XIVE to PE */
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index a82aaa786e9e..7473c7ca1db0 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -383,7 +383,7 @@ static int rtas_prepare_msi_irqs(struct pci_dev *pdev, int nvec_in, int type,
- 	 */
- again:
- 	if (type == PCI_CAP_ID_MSI) {
--		if (pdev->no_64bit_msi) {
-+		if (pdev->msi_addr_mask < DMA_BIT_MASK(64)) {
- 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSI_FN, nvec);
- 			if (rc < 0) {
- 				/*
-@@ -409,7 +409,7 @@ static int rtas_prepare_msi_irqs(struct pci_dev *pdev, int nvec_in, int type,
- 		if (use_32bit_msi_hack && rc > 0)
- 			rtas_hack_32bit_msi_gen2(pdev);
- 	} else {
--		if (pdev->no_64bit_msi)
-+		if (pdev->msi_addr_mask < DMA_BIT_MASK(64))
- 			rc = rtas_change_msi(pdn, RTAS_CHANGE_32MSIX_FN, nvec);
- 		else
- 			rc = rtas_change_msi(pdn, RTAS_CHANGE_MSIX_FN, nvec);
-diff --git a/drivers/gpu/drm/radeon/radeon_irq_kms.c b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-index 9961251b44ba..d550554a6f3f 100644
---- a/drivers/gpu/drm/radeon/radeon_irq_kms.c
-+++ b/drivers/gpu/drm/radeon/radeon_irq_kms.c
-@@ -252,7 +252,7 @@ static bool radeon_msi_ok(struct radeon_device *rdev)
- 	 */
- 	if (rdev->family < CHIP_BONAIRE) {
- 		dev_info(rdev->dev, "radeon: MSI limited to 32-bit\n");
--		rdev->pdev->no_64bit_msi = 1;
-+		rdev->pdev->msi_addr_mask = DMA_BIT_MASK(32);
- 	}
- 
- 	/* force MSI on */
-diff --git a/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c b/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c
-index 70d86c5f52fb..0671deae9a28 100644
---- a/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c
-+++ b/drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c
-@@ -331,7 +331,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- #ifdef CONFIG_PPC64
- 	/* Ensure MSI/MSI-X interrupts lie within addressable physical memory */
--	pdev->no_64bit_msi = 1;
-+	pdev->msi_addr_mask = DMA_BIT_MASK(32);
- #endif
- 
- 	err = ionic_setup_one(ionic);
-diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-index 34d664139f48..48f5f03d1479 100644
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -322,7 +322,7 @@ static int msi_verify_entries(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
- 
--	if (!dev->no_64bit_msi)
-+	if (dev->msi_addr_mask == DMA_BIT_MASK(64))
- 		return 0;
- 
- 	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
-diff --git a/drivers/pci/msi/pcidev_msi.c b/drivers/pci/msi/pcidev_msi.c
-index 5520aff53b56..0b0346813092 100644
---- a/drivers/pci/msi/pcidev_msi.c
-+++ b/drivers/pci/msi/pcidev_msi.c
-@@ -24,7 +24,7 @@ void pci_msi_init(struct pci_dev *dev)
- 	}
- 
- 	if (!(ctrl & PCI_MSI_FLAGS_64BIT))
--		dev->no_64bit_msi = 1;
-+		dev->msi_addr_mask = DMA_BIT_MASK(32);
- }
- 
- void pci_msix_init(struct pci_dev *dev)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 41183aed8f5d..a2bff57176a3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2047,6 +2047,13 @@ int pci_setup_device(struct pci_dev *dev)
- 	 */
- 	dev->dma_mask = 0xffffffff;
- 
-+	/*
-+	 * Assume 64-bit addresses for MSI initially. Will be changed to 32-bit
-+	 * if MSI (rather than MSI-X) capability does not have
-+	 * PCI_MSI_FLAGS_64BIT. Can also be overridden by driver.
-+	 */
-+	dev->msi_addr_mask = DMA_BIT_MASK(64);
-+
- 	dev_set_name(&dev->dev, "%04x:%02x:%02x.%d", pci_domain_nr(dev->bus),
- 		     dev->bus->number, PCI_SLOT(dev->devfn),
- 		     PCI_FUNC(dev->devfn));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 864775651c6f..0fe32fef0331 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -377,6 +377,13 @@ struct pci_dev {
- 					   0xffffffff.  You only need to change
- 					   this if your device has broken DMA
- 					   or supports 64-bit transfers.  */
-+	u64		msi_addr_mask;	/* Mask of the bits of bus address for
-+					   MSI that this device implements.
-+					   Normally set based on device
-+					   capabilities. You only need to
-+					   change this if your device claims
-+					   to support 64-bit MSI but implements
-+					   fewer than 64 address bits. */
- 
- 	struct device_dma_parameters dma_parms;
- 
-@@ -441,7 +448,6 @@ struct pci_dev {
- 
- 	unsigned int	is_busmaster:1;		/* Is busmaster */
- 	unsigned int	no_msi:1;		/* May not use MSI */
--	unsigned int	no_64bit_msi:1;		/* May only use 32-bit MSIs */
- 	unsigned int	block_cfg_access:1;	/* Config space access blocked */
- 	unsigned int	broken_parity_status:1;	/* Generates false positive parity */
- 	unsigned int	irq_reroute_variant:2;	/* Needs IRQ rerouting variant */
-diff --git a/sound/hda/controllers/intel.c b/sound/hda/controllers/intel.c
-index 1e8e3d61291a..c9542ebdf7e2 100644
---- a/sound/hda/controllers/intel.c
-+++ b/sound/hda/controllers/intel.c
-@@ -1905,7 +1905,7 @@ static int azx_first_init(struct azx *chip)
- 
- 	if (chip->msi && chip->driver_caps & AZX_DCAPS_NO_MSI64) {
- 		dev_dbg(card->dev, "Disabling 64bit MSI\n");
--		pci->no_64bit_msi = true;
-+		pci->msi_addr_mask = DMA_BIT_MASK(32);
- 	}
- 
- 	pci_set_master(pci);
-
--- 
-2.52.0
-
+yes, that should work. In that way the driver binding flow is covered
+automatically.
