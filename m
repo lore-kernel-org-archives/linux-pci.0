@@ -1,25 +1,26 @@
 Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 313F43203B0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CBC92DCF6C;
 	Thu, 29 Jan 2026 01:56:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769651817; cv=none; b=CxZUqHtWsCWpVfGftNO8/DoWKn3zqEJFEQR99u72pKIjGW+ap48Jx/umG9W/3O5+0dZhbZXBO9mFqATGmaGXkhpVDEpJFBopdEPyWPDtaCUs0NHk3SaOLjJTtwecvX0V3a+MPI4Gf0JX6vSD+wqyFn5H7D/fGsxDe0CB/OA88kY=
+	t=1769651817; cv=none; b=uLCqOTgF8xHgoHgxQPGEDANZfPsGM+fup6lX0U7jf5np4fpM3ed7Ec4tcTGq8l5trFoUBopn/TqvFnUOS1BgRSnUHsZO5lMzYQlzuKOjZoGujlvlDP02syggw6oSn4hFTbrrkehoVQFhIzlvKrijhUvP9hT/0nVycYd9PTMQcSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1769651817; c=relaxed/simple;
-	bh=j7CQU4VnbHcO/pWhc7tKbgzkvWg3RjTm1QiVX9uoteQ=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=DRhT1lDb3j1U1rwVSsl9BiNQPCuf/m5QlFrljR6tgP5cGtbU5v6LI3OH5PgP8qLsmJRTFmEFf9okM8ZhW2nwoIHkmaPdZ6OtoQa3ftvM9AIqy3RaIA/EPd+H85VuJ/t6gtRq/KLqvpEzVJiysDIQZ+E6Q3Y5UUVly+1F0PalicY=
+	bh=q8FsTvEB7kNVAruzlCGBRSyg8dUgIWy0ohOveSrJpBk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Jz/y+OZJXvXKk7KYlwLnwt2EVAzTAIFjtbg7O2+onz8IUTiJHxzqLrR68s1seOZTyyDNmkAPJTxwzRIYWpRFTQW4NkyF7psVs3sTguWxk6Fz1qFbIV6Y/q5JmWGPCGv7eEqFEEVP5UHd7ebze0mKjcIT7i/vgueFXF8cQNHVnA0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from [127.0.0.2] (unknown [210.73.43.101])
-	by APP-05 (Coremail) with SMTP id zQCowAAntwpDvnpps5z0Bg--.39391S2;
-	Thu, 29 Jan 2026 09:56:19 +0800 (CST)
+	by APP-05 (Coremail) with SMTP id zQCowAAntwpDvnpps5z0Bg--.39391S4;
+	Thu, 29 Jan 2026 09:56:20 +0800 (CST)
 From: Vivian Wang <wangruikang@iscas.ac.cn>
-Subject: [PATCH v4 0/4] PCI/MSI: Generalize no_64bit_msi into msi_addr_mask
-Date: Thu, 29 Jan 2026 09:56:05 +0800
-Message-Id: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
+Date: Thu, 29 Jan 2026 09:56:07 +0800
+Subject: [PATCH v4 2/4] PCI/MSI: Check msi_addr_mask in
+ msi_verify_entries()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -28,12 +29,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIADW+emkC/23Q3UrFMAwH8FcZvTaj32c9V76HKKRd5wmy7djOo
- oy9u3VHQXGX/5D8ErKyHBPFzM7NylIslGmeatB3DQsXnJ4jUF8zk1waIaWCayAYMwH2fYIR8wv
- I/mQNnqJXjrM6d01xoPfdfHi85RRf3yq93IrMY44Q5nGk5dwU2woHKYindWNf/RfKy5w+9pOK2
- Ae+t+uD7UUAB27QDsFrrwO/pxwwtxjaMO1ekT+G5UKKI0NWY9DSOCVs5zr331C/jaMvFFUNNzi
- PyHVnpP5rbNv2CXj0dcRsAQAA
-X-Change-ID: 20251223-pci-msi-addr-mask-2d765a7eb390
+Message-Id: <20260129-pci-msi-addr-mask-v4-2-70da998f2750@iscas.ac.cn>
+References: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
+In-Reply-To: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
 To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
  Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
  "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
@@ -50,127 +48,69 @@ Cc: Han Gao <gaohan@iscas.ac.cn>, Vivian Wang <wangruikang@iscas.ac.cn>,
  linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org, 
  dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, 
  linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
- linux-riscv@lists.infradead.org, sophgo@lists.linux.dev, 
- Takashi Iwai <tiwai@suse.de>
+ linux-riscv@lists.infradead.org, sophgo@lists.linux.dev
 X-Mailer: b4 0.14.3
-X-CM-TRANSID:zQCowAAntwpDvnpps5z0Bg--.39391S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFy3ZFy7CrWxur4kZryrZwb_yoWrtw4DpF
-	W5G3yagr40yryxKa9rCw47ZF43t3Z5t34xKr1DK3sa9an0vFy8Zrn3tr4ru347Xr4xJw40
-	qr9rW3WkZaykuaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9K14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
-	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wrylc2xSY4AK67AK6w4l42xK82IYc2Ij64vIr4
-	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
-	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
-	v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRRtCzUUUUU
+X-CM-TRANSID:zQCowAAntwpDvnpps5z0Bg--.39391S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7KrW3Cr13uFy7GF4xJw1kKrg_yoW8XrW3pF
+	ZFga1DAr4Fk3W5Jan8Ww1vqF15ZF90qa43GrW8W34a9FnIq3W2yw13K347Xa4aqF18Kw1U
+	ZF9Fyw4UGFs0vFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUQj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr1j6rxd
+	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+	v20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+	IY04v7MxkF7I0En4kS14v26r4a6rW5MxkIecxEwVAFwVWkMxAIw28IcxkI7VAKI48JMxC2
+	0s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI
+	0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE
+	14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2
+	IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_
+	Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRED7sUUUUU=
 X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
 
-The Sophgo SG2042 is a cursed machine in more ways than one.
+Instead of a 32-bit/64-bit dichotomy, check the MSI address against
+msi_addr_mask.
 
-The one way relevant to this patch series is that its PCIe controller
-has neither INTx nor a low-address MSI doorbell wired up. Instead, the
-only usable MSI doorbell is a SoC one at 0x7030010300, which is above
-the 32-bit limit.
+This allows platforms with an MSI doorbell address above the 32-bit
+limit to work with devices without full 64-bit MSI address support, as
+long as the doorbell is within the addressable range of MSI of the
+device.
 
-Currently, the no_64bit_msi flag on a PCI device declares that a device
-needs a 32-bit MSI address. Since no more precise indication is
-possible, devices supporting less than 64 bits of MSI addresses are all
-lumped into one "need 32-bit MSI address" bucket. This of course
-prevents these devices from working with MSI enabled on SG2042 because a
-32-bit MSI doorbell address is not possible. Combined with a lack of
-INTx, some of them have trouble working on SG2042 at all.
-
-There were previous dirtier attempts to allow overriding no_64bit_msi
-for radeon [1] and hda/intel [2].
-
-To fix this, generalize the single bit no_64bit_msi into a full address
-mask msi_addr_mask to more precisely describe the restriction. The
-existing DMA masks seems insufficient, as for e.g. radeon the
-msi_addr_mask and coherent_dma_mask seems to be different on more recent
-devices.
-
-The patches are structured as follows:
-
-- Patch 1 conservatively introduces msi_addr_mask, without introducing
-  any functional changes (hopefully, if I've done everything right), by
-  only using DMA_BIT_MASK(32) and DMA_BIT_MASK(64).
-- The rest of the series actually make use of intermediate values of
-  msi_addr_mask, and should be independently appliable. Patch 2 relaxes
-  msi_verify_entries() to allow intermediate values of msi_addr_mask.
-  Patch 3 onwards raises msi_addr_mask in individual device drivers.
-
-I still believe this safe approach is the way to go, since we don't know
-the MSI addressing limitations of *every single* PCI(e) device out
-there. Brett's comment from v1 [3] indicates at least the *possibility*
-of MSI mask being larger than DMA mask, so let's play it safe for now
-and not randomly disable some other device's MSI just because of this
-one cursed platform.
-
-Tested on SG2042 with a Radeon R5 220 which makes use of radeon and
-hda/intel. PPC changes and pensanto/ionic changes are compile-tested
-only, since I do not have the hardware.
-
-I would appreciate if driver maintainers can take a look and see whether
-the masks I've set makes sense, although I believe they shouldn't cause
-problems on existing platforms. I'm also not familiar with PPC enough to
-touch the arch/powerpc firmware calls further - help would be
-appreciated.
-
-My intention is that the first two patches are taken up by PCI
-maintainers, and the rest go through the maintainers of individual
-drivers since they could use more device-specific testing and review. If
-this is not convenient I'll be happy to split it up or something.
-
-[1]: https://lore.kernel.org/all/20251220163338.3852399-1-gaohan@iscas.ac.cn/
-[2]: https://lore.kernel.org/all/20251220170501.3972438-1-gaohan@iscas.ac.cn/
-[3]: https://lore.kernel.org/all/970e6955-d345-48e3-8ea5-83c577ecc563@amd.com/
-
+Reviewed-by: Thomas Gleixner <tglx@kernel.org>
+Signed-off-by: Vivian Wang <wangruikang@iscas.ac.cn>
 ---
-Changes in v4:
-- Minor patch message rewording (Thomas)
-- Minor code style fix (Thomas)
-- Link to v3: https://lore.kernel.org/r/20260123-pci-msi-addr-mask-v3-0-9f9baa048524@iscas.ac.cn
-
-Changes in v3:
-- Patch 2: %llx -> %#llx while printing addresses (Bjorn)
-- Link to v2: https://lore.kernel.org/r/20260121-pci-msi-addr-mask-v2-0-f42593168989@iscas.ac.cn
-
-Changes in v2:
-- Patch 3: Fix the mask for radeon (Christian)
-- Drop what was patch 5, keep the behavior for pensando unchanged for now
-- Add Cc for linux-riscv and sophgo. Oops.
-- Link to v1: https://lore.kernel.org/r/20251224-pci-msi-addr-mask-v1-0-05a6fcb4b4c0@iscas.ac.cn/
-
+v4: Patch message rewording, and one code style fix (Thomas)
 ---
-Vivian Wang (4):
-      PCI/MSI: Conservatively generalize no_64bit_msi into msi_addr_mask
-      PCI/MSI: Check msi_addr_mask in msi_verify_entries()
-      drm/radeon: Raise msi_addr_mask to dma_bits
-      ALSA: hda/intel: Raise msi_addr_mask to dma_bits
+ drivers/pci/msi/msi.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
- arch/powerpc/platforms/powernv/pci-ioda.c           |  2 +-
- arch/powerpc/platforms/pseries/msi.c                |  4 ++--
- drivers/gpu/drm/radeon/radeon_device.c              |  1 +
- drivers/gpu/drm/radeon/radeon_irq_kms.c             | 10 ----------
- drivers/net/ethernet/pensando/ionic/ionic_bus_pci.c |  2 +-
- drivers/pci/msi/msi.c                               | 10 ++++++----
- drivers/pci/msi/pcidev_msi.c                        |  2 +-
- drivers/pci/probe.c                                 |  7 +++++++
- include/linux/pci.h                                 |  8 +++++++-
- sound/hda/controllers/intel.c                       | 10 +++++-----
- 10 files changed, 31 insertions(+), 25 deletions(-)
----
-base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
-change-id: 20251223-pci-msi-addr-mask-2d765a7eb390
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 48f5f03d1479..424a4ba9b557 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -321,14 +321,16 @@ static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
+ static int msi_verify_entries(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
++	u64 address;
+ 
+ 	if (dev->msi_addr_mask == DMA_BIT_MASK(64))
+ 		return 0;
+ 
+ 	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+-		if (entry->msg.address_hi) {
+-			pci_err(dev, "arch assigned 64-bit MSI address %#x%08x but device only supports 32 bits\n",
+-				entry->msg.address_hi, entry->msg.address_lo);
++		address = (u64)entry->msg.address_hi << 32 | entry->msg.address_lo;
++		if (address & ~dev->msi_addr_mask) {
++			pci_err(dev, "arch assigned 64-bit MSI address %#llx above device MSI address mask %#llx\n",
++				address, dev->msi_addr_mask);
+ 			break;
+ 		}
+ 	}
 
-Best regards,
 -- 
-Vivian "dramforever" Wang
+2.52.0
 
