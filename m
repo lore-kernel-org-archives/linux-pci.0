@@ -1,69 +1,69 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011056.outbound.protection.outlook.com [52.101.62.56])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020089.outbound.protection.outlook.com [52.101.228.89])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB2F355813;
-	Fri, 30 Jan 2026 17:21:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 677E935EDC2;
+	Fri, 30 Jan 2026 17:27:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.89
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769793694; cv=fail; b=mCxfCXfLN0twsgyKrxU/J8XNtdzA2hBnqam5Rbi9wDFhr+bPaM48neq9PWa+lYca5Q2X0dLye/ekhzDfNwB2/gm5oGKB+yFsRDX/gvRpKBaSP2uslVnxDAiXUXmO4lcCNKDHvIv5/edC+9s2Bi+TW/CFnQPsTiac/amZZA4ydrA=
+	t=1769794028; cv=fail; b=t+J6YY3bkgGngMDiUurFW1rChzYGs+Fp1tyJvG7nSsL3BoyI6Zet5jjgYDI/vZF0NY0Tte6lPlYtV7Q9pttjTEkQyvRCHQ/lvlQWG24NGQUMkDyUyoQ0y7Dutb7Yc3o7GWl2pkd60SHQiluoTpR6Im2TEYLKsNmvq6LjQj7/ajY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769793694; c=relaxed/simple;
-	bh=H4ojoODjC4Sog03DgJM4eHWM7gxnY5SNQYjEBTBrbuo=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=FB8VXE/CiqG3lp5mn96Thd65EPYtfY/EzRwKMwWr6eBudh48OOQvJjdDMFz21AJXB1v8qI5fhJu5m3fsFVrYJpxd3eJesU2mbBwI44EQgWC/6PbUEgWZnOkbG+wTcfTKhLGx7m/5sksPTKdwhoqrqKAXgfFDdZpEc87hyQ5iotc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=P27NSv2U; arc=fail smtp.client-ip=52.101.62.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1769794028; c=relaxed/simple;
+	bh=aEUIp2K7GASQWsqKBT5ZKw5zsvPXfmlQGO1PpNBnbIo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=poMOpyX8Bjhh5l8qQQt78P37IOe/3HnlDnUCEQRfPJDye5hV5M7mJhsEJ8szUB0E61MykbTDyG2jlOfUZEPv/sYaZe0oCtRoN6DCcUBZJKWymeMOrQnWWc134DJ+yoBZxLPxfwQEu2pySAeVTqntcOtgtzamR1ug7f1n8nom8Zk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=RI9oZq54; arc=fail smtp.client-ip=52.101.228.89
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="P27NSv2U"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="RI9oZq54"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=NdHP6LRiaw75Y/WCqfKlBzFsI6lJz4URvZTBpoWvdBIsq5XyephM1fqSoZb7hjTcN69/G809YWTdLRzC9ugVXEjCpkL1cpOB6YEEPzAd9GDox+iJHG+6Be3SHDRYjd/kJcL4ZJuvIRBizwf6w0Ur1+9O9NTG84D9L6Row7iYK/WEckzbtT6juyUwOF7eZRGtKla7qPHVpDDoXmw3SZgBJCs8xdboV/WpBZHivKB5OHzq5sVvOjpPWUf28el42ZU7Z7NfLsZcmAJvHxLh94UpVH2XZcFc9i3LNy52AZUzd8OpokYk+YeexnJKxA7Kz/WUeXjp4uE+z46VmpSWx93INw==
+ b=cq3IiecqCidvOdXB20poaF+efGE7qbdNlUgBBghrnZvApZBPgrwIxRD4DNreKKiSe58YHce2MyF2XhM8GhyHYOosXlnUUw1XHobygnOkURW0/9ODY7HzSk2unPaKMuujRlv4z29ybqN9/enLOImFXotqDBMu5zTdl5B2qWpKtzg7Quz43iR1dm3JF6lKVrX9oHQ6VwyOPcencLbvCJKqr5aaZ75gYTPDczrVPoK3utSLlm+2XnM6y1q7ftAEe9pk3XPuPjvERc3B4IO4L+f92qRdlBx4CaNatgPnDyi3+s7CX26fBwPKnr3+B5U1Bie2NznLSHphccjL3QQEpPh+6A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IB+3/S+iB0E2/7jjUyHhSHxcbBlNI152yR5vEisncuc=;
- b=dKptJQc3Oqup5Qs+TxJJt75FwKfKjkIy/+k//mC9FgoR0HWyea/Zh1lemQhn2N1eTEN+lrKAj5AKnDlQpbDUFlN+HubQnkg6+kBHyZ1PSQVIExGQQHIKLBbPOsIOq1C6KldjQvLcvfByNNINMogavFchvxnmqZ8HMdOna5saksC2u7PthvtxzlKVSr0yFmvybB0bgfEIHugECUd9+OjemFHRs5qRqtNs/pajsUJMncUDnr6shxhZiyMczxQs3yLVoMpzl6BKQl8mCzTY3sgou/YtbdLS6yULzGHoWiD2grDDkNSvVvxwyqPg0+hya05ffWuEa6peqhQfxZ/KQgdm7A==
+ bh=FmWPvVWFPEbHvMA/cQ8pLBrYDtzBi/0P7v+6n/fXhLA=;
+ b=QwEQiXGjUsKwjl0zDNbEbT5jXZbc9ScQeGM8q/ZUJiB/13PPShKf/DdJ7kjMgQu2PWDxZhx/qNVrd2lnTckSBb1UPkU/sUhv5ONDKpxUXwQOzAHmOpPfIzJ2+oHrfE/xjvZYPDbEuGOPDFcJ+GIu5P7pevJai4pEd1sk5F9EKEZHeWVXoNalxi79Mj9RMtu51/4iTUMEzohKDp3Ikwhg+ZFCPkSHHBdwiV68kUbPeununU8Uc0kvuvohdQgH8fhTfhXbenpuciCM4bnqoWY0IgLpa6rnhtJBT5zFK7DLs1LFCNA430EN/okGekLHFFJnFgE31TIFV0SL9qpC8YBqyg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IB+3/S+iB0E2/7jjUyHhSHxcbBlNI152yR5vEisncuc=;
- b=P27NSv2UPGXIkQOTyOnsCfEyZa5gKaUhQOPVhwiSmcZXcP/qpoipHKlxiHCzp5oU1cFSFnuhJSpwpgE3WHSKsCVSLHjO7uEBDPmzF5+nuy5R7U+cCYKCELpWLz8ZmzY2XhFkvqAispJMWuSeGS4Ist8H+IuDTQKyjqHFCwKGU0i2IbgF+w7ZwLn/ivFyAI51T4Y+vqMl7hC6gdsiOsmPgLPzWKo7gNrVSMuIuvlM3Bgwud3I5cQbNCU9s8sr2LXYN9n9waxKkwpfWOO3Hm0+HApIEWqC6zvTKMLDygPp95CGf8sBSnXvbI5DRIe3oU4iQcY5SL3iY4HrfdpmzAfIfA==
+ bh=FmWPvVWFPEbHvMA/cQ8pLBrYDtzBi/0P7v+6n/fXhLA=;
+ b=RI9oZq54MdssbFTRDda8xMeXLWa57pw+aNSxH74UBjcb9E0k78nvzz9i2TJ3FFaCs7hGPPGddLGXGZAqMrOinvl5+aWBuaWLGul6uT7rNBQW/vx6H4NTeCbUFxYGGD8/hmNALSK1+dqApqwXZzu66TiCEByyfzi8MAxIxq57jN0=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
- by MW4PR12MB6779.namprd12.prod.outlook.com (2603:10b6:303:20f::13) with
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY7P286MB5812.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:2a8::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.9; Fri, 30 Jan
- 2026 17:21:28 +0000
-Received: from DS2PR12MB9750.namprd12.prod.outlook.com
- ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
- ([fe80::56a8:d6bf:e24c:b391%5]) with mapi id 15.20.9564.010; Fri, 30 Jan 2026
- 17:21:28 +0000
-Message-ID: <a39410ec-4054-40eb-a687-0f161cffff2c@nvidia.com>
-Date: Fri, 30 Jan 2026 17:21:22 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4 04/22] PCI: tegra194: Apply pinctrl settings for both
- PCIe RP and EP
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- thierry.reding@gmail.com, jingoohan1@gmail.com, vidyas@nvidia.com,
- cassel@kernel.org, 18255117159@163.com
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260126074519.3426742-1-mmaddireddy@nvidia.com>
- <20260126074519.3426742-5-mmaddireddy@nvidia.com>
-From: Jon Hunter <jonathanh@nvidia.com>
-Content-Language: en-US
-In-Reply-To: <20260126074519.3426742-5-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P265CA0152.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:2c7::15) To DS2PR12MB9750.namprd12.prod.outlook.com
- (2603:10b6:8:2b0::12)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.12; Fri, 30 Jan
+ 2026 17:27:03 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9542.010; Fri, 30 Jan 2026
+ 17:27:03 +0000
+Date: Sat, 31 Jan 2026 02:27:01 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Frank Li <Frank.li@nxp.com>
+Cc: mani@kernel.org, vkoul@kernel.org, jingoohan1@gmail.com, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 7/7] PCI: dwc: Add helper to query integrated dw-edma
+ linked-list region
+Message-ID: <v25s3ji7deayobdvicbch72jqnn4migzo57jibdhuddjr623cy@3e4zygidpkdl>
+References: <20260127033420.3460579-1-den@valinux.co.jp>
+ <20260127033420.3460579-8-den@valinux.co.jp>
+ <aXovtOcilRrkA0Ot@lizhi-Precision-Tower-5810>
+ <dpx4s35dqvhp54sloixxsn3qcf3g2k745wieaefdc2svgkbtr6@4vuqgp46czi7>
+ <aXrXJbjKiAFXaxOX@lizhi-Precision-Tower-5810>
+ <zqcu3awadvqbtil3vudcmgjyjpku7divrhqyox72k43nfzcoo7@hflaengfjy27>
+ <aXzJFhcYCqTE5ma9@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aXzJFhcYCqTE5ma9@lizhi-Precision-Tower-5810>
+X-ClientProxiedBy: TYCP286CA0116.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:29c::8) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -71,175 +71,363 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|MW4PR12MB6779:EE_
-X-MS-Office365-Filtering-Correlation-Id: 101b2fe7-700b-4620-d578-08de60240097
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY7P286MB5812:EE_
+X-MS-Office365-Filtering-Correlation-Id: bd36bbea-1db2-4227-cdbf-08de6024c87e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|10070799003|1800799024|921020;
+	BCL:0;ARA:13230040|376014|10070799003|366016|1800799024|7416014;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Zm1SMDJNV1JCZTQ5TW9EWGZ5T0wzSk8rQUJyNDZzOGl5ck5TbENvMjNGVmxx?=
- =?utf-8?B?L2hYWjR2QXE5dXZ4UC9mOU5Tc0FiOEpVUEV2R29TSWh1ckJwZERnMWpGZ01u?=
- =?utf-8?B?S3k0YXVMZS80TkdKTVFSV1pjRHRhSzdnWFFzeTZuaDlmRmxTMHJ2Szh6c1h6?=
- =?utf-8?B?Qy91NXVvMDJjSitIZnJSbmZNcWxTRnNYdzNDd3JKUVpvWDd6cG9xcHlPVnN1?=
- =?utf-8?B?QVVnUWJrbStHanB2Mld4R1gvdGFPbnBtakFLVzZNS1AxRTdNWDRBYW9IOC9r?=
- =?utf-8?B?c0tOclRlRmxRWmUyd1ZvazZOUk1iaVdvVUNNbnpEbFFORU04ckVqTi9xdmtB?=
- =?utf-8?B?a3BVRXFtNkQwNDc4N0Y0bzdpY3dZazZoVXFWL2lsQjEyKzIyeGVrRFFFZDNa?=
- =?utf-8?B?cnRjdFdIQWdYQ2VVSU9ROGg3bXlmVmpFYUlUK095bWhEY1VFUTkrenE4TjFj?=
- =?utf-8?B?d3FMelFBbFJPcFlOcWlVREZiQjB0azk4K0JqWmtmZ0QyY3ZHSmt5VURGNGlm?=
- =?utf-8?B?dlNtMjN2RklpQWkydzdUREQzNEQzak40VHpqSDFESnNqMGh4TzF4eDlVZ1ZZ?=
- =?utf-8?B?QWYzYThlQkhnVzBCV1h4bmpwaG5PVldqTHExRUlGVFlPQXZZWjhXMUJYa2Fx?=
- =?utf-8?B?RHFKMDZ6Y3psSWdXMWVvbU41S05pdjl4bkoyTDF4MUJKK3puakxhbkpkVXBI?=
- =?utf-8?B?L3NqS0pXYkIrNFc3NW9EUS9JbjFEZ2wxRDE2SW92WGhnWVhqM3JpMWI0K3RL?=
- =?utf-8?B?MVBBUFFqakZ1a04zZzBGYnlpeDl5UG9Rend4SkV1SDhqeGZIRDR6ak5WRzI0?=
- =?utf-8?B?d3huTjBnVmJxOG9IVWlBQ2lJUTRYTG1DeWw2dWFuZnZnZmpvM2MwTzR6QWR5?=
- =?utf-8?B?VEp3WGxLWFJCeFIvVmVSL2x6bExXRGd5cERyeGFRaVJPcHNNeTJ5eDVrakhh?=
- =?utf-8?B?STJBSktWSnF6T1BSWlBZNFpjSWVqV0MzMTcrRS9yQTMzU1JaeVQzSEcwT0s2?=
- =?utf-8?B?M0hBQzZGcWsxSkxOTHdtbUJYaTU4aGY3WWJZdW44aW9KN2RlY3NZOTNsS1hu?=
- =?utf-8?B?K1BTbDhUaUtMZEthY2xXUTVJQ29WOHR6OUdxQ3NGR2EwTGU2Z1R1OFJ4aWMy?=
- =?utf-8?B?amFBc2lZL3hkT1pZMXk1ODFLb3pBMm1keEpxN21QanQ3Yk5NNGxmcXdsTW8v?=
- =?utf-8?B?c1BvNEt6Rk0xd3VKZ3Q1Q3J1MDdDKzZWTGxPcG9ldXFWaC9TS2xIMnFXWGRO?=
- =?utf-8?B?bE9Zcy9tRUVhclB4RS9WUkhMWXV2VUh3eUk2bzFPcDhzeUVFbWEvdEgrNDJn?=
- =?utf-8?B?eHA1ZjRyNThPZXNLREJIUm1ZQ0lQeXBPZUQ5WEpOcmUyT0lVOTF0T3ZuTE1S?=
- =?utf-8?B?SGRSMUFSUjRQeUtoUnlWVmhjcWllK0NIMGdWWkQ1bVdRU2NXSllkUW4yL2ZI?=
- =?utf-8?B?bnloT2tPNkJScW9CeHhZTDdqRnRyWnBDUzBlNUMrUVRZR0ZuQk9UYjg4QlBD?=
- =?utf-8?B?czZsdmxVdGx5TlhpWVRzMkZPMzhiSlZoaUdHK1lJNkJPSi9SS09zYnBYTFUz?=
- =?utf-8?B?ZG1MOTk3eHRzQ1lpd01tTk1URG80RkloVzdpd2J0WHU0b096ZlpqbDRmUGVJ?=
- =?utf-8?B?OXp6TkorY0dNdSs5d2RSU0JkdFVHM25za3ZDYWtSQlVWQ3hZemZ4bC9RQnR2?=
- =?utf-8?B?VWgyYzNzTFY4R1JZaCtHc29ZdmZlMWtUeFQ5cFgrTTI3RjExbk5xMHhUaXBJ?=
- =?utf-8?B?YUxreFBjTHV4ZERWdzdiVk85NVNuakVlbkJaWlhLUkg2UWRxditIYitKYk5q?=
- =?utf-8?B?ejBsTjg3SVR5QnRXdkY0MmFFb3FsWjZhcVNyODlyaEVWWVZZcmxLbXB4bjBM?=
- =?utf-8?B?RTM4K0x6YWxldThWV3NtSFE2K2JhTHJlQ0xad05UUHlKM0s2SHpaMUpQalpU?=
- =?utf-8?B?YVVaVTEvNVVmRml3cDZJSDk5RWhpR3pmb2p2aU1MNEM1NWhtMGxXcEtkeWpE?=
- =?utf-8?B?OEY3SExJeTFob3lGL0VrcWFnSHd0V2RNclNicDBmWFBBSXFIV0VIU2JBczd2?=
- =?utf-8?B?K3NERUpTdVVERmRvd1lhY0hMZ2JyQVpadEVwaE51Q1dzN21XUXFML21Bb3Ez?=
- =?utf-8?B?SVBBakQ1MFdac0cvSUxYV0J5MUZlVC9HWWJFRmtSNTFOUzF2TVRyUUJuRnNF?=
- =?utf-8?B?eUE9PQ==?=
+	=?us-ascii?Q?JcwKz0jZ6WPbEAM3SuHFEmPj+8+3VdUKKv2qEwbCAKbRhh2toI5srzgRN4DD?=
+ =?us-ascii?Q?ri7H0ptEZzwR6EoDQOqm1rINzV81PDl+g0wgF5xGd6Bw5sF/HhKXhm2xlnrV?=
+ =?us-ascii?Q?uZTBrKRCRV7nYEMSx+ieIqxJWJ8zBdEFidgHjLc9/o52vJaGr16iap1ZevjC?=
+ =?us-ascii?Q?3Mfm29Rb8klHojAu9YAeMdUHnflfNghi4PdgHtqfRCHFALVtau1HdlOhsRlo?=
+ =?us-ascii?Q?c4A2yz8G9thwGruQjuDZ6F5+NN3Yfv016U2d42B+Ft0borrkypQdzY8Y1g0f?=
+ =?us-ascii?Q?APFlUic1LVOSaMLXSQtl/L9WeqnIvW3/M7sqb+mDXe5mAT3Ehza80G8kF1yX?=
+ =?us-ascii?Q?+aub64cwi8SMrOFp4yOF4UDl3vacR/4bdmuy1CrCaQ2rDcziySMZtC49KJZ2?=
+ =?us-ascii?Q?H/xN0DcE4w/gp/fdRCm1hXs1qUZ0mfxz2KZlzP+tHKt/Ew7/YHP2JuBAwuV3?=
+ =?us-ascii?Q?lCUHaBVomyQIbvO+dKVp6QKfgEhQA+r8eDSQR5ecNUIteqNiT13m2wxRBfic?=
+ =?us-ascii?Q?V872cTPF+37lczgc49Hmd4pu2l96INB8o7jITb0eB63UIU8Fh3a+4E0y1XhO?=
+ =?us-ascii?Q?WJBA1sHnISZDKLP5WDTK6ilNU5/M9kBiPcI2iOl7QvCcyyYLn3OxfP9QIPQR?=
+ =?us-ascii?Q?L49CDMUq/eNq9etHOS6eegWymyyvFYs9xv5oLvFfAC5MiY8dzSyfvlnKQcSU?=
+ =?us-ascii?Q?y7+Rub/LIcrk7xhWA2XD6ZQyJbSV4A8CrmcsNA0kDF49TJPm9ha8Hcsd9P6r?=
+ =?us-ascii?Q?SewMVvRS8RFRVhgJC/6cT62Jj6EcwsdAuY5iuSUuOwEX4REhmpR4WPZ6w6l2?=
+ =?us-ascii?Q?eacKvSWkS4ALe8FFrFbjpXlr+S04Q/231xQM+3Q663Conbeigu6SfhJsC4p5?=
+ =?us-ascii?Q?3QNQjP+IntCIYgOFPu7YiKxUOS0w4NiB8AOF7i6e6lGh2sTRxFCobhNKcX/s?=
+ =?us-ascii?Q?h1TZiTA/RGvgopKt4NThnVYB1dMtfCvhehVEjRBOwBwnzmmIfPW81vUHbYiJ?=
+ =?us-ascii?Q?tKVeZnDK3q6lYYYCH5j8/Y1Yg79oQMtl+PiUaeUgKKfwFrTisTVJQoUOzjZg?=
+ =?us-ascii?Q?TqSHBUmSlrVYDXHOJ3zC3gNQhwvtPstlyBOT8H9YxIMZrmYukY1KSd00sm3i?=
+ =?us-ascii?Q?CBTW90/Rm+QrmX1ktI5ZTcoIFcAOsEeJzTBIkXAgJka/3NZ9DyyyK5Z7hHm5?=
+ =?us-ascii?Q?jv5FyzZyoZ83V8/5nvlG+UrJ94++3LinUscqEmhyF7Cq/YB9zB78u0VRAyrZ?=
+ =?us-ascii?Q?NYAwABgD1Xg6RmglIHATnKFE4zOJjnLHx8ZQbPTO2FZ1Xh7Vh/J7zk3mxUVz?=
+ =?us-ascii?Q?KehHF5shr2UEdV4Ty1VMz1IIOqwRAF5xRUZ1YDNmx7MmdNB0eQM+/IJG6xPL?=
+ =?us-ascii?Q?eUEwkQ8pnkOgPdeBBAtVQRkRHwmyrgeoqQD0VsbvLotL/QS3HfDWrI+HN1nC?=
+ =?us-ascii?Q?bv0H1zDIba1FTxkbrg+TdLyF04dZeOFcNtDjkoiTnyLHznSz2yG0Tf3JdjAv?=
+ =?us-ascii?Q?TEyPbZhZ4IUZ7P0lw6gDlAfJJcBaCZeXVkfzvy180yDCK1mZiIFnU51zYRWB?=
+ =?us-ascii?Q?Zr8Rd9bON1a076TNdG9LTMvQc/hD8hAIf9L4CHwC?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(10070799003)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(10070799003)(366016)(1800799024)(7416014);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bEJKN0xIUGJUZXNKYU1Ta05Td1RjSDJZTjR6NDlRdzEzQ0o3cCsxZzYveDRH?=
- =?utf-8?B?bG5mdysxYnNvZEtkMzBoYXAvUkRmTW9HdWcrejY2bGU4T2EvT2t3Rms1a1l0?=
- =?utf-8?B?dXVCb09uMWVjbko5OVQvN2ZKS3J6K3VDR1lXZkYvTysrNFh3YzdWZURtc2RB?=
- =?utf-8?B?S1hOM2JKaHVGTmtkWDJaZ25MTFFNREl5MktQZTFiY1pON00veVJ2cWJxMnZu?=
- =?utf-8?B?Vk50aG5qb3VKTk9abW52VVdkQmM1Q0RFSkxOa3VhMVgwTXhtaEJ4V3FGVXBW?=
- =?utf-8?B?bDk5L2hQVlNJM2cxQWh5MUR2MWJCTHljVHRYeFZjNzRsZ2g3ZDY3K2lwL3lG?=
- =?utf-8?B?Z05JYXg1WXJCK1BBWjI2c2RDNzd1Y3JSdWxTbnVOUnpUOThhNS9tTENmSzVi?=
- =?utf-8?B?SGZFMTBDNFZBWEJUbm45NFZ0UUlRbHdhZkVDb3JXU2NFN2I1aTFDdEREY3dI?=
- =?utf-8?B?TlBVYU1id0FrZmx1L3hYN2xML2RlSjFUeHpkL3F1cWo1ZXZzRkp3OFhETnUw?=
- =?utf-8?B?ZjdjSjlodTJXOFArb3AxVG13eVRZdGYzOTc5RHVjNWhSV2JXRFBwdVE3SFVV?=
- =?utf-8?B?eWNDTHZRVDBOZHZ5bEQyUVR2eDZKMEZYQklIM1Q2S0U3OFByRHd2Z21JZHJD?=
- =?utf-8?B?Njd6bTRqK2lyZDRDblNDK0lvazJkRkhmYTI1MDRMNzJrREJQWTlPOWFKQUFZ?=
- =?utf-8?B?MEo2UnlzZDQxbjVabDlNWloxR21wcFBUTitaT25jbGtnT0NYRHZWZ0docjNT?=
- =?utf-8?B?YVdUdUNoMXJQTkpIY2JjYUp6cHJvcTRXWHpnYXk1U1k2Z0JCWGJjTXZRL3lW?=
- =?utf-8?B?Lys4d0dFdWxzQnExTUJleE1YWmV1K3BVMzFRbkFWUzh6VnJhQnNXcnpyWW1D?=
- =?utf-8?B?cklRZjBnY0NKRnhIbk1yWlcxWERlSmRndUJKZUI4NUVpQXg2T0svMlgrYVR5?=
- =?utf-8?B?c1l3NHFBcEVzemJ5N0w5enptbjJyeTJ2eThvMnhRUUdqUnBrdDdkd0xFWE1M?=
- =?utf-8?B?R0dhc014SVVYVU5kY0dSZFVIRlFXUDNBN01ZY2FhYWpmYng0Y1RQa010Mkhp?=
- =?utf-8?B?R0tOTnppcDZMR0tBRkJhWnZYQ0orYThLZ2RMZFl4bERueXFKNXh0VHI5T213?=
- =?utf-8?B?ZnZvRktNdWFZTFVGSTZWRmFVeS95dXI3eG9UVDgzcnpLQzF6OXVNNHVRRW5M?=
- =?utf-8?B?ZzhwUW1aaUMxTHlrQVU4RHlsNmZxTC9RZHJTSkFHUlRORVUveGhaNFlPaFU1?=
- =?utf-8?B?NWZKZVBOdjBpcDZuNmpSUmRNWitHd0Q2Sko5VS9oSGVJZXFhazUvMU42WWlo?=
- =?utf-8?B?UkRPVUtxNElkVk05bHhRVy9qMHl1VGtzYUFLOTdVb3VnaFMvUzhmZ3RSeWhq?=
- =?utf-8?B?K0ZCZWJaRlkwYWs1enZSeHJxdEJpcXN2Q0tmVEZhWnU0bXJLZnBiZWQzVVBa?=
- =?utf-8?B?VTV1Rk83aU03MWtBRDFTZWhxNURMeUFFMXdEUzlVdkhxTnNSOGJBWWtnd2pX?=
- =?utf-8?B?NGJFSXJ5ckQ4TmlXeUFHdklVSXlnVXpiNENyUTBCcmlQQndudmdkWTVLZ3lz?=
- =?utf-8?B?aGZUN3cvSHhsTGFqNjY3ZU42NzZWWVNEVGZTT2VhMmRmYWJxSGdWSTJtZWMv?=
- =?utf-8?B?NEhVWUpHUkhDMVZaeW8zRDd5d1pSdUR5K05DQkNjSG9jcTB5NC9pTzYvMHhq?=
- =?utf-8?B?QjlhQTZqZzNDaGJiZ3VqOHJGUzBJVyt3Ym5GSWlBSWRGZTdzMXZqNXJHanRD?=
- =?utf-8?B?THNtcVRBK2VoQW9VeWFqRWZnb1dzRHdtbkN4UTF1dXA0c1B4UHk2OHYxRk1s?=
- =?utf-8?B?U0NTbUlDK25qeENieUQzTlF6NHpDd1lZOVY0amlvbUhEeGQrTkNJR1Y5ZUht?=
- =?utf-8?B?VFBlendMNE9GaEFIL3o2eW96Z0wxNXdPTzVtbHluaXg2Vm9sdlE1MG44S2NT?=
- =?utf-8?B?L2ZOWm91azVEQ0tqV0Vlb0ZZR09iWjl5K2ZVMXRFbVdETXRweHVkZ24wQWp6?=
- =?utf-8?B?Y1VrMk42RlJiNVhDSkROWm5rdEhEb05Dam8vMWJmMmpJR3VHZWg0TjgwbGc0?=
- =?utf-8?B?dVRjYXVUemR1aUQ0Z2laTXV1bTRhWjhHanAxbDNqWGgyTXdlajBVYWxlb0F4?=
- =?utf-8?B?UGsxVmNXZDBvVEd4L0JVVnhCbndrUWxVUW1FUU1EamZHemltOUlGb3FXU3Bw?=
- =?utf-8?B?SVB0WmY0bnBWMi9Lc1NGS1J3dGpxYmoxaEtLUGdSeXdtRWxSc25mNytwU0hP?=
- =?utf-8?B?dnBzUDV1Y1g1SG5vUHZRVnJ3cG96TmtvbThOandKeDk0T05TSTQ2KzYyN05H?=
- =?utf-8?B?Q0ovTHF2d1RmaXpmd1dFTTREVjd2OEJFZ242NUNOV1hheURwMkhkc1JXZ0pY?=
- =?utf-8?Q?p0ksA8MXtVZGGHurZqNMz+3bmfjdT3HvqxG56b9V++vlm?=
-X-MS-Exchange-AntiSpam-MessageData-1: pSfEVu7/8M8MRw==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 101b2fe7-700b-4620-d578-08de60240097
-X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
+	=?us-ascii?Q?Krw4WiLDCmi0WikTx7t7/mJaJv1VlSziThzka1B6AS5w5Q2kVZ9iw2GBDL2r?=
+ =?us-ascii?Q?6I0hZtedf2DgF2Bn/30hc5yPBm8ND0HhvJ6FcG3XrWrhG4XZl+2gtwSFbJg2?=
+ =?us-ascii?Q?m9D2A71VtpeeEQDP3YxqUosQFVhSqbETOUqy4IAoLE7LVsCpuZuzNKw2CssU?=
+ =?us-ascii?Q?6mJ70Z/LHuQc0gEhyE27QlV8Uk8YoyBBpdZYz+flHuK5ksEx4S3X9Lm1r77I?=
+ =?us-ascii?Q?o45/aaUgxtQABAbbFF1u+DsUyVVbRfhURE4s0zLXkJEP3+frjqL9+Q1rkMmU?=
+ =?us-ascii?Q?hrSwAbWud+uLAsD/wmCenkLL7c0H58qyJkx6vMGlipUrMllYGiYaFnW1wCy/?=
+ =?us-ascii?Q?jQzdhBAgXBR3Q4U4Pb22SnrkHlLJi+eg38d4L8M3Xzlpexuy2mnOALK15hQx?=
+ =?us-ascii?Q?j7LtLyuMmbn9mi+eO5WnNeL2Y70+7wPdtcVAI8CDf9xfBVbrch+QBy9SPik0?=
+ =?us-ascii?Q?GfkGWp3Qoo1WBsrVrI/MGn/mZtrH1vOMoz3PR9t61a08Sjf2ju+abInJ03PJ?=
+ =?us-ascii?Q?JFrGGQkwDv93nz65KNumcLMJ93R4fFo3jF7R2hL+pS94wYDZTm3nFlfa1xw3?=
+ =?us-ascii?Q?XPZEHRVBPzHXzPSeDY3zodD9ba8QwrOjSlqYHc6npiENsxzJDFLSWWRkPc7f?=
+ =?us-ascii?Q?/sW+h0HVuZgkYStc5RaN+zRV29n+3ixSBP7Vs076o4xzpCqQuT4rXPyxv3Cp?=
+ =?us-ascii?Q?Ehok5+Yagbi3IwTSbdjD7dpUNvxNu/kwIPJRNQBsJNXKWdPpcsEuOl+01vLT?=
+ =?us-ascii?Q?D5uRQfSI4L9uD/feelCoANU4XxmoUXqs6Y98mCSQ05KI/AWkmllefga5VY9w?=
+ =?us-ascii?Q?tnXULKH9OJYYGsb0cihRBViQ5XttCwqKEkiPGsHEBQADSujAhgHpTAAL3bGn?=
+ =?us-ascii?Q?Zc4LUQVUZVEUIP5VFAcbbC5e4frN+HwVZTPS/jCdJZTYR3dRlZfoWgQf3jeN?=
+ =?us-ascii?Q?IJUWCcd9cwD4tyVWbjv5I13dfJh5050P1vBWN9x/J0wajxx8KV7phTMt12ch?=
+ =?us-ascii?Q?9JlwD3eBVunOEcZmkQA+iDXzrFCI2AOAHZDAyzXVoFv6SRL7c8iVpa97kEuT?=
+ =?us-ascii?Q?Nlg94oFF1RGic/smYi1BpdVgywH3YHaMDlP1jTYHBiqW1YmEYQCxltkushBu?=
+ =?us-ascii?Q?J/Sfk2/lWTVUPXOet80Bahe0e0a6PUOIb1U4ibt6TSBuBBQPUKu5ZkidwuR4?=
+ =?us-ascii?Q?quwcJamm4QArU40P74ezm/Jutva16bbfJ7X/IsRqd9lgxtOc4XkNijrFVSpi?=
+ =?us-ascii?Q?4sXz1bGhX8wOulmnPt77WBr9GXD0H1tQxY2KQKOFQn2L0uyyqtqB65L4oyo7?=
+ =?us-ascii?Q?Mt89EbbfOCNQBrOyp8/MbOc+7jcgvBkVMv7EutGjjaUqV/dPKs9kYE3vJusT?=
+ =?us-ascii?Q?GPjTXn8AWDk/y+nUj1/uWJWxaT0HlJWZapVFP/DhDDnfBOgEknmwkN+sN2fn?=
+ =?us-ascii?Q?JFlp6Q75zvPPnDuMUBftXNznB+CSkK1/1j5OJiQtln0JPWaMcFMzujnwVCMF?=
+ =?us-ascii?Q?k2HBunZSE6Rv8NfgYx/oOOZT65iEZDmFZfjbrebil3U368OwnJFqAD8datb1?=
+ =?us-ascii?Q?4esJCb/OJ3x7wTg3PytG4mkX8GgFFKAXVrLov+/doM4uLSOaPy2RHwopFVQK?=
+ =?us-ascii?Q?b1i6w7XAH/jPCGkS4BwzBXn4BJywxKIUElHZlNxvjHQC4KjD1bbJCpsiA2/y?=
+ =?us-ascii?Q?bWGRuJX1Ytt0GhLy+aZTcnI786yJ5GMKpremryaX/5yrWXlgeav+c2Ms7+Wm?=
+ =?us-ascii?Q?33LT1ygVaoSiJ0/2fEdG+ZZRT9Jy5JbSZTXoQC7rTGMZkkX6bJ3T?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: bd36bbea-1db2-4227-cdbf-08de6024c87e
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jan 2026 17:21:28.0425
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jan 2026 17:27:03.2973
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 00yWOJcfZNbgppW/l3htOf3wXAzeDSqzHF0gGfcOIeyjD5xcxaFeZafV9YNbTS2ZhfSGyMIPw3wmA9nmpNVp4Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB6779
+X-MS-Exchange-CrossTenant-UserPrincipalName: BQoac7VYrjnVzplb0q87C7vCM0R2WPKHN5i4Em7vZYTY2ATpT0qAvgXW1FhXibSgNmWHUx074n4sx/THI5IJRQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY7P286MB5812
 
-
-
-On 26/01/2026 07:45, Manikanta Maddireddy wrote:
-> From: Vidya Sagar <vidyas@nvidia.com>
+On Fri, Jan 30, 2026 at 10:07:02AM -0500, Frank Li wrote:
+> On Fri, Jan 30, 2026 at 04:16:11PM +0900, Koichiro Den wrote:
+> > On Wed, Jan 28, 2026 at 10:42:29PM -0500, Frank Li wrote:
+> > > On Thu, Jan 29, 2026 at 01:25:30AM +0900, Koichiro Den wrote:
+> > > > On Wed, Jan 28, 2026 at 10:48:04AM -0500, Frank Li wrote:
+> > > > > On Tue, Jan 27, 2026 at 12:34:20PM +0900, Koichiro Den wrote:
+> > > > > > Some DesignWare PCIe endpoint controllers integrate a DesignWare eDMA
+> > > > > > instance and allocate per-channel linked-list (LL) regions. Remote eDMA
+> > > > > > providers may need to expose those LL regions to the host so it can
+> > > > > > build descriptors against the remote view.
+> > > > > >
+> > > > > > Export dwc_pcie_edma_get_ll_region() to allow higher-level code to query
+> > > > > > the LL region (base/size) for a given EPC, transfer direction
+> > > > > > (DMA_DEV_TO_MEM / DMA_MEM_TO_DEV) and hardware channel identifier. The
+> > > > > > helper maps the request to the appropriate read/write LL region
+> > > > > > depending on whether the integrated eDMA is the local or the remote
+> > > > > > view.
+> > > > > >
+> > > > > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > > > > > ---
+> > > > > >  drivers/pci/controller/dwc/pcie-designware.c | 45 ++++++++++++++++++++
+> > > > > >  include/linux/pcie-dwc-edma.h                | 33 ++++++++++++++
+> > > > > >  2 files changed, 78 insertions(+)
+> > > > > >
+> > > > > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> > > > > > index bbaeecce199a..e8617873e832 100644
+> > > > > > --- a/drivers/pci/controller/dwc/pcie-designware.c
+> > > > > > +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> > > > > > @@ -1369,3 +1369,48 @@ int dwc_pcie_edma_get_reg_window(struct pci_epc *epc, phys_addr_t *phys,
+> > > > > >  	return 0;
+> > > > > >  }
+> > > > > >  EXPORT_SYMBOL_GPL(dwc_pcie_edma_get_reg_window);
+> > > > > > +
+> > > > > > +int dwc_pcie_edma_get_ll_region(struct pci_epc *epc,
+> > > > > > +				enum dma_transfer_direction dir, int hw_id,
+> > > > > > +				struct dw_edma_region *region)
+> > > > >
+> > > > > These APIs need an user, A simple method is that add one test case in
+> > > > > pci-epf-test.
+> > > >
+> > > > Thanks for the feedback.
+> > > >
+> > > > I'm unsure whether adding DesignWare-specific coverage to pci-epf-test
+> > > > would be acceptable. I'd appreciate your guidance on the preferred
+> > > > approach.
+> > > >
+> > > > One possible direction I had in mind is to keep pci-epf-test.c generic and
+> > >
+> > > Add a EPC/EPF API, so dynatmic check if support DMA region or other feature.
+> >
+> > Thank you for the comment.
+> >
+> > Ok, I have drafted an API ([1] below).
+> >
+> > One thing I'm unsure about is how far the pci-epf-test validation should
+> > go. Since the API (pci_epc_get_remote_resources() in [1]) is generic and
+> > only returns a list of (type, phys_addr, size, and type-specific fields), a
+> > fully end-to-end validation (i.e. "are these resources actually usable from
+> > the host?") would require controller-specific (DW-eDMA-specific) knowledge
+> > and also depends on how those resources are exposed (e.g. for a eDMA LL
+> > region, it may be sufficient to inform the host of EP-local address, while
+> > the eDMA register block would need to be fully exposed via BAR mapping).
+> >
+> > Do you think a "smoke test" would be sufficient for now (e.g. testing
+> > whether the new API returns a sane / well-formed list of resources),
+> > or are
+> > you expecting the test to actually program the DMA eingine from the host?
+> > Personally, I think the former would suffice, since the latter would be
+> > very close to re-implementing the real user (e.g. ntb_dw_edma [2]) itself.
 > 
-> PERST# and CLKREQ# pinctrl settings should be applied for both root port
-> and endpoint mode. Move pinctrl_pm_select_default_state() function call
-> from root port specific configuration function to probe().
-> 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V4:
-> * None
-> 
-> V3:
-> * None
-> 
-> V2:
-> * None
-> 
->   drivers/pci/controller/dwc/pcie-tegra194.c | 19 +++++++++++++------
->   1 file changed, 13 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 0b8c1a7ca232..04ff211deaea 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -1645,12 +1645,6 @@ static int tegra_pcie_config_rp(struct tegra_pcie_dw *pcie)
->   		goto fail_pm_get_sync;
->   	}
->   
-> -	ret = pinctrl_pm_select_default_state(dev);
-> -	if (ret < 0) {
-> -		dev_err(dev, "Failed to configure sideband pins: %d\n", ret);
-> -		goto fail_pm_get_sync;
-> -	}
-> -
->   	ret = tegra_pcie_init_controller(pcie);
->   	if (ret < 0) {
->   		dev_err(dev, "Failed to initialize controller: %d\n", ret);
-> @@ -2106,6 +2100,19 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
->   	pp = &pci->pp;
->   	pp->num_vectors = MAX_MSI_IRQS;
->   
-> +	ret = pinctrl_pm_select_default_state(dev);
-> +	if (ret < 0) {
-> +		const char *level = KERN_ERR;
-> +
-> +		if (ret == -EPROBE_DEFER)
-> +			level = KERN_DEBUG;
-> +
-> +		dev_printk(level, dev,
-> +			   "Failed to configure sideband pins: %d\n",
-> +			   ret);
+> Smoke test should be enough now.
 
-We can now use dev_err_probe() to handle the above and this becomes ...
+I'll prepare v3 accordingly. Thanks.
 
-  if (ret < 0)
-         return dev_err_probe(dev, ret, "Failed to configure sideband pins: %d\n", ret);
+Koichiro
 
-> +		return ret;
-> +	}
-> +
->   	ret = tegra_pcie_dw_parse_dt(pcie);
->   	if (ret < 0) {
->   		const char *level = KERN_ERR;
-
--- 
-nvpublic
-
+> 
+> Frank
+> >
+> > [1]:
+> >
+> > diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> > index c021c7af175f..4cb5e634daba 100644
+> > --- a/include/linux/pci-epc.h
+> > +++ b/include/linux/pci-epc.h
+> > @@ -61,6 +61,35 @@ struct pci_epc_map {
+> >         void __iomem    *virt_addr;
+> >  };
+> >
+> > +/**
+> > + * enum pci_epc_remote_resource_type - remote resource type identifiers
+> > + */
+> > +enum pci_epc_remote_resource_type {
+> > +       PCI_EPC_RR_DMA_CTRL_MMIO,
+> > +       PCI_EPC_RR_DMA_CHAN_DESC,
+> > +};
+> > +
+> > +/**
+> > + * struct pci_epc_remote_resource - a physical resource that can be exposed
+> > + * @type:      resource type, see enum pci_epc_remote_resource_type
+> > + * @phys_addr: physical base address of the resource
+> > + * @size:      size of the resource in bytes
+> > + * @u:         type-specific metadata
+> > + */
+> > +struct pci_epc_remote_resource {
+> > +       enum pci_epc_remote_resource_type type;
+> > +       phys_addr_t phys_addr;
+> > +       size_t size;
+> > +
+> > +       union {
+> > +               /* PCI_EPC_RR_DMA_CHAN_DESC */
+> > +               struct {
+> > +                       u16 hw_chan_id;
+> > +                       bool ep2rc;
+> > +               } dma_chan_desc;
+> > +       } u;
+> > +};
+> > +
+> >  /**
+> >   * struct pci_epc_ops - set of function pointers for performing EPC operations
+> >   * @write_header: ops to populate configuration space header
+> > @@ -84,6 +113,8 @@ struct pci_epc_map {
+> >   * @start: ops to start the PCI link
+> >   * @stop: ops to stop the PCI link
+> >   * @get_features: ops to get the features supported by the EPC
+> > + * @get_remote_resources: ops to retrieve controller-owned resources that can be
+> > + *                       exposed to the remote host (optional)
+> >   * @owner: the module owner containing the ops
+> >   */
+> >  struct pci_epc_ops {
+> > @@ -115,6 +146,9 @@ struct pci_epc_ops {
+> >         void    (*stop)(struct pci_epc *epc);
+> >         const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
+> >                                                        u8 func_no, u8 vfunc_no);
+> > +       int     (*get_remote_resources)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> > +                                       struct pci_epc_remote_resource *resources,
+> > +                                       int num_resources);
+> >         struct module *owner;
+> >  };
+> >
+> > @@ -309,6 +343,9 @@ int pci_epc_start(struct pci_epc *epc);
+> >  void pci_epc_stop(struct pci_epc *epc);
+> >  const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+> >                                                     u8 func_no, u8 vfunc_no);
+> > +int pci_epc_get_remote_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> > +                                struct pci_epc_remote_resource *resources,
+> > +                                int num_resources);
+> >  enum pci_barno
+> >  pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features);
+> >  enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
+> >
+> > ---8<---
+> >
+> > Notes:
+> > * The naming ("pci_epc_get_remote_resources") is still TBD, but the intent
+> >   is to return everything needed to support remote use of an EPC-integraed
+> >   DMA engine.
+> > * With this API, [PATCH v2 1/7] and [PATCH v2 2/7] are no longer needed,
+> >   since API caller does not need to know the low-level DMA channel id
+> >   (hw_id).
+> >
+> > [2] https://lore.kernel.org/all/20260118135440.1958279-26-den@valinux.co.jp/
+> >
+> > Thanks for the review,
+> > Koichiro
+> >
+> > >
+> > > Frank
+> > >
+> > > > add an optional DesignWare-specific extension, selected via Kconfig, to
+> > > > exercise these helpers. Likewise on the host side
+> > > > (drivers/misc/pci_endpoint_test.c and kselftest pci_endpoint_test.c).
+> > > >
+> > > > Koichiro
+> > > >
+> > > > >
+> > > > > Frank
+> > > > >
+> > > > > > +{
+> > > > > > +	struct dw_edma_chip *chip;
+> > > > > > +	struct dw_pcie_ep *ep;
+> > > > > > +	struct dw_pcie *pci;
+> > > > > > +	bool dir_read;
+> > > > > > +
+> > > > > > +	if (!epc || !region)
+> > > > > > +		return -EINVAL;
+> > > > > > +	if (dir != DMA_DEV_TO_MEM && dir != DMA_MEM_TO_DEV)
+> > > > > > +		return -EINVAL;
+> > > > > > +	if (hw_id < 0)
+> > > > > > +		return -EINVAL;
+> > > > > > +
+> > > > > > +	ep = epc_get_drvdata(epc);
+> > > > > > +	if (!ep)
+> > > > > > +		return -ENODEV;
+> > > > > > +
+> > > > > > +	pci = to_dw_pcie_from_ep(ep);
+> > > > > > +	chip = &pci->edma;
+> > > > > > +
+> > > > > > +	if (!chip->dev)
+> > > > > > +		return -ENODEV;
+> > > > > > +
+> > > > > > +	if (chip->flags & DW_EDMA_CHIP_LOCAL)
+> > > > > > +		dir_read = (dir == DMA_DEV_TO_MEM);
+> > > > > > +	else
+> > > > > > +		dir_read = (dir == DMA_MEM_TO_DEV);
+> > > > > > +
+> > > > > > +	if (dir_read) {
+> > > > > > +		if (hw_id >= chip->ll_rd_cnt)
+> > > > > > +			return -EINVAL;
+> > > > > > +		*region = chip->ll_region_rd[hw_id];
+> > > > > > +	} else {
+> > > > > > +		if (hw_id >= chip->ll_wr_cnt)
+> > > > > > +			return -EINVAL;
+> > > > > > +		*region = chip->ll_region_wr[hw_id];
+> > > > > > +	}
+> > > > > > +
+> > > > > > +	return 0;
+> > > > > > +}
+> > > > > > +EXPORT_SYMBOL_GPL(dwc_pcie_edma_get_ll_region);
+> > > > > > diff --git a/include/linux/pcie-dwc-edma.h b/include/linux/pcie-dwc-edma.h
+> > > > > > index a5b0595603f4..36afb4df1998 100644
+> > > > > > --- a/include/linux/pcie-dwc-edma.h
+> > > > > > +++ b/include/linux/pcie-dwc-edma.h
+> > > > > > @@ -6,6 +6,8 @@
+> > > > > >  #ifndef LINUX_PCIE_DWC_EDMA_H
+> > > > > >  #define LINUX_PCIE_DWC_EDMA_H
+> > > > > >
+> > > > > > +#include <linux/dma/edma.h>
+> > > > > > +#include <linux/dmaengine.h>
+> > > > > >  #include <linux/errno.h>
+> > > > > >  #include <linux/kconfig.h>
+> > > > > >  #include <linux/pci-epc.h>
+> > > > > > @@ -27,6 +29,29 @@
+> > > > > >   */
+> > > > > >  int dwc_pcie_edma_get_reg_window(struct pci_epc *epc, phys_addr_t *phys,
+> > > > > >  				 resource_size_t *sz);
+> > > > > > +
+> > > > > > +/**
+> > > > > > + * dwc_pcie_edma_get_ll_region() - get linked-list (LL) region for a HW channel
+> > > > > > + * @epc:    EPC device associated with the integrated eDMA instance
+> > > > > > + * @dir:    DMA transfer direction (%DMA_DEV_TO_MEM or %DMA_MEM_TO_DEV)
+> > > > > > + * @hw_id:  hardware channel identifier (equals to dw_edma_chan.id)
+> > > > > > + * @region: pointer to a region descriptor to fill in
+> > > > > > + *
+> > > > > > + * Some integrated DesignWare eDMA instances allocate per-channel linked-list
+> > > > > > + * (LL) regions for descriptor storage. This helper returns the LL region
+> > > > > > + * corresponding to @dir and @hw_id.
+> > > > > > + *
+> > > > > > + * The mapping between @dir and the underlying eDMA read/write LL region
+> > > > > > + * depends on whether the integrated eDMA instance represents a local or a
+> > > > > > + * remote view.
+> > > > > > + *
+> > > > > > + * Return: 0 on success, -EINVAL on invalid arguments (including out-of-range
+> > > > > > + *         @hw_id), or -ENODEV if the integrated eDMA instance is not present
+> > > > > > + *         or not initialized.
+> > > > > > + */
+> > > > > > +int dwc_pcie_edma_get_ll_region(struct pci_epc *epc,
+> > > > > > +				enum dma_transfer_direction dir, int hw_id,
+> > > > > > +				struct dw_edma_region *region);
+> > > > > >  #else
+> > > > > >  static inline int
+> > > > > >  dwc_pcie_edma_get_reg_window(struct pci_epc *epc, phys_addr_t *phys,
+> > > > > > @@ -34,6 +59,14 @@ dwc_pcie_edma_get_reg_window(struct pci_epc *epc, phys_addr_t *phys,
+> > > > > >  {
+> > > > > >  	return -ENODEV;
+> > > > > >  }
+> > > > > > +
+> > > > > > +static inline int
+> > > > > > +dwc_pcie_edma_get_ll_region(struct pci_epc *epc,
+> > > > > > +			    enum dma_transfer_direction dir, int hw_id,
+> > > > > > +			    struct dw_edma_region *region)
+> > > > > > +{
+> > > > > > +	return -ENODEV;
+> > > > > > +}
+> > > > > >  #endif /* CONFIG_PCIE_DW */
+> > > > > >
+> > > > > >  #endif /* LINUX_PCIE_DWC_EDMA_H */
+> > > > > > --
+> > > > > > 2.51.0
+> > > > > >
