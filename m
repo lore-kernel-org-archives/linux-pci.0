@@ -1,308 +1,243 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010031.outbound.protection.outlook.com [40.93.198.31])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D79B26E16C;
-	Fri, 30 Jan 2026 13:33:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.31
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769779992; cv=fail; b=otXb/6lxkW1hYQhQ766YWpkntiMsqlHoyUeumHNr2iMoK8lJ+4PVMaT7u5jlTyl2Mn7rx4MweW00O9xeZoUKb7GA56R5R7NG0LGym3DrpV4E7awxbNqJlY+b2qvtUQJweMysG92WFBy+Muj7DVkFoyFHZVuUr5o8vtMxuwfY44Y=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769779992; c=relaxed/simple;
-	bh=4yB/FFCkyk6FyLOHcT4vQ3iETzmi4BRvSsR61xjFdck=;
-	h=From:Date:Subject:Content-Type:Message-Id:To:Cc:MIME-Version; b=tB4LWo5JIKDk/syebcxUMLkNx/P1lj9ue8fdGR+2u29s6tz6ZqrB1STnHJxNrOdabhdV1nDmVhc4T4i/T3NtTIQvVwBhn0hBnXSvosr6KsHl0jTpffkvHnehpdkHqlZPr2fPa8+EsWnORw68hpuejWFRkRkHwUqfRY3Sn6w2/5k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Z0nORIzs; arc=fail smtp.client-ip=40.93.198.31
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7519F2E4258
+	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 13:52:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769781174; cv=none; b=O30qa+Nzz0pdQ3rlHpsUISeFNiR32euRGaThYRvPTqp9hN2SXXaat57+wK/zyfwVomSBd5FxcD8qFDvHaemo1fFEejvbCFiP+vEFoEz1VLHxbaZo+K3rX4y+1YP9VtShlYxy0jjYsyyBhkBGG9vVcJZ1BCrDhWxDdhw21FSS1KM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769781174; c=relaxed/simple;
+	bh=7BkjoQJU+ia2PMS1t5wmpNqwQAEhRIVS+TW+cvlD5bw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bG0s7ocHk8nZMfE+1FTlUpFbhZKZgJxedCJooIGON4Lqa2nGtu6txK349QLEMiK6rj6HwaYODozliiUzE2JvtEfc1qiuUPmUlCvivhPdqx2uszrcJw1elDjhyXQCgiPmtiz3JF3V9P0XQMZa4Ks1mLyXA9+m0hQqgETZI4k+h2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=YIMR9XBi; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Z0nORIzs"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=h3B1EGe0Aye4EIUq0SJFdLJfJ6vIJgOroCNdxV6eoVh7fDZYoQihoItUcnxBurOGXQRH+Zt7rA3BDfUUS1OfEHROiIqOeftTwInzVXysTo1WUxf5WwhABcvNLXRNaPLW3qebIZlK3qWHGycLKQO6bwJ4HUKMxulHht15VPDJoiiLQ/ijSl5lyWdAIa1s1Ozj8JvNqLRjGYVEXh4wM+9hqomxAofnqFveEA3ieks3XKlny3egLVMaalW0USOp4u4XFAVKIJTuay0dhPDaRb6ZD0s+fEGGqyoxo+c8hUEkArMXMbRPE0WIOCD41mNBG45k8CnFkCW0Is8MwJKNFJ2mqA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=a19byuoTHXL3ssNpRJtujZZjdiT2bWZZ2x8GJL3PJcc=;
- b=Clt65BSEtRS46DDxfJc0c4lwfjJcnxQJIHcsQCF5GXyIoJZnFSjjTPR8hZmgw6KYL8Sl4PgpYNpBmNEBNB7ZUTpfEiQHCB4sdHm+CtZM7EdOdFBJ+Th++ZaAdjv/gp22KKVnTR6FWKO0vf7CMbH6xYsXzAJ8DpAEC0bUWLsAi5o94S3hsLn/Lt3k/bPdcj90ZxwHH4mlXS90fc6eMjaCS/0oK5+4bMtBmQPRkdL8WuS67+wAP1j5vhj3wNswz8oxLlgbbJh8LtO7ycNgMIUGOJ2KKng3gVDmtoQ3man1dNQUUYMcUbrjS2zJVElwZgsjeXuabFu0WHqNtgMqoXTHzQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=a19byuoTHXL3ssNpRJtujZZjdiT2bWZZ2x8GJL3PJcc=;
- b=Z0nORIzsquCqxFMWGsTxz9PfqsI/bvH08Ax0f8FAOIj9vXb6DxyKg8aNmcDlEU3NXXdq4x35nPkunUnJHvuN5wZ8L31nTrmmAF1TI7YlUtm3A+oaYDaCzeiXmZa6w4TXpSjkjAZZVKNAe+Kk2Kn5p6kpqlY76/X5YYkcsudSUQrdS//gey20wMBb9JlGFT5wx6jXA0DsaqcH9IRZ2qlnGzeLzbGseYwCK6qIgFgLCp5Spo7gHzJI0PiIUDiCrvLgQV6c0NdY+kmt1b0O1FQj2ZcgNPIFoFdKMhuwsNwzcHRNjQqfMmyUYK4F7lEF1pDAVrxcQzx7nQDnMnnUA0oG0Q==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by CY5PR12MB6084.namprd12.prod.outlook.com (2603:10b6:930:28::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.11; Fri, 30 Jan
- 2026 13:33:08 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%3]) with mapi id 15.20.9564.010; Fri, 30 Jan 2026
- 13:33:07 +0000
-From: Alexandre Courbot <acourbot@nvidia.com>
-Date: Fri, 30 Jan 2026 22:32:46 +0900
-Subject: [PATCH] rust: io: move MIN_SIZE and io_addr_assert to IoKnownSize
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260130-io-min-size-v1-1-65a546e3104d@nvidia.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzMDQ2MD3cx83dzMPN3izKpU3TTjZCMLy2RDE4vEVCWgjoKi1LTMCrBp0bG
- 1tQBsTUJbXQAAAA==
-X-Change-ID: 20260130-io-min-size-f3c289c148ae
-To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun.feng@gmail.com>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Trevor Gross <tmgross@umich.edu>, Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Zhi Wang <zhiw@nvidia.com>
-Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- Alexandre Courbot <acourbot@nvidia.com>
-X-Mailer: b4 0.14.3
-X-ClientProxiedBy: TYCP286CA0253.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:456::11) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="YIMR9XBi"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-48068127f00so18250435e9.3
+        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 05:52:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=tuxon.dev; s=google; t=1769781171; x=1770385971; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=INGNfIhX3cdl2idoxtcthwbVKbbQU48P6iBpGUwnFNY=;
+        b=YIMR9XBiyiyxl12ahO49Vo1+a9wJ/8o0FOrtTzKlFIy0cBvSZLlgKl68Bl3jMQTQAq
+         TcPbphZkyRtS+IyKrc2XcNpPTxQRBX15D1Fz+m0rgxLg4C4ZLHvvhvVPaRI46VCqygju
+         1Vlok839z2bk6I62wSyA3QQf1+d13NOwShX4+xeu9A1284RfcO0k3JqvsBp01axcAbgG
+         eP6r6zb4Qn4t6k5nVC4umGHO+yfybmicUug6BmV2pxKxn33xv8DIxm8KCJvvOZR/sfRg
+         JfZJ1QjoukAL1R8BWPzMJoQXENPh0tO/LvBC7Zh1BsDBWLsWrqh0aCUkYfOgZ0GFOM+5
+         ACWw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769781171; x=1770385971;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=INGNfIhX3cdl2idoxtcthwbVKbbQU48P6iBpGUwnFNY=;
+        b=mR/lZNm8sVflJMyuU8N8Bb0XiO2NPjzrGBp6BW2szG4cWAexJW8kSewG0C+sIOLLbO
+         nWP5GzSEtp1XN4hABiLy8oAY2+yG03mKi4b3CWKxtqcSI4QwsyD3kpcXzrL2PnwWY/Vh
+         5C3zl3QR/Xq/X2ZDSDqSE3Zc/sYN6fapvJabLU2+E23AGzAPj4TOSzmT3br9RnivsUbe
+         UyTcbavOEQBd/5KSvJgOSfu0hDWiihnZRYNf7cmLpYtWiPlh93+/4TifPPEmr4WtN1ZG
+         y9KowSD3xQfiqV46FmHp+3M7Vr6fX5qW8/M/ETZlUWxsd1ECzyCBj8FeYW7JExmkb7rA
+         pB3A==
+X-Forwarded-Encrypted: i=1; AJvYcCXFi+YhaEwvkPD9TS0Nv6itvB6RMz8CgQo5STmVW3mnEfv+R31YeIYDyI1jrSUY/EGAaHpDmIqY+zE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YypHtbXSKnX8FsaE4TWBK+42w47a3gk1TE5Usm2D7ErZ4b4dNPX
+	WDF+cQIkMPI8d9iGGn3muw4AQMzv1WJqtwlpuhB5kXYIk78eKoh+GvhI/w8dBrLfpvQ=
+X-Gm-Gg: AZuq6aLumloEuzXEVtP0oom6Dq7dPieYrOqOLSDc3i4X/Q/t4VA5qz9BcYrvkH7mLkC
+	NomUjQ39a6R0dO3DAxZgmbaXedVyoSICoRJqRRk0ZQYX1vnc5nsi2X8rnZLAkpTAYsGLuyi8FYE
+	5ioKcBijiuIlBeyVTcnPoSzGuaWhJ56UP+S5fE4c5VRpv2VYDU9B9krkgl5XBpaa9rJN6l5CpKa
+	RGoxxUR2Xzvt0gXgggQZzIChPGTbvFgT45Pja32nvd0R+o8f2c8+VqU9ihLUCnZxDw6XJXpgc7Z
+	Mvt2fHoXiHjQaR3s5Vc50nAILR+BInqfE43LtFjyh91PoKKNNl8rGJOwfXePp99lRilJDlrvBPw
+	gN1fZm3nH8sMTlKPcUgxBQIVSzmJucjrhpJr5dOtJmwu+9hCpl6gLiGCL03/5K3PtXL2jEZnrHi
+	/doQGvutifk0CurNzwSozvF3+O61ze
+X-Received: by 2002:a05:600c:a306:b0:477:6d96:b3e5 with SMTP id 5b1f17b1804b1-482db45ded7mr32976715e9.7.1769781170326;
+        Fri, 30 Jan 2026 05:52:50 -0800 (PST)
+Received: from [192.168.50.4] ([82.78.167.31])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-482e047e644sm16278305e9.2.2026.01.30.05.52.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Jan 2026 05:52:49 -0800 (PST)
+Message-ID: <4b4ddd9a-35d1-43d7-b25b-5101f914a68e@tuxon.dev>
+Date: Fri, 30 Jan 2026 15:52:47 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CY5PR12MB6084:EE_
-X-MS-Office365-Filtering-Correlation-Id: bd6cee6f-468a-499a-819a-08de60041a89
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|10070799003|7416014|376014|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?R3cvMCtKQm9tWkJ1cW95Szl1YXpzcTFtMlRIdXJvdTUreDdwK2g3VlVXU2RD?=
- =?utf-8?B?Y2ViY3ArbFFlQmxXenppTHAyWEpwZHF0L2dhTkJIaGQyY3JObElJQ2oxdjNL?=
- =?utf-8?B?OEcxWkNNMEpOMTVJdllOaWtLeVV5Rzk2T3czZXcvVmRQZEpObHJLMXRCenZx?=
- =?utf-8?B?d2U4Q3BKem5hNmh0RzJpbGFYc1hpUGZUVEZGRURndnNKR2Qyc1o0cE9VNjdo?=
- =?utf-8?B?NVhTRnQ0SzVIR2RwV3lGUEVlMHpXMDRXby84WXdEMVhDMElzL09pZ1hiMVVj?=
- =?utf-8?B?UVNuN1lzNnRKQUw5RW1wTE1xRk0wc0J0TWU3YXUvakdGdy9oNDZ6NnIwc3NY?=
- =?utf-8?B?YW5vQzRIdGx1YnpZL01zU0VaVHY4TFlQQW5GRHRtbVg4VVVKcDF5WVFtajVn?=
- =?utf-8?B?ODQ1b1lSRTM5QkQwaEUwQ1JkaWxXYnBpbmZnMzVPT0FXNkh0OW4raDBZNGth?=
- =?utf-8?B?WjVpSWVnR0VuU2w0Y2NMN0hnUUNYOUZhZXpRYlNkNXIrUEN1Mmp4RmEydEpi?=
- =?utf-8?B?dUVFUFcwZ2tlVU1yMy9LL3ZBWnNobk1FREVHR1NjcDdySDdXUzM3TjBScWdW?=
- =?utf-8?B?WWlOeElhYVppR3NNUU9LOWxtYTRiWUhQWHpIZDZOZFZCOHh6TmNnMko5cEQz?=
- =?utf-8?B?enU5ZEJFeFRwczc1dFRla1E0aWljSmttODRMTDYzaHp5cGRhTVBTajlzZm5u?=
- =?utf-8?B?Yy8rZnZ4YW9WOHB2M3NqRUxKODlsL0lwaUZtLzV3YUM4K0NwTWZUb3gwS3Ew?=
- =?utf-8?B?WVdlbVZodUdaNzU4U1UydnIxQWdLQW5lV1MycEZ1T2ErWFVYV0pUcmxtRTdC?=
- =?utf-8?B?SFYvSitpdXd6WHBpdWE5a3FlWmFLamIyenJaYkU4ZDBXNXhxMC9vSG54U2Ft?=
- =?utf-8?B?RWZxMGlQR3IzNnhjeWEvWmk0Z3R4Z1RFaGJ5azduWEw2ZjJZLzAzbjJmKzNL?=
- =?utf-8?B?QzhPcWMxRU1ib2VWMmpVOTFud1RKd2hRL2paSWNtcExLckYzelFRZk5ZdVo5?=
- =?utf-8?B?Q216YTlrQ0J4bUozMjBNblc4UEVrVHcrM1A1akJ5YmdsYlBqUFl1VkEwZVJC?=
- =?utf-8?B?WHpKbnlWWVhLUlZsMmQ0d2J1eGtwbXB1ZjVlRWtyZ1JNYkhUVk5zZjdPZmVs?=
- =?utf-8?B?cUxHVXhuenUrd0NwS0ZENnE3STlySHg3YzFJUkFrcFgrOG0vNUJ6TGpDMTRH?=
- =?utf-8?B?anRBYXFYVmRFNW01dlp3U2htbjBVWWUyTlM5UmthRVB0aGc1YTRJWHo0ZVVn?=
- =?utf-8?B?ZjZGdy8vN2RrcVovSEFGUTJ1cUl2TUhNM2F6TmFXN0hnQjZNWHRVbnNIZjhu?=
- =?utf-8?B?clB1UjMwd1ZRc3hSaE9MWENKc2QwSVFKdEw3dXdDb2duN1NDaGw4NUdiQUNu?=
- =?utf-8?B?SW5IT3A4a1U3QWw0Q3BsVU1zTVpzSk85cVZJeVg0TFlPRzZIVGRkTVoyNUFq?=
- =?utf-8?B?V0tiSUIwTWJuUVFzUWNjalljY3JZQjFXSWNqZEFRTHE5SUtqeW9sTmIvdlY2?=
- =?utf-8?B?VjROWkVpT2ZnQzZQMlNHbWpWd2xxeUo2WUNyMjdqc0RrNml5L2JYRGE0bld1?=
- =?utf-8?B?Z3hJMzEvZTBMQXE2ZkZnVkZpd24vT2xOTVVCWU5jSTRER05NWGNDeG1YQVVR?=
- =?utf-8?B?T2xjVUVhbWM3Q0dla1BCcERDbWR0MGo5eUVsREdLMXRTNysrUVlJT3pKR1Zx?=
- =?utf-8?B?TzZ2QVYvTVYrU0VCZlBzL1I4aVk4M0JBQmJqOXhlYVBLQUd4STJtSzRuRjBC?=
- =?utf-8?B?WmJ2YmpTREZQSUFSVUhGUUQ2NWxVU2x1ZGhaQ3F0cEJ1b2tkeStKYWRBUVpl?=
- =?utf-8?B?Uk1xSjJtUlQ2aEtaVW82VXArSlhLMzZWWW5JRXlsVHpOR3B2SEhCdGhOcGdh?=
- =?utf-8?B?Z1g4MEpmZmFXZWxlejhQRWdnVnRnbXBCYXVyVlFJQms2UGxxUitWUzh0bWRm?=
- =?utf-8?B?RFVSNzZDYnRwcllGaXUzek1uWG5FUklTaVk0SGszbEkxU09wQjRUSUhvTWZU?=
- =?utf-8?B?eU91azhnemlJUmgxQ1g3b3ZPMm5Ydm5XU1I2Zm5NTFR6dDB1dlF4WGxrRHIz?=
- =?utf-8?B?TFpUNjZPZ2tDZ2EvYldCRFVNNkRZWjFWMW5YYkswYmp4eFBCM0RmTzlhQlE2?=
- =?utf-8?B?RjZoOUpocXhrZHFSKzZQaXNjTTRxUk9kc3UzY3V3cU15dHNJSUZNSlE5VnR4?=
- =?utf-8?B?WlE9PQ==?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(10070799003)(7416014)(376014)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?RFA1UlVza0xVajE1d3NNTm01NEVFTFh4UTVjQy9yek1QaE01T3ptck9vWVFU?=
- =?utf-8?B?U0U0cVBuTkJCU3lGazM3OXhOeGNKMU1lWjJDbmgvZWkzYTY1UmlHOVdKV0tJ?=
- =?utf-8?B?c3U2R0RvVjMvdXc3TGhzM0lVMDJYeUJxZTlqbnVNallmRmpaOUxDUkZIT0xk?=
- =?utf-8?B?a0xMOUpHVFhWS25yZ2g5eTR4eGFXemU0QlEvbHYxVXNTaVF3UVdYNnA5dzdk?=
- =?utf-8?B?WGhUMGRIaGxuOGVZRUR2UkNtaExJVDB3UVJRN1c4ditKNTJheXN4c2R3MXpv?=
- =?utf-8?B?cnV0d1dQc1dIZlN6VGVnZjVMajRmYnVDOU9JcEJsLzVFeFVvSkFqdkpiWFBu?=
- =?utf-8?B?eFBPWHBTZWNON0kwQ2hOcVhnZkFORC9FVHFrVUNlU0toMmdDaHVmd3l5d1k3?=
- =?utf-8?B?dmV5Y0hMODlBdXNtZHlXVGdvQkk2WnhJK3JEQ25UUkQvaWtJM3NPWDVqK3Vy?=
- =?utf-8?B?SGhhRnMxcjREblNtbm81SDlPRC9uYWVXUXJUWnJVQnI1VVpzRmdxNnU3Tmpr?=
- =?utf-8?B?cWordmRWczRENjJBckhqbUdXUy9nL09HNkVwT2lycW1QdytMSDhTbkh3Y0Vy?=
- =?utf-8?B?TSsrM2phOGpSQldmUGNPWnV4THdJYjFvQUdvcm5IMnMzcHZybCtEb2hNK2xE?=
- =?utf-8?B?TW4zVitxUVZvRzRmSjNTNUNOK0pQTkhkUjhxb3JRdGswcS9Hb0k0Tm94ejQ5?=
- =?utf-8?B?RHhUQ0kxNkJ2bGFVZXFOTExXTk4zbk5RQ1phcEg0WGswTzNUeVgxN0VnVVlq?=
- =?utf-8?B?UGpPdzVWcytCSUlmdDRla3JhbWlWVzlxN2phSFhwWER0NjdLOENTNTdRTWpi?=
- =?utf-8?B?MHBPSjQvc215VHVUTUNWc3JLTWRwb1ZMaXpweE1OdDNwcTdkUlNkbUlPOUQ0?=
- =?utf-8?B?djI4eExaQ2doYTAyU2VFeDU5Rk1WWTVmVGc0YjcveTlyUGFZYk5ZSFFpUHp3?=
- =?utf-8?B?bkxOTlliOGxuZGtMOStEaHZjOEIzSk5qRk1jZW82cEc4bG1JVVFMV3VRZUw4?=
- =?utf-8?B?STJYODlrdk1oNWF2UDRFZWpmNmdSV2Z5cGtwZDBlaTliZXJXUjUwSEdyQ3N5?=
- =?utf-8?B?eEszMTJlcGs0OWNKd1pvMG1DWDUwU0xsWkFFbmVDYnRpaEpCbDZ0UVNxTjVz?=
- =?utf-8?B?eEVvL3ZSaUd4U0VCTzFXcHZNRmtMZlkvQU8wSkFQUTZqU0tqOHYwc01EZDJn?=
- =?utf-8?B?UVJ6djZuUE50SmlucTFXWHlKZDYyRy9heXM3VTVlanZ3TW5YSGJWV2ZiMEJR?=
- =?utf-8?B?YkpTYWhMS2FUTTBBL0F5WGZyM014b3JBNkNWOGVaMjhqL0gxcTQ2UnRpNU9B?=
- =?utf-8?B?cVk3R2VVRWdQTEJ2aE1pWWhDWG0vQm02SS83NHR2ZXJaemc1bVNrVk9qcFpz?=
- =?utf-8?B?cEJzOHRqS1lFSDJwRVM2MGYzQXJCM3MxclY0c3VGOFhGbmV5Y0gxNHpjK2JE?=
- =?utf-8?B?R3BNUVU2ckJFVWN2YkZ0Mk5pYmgwdWlYVHlnRkJ5UTN0ZTNSQm5NOWdPK0ZT?=
- =?utf-8?B?WWlhS1U2Z1ErdEtuaElUSkhPNVllZjVSdWZyUGZ6UmpRTldBTnJyK2U4NWhw?=
- =?utf-8?B?OW1wYUhXRlJSRzMxdDUzYXUrNzNla3d1RWFOWDg1bDVMS0xYYWJXa2tmV3Fq?=
- =?utf-8?B?eFYrazZiU3NYUjdrYXVqUklWbHpkUGtsYWNsRVNBRG5pT2xHL2gxQlErbGp3?=
- =?utf-8?B?SitmcitWRk5RZzQ3aDZVUlhtak92K1FJS3FzNU14MkJaR053K2wrczd4TGpS?=
- =?utf-8?B?bDhNZ1A5eFJUMVlkamp1ZlF2cENWenIxQm9vTUZnYXlrWkdEY3N3MzJhOVZX?=
- =?utf-8?B?Y2dOSGNhY3E0K2xqejRzaGYwU3RoZktBTVdBTnN4M0NUWk5GVHFZQU9kSkd1?=
- =?utf-8?B?NWJoQ3BsMzRoTXVMQjJCKzBLV1hBNTBtSkxuTTF6aGJkQ3lrVFhBNmRZYXND?=
- =?utf-8?B?UXBzVmpqeEx1eW91dCt3NE9meDMwN2RrZFRaZFJNeDBTeVBwb2RzL3F4N2ZO?=
- =?utf-8?B?c3lYaVdyV1ArR2htV2hyQmtWd21pSVlCL0VOUG9YV2ZXZ29scG1LM2FxVkc4?=
- =?utf-8?B?QWg1YzJnQzBJYmFRWklmNXM2ZkErcmpQemhzMzd4aUtMb29yTVQyRVhSRFJY?=
- =?utf-8?B?QnhkUXdQUWpFdlNXOVFvNlErbktpUnRQa3BINmhJdVdJeU81SEdHV2xzeTJP?=
- =?utf-8?B?R205WkR6Skw4VWx0bm1Wenpkc3k5SHVHakVRUW82a080WU9KWmhsQm5IVDkw?=
- =?utf-8?B?NTJVeHBvSDZyMkNQaFVtb0ROZlY5R2pHRysxNlF0VGhGK25EVVFDbzk5VGJW?=
- =?utf-8?B?aWJRRmtXdUNmaUM5djlCNGpmOVFpZGkvQWpXSHMyREowYzlIM1RpblRBeUFG?=
- =?utf-8?Q?YWIn5cFXksLn+JBr+41xzMo9rghUV2ajJgs9MpkkXwjRa?=
-X-MS-Exchange-AntiSpam-MessageData-1: Wur8ZGCIlXbxUw==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bd6cee6f-468a-499a-819a-08de60041a89
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jan 2026 13:33:07.6623
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mUYqF8blqitz/OKO73KPdZ4CU5ic/ZYEQNBO2laeceOUP0px5xIbbqpLIlZIKYhCHEOT5eZg9eTCQvrB0wuu4w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6084
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 02/15] PCI: renesas: rzg3s: Rework inbound window
+ algorithm for multi-SoC support
+To: John Madieu <john.madieu.xa@bp.renesas.com>,
+ claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org, geert+renesas@glider.be,
+ krzk+dt@kernel.org
+Cc: robh@kernel.org, bhelgaas@google.com, conor+dt@kernel.org,
+ magnus.damm@gmail.com, biju.das.jz@bp.renesas.com,
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-clk@vger.kernel.org, john.madieu@gmail.com
+References: <20260129214130.16067-1-john.madieu.xa@bp.renesas.com>
+ <20260129214130.16067-3-john.madieu.xa@bp.renesas.com>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+In-Reply-To: <20260129214130.16067-3-john.madieu.xa@bp.renesas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-`MIN_SIZE` are `io_addr_assert` only ever used for IO types which
-implement `IoKnownSize` and do not make sense for types that don't.
+Hi, John,
 
-It looks like they should have been there since the beginning, so move
-them while the code is still fresh.
+On 1/29/26 23:41, John Madieu wrote:
+> The existing inbound window configuration algorithm has two issues that
+> prevent proper operation on RZ/G3E:
+> 
+> 1. Over-mapping: Using roundup_pow_of_two() on the remaining region size
+>     can result in windows that extend beyond the intended memory region.
+> 
+> 2. Alignment violation: Addresses are only aligned to 4K regardless of
+>     the actual window size. According to the RZ/G3S HW manual (Rev.1.10,
+>     section 34.3.7.6) and RZ/G3E HW manual (Rev.1.15, section 6.6.7.6),
 
-Also update `IoKnownSize`'s documentation since it is not just a marker
-trait anymore.
+Section 34.3.7.6 does not exist on RZ/G3S Rev.1.10 neither on later revisions. I 
+suppose this had to be 34.6.6, point 7.
 
-Fixes: 121d87b28e1d ("rust: io: separate generic I/O helpers from MMIO implementation")
-Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
----
- rust/kernel/io.rs     | 36 ++++++++++++++++++------------------
- rust/kernel/pci/io.rs |  7 +++----
- 2 files changed, 21 insertions(+), 22 deletions(-)
+>     bit carry must not occur when adding AXI Window Base and AXI Window
+>     Mask registers. This effectively requires the base address to be
+>     aligned to the window size.
+> 
+> While RZ/G3S tolerates these issues,
 
-diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index 056a3ec71647..c1cca7b438c3 100644
---- a/rust/kernel/io.rs
-+++ b/rust/kernel/io.rs
-@@ -301,9 +301,6 @@ pub trait IoCapable<T> {}
- /// For MMIO regions, all widths (u8, u16, u32, and u64 on 64-bit systems) are typically
- /// supported. For PCI configuration space, u8, u16, and u32 are supported but u64 is not.
- pub trait Io {
--    /// Minimum usable size of this region.
--    const MIN_SIZE: usize;
--
-     /// Returns the base address of this mapping.
-     fn addr(&self) -> usize;
- 
-@@ -323,16 +320,6 @@ fn io_addr<U>(&self, offset: usize) -> Result<usize> {
-         self.addr().checked_add(offset).ok_or(EINVAL)
-     }
- 
--    /// Returns the absolute I/O address for a given `offset`,
--    /// performing compile-time bound checks.
--    // Always inline to optimize out error path of `build_assert`.
--    #[inline(always)]
--    fn io_addr_assert<U>(&self, offset: usize) -> usize {
--        build_assert!(offset_valid::<U>(offset, Self::MIN_SIZE));
--
--        self.addr() + offset
--    }
--
-     /// Fallible 8-bit read with runtime bounds check.
-     #[inline(always)]
-     fn try_read8(&self, _offset: usize) -> Result<u8>
-@@ -478,14 +465,27 @@ fn write64(&self, _value: u64, _offset: usize)
-     }
- }
- 
--/// Marker trait for types with a known size at compile time.
-+/// Trait for types with a known size at compile time.
- ///
- /// This trait is implemented by I/O backends that have a compile-time known size,
- /// enabling the use of infallible I/O accessors with compile-time bounds checking.
- ///
- /// Types implementing this trait can use the infallible methods in [`Io`] trait
- /// (e.g., `read8`, `write32`), which require `Self: IoKnownSize` bound.
--pub trait IoKnownSize: Io {}
-+pub trait IoKnownSize: Io {
-+    /// Minimum usable size of this region.
-+    const MIN_SIZE: usize;
-+
-+    /// Returns the absolute I/O address for a given `offset`,
-+    /// performing compile-time bound checks.
-+    // Always inline to optimize out error path of `build_assert`.
-+    #[inline(always)]
-+    fn io_addr_assert<U>(&self, offset: usize) -> usize {
-+        build_assert!(offset_valid::<U>(offset, Self::MIN_SIZE));
-+
-+        self.addr() + offset
-+    }
-+}
- 
- // MMIO regions support 8, 16, and 32-bit accesses.
- impl<const SIZE: usize> IoCapable<u8> for Mmio<SIZE> {}
-@@ -497,8 +497,6 @@ impl<const SIZE: usize> IoCapable<u32> for Mmio<SIZE> {}
- impl<const SIZE: usize> IoCapable<u64> for Mmio<SIZE> {}
- 
- impl<const SIZE: usize> Io for Mmio<SIZE> {
--    const MIN_SIZE: usize = SIZE;
--
-     /// Returns the base address of this mapping.
-     #[inline]
-     fn addr(&self) -> usize {
-@@ -552,7 +550,9 @@ fn maxsize(&self) -> usize {
-     );
- }
- 
--impl<const SIZE: usize> IoKnownSize for Mmio<SIZE> {}
-+impl<const SIZE: usize> IoKnownSize for Mmio<SIZE> {
-+    const MIN_SIZE: usize = SIZE;
-+}
- 
- impl<const SIZE: usize> Mmio<SIZE> {
-     /// Converts an `MmioRaw` into an `Mmio` instance, providing the accessors to the MMIO mapping.
-diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-index 026e7a3b69bd..6ca4cf75594c 100644
---- a/rust/kernel/pci/io.rs
-+++ b/rust/kernel/pci/io.rs
-@@ -148,8 +148,6 @@ impl<'a, S: ConfigSpaceKind> IoCapable<u16> for ConfigSpace<'a, S> {}
- impl<'a, S: ConfigSpaceKind> IoCapable<u32> for ConfigSpace<'a, S> {}
- 
- impl<'a, S: ConfigSpaceKind> Io for ConfigSpace<'a, S> {
--    const MIN_SIZE: usize = S::SIZE;
--
-     /// Returns the base address of the I/O region. It is always 0 for configuration space.
-     #[inline]
-     fn addr(&self) -> usize {
-@@ -174,8 +172,9 @@ fn maxsize(&self) -> usize {
-     define_write!(infallible, write32, call_config_write(pci_write_config_dword) <- u32);
- }
- 
--/// Marker trait indicating ConfigSpace has a known size at compile time.
--impl<'a, S: ConfigSpaceKind> IoKnownSize for ConfigSpace<'a, S> {}
-+impl<'a, S: ConfigSpaceKind> IoKnownSize for ConfigSpace<'a, S> {
-+    const MIN_SIZE: usize = S::SIZE;
-+}
- 
- /// A PCI BAR to perform I/O-Operations on.
- ///
+I don't think it tolerates this but I haven't tested more than one window.
 
----
-base-commit: c71257394bc9c59ea727803f6e55e83fe63db74e
-change-id: 20260130-io-min-size-f3c289c148ae
+> RZ/G3E strictly enforces these
+> constraints and requires precise window boundaries with properly aligned
+> addresses.
+> 
+> Rework the algorithm to properly handle arbitrary region sizes and
+> alignment constraints by splitting non-power-of-2 regions into multiple
+> windows. The new approach iteratively selects the largest power-of-2
+> size that:
+>   - Fits within the remaining region (__fls of remaining size)
+>   - Does not exceed the natural alignment of the CPU address (__ffs)
+>   - Does not exceed the natural alignment of the PCI address (__ffs)
+> 
+> This ensures windows never over-map beyond the intended region and
+> satisfies the hardware requirement that base address + mask must not
+> cause bit carry, while maintaining the 4K * 2^N byte window size
+> constraint.
+> 
+> The reworked algorithm is required for RZ/G3E support and remains
+> fully compatible with RZ/G3S.
+> 
+> Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+> ---
+> 
+> Changes:
+> 
+> v4: No changes
+> v3: No changes
+> v2: New patch
+> 
+>   drivers/pci/controller/pcie-rzg3s-host.c | 53 ++++++++++++++----------
+>   1 file changed, 31 insertions(+), 22 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+> index 58e78fc52913..7b42f9415d3a 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> @@ -1270,50 +1270,59 @@ static int rzg3s_pcie_set_inbound_windows(struct rzg3s_pcie_host *host,
+>   	u64 pci_addr = entry->res->start - entry->offset;
+>   	u64 cpu_addr = entry->res->start;
+>   	u64 cpu_end = entry->res->end;
+> -	u64 size_id = 0;
+>   	int id = *index;
+>   	u64 size;
+>   
+> -	while (cpu_addr < cpu_end) {
+> +	/*
+> +	 * According to the RZ/G3S HW manual (Rev.1.10, section 34.3.7.6) 
 
-Best regards,
--- 
-Alexandre Courbot <acourbot@nvidia.com>
+s/34.3.7.6/34.6.6.7 or 34.6.6 point 7
+
+
+> and
+> +	 * RZ/G3E HW manual (Rev.1.15, section 6.6.7.6):
+> +	 * - Each window must be a single memory size of power of two
+> +	 * - Mask registers must be set to (2^N - 1)
+> +	 * - Bit carry must not occur when adding base and mask registers,
+> +	 *   meaning the base address must be aligned to the window size
+> +	 *
+> +	 * Split non-power-of-2 regions into multiple windows to satisfy
+> +	 * these constraints without over-mapping.
+> +	 */
+> +	while (cpu_addr <= cpu_end) {
+> +		u64 remaining_size = cpu_end - cpu_addr + 1;
+> +		u64 align_limit;
+> +
+>   		if (id >= RZG3S_MAX_WINDOWS)
+>   			return dev_err_probe(host->dev, -ENOSPC,
+>   					     "Failed to map inbound window for resource (%s)\n",
+>   					     entry->res->name);
+>   
+> -		size = resource_size(entry->res) - size_id;
+> +		/* Start with largest power-of-two that fits in remaining size */
+> +		size = 1ULL << __fls(remaining_size);
+>   
+>   		/*
+> -		 * According to the RZ/G3S HW manual (Rev.1.10,
+> -		 * section 34.3.1.71 AXI Window Mask (Lower) Registers) the min
+> -		 * size is 4K.
+> +		 * The "no bit carry" rule requires base addresses to be
+> +		 * aligned to the window size. Find the maximum window size
+> +		 * that both addresses can support based on their natural
+> +		 * alignment (lowest set bit).
+>   		 */
+> -		size = max(size, SZ_4K);
+> +		align_limit = min(cpu_addr ? (1ULL << __ffs(cpu_addr)) : ~0ULL,
+> +				  pci_addr ? (1ULL << __ffs(pci_addr)) : ~0ULL);
+> +
+> +		size = min(size, align_limit);
+>   
+>   		/*
+> -		 * According the RZ/G3S HW manual (Rev.1.10, sections:
+> -		 * - 34.3.1.69 AXI Window Base (Lower) Registers
+> -		 * - 34.3.1.71 AXI Window Mask (Lower) Registers
+> -		 * - 34.3.1.73 AXI Destination (Lower) Registers)
+> -		 * the CPU addr, PCIe addr, size should be 4K aligned and be a
+> -		 * power of 2.
+> +		 * Minimum window size is 4KB.
+> +		 * See RZ/G3S HW manual (Rev.1.10, section 34.3.1.71) and
+> +		 * RZ/G3E HW manual (Rev.1.15, section 6.6.4.1.3.(74)).
+>   		 */
+> -		size = ALIGN(size, SZ_4K);
+> -		size = roundup_pow_of_two(size);
+> -
+> -		cpu_addr = ALIGN(cpu_addr, SZ_4K);
+> -		pci_addr = ALIGN(pci_addr, SZ_4K);
+> +		size = max(size, SZ_4K);
+>   
+>   		/*
+> -		 * According to the RZ/G3S HW manual (Rev.1.10, section
+> -		 * 34.3.1.71 AXI Window Mask (Lower) Registers) HW expects first
+> -		 * 12 LSB bits to be 0xfff. Subtract 1 from size for this.
+> +		 * HW expects (size - 1) for mask register, e.g., a 4KB window
+> +		 * (0x1000) requires mask value 0xFFF.
+
+This change is unrelated for this patch. It can be dropped.
+
+With those addressed:
+
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+
+>   		 */
+>   		rzg3s_pcie_set_inbound_window(host, cpu_addr, pci_addr,
+>   					      size - 1, id);
+>   
+>   		pci_addr += size;
+>   		cpu_addr += size;
+> -		size_id = size;
+>   		id++;
+>   	}
+>   	*index = id;
 
