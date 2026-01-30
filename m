@@ -1,248 +1,270 @@
-Received: from out30-113.freemail.mail.aliyun.com (out30-113.freemail.mail.aliyun.com [115.124.30.113])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C26313267
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 08:07:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.113
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C653E353EFF
+	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 09:24:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769760474; cv=none; b=ONxj0H46CQ1iTOU9Vicv0iaTUcUr7GlbUK6ISu60uIcdJgYPyf93gI5ykm+hVxBsXChKe4qxQsdEGlZC4YkVFWgRj97KcA0jVy6QGo8d/xFhvkMGSWyYO7lYjZ6zd6FiZIT3YV/e3qGGFHO6Lilr5nG/xPw9IGlqDQDQZ/5969M=
+	t=1769765093; cv=none; b=hEwyqBk06aw9dEeAeeWmBMaLvcJqL+Bz1NoK5zNfsLx5DC0h3d+gAgjR/uNzhrZpzRAJBEFwhZJBI11Tg8tU59d9JmGl4PD1CvblHfYWlHEfYA7iUCch58T8jwLZNso6uLXyxgPHjo71P0FpfGDunR6TrqI9imPkXjh1qiW3mR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769760474; c=relaxed/simple;
-	bh=3Cbs7au5v+jb2GjJqIPJz6VNoSZjlXGC43ZsXf7RLNE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GnUbDqNVn7m0LcdLBlPXqbU1ZYjqm+dSEQENTrnTGe3838OkNPVSobPFuBv0SAIIVz7bQZcccTinZV37iTVoywtMWI8odOQx2kLYD3j9XFKdLe4fOoLvNcUHJj8vlGkKNxJSJtVHJ39Yepst+5QlF+e89hJQg5DvMEDlDEz5SMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=YCCmsyBw; arc=none smtp.client-ip=115.124.30.113
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1769765093; c=relaxed/simple;
+	bh=sHyf7JGTswJnJzJuVR3G5aqWnzb8mjgdujsgFrfEpdA=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=MBTybP5X8CJRoXIK2vlX0GGWyiydBltV5zsulJKAkKlPLP+ACFzrMs68voed9oo1I41RRdexp1dBhSiC28F0YHGcNQbeZ2XE9JvJDbpqxIO5/MWhU+JxygVVRRAxuVXUvz6TJfTz1jxQib+GeHvG+QNkh8Vk+FsTY3QVrNt3w4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GcZaqEyX; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="YCCmsyBw"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1769760464; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=4xf4Oxgqg2iEwUvRivv0oCA8PX/wt+seFB5IFk/WLE0=;
-	b=YCCmsyBwBnjDJxBeflvJFXT1EnnWxZ4E6IntFApyiXKM3mAI+DtDDWz9DT5eR9W1zgm02n2ywasVY0hxtFUnqmfsEvQ39QER4eHCpAKXyvXXZllI46VLa2MUXdxxZHH0y9/zIggQyN1iJdUw2EDR9931E4konwHkXXcsL7P8UTA=
-Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WyA3lq4_1769760460 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 30 Jan 2026 16:07:44 +0800
-From: Guixin Liu <kanie@linux.alibaba.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Andy Shevchenko <andriy.shevchenko@intel.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: linux-pci@vger.kernel.org,
-	Xunlei Pang <xlpang@linux.alibaba.com>,
-	oliver.yang@linux.alibaba.com
-Subject: [PATCH v11 2/2] PCI: Check ROM header and data structure addr before accessing
-Date: Fri, 30 Jan 2026 16:07:29 +0800
-Message-Id: <20260130080729.96152-3-kanie@linux.alibaba.com>
-X-Mailer: git-send-email 2.32.0.3.g01195cf9f
-In-Reply-To: <20260130080729.96152-1-kanie@linux.alibaba.com>
-References: <20260130080729.96152-1-kanie@linux.alibaba.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GcZaqEyX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769765089; x=1801301089;
+  h=date:from:to:cc:subject:message-id;
+  bh=sHyf7JGTswJnJzJuVR3G5aqWnzb8mjgdujsgFrfEpdA=;
+  b=GcZaqEyXcyJLiCqhi7n9xqgxAYlQ2Uc74IlFhEsJ/DyZcQec5vKC5Abz
+   TbvsTaoK9F7XBGfFUCeNzuWdS+1biZ507+RI8nl59e1g+m/wqt9auOOet
+   qntwV3gnfIFUP92Ch2F9juuxSm7QU936hX6XONjK4LuPmsmF/EQB57gNA
+   tQb/PHYVsYtz+FJUIgn8tFWaldTWf4JLYE+m8IJXgTVf9+S//lMdBXGz8
+   zMUM9C9WDC7EyXPG7JycP7CtuCFXSgaAvUOnac6LOig61NM1ndmdTW3+r
+   alFa7FWavB/lrLxPmgUyPlF3eLIhlZ7l4qPpHZWEwyyoeyPkCIf4seV1Y
+   w==;
+X-CSE-ConnectionGUID: 1fs5F2L9SIqOi0cMSnU4Hw==
+X-CSE-MsgGUID: 9qcf0++0QsObIZDhZW91FA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11686"; a="82384853"
+X-IronPort-AV: E=Sophos;i="6.21,262,1763452800"; 
+   d="scan'208";a="82384853"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jan 2026 01:24:48 -0800
+X-CSE-ConnectionGUID: smiHy5kqSCS45NobK6hwlw==
+X-CSE-MsgGUID: XjG56FQoS/qCNbWfj3QGEQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,262,1763452800"; 
+   d="scan'208";a="208615579"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 30 Jan 2026 01:24:46 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vlkk7-00000000cRY-0EFw;
+	Fri, 30 Jan 2026 09:24:43 +0000
+Date: Fri, 30 Jan 2026 17:24:31 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:reset2] BUILD SUCCESS
+ 86c2e331953c9ec0713938d9282bd0bbcc490ff7
+Message-ID: <202601301726.rQhDToh9-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-We meet a crash when running stress-ng on x86_64 machine:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git reset2
+branch HEAD: 86c2e331953c9ec0713938d9282bd0bbcc490ff7  PCI: Remove slot-specific lock/unlock and save/restore
 
-  BUG: unable to handle page fault for address: ffa0000007f40000
-  RIP: 0010:pci_get_rom_size+0x52/0x220
-  Call Trace:
-  <TASK>
-    pci_map_rom+0x80/0x130
-    pci_read_rom+0x4b/0xe0
-    kernfs_file_read_iter+0x96/0x180
-    vfs_read+0x1b1/0x300
+elapsed time: 721m
 
-Our analysis reveals that the ROM space's start address is
-0xffa0000007f30000, and size is 0x10000. Because of broken ROM
-space, before calling readl(pds), the pds's value is
-0xffa0000007f3ffff, which is already pointed to the ROM space
-end, invoking readl() would read 4 bytes therefore cause an
-out-of-bounds access and trigger a crash.
-Fix this by adding image header and data structure checking.
+configs tested: 193
+configs skipped: 3
 
-We also found another crash on arm64 machine:
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-  Unable to handle kernel paging request at virtual address
-ffff8000dd1393ff
-  Mem abort info:
-  ESR = 0x0000000096000021
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x21: alignment fault
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-22
+arc                      axs103_smp_defconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260130    clang-17
+arc                   randconfig-002-20260130    clang-17
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                              allyesconfig    gcc-15.2.0
+arm                                 defconfig    gcc-15.2.0
+arm                          pxa3xx_defconfig    gcc-15.2.0
+arm                   randconfig-001-20260130    clang-17
+arm                   randconfig-002-20260130    clang-17
+arm                   randconfig-003-20260130    clang-17
+arm                   randconfig-004-20260130    clang-17
+arm64                            allmodconfig    clang-22
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260130    gcc-11.5.0
+hexagon               randconfig-002-20260130    gcc-11.5.0
+i386                             allmodconfig    clang-20
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386        buildonly-randconfig-001-20260130    clang-20
+i386        buildonly-randconfig-002-20260130    clang-20
+i386        buildonly-randconfig-003-20260130    clang-20
+i386        buildonly-randconfig-004-20260130    clang-20
+i386        buildonly-randconfig-005-20260130    clang-20
+i386        buildonly-randconfig-006-20260130    clang-20
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260130    gcc-14
+i386                  randconfig-002-20260130    gcc-14
+i386                  randconfig-003-20260130    gcc-14
+i386                  randconfig-004-20260130    gcc-14
+i386                  randconfig-005-20260130    gcc-14
+i386                  randconfig-006-20260130    gcc-14
+i386                  randconfig-007-20260130    gcc-14
+i386                  randconfig-011-20260130    clang-20
+i386                  randconfig-012-20260130    clang-20
+i386                  randconfig-013-20260130    clang-20
+i386                  randconfig-014-20260130    clang-20
+i386                  randconfig-015-20260130    clang-20
+i386                  randconfig-016-20260130    clang-20
+i386                  randconfig-017-20260130    clang-20
+loongarch                        allmodconfig    clang-22
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260130    gcc-11.5.0
+loongarch             randconfig-002-20260130    gcc-11.5.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                             allyesconfig    gcc-15.2.0
+m68k                          amiga_defconfig    gcc-15.2.0
+m68k                                defconfig    clang-19
+m68k                       m5208evb_defconfig    gcc-15.2.0
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+mips                  decstation_64_defconfig    gcc-15.2.0
+mips                           jazz_defconfig    gcc-15.2.0
+mips                     loongson2k_defconfig    gcc-15.2.0
+mips                       rbtx49xx_defconfig    gcc-15.2.0
+nios2                            allmodconfig    clang-22
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-22
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                 randconfig-001-20260130    gcc-11.5.0
+nios2                 randconfig-002-20260130    gcc-11.5.0
+openrisc                         allmodconfig    clang-22
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    clang-22
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+openrisc                    or1ksim_defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-22
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260130    gcc-8.5.0
+parisc                randconfig-002-20260130    gcc-8.5.0
+parisc64                            defconfig    clang-19
+powerpc                     akebono_defconfig    gcc-15.2.0
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-22
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc                      mgcoge_defconfig    gcc-15.2.0
+powerpc                     rainier_defconfig    gcc-15.2.0
+powerpc               randconfig-001-20260130    gcc-8.5.0
+powerpc               randconfig-002-20260130    gcc-8.5.0
+powerpc                    socrates_defconfig    gcc-15.2.0
+powerpc64             randconfig-001-20260130    gcc-8.5.0
+powerpc64             randconfig-002-20260130    gcc-8.5.0
+riscv                            allmodconfig    clang-22
+riscv                             allnoconfig    clang-22
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260130    clang-22
+riscv                 randconfig-002-20260130    clang-22
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-22
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260130    clang-22
+s390                  randconfig-002-20260130    clang-22
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-22
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                    randconfig-001-20260130    clang-22
+sh                    randconfig-002-20260130    clang-22
+sparc                             allnoconfig    clang-22
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260130    clang-22
+sparc                 randconfig-002-20260130    clang-22
+sparc64                          allmodconfig    clang-22
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260130    clang-22
+sparc64               randconfig-002-20260130    clang-22
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-22
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260130    clang-22
+um                    randconfig-002-20260130    clang-22
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-22
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260130    clang-20
+x86_64      buildonly-randconfig-002-20260130    clang-20
+x86_64      buildonly-randconfig-003-20260130    clang-20
+x86_64      buildonly-randconfig-004-20260130    clang-20
+x86_64      buildonly-randconfig-005-20260130    clang-20
+x86_64      buildonly-randconfig-006-20260130    clang-20
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260130    clang-20
+x86_64                randconfig-002-20260130    clang-20
+x86_64                randconfig-003-20260130    clang-20
+x86_64                randconfig-004-20260130    clang-20
+x86_64                randconfig-005-20260130    clang-20
+x86_64                randconfig-006-20260130    clang-20
+x86_64                randconfig-011-20260130    clang-20
+x86_64                randconfig-012-20260130    clang-20
+x86_64                randconfig-013-20260130    clang-20
+x86_64                randconfig-014-20260130    clang-20
+x86_64                randconfig-015-20260130    clang-20
+x86_64                randconfig-016-20260130    clang-20
+x86_64                randconfig-071-20260130    clang-20
+x86_64                randconfig-072-20260130    clang-20
+x86_64                randconfig-073-20260130    clang-20
+x86_64                randconfig-074-20260130    clang-20
+x86_64                randconfig-075-20260130    clang-20
+x86_64                randconfig-076-20260130    clang-20
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-22
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-22
+xtensa                           allyesconfig    gcc-15.2.0
+xtensa                  cadence_csp_defconfig    gcc-15.2.0
+xtensa                randconfig-001-20260130    clang-22
+xtensa                randconfig-002-20260130    clang-22
 
-The call trace is the same with x86_64, but the crash reason is
-that the data structure addr is not aligned with 4, and arm64
-machine report "alignment fault". Fix this by adding alignment
-checking.
-
-Fixes: 47b975d234ea ("PCI: Avoid iterating through memory outside the resource window")
-Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com>
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
----
- drivers/pci/rom.c | 113 ++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 95 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index 4f7641b93b4b..d8abed669fac 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -6,9 +6,12 @@
-  * (C) Copyright 2004 Silicon Graphics, Inc. Jesse Barnes <jbarnes@sgi.com>
-  */
- 
-+#include <linux/align.h>
- #include <linux/bits.h>
- #include <linux/kernel.h>
- #include <linux/export.h>
-+#include <linux/io.h>
-+#include <linux/overflow.h>
- #include <linux/pci.h>
- #include <linux/sizes.h>
- #include <linux/slab.h>
-@@ -84,6 +87,91 @@ void pci_disable_rom(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_disable_rom);
- 
-+static bool pci_rom_is_header_valid(struct pci_dev *pdev,
-+				    void __iomem *image,
-+				    void __iomem *rom,
-+				    size_t size,
-+				    bool last_image)
-+{
-+	unsigned long rom_end = (unsigned long)rom + size - 1;
-+	unsigned long header_end;
-+	u16 signature;
-+
-+	/*
-+	 * Some CPU architectures require IOMEM access addresses to
-+	 * be aligned, for example arm64, so since we're about to
-+	 * call readw(), we check here for 2-byte alignment.
-+	 */
-+	if (!IS_ALIGNED((unsigned long)image, 2))
-+		return false;
-+
-+	if (check_add_overflow((unsigned long)image, PCI_ROM_HEADER_SIZE,
-+				&header_end))
-+		return false;
-+
-+	if (image < rom || header_end > rom_end)
-+		return false;
-+
-+	/* Standard PCI ROMs start out with these bytes 55 AA */
-+	signature = readw(image);
-+	if (signature == PCI_ROM_IMAGE_SIGNATURE)
-+		return true;
-+
-+	if (last_image) {
-+		pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
-+			 PCI_ROM_IMAGE_SIGNATURE, signature);
-+	} else {
-+		pci_info(pdev, "No more image in the PCI ROM\n");
-+	}
-+
-+	return false;
-+}
-+
-+static bool pci_rom_is_data_struct_valid(struct pci_dev *pdev,
-+					 void __iomem *pds,
-+					 void __iomem *rom,
-+					 size_t size)
-+{
-+	unsigned long rom_end = (unsigned long)rom + size - 1;
-+	unsigned long end;
-+	u32 signature;
-+	u16 data_len;
-+
-+	/*
-+	 * Some CPU architectures require IOMEM access addresses to
-+	 * be aligned, for example arm64, so since we're about to
-+	 * call readl(), we check here for 4-byte alignment.
-+	 */
-+	if (!IS_ALIGNED((unsigned long)pds, 4))
-+		return false;
-+
-+	/* Before reading length, check addr range. */
-+	if (check_add_overflow((unsigned long)pds, PCI_ROM_DATA_STRUCT_LEN + 1,
-+				&end))
-+		return false;
-+
-+	if (pds < rom || end > rom_end)
-+		return false;
-+
-+	data_len = readw(pds + PCI_ROM_DATA_STRUCT_LEN);
-+	if (!data_len || data_len == U16_MAX)
-+		return false;
-+
-+	if (check_add_overflow((unsigned long)pds, data_len, &end))
-+		return false;
-+
-+	if (end > rom_end)
-+		return false;
-+
-+	signature = readl(pds);
-+	if (signature == PCI_ROM_DATA_STRUCT_SIGNATURE)
-+		return true;
-+
-+	pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
-+		 PCI_ROM_DATA_STRUCT_SIGNATURE, signature);
-+	return false;
-+}
-+
- /**
-  * pci_get_rom_size - obtain the actual size of the ROM image
-  * @pdev: target PCI device
-@@ -99,38 +187,27 @@ static size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom,
- 			       size_t size)
- {
- 	void __iomem *image;
--	int last_image;
- 	unsigned int length;
-+	bool last_image;
- 
- 	image = rom;
- 	do {
- 		void __iomem *pds;
--		/* Standard PCI ROMs start out with these bytes 55 AA */
--		if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
--			pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
--				 PCI_ROM_IMAGE_SIGNATURE, readw(image));
-+		if (!pci_rom_is_header_valid(pdev, image, rom, size, true))
- 			break;
--		}
-+
- 		/* get the PCI data structure and check its "PCIR" signature */
- 		pds = image + readw(image + PCI_ROM_POINTER_TO_DATA_STRUCT);
--		if (readl(pds) != PCI_ROM_DATA_STRUCT_SIGNATURE) {
--			pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
--				 PCI_ROM_DATA_STRUCT_SIGNATURE, readl(pds));
-+		if (!pci_rom_is_data_struct_valid(pdev, pds, rom, size))
- 			break;
--		}
-+
- 		last_image = readb(pds + PCI_ROM_LAST_IMAGE_INDICATOR) &
- 				   PCI_ROM_LAST_IMAGE_INDICATOR_BIT;
- 		length = readw(pds + PCI_ROM_IMAGE_LEN);
- 		image += length * PCI_ROM_IMAGE_SECTOR_SIZE;
--		/* Avoid iterating through memory outside the resource window */
--		if (image >= rom + size)
-+
-+		if (!pci_rom_is_header_valid(pdev, image, rom, size, last_image))
- 			break;
--		if (!last_image) {
--			if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
--				pci_info(pdev, "No more image in the PCI ROM\n");
--				break;
--			}
--		}
- 	} while (length && !last_image);
- 
- 	/* never return a size larger than the PCI resource window */
--- 
-2.32.0.3.g01195cf9f
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
