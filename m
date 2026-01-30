@@ -1,147 +1,198 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA2E1F09AD
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 14:19:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53A11322B6D
+	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 14:25:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769782798; cv=none; b=Az97+jJuV8HAIdm5TgzKJUNC73uaujiDqcYHLT5jbhMclZVTnYMrBFhR6e8ohrf90jVdwk4JqUjDq1F+y7FKXng2Mzs/TJL4HHuldY/aDRFSpwuInltAAWX97NhKMmCrAFiUg9mixCVuXxuWK3JlqWeYEkgfcMfLj/3UmE78wcM=
+	t=1769783112; cv=none; b=anu2kwW9DG7QpTIIa89XtjU/KFaIxujKgZn4vn3p1eICB5+m8m4tsrVOdDD+FkVld6j03HHHZID2RuJZTKiuZGhEDJTfsJvHejlVxifMM78fqd1JIKoaGQcOn0277/cne+s6rwzIDJrXSOXuuj7I8uFukOkI5IcdNYAYpLbrnN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769782798; c=relaxed/simple;
-	bh=RM2jYyaAJGs0KZpvFRO6884NvQRvdHDwu2gaf4nYWYU=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=oi9PFKBpj8TjkGKCRrddjwXdJvNoPX6tiMIEwXM/yCPFoE0k5UnAPXTJeVljjIXZbGJX8mVe6W3x77d20HUkWMpOj02ykleysCnqCgQV+2exsn0BNLcuEXDsEWCNc5/LKIVZmnn7FiVg2x+b/YHgeHYoy2ZTr1mZTMtTxclGI54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=loFPxULu; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=DEyrH2B/; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1769783112; c=relaxed/simple;
+	bh=ky56pFmagL53l/6EDJ0oTxsX72fRm9RrAm1uoEG+cnM=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=iNj0gL8O4FPVALuNFzir2z+MH5ovnyVa7SndeaseMnBhLZUo4CPob7ft3F7J95vMOrPgRwcOivdurXxKZJ/w+sMlRJGZvyHXoPDs6HgTsrBAsspTR0RUD16UABdypFnlDWJrajnuhSvmdD+rbLndz+Z6HXZoj7laEpRxAdpnNzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=OAY3hYQ3; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="loFPxULu";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="DEyrH2B/"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60U9V9ex2675518
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 14:19:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	lBX7Xb/c4QyqHoYQVWwEkaV24j6y+poeEuDnKvKxiw0=; b=loFPxULuvLXhBnBq
-	vVXq2j5+ePZ+V8JOlaEo9f4uEpF14BzGwmqfPuk7ei5/h2NpTQ3UiGk14Ra73EJr
-	0Gb9sc/QmxoQi69tOmLyQGfmukzU0JuIuOjuxc1GVobFPYaYnBIUXqxTIcqWt+hg
-	2Dst6NZmtfD+ts/JgOOWleYea41sCkO1SuN2W3IS4iEmaEt+rYhBJNu3Kxczk8xi
-	X8c/xXdPwH47YKWASs9zjd+wttT/VScUuwtPej46lk+BWEOIHBv/gGEd5smpKqKU
-	WoiFFxQHGKa6qtwGaI7d2fx2+bB7x+c5DtGhqg5/oJydmOoB9nm4QjMd+q5hjGjU
-	k7Ve6g==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c0t340tam-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 14:19:56 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2a863be8508so30253035ad.2
-        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 06:19:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1769782796; x=1770387596; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lBX7Xb/c4QyqHoYQVWwEkaV24j6y+poeEuDnKvKxiw0=;
-        b=DEyrH2B/dHjTOB+x3juyzQ8Q36Ui+thH/P0XRYEoydb7j6ZTNEDuSc6g5l29KyNUu6
-         y+VWI622DlugSsMPJ4lnSjtJGJ5VslREC88PPcT7DIHLtQGpnyFBBrMdJUmRMXonaYqj
-         KeNkFhYaQWQMsFYdwaZQoNoLJ0GZGWgI0nBhRfXq50kbYWLXwuzsa/oXgFXrxva/cipN
-         ccRNI+dh4Y7cOcU2EojN6alos8gK3dHzsxSNIoz1v9/lITbYAmg6NlhwS0Ut82ZaRlBQ
-         +qjRFK4wRGWWjPDBzZzRtJaeb7f2XI+93fkbvuEtHCmc+TC5zaDHJsX3I6SttiA77n8O
-         KfsA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769782796; x=1770387596;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=lBX7Xb/c4QyqHoYQVWwEkaV24j6y+poeEuDnKvKxiw0=;
-        b=DYOYiWJShNtYiD1+4OVudf9O2wtjbyl4n2bvYmMCyZsrienTPq5AN+iYUbBPsQxGVU
-         WK+RcIcfymnoDzj7YWCJg7OgEcqmokalKCa05WLyIsp8SMMk3aeHAAuUd7Cy2GhirEDN
-         zuRji35buXz8kSD7KBB2D/wfWM2xQEkSdO+WLCfvwqV2L6z+Lyu4YZAtk2XLq8mELPW2
-         F/F2TO0y7AnIcC8/+CnrKFIULtePEbdGgXhQdsnVRPIaGg1Wy1tiS5h3+vVRMTpCmpqo
-         PB9d9EJV0ZTwMasJ1jf2MRVNChznwdvjN72tw6nB9GimqIRwUFXADMb/mFcihteUAqp0
-         1Atw==
-X-Forwarded-Encrypted: i=1; AJvYcCXsmjI6VNdtbyQDq7cjrnOGNBCwIaDK4cidTgEAnIBbVCmBIX4nzqlRuEhqrvALS4yFM901z2bJePA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxU42a91iaxoik4zyivQAZLM/9hwbZ6/FdlQCoifhJZ0kBcIfik
-	bryvXpv2XgaLfwWzVmAk3LO/dCvhcUZtxq3EW3EuDm6dzngETJDphwirHFP0Oxm49Ngr3OZjWah
-	OczDUtZQwOQYEaBuZCGmKgEjid5JmKt0Ye2D4ebk6uf/sHRnE8YdWjDuobdswTWY=
-X-Gm-Gg: AZuq6aKUn5lu3bBAljLosyerJDm8o9qiNFl31C06eCVsfgWR55f7/xrX8pxn2QKbMYB
-	VDfDpz+3q7jr8m67aepFm6/WvxBDDQNa6wTIwUKYp+EJhHtLK3mWMHvC10hkJlSdf3RbZWiNUQx
-	BjkidUQChvorDzqKFEcieKXbTaIp4/kVjMMxA04KltxIwcr1mlLo3fCpB2sTS2rPU1UhtTOcKjf
-	Bqyf+RX/OC+GJfFohl5iCeZgGP6mGofeOfzsMUk1/cmpZMnblFFXhEu8YatkG+GzQWU1u3RzFjm
-	fVE3X4n8x9sPt36ZWp82Chm+IQeddFaSBdSW9Z/gwJa0Wq1GNq+9H3pjJ7P6yWj+Rc1d2QQNSql
-	NQd+s
-X-Received: by 2002:a17:902:da90:b0:29e:a615:f508 with SMTP id d9443c01a7336-2a8d803819bmr32743145ad.28.1769782795914;
-        Fri, 30 Jan 2026 06:19:55 -0800 (PST)
-X-Received: by 2002:a17:902:da90:b0:29e:a615:f508 with SMTP id d9443c01a7336-2a8d803819bmr32742685ad.28.1769782795287;
-        Fri, 30 Jan 2026 06:19:55 -0800 (PST)
-Received: from work.lan ([2409:4091:a0f4:6806:d344:e8bc:3382:4c2a])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a88b4c3b29sm73906345ad.54.2026.01.30.06.19.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Jan 2026 06:19:54 -0800 (PST)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-        Niklas Cassel <cassel@kernel.org>
-Cc: Frank.Li@nxp.com, dlemoal@kernel.org, Koichiro Den <den@valinux.co.jp>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
-In-Reply-To: <20260130113038.2143947-2-cassel@kernel.org>
-References: <20260130113038.2143947-2-cassel@kernel.org>
-Subject: Re: [PATCH v5] PCI: endpoint: pci-epf-test: Allow overriding
- default BAR sizes
-Message-Id: <176978279120.8260.1628300698854466072.b4-ty@kernel.org>
-Date: Fri, 30 Jan 2026 19:49:51 +0530
+	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="OAY3hYQ3"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 5A817240029
+	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 15:25:07 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.net; s=2017;
+	t=1769783107; bh=NuU7o3acHMY5tPPTqWm/q6sOOEfui3MF1FN/fdWnEZY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
+	 From;
+	b=OAY3hYQ3JiCNZ8d1tyjL++nVkypuHUaYKRREjN8KhuK+U1AuV0SFXc7K93xcQrVUw
+	 4th8MZn7A+zPGwwb5cMcT89odCBmwQekO5kMxV8xPbC4V147WSDBPpbyy2jf4t+Ln0
+	 QK/yfwS617lEmyyR7KkqIyDimsNccjLg7Qyy+7N1jP0alSA9DCuttSkNm/yaAriOH/
+	 uTHY8JI50WtrSxyeYtZnOMdmQ41fOi1/TKtZnjSAYxCjcBdYgcx/CHF8YL36oYqFUL
+	 T2BeDpG1TCMwI9QnwYTXMlaub2U5g5fL20jCkWrdsaBhk0/7kcpBsr2Uq5vEQYiaNK
+	 Ko65FK8TFWnAQ==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4f2dZS2jQQz9rxQ;
+	Fri, 30 Jan 2026 15:25:04 +0100 (CET)
+From: Charalampos Mitrodimas <charmitro@posteo.net>
+To: Alexandre Courbot <acourbot@nvidia.com>
+Cc: Danilo Krummrich <dakr@kernel.org>,  Alice Ryhl <aliceryhl@google.com>,
+  Daniel Almeida <daniel.almeida@collabora.com>,  Miguel Ojeda
+ <ojeda@kernel.org>,  Boqun Feng <boqun.feng@gmail.com>,  Gary Guo
+ <gary@garyguo.net>,  =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>,  Benno
+ Lossin <lossin@kernel.org>,  Andreas Hindborg <a.hindborg@kernel.org>,
+  Trevor Gross <tmgross@umich.edu>,  Bjorn Helgaas <bhelgaas@google.com>,
+  Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,  Zhi Wang
+ <zhiw@nvidia.com>,  driver-core@lists.linux.dev,
+  rust-for-linux@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  linux-pci@vger.kernel.org
+Subject: Re: [PATCH] rust: io: move MIN_SIZE and io_addr_assert to IoKnownSize
+In-Reply-To: <20260130-io-min-size-v1-1-65a546e3104d@nvidia.com>
+References: <20260130-io-min-size-v1-1-65a546e3104d@nvidia.com>
+Date: Fri, 30 Jan 2026 14:25:06 +0000
+Message-ID: <87bjibtby8.fsf@posteo.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTMwMDExNyBTYWx0ZWRfX6Fnpki0dFgfZ
- BtM0qwWrb43mP3a5p7XDvueDe+ailN87iYNzW1vK9G6SqWGUdta71UjxBaRVplkz7M0yp622+yC
- 5gI4b22sjK+jv5NcjWL3R0pVz1JRugd0yJj/hdeZwUKQw+2x5mVmaHhRVHAxc6CO49YHEeTNT8f
- 5h5h96tqCgEF7zFZjPD7pD1E5eRKWD1kYK/cYItgEck1DpnmTQry3V+lOSFG1AJd0tnEHucHzMm
- 1nNFNJpZ0o9++hvFdmiKLHbfb/iOr2rRNYXf92TPb7WnblJaVov56BdXiDyBhivfs7rPXW8LYRD
- HBWPgZjC3a26eIIuKYYJgaG1o9fbglLVyCYPnqDDwzyrMy2icoRvM4A18T2dJCcHibF1QsxNhgE
- Z3IiGJ0eO1mEqSoQS6YiLscsGFqrf9A15xIJcXw7AqroaN2g9hGRxMDuCiT+X2K+KvRGnnuh/hL
- mcimj8Fsjw74lnpIJYw==
-X-Proofpoint-ORIG-GUID: EhCiUe-Fe7KxFDek6aPp4Qhz9djDSxBS
-X-Authority-Analysis: v=2.4 cv=QfFrf8bv c=1 sm=1 tr=0 ts=697cbe0c cx=c_pps
- a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=MIuId-MzVKPO7xlGtEAA:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
- a=GvdueXVYPmCkWapjIL-Q:22
-X-Proofpoint-GUID: EhCiUe-Fe7KxFDek6aPp4Qhz9djDSxBS
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-01-30_02,2026-01-29_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 bulkscore=0 impostorscore=0 adultscore=0 phishscore=0
- spamscore=0 clxscore=1015 lowpriorityscore=0 malwarescore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601300117
+Content-Type: text/plain
 
+Alexandre Courbot <acourbot@nvidia.com> writes:
 
-On Fri, 30 Jan 2026 12:30:39 +0100, Niklas Cassel wrote:
-> Add bar{0,1,2,3,4,5}_size attributes in configfs, so that the user is not
-> restricted to run pci-epf-test with the hardcoded BAR size values defined
-> in pci-epf-test.c.
-> 
-> This code is shamelessly more or less copy pasted from pci-epf-vntb.c
-> 
-> 
-> [...]
+> `MIN_SIZE` are `io_addr_assert` only ever used for IO types which
 
-Applied, thanks!
+Hi,
 
-[1/1] PCI: endpoint: pci-epf-test: Allow overriding default BAR sizes
-      commit: 930e343cde6c43cdcbfcc8fdb45539dc8d53d82c
+Typo? should be "and" instead of "are"?
 
-Best regards,
--- 
-Manivannan Sadhasivam <mani@kernel.org>
+Cheers,
+C. Mitrodimas
 
+> implement `IoKnownSize` and do not make sense for types that don't.
+>
+> It looks like they should have been there since the beginning, so move
+> them while the code is still fresh.
+>
+> Also update `IoKnownSize`'s documentation since it is not just a marker
+> trait anymore.
+>
+> Fixes: 121d87b28e1d ("rust: io: separate generic I/O helpers from MMIO implementation")
+> Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
+> ---
+>  rust/kernel/io.rs     | 36 ++++++++++++++++++------------------
+>  rust/kernel/pci/io.rs |  7 +++----
+>  2 files changed, 21 insertions(+), 22 deletions(-)
+>
+> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+> index 056a3ec71647..c1cca7b438c3 100644
+> --- a/rust/kernel/io.rs
+> +++ b/rust/kernel/io.rs
+> @@ -301,9 +301,6 @@ pub trait IoCapable<T> {}
+>  /// For MMIO regions, all widths (u8, u16, u32, and u64 on 64-bit systems) are typically
+>  /// supported. For PCI configuration space, u8, u16, and u32 are supported but u64 is not.
+>  pub trait Io {
+> -    /// Minimum usable size of this region.
+> -    const MIN_SIZE: usize;
+> -
+>      /// Returns the base address of this mapping.
+>      fn addr(&self) -> usize;
+>  
+> @@ -323,16 +320,6 @@ fn io_addr<U>(&self, offset: usize) -> Result<usize> {
+>          self.addr().checked_add(offset).ok_or(EINVAL)
+>      }
+>  
+> -    /// Returns the absolute I/O address for a given `offset`,
+> -    /// performing compile-time bound checks.
+> -    // Always inline to optimize out error path of `build_assert`.
+> -    #[inline(always)]
+> -    fn io_addr_assert<U>(&self, offset: usize) -> usize {
+> -        build_assert!(offset_valid::<U>(offset, Self::MIN_SIZE));
+> -
+> -        self.addr() + offset
+> -    }
+> -
+>      /// Fallible 8-bit read with runtime bounds check.
+>      #[inline(always)]
+>      fn try_read8(&self, _offset: usize) -> Result<u8>
+> @@ -478,14 +465,27 @@ fn write64(&self, _value: u64, _offset: usize)
+>      }
+>  }
+>  
+> -/// Marker trait for types with a known size at compile time.
+> +/// Trait for types with a known size at compile time.
+>  ///
+>  /// This trait is implemented by I/O backends that have a compile-time known size,
+>  /// enabling the use of infallible I/O accessors with compile-time bounds checking.
+>  ///
+>  /// Types implementing this trait can use the infallible methods in [`Io`] trait
+>  /// (e.g., `read8`, `write32`), which require `Self: IoKnownSize` bound.
+> -pub trait IoKnownSize: Io {}
+> +pub trait IoKnownSize: Io {
+> +    /// Minimum usable size of this region.
+> +    const MIN_SIZE: usize;
+> +
+> +    /// Returns the absolute I/O address for a given `offset`,
+> +    /// performing compile-time bound checks.
+> +    // Always inline to optimize out error path of `build_assert`.
+> +    #[inline(always)]
+> +    fn io_addr_assert<U>(&self, offset: usize) -> usize {
+> +        build_assert!(offset_valid::<U>(offset, Self::MIN_SIZE));
+> +
+> +        self.addr() + offset
+> +    }
+> +}
+>  
+>  // MMIO regions support 8, 16, and 32-bit accesses.
+>  impl<const SIZE: usize> IoCapable<u8> for Mmio<SIZE> {}
+> @@ -497,8 +497,6 @@ impl<const SIZE: usize> IoCapable<u32> for Mmio<SIZE> {}
+>  impl<const SIZE: usize> IoCapable<u64> for Mmio<SIZE> {}
+>  
+>  impl<const SIZE: usize> Io for Mmio<SIZE> {
+> -    const MIN_SIZE: usize = SIZE;
+> -
+>      /// Returns the base address of this mapping.
+>      #[inline]
+>      fn addr(&self) -> usize {
+> @@ -552,7 +550,9 @@ fn maxsize(&self) -> usize {
+>      );
+>  }
+>  
+> -impl<const SIZE: usize> IoKnownSize for Mmio<SIZE> {}
+> +impl<const SIZE: usize> IoKnownSize for Mmio<SIZE> {
+> +    const MIN_SIZE: usize = SIZE;
+> +}
+>  
+>  impl<const SIZE: usize> Mmio<SIZE> {
+>      /// Converts an `MmioRaw` into an `Mmio` instance, providing the accessors to the MMIO mapping.
+> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+> index 026e7a3b69bd..6ca4cf75594c 100644
+> --- a/rust/kernel/pci/io.rs
+> +++ b/rust/kernel/pci/io.rs
+> @@ -148,8 +148,6 @@ impl<'a, S: ConfigSpaceKind> IoCapable<u16> for ConfigSpace<'a, S> {}
+>  impl<'a, S: ConfigSpaceKind> IoCapable<u32> for ConfigSpace<'a, S> {}
+>  
+>  impl<'a, S: ConfigSpaceKind> Io for ConfigSpace<'a, S> {
+> -    const MIN_SIZE: usize = S::SIZE;
+> -
+>      /// Returns the base address of the I/O region. It is always 0 for configuration space.
+>      #[inline]
+>      fn addr(&self) -> usize {
+> @@ -174,8 +172,9 @@ fn maxsize(&self) -> usize {
+>      define_write!(infallible, write32, call_config_write(pci_write_config_dword) <- u32);
+>  }
+>  
+> -/// Marker trait indicating ConfigSpace has a known size at compile time.
+> -impl<'a, S: ConfigSpaceKind> IoKnownSize for ConfigSpace<'a, S> {}
+> +impl<'a, S: ConfigSpaceKind> IoKnownSize for ConfigSpace<'a, S> {
+> +    const MIN_SIZE: usize = S::SIZE;
+> +}
+>  
+>  /// A PCI BAR to perform I/O-Operations on.
+>  ///
+>
+> ---
+> base-commit: c71257394bc9c59ea727803f6e55e83fe63db74e
+> change-id: 20260130-io-min-size-f3c289c148ae
+>
+> Best regards,
