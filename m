@@ -1,172 +1,203 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D8FB63590D9;
-	Fri, 30 Jan 2026 22:51:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7075C3590D8;
+	Fri, 30 Jan 2026 22:51:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769813483; cv=none; b=rLOoBWs3BuGcS5ow4jJPRlPUIW7uXCFMGVrI8TgYe9AmRZn+s0SwrrFx+jkN2llRPwvbo4pxyak4U+wdmyGAYR3tgfWv1uXSL/NRuMZJO2K1hGz8ThhGC1dAzOeIhgISjWrYn85AoEo5rg6E0kEfyBeBJ/cwC7mK1C78g4OcCV0=
+	t=1769813499; cv=none; b=CkOTi/T2ZO3vP+bjVnpP4z/Zz46L64aFODOgTJ04NIZzaMQuusG3iVu8w76eHbqVAhZTgUorCLFyEcnK4xeNzcDr7lcwcmhSM8vVndR1GKo5peIsQN1RxpharBUmnfRosZLeVRod9xJUQkvZooRPJTiBX5mkxUUUXu3mzRcU8tg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769813483; c=relaxed/simple;
-	bh=CZ/JLVg4sr9VTrKuJxKW8r62d7mpHtMwolcXa543zgU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F0yPyq45VBMJLREqRWqVyG1ciYz8aupp47Qne7amLdglEUG/33HuFJ3eqN0QlpXjSQPJhE8MZvDmg2fQ/jGO4hroLOyq84lbHjqJK1u9H3Q3ghdiJ3DIn99LnoJVTEa3pTSl+CPd+YHWUZvUM/nScx38+wVzDgCSYJnjnYC57wM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=nnW/cjHF; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1769813499; c=relaxed/simple;
+	bh=U+au43+QZxuZYBecWgw6CB7k20w6KPR9nf6OvAdwBa0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EeK4vNfmXIZb3JHeAsgYrIaPH7rEMXpp63CylhlE2TgnImonsWJW5lYbxVFosbtnyfMKh8TaK5KDj7PvLweGv+j4IH5IxrfEgR5MGnAkbsl/iLRqMlcnO6n2CFdmFY6fXg4AALkfO7Us08pT4gjbga8eU0cULj0UwLXxMCIH2LE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L7f5roAD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="nnW/cjHF"
-Received: from [192.168.0.88] (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 7D09D20B7167;
-	Fri, 30 Jan 2026 14:51:20 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7D09D20B7167
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1769813481;
-	bh=KGdqS9ek3b00E3zGRkQ2P5hPV0gdMGJpvlJhJT8pBAM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=nnW/cjHFX2Y5nDawSxVZ3sUA+dmD8vFt4ip3PxYRcw9o/woCVpgXmW+cCwzodAyQL
-	 L6uefhD0hSdSKg5QDkYh1KNQQ7z20w5Wwa8oDaL9qgH0MmByofmSnUnskROUxZWUR5
-	 BQHY7cYRXGx3B85k5PRq6Plys4U5RBW5yAx5hZOU=
-Message-ID: <8298de1d-648c-bbc6-b3c9-1cbc9b5d7e72@linux.microsoft.com>
-Date: Fri, 30 Jan 2026 14:51:19 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L7f5roAD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33CEAC4CEF7;
+	Fri, 30 Jan 2026 22:51:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769813499;
+	bh=U+au43+QZxuZYBecWgw6CB7k20w6KPR9nf6OvAdwBa0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=L7f5roADcRTW5jTBNIcfVjCmUYMuJ8S4MH5Gk3KzRFpMU7rHaJgtawp8PMsxpa7jC
+	 y556UflqKCvXi2LiElLa20esqMPdrp4vwLn3ET3B3Mhwsg1862bFRICDwptoCS0nEP
+	 G43kNjKa7u0Zde8GW5ojHXcX5pvwfuV3O3Q9Tngs7tiGyrujkwG4ejADOOzWnAWPcc
+	 RQkO1KTLbSAIPd/KQOh97OcsUtPE0vgyWxTz40ri4x/WcAncFvse1pvWVM8yPhsWT0
+	 W5QykY7uroaIH1Ej4XTealYdiefYODIH+2hfZU9nfjSIOj8EuOjhCwqG249VCK3+cW
+	 DgH6fia+PD96A==
+Date: Fri, 30 Jan 2026 23:51:33 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org,
+	jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	Zhiqiang.Hou@nxp.com, gustavo.pimentel@synopsys.com,
+	linux-kernel@vger.kernel.org, s-vadapalli@ti.com,
+	danishanwar@ti.com
+Subject: Re: [PATCH v4 2/3] PCI: dwc: ep: Add per-PF BAR and inbound ATU
+ mapping support
+Message-ID: <aX019VTWjMlPX8qp@fedora>
+References: <20260129091753.490167-1-a-garg7@ti.com>
+ <20260129091753.490167-3-a-garg7@ti.com>
+ <aXtrW7viGZfMNZur@ryzen>
+ <s5hd43mnktvnuikuai25fhzchkt4y5w3ejabqhr43ihvwuefb3@wvatfe5k4loe>
+ <aXyAfilrBOe1cEEk@ryzen>
+ <q5e7ydmf4ra6x2mbxwifovgr6p6x5dfnz3hz5psq5ypyabtsvx@oq5ovi4o26yf>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH v0 12/15] x86/hyperv: Implement hyperv virtual iommu
-Content-Language: en-US
-To: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, kys@microsoft.com,
- haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
- longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org,
- tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
- dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
- nunodasneves@linux.microsoft.com, mhklinux@outlook.com,
- romank@linux.microsoft.com
-References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
- <20260120064230.3602565-13-mrathor@linux.microsoft.com>
- <aXAZ-r1PeUBAHwaK@skinsburskii.localdomain>
- <54fd73b9-ade6-f1bb-08fc-17571aeadb20@linux.microsoft.com>
- <aXeO7wh7bpacJ1Sk@skinsburskii.localdomain>
- <c40e6dc8-8e42-b0f3-f8e5-3c637adb7f13@linux.microsoft.com>
- <aXkIGfos4l0kv_lF@skinsburskii.localdomain>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <aXkIGfos4l0kv_lF@skinsburskii.localdomain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <q5e7ydmf4ra6x2mbxwifovgr6p6x5dfnz3hz5psq5ypyabtsvx@oq5ovi4o26yf>
 
-On 1/27/26 10:46, Stanislav Kinsburskii wrote:
-> On Mon, Jan 26, 2026 at 07:02:29PM -0800, Mukesh R wrote:
->> On 1/26/26 07:57, Stanislav Kinsburskii wrote:
->>> On Fri, Jan 23, 2026 at 05:26:19PM -0800, Mukesh R wrote:
->>>> On 1/20/26 16:12, Stanislav Kinsburskii wrote:
->>>>> On Mon, Jan 19, 2026 at 10:42:27PM -0800, Mukesh R wrote:
->>>>>> From: Mukesh Rathor <mrathor@linux.microsoft.com>
->>>>>>
->>>>>> Add a new file to implement management of device domains, mapping and
->>>>>> unmapping of iommu memory, and other iommu_ops to fit within the VFIO
->>>>>> framework for PCI passthru on Hyper-V running Linux as root or L1VH
->>>>>> parent. This also implements direct attach mechanism for PCI passthru,
->>>>>> and it is also made to work within the VFIO framework.
->>>>>>
->>>>>> At a high level, during boot the hypervisor creates a default identity
->>>>>> domain and attaches all devices to it. This nicely maps to Linux iommu
->>>>>> subsystem IOMMU_DOMAIN_IDENTITY domain. As a result, Linux does not
->>>>>> need to explicitly ask Hyper-V to attach devices and do maps/unmaps
->>>>>> during boot. As mentioned previously, Hyper-V supports two ways to do
->>>>>> PCI passthru:
->>>>>>
->>>>>>      1. Device Domain: root must create a device domain in the hypervisor,
->>>>>>         and do map/unmap hypercalls for mapping and unmapping guest RAM.
->>>>>>         All hypervisor communications use device id of type PCI for
->>>>>>         identifying and referencing the device.
->>>>>>
->>>>>>      2. Direct Attach: the hypervisor will simply use the guest's HW
->>>>>>         page table for mappings, thus the host need not do map/unmap
->>>>>>         device memory hypercalls. As such, direct attach passthru setup
->>>>>>         during guest boot is extremely fast. A direct attached device
->>>>>>         must be referenced via logical device id and not via the PCI
->>>>>>         device id.
->>>>>>
->>>>>> At present, L1VH root/parent only supports direct attaches. Also direct
->>>>>> attach is default in non-L1VH cases because there are some significant
->>>>>> performance issues with device domain implementation currently for guests
->>>>>> with higher RAM (say more than 8GB), and that unfortunately cannot be
->>>>>> addressed in the short term.
->>>>>>
->>>>>
->>>>> <snip>
->>>>>
->>>
->>> <snip>
->>>
->>>>>> +static void hv_iommu_detach_dev(struct iommu_domain *immdom, struct device *dev)
->>>>>> +{
->>>>>> +	struct pci_dev *pdev;
->>>>>> +	struct hv_domain *hvdom = to_hv_domain(immdom);
->>>>>> +
->>>>>> +	/* See the attach function, only PCI devices for now */
->>>>>> +	if (!dev_is_pci(dev))
->>>>>> +		return;
->>>>>> +
->>>>>> +	if (hvdom->num_attchd == 0)
->>>>>> +		pr_warn("Hyper-V: num_attchd is zero (%s)\n", dev_name(dev));
->>>>>> +
->>>>>> +	pdev = to_pci_dev(dev);
->>>>>> +
->>>>>> +	if (hvdom->attached_dom) {
->>>>>> +		hv_iommu_det_dev_from_guest(hvdom, pdev);
->>>>>> +
->>>>>> +		/* Do not reset attached_dom, hv_iommu_unmap_pages happens
->>>>>> +		 * next.
->>>>>> +		 */
->>>>>> +	} else {
->>>>>> +		hv_iommu_det_dev_from_dom(hvdom, pdev);
->>>>>> +	}
->>>>>> +
->>>>>> +	hvdom->num_attchd--;
->>>>>
->>>>> Shouldn't this be modified iff the detach succeeded?
->>>>
->>>> We want to still free the domain and not let it get stuck. The purpose
->>>> is more to make sure detach was called before domain free.
->>>>
->>>
->>> How can one debug subseqent errors if num_attchd is decremented
->>> unconditionally? In reality the device is left attached, but the related
->>> kernel metadata is gone.
->>
->> Error is printed in case of failed detach. If there is panic, at least
->> you can get some info about the device. Metadata in hypervisor is
->> around if failed.
->>
+Hello Koichiro,
+
+On Sat, Jan 31, 2026 at 02:16:37AM +0900, Koichiro Den wrote:
+> While looking at this, I spotted a subtle corner case that the missing
+> 'return' has been masking.
 > 
-> With this approach the only thing left is a kernel message.
-> But if the state is kept intact, one could collect a kernel core and
-> analyze it.
+> Consider the following re-programming sequence for a BAR:
+> 
+>   1) The initial set_bar() programs the BAR in BAR Match Mode
+>   2) The second set_bar() switches the BAR to Address Match Mode
+>      - Ad part of this, set_bar() calls dw_pcie_ep_clear_ib_maps() before
+>        re-programming.
+>   3) The third set_bar() switches back to BAR Match Mode.
+> 
+> In step (3), the current behavior depends on how the caller handles the
+> struct pci_epf_bar passed to set_bar()
+> 
+>   a) If the caller passes a freshly prepared epf_bar with .num_submap = 0,
+>      dw_pcie_ep_clear_ib_maps() is called as expected.
+> 
+>   b) If the caller updates the same epf_bar in place (i.e. reused the
+>      object that passed in step (2)) and simply updates .num_submap back to
+>      0, dw_pcie_ep_clear_ib_maps() is NOT called because the condition in
+>      [1] evaluates to false. The recently merged (my) pci-epf-test code
+>      follows this patter, see [2].
+> 
+> The point is that ep_func->epf_bar[bar] only stores a pointer, and the
+> actual object is owned by the API caller. Since struct pci_epf embeds the
+> BAR descriptors, updating an epf_bar in place (pattern (b)) seems quite
+> natural and, in my view, should be supported.
 
-Again, most of linux stuff is cleaned up, the only state is in
-hypervisor, and hypervisor can totally protect itself and devices.
-So there is not much in kernel core as it got cleaned up already.
-Think of this as additional check, we can remove in future after
-it stands the test of time, until then, every debugging bit helps.
+(cut)
 
-> And note, that there won't be a hypervisor core by default: our main
-> context with the usptreamed version of the driver is L1VH and a kernel
-> core is the only thing a third party customer can provide for our
-> analysis.
+> Requiring callers to always pass a new epf_bar (pattern (a)) feels
+> contrary to the current API/data-structure design.
 
-Wei can correct me, but we are not only l1vh focused here. There is
-work going on on all fronts.
+I disagree.
 
-Thanks,
--Mukesh
+I previously suggested that you should look at pci_epf_test_enable_doorbell()
+and pci_epf_test_disable_doorbell().
 
-> Thanks,
-> Stanislav
+If we look at the workflow in pci-epf-test for the doorbell test case:
+
+1)
+pci_epf_test_epc_init() calls pci_epf_test_set_bar() which calls
+pci_epc_set_bar(..., &epf->bar[bar]);
+
+2)
+pci_epf_test_enable_doorbell()
+uses a new struct pci_epf_bar (epf_test->db_bar)
+
+copies the barno, size and flags for the BAR is will dynamically change:
+epf_test->db_bar.barno = bar;
+epf_test->db_bar.size = epf->bar[bar].size;
+epf_test->db_bar.flags = epf->bar[bar].flags;
+calls pci_epc_set_bar(..., &epf_test->db_bar);
+
+3)
+pci_epf_test_disable_doorbell() calls 
+pci_epc_set_bar(..., &epf->bar[bar]);
+with the original unmodified struct pci_epf_bar.
+
+
+Your new test case however, reuses epf->bar[bar] in step 1, 2, 3.
+
+I think the solution is to change your test case so that you use same
+workflow as the doorbell test case. Just add a new struct pci_epf_bar
+to struct pci_epf_test where you store the temporary BAR.
+
+
+I'm not a big fan of your suggested code changes.
+
+I think adding the early return in dw_pcie_ep_clear_ib_maps() and
+modifying your test case to use a new epf_bar are the only things
+that should be fixed as soon as possible.
+
+
+> One downside is that this introduces a behavioral change in a specific
+> failure case that already existed prior to this series.
+> 
+> Concretely, this only affects the traditional reprogramming path where a
+> BAR configured in BAR Match Mode is updated again to BAR Match Mode. If
+> such an update fails (for example, because the new epf_bar->phys_addr is
+> not aligned to region_align), the behavior changes as follows:
+> 
+>   - Before this change: the previously programmed BAR Match Mode mapping
+>     remains in place.
+>   - After this change: the existing mapping is torn down first, so no mapping
+>     remains after the failure.
+> 
+> I don't think this change is a major issue, since the caller will still
+> observe the failure and should handle the error accordingly in either case.
+> That said, I'd appreciate feedback if retaining the old BAR Match Mode
+> mapping on such failure scenario is considered important for the existing
+> update path.
+
+You have found a potential problem with the API though, but like you said,
+this problem was there even before your changes, so this problem can take
+more time to be addressed.
+
+Since the DWC EP driver only stores pointers to struct pci_epf_bar BARs
+in set_bar(), it is theoretically possible for the caller to modify this
+struct after calling set_bar(). This means that any future safety check
+against values in ep_func->epf_bar (e.g. [1]) is unreliable, as the caller
+could have modified the struct after calling set_bar().
+
+[1] https://github.com/torvalds/linux/blob/v6.19-rc7/drivers/pci/controller/dwc/pcie-designware-ep.c#L368-L370
+
+I think the solution to this is to modify struct dw_pcie_ep_func:
+
+@@ -472,7 +472,7 @@ struct dw_pcie_ep_func {
+        u8                      msi_cap;        /* MSI capability offset */
+        u8                      msix_cap;       /* MSI-X capability offset */
+        u8                      bar_to_atu[PCI_STD_NUM_BARS];
+-       struct pci_epf_bar      *epf_bar[PCI_STD_NUM_BARS];
++       struct pci_epf_bar      epf_bar[PCI_STD_NUM_BARS];
+ 
+        /* Only for Address Match Mode inbound iATU */
+        u32                     *ib_atu_indexes[PCI_STD_NUM_BARS];
+
+
+
+And then modify set_bar() to something like:
+
+@@ -588,7 +588,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+        if (ret)
+                return ret;
+ 
+-       ep_func->epf_bar[bar] = epf_bar;
++       memcpy(&ep_func->epf_bar[bar], epf_bar, sizeof *epf_bar);
+ 
+        return 0;
+ }
+
+
+But that would also mean that we need to modify the if (ep_func->epf_bar[bar])
+with something like if (ep_func->epf_bar_in_use[bar])
+
+Or... I guess we could keep it as pointers, but use kmemdup() in set_bar()
+to get our own immutable copy, and then kfree() the pointer in clear_bar()
+(and in set_bar() before kmemduping the memory, if the DWC driver already
+has a local copy (i.e. dynamically changing the BAR without first calling
+clear_bar()))
+
+
+Kind regards,
+Niklas
