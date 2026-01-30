@@ -1,169 +1,265 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B516C242D6C
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 11:21:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F4447080E;
+	Fri, 30 Jan 2026 11:32:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769772072; cv=none; b=fV5cxTl9xpjwIJ9x2dFKhX5rIoWnDnS0DR63NBwDwEP43z+g2R1FfJWtcoY9hfz6U9AMK8FVvF81SI+VUZP2rxXdwNQOq21xkJSv5hi+9FgMGjGDi9QCoIlIab0GXVNMYKVPV7PQ4KRh73g4hNv9WBE45hw3B+cc7dQZeYiUe7c=
+	t=1769772740; cv=none; b=Xz8SH++KMU7IR0JTjl/djdy9UKgUmyYX/8vWWfEwzPBMb0znioJJVcVkfauxwFVuYNFNwvnDDeMmMXI4DdCJBdY0XA/KvirozgmGppG5XZQRSsNxaF61k/hCBilJwjdV7WTA+IIH/Tc2hLGPgxsfb+XB3ZdD4jqoLarxzrydt3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769772072; c=relaxed/simple;
-	bh=8XTGJt0WxjfvBTMsvs1ASjI5pNp+pYhASDar5eWdgi0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L0E1tP2wsYFkamflPgo1LPE80FNGfkT9qN/6ix/AYw6msUtnqTmDjFMNFd8SwsKxq1FobJuH7RSjcPcF4F26Y7JyLDgVFmGqvBAy/IZtdBR3vbgLhQRG3o2G1ldT1+VinY2blnZzbY/PTab+2Zw4QqpfAgYSgq30XOjhzWJY4sw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=eeLkMX0i; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NPlzy6Fh; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1769772740; c=relaxed/simple;
+	bh=x8QiWewuBIKCnSF4w/prPydUCF3G3iJdESwqF/Ev3+M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gQO0uHdcCIfdlPN8gYoiOiek6bHsNnDO0koQB8d4Wfm3r8ucasVNyXj3nEd3+YoClikUsftOg4r2U9qF4G19M458NFnq8Pg00lHKjnbC3Qkp7eOzUcBEcY7yJ7tWRUVUjsSicpoDOVET1YP5Xp5RYDoneuPpcEPEE9KLctIrskw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cWsYBnXm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="eeLkMX0i";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NPlzy6Fh"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60U4bKdJ1485236
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 11:21:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	KbcTK2WZjfHEQQ39q4AXBDKxCctb3txQ5lG0R1mMthE=; b=eeLkMX0iElqJMZIv
-	JKwPktQIB4bgh2Vu2+TDkrpF5y42WfD2KBx+fXCvECzkxBO4DvfLR3AMrXqNBw2Z
-	MEbxZbW9zvBDIXYc7sdEPumuqoQwfLMmx5qssdu14N7bSKqbeBfZ0KPL867hhzcG
-	PBR1plwIhUnLt/QBcWnB2gcd7M59r+ItWKcdOTZKHCvllniem9vE9hfQ1ywDuTo/
-	kyi8J6ky9mwsJK0cpP7VtPTVCVUbj0W7j/GlViwHTGE6JHAWtUdY6wDggEFkMuXT
-	s33CkGpcHpk+M+P7At3DIjbA/jm9g2VgIRz2jj+7GJIWsbDdKbrM2s9da9ZT2ePV
-	eJmU+Q==
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c0nsf958b-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 11:21:08 +0000 (GMT)
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-8c6a182d4e1so38817685a.0
-        for <linux-pci@vger.kernel.org>; Fri, 30 Jan 2026 03:21:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1769772067; x=1770376867; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=KbcTK2WZjfHEQQ39q4AXBDKxCctb3txQ5lG0R1mMthE=;
-        b=NPlzy6FhLtISATgIfeQHls89cJKNS3QTz+jXJnq1e7H5Zvz1IBRu7yTZVeK1yILFpk
-         5NERLa+L9grM9zzGXR5ouBAfllpOQXLrsOoHv16Mvyb6VcBPkgx/+wz4BxUR2c2UVdi9
-         dEIzCsUGvak2dDPqJc3IHI0Uu950zDEPyIqAOIIhvxeb8MNqJuy3KlW6T3XSZMyNync7
-         +JHtGQewHXxbSxmLqX8QuvKlc4OKaPWwRbLMn3gV896+wGau1vQBu/T8QyHM2eg0tlpo
-         przznKML9qdH1F5aTKtvg9iklJU1rxdkumdCEp59aogn+OEeZV8EnA/olWZTtzwxkKF/
-         Lf3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769772067; x=1770376867;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=KbcTK2WZjfHEQQ39q4AXBDKxCctb3txQ5lG0R1mMthE=;
-        b=nUnVpnw4k42v1RzkFffnfyWleY3ZfnFGtcfegP9aHvuF9kdl73mZX7zZHiBO0Xw5So
-         uga5V5FiU92W6OPeLBlZ6nXtT0lI726fj20Hqi/SMeFJAXPT4OlD50A9bqeoKPDTz+Qr
-         d1qO6ErSOQfVt2+7QHktafnSiQJOVWNMUPpW6ez3Z08ZVfFMIVVqc4UDR9pnLkKeGf3H
-         LiYn0Z0liIl6xiRsyNUqdftU6zYgDUuiokoGDSQ8dIrnuj26CK2WLwGqWSPSdTD+IUz3
-         I7wsNy/9MiXLFtfRWPsvwisNGlucLl2snjZkucSRvA+I4KmE4mt4tKWxdIZ1CNShGmCH
-         3J5Q==
-X-Gm-Message-State: AOJu0YxNz2dxMzuDtVSfNkBp2AcdfPmSWFgtmSHeVeQx0jSletYMJt3l
-	ku1t38o1l88nPx6xETsOeHD/rrolI0nsgN3mpzg/Ck5if8Rr9ZozQn1J6oMXL+bCXfl33P+pbF+
-	Go0B/ED7MrBIlxkXIXqxh3ePyzCtN/J9Y6/M290qf3kPhY6VdocY+MAcQLZLUlI8=
-X-Gm-Gg: AZuq6aJ5tG/7WZ/50E4l/jlhv9YeWMtuFrHLEfmNv0gV0Q+yyTsyql1ZSPvQi493en2
-	GDZw4v2kKw6PLRWOU7+JUiVxO74xV8XNwj2BVYvfaxAXiHB3wj4HIzi+HGzDGTjRi3URveP4Lof
-	p8DvwBdVaWqog+NBIR96w1LC1REhf6gZznYJ4iFWItCCxWO8Ir314FlK6yayTYMvdMvSJAFu8Yr
-	JasUYcQ67tQwd9hWxYPWyYu0//NOVz2GiPnzJIPWNmTxvoEA2tSa6chNuBW8p1Mb9FAzmOSB1y5
-	WOsU8EQ4TiLokpDO7iDo0Zd/2emadUGXgbkIvdICIU2sLWxvxdEZNVsp098/8s76nv8iDG950xo
-	lmwavNWgJwCAUEOpM+RapsNO/Ep6jV9lcuX4qO1GJl56tOszbW5QUIlMSSNy2Un7z/QA=
-X-Received: by 2002:a05:620a:4441:b0:8b2:e177:fb18 with SMTP id af79cd13be357-8c9eb312fd8mr274268585a.9.1769772067179;
-        Fri, 30 Jan 2026 03:21:07 -0800 (PST)
-X-Received: by 2002:a05:620a:4441:b0:8b2:e177:fb18 with SMTP id af79cd13be357-8c9eb312fd8mr274267185a.9.1769772066697;
-        Fri, 30 Jan 2026 03:21:06 -0800 (PST)
-Received: from [192.168.119.254] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b8df8465cb5sm137854166b.40.2026.01.30.03.21.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Jan 2026 03:21:06 -0800 (PST)
-Message-ID: <7e61575a-3e0f-491d-ae22-89ab8bb21c91@oss.qualcomm.com>
-Date: Fri, 30 Jan 2026 12:21:03 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cWsYBnXm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68F99C4CEF7;
+	Fri, 30 Jan 2026 11:32:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769772739;
+	bh=x8QiWewuBIKCnSF4w/prPydUCF3G3iJdESwqF/Ev3+M=;
+	h=From:To:Cc:Subject:Date:From;
+	b=cWsYBnXmhC4/HrHZzGqtCx3sZWsVBpNAQHfycCAJaeaiz648vIH5+ASk1fMO6cQR4
+	 Pv1+bZ3bcIR4D/24Lv3D1TiPjVZMtnDJeWcb4vXxCby68mKZtDNNRQsN5LlDqcypBr
+	 JNpViVH/G8frSY4BmUSDpbsntxd+xgcyMrXYY1kkpZ+ubBwYKXoJmgBed8YMgXLdjs
+	 acoGLpFmPG8dOPDHZd/krEech+sr/V289x5PKYqox/v7zbdKSkzbNsolfdTku7NwWj
+	 7tBRSGY8IrL1ygr9TH0L0dFtVW9tv0RgMkQh0uMIF+7h66lEze3bW6n6uRJTaTa8QP
+	 6KYCrXGWP+UIw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>
+Cc: Frank.Li@nxp.com,
+	dlemoal@kernel.org,
+	Koichiro Den <den@valinux.co.jp>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Subject: [PATCH v5] PCI: endpoint: pci-epf-test: Allow overriding default BAR sizes
+Date: Fri, 30 Jan 2026 12:30:39 +0100
+Message-ID: <20260130113038.2143947-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] PCI: qcom: Add D3cold support
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Will Deacon <will@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        jonathanh@nvidia.com
-References: <20260128-d3cold-v1-0-dd8f3f0ce824@oss.qualcomm.com>
- <20260128-d3cold-v1-3-dd8f3f0ce824@oss.qualcomm.com>
- <63531057-ea7c-4a87-9848-04e502bffc32@oss.qualcomm.com>
- <45e1c870-f155-4943-990d-5e75a1e8b998@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <45e1c870-f155-4943-990d-5e75a1e8b998@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7711; i=cassel@kernel.org; h=from:subject; bh=x8QiWewuBIKCnSF4w/prPydUCF3G3iJdESwqF/Ev3+M=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJrpsXJRCilnHi/OvBL5VTLlZMNnrgfOVxywUTh15X3f YoLBa/wd5SyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAijScZGX6855q77IXF4WcV M3v/sqXN36XSzZrl5J3p9pezOK5g/SNGhuUZK3dXeCnNN120ouChtm59z5SzLgoCq+21pxy/JiK kwg4A
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: LNHzqVLHw0vRKQDCh6lT6uOOqexTXVZ2
-X-Authority-Analysis: v=2.4 cv=EvjfbCcA c=1 sm=1 tr=0 ts=697c9424 cx=c_pps
- a=50t2pK5VMbmlHzFWWp8p/g==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=M7nLEK1OKNC5V3jzK1UA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=IoWCM6iH3mJn3m4BftBB:22
-X-Proofpoint-GUID: LNHzqVLHw0vRKQDCh6lT6uOOqexTXVZ2
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTMwMDA5MiBTYWx0ZWRfX6x/2ZqkODnKN
- Z943bmz1cvnb00ti4xIm1YiiOlUEcEHvWQLkVLRJ8vfL5HCWnqWCpeZE/SO6yJZ7KU63byeu6/t
- 7e1BMlgv8AJPqfX9RpRnH2ytUcrbwRjSgGS4aKSwCJS9HMDeEVV8FvMq+9m1CKYG1AfQ54e24VH
- 2DbMsSlbJnje9ZGdYdwCePVyKeduO5AHtx9SxhipIMPtsTMW3fVrhg5RTBfPiecUmv7pGNTA9Uv
- 6PmGgzZwXHruLsh54ZdUrBSKyYfqDIOWqfGyzS8R+DdMUksTHEmF6E3l9ph3fTJ/5+4lEdiUfgS
- ksSyrIu0bTBDebcpy7ot5CyO/kKrwg9q6cwU2Z4Y5zheL1CifjoTEQaOm9A8MzhHhGK8DLLQQiE
- Iwr6uL7TCaOJPXpb/0c5T1mG598d3Za+4cecDd4A0Tq0ze08cnpS+5MZnKtJASIRni0fn6HMFsx
- D4oMqnMS0mNCOo5DGVw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-01-30_01,2026-01-29_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 spamscore=0 priorityscore=1501 bulkscore=0 suspectscore=0
- adultscore=0 malwarescore=0 impostorscore=0 lowpriorityscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601300092
 
-On 1/29/26 6:27 AM, Krishna Chaitanya Chundru wrote:
-> 
-> 
-> On 1/28/2026 5:58 PM, Konrad Dybcio wrote:
->> On 1/28/26 12:40 PM, Krishna Chaitanya Chundru wrote:
->>> Add pme_turn_off() support and use DWC common suspend resume methods
->>> for device D3cold entry & exit. If the device is not kept in D3cold
->>> use existing methods like keeping icc votes, opp votes etc.. intact.
->>>
->>> In qcom_pcie_deinit_2_7_0(), explicitly disable PCIe clocks and resets
->>> in the controller.
->>>
->>> Remove suspended flag from qcom_pcie structure as it is no longer needed.
->>>
->>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->>> ---
->> [...]
->>
->>> +        /*
->>> +         * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
->>> +         * Because on some platforms, DBI access can happen very late during the
->>> +         * S2RAM and a non-active CPU-PCIe interconnect path may lead to NoC
->>> +         * error.
->>> +         */
->> I think someone internally once tracked down what that access was
-> As per last debug which I have done few years back we see access coming IRQ driver to mask the interrupts
-> as part of disabling non boot CPU's.
->> Can we fix that instead?
-> The only proper fix is to keep device in D3cold which this patch is doing. if some client drivers like NVMe
-> doesn't want to go D3cold we need to honor it, but Mani is working on it to allow NVMe drivers to go to D3cold.
+Add bar{0,1,2,3,4,5}_size attributes in configfs, so that the user is not
+restricted to run pci-epf-test with the hardcoded BAR size values defined
+in pci-epf-test.c.
 
-That doesn't sound right - if there's an unclocked access, we should
-either ensure that the PCIe controller is online for that write, or skip
-the write if it's not possible for $reasons
+This code is shamelessly more or less copy pasted from pci-epf-vntb.c
 
-Konrad
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Tested-by: Koichiro Den <den@valinux.co.jp>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+Changes since V4:
+-Declare variables on same line.
+-Improved code comment.
+-Picked up tags.
+
+ Documentation/PCI/endpoint/pci-test-howto.rst | 19 ++++
+ drivers/pci/endpoint/functions/pci-epf-test.c | 99 ++++++++++++++++++-
+ 2 files changed, 116 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/PCI/endpoint/pci-test-howto.rst b/Documentation/PCI/endpoint/pci-test-howto.rst
+index dd66858cde46..cf38daa512ea 100644
+--- a/Documentation/PCI/endpoint/pci-test-howto.rst
++++ b/Documentation/PCI/endpoint/pci-test-howto.rst
+@@ -84,6 +84,25 @@ device, the following commands can be used::
+ 	# echo 32 > functions/pci_epf_test/func1/msi_interrupts
+ 	# echo 2048 > functions/pci_epf_test/func1/msix_interrupts
+ 
++By default, pci-epf-test uses the following BAR sizes::
++
++	# grep . functions/pci_epf_test/func1/pci_epf_test.0/bar?_size
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar0_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar1_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar2_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar3_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar4_size:131072
++	  functions/pci_epf_test/func1/pci_epf_test.0/bar5_size:1048576
++
++The user can override a default value using e.g.::
++	# echo 1048576 > functions/pci_epf_test/func1/pci_epf_test.0/bar1_size
++
++Overriding the default BAR sizes can only be done before binding the
++pci-epf-test device to a PCI endpoint controller driver.
++
++Note: Some endpoint controllers might have fixed size BARs, or reserved BARs,
++for such controllers, the corresponding BAR size in configfs will be ignored.
++
+ 
+ Binding pci-epf-test Device to EP Controller
+ --------------------------------------------
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 1cc630a2ee75..98a9c3176b48 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -72,6 +72,7 @@ static struct workqueue_struct *kpcitest_workqueue;
+ struct pci_epf_test {
+ 	void			*reg[PCI_STD_NUM_BARS];
+ 	struct pci_epf		*epf;
++	struct config_group	group;
+ 	enum pci_barno		test_reg_bar;
+ 	size_t			msix_table_offset;
+ 	struct delayed_work	cmd_handler;
+@@ -85,6 +86,7 @@ struct pci_epf_test {
+ 	bool			dma_private;
+ 	const struct pci_epc_features *epc_features;
+ 	struct pci_epf_bar	db_bar;
++	size_t			bar_size[PCI_STD_NUM_BARS];
+ };
+ 
+ struct pci_epf_test_reg {
+@@ -111,7 +113,8 @@ static struct pci_epf_header test_header = {
+ 	.interrupt_pin	= PCI_INTERRUPT_INTA,
+ };
+ 
+-static size_t bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
++/* default BAR sizes, can be overridden by the user using configfs */
++static size_t default_bar_size[] = { 131072, 131072, 131072, 131072, 131072, 1048576 };
+ 
+ static void pci_epf_test_dma_callback(void *param)
+ {
+@@ -1240,7 +1243,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+ 		if (epc_features->bar[bar].type == BAR_FIXED)
+ 			test_reg_size = epc_features->bar[bar].fixed_size;
+ 		else
+-			test_reg_size = bar_size[bar];
++			test_reg_size = epf_test->bar_size[bar];
+ 
+ 		base = pci_epf_alloc_space(epf, test_reg_size, bar,
+ 					   epc_features, PRIMARY_INTERFACE);
+@@ -1312,6 +1315,94 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
+ 	pci_epf_test_free_space(epf);
+ }
+ 
++#define PCI_EPF_TEST_BAR_SIZE_R(_name, _id)				\
++static ssize_t pci_epf_test_##_name##_show(struct config_item *item,	\
++					   char *page)			\
++{									\
++	struct config_group *group = to_config_group(item);		\
++	struct pci_epf_test *epf_test =					\
++		container_of(group, struct pci_epf_test, group);	\
++									\
++	return sysfs_emit(page, "%zu\n", epf_test->bar_size[_id]);	\
++}
++
++#define PCI_EPF_TEST_BAR_SIZE_W(_name, _id)				\
++static ssize_t pci_epf_test_##_name##_store(struct config_item *item,	\
++					    const char *page,		\
++					    size_t len)			\
++{									\
++	struct config_group *group = to_config_group(item);		\
++	struct pci_epf_test *epf_test =					\
++		container_of(group, struct pci_epf_test, group);	\
++	int val, ret;							\
++									\
++	/*								\
++	 * BAR sizes can only be modified before binding to an EPC,	\
++	 * because pci_epf_test_alloc_space() is called in .bind().	\
++	 */								\
++	if (epf_test->epf->epc)						\
++		return -EINVAL;						\
++									\
++	ret = kstrtouint(page, 0, &val);				\
++	if (ret)							\
++		return ret;						\
++									\
++	if (!is_power_of_2(val))					\
++		return -EINVAL;						\
++									\
++	epf_test->bar_size[_id] = val;					\
++									\
++	return len;							\
++}
++
++PCI_EPF_TEST_BAR_SIZE_R(bar0_size, BAR_0)
++PCI_EPF_TEST_BAR_SIZE_W(bar0_size, BAR_0)
++PCI_EPF_TEST_BAR_SIZE_R(bar1_size, BAR_1)
++PCI_EPF_TEST_BAR_SIZE_W(bar1_size, BAR_1)
++PCI_EPF_TEST_BAR_SIZE_R(bar2_size, BAR_2)
++PCI_EPF_TEST_BAR_SIZE_W(bar2_size, BAR_2)
++PCI_EPF_TEST_BAR_SIZE_R(bar3_size, BAR_3)
++PCI_EPF_TEST_BAR_SIZE_W(bar3_size, BAR_3)
++PCI_EPF_TEST_BAR_SIZE_R(bar4_size, BAR_4)
++PCI_EPF_TEST_BAR_SIZE_W(bar4_size, BAR_4)
++PCI_EPF_TEST_BAR_SIZE_R(bar5_size, BAR_5)
++PCI_EPF_TEST_BAR_SIZE_W(bar5_size, BAR_5)
++
++CONFIGFS_ATTR(pci_epf_test_, bar0_size);
++CONFIGFS_ATTR(pci_epf_test_, bar1_size);
++CONFIGFS_ATTR(pci_epf_test_, bar2_size);
++CONFIGFS_ATTR(pci_epf_test_, bar3_size);
++CONFIGFS_ATTR(pci_epf_test_, bar4_size);
++CONFIGFS_ATTR(pci_epf_test_, bar5_size);
++
++static struct configfs_attribute *pci_epf_test_attrs[] = {
++	&pci_epf_test_attr_bar0_size,
++	&pci_epf_test_attr_bar1_size,
++	&pci_epf_test_attr_bar2_size,
++	&pci_epf_test_attr_bar3_size,
++	&pci_epf_test_attr_bar4_size,
++	&pci_epf_test_attr_bar5_size,
++	NULL,
++};
++
++static const struct config_item_type pci_epf_test_group_type = {
++	.ct_attrs	= pci_epf_test_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_group *pci_epf_test_add_cfs(struct pci_epf *epf,
++						 struct config_group *group)
++{
++	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
++	struct config_group *epf_group = &epf_test->group;
++	struct device *dev = &epf->dev;
++
++	config_group_init_type_name(epf_group, dev_name(dev),
++				    &pci_epf_test_group_type);
++
++	return epf_group;
++}
++
+ static const struct pci_epf_device_id pci_epf_test_ids[] = {
+ 	{
+ 		.name = "pci_epf_test",
+@@ -1324,6 +1415,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+ {
+ 	struct pci_epf_test *epf_test;
+ 	struct device *dev = &epf->dev;
++	enum pci_barno bar;
+ 
+ 	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
+ 	if (!epf_test)
+@@ -1331,6 +1423,8 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+ 
+ 	epf->header = &test_header;
+ 	epf_test->epf = epf;
++	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++)
++		epf_test->bar_size[bar] = default_bar_size[bar];
+ 
+ 	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
+ 
+@@ -1343,6 +1437,7 @@ static int pci_epf_test_probe(struct pci_epf *epf,
+ static const struct pci_epf_ops ops = {
+ 	.unbind	= pci_epf_test_unbind,
+ 	.bind	= pci_epf_test_bind,
++	.add_cfs = pci_epf_test_add_cfs,
+ };
+ 
+ static struct pci_epf_driver test_driver = {
+-- 
+2.52.0
+
