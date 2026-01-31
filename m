@@ -1,242 +1,191 @@
-Received: from mail-wr1-f66.google.com (mail-wr1-f66.google.com [209.85.221.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020130.outbound.protection.outlook.com [52.101.228.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1767273D9F
-	for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 13:34:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.66
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769866450; cv=none; b=A29xYZ/RFoRldki/00rWUuyIWMza+y6ZB3Z8piMpVlXQ0eUkGpdDbsMuZ1x2iqkpbgDBmWJ5RLTMTzi6ooekgTedxd7jrAlbEbm3bgkxFw5FGraQintn8B9/u5MNXipcQ/i96fJllXZZt77RXSSCJoHOHQ05ZOyQH+/SYVTZLhs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769866450; c=relaxed/simple;
-	bh=B3tW+T3+xTqFN7KjQ7CwQXAjt+4LE0T30rQy08uzlD8=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=Pxe8DjNRfAiyj0iOX4fMGYp7G0U+43klkO/j4bmtLGZbIK0vVBuEwFciDpQkqcsqOv6Zc/WRQgQlzqkqAuslhlp1+H7YP3lI5uEZMJwwuC+zBKiT+sfddbmFKwZmgf3yVCAJ822mXXWNwdjZtdt0YGZmSPn2pIb4xFLsT1Q1/qM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nr9uV/2v; arc=none smtp.client-ip=209.85.221.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 032CD199230;
+	Sat, 31 Jan 2026 13:37:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.130
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769866627; cv=fail; b=AwHvuQ6at//aEgWQ3LVmKVmYMdnpiTIhI31nGNxAVa4JBtVyeeoqRfFf9wUCyFvQ7QEr3V8hOKg4zq5gxofwU6X3tWkovutsqmy+7nfmIaHodChGR6xx6vQzV/Bw/a0TGBLBUn/gLd99HKXAJDPFgzLkHujO4v7s7zKzBYxTP08=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769866627; c=relaxed/simple;
+	bh=5FaUJtvQJZ5vZ7VEucjGszVNlqcEL3+eumSMSvKe9wM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Q3HtGqjMACcbhqxmyDcLLwe/KU9J1cCUTvjHhPZ9dcV24rOEx0jIBKse0ojX0ABSSR9OIWeF2qclchJfWG3iCLdqCXtFSEhqBzTYLt6Siwl7IFcni+FGGAs2nPV+l+e6/QUCQWer+s/vpLxExcaJ4YHqk0jZNwEHyBmLF3Mi4Co=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=wpLo9iFp; arc=fail smtp.client-ip=52.101.228.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nr9uV/2v"
-Received: by mail-wr1-f66.google.com with SMTP id ffacd0b85a97d-43284ed32a0so1615669f8f.3
-        for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 05:34:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769866447; x=1770471247; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=+GMDkRHv2Khx/Muzvkcr6QDmiyEqHb/dntZQAQVhjCU=;
-        b=nr9uV/2vtw2hD3wZzckrmHpKRl8EL1jFiH8752JizKUiDudOce7+QJIsd7mvl4tGz+
-         rZ4O8mvxaHgkG/uLa/KItDVKxj0bf/Me2Dk7R4yPyIX70ghoOgBlSXjldLwsbFt0t/OW
-         4LLccSwYwYs7coFG17ZYr2Zk/US9TALaFNxXKlANjc874FaTJfiEKFX+HM1b+zgMKPuV
-         RH1QTSP377/Zf4vqbTKIVjjKh/DBUAxEq89di7ZFBROjikumMNjewAtmWeuH9t59wGkZ
-         OgcIpnZVpy8Jz8yOETB/7wmHd8IY0BuBmYQK6xY6gyFkMdtxcu4/VP5fQTNyGkTOSO+8
-         iVRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769866447; x=1770471247;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+GMDkRHv2Khx/Muzvkcr6QDmiyEqHb/dntZQAQVhjCU=;
-        b=YXtDB3brL9eDTeKcBsBhBrd0LmbqJIXhxf3DKw1ntRrKaHIJwqYmHPdRwuMaND1kYr
-         MT+fjjFC0uqea3sZoM0vOE1kng0xFLIOCronmZZG1nq1973ZUOLdOqaWlZPl8qX45tny
-         ImCbPHffdPY0gUflUF15g/n/HI2M2c9kr96dbnWBV1XyjG+NyNdWO1qW/S6dYXrxUFQe
-         9fyhIun9saMbbNgosRQqKC6adkCC8i2dNosXfpI8UkkS87aSMrTBpKewP/eL6uynP4cI
-         r/RHxEZ/yA11WOnsr4TipVL/7yoZmQ7xPloCXTVSzbvKj5LXCkc/5GZlpNUlzAW30xb9
-         8Viw==
-X-Forwarded-Encrypted: i=1; AJvYcCVzNmHJk6kSDElpxXx3oofYJJ8F1GEabQO0qbFM23kV1SzBV/Ggae4e4ux+jfWhNcXX4ekUlX9Nv2M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxszFgbm6ickXcdi9pqIfnSLKr3q9JfKnPUTDfBe/koYPmenEB8
-	09asX7M5tfSyEVzX8qAfe2rjzXRv6FODDatWxutX7UDgOa8vp2bJNHPV
-X-Gm-Gg: AZuq6aJRpF4wOcuJ3xXoDD2Zlre6n49heDmPTuRE9c6Br9QCRVShHABKCXXhLri9UPD
-	IX7C+ymsv83JeAcJUm3CYCa9NQrAYEibwSEFGWXfABGEB1FG+M3tIdLrZYdlklvvQfcwW7EVIlA
-	Yxi9SGb2Ql8Yu5ya7CGeaf/zycxV9jDQtIi3RH0BuVy7RokMf51KcwCMSTVbQhV2QCutf279xLo
-	T9M9viVPYw4cDU70owgbmxfXUTGMJNM/PG6wGby9+lKG4Mo5MToONFQFicYp5+InhBsQokshKyk
-	ra0TwsfLGeFgP0MrFIPbkY3oOB93xuAsXCcwYYs9pJMHbLozUXjtgbpK8KVGGLAlUDtLV6dFNkV
-	Cwn93I86ge+L0uj92IwTXvmZ/VFc8+Ipe2kENA8y11QHkO1lO/GL03ze7swNRgo+mDWQ5Px3H0b
-	FYSdqHWjyDPd2Yaj8a37D9ROqJxVU1JwcRAsDmY9zTywSSP86WZSVCDyLWI/sSGZ8uR6TMkTKW+
-	IjzmJ3f5+nfWQzNEA6tIznJ/v0b4g1/DBVU0qdQCZLSHA==
-X-Received: by 2002:a05:6000:26c3:b0:435:bbd7:18e1 with SMTP id ffacd0b85a97d-435f3a6f621mr8477082f8f.9.1769866446676;
-        Sat, 31 Jan 2026 05:34:06 -0800 (PST)
-Received: from ?IPV6:2003:df:bf2d:e300:fa3c:28af:ecab:143f? (p200300dfbf2de300fa3c28afecab143f.dip0.t-ipconnect.de. [2003:df:bf2d:e300:fa3c:28af:ecab:143f])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-435e13235f5sm29300881f8f.29.2026.01.31.05.34.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 31 Jan 2026 05:34:06 -0800 (PST)
-Message-ID: <49693073-e49e-4b5f-849b-6dd5fd3de712@gmail.com>
-Date: Sat, 31 Jan 2026 14:34:05 +0100
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="wpLo9iFp"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cmCAfl9TS6l3YegyMH9TeFqTwHOe4hXUxgaAw6rC1iDKPJPLMYqC4GwQO8WnDkFwnT1PyjXniaHGmicq3ridTC1X02aFLxzCeUHS9W35D/BvWUPwh22o6rm9zc4ss+UnVlIDEYx0aWsKkYnrUI9U2Gn9RWBw0whxnVZvFgXFc5KbwVNLcUAT7ut1aJJyJf9H8SQYhFVEfH+G70ePEDLEKEov8Z3EdM82mfbznPrfp9Z9Y33g+2i4KWXdw4US10XkQia/774gb2BgcAn40dxn1xkUUgjyyRCjaXlBS5gFrpa9vflc094gxPawvHBkc88gud4B6aZUpgOxRLn9CEKOGA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=i0DJP6vTv0QYOKMrncI8q8Xbf3uzkb5sa1uQLq96KeY=;
+ b=j/GCPTEJptfLjOQPmrLVb87B2kjbgZQZ4/fcuZ3HFmCyg6S2re8yADXyh/tVTH9mXJOiNnoB/ZKbUIZIiorjzhXYx1nN4wtDr34PCoZyiBEffTsv72bkNTBIBOEhq2K8drzeup7IhRVgzld4jyo8f372K8vfvhyABaXhpgLP1neqLG3OC8yxcWH4ECUSCM1a0g5E8ZHwrXuMiQz42AKLQydkeyEoOnBLY1H5+ocQbp2gCD+rMag46OAOYB3gkyAercfbbE17zIO6LiUhCJH1SYT2wQ0+UBrTV+AWGV4zCZ0O1QR95zl46ZeLIOtGk06h7nsJXs8w87uS65c/7z30oA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=i0DJP6vTv0QYOKMrncI8q8Xbf3uzkb5sa1uQLq96KeY=;
+ b=wpLo9iFpvUc5OvadTzfQnqC1hetkRSLz+T0wirQFSEqsaM29GehU4Tuc7AxYamEGMpEX+Dhv3/JOOUDmvNjNc5kyIWVRnERJzVoPlG0tdZbeInBeMXBVZlMoi+8FrjXZPbsz1Y09DUcTdGolnxFCe6iqZY7htLo3xoWEXZTnV4c=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYYP286MB5003.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:14b::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.13; Sat, 31 Jan
+ 2026 13:37:02 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9542.010; Sat, 31 Jan 2026
+ 13:37:02 +0000
+From: Koichiro Den <den@valinux.co.jp>
+To: mani@kernel.org,
+	cassel@kernel.org,
+	kwilczynski@kernel.org,
+	kishon@kernel.org,
+	bhelgaas@google.com,
+	corbet@lwn.net,
+	jingoohan1@gmail.com,
+	lpieralisi@kernel.org,
+	robh@kernel.org,
+	Frank.Li@nxp.com
+Cc: linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] PCI: dwc: ep: Return after clearing BAR-match inbound mapping
+Date: Sat, 31 Jan 2026 22:36:53 +0900
+Message-ID: <20260131133655.218018-2-den@valinux.co.jp>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260131133655.218018-1-den@valinux.co.jp>
+References: <20260131133655.218018-1-den@valinux.co.jp>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TYCP286CA0367.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:79::14) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Dirk Behme <dirk.behme@gmail.com>
-Subject: Re: [PATCH 2/2] samples: rust: pci: exercise capability lookup
-To: Zijing Zhang <zijing.zhang@ry.rs>, dakr@kernel.org,
- linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org
-Cc: bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org,
- gary@garyguo.net
-References: <20260131040200.1242566-1-zijing.zhang@ry.rs>
- <20260131040200.1242566-3-zijing.zhang@ry.rs>
-Content-Language: de-AT-frami
-In-Reply-To: <20260131040200.1242566-3-zijing.zhang@ry.rs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYYP286MB5003:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4d250073-29ee-4b6d-bac1-08de60cdd13d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|366016|7416014|1800799024|376014|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?rmLBWYzcopm+HQlzg7Mc/Nd4gN+f8NpUrINhKIVW5PBGApBPDl4+wTWKyKIj?=
+ =?us-ascii?Q?oJbBvYiGeaajenM0wAx9U+OTmH8Bxgfz2wXYMB9xhBc/+Rg5blqHTaqQ5EDC?=
+ =?us-ascii?Q?ZN/D6sePRepkkj7ju7G2yPDeih8PpctCpRUDI9dOnJSOHl28mz66+w4A0klB?=
+ =?us-ascii?Q?/MVwqTK1OM48TsH1SkHPTbtkysjd4Ru/aOBmDVgBK316iJAwRLH8MiO93v2o?=
+ =?us-ascii?Q?JVl7bGe3DuUKCh1KShUVxYCJRtLhsS3061H2hVynamZztXsJkyxbrq4AZXCl?=
+ =?us-ascii?Q?seZNj9S9PArORQuhMyURZqI4a8hI0EcFaFvsnOyYij53qpG3n1PtHmMtxJfw?=
+ =?us-ascii?Q?8hBPLEzUPEeDDRwo/lSEJh/pAmhrbH0YcHENGCCStrPGn+6vMETH6OqJ/qYj?=
+ =?us-ascii?Q?uMHLaSqW3Xo8TKLKVrpdzxFl1iRZL6btDC4F9BoKgaypFAwiUW3CYGx6EKum?=
+ =?us-ascii?Q?8NhTg+xdYG8YM7pvtJp01QRGD7Sbf9ogodRzUmWmwt/Qd5eK61R4RlQE6IE7?=
+ =?us-ascii?Q?7w453Ed0CjqaaxH0DzoU9kP0A9aDer0s5lZVonEg17Z7rDpcbIWsD5CCEnLP?=
+ =?us-ascii?Q?XLB+lgE1QSQiLeMHP2xoF3CEw/3R15LlOruad4NPB6kTFSb4009ZcvxNapbC?=
+ =?us-ascii?Q?IlRxl+w61d+XMdqLEFf3JM50ylf3MrogYgsUzXhTOkuqEDhroT+iBxfpnQXZ?=
+ =?us-ascii?Q?uZB3/tFCoX8zFRxxN/uWpU14XRX6i1RlEjEbvqffJqvVNcuAqzRhBuFvtIVD?=
+ =?us-ascii?Q?YvFY3pQ+05WMDqco4PSXqmDc6ZSJJG9ozNizo1vcHc7KgCNPcU+ywOtMVQh3?=
+ =?us-ascii?Q?aJ7rIlXFFV5kIjT3kwqxvis4hwW3VYErNJoEU2WjjYuFxuCXyw1HVNxK1dVe?=
+ =?us-ascii?Q?kkLOOIV2Z3GN4XgN9xtmuDkE3XPTeesIAdihuqtAc+Wvc9DMts3krlcKLFfi?=
+ =?us-ascii?Q?fAH6wzywszL7Bdx+3wHCL8zlU7qgPaW9CT6wOBVsFbYCBxXSXV52p5XcvY9N?=
+ =?us-ascii?Q?a9FCBoU+KLa7pvAAlBrtdGZyru6kuoAWAmaiKolSjvkkng2wsy9wUDOXSzRp?=
+ =?us-ascii?Q?VngnxvvR4L6X2hb9ujzmFxOZAvyi05xFO0vDOIrpgjeMgUYFO7/zK8ap6YkG?=
+ =?us-ascii?Q?6HxbbJIYzGoc92vCavSMuExcnTVysEaBtYoiMBSGZ3THZlXpL7jouPUR6Ut+?=
+ =?us-ascii?Q?Q4e4YjReXE2beLcKjqJzULu7n5UpFSiSCc9Qa5qkkHUPDQAc7RN5JpmCHeUk?=
+ =?us-ascii?Q?8EeaTKr6R6+9slB4h3kA1kCggF4EmUWRC52LILQFh1WFU/VO3oteYyLJuOw3?=
+ =?us-ascii?Q?jXi59ljmO0pLOM7kmFqU3h74cw+I3G0imTYiq/DOuUz6BzMVCWH9ETZFHiLH?=
+ =?us-ascii?Q?VIFtlBVIJUnVCrg9t+9A9EsbwR1K0VhMak9YM5khroGzorRn0dTP6KlK8WQk?=
+ =?us-ascii?Q?UkNfUcn+lvwUtRUUWkFW7oIhFw4rtJ1xxXl1NfQXHqfepuUUvkY52nzxLlKb?=
+ =?us-ascii?Q?G1XuseOz+eJkwuwc6aPP8296Mms2Hu9dFIS81x9VSZJ1NCmKPzFlgktmxlR5?=
+ =?us-ascii?Q?GKAoIffv5Jo29SZ+2Izj2eq3roSA6SAILLyNVGrtp5N6tgA/YTCD4TyvWCTW?=
+ =?us-ascii?Q?BHCqygsWAcsaUIuzXHmqI0w=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(7416014)(1800799024)(376014)(921020);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Izhn8MEh1/cMHzB9FWut7vtBdpAERWwJqNt4xVICHYbwdWKFdLRg5zQrDRW2?=
+ =?us-ascii?Q?3WJXQWZF5fw0frNVKvUGHIifKl40YMfquZjnN4EbJWcPuGooDvmPOVmEUII2?=
+ =?us-ascii?Q?AchoLELu5ExulwvD01Seb1mQvZ9UwkwJXpTZ8RCgWY+CUIBkaiFeZCDUwq6v?=
+ =?us-ascii?Q?rwUj+GIgPxjG1YOMGnGixWk+R5NZ9vinCdtHoNP9bVvdz2n39JtMcfTr+Uh0?=
+ =?us-ascii?Q?CQIgH5YJ5VBaz2wvdFux3bIfEKl6md0ao+iUbdGbl5BnyP1qhchYRXa5hSDm?=
+ =?us-ascii?Q?rzT4NR9QV0ZBZlIK+Bpc5kSrdx5iHBCYc/Dzo2VN/z30p9hlF59x5mJgpXsF?=
+ =?us-ascii?Q?oiEpqCnJ4FanAXPG4d2Q2pTqpJNU0tjpuwXDRMfSDCVG//xeftX17+FQN4aL?=
+ =?us-ascii?Q?gmdIW0HdzBnvSW6gkD2TDXmnUehM+SD+rVMKfHlb9qo45zA6l/RpBTobV7UO?=
+ =?us-ascii?Q?nSzUGCrZBsl2kpDGJeWmXoWaQ20uNFz0eEYBgW4tN68CRwWW1vRmwM4L9S29?=
+ =?us-ascii?Q?X1f4ROyfCz1vMRyjLw+KyEPoLmqK7ERSutgII915E8pWbGZezIG8tCe6L7/Y?=
+ =?us-ascii?Q?ST5Sx8qw9b41VxildGublkw2XSh08CWKubgiybCnpvGVq9FF/r2ojAaeO6kG?=
+ =?us-ascii?Q?3zdglZ6+9re1VOS3TZ80aT8dsz8aywRswlaVulV1870bFF5KPu2gLHxWWJgW?=
+ =?us-ascii?Q?3RZ+2lnFKeZhrKBKWYNTFHG8aIZj0/9hCMdBE/Io+hRtEBUCaN35IQMJNeab?=
+ =?us-ascii?Q?//qGR1zFgUQK3Do18lSjZE5HeStRES47+YRE1O/0Lkhb9hAVRa/894GNXkDp?=
+ =?us-ascii?Q?UO6Ph1jpTu98p6soxh6RIRKKyt3kxpZnAoVshIZZ4bgA690nr9hGLHWEhbs/?=
+ =?us-ascii?Q?xQtILKZc7eZ/nHcNYu8wS9qJhBIbOB8VhqdUnpXWd8xjI037yj7+nAQhTivc?=
+ =?us-ascii?Q?D1sav3JFuj4PtfxpprC3SaMn3NP5WosSJjz1RYgD3Ippe2ajBe5NL2DbjKCK?=
+ =?us-ascii?Q?MI0pqiOyf8NvVvkdNuaZubbO3arR/k36hlQ/Qb9rG/8zZ7B+YbyT/Gkj1YQM?=
+ =?us-ascii?Q?9L7IlXzitst9PcT1A5SREdtHvY1lFkLyM94SJqi/ixDwFE7JtrGjWBZCWZuA?=
+ =?us-ascii?Q?wBoJt4gw1qo9EFq8E+aAH+rkpiy2Unmn3BI6LJJgDIDPKv/Xcnb0RWSoo+kv?=
+ =?us-ascii?Q?utA2rrVltVOS7hypnN3PKxFkXzPbAviOm9X0i6prUxjGB1B9vPOTzRsQhYhH?=
+ =?us-ascii?Q?zm3+Ap6kFTUjZy5QfAfUZTKjDx8Yyg6ihmLw95XdGvCe4Vq/8OLhGU3pyU0j?=
+ =?us-ascii?Q?mKiHzTUcNqzs6YMhtgZMJ9EsYjklJHcaDBPsUBnzXu05TgRTlUKvQETMwVXR?=
+ =?us-ascii?Q?WbvkyjHQ26OsItxKMMWT0eqNRLljl1jgVDK8tAwp9MqhCXH/ziuCgPOEK/CC?=
+ =?us-ascii?Q?q1lQ/XQ9Zr58OeONgb3ucyUJpYuyJoDSz4sGfyowPN7ZiAGYaXMD5XbOUh9a?=
+ =?us-ascii?Q?ozH8fsAoFKFac43CmwpDMd6+yVZbEvyiD3HLT2VtSA+zVVnXxhdVfLK04mta?=
+ =?us-ascii?Q?FKJBoKsRV+ByxV4UjT1fTyIOgsHQqC6ZEy+PbXOKD+sjXYSTaKqW2DqYRTIw?=
+ =?us-ascii?Q?QRXlhp+qoakRDMH2LHHN0I3lHsTn8vS56y/2k/wf/bhzoXywc4/XUOrvGXDa?=
+ =?us-ascii?Q?pF8suoR79EbRSJD4CAvK88PAny9oqniWMxvg5EPyIlMB5TO2OtuxebbmOy+F?=
+ =?us-ascii?Q?uebCv+edEZBlAWDXQLYbLYtZAvMdl7+dDsuoGQFFOWhQVIfj/8Uj?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4d250073-29ee-4b6d-bac1-08de60cdd13d
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Jan 2026 13:37:02.8688
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: sUSmwaGfQb8Bw8SNfHksFBAiGFYy0KuxQJrIBDk1bPb0qMK9QG3OmSM3WVC4MWz9Rzy+YY7wmLfbKdMH4KF1MQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB5003
 
-On 31.01.26 05:02, Zijing Zhang wrote:
-> Use the new pci::Device capability helpers to locate a few common
-> capabilities (standard and extended).
-> 
-> Also try a best-effort self-check to exercise the `Some(offset)` path
-> when the device advertises a standard capability list or an ext-cap header.
-> 
-> Signed-off-by: Zijing Zhang <zijing.zhang@ry.rs>
-> ---
->  samples/rust/rust_driver_pci.rs | 90 +++++++++++++++++++++++++++++++++
->  1 file changed, 90 insertions(+)
-> 
-> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_pci.rs
-> index 4dfb8a6a4707..195d37edff2c 100644
-> --- a/samples/rust/rust_driver_pci.rs
-> +++ b/samples/rust/rust_driver_pci.rs
-> @@ -5,6 +5,7 @@
->  //! To make this driver probe, QEMU must be run with `-device pci-testdev`.
->  
->  use kernel::{
-> +    bindings,
->      device::Bound,
->      device::Core,
->      devres::Devres,
-> @@ -89,6 +90,95 @@ fn config_space(pdev: &pci::Device<Bound>) {
->              "pci-testdev config space read32 BAR 0: {:x}\n",
->              config.read32(0x10)
->          );
-> +
-> +        for (name, id) in [
-> +            ("PM", bindings::PCI_CAP_ID_PM as u8),
-> +            ("MSI", bindings::PCI_CAP_ID_MSI as u8),
-> +            ("PCIe", bindings::PCI_CAP_ID_EXP as u8),
+dw_pcie_ep_clear_ib_maps() first checks whether the inbound mapping for
+a BAR is in BAR Match Mode (tracked via ep_func->bar_to_atu[bar]). Once
+found, the iATU region is disabled and the bookkeeping is cleared.
 
+BAR Match Mode and Address Match Mode mappings are mutually exclusive
+for a given BAR, so there is nothing left for the Address Match Mode
+teardown path to do after the BAR Match Mode mapping has been removed.
 
-Would it make sense to drop the direct usage of `bindings` by the
-user? And add an abstraction for this in pci.rs? E.g. an enum?
+Return early after clearing the BAR Match Mode mapping to avoid running
+the Address Match Mode teardown path. This makes the helper's intention
+explicit and helps detect incorrect use of pci_epc_set_bar().
 
+Link: https://lore.kernel.org/all/aXtrW7viGZfMNZur@ryzen/
+Suggested-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Koichiro Den <den@valinux.co.jp>
+---
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> +        ] {
-> +            if let Some(pos) = pdev.find_capability(id) {
-> +                dev_info!(pdev.as_ref(), "pci-testdev {name} cap @ 0x{:02x}\n", pos);
-
-
-Just as a heads up, using `as_ref()`in the `dev_*` prints should be
-obsolete soon:
-
-https://lore.kernel.org/rust-for-linux/20260120181152.3640314-2-gary@kernel.org/
-
-
-> +            } else {
-> +                dev_info!(pdev.as_ref(), "pci-testdev has no {name} capability\n");
-> +            }
-> +        }
-> +
-> +        // Best-effort self-check to exercise the `Some(offset)` path:
-> +        // If the device advertises a standard capability list, read the first capability ID
-> +        // directly from config space and verify that `find_capability()` returns an offset.
-> +        let status = config.read16(bindings::PCI_STATUS as usize);
-> +        if (status & bindings::PCI_STATUS_CAP_LIST as u16) != 0 {
-> +            let pos = config.read8(bindings::PCI_CAPABILITY_LIST as usize);
-
-
-An other heads up: This should use the `register!()` macro soon:
-
-https://lore.kernel.org/rust-for-linux/20260128-register-v4-6-aee3a33d9649@nvidia.com/
-
-
-> +            if pos != 0 {
-> +                let id = config.read8(pos as usize + bindings::PCI_CAP_LIST_ID as usize);
-> +                match pdev.find_capability(id) {
-> +                    Some(found) => dev_info!(
-> +                        pdev.as_ref(),
-> +                        "pci-testdev selfcheck: cap id 0x{:02x} @ 0x{:02x} (find -> 0x{:02x})\n",
-> +                        id,
-> +                        pos,
-> +                        found
-> +                    ),
-> +                    None => dev_info!(
-> +                        pdev.as_ref(),
-> +                        "pci-testdev selfcheck: cap id 0x{:02x} @ 0x{:02x} (find -> none)\n",
-> +                        id,
-> +                        pos
-> +                    ),
-> +                }
-> +            } else {
-> +                dev_info!(pdev.as_ref(), "pci-testdev selfcheck: empty cap list\n");
-> +            }
-> +        } else {
-> +            dev_info!(pdev.as_ref(), "pci-testdev selfcheck: no cap list\n");
-> +        }
-
-
-Could the indentation and nesting level of this block be reduced by
-moving this to a helper function, e.g. `check_standard_capability()`,
-and in that use early returns?
-
-Same for the extended capabilities below (e.g.
-`check_extended_capability()`).
-
-And, going even one step further: I don't know much about PCI, but is
-this a common pattern several users / drivers might need? If so it
-might make sense to move some of this `check_*_capability()` to pci.rs?
-
-Best regards
-
-Dirk
-
-
-> +        for (name, id) in [
-> +            ("DSN", bindings::PCI_EXT_CAP_ID_DSN as u16),
-> +            ("SR-IOV", bindings::PCI_EXT_CAP_ID_SRIOV as u16),
-> +        ] {
-> +            if let Some(pos) = pdev.find_ext_capability(id) {
-> +                dev_info!(pdev.as_ref(), "pci-testdev {name} ext cap @ 0x{:04x}\n", pos);
-> +            } else {
-> +                dev_info!(pdev.as_ref(), "pci-testdev has no {name} ext capability\n");
-> +            }
-> +        }
-> +
-> +        // Best-effort self-check for extended capabilities.
-> +        //
-> +        // If the device has PCIe extended configuration space, verify that
-> +        // `find_ext_capability()` can find the ID from the first extended
-> +        // capability header (which is located right after the 256-byte legacy
-> +        // configuration space).
-> +        if let Ok(config_ext) = pdev.config_space_extended() {
-> +            let hdr = config_ext.read32(bindings::PCI_CFG_SPACE_SIZE as usize);
-> +            if hdr != 0 && hdr != u32::MAX {
-> +                let id = (hdr & 0xffff) as u16;
-> +                match pdev.find_ext_capability(id) {
-> +                    Some(found) => dev_info!(
-> +                        pdev.as_ref(),
-> +                        "pci-testdev selfcheck: ext cap id 0x{:04x} @ 0x{:04x} (find -> 0x{:04x})\n",
-> +                        id,
-> +                        bindings::PCI_CFG_SPACE_SIZE,
-> +                        found
-> +                    ),
-> +                    None => dev_info!(
-> +                        pdev.as_ref(),
-> +                        "pci-testdev selfcheck: ext cap id 0x{:04x} @ 0x{:04x} (find -> none)\n",
-> +                        id,
-> +                        bindings::PCI_CFG_SPACE_SIZE
-> +                    ),
-> +                }
-> +            } else {
-> +                dev_info!(
-> +                    pdev.as_ref(),
-> +                    "pci-testdev selfcheck: no ext cap header @ 0x{:04x}\n",
-> +                    bindings::PCI_CFG_SPACE_SIZE
-> +                );
-> +            }
-> +        } else {
-> +            dev_info!(pdev.as_ref(), "pci-testdev selfcheck: no ext config space\n");
-> +        }
->      }
->  }
->  
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 7e7844ff0f7e..0ca05943a1e5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -165,6 +165,7 @@ static void dw_pcie_ep_clear_ib_maps(struct dw_pcie_ep *ep, u8 func_no, enum pci
+ 		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, atu_index);
+ 		clear_bit(atu_index, ep->ib_window_map);
+ 		ep_func->bar_to_atu[bar] = 0;
++		return;
+ 	}
+ 
+ 	/* Tear down all Address Match Mode mappings, if any. */
+-- 
+2.51.0
 
