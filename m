@@ -1,83 +1,140 @@
-Received: from mail-108-mta80.mxroute.com (mail-108-mta80.mxroute.com [136.175.108.80])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE6EC2F5A1F
-	for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 16:47:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E552D2491;
+	Sat, 31 Jan 2026 16:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769878067; cv=none; b=VdMz75GdsYubCH93IX6InMpfA/VaxVXKyK0YTu8fQNM2dmuTow2r/b/PLW+4drz7oxsR4wzaRee/XTnUt88eK65VtlRQQoLqdz8mInyC2KgjGw0DdtZYx4fh0dU1edc7FFIHpVRlX+6jnyoFVlJYuirR4ncCyGcah/e3Dhmo7VM=
+	t=1769878245; cv=none; b=KFpELc1LTdZ0hSDQrjtrmFGLS9la6uKBz/ksyeyP8FSClLjf3va/eYqgRMj03reBJoZlH8EJ569gMqtoMKi1SBWi2Bl2JgzFu6+2VH/UCUzU45MGpCQrrMjpFZdF1ZBjLAQTUvPCx6HOsU7kMEukW3PCm1m5a0dNSwOYSzV6V7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769878067; c=relaxed/simple;
-	bh=umWhJFuAS1ToWYCThdrWAuklc0sVXb/QNkQaKYNursU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TL8lESyPgSNGPM7HFpBgR8cvc/VF/nSOIz9nuea8hTp9qQ3zT6trDaMSw+gXxmI/QhtpXMDwL9Lf/gP9FpjjieqgZIgCY9RHz4yYKJ8ROW8d7sU6vCvRwBI3foWlbA4RFHxmnelOvKiLomAHebLW5u4PCIkhNhLvT2S6ncTtFTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs; spf=pass smtp.mailfrom=ry.rs; dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b=l6VeEpgy; arc=none smtp.client-ip=136.175.108.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ry.rs
+	s=arc-20240116; t=1769878245; c=relaxed/simple;
+	bh=Pq75lfbTLCURF9snDbnVcSpQd+vL1pkGds2uMZrgcgs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EEZ6GDfq0Mb4dmcLFSsIXbYtyqIa4IaIh1NaOXBO5pZVS4GjXN8lT1EV9YTjRu+s+Vkyg7D3tXUbibEtL6esr+vSo0eXRPqpthZCc04Pe32e8BoPPwRWeLhiTZBvS83MBzlh0kH/m2QiVTKb5pVHosqJ5sIkmVw/OBVFS0c5i1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TXYW1ZHo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b="l6VeEpgy"
-Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
- (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta80.mxroute.com (ZoneMTA) with ESMTPSA id 19c14ef46110009140.004
- for <linux-pci@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Sat, 31 Jan 2026 16:42:31 +0000
-X-Zone-Loop: 5336d725e6fad92561abef4b86790e0221377d39247c
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=ry.rs; s=x;
-	h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
-	bh=WD4VvadkwOK+JFplFLasnbYEL1wNfsFrAK5VP3T5xXM=; b=l6VeEpgy5Wzqr2vXSoBkNxaB2r
-	UZHnkJbv/YRApMn0TYls8PcyEVaId8KMQiPSG7hmy+SDzby+rEV8rUTcKy3Gf+8j7rJTdHJfj8puK
-	HIg0oiWO2kGF13iTxWOtiAPtT0cSs52jJBdviL1KV64wWS9DpKKs3JnOeSHlOgwew5HsTVB3ImJnR
-	Sxv62qEzDuuHLM1jHdCpmk2GzMC10DKaZLXSEirFyQDh42IHNMJGwqmmZV1j//cKn9mV4V0mn+fML
-	XMyaCA/HWwglkH2Yk63obAXyVpyCQTT2BzZvO6Ik8jhB5EnCWyKNi4wGn3K5XG+kPHLPofpV83xGg
-	buOuooKA==;
-From: Zijing Zhang <zijing.zhang@ry.rs>
-To: dakr@kernel.org,
-	linux-pci@vger.kernel.org,
-	rust-for-linux@vger.kernel.org
-Cc: acourbot@nvidia.com,
-	zijing.zhang@ry.rs,
-	Gary Guo <gary@garyguo.net>
-Subject: [PATCH v2] rust: pci: export ConfigSpace
-Date: Sat, 31 Jan 2026 16:42:17 +0000
-Message-ID: <995384df9224283fab185b5e06f519506fff1873.1769877524.git.zijing.zhang@ry.rs>
-In-Reply-To: <DG2WR3EOBWCY.DU3K4LRV4FUE@garyguo.net>
-References: <DG2WR3EOBWCY.DU3K4LRV4FUE@garyguo.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TXYW1ZHo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A989C4CEF1;
+	Sat, 31 Jan 2026 16:50:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769878244;
+	bh=Pq75lfbTLCURF9snDbnVcSpQd+vL1pkGds2uMZrgcgs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TXYW1ZHoRNDwxLNTidSM6lrXJP5MyWY/UQj1kc6p8EG/2CsO2zfdDUVGcCCGlVgBq
+	 0k3MIPRAvf/eC3ygexyfuec7n1SccatsV/58U4sijLFtLkS/qosZN0Xmwaxv6o9n4N
+	 4/uUIvygCOUA1YSMsxLany79uk0Uy/GDaucqMbfIbP8nnauS1Y14ILYY6BGArirwHA
+	 OcB6cI2vZUsQZOKEkoTi9tF2+R65+ycbtmoRnvNQH4hK5GZhWAXZihMFImbf3XbO9K
+	 CW9lMtamW73BKN8WkQZ6vjFsccpgriWsbxzeIf7UOfERHMV2WiCm3lqg07wQZTbM1h
+	 /eNrtUvCaqG2A==
+Date: Sat, 31 Jan 2026 17:50:38 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
+	bhelgaas@google.com, corbet@lwn.net, jingoohan1@gmail.com,
+	lpieralisi@kernel.org, robh@kernel.org, Frank.Li@nxp.com,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: endpoint: Document pci_epc_set_bar() caller
+ ownership and lifetime rules
+Message-ID: <aX4y3txKcYmb-kE3@fedora>
+References: <20260131133655.218018-1-den@valinux.co.jp>
+ <20260131133655.218018-4-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-Id: zijing.zhang@ry.rs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260131133655.218018-4-den@valinux.co.jp>
 
-Re-export ConfigSpace from kernel::pci so users can name the returned
-type from Device::config_space*().
+On Sat, Jan 31, 2026 at 10:36:55PM +0900, Koichiro Den wrote:
+> pci_epc_set_bar() may be called multiple times for a BAR when an
+> endpoint controller supports dynamic_inbound_mapping and/or
+> subrange_mapping.
+> 
+> Some EPC drivers keep a reference to the struct pci_epf_bar passed to
+> pci_epc_set_bar(), but the documentation does not describe the ownership
+> and lifetime rules for that object (and its submap array).
+> 
+> Document that the EPF driver retains ownership of these objects, must
+> keep them valid, and must not modify them after a successful
+> pci_epc_set_bar(). When updating an active mapping, the EPF driver must
+> pass a new pci_epf_bar instance and only free the old one after the
+> update succeeds.
+> 
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+>  Documentation/PCI/endpoint/pci-endpoint.rst | 22 +++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/Documentation/PCI/endpoint/pci-endpoint.rst b/Documentation/PCI/endpoint/pci-endpoint.rst
+> index 4697377adeae..b2f5ad147ed8 100644
+> --- a/Documentation/PCI/endpoint/pci-endpoint.rst
+> +++ b/Documentation/PCI/endpoint/pci-endpoint.rst
+> @@ -119,6 +119,28 @@ by the PCI endpoint function driver.
+>     BAR register or BAR decode on the endpoint while the host still expects
+>     the assigned BAR address to remain valid.
+>  
+> +   The struct pci_epf_bar passed to pci_epc_set_bar() (and the optional
+> +   pci_epf_bar.submap array) is owned by the PCI endpoint function driver.
+> +   An EPC driver may keep a reference to these objects after
+> +   pci_epc_set_bar() returns. Therefore the EPF driver must ensure that:
+> +
+> +     * Ownership of the pci_epf_bar object passed to pci_epc_set_bar()
+> +       remains with the caller (the EPF driver). The caller is responsible
+> +       for ensuring it remains valid (and freeing it when dynamically
+> +       allocated).
+> +
+> +     * After pci_epc_set_bar() succeeds, the caller must not modify the
+> +       contents of the pci_epf_bar object (or its submap array) until a
+> +       later successful pci_epc_set_bar() for the same BAR replaces it, or
+> +       until pci_epc_clear_bar() succeeds. Otherwise, it could potentially
+> +       lead to use-after-free or undefined behavior.
+> +
+> +     * If the caller needs to update the mapping for a BAR and calls
+> +       pci_epc_set_bar() again, it should use a new pci_epf_bar instance
+> +       (and a new submap array, if used). If the call succeeds, the old
 
-Fixes: 4dc0bacb1d3c ("rust: pci: add config space read/write support")
-Reported-by: Gary Guo <gary@garyguo.net>
-Closes: https://lore.kernel.org/rust-for-linux/DG2D5ONS18FE.TC7K3O8V8SU1@garyguo.net/
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-Signed-off-by: Zijing Zhang <zijing.zhang@ry.rs>
----
- rust/kernel/pci.rs | 1 +
- 1 file changed, 1 insertion(+)
+Why does it need a new submap array?
 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index f347c2f7c3a6..af74ddff6114 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -42,6 +42,7 @@
- };
- pub use self::io::{
-     Bar,
-+    ConfigSpace,
-     ConfigSpaceKind,
-     ConfigSpaceSize,
-     Extended,
--- 
-2.52.0
+Since an EPC driver never frees the pci_epf_bar instance, nor never frees
+the submap array, an EPF driver could reuse the submap in two consecutive
+set_bar() if it so wanted, even though it would be a bit silly.
 
+I guess my point is that the important thing is that the pci_epf_bar and
+the submap is immutable / pointer to const from EPC's point of view.
+
+Since the EPC will not change the pci_epf_bar, EPF driver could also
+theoretically call set_bar() twice with the exact same pci_epf_bar,
+even though that would be a bit silly.
+
+
+IMO, we could totally avoid all this text if we just changed;
+int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+                    struct pci_epf_bar *epf_bar);
+
+to:
+int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+                    const struct pci_epf_bar * const epf_bar);
+
+
+i.e.  const pointer to something const, because set_bar() will not change
+the pointer, and what is being passed should not change.
+
+
+Note that I'm not asking you to do this change in all the drivers,
+I'm just saying that if the API was actually defined like this,
+we would not need to add any Documentation, because the code would
+speak for itself.
+
+
+I think this patch is good, if we just rephrase it slightly.
+(An EPF driver can send in the same struct bar twice, it just can't
+modify the current struct bar while it is "in use".)
+We can probably write this in two paragraphs instead of three.
+
+
+Kind regards,
+Niklas
