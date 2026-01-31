@@ -1,303 +1,242 @@
-Received: from mail-108-mta65.mxroute.com (mail-108-mta65.mxroute.com [136.175.108.65])
+Received: from mail-wr1-f66.google.com (mail-wr1-f66.google.com [209.85.221.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2DF72DECCB
-	for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 11:26:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1767273D9F
+	for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 13:34:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769858813; cv=none; b=nxz5rplnCATKIK5epxvLG0kwfN01j/Vx7nsh24OV3csYam8QxEoQzZJ1hH1ALYItdR1r634K5BoIc3seKa4fz1CsAs8EvfQ2DNlfdISN9RkHXu4JJT7/FayFIjMu0qwmWwMLL0QgeRuV5o12gW4HfoQNphn1KegfZ/8WN/vqvoI=
+	t=1769866450; cv=none; b=A29xYZ/RFoRldki/00rWUuyIWMza+y6ZB3Z8piMpVlXQ0eUkGpdDbsMuZ1x2iqkpbgDBmWJ5RLTMTzi6ooekgTedxd7jrAlbEbm3bgkxFw5FGraQintn8B9/u5MNXipcQ/i96fJllXZZt77RXSSCJoHOHQ05ZOyQH+/SYVTZLhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769858813; c=relaxed/simple;
-	bh=IcqwC9eAkYqynb9dh6jYtMiPB7WWlLCjGKrCtqMmtqw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h4LkvQWlZtKoJudF6tY6NrZ5MJUoXsopl9SmZ9GeHf5HjKuLInXoTwcvnvP2DqfkjzEQ20pow4O2D1FDU6h32WXXekuWElaUcdGbUDGYPx/1/F7pwq9uqR8J5h0BMJJE5vUvpKIWfOoLcCrpGhVesP7SobVnOfiDjWh90jU0X2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs; spf=pass smtp.mailfrom=ry.rs; dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b=DxbwiAOL; arc=none smtp.client-ip=136.175.108.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ry.rs
+	s=arc-20240116; t=1769866450; c=relaxed/simple;
+	bh=B3tW+T3+xTqFN7KjQ7CwQXAjt+4LE0T30rQy08uzlD8=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=Pxe8DjNRfAiyj0iOX4fMGYp7G0U+43klkO/j4bmtLGZbIK0vVBuEwFciDpQkqcsqOv6Zc/WRQgQlzqkqAuslhlp1+H7YP3lI5uEZMJwwuC+zBKiT+sfddbmFKwZmgf3yVCAJ822mXXWNwdjZtdt0YGZmSPn2pIb4xFLsT1Q1/qM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nr9uV/2v; arc=none smtp.client-ip=209.85.221.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b="DxbwiAOL"
-Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
- (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta65.mxroute.com (ZoneMTA) with ESMTPSA id 19c13c97eb20009140.006
- for <linux-pci@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Sat, 31 Jan 2026 11:21:38 +0000
-X-Zone-Loop: a7ab775b0c0c3cb0199d2375e97d84702830c637bd25
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=ry.rs; s=x;
-	h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
-	bh=zbUMLGM28vAeGXLGlR/VovMeia9iEiIVTr53jZg8pgo=; b=DxbwiAOL6JSQaikrHWX5ZNNugM
-	yZVTuIW8/ovI8WXgyGe7gs2B2H26a9oVKVv2C0SlaZm8OWmwRdaeL0MZIeIspwetOfuh/C3Bse/n2
-	/XIxx+c8fjOxIyjMcfl2YOPrAtwBU+hzy3AJL7zITz6w6lb2xakMDquPcBdweXcCWp80NBgjxL6/P
-	GczVacAm3nP5GEAsuoHQI2DhnUncN+FbziIbeHWDvK3f4H8JeCyh2w0v7T41q+93QVBvYDY22ebqc
-	XsQNGR1N+7D1WaVe+ERS1nF5BGvFK5fEVgigrDrz/8jPFlqIo1ohWA5i5XoEBwhvBoZ1TliEUuFWt
-	F1g5j3Tg==;
-From: Zijing Zhang <zijing.zhang@ry.rs>
-To: dakr@kernel.org,
-	linux-pci@vger.kernel.org,
-	rust-for-linux@vger.kernel.org
-Cc: bhelgaas@google.com,
-	kwilczynski@kernel.org,
-	ojeda@kernel.org,
-	gary@garyguo.net,
-	Zijing Zhang <zijing.zhang@ry.rs>
-Subject: [PATCH v2 1/2] rust: pci: add capability iterator types
-Date: Sat, 31 Jan 2026 11:21:16 +0000
-Message-ID: <20260131112117.1361425-2-zijing.zhang@ry.rs>
-In-Reply-To: <20260131112117.1361425-1-zijing.zhang@ry.rs>
-References: <20260131110737.1356432-1-zijing.zhang@ry.rs>
- <20260131112117.1361425-1-zijing.zhang@ry.rs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nr9uV/2v"
+Received: by mail-wr1-f66.google.com with SMTP id ffacd0b85a97d-43284ed32a0so1615669f8f.3
+        for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 05:34:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769866447; x=1770471247; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=+GMDkRHv2Khx/Muzvkcr6QDmiyEqHb/dntZQAQVhjCU=;
+        b=nr9uV/2vtw2hD3wZzckrmHpKRl8EL1jFiH8752JizKUiDudOce7+QJIsd7mvl4tGz+
+         rZ4O8mvxaHgkG/uLa/KItDVKxj0bf/Me2Dk7R4yPyIX70ghoOgBlSXjldLwsbFt0t/OW
+         4LLccSwYwYs7coFG17ZYr2Zk/US9TALaFNxXKlANjc874FaTJfiEKFX+HM1b+zgMKPuV
+         RH1QTSP377/Zf4vqbTKIVjjKh/DBUAxEq89di7ZFBROjikumMNjewAtmWeuH9t59wGkZ
+         OgcIpnZVpy8Jz8yOETB/7wmHd8IY0BuBmYQK6xY6gyFkMdtxcu4/VP5fQTNyGkTOSO+8
+         iVRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769866447; x=1770471247;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+GMDkRHv2Khx/Muzvkcr6QDmiyEqHb/dntZQAQVhjCU=;
+        b=YXtDB3brL9eDTeKcBsBhBrd0LmbqJIXhxf3DKw1ntRrKaHIJwqYmHPdRwuMaND1kYr
+         MT+fjjFC0uqea3sZoM0vOE1kng0xFLIOCronmZZG1nq1973ZUOLdOqaWlZPl8qX45tny
+         ImCbPHffdPY0gUflUF15g/n/HI2M2c9kr96dbnWBV1XyjG+NyNdWO1qW/S6dYXrxUFQe
+         9fyhIun9saMbbNgosRQqKC6adkCC8i2dNosXfpI8UkkS87aSMrTBpKewP/eL6uynP4cI
+         r/RHxEZ/yA11WOnsr4TipVL/7yoZmQ7xPloCXTVSzbvKj5LXCkc/5GZlpNUlzAW30xb9
+         8Viw==
+X-Forwarded-Encrypted: i=1; AJvYcCVzNmHJk6kSDElpxXx3oofYJJ8F1GEabQO0qbFM23kV1SzBV/Ggae4e4ux+jfWhNcXX4ekUlX9Nv2M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxszFgbm6ickXcdi9pqIfnSLKr3q9JfKnPUTDfBe/koYPmenEB8
+	09asX7M5tfSyEVzX8qAfe2rjzXRv6FODDatWxutX7UDgOa8vp2bJNHPV
+X-Gm-Gg: AZuq6aJRpF4wOcuJ3xXoDD2Zlre6n49heDmPTuRE9c6Br9QCRVShHABKCXXhLri9UPD
+	IX7C+ymsv83JeAcJUm3CYCa9NQrAYEibwSEFGWXfABGEB1FG+M3tIdLrZYdlklvvQfcwW7EVIlA
+	Yxi9SGb2Ql8Yu5ya7CGeaf/zycxV9jDQtIi3RH0BuVy7RokMf51KcwCMSTVbQhV2QCutf279xLo
+	T9M9viVPYw4cDU70owgbmxfXUTGMJNM/PG6wGby9+lKG4Mo5MToONFQFicYp5+InhBsQokshKyk
+	ra0TwsfLGeFgP0MrFIPbkY3oOB93xuAsXCcwYYs9pJMHbLozUXjtgbpK8KVGGLAlUDtLV6dFNkV
+	Cwn93I86ge+L0uj92IwTXvmZ/VFc8+Ipe2kENA8y11QHkO1lO/GL03ze7swNRgo+mDWQ5Px3H0b
+	FYSdqHWjyDPd2Yaj8a37D9ROqJxVU1JwcRAsDmY9zTywSSP86WZSVCDyLWI/sSGZ8uR6TMkTKW+
+	IjzmJ3f5+nfWQzNEA6tIznJ/v0b4g1/DBVU0qdQCZLSHA==
+X-Received: by 2002:a05:6000:26c3:b0:435:bbd7:18e1 with SMTP id ffacd0b85a97d-435f3a6f621mr8477082f8f.9.1769866446676;
+        Sat, 31 Jan 2026 05:34:06 -0800 (PST)
+Received: from ?IPV6:2003:df:bf2d:e300:fa3c:28af:ecab:143f? (p200300dfbf2de300fa3c28afecab143f.dip0.t-ipconnect.de. [2003:df:bf2d:e300:fa3c:28af:ecab:143f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-435e13235f5sm29300881f8f.29.2026.01.31.05.34.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 31 Jan 2026 05:34:06 -0800 (PST)
+Message-ID: <49693073-e49e-4b5f-849b-6dd5fd3de712@gmail.com>
+Date: Sat, 31 Jan 2026 14:34:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-Id: zijing.zhang@ry.rs
+User-Agent: Mozilla Thunderbird
+From: Dirk Behme <dirk.behme@gmail.com>
+Subject: Re: [PATCH 2/2] samples: rust: pci: exercise capability lookup
+To: Zijing Zhang <zijing.zhang@ry.rs>, dakr@kernel.org,
+ linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org
+Cc: bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org,
+ gary@garyguo.net
+References: <20260131040200.1242566-1-zijing.zhang@ry.rs>
+ <20260131040200.1242566-3-zijing.zhang@ry.rs>
+Content-Language: de-AT-frami
+In-Reply-To: <20260131040200.1242566-3-zijing.zhang@ry.rs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Add best-effort iterators for standard and extended capability offsets.
+On 31.01.26 05:02, Zijing Zhang wrote:
+> Use the new pci::Device capability helpers to locate a few common
+> capabilities (standard and extended).
+> 
+> Also try a best-effort self-check to exercise the `Some(offset)` path
+> when the device advertises a standard capability list or an ext-cap header.
+> 
+> Signed-off-by: Zijing Zhang <zijing.zhang@ry.rs>
+> ---
+>  samples/rust/rust_driver_pci.rs | 90 +++++++++++++++++++++++++++++++++
+>  1 file changed, 90 insertions(+)
+> 
+> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_pci.rs
+> index 4dfb8a6a4707..195d37edff2c 100644
+> --- a/samples/rust/rust_driver_pci.rs
+> +++ b/samples/rust/rust_driver_pci.rs
+> @@ -5,6 +5,7 @@
+>  //! To make this driver probe, QEMU must be run with `-device pci-testdev`.
+>  
+>  use kernel::{
+> +    bindings,
+>      device::Bound,
+>      device::Core,
+>      devres::Devres,
+> @@ -89,6 +90,95 @@ fn config_space(pdev: &pci::Device<Bound>) {
+>              "pci-testdev config space read32 BAR 0: {:x}\n",
+>              config.read32(0x10)
+>          );
+> +
+> +        for (name, id) in [
+> +            ("PM", bindings::PCI_CAP_ID_PM as u8),
+> +            ("MSI", bindings::PCI_CAP_ID_MSI as u8),
+> +            ("PCIe", bindings::PCI_CAP_ID_EXP as u8),
 
-The iterators intentionally yield only offsets to keep the API thin.
 
-Signed-off-by: Zijing Zhang <zijing.zhang@ry.rs>
----
- rust/kernel/pci.rs | 221 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 221 insertions(+)
+Would it make sense to drop the direct usage of `bindings` by the
+user? And add an abstraction for this in pci.rs? E.g. an enum?
 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 2bec354cf620..2e740e56fb1d 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -479,6 +479,227 @@ pub fn find_ext_capability(&self, id: u16) -> Option<u16> {
-             Some(offset)
-         }
-     }
-+
-+    /// Iterates the offsets of standard PCI capabilities.
-+    ///
-+    /// The iterator yields the config-space offset of each capability as an `u8`.
-+    ///
-+    /// This is a best-effort enumeration of the device's capability list and may stop early if
-+    /// the list appears malformed.
-+    #[inline]
-+    pub fn capabilities(&self) -> Capabilities<'_> {
-+        Capabilities::new(self)
-+    }
-+
-+    /// Iterates the offsets of extended capabilities.
-+    ///
-+    /// The iterator yields the config-space offset of each extended capability as an `u16`.
-+    ///
-+    /// This is a best-effort enumeration of the device's extended capability list and may stop
-+    /// early if the list appears malformed or if the device does not have extended config space.
-+    #[inline]
-+    pub fn ext_capabilities(&self) -> ExtCapabilities<'_> {
-+        ExtCapabilities::new(self)
-+    }
-+
-+    fn read_config_u8(&self, offset: u16) -> Option<u8> {
-+        let mut val: u8 = 0;
-+        // SAFETY: By the type invariant of `Device`, `self.as_raw()` is a valid PCI device.
-+        //
-+        // CAST: PCI configuration space is at most 4096 bytes, so `offset` always fits within
-+        // `i32` without truncation or sign change.
-+        let ret = unsafe { bindings::pci_read_config_byte(self.as_raw(), offset as i32, &mut val) };
-+        if ret == 0 {
-+            Some(val)
-+        } else {
-+            None
-+        }
-+    }
-+
-+    fn read_config_u16(&self, offset: u16) -> Option<u16> {
-+        let mut val: u16 = 0;
-+        // SAFETY: By the type invariant of `Device`, `self.as_raw()` is a valid PCI device.
-+        //
-+        // CAST: PCI configuration space is at most 4096 bytes, so `offset` always fits within
-+        // `i32` without truncation or sign change.
-+        let ret = unsafe { bindings::pci_read_config_word(self.as_raw(), offset as i32, &mut val) };
-+        if ret == 0 {
-+            Some(val)
-+        } else {
-+            None
-+        }
-+    }
-+
-+    fn read_config_u32(&self, offset: u16) -> Option<u32> {
-+        let mut val: u32 = 0;
-+        // SAFETY: By the type invariant of `Device`, `self.as_raw()` is a valid PCI device.
-+        //
-+        // CAST: PCI configuration space is at most 4096 bytes, so `offset` always fits within
-+        // `i32` without truncation or sign change.
-+        let ret =
-+            unsafe { bindings::pci_read_config_dword(self.as_raw(), offset as i32, &mut val) };
-+        if ret == 0 {
-+            Some(val)
-+        } else {
-+            None
-+        }
-+    }
-+}
-+
-+/// Iterator over the offsets of standard PCI capabilities.
-+pub struct Capabilities<'a> {
-+    dev: &'a Device,
-+    next: Option<u8>,
-+    steps: u16,
-+}
-+
-+impl<'a> Capabilities<'a> {
-+    // Matches the TTL used by the PCI core (see `PCI_FIND_CAP_TTL` in `drivers/pci/pci.h`).
-+    const MAX_STEPS: u16 = 48;
-+
-+    fn new(dev: &'a Device) -> Self {
-+        let status = dev.read_config_u16(bindings::PCI_STATUS as u16);
-+        let hdr_type = dev.read_config_u8(bindings::PCI_HEADER_TYPE as u16);
-+
-+        let cap_list_ptr = status
-+            .filter(|s| (s & bindings::PCI_STATUS_CAP_LIST as u16) != 0)
-+            .and_then(|_| {
-+                let hdr_type = hdr_type?;
-+                const HDR_NORMAL: u8 = bindings::PCI_HEADER_TYPE_NORMAL as u8;
-+                const HDR_BRIDGE: u8 = bindings::PCI_HEADER_TYPE_BRIDGE as u8;
-+                const HDR_CARDBUS: u8 = bindings::PCI_HEADER_TYPE_CARDBUS as u8;
-+
-+                match hdr_type & (bindings::PCI_HEADER_TYPE_MASK as u8) {
-+                    HDR_NORMAL | HDR_BRIDGE => Some(bindings::PCI_CAPABILITY_LIST as u8),
-+                    HDR_CARDBUS => Some(bindings::PCI_CB_CAPABILITY_LIST as u8),
-+                    _ => None,
-+                }
-+            });
-+
-+        let next = cap_list_ptr
-+            .and_then(|ptr| dev.read_config_u8(ptr as u16))
-+            .filter(|&pos| pos != 0);
-+
-+        Self {
-+            dev,
-+            next,
-+            steps: 0,
-+        }
-+    }
-+}
-+
-+impl Iterator for Capabilities<'_> {
-+    type Item = u8;
-+
-+    fn next(&mut self) -> Option<Self::Item> {
-+        let mut pos = self.next?;
-+        self.steps += 1;
-+        if self.steps > Self::MAX_STEPS {
-+            dev_warn!(
-+                self.dev.as_ref(),
-+                "PCI capability list appears malformed; aborting after {} steps\n",
-+                Self::MAX_STEPS
-+            );
-+            self.next = None;
-+            return None;
-+        }
-+
-+        if pos < bindings::PCI_STD_HEADER_SIZEOF as u8 {
-+            self.next = None;
-+            return None;
-+        }
-+
-+        // Capability pointers are required to be dword-aligned, but mask the low bits anyway to
-+        // match the PCI core behavior.
-+        pos &= !0x3;
-+
-+        let ent = self.dev.read_config_u16(pos as u16)?;
-+        let next = (ent >> 8) as u8;
-+        let next = match next {
-+            0 => None,
-+            n if n == pos => None,
-+            n => Some(n),
-+        };
-+
-+        self.next = next;
-+        Some(pos)
-+    }
-+}
-+
-+/// Iterator over the offsets of extended capabilities.
-+pub struct ExtCapabilities<'a> {
-+    dev: &'a Device,
-+    next: Option<u16>,
-+    steps: u16,
-+}
-+
-+impl<'a> ExtCapabilities<'a> {
-+    const FIRST: u16 = bindings::PCI_CFG_SPACE_SIZE as u16;
-+    // Matches the calculated TTL used by the PCI core (see `PCI_FIND_NEXT_EXT_CAP()` in
-+    // `drivers/pci/pci.h`).
-+    const MAX_STEPS: u16 =
-+        ((bindings::PCI_CFG_SPACE_EXP_SIZE - bindings::PCI_CFG_SPACE_SIZE) / 8) as u16;
-+
-+    fn new(dev: &'a Device) -> Self {
-+        // Fast path: avoid probing if the device does not have extended config space.
-+        //
-+        // SAFETY: By the type invariant of `Device`, `dev.as_raw()` is a valid `struct pci_dev`.
-+        let cfg_size = unsafe { (*dev.as_raw()).cfg_size };
-+        if cfg_size <= bindings::PCI_CFG_SPACE_SIZE as i32 {
-+            return Self {
-+                dev,
-+                next: None,
-+                steps: 0,
-+            };
-+        }
-+
-+        // Best-effort enumeration: attempt to read the first header at 0x100.
-+        let hdr = dev.read_config_u32(Self::FIRST);
-+
-+        let next = hdr
-+            .filter(|&h| h != 0 && h != u32::MAX)
-+            .map(|_| Self::FIRST);
-+
-+        Self {
-+            dev,
-+            next,
-+            steps: 0,
-+        }
-+    }
-+}
-+
-+impl Iterator for ExtCapabilities<'_> {
-+    type Item = u16;
-+
-+    fn next(&mut self) -> Option<Self::Item> {
-+        let pos = self.next?;
-+        self.steps += 1;
-+        if self.steps > Self::MAX_STEPS {
-+            dev_warn!(
-+                self.dev.as_ref(),
-+                "PCI extended capability list appears malformed; aborting after {} steps\n",
-+                Self::MAX_STEPS
-+            );
-+            self.next = None;
-+            return None;
-+        }
-+
-+        let hdr = self.dev.read_config_u32(pos)?;
-+        if hdr == 0 || hdr == u32::MAX {
-+            self.next = None;
-+            return None;
-+        }
-+
-+        let next = ((hdr >> 20) & 0xffc) as u16;
-+        self.next = match next {
-+            0 => None,
-+            n if n == pos => None,
-+            n if n < bindings::PCI_CFG_SPACE_SIZE as u16 => None,
-+            n => Some(n),
-+        };
-+
-+        Some(pos)
-+    }
- }
- 
- impl Device<device::Core> {
--- 
-2.52.0
+
+> +        ] {
+> +            if let Some(pos) = pdev.find_capability(id) {
+> +                dev_info!(pdev.as_ref(), "pci-testdev {name} cap @ 0x{:02x}\n", pos);
+
+
+Just as a heads up, using `as_ref()`in the `dev_*` prints should be
+obsolete soon:
+
+https://lore.kernel.org/rust-for-linux/20260120181152.3640314-2-gary@kernel.org/
+
+
+> +            } else {
+> +                dev_info!(pdev.as_ref(), "pci-testdev has no {name} capability\n");
+> +            }
+> +        }
+> +
+> +        // Best-effort self-check to exercise the `Some(offset)` path:
+> +        // If the device advertises a standard capability list, read the first capability ID
+> +        // directly from config space and verify that `find_capability()` returns an offset.
+> +        let status = config.read16(bindings::PCI_STATUS as usize);
+> +        if (status & bindings::PCI_STATUS_CAP_LIST as u16) != 0 {
+> +            let pos = config.read8(bindings::PCI_CAPABILITY_LIST as usize);
+
+
+An other heads up: This should use the `register!()` macro soon:
+
+https://lore.kernel.org/rust-for-linux/20260128-register-v4-6-aee3a33d9649@nvidia.com/
+
+
+> +            if pos != 0 {
+> +                let id = config.read8(pos as usize + bindings::PCI_CAP_LIST_ID as usize);
+> +                match pdev.find_capability(id) {
+> +                    Some(found) => dev_info!(
+> +                        pdev.as_ref(),
+> +                        "pci-testdev selfcheck: cap id 0x{:02x} @ 0x{:02x} (find -> 0x{:02x})\n",
+> +                        id,
+> +                        pos,
+> +                        found
+> +                    ),
+> +                    None => dev_info!(
+> +                        pdev.as_ref(),
+> +                        "pci-testdev selfcheck: cap id 0x{:02x} @ 0x{:02x} (find -> none)\n",
+> +                        id,
+> +                        pos
+> +                    ),
+> +                }
+> +            } else {
+> +                dev_info!(pdev.as_ref(), "pci-testdev selfcheck: empty cap list\n");
+> +            }
+> +        } else {
+> +            dev_info!(pdev.as_ref(), "pci-testdev selfcheck: no cap list\n");
+> +        }
+
+
+Could the indentation and nesting level of this block be reduced by
+moving this to a helper function, e.g. `check_standard_capability()`,
+and in that use early returns?
+
+Same for the extended capabilities below (e.g.
+`check_extended_capability()`).
+
+And, going even one step further: I don't know much about PCI, but is
+this a common pattern several users / drivers might need? If so it
+might make sense to move some of this `check_*_capability()` to pci.rs?
+
+Best regards
+
+Dirk
+
+
+> +        for (name, id) in [
+> +            ("DSN", bindings::PCI_EXT_CAP_ID_DSN as u16),
+> +            ("SR-IOV", bindings::PCI_EXT_CAP_ID_SRIOV as u16),
+> +        ] {
+> +            if let Some(pos) = pdev.find_ext_capability(id) {
+> +                dev_info!(pdev.as_ref(), "pci-testdev {name} ext cap @ 0x{:04x}\n", pos);
+> +            } else {
+> +                dev_info!(pdev.as_ref(), "pci-testdev has no {name} ext capability\n");
+> +            }
+> +        }
+> +
+> +        // Best-effort self-check for extended capabilities.
+> +        //
+> +        // If the device has PCIe extended configuration space, verify that
+> +        // `find_ext_capability()` can find the ID from the first extended
+> +        // capability header (which is located right after the 256-byte legacy
+> +        // configuration space).
+> +        if let Ok(config_ext) = pdev.config_space_extended() {
+> +            let hdr = config_ext.read32(bindings::PCI_CFG_SPACE_SIZE as usize);
+> +            if hdr != 0 && hdr != u32::MAX {
+> +                let id = (hdr & 0xffff) as u16;
+> +                match pdev.find_ext_capability(id) {
+> +                    Some(found) => dev_info!(
+> +                        pdev.as_ref(),
+> +                        "pci-testdev selfcheck: ext cap id 0x{:04x} @ 0x{:04x} (find -> 0x{:04x})\n",
+> +                        id,
+> +                        bindings::PCI_CFG_SPACE_SIZE,
+> +                        found
+> +                    ),
+> +                    None => dev_info!(
+> +                        pdev.as_ref(),
+> +                        "pci-testdev selfcheck: ext cap id 0x{:04x} @ 0x{:04x} (find -> none)\n",
+> +                        id,
+> +                        bindings::PCI_CFG_SPACE_SIZE
+> +                    ),
+> +                }
+> +            } else {
+> +                dev_info!(
+> +                    pdev.as_ref(),
+> +                    "pci-testdev selfcheck: no ext cap header @ 0x{:04x}\n",
+> +                    bindings::PCI_CFG_SPACE_SIZE
+> +                );
+> +            }
+> +        } else {
+> +            dev_info!(pdev.as_ref(), "pci-testdev selfcheck: no ext config space\n");
+> +        }
+>      }
+>  }
+>  
 
