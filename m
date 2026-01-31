@@ -1,70 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-108-mta142.mxroute.com (mail-108-mta142.mxroute.com [136.175.108.142])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46F0235BDB8;
-	Sat, 31 Jan 2026 14:25:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A38FF35CB7B
+	for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 14:27:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769869544; cv=none; b=d4ve7z5/SmCtCGj4PsuHKxYiqU9yGTEoYB8UYXUUNMAZXTUg60QzpO68Kkatoa0lYbe4XqhbiL/lm2INK/EyeZq4XigjVNsL4G55JwzhqoX8rCOHShOg/4/4zH3t3F5NDDn79cqkJK9UW2lErBGiUTkcAspBDd29qppTzrPeoQc=
+	t=1769869662; cv=none; b=LT/sW0i+CTEavt3SLoiMjVg0KO9nln9x6pRf2hJ72oCGfEiX+zNlIlQVIMpcln2kZTnCeAxXcqYjsgRqiQJ4qgNtrbLucZql9C1v2R6TOanzfWiWZzyK248sY3oKuTiSaipE1CfOrgGycrQ99wueRBWKo1OOCaYy8FFPeka4Hrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769869544; c=relaxed/simple;
-	bh=wVsWvv0IL5XOf6zVy7RcF5hJW8aZ2pYZbyOxNeIcvmA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LEcpNrY1GCDNvpmDJ6a8och4WDWblwHVJQBhPgXBMIKFiwDSZiAx14zKj9EX8Mfaxc7/BjmFXhD2W0KWtjJLbWOX0f0bdlXAPozvXqIfSyZG5KqghoVd6X2ZAepcagTlYPELsZ4F/Rvgkk9XjQPQlkIBhSe3ks3wYwMhMs7AM0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pEiVGPDt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769869662; c=relaxed/simple;
+	bh=WVUZtrHdQCMK9fLWnTWlzYcBIGRNJYJRFhSBnvqy3A4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NcVrPcCGpLQsczBTtQW59jgt/WrYogg4d1/bNuUKboJULU9kO+DKoZD8GJCdByKtDoZspBJ0fiHL0ntXnRS29VL7wGtN3sXXrPYenYHbqZJfiEblMnVeEKizVQZIhFu5tMTctF2loWcpyKlKxdCkqrdVj4KxfoGLOpwNVJ85Z0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs; spf=pass smtp.mailfrom=ry.rs; dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b=KitFCE9B; arc=none smtp.client-ip=136.175.108.142
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ry.rs
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pEiVGPDt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4071C4CEF1;
-	Sat, 31 Jan 2026 14:25:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769869543;
-	bh=wVsWvv0IL5XOf6zVy7RcF5hJW8aZ2pYZbyOxNeIcvmA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pEiVGPDtTfcvXGzrM81yaHgKojfCIpjcpmrU2VBVWEzD/405MNOqqSPHBmJwlqM1C
-	 ASigzP+jyB4FX7MkWq+JXyLVpi+CEhlF7zcSl5NSs88S6r5Hef92ZoYgoS7OQ3JB22
-	 OeuA74wiRergJjvZmDxGNaMIiyI3BhULKtY81uQZ4xnnLMI4uax1ET9UyVet47CBbu
-	 t+OWqn/59+Oof+4s54LEnbGImO6Psdg+wyNUZFRC2D/hb4s8TpaZonyuPSojDzv6BJ
-	 tCvunJsQgDH5JfGRjWwl5hw1jqkEvHyHQ5NtZ97X+jI5rRrB2WE+kbwbT97EeD7cu5
-	 yoDlp5uwnOMCg==
-Date: Sat, 31 Jan 2026 15:25:37 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
-	bhelgaas@google.com, corbet@lwn.net, jingoohan1@gmail.com,
-	lpieralisi@kernel.org, robh@kernel.org, Frank.Li@nxp.com,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: dwc: ep: Return after clearing BAR-match
- inbound mapping
-Message-ID: <aX4Q4RWMfXt085lL@fedora>
-References: <20260131133655.218018-1-den@valinux.co.jp>
- <20260131133655.218018-2-den@valinux.co.jp>
+	dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b="KitFCE9B"
+Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
+ (Authenticated sender: mN4UYu2MZsgR)
+ by mail-108-mta142.mxroute.com (ZoneMTA) with ESMTPSA id 19c146efec90009140.002
+ for <linux-pci@vger.kernel.org>
+ (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
+ Sat, 31 Jan 2026 14:22:24 +0000
+X-Zone-Loop: 28b9c88c2728ab88f6da89593dfbc0e7abb9124df0d0
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=ry.rs; s=x;
+	h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Date:Subject:
+	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
+	bh=WVUZtrHdQCMK9fLWnTWlzYcBIGRNJYJRFhSBnvqy3A4=; b=KitFCE9BFVrYZin3dw98pZEXbT
+	kXazrV/YMEtY40KLn5NRgj1ponTqjGkG/NCVPRseRnmbi2/SfSAvF5JY3fdjZc4utK1F2bhTqgoZk
+	rwtwFND1E5TcW4ZRaF2FOdE+x/CB5o/2vFuNnyJ3BBxy6WdpDsuLgL/DclvD2gMElV9z7MqEdz938
+	CJ12SubfRnVuZI44KNYBPUjvQLCOWXDEl2ZrOTXoxs57aCQhiMf3V9h/FKTEEUAD6nvNoHJnWNQV8
+	Jjj1SvmJrsj38GhAMQDVDv7EDXuFeimIXxbN2dBXz506+ibk1eb4jhgyrzgaeqbNhHac7QqmGwdUa
+	Y7Dn8utQ==;
+From: Zijing Zhang <zijing.zhang@ry.rs>
+To: dirk.behme@gmail.com
+Cc: linux-pci@vger.kernel.org,
+	rust-for-linux@vger.kernel.org,
+	Zijing Zhang <zijing.zhang@ry.rs>
+Subject: Re: [PATCH 2/2] samples: rust: pci: exercise capability lookup
+Date: Sat, 31 Jan 2026 14:22:10 +0000
+Message-ID: <20260131142210.1387871-1-zijing.zhang@ry.rs>
+In-Reply-To: <49693073-e49e-4b5f-849b-6dd5fd3de712@gmail.com>
+References: <49693073-e49e-4b5f-849b-6dd5fd3de712@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260131133655.218018-2-den@valinux.co.jp>
+Content-Transfer-Encoding: 8bit
+X-Authenticated-Id: zijing.zhang@ry.rs
 
-On Sat, Jan 31, 2026 at 10:36:53PM +0900, Koichiro Den wrote:
-> dw_pcie_ep_clear_ib_maps() first checks whether the inbound mapping for
-> a BAR is in BAR Match Mode (tracked via ep_func->bar_to_atu[bar]). Once
-> found, the iATU region is disabled and the bookkeeping is cleared.
-> 
-> BAR Match Mode and Address Match Mode mappings are mutually exclusive
-> for a given BAR, so there is nothing left for the Address Match Mode
-> teardown path to do after the BAR Match Mode mapping has been removed.
-> 
-> Return early after clearing the BAR Match Mode mapping to avoid running
-> the Address Match Mode teardown path. This makes the helper's intention
-> explicit and helps detect incorrect use of pci_epc_set_bar().
-> 
-> Link: https://lore.kernel.org/all/aXtrW7viGZfMNZur@ryzen/
-> Suggested-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
+Hi Dirk,
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Thanks a lot for the careful review and the pointers!
+
+I agree on the `bindings` usage in the sample. Exposing raw bindgen constants
+to users is not ideal.
+
+For v3, I plan to introduce small typed wrappers in `kernel::pci`:
+
+- `CapabilityId` (u8 newtype) for standard capabilities.
+- `ExtendedCapabilityId` (u16 newtype) for PCIe extended capabilities.
+
+Both will provide common `const` IDs matching the existing `PCI_CAP_ID_*` /
+`PCI_EXT_CAP_ID_*` definitions, plus `from_raw()` / `as_raw()` so drivers can
+still use less common IDs without falling back to `bindings`.
+
+I will then update `find_capability()` and `find_ext_capability()` to accept
+`CapabilityId` and `ExtendedCapabilityId` respectively.Since the newtypes
+provide `from_raw()`.
+
+Real drivers typically know what they need and do not need to validate the PCI
+core helpers, thus the intent of the self-check here is mainly to validate PCI
+abstraction correctly behaves. This logic would be kept as sample-only private
+helpers and refactored.
+
+Also noted on `pdev.as_ref()` becoming obsolete soon, and the upcoming
+`register!()` macro; Sample will be updated once those are available in tree.
+
+Best regards,
+Zijing
