@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E552D2491;
-	Sat, 31 Jan 2026 16:50:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16A8434EEE4;
+	Sat, 31 Jan 2026 17:35:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769878245; cv=none; b=KFpELc1LTdZ0hSDQrjtrmFGLS9la6uKBz/ksyeyP8FSClLjf3va/eYqgRMj03reBJoZlH8EJ569gMqtoMKi1SBWi2Bl2JgzFu6+2VH/UCUzU45MGpCQrrMjpFZdF1ZBjLAQTUvPCx6HOsU7kMEukW3PCm1m5a0dNSwOYSzV6V7s=
+	t=1769880920; cv=none; b=LXD02EEG7m82aYK1uYY3BI/tcvEDTBotQghFzO/zoWZchsZ8cMQd1q7xKY8z5mo5ZGzmUabDXTCmMsBd3pcYxka5mOmyY7z3WXrIbuPoisjofDRr3M+6bA5RMOyPAYmv5B0ZAdvVlWc5bUK79mXMx4EKUw0GJZI6Pol+kl2ndwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769878245; c=relaxed/simple;
-	bh=Pq75lfbTLCURF9snDbnVcSpQd+vL1pkGds2uMZrgcgs=;
+	s=arc-20240116; t=1769880920; c=relaxed/simple;
+	bh=+dri6J0Bx7uOsLbd49Yn2k0TdPm0FAHLxYH/6NKndbg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EEZ6GDfq0Mb4dmcLFSsIXbYtyqIa4IaIh1NaOXBO5pZVS4GjXN8lT1EV9YTjRu+s+Vkyg7D3tXUbibEtL6esr+vSo0eXRPqpthZCc04Pe32e8BoPPwRWeLhiTZBvS83MBzlh0kH/m2QiVTKb5pVHosqJ5sIkmVw/OBVFS0c5i1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TXYW1ZHo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=EimeiUgVWrQKTe3qkdsTfFBPmTY5qYwrgRgmiPfUFfR2PB1e/N7a/maXuFApkmvA70uXRvGsFiLceUVWCghGDJZD5LHQ8aSxfHJdfsPsLktzyvB+d8Hb3VT/GXk4/ZfL+3cr5Ioao8YWPuGHt2P4vQZ6apay5HxuaO4zWmmsugg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qdYvG3PW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TXYW1ZHo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A989C4CEF1;
-	Sat, 31 Jan 2026 16:50:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qdYvG3PW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17196C4CEF1;
+	Sat, 31 Jan 2026 17:35:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769878244;
-	bh=Pq75lfbTLCURF9snDbnVcSpQd+vL1pkGds2uMZrgcgs=;
+	s=k20201202; t=1769880919;
+	bh=+dri6J0Bx7uOsLbd49Yn2k0TdPm0FAHLxYH/6NKndbg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TXYW1ZHoRNDwxLNTidSM6lrXJP5MyWY/UQj1kc6p8EG/2CsO2zfdDUVGcCCGlVgBq
-	 0k3MIPRAvf/eC3ygexyfuec7n1SccatsV/58U4sijLFtLkS/qosZN0Xmwaxv6o9n4N
-	 4/uUIvygCOUA1YSMsxLany79uk0Uy/GDaucqMbfIbP8nnauS1Y14ILYY6BGArirwHA
-	 OcB6cI2vZUsQZOKEkoTi9tF2+R65+ycbtmoRnvNQH4hK5GZhWAXZihMFImbf3XbO9K
-	 CW9lMtamW73BKN8WkQZ6vjFsccpgriWsbxzeIf7UOfERHMV2WiCm3lqg07wQZTbM1h
-	 /eNrtUvCaqG2A==
-Date: Sat, 31 Jan 2026 17:50:38 +0100
+	b=qdYvG3PW7K3yr1rfRSAz40WpLX7f8wXla96G4GT1L03zfKqQDMECDsgtCW/1c7gPp
+	 qczWdPEZq7Nr8iga0o12z7oB/N3rhvOCcUbsXPjN6vTK3xVY+OpedDuFWZ1nVc+ycX
+	 n76bAePpLd807W8NaTLctINJ8joGa9O6DxdnKknIUe9nYCU8IFjcADFfMQk22tDa4o
+	 sfAeRykWL1RuNBE/7jmXV9QerPlYvBii6TKH/K/NmS8rGWMxoQunx92OgxtzJasty9
+	 UBJI3Z4JzAlcUZ9RJoqIJTk2rDafN6rr6dNHiTDgUNH2pkHMIisPDXynvzRabfTp2K
+	 htt1vMnTZKN9A==
+Date: Sat, 31 Jan 2026 18:35:13 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: Koichiro Den <den@valinux.co.jp>
 Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
@@ -34,11 +34,11 @@ Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
 	lpieralisi@kernel.org, robh@kernel.org, Frank.Li@nxp.com,
 	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: endpoint: Document pci_epc_set_bar() caller
- ownership and lifetime rules
-Message-ID: <aX4y3txKcYmb-kE3@fedora>
+Subject: Re: [PATCH 2/3] PCI: endpoint: pci-epf-test: Use dedicated
+ pci_epf_bar for subrange mapping
+Message-ID: <aX49Ucwd1PalCcGr@fedora>
 References: <20260131133655.218018-1-den@valinux.co.jp>
- <20260131133655.218018-4-den@valinux.co.jp>
+ <20260131133655.218018-3-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,93 +47,86 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260131133655.218018-4-den@valinux.co.jp>
+In-Reply-To: <20260131133655.218018-3-den@valinux.co.jp>
 
-On Sat, Jan 31, 2026 at 10:36:55PM +0900, Koichiro Den wrote:
-> pci_epc_set_bar() may be called multiple times for a BAR when an
-> endpoint controller supports dynamic_inbound_mapping and/or
-> subrange_mapping.
-> 
-> Some EPC drivers keep a reference to the struct pci_epf_bar passed to
-> pci_epc_set_bar(), but the documentation does not describe the ownership
-> and lifetime rules for that object (and its submap array).
-> 
-> Document that the EPF driver retains ownership of these objects, must
-> keep them valid, and must not modify them after a successful
-> pci_epc_set_bar(). When updating an active mapping, the EPF driver must
-> pass a new pci_epf_bar instance and only free the old one after the
-> update succeeds.
-> 
+On Sat, Jan 31, 2026 at 10:36:54PM +0900, Koichiro Den wrote:
+> The BAR subrange setup/clear paths in pci-epf-test used to update
+> epf->bar[barno].submap in place and free/restore the submap around
+> pci_epc_set_bar() calls.
+>
+> Some EPC drivers may keep a reference to the struct pci_epf_bar passed
+> to pci_epc_set_bar(). Mutating or freeing the same bar descriptor after
+> a successful set_bar() can therefore lead to unexpected behaviour.
+>
+> Use a dedicated pci_epf_bar instance for the subrange mapping test and
+> only free the allocated submap after restoring the BAR mapping back to
+> the default epf->bar[barno] descriptor.
+>
+> Fixes: 6c5e6101423b ("PCI: endpoint: pci-epf-test: Add BAR subrange mapping test support")
+> Suggested-by: Niklas Cassel <cassel@kernel.org>
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 > ---
->  Documentation/PCI/endpoint/pci-endpoint.rst | 22 +++++++++++++++++++++
->  1 file changed, 22 insertions(+)
-> 
-> diff --git a/Documentation/PCI/endpoint/pci-endpoint.rst b/Documentation/PCI/endpoint/pci-endpoint.rst
-> index 4697377adeae..b2f5ad147ed8 100644
-> --- a/Documentation/PCI/endpoint/pci-endpoint.rst
-> +++ b/Documentation/PCI/endpoint/pci-endpoint.rst
-> @@ -119,6 +119,28 @@ by the PCI endpoint function driver.
->     BAR register or BAR decode on the endpoint while the host still expects
->     the assigned BAR address to remain valid.
->  
-> +   The struct pci_epf_bar passed to pci_epc_set_bar() (and the optional
-> +   pci_epf_bar.submap array) is owned by the PCI endpoint function driver.
-> +   An EPC driver may keep a reference to these objects after
-> +   pci_epc_set_bar() returns. Therefore the EPF driver must ensure that:
-> +
-> +     * Ownership of the pci_epf_bar object passed to pci_epc_set_bar()
-> +       remains with the caller (the EPF driver). The caller is responsible
-> +       for ensuring it remains valid (and freeing it when dynamically
-> +       allocated).
-> +
-> +     * After pci_epc_set_bar() succeeds, the caller must not modify the
-> +       contents of the pci_epf_bar object (or its submap array) until a
-> +       later successful pci_epc_set_bar() for the same BAR replaces it, or
-> +       until pci_epc_clear_bar() succeeds. Otherwise, it could potentially
-> +       lead to use-after-free or undefined behavior.
-> +
-> +     * If the caller needs to update the mapping for a BAR and calls
-> +       pci_epc_set_bar() again, it should use a new pci_epf_bar instance
-> +       (and a new submap array, if used). If the call succeeds, the old
-
-Why does it need a new submap array?
-
-Since an EPC driver never frees the pci_epf_bar instance, nor never frees
-the submap array, an EPF driver could reuse the submap in two consecutive
-set_bar() if it so wanted, even though it would be a bit silly.
-
-I guess my point is that the important thing is that the pci_epf_bar and
-the submap is immutable / pointer to const from EPC's point of view.
-
-Since the EPC will not change the pci_epf_bar, EPF driver could also
-theoretically call set_bar() twice with the exact same pci_epf_bar,
-even though that would be a bit silly.
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 32 ++++++-------------
+>  1 file changed, 10 insertions(+), 22 deletions(-)
+>
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 6952ee418622..fd6452d1dcc7 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -86,6 +86,7 @@ struct pci_epf_test {
+>	bool			dma_private;
+>	const struct pci_epc_features *epc_features;
+>	struct pci_epf_bar	db_bar;
+> +	struct pci_epf_bar	subrange_bar[PCI_STD_NUM_BARS];
 
 
-IMO, we could totally avoid all this text if we just changed;
-int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-                    struct pci_epf_bar *epf_bar);
+If we compare your test:
+pci_epf_test_bar_subrange_setup(), the host side decides which BAR you
+want to configure.
 
-to:
-int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-                    const struct pci_epf_bar * const epf_bar);
+For pci_epf_test_enable_doorbell(), the function itself uses
+pci_epc_get_next_free_bar(), so the EP side decides which BAR to use.
 
-
-i.e.  const pointer to something const, because set_bar() will not change
-the pointer, and what is being passed should not change.
+This is a difference, but I think your way is fine.
 
 
-Note that I'm not asking you to do this change in all the drivers,
-I'm just saying that if the API was actually defined like this,
-we would not need to add any Documentation, because the code would
-speak for itself.
+
+Another difference is that you have:
+struct pci_epf_bar      subrange_bar[PCI_STD_NUM_BARS];
+
+while the doorbell test case has:
+
+struct pci_epf_bar      db_bar;
+
+Looking at the code, you allow multiple BARs to be configured in subrange
+mapping mode (even though the selftest itself will only enable+disable it
+for one BAR one by one, but I guess someone could theoretically write their
+own test program that puts all the BARs in subrange mapping mode at the same
+time).
+
+This is another difference from enable_doorbell(), but again I think your
+way is also fine.
 
 
-I think this patch is good, if we just rephrase it slightly.
-(An EPF driver can send in the same struct bar twice, it just can't
-modify the current struct bar while it is "in use".)
-We can probably write this in two paragraphs instead of three.
+
+Looking at the pci-epf-test code, I realize that, because:
+struct pci_epf_bar      db_bar;
+is just a single struct, doing ioctl ENABLE_DOORBELL multiple times will
+just overwrite the existing db_bar struct... Not very nice...
+
+Since it is only one db_bar, pci-epf-test should return an error if
+ENABLE_DOORBELL is called multiple times in a row, rather than just silently
+overwrite pci_epf_bar db_bar, leaving the previous BAR still configured
+while programming yet another BAR for a HW doorbell... This means that
+calling DISABLE_DOORBELL will incorrectly just cleanup one BAR and not two...
+This is not your bug however...
+
+
+
+TL;DR: I think your code looks fine, even though it is different that
+the doorbell test case in a few ways.
+
+Also the doorbell test case is buggy, but that is not really your problem.
 
 
 Kind regards,
