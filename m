@@ -1,366 +1,304 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021117.outbound.protection.outlook.com [40.107.74.117])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB3C2AD00;
-	Sun,  1 Feb 2026 02:32:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.117
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769913150; cv=fail; b=BTwgZ2ROgO6wGQDZWBNJn/AEyk1j2AjcupQz3TFsk60X2Npu4+XXtr0R70JsO/6epMy8BIjl1XjAyFfAqNWPSwzZYjlET6mKmhRpLdBSh1S4TBKPhJWZTx+CxMECpt9KX3ZyBLjt7rfNniDhV/rh6iRAdfr0Zko1ls4EeterEOc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769913150; c=relaxed/simple;
-	bh=/K9gMVpx2D3bfjrUXfbkKYnKNfqrW1K106vNxOjuz+I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=QiW+lPS2FUdwxVSxngNRaRjsgaY0u2avWYF5FAL+XSgqYffYGpVHAlaf/f8C6c283CihCDvHjP/VBEyFwxeRC1EsIXLawtXjnCB0JqA6phRaUsnXOQLXrIy3kOo5y36NU7YV3WKl5aPWb1XrZzHcMcEVILSvG1JhHSswiDjECdI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=E/RhbMZf; arc=fail smtp.client-ip=40.107.74.117
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C87CA224AE8
+	for <linux-pci@vger.kernel.org>; Sun,  1 Feb 2026 06:24:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769927095; cv=none; b=QZULBDq9bsWk4kUMAhe4SVW8Cf8Fvvj9v2fE3mY+QSw0MZ9J4XnRS6Op8qHK0gKCCUctkJfI0/GCc2vWzpGfasUet8ERXM0Vy0JhsVGR9ZPwanjb/EhJ+n5LoiXjYAhy0ezSfLb1iMP9JsMLxUr0axGz9m+3JESBC3Dch/PLa6I=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769927095; c=relaxed/simple;
+	bh=VQgd/ntI7MrOtZ5XEOtaiTzReNsfs7DqrEP/Dk+Ea6I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RKcBZLEesokS97Kejmhqxvrqfe9E7kbSLCRx+I8C1wAmYr34L2YxPeAvpM8ErazsLhf/3E7ySPWrhFsRt4BixDrOKg0p7f3inrKsZa2RbOKIh09vgXlUwr38696kin+QrZi/OB9Uff3VwSIlEIr9cPqwx4PLFBWKKND3hV6OY1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mHOvPUKQ; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="E/RhbMZf"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=SUkdzQNf9oSBE3LBF/1Pq9GV5JuXUbX9h0WLe8xzJsv93VXhBnbl4JUAT7prog4sUu8f6XMS2KxW81nc006apmy+IFP74/O5dWv8/SSeotdMaiY8MI4HbtZ6E3mcUcvVNrg+5HhI9zqgXf5NQ2Sqj4XJQxS/ONyNHM3iW+pHlw9phunA5Xi6+6ZV8+eRuLXi3KO+i/fB0hCux8Vguha2kWnV4hfR3VRK6Dj7UXoJloc+IVnAqMjQnOjo9fabbK20TngvnM33IgwUWASrJKhLdAnxObBRqaTXaCsZvrSowEDDU1ITizTi1lHlSVkqgn7R7x2DC/EubPUncirMrvIKWw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ggrj8BosZR3rauq4p9WcH0/2ZR8KIa0PzXb2UveLK+M=;
- b=ZVliumPBt5jv7rgeCF6GDFeL7ViSPEegp5kDpOpZkyuYidX9p2lSWfcJuaUekJ5WD91gBjnhPwq59B9xpLm+BkcZiLGhC6EQS2y/fYjWJrpwDrJl/WqNzypKtX1nJCwQpbLut1ewtkCq9Elzxmlzm1KMSZnAPNcYrlGviIjFw8Z4gAFZIMHJWkVPlEYUI6J4sXQnRllIekEo+Z57ZQw1pc+TW+LV9ct9oTm4OxaDPKeDaR75NydTdU8HM69njq/L701X45ZHyD4wgjjFfjJq74bRryh7CwDXnDsRzzKHquzfk6O4LjgXqhuycy7YY0LpvtClg1hve8S/1gyELZjFEA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ggrj8BosZR3rauq4p9WcH0/2ZR8KIa0PzXb2UveLK+M=;
- b=E/RhbMZf4pZYgfqKHuz/cznnub9coYrDBzswpg4V/b57oZw1OLq4QGFBhJnUdg5XTllynLWJWLccLZ1nBkI3kM8ApdWz0fLNsRLNWKZ6r9JyVuxBYueGXaEdOrTlfXdnTjr+Rai+ZPrPQeaItpoO7m5SqAI/8295Eefw04IhlUU=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TYCP286MB2685.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:244::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.15; Sun, 1 Feb
- 2026 02:32:25 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9542.010; Sun, 1 Feb 2026
- 02:32:24 +0000
-Date: Sun, 1 Feb 2026 11:32:23 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: vkoul@kernel.org, mani@kernel.org, Frank.Li@nxp.com, 
-	jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
-	bhelgaas@google.com
-Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/7] dmaengine: dw-edma, PCI: dwc: Enable remote use
- of integrated DesignWare eDMA
-Message-ID: <h3uhcd426u32lmn4ajjcrclabuptiy3d4lmtdbwhtu5ca2dv2s@co5piltmkhx6>
-References: <20260127033420.3460579-1-den@valinux.co.jp>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260127033420.3460579-1-den@valinux.co.jp>
-X-ClientProxiedBy: TYCP301CA0019.JPNP301.PROD.OUTLOOK.COM
- (2603:1096:400:381::6) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mHOvPUKQ"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-47fedb7c68dso35323405e9.2
+        for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 22:24:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769927092; x=1770531892; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=G1PDCVMHZp+0xGdbh+dSoCllMY4HTfCtaq+3usc0PNI=;
+        b=mHOvPUKQALqLPbSqYLMQGioV7Jti3JWUGQwIoZ418grbkyir1jy9VVuLw4aMW1bbOE
+         gn74qpV2K4XF2m/Q3x61GXChM8FZe9LwChNQmEPGkjy3rNRuM/xBPxm6NGc+E9cEpN+6
+         aZVCxN4Ex9WlY6Wpb5wlyBacmwMceMJxHQJLknoskikmit3mrhUz/XcC3tn6DqYWlsL+
+         a7lBAsmMDKKNCayLeLML5fmslieqgrSxmkZAW4yulMdzYO+vS1nSPf77u0tTM6PlEf/G
+         Fl1bAgKw4VIpAJShOCMSsJjX3OCXh7G0YFVunwojwx0utvrbJAInne8rdeZydvb9f265
+         gr5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769927092; x=1770531892;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=G1PDCVMHZp+0xGdbh+dSoCllMY4HTfCtaq+3usc0PNI=;
+        b=S6f7FSqxQDVllaCjlKtH09h2i8wjVKtCFA8SKryWuAfWbA6sAGaQ/7F+J3KQuGK0NI
+         Ny9+e4BwMZ04CRtPS28Jg2agRqkol5nY/uRoojL9osDgiTdA98mdNNf6K0BGB3o1Tfls
+         F7NU/KLwdMb57yP5HkjK1o5ycZtMJI9wMDuO07FfUKndFat8jbcEklKr0ZligKGdHgZy
+         eOU5UI4062DR6bA1bmbyucCd0yrSERPxnEzhYXpXNPFVREt/SI287x591hxAR2KlHRJp
+         xsHxhvypddM/1bgFxIGqA73a8MzPkTAYrwlbR54jsOjLak6SH+KBk9jzJBP/E/YL2Hhc
+         wT/g==
+X-Forwarded-Encrypted: i=1; AJvYcCVLWArdacrvQ9mZSQrH8PpCntegXa8agLpr9AWotIZhTXbUEfeG13eemVy/G0qvMps5rfHo8l1gCtM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyQKz+yVxKxZ6Ms3qJ9YN5OMlbcTg/HSTeJdRmbPT3/xIkHPYLN
+	PisiIPrFQhIcf68asP6ivFWL0/x1bA7sjXjXdRqvy4JYthmKV+gz8GNU
+X-Gm-Gg: AZuq6aJVLhD0WNAdNqq55qG056yid7uevD9xlykg+ilj6/tvbihYl/Kg80yFb9312ru
+	9h88PBa1e9B/E88/EXuOepYviWFQRcPMCkzpXWiVj6IfX/nJkeHRE5dH9fTj8hTqY6r96vbOWTh
+	cghuBrCeEeElsZTzcTykH3RsYln6HDgFKF6nfZOXTFXfwNH36lFN7xSEqvaa4ySQ+hf6A9jQuzf
+	mEH9dft6RamGpizVuRwnxM6OhZVID23A5wEwxp4bseVrdcASui8aIDvrLxL0X7CaUZ/OdZCJTM1
+	H5cwbilzk3KUyrOfgLcjbhk+MDmzjoeVvFtPla/+lrBHzFVlPUqgQU/VP8uXeeT9tP8Z2CaG/Pb
+	IHindgaQVa7Aq+vAIknCWd7QOst9YlXXVbEP0TpfqwXUahwGN7CPiVndPWEN3GRq0efZPd28btK
+	haxTcWybfn/06oEPluNKmzEPxSrbsSsEW7O5uDMtSEGfHQn8J7wj+yjzJfvotOZbh9MYStFB5NL
+	7QFltPJ4OTWFjAXQzPZQoWUXE/N3HVQkHMsX8Lh80XcN5qNPHWYkw0v
+X-Received: by 2002:a05:600c:818f:b0:480:49ce:42cc with SMTP id 5b1f17b1804b1-482db45f4b7mr97490525e9.9.1769927091907;
+        Sat, 31 Jan 2026 22:24:51 -0800 (PST)
+Received: from ?IPV6:2003:df:bf2d:e300:2541:f823:ac24:da0b? (p200300dfbf2de3002541f823ac24da0b.dip0.t-ipconnect.de. [2003:df:bf2d:e300:2541:f823:ac24:da0b])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4806ce4c3c6sm303675385e9.10.2026.01.31.22.24.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 31 Jan 2026 22:24:51 -0800 (PST)
+Message-ID: <d8549758-e2ac-4d5a-8231-790498556de3@gmail.com>
+Date: Sun, 1 Feb 2026 07:24:50 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB2685:EE_
-X-MS-Office365-Filtering-Correlation-Id: da1f7e7c-7ab4-45c2-c16e-08de613a2281
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|7416014|366016|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?eC9QaVFRY3N4ODU1QWF2NXhaVkJjcVQydU5PU0toSkI1TExzUWU5cGFhWnRj?=
- =?utf-8?B?VFFBRWtVZkRLam4rbFlZNHpVZ2xHeEFDR0c5dy8xM2dYczlMQkNTK2h5a1FZ?=
- =?utf-8?B?MkFWNis4RU8vcEcvWXRTLzk2eXJPMzRTckpING5LWElBQVdUMWwvSEEyMDRM?=
- =?utf-8?B?czJ0OFFBWGNlV3RYSVRXb1U2aGY0NzFrcFV6aERoM2lXancyUDQ5NDZRdDB6?=
- =?utf-8?B?cE8zQWNOTk5FQ003T1hpTTJIY3ZOeVl0YlB4dWw1SkcrNlI3c2h6SGlRVGtF?=
- =?utf-8?B?N1Y0R0k5Ui9BOVVocGN3MUhFMW1qT2Q4dUc2U2hnU1gxUHF0UHNiWS8xeEJ6?=
- =?utf-8?B?ZFRvcEcrV0hEb1VsQ29aSG1RVDRPVDk4U0hmckt0WXZDUm9ZQnFNTEdBbWF1?=
- =?utf-8?B?YU84c1hFSmN4TmdiWDFObTZGZGhqMDRpdzRRSU5WMFBKYjg0dTh4OHI0L29S?=
- =?utf-8?B?cjlpcVlkQ3dJT2YxbjJVWHFMRExLaFUvaVF6dGJ2SEE4ZzZUdW8vZzdrVEZL?=
- =?utf-8?B?YXYxZnNLSExoQ2t0NHY2UmhLaFRXc0VQOVZyazRNM1YzbC9PbWQvdVRORGFC?=
- =?utf-8?B?ZGVQNWVFNnNLM0lTbDVPVWNWanNXbHRIb3VyMk81Vm1oZm81QXMvUWxad1VD?=
- =?utf-8?B?a0NWeURVczhpQ2tuTlVHYTVVdlU0VERpTzVZcGJxTTdpa1Vqdkd5TTh1VVM4?=
- =?utf-8?B?YklnRWFnbVJIL0JIOXRQT09NQjlGUTRWNEUrTFVSLzc2SWRDbG1oUGhYdEt3?=
- =?utf-8?B?M1ZlRW9kWkltOHJCaUJhVG8wQjh6eGxTVTEyR2ZKcFBpa2xYTXhxNmZvZEFH?=
- =?utf-8?B?czZFUWozakhHeTRueFYwbTRMSkxiTGp1TWZmQXRseW4vTTJmTmR2Y2R5VlYv?=
- =?utf-8?B?blNkTG96bzY3c0ZrZzBqS3BHQnRJalhzR3E5bGM4V0hneFhJdWN3NGhlQVJX?=
- =?utf-8?B?RjR3clpveS84ZXVOUWFkVllyTUgzMnZ3Z0xiT3c5NEtvSVNuQzE1M2xaVnhV?=
- =?utf-8?B?blpwYldhdzZUbFUrc0lUZVpNNEx5NkIvUlg5R3RlbE9CZVczQmN0SlFoSmhE?=
- =?utf-8?B?TVp1cEVIcTJJSSs5Vm5INEIwZzRiemRxdU80d1FtNW13Q0g1OU1DVEtCYXRu?=
- =?utf-8?B?Wk40MU9QN25qZmx5TE8wNkkzL1RJbmZ2bm5kRlFhMjY3eEFrMDY4SncrV1J2?=
- =?utf-8?B?WFR2ZHZpanlvR0VwWDMzVUtTdWdzcWtxN3RGYnVlREpCYTdHM3dvM04rNGV3?=
- =?utf-8?B?L1JIejRUV1NBMStYcmUzZ0tNNEtsa1IyU3BIZmZtUkVTYVk4M2NQZnFwZ0pQ?=
- =?utf-8?B?U2hjajNzaENyR1pUVDFyZnRPMnZUTWkrQnJvZCtOdlpxOUEvdUMwYUlUK1lk?=
- =?utf-8?B?Y1NyZXdHNHV0dW9vUGlSQ0FsVWpReWtMa0JDUzJERVk4a2I3QzA4OFlTQmRw?=
- =?utf-8?B?WTNFYjZoVnYzbHVIcVFqRVFzeit1ejZxSksvN0F6ZXRDMnFpVk9tZjhPclBq?=
- =?utf-8?B?WU9QblZyUWlMMHBDZ2ZFTnhiTFl6c21mQ0ZYMU5tMFFuaE13eG5ISFltazZB?=
- =?utf-8?B?NVZaWlU1Y0tjeDJsVVZJRFBtbjhpNWMwcVBLOVREWTl0TnlxREFPZEdwSkM1?=
- =?utf-8?B?VFBadTR2Z09iUnJCUHgxWGxlNXlSZkpjdVZHK0QrOHIvMUtPc1ViTlNiUUJY?=
- =?utf-8?B?RXBscUhmQnAySDVzRm43dFdUVURpTXpuNzJUOGtZcVBCL3JGYXhNeGw4aHFD?=
- =?utf-8?B?eVNVaEpFWldUK1JsWm1XOHFGVlIyR2FqeEdoamYxOWpaTTlFbEpXTlB0V216?=
- =?utf-8?B?U3RuekV6K2pOSmZlRUhjcjM4Um9NQ25rMzgwY3dvWDNtWXIyN0JpQzZjMDR6?=
- =?utf-8?B?YUZXd1FGeWY5SUhsdWdQczRoUWxQWUVoM3pwZzE2SkNpMDJUVHFjb2d0bWJx?=
- =?utf-8?B?WUlNbG5Cbi8ya2RxNkk3WEtJLzdOdnc3SXBLdWE5d1NYRFhnWVF2UHpLRHln?=
- =?utf-8?B?TldzTnJIYnJtQXZhSTRLRmhPVjN0TEx1ZUFaYytzT1FNblowTnNNWkZnSU1V?=
- =?utf-8?B?Y2FwWFpnTzRNWExHSHNzN0pDUlFXa29QSEN0ODh5Snh2WXJtRU42TjlqRWRl?=
- =?utf-8?Q?xhrM=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(7416014)(366016)(376014);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YjM2b2pXYWxMc2J5cGNuVkNRZTZxb29qNGpPdXRpaHFncW9QTEl6SXdad0JX?=
- =?utf-8?B?MkJuYXV6U1BJWm9yZmNSWEFNcGtRR2NUWVg5STZQOXZ5MGo5N2dsVW02MWNy?=
- =?utf-8?B?YVV1T0syVis1RUZGM0FuYWg1MDdNM0ZOYTJ1Z3EvZ2RvUUlERlZKZ0JtcHFT?=
- =?utf-8?B?ZDd5ajZPZ3VMcDZvNE5ia0QrcVpMaWp5YTh5bFdKdXEzQWU3bElZQ3QrNVNJ?=
- =?utf-8?B?aXNacE9wOVdLMjRxZ2R0K295RE1udWlidkJTbW15emFjY1ViNHhmd2pDN3hG?=
- =?utf-8?B?U2xsWnprekgveU9Bc0FsNFlpLzdZZmovdzQxL05OeEkzNjdDMjZ4L0pUUUhD?=
- =?utf-8?B?Vmsrei9QS1hLcUdMR0tVU1FjTkF6Y0JKUXVGZVlIMkdhbHpweUJkZEZPc3BE?=
- =?utf-8?B?UVlRNmdUZmNuY0Z6QVExa0E1RmQ3N0Rnay9xZzhLUEVhckNzbExSR1NIU0Zl?=
- =?utf-8?B?Qkw4c0JjZW1nMHNuSkhncGdiWCtBamF0MXovdkQ0UDJqNkZHb01Ja2xsQ0Zs?=
- =?utf-8?B?QmNIWjBPNGVJZHpPRFdXbXoxREZNZW93bEU3WDBvZWdEUksvaVNVRXhLSElp?=
- =?utf-8?B?UnpYa0hGOXVqdW5UZzNJRXVUOTRQcGpxUk5pcUEyQVN2ek9BRWRCV2l0ZUhV?=
- =?utf-8?B?S3E2anppeWU3UDFNb0hqZXA2NGNWbGVheUtNUEo4VlZZSTUwLzN2cFNnUEhZ?=
- =?utf-8?B?SlhlUDBicHZJOTcvVTJLSm10OWtLaGY3b0ZHSE9vSXJUcEp5ZW5DTHJCZ1JP?=
- =?utf-8?B?Ym42K1dqYnY0WE5XbGlRYzdscW9VcUExcCtsY1o2QjV6NnYxZ29JRXgzemFl?=
- =?utf-8?B?MkpscXliOGxSN2VRM1g4Y1hnclQwRTNEbk5qQllhTmZxMXNFLzVrNVJpbTZO?=
- =?utf-8?B?M282cm9YS0hpem0xNkVEVitMSVJ5VTBGUVVsRjY4ZUxnaUE5Z2tNSTFUdGxh?=
- =?utf-8?B?QkxZSGR2T2w4RTc5ZzU0M016TWVwR2duU1l6eFJSQnJPWmtXMzBTaU42eVJJ?=
- =?utf-8?B?QnFuMkdzVjVEcmRib3MyWEl6ZmNxdnRPSXk2bTdUZ2toZjRwbGdaSHEvcFB3?=
- =?utf-8?B?TkhRdXBRb1k2ZjNPQ2JFbmF5VUFvZi9MeXZlWjhqY3phY01RK1FPWk9BZ3Iz?=
- =?utf-8?B?K002d291cGlkRnc0Y29iWFRaNmd0Q0VkVmdxU0xLMzFxR0xaWmYzcTBHN3BF?=
- =?utf-8?B?UnpuUEZJSUVjRmRScjZQK0JXME10emE1OWFpQnJNdWRyeWxxekNIK3VId1dB?=
- =?utf-8?B?a1VHQThXQ2RZeDFxeHhVNExCWE5yRndtOHN3LzdQYmNXYzZNQ2hkMkx0SDIy?=
- =?utf-8?B?Rnk4blo0c1J5U0VVSWRNUHJYcGJ1Y1luRFg0d1N4cDFxeDFHak5HcG52UzVM?=
- =?utf-8?B?RzUvand4aE5XSnBHWUdKWE1TdjFPL0l6cGR1LzV4blN6ZExnMnRrVFBGZG01?=
- =?utf-8?B?aFl2S0NlTk4ybFA5dk5XUzdBMko3YlI2RjA4Mk5QemVNWVVSR2x5dEY2QlQ3?=
- =?utf-8?B?bjRHYmk4QklKMkVGVWZNVnh2dUpGMkpNQlFTVHhUR0pzSGdoTmVya1ZJd3dG?=
- =?utf-8?B?RFNzdmJyTzkwazlLcjMzam1na2JPeFovZFR1VWNqeHRDc3dRd0pOV2huYlVN?=
- =?utf-8?B?LzliYnhzU2Y3VlBqR2YwZ2oweVJMazc5THozR1o3NFB6VXhpZ2ZtOFJweGYy?=
- =?utf-8?B?M2xzTXhvQVZxWW1IdDB6ZmFNQ25RTFIzeU1CNE9Ea0tpZjBpU24wbEdDMCty?=
- =?utf-8?B?VTdTYzdtMEZPWEt6UFRhVjhYb3M2bk1xUTl1YnVBT2ljSGxXdUQzc0tMVzJE?=
- =?utf-8?B?Qjk2dS9hNXJJT21haEpSd1k4a3psY2pRNlFScitwcy9FNm9pZWt6Q1hZYXFj?=
- =?utf-8?B?S3d4ZXJHM3pZcUEzOUlwQ3I2ZU84anFoS0U4OGpTMnhkdEplSFVtMzVDS2VG?=
- =?utf-8?B?dEFKY1ZyV1YwVGZlTDVnaXNRU1NxY0NUVlFNWjl0MFlUVG5HYzJMbnN4MGxW?=
- =?utf-8?B?Mm82cUhTMGZtdE1YeDZXb3l0Tk5Zc3JLUDFabG8wZHJLK1RJeVlTQlMxQzY5?=
- =?utf-8?B?aTN0ZDJYU1Z4SThtbldVbjVwd3IxV252U3lwRjVKTStra2gwRVl0cnZmK0x4?=
- =?utf-8?B?dDRjZTYxcmFlNGpCMDh2Ly85SWFEU051K1JPSGRldCs1Tm5rUHl3dm16L2Fi?=
- =?utf-8?B?MHJZL2xwbkpHZmlVcUU5N3RSSzZrc2Yrb2k5TVFWL2dzTlpDeFlpUW8zWjJv?=
- =?utf-8?B?ZktuVDYyTzRuU0JJbGFIKzA1cnIvcDVQU0VwMkpxOFdOWnh3T2ZZb0d1aklt?=
- =?utf-8?B?Rk1MUk9iMFUwelVSR2NRYTFYNHNJeHN1SnVpeWJUMGxIWUxoOWRrbnVOdjJq?=
- =?utf-8?Q?OzoGd1YdDAV48+0dBniawHwn8JatNFvxhn9OF?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: da1f7e7c-7ab4-45c2-c16e-08de613a2281
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Feb 2026 02:32:24.8915
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: vA+ea09WUEH2GYfy/8mQ5oogHbJpfG9brkI2rxK2Rjmh2aENrhFIaoHYFOaqw2UUVYEJV+wfeDryGMcwsp4gEg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2685
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] rust: pci: add capability lookup helpers
+To: Zijing Zhang <zijing.zhang@ry.rs>, dakr@kernel.org,
+ linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org
+Cc: bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org,
+ gary@garyguo.net
+References: <20260131040200.1242566-1-zijing.zhang@ry.rs>
+ <20260131151749.1444030-1-zijing.zhang@ry.rs>
+ <20260131151749.1444030-2-zijing.zhang@ry.rs>
+Content-Language: en-US
+From: Dirk Behme <dirk.behme@gmail.com>
+In-Reply-To: <20260131151749.1444030-2-zijing.zhang@ry.rs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jan 27, 2026 at 12:34:13PM +0900, Koichiro Den wrote:
-> Hi,
+Hi Zijing,
+
+some quite minor stylistic nits below:
+
+On 31.01.26 16:17, Zijing Zhang wrote:
+> Add thin wrappers around pci_find_capability() and
+> pci_find_ext_capability().
+
+pci_find_capability() -> `pci_find_capability()`
+
+Same for the other cases and the 2nd commit message.
+
+> The helpers return the capability offset in config space, or None if the
+> capability is not present.
 > 
-> Per Frank Li's suggestion [1], this revision combines the previously posted
-> PCI/dwc helper series and the dmaengine/dw-edma series into a single
-> 7-patch set. This series therefore supersedes the two earlier postings:
+> Introduce CapabilityId and ExtendedCapabilityId newtypes so drivers can use
+> named constants without importing raw bindgen constants, while still
+> allowing uncommon IDs via from_raw().
 > 
->   - [PATCH 0/5] dmaengine: dw-edma: Add helpers for remote eDMA use scenarios
->     https://lore.kernel.org/dmaengine/20260126073652.3293564-1-den@valinux.co.jp/
->   - [PATCH 0/2] PCI: dwc: Expose integrated DesignWare eDMA windows
->     https://lore.kernel.org/linux-pci/20260126071550.3233631-1-den@valinux.co.jp/
+> Signed-off-by: Zijing Zhang <zijing.zhang@ry.rs>
+> ---
+>  rust/kernel/pci.rs | 149 +++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 149 insertions(+)
 > 
-> [1] https://lore.kernel.org/linux-pci/aXeoxxG+9cFML1sx@lizhi-Precision-Tower-5810/
-> 
-> Some DesignWare PCIe endpoint platforms integrate a DesignWare eDMA
-> instance alongside the PCIe controller. In remote eDMA use cases, the host
-> needs access to the eDMA register block and the per-channel linked-list
-> (LL) regions via PCIe BARs, while the endpoint may still boot with a
-> standard EP configuration (and may also use dw-edma locally).
-> 
-> This series provides the following building blocks:
-> 
->   * dmaengine: Add an optional dma_slave_caps.hw_id so DMA providers can expose
->     a provider-defined hardware channel identifier to clients, and report it
->     from dw-edma. This allows users to correlate a DMA channel with
->     hardware-specific resources such as per-channel LL regions.
-> 
->   * dmaengine/dw-edma: Add features useful for remote-controlled EP eDMA usage:
->       - per-channel interrupt routing control (configured via dmaengine_slave_config(),
->         passing a small dw-edma-specific structure through
->         dma_slave_config.peripheral_config / dma_slave_config.peripheral_size),
->       - optional completion polling when local IRQ handling is disabled, and
->       - notify-only channels for cases where the local side needs interrupt
-> 	notification without cookie-based accounting (i.e. its peer
-> 	prepares and submits the descriptors), useful when host-to-endpoint
-> 	interrupt delivery is difficult or unavailable without it.
-> 
->   * PCI: dwc: Add query-only helper APIs to expose resources of an integrated
->     DesignWare eDMA instance:
->       - the physical base/size of the eDMA register window, and
->       - the per-channel LL region base/size, keyed by transfer direction and
->         the hardware channel identifier (hw_id).
-> 
-> The first real user will likely be the DesignWare backend in the NTB transport work:
-> 
->   [RFC PATCH v4 25/38] NTB: hw: Add remote eDMA backend registry and DesignWare backend
->   https://lore.kernel.org/linux-pci/20260118135440.1958279-26-den@valinux.co.jp/
-> 
->     (Note: the implementation in this series has been updated since that
->     RFC v4, so the RFC series will also need some adjustments. I have an
->     updated RFC series locally and can post an RFC v5 if that would help
->     review/testing.)
-> 
-> Apply/merge notes:
->   - Patches 1-5 apply cleanly on dmaengine.git next.
->   - Patches 6-7 apply cleanly on pci.git controller/dwc.
-> 
-> Changes in v2:
->   - Combine the two previously posted series into a single set (per Frank's
->     suggestion). Order dmaengine/dw-edma patches first so hw_id support
->     lands before the PCI LL-region helper, which assumes
->     dma_slave_caps.hw_id availability.
-> 
-> Thanks for reviewing,
-> 
-> 
-> Koichiro Den (7):
->   dmaengine: Add hw_id to dma_slave_caps
->   dmaengine: dw-edma: Report channel hw_id in dma_slave_caps
->   dmaengine: dw-edma: Add per-channel interrupt routing control
->   dmaengine: dw-edma: Poll completion when local IRQ handling is
->     disabled
->   dmaengine: dw-edma: Add notify-only channels support
->   PCI: dwc: Add helper to query integrated dw-edma register window
->   PCI: dwc: Add helper to query integrated dw-edma linked-list region
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index 82e128431f08..213ff856f538 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
+> @@ -41,6 +41,118 @@
+>      Vendor, //
+>  };
+>  pub use self::io::Bar;
+> +
+> +/// A standard PCI capability ID.
+> +///
+> +/// This is a thin wrapper around the underlying numeric capability ID.
+> +#[repr(transparent)]
+> +#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+> +pub struct CapabilityId(u8);
+> +
+> +impl CapabilityId {
+> +    /// Creates a [`CapabilityId`] from a raw value.
+> +    #[inline]
+> +    pub const fn from_raw(id: u8) -> Self {
+> +        Self(id)
+> +    }
+> +
+> +    /// Returns the raw value.
+> +    #[inline]
+> +    pub const fn as_raw(self) -> u8 {
+> +        self.0
+> +    }
+> +
+> +    /// Power Management.
+> +    pub const PM: Self = Self(bindings::PCI_CAP_ID_PM as u8);
+> +    /// Accelerated Graphics Port.
+> +    pub const AGP: Self = Self(bindings::PCI_CAP_ID_AGP as u8);
+> +    /// Vital Product Data.
+> +    pub const VPD: Self = Self(bindings::PCI_CAP_ID_VPD as u8);
+> +    /// Slot Identification.
+> +    pub const SLOTID: Self = Self(bindings::PCI_CAP_ID_SLOTID as u8);
+> +    /// Message Signalled Interrupts.
+> +    pub const MSI: Self = Self(bindings::PCI_CAP_ID_MSI as u8);
+> +    /// CompactPCI HotSwap.
+> +    pub const CHSWP: Self = Self(bindings::PCI_CAP_ID_CHSWP as u8);
+> +    /// PCI-X.
+> +    pub const PCIX: Self = Self(bindings::PCI_CAP_ID_PCIX as u8);
+> +    /// HyperTransport.
+> +    pub const HT: Self = Self(bindings::PCI_CAP_ID_HT as u8);
+> +    /// Vendor-Specific.
+> +    pub const VNDR: Self = Self(bindings::PCI_CAP_ID_VNDR as u8);
+> +    /// Debug port.
+> +    pub const DBG: Self = Self(bindings::PCI_CAP_ID_DBG as u8);
+> +    /// CompactPCI Central Resource Control.
+> +    pub const CCRC: Self = Self(bindings::PCI_CAP_ID_CCRC as u8);
+> +    /// PCI Standard Hot-Plug Controller.
+> +    pub const SHPC: Self = Self(bindings::PCI_CAP_ID_SHPC as u8);
+> +    /// Bridge subsystem vendor/device ID.
+> +    pub const SSVID: Self = Self(bindings::PCI_CAP_ID_SSVID as u8);
+> +    /// AGP 8x.
+> +    pub const AGP3: Self = Self(bindings::PCI_CAP_ID_AGP3 as u8);
+> +    /// Secure Device.
+> +    pub const SECDEV: Self = Self(bindings::PCI_CAP_ID_SECDEV as u8);
+> +    /// PCI Express.
+> +    pub const EXP: Self = Self(bindings::PCI_CAP_ID_EXP as u8);
+> +    /// MSI-X.
+> +    pub const MSIX: Self = Self(bindings::PCI_CAP_ID_MSIX as u8);
+> +    /// Serial ATA Data/Index Configuration.
+> +    pub const SATA: Self = Self(bindings::PCI_CAP_ID_SATA as u8);
+> +    /// PCI Advanced Features.
+> +    pub const AF: Self = Self(bindings::PCI_CAP_ID_AF as u8);
+> +    /// PCI Enhanced Allocation.
+> +    pub const EA: Self = Self(bindings::PCI_CAP_ID_EA as u8);
+> +}
+> +
+> +/// A PCIe extended capability ID.
+> +///
+> +/// This is a thin wrapper around the underlying numeric capability ID.
+> +#[repr(transparent)]
+> +#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+> +pub struct ExtendedCapabilityId(u16);
+> +
+> +impl ExtendedCapabilityId {
+> +    /// Creates an [`ExtendedCapabilityId`] from a raw value.
+> +    #[inline]
+> +    pub const fn from_raw(id: u16) -> Self {
+> +        Self(id)
+> +    }
+> +
+> +    /// Returns the raw value.
+> +    #[inline]
+> +    pub const fn as_raw(self) -> u16 {
+> +        self.0
+> +    }
+> +
+> +    /// Advanced Error Reporting.
+> +    pub const ERR: Self = Self(bindings::PCI_EXT_CAP_ID_ERR as u16);
+> +    /// Virtual Channel.
+> +    pub const VC: Self = Self(bindings::PCI_EXT_CAP_ID_VC as u16);
+> +    /// Device Serial Number.
+> +    pub const DSN: Self = Self(bindings::PCI_EXT_CAP_ID_DSN as u16);
+> +    /// Vendor-Specific Extended Capability.
+> +    pub const VNDR: Self = Self(bindings::PCI_EXT_CAP_ID_VNDR as u16);
+> +    /// Access Control Services.
+> +    pub const ACS: Self = Self(bindings::PCI_EXT_CAP_ID_ACS as u16);
+> +    /// Alternate Routing-ID Interpretation.
+> +    pub const ARI: Self = Self(bindings::PCI_EXT_CAP_ID_ARI as u16);
+> +    /// Address Translation Services.
+> +    pub const ATS: Self = Self(bindings::PCI_EXT_CAP_ID_ATS as u16);
+> +    /// Single Root I/O Virtualization.
+> +    pub const SRIOV: Self = Self(bindings::PCI_EXT_CAP_ID_SRIOV as u16);
+> +    /// Resizable BAR.
+> +    pub const REBAR: Self = Self(bindings::PCI_EXT_CAP_ID_REBAR as u16);
+> +    /// Latency Tolerance Reporting.
+> +    pub const LTR: Self = Self(bindings::PCI_EXT_CAP_ID_LTR as u16);
+> +    /// Downstream Port Containment.
+> +    pub const DPC: Self = Self(bindings::PCI_EXT_CAP_ID_DPC as u16);
+> +    /// L1 PM Substates.
+> +    pub const L1SS: Self = Self(bindings::PCI_EXT_CAP_ID_L1SS as u16);
+> +    /// Precision Time Measurement.
+> +    pub const PTM: Self = Self(bindings::PCI_EXT_CAP_ID_PTM as u16);
+> +    /// Designated Vendor-Specific Extended Capability.
+> +    pub const DVSEC: Self = Self(bindings::PCI_EXT_CAP_ID_DVSEC as u16);
+> +}
+
+Missing empty line before `pub use self::irq` below?
+
+>  pub use self::irq::{
+>      IrqType,
+>      IrqTypes,
+> @@ -427,6 +539,43 @@ pub fn pci_class(&self) -> Class {
+>          // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
+>          Class::from_raw(unsafe { (*self.as_raw()).class })
+>      }
+> +
+> +    /// Finds a PCI capability by ID and returns its config-space offset.
+> +    ///
+> +    /// Returns `None` if the capability is not present.
+> +    ///
+> +    /// This is a thin wrapper around `pci_find_capability()`.
+> +    #[inline]
+> +    pub fn find_capability(&self, id: CapabilityId) -> Option<u8> {
+
+Depending on the future use of this function (and
+`find_ext_capability()` below) would it be an option to introduce a
+type for the returned u8/u16 offset?
+
+> +        // SAFETY: By its type invariant `self.as_raw` is always a valid pointer to a
+> +        // `struct pci_dev`.
+> +        let offset = unsafe { bindings::pci_find_capability(self.as_raw(), id.as_raw().into()) };
+> +
+> +        if offset == 0 {
+> +            None
+> +        } else {
+> +            Some(offset)
+> +        }
+
+In
+
+https://lore.kernel.org/rust-for-linux/CANiq72kiscT5euAUjcSzvxMzM9Hdj8aQGeUN_pVF-vHf3DhBuQ@mail.gmail.com/
+
+it was proposed to use the style
+
+if offset == 0 {
+    return None;
+}
+
+Some(offset)
 
 
-Hi Mani, Vinod (and others),
+Best regards
 
-I'd appreciate your thoughts on the overall design of patches 3–5/7 when
-you have a moment.
-
-  - [PATCH v2 3/7] dmaengine: dw-edma: Add per-channel interrupt routing control
-    https://lore.kernel.org/dmaengine/20260127033420.3460579-4-den@valinux.co.jp/
-  - [PATCH v2 4/7] dmaengine: dw-edma: Poll completion when local IRQ handling is disabled
-    https://lore.kernel.org/dmaengine/20260127033420.3460579-5-den@valinux.co.jp/
-  - [PATCH v2 5/7] dmaengine: dw-edma: Add notify-only channels support
-    https://lore.kernel.org/dmaengine/20260127033420.3460579-6-den@valinux.co.jp/
-
-My cover letter might have been too terse, so let me add a bit more context
-and two questions at the end.
-
-(Frank already provided helpful feedback on v1/RFC for Patch 3/7. Thanks, Frank.)
+Dirk
 
 
-Motivation for these three patches
-----------------------------------
+> +    }
+> +
+> +    /// Finds an extended capability by ID and returns its config-space offset.
+> +    ///
+> +    /// Returns `None` if the capability is not present.
+> +    ///
+> +    /// This is a thin wrapper around `pci_find_ext_capability()`.
+> +    #[inline]
+> +    pub fn find_ext_capability(&self, id: ExtendedCapabilityId) -> Option<u16> {
+> +        // SAFETY: By its type invariant `self.as_raw` is always a valid pointer to a
+> +        // `struct pci_dev`.
+> +        let offset =
+> +            unsafe { bindings::pci_find_ext_capability(self.as_raw(), id.as_raw().into()) };
+> +
+> +        if offset == 0 {
+> +            None
+> +        } else {
+> +            Some(offset)
+> +        }
+> +    }
+>  }
+>  
+>  impl Device<device::Core> {
 
-  For remote use of a DMA channel (i.e. the host drives a channel that
-  resides in the endpoint (EP)):
-
-  * The EP initializes its DMA channels during the normal SoC glue
-    driver probe.
-  * It obtains a dma_chan to delegate to the host via the standard
-    dma_request_channel().
-  * It exposes the underlying HW resources to the host ("delegation").
-  * The host also acquires a channel via the standard
-    dma_request_channel(). The underlying HW resource is the same as on the
-    EP side, but it's driven remotely from the host.
-
-  and I'm targeting two operating modes:
-
-  1). Standard use of the remote channel
-
-    * The host submits a transaction and handles its completion, just
-      like a local dmaengine client would. Under the hood, the HW channel
-      resides in the remote EP.
-    * In this scenario, we need to ensure:
-      (a). completion interrupts are delivered only to the host. Or,
-      (b). even if (a) is not possible (i.e. the EP also gets interrupted),
-           the EP must not acknowledge/clear the interrupt status in a way
-           that would race with host.
-
-                                  dmaengine_submit()
-                                          :
-                                          v
-       +----------+                 +----------+
-       | dma_chan |--(delegate)--->: dma_chan :
-       +----------+                 +----------+
-      EP (delegator)              Host (delegatee)
-                                          ^
-                                          :
-                                completion interrupt
-
-  2). Notify-only channel
-
-    * The host submits a transaction, and the EP gets the interrupt
-      and runs any registered callbacks.
-    * In this scenario, we need to ensure:
-      (a). completion interrupts are delivered only to the EP. Or,
-      (b). even if (a) is not possible (i.e. the host also gets
-           interrupted), the host must not acknowledge/clear the interrupt
-           status in a way that would race with the EP.
-      (c). repeated dmaengine_submit() calls must not get stuck, even
-           though it cannot rely on interrupt-driven transaction status
-           management.
-      (d). callback can be registered for the dma_chan on the EP.
-
-                                  dmaengine_submit()
-                                          :
-                                          v
-       +----------+                 +----------+
-       | dma_chan |--(delegate)--->: dma_chan :
-       +----------+                 +----------+
-      EP (delegator)              Host (delegatee)
-             ^
-             :
-      completion interrupt
-
-
-  Patch mapping:
-    - (a)(b) are addressed by [PATCH v2 3/7].
-    - (c) is addressed by [PATCH v2 4/7].
-    - (d) is addressed by [PATCH v2 5/7].
-
-
-Questions
----------
-
-  1. Are these two use cases (1) and (2) acceptable?
-  2. To support (1) and (2), is the current implementation direction acceptable?
-     Or should this be generalized into a dmaengine API rather than being a
-     dw-edma-core-specific extension?
-
-
-Any feedback would be appreciated.
-
-Kind regards,
-Koichiro
-
-
-> 
->  MAINTAINERS                                  |   2 +-
->  drivers/dma/dmaengine.c                      |   1 +
->  drivers/dma/dw-edma/dw-edma-core.c           | 167 +++++++++++++++++--
->  drivers/dma/dw-edma/dw-edma-core.h           |  21 +++
->  drivers/dma/dw-edma/dw-edma-v0-core.c        |  26 ++-
->  drivers/pci/controller/dwc/pcie-designware.c |  74 ++++++++
->  drivers/pci/controller/dwc/pcie-designware.h |   2 +
->  include/linux/dma/edma.h                     |  57 +++++++
->  include/linux/dmaengine.h                    |   2 +
->  include/linux/pcie-dwc-edma.h                |  72 ++++++++
->  10 files changed, 398 insertions(+), 26 deletions(-)
->  create mode 100644 include/linux/pcie-dwc-edma.h
-> 
-> -- 
-> 2.51.0
-> 
