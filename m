@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5C643195EF;
-	Sun,  1 Feb 2026 12:24:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68DA731355C;
+	Sun,  1 Feb 2026 12:25:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769948698; cv=none; b=bdngcvKLi2oxBk+wyWqhadwU6NFoDQDrGGChjNqT8Sc5ceUWtGUDL2kgbb92WspcAUoLo9/SEc1F/ix51MQ8O9S8KRavlYgnHrT+VRPbZeSo20bWONPBBoNWRIqS+Vzh2H/b0gV1s0CpB7VAhHYQn008A6qvLgZRhs7K3BGB+no=
+	t=1769948721; cv=none; b=Cn6v7BtKN/hQ98dZLXF+lUN/RSZJiWCx7dP7Nh+JW4ByqMxXmBpJrdmIC+qyH2jy6HdHECCpYouzgJ4HsiFnFCCTCpl/GmcbpIKxxWN+C2iTXgwiJ80nxIKRkWApZ6PPu8Hj9WhIFTYdoUKLb1dgb9untxoIBUDDI4jsyGr7V3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769948698; c=relaxed/simple;
+	s=arc-20240116; t=1769948721; c=relaxed/simple;
 	bh=e0FL0TcKkmbowDPf4LiX7QsYpwCM/WUr9bFfUtzr4Kk=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=ffq0hWJWxpV0f06l0VDn19PpZ7QkT9bxE9B7ZkQce/cL6UNbq35dMGUZe21Hfa15nkfzORqgrPjV3/IKF+A9om0QY8ngCxKr0xo4dP0PIfGdNl6YDG10l2CCVZYjWz9y0/2VluVSQhJSty0Mgn9JDujubwFJRdECb2W1ZoxlsQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKCpE1Pr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=P/fjy/53EjQRxw+vWfV3X7FpsPxEqfInWuynFU+i7e1D0Gpl7Yty/QAG7x6rlK3ELiBQok+EQYzeoQpJpzEQlAjH8v5h5tiNuKPr5g17EZ4idNNRCH808RiqoQH3FFkiMGPL3E/BrVb5/aNvuqccL5npaw+aUE89lKFcDc0vMeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ibDVYQTp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKCpE1Pr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F5D0C4CEF7;
-	Sun,  1 Feb 2026 12:24:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ibDVYQTp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7A95C4CEF7;
+	Sun,  1 Feb 2026 12:25:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769948697;
+	s=k20201202; t=1769948721;
 	bh=e0FL0TcKkmbowDPf4LiX7QsYpwCM/WUr9bFfUtzr4Kk=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=cKCpE1PrSn1tpdFfW8mqJock00Ci868eBzjcTIml4DEamaH32f7kIo3lDI8YRPakD
-	 xztQHuLUk/6/eCm1cdvwd89VNNFd7Eg1M4svtAWmOFIXg9fqv/PPVG/29QbDomfkRt
-	 vbcyqVpA1HzMxVMprSO6fuMz7HADokwU72x99k+Yvibi7Ya8RfIHqCeYTZhmXjtKVS
-	 2J0s4MQF0zHoyHXjYwxZi1GaSmjIeoClB5QUtbBamFuUN5asfDg4NfkxbieaGm2UEI
-	 tkgh4Dd7yHa4Tm90vKYkKfzSKbiyCJO8V3sdidXGh8f2GOvI+mKmIYiz34mc/LHTgz
-	 gC2mzJdDbbSKQ==
+	b=ibDVYQTpfWdjDDqsql5WFGT1ipxeWlcpQgK9AGvB4q7+zYvBEHr7bQnWk7ur8hveq
+	 a2AKFwJ6/Vh4WfnhCDAhdm+yTmGqrlX5teE4QX+HbkQNfrOm1U5+dAjp5Yyxo4bdMV
+	 GcBSp1r6s2ACWsyvxOxHb/29wyWIaJZ4IbyztC1FiXfb24bSEPctwXO/ZMOGquJvp6
+	 BMwRmXnRFT9li8njHKMefEQrW7fGV6POJOSYxsYvbA75LM+Y/rnUvoHJ94g0PW0yR5
+	 DVogQBGbs9dhxvCOsNCVBXxysdNKDVro5qm/S7nKwfIehVAHufDAqwISh2VLNei4Xe
+	 NOb7/V+USNrCw==
 From: Leon Romanovsky <leon@kernel.org>
 To: bhelgaas@google.com, mani@kernel.org, krzk+dt@kernel.org, 
  conor+dt@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org, 
@@ -40,8 +40,8 @@ In-Reply-To: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
 References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
 Subject: Re: [PATCH v10 0/2] Add driver support for Eswin EIC7700 SoC PCIe
  controller
-Message-Id: <176994869472.79432.11245161336216033848.b4-ty@kernel.org>
-Date: Sun, 01 Feb 2026 07:24:54 -0500
+Message-Id: <176994871832.79706.6040720145789682924.b4-ty@kernel.org>
+Date: Sun, 01 Feb 2026 07:25:18 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
