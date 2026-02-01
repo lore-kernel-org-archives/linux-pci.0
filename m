@@ -1,246 +1,204 @@
-Received: from mail-108-mta88.mxroute.com (mail-108-mta88.mxroute.com [136.175.108.88])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F246829408
-	for <linux-pci@vger.kernel.org>; Sun,  1 Feb 2026 07:48:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.88
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CBE62701B1;
+	Sun,  1 Feb 2026 10:21:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769932101; cv=none; b=fb7BNmqczZy/iOksRJ/m6C4EF36oHHRDN5Y3gvvGSV9mAxI4p5FNS7Gdo4zymCSlbRzm6AIUaTxXj22XVCroj82om1oEWqt3Ki7DCWgpZvpOSBH4AhJ3eKp2JU0GDQb3TS3rFBXppSSTF30wvPMdULrxaUFvUn4oZ8sWyySsGD8=
+	t=1769941284; cv=none; b=JqAACEFLd6NnhI7HiIe3p/Ni5seJtcDIIXohud3Vu6IJ9pJrBZAzAKdDvpubtOgDKQ/CdFrotRTG5WbHfuqg87Dlki6EbmZ4pyzRI5RY89Jb0R2D0ZWdxXXvjztNszW3e+j4YbAyxY0gobscmwQkStC4T/LM1Bgxk3AWJjGo7kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769932101; c=relaxed/simple;
-	bh=6xuAfCj64d/1gJB8bwxvpnttWEotqcJXbkpkoI2o9B4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bsDDBvpyzz7BBqJh19cpIY+LM19IMXmk1uPHND5d8V9AsewGIdo8l6oBRXFsfiIX44ZQAmd3ufVuerq4IKY+JzB4bI1IQYmHJ5Gjf8sNysA6c0agoBZFGRBLg9VNEW6z2l5hrq7OXEbFCgu3o/He+ZAMb092R8AWGFh5XGjoJ9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs; spf=pass smtp.mailfrom=ry.rs; dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b=SGLjZm3/; arc=none smtp.client-ip=136.175.108.88
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ry.rs
+	s=arc-20240116; t=1769941284; c=relaxed/simple;
+	bh=uTcjg7oWuXYWxhI5viZWpG4AjyZYMiFFCHK6hnZNmbQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CubgFvL3u8ObK/5wC5bOxkKmZuF9fJ57XyC1+3zrcdP5ayxuTFgo4MaqxZTBRL+GxFp0O12S6RdbhZweKgVMsGYJI8rafFAzvn2Qfsu8+eHciQGE+1JyGeaLV7Tk+L3vSpNlgKNXA2UJPYwDZ0ImpqReBq798mOm19fTimUkmNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=w_armin@gmx.de header.b=i7WiGSJD; arc=none smtp.client-ip=212.227.15.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b="SGLjZm3/"
-Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
- (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta88.mxroute.com (ZoneMTA) with ESMTPSA id 19c1827bdba0009140.008
- for <linux-pci@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Sun, 01 Feb 2026 07:43:03 +0000
-X-Zone-Loop: 9b397da998de35be0c1cc3d5af4ea8f1adcf03ded3ae
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=ry.rs; s=x;
-	h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
-	bh=QQDnRBxv19vkw52ZVZPCCS5T95lRu9QJIJ5qgMi9jMs=; b=SGLjZm3//INRVF7lX/6cAJvqZS
-	HZZxAKn0KmojP7Ggv27B5b7LrnQC1LRJS85IAOxk6yMXsfniFS74DARqFZsdlwSi1xc3IfHoLzVEY
-	eM+cl8lAV2KUAbIbGnLehjqyN/jQn40E3ZDMGGMYgUZs/Ozf8qo6XD49eETgIkMFYe4cY4EeEujPx
-	P9SZCbACQmk+mGqoTToBWU/Ax87R3sFuTdDFywSCplP5Y/JoheiYdOf8eNqKBiXSK9eBwEQ3leMA4
-	BCMysOWl1wWaOYpIspn1Yp3A/PIsrR6VZ6qSrTfiEsm19T2qG3STOcQgI/G9xQJesUTgCWOhsYft3
-	W5l+hw9g==;
-From: Zijing Zhang <zijing.zhang@ry.rs>
-To: dakr@kernel.org,
-	linux-pci@vger.kernel.org,
-	rust-for-linux@vger.kernel.org
-Cc: bhelgaas@google.com,
-	kwilczynski@kernel.org,
-	ojeda@kernel.org,
-	gary@garyguo.net,
-	dirk.behme@gmail.com,
-	lianux.mm@gmail.com,
-	Zijing Zhang <zijing.zhang@ry.rs>
-Subject: [PATCH v5 1/2] rust: pci: add capability lookup helpers
-Date: Sun,  1 Feb 2026 07:42:47 +0000
-Message-ID: <20260201074248.1629393-2-zijing.zhang@ry.rs>
-In-Reply-To: <20260201074248.1629393-1-zijing.zhang@ry.rs>
-References: <20260201074248.1629393-1-zijing.zhang@ry.rs>
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=w_armin@gmx.de header.b="i7WiGSJD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
+	s=s31663417; t=1769941198; x=1770545998; i=w_armin@gmx.de;
+	bh=9x7HpyWOhbUGkwEQIBNa7vexJVFMvQ6wdp3e0Aovy30=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=i7WiGSJDLPksZeJeN5ZeGfcXT7eTrn9bq5uASZzw91IbSbkTGvCX3bGW5ohJlN3C
+	 wx84muhLR71ozgINowEpd1vThw+c2KFdRCmJzz7nQo0+4Q1umF2mN3GIHPhw1vIFp
+	 OMaBUFWpB4g2E0lDD0z1zu5aadXmRG7V9gASh3cbHHVYRQUldlR+CWotRkVgbgXVl
+	 RPNKWHTOrbl9Xkt6mYzFMMLgsKk2iwNKEay6CYdzqm3+n/u/ZnJMkfdBQyDTobGQK
+	 ve21mPDQVdQgW/a34ehaW/wQKbq13nwr56riwW6xpGTr0oeAZh71ssKMDmvcDU1v1
+	 69zzkepqCcmcJa99Lw==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [10.66.134.249] ([164.15.244.57]) by mail.gmx.net (mrgmx005
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1Mulm5-1w3TTi22Jn-00t7V6; Sun, 01
+ Feb 2026 11:19:58 +0100
+Message-ID: <2a4e5667-ae24-403f-8fbd-cb37bd66f055@gmx.de>
+Date: Sun, 1 Feb 2026 11:19:46 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-Id: zijing.zhang@ry.rs
+User-Agent: Mozilla Thunderbird
+Subject: Re: crash during resume of PCIe bridge from v5.17 to next-20260130
+ (v5.16 works)
+To: Bert Karwatzki <spasswolf@web.de>, Thomas Gleixner <tglx@kernel.org>,
+ linux-kernel@vger.kernel.org
+Cc: linux-next@vger.kernel.org, Mario Limonciello
+ <mario.limonciello@amd.com>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ regressions@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, "Rafael J . Wysocki"
+ <rafael.j.wysocki@intel.com>, acpica-devel@lists.linux.dev,
+ Robert Moore <robert.moore@intel.com>, Saket Dumbre
+ <saket.dumbre@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Clemens Ladisch <clemens@ladisch.de>, Jinchao Wang
+ <wangjinchao600@gmail.com>, Yury Norov <yury.norov@gmail.com>,
+ Anna Schumaker <anna.schumaker@oracle.com>, Baoquan He <bhe@redhat.com>,
+ "Darrick J. Wong" <djwong@kernel.org>, Dave Young <dyoung@redhat.com>,
+ Doug Anderson <dianders@chromium.org>,
+ "Guilherme G. Piccoli" <gpiccoli@igalia.com>, Helge Deller <deller@gmx.de>,
+ Ingo Molnar <mingo@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Joanthan Cameron <Jonathan.Cameron@huawei.com>,
+ Joel Granados <joel.granados@kernel.org>,
+ John Ogness <john.ogness@linutronix.de>, Kees Cook <kees@kernel.org>,
+ Li Huafei <lihuafei1@huawei.com>, "Luck, Tony" <tony.luck@intel.com>,
+ Luo Gengkun <luogengkun@huaweicloud.com>,
+ Max Kellermann <max.kellermann@ionos.com>, Nam Cao <namcao@linutronix.de>,
+ oushixiong <oushixiong@kylinos.cn>, Petr Mladek <pmladek@suse.com>,
+ Qianqiang Liu <qianqiang.liu@163.com>,
+ Sergey Senozhatsky <senozhatsky@chromium.org>,
+ Sohil Mehta <sohil.mehta@intel.com>, Tejun Heo <tj@kernel.org>,
+ Thomas Zimemrmann <tzimmermann@suse.de>,
+ Thorsten Blum <thorsten.blum@linux.dev>,
+ Ville Syrjala <ville.syrjala@linux.intel.com>,
+ Vivek Goyal <vgoyal@redhat.com>, Yunhui Cui <cuiyunhui@bytedance.com>,
+ Andrew Morton <akpm@linux-foundation.org>
+References: <20260113094129.3357-1-spasswolf@web.de> <87h5spk01t.ffs@tglx>
+ <bc20529d7520e7db7de2022bf9c96a1bc3a2f0df.camel@web.de> <87v7h5ia3d.ffs@tglx>
+ <99f1aaba32030d2b9285dbd983fdf8518a181a8d.camel@web.de>
+ <82b4d69a5b943aa5e8aa7cc33fcc00bce02e557c.camel@web.de>
+ <630a4020c87c122c004321971e43c334fd7aceb4.camel@web.de>
+Content-Language: en-US
+From: Armin Wolf <W_Armin@gmx.de>
+In-Reply-To: <630a4020c87c122c004321971e43c334fd7aceb4.camel@web.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V03:K1:TYg08LGyCYWL0RjzI4ONXXWizRQBxv3kR0Vr5r4HV9kjJpvdgCk
+ 0/euWXpFGLD3gHCPcA7Nn4THoLVo8V1+lhIVEn1W7cOXNQTJObE8suIv4sTMUWnXfEsO+m4
+ nbNJlDZrG0yHIOgLOST7YGB7Ei63IJwRrysLzSek8cIyf831VirJFVUZAhDI95fwV4TOtqH
+ UUCCKBtgJtb4pRxIeMQlg==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:AveMuN3d2N4=;Qo9YCR/IA9BExtuLwf39GJ6cxAA
+ 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
+ G4SLRa/k=
 
-Add thin wrappers around `pci_find_capability()` and
-`pci_find_ext_capability()`.
+Am 01.02.26 um 01:36 schrieb Bert Karwatzki:
 
-The helpers return the capability offset in config space, or `None` if the
-capability is not present.
+> I found the error, the commit
+> ("drm/amd: Check if ASPM is enabled from PCIe subsystem")
+> has been applied twice first as cba07cce39ac and a second time
+> as 7294863a6f01 after it had been superseeded by commit
+> 0ab5d711ec74 ("drm/amd: Refactor `amdgpu_aspm` to be evaluated per device")
+> This effectively disables ASPM globally after the built-in GPU (which does not
+> support ASPM) is probed. This is the reason for the crashes and loss of devices
+> errors which on average occur after ~1000 resumes of the discrete GPU.
+>
+> snippet from git log --oneline drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c in linux-next:
+> 158a05a0b885 drm/amdgpu: Add use_xgmi_p2p module parameter
+> 7294863a6f01 drm/amd: Check if ASPM is enabled from PCIe subsystem  <--- This does not belong here!
+> b784f42cf78b drm/amdgpu: drop testing module parameter
+> 0b1a63487b0f drm/amdgpu: drop benchmark module parameter
+> cec2cc7b1c4a drm/amdgpu: Fix typo in *whether* in comment
+> 0ab5d711ec74 drm/amd: Refactor `amdgpu_aspm` to be evaluated per device <--- This removes the code from the previous commit.
+> cba07cce39ac drm/amd: Check if ASPM is enabled from PCIe subsystem  <--- The first time the commit was applied.
+> dfcc3e8c24cc drm/amdgpu: make cyan skillfish support code more consistent
+>
+> The fix is simply to revert commit 7294863a6f01.
+>
+> I sent a patch for linux-next (unfortunately without CC'ing stable) and a seperate patch for
+> v6.18.8, I hope this does not cause confusion ...
+>
+> Bert Karwatzki
 
-Introduce `CapabilityId` and `ExtendedCapabilityId` newtypes so drivers can
-use named constants without importing raw bindgen constants, while still
-allowing uncommon IDs via `from_raw()`.
+Good work! Thank you for researching the faulty commit that lead to this strange behavior.
 
-Signed-off-by: Zijing Zhang <zijing.zhang@ry.rs>
----
- rust/kernel/pci.rs | 150 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 150 insertions(+)
-
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 82e128431f08..d1ce64078a51 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -41,6 +41,119 @@
-     Vendor, //
- };
- pub use self::io::Bar;
-+
-+/// A standard PCI capability ID.
-+///
-+/// This is a thin wrapper around the underlying numeric capability ID.
-+#[repr(transparent)]
-+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-+pub struct CapabilityId(u8);
-+
-+impl CapabilityId {
-+    /// Creates a [`CapabilityId`] from a raw value.
-+    #[inline]
-+    pub const fn from_raw(id: u8) -> Self {
-+        Self(id)
-+    }
-+
-+    /// Returns the raw value.
-+    #[inline]
-+    pub const fn as_raw(self) -> u8 {
-+        self.0
-+    }
-+
-+    /// Power Management.
-+    pub const PM: Self = Self(bindings::PCI_CAP_ID_PM as _);
-+    /// Accelerated Graphics Port.
-+    pub const AGP: Self = Self(bindings::PCI_CAP_ID_AGP as _);
-+    /// Vital Product Data.
-+    pub const VPD: Self = Self(bindings::PCI_CAP_ID_VPD as _);
-+    /// Slot Identification.
-+    pub const SLOTID: Self = Self(bindings::PCI_CAP_ID_SLOTID as _);
-+    /// Message Signalled Interrupts.
-+    pub const MSI: Self = Self(bindings::PCI_CAP_ID_MSI as _);
-+    /// CompactPCI HotSwap.
-+    pub const CHSWP: Self = Self(bindings::PCI_CAP_ID_CHSWP as _);
-+    /// PCI-X.
-+    pub const PCIX: Self = Self(bindings::PCI_CAP_ID_PCIX as _);
-+    /// HyperTransport.
-+    pub const HT: Self = Self(bindings::PCI_CAP_ID_HT as _);
-+    /// Vendor-Specific.
-+    pub const VNDR: Self = Self(bindings::PCI_CAP_ID_VNDR as _);
-+    /// Debug port.
-+    pub const DBG: Self = Self(bindings::PCI_CAP_ID_DBG as _);
-+    /// CompactPCI Central Resource Control.
-+    pub const CCRC: Self = Self(bindings::PCI_CAP_ID_CCRC as _);
-+    /// PCI Standard Hot-Plug Controller.
-+    pub const SHPC: Self = Self(bindings::PCI_CAP_ID_SHPC as _);
-+    /// Bridge subsystem vendor/device ID.
-+    pub const SSVID: Self = Self(bindings::PCI_CAP_ID_SSVID as _);
-+    /// AGP 8x.
-+    pub const AGP3: Self = Self(bindings::PCI_CAP_ID_AGP3 as _);
-+    /// Secure Device.
-+    pub const SECDEV: Self = Self(bindings::PCI_CAP_ID_SECDEV as _);
-+    /// PCI Express.
-+    pub const EXP: Self = Self(bindings::PCI_CAP_ID_EXP as _);
-+    /// MSI-X.
-+    pub const MSIX: Self = Self(bindings::PCI_CAP_ID_MSIX as _);
-+    /// Serial ATA Data/Index Configuration.
-+    pub const SATA: Self = Self(bindings::PCI_CAP_ID_SATA as _);
-+    /// PCI Advanced Features.
-+    pub const AF: Self = Self(bindings::PCI_CAP_ID_AF as _);
-+    /// PCI Enhanced Allocation.
-+    pub const EA: Self = Self(bindings::PCI_CAP_ID_EA as _);
-+}
-+
-+/// A PCIe extended capability ID.
-+///
-+/// This is a thin wrapper around the underlying numeric capability ID.
-+#[repr(transparent)]
-+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-+pub struct ExtendedCapabilityId(u16);
-+
-+impl ExtendedCapabilityId {
-+    /// Creates an [`ExtendedCapabilityId`] from a raw value.
-+    #[inline]
-+    pub const fn from_raw(id: u16) -> Self {
-+        Self(id)
-+    }
-+
-+    /// Returns the raw value.
-+    #[inline]
-+    pub const fn as_raw(self) -> u16 {
-+        self.0
-+    }
-+
-+    /// Advanced Error Reporting.
-+    pub const ERR: Self = Self(bindings::PCI_EXT_CAP_ID_ERR as _);
-+    /// Virtual Channel.
-+    pub const VC: Self = Self(bindings::PCI_EXT_CAP_ID_VC as _);
-+    /// Device Serial Number.
-+    pub const DSN: Self = Self(bindings::PCI_EXT_CAP_ID_DSN as _);
-+    /// Vendor-Specific Extended Capability.
-+    pub const VNDR: Self = Self(bindings::PCI_EXT_CAP_ID_VNDR as _);
-+    /// Access Control Services.
-+    pub const ACS: Self = Self(bindings::PCI_EXT_CAP_ID_ACS as _);
-+    /// Alternate Routing-ID Interpretation.
-+    pub const ARI: Self = Self(bindings::PCI_EXT_CAP_ID_ARI as _);
-+    /// Address Translation Services.
-+    pub const ATS: Self = Self(bindings::PCI_EXT_CAP_ID_ATS as _);
-+    /// Single Root I/O Virtualization.
-+    pub const SRIOV: Self = Self(bindings::PCI_EXT_CAP_ID_SRIOV as _);
-+    /// Resizable BAR.
-+    pub const REBAR: Self = Self(bindings::PCI_EXT_CAP_ID_REBAR as _);
-+    /// Latency Tolerance Reporting.
-+    pub const LTR: Self = Self(bindings::PCI_EXT_CAP_ID_LTR as _);
-+    /// Downstream Port Containment.
-+    pub const DPC: Self = Self(bindings::PCI_EXT_CAP_ID_DPC as _);
-+    /// L1 PM Substates.
-+    pub const L1SS: Self = Self(bindings::PCI_EXT_CAP_ID_L1SS as _);
-+    /// Precision Time Measurement.
-+    pub const PTM: Self = Self(bindings::PCI_EXT_CAP_ID_PTM as _);
-+    /// Designated Vendor-Specific Extended Capability.
-+    pub const DVSEC: Self = Self(bindings::PCI_EXT_CAP_ID_DVSEC as _);
-+}
-+
- pub use self::irq::{
-     IrqType,
-     IrqTypes,
-@@ -427,6 +540,43 @@ pub fn pci_class(&self) -> Class {
-         // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
-         Class::from_raw(unsafe { (*self.as_raw()).class })
-     }
-+
-+    /// Finds a PCI capability by ID and returns its config-space offset.
-+    ///
-+    /// Returns `None` if the capability is not present.
-+    ///
-+    /// This is a thin wrapper around `pci_find_capability()`.
-+    #[inline]
-+    pub fn find_capability(&self, id: CapabilityId) -> Option<u8> {
-+        // SAFETY: By its type invariant `self.as_raw` is always a valid pointer to a
-+        // `struct pci_dev`.
-+        let offset = unsafe { bindings::pci_find_capability(self.as_raw(), id.as_raw().into()) };
-+
-+        if offset == 0 {
-+            return None;
-+        }
-+
-+        Some(offset)
-+    }
-+
-+    /// Finds an extended capability by ID and returns its config-space offset.
-+    ///
-+    /// Returns `None` if the capability is not present.
-+    ///
-+    /// This is a thin wrapper around `pci_find_ext_capability()`.
-+    #[inline]
-+    pub fn find_ext_capability(&self, id: ExtendedCapabilityId) -> Option<u16> {
-+        // SAFETY: By its type invariant `self.as_raw` is always a valid pointer to a
-+        // `struct pci_dev`.
-+        let offset =
-+            unsafe { bindings::pci_find_ext_capability(self.as_raw(), id.as_raw().into()) };
-+
-+        if offset == 0 {
-+            return None;
-+        }
-+
-+        Some(offset)
-+    }
- }
- 
- impl Device<device::Core> {
--- 
-2.52.0
+Thanks,
+Armin Wolf
 
