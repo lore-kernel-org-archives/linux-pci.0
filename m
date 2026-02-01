@@ -1,304 +1,518 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-186.mta1.migadu.com (out-186.mta1.migadu.com [95.215.58.186])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C87CA224AE8
-	for <linux-pci@vger.kernel.org>; Sun,  1 Feb 2026 06:24:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B29029D29D
+	for <linux-pci@vger.kernel.org>; Sun,  1 Feb 2026 06:38:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769927095; cv=none; b=QZULBDq9bsWk4kUMAhe4SVW8Cf8Fvvj9v2fE3mY+QSw0MZ9J4XnRS6Op8qHK0gKCCUctkJfI0/GCc2vWzpGfasUet8ERXM0Vy0JhsVGR9ZPwanjb/EhJ+n5LoiXjYAhy0ezSfLb1iMP9JsMLxUr0axGz9m+3JESBC3Dch/PLa6I=
+	t=1769927928; cv=none; b=X/NDCf634C02Qxao0cY6AB+Tp+UiWlse5k2wSzOUvuqIogElzruGdWt/eFepi+fHkzt8rzR1qXtr6lCgWQa9pX5Vp2SRw8YBsNvml8KydrYldKeB4k+A1UXR5hbvpx+JGh3CSh0+3QMSOrJyDfRJ3TRcT6HIaC0NtkVQLdlX+9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769927095; c=relaxed/simple;
-	bh=VQgd/ntI7MrOtZ5XEOtaiTzReNsfs7DqrEP/Dk+Ea6I=;
+	s=arc-20240116; t=1769927928; c=relaxed/simple;
+	bh=nbfNpQjgAzIEscLrdW9vuZG047Ckhgg+ZpH+MEM3RCU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RKcBZLEesokS97Kejmhqxvrqfe9E7kbSLCRx+I8C1wAmYr34L2YxPeAvpM8ErazsLhf/3E7ySPWrhFsRt4BixDrOKg0p7f3inrKsZa2RbOKIh09vgXlUwr38696kin+QrZi/OB9Uff3VwSIlEIr9cPqwx4PLFBWKKND3hV6OY1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mHOvPUKQ; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 In-Reply-To:Content-Type; b=FTKC31sSloSd/s8ZWU4Mmntz150qZfSgvduenL8R+MSPKhDm2TuQjyMMg9hNMhyb9SGzUkOdmcnKk0SBkaBmGtG5Nrl76dhOhG8ZE+n2VBFP3R6pYzk+/sXfHsK9RItgkfITWU9IeO3L6w14zFbQI2tizesQhThmzXFFI1d/x7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=smbFLQG3; arc=none smtp.client-ip=95.215.58.186
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mHOvPUKQ"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-47fedb7c68dso35323405e9.2
-        for <linux-pci@vger.kernel.org>; Sat, 31 Jan 2026 22:24:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769927092; x=1770531892; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=G1PDCVMHZp+0xGdbh+dSoCllMY4HTfCtaq+3usc0PNI=;
-        b=mHOvPUKQALqLPbSqYLMQGioV7Jti3JWUGQwIoZ418grbkyir1jy9VVuLw4aMW1bbOE
-         gn74qpV2K4XF2m/Q3x61GXChM8FZe9LwChNQmEPGkjy3rNRuM/xBPxm6NGc+E9cEpN+6
-         aZVCxN4Ex9WlY6Wpb5wlyBacmwMceMJxHQJLknoskikmit3mrhUz/XcC3tn6DqYWlsL+
-         a7lBAsmMDKKNCayLeLML5fmslieqgrSxmkZAW4yulMdzYO+vS1nSPf77u0tTM6PlEf/G
-         Fl1bAgKw4VIpAJShOCMSsJjX3OCXh7G0YFVunwojwx0utvrbJAInne8rdeZydvb9f265
-         gr5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769927092; x=1770531892;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=G1PDCVMHZp+0xGdbh+dSoCllMY4HTfCtaq+3usc0PNI=;
-        b=S6f7FSqxQDVllaCjlKtH09h2i8wjVKtCFA8SKryWuAfWbA6sAGaQ/7F+J3KQuGK0NI
-         Ny9+e4BwMZ04CRtPS28Jg2agRqkol5nY/uRoojL9osDgiTdA98mdNNf6K0BGB3o1Tfls
-         F7NU/KLwdMb57yP5HkjK1o5ycZtMJI9wMDuO07FfUKndFat8jbcEklKr0ZligKGdHgZy
-         eOU5UI4062DR6bA1bmbyucCd0yrSERPxnEzhYXpXNPFVREt/SI287x591hxAR2KlHRJp
-         xsHxhvypddM/1bgFxIGqA73a8MzPkTAYrwlbR54jsOjLak6SH+KBk9jzJBP/E/YL2Hhc
-         wT/g==
-X-Forwarded-Encrypted: i=1; AJvYcCVLWArdacrvQ9mZSQrH8PpCntegXa8agLpr9AWotIZhTXbUEfeG13eemVy/G0qvMps5rfHo8l1gCtM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyQKz+yVxKxZ6Ms3qJ9YN5OMlbcTg/HSTeJdRmbPT3/xIkHPYLN
-	PisiIPrFQhIcf68asP6ivFWL0/x1bA7sjXjXdRqvy4JYthmKV+gz8GNU
-X-Gm-Gg: AZuq6aJVLhD0WNAdNqq55qG056yid7uevD9xlykg+ilj6/tvbihYl/Kg80yFb9312ru
-	9h88PBa1e9B/E88/EXuOepYviWFQRcPMCkzpXWiVj6IfX/nJkeHRE5dH9fTj8hTqY6r96vbOWTh
-	cghuBrCeEeElsZTzcTykH3RsYln6HDgFKF6nfZOXTFXfwNH36lFN7xSEqvaa4ySQ+hf6A9jQuzf
-	mEH9dft6RamGpizVuRwnxM6OhZVID23A5wEwxp4bseVrdcASui8aIDvrLxL0X7CaUZ/OdZCJTM1
-	H5cwbilzk3KUyrOfgLcjbhk+MDmzjoeVvFtPla/+lrBHzFVlPUqgQU/VP8uXeeT9tP8Z2CaG/Pb
-	IHindgaQVa7Aq+vAIknCWd7QOst9YlXXVbEP0TpfqwXUahwGN7CPiVndPWEN3GRq0efZPd28btK
-	haxTcWybfn/06oEPluNKmzEPxSrbsSsEW7O5uDMtSEGfHQn8J7wj+yjzJfvotOZbh9MYStFB5NL
-	7QFltPJ4OTWFjAXQzPZQoWUXE/N3HVQkHMsX8Lh80XcN5qNPHWYkw0v
-X-Received: by 2002:a05:600c:818f:b0:480:49ce:42cc with SMTP id 5b1f17b1804b1-482db45f4b7mr97490525e9.9.1769927091907;
-        Sat, 31 Jan 2026 22:24:51 -0800 (PST)
-Received: from ?IPV6:2003:df:bf2d:e300:2541:f823:ac24:da0b? (p200300dfbf2de3002541f823ac24da0b.dip0.t-ipconnect.de. [2003:df:bf2d:e300:2541:f823:ac24:da0b])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4806ce4c3c6sm303675385e9.10.2026.01.31.22.24.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 31 Jan 2026 22:24:51 -0800 (PST)
-Message-ID: <d8549758-e2ac-4d5a-8231-790498556de3@gmail.com>
-Date: Sun, 1 Feb 2026 07:24:50 +0100
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="smbFLQG3"
+Message-ID: <44484594-5b5d-4237-993c-ac1e173ad62e@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1769927913;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZwyK35BqHJ9vMxdC101Hpkz7OEl6VsmM8t+q1gtlYtQ=;
+	b=smbFLQG3fxi0EmdEQh5EfbtGQ62LpS961djirjg538qndfMoJIldCdV/L2GKzWYzuysN/1
+	/GumBEceCbaFABLQT0FDfy4W6hBDyhGvjE/RBwgY8Fercg7NI2raGGc+bgtYZDTz4/ErLu
+	bI04FQJ+kIrizpByKTlcv8fJSr/4ST4=
+Date: Sat, 31 Jan 2026 22:38:18 -0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] rust: pci: add capability lookup helpers
-To: Zijing Zhang <zijing.zhang@ry.rs>, dakr@kernel.org,
- linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org
-Cc: bhelgaas@google.com, kwilczynski@kernel.org, ojeda@kernel.org,
- gary@garyguo.net
-References: <20260131040200.1242566-1-zijing.zhang@ry.rs>
- <20260131151749.1444030-1-zijing.zhang@ry.rs>
- <20260131151749.1444030-2-zijing.zhang@ry.rs>
-Content-Language: en-US
-From: Dirk Behme <dirk.behme@gmail.com>
-In-Reply-To: <20260131151749.1444030-2-zijing.zhang@ry.rs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 02/22] PCI: Add API to track PCI devices preserved
+ across Live Update
+To: David Matlack <dmatlack@google.com>, Alex Williamson <alex@shazbot.org>
+Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
+ Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+ Alistair Popple <apopple@nvidia.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal
+ <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>,
+ Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>,
+ Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>,
+ kexec@lists.infradead.org, kvm@vger.kernel.org,
+ Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-mm@kvack.org,
+ linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
+ =?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>,
+ Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+ Pasha Tatashin <pasha.tatashin@soleen.com>,
+ Pranjal Shrivastava <praan@google.com>, Pratyush Yadav
+ <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>,
+ Samiullah Khawaja <skhawaja@google.com>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>,
+ Yi Liu <yi.l.liu@intel.com>
+References: <20260129212510.967611-1-dmatlack@google.com>
+ <20260129212510.967611-3-dmatlack@google.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Zhu Yanjun <yanjun.zhu@linux.dev>
+In-Reply-To: <20260129212510.967611-3-dmatlack@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Hi Zijing,
 
-some quite minor stylistic nits below:
+在 2026/1/29 13:24, David Matlack 写道:
+> Add an API to enable the PCI subsystem to track all devices that are
+> preserved across a Live Update, including both incoming devices (passed
+> from the previous kernel) and outgoing devices (passed to the next
+> kernel).
+>
+> Use PCI segment number and BDF to keep track of devices across Live
+> Update. This means the kernel must keep both identifiers constant across
+> a Live Update for any preserved device. VFs are not supported for now,
+> since that requires preserving SR-IOV state on the device to ensure the
+> same number of VFs appear after kexec and with the same BDFs.
+>
+> Drivers that preserve devices across Live Update can now register their
+> struct liveupdate_file_handler with the PCI subsystem so that the PCI
+> subsystem can allocate and manage File-Lifecycle-Bound (FLB) global data
+> to track the list of incoming and outgoing preserved devices.
+>
+>    pci_liveupdate_register_fh(driver_fh)
+>    pci_liveupdate_unregister_fh(driver_fh)
 
-On 31.01.26 16:17, Zijing Zhang wrote:
-> Add thin wrappers around pci_find_capability() and
-> pci_find_ext_capability().
+Can the above 2 functions support the virtual devices? For example, 
+bonding, veth, iSWAP and RXE.
 
-pci_find_capability() -> `pci_find_capability()`
+These virtual devices do not have BDF. As such, I am not sure if your 
+patches take these virtual devices in to account.
 
-Same for the other cases and the 2nd commit message.
+Thanks a lot.
 
-> The helpers return the capability offset in config space, or None if the
-> capability is not present.
-> 
-> Introduce CapabilityId and ExtendedCapabilityId newtypes so drivers can use
-> named constants without importing raw bindgen constants, while still
-> allowing uncommon IDs via from_raw().
-> 
-> Signed-off-by: Zijing Zhang <zijing.zhang@ry.rs>
+Zhu Yanjun
+
+>
+> Drivers can notify the PCI subsystem whenever a device is preserved and
+> unpreserved with the following APIs:
+>
+>    pci_liveupdate_outgoing_preserve(pci_dev)
+>    pci_liveupdate_outgoing_unpreserve(pci_dev)
+>
+> After a Live Update, the PCI subsystem fetches its FLB global data
+> from the previous kernel from the Live Update Orchestrator (LUO) during
+> device initialization to determine which devices were preserved.
+>
+> Drivers can check if a device was preserved before userspace retrieves
+> the file for it via pci_dev->liveupdate_incoming.
+>
+> Once a driver has finished restoring an incoming preserved device, it
+> can notify the PCI subsystem with the following call, which clears
+> pci_dev->liveupdate_incoming.
+>
+>    pci_liveupdate_incoming_finish(pci_dev)
+>
+> This API will be used in subsequent commits by the vfio-pci driver to
+> preserve VFIO devices across Live Update and by the PCI subsystem.
+>
+> Signed-off-by: David Matlack <dmatlack@google.com>
 > ---
->  rust/kernel/pci.rs | 149 +++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 149 insertions(+)
-> 
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index 82e128431f08..213ff856f538 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
-> @@ -41,6 +41,118 @@
->      Vendor, //
->  };
->  pub use self::io::Bar;
+>   drivers/pci/Makefile        |   1 +
+>   drivers/pci/liveupdate.c    | 212 ++++++++++++++++++++++++++++++++++++
+>   drivers/pci/probe.c         |   2 +
+>   include/linux/kho/abi/pci.h |  55 ++++++++++
+>   include/linux/pci.h         |  47 ++++++++
+>   5 files changed, 317 insertions(+)
+>   create mode 100644 drivers/pci/liveupdate.c
+>   create mode 100644 include/linux/kho/abi/pci.h
+>
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 8c259a9a8796..a32f7658b9e5 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -16,6 +16,7 @@ obj-$(CONFIG_PROC_FS)		+= proc.o
+>   obj-$(CONFIG_SYSFS)		+= pci-sysfs.o slot.o
+>   obj-$(CONFIG_ACPI)		+= pci-acpi.o
+>   obj-$(CONFIG_GENERIC_PCI_IOMAP) += iomap.o
+> +obj-$(CONFIG_LIVEUPDATE)	+= liveupdate.o
+>   endif
+>   
+>   obj-$(CONFIG_OF)		+= of.o
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> new file mode 100644
+> index 000000000000..182cfc793b80
+> --- /dev/null
+> +++ b/drivers/pci/liveupdate.c
+> @@ -0,0 +1,212 @@
+> +// SPDX-License-Identifier: GPL-2.0
 > +
-> +/// A standard PCI capability ID.
-> +///
-> +/// This is a thin wrapper around the underlying numeric capability ID.
-> +#[repr(transparent)]
-> +#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-> +pub struct CapabilityId(u8);
+> +/*
+> + * Copyright (c) 2025, Google LLC.
+> + * David Matlack <dmatlack@google.com>
+> + */
 > +
-> +impl CapabilityId {
-> +    /// Creates a [`CapabilityId`] from a raw value.
-> +    #[inline]
-> +    pub const fn from_raw(id: u8) -> Self {
-> +        Self(id)
-> +    }
+> +#include <linux/bsearch.h>
+> +#include <linux/io.h>
+> +#include <linux/kexec_handover.h>
+> +#include <linux/kho/abi/pci.h>
+> +#include <linux/liveupdate.h>
+> +#include <linux/mutex.h>
+> +#include <linux/mm.h>
+> +#include <linux/pci.h>
+> +#include <linux/sort.h>
 > +
-> +    /// Returns the raw value.
-> +    #[inline]
-> +    pub const fn as_raw(self) -> u8 {
-> +        self.0
-> +    }
+> +static DEFINE_MUTEX(pci_flb_outgoing_lock);
 > +
-> +    /// Power Management.
-> +    pub const PM: Self = Self(bindings::PCI_CAP_ID_PM as u8);
-> +    /// Accelerated Graphics Port.
-> +    pub const AGP: Self = Self(bindings::PCI_CAP_ID_AGP as u8);
-> +    /// Vital Product Data.
-> +    pub const VPD: Self = Self(bindings::PCI_CAP_ID_VPD as u8);
-> +    /// Slot Identification.
-> +    pub const SLOTID: Self = Self(bindings::PCI_CAP_ID_SLOTID as u8);
-> +    /// Message Signalled Interrupts.
-> +    pub const MSI: Self = Self(bindings::PCI_CAP_ID_MSI as u8);
-> +    /// CompactPCI HotSwap.
-> +    pub const CHSWP: Self = Self(bindings::PCI_CAP_ID_CHSWP as u8);
-> +    /// PCI-X.
-> +    pub const PCIX: Self = Self(bindings::PCI_CAP_ID_PCIX as u8);
-> +    /// HyperTransport.
-> +    pub const HT: Self = Self(bindings::PCI_CAP_ID_HT as u8);
-> +    /// Vendor-Specific.
-> +    pub const VNDR: Self = Self(bindings::PCI_CAP_ID_VNDR as u8);
-> +    /// Debug port.
-> +    pub const DBG: Self = Self(bindings::PCI_CAP_ID_DBG as u8);
-> +    /// CompactPCI Central Resource Control.
-> +    pub const CCRC: Self = Self(bindings::PCI_CAP_ID_CCRC as u8);
-> +    /// PCI Standard Hot-Plug Controller.
-> +    pub const SHPC: Self = Self(bindings::PCI_CAP_ID_SHPC as u8);
-> +    /// Bridge subsystem vendor/device ID.
-> +    pub const SSVID: Self = Self(bindings::PCI_CAP_ID_SSVID as u8);
-> +    /// AGP 8x.
-> +    pub const AGP3: Self = Self(bindings::PCI_CAP_ID_AGP3 as u8);
-> +    /// Secure Device.
-> +    pub const SECDEV: Self = Self(bindings::PCI_CAP_ID_SECDEV as u8);
-> +    /// PCI Express.
-> +    pub const EXP: Self = Self(bindings::PCI_CAP_ID_EXP as u8);
-> +    /// MSI-X.
-> +    pub const MSIX: Self = Self(bindings::PCI_CAP_ID_MSIX as u8);
-> +    /// Serial ATA Data/Index Configuration.
-> +    pub const SATA: Self = Self(bindings::PCI_CAP_ID_SATA as u8);
-> +    /// PCI Advanced Features.
-> +    pub const AF: Self = Self(bindings::PCI_CAP_ID_AF as u8);
-> +    /// PCI Enhanced Allocation.
-> +    pub const EA: Self = Self(bindings::PCI_CAP_ID_EA as u8);
+> +static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
+> +{
+> +	struct pci_dev *dev = NULL;
+> +	int max_nr_devices = 0;
+> +	struct pci_ser *ser;
+> +	unsigned long size;
+> +
+> +	for_each_pci_dev(dev)
+> +		max_nr_devices++;
+> +
+> +	size = struct_size_t(struct pci_ser, devices, max_nr_devices);
+> +
+> +	ser = kho_alloc_preserve(size);
+> +	if (IS_ERR(ser))
+> +		return PTR_ERR(ser);
+> +
+> +	ser->max_nr_devices = max_nr_devices;
+> +
+> +	args->obj = ser;
+> +	args->data = virt_to_phys(ser);
+> +	return 0;
 > +}
 > +
-> +/// A PCIe extended capability ID.
-> +///
-> +/// This is a thin wrapper around the underlying numeric capability ID.
-> +#[repr(transparent)]
-> +#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-> +pub struct ExtendedCapabilityId(u16);
+> +static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
+> +{
+> +	struct pci_ser *ser = args->obj;
 > +
-> +impl ExtendedCapabilityId {
-> +    /// Creates an [`ExtendedCapabilityId`] from a raw value.
-> +    #[inline]
-> +    pub const fn from_raw(id: u16) -> Self {
-> +        Self(id)
-> +    }
-> +
-> +    /// Returns the raw value.
-> +    #[inline]
-> +    pub const fn as_raw(self) -> u16 {
-> +        self.0
-> +    }
-> +
-> +    /// Advanced Error Reporting.
-> +    pub const ERR: Self = Self(bindings::PCI_EXT_CAP_ID_ERR as u16);
-> +    /// Virtual Channel.
-> +    pub const VC: Self = Self(bindings::PCI_EXT_CAP_ID_VC as u16);
-> +    /// Device Serial Number.
-> +    pub const DSN: Self = Self(bindings::PCI_EXT_CAP_ID_DSN as u16);
-> +    /// Vendor-Specific Extended Capability.
-> +    pub const VNDR: Self = Self(bindings::PCI_EXT_CAP_ID_VNDR as u16);
-> +    /// Access Control Services.
-> +    pub const ACS: Self = Self(bindings::PCI_EXT_CAP_ID_ACS as u16);
-> +    /// Alternate Routing-ID Interpretation.
-> +    pub const ARI: Self = Self(bindings::PCI_EXT_CAP_ID_ARI as u16);
-> +    /// Address Translation Services.
-> +    pub const ATS: Self = Self(bindings::PCI_EXT_CAP_ID_ATS as u16);
-> +    /// Single Root I/O Virtualization.
-> +    pub const SRIOV: Self = Self(bindings::PCI_EXT_CAP_ID_SRIOV as u16);
-> +    /// Resizable BAR.
-> +    pub const REBAR: Self = Self(bindings::PCI_EXT_CAP_ID_REBAR as u16);
-> +    /// Latency Tolerance Reporting.
-> +    pub const LTR: Self = Self(bindings::PCI_EXT_CAP_ID_LTR as u16);
-> +    /// Downstream Port Containment.
-> +    pub const DPC: Self = Self(bindings::PCI_EXT_CAP_ID_DPC as u16);
-> +    /// L1 PM Substates.
-> +    pub const L1SS: Self = Self(bindings::PCI_EXT_CAP_ID_L1SS as u16);
-> +    /// Precision Time Measurement.
-> +    pub const PTM: Self = Self(bindings::PCI_EXT_CAP_ID_PTM as u16);
-> +    /// Designated Vendor-Specific Extended Capability.
-> +    pub const DVSEC: Self = Self(bindings::PCI_EXT_CAP_ID_DVSEC as u16);
+> +	WARN_ON_ONCE(ser->nr_devices);
+> +	kho_unpreserve_free(ser);
 > +}
-
-Missing empty line before `pub use self::irq` below?
-
->  pub use self::irq::{
->      IrqType,
->      IrqTypes,
-> @@ -427,6 +539,43 @@ pub fn pci_class(&self) -> Class {
->          // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
->          Class::from_raw(unsafe { (*self.as_raw()).class })
->      }
 > +
-> +    /// Finds a PCI capability by ID and returns its config-space offset.
-> +    ///
-> +    /// Returns `None` if the capability is not present.
-> +    ///
-> +    /// This is a thin wrapper around `pci_find_capability()`.
-> +    #[inline]
-> +    pub fn find_capability(&self, id: CapabilityId) -> Option<u8> {
-
-Depending on the future use of this function (and
-`find_ext_capability()` below) would it be an option to introduce a
-type for the returned u8/u16 offset?
-
-> +        // SAFETY: By its type invariant `self.as_raw` is always a valid pointer to a
-> +        // `struct pci_dev`.
-> +        let offset = unsafe { bindings::pci_find_capability(self.as_raw(), id.as_raw().into()) };
+> +static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
+> +{
+> +	args->obj = phys_to_virt(args->data);
+> +	return 0;
+> +}
 > +
-> +        if offset == 0 {
-> +            None
-> +        } else {
-> +            Some(offset)
-> +        }
-
-In
-
-https://lore.kernel.org/rust-for-linux/CANiq72kiscT5euAUjcSzvxMzM9Hdj8aQGeUN_pVF-vHf3DhBuQ@mail.gmail.com/
-
-it was proposed to use the style
-
-if offset == 0 {
-    return None;
-}
-
-Some(offset)
-
-
-Best regards
-
-Dirk
-
-
-> +    }
+> +static void pci_flb_finish(struct liveupdate_flb_op_args *args)
+> +{
+> +	kho_restore_free(args->obj);
+> +}
 > +
-> +    /// Finds an extended capability by ID and returns its config-space offset.
-> +    ///
-> +    /// Returns `None` if the capability is not present.
-> +    ///
-> +    /// This is a thin wrapper around `pci_find_ext_capability()`.
-> +    #[inline]
-> +    pub fn find_ext_capability(&self, id: ExtendedCapabilityId) -> Option<u16> {
-> +        // SAFETY: By its type invariant `self.as_raw` is always a valid pointer to a
-> +        // `struct pci_dev`.
-> +        let offset =
-> +            unsafe { bindings::pci_find_ext_capability(self.as_raw(), id.as_raw().into()) };
+> +static struct liveupdate_flb_ops pci_liveupdate_flb_ops = {
+> +	.preserve = pci_flb_preserve,
+> +	.unpreserve = pci_flb_unpreserve,
+> +	.retrieve = pci_flb_retrieve,
+> +	.finish = pci_flb_finish,
+> +	.owner = THIS_MODULE,
+> +};
 > +
-> +        if offset == 0 {
-> +            None
-> +        } else {
-> +            Some(offset)
-> +        }
-> +    }
->  }
->  
->  impl Device<device::Core> {
+> +static struct liveupdate_flb pci_liveupdate_flb = {
+> +	.ops = &pci_liveupdate_flb_ops,
+> +	.compatible = PCI_LUO_FLB_COMPATIBLE,
+> +};
+> +
+> +#define INIT_PCI_DEV_SER(_dev) {		\
+> +	.domain = pci_domain_nr((_dev)->bus),	\
+> +	.bdf = pci_dev_id(_dev),		\
+> +}
+> +
+> +static int pci_dev_ser_cmp(const void *__a, const void *__b)
+> +{
+> +	const struct pci_dev_ser *a = __a, *b = __b;
+> +
+> +	return cmp_int(a->domain << 16 | a->bdf, b->domain << 16 | b->bdf);
+> +}
+> +
+> +static struct pci_dev_ser *pci_ser_find(struct pci_ser *ser,
+> +					struct pci_dev *dev)
+> +{
+> +	const struct pci_dev_ser key = INIT_PCI_DEV_SER(dev);
+> +
+> +	return bsearch(&key, ser->devices, ser->nr_devices,
+> +		       sizeof(key), pci_dev_ser_cmp);
+> +}
+> +
+> +static int pci_ser_delete(struct pci_ser *ser, struct pci_dev *dev)
+> +{
+> +	struct pci_dev_ser *dev_ser;
+> +	int i;
+> +
+> +	dev_ser = pci_ser_find(ser, dev);
+> +	if (!dev_ser)
+> +		return -ENOENT;
+> +
+> +	for (i = dev_ser - ser->devices; i < ser->nr_devices - 1; i++)
+> +		ser->devices[i] = ser->devices[i + 1];
+> +
+> +	ser->nr_devices--;
+> +	return 0;
+> +}
+> +
+> +int pci_liveupdate_outgoing_preserve(struct pci_dev *dev)
+> +{
+> +	struct pci_dev_ser new = INIT_PCI_DEV_SER(dev);
+> +	struct pci_ser *ser;
+> +	int i, ret;
+> +
+> +	/* Preserving VFs is not supported yet. */
+> +	if (dev->is_virtfn)
+> +		return -EINVAL;
+> +
+> +	guard(mutex)(&pci_flb_outgoing_lock);
+> +
+> +	if (dev->liveupdate_outgoing)
+> +		return -EBUSY;
+> +
+> +	ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void **)&ser);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (ser->nr_devices == ser->max_nr_devices)
+> +		return -E2BIG;
+> +
+> +	for (i = ser->nr_devices; i > 0; i--) {
+> +		struct pci_dev_ser *prev = &ser->devices[i - 1];
+> +		int cmp = pci_dev_ser_cmp(&new, prev);
+> +
+> +		if (WARN_ON_ONCE(!cmp))
+> +			return -EBUSY;
+> +
+> +		if (cmp > 0)
+> +			break;
+> +
+> +		ser->devices[i] = *prev;
+> +	}
+> +
+> +	ser->devices[i] = new;
+> +	ser->nr_devices++;
+> +	dev->liveupdate_outgoing = true;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_outgoing_preserve);
+> +
+> +void pci_liveupdate_outgoing_unpreserve(struct pci_dev *dev)
+> +{
+> +	struct pci_ser *ser;
+> +	int ret;
+> +
+> +	guard(mutex)(&pci_flb_outgoing_lock);
+> +
+> +	ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void **)&ser);
+> +	if (WARN_ON_ONCE(ret))
+> +		return;
+> +
+> +	WARN_ON_ONCE(pci_ser_delete(ser, dev));
+> +	dev->liveupdate_outgoing = false;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_outgoing_unpreserve);
+> +
+> +u32 pci_liveupdate_incoming_nr_devices(void)
+> +{
+> +	struct pci_ser *ser;
+> +	int ret;
+> +
+> +	ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)&ser);
+> +	if (ret)
+> +		return 0;
+> +
+> +	return ser->nr_devices;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_incoming_nr_devices);
+> +
+> +void pci_liveupdate_setup_device(struct pci_dev *dev)
+> +{
+> +	struct pci_ser *ser;
+> +	int ret;
+> +
+> +	ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)&ser);
+> +	if (ret)
+> +		return;
+> +
+> +	dev->liveupdate_incoming = !!pci_ser_find(ser, dev);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_setup_device);
+> +
+> +void pci_liveupdate_incoming_finish(struct pci_dev *dev)
+> +{
+> +	dev->liveupdate_incoming = false;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_incoming_finish);
+> +
+> +int pci_liveupdate_register_fh(struct liveupdate_file_handler *fh)
+> +{
+> +	return liveupdate_register_flb(fh, &pci_liveupdate_flb);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_register_fh);
+> +
+> +int pci_liveupdate_unregister_fh(struct liveupdate_file_handler *fh)
+> +{
+> +	return liveupdate_unregister_flb(fh, &pci_liveupdate_flb);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_liveupdate_unregister_fh);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 37329095e5fe..af6356c5a156 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2060,6 +2060,8 @@ int pci_setup_device(struct pci_dev *dev)
+>   	if (pci_early_dump)
+>   		early_dump_pci_device(dev);
+>   
+> +	pci_liveupdate_setup_device(dev);
+> +
+>   	/* Need to have dev->class ready */
+>   	dev->cfg_size = pci_cfg_space_size(dev);
+>   
+> diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.h
+> new file mode 100644
+> index 000000000000..6577767f8da6
+> --- /dev/null
+> +++ b/include/linux/kho/abi/pci.h
+> @@ -0,0 +1,55 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +
+> +/*
+> + * Copyright (c) 2025, Google LLC.
+> + * David Matlack <dmatlack@google.com>
+> + */
+> +
+> +#ifndef _LINUX_KHO_ABI_PCI_H
+> +#define _LINUX_KHO_ABI_PCI_H
+> +
+> +#include <linux/compiler.h>
+> +#include <linux/types.h>
+> +
+> +/**
+> + * DOC: PCI File-Lifecycle Bound (FLB) Live Update ABI
+> + *
+> + * This header defines the ABI for preserving core PCI state across kexec using
+> + * Live Update File-Lifecycle Bound (FLB) data.
+> + *
+> + * This interface is a contract. Any modification to any of the serialization
+> + * structs defined here constitutes a breaking change. Such changes require
+> + * incrementing the version number in the PCI_LUO_FLB_COMPATIBLE string.
+> + */
+> +
+> +#define PCI_LUO_FLB_COMPATIBLE "pci-v1"
+> +
+> +/**
+> + * struct pci_dev_ser - Serialized state about a single PCI device.
+> + *
+> + * @domain: The device's PCI domain number (segment).
+> + * @bdf: The device's PCI bus, device, and function number.
+> + */
+> +struct pci_dev_ser {
+> +	u16 domain;
+> +	u16 bdf;
+> +} __packed;
+> +
+> +/**
+> + * struct pci_ser - PCI Subsystem Live Update State
+> + *
+> + * This struct tracks state about all devices that are being preserved across
+> + * a Live Update for the next kernel.
+> + *
+> + * @max_nr_devices: The length of the devices[] flexible array.
+> + * @nr_devices: The number of devices that were preserved.
+> + * @devices: Flexible array of pci_dev_ser structs for each device. Guaranteed
+> + *           to be sorted ascending by domain and bdf.
+> + */
+> +struct pci_ser {
+> +	u64 max_nr_devices;
+> +	u64 nr_devices;
+> +	struct pci_dev_ser devices[];
+> +} __packed;
+> +
+> +#endif /* _LINUX_KHO_ABI_PCI_H */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 7e36936bb37a..9ead6d84aef6 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -40,6 +40,7 @@
+>   #include <linux/resource_ext.h>
+>   #include <linux/msi_api.h>
+>   #include <uapi/linux/pci.h>
+> +#include <linux/liveupdate.h>
+>   
+>   #include <linux/pci_ids.h>
+>   
+> @@ -582,6 +583,10 @@ struct pci_dev {
+>   	u8		tph_mode;	/* TPH mode */
+>   	u8		tph_req_type;	/* TPH requester type */
+>   #endif
+> +#ifdef CONFIG_LIVEUPDATE
+> +	unsigned int	liveupdate_incoming:1;	/* Preserved by previous kernel */
+> +	unsigned int	liveupdate_outgoing:1;	/* Preserved for next kernel */
+> +#endif
+>   };
+>   
+>   static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+> @@ -2854,4 +2859,46 @@ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
+>   	WARN_ONCE(condition, "%s %s: " fmt, \
+>   		  dev_driver_string(&(pdev)->dev), pci_name(pdev), ##arg)
+>   
+> +#ifdef CONFIG_LIVEUPDATE
+> +int pci_liveupdate_outgoing_preserve(struct pci_dev *dev);
+> +void pci_liveupdate_outgoing_unpreserve(struct pci_dev *dev);
+> +void pci_liveupdate_setup_device(struct pci_dev *dev);
+> +u32 pci_liveupdate_incoming_nr_devices(void);
+> +void pci_liveupdate_incoming_finish(struct pci_dev *dev);
+> +int pci_liveupdate_register_fh(struct liveupdate_file_handler *fh);
+> +int pci_liveupdate_unregister_fh(struct liveupdate_file_handler *fh);
+> +#else /* !CONFIG_LIVEUPDATE */
+> +static inline int pci_liveupdate_outgoing_preserve(struct pci_dev *dev)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+> +
+> +static inline void pci_liveupdate_outgoing_unpreserve(struct pci_dev *dev)
+> +{
+> +}
+> +
+> +static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
+> +{
+> +}
+> +
+> +static inline u32 pci_liveupdate_incoming_nr_devices(void)
+> +{
+> +	return 0;
+> +}
+> +
+> +static inline void pci_liveupdate_incoming_finish(struct pci_dev *dev)
+> +{
+> +}
+> +
+> +static inline int pci_liveupdate_register_fh(struct liveupdate_file_handler *fh)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+> +
+> +static inline int pci_liveupdate_unregister_fh(struct liveupdate_file_handler *fh)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+> +#endif /* !CONFIG_LIVEUPDATE */
+> +
+>   #endif /* LINUX_PCI_H */
+>
+-- 
+Best Regards,
+Yanjun.Zhu
 
