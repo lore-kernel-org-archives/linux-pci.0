@@ -1,154 +1,145 @@
-Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com [209.85.208.177])
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B95E2D8DB9
-	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 18:15:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E57A2F2918
+	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 19:23:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770056128; cv=pass; b=qkEaFETvhLT2nW+2ToBxG5gmvtEWKjWGNXq1j68yANxb3HQe23Ok6Qk2cL3wgRczJf64enweUg+s9Mle7Wsp0dBLTwuxoE6GJ4Zg9kLLxhPlFGhrwuC1PGUopRFyq5RHH2mM2U92pUUrvFCg0qoxDfj8EYvjzX4u9xjyEpXApwM=
+	t=1770060225; cv=pass; b=Xuqa0yPNcFUuqQ1Rx8orWRjcKGJc2S4i0MZod1eriH7Erta0IIupe79l8UfIP0zAO2PRKrPGuQWmRhVPKaTkgg8QSlDzqemEiOxRWOQgHs7sIAQW5A/arICkjUXzmvKqeLd6DQJbN1iHPZe+op8WNy+vKFtDSepvPNHqqgFIHwU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770056128; c=relaxed/simple;
-	bh=hfLkISPUv1gvXr1CboqWBn1bs3Sd5IoZNOLzZg55skM=;
+	s=arc-20240116; t=1770060225; c=relaxed/simple;
+	bh=jnZPteeSHeX5ZpEveHAlWBA4LRcr7W4KJV3rdDt8BuI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iF3+Vcj9hY3LFdVkbqT7NpezdvuXAj73tke4Ebb5qL/3YekiQctX4+cJoZ5yWpqzrbFupi+5+yM6Y0cB4Qa1MnYffbUi487OBQ5S2WCMOpDgRZUO8+Ne/irZGx2WCaWqo38gfpfQqPkpphWIM+XEm+iZ8HvOyYRXz8EcJ7UhPVM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PSJ2pVDb; arc=pass smtp.client-ip=209.85.208.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 To:Cc:Content-Type; b=kgQlaO6IfzZCZKI6iro+ien4fyoY73FUbF+ZZgjOHxIDYWcEIPyL1cku24pTgCUR5WovGrg2wafTd3u26yo0IEIxvb3Pfr93r2ubym2ZOtq0Rxdn2wHJ9ltE5NDA9swP6USENbqoEtQw0MgkMh+o0O7V9fFr89J5of8gJITfW+k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=b1VE665g; arc=pass smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PSJ2pVDb"
-Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-385b9be0759so36824891fa.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2026 10:15:26 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1770056125; cv=none;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="b1VE665g"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-64d1ef53cf3so6108072a12.0
+        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2026 11:23:43 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1770060222; cv=none;
         d=google.com; s=arc-20240605;
-        b=amy8Zi6GSXF1ZhyuMtlZ94bHLNT1QeqhaKBx3MLGKW0DNuS4BspOLblxVeNigJ/4Qy
-         nLmns9chstwGFEYo/RtANTNM84O9+t49qsTx+x9P+GZO7VxbZ8eu1+6nf5PJ4xk/vUqx
-         g7aUpVGKOywrP386uurcoJuYx76s8HNTOYAgwg1FcbCXC6PRcQvv2EKXirs1j/GE8wsA
-         Du5N4s3RWkvwL6alUKSl3LnwA3mN7DYCDhpblgD9ugxZdtBuCZuW3Xh6u/rlBB9ghPtD
-         kGR52HuAc2uuiOAcTk3xr/xRxrw0kb2AZfddtmEAUNb2eWKGUJDNKCi0uzVbTHvTqWyz
-         33vg==
+        b=lZlnJrN0DT4d4sa3Mc6TKDP28IpKhUCa9xvPVImtaPTB4VTYR06Ip2SDbAosISGA0O
+         99wirpHx4C+g+UCJZ6cditbEOZsXXh/13gt5767KWwUVtuaXHz3u5OdVYlLzOLGOolzf
+         AFxGKTujqBm4QaKvNvXz9vW3893QgHadDfAeeJn+XXjg0q3pGqWbtXvmUHwTPUOcNwKp
+         LLbf03y+nvPqJJrHJk3ZMyBFXpnAXomNXAbwylzxqW5YvtYHmXFD9Ll0KalONlKJRwI6
+         9AL0ijX9I3XDL5x3oP2HGHRh4U4nynjzLQEn2mPF0beqbAlVP1BpYLCjYQHMeVh23JV2
+         +ucw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=LIHmbN0vtM4SeA7+jGmffdOqzfQaVyhc47MhdLc1+1s=;
-        fh=ToXhNDChbhkxxwJdrg3VWx7nueusGUcVxxmg9ik98e4=;
-        b=AMbWoKoAXNf+cFjeYCiVIQec5EtRwhI7cxIdn9kfeSjYBmF4knKZmY9ym8lByjo+D7
-         8SrTCLVQdzRSyfS8xFvhHdEp431oHOW1WwYFsNCh+S36oCNDP0G3PnjmqCml4kMSaRKP
-         /JZufLNTVw+I4N30QqV+MI3MMlij7rwpJNtrb8HyNZffB3pN2eFrqYUIydXzeRE/tl79
-         L3x9CB6vzI0Eu96sTJut7kKSz4p8B7whgKfNQ8H9bZPm/DuMZt4mQ5/fLJi1MWIgnUO8
-         I/DyJRp3WLW27P5oWUR7ZRUELJplhDp2ftpipBMpemWBs29sfYo/6KqbKSidRX5q1u/Z
-         MVrw==;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=KqNSP8u9FYnKkd4xDRWAuBWQOKd1/6jXqlAv5Huiee8=;
+        fh=lNqwcR5Gd+/mN/3y1pf5mySSfiMS7cJrP0eLuRanEV4=;
+        b=Sem+mhu8kKJvCZX/lpQ4Ku/erUe+KiIeZRSl7UHdeLwlEUXAbDiLnLlIVSXwC68xmP
+         nDa0VklL6JCrVfxxXpsVH7epT3Ok/scTlIYa9b8XRLq4YuGSIjkASjYYS4kPda9JbouH
+         8aDz7bc8zeDF2UbDOvBfMZTe9d0trTPVOIs9ZbajgRX65wSnpp10QkC09nC/c0E/5/Jk
+         0AEUsD8Ezp+Yp2VWTBDEXwaC5vBQr8iLK4XB7qHdCvn+0OOcdcJijD5GGs5VnoK7kMBS
+         EzRjWqKDbRsinQpyamHS/+uYQgvA1jc++GRtGc0l61qE/T9pwObryZ4pZtOTVNXM/NPC
+         W54g==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1770056125; x=1770660925; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LIHmbN0vtM4SeA7+jGmffdOqzfQaVyhc47MhdLc1+1s=;
-        b=PSJ2pVDbNQVnPXrXNjymko4FOE40C743kvBmJ86NLSh4GircZENoqWveK5OWNMFOO9
-         GpNsC5mwmhTxifUlf/daWGwYTrtNmBzSI9eXvPrODcez7DbDVIYiqvcyBy8amLYrrxVp
-         DLhTd6QbiVH1AZJlMuR6iTv3Niiaa2lm5P9p2E6o7tcArvBjQTQzHxA7WxzzMWq7visY
-         Ddj+8fe+ab5vxCLuvIu9gW3nb9y1abZAGX4BKFdWVZfyFeTp3yFB593U7yT/3WYrmVXT
-         hClbGiN6g1pDtf0H+z9QDhit5pfuUP7PHyl+0qS9jvPbM1Ti2diqJ0edF/uO0rC2wXpJ
-         ZfNg==
+        d=linaro.org; s=google; t=1770060222; x=1770665022; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=KqNSP8u9FYnKkd4xDRWAuBWQOKd1/6jXqlAv5Huiee8=;
+        b=b1VE665g2mIi70zs0Ch67rJLvOs9kZjc8Bei+zGR5Y2VndUL3orn87yM8cGbrvoPGt
+         J/4/NhetaWO61kFmbmV0lpW14n4LG6kEBeQybPunfb+GFjbhAgLfx9Dguh131c3CiuQB
+         ZzSnQgjS/x3d3OMtlJwLJruqxD9RNupiT1Sh7w1dyY+11u18Mvz/BwdRDmyTtDbBdVsf
+         S6V3KlGtITaEeMN1wgbgmtKOv+zhCe2xa0XHAcpB2Yli7Adx+pFFqrb9CNqd7v5o1bY4
+         hdYXzYou5yRMaBe28s8LOJ+qhK1/vaqSfvfd5oWrO7yEyxJ1MkgTfQ/LGrFjjxk3roKT
+         adfw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770056125; x=1770660925;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=LIHmbN0vtM4SeA7+jGmffdOqzfQaVyhc47MhdLc1+1s=;
-        b=GdsB5sqkLUnazg6cl7Qfdlkv6w4LPzP/6/BN4ERalv13InYPulesXnoSrkWl+mnMme
-         I1pOiODLuiO1DF7WedUe1CUJ/+yLdZ1JFNv0s/BJJvWSGik8hbS67Jtwj1l2n+lhMC42
-         Z03dt49sl2mrJ+HZPVcdVYye4eyenTWIBcwI20pic2exJ4OXafQhYqy+GrBSGcszcaLx
-         c+eXFEuKLRVuE6JL47tAC9FnkaK817YY+amd4um49oYHM25ynUv9r8xdZZcljUERDcJe
-         RDCaNG46xa0zHhrsU/f9vEnngd2kkORo1zo64lTvMo9hnSt+RCCBKHXsIaSXnTEbu3bX
-         NcWg==
-X-Forwarded-Encrypted: i=1; AJvYcCWVKN8wwXYZQF+CDbd91FUnT8w/+YWe7tDJJQIzTQVruF5zyOExfEcnhN/4qXiSUGpQk3liTXCaCOM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJDC1E3MF+pCSIjdpSgCEiWLFqi1xGDdG6ijwIiKpRoW4xsbHA
-	Yl3jEib8JKbNW6GggxfL8Us/JRRkEtUGG62oq203NXNeLAq3Aiq1rv4/wI7nxEKJNChBuo8AuMS
-	Yj4/PSPzok/aXP8ASK2F5bawA/IAU4uWZSatOvi2f
-X-Gm-Gg: AZuq6aJbJWNyJvuW0CfVjZQgkNEXXmBEwB6/m9ak1IFdV2QUj/3JwiCC5EqUAN1mq24
-	IpbmdrZie1ZjanUnLD4vtORoOJxG3wqUb+cNU86eYts+Z05NUnnWvaSktFPn9/dMSfkQIsocyXr
-	/OhrYtPri16+F75FYxwGxuVWx+ZKxt065Cd8mzWovaQnRhBkF2MyDCQixDfGZ6wrpmP1D7OkTzb
-	zNwATbYj/xVQAsjH83HxneSuh6pZZFMvHMCQcsckIgmbPAV9LhzBOKqZMI7Iz7vI8O/1A==
-X-Received: by 2002:a2e:a54b:0:b0:383:1c18:ade6 with SMTP id
- 38308e7fff4ca-3864662d728mr40696471fa.20.1770056124374; Mon, 02 Feb 2026
- 10:15:24 -0800 (PST)
+        d=1e100.net; s=20230601; t=1770060222; x=1770665022;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KqNSP8u9FYnKkd4xDRWAuBWQOKd1/6jXqlAv5Huiee8=;
+        b=ChiKWSRRf/gV0P32cJR1h1buW/m5b+Z/VOqoqvXWTEn2NVOzzB8HRWKWRl6w/JdI71
+         IJ5czcvvRjiWG3Qc0Yv144+VbkmX5rvQ8JbPAmBTFgR5ggFJlIOZHcfIdr6kV3J5q4Tc
+         HSOMepLl2uawc7p+C0mnQ8MMQZGdKHov4RDk0Xap6Fk2bziZAzQf/w7TW0tSdOvyCIE7
+         hUy4WhqdBgJyYBWfrMk1GGp3xgKBHf9hjkA+LhPoYn8bymID1o4xF1Fi1YnoYGtNc62P
+         BBRNDXw7XHmt4QhROEepwKNS23WTuU2+znQ9uUAZjWD2tAhFUtvRqKJGey49IglEPuMw
+         XoUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU0lbnjsmcebJQ1bmpeErh12EJToH9ilbMoNIRbZKJD2XC9vy/lYMUwlCX5OiJc5l7gTUkpJsC4TZw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5jP2fDtYwmHw4lg8FzIGMg4Zs5MvmCaUmZyZr5NQM74BXYF2V
+	8gxWPfve5yvCAL2BS6/xDK4amS1EXRkMQVFdlj9E0tpELLNxxzqj89MnTQGT6K4T2YDpjrMP1q/
+	QoQTj3FIHdi8HUjEdMxKnezkKgM6StcLl1H2kgqDC7g==
+X-Gm-Gg: AZuq6aJfzJO1TPgx/9g80e7d7EsvC67HaWUumRNuUEm0ziKdeKZ3KPEczTjfLHXPUGP
+	h5uzbpPYplI0dxiguAW1nCEy6gT6TZuIYafatuiCN/8u/j/f2HB6bJDoRY+5uDhG8MlsrD6zmdN
+	xt1qRaIxby/Ap59zjK6XIMPENSFdojZmCpNYu7FkyYnY90YapMD8t599a2B1YOsHW7tZVjm6rla
+	vp6PyjYXZ/8TLS+moXQ/aEHFhYTZGtWc4KNNMYVDydbT5K4m1H4S6SCJUTEDnbI0BOyvTFj3xyL
+	sHqOfE1ETxKAkJab/qSVjQ==
+X-Received: by 2002:a05:6402:430a:b0:658:cc59:161c with SMTP id
+ 4fb4d7f45d1cf-658de563dccmr7500568a12.12.1770060221904; Mon, 02 Feb 2026
+ 11:23:41 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260129212510.967611-1-dmatlack@google.com> <20260129212510.967611-3-dmatlack@google.com>
- <44484594-5b5d-4237-993c-ac1e173ad62e@linux.dev>
-In-Reply-To: <44484594-5b5d-4237-993c-ac1e173ad62e@linux.dev>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 2 Feb 2026 10:14:56 -0800
-X-Gm-Features: AZwV_QhgTJZ7rnxODmCU1qhjsI1pWSHh1k-rPTozueyr5OUveeJ2FC59ISanCNo
-Message-ID: <CALzav=d1ZrHrWd-HhZJ8aY6aqxkBcLoet_5+-LL1mOakVTj6Ww@mail.gmail.com>
-Subject: Re: [PATCH v2 02/22] PCI: Add API to track PCI devices preserved
- across Live Update
-To: Zhu Yanjun <yanjun.zhu@linux.dev>
-Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, 
-	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
-	Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>, 
-	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+References: <20260202151050.1446165-1-vincent.guittot@linaro.org> <aYDiFpGT5hEDDFhV@lizhi-Precision-Tower-5810>
+In-Reply-To: <aYDiFpGT5hEDDFhV@lizhi-Precision-Tower-5810>
+From: Vincent Guittot <vincent.guittot@linaro.org>
+Date: Mon, 2 Feb 2026 20:23:30 +0100
+X-Gm-Features: AZwV_Qh1oY-NeA_FmOnmZdDAzImBqngjLBWXIy59t4ga6SGhrkYyYc67DM6knQ4
+Message-ID: <CAKfTPtDjad7aowTQ3UJPi5Qqgzf3q8J=kASa-t3YM4zfjUv3-w@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: s32g: Fix ports parsing
+To: Frank Li <Frank.li@nxp.com>
+Cc: ciprianmarian.costea@oss.nxp.com, s32@nxp.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, Jan 31, 2026 at 10:38=E2=80=AFPM Zhu Yanjun <yanjun.zhu@linux.dev> =
-wrote:
+On Mon, 2 Feb 2026 at 18:42, Frank Li <Frank.li@nxp.com> wrote:
 >
-> =E5=9C=A8 2026/1/29 13:24, David Matlack =E5=86=99=E9=81=93:
-> > Add an API to enable the PCI subsystem to track all devices that are
-> > preserved across a Live Update, including both incoming devices (passed
-> > from the previous kernel) and outgoing devices (passed to the next
-> > kernel).
+> On Mon, Feb 02, 2026 at 04:10:50PM +0100, Vincent Guittot wrote:
+> > No error return is missing after the loop resulting in removing the
+> > ports from the list.
 > >
-> > Use PCI segment number and BDF to keep track of devices across Live
-> > Update. This means the kernel must keep both identifiers constant acros=
-s
-> > a Live Update for any preserved device. VFs are not supported for now,
-> > since that requires preserving SR-IOV state on the device to ensure the
-> > same number of VFs appear after kexec and with the same BDFs.
+> > Fixes: 5cbc7d3e316e ("PCI: s32g: Add NXP S32G PCIe controller driver (RC)")
+> > Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
+> > ---
 > >
-> > Drivers that preserve devices across Live Update can now register their
-> > struct liveupdate_file_handler with the PCI subsystem so that the PCI
-> > subsystem can allocate and manage File-Lifecycle-Bound (FLB) global dat=
-a
-> > to track the list of incoming and outgoing preserved devices.
+> > Change since v1:
+> > - handle correctly the case when there is no child port
 > >
-> >    pci_liveupdate_register_fh(driver_fh)
-> >    pci_liveupdate_unregister_fh(driver_fh)
+> >  drivers/pci/controller/dwc/pcie-nxp-s32g.c | 8 ++++----
+> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+> > index 47745749f75c..b3ec38099fa3 100644
+> > --- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+> > +++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+> > @@ -282,12 +282,12 @@ static int s32g_pcie_parse_ports(struct device *dev, struct s32g_pcie *s32g_pp)
+> >
+> >               ret = s32g_pcie_parse_port(s32g_pp, of_port);
+> >               if (ret)
+> > -                     goto err_port;
+> > +                     break;
+> >       }
+> >
+> > -err_port:
+> > -     list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
+> > -             list_del(&port->list);
 >
-> Can the above 2 functions support the virtual devices? For example,
-> bonding, veth, iSWAP and RXE.
->
-> These virtual devices do not have BDF. As such, I am not sure if your
-> patches take these virtual devices in to account.
+> break and goto is logical equal here. So only need below if (ret).
 
-No this patch series only supports PCI devices, since those are the
-only devices so far we've needed to support.
+Yes it's similar that why I removed it, the goto becomes useless and
+make code less readable
 
-I am not familiar with any of the devices that you mentioned. If they
-are virtual then does that mean it's all just software? In that case I
-would be curious to know what problem is solved by preserving them in
-the kernel, vs. tearing them down and rebuilding them across a Live
-Udpate.
+>
+> Frank
+>
+> > +     if (ret)
+> > +             list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
+> > +                     list_del(&port->list);
+> >
+> >       return ret;
+> >  }
+> > --
+> > 2.43.0
+> >
