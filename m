@@ -1,63 +1,70 @@
-Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020103.outbound.protection.outlook.com [52.101.195.103])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020104.outbound.protection.outlook.com [52.101.228.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEDA2376463;
-	Mon,  2 Feb 2026 15:02:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.103
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E802D2493;
+	Mon,  2 Feb 2026 15:04:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.104
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770044560; cv=fail; b=eD5979H7DmObMM7b5qpNV/4UX5EodhWf54KBoFi7vqu0qwp+1mFEH+3YMWnWWBnAHDmcGaUevyIWDT0sfF1hv4mTUCrrRAcX6NFGeFvQGVkeJG8bAWfmaxzRw18t5X/zOFCI/9Mnzhwic5cXKEVpOj0P84fmthQW0Ddi1RHQw0g=
+	t=1770044657; cv=fail; b=DBvPTJ7HUq6WuWFX40ytqBl58XXyVuE9zxdvfEzVbgFIvaLorqfyXEdbSXkb6VeNAdEo4FglHnhEAFVMMojX8ArIB5fv4fSlZRt+dd0YEpHrxym4YnYXwdjveezxA3L1fw7OdeMeqDWZx2dItGLOGuSG8ELYWIHCVixB95lKs34=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770044560; c=relaxed/simple;
-	bh=VqNPZN7tkrplUCAeBZHCTE3wy6kYcyndIl0pOyHMVlc=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=h1pcb7zFfbSdO8lsYFYlwdA14DcaIK4SfFqDKQSXjhKTRo0eoV2rmmSDk4bgxjW/H4Xo7GfXnkDHeSulwCD4eZISi7FW9mkyTyiNnIRxO/4UdrFHcDKQCU4jEt57zuIlsinnd+3RnpW5EBGtBgtnx07G2aU6lZCAWr5F1JteeKE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=q68ScTIb; arc=fail smtp.client-ip=52.101.195.103
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1770044657; c=relaxed/simple;
+	bh=pWkOvKz/7uHLHj4beIbkt2mctMPUUxc4vWIOxfAYjqE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=KvYmCCxhyjH8jxRGEAxzU4XaMml8vvOFWtZruMxReEtrb5jPs9VkOZhRR0YUhlACefTA7qLiMSj0pZWqa+2szi7ZfP32uHw0kVrO7NR62UlrS7M1n6fL+fLALVvzBpB7FvvQtUtDwMKdMsxS+58WYn6q6rdyK5ITMkrrarcePws=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=mZJxp2gp; arc=fail smtp.client-ip=52.101.228.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="q68ScTIb"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="mZJxp2gp"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lAthkrxrStASsQfFs24uBVKLzyizuksbWW/pnuEGObEAxc6br4slEy4gsTF35KKkK6wsbOtSL6ADU+uCKe6WARF4ho4QMjHYq7Nbn7+GwHTcY1vco070inXRKvcYMz7gI2Y/dQCCrL3X1NUv9EeEfvVDBIFylXo58jbHvi4qh5Si3UrvcG0tlw3fbHiiYIfCJXQ1NFJPERNza187V5qV5g378nyLJywwDHwImePIhGmVRygURqFhQa+noiJavThRAzEEEcgx8ZcWkmUqAt7sV/XFuF8EfGx0DY/rY2jHo7mzNNt/kiFaH/+GpujuotjvCbkJXOhDkG4UaWWaOrzxZg==
+ b=gK7hl5or1ryN2l+g70Bu71ipVa3KYVnpQIaokMW+nGCVuY5ql8tH5vK7mUPAabZm0pyowsgxj66sbkrvhr+XsTs+UZrMZ9aYwrpnPm0lDz0DaI7CYEOTmrVMtPsl3Y/tA6UA+uGMljMycvTnlXv6kE1vxz6os4DqmI0q0eizGhSckn2kpP9XSpxGvMoHfrJBgRM5rJhL26NwvMOf+MQKYbdNridBcTL+m5PTzIx1SYgKk0TwSmnb8+fM2kddQosCtU3dEfEthUEuptujsu99p99BDkbljvx/WgiMGclkZ6qMtV+rFT2ioHRygUTlnBflxWk5d6ElBBUSU+W4l15vzw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=v1OC2BcFcehxojGk0goPcYnKyCOoRkV57C5L6dCOZOY=;
- b=X0DY0Xw8U3k0xVfNycVG/w4k1dPelOOnM9F3f9JOd8Lwmtw1SOJIFuGPa4/oL1tx+QsK1f7+tacYxXrwH0MsnCcyi/Xx1b1QlhBDHFvRFHVRu+rSleKeVTtv0ZCCzQCaHF8rXPIp9k1ZetH0AG01HAHxUCFcGj8O5oMtUHmMSKXbrAYLh0qJRmBXxogJj+4mwtVEqtc/Egvw4XJ2i7omrNla0zSefqISZb7UzA79j0s4XcHqCzO/yHAZda2WcjJIyfUxDIBc/5+bbfbwCxyd/sf+CN9JAZM7RAjvQ1CfeenRTk7Bzd2rAGNEDE3cG77DJGJ2YxXct1Olg5Da8yLPOg==
+ bh=JVbu91/h9cqsX0AOCA8csaVz+fS2HcgU3A+nTWd1w4g=;
+ b=t+q7LHWKgijKcdwh2M3Lz4KK4TxL7Q7vDbwRpuzQkZB7bucsTtRhzI/LeLzCuMIqRY6G4QrExEAS73VMxG2Gk+7RRJvA+c4nWYv3Q9dAvjUUR4gJ5N4f/vmq1Ad8Jtn8HXOzOJnU0mGu7NPNZ92VJrcWBFig+PrSBXsy1xWwfHwTwFf/Zuc1AZOpHlFF+cBjHecRF3TmKh96mShtULKrC2Llsu4GtFZCN5lefiz5CmR4tVQZxi1BT683RJn0FLh/V43ETJilt9UiD2umbJueHo8jqyNpchP63veNpOgc5wUQQf75V5HevKN+JwKyGKyy3jMfFelVFQZkHFXne9XZDw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v1OC2BcFcehxojGk0goPcYnKyCOoRkV57C5L6dCOZOY=;
- b=q68ScTIbKhAtEZRYDCCzyN9jvIU+SlFjc/bep0BL0Lrs2/ApmXZBfsO3eJ+l7wpZ9J2lCecAvfUhaRe7ZONl5ZuGugBSq6E74bIOEuyzq09vbESuWQLHBR8oGwQ0BnxNsrqhtiuqfWGWjH2xgMyKdAcxxqsBxs78DBYudIkk7Lg=
+ bh=JVbu91/h9cqsX0AOCA8csaVz+fS2HcgU3A+nTWd1w4g=;
+ b=mZJxp2gphs1cH7cIjfHfid8nmKqG22bIIMfxZrL48HQQRKfkOvFylMlPn7LoGa9KgOXSbC1G+fYsnBwKivKESg+SWg7vg8ef4bGAlJSBeDZIn07dqYYA9ANzutSKT0yNaU1z3BwfpB4U0KGbFrCAHEIGrxusDH1hrOSSCy9cYNg=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO8P265MB7398.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:3ca::5) with
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by OS7P286MB7748.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:464::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.16; Mon, 2 Feb
- 2026 15:02:33 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9564.016; Mon, 2 Feb 2026
- 15:02:33 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 02 Feb 2026 15:02:32 +0000
-Message-Id: <DG4KFDZNRSYS.28570B2QPH28E@garyguo.net>
-Cc: <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
- <gary@garyguo.net>, <dirk.behme@gmail.com>, <lianux.mm@gmail.com>
-Subject: Re: [PATCH v5 0/2] rust: pci: add capability lookup helpers
-From: "Gary Guo" <gary@garyguo.net>
-To: "Zijing Zhang" <zijing.zhang@ry.rs>, <dakr@kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20260201074248.1629393-1-zijing.zhang@ry.rs>
-In-Reply-To: <20260201074248.1629393-1-zijing.zhang@ry.rs>
-X-ClientProxiedBy: LO2P265CA0502.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:13b::9) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+ 2026 15:04:12 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9564.016; Mon, 2 Feb 2026
+ 15:04:12 +0000
+Date: Tue, 3 Feb 2026 00:04:11 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org, 
+	bhelgaas@google.com, corbet@lwn.net, jingoohan1@gmail.com, lpieralisi@kernel.org, 
+	robh@kernel.org, Frank.Li@nxp.com, linux-pci@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: endpoint: Document pci_epc_set_bar() caller
+ ownership and lifetime rules
+Message-ID: <xzred2tylww7hbwrpov77h337r4x7mtjgdslgvwfgnooqjv6nx@cyo6mfj3v4hv>
+References: <20260131133655.218018-1-den@valinux.co.jp>
+ <20260131133655.218018-4-den@valinux.co.jp>
+ <aX4y3txKcYmb-kE3@fedora>
+ <4erlj426nvmilwfdq5e63ojiqecomcpj35nvmiyw2p5mvifwlt@yspmfxrzmxei>
+ <aX_HfpBoQX4j7mag@ryzen>
+ <sextbnbmsur2xjfoun2l4lr5vekmpzae7sx6or2ird44t6ud6d@yprcz43tpq4p>
+ <aYBt8OSLKC6F3nZG@ryzen>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aYBt8OSLKC6F3nZG@ryzen>
+X-ClientProxiedBy: TY4P301CA0023.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:2b1::15) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -65,179 +72,203 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO8P265MB7398:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5bffab6f-8357-4ef3-5b75-08de626c1823
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS7P286MB7748:EE_
+X-MS-Office365-Filtering-Correlation-Id: eb0474e4-c98c-4334-5be2-08de626c532f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|366016|1800799024|10070799003|7053199007;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|10070799003|366016;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?TEI0UG51QWdoYnRlTmphNVRuNVJDMFBkNFpGeE9kRTc3Q3haVll1MGxjdFlR?=
- =?utf-8?B?emdFWEg2UkN6Qk05YzRpVkNDUU5WVU1QbjBJUUJmWjV0YTJvQmRTaDI1Zm5z?=
- =?utf-8?B?TFZoQlVTUjlzMFNDVkI3bGRUOGhJRlN4d243Z1Z3VVBwNGJZYVpBaXVCaGc4?=
- =?utf-8?B?MjhoaW5kdFIzS0lvTmt2aU44L24yQUR6aVVLWXJBNWpLZzZCc1lmZDg2ZGJy?=
- =?utf-8?B?aW92Z0V3NkhjWEc1b2VzSy9GY05hTEl0R2gwbmNKclJ1VFJ3NmN4cVBGQndu?=
- =?utf-8?B?SEtkcVJ3Nm9nNUlGNUd3OXVLb3g4UVplVVEzNDhhYWtuYmJHT2ZMUHZlT0NT?=
- =?utf-8?B?NVp2Y3FLdTRoVnhNSUJ6dEZPR0YyWStWdVFDYXAyN255WGNtMVdSdUJSajdP?=
- =?utf-8?B?L2VhSmdoblZvMWd3OWc0dHNLcTRGdHJqQlpSd3ExS2lRbm5BM05CUVpKS0wr?=
- =?utf-8?B?ancxUk4vZWVCMzQzR3A0T0lmL1piSVB5ckJvbG82WE55cnhZS0IwVU0xakhB?=
- =?utf-8?B?N2pRNEErbHMwY09Nbmdxdm5kZ21iZGw1NVNqMEgyazFjcURvRitVSFlQQVIy?=
- =?utf-8?B?bFk4OWMyV3M5OFRWenJlTDhwTEE3TVRoU09ab3FYODdQeHgxZy92blo3L0N2?=
- =?utf-8?B?RHVveERuUHdQSzFMRkFtbGo0YlZvR041QnJyaUlmTGYvNElsY0lOelJXYWl2?=
- =?utf-8?B?djZ0ajRuclJPMzRtSEZ1dVRvVWJLTTkrWGdKSjNSYU9oc3FqdXFiM0JxMDVR?=
- =?utf-8?B?b0JqT1NJaTd1bE1WUlZ0NmRQQmpZTXhuN2xwSEhrdXArNGVsekJudFAyTGRv?=
- =?utf-8?B?SCtkU2Q5bTgvUTN1eHRrSm9jb2swOUZTYmNSUFE4bURwai9DdXVHam5yY3Zo?=
- =?utf-8?B?UTdLcUUxaWFHdVdqb3ozTllsV0JxMUZpYlR3WWZaU3I3SlR3WGhtK1IwbTZj?=
- =?utf-8?B?bWgwb0tyRHlpSDVRamkzYTJDVDlXaUZUVXoyOFl1TDhvT2lvYUZ5WWxOMTY2?=
- =?utf-8?B?cS9yNmxreXdlK3dXeFBHVlhXMDJEVlVvRTFrZ01TSjdKNmQyNmhKL0JLa2to?=
- =?utf-8?B?VGsrakhLWjJQR0tIN2M5bW5ORVgyZ0RCL1FtSEZkUEU5aHBCckZCMWk0TEZs?=
- =?utf-8?B?N2RHb3FzNjNQKytXRkNoalFsNWhNNDlkWEJKUWRyck5Jem1vRDdzTjdST1pq?=
- =?utf-8?B?Z2xDT3NodUZXN3VWSjl6M2FFWFRuaVJoR2VnMGFmZ1MwMkl2eW1WNVdDQmZG?=
- =?utf-8?B?U01HNUU4a3E2RVhKQjgxRnNMK2ovdE9kTVZGNHY2Y2h5WE9xb05neUkvaGV5?=
- =?utf-8?B?RHFqVzhRQTVGcUVIc1JicnNtK0lBLysyV3pmT0hDMXhaeVZzeWk2bzEwbXJx?=
- =?utf-8?B?MTRhS2ZkUFlkRWRWTXRhWkxFdzZhcGdma1MwZ2wvQlhPZmo0b2c5MWpRcnI1?=
- =?utf-8?B?clF3WUNiZGMzaERHMTNMbG9FaGZ1TE9pemVwcEVMM1FpVlozZUtocHY0cGZG?=
- =?utf-8?B?QTQ5cGF4Smc2ZmY5SEovTEdyVDVobHBMNGRMdkxpS1B6WVhSam5MMThNR1B4?=
- =?utf-8?B?Z2t1MldRQnVsUU45N0QxRi9SdytPVG5OMDZsUUhDL3FzRis3d0p2YTQxWEJj?=
- =?utf-8?B?enRvWlBVc1MwSGc3VFN1UmlPQ3UwaGNRTVA4Yy9lRmFBMTNoM3NnbWlFQ2dx?=
- =?utf-8?B?NEVzY1N5MGV4Nm5FdjZVTVVYRHRtYVl6ME9oSnpXUUVpZU5DSDNUdmh4djhQ?=
- =?utf-8?B?WWFzU2Q5Qm5tcS84TVdUV21CaGRMVVl3aHdVVW5UVlFkNGNtZEVwRCtjNmIx?=
- =?utf-8?B?eXpWQkFLc3YrSkxYeHRqZlJobUVtN1k4QmN2WkgzLzhSdGYrRnBDSkdZQ0Nu?=
- =?utf-8?B?V1UydFJuVW8vSUMrSExtVW5pRkhGOXphekZnRmhzVEZrTHkyckdqL1p1dFdK?=
- =?utf-8?B?Qy9RSDJJcG1Ra3NUOFh5U0s4KytmdHJxQnVJbW9YUCtZZ2wwRUJ1T1RWR2JM?=
- =?utf-8?B?b0FoYlFVb3lNNlB5dmFmSkc2ZTBLaEc4VnVDOTYwVVNZZGdXenBMVUtNcGdT?=
- =?utf-8?B?VGZyelpDT3JFYUJRV3VLYXUvcjF6ZWJmNTdPcWlpUUtnUmh4Z0FvNkI1NFlr?=
- =?utf-8?Q?1HWA=3D?=
+	=?us-ascii?Q?7GEBPg9Xt+Txuf2A3f83UNDwFF4WaaKIdoAJS5WouxcC2DJiDNQeXh6V1rHq?=
+ =?us-ascii?Q?F1d1cOIYaDke/FQKipzWcKsZJhglpMbXAOnSYy5yZ2faFR5J8s9GDgaZmKeI?=
+ =?us-ascii?Q?8KUbc9ldXxESdY9DFf4/nmVZI0bRuux6VqKGRctVP4IK/jrnd1RGGrIu/QC/?=
+ =?us-ascii?Q?XqRVR4GfrzF5kv2HJEAW9nC1Q6bl3Q4bb/gxA/tzagiXNwV4iyDICR+nUxDR?=
+ =?us-ascii?Q?lzuU+h/nffgiIxGBALtfJ35RlqHm1s8ASvVH3qZqHFePDYgDxf97vT2+8Ih8?=
+ =?us-ascii?Q?7gOi71QCOhpw5iG/7Z+EXuXq/9c+wWFvdjJWaUwyBBZjc2DzoiJlC92TQhBc?=
+ =?us-ascii?Q?kMshvk0eaxs1quhDl4M5UYXEd23jd/R3ekXmbjJ0WXNLQmK9OMYWdDsxuKN4?=
+ =?us-ascii?Q?0L0BzHAdo+Pw1T0ZXbUXvZQiLFnff+StYjcvetpyLPBXH8fPwBscOKNY/lzD?=
+ =?us-ascii?Q?sD6iEx6MBCZkLVJ2/7LEQzmQDHaEVOZGwJ86H6yrDo+9vytymu57dDMFqdIO?=
+ =?us-ascii?Q?exlnbZwFecRMWMDs2Z01FvzQWY6tbTA5TxGaLz0UoUnMfKAVmhsNtQJ5qWHe?=
+ =?us-ascii?Q?dsQ+2Ofpcsu+Vr3SNfmfAvIQHtMP8MKm24Zh4A5t3uN2flIsccgPt6CQCsOi?=
+ =?us-ascii?Q?2VqBGKO9CIlKYDicLOsW+Jvl2CMzunskh28HmtmP6ZPMWby65fPmyYinH7np?=
+ =?us-ascii?Q?lyzxqDWYYSNobTBOed3gNn9xVDJvmruS2nZe/L2/OUWwmdQGWqjCEcPgO6+5?=
+ =?us-ascii?Q?ui9w7WvMHpK2iRYpXB3OlPOekoBewpnpcKiBd4YtMzUrG745BSQySIEVpZzs?=
+ =?us-ascii?Q?y/Rp5g3flNGL/3uWHpMISQPi1CQ76dlkhC/bvJ4gfyZYwoxmxladg80TRLKH?=
+ =?us-ascii?Q?TNot2mlTIxes6v0Ic95is3HECj3ev6frZEw6OxJE734IYUN2Qs528JSuD5ZR?=
+ =?us-ascii?Q?uMFY2Spess21DuMkrFqepnll4ZnwaZOZeLDR2zlH2K6SbyckITDzNKxtjMv4?=
+ =?us-ascii?Q?Oj1kd9o++y+e7qCDxiB+nSoWvsNz+/Q1A5N+YMdq9XDm6owW/AbyhHDxA3IP?=
+ =?us-ascii?Q?i24XbEAfKFe/c2rRNezjEVa29GHdaxP0AKpk922Jtwkfxz+iVYGMPck1Etae?=
+ =?us-ascii?Q?6UMOJKB9HGoQINoy/oRpgVAORiRIMj7GGV8Po2ILVhrB4BDCCGQjuZymE1no?=
+ =?us-ascii?Q?AKHAot6ewg1lG8v7Yg4P7UoZlS/IYS5+2HPiHShFQ0QYm06m/DDYy8w/FbND?=
+ =?us-ascii?Q?3qhRPePcIECbjCUt0P6TqEgxEWqEU8n5oa3O7nU0NF44boCJbo0zq31edW38?=
+ =?us-ascii?Q?KubFSYXiiAGEdpeO6tEO3ds9rPingWqIYAM6AEGLyLQDcQpmAY2loegYdCKN?=
+ =?us-ascii?Q?AMYmBdtrybId3U9QdAIKeGa6GRVB4ZpVI0FV+n6JqLm3v7OiaWS8tmWbygr+?=
+ =?us-ascii?Q?2yCQm8ujSY3AeZTfq8GS8G2KTTEHIcnjfIhA5N1Ch6RIUdq0LayENvv49HFb?=
+ =?us-ascii?Q?iZGmwpFTmSWGNF2Rp5hI6/0VkzPzUQFWZxmFOH/t3jXf+rpZyigrVacDtEuy?=
+ =?us-ascii?Q?Ws5Xz364RJk4/BbvgOc=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(10070799003)(7053199007);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(10070799003)(366016);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ODltak5ySEpuM2haczhXTC9GTmRCUkNHbUZiejhuR1JGK2pSQW5TV3NqRU9n?=
- =?utf-8?B?dm5JVmU2OFAzT2Izem5Tais2QzYyTVJkdDQxNzNKVVlBRHVhQThHUi9zeDJI?=
- =?utf-8?B?L0JsYXlIZnhFL3ZTblVUZmQ0Qi94VmhoOW12elFRc3liQUJCZ0M5UHlIY1Zk?=
- =?utf-8?B?QkJ1dXZnSU9uVDhzZlozZzV6T3UybCsvL0EySmxlTTk2bHJnNmNzUXE4RExt?=
- =?utf-8?B?anBBZ3RDcjhrVHpweWN3UXJOTVdBUkNpOUhsRVZMRXRLcHpESHZSdmVVRGxq?=
- =?utf-8?B?ZnUvdVhJdlpObFNKRnByOUwydVFteGdPNjJJckhSUHl1RnEyUEJvcEVaUWRF?=
- =?utf-8?B?aGFjQWJKU2xvYlF4b2RGOVg5b0VlOFk2cnFBRkRzaG1DYmlQeUJQbXdUU2d4?=
- =?utf-8?B?aHRFL2pZNW5kUnRuMHpYSVFQanFRRHJoa1M2ekp4Qjg0R3NRdHlHSFY3T3Yr?=
- =?utf-8?B?MUd4bmdjWGVLMFZaWUVXWGdjTW05K2lRRUNnYkY1czdzaTdwVGlDUTlrNlZD?=
- =?utf-8?B?VlZIaEZWWms1YmFxcXBTYWxXL2gzS3I2eWdKaThic2NpUmdtYUxTUlAwQUtH?=
- =?utf-8?B?LzNpcFVaSTdqckZDRXdFWktUdUc3L0p0V3ZldkQwWXRhTzFpa3VnVUR6N3du?=
- =?utf-8?B?aEVDYmUwQlA4KzNVNHlvK09oaGRhQ0p1cWFGV0RveTMwaHA5OG5yRkl6TzZv?=
- =?utf-8?B?VklST3JIOE04ZHBzWFA0em1GTlkyVWNqMTZrZHJpZE0zOGlPYm8xZDFiWXhI?=
- =?utf-8?B?aER5SVRqUlN5ZUIwMlpxUjF5ODhVMHQ3OGxMeU9xS0tiZXdSRVF3WEQrNklq?=
- =?utf-8?B?T1Y2TS80RE8wc2FYU3plZEpLTm5NbnJmeUVXak44c1lrQVZFUUZuQzlaQ2t0?=
- =?utf-8?B?dlpXQXNvQkhMeEFQN3lvZXhXcnJidXZKK2tGVzQ4WmFEN2VxaFV1dXlpRTZX?=
- =?utf-8?B?dHljYTVtajZ3bmQ3QnAyamRDM1IyUW9pbnhsRXZRaVBOdG1hMXplSEdVeHFT?=
- =?utf-8?B?d1pWbE5MMHVTdlpCemltdVRqMlBsdDRBUGRLNS85R3VuYjFoK01iRlVKWFNM?=
- =?utf-8?B?eU4xc0grczRkRDBSVW5veEpOcTFCV2JVdi9Pa3lDUEtuL1lqK0xzMS8wSlZa?=
- =?utf-8?B?dW1XMVQ5TlRzK2IyZk9GYnlCZjZrdjlyc3dtWFRoQlNFcDlBQXo4d3FpTjAx?=
- =?utf-8?B?WGtQYlZXWUV1UlZORFJPL2dYeSsyTXhqUnhGOTBUOGptUTdmdmd3Z0VWTEtW?=
- =?utf-8?B?Yk5IaDlYQlhkMkVKNTFXRUd0ZVpleEd5dnNyYW14NnNOWmFzVGNjdS8yRTU1?=
- =?utf-8?B?TEczQ3M2dlpyRGZiM0poN2IwMVViTmRHOUI2a093dzA0WGNMQkNCY3R5UmdJ?=
- =?utf-8?B?VzdLeEFkeFZOWXVvTStwRVV4ZnZvT1RzUTNabEtWOGQ1bVFCcnNLaVQ5aWRW?=
- =?utf-8?B?Z05GU0FVcC9QeFNEcXFDK1lwMlA4OUpad1pWeW1UU29hZ0VRZXRRYms1WEI2?=
- =?utf-8?B?MDNmWUpuZjVQWWNBYXFqOVZlcWE0SGdBNFczY2hjRE9OUlh2VExhYmFrSko3?=
- =?utf-8?B?TjN4K2tnTjJNNFpDMkJOKzV3cXJoemttWlp2MUpVbEFQdjR0RWp2R1JnUHZY?=
- =?utf-8?B?djhIYlRYY1dBTWpnQ3ZwRCtqVnNTb1dBaHBXdkViMXJvVjZvc1ljQVM5Nm9J?=
- =?utf-8?B?aHZDSEN1WnhyRER5djZkZGZvYlJPLzYzelB3THhSdHpwL0RXRWhhVHdxRnNW?=
- =?utf-8?B?ZXYycUhIMEg3bWx0M0JmWDZDWmpDVU00TWlSU0VnZnVsczRoQm1QZ05LZGJz?=
- =?utf-8?B?dTFKY243NHVnWU9qV08yREVEdHNCZ0grYmZQWU4yOEdaTWsyUzhtMUhxUTND?=
- =?utf-8?B?MTgxNzVmUjBpMFR0WVZlUnlxSnFLU0hhMW9XWS9hVzMxdlZTSnFqeTdZMEZZ?=
- =?utf-8?B?dkQwZ1NSS3BvZFozUUZYZG5JSVBSak5ZZ3pBNHpRelBRdU5jZDRwY3JnOGVi?=
- =?utf-8?B?QSsyVnA2MGxnN0o2SUUyOUlUTVNmRG9veFk0UDZoZFRLcGJLblFwaWg3ZmFP?=
- =?utf-8?B?T3F3Ym5zblBVM2R1b2ZwZUZFQ2haUTNHMnFGVUFpdEFNVzViOTlXTk9lbDJi?=
- =?utf-8?B?WW5xeU9uNXRVampCYks0ZVdldXJBZ0tyUllPTjFvNE43YVIxZm1FYXUzVWd6?=
- =?utf-8?B?ckp2NXNmRklEekd6TERTbHJ6S2xrK0s0Z2dRMG1PcGJOZDZnb3J5OFlBRW1V?=
- =?utf-8?B?R3BxWUoyY1dQelZrUTY5U1FuWXpRcDBib0NxNVFqYW0zQ1BJVTFOUW1jT3RW?=
- =?utf-8?B?OENqU0paYTJaTi9oSGlDUmo2Vk04bENBTXovMHNlYjVBZ21zdnYzZz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5bffab6f-8357-4ef3-5b75-08de626c1823
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+	=?us-ascii?Q?7jrKG4rWj01uD2sZzisocT2eyxiigG7pTELAJmD5vSYE6NteEgLuwc0BI1ev?=
+ =?us-ascii?Q?ADZxA8tLZoInBJRipsx2kXsHrvEPhw8Fb9wXxtNfj3uSVzRa1vG+4Akd8aYP?=
+ =?us-ascii?Q?svN9d29hEmfPiCBIRdZrNYDZDhoF2UHFYccMxA+GysRdwxtNOLAAakcrBeaq?=
+ =?us-ascii?Q?82g9qL2djY1InYOiDnQw9NP36fdHPw9n7cdTtVlfRLG1Y1iX5LQ+Bh7v9i2G?=
+ =?us-ascii?Q?ROMrpCIbn+Zs66dlVYWhDLwQpoSIdAXhx8ffBVnTcbdcsRVral0Q+LkaqGSd?=
+ =?us-ascii?Q?i+26crU3iZEWSHCC33AArxXgj6Rd7ucT9WC+grH2OaTG713ihP625WkkzfRX?=
+ =?us-ascii?Q?aquzpI9uEEy6VwbA2ymlHUkXgW9kY/LOmVhyqiz7jUJyEaMfzB5TS8jBES+V?=
+ =?us-ascii?Q?x66bI0Z1Dhe+vCGP+haisWNDK5DEGDeg0kNzojMRtJFa0czKv9VTN11yrjG5?=
+ =?us-ascii?Q?eMlhsgV6hJkrB+njb5clwxiigi3/rJKyVan4Xo9O8QyKXOuS/fO+UkYaZT28?=
+ =?us-ascii?Q?4HQCOeXkyIKaBHGLsyQgv0o4iTM16xBHouVUGeDfroRdSJ9gVTi4JVcO9k9r?=
+ =?us-ascii?Q?Glr/WJTBrhuSzWrpZOdRO9Og5HCa6pRneAnGMXPDMaVW8InrFv1Z8qtxMT5Q?=
+ =?us-ascii?Q?Ay26SL986YfhYz5yJ+a9xpY6VxP6kfCMmwzyD23iFB+KXx6uVxXgKHhzzYq8?=
+ =?us-ascii?Q?TRfTWgd65FALDnh7PBJAo/95b8OzgGsoUCv7fesvxGJtJNewGfdDiN2py6PC?=
+ =?us-ascii?Q?KtuzswhZx8p2CbaNULdRroHQPGj6Tpnrwx/JXe1mTnhFc6nwpTjMgM+s+03Y?=
+ =?us-ascii?Q?QTsq9v5MIZzoAVKtX4mP0oNjgWlJESv1yHeTBm27c+TFF2XOIQjzLju+XeOa?=
+ =?us-ascii?Q?1XozTVt7SaUyErA+kSohet+2fa4qdMR9kJIbl2YI3LSDP6KyX4EqJj4hZAY2?=
+ =?us-ascii?Q?xUjgTEhwgnu9rRBf3tKcayGTkrMrLMEAj8Ho5jZLC2L39TKJ7XAOAw5z3XVu?=
+ =?us-ascii?Q?tApdL7CmCqCcMzp0h5QSu9C2QXuWVZ6OoT6O90PaM0/urtX8XEaaQyuxjQe/?=
+ =?us-ascii?Q?3uu3rzvL+tbmwdkFhMgznkHtTzLalNpfesfLuUZ0dmfISjlw3GBc5Wb8pXdy?=
+ =?us-ascii?Q?qvD7ENOZqEQVynrQdvnPPa+FGArPAazbMx1F8lqWOtP7z9y/Q8s3mDNcrRp7?=
+ =?us-ascii?Q?P4gc/MAoNF92igiDRMeWA7dewSXaeL2odYtNbuyYJDPzVZTQ1JO9z7JLz3Or?=
+ =?us-ascii?Q?aTXcmpV84r2qucWF0VlBKD7YipoGpVAXt4WbTxIv4LRp3k/x3sybo7UlGHcj?=
+ =?us-ascii?Q?ASdt1+ZYMvICkGcUMM5MdEd9Kods95bVFFrXBHThROeMGEKxH8LvCFkplW7y?=
+ =?us-ascii?Q?lKkkqm3IgZ1aTdSLHAVsgGzBOvWgEeWdjfYDy7vWmuRpBcKN6wkdv9Gtz6Ub?=
+ =?us-ascii?Q?1/mdr33cn3f5fUODrkB9mOOWFjYnm/rP1AZ3JiYQofCpCb6WNqVmg1YCG5gc?=
+ =?us-ascii?Q?enQ1k1kO9d5fPSPcqFZxNAYGC030rtjMqYqI1zFNAOUVV6qYpqEXsHi171ow?=
+ =?us-ascii?Q?O0fCBLEa4FvcMv/rNZtePD54Uo3VfGvRGdKZm4aOVB0diD5rpgvPX+Ri18E/?=
+ =?us-ascii?Q?MdJEFQO4WHLepOiXBzAQ/yE0/LFdoh8OHompCWqOT1/AsPeRWveMiMnWGIMQ?=
+ =?us-ascii?Q?+XiurfDIMzhay+M3DvC6tZ110mKTNQtwhOBoB8ioTk1oldzuFWCQufEO38U9?=
+ =?us-ascii?Q?I4ThP9xPIVneXqjLho0ypS3M53qOJ4W32DZJ0zpBgxjnuA1HEA5Y?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: eb0474e4-c98c-4334-5be2-08de626c532f
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 15:02:33.5200
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 15:04:12.5433
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LWKtI80H29d8cqoToi4Kc5A8c2lAvQk2f2b9tflq2XpqGYvvx7ou1s2lSmfRBRFppjsm3QrcvcCtf4VT6JfcMw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO8P265MB7398
+X-MS-Exchange-CrossTenant-UserPrincipalName: sklfcmjrjXU54PliuAU+5sRO4rhbW7Rb407htpWdUGIUMTl4o9xQP3cRbphldFwTv+IEzOKDhkhBGgm1ZcZjnQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS7P286MB7748
 
-On Sun Feb 1, 2026 at 7:42 AM GMT, Zijing Zhang wrote:
-> It introduces `pci::Device::{find_capability, find_ext_capability}`, thin=
-=20
-> wrappers around the PCI core helpers (`pci_find_capability()` and=20
-> `pci_find_ext_capability()`), returning the config-space offset when pres=
-ent.
->
-> In `pci::CapabilityId` and  `pci::ExtendedCapabilityId`, Capability IDs a=
-re=20
-> wrapped as newtypes with `from_raw()` plus a set of common constants.
->
-> An in-tree user is added to Rust PCI driver sample to exercise the new AP=
-I.
->
-> Previous versions (v4)
-> https://lore.kernel.org/rust-for-linux/20260201071450.1614172-1-zijing.zh=
-ang@ry.rs/
+On Mon, Feb 02, 2026 at 10:27:12AM +0100, Niklas Cassel wrote:
+> On Mon, Feb 02, 2026 at 02:59:35PM +0900, Koichiro Den wrote:
+> > > 
+> > > Considering that struct pci_epf_bar lives in struct pci_epf, I think my
+> > > previous idea of doing a kmemdup, seems wrong...
+> > > 
+> > 
+> > I don't think it's inherently wrong. I think it really comes down to what
+> > contract we want pci_epc_set_bar() to imply.
+> > 
+> > When I saw your earlier comment:
+> > https://lore.kernel.org/all/aX019VTWjMlPX8qp@fedora/
+> > I hastily assumed you were implicitly suggesting that there are some
+> > outliers (such as epf-vntb), which led me to think we should document a
+> > single "legit" way to use the API. In hindsight, I read too much into it,
+> > there doesn't seem to be a clearly established contract today.
+> > 
+> > One subtlety if we decide to treat in-place updates as supported: the
+> > existing dynamic update compatibility check in dwc [3] becomes officially
+> > best-effort, because ep->epf_bar[bar] and the passed-in epf_bar may point
+> > to the same object (so comparing against the previous state is not
+> > reliable). In other words, changing barno/size/flags via in-place updates
+> > would be caller misuse, but the driver cannot always detect it.
+> 
+> Yes, I agree, but I think that is fine.
+> 
+> If the caller does a fundamental change to an existing struct pci_epf_bar,
+> between two set_bar() calls... they have no one to blame but themselves.
+> 
+> At least the check will be able to detect when the second set_bar() call
+> is supplied a new struct which does not have the same size / flags as the
+> struct pci_epf_bar that is currently in use.
+> 
+> The same currently applies to clear_bar():
+> If you do a stupid in place update of the struct pci_epf_bar after calling
+> set_bar(), e.g. modifying epf_bar->barno, clear_bar() will absolutely do
+> "bad things".
+> 
+> Perhaps we should update the comment in dw_pcie_ep_set_bar():
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 7e7844ff0f7e..451ba8add157 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -518,6 +518,11 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>                 /*
+>                  * We can only dynamically change a BAR if the new BAR size and
+>                  * BAR flags do not differ from the existing configuration.
+> +                *
+> +                * Note: this safety check only works when the caller uses a new
+> +                * struct pci_epf_bar in the second set_bar() call. If the same
+> +                * struct pci_epf_bar was supplied (i.e. being updated in place)
+> +                * then it is impossible to detect invalid changes to the BAR.
+>                  */
+>                 if (ep_func->epf_bar[bar]->barno != bar ||
+>                     ep_func->epf_bar[bar]->size != size ||
+> 
+> 
+> To make it clear that this safety check is not always possible.
+> 
+> 
+> > > I'm sorry for making you waste time. I did miss that even though pci-epf-vntb
+> > > does not do in place updates of doorbell BAR, it does so for the other BARs.
+> > 
+> > No worries at all, and thanks for digging through the history with me.
+> > At this point, I think there are still two reasonable options (to
+> > summarize):
+> > 
+> > X). Treat the existing in-tree callers (including in-place update) as valid
+> >     usage (i.e. apply [4]).
+> > 
+> >     [4] https://lore.kernel.org/linux-pci/q5e7ydmf4ra6x2mbxwifovgr6p6x5dfnz3hz5psq5ypyabtsvx@oq5ovi4o26yf/
+> > 
+> >     In this case, the downside noted in [4] remains: if a BAR reprogramming
+> >     attempt fails (especially for the long-standing epf-vntb's BAR Match ->
+> >     BAR Match transition case), the previously programmed inbound mapping
+> >     will already have been torn down. This behavior change is inherent in
+> >     making the teardown unconditional. I think this is acceptable because
+> >     if the caller is passing incompatible/invalid parameters, things are
+> >     already going off the rails anyway, and the call site that receives the
+> >     error should never actively use the BAR for any real transactions.
+> > 
+> >     Separately, if we treat in-place updates as supported, some of the
+> >     existing compatibility checks (e.g. barno/size/flags) become inherently
+> >     best-effort, because the previous state may no longer be observable by
+> >     the driver. Addressing that would require additional follow-up work
+> >     (e.g. with doing a kmemdup and holding the snapshot), but this is a
+> >     pre-existing issue, so there is no need to rush fixing this.
+> > 
+> > Y). Define a stricter API usage contract, document it, and then adjust all
+> >     the caller sides later (i.e. apply this v2 series).
+> > 
+> >     The downside here is that struct pci_epf embeds the struct pci_epf_bar
+> >     array, so tightening the contract and fixing existing users would
+> >     likely be awkward.
+> > 
+> > Personally, I'm inclined towards (X) at the moment, mainly because there
+> > doesn't seem to be a firm, shared understanding of the API contract today.
+> > Later, we can do follow-up work for the existing behaviour, which is
+> > already present on mainline.
+> > 
+> > If you still agree with (X), I'll send v2 with splitting [4] into two-patch
+> > series, with an explanation above the unconditional
+> > dw_pcie_ep_clear_ib_maps().
+> 
+> I did not change my mind a second time :)
+> 
+> So I still think X is the way to go.
 
-Also I'd like to mention that Zhi Wang already have a version adding the sa=
-me
-feature on the list, sent before your v1:
+I have just sent v2:
+https://lore.kernel.org/linux-pci/20260202145407.503348-1-den@valinux.co.jp/
+Thanks for the review.
 
-https://lore.kernel.org/rust-for-linux/20260126215957.541180-3-zhiw@nvidia.=
-com/
+Kind regards,
+Koichiro
 
-I'd recommend to work together for the feature rather than creating competi=
-ng
-series.
-
-Thanks,
-Gary
-
->
-> Testing
-> ---
->
-> Build
-> - x86_64 defconfig-based kernel with Rust enabled (out-of-tree build)
-> - `CONFIG_SAMPLES_RUST=3Dy`
-> - `CONFIG_SAMPLE_RUST_DRIVER_PCI=3Dy`
->
-> Runtime
-> - QEMU x86_64 (i440FX) with `-device pci-testdev`
-> - QEMU x86_64 (q35) with an NVMe device
->
-> Changelog
-> ---
->
-> v2
-> - Run rustfmt on samples/rust/rust_driver_pci.rs to fix rustfmtcheck.
->
-> v3
-> - Base on pci/next.
-> - Add `CapabilityId`/`ExtendedCapabilityId`, switch `find_*capability()`
->   to use them.
-> - Document the common ID constants.
-> - Update the sample to use typed IDs and exercise the new helpers.
->
-> v4
-> - Minor doc/style nits.
-> - Use early-return style in `find_*capability()`.
->
->
-> v5 (current)
-> - Fix sample build by using `pdev.as_ref()` for `dev_info!`.
-> - Use `as _` in constant definitions.
->
-> Zijing Zhang (2):
->   rust: pci: add capability lookup helpers
->   samples: rust: pci: exercise capability lookup
->
->  rust/kernel/pci.rs              | 150 ++++++++++++++++++++++++++++++++
->  samples/rust/rust_driver_pci.rs |  31 +++++++
->  2 files changed, 181 insertions(+)
->
->
-> base-commit: ff0e2f679ab0de50a2e9e88fabc1026bc3be04ba
-
+> 
+> 
+> Kind regards,
+> Niklas
