@@ -1,178 +1,229 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012010.outbound.protection.outlook.com [52.101.66.10])
+Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BF7D288C86;
-	Mon,  2 Feb 2026 06:40:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.10
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770014443; cv=fail; b=YEUc98rhs6YCot6B5R0KDFwrwofTWlvw0AzRzL+Ba+eyDYUJOO/l1Bq+yNGqw7R6Qb9Lv14SIK8j7gKhpjmvGGSYAX/Xk81kgDUfGx3BIL0+JIvJpuRpnILEFpShLiKWf8fy5CmVF2zTjPhvgOkEuFheemFbsX58MJwSBkp/ttY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770014443; c=relaxed/simple;
-	bh=lX7lUf2W89HWGXPSGxOnpQqGjuN15WWjzZeYaWAF8lk=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eBDZJ+dopJdO3QzVulqM1H7Mu398s2FCKCFSMFhM2znOL1ZHkkY7Ron9bsTDtNEIwL6hpTESTM+2r7/wrUc7F/lW+LsBO3eGkQ6In6+F3/+Y3mTM6t2LoYyT8hNl3qc1ELlad1xIJxCVZUOOcPyZ7r4aUTfXfsgCEuNuXdsgxU0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=de.bosch.com; spf=pass smtp.mailfrom=de.bosch.com; dkim=pass (2048-bit key) header.d=de.bosch.com header.i=@de.bosch.com header.b=EeRw7hLs; arc=fail smtp.client-ip=52.101.66.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=de.bosch.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=de.bosch.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=de.bosch.com header.i=@de.bosch.com header.b="EeRw7hLs"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Msoj4Htltj6CL097t7EVjsgR+j2iecomrVae2FzptSe5p7aOmSOax7VFli/L8vVCcpQVdbWdgFSE5Fxk05K2wotaGpN/4JI3BRM1csj81OVUzdGO6IT/1K4e/LySy1+PIS7Br31dKthXSaT4vM+BwtYf/mekXp+COfMgNPUmXP2s3aiR18UwWwsRwXb7vmYPx3txbWQmMaJNbzCXtnJ3etfIx73H54av5V0C+a5HAdkxyorC/64LlZbqGCpimVlg3MNJ3dewfKY+RPZQpTtqpBCX7QmjWhd+fmTS+webRxI+vEvxyubrZ7ffRKyqdquUwxP4if7iKTlBAMbk1EPjmA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=itfPUBV6R9ZUVdmA3EgMcpE2PW2f+D3sztOy5hwKet4=;
- b=BlXFFkFnd790PW8DvsqKRtDx8BrAvIGgXH++8cSN19haRTyG7f2JJkC6/YM6qKAuviok1QF71bNK+z2JGaVXtlqIMj893EOepTKJbY/3skdGgzd6mUpwS5+nQySPDeyAF50uKloTnINgRltLtujn+YTzDf4kzmEKKNFl5eRgSphM+FWcHqEIyWEkArHumwLxVGltkxpcsKBGFB31WEtZQs0A1E4Kpz4e5dzxEffSy4fCMcGToiijwi8sObKbXnX0bgbLO8iMqvL/HuAyJTsrtGHyRgwvEYI6kl1cBU6jt+WMNgxXIIPpKlKwmQbUWvwXRotHbeqoL4LcuN9uozfvEg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 139.15.153.206) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=de.bosch.com;
- dmarc=pass (p=reject sp=none pct=100) action=none header.from=de.bosch.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=de.bosch.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=itfPUBV6R9ZUVdmA3EgMcpE2PW2f+D3sztOy5hwKet4=;
- b=EeRw7hLsH32zIWrLHXB6cyQJpTHnsmTAubu+VGVx9lu0v2Dt08Wtl+rg7c/Yqd91+oLlU56hd//Unb4F4/JbN8A+NIAtBkfLyxrGz5kr1VjAlatoGDessxFPxDQNmKw7hmwlIqz0JE9nAYzitxX17cILT7x5yRJd7WzuLqtsPUJphQWh1OrnxWn4orOzWCoi+49WBVWIH0PxS2Sp0Atp+u4n3ake3Zc9jhuoVkNI7ITDyRBjw1HZzsClfaAiCGHpusn2PAMBYWKt1RvXc+jTZ7o+/Uj42A4WTCw5z5v+A5dUNvJ7FrN5yZw49fDqWfOTBEbvwhhzNlXSUS9wH6Sj6g==
-Received: from DUZPR01CA0192.eurprd01.prod.exchangelabs.com
- (2603:10a6:10:4b6::15) by VI0PR10MB9768.EURPRD10.PROD.OUTLOOK.COM
- (2603:10a6:800:338::9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.16; Mon, 2 Feb
- 2026 06:40:36 +0000
-Received: from DU6PEPF0000A7DD.eurprd02.prod.outlook.com
- (2603:10a6:10:4b6:cafe::50) by DUZPR01CA0192.outlook.office365.com
- (2603:10a6:10:4b6::15) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9564.16 via Frontend Transport; Mon,
- 2 Feb 2026 06:40:36 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 139.15.153.206)
- smtp.mailfrom=de.bosch.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=de.bosch.com;
-Received-SPF: Pass (protection.outlook.com: domain of de.bosch.com designates
- 139.15.153.206 as permitted sender) receiver=protection.outlook.com;
- client-ip=139.15.153.206; helo=eop.bosch-org.com; pr=C
-Received: from eop.bosch-org.com (139.15.153.206) by
- DU6PEPF0000A7DD.mail.protection.outlook.com (10.167.8.37) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9587.10 via Frontend Transport; Mon, 2 Feb 2026 06:40:36 +0000
-Received: from RNGMBX3003.de.bosch.com (10.124.11.208) by eop.bosch-org.com
- (139.15.153.206) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.35; Mon, 2 Feb
- 2026 07:40:35 +0100
-Received: from HI7-C-0001H.de.bosch.com (10.34.220.0) by smtp.app.bosch.com
- (10.124.11.208) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.35; Mon, 2 Feb
- 2026 07:40:34 +0100
-From: Dirk Behme <dirk.behme@de.bosch.com>
-To: <rust-for-linux@vger.kernel.org>, <gary@garyguo.net>, <dakr@kernel.org>
-CC: <dirk.behme@de.bosch.com>, <ojeda@kernel.org>,
-	<linux-pci@vger.kernel.org>, <kwilczynski@kernel.org>, <bhelgaas@google.com>
-Subject: [PATCH] samples: rust: pci: Remove some additional `.as_ref()` for `dev_*` print
-Date: Mon, 2 Feb 2026 07:40:01 +0100
-Message-ID: <20260202064001.176787-1-dirk.behme@de.bosch.com>
-X-Mailer: git-send-email 2.48.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB862DE1FA
+	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 06:41:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770014509; cv=none; b=XQCMJ7bjfB2tw9b6P7QD/aFUN0PSehw0ydFDFzF+uN0Egxnir7CBwdBTLUHTNyuZpkvIZcFnX4EQ60mjYDD3jhau8XUwCg6ASVl06r5cRqX04QA9F6MH/aL5dwMsHb/WXWtL60I3HLaQpdtEOOsS1KVNdKvvYK0levGHvJ089qA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770014509; c=relaxed/simple;
+	bh=pEl4lzQJqDFESQElcqCFr1oHYlbeseZhtSTlKwiU+Xs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=udYxS55LvOEP/11jo79yLCw5dNElhDiMhVXmYcnV3TjfH2/by7gOag9W6GHv7T91W3ohGmunMny11g0YJEIXn0DqkJd+Wi7GbRUSgqmgjVZ/ct5XwXKIx3VKvLSUBQgJdog2QPsAmHKpenlQYWKsIamWuD3pZmIpMSoafxeUl44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
+X-ASG-Debug-ID: 1770014494-086e2306f850df0001-0c9NHn
+Received: from ZXSHMBX1.zhaoxin.com (ZXSHMBX1.zhaoxin.com [10.28.252.163]) by mx1.zhaoxin.com with ESMTP id K2fM5KilnLxEKCqs (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Mon, 02 Feb 2026 14:41:34 +0800 (CST)
+X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
+Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX1.zhaoxin.com
+ (10.28.252.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Mon, 2 Feb
+ 2026 14:41:33 +0800
+Received: from ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85]) by
+ ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85%7]) with mapi id
+ 15.01.2507.059; Mon, 2 Feb 2026 14:41:33 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
+Received: from [10.32.64.5] (10.32.64.5) by ZXBJMBX03.zhaoxin.com
+ (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Mon, 2 Feb
+ 2026 14:00:53 +0800
+Message-ID: <1096398c-e883-4232-91f6-836fc508092d@zhaoxin.com>
+Date: Mon, 2 Feb 2026 14:00:55 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DU6PEPF0000A7DD:EE_|VI0PR10MB9768:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7650df8d-fe0f-4780-e6b8-08de6225f921
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|82310400026|1800799024|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?jEVqxWAn4sDyvswL3fSfvuIww7xyfcyMMY2nGrXXl8//DRAkv3c0R359YsMC?=
- =?us-ascii?Q?bTnHpDT0ZN4lTGJEwFtWdXEEEkPR9ZT1C+AK/BdUuoTyI9WzLBFhz4zy4Pog?=
- =?us-ascii?Q?Xu6j0RSQ/vrOwFlhSzYkvrKBD3MvrjetguYXE2Aq2pKQFZH13hzZzFIOTlw8?=
- =?us-ascii?Q?B3P3fw2gEfO6V2wbSGBwjL0KW9LqeVwSzCCthcr+C65OVEdDLimq/1wLGs/T?=
- =?us-ascii?Q?sZF/ApJpSOn22bRCukVmM+rXQAEFWMBsO5+35z7CTDXiVizIn5FYxJgZbokJ?=
- =?us-ascii?Q?sKXKGVpD4Zcx0hCGFVOneXTlDotp1MLPqVUAAVKFB4eEeSdDwafUjWqCwmOP?=
- =?us-ascii?Q?5//IsJ3dprcojXo3I3XkNHrIBP2bM2WQV9WN46PU4Bfztmks+OQYCVRW1swb?=
- =?us-ascii?Q?OCQC+BtwOx9Eltcod4HyGwbySdR3oFcWzpyUmzQNxB+Y37UWdd92X6YrWlqP?=
- =?us-ascii?Q?Er0lMxc71n6goJxLv0+oil/8YEgwG5lvxtmBWMzeqwaiPZ66DlPWzPtL+vj9?=
- =?us-ascii?Q?Tswk8l+oFvBwQuR6bIdwPdMoOnyKnaRdbSO72IgjjEsc/0wvmvC6XwIuwu+f?=
- =?us-ascii?Q?kcKTYfpmAXczUIg7houdLrPJWOIdBoBI34Hy6KY9XAbOE8ZeUOrpgvqFpT6n?=
- =?us-ascii?Q?mnP0nB8NUaKZaledUqUKAEnHuQVBoelLjFPkxV/E/Qm4Wx9C9bgSMA8AdErQ?=
- =?us-ascii?Q?Fc4JN8d+sJoczYMtlVtxNSG1rgxvce76ZiAnIWGAagwTEsm/a14+zPcnSREd?=
- =?us-ascii?Q?A3ID4qQnHimKkEwTqKT9t2kZ58ZeN1T7D6WmHaxtDg9/TCqmF+Sr0iX2lJuE?=
- =?us-ascii?Q?+kPZ6O8Ylv0ceZDI9eKsgRtR086Q5GGSIwTy8Ts62U8I3dz4+b9J/7+bULum?=
- =?us-ascii?Q?q5onwnLQ+//fp8CwKYWeZQmU+RgZRbxG1qhLAlj4sgkbfwzKtpnjxxokj6Lh?=
- =?us-ascii?Q?NWEG4ltDZ1YM6dKXh9cx+apI4hFeV3hKJdD2QBManb+SK95Zi9ntPMe+xXNc?=
- =?us-ascii?Q?uGLe3vNm0qQ7Nq61IBdVMoIvSIY4SuyVLGIS7z+dLqyg8I/Zj8zFaM7P2T4S?=
- =?us-ascii?Q?KMS2gdpRIrlrz/PGSts5q5bi3uMCiKZBoeUrsfgIJ4i1LiQRsjYlQmcCgu/n?=
- =?us-ascii?Q?uMgmCNzxeGW+5HQKl49BW449eK42YcaZewie4nOyO7OPfARztQRd0IY7qH4T?=
- =?us-ascii?Q?4wi0sBhgFonWPn7GxFKn3e08E8lAoS8vYB8cl8SmwCIAO3dh2Anr7cac9zAL?=
- =?us-ascii?Q?jkWh9xPpinsX9ny9JyjmV6AdT+wEm0wT743K9LO3m3YSwlK3MnQ3wjQsRuH6?=
- =?us-ascii?Q?K2TJ+SXmu3OkR02GRcXcDa7KgQmeuX7USfXKm2xgGW9+UiGKEIOUeIS67CSI?=
- =?us-ascii?Q?j//XP7L5g2TayYkcY2h5z3ISaC075G2N77gtA+jDockOUrH3vlbkz7XWXs9y?=
- =?us-ascii?Q?7Gd5cNkgGSwWiLuCfo97RGPQuskx+PuoHl9JnlsHkcT1jWDTsRhCaykjrpQI?=
- =?us-ascii?Q?cyhvtHqw82aQQAcOz+OSn3YNalqW+ceDFfrsw1hpLLWaJM29GFzBLuW30X9E?=
- =?us-ascii?Q?cb6OezobXaDc/dN40lkUhgX3sz4gmb8EkYFy0x9dP8jXcn8LFSzTa1g8AzaC?=
- =?us-ascii?Q?IwDpUkzCfQvoGD2mBMSbZOel5qgXWTJGgq36FZb9DgZwRYEqBdtquV77lQ14?=
- =?us-ascii?Q?+DuUjA=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:139.15.153.206;CTRY:DE;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:eop.bosch-org.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700013)(82310400026)(1800799024)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	6AL8A90bJLqwy9GwELFkYku5PquYgHlE2KV2e8sTx4di6VqKHVv/dzqxZ8HBBWUPBSm9qnbI17euT9xLzmHvuZDO+L2pRQxd0BpjmA7JeMw7cytzCM//4RpAvSM7ezJMJgOqOvDkv4o/41H/DC8s4ReS2b6rv1wCzzgjmgrwnAI+yX7D6Zgz2jHdqXUZbRd5FtUHcON8QehmPgZVHne05E+aGf7mlYRwZ9YB9LrO4YcMBr/jqdv7iXujATSno6kI/TANoLxhMb11PfOTjAnrUWAbN/Vfgp7+AEvKQxLlO+bMJPPyoGtnEbmYnYkElI50M1fcdLDeerVEeRx74oTEYpCixtrDkoTJ1RZJgeADxUHIyPXWC1GTxy8qoU7fgUhv0TpbsJKQEGKz1sP1a63NgZe0jiwCCOnDoQUF5JY3PgSYVRY14cyfamFe+Fez88xX
-X-OriginatorOrg: de.bosch.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 06:40:36.5116
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7650df8d-fe0f-4780-e6b8-08de6225f921
-X-MS-Exchange-CrossTenant-Id: 0ae51e19-07c8-4e4b-bb6d-648ee58410f4
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0ae51e19-07c8-4e4b-bb6d-648ee58410f4;Ip=[139.15.153.206];Helo=[eop.bosch-org.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DU6PEPF0000A7DD.eurprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR10MB9768
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
+To: Lukas Wunner <lukas@wunner.de>
+X-ASG-Orig-Subj: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
+CC: Bjorn Helgaas <helgaas@kernel.org>, <mahesh@linux.ibm.com>,
+	<oohall@gmail.com>, <bhelgaas@google.com>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>
+References: <20260123202140.GA84703@bhelgaas>
+ <3af9f754-d282-485c-a3f2-49a230bfe143@zhaoxin.com>
+ <aXydEn_lAbNROQKy@wunner.de>
+From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
+In-Reply-To: <aXydEn_lAbNROQKy@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ ZXBJMBX03.zhaoxin.com (10.29.252.7)
+X-Moderation-Data: 2/2/2026 2:41:32 PM
+X-Barracuda-Connect: ZXSHMBX1.zhaoxin.com[10.28.252.163]
+X-Barracuda-Start-Time: 1770014494
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://mx2.zhaoxin.com:4443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 7328
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: -2.02
+X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.153923
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
 
-The commit 600de1c008b2 ("rust: pci: remove redundant `.as_ref()` for `dev_*`
-print") removed `.as_ref()` for `dev_*` prints. Nearly at the same time
-the commit e62e48adf76c ("sample: rust: pci: add tests for config space
-routines") was merged. Which missed this removal, then.
 
-Signed-off-by: Dirk Behme <dirk.behme@de.bosch.com>
----
 
-This is based on next-20260130
+=E5=9C=A8 2026/1/30 19:59, Lukas Wunner =E5=86=99=E9=81=93:
+>=20
+>=20
+> [=E8=BF=99=E5=B0=81=E9=82=AE=E4=BB=B6=E6=9D=A5=E8=87=AA=E5=A4=96=E9=83=A8=
+=E5=8F=91=E4=BB=B6=E4=BA=BA =E8=B0=A8=E9=98=B2=E9=A3=8E=E9=99=A9]
+>=20
+> On Wed, Jan 28, 2026 at 06:07:51PM +0800, LeoLiu-oc wrote:
+>> Without this patch, PCIE devices may not be usable and could even cause
+>> more serious errors, such as a kernel panic. For example, the following
+>> log is encountered in hardware testing:
+>>
+>> list_del corruption, ffff8881418b79e8->next is LIST_POISON1
+>> (dead000000000100)
+>> ------------[ cut here ]------------
+>> kernel BUG at lib/list_debug.c:56!
+>> invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+>> ...
+>> Kernel panic - not syncing: Fatal exception
+>=20
+> This should not happen.  Which kernel version are you using?
 
-I don't think its worth a `Fixes:` tag as both ways work and this is
-an optimization / clean up only.
+The kernel version I am using is 6.18.6. This patch has already been
+included.
 
- samples/rust/rust_driver_pci.rs | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+The complete log of the kernel panic is as follows:
 
-diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_pci.rs
-index 4dfb8a6a4707..d3d4a7931deb 100644
---- a/samples/rust/rust_driver_pci.rs
-+++ b/samples/rust/rust_driver_pci.rs
-@@ -73,19 +73,19 @@ fn config_space(pdev: &pci::Device<Bound>) {
-         // TODO: use the register!() macro for defining PCI configuration space registers once it
-         // has been move out of nova-core.
-         dev_info!(
--            pdev.as_ref(),
-+            pdev,
-             "pci-testdev config space read8 rev ID: {:x}\n",
-             config.read8(0x8)
-         );
- 
-         dev_info!(
--            pdev.as_ref(),
-+            pdev,
-             "pci-testdev config space read16 vendor ID: {:x}\n",
-             config.read16(0)
-         );
- 
-         dev_info!(
--            pdev.as_ref(),
-+            pdev,
-             "pci-testdev config space read32 BAR 0: {:x}\n",
-             config.read32(0x10)
-         );
--- 
-2.34.1
+[  100.304077][  T843] list_del corruption, ffff8881418b79e8->next is
+LIST_POISON1 (dead000000000100)
+[  100.312989][  T843] ------------[ cut here ]------------
+[  100.318268][  T843] kernel BUG at lib/list_debug.c:56!
+[  100.323380][  T843] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+[  100.329250][  T843] CPU: 7 PID: 843 Comm: irq/27-pciehp Tainted: P
+    W  OE     ------- ----  6.6.0-32.7.v2505.ky11.x86_64 #1
+[  100.340793][  T843] Source Version:
+71d5b964051132b7772acd935972fca11462bbfe
+[  100.359228][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/0xc0
+[  100.365877][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48
+c7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8
+a1 43 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9
+ff 0f 0b
+[  100.385158][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
+[  100.391024][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX:
+0000000000000000
+[  100.398781][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI:
+ffff8897df5a32c0
+[  100.406538][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09:
+0000000000000003
+[  100.414294][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12:
+0000000000000000
+[  100.422050][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15:
+ffff888116507c28
+[  100.429807][  T843] FS:  0000000000000000(0000)
+GS:ffff8897df580000(0000) knlGS:0000000000000000
+[  100.438511][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  100.444891][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4:
+0000000000570ee0
+[  100.452647][  T843] PKRU: 55555554
+[  100.456017][  T843] Call Trace:
+[  100.459129][  T843]  <TASK>
+[  100.461898][  T843]  ice_flow_rem_entry_sync.constprop.0+0x1c/0x90 [ice]
+[  100.468663][  T843]  ice_flow_rem_entry+0x3d/0x60 [ice]
+[  100.473925][  T843]
+ice_fdir_erase_flow_from_hw.constprop.0+0x9b/0x100 [ice]
+[  100.481078][  T843]  ice_fdir_rem_flow.constprop.0+0x32/0xb0 [ice]
+[  100.487284][  T843]  ice_vsi_manage_fdir+0x7b/0xb0 [ice]
+[  100.492629][  T843]  ice_deinit_features.part.0+0x46/0xc0 [ice]
+[  100.498571][  T843]  ice_remove+0xcf/0x220 [ice]
+[  100.503222][  T843]  pci_device_remove+0x3f/0xb0
+[  100.507798][  T843]  device_release_driver_internal+0x19d/0x220
+[  100.513667][  T843]  pci_stop_bus_device+0x6c/0x90
+[  100.518417][  T843]  pci_stop_and_remove_bus_device+0x12/0x20
+[  100.524110][  T843]  pciehp_unconfigure_device+0x9f/0x160
+[  100.529463][  T843]  pciehp_disable_slot+0x69/0x130
+[  100.534296][  T843]  pciehp_handle_presence_or_link_change+0xfc/0x210
+[  100.540678][  T843]  pciehp_ist+0x204/0x230
+[  100.544824][  T843]  ? __pfx_irq_thread_fn+0x10/0x10
+[  100.549747][  T843]  irq_thread_fn+0x20/0x60
+[  100.553978][  T843]  irq_thread+0xfb/0x1c0
+[  100.558038][  T843]  ? __pfx_irq_thread_dtor+0x10/0x10
+[  100.563130][  T843]  ? __pfx_irq_thread+0x10/0x10
+[  100.567791][  T843]  kthread+0xe5/0x120
+[  100.571594][  T843]  ? __pfx_kthread+0x10/0x10
+[  100.575997][  T843]  ret_from_fork+0x17a/0x1a0
+[  100.580403][  T843]  ? __pfx_kthread+0x10/0x10
+[  100.584805][  T843]  ret_from_fork_asm+0x1a/0x30
+[  100.589384][  T843]  </TASK>
+[  100.592237][  T843] Modules linked in: zxmem(OE) einj amdgpu amdxcp
+gpu_sched drm_exec drm_buddy nft_fib_inet nft_fib_ipv4 nft_fib_ipv6
+nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct
+nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 zhaoxin_cputemp
+nf_defrag_ipv4 zhaoxin_rng snd_hda_codec_hdmi radeon rfkill
+snd_hda_intel snd_intel_dspcfg irdma i2c_algo_bit snd_intel_sdw_acpi
+ip_set i40e drm_suballoc_helper nf_tables drm_ttm_helper pcicfg(POE)
+snd_hda_codec ib_uverbs sunrpc ttm ib_core snd_hda_core
+drm_display_helper snd_hwdep kvm_intel snd_pcm cec vfat fat
+drm_kms_helper snd_timer kvm video ice snd psmouse soundcore wmi
+acpi_cpufreq pcspkr i2c_zhaoxin sg sch_fq_codel drm fuse backlight
+nfnetlink xfs sd_mod t10_pi sm2_zhaoxin_gmi crct10dif_pclmul
+crc32_pclmul ahci crc32c_intel libahci r8169 ghash_clmulni_intel libata
+sha512_ssse3 serio_raw realtek dm_mirror dm_region_hash dm_log
+dm_multipath dm_mod i2c_dev autofs4
+[  100.674508][  T843] ---[ end trace 0000000000000000 ]---
+[  100.709547][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/0xc0
+[  100.716197][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48
+c7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8
+a1 43 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9
+ff 0f 0b
+[  100.735491][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
+[  100.741367][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX:
+0000000000000000
+[  100.749137][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI:
+ffff8897df5a32c0
+[  100.756909][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09:
+0000000000000003
+[  100.764678][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12:
+0000000000000000
+[  100.772448][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15:
+ffff888116507c28
+[  100.780218][  T843] FS:  0000000000000000(0000)
+GS:ffff8897df580000(0000) knlGS:0000000000000000
+[  100.788934][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  100.795329][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4:
+0000000000570ee0
+[  100.803099][  T843] PKRU: 55555554
+[  100.806483][  T843] Kernel panic - not syncing: Fatal exception
+[  100.812794][  T843] Kernel Offset: disabled
+[  100.821613][  T843] pstore: backend (erst) writing error (-28)
+[  100.827481][  T843] ---[ end Kernel panic - not syncing: Fatal
+exception ]---
+
+The reason for this kernel panic is that the ice network card driver
+executed the ice_pci_err_detected() for a longer time than the maximum
+waiting time allowed by pciehp. After that, the pciehp_ist() will
+execute the ice network card driver's ice_remove() process. This results
+in the ice_pci_err_detected() having already deleted the list, while the
+ice_remove() is still attempting to delete a list that no longer exists.
+
+> There used to be a use-after-free on concurrent DPC and hot-removal.
+> It was fixed by 11a1f4bc4736, which went into v6.11 and was subsequently
+> ported all the way back to v5.10-stable.
+>=20
+> I suspect you may be using a kernel which lacks that fix.
+>=20
+
+From the above analysis process, it is clear that this is not the same
+issue.
+
+Yours sincerely,
+LeoLiu-oc
+
+> Thanks,
+>=20
+> Lukas
 
