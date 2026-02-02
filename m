@@ -1,72 +1,62 @@
-Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021087.outbound.protection.outlook.com [52.101.95.87])
+Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021116.outbound.protection.outlook.com [52.101.95.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EB693207;
-	Mon,  2 Feb 2026 14:07:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.87
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29373C0C;
+	Mon,  2 Feb 2026 14:13:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.116
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770041256; cv=fail; b=qKlHtQCQYqhnUCoRlZl2ciTTm5eq2IyMishwA72okHMK21vn1XzSV5APGILjBUsm9Wpv/qdItcsGs4EWYYbpygKwXWyhpetVqeLdNhvEJT7rRWp8+NPoA/ZIFYKRN+LNWDkn+l3nOiPWAdfFxftJLiYo0ySVWT5L0dlUa2+KBq4=
+	t=1770041594; cv=fail; b=YaJoXwTtnHLtjziepug4oPuNpxt39osZjU+AODCam6kgKqu7srabKxGN0931+8RkyWZe6nuwGQ/Q4bmNbKbZBlQwatYxvuQQ5VY0Hu0zZ3/7pmpShIRee7KhAB+9pvvb5c68yXcGPckZdhz8klIV1CYq0zTYlEplVoCBsnVP630=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770041256; c=relaxed/simple;
-	bh=ZYFiguBXOc8+ScEWIyqjb1IqKvyjqoQZfGvgtd+4vbg=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=bp6B4U2kYwjsuc4YCZ24c1jf2JZhpJAGPlw0/dkvi2Ng0zyozjKkt65soP3ptsTq1JMiZrk4koZRYeQtwjorNmTYJQGhKSpOuObbWnlACRsEXScaR99EGZE2Soxsp8B3Rjq8fxC+B+AZ+9IAuJt/KDbZebWsnhBvTfm7Eeo99Os=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=vv154Lkm; arc=fail smtp.client-ip=52.101.95.87
+	s=arc-20240116; t=1770041594; c=relaxed/simple;
+	bh=PTLdB4z+3zQP2vmmYsqtE+vkPiC5iEuSDVMB6LzqSew=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=i1qrgLkOGzzsJGhbGCH5M1pxuTHIFTnwoumgqttxjZN8iEaOXad60tBpcthnGni92Ymv9gYQIF1Fm3psB00qNnEvpygjle1IjGJQYWOWiYtT+vkx3H7gHskvp4h5SxWmChUtSA0Xq3R0FIDvLw66xtVWpFbJIdMdNKM8n5075ZY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=YEhMe6zZ; arc=fail smtp.client-ip=52.101.95.116
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="vv154Lkm"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="YEhMe6zZ"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Lu7RLth9C6a4FILEMB54W8mkrAO0yDNDmYKrJyck5WaMtMDCJXM1Np5RyiAeW+3jXfcjRcf9wxa7jq/fCOb9mnVBfyyJvqeHyKQOX5hIiC3PQc737w8ULVpkTc8iL0wPY0opIv66p1kDP98uyazOymtwTKPauXPh/zuPvgXuIAd1xTgT3a/+PXFj/guaWFuYMrbNs5+4la2FCO5GTuLEDwmGXj+t8SmEZ579hhK6LM8K6fECKzFd6habC4QlGb9JT/lRHMMmTZNfnzjcUs8wp7Tc8c6Xpbf5LbwfXRbhRZvzhsc0f6xlCSdWwb/RKu2rmgSBTefc9M0aGxFYHuVP/A==
+ b=CJE3brddKHC271VbYwmQFsZ/Fd/UGRCokIj6I1f44OrkAmNJsNNa1xwZ6WbPZbwpTzwqjiTCBds2EUHTSXanoGYwLIIlp02Cwd3cLknYZF3oQJHvqe/mE8fLKanviRbm+EsFeX2A5lIqM7HpuoJwd9EmbM6emxE797zDFAHnWhTmHehzTNOJ9j1llEUzIaK4Xjb0y5fMbDLnGF5BtsddnBQkNHFEvrZ5dTw9a13kupDgP9CxnEiku3nyVRrF2FyYkaFc+ycSKM6APiW8gRQg5lZlEjtX4RV+Po/ETO+5H44Y0tfZRv+a1xzBg9yK5gVUQqeKtMKjQpx0O2hDh2iXeg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HwsGcBs0sGoafAoVijwKGG5O8E0mdB035irkYN2Lg8E=;
- b=uADqNSYDUbdCso1MeSZEf9xpUO0uyXcDOfEjkR2B1RCDSEfQH3W/3uam7HeUFTjxu1T8tvjtZ6pGENsrOwDJLcPvMnad5tjnmRNDl5nM8shQ4NfgYyKPFiLLfcrzVz+OkOuDbGwr/CWX1qJRl6C2zpAoUXIcwWVHrDjLDbQfFXIA82Ak8XMVbhEiOLyBGoyYNpyqszbBK0QzAvzJThl+qCQ1F0Hv3D/yLlZ47zXbDeZqatg4EjEVt9VGcaHiYVjpWuBja4V3XL/+hamkIcRbCp1OGksMBCnW2FWT2n8agIJrXFD9Bs1IXa0hG4HporxPrFOSZ481fFhD185XAdkqAg==
+ bh=aaaKjn/1yEN0PUwy/v2gts1JwYagkwCHFhwmQ0JzX+A=;
+ b=ncbXQicvWDugXTe05QbUzO7KzIqcAWvyw5hHbsUawr5C8qkT6xGcHXG/1XY8U1Dv3R0FjsHLq5Mlrjs+OiIhdpysY0PjUVIUdcMH6NhWsgottVChmLIXJQsx9FzRYDTGQyp2bN4k4pMXBNwdG+QrKpalpZ6pOCPwI1TlVgcktSqSSS29RMELWSUdrwbKHKvPtsiVroMCW9jtiZxfa9BX8Z5YwIPQ24ucv++O+8QmpfevlUQSnwiCyxkXSMFUWx4KZWdKU8lD9StGm/iZ6XIjwMImQ7u5I23jl0k2U1eVMsOpsYDPFMiMK1BBIDy4MuRwOn3Yk6S9sQG21wOhzMR1bw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HwsGcBs0sGoafAoVijwKGG5O8E0mdB035irkYN2Lg8E=;
- b=vv154LkmVkwXJurFRlogzCsvrPCR8mf2BLCtTDkT2RzP+htSq+90tmy7cnOi2yoeIKGx/05OVyKOYI6Q6jcuBvczQpjvhlAYIpIoxZTCsEpK7vWcHiqKgS/DQ9DxBiPHFwoFsd0DMLsPYbhz38XKeoEH6bee8e2jAFRNUoFq2N8=
+ bh=aaaKjn/1yEN0PUwy/v2gts1JwYagkwCHFhwmQ0JzX+A=;
+ b=YEhMe6zZEk/0Tp5GlRKRtCIxSIs7R6Uq34WcWEVTQjX/rbkvq0SlM/Yiwq0/GMkyqOUhVge9/NQrv+1IcTgfXXsSRvf2mlvNSDXU08I8kqamMgtJW9OIPRhTEupBIxvbFumwos4UVgEg2xc9SpXbSqHVy9BbDawTYC+IgsvZguE=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO0P265MB5941.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:290::9) with
+ by LO8P265MB7891.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:3a8::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.16; Mon, 2 Feb
- 2026 14:07:30 +0000
+ 2026 14:13:09 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9564.016; Mon, 2 Feb 2026
- 14:07:30 +0000
+ 14:13:08 +0000
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Mon, 02 Feb 2026 14:07:29 +0000
-Message-Id: <DG4J98HVOUEX.I7XOB7LPB49L@garyguo.net>
-Subject: Re: [PATCH 3/6] rust: io: provide Mmio relaxed ops through a
- wrapper type
+Date: Mon, 02 Feb 2026 14:13:08 +0000
+Message-Id: <DG4JDJZB7BI0.39DIJGBNAI3RA@garyguo.net>
+Cc: <bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+ <gary@garyguo.net>, <dirk.behme@gmail.com>, <lianux.mm@gmail.com>
+Subject: Re: [PATCH v5 0/2] rust: pci: add capability lookup helpers
 From: "Gary Guo" <gary@garyguo.net>
-To: "Alexandre Courbot" <acourbot@nvidia.com>, "Danilo Krummrich"
- <dakr@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun
- Feng" <boqun.feng@gmail.com>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
- Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, "Zhi Wang"
- <zhiw@nvidia.com>, "Lyude Paul" <lyude@redhat.com>, "Eliot Courtney"
- <ecourtney@nvidia.com>
+To: "Zijing Zhang" <zijing.zhang@ry.rs>, <dakr@kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
 X-Mailer: aerc 0.21.0
-References: <20260202-io-v1-0-9bb2177d23be@nvidia.com>
- <20260202-io-v1-3-9bb2177d23be@nvidia.com>
-In-Reply-To: <20260202-io-v1-3-9bb2177d23be@nvidia.com>
-X-ClientProxiedBy: LO4P123CA0195.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:1a4::20) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+References: <20260201074248.1629393-1-zijing.zhang@ry.rs>
+In-Reply-To: <20260201074248.1629393-1-zijing.zhang@ry.rs>
+X-ClientProxiedBy: LO4P265CA0248.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:350::8) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -75,263 +65,176 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB5941:EE_
-X-MS-Office365-Filtering-Correlation-Id: c8ae70ea-be48-4a08-2f7e-08de6264674b
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO8P265MB7891:EE_
+X-MS-Office365-Filtering-Correlation-Id: e752c0b7-aae1-4efe-0f4b-08de626530f0
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|7416014|376014|1800799024|366016|921020|7053199007;
+	BCL:0;ARA:13230040|376014|366016|1800799024|10070799003|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?OEwzNVlJOHdaWXJzSThOWlczd3ZLQkF3cUY0MDNMTVpIVmdBMUhYOUJRTVZ2?=
- =?utf-8?B?SXB1d0Erd0FLYm5xQnd0VVRMVDE3NEg4c2J6QWlpbXNGeExlL0hOanZIaVhX?=
- =?utf-8?B?MlYyNjYwbjhkR3BqTUVZSzJHcW5QdTZ5bG1mRDRCMHNyVktWTTdyS1Zncm40?=
- =?utf-8?B?QWl3V0EvZng4YUN2YnVwOTlEVk1RWHlqZll4VVQ0L05UbGpROS9pOEhaRUlE?=
- =?utf-8?B?eXhPSzcrR2tGN3hpNjg1STJOU1RBYU1GQm4zQ2dEdURjd2lzSXdGelBQVHFu?=
- =?utf-8?B?d3E1b01IK05xOWUvOEpncVVRUVB0d29wa0s4UHY4Z3F3STM4UGx0UlFOODIy?=
- =?utf-8?B?L2hEVGY4NjlWUy9jWk12RlFMVnRnK0o2aU9EVkNsbXhGRWloanVzS01MNHBn?=
- =?utf-8?B?dnV1VndJMHZ2Q2RzZEgyTjUrUVA2UUJWQS9oUUFSN3BYUDZnVTNOcWtGYW5m?=
- =?utf-8?B?YzFBTENrc1J0VUM0ZmVEQmZKUVE4RHNncU8yRXR2dW5uWEZraGJaZ0tHY3dY?=
- =?utf-8?B?L2NadWc5Qi9MNFRCRU5EdHhGVlpxN3lzV2NtR2hoNndDNjdEK2ZmL2lBeTRD?=
- =?utf-8?B?MHVNeDdLOWtMZ3ZLRDRZTm5raHJnZzVwVEkzRE1kbDJsbytYUm1UMlp5a0Rt?=
- =?utf-8?B?T2doOTlXMnZ2K0dMV1JVVUpEVUZCSW5LdzhHSFRNL3BIQnVNdG9rZnNYZnpv?=
- =?utf-8?B?YURoeEk4UmVkUHRBem12MkoxTVlSRFNjQzVwSk9OM0tHRnpnV1JrTVlhRmxK?=
- =?utf-8?B?dnR6OThqWWgwcWZ0L2F6dE5sMnZqaXZZTHZGZmQwOUE4b2kzVktUV25WQ2lU?=
- =?utf-8?B?QjFabCtQSXorT2UzQVZBbWRPMHorS3lXaUd0S1JXc010cGFqTEI3eUdBR0Jx?=
- =?utf-8?B?ZlY0RGc2S1duZHo0S1FDSDRrc2JzdkNscHhYdGNvZGZTaXFKRGxVNDFzUVh3?=
- =?utf-8?B?VlFYeXVwWmtlVzFWU3BMSy9WZkh6MkF5V3MxNi9nN2h0QmxzeXF5OFNaQ0Vh?=
- =?utf-8?B?bzVSRzdjb002SUFLR2l1SmVsaXM4b0dkeVhPc25CdzJzVkdiY01nNHQ5QTR4?=
- =?utf-8?B?THpZbnMwVUw5eXc1N2Z2djRRd05ISiswdjE5dTErLy91MU9aRGgycDFodnpB?=
- =?utf-8?B?dmk5NTFiWkVrZDNySC9LeldLM0hSdTVmeGVYVjVrOUNjaWM1N3B1bDdKR011?=
- =?utf-8?B?TWhMUDFUL0ZDOC9GdXlPMmlDaGFrNzF3a2JDOU0rVE5XVzYwdjhwL0tGUUJ5?=
- =?utf-8?B?UUdSSnhoUUdyQkhyZ1lZcHdjRDkyamZPR3ZyTlhrdFZtalNWRkt4Z1lUUUVX?=
- =?utf-8?B?NkFYRmJPMHRJNVU2Nnk1Z2xsdmFnamZ4S0NiZi9uaE5IYnBjb2hJajc0eGc1?=
- =?utf-8?B?WkpoaEQrSE5uN2dQOFdtRmpPb2FyNmg1cHZJWHRIak43MWR6RUNQYm1MSFh5?=
- =?utf-8?B?OHdjLzIvTHhDYklyMG5UUk43Mjk3MDVvU3F6WitlRy9IcE83K2w2YUZOTFN3?=
- =?utf-8?B?Y0dtUU9vYmhObnpxbjQvNmVyK2c3MVh6TFpsY0tydlcwVWttaWZyMVd4WXI3?=
- =?utf-8?B?RmUwd2N6QzE3YnlMRHFNSEhlUXRFSTR3S0dMVEtjWjRzUG5idHF2SFdlMWpN?=
- =?utf-8?B?UHoxdzJSN1NVUWVDV2RjTG1ZTG5ZWWtibER0czFyQ0RNMmQzTDVRU0p0N0pF?=
- =?utf-8?B?RTJIWTc1QWFVcDZoMFN1bDM5S3gyM2dKMnNOSURPVm11MFdrMjhMSi9FUm0v?=
- =?utf-8?B?Uk5hdHVLSWlNeHF4bFlSY2d3Yi9nTjJKbXozOXhxRGU2L2xiYUdXRmtXZUh0?=
- =?utf-8?B?elB0bnZUclh2enMvMlpCT0lOc2FpcXpvV0dpUnFrL1dMUmhCWVFRVUFJOHVV?=
- =?utf-8?B?L1NZS0lNdEhsL0U5OGNSUkpxRE1DU2JWLzZJSjVnSEdGTi9qRExqYzZ0VVhs?=
- =?utf-8?B?MllOV3BhZjF3aHpjUnJBQ1RiMVdMV1dYVGhHTWowU2NpbG1PMzVZTXFETXpF?=
- =?utf-8?B?c1FYbTd5ZktsRU5ualNRWmtvV0o1M2pXeHAzT25ZaG44bzA3UmI1ZndyMXRH?=
- =?utf-8?B?WVpwamNPQnhrUm1BUk1PS3c5ZzBVUDBsNUJNTEhQQlROTm5BZnZNOUFkZ1Qw?=
- =?utf-8?B?OGhVcGxNMTFwY0FjbERBSEFGRWpsc0Q3YndVSDM3b2h6UW8vSDdWbmxrdk1W?=
- =?utf-8?B?VHc9PQ==?=
+	=?utf-8?B?eC9oc2xZL09XaGRkVWl0anZuL0NsZ1d3VElRY1Z5eFJYb1Y5eis4SnAzc0Z1?=
+ =?utf-8?B?UXl6VkozKzBFQndaS3QyMGRlZDQ4T2VhN0NSd3d6cTVzYk9aQ0tiWnFYaHlp?=
+ =?utf-8?B?U1F5R2RDVmE3ekxqaGg1eFFmTU5ZQVJOSlJ0KzJ2TnA2UHpjQVdNMFl2bDQ4?=
+ =?utf-8?B?OUFyeTVRQkpqZEl5T2o2Y1IrYXZEdmQ1YVZXcmJMNEt4di96YmhhRm5yb0VE?=
+ =?utf-8?B?bExLWHh1MktobHdVUEJuK1ZrMXBRYkhHRnAweWx4MUtVNzR3RUYvT2FWbHBj?=
+ =?utf-8?B?SFAwUWZ0dzFaR1lKMnM3aHE1aU9jaGJ6cjlIZDJ2VkpPS1BsZGxFRE1Pc2lX?=
+ =?utf-8?B?MDdFWU5kcmcxRVprbkxORlJSYmdBNmkxd3N2K2EvSXJyeEliOVJ1c1lzbHpC?=
+ =?utf-8?B?dE9MSldDU0lneko5SXdwQzVMQjQvZUVHSDh4TTlITWlaSjZzcTZ1S2Roa0I0?=
+ =?utf-8?B?R0dMQW1kUjFCcXo3MCs0Q1NDdXJLY0NUaGp5Z08zRWxJQzVwWTFvc29WbW9Q?=
+ =?utf-8?B?MzZwR2FMMGxyQW5VNWdmZzVYWE9EamRqT3dTU0ViTk1tZU9sbUlIcGJXdkdj?=
+ =?utf-8?B?QVVKZHJJby9WUCtwUUFWNllLMExmdkJIQVVLNmpsOXpEcU02S2RqV3Vjb0hW?=
+ =?utf-8?B?c0F5R0pvcGUyN3dyT2JqdW1wVC9RcldkZ1lJSFlWWDA0OXJmNS8wQzRSSGg3?=
+ =?utf-8?B?SmhHaGh1YVAvZ2svSnhycmtLVjgyYlhJUVcraXFzbnlTNE1RaUl2V2ZNR2Q5?=
+ =?utf-8?B?MXNKcUU4STlkeElCNWVpczdOMEJrdGh6V3g3ZVRueHJxQ1hwRHhxbENPUjRX?=
+ =?utf-8?B?WGlnNTN6ekp4VlcyRzFTbVVwOGJEWm9yZWxGblhjUk53ck9mYkdKVnkrWFlP?=
+ =?utf-8?B?MGpLUVF5ZHBPQUdaV1NmK1dGTEEwYm1VUmQ1L0t5QWxLZThKc2JPeFhjN3Fk?=
+ =?utf-8?B?SDBoay9seGhNcUMyRk1haGlrUy96eitVd1J1N3E4TjFadGN4OTdOYWtNekMz?=
+ =?utf-8?B?ZmtnaHR0c2FPMjlYSklFZ2hFWFNVUXU5TWY2Mk54b3NmTjJtUTh6a2crNjcv?=
+ =?utf-8?B?SzVWd2NOTzdtYkQ4NFJ0Q2hyUWM3bmdMVVpVTEZ2NzBReDZCQy9IQ001YU1Q?=
+ =?utf-8?B?UGh1aGtTWEUyV1FrNFZqZUFiNU5LMzdLRmhDMktBbjBEellObEdvQUZaNmo0?=
+ =?utf-8?B?dTFzWG9DT1NyUUVOSXhuRmxObjNmZzVIRW4zNVpiSksvQ1NWd2pXMmZVeXN5?=
+ =?utf-8?B?UFlKQW03TmRFMHlwWk1mRnNNNTEzZTRHZnpKTDlXaXJoOGhHZmJqVVN6N0RR?=
+ =?utf-8?B?TUZiOVFHSWJNRlNCOVZJSDZFVWJLaVNwbDNKRGpJWWJvTUV0dHd6VGtUY2ww?=
+ =?utf-8?B?OTFYaG9PT21MaTZiNTYvc3lsSlBETHRyQ1EvaGcvQXdpUGtxSEhjQVVXS1cy?=
+ =?utf-8?B?VDVWSzd5Z1lMbFFDcjRTdlVUOEFlKzBWSXkxS2JUQUtGajl1OCszdTVVdXg0?=
+ =?utf-8?B?Ry8rYXZHaWFiWmFFRitOZDdXSGhtc1ZEVzhZVHJucWhJRU5ZSTUzV1dTKzJz?=
+ =?utf-8?B?c0pHRXhva1drcmR1RldITTQwL2dTYWw3aVEwMEFLUzIweDg1RllSRXdlTXYr?=
+ =?utf-8?B?dWFVL0xnSVVyVm0xYlRXM1dlaTNtcldPeGdxM2xsaUJiZnZFRG1TRG42ZkRG?=
+ =?utf-8?B?ekVXUFlTVDRXVlZxVERTSjhkMDgwQXlHcmR6bVpYUUFsNEtMQk1EQlJMa0I4?=
+ =?utf-8?B?aDR1L1VjK1Rrbyt4QlpvejlIMUxnd01QekpEVjhRSDBHYUZ1eGJ1ZDNVbUlF?=
+ =?utf-8?B?eWdpUDRma3BMdWdSTFpTck9EWFo2d0s2cDZsWXVMQnFXVWYzUWRYVjlBSmpP?=
+ =?utf-8?B?OHMwVEx6ZTVRYWZJYWhHcDRqT2JReTJtLzRwbnBvTk9lc3hObFVjZkNjZFlt?=
+ =?utf-8?B?UUY0MDJVSzh2SUQrSFdoMVZCT21sc3dyWVdnWkNNRkJxeTQ5dVV2M05ocW1E?=
+ =?utf-8?B?aDZTZFdOREhEbTZLWHFYbDBXWnBKc1R5VnY1MHZuQ3ZUMk1yWlpsUWRkYXBu?=
+ =?utf-8?B?MTR5L2pQOVpLdldrVVN6NVBabmdHcTZYSlY4WHpnK2o1bm9HU2oxZk5sTy9n?=
+ =?utf-8?Q?OIxA=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(7416014)(376014)(1800799024)(366016)(921020)(7053199007);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(10070799003)(7053199007);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Tm9QL3lnMkRPRUpWSHllZ25wL1lLQkxGdmZ6U1YrYk1QRXczY1Q2bHR4VG9l?=
- =?utf-8?B?d0hVbXVYSGY4OVkzRHBJMVRHRW5RZjluMWhkaUZtYk43VmxEb3pKQUlYRk92?=
- =?utf-8?B?Sm1NY1I5K0VoWFlmMlFaV3QzaE5BY1lCVjM4L25keDVwbnptYVZDWlF1MThT?=
- =?utf-8?B?TmI4TEVBOE1waVkyUDlldkFMa3lpYytCWVBXbVU0d1RrVE1HZkl6MVlRVndv?=
- =?utf-8?B?QU1keGJuTVpjakZCVGthbi9SRGE1engrdGVOVUhPTktqQzYydGJuWkxma0I3?=
- =?utf-8?B?SWNyTnkrcTlkdXZNTHVyazdZYTVUbGttWE5kN2kzY0lLVnRqc1NRWXVPSGJ5?=
- =?utf-8?B?TThDK2FweFFkT2xVMzN1TnFPT0lRN1BUZmF6TE9VV2FrZHVXcUo1VzBnQmg4?=
- =?utf-8?B?d1I1S25zY1RITEV3R1p5MmhCcUlLOFY1RXkxZ1ZKWGVpblA0anpndThzdWlU?=
- =?utf-8?B?VDdVcnM1bE5ENWRJc1owa1dZdUF3YWFpRHEyaldVTmJVYTJ0UXp0ajYzNDFj?=
- =?utf-8?B?N3lLUDUrWkwvaTNUTm9NTXAvclM2dVFBZWNXa2lrcFRYOER3enVocGRCT1BU?=
- =?utf-8?B?OFovNGVWUHNrczBTZGF3cXorV1JSdzVVVkx5MnpVN3REbmdyVGNZcTQxY25F?=
- =?utf-8?B?QTZUL2pDSTNiRzBxWVFRYVBSMVMrZ1g0WmFhdHhadUlzOFJyUHZIRnlRYkxG?=
- =?utf-8?B?ZlZvQ1JFUTFyVXFCdmNOTVhmeSs4d3diVjZtZ3lVRExsSHBHU1A0MXlNR3Jr?=
- =?utf-8?B?QUxhY0U2MkcvSXQ3YWxxRHZqVUI4Q2xoS0d0dUUvamFVallqZGFqYm5TV0JI?=
- =?utf-8?B?SHk0Z1ZUenFZaVdQYnBBMm1lRXVjSFVpTGJvSlRvc2gya1NiWC92bDVMQ3Nu?=
- =?utf-8?B?a20zNXdZZk1oWERsMTZ1bWdSTlQyQWJ1emlpbUlIMUZMSHQ4WEVtZDF0QW9r?=
- =?utf-8?B?RHg3S2NXL2w2VitPNkJLUTV2NFJQZlphbFYwVEV3N3lwTzJEbGM3UGVLNjA0?=
- =?utf-8?B?OFJyU2NNWUdUVE5MQmI4ZGpHUUxIWDUyK25rZGdwWW1vMzlyWk5XVEVxRW1j?=
- =?utf-8?B?M2traUR0SkRqQ0R4Y1RlbzlxT3NDUjVGWXUvQWVRMWpNc1JnWFVCd1JUNFhT?=
- =?utf-8?B?am1XK3FnNTdnTFVCRDVRV1U1NnhTdXJXWHdwd1V1S2lrNFNsdjNTdlF1V09K?=
- =?utf-8?B?M3AwYzRWeGVId3V6UWZzRHhFV0w3ckpFYmdRNzZFL21yYXdzWW85emlkclhI?=
- =?utf-8?B?MldjK0ZDVlNxclRhcTRKcW1vSmd0ckRJbU1kVzlKMUxwMFJML052VG8yZzNL?=
- =?utf-8?B?Wm42MDduVlhXRm9HNy9rVGdtWlgySi95b0kyUjF0cllmRm1JSXBuMEpZbERv?=
- =?utf-8?B?OXBIbmpxK2tzSG83NUlSdG9Ld21UT3JGT3J4K3JOZm9CVVZRaWJ6MEhTYjlM?=
- =?utf-8?B?L1h4Y3RoRGkvTWZGaVJCVDhXU2RXQU8zVlVYWlc2ZVVSNlZBL0ZicTJPdDJI?=
- =?utf-8?B?djVYUFFoU1lybCtMUGVMR25rOHNqbTd6bkE5Uy80dCtPRU9PbDBNMjZUYTFT?=
- =?utf-8?B?d3VyZGk4aXNxck8rZ2p6dmUrcklDMXVXcmtydmFSam5pM2JzYXhQbWU3U2Ey?=
- =?utf-8?B?bjUxNStBU1NmWDJlaDgrQ2VWZlpwbVptWkptK1BQNVFnWElpSVQ3bWVoOHMy?=
- =?utf-8?B?YkZLMFp3YjB2MHU2QWs2aGxqdnRnVG9sWVh5VkM5SnJUOUN4K2pIbWJBWDlE?=
- =?utf-8?B?dWVtYnFhMlFlTCttbXRlb0tDcjRvVDNHYytrUGs0THBiRWJ3RHBTS3gzYnBw?=
- =?utf-8?B?Z0swR1Qxai9FRFByUEVReS95VlRZSHl1TndUT3lGQTljbXMvajNyYWNaUkpa?=
- =?utf-8?B?VVFNbDg3SzFYWkdkL0NKUFNLTStKOEJ3VU83NFYwVXBCNyt3M1NkWWM4cEU4?=
- =?utf-8?B?NnJYK2ZITEhGQksvZGZCcXJIU0Raa29JZVBRRnNWaFllVk1xM2VKbjNGdVJn?=
- =?utf-8?B?azllRER6Ym1sK0JubU12TlZISHRuRm1XNWF3WjNYMjhQaVJsS1JWSTFkSXBQ?=
- =?utf-8?B?TWdDWnFqYkRFOTZWeXNVaE14Nzc0dUpKVkVTYnprNVYrSjA2MFF1bmgxY09o?=
- =?utf-8?B?MVZVNlhmOUhINTRKdU5lQWp6NW5BWnVCMmd6aDZYM1JNajk1ZjByZ1JsVW0x?=
- =?utf-8?B?cFA1YUJuRjhHMUllZXBvVUJHZ212bktHSllrOFFiWUhzSXZjWFRUenB4WmlU?=
- =?utf-8?B?dUpVVUtjRzF0NlBDWmpnSHhXeUJVMEhjUy9ZM2J4cEQ2cDRETnBnTU1iYzFR?=
- =?utf-8?B?dTgyblVlMERRVFhhK1U1dUk4czk4Si9lZHl6T3B5cTN1ZTQ1Rk5pdz09?=
+	=?utf-8?B?dXBzeklaMStsWlZWS1M1cHFoUW9MNzFDTmZTNExtNTkyT1gxbGF1TGE0Wk5t?=
+ =?utf-8?B?ZU5yeGxnaXIvR1ZZbkRaNU5vVkl2bGNRRi9ML3RUeVM1dlFmbDJhTUxsdm9h?=
+ =?utf-8?B?bGhnb2NyOHBFZThtSVdwV01TNzJiMkZMUXl5MWhja0NsdFZRM1Fvd2kzeVZE?=
+ =?utf-8?B?MkFWYjUwTzczQStQcEtBekNKdWpzYkY0K3VoVFdyU2FaQWxnaXB0bHA3MEJi?=
+ =?utf-8?B?ZjN6dVhsaTZneGlhb2VBcGRFTU5JOTlMYXdlZEg4TTJuK3pHRTRxNG0vWkx0?=
+ =?utf-8?B?MVVqcE1sellnSXJZb2dENW1LR1RWY0gyVW1MM0tKanZvVjRtNUJSTU9ReERG?=
+ =?utf-8?B?K1ArNEk2YnFrbm8xdGhNWEJrYnZNdjRBSmwxWVloZmFGakhDZjVYdStFcUlp?=
+ =?utf-8?B?NUlLanprbVRrNkZ6Q05DTkx5QThJRWt4MkN3Q0FyK3ZYVnBrNzVkOUt2cGFL?=
+ =?utf-8?B?WGNFbGE1aXk0YngrNi8wN2gwWHhrTXY5S3k5cWgyM0o2NnBDbjI3TGRFbUpy?=
+ =?utf-8?B?YXZocEF6Y3dNZFQ0UVp1ay9oWk80VmxaUmQ2c052cEYzZ0pOVE1KM3M5cDZ0?=
+ =?utf-8?B?RDQ2Z2orblp6a1N3cW5HN1UwVkVUd1JZOGZoQVZaRTJSUEdqSXJFL2dOUzBs?=
+ =?utf-8?B?dmxLclhsY2Z2Y0g4S29WYmlTcnlacXBDM1l6SHZNNnA3Q2lTUXo2aS8xNnNy?=
+ =?utf-8?B?ays4TVJBSEt1bzV3UkpmT3hoeDFzUFBreUEwNDMvOUd5WFdNN1MwNGpyT3FP?=
+ =?utf-8?B?RW1UUjQ0bmtYUGV0RklZM2toViswcm9jTWZUZU9ueWM1RWNiL3grUk1QdVBN?=
+ =?utf-8?B?NnhlUzRTS2FFWE42V0JsSzdDZy9jZFZRZUJoazVtL1BNdjcxNFcxUmdiUTJC?=
+ =?utf-8?B?QkZiYXFLeWZ1YjVUbHNIRmM2Q3VSdkQ1T2dVQTQzVUpZM0FaWVdiVVZJT05m?=
+ =?utf-8?B?d1pWbktORmptZGI1THpXQUxwZzN0QjlIWGwwNzBkSVhkRHI1d1daVUlhY3NM?=
+ =?utf-8?B?dXI1aTdyZkJjaUthQ0VaYU5rcjBCMGZqc3NUdmdmMnVsb2RhWTJpVjRnWVZz?=
+ =?utf-8?B?eEh2VEdKcjVqMnk5SFJKTUQrRitobklZSlIxY2d2c2p6UmtSNmYxM3NUQklI?=
+ =?utf-8?B?N1ZuMGJoVG5qZEhZejFkVE15NVVLaC8wT25nSVpJWUUxQmtGLzlGV1BHYkhN?=
+ =?utf-8?B?eUJUaWVNeEJEZm82VHNRMTRwTndjTzB6YWx0cyt2ZzBMenJTMlIxcHpCOEJS?=
+ =?utf-8?B?ZngwVnp1cUd0VGV4TFlBeUtPZi80anZzNVExRDY5Yi9CWTg5U0Q1NXIrR00x?=
+ =?utf-8?B?Qk9EYUNkS05PQUI0cVBBWDdvL3ZvLzNpcVkyNjBTWDQrVDV4b2MvK203Ti91?=
+ =?utf-8?B?ckxGQUgvcWxtNTZhZ3pzODlqZXJUaW0zT0wvTE5GdHJnWWwwdEtjOWZCK01L?=
+ =?utf-8?B?NDVidFlVWmhmQVBXNklEVGFNN3dSbXV6cGh2a3N0VGhGT3ZtS0RIdGgvTklz?=
+ =?utf-8?B?SGkwZzRPa0xGQUJlWUtqUysxdXEzNWlTTFdMU1kzYkI0SHdZR2tNd1hUZWxD?=
+ =?utf-8?B?eGRiOGxtTzlQdEJCL3h5YzZLc2VIYytzWmExa3BTS2tiU1VkL3VQb1AyMi9x?=
+ =?utf-8?B?d1FXSDZqanc3WHgraHFZTDE4ZUJnSFBmc1JNZzVFbnNsK2dZc0txYnRuSmhi?=
+ =?utf-8?B?MWFGNmNMa2FBd2Q3bVlOMTRNcVM0emoybGJ3WTdxVDBPOVJmSmpyUGlUcGpq?=
+ =?utf-8?B?TFJ3QVVWZGxRWmpsZFBYVnFuU3RrUmtiNk96SFliZGh4TXBoMzFENC9SNE4x?=
+ =?utf-8?B?SWhEM0RvZHR0K2tudXh4WWRFZHRkMmpPaW5RMEROdys3bFF5VVJreVY2eTBZ?=
+ =?utf-8?B?RUxrU2d6blhNWSt1NnpJWk5Da3R4SG5OS0Z6T2pNekcydGZ1SHQvTnBGZ1FF?=
+ =?utf-8?B?ZmFyeENtYTRMdDZYVHBQM015VjJnajEzRCtZc2FMQnJtWDhxOXlDVlFOTStk?=
+ =?utf-8?B?YXVsZngrVXVPQ3BFbkQxbjduOG90QlZxK0FDM21GTWFxRXUrU0NnbkhEcWJB?=
+ =?utf-8?B?dWFyemQ3bkhQVmtUTW1ZMlpwYmFWS0wxSDJ0TkRpYk1vNm9VeDRaQlBrRVc2?=
+ =?utf-8?B?b0JHam90bGxiVHdNYnhLV2wxczJlWDZNR094NWR4c3g0TFptR1JBc2pCWXU1?=
+ =?utf-8?B?U0ZvRDNBd2FONEI5L2x5aWd4SkltVTFleWRrc3ZEd21UeFlGbEdWU3NZdmFh?=
+ =?utf-8?B?WmZqVE1YbXlVd05zZUM4WjJmYUI2TUNzK1crSHJaVjg3d0M2SUFKZ0ZxVWJt?=
+ =?utf-8?B?dDVub3dzQVNXaklJUVA3VDM3RHJmUEVnSlhiZlVVTElOcmNIRy9kUT09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: c8ae70ea-be48-4a08-2f7e-08de6264674b
+X-MS-Exchange-CrossTenant-Network-Message-Id: e752c0b7-aae1-4efe-0f4b-08de626530f0
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 14:07:30.3334
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 14:13:08.6209
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kE9fqMPHwJI+JoZlbHDmpQxKdBauBMz0xYuAMs+hD3nu0URf983Nf6cGvwfr9VH3xjHJlsAH7hmiY2kanPopNw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB5941
+X-MS-Exchange-CrossTenant-UserPrincipalName: ZDJ0dFU1408vBFZiJ0ZP0u0NXr/q3ZgGGAOCAWjFDW38XBcAvqICe8Nuv+xlLEf+0x3xOYxZ5bgG11uKIzOtTg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO8P265MB7891
 
-On Mon Feb 2, 2026 at 8:13 AM GMT, Alexandre Courbot wrote:
-> Relaxed I/O accessors for `Mmio` are currently implemented as an extra
-> set of methods that mirror the ones defined in `Io`, but with the
-> `_relaxed` suffix.
+On Sun Feb 1, 2026 at 7:42 AM GMT, Zijing Zhang wrote:
+> It introduces `pci::Device::{find_capability, find_ext_capability}`, thin=
+=20
+> wrappers around the PCI core helpers (`pci_find_capability()` and=20
+> `pci_find_ext_capability()`), returning the config-space offset when pres=
+ent.
 >
-> This makes these methods impossible to use with generic code, which is a
-> highly plausible proposition now that we have the `Io` trait.
+> In `pci::CapabilityId` and  `pci::ExtendedCapabilityId`, Capability IDs a=
+re=20
+> wrapped as newtypes with `from_raw()` plus a set of common constants.
 >
-> Address this by adding a new `RelaxedMmio` wrapper type for `Mmio` that
-> provides its own `IoCapable` implementations relying on the relaxed C
-> accessors. This makes it possible to use relaxed operations on a `Mmio`
-> simply by wrapping it, and to use `RelaxedMmio` in code generic against
-> `Io`.
-
-Hi Alex,
-
-I think ultimately choice of order to use for each I/O access is local to t=
-he
-specific access, not a global property.
-
-I know you can just do `RelaxedMmio::from(io).access()` for each single acc=
-ess
-too, but it feels quite verbose.
-
-I guess one alternative design is explicit order on the access, e.g.
-
-    io.read32(Relaxed)
-
-Or
-
-    io.read32(Full)
-
-however this is verbose in some other ways... I'd like to hear how Boqun th=
-inks
-on this one.
-
+> An in-tree user is added to Rust PCI driver sample to exercise the new AP=
+I.
 >
-> Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
-> ---
->  rust/kernel/io.rs | 66 +++++++++++++++++++++++++++++++++++++++++++++++++=
-++++--
->  1 file changed, 64 insertions(+), 2 deletions(-)
->
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index dc894a45bbcc..baa8d3baa20c 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -556,9 +556,15 @@ fn io_addr_assert<U>(&self, offset: usize) -> usize =
-{
-> =20
->  /// Implements [`IoCapable`] on `$mmio` for `$ty` using `$read_fn` and `=
-$write_fn`.
->  macro_rules! impl_mmio_io_capable {
-> -    ($mmio:ident, $(#[$attr:meta])* $ty:ty, $read_fn:ident, $write_fn:id=
-ent) =3D> {
-> +    (
-> +        $mmio:ident $(< $($generics:tt),+ >)*,
-> +        $(#[$attr:meta])* $ty:ty,
-> +        $read_fn:ident, $write_fn:ident
-> +    ) =3D> {
->          $(#[$attr])*
-> -        impl<const SIZE: usize> IoCapable<$ty> for $mmio<SIZE> {
-> +        impl<$($($generics),+,)* const SIZE: usize> IoCapable<$ty>
-> +            for $mmio<$($($generics),+,)* SIZE>
-> +        {
->              unsafe fn io_read(&self, address: usize) -> $ty {
->                  // SAFETY: By the trait invariant `address` is a valid a=
-ddress for MMIO operations.
->                  unsafe { bindings::$read_fn(address as *const c_void) }
-> @@ -695,3 +701,59 @@ pub unsafe fn from_raw(raw: &MmioRaw<SIZE>) -> &Self=
- {
->          call_mmio_write(writeq_relaxed) <- u64
->      );
->  }
-> +
-> +/// [`Mmio`] wrapper using relaxed accessors.
-> +///
-> +/// This provides an implementation of [`Io`] that uses relaxed I/O MMIO=
- operands instead of the
-> +/// regular ones.
-> +///
-> +/// # Examples
-> +///
-> +/// ```no_run
-> +/// use kernel::io::{Io, Mmio, RelaxedMmio};
-> +///
-> +/// fn do_io(io: &Mmio<0x100>) {
-> +///     let relaxed_io =3D RelaxedMmio::from(io);
-> +///
-> +///     // The access is performed using `readl_relaxed` instead of `rea=
-dl`.
-> +///     let v =3D relaxed_io.read32(0x10);
-> +/// }
-> +///
-> +/// ```
-> +#[repr(transparent)]
-> +pub struct RelaxedMmio<'a, const SIZE: usize =3D 0>(&'a Mmio<SIZE>);
+> Previous versions (v4)
+> https://lore.kernel.org/rust-for-linux/20260201071450.1614172-1-zijing.zh=
+ang@ry.rs/
 
-For a transparent wrapper, it should be=20
+Hi Zijing,
 
-#[repr(transparent)]
-pub struct RelaxedMmio<const SIZE: usize =3D 0>(Mmio<SIZE>);
+Please give people enough time to review your patch and provide feedbacks b=
+efore
+sending out a new version.
 
-Then the construction is
+Sending out 5 versions during a weekend is excessive.
 
-    fn from(value: &'a Mmio<SIZE>) -> &'a RelaxedMmio<SIZE> {
-        unsafe { core::mem::transmute(value) }
-    }
-
-unfortunately this require unsafe (perhaps can be helped with macros that
-auto-generate this for transparent wrappers?), but this has the benefit tha=
-t you
-get a reference and everything works without indirection (with your approac=
-h,
-I/O methods take `&RelaxedMmio<'a, SIZE>` and it double dereferencing). Thi=
-s
-also mean that you can copy the type or reborrow it.
-
-Best,
+Thanks,
 Gary
 
-> +
-> +impl<'a, const SIZE: usize> From<&'a Mmio<SIZE>> for RelaxedMmio<'a, SIZ=
-E> {
-> +    fn from(value: &'a Mmio<SIZE>) -> Self {
-> +        Self(value)
-> +    }
-> +}
-> +
-> +impl<'a, const SIZE: usize> Io for RelaxedMmio<'a, SIZE> {
-> +    #[inline]
-> +    fn addr(&self) -> usize {
-> +        self.0.addr()
-> +    }
-> +
-> +    #[inline]
-> +    fn maxsize(&self) -> usize {
-> +        self.0.maxsize()
-> +    }
-> +}
-> +
-> +impl<'a, const SIZE: usize> IoKnownSize for RelaxedMmio<'a, SIZE> {
-> +    const MIN_SIZE: usize =3D SIZE;
-> +}
-> +
-> +// MMIO regions support 8, 16, and 32-bit accesses.
-> +impl_mmio_io_capable!(RelaxedMmio<'a>, u8, readb_relaxed, writeb_relaxed=
-);
-> +impl_mmio_io_capable!(RelaxedMmio<'a>, u16, readw_relaxed, writew_relaxe=
-d);
-> +impl_mmio_io_capable!(RelaxedMmio<'a>, u32, readl_relaxed, writel_relaxe=
-d);
-> +// MMIO regions on 64-bit systems also support 64-bit accesses.
-> +impl_mmio_io_capable!(
-> +    RelaxedMmio<'a>,
-> +    #[cfg(CONFIG_64BIT)]
-> +    u64,
-> +    readq_relaxed,
-> +    writeq_relaxed
-> +);
+>
+> Testing
+> ---
+>
+> Build
+> - x86_64 defconfig-based kernel with Rust enabled (out-of-tree build)
+> - `CONFIG_SAMPLES_RUST=3Dy`
+> - `CONFIG_SAMPLE_RUST_DRIVER_PCI=3Dy`
+>
+> Runtime
+> - QEMU x86_64 (i440FX) with `-device pci-testdev`
+> - QEMU x86_64 (q35) with an NVMe device
+>
+> Changelog
+> ---
+>
+> v2
+> - Run rustfmt on samples/rust/rust_driver_pci.rs to fix rustfmtcheck.
+>
+> v3
+> - Base on pci/next.
+> - Add `CapabilityId`/`ExtendedCapabilityId`, switch `find_*capability()`
+>   to use them.
+> - Document the common ID constants.
+> - Update the sample to use typed IDs and exercise the new helpers.
+>
+> v4
+> - Minor doc/style nits.
+> - Use early-return style in `find_*capability()`.
+>
+>
+> v5 (current)
+> - Fix sample build by using `pdev.as_ref()` for `dev_info!`.
+> - Use `as _` in constant definitions.
+>
+> Zijing Zhang (2):
+>   rust: pci: add capability lookup helpers
+>   samples: rust: pci: exercise capability lookup
+>
+>  rust/kernel/pci.rs              | 150 ++++++++++++++++++++++++++++++++
+>  samples/rust/rust_driver_pci.rs |  31 +++++++
+>  2 files changed, 181 insertions(+)
+>
+>
+> base-commit: ff0e2f679ab0de50a2e9e88fabc1026bc3be04ba
 
