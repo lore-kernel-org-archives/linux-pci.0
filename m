@@ -1,35 +1,36 @@
 Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020128.outbound.protection.outlook.com [52.101.229.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DC9A8635D;
-	Mon,  2 Feb 2026 14:54:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289CC372B2F;
+	Mon,  2 Feb 2026 14:54:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.128
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770044056; cv=fail; b=ktwN4Ttezgt2dykEBztV9Is+iFj5SrR+PFBAGSa5vaECT0Jsti3Fa1Y10mleUg2HxmLyRFnqlWwaI3mOqPrz7pdq09OnLjCFBq/2g12CYwasDK6OX24wmlgw4pdJvLa1mAmSk20Exg1a5UtFyYk4m8gx1oiq2QBQUKqRyitvJhA=
+	t=1770044057; cv=fail; b=RIrgZASGED4TvxJiJg4gc4jMcUHSvzYI1W+61+RHcQDEA6HeIZtFXcJKKQ5lNe1q0nCM2XivyMfO6EbXlQI/RC+jjjk0EpQKbwYvUAWvu1nwdiFnJgDJoQMP8mjYtAuap5jI/h9sf+5fsuYdTsz1TdtoD8B9bMhxPKyDA/Jw59Q=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770044056; c=relaxed/simple;
-	bh=UlvMfJC0sqZq24bj+UBnONHZolUYtpar7+AjXq/O9KU=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=TReS8l7bd+Fi9RQZHif9NGuzv4USLUOyz8kPt9gffxLzGFfOeKKF2pk96Bjvls7nKkpmQjCgHtvQy88q/aesxLg7S8j689dERRBOh65OFLkZkf2mB8aKIsAJD8cYhNf08RmJ4quaxM1n+oYuNnMPjuBDiANiBx9zmieH/GTJ6tw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=UL9e0tbb; arc=fail smtp.client-ip=52.101.229.128
+	s=arc-20240116; t=1770044057; c=relaxed/simple;
+	bh=UclqMHu3pNKLk2knrJa991cGuRQ8xDdtbY5N807hZdw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=WGyzvpNQN32IT0m9ZtBkz02OGzYjiISP2mrPUzchYqyO+OF7WBroIFOy242QS39ZL66fBkm8eKn3yW8ipbB+pOUNc8wA4ve25N//yZz+jwaN+apA+Xp9A5qK9ij7hkP8efGyJri828ZyEt03rhOZHC/phKYkvri2VuIRs9whoXE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=VlVjDX8x; arc=fail smtp.client-ip=52.101.229.128
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="UL9e0tbb"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="VlVjDX8x"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rD7Ab2HxVO2XV4D1fYXZd3jCdlJo1Gj4szGtjXkoO/wobR9UHpjGDYqB4EffGjoPE27tGMmFtGHpBETc0xa7lNs2SPZJIyTiA3P4nkWgxYb31buBOrQu6Hogm2PoodK+6BWse9oSAVY4oMO1DR42TsqeCsv6a9vSHa32nBIjwwt+N/kSQW3JG9p1BJ4KabyuoFRySIPXn3MqVZXJR3d9GXtaotfNg+C+VogO8ESK4QgcKfNEnmUOhiTWdSDsekdTNR4kNzQBWdu4PWFj9LElTAdPqU2L97PCwZmnQ2Dz4FkZJ6TV1mYG8dOwDzC3Y6omE4l0Xhx7wSNFhE5zYnlR6A==
+ b=vsscqaH6eceXGGx46mm3+G/nvHV4SufR1O+x9LllwP53xm81flxOlEjOhV1nowdfScXRw/5zgKVjs15aXPCpDcCzfKIMbEGPTWGjZfleSp0gLr4GRq6reh9/bn0+IZHAG7qYaPyuxo1qEvYt/w71e4qaSu62kfzeRAXyaLrUeDwvqy6rDuNkY9Zx5XvASkouY1rYaue4VAK4O1YCFdLXF+O0f/PBG4hLFBEY8kRiAnSrAE0Ocz2Osf2NITjZVtTkVBOKcbQQL4Ym+5taVr16r5S5FTti4JApD/I+VkGwbczPDro8RLob/3fkoQEp63xkmiX7OdJb7AxWEaDCUUKFmQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=RpQMstyK+/jwg8tojA4vt85XnToC0X9CSVE0usBe8Is=;
- b=pqCodOTfZvpa6sXZQ1cnANbAqNjC7VPliYTdhzzCgoFakCOFJij7Kj8Gx1YvNV4VabW1zBLV4/elVB8yNx2wRk2Qf42Ioem91nRAruBCKLN4oasW45+7VejStO0t0f9q7DAJrS0b9VvLdFe8iqQ/iMN5s5JsX+P1ocoymBxg4hYNp+PvovO8XibSfaJei+wg3ghnB0X29+gfIDAE7Rz0rifaQF5awqnrzZJssKrrJGYimLebEk+LLZpmTd+KphAe9F+/hNIaX+jUsoG0fJFhmGAx05ldvMP1VDH2yyrUVxP+2ov89uYxWmdkg02nEZupOkjvT7rFOD6f2bu9/KyrBA==
+ bh=CRLYnC9tFwYsvxbd/UXODFYvMJQIpxjC5Z8qbMrrzvo=;
+ b=OqdAY1ssadVximwdhLTreto3ftCvyrWRoi9vRayB38AekJnwjXk9Nn3qJ6CPw+nkp1MFcm6nJsjaezlCEE2nmMZP1tptXYFp8KujWxr+avWOngpmRClXgYpss3B/UnvxjODzFKr0NAN6L8PrNQpys9gcWvvGzODVhx2HeWImM7oErkxmPBpQtaUOb2lgEubgGFe9p/V9Y0sTrgUc17ZfqVN/C2neeDG9+2WlSSF1toemvxkFA+HecB9d2PUqzyvhqXCDLRoBYTufHYBrGmxtYvoBp3klM1Sq4ryJ83XqfS7csGfdbwOrONoaugOy9DdnuWlEP9dPdCJlBE77E9ZHwQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
  header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RpQMstyK+/jwg8tojA4vt85XnToC0X9CSVE0usBe8Is=;
- b=UL9e0tbbZMNblFyy1qQmU+5pBbwurpb/uX9+YGBrqBHKafXzf5EzTuuEhoJEO0NJnNaK9RADi7p4IEZ+m6vFon9BmwZ/a7/Sid0a9akiyYVl1saU5Gx17f73/CxX70I3FhdCqVbLcfbjKeJ3ea4nNZ+ZzYlCFGNPBzYsEVijvJ0=
+ bh=CRLYnC9tFwYsvxbd/UXODFYvMJQIpxjC5Z8qbMrrzvo=;
+ b=VlVjDX8xoGfsk4UKhDz38VzjjAo2lZGvPOIRviLKJn3jTmRExbfb2Az7e3333EgMaJ6omSE+/c1DnZYRijizNFU2JVlmvkEQrdaGA6gVfkTj3hQshkfrF9GyKCF8Izwl/M1GBNlSqn57Ip5RRBsKlFK4ZcGTX867nyvyN57VhHw=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=valinux.co.jp;
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
@@ -40,7 +41,7 @@ Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
 Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9564.016; Mon, 2 Feb 2026
- 14:54:10 +0000
+ 14:54:11 +0000
 From: Koichiro Den <den@valinux.co.jp>
 To: mani@kernel.org,
 	cassel@kernel.org,
@@ -55,14 +56,16 @@ To: mani@kernel.org,
 Cc: linux-pci@vger.kernel.org,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/2] PCI: dwc: ep: Fix BAR update handling with in-place epf_bar reuse
-Date: Mon,  2 Feb 2026 23:54:05 +0900
-Message-ID: <20260202145407.503348-1-den@valinux.co.jp>
+Subject: [PATCH v2 1/2] PCI: dwc: ep: Return after clearing BAR-match inbound mapping
+Date: Mon,  2 Feb 2026 23:54:06 +0900
+Message-ID: <20260202145407.503348-2-den@valinux.co.jp>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260202145407.503348-1-den@valinux.co.jp>
+References: <20260202145407.503348-1-den@valinux.co.jp>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCPR01CA0158.jpnprd01.prod.outlook.com
- (2603:1096:400:2b1::9) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-ClientProxiedBy: TYCP286CA0134.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:2b6::16) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
  (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -72,123 +75,116 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB2195:EE_
-X-MS-Office365-Filtering-Correlation-Id: ab956624-7bbb-4675-4273-08de626aec4d
+X-MS-Office365-Filtering-Correlation-Id: d1e903a5-fb48-492c-080b-08de626aecf9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|10070799003|921020;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?C22xPdMUajXVuRYwxSK/Lt+/eRgJ+shXziBkF61WMCZ2ZJU0znmZlqDIaMdk?=
- =?us-ascii?Q?1qj7FHLZcKsXNzBuS8bfldO4MOl2XCAEGBp0XNnWT606tlEvX3DP901vzoYu?=
- =?us-ascii?Q?YCFpErPBBFrmGCEmgzxmaYI1x/znKGd2RFBuE2XaS1aifVxY5o2FGtn6g23o?=
- =?us-ascii?Q?mcS+4WsxTzAGY5/3GRZzmJHTgBX+Le0m4XZuJF+/TpxnXZF+xEry6CqtneIw?=
- =?us-ascii?Q?bTIKoBOM/vmBMb9yXvV+uGrYSHK6GbuGdC0t1vJEHox7Z4uYfdsZq9+s69eQ?=
- =?us-ascii?Q?x1OQicnwjEwCh8Bozu7vxH/MJNa/peeEENS+mSG9xuknBcFFRNJC7qqKY/cN?=
- =?us-ascii?Q?sKjZQ0wLrtRa8U+TSm82oaOglBkfHz5vwILoFfFK8uIj0VBYfOQ31armYcWA?=
- =?us-ascii?Q?xrLQk1izTzzkd5khD/4wmNjCq3R0377vgWw0nj3REyOjDrh1jHvHMz9bLaJB?=
- =?us-ascii?Q?Rp/tG2F/zk95QoE2bcizVfY3/bZMjkIP4kMCH65uaO2mh0JfQWizWbTUYfoq?=
- =?us-ascii?Q?X6hwSvVsMXyRvvodm8EDOQqdFY7yWW1vP3vPkKDiNAbeNDRnRmR9Pnvficit?=
- =?us-ascii?Q?mk8wcke0fQNhafK2vpyoROU9mldyW7kuZOd0AMV73z4z+2RxkVMw8HihOpDA?=
- =?us-ascii?Q?HqgdzSV0yGTgUlSBb5BlA1xdSdqoZg1vIm9tcbN4iwl7dminxHuCM81KdX+5?=
- =?us-ascii?Q?7EHvhi6jIRwlxuoMqWDRdyZMDE/oP0hcPL0C1UareRje4DhudHynZ4xN+aVU?=
- =?us-ascii?Q?1fnrZhWOuozjKRVpJtfFtDXBmUFgKVswsh6yP7WgRDEybQsbZ8LpC9Nbbp2m?=
- =?us-ascii?Q?fMzhp6oVFJA1MVSZBKm513oNfry1jt8wynyjfI2N4CS+yrYM44XP43Rvd7tS?=
- =?us-ascii?Q?Q0daqpnFxbP7IoApf4pdytZUtUFVeLol6BiU7p0ryWe289TsfvAM193RfkcA?=
- =?us-ascii?Q?P6+JLirt2S7Pw3oigdU0RVmIQNS36Z9yUAtPiJk970wyc+LBrlbRNKRKfX3j?=
- =?us-ascii?Q?Dce8RVmCO/hE4XyB2jEgbsNg5lsxP8a8qvsuX/Rggs1saZpL2n+PBYL3c8zi?=
- =?us-ascii?Q?cNgD9IvDGw2xSGpDhnPmBKWjCbl6hzawRMtboC5AFaKoz3/S2UEpCvgV7lYv?=
- =?us-ascii?Q?bIprLg/Ntmy+e7gC0flsrqdArFoiWxHGxcIpOCQ3LAxAwMTM3gY38I1hsh0k?=
- =?us-ascii?Q?K/uNMCIz8O/4qGY85luJWXIYCVj45UHMpksxh9nieVha7R1XkhQ1k8nTpoQP?=
- =?us-ascii?Q?mqnytddaBAwlXN9ucFshQlrCpeUhm0vlUXdw2qDdCe1ig1IiG/4kgzJVt2/E?=
- =?us-ascii?Q?19PjrS2lNTIH28Vywid/gBtWOXVhQu0cZOegAlDfweBJ6cvAl/WJLpW0s1+1?=
- =?us-ascii?Q?EKRirvGK6bfp74aaKNxEvWm/k7KssD0rG/MQcMIj2cj0b5h1GGC5uPCP/+U1?=
- =?us-ascii?Q?UHyM887i4SeDJnPEGEtwaisNB4D5XTk8VcSMV3G7g5hL5MM6jNyNZSWs+7Vo?=
- =?us-ascii?Q?OhWgKSV5uuQVUPPkxkeT/wF7zzazg8J/71OxjNzOiQB1y2xLo5EuunLDYnBf?=
- =?us-ascii?Q?Fk1AvUX+hVzQ0tm8ve4=3D?=
+	=?us-ascii?Q?nOnkL/LEd3SELP9pWGeYMBMiSkWrOqJz5zvmg2kZmpgliAdk2BAf/Bvn5y9l?=
+ =?us-ascii?Q?UeSpuhYlLJ1wwkU3VL6IAJdEzKRqH8+froD7wv6g+gd2G/nUbcIoJBvfyiHi?=
+ =?us-ascii?Q?FupwfISZFIowRwgWaWfvMAmOwi8Z9/zKNP8DiEuj3cgxx87cZmmidYTYTbK5?=
+ =?us-ascii?Q?TpxnkprOFCHwTX1IQuacoZA0xAzs3nkdDg2dbN9leUQepIyLZUKkkQb2Fq6m?=
+ =?us-ascii?Q?wj1i8+zsLDPSBHxwrHSUQg2tfogAfst3QBuD95s6LmMuttKJrx5BxMcUbFxZ?=
+ =?us-ascii?Q?Jwl9c8R31LYk8+xsINai0AyvzZUZEhE5XVXk7gPB5EZqF8ovytVpE5fIXrap?=
+ =?us-ascii?Q?CrdiDwy9IwnS8B+oSYXXxb9GDPBjpaDGti38vQlRhdgZaxmbqz+J8M17xnyX?=
+ =?us-ascii?Q?TIyCjvJVG1mWEAdVl6BGdObs5MsPDdf2x6SENyLod0EY2qSvQI/320J9KAjQ?=
+ =?us-ascii?Q?FIP2Z3hD4q/W6Oz/7ZjPoo6hzqAFp8kMwc+YeOQwQtvX/fqWvqwHWQpqu0jL?=
+ =?us-ascii?Q?CO6gK/Nd1WIr1Vdgk4tYGE0n5ZyZCzuhebORH4gJCKPMjH5JOKNSIdxHSD/K?=
+ =?us-ascii?Q?dwbnnx4T+KskEkgEAawz+qw1o+uncyb0jr+UcltwzVClL//OC9C1Q0n/3tW6?=
+ =?us-ascii?Q?HEg7JGM9xqHbET36YnwSVbWRKSKEQfmdISv7nFhdlPO/HOb5sqg3KFjo6RO5?=
+ =?us-ascii?Q?ohd1DKGR0Ni6K0PdD736qNR5BOV150NX7AFc1rSuaJpln+zMX1pciK5KG6c/?=
+ =?us-ascii?Q?rbtBtVnJw8ohaCCDd0UzkCyArYiciYBc5Dd7k8RO26nZFi0ta2zWCtjG64J0?=
+ =?us-ascii?Q?bjoW++QOCYa00Z7ZUs3torv6twe28OIl4hdat18t6PWHRcusapqsIeZpP3g9?=
+ =?us-ascii?Q?FUJ/M5Yp2JHTmNZ8aLi9vlR5Bzxngklq1EAYm7LC3m3ATtAin0zhy89TSzCl?=
+ =?us-ascii?Q?ABn0VuKQwI63Gb7zzCtzs334SJYxe5WK4Jmt/6pQPkb/8EaxQ3hPwigNCKhb?=
+ =?us-ascii?Q?wdcRonUMM95fxFEuNwW2reGk7sHwAoOkVZZqIN5zs8vGJiuZ2NeMKn/EcIo2?=
+ =?us-ascii?Q?ZvLVucJuAu7njIhi4dVWyZ4oqLDYbB4y+p+YtCy86m6ORMMzZHltzk6/KwgI?=
+ =?us-ascii?Q?dmxME6q3jyCdCYD9hCifLwavklXvdnR1WVIlOruPA3yGy08D1KVOaYLZLRPB?=
+ =?us-ascii?Q?YTR+ta76smjl8rU7Wj4H1Z7NlVtUxQ7yEH3hxOSFKHWlWeVM0VQESzUQL/WI?=
+ =?us-ascii?Q?p5dNZCn8WgvmwkVz121drstCJrtACKpItUIAeKYoHgrofl92JobT+vC/fwXb?=
+ =?us-ascii?Q?REZdohdIgISw2hQJLIjiYRYKloWFr9emSInFZ7Qq2OT/ep1DmWOPg5Z+pRe/?=
+ =?us-ascii?Q?atWWTjH0yVzvuuAJYiTQlmX1TEHzK8ReHgT0b2JSnzP3XdT+paQvDtNFSZCz?=
+ =?us-ascii?Q?KHp/USFX87FKMZJ3VhyBB+QQGcPLVzQi0Ze6dcWFxRG3xidpPat69JtIFWfO?=
+ =?us-ascii?Q?8OGBVVbrOoxyTtv5r8xqdGJotCtNditDy3wI0EOvlT9QFD5HJpG9BG/aTy7h?=
+ =?us-ascii?Q?dCnFWqvwYuj5lt2Y0BF1Lq+B4kddGJlGF4bPAr7By8Lt9TBnlZ6j5bJfXrmJ?=
+ =?us-ascii?Q?cg=3D=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(10070799003)(921020);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?+b7u3D9O0nPN/TvF93pNkOUbrdtxHTildsBR2xk/Fc38FzDZwWkkkPaEv//q?=
- =?us-ascii?Q?LwVwjX0cTQLHdke2CE5yFRHnLtucYWYY1xh/YEe7EcFHyB7Z/NdCPUg02e7x?=
- =?us-ascii?Q?ZrFKsxK/kB5id7lc6ZM2JDwUhfs8KEefPdT2Mo0WVxy3VXJn4bdYvlXCifOr?=
- =?us-ascii?Q?Zzr+nb960nAe1Lgc+wc8riIqYejPnmM6WfaE73Rhyb019lpfxpGQ5+m3yMcJ?=
- =?us-ascii?Q?fIbGW6b+JPhVEPpqvqv6aghHK9RzFSrLhAP8RFDebDTjB+YbeEF6uqA9nYwK?=
- =?us-ascii?Q?m+druJYv9HdG6Ymfs6bL6qjZIuBLaD1qdYCdm1ss25v09R7ozFU8Bp9Cz5dt?=
- =?us-ascii?Q?CAckEbCIWvI06gcL8eo5zt7g+a4QOlvh2+2b/+DAVjen3RGwldrMU6krv0yi?=
- =?us-ascii?Q?yCEbkYNazgEf9pGgJetEGGtgVtJ0ng/XByQHZH5zi8w74yZi+SInqJjAsN0K?=
- =?us-ascii?Q?zZ+Llkdjo/RPwRSz94IMFQEq/gYvRd36uWveZsyLZyszWDI8Vpy2GcDMZbkJ?=
- =?us-ascii?Q?aq/TuqrVithFQ5FLohkmmMGnfLZ2j6vPY5bCZmix4g/3OCI3GtqudCy28ALB?=
- =?us-ascii?Q?hxZiC7HApV4dir+JYfujyDHwwp+VENWBxBRuIlpmMW7p7+V1NmCMSlgs8JzN?=
- =?us-ascii?Q?S8uEb0Ds8YwwluMDLlij/fPSsTG9BnnIjasPHbJNjWQvvTcLGu2ptQgazVg9?=
- =?us-ascii?Q?41c0BoSVZncZ0vJz63o1DZVDhqyAc1pIVZweIO6uisULclAV6QnHllYKscBB?=
- =?us-ascii?Q?yYy2qAyYcRppwBoeAdW2m5zo37boxcBHt2GyRIVvqgrpGBv90QEzwiJ9fxyn?=
- =?us-ascii?Q?ntQ00ZGcAllNLFgkf6M7igiPevvBZlgVoR2At2nIKTx+FxV5VtnSUgon8SdA?=
- =?us-ascii?Q?YyOcY3ee9akjG7Rbfmo3xOdpM9u6NcvL6O10csMSNqcHw+96NIb8gafSuWI/?=
- =?us-ascii?Q?pqep5LNqoDLYCNxWW/56cQEAZBYSLauMXvLUJPAfqhxdVlYCIx0nDGSlJ57c?=
- =?us-ascii?Q?H37nWLj4fU7GLaQXIRtgKNdFQ0hEeCQiElfSW5nwn2D0Z5jsV+dq1HwBq+2i?=
- =?us-ascii?Q?ZhK/ZREb2OVhiKZz5DisioRvgXj5FJZPKgPycmqXQzuP576YEsc3NBeVMWK4?=
- =?us-ascii?Q?qLIqxw8pHbHaxWPGkWQrfR5UkiZ4bcQT3brS85fyCk5buecRUsFjFjf5KWcg?=
- =?us-ascii?Q?h8q3ZSroWyDBp18PlRxeIOn0OEq3v0+MtB+qdHKKJhiOxnhcNUnQ42ayNgeu?=
- =?us-ascii?Q?fpvJHLVWbmzOaZD499I224OTerqJyHYgUrJMxOF1HvzOQD8Hj6BZxGKvEI6p?=
- =?us-ascii?Q?0vMLTTrjPnQ5F30WM2fLzsj1fDYIVuFfR8JHMLiNRykh18z74FPNocVL8D+j?=
- =?us-ascii?Q?O8jb9mynCmAljgU3VWrSBkpf61Th70ZXAEunmutMzosWapQbgXPiCjqwWx8j?=
- =?us-ascii?Q?Bgza/h6q3426owWRdKHjpLusUY63s9hTPE+zVhnIv5a7Ut1WJswNxoP3DQIl?=
- =?us-ascii?Q?4x1c8MtLVG9gskB5jrJqs3uXBkCvN2hboHWBGhK0LdhhPO9GjybXZG5mx460?=
- =?us-ascii?Q?khCDUU15cMtpvHH26w4WdVvFivWWVmzPef/vfDdX3BFgCkFuOLIGY9RUsEGC?=
- =?us-ascii?Q?rFgqHN43WHOzdaHZXGMLyXYwFvrW7czc/FyZKveaMCv2XMHthj3VnSDPrmJc?=
- =?us-ascii?Q?kUNl6YbXe2JkZdzPdtjKCCdP89JsGrCbFVXVg0LHa9pQXsWkCIK7afdTDEaB?=
- =?us-ascii?Q?eCoye2uvEP+19wNc2PePI+OrEVcFZrtRxUhyDVrCYAvw40JkF526?=
+	=?us-ascii?Q?lJWhOY7hk4lgYICE666mh9V8McjtIHVL1M1aAl1f6UysVlUB099dK1YGD+lp?=
+ =?us-ascii?Q?5tRM3X3cVYcqhp52lOgRvUdNtqcSXU2ccCDlvJjB0klbPoiv6Qk1LTlCdgPX?=
+ =?us-ascii?Q?0nMMUAT4M/ISXaqYRH+h5Bmcdx3Nwy2IEPBgbXywvGGWctDDlTelvi7KgCbm?=
+ =?us-ascii?Q?Gas2XdPC/oC0Yhl3yaO8CJyajA7G6Zc/G8XT+BZSQH0O9mQF6mgcvMzdHI8Q?=
+ =?us-ascii?Q?+/eeGQHpfwn8hJT7lPm6N0phL2jJ7awcPwW9JpRZJqdbGKVh9QauLUXdVqNS?=
+ =?us-ascii?Q?JSb9+Ct1xmvhTtNya8elyWmiDVRaE0hnHuv2s3xTVy6b4ZxGYfFENYO6Akv0?=
+ =?us-ascii?Q?GrHZE26d3P3BTUsEO5oK6YF9ypNgc3idumTMDMDyu1Hr3Huh0qYXcBZ1n1u+?=
+ =?us-ascii?Q?n4Asn/c3w6RkL90rncIXhf3vUV+MpltnlBjTssxU0nbnizyxF2tueo9faT1q?=
+ =?us-ascii?Q?CAycMB2O3WsZEKNOR3k8bYfqSFvgQA8u60lHigZDCpcTy7c3+2SGKdyusLPa?=
+ =?us-ascii?Q?vQDi53SGisy/KsCbo4j8cXYnANmD4S7L8PUbeNrH4K/RCg2VJdwNhdrKDPcM?=
+ =?us-ascii?Q?kQZR0wG95u0GmN5se0CtP92g9h9Fpr7GQ548Lm+WtH5eVZKJk/qgMR0o6c95?=
+ =?us-ascii?Q?FxZwgV5G9Sq90ueMryDSOcON/KZotxLEmwGCpp0HyXUUPoyGXAeuxPrvxof4?=
+ =?us-ascii?Q?habP6aXg6+0b18liKsv1WAsziSqabLNsgmyDi3KC+9JQ5QludGvCEE8F9iKe?=
+ =?us-ascii?Q?vN7nS/ObkiQDuSReMVKRCRhhZoRmOXV5wuk7r+4Qxsn5gXPA2FbO9lSv58qx?=
+ =?us-ascii?Q?xy1y4nOTkOxVSIiCwxk8GgS7CnYLUx4FdWkf/g09V4OL3Dltw+tiggRUtpfy?=
+ =?us-ascii?Q?kGIjxqVlPSTbXuI4r2bwjoH6IJWzUY0Cl5vtSuzcANbUudNsMJsNgdQJrVhZ?=
+ =?us-ascii?Q?AYWf/bgWvCjI9xOEtn+Yq4K19AE5kz83V4jLp8Us0tD7Mgr6DiVODzub/CXQ?=
+ =?us-ascii?Q?Sp3X7VZYPrLs0ezMmmgan9VvUNS5Qhy7Yi5WTIQIORMEJdwzIYB388JWo08R?=
+ =?us-ascii?Q?YqOcjB06frzGK3a7JT/2VbZOlVPTnI9gyjIZjX/kDhoMX93FZ1YZm8zlEn9D?=
+ =?us-ascii?Q?9uhEQvkCWSkWtV9m0afONkfFVLLNDxyoD6W3dtS3TVNLKbHS6D6jQBOwkzyg?=
+ =?us-ascii?Q?41U1jRi/n2WbEAgsZqnMz/Zf2NY5YSaj4cD7CJfZYIaUkeJt4sR2giBlhEVv?=
+ =?us-ascii?Q?2sJzv9H6032ObQQ4JH+yv048XdldVstsPi3tG+bUKC041TA7bp9bATUcQlUD?=
+ =?us-ascii?Q?6C+rz55nGIOex7VC/H8Kn8DlGJwm/LJNA55CFESAEtAR1iZuEXcdbr11AqG6?=
+ =?us-ascii?Q?y8G/I47LGcIxGTmQP7PJUXXhOsYz6eBQTR5vzp23pUIBTUyKMvf5swpoOabY?=
+ =?us-ascii?Q?dYbDcBQ+tvJwlGykg9FOFUgNJ4qrT/W+rP++Qw2xpiiE0GJxKi0+yzpknhi9?=
+ =?us-ascii?Q?fot14PKVL8Bp6d/L+Ld5WmzbxkvtVXwVS6UaKM39VxbuigK7rsi5QSzKD8MF?=
+ =?us-ascii?Q?QwktIjoTXkTGdyBaiMidZ9asH6A5qAcCZIpGnQZuF67ByYSl8k4O+GnEgpRY?=
+ =?us-ascii?Q?91kpUWMT/ZSF4Ro61+wbWP9kqiz0JN6OVy7T9xKg4pS/+VcfAHGXvNmMwuQL?=
+ =?us-ascii?Q?BPdNOEtowF9czLMQ8PAJKgFC+3K71ltdJQCLEr8x4DqvlGYOtYbTVwiC7Z3+?=
+ =?us-ascii?Q?eaykPs+Mz6m29IjGwqU0WTR9ZX1G1i3+5NJElEt4vvQcuox4IWnV?=
 X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: ab956624-7bbb-4675-4273-08de626aec4d
+X-MS-Exchange-CrossTenant-Network-Message-Id: d1e903a5-fb48-492c-080b-08de626aecf9
 X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 14:54:10.4578
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 14:54:11.5415
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: oHHo68OkFz9ecB6PmiQTtl6qcBAEUvZLGwA3AYm3NGWMuE0M7+zwhuZQz4sTxZUeoXtvWD63PScJ23cS47xbLQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: /oAy9D/zTwQtz1sA44an6gcX2caAVKa52mU2UifnUxJ84pmyK0si7OIyZIH6a3C2DSzN5QbBLMSSel0Ai8OFqg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2195
 
-Hi,
+dw_pcie_ep_clear_ib_maps() first checks whether the inbound mapping for
+a BAR is in BAR Match Mode (tracked via ep_func->bar_to_atu[bar]). Once
+found, the iATU region is disabled and the bookkeeping is cleared.
 
-This patch series is a follow-up to a side discussion that started from
-Niklas' comment at:
-https://lore.kernel.org/all/aXtrW7viGZfMNZur@ryzen/
+BAR Match Mode and Address Match Mode mappings are mutually exclusive
+for a given BAR, so there is nothing left for the Address Match Mode
+teardown path to do after the BAR Match Mode mapping has been removed.
 
-This series:
-  1) Makes BAR Match vs Address Match teardown in DesignWare EP explicit
-     by returning right after clearing a BAR-match inbound mapping.
-  2) Fixes the dw_pcie_ep_set_bar() mapping-update path to run
-     dw_pcie_ep_clear_ib_maps() unconditionally, since the driver cannot
-     reliably distinguish BAR Match -> BAR Match from Address Match ->
-     BAR Match transitions when the same epf_bar instance is updated in
-     place and passed in again.
+Return early after clearing the BAR Match Mode mapping to avoid running
+the Address Match Mode teardown path. This makes the helper's intention
+explicit and helps detect incorrect use of pci_epc_set_bar().
 
-Base: controller/dwc branch, latest:
-commit a24149881558 ("PCI: dwc: ep: Add comment explaining controller level
-                      PTM access in multi PF setup")
+Suggested-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Koichiro Den <den@valinux.co.jp>
+---
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Changes since v1:
-  - Switched from the v1 approach (Y) to the alternative approach (X)
-    that was proposed earlier in the discussion.
-    Details of the v1 (Y) vs v2 (X) are described at:
-    https://lore.kernel.org/all/sextbnbmsur2xjfoun2l4lr5vekmpzae7sx6or2ird44t6ud6d@yprcz43tpq4p/
-  - Changed the subject.
-
-v1: https://lore.kernel.org/all/20260131133655.218018-1-den@valinux.co.jp/
-
-Thanks,
-
-
-Koichiro Den (2):
-  PCI: dwc: ep: Return after clearing BAR-match inbound mapping
-  PCI: dwc: ep: Always clear IB maps on BAR update
-
- drivers/pci/controller/dwc/pcie-designware-ep.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 7e7844ff0f7e..0ca05943a1e5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -165,6 +165,7 @@ static void dw_pcie_ep_clear_ib_maps(struct dw_pcie_ep *ep, u8 func_no, enum pci
+ 		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, atu_index);
+ 		clear_bit(atu_index, ep->ib_window_map);
+ 		ep_func->bar_to_atu[bar] = 0;
++		return;
+ 	}
+ 
+ 	/* Tear down all Address Match Mode mappings, if any. */
 -- 
 2.51.0
 
