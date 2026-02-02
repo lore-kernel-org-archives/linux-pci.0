@@ -1,226 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D9C41B983F;
-	Mon,  2 Feb 2026 13:05:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9468E36167E
+	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 13:08:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770037514; cv=none; b=droSrRzpMh2Sr0yL0CImf6d0ZSCKMCAdMSBnLr75h7xHU8oyY0i63ITInyd2h7kSUoMNMT9rqMeVert5ILbV+BHPpeMQofrToR3nSJBuOwT5rsqudb9h6X9uB/RaPcgHtOh5+jC3Jf65ml8s9NKIP/nOeN1AegxQlhe5HasjVK4=
+	t=1770037692; cv=none; b=CC+IkVnLgVUNO7IXmlpej6QuoVTBdkZ43JWqbvLlgPrS0EFNqrGuFUvyow86+PXzdwFMx6+wc8bN32FL3zQwDY04LH3EZDs3ydB3yY0TS6IyBmhTd1yTW79zjtHaHINEgyS4FKoIQ5QbAGTIyHSrL1Zj4sQammdxc7hv87cuzbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770037514; c=relaxed/simple;
-	bh=EA8qmHxvlMjKBeqgsh6FoAR2kX5IcYCMu3Q/fDbz/zg=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=i/7/S3k7phNfyeUz5YQsqtcL4LrlEBn4t7N4Bqk2BpGlNRGcWtD0Q55LydG2XPvxEknSvOCiNo40MNeVc1Q+oh7NBKvbh2zQjyRVUdb+5JAhWNIeVgGeaSNjtn+pixOq4qhlMcFgxkI8rPMqhJ1LFtgV6m15ek7yN9a4wTuOsOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FdM2WSOE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770037692; c=relaxed/simple;
+	bh=zt9DR77wzlilHy+G4PnOiXCK9LPBeXZsCAt1vj+ySS4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CnXQ5a40HkU1eFd1wLQheqVowC2i+3u2MV5UqYtH6JQgVJXCfLJn04YiqFZOKfSJAT6EZE1fCahnP7hIYV27piXpnAxR8nHscir0GRRa5haXjmemnTrNR7RhWKBGZjQ+dEvcv7OZofPfo7of04YVc3svwfbI0X4+BwNbPcNP0oU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=aU4scHM6; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FdM2WSOE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5443BC116C6;
-	Mon,  2 Feb 2026 13:05:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770037514;
-	bh=EA8qmHxvlMjKBeqgsh6FoAR2kX5IcYCMu3Q/fDbz/zg=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=FdM2WSOEpeVQ0G9EyU21z1S0Lc0i5nKom3jrdf4XT0vgxVkmSvVv01d7Bbqzor4Fr
-	 CKetcy6KuujlK1hofUqZhdONhdECK3R68Fs7v//6QJguXupZST0CUs8zTOP9DioDPT
-	 IUnmq8kMggsi9hM/2sWsGOulgfdLPcK393LWYJkIgu+PxzntGjJR8JkaKZmODhjqMr
-	 4Ea8+agyrb3fZaidYMXZ95Vvnc/vkji4291P5tmXEeFMR/upeh++8DYO0R1c5Phm5z
-	 UTz1+AHlfwlF8f9Wzh344oXZckqGRPiIKrhA4666Jd7Zkj638nJsu/G51PO4f0Yq98
-	 RRwcBhArrCJpQ==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: Gary Guo <gary@garyguo.net>, Gary Guo <gary@garyguo.net>, Oliver Mangold
- <oliver.mangold@pm.me>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>,
- Boqun Feng <boqun.feng@gmail.com>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Alice Ryhl <aliceryhl@google.com>, Trevor
- Gross <tmgross@umich.edu>, Benno Lossin <lossin@kernel.org>, Danilo
- Krummrich <dakr@kernel.org>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman
- <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, Leon
- Romanovsky <leon@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
- <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David
- Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Alexander
- Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan
- Kara <jack@suse.cz>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, "Liam
- R. Howlett" <Liam.Howlett@oracle.com>, Viresh Kumar <vireshk@kernel.org>,
- Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Paul
- Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, Asahi
- Lina <lina+kernel@asahilina.net>, rust-for-linux@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org,
- linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v13 1/4] rust: types: Add Ownable/Owned types
-In-Reply-To: <DG4H66NZ5ME0.3M9CQY1ER4Q0X@garyguo.net>
-References: <20251117-unique-ref-v13-0-b5b243df1250@pm.me>
- <20251117-unique-ref-v13-1-b5b243df1250@pm.me>
- <20251201155135.2b9c4084.gary@garyguo.net>
- <87343jqydo.fsf@t14s.mail-host-address-is-not-set>
- <rHWhMe7C5fnwgGCnKS4N7G90SrX0Ao8332cwKPH2o-Em_lCBG3lm_erDn9dtg55SpjMFQQoJ_hhDU3bKOdYfAQ==@protonmail.internalid>
- <DG4H66NZ5ME0.3M9CQY1ER4Q0X@garyguo.net>
-Date: Mon, 02 Feb 2026 14:04:56 +0100
-Message-ID: <87o6m7pa87.fsf@t14s.mail-host-address-is-not-set>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="aU4scHM6"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-47edd6111b4so47200995e9.1
+        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2026 05:08:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1770037689; x=1770642489; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=us8rkbaDqiFPo9bSgIdnDClrOWuVChIefeA+LRaKMx4=;
+        b=aU4scHM6YzD9HFDtv35PVHrZ0aKJKjmQVgd3n5rn3AOxSmD1b9+8zWdiiAYoI52+um
+         KaZtLfQdZLzhv3ZJ65BP/2dQBWE9mSssjvVJWQO8x1KgpvdbJqCK72h4bHMTjcFbdNAk
+         dAM5izxsbb5+HUTXh1GGk5WcgZxrELLHlb2lIYs2sVb4IskTjujAEplOrVug9QYRfX04
+         BLWQdLDpA2yc5i0KXVf8yUK648wF00Awm7WW+h/jc8uxSX+/2XDwSZ1rWD50fnl2ZfqZ
+         BtObyE4OvgTybxEmc2zLEWrjr3ZC8wvHWd0J53cZLK04s0JE4UJhRoAEl3tarkCCeVgk
+         0wUg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770037689; x=1770642489;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=us8rkbaDqiFPo9bSgIdnDClrOWuVChIefeA+LRaKMx4=;
+        b=iwSGQSqojchyfkbKSIvrk/JcKJ5ndjfenfEyPiuu8lfLgvcggo0hasIttxTUBU+1nk
+         FS8Z9C5CVbuzCo8BkGQOTy/zAq0IFFfQ0aKManF8/0ExskxdtiL3Ey7yErgnCE6Xdet/
+         Vbu/d57F+lZb+d+X8LJOTr1KMS9Z3iCvVp2vD1GigOMs5xlwDPtAIlxopcIphOPeDmaW
+         MHikJ8ZoNCgdWMQbhY1+X6gvkSkp/VZ3XL+36FSnOdUnf/k9HWCPYdCgjqAKVuCyNPq5
+         3AxV3NBgHRLB4+fRnIzDa3px1hdZehX1MErtlqAMUs0U3ojDa1Szl4QsScCu+zfz5b8i
+         qOXg==
+X-Forwarded-Encrypted: i=1; AJvYcCWB553GcUNHCMUOYPpVEniQYoxqmWyRB3k2m6AF80XKL0wC7/Qkrp3q1iMe5/EKiIg39Amr80WrX5Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyigYBM7kAgdxiY8HZ/dzNPDdcJCJS2s2Vd68Lt+500ValQPFLa
+	nNZV0icLhU3TmZDToOHlOtjX/W/RfA5s3h6Gq07YsCUVvAKGub7hTdeThF9iIj+ezwgXV74sZ3S
+	2ii2q
+X-Gm-Gg: AZuq6aKMZpJ6gp01z+VSVOymqhgL2gQKMzy/MzMWG/ouob2igrY8zab8SOn38U6teCm
+	rEaCHyLoKwK9YxKnWKNy+ee8896bdXapzfV5El9SGURdsDVp2hNrviv0ogp1xQPNQe7a1bRxrvc
+	fEIZAsXQkdzd8TVq46RJjinRUPQ0ZxppQblQRuufBz4U41Qa24CsldPsKQk8gQUysl3/+hczCeR
+	T31PQKMq8VZreGEySHfbyelaGuMeRy0oC+Abmy51wDasmxJ8Tv6nrqO4W5V2dyAFXcOFmjH7c38
+	pGc8Q7KO7pk5bfP84ugDiBm3fODHdsJNmU7uGQiwwZl3b/On+BsCVZ7Uy+QJAB/D717qXgxL3dc
+	ozTtDdGYFp50jendM/ZFobAulRxjl+dTmngXdyhBm38kndqdcwbiRebHO7ncwM9WjEpseHJ32az
+	7dy7Ygcis495d6dmYR/UOUkFLaXH+BnQ==
+X-Received: by 2002:a05:600c:310f:b0:480:3a72:5238 with SMTP id 5b1f17b1804b1-482db49243dmr160135245e9.30.1770037688901;
+        Mon, 02 Feb 2026 05:08:08 -0800 (PST)
+Received: from vingu-cube.. ([2a01:e0a:f:6020:fad5:23a2:cd9e:d80e])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48066aaf235sm438299775e9.0.2026.02.02.05.08.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Feb 2026 05:08:08 -0800 (PST)
+From: Vincent Guittot <vincent.guittot@linaro.org>
+To: ciprianmarian.costea@oss.nxp.com,
+	s32@nxp.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Vincent Guittot <vincent.guittot@linaro.org>
+Subject: [PATCH] PCI: s32g: Fix ports parsing
+Date: Mon,  2 Feb 2026 14:07:56 +0100
+Message-ID: <20260202130756.1421488-1-vincent.guittot@linaro.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-"Gary Guo" <gary@garyguo.net> writes:
+No error return is missing after the loop resulting in removing the
+ports from the list.
 
-> On Mon Feb 2, 2026 at 9:37 AM GMT, Andreas Hindborg wrote:
->> Gary Guo <gary@garyguo.net> writes:
->>
->>> On Mon, 17 Nov 2025 10:07:40 +0000
->>> Oliver Mangold <oliver.mangold@pm.me> wrote:
->>>
->>>> From: Asahi Lina <lina+kernel@asahilina.net>
+Fixes: 5cbc7d3e316e ("PCI: s32g: Add NXP S32G PCIe controller driver (RC)")
+Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-nxp-s32g.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-<cut>
-
->>>> +impl<T: Ownable> Owned<T> {
->>>> +    /// Creates a new instance of [`Owned`].
->>>> +    ///
->>>> +    /// It takes over ownership of the underlying object.
->>>> +    ///
->>>> +    /// # Safety
->>>> +    ///
->>>> +    /// Callers must ensure that:
->>>> +    /// - `ptr` points to a valid instance of `T`.
->>>> +    /// - Ownership of the underlying `T` can be transferred to the `Self<T>` (i.e. operations
->>>> +    ///   which require ownership will be safe).
->>>> +    /// - No other Rust references to the underlying object exist. This implies that the underlying
->>>> +    ///   object is not accessed through `ptr` anymore after the function call (at least until the
->>>> +    ///   the `Self<T>` is dropped.
->>>
->>> Is this correct? If `Self<T>` is dropped then `T::release` is called so
->>> the pointer should also not be accessed further?
->>
->> I can't follow you point here. Are you saying that the requirement is
->> wrong because `T::release` will access the object by reference? If so,
->> that is part of `Owned<_>::drop`, which is explicitly mentioned in the
->> comment (until .. dropped).
->
-> I meant that the `Self<T>` is dropped, the object is destroyed so it should also
-> not be accessed further. Perhaps just remove the "(at least ...)" part from
-> comment.
-
-Right, got it. The "until.." is in place to allow reuse of the
-allocation. There is no requirement here to drop `T` via the `release`
-method when an `Owned<T>` is dropped. Implementers are free to implement
-schemes that reuse the object without drop and re-init. This can be used
-in object caches such as for the block request cache.
-
->
->>
->>>
->>>> +    /// - The C code follows the usual shared reference requirements. That is, the kernel will never
->>>> +    ///   mutate or free the underlying object (excluding interior mutability that follows the usual
->>>> +    ///   rules) while Rust owns it.
->>>
->>> The concept "interior mutability" doesn't really exist on the C side.
->>> Also, use of interior mutability (by UnsafeCell) would be incorrect if
->>> the type is implemented in the rust side (as this requires a
->>> UnsafePinned).
->>>
->>> Interior mutability means things can be mutated behind a shared
->>> reference -- however in this case, we have a mutable reference (either
->>> `Pin<&mut Self>` or `&mut Self`)!
->>>
->>> Perhaps together with the next line, they could be just phrased like
->>> this?
->>>
->>> - The underlying object must not be accessed (read or mutated) through
->>>   any pointer other than the created `Owned<T>`.
->>>   Opt-out is still possbile similar to a mutable reference (e.g. by
->>>   using p`Opaque`]).
->>>
->>> I think we should just tell the user "this is just a unique reference
->>> similar to &mut". They should be able to deduce that all the `!Unpin`
->>> that opts out from uniqueness of mutable reference applies here too.
->>
->> I agree. I would suggest updating the struct documentation:
->>
->>     @@ -108,7 +108,7 @@ pub unsafe trait Ownable {
->>         unsafe fn release(this: NonNull<Self>);
->>     }
->>
->>     -/// An owned reference to an owned `T`.
->>     +/// An mutable reference to an owned `T`.
->>     ///
->>     /// The [`Ownable`] is automatically freed or released when an instance of [`Owned`] is
->>     /// dropped.
->>
->> And then the safety requirement as
->>
->>  An `Owned<T>` is a mutable reference to the underlying object. As such,
->>  the object must not be accessed (read or mutated) through any pointer
->>  other than the created `Owned<T>`. Opt-out is still possbile similar to
->>  a mutable reference (e.g. by using [`Opaque`]).
->
-> Sounds good to me.
-
-OK.
-
->
->>
->>
->>>> +    /// - In case `T` implements [`Unpin`] the previous requirement is extended from shared to
->>>> +    ///   mutable reference requirements. That is, the kernel will not mutate or free the underlying
->>>> +    ///   object and is okay with it being modified by Rust code.
->>>
->>> - If `T` implements [`Unpin`], the structure must not be mutated for
->>>   the entire lifetime of `Owned<T>`.
->>
->> Would it be OK to just write "If `T: Unpin`, the ..."?
->>
->> Again, opt out is possible, right?
->>
->
-> When the "mutable reference" framing above I think you can just drop this part.
-
-Agreed.
-
->
->>>
->>>> +    pub unsafe fn from_raw(ptr: NonNull<T>) -> Self {
->>>
->>> This needs a (rather trivial) INVARIANT comment.
->>
->> OK.
->>
->>>
->>>> +        Self {
->>>> +            ptr,
->>>> +        }
->>>> +    }
->>>> +
->>>> +    /// Consumes the [`Owned`], returning a raw pointer.
->>>> +    ///
->>>> +    /// This function does not actually relinquish ownership of the object. After calling this
->>>
->>> Perhaps "relinquish" isn't the best word here? In my mental model
->>> this function is pretty much relinquishing ownership as `Owned<T>` no
->>> longer exists. It just doesn't release the object.
->>
->> How about this:
->>
->>
->>     /// Consumes the [`Owned`], returning a raw pointer.
->>     ///
->>     /// This function does not drop the underlying `T`. When this function returns, ownership of the
->>     /// underlying `T` is with the caller.
->
-> SGTM.
-
-OK.
-
-
-Best regards,
-Andreas Hindborg
-
+diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+index 47745749f75c..767f5a622441 100644
+--- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
++++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+@@ -285,6 +285,8 @@ static int s32g_pcie_parse_ports(struct device *dev, struct s32g_pcie *s32g_pp)
+ 			goto err_port;
+ 	}
+ 
++	return 0;
++
+ err_port:
+ 	list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
+ 		list_del(&port->list);
+-- 
+2.43.0
 
