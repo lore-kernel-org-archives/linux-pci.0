@@ -1,206 +1,362 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013027.outbound.protection.outlook.com [40.107.162.27])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013027.outbound.protection.outlook.com [40.93.201.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF7753081C2;
-	Mon,  2 Feb 2026 19:46:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 140C730B52A;
+	Mon,  2 Feb 2026 19:57:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.27
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770061579; cv=fail; b=CWfLLPdaMGYGHsWUYRPtx/sqshwRNCLX+ymnptV/GcGvNsK67fYj63BmX2HjA+EVQ2BOUHQ2KZkvF4a2WlkuITu9BF00+mZU95snKsZ5Md4its48B4KSBiL2PUV0ijxdEDcpY3OJm5aeuhqzYsEygN1yhiUzgzRj0V+wcU1lJy4=
+	t=1770062252; cv=fail; b=pubKonN2iTiqGnMj3yZLspVMuhFx4abT9fhBT/8G7VCUDIrt9aRjRN56S6aVpN/ic6RTi0deNEQH1PIUa5JiGYqsQLPcCN+QyrPYZsp/mt7+6WUaIoFqDTHZl6Ch/wrhq63JwN24qnY00ov5E7iYcFfq6HNPCIAwrDyCbyekR/o=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770061579; c=relaxed/simple;
-	bh=5w7p9pgAsxvwl4Z3dJNPX/Grd6EXgIwPQG3MR6ldgNY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=aAfh6K5BwTRtSYocoMIiJjChk2cV7bWr48MN4NIh2mHpd+xFxUq485YDAwB2AWupdO/hAvHLEI0zPT60ES8MPC/4QODSX0nsyjGv+q7MxkyJKyDI+rqy3246UsMk3lAqQlZABNyqbNxel8TxRwVC0eizz4c4ANMfiZ9HgPNl37Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=BWWTGbZF; arc=fail smtp.client-ip=40.107.162.27
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1770062252; c=relaxed/simple;
+	bh=9XqDf9h536darH0npEgiQBqM2uQACkqM3HEQxyN2bls=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DcaR92Rgx4qZQvjpAEAOU4MQkr+V9EHJFMfJPXH9DYW0K+svSBB/leOeFbzAOXCz/3TwBkqP5Z24B4/cDJqZ0pWd0YRZqlr9GdHz1X+iBgrX+POiH4cfXNe1f/z+dz80MJus61hmf5M/vj8VSPUn3y9ZWs33WkNjqrE2JMbgTJg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=VDx3LfXg; arc=fail smtp.client-ip=40.93.201.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="BWWTGbZF"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="VDx3LfXg"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=D+QltG9SjhnKjTJT4Xqc/Re726nHf84j9RbncOxYgB1SSbnkZasCAVFDp5/9F3SQMDNQi33kkOOuXHX88RswGYiC8TwgTnfzMWSKZ30Z8g0snZ1SZVktca6CYa6aOQadLZlcK/3vpVUVU1o39VpiQ1qbKIUxGq8xkujsuHa2VcoGgF9HOQJvrOq/6N46Fg0qgu1TuxcAGFqacG6Fkx4jac6xjOQOeZk7LPP16N8VQtyVHYeapyac5zZ4LyEXfTDp6a75Cr/hp1xQAhkzVPR9RumzN+788N8oDNyu6VXCzxpc5AnDzeaCCdPaPsMHdx7HxWniRLcWTwdCPixWL3YCJQ==
+ b=pwtz47GT1wEVfrMVGfAj5J9fPi6G8/jwYKMDkQZj3/vtvfOMA9qip41Cevcue+BOnWRXN5YTEsDFDF7pJ9peMnXLrlopdCO6EOAhl/OtBS0f6hB8z6D+UQMTk3PXAOCszerf5OZKcj1IMHueRZ7EKiZvRerESY9FyOxA1pROsEZggtEO9iXijz+sNNWefJ/O7qb9Xj6LRpPpLvV36PV5GcqFQwN1vqkm7KaQx1dyVVVvYCy6CDVGv3ZTB9NqH45YSdpE2dGNFyG/9rVbOzNtZIQcrlrWO7AHZKJFHwHcl6BiH+rd0VfmPunp4N0pLurrAB7nZVBjagG6wjGauELawg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zbS7/PkeHHh5XYRztVTzgx+wTaQ6MglpyrnOgzQABA4=;
- b=h8ZOfs5x80gSXj0kj8mFkW7hROGLS7F8hvXRdSre/dsHysytvJExZs/eW6sY6+x6F5TV4xp1Y4qsR4CjbiBK10+zRfdCoZNkUuuIoa0m1QN1yMPCkYJXhakAYm01o2wc7k+bDloNonzHvrd0MdWIUvEZG0JJqqvDEyLDWna/WtwfbhJm59+r7M4abV50Pdg4qjTzKt8cJ9lCYdjL+Guwxae0SCNJJ3kZALguJ5ZN66YFDHs+Icd4nMHn5FjZdWqtWdW+TdxYx7CMP1tTp+i5n9FG3UxIxfuKeXzPo21Z6ZHb4wcSJwPo5SLfuytgbazKQUsDGGv6/clZQUEpX0eTtg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ bh=/OmqGg3khQmLwGMKcm7kuEy7AZHMSCC9qER6XlniUDw=;
+ b=MYhTWLL/aM7MMLmyQrFSEDihVd8p5elSNXwi2ctZ/5S7f/xwpTpZCLBW7rKSu+y+ndtQq7lJKexg+0lRpuMWIjwFaYRfynQWFr5K55/NHQZCT4F6B1nw73ZqLgB1+sGHDk1LP/uV6srl99lfplCnRD2Ptpr/UdxIpWa250wx3rynB+4n+Ls/dwEstqIRAo/NU8WW9kxdIIqZ/IChfaGo//0IhO4TnTJoH3zsuXoOFDnQYDn8uQrBItsRN2zNDu9Em7mY8OiwGaAIYzAH479cCXNMLc8lpwwZTq8acP+vkZ4Msoj3sMuRLLSyGn35gK7gE5M3Xk7Tdw4sQqlwlHhICw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=ry.rs smtp.mailfrom=nvidia.com; dmarc=pass
+ (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
+ (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zbS7/PkeHHh5XYRztVTzgx+wTaQ6MglpyrnOgzQABA4=;
- b=BWWTGbZFCvdU63h15Xy3R04qtV79Ly0oO8BtCMyao0vmmaehd2krctCLkGQOl0j5LjHzqwpF7uEWUpI9V0YaSKyAwAS4UGvSGHYyEwZHCsNA1PFYa7m09CwklseQGOPV/SyN9szfIo4o9OWuaGJZn6uhnxy2Xzc7c2PR+IEJVn0GWGanR4i+cQ02BBgcturJviYnAeLha9plJyL/imP/8edec6/SnE+hM0s1ax/yp7uLp+2TtULE3ZptbOtRG9ALKoZiICoxAWbqzSzLvIgHr+fqugtwCGNGFAh/CWVu5zEQcGcJCM2U6CCry/V/hhs4mLGXV0i1KB+ya8rMXKS6nw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by AM9PR04MB8667.eurprd04.prod.outlook.com (2603:10a6:20b:43e::14) with
+ bh=/OmqGg3khQmLwGMKcm7kuEy7AZHMSCC9qER6XlniUDw=;
+ b=VDx3LfXgBdkN5Gr3Jg/Zm6AhHxOQawuQwPW2XpLgO3gb/mSi5GsM03lXRH9kq/Vg5hmbf253snrm+5WLhTNSAheWIGM+ZFgQ062Y7pCBgg0xsSNUt8KlG0I1nzVSLpRU/cXiIH8mPBMJBKBbruZlaSYgPLceeLrjod50hniFrztUAaBtLtRZriBZ0QeLTA+sJtFnxEathB2mAggfEkKGfrsK/I9SEY8mhGF5IvBMNBglqoVIHbx0BVTN86D6hlyMKxaxd7j2MWliPRrHv15ylCs8hXNHu3Bd0YnaQqTgzmTFu8djAs9ecEPziCfbX1oL2Gt8Au7yGcF8FrrILDx2WA==
+Received: from DM6PR06CA0088.namprd06.prod.outlook.com (2603:10b6:5:336::21)
+ by SJ1PR12MB6075.namprd12.prod.outlook.com (2603:10b6:a03:45e::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.16; Mon, 2 Feb
- 2026 19:46:15 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9564.016; Mon, 2 Feb 2026
- 19:46:15 +0000
-Date: Mon, 2 Feb 2026 14:46:06 -0500
-From: Frank Li <Frank.li@nxp.com>
-To: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: ciprianmarian.costea@oss.nxp.com, s32@nxp.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, imx@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: s32g: Fix ports parsing
-Message-ID: <aYD+/iTSF8ikTLIY@lizhi-Precision-Tower-5810>
-References: <20260202151050.1446165-1-vincent.guittot@linaro.org>
- <aYDiFpGT5hEDDFhV@lizhi-Precision-Tower-5810>
- <CAKfTPtDjad7aowTQ3UJPi5Qqgzf3q8J=kASa-t3YM4zfjUv3-w@mail.gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKfTPtDjad7aowTQ3UJPi5Qqgzf3q8J=kASa-t3YM4zfjUv3-w@mail.gmail.com>
-X-ClientProxiedBy: SJ0PR03CA0187.namprd03.prod.outlook.com
- (2603:10b6:a03:2ef::12) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+ 2026 19:57:25 +0000
+Received: from DS3PEPF0000C37B.namprd04.prod.outlook.com
+ (2603:10b6:5:336:cafe::a0) by DM6PR06CA0088.outlook.office365.com
+ (2603:10b6:5:336::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.16 via Frontend
+ Transport; Mon, 2 Feb 2026 19:57:25 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ DS3PEPF0000C37B.mail.protection.outlook.com (10.167.23.5) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9587.10 via Frontend Transport; Mon, 2 Feb 2026 19:57:24 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 2 Feb
+ 2026 11:57:19 -0800
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Mon, 2 Feb 2026 11:57:18 -0800
+Received: from inno-thin-client (10.127.8.9) by mail.nvidia.com
+ (10.126.190.181) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
+ Transport; Mon, 2 Feb 2026 11:57:16 -0800
+Date: Mon, 2 Feb 2026 21:57:15 +0200
+From: Zhi Wang <zhiw@nvidia.com>
+To: Zijing Zhang <zijing.zhang@ry.rs>
+CC: Gary Guo <gary@garyguo.net>, <dakr@kernel.org>,
+	<linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
+	<bhelgaas@google.com>, <kwilczynski@kernel.org>, <ojeda@kernel.org>,
+	<dirk.behme@gmail.com>, <lianux.mm@gmail.com>
+Subject: Re: [PATCH v5 0/2] rust: pci: add capability lookup helpers
+Message-ID: <20260202215715.1000e2eb.zhiw@nvidia.com>
+In-Reply-To: <2f385010-0a47-4d0f-8554-b841f6026561@ry.rs>
+References: <20260201074248.1629393-1-zijing.zhang@ry.rs>
+	<DG4KFDZNRSYS.28570B2QPH28E@garyguo.net>
+	<2f385010-0a47-4d0f-8554-b841f6026561@ry.rs>
+Organization: NVIDIA
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|AM9PR04MB8667:EE_
-X-MS-Office365-Filtering-Correlation-Id: a6365920-8fd0-4746-b2e8-08de6293b9b0
+X-MS-TrafficTypeDiagnostic: DS3PEPF0000C37B:EE_|SJ1PR12MB6075:EE_
+X-MS-Office365-Filtering-Correlation-Id: 84069bce-b753-410e-97c8-08de629548b7
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|52116014|7416014|376014|19092799006|1800799024|366016|38350700014|7053199007;
+	BCL:0;ARA:13230040|82310400026|376014|7416014|36860700013|1800799024|7053199007|13003099007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?bIi2lfgEUjB5x5yFZig32dV2JaGzLplb2Ik3dt290vYcPkZkD6v9eZp3S+Zd?=
- =?us-ascii?Q?0dcCZSEd84c5HqxBsIJnCKdTY3vXbd1uD/tvOaZ+n3qWghejyVMImH30BedS?=
- =?us-ascii?Q?y9ZFFoYwJPc/26Puz5XKPyykYK7erSa/avJKsp5nYEMlocWO6H0p2AV8n4v3?=
- =?us-ascii?Q?YrOJ/dOR4sHbTeSGViSIaYSeYRpsFcxJ8OwmskK9ss4NvAkt2f230roiI8y+?=
- =?us-ascii?Q?wK38/+DW2kDrc6izrWZTIaeRhEdhB38CICIfaxFGEjV6Y8IjgsYVH10Wz4aQ?=
- =?us-ascii?Q?dnsOg3c3v0qslgtR23/6+SqwbPbuqZ7CQ+QxzC5OLW/Tdt7jSG1IQqkQNhGd?=
- =?us-ascii?Q?4j2YhKUvD6W6XC8gHiHjEdpWTx/S4xLHdVzDpBzEBSDNLsWG6Nt2WwlsjoN3?=
- =?us-ascii?Q?sJIgYIwQeJAHookuL3pfApUNhtWT9OkTzgjNw9wMQHoOFY+LRqpOZ7bFs5oA?=
- =?us-ascii?Q?alzlHyPMTFfVpRu9qlI0ssFOzyGZhjmEjZo2jgaRfyQKcpKnAui3kP6xDF9c?=
- =?us-ascii?Q?Py6/Jqj8R6zUFYnfq7jrSjBzZr3qKYiUHYqVowYcO1CvQAo0TThv3mMZgjtH?=
- =?us-ascii?Q?w6d27s2qocpvr2L5OFyYiV8urbssnx00JLvcK7lON5aXfVYevF39NJ7tb9bf?=
- =?us-ascii?Q?8IYkNZOqBFFFII7TGyRfOoTy5ugAJGJwO/qZw1rnlKP46M89BLTEEGAbxZ+8?=
- =?us-ascii?Q?SplEjOfXFz7feSHaeZnRVwHXLNT3s5Su3CQT5/qVpecicIhng/dPI3mET9Hz?=
- =?us-ascii?Q?Mf9HEMp1XyGZJc1PJFMiGinfjcN438GwJtXDkyZ2j9MUsqM520jAMQCQ5RpZ?=
- =?us-ascii?Q?ek0miCqB0zO+km2HA+s2RoViRXidMw+fsnPaEfN9158vBU2bcIcD7hq8lQzY?=
- =?us-ascii?Q?BHU2ExciNF21i7sKuVfK1KX39GvwucRS6secyst/OiRC5UyfYs7wzWRODCEl?=
- =?us-ascii?Q?hFBHiUR5x4UW2oXMlHJ/P8OzDli2w81LN1a++86RKti/XQ9dao/WDy6yFOM1?=
- =?us-ascii?Q?jktGkrTgimY6mBGQ7LygiA+k4JCFDjJ/E+4AqqgfjJCy5/DfN3aJHs4WD5FP?=
- =?us-ascii?Q?AfGnXhiugkbMi6sgjGm26v/QRmInDJrc/duym1XbSMkmEW9Um4yz1Dmpvmub?=
- =?us-ascii?Q?eumJu0VK+PyCHqNT5NH5O59YpZLxqg0PlP54QuXnTX84LQBugpUxu4xrYxA0?=
- =?us-ascii?Q?rA1Js9/Kvu4XaqUozypouoZuFJTycv5cpH+bdNcd78FXzVDs9VkqEvI3qbEw?=
- =?us-ascii?Q?3O9DOCbaYlS84fpZryCqIZHexOhYKbVN0f9sF6s+q8T4LWyWol0Bmz2c8qXI?=
- =?us-ascii?Q?7hBo7PrAINGV0SSz57uu0WgtyHKbdzsk8cd3j+ZoW56kwCzhBmFFCb8DhqrU?=
- =?us-ascii?Q?iwfuuFwCfMS3LY1cpT+BoNESoE8rhIhQEssAyeY3u2Z/FKjnpEch/MzlCoPK?=
- =?us-ascii?Q?JdHncLXkTK75Pm7vB1lcT98WyBxLbVj4z7RYSbs6aKNvaPP4rzD3JwggAXzN?=
- =?us-ascii?Q?ur+jZ65MiLaykUsS54k+sioeZkChIxA4jiOkTlNSA9HdSUSc4KfNh6YZlJIb?=
- =?us-ascii?Q?6rR4OOoF9o6bfl+dSAK/uaK8s0SZqh5hV1N/eyUzf+OI7pmdaLwaFoVJEdQ0?=
- =?us-ascii?Q?B0bFPbazA1Mg1ystrVH3x8g=3D?=
+	=?us-ascii?Q?F4kTjaBQfcUAXrHUQ6pgqVFmiqcX19xpNgzfvBWXGrddYhdzqr3fZzWS6+5A?=
+ =?us-ascii?Q?3W16b5L8uyJdEvPtZSvTN9fazKbyVD8J3x/kUu6GyyKv2mA8vrbC5ypu2cqv?=
+ =?us-ascii?Q?w3+AQX6fk/lf3rnIioyL99duelhzDQnqoT6Bz1wtr4lK9b00HwuD62Rr7EE0?=
+ =?us-ascii?Q?nGFJflZt7D8AmO+lXXEGD3/Cn9TMNH9BrN/bp/1RAV5MrUIftmLI5rzlijFL?=
+ =?us-ascii?Q?9YB1JLee8umtwu2uXhKmVco1t2qfzbiJrkLv6q+XwFnlvROmF1qwWivztOlZ?=
+ =?us-ascii?Q?9g3K/5vksFHTnHsNahUNZSHwMUMt1KIqzNioByhGu3A/luoHylL8AJW8ckce?=
+ =?us-ascii?Q?Itkt7yg0dJMamYg/6RiDW3XIT1A21TJxfKMF3/Ke4NHUvAxUbcnXHP3nsVzv?=
+ =?us-ascii?Q?KIzjpwrw/ljyj1M6o/nbV/w9DCQCHLyJ2dw0Jp6OereoFEWokst6gvOYrS/h?=
+ =?us-ascii?Q?2J9Xx6HWIwUH3G8f6BTR8wgHXPqKR4RIdFrLM9bzpdzVdnu8RuXpOrfGReqY?=
+ =?us-ascii?Q?KU1HkdPglkMXOu4H3hc71B0sNw5RyrIvVQQP6RP8fXY9Ix5pYCs3ng+dU2uG?=
+ =?us-ascii?Q?FCjgJmQtuhSCX4BNPxBJzcZVoSvUlAAeqvH5H7NogiKtIkIV1+xPbplyeTg0?=
+ =?us-ascii?Q?iRaJ2UGPk03J/K7TFc2I/bS7oFU3FfrXNzga9hQMlC4TCMzMJoc2/5x4Mbhi?=
+ =?us-ascii?Q?KRNi1hOxIo2cQhQeRucYQH+AYyoOWgMtEQwHw26UV66A8pIB7a3YnvfIBVZp?=
+ =?us-ascii?Q?IC9ZJ3xZBtCTrF1KL/eYfVS4oZxkcXA1SJfkamaenAWc9hJUNiSvKF1AoX/B?=
+ =?us-ascii?Q?3MwExXtFczWWwFOxhks1rlBgfCRkpUoYQoubIENiVvZOJpYEleZgK1ROh3iv?=
+ =?us-ascii?Q?Xptv/aT28ZQvCKwtKyLERa+Vwu9vrbWw8RPZTtUeQv0+uIhrpBqfZQ/XKCse?=
+ =?us-ascii?Q?4Uw6Cwt2Wzm33s6UphMIkJmrEysSZOQuXpv/PodAa8NmWhUhv2PjgfeIbCcB?=
+ =?us-ascii?Q?jFH4rO9jCVuLvStt6g6xTSpvlCrfEutWI4hZ5fftv8hdtJZ+BrHcImlUgzhS?=
+ =?us-ascii?Q?UfU+SkxiXKo6lpF2sKa05JW5LBrcSMg0UI2YfUOXah7Sm/zuNECo7OnnRx4R?=
+ =?us-ascii?Q?Sy/JDBY/TaWxuirQ+kXP8/784yokGpezCat+SOz2lgY6RaV+uyF9kP2h6Q3o?=
+ =?us-ascii?Q?vsn/CkrViNEAvBbO9KH+klgci1mN9Zjwtk/JhJOuzXGxfZbHTUy4jiILm1dg?=
+ =?us-ascii?Q?Nc9aAH3/1fZGaiBdb40IZACf0r78YoftW1G0q+CrU1LVcHwoZNwuEwZQ6sLf?=
+ =?us-ascii?Q?ua8lJmVV4Owt5oyGX6ZkgxmDq3EuT2PUyi5EMGJP4bK7sY14oKsFa7dLAsGG?=
+ =?us-ascii?Q?oWXbi6Cv95PW+fXzK78gash39fH4k473T9g5gH4i3Yjd2RWxTJBf3vLXU8Uy?=
+ =?us-ascii?Q?UK+dEBWzlpVRr4YRzJWMrnqzn9EnoxleB9sbAUfL6AZ0jASkDu0YaX/Q7omM?=
+ =?us-ascii?Q?eZALEAun5piiq/peWk0yaxs8fpRjmshhoX6spXyhrM3cGOJ1QMtR5TILbN5D?=
+ =?us-ascii?Q?Bnju9mekyS94tEopswGbhA5fZCUuxpdxy0lnMQF9/av2R/qzMMHEkRWQ5x/W?=
+ =?us-ascii?Q?XOUjNpfBmTN/qwcMbLQo2tZLWR8Pu3M78ih0TpULLxylQJgUICvKlM37g1/i?=
+ =?us-ascii?Q?l4xCmg=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(7416014)(376014)(19092799006)(1800799024)(366016)(38350700014)(7053199007);DIR:OUT;SFP:1101;
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(36860700013)(1800799024)(7053199007)(13003099007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?NDzzEZnaVxrsqx0mNoNTNfeaD05ydAIDCgY4CKqYU9ZCSo4BwG+oOALrcIPU?=
- =?us-ascii?Q?j14o9pC2sQlMwFuGWYKAuVaWH5I9PIJZyaPA3W01InecNCwEQjxACeZkVOF6?=
- =?us-ascii?Q?LftIaieYyg0hFgVOEV+16C4WVD2E4kuSUaS6sVLYUktDwlE1tUHjSbq6iInU?=
- =?us-ascii?Q?sp8vnXdddpMEKdGXkQ1JxCdcDufJLcWMQ3f7AExoCFYDD4omuf9as9PIEZym?=
- =?us-ascii?Q?fRuonnr5cK51WXsxXDg9bCbZ9OKfCyji5DhdVKXBqgAhDCe9w1t/2F2kt9sI?=
- =?us-ascii?Q?JTTcgxKxbsrbIPWkMdDcxKqEW2Shaf6Ow7cjBMROHpTsQsELOskpsTrPGiVj?=
- =?us-ascii?Q?L8V5w89p73oQsn2AfV3J7uzJgPIO7i2t0VVW0tzc7kgo2ZH6HlYGotfSwzt9?=
- =?us-ascii?Q?PMd4LfGni6XDRzCmfIauphpf2VsGx0GZLHtMvBi6zF+ufeTIMnzM3aMJmEtH?=
- =?us-ascii?Q?xuGWLvDtcILkQ0UAPSwIRhZhImYOl/AFPzfwVj2yG+vlG6Z6ydUqd27Bmd7+?=
- =?us-ascii?Q?+acyvoADLs1O8FKgya8bmgKQMVeTQQwK5EnHosoXcZQ46mwkEie6LMSoMo0e?=
- =?us-ascii?Q?9aH9gVLVuq1PZWn9lzpFzs28vIg1B5w9T9aH3eI1BfFQAWQ418CkYoYV29oY?=
- =?us-ascii?Q?zvThJXcieODwCliDaADEogDZtJVoOd19vUUqpsRN/HsdRANDNzp03lZ+r4aQ?=
- =?us-ascii?Q?RMV0XxCMx3jDMr4n0rQzKVQiSwNfybffNGITicKrGtIIVTPfy7ZBgikluZvI?=
- =?us-ascii?Q?c/hXLiDVqWMbi8J8Gc5hfCBQeNDKg2RzFA7hSeqUBgpzEJwPMNEIQEpsnRs7?=
- =?us-ascii?Q?rfEj7Vhupxy4TJ+aaA2BzGuVzYZIGq2ezFpY30aBR7R6SMcrfv6Rh8hplJPM?=
- =?us-ascii?Q?sGCnHzyv3i5dHmG/vKcDM8vpL0fNrz/8YDEAJGZHcrkb+wc/g97bwt+HUuHN?=
- =?us-ascii?Q?3MCkgLBZmmJNBddZBvvtu5u2MWdmttL422QIJZip+2iXx4h2Fk1L7EwD6dxs?=
- =?us-ascii?Q?/w5KkldEjMmJUnihtvF0WRcbd+GwZb3TpZShzCGE5IXdz613cYRUOEZBJ+ZX?=
- =?us-ascii?Q?1VNaz2wIrEM6GqI+kCFZ+c9Fqcj3H0niVABVq+yldX4M3eFx23JrsLw8ce7m?=
- =?us-ascii?Q?y3a+m5WsexPDUQR17DTjHwCE1NIhNS01ZS7SfV4bEsg09V1Tok+h0l9veYQm?=
- =?us-ascii?Q?ZMF73Selh3cSfzVd+T7237suh2vqz0balTQBYMqi2ib/l3xJNRkOZelclcwj?=
- =?us-ascii?Q?zTbxSn8Qq1NOD4p0rbrbP8uZtX7ysDxDFyj10iYcejT8kH1YkUiFLBU7KIiD?=
- =?us-ascii?Q?yJptTCjqezoxmwd+vU9aZOZbbfHGGl7Rr/KWnTxbzz5jQVPyRqxz0dF9bqtC?=
- =?us-ascii?Q?JihQE638HWQXb1rLrkJ6m39DNIEM42U/RjOrRJvFaM7KDipe2OtsNnbd1jXZ?=
- =?us-ascii?Q?bacmKSj5awlKNfsuTRj9fAEStFoEJAlyhMP6x75W/Y5fJHrkTUr3E5LnTT8/?=
- =?us-ascii?Q?beEMoKhnUDKmuCdTBVWrgrqajvPGBs+JmmsTYgqEeXBpoK17tkg6WN4mYmgP?=
- =?us-ascii?Q?f40tMCHaHDB+xCqCMGvyeTtDkA/lk3tPrccmFGf54rE7yZEMsFmm9MNMNuiZ?=
- =?us-ascii?Q?9/zuWkagFkUNzQZkWD45ao6JP2JgCuaiybrS7XJ0UMJ91UzBvPkltcjRHnBP?=
- =?us-ascii?Q?y6SElYCqe+1dI0ci6FgU5taKE6ZoIek0+SwAVu5Dc2wathyes/nzch0N2gLC?=
- =?us-ascii?Q?GObe3m1hYg=3D=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a6365920-8fd0-4746-b2e8-08de6293b9b0
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 19:46:15.1378
+	oY5tezDWnMRp9zpEt3E+CHzoKJ7tUiZVjrBarjiO+uxsBH1cw4bb2axt/aHmDtGk2zf28n0Ba1Hel+4vtLdVNur1jbs1BUvq/KypasJxN/2M9dwQn7ll5I5D+SClWU0UBvvBIvWak6iJ+91XUf3Kc9HoGNG7fgKsZWPnZnGeIIvjaimXS5FwkdNn2ws40/YNkwRrr7IRW+T05ZqVDPP4Vco44VUKWO8hwWxc5cdhWUFgagSaYSa80Er/6cah9Rw4NBUeWlJnzQMSrK6kkuZcSJi7hMqMj2jncKsyS0iVtR+dzC0Lw6ZpsTzy7fDZeUdwhlVNW7XeApUz8e8MojX+gHSywu+r94EfPpIRc6W8gZ6RRoSFq1G3bZmapPh//6Hg99XGck5lvIms4mkns6kEJTpbcpkmgkq6dEN69XACs8LKr5GXZ+1PyLDc+Jj8nKSZ
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 19:57:24.1778
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pq43ILuAuxEBt7t3zaP3LzHRHf12GfaesTFBZQJkxrtSLY6UxW0rPnU/wIDzAWXqyEWVPyk6/wjq1io52lTX+A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB8667
+X-MS-Exchange-CrossTenant-Network-Message-Id: 84069bce-b753-410e-97c8-08de629548b7
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS3PEPF0000C37B.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR12MB6075
 
-On Mon, Feb 02, 2026 at 08:23:30PM +0100, Vincent Guittot wrote:
-> On Mon, 2 Feb 2026 at 18:42, Frank Li <Frank.li@nxp.com> wrote:
-> >
-> > On Mon, Feb 02, 2026 at 04:10:50PM +0100, Vincent Guittot wrote:
-> > > No error return is missing after the loop resulting in removing the
-> > > ports from the list.
-> > >
-> > > Fixes: 5cbc7d3e316e ("PCI: s32g: Add NXP S32G PCIe controller driver (RC)")
-> > > Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
-> > > ---
-> > >
-> > > Change since v1:
-> > > - handle correctly the case when there is no child port
-> > >
-> > >  drivers/pci/controller/dwc/pcie-nxp-s32g.c | 8 ++++----
-> > >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> > > index 47745749f75c..b3ec38099fa3 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> > > @@ -282,12 +282,12 @@ static int s32g_pcie_parse_ports(struct device *dev, struct s32g_pcie *s32g_pp)
-> > >
-> > >               ret = s32g_pcie_parse_port(s32g_pp, of_port);
-> > >               if (ret)
-> > > -                     goto err_port;
-> > > +                     break;
-> > >       }
-> > >
-> > > -err_port:
-> > > -     list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
-> > > -             list_del(&port->list);
-> >
-> > break and goto is logical equal here. So only need below if (ret).
->
-> Yes it's similar that why I removed it, the goto becomes useless and
-> make code less readable
+On Mon, 2 Feb 2026 23:41:42 +0800
+Zijing Zhang <zijing.zhang@ry.rs> wrote:
 
-But don't suggest change in this fixes patch, which should focus on the
-key part.
+> 
+> 
 
-Frank
+Hi Zijing,
 
->
-> >
-> > Frank
-> >
-> > > +     if (ret)
-> > > +             list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
-> > > +                     list_del(&port->list);
-> > >
-> > >       return ret;
-> > >  }
-> > > --
-> > > 2.43.0
-> > >
+Good to see you working on this too! Welcome to join the party!
+
+I think "thin wrappers" were indeed the initial thought for many of us.
+However, after several rounds of discussions with maintainers at the
+summits, the requirement has shifted towards a stricter, OO-style Rust
+abstraction rather than direct wrappers.
+
+The key takeaways for the current direction are:
+- Enforcing boundary checks via the Io trait backend.
+- Using register! macros for definitions.
+- Implementing proper Rust iterators for Cap discovery.
+
+Since nova-core relies on these specific safety features, I'm pushing
+forward with this high-level abstraction. For nova-core, our immediate
+need is accessing and reading registers in the SR-IOV capability.
+
+That said, there is plenty of room for collaboration to achieve a complete
+framework! For example, support for normal configuration space
+capabilities, the iterator implementation itself, and capabilities other
+than SR-IOV are all areas that need work.
+
+Currently, I am waiting for Alex's Io trait cleanup and refactor to settle
+before deciding what should be included or changed in my next re-spin.
+Also, any input on how to best organize the traits between normal
+configuration space caps and extended caps would be much appreciated!
+
+You are also welcome to reach out via Zulip for a quick discussion or
+catch-up.
+
+Z.
+
+> On 2/2/2026 11:02 PM, Gary Guo wrote:
+> > On Sun Feb 1, 2026 at 7:42 AM GMT, Zijing Zhang wrote:
+> >> It introduces `pci::Device::{find_capability, find_ext_capability}`,
+> >> thin wrappers around the PCI core helpers (`pci_find_capability()` and
+> >> `pci_find_ext_capability()`), returning the config-space offset when
+> >> present.
+> >>
+> >> In `pci::CapabilityId` and  `pci::ExtendedCapabilityId`, Capability
+> >> IDs are wrapped as newtypes with `from_raw()` plus a set of common
+> >> constants.
+> >>
+> >> An in-tree user is added to Rust PCI driver sample to exercise the
+> >> new API.
+> >>
+> >> Previous versions (v4)
+> >> https://lore.kernel.org/rust-for-linux/20260201071450.1614172-1-zijing.zhang@ry.rs/
+> > 
+> > Also I'd like to mention that Zhi Wang already have a version adding
+> > the same feature on the list, sent before your v1:
+> > 
+> > https://lore.kernel.org/rust-for-linux/20260126215957.541180-3-zhiw@nvidia.com/
+> > 
+> > I'd recommend to work together for the feature rather than creating
+> > competing series.
+> > 
+> > Thanks,
+> > Gary
+> > 
+> >>
+> >> Testing
+> >> ---
+> >>
+> >> Build
+> >> - x86_64 defconfig-based kernel with Rust enabled (out-of-tree build)
+> >> - `CONFIG_SAMPLES_RUST=y`
+> >> - `CONFIG_SAMPLE_RUST_DRIVER_PCI=y`
+> >>
+> >> Runtime
+> >> - QEMU x86_64 (i440FX) with `-device pci-testdev`
+> >> - QEMU x86_64 (q35) with an NVMe device
+> >>
+> >> Changelog
+> >> ---
+> >>
+> >> v2
+> >> - Run rustfmt on samples/rust/rust_driver_pci.rs to fix rustfmtcheck.
+> >>
+> >> v3
+> >> - Base on pci/next.
+> >> - Add `CapabilityId`/`ExtendedCapabilityId`, switch
+> >> `find_*capability()` to use them.
+> >> - Document the common ID constants.
+> >> - Update the sample to use typed IDs and exercise the new helpers.
+> >>
+> >> v4
+> >> - Minor doc/style nits.
+> >> - Use early-return style in `find_*capability()`.
+> >>
+> >>
+> >> v5 (current)
+> >> - Fix sample build by using `pdev.as_ref()` for `dev_info!`.
+> >> - Use `as _` in constant definitions.
+> >>
+> >> Zijing Zhang (2):
+> >>    rust: pci: add capability lookup helpers
+> >>    samples: rust: pci: exercise capability lookup
+> >>
+> >>   rust/kernel/pci.rs              | 150
+> >> ++++++++++++++++++++++++++++++++ samples/rust/rust_driver_pci.rs |
+> >> 31 +++++++ 2 files changed, 181 insertions(+)
+> >>
+> >>
+> >> base-commit: ff0e2f679ab0de50a2e9e88fabc1026bc3be04ba
+> > 
+> 
+> 
+> On 2/2/2026 11:02 PM, Gary Guo wrote:
+>  > On Sun Feb 1, 2026 at 7:42 AM GMT, Zijing Zhang wrote:
+>  >> It introduces `pci::Device::{find_capability, find_ext_capability}`, 
+> thin
+>  >> wrappers around the PCI core helpers (`pci_find_capability()` and
+>  >> `pci_find_ext_capability()`), returning the config-space offset when 
+> present.
+>  >>
+>  >> In `pci::CapabilityId` and  `pci::ExtendedCapabilityId`, Capability 
+> IDs are
+>  >> wrapped as newtypes with `from_raw()` plus a set of common constants.
+>  >>
+>  >> An in-tree user is added to Rust PCI driver sample to exercise the 
+> new API.
+>  >>
+>  >> Previous versions (v4)
+>  >> 
+> https://lore.kernel.org/rust-for-linux/20260201071450.1614172-1-zijing.zhang@ry.rs/
+>  >
+>  > Also I'd like to mention that Zhi Wang already have a version adding 
+> the same
+>  > feature on the list, sent before your v1:
+>  >
+>  > 
+> https://lore.kernel.org/rust-for-linux/20260126215957.541180-3-zhiw@nvidia.com/
+>  >
+>  > I'd recommend to work together for the feature rather than creating 
+> competing
+>  > series.
+>  >
+>  > Thanks,
+>  > Gary
+>  >
+>  >>
+>  >> Testing
+>  >> ---
+>  >>
+>  >> Build
+>  >> - x86_64 defconfig-based kernel with Rust enabled (out-of-tree build)
+>  >> - `CONFIG_SAMPLES_RUST=y`
+>  >> - `CONFIG_SAMPLE_RUST_DRIVER_PCI=y`
+>  >>
+>  >> Runtime
+>  >> - QEMU x86_64 (i440FX) with `-device pci-testdev`
+>  >> - QEMU x86_64 (q35) with an NVMe device
+>  >>
+>  >> Changelog
+>  >> ---
+>  >>
+>  >> v2
+>  >> - Run rustfmt on samples/rust/rust_driver_pci.rs to fix rustfmtcheck.
+>  >>
+>  >> v3
+>  >> - Base on pci/next.
+>  >> - Add `CapabilityId`/`ExtendedCapabilityId`, switch
+>  >> `find_*capability()` to use them.
+>  >> - Document the common ID constants.
+>  >> - Update the sample to use typed IDs and exercise the new helpers.
+>  >>
+>  >> v4
+>  >> - Minor doc/style nits.
+>  >> - Use early-return style in `find_*capability()`.
+>  >>
+>  >>
+>  >> v5 (current)
+>  >> - Fix sample build by using `pdev.as_ref()` for `dev_info!`.
+>  >> - Use `as _` in constant definitions.
+>  >>
+>  >> Zijing Zhang (2):
+>  >>    rust: pci: add capability lookup helpers
+>  >>    samples: rust: pci: exercise capability lookup
+>  >>
+>  >>   rust/kernel/pci.rs              | 150
+>  >> ++++++++++++++++++++++++++++++++ samples/rust/rust_driver_pci.rs |
+>  >> 31 +++++++ 2 files changed, 181 insertions(+)
+>  >>
+>  >>
+>  >> base-commit: ff0e2f679ab0de50a2e9e88fabc1026bc3be04ba
+>  >
+> 
+> Hi Gary and all,
+> 
+> Thanks for the feedback.
+> 
+> Zhi's work on SR-IOV is excellent and provides a higher-level 
+> abstraction. My series focuses on providing the fundamental lookup 
+> infrastructure and typed IDs, which are intended to serve as a 
+> general-purpose foundation for any PCI capability interaction.
+> 
+> These two series appear to be complementary. I am open to any 
+> integration path the maintainers prefer and would welcome Zhi's thoughts 
+> on how we might best align these efforts.
+> 
+> As a newcomer to the community, I am passionate about Rust PCI driver 
+> development and appreciate Gary's diligence in maintaining the 
+> subsystem's quality. I've taken note of the feedback regarding the patch 
+> frequency and will ensure to allow more time for review in future 
+> iterations.
+> 
+> Thanks,
+> Zijing
+> 
+
