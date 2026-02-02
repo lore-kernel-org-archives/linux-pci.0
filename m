@@ -1,249 +1,346 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013070.outbound.protection.outlook.com [40.93.196.70])
+Received: from mx2.zhaoxin.com (mx2.zhaoxin.com [61.152.208.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C77EA3EBF37;
-	Mon,  2 Feb 2026 05:23:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.70
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770009827; cv=fail; b=oHa4bye4ou1W45A5pstp+uUSB94wuMcUaogD3XTSuLakW1dMN1QmcZl00GSXi9BnNcHtHg+LlSqyP8MDYf9zZ/lKN96U2PKHwLKBcIvJdsasvrqf/MFlXlnjrVly6i/h/0uOx9TvBUi7OJGEADZ/RTrXZCN1c8/CcLUesXS4c9Y=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770009827; c=relaxed/simple;
-	bh=WSN4uAPZnmsN3onq2lVDXEiiWppDVAA+2Y+5XhumPAQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=j4GGbJXBU0NdfDkxSeQ2lrxRG4amZ52EKQOCsIv/kbFAuO7NJnYPoK7jSfPjlxD6B2mz2xBU1cJCDDROvwfGJltPXpct7sM3lEdMxp00enpTzIQb1ZTipttc9XI04aAP3DG8iFNgOFo2EPMcOvTgwBSgXL9vtF6JKiZwSnOJtYs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=sguWycRx; arc=fail smtp.client-ip=40.93.196.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="sguWycRx"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PLn9PG5WLYRmhb9AvlnI9wo+nMbylSm5ZG87xBmjFGmHGsaIT9lEDGIaP/9uoGs6/SGgo8vgQ1MPEl0RRtbHGrUpBdzG7ExZqH9hRx6T3nxY4kO5MlpmuR4A7t3qTN8jELdLRXS+5E/4z0bkNBwxrr/qOs78AAE+rnlpyLTfrXHeI8B3/qDBSarz3gfYVSf3VrKzZDJYiuQbPo6eWhYBCb1HdwpDTY5/NnnwwskIbRYugf9jqNx5wgISOWfETXz315FsC+unE3y/JozJvkfPFrERb8OaPucl++FlJqXh8ZigvprEhCiO3Vql6qcOnhNIA3FQo3S7pL51cflTcUgXkQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xm1OR6GzILUCJTAdVVfy/LdDvFQk2DpAVcmznSucqu8=;
- b=lCVL5kCKnx+B25D1PQX8D0GL9r2iKzLFj4vvPZzsU/505Q6fViozgc94DUlSn8XpMIiSGyqEOH+pTqaxnPEFYPF1tAPD/mxves4bZs2F7nXKfQZp2FVxyLmzONoA3gG7ZQE+/EKCYRIzouQ82vSI2DTkgMWWvbw2P0a6jCQgTd5ia6GX1KsE3FBXQfQc6PlLJVbRtNMbb6q9S4VEz45AnamfK8CxNhWgZOVREPvC/1mNYNWNDkYfI/YoBSEGQnVpsWBzCJ/XOaW+BCPse772c34BNlV8PdlmAp2kIm6XzevsbHnLS1kcbdTXX6VyoWQE8LdfGFwAnfObESKmVfxutQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xm1OR6GzILUCJTAdVVfy/LdDvFQk2DpAVcmznSucqu8=;
- b=sguWycRxdVf9zbX5jTaaM1Fezg/HetZGfpidA2jcoiwtLOjZRrzdv2IYF8dQddutAt2Fi/PJAS8tRpYRiDKDVqIm9nvwJANmJdFzb98jiL4aIwmPQCYRj+GPyJpqDqPlSVSI1u70QoGbLrMlRA8yC0tXlCU8UoK8AE/iVF53f9mkZS/dZD7+NLa8w03kRSMjlI4K9hX17YmVRjMDkr58b0IoXWwqyBhtCneW+FNgy+8UKvWxatyOM5QhtgjZZfLHkM0Psbg03JJBAIbEhppS87Zq9DWFR2vv6uoAdcclD55GAVS2AHs8JTPa8EezKX+kKUu6zQnFXQclA0QfHR2uKw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
- PH7PR12MB5901.namprd12.prod.outlook.com (2603:10b6:510:1d5::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9564.16; Mon, 2 Feb
- 2026 05:23:41 +0000
-Received: from DS0PR12MB8245.namprd12.prod.outlook.com
- ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
- ([fe80::e7c5:cfca:a597:7fa4%4]) with mapi id 15.20.9564.016; Mon, 2 Feb 2026
- 05:23:41 +0000
-Message-ID: <157b145a-9473-46e5-9d1a-d317a2be17ba@nvidia.com>
-Date: Mon, 2 Feb 2026 10:52:52 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4 04/22] PCI: tegra194: Apply pinctrl settings for both
- PCIe RP and EP
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
- 18255117159@163.com, cassel@kernel.org, vidyas@nvidia.com,
- jingoohan1@gmail.com, thierry.reding@gmail.com, conor+dt@kernel.org,
- krzk+dt@kernel.org, robh@kernel.org, mani@kernel.org,
- kwilczynski@kernel.org, lpieralisi@kernel.org, bhelgaas@google.com
-References: <20260126074519.3426742-1-mmaddireddy@nvidia.com>
- <20260126074519.3426742-5-mmaddireddy@nvidia.com>
- <a39410ec-4054-40eb-a687-0f161cffff2c@nvidia.com>
-Content-Language: en-US
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-X-Nvconfidentiality: nvpublic
-In-Reply-To: <a39410ec-4054-40eb-a687-0f161cffff2c@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: MA5PR01CA0165.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:1cf::15) To DS0PR12MB8245.namprd12.prod.outlook.com
- (2603:10b6:8:f2::16)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE642561A2
+	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 05:56:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=61.152.208.219
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770011793; cv=none; b=TsjhSv8t9TV2gQeLLrauYH0WEomzlJXd5ITWED1uM5BtNUGBub4+WQtCZ3x8HGbunjq703TCSBUOWGtpgbyLbFK/fm1UhYVVVghpm5Oc0NQH7ugm4SrUo67AQvPxiIvaCkmJ1qBs0qui26qXgDWzLs311qbbKF7Djr3DHLKkyH4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770011793; c=relaxed/simple;
+	bh=J2sXQsjeut+rbNGyPCwTAjO6Iwhy8fix+LF22FsDeO8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=qkl6NphqzUPs9kaNSDhktV+9S+QoKqhvDx8Ca8nyMdtSdN7fPskmVrCK34tdT8qm35Umr5EFuoab4PsR0PIJpitm7Xy/nRNpLDLGJN6Z7lQGDZBKiWzRGNawO5WpqUlAqLVjiSSSh+/CXaq3ZscUeVWiLG+WPipAs7/3S/2O0ec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=61.152.208.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
+X-ASG-Debug-ID: 1770011779-1eb14e7c0446370001-0c9NHn
+Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx2.zhaoxin.com with ESMTP id fSw72eFTANyS85Gi (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Mon, 02 Feb 2026 13:56:19 +0800 (CST)
+X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX2.zhaoxin.com
+ (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Mon, 2 Feb
+ 2026 13:56:18 +0800
+Received: from ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85]) by
+ ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85%7]) with mapi id
+ 15.01.2507.059; Mon, 2 Feb 2026 13:56:18 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Received: from [10.32.64.5] (10.32.64.5) by ZXBJMBX03.zhaoxin.com
+ (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Mon, 2 Feb
+ 2026 13:55:30 +0800
+Message-ID: <075992c3-6a98-4854-9c4d-59abef7f1d5a@zhaoxin.com>
+Date: Mon, 2 Feb 2026 13:55:24 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|PH7PR12MB5901:EE_
-X-MS-Office365-Filtering-Correlation-Id: f4371b2d-e036-4575-815a-08de621b3a25
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?azdhZXFPaTZCVkVOZEZHZE5Hd1p3NXZRY0RNQ3d2NGNTQTlMT0hoS1dWYS9I?=
- =?utf-8?B?UjBCZzMvaXFmZEJmZlRCR3Fkd2YwaTNkTE1HZWZubjJVcGtJN2ZrT1RQaENw?=
- =?utf-8?B?Snpza2RVYTZxMkRwc1lQVXRiMVlkM2liN3FobWcyNHVYQU1VZWJqaDF5MXhm?=
- =?utf-8?B?dGpSNWFMdFU0K1ZlY2dkSjBqd0dTaTJKcVJIYnVqcHZFSWJNQTZVOHBFejdN?=
- =?utf-8?B?K0YwTWhGU2FpWjl4cWx5d0JiZjJ1WklyZFAzVlpDZWM5cjErUVhHTWVUSlR6?=
- =?utf-8?B?MFJWanFsQVBiMmljMjU3dkREc3NmbGRrUHRQMHBjNUt6WDc0ZnNpQWFYVW9k?=
- =?utf-8?B?Uk1wRFlhWFJaci9YcnRGY0gyM0hwQmptVFJ2K1NwaERmUmtWU1JIbEQ4ME9u?=
- =?utf-8?B?ZC9neFBrSTh4RXZuUXpKT2xXLzEyaGJjM0tuTEhaZHNJRUNxb04vTENXbmpw?=
- =?utf-8?B?OG9McS8vODJqeDh2c0R6WXlST2tCQytmQ29MbFVOSWljUUlyTWhWcWtaMlZt?=
- =?utf-8?B?NjhoTHlKZzdtbDdqKytTZDZZWitHdUlCV0JBSU53d0U4Q09NY0s5NnVhVVVa?=
- =?utf-8?B?TGE3L1FPWnJLcEZUT0J0SWtNeWtBOHN3VWR5MVRhWjdlUmpBNmJ1aEE5K1hR?=
- =?utf-8?B?Mk9VcndnQTg2VWJTVm9JSnQ5bGppbVRqeGo2eTZwL09IcmJhbDdSUExOUmVO?=
- =?utf-8?B?bXNpNXJlUWxxQ1c2R3VyNkpzM1pzRmdSU2ExQmoxc1o2aGdYTGhnczRqWGxY?=
- =?utf-8?B?MU40cWRFTThTOUl5KzU4ajZoZkROTjkrdEFjRjBsZTNvWEQ2WTZ5VzhvMWtu?=
- =?utf-8?B?cktwTEpkVnd6Vzc5S0V5TEVFTmtUUmVBbFc4b0o4Slp1bmczaXBRR2FSdG5z?=
- =?utf-8?B?djZSRXViUUl5V2VkZ21MK2dNT0E2T2J5Rm5PTjB2VVNFeksxTkhmT3N6a2ZT?=
- =?utf-8?B?V2JiMTF3Z0RuUEk1TjdEKzkwREFneStUcWZidFkvN3RTakdxYU9UYklzSjFk?=
- =?utf-8?B?bFIzVmI2aVV3STBwZ0FUSU1Lcit3cFpxSXk5dnk0V3dkUmc3U3JZVDF4dDF4?=
- =?utf-8?B?bk5hQVhhL2tPdjVVSmJWT2Y2YUdMODNHd2VTNFJ6SGFZNjFMTjloN2d5T0Jk?=
- =?utf-8?B?eGpvbVpnRXdSR09mOEVkOU50bTJ4S3c1U3JxZytmUkZ1dEdqNVZ4dFlybkNy?=
- =?utf-8?B?VTJOV1VNUkVrUkovU1o1TEZSU1k5bzk2aXRwb0RseHh3eE5wcFVSZ1dJVXRo?=
- =?utf-8?B?R3I0dFEwRUtQaDdxcktMSjZnK1VjbDhDNkMycHgrREo1RHRRNWJUNUNWSFVV?=
- =?utf-8?B?Zmh1UXdHbUFLbG9qMzRDUm1iL2gwMU8vV1BIM2xZQ1Q0QkJ4a0dDdWFMSGlK?=
- =?utf-8?B?bnJOOFNGNWFCUEpGU3RrOXpNWS9XUjZTWjd6NUZmQTR4anNWZC82SFNCTGxB?=
- =?utf-8?B?MCs4TGxLSm14U0VsTjY0bXlpN0h0ZU96QUFQOWRnQXRXR3NYdnJyYUxEaDJj?=
- =?utf-8?B?UHBya3EzTGZyRjdXUGJScG1KS1A0dGJ4Wm9RdUpiVDY3MmZXaTRNbTROSXFp?=
- =?utf-8?B?TVJjUU9MTmNVVHBiUW5lQ2tuL09SN1pxK3FyemNldXM1N1g4MldvT0QyWnYr?=
- =?utf-8?B?SDE5R3BtUWhOU21kZEVsQUlLeDBtVG1td2ZJL0cvYTZ4NWlwL3dxTGZSckRQ?=
- =?utf-8?B?aS8vWW5RUzdPOGRoZlJDZDJOcloyTi9uL0t3RTJjSnNkUFBMUnpTYU41Q3JB?=
- =?utf-8?B?alJWS2hYK2d3Z2Z6Tkh2amE1MHJsNWorU3U3cDRqNDZCZVAxQ1UzSm9LZktI?=
- =?utf-8?B?Y296bHQzQXRWS1hVSzBiODRYNHoxVnkyVVpDMUdHT1hOSzlRRGh5emdXandG?=
- =?utf-8?B?Y0gvd1U3UVhpZ09ZVUJRWXJDdW81RGVmRkZ3NktEdXJTOEpmQlpnL0RNdnZl?=
- =?utf-8?B?ZzFQaTV5NEU4SXMwYy84dEtqQSswWlBmZXV5dTRNZHM1QnJvSFJuaXE5ZWtV?=
- =?utf-8?B?bllZeW9VRjQ3OXY2ZTBrV2ZSbGNwM084UWVhaTJ1R0FTK3pMRDE3L0p4Nk5V?=
- =?utf-8?B?My9VWnBXYndKd2Y0dko0am1DeUJMV1lEaC9yUk5WZ1Q0NGhOeXlMSVFSc2Uw?=
- =?utf-8?Q?zu1E=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?RStkRHAwVVFzcURGWFIrR2VDOFdvS3FRVzBBa1p2bFF3L3VPZlhmZUlwL2s2?=
- =?utf-8?B?RnBsZE9DL1RuQlhvazFBeE9kK3h2MExqNHhGaHJsd1hKaHEydTd6bFc0M3B1?=
- =?utf-8?B?VlpTZlVyUFdOemtIWlRjWHhUV2lDUTZMN3pBUFRlMTYycjgycHJ6RkcxOTUy?=
- =?utf-8?B?bTdBbHRvODlncC9Lak9GeXgrdm9LMEU2RmgxMVFYNSszZktrazdwY2haS0hu?=
- =?utf-8?B?UVhVUnF6dlNFT0FQRzFaYlc5WmpRUGRJMGtGQm1IY3Bab01aM2dOMXdlQnF3?=
- =?utf-8?B?eUp4T0lvNVUvamJLbTZnZ0FHUnlKeVAvM2FvN0pQT251cnhUUWlZcURjanV3?=
- =?utf-8?B?b2l1S3VuYXFCcHhPczZYcEtwUEJlbUlCemdKcnRlU2k0U1VpdE5SV09FeFFn?=
- =?utf-8?B?cHFDUHY0ODFZdDFyaXo4WWM1YTQzd3pLRzRjV0syZDhXbGZsUnlHVmI1Q01S?=
- =?utf-8?B?WGd1OEQ5ekdsQUxjSlhUcnM3Q3pWc3FTemlEZDM5bmMxZDNoNWhLeCs4U3V5?=
- =?utf-8?B?Q2s1emp2ZnFEVUM3S2xtc3ZXOUlhbHMzc0RjOVpHSVVsK3JXcTRPYWxWOFBi?=
- =?utf-8?B?d2wzWHZESWkxVGZ3NnJYajRWU2FOTnBVVW1CWnFsVkkrWmtONytXM2g5bHll?=
- =?utf-8?B?bXRralgrbXJTU0xGV2s5Zmk4ZXJXZy91dytrUkFrK0xINTI1VlU5Q21sTFBQ?=
- =?utf-8?B?Qk9jS1NlNWF1Qld3YzJGd0ExbkdiQmpJa2NGTjN6bmVTbnhGZDN2MUNDS0VE?=
- =?utf-8?B?b0Y4LzgzKzlNYnJrLzdoaCtReWZkTU5YL0RSY285aEpKdStheXE0bWlqVHNs?=
- =?utf-8?B?WFlGWERnN1R3WDhIeTRkY3lDUEFXRnM5eU9JeVFjb2NmUTJCWEI5RTFnWHZU?=
- =?utf-8?B?akFOTGVGdVdhNnk2Z1oxZTlNUEk5dUdBcGVSVm16aWczTEJ6VU4xaHI5bnJX?=
- =?utf-8?B?WUNEdGhmUmE3U21wcHpNMzRzUVkrbGF0WWJsU09IY08wMjIxRmpXQkV1Mng4?=
- =?utf-8?B?QURsMGJDS1F3UG13dXdxOTNzVXpVS1dvSTZQbzZFZ1B0YnJibVhpMXVOYk5h?=
- =?utf-8?B?d2picGozcVoweU4zWWxsN1ZNbEFqUmhVZEJGUmMyd1I5Wnp2OE1YclppTGhu?=
- =?utf-8?B?aTFiWU5EUGdRQ1h0K2E2QlV4ekJ2Z1lSRk4yS2ZINFRNWnZaZHN6Q0t2MDhK?=
- =?utf-8?B?SDJhTGhWZVJ0R041WXFGYXQwcERKbTNqQmRhckdiZjl6N2NrWlVEOEkvSTkx?=
- =?utf-8?B?cEtBOEZ3b3JMRFN1RHFDR1d6R2RWNFAyeno2TE5JWHFBZGloM0ZJd0ZYSDdS?=
- =?utf-8?B?MkdvVy8xenl5bElXM3ZlalBOTENBbCtNbkJ2SndjUG5pTGFYVFhTaFZscmh4?=
- =?utf-8?B?bCtKb0lSNnBmMnNkUmF2OE1TL3dOTmpPcjlDNVAzbGZwSFZEcTNaOFJiaXVO?=
- =?utf-8?B?eXRmNitYNU9TZUFGamp2ZmtSNXFia3pwUCtZaGxtSktYS3pnOC9wYm1hb3hk?=
- =?utf-8?B?M3NzVy9MRWhXcHlJT0c2MXc3WTQ3RWlpSjE4Z1o2c3dBNXpZRWQxbUo2ZGRa?=
- =?utf-8?B?dUlSNit0WGhRQzlyTWpoZDF1N28wdHpRNWt3ZGVzVm1qVkQyOStXalNIK3M5?=
- =?utf-8?B?YUJiS2ZvbWlsYzA2K0ExY1VsMWtYVkRPLzNFVGp0b3dKYWxQNkZFOVpCZVcx?=
- =?utf-8?B?T3I0aFlRQ0NDdC9pYitMbEZXSndYbUIvclM3alJ1VVJxTStYc29VN1JiTVVr?=
- =?utf-8?B?Z0lNS0JTdzl1bXMwL2VNZnZNODlxL0F4ZE9vYndxbVJzKzhBbm5qaFF2UUdC?=
- =?utf-8?B?ZXlkNHR3RUhBRncvd1hPMzlSY3dOMjNWQVN4SGZNNTVaMStSenNkSjIxeHhJ?=
- =?utf-8?B?RVh1b0c2Y256Y3RLa0RESEI4UERYazFGZGprR3hFdzBsWWI0a05zeDQ1SER2?=
- =?utf-8?B?bUlOcFFORGI0aDdPRmp6YWprMk5rdTBWS2R4QkxCbm5RTXE1UTJUcnEvbVB6?=
- =?utf-8?B?a29Wc3B1SytEQ0hNcmlLVGMxMkxRdThDcXhjbzdRSGlNWnpwRHN6N3pTNnFl?=
- =?utf-8?B?SHJnaytHdVVLRUhuTmRqVHRpcDR2Q1dRdzZrYXFsbTc2all2RXZBSEIwdy9Q?=
- =?utf-8?B?bjMzRzJYMk9Ed0UxTWpZVmtDODI1K2ZRV2VoeDM4STVFOU9aZFNSWEpGTFg2?=
- =?utf-8?B?L21MQlo0MXh0c0dWVVIrcjV5U0xKeE9xOTJpRE54aHVJYTRYV0Z6U1ppci9V?=
- =?utf-8?B?a3dUQytRYkVKbUM3YS9LWXNJQm4xclUzVHhqNjRPOHBaSXdhWFk1eEczeTFT?=
- =?utf-8?B?OXl1RUZ6ZU9saVp1ODcrbmR1cVJmMDRNSmtJSk5EUUZCWC85czFydz09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f4371b2d-e036-4575-815a-08de621b3a25
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 05:23:41.6213
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: z2MxUNGUqCzPm0SFyZ4OKfxtAfT3NVUK2Shy3raDtVQzEDVE16JbGwAkBalFNT675DOr/TrMByP874f1UzuY9Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB5901
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
+To: Bjorn Helgaas <helgaas@kernel.org>
+X-ASG-Orig-Subj: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
+CC: <mahesh@linux.ibm.com>, <oohall@gmail.com>, <bhelgaas@google.com>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <CobeChen@zhaoxin.com>,
+	<TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>, Lukas Wunner
+	<lukas@wunner.de>
+References: <20260128194835.GA429644@bhelgaas>
+From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
+In-Reply-To: <20260128194835.GA429644@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ ZXBJMBX03.zhaoxin.com (10.29.252.7)
+X-Moderation-Data: 2/2/2026 1:56:17 PM
+X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
+X-Barracuda-Start-Time: 1770011779
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://10.28.252.36:4443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 13155
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: -2.02
+X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.153920
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
 
 
-On 30/01/26 10:51 pm, Jon Hunter wrote:
->
->
-> On 26/01/2026 07:45, Manikanta Maddireddy wrote:
->> From: Vidya Sagar <vidyas@nvidia.com>
->>
->> PERST# and CLKREQ# pinctrl settings should be applied for both root port
->> and endpoint mode. Move pinctrl_pm_select_default_state() function call
->> from root port specific configuration function to probe().
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->> V4:
->> * None
->>
->> V3:
->> * None
->>
->> V2:
->> * None
->>
->>   drivers/pci/controller/dwc/pcie-tegra194.c | 19 +++++++++++++------
->>   1 file changed, 13 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c 
->> b/drivers/pci/controller/dwc/pcie-tegra194.c
->> index 0b8c1a7ca232..04ff211deaea 100644
->> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
->> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
->> @@ -1645,12 +1645,6 @@ static int tegra_pcie_config_rp(struct 
->> tegra_pcie_dw *pcie)
->>           goto fail_pm_get_sync;
->>       }
->>   -    ret = pinctrl_pm_select_default_state(dev);
->> -    if (ret < 0) {
->> -        dev_err(dev, "Failed to configure sideband pins: %d\n", ret);
->> -        goto fail_pm_get_sync;
->> -    }
->> -
->>       ret = tegra_pcie_init_controller(pcie);
->>       if (ret < 0) {
->>           dev_err(dev, "Failed to initialize controller: %d\n", ret);
->> @@ -2106,6 +2100,19 @@ static int tegra_pcie_dw_probe(struct 
->> platform_device *pdev)
->>       pp = &pci->pp;
->>       pp->num_vectors = MAX_MSI_IRQS;
->>   +    ret = pinctrl_pm_select_default_state(dev);
->> +    if (ret < 0) {
->> +        const char *level = KERN_ERR;
->> +
->> +        if (ret == -EPROBE_DEFER)
->> +            level = KERN_DEBUG;
->> +
->> +        dev_printk(level, dev,
->> +               "Failed to configure sideband pins: %d\n",
->> +               ret);
->
-> We can now use dev_err_probe() to handle the above and this becomes ...
->
->  if (ret < 0)
->         return dev_err_probe(dev, ret, "Failed to configure sideband 
-> pins: %d\n", ret);
->
-Thank you for quick review. I will fix it in next version.
 
-I will wait for few more days for others to review this series and then 
-send new version.
+=E5=9C=A8 2026/1/29 3:48, Bjorn Helgaas =E5=86=99=E9=81=93:
+>=20
+>=20
+> [=E8=BF=99=E5=B0=81=E9=82=AE=E4=BB=B6=E6=9D=A5=E8=87=AA=E5=A4=96=E9=83=A8=
+=E5=8F=91=E4=BB=B6=E4=BA=BA =E8=B0=A8=E9=98=B2=E9=A3=8E=E9=99=A9]
+>=20
+> On Wed, Jan 28, 2026 at 06:07:51PM +0800, LeoLiu-oc wrote:
+>> =E5=9C=A8 2026/1/24 4:21, Bjorn Helgaas =E5=86=99=E9=81=93:
+>>> [=E8=BF=99=E5=B0=81=E9=82=AE=E4=BB=B6=E6=9D=A5=E8=87=AA=E5=A4=96=E9=83=
+=A8=E5=8F=91=E4=BB=B6=E4=BA=BA =E8=B0=A8=E9=98=B2=E9=A3=8E=E9=99=A9]
+>>> On Fri, Jan 23, 2026 at 06:40:34PM +0800, LeoLiu-oc wrote:
+>>>> Commit a97396c6eb13 ("PCI: pciehp: Ignore Link Down/Up caused by DPC")
+>>>> amended PCIe hotplug to not bring down the slot upon Data Link Layer S=
+tate
+>>>> Changed events caused by Downstream Port Containment.
+>>>>
+>>>> However, PCIe hotplug (pciehp) waits up to 4 seconds before assuming t=
+hat
+>>>> DPC recovery has failed and disabling the slot. This timeout period is
+>>>> insufficient for some PCIe devices.
+>>>> For example, the E810 dual-port network card driver needs to take over
+>>>> 10 seconds to execute its err_detected() callback.
+>>>> Since this exceeds the maximum wait time allowed for DPC recovery by t=
+he
+>>>> hotplug IRQ threads, a race condition occurs between the hotplug threa=
+d and
+>>>> the dpc_handler() thread.
+>=20
+>>> Include the name of the E810 driver so we can easily find the
+>>> .err_detected() callback in question.  Actually, including the *name*
+>>> of that callback would be a very direct way of doing this :)
+>=20
+Ok, your advice is very good. I'll follow your suggestion.
 
->> +        return ret;
->> +    }
->> +
->>       ret = tegra_pcie_dw_parse_dt(pcie);
->>       if (ret < 0) {
->>           const char *level = KERN_ERR;
->
+> AFAICS there is no ".err_detected()" callback.  I assume you mean the
+> ".error_detected()" callback in struct pci_error_handlers.  Sorry to
+> be pedantic, but it makes things a lot harder to review if we don't
+> refer to the actual names in the code.
+>=20
+Yes,.err_detected() described above refers to the ice_pci_err_detected
+function of the ice network driver.I will modify this part in the commit
+of the next version.
+
+> And my guess is that E810 means the Intel E810 NIC, probably claimed
+> by the "ice" driver, which would mean ice_pci_err_detected() is the
+> callback in question?
+>=20
+Yes, the "E810" device driver described above refers to the "ice" driver.
+
+Commit a97396c6eb13 ("PCI: pciehp: Ignore Link Down/Up caused by DPC")
+amended PCIe hotplug to not bring down the slot upon Data Link Layer State
+Changed events caused by Downstream Port Containment.
+Commit c3be50f7547c ("PCI: pciehp: Ignore Presence Detect Changed caused
+by DPC") sought to ignore Presence Detect Changed events occurring as a sid=
+e
+effect of Downstream Port Containment.
+These commits await recovery from DPC and then clears events which
+occurred in the meantime.
+
+However, pciehp_ist() waits up to 4 seconds before assuming that DPC
+recovery has failed and disabling the slot. This timeout period is
+insufficient for some PCIe devices. For example, the ice network card
+driver execution exceeded the maximum waiting time for DPC recovery,
+causing the pciehp_disable_slot function to be executed which is not
+needed. From the user's point of view, you will see that the ice network
+card may not be usable and could even cause more serious errors, such as
+a kernel panic. kernel panic is caused by a race between
+pciep_disable_slot() and pcie_do_recovery().
+For example, the following log is encountered in hardware testing:
+
+[  100.304077][  T843] list_del corruption, ffff8881418b79e8->next is
+LIST_POISON1 (dead000000000100)
+[  100.312989][  T843] ------------[ cut here ]------------
+[  100.318268][  T843] kernel BUG at lib/list_debug.c:56!
+[  100.323380][  T843] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+[  100.329250][  T843] CPU: 7 PID: 843 Comm: irq/27-pciehp Tainted: P
+    W  OE     ------- ----  6.6.0-32.7.v2505.ky11.x86_64 #1
+[  100.340793][  T843] Source Version:
+71d5b964051132b7772acd935972fca11462bbfe
+[  100.359228][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/0xc0
+[  100.365877][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48
+c7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8
+a1 43 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9
+ff 0f 0b
+[  100.385158][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
+[  100.391024][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX:
+0000000000000000
+[  100.398781][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI:
+ffff8897df5a32c0
+[  100.406538][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09:
+0000000000000003
+[  100.414294][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12:
+0000000000000000
+[  100.422050][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15:
+ffff888116507c28
+[  100.429807][  T843] FS:  0000000000000000(0000)
+GS:ffff8897df580000(0000) knlGS:0000000000000000
+[  100.438511][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  100.444891][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4:
+0000000000570ee0
+[  100.452647][  T843] PKRU: 55555554
+[  100.456017][  T843] Call Trace:
+[  100.459129][  T843]  <TASK>
+[  100.461898][  T843]  ice_flow_rem_entry_sync.constprop.0+0x1c/0x90 [ice]
+[  100.468663][  T843]  ice_flow_rem_entry+0x3d/0x60 [ice]
+[  100.473925][  T843]
+ice_fdir_erase_flow_from_hw.constprop.0+0x9b/0x100 [ice]
+[  100.481078][  T843]  ice_fdir_rem_flow.constprop.0+0x32/0xb0 [ice]
+[  100.487284][  T843]  ice_vsi_manage_fdir+0x7b/0xb0 [ice]
+[  100.492629][  T843]  ice_deinit_features.part.0+0x46/0xc0 [ice]
+[  100.498571][  T843]  ice_remove+0xcf/0x220 [ice]
+[  100.503222][  T843]  pci_device_remove+0x3f/0xb0
+[  100.507798][  T843]  device_release_driver_internal+0x19d/0x220
+[  100.513667][  T843]  pci_stop_bus_device+0x6c/0x90
+[  100.518417][  T843]  pci_stop_and_remove_bus_device+0x12/0x20
+[  100.524110][  T843]  pciehp_unconfigure_device+0x9f/0x160
+[  100.529463][  T843]  pciehp_disable_slot+0x69/0x130
+[  100.534296][  T843]  pciehp_handle_presence_or_link_change+0xfc/0x210
+[  100.540678][  T843]  pciehp_ist+0x204/0x230
+[  100.544824][  T843]  ? __pfx_irq_thread_fn+0x10/0x10
+[  100.549747][  T843]  irq_thread_fn+0x20/0x60
+[  100.553978][  T843]  irq_thread+0xfb/0x1c0
+[  100.558038][  T843]  ? __pfx_irq_thread_dtor+0x10/0x10
+[  100.563130][  T843]  ? __pfx_irq_thread+0x10/0x10
+[  100.567791][  T843]  kthread+0xe5/0x120
+[  100.571594][  T843]  ? __pfx_kthread+0x10/0x10
+[  100.575997][  T843]  ret_from_fork+0x17a/0x1a0
+[  100.580403][  T843]  ? __pfx_kthread+0x10/0x10
+[  100.584805][  T843]  ret_from_fork_asm+0x1a/0x30
+[  100.589384][  T843]  </TASK>
+[  100.592237][  T843] Modules linked in: zxmem(OE) einj amdgpu amdxcp
+gpu_sched drm_exec drm_buddy nft_fib_inet nft_fib_ipv4 nft_fib_ipv6
+nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct
+nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 zhaoxin_cputemp
+nf_defrag_ipv4 zhaoxin_rng snd_hda_codec_hdmi radeon rfkill
+snd_hda_intel snd_intel_dspcfg irdma i2c_algo_bit snd_intel_sdw_acpi
+ip_set i40e drm_suballoc_helper nf_tables drm_ttm_helper pcicfg(POE)
+snd_hda_codec ib_uverbs sunrpc ttm ib_core snd_hda_core
+drm_display_helper snd_hwdep kvm_intel snd_pcm cec vfat fat
+drm_kms_helper snd_timer kvm video ice snd psmouse soundcore wmi
+acpi_cpufreq pcspkr i2c_zhaoxin sg sch_fq_codel drm fuse backlight
+nfnetlink xfs sd_mod t10_pi sm2_zhaoxin_gmi crct10dif_pclmul
+crc32_pclmul ahci crc32c_intel libahci r8169 ghash_clmulni_intel libata
+sha512_ssse3 serio_raw realtek dm_mirror dm_region_hash dm_log
+dm_multipath dm_mod i2c_dev autofs4
+[  100.674508][  T843] ---[ end trace 0000000000000000 ]---
+[  100.709547][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/0xc0
+[  100.716197][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48
+c7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8
+a1 43 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9
+ff 0f 0b
+[  100.735491][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
+[  100.741367][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX:
+0000000000000000
+[  100.749137][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI:
+ffff8897df5a32c0
+[  100.756909][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09:
+0000000000000003
+[  100.764678][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12:
+0000000000000000
+[  100.772448][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15:
+ffff888116507c28
+[  100.780218][  T843] FS:  0000000000000000(0000)
+GS:ffff8897df580000(0000) knlGS:0000000000000000
+[  100.788934][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  100.795329][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4:
+0000000000570ee0
+[  100.803099][  T843] PKRU: 55555554
+[  100.806483][  T843] Kernel panic - not syncing: Fatal exception
+[  100.812794][  T843] Kernel Offset: disabled
+[  100.821613][  T843] pstore: backend (erst) writing error (-28)
+[  100.827481][  T843] ---[ end Kernel panic - not syncing: Fatal
+exception ]---
+
+
+>>> I guess the problem this fixes is that there was a PCIe error that
+>>> triggered DPC, and the E810 .err_detected() works but takes longer
+>>> than expected, which results in pciehp disabling the slot when it
+>>> doesn't need to?  So the user basically sees a dead E810 device?
+>>
+>> Yes, this patch is to solve this problem.
+>>
+Without this patch, we would observe that the ice network card is in an
+unavailable state and a kernel panic.
+
+>>> It seems unfortunate that we have this dependency on the time allowed
+>>> for .err_detected() to execute.  It's nice if adding arbitrary delay
+>>> doesn't break things, but maybe we can't always achieve that.
+>>>
+>> I think this is a feasible solution. For some PCIE devices, executing
+>> the .err_detect() within 4 seconds will not have any impact, for a few
+>> PCIE devices, it might increase the execution time of pciehp_ist().
+>> Without this patch, PCIE devices may not be usable and could even cause
+>> more serious errors, such as a kernel panic. For example, the following
+>> log is encountered in hardware testing:
+>>
+>> list_del corruption, ffff8881418b79e8->next is LIST_POISON1
+>> (dead000000000100)
+>> ------------[ cut here ]------------
+>> kernel BUG at lib/list_debug.c:56!
+>> invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+>> ...
+>> Kernel panic - not syncing: Fatal exception
+>=20
+> This is an interesting panic and looks like it might have been hard to
+> debug.
+>=20
+> Do you have any idea what exactly caused this and how it's related to
+> the timeout in pci_dpc_recovered()?  Is there a race where pciehp
+> disables the slot and removes the driver, but eventually
+> ice_pci_err_detected() completes and we're running some ice driver
+> code while it's being removed or something?
+>=20
+The reason for this kernel panic is that the ice network card driver
+executed the ice_pci_err_detected() for a longer time than the maximum
+waiting time allowed by pciehp. After that, the pciehp_ist() will
+execute the ice network card driver's ice_remove() process. This results
+in the ice_pci_err_detected() having already deleted the list, while the
+ice_remove() is still attempting to delete a list that no longer exists.
+
+> Simply increasing the timeout doesn't feel like a very robust way of
+> solving the problem.  What happens when some other device needs 17
+> seconds?
+>=20
+The situation you described is indeed possible. Yes, we cannot guarantee
+that all PCIe devices will complete the DPC recovery process within 16
+seconds.
+
+> But if increasing the timeout is the best we can do, maybe a warning
+> message in pci_dpc_recovered() when we time out would at least be a
+> hint that we might be heading for trouble?
+>=20
+This is indeed a very good suggestion. Here is another alternative.
+
+@@ -100,6 +100,7 @@ static bool dpc_completed(struct pci_dev *pdev)
+ bool pci_dpc_recovered(struct pci_dev *pdev)
+ {
+ 	struct pci_host_bridge *host;
++	u16 status;
+
+ 	if (!pdev->dpc_cap)
+ 		return false;
+@@ -120,6 +121,12 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+ 	wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
+ 			   msecs_to_jiffies(4000));
+
++	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_STATUS, &status);
++	if ((!PCI_POSSIBLE_ERROR(status)) && (status &
+PCI_EXP_DPC_STATUS_TRIGGER)){
++		pci_warn(pdev, "The execution of device driver's error_detected()
+took too long\n");
++		return true;
++	}
++
+ 	return test_and_clear_bit(PCI_DPC_RECOVERED, &pdev->priv_flags);
+
+>>> I see that pci_dpc_recovered() is called from pciehp_ist().  Are we
+>>> prepared for long delays there?
+>>
+>> This patch may affect the hotplug IRQ threads execution time triggered
+>> by DPC, but it has no effect for normal HotPlug operation, e.g.
+>> Attention Button Pressed or Power Fault Detected. If you have better
+>> modification suggestions, I will update to the next version.
+>=20
+>>>> +++ b/drivers/pci/pcie/dpc.c
+>>>> @@ -121,7 +121,7 @@ bool pci_dpc_recovered(struct pci_dev *pdev)
+>>>>        * but reports indicate that DPC completes within 4 seconds.
+>>>>        */
+>>>>       wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
+>>>> -                        msecs_to_jiffies(4000));
+>>>> +                        msecs_to_jiffies(16000));
+
