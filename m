@@ -1,156 +1,231 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22DF7533D6
-	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 13:37:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40E335D5FD
+	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 13:52:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770039442; cv=none; b=Ng3rWmdFQ/bTnjZGf2s27aC2LtbUlj7UENgvKkscREPGD9VRPxaL0pHxoRifhzWlZTdZB5t0KXApc76g2h71Q0yg35Cmz9a/g26OCSaCpVBA6NM2HNWpPzRtyn8b18WPHSaKi3BdMgai6xvL8aY3zriTDbQmf0QZnSch0UDcHIM=
+	t=1770040343; cv=none; b=NDlqF2UqZnOZLJ/Yj9lRxHvPpmvA9i/xaW6ovBG7UGzT+RxgzGgFu73yeOMkSfWPegpB5utLT873HRb6EBk/LdA/N5A9P9TragBmIbhInOkyPwrWvnVeytUjRsoRPCKOdClSR2P3LMWgGJybmFdq1wMr+oqs/mmm0+6AMX1f5Yc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770039442; c=relaxed/simple;
-	bh=V6Tfoe3HRWqS64lmo1MNdCN5YwtOZQCUr/ZQi4ndplk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uvrq5/8x4AS4w/bD6252RmuDDKr0uYjkwhAN/b8ScwOKYFcHpzDV355l+ppEIdo8z+K77hqdt3X08QZQYQLhALM2sBnWM2NpTAvHroKWfWbptWyfEbsLuNz/TovYmMO1P5qKJTthzgSn4oTFK6AWF1RMrccyBIlB3Sf5ZqPywZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ph61dp2i; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1770040343; c=relaxed/simple;
+	bh=SK3/J5Ituv01MVS/sDHMV2/fPNcx5eIjRXmqRyWMvoE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=JTwix9AA9opAalhvgEVMvx1YRxsqP8uezYgespBcQAVEapMnPmTReKJFV6IrBKe6uCN3QRJEpvigVxyQtjS4jYLuHLrKKcuB6DnqTM6A+bF2a0lH0BO9pi1+wodv8XZBOhbqNm7fEKEo8wPRLTMrkGx314Xhtv7V7PHOn8jSd10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=D0zR4SMT; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ph61dp2i"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-432d2c7dd52so4733947f8f.2
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2026 05:37:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1770039439; x=1770644239; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=sMtwM17CKX/8W2nz2qFNN/9+egceBVoLznQr83mTsDY=;
-        b=ph61dp2iWkWGKhXd+HbzxVvu2Kk3eUeNK/GLYVQPLuHYgnQ3cK9XI1BgD3vFsUuoTF
-         VG7uVhBWgk2X0KaLmk1vGIM15+rH0959AeBcwox6HryoX0gQEex7IJZYvj9u12P/wZmU
-         DZOm/98BZHhtv2YSK5sG6uN33rVsSHfJMtekMe6MtZALja9OOT1wIRE94p1zTkxUOuWt
-         gm198EiiDvDdTzgT3mR9sOdEVTjkB4WPjAVgkEJSsZHkETOzagbcnbczaOA6Z57x8/Ch
-         uYaQzmNWyISWneMn+bxEAjX6pfEGRXzbD3lw2ERs4124unfIc0mfV5P8dFalfmh8A6fq
-         8x6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770039439; x=1770644239;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sMtwM17CKX/8W2nz2qFNN/9+egceBVoLznQr83mTsDY=;
-        b=GGCIWWHJ0njdxoGoQS0DElFuy1oYlMWnYpJ8hqRj82Yf66K5hcF7ETVAmO0Ybg8Sgs
-         B+csbqOjnNq5MwsmydUTXVHGSrOZcyULsQo4iwWIbevoufgxHkrIiUt3f1BEIC8H6Q1G
-         4nHSv9TuNhra7HgMT/WZwmdMFFLzglOhBx0NIuemlGSU+GcWV0jD0kHvn4JNEvh3bVmd
-         cidQ1QeZKqyMLJmD1f7cAgISafx7z/c+alWsvHhnhZmechjVZVrZmxcsTXAVyJG0S9ct
-         3mfbxzPONMJzq38MiB90s44UbAJK67pf3WOnqRq/VkBejWzqE2KnC+hPwdSj5P2iCHg6
-         62BQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWdnVOlJo/ai4GxbvUyUVRIuzmbq49yoWx6a4xPqFXkdl50cf+K0IodA1KbNCp824zj0evzxgpvDQU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzmb/xAivB+9lg4liZZyknglPffLF+XSKydWZmOOgvP3aGguhBF
-	vM+r5e/47p4ZI6C36jir8IAPo0c/W/dMxeA8sk3Jn2JGpuJ3TTd+OHZJGvh8urXTg4c=
-X-Gm-Gg: AZuq6aJiUxnrUuCxPcIwb7POmPEnYUhBr4Hj6v/n+QxkZazA1jmnxMEeLFqHS6wCL6q
-	wvarrCKMu5Atelk7wVqv7e+azMpBC4Dqnlh+LjimA1yoDv0FQMcyAB85qs6S3IM+AP/eWp7fgtF
-	uFgETgRiBm/Bc7sP9gATuYqOnLxk/se5DwoVNkbtKfj2WjNozPXKGwytjcPXTA6b7pMLDckCp0V
-	Ungg0wtdutUZuxCYHhvPkLmYV7xfDgcBHM4dBvcOsYYDmnWwZhElvEM7Fq1ihlUnZVmppOuuUhy
-	fG7cwOGP67ZOTw2XkwvdISzcJfT7s/fpW6g5y1n65clXjbF2d8Dg5m7cxTSllhXu6Nl+GJKbxed
-	4VXhVNtuyGkGA4qCghUnuSybBi3gUE0zqb1PmGD9tYd+qqk3KaIQQj6qk/e0i9RnOf+v3n8zwBr
-	b+qiHYVtLVE/gW9A==
-X-Received: by 2002:a5d:5850:0:b0:435:dbe3:c6b1 with SMTP id ffacd0b85a97d-435f3a92b77mr17179529f8f.25.1770039439418;
-        Mon, 02 Feb 2026 05:37:19 -0800 (PST)
-Received: from vingu-cube ([2a01:e0a:f:6020:7cf3:628:f0e:cd4d])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-435e131ce93sm43065097f8f.24.2026.02.02.05.37.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Feb 2026 05:37:15 -0800 (PST)
-Date: Mon, 2 Feb 2026 14:37:14 +0100
-From: Vincent Guittot <vincent.guittot@linaro.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: ciprianmarian.costea@oss.nxp.com, s32@nxp.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: s32g: Fix ports parsing
-Message-ID: <aYCoiulppKnvvOpp@vingu-cube>
-References: <20260202130756.1421488-1-vincent.guittot@linaro.org>
- <scnf5gh3h5pwvnbe4bwtztdlgcpvvtse4fg64bto2jgyotfpwl@sle4k4ky3gtu>
- <CAKfTPtBZCLiq0E-a2QA5X_Bix2PxXiCyuCira1V_wBWZORUS6A@mail.gmail.com>
- <howlzhze3axqiguqvxslssc2tr7ocaa7l2obr4623n3piw5xee@ujnyo5bieril>
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="D0zR4SMT"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 080F524002B
+	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 14:52:19 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1770040339; bh=+BF4QbuMA531R+4C2w46k7sZ/yalnR3rbtvrSCnTz5Q=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
+	b=D0zR4SMTEEAw9CfBbkF5cefHt2Ztogxnw8viMkkEye0yOVmDaAHCmnGlaK8x58A56
+	 83mmSK++F6c0kL/iVeDXRBuDLt5f1RbpV96KCOFiiw2uq4jNQQ9xauq2NnaaL9nr/D
+	 jYS21PtX5QQrgsb1MoY98jEnsrlyPzWS73JUyFFUM4cxMwleOmlro+Xzq2QID7ct7u
+	 8knAhsFwrnQyxyhUUWMmguWIdHA1VHOWqFwkgM8F+jpsfhFMevQC8YJjXqtec0CelT
+	 +XrODFBH9TOU+bgyRSQedRMlOCzM1Lsq0U+PtECk7X90vXdwFzDlBr4rapBi8qTvdt
+	 5YmnYfJOv09nw==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4f4SjC28Fkz6twh;
+	Mon,  2 Feb 2026 14:52:15 +0100 (CET)
+From: Markus Probst <markus.probst@posteo.de>
+Subject: [PATCH v11 0/3] rust: leds: add led classdev abstractions
+Date: Mon, 02 Feb 2026 13:52:17 +0000
+Message-Id: <20260202-rust_leds-v11-0-585d1c8be20c@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <howlzhze3axqiguqvxslssc2tr7ocaa7l2obr4623n3piw5xee@ujnyo5bieril>
+X-B4-Tracking: v=1; b=H4sIAN2rgGkC/13MQQqDMBCF4atI1k3JqImZrnqPUkowkxooKomVF
+ vHujYIQupzHfP/CIgVPkV2KhQWaffRDnw6AU8HazvRP4t6mgZWilABQ8/CO0+NFNnKDEl3Tlq5
+ xyNL/GMj5zx673dPd+TgN4bu3Z72tR0VmlVlzwS2aGlwlpaz0dRziRMPZEtsqM+YSc4lJatWCt
+ AZQqOpfgjioEiBUTkEkS8KAVLXWtcPcruv6A6SdZjUZAQAA
+X-Change-ID: 20251114-rust_leds-a959f7c2f7f9
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+ Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
+ Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng <boqun.feng@gmail.com>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Markus Probst <markus.probst@posteo.de>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3949;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=SK3/J5Ituv01MVS/sDHMV2/fPNcx5eIjRXmqRyWMvoE=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBpgKwEjeJ3FJ52E03anXiL+RLJaXuV2F4vhW0eE
+ hwEwiyNx2aJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaYCsBBsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMSwyLDIACgkQNHYf+OetQ9JdhxAAiW1nZMr+YreBU8V1RU6K69ard50ocdt
+ KGnCq+y72E/c/z6LWOCJXxk0MEyX+WbX7ZUSt17x6jj7Yhc7UWXAKusxJZkZ0YOX60iFYbYvD/K
+ H9TustHPSiFkpflLbWTwKf/R4h/7ogZU4XJoWQaMCsDoZpwBnF+GGvceAGZIFAVqyBRjLQx4kXu
+ aqnLLrEdIESTlbC6R21zB2M7tq2upuHoLlYSfLszLKDAT6tsB9BjcCY7OxI/DX98++eFKLbZ6MV
+ 4/Mlw6An1TEY1xVIAgbkLHG/K2GyJ43y/1m9OOH6CeduvtmjNrR601PVq3DVGFfG85xzT8wFEyK
+ bXwWVAKiAg3CHijH6xeJWSudDWy4wyoEMQ4LzT7jzP2/QxduizjRhyJGyOZdEwq+PKVzVQYj92M
+ 2/hk2TpMb7svopwISI9dSV3K38QImNZxNfZQ/ulgRl+qn9WPYLVFu6dg+P8dTa7Xc25Xu7NkrkL
+ rdFQon2WRFJ5fr7Aghl8/vqaqI7XaTGu8VkZuTItLk6nGccZchbb524X/3kvD0KJvyhWNKCLewt
+ JheNxP23wEicxY51mYxQv4F498hkKbQbrCwlXR8XV7d/Hu+s9DpNpgZQUyb/64n1LkxB6JaGU77
+ boo9Y7cDHBDDFXOsMXNUYA2dmRKlxSFNQYdNmEfwFh/vuIE+e71A=
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Le lundi 02 févr. 2026 à 18:58:34 (+0530), Manivannan Sadhasivam a écrit :
-> On Mon, Feb 02, 2026 at 02:23:52PM +0100, Vincent Guittot wrote:
-> > On Mon, 2 Feb 2026 at 14:18, Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > >
-> > > On Mon, Feb 02, 2026 at 02:07:56PM +0100, Vincent Guittot wrote:
-> > > > No error return is missing after the loop resulting in removing the
-> > > > ports from the list.
-> > > >
-> > > > Fixes: 5cbc7d3e316e ("PCI: s32g: Add NXP S32G PCIe controller driver (RC)")
-> > > > Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
-> > > > ---
-> > > >  drivers/pci/controller/dwc/pcie-nxp-s32g.c | 2 ++
-> > > >  1 file changed, 2 insertions(+)
-> > > >
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> > > > index 47745749f75c..767f5a622441 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> > > > @@ -285,6 +285,8 @@ static int s32g_pcie_parse_ports(struct device *dev, struct s32g_pcie *s32g_pp)
-> > > >                       goto err_port;
-> > > >       }
-> > > >
-> > > > +     return 0;
-> > > > +
-> > >
-> > > Hmm. So the initial 'ret = -ENOENT' will become redundant and you'll return
-> > > success even if there are no Root Ports in DT.
-> > 
-> > good point.
-> > 
-> > >
-> > > You should do:
-> > >
-> > >         if (!of_get_available_child_count(dev->of_node))
-> > >                 return -ENOENT;
-> > 
-> > or maybe
-> > 
-> > +       if (!ret)
-> > +               return 0;
-> > 
-> 
-> That'll work too. For some reason, I initially thought it would be ugly, but it
-> doesn't :)
+This patch series has previously been contained in
+https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
+which added a rust written led driver for a microcontroller via i2c.
 
-In fact this enables more changes and I end up with:
+As the reading and writing to the i2c client via the register!
+macro has not been implemented yet [1], the patch series will only
+contain the additional abstractions required.
 
-@@ -282,12 +282,12 @@ static int s32g_pcie_parse_ports(struct device *dev, struct s32g_pcie *s32g_pp)
- 
- 		ret = s32g_pcie_parse_port(s32g_pp, of_port);
- 		if (ret)
--			goto err_port;
-+			break;
- 	}
- 
--err_port:
--	list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
--		list_del(&port->list);
-+	if (ret)
-+		list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
-+			list_del(&port->list);
- 
- 	return ret;
- }
--- 
+[1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@kernel.org/
 
+The following changes were made:
+* add basic led classdev abstractions to register and unregister leds
 
-> 
-> - Mani
-> 
-> -- 
-> மணிவண்ணன் சதாசிவம்
+* add basic led classdev abstractions to register and unregister
+  multicolor leds
+
+Changes since v10:
+* allow in-place initialization of `LedOps`
+* run rustfmt for code inside `try_pin_init!`
+
+Changes since v9:
+* add missing periods in documentation
+* duplicate `led::Device` and `led::Adapter` instead of using a complex
+  trait
+* fix imports not using prelude
+* adapt to CStr change
+* documented `led::Color::Multi` and `led::Color::Rgb`
+
+Changes since v8:
+* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
+* make functions in `MultiColorSubLed` const
+* drop the "rust: Add trait to convert a device reference to a bus
+  device reference" patch, as it has been picked into driver-core
+
+Changes since v7:
+* adjusted import style
+* added classdev parameter to callback functions in `LedOps`
+* implement `led::Color`
+* extend `led::InitData` with
+  - initial_brightness
+  - default_trigger
+  - default_color
+* split generic and normal led classdev abstractions up (see patch 3/4)
+* add multicolor led class device abstractions (see patch 4/4)
+* added MAINTAINERS entry
+
+Changes since v6:
+* fixed typos
+* improved documentation
+
+Changes since v5:
+* rename `IntoBusDevice` trait into `AsBusDevice`
+* fix documentation about `LedOps::BLOCKING`
+* removed dependency on i2c bindings
+* added `AsBusDevice` implementation for `platform::Device`
+* removed `device::Device` fallback implementation
+* document that `AsBusDevice` must not be used by drivers and is
+  intended for bus and class device abstractions only.
+
+Changes since v4:
+* add abstraction to convert a device reference to a bus device
+  reference
+* require the bus device as parent device and provide it in class device
+  callbacks
+* remove Pin<Vec<_>> abstraction (as not relevant for the led
+  abstractions)
+* fixed formatting in `led::Device::new`
+* fixed `LedOps::BLOCKING` did the inverse effect
+
+Changes since v3:
+* fixed kunit tests failing because of example in documentation
+
+Changes since v2:
+* return `Devres` on `led::Device` creation
+* replace KBox<T> with T in struct definition
+* increment and decrement reference-count of fwnode
+* make a device parent mandatory for led classdev creation
+* rename `led::Handler` to `led::LedOps`
+* add optional `brightness_get` function to `led::LedOps`
+* use `#[vtable]` instead of `const BLINK: bool`
+* use `Opaque::cast_from` instead of casting a pointer
+* improve documentation
+* improve support for older rust versions
+* use `&Device<Bound>` for parent
+
+Changes since v1:
+* fixed typos noticed by Onur Özkan
+
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+Markus Probst (3):
+      rust: leds: add basic led classdev abstractions
+      rust: leds: split generic and normal led classdev abstractions up
+      rust: leds: add multicolor classdev abstractions
+
+ MAINTAINERS                     |   8 +
+ rust/bindings/bindings_helper.h |   1 +
+ rust/kernel/led.rs              | 300 +++++++++++++++++++++++++++++++
+ rust/kernel/led/multicolor.rs   | 382 ++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/led/normal.rs       | 226 ++++++++++++++++++++++++
+ rust/kernel/lib.rs              |   1 +
+ 6 files changed, 918 insertions(+)
+---
+base-commit: 18f7fcd5e69a04df57b563360b88be72471d6b62
+change-id: 20251114-rust_leds-a959f7c2f7f9
+
