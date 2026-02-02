@@ -1,107 +1,92 @@
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [144.76.133.112])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B376335BDB8
-	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 10:42:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39EA535D603;
+	Mon,  2 Feb 2026 10:57:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770028952; cv=none; b=eO+IIYn2tggfbSeurfN5/yGMaLgY8EomDUoC4o5t+fh5k1rUAHJEfADBRQpLdVK7bpy3ChECYfCdAFZ9DDq9wdQnv1ed1gWAcEpfXlLZKA5C5GZgT/0UoFumm9fGpLHptbg2W/iZRuPyym9qMJ3anbAPeI82zRd2+CpKaZlPtyo=
+	t=1770029856; cv=none; b=dGQWZY0Dk1qTMQC3fBt1730gBGq2Ak6qDbIuAXE/ozW4tlzcTlPwlrQCTq+ND0KtO3puodRrLLDxgY+PXXd4HrNhLV/2l+UpHHHHlQ9o6c5x2e6De8uM53SFhZZdVNmZeudWBPqgEHjeakVPVCe4USx3yTPKjU3wH/x3l7tE4gM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770028952; c=relaxed/simple;
-	bh=+slSCtj/zsYfmdj0kQqfv4p3Dtfo8oS+mSFE/2eHJfI=;
+	s=arc-20240116; t=1770029856; c=relaxed/simple;
+	bh=v1nG6m4IXvpZK5lBkTIqj296BlgLhGZvc4GCeR9YPI0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q/H8NTwMcnuPNaRBWbMWQKC5+T9lCDXvTIuvkGPAEpDv+/Otr6u/Erz0WkSe0jDIaX6S3vbNVwOggP5h4TRSpaL9gaQoiFtVqCxCq32HxMt33NAYW5eZxdFBIAPYP5SMSPudr3CapI+beRlhwvQjEc/g84FY0tcMI5+W8s9WVmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=144.76.133.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 365AE2C02044;
-	Mon,  2 Feb 2026 11:42:22 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 09132290CA; Mon,  2 Feb 2026 11:42:22 +0100 (CET)
-Date: Mon, 2 Feb 2026 11:42:22 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Terry Bowman <terry.bowman@amd.com>,
-	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	linux-pci@vger.kernel.org, Shuai Xue <xueshuai@linux.alibaba.com>,
-	tianruidong@linux.alibaba.com, Keith Busch <kbusch@kernel.org>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH] PCI/AER: Clear stale errors on reporting agents upon
- probe
-Message-ID: <aYB_jmq7xlyKpBFb@wunner.de>
-References: <3011c2ed30c11f858e35e29939add754adea7478.1769332702.git.lukas@wunner.de>
- <20260127230055.GA384686@bhelgaas>
+	 Content-Type:Content-Disposition:In-Reply-To; b=g/Mq8vmLUD+Y4Ckrgd0Bd667RFwavgoKUqCibCTJ0DXeAiO/VGhJ4+taDR2wyY8EA81LLDC9BzPCJTvGE1DXvrueZVU78CMNaIWvwmSIavwtyJ8CYD+CHaHLfnYeAYLPUIOyEsF2b26P/GyUZIoZCdkux7L8vY72iO7CGAlAN2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aBalgowb; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aBalgowb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F187DC116D0;
+	Mon,  2 Feb 2026 10:57:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770029855;
+	bh=v1nG6m4IXvpZK5lBkTIqj296BlgLhGZvc4GCeR9YPI0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aBalgowbEnDJmkBDolYkcvGVzCpk+lsj56HS6WDLNUria80WxCkuIZBGsMsmFCltP
+	 hPwnXQYeHVm7FZ1x64LGuECvl9AIgJCpy4s6U7OztKgqtTC9rNHxFx/g95GL/gdf0b
+	 etF4j3kN4vHjvcGU0h67wdhBulxe+ORYBMUd8AgZc88cDO+o6UoSGpl2Kj/SKbBpHI
+	 Y6E1yJ9Bb49R8N3vZJycauPhHdV8foXkqNBIXcSf5jZaGFwaNnko5Pi42riHJlY4sI
+	 eXtlv0VEbUS3b0UKFnPXnStmxaDwK50M3RPnTr+MwxHlKX7T1cGb8Sq9DX5MkIYnLD
+	 n9EUR2ng4A7rQ==
+Date: Mon, 2 Feb 2026 16:27:26 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	christian.bruel@foss.st.com, shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com, 
+	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com, 
+	zhangsenchuan@eswincomputing.com, ningyu@eswincomputing.com, linmin@eswincomputing.com, 
+	pinkesh.vaghela@einfochips.com, ouyanghui@eswincomputing.com
+Subject: Re: [PATCH v10 0/2] Add driver support for Eswin EIC7700 SoC PCIe
+ controller
+Message-ID: <wuchlwgfse5oubaqfchnxnpuzggbx6fl5pnnn5ouyfnllakwcz@xnllqqtg6rk2>
+References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
+ <176994869472.79432.11245161336216033848.b4-ty@kernel.org>
+ <20260201122810.GA34749@unreal>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260127230055.GA384686@bhelgaas>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260201122810.GA34749@unreal>
 
-On Tue, Jan 27, 2026 at 05:00:55PM -0600, Bjorn Helgaas wrote:
-> On Sun, Jan 25, 2026 at 10:25:51AM +0100, Lukas Wunner wrote:
-> > Correctable and Uncorrectable Error Status Registers on reporting agents
-> > are cleared upon PCI device enumeration in pci_aer_init() to flush past
-> > events.  They're cleared again when an error is handled by the AER driver.
+On Sun, Feb 01, 2026 at 02:28:10PM +0200, Leon Romanovsky wrote:
+> On Sun, Feb 01, 2026 at 07:24:54AM -0500, Leon Romanovsky wrote:
+> > 
+> > On Thu, 29 Jan 2026 17:26:28 +0800, zhangsenchuan@eswincomputing.com wrote:
+> > > Changes in v10:
+> > > - Updates: eswin,eic7700-pcie.yaml
+> > >   - None
+> > > 
+> > > - Updates: pcie-eic7700.c
+> > >   - Remove devm_clk_bulk_get_all_enabled API, use devm_clk_bulk_get_all
+> > >     and clk_bulk_prepare_enable. Add resource release codes and add
+> > >     eic7700_pcie_host_deinit API.
+> > >   - Update PCI_DEVICE_ID_ESWIN_EIC7700.
+> > >   - Add reset_control_put release resources in "goto err_port:".
+> > >   - Delete trailing comma after a terminator in eic7700_pcie_of_match.
+> > > - Link to V9: https://lore.kernel.org/all/20251229113021.1859-1-zhangsenchuan@eswincomputing.com/
+> > > 
+> > > [...]
+> > 
+> > Applied, thanks!
+> > 
+> > [1/2] dt-bindings: PCI: eic7700: Add Eswin PCIe host controller
+> >       (no commit info)
+> > [2/2] PCI: eic7700: Add Eswin PCIe host controller driver
+> >       (no commit info)
 > 
-> Do you think pci_aer_init() is the right time to clear the error
-> status bits?  Most of those bits are sticky, so they're not cleared by
-> reset.
 > 
-> I'm thinking about the scenario where a PCIe error occurs is captured
-> in the AER error status registers, but the system reboots before the
-> AER driver can log the error.  Since the bits are sticky, the new
-> kernel might have a chance to find and log the error that happened
-> with the previous kernel.
+> Sorry for the noise. The issue was caused by a mistake in my scripts.  
+> Of course, it was never applied.
+> 
 
-I agree that *reporting* errors instead of just silently *clearing* them
-could be useful.
+I was about to scream, but glad that this didn't happen.
 
-We cannot pinpoint when the errors occurred, so we'd have to mark them
-in the log messages as having occurred "during shutdown or early boot"
-or "during suspend or resume" (for errors occurring during a system sleep
-cycle).  But that could still be good enough and helpful for users.
+- Mani
 
-We could report them with KERN_INFO severity and if that turns out to be
-too noisy, demote them to KERN_DEBUG or exempt certain error types
-(such as Unsupported Requests).
-
-Shuai Xue and I had a discussion late last year about reporting
-versus silently clearing stale errors:
-https://lore.kernel.org/all/aPoIDW_Yt90VgHL8@wunner.de/
-
-I think we were both unsure back then whether you would entertain a patch
-to report stale errors.  But since you're now raising the issue yourself,
-I'd say yes, it's worth pursuing.
-
-However I think the $SUBJECT_PATCH still makes sense:  If I were to submit
-a series to report stale errors, I'd still first amend the code to clear
-all stale errors (instead of leaving some of them uncleared), then amend it
-to report errors prior to clearing them.  The $SUBJECT_PATCH is sort of
-a fix that distributions may want to backport, whereas *reporting*
-stale errors would be a new feature not eligible for backporting.
-
-> So I wonder if pci_aer_init() should just find the Capability and
-> alloc its buffers, and aer_probe() should look for existing errors and
-> log them before clearing them.
-
-Devices may be enumerated after aer_probe(), e.g. when they're hot-added
-below an AER-capable and hotplug-capable Root Port.  For cases like this,
-we'll still have to clear (and in the future report) stale errors in
-pci_aer_init().
-
-(The $SUBJECT_PATCH takes this into account and explicitly calls out
-this corner case in the commit message.)
-
-Thanks,
-
-Lukas
+-- 
+மணிவண்ணன் சதாசிவம்
