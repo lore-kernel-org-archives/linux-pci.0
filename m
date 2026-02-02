@@ -1,120 +1,69 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D542882A8
-	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 15:11:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 065DB366DD7;
+	Mon,  2 Feb 2026 15:29:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770045061; cv=none; b=k+Uv9y799bnRa9ujMmwH5b8pua2vSLUWX5IWG4h37ijofXsJM+EJcdUF7jAzLRatwlNu9r0TbXljSW21+i2Q0OJv+Vn+BRg/cZDrNF2BxQHtsElfOuTsQO3znov61/kr+lVAXFyQSl20rEDVfpDazyTqpkcRsRfIc3gBTIA57mY=
+	t=1770046193; cv=none; b=aLA7oft+qP70TuaNlwaGdsLWXH2NB+ec8zQxdAX0vomD9aOJQvS4mmAt73OFhjNguRePwWPTuz7fRy2XdfyheoChqV1JODfkjO0cXNu7UchHXBo1G2dkezIlAXl6v7FE4Flsxu1Ax3piqNn9uOrvQJEI1C2THahbSj8kcs4aGxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770045061; c=relaxed/simple;
-	bh=btc952EXnNWwdQlMg+H9RbtOd9pcgav+Aeu0irDTT9A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=po16EmdGQDtNBCu+Vv7jLU/bVEYKlvNHfS71zQ4LJTPm4jqLiJVADkaIaC0MWHVF/2asYCtfFIbQs/XoOKr3QOejGB9vimVKExJ4SqXO5cUe/eNQTzdOQyWt5L1dYJtyWWlJZjf2r1X+i9Gaw80pClMcpZlA0A7DNK0wP5CWNBE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=vMdVBndC; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1770046193; c=relaxed/simple;
+	bh=hdTDTXPlle8rnOSCflXXpP2xx15aOGrUlA6yUqB9zpo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cWYlF6/WKiPjiMJBUYMZKwNjkDaR4ZxAh9DQc8BQxC1HgD4zquYBd2S0VO2XN2ADsUn+2ZVR/pQiJspjsIucxofRqsCya5P67VDnoSby07+ajDm5dTfZY+QYF/snZnHLYskPEgHTmfZZaSuxQJ6BcgID7Zf3WU1BeAu4BZ7sQhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=flDp5Qi9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vMdVBndC"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-432d2670932so4209642f8f.2
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2026 07:11:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1770045059; x=1770649859; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=QLQJlIi1xp3GOgxJrSuyTGl+kKtHgLV5lTV9J+BYkDY=;
-        b=vMdVBndCHwhhq8lTTOrA0HVYARA+uPLK78PeYrJ+tXombRUvfjKfM+e5VL8wZPAPWG
-         0HJXfV8+WE3QklokxNX3mdXUcdK7cWVEHEf0czMfi7swxn9RnkmFVnxGrahr+moX76OY
-         3laWrtHTKzAF/DnsrSWjPEs2BHo58m/cAPVYEx/NrJHvhJIBUXhDu8c6RypC0BX67448
-         tkfg5v3dCwjFJM73ygCLbfdlI15F2/V8NRBn9mngPviHWXDBQPUqbzPQN+ke7+ihezr5
-         dFftO2Nh9TfXi/AHR+a8TXHP+q32S7n1hMJJmWbdq91AR8upRYgKZY3z1yWWygW7pZfs
-         x2Cw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770045059; x=1770649859;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QLQJlIi1xp3GOgxJrSuyTGl+kKtHgLV5lTV9J+BYkDY=;
-        b=OHQOMmrZ7ZzjnrEIqGPSpW8t+FqmvzoWo3JRdyJ/o7sw23VmsuVaH699T5R6QSXOup
-         h1QBtWJzC+dEkgK/q/nMyczjGM8SlXL4V7HLM725yT1UXQCLY0FX6VMm3tWtvE1+fGHp
-         hVFkhtPnkWAhhuN7WX9+UKFysT6qs/r8xLxcawsNC9sf37AmnVgDs28Njm/daA0B1eRi
-         dPPRSDEt3FO/+vUU2+/S15SeVVVKHs8hkD036h65FG+ojiXOxTlMcapZaqqSt3e0kHru
-         UdhX0FAsmpdiomFOSuDzOhLyfTLmig1IGKRfj1M1AncO8Zk/2Dw1Wyy2mmtV9qsBO8Yy
-         8dsg==
-X-Forwarded-Encrypted: i=1; AJvYcCW17nxKfIig1C3VpuNoaHSg1PLe4A0xTEdiqvavfhjJeUgS5JChZXgZtxEXPIekVfP/EY7/uJHNM+g=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyk8UIrMuvnoQ0IC8/1yrEUyJSDY8ZxpBJ3mMvpXE6ij/Lazc44
-	MLoGXHbVLy1/5fy78g8n4BJRCNN/5N7c2azP4F89QUXUMLIMxaiqur4cDV5MfJ46kUk=
-X-Gm-Gg: AZuq6aIoyeovKqtvcB9cwzWJWT3xgJeUAMlAVuu5rY8TwJUe3EFyMu7xu0RA5+V/0CF
-	smZO0I/xa9m34HLo+42Caliq33AiRelza/N8wKU7Y9BNjdneec17FgOBFap366mZqklvd+qKfy7
-	Ym5aQUsgM7cckdHYtoYfbNhn+zvRBzK5XphNIyVzgCHdsWAUB7VEOIW14qVjrHcsNalkauSr8tr
-	UJTCuIXkHw03A3v3Aw5MyiOJZLvxQQOT3knsL43OLA824JRh/XAzG+tEIQ7deTlJ8qHNszNsA/S
-	8LVOKbzNYWr8ajw7zVu+NhtYU64Sh+46FZwwmdw6Aojz8uMXly/1FxaqYpVQfqzEmHFy+ie4cC0
-	ugxP5UP6RZzyjKynESaDvVyVYr2bfcBQxKj1fp6/IIiqhDqUQDk8LULRdXUmQUHJzYB8qGn1XUh
-	FWDVaiUj0pYIxh5G30AKWjA1i86pk=
-X-Received: by 2002:a5d:64e6:0:b0:435:982d:97ee with SMTP id ffacd0b85a97d-435f3ab9a44mr19652025f8f.57.1770045055569;
-        Mon, 02 Feb 2026 07:10:55 -0800 (PST)
-Received: from vingu-cube.. ([2a01:e0a:f:6020:7cf3:628:f0e:cd4d])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-435e10edfccsm42845021f8f.17.2026.02.02.07.10.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Feb 2026 07:10:54 -0800 (PST)
-From: Vincent Guittot <vincent.guittot@linaro.org>
-To: ciprianmarian.costea@oss.nxp.com,
-	s32@nxp.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	imx@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="flDp5Qi9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDA3CC116C6;
+	Mon,  2 Feb 2026 15:29:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770046192;
+	bh=hdTDTXPlle8rnOSCflXXpP2xx15aOGrUlA6yUqB9zpo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=flDp5Qi9DnqSRKp74scNiKZ7oras0XAlvs1IKd2uSae2RKwjDR5CnICAGK1NopQaD
+	 8sSTIMObfQvkQAseps3q4erfbi32vPMQoY/+E6iX72AYM0gG70Ul7cAfEb7wQ9TlHc
+	 58FLUfxK2INSg66rZAOJgzTyhvqzfguevLgWApScJkuve6b8ikKBb3MT2DDqt/ZWGX
+	 /QaYNhUkaQ5qpKY5dI2Gw4Ci0W81kJGGkDdRxVTxHJetaNfaJxWkXZw5hM3XCc/iXE
+	 CJlA4yAiJvuVlm0nDMAVx25w4B8o3X0/HFrN8bGdHc9DX7Z82npl/bSyo6Jvzy7B0b
+	 H7MGKgk3uwXkA==
+Date: Mon, 2 Feb 2026 16:29:47 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
+	bhelgaas@google.com, corbet@lwn.net, jingoohan1@gmail.com,
+	lpieralisi@kernel.org, robh@kernel.org, Frank.Li@nxp.com,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Cc: Vincent Guittot <vincent.guittot@linaro.org>
-Subject: [PATCH v2] PCI: s32g: Fix ports parsing
-Date: Mon,  2 Feb 2026 16:10:50 +0100
-Message-ID: <20260202151050.1446165-1-vincent.guittot@linaro.org>
-X-Mailer: git-send-email 2.43.0
+Subject: Re: [PATCH v2 1/2] PCI: dwc: ep: Return after clearing BAR-match
+ inbound mapping
+Message-ID: <aYDC617a8s012LBl@ryzen>
+References: <20260202145407.503348-1-den@valinux.co.jp>
+ <20260202145407.503348-2-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260202145407.503348-2-den@valinux.co.jp>
 
-No error return is missing after the loop resulting in removing the
-ports from the list.
+On Mon, Feb 02, 2026 at 11:54:06PM +0900, Koichiro Den wrote:
+> dw_pcie_ep_clear_ib_maps() first checks whether the inbound mapping for
+> a BAR is in BAR Match Mode (tracked via ep_func->bar_to_atu[bar]). Once
+> found, the iATU region is disabled and the bookkeeping is cleared.
+> 
+> BAR Match Mode and Address Match Mode mappings are mutually exclusive
+> for a given BAR, so there is nothing left for the Address Match Mode
+> teardown path to do after the BAR Match Mode mapping has been removed.
+> 
+> Return early after clearing the BAR Match Mode mapping to avoid running
+> the Address Match Mode teardown path. This makes the helper's intention
+> explicit and helps detect incorrect use of pci_epc_set_bar().
+> 
+> Suggested-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
 
-Fixes: 5cbc7d3e316e ("PCI: s32g: Add NXP S32G PCIe controller driver (RC)")
-Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
----
-
-Change since v1:
-- handle correctly the case when there is no child port
-
- drivers/pci/controller/dwc/pcie-nxp-s32g.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-index 47745749f75c..b3ec38099fa3 100644
---- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-+++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-@@ -282,12 +282,12 @@ static int s32g_pcie_parse_ports(struct device *dev, struct s32g_pcie *s32g_pp)
- 
- 		ret = s32g_pcie_parse_port(s32g_pp, of_port);
- 		if (ret)
--			goto err_port;
-+			break;
- 	}
- 
--err_port:
--	list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
--		list_del(&port->list);
-+	if (ret)
-+		list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
-+			list_del(&port->list);
- 
- 	return ret;
- }
--- 
-2.43.0
-
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
