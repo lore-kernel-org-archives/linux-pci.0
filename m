@@ -1,273 +1,349 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FFC135A943;
-	Mon,  2 Feb 2026 11:00:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D413612DC
+	for <linux-pci@vger.kernel.org>; Mon,  2 Feb 2026 11:21:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770030001; cv=none; b=L5K97W4WG8yAB9RqswInsqWmYkHa8OcDPIDGqsey84MilHA7K1Fynd2pCpxRJYu87EXC/X6VkBQwcofEfb59BkSNp8JGuqH+l+XRETo1THv1nwk3Um8aUjbqsjRj6PA4KW9zgYKXUQlAiKBqzKfY8q2HnmIs05OCD4Nn05ityTA=
+	t=1770031312; cv=none; b=SsXXvGPEu86B2uekwJbwncEkcmbs8/6tp1YcJCwiMGPCXfvS/sf5PmyiV9/AETjBT/MOr15uUVvf0icXaUf52o+h1LXSKuVafYzUqiGBvLY0mH72lf1nVU1KwdYXAuNr6pTAbFFAO/6s5cIGDsCGRtIsH33yglbmjXSc/knZhZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770030001; c=relaxed/simple;
-	bh=TUnLtH/hGYDDh2Iz7+OkTetuo8jQN0M82oo7UEGB3Yg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g/oVHXKDncNrBoj4bNqQD03rHZKmqs1+oHXAI0hYQ/XTEcJUjIdlRt9MaHnjkxI+OMD5sxJjEnW5yfXtIiqEWPaLgvUxVo9NqyjXk8aBNO4f56Ad3wyLZqMEWsZUrkmuZ0kxeB2Y9foLA9Ss4flFv4XQSwVJYYy6QaPnK18IN+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GlkMDBZg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770031312; c=relaxed/simple;
+	bh=kZ9qfPSbdxhdxJd1jEgNR8KcEW+dydPdZg2jpta0mZ0=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=qSgkRtY7+sVMdi6PoBIFe4KPWFa7tkv1WKqPDvVMaJpbh7zGS0E15VWba80kouBoyc6CjkzWIJHuU8a7YsHPQyMUt8Cw5N2e3WEOdzcV2iU6Px27+22Vq0fgfL7WkgLCj/Cq42Cd130eAoFxdNJ2C+MeKRFsBNopJM9JGYAVTaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=egGBFYQs; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GlkMDBZg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A81C116C6;
-	Mon,  2 Feb 2026 10:59:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770030001;
-	bh=TUnLtH/hGYDDh2Iz7+OkTetuo8jQN0M82oo7UEGB3Yg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=GlkMDBZg6unx+96Zcs1IKoVEox02V85SUcZeN0y1r+gsBiDn0EWevG33GMpRscrzm
-	 gnMppSFRPNWQRafon2cp/69/5vh4MT+WYsk1+H5P8+WATrj9vTCLRe9ldjqwIFAS3F
-	 hh32lbtHKMXLcPxTZlK1x2E4fMHqzs4rVXntSdC2/m/YGfZRLwayaDq4nSVNvfOGlc
-	 HJB4VTC7QlF8QbUXQ1KGIn1gRQKwr+QLZCLpHcZUTEk1q3kDBzJPtykh+JwQdqzzSS
-	 vk3IaxeaLgFPEJu8AuOromDEC+3fyRC5tqMpGx6VevjPT2bj3gTOg3boJTF9X3gCwp
-	 hU91tEau63b9g==
-Date: Mon, 2 Feb 2026 16:29:51 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: zhangsenchuan@eswincomputing.com
-Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	christian.bruel@foss.st.com, shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com, 
-	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com, ningyu@eswincomputing.com, 
-	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com, ouyanghui@eswincomputing.com
-Subject: Re: [PATCH v10 0/2] Add driver support for Eswin EIC7700 SoC PCIe
- controller
-Message-ID: <4vqlkw2cr3caqj7whlld7r2d5nenrxsufuc72zwwy5a6a5wmza@3haxytsqqigj>
-References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="egGBFYQs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1770031309; x=1801567309;
+  h=date:from:to:cc:subject:message-id;
+  bh=kZ9qfPSbdxhdxJd1jEgNR8KcEW+dydPdZg2jpta0mZ0=;
+  b=egGBFYQsU3+P8CimdD6xbn4Bs+oK/aylRLxF69j87xEK3eohl9KnkWWl
+   njqOY4hPUoRcgpaaJXiDIOM5zt7wBYYAM1Y9ZyJfY81LYVlGBygr3qKEz
+   8OmjmcOqxRxPL3ChWOO7v5j+1jnqVlyJLzMcRbpKp5BiVRkQuR20MqIom
+   ELhhC0CuF2sCIzYHKjmbqNOmg6/of/L/6HDGemSiLZs5mFSOQggjZV14L
+   xNA6+kcnlQ1pJ/ST2Ox0M8MJNRyj0iJKF05lwG0qp6UcvwCAom2Ql27VC
+   T3kmFIH0UjrVbu5iOq4rItHX6HqL1VrMd4oc1jF5cNwsEZtigUGdf6zMB
+   A==;
+X-CSE-ConnectionGUID: ngM4SqwKTTuRUUAuzwXSyg==
+X-CSE-MsgGUID: WCB85q61TwqcrcJLK3vIqg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11689"; a="71097260"
+X-IronPort-AV: E=Sophos;i="6.21,268,1763452800"; 
+   d="scan'208";a="71097260"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2026 03:21:48 -0800
+X-CSE-ConnectionGUID: yZ6sum6MQuK/gkREvTYoZg==
+X-CSE-MsgGUID: dVvFdl7CQ6mJE7MOr63ucQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,268,1763452800"; 
+   d="scan'208";a="209343642"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa006.fm.intel.com with ESMTP; 02 Feb 2026 03:21:47 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vms00-00000000fVc-3tjr;
+	Mon, 02 Feb 2026 11:21:44 +0000
+Date: Mon, 02 Feb 2026 19:21:44 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:iov] BUILD SUCCESS
+ a5338e365c4559d7b4d7356116b0eb95b12e08d5
+Message-ID: <202602021935.aRNf7uXk-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
 
-On Thu, Jan 29, 2026 at 05:26:28PM +0800, zhangsenchuan@eswincomputing.com wrote:
-> From: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-> 
-> Changes in v10:
-> - Updates: eswin,eic7700-pcie.yaml
->   - None
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git iov
+branch HEAD: a5338e365c4559d7b4d7356116b0eb95b12e08d5  PCI/IOV: Fix race between SR-IOV enable/disable and hotplug
 
-This version looks good to me, but it'd be good if Bjorn could give an Ack since
-there were previous reviews from him. Also, this week is -rc8, so it is too late
-for 7.0. I hope we can merge this series early, once v7.0-rc1 is released.
+elapsed time: 775m
 
-- Mani
+configs tested: 272
+configs skipped: 19
 
-> - Updates: pcie-eic7700.c
->   - Remove devm_clk_bulk_get_all_enabled API, use devm_clk_bulk_get_all
->     and clk_bulk_prepare_enable. Add resource release codes and add
->     eic7700_pcie_host_deinit API.
->   - Update PCI_DEVICE_ID_ESWIN_EIC7700.
->   - Add reset_control_put release resources in "goto err_port:".
->   - Delete trailing comma after a terminator in eic7700_pcie_of_match.
-> - Link to V9: https://lore.kernel.org/all/20251229113021.1859-1-zhangsenchuan@eswincomputing.com/
-> 
-> Changes in v9:
-> - Updates: eswin,eic7700-pcie.yaml
->   - None
-> 
-> - Updates: pcie-eic7700.c
->   - Update comment, s/Rort/Port/.
-> - Link to V8: https://lore.kernel.org/all/20251215095928.1712-1-zhangsenchuan@eswincomputing.com/
-> 
-> Changes in v8:
-> - Updates: eswin,eic7700-pcie.yaml
->   - None
-> 
-> - Updates: pcie-eic7700.c
->   - Remove dw_pcie_suspend_noirq/dw_pcie_resume_noirq API and add a
->     comment, and remove .deinit.
->   - Remove no_pme_handshake flag.
->   - Add dw_pcie_dbi_ro_wr_en/dw_pcie_dbi_ro_wr_dis API.
->   - Add eic7700_pcie_assert helper function.
->   - Update NOIRQ_SYSTEM_SLEEP_PM_OPS to DEFINE_NOIRQ_DEV_PM_OPS.
-> - Link to V7: https://lore.kernel.org/all/20251202090225.1602-1-zhangsenchuan@eswincomputing.com/
-> 
-> Changes in v7:
-> - Updates: eswin,eic7700-pcie.yaml
->   - None
-> 
-> - Updates: pcie-eic7700.c
->   - Update "config PCIE_EIC7700" bool to tristate.
->   - Remove fix MSI-X code, depend on new commit [1].
->   - Add set no_pme_handshake flag.
->   - Update -EINVAL to -ENODATA and add PM runtime function.
->   - Add ".probe_type = PROBE_PREFER_ASYNCHRONOUS,".
->   - Update eic7700_pcie_perst_deassert function name to
->     eic7700_pcie_perst_reset.
->   - Update readw to dw_pcie_readw_dbi function.
->   - Add comments above reset_control_bulk_deassert function.
-> 
-> - Updates: pcie-designware.h pcie-designware-host.c
->  -  The ESWIN EIC7700 SoC lacks hardware support for the L2/L3 low-power
->     link states. It cannot enter the L2/L3 ready state through the
->     PME_Turn_Off/PME_To_Ack handshake protocol. To address this, add a
->     no_pme_handshake flag skip PME_Turn_Off broadcast and link state check
->     code, other driver can reuse this flag if meet the similar situation.
-> - Link to V6: https://lore.kernel.org/linux-pci/20251120101018.1477-1-zhangsenchuan@eswincomputing.com/
-> - Link to: https://lore.kernel.org/linux-pci/20251109-remove_cap-v1-3-2208f46f4dc2@oss.qualcomm.com/ [1]
-> 
-> Changes in v6:
-> - Updates: eswin,eic7700-pcie.yaml
->   - Add Reviewed-by: Rob Herring (Arm) <robh@kernel.org>.
-> 
-> - Updates: pcie-eic7700.c
->   - Remove pci_root_ports_have_device function judgment during suspend.
->   - Remove eic7700_pcie_pme_turn_off and eic7700_pcie_get_ltssm function.
->   - Add set no_suspport_L2 flag.
-> 
-> - Updates: pcie-designware.h pcie-designware-host.c
->  - The ESWIN EIC7700 soc does not support enter L2 link state. Therefore
->    add no_suspport_L2 flag skip PME_Turn_Off broadcast and link state
->    check code, other driver can reuse this flag if meet the similar
->    situation.
-> - Link to V5: https://lore.kernel.org/all/20251110090716.1392-1-zhangsenchuan@eswincomputing.com/
-> - Link to: https://lore.kernel.org/all/e7plmtwtkkd4ymrt2hkztcqdx4ugfjk64oksjyf6lpi2oui53d@vhuo5occyref/
-> 
-> Changes in v5:
-> - Updates: eswin,eic7700-pcie.yaml
->   - Modify reg-names: update mgmt to elbi.
->   - Modify clock-names: update pclk to phy_reg.
->   - Modify reset-names: update powerup to pwr.
->   - Remove powerup modify in "snps,dw-pcie-common.yaml" file.
-> 
-> - Updates: pcie-eic7700.c
->   - Update the driver submission comment, mention EIC7700 in the
->     "config PCIE_EIC7700" and in the driver title.
->   - Update some comments, for examples: "s/PME_TURN_OFF/PME_Turn_Off/",
->     "s/INTX/INTx/", "s/PERST/PERST#/", "s/perst/PERST#/", "s/id/ID/".
->   - Update "struct *_pcie" name and function name, add the eic7700 prefix.
->   - Use PCIEELBI_CTRL0_DEV_TYPE macro and update comment, use FIELD_PREP.
->   - Add eic7700_pcie_data pointer in struct eic7700_pcie.
->   - Update .deinit callback function name and removed the dw_pcie_link_up
->     judgment, add pci_root_ports_have_device function judgment.
->   - Remove devm_platform_ioremap_resource_byname function get mgmt, use
->     platform_get_resource_byname function get elbi in "pcie-designware.c".
->   - Update of_reset_control_get to of_reset_control_get_exclusive, use
->     devm_reset_control_bulk_get_exclusive function get resets, update use
->     reset_control_bulk_assert/reset_control_bulk_deassert function.
-> - Link to V4: https://lore.kernel.org/all/20251030082900.1304-1-zhangsenchuan@eswincomputing.com/
-> - Link to https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/tree/?h=controller/dwc
-> 
-> Changes in v4:
-> - Updates: eswin,eic7700-pcie.yaml
->   - Use snps,dw-pcie.yaml instead pci-host-bridge.yaml.
-> 
-> - Updates: snps,dw-pcie-common.yaml
->   - Add powerup reset property, our powerup property is somewhat different
->     from the general attributes defined by Synopsys DWC binding.
-> 
-> - Updates: pcie-eic7700.c
->   - Update the driver submission comment.
->   - Alphabetize so the menuconfig entries remain sorted by vendor.
->   - Update use PCI_CAP_LIST_NEXT_MASK macro.
->   - Use readl_poll_timeout function.
->   - Update eswin_pcie_suspend/eswin_pcie_resume name to
->     eswin_pcie_suspend_noirq/eswin_pcie_resume_noirq.
->   - PM use dw_pcie_suspend_noirq and dw_pcie_resume_noirq function and add
->     eswin_pcie_get_ltssm, eswin_pcie_pme_turn_off, eswin_pcie_host_exit
->     function adapt to PM.
-> - Link to V3: https://lore.kernel.org/linux-pci/20250923120946.1218-1-zhangsenchuan@eswincomputing.com/
-> 
-> Changes in v3:
-> - Updates: eswin,eic7700-pcie.yaml
->   - Based on the last patch yaml file, devicetree separates the root port
->     node, changing it significantly. Therefore, "Reviewed-by: Krzysztof
->     Kozlowski <krzysztof.kozlowski@linaro.org>" is not added.
->   - Clock and reset drivers are under review. In yaml, macro definitions
->     used in clock and reset can only be replaced by constant values.
->   - Move the num-lanes and perst resets to the PCIe Root Port node, make
->     it easier to support multiple Root Ports in future versions of the
->     hardware.
->   - Update the num-lanes attribute and modify define num-lanes as decimal.
->   - Optimize the ranges attribute and clear the relocatable flag (bit 31)
->     for any regions.
->   - Update comment: inte~inth are actual interrupts and these names align
->     with the interrupt names in the hardware IP, inte~inth interrupts
->     corresponds to Deassert_INTA~Deassert_INTD.
->   - Add Signed-off-by: Yanghui Ou <ouyanghui@eswincomputing.com>.
-> 
-> - Updates: pcie-eic7700.c
->   - Update the submission comment and add DWC IP revision, data rate, lane
->     information.
->   - Optimize the "config PCIE_EIC7700" configuration.
->   - Optimize the macro definition, add bitfield definition for the mask,
->     and remove redundant comments. optimize comments, make use of 80
->     columns for comments.
->   - Use the dw_pcie_find_capability function to obtain the offset by
->     traversing the function list.
->   - Remove the sets MPS code and configure it by PCI core.
->   - Alphabetize so the menuconfig entries remain sorted by vendor.
->   - Configure ESWIN VID:DID for Root Port as the default values are
-> 	invalid,and remove the redundant lane config.
->   - Use reverse Xmas order for all local variables in this driver
->   - Hardware doesn't support MSI-X but it advertises MSI-X capability, set
->     a flag and clear it conditionally.
->   - Resets are all necessary, Update the interface function for resets.
->   - Since driver does not depend on any parent to power on any resource,
->     the pm runtime related functions are removed.
->   - Remove "eswin_pcie_shutdown" function, our comment on the shutdown
->     function is incorrect. Moreover, when the host powers reboots,it will
->     enter the shutdown function, we are using host reset and do not need
->     to assert perst. Therefore, the shutdown function is not necessary.
->   - remove "eswin_pcie_remove", because it is not safe to remove it during
->     runtime, and this driver has been modified to builtin_platform_driver
->     and does not support hot plugging, therefore, the remove function is
->     not needed.
->   - The Suspend function adds link state judgment, and for controllers
->     with active devices, resources cannot be turned off.
->   - Add Signed-off-by: Yanghui Ou <ouyanghui@eswincomputing.com>.
-> - Link to V2: https://lore.kernel.org/linux-pci/20250829082021.49-1-zhangsenchuan@eswincomputing.com/
-> 
-> Changes in v2:
-> - Updates: eswin,eic7700-pcie.yaml
->   - Optimize the naming of "clock-names" and "reset-names".
->   - Add a reference to "$ref: /schemas/pci/pci-host-bridge.yaml#".
->     (The name of the reset attribute in the "snps,dw-pcie-common.yaml"
->     file is different from our reset attribute and "snps,dw-pcie.yaml"
->     file cannot be directly referenced)
->   - Follow DTS coding style to optimize yaml attributes.
->   - Remove status = "disabled" from yaml.
-> 
-> - Updates: pcie-eic7700.c
->   - Remove unnecessary imported header files.
->   - Use dev_err instead of pr_err and remove the WARN_ON function.
->   - The eswin_evb_socket_power_on function is removed and not supported.
->   - The eswin_pcie_remove function is placed after the probe function.
->   - Optimize function alignment.
->   - Manage the clock using the devm_clk_bulk_get_all_enabled function.
->   - Handle the release of resources after the dw_pcie_host_init function
->     call fails.
->   - Remove the dev_dbg function and remove __exit_p.
->   - Add support for the system pm function.
-> - Link to V1: https://lore.kernel.org/all/20250516094057.1300-1-zhangsenchuan@eswincomputing.com/
-> 
-> Senchuan Zhang (2):
->   dt-bindings: PCI: eic7700: Add Eswin PCIe host controller
->   PCI: eic7700: Add Eswin PCIe host controller driver
-> 
->  .../bindings/pci/eswin,eic7700-pcie.yaml      | 167 +++++++
->  drivers/pci/controller/dwc/Kconfig            |  11 +
->  drivers/pci/controller/dwc/Makefile           |   1 +
->  drivers/pci/controller/dwc/pcie-eic7700.c     | 410 ++++++++++++++++++
->  4 files changed, 589 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/eswin,eic7700-pcie.yaml
->  create mode 100644 drivers/pci/controller/dwc/pcie-eic7700.c
-> 
-> --
-> 2.25.1
-> 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
--- 
-மணிவண்ணன் சதாசிவம்
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-22
+arc                                 defconfig    gcc-15.2.0
+arc                     nsimosci_hs_defconfig    gcc-15.2.0
+arc                   randconfig-001-20260202    gcc-10.5.0
+arc                   randconfig-001-20260202    gcc-14.3.0
+arc                   randconfig-002-20260202    gcc-14.3.0
+arm                               allnoconfig    clang-22
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                              allyesconfig    gcc-15.2.0
+arm                         assabet_defconfig    gcc-15.2.0
+arm                                 defconfig    gcc-15.2.0
+arm                           h3600_defconfig    gcc-15.2.0
+arm                      jornada720_defconfig    clang-22
+arm                       multi_v4t_defconfig    gcc-15.2.0
+arm                        multi_v5_defconfig    clang-22
+arm                        mvebu_v5_defconfig    gcc-15.2.0
+arm                         nhk8815_defconfig    clang-22
+arm                          pxa168_defconfig    gcc-15.2.0
+arm                             pxa_defconfig    clang-22
+arm                   randconfig-001-20260202    gcc-13.4.0
+arm                   randconfig-001-20260202    gcc-14.3.0
+arm                   randconfig-002-20260202    gcc-12.5.0
+arm                   randconfig-002-20260202    gcc-14.3.0
+arm                   randconfig-003-20260202    clang-22
+arm                   randconfig-003-20260202    gcc-14.3.0
+arm                   randconfig-004-20260202    gcc-11.5.0
+arm                   randconfig-004-20260202    gcc-14.3.0
+arm                          sp7021_defconfig    gcc-15.2.0
+arm                           spitz_defconfig    clang-22
+arm                         vf610m4_defconfig    gcc-15.2.0
+arm                         wpcm450_defconfig    gcc-15.2.0
+arm64                            allmodconfig    clang-22
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260202    gcc-9.5.0
+arm64                 randconfig-002-20260202    gcc-9.5.0
+arm64                 randconfig-003-20260202    gcc-9.5.0
+arm64                 randconfig-004-20260202    gcc-9.5.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260202    gcc-9.5.0
+csky                  randconfig-002-20260202    gcc-9.5.0
+hexagon                          allmodconfig    clang-17
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    clang-22
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260202    clang-19
+hexagon               randconfig-001-20260202    clang-22
+hexagon               randconfig-002-20260202    clang-19
+hexagon               randconfig-002-20260202    clang-22
+i386                             allmodconfig    clang-20
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260202    clang-20
+i386        buildonly-randconfig-001-20260202    gcc-14
+i386        buildonly-randconfig-002-20260202    gcc-14
+i386        buildonly-randconfig-003-20260202    clang-20
+i386        buildonly-randconfig-003-20260202    gcc-14
+i386        buildonly-randconfig-004-20260202    clang-20
+i386        buildonly-randconfig-004-20260202    gcc-14
+i386        buildonly-randconfig-005-20260202    gcc-12
+i386        buildonly-randconfig-005-20260202    gcc-14
+i386        buildonly-randconfig-006-20260202    gcc-14
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260202    clang-20
+i386                  randconfig-001-20260202    gcc-14
+i386                  randconfig-002-20260202    gcc-14
+i386                  randconfig-003-20260202    clang-20
+i386                  randconfig-003-20260202    gcc-14
+i386                  randconfig-004-20260202    clang-20
+i386                  randconfig-004-20260202    gcc-14
+i386                  randconfig-005-20260202    gcc-14
+i386                  randconfig-006-20260202    gcc-14
+i386                  randconfig-007-20260202    clang-20
+i386                  randconfig-007-20260202    gcc-14
+i386                  randconfig-011-20260202    clang-20
+i386                  randconfig-012-20260202    clang-20
+i386                  randconfig-013-20260202    clang-20
+i386                  randconfig-014-20260202    clang-20
+i386                  randconfig-014-20260202    gcc-14
+i386                  randconfig-015-20260202    clang-20
+i386                  randconfig-016-20260202    clang-20
+i386                  randconfig-017-20260202    clang-20
+loongarch                        allmodconfig    clang-22
+loongarch                         allnoconfig    clang-22
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260202    clang-19
+loongarch             randconfig-001-20260202    gcc-12.5.0
+loongarch             randconfig-002-20260202    clang-19
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                             allyesconfig    gcc-15.2.0
+m68k                         apollo_defconfig    clang-22
+m68k                                defconfig    clang-19
+m68k                                defconfig    gcc-15.2.0
+m68k                        m5272c3_defconfig    gcc-15.2.0
+m68k                        mvme16x_defconfig    clang-22
+m68k                        stmark2_defconfig    gcc-15.2.0
+microblaze                       alldefconfig    clang-22
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+microblaze                          defconfig    gcc-15.2.0
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+mips                        bcm47xx_defconfig    clang-22
+mips                        bcm47xx_defconfig    gcc-15.2.0
+mips                          eyeq6_defconfig    gcc-15.2.0
+mips                           gcw0_defconfig    clang-22
+mips                           ip27_defconfig    gcc-15.2.0
+mips                           mtx1_defconfig    gcc-15.2.0
+nios2                            allmodconfig    clang-22
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-22
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                               defconfig    gcc-11.5.0
+nios2                               defconfig    gcc-15.2.0
+nios2                 randconfig-001-20260202    clang-19
+nios2                 randconfig-001-20260202    gcc-9.5.0
+nios2                 randconfig-002-20260202    clang-19
+nios2                 randconfig-002-20260202    gcc-8.5.0
+openrisc                         allmodconfig    clang-22
+openrisc                         allmodconfig    gcc-11.5.0
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    clang-22
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+openrisc                       virt_defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-22
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                generic-64bit_defconfig    clang-22
+parisc                randconfig-001-20260202    gcc-8.5.0
+parisc                randconfig-002-20260202    gcc-8.5.0
+parisc64                            defconfig    clang-19
+parisc64                            defconfig    gcc-15.2.0
+powerpc                     akebono_defconfig    gcc-15.2.0
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-22
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc                    amigaone_defconfig    clang-22
+powerpc                        fsp2_defconfig    gcc-15.2.0
+powerpc                        icon_defconfig    gcc-15.2.0
+powerpc                   lite5200b_defconfig    gcc-15.2.0
+powerpc                     mpc512x_defconfig    gcc-15.2.0
+powerpc                 mpc8315_rdb_defconfig    gcc-15.2.0
+powerpc                      pmac32_defconfig    gcc-15.2.0
+powerpc                       ppc64_defconfig    gcc-15.2.0
+powerpc               randconfig-001-20260202    gcc-8.5.0
+powerpc               randconfig-002-20260202    gcc-8.5.0
+powerpc                    sam440ep_defconfig    gcc-15.2.0
+powerpc                     tqm8540_defconfig    gcc-15.2.0
+powerpc64             randconfig-001-20260202    gcc-8.5.0
+powerpc64             randconfig-002-20260202    gcc-8.5.0
+riscv                            allmodconfig    clang-22
+riscv                             allnoconfig    clang-22
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                    nommu_k210_defconfig    gcc-15.2.0
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-22
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                       zfcpdump_defconfig    gcc-15.2.0
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-22
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                        edosk7705_defconfig    gcc-15.2.0
+sh                     magicpanelr2_defconfig    gcc-15.2.0
+sh                            migor_defconfig    gcc-15.2.0
+sh                          rsk7269_defconfig    gcc-15.2.0
+sh                   rts7751r2dplus_defconfig    gcc-15.2.0
+sh                           se7206_defconfig    clang-22
+sh                           se7751_defconfig    gcc-15.2.0
+sh                        sh7785lcr_defconfig    gcc-15.2.0
+sh                              ul2_defconfig    gcc-15.2.0
+sparc                             allnoconfig    clang-22
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260202    gcc-12.5.0
+sparc                 randconfig-002-20260202    gcc-12.5.0
+sparc64                          alldefconfig    gcc-15.2.0
+sparc64                          allmodconfig    clang-22
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260202    gcc-12.5.0
+sparc64               randconfig-002-20260202    gcc-12.5.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-22
+um                               allyesconfig    gcc-14
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260202    gcc-12.5.0
+um                    randconfig-002-20260202    gcc-12.5.0
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-22
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260202    gcc-14
+x86_64      buildonly-randconfig-002-20260202    clang-20
+x86_64      buildonly-randconfig-002-20260202    gcc-14
+x86_64      buildonly-randconfig-003-20260202    gcc-14
+x86_64      buildonly-randconfig-004-20260202    gcc-14
+x86_64      buildonly-randconfig-005-20260202    clang-20
+x86_64      buildonly-randconfig-005-20260202    gcc-14
+x86_64      buildonly-randconfig-006-20260202    clang-20
+x86_64      buildonly-randconfig-006-20260202    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260202    gcc-14
+x86_64                randconfig-002-20260202    gcc-14
+x86_64                randconfig-003-20260202    gcc-14
+x86_64                randconfig-004-20260202    gcc-14
+x86_64                randconfig-005-20260202    gcc-14
+x86_64                randconfig-006-20260202    gcc-14
+x86_64                randconfig-011-20260202    gcc-14
+x86_64                randconfig-012-20260202    clang-20
+x86_64                randconfig-012-20260202    gcc-14
+x86_64                randconfig-013-20260202    clang-20
+x86_64                randconfig-013-20260202    gcc-14
+x86_64                randconfig-014-20260202    gcc-12
+x86_64                randconfig-014-20260202    gcc-14
+x86_64                randconfig-015-20260202    gcc-14
+x86_64                randconfig-016-20260202    gcc-14
+x86_64                randconfig-071-20260202    clang-20
+x86_64                randconfig-071-20260202    gcc-14
+x86_64                randconfig-072-20260202    clang-20
+x86_64                randconfig-072-20260202    gcc-14
+x86_64                randconfig-073-20260202    clang-20
+x86_64                randconfig-074-20260202    clang-20
+x86_64                randconfig-075-20260202    clang-20
+x86_64                randconfig-075-20260202    gcc-12
+x86_64                randconfig-076-20260202    clang-20
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-22
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-22
+xtensa                           allyesconfig    gcc-11.5.0
+xtensa                  nommu_kc705_defconfig    gcc-15.2.0
+xtensa                randconfig-001-20260202    gcc-12.5.0
+xtensa                randconfig-002-20260202    gcc-12.5.0
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
