@@ -1,52 +1,53 @@
 Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012024.outbound.protection.outlook.com [52.101.53.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1148E328633;
-	Mon,  2 Feb 2026 08:13:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A30328273;
+	Mon,  2 Feb 2026 08:14:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.24
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770020043; cv=fail; b=tlfDIpW1S2t4DLstiGWVM9MV/W+h/grdGeTR7ihb/OMDCo/iO0b4HbedskpvhQqBRXGxI9vQ6+PuJJC+MvYO/3IRb1pnYJaE5U59/edVZaIjH0kgu8RuSiQ5Ex65VtJupyeOKdtCpB+shVxhkJvZhRcdc+24/5rkpvFNmqTX0cw=
+	t=1770020051; cv=fail; b=imGxVdlQP133m7dY8MTik3d4ZlsC/NyGe1K2fFszk+NgywYXW0xC6kT+p5wnXfilS6sxrksMfRADH+ofr6Jeq82XwBBfKPrKWvgMXLFIQw2jcymIA8p4mB0zB9QP/ks/A0ORY8J4z7+iU0iv/Y5plLlXUMRQ3zpXpvkRA642ULE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770020043; c=relaxed/simple;
-	bh=VnMoadKo2y/CkAULBeTVCHRY0ypiYB2iC1N2RCDU2Mc=;
+	s=arc-20240116; t=1770020051; c=relaxed/simple;
+	bh=f2HWLyuuEwKvpIMqcdxzl2UvojO00VUm2L8zG1/Skxs=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=OdHiqS74UIGqAAAeiy+Xw2XFmzuyx9pyFb4jnV7vKUFkTXQuVGVteuggtwtIsFtEzYSytdP5yHrp6HzFnD9oLgnk+TzUOfEP0H0xMq/3Ift7DUhVnn0Olsfs/KWWf11hcTQj4GkIuxMV0KqIf/WaPaXw8NRvSKCYim2Tx+sJuKg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=SkZsbTS4; arc=fail smtp.client-ip=52.101.53.24
+	 To:Cc:MIME-Version; b=QmDUj394xy4kGOaLeBGyh3AgIS2EaByolPcOslCESZSW0dwIlUpIjW8Q7Ep89JdSdweX5fI4hsSYXdc99nhsXO6J34M+kISYeDxUYWR3YGf1n30oDTO1onZwvHb0orvirswBbkORoJEHvULXHtq00sUX4DL8bNlm+5lNP86GNOU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=gIsvi+pd; arc=fail smtp.client-ip=52.101.53.24
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="SkZsbTS4"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="gIsvi+pd"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=wj7OnYRtluWf9VWOlI0dWQ3CENO3p2i3EeUMuzvDFQ1LvXT4awsrVjzOHavgc0gFb1Z0jyUr2f6OZtIcylOz9n732GoJLFJZKOHneqDTn9dxp87FWGikBRDmfNBZGkt09iSsKg2mORhQraDGqEH5XjHYmQjfr99jIc3yxcrItUjfZHJQ66lt8HiSVWzZpOnPL+nYXxskxwV/XW5Z+WCS0wbfZpBnYW7u9Jw0GLvxh48acHb/VLc0zQ0UrtA+qIRQZ1HkPR6tFfwSCFat087c5BySN76R7BSz8tgSScl8JIlPZOXGYLgfZPcQwd8gb4n48YTZ3F/eTc6Z9YSF+AxGQQ==
+ b=JKw6Y6et6at0hHErZES93HUGVY1Il+H8k1LLdBU7aT1zt4iJWGRqfdY3sJsQoA81tPKD8dkLa3lZrdLWQrPeNkvkPBgKOfe7SJF61qnhC6SELsiu8slY92QYDwY1QGMn2Yfey/n0t6ZaFhRS6AXBFGcGgToozXM0l8KAgnZpsfqRQf5WoILk/vEtbRRu2YVXHlJ4lnq0ocHUEnFFSgdmMdg6iIrguOhDYxw7eZJNoQwjs2oiiKmkYDW2DXTASrUsFnPdkuBDWd2N5oBJHwXXd7wHP5BDKjb/QqVVc0wmTDcyzrvyPZV+1//XwU/1EfSwcKiMxblbs3zfg3RLAu2/rQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=99TKQ1j08r8iAcMiW5WUdAbQaI7Luciy73SDqvX9REI=;
- b=lhQ7hn7h3ft+8a+wy8ZqTjVBYVoF3ffGZM2fOjR1SxGM3WUmgie2gbX3Bv91g1/utcgWT1JaBGQMroEX5OqucJUOMEotkWmaK7VRWG555E+sBmnSKwa9XOgEamtonh0B7tCvypyOUsJVGp4mHXNle4ciNuaTjDv3cIy+W8l9zR0MBHoA4oECdBGK9XK9XTO60mKc8HqbLzqKl5qn1OuFmMaTcM3dlf4pCL8ZM9qgx+RQO1/WhH/b0qbZ6Hk7ON7kKMZ9VPaEb4f6y1iN3+IsEXwf7uuZCwbKlNhKfzfQnUwNb+3h/0lMnwHqHs+Qk1MLys7xbhHpUJl9rdBEMS2FKw==
+ bh=yjldlf8dliVrBChKUPVQGAPWqKsJT6n32/lLFg/yIyU=;
+ b=O6QnNUe2qKskjhJ9szp/Yt87po7DZGQ35mLDzMXFRQx9LI9jfgKIQCRt9tIwITBPtNgAqT2WckRhT8pVYnu0l5Av0G51hCVRrnlvLFRnlqAtYFvgGZP83WziNrYYs2Yryys8VpvsTCSlRqexMYEZSNdTEaigBU81Bw7PhH6vJfu/rQHLalEwlmFeGBJS0LSUgL/A8inzpKGIQuUiRrLn1HKUtC5z4GrWBpw3whZC5WtnpRYbBClTOfXCsd85BLEBqWH+pnQLvyeblrkGW5Z432uGbYBBntMhuM8G3SOfWynCy3D7Mf/V5mYGhXFWfvl1HV/bYKlG2L2ZSGEK3i4CNw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=99TKQ1j08r8iAcMiW5WUdAbQaI7Luciy73SDqvX9REI=;
- b=SkZsbTS4NjWa+lB2IlW8Wp1VQ+yr1CdW+W4qY1+2F5tXQ2mXcqRPPkqKNtNKPXZzA4ZZTtedwBtEl8SEdL8fo06xvJLm7ji7Md38YjMsMGrpLXJr13ioAOrl38dNdHQ4z/8gFSHio1ZqMo+Si1Lj+4TEcvZpMxKAzuZT2s1oUbmTjv2crIBL9wKhBfy9FsvAZhTKWKIVMhM0jvBYHYkRvjzWMbPXdQ3ZoYIWW3quI/iCz4mIYpO0oM0/RWd5BL6p2lqak0ipHNW+E0H1lVw9JaqqMtyrjZy3Yw1gCXwttI6lQrHW/TQMmUUc4di5m0pHQeSNloB9Y6VVHX2A3EkKvw==
+ bh=yjldlf8dliVrBChKUPVQGAPWqKsJT6n32/lLFg/yIyU=;
+ b=gIsvi+pdKeKvLWi+az5OSTJEaPM3MKRnowZsOoyFgmQSc3ggjkokq/hp5SNstwNB2x3NKhDaCQsulqWrQsOhDQixS3+u3l+uG2YELbtR90LbIwYkwWWCEu6Mh993ZqCxWNENH3ShDJfucmSsJoVoVcW5Bs3YMqn8TN+/4wnHlRZrcVqIi0yZQ8BmK9YG4VhbUtzJfrkgnjt+D0GK5UVt41sTHIZjfry+vRTHK3t4guAA/KlkV7eVCS3/M/xrJnI1r6J3YJXkfb7OgtRwe0Qd+nGYB+1MPgxT5W1rt5O2zH4RWWKtmRRNQq9hvM91oZ5m1LTem0vDeIA2CG0Sna8ABA==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
  by DS0PR12MB6416.namprd12.prod.outlook.com (2603:10b6:8:cb::6) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9564.16; Mon, 2 Feb 2026 08:13:31 +0000
+ 15.20.9564.16; Mon, 2 Feb 2026 08:13:35 +0000
 Received: from CH2PR12MB3990.namprd12.prod.outlook.com
  ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
  ([fe80::7de1:4fe5:8ead:5989%3]) with mapi id 15.20.9564.016; Mon, 2 Feb 2026
- 08:13:31 +0000
+ 08:13:35 +0000
 From: Alexandre Courbot <acourbot@nvidia.com>
-Date: Mon, 02 Feb 2026 17:13:03 +0900
-Subject: [PATCH 4/6] rust: io: remove legacy relaxed accessors of Mmio
+Date: Mon, 02 Feb 2026 17:13:04 +0900
+Subject: [PATCH 5/6] rust: pci: io: remove overloaded Io methods of
+ ConfigSpace
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260202-io-v1-4-9bb2177d23be@nvidia.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260202-io-v1-5-9bb2177d23be@nvidia.com>
 References: <20260202-io-v1-0-9bb2177d23be@nvidia.com>
 In-Reply-To: <20260202-io-v1-0-9bb2177d23be@nvidia.com>
 To: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
@@ -63,8 +64,8 @@ Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
  Eliot Courtney <ecourtney@nvidia.com>, 
  Alexandre Courbot <acourbot@nvidia.com>
 X-Mailer: b4 0.14.3
-X-ClientProxiedBy: TYCP286CA0295.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:3c8::10) To CH2PR12MB3990.namprd12.prod.outlook.com
+X-ClientProxiedBy: TYCP286CA0369.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:79::13) To CH2PR12MB3990.namprd12.prod.outlook.com
  (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -74,166 +75,232 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|DS0PR12MB6416:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3666f24d-a29a-4a1a-84e0-08de6232f3be
+X-MS-Office365-Filtering-Correlation-Id: f834371b-76e1-4f8a-357a-08de6232f5f2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|10070799003|7416014|376014|1800799024|366016|921020;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?WTRpSDl0bmM0a2tvdEVCQUx3VHJsL2hWQmI5RkZvL2hBT0hKS0ZuR2lpOTdB?=
- =?utf-8?B?bm55cjlGYTNUL0RadS9VNUVlQXlhTUQvMVp0RkxVOEh1b3NNUkxyNk51RTNh?=
- =?utf-8?B?aWgxZUdIUU55UzlraWVPaThrMVJaTzhGY3R2VGN1MWsrQ0NyMFJGNmVNeXpq?=
- =?utf-8?B?ZnRQSmVsdnNUVlJhYWFOM2hzTURMSlduaENVc0R2a2Q2NmttUVFrNXhUV213?=
- =?utf-8?B?c05uV01YMnV2dWdtVEtjMis5bEJ0dWZLczBLNXVBZk1uc0JNRmxPV3VzY0JW?=
- =?utf-8?B?N2JZMHA5U3p0cFdGRnV6anFLazkxL3pINlRwLzI3bXFyV3Iwem0yK255R1VN?=
- =?utf-8?B?YlQxMnhBRU9CajVVUmtYb08wbVQ1clBVanZPenFUdUdzSGNkZGlsR2VUYXJu?=
- =?utf-8?B?R1llaFZjaWEyQXdoQmVuZXhsMlZhZ0hPTVNGS2FMbzhBMmNFd0o4dUNROXVE?=
- =?utf-8?B?SW1vUEJObEFNQWs1WHBoYmpYN2JRdnIwVzQwVUo2MEpkWmRZLzRXY1R6VXRw?=
- =?utf-8?B?Q2pndER6azkvczRvb0ZtSS9XQnlaTDhrR3N6SmtVZUpYelRGMGM0c3pZNk1a?=
- =?utf-8?B?WjFiMmVHUkZIMTZJZm5IeTQ4SkZOYmRnYjYrdG52MzZab21GQ05ZZnZWdUY2?=
- =?utf-8?B?bDFabVo3aHdONllaOHNJSXRvVms1SFFObmVXaEZNZ09ZVzFqZFhrdS9XeFF1?=
- =?utf-8?B?cW1iMFR3M2RHOUN3aHN3TUdWUmVYRkh3Q3d4UUtJOG5PUHBjMFpDQXZvYVBl?=
- =?utf-8?B?S2Jady9GK2t1SXNhZlg4cHVhVGEzTGJEN1BUUjIvK2ZoV3o3TCt2U1VwRkZs?=
- =?utf-8?B?MEV6U3NUTk8vV0tNNi95YmI3RUtMb1lHdEF1dmdsUTZTaUlSNy9TcmRpYWVC?=
- =?utf-8?B?dTROYlVzalVtTHZkRkpjZzV4ZW1NaVJlbTBpbVNKWk8wMytValBSWndManpz?=
- =?utf-8?B?cXN6dkZxUXBRbTFMRUpMa2hzZ1ZUREM2bzQ0MmovQm5lM2FpbHhXRERmNGZn?=
- =?utf-8?B?a2t6MVQrR3YrUnBTYTZyYnhuSGx2MjNsbjNSM1htckNiUk8wM0dnR3ZSaTNj?=
- =?utf-8?B?QWdlL1UyKzRaM0hqRUxEZ1VrVDZvSiszZFp5RkhyRm95UEYvbTRYTWUrNHFl?=
- =?utf-8?B?clNxYVFLbFdWNlJLWG9tdEVVbzkwQUtUV2ovRnN3MEphc3ZSWlI2eVVlK1Vs?=
- =?utf-8?B?WDAyaytBcXhWWThiUEhJby8vQWQyM2hncUdTOCt2TjlKVzhLaXRMTmdMRDVu?=
- =?utf-8?B?RGdGVzE2YkhXQVBFMkRjcTJ6V0ZBUjlMR0w4cnc5UkJhZjI3SmRkQm1zOWRY?=
- =?utf-8?B?SlhNTi9wRnhjakxYUVRWVzlsYmFvRWZhNTAyOExjZGhtUHN6cDZrUi9JUUsv?=
- =?utf-8?B?VDV5ejNxUFlidlFzM0trSVpEMHB2MEx6Uk52clN3R0kyY093MTNYZkcyeDRN?=
- =?utf-8?B?NlR1bEFyYW9KTjNmV2VvK3h0L0d5RzhnQWZEY1Q2N0ptVlhBZWZCcDN5U1hu?=
- =?utf-8?B?NUxrRFVTUWZMWFlKYTZRV3M1Y0M1Vk9DQ0JjS3hxV00raVgzaVB4LzZxaFJv?=
- =?utf-8?B?bk5UZUxtMFlYK2NRRlk3RDVKaEpnWFBNY0JreVIrbHU3eGxPOGtlOFZ2RXZJ?=
- =?utf-8?B?dzJ6QnMzWDZROUxKZmM3VVBiMmN6WjVCMnVYS1Brb3Z1Qms3M2RjRGNUQjRw?=
- =?utf-8?B?cVFNU3p3REJIYVFoRlZwZVpCd3ZXUUJSZGdYWXhDZVdJTXduZUp5TUZ6T2Ri?=
- =?utf-8?B?VndnSHNYZUU1K241S2RaRG5rUWkxemE0ZWRYcUE2aWdTVGZwalgyWHhHeXlZ?=
- =?utf-8?B?VDBRZ015d2ZzT1JDbEJVK3o4N0RPRm9RdEVXdnk2WHphNDRiZmpmTUttU3kr?=
- =?utf-8?B?UVhBK0NyZFZMbjJBTHBRREhlRU11KzhoQkpYa1pPN2ZZNVlNQTNYRk5nVjFF?=
- =?utf-8?B?V25veEZWSU8wMjM1UUpaVkp4QWM3Y0RHTmIrV05RdThpYzY3NUMvd2ZWeFpo?=
- =?utf-8?B?UEVFY2VLb1dCT2RobXpvNnJSMCt2RmNTcUJJeVdMMThwcjZqSTNSMUpvLzFw?=
- =?utf-8?B?bWdMTzJ5STdGTFppaDM5OEg2TXNJMkdZaE45dDY1Q3VyTXhlKzVSMGxwMGtY?=
- =?utf-8?B?ak5yMCt6NUdSeExRUFV3RUpOeThKQVBwaEJWQW5rbzE1VVlzeEFUV0k4OEp1?=
- =?utf-8?B?elE9PQ==?=
+	=?utf-8?B?bHhaaHBuL01hWXZ3N2hWclhUVDZSdEd6SXJhaGxkcUo2ejBTQ0FhK0FQMlQy?=
+ =?utf-8?B?ZldUdDRBSm1rYWR2TTcvcnVPTWcwOUUvYUFuNlpVcEJGWVVPbkpEZ3ZJT1Jp?=
+ =?utf-8?B?TUdqV1JtVXp3anlNeHJsZWNWQXY5VkxCNFp6Wks3cEp2MXM4akxOSE5pV0tw?=
+ =?utf-8?B?eUJHV0FqcGZHc0FYVDNCNFNWVkVZMVJrSlNtOFkyd002UXgrSzhBTDZ3Qy9i?=
+ =?utf-8?B?R2VhY0I5ZEJBK05PSzZrVjRHaUR6TWhCVmM3K2dXNkNyNG9kSjF4OURiYXYv?=
+ =?utf-8?B?SmFOMFZ2bWxOc25uSll0cGF4M0QwaUs3VjJuK0M3UmdINTBDdmc3SytuZ2Fk?=
+ =?utf-8?B?K1B1cXVHbGNvUjAvWFVSd08zS1V0QzlpZ3NZM0lxOUd1MlJDMkRoSWVmT2hk?=
+ =?utf-8?B?dmhyMDRKODFvM0FBMGRlaWJDaWlES3dURktva1lFR0UwVVRMbk05dklWR2V3?=
+ =?utf-8?B?bWx6aGtpaVhlQWdIWUUzMjVRUUJKanlMSUprbW5ndlkyTkhiY0pYdE04UThR?=
+ =?utf-8?B?TkpINmJBWXhqaFg4ZlZsUWlEQ25Delp1dmFzZkdGNHptQ3F3OERrelZjNmg2?=
+ =?utf-8?B?cUdPbUpqVkp0V3dCVWtxQU1uVHBtTEdTWW9zMmJKSi9EbjgwM2FwaEw3Nkp4?=
+ =?utf-8?B?MzlrTmVLR3U5MnV4QUV2cURCMWFsbjhPc3oydXJuMExadXZDanZQcjBFbk04?=
+ =?utf-8?B?OWlaM1JyU2tLSDdvYXo5cURtK2pOVldqMCtPWVRPM08ySGFrektaWGZ3V01v?=
+ =?utf-8?B?TFQybXk4Yng2N1gwYlgwK09kVnYvNjJGVmJoWVF5Q1RiODQ5MVZRU0I3bmRy?=
+ =?utf-8?B?WThJdnQ3UTdnSWlweDlRTExndzZuWFYwZXpMU2JIKzdJQml2Mlc2VTJvWDZ0?=
+ =?utf-8?B?T0xLS09Ta20wV0trZk0yd2tTbzBDQ3kvMUNZNXRwdUVxaitNd1hMZkNQb0ZD?=
+ =?utf-8?B?VFMrMkpZSkZYbEJpMG5oamUxN3NJcjlZeDA4clV0aHVCcFFoVll3UkxqbnZh?=
+ =?utf-8?B?UEFnTjczV0NrSUFaU2c0U3Yycm9MT3NxTTVTeXpZMVhMbVc3UUZvVm5BcHNx?=
+ =?utf-8?B?N1hrYjFvMGRaSFlZS0I4RnJWRHU4MlU3SmF4Q0JtWHZoL3M2YkQ2bmt3Tk1u?=
+ =?utf-8?B?RDNhWlh5N2lyeWhacVVMNnNHWUNKclIxL04zRGZMTGozTE5hOG9BR09GZWwv?=
+ =?utf-8?B?c0tSUTloWGdZU1p0NzdjNCtQL3V3WHpXdkRLaG10R2FhazN3UWxtWSt5U1Bl?=
+ =?utf-8?B?Ky84SDlRaTd6Qnl1ZkE2S0taWGp0OTRYODJHTlBPUHFQTlBJaVovOWxBYTRk?=
+ =?utf-8?B?b0YzZ2xsREhNVE5uMjl6dTZpeDh0WjJmRGxPYisyNEN5Slkzc1FpS3NrdG9r?=
+ =?utf-8?B?eUpIYTNJbG01eEhhbDhVM2dnQlhNZnppVkM5OHNBbmZtMlpLZk81eGxOemEv?=
+ =?utf-8?B?dTRRMjBlY3pWL3NTa0t5QmtFLysrRVpJT2R4dFNxRHRSeWhYOFhVT3lZWmQ3?=
+ =?utf-8?B?VG1kM0w5UytNOUdvN2dFT3RyM1pkelM5dWFUeHJVUWNEUitpdlV4L1d1VlFm?=
+ =?utf-8?B?bkl0TkRoMXdMS3pkWGRhWnBaZEJnRmJzOGY2MXU0b09tTU1DeTBycVFiMmVG?=
+ =?utf-8?B?Zm9DWk9NUERKTDlpZkpIY1ByWjBVZ2NQczl3ckxRU2J6OEJDTkdkVlpjcm10?=
+ =?utf-8?B?TzVzZ05wc05MVjd2aGptdU83T3hZcUUvTzJySENTQVlsRkdlUjJxaTF0TGxZ?=
+ =?utf-8?B?TnZVTUFjeWliUEJzUmhadTlOTUxqRytBQnJYTTBSM2FLTTRUbWJqV0pvU0FC?=
+ =?utf-8?B?NER3U1JRUmNvc2lpR1F1a2prWUpFYlpSN1lVWndzMlRnenVmN0JIajEwRkZj?=
+ =?utf-8?B?VGpJVmVvcTIxb0lBT1V6dEdTOGw5WVNIbDJYWFJJT0U2bkwwaElORnRIN1ZP?=
+ =?utf-8?B?SVBYeEpUTHRhT0VEWTVQNGFoRW00VFVKWVBHcGRYTDU4VHI4cHRHMStKeHdx?=
+ =?utf-8?B?d0RvQitKdlNIelEzWjZxaHlXWDNRM1RmcWVUeGJtSUNjaDFvZ3ZtSVJ3ZTBI?=
+ =?utf-8?B?bTloelRMYXZQN1pML2VrbmJpQmxLbjI5VnRIb25SYm5EWk55L2wzLzVtQ3Zl?=
+ =?utf-8?B?ZjU0NDdHNmozcG9OZHpFWExnbTVSTDJxMWM1eGhhMEFwZWtLZ0dkSTJoZjJG?=
+ =?utf-8?B?OHc9PQ==?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(7416014)(376014)(1800799024)(366016)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?di9UdGg5TW5veFNMc3ZTdVcrRXdGWExTZlVTcUtueWVXWjMvWlE5V2dLRldp?=
- =?utf-8?B?bWplRDFJWXF3WUFjeFJiSk4rUFprY1hFMU5BYWtralhFb3cyNkhramZLcVEw?=
- =?utf-8?B?Y08xTGlYMWhyTEFjWTVQTW45eVVmTitBZ2dXNW1OME5KUGdFM2g0R2Zic3pU?=
- =?utf-8?B?S0xwVlJpdzR5RXhqb1NSMWpQUyttMGRseDZhR05qbm1FWHM2SjBSUHVmZ25j?=
- =?utf-8?B?bjB1OGZPemZocGZON2k4a1ltbS93YVFEajdIaXE0RHhtcDR0RDZjaGhKMlVJ?=
- =?utf-8?B?ajM3NitTbHB5dE5jV0k0aVRsdzJxNitxeWJHSmZHQzZKWjRxNjVnamZGc1Jr?=
- =?utf-8?B?SkpvVTRjdFNRVjZjRWdOYnlkam5ja2RWUWMrd1pUWkJlVHNCUkJjVXA2RFlu?=
- =?utf-8?B?L3piTlN5Y1VhVnpNTm9OMFZkdGN2MlRBOVBzcm9JZWh6RkhVZTNVbjhqWEtz?=
- =?utf-8?B?RU00SVdFbkZxN3lzdkhmc0hRSWw0SXcxeTRQYkdYL0NveWxpTmM5K0lVdU9z?=
- =?utf-8?B?TjJCOE5Ob0FNSlBZUGRqOE5DOEo4WTk3eGFCZGtWUHhNTndKdjlTWXhqUW1p?=
- =?utf-8?B?NnRXellrN3JqcWF0Y2NnYktHY3V4RjVhcmRuN3dmdVVoMVExcW5LczBLY0Fq?=
- =?utf-8?B?aEVVWVFhQitNNGliTW56M1NZdHg1OUpWQVdocmFQbjlUbWlhWVljaGhhUFdZ?=
- =?utf-8?B?TnczaDgyUi9tZTZic204eWdYQStoQUF3cExza294bVZUK2JaRmpVZWkvUzky?=
- =?utf-8?B?aFVQR2liWkZCZmxadHlISDVHaDBNUTJtUUxnVkozclhUMFJwTzZaT0FaRllq?=
- =?utf-8?B?ZVJLYVBkQllFS3hiRUxMeloycHVYc0FFZW9wU2ovVzRROFNScXhpTXkvOHhD?=
- =?utf-8?B?dHJ2OVZqZE01Um5hb1U2cUttSC9ydmZPRlA2a0lkNjFvLzdSdGpyRVZRYW55?=
- =?utf-8?B?aXJESGRFVGw3SjQ3bmhpMUplOUdGR25lZW5oNWpyUW1zV015VXFCNUdicGZ4?=
- =?utf-8?B?NlZ3aktnRkJMRU9vRmpHbHlWbnl6TWFjdG5XVmV6SWUwTVlvV1c1cFNEaSsr?=
- =?utf-8?B?NHVCQmFxemdoQTJBVWhnbjI5VFZidDV5NFREaUZXYzJMaGlEWnhsc2F4STJ0?=
- =?utf-8?B?MHUyQUJ6aDZHTmFEMzArODlycXNaTkRYNEhpUTg0Z0IvYUxpWUhMZzlxbTVj?=
- =?utf-8?B?Sk1SNFpQUTVBcE5YM2Q1WTJMNWlZNUhycmhSUnhLZjJnOHFNb1JEN0JHRmc5?=
- =?utf-8?B?TDZmTGtOdjhCRWNWL1VxL0ZrL0l6R2F0QTJKSmo3dk9mTjVONk9CVjV3VDFZ?=
- =?utf-8?B?UTl2MThrOUJ3Z2lyTStISHVvWVhIWnJReEFLTlB6eFFNcEUzTnFtYWJqNlhz?=
- =?utf-8?B?TUgvMEtyVm9HZTFxYTgwQWlzSERSSEZrUlZncjdsRVhxbzNoWDhGR2d5czBj?=
- =?utf-8?B?QnppMTBlRlJUdzdMRS9rTTBYaW5VQUo2V2RyaThydGNWQzd6RlhtWVlVT0ls?=
- =?utf-8?B?NVhDL2wzUmNGeWlQVTlidGhVWFEvWjVkZitDbDJ2UTFKSUhCeFF6S0w4WS93?=
- =?utf-8?B?U3FwcWJOVU8xQWhoZWtLcUltbkxRazNudnlDU2FPRGVCSE1xOU9DL0puU25h?=
- =?utf-8?B?a1hRNjdkK2JkejFMQ2dtSnY2VHJrV0RmZFowQ1F4YVpNQTR6bzROcmlUTmVH?=
- =?utf-8?B?c3pmcnJSQ2Jhb0p4U3RaOTZLYlZ0bnRBdTBpbTlFM2R4amwzOFJ6aU5EVnpp?=
- =?utf-8?B?VGRaVFRCQnRKMTBCTEljQnhwajlyYTlaWGQ4OC9LYVZqWnlidy9jMTNHUlFj?=
- =?utf-8?B?R3N4dnl1NzVldHRQdFJQZ0tCNGd4MG00Z3NOSWpQd2RnYk16ZEJOM0xSZ0xQ?=
- =?utf-8?B?MkVsdGN1cUthUDMyKzdNaEtkSXI4Q2NBdjYyRWhZN1d1ZitqemlNZFRvbTk1?=
- =?utf-8?B?UDBhSVNyOXFMalBUNU43Rk1EZUQzdWFhYnJqWDlQdnZ0cmJLdnl1RTFqZktE?=
- =?utf-8?B?WE9lYTk2N09aUllFR3JxRHFscjE2Sko1MTZMV05mbHE5R0hLR1JYaURLMDBo?=
- =?utf-8?B?VWhvUWJ5TU1CeDl2TmgvRzZGMER6cVFKcHM4aGNBanA5aXh4KzA4bjdlYk1z?=
- =?utf-8?B?T250NXBVK1JDMmExWEVMQ3prVWd6ek42VzJNTjFSdWtIY3BNSGtYY1BRcEQv?=
- =?utf-8?B?NXZKTGpSM1RteC9kajZZWWIxckVRSnFQMUJ3VlpJdTJYT3JyMmZwUmU0MjNM?=
- =?utf-8?B?SWZ1SWpRMituYXlpWWx1ejQ0QWc5SHR6eVdLOGpRMnRSZUdoci9oZDgwR1pY?=
- =?utf-8?B?WlJLUUpVbVgyd1IxVkMyV2VSSTc5NnZCYmV1aTRKaS92eDE3dk5PaXlPUzlI?=
- =?utf-8?Q?kgxwPAI1PQigTsT7YLoCgzQBuM62+/tJLTBGoxMJUfdxb?=
-X-MS-Exchange-AntiSpam-MessageData-1: YTKwRjCLwxCKrQ==
+	=?utf-8?B?L1c1ak56emk1ZFEwM0V6QVlUSU1nWTA2R1FPSzB0S3ZkR1oyNlovZVh2enc2?=
+ =?utf-8?B?dXJQdTBwM25UTCs2QldWYzZyYlh1VERHSFluUWx5cjdtcitHU2JBVzZlWHhs?=
+ =?utf-8?B?ZVo4VWdtQlVMM2wwdDF0V2tlNm43SDQxWGkxc3B3bjhsZDl3L1dYTjB1RDRn?=
+ =?utf-8?B?NTY2TzhVRG0yZzhmZmNKbDU2bVJHRW9Pa3AvaXpsQ3V0SGlja1MwWTkxaGYw?=
+ =?utf-8?B?Yk5TVFh2RkRNSDB5U0kzUjZRdWNDcStoaUdVeURwRFdiUHBQZWNCbFY4QjBT?=
+ =?utf-8?B?YVJXR0Y3L280Rzd4SEZUdm5Da080SUNNdCtiQ0htYWRpbytPN1hsR1RmVzNQ?=
+ =?utf-8?B?dG1UdUZjWkQ5N1RkQjdMOFhXVzFxeWorWlBnS3hiS2toRDVTbmJoZzVPQmIv?=
+ =?utf-8?B?WjNjVURhdGtmbmY5SHlRV0RNYlcrTzA0aEdhU0xYMCticUpldXJodGNXNW5z?=
+ =?utf-8?B?T2trZGxwUHJUMWJ0ZWliYmxsYTl4N0JyaFVzZFZNT3ZRL1BiMkQrZU1LVlFP?=
+ =?utf-8?B?LzFkWFFiVUpYNTFJZE1pN3FDVkxsY2ZzUkEvUkloU3FMOEFYU2UwSDRWb2xj?=
+ =?utf-8?B?MHNCVjRKRXNFWGY4UGQ3U0xVWUFXY3BmeW8vTG9uWnBwSVBWTWUrRjcwVkkr?=
+ =?utf-8?B?Wmo4UlMxbXpDQ2xCRkFZUEsyeis4bm1PY2JLNTFTUStzay9ZQVdDaFp0azBj?=
+ =?utf-8?B?K2FQTzRVMzJvNzJaSVgyaXR1RzN6aGQ4STVpMklNb2VhMlFla1BRbysxQitK?=
+ =?utf-8?B?RkVGWlRabmVXczVqR2RXUlljUk9NMmZlKzhuOVJaSDZFNCtsbElNbCtMWVdj?=
+ =?utf-8?B?d2dEREp3U1FjQ002dzJ1YkhwOW01bHo2U2M4SlUwY2x0N05USTJwTVg0dnFj?=
+ =?utf-8?B?YU5FQ3dEQWkrdU5CRVlnUGtHZEM2cksza2wxaHNvUmhzUGwzWG4vTzVzc0Vz?=
+ =?utf-8?B?S1hsQ1pYeDB4YTk4TlF3cW9ldTlSTnRTTUFsdzZJSDhCdEsyMm1TTElUc0VV?=
+ =?utf-8?B?ZkIzVmJBT0hhSTdOQnhzekFzRVA3Y0dqbzljZW5hSGhiSnU3NjU4NnBnVnVL?=
+ =?utf-8?B?U1FaRk40T3dndy9keEM3akNtV3V6ZmZDUjlwSjlGdDZkMG9qVVBibWNEUlUv?=
+ =?utf-8?B?OWFFN1hPUnRIbjBMSDRNem8wbVhFR1JOYXhmMW5pNzVVNHh4Vk1lRmhxNThM?=
+ =?utf-8?B?M0R0MWxQNmx4OWRJRWtyVmJud1JUOEpFYkZsR2lUTjF2QVBaS01PR0ZsZ1R1?=
+ =?utf-8?B?SEJPNTQxRVY5V3pFUlBoRTdvRC93V3NCYTl0QUtEWWNrWEpmYmpnQmMwWUNs?=
+ =?utf-8?B?ZG50ZUY3MnFVSnFOb1lRU1lJVHpQTTFEWS81NWpZU1BhN2ZURlFaN25nS2FG?=
+ =?utf-8?B?eW11MTN1bXJCczRVbzM1T1ZLcno1L3gwSXJZNlV3NGNZanNUOFlqQjloMmRF?=
+ =?utf-8?B?bWloZFhBYXFDOStJeE9rV1Z1YmR3bi9mNE83KzFnRkZFUmRMcEkwV2ViWTlo?=
+ =?utf-8?B?eHdJRFhaZXA0VjRjWEpGMkpTM1NEbjhHbVJGVVNvdW5URjkvczc3S3U2a3Jn?=
+ =?utf-8?B?dFQ2S2NXbFF2eUZyWmZXbXV1N1RXVm9HQjQyUlpUR3ZuNjh5QWxuYlpkRGQ4?=
+ =?utf-8?B?bktUbDYwYnMwMmlvVHowc21hd1kwRGFDNC9LRWF6dm5FL1o0WVJyM2JlU3pG?=
+ =?utf-8?B?ZGE1em5rdW53SWdPWGZRQ1BFbU9RK3VCWk1TQ0pmL3BqcUpUYmp2OGtCaFhh?=
+ =?utf-8?B?WGMxWm92QkR0U0g2S0hSeForMStzV0lFSDFvUVk2WCtpd2lEN0NIdjRWckw3?=
+ =?utf-8?B?elNNbzdjNjc4MkxSbHVRbE5qZ1BwR3I3ZTF5UGtXU25iVWJTd2Zwb2dWN3k5?=
+ =?utf-8?B?US9oa242QmRnR0RjS0dQb3doVlY3MmtQYVhzUVo0Q2dTa0dXdkNqdG1RTXM1?=
+ =?utf-8?B?M3QrcWNDZjZqY1pvUkZKajJ3TGRaWEI0M2tOd0tHTkpaTUVSaHo1eWtKVnQ5?=
+ =?utf-8?B?bVkyUnQyUFlwQ0hpYkxnVFoyd2FJMzRGWnIreEtNTWZVMzRYRW16K3ZSU3V4?=
+ =?utf-8?B?RkZYbzllaFdPNVFRNE5iZVU5Mjl4enFEY2xqd1RNMUx5U3c4Ym5vV1Q1VDRw?=
+ =?utf-8?B?ZE93Q3NOdGV3WE5HR2RqVTRFSU1lQmxsQzZncjBsQ3M1SERWZ05RTlhUWWpp?=
+ =?utf-8?B?YmlDcHpKdXZRaWpwZWJacWR5QUdwMHVpUEVIRHBvQUpGK2lmL09sOTNxdFFq?=
+ =?utf-8?B?T3kxTmhWK1BMeVlVdUtlOUNlMEx2c2VSWWJLTlFrMHZoTTIwSFhCRVRmU1Mw?=
+ =?utf-8?B?S2RIbjNvN3VEOEtZeFpZNnRkajhITTRNaXBuSU5uYmNDamYvcm1TY0JIbjd4?=
+ =?utf-8?Q?0xsYhO1+BHeUYIKpEUWkqSA929XwZ7L6O5Csncqj+N/Vu?=
+X-MS-Exchange-AntiSpam-MessageData-1: jMNp+OV9H7mDoA==
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3666f24d-a29a-4a1a-84e0-08de6232f3be
+X-MS-Exchange-CrossTenant-Network-Message-Id: f834371b-76e1-4f8a-357a-08de6232f5f2
 X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 08:13:31.1697
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Feb 2026 08:13:35.1868
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ih0EnJpXSv+WgqTSffbNS4LSEc2nsJb5u1D/m6a/IGxC6TfAqClbVymwSyVQZlS0F5Jh2JKwzFqo75SSOo0FKQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1DBi4Xxg4NvgFFSPqYgd+7+lJ9CiaEKIdftiHJ7E/O5QMKikjSB/UhroRFUMFdqpnYS3mpRUgCpmpfn6ubFcIA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6416
 
-The relaxed access functionality is now provided by the `RelaxedMmio`
-wrapper type, and we don't have any user of the legacy methods left.
-Remove them.
+Since `ConfigSpace` now has the relevant implementations of `IoCapable`,
+the default methods of `Io` can be used in place of the overloaded ones.
+Remove them as well as the macros generating them.
 
 Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
 ---
- rust/kernel/io.rs | 40 ----------------------------------------
- 1 file changed, 40 deletions(-)
+ rust/kernel/io.rs     |  3 ---
+ rust/kernel/pci/io.rs | 70 ---------------------------------------------------
+ 2 files changed, 73 deletions(-)
 
 diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-index baa8d3baa20c..e1094a237ff7 100644
+index e1094a237ff7..0e8031dfe0f0 100644
 --- a/rust/kernel/io.rs
 +++ b/rust/kernel/io.rs
-@@ -660,46 +660,6 @@ pub unsafe fn from_raw(raw: &MmioRaw<SIZE>) -> &Self {
-         // SAFETY: `Mmio` is a transparent wrapper around `MmioRaw`.
-         unsafe { &*core::ptr::from_ref(raw).cast() }
-     }
+@@ -226,8 +226,6 @@ macro_rules! define_read {
+         }
+     };
+ }
+-pub(crate) use define_read;
 -
--    define_read!(infallible, pub read8_relaxed, call_mmio_read(readb_relaxed) -> u8);
--    define_read!(infallible, pub read16_relaxed, call_mmio_read(readw_relaxed) -> u16);
--    define_read!(infallible, pub read32_relaxed, call_mmio_read(readl_relaxed) -> u32);
--    define_read!(
--        infallible,
--        #[cfg(CONFIG_64BIT)]
--        pub read64_relaxed,
--        call_mmio_read(readq_relaxed) -> u64
--    );
--
--    define_read!(fallible, pub try_read8_relaxed, call_mmio_read(readb_relaxed) -> u8);
--    define_read!(fallible, pub try_read16_relaxed, call_mmio_read(readw_relaxed) -> u16);
--    define_read!(fallible, pub try_read32_relaxed, call_mmio_read(readl_relaxed) -> u32);
--    define_read!(
--        fallible,
--        #[cfg(CONFIG_64BIT)]
--        pub try_read64_relaxed,
--        call_mmio_read(readq_relaxed) -> u64
--    );
--
--    define_write!(infallible, pub write8_relaxed, call_mmio_write(writeb_relaxed) <- u8);
--    define_write!(infallible, pub write16_relaxed, call_mmio_write(writew_relaxed) <- u16);
--    define_write!(infallible, pub write32_relaxed, call_mmio_write(writel_relaxed) <- u32);
--    define_write!(
--        infallible,
--        #[cfg(CONFIG_64BIT)]
--        pub write64_relaxed,
--        call_mmio_write(writeq_relaxed) <- u64
--    );
--
--    define_write!(fallible, pub try_write8_relaxed, call_mmio_write(writeb_relaxed) <- u8);
--    define_write!(fallible, pub try_write16_relaxed, call_mmio_write(writew_relaxed) <- u16);
--    define_write!(fallible, pub try_write32_relaxed, call_mmio_write(writel_relaxed) <- u32);
--    define_write!(
--        fallible,
--        #[cfg(CONFIG_64BIT)]
--        pub try_write64_relaxed,
--        call_mmio_write(writeq_relaxed) <- u64
--    );
+ macro_rules! define_write {
+     (infallible, $(#[$attr:meta])* $vis:vis $name:ident, $call_macro:ident($c_fn:ident) <-
+      $type_name:ty) => {
+@@ -259,7 +257,6 @@ macro_rules! define_write {
+         }
+     };
+ }
+-pub(crate) use define_write;
+ 
+ /// Checks whether an access of type `U` at the given `offset`
+ /// is valid within this region.
+diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+index 8c8aab2e3f22..ae78676c927f 100644
+--- a/rust/kernel/pci/io.rs
++++ b/rust/kernel/pci/io.rs
+@@ -8,8 +8,6 @@
+     device,
+     devres::Devres,
+     io::{
+-        define_read,
+-        define_write,
+         Io,
+         IoCapable,
+         IoKnownSize,
+@@ -85,63 +83,6 @@ pub struct ConfigSpace<'a, S: ConfigSpaceKind = Extended> {
+     _marker: PhantomData<S>,
  }
  
- /// [`Mmio`] wrapper using relaxed accessors.
+-/// Internal helper macros used to invoke C PCI configuration space read functions.
+-///
+-/// This macro is intended to be used by higher-level PCI configuration space access macros
+-/// (define_read) and provides a unified expansion for infallible vs. fallible read semantics. It
+-/// emits a direct call into the corresponding C helper and performs the required cast to the Rust
+-/// return type.
+-///
+-/// # Parameters
+-///
+-/// * `$c_fn` – The C function performing the PCI configuration space write.
+-/// * `$self` – The I/O backend object.
+-/// * `$ty` – The type of the value to read.
+-/// * `$addr` – The PCI configuration space offset to read.
+-///
+-/// This macro does not perform any validation; all invariants must be upheld by the higher-level
+-/// abstraction invoking it.
+-macro_rules! call_config_read {
+-    (infallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr) => {{
+-        let mut val: $ty = 0;
+-        // SAFETY: By the type invariant `$self.pdev` is a valid address.
+-        // CAST: The offset is cast to `i32` because the C functions expect a 32-bit signed offset
+-        // parameter. PCI configuration space size is at most 4096 bytes, so the value always fits
+-        // within `i32` without truncation or sign change.
+-        // Return value from C function is ignored in infallible accessors.
+-        let _ret = unsafe { bindings::$c_fn($self.pdev.as_raw(), $addr as i32, &mut val) };
+-        val
+-    }};
+-}
+-
+-/// Internal helper macros used to invoke C PCI configuration space write functions.
+-///
+-/// This macro is intended to be used by higher-level PCI configuration space access macros
+-/// (define_write) and provides a unified expansion for infallible vs. fallible read semantics. It
+-/// emits a direct call into the corresponding C helper and performs the required cast to the Rust
+-/// return type.
+-///
+-/// # Parameters
+-///
+-/// * `$c_fn` – The C function performing the PCI configuration space write.
+-/// * `$self` – The I/O backend object.
+-/// * `$ty` – The type of the written value.
+-/// * `$addr` – The configuration space offset to write.
+-/// * `$value` – The value to write.
+-///
+-/// This macro does not perform any validation; all invariants must be upheld by the higher-level
+-/// abstraction invoking it.
+-macro_rules! call_config_write {
+-    (infallible, $c_fn:ident, $self:ident, $ty:ty, $addr:expr, $value:expr) => {
+-        // SAFETY: By the type invariant `$self.pdev` is a valid address.
+-        // CAST: The offset is cast to `i32` because the C functions expect a 32-bit signed offset
+-        // parameter. PCI configuration space size is at most 4096 bytes, so the value always fits
+-        // within `i32` without truncation or sign change.
+-        // Return value from C function is ignored in infallible accessors.
+-        let _ret = unsafe { bindings::$c_fn($self.pdev.as_raw(), $addr as i32, $value) };
+-    };
+-}
+-
+ /// Implements [`IoCapable`] on [`ConfigSpace`] for `$ty` using `$read_fn` and `$write_fn`.
+ macro_rules! impl_config_space_io_capable {
+     ($ty:ty, $read_fn:ident, $write_fn:ident) => {
+@@ -190,17 +131,6 @@ fn addr(&self) -> usize {
+     fn maxsize(&self) -> usize {
+         self.pdev.cfg_size().into_raw()
+     }
+-
+-    // PCI configuration space does not support fallible operations.
+-    // The default implementations from the Io trait are not used.
+-
+-    define_read!(infallible, read8, call_config_read(pci_read_config_byte) -> u8);
+-    define_read!(infallible, read16, call_config_read(pci_read_config_word) -> u16);
+-    define_read!(infallible, read32, call_config_read(pci_read_config_dword) -> u32);
+-
+-    define_write!(infallible, write8, call_config_write(pci_write_config_byte) <- u8);
+-    define_write!(infallible, write16, call_config_write(pci_write_config_word) <- u16);
+-    define_write!(infallible, write32, call_config_write(pci_write_config_dword) <- u32);
+ }
+ 
+ impl<'a, S: ConfigSpaceKind> IoKnownSize for ConfigSpace<'a, S> {
 
 -- 
 2.52.0
