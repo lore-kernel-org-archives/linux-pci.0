@@ -1,160 +1,127 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 731FD2652B6;
-	Tue,  3 Feb 2026 16:27:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 913F5394466
+	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2026 16:46:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770136038; cv=none; b=AY+Dmf2mST1qKrvuPAQ/E1vu+Cubpsn7iQOJw4XmHBJfNG2UrkgpsIX9HGoUSbJhJOtWfIRIhpD7O44zpqrf52BwpI9DZXJ1q3Rm/1CEVpJAMyAn5bfCTS1+LvYW79bj29ixB1PK1imNI4rw8tAo4t/Z4joqr3UZa7Eh/huAdvw=
+	t=1770137192; cv=none; b=hPoAmm62V5Y5NlWMa1KMU0BopOWfh/KejPibDXycGKbU0EiGxIooMB5oDqCJjeBrErmAu3h8r4EtwqD6YZhPjHtspQVPpjOjmz/DZa5HManjYgfGv6d0DkEaP86Vm25M/UF9YyLQ0EoiL9VKe32z9Rpi9tf7qeRNl61OV3Gm13g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770136038; c=relaxed/simple;
-	bh=z7k3+zs9+ReXK199UPguA2ILoq53tPoo21AtK2GfAHA=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jaXfFOO1oebdmNEjyZgUDNtV1UL7X01nRBFiNi8cmcIHXN5Q5ln22PCuapyf6WKGnJ4FdkP2d3qsHbPcL7DtjDpaywcjLk6JHKTuKiLLJWwQZFEgXt5IzbJ679ABOtVssErtkh2C5MTORy5La0aDCtvMfd5QxYKjwOyRn6LiKwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.150])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f584f2ybJzJ468t;
-	Wed,  4 Feb 2026 00:26:26 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0CB3640565;
-	Wed,  4 Feb 2026 00:27:14 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 3 Feb
- 2026 16:27:13 +0000
-Date: Tue, 3 Feb 2026 16:27:11 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Terry Bowman <terry.bowman@amd.com>
-CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
-	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
-	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
-	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
-	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
-	<ira.weiny@intel.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v15 8/9] cxl: Remove Endpoint AER correctable handler
-Message-ID: <20260203162711.000019a4@huawei.com>
-In-Reply-To: <20260203025244.3093805-9-terry.bowman@amd.com>
-References: <20260203025244.3093805-1-terry.bowman@amd.com>
-	<20260203025244.3093805-9-terry.bowman@amd.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1770137192; c=relaxed/simple;
+	bh=Gi1htnYpLsbfBZ4uIWrPR1buObmElY1r/sNxGV1Nc04=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=e+xZRvmbrx001tpbi9CMuafuEw5X44eUZm6h9nJ/J/sKkLHnx4Eaov+lMIePouUzt+6UE1KaU9K/znQVt8UxIEBzQo/aGJchqr8cp1uei/r8zLB4mlgWtZIp1p36n+/g6Mr2kofrPXO/6C5qDnj91cMhd/WIgubr2iYhDDq3ZIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QnV0Uxno; arc=none smtp.client-ip=209.85.216.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QnV0Uxno"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-34c868b197eso4253298a91.2
+        for <linux-pci@vger.kernel.org>; Tue, 03 Feb 2026 08:46:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1770137191; x=1770741991; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=49b0/xPdvxtHrk0c1rp4r1O+40H+pdifaRAqxA1I5XM=;
+        b=QnV0UxnoWMicq7tyxI6fcbcy+3g86q779zFaRY9scFsiksuQBsZi/XcYM67Fo7NH+t
+         BEjX0UCE4gha0yVzTIZErhVIsikH0ieb534TDt4bjO3qel0fjyVsML3lUOoDzlOpQn2l
+         YAL7nrwigVeYa0i5ubxPUFXm/joaOSnc8xEYAJ5/ozBFItL7sGPpc+P+vprXqYs42HsX
+         MEcdjt7qKe49+7blDZog+YRCNOlPr8gi0qxOg1ytQLsmfiNjKhHK+hvy+rbsOAkB+Rcr
+         D0uQ5Ej62hf8cScGe4qBx3pyEQAe7Ra5TZILITlKB/XZNXab9qtu1kbh0HhBLGizGNa+
+         k6gw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770137191; x=1770741991;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=49b0/xPdvxtHrk0c1rp4r1O+40H+pdifaRAqxA1I5XM=;
+        b=SIGY8c332am7Yh/0dBtRPmPXoJ3+v//9Apo6VCg/Vu570goUqaxhlEMQJEuu3LqKhO
+         AOOnj04Rm9eF+lnXAarbwZt8bJ3YI0jhodWkyWNLtKzUNQJV5pBiJBRCb6vRip0g1qaf
+         aIj5qZeYpRwPkTFKDSWKfNxC0+4R7D4dkEsP35oEUsQIEbH+1a/ht6EHlZWOdFAl2GHT
+         +l10foOJ5vMvy17TtOGhT+vJHUac5Eag+5Yg+EtOwpSM/1zyIJRnV3lrwt4VKawpX0tI
+         ESzsF8WnFm/Al5ZYbI0KAu8I8uZdHteHee/ZvQHZAuA0Wz7LTSHisikQio8+VWw+WVWA
+         CihA==
+X-Gm-Message-State: AOJu0Yxd+fVWbU9JhazmTDXHx7KVdO/12qZLuLYIYGGVkiliSgMzyqTv
+	jRC0LYggbOAqgcnHNMlO0jwIbYD0SuoC6ag1yb1Bs1qTANRRuyPvObhp
+X-Gm-Gg: AZuq6aINUTZbL96uNF8lvxriuWFnN0Ete2DsbHR3zIKEusSGVtAIbEy9/r0EPHDEtu+
+	H6GG99R9i0W8iinZfTL6B9/beKr6FEq7OXak+nj/B8SBP0HKEv4j1gvtLWVs6h/MKbffPcaogPn
+	wRkcbZnW5GR/wFLO3QsoDRjV2GrPpQSEHbXgDvwgrknOQtItb20pYMiJLa7T7PDlcKOA/7FZBvQ
+	YP0OcvGfa0BRJgGSpzCqwtqVQ/0rte93DUfGH4tpcBUrDcXN0hXEZWAXrB1QQHXDZGpy2mXPh8P
+	eohW1vU2dU16+QnRb9a4AWTRyCuRyvfVtRBvDv8UIOVRnAG5iG5/e1y5rY7AaULC0KaadzYgNoe
+	ilEIW/S8q44Npq5pCDMeg0yxG4BaBf76Lq/aEkfiFtRG07Oxl8qnCwNdNwVDr4/5E6RMDN6bHAI
+	/rXyLXsqA2nGgTReTQMlW+AVaBmg==
+X-Received: by 2002:a17:90b:4a07:b0:353:3934:1449 with SMTP id 98e67ed59e1d1-3543b2fa68amr14816121a91.12.1770137190912;
+        Tue, 03 Feb 2026 08:46:30 -0800 (PST)
+Received: from junjungu-PC.localdomain ([2408:820c:9008:ba52:f091:7dff:927e:f788])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3548630df97sm106070a91.13.2026.02.03.08.46.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Feb 2026 08:46:30 -0800 (PST)
+From: Felix Gu <ustc.gu@gmail.com>
+Date: Wed, 04 Feb 2026 00:46:24 +0800
+Subject: [PATCH] PCI: rzg3s-host: Fix device node reference leak in
+ rzg3s_pcie_host_parse_port()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100009.china.huawei.com (7.191.174.83) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+Message-Id: <20260204-rzg3s-v1-1-142bc81c3312@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAF8mgmkC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzMDIwMT3aKqdONi3aRk82Qj82QLg0QLSyWg2oKi1LTMCrA50bG1tQA4zyJ
+ XVwAAAA==
+X-Change-ID: 20260204-rzg3s-bc7c27c80a89
+To: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Felix Gu <ustc.gu@gmail.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1770137186; l=1372;
+ i=ustc.gu@gmail.com; h=from:subject:message-id;
+ bh=Gi1htnYpLsbfBZ4uIWrPR1buObmElY1r/sNxGV1Nc04=;
+ b=QpftaQ90i7I2mrQt51hu+ZGKUrMhiL5YyUKtGGs6kgS9XmS+vYOGSatMhKV8YPfb6BW2t3g05
+ 4gTTZVgcPN2B12jL9lxZqbOXsACPvnu4BJu5BJkivg2ydwezA9D89i2
+X-Developer-Key: i=ustc.gu@gmail.com; a=ed25519;
+ pk=fjUXwmjchVN7Ja6KGP55IXOzFeCl9edaHoQIEUA+/hw=
 
-On Mon, 2 Feb 2026 20:52:43 -0600
-Terry Bowman <terry.bowman@amd.com> wrote:
+In rzg3s_pcie_host_parse_port(), of_get_next_child() returns a device
+node with an incremented reference count that must be released with
+of_node_put(). The current code fails to call of_node_put() which
+causes a reference leak.
 
-> CXL drivers dont require a correctable PCI AER handler. Correctable AER
-> errors reported by CXL devices are logged and cleared in the AER driver.
-> This makes the correctable AER handler callback in the CXL driver
-> unnecessary.
-> 
-> Remove cxl_cor_error_detected() and drop the .cor_error_detected callback
-> from the CXL PCI error handlers.
-> 
-> This consolidates correctable error reporting under the CXL RAS infrastructure
-> and avoids redundant or conflicting logging with the AER driver.
+Use the __free(device_node) attribute to ensure automatic cleanup when
+the variable goes out of scope.
 
-Please add a before and after log so we know what the redundant info was that has
-been dropped.
+Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Jonathan
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index 5aa58638903f..2809112e6317 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -1142,7 +1142,8 @@ static int rzg3s_pcie_resets_prepare_and_get(struct rzg3s_pcie_host *host)
+ 
+ static int rzg3s_pcie_host_parse_port(struct rzg3s_pcie_host *host)
+ {
+-	struct device_node *of_port = of_get_next_child(host->dev->of_node, NULL);
++	struct device_node *of_port __free(device_node) =
++		of_get_next_child(host->dev->of_node, NULL);
+ 	struct rzg3s_pcie_port *port = &host->port;
+ 	int ret;
+ 
 
-> 
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> 
-> ---
-> 
-> Changes in v14->v15:
-> - Remove cxl_pci_cor_error_detected(). Is not needed. AER is logged
->   in the AER driver. (Dan)
-> - Update commit message (Terry)
-> 
-> Changes in v13->v14:
-> - New commit
-> - Change cxl_cor_error_detected() parameter to &pdev->dev device from
->   memdev device. (Terry)
-> - Updated commit message (Terry)
-> ---
->  drivers/cxl/core/ras.c | 23 -----------------------
->  drivers/cxl/cxlpci.h   |  2 --
->  drivers/cxl/pci.c      |  1 -
->  3 files changed, 26 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 061e6aaec176..e5a0d0283d3f 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-> @@ -418,29 +418,6 @@ static pci_ers_result_t cxl_port_error_detected(struct device *dev)
->  	}
->  }
->  
-> -void cxl_cor_error_detected(struct pci_dev *pdev)
-> -{
-> -	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> -	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> -	struct device *dev = &cxlds->cxlmd->dev;
-> -
-> -	scoped_guard(device, dev) {
-> -		if (!dev->driver) {
-> -			dev_warn(&pdev->dev,
-> -				 "%s: memdev disabled, abort error handling\n",
-> -				 dev_name(dev));
-> -			return;
-> -		}
-> -
-> -		if (cxlds->rcd)
-> -			cxl_handle_rdport_errors(cxlds);
-> -
-> -		cxl_handle_cor_ras(&cxlds->cxlmd->dev, cxlds->serial,
-> -				   cxlmd->endpoint->regs.ras);
-> -	}
-> -}
-> -EXPORT_SYMBOL_NS_GPL(cxl_cor_error_detected, "CXL");
-> -
->  static bool cxl_handle_aer(struct pci_dev *pdev)
->  {
->  	struct aer_capability_regs aer;
-> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-> index 5534422b496c..e3388dffdd75 100644
-> --- a/drivers/cxl/cxlpci.h
-> +++ b/drivers/cxl/cxlpci.h
-> @@ -78,13 +78,11 @@ struct cxl_dev_state;
->  void read_cdat_data(struct cxl_port *port);
->  
->  #ifdef CONFIG_CXL_RAS
-> -void cxl_cor_error_detected(struct pci_dev *pdev);
->  void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport);
->  pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
->  					pci_channel_state_t error);
->  void devm_cxl_port_ras_setup(struct cxl_port *port);
->  #else
-> -static inline void cxl_cor_error_detected(struct pci_dev *pdev) { }
->  static inline pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
->  						      pci_channel_state_t state)
->  {
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index ff741adc7c7f..c6b2966f5fda 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -1055,7 +1055,6 @@ static const struct pci_error_handlers pci_error_handlers = {
->  	.error_detected	= cxl_pci_error_detected,
->  	.slot_reset	= cxl_slot_reset,
->  	.resume		= cxl_error_resume,
-> -	.cor_error_detected	= cxl_cor_error_detected,
->  	.reset_done	= cxl_reset_done,
->  };
->  
+---
+base-commit: 193579fe01389bc21aff0051d13f24e8ea95b47d
+change-id: 20260204-rzg3s-bc7c27c80a89
+
+Best regards,
+-- 
+Felix Gu <ustc.gu@gmail.com>
 
