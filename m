@@ -1,30 +1,30 @@
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B1434F475;
-	Tue,  3 Feb 2026 16:18:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 731FD2652B6;
+	Tue,  3 Feb 2026 16:27:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770135531; cv=none; b=RFx4Ax8JNWmDsq/4d614NmgCe3JzcS6olhHlmBb2FtnuDoHp141Qui2K7wGjjZiUod4HKHLV22XgHrgA5JEecbWNh9iMXXNn8UcgfAW1Tp7WT4659/DudHp0qE0VFRdK7xeE/vG9/A/bLODCB/ypdOlIY1YASvdVCEOPyYeYuJs=
+	t=1770136038; cv=none; b=AY+Dmf2mST1qKrvuPAQ/E1vu+Cubpsn7iQOJw4XmHBJfNG2UrkgpsIX9HGoUSbJhJOtWfIRIhpD7O44zpqrf52BwpI9DZXJ1q3Rm/1CEVpJAMyAn5bfCTS1+LvYW79bj29ixB1PK1imNI4rw8tAo4t/Z4joqr3UZa7Eh/huAdvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770135531; c=relaxed/simple;
-	bh=eS1WcSWVcHX1tpDW7sUjdRJysXhg4Mej4pUZU98+FHo=;
+	s=arc-20240116; t=1770136038; c=relaxed/simple;
+	bh=z7k3+zs9+ReXK199UPguA2ILoq53tPoo21AtK2GfAHA=;
 	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q36W2SXoCnXGLsM6JfcJX2UI0sDqjdTzUQ0eY2kcbtNjssM3OEqEGY8wQz7im9oUqPpaEfFUvla2uSjPKr2tIXdPrvcNcKOF4+G8gcSHZ2M/nYC6CK6E/yhb2wuErSGi462ruNw9IG/DO5wvRMcS67IC4mYrpKb0l66EspVwaW0=
+	 MIME-Version:Content-Type; b=jaXfFOO1oebdmNEjyZgUDNtV1UL7X01nRBFiNi8cmcIHXN5Q5ln22PCuapyf6WKGnJ4FdkP2d3qsHbPcL7DtjDpaywcjLk6JHKTuKiLLJWwQZFEgXt5IzbJ679ABOtVssErtkh2C5MTORy5La0aDCtvMfd5QxYKjwOyRn6LiKwY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.107])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f57tr37RLzJ46bg;
-	Wed,  4 Feb 2026 00:17:56 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f584f2ybJzJ468t;
+	Wed,  4 Feb 2026 00:26:26 +0800 (CST)
 Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1138C40570;
-	Wed,  4 Feb 2026 00:18:44 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 0CB3640565;
+	Wed,  4 Feb 2026 00:27:14 +0800 (CST)
 Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
  (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 3 Feb
- 2026 16:18:43 +0000
-Date: Tue, 3 Feb 2026 16:18:41 +0000
+ 2026 16:27:13 +0000
+Date: Tue, 3 Feb 2026 16:27:11 +0000
 From: Jonathan Cameron <jonathan.cameron@huawei.com>
 To: Terry Bowman <terry.bowman@amd.com>
 CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
@@ -36,11 +36,11 @@ CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
 	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
 	<ira.weiny@intel.com>, <linux-kernel@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v15 7/9] cxl: Update Endpoint AER uncorrectable handler
-Message-ID: <20260203161841.000006a1@huawei.com>
-In-Reply-To: <20260203025244.3093805-8-terry.bowman@amd.com>
+Subject: Re: [PATCH v15 8/9] cxl: Remove Endpoint AER correctable handler
+Message-ID: <20260203162711.000019a4@huawei.com>
+In-Reply-To: <20260203025244.3093805-9-terry.bowman@amd.com>
 References: <20260203025244.3093805-1-terry.bowman@amd.com>
-	<20260203025244.3093805-8-terry.bowman@amd.com>
+	<20260203025244.3093805-9-terry.bowman@amd.com>
 X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -53,141 +53,108 @@ Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: lhrpeml100009.china.huawei.com (7.191.174.83) To
  dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Mon, 2 Feb 2026 20:52:42 -0600
+On Mon, 2 Feb 2026 20:52:43 -0600
 Terry Bowman <terry.bowman@amd.com> wrote:
 
-> CXL drivers now implement protocol RAS support. PCI protocol errors,
-> however, continue to be reported via the AER capability and must still be
-> handled by a PCI error recovery callback.
+> CXL drivers dont require a correctable PCI AER handler. Correctable AER
+> errors reported by CXL devices are logged and cleared in the AER driver.
+> This makes the correctable AER handler callback in the CXL driver
+> unnecessary.
 > 
-> Replace the existing cxl_error_detected() callback in cxl/pci.c with a
-> new cxl_pci_error_detected() implementation that handles only uncorrectable
-> PCI protocol errors reported through AER.
+> Remove cxl_cor_error_detected() and drop the .cor_error_detected callback
+> from the CXL PCI error handlers.
 > 
-> Introduce helper named cxl_handler_aer() amd implement to handle and
-> log the CXL device's AER error.
-> 
-> This cleanly separates CXL protocol error handling from PCI AER handling
-> and ensures that each subsystem processes only the errors it is
-> responsible.
+> This consolidates correctable error reporting under the CXL RAS infrastructure
+> and avoids redundant or conflicting logging with the AER driver.
+
+Please add a before and after log so we know what the redundant info was that has
+been dropped.
+
+Jonathan
+
 > 
 > Signed-off-by: Terry Bowman <terry.bowman@amd.com>
 > 
 > ---
 > 
 > Changes in v14->v15:
-> - Title update (Terry)
-> - Change cxl_pci_error-detected() to handle & log AER (Terry)`
+> - Remove cxl_pci_cor_error_detected(). Is not needed. AER is logged
+>   in the AER driver. (Dan)
 > - Update commit message (Terry)
-> - Moved cxl_handle_ras()/cxl_handle_cor_ras() to earlier patch (Terry)
 > 
 > Changes in v13->v14:
-> - Update commit headline (Bjorn)
-> - Rename pci_error_detected()/pci_cor_error_detected() ->
->   cxl_pci_error_detected/cxl_pci_cor_error_detected() (Jonathan)
-> - Remove now-invalid comment in cxl_error_detected() (Jonathan)
-> - Split into separate patches for UCE and CE (Terry)
-> 
-> Changes in v12->v13:
-> - Update commit messaqge (Terry)
-> - Updated all the implementation and commit message. (Terry)
-> - Refactored cxl_cor_error_detected()/cxl_error_detected() to remove
->   pdev (Dave Jiang)
-> 
-> Changes in v11->v12:
-> - None
-> 
-> Changes in v10->v11:
-> - cxl_error_detected() - Change handlers' scoped_guard() to guard() (Jonathan)
-> - cxl_error_detected() - Remove extra line (Shiju)
-> - Changes moved to core/ras.c (Terry)
-> - cxl_error_detected(), remove 'ue' and return with function call. (Jonathan)
-> - Remove extra space in documentation for PCI_ERS_RESULT_PANIC definition
-> - Move #include "pci.h from cxl.h to core.h (Terry)
-> - Remove unnecessary includes of cxl.h and core.h in mem.c (Terry)
+> - New commit
+> - Change cxl_cor_error_detected() parameter to &pdev->dev device from
+>   memdev device. (Terry)
+> - Updated commit message (Terry)
 > ---
->  drivers/cxl/core/ras.c | 68 +++++++++++++++---------------------------
->  drivers/cxl/cxlpci.h   |  9 +++---
->  drivers/cxl/pci.c      |  6 ++--
->  3 files changed, 31 insertions(+), 52 deletions(-)
+>  drivers/cxl/core/ras.c | 23 -----------------------
+>  drivers/cxl/cxlpci.h   |  2 --
+>  drivers/cxl/pci.c      |  1 -
+>  3 files changed, 26 deletions(-)
 > 
 > diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 970ff3df442c..061e6aaec176 100644
+> index 061e6aaec176..e5a0d0283d3f 100644
 > --- a/drivers/cxl/core/ras.c
 > +++ b/drivers/cxl/core/ras.c
-> @@ -441,55 +441,35 @@ void cxl_cor_error_detected(struct pci_dev *pdev)
+> @@ -418,29 +418,6 @@ static pci_ers_result_t cxl_port_error_detected(struct device *dev)
+>  	}
 >  }
->  EXPORT_SYMBOL_NS_GPL(cxl_cor_error_detected, "CXL");
 >  
-> -pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
-> -				    pci_channel_state_t state)
-> +static bool cxl_handle_aer(struct pci_dev *pdev)
->  {
+> -void cxl_cor_error_detected(struct pci_dev *pdev)
+> -{
 > -	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
 > -	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> -	struct device *dev = &cxlmd->dev;
-> -	bool ue;
+> -	struct device *dev = &cxlds->cxlmd->dev;
 > -
 > -	scoped_guard(device, dev) {
 > -		if (!dev->driver) {
 > -			dev_warn(&pdev->dev,
 > -				 "%s: memdev disabled, abort error handling\n",
 > -				 dev_name(dev));
-> -			return PCI_ERS_RESULT_DISCONNECT;
+> -			return;
 > -		}
-> +	struct aer_capability_regs aer;
-
-I don't see a strong reason to use this structure given you just want two
-of the registers and read into them one by one.
-
-> +	u32 aer_cap = pdev->aer_cap;
->  
+> -
 > -		if (cxlds->rcd)
 > -			cxl_handle_rdport_errors(cxlds);
-> -		/*
-> -		 * A frozen channel indicates an impending reset which is fatal to
-> -		 * CXL.mem operation, and will likely crash the system. On the off
-> -		 * chance the situation is recoverable dump the status of the RAS
-> -		 * capability registers and bounce the active state of the memdev.
-> -		 */
-> -		ue = cxl_handle_ras(&cxlds->cxlmd->dev, cxlds->serial,
-> -				    cxlmd->endpoint->regs.ras);
-> +	if (!aer_cap) {
-> +		pr_warn_ratelimited("%s: AER capability isn't present\n",
-> +				    pci_name(pdev));
-
-These could use dev_warn_rate_limited()
-or even add a wrapper similar to pci_info_rate_limited()
-
-> +		return false;
->  	}
->  
-> -	switch (state) {
-> -	case pci_channel_io_normal:
-> -		if (ue) {
-> -			device_release_driver(dev);
-> -			return PCI_ERS_RESULT_NEED_RESET;
-> -		}
-> -		return PCI_ERS_RESULT_CAN_RECOVER;
-> -	case pci_channel_io_frozen:
-> -		dev_warn(&pdev->dev,
-> -			 "%s: frozen state error detected, disable CXL.mem\n",
-> -			 dev_name(dev));
-> -		device_release_driver(dev);
-> -		return PCI_ERS_RESULT_NEED_RESET;
-> -	case pci_channel_io_perm_failure:
-> -		dev_warn(&pdev->dev,
-> -			 "failure state error detected, request disconnect\n");
-> -		return PCI_ERS_RESULT_DISCONNECT;
+> -
+> -		cxl_handle_cor_ras(&cxlds->cxlmd->dev, cxlds->serial,
+> -				   cxlmd->endpoint->regs.ras);
 > -	}
-> -	return PCI_ERS_RESULT_NEED_RESET;
-> +	pci_read_config_dword(pdev, aer_cap + PCI_ERR_UNCOR_STATUS, &aer.uncor_status);
-> +	pci_read_config_dword(pdev, aer_cap + PCI_ERR_UNCOR_MASK, &aer.uncor_mask);
-> +
-> +	/* The AER driver logged the error */
-> +	pci_aer_clear_nonfatal_status(pdev);
-> +	pci_aer_clear_fatal_status(pdev);
-> +
-> +	return (aer.uncor_status & aer.uncor_mask);
-> +}
+> -}
+> -EXPORT_SYMBOL_NS_GPL(cxl_cor_error_detected, "CXL");
+> -
+>  static bool cxl_handle_aer(struct pci_dev *pdev)
+>  {
+>  	struct aer_capability_regs aer;
+> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+> index 5534422b496c..e3388dffdd75 100644
+> --- a/drivers/cxl/cxlpci.h
+> +++ b/drivers/cxl/cxlpci.h
+> @@ -78,13 +78,11 @@ struct cxl_dev_state;
+>  void read_cdat_data(struct cxl_port *port);
+>  
+>  #ifdef CONFIG_CXL_RAS
+> -void cxl_cor_error_detected(struct pci_dev *pdev);
+>  void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport);
+>  pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
+>  					pci_channel_state_t error);
+>  void devm_cxl_port_ras_setup(struct cxl_port *port);
+>  #else
+> -static inline void cxl_cor_error_detected(struct pci_dev *pdev) { }
+>  static inline pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
+>  						      pci_channel_state_t state)
+>  {
+> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+> index ff741adc7c7f..c6b2966f5fda 100644
+> --- a/drivers/cxl/pci.c
+> +++ b/drivers/cxl/pci.c
+> @@ -1055,7 +1055,6 @@ static const struct pci_error_handlers pci_error_handlers = {
+>  	.error_detected	= cxl_pci_error_detected,
+>  	.slot_reset	= cxl_slot_reset,
+>  	.resume		= cxl_error_resume,
+> -	.cor_error_detected	= cxl_cor_error_detected,
+>  	.reset_done	= cxl_reset_done,
+>  };
+>  
 
