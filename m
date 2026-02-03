@@ -1,182 +1,186 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A3831AA90
-	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2026 15:15:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47962342CA2;
+	Tue,  3 Feb 2026 15:26:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770131706; cv=none; b=F+KvDUjWLDv1iqA0Q6Nf9qiVGSEXB91bdCdJFHadD474RWDK6sTC5/AC0XZ6ZM+jMAMYQ3PInGUs4R4x2noVaG7YN3L+z0EBy/St+f2kwTo/TYGM3fzrkFMg/+ghM5HCZrwOUIcWJj3B91/CuIzSva0hdTTV3xgknJvbRDI0ejY=
+	t=1770132383; cv=none; b=PNK7VOaZCADmsOvxOA8qGXKbdSB+jDZ1Bnf4OAmDvkPrW7qRb57yjy1aCr899uGx7Fa+XnrnmbB8fzHR0KOuHHupf4s/RYMB8XJSrtJvvMZfhDBGm1LAkvG2RnPbDF/LBp4CnUee/iau7SvjNlW5OHyrw5/S83w8+YcCvHUpb2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770131706; c=relaxed/simple;
-	bh=iuhGctjnfCD2wO81raeBfrVWoGcVrFTZZg5a+wsO3Ck=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=C0KbqYWycZbBfJULbWK3/+j7PGjof7TxitDHIK425iFI9myXlBUwC6RFeoGJ22bdV53qKq5OUEynIwaWUvHRVpnFKK1G75pNajdLuZA0lpO94TSOlq6JOa/xV2JOizH9BkNQzPV52leaagZC3cKd92grbVGLBU3Oebgvqx7xvXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q8UiHhx8; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q8UiHhx8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770131703; x=1801667703;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=iuhGctjnfCD2wO81raeBfrVWoGcVrFTZZg5a+wsO3Ck=;
-  b=Q8UiHhx8doWhcG0YEIFbHqJL9sQomlBFZyCwaiibYlsYJs9lNlNFSq4P
-   tvfOuJPSyAYISs4B+9Gz/y9vMdCT3UZOUbC9g2NHuF8fAvcp3nsLwZaSN
-   bUhQLvTV3oOf2GQk7OKTRo+G/EWjdEKQUfY2JUiSszDzUaGuJ4S6l1fO3
-   rSjIqnXq8ODCZ4F2XgbVt7wRsiyHVXbZxPA+oHobbrEqwhsFShyX24+/t
-   hnpx8+Y6GuDtVtaBmU8rH6nX4eHENPyX7cexhYEVKFczNUuxywC2TvCiv
-   tw9BhiAW2IZt4paC6X0hpTrmQUuEwo6xuoRuWxNLYoYYMvC2lFxNOLi2+
-   g==;
-X-CSE-ConnectionGUID: hyKVId7xTT2V7ArCGgvm5g==
-X-CSE-MsgGUID: ZtmoAiaySPeKg26sf2ctXQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11690"; a="73901450"
-X-IronPort-AV: E=Sophos;i="6.21,270,1763452800"; 
-   d="scan'208";a="73901450"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2026 07:15:01 -0800
-X-CSE-ConnectionGUID: 5XoCBJaUR5W/DkTZ7Ftlbw==
-X-CSE-MsgGUID: 8lwMDtVvRVGTDV/DgxkkFA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,270,1763452800"; 
-   d="scan'208";a="240549998"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.117])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2026 07:14:59 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 3 Feb 2026 17:14:55 +0200 (EET)
-To: Sizhe Liu <liusizhe5@huawei.com>
-cc: bhelgaas@google.com, jonathan.cameron@huawei.com, shiju.jose@huawei.com, 
-    linux-pci@vger.kernel.org, linuxarm@huawei.com, prime.zeng@hisilicon.com, 
-    fanghao11@huawei.com, shenyang39@huawei.com
-Subject: Re: [PATCH] PCI: Fix PCI bridge resource allocation when base exceeds
- limit
-In-Reply-To: <20260203023545.2753811-1-liusizhe5@huawei.com>
-Message-ID: <cc4121b7-b99e-d7e0-8c20-8a2f0d3a0e2d@linux.intel.com>
-References: <20260203023545.2753811-1-liusizhe5@huawei.com>
+	s=arc-20240116; t=1770132383; c=relaxed/simple;
+	bh=z9JbRhTgf3X95CHyxiP8L5vNk3sgofPAn92OncfDEE8=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=r092c7cw6Aw6AjjiQTJoagnUpZGBnExBBL3vEBkY/J1McplwCeS7Cktc/Ls77WAir6rTUHYn78NoiSE+sGfyLLBdH2faBhJ1d3rvHZDn65wv36jOtJt+++/Lpv9gys7DxtT/buwfnGGiKOBvKMXsgUNkS+u4GIQkk18U9LTrhpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f56kD0RVtzJ46ZS;
+	Tue,  3 Feb 2026 23:25:24 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 9A63F4056A;
+	Tue,  3 Feb 2026 23:26:11 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 3 Feb
+ 2026 15:26:10 +0000
+Date: Tue, 3 Feb 2026 15:26:09 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Terry Bowman <terry.bowman@amd.com>
+CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
+	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
+	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
+	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
+	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
+	<ira.weiny@intel.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v15 4/9] PCI/AER: Dequeue forwarded CXL error
+Message-ID: <20260203152609.00004b41@huawei.com>
+In-Reply-To: <20260203025244.3093805-5-terry.bowman@amd.com>
+References: <20260203025244.3093805-1-terry.bowman@amd.com>
+	<20260203025244.3093805-5-terry.bowman@amd.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Tue, 3 Feb 2026, Sizhe Liu wrote:
+On Mon, 2 Feb 2026 20:52:39 -0600
+Terry Bowman <terry.bowman@amd.com> wrote:
 
-> In pci_read_bridge_mmio_pref(), pci_read_bridge_mmio() and pci_read_bridge_io(),
-> when the MEMORY_BASE value is greater than MEMORY_LIMIT,
-> resource_set_range(res, 0, 0) is called to set both the start address
-> and the size of the address of the PCI bridge resource to 0.
-> However, the end address is later calculated as:
-> res->end = res->start + size - 1
-> As a result, the resource range becomes [0x00000000-0xffffffffffffffff]
-> instead of the expected [0x00000000-0x00000000].
-
-Hi,
-
-Thanks for the patch but your understanding on how resources addresses 
-work is not correct.
-
-A zero sized resource should have end at start - 1, just like 
-resource_set_range() sets it!
-
-> This causes an exception in the subsequent resource claiming process,
-> because the address range [0x00000000-0xffffffffffffffff] exceeds
-> the range specified in the DSDT. The abnormal bridge triggers clipping
-> when claiming resources, then the entire parent PCI bus address range
-> becomes occupied. Other bridges on the same bus will report
-> address conflicts during their claim process. The resource allocation
-> may be degraded from 64-bit to 32-bit, or even worse, it fails.
+> The AER driver now forwards CXL protocol errors to the CXL driver via a
+> kfifo. The CXL driver must consume these work items and initiate protocol
+> error handling while ensuring the device's RAS mappings remain valid
+> throughout processing.
 > 
-> The related boot log is as follows:
-> pci 0000:20:00.0: PCI bridge to [bus 21]
-> pci 0000:20:00.0: bridge window [io  size 0x0000 disabled]: can't claim; no address assigned
-> pci 0000:20:00.0: [io  0x0000-0xffffffffffffffff disabled] clipped to [io  0x0000-0xffff disabled]
-
-pci_bus_clip_resource() should not touch IORESOURCE_DISABLED resources 
-nor zero sized resources. The problem seems to originate from 
-pci_claim_bridge_resources() and pci_claim_bridge_resource() which try to 
-claim such resources no matter what.
-
-I think pci_claim_bridge_resources() should check if IORESOURCE_DISABLED 
-is set and use continue, it already has check !r->flags which probably 
-worked prior to 8278c6914306 ("PCI: Preserve bridge window resource type 
-flags") but is no longer enough to decided if bridge window is valid or 
-not.
-
-Do you want to do that patch and test it? (I'm quite busy this week 
-myself.)
-
-> pci 0000:20:00.0:   bridge window [io  0x0000-0xffff disabled]
-> pci 0000:20:00.0: bridge window [mem size 0x00000000 disabled]: can't claim; no address assigned
-> pci 0000:20:00.0: [mem 0x00000000-0xffffffffffffffff disabled] clipped to [mem 0x800000000000-0x8013ffffffff disabled]
-> pci 0000:20:00.0: bridge window [mem 0x800000000000-0x8013ffffffff disabled]: can't claim; no compatible bridge window
-> pci 0000:20:00.0: bridge window [mem size 0x00000000 64bit pref disabled]: can't claim; no address assigned
-> pci 0000:20:00.0: [mem 0x00000000-0xffffffffffffffff 64bit pref disabled] clipped to [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
-> pci 0000:20:00.0:   bridge window [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
-> pci 0000:20:08.0: PCI bridge to [bus 22]
-> pci 0000:20:08.0: bridge window [io  size 0x0000 disabled]: can't claim; no address assigned
-> pci 0000:20:08.0: [io  0x0000-0xffffffffffffffff disabled] clipped to [io  0x0000-0xffff disabled]
-> pci 0000:20:08.0: bridge window [io  0x0000-0xffff disabled]: can't claim; address conflict with PCI Bus 0000:21 [io  0x0000-0xffff disabled]
-> pci 0000:20:08.0: bridge window [mem size 0x00000000 disabled]: can't claim; no address assigned
-> pci 0000:20:08.0: [mem 0x00000000-0xffffffffffffffff disabled] clipped to [mem 0x800000000000-0x8013ffffffff disabled]
-> pci 0000:20:08.0: bridge window [mem 0x800000000000-0x8013ffffffff disabled]: can't claim; no compatible bridge window
-> pci 0000:20:08.0: bridge window [mem size 0x00000000 64bit pref disabled]: can't claim; no address assigned
-> pci 0000:20:08.0: [mem 0x00000000-0xffffffffffffffff 64bit pref disabled] clipped to [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
-> pci 0000:20:08.0: bridge window [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]: can't claim; address conflict with PCI Bus 0000:21 [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
-> pci 0000:20:09.0: PCI bridge to [bus 23]
-> pci 0000:20:09.0: bridge window [io  0x0000-0x0fff]: can't claim; address conflict with PCI Bus 0000:21 [io  0x0000-0xffff disabled]
-> pci 0000:20:09.0: bridge window [mem 0x800003000000-0x8000048fffff 64bit pref]: can't claim; address conflict with PCI Bus 0000:21 [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
+> Implement cxl_proto_err_work_fn() to dequeue work items forwarded by the
+> AER service driver. Lock the parent CXL Port device to ensure the CXL
+> device's RAS registers are accessible during handling. Add pdev reference-put
+> to match reference-get in AER driver. This will ensure pdev access after
+> kfifo dequeue. These changes apply to CXL Ports and CXL Endpoints.
 > 
-> Solution:
-> A comment in pci_read_bridge_mmio_pref() states:
-> /*
->  * Some bridges set the base > limit by default, and some
->  * (broken) BIOSes do not initialize them.  If we find
->  * this, just assume they are not being used.
->  */
-> When the base is greater than the limit, a proper fix is to set the
-> resource flag to IORESOURCE_UNSET or IORESOURCE_DISABLED while keeping
-> the start and end addresses as 0. This prevents the clipping process
-> from being triggered incorrectly.
+> Update is_cxl_error() to recognize CXL Port devices with errors.
 > 
-> Fixes: 8278c6914306 ("PCI: Preserve bridge window resource type flags")
-> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
-> ---
->  drivers/pci/probe.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 41183aed8f5d..561f2420d9eb 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -429,7 +429,6 @@ static void pci_read_bridge_io(struct pci_dev *dev, struct resource *res,
->  		if (log)
->  			pci_info(dev, "  bridge window %pR\n", res);
->  	} else {
-> -		resource_set_range(res, 0, 0);
->  		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
->  	}
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+There are some small functional changes to existing paths (maybe)
+that I think need explanations in this commit message.
+
+Otherwise, one suggests small simplification.
+
+> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+> index 74df561ed32e..a6c0bc6d7203 100644
+> --- a/drivers/cxl/core/ras.c
+> +++ b/drivers/cxl/core/ras.c
+> @@ -118,17 +118,6 @@ static void cxl_cper_prot_err_work_fn(struct work_struct *work)
 >  }
-> @@ -455,7 +454,6 @@ static void pci_read_bridge_mmio(struct pci_dev *dev, struct resource *res,
->  		if (log)
->  			pci_info(dev, "  bridge window %pR\n", res);
->  	} else {
-> -		resource_set_range(res, 0, 0);
->  		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
->  	}
+>  static DECLARE_WORK(cxl_cper_prot_err_work, cxl_cper_prot_err_work_fn);
+>  
+> -int cxl_ras_init(void)
+> -{
+> -	return cxl_cper_register_prot_err_work(&cxl_cper_prot_err_work);
+> -}
+> -
+> -void cxl_ras_exit(void)
+> -{
+> -	cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
+> -	cancel_work_sync(&cxl_cper_prot_err_work);
+> -}
+> -
+>  static void cxl_dport_map_ras(struct cxl_dport *dport)
+>  {
+>  	struct cxl_register_map *map = &dport->reg_map;
+> @@ -185,6 +174,50 @@ void devm_cxl_port_ras_setup(struct cxl_port *port)
 >  }
-> @@ -511,7 +509,6 @@ static void pci_read_bridge_mmio_pref(struct pci_dev *dev, struct resource *res,
->  		if (log)
->  			pci_info(dev, "  bridge window %pR\n", res);
->  	} else {
-> -		resource_set_range(res, 0, 0);
->  		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
->  	}
->  }
+>  EXPORT_SYMBOL_NS_GPL(devm_cxl_port_ras_setup, "CXL");
+>  
+> +/*
+> + * get_cxl_port - Return the parent CXL Port of a PCI device
+> + * @pdev: PCI device whose parent CXL Port is being queried
+> + *
+> + * Looks up and returns the parent CXL Port associated with @pdev. On
+> + * success, the returned port has its reference count incremented and must
+> + * be released by the caller. Returns NULL if no associated CXL port is
+> + * found.
+> + *
+> + * Return: Pointer to the parent &struct cxl_port or NULL on failure
+> + */
+> +static struct cxl_port *get_cxl_port(struct pci_dev *pdev)
+> +{
+> +	switch (pci_pcie_type(pdev)) {
+> +	case PCI_EXP_TYPE_ROOT_PORT:
+> +	case PCI_EXP_TYPE_DOWNSTREAM:
+> +	{
+> +		struct cxl_dport *dport;
+> +		struct cxl_port *port = find_cxl_port(&pdev->dev, &dport);
+
+Can you pass NULL for dport?  Looks like it to me as that ultimately ends
+up in match_port_by_dport() and 
+if (ctx->dport)
+	*ctx->dport = dport;
+
+where with this as null means ctx->dport == NULL.
+
+> +
+> +		if (!port) {
+> +			pci_err(pdev, "Failed to find the CXL device");
+> +			return NULL;
+> +		}
+> +		return port;
+> +	}
+> +	case PCI_EXP_TYPE_UPSTREAM:
+> +	case PCI_EXP_TYPE_ENDPOINT:
+> +	{
+> +		struct cxl_port *port = find_cxl_port_by_uport(&pdev->dev);
+> +
+> +		if (!port) {
+> +			pci_err(pdev, "Failed to find the CXL device");
+> +			return NULL;
+> +		}
+> +		return port;
+> +	}
+> +	}
+> +
+> +	pr_err_ratelimited("%s: Error - Unsupported device type (%#x)",
+> +			   pci_name(pdev), pci_pcie_type(pdev));
+> +	return NULL;
+> +}
 
 
--- 
- i.
+> +int cxl_ras_init(void)
+> +{
+> +	if (cxl_cper_register_prot_err_work(&cxl_cper_prot_err_work))
+> +		pr_err("Failed to initialize CXL RAS CPER\n");
+
+Why introduce a new error print?  I don't particularly mind
+but wasn't obvious to me why one has become appropriate and why only
+for the first call here.
+
+More importantly - if this failed it would previously have resulted
+in cxl_core_init() failing and things getting torn down.
+
+> +
+> +	cxl_register_proto_err_work(&cxl_proto_err_work);
+> +
+> +	return 0;
+> +}
+> +
+> +void cxl_ras_exit(void)
+> +{
+> +	cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
+> +	cancel_work_sync(&cxl_cper_prot_err_work);
+> +
+> +	cxl_unregister_proto_err_work();
+> +	cancel_work_sync(&cxl_proto_err_work);
+> +}
+
 
