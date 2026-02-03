@@ -1,102 +1,101 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 445A33115A1;
-	Mon,  2 Feb 2026 21:09:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4F721922FD
+	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2026 00:21:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770066579; cv=none; b=iGPhmv6eEA3owfgN+brJkkmgK3j6PVusKVxIeMvWsLbvnS47tYiSx6ZTcZc/366JbcNElP30jpaaFSw98gKhtRrE75ALAqHj+hLcEHUxIQl2m/eDPH9a+P+Nibc0rvhDxYHdEq5RPkl4sVNj/yfXWJfbtNdLndWW1N4a6oRPgHE=
+	t=1770078108; cv=none; b=rUhhfxoPBzAFEGUlRFQi9BqnNb3VeQCZyWse02ET8g8WqeSkDGP+nkhTBA+gtpUSrjKQ/101cqCZ2ecIwI9CJSrcCXUG0LeW+Ymb2bwCTb19sGwvYY3aUbkcGJmB4d2O0so1YH/xuNFTcotUSmEXfrtSviacBHhPWv8HKd8sMG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770066579; c=relaxed/simple;
-	bh=ZXpSPjsc4auokkKYFS97hRcwOWY5ghe7BKYW7qeW1ms=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RIPNeO6zBJNuxCExSMz2EQ64Y2s227fkP14hXfVO6hloprdIWCjkTeHAF9/8KIZTxF4oj7FVHmd153FDM++yMTTajlv5dUYkQFvcDVhPNGTF4D5JhGw7ubupeGsiO1/fv/CxHYmLB6fb6pLF0CIBvJFKdMix8SU97u2VszPC97I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 520912006F69;
-	Mon,  2 Feb 2026 22:09:27 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 4B301290DD; Mon,  2 Feb 2026 22:09:27 +0100 (CET)
-Date: Mon, 2 Feb 2026 22:09:27 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Shuai Xue <xueshuai@linux.alibaba.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	kbusch@kernel.org, sathyanarayanan.kuppuswamy@linux.intel.com,
-	mahesh@linux.ibm.com, oohall@gmail.com, Jonathan.Cameron@huawei.com,
-	terry.bowman@amd.com, tianruidong@linux.alibaba.com
-Subject: Re: [PATCH v7 2/5] PCI/DPC: Run recovery on device that detected the
- error
-Message-ID: <aYESh4bCE2lzTg2S@wunner.de>
-References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
- <20260124074557.73961-3-xueshuai@linux.alibaba.com>
- <aYCujqZIvxElSsOE@wunner.de>
+	s=arc-20240116; t=1770078108; c=relaxed/simple;
+	bh=yl42pVmd/Pi0ztQ54DneU35smjr2f4vAu8DEetdqRuY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=HNr7Q0dpip3uJ/a/6YfkiHZvR6GH3gUuHBvVxva4YXcAlXu5tekCnihki2ArfLXa+PJiJKV51bDoNnoVTwKOiG6sipEuTQvTOpdPdTQ+QpyxfkwUeRXy+zlg9IQBixVpnDBTMOC+9nRV8tGMW7Ifjrvim41pLKW1bvAzW8ATrpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FJ6tOz39; arc=none smtp.client-ip=91.218.175.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FJ6tOz39"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1770078104;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=+2XTSPZI0r7r0xxXuEFfDuh4AMy4Nmaw4oOpOLhAvXI=;
+	b=FJ6tOz39ef3x9lh948TOCFUoh+KaPWT5sVuHy7f6TNRN961P6OhIhTYx8BzBhwsRkuCnIk
+	7ZX4HfvTe1DCCbScLcc5RJgoTVjeyK+cLEbgABoOu2v2hblyR4dfOFPbvuwTb1AuLaSmVc
+	G8bsfPUu8zZv8/2dra5Tpp53PzK7PvE=
+From: Sean Anderson <sean.anderson@linux.dev>
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Vinod Koul <vkoul@kernel.org>,
+	linux-phy@lists.infradead.org
+Cc: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>,
+	linux-kernel@vger.kernel.org,
+	Michal Simek <michal.simek@amd.com>,
+	linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sean Anderson <sean.anderson@linux.dev>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	devicetree@vger.kernel.org
+Subject: [PATCH 0/8] phy: zynqmp: Perform complete initialization, including ILL calibration
+Date: Mon,  2 Feb 2026 19:21:20 -0500
+Message-Id: <20260203002128.935842-1-sean.anderson@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aYCujqZIvxElSsOE@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Mon, Feb 02, 2026 at 03:02:54PM +0100, Lukas Wunner wrote:
-> You're assuming that the parent of the Requester is always identical
-> to the containing Downstream Port.  But that's not necessarily the case:
-> 
-> E.g., imagine a DPC-capable Root Port with a PCIe switch below
-> whose Downstream Ports are not DPC-capable.  Let's say an Endpoint
-> beneath the PCIe switch sends ERR_FATAL upstream.  AFAICS, your patch
-> will cause pcie_do_recovery() to invoke dpc_reset_link() with the
-> Downstream Port of the PCIe switch as argument.  That function will
-> then happily use pdev->dpc_cap even though it's 0.
+This series completely initializes the GTRs in Linux, making all
+bootloader initialization (as performed by init_serdes() in
+psu_init_gpl.c) optional. This gives the following advantages:
 
-Thinking about this some more, I realized there's another problem:
+- On some boards (mine) the reference clocks may not be configured in
+  SPL/FSBL. So ILL calibration will fail (and take a long time to do so)
+  unless we defer initialization to U-Boot/Linux where the phy driver
+  can request the clocks.
+- If PCIe/SATA are not used in U-Boot, ILL calibration can be deferred
+  until Linux when it can be done it parallel with other initialization.
+- We will have flexibility to switch between different configurations at
+  runtime. For example, this could allow supporting both SATA and PCIe M.2
+  cards with [1].
 
-In a scenario like the one I've outlined above, after your change,
-pcie_do_recovery() will only broadcast error_detected (and other
-callbacks) below the downstream port of the PCIe switch -- and not
-to any other devices below the containing Root Port.
+I have tested this series with DP, PCIe, SGMII, and SATA. USB3 is broken
+on my dev board at the moment (independent of this series; need to
+investigate) so I have not tested that. I have an equivalent set of
+patches for U-Boot that I will try to post soon.
 
-However, the DPC-induced Link Down event at the Root Port results
-in a Hot Reset being propagated down the hierarchy to any device
-below the Root Port.  So with your change, the siblings of the
-downstream port on the PCIe switch will no longer be informed of
-the reset and thus are no longer given an opportunity to recover
-after reset.
+[1] https://lore.kernel.org/linux-pci/20260107-pci-m2-v5-0-8173d8a72641@oss.qualcomm.com/
 
-The premise on which this patch is built is false -- that the bridge
-upstream of the error-reporting device is always equal to the
-containing Downstream Port.
 
-It seems the only reason why you want to pass the reporting device
-to pcie_do_recovery() is that you want to call pcie_clear_device_status()
-and pci_aer_clear_nonfatal_status() with that device.
+Sean Anderson (8):
+  dt-bindings: pci: xilinx-nwl: Add resets
+  phy: zynqmp: Refactor bus width configuration into helper
+  phy: zynqmp: Refactor common phy initialization into a helper
+  phy: zynqmp: Calibrate ILL if necessary
+  phy: zynqmp: Initialize chicken bits
+  PCI: xilinx-nwl: Split phy_init from phy_power_on
+  PCI: xilinx-nwl: Reset the core during probe
+  arm64: zynqmp: Add PCIe resets
 
-However as I've said before, those calls are AER-specific and should
-be moved out of pcie_do_recovery() so that it becomes generic and can
-be used by EEH and s390:
+ .../bindings/pci/xlnx,nwl-pcie.yaml           |  17 +
+ arch/arm64/boot/dts/xilinx/zynqmp.dtsi        |   4 +
+ drivers/pci/controller/pcie-xilinx-nwl.c      | 255 +++++++--
+ drivers/phy/xilinx/phy-zynqmp.c               | 487 +++++++++++++++++-
+ 4 files changed, 713 insertions(+), 50 deletions(-)
 
-https://lore.kernel.org/all/aPYKe1UKKkR7qrt1@wunner.de/
+-- 
+2.35.1.1320.gc452695387.dirty
 
-There's another problem:  When a device experiences an error while DPC
-is ongoing (i.e. while the link is down), its ERR_FATAL or ERR_NONFATAL
-Message may not come through.  Still the error bits are set in the
-device's Uncorrectable Error Status register.  So I think what we need to
-do is walk the hierarchy below the containing Downstream Port after the
-link is back up and search for devices with any error bits set,
-then report and clear those errors.  We may do this after first
-examining the device in the DPC Error Source ID register.
-Any additional errors found while walking the hierarchy can then
-be identified as "occurred during DPC recovery".
-
-Thanks,
-
-Lukas
