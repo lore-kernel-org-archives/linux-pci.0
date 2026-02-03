@@ -1,32 +1,32 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
+Received: from out-188.mta0.migadu.com (out-188.mta0.migadu.com [91.218.175.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB91419005E
-	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2026 00:21:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9CB61C8626
+	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2026 00:22:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770078121; cv=none; b=lsxBjdgkv71cGtdvUM+vLsdNGdWPOyjjn5vaNg10GePJDaYZLPbSrWRwlm8x3kI+C9D5DTE9jddVDlj6n48/bqnOZPOWcJpheeGrMy5c0OzhURH7mMMKYc2GMosPzah6LETYuWmUzOrgUeOlJ7TmpoBTxuen0T6S53Xo1eucag4=
+	t=1770078122; cv=none; b=N86+0zjl4MGIPLtxx6ryblDWbhiZitiSg9/L3d+/LT/aONnt/Ql1sBLmZNAOiZwBMYdggds/k72VwKg4SQhsKL2STplB7hH2WuYl8tPvKZ6G7ZRfc8U9JiuMTxZy1CZYqCcO/HkrKZpDyW6cRR0tVsPyYKvqmSk7F4iheYhB9j0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770078121; c=relaxed/simple;
-	bh=IDh3rgzulIlQYxLxKdRaDE5kIgH6fUR26eEAf0iXhqI=;
+	s=arc-20240116; t=1770078122; c=relaxed/simple;
+	bh=G/1ZJlP0fqcFtmStdil7zEuwpR1Mab+pnH0hFCakCR4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gcO7GJWu1tlQRsWZGyOLZQuU5Wc2XC3g2rg/8m7LH5+lYKQMGjUxvFrCAowB6nBXpLB1xkwEkJDGwofPF+Y8KO+2uztcRKpN7TZDGhPCz7xZUaX39/xIGwpbrVyOFYEwZgXxfjlc+wt7o64EDtSVaf/0PUCHgXbQhjn5PVrHzbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cJ2hR9uG; arc=none smtp.client-ip=91.218.175.185
+	 MIME-Version:Content-Type; b=JU8/tYguZZPQvfqUyWysqkHze9w1+rWJkSAU4dwzg9KuyHYNrF2PFYeN5LW1YQaO3V2UknFOwRe7EMplDEC1+ipwT8GlDvOwbx4RfehW4smKKMlpUftxhsUCzMn938Xrbr0He55rUVOyyHItdD2+KU8YBjRYc7VGl29J9FN3dmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pq/G6vrU; arc=none smtp.client-ip=91.218.175.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cJ2hR9uG"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pq/G6vrU"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770078116;
+	t=1770078119;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=z5LFXkBNsaVFgE+X7iTo/Y29wKqqTLybqX/8AfnQSGE=;
-	b=cJ2hR9uGAGRArhS64fAzjFL3KYNeF222SksA8JH1aVxmvkavp+hI+5LmZxckuAV17UuUqX
-	XyAKRZ1my27xviwXsb5wMwfM3B/3hzdzTtAN34AFDhYNRjVFI35BBUzwjG1ttooSReRjMp
-	xOdbJjQLtcb1qlt8U/VFuTS9YhHZsyY=
+	bh=laRHeOIKWBINYMn3qvuMftaW9eLnbEEB751RyH28DIA=;
+	b=pq/G6vrUF2wQiZrQQ84P8h0KwT8wQUphdD0RU8p1qs+uyy5ypWBM86wvEfzZ/2qQYD1KH+
+	JzKVID4tFVYI7nFX7znWyF2/tZuQ0+6OjcHzlEby7U3VU5xEE6QK0nQB9rja125CvoSUfO
+	UXb5Vj4iRnI8Yj4tIw5PC5Z5BJ5Bidg=
 From: Sean Anderson <sean.anderson@linux.dev>
 To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
 	Vinod Koul <vkoul@kernel.org>,
@@ -44,9 +44,9 @@ Cc: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Sean Anderson <sean.anderson@linux.dev>
-Subject: [PATCH 5/8] phy: zynqmp: Initialize chicken bits
-Date: Mon,  2 Feb 2026 19:21:25 -0500
-Message-Id: <20260203002128.935842-6-sean.anderson@linux.dev>
+Subject: [PATCH 6/8] PCI: xilinx-nwl: Split phy_init from phy_power_on
+Date: Mon,  2 Feb 2026 19:21:26 -0500
+Message-Id: <20260203002128.935842-7-sean.anderson@linux.dev>
 In-Reply-To: <20260203002128.935842-1-sean.anderson@linux.dev>
 References: <20260203002128.935842-1-sean.anderson@linux.dev>
 Precedence: bulk
@@ -55,69 +55,172 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-These bits are all set by serdes_init(). Move them to the phy driver so
-we can skip serdes_init().
+In preparation for reset support, split phy_init from phy_power_on. The
+former must be performed while the controller is in reset, while the
+latter must be performed while the controller is not in reset.
 
 Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
 ---
 
- drivers/phy/xilinx/phy-zynqmp.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/pci/controller/pcie-xilinx-nwl.c | 78 +++++++++++++-----------
+ 1 file changed, 43 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/phy/xilinx/phy-zynqmp.c b/drivers/phy/xilinx/phy-zynqmp.c
-index 854b0ea04648..1bdf29ba284c 100644
---- a/drivers/phy/xilinx/phy-zynqmp.c
-+++ b/drivers/phy/xilinx/phy-zynqmp.c
-@@ -54,7 +54,13 @@
- /* PCS control parameters */
- #define L0_TM_ANA_BYP_4			0x1010
- #define L0_TM_ANA_BYP_7			0x1018
-+#define L0_TM_ANA_BYP_12		0x102c
-+#define L0_TM_ANA_BYP_12_FORCE_UPHY_PSO_HSRXDIG		BIT(6)
-+#define L0_TM_ANA_BYP_15		0x1038
-+#define L0_TM_ANA_BYP_15_FORCE_UPHY_ENABLE_LOW_LEAKAGE	BIT(6)
- #define L0_TM_DIG_6			0x106c
-+#define L0_TM_DIG_8			0x1074
-+#define L0_TM_DIG_8_EYESURF		BIT(4)
- #define L0_TM_DIG_22			0x10ac
- #define L0_TM_DIS_DESCRAMBLE_DECODER	0x0f
- #define L0_TX_DIG_61			0x00f4
-@@ -82,7 +88,13 @@
- #define L0_TM_EQ1_EQ_STG2_PREAMP_MODE_VAL	BIT(2)
- #define L0_TM_E_ILL8			0x1940
- #define L0_TM_E_ILL9			0x1944
-+#define L0_TM_EQ11			0x1978
-+#define L0_TM_EQ11_FORCE_EQ_OFFS_OFF	BIT(4)
- #define L0_TM_ILL13			0x1994
-+#define L0_TM_RST_DLY			0x19a4
-+#define L0_TM_MISC3			0x19ac
-+#define L0_TM_MISC3_CDR_EN_FPL		BIT(1)
-+#define L0_TM_MISC3_CDR_EN_FFL		BIT(0)
- #define L0_TM_CDR5			0x1c14
- #define L0_TM_CDR5_FPHL_FSM_ACC_CYCLES	GENMASK(7, 5)
- #define L0_TM_CDR5_FFL_PH0_INT_GAIN	GENMASK(4, 0)
-@@ -849,6 +861,18 @@ static int xpsgtr_common_init(struct xpsgtr_phy *gtr_phy)
- 	/* Enable coarse code saturation limiting logic. */
- 	xpsgtr_write_phy(gtr_phy, L0_TM_PLL_DIG_37, L0_TM_COARSE_CODE_LIMIT);
+diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+index 7db2c96c6cec..7cfdc21e6f40 100644
+--- a/drivers/pci/controller/pcie-xilinx-nwl.c
++++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+@@ -517,56 +517,55 @@ static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
  
-+	/* Miscellaneous chicken bits */
-+	xpsgtr_clr_set_phy(gtr_phy, L0_TM_DIG_8, 0, L0_TM_DIG_8_EYESURF);
-+	xpsgtr_write_phy(gtr_phy, L0_TM_ILL13, 7);
-+	xpsgtr_write_phy(gtr_phy, L0_TM_RST_DLY, 255);
-+	xpsgtr_clr_set_phy(gtr_phy, L0_TM_ANA_BYP_15, 0,
-+			   L0_TM_ANA_BYP_15_FORCE_UPHY_ENABLE_LOW_LEAKAGE);
-+	xpsgtr_clr_set_phy(gtr_phy, L0_TM_ANA_BYP_12, 0,
-+			   L0_TM_ANA_BYP_12_FORCE_UPHY_PSO_HSRXDIG);
-+	xpsgtr_clr_set_phy(gtr_phy, L0_TM_MISC3, L0_TM_MISC3_CDR_EN_FPL |
-+						 L0_TM_MISC3_CDR_EN_FFL, 0);
-+	xpsgtr_clr_set_phy(gtr_phy, L0_TM_EQ11, 0, L0_TM_EQ11_FORCE_EQ_OFFS_OFF);
+ static void nwl_pcie_phy_power_off(struct nwl_pcie *pcie, int i)
+ {
+-	int err = phy_power_off(pcie->phy[i]);
++	while (i--) {
++		int err = phy_power_off(pcie->phy[i]);
+ 
+-	if (err)
+-		dev_err(pcie->dev, "could not power off phy %d (err=%d)\n", i,
+-			err);
++		if (err)
++			dev_err(pcie->dev,
++				"could not power off phy %d (err=%d)\n", i,
++				err);
++	}
+ }
+ 
+ static void nwl_pcie_phy_exit(struct nwl_pcie *pcie, int i)
+ {
+-	int err = phy_exit(pcie->phy[i]);
++	while (i--) {
++		int err = phy_exit(pcie->phy[i]);
+ 
+-	if (err)
+-		dev_err(pcie->dev, "could not exit phy %d (err=%d)\n", i, err);
++		if (err)
++			dev_err(pcie->dev, "could not exit phy %d (err=%d)\n",
++				i, err);
++	}
+ }
+ 
+-static int nwl_pcie_phy_enable(struct nwl_pcie *pcie)
++static int nwl_pcie_phy_init(struct nwl_pcie *pcie)
+ {
+ 	int i, ret;
+ 
+-	for (i = 0; i < ARRAY_SIZE(pcie->phy); i++) {
++	for (i = ARRAY_SIZE(pcie->phy) - 1; i >= 0; i--) {
+ 		ret = phy_init(pcie->phy[i]);
+-		if (ret)
+-			goto err;
+-
+-		ret = phy_power_on(pcie->phy[i]);
+ 		if (ret) {
+ 			nwl_pcie_phy_exit(pcie, i);
+-			goto err;
++			return ret;
+ 		}
+ 	}
+ 
+ 	return 0;
+-
+-err:
+-	while (i--) {
+-		nwl_pcie_phy_power_off(pcie, i);
+-		nwl_pcie_phy_exit(pcie, i);
+-	}
+-
+-	return ret;
+ }
+ 
+-static void nwl_pcie_phy_disable(struct nwl_pcie *pcie)
++static int nwl_pcie_phy_power_on(struct nwl_pcie *pcie)
+ {
+-	int i;
++	int i, ret;
+ 
+-	for (i = ARRAY_SIZE(pcie->phy); i--;) {
+-		nwl_pcie_phy_power_off(pcie, i);
+-		nwl_pcie_phy_exit(pcie, i);
++	for (i = ARRAY_SIZE(pcie->phy) - 1; i >= 0; i--) {
++		ret = phy_power_on(pcie->phy[i]);
++		if (ret) {
++			nwl_pcie_phy_power_off(pcie, i);
++			return ret;
++		}
+ 	}
 +
- 	ret = xpsgtr_configure_pll(gtr_phy);
- 	if (ret)
- 		return ret;
++	return 0;
+ }
+ 
+ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
+@@ -859,22 +858,28 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
+-	err = nwl_pcie_phy_enable(pcie);
++	err = nwl_pcie_phy_init(pcie);
+ 	if (err) {
+-		dev_err(dev, "could not enable PHYs\n");
++		dev_err(dev, "could not init PHYs\n");
+ 		goto err_clk;
+ 	}
+ 
++	err = nwl_pcie_phy_power_on(pcie);
++	if (err) {
++		dev_err(dev, "could not power on PHYs\n");
++		goto err_phy_init;
++	}
++
+ 	err = nwl_pcie_bridge_init(pcie);
+ 	if (err) {
+ 		dev_err(dev, "HW Initialization failed\n");
+-		goto err_phy;
++		goto err_phy_power;
+ 	}
+ 
+ 	err = nwl_pcie_init_irq_domain(pcie);
+ 	if (err) {
+ 		dev_err(dev, "Failed creating IRQ Domain\n");
+-		goto err_phy;
++		goto err_phy_power;
+ 	}
+ 
+ 	bridge->sysdata = pcie;
+@@ -884,7 +889,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 		err = nwl_pcie_enable_msi(pcie);
+ 		if (err < 0) {
+ 			dev_err(dev, "failed to enable MSI support: %d\n", err);
+-			goto err_phy;
++			goto err_phy_power;
+ 		}
+ 	}
+ 
+@@ -892,8 +897,10 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 	if (!err)
+ 		return 0;
+ 
+-err_phy:
+-	nwl_pcie_phy_disable(pcie);
++err_phy_power:
++	nwl_pcie_phy_power_off(pcie, ARRAY_SIZE(pcie->phy));
++err_phy_init:
++	nwl_pcie_phy_exit(pcie, ARRAY_SIZE(pcie->phy));
+ err_clk:
+ 	clk_disable_unprepare(pcie->clk);
+ 	return err;
+@@ -903,7 +910,8 @@ static void nwl_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct nwl_pcie *pcie = platform_get_drvdata(pdev);
+ 
+-	nwl_pcie_phy_disable(pcie);
++	nwl_pcie_phy_power_off(pcie, ARRAY_SIZE(pcie->phy));
++	nwl_pcie_phy_exit(pcie, ARRAY_SIZE(pcie->phy));
+ 	clk_disable_unprepare(pcie->clk);
+ }
+ 
 -- 
 2.35.1.1320.gc452695387.dirty
 
