@@ -1,296 +1,160 @@
-Received: from mail-108-mta161.mxroute.com (mail-108-mta161.mxroute.com [136.175.108.161])
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3581366DB1
-	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2026 05:47:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.161
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770097674; cv=none; b=andPe+7mpW+TlsG+c4pmuy2qptILL3hoCK0ZUUKOUh1hpvDFcL7wds+bAvXP4afeKPjyCjbW+UvDVL7h4pSGzRGBZTWXnUyEOzig0cDXOs3H/24HN17btnGrzEm6lJdFzXaJ43h0NmzXC33LvSIfwSXNVGvyrqTi8tFsH28p6gQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770097674; c=relaxed/simple;
-	bh=7ZioxNEjYitRwIpo8V/hMCg6vXoxq+/eeTF+IvDImOY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DeYa2Tn0Ar7EMdlqEbqzkDIWxDKQejpqo+NRaarfGHIfkbRSpxS245SW7i253bpsnhpP6UJczTN9TyzUsF+2TxTvVPOCHaoq31CsLXmTJ+UPp+zmB5OYjml1xQ6OV8naB/sS1WXEGgxm/nflzwGmWwdlgPziH1g+SECcekmgSnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs; spf=pass smtp.mailfrom=ry.rs; dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b=mmBb+5xm; arc=none smtp.client-ip=136.175.108.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ry.rs
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ry.rs
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B15B368293
+	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2026 06:56:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770101797; cv=pass; b=W7JYs04i6zTq8iKSCMKWG27WpnXqffk2WTmPGOD/P9ehe3pKwrvPTOoYuICT6zd4gtPAA1ahjcjofMnlpwiltJ7Yp9vKd554nYR9/TWrQBY2uUv4jc7Cy6nTZMp2HjlwP52LrXMHYZSUJl2xTLqAvk7rRg9nMI40gm+/5xsNeFA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770101797; c=relaxed/simple;
+	bh=P/Ggq90pDvb5xr5Ttkl63HqWY+uM9O4Zm1z7/pblo90=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=l8bTwL0XA2Ihv18QggCkltQkZu9rjndsTym3NBoe5eupTVdhs36wxZFqMxusEkvoVXDqkDaHDIE6/Wk+RciuXtp3JTevSUdg9AJjKyrTBT5/Laa0jaHAI4nit2qNtfQJypnipcwKUtlQf8j47ib0pRJU8Xd/7s2OV3pDiYb1/W8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hReoepS8; arc=pass smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ry.rs header.i=@ry.rs header.b="mmBb+5xm"
-Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
- (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta161.mxroute.com (ZoneMTA) with ESMTPSA id 19c220639ae0009140.009
- for <linux-pci@vger.kernel.org>
- (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Tue, 03 Feb 2026 05:42:39 +0000
-X-Zone-Loop: e5baac1747890a71f36723d94d1f025b6ecdd05ce3ab
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=ry.rs; s=x;
-	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
-	Subject:MIME-Version:Date:Sender:Reply-To:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
-	bh=g0U8j4hwK2RHOwhzAeojkh/eKJubBFV4p6Zi355Ueas=; b=mmBb+5xm+V4MzRw3Yqcn0+yHuK
-	RTAE/17LkzkPB+egXYMGr+1w23VMahTp69Xu1fY8rXofK32jDpPcbX/4PoTUJHZhYL1bO/W1x/P7b
-	PR/44lg9kenyRsDwsoYYMRNqBoAsTp9QLlzcn/hZdu213MxWkyJyt7Poopdwb+i9xX/6g8h0MbPo0
-	T/zHsjseFVpnxHIbhExrqQ4BJNSVPsq1wq8MXfdgralsnOwCxaMnrBZj27BdVBLk5rPERmbOvSSTD
-	9amXG0h1sxiNsazlOmJPU/vl1G67Og1uHYz6jSh+B0R/7QBS3ToP7nFGoM+LY9w+JNHthRxpi736r
-	tfGh6qrw==;
-Message-ID: <a1b5b7cb-b31c-4895-8057-bdbb0b0eb629@ry.rs>
-Date: Tue, 3 Feb 2026 13:42:30 +0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hReoepS8"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-b8871718b05so840312166b.2
+        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2026 22:56:35 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1770101794; cv=none;
+        d=google.com; s=arc-20240605;
+        b=J8u1BAQ2tIudJ4rHDNPFgEDlNsvCjrH8x4vjhUb+QYUoflVdTBUqlMEjuL9JRjuvEm
+         dwDh5aXvsZNJdQhPMEEXLKTce0ViEibdF+zeCNTPORy20iRc30koMT3Xl/BjcDcXQ41P
+         Ql+47x+jluxgMtj775pcg+v4FOqyMMlumLNUVYttipNKZ6nCqSJj46MuC8X/TXevUBz+
+         55CxGCZtT4NNTCfr6srccNUmwiQkUl7y3FsETuHZquS0R6nZPGcBSPrA+mXctzla8LTf
+         0D1d6Tkj59zZRIYrm+EE5OEX8k1Jn3WRRMSJZbhhuJepvDjnrhhA4rNLpuRxrOvkSupe
+         K00Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=hPfG7IVpjEneMOzN4kNdadNHZSe9In0bxUCOtJ3itiY=;
+        fh=t73QAtORJacPLrxzAs3OLjo7Ngenm3MxreB3ABes5P8=;
+        b=gXbJiNU8zSWVDblWixqlH5U1jHc6OGJ3wZjrKmJ0rhrUBmo1EREULJT58FgWKsVnCD
+         YQbl4f3loPpm8787R7RnNe6OMyGaHO8vRIC+R/lezZHIMRMJjV7CgVuwM+KpSTj7nItu
+         3l+g5krm1Aq2H2xqleeSt8yivSY0YZ/jyGROEWnYy/mR4kBIqBLMLA0Md3q5p8/lMNAM
+         rIa3kMpfWtmnz2yPWh1vBISKxUCBu1aSVDD7x31ZTD4/RsnWw4HnTNPLJZ+PKC8sBSej
+         cAteuZ+L8kKN/+ermQ8gsx7mwCO0Xhi+wPMenqk/lAtdj4wNEW1cBpgzVFoKBzpaXTmg
+         RvFg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1770101794; x=1770706594; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=hPfG7IVpjEneMOzN4kNdadNHZSe9In0bxUCOtJ3itiY=;
+        b=hReoepS8g4jIjIWno3x73XY0BMnt3ubf5vF+0zSnmFnLlLNf3hGoghSVDYeSxY5SGH
+         AzcfL0LIXLRpfvc+MssfBb0fbEh6Y3nAUooYrtoMyMldnjHC85QjS8zR0otujoaiNGCV
+         1jqsFJObsNNhUbx+7Xb1QRz0G8LP2m1y1vztpqase2sWxoWicSFK8wtUWnO0b+UwO/yP
+         cKy5/d8X5krrv0rk2RRbgbYijEYWySgvRUkluae1sCrfT6qY9SIR9xcbM7B3Mau8/r44
+         PMVsJnZ33ijVH1+6++l0/TpVXbKxk66Yg3d6VF+gB7dZZJGHTNQ3XIkdnpIEqA1CRJUp
+         vuug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770101794; x=1770706594;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hPfG7IVpjEneMOzN4kNdadNHZSe9In0bxUCOtJ3itiY=;
+        b=Mv1LtFrwOPmRk03KRIplYF7bc/rqKTv9p4ak3d6SpctbccMzw3LmtIpsz1jflp4Ma2
+         UqTaMfkEFXOBpGZDEKHtytB4Hw8y458CHvrwPKrv/JSQM0L5PO9HbVgO8V/Vv5KWFtPe
+         +ewi2oU/D9WxBYv9SPmV8L34sG5qmNfOVpDVB3egEw9pX+Y9uZWXXphm/7Kf/6RxMDD4
+         QS3m5VWsn2ArXlYAOjQLSN/6K4pPo9O34NB7tysW29UcHI1RMArvc0KIcegrIfL9WWf1
+         S1zMcxg/CvQseqXukC9JEHJ+xKfe+EZA32P6GNEfLaA+8KVWjQf2mjQnhDn1igl3fIko
+         fzyg==
+X-Forwarded-Encrypted: i=1; AJvYcCUqvKSD4c6+8ybpBCPkhw77u12rjvG0GvT6A0JMuoKLeDxuH2bE0g25rXUD4eE+/wsrF/fmHRwyXV0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwrSWXC+MqEYVfxD2R8+buhmAHflQKSVUJb0745os6df1kfKGg
+	M9FqMJf42O33YpkebBIT2KBEPlphjTDFQd4sPcAgBn6aAWmO8Xds76in3YFMZkGCjgsdzP/Ymv+
+	zCFbq2EsFAo0tuaULUL4WOUd6XmV0sbG1ssohqZGLnQ==
+X-Gm-Gg: AZuq6aLh+CkyvYPYzwGo3lIDEUk6FW9zY96cFNMrZBZkNgq2Z4ZC0of6xQZu0TG3run
+	lL9CvROVoLNePodj1gizKyQAxmcncgBo8L45lZIc1jpl369p8Risih0IkQpN/miKBVBPMkejTFz
+	4GWGzwYTyQwwheYR2av4H3AflXOPXHKahjiPVi0r2DrNvPkCdaNN+2Y5L6vHg1PYjG8NDk45bkD
+	DlvALFlEqy2WxJnaDlXk6JED04vsCDX29b/+gBh+nPrncFVf51e7z7PlRBb1uwK9ewDf6qmwnlm
+	Y3At9BLn0LXCMgiUqcyHVw==
+X-Received: by 2002:a17:907:94d0:b0:b87:892:f43b with SMTP id
+ a640c23a62f3a-b8dff68456emr931355166b.42.1770101794402; Mon, 02 Feb 2026
+ 22:56:34 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 0/2] rust: pci: add capability lookup helpers
-To: Zhi Wang <zhiw@nvidia.com>
-Cc: Gary Guo <gary@garyguo.net>, dakr@kernel.org, linux-pci@vger.kernel.org,
- rust-for-linux@vger.kernel.org, bhelgaas@google.com, kwilczynski@kernel.org,
- ojeda@kernel.org, dirk.behme@gmail.com, lianux.mm@gmail.com
-References: <20260201074248.1629393-1-zijing.zhang@ry.rs>
- <DG4KFDZNRSYS.28570B2QPH28E@garyguo.net>
- <2f385010-0a47-4d0f-8554-b841f6026561@ry.rs>
- <20260202215715.1000e2eb.zhiw@nvidia.com>
-Content-Language: en-US
-From: Zijing Zhang <zijing.zhang@ry.rs>
-In-Reply-To: <20260202215715.1000e2eb.zhiw@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Authenticated-Id: zijing.zhang@ry.rs
+References: <20260202151050.1446165-1-vincent.guittot@linaro.org>
+ <aYDiFpGT5hEDDFhV@lizhi-Precision-Tower-5810> <CAKfTPtDjad7aowTQ3UJPi5Qqgzf3q8J=kASa-t3YM4zfjUv3-w@mail.gmail.com>
+ <aYD+/iTSF8ikTLIY@lizhi-Precision-Tower-5810>
+In-Reply-To: <aYD+/iTSF8ikTLIY@lizhi-Precision-Tower-5810>
+From: Vincent Guittot <vincent.guittot@linaro.org>
+Date: Tue, 3 Feb 2026 07:56:23 +0100
+X-Gm-Features: AZwV_Qg5Kwi9KHew4ku1K5fA0TmRsp-hVv0jTdHdOIruFI5le9h55MG348VMg14
+Message-ID: <CAKfTPtDcKw0qc3o70AT9_n2omejNrh9fnkwS5NWKQpqjaCnBdg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: s32g: Fix ports parsing
+To: Frank Li <Frank.li@nxp.com>
+Cc: ciprianmarian.costea@oss.nxp.com, s32@nxp.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Zhi,
+On Mon, 2 Feb 2026 at 20:46, Frank Li <Frank.li@nxp.com> wrote:
+>
+> On Mon, Feb 02, 2026 at 08:23:30PM +0100, Vincent Guittot wrote:
+> > On Mon, 2 Feb 2026 at 18:42, Frank Li <Frank.li@nxp.com> wrote:
+> > >
+> > > On Mon, Feb 02, 2026 at 04:10:50PM +0100, Vincent Guittot wrote:
+> > > > No error return is missing after the loop resulting in removing the
+> > > > ports from the list.
+> > > >
+> > > > Fixes: 5cbc7d3e316e ("PCI: s32g: Add NXP S32G PCIe controller driver (RC)")
+> > > > Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
+> > > > ---
+> > > >
+> > > > Change since v1:
+> > > > - handle correctly the case when there is no child port
+> > > >
+> > > >  drivers/pci/controller/dwc/pcie-nxp-s32g.c | 8 ++++----
+> > > >  1 file changed, 4 insertions(+), 4 deletions(-)
+> > > >
+> > > > diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+> > > > index 47745749f75c..b3ec38099fa3 100644
+> > > > --- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+> > > > +++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+> > > > @@ -282,12 +282,12 @@ static int s32g_pcie_parse_ports(struct device *dev, struct s32g_pcie *s32g_pp)
+> > > >
+> > > >               ret = s32g_pcie_parse_port(s32g_pp, of_port);
+> > > >               if (ret)
+> > > > -                     goto err_port;
+> > > > +                     break;
+> > > >       }
+> > > >
+> > > > -err_port:
+> > > > -     list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
+> > > > -             list_del(&port->list);
+> > >
+> > > break and goto is logical equal here. So only need below if (ret).
+> >
+> > Yes it's similar that why I removed it, the goto becomes useless and
+> > make code less readable
+>
+> But don't suggest change in this fixes patch, which should focus on the
+> key part.
 
-Thank you, Zhi, for the detailed explanation. The shift toward a 
-stricter OO-style abstraction with `Io` trait integration and 
-`register!` macros makes a lot of sense and probably you could fold my 
-`CapabilityId` definitions and lookup logic into your series at your 
-will and consequently, I could withdraw my patch set to avoid further 
-duplication.
+It's not a suggested change, it's the fix. err_port is now wrong
+because it's the path for all cases.
 
-I look forward to discussing how to best align our efforts. I'm also 
-interested in taking on additional tasks, such as the iterator 
-implementation, once the underlying `Io` trait refactor settles.
-
-Best regards,
-Zijing
-
-On 2/3/2026 3:57 AM, Zhi Wang wrote:
-> On Mon, 2 Feb 2026 23:41:42 +0800
-> Zijing Zhang <zijing.zhang@ry.rs> wrote:
-> 
->>
->>
-> 
-> Hi Zijing,
-> 
-> Good to see you working on this too! Welcome to join the party!
-> 
-> I think "thin wrappers" were indeed the initial thought for many of us.
-> However, after several rounds of discussions with maintainers at the
-> summits, the requirement has shifted towards a stricter, OO-style Rust
-> abstraction rather than direct wrappers.
-> 
-> The key takeaways for the current direction are:
-> - Enforcing boundary checks via the Io trait backend.
-> - Using register! macros for definitions.
-> - Implementing proper Rust iterators for Cap discovery.
-> 
-> Since nova-core relies on these specific safety features, I'm pushing
-> forward with this high-level abstraction. For nova-core, our immediate
-> need is accessing and reading registers in the SR-IOV capability.
-> 
-> That said, there is plenty of room for collaboration to achieve a complete
-> framework! For example, support for normal configuration space
-> capabilities, the iterator implementation itself, and capabilities other
-> than SR-IOV are all areas that need work.
-> 
-> Currently, I am waiting for Alex's Io trait cleanup and refactor to settle
-> before deciding what should be included or changed in my next re-spin.
-> Also, any input on how to best organize the traits between normal
-> configuration space caps and extended caps would be much appreciated!
-> 
-> You are also welcome to reach out via Zulip for a quick discussion or
-> catch-up.
-> 
-> Z.
-> 
->> On 2/2/2026 11:02 PM, Gary Guo wrote:
->>> On Sun Feb 1, 2026 at 7:42 AM GMT, Zijing Zhang wrote:
->>>> It introduces `pci::Device::{find_capability, find_ext_capability}`,
->>>> thin wrappers around the PCI core helpers (`pci_find_capability()` and
->>>> `pci_find_ext_capability()`), returning the config-space offset when
->>>> present.
->>>>
->>>> In `pci::CapabilityId` and  `pci::ExtendedCapabilityId`, Capability
->>>> IDs are wrapped as newtypes with `from_raw()` plus a set of common
->>>> constants.
->>>>
->>>> An in-tree user is added to Rust PCI driver sample to exercise the
->>>> new API.
->>>>
->>>> Previous versions (v4)
->>>> https://lore.kernel.org/rust-for-linux/20260201071450.1614172-1-zijing.zhang@ry.rs/
->>>
->>> Also I'd like to mention that Zhi Wang already have a version adding
->>> the same feature on the list, sent before your v1:
->>>
->>> https://lore.kernel.org/rust-for-linux/20260126215957.541180-3-zhiw@nvidia.com/
->>>
->>> I'd recommend to work together for the feature rather than creating
->>> competing series.
->>>
->>> Thanks,
->>> Gary
->>>
->>>>
->>>> Testing
->>>> ---
->>>>
->>>> Build
->>>> - x86_64 defconfig-based kernel with Rust enabled (out-of-tree build)
->>>> - `CONFIG_SAMPLES_RUST=y`
->>>> - `CONFIG_SAMPLE_RUST_DRIVER_PCI=y`
->>>>
->>>> Runtime
->>>> - QEMU x86_64 (i440FX) with `-device pci-testdev`
->>>> - QEMU x86_64 (q35) with an NVMe device
->>>>
->>>> Changelog
->>>> ---
->>>>
->>>> v2
->>>> - Run rustfmt on samples/rust/rust_driver_pci.rs to fix rustfmtcheck.
->>>>
->>>> v3
->>>> - Base on pci/next.
->>>> - Add `CapabilityId`/`ExtendedCapabilityId`, switch
->>>> `find_*capability()` to use them.
->>>> - Document the common ID constants.
->>>> - Update the sample to use typed IDs and exercise the new helpers.
->>>>
->>>> v4
->>>> - Minor doc/style nits.
->>>> - Use early-return style in `find_*capability()`.
->>>>
->>>>
->>>> v5 (current)
->>>> - Fix sample build by using `pdev.as_ref()` for `dev_info!`.
->>>> - Use `as _` in constant definitions.
->>>>
->>>> Zijing Zhang (2):
->>>>     rust: pci: add capability lookup helpers
->>>>     samples: rust: pci: exercise capability lookup
->>>>
->>>>    rust/kernel/pci.rs              | 150
->>>> ++++++++++++++++++++++++++++++++ samples/rust/rust_driver_pci.rs |
->>>> 31 +++++++ 2 files changed, 181 insertions(+)
->>>>
->>>>
->>>> base-commit: ff0e2f679ab0de50a2e9e88fabc1026bc3be04ba
->>>
->>
->>
->> On 2/2/2026 11:02 PM, Gary Guo wrote:
->>   > On Sun Feb 1, 2026 at 7:42 AM GMT, Zijing Zhang wrote:
->>   >> It introduces `pci::Device::{find_capability, find_ext_capability}`,
->> thin
->>   >> wrappers around the PCI core helpers (`pci_find_capability()` and
->>   >> `pci_find_ext_capability()`), returning the config-space offset when
->> present.
->>   >>
->>   >> In `pci::CapabilityId` and  `pci::ExtendedCapabilityId`, Capability
->> IDs are
->>   >> wrapped as newtypes with `from_raw()` plus a set of common constants.
->>   >>
->>   >> An in-tree user is added to Rust PCI driver sample to exercise the
->> new API.
->>   >>
->>   >> Previous versions (v4)
->>   >>
->> https://lore.kernel.org/rust-for-linux/20260201071450.1614172-1-zijing.zhang@ry.rs/
->>   >
->>   > Also I'd like to mention that Zhi Wang already have a version adding
->> the same
->>   > feature on the list, sent before your v1:
->>   >
->>   >
->> https://lore.kernel.org/rust-for-linux/20260126215957.541180-3-zhiw@nvidia.com/
->>   >
->>   > I'd recommend to work together for the feature rather than creating
->> competing
->>   > series.
->>   >
->>   > Thanks,
->>   > Gary
->>   >
->>   >>
->>   >> Testing
->>   >> ---
->>   >>
->>   >> Build
->>   >> - x86_64 defconfig-based kernel with Rust enabled (out-of-tree build)
->>   >> - `CONFIG_SAMPLES_RUST=y`
->>   >> - `CONFIG_SAMPLE_RUST_DRIVER_PCI=y`
->>   >>
->>   >> Runtime
->>   >> - QEMU x86_64 (i440FX) with `-device pci-testdev`
->>   >> - QEMU x86_64 (q35) with an NVMe device
->>   >>
->>   >> Changelog
->>   >> ---
->>   >>
->>   >> v2
->>   >> - Run rustfmt on samples/rust/rust_driver_pci.rs to fix rustfmtcheck.
->>   >>
->>   >> v3
->>   >> - Base on pci/next.
->>   >> - Add `CapabilityId`/`ExtendedCapabilityId`, switch
->>   >> `find_*capability()` to use them.
->>   >> - Document the common ID constants.
->>   >> - Update the sample to use typed IDs and exercise the new helpers.
->>   >>
->>   >> v4
->>   >> - Minor doc/style nits.
->>   >> - Use early-return style in `find_*capability()`.
->>   >>
->>   >>
->>   >> v5 (current)
->>   >> - Fix sample build by using `pdev.as_ref()` for `dev_info!`.
->>   >> - Use `as _` in constant definitions.
->>   >>
->>   >> Zijing Zhang (2):
->>   >>    rust: pci: add capability lookup helpers
->>   >>    samples: rust: pci: exercise capability lookup
->>   >>
->>   >>   rust/kernel/pci.rs              | 150
->>   >> ++++++++++++++++++++++++++++++++ samples/rust/rust_driver_pci.rs |
->>   >> 31 +++++++ 2 files changed, 181 insertions(+)
->>   >>
->>   >>
->>   >> base-commit: ff0e2f679ab0de50a2e9e88fabc1026bc3be04ba
->>   >
->>
->> Hi Gary and all,
->>
->> Thanks for the feedback.
->>
->> Zhi's work on SR-IOV is excellent and provides a higher-level
->> abstraction. My series focuses on providing the fundamental lookup
->> infrastructure and typed IDs, which are intended to serve as a
->> general-purpose foundation for any PCI capability interaction.
->>
->> These two series appear to be complementary. I am open to any
->> integration path the maintainers prefer and would welcome Zhi's thoughts
->> on how we might best align these efforts.
->>
->> As a newcomer to the community, I am passionate about Rust PCI driver
->> development and appreciate Gary's diligence in maintaining the
->> subsystem's quality. I've taken note of the feedback regarding the patch
->> frequency and will ensure to allow more time for review in future
->> iterations.
->>
->> Thanks,
->> Zijing
->>
-> 
-
+>
+> Frank
+>
+> >
+> > >
+> > > Frank
+> > >
+> > > > +     if (ret)
+> > > > +             list_for_each_entry_safe(port, tmp, &s32g_pp->ports, list)
+> > > > +                     list_del(&port->list);
+> > > >
+> > > >       return ret;
+> > > >  }
+> > > > --
+> > > > 2.43.0
+> > > >
