@@ -1,103 +1,166 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D96D73F0769
-	for <linux-pci@vger.kernel.org>; Wed,  4 Feb 2026 12:33:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39FB519D081;
+	Wed,  4 Feb 2026 12:34:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770208403; cv=none; b=uK5Q/6UKh4leM5Bqb3NQpfUw8FLCum6Cqudy7gruR6c5NjlMXj2obF2nBUQ5nY2exNaDQObAb09YsPi35uK0lc/oTgkfSIby01hXPwuzr/s9RA51KnBkgrE9pIa7PhlvvNOVhAXU9VPo5OQR1xzKQDwP4XzZ71un3d/pgGr2U8I=
+	t=1770208452; cv=none; b=K7xUWjBZx5+E+1PCRZ228sXu3pWVqWbW+0SiFfjuXum+CQoxNQN7+Q0YpOnolhsD7ybii8Hw6kztM1dzYtLCpxBHd8GCEQ/4Lw6jAUjTh0hdlK5+T3BsCpmE4m9zw2m3TESu7jQliB3K+HGYTX8XAHKNXygEfTquwY4Py2lZw20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770208403; c=relaxed/simple;
-	bh=3aWb2+Gb2KAFgpNX6m9YjkRl5sjzP1BcDCEHLkg+3Fw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J4+8JZRSh7XpC1/TR0FxOqGtKUZggzLTd+/YCOekkRlJ/MX7CaHz2ijgrbUwIqFD7n5nwUhxYOWtbbobNibNAKtyW5LSkhtUv/ekXLl/Ey44H5BijMSw+oUQdPoTH++OCdNzwxTNiakBjNdury4f9M4rRy6/Q++OlpwC0x0gTjA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=iIftq1uv; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
+	s=arc-20240116; t=1770208452; c=relaxed/simple;
+	bh=AHCivJDP5GD4OkZ5utB49/t1kFWdOSJ8prtPUFvZDG0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SMPxwFH3d4maIaUzQoqDblWqDMRKEzDCRIBHQ99yZtYO+N8pfzLwbEwLBbi/wu01LeO0MYGl3jsz4okKTo+LAc+yJ3KQjX1p23/DeraAxoHx2bHqhP55nUV7aTaQy3xU7W23DlI7FJyTW24TopytL0+5WKJC0YMt347ZYtsXVFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KiToyLjj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="iIftq1uv"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4806e0f6b69so49839705e9.3
-        for <linux-pci@vger.kernel.org>; Wed, 04 Feb 2026 04:33:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1770208401; x=1770813201; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ZB5JaRsNpoCnZepyi0nCuJMBvHsl1mEmdY05cCIU6OM=;
-        b=iIftq1uvpAdXK73jmzxj3HRsP2q7UOqb6UEdccllGlI1IdH9UFt6nwhk1XDm9NRJi5
-         B9jw+gi21qzZMArOv+vabvbtt6zXqD46JWpLIWXPx414Unabhaq/cKsG9kSmcXQPP5d8
-         Pb4QvDVJ6/lnc+uUhXqx/7lECcZsR4LsmboRyj8kPMh/3Z0dpwPxFyhCD6MSXoj5R2wD
-         PWV28/PPR9wq2B8g8PYQFfw3yByuHspGe8M6t0GMqKn3RB54K1gcEKr2Ku7l/iyLpHg9
-         thEPpl3pDb0XMNxi5Cq9pauS8ddEKBo8icCtrx1ckVTB5GfWj2lgWwG9DaK/lXvWvrTd
-         rmdQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770208401; x=1770813201;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ZB5JaRsNpoCnZepyi0nCuJMBvHsl1mEmdY05cCIU6OM=;
-        b=nw7VVZG1hcYyICdqFdwAx44+nGgheK01epvJhmO1Oqp4Z+gofH9mPvf9KQIcm4ocme
-         4N2C8Ti56Kh1Yz0G+btinRZroj6lQQqnLnmrVxD/wC+eSX82Aih8dPg4IddLrB4JotZl
-         6seMGMVrXXz6RjGiZOFPs7AaAoNFlEaPqija2ax6ncbSbUPtgpJYRLcuPKvta6UguYZh
-         qPU9xcLEIWRxTgrWmttB1MoTDaRxpaqPklQXcKzrmpUkar7Yw+rAtqYdYafzLbH9TcOa
-         DkjV2Vrp6y8Z4t3qv8gbi2rIOdiR1v7ASZvWYI1lBbOMXxzVtRptFLRAalvt+xITlOOA
-         O26g==
-X-Gm-Message-State: AOJu0YwfqcW/aPrVlT3j3BTPsvZmRL+UXDj8bSY+EpdSdzFtWN/Y2niL
-	Xtx/i0sYhHEjzCCA/Jo92hzltkiks32Gpu6biVTmdA4nRKSbHCFA+WRimnSyiOgF3tI=
-X-Gm-Gg: AZuq6aJ4Fstgu5HjV0okGJSJtkFeBQQbbO31+cFCV3Uxudx4fwRGfRbRRdaah8vvDCh
-	sfSeXoZnAtGIPA/rgt8eWVcYJRJR817x8k82vrT/ErN37+rGA+LYafZqmvO3JOTkMbF4gUjTRWW
-	+aZLnlUTvIwBzm+ZimGYe5zFsa8xCD48XBaGvQHfEKChUw5EyR8skud64xN2AuQpGSbJakpH3la
-	kGyoVRhvBuRRTvoGOS1p7dzH75lUI9iGJpuspiW9XsP8hpBvTJqlvgjAoNs9BJBiOl/Q5Ma1BeP
-	QpQxNcrNNVlZwmz+Zbz10+4IuY7uu4UkF8p2tTCjAMDuhtiW4hRIXz7jkaRnxtSOyvtRjBEWgxM
-	t2z+sq2rf3fkhf5OaWR4LPDRp3XlY4NBNEAlva3ZPc7c70ntFHbalEgBxniyz5cfBtDldMc9t+1
-	z8Gg3D9kn9ISSz2uQdl7A=
-X-Received: by 2002:a05:600c:3496:b0:47e:e2b0:15b8 with SMTP id 5b1f17b1804b1-4830e93ebe2mr36434415e9.4.1770208400957;
-        Wed, 04 Feb 2026 04:33:20 -0800 (PST)
-Received: from [192.168.50.4] ([82.78.167.215])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4830ec4a76esm30285155e9.1.2026.02.04.04.33.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Feb 2026 04:33:20 -0800 (PST)
-Message-ID: <c1f4ad90-bcdf-4dc3-9eae-2a74df86bd3d@tuxon.dev>
-Date: Wed, 4 Feb 2026 14:33:17 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KiToyLjj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46458C4CEF7;
+	Wed,  4 Feb 2026 12:34:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770208451;
+	bh=AHCivJDP5GD4OkZ5utB49/t1kFWdOSJ8prtPUFvZDG0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KiToyLjjCR1nTGa50S+wkB8PvJazj2qYOSlcD/TRBD0REFefCrv0GR/ITEIQWBBKr
+	 ZTMgraWW5tzNmc6J84Kbctoen0pRB/76UckTZ3Y8sWjIaeOO/sEx84pKV1tBeOJibd
+	 VnMHyLqxHktn+OetUF07woScFMr9Fd1gPJjQDp1lLiNq4Sodx5s2nvjE2d+NsGDl6x
+	 F8WP1Dj1nDwYgoYn3e1bJJ/NuBw/j5uNFIQP3Jy+ZeJ0sa0dBdj6QWr6F0WPNHai7N
+	 sMIuECPEIE++t78svtxJ9mK27FhxbdcDbuncQ5yU/wz8WJq44Ag8bJ8maSjFazkq8z
+	 JSjYzFdXEMF1g==
+Date: Wed, 4 Feb 2026 18:03:55 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: Frank Li <frank.li@nxp.com>, Hongxing Zhu <hongxing.zhu@nxp.com>, 
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "bhelgaas@google.com" <bhelgaas@google.com>, 
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
+	"robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>, 
+	"conor+dt@kernel.org" <conor+dt@kernel.org>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, 
+	"festevam@gmail.com" <festevam@gmail.com>, "imx@lists.linux.dev" <imx@lists.linux.dev>, 
+	"kernel@pengutronix.de" <kernel@pengutronix.de>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V3 03/10] arm: dts: imx6qdl: Add Root Port node and PERST
+ property
+Message-ID: <gshz5zc7qkfkqkla2mkpu7jjf3sctrqf5jo5vszzgxzpegxzni@yhdqkykyn2ar>
+References: <20260203015614.2957479-1-sherry.sun@nxp.com>
+ <20260203015614.2957479-4-sherry.sun@nxp.com>
+ <mp25jwvoimpesfwtpmyeltdpbu7aznahxvkcn6jxg5jqzxck4i@pium66rnpdd3>
+ <VI0PR04MB12114DBBE58AB89BEEDC28C019298A@VI0PR04MB12114.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: rzg3s-host: Fix device node reference leak in
- rzg3s_pcie_host_parse_port()
-To: Felix Gu <ustc.gu@gmail.com>,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260204-rzg3s-v1-1-142bc81c3312@gmail.com>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <20260204-rzg3s-v1-1-142bc81c3312@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <VI0PR04MB12114DBBE58AB89BEEDC28C019298A@VI0PR04MB12114.eurprd04.prod.outlook.com>
 
-
-
-On 2/3/26 18:46, Felix Gu wrote:
-> In rzg3s_pcie_host_parse_port(), of_get_next_child() returns a device
-> node with an incremented reference count that must be released with
-> of_node_put(). The current code fails to call of_node_put() which
-> causes a reference leak.
+On Wed, Feb 04, 2026 at 06:44:07AM +0000, Sherry Sun wrote:
+> > On Tue, Feb 03, 2026 at 09:56:07AM +0800, Sherry Sun wrote:
+> > > Since describing the PCIe PERST# property under Host Bridge node is
+> > > now deprecated, it is recommended to add it to the Root Port node, so
+> > > creating the Root Port node and add the reset-gpios property in Root
+> > > Port.
+> > >
+> > > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> > > ---
+> > >  arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  5 +++++
+> > >  arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi         | 11 +++++++++++
+> > >  arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts |  5 +++++
+> > >  3 files changed, 21 insertions(+)
+> > >
+> > > diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+> > > b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+> > > index ba29720e3f72..fe9046c03ddd 100644
+> > > --- a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+> > > +++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+> > > @@ -754,11 +754,16 @@ lvds0_out: endpoint {  &pcie {
+> > >  	pinctrl-names = "default";
+> > >  	pinctrl-0 = <&pinctrl_pcie>;
+> > > +	/* This property is deprecated, use reset-gpios from the Root Port
+> > > +node. */
+> > >  	reset-gpio = <&gpio7 12 GPIO_ACTIVE_LOW>;
+> > 
+> > You should just remove this property.
 > 
-> Use the __free(device_node) attribute to ensure automatic cleanup when
-> the variable goes out of scope.
+> Hi Manivannan,
 > 
-> Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
-> Signed-off-by: Felix Gu <ustc.gu@gmail.com>
+> Actually I have discussed with Frank about this in V1, Frank suggested add
+> comments here instead of removing the old property, just in case the dts
+> used by old kernel to avoid function break. Or maybe we can at least keep it
+> for some kernel release, then remove it later.
+> 
 
+If the new DT breaks the old kernel, then the kernel needs to be upgraded. But
+typically, one would update both kernel + DT or just the kernel, not just DT.
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+- Mani
+
+> Best Regards
+> Sherry
+> > 
+> > >  	vpcie-supply = <&reg_pcie>;
+> > >  	status = "okay";
+> > >  };
+> > >
+> > > +&pcie_port0 {
+> > > +	reset-gpios = <&gpio7 12 GPIO_ACTIVE_LOW>; };
+> > > +
+> > >  &pwm1 {
+> > >  	pinctrl-names = "default";
+> > >  	pinctrl-0 = <&pinctrl_pwm1>;
+> > > diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+> > > b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+> > > index 76e6043e1f91..eeb376193398 100644
+> > > --- a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+> > > +++ b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+> > > @@ -289,6 +289,17 @@ pcie: pcie@1ffc000 {
+> > >  				 <&clks IMX6QDL_CLK_PCIE_REF_125M>;
+> > >  			clock-names = "pcie", "pcie_bus", "pcie_phy";
+> > >  			status = "disabled";
+> > > +
+> > > +			pcie_port0: pcie@0 {
+> > > +				compatible = "pciclass,0604";
+> > > +				device_type = "pci";
+> > > +				reg = <0x0 0x0 0x0 0x0 0x0>;
+> > > +				bus-range = <0x01 0xff>;
+> > > +
+> > > +				#address-cells = <3>;
+> > > +				#size-cells = <2>;
+> > > +				ranges;
+> > > +			};
+> > >  		};
+> > >
+> > >  		aips1: bus@2000000 { /* AIPS1 */
+> > > diff --git a/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
+> > > b/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
+> > > index c5b220aeaefd..6b12cab7175f 100644
+> > > --- a/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
+> > > +++ b/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
+> > > @@ -45,10 +45,15 @@ MX6QDL_PAD_GPIO_6__ENET_IRQ
+> > 	0x000b1
+> > >  };
+> > >
+> > >  &pcie {
+> > > +	/* This property is deprecated, use reset-gpios from the Root Port
+> > > +node. */
+> > >  	reset-gpio = <&max7310_c 5 GPIO_ACTIVE_LOW>;
+> > >  	status = "okay";
+> > >  };
+> > >
+> > > +&pcie_port0 {
+> > > +	reset-gpios = <&max7310_c 5 GPIO_ACTIVE_LOW>; };
+> > > +
+> > >  &sata {
+> > >  	status = "okay";
+> > >  };
+> > > --
+> > > 2.37.1
+> > >
+> > 
+> > --
+> > மணிவண்ணன் சதாசிவம்
+
+-- 
+மணிவண்ணன் சதாசிவம்
