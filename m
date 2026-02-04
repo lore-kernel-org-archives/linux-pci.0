@@ -1,50 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39FB519D081;
-	Wed,  4 Feb 2026 12:34:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67FA124DFF3;
+	Wed,  4 Feb 2026 12:37:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770208452; cv=none; b=K7xUWjBZx5+E+1PCRZ228sXu3pWVqWbW+0SiFfjuXum+CQoxNQN7+Q0YpOnolhsD7ybii8Hw6kztM1dzYtLCpxBHd8GCEQ/4Lw6jAUjTh0hdlK5+T3BsCpmE4m9zw2m3TESu7jQliB3K+HGYTX8XAHKNXygEfTquwY4Py2lZw20=
+	t=1770208642; cv=none; b=FbNJJaTTBbeUne948Y2nC0s844sOi134iAKkrWqvu/PEvkPdzje797R43fC7iRqXo86JORHteBgHWqjFrLeOW98+eE3ZRgm1ghtLTPuv1xVq4TTWZm/RyvCj821QToDtUa5f8/m4ATncELXDX8mQpOutc9lCtLeB6ubz9snAL5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770208452; c=relaxed/simple;
-	bh=AHCivJDP5GD4OkZ5utB49/t1kFWdOSJ8prtPUFvZDG0=;
+	s=arc-20240116; t=1770208642; c=relaxed/simple;
+	bh=Lfgz74GJBh4i45yr3gf/Dl4spcDUF4yt2tlV2Md+WfE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SMPxwFH3d4maIaUzQoqDblWqDMRKEzDCRIBHQ99yZtYO+N8pfzLwbEwLBbi/wu01LeO0MYGl3jsz4okKTo+LAc+yJ3KQjX1p23/DeraAxoHx2bHqhP55nUV7aTaQy3xU7W23DlI7FJyTW24TopytL0+5WKJC0YMt347ZYtsXVFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KiToyLjj; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=r1K5XxEnNh8Bkd23aN23JxO3JJ+n9cNJEcr+aey49zSwwgStsXj3NgUw6UD4XTifXNp/IrADLi0yPK6E2OA1+R2ox59kDnAtixvBzwSgKYlRJ4zh3i6yiRDk579PF8UiErbmWlCJw5Dfa11xaBdmUsC216QIT/LZwrnBFhg4vtY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K2jf+8k8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KiToyLjj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46458C4CEF7;
-	Wed,  4 Feb 2026 12:34:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K2jf+8k8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BDC4C4CEF7;
+	Wed,  4 Feb 2026 12:37:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770208451;
-	bh=AHCivJDP5GD4OkZ5utB49/t1kFWdOSJ8prtPUFvZDG0=;
+	s=k20201202; t=1770208642;
+	bh=Lfgz74GJBh4i45yr3gf/Dl4spcDUF4yt2tlV2Md+WfE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KiToyLjjCR1nTGa50S+wkB8PvJazj2qYOSlcD/TRBD0REFefCrv0GR/ITEIQWBBKr
-	 ZTMgraWW5tzNmc6J84Kbctoen0pRB/76UckTZ3Y8sWjIaeOO/sEx84pKV1tBeOJibd
-	 VnMHyLqxHktn+OetUF07woScFMr9Fd1gPJjQDp1lLiNq4Sodx5s2nvjE2d+NsGDl6x
-	 F8WP1Dj1nDwYgoYn3e1bJJ/NuBw/j5uNFIQP3Jy+ZeJ0sa0dBdj6QWr6F0WPNHai7N
-	 sMIuECPEIE++t78svtxJ9mK27FhxbdcDbuncQ5yU/wz8WJq44Ag8bJ8maSjFazkq8z
-	 JSjYzFdXEMF1g==
-Date: Wed, 4 Feb 2026 18:03:55 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sherry Sun <sherry.sun@nxp.com>
-Cc: Frank Li <frank.li@nxp.com>, Hongxing Zhu <hongxing.zhu@nxp.com>, 
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>, 
-	"conor+dt@kernel.org" <conor+dt@kernel.org>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, 
-	"festevam@gmail.com" <festevam@gmail.com>, "imx@lists.linux.dev" <imx@lists.linux.dev>, 
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V3 03/10] arm: dts: imx6qdl: Add Root Port node and PERST
- property
-Message-ID: <gshz5zc7qkfkqkla2mkpu7jjf3sctrqf5jo5vszzgxzpegxzni@yhdqkykyn2ar>
-References: <20260203015614.2957479-1-sherry.sun@nxp.com>
- <20260203015614.2957479-4-sherry.sun@nxp.com>
- <mp25jwvoimpesfwtpmyeltdpbu7aznahxvkcn6jxg5jqzxck4i@pium66rnpdd3>
- <VI0PR04MB12114DBBE58AB89BEEDC28C019298A@VI0PR04MB12114.eurprd04.prod.outlook.com>
+	b=K2jf+8k8tcXxUA7YJYZEDqsCxnprbeRB+aJJuJ9HR7+qYJ7VDGPbJ1RzacSbXgIi6
+	 uD1o5tnn4HE95PzIhiIp5mO+Sozrs9HlzcHy2rSxbTET7HZfLcbG9hE2uugx6rDP1g
+	 SHvfXC4pixyC7ABhyZ0HXc9quCPy+R/Uttw4f8BA9zbK63AeixkVW8jez324J/7/Q1
+	 3CLQaUb2oyY/+eHLPN0GXHWuvcexcg8su2qYbwEJGBXhPp9QZuFrOEg/uXfEZaQ0Du
+	 swWsYwBfJSgbFWoS52t8/VUff34terAi/vBX9DVAMBH2pY64Y0jo+oacXsu4XGidyI
+	 CaQxJCNGY4mwQ==
+Date: Wed, 4 Feb 2026 18:07:08 +0530
+From: "mani@kernel.org" <mani@kernel.org>
+To: Michael Kelley <mhklinux@outlook.com>
+Cc: "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
+	"bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, 
+	"kys@microsoft.com" <kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>, 
+	"wei.liu@kernel.org" <wei.liu@kernel.org>, "decui@microsoft.com" <decui@microsoft.com>, 
+	"longli@microsoft.com" <longli@microsoft.com>
+Subject: Re: [PATCH 1/1] PCI: hv: Remove unused field pci_bus in struct
+ hv_pcibus_device
+Message-ID: <lorhokiggjgxr7ghisdijmn5n2d27ezgxckr6m4yfbx2j3egro@ak3ikbgapaf5>
+References: <20260111170034.67558-1-mhklinux@outlook.com>
+ <SN6PR02MB41575DE702FAF2BCE5FD38CFD49EA@SN6PR02MB4157.namprd02.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,113 +50,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <VI0PR04MB12114DBBE58AB89BEEDC28C019298A@VI0PR04MB12114.eurprd04.prod.outlook.com>
+In-Reply-To: <SN6PR02MB41575DE702FAF2BCE5FD38CFD49EA@SN6PR02MB4157.namprd02.prod.outlook.com>
 
-On Wed, Feb 04, 2026 at 06:44:07AM +0000, Sherry Sun wrote:
-> > On Tue, Feb 03, 2026 at 09:56:07AM +0800, Sherry Sun wrote:
-> > > Since describing the PCIe PERST# property under Host Bridge node is
-> > > now deprecated, it is recommended to add it to the Root Port node, so
-> > > creating the Root Port node and add the reset-gpios property in Root
-> > > Port.
-> > >
-> > > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> > > ---
-> > >  arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  5 +++++
-> > >  arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi         | 11 +++++++++++
-> > >  arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts |  5 +++++
-> > >  3 files changed, 21 insertions(+)
-> > >
-> > > diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
-> > > b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
-> > > index ba29720e3f72..fe9046c03ddd 100644
-> > > --- a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
-> > > +++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
-> > > @@ -754,11 +754,16 @@ lvds0_out: endpoint {  &pcie {
-> > >  	pinctrl-names = "default";
-> > >  	pinctrl-0 = <&pinctrl_pcie>;
-> > > +	/* This property is deprecated, use reset-gpios from the Root Port
-> > > +node. */
-> > >  	reset-gpio = <&gpio7 12 GPIO_ACTIVE_LOW>;
+On Thu, Jan 29, 2026 at 04:35:29AM +0000, Michael Kelley wrote:
+> From: mhkelley58@gmail.com <mhkelley58@gmail.com> Sent: Sunday, January 11, 2026 9:01 AM
 > > 
-> > You should just remove this property.
+> > From: Michael Kelley <mhklinux@outlook.com>
+> > 
+> > Field pci_bus in struct hv_pcibus_device is unused since
+> > commit 418cb6c8e051 ("PCI: hv: Generify PCI probing"). Remove it.
+> > 
+> > No functional change.
+> > 
+> > Signed-off-by: Michael Kelley <mhklinux@outlook.com>
 > 
-> Hi Manivannan,
-> 
-> Actually I have discussed with Frank about this in V1, Frank suggested add
-> comments here instead of removing the old property, just in case the dts
-> used by old kernel to avoid function break. Or maybe we can at least keep it
-> for some kernel release, then remove it later.
+> Could a PCI maintainer give an Ack for this trivial patch?
 > 
 
-If the new DT breaks the old kernel, then the kernel needs to be upgraded. But
-typically, one would update both kernel + DT or just the kernel, not just DT.
+I see this got queued by Wei Liu, but FWIW:
+
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 
 - Mani
 
-> Best Regards
-> Sherry
+> Thx, Michael
+> 
+> > ---
+> >  drivers/pci/controller/pci-hyperv.c | 1 -
+> >  1 file changed, 1 deletion(-)
 > > 
-> > >  	vpcie-supply = <&reg_pcie>;
-> > >  	status = "okay";
-> > >  };
-> > >
-> > > +&pcie_port0 {
-> > > +	reset-gpios = <&gpio7 12 GPIO_ACTIVE_LOW>; };
-> > > +
-> > >  &pwm1 {
-> > >  	pinctrl-names = "default";
-> > >  	pinctrl-0 = <&pinctrl_pwm1>;
-> > > diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
-> > > b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
-> > > index 76e6043e1f91..eeb376193398 100644
-> > > --- a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
-> > > +++ b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
-> > > @@ -289,6 +289,17 @@ pcie: pcie@1ffc000 {
-> > >  				 <&clks IMX6QDL_CLK_PCIE_REF_125M>;
-> > >  			clock-names = "pcie", "pcie_bus", "pcie_phy";
-> > >  			status = "disabled";
-> > > +
-> > > +			pcie_port0: pcie@0 {
-> > > +				compatible = "pciclass,0604";
-> > > +				device_type = "pci";
-> > > +				reg = <0x0 0x0 0x0 0x0 0x0>;
-> > > +				bus-range = <0x01 0xff>;
-> > > +
-> > > +				#address-cells = <3>;
-> > > +				#size-cells = <2>;
-> > > +				ranges;
-> > > +			};
-> > >  		};
-> > >
-> > >  		aips1: bus@2000000 { /* AIPS1 */
-> > > diff --git a/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
-> > > b/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
-> > > index c5b220aeaefd..6b12cab7175f 100644
-> > > --- a/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
-> > > +++ b/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
-> > > @@ -45,10 +45,15 @@ MX6QDL_PAD_GPIO_6__ENET_IRQ
-> > 	0x000b1
-> > >  };
-> > >
-> > >  &pcie {
-> > > +	/* This property is deprecated, use reset-gpios from the Root Port
-> > > +node. */
-> > >  	reset-gpio = <&max7310_c 5 GPIO_ACTIVE_LOW>;
-> > >  	status = "okay";
-> > >  };
-> > >
-> > > +&pcie_port0 {
-> > > +	reset-gpios = <&max7310_c 5 GPIO_ACTIVE_LOW>; };
-> > > +
-> > >  &sata {
-> > >  	status = "okay";
-> > >  };
-> > > --
-> > > 2.37.1
-> > >
-> > 
+> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > index 1e237d3538f9..7fcba05cec30 100644
+> > --- a/drivers/pci/controller/pci-hyperv.c
+> > +++ b/drivers/pci/controller/pci-hyperv.c
+> > @@ -501,7 +501,6 @@ struct hv_pcibus_device {
+> >  	struct resource *low_mmio_res;
+> >  	struct resource *high_mmio_res;
+> >  	struct completion *survey_event;
+> > -	struct pci_bus *pci_bus;
+> >  	spinlock_t config_lock;	/* Avoid two threads writing index page */
+> >  	spinlock_t device_list_lock;	/* Protect lists below */
+> >  	void __iomem *cfg_addr;
 > > --
-> > மணிவண்ணன் சதாசிவம்
+> > 2.25.1
+> > 
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
