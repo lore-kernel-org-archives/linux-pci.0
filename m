@@ -1,117 +1,67 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39FAF3D9041;
-	Wed,  4 Feb 2026 16:07:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A240D40FD98
+	for <linux-pci@vger.kernel.org>; Wed,  4 Feb 2026 16:13:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770221227; cv=none; b=NxLkwWXVLd/d7F0f0e63Q/9Vuzu9AZtNwhYFNWi2KhC5mTjacYAOxNcWCh+c3s3cU3Djh4uDv5i3CpsUSANgpdQ2KrqGov54u2aGUQpC69xGM4g7J/sumqaOsEB9jeyF5YdwB1dsReTmbHkxtgokrDe/epaLbPivLzWVpWWbafg=
+	t=1770221586; cv=none; b=qQqg6mmPI77rWOn52CkIZCyns9E1ciPhrdSsio34hbZSft/bO7vu8ztP7iUh8ZpDREFSPRKTm6JY4OkVrmdnTZrBJtNLJ8rD4Cllz05VZalYJNXqLB1RBYfJ5twIjS6FbcQmk0F3jl2dvgMSHa9VAsQPF/TNOkRlTwGwA9BASM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770221227; c=relaxed/simple;
-	bh=zgeg4LpFYkGts44vRDwLwUa+VYSDlRkllv2N4lJEvvg=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Rmnvxu7X9EM8twIdMN7hJDZF9xHV857es8UHiCGFQz7aHsvtGy7Fz0nurY0VlKDS0TcOjPE1pT/VfrLJsecGDaDn0Z1KO9Wleri6gHa/4imy73tkkQXknl7DJoNFhf3TVBHkKy4WlUOxFlloRs6hyp+KWaerE8ni6Ey9APSmTps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XnzGhoQx; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XnzGhoQx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC1A4C19423;
-	Wed,  4 Feb 2026 16:06:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770221226;
-	bh=zgeg4LpFYkGts44vRDwLwUa+VYSDlRkllv2N4lJEvvg=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=XnzGhoQxZKf3UQUh2YoZFN9qW8ovu2POoWF9WjU6+PWtF+yVh/x/ub22/QXkV9h+Y
-	 xQAB+vpKbZNTxsxvYOGjMKFs+zhQYNcpvhtzg5hwZy7PC72ma7i23uU5zASOCB3d7U
-	 JE+DG9j6685I5plBOtUzYIFke4zPfub1mdjahapJr4+/uYqYwArr2iW9Zzh+tL+4i4
-	 qocUIrDo/U8co47MA3m34ke+IGQfRBAohAjf5uTGNfYgwIiciKP9K7vnqOWNzL2cSf
-	 u0QkyK6DDvaohsw0x3RfqmciFoHurjoxlEfTbDT+pLK5v/6DvUWtiQU+mKsVxN/335
-	 +mgP920c5zjTg==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun.feng@gmail.com>, Gary
- Guo <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno
- Lossin <lossin@kernel.org>, Alice
- Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman
- <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, Leon
- Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge
- Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, David
- Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Alexander
- Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
- Jan Kara <jack@suse.cz>, Igor Korotin <igor.korotin.linux@gmail.com>,
- Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes
- <lorenzo.stoakes@oracle.com>, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, Stephen
- Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Krzysztof
- =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- linux-kernel@vger.kernel.org,
- rust-for-linux@vger.kernel.org, linux-block@vger.kernel.org,
- linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, Asahi Lina
- <lina+kernel@asahilina.net>
-Subject: Re: [PATCH v14 1/9] rust: types: Add Ownable/Owned types
-In-Reply-To: <DG6AIA0QK77C.EKG7X4NBEJ00@kernel.org>
-References: <20260204-unique-ref-v14-0-17cb29ebacbb@kernel.org>
- <20260204-unique-ref-v14-1-17cb29ebacbb@kernel.org>
- <7uftlTZxNVxMw7VNqETbf9dBIWLrQ1Px16pM3qnAcc6FPgQj-ERdWfAACc5aDSAdeHM5lLTdSBZYkcOIgu7mWA==@protonmail.internalid>
- <DG6AIA0QK77C.EKG7X4NBEJ00@kernel.org>
-Date: Wed, 04 Feb 2026 17:06:50 +0100
-Message-ID: <87fr7gpk6d.fsf@t14s.mail-host-address-is-not-set>
+	s=arc-20240116; t=1770221586; c=relaxed/simple;
+	bh=WUOWSFpPSsBImUTgRBfJ0UFPVVpolQHRziYZCuY9ZB8=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=am9RFR3jcD8a9BuH27tU7tJZ6u8Eq4XMKmyXmKT68lxYujoim9ORBlKcv/84AEwqxsSm76GbgqD9ieDrWFl+rgXIurXL8AZ0OHBMrWNltZsnchzrsrnfPOj5YV/1iqjtRC9HxXQnC4oVqpobAX628/O5sYVe2XIWNiX55tQw9r8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id 1CFA99200B3; Wed,  4 Feb 2026 17:13:05 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id 16BDB92009C;
+	Wed,  4 Feb 2026 16:13:05 +0000 (GMT)
+Date: Wed, 4 Feb 2026 16:13:05 +0000 (GMT)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Niklas Cassel <cassel@kernel.org>
+cc: Manivannan Sadhasivam <mani@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
+    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+    =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+    Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+    Frank Li <Frank.Li@nxp.com>, 
+    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+    Randolph Lin <randolph@andestech.com>, 
+    Samuel Holland <samuel.holland@sifive.com>, 
+    Charles Mirabile <cmirabil@redhat.com>, tim609@andestech.com, 
+    Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/3] PCI: dwc: Clean up iATU index mess
+In-Reply-To: <aYCc1GpSr4k2HdHJ@ryzen>
+Message-ID: <alpine.DEB.2.21.2602041606040.12532@angie.orcam.me.uk>
+References: <20260127151038.1484881-5-cassel@kernel.org> <zdxpiisnc4eq5a26dlaelchri3vu4aoyndy2pnif2rotbiyj72@c3hbnd3cwubz> <aYCc1GpSr4k2HdHJ@ryzen>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 
-"Danilo Krummrich" <dakr@kernel.org> writes:
+On Mon, 2 Feb 2026, Niklas Cassel wrote:
 
-> On Wed Feb 4, 2026 at 12:56 PM CET, Andreas Hindborg wrote:
->> From: Asahi Lina <lina+kernel@asahilina.net>
->>
->> By analogy to `AlwaysRefCounted` and `ARef`, an `Ownable` type is a
->> (typically C FFI) type that *may* be owned by Rust, but need not be. Unlike
->> `AlwaysRefCounted`, this mechanism expects the reference to be unique
->> within Rust, and does not allow cloning.
->>
->> Conceptually, this is similar to a `KBox<T>`, except that it delegates
->> resource management to the `T` instead of using a generic allocator.
->>
->> This change is a derived work based on work by Asahi Lina
->> <lina+kernel@asahilina.net> [1] and Oliver Mangold <oliver.mangold@pm.me>.
->>
->> Link: https://lore.kernel.org/rust-for-linux/20250202-rust-page-v1-1-e3170d7fe55e@asahilina.net/ [1]
->> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
->
-> Given the From: line above, this needs Lina's SoB.
->
-> This patch was also originally posted by Abdiel and Boqun and I think we should
-> account for this. I mentioned this in a couple of previous versions already,
-> e.g. in [1]. I think we should account for this.
->
-> [1] https://lore.kernel.org/all/cc28d048-5e0f-4f0e-b0f2-1b9e240f639b@kernel.org/
+> > Series looks good to me. However, I'd prefer waiting for Maciej's testing before
+> > merging.
+> 
+> Maciej,
+> 
+> Any chance to get a Tested-by?
+> 
+> 6.19-rc8 is already out.
+> 
+> Even if they are fixes, it would be nice if it they could make it for 7.0.
 
-I had a question about this in the cover letter.
+ Hectic time here.  I've verified it now using the system I've originally 
+encountered the regression with.  No significant change in the kernel log 
+compared to the previous fix by Krishna, except for different IRQ numbers 
+assigned to devices (but that I reckon could be something else present in 
+the pci tree that isn't there in Linus's master), and the system seems to 
+boot correctly, so I do hope all is in order.
 
-It is my understanding that the SoB needs confirmation from the author
-if the code was changed. I changed the code and did not want to bother
-the original author, because it is my understanding they do not wish to
-be contacted. I did not want to misrepresent the original author, and so
-I did not change the "From:" line.
-
-I want to be clear that I want to submit this patch the correct way,
-whatever that is. I will happily take all the guidance I can get to find
-the correct way to represent the work of the original author(s).
-
-How would you prefer to account for the work by Abdiel and Boqun?
-
-Please advise about SoB and I will correct the series.
-
-
-Best regards,
-Andreas Hindborg
-
+  Maciej
 
