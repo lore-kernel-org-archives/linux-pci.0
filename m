@@ -1,37 +1,44 @@
-Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A22826ED45
-	for <linux-pci@vger.kernel.org>; Wed,  4 Feb 2026 02:14:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1D79286D5D
+	for <linux-pci@vger.kernel.org>; Wed,  4 Feb 2026 03:58:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770171267; cv=none; b=PtsrqoygzBQJRj/fNLVYVx+o0pwpskZbbrltAxSiAraflOLPFUs318Drq0ma6rBjc9LEUy0dMUzV0yYKpzKhvPvk0tWPpvRnxj/993owczwzmG5TWgXBIQGy/3NdxPLzTrlmFrwK19wyq3o4R0zIs4RVgiYxZJyvbrQCwzKsfIo=
+	t=1770177524; cv=none; b=Te+1KMp+5HwrWPozNBoIbaDoRTOetqB1j6HfvnRAjR7p+Vn0G3CLU8/gLVm2ph6I/TwvyDHKU7eDwPB2rdrSfIFkHJJmi+rd72xLz1dKQaCF5C+piyOktVYST0hKTy69g21zjCGYq+MtH09jgosO658zTiDBr+j6PBH9Pi2qTLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770171267; c=relaxed/simple;
-	bh=/qAFf1gzljlYZSC5d68iXf/E2f1XJBgbAiVcjtNdc2c=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:CC:References:
-	 In-Reply-To:Content-Type; b=X43x0O6ebHVjnlA/jwzUiPmt+8VgVEb5z84db5Z+P139682pViynGGGw1fl5hdU8lcYfl07DdaXAhEHENbA4enbq+uDA/KgA5GabWQU/rl1YVBAwre5UYC6TK/pYbYy4n6Koi8tKGhC46ErDsXsnU4ONnZEzXuIQuHj6skRpn/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
-X-ASG-Debug-ID: 1770171252-086e2306f756850001-0c9NHn
-Received: from ZXSHMBX3.zhaoxin.com (ZXSHMBX3.zhaoxin.com [10.28.252.165]) by mx1.zhaoxin.com with ESMTP id G9vEasgIBZXM3HYu (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Wed, 04 Feb 2026 10:14:12 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.165
-Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX3.zhaoxin.com
- (10.28.252.165) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Wed, 4 Feb
- 2026 10:14:11 +0800
-Received: from ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85]) by
- ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85%7]) with mapi id
- 15.01.2507.059; Wed, 4 Feb 2026 10:14:11 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.165
-Received: from [10.32.64.12] (10.32.64.12) by ZXBJMBX03.zhaoxin.com
- (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Wed, 4 Feb
- 2026 10:10:15 +0800
-Message-ID: <e4ac46d3-321f-4f9d-b327-0e16caabbb96@zhaoxin.com>
-Date: Wed, 4 Feb 2026 10:10:01 +0800
+	s=arc-20240116; t=1770177524; c=relaxed/simple;
+	bh=/LARrgaz3sLEL6bIdR7Aro2ZRcHqruv4O0cnYbwT8u8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=IMcHz1pueEZP8JJjEQS4gVoEKYn2Iv3Rk1pEJqcU2cUJNt5WtTLnIIgdC3OW4ahm6cyHsVCWrNNRNGOTN1AgUlD/clj2HsCsnhWBMi2rVCBZ7PdVk4Ci0zZd+59LPRKKMdlha/J2RoNb6skyXsVgSedu3atGFOWPzAJvTBfMHuQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=mdDoG5RJ; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="mdDoG5RJ"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=YcXajX8dhAEzeEVNdFd7X6DzWaasHvqoYbfacUyofqY=;
+	b=mdDoG5RJ3Pv0B+mibOUQkj0N3QoxPzUQjmkmEfweDHDVcplLELqnI2FGGfqf9OZKWIsdMggny
+	SCcIFNBBY25lV5ogIRjpgRkkH7AU+Kll26yEUGS4vW5tjsa0nZXZosx2CB3ZjmtRIqO0V/Y1cbw
+	VNcYhkmJdfO3NsOkeTKR1YQ=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4f5RLJ46jgzcZyp;
+	Wed,  4 Feb 2026 11:54:16 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id B4E4840363;
+	Wed,  4 Feb 2026 11:58:38 +0800 (CST)
+Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 4 Feb 2026 11:58:35 +0800
+Received: from [10.67.120.233] (10.67.120.233) by
+ kwepemn200012.china.huawei.com (7.202.194.135) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 4 Feb 2026 11:58:35 +0800
+Message-ID: <fd3d565d-829c-49f7-865c-559c6d35df8a@huawei.com>
+Date: Wed, 4 Feb 2026 11:58:34 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -39,219 +46,145 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
-Subject: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
-To: Lukas Wunner <lukas@wunner.de>
-X-ASG-Orig-Subj: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
-CC: Bjorn Helgaas <helgaas@kernel.org>, <mahesh@linux.ibm.com>,
-	<oohall@gmail.com>, <bhelgaas@google.com>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>, Przemek Kitszel
-	<przemyslaw.kitszel@intel.com>
-References: <20260123202140.GA84703@bhelgaas>
- <3af9f754-d282-485c-a3f2-49a230bfe143@zhaoxin.com>
- <aXydEn_lAbNROQKy@wunner.de>
- <1096398c-e883-4232-91f6-836fc508092d@zhaoxin.com>
- <aYBoP-B2E9fp_4YZ@wunner.de>
-In-Reply-To: <aYBoP-B2E9fp_4YZ@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Moderation-Data: 2/4/2026 10:14:10 AM
-X-Barracuda-Connect: ZXSHMBX3.zhaoxin.com[10.28.252.165]
-X-Barracuda-Start-Time: 1770171252
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://mx2.zhaoxin.com:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 9074
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -2.02
-X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.154010
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
+Subject: Re: [PATCH] PCI: Fix PCI bridge resource allocation when base exceeds
+ limit
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+CC: <bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
+	<shiju.jose@huawei.com>, <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+	<prime.zeng@hisilicon.com>, <fanghao11@huawei.com>, <shenyang39@huawei.com>
+References: <20260203023545.2753811-1-liusizhe5@huawei.com>
+ <cc4121b7-b99e-d7e0-8c20-8a2f0d3a0e2d@linux.intel.com>
+From: Sizhe LIU <liusizhe5@huawei.com>
+In-Reply-To: <cc4121b7-b99e-d7e0-8c20-8a2f0d3a0e2d@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemn200012.china.huawei.com (7.202.194.135)
 
 
+On 2026/2/3 23:14, Ilpo Järvinen wrote:
+> On Tue, 3 Feb 2026, Sizhe Liu wrote:
+>
+>> In pci_read_bridge_mmio_pref(), pci_read_bridge_mmio() and pci_read_bridge_io(),
+>> when the MEMORY_BASE value is greater than MEMORY_LIMIT,
+>> resource_set_range(res, 0, 0) is called to set both the start address
+>> and the size of the address of the PCI bridge resource to 0.
+>> However, the end address is later calculated as:
+>> res->end = res->start + size - 1
+>> As a result, the resource range becomes [0x00000000-0xffffffffffffffff]
+>> instead of the expected [0x00000000-0x00000000].
+> Hi,
+>
+> Thanks for the patch but your understanding on how resources addresses
+> work is not correct.
+>
+> A zero sized resource should have end at start - 1, just like
+> resource_set_range() sets it!
 
-=E5=9C=A8 2026/2/2 17:02, Lukas Wunner =E5=86=99=E9=81=93:
->=20
->=20
-> [=E8=BF=99=E5=B0=81=E9=82=AE=E4=BB=B6=E6=9D=A5=E8=87=AA=E5=A4=96=E9=83=A8=
-=E5=8F=91=E4=BB=B6=E4=BA=BA =E8=B0=A8=E9=98=B2=E9=A3=8E=E9=99=A9]
->=20
-> [cc +=3D Tony, Przemek (ice driver maintainers), start of thread is here:
-> https://lore.kernel.org/all/20260123104034.429060-1-LeoLiu-oc@zhaoxin.com=
-/
-> ]
->=20
-> On Mon, Feb 02, 2026 at 02:00:55PM +0800, LeoLiu-oc wrote:
->> The kernel version I am using is 6.18.6.
-> [...]
->> The complete log of the kernel panic is as follows:
+Hi,
+
+Thanks for your correction! I agree with you.
+
+Use [0x00000000-0xffffffffffffffff] to represent a zero-length
+
+resource address, even though it may look misleading.
+
+If the zero-length resource address is represented as 
+[0x00000000-0x00000000],
+
+the size returned by resource_size() would be 1, which is incorrect.
+
+>> This causes an exception in the subsequent resource claiming process,
+>> because the address range [0x00000000-0xffffffffffffffff] exceeds
+>> the range specified in the DSDT. The abnormal bridge triggers clipping
+>> when claiming resources, then the entire parent PCI bus address range
+>> becomes occupied. Other bridges on the same bus will report
+>> address conflicts during their claim process. The resource allocation
+>> may be degraded from 64-bit to 32-bit, or even worse, it fails.
 >>
->> [  100.304077][  T843] list_del corruption, ffff8881418b79e8->next is LI=
-ST_POISON1 (dead000000000100)
->> [  100.312989][  T843] ------------[ cut here ]------------
->> [  100.318268][  T843] kernel BUG at lib/list_debug.c:56!
->> [  100.323380][  T843] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
->> [  100.329250][  T843] CPU: 7 PID: 843 Comm: irq/27-pciehp Tainted: P   =
- W  OE     ------- ----  6.6.0-32.7.v2505.ky11.x86_64 #1
->> [  100.340793][  T843] Source Version: 71d5b964051132b7772acd935972fca11=
-462bbfe
->> [  100.359228][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/0=
-xc0
->> [  100.365877][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48 c=
-7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8 a1 4=
-3 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9 ff 0f 0b
->> [  100.385158][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
->> [  100.391024][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX: =
-0000000000000000
->> [  100.398781][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI: =
-ffff8897df5a32c0
->> [  100.406538][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09: =
-0000000000000003
->> [  100.414294][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12: =
-0000000000000000
->> [  100.422050][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15: =
-ffff888116507c28
->> [  100.429807][  T843] FS:  0000000000000000(0000) GS:ffff8897df580000(0=
-000) knlGS:0000000000000000
->> [  100.438511][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [  100.444891][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4: =
-0000000000570ee0
->> [  100.452647][  T843] PKRU: 55555554
->> [  100.456017][  T843] Call Trace:
->> [  100.459129][  T843]  <TASK>
->> [  100.461898][  T843]  ice_flow_rem_entry_sync.constprop.0+0x1c/0x90 [i=
-ce]
->> [  100.468663][  T843]  ice_flow_rem_entry+0x3d/0x60 [ice]
->> [  100.473925][  T843]  ice_fdir_erase_flow_from_hw.constprop.0+0x9b/0x1=
-00 [ice]
->> [  100.481078][  T843]  ice_fdir_rem_flow.constprop.0+0x32/0xb0 [ice]
->> [  100.487284][  T843]  ice_vsi_manage_fdir+0x7b/0xb0 [ice]
->> [  100.492629][  T843]  ice_deinit_features.part.0+0x46/0xc0 [ice]
->> [  100.498571][  T843]  ice_remove+0xcf/0x220 [ice]
->> [  100.503222][  T843]  pci_device_remove+0x3f/0xb0
->> [  100.507798][  T843]  device_release_driver_internal+0x19d/0x220
->> [  100.513667][  T843]  pci_stop_bus_device+0x6c/0x90
->> [  100.518417][  T843]  pci_stop_and_remove_bus_device+0x12/0x20
->> [  100.524110][  T843]  pciehp_unconfigure_device+0x9f/0x160
->> [  100.529463][  T843]  pciehp_disable_slot+0x69/0x130
->> [  100.534296][  T843]  pciehp_handle_presence_or_link_change+0xfc/0x210
->> [  100.540678][  T843]  pciehp_ist+0x204/0x230
->> [  100.544824][  T843]  ? __pfx_irq_thread_fn+0x10/0x10
->> [  100.549747][  T843]  irq_thread_fn+0x20/0x60
->> [  100.553978][  T843]  irq_thread+0xfb/0x1c0
->> [  100.558038][  T843]  ? __pfx_irq_thread_dtor+0x10/0x10
->> [  100.563130][  T843]  ? __pfx_irq_thread+0x10/0x10
->> [  100.567791][  T843]  kthread+0xe5/0x120
->> [  100.571594][  T843]  ? __pfx_kthread+0x10/0x10
->> [  100.575997][  T843]  ret_from_fork+0x17a/0x1a0
->> [  100.580403][  T843]  ? __pfx_kthread+0x10/0x10
->> [  100.584805][  T843]  ret_from_fork_asm+0x1a/0x30
->> [  100.589384][  T843]  </TASK>
->> [  100.592237][  T843] Modules linked in: zxmem(OE) einj amdgpu amdxcp
->> gpu_sched drm_exec drm_buddy nft_fib_inet nft_fib_ipv4 nft_fib_ipv6
->> nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct
->> nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 zhaoxin_cputemp
->> nf_defrag_ipv4 zhaoxin_rng snd_hda_codec_hdmi radeon rfkill
->> snd_hda_intel snd_intel_dspcfg irdma i2c_algo_bit snd_intel_sdw_acpi
->> ip_set i40e drm_suballoc_helper nf_tables drm_ttm_helper pcicfg(POE)
->> snd_hda_codec ib_uverbs sunrpc ttm ib_core snd_hda_core
->> drm_display_helper snd_hwdep kvm_intel snd_pcm cec vfat fat
->> drm_kms_helper snd_timer kvm video ice snd psmouse soundcore wmi
->> acpi_cpufreq pcspkr i2c_zhaoxin sg sch_fq_codel drm fuse backlight
->> nfnetlink xfs sd_mod t10_pi sm2_zhaoxin_gmi crct10dif_pclmul
->> crc32_pclmul ahci crc32c_intel libahci r8169 ghash_clmulni_intel libata
->> sha512_ssse3 serio_raw realtek dm_mirror dm_region_hash dm_log
->> dm_multipath dm_mod i2c_dev autofs4
->> [  100.674508][  T843] ---[ end trace 0000000000000000 ]---
->> [  100.709547][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/0=
-xc0
->> [  100.716197][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48 c=
-7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8 a1 4=
-3 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9 ff 0f 0b
->> [  100.735491][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
->> [  100.741367][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX: =
-0000000000000000
->> [  100.749137][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI: =
-ffff8897df5a32c0
->> [  100.756909][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09: =
-0000000000000003
->> [  100.764678][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12: =
-0000000000000000
->> [  100.772448][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15: =
-ffff888116507c28
->> [  100.780218][  T843] FS:  0000000000000000(0000) GS:ffff8897df580000(0=
-000) knlGS:0000000000000000
->> [  100.788934][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [  100.795329][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4: =
-0000000000570ee0
->> [  100.803099][  T843] PKRU: 55555554
->> [  100.806483][  T843] Kernel panic - not syncing: Fatal exception
->> [  100.812794][  T843] Kernel Offset: disabled
->> [  100.821613][  T843] pstore: backend (erst) writing error (-28)
->> [  100.827481][  T843] ---[ end Kernel panic - not syncing: Fatal except=
-ion ]---
+>> The related boot log is as follows:
+>> pci 0000:20:00.0: PCI bridge to [bus 21]
+>> pci 0000:20:00.0: bridge window [io  size 0x0000 disabled]: can't claim; no address assigned
+>> pci 0000:20:00.0: [io  0x0000-0xffffffffffffffff disabled] clipped to [io  0x0000-0xffff disabled]
+> pci_bus_clip_resource() should not touch IORESOURCE_DISABLED resources
+> nor zero sized resources. The problem seems to originate from
+> pci_claim_bridge_resources() and pci_claim_bridge_resource() which try to
+> claim such resources no matter what.
+>
+> I think pci_claim_bridge_resources() should check if IORESOURCE_DISABLED
+> is set and use continue, it already has check !r->flags which probably
+> worked prior to 8278c6914306 ("PCI: Preserve bridge window resource type
+> flags") but is no longer enough to decided if bridge window is valid or
+> not.
+>
+> Do you want to do that patch and test it? (I'm quite busy this week
+> myself.)
+No problem, I've seen your patch and I will test it later.
+>> pci 0000:20:00.0:   bridge window [io  0x0000-0xffff disabled]
+>> pci 0000:20:00.0: bridge window [mem size 0x00000000 disabled]: can't claim; no address assigned
+>> pci 0000:20:00.0: [mem 0x00000000-0xffffffffffffffff disabled] clipped to [mem 0x800000000000-0x8013ffffffff disabled]
+>> pci 0000:20:00.0: bridge window [mem 0x800000000000-0x8013ffffffff disabled]: can't claim; no compatible bridge window
+>> pci 0000:20:00.0: bridge window [mem size 0x00000000 64bit pref disabled]: can't claim; no address assigned
+>> pci 0000:20:00.0: [mem 0x00000000-0xffffffffffffffff 64bit pref disabled] clipped to [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
+>> pci 0000:20:00.0:   bridge window [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
+>> pci 0000:20:08.0: PCI bridge to [bus 22]
+>> pci 0000:20:08.0: bridge window [io  size 0x0000 disabled]: can't claim; no address assigned
+>> pci 0000:20:08.0: [io  0x0000-0xffffffffffffffff disabled] clipped to [io  0x0000-0xffff disabled]
+>> pci 0000:20:08.0: bridge window [io  0x0000-0xffff disabled]: can't claim; address conflict with PCI Bus 0000:21 [io  0x0000-0xffff disabled]
+>> pci 0000:20:08.0: bridge window [mem size 0x00000000 disabled]: can't claim; no address assigned
+>> pci 0000:20:08.0: [mem 0x00000000-0xffffffffffffffff disabled] clipped to [mem 0x800000000000-0x8013ffffffff disabled]
+>> pci 0000:20:08.0: bridge window [mem 0x800000000000-0x8013ffffffff disabled]: can't claim; no compatible bridge window
+>> pci 0000:20:08.0: bridge window [mem size 0x00000000 64bit pref disabled]: can't claim; no address assigned
+>> pci 0000:20:08.0: [mem 0x00000000-0xffffffffffffffff 64bit pref disabled] clipped to [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
+>> pci 0000:20:08.0: bridge window [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]: can't claim; address conflict with PCI Bus 0000:21 [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
+>> pci 0000:20:09.0: PCI bridge to [bus 23]
+>> pci 0000:20:09.0: bridge window [io  0x0000-0x0fff]: can't claim; address conflict with PCI Bus 0000:21 [io  0x0000-0xffff disabled]
+>> pci 0000:20:09.0: bridge window [mem 0x800003000000-0x8000048fffff 64bit pref]: can't claim; address conflict with PCI Bus 0000:21 [mem 0x800000000000-0x8013ffffffff 64bit pref disabled]
 >>
->> The reason for this kernel panic is that the ice network card driver
->> executed the ice_pci_err_detected() for a longer time than the maximum
->> waiting time allowed by pciehp. After that, the pciehp_ist() will
->> execute the ice network card driver's ice_remove() process. This results
->> in the ice_pci_err_detected() having already deleted the list, while the
->> ice_remove() is still attempting to delete a list that no longer exists.
->=20
-> This is a bug in the ice driver, not in the pciehp or dpc driver.
-> As such, it is not a good argument to support the extension of the
-> timeout.  I'm not against extending the timeout, but the argument
-> that it's necessary to avoid occurrence of a bug is not a good one.
->=20
-> You should first try to unbind the ice driver at runtime to see if
-> there is a general problem in the unbind code path:
->=20
-> echo abcd:ef:gh.i > /sys/bus/pci/drivers/shpchp/unbind
->=20
-> Replace abcd:ef:gh.i with the domain/bus/device/function of the Ethernet
-> card.  The dmesg excerpt you've provided unfortunately does not betray
-> the card's address.
->=20
-> Then try to rebind the driver via the "bind" sysfs attribute.
->=20
-> If this works, the next thing to debug is whether the driver has a
-> problem with surprise removal.  I'm not fully convinced that the
-> crash you're seeing is caused by concurrent execution of
-> ice_pci_err_detected() and ice_remove().  When pciehp unbinds the
-> driver during DPC recovery, the device is likely inaccessible.
-> It's possible that ice_remove() behaves differently for an
-> inaccessible device and that may cause the crash instead of the
-> concurrent execution of ice_pci_err_detected().
->=20
-The fundamental cause of this problem lies in the fact that the network
-driver took longer than the maximum time (4 seconds) set by pcie_ist()
-for the DPC to recover when executing ice_pci_err_detected(). This
-forced the execution of pciehp_disable_slot() which should not have been
-executed, while pcie_do_recovery() continued to execute. This situation
-led to a competition between the execution processes of
-pciehp_disable_slot() and pcie_do_recovery(), resulting in the
-unavailability of the device and the possibility of kernel crashes.
-
-> It would also be good to understand why DPC recovery of the Ethernet
-> card takes this long.  Does it take a long time to come out of reset?
-> Could the ice driver be changed to allow for faster recovery?
->=20
-Based on the current situation, it is observed that the execution of
-ice_pci_err_detected() in the ice network card driver takes a very long
-time, which is intolerable for the synchronization protocol between the
-PCIe hotplug driver and the DPC recovery.
-
-Yours sincerely,
-LeoLiu-oc
-
-> Thanks,
->=20
-> Lukas
-
+>> Solution:
+>> A comment in pci_read_bridge_mmio_pref() states:
+>> /*
+>>   * Some bridges set the base > limit by default, and some
+>>   * (broken) BIOSes do not initialize them.  If we find
+>>   * this, just assume they are not being used.
+>>   */
+>> When the base is greater than the limit, a proper fix is to set the
+>> resource flag to IORESOURCE_UNSET or IORESOURCE_DISABLED while keeping
+>> the start and end addresses as 0. This prevents the clipping process
+>> from being triggered incorrectly.
+>>
+>> Fixes: 8278c6914306 ("PCI: Preserve bridge window resource type flags")
+>> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
+>> ---
+>>   drivers/pci/probe.c | 3 ---
+>>   1 file changed, 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 41183aed8f5d..561f2420d9eb 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -429,7 +429,6 @@ static void pci_read_bridge_io(struct pci_dev *dev, struct resource *res,
+>>   		if (log)
+>>   			pci_info(dev, "  bridge window %pR\n", res);
+>>   	} else {
+>> -		resource_set_range(res, 0, 0);
+>>   		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+>>   	}
+>>   }
+>> @@ -455,7 +454,6 @@ static void pci_read_bridge_mmio(struct pci_dev *dev, struct resource *res,
+>>   		if (log)
+>>   			pci_info(dev, "  bridge window %pR\n", res);
+>>   	} else {
+>> -		resource_set_range(res, 0, 0);
+>>   		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+>>   	}
+>>   }
+>> @@ -511,7 +509,6 @@ static void pci_read_bridge_mmio_pref(struct pci_dev *dev, struct resource *res,
+>>   		if (log)
+>>   			pci_info(dev, "  bridge window %pR\n", res);
+>>   	} else {
+>> -		resource_set_range(res, 0, 0);
+>>   		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+>>   	}
+>>   }
+>
