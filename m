@@ -1,133 +1,165 @@
-Received: from mail-wm1-f73.google.com (mail-wm1-f73.google.com [209.85.128.73])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010017.outbound.protection.outlook.com [52.101.193.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC643B8D6B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Feb 2026 10:37:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.73
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770201436; cv=none; b=FDTUyXMsYTx9bJEGxFkWidsB/c02rwFxbu7I1ShtMjdOFS8K1r9SyNylHTTBWVa4Go8qdc1a+XkPqT8swaLfGyxISA4E6MKUergBxH8V8qoOdnHvRhE6UBVktogQyz8myelTcNwdEtRc7RXorcoY+r+uRdjh6sQqsxdzkMFSCSo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770201436; c=relaxed/simple;
-	bh=x23D0hsv+uFoQs4cpH6jEoI5szd/yJs94L/Z2zjXtI4=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=Qsu4uVkR6lsSRMWqSmS3IZKo+Bap9xmym+E2nj/Dn0cbhHYnyRCagnd1M42rLlk5UH0FDd3LGSpK1yRsL0Qt3iKLx3H8M8+OTiOboMDX6+9Z2ccmq9XNFYTdvMEfh0PPuZrOiIjjPMEVpnw87qKZEsbEtqGORAvJ0CAjIzB37kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=krTc9oMJ; arc=none smtp.client-ip=209.85.128.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5481938F255;
+	Wed,  4 Feb 2026 10:49:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.17
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770202185; cv=fail; b=nMuzJKV7gMnqgSzVGqlOno2/7HgQO1cVefQCYbfwm1U0Xuy2NaAKvn1Cbn/MrOLmCaYOCbHXESS/0GSiOFEEQsdPPELK+jb3LGeBD5ncqTjXvk9ezflef+awY2RP9ahh2d6YuYANiYMRZ4mC1HN7wLHMo74IUgpGk/XBcoA/zJ4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770202185; c=relaxed/simple;
+	bh=Z7Uicl9V30UGzEqdRsf758amgl1VB2li6MAWs8IUjfo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TPC1IgSSX12l14tWNH1ODu447FnUHT3oexz++7A/4rQQsK3VcgYSV4vtEI2CTb91CmpscBP/cJgj/5+y7sEt3JaFT+pPpalwP8Yg2oZxR0cWlkENtboXJbf6h6lB2oaRNUmIiUIK5VBYLNd5fn01yLSuH47VH9BnJutrVNFpfBI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=NKekl8n9; arc=fail smtp.client-ip=52.101.193.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="krTc9oMJ"
-Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-47edfdc6c1aso54115235e9.3
-        for <linux-pci@vger.kernel.org>; Wed, 04 Feb 2026 02:37:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1770201434; x=1770806234; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=80je5TC4fR0wUqvJug9PMXJE5OH/OTksMBklHWdOTcQ=;
-        b=krTc9oMJCQH87liNS9URz/0fG/qIHLhcD1DraG4MDBGtdOdXYGL050vFYzT6xvIZFO
-         m6TsUVE/m3asNekGU5z5QnvhRwsj1YCcsKGr/bocmWoIu2bbqneIyqHQgD0OSFDIBY53
-         /5S/l0d6e6IE/EnAgyAbE6EavKPLbGrpldQiyxgJ15pFenLhMps4XVGIEqhco2NRgEo8
-         RjgAdMWjo6VXfSFnwcXqr0ef9WrmYnj5HYCWhPzfOT506pTTCL3GJuDeknSMxrNytrzu
-         S15rlrbguYz5GMZ/lRaoIjyzUn7AZysCU1zaeGJ3dpiUuvAYV0kA+Ih+XgH0JuUUzkwL
-         g6eA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770201434; x=1770806234;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=80je5TC4fR0wUqvJug9PMXJE5OH/OTksMBklHWdOTcQ=;
-        b=ILuTgNfBuzH8LZeFfZ48PJN3gM4ec5YZ0/A15BSnb1dyRQA9KyBZru04jgDZdIrW7i
-         ofdUv7bx4VA1NF7w70wt1YD1/LNzvxnQEbOeuEwtCGRHc3Gixnhrbxuyymba+iZwzYQ3
-         p16haqLCQMVDRdLZrDqYmJ407QFjz9MYDdbyP+4HKY2tBRbjZJ5qQemxvpo/EifH3T90
-         mvQR4O4LxnemkLfA5Wn0IQ/vjWD896IaRpxeTuGHzJpJldXxmzXJ5DjdXi4080HHAiN4
-         Y3jbcmzKHwKw1TEVyvQ3sabEks97lNiIHVIbrsE8fSKzNfrZXiVKobIMTPu4jLo/hAH9
-         rM1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCU4QP6Z3U26O1GyS8tn/8EIiTYeKXBLL4BtzxcBKyX1a8wKA+n71pe3TlWPuJrtA8AIyMBhoZJCUf0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzJWRUQUhQPQfEAgOSPFwZQPxDTgQpYpcOOnKls9gv6tjxD+aGH
-	uDUvuT1vHCIE0zzhGXWOCtxNxiFnloPX+NGNSpMhqfe46+KH306N8n7YQDsbUOAQevd/vW8ZjM0
-	AiZUPwtpUaoK5P/ByKA==
-X-Received: from wmxa16-n2.prod.google.com ([2002:a05:600d:6450:20b0:47e:e20e:e9a5])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:6087:b0:483:a21:7744 with SMTP id 5b1f17b1804b1-4830e977f1cmr30901995e9.26.1770201434095;
- Wed, 04 Feb 2026 02:37:14 -0800 (PST)
-Date: Wed, 4 Feb 2026 10:37:13 +0000
-In-Reply-To: <20260202-io-v1-0-9bb2177d23be@nvidia.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="NKekl8n9"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cIgoHNdMteLFJQxCVe0AnwYxyk/iqgks2JaWa6BAOnimr3ZUsvmM9RzxGo7RGAVWMdCQ6eGfIktwH8SusOe7Zd0AaZX4g83qodyNinleOtoik0x28tPM2yhy7TwdBl+qPEr3KRQj5XhNnyidWAoNDTjQGqOYxFSCTzvOTRUsnti7TpQVH7RX+zEBjQ7PbWnlifCg6ctqpYWKCg/AI9XpNEDKrTrM0iho/LC9E8QJ655GJjkt8HLe3u1MnI72dohhSlNNnYFz1ZkEpIvjwg3nvzja3dSgEy6qAtXqk8idjTdtK0WquEoqiouvzvi0kW706TaJae850GHwzW9WQ/rn5Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2h7hhDHPEmy+A9N1DoRQUHnH9U1oD1eXKY8/AAMjJ3s=;
+ b=FIzHTIgRFVM6umwD+6B4vxSpsy6dq+H/QWDZv5Od5P47Kqt6eXxshsjx0ih9Yi6/ii/uOIzn2nmL8hO0v39zGxZk3G5pld8JuvRF+S2avyN+OK9AY2F9x6HdYTA+U51gH5yEjw0s2LyOOQn4SbHRlm72QjXKY5luV3TEpsUMudFCOJjChcc2W6U0Uldtz1fViESZ0CpQdTjSQyuC74FmZ2U6JMdcrByUu6Pvszs+hJRB+A3FP5WfUyBCe5jN45HW4hDodJ1pvq8WwmOr7/ZhT5+1Qmr8WNx+Ng55C/TKIwrmmlVOx5TUfzwFXdKhtRpRphH8/RgqyB5nzZt8gQmhSg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2h7hhDHPEmy+A9N1DoRQUHnH9U1oD1eXKY8/AAMjJ3s=;
+ b=NKekl8n9yFpaSHbYs6DBb6Zdg7J+/4KR+4NlHE8H1rZL5DIn3v8/E/IFphwdNpOQEEHtxuaMNJ1pFW7QzKbHWq5J0bVv+IJcvCd//B7hIFl9n85b5sI7r32qX9w1QwE44XzMYaTQQ9CCnZg/QJs7BYR9BR6NNIWVVSc2TLbtB8M=
+Received: from MW4PR03CA0016.namprd03.prod.outlook.com (2603:10b6:303:8f::21)
+ by DS7PR12MB6264.namprd12.prod.outlook.com (2603:10b6:8:94::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.12; Wed, 4 Feb
+ 2026 10:49:42 +0000
+Received: from CO1PEPF00012E80.namprd03.prod.outlook.com
+ (2603:10b6:303:8f:cafe::5a) by MW4PR03CA0016.outlook.office365.com
+ (2603:10b6:303:8f::21) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9587.12 via Frontend Transport; Wed,
+ 4 Feb 2026 10:49:42 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
+Received: from satlexmb08.amd.com (165.204.84.17) by
+ CO1PEPF00012E80.mail.protection.outlook.com (10.167.249.55) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9587.10 via Frontend Transport; Wed, 4 Feb 2026 10:49:41 +0000
+Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Wed, 4 Feb
+ 2026 04:49:41 -0600
+Received: from xhdapps-pcie2.xilinx.com (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.17 via Frontend
+ Transport; Wed, 4 Feb 2026 02:49:39 -0800
+From: Devendra K Verma <devendra.verma@amd.com>
+To: <bhelgaas@google.com>, <mani@kernel.org>, <vkoul@kernel.org>
+CC: <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
+	<Devendra.Verma@amd.com>
+Subject: [PATCH v10 0/2] Add AMD MDB Endpoint and non-LL mode Support
+Date: Wed, 4 Feb 2026 16:19:31 +0530
+Message-ID: <20260204104933.33179-1-devendra.verma@amd.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260202-io-v1-0-9bb2177d23be@nvidia.com>
-Message-ID: <aYMhWUTL_7c1gmrO@google.com>
-Subject: Re: [PATCH 0/6] rust: io: turn IoCapable into a functional trait
-From: Alice Ryhl <aliceryhl@google.com>
-To: Alexandre Courbot <acourbot@nvidia.com>
-Cc: Danilo Krummrich <dakr@kernel.org>, Daniel Almeida <daniel.almeida@collabora.com>, 
-	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>, 
-	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
-	Andreas Hindborg <a.hindborg@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
-	Bjorn Helgaas <bhelgaas@google.com>, 
-	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, driver-core@lists.linux.dev, 
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, Zhi Wang <zhiw@nvidia.com>, Lyude Paul <lyude@redhat.com>, 
-	Eliot Courtney <ecourtney@nvidia.com>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF00012E80:EE_|DS7PR12MB6264:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4c888f6f-78a7-40b0-20cb-08de63db1a24
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|36860700013|82310400026;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?N46w5+xl1D/RQ19fffNmnEXIPrux9yzebAY20ylQcUOE/eeYWkZmpRhT3mrA?=
+ =?us-ascii?Q?kErFJKCY3nyzf939WaJii+Xz2APzN1uZcPpnRtc4XdxJeBz6D6uzff4dsmf7?=
+ =?us-ascii?Q?LjQKQfQcz+BUJrfbVIP0WggYNX7pKP/ejz1GSski8e3JjVnpnGUwER7Z2H/5?=
+ =?us-ascii?Q?iiwrjWmzdUReJjHLyW94T+K+FCnkJDRx9E7kC8YOky/eW3aZL3uYNBcijROS?=
+ =?us-ascii?Q?k2I86fF/h9u84JQMv4KqYH4NiKYGAHilVoUWSPr0+IVo5C2BaPI/O7xNiR4+?=
+ =?us-ascii?Q?WEjwxAs4UFqWAOxlh6je8yF4Gf39OhFHTw2E8oD9KIv5GPo7tXRBI2EFXifl?=
+ =?us-ascii?Q?FSIitnyONlrw8khg8b/A7jbohFwzgzXEpgKbzXCbZSbbSPpvMDC1ALAre6Ew?=
+ =?us-ascii?Q?UaVBT2iMoGqt/pOgBxTsoxPXYcNvCnSGHO4M5n4zv3oDKG5twV8QyI5RhnsE?=
+ =?us-ascii?Q?PCN5zkdAzr8dgRQ+aSq+3Ll87UHrLLfHxulWrP1gRoRFAeGm9+PCvC0rzUMn?=
+ =?us-ascii?Q?Q4l0PcE+zeqJeobg5rd6uWuf53+Ii5OZpjr9wN/8nn5K/CLh+I2ujAoYxkgq?=
+ =?us-ascii?Q?tuJFYZWPAhxpGpClVqSxfPZI6gnWqophur1d0G3I1gJoXXvhTlupaGKmXdBJ?=
+ =?us-ascii?Q?NECgTIscw0+6iyWayomnhmADNYhCE1Sl2/i6L+0bHYjv0UMVgP8stzeO/nx0?=
+ =?us-ascii?Q?R7yZEozBVwrccd1EGDWJ0lwRi0hwaOB2Ih7ycsQ6gMMLJiKEwMOeUa0QMzT6?=
+ =?us-ascii?Q?Zw6MCamQuZKKsN1mkzoOB6wN8NIUPpwK/UU34C029pc5WJEkgD/LGWVN+WzC?=
+ =?us-ascii?Q?ZtqFU5wHLeGgRih+ikjT/T0OcyLwkxn6eT0v4zk8CxKifpVhQDAjdNfHj9Yw?=
+ =?us-ascii?Q?Rua+cGrwc8U1S0S2+0UvK3/42BWEYAAxU0KFBmx1UF14ozsk3Dae0AGPplpd?=
+ =?us-ascii?Q?gmn8vR39T1yODpHH/j7jeyMSuNkkzh/isVbUWHDMmAsmNP+9p7vSE/wUOrgU?=
+ =?us-ascii?Q?/Hnieuu2KRjvrFqTaYlq9p7IIiFnB0O9AdeRA1fanKlilKVuJfmwBuKcD0Ct?=
+ =?us-ascii?Q?O3Mh17wS+Y5s84jGdmDCOEU+r5oxIdUvHhX5UxMAiVb8GAJVuLp0Z9opakHP?=
+ =?us-ascii?Q?/pO6Cr/fAVCzI5b2C8BPhQf/KtYN0r/HEGshfaehe8jhEv1/hKYUfX2mJtku?=
+ =?us-ascii?Q?1eiiiGG/9DS0cEhWiMu7SKqi3XEqA6SGxNFMV90+EgU7Luex3OmhaqdJ8OTr?=
+ =?us-ascii?Q?mNDW04i5tKsvQfuMDs0okBhDz38G3YZqfxAnedcyOpusevYalWKHx/drPo+V?=
+ =?us-ascii?Q?tqt3ZISmYWj11dEWaOXp3KKVWLnF3XmDVdPe4/+8rrfvYLC4MfmuoxMafI6P?=
+ =?us-ascii?Q?0lPCMb0IjB7dMhY420ruz4Csu4vO7wvntVq/EWTBtx6x/0c9m72c+wH2oJL8?=
+ =?us-ascii?Q?gBYAamW3EbDoqVW41RxAJptB5j7gwIxw7/XUzgRT2y9QCA1vez6k6/dB+OPl?=
+ =?us-ascii?Q?SGECanyIKZnaO27LdblxNdBtQFtPjZJpP8sc+xPYmY6HI+D9QPwKh6dUCTYG?=
+ =?us-ascii?Q?udHhXPRXaFvGnOsolt0o+4eAvBlp/dFPUO/p/aXJfmSnipQGTAKqzq+8utYW?=
+ =?us-ascii?Q?y3KrjHsUmGshcis9WMwRgbgtXv39oVxoF9Ak886V/SqHtlly4tytBpf82jNr?=
+ =?us-ascii?Q?L2R0yQ=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(376014)(36860700013)(82310400026);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	WnavjLcwBw2G0RvQfPlIHcRuwRdmi8A+6utR6/R/d+vdbWe/3ThQnZ2mZd/hjIZ+wStihBa2RtwMo6Z6YMZnT0QN6QYX+KYR3Hzhytn6Y4cG35Udpkx9ETY2/M7BkiDE/E6SQHCu4OBW2XTWb5TjOks8aWZBW8Z1MaOdKY6ObUrhR66o02S939yD+1Z7lu0qMtGFOGwEdFXb3IQstqZ9oY0qz4K45bb88pcUSLAjTUjU2jw9PCwtkmIxZauQHpFdLu7VSnHExpaPvaEo/aJSv1/JKFJUnQNoxpFm09TGAWNa/mKyxEHkhuKBE9rtRgaHfCXYm7NSoXu8H+CrIrMtSXLvvMASvRUB65D5f1ubPNXPbZvL5wSENXtIGBLGc0A7d10xeJi7CER+54Hr917L03idbDiFqrK7NKou4JgRtxlxFLEXF71ZS0FDgqkhMnOP
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Feb 2026 10:49:41.9311
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4c888f6f-78a7-40b0-20cb-08de63db1a24
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CO1PEPF00012E80.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6264
 
-On Mon, Feb 02, 2026 at 05:12:59PM +0900, Alexandre Courbot wrote:
-> `IoCapable<T>` is currently used as a marker trait to signal that the
-> methods of the `Io` trait corresponding to `T` have been overridden by
-> the implementor (the default implementations triggering a build-time
-> error).
-> 
-> This goes against the DRY principle and separates the signaling of the
-> capability from its implementation, making it possible to forget a step
-> while implementing a new `Io`.
-> 
-> Another undesirable side-effect is that it makes the implementation of
-> I/O backends boilerplate-y and convoluted: currently this is done using
-> two levels of imbricated macros that generate unsafe code.
-> 
-> This patchset fixes these issues by turning `IoCapable` into a
-> functional trait including the raw implementation of the I/O
-> accessors for `T` using unsafe methods that work with an arbitrary
-> address, and making the default methods of `Io` call into these
-> implementations after checking the bounds.
-> 
-> This makes overriding these accessors on all I/O backends unneeded,
-> resulting in a net -90 LoCs while avoiding a violation of the DRY
-> principle and reducing (and simplifying) the use of macros generating
-> unsafe code.
-> 
-> Patch 1 adds the `io_read` and `io_write` unsafe methods to `IoCapable`,
-> provides the required implementations for `Mmio` and `pci::ConfigSpace`,
-> and make the default I/O accessors of `Io` call into them instead of
-> failing.
-> 
-> Patches 2 to 4 get rid of the `_relaxed` variants we had in `Mmio`,
-> since these are not usable in code generic against `Io` and makes use of
-> the macros we want to remove. They are replaced by a `RelaxedMmio`
-> wrapper type that implements the required `IoCapable`s and is thus
-> usable in generic code.
-> 
-> Patches 5 and 6 remove the overloaded implementations of the `Io`
-> methods for `pci::ConfigSpace` and `Mmio`, respectively, while also
-> deleting the macros that have become unused.
-> 
-> There is more work coming on top of this patchset (notably the
-> `register!` macro with proper I/O), but I wanted to send this work first
-> as it stands on its own IMHO and is more digestible from a review
-> perspective.
-> 
-> The base for this patchset is `driver-core-testing`.
-> 
-> Cc: Zhi Wang <zhiw@nvidia.com>
-> Cc: Lyude Paul <lyude@redhat.com>
-> Cc: Eliot Courtney <ecourtney@nvidia.com>
-> 
-> Signed-off-by: Alexandre Courbot <acourbot@nvidia.com>
+This series of patch support the following:
 
-Overall looks great!
+ - AMD MDB Endpoint Support, as part of this patch following are
+   added:
+   o AMD supported device ID and vendor ID (Xilinx)
+   o AMD MDB specific driver data
+   o AMD specific VSEC capabilities to retrieve the base of
+     phys address of MDB side DDR
+   o Logic to assign the offsets to LL and data blocks if
+     more number of channels are enabled than configured
+     in the given pci_data struct.
 
-With the `mmio.relaxed().write(_)` syntax suggested in the thread on
-patch 3, this is acked by me.
+ - Addition of non-LL mode
+   o The IP supported non-LL mode functions
+   o Flexibility to choose non-LL mode via dma_slave_config
+     param peripheral_config, by the client for all the vendors
+     using HDMA IP.
+   o Allow IP utilization if LL mode is not available
 
-Acked-by: Alice Ryhl <aliceryhl@google.com>
+Devendra K Verma (2):
+  dmaengine: dw-edma: Add AMD MDB Endpoint Support
+  dmaengine: dw-edma: Add non-LL mode
+
+ drivers/dma/dw-edma/dw-edma-core.c    |  35 +++-
+ drivers/dma/dw-edma/dw-edma-core.h    |   1 +
+ drivers/dma/dw-edma/dw-edma-pcie.c    | 220 +++++++++++++++++++++++---
+ drivers/dma/dw-edma/dw-hdma-v0-core.c |  65 +++++++-
+ drivers/dma/dw-edma/dw-hdma-v0-regs.h |   1 +
+ include/linux/dma/edma.h              |   1 +
+ 6 files changed, 301 insertions(+), 22 deletions(-)
+
+-- 
+2.43.0
+
