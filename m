@@ -1,53 +1,53 @@
 Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2381330B3B
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EAD5330B3B
+	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:26:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770326769; cv=none; b=pdSl/MdA3CKc7XI4PLY0WsHBAwGoZr58ykx565YNuxuEW3DLczgG+eJzpSvQrXq2xqskYn8KSleSViSis7Y5vu0Ksh5x/HegoMl/cJuVQQnG69zx4daFb1vx78PTlH7WzsBFiHtSg/V93foJKmK0X60rIa8S1e1/TrWiBYufXSM=
+	t=1770326770; cv=none; b=pPSie6+bIndx2JD8kKbBt4NhR2TLsvkdLFNRxfk0vatObWIsDyvvAY125Yw3qr/CAcvMKKHrquCnGKHWLvOpAkoj6DfhSK1hJQaPbLByLNOVZAqXqRQHEnjNzAfgGF4dRKnoxnRt2Q9yxkjAiSH8g8IyheuHO+y8zr4gSqHaeHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770326769; c=relaxed/simple;
-	bh=OY96lECJOiQb2BGaO8ulmha0l3MyUNsCXqUAmjSSjg4=;
+	s=arc-20240116; t=1770326770; c=relaxed/simple;
+	bh=F0UnsJzUDxr49j3JuWF675M03CqrIDw+/8P3bEqJp1E=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UlcL86vT5/7H8Y3NZtbix4VQ+G8e9yJM8/IKJjYofsbK2jpCeH1lAGZIv90Vk3o65Q/5B7pi9+ffoyMwolt8y0O+UH3SBGhXafgR5cFkAtSzBniDhqzDuyWhi6FR5ndqvn5ZPfZdyiHtXFcrqh4ieEo1THud1YE7pJom0SRPh/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=FfMv3mIq; arc=none smtp.client-ip=67.231.153.30
+	 MIME-Version:Content-Type; b=f+x4r2EZ9cAafW1Xl6nXQuQbqrPK7r6PyGGfyFa7TigeFIS6BwPYLf8DzRtHyYRFi8Zj/0W0H9ySm698mQiff96GBJRTAQU4T2Pz7mTdhcpMgDNUj9bGnuclr6R0zykY5J6z+woiw/q4DF5ufLzFhq93tybEyg9Cfv2YiJO7ra4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=LDEIhll3; arc=none smtp.client-ip=67.231.153.30
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="FfMv3mIq"
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="LDEIhll3"
 Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 615JBUFK082580
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2026 13:26:07 -0800
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 615JBUFM082580
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2026 13:26:09 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=EdngCfmiK0EmwfWo/Gj5CK7FdoZnGdb1UT8xkPl0bRo=; b=FfMv3mIqDfib
-	SLGiE8WG/EdPYNYP5Zt0hIrgWBoS7ylSfX5bUmz6mb4hJSdz78qR8aVuvHGg8ENg
-	JoWUm6UFRVX3h0fsTbebI8WSNSiAzaAEdZoY38GRV5IWdGGLiHroTdqyiOiLbYZJ
-	RmvVuxZa70q2FM+phE1elgmdFSGsCjJzHDsI+lJV9C+Q9+EeLuDsxGHwm2ROaavj
-	G3RYNLmZuFYPIS/GZzlGmSs7ywXKxBOYZeGu+ccI+CCpN55wl0+Vht/WGMOi3sys
-	+5TAs3jxLHi0jl+HEu26bSw7AhE/GYQ6oPLo0DEejqUV/xAdEh5lgeJhu2FLdoqs
-	/+mYJ/+YNA==
+	 bh=lqUi4UsKsfoN9+YSJcgu5okJspYhsg4nd7i5pVngzWM=; b=LDEIhll3izfb
+	nFEcux1fnLUthOdgVh5CD1V2aPgDTmIB2nyQnG5LEfrfS/33xXoM9zjnFfX1e59i
+	mnMVO79rmRbCVaTE3FebC0tI00o5fB8+bUEts9ytOz2mSkThSG3nQkSpRdecoY6M
+	KDbwc29Jd4v5L3DZ3u9gsfJC7whtM6rolKaOUefCnj17x83CAgpgzg4B8US0HHGa
+	TZ4ioL5P9qas5EGiZcrCE2yI/E3D8ERshHhBg4yDCy5QUp5G4UWDg779VHtJomwz
+	4wGFiLuya3ED4F+7cxXtrfirfcJjJrnEu+/WD1pGhfc2yTwBCO/nB9pcaZn+oyFr
+	ZcvPTv988g==
 Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c504t2m0a-11
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c504t2m0a-13
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:26:07 -0800 (PST)
-Received: from twshared13080.31.frc3.facebook.com (2620:10d:c0a8:1b::8e35) by
+	for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:26:08 -0800 (PST)
+Received: from twshared13080.31.frc3.facebook.com (2620:10d:c0a8:1b::2d) by
  mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.2.2562.35; Thu, 5 Feb 2026 21:26:02 +0000
 Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
-	id 4972572EC9D0; Thu,  5 Feb 2026 13:25:49 -0800 (PST)
+	id 4D36172EC9D2; Thu,  5 Feb 2026 13:25:49 -0800 (PST)
 From: Keith Busch <kbusch@meta.com>
 To: <linux-pci@vger.kernel.org>, <helgaas@kernel.org>
 CC: <alex@shazbot.org>, <lukas@wunner.de>, <dan.j.williams@intel.com>,
         <guojinhui.liam@bytedance.com>, <ilpo.jarvinen@linux.intel.com>,
         Keith Busch
 	<kbusch@kernel.org>
-Subject: [PATCHv3 3/4] pci: remove slot specific lock/unlock and save/restore
-Date: Thu, 5 Feb 2026 13:25:32 -0800
-Message-ID: <20260205212533.1512153-4-kbusch@meta.com>
+Subject: [PATCHv3 4/4] pci: make reset_subordinate hotplug safe
+Date: Thu, 5 Feb 2026 13:25:33 -0800
+Message-ID: <20260205212533.1512153-5-kbusch@meta.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260205212533.1512153-1-kbusch@meta.com>
 References: <20260205212533.1512153-1-kbusch@meta.com>
@@ -60,278 +60,183 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: 1zYNJIxl-TaclE2nXuJjwRmpuxvMk4oZ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA1MDE2MyBTYWx0ZWRfX3zDKrKXeCCD1
- 3ZhyhA+nRbzZK9/nDDeoahH6+QktLG764F2hk6RSY7sJJ4S61qpbAf10GZcSpX2berKEUpIvDei
- woo1WypOOo703KI/Bh3POsjIZVjsoK4/vLkX33WEBgTvaHPYAcc23XOzm29wa3LHzOxNAM0j8Ls
- 9IBVAb6GdHvDqDWwN3fFuX7tmWWRnS74G3f6ubukJNwM8j0BZO/q04aRUt7a5O+hlfCfemvEczb
- m4RIuWPIysdE5sIfeiCCgRSx3pKRhBYgjfYvDcPCaN5n+ZznY1RJ7s3sj5ZKM9rBvn0juF8JoVY
- 89kViMkctErvH+pZYQQY1sASAPwxPIoZWoDojEEyzWgvXVU06L1nUIyBf8Oq/KwR3IbjPiAN8Eh
- Qvroa6P/0u0JUed6m7NffdIyLwEkr7u7Y6IzdZW7KuVCQL66yiO8uGC0vTk8qhXY+D/0RQPInMS
- 3CVpy16YRECfB7XDp7w==
-X-Proofpoint-GUID: 1zYNJIxl-TaclE2nXuJjwRmpuxvMk4oZ
-X-Authority-Analysis: v=2.4 cv=XeyEDY55 c=1 sm=1 tr=0 ts=69850aef cx=c_pps
+X-Proofpoint-ORIG-GUID: 8Vok6dV_qJ2_VwUS680HAVn6aEamKzsD
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA1MDE2MyBTYWx0ZWRfX7NQCFD5rdpMe
+ I6JRu5QIIarOrYqyRVdSS1Tr9GuENqfxALa9gEl393/56AfpbqAbsCOC/IcQvbItCR+ryyMKUH0
+ I5nx2DrEnUY3Z4WeP1oZaJqLVsFE3RRt4q0srynG37JTBY5v5+5m+6AITa3Rw/x1Crxkq7P1PcT
+ crNzyb8Fu/gISUy2/DYhGc7d+jGJpV7Q3NvVssqUGWtfD6g/M9sWq3VdVwXFOaYZ32NHzNPIQkR
+ pFl0nqha2LaZ0VmSvLpM4zLlbdu86C1m5g2X/RC4z0stx5/wcT6zG9hT2Dan9jNJKrGeSY6ApZl
+ 0qqDf12VAQFFWVQmJh7PlkymVelq5D5iepgubVKIfti4o+SfWBEfCzNCKqoSm3R1+Hv/TzcaCXt
+ 7SFAjKlZ/i/tVBtDvi2SrISpdh7+FCompSglMS8EAC1Mj6BDukqPv09Li/wwfoWrSBD7v9rkFeD
+ 6KnCE+8iAgJqZ4Gfk3g==
+X-Proofpoint-GUID: 8Vok6dV_qJ2_VwUS680HAVn6aEamKzsD
+X-Authority-Analysis: v=2.4 cv=XeyEDY55 c=1 sm=1 tr=0 ts=69850af0 cx=c_pps
  a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
  a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8
- a=R5VB0q6KzM-PVnaiiKsA:9
+ a=2wUrPlsJMn_ct-MveNUA:9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-05_05,2026-02-05_03,2025-10-01_01
 
 From: Keith Busch <kbusch@kernel.org>
 
-The Linux pci driver resolves a "slot" to the "D" in the B:D.f (see
-PCI_SLOT()). A pcie "slot reset" is a secondary bus reset, which affects
-every function on every "D", not just the ones with a matching "slot".
-The slot lock/unlock and save/restore functions, however, are only
-handling a subset of the functions, breaking the rest.
+Use the slot reset method when resetting the bridge if the bus contains
+hot plug slots. This fixes spurious hot plug events that are triggered
+by the secondary bus reset that bypasses the slot's detection disabling.
 
-ARI devices with more than 8 functions fail because their state is not
-properly handled, nor is the attached driver notified of the reset. In
-the best case, the device will appear unresponsive to the driver,
-resulting in unexpected errors. A worse possibility may panic the kernel
-if in flight transactions trigger hardware reported errors like this
-real observation:
+Resetting a bridge's subordinate bus can be done like this:
 
-  vfio-pci 0000:01:00.0: resetting
-  vfio-pci 0000:01:00.0: reset done
-  {1}[Hardware Error]:  Error 1, type: fatal
-  {1}[Hardware Error]:   section_type: PCIe error
-  {1}[Hardware Error]:   port_type: 0, PCIe end point
-  {1}[Hardware Error]:   version: 0.2
-  {1}[Hardware Error]:   command: 0x0140, status: 0x0010
-  {1}[Hardware Error]:   device_id: 0000:01:01.0
-  {1}[Hardware Error]:   slot: 0
-  {1}[Hardware Error]:   secondary_bus: 0x00
-  {1}[Hardware Error]:   vendor_id: 0x1d9b, device_id: 0x0207
-  {1}[Hardware Error]:   class_code: 020000
-  {1}[Hardware Error]:   bridge: secondary_status: 0x0000, control: 0x000=
-0
-  {1}[Hardware Error]:   aer_cor_status: 0x00008000, aer_cor_mask: 0x0000=
-2000
-  {1}[Hardware Error]:   aer_uncor_status: 0x00010000, aer_uncor_mask: 0x=
-00100000
-  {1}[Hardware Error]:   aer_uncor_severity: 0x006f6030
-  {1}[Hardware Error]:   TLP Header: 0a412800 00192080 60000004 00000004
-  GHES: Fatal hardware error but panic disabled
-  Kernel panic - not syncing: GHES: Fatal hardware error
+  # echo 1 > /sys/bus/pci/devices/0000:50:01.0/reset_subordinate
 
-Fix this by properly locking and notifying the entire affected bus
-topology, not just specific matching slots. For architectures that
-support "slot" specific resets, this patch potentially introduces an
-insignificant amount of overhead, but is otherwise harmless.
+Prior to this patch, an example kernel message may show something like:
+
+  pcieport 0000:50:01.0: pciehp: Slot(40): Link Down
+
+With this change, the pciehp driver ignores the link event during the
+reset, so may show this message instead:
+
+  pcieport 0000:50:01.0: pciehp: Slot(40): Link Down/Up ignored
 
 Signed-off-by: Keith Busch <kbusch@kernel.org>
 ---
- drivers/pci/pci.c | 147 ++++------------------------------------------
- 1 file changed, 11 insertions(+), 136 deletions(-)
+ drivers/pci/pci-sysfs.c |  3 +-
+ drivers/pci/pci.c       | 71 ++++++++++++++++++++++++++++-------------
+ drivers/pci/pci.h       |  2 +-
+ 3 files changed, 50 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c2df915ad2d29..039d3dc157006 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -553,7 +553,6 @@ static ssize_t reset_subordinate_store(struct device =
+*dev,
+ 				const char *buf, size_t count)
+ {
+ 	struct pci_dev *pdev =3D to_pci_dev(dev);
+-	struct pci_bus *bus =3D pdev->subordinate;
+ 	unsigned long val;
+=20
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -563,7 +562,7 @@ static ssize_t reset_subordinate_store(struct device =
+*dev,
+ 		return -EINVAL;
+=20
+ 	if (val) {
+-		int ret =3D __pci_reset_bus(bus);
++		int ret =3D pci_try_reset_bridge(pdev);
+=20
+ 		if (ret)
+ 			return ret;
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e00af20ea7376..df9ed73dad416 100644
+index df9ed73dad416..27817c6603a5c 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -5287,96 +5287,6 @@ static int pci_bus_trylock(struct pci_bus *bus)
- 	return 0;
- }
+@@ -51,6 +51,10 @@ unsigned int pci_pm_d3hot_delay;
 =20
--/* Do any devices on or below this slot prevent a bus reset? */
--static bool pci_slot_resettable(struct pci_slot *slot)
--{
--	struct pci_dev *dev, *bridge =3D slot->bus->self;
--
--	if (bridge && (bridge->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET))
--		return false;
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot !=3D slot)
--			continue;
--		if (dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
--		    (dev->subordinate && !pci_bus_resettable(dev->subordinate)))
--			return false;
--	}
--
--	return true;
--}
--
--/* Lock devices from the top of the tree down */
--static void pci_slot_lock(struct pci_slot *slot)
--{
--	struct pci_dev *dev, *bridge =3D slot->bus->self;
--
--	if (bridge)
--		pci_dev_lock(bridge);
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot !=3D slot)
--			continue;
--		if (dev->subordinate)
--			pci_bus_lock(dev->subordinate);
--		else
--			pci_dev_lock(dev);
--	}
--}
--
--/* Unlock devices from the bottom of the tree up */
--static void pci_slot_unlock(struct pci_slot *slot)
--{
--	struct pci_dev *dev, *bridge =3D slot->bus->self;
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot !=3D slot)
--			continue;
--		if (dev->subordinate)
--			pci_bus_unlock(dev->subordinate);
--		else
--			pci_dev_unlock(dev);
--	}
--
--	if (bridge)
--		pci_dev_unlock(bridge);
--}
--
--/* Return 1 on successful lock, 0 on contention */
--static int pci_slot_trylock(struct pci_slot *slot)
--{
--	struct pci_dev *dev, *bridge =3D slot->bus->self;
--
--	if (bridge && !pci_dev_trylock(bridge))
--		return 0;
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot !=3D slot)
--			continue;
--		if (dev->subordinate) {
--			if (!pci_bus_trylock(dev->subordinate))
--				goto unlock;
--		} else if (!pci_dev_trylock(dev))
--			goto unlock;
--	}
--	return 1;
--
--unlock:
--	list_for_each_entry_continue_reverse(dev,
--					     &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot !=3D slot)
--			continue;
--		if (dev->subordinate)
--			pci_bus_unlock(dev->subordinate);
--		else
--			pci_dev_unlock(dev);
--	}
--
--	if (bridge)
--		pci_dev_unlock(bridge);
--	return 0;
--}
--
- /*
-  * Save and disable devices from the top of the tree down while holding
-  * the @dev mutex lock for the entire tree.
-@@ -5410,59 +5320,23 @@ static void pci_bus_restore_locked(struct pci_bus=
- *bus)
- 	}
- }
+ static void pci_pme_list_scan(struct work_struct *work);
 =20
--/*
-- * Save and disable devices from the top of the tree down while holding
-- * the @dev mutex lock for the entire tree.
-- */
--static void pci_slot_save_and_disable_locked(struct pci_slot *slot)
--{
--	struct pci_dev *dev;
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot !=3D slot)
--			continue;
--		pci_dev_save_and_disable(dev);
--		if (dev->subordinate)
--			pci_bus_save_and_disable_locked(dev->subordinate);
--	}
--}
--
--/*
-- * Restore devices from top of the tree down while holding @dev mutex lo=
-ck
-- * for the entire tree.  Parent bridges need to be restored before we ca=
-n
-- * get to subordinate devices.
-- */
--static void pci_slot_restore_locked(struct pci_slot *slot)
--{
--	struct pci_dev *dev;
--
--	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
--		if (!dev->slot || dev->slot !=3D slot)
--			continue;
--		pci_dev_restore(dev);
--		if (dev->subordinate) {
--			pci_bridge_wait_for_secondary_bus(dev, "slot reset");
--			pci_bus_restore_locked(dev->subordinate);
--		}
--	}
--}
--
- static int pci_slot_reset(struct pci_slot *slot, bool probe)
++#define PCI_SLOT_RESET_MASKED true
++#define PCI_SLOT_RESET_UNMASKED false
++static int pci_reset_bridge(struct pci_dev *bridge, bool save);
++
+ static LIST_HEAD(pci_pme_list);
+ static DEFINE_MUTEX(pci_pme_list_mutex);
+ static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
+@@ -5420,29 +5424,7 @@ static int pci_bus_reset(struct pci_bus *bus, bool=
+ probe)
+  */
+ int pci_bus_error_reset(struct pci_dev *bridge)
  {
-+	struct pci_bus *bus =3D slot ? slot->bus : NULL;
- 	int rc;
+-	struct pci_bus *bus =3D bridge->subordinate;
+-	struct pci_slot *slot;
+-
+-	if (!bus)
+-		return -ENOTTY;
+-
+-	mutex_lock(&pci_slot_mutex);
+-	if (list_empty(&bus->slots))
+-		goto bus_reset;
+-
+-	list_for_each_entry(slot, &bus->slots, list)
+-		if (pci_probe_reset_slot(slot))
+-			goto bus_reset;
+-
+-	list_for_each_entry(slot, &bus->slots, list)
+-		if (pci_slot_reset(slot, PCI_RESET_DO_RESET))
+-			goto bus_reset;
+-
+-	mutex_unlock(&pci_slot_mutex);
+-	return 0;
+-bus_reset:
+-	mutex_unlock(&pci_slot_mutex);
+-	return pci_bus_reset(bridge->subordinate, PCI_RESET_DO_RESET);
++	return pci_reset_bridge(bridge, PCI_SLOT_RESET_UNMASKED);
+ }
 =20
--	if (!slot || !pci_slot_resettable(slot))
-+	if (!slot || !bus || !pci_bus_resettable(bus))
- 		return -ENOTTY;
-=20
- 	if (!probe)
--		pci_slot_lock(slot);
-+		pci_bus_lock(bus);
-=20
- 	might_sleep();
-=20
- 	rc =3D pci_reset_hotplug_slot(slot->hotplug, probe);
-=20
- 	if (!probe)
--		pci_slot_unlock(slot);
-+		pci_bus_unlock(bus);
-=20
+ /**
+@@ -5483,6 +5465,49 @@ static int pci_try_reset_bus(struct pci_bus *bus)
  	return rc;
  }
-@@ -5489,25 +5363,26 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-  * wrap the bus reset to avoid spurious slot related events such as hotp=
-lug.
-  * Generally a slot reset should be attempted before a bus reset.  All o=
-f the
-  * function of the slot and any subordinate buses behind the slot are re=
-set
-- * through this function.  PCI config space of all devices in the slot a=
-nd
-- * behind the slot is saved before and restored after reset.
-+ * through this function.  PCI config space of all devices below the slo=
-t bus
-+ * are saved before and restored after reset.
-  *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
- static int pci_try_reset_slot(struct pci_slot *slot)
- {
-+	struct pci_bus *bus =3D slot->bus;
- 	int rc;
 =20
- 	rc =3D pci_slot_reset(slot, PCI_RESET_PROBE);
- 	if (rc)
- 		return rc;
++static int pci_reset_bridge(struct pci_dev *bridge, bool masked)
++{
++	struct pci_bus *bus =3D bridge->subordinate;
++	struct pci_slot *slot;
++
++	if (!bus)
++		return -ENOTTY;
++
++	mutex_lock(&pci_slot_mutex);
++	if (list_empty(&bus->slots))
++		goto bus_reset;
++
++	list_for_each_entry(slot, &bus->slots, list)
++		if (pci_probe_reset_slot(slot))
++			goto bus_reset;
++
++	list_for_each_entry(slot, &bus->slots, list) {
++		int ret;
++
++		if (masked)
++			ret =3D pci_try_reset_slot(slot);
++		else
++			ret =3D pci_slot_reset(slot, PCI_RESET_DO_RESET);
++
++		if (ret)
++			goto bus_reset;
++	}
++
++	mutex_unlock(&pci_slot_mutex);
++	return 0;
++bus_reset:
++	mutex_unlock(&pci_slot_mutex);
++
++	if (masked)
++		return pci_try_reset_bus(bus);
++	return pci_bus_reset(bridge->subordinate, PCI_RESET_DO_RESET);
++}
++
++int pci_try_reset_bridge(struct pci_dev *bridge)
++{
++	return pci_reset_bridge(bridge, PCI_SLOT_RESET_MASKED);
++}
++
+ /**
+  * pci_reset_bus - Try to reset a PCI bus
+  * @pdev: top level PCI device to reset via slot/bus
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0e67014aa0013..790f2350b890c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -197,7 +197,7 @@ bool pci_reset_supported(struct pci_dev *dev);
+ void pci_init_reset_methods(struct pci_dev *dev);
+ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ int pci_bus_error_reset(struct pci_dev *dev);
+-int __pci_reset_bus(struct pci_bus *bus);
++int pci_try_reset_bridge(struct pci_dev *dev);
 =20
--	if (pci_slot_trylock(slot)) {
--		pci_slot_save_and_disable_locked(slot);
-+	if (pci_bus_trylock(bus)) {
-+		pci_bus_save_and_disable_locked(bus);
- 		might_sleep();
- 		rc =3D pci_reset_hotplug_slot(slot->hotplug, PCI_RESET_DO_RESET);
--		pci_slot_restore_locked(slot);
--		pci_slot_unlock(slot);
-+		pci_bus_restore_locked(bus);
-+		pci_bus_unlock(bus);
- 	} else
- 		rc =3D -EAGAIN;
-=20
+ struct pci_cap_saved_data {
+ 	u16		cap_nr;
 --=20
 2.47.3
 
