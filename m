@@ -1,30 +1,30 @@
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35DD02727FA;
-	Thu,  5 Feb 2026 17:13:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CB9021255A;
+	Thu,  5 Feb 2026 17:16:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770311632; cv=none; b=GK2Ey9FPX1Cr15I70hdB43H7EsubeWQiXl1CPoJXT9jut/Jr9nE3ej+h6yXyTpGOTf3OVZE3yQX+KjTC4Q4u7O9II2PU2k6CN1+EKrrym0AGYhT4A1XxqCtreYw8Q1onXPxLT2dnpyj4tahcxwIu+odomXQegcwnMECAwG4WD54=
+	t=1770311795; cv=none; b=OHmQ7Uwx1/bPSLFBIsvIwpQ1XT8HJWd+r/prIS57x98mV2OcC7ae1Uf2n2zfFoxh1jEqqEqa1v5LSlck3QpuCAtVbsdmqQHTel5JBMuQ/dL7fxZ6tNfnRuSY0TdecWQ+LbIIb7ywfpwlxsb0JKXAOtJS/Qzl15dM6jPxcpvAeUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770311632; c=relaxed/simple;
-	bh=7ZkXvkRhbvIImVLNVrlIGYVo9YAutyavgCoFsinUTe8=;
+	s=arc-20240116; t=1770311795; c=relaxed/simple;
+	bh=y4zs2xlDJBVx1X7XurCgpTImEe3FTPJ7jBu721A32UY=;
 	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wnz43/11Cvw++1p1TfAwdt+qR1QyMV0l+auL79Y8rlp4OTfjm8tOir6BxY/FO1RVTatK5Y384pGuwytSFHL42wthPyn/p2DBHo84vpcrNQXvI4qh2MDmiKvdAXzisgZr/PflTeGZ+gs8wN4+qsGiBMT39Bd4KBPnud4oUih8HTU=
+	 MIME-Version:Content-Type; b=QyEznBz1wLSxCSBlYdvuWwp6WVw9ANcixYfeYtqI3fQYxCirIZ8GmKBfqeW12u6V9e01lx64FJuAimjf85TUwzXcDC1LFLO8+g8dMTo8Ueebwx6BY2MhgK6Zrvmn6GEH1sWFODEgzAkhCqiLl3swlyxDSmCyjzNn3q2lRb78f/M=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.107])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f6P2L2qYSzHnGj5;
-	Fri,  6 Feb 2026 01:13:46 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4f6P4W41KzzJ46BP;
+	Fri,  6 Feb 2026 01:15:39 +0800 (CST)
 Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3518D40570;
-	Fri,  6 Feb 2026 01:13:49 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 83DBC4056A;
+	Fri,  6 Feb 2026 01:16:30 +0800 (CST)
 Received: from localhost (10.48.151.164) by dubpeml500005.china.huawei.com
  (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 5 Feb
- 2026 17:13:47 +0000
-Date: Thu, 5 Feb 2026 17:13:46 +0000
+ 2026 17:16:29 +0000
+Date: Thu, 5 Feb 2026 17:16:27 +0000
 From: Jonathan Cameron <jonathan.cameron@huawei.com>
 To: "Bowman, Terry" <terry.bowman@amd.com>
 CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
@@ -36,13 +36,14 @@ CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
 	<linux-cxl@vger.kernel.org>, <vishal.l.verma@intel.com>, <alucerop@amd.com>,
 	<ira.weiny@intel.com>, <linux-kernel@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v15 4/9] PCI/AER: Dequeue forwarded CXL error
-Message-ID: <20260205171346.00001e6b@huawei.com>
-In-Reply-To: <59fb1a00-a9cb-482a-b8be-3982c515cd85@amd.com>
+Subject: Re: [PATCH v15 5/9] PCI: Establish common CXL Port protocol error
+ flow
+Message-ID: <20260205171627.000013da@huawei.com>
+In-Reply-To: <e296e48e-40d1-483b-9f49-78e8bd3b885f@amd.com>
 References: <20260203025244.3093805-1-terry.bowman@amd.com>
-	<20260203025244.3093805-5-terry.bowman@amd.com>
-	<20260203152609.00004b41@huawei.com>
-	<59fb1a00-a9cb-482a-b8be-3982c515cd85@amd.com>
+	<20260203025244.3093805-6-terry.bowman@amd.com>
+	<20260203154039.000001ae@huawei.com>
+	<e296e48e-40d1-483b-9f49-78e8bd3b885f@amd.com>
 X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -55,169 +56,185 @@ Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: lhrpeml500012.china.huawei.com (7.191.174.4) To
  dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Tue, 3 Feb 2026 11:00:40 -0600
+On Tue, 3 Feb 2026 12:21:56 -0600
 "Bowman, Terry" <terry.bowman@amd.com> wrote:
 
-> On 2/3/2026 9:26 AM, Jonathan Cameron wrote:
-> > On Mon, 2 Feb 2026 20:52:39 -0600
+> On 2/3/2026 9:40 AM, Jonathan Cameron wrote:
+> > On Mon, 2 Feb 2026 20:52:40 -0600
 > > Terry Bowman <terry.bowman@amd.com> wrote:
 > >   
-> >> The AER driver now forwards CXL protocol errors to the CXL driver via a
-> >> kfifo. The CXL driver must consume these work items and initiate protocol
-> >> error handling while ensuring the device's RAS mappings remain valid
-> >> throughout processing.
+> >> Introduce CXL Port protocol error handling callbacks to unify detection,
+> >> logging, and recovery across CXL Ports and Endpoints, including RCH
+> >> downstream ports. Establish a consistent flow for correctable and
+> >> uncorrectable CXL protocol errors.
 > >>
-> >> Implement cxl_proto_err_work_fn() to dequeue work items forwarded by the
-> >> AER service driver. Lock the parent CXL Port device to ensure the CXL
-> >> device's RAS registers are accessible during handling. Add pdev reference-put
-> >> to match reference-get in AER driver. This will ensure pdev access after
-> >> kfifo dequeue. These changes apply to CXL Ports and CXL Endpoints.
+> >> Provide the solution by adding cxl_port_cor_error_detected() and
+> >> cxl_port_error_detected() to handle correctable and uncorrectable handling
+> >> through CXL RAS helpers, coordinating uncorrectable recovery in
+> >> cxl_do_recovery(), and panicking when the handler returns PCI_ERS_RESULT_PANIC
+> >> to preserve fatal cachemem behavior. Gate endpoint handling on the endpoint
+> >> driver being bound to avoid processing errors on disabled devices.
 > >>
-> >> Update is_cxl_error() to recognize CXL Port devices with errors.
+> >> Centralize the RAS base lookup in cxl_get_ras_base(), selecting the
+> >> downstream-port dport->regs.ras for Root/Downstream Ports and port->regs.ras
+> >> for Upstream Ports/Endpoints.
+> >>
+> >> Export pcie_clear_device_status() and pci_aer_clear_fatal_status() to enable
+> >> cxl_core to clear PCIe/AER state in these flows.
 > >>
 > >> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> >> Acked-by: Bjorn Helgaas <bhelgaas@google.com>  
+> >> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> Reviewed-by: Dave Jiang dave.jiang@intel.com  
 > > 
-> > There are some small functional changes to existing paths (maybe)
-> > that I think need explanations in this commit message.
+> > Hi Terry,
 > > 
-> > Otherwise, one suggests small simplification.
+> > A few comments inline.
+> > 
+> > Thanks,
+> > 
+> > Jonathan
 > >   
+> 
+> Thanks for reviewing.
+> 
+> >>
+> >> ---
+> >>
+> >> Changes in v14->v15:
+> >> - Update commit message and title. Added Bjorn's ack.
+> >> - Move CE and UCE handling logic here
+> >>
+> >> Changes in v13->v14:
+> >> - Add Dave Jiang's review-by
+> >> - Update commit message & headline (Bjorn)
+> >> - Refactor cxl_port_error_detected()/cxl_port_cor_error_detected() to
+> >>   one line (Jonathan)
+> >> - Remove cxl_walk_port() (Dan)
+> >> - Remove cxl_pci_drv_bound(). Check for 'is_cxl' parent port is
+> >>   sufficient (Dan)
+> >> - Remove device_lock_if()
+> >> - Combined CE and UCE here (Terry)
+> >>
+> >> Changes in v12->v13:
+> >> - Move get_pci_cxl_host_dev() and cxl_handle_proto_error() to Dequeue
+> >>   patch (Terry)
+> >> - Remove EP case in cxl_get_ras_base(), not used. (Terry)
+> >> - Remove check for dport->dport_dev (Dave)
+> >> - Remove whitespace (Terry)
+> >>
+> >> Changes in v11->v12:
+> >> - Add call to cxl_pci_drv_bound() in cxl_handle_proto_error() and
+> >>   pci_to_cxl_dev()
+> >> - Change cxl_error_detected() -> cxl_cor_error_detected()
+> >> - Remove NULL variable assignments
+> >> - Replace bus_find_device() with find_cxl_port_by_uport() for upstream
+> >>   port searches.
+> >>
+> >> Changes in v10->v11:
+> >> - None
+> >> ---
+> >>  drivers/cxl/core/ras.c | 134 +++++++++++++++++++++++++++++++++++++++++
+> >>  drivers/pci/pci.c      |   1 +
+> >>  drivers/pci/pci.h      |   2 -
+> >>  drivers/pci/pcie/aer.c |   1 +
+> >>  include/linux/aer.h    |   2 +
+> >>  include/linux/pci.h    |   2 +
+> >>  6 files changed, 140 insertions(+), 2 deletions(-)
+> >>
 > >> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> >> index 74df561ed32e..a6c0bc6d7203 100644
+> >> index a6c0bc6d7203..0216dafa6118 100644
 > >> --- a/drivers/cxl/core/ras.c
 > >> +++ b/drivers/cxl/core/ras.c
-> >> @@ -118,17 +118,6 @@ static void cxl_cper_prot_err_work_fn(struct work_struct *work)
+> >> @@ -218,6 +218,68 @@ static struct cxl_port *get_cxl_port(struct pci_dev *pdev)
+> >>  	return NULL;
 > >>  }
-> >>  static DECLARE_WORK(cxl_cper_prot_err_work, cxl_cper_prot_err_work_fn);
 > >>  
-> >> -int cxl_ras_init(void)
-> >> -{
-> >> -	return cxl_cper_register_prot_err_work(&cxl_cper_prot_err_work);
-> >> -}
-> >> -
-> >> -void cxl_ras_exit(void)
-> >> -{
-> >> -	cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
-> >> -	cancel_work_sync(&cxl_cper_prot_err_work);
-> >> -}
-> >> -
-> >>  static void cxl_dport_map_ras(struct cxl_dport *dport)
-> >>  {
-> >>  	struct cxl_register_map *map = &dport->reg_map;
-> >> @@ -185,6 +174,50 @@ void devm_cxl_port_ras_setup(struct cxl_port *port)
-> >>  }
-> >>  EXPORT_SYMBOL_NS_GPL(devm_cxl_port_ras_setup, "CXL");
-> >>  
-> >> +/*
-> >> + * get_cxl_port - Return the parent CXL Port of a PCI device
-> >> + * @pdev: PCI device whose parent CXL Port is being queried
-> >> + *
-> >> + * Looks up and returns the parent CXL Port associated with @pdev. On
-> >> + * success, the returned port has its reference count incremented and must
-> >> + * be released by the caller. Returns NULL if no associated CXL port is
-> >> + * found.
-> >> + *
-> >> + * Return: Pointer to the parent &struct cxl_port or NULL on failure
-> >> + */
-> >> +static struct cxl_port *get_cxl_port(struct pci_dev *pdev)
+> >> +static void __iomem *cxl_get_ras_base(struct device *dev)
 > >> +{
+> >> +	struct pci_dev *pdev = to_pci_dev(dev);
+> >> +
 > >> +	switch (pci_pcie_type(pdev)) {
 > >> +	case PCI_EXP_TYPE_ROOT_PORT:
 > >> +	case PCI_EXP_TYPE_DOWNSTREAM:
 > >> +	{
-> >> +		struct cxl_dport *dport;
-> >> +		struct cxl_port *port = find_cxl_port(&pdev->dev, &dport);  
+> >> +		struct cxl_dport *dport;  
 > > 
-> > Can you pass NULL for dport?  Looks like it to me as that ultimately ends
-> > up in match_port_by_dport() and 
-> > if (ctx->dport)
-> > 	*ctx->dport = dport;
+> > 		struct cxl_dport *dport = NULL;
+> >   
+> >> +		struct cxl_port *port __free(put_cxl_port) = find_cxl_port(&pdev->dev, &dport);  
 > > 
-> > where with this as null means ctx->dport == NULL.
+> > as if this failed, dport is not written. Alternative is check port, not dport as port
+> > will always be initialized whether or not failure occurs in find_cxl_port()
 > >   
 > 
-> Yes.
+> Ok.
 > 
-> 
+> >   
 > >> +
-> >> +		if (!port) {
+> >> +		if (!dport) {
 > >> +			pci_err(pdev, "Failed to find the CXL device");
 > >> +			return NULL;
 > >> +		}
-> >> +		return port;
+> >> +		return dport->regs.ras;
 > >> +	}
 > >> +	case PCI_EXP_TYPE_UPSTREAM:
 > >> +	case PCI_EXP_TYPE_ENDPOINT:
 > >> +	{
-> >> +		struct cxl_port *port = find_cxl_port_by_uport(&pdev->dev);
+> >> +		struct cxl_port *port __free(put_cxl_port) = find_cxl_port_by_uport(&pdev->dev);
 > >> +
 > >> +		if (!port) {
 > >> +			pci_err(pdev, "Failed to find the CXL device");
 > >> +			return NULL;
 > >> +		}
-> >> +		return port;
+> >> +		return port->regs.ras;
 > >> +	}
 > >> +	}
-> >> +
-> >> +	pr_err_ratelimited("%s: Error - Unsupported device type (%#x)",
-> >> +			   pci_name(pdev), pci_pcie_type(pdev));
+> >> +	dev_warn_once(dev, "Error: Unsupported device type (%#x)", pci_pcie_type(pdev));
 > >> +	return NULL;
 > >> +}  
-> > 
 > >   
-> >> +int cxl_ras_init(void)
+> >>  void cxl_handle_cor_ras(struct device *dev, u64 serial, void __iomem *ras_base)
+> >>  {
+> >>  	void __iomem *addr;
+> >> @@ -288,6 +350,60 @@ bool cxl_handle_ras(struct device *dev, u64 serial, void __iomem *ras_base)
+> >>  	return true;
+> >>  }
+> >>  
+> >> +static void cxl_port_cor_error_detected(struct device *dev)
 > >> +{
-> >> +	if (cxl_cper_register_prot_err_work(&cxl_cper_prot_err_work))
-> >> +		pr_err("Failed to initialize CXL RAS CPER\n");  
+> >> +	struct pci_dev *pdev = to_pci_dev(dev);
+> >> +	struct cxl_port *port __free(put_cxl_port) = get_cxl_port(pdev);
+> >> +
+> >> +	if (is_cxl_endpoint(port)) {
+> >> +		struct cxl_memdev *cxlmd = to_cxl_memdev(port->uport_dev);
+> >> +		struct cxl_dev_state *cxlds = cxlmd->cxlds;
+> >> +
+> >> +		guard(device)(&cxlmd->dev);  
 > > 
-> > Why introduce a new error print?  I don't particularly mind
-> > but wasn't obvious to me why one has become appropriate and why only
-> > for the first call here.
+> > Maybe add a comment on why this lock needs to be held and then why the dev->drvier
+> > below needs to be true.
+> >   
+> This can be removed. This was added to ensure the EP's RAS registers remained accessible 
+> during handling. This was when when the mapped RAS registers were owned by the CXL memory 
+> device. This has changed such that the EP RAS registers are now owned by the EP Port. And, 
+> the Endpoint Port is already locked in cxl_proto_err_work_fn() before calling this funcion.
+> 
+> >> +
+> >> +		if (!dev->driver) {
+> >> +			dev_warn(&pdev->dev,
+> >> +				 "%s: memdev disabled, abort error handling\n",
+> >> +				 dev_name(dev));  
+> > 
+> > Same question as below on why pdev->dev / dev_name(dev) here.
+> > Maybe pci_warn() is more appropriate.
 > >   
 > 
-> This was introduced before v10. 
-> 
-> RAS initialization failure should not fail cxl_core probe.
-> 
-> OSfirst AER support was added in this series in this file next to CPER. 
-> CPER initialization can fail and OSFirst can not is the reason for only 
-> one log. 
-> 
-> When I look at this block of code I'm drawn to the return value. It looks 
-> like it should be a void function. Thoughts?
+> I believe the driver check can be removed but would like your input. The check 
+> for the driver is another piece of code specifically for when the handler was accessing 
+> the memdev's RAS registers. It was a last check to make certain the device is bound 
+> to a driver before accessing. EP RAS is now owned by the Endpoint Port.
 
-I'd return an error code, then at caller decide to not treat that
-as a failure case. That gives a clear place to add a print + maybe
-a comment that says - yes it's an error, but for 'reasons' we carry on
-anyway
+Sounds fine to me to drop this check if we don't need anything that
+belongs to that driver any more.
 
 Jonathan
-
-
-> 
-> - Terry
-> 
-> 
-> > More importantly - if this failed it would previously have resulted
-> > in cxl_core_init() failing and things getting torn down.
-> >   
-> >> +
-> >> +	cxl_register_proto_err_work(&cxl_proto_err_work);
-> >> +
-> >> +	return 0;
-> >> +}
-> >> +
-> >> +void cxl_ras_exit(void)
-> >> +{
-> >> +	cxl_cper_unregister_prot_err_work(&cxl_cper_prot_err_work);
-> >> +	cancel_work_sync(&cxl_cper_prot_err_work);
-> >> +
-> >> +	cxl_unregister_proto_err_work();
-> >> +	cancel_work_sync(&cxl_proto_err_work);
-> >> +}  
-> > 
-> >   
-> 
-> 
-
