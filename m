@@ -1,62 +1,63 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D111862A;
-	Thu,  5 Feb 2026 00:02:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E23E1DD0EF;
+	Thu,  5 Feb 2026 02:37:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770249764; cv=none; b=d9TetOmlWTg1KTjUzhSYD9Dr0leWQHLfLUOnDfyTWsdIaKUvGV4BoK9pVQRmMHZ6S063TjlQJ7lX1W7t3QacX9ZT6Ui+h8Q/zuwFYg+wMACca31+wopK8MAZPIOLEkgjs9Xjr6aanyo3fj4GXHMxvAieAjfrc8Wh+WEU8xDG7e0=
+	t=1770259069; cv=none; b=ZytgcezAQNMOFqRReH04DSSghIQ9lTyGbwMc1Z33qrUvTX4qZK4z1nFfDsHkY4ZplSQXmzJUzyYWTY23LcbapP4U/wqFLyCEvooISuLn+e28q0V+oWYg8GO037V7/coTqG6RwUt4+jc9Qe56rVybiIr4tq5pL6j7T84Vd92BCoE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770249764; c=relaxed/simple;
-	bh=8EmPOgxCqMVBSCIXlKn5Fd96oBKayGlgN/Pw+n7N7ZM=;
+	s=arc-20240116; t=1770259069; c=relaxed/simple;
+	bh=E5LPU4NWtqOyTdkjV6OAOmlb669H2tC5lWTVQZncWtg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TOCN/cUOSzFEv9KVnbEoqwuvysaV/tA82ZZffKShiAY645E+Ap1XXaVo7FNtJZugq4pTjIpxaJv8DW/1Zee1iReA6AK3wboXqowltEMDV4VtPdE2RNSTVLMtIcRBgzmY3JrJdDSpPmw6d2Uh3/2eDVMfa6zteQn/Jfj2NOT+SJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kNh4ex1F; arc=none smtp.client-ip=198.175.65.17
+	 Content-Type:Content-Disposition:In-Reply-To; b=pTp4xSp0tS06Qlk+BNAWC4FR+jbVH/M8wLKt58X/5x5WBoLTQvA9ntl+NG31hU1Qn0o/f++aiSks0QYwnH7XPap+CbhoqKLyI9KAXw7PVLY5fHodcLJ6aZkN5qKSQ2u6oEzCGA48hay5kKk4mNuUx4Gu9ck/t8ONq36Z5W56rl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A5BrKqNW; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kNh4ex1F"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A5BrKqNW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770249764; x=1801785764;
+  t=1770259069; x=1801795069;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=8EmPOgxCqMVBSCIXlKn5Fd96oBKayGlgN/Pw+n7N7ZM=;
-  b=kNh4ex1FoaDV5UwyUdFpruW0GUbkGZYS+mvtytx69TWdhseCT7Ea1iTF
-   3mxSA18Wh2i+fXHGfyx3Lz9T/1sYQz13g8pZhIiWznu/wr3/NrroF6DYD
-   kZ+cnsPp56O82UDLHUQPKoaBvRUlrn10Vnekk3GfKsq3MDGygApV/LB0R
-   JUps+L+Tz/QIqu6bredGZwJWacr8Y2ZM9lVb4YWf++tltHgUk3cEYYVJV
-   Q9dTAR0kJzS85sIUUJmrNS6/+oRcNZZRDU6OxQezAEPReh0GKEmIficTL
-   jU8EWAbpij24vonnHdRgn1rEcy9iuNTPYm/TnLEp/1lxceBeSoN6bTAkl
-   Q==;
-X-CSE-ConnectionGUID: mOM/BJySQlO9TqldA4lvow==
-X-CSE-MsgGUID: ht8IBpkXRr+xe7GHGM5bkA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11691"; a="71430001"
+  bh=E5LPU4NWtqOyTdkjV6OAOmlb669H2tC5lWTVQZncWtg=;
+  b=A5BrKqNW3v3VHxR1mBW6rXtT4AFi4/Jp/mw1ooVYUOOtwhN6aygOgsL2
+   GfeUJlOTcXJ+DLeEth89zmKxi/0FCnDfyCFUzBQR7Pdd1TW/qNmjexsyf
+   sC5pzfAaKhwzNKashk3JzhwCq+AmmSmdxA9CAAMnbBwNdS+F+z5Nt0A28
+   wqE3piqvr7jrorAiCQFBb5smF/GY0lMtNIYb4KT/S5xPwTF35rpe0AjgK
+   /cqhw2Ia4oV65YMFZhMn99L17C4ePn4dgZgDM/FyJArpaIsq3XdVYU0fy
+   GJUOeykc+wSmipbiNTsTMA8VMNVSXC4EyMT5xFrA/OW3nIk5n+VoG2KXb
+   A==;
+X-CSE-ConnectionGUID: z6BqvePBS8u9QFJC/XaYDA==
+X-CSE-MsgGUID: PSl1egV6SWKnMau3R6Ak3Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11691"; a="71549169"
 X-IronPort-AV: E=Sophos;i="6.21,273,1763452800"; 
-   d="scan'208";a="71430001"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2026 16:02:43 -0800
-X-CSE-ConnectionGUID: DnA57gcFSWyPlRVzxUxI7w==
-X-CSE-MsgGUID: WnkvpO+XQXaQuw8NIgtusw==
+   d="scan'208";a="71549169"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2026 18:37:48 -0800
+X-CSE-ConnectionGUID: oNLTQC/mT7GrfH0lFLvqfQ==
+X-CSE-MsgGUID: S66bEHSISoCB+sTIOkhzFw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,273,1763452800"; 
-   d="scan'208";a="209419369"
+   d="scan'208";a="210438991"
 Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 04 Feb 2026 16:02:40 -0800
+  by orviesa007.jf.intel.com with ESMTP; 04 Feb 2026 18:37:45 -0800
 Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vnmpR-00000000jFQ-3OnI;
-	Thu, 05 Feb 2026 00:02:37 +0000
-Date: Thu, 5 Feb 2026 08:01:43 +0800
+	id 1vnpFW-00000000jLU-1B29;
+	Thu, 05 Feb 2026 02:37:42 +0000
+Date: Thu, 5 Feb 2026 10:37:16 +0800
 From: kernel test robot <lkp@intel.com>
 To: Koichiro Den <den@valinux.co.jp>, vkoul@kernel.org, mani@kernel.org,
 	Frank.Li@nxp.com, jingoohan1@gmail.com, lpieralisi@kernel.org,
 	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com
-Cc: oe-kbuild-all@lists.linux.dev, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v3 09/11] PCI: endpoint: pci-epf-test: Add smoke test for
  EPC remote resource API
-Message-ID: <202602050741.nyI2oa7X-lkp@intel.com>
+Message-ID: <202602051059.2bwjcYJE-lkp@intel.com>
 References: <20260204145440.950609-10-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -83,60 +84,52 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Koichiro-Den/dmaengine-Ad
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
 patch link:    https://lore.kernel.org/r/20260204145440.950609-10-den%40valinux.co.jp
 patch subject: [PATCH v3 09/11] PCI: endpoint: pci-epf-test: Add smoke test for EPC remote resource API
-config: i386-randconfig-003-20260205 (https://download.01.org/0day-ci/archive/20260205/202602050741.nyI2oa7X-lkp@intel.com/config)
-compiler: gcc-13 (Debian 13.3.0-16) 13.3.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260205/202602050741.nyI2oa7X-lkp@intel.com/reproduce)
+config: um-randconfig-001-20260205 (https://download.01.org/0day-ci/archive/20260205/202602051059.2bwjcYJE-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 9b8addffa70cee5b2acc5454712d9cf78ce45710)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260205/202602051059.2bwjcYJE-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202602050741.nyI2oa7X-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202602051059.2bwjcYJE-lkp@intel.com/
 
 All warnings (new ones prefixed by >>):
 
-   In file included from include/linux/device.h:15,
-                    from include/linux/dmaengine.h:8,
-                    from drivers/pci/endpoint/functions/pci-epf-test.c:11:
-   drivers/pci/endpoint/functions/pci-epf-test.c: In function 'pci_epf_test_epc_api':
->> drivers/pci/endpoint/functions/pci-epf-test.c:1012:33: warning: format '%llu' expects argument of type 'long long unsigned int', but argument 6 has type 'resource_size_t' {aka 'unsigned int'} [-Wformat=]
+   In file included from drivers/pci/endpoint/functions/pci-epf-test.c:11:
+   In file included from include/linux/dmaengine.h:12:
+   In file included from include/linux/scatterlist.h:9:
+   In file included from arch/um/include/asm/io.h:24:
+   include/asm-generic/io.h:1209:55: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
+    1209 |         return (port > MMIO_UPPER_LIMIT) ? NULL : PCI_IOBASE + port;
+         |                                                   ~~~~~~~~~~ ^
+>> drivers/pci/endpoint/functions/pci-epf-test.c:1013:36: warning: format specifies type 'unsigned long long' but the argument has type 'resource_size_t' (aka 'unsigned int') [-Wformat]
     1012 |                                 "Invalid remote resource[%d] (type=%d phys=%pa size=%llu)\n",
-         |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/dev_printk.h:110:30: note: in definition of macro 'dev_printk_index_wrap'
-     110 |                 _p_func(dev, fmt, ##__VA_ARGS__);                       \
-         |                              ^~~
-   include/linux/dev_printk.h:154:56: note: in expansion of macro 'dev_fmt'
-     154 |         dev_printk_index_wrap(_dev_err, KERN_ERR, dev, dev_fmt(fmt), ##__VA_ARGS__)
-         |                                                        ^~~~~~~
-   drivers/pci/endpoint/functions/pci-epf-test.c:1011:25: note: in expansion of macro 'dev_err'
-    1011 |                         dev_err(dev,
-         |                         ^~~~~~~
-   drivers/pci/endpoint/functions/pci-epf-test.c:1012:88: note: format string is defined here
-    1012 |                                 "Invalid remote resource[%d] (type=%d phys=%pa size=%llu)\n",
-         |                                                                                     ~~~^
-         |                                                                                        |
-         |                                                                                        long long unsigned int
+         |                                                                                     ~~~~
          |                                                                                     %u
-   drivers/pci/endpoint/functions/pci-epf-test.c:1020:33: warning: format '%llu' expects argument of type 'long long unsigned int', but argument 5 has type 'resource_size_t' {aka 'unsigned int'} [-Wformat=]
-    1020 |                                 "Remote resource[%d] overflow (phys=%pa size=%llu)\n",
-         |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/dev_printk.h:110:30: note: in definition of macro 'dev_printk_index_wrap'
-     110 |                 _p_func(dev, fmt, ##__VA_ARGS__);                       \
-         |                              ^~~
-   include/linux/dev_printk.h:154:56: note: in expansion of macro 'dev_fmt'
+    1013 |                                 i, res->type, &res->phys_addr, res->size);
+         |                                                                ^~~~~~~~~
+   include/linux/dev_printk.h:154:65: note: expanded from macro 'dev_err'
      154 |         dev_printk_index_wrap(_dev_err, KERN_ERR, dev, dev_fmt(fmt), ##__VA_ARGS__)
-         |                                                        ^~~~~~~
-   drivers/pci/endpoint/functions/pci-epf-test.c:1019:25: note: in expansion of macro 'dev_err'
-    1019 |                         dev_err(dev,
-         |                         ^~~~~~~
-   drivers/pci/endpoint/functions/pci-epf-test.c:1020:81: note: format string is defined here
+         |                                                                ~~~     ^~~~~~~~~~~
+   include/linux/dev_printk.h:110:23: note: expanded from macro 'dev_printk_index_wrap'
+     110 |                 _p_func(dev, fmt, ##__VA_ARGS__);                       \
+         |                              ~~~    ^~~~~~~~~~~
+   drivers/pci/endpoint/functions/pci-epf-test.c:1021:25: warning: format specifies type 'unsigned long long' but the argument has type 'resource_size_t' (aka 'unsigned int') [-Wformat]
     1020 |                                 "Remote resource[%d] overflow (phys=%pa size=%llu)\n",
-         |                                                                              ~~~^
-         |                                                                                 |
-         |                                                                                 long long unsigned int
+         |                                                                              ~~~~
          |                                                                              %u
+    1021 |                                 i, &res->phys_addr, res->size);
+         |                                                     ^~~~~~~~~
+   include/linux/dev_printk.h:154:65: note: expanded from macro 'dev_err'
+     154 |         dev_printk_index_wrap(_dev_err, KERN_ERR, dev, dev_fmt(fmt), ##__VA_ARGS__)
+         |                                                                ~~~     ^~~~~~~~~~~
+   include/linux/dev_printk.h:110:23: note: expanded from macro 'dev_printk_index_wrap'
+     110 |                 _p_func(dev, fmt, ##__VA_ARGS__);                       \
+         |                              ~~~    ^~~~~~~~~~~
+   3 warnings generated.
 
 
-vim +1012 drivers/pci/endpoint/functions/pci-epf-test.c
+vim +1013 drivers/pci/endpoint/functions/pci-epf-test.c
 
    972	
    973	static void pci_epf_test_epc_api(struct pci_epf_test *epf_test,
@@ -178,8 +171,8 @@ vim +1012 drivers/pci/endpoint/functions/pci-epf-test.c
   1009	
   1010			if (!res->phys_addr || !res->size) {
   1011				dev_err(dev,
-> 1012					"Invalid remote resource[%d] (type=%d phys=%pa size=%llu)\n",
-  1013					i, res->type, &res->phys_addr, res->size);
+  1012					"Invalid remote resource[%d] (type=%d phys=%pa size=%llu)\n",
+> 1013					i, res->type, &res->phys_addr, res->size);
   1014				goto err_free;
   1015			}
   1016	
