@@ -1,56 +1,52 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36F6D330B3B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E642330B3B
 	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:26:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770326766; cv=none; b=V/iun+PZMabS51vgM4x6jDqG0ckNrOzi1/avfniuqsAClVhK0z5wJ816kBVz5qXBsTyzA0Gm+XP3yTUmFkBktXtwHZ0EXQUXzf7Z6j+EiPJJwVGwKXN1ug/5GEZx86DuvBQviukOxmlP9AINzLM324GXkKD3q+j2nGogo8PRVEw=
+	t=1770326767; cv=none; b=UTwArOh0ir2jGa2XsRP5t4d446irADZFMN8msMOWiw+/6ZzH7LATeOy2WqLnAUr2zrMt+42HjWIgNTfRtRLzld02gbBv9nc4wCGF/6PMG7mbBoyyB4cssJ3VwYoIZELGl3LHlrZ/cVvQJizW+M27Nl/bnF8Pr8hYNz+BAsVEkpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770326766; c=relaxed/simple;
-	bh=SqjPsXr6piVk6ogVoVIUTMT1jcjJYRJitl67noT+hvc=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QTVSWyXBjkcCfbwFlFKq9QYdjCzN+hqdVF2Q3Ds8zUUrB5Dy7utGOX+KFdvWvpFTNjLyqM8V5QcWJ8FqGM5ZDkXW0ih4KwrA/Tx0vvaPN+4B4LdcWU/1gx4Ikoh9v+tk0m5aWmn8WA3TqZjCTuM+Ik2yRYJokef8QbPLlv0eudc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=quSKeo8S; arc=none smtp.client-ip=67.231.145.42
+	s=arc-20240116; t=1770326767; c=relaxed/simple;
+	bh=ntboWVGgR4eujbDEggg3GP5T/GJlDdZN1KRXS+R0b/s=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=si3V5oNWDvamvZ0pvVQ96ZNlKrR7aFeBcYtdtXKBcnNof6BBCY88BzZGHAXnrm+F3aOYShWxNBHBPxK+eOgZnZq3jL8G/B5Bpw+t38se97alZYDcW0J+L2wy8JtoK/l8H4gXbKImACcwCxyxRnqyVcrMnLABA90+54C7zeozjKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=ujIkDZ4R; arc=none smtp.client-ip=67.231.153.30
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="quSKeo8S"
-Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 615LGPq52800679
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2026 13:26:05 -0800
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="ujIkDZ4R"
+Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 615JBU2O2258948
+	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2026 13:26:06 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=YayacKBhq5fM8F+dwFjzyqDrFdp5PKOkZJL5HBfcF8U=; b=quSKeo8SQeH4
-	3ZD9L7ruuwRqD8LiDFM88FOKba/iVh23PIp9AS4Uccc/yuhgGvR9ck9Y9tPXCeek
-	6gKKcCAUnn6qDwDboboAaPbIKlC1ogTOhUsGRiqAqh4BRVpc5wXS+q3Npbns7aye
-	Rwc1oLj+jlvzhWBdxgOpLF1D8SW62tmbe74pOcuf73OWJgbXNAuB7UOeLVs/Yima
-	QZI7gf86TW39hss/UhxNgnDoEgITGpyqHxYxgeVspojEfQ0yQerxa2f8idWnJX6S
-	r2pug0Lso7qVX36wE0o599u4TihKiGhDHLAJOLOrptLe/sX2jSp112i/cLEN+6W9
-	Nmqsl6eKlQ==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c52ysr3n3-1
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=s2048-2025-q2; bh=9+ZTy7vZia2BgWL/KP
+	HhoVHDhHgZGmoO7Rxcx5WiHps=; b=ujIkDZ4RcsP4wDDI3BN3k5TTsN5z46ST/Z
+	4iTIgoB+nGNnK5rtLUw7Pf9v49uDpHZKHJYpZ93y9atZOQ2yR8j2sM/cQwo11zj7
+	Ugbqhkpnc8ErLzXoOtx0zoiak/NcaIRV3gBZTylRTWmPKK5EHl8gHhJ8fvOQNWj6
+	uG8Kngwyi2pAJKT/0d1qOsY1QUlDvfSKBPNBcqjukP4FD7wLr1l49I9xjyhmxPto
+	USX7uIeUeEN3sX3eMRIv9Tssnuhrr67+ur4oVCXQhtVDxqg7JDpKa0+iD4xh2gWx
+	pO6AcsVX69MKwAv7DvhilLXmVMPiZv+ONsXLo6Z4BGY6FlS9BLvg==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c50602ks7-7
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:26:05 -0800 (PST)
-Received: from twshared10186.03.snb1.facebook.com (2620:10d:c085:208::f) by
- mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
+	for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:26:06 -0800 (PST)
+Received: from twshared26368.04.snb1.facebook.com (2620:10d:c0a8:1b::30) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Thu, 5 Feb 2026 21:26:04 +0000
+ 15.2.2562.35; Thu, 5 Feb 2026 21:25:50 +0000
 Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
-	id 39F1F72EC9CE; Thu,  5 Feb 2026 13:25:49 -0800 (PST)
+	id 1C09A72EC9CB; Thu,  5 Feb 2026 13:25:49 -0800 (PST)
 From: Keith Busch <kbusch@meta.com>
 To: <linux-pci@vger.kernel.org>, <helgaas@kernel.org>
 CC: <alex@shazbot.org>, <lukas@wunner.de>, <dan.j.williams@intel.com>,
         <guojinhui.liam@bytedance.com>, <ilpo.jarvinen@linux.intel.com>,
         Keith Busch
 	<kbusch@kernel.org>
-Subject: [PATCHv3 2/4] pci: allow all bus devices to use the same slot
-Date: Thu, 5 Feb 2026 13:25:31 -0800
-Message-ID: <20260205212533.1512153-3-kbusch@meta.com>
+Subject: [PATCHv3 0/4] pci slot reset handling fixes
+Date: Thu, 5 Feb 2026 13:25:29 -0800
+Message-ID: <20260205212533.1512153-1-kbusch@meta.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260205212533.1512153-1-kbusch@meta.com>
-References: <20260205212533.1512153-1-kbusch@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,169 +56,58 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Authority-Analysis: v=2.4 cv=Wo0m8Nfv c=1 sm=1 tr=0 ts=69850aed cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA1MDE2MyBTYWx0ZWRfX4Uth5nmGRLe7
+ A3L5ad+BLQ2IXlR9u9+2qeDAoDfnBcs3RG1xb2xJ12Vii4JHILXFiXNi+dlsHX1Gj69E0uEwwuq
+ DEAvs5vJudS+hBeQ48PjFq6EIO8CZe9yHJX2pKRawYRIiYnIJEvI2rk6YHUIlpBlFHFGIkrS/YM
+ juPSQBZgS/LhqURoUQwWXHYSeHnJRzx5h0wGLd2DP7vzlBdjpUPBofPrhz4ovLufia+aIGf09wB
+ UPbhfIaXHH8dE4JaQX4BcfyqsQue/YBuAVEK4oJS8iJIN6hmTyJM56w+BMqwvBjQDW+8yK5Xjqe
+ taKZ/uEFB2cd7XsZrN2DbgPsO5TPtDByaN64ZGEu+yUGmaBJJegfkPgBMSiwfDN1eBZqCWZpum/
+ b4P8ABKxK8HjztyPIDCl28BZMDRdWPo+gf0fhG1DrEHJI0zayBMvYw3ddS+1IrV7gwVvjH/JRRB
+ FRGQsHCSwc9ZINtZbVQ==
+X-Proofpoint-ORIG-GUID: BTGJUvgRf21q8abYRNOnLgrBICqKeU9g
+X-Authority-Analysis: v=2.4 cv=K+Iv3iWI c=1 sm=1 tr=0 ts=69850aee cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
  a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8
- a=CNu0A2bchwO_Ns1ddjEA:9
-X-Proofpoint-GUID: -IMNNe_71a_D4IKhVmp-NTmVblH8Cmfr
-X-Proofpoint-ORIG-GUID: -IMNNe_71a_D4IKhVmp-NTmVblH8Cmfr
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA1MDE2MyBTYWx0ZWRfX4bEmr1YiKHV0
- 9PRvOHeBm+ESDYKAhZXxMYmNYCMnfCaKesuEv2mvtrvS4Br9qws6Ixo45FRJP5q2ENP71kN0pvU
- binuFMPOxKTwXkoOGUmNnQOFxIz2pI6xs+n5ZkIHaD/PHy6APJHbQHkyJboSC4zf7cbs81C4w+q
- KUb7SbAwLJhcJOtIVmD6PCCUJPasL+whkdz5ySrg9Y+RbwXZ15nUtEfeCXSAy3KBQOQrVku+iqR
- W45NH6ZyyzaeUxOUZCbxuB1hqVQYULQKRaecSKesjQTKtyU8FY0/DkjxRYxdJYc2IQOG/q0bJ1M
- JPgJtYwqK6deOhb54wMdJsnaKPWP8H2+Qd6SUNWz1mJbiPu44dlVfm0LAutOYHtYXMFHpFvNudp
- d7t6Ptn0Cld1z+6IgwztZ5vSl1y9kPbqnPhTJRo/ATySRzA4YzaKbJLPd4WZFc0QQbwbA5R/jFo
- HCWK2G2H2suhYblT31A==
+ a=-2_qhUFmwe7lauJXkPsA:9
+X-Proofpoint-GUID: BTGJUvgRf21q8abYRNOnLgrBICqKeU9g
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-05_05,2026-02-05_03,2025-10-01_01
 
 From: Keith Busch <kbusch@kernel.org>
 
-A pcie hot plug slot applies to the entire subordinate bus. Thus, pciehp
-only allocates a single hotplug slot for the bridge to that bus. The pci
-slot, though, would only match to functions on device 0, meaning any
-other device beyond that are not matched to any slot even though they
-all share the same slot.
+Changes from previous:
 
-Allow a slot to be created to claim all devices on a bus, not just a
-matching device. This is done by introducing a sential value, named
-PCI_SLOT_ALL_DEVICES, which then has the pci slot match to any device on
-the bus. This fixes walking the slot's device list for ports that don't
-have device specific slots.
+Incorporating suggestions from Dan:
 
-Since 0xff already has special meaning, the chose sentinal value for
-this new feature is 0xfe. This will not clash with any actual slot
-number since they are limited to 5 bits.
+  There's a prep patch changing the names of the functions for clarity.
 
-Signed-off-by: Keith Busch <kbusch@kernel.org>
----
- drivers/pci/hotplug/pciehp_core.c |  3 ++-
- drivers/pci/slot.c                | 22 ++++++++++++++++++----
- include/linux/pci.h               |  8 +++++++-
- 3 files changed, 27 insertions(+), 6 deletions(-)
+  Introduced symbolic names to the reset bridge parameters to indicate
+  whether it's a masked or unmasked reset attempt.
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pcie=
-hp_core.c
-index f59baa9129709..d80346d567049 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -79,7 +79,8 @@ static int init_slot(struct controller *ctrl)
- 	snprintf(name, SLOT_NAME_SIZE, "%u", PSN(ctrl));
-=20
- 	retval =3D pci_hp_initialize(&ctrl->hotplug_slot,
--				   ctrl->pcie->port->subordinate, 0, name);
-+				   ctrl->pcie->port->subordinate,
-+				   PCI_SLOT_ALL_DEVICES, name);
- 	if (retval) {
- 		ctrl_err(ctrl, "pci_hp_initialize failed: error %d\n", retval);
- 		kfree(ops);
-diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-index 50fb3eb595fe6..647f6d2cceef6 100644
---- a/drivers/pci/slot.c
-+++ b/drivers/pci/slot.c
-@@ -41,6 +41,10 @@ static ssize_t address_read_file(struct pci_slot *slot=
-, char *buf)
- 		return sysfs_emit(buf, "%04x:%02x\n",
- 				  pci_domain_nr(slot->bus),
- 				  slot->bus->number);
-+	if (slot->number =3D=3D PCI_SLOT_ALL_DEVICES)
-+		return sysfs_emit(buf, "%04x:%02x:00\n",
-+				  pci_domain_nr(slot->bus),
-+				  slot->bus->number);
-=20
- 	return sysfs_emit(buf, "%04x:%02x:%02x\n",
- 			  pci_domain_nr(slot->bus),
-@@ -73,7 +77,8 @@ static void pci_slot_release(struct kobject *kobj)
-=20
- 	down_read(&pci_bus_sem);
- 	list_for_each_entry(dev, &slot->bus->devices, bus_list)
--		if (PCI_SLOT(dev->devfn) =3D=3D slot->number)
-+		if (slot->number =3D=3D PCI_SLOT_ALL_DEVICES ||
-+		    PCI_SLOT(dev->devfn) =3D=3D slot->number)
- 			dev->slot =3D NULL;
- 	up_read(&pci_bus_sem);
-=20
-@@ -166,7 +171,8 @@ void pci_dev_assign_slot(struct pci_dev *dev)
-=20
- 	mutex_lock(&pci_slot_mutex);
- 	list_for_each_entry(slot, &dev->bus->slots, list)
--		if (PCI_SLOT(dev->devfn) =3D=3D slot->number)
-+		if (slot->number =3D=3D PCI_SLOT_ALL_DEVICES ||
-+		    PCI_SLOT(dev->devfn) =3D=3D slot->number)
- 			dev->slot =3D slot;
- 	mutex_unlock(&pci_slot_mutex);
- }
-@@ -188,7 +194,7 @@ static struct pci_slot *get_slot(struct pci_bus *pare=
-nt, int slot_nr)
- /**
-  * pci_create_slot - create or increment refcount for physical PCI slot
-  * @parent: struct pci_bus of parent bridge
-- * @slot_nr: PCI_SLOT(pci_dev->devfn) or -1 for placeholder
-+ * @slot_nr: PCI_SLOT(pci_dev->devfn), -1 for placeholder, or PCI_SLOT_A=
-LL_DEVICES
-  * @name: user visible string presented in /sys/bus/pci/slots/<name>
-  * @hotplug: set if caller is hotplug driver, NULL otherwise
-  *
-@@ -222,6 +228,13 @@ static struct pci_slot *get_slot(struct pci_bus *par=
-ent, int slot_nr)
-  * consist solely of a dddd:bb tuple, where dddd is the PCI domain of th=
-e
-  * %struct pci_bus and bb is the bus number. In other words, the devfn o=
-f
-  * the 'placeholder' slot will not be displayed.
-+ *
-+ * Bus-wide slots:
-+ * For PCIe hotplug, the physical slot encompasses the entire subordinat=
-e
-+ * bus, not just a single device number. Pass @slot_nr =3D=3D PCI_SLOT_A=
-LL_DEVICES
-+ * to create a slot that matches all devices on the bus. Unlike placehol=
-der
-+ * slots, bus-wide slots go through normal slot lookup and reuse existin=
-g
-+ * slots if present.
-  */
- struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
- 				 const char *name,
-@@ -285,7 +298,8 @@ struct pci_slot *pci_create_slot(struct pci_bus *pare=
-nt, int slot_nr,
-=20
- 	down_read(&pci_bus_sem);
- 	list_for_each_entry(dev, &parent->devices, bus_list)
--		if (PCI_SLOT(dev->devfn) =3D=3D slot_nr)
-+		if (slot_nr =3D=3D PCI_SLOT_ALL_DEVICES ||
-+		    PCI_SLOT(dev->devfn) =3D=3D slot_nr)
- 			dev->slot =3D slot;
- 	up_read(&pci_bus_sem);
-=20
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 864775651c6fa..d9f85025d97f5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -72,12 +72,18 @@
- /* return bus from PCI devid =3D ((u16)bus_number) << 8) | devfn */
- #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
-=20
-+/*
-+ * PCI_SLOT_ALL_DEVICES indicates a slot that covers all devices on the =
-bus.
-+ * Used for PCIe hotplug where the physical slot is the entire subordina=
-te bus.
-+ */
-+#define PCI_SLOT_ALL_DEVICES	0xfe
-+
- /* pci_slot represents a physical slot */
- struct pci_slot {
- 	struct pci_bus		*bus;		/* Bus this slot is on */
- 	struct list_head	list;		/* Node in list of slots */
- 	struct hotplug_slot	*hotplug;	/* Hotplug info (move here) */
--	unsigned char		number;		/* PCI_SLOT(pci_dev->devfn) */
-+	unsigned char		number;		/* Device nr, or PCI_SLOT_ALL_DEVICES */
- 	struct kobject		kobj;
- };
-=20
+  Renamed the new "pci_reset_bridge" to "pci_try_reset_bridge", in
+  keeping with the convention this series introduced.
+
+I've also include a new patch specifically to allow pciehp slots to
+claim all bus devices. I'm almost certain this is what pciehp wanted in
+the first place. If this is acceptable, patch 3/4 here becomes
+unnecessary, but I'm including that patch as an option here just in case
+it's preferred to remove the slot specific lock handling.
+
+Keith Busch (4):
+  pci: rename __pci_bus_reset and __pci_slot_reset
+  pci: allow all bus devices to use the same slot
+  pci: remove slot specific lock/unlock and save/restore
+  pci: make reset_subordinate hotplug safe
+
+ drivers/pci/hotplug/pciehp_core.c |   3 +-
+ drivers/pci/pci-sysfs.c           |   3 +-
+ drivers/pci/pci.c                 | 228 +++++++++---------------------
+ drivers/pci/pci.h                 |   2 +-
+ drivers/pci/slot.c                |  22 ++-
+ include/linux/pci.h               |   8 +-
+ 6 files changed, 93 insertions(+), 173 deletions(-)
+
 --=20
 2.47.3
 
