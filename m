@@ -1,303 +1,341 @@
-Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011008.outbound.protection.outlook.com [52.101.65.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC8342B757;
-	Thu,  5 Feb 2026 16:11:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.8
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770307903; cv=fail; b=dHMml8dfptrwMFMi8EX0CdYzWGWsmMPerpJDO/MmmFAQOUC0QYFBQPs01Zs4pu2jnUBMXAheSvnKEZUoTXfJBlkizUrLvxg/XRMijCp1gnUNuIrUE0FhLBgjLhDdz06tD4KJ1f6lSeiRQd7XSNExj0xxprwA6RYi76+S/ryWD4E=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770307903; c=relaxed/simple;
-	bh=BqOyc6TZEW/pbDysR4pdVBlj24Hv+XLHyJrPDdlTuOY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=nt29wAjEOBTHHW3QPeuNHYEIgLMqljkPwKkrRnsylN4CKy+dmEzwAdCS6X6DnJsKz3R4BvBc9JdSn34l2Y22KlgW6HIacMHstIdAvbARjaHaRfekykIK81i4t0ZfHquB3TuHtN6ZeS794VsA/EbpQxPG7ZSYkUj0Ag8GsH9CXn0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=MygwU7BV; arc=fail smtp.client-ip=52.101.65.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1F52D1A9FBA;
+	Thu,  5 Feb 2026 16:28:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770308903; cv=none; b=HlUsD2bEQMyh8BNoegxPzOuvLoPTYCgjUrdN0JNg+xGyT3jeXEjRRuPiBlZzxAtK6OUfZZdYz9zoOnhupRUBwhJcoF3696uAkLgLPkBropCucT9EM4dF+of99GodBmMdmH2UBdph5BEEPOnBXMCT+4sQjVd6lbnB4jImGMh8nZo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770308903; c=relaxed/simple;
+	bh=W8VlNfO2JHo/bnCgKOOJvg7DmWY2z2lpGn5jTY2Nj30=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XNGmXqY08gXPoDtyovDQYadIWaSXKoGAE4nkU6wamU0bZHWZ4XwwWDxndQ4pR3Y42Ku7Kx1DRSbQMd1fN69Fyfc2zOYv9lJ5UCk4SWtZXgTzXzpo8EBuTWNYyi9q40wOd4wwz+PXfReYijrRxVNsEw7gYJCiFosGyU2qTsvOSok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=H0SyIUB8; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="MygwU7BV"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=YYs4uGU5/WnzicIOPO7jXKTWRUHeP5Qqosp/FNw9HsyH52lE89Uz16uYpn+RgUVoz83nGS4MyqE1E2jiHPeWBHTIkp2iOxAYh4vDk0ZQ3cMORVFi4Jg8+kGXhvslJQtps+ejIgmQBGQ/QiqHSfocAXSF+QL0HmdW4XQ1CztkIlpbbgjJLEsFgWE69XL4UK4pbwD2kQokz01eW17TbeKzEmnb1/2qG556W36RRIcaOzzPf+mifT4eXgGKzLKrP3fvBSEHeZhboa/W9l1nOhJdk2wRpDX3isKIwDxblW073BigJveE4zBjMgGViwbKjXOB3YHUZ2RODu82dDGCDb1H6Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KM6zXSgLOXp4bl92cE4ns5jrIvIgv+J+HxAQSNcvsFE=;
- b=GUGrmygvqLNxvs7fom8mxqolOPUuop8YgYwzO4NZtJMjSZEsrCPIiwqKY22a1bW3aVfAcQdtciWwrdC2O7Ou7EYzNLMiSHr4nlFpRtP8UlbZHLsEoRbQCFU7sw4y27Hekud+Z5JePe9VYOZeJwjK0GEOPpBmgU0RgDnxZVAxZMAgheEHuUpenI/4uflJvDWEUAI8vcCNuADaY/vu8HrYodGu33p9bAsRDkDGxmFFNwWURhc08XUBwT+Yd0pYeEZk2sPh2zWXUTA+FH3/e0TmD9mKTIExNLzG30mIoOe57hvaIQb5z/S0JMlYxdWYnNq7+ol8+Qv+fGEpQqIyrc2Omw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KM6zXSgLOXp4bl92cE4ns5jrIvIgv+J+HxAQSNcvsFE=;
- b=MygwU7BVnlF/dMQqodSnIujIhDqvxNFKPWaJ8KxJfamVlUFY2EY877gihR5c6ddgjKJD/Xcic36aKduU/0C5eu0xEy7mrpktSzqeY3IDRqGg5+kqp3/6qHOyVf8Z9UxtIduPx7tZyUgsNYVjyI10I4WSu+NeKLAWI5td/KhOPUbzgrd4csV9t1H8z0Jn5szaFCWZYlQyV1AtWXxOSjMuB8RasZnpKvqylXOvLDtKDg4QMu8vAovLoWZ1E55HdJBZXXABUuQ04u1AKsClnSRb65z4ZpG7bIm2Lfl7F35F0Ndixmm31/DlXf5xkou7lX3JBGWEWk+BZ7Ij6jOqqS7DLw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by FRWPR04MB11104.eurprd04.prod.outlook.com (2603:10a6:d10:173::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.14; Thu, 5 Feb
- 2026 16:11:40 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9587.010; Thu, 5 Feb 2026
- 16:11:40 +0000
-Date: Thu, 5 Feb 2026 11:11:31 -0500
-From: Frank Li <Frank.li@nxp.com>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: vkoul@kernel.org, mani@kernel.org, jingoohan1@gmail.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 08/11] PCI: dwc: ep: Report integrated DWC eDMA remote
- resources
-Message-ID: <aYTBM5yOnyhy8F2g@lizhi-Precision-Tower-5810>
-References: <20260204145440.950609-1-den@valinux.co.jp>
- <20260204145440.950609-9-den@valinux.co.jp>
- <aYOKo1Ep9g9xxeQr@lizhi-Precision-Tower-5810>
- <szak7xkmj7j36jyjyqj3t56uytdubabk4tet6yrgiqa54gwafq@kynruthmumcu>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <szak7xkmj7j36jyjyqj3t56uytdubabk4tet6yrgiqa54gwafq@kynruthmumcu>
-X-ClientProxiedBy: BYAPR05CA0009.namprd05.prod.outlook.com
- (2603:10b6:a03:c0::22) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="H0SyIUB8"
+Received: from skinsburskii.localdomain (unknown [52.148.138.235])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 3899820B7168;
+	Thu,  5 Feb 2026 08:28:21 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 3899820B7168
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1770308902;
+	bh=hEKNI4pc8JGeBxj0hB9EVA+YavUvMccFeARgB1ErhQ8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=H0SyIUB8WvuLjuLyMvCF5pJe/r3PpXQFAtQ4RP+Y9O1+KKvMLZLZKhF1o3XchbQAu
+	 FMtriiJF20YerGvVCKXLbgTG14HA1BwdWo6N9LN20iEqQr9zRBh+odMGZXCucIqMYO
+	 HdIxlXCrX9Yk/MCa5HO0J6hHgIZtHLKC3vPhnFiI=
+Date: Thu, 5 Feb 2026 08:28:20 -0800
+From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
+	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com
+Subject: Re: [PATCH v0 15/15] mshv: Populate mmio mappings for PCI passthru
+Message-ID: <aYTFJB4UcRkL2NwG@skinsburskii.localdomain>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-16-mrathor@linux.microsoft.com>
+ <aXAxmYm4zbOzGztz@skinsburskii.localdomain>
+ <45e7a4c0-f1d8-b8b4-8c03-56d06845323b@linux.microsoft.com>
+ <aXevWXolgNrrLltF@skinsburskii.localdomain>
+ <f39a501e-478f-66ff-26c8-229ca3991f4f@linux.microsoft.com>
+ <aXkKhGvpaHUGclI-@skinsburskii.localdomain>
+ <8d798da6-1720-ceea-f1b0-62ca675085c8@linux.microsoft.com>
+ <aYDROXpR5kvlylGG@skinsburskii.localdomain>
+ <596c9549-9edc-91f3-7473-e206ddc68e76@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|FRWPR04MB11104:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0a8b145b-5289-4c9a-4858-08de64d13f19
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|366016|1800799024|376014|52116014|7416014|38350700014|7053199007;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?UP2ct5Ai9SBbA1Wx21jkyCovRKbyrNtDDJvTVgzmXAOgHlLWZJSWNE5w/tFz?=
- =?us-ascii?Q?ZSBZmh8ztOPnzl4bJ7A5yjnL1RURzmOIhAFyiEVDz6auVq3RlU1UZ51wda/3?=
- =?us-ascii?Q?khSVULGzEYkRukRZz02HcXL52p/CnDtFFeDQYwCjqFkovRPBFFTd0KuFykYK?=
- =?us-ascii?Q?PHuf0NqvoOqgOZejM8fq2wHutnBzbBpw4QC7Yc7kMYciEcEaq9KwyHTbmXBZ?=
- =?us-ascii?Q?kYemfWpiS5KTPWUJpuHWmovdPqqx7JDH5ollx1PQK8eWxHypCI4SomHaTvzJ?=
- =?us-ascii?Q?OM40HM8OVaTBWmYSz+rGYhDWfUys+9bDF/HfVyxeNauItK5WHuIS4zYCH9RO?=
- =?us-ascii?Q?f/vSikHaKKyMDRHt8nAhLgjwsQoh1VxJkyUlICdnWwFrPsa7w1IvEirn6ydb?=
- =?us-ascii?Q?fSiJs0avy2go4x1tJeoFR2E7Popotu9m/oycomEZ4gVt8J/cIR8FT8F4+hh8?=
- =?us-ascii?Q?Npa0JoX2E5QurqezpA8A3/5SwBTQTb+0j6vCg7JbGR3RR5cFahpWKKU7qCAL?=
- =?us-ascii?Q?UbPET/GAoI8EFT8cqS2/CkwEXKv/nlNSHdkWtE3Ai1NTrk42s+CATh4Ws8yG?=
- =?us-ascii?Q?vIBZMziOwFEeUQb3yvYwEU5dXnEwtze4pGtmi/5wqRJzpJgC4YtZDOrH//0z?=
- =?us-ascii?Q?9vFyVt6spkzxXqt3zZNKAeFloi6t/G89DWjsyT5tLvo96msEfmLe1eDwvApk?=
- =?us-ascii?Q?BFFtRMLEEF758xzrVKqLHdCJtLfSkDipVwrzPThEWoSBWH8nVdpG3Fs0Tlgq?=
- =?us-ascii?Q?Il58/N2e0tIMASs+cB33rRd7PVlzmMmU0dwr5m9BJmqXBe339B6zgIsEX46d?=
- =?us-ascii?Q?h21Tb6TOSXVNuglNBjlAugFOJBtVDY+8W5KwcUXcrhXh4TtzMTVNDGgKpTWu?=
- =?us-ascii?Q?gYVpm/hT8eKFqU/ZeWR32mUJAnT+VertOpj738EbNZpnmsDBcQ4+V3uP1cA4?=
- =?us-ascii?Q?dzPVv3f9G6IOEoZK7j26YY/jXfWaraLWjiy73kxk14gMDaREjTAMsbTdQyro?=
- =?us-ascii?Q?mQP6cvNdj+0Tcac1F2vU0fQZoHe1vc8CM9gX8QCDH46x7jIzK057YhtMO4Pc?=
- =?us-ascii?Q?ec+tsxFC6BLzPrJ5VpdZ3JUkDzqOMCGjP/ZUwParTsKraca+E33s2doqgjF8?=
- =?us-ascii?Q?cdqA9EGRYNWM2xJhcAX4JmPGqr+dC15dICZV81R54+/mbQKsvhsdiLCh963w?=
- =?us-ascii?Q?NZPuyR3cOJ0llVZ1bAQPkya//PqDph23PxLpbSfLTtNnHIrzt4ux8bGSwX3B?=
- =?us-ascii?Q?kDq9FHiYWpDeeIGmRsmvXCebRRQirV11XbDBM3r7k07wiSQuf9u4APTen7G2?=
- =?us-ascii?Q?4Y0wKxGx12G7AGRgQRmm3QX3HED9KjgkLd1gcTN4LqlWIS4aOiqfegcZoRBR?=
- =?us-ascii?Q?etVCgw1XlZ5FfLswBzPRJnTk6rPq69PB6j4ufHDdVJ8+5FOVntx2u/g+3uA9?=
- =?us-ascii?Q?6QTP0h8J3WpXE0vpToHebyUP79OmaI1adWbCHecluq3mt2zbOPpVt+P2g/em?=
- =?us-ascii?Q?DCAnD+SD4Hyn1rZ9XJaFmtkP2K8Fct6fyrp1DCsAY++792l6+Mk73xeABoUF?=
- =?us-ascii?Q?kKswvJsU8DjbIKGxnp1AOxIZCAuD4dD4EPETezPJyDGPdXbfKLBsB4E69c4N?=
- =?us-ascii?Q?aKKQOUtqd+hau2AFY3vtwc8=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(1800799024)(376014)(52116014)(7416014)(38350700014)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?J1L9xwXpMah7gq1HMiazR0274gxO0eXsyCELBdg2ggiAYnvYMJOdO4wKEBT6?=
- =?us-ascii?Q?e4rFGFikfYyLXOQ8tBFHMNoxKGHiJX/lBHOMkcpK/WTQM0x/hMhn29llK2Cn?=
- =?us-ascii?Q?+c10cyfi4gYgpt1MuQ0xHL+GFMSzzfnS1Z8CMxl0m0w6gH5s0FFzIQL0wYfr?=
- =?us-ascii?Q?X95DMovZFGOsefXwOTvJLGZaRjGHMAqej5kFAgDo2y06j8Ad6Q3jMkeepgWS?=
- =?us-ascii?Q?yYFoeSI1tL+a6/FI92XODiMONWA8lDZQUEL34gGK6te/ux97I8E2EflZDwvn?=
- =?us-ascii?Q?pzEUV1V+CLV/FM20CmDrNEIGkirvYpLdw8jj4ZUnFtTxUvZSChggk1NW7Eqe?=
- =?us-ascii?Q?Dq96E6T/lis+Iq0+JGlQ2lNfpUknpiutLBJOHEtPZIXs14vopDHllc1XkxoL?=
- =?us-ascii?Q?qKUM957AC1yd3AgtAg+hTiwVB2SyJ3MUxiIo9fRq1JyFEaUUYcsoKRI0kmO4?=
- =?us-ascii?Q?87AVn8z1icRZ5kmg0LbqixJmdJP9bbAR0LYzdR218pBzuCOLqPDBhv65xRdE?=
- =?us-ascii?Q?T5Vlk7edu/PbNSOhjegT3+UnYY+dlOim7gdWQeSCGmASvlUjaFhw/nOG8K3g?=
- =?us-ascii?Q?q5V4TX8LN/8nbG9srAgEKVwUiEzjgU4yx2GZdLeqpLpUV19s9X4KQptsCSgN?=
- =?us-ascii?Q?tf8d1xUGpQ2PBcqbfdABazzx2M0uybLiCalbrlAjIJjPpHHZRCtP8d4/i3j9?=
- =?us-ascii?Q?nd4WAEUeTqaadA0SwQdvDFXMaexUtLM/uY8Ovb8ruBlWECbwUmiEgparm+aO?=
- =?us-ascii?Q?uncxZkqYVHU/xbaSRyjWQdZN4JCxJbxKZlY1J3A8syPpFsbmLZVzVzeJa/KC?=
- =?us-ascii?Q?1ReStXPFinJo/G2fVwGtnMXWxgo6dHgtPJowE6zUP9prIlJ47wturFkhQQKz?=
- =?us-ascii?Q?4LAzEfEHp3jiKcqDpn7PrYnVzNi2m9r1UXn/1F15iz+LePHmvyDay44cJyn2?=
- =?us-ascii?Q?45j8a/rqE4KvfaDuGGaFVFWkF31N5vP7BtqXNVyjsHv0+MeppEyhLOPvvztZ?=
- =?us-ascii?Q?r5XabsMywEpd3Sj5awm53UDio9vpGVChGYI3HXoc3CJ2NJqbg1c+hSII8r85?=
- =?us-ascii?Q?jaHuQAIn327t0aTkligiyJV0Vi+vhOPxMsQUi8a+F0nXE3Ox7uKDUiDwc1Ut?=
- =?us-ascii?Q?PecGydVbFN1ph9IoRZv3lRFy5NNhQ+doUv/tAz/9MgeDaYMTba+SCAMZnpFF?=
- =?us-ascii?Q?ei1L01xpslNLjbdpf4NaftfxlrurwbUujYOmdP16FIl0Vkj4jbRsyD3WLuFo?=
- =?us-ascii?Q?1FOcWbJiZDfsi7dY/qC7z2gwn39OXCMudZYD+Vzx7S2fmS5aMoxXiKXp/qdk?=
- =?us-ascii?Q?FRwxdpc2i1eurDGvkoYLpouq2yf7pqHX1mfVA83N55Gx+DY2ctdvQRuqhzcY?=
- =?us-ascii?Q?XUgcusQZik1mokfZWt8GOKfpUmZlQL7Y8E7TUR8sw3XwynUIDC5bjxdOLnzR?=
- =?us-ascii?Q?dtmXefkk7ZGW7owWxPTyZSirOZhQFMRoMwMHMjgg+3SFhpYyJUF0zNF1Z5sl?=
- =?us-ascii?Q?e2XNC7NFTE18D85NdpNrLNROGBKUUVN6VVk3nNdOISnm75/zwK8lpH16hE1S?=
- =?us-ascii?Q?BlpIWaxkB3VZ3PDXXB8EqsOLzT7x/Sdda7lQrQcGFteRquMDs2ru8vru//Ti?=
- =?us-ascii?Q?Bd9DF6LH20sef+o+BACG9O5bXT4xEm7TdR4qjLwRnNA7i7dMRtSXfLg6wfyF?=
- =?us-ascii?Q?ZhaA6z4wV5q0B8sQU62gYxMxYdIn9UhPIKgXJolekuj3/6qw?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0a8b145b-5289-4c9a-4858-08de64d13f19
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Feb 2026 16:11:40.4380
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qJYg/UZEg2SJThUhUy1II9I+hbrpSY6YMlZ2fQPP4wPVHgLm9MiYHJzI/5f667f9VkOobFr+8rxvPrSag1sJJg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: FRWPR04MB11104
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <596c9549-9edc-91f3-7473-e206ddc68e76@linux.microsoft.com>
 
-On Thu, Feb 05, 2026 at 03:58:35PM +0900, Koichiro Den wrote:
-> On Wed, Feb 04, 2026 at 01:06:27PM -0500, Frank Li wrote:
-> > On Wed, Feb 04, 2026 at 11:54:36PM +0900, Koichiro Den wrote:
-> > > Implement pci_epc_ops.get_remote_resources() for the DesignWare PCIe
-> > > endpoint controller. Report:
-> > > - the integrated eDMA control MMIO window
-> > > - the per-channel linked-list regions for read/write engines
-> > >
-> > > This allows endpoint function drivers to discover and map or inform
-> > > these resources to a remote peer using the generic EPC API.
-> > >
-> > > Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> > > ---
-> > >  .../pci/controller/dwc/pcie-designware-ep.c   | 74 +++++++++++++++++++
-> > >  1 file changed, 74 insertions(+)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > index 7e7844ff0f7e..5c0dcbf18d07 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > @@ -808,6 +808,79 @@ dw_pcie_ep_get_features(struct pci_epc *epc, u8 func_no, u8 vfunc_no)
-> > >  	return ep->ops->get_features(ep);
-> > >  }
-> > >
-> > > +static int
-> > > +dw_pcie_ep_get_remote_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-> > > +				struct pci_epc_remote_resource *resources,
-> > > +				int num_resources)
-> > > +{
-> > > +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> > > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > > +	struct dw_edma_chip *edma = &pci->edma;
-> > > +	int ll_cnt = 0, needed, idx = 0;
-> > > +	resource_size_t dma_size;
-> > > +	phys_addr_t dma_phys;
-> > > +	unsigned int i;
-> > > +
-> > > +	if (!pci->edma_reg_size)
-> > > +		return 0;
-> > > +
-> > > +	dma_phys = pci->edma_reg_phys;
-> > > +	dma_size = pci->edma_reg_size;
-> > > +
-> > > +	for (i = 0; i < edma->ll_wr_cnt; i++)
-> > > +		if (edma->ll_region_wr[i].sz)
-> > > +			ll_cnt++;
-> > > +
-> > > +	for (i = 0; i < edma->ll_rd_cnt; i++)
-> > > +		if (edma->ll_region_rd[i].sz)
-> > > +			ll_cnt++;
-> > > +
-> > > +	needed = 1 + ll_cnt;
-> > > +
-> > > +	/* Count query mode */
-> > > +	if (!resources || !num_resources)
-> > > +		return needed;
->
-> ^[1] count-query implementation
->
-> > > +
-> > > +	if (num_resources < needed)
-> > > +		return -ENOSPC;
-> >
-> > How to predict how many 'num_resources' needs?  provide
-> > dw_pcie_ep_get_resource_number()?
-> >
-> > Or dw_pcie_ep_get_remote_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-> >                              struct pci_epc_remote_resource *resources,
-> >                              int *num_resources)
-> >
-> > return number_resource validate.  if resources is NULL, just return how
-> > many resource needed.
->
-> This is already supported by the current implementation: in
-> dw_pcie_ep_get_remote_resources(), if resources is NULL (or num_resources
-> is 0), it returns the number of entries required (see [1] above). Callers
-> can therefore first query the count and then call again with a properly
-> sized array.
->
-> This behavior is also documented in the core API added in [PATCH v3 06/11]
-> (pci_epc_get_remote_resources()).
->
->     + * Return:
->   > + *   * >= 0: number of resources returned (or required, if @resources is NULL)
->     + *   * -EOPNOTSUPP: backend does not support remote resource queries
->     + *   * other -errno on failure
->     + */
->     +int pci_epc_get_remote_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->     +                            struct pci_epc_remote_resource *resources,
->     +                            int num_resources)
+On Wed, Feb 04, 2026 at 02:52:54PM -0800, Mukesh R wrote:
+> On 2/2/26 08:30, Stanislav Kinsburskii wrote:
+> > On Fri, Jan 30, 2026 at 02:17:24PM -0800, Mukesh R wrote:
+> > > On 1/27/26 10:57, Stanislav Kinsburskii wrote:
+> > > > On Mon, Jan 26, 2026 at 07:07:22PM -0800, Mukesh R wrote:
+> > > > > On 1/26/26 10:15, Stanislav Kinsburskii wrote:
+> > > > > > On Fri, Jan 23, 2026 at 06:19:15PM -0800, Mukesh R wrote:
+> > > > > > > On 1/20/26 17:53, Stanislav Kinsburskii wrote:
+> > > > > > > > On Mon, Jan 19, 2026 at 10:42:30PM -0800, Mukesh R wrote:
+> > > > > > > > > From: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > > > > > > > 
+> > > > > > > > > Upon guest access, in case of missing mmio mapping, the hypervisor
+> > > > > > > > > generates an unmapped gpa intercept. In this path, lookup the PCI
+> > > > > > > > > resource pfn for the guest gpa, and ask the hypervisor to map it
+> > > > > > > > > via hypercall. The PCI resource pfn is maintained by the VFIO driver,
+> > > > > > > > > and obtained via fixup_user_fault call (similar to KVM).
+> > > > > > > > > 
+> > > > > > > > > Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> > > > > > > > > ---
+> > > > > > > > >      drivers/hv/mshv_root_main.c | 115 ++++++++++++++++++++++++++++++++++++
+> > > > > > > > >      1 file changed, 115 insertions(+)
+> > > > > > > > > 
+> > > > > > > > > diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
+> > > > > > > > > index 03f3aa9f5541..4c8bc7cd0888 100644
+> > > > > > > > > --- a/drivers/hv/mshv_root_main.c
+> > > > > > > > > +++ b/drivers/hv/mshv_root_main.c
+> > > > > > > > > @@ -56,6 +56,14 @@ struct hv_stats_page {
+> > > > > > > > >      	};
+> > > > > > > > >      } __packed;
+> > > > > > > > > +bool hv_nofull_mmio;   /* don't map entire mmio region upon fault */
+> > > > > > > > > +static int __init setup_hv_full_mmio(char *str)
+> > > > > > > > > +{
+> > > > > > > > > +	hv_nofull_mmio = true;
+> > > > > > > > > +	return 0;
+> > > > > > > > > +}
+> > > > > > > > > +__setup("hv_nofull_mmio", setup_hv_full_mmio);
+> > > > > > > > > +
+> > > > > > > > >      struct mshv_root mshv_root;
+> > > > > > > > >      enum hv_scheduler_type hv_scheduler_type;
+> > > > > > > > > @@ -612,6 +620,109 @@ mshv_partition_region_by_gfn(struct mshv_partition *partition, u64 gfn)
+> > > > > > > > >      }
+> > > > > > > > >      #ifdef CONFIG_X86_64
+> > > > > > > > > +
+> > > > > > > > > +/*
+> > > > > > > > > + * Check if uaddr is for mmio range. If yes, return 0 with mmio_pfn filled in
+> > > > > > > > > + * else just return -errno.
+> > > > > > > > > + */
+> > > > > > > > > +static int mshv_chk_get_mmio_start_pfn(struct mshv_partition *pt, u64 gfn,
+> > > > > > > > > +				       u64 *mmio_pfnp)
+> > > > > > > > > +{
+> > > > > > > > > +	struct vm_area_struct *vma;
+> > > > > > > > > +	bool is_mmio;
+> > > > > > > > > +	u64 uaddr;
+> > > > > > > > > +	struct mshv_mem_region *mreg;
+> > > > > > > > > +	struct follow_pfnmap_args pfnmap_args;
+> > > > > > > > > +	int rc = -EINVAL;
+> > > > > > > > > +
+> > > > > > > > > +	/*
+> > > > > > > > > +	 * Do not allow mem region to be deleted beneath us. VFIO uses
+> > > > > > > > > +	 * useraddr vma to lookup pci bar pfn.
+> > > > > > > > > +	 */
+> > > > > > > > > +	spin_lock(&pt->pt_mem_regions_lock);
+> > > > > > > > > +
+> > > > > > > > > +	/* Get the region again under the lock */
+> > > > > > > > > +	mreg = mshv_partition_region_by_gfn(pt, gfn);
+> > > > > > > > > +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
+> > > > > > > > > +		goto unlock_pt_out;
+> > > > > > > > > +
+> > > > > > > > > +	uaddr = mreg->start_uaddr +
+> > > > > > > > > +		((gfn - mreg->start_gfn) << HV_HYP_PAGE_SHIFT);
+> > > > > > > > > +
+> > > > > > > > > +	mmap_read_lock(current->mm);
+> > > > > > > > 
+> > > > > > > > Semaphore can't be taken under spinlock.
+> > > > > > 
+> > > > > > > 
+> > > > > > > Yeah, something didn't feel right here and I meant to recheck, now regret
+> > > > > > > rushing to submit the patch.
+> > > > > > > 
+> > > > > > > Rethinking, I think the pt_mem_regions_lock is not needed to protect
+> > > > > > > the uaddr because unmap will properly serialize via the mm lock.
+> > > > > > > 
+> > > > > > > 
+> > > > > > > > > +	vma = vma_lookup(current->mm, uaddr);
+> > > > > > > > > +	is_mmio = vma ? !!(vma->vm_flags & (VM_IO | VM_PFNMAP)) : 0;
+> > > > > > > > 
+> > > > > > > > Why this check is needed again?
+> > > > > > > 
+> > > > > > > To make sure region did not change. This check is under lock.
+> > > > > > > 
+> > > > > > 
+> > > > > > How can this happen? One can't change VMA type without unmapping it
+> > > > > > first. And unmapping it leads to a kernel MMIO region state dangling
+> > > > > > around without corresponding user space mapping.
+> > > > > 
+> > > > > Right, and vm_flags would not be mmio expected then.
+> > > > > 
+> > > > > > This is similar to dangling pinned regions and should likely be
+> > > > > > addressed the same way by utilizing MMU notifiers to destpoy memoty
+> > > > > > regions is VMA is detached.
+> > > > > 
+> > > > > I don't think we need that. Either it succeeds if the region did not
+> > > > > change at all, or just fails.
+> > > > > 
+> > > > 
+> > > > I'm afraid we do, as if the driver mapped a page with the previous
+> > > > memory region, and then the region is unmapped, the page will stay
+> > > > mapped in the hypervisor, but will be considered free by kernel, which
+> > > > in turn will lead to GPF upn next allocation.
+> > > 
+> > > There are no ram pages for mmio regions. Also, we don't do much with
+> > > mmio regions other than tell the hyp about it.
+> > > 
+> > 
+> > So, are you saying that the hypervisor does not use these pages and only
+> > tracks them? That would make things easier.
+> > However, if we later try to map a GPA that is already mapped, will the
+> > hypervisor return an error?
+> 
+> Hypervisor does not return an error.
+> 
 
-Sorry, I missed it.
+So, what happenes if we map a GPA that is already mapped? Does it just
+remap it to the new PFN?
 
-Frank
+Thanks,
+Stanislav
 
->
-> Thanks,
-> Koichiro
->
-> >
-> > Frank
-> > > +
-> > > +	resources[idx++] = (struct pci_epc_remote_resource) {
-> > > +		.type = PCI_EPC_RR_DMA_CTRL_MMIO,
-> > > +		.phys_addr = dma_phys,
-> > > +		.size = dma_size,
-> > > +	};
-> > > +
-> > > +	/* One LL region per write channel */
-> > > +	for (i = 0; i < edma->ll_wr_cnt; i++) {
-> > > +		if (!edma->ll_region_wr[i].sz)
-> > > +			continue;
-> > > +
-> > > +		resources[idx++] = (struct pci_epc_remote_resource) {
-> > > +			.type = PCI_EPC_RR_DMA_CHAN_DESC,
-> > > +			.phys_addr = edma->ll_region_wr[i].paddr,
-> > > +			.size = edma->ll_region_wr[i].sz,
-> > > +			.u.dma_chan_desc.hw_chan_id = i,
-> > > +			.u.dma_chan_desc.ep2rc = true,
-> > > +		};
-> > > +	}
-> > > +
-> > > +	/* One LL region per read channel */
-> > > +	for (i = 0; i < edma->ll_rd_cnt; i++) {
-> > > +		if (!edma->ll_region_rd[i].sz)
-> > > +			continue;
-> > > +
-> > > +		resources[idx++] = (struct pci_epc_remote_resource) {
-> > > +			.type = PCI_EPC_RR_DMA_CHAN_DESC,
-> > > +			.phys_addr = edma->ll_region_rd[i].paddr,
-> > > +			.size = edma->ll_region_rd[i].sz,
-> > > +			.u.dma_chan_desc.hw_chan_id = i,
-> > > +			.u.dma_chan_desc.ep2rc = false,
-> > > +		};
-> > > +	}
-> > > +
-> > > +	return idx;
-> > > +}
-> > > +
-> > >  static const struct pci_epc_ops epc_ops = {
-> > >  	.write_header		= dw_pcie_ep_write_header,
-> > >  	.set_bar		= dw_pcie_ep_set_bar,
-> > > @@ -823,6 +896,7 @@ static const struct pci_epc_ops epc_ops = {
-> > >  	.start			= dw_pcie_ep_start,
-> > >  	.stop			= dw_pcie_ep_stop,
-> > >  	.get_features		= dw_pcie_ep_get_features,
-> > > +	.get_remote_resources	= dw_pcie_ep_get_remote_resources,
-> > >  };
-> > >
-> > >  /**
-> > > --
-> > > 2.51.0
-> > >
+> 
+> 
+> > Thanks,
+> > Stanislav
+> > 
+> > > Thanks,
+> > > -Mukesh
+> > > 
+> > > 
+> > > > With pinned regions we issue is similar but less impacting: pages can't
+> > > > be released by user space unmapping and thus will be simply leaked, but
+> > > > the system stays intact.
+> > > > 
+> > > > MMIO regions are simila to movable region in this regard: they don't
+> > > > reference the user pages, and thus this guest region replaement is a
+> > > > stright wat to kernel panic.
+> > > > 
+> > > > > 
+> > > > > > > > The region type is stored on the region itself.
+> > > > > > > > And the type is checked on the caller side.
+> > > > > > > > 
+> > > > > > > > > +	if (!is_mmio)
+> > > > > > > > > +		goto unlock_mmap_out;
+> > > > > > > > > +
+> > > > > > > > > +	pfnmap_args.vma = vma;
+> > > > > > > > > +	pfnmap_args.address = uaddr;
+> > > > > > > > > +
+> > > > > > > > > +	rc = follow_pfnmap_start(&pfnmap_args);
+> > > > > > > > > +	if (rc) {
+> > > > > > > > > +		rc = fixup_user_fault(current->mm, uaddr, FAULT_FLAG_WRITE,
+> > > > > > > > > +				      NULL);
+> > > > > > > > > +		if (rc)
+> > > > > > > > > +			goto unlock_mmap_out;
+> > > > > > > > > +
+> > > > > > > > > +		rc = follow_pfnmap_start(&pfnmap_args);
+> > > > > > > > > +		if (rc)
+> > > > > > > > > +			goto unlock_mmap_out;
+> > > > > > > > > +	}
+> > > > > > > > > +
+> > > > > > > > > +	*mmio_pfnp = pfnmap_args.pfn;
+> > > > > > > > > +	follow_pfnmap_end(&pfnmap_args);
+> > > > > > > > > +d
+> > > > > > > > > +unlock_mmap_out:
+> > > > > > > > > +	mmap_read_unlock(current->mm);
+> > > > > > > > > +unlock_pt_out:
+> > > > > > > > > +	spin_unlock(&pt->pt_mem_regions_lock);
+> > > > > > > > > +	return rc;
+> > > > > > > > > +}
+> > > > > > > > > +
+> > > > > > > > > +/*
+> > > > > > > > > + * At present, the only unmapped gpa is mmio space. Verify if it's mmio
+> > > > > > > > > + * and resolve if possible.
+> > > > > > > > > + * Returns: True if valid mmio intercept and it was handled, else false
+> > > > > > > > > + */
+> > > > > > > > > +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp)
+> > > > > > > > > +{
+> > > > > > > > > +	struct hv_message *hvmsg = vp->vp_intercept_msg_page;
+> > > > > > > > > +	struct hv_x64_memory_intercept_message *msg;
+> > > > > > > > > +	union hv_x64_memory_access_info accinfo;
+> > > > > > > > > +	u64 gfn, mmio_spa, numpgs;
+> > > > > > > > > +	struct mshv_mem_region *mreg;
+> > > > > > > > > +	int rc;
+> > > > > > > > > +	struct mshv_partition *pt = vp->vp_partition;
+> > > > > > > > > +
+> > > > > > > > > +	msg = (struct hv_x64_memory_intercept_message *)hvmsg->u.payload;
+> > > > > > > > > +	accinfo = msg->memory_access_info;
+> > > > > > > > > +
+> > > > > > > > > +	if (!accinfo.gva_gpa_valid)
+> > > > > > > > > +		return false;
+> > > > > > > > > +
+> > > > > > > > > +	/* Do a fast check and bail if non mmio intercept */
+> > > > > > > > > +	gfn = msg->guest_physical_address >> HV_HYP_PAGE_SHIFT;
+> > > > > > > > > +	mreg = mshv_partition_region_by_gfn(pt, gfn);
+> > > > > > > > 
+> > > > > > > > This call needs to be protected by the spinlock.
+> > > > > > > 
+> > > > > > > This is sorta fast path to bail. We recheck under partition lock above.
+> > > > > > > 
+> > > > > > 
+> > > > > > Accessing the list of regions without lock is unsafe.
+> > > > > 
+> > > > > I am not sure why? This check is done by a vcpu thread, so regions
+> > > > > will not have just gone away.
+> > > > > 
+> > > > 
+> > > > This is shared resources. Multiple VP thread get into this function
+> > > > simultaneously, so there is a race already. But this one we can live
+> > > > with without locking as they don't mutate the list of the regions.
+> > > > 
+> > > > The issue happens when VMM adds or removed another region as it mutates
+> > > > the list and races with VP threads doing this lookup.
+> > > > 
+> > > > Thanks,
+> > > > Stanislav
+> > > > 
+> > > > 
+> > > > > Thanks,
+> > > > > -Mukesh
+> > > > > 
+> > > > > 
+> > > > > > Thanks,
+> > > > > > Stanislav
+> > > > > > 
+> > > > > > > Thanks,
+> > > > > > > -Mukesh
+> > > > > > > 
+> > > > > > > 
+> > > > > > > > Thanks,
+> > > > > > > > Stanislav
+> > > > > > > > 
+> > > > > > > > > +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
+> > > > > > > > > +		return false;
+> > > > > > > > > +
+> > > > > > > > > +	rc = mshv_chk_get_mmio_start_pfn(pt, gfn, &mmio_spa);
+> > > > > > > > > +	if (rc)
+> > > > > > > > > +		return false;
+> > > > > > > > > +
+> > > > > > > > > +	if (!hv_nofull_mmio) {		/* default case */
+> > > > > > > > > +		gfn = mreg->start_gfn;
+> > > > > > > > > +		mmio_spa = mmio_spa - (gfn - mreg->start_gfn);
+> > > > > > > > > +		numpgs = mreg->nr_pages;
+> > > > > > > > > +	} else
+> > > > > > > > > +		numpgs = 1;
+> > > > > > > > > +
+> > > > > > > > > +	rc = hv_call_map_mmio_pages(pt->pt_id, gfn, mmio_spa, numpgs);
+> > > > > > > > > +
+> > > > > > > > > +	return rc == 0;
+> > > > > > > > > +}
+> > > > > > > > > +
+> > > > > > > > >      static struct mshv_mem_region *
+> > > > > > > > >      mshv_partition_region_by_gfn_get(struct mshv_partition *p, u64 gfn)
+> > > > > > > > >      {
+> > > > > > > > > @@ -666,13 +777,17 @@ static bool mshv_handle_gpa_intercept(struct mshv_vp *vp)
+> > > > > > > > >      	return ret;
+> > > > > > > > >      }
+> > > > > > > > > +
+> > > > > > > > >      #else  /* CONFIG_X86_64 */
+> > > > > > > > > +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp) { return false; }
+> > > > > > > > >      static bool mshv_handle_gpa_intercept(struct mshv_vp *vp) { return false; }
+> > > > > > > > >      #endif /* CONFIG_X86_64 */
+> > > > > > > > >      static bool mshv_vp_handle_intercept(struct mshv_vp *vp)
+> > > > > > > > >      {
+> > > > > > > > >      	switch (vp->vp_intercept_msg_page->header.message_type) {
+> > > > > > > > > +	case HVMSG_UNMAPPED_GPA:
+> > > > > > > > > +		return mshv_handle_unmapped_gpa(vp);
+> > > > > > > > >      	case HVMSG_GPA_INTERCEPT:
+> > > > > > > > >      		return mshv_handle_gpa_intercept(vp);
+> > > > > > > > >      	}
+> > > > > > > > > -- 
+> > > > > > > > > 2.51.2.vfs.0.1
+> > > > > > > > > 
