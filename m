@@ -1,131 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E01D198A17;
-	Thu,  5 Feb 2026 07:56:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7404523D7D4
+	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 08:04:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770278173; cv=none; b=GpQPgWAifzhLvU7hALgY5n1d4q0vlPAKkPgJsvzwEhviMik3T9kFSYcwwgTpjAwtNr/D4L5OG5FbfiBdpTNzHAaNvRd6Ba93ebz8QsK9uBQckXPV/ThDF7XLPVbXBPiRVCqEeYvpcDuax68s3TuyluX9J4hiobkLq/e0rC6c6kE=
+	t=1770278660; cv=none; b=Cq/E6v0RjBGnNZxQ8oLBISIK+B5X4zfNWkLTNSR/77rItFI/IpH4dscIKiJTiOZ3ISIUgLpqLVk51yWedn2AfLrsUC475Ebohv/R+AFmH/1+aawEj/XcvvLprx5Uy3WYQ9Mfx2Kz3k+rG5lR7QGw0+zQaB0SYk6f0JzYnDp0w48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770278173; c=relaxed/simple;
-	bh=iAqePYBH9r6Pea3NTQMyXP1EmjnGKfuKyDxDpuh5aQk=;
+	s=arc-20240116; t=1770278660; c=relaxed/simple;
+	bh=NuTnfWMLkaNnCn9Wm6xJ2kv52vSP7Fh8/WQg/2+3wCw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n7fTmMQW3bdD/OVeRBH6jc37ciKZRiOJBJsRq4MNPZExDXGp/ejg1Hru3Z+3qA63rcJV3IXXlYXAxU/ufNSwZTLjuHwRd2NW/I5kp0kLlnwy9/ouX0tz88dIqtSok6r0iK97DpNxadt+1Rz171eJI/zVaJluuwSo5IJuA4q7P7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VPxGULA9; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=XeeIeK34N/W6LJ8M3U61FHrHXCRlQMVsP/0cmemdbz9JCR/serbLSDbSm1yHiVfET4g4lnCJA7tjwsazC1nyd3vvkATOljMCc+ibvEdBsCzpmzXsPAj5g0WjdhcnLg9ScVX5+A5k07hIZzwY4Ku3hlDeNXjpjdCyFYD/S6D7DKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AY3PHzoO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VPxGULA9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E77FC4CEF7;
-	Thu,  5 Feb 2026 07:56:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AY3PHzoO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06406C4CEF7;
+	Thu,  5 Feb 2026 08:04:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770278173;
-	bh=iAqePYBH9r6Pea3NTQMyXP1EmjnGKfuKyDxDpuh5aQk=;
+	s=k20201202; t=1770278660;
+	bh=NuTnfWMLkaNnCn9Wm6xJ2kv52vSP7Fh8/WQg/2+3wCw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VPxGULA9ZAWSdGAmKU2s2UsFoSkCvALA5LQsFG57Lj98a3op/YO8P51TNlwdIHK0e
-	 Js0Wx3NZJM7tMpv9QudyyoFnNBFQWl3BiqjNJdrI27qhk541mIe72moVgcwNEDauld
-	 sRxKJ18xtEvWe8C1fsj0IC9lQX9Y2skZsz20L/Hu2OZ0TWnbCjPYWzZNN7OSFeo7HY
-	 XNchMt4KO4Xhjed5jT/Tk4Ad5v4k9nYkOe7onX/RlZAiFGITtVlRSBk6JAH5Kp2eXd
-	 N9+3h0l3WzkX/6YC7Rq5C2sZGpBS49LuRIizL9EoPHNi5l3YnLWYTukvyo+sNIkpbN
-	 AaPrkurhj7ZSQ==
-Date: Thu, 5 Feb 2026 13:25:58 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	thierry.reding@gmail.com, jonathanh@nvidia.com, jingoohan1@gmail.com, vidyas@nvidia.com, 
-	cassel@kernel.org, 18255117159@163.com, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V4 00/22] Enhancements to pcie-tegra194 driver
-Message-ID: <u7doih67vqljroq674ymf7vlm2weysk5xbnhtuyxp3johd3yty@s2clguxon5hp>
-References: <20260126074519.3426742-1-mmaddireddy@nvidia.com>
+	b=AY3PHzoOGgpTxoNe4O/XaR4423LEYLME0QXk0kqxHV1syhL8xG1IMUhbEkc/m0Jz9
+	 Bmv1Vb9V5PX33XRw+TCWGIZvmaHLk7dHksmyYuyomoYF9auKQD7UBQuvCPY8Z8Jg4K
+	 y4EYEM/k3mePlRe6gTx+qdzlpokoFcQDNxwKY93yIL3qb2hUbuaEXcS/RFUP2Tg337
+	 QHgI2+YfMz1l/Xj28yTZYHveuvEaIfHoE3TYQZ7Q8oPhPlGva5O8k2hPjTU2PLdrxN
+	 Nl8yQPRTuUNEP8VONXQTfKdNHLd+DMLEpVK7zDYmePyu5hN23KrSXVlOnjWl/L1Y3/
+	 nf0amaD8mYetA==
+Date: Thu, 5 Feb 2026 09:04:14 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Samuel Holland <samuel.holland@sifive.com>,
+	Charles Mirabile <cmirabil@redhat.com>, tim609@andestech.com,
+	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/3] PCI: dwc: Clean up iATU index mess
+Message-ID: <aYRO_vQW6d_UfIZE@ryzen>
+References: <20260127151038.1484881-5-cassel@kernel.org>
+ <zdxpiisnc4eq5a26dlaelchri3vu4aoyndy2pnif2rotbiyj72@c3hbnd3cwubz>
+ <aYCc1GpSr4k2HdHJ@ryzen>
+ <alpine.DEB.2.21.2602041606040.12532@angie.orcam.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260126074519.3426742-1-mmaddireddy@nvidia.com>
+In-Reply-To: <alpine.DEB.2.21.2602041606040.12532@angie.orcam.me.uk>
 
-On Mon, Jan 26, 2026 at 01:14:57PM +0530, Manikanta Maddireddy wrote:
-> This series[1] was originally posted by Vidya Sagar, and I have rebased
-> it onto 6.19.0-rc6-next. I addressed review comments, reworked a patch
-> and included four new patches. I verified these patches on Jetson AGX
-> Orin(Tegra234 SoC).
+On Wed, Feb 04, 2026 at 04:13:05PM +0000, Maciej W. Rozycki wrote:
+> On Mon, 2 Feb 2026, Niklas Cassel wrote:
 > 
-> Disabling L1SS capability based on support-clkreq device tree property
-> is moved to common DWC driver, so I reworked below patch to disable
-> just L1.2 capability on Tegra234 SoC.
->  - PCI: tegra194: Disable L1.2 capability of Tegra234 EP
+> > > Series looks good to me. However, I'd prefer waiting for Maciej's testing before
+> > > merging.
+> > 
+> > Maciej,
+> > 
+> > Any chance to get a Tested-by?
+> > 
+> > 6.19-rc8 is already out.
+> > 
+> > Even if they are fixes, it would be nice if it they could make it for 7.0.
 > 
-> I added below four new patches to fix bugs, commit message of each
-> patch has the details on the bug and fix.
->  - PCI: tegra194: Add ASPM L1 entrance latency config
->  - PCI: tegra194: Use HW version number
->  - PCI: tegra194: Fix CBB timeout caused by DBI access before core power-on
->  - PCI: tegra194: Disable PERST IRQ only in Endpoint mode 
-> 
+>  Hectic time here.  I've verified it now using the system I've originally 
+> encountered the regression with.  No significant change in the kernel log 
+> compared to the previous fix by Krishna, except for different IRQ numbers 
+> assigned to devices (but that I reckon could be something else present in 
+> the pci tree that isn't there in Linus's master), and the system seems to 
+> boot correctly, so I do hope all is in order.
 
-Please send the fixes separately. It is hard to review a big series like this. I
-don't recommend sending more than 10 patches per series.
+Thank you for testing!
 
-- Mani
+Considering that it is fixes, I suggest that we queue it up for 6.20 / 7.0,
+even though it will not have time to be in linux-next for a week.
 
-> I added more context in the commit message for below patch based on review
-> comment in V3.
->  - PCI: tegra194: Remove IRQF_ONESHOT flag during Endpoint interrupt registration
-> 
-> Rest of the patches are same as the original V3 series, just rebased them on
-> 6.19.0-rc6-next.
-> 
-> Verification details.
->  - I verified both Root port and Endpoint mode controllers on Tegra234 SoC.
->  - Basic sanity Link up, configuration space access and BAR access are verified.
->  - I verified that ASPM L1.2 capability is disabled for Endpoint mode.
->  - I verified suspend to RAM tests with Endpoint mode.
-> 
-> [1] https://patchwork.kernel.org/project/linux-pci/patch/20221013183854.21087-1-vidyas@nvidia.com/
-> 
-> Manikanta Maddireddy (4):
->   PCI: tegra194: Add ASPM L1 entrance latency config
->   PCI: tegra194: Use HW version number
->   PCI: tegra194: Fix CBB timeout caused by DBI access before core
->     power-on
->   PCI: tegra194: Disable PERST IRQ only in Endpoint mode
-> 
-> Vidya Sagar (18):
->   PCI: tegra194: Use devm_gpiod_get_optional() to parse
->     "nvidia,refclk-select"
->   PCI: tegra194: Drive CLKREQ signal low explicitly
->   PCI: tegra194: Fix polling delay for L2 state
->   PCI: tegra194: Apply pinctrl settings for both PCIe RP and EP
->   PCI: tegra194: Refactor LTSSM state polling on surprise down
->   PCI: tegra194: Disable direct speed change for EP
->   PCI: tegra194: Calibrate P2U for endpoint mode
->   PCI: tegra194: Free resources during controller deinitialization
->   PCI: tegra194: Remove IRQF_ONESHOT flag during Endpoint interrupt
->     registration
->   PCI: tegra194: Enable DMA interrupt
->   PCI: tegra194: Enable hardware hot reset mode in Endpoint
->   PCI: tegra194: Allow system suspend when the Endpoint link is not up
->   PCI: tegra194: Disable L1.2 capability of Tegra234 EP
->   PCI: tegra194: Set LTR message request before PCIe link up
->   PCI: tegra194: Don't force the device into the D0 state before L2
->   PCI: tegra194: Free up EP resources during remove()
->   dt-bindings: PCI: tegra194: Add monitor clock support
->   PCI: tegra194: Add core monitor clock support
-> 
->  .../bindings/pci/nvidia,tegra194-pcie-ep.yaml |   6 +-
->  .../bindings/pci/nvidia,tegra194-pcie.yaml    |   6 +-
->  drivers/pci/controller/dwc/pcie-designware.c  |   2 +-
->  drivers/pci/controller/dwc/pcie-designware.h  |   2 +
->  drivers/pci/controller/dwc/pcie-tegra194.c    | 268 +++++++++++-------
->  5 files changed, 181 insertions(+), 103 deletions(-)
-> 
-> -- 
-> 2.34.1
-> 
+(The requirement to spend time in linux-next is for new stuff, not for fixes.)
 
--- 
-மணிவண்ணன் சதாசிவம்
+
+Kind regards,
+Niklas
