@@ -1,55 +1,57 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2DFCE23F417;
-	Thu,  5 Feb 2026 18:31:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770316318; cv=none; b=mFXOzSIsf5ZvKoU3xn/JpN+R/R2EiG+yA0fL2Hs/Vm6nk+CiI6G9/l/vNZt3XJqK+KyjhBj8UrRDYnMo6a9LDTJso5q71gpMorS5frf2Jji6v8NV1t+ClNkV9I9ZrI1Yq3NqWp6BH1WH/cQgsNY0c/1+o76ku/C/lXyPxd/K4Ew=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770316318; c=relaxed/simple;
-	bh=heEgSRf28KWo9o/PocJuupwzkVeF/gjG+BN2+SWSIa0=;
+Received: from sender4-of-o54.zoho.com (sender4-of-o54.zoho.com [136.143.188.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC2AF30649C;
+	Thu,  5 Feb 2026 18:49:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770317343; cv=pass; b=spV1Mzod0qR/fA51NR9uPTCj6b00pkb5a7/Rr3uNbYt0gwCdyczS0ERkBeK+7fxU/QyX4lKDLMPxs+fO0wUWU5tanKygverQZYWafHJLQmrswH20JDzt0xGh7CQ7mcahbGFeZfbWVvyPwLZ+YUbPU2FnxayhJkQQogN92IaqOkU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770317343; c=relaxed/simple;
+	bh=Vh2oP1Cm03rchO4Ng4g1WIm/z+mD9qqktuyHYR0W5EA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TrZU90zCqyvOvi6w+atNRxmxtlaFaV94HR79t/XSV5Aoq+3b2QD1XxNe1uwyjeykWVVsZQcIsatJIWyH/LoClc06mQAnIRS0inr+axoF4Qr3cZPloYQptASCpBNZr9ygaRy8Gg0i0JJZpEn0AFTkOQ3BEHyWpghGBMRjed905yA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=haHqLw8e; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=csSp4Jrr0cv1d8MTLYchRZbRKgR5PEoe8ivky7hWAq2zfm8dTB7NF+UcTtF5esGNHUWLPVWL3zvebI5hAeHMW5ROV4LN994EBfoPPFZg0D4cW1LPebvQQFcQL9P+yaGwALvskMaE++aK7SyJE2LkG+UeHhseG7llE3rEB7FnDXM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=anirudhrb.com; spf=pass smtp.mailfrom=anirudhrb.com; dkim=pass (1024-bit key) header.d=anirudhrb.com header.i=anirudh@anirudhrb.com header.b=QKUYfyuc; arc=pass smtp.client-ip=136.143.188.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=anirudhrb.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=anirudhrb.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="haHqLw8e"
-Received: from skinsburskii.localdomain (unknown [52.148.138.235])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 8470B20B7169;
-	Thu,  5 Feb 2026 10:31:56 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8470B20B7169
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1770316317;
-	bh=KXMwG6BGnk12d8Zak18LbzOy5UoGxhY+Vill2gcYoVg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=haHqLw8eQdW/e0hQhTM7GUUYD4UFFfmsptLs2aj+o9czuyMPa2Hye3N5zWxc5/Jmo
-	 CveCbGUldDoRIW2W6rZOT6a2axryt/n2mHxDIVcRSzaKcebDW30mvqB9wOSqXjOjPQ
-	 TnqHkIyI2/rgvUlCuyMo9mYsHDJKSgJWtJw2FEMQ=
-Date: Thu, 5 Feb 2026 10:31:54 -0800
-From: Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
+	dkim=pass (1024-bit key) header.d=anirudhrb.com header.i=anirudh@anirudhrb.com header.b="QKUYfyuc"
+ARC-Seal: i=1; a=rsa-sha256; t=1770317290; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=VxxiQZ8Si+cWrV870ZJYhAOLbxYCPc2kvxRJmkTJj9ac5/p5vkop8LbvtPVmvPqh32nFOfmDlxg1VfLPYNoQXM4+gepkfurb+m2l4IF4QaTLNJXGI414AmKUIU5Mn1CP+P76OqXQtnB+uUwdIOaE6S9Au5tS0Kz68v6Wj8tdvhI=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1770317290; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=KO0xB+xmzULqqY6PqjNDWqiMvaiTGN2sWMUiGRmryfU=; 
+	b=R6uSDm0mWdBb5+zuOI2gdSwhzoxgvyLdgPpsFfhVhjvQmUVa4PdgcxuP6CNJKwa/A/WliUL1PPDeKatnsbZGa4lBOTOWecRzRgfpnIlK4Z/Dw78pHq/xSES8Vxdev+teat4Xm9FbYyGjwFGLgMbVt7AoyrGAdXeUxyHlomUKFMg=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=anirudhrb.com;
+	spf=pass  smtp.mailfrom=anirudh@anirudhrb.com;
+	dmarc=pass header.from=<anirudh@anirudhrb.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1770317289;
+	s=zoho; d=anirudhrb.com; i=anirudh@anirudhrb.com;
+	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
+	bh=KO0xB+xmzULqqY6PqjNDWqiMvaiTGN2sWMUiGRmryfU=;
+	b=QKUYfyucCzTIaEgwNQ1g8534g9sEp095La2jtIZYHo7xgMTPibicMfizIFkdXFC5
+	kaSBXaKEcllmiPGx5snT87wtn971gQiHEkwospHXlcBhJ3SGqWwkXnAgTpUhQB1fJ+i
+	dA34i/fLky8JJj0NuE7xXx8beuP60bE/UxrLRCYc=
+Received: by mx.zohomail.com with SMTPS id 1770317286060380.11045380201017;
+	Thu, 5 Feb 2026 10:48:06 -0800 (PST)
+Date: Fri, 6 Feb 2026 00:17:54 +0530
+From: Anirudh Rayabharam <anirudh@anirudhrb.com>
 To: Mukesh R <mrathor@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com,
-	will@kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-	dave.hansen@linux.intel.com, hpa@zytor.com, joro@8bytes.org,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, arnd@arndb.de,
-	nunodasneves@linux.microsoft.com, mhklinux@outlook.com
-Subject: Re: [PATCH v0 15/15] mshv: Populate mmio mappings for PCI passthru
-Message-ID: <aYTiGhDwJqoyWqRT@skinsburskii.localdomain>
-References: <aXAxmYm4zbOzGztz@skinsburskii.localdomain>
- <45e7a4c0-f1d8-b8b4-8c03-56d06845323b@linux.microsoft.com>
- <aXevWXolgNrrLltF@skinsburskii.localdomain>
- <f39a501e-478f-66ff-26c8-229ca3991f4f@linux.microsoft.com>
- <aXkKhGvpaHUGclI-@skinsburskii.localdomain>
- <8d798da6-1720-ceea-f1b0-62ca675085c8@linux.microsoft.com>
- <aYDROXpR5kvlylGG@skinsburskii.localdomain>
- <596c9549-9edc-91f3-7473-e206ddc68e76@linux.microsoft.com>
- <aYTFJB4UcRkL2NwG@skinsburskii.localdomain>
- <4a7c63fc-b96a-9841-7745-adbc41190c36@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-arch@vger.kernel.org, kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org, 
+	decui@microsoft.com, longli@microsoft.com, catalin.marinas@arm.com, will@kernel.org, 
+	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, 
+	hpa@zytor.com, joro@8bytes.org, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	mani@kernel.org, robh@kernel.org, bhelgaas@google.com, arnd@arndb.de, 
+	nunodasneves@linux.microsoft.com, mhklinux@outlook.com, romank@linux.microsoft.com
+Subject: Re: [PATCH v0 02/15] x86/hyperv: cosmetic changes in irqdomain.c for
+ readability
+Message-ID: <d7kv4dlv34ieh6o4wyb53wxwbiphbtlnn65g3tnxzjxilrdxu5@zrxlmhx2lye6>
+References: <20260120064230.3602565-1-mrathor@linux.microsoft.com>
+ <20260120064230.3602565-3-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -58,295 +60,439 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4a7c63fc-b96a-9841-7745-adbc41190c36@linux.microsoft.com>
+In-Reply-To: <20260120064230.3602565-3-mrathor@linux.microsoft.com>
+X-ZohoMailClient: External
 
-On Thu, Feb 05, 2026 at 09:57:20AM -0800, Mukesh R wrote:
-> On 2/5/26 08:28, Stanislav Kinsburskii wrote:
-> > On Wed, Feb 04, 2026 at 02:52:54PM -0800, Mukesh R wrote:
-> > > On 2/2/26 08:30, Stanislav Kinsburskii wrote:
-> > > > On Fri, Jan 30, 2026 at 02:17:24PM -0800, Mukesh R wrote:
-> > > > > On 1/27/26 10:57, Stanislav Kinsburskii wrote:
-> > > > > > On Mon, Jan 26, 2026 at 07:07:22PM -0800, Mukesh R wrote:
-> > > > > > > On 1/26/26 10:15, Stanislav Kinsburskii wrote:
-> > > > > > > > On Fri, Jan 23, 2026 at 06:19:15PM -0800, Mukesh R wrote:
-> > > > > > > > > On 1/20/26 17:53, Stanislav Kinsburskii wrote:
-> > > > > > > > > > On Mon, Jan 19, 2026 at 10:42:30PM -0800, Mukesh R wrote:
-> > > > > > > > > > > From: Mukesh Rathor <mrathor@linux.microsoft.com>
-> > > > > > > > > > > 
-> > > > > > > > > > > Upon guest access, in case of missing mmio mapping, the hypervisor
-> > > > > > > > > > > generates an unmapped gpa intercept. In this path, lookup the PCI
-> > > > > > > > > > > resource pfn for the guest gpa, and ask the hypervisor to map it
-> > > > > > > > > > > via hypercall. The PCI resource pfn is maintained by the VFIO driver,
-> > > > > > > > > > > and obtained via fixup_user_fault call (similar to KVM).
-> > > > > > > > > > > 
-> > > > > > > > > > > Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
-> > > > > > > > > > > ---
-> > > > > > > > > > >       drivers/hv/mshv_root_main.c | 115 ++++++++++++++++++++++++++++++++++++
-> > > > > > > > > > >       1 file changed, 115 insertions(+)
-> > > > > > > > > > > 
-> > > > > > > > > > > diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
-> > > > > > > > > > > index 03f3aa9f5541..4c8bc7cd0888 100644
-> > > > > > > > > > > --- a/drivers/hv/mshv_root_main.c
-> > > > > > > > > > > +++ b/drivers/hv/mshv_root_main.c
-> > > > > > > > > > > @@ -56,6 +56,14 @@ struct hv_stats_page {
-> > > > > > > > > > >       	};
-> > > > > > > > > > >       } __packed;
-> > > > > > > > > > > +bool hv_nofull_mmio;   /* don't map entire mmio region upon fault */
-> > > > > > > > > > > +static int __init setup_hv_full_mmio(char *str)
-> > > > > > > > > > > +{
-> > > > > > > > > > > +	hv_nofull_mmio = true;
-> > > > > > > > > > > +	return 0;
-> > > > > > > > > > > +}
-> > > > > > > > > > > +__setup("hv_nofull_mmio", setup_hv_full_mmio);
-> > > > > > > > > > > +
-> > > > > > > > > > >       struct mshv_root mshv_root;
-> > > > > > > > > > >       enum hv_scheduler_type hv_scheduler_type;
-> > > > > > > > > > > @@ -612,6 +620,109 @@ mshv_partition_region_by_gfn(struct mshv_partition *partition, u64 gfn)
-> > > > > > > > > > >       }
-> > > > > > > > > > >       #ifdef CONFIG_X86_64
-> > > > > > > > > > > +
-> > > > > > > > > > > +/*
-> > > > > > > > > > > + * Check if uaddr is for mmio range. If yes, return 0 with mmio_pfn filled in
-> > > > > > > > > > > + * else just return -errno.
-> > > > > > > > > > > + */
-> > > > > > > > > > > +static int mshv_chk_get_mmio_start_pfn(struct mshv_partition *pt, u64 gfn,
-> > > > > > > > > > > +				       u64 *mmio_pfnp)
-> > > > > > > > > > > +{
-> > > > > > > > > > > +	struct vm_area_struct *vma;
-> > > > > > > > > > > +	bool is_mmio;
-> > > > > > > > > > > +	u64 uaddr;
-> > > > > > > > > > > +	struct mshv_mem_region *mreg;
-> > > > > > > > > > > +	struct follow_pfnmap_args pfnmap_args;
-> > > > > > > > > > > +	int rc = -EINVAL;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	/*
-> > > > > > > > > > > +	 * Do not allow mem region to be deleted beneath us. VFIO uses
-> > > > > > > > > > > +	 * useraddr vma to lookup pci bar pfn.
-> > > > > > > > > > > +	 */
-> > > > > > > > > > > +	spin_lock(&pt->pt_mem_regions_lock);
-> > > > > > > > > > > +
-> > > > > > > > > > > +	/* Get the region again under the lock */
-> > > > > > > > > > > +	mreg = mshv_partition_region_by_gfn(pt, gfn);
-> > > > > > > > > > > +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
-> > > > > > > > > > > +		goto unlock_pt_out;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	uaddr = mreg->start_uaddr +
-> > > > > > > > > > > +		((gfn - mreg->start_gfn) << HV_HYP_PAGE_SHIFT);
-> > > > > > > > > > > +
-> > > > > > > > > > > +	mmap_read_lock(current->mm);
-> > > > > > > > > > 
-> > > > > > > > > > Semaphore can't be taken under spinlock.
-> > > > > > > > 
-> > > > > > > > > 
-> > > > > > > > > Yeah, something didn't feel right here and I meant to recheck, now regret
-> > > > > > > > > rushing to submit the patch.
-> > > > > > > > > 
-> > > > > > > > > Rethinking, I think the pt_mem_regions_lock is not needed to protect
-> > > > > > > > > the uaddr because unmap will properly serialize via the mm lock.
-> > > > > > > > > 
-> > > > > > > > > 
-> > > > > > > > > > > +	vma = vma_lookup(current->mm, uaddr);
-> > > > > > > > > > > +	is_mmio = vma ? !!(vma->vm_flags & (VM_IO | VM_PFNMAP)) : 0;
-> > > > > > > > > > 
-> > > > > > > > > > Why this check is needed again?
-> > > > > > > > > 
-> > > > > > > > > To make sure region did not change. This check is under lock.
-> > > > > > > > > 
-> > > > > > > > 
-> > > > > > > > How can this happen? One can't change VMA type without unmapping it
-> > > > > > > > first. And unmapping it leads to a kernel MMIO region state dangling
-> > > > > > > > around without corresponding user space mapping.
-> > > > > > > 
-> > > > > > > Right, and vm_flags would not be mmio expected then.
-> > > > > > > 
-> > > > > > > > This is similar to dangling pinned regions and should likely be
-> > > > > > > > addressed the same way by utilizing MMU notifiers to destpoy memoty
-> > > > > > > > regions is VMA is detached.
-> > > > > > > 
-> > > > > > > I don't think we need that. Either it succeeds if the region did not
-> > > > > > > change at all, or just fails.
-> > > > > > > 
-> > > > > > 
-> > > > > > I'm afraid we do, as if the driver mapped a page with the previous
-> > > > > > memory region, and then the region is unmapped, the page will stay
-> > > > > > mapped in the hypervisor, but will be considered free by kernel, which
-> > > > > > in turn will lead to GPF upn next allocation.
-> > > > > 
-> > > > > There are no ram pages for mmio regions. Also, we don't do much with
-> > > > > mmio regions other than tell the hyp about it.
-> > > > > 
-> > > > 
-> > > > So, are you saying that the hypervisor does not use these pages and only
-> > > > tracks them? That would make things easier.
-> > > > However, if we later try to map a GPA that is already mapped, will the
-> > > > hypervisor return an error?
-> > > 
-> > > Hypervisor does not return an error.
-> > > 
-> > 
-> > So, what happenes if we map a GPA that is already mapped? Does it just
-> > remap it to the new PFN?
+On Mon, Jan 19, 2026 at 10:42:17PM -0800, Mukesh R wrote:
+> From: Mukesh Rathor <mrathor@linux.microsoft.com>
 > 
-> yes, otherwise it would return error, right?
+> Make cosmetic changes:
+>  o Rename struct pci_dev *dev to *pdev since there are cases of
+>    struct device *dev in the file and all over the kernel
+>  o Rename hv_build_pci_dev_id to hv_build_devid_type_pci in anticipation
+>    of building different types of device ids
+>  o Fix checkpatch.pl issues with return and extraneous printk
+>  o Replace spaces with tabs
+>  o Rename struct hv_devid *xxx to struct hv_devid *hv_devid given code
+>    paths involve many types of device ids
+>  o Fix indentation in a large if block by using goto.
+> 
+> There are no functional changes.
+> 
+> Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+> ---
+>  arch/x86/hyperv/irqdomain.c | 197 +++++++++++++++++++-----------------
+>  1 file changed, 103 insertions(+), 94 deletions(-)
+> 
+> diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
+> index c3ba12b1bc07..f6b61483b3b8 100644
+> --- a/arch/x86/hyperv/irqdomain.c
+> +++ b/arch/x86/hyperv/irqdomain.c
+> @@ -1,5 +1,4 @@
+>  // SPDX-License-Identifier: GPL-2.0
+> -
+>  /*
+>   * Irqdomain for Linux to run as the root partition on Microsoft Hypervisor.
+>   *
+> @@ -14,8 +13,8 @@
+>  #include <linux/irqchip/irq-msi-lib.h>
+>  #include <asm/mshyperv.h>
+>  
+> -static int hv_map_interrupt(union hv_device_id device_id, bool level,
+> -		int cpu, int vector, struct hv_interrupt_entry *entry)
+> +static int hv_map_interrupt(union hv_device_id hv_devid, bool level,
+> +		int cpu, int vector, struct hv_interrupt_entry *ret_entry)
+>  {
+>  	struct hv_input_map_device_interrupt *input;
+>  	struct hv_output_map_device_interrupt *output;
+> @@ -32,7 +31,7 @@ static int hv_map_interrupt(union hv_device_id device_id, bool level,
+>  	intr_desc = &input->interrupt_descriptor;
+>  	memset(input, 0, sizeof(*input));
+>  	input->partition_id = hv_current_partition_id;
+> -	input->device_id = device_id.as_uint64;
+> +	input->device_id = hv_devid.as_uint64;
+>  	intr_desc->interrupt_type = HV_X64_INTERRUPT_TYPE_FIXED;
+>  	intr_desc->vector_count = 1;
+>  	intr_desc->target.vector = vector;
+> @@ -44,7 +43,7 @@ static int hv_map_interrupt(union hv_device_id device_id, bool level,
+>  
+>  	intr_desc->target.vp_set.valid_bank_mask = 0;
+>  	intr_desc->target.vp_set.format = HV_GENERIC_SET_SPARSE_4K;
+> -	nr_bank = cpumask_to_vpset(&(intr_desc->target.vp_set), cpumask_of(cpu));
+> +	nr_bank = cpumask_to_vpset(&intr_desc->target.vp_set, cpumask_of(cpu));
+>  	if (nr_bank < 0) {
+>  		local_irq_restore(flags);
+>  		pr_err("%s: unable to generate VP set\n", __func__);
+> @@ -61,7 +60,7 @@ static int hv_map_interrupt(union hv_device_id device_id, bool level,
+>  
+>  	status = hv_do_rep_hypercall(HVCALL_MAP_DEVICE_INTERRUPT, 0, var_size,
+>  			input, output);
+> -	*entry = output->interrupt_entry;
+> +	*ret_entry = output->interrupt_entry;
+>  
+>  	local_irq_restore(flags);
+>  
+> @@ -71,21 +70,19 @@ static int hv_map_interrupt(union hv_device_id device_id, bool level,
+>  	return hv_result_to_errno(status);
+>  }
+>  
+> -static int hv_unmap_interrupt(u64 id, struct hv_interrupt_entry *old_entry)
+> +static int hv_unmap_interrupt(u64 id, struct hv_interrupt_entry *irq_entry)
+>  {
+>  	unsigned long flags;
+>  	struct hv_input_unmap_device_interrupt *input;
+> -	struct hv_interrupt_entry *intr_entry;
+>  	u64 status;
+>  
+>  	local_irq_save(flags);
+>  	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
+>  
+>  	memset(input, 0, sizeof(*input));
+> -	intr_entry = &input->interrupt_entry;
+>  	input->partition_id = hv_current_partition_id;
+>  	input->device_id = id;
+> -	*intr_entry = *old_entry;
+> +	input->interrupt_entry = *irq_entry;
+>  
+>  	status = hv_do_hypercall(HVCALL_UNMAP_DEVICE_INTERRUPT, input, NULL);
+>  	local_irq_restore(flags);
+> @@ -115,67 +112,71 @@ static int get_rid_cb(struct pci_dev *pdev, u16 alias, void *data)
+>  	return 0;
+>  }
+>  
+> -static union hv_device_id hv_build_pci_dev_id(struct pci_dev *dev)
+> +static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
+>  {
+> -	union hv_device_id dev_id;
+> +	int pos;
+> +	union hv_device_id hv_devid;
+>  	struct rid_data data = {
+>  		.bridge = NULL,
+> -		.rid = PCI_DEVID(dev->bus->number, dev->devfn)
+> +		.rid = PCI_DEVID(pdev->bus->number, pdev->devfn)
+>  	};
+>  
+> -	pci_for_each_dma_alias(dev, get_rid_cb, &data);
+> +	pci_for_each_dma_alias(pdev, get_rid_cb, &data);
+>  
+> -	dev_id.as_uint64 = 0;
+> -	dev_id.device_type = HV_DEVICE_TYPE_PCI;
+> -	dev_id.pci.segment = pci_domain_nr(dev->bus);
+> +	hv_devid.as_uint64 = 0;
+> +	hv_devid.device_type = HV_DEVICE_TYPE_PCI;
+> +	hv_devid.pci.segment = pci_domain_nr(pdev->bus);
+>  
+> -	dev_id.pci.bdf.bus = PCI_BUS_NUM(data.rid);
+> -	dev_id.pci.bdf.device = PCI_SLOT(data.rid);
+> -	dev_id.pci.bdf.function = PCI_FUNC(data.rid);
+> -	dev_id.pci.source_shadow = HV_SOURCE_SHADOW_NONE;
+> +	hv_devid.pci.bdf.bus = PCI_BUS_NUM(data.rid);
+> +	hv_devid.pci.bdf.device = PCI_SLOT(data.rid);
+> +	hv_devid.pci.bdf.function = PCI_FUNC(data.rid);
+> +	hv_devid.pci.source_shadow = HV_SOURCE_SHADOW_NONE;
+>  
+> -	if (data.bridge) {
+> -		int pos;
+> +	if (data.bridge == NULL)
+> +		goto out;
+>  
+> -		/*
+> -		 * Microsoft Hypervisor requires a bus range when the bridge is
+> -		 * running in PCI-X mode.
+> -		 *
+> -		 * To distinguish conventional vs PCI-X bridge, we can check
+> -		 * the bridge's PCI-X Secondary Status Register, Secondary Bus
+> -		 * Mode and Frequency bits. See PCI Express to PCI/PCI-X Bridge
+> -		 * Specification Revision 1.0 5.2.2.1.3.
+> -		 *
+> -		 * Value zero means it is in conventional mode, otherwise it is
+> -		 * in PCI-X mode.
+> -		 */
+> +	/*
+> +	 * Microsoft Hypervisor requires a bus range when the bridge is
+> +	 * running in PCI-X mode.
+> +	 *
+> +	 * To distinguish conventional vs PCI-X bridge, we can check
+> +	 * the bridge's PCI-X Secondary Status Register, Secondary Bus
+> +	 * Mode and Frequency bits. See PCI Express to PCI/PCI-X Bridge
+> +	 * Specification Revision 1.0 5.2.2.1.3.
+> +	 *
+> +	 * Value zero means it is in conventional mode, otherwise it is
+> +	 * in PCI-X mode.
+> +	 */
+>  
+> -		pos = pci_find_capability(data.bridge, PCI_CAP_ID_PCIX);
+> -		if (pos) {
+> -			u16 status;
+> +	pos = pci_find_capability(data.bridge, PCI_CAP_ID_PCIX);
+> +	if (pos) {
+> +		u16 status;
+>  
+> -			pci_read_config_word(data.bridge, pos +
+> -					PCI_X_BRIDGE_SSTATUS, &status);
+> +		pci_read_config_word(data.bridge, pos + PCI_X_BRIDGE_SSTATUS,
+> +				     &status);
+>  
+> -			if (status & PCI_X_SSTATUS_FREQ) {
+> -				/* Non-zero, PCI-X mode */
+> -				u8 sec_bus, sub_bus;
+> +		if (status & PCI_X_SSTATUS_FREQ) {
+> +			/* Non-zero, PCI-X mode */
+> +			u8 sec_bus, sub_bus;
+>  
+> -				dev_id.pci.source_shadow = HV_SOURCE_SHADOW_BRIDGE_BUS_RANGE;
+> +			hv_devid.pci.source_shadow =
+> +					     HV_SOURCE_SHADOW_BRIDGE_BUS_RANGE;
+>  
+> -				pci_read_config_byte(data.bridge, PCI_SECONDARY_BUS, &sec_bus);
+> -				dev_id.pci.shadow_bus_range.secondary_bus = sec_bus;
+> -				pci_read_config_byte(data.bridge, PCI_SUBORDINATE_BUS, &sub_bus);
+> -				dev_id.pci.shadow_bus_range.subordinate_bus = sub_bus;
+> -			}
+> +			pci_read_config_byte(data.bridge, PCI_SECONDARY_BUS,
+> +					     &sec_bus);
+> +			hv_devid.pci.shadow_bus_range.secondary_bus = sec_bus;
+> +			pci_read_config_byte(data.bridge, PCI_SUBORDINATE_BUS,
+> +					     &sub_bus);
+> +			hv_devid.pci.shadow_bus_range.subordinate_bus = sub_bus;
+>  		}
+>  	}
+>  
+> -	return dev_id;
+> +out:
+> +	return hv_devid;
+>  }
+>  
+> -/**
+> - * hv_map_msi_interrupt() - "Map" the MSI IRQ in the hypervisor.
+> +/*
+> + * hv_map_msi_interrupt() - Map the MSI IRQ in the hypervisor.
+>   * @data:      Describes the IRQ
+>   * @out_entry: Hypervisor (MSI) interrupt entry (can be NULL)
+>   *
+> @@ -188,22 +189,23 @@ int hv_map_msi_interrupt(struct irq_data *data,
+>  {
+>  	struct irq_cfg *cfg = irqd_cfg(data);
+>  	struct hv_interrupt_entry dummy;
+> -	union hv_device_id device_id;
+> +	union hv_device_id hv_devid;
+>  	struct msi_desc *msidesc;
+> -	struct pci_dev *dev;
+> +	struct pci_dev *pdev;
+>  	int cpu;
+>  
+>  	msidesc = irq_data_get_msi_desc(data);
+> -	dev = msi_desc_to_pci_dev(msidesc);
+> -	device_id = hv_build_pci_dev_id(dev);
+> +	pdev = msi_desc_to_pci_dev(msidesc);
+> +	hv_devid = hv_build_devid_type_pci(pdev);
+>  	cpu = cpumask_first(irq_data_get_effective_affinity_mask(data));
+>  
+> -	return hv_map_interrupt(device_id, false, cpu, cfg->vector,
+> +	return hv_map_interrupt(hv_devid, false, cpu, cfg->vector,
+>  				out_entry ? out_entry : &dummy);
+>  }
+>  EXPORT_SYMBOL_GPL(hv_map_msi_interrupt);
+>  
+> -static inline void entry_to_msi_msg(struct hv_interrupt_entry *entry, struct msi_msg *msg)
+> +static void entry_to_msi_msg(struct hv_interrupt_entry *entry,
+> +			     struct msi_msg *msg)
+>  {
+>  	/* High address is always 0 */
+>  	msg->address_hi = 0;
+> @@ -211,17 +213,19 @@ static inline void entry_to_msi_msg(struct hv_interrupt_entry *entry, struct msi
+>  	msg->data = entry->msi_entry.data.as_uint32;
+>  }
+>  
+> -static int hv_unmap_msi_interrupt(struct pci_dev *dev, struct hv_interrupt_entry *old_entry);
+> +static int hv_unmap_msi_interrupt(struct pci_dev *pdev,
+> +				  struct hv_interrupt_entry *irq_entry);
+> +
+>  static void hv_irq_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  {
+>  	struct hv_interrupt_entry *stored_entry;
+>  	struct irq_cfg *cfg = irqd_cfg(data);
+>  	struct msi_desc *msidesc;
+> -	struct pci_dev *dev;
+> +	struct pci_dev *pdev;
+>  	int ret;
+>  
+>  	msidesc = irq_data_get_msi_desc(data);
+> -	dev = msi_desc_to_pci_dev(msidesc);
+> +	pdev = msi_desc_to_pci_dev(msidesc);
+>  
+>  	if (!cfg) {
+>  		pr_debug("%s: cfg is NULL", __func__);
+> @@ -240,7 +244,7 @@ static void hv_irq_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  		stored_entry = data->chip_data;
+>  		data->chip_data = NULL;
+>  
+> -		ret = hv_unmap_msi_interrupt(dev, stored_entry);
+> +		ret = hv_unmap_msi_interrupt(pdev, stored_entry);
+>  
+>  		kfree(stored_entry);
+>  
+> @@ -249,10 +253,8 @@ static void hv_irq_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  	}
+>  
+>  	stored_entry = kzalloc(sizeof(*stored_entry), GFP_ATOMIC);
+> -	if (!stored_entry) {
+> -		pr_debug("%s: failed to allocate chip data\n", __func__);
+> +	if (!stored_entry)
+>  		return;
+> -	}
+>  
+>  	ret = hv_map_msi_interrupt(data, stored_entry);
+>  	if (ret) {
+> @@ -262,18 +264,21 @@ static void hv_irq_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  
+>  	data->chip_data = stored_entry;
+>  	entry_to_msi_msg(data->chip_data, msg);
+> -
+> -	return;
+>  }
+>  
+> -static int hv_unmap_msi_interrupt(struct pci_dev *dev, struct hv_interrupt_entry *old_entry)
+> +static int hv_unmap_msi_interrupt(struct pci_dev *pdev,
+> +				  struct hv_interrupt_entry *irq_entry)
+>  {
+> -	return hv_unmap_interrupt(hv_build_pci_dev_id(dev).as_uint64, old_entry);
+> +	union hv_device_id hv_devid;
+> +
+> +	hv_devid = hv_build_devid_type_pci(pdev);
+> +	return hv_unmap_interrupt(hv_devid.as_uint64, irq_entry);
+>  }
+>  
+> -static void hv_teardown_msi_irq(struct pci_dev *dev, struct irq_data *irqd)
+> +/* NB: during map, hv_interrupt_entry is saved via data->chip_data */
+> +static void hv_teardown_msi_irq(struct pci_dev *pdev, struct irq_data *irqd)
+>  {
+> -	struct hv_interrupt_entry old_entry;
+> +	struct hv_interrupt_entry irq_entry;
+>  	struct msi_msg msg;
+>  
+>  	if (!irqd->chip_data) {
+> @@ -281,13 +286,13 @@ static void hv_teardown_msi_irq(struct pci_dev *dev, struct irq_data *irqd)
+>  		return;
+>  	}
+>  
+> -	old_entry = *(struct hv_interrupt_entry *)irqd->chip_data;
+> -	entry_to_msi_msg(&old_entry, &msg);
+> +	irq_entry = *(struct hv_interrupt_entry *)irqd->chip_data;
+> +	entry_to_msi_msg(&irq_entry, &msg);
+>  
+>  	kfree(irqd->chip_data);
+>  	irqd->chip_data = NULL;
+>  
+> -	(void)hv_unmap_msi_interrupt(dev, &old_entry);
+> +	(void)hv_unmap_msi_interrupt(pdev, &irq_entry);
+>  }
+>  
+>  /*
+> @@ -302,7 +307,8 @@ static struct irq_chip hv_pci_msi_controller = {
+>  };
+>  
+>  static bool hv_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
+> -				 struct irq_domain *real_parent, struct msi_domain_info *info)
+> +				 struct irq_domain *real_parent,
+> +				 struct msi_domain_info *info)
+>  {
+>  	struct irq_chip *chip = info->chip;
+>  
+> @@ -317,7 +323,8 @@ static bool hv_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
+>  }
+>  
+>  #define HV_MSI_FLAGS_SUPPORTED	(MSI_GENERIC_FLAGS_MASK | MSI_FLAG_PCI_MSIX)
+> -#define HV_MSI_FLAGS_REQUIRED	(MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS)
+> +#define HV_MSI_FLAGS_REQUIRED	(MSI_FLAG_USE_DEF_DOM_OPS |	\
+> +				 MSI_FLAG_USE_DEF_CHIP_OPS)
+>  
+>  static struct msi_parent_ops hv_msi_parent_ops = {
+>  	.supported_flags	= HV_MSI_FLAGS_SUPPORTED,
+> @@ -329,14 +336,13 @@ static struct msi_parent_ops hv_msi_parent_ops = {
+>  	.init_dev_msi_info	= hv_init_dev_msi_info,
+>  };
+>  
+> -static int hv_msi_domain_alloc(struct irq_domain *d, unsigned int virq, unsigned int nr_irqs,
+> -			       void *arg)
+> +static int hv_msi_domain_alloc(struct irq_domain *d, unsigned int virq,
+> +			       unsigned int nr_irqs, void *arg)
+>  {
+>  	/*
+> -	 * TODO: The allocation bits of hv_irq_compose_msi_msg(), i.e. everything except
+> -	 * entry_to_msi_msg() should be in here.
+> +	 * TODO: The allocation bits of hv_irq_compose_msi_msg(), i.e.
+> +	 *	 everything except entry_to_msi_msg() should be in here.
+>  	 */
+> -
+>  	int ret;
+>  
+>  	ret = irq_domain_alloc_irqs_parent(d, virq, nr_irqs, arg);
+> @@ -344,13 +350,15 @@ static int hv_msi_domain_alloc(struct irq_domain *d, unsigned int virq, unsigned
+>  		return ret;
+>  
+>  	for (int i = 0; i < nr_irqs; ++i) {
+> -		irq_domain_set_info(d, virq + i, 0, &hv_pci_msi_controller, NULL,
+> -				    handle_edge_irq, NULL, "edge");
+> +		irq_domain_set_info(d, virq + i, 0, &hv_pci_msi_controller,
+> +				    NULL, handle_edge_irq, NULL, "edge");
+>  	}
+> +
+>  	return 0;
+>  }
+>  
+> -static void hv_msi_domain_free(struct irq_domain *d, unsigned int virq, unsigned int nr_irqs)
+> +static void hv_msi_domain_free(struct irq_domain *d, unsigned int virq,
+> +			       unsigned int nr_irqs)
+>  {
+>  	for (int i = 0; i < nr_irqs; ++i) {
+>  		struct irq_data *irqd = irq_domain_get_irq_data(d, virq);
+> @@ -362,6 +370,7 @@ static void hv_msi_domain_free(struct irq_domain *d, unsigned int virq, unsigned
+>  
+>  		hv_teardown_msi_irq(to_pci_dev(desc->dev), irqd);
+>  	}
+> +
+>  	irq_domain_free_irqs_top(d, virq, nr_irqs);
+>  }
+>  
+> @@ -394,25 +403,25 @@ struct irq_domain * __init hv_create_pci_msi_domain(void)
+>  
+>  int hv_unmap_ioapic_interrupt(int ioapic_id, struct hv_interrupt_entry *entry)
+>  {
+> -	union hv_device_id device_id;
+> +	union hv_device_id hv_devid;
+>  
+> -	device_id.as_uint64 = 0;
+> -	device_id.device_type = HV_DEVICE_TYPE_IOAPIC;
+> -	device_id.ioapic.ioapic_id = (u8)ioapic_id;
+> +	hv_devid.as_uint64 = 0;
+> +	hv_devid.device_type = HV_DEVICE_TYPE_IOAPIC;
+> +	hv_devid.ioapic.ioapic_id = (u8)ioapic_id;
+>  
+> -	return hv_unmap_interrupt(device_id.as_uint64, entry);
+> +	return hv_unmap_interrupt(hv_devid.as_uint64, entry);
+>  }
+>  EXPORT_SYMBOL_GPL(hv_unmap_ioapic_interrupt);
+>  
+>  int hv_map_ioapic_interrupt(int ioapic_id, bool level, int cpu, int vector,
+>  		struct hv_interrupt_entry *entry)
+>  {
+> -	union hv_device_id device_id;
+> +	union hv_device_id hv_devid;
+>  
+> -	device_id.as_uint64 = 0;
+> -	device_id.device_type = HV_DEVICE_TYPE_IOAPIC;
+> -	device_id.ioapic.ioapic_id = (u8)ioapic_id;
+> +	hv_devid.as_uint64 = 0;
+> +	hv_devid.device_type = HV_DEVICE_TYPE_IOAPIC;
+> +	hv_devid.ioapic.ioapic_id = (u8)ioapic_id;
+>  
+> -	return hv_map_interrupt(device_id, level, cpu, vector, entry);
+> +	return hv_map_interrupt(hv_devid, level, cpu, vector, entry);
+>  }
+>  EXPORT_SYMBOL_GPL(hv_map_ioapic_interrupt);
+> -- 
+> 2.51.2.vfs.0.1
 > 
 
-I see.
-Please summarize and document this behaviour in the commit message.
-
-Thanks,
-Stanislav
-
-> > Thanks,
-> > Stanislav
-> > 
-> > > 
-> > > 
-> > > > Thanks,
-> > > > Stanislav
-> > > > 
-> > > > > Thanks,
-> > > > > -Mukesh
-> > > > > 
-> > > > > 
-> > > > > > With pinned regions we issue is similar but less impacting: pages can't
-> > > > > > be released by user space unmapping and thus will be simply leaked, but
-> > > > > > the system stays intact.
-> > > > > > 
-> > > > > > MMIO regions are simila to movable region in this regard: they don't
-> > > > > > reference the user pages, and thus this guest region replaement is a
-> > > > > > stright wat to kernel panic.
-> > > > > > 
-> > > > > > > 
-> > > > > > > > > > The region type is stored on the region itself.
-> > > > > > > > > > And the type is checked on the caller side.
-> > > > > > > > > > 
-> > > > > > > > > > > +	if (!is_mmio)
-> > > > > > > > > > > +		goto unlock_mmap_out;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	pfnmap_args.vma = vma;
-> > > > > > > > > > > +	pfnmap_args.address = uaddr;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	rc = follow_pfnmap_start(&pfnmap_args);
-> > > > > > > > > > > +	if (rc) {
-> > > > > > > > > > > +		rc = fixup_user_fault(current->mm, uaddr, FAULT_FLAG_WRITE,
-> > > > > > > > > > > +				      NULL);
-> > > > > > > > > > > +		if (rc)
-> > > > > > > > > > > +			goto unlock_mmap_out;
-> > > > > > > > > > > +
-> > > > > > > > > > > +		rc = follow_pfnmap_start(&pfnmap_args);
-> > > > > > > > > > > +		if (rc)
-> > > > > > > > > > > +			goto unlock_mmap_out;
-> > > > > > > > > > > +	}
-> > > > > > > > > > > +
-> > > > > > > > > > > +	*mmio_pfnp = pfnmap_args.pfn;
-> > > > > > > > > > > +	follow_pfnmap_end(&pfnmap_args);
-> > > > > > > > > > > +d
-> > > > > > > > > > > +unlock_mmap_out:
-> > > > > > > > > > > +	mmap_read_unlock(current->mm);
-> > > > > > > > > > > +unlock_pt_out:
-> > > > > > > > > > > +	spin_unlock(&pt->pt_mem_regions_lock);
-> > > > > > > > > > > +	return rc;
-> > > > > > > > > > > +}
-> > > > > > > > > > > +
-> > > > > > > > > > > +/*
-> > > > > > > > > > > + * At present, the only unmapped gpa is mmio space. Verify if it's mmio
-> > > > > > > > > > > + * and resolve if possible.
-> > > > > > > > > > > + * Returns: True if valid mmio intercept and it was handled, else false
-> > > > > > > > > > > + */
-> > > > > > > > > > > +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp)
-> > > > > > > > > > > +{
-> > > > > > > > > > > +	struct hv_message *hvmsg = vp->vp_intercept_msg_page;
-> > > > > > > > > > > +	struct hv_x64_memory_intercept_message *msg;
-> > > > > > > > > > > +	union hv_x64_memory_access_info accinfo;
-> > > > > > > > > > > +	u64 gfn, mmio_spa, numpgs;
-> > > > > > > > > > > +	struct mshv_mem_region *mreg;
-> > > > > > > > > > > +	int rc;
-> > > > > > > > > > > +	struct mshv_partition *pt = vp->vp_partition;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	msg = (struct hv_x64_memory_intercept_message *)hvmsg->u.payload;
-> > > > > > > > > > > +	accinfo = msg->memory_access_info;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	if (!accinfo.gva_gpa_valid)
-> > > > > > > > > > > +		return false;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	/* Do a fast check and bail if non mmio intercept */
-> > > > > > > > > > > +	gfn = msg->guest_physical_address >> HV_HYP_PAGE_SHIFT;
-> > > > > > > > > > > +	mreg = mshv_partition_region_by_gfn(pt, gfn);
-> > > > > > > > > > 
-> > > > > > > > > > This call needs to be protected by the spinlock.
-> > > > > > > > > 
-> > > > > > > > > This is sorta fast path to bail. We recheck under partition lock above.
-> > > > > > > > > 
-> > > > > > > > 
-> > > > > > > > Accessing the list of regions without lock is unsafe.
-> > > > > > > 
-> > > > > > > I am not sure why? This check is done by a vcpu thread, so regions
-> > > > > > > will not have just gone away.
-> > > > > > > 
-> > > > > > 
-> > > > > > This is shared resources. Multiple VP thread get into this function
-> > > > > > simultaneously, so there is a race already. But this one we can live
-> > > > > > with without locking as they don't mutate the list of the regions.
-> > > > > > 
-> > > > > > The issue happens when VMM adds or removed another region as it mutates
-> > > > > > the list and races with VP threads doing this lookup.
-> > > > > > 
-> > > > > > Thanks,
-> > > > > > Stanislav
-> > > > > > 
-> > > > > > 
-> > > > > > > Thanks,
-> > > > > > > -Mukesh
-> > > > > > > 
-> > > > > > > 
-> > > > > > > > Thanks,
-> > > > > > > > Stanislav
-> > > > > > > > 
-> > > > > > > > > Thanks,
-> > > > > > > > > -Mukesh
-> > > > > > > > > 
-> > > > > > > > > 
-> > > > > > > > > > Thanks,
-> > > > > > > > > > Stanislav
-> > > > > > > > > > 
-> > > > > > > > > > > +	if (mreg == NULL || mreg->type != MSHV_REGION_TYPE_MMIO)
-> > > > > > > > > > > +		return false;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	rc = mshv_chk_get_mmio_start_pfn(pt, gfn, &mmio_spa);
-> > > > > > > > > > > +	if (rc)
-> > > > > > > > > > > +		return false;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	if (!hv_nofull_mmio) {		/* default case */
-> > > > > > > > > > > +		gfn = mreg->start_gfn;
-> > > > > > > > > > > +		mmio_spa = mmio_spa - (gfn - mreg->start_gfn);
-> > > > > > > > > > > +		numpgs = mreg->nr_pages;
-> > > > > > > > > > > +	} else
-> > > > > > > > > > > +		numpgs = 1;
-> > > > > > > > > > > +
-> > > > > > > > > > > +	rc = hv_call_map_mmio_pages(pt->pt_id, gfn, mmio_spa, numpgs);
-> > > > > > > > > > > +
-> > > > > > > > > > > +	return rc == 0;
-> > > > > > > > > > > +}
-> > > > > > > > > > > +
-> > > > > > > > > > >       static struct mshv_mem_region *
-> > > > > > > > > > >       mshv_partition_region_by_gfn_get(struct mshv_partition *p, u64 gfn)
-> > > > > > > > > > >       {
-> > > > > > > > > > > @@ -666,13 +777,17 @@ static bool mshv_handle_gpa_intercept(struct mshv_vp *vp)
-> > > > > > > > > > >       	return ret;
-> > > > > > > > > > >       }
-> > > > > > > > > > > +
-> > > > > > > > > > >       #else  /* CONFIG_X86_64 */
-> > > > > > > > > > > +static bool mshv_handle_unmapped_gpa(struct mshv_vp *vp) { return false; }
-> > > > > > > > > > >       static bool mshv_handle_gpa_intercept(struct mshv_vp *vp) { return false; }
-> > > > > > > > > > >       #endif /* CONFIG_X86_64 */
-> > > > > > > > > > >       static bool mshv_vp_handle_intercept(struct mshv_vp *vp)
-> > > > > > > > > > >       {
-> > > > > > > > > > >       	switch (vp->vp_intercept_msg_page->header.message_type) {
-> > > > > > > > > > > +	case HVMSG_UNMAPPED_GPA:
-> > > > > > > > > > > +		return mshv_handle_unmapped_gpa(vp);
-> > > > > > > > > > >       	case HVMSG_GPA_INTERCEPT:
-> > > > > > > > > > >       		return mshv_handle_gpa_intercept(vp);
-> > > > > > > > > > >       	}
-> > > > > > > > > > > -- 
-> > > > > > > > > > > 2.51.2.vfs.0.1
-> > > > > > > > > > > 
+Reviewed-by: Anirudh Rayabharam (Microsoft) <anirudh@anirudhrb.com>
