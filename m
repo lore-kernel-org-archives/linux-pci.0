@@ -1,242 +1,184 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EAD5330B3B
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:26:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAFD9331211
+	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:27:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770326770; cv=none; b=pPSie6+bIndx2JD8kKbBt4NhR2TLsvkdLFNRxfk0vatObWIsDyvvAY125Yw3qr/CAcvMKKHrquCnGKHWLvOpAkoj6DfhSK1hJQaPbLByLNOVZAqXqRQHEnjNzAfgGF4dRKnoxnRt2Q9yxkjAiSH8g8IyheuHO+y8zr4gSqHaeHo=
+	t=1770326835; cv=none; b=eKtsfu0e4QdcsXE9CdmLVHlNRe1P4csSvg9eEonk6FtpSbnOIqrzr5sUN0KrAlIejIZ/sIO7iDIX4cX4OMInNckUsp+yk8l/OXbT7hB3W8/CQRnQpqnbnRKwQm9eD+Lk5pu1xKd6NY6wHBcWgkBe8qx6EhcdhYTWyNRMDsqr5pA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770326770; c=relaxed/simple;
-	bh=F0UnsJzUDxr49j3JuWF675M03CqrIDw+/8P3bEqJp1E=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f+x4r2EZ9cAafW1Xl6nXQuQbqrPK7r6PyGGfyFa7TigeFIS6BwPYLf8DzRtHyYRFi8Zj/0W0H9ySm698mQiff96GBJRTAQU4T2Pz7mTdhcpMgDNUj9bGnuclr6R0zykY5J6z+woiw/q4DF5ufLzFhq93tybEyg9Cfv2YiJO7ra4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=LDEIhll3; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1770326835; c=relaxed/simple;
+	bh=onUcEIsNRNpDK4k+ZwYKjhl/82j2tz+8TXLBfpER88U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=W5wwuyqUz7MZWgcNPNiqZxMIEUZYRA+v6fN3PaPU/yZ7W3Ae1Qzu81REgu0exCLQiRWoRc+JBJNydDbPu5iM5lBvbbrE+Rsi6paqCBLoQv+x4RCmOMoV14Ny82/kgoTf5D00TPR9i+tvRFBZ4PGsmAbCNhAHQvhQAbI6PnU4pVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IkiV7WEJ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=t5/opbZR; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="LDEIhll3"
-Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 615JBUFM082580
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2026 13:26:09 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=lqUi4UsKsfoN9+YSJcgu5okJspYhsg4nd7i5pVngzWM=; b=LDEIhll3izfb
-	nFEcux1fnLUthOdgVh5CD1V2aPgDTmIB2nyQnG5LEfrfS/33xXoM9zjnFfX1e59i
-	mnMVO79rmRbCVaTE3FebC0tI00o5fB8+bUEts9ytOz2mSkThSG3nQkSpRdecoY6M
-	KDbwc29Jd4v5L3DZ3u9gsfJC7whtM6rolKaOUefCnj17x83CAgpgzg4B8US0HHGa
-	TZ4ioL5P9qas5EGiZcrCE2yI/E3D8ERshHhBg4yDCy5QUp5G4UWDg779VHtJomwz
-	4wGFiLuya3ED4F+7cxXtrfirfcJjJrnEu+/WD1pGhfc2yTwBCO/nB9pcaZn+oyFr
-	ZcvPTv988g==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c504t2m0a-13
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:26:08 -0800 (PST)
-Received: from twshared13080.31.frc3.facebook.com (2620:10d:c0a8:1b::2d) by
- mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Thu, 5 Feb 2026 21:26:02 +0000
-Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
-	id 4D36172EC9D2; Thu,  5 Feb 2026 13:25:49 -0800 (PST)
-From: Keith Busch <kbusch@meta.com>
-To: <linux-pci@vger.kernel.org>, <helgaas@kernel.org>
-CC: <alex@shazbot.org>, <lukas@wunner.de>, <dan.j.williams@intel.com>,
-        <guojinhui.liam@bytedance.com>, <ilpo.jarvinen@linux.intel.com>,
-        Keith Busch
-	<kbusch@kernel.org>
-Subject: [PATCHv3 4/4] pci: make reset_subordinate hotplug safe
-Date: Thu, 5 Feb 2026 13:25:33 -0800
-Message-ID: <20260205212533.1512153-5-kbusch@meta.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260205212533.1512153-1-kbusch@meta.com>
-References: <20260205212533.1512153-1-kbusch@meta.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IkiV7WEJ";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="t5/opbZR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1770326834;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rGchRpNtHpsURPrx/vVHrgmCPFSkjjSjv6Ar1R+yRYU=;
+	b=IkiV7WEJpTiUrUhfoG8JMj94girazSGWjdLGAtGZEOv7sed9e42/rXhlHFO8DCuriBG8Qj
+	2aEkFF04gs/+SnxlVIazVjrJe5qSwrQeFG3dn8Rm3mbcKdqs9ljGO0MHYsNTsuaJ0FPoNO
+	fm36TnwoajBXyO71WZarSqwjfXP5EOE=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-63-8eBD3gRaOMyaZ_NhU9hHZQ-1; Thu, 05 Feb 2026 16:27:13 -0500
+X-MC-Unique: 8eBD3gRaOMyaZ_NhU9hHZQ-1
+X-Mimecast-MFC-AGG-ID: 8eBD3gRaOMyaZ_NhU9hHZQ_1770326833
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-502a8fa0a28so1386991cf.2
+        for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:27:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1770326833; x=1770931633; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rGchRpNtHpsURPrx/vVHrgmCPFSkjjSjv6Ar1R+yRYU=;
+        b=t5/opbZR5FktdI9ygVqVAfgHLxwRfyRQ9NuHv98/ycoStCB9zUWEHlHfMBMVSsDxgF
+         VXAi5Kq3m8BctAP0SZvwowe+kEeWZ2Pq+ntDwPxquLqS8+eQU88WYEiY/iPU2VVA0/sl
+         cA5ibjdHOaPqBcgQD4gzE3Ao7BwvmCLmyQkRFsZ14nyghgqJp+bxncP7inURSiBie1Hp
+         C+UgLJE16ZEOUBNXt0ezMuuSquzZJNyDYl+pup6rYS1nmCFycmZ8J7pObGd8uFM7/x9+
+         zl8zo56ORyiXr668sVXC3/78MXRklSFalR2JU1VMaRuhJjf00azAFnBBBJvpVCvEmu8O
+         aXAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770326833; x=1770931633;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rGchRpNtHpsURPrx/vVHrgmCPFSkjjSjv6Ar1R+yRYU=;
+        b=dy5//0v8zObM82rg+WJB8pm47nA3ZWv5G6r+Vr43UTh3eT5gvXS9tuG1X8scBgviLp
+         OVeUxiuhD9BgOeg/48pJrY4mAcyM/i8EAvCAUHjEGG0zak/6gDaaZAU2JpdEa1w1IroC
+         ZONVzDWBE6NaZGzOFH2g+7FBzdcxmhqsb2DvbzW9lcTAi8FcWmKASDh9E6VLHZ2ojP91
+         qS6CUv5m4Ddbhvhc+kIzBsN0kyZwy3ZZuBJA/hAq4BQQY5D/3wWZu/Jqn0tbmBb8JrUM
+         e7aX5sdHXIoUwEIAxckS+W5mwN9EilhgJdi+b7JU0x3iPuwr+PBgfH55vH3s3Yg60CtV
+         S0HA==
+X-Forwarded-Encrypted: i=1; AJvYcCVPZ4wb2YJLFZGUaLHPszhw89gTKMv2D879aj+hY6SkMx9ZNXtPihNXh+xEKOJS5pRjLdLG7lpoNpo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxxbdSxRTtwpTYRXoNTW5YmfUIHP6xlunBm5rFy7KsTsryuqXBa
+	ZaBZYtV+Grn+EhmduFNlbY2IyXn5RUhaX8Q0I8ftW45pVB/9+bfKEFKlvegF6cEO8ShLSgZEwfs
+	bJ1E8RoPfCZIXVyivCwpGU1tpk4AVJDuYTzByLC7CNGy5Dd1UrLhr+D0fiNZUuQ==
+X-Gm-Gg: AZuq6aLydnSzu9C2KPiDWVQmQ88Hd9I7vCJwEI7wDvO1t/HSV/EoeGMuDVmxT78AsoM
+	GibzWnal06jejFJQ4tsrAyBaMBCIoVEjYGx/ZpYc9LF0XH4/oSFRZlwJUHW8iWeVf5V/PecV1Fb
+	DYQtNZn9WpDVVzQlpsPJZolRtcQCpgSzGIBYYwQMs2eSDZUQJ496WaGW8suaaDqnNCFqd4cSrwj
+	8S1XdlxVQTWDMfLeu2bcJ3/2w9mOFlIEA8G+blcXwDgFe94tiz2igOrn79iY7Q2+tcZmO7Qxg6O
+	jJcs1cxhDuXDWPf5uLshUf7CUX4HNHtUsvm3QCUEc9xoWDpRuyPFZy3izIIO84YKc0h7jkk3CkO
+	p3JgdkSdGCw==
+X-Received: by 2002:ac8:598f:0:b0:4ee:1b0e:861a with SMTP id d75a77b69052e-506398477b3mr7896151cf.13.1770326832965;
+        Thu, 05 Feb 2026 13:27:12 -0800 (PST)
+X-Received: by 2002:ac8:598f:0:b0:4ee:1b0e:861a with SMTP id d75a77b69052e-506398477b3mr7895841cf.13.1770326832454;
+        Thu, 05 Feb 2026 13:27:12 -0800 (PST)
+Received: from localhost ([2607:f2c0:b010:9000:f569:ac10:227c:5156])
+        by smtp.gmail.com with UTF8SMTPSA id d75a77b69052e-506392902eesm3841121cf.21.2026.02.05.13.27.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Feb 2026 13:27:11 -0800 (PST)
+Date: Thu, 5 Feb 2026 16:27:10 -0500
+From: Peter Colberg <pcolberg@redhat.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Alex Gaynor <alex.gaynor@gmail.com>,
+	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
+	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Ertman <david.m.ertman@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
+	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>
+Subject: Re: [PATCH 3/8] rust: pci: add {enable,disable}_sriov(), to control
+ SR-IOV capability
+Message-ID: <aYULLucqol7jRoDC@earendel>
+Mail-Followup-To: Jason Gunthorpe <jgg@ziepe.ca>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Miguel Ojeda <ojeda@kernel.org>,
+	Alex Gaynor <alex.gaynor@gmail.com>,
+	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
+	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <lossin@kernel.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
+	Daniel Almeida <daniel.almeida@collabora.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Ertman <david.m.ertman@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
+	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>
+References: <20251119-rust-pci-sriov-v1-0-883a94599a97@redhat.com>
+ <20251119-rust-pci-sriov-v1-3-883a94599a97@redhat.com>
+ <20251121232833.GH233636@ziepe.ca>
+ <aUrquI3X68Ilmebh@earendel>
+ <20260106012236.GR125261@ziepe.ca>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: 8Vok6dV_qJ2_VwUS680HAVn6aEamKzsD
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA1MDE2MyBTYWx0ZWRfX7NQCFD5rdpMe
- I6JRu5QIIarOrYqyRVdSS1Tr9GuENqfxALa9gEl393/56AfpbqAbsCOC/IcQvbItCR+ryyMKUH0
- I5nx2DrEnUY3Z4WeP1oZaJqLVsFE3RRt4q0srynG37JTBY5v5+5m+6AITa3Rw/x1Crxkq7P1PcT
- crNzyb8Fu/gISUy2/DYhGc7d+jGJpV7Q3NvVssqUGWtfD6g/M9sWq3VdVwXFOaYZ32NHzNPIQkR
- pFl0nqha2LaZ0VmSvLpM4zLlbdu86C1m5g2X/RC4z0stx5/wcT6zG9hT2Dan9jNJKrGeSY6ApZl
- 0qqDf12VAQFFWVQmJh7PlkymVelq5D5iepgubVKIfti4o+SfWBEfCzNCKqoSm3R1+Hv/TzcaCXt
- 7SFAjKlZ/i/tVBtDvi2SrISpdh7+FCompSglMS8EAC1Mj6BDukqPv09Li/wwfoWrSBD7v9rkFeD
- 6KnCE+8iAgJqZ4Gfk3g==
-X-Proofpoint-GUID: 8Vok6dV_qJ2_VwUS680HAVn6aEamKzsD
-X-Authority-Analysis: v=2.4 cv=XeyEDY55 c=1 sm=1 tr=0 ts=69850af0 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8
- a=2wUrPlsJMn_ct-MveNUA:9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-05_05,2026-02-05_03,2025-10-01_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260106012236.GR125261@ziepe.ca>
 
-From: Keith Busch <kbusch@kernel.org>
+Hi Jason,
 
-Use the slot reset method when resetting the bridge if the bus contains
-hot plug slots. This fixes spurious hot plug events that are triggered
-by the secondary bus reset that bypasses the slot's detection disabling.
+On Mon, Jan 05, 2026 at 09:22:36PM -0400, Jason Gunthorpe wrote:
+> On Tue, Dec 23, 2025 at 02:17:12PM -0500, Peter Colberg wrote:
+> > Further, enable_sriov() is prevented during remove() using a new
+> > flag inhibit_enable in the pci_sriov structure that is set before
+> > and cleared after the PF driver is unbound from the device.
+> 
+> Doesn't this need something concurrent safe like a revocable?
 
-Resetting a bridge's subordinate bus can be done like this:
+Thank you for the follow-up and apologies for the delay. I have now
+posted a v2 series that takes a different approach from what was
+described earlier, after discussing this further with Danilo.
 
-  # echo 1 > /sys/bus/pci/devices/0000:50:01.0/reset_subordinate
+In the v2 patch [1], when the new PCI driver flag managed_sriov is
+set, which is always the case for Rust, SR-IOV is disabled twice if
+needed: once before the unbind() callback for a well-behaved driver,
+and a second time after unbind() for a broken (but nevertheless using
+safe APIs only) driver that re-enables SR-IOV during unbind().
 
-Prior to this patch, an example kernel message may show something like:
+Together with commit a995fe1a3aa7 ("rust: driver: drop device private
+data post unbind") which ensures that the device private data for the
+PF device is still alive until after the function pci_iov_remove() is
+called and forcibly re-disables SR_IOV if needed, this upholds the
+safety guarantee which pci::Device::physfn() depends on.
 
-  pcieport 0000:50:01.0: pciehp: Slot(40): Link Down
+As an alternative for preventing SR-IOV management during unbind(), I
+briefly considered adding a new context, e.g., CoreInternal => Core =>
+CoreUnbind => Bound => Normal, where {enable,disable}_sriov() are
+implemented by Core but not CoreUnbind, but discarded that solution
+since it seems too specific to this case to warrant the complexity.
 
-With this change, the pciehp driver ignores the link event during the
-reset, so may show this message instead:
+Thanks,
+Peter
 
-  pcieport 0000:50:01.0: pciehp: Slot(40): Link Down/Up ignored
+[1] https://lore.kernel.org/rust-for-linux/20260205-rust-pci-sriov-v2-1-ef9400c7767b@redhat.com/
 
-Signed-off-by: Keith Busch <kbusch@kernel.org>
----
- drivers/pci/pci-sysfs.c |  3 +-
- drivers/pci/pci.c       | 71 ++++++++++++++++++++++++++++-------------
- drivers/pci/pci.h       |  2 +-
- 3 files changed, 50 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index c2df915ad2d29..039d3dc157006 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -553,7 +553,6 @@ static ssize_t reset_subordinate_store(struct device =
-*dev,
- 				const char *buf, size_t count)
- {
- 	struct pci_dev *pdev =3D to_pci_dev(dev);
--	struct pci_bus *bus =3D pdev->subordinate;
- 	unsigned long val;
-=20
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -563,7 +562,7 @@ static ssize_t reset_subordinate_store(struct device =
-*dev,
- 		return -EINVAL;
-=20
- 	if (val) {
--		int ret =3D __pci_reset_bus(bus);
-+		int ret =3D pci_try_reset_bridge(pdev);
-=20
- 		if (ret)
- 			return ret;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index df9ed73dad416..27817c6603a5c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -51,6 +51,10 @@ unsigned int pci_pm_d3hot_delay;
-=20
- static void pci_pme_list_scan(struct work_struct *work);
-=20
-+#define PCI_SLOT_RESET_MASKED true
-+#define PCI_SLOT_RESET_UNMASKED false
-+static int pci_reset_bridge(struct pci_dev *bridge, bool save);
-+
- static LIST_HEAD(pci_pme_list);
- static DEFINE_MUTEX(pci_pme_list_mutex);
- static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
-@@ -5420,29 +5424,7 @@ static int pci_bus_reset(struct pci_bus *bus, bool=
- probe)
-  */
- int pci_bus_error_reset(struct pci_dev *bridge)
- {
--	struct pci_bus *bus =3D bridge->subordinate;
--	struct pci_slot *slot;
--
--	if (!bus)
--		return -ENOTTY;
--
--	mutex_lock(&pci_slot_mutex);
--	if (list_empty(&bus->slots))
--		goto bus_reset;
--
--	list_for_each_entry(slot, &bus->slots, list)
--		if (pci_probe_reset_slot(slot))
--			goto bus_reset;
--
--	list_for_each_entry(slot, &bus->slots, list)
--		if (pci_slot_reset(slot, PCI_RESET_DO_RESET))
--			goto bus_reset;
--
--	mutex_unlock(&pci_slot_mutex);
--	return 0;
--bus_reset:
--	mutex_unlock(&pci_slot_mutex);
--	return pci_bus_reset(bridge->subordinate, PCI_RESET_DO_RESET);
-+	return pci_reset_bridge(bridge, PCI_SLOT_RESET_UNMASKED);
- }
-=20
- /**
-@@ -5483,6 +5465,49 @@ static int pci_try_reset_bus(struct pci_bus *bus)
- 	return rc;
- }
-=20
-+static int pci_reset_bridge(struct pci_dev *bridge, bool masked)
-+{
-+	struct pci_bus *bus =3D bridge->subordinate;
-+	struct pci_slot *slot;
-+
-+	if (!bus)
-+		return -ENOTTY;
-+
-+	mutex_lock(&pci_slot_mutex);
-+	if (list_empty(&bus->slots))
-+		goto bus_reset;
-+
-+	list_for_each_entry(slot, &bus->slots, list)
-+		if (pci_probe_reset_slot(slot))
-+			goto bus_reset;
-+
-+	list_for_each_entry(slot, &bus->slots, list) {
-+		int ret;
-+
-+		if (masked)
-+			ret =3D pci_try_reset_slot(slot);
-+		else
-+			ret =3D pci_slot_reset(slot, PCI_RESET_DO_RESET);
-+
-+		if (ret)
-+			goto bus_reset;
-+	}
-+
-+	mutex_unlock(&pci_slot_mutex);
-+	return 0;
-+bus_reset:
-+	mutex_unlock(&pci_slot_mutex);
-+
-+	if (masked)
-+		return pci_try_reset_bus(bus);
-+	return pci_bus_reset(bridge->subordinate, PCI_RESET_DO_RESET);
-+}
-+
-+int pci_try_reset_bridge(struct pci_dev *bridge)
-+{
-+	return pci_reset_bridge(bridge, PCI_SLOT_RESET_MASKED);
-+}
-+
- /**
-  * pci_reset_bus - Try to reset a PCI bus
-  * @pdev: top level PCI device to reset via slot/bus
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0e67014aa0013..790f2350b890c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -197,7 +197,7 @@ bool pci_reset_supported(struct pci_dev *dev);
- void pci_init_reset_methods(struct pci_dev *dev);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
--int __pci_reset_bus(struct pci_bus *bus);
-+int pci_try_reset_bridge(struct pci_dev *dev);
-=20
- struct pci_cap_saved_data {
- 	u16		cap_nr;
---=20
-2.47.3
+> 
+> Jason
+> 
 
