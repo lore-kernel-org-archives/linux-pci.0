@@ -1,184 +1,220 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAFD9331211
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:27:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F5123815B
+	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:52:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770326835; cv=none; b=eKtsfu0e4QdcsXE9CdmLVHlNRe1P4csSvg9eEonk6FtpSbnOIqrzr5sUN0KrAlIejIZ/sIO7iDIX4cX4OMInNckUsp+yk8l/OXbT7hB3W8/CQRnQpqnbnRKwQm9eD+Lk5pu1xKd6NY6wHBcWgkBe8qx6EhcdhYTWyNRMDsqr5pA=
+	t=1770328323; cv=none; b=skYhKR9Evb98RW3cpzsYyIhjj5rMNqSUoLkcEeS+qtJdNKQmg6JPMZBgLEHRZfInmwIfEH663RYDC5/77c6k2zYkEcBzpcDyIg0LTD0miVDH7mm204egcKYhHmlHukLkrpm0GHb0RTzbud91k3T988G9Mv07p2As6Ehpp11k9cE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770326835; c=relaxed/simple;
-	bh=onUcEIsNRNpDK4k+ZwYKjhl/82j2tz+8TXLBfpER88U=;
+	s=arc-20240116; t=1770328323; c=relaxed/simple;
+	bh=F3aKZ/fCnbB9EJmonJjgo8SU4XqpJqBtz1yAs+j9ReM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W5wwuyqUz7MZWgcNPNiqZxMIEUZYRA+v6fN3PaPU/yZ7W3Ae1Qzu81REgu0exCLQiRWoRc+JBJNydDbPu5iM5lBvbbrE+Rsi6paqCBLoQv+x4RCmOMoV14Ny82/kgoTf5D00TPR9i+tvRFBZ4PGsmAbCNhAHQvhQAbI6PnU4pVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IkiV7WEJ; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=t5/opbZR; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=HQy07cWOzcRvwqIkxTlwcBQZo5M2mqMoMAs37bQnMFUlu1jblKiuYEWT/CG7l8pdGgZKoPhvbKRSNlV/FfqwaX7FymfA3GfueXJF7JtDvXxRxvXvwlpMtMDvU+VRAuPKbb8XQ7KGv8WXz6iXyWQZDOzdlSwBxK8IgG90B30JOuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=zo6B4CDz; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IkiV7WEJ";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="t5/opbZR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1770326834;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rGchRpNtHpsURPrx/vVHrgmCPFSkjjSjv6Ar1R+yRYU=;
-	b=IkiV7WEJpTiUrUhfoG8JMj94girazSGWjdLGAtGZEOv7sed9e42/rXhlHFO8DCuriBG8Qj
-	2aEkFF04gs/+SnxlVIazVjrJe5qSwrQeFG3dn8Rm3mbcKdqs9ljGO0MHYsNTsuaJ0FPoNO
-	fm36TnwoajBXyO71WZarSqwjfXP5EOE=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-63-8eBD3gRaOMyaZ_NhU9hHZQ-1; Thu, 05 Feb 2026 16:27:13 -0500
-X-MC-Unique: 8eBD3gRaOMyaZ_NhU9hHZQ-1
-X-Mimecast-MFC-AGG-ID: 8eBD3gRaOMyaZ_NhU9hHZQ_1770326833
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-502a8fa0a28so1386991cf.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:27:13 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="zo6B4CDz"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2a09757004cso12009565ad.3
+        for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:52:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1770326833; x=1770931633; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:from:date:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=rGchRpNtHpsURPrx/vVHrgmCPFSkjjSjv6Ar1R+yRYU=;
-        b=t5/opbZR5FktdI9ygVqVAfgHLxwRfyRQ9NuHv98/ycoStCB9zUWEHlHfMBMVSsDxgF
-         VXAi5Kq3m8BctAP0SZvwowe+kEeWZ2Pq+ntDwPxquLqS8+eQU88WYEiY/iPU2VVA0/sl
-         cA5ibjdHOaPqBcgQD4gzE3Ao7BwvmCLmyQkRFsZ14nyghgqJp+bxncP7inURSiBie1Hp
-         C+UgLJE16ZEOUBNXt0ezMuuSquzZJNyDYl+pup6rYS1nmCFycmZ8J7pObGd8uFM7/x9+
-         zl8zo56ORyiXr668sVXC3/78MXRklSFalR2JU1VMaRuhJjf00azAFnBBBJvpVCvEmu8O
-         aXAA==
+        d=google.com; s=20230601; t=1770328322; x=1770933122; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=kGsy+6Drt04/pl8yx93tFPhkkWQllmpTFtK5bY5HHKI=;
+        b=zo6B4CDzOGlGXmOvjRL/lMANxUl4N3LMS16xfUwXnMDXBRpMnGEinBZG1yN/mavVSw
+         MTOWp8oegko5eCOezR1SJM1kCtufF6NHEIOFYVHg+GepYMQOiCONJ3ifcuu+bI8eAJob
+         6Epvs0Wu1jhWY6wHu07KTyaT60sIr5iyHZ52B5Glvll1bS3PJ6OroCThuWBY5guYqPLo
+         f/MeNo80xp+wwRexTgW6BRwFeowC2JyzoCJl+c8i9NVJBmm/NwWN7T0s5Voj/iChYd3e
+         2m0mzBvEDC4SAf7/KVnyi1TaV2q/msHAIjFZFpM/xFW31TTaOImHR/Y0ilU1Fh+eeJXU
+         QHOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770326833; x=1770931633;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20230601; t=1770328322; x=1770933122;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rGchRpNtHpsURPrx/vVHrgmCPFSkjjSjv6Ar1R+yRYU=;
-        b=dy5//0v8zObM82rg+WJB8pm47nA3ZWv5G6r+Vr43UTh3eT5gvXS9tuG1X8scBgviLp
-         OVeUxiuhD9BgOeg/48pJrY4mAcyM/i8EAvCAUHjEGG0zak/6gDaaZAU2JpdEa1w1IroC
-         ZONVzDWBE6NaZGzOFH2g+7FBzdcxmhqsb2DvbzW9lcTAi8FcWmKASDh9E6VLHZ2ojP91
-         qS6CUv5m4Ddbhvhc+kIzBsN0kyZwy3ZZuBJA/hAq4BQQY5D/3wWZu/Jqn0tbmBb8JrUM
-         e7aX5sdHXIoUwEIAxckS+W5mwN9EilhgJdi+b7JU0x3iPuwr+PBgfH55vH3s3Yg60CtV
-         S0HA==
-X-Forwarded-Encrypted: i=1; AJvYcCVPZ4wb2YJLFZGUaLHPszhw89gTKMv2D879aj+hY6SkMx9ZNXtPihNXh+xEKOJS5pRjLdLG7lpoNpo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxxbdSxRTtwpTYRXoNTW5YmfUIHP6xlunBm5rFy7KsTsryuqXBa
-	ZaBZYtV+Grn+EhmduFNlbY2IyXn5RUhaX8Q0I8ftW45pVB/9+bfKEFKlvegF6cEO8ShLSgZEwfs
-	bJ1E8RoPfCZIXVyivCwpGU1tpk4AVJDuYTzByLC7CNGy5Dd1UrLhr+D0fiNZUuQ==
-X-Gm-Gg: AZuq6aLydnSzu9C2KPiDWVQmQ88Hd9I7vCJwEI7wDvO1t/HSV/EoeGMuDVmxT78AsoM
-	GibzWnal06jejFJQ4tsrAyBaMBCIoVEjYGx/ZpYc9LF0XH4/oSFRZlwJUHW8iWeVf5V/PecV1Fb
-	DYQtNZn9WpDVVzQlpsPJZolRtcQCpgSzGIBYYwQMs2eSDZUQJ496WaGW8suaaDqnNCFqd4cSrwj
-	8S1XdlxVQTWDMfLeu2bcJ3/2w9mOFlIEA8G+blcXwDgFe94tiz2igOrn79iY7Q2+tcZmO7Qxg6O
-	jJcs1cxhDuXDWPf5uLshUf7CUX4HNHtUsvm3QCUEc9xoWDpRuyPFZy3izIIO84YKc0h7jkk3CkO
-	p3JgdkSdGCw==
-X-Received: by 2002:ac8:598f:0:b0:4ee:1b0e:861a with SMTP id d75a77b69052e-506398477b3mr7896151cf.13.1770326832965;
-        Thu, 05 Feb 2026 13:27:12 -0800 (PST)
-X-Received: by 2002:ac8:598f:0:b0:4ee:1b0e:861a with SMTP id d75a77b69052e-506398477b3mr7895841cf.13.1770326832454;
-        Thu, 05 Feb 2026 13:27:12 -0800 (PST)
-Received: from localhost ([2607:f2c0:b010:9000:f569:ac10:227c:5156])
-        by smtp.gmail.com with UTF8SMTPSA id d75a77b69052e-506392902eesm3841121cf.21.2026.02.05.13.27.11
+        bh=kGsy+6Drt04/pl8yx93tFPhkkWQllmpTFtK5bY5HHKI=;
+        b=ggzZRGxtyi/D08XfmJS0LvnF27JqVKM5+qRB2z0bMcmp/Tmdhh4pjYKgTyPj1HDFge
+         Sq8l0g0kHPN3tpDMXqRo1q6KX0Vc4/oPLX2FQwjbw+Wn20HcWvNWA9IA/EKNcXY2e0e8
+         GVU4ibkZSZnJsZ52r5APn2R0xxVc8hefa9N6NbpjNQV6tskIOcd3vXeZraukEf1fpdv/
+         TsPMt3kSyykifV5bcyoZvEwjXZ1BEgJMvmZPzAQvXft6XmaypmxPL8B2HZYmqlL9f5Qj
+         RLYFNoAucOM6S39i+KznF57fFr5ALnrkcCTR5Qy+1q2M1csanFfmLIeVzviD0H5C3mw+
+         Imbw==
+X-Forwarded-Encrypted: i=1; AJvYcCW+QsJmlpleCH1mZapLhXlJsm2SvLN6+c1rwdW1HgiwNaDnn8JbwD75pBHaq1p7jgmsNPjwCySLpK8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw/VwkTdoEoqv1VXP5rvfBQ/qzYciurNhb12qWJlYfgPFVXEJGa
+	SxTQ2jwzJHXE4cK4NwfWjvcsP14VO/GuFx8zitdMFrmUkJEuyWBD7QNPin0Z5VD+nQ==
+X-Gm-Gg: AZuq6aIOr3SJ8cUG+65kT9cKz+KsNCPuM8X2BcA2jKoM6TR8mxJPDDP46vu8tRhIEET
+	722MXgaJbDjV7dlHPnbBjUfA8sUpb6bpNgKqLHVGg4v9MmDceSJCFV0PPIdtwgCFS17ueDsawMT
+	DdoCbb+GdzqPpKYb7aWMxo8JLUrih6fCKXmU0eIMH5Z/C3vk37TUYub7zcFKQdFi9arazt0kObt
+	VpXAgvew7NAt2f11aw1F56xOjo3I5R8Obr6qAytl1CEy6XH9AITzPns3SRV0j/sgaCiZpa6BsTq
+	6LlCl5O8Y6p5YImOtvgu0g4Tm5VSaEmlCtAqW3VkawMV31SPgPX9taqXKKrg08qKcKhn3tquw/w
+	AkDxQ1AxJSwX5BNB2mLBZkF5eQhejZQnBeNZUMvnzbubgr7Q0/sXRruQ2orBY8W3gXBOCI5XoaA
+	19DiB1nTBrVQv+ONRMFLDCXe3PMPDp4wXT9i9Ff9GYYPxJNHk69g==
+X-Received: by 2002:a17:902:c94b:b0:2a1:deb:c460 with SMTP id d9443c01a7336-2a9516d3e0cmr5394585ad.33.1770328321980;
+        Thu, 05 Feb 2026 13:52:01 -0800 (PST)
+Received: from google.com (79.217.168.34.bc.googleusercontent.com. [34.168.217.79])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a9521b9f5esm3197445ad.51.2026.02.05.13.52.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Feb 2026 13:27:11 -0800 (PST)
-Date: Thu, 5 Feb 2026 16:27:10 -0500
-From: Peter Colberg <pcolberg@redhat.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Alex Gaynor <alex.gaynor@gmail.com>,
-	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
-	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
-	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>
-Subject: Re: [PATCH 3/8] rust: pci: add {enable,disable}_sriov(), to control
- SR-IOV capability
-Message-ID: <aYULLucqol7jRoDC@earendel>
-Mail-Followup-To: Jason Gunthorpe <jgg@ziepe.ca>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Alex Gaynor <alex.gaynor@gmail.com>,
-	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
-	=?utf-8?B?QmrDtnJu?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
-	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>, Zhi Wang <zhiw@nvidia.com>
-References: <20251119-rust-pci-sriov-v1-0-883a94599a97@redhat.com>
- <20251119-rust-pci-sriov-v1-3-883a94599a97@redhat.com>
- <20251121232833.GH233636@ziepe.ca>
- <aUrquI3X68Ilmebh@earendel>
- <20260106012236.GR125261@ziepe.ca>
+        Thu, 05 Feb 2026 13:52:01 -0800 (PST)
+Date: Thu, 5 Feb 2026 21:51:56 +0000
+From: David Matlack <dmatlack@google.com>
+To: Raghavendra Rao Ananta <rananta@google.com>
+Cc: Alex Williamson <alex@shazbot.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Josh Hilke <jrhilke@google.com>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Samiullah Khawaja <skhawaja@google.com>
+Subject: Re: [PATCH v2 6/6] vfio: selftests: Add tests to validate SR-IOV UAPI
+Message-ID: <aYUQ_HkDJU9kjsUl@google.com>
+References: <20251210181417.3677674-1-rananta@google.com>
+ <20251210181417.3677674-7-rananta@google.com>
+ <aUSNoBzvybi24SUD@google.com>
+ <CAJHc60zAB8pyc7=ca=eOf+SEEvnZ3JxVEnZoOtgj+mX1GQiALw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260106012236.GR125261@ziepe.ca>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJHc60zAB8pyc7=ca=eOf+SEEvnZ3JxVEnZoOtgj+mX1GQiALw@mail.gmail.com>
 
-Hi Jason,
+On 2026-01-06 11:47 AM, Raghavendra Rao Ananta wrote:
+> On Thu, Dec 18, 2025 at 3:26 PM David Matlack <dmatlack@google.com> wrote:
+> >
+> > On 2025-12-10 06:14 PM, Raghavendra Rao Ananta wrote:
+> > > Add a selfttest, vfio_pci_sriov_uapi_test.c, to validate the
+> > > SR-IOV UAPI, including the following cases, iterating over
+> > > all the IOMMU modes currently supported:
+> > >  - Setting correct/incorrect/NULL tokens during device init.
+> > >  - Close the PF device immediately after setting the token.
+> > >  - Change/override the PF's token after device init.
+> > >
+> > > Signed-off-by: Raghavendra Rao Ananta <rananta@google.com>
+> >
+> > I hit the following kernel NULL pointer dereference after running the
+> > new test a few times (nice!).
+> >
+> > Repro:
+> >
+> >   $ tools/testing/selftests/vfio/scripts/setup.sh 0000:16:00.1
+> >   $ tools/testing/selftests/vfio/vfio_pci_sriov_uapi_test 0000:16:00.1
+> >   $ tools/testing/selftests/vfio/scripts/cleanup.sh
+> >   ... repeat ...
+> >
+> > The panic:
+> >
+> > [  553.245784][T27601] vfio-pci 0000:1a:00.0: probe with driver vfio-pci failed with error -22
+> > [  553.256622][T27601] vfio-pci 0000:1a:00.0: probe with driver vfio-pci failed with error -22
+> > [  574.857650][T27935] BUG: kernel NULL pointer dereference, address: 0000000000000008
+> > [  574.865322][T27935] #PF: supervisor read access in kernel mode
+> > [  574.871175][T27935] #PF: error_code(0x0000) - not-present page
+> > [  574.877021][T27935] PGD 4116e63067 P4D 40fb0a3067 PUD 409597f067 PMD 0
+> > [  574.883654][T27935] Oops: Oops: 0000 [#1] SMP NOPTI
+> > [  574.888551][T27935] CPU: 100 UID: 0 PID: 27935 Comm: vfio_pci_sriov_ Tainted: G S      W           6.18.0-smp-DEV #1 NONE
+> > [  574.899600][T27935] Tainted: [S]=CPU_OUT_OF_SPEC, [W]=WARN
+> > [  574.905104][T27935] Hardware name: Google Izumi-EMR/izumi, BIOS 0.20250801.2-0 08/25/2025
+> > [  574.913289][T27935] RIP: 0010:rb_insert_color+0x44/0x110
+> > [  574.918623][T27935] Code: cc cc 48 89 cf 48 83 cf 01 48 89 3a 48 89 38 48 8b 01 48 89 cf 48 83 e0 fc 48 89 01 74 d7 48 8b 08 f6 c1 01 0f 85 c1 00 00 00 <48> 8b 51 08 48 39 c2 74 0c 48 85 d2 74 4f f6 02 01 74 c5 eb 48 48
+> > [  574.938080][T27935] RSP: 0018:ff85113dcdd6bb08 EFLAGS: 00010046
+> > [  574.944013][T27935] RAX: ff3f257594a99e80 RBX: ff3f25758af490c0 RCX: 0000000000000000
+> > [  574.951857][T27935] RDX: 0000000000001a00 RSI: ff3f25360038eb70 RDI: ff3f2536658bbee0
+> > [  574.959702][T27935] RBP: ff3f25360038ea00 R08: 0000000000000002 R09: ff85113dcdd6badc
+> > [  574.967544][T27935] R10: ff3f257590ab8000 R11: ffffffffa78210a0 R12: ff3f2536658bbea0
+> > [  574.975387][T27935] R13: 0000000000000286 R14: ff3f25758af49000 R15: ff3f25360038eb78
+> > [  574.983230][T27935] FS:  00000000223403c0(0000) GS:ff3f25b4d4d83000(0000) knlGS:0000000000000000
+> > [  574.992032][T27935] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > [  574.998488][T27935] CR2: 0000000000000008 CR3: 00000040fa254005 CR4: 0000000000f71ef0
+> > [  575.006332][T27935] PKRU: 55555554
+> > [  575.009753][T27935] Call Trace:
+> > [  575.012919][T27935]  <TASK>
+> > [  575.015730][T27935]  intel_iommu_probe_device+0x4c9/0x7b0
+> > [  575.021153][T27935]  __iommu_probe_device+0x101/0x4c0
+> > [  575.026231][T27935]  iommu_bus_notifier+0x37/0x100
+> > [  575.031046][T27935]  blocking_notifier_call_chain+0x53/0xd0
+> > [  575.036634][T27935]  bus_notify+0x99/0xc0
+> > [  575.040666][T27935]  device_add+0x252/0x470
+> > [  575.044872][T27935]  pci_device_add+0x414/0x5c0
+> > [  575.049429][T27935]  pci_iov_add_virtfn+0x2f2/0x3e0
+> > [  575.054326][T27935]  sriov_add_vfs+0x33/0x70
+> > [  575.058613][T27935]  sriov_enable+0x2fc/0x490
+> > [  575.062992][T27935]  vfio_pci_core_sriov_configure+0x16c/0x210
+> > [  575.068843][T27935]  sriov_numvfs_store+0xc4/0x190
+> > [  575.073652][T27935]  kernfs_fop_write_iter+0xfe/0x180
+> > [  575.078724][T27935]  vfs_write+0x2d0/0x430
+> > [  575.082846][T27935]  ksys_write+0x7f/0x100
+> > [  575.086965][T27935]  do_syscall_64+0x6f/0x940
+> > [  575.091339][T27935]  ? arch_exit_to_user_mode_prepare+0x9/0xb0
+> > [  575.097193][T27935]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-On Mon, Jan 05, 2026 at 09:22:36PM -0400, Jason Gunthorpe wrote:
-> On Tue, Dec 23, 2025 at 02:17:12PM -0500, Peter Colberg wrote:
-> > Further, enable_sriov() is prevented during remove() using a new
-> > flag inhibit_enable in the pci_sriov structure that is set before
-> > and cleared after the PF driver is unbound from the device.
-> 
-> Doesn't this need something concurrent safe like a revocable?
+I think this is a use-after-free.
 
-Thank you for the follow-up and apologies for the delay. I have now
-posted a v2 series that takes a different approach from what was
-described earlier, after discussing this further with Danilo.
+The VF used in this test matches quirk_intel_e2000_no_ats() which means
+that ATS gets disabled (pdev->ats_cap = 0) via quirk after the device is
+set up.
 
-In the v2 patch [1], when the new PCI driver flag managed_sriov is
-set, which is always the case for Rust, SR-IOV is disabled twice if
-needed: once before the unbind() callback for a well-behaved driver,
-and a second time after unbind() for a broken (but nevertheless using
-safe APIs only) driver that re-enables SR-IOV during unbind().
+ drivers/pci/quirks.c:
 
-Together with commit a995fe1a3aa7 ("rust: driver: drop device private
-data post unbind") which ensures that the device private data for the
-PF device is still alive until after the function pci_iov_remove() is
-called and forcibly re-disables SR_IOV if needed, this upholds the
-safety guarantee which pci::Device::physfn() depends on.
+ 5651 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
 
-As an alternative for preventing SR-IOV management during unbind(), I
-briefly considered adding a new context, e.g., CoreInternal => Core =>
-CoreUnbind => Bound => Normal, where {enable,disable}_sriov() are
-implemented by Core but not CoreUnbind, but discarded that solution
-since it seems too specific to this case to warrant the complexity.
+The issue is this quirk is applied after the Intel IOMMU driver is
+notified about the device.
 
-Thanks,
-Peter
+So during intel_iommu_probe_device(), the Intel IOMMU driver sees that
+ATS is enabled, and adds the device to the device rbtree:
 
-[1] https://lore.kernel.org/rust-for-linux/20260205-rust-pci-sriov-v2-1-ef9400c7767b@redhat.com/
+ drivers/iommu/intel/iommu.c:
 
-> 
-> Jason
-> 
+ 3765 static struct iommu_device *intel_iommu_probe_device(struct device *dev)
+ 3766 {
+ ...
+ 3826         if (pdev && pci_ats_supported(pdev)) {
+ 3827                 pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
+ 3828                 ret = device_rbtree_insert(iommu, info);
+ 3829                 if (ret)
+ 3830                         goto free;
+ 3831         }
+ ...
+ 3858 }
 
+
+Then ATS is disabled via quirk:
+
+ drivers/pci/iov.c:
+
+ 346 int pci_iov_add_virtfn(struct pci_dev *dev, int id)
+ 347 {
+ ...
+ 383
+ 384         pci_device_add(virtfn, virtfn->bus);  <======= notifies Intel IOMMU
+ 385         rc = pci_iov_sysfs_link(dev, virtfn, id);
+ 386         if (rc)
+ 387                 goto failed1;
+ 388
+ 389         pci_bus_add_device(virtfn);  <==== Disables ATS via pci_fixup_final
+ 390
+ 391         return 0;
+ ...
+ 401 }
+
+Then later when the VF is destroyed (SR-IOV disabled on the PF), the
+Intel IOMMU sees that ATS is disabled and does not remove the device
+from its rbtree.
+
+ drivers/iommu/intel/iommu.c:
+
+ 3889 static void intel_iommu_release_device(struct device *dev)
+ 3890 {
+ ...
+ 3903         if (dev_is_pci(dev) && pci_ats_supported(to_pci_dev(dev)))
+ 3904                 device_rbtree_remove(info);
+ ...
+ 3913         kfree(info);   <======= info is still reachable from device rbtree
+ 3914 }
