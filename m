@@ -1,220 +1,297 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F5123815B
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2026 21:52:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EB0332E6B1;
+	Thu,  5 Feb 2026 23:39:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770328323; cv=none; b=skYhKR9Evb98RW3cpzsYyIhjj5rMNqSUoLkcEeS+qtJdNKQmg6JPMZBgLEHRZfInmwIfEH663RYDC5/77c6k2zYkEcBzpcDyIg0LTD0miVDH7mm204egcKYhHmlHukLkrpm0GHb0RTzbud91k3T988G9Mv07p2As6Ehpp11k9cE=
+	t=1770334762; cv=none; b=B20kNpFqLBx/PUwuHrDxXfYWvDb6p51KRrYht7fj3ucjGdVC5FGuEbTHsRxrCxNFs/iITd7a1xAvEkjg+Guba4oZYKgiHK++sMxiXqvaFh2CBs29tM9txavrgZ8sWsbJtbKU/eI6QD2FWS2Rr0UjFVdohhwpMEG/GxO6nxjEhqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770328323; c=relaxed/simple;
-	bh=F3aKZ/fCnbB9EJmonJjgo8SU4XqpJqBtz1yAs+j9ReM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HQy07cWOzcRvwqIkxTlwcBQZo5M2mqMoMAs37bQnMFUlu1jblKiuYEWT/CG7l8pdGgZKoPhvbKRSNlV/FfqwaX7FymfA3GfueXJF7JtDvXxRxvXvwlpMtMDvU+VRAuPKbb8XQ7KGv8WXz6iXyWQZDOzdlSwBxK8IgG90B30JOuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=zo6B4CDz; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1770334762; c=relaxed/simple;
+	bh=rPAJAXbftL1YEhOmfREd9FkJ08Ea0CF9RF4fclqDxPk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=kHd3YyGvobGC9lsOZrHs53cPiKBDaqJIp7Gy8FumDfvgmPxkBZhrFCZM4EKSzWrI9lV1J/b4C+22zLPfKjt52mNgNCvDRYEwwpPShNrgcIqAYHJPBleJX+qQy9ONFsqA5qCzMnjPpblRrMIjvRpKHRTLt+Pl2zJ+LGQVtFedaqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PA91govs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="zo6B4CDz"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2a09757004cso12009565ad.3
-        for <linux-pci@vger.kernel.org>; Thu, 05 Feb 2026 13:52:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1770328322; x=1770933122; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=kGsy+6Drt04/pl8yx93tFPhkkWQllmpTFtK5bY5HHKI=;
-        b=zo6B4CDzOGlGXmOvjRL/lMANxUl4N3LMS16xfUwXnMDXBRpMnGEinBZG1yN/mavVSw
-         MTOWp8oegko5eCOezR1SJM1kCtufF6NHEIOFYVHg+GepYMQOiCONJ3ifcuu+bI8eAJob
-         6Epvs0Wu1jhWY6wHu07KTyaT60sIr5iyHZ52B5Glvll1bS3PJ6OroCThuWBY5guYqPLo
-         f/MeNo80xp+wwRexTgW6BRwFeowC2JyzoCJl+c8i9NVJBmm/NwWN7T0s5Voj/iChYd3e
-         2m0mzBvEDC4SAf7/KVnyi1TaV2q/msHAIjFZFpM/xFW31TTaOImHR/Y0ilU1Fh+eeJXU
-         QHOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770328322; x=1770933122;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kGsy+6Drt04/pl8yx93tFPhkkWQllmpTFtK5bY5HHKI=;
-        b=ggzZRGxtyi/D08XfmJS0LvnF27JqVKM5+qRB2z0bMcmp/Tmdhh4pjYKgTyPj1HDFge
-         Sq8l0g0kHPN3tpDMXqRo1q6KX0Vc4/oPLX2FQwjbw+Wn20HcWvNWA9IA/EKNcXY2e0e8
-         GVU4ibkZSZnJsZ52r5APn2R0xxVc8hefa9N6NbpjNQV6tskIOcd3vXeZraukEf1fpdv/
-         TsPMt3kSyykifV5bcyoZvEwjXZ1BEgJMvmZPzAQvXft6XmaypmxPL8B2HZYmqlL9f5Qj
-         RLYFNoAucOM6S39i+KznF57fFr5ALnrkcCTR5Qy+1q2M1csanFfmLIeVzviD0H5C3mw+
-         Imbw==
-X-Forwarded-Encrypted: i=1; AJvYcCW+QsJmlpleCH1mZapLhXlJsm2SvLN6+c1rwdW1HgiwNaDnn8JbwD75pBHaq1p7jgmsNPjwCySLpK8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw/VwkTdoEoqv1VXP5rvfBQ/qzYciurNhb12qWJlYfgPFVXEJGa
-	SxTQ2jwzJHXE4cK4NwfWjvcsP14VO/GuFx8zitdMFrmUkJEuyWBD7QNPin0Z5VD+nQ==
-X-Gm-Gg: AZuq6aIOr3SJ8cUG+65kT9cKz+KsNCPuM8X2BcA2jKoM6TR8mxJPDDP46vu8tRhIEET
-	722MXgaJbDjV7dlHPnbBjUfA8sUpb6bpNgKqLHVGg4v9MmDceSJCFV0PPIdtwgCFS17ueDsawMT
-	DdoCbb+GdzqPpKYb7aWMxo8JLUrih6fCKXmU0eIMH5Z/C3vk37TUYub7zcFKQdFi9arazt0kObt
-	VpXAgvew7NAt2f11aw1F56xOjo3I5R8Obr6qAytl1CEy6XH9AITzPns3SRV0j/sgaCiZpa6BsTq
-	6LlCl5O8Y6p5YImOtvgu0g4Tm5VSaEmlCtAqW3VkawMV31SPgPX9taqXKKrg08qKcKhn3tquw/w
-	AkDxQ1AxJSwX5BNB2mLBZkF5eQhejZQnBeNZUMvnzbubgr7Q0/sXRruQ2orBY8W3gXBOCI5XoaA
-	19DiB1nTBrVQv+ONRMFLDCXe3PMPDp4wXT9i9Ff9GYYPxJNHk69g==
-X-Received: by 2002:a17:902:c94b:b0:2a1:deb:c460 with SMTP id d9443c01a7336-2a9516d3e0cmr5394585ad.33.1770328321980;
-        Thu, 05 Feb 2026 13:52:01 -0800 (PST)
-Received: from google.com (79.217.168.34.bc.googleusercontent.com. [34.168.217.79])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a9521b9f5esm3197445ad.51.2026.02.05.13.52.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Feb 2026 13:52:01 -0800 (PST)
-Date: Thu, 5 Feb 2026 21:51:56 +0000
-From: David Matlack <dmatlack@google.com>
-To: Raghavendra Rao Ananta <rananta@google.com>
-Cc: Alex Williamson <alex@shazbot.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Josh Hilke <jrhilke@google.com>, kvm@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PA91govs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E4B6C4CEF7;
+	Thu,  5 Feb 2026 23:39:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770334762;
+	bh=rPAJAXbftL1YEhOmfREd9FkJ08Ea0CF9RF4fclqDxPk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=PA91govs2VF1yrpWz72rz649TOm99d/A583cojfDZlNnFit29HyLdeEs7uVkwQ1zA
+	 bjPO9fxeWntDI2TyrRFaq2asQULdROcSYf0woQjMyIDfol1vXmuqzLp2E5LACmVGfB
+	 sEW3eEQ4Ldq1MuwoB6xPCgilpy8iR4FlAo2IlM6dPV1/HXJYL6udCWKK6caSOoGqcQ
+	 Yo74EPhULMg/jQJjyxDunxstElXi9zcckM96AuuRxxm1ebCsqwxuoBmnrb/0hd+4GJ
+	 3JqlCrnhnAfYUn6EFgEFOvO1OLPZjdIeAnEFoyqMrEMpOjUxzWfcMlqqesGmMS5xbT
+	 NuGjn/Oaax5bw==
+Date: Thu, 5 Feb 2026 17:39:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Samiullah Khawaja <skhawaja@google.com>
-Subject: Re: [PATCH v2 6/6] vfio: selftests: Add tests to validate SR-IOV UAPI
-Message-ID: <aYUQ_HkDJU9kjsUl@google.com>
-References: <20251210181417.3677674-1-rananta@google.com>
- <20251210181417.3677674-7-rananta@google.com>
- <aUSNoBzvybi24SUD@google.com>
- <CAJHc60zAB8pyc7=ca=eOf+SEEvnZ3JxVEnZoOtgj+mX1GQiALw@mail.gmail.com>
+	Naresh Kamboju <naresh.kamboju@linaro.org>,
+	Pavankumar Kondeti <quic_pkondeti@quicinc.com>,
+	Xingang Wang <wangxingang5@huawei.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Alex Williamson <alex@shazbot.org>,
+	James Puthukattukaran <james.puthukattukaran@oracle.com>
+Subject: Re: [PATCH v3 3/4] PCI: Disable ACS SV capability for the broken IDT
+ switches
+Message-ID: <20260205233920.GA17083@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJHc60zAB8pyc7=ca=eOf+SEEvnZ3JxVEnZoOtgj+mX1GQiALw@mail.gmail.com>
+In-Reply-To: <20260102-pci_acs-v3-3-72280b94d288@oss.qualcomm.com>
 
-On 2026-01-06 11:47 AM, Raghavendra Rao Ananta wrote:
-> On Thu, Dec 18, 2025 at 3:26 PM David Matlack <dmatlack@google.com> wrote:
-> >
-> > On 2025-12-10 06:14 PM, Raghavendra Rao Ananta wrote:
-> > > Add a selfttest, vfio_pci_sriov_uapi_test.c, to validate the
-> > > SR-IOV UAPI, including the following cases, iterating over
-> > > all the IOMMU modes currently supported:
-> > >  - Setting correct/incorrect/NULL tokens during device init.
-> > >  - Close the PF device immediately after setting the token.
-> > >  - Change/override the PF's token after device init.
-> > >
-> > > Signed-off-by: Raghavendra Rao Ananta <rananta@google.com>
-> >
-> > I hit the following kernel NULL pointer dereference after running the
-> > new test a few times (nice!).
-> >
-> > Repro:
-> >
-> >   $ tools/testing/selftests/vfio/scripts/setup.sh 0000:16:00.1
-> >   $ tools/testing/selftests/vfio/vfio_pci_sriov_uapi_test 0000:16:00.1
-> >   $ tools/testing/selftests/vfio/scripts/cleanup.sh
-> >   ... repeat ...
-> >
-> > The panic:
-> >
-> > [  553.245784][T27601] vfio-pci 0000:1a:00.0: probe with driver vfio-pci failed with error -22
-> > [  553.256622][T27601] vfio-pci 0000:1a:00.0: probe with driver vfio-pci failed with error -22
-> > [  574.857650][T27935] BUG: kernel NULL pointer dereference, address: 0000000000000008
-> > [  574.865322][T27935] #PF: supervisor read access in kernel mode
-> > [  574.871175][T27935] #PF: error_code(0x0000) - not-present page
-> > [  574.877021][T27935] PGD 4116e63067 P4D 40fb0a3067 PUD 409597f067 PMD 0
-> > [  574.883654][T27935] Oops: Oops: 0000 [#1] SMP NOPTI
-> > [  574.888551][T27935] CPU: 100 UID: 0 PID: 27935 Comm: vfio_pci_sriov_ Tainted: G S      W           6.18.0-smp-DEV #1 NONE
-> > [  574.899600][T27935] Tainted: [S]=CPU_OUT_OF_SPEC, [W]=WARN
-> > [  574.905104][T27935] Hardware name: Google Izumi-EMR/izumi, BIOS 0.20250801.2-0 08/25/2025
-> > [  574.913289][T27935] RIP: 0010:rb_insert_color+0x44/0x110
-> > [  574.918623][T27935] Code: cc cc 48 89 cf 48 83 cf 01 48 89 3a 48 89 38 48 8b 01 48 89 cf 48 83 e0 fc 48 89 01 74 d7 48 8b 08 f6 c1 01 0f 85 c1 00 00 00 <48> 8b 51 08 48 39 c2 74 0c 48 85 d2 74 4f f6 02 01 74 c5 eb 48 48
-> > [  574.938080][T27935] RSP: 0018:ff85113dcdd6bb08 EFLAGS: 00010046
-> > [  574.944013][T27935] RAX: ff3f257594a99e80 RBX: ff3f25758af490c0 RCX: 0000000000000000
-> > [  574.951857][T27935] RDX: 0000000000001a00 RSI: ff3f25360038eb70 RDI: ff3f2536658bbee0
-> > [  574.959702][T27935] RBP: ff3f25360038ea00 R08: 0000000000000002 R09: ff85113dcdd6badc
-> > [  574.967544][T27935] R10: ff3f257590ab8000 R11: ffffffffa78210a0 R12: ff3f2536658bbea0
-> > [  574.975387][T27935] R13: 0000000000000286 R14: ff3f25758af49000 R15: ff3f25360038eb78
-> > [  574.983230][T27935] FS:  00000000223403c0(0000) GS:ff3f25b4d4d83000(0000) knlGS:0000000000000000
-> > [  574.992032][T27935] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [  574.998488][T27935] CR2: 0000000000000008 CR3: 00000040fa254005 CR4: 0000000000f71ef0
-> > [  575.006332][T27935] PKRU: 55555554
-> > [  575.009753][T27935] Call Trace:
-> > [  575.012919][T27935]  <TASK>
-> > [  575.015730][T27935]  intel_iommu_probe_device+0x4c9/0x7b0
-> > [  575.021153][T27935]  __iommu_probe_device+0x101/0x4c0
-> > [  575.026231][T27935]  iommu_bus_notifier+0x37/0x100
-> > [  575.031046][T27935]  blocking_notifier_call_chain+0x53/0xd0
-> > [  575.036634][T27935]  bus_notify+0x99/0xc0
-> > [  575.040666][T27935]  device_add+0x252/0x470
-> > [  575.044872][T27935]  pci_device_add+0x414/0x5c0
-> > [  575.049429][T27935]  pci_iov_add_virtfn+0x2f2/0x3e0
-> > [  575.054326][T27935]  sriov_add_vfs+0x33/0x70
-> > [  575.058613][T27935]  sriov_enable+0x2fc/0x490
-> > [  575.062992][T27935]  vfio_pci_core_sriov_configure+0x16c/0x210
-> > [  575.068843][T27935]  sriov_numvfs_store+0xc4/0x190
-> > [  575.073652][T27935]  kernfs_fop_write_iter+0xfe/0x180
-> > [  575.078724][T27935]  vfs_write+0x2d0/0x430
-> > [  575.082846][T27935]  ksys_write+0x7f/0x100
-> > [  575.086965][T27935]  do_syscall_64+0x6f/0x940
-> > [  575.091339][T27935]  ? arch_exit_to_user_mode_prepare+0x9/0xb0
-> > [  575.097193][T27935]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[+cc Alex, James (author of aa667c6408d2)]
 
-I think this is a use-after-free.
+On Fri, Jan 02, 2026 at 09:04:49PM +0530, Manivannan Sadhasivam wrote:
+> Some IDT switches behave erratically when ACS Source Validation is enabled.
+> For example, they incorrectly flag an ACS Source Validation error on
+> completions for config read requests even though PCIe r4.0, sec 6.12.1.1,
+> says that completions are never affected by ACS Source Validation.
+> 
+> Even though IDT suggests working around this issue by issuing a config
+> write before the first config read, so that the device caches the bus and
+> device number. But it would still be fragile since the device could loose
+> the IDs after the reset and any further access may trigger ACS SV
+> violation.
+> 
+> Hence, to properly fix the issue, the respective capability needs to be
+> disabled. Since the ACS Capabilities are RO values, and are cached in the
+> 'pci_dev::acs_capabilities' field, remove the cached broken capabilities by
+> calling pci_disable_broken_acs_cap() from pci_acs_init(). This will allow
+> pci_enable_acs() helper to disable the relevant ACS ctrls.
+> 
+> With this, the previous workaround can now be safely removed.
 
-The VF used in this test matches quirk_intel_e2000_no_ats() which means
-that ATS gets disabled (pdev->ats_cap = 0) via quirk after the device is
-set up.
+James added the existing IDT workaround for the IDT 0x80b5 switch,
+which was merged as aa667c6408d2 ("PCI: Workaround IDT switch ACS
+Source Validation erratum").
 
- drivers/pci/quirks.c:
+I guess these last three patches:
 
- 5651 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
+  PCI: Cache ACS capabilities
+  PCI: Disable ACS SV capability for the broken IDT switches
+  PCI: Extend the pci_disable_broken_acs_cap() quirk for one more IDT switch
 
-The issue is this quirk is applied after the Intel IOMMU driver is
-notified about the device.
+are basically to fix the same issue on the IDT 0x8090 switch?
 
-So during intel_iommu_probe_device(), the Intel IOMMU driver sees that
-ATS is enabled, and adds the device to the device rbtree:
+The obvious approach would be to extend the test in
+pci_bus_read_dev_vendor_id() to check for 0x8090 in addition to
+0x80b5, which might be worth doing first, before changing the whole
+approach.
 
- drivers/iommu/intel/iommu.c:
+I guess your point here is that the existing workaround isn't enough
+even for 0x80b5 because it doesn't handle the reset case?  The patch
+changelogs after v9 of the original patch (see below) do mention that
+FLR and hot reset were tested and didn't seem to require the
+workaround.  But you've probably seen problems after reset?
 
- 3765 static struct iommu_device *intel_iommu_probe_device(struct device *dev)
- 3766 {
- ...
- 3826         if (pdev && pci_ats_supported(pdev)) {
- 3827                 pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
- 3828                 ret = device_rbtree_insert(iommu, info);
- 3829                 if (ret)
- 3830                         goto free;
- 3831         }
- ...
- 3858 }
+I think it's worth a note about why the reset case can't be fixed
+similarly to the enumeration case.  
 
+This patch gives up on ACS SV completely for this switch instead of
+the current approach of:
 
-Then ATS is disabled via quirk:
+  - disabling ACS SV
+  - doing a config write
+  - reading dev/vendor ID
+  - re-enabling ACS SV
 
- drivers/pci/iov.c:
+It'd be worth expanding on this and what the effect of avoiding ACS SV
+is.  Does this change which devices can be safely passed through to
+virtual guests?  Does it give up isolation that users expect?
 
- 346 int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- 347 {
- ...
- 383
- 384         pci_device_add(virtfn, virtfn->bus);  <======= notifies Intel IOMMU
- 385         rc = pci_iov_sysfs_link(dev, virtfn, id);
- 386         if (rc)
- 387                 goto failed1;
- 388
- 389         pci_bus_add_device(virtfn);  <==== Disables ATS via pci_fixup_final
- 390
- 391         return 0;
- ...
- 401 }
+I also couldn't remember why we can't just do a config write before
+reading the vendor/dev ID of a device below the switch, which is
+addressed in the discussion of v3 (below).  Basically if the device
+isn't yet ready to accept config accesses, it may not latch the bus
+number, and we can't really tell when it *is* ready.
 
-Then later when the VF is destroyed (SR-IOV disabled on the PF), the
-Intel IOMMU sees that ATS is disabled and does not remove the device
-from its rbtree.
+I collected up all the history I could find about the original change:
 
- drivers/iommu/intel/iommu.c:
+v3  2017-06-09 https://lore.kernel.org/all/20170609231617.20243-1-yinghai@kernel.org/
+    doing config write is hard because we don't know when the device
+    is Configuration-Ready and can capture the bus number:
+    https://lore.kernel.org/all/20170613221451.GC7012@bhelgaas-glaptop.roam.corp.google.com/
+v4  2017-06-27 https://lore.kernel.org/all/5952D144.8060609@oracle.com/
+    only do workaround for IDT switches
+v5  2017-07-06 https://lore.kernel.org/all/595E610A.5000900@oracle.com/
+    skip devices that don't advertise ACS SV support
+v7  2017-09-18 https://lore.kernel.org/all/59C02719.5050103@oracle.com/
+    add https://bugzilla.kernel.org/show_bug.cgi?id=196979 with
+    details about how Windows deals with this
+v8  2018-03-06 https://lore.kernel.org/all/ce8e9a3e-474d-961c-eb0a-c021077f2dca@oracle.com/
+v9  ? (couldn't find this)
+    tested FLR and hot reset scenarios; didn't see issues where
+    workaround was required
+v11 2018-04-11 https://lore.kernel.org/all/e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com/ (no version label)
+    2018-04-19 https://lore.kernel.org/all/b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com/ (no version label)
+v12 2018-04-24 https://lore.kernel.org/all/7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com/
+v13 2018-04-30 https://lore.kernel.org/all/4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com/ (labeled v2)
+v14 2018-07-09 https://lore.kernel.org/all/4117c119-c754-bf4e-544c-19cb6e239f38@oracle.com/
 
- 3889 static void intel_iommu_release_device(struct device *dev)
- 3890 {
- ...
- 3903         if (dev_is_pci(dev) && pci_ats_supported(to_pci_dev(dev)))
- 3904                 device_rbtree_remove(info);
- ...
- 3913         kfree(info);   <======= info is still reachable from device rbtree
- 3914 }
+> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> Tested-by: Naresh Kamboju <naresh.kamboju@linaro.org>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+>  drivers/pci/pci.c    |  1 +
+>  drivers/pci/pci.h    |  3 ++-
+>  drivers/pci/probe.c  | 12 -----------
+>  drivers/pci/quirks.c | 61 ++++++++++++----------------------------------------
+>  4 files changed, 17 insertions(+), 60 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d89b04451aea..e16229e7ff6f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3652,6 +3652,7 @@ void pci_acs_init(struct pci_dev *dev)
+>  		return;
+>  
+>  	pci_read_config_word(dev, pos + PCI_ACS_CAP, &dev->acs_capabilities);
+> +	pci_disable_broken_acs_cap(dev);
+>  }
+>  
+>  /**
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 4592ede0ebcc..5fe5d6e84c95 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -432,7 +432,6 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+>  				int rrs_timeout);
+>  bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+>  					int rrs_timeout);
+> -int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *pl, int rrs_timeout);
+>  
+>  int pci_setup_device(struct pci_dev *dev);
+>  void __pci_size_stdbars(struct pci_dev *dev, int count,
+> @@ -944,6 +943,7 @@ void pci_enable_acs(struct pci_dev *dev);
+>  int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+>  int pci_dev_specific_enable_acs(struct pci_dev *dev);
+>  int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+> +void pci_disable_broken_acs_cap(struct pci_dev *pdev);
+>  int pcie_failed_link_retrain(struct pci_dev *dev);
+>  #else
+>  static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+> @@ -959,6 +959,7 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
+>  {
+>  	return -ENOTTY;
+>  }
+> +static inline void pci_disable_broken_acs_cap(struct pci_dev *dev) { }
+>  static inline int pcie_failed_link_retrain(struct pci_dev *dev)
+>  {
+>  	return -ENOTTY;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 41183aed8f5d..c7304ac5afc2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2547,18 +2547,6 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>  				int timeout)
+>  {
+> -#ifdef CONFIG_PCI_QUIRKS
+> -	struct pci_dev *bridge = bus->self;
+> -
+> -	/*
+> -	 * Certain IDT switches have an issue where they improperly trigger
+> -	 * ACS Source Validation errors on completions for config reads.
+> -	 */
+> -	if (bridge && bridge->vendor == PCI_VENDOR_ID_IDT &&
+> -	    bridge->device == 0x80b5)
+> -		return pci_idt_bus_quirk(bus, devfn, l, timeout);
+> -#endif
+> -
+>  	return pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
+>  }
+>  EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b9c252aa6fe0..1571a2ef331e 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5778,58 +5778,25 @@ DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+>  			       PCI_BASE_CLASS_DISPLAY, 16, quirk_nvidia_hda);
+>  
+>  /*
+> - * Some IDT switches incorrectly flag an ACS Source Validation error on
+> - * completions for config read requests even though PCIe r4.0, sec
+> - * 6.12.1.1, says that completions are never affected by ACS Source
+> - * Validation.  Here's the text of IDT 89H32H8G3-YC, erratum #36:
+> + * Some IDT switches behave erratically when ACS Source Validation is enabled.
+> + * For example, they incorrectly flag an ACS Source Validation error on
+> + * completions for config read requests even though PCIe r4.0, sec 6.12.1.1,
+> + * says that completions are never affected by ACS Source Validation.
+>   *
+> - *   Item #36 - Downstream port applies ACS Source Validation to Completions
+> - *   Section 6.12.1.1 of the PCI Express Base Specification 3.1 states that
+> - *   completions are never affected by ACS Source Validation.  However,
+> - *   completions received by a downstream port of the PCIe switch from a
+> - *   device that has not yet captured a PCIe bus number are incorrectly
+> - *   dropped by ACS Source Validation by the switch downstream port.
+> + * Even though IDT suggests working around this issue by issuing a config write
+> + * before the first config read, so that the switch caches the bus and device
+> + * number, it would still be fragile since the device could loose the IDs after
+> + * the reset.
+>   *
+> - * The workaround suggested by IDT is to issue a config write to the
+> - * downstream device before issuing the first config read.  This allows the
+> - * downstream device to capture its bus and device numbers (see PCIe r4.0,
+> - * sec 2.2.9), thus avoiding the ACS error on the completion.
+> - *
+> - * However, we don't know when the device is ready to accept the config
+> - * write, so we do config reads until we receive a non-Config Request Retry
+> - * Status, then do the config write.
+> - *
+> - * To avoid hitting the erratum when doing the config reads, we disable ACS
+> - * SV around this process.
+> + * Hence, a reliable fix would be to assume that these switches don't support
+> + * ACS SV.
+>   */
+> -int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l, int timeout)
+> +void pci_disable_broken_acs_cap(struct pci_dev *pdev)
+>  {
+> -	int pos;
+> -	u16 ctrl = 0;
+> -	bool found;
+> -	struct pci_dev *bridge = bus->self;
+> -
+> -	pos = bridge->acs_cap;
+> -
+> -	/* Disable ACS SV before initial config reads */
+> -	if (pos) {
+> -		pci_read_config_word(bridge, pos + PCI_ACS_CTRL, &ctrl);
+> -		if (ctrl & PCI_ACS_SV)
+> -			pci_write_config_word(bridge, pos + PCI_ACS_CTRL,
+> -					      ctrl & ~PCI_ACS_SV);
+> +	if (pdev->vendor == PCI_VENDOR_ID_IDT && pdev->device == 0x80b5) {
+> +		pci_info(pdev, "Disabling broken ACS SV\n");
+> +		pdev->acs_capabilities &= ~PCI_ACS_SV;
+>  	}
+> -
+> -	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
+> -
+> -	/* Write Vendor ID (read-only) so the endpoint latches its bus/dev */
+> -	if (found)
+> -		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
+> -
+> -	/* Re-enable ACS_SV if it was previously enabled */
+> -	if (ctrl & PCI_ACS_SV)
+> -		pci_write_config_word(bridge, pos + PCI_ACS_CTRL, ctrl);
+> -
+> -	return found;
+>  }
+>  
+>  /*
+> 
+> -- 
+> 2.48.1
+> 
