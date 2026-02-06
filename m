@@ -1,144 +1,113 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.165])
+Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92E5329BDBF
-	for <linux-pci@vger.kernel.org>; Sun,  8 Feb 2026 21:30:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.165
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770586259; cv=pass; b=W06Q9cVsTIMhD/Eci+ubh0PVbxxmboExN1s8g/QB751ej9tJsWGFTMa6hXUw0lPS/4/6GSi8xwcl0CqpqEYKA6iTlYEQqR5vfDA5CI0zHBD+QzUA1hvybvRCbh90NcqT7QSimrDFEMKcaxdjiGRkRjhiWddcUYdBQofdrJyGhqQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770586259; c=relaxed/simple;
-	bh=DqBLUrhBuL06YYsO+DzU6rbEovOYWHLh4Pm3Ji3ddFM=;
-	h=References:Message-ID:From:To:Cc:Subject:Date:Mime-Version:
-	 Content-Type:Content-Disposition; b=qLTTo6COTXTBcV1eKCEe9kyp+yCu85OwJr4+6MAO58PiYT4qd5439WlkkDUUSewRslgMV+VLbuZE0EgyEPkLSEKNcaOiDvz8wgkFCbbTiAerZ8ZnaKU5xcTkmjtYch6faZdTfQhO3bLpIFecDEfnS0dfy6Ihv8Jx+kRhcADMyO8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=masysma.net; spf=pass smtp.mailfrom=masysma.net; dkim=pass (2048-bit key) header.d=masysma.net header.i=@masysma.net header.b=nm4C4Y0E; dkim=permerror (0-bit key) header.d=masysma.net header.i=@masysma.net header.b=WzFDkwjw; arc=pass smtp.client-ip=81.169.146.165
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=masysma.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=masysma.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=masysma.net header.i=@masysma.net header.b="nm4C4Y0E";
-	dkim=permerror (0-bit key) header.d=masysma.net header.i=@masysma.net header.b="WzFDkwjw"
-ARC-Seal: i=1; a=rsa-sha256; t=1770586241; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=HFIDYRQ8KCEJiCeQGSXvFjjlAFNO+NeTl8isRM74yaMEINx12xFt5bgtbdM2tMdU/S
-    07aLxiWdSl3Z4ODly6tenNF5U7MBaB3sne94zpsukJMQMq4PtnjCkaRP3Pb+eeVBO9U7
-    XdhGGSUTrVnnJnCzv2VbmeMvYeU3J444qneaIvenwb+zwK+R3ZTYOV7aLQgewkGC5imI
-    evyw0SHJeaZxrNEm5oyF7VRzqlZWqch84rX5NKwSJ1sPEJYYRgwP5S/6uYJLWO8Q3mPE
-    oMShUddGuA0YDDM7xaiQrMa+qX0Zcwpx+rSe35KxTqR0ASYseq1n/4az7W56zASpgtOa
-    18Zw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1770586241;
-    s=strato-dkim-0002; d=strato.com;
-    h=Date:Subject:Cc:To:From:Message-ID:References:Cc:Date:From:Subject:
-    Sender;
-    bh=+O44CNWrLoa/XFnBV8A7kFFREAVFWtrL1ZCd+Xie11A=;
-    b=jJQAo+wL+RcUD/o4MV3kU5FcjpVZC+4pFyL4un4Y9kpOaO2kP09tRg07teajqLmlYT
-    S4/hPa9e4rH02mDumqvUvEoVxgsbhusKb0HzLL+h3dgoihj1FsUDpsvNm9N9BdF7EjBx
-    2x3JP9F0A7toPP8US9GdIBdHiR8wbF2NoKYg65BxWkHLw6U7t27r8wLm4kA6DVTElRU0
-    w5NBl9IIW8AYzjE3CU/l5FI+YrsJTQylhqDJ4vWdu2AEJ8dDPDb4JswNGiDM99cxgtu8
-    z5ynKkiTRz3ziZWGPiAmcwUjc2d7M0va/so328HHvJGZOPiYeeQ06/k3B5rXcvz1HYQs
-    o8Tg==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1770586241;
-    s=strato-dkim-0002; d=masysma.net;
-    h=Date:Subject:Cc:To:From:Message-ID:References:Cc:Date:From:Subject:
-    Sender;
-    bh=+O44CNWrLoa/XFnBV8A7kFFREAVFWtrL1ZCd+Xie11A=;
-    b=nm4C4Y0E0omdMrIjIeZUhSDDjowW6QFBbpaApgb+A7lFh5oRIdv8Zap2nBzudi9Ct9
-    hzYaRRTQJdtYvMTbPK3a6+G+5GKWj7zRBclmaMPBZubvHRuC4msKYb7L7bYCL3cBYBIl
-    ZPLYEisGq4mrSM2TKxlVfk6iM8oeplQTkq6yL3VjVasltFDiaBQyJYI8ct4OkfBpVCFK
-    KKb7gTTUh1ARoxB08NBqhL5DOOFIdEmluiRcqzlHMJNm/YPNE8JKjgEo86G+RfQi66gy
-    rUH2qaUIAMxH51YqGabztbwA4vsb0dSo1y2aaBPMYUV16j7g5OWiM+mT0TLUvxMA8uwo
-    arqw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1770586241;
-    s=strato-dkim-0003; d=masysma.net;
-    h=Date:Subject:Cc:To:From:Message-ID:References:Cc:Date:From:Subject:
-    Sender;
-    bh=+O44CNWrLoa/XFnBV8A7kFFREAVFWtrL1ZCd+Xie11A=;
-    b=WzFDkwjwjKGVON5rNZ7IpUxCW38KdE+58QBOtD1Fc0v35Df/U7y94CZe3nREOmgp3X
-    TdtNIUfiCUZohNmVhZAg==
-X-RZG-AUTH: ":JWICemCleuxmQC700vpzGgDMhu8YP6Ql4e3bvdBvsQ2fC5IJhh3tj/mdIDjDL2XEF3B/cogzjlgx+bvlDJMMOb0rK2YO2Wo="
-Received: from masysma-18
-    by smtp.strato.de (RZmta 55.0.1 AUTH)
-    with ESMTPSA id 97fea1218LUeE0j
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Sun, 8 Feb 2026 22:30:40 +0100 (CET)
-References: <20251008165345.GA627277@bhelgaas> <80340269-c702-442d-a461-300a2041a497@leemhuis.info>
-Message-ID: <cone.1770586239.550948.1302334.1000@masysma-18>
-X-Mailer: https://www.courier-mta.org/cone/
-From: Linux-Fan <info@masysma.net>
-To: Linux regressions mailing list <regressions@lists.linux.dev>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Hui Wang <hui.wang@canonical.com>,
-    Nirmal Patel <nirmal.patel@linux.intel.com>,
-    Jonathan Derrick <jonathan.derrick@linux.dev>, linux-pci@vger.kernel.org,
-    bhelgaas@google.com, raphael.norwitz@nutanix.com, alay.shah@nutanix.com,
-    suresh.gumpula@nutanix.com, ilpo.jarvinen@linux.intel.com,
-    Chaitanya Kumar Borah <chaitanya.kumar.borah@intel.com>,
-    Ville =?UTF-8?B?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Subject: Re: [PATCH] PCI: Disable RRS polling for Intel SSDPE2KX020T8 nvme
-Date: Sun, 08 Feb 2026 22:30:39 +0100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46DC619D89E
+	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 01:01:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770598896; cv=none; b=S9tMyaLT3AvgFDOt1R/IGW22I9NitS1fFGbTez0D44nvP7Ik7kZXKzTlJPeQ5IfXwMUJIKRcterrKC21M9486zIIx7kR2k9yiyhzCOq1qDFBMMBsBPS1I4ZZSQIQr5HzGCTRizOcg2HK18i8YG1g6DAnkvTQSN0skxuLCkE4vOg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770598896; c=relaxed/simple;
+	bh=69SVmH080kQ0s9pD6WHGHZSpprX+aHodu42uF0Ih4nQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=GQ8vIwCmHetOXugHciuWClI7M2u8rv/zGZ0oCQJDi3wx2zGxTOxj9gV0wTEhcngd3UhAIGJGAbhACQ+LBBr5xDKyPNtfXYUpZJ5ad0xjx1VU9kg8KB6rJtfhlPA/hp2/r7/580bJ9NBWCNdhbZYIqjM3GdVCHo45ov6IVZnkc3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
+X-ASG-Debug-ID: 1770598818-086e230ac70afc0001-0c9NHn
+Received: from ZXSHMBX1.zhaoxin.com (ZXSHMBX1.zhaoxin.com [10.28.252.163]) by mx1.zhaoxin.com with ESMTP id uaI0d5gmSMmYU5Mr (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Mon, 09 Feb 2026 09:00:18 +0800 (CST)
+X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
+Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX1.zhaoxin.com
+ (10.28.252.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Mon, 9 Feb
+ 2026 09:00:18 +0800
+Received: from ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85]) by
+ ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85%7]) with mapi id
+ 15.01.2507.059; Mon, 9 Feb 2026 09:00:18 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
+Received: from [10.32.64.12] (10.32.64.12) by ZXBJMBX03.zhaoxin.com
+ (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Fri, 6 Feb
+ 2026 19:07:52 +0800
+Message-ID: <c1c24812-37aa-48af-922f-2e43c659703c@zhaoxin.com>
+Date: Fri, 6 Feb 2026 19:07:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset="UTF-8"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: dpc: Increase pciehp waiting time for DPC
+ recovery
+To: Lukas Wunner <lukas@wunner.de>
+X-ASG-Orig-Subj: Re: [PATCH v2] PCI: dpc: Increase pciehp waiting time for DPC
+ recovery
+CC: Bjorn Helgaas <bhelgaas@google.com>, Mahesh J Salgaonkar
+	<mahesh@linux.ibm.com>, Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Oliver O'Halloran <oohall@gmail.com>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<CobeChen@zhaoxin.com>, <ErosZhang@zhaoxin.com>, <TonyWWang@zhaoxin.com>
+References: <20260204035542.53232-1-LeoLiu-oc@zhaoxin.com>
+ <aYRatwSvUG0yQkHd@wunner.de>
+From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
+In-Reply-To: <aYRatwSvUG0yQkHd@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ ZXBJMBX03.zhaoxin.com (10.29.252.7)
+X-Moderation-Data: 2/9/2026 9:00:17 AM
+X-Barracuda-Connect: ZXSHMBX1.zhaoxin.com[10.28.252.163]
+X-Barracuda-Start-Time: 1770598818
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://mx2.zhaoxin.com:4443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 1170
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: -2.02
+X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.154248
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
 
-Linux regression tracking (Thorsten Leemhuis) writes:
 
-> [top-posting to facilitate processing]
->
-> The issue discussed in this thread is still on my list of tracked
-> regression, which got me wondering what's the status here. Did it fall
-> through the cracks? Or was the regression maybe fixed already and I just
-> missed it?
 
-Hello Thorsten,
+=E5=9C=A8 2026/2/5 16:54, Lukas Wunner =E5=86=99=E9=81=93:
+>=20
+>=20
+> [=E8=BF=99=E5=B0=81=E9=82=AE=E4=BB=B6=E6=9D=A5=E8=87=AA=E5=A4=96=E9=83=A8=
+=E5=8F=91=E4=BB=B6=E4=BA=BA =E8=B0=A8=E9=98=B2=E9=A3=8E=E9=99=A9]
+>=20
+> On Wed, Feb 04, 2026 at 11:55:42AM +0800, LeoLiu-oc wrote:
+>> For example, The execution of the ice_pci_err_detected() in the ice netw=
+ork
+>> card driver exceeded the maximum waiting time for DPC recovery, causing =
+the
+>> pciehp_disable_slot() to be executed which is not needed. From the user'=
+s
+>> point of view, you will see that the ice network card may not be usable =
+and
+>> could even cause more serious errors, such as a kernel panic. kernel pan=
+ic
+>> is caused by a race between pciehp_disable_slot() and pcie_do_recovery()=
+.
+>> In practice, we would observe that the ice network card is in an
+>> unavailable state and a kernel panic.
+>=20
+> Unfortunately v2 was submitted without answering all of the questions
+> and testing all of the things asked for during review:
+>=20
+> https://lore.kernel.org/all/aYBoP-B2E9fp_4YZ@wunner.de/
 
-I saw the regression was closed here:
-<https://lore.kernel.org/regressions/e03d4af5-5cdb-4bf4-a568-06b9213247a0@leemhuis.info/>
+I have already replied to your concern in the following email. Please
+pay attention to check it
 
-I am one of the users affected by this issue and are currently running an  
-old Linux version (Linux 6.1 from Debian oldstable) to work around it. As a  
-user I would very much appreciate an upstream fix.
+https://lore.kernel.org/all/018007dd-68d9-4e16-b605-15d9c77ea13f@zhaoxin.co=
+m/
 
-The Debian bug is still open
-<https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1112238> whereas I think  
-Ubuntu got a patch working around the issue for their users:
-<https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2111521>
+Yours sincerely,
+LeoLiu-oc
 
-Is there a chance to possibly include the workaround in the upstream?
-
-As the issue is reproducible on my system, I should be able to test some  
-patches if necessary. Tests are not easy to perform because it degrades the  
-RAID system and I would like to avoid damaging my “production” data hence  
-limit the tests to the required minimum.
-
-But if there is some real doubt that the issue is still present, tell me and  
-I check it again with a more recent kernel version?
-
-Thanks in advance and Kind regards
-Linux-Fan
-
-> On 10/8/25 18:53, Bjorn Helgaas wrote:
-> > Nirmal, Jonathan, can you confirm that when RRS SV is enabled for VMD
-> > Root Ports, we should actually see the 0x0001 value when a device
-> > downstream of VMD responds with RRS?  From the log below, it appears
-> > that we actually get 0xffffffff when reading Device ID after a reset.
-> >
-> > On Thu, Aug 21, 2025 at 11:39:36AM -0500, Bjorn Helgaas wrote:
-> >> On Thu, Jul 03, 2025 at 08:05:05AM +0800, Hui Wang wrote:
-> >>> On 7/2/25 17:43, Hui Wang wrote:
-
-[...]
-
-> > The patch is here:
-> > https://lore.kernel.org/r/20250701232341.GA1859056@bhelgaas
-> > and the log with that patch is here:
-
-[...]
