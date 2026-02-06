@@ -1,45 +1,55 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04C93093D7;
-	Fri,  6 Feb 2026 21:10:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA7D53126D0;
+	Fri,  6 Feb 2026 21:35:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770412256; cv=none; b=h5GQTgpQkz+azy+hvre8HUuowZKYEr+rTYPXscNp0ESZnEs8mLT47Re+2V2LgLgHoHirAU4IOY/kjQngkfb8Or9byo/M9b5VYPtAyGmNZ61SuCAYLrJano6ZvjmCgARM1cEE0kdfnwu9H9VdA7MvkeZh7pKNOyAaMrUrsiR4oi0=
+	t=1770413759; cv=none; b=YSVRZgElFkcfMFHgRglGo4oHx5sCGrqKTpduSIU1oXQ/Iv87aL2Sd0tkgkv6tcPj3ecP90VZh1Qiw84RT5dBu9oz27FMUG5IPZvNu7qyNuyEO/AKB3zpSeP5J6XeJZdKB3BWYgNPMMFr+iqho46rDp52iA9LuXVoO+21nNxRlLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770412256; c=relaxed/simple;
-	bh=rqvftc6NKAdmy/FYINCo5ZPuutP1eJkXz+ClzPeV8SY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LpgfILqvA2EvGVXHGbaIrdVR6zECt8nk6+QG71hqe7bzwY8MQuZ/ogx024zxKw1viH7XL5fqBHBNIAi0Vo42JGpRjj8gUPHU0diC7ypBCeL4HCMwF8X2FRf7TdMupU44dPmVuFCRSHnTfb9rGO6kCB6T5V9rLppV3NEqXly6KkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 246912008014;
-	Fri,  6 Feb 2026 22:10:48 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 1F9F0473B; Fri,  6 Feb 2026 22:10:48 +0100 (CET)
-Date: Fri, 6 Feb 2026 22:10:48 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Breno Leitao <leitao@debian.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org, dcostantino@meta.com, rneu@meta.com,
-	kernel-team@meta.com
-Subject: Re: [PATCH] PCI/AER: Add option to panic on unrecoverable errors
-Message-ID: <aYZY2KgtSnqUWXbu@wunner.de>
-References: <20260206-pci-v1-1-85160f02d956@debian.org>
- <20260206185232.GA70936@bhelgaas>
- <aYY_hMZyVp7GZvX2@kbusch-mbp>
- <aYZU09qCN3u-_byj@wunner.de>
+	s=arc-20240116; t=1770413759; c=relaxed/simple;
+	bh=dpuixKPaca+z8P7KSWpyhbK+TCmFkMQ2hPyCbIIOrUY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=uBmOtBQdfT9X/pGfE0x6OIHyzoesmBGjnNu40Q5CWo1x9HiojJ5pcq7We+Gh2+4uAsF+xDDM3+t4b0fjA956TSK5jHSm+6zdf2MISlDjQsvjbpIx6J24htmqKP+dmaMKJGmnduWnREYzri4Y7ZN/BpANOpedx+Ulj1vw6+d4FeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKiBd6UV; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKiBd6UV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72974C116C6;
+	Fri,  6 Feb 2026 21:35:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770413758;
+	bh=dpuixKPaca+z8P7KSWpyhbK+TCmFkMQ2hPyCbIIOrUY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=BKiBd6UVFOmZNUiHi2ArQZp6AzI1ZrlrM9SNXzmgl+t7WJuSArxlD4FdOYc8AJZo8
+	 +qwQK2mdyhRYbUeTqdcA5JpJteLTkmd7BFXnLWEiHJEezOTF9EVR/tW85Fgd3cJ/OP
+	 oOGCr+4q1b62itZFKe//qgBpokRzQNPb868MGVL7u5Hkeitnsaan4ZL+peh9jF5uXE
+	 TqN6dWn4shdcUlyC+ibaZyhlP/4nZlnGjGfFqfh9bpvTb6Lb2OTcjnhohyaeeFrVuU
+	 RJ9cfFcYrLy0mWfjAhoF0zvMOQSjy6Na61f8PCbosimTIttf5kVJxqgfZTYJEpVxIQ
+	 GK8hVIHYLXexg==
+Date: Fri, 6 Feb 2026 15:35:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	KancyJoe <kancy2333@outlook.com>
+Subject: Re: [PATCH v3 0/9] arm64: dts: qcom: Add support for the Ayaneo
+ Pocket S2
+Message-ID: <20260206213557.GA83922@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,34 +58,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aYZU09qCN3u-_byj@wunner.de>
+In-Reply-To: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
 
-On Fri, Feb 06, 2026 at 09:53:39PM +0100, Lukas Wunner wrote:
-> So I wouldn't consider 918b4053184c to have been a universally successful
-> approach and I fear that this patch goes even further.
+On Fri, Feb 06, 2026 at 03:50:28PM +0100, Neil Armstrong wrote:
+> The Ayaneo Pocket S2 is a gaming console based on the Qualcomm
+> Snapdragon 8 Gen 3. It has an internal UFS storage, WiFi,
+> Bluetooth, gaming buttons, SDCard, 2K display and USB-C
+> connector.
 
-Forgot to mention -- there's another problem:
+>       pci: pwrctrl: slot: fix dev_err_probe() usage
+>       pci: pwrctrl: rename pci-pwrctrl-slot as generic
 
-PCI_ERS_RESULT_NO_AER_DRIVER is obviously AER-specific.
+These look fine (but please update subject lines to follow past
+history).
 
-powerpc (EEH) and s390 have error recovery mechanisms separate from AER
-and we've been trying to align them more closely so that drivers don't
-need to be aware of platform-specific behavior.
+>       pci: pwrctrl: generic: support for the UPD720201/UPD720202 USB 3.0 xHCI Host Controller
 
-eeh_pe_report_edev() does not modify the pci_ers_result for unbound
-drivers and those without pci_error_handlers.  And the default is
-PCI_ERS_RESULT_NONE.  eeh_report_error() also returns PCI_ERS_RESULT_NONE
-for drivers without ->error_detected() callback.
-
-In the PCI_ERS_RESULT_NONE case, EEH seems to perform a reset and
-assume successful recovery.
-
-It's only AER that is this strict about unbound devices and drivers that
-lack pci_error_handlers.
-
-If anything we should try to *reduce* deviations between the various
-error recovery mechanisms, not double down on increasing them.
-
-Thanks,
-
-Lukas
+I don't see anything here specific to UPD720201/UPD720202.  I don't
+want a stream of patches to add more devices in the future.  Is there
+any better design?
