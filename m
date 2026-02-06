@@ -1,17 +1,17 @@
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [144.76.133.112])
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADF6925A655;
-	Fri,  6 Feb 2026 20:53:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04C93093D7;
+	Fri,  6 Feb 2026 21:10:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770411222; cv=none; b=AkYdlHUBshOcsPl5R9P5UW+PsWaMVM9SRFBvUiF9IxD+4nEXYFvvTSzf3AwKDIRFhIifc9bPyIVWcaOIBm+3xCnUinqri7XA51idjSwXq+RVQ0UHE/nre1R2jVrSz8EiQPzAGVXTiyfeok86+MD0SxlqJ/F+x3AOtPKyK4Hlkv8=
+	t=1770412256; cv=none; b=h5GQTgpQkz+azy+hvre8HUuowZKYEr+rTYPXscNp0ESZnEs8mLT47Re+2V2LgLgHoHirAU4IOY/kjQngkfb8Or9byo/M9b5VYPtAyGmNZ61SuCAYLrJano6ZvjmCgARM1cEE0kdfnwu9H9VdA7MvkeZh7pKNOyAaMrUrsiR4oi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770411222; c=relaxed/simple;
-	bh=cWVoMK4vE6oudGe98sTeGIP2ed33MCzt8bJUyQqLvpE=;
+	s=arc-20240116; t=1770412256; c=relaxed/simple;
+	bh=rqvftc6NKAdmy/FYINCo5ZPuutP1eJkXz+ClzPeV8SY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sZnvzVFFAUZi5hOQu9eo2PKtmizoiHPLHr5OB3ENFtBAwxB7JQHQmA8MzaKXU5UCVirXORX+lS7ArGQ2jprptZcICJU7U5jY+jMQiiTz9TPuZghlaStOkZ4jlFplayvesZC+4njdWYAjZV351Fem4NK4wjw5C7GJNoV+j0lCqOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=144.76.133.112
+	 Content-Type:Content-Disposition:In-Reply-To; b=LpgfILqvA2EvGVXHGbaIrdVR6zECt8nk6+QG71hqe7bzwY8MQuZ/ogx024zxKw1viH7XL5fqBHBNIAi0Vo42JGpRjj8gUPHU0diC7ypBCeL4HCMwF8X2FRf7TdMupU44dPmVuFCRSHnTfb9rGO6kCB6T5V9rLppV3NEqXly6KkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
 Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
@@ -19,11 +19,11 @@ Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
 	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
 	 client-signature ECDSA (secp384r1) client-digest SHA384)
 	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 50E4F2C0162F;
-	Fri,  6 Feb 2026 21:53:39 +0100 (CET)
+	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 246912008014;
+	Fri,  6 Feb 2026 22:10:48 +0100 (CET)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 377E14936; Fri,  6 Feb 2026 21:53:39 +0100 (CET)
-Date: Fri, 6 Feb 2026 21:53:39 +0100
+	id 1F9F0473B; Fri,  6 Feb 2026 22:10:48 +0100 (CET)
+Date: Fri, 6 Feb 2026 22:10:48 +0100
 From: Lukas Wunner <lukas@wunner.de>
 To: Keith Busch <kbusch@kernel.org>
 Cc: Bjorn Helgaas <helgaas@kernel.org>, Breno Leitao <leitao@debian.org>,
@@ -35,10 +35,11 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>, Breno Leitao <leitao@debian.org>,
 	linux-pci@vger.kernel.org, dcostantino@meta.com, rneu@meta.com,
 	kernel-team@meta.com
 Subject: Re: [PATCH] PCI/AER: Add option to panic on unrecoverable errors
-Message-ID: <aYZU09qCN3u-_byj@wunner.de>
+Message-ID: <aYZY2KgtSnqUWXbu@wunner.de>
 References: <20260206-pci-v1-1-85160f02d956@debian.org>
  <20260206185232.GA70936@bhelgaas>
  <aYY_hMZyVp7GZvX2@kbusch-mbp>
+ <aYZU09qCN3u-_byj@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,44 +48,33 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aYY_hMZyVp7GZvX2@kbusch-mbp>
+In-Reply-To: <aYZU09qCN3u-_byj@wunner.de>
 
-On Fri, Feb 06, 2026 at 12:22:44PM -0700, Keith Busch wrote:
-> On Fri, Feb 06, 2026 at 12:52:32PM -0600, Bjorn Helgaas wrote:
-> > Are there any other similar flags you already use that we could
-> > piggy-back on?  E.g., if we raised the level to KERN_WARNING, maybe
-> > the existing "panic_on_warn" would be enough?
-> 
-> There are many KERN_WARNING messages that don't rise to the level of
-> warranting a 'panic' that don't want to enable such an option in
-> production. It looks like the panic_on_warn was introduced for developer
-> debugging.
+On Fri, Feb 06, 2026 at 09:53:39PM +0100, Lukas Wunner wrote:
+> So I wouldn't consider 918b4053184c to have been a universally successful
+> approach and I fear that this patch goes even further.
 
-panic_on_warn springs into action on WARN() splats, not arbitrary
-messages with KERN_WARNING severity.  Also, sysctl kernel.warn_limit
-may be used to grant a certain number of panic-free WARNs.
+Forgot to mention -- there's another problem:
 
-FWIW, the "pcieportdrv.aer_unrecoverable_fatal" parameter introduced
-by this patch feels somewhat oddly named.  Something like
-"pci.panic_on_fatal" might be clearer and more succinct.
+PCI_ERS_RESULT_NO_AER_DRIVER is obviously AER-specific.
 
-> I agree the curnent INFO level is too low for the generic unrecovered
-> condition, though.
+powerpc (EEH) and s390 have error recovery mechanisms separate from AER
+and we've been trying to align them more closely so that drivers don't
+need to be aware of platform-specific behavior.
 
-At least for unbound devices, I think 918b4053184c went way too far.
-I think an unbound device should generally be considered recoverable
-through a reset.
+eeh_pe_report_edev() does not modify the pci_ers_result for unbound
+drivers and those without pci_error_handlers.  And the default is
+PCI_ERS_RESULT_NONE.  eeh_report_error() also returns PCI_ERS_RESULT_NONE
+for drivers without ->error_detected() callback.
 
-As for bound devices whose drivers lack pci_error_handlers, it has been
-painful in practice that they're considered unrecoverable wholesale.
-E.g. GPUs often expose an audio device as well as telemetry devices,
-all arranged below an integrated PCIe switch.  All of these devices
-need drivers with pci_error_handlers in order for the GPU to be
-recoverable.  In some cases, dummy callbacks were added to render
-the whole thing recoverable.
+In the PCI_ERS_RESULT_NONE case, EEH seems to perform a reset and
+assume successful recovery.
 
-So I wouldn't consider 918b4053184c to have been a universally successful
-approach and I fear that this patch goes even further.
+It's only AER that is this strict about unbound devices and drivers that
+lack pci_error_handlers.
+
+If anything we should try to *reduce* deviations between the various
+error recovery mechanisms, not double down on increasing them.
 
 Thanks,
 
