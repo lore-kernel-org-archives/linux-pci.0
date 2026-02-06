@@ -1,313 +1,335 @@
-Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC1734F270
-	for <linux-pci@vger.kernel.org>; Fri,  6 Feb 2026 09:00:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A402F9C3D;
+	Fri,  6 Feb 2026 09:11:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770368401; cv=none; b=khwbKDvt8yKXfFn3dxuoBTc/q+ugfGAnAREmxzhwfImjIRJ+AVJz3K6QUqDTWfSIzSwL5xMrGpxP66JjhRtu/xmvIeXMo9d0yf3NZEeHO9bdfH72isATkBA+XQdHU9yC1HLqd2Xf2lmo84N88QCkAIVTO5ZCqHRZaG08+XRqjUk=
+	t=1770369103; cv=none; b=Os/u1eiKaILRdWHsRTb6+X4v+Xq47kdTda3ZGRDcsrm1F+SAPn1UX87aI54AZlrZSlX0/RwOVI/AjYS+26nVkMsQRxe3adsssjQhVyqGCSGk0RbW44xXrGle5oSGjiOBSoH8cVTDkYdQ0Hy/qyfQkSGaRtyDDrkAC8RWiVh87ZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770368401; c=relaxed/simple;
-	bh=cFJBlwwgH587BcwmLgCjcEY6YT4JnPriUczgK9iHXSw=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
-	 In-Reply-To:Content-Type; b=hDan7ZFFlHZt/2FhuADPjusQG0KoSNXo17IT/qO16WdMjCpFCGHwJJXuMLW9PLv9so4A0KBEDd1xAefZJSp0uzlhvv7KWcGJ6ZG8X7jYxXOsPL3mr40F4A2Uvbj8RhYKj2hhO/mGgcZo9V1uafJVAaehAYFjOoqWv8A2FTBFJpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
-X-ASG-Debug-ID: 1770368366-086e2353e000fa0001-0c9NHn
-Received: from ZXSHMBX1.zhaoxin.com (ZXSHMBX1.zhaoxin.com [10.28.252.163]) by mx1.zhaoxin.com with ESMTP id bMLw7G7sq6T7V1cu (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Fri, 06 Feb 2026 16:59:26 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
-Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX1.zhaoxin.com
- (10.28.252.163) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Fri, 6 Feb
- 2026 16:59:26 +0800
-Received: from ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85]) by
- ZXSHMBX1.zhaoxin.com ([fe80::936:f2f9:9efa:3c85%7]) with mapi id
- 15.01.2507.059; Fri, 6 Feb 2026 16:59:26 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
-Received: from [10.32.64.12] (10.32.64.12) by ZXBJMBX03.zhaoxin.com
- (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.59; Fri, 6 Feb
- 2026 16:13:38 +0800
-Message-ID: <018007dd-68d9-4e16-b605-15d9c77ea13f@zhaoxin.com>
-Date: Fri, 6 Feb 2026 16:13:30 +0800
+	s=arc-20240116; t=1770369103; c=relaxed/simple;
+	bh=tc3lg7Bqw2QuglErWCKqTgJiaeqx1w8P2QbcfUFOiwk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YYmQQaVmswmCIuS0ASj6f7m4HK4TbJyD7ofo8lMUezIzuTU08ai5Szf+fjlWBVmgf4oTG+0sYXkj+dlaYPTtAKjDjo4NDuZI3WrSVtlmOacf4oLRS+YqBv0i8ghw6OQRd75Vlhv1xpTYTVwJIEXAAPmcpae3dc9O/QwyGm1iN0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uNvIj8yX; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uNvIj8yX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C003C19422;
+	Fri,  6 Feb 2026 09:11:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770369103;
+	bh=tc3lg7Bqw2QuglErWCKqTgJiaeqx1w8P2QbcfUFOiwk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uNvIj8yXjA18Uloi4a5pXmyoeRcbpkMv8P/JamRmhW0oiiwPcrfAXXcm5Kl8H7Vdq
+	 6ju1ewFwoH4mqQjQk3VdddRtVIfnyxHbPZALERTl8ZNzDQvRVhMIhJx5HqdUg2NCD1
+	 fJaUjfu80MfMC11lsGCZPfZixHD6VOKuc/gMj27CYa3nz1jQtGjWQNR+EmoL3TeZDN
+	 I1T8F25cGhTHZ2QUo6/OBJKW14vLmkp4E4FW21VR7OU7ltLkbMMRppXP0gx+1sH09e
+	 S+C5fwacH7bugWkfh0XE9oMRuVKhvbSf9wvkG3z7MOLPxnT4JA3rfxjJfEQiojSoCK
+	 Oo634rTYJ69/Q==
+Date: Fri, 6 Feb 2026 14:41:36 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	iommu@lists.linux.dev, Naresh Kamboju <naresh.kamboju@linaro.org>, 
+	Pavankumar Kondeti <quic_pkondeti@quicinc.com>, Xingang Wang <wangxingang5@huawei.com>, 
+	Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Alex Williamson <alex@shazbot.org>, 
+	James Puthukattukaran <james.puthukattukaran@oracle.com>
+Subject: Re: [PATCH v3 3/4] PCI: Disable ACS SV capability for the broken IDT
+ switches
+Message-ID: <ga5ro3nvrbmbjubtk6xnozzc6exqq5vnkmp2pfuhtnzmpsuogz@lcycdoxtu2k4>
+References: <20260102-pci_acs-v3-3-72280b94d288@oss.qualcomm.com>
+ <20260205233920.GA17083@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
-From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
-X-ASG-Orig-Subj: Re: [PATCH] PCI: dpc: Increase pciehp waiting time for DPC recovery
-To: Lukas Wunner <lukas@wunner.de>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <mahesh@linux.ibm.com>,
-	<oohall@gmail.com>, <bhelgaas@google.com>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>, Przemek Kitszel
-	<przemyslaw.kitszel@intel.com>
-References: <20260123202140.GA84703@bhelgaas>
- <3af9f754-d282-485c-a3f2-49a230bfe143@zhaoxin.com>
- <aXydEn_lAbNROQKy@wunner.de>
- <1096398c-e883-4232-91f6-836fc508092d@zhaoxin.com>
- <aYBoP-B2E9fp_4YZ@wunner.de>
- <e4ac46d3-321f-4f9d-b327-0e16caabbb96@zhaoxin.com>
-In-Reply-To: <e4ac46d3-321f-4f9d-b327-0e16caabbb96@zhaoxin.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Moderation-Data: 2/6/2026 4:59:25 PM
-X-Barracuda-Connect: ZXSHMBX1.zhaoxin.com[10.28.252.163]
-X-Barracuda-Start-Time: 1770368366
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://mx2.zhaoxin.com:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 11235
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -1.52
-X-Barracuda-Spam-Status: No, SCORE=-1.52 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=BSF_SC0_SA983
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.154119
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
-	0.50 BSF_SC0_SA983          Custom Rule BSF_SC0_SA983
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260205233920.GA17083@bhelgaas>
 
+On Thu, Feb 05, 2026 at 05:39:20PM -0600, Bjorn Helgaas wrote:
+> [+cc Alex, James (author of aa667c6408d2)]
+> 
+> On Fri, Jan 02, 2026 at 09:04:49PM +0530, Manivannan Sadhasivam wrote:
+> > Some IDT switches behave erratically when ACS Source Validation is enabled.
+> > For example, they incorrectly flag an ACS Source Validation error on
+> > completions for config read requests even though PCIe r4.0, sec 6.12.1.1,
+> > says that completions are never affected by ACS Source Validation.
+> > 
+> > Even though IDT suggests working around this issue by issuing a config
+> > write before the first config read, so that the device caches the bus and
+> > device number. But it would still be fragile since the device could loose
+> > the IDs after the reset and any further access may trigger ACS SV
+> > violation.
+> > 
+> > Hence, to properly fix the issue, the respective capability needs to be
+> > disabled. Since the ACS Capabilities are RO values, and are cached in the
+> > 'pci_dev::acs_capabilities' field, remove the cached broken capabilities by
+> > calling pci_disable_broken_acs_cap() from pci_acs_init(). This will allow
+> > pci_enable_acs() helper to disable the relevant ACS ctrls.
+> > 
+> > With this, the previous workaround can now be safely removed.
+> 
+> James added the existing IDT workaround for the IDT 0x80b5 switch,
+> which was merged as aa667c6408d2 ("PCI: Workaround IDT switch ACS
+> Source Validation erratum").
+> 
+> I guess these last three patches:
+> 
+>   PCI: Cache ACS capabilities
+>   PCI: Disable ACS SV capability for the broken IDT switches
+>   PCI: Extend the pci_disable_broken_acs_cap() quirk for one more IDT switch
+> 
+> are basically to fix the same issue on the IDT 0x8090 switch?
+> 
 
+Yes!
 
-=E5=9C=A8 2026/2/4 10:10, LeoLiu-oc =E5=86=99=E9=81=93:
->=20
->=20
-> =E5=9C=A8 2026/2/2 17:02, Lukas Wunner =E5=86=99=E9=81=93:
->>
->>
->> [=E8=BF=99=E5=B0=81=E9=82=AE=E4=BB=B6=E6=9D=A5=E8=87=AA=E5=A4=96=E9=83=
-=A8=E5=8F=91=E4=BB=B6=E4=BA=BA =E8=B0=A8=E9=98=B2=E9=A3=8E=E9=99=A9]
->>
->> [cc +=3D Tony, Przemek (ice driver maintainers), start of thread is here=
-:
->> https://lore.kernel.org/all/20260123104034.429060-1-LeoLiu-oc@zhaoxin.co=
-m/
->> ]
->>
->> On Mon, Feb 02, 2026 at 02:00:55PM +0800, LeoLiu-oc wrote:
->>> The kernel version I am using is 6.18.6.
->> [...]
->>> The complete log of the kernel panic is as follows:
->>>
->>> [  100.304077][  T843] list_del corruption, ffff8881418b79e8->next is L=
-IST_POISON1 (dead000000000100)
->>> [  100.312989][  T843] ------------[ cut here ]------------
->>> [  100.318268][  T843] kernel BUG at lib/list_debug.c:56!
->>> [  100.323380][  T843] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
->>> [  100.329250][  T843] CPU: 7 PID: 843 Comm: irq/27-pciehp Tainted: P  =
-  W  OE     ------- ----  6.6.0-32.7.v2505.ky11.x86_64 #1
->>> [  100.340793][  T843] Source Version: 71d5b964051132b7772acd935972fca1=
-1462bbfe
->>> [  100.359228][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/=
-0xc0
->>> [  100.365877][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48 =
-c7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8 a1 =
-43 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9 ff 0f 0=
-b
->>> [  100.385158][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
->>> [  100.391024][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX:=
- 0000000000000000
->>> [  100.398781][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI:=
- ffff8897df5a32c0
->>> [  100.406538][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09:=
- 0000000000000003
->>> [  100.414294][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12:=
- 0000000000000000
->>> [  100.422050][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15:=
- ffff888116507c28
->>> [  100.429807][  T843] FS:  0000000000000000(0000) GS:ffff8897df580000(=
-0000) knlGS:0000000000000000
->>> [  100.438511][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003=
-3
->>> [  100.444891][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4:=
- 0000000000570ee0
->>> [  100.452647][  T843] PKRU: 55555554
->>> [  100.456017][  T843] Call Trace:
->>> [  100.459129][  T843]  <TASK>
->>> [  100.461898][  T843]  ice_flow_rem_entry_sync.constprop.0+0x1c/0x90 [=
-ice]
->>> [  100.468663][  T843]  ice_flow_rem_entry+0x3d/0x60 [ice]
->>> [  100.473925][  T843]  ice_fdir_erase_flow_from_hw.constprop.0+0x9b/0x=
-100 [ice]
->>> [  100.481078][  T843]  ice_fdir_rem_flow.constprop.0+0x32/0xb0 [ice]
->>> [  100.487284][  T843]  ice_vsi_manage_fdir+0x7b/0xb0 [ice]
->>> [  100.492629][  T843]  ice_deinit_features.part.0+0x46/0xc0 [ice]
->>> [  100.498571][  T843]  ice_remove+0xcf/0x220 [ice]
->>> [  100.503222][  T843]  pci_device_remove+0x3f/0xb0
->>> [  100.507798][  T843]  device_release_driver_internal+0x19d/0x220
->>> [  100.513667][  T843]  pci_stop_bus_device+0x6c/0x90
->>> [  100.518417][  T843]  pci_stop_and_remove_bus_device+0x12/0x20
->>> [  100.524110][  T843]  pciehp_unconfigure_device+0x9f/0x160
->>> [  100.529463][  T843]  pciehp_disable_slot+0x69/0x130
->>> [  100.534296][  T843]  pciehp_handle_presence_or_link_change+0xfc/0x21=
-0
->>> [  100.540678][  T843]  pciehp_ist+0x204/0x230
->>> [  100.544824][  T843]  ? __pfx_irq_thread_fn+0x10/0x10
->>> [  100.549747][  T843]  irq_thread_fn+0x20/0x60
->>> [  100.553978][  T843]  irq_thread+0xfb/0x1c0
->>> [  100.558038][  T843]  ? __pfx_irq_thread_dtor+0x10/0x10
->>> [  100.563130][  T843]  ? __pfx_irq_thread+0x10/0x10
->>> [  100.567791][  T843]  kthread+0xe5/0x120
->>> [  100.571594][  T843]  ? __pfx_kthread+0x10/0x10
->>> [  100.575997][  T843]  ret_from_fork+0x17a/0x1a0
->>> [  100.580403][  T843]  ? __pfx_kthread+0x10/0x10
->>> [  100.584805][  T843]  ret_from_fork_asm+0x1a/0x30
->>> [  100.589384][  T843]  </TASK>
->>> [  100.592237][  T843] Modules linked in: zxmem(OE) einj amdgpu amdxcp
->>> gpu_sched drm_exec drm_buddy nft_fib_inet nft_fib_ipv4 nft_fib_ipv6
->>> nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct
->>> nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 zhaoxin_cputemp
->>> nf_defrag_ipv4 zhaoxin_rng snd_hda_codec_hdmi radeon rfkill
->>> snd_hda_intel snd_intel_dspcfg irdma i2c_algo_bit snd_intel_sdw_acpi
->>> ip_set i40e drm_suballoc_helper nf_tables drm_ttm_helper pcicfg(POE)
->>> snd_hda_codec ib_uverbs sunrpc ttm ib_core snd_hda_core
->>> drm_display_helper snd_hwdep kvm_intel snd_pcm cec vfat fat
->>> drm_kms_helper snd_timer kvm video ice snd psmouse soundcore wmi
->>> acpi_cpufreq pcspkr i2c_zhaoxin sg sch_fq_codel drm fuse backlight
->>> nfnetlink xfs sd_mod t10_pi sm2_zhaoxin_gmi crct10dif_pclmul
->>> crc32_pclmul ahci crc32c_intel libahci r8169 ghash_clmulni_intel libata
->>> sha512_ssse3 serio_raw realtek dm_mirror dm_region_hash dm_log
->>> dm_multipath dm_mod i2c_dev autofs4
->>> [  100.674508][  T843] ---[ end trace 0000000000000000 ]---
->>> [  100.709547][  T843] RIP: 0010:__list_del_entry_valid_or_report+0x7f/=
-0xc0
->>> [  100.716197][  T843] Code: 66 4b a6 e8 c3 43 a9 ff 0f 0b 48 89 fe 48 =
-c7 c7 10 67 4b a6 e8 b2 43 a9 ff 0f 0b 48 89 fe 48 c7 c7 40 67 4b a6 e8 a1 =
-43 a9 ff <0f> 0b 48 89 fe 48 89 ca 48 c7 c7 78 67 4b a6 e8 8d 43 a9 ff 0f 0=
-b
->>> [  100.735491][  T843] RSP: 0018:ffffc9000f70fc08 EFLAGS: 00010246
->>> [  100.741367][  T843] RAX: 000000000000004e RBX: ffff8881418b79e8 RCX:=
- 0000000000000000
->>> [  100.749137][  T843] RDX: 0000000000000000 RSI: ffff8897df5a32c0 RDI:=
- ffff8897df5a32c0
->>> [  100.756909][  T843] RBP: ffff8881257f9608 R08: 0000000000000000 R09:=
- 0000000000000003
->>> [  100.764678][  T843] R10: ffffc9000f70fa90 R11: ffffffffa6fee508 R12:=
- 0000000000000000
->>> [  100.772448][  T843] R13: ffff8881257f9608 R14: ffff888116507c28 R15:=
- ffff888116507c28
->>> [  100.780218][  T843] FS:  0000000000000000(0000) GS:ffff8897df580000(=
-0000) knlGS:0000000000000000
->>> [  100.788934][  T843] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003=
-3
->>> [  100.795329][  T843] CR2: 00007f9563bac1c0 CR3: 0000000c4be26004 CR4:=
- 0000000000570ee0
->>> [  100.803099][  T843] PKRU: 55555554
->>> [  100.806483][  T843] Kernel panic - not syncing: Fatal exception
->>> [  100.812794][  T843] Kernel Offset: disabled
->>> [  100.821613][  T843] pstore: backend (erst) writing error (-28)
->>> [  100.827481][  T843] ---[ end Kernel panic - not syncing: Fatal excep=
-tion ]---
->>>
->>> The reason for this kernel panic is that the ice network card driver
->>> executed the ice_pci_err_detected() for a longer time than the maximum
->>> waiting time allowed by pciehp. After that, the pciehp_ist() will
->>> execute the ice network card driver's ice_remove() process. This result=
-s
->>> in the ice_pci_err_detected() having already deleted the list, while th=
-e
->>> ice_remove() is still attempting to delete a list that no longer exists=
-.
->>
->> This is a bug in the ice driver, not in the pciehp or dpc driver.
->> As such, it is not a good argument to support the extension of the
->> timeout.  I'm not against extending the timeout, but the argument
->> that it's necessary to avoid occurrence of a bug is not a good one.
->>
->> You should first try to unbind the ice driver at runtime to see if
->> there is a general problem in the unbind code path:
->>
->> echo abcd:ef:gh.i > /sys/bus/pci/drivers/shpchp/unbind
->>
->> Replace abcd:ef:gh.i with the domain/bus/device/function of the Ethernet
->> card.  The dmesg excerpt you've provided unfortunately does not betray
->> the card's address.
->>
->> Then try to rebind the driver via the "bind" sysfs attribute.
->>
-Sorry, I didn't mean to ignore your question=EF=BC=8Cbecause these issues a=
-re
-not the cause of the kernel panic. I have previously conducted a test
-where I first unbound the ice network card and then bound it. There was
-no problem with that.
+> The obvious approach would be to extend the test in
+> pci_bus_read_dev_vendor_id() to check for 0x8090 in addition to
+> 0x80b5, which might be worth doing first, before changing the whole
+> approach.
+> 
 
->> If this works, the next thing to debug is whether the driver has a
->> problem with surprise removal.  I'm not fully convinced that the
->> crash you're seeing is caused by concurrent execution of
->> ice_pci_err_detected() and ice_remove().  When pciehp unbinds the
->> driver during DPC recovery, the device is likely inaccessible.
->> It's possible that ice_remove() behaves differently for an
->> inaccessible device and that may cause the crash instead of the
->> concurrent execution of ice_pci_err_detected().
->>
-I was able to turn off the power supply of the slot where the ice
-network card is located and then enable the power supply through the
-sysfs interface, without any issues.
+I've mentioned the rationale for not using this approach in the cover letter.
+But I'll mention it here also. I did try extending the existing quirk in the
+first version of this series [1], but Jason proposed to disable ACS completely
+for these switches as doing a dummy config write before reading the vendor ID
+would not help if the switch gets reset during runtime. The cached bus number in
+the device would get lost, triggering ACS SV again.
 
-For example,
-echo 0 > /sys/bus/pci/slots/[slot number]/power
-echo 1 > /sys/bus/pci/slots/[slot number]/power
+> I guess your point here is that the existing workaround isn't enough
+> even for 0x80b5 because it doesn't handle the reset case?  The patch
+> changelogs after v9 of the original patch (see below) do mention that
+> FLR and hot reset were tested and didn't seem to require the
+> workaround.  But you've probably seen problems after reset?
+> 
 
-It is also fine to perform DPC recovery separately for the slot where
-the ice network card is located.
+I haven't seen the problem myself, but Jason's point was that there is no
+spec mandate for the switch to retain its bus number after FLR/hot reset [2]
 
-When the slot where the ice network card is located enables both DPC and
-hotplug simultaneously, conducting the DPC recovery test will result in
-issues, such as unavailability of the device and kernel panic.
+> I think it's worth a note about why the reset case can't be fixed
+> similarly to the enumeration case.  
+> 
 
-I had previously confirmed through the code for deleting the list by
-using the core dump method. The cause of the kernel panic was exactly as
-I had described before: The reason for this kernel panic is that the ice
-network card driver executed the ice_pci_err_detected() for a longer
-time than the maximum waiting time allowed by pciehp. After that, the
-pciehp_ist() will execute the ice network card driver's ice_remove()
-process. This results in the ice_pci_err_detected() having already
-deleted the list, while the ice_remove() is still attempting to delete a
-list that no longer exists.
+If the device looses its cached bus number, then further config reads from the
+host would trigger ACS SV. And we do not want to do a dummy write from all
+possible locations in PCI core.
 
-> The fundamental cause of this problem lies in the fact that the network
-> driver took longer than the maximum time (4 seconds) set by pcie_ist()
-> for the DPC to recover when executing ice_pci_err_detected(). This
-> forced the execution of pciehp_disable_slot() which should not have been
-> executed, while pcie_do_recovery() continued to execute. This situation
-> led to a competition between the execution processes of
-> pciehp_disable_slot() and pcie_do_recovery(), resulting in the
-> unavailability of the device and the possibility of kernel crashes.
->=20
-Add some information about this question, this might be a problem with a
-series of PCIe devices, rather than just an issue with the ice network
-card driver. Therefore, we should address the issue at the PCIe driver
-architecture level to ensure that other PCIe devices do not encounter
-such problems.
+> This patch gives up on ACS SV completely for this switch instead of
+> the current approach of:
+> 
+>   - disabling ACS SV
+>   - doing a config write
+>   - reading dev/vendor ID
+>   - re-enabling ACS SV
+> 
+> It'd be worth expanding on this and what the effect of avoiding ACS SV
+> is.  Does this change which devices can be safely passed through to
+> virtual guests?  Does it give up isolation that users expect?
+> 
 
->> It would also be good to understand why DPC recovery of the Ethernet
->> card takes this long.  Does it take a long time to come out of reset?
->> Could the ice driver be changed to allow for faster recovery?
->>
-> Based on the current situation, it is observed that the execution of
-> ice_pci_err_detected() in the ice network card driver takes a very long
-> time, which is intolerable for the synchronization protocol between the
-> PCIe hotplug driver and the DPC recovery.
->=20
-Based on the previous debugging results, the long execution time of the
-ice network card driver for ice_pci_err_detected() is mainly influenced
-by the irdma driver of the ice network card.
+IMO, ACS SV is somewhat broken on this switch. But we can still passthrough the
+downstream devices to the guests. There won't be ACS SV apparently, but that's
+what users will get with broken hw.
 
-> Yours sincerely,
-> LeoLiu-oc
->=20
->> Thanks,
->>
->> Lukas
->=20
+> I also couldn't remember why we can't just do a config write before
+> reading the vendor/dev ID of a device below the switch, which is
+> addressed in the discussion of v3 (below).  Basically if the device
+> isn't yet ready to accept config accesses, it may not latch the bus
+> number, and we can't really tell when it *is* ready.
+> 
 
+I think that is a separate discussion (detecting device readiness). But doing a
+dummy config write to woraround the hardware bug looks fragile to me too.
+
+- Mani
+
+[1] https://lore.kernel.org/linux-pci/20250910-pci-acs-v1-0-fe9adb65ad7d@oss.qualcomm.com/
+[2] https://lore.kernel.org/linux-pci/20250924125555.GJ2547959@ziepe.ca/
+
+> I collected up all the history I could find about the original change:
+> 
+> v3  2017-06-09 https://lore.kernel.org/all/20170609231617.20243-1-yinghai@kernel.org/
+>     doing config write is hard because we don't know when the device
+>     is Configuration-Ready and can capture the bus number:
+>     https://lore.kernel.org/all/20170613221451.GC7012@bhelgaas-glaptop.roam.corp.google.com/
+> v4  2017-06-27 https://lore.kernel.org/all/5952D144.8060609@oracle.com/
+>     only do workaround for IDT switches
+> v5  2017-07-06 https://lore.kernel.org/all/595E610A.5000900@oracle.com/
+>     skip devices that don't advertise ACS SV support
+> v7  2017-09-18 https://lore.kernel.org/all/59C02719.5050103@oracle.com/
+>     add https://bugzilla.kernel.org/show_bug.cgi?id=196979 with
+>     details about how Windows deals with this
+> v8  2018-03-06 https://lore.kernel.org/all/ce8e9a3e-474d-961c-eb0a-c021077f2dca@oracle.com/
+> v9  ? (couldn't find this)
+>     tested FLR and hot reset scenarios; didn't see issues where
+>     workaround was required
+> v11 2018-04-11 https://lore.kernel.org/all/e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com/ (no version label)
+>     2018-04-19 https://lore.kernel.org/all/b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com/ (no version label)
+> v12 2018-04-24 https://lore.kernel.org/all/7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com/
+> v13 2018-04-30 https://lore.kernel.org/all/4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com/ (labeled v2)
+> v14 2018-07-09 https://lore.kernel.org/all/4117c119-c754-bf4e-544c-19cb6e239f38@oracle.com/
+> 
+> > Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> > Tested-by: Naresh Kamboju <naresh.kamboju@linaro.org>
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> >  drivers/pci/pci.c    |  1 +
+> >  drivers/pci/pci.h    |  3 ++-
+> >  drivers/pci/probe.c  | 12 -----------
+> >  drivers/pci/quirks.c | 61 ++++++++++++----------------------------------------
+> >  4 files changed, 17 insertions(+), 60 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index d89b04451aea..e16229e7ff6f 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -3652,6 +3652,7 @@ void pci_acs_init(struct pci_dev *dev)
+> >  		return;
+> >  
+> >  	pci_read_config_word(dev, pos + PCI_ACS_CAP, &dev->acs_capabilities);
+> > +	pci_disable_broken_acs_cap(dev);
+> >  }
+> >  
+> >  /**
+> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > index 4592ede0ebcc..5fe5d6e84c95 100644
+> > --- a/drivers/pci/pci.h
+> > +++ b/drivers/pci/pci.h
+> > @@ -432,7 +432,6 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> >  				int rrs_timeout);
+> >  bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+> >  					int rrs_timeout);
+> > -int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *pl, int rrs_timeout);
+> >  
+> >  int pci_setup_device(struct pci_dev *dev);
+> >  void __pci_size_stdbars(struct pci_dev *dev, int count,
+> > @@ -944,6 +943,7 @@ void pci_enable_acs(struct pci_dev *dev);
+> >  int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+> >  int pci_dev_specific_enable_acs(struct pci_dev *dev);
+> >  int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+> > +void pci_disable_broken_acs_cap(struct pci_dev *pdev);
+> >  int pcie_failed_link_retrain(struct pci_dev *dev);
+> >  #else
+> >  static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+> > @@ -959,6 +959,7 @@ static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
+> >  {
+> >  	return -ENOTTY;
+> >  }
+> > +static inline void pci_disable_broken_acs_cap(struct pci_dev *dev) { }
+> >  static inline int pcie_failed_link_retrain(struct pci_dev *dev)
+> >  {
+> >  	return -ENOTTY;
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 41183aed8f5d..c7304ac5afc2 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -2547,18 +2547,6 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+> >  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+> >  				int timeout)
+> >  {
+> > -#ifdef CONFIG_PCI_QUIRKS
+> > -	struct pci_dev *bridge = bus->self;
+> > -
+> > -	/*
+> > -	 * Certain IDT switches have an issue where they improperly trigger
+> > -	 * ACS Source Validation errors on completions for config reads.
+> > -	 */
+> > -	if (bridge && bridge->vendor == PCI_VENDOR_ID_IDT &&
+> > -	    bridge->device == 0x80b5)
+> > -		return pci_idt_bus_quirk(bus, devfn, l, timeout);
+> > -#endif
+> > -
+> >  	return pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
+> >  }
+> >  EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index b9c252aa6fe0..1571a2ef331e 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -5778,58 +5778,25 @@ DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+> >  			       PCI_BASE_CLASS_DISPLAY, 16, quirk_nvidia_hda);
+> >  
+> >  /*
+> > - * Some IDT switches incorrectly flag an ACS Source Validation error on
+> > - * completions for config read requests even though PCIe r4.0, sec
+> > - * 6.12.1.1, says that completions are never affected by ACS Source
+> > - * Validation.  Here's the text of IDT 89H32H8G3-YC, erratum #36:
+> > + * Some IDT switches behave erratically when ACS Source Validation is enabled.
+> > + * For example, they incorrectly flag an ACS Source Validation error on
+> > + * completions for config read requests even though PCIe r4.0, sec 6.12.1.1,
+> > + * says that completions are never affected by ACS Source Validation.
+> >   *
+> > - *   Item #36 - Downstream port applies ACS Source Validation to Completions
+> > - *   Section 6.12.1.1 of the PCI Express Base Specification 3.1 states that
+> > - *   completions are never affected by ACS Source Validation.  However,
+> > - *   completions received by a downstream port of the PCIe switch from a
+> > - *   device that has not yet captured a PCIe bus number are incorrectly
+> > - *   dropped by ACS Source Validation by the switch downstream port.
+> > + * Even though IDT suggests working around this issue by issuing a config write
+> > + * before the first config read, so that the switch caches the bus and device
+> > + * number, it would still be fragile since the device could loose the IDs after
+> > + * the reset.
+> >   *
+> > - * The workaround suggested by IDT is to issue a config write to the
+> > - * downstream device before issuing the first config read.  This allows the
+> > - * downstream device to capture its bus and device numbers (see PCIe r4.0,
+> > - * sec 2.2.9), thus avoiding the ACS error on the completion.
+> > - *
+> > - * However, we don't know when the device is ready to accept the config
+> > - * write, so we do config reads until we receive a non-Config Request Retry
+> > - * Status, then do the config write.
+> > - *
+> > - * To avoid hitting the erratum when doing the config reads, we disable ACS
+> > - * SV around this process.
+> > + * Hence, a reliable fix would be to assume that these switches don't support
+> > + * ACS SV.
+> >   */
+> > -int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l, int timeout)
+> > +void pci_disable_broken_acs_cap(struct pci_dev *pdev)
+> >  {
+> > -	int pos;
+> > -	u16 ctrl = 0;
+> > -	bool found;
+> > -	struct pci_dev *bridge = bus->self;
+> > -
+> > -	pos = bridge->acs_cap;
+> > -
+> > -	/* Disable ACS SV before initial config reads */
+> > -	if (pos) {
+> > -		pci_read_config_word(bridge, pos + PCI_ACS_CTRL, &ctrl);
+> > -		if (ctrl & PCI_ACS_SV)
+> > -			pci_write_config_word(bridge, pos + PCI_ACS_CTRL,
+> > -					      ctrl & ~PCI_ACS_SV);
+> > +	if (pdev->vendor == PCI_VENDOR_ID_IDT && pdev->device == 0x80b5) {
+> > +		pci_info(pdev, "Disabling broken ACS SV\n");
+> > +		pdev->acs_capabilities &= ~PCI_ACS_SV;
+> >  	}
+> > -
+> > -	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
+> > -
+> > -	/* Write Vendor ID (read-only) so the endpoint latches its bus/dev */
+> > -	if (found)
+> > -		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
+> > -
+> > -	/* Re-enable ACS_SV if it was previously enabled */
+> > -	if (ctrl & PCI_ACS_SV)
+> > -		pci_write_config_word(bridge, pos + PCI_ACS_CTRL, ctrl);
+> > -
+> > -	return found;
+> >  }
+> >  
+> >  /*
+> > 
+> > -- 
+> > 2.48.1
+> > 
+
+-- 
+மணிவண்ணன் சதாசிவம்
