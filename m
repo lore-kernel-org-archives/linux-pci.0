@@ -1,99 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDE46F2F2
-	for <linux-pci@vger.kernel.org>; Fri,  6 Feb 2026 22:49:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 448EA2E1C7C;
+	Fri,  6 Feb 2026 22:56:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770418151; cv=none; b=obcR6kavxUbV8/ob1cvLLSf/Fh8J2GxXM9nEYy8l+iwbg+aEVudMb2G/Be2I2iyHGVhp1xVZnxVwwV8rVKzUSptg3Z8ArV1jROmK0ksEM5wjuBZ7asWhoIKxuhDC2HrVcF4q4yOD1V9R5DUq6N/yxgYuKRqa1UF2gxXbTs0co+I=
+	t=1770418613; cv=none; b=IBZekcrk9gfQ63oNXwjTFBJEHMVQ4wxzOlf5HVEtbKU/M7v/tdwplGc6CQtVsmUUIkAZoJo/i8TNiANOXJXyIXPyOVBdosjSCOr3wnjiPEfCfCZc489XJY3FXIi6KNj7FbduMIt38BDVs5IpfgDy8fvjgcOYOSO3OFCrCGhsIfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770418151; c=relaxed/simple;
-	bh=VEr+Ea6i+JVjbP6cXpe7i/eP3D7YBNBWLoDPrTGR0xU=;
+	s=arc-20240116; t=1770418613; c=relaxed/simple;
+	bh=6WjCz7ZYMe/AH95Qk82FRiPfEqWKuEtaImrhUSXf088=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=BNtpcbfMzoIwJ34+ctr2g9R25eVFGOdLSeFO25PLEI62J7hEVik6tV9KschEgtDdcVJnbyr+wJXcCln1rLX53QMl/ph3M01N5j9lqYx9flxhX3JwTbn+3Hk4GVMiaqAg9XiPFUpensNU3l12QiuSfbyGfVFMF1vUaFZM9PtkWJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L+P0JYAJ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=l+o0AvXz+XoFvixs2tv0/h5Mk26UjXP1p44VTr9SSROT4x5iSDy3CSOg9v54cQ8vbuDbq2HhmNaWjGlQzJ99QVSR0aW/2T654DxNwasaeEUoXJ+BUxA+NV2U8u+wTejLA38FGBM8xwgaw1w/ocT20Bf0994H6wSRBGXCm57d/os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qqpm40OT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L+P0JYAJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D5CC116C6;
-	Fri,  6 Feb 2026 22:49:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qqpm40OT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D495C116C6;
+	Fri,  6 Feb 2026 22:56:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770418150;
-	bh=VEr+Ea6i+JVjbP6cXpe7i/eP3D7YBNBWLoDPrTGR0xU=;
+	s=k20201202; t=1770418612;
+	bh=6WjCz7ZYMe/AH95Qk82FRiPfEqWKuEtaImrhUSXf088=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=L+P0JYAJsKV80C3peQwnV34y6EvW5k1ISNp+3st2AHp1V8KBMCkYGI3t4VaJKNb3G
-	 qRsyVFRYGCa9gliGGOr5/X/3JofLXkhpWeH3yn9z22gFYTUgYselNy77XGpgYBR8B+
-	 o0eKAJoKgdnBLUHdKhGKlXK0Z/sSb+xsdgHqW4sr0ybd2YzMNnjXascZOOQWjmjVLi
-	 s/QKv9yHFd+NQFMhjs5NAj6LkLPfjGeo1SGH43JVtxFgm2q3Pjj1vkeAjMEXq8lBVN
-	 KUps5BJc+1ggc7qLdxJKriGeY2OBQViPtL/nNHneEmSH25HyYs3aTSzRlaVZpmVWo9
-	 xSptKRyctwRoA==
-Date: Fri, 6 Feb 2026 16:49:07 -0600
+	b=qqpm40OTRKnSEh/z/DRKrv+enLA5BVgBYbita40USFJSdugz22fdq2AbdHM2oQCxW
+	 RQeWrpVfE+kGqVKahezLDa/LFNf2I6GTnXVrTrUwri93opGVQGkEeKM4KXgEk7f7+0
+	 f38QCdVJDa+huInJqgcu040X35/FAZxp0i7bzaL7e71s6KPrGR3zR7pX1Z7oWeqw7c
+	 5ZZoe783OUnn42Za3TB9cwZ34yRmbhf9DOc+Azn2kXsqDkdEWRvdyO4rjKoD+016DP
+	 es1htKxSCIVDJtM7YVyUqDKtb3k05eBCXQ8iiZb7FuhCXhmZVmqbDAThm1D2xPA6Ad
+	 ql8dr80Hy2qXA==
+Date: Fri, 6 Feb 2026 16:56:51 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jess <jess@jessie.cafe>
-Cc: will@kernel.org, bhelgaas@google.com, kwilczynski@kernel.org,
-	linux-pci@vger.kernel.org, lpieralisi@kernel.org, mani@kernel.org,
-	robh@kernel.org
-Subject: Re: [PATCH v2] PCI: host-generic: Avoid reporting incorrect "missing
- "reg" property" error
-Message-ID: <20260206224907.GA100198@bhelgaas>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Jinhui Guo <guojinhui.liam@bytedance.com>,
+	Keith Busch <kbusch@kernel.org>,
+	"Anthony Pighin (Nokia)" <anthony.pighin@nokia.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI: Locking related improvements
+Message-ID: <20260206225651.GA103421@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260120004444.191093-1-jess@jessie.cafe>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260116125742.1890-1-ilpo.jarvinen@linux.intel.com>
 
-On Tue, Jan 20, 2026 at 01:44:44PM +1300, Jess wrote:
-> When the function pci_host_common_ecam_create() calls
-> of_address_to_resource() it assumes all errors from that callsite are due
-> to a missing "reg" property in the device tree node.
+On Fri, Jan 16, 2026 at 02:57:39PM +0200, Ilpo Järvinen wrote:
+> Hi all,
 > 
-> This can manifest when running the qemu "virt" board, with a 32-bit kernel
-> and `highmem=on`.
+> Here are a few locking related coding quality improvements, none of
+> them aims to introduce any function changes. First two convert "must be
+> asserted" comments into lockdep asserts for easier detection of
+> violations. The last patch consolidates almost duplicated code in the
+> bus/slot locking function.
 > 
-> After the following calls:
-> of_address_to_resource()
->   -> __of_address_to_resource()
->   -> __of_address_resource_bounds()
+> This series based is based on top of the fix (the last change would
+> obviously conflict with it):
 > 
-> this overflow check can fail due to PCI being out of range:
-> if (overflows_type(start, r->start))
-> 	return -EOVERFLOW;
+> https://patchwork.kernel.org/project/linux-pci/patch/20251212145528.2555-1-guojinhui.liam@bytedance.com/
 > 
-> This leads to the very confusing error message:
-> pci-host-generic 4010000000.pcie: host bridge /pcie@10000000 ranges:
-> pci-host-generic 4010000000.pcie:       IO 0x003eff0000..0x003effffff -> 0x0000000000
-> pci-host-generic 4010000000.pcie:      MEM 0x0010000000..0x003efeffff -> 0x0010000000
-> pci-host-generic 4010000000.pcie:      MEM 0x8000000000..0xffffffffff -> 0x8000000000
-> pci-host-generic 4010000000.pcie: missing "reg" property
-> pci-host-generic 4010000000.pcie: probe with driver pci-host-generic failed with error -75
 > 
-> Make the error message more generic.
+> Ilpo Järvinen (3):
+>   PCI: Use lockdep_assert_held(pci_bus_sem) to verify lock is held
+>   PCI: Use device_lock_assert() to verify device lock is held
+>   PCI: Consolidate pci_bus/slot_lock/unlock/trylock()
 > 
-> Link: https://www.qemu.org/docs/master/system/arm/virt.html
-> Signed-off-by: Jess <jess@jessie.cafe>
+>  drivers/pci/pci.c | 120 ++++++++++++++++++++++++----------------------
+>  1 file changed, 63 insertions(+), 57 deletions(-)
 
-Applied to pci/controller/generic for v6.20, thanks!
+Applied the first two to pci/virtualization along with the other reset
+changes for v6.20, thanks!
 
-> ---
->  drivers/pci/controller/pci-host-common.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-> index c473e7c03bac..d6258c1cffe5 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -32,7 +32,7 @@ struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
->  
->  	err = of_address_to_resource(dev->of_node, 0, &cfgres);
->  	if (err) {
-> -		dev_err(dev, "missing \"reg\" property\n");
-> +		dev_err(dev, "missing or malformed \"reg\" property\n");
->  		return ERR_PTR(err);
->  	}
->  
-> -- 
-> 2.51.2
-> 
+The last is a great idea but will need some rebase/rework on top of
+Keith's changes.
