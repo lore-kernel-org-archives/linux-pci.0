@@ -1,179 +1,209 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 061BC31812E;
-	Fri,  6 Feb 2026 09:18:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDC4D30AABE
+	for <linux-pci@vger.kernel.org>; Fri,  6 Feb 2026 10:00:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770369497; cv=none; b=rxIMTsloB2ZwooEqlOe6TYCG6crD6jGjVmMOAOitk4fIN6oT5LHJBZ+mTXcezN0eQOwqtq0o+q20o1wvRNH0vwkcw+ftJvulnPhES+LWDaZFntAGf7OS/Zx4/0bMtvov+D3JJtbErbEQyya7HH3Z3I5VT3veco2pvzinNEZ4O9g=
+	t=1770372043; cv=none; b=V7yJDVGXitahJqTMvH/qwDOUhiSgm4yrK8ZTFEmjry7waZW44x2rH4/XPVvRAesDjoul+kuU9o8tVIhcfnWCokFm3l15MqvQMd6Yf1hJ0eyT2fYzsVzzwhrFUXpJU/vKWIR87oNPtTsdn5c/WXaGo4ydrejhg9s1ET5dtlDXkFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770369497; c=relaxed/simple;
-	bh=+YVOcz7293Y1pFm0YpuwuxUMFNEskj/gFmRuMKN0XBE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SHK0zAoVHsLCZrq7iywbZDuPRIcwUo2g21Ag+F1RTnHgPuzPFPvLWUeG9Og5zJztiMTqYeGpMbxl8gt1op2j9NEMcwHJJBke1hc6LErVNZCZOPqRZ24gDajdkz0yzvYvF3CuW2Mh/Lgro3D/4/HjpVj2cy/uwGidXmMcb1Dh5tA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WFdy/1s2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770372043; c=relaxed/simple;
+	bh=nj3OnUu2My8H7ggzM5BXqLX32ICVuTBKkAg4sGiM16o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=qvC+wNU++3ZtYSMU8RILhfHXfkJdCwfKvqjXuTbdiZhs1pey1QxMSS8haNtOf9pm2g+VhZMvJqgqcgul7mpUZN8Yj/e8ADK55GXmw+xXhO1XrwIl5ZH4KiCXkG95aadHfkJooTaiT8CERuDybLHH3Ag6G4Nzxx5hzBh0ToZMlTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=NIckCLa+; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WFdy/1s2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7693CC116C6;
-	Fri,  6 Feb 2026 09:18:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770369496;
-	bh=+YVOcz7293Y1pFm0YpuwuxUMFNEskj/gFmRuMKN0XBE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WFdy/1s2G6pcrl9Syjo5XvWesv+Ca7LMWtjDAYT2qsuXyHDUUUsVALCOCQvzCh+mU
-	 nAtvUvEsluBDgAeHfA7kRYZ+Mb41F+blVgeKlze5tyuSAzjfsYEv9nmGwAqDrbreVV
-	 A5PwBjVxePTxEUeVCitB0rVznjMB20SW06JhlYNQ+W9gzuqTy6v3P9WpAep5cWA79Q
-	 W3zpZcwUtC6/y6F/v5DnjZ6KFmcWvr6ex0OsHwbHm0zF6JM6lvk5cW/NneXCtKVrL9
-	 XwoORZkNBclBtMh4e3HCDICcwjRWPuc8dCv1zQZDWsLwMYCWwiu2LqpoETrqJ44D49
-	 o/2o4DZmm++3A==
-Date: Fri, 6 Feb 2026 14:48:10 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	iommu@lists.linux.dev, Naresh Kamboju <naresh.kamboju@linaro.org>, 
-	Pavankumar Kondeti <quic_pkondeti@quicinc.com>, Xingang Wang <wangxingang5@huawei.com>, 
-	Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH v3 1/4] PCI: Enable ACS only after configuring IOMMU for
- OF platforms
-Message-ID: <p6wq2kakzc53fdf47nmezlp2dccimblhc2ssb5hayll3epe7oe@jlgmjqyffkp4>
-References: <20260102-pci_acs-v3-1-72280b94d288@oss.qualcomm.com>
- <20260204233330.GA22347@bhelgaas>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="NIckCLa+"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=tftKTKFBl/Ok5BbE/9r4ZIruNZKPjcPUXp0ynGyi9r0=;
+	b=NIckCLa+6WLXgmsy0wDA6VHavLbT1IMXrTPmsdyxK5FRp6lBdMOXs0p8Q404TQMJSiDcHSE+t
+	baG+GfzY6nJW9cGuTMQMYUa2hOoOlLHCYEOZnrz8O9nai/yC1Pxqnn4dYCR6rDC6joD5mi0UY0u
+	B40wkkH2IRw1R9sKSkFqado=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4f6qHc5dYYz12LCb
+	for <linux-pci@vger.kernel.org>; Fri,  6 Feb 2026 17:56:44 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id CD1E52012A
+	for <linux-pci@vger.kernel.org>; Fri,  6 Feb 2026 18:00:33 +0800 (CST)
+Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 6 Feb 2026 18:00:33 +0800
+Received: from [10.67.120.233] (10.67.120.233) by
+ kwepemn200012.china.huawei.com (7.202.194.135) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 6 Feb 2026 18:00:32 +0800
+Message-ID: <714842fb-dfdd-4ea2-adb1-2b44148b57b2@huawei.com>
+Date: Fri, 6 Feb 2026 18:00:32 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260204233330.GA22347@bhelgaas>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI/AER: Fix AER log missing in DPC case
+To: <bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
+	<shiju.jose@huawei.com>, <pandoh@google.com>
+CC: <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+	<prime.zeng@hisilicon.com>, <fanghao11@huawei.com>, <shenyang39@huawei.com>
+References: <20260129140103.712011-1-liusizhe5@huawei.com>
+From: Sizhe LIU <liusizhe5@huawei.com>
+In-Reply-To: <20260129140103.712011-1-liusizhe5@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ kwepemn200012.china.huawei.com (7.202.194.135)
 
-On Wed, Feb 04, 2026 at 05:33:30PM -0600, Bjorn Helgaas wrote:
-> On Fri, Jan 02, 2026 at 09:04:47PM +0530, Manivannan Sadhasivam wrote:
-> > For enabling ACS without the cmdline params, the platform drivers are
-> > expected to call pci_request_acs() API which sets a static flag,
-> > 'pci_acs_enable' in drivers/pci/pci.c. And this flag is used to enable ACS
-> > in pci_enable_acs() helper, which gets called during pci_acs_init(), as per
-> > this call stack:
-> > 
-> > -> pci_device_add()
-> > 	-> pci_init_capabilities()
-> > 		-> pci_acs_init()
-> > 			/* check for pci_acs_enable */
-> > 			-> pci_enable_acs()
-> > 
-> > For the OF platforms, pci_request_acs() is called during
-> > of_iommu_configure() during device_add(), as per this call stack:
-> > 
-> > -> device_add()
-> > 	-> iommu_bus_notifier()
-> > 		-> iommu_probe_device()
-> > 			-> pci_dma_configure()
-> > 				-> of_dma_configure()
-> > 					-> of_iommu_configure()
-> > 						/* set pci_acs_enable */
-> > 						-> pci_request_acs()
-> > 
-> > As seen from both call stacks, pci_enable_acs() is called way before the
-> > invocation of pci_request_acs() for the OF platforms. This means,
-> > pci_enable_acs() will not enable ACS for the first device that gets
-> > enumerated, which is usally the Root Port device. But since the static
-> > flag, 'pci_acs_enable' is set *afterwards*, ACS will be enabled for the
-> > ACS capable devices enumerated later.
-> > 
-> > To fix this issue, do not call pci_enable_acs() from pci_acs_init(), but
-> > only from pci_dma_configure() after calling of_dma_configure(). This makes
-> > sure that pci_enable_acs() only gets called after the IOMMU framework has
-> > called pci_request_acs(). The ACS enablement flow now looks like:
-> > 
-> > -> pci_device_add()
-> > 	-> pci_init_capabilities()
-> > 		/* Just store the ACS cap */
-> > 		-> pci_acs_init()
-> > 	-> device_add()
-> > 		...
-> > 		-> pci_dma_configure()
-> > 			-> of_dma_configure()
-> > 				-> pci_request_acs()
-> > 			-> pci_enable_acs()
-> > 
-> > For the ACPI platforms, pci_request_acs() is called during ACPI
-> > initialization time itself, independent of the IOMMU framework.
-> 
-> I don't think cmdline params are relevant, since I don't see any that
-> set pci_acs_enable or call pci_request_acs().
-> 
-> I propose a longer but combined call chain in the commit log to show
-> the old sequence vs the new one.  I do notice the double call of
-> pci_enable_acs() (along with dev->bus->dma_configure()), which all
-> looks odd, but maybe it will be rationalized someday:
-> 
+Hi,
+Gentle ping.
 
-Yeah, there is no issue with calling pci_enable_acs() twice as of now, but I
-don't have a better solution either.
 
->     PCI: Enable ACS after configuring IOMMU for OF platforms
->     
->     Platform, ACPI, or IOMMU drivers call pci_request_acs(), which sets
->     'pci_acs_enable' to request that ACS be enabled for any devices enumerated
->     in the future.
->     
->     OF platforms called pci_enable_acs() for the first device before
->     of_iommu_configure() called pci_request_acs(), so ACS was never enabled for
->     that device (typically a Root Port).
->     
->     Call pci_enable_acs() later, from pci_dma_configure(), after
->     of_dma_configure() has had a chance to call pci_request_acs().
->     
->     Here's the call path, showing the move of pci_enable_acs() from
->     pci_acs_init() to pci_dma_configure(), where it always happens after
->     pci_request_acs():
->     
->         pci_device_add
->           pci_init_capabilities
->             pci_acs_init
->      -        pci_enable_acs
->      -          if (pci_acs_enable)                <-- previous test
->      -            ...
->           device_add
->             bus_notify(BUS_NOTIFY_ADD_DEVICE)
->               iommu_bus_notifier
->                 iommu_probe_device
->                   iommu_init_device
->                     dev->bus->dma_configure
->                       pci_dma_configure            # pci_bus_type.dma_configure
->                         of_dma_configure
->                           of_iommu_configure
->                             pci_request_acs
->                               pci_acs_enable = 1   <-- set
->      +                  pci_enable_acs
->      +                    if (pci_acs_enable)      <-- new test
->      +                      ...
->             bus_probe_device
->               device_initial_probe
->                 ...
->                   really_probe
->                     dev->bus->dma_configure
->                       pci_dma_configure            # pci_bus_type.dma_configure
->                         ...
->                           pci_enable_acs
->     
->     Note that we will now call pci_enable_acs() twice for every device, first
->     from the iommu_probe_device() path and again from the really_probe() path.
->     Presumably that's not an issue since we also call dev->bus->dma_configure()
->     twice.
->     
->     For the ACPI platforms, pci_request_acs() is called during ACPI
->     initialization time itself, independent of the IOMMU framework.
-> 
+Best regards,
+Sizhe
 
-Thanks! Let me know if I need to respin or you want to ammend it while applying.
-(It is not clear to me what is your plan here).
+On 2026/1/29 22:01, Sizhe Liu wrote:
+> In the current DPC error reporting case, some AER log information is missing.
+>
+> -- Error log abnormal
+> pcieport 0000:20:00.0: DPC: containment event, status: 0x1f11: unmasked uncorrectable error detected
+> (------ AER error log supposed to be printed here, but missing ------)
+> nvme nvme0: frozen state error detected, reset controller
+> {4}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
+>
+> Cause:
+> In aer_print_error(), PCIe AER errors is reported, and is rate-limited
+> by info->ratelimit_print[i]. There are two entry points for
+> aer_print_error().
+>
+> 1) Native AER
+> aer_isr_one_error_type() -> aer_process_err_devices() ->
+> aer_print_error()
+> 2) DPC
+> dpc_process_error() -> aer_print_error()
+>
+> The value of info->ratelimit_print[i] is initialized correctly in
+> the native AER case:
+> aer_isr_one_error_type() -> find_source_device() ->
+> find_device_iter() -> add_error_device()
+>
+> In the DPC case, info->ratelimit_print[i] is not initialized and
+> alloc by 0 , so in aer_print_error(), it will directly return at line
+> if (!info->ratelimit_print[i])
+> This will result in losing the AER log messages in the DPC case.
+>
+> Solution:
+> 1. Move the initialization of info->ratelimit_print[i] to
+> aer_ratelimit_print_init().
+> 2. Add aer_ratelimit_print_init() in dpc_process_error().
+> 3. Replace the initialization by aer_ratelimit_print_init()in
+> Native AER case.
+>
+> Test with AER inject:
+> Set the DPC reporting priority in the BIOS and send
+> MalfTLP(AER FATAL ERROR) to device.
+>
+> -- Error log normal
+> pcieport 0000:20:00.0: DPC: containment event, status:0x1f11: unmasked uncorrectable error detected
+> pcieport 0000:20:00.0: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
+> pcieport 0000:20:00.0: device [19e5:a120] error status/mask=00040000/04580000
+> pcieport 0000:20:00.0:    [18] MalfTLP   (First)
+> pcieport 0000:20:00.0: AER:   TLP Header: 0x00000000 0x00000000 0x00000000 0x00000000
+> nvme nvme0: frozen state error detected, reset controller
+> {2}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
+>
+> [1] https://lore.kernel.org/linux-pci/20260127035405.712271-1-liusizhe5@huawei.com/
+>
+> Fixes: a57f2bfb4a58 ("PCI/AER: Ratelimit correctable and non-fatal error logging")
+> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
+> ---
+> v2
+> - Corrected the format and spelling errors in the commit log.
+>
+>   drivers/pci/pci.h      |  1 +
+>   drivers/pci/pcie/aer.c | 35 +++++++++++++++++++++++------------
+>   drivers/pci/pcie/dpc.c |  1 +
+>   3 files changed, 25 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 0e67014aa001..0cbcbcd52354 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -748,6 +748,7 @@ struct aer_err_info {
+>   
+>   int aer_get_device_error_info(struct aer_err_info *info, int i);
+>   void aer_print_error(struct aer_err_info *info, int i);
+> +void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info, int idx);
+>   
+>   int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
+>   		      unsigned int tlp_len, bool flit,
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index e0bcaa896803..b73915b63327 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -925,6 +925,28 @@ int cper_severity_to_aer(int cper_severity)
+>   EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+>   #endif
+>   
+> +/**
+> + * aer_ratelimit_print_init - set flag whether error message is printed
+> + * @dev: pointer to pci_dev to be rate-limited
+> + * @e_info: pointer to error info
+> + * @idx: index for ratelimit_print array
+> + */
+> +void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info, int idx)
+> +{
+> +	/*
+> +	 * Ratelimit AER log messages.  "dev" is either the source
+> +	 * identified by the root's Error Source ID or it has an unmasked
+> +	 * error logged in its own AER Capability.  Messages are emitted
+> +	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
+> +	 * for a downstream device, make sure we print the Error Source ID
+> +	 * from the root as well.
+> +	 */
+> +	if (aer_ratelimit(dev, e_info->severity)) {
+> +		e_info->ratelimit_print[idx] = 1;
+> +		e_info->root_ratelimit_print = 1;
+> +	}
+> +}
+> +
+>   void pci_print_aer(struct pci_dev *dev, int aer_severity,
+>   		   struct aer_capability_regs *aer)
+>   {
+> @@ -990,18 +1012,7 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
+>   	e_info->dev[i] = pci_dev_get(dev);
+>   	e_info->error_dev_num++;
+>   
+> -	/*
+> -	 * Ratelimit AER log messages.  "dev" is either the source
+> -	 * identified by the root's Error Source ID or it has an unmasked
+> -	 * error logged in its own AER Capability.  Messages are emitted
+> -	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
+> -	 * for a downstream device, make sure we print the Error Source ID
+> -	 * from the root as well.
+> -	 */
+> -	if (aer_ratelimit(dev, e_info->severity)) {
+> -		e_info->ratelimit_print[i] = 1;
+> -		e_info->root_ratelimit_print = 1;
+> -	}
+> +	aer_ratelimit_print_init(dev, e_info, i);
+>   	return 0;
+>   }
+>   
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index fc18349614d7..d17adc642781 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -275,6 +275,7 @@ void dpc_process_error(struct pci_dev *pdev)
+>   			 status);
+>   		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
+>   		    aer_get_device_error_info(&info, 0)) {
+> +			aer_ratelimit_print_init(pdev, &info, 0);
+>   			aer_print_error(&info, 0);
+>   			pci_aer_clear_nonfatal_status(pdev);
+>   			pci_aer_clear_fatal_status(pdev);
 
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
