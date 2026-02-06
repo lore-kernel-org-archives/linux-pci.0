@@ -1,126 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5FD7309EE9;
-	Fri,  6 Feb 2026 22:59:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23DEE31328A
+	for <linux-pci@vger.kernel.org>; Fri,  6 Feb 2026 23:14:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770418746; cv=none; b=Fj94aGGtE8mCxs3MVI0nooLuTAerFPZoQKewClSXih5EgOPkZ0EE9cQPbpkQMOHv5nrE+MGDPVB4KYCq/GNKp8hRn8W4UNCcFI6P7cQqGyOVExtm7n9/NjxU7PC4ZYBiMRw3N1Jv4KXO1mOsoUPWYKyQD7w18DF8Bde+QOrSnpo=
+	t=1770419693; cv=none; b=AofWGtjSu6RwQ2NedTTO0MIX22gfmXHJWa5ipfXOVGnQMRvZ+xJsQBKym+yxWX0o8BInbrOJed2w8VsUYgJ+1IhRAXmC3wr1dti8p/8t23paYT8T40cDS9CxpjCuwHFNVhBRflfwVb/X/2Xx6vzTYUSOkAZKt/sCIh8325slGKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770418746; c=relaxed/simple;
-	bh=79gUol5oeNcxMoawxQyWlDCHIdz7vTlXoRbNh+iyTJU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=td/hJyDNdWzfovzisGy/ArPwTcDUPux/wHcnIhtJUNj8o36C/R0/UV6qANVtLCOkAXarDxtNmpZz0RIGRFFZ1BdBOSe/0uPsaie8d8fpRU+cIqfalu3n1SWHUpt8vxECLglY0u727aNJ2mZLOEZQUe/6Wvrz3RSvDzpemFOeruk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pnOBHWi+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770419693; c=relaxed/simple;
+	bh=//lXxvGzvwvRX8TAWjBtg2RwKbUnQc3RJsVA6A3Oyik=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bdehFWRwf4HpIebLyKJ4HnxkLX0iI3KQ+1dwMlvs6QfGGVc2psPjVFxATIjQ1P3rH9OgpWoe5Wc7ZrGh8puIHXEBOSQVZkOZVyfDBTlGm/TvsZeGWzSYJCPeLTBfXmzwTnOZ3ZXa6wYo3fnKvaYA3JC6r4ixu17N3dF3rnmsUMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=g3tRWC1l; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pnOBHWi+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F4E8C116C6;
-	Fri,  6 Feb 2026 22:59:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770418746;
-	bh=79gUol5oeNcxMoawxQyWlDCHIdz7vTlXoRbNh+iyTJU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=pnOBHWi+IDzNqmI/qp00vvOe6AI6lggVmBRXUNbnd2La57yxpUNP07QwHXETHodEJ
-	 fIK1WQdhqAsunekuF0cZJzwOTahENbnhejycYhaAIblS+cMGRsoWYc28gyI56cJltL
-	 0VZ8fSmNYs1//eCHPHsHjMjGUOG4MboLUTInlMFto59Du53LAWgw23EkxDeCjqUDTH
-	 l8ZxXujfoClyZmVRHNxxEJqYPO9bqwMM5nfJQvh5ZNVGJO/P8WwkCQzjsNrVMfb2aP
-	 fBE2FSiRziwmqkGnYvPfpAWbUal+l0tJ/hFOvYl+PzrNUkgcBLY+WHXTuueJHM8Iq6
-	 EM1ze3qK+XNSQ==
-Date: Fri, 6 Feb 2026 16:59:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Adam Stylinski <kungfujesus06@gmail.com>
-Subject: Re: [PATCH 1/1] PCI/bwctrl: Disable BW controller on Intel P45 using
- a quirk
-Message-ID: <20260206225905.GA103793@bhelgaas>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="g3tRWC1l"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2a79ded11a2so18541445ad.3
+        for <linux-pci@vger.kernel.org>; Fri, 06 Feb 2026 15:14:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1770419692; x=1771024492; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=xORO1Htmm6YxNYM1C9oAOOlxqgAaEPMiLYXG8QXy21k=;
+        b=g3tRWC1lBp4G6v57OMNJH/IWhVnKhZkgx/YZiytE6h7F/GblmQyEeomg0JeF945imr
+         3DB0TWRGaESQe070W0BWOsUsHHgvWnyNF6EEwR5gbcMaxsCWtsRq1Fe05Wodqe+0qye2
+         LBmPBBEaSzUa/6BVN4mGd5ytwg0pv9jYELANMZypZY/N1Rk4NZK0jaWANUovaQTw19Op
+         /8LEugHReBQZGwa4owCg//1Vcv3ViHo6xmE5eGqCTRiTfYejf8j7ME+YpxzTkLA9rqSr
+         Q2sFeCKKNGRwrLl2prU/fOIUJF/CpaYN2BHv2qZMRrBdGsbsQA9CbV1GnPE3RBNl1TaN
+         FKLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770419692; x=1771024492;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xORO1Htmm6YxNYM1C9oAOOlxqgAaEPMiLYXG8QXy21k=;
+        b=AR7PxVrZXLyBOJAvT4/8nJLAsKZogPoxjZaE0sYEPIpY+pxo/bmsljgAtqcbwnvX0f
+         CVl/DWh/a+Ww2JwvRAy4CMvggyQf1YQ/icYID+IVSMDMGDyGfkatlJJoOqOslUnKnDs1
+         Hu9Rq/kYXocLyyNnwEEJteViWCfuRd+2OAzJtgz7wq1EUvantAH0BGkIUvVNVRfMKa1R
+         iqHuHhZFpJYl27VQ6HQBAB98MGy0LoIt5kCJsBdFla2O26Uw2rG9hm+X276e+jGhC3zi
+         vLfYIW6AtLLNCBAUeGMHN8teO0vTSACPGoCyKbjajKg5YTKtFMaBXO34J3Yemiebi49v
+         ISJQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVvvfmRtNRLFOuqnEj8ZZVWY0kb66QWfbuAxGC0bNuhLhGmzA6U6LWBORdE+X8PDB/QABIO3zJ6m4c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzE8gRJVboWrcULaMfSqGrdSWGay02eOcfKPdjDfw3T0QxATn7D
+	9bX314RrA/qKg06PQ2jcuWambSuRxHTVKmUhhLMEOOR760DTUjoNpVMO0D/6OMclmw==
+X-Gm-Gg: AZuq6aJZ6xvqFDtwtUW1f2RkrdCuYEKOW8OMG8ufXEnQYb319YGIN8hRdESi+xil87w
+	JyTVkOmigpsJrzeFJT/9ToJPbMi1cZK2igB1ttII3nyNJ3n2++F1fBrQ4o6t/OS+CAU4B7mxDPj
+	rzgNvB7fpX6GmOQiA79dHgcqjVc32WRMWCXCgHXnbpsCnCWs4NNQk/MzQVhaATckO9pgxno3f/Z
+	q+iAYQyXHSE1B1rLPmDmA+32ofNgzbAcn+li18EBIBE4rwTVm1WPsNAS43CN6w6XJORdvG4Mi+6
+	kdiZedVp0fOAfri3hq+rm6/vPuTUHueClfRs1UP4miyYhN3hRNWV2z+lOk52MWzKvFHcyh5t2r6
+	BFp17CFRS4LstgMqp5f73jHwIGtkjleFzTGIIaJHgJY0uxOVExaFkI3eIE/vb7PJaUNR2d/kVjt
+	mPC5Z2fyepyVQxwK7Ocmg3pdkco9nDEUf+6VrQZnPOnxM80G2wNA==
+X-Received: by 2002:a17:903:3bcb:b0:2a0:c1ed:c8c2 with SMTP id d9443c01a7336-2a95191f76emr38694515ad.55.1770419692202;
+        Fri, 06 Feb 2026 15:14:52 -0800 (PST)
+Received: from google.com (79.217.168.34.bc.googleusercontent.com. [34.168.217.79])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a9521eb87fsm33865195ad.71.2026.02.06.15.14.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 06 Feb 2026 15:14:51 -0800 (PST)
+Date: Fri, 6 Feb 2026 23:14:46 +0000
+From: David Matlack <dmatlack@google.com>
+To: "Yanjun.Zhu" <yanjun.zhu@linux.dev>
+Cc: Alex Williamson <alex@shazbot.org>,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
+	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
+	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Raghavendra Rao Ananta <rananta@google.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Tomita Moeko <tomitamoeko@gmail.com>,
+	Vipin Sharma <vipinsh@google.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v2 04/22] vfio/pci: Register a file handler with Live
+ Update Orchestrator
+Message-ID: <aYZ15u120FEa8Qw2@google.com>
+References: <20260129212510.967611-1-dmatlack@google.com>
+ <20260129212510.967611-5-dmatlack@google.com>
+ <6dc423bd-36e6-4f97-b2b2-c7030575a3a1@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260116131513.2359-1-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <6dc423bd-36e6-4f97-b2b2-c7030575a3a1@linux.dev>
 
-On Fri, Jan 16, 2026 at 03:15:12PM +0200, Ilpo JÃ¤rvinen wrote:
-> The commit 665745f27487 ("PCI/bwctrl: Re-add BW notification portdrv as
-> PCIe BW controller") was found to lead to a boot hang on a Intel P45
-> system. Testing without setting Link Bandwidth Management Interrupt
-> Enable (LBMIE) and Link Autonomous Bandwidth Interrupt Enable (LABIE)
-> (PCIe r7.0, sec. 7.5.3.7) in bwctrl allowed system to come up.
-> 
-> P45 is very old chipset and supports only up to gen2 PCIe, so not
-> having bwctrl does not seem a huge defiancy.
-> 
-> Add no_bw_notif into the struct pci_dev and quirk Intel P45 Root Port
-> with it.
-> 
-> Reported-by: Adam Stylinski <kungfujesus06@gmail.com>
-> Link: https://lore.kernel.org/linux-pci/aUCt1tHhm_-XIVvi@eggsbenedict/
-> Tested-by: Adam Stylinski <kungfujesus06@gmail.com>
-> Signed-off-by: Ilpo JÃ¤rvinen <ilpo.jarvinen@linux.intel.com>
+On 2026-02-06 02:37 PM, Yanjun.Zhu wrote:
+> On 1/29/26 1:24 PM, David Matlack wrote:
 
-Applied to pci/bwctrl for v6.20, thanks!
+> > +int __init vfio_pci_liveupdate_init(void)
+> > +{
+> > +	if (!liveupdate_enabled())
+> > +		return 0;
+> 813 int liveupdate_register_file_handler(struct liveupdate_file_handler *fh)
+> 814 {
+> 815         struct liveupdate_file_handler *fh_iter;
+> 816         int err;
+> 817
+> 818         if (!liveupdate_enabled())
+> 
+> 819                 return -EOPNOTSUPP;
+> 
+> In the function liveupdate_register_file_handler, liveupdate_enabled is also checked.
+> as such, it is not necessary to check here?
 
-> ---
->  drivers/pci/pcie/bwctrl.c |  3 +++
->  drivers/pci/quirks.c      | 10 ++++++++++
->  include/linux/pci.h       |  1 +
->  3 files changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
-> index 36f939f23d34..4ae92c9f912a 100644
-> --- a/drivers/pci/pcie/bwctrl.c
-> +++ b/drivers/pci/pcie/bwctrl.c
-> @@ -250,6 +250,9 @@ static int pcie_bwnotif_probe(struct pcie_device *srv)
->  	struct pci_dev *port = srv->port;
->  	int ret;
->  
-> +	if (port->no_bw_notif)
-> +		return -ENODEV;
-> +
->  	/* Can happen if we run out of bus numbers during enumeration. */
->  	if (!port->subordinate)
->  		return -ENODEV;
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b9c252aa6fe0..6ef42a2c4831 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -1359,6 +1359,16 @@ static void quirk_transparent_bridge(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82380FB,	quirk_transparent_bridge);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TOSHIBA,	0x605,	quirk_transparent_bridge);
->  
-> +/*
-> + * Enabling Link Bandwidth Management Interrupts (BW notifications) can cause
-> + * boot hangs on P45.
-> + */
-> +static void quirk_p45_bw_notifications(struct pci_dev *dev)
-> +{
-> +	dev->no_bw_notif = 1;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e21, quirk_p45_bw_notifications);
-> +
->  /*
->   * Common misconfiguration of the MediaGX/Geode PCI master that will reduce
->   * PCI bandwidth from 70MB/s to 25MB/s.  See the GXM/GXLV/GX1 datasheets
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 864775651c6f..3a556cd749e3 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -406,6 +406,7 @@ struct pci_dev {
->  						      user sysfs */
->  	unsigned int	clear_retrain_link:1;	/* Need to clear Retrain Link
->  						   bit manually */
-> +	unsigned int	no_bw_notif:1;	/* BW notifications may cause issues */
->  	unsigned int	d3hot_delay;	/* D3hot->D0 transition time in ms */
->  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
->  
-> 
-> base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
-> -- 
-> 2.39.5
-> 
+Yeah that is a bit odd. I see that memfd_luo_init() just checks for
+-EOPNOTSUPP. We can do the same thing here.
