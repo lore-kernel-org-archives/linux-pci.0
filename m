@@ -1,176 +1,154 @@
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48885335547;
-	Fri,  6 Feb 2026 18:23:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2A3337692;
+	Fri,  6 Feb 2026 18:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770402227; cv=none; b=HgV3aRsVP8YcBIkUget7cgdpr9LKiq8lLGJoCYT986IgrVuy3QSc1ehpUF4aEbjFuSw4PhRv+9Hp1en7lc93hAMPDRFftWZrZjhGuhk5MXbAay0w2RdmmOTcK/BNKgY9JAsNjsMVrn98bUNb/eMMu7+IJO/rlKIP6aE5fc6jLCI=
+	t=1770402742; cv=none; b=HsiEbq0RSBhscdpyFFNAIAcKkM5btyvp7CakVh55C3sMfuxqpRAzL9r6+4aBXL9avJ25q8udfl8T4DBsU3OeSVCaQeGMmdoM1CC7ZYE3crA7jkUgGauEQ3HB6JFgI8mRpiu4UPWWyi8X0lOn7m6jcYlNA+TWe/5wsI7A7qL3CCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770402227; c=relaxed/simple;
-	bh=NLJTjdEuvXlzEMjjb/lVm25SG7TTpAM8I0Xs7X9vCA0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=UvT9elSkVnZwaQehwWURG/3gSSQX4FZEtc/mFagM0cFvpJRrj2fm80z2bH3XeChC8SjVmefBvlUB+M51pK7QhbsiJ/ubexNeppLtBymYVHKbqldy/JeE+WNJrtyDtYX4bbHcZifTwZsCybDikLed/BWzikY3mf+E5Q/81htJOFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=fJO4rH2R; arc=none smtp.client-ip=82.195.75.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
+	s=arc-20240116; t=1770402742; c=relaxed/simple;
+	bh=SyviauEqzGRNgMKFKUSriULfbguERUdTF3gSkStiiws=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=bXySCnukE4/fLp6pxb3j3J1Mo75kk5nagmvSnNstrpy0qZB6h7pHvBpZpScqM+4Ud8hIUSQ/dy0U9trEgNnbKo+4clqBP2bAvojlsbosORhtYerNaJitejF0os/JuNDUhzB3NMF53Y593P4brY3//Yxwf43j5wDTMjYIKYjmNhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jx75DmQR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="fJO4rH2R"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:Cc:To:Message-Id:
-	Content-Transfer-Encoding:Content-Type:MIME-Version:Subject:Date:From:
-	Reply-To:Content-ID:Content-Description:In-Reply-To:References;
-	bh=jebKBLlng7MbRbI0s5SEHj0gh6mnYIB+0HCeDj0VqTY=; b=fJO4rH2R+e5i0VFDa6OrJXhSLZ
-	Fdj4gfb+RzHTNX2B6kx4Mu1n9vC0HmYS4J5n/HNw53/qkN/3zySwNlKYZJMCwXEjFFRiRUaQ57zLb
-	dKu364fhMg9f5LzKC5rnKeWbLbFKteijmEXG+vIkYYu/kNNZ/GWWPZ+mIyMEua5rLbLWz8ieRzBE1
-	CCgL5/XjLSveN89Fy54iKsoIQPpbfM3zfxK/zuUuKLSz7+gYbZIXtYZLnf6nCTyo8SL+MJsCuixO8
-	+iF4rtxOYJHVz16dG+jMNRVhNENEmyGbjSWW6SVyQqhsP2AsRRSB6RgyOCOx7PdWXbOgTP3X59cbs
-	fBbcfHpQ==;
-Received: from authenticated user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.94.2)
-	(envelope-from <leitao@debian.org>)
-	id 1voQUU-007LhV-AP; Fri, 06 Feb 2026 18:23:38 +0000
-From: Breno Leitao <leitao@debian.org>
-Date: Fri, 06 Feb 2026 10:23:11 -0800
-Subject: [PATCH] PCI/AER: Add option to panic on unrecoverable errors
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jx75DmQR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC446C116C6;
+	Fri,  6 Feb 2026 18:32:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770402742;
+	bh=SyviauEqzGRNgMKFKUSriULfbguERUdTF3gSkStiiws=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=jx75DmQR8I+p5N8nTPmep6m7pQrPyLCtGEQbcUh6UZDGHUYRXvSROJNjMbb/APGhk
+	 ca8FQXwV0t4cEUI6gxduTER+tdagta359GW0RbAo3HFwqxVKKSdiCH5do/HLbBAQYC
+	 lMNYxgkjdAmLEWDth5tM960THxnc+foLrNWVXYAOP+PJBRvXRRb4nuZb3f9JYItwm0
+	 YVRu+TEg/ovKAVFJFsuc3w5B8wSRNPG3Jha4pgah9L93rTany8uL0m1aLouyR3Op5C
+	 fFUBumVDIXubV/3yeQjnA5m8a8kHd7fXSiBGS62PT3I01M7F3ycQRUc0QVofa0gbAq
+	 cGE7DH5uErqcQ==
+Date: Fri, 6 Feb 2026 12:32:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+	Naresh Kamboju <naresh.kamboju@linaro.org>,
+	Pavankumar Kondeti <quic_pkondeti@quicinc.com>,
+	Xingang Wang <wangxingang5@huawei.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Manivannan Sadhasivam <mani@kernel.org>
+Subject: Re: [PATCH v3 0/4] PCI: Fix ACS enablement for Root Ports in OF
+ platforms
+Message-ID: <20260206183220.GA70809@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260206-pci-v1-1-85160f02d956@debian.org>
-X-B4-Tracking: v=1; b=H4sIAI8xhmkC/yXMQQqDMBBG4asM/9pAMkIsuYq40DhppwsriYog3
- r2oy7f43oEiWaUg0IEsmxb9TQjkKkL89NNbjI4IBLbsLVtv5qim9hyTa9i9moSKMGdJut+Xtnu
- 6rMNX4nJRnOcffHyyZmcAAAA=
-X-Change-ID: 20260206-pci-362cf172187f
-To: Jonathan Corbet <corbet@lwn.net>, 
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
- Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
- kbusch@kernel.org
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, 
- dcostantino@meta.com, rneu@meta.com, kernel-team@meta.com, 
- Breno Leitao <leitao@debian.org>
-X-Mailer: b4 0.15-dev-f4305
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3984; i=leitao@debian.org;
- h=from:subject:message-id; bh=NLJTjdEuvXlzEMjjb/lVm25SG7TTpAM8I0Xs7X9vCA0=;
- b=owEBbQKS/ZANAwAIATWjk5/8eHdtAcsmYgBphjGhnLQnqdXoF2/wZy8uYIo7655acHbzSapTJ
- it+KU0GEWiJAjMEAAEIAB0WIQSshTmm6PRnAspKQ5s1o5Of/Hh3bQUCaYYxoQAKCRA1o5Of/Hh3
- bQygD/kBDTqiGWi3gm2/bDdHYTUCBcqeHDi7jQez7MTGnt1g9W/1Cv2Yu5najPwWVGrUOZv/lq/
- jYdFkcA2PqYjVEIVk90cZ3mlqubBqO+lfD4OFquwitnNmG0NkZzMEjtGASg+RX6oeQtszylOPyg
- 0Ti2Lefc1n20VyZqmDPX9vkwO9FYvb7uvXi3oftRJdKKOycOnOnrl0osLrCo8+0zLXrz40G3qql
- m/0NSwC6Cx/SoGcWI4vp0hZsxDrEf/R9nLAGDPw8bcsN2/0+h5g8FMVnZkCUHV0QL//Zkkmnd8M
- Cjf/8UAqFb9JPPwLAJ7BTdMVliWzAylGKfZYdJkv3Grrw8eVdsljSGI3rQHCOpO3T1X4sKc7maL
- zyYajMRfBZHzOevoriGkYeWAZjx+81ILFhUdSkTsQ66lcmE4X8u/arGnCMsghjSCHy92ccmIPdx
- DdYULlPuLVmRaiegaY1ZycTdz8+3ZxHXmdHXlF3cY4ULkfzPyfsXeSRn653fvzKmytJSBPTVrKi
- ODHjN/2BRfT67+p2JP5jju7ubTnTRIg5o4pubruVvJjz59Jpiev/1G1prB+Kioy4KVVrIboF80m
- T+fOQrdsldIFOmmekCb9aVUZ6aMJJhyHGJoD4IFt/aqAOU++5iDwuZVCMO9vSlGMJOT3KBycUJS
- HtwwkGmXljjtpBA==
-X-Developer-Key: i=leitao@debian.org; a=openpgp;
- fpr=AC8539A6E8F46702CA4A439B35A3939FFC78776D
-X-Debian-User: leitao
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260102-pci_acs-v3-0-72280b94d288@oss.qualcomm.com>
 
-When a device lacks an error_detected callback, AER recovery fails and
-the device is left in a disconnected state. This can mask serious
-hardware issues during development and testing.
+On Fri, Jan 02, 2026 at 09:04:46PM +0530, Manivannan Sadhasivam wrote:
+> Hi,
+> 
+> This series fixes the long standing issue with ACS in OF platforms. There are
+> two fixes in this series, both fixing independent issues on their own, but both
+> are needed to properly enable ACS on OF platforms.
+> 
+> Issue(s) background
+> ===================
+> 
+> Back in 2021, Xingang Wang first noted a failure in attaching the HiSilicon SEC
+> device to QEMU ARM64 pci-root-port device [1]. He then tracked down the issue to
+> ACS not being enabled for the QEMU Root Port device and he proposed a patch to
+> fix it [2].
+> 
+> Once the patch got applied, people reported PCIe issues with linux-next on the
+> ARM Juno Development boards, where they saw failure in enumerating the endpoint
+> devices [3][4]. So soon, the patch got dropped, but the actual issue with the
+> ARM Juno boards was left behind.
+> 
+> Fast forward to 2024, Pavan resubmitted the same fix [5] for his own usecase,
+> hoping that someone in the community would fix the issue with ARM Juno boards.
+> But the patch was rightly rejected, as a patch that was known to cause issues
+> should not be merged to the kernel. But again, no one investigated the Juno
+> issue and it was left behind again.
+> 
+> Now it ended up in my plate and I managed to track down the issue with the help
+> of Naresh who got access to the Juno boards in LKFT. The Juno issue was with the
+> PCIe switch from Microsemi/IDT, which triggers ACS Source Validation error on
+> Completions received for the Configuration Read Request from a device connected
+> to the downstream port that has not yet captured the PCIe bus number. As per the
+> PCIe spec r6.0 sec 2.2.6.2, "Functions must capture the Bus and Device Numbers
+> supplied with all Type 0 Configuration Write Requests completed by the Function
+> and supply these numbers in the Bus and Device Number fields of the Requester ID
+> for all Requests". So during the first Configuration Read Request issued by the
+> switch downstream port during enumeration (for reading Vendor ID), Bus and
+> Device numbers will be unknown to the device. So it responds to the Read Request
+> with Completion having Bus and Device number as 0. The switch interprets the
+> Completion as an ACS Source Validation error and drops the completion, leading
+> to the failure in detecting the endpoint device. Though the PCIe spec r6.0, sec
+> 6.12.1.1, states that "Completions are never affected by ACS Source Validation".
+> This behavior is in violation of the spec.
+> 
+> Solution
+> ========
+> 
+> In September, I submitted a series [6] to fix both issues. For the IDT issue,
+> I reused the existing quirk in the PCI core which does a dummy config write
+> before issuing the first config read to the device. And for the ACS enablement
+> issue, I just resubmitted the original patch from Xingang which called
+> pci_request_acs() from devm_of_pci_bridge_init().
+> 
+> But during the review of the series, several comments were received and they
+> required the series to be reworked completely. Hence, in this version, I've
+> incorported the comments as below:
+> 
+> 1. For the ACS enablement issue, I've moved the pci_enable_acs() call from
+> pci_acs_init() to pci_dma_configure().
+> 
+> 2. For the IDT issue, I've cached the ACS capabilities (RO) in 'pci_dev',
+> and disabled the broken capability for the IDT switches in the cache. This also
+> allowed to get rid of the earlier workaround for the switch.
+> 
+> [1] https://lore.kernel.org/all/038397a6-57e2-b6fc-6e1c-7c03b7be9d96@huawei.com
+> [2] https://lore.kernel.org/all/1621566204-37456-1-git-send-email-wangxingang5@huawei.com
+> [3] https://lore.kernel.org/all/01314d70-41e6-70f9-e496-84091948701a@samsung.com
+> [4] https://lore.kernel.org/all/CADYN=9JWU3CMLzMEcD5MSQGnaLyDRSKc5SofBFHUax6YuTRaJA@mail.gmail.com
+> [5] https://lore.kernel.org/linux-pci/20241107-pci_acs_fix-v1-1-185a2462a571@quicinc.com
+> [6] https://lore.kernel.org/linux-pci/20250910-pci-acs-v1-0-fe9adb65ad7d@oss.qualcomm.com
+> 
+> Changes in v3:
+> - Dropped the 'acs_broken_cap' field and directly called the quirk from
+>   pci_acs_init()
+> - Collected tags. Since the delta between v2 and v3 is minimal, I've kept them.
+> - Rebased on top of v6.19-rc1 
+> - Link to v2: https://lore.kernel.org/r/20251202-pci_acs-v2-0-5d2759a71489@oss.qualcomm.com
+> 
+> Changes in v2:
+> 
+> * Reworked the patches completely as mentioned above.
+> * Rebased on top of v6.18-rc7
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+> Manivannan Sadhasivam (4):
+>       PCI: Enable ACS only after configuring IOMMU for OF platforms
+>       PCI: Cache ACS capabilities
+>       PCI: Disable ACS SV capability for the broken IDT switches
+>       PCI: Extend the pci_disable_broken_acs_cap() quirk for one more IDT switch
+> 
+>  drivers/pci/pci-driver.c |  8 +++++++
+>  drivers/pci/pci.c        | 33 ++++++++++++--------------
+>  drivers/pci/pci.h        |  4 +++-
+>  drivers/pci/probe.c      | 12 ----------
+>  drivers/pci/quirks.c     | 62 ++++++++++++------------------------------------
+>  include/linux/pci.h      |  1 +
+>  6 files changed, 42 insertions(+), 78 deletions(-)
+> ---
+> base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
+> change-id: 20251201-pci_acs-b15aa3947289
 
-Add a module parameter 'aer_unrecoverable_fatal' that panics the kernel
-instead, making such failures immediately visible. The parameter
-defaults to false to preserve existing behavior.
-
-Signed-off-by: Breno Leitao <leitao@debian.org>
----
-In environments where all hardware must be fully operational, silently
-leaving a device in a disconnected state after an AER recovery failure
-is unacceptable. This is common in high-reliability systems, production
-servers, and testing infrastructure where a degraded system should not
-continue running.
-
-This patch adds a module parameter that allows administrators to enforce
-a strict policy: if a device cannot recover from an AER error, the
-kernel panics instead of continuing with degraded hardware. This ensures
-that hardware failures are immediately visible and can trigger
-appropriate remediation (restart, failover, alerting).
----
- Documentation/admin-guide/kernel-parameters.txt | 9 +++++++++
- drivers/pci/pcie/err.c                          | 3 +++
- drivers/pci/pcie/portdrv.c                      | 7 +++++++
- drivers/pci/pcie/portdrv.h                      | 1 +
- 4 files changed, 20 insertions(+)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 1058f2a6d6a8c..ff95c24280e3c 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -5240,6 +5240,15 @@ Kernel parameters
- 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
- 			all PCIe root ports use INTx for all services).
- 
-+	pcieportdrv.aer_unrecoverable_fatal=
-+			[PCIE] Panic on unrecoverable AER errors:
-+		0	Log the error and leave the device in a disconnected
-+			state (default).
-+		1	Panic the kernel when a device cannot recover from an
-+			AER error (no error_detected callback). Useful for
-+			high-reliability systems where degraded hardware is
-+			unacceptable.
-+
- 	pcmv=		[HW,PCMCIA] BadgePAD 4
- 
- 	pd_ignore_unused
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index bebe4bc111d75..788484791902e 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -73,6 +73,9 @@ static int report_error_detected(struct pci_dev *dev,
- 		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
- 			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
- 			pci_info(dev, "can't recover (no error_detected callback)\n");
-+			if (aer_unrecoverable_fatal)
-+				panic("AER: %s: no error_detected callback\n",
-+				      pci_name(dev));
- 		} else {
- 			vote = PCI_ERS_RESULT_NONE;
- 		}
-diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-index 38a41ccf79b9a..a411f60ff50ce 100644
---- a/drivers/pci/pcie/portdrv.c
-+++ b/drivers/pci/pcie/portdrv.c
-@@ -22,6 +22,13 @@
- #include "../pci.h"
- #include "portdrv.h"
- 
-+#ifdef CONFIG_PCIEAER
-+bool aer_unrecoverable_fatal;
-+module_param(aer_unrecoverable_fatal, bool, 0644);
-+MODULE_PARM_DESC(aer_unrecoverable_fatal,
-+		 "Panic if a device cannot recover from an AER error (default: false)");
-+#endif
-+
- /*
-  * The PCIe Capability Interrupt Message Number (PCIe r3.1, sec 7.8.2) must
-  * be one of the first 32 MSI-X entries.  Per PCI r3.0, sec 6.8.3.1, MSI
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index bd29d1cc7b8bd..6c67b18de93c9 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -29,6 +29,7 @@ extern bool pcie_ports_dpc_native;
- 
- #ifdef CONFIG_PCIEAER
- int pcie_aer_init(void);
-+extern bool aer_unrecoverable_fatal;
- #else
- static inline int pcie_aer_init(void) { return 0; }
- #endif
-
----
-base-commit: 6bd9ed02871f22beb0e50690b0c3caf457104f7c
-change-id: 20260206-pci-362cf172187f
-
-Best regards,
---  
-Breno Leitao <leitao@debian.org>
-
+Applied to pci/virtualization for v6.20, thanks!
