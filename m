@@ -1,118 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7687B23183F
-	for <linux-pci@vger.kernel.org>; Fri,  6 Feb 2026 22:28:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A63A2FB997;
+	Fri,  6 Feb 2026 22:29:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770416908; cv=none; b=mYmuzIjUEdeb10SGnyQvnQ+RXfRYDm59uz3I79xzqJTd3XxZUFr2p0/X2KCzZz7arykW58qr0AD0/kr+ct4nSUwNFBYJD8DH7sibfbFxHVrwIJdgF6AqrbHoumxz25CoQJvRX0GFroP/7TR8RngpeRnUZm30PublWwHX7HZwvBU=
+	t=1770416965; cv=none; b=kX6GSPNgLoFTtLmY8Hf61hrVRsIeu3mY+VPRVolK4ZEXR0384edUy5tmVVNsVijC1vt2v46hWRBLeaD2TaewI+8P8oUl+lw4mN1QHy5NA+MB4ujq6xZkc3WnkMSCJc8KZiDWhLyfqb6nms7ZqS+H8A0jB5uPsHQMcPYnDRiqoBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770416908; c=relaxed/simple;
-	bh=4QIFGvFfg4LSWRydXVNM8TvmNgmijeL6c2LThIuq+4M=;
+	s=arc-20240116; t=1770416965; c=relaxed/simple;
+	bh=/ZQzXvueEhb1Dzw5x/j36IsO3RIg2BwlBa5zM30ow5A=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ZuU7wRWYksuy4vjyW315vth87W6QjzxNCG3LNRBjtFAaXhnIB/9MSbzonxof/AL/ZeOVqIdQc0yuT5fWJ/unfIsNQf5EUl/IPpYU5rzs6v3a5W8uipYaGykmA18NqZ/Amasrd3IdBSlMjQgtFTbK0yoNZ4gbWfJMlPBlB6sswcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r4gY9fKN; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=QZ4ZM4pocBXEIsenJGMqoJDhaZoNbuI2PuZimOm715afO1yPSxCJq/KH4/ETly+dZkrh+ygd7A8kQlrbPW7qd6NWtyHmnpz+jOrqLzfCKEpYrV1+SF/mMaEdb0H8uI0VGv8Tx1pkZTeYfrUt4Fk6SF76vbWERkTkJg0RmuzZ1D8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q+9VRAYZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r4gY9fKN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB968C116C6;
-	Fri,  6 Feb 2026 22:28:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q+9VRAYZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CDD5C116C6;
+	Fri,  6 Feb 2026 22:29:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770416908;
-	bh=4QIFGvFfg4LSWRydXVNM8TvmNgmijeL6c2LThIuq+4M=;
+	s=k20201202; t=1770416964;
+	bh=/ZQzXvueEhb1Dzw5x/j36IsO3RIg2BwlBa5zM30ow5A=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=r4gY9fKNZSIYkKwzxtJ9FAvasilXCzSvelXuXMd78N3A23EYF8kAk0NBMjE+z+uKD
-	 UDXylHAw9PMX5Wm3jITE3ai3AjdImFGQHei5iJDX8qmqMrJ3k/ErrZuFrD45pH5JUb
-	 PSLpPECKYtYxkVTXAFA2wJEwBvQjqrJzpDExTCHzoX84uMIY9oaTdpdR/1YlUSsfQc
-	 fvJdh5duePbULMKYIjCTu0XraKDkPmP3CsKusc6Z0SyUcJgt9N1xbgKsP2o0mOYurq
-	 cOKkoFfy5ziIQ/SAbp1kYUAgVwHxp8TlgkInffgfLgz8jZBzbcojV/Bjle2ZBW/FJq
-	 ZSDMb76GB2tng==
-Date: Fri, 6 Feb 2026 16:28:26 -0600
+	b=q+9VRAYZXZ6EIPF5h+E3PNNZJD20ouj/24JImWf8yg5+BU+69VNRRbcd+X31tedFH
+	 SoOTNMHyHRHexMEphiM+TI3DEULjMEZWo96PpvXmw+H+KWtyHSLH9Q8sYyTxnV0LXD
+	 Ep2xqHoN6dU9048HOzQIXf60iYK3la43BKeyMEKUzyxW7WjGUPjzpFn0domQG9SRbT
+	 WGuOPM7HuRFnx1IBi9QFK2K38b06ig2+r5E8h7XNF9WCBGNU4weummBN0ebG4xioY1
+	 iB0cuHC0TyXW22X74aDSDzgO4jy2nZSOnFo8oLq5dSigfJXw2MSuqb2At3Rhdt/nxx
+	 x/QHd7d073w/Q==
+Date: Fri, 6 Feb 2026 16:29:23 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: qinyuntan <qinyuntan@linux.alibaba.com>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
-	linux-nvme@lists.infradead.org,
-	Xunlei Pang <xlpang@linux.alibaba.com>,
-	Guixin Liu <kanie@linux.alibaba.com>, oliver.yang@linux.alibaba.com,
-	Guanghui Feng <guanghuifeng@linux.alibaba.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V1] nvme-pci: disable SR-IOV VFs on driver unbind
-Message-ID: <20260206222826.GA98751@bhelgaas>
+To: duziming <duziming2@huawei.com>
+Cc: alex@shazbot.org, bhelgaas@google.com, chrisw@redhat.com,
+	jbarnes@virtuousgeek.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, liuyongqiang13@huawei.com
+Subject: Re: [PATCH v4 0/4] Miscellaneous fixes for pci subsystem
+Message-ID: <20260206222923.GA98884@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <88437e1a-2df0-41e6-a58f-dcc68d4458bc@linux.alibaba.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <728a9d24-b2cc-43f3-a1c3-12695155bf2f@huawei.com>
 
-On Fri, Jan 30, 2026 at 12:53:25PM +0800, qinyuntan wrote:
-> Hi All,
+On Fri, Jan 30, 2026 at 03:53:10PM +0800, duziming wrote:
+> Hi all,
 > 
-> Thank you all for the insightful discussion!
-> 
-> I agree with Leon's point that not all devices are created equal when it
-> comes to SR-IOV handling during driver unbind.
-> 
-> Looking at existing driver implementations, I found two different
-> approaches:
-> 
-> 1) mlx5 - unconditionally disables SR-IOV in remove:
-> 
->    drivers/net/ethernet/mellanox/mlx5/core/main.c:
->    static void remove_one(struct pci_dev *pdev)
->    {
->        ...
->        mlx5_sriov_disable(pdev, false);
->        ...
->    }
-> 
->    drivers/net/ethernet/mellanox/mlx5/core/sriov.c:
->    void mlx5_sriov_disable(struct pci_dev *pdev, bool num_vf_change)
->    {
->        struct mlx5_core_dev *dev  = pci_get_drvdata(pdev);
->        struct devlink *devlink = priv_to_devlink(dev);
->        int num_vfs = pci_num_vf(dev->pdev);
-> 
->        pci_disable_sriov(pdev);  /* Always disable, no pci_vfs_assigned()
-> check */
->        devl_lock(devlink);
->        mlx5_device_disable_sriov(dev, num_vfs, true, num_vf_change);
->        devl_unlock(devlink);
->    }
-> 
-> 2) ixgbe - checks pci_vfs_assigned() and skips disable if VFs are in use:
-> 
->    drivers/net/ethernet/intel/ixgbe/ixgbe_main.c:
->    static void ixgbe_remove(struct pci_dev *pdev)
->    {
->        ...
->    #ifdef CONFIG_PCI_IOV
->        ixgbe_disable_sriov(adapter);
->    #endif
->        ...
->    }
-> 
->    drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c:
->    #ifdef CONFIG_PCI_IOV
->        if (pci_vfs_assigned(adapter->pdev)) {
->            e_dev_warn("Unloading driver while VFs are assigned - VFs will
-> not be deallocated\n");
->            return -EPERM;
->        }
->        pci_disable_sriov(adapter->pdev);
->    #endif
-> 
-> Regarding the warning level discussion: I would prefer keeping it as
-> dev_warn() rather than downgrading to dev_info(). As Leon mentioned,
-> some devices do require SR-IOV to be disabled when the PF is unbound,
-> and for those cases, this warning is important for operators to notice
-> and take action. A warning level helps ensure it doesn't get lost in
-> normal system logs.
-> 
-> Please let me know how you'd like to proceed.
+> Gentle ping on this patchset. Any feedback would be greatly appreciated.
 
-"driver left SR-IOV enabled after remove\n" is KERN_WARNING today, and
-I'm OK with leaving it that way.
+Sorry I didn't get to this.  Poke again after v6.20-rc1.
+
+> On 2026/1/15 15:52, Ziming Du wrote:
+> 
+> > Miscellaneous fixes for pci subsystem
+> > 
+> > Changes in v4:
+> > - Remove the architecture-specific #ifdef to apply the alignment
+> >    check for all platforms (including x86), as device registers are
+> >    naturally aligned anyway.
+> > - Fix a potential issue in proc_bus_pci_read() to make it consistent
+> >    with proc_bus_pci_write(), as suggested by Ilpo Järvinen.
+> > - Link to v3:https://lore.kernel.org/linux-pci/20260108015944.3520719-1-duziming2@huawei.com/
+> > 
+> > Changes in v3:
+> > - Check *ppos before assign it to pos.
+> > - Link to v2:https://lore.kernel.org/linux-pci/20251224092721.2034529-1-duziming2@huawei.com/
+> > 
+> > Changes in v2:
+> > - Correct grammer and indentation.
+> > - Remove unrelated stack traces from the commit message.
+> > - Modify the handling of pos by adding a non-negative check to ensure
+> >    that the input value is valid.
+> > - Use the existing IS_ALIGNED macro and ensure that after modification,
+> >    other cases still retuen -EINVAL as before.
+> > - Link to v1:https://lore.kernel.org/linux-pci/20251216083912.758219-1-duziming2@huawei.com/
+> > 
+> > Yongqiang Liu (2):
+> >    PCI: Prevent overflow in proc_bus_pci_write()
+> >    PCI/sysfs: Prohibit unaligned access to I/O port
+> > Ziming Du (2):
+> >    PCI/sysfs: Fix null pointer dereference during hotplug
+> >    PCI: Prevent overflow in proc_bus_pci_read()
+> > 
+> >   drivers/pci/pci-sysfs.c |  7 +++++++
+> >   drivers/pci/proc.c      | 11 +++++++++--
+> >   2 files changed, 16 insertions(+), 2 deletions(-)
+> 
+> Thanx du!
+> 
