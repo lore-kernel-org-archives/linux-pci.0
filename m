@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 294B41DF723
-	for <linux-pci@vger.kernel.org>; Sat,  7 Feb 2026 10:40:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C8333DEF5
+	for <linux-pci@vger.kernel.org>; Sat,  7 Feb 2026 10:40:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770460842; cv=none; b=gsnE2KMExOQKuPs3YmqleYApQhm59oWXYpcq1qC4pNSUh37S3HghUaWyTzKgwLbv7bxGzJpxcanwlp6PS24xIymNPhkMRL0tPVq00cPbOBFZiq11g+wZXYkqSJebpSlMh8UYffL3psq6+VqcrhcHcOdgGL0HnqF9z1o6wbIVmRg=
+	t=1770460842; cv=none; b=YlEQD+AAwjbxDC/hABEe/8WdKCLC0X8ZszfhCLuFh3FGWtPWeqoQ9yiVG9dxbgM1oKBj3nNeXcLHspZnCTrx9U1Tl1yp8HU8K6PcGqGrJT/pDEfmCACBcHFq8qFa+zyMBi/Uvf0LsxiCw1+x42FSu0KRUarpySsDiGRhm/s6YkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1770460842; c=relaxed/simple;
-	bh=b0GL1aDSsW3pY2+Qfs+d55bnbMJUFEVnHlSlbA2coQ0=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=W1ukT+aGw7LOZLNDV6HNTSIDPYm14O66FQ3gbznaYIGy6pZV3P9RDh8GFHkwMj5/qrW0w+N1S02D2DF+p0Z+yExzerEpyaTVoKWnueBwmrf5vui/2+mao7uFqzRZNnZzoy/pA0dYb1ABIMQ9Bwx95mvEZaQWpgg2Ri06vNzbA10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Nz0RKvQQ; arc=none smtp.client-ip=192.198.163.11
+	bh=jtlb6g+YjLhv+CztXc3FrbHWDtmM3ncLo/cUAPsVtAI=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=rubN7ex97aNsHj9hNBqSyQbsVyLLWO6hB6VgvPq3mlW29tY1NtOkBjfAp4E4iWoxRN8o8X8Zlw9i7vvvxlmwxrvEvN1fqgaKCZyFQ/rKqpNLj2x6NegYr1InJ0gwXu821E5TEdcLw+QbOj8kKtJfD/RSbcmHd5e+e80/uj7QFm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KduBDt38; arc=none smtp.client-ip=192.198.163.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Nz0RKvQQ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KduBDt38"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1770460842; x=1801996842;
   h=date:from:to:cc:subject:message-id;
-  bh=b0GL1aDSsW3pY2+Qfs+d55bnbMJUFEVnHlSlbA2coQ0=;
-  b=Nz0RKvQQG++wBv7WNf+kG0IJHfREfLByjpNhpydlOSR125ywRintrffC
-   dkv3KIUTXPaSNPFameTfsqjuVpx3fSbyYusDaYsfEIs0XOH5f1HusAfQf
-   EiZHD4a14edgiMTrDf/EbE124QZKoErRYm8ObOnPKyRoINnQtoBleQrnf
-   cKSTLzvrs7Nb3Qteu0BXCKVo9+avheDgLo4AOxBONXWsVSPixwpfoCxkM
-   81gx6WlZHxN4MDqg9Kqk0BI+JVZIrr1KKXjhPpGv5CqB9XKg8Ow7qHm/U
-   5Jw79fm0+epWoWXWw58ObdGER4kqqaDR7OcX6y5wffXKKQzem1SVfr1f8
-   Q==;
-X-CSE-ConnectionGUID: 0S5bb2VoQT6S9nhB7SfurA==
-X-CSE-MsgGUID: B7moARWLScm+xymANEP8CQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11693"; a="82288345"
+  bh=jtlb6g+YjLhv+CztXc3FrbHWDtmM3ncLo/cUAPsVtAI=;
+  b=KduBDt38okbfhJpwzAbN2lyt1cB2Vx09tr60ezaLlRZ6RKfZ2cjnIUZ0
+   LIYrLRUc2hLjTW3abT6AtBFbNevpClKAm0E7WscngnFmitqj6gd+7y6B8
+   5hO45JKZzTypiSWFbNBHxvf4jcFU9Wvs5JZ1gZmKMU9XJLMagQX3MYGlR
+   WnsNLbfvJOdRN945PXzZutOj0EpE4DycUbyW7lQE5hc8VbhWjeERLTeto
+   x+pAv3szGBBRdfjwc+gFN8IZxdOvn4PYjVXkjinNPmVnyveDX6RlterMy
+   LKhvMTGhhOsfZl+AcciwqqUVgwf3Hw9Kd6zUA7uq6V9K0AIw2vgvadm+j
+   w==;
+X-CSE-ConnectionGUID: TZZ6Q4Q2SrO7Ys9Gv6pgAA==
+X-CSE-MsgGUID: AH8Oob4HSD6IVqD4zrvNjg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11693"; a="82288347"
 X-IronPort-AV: E=Sophos;i="6.21,278,1763452800"; 
-   d="scan'208";a="82288345"
+   d="scan'208";a="82288347"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
   by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2026 02:40:41 -0800
-X-CSE-ConnectionGUID: CkyRekWiThq0g+xIHNQWhQ==
-X-CSE-MsgGUID: RYLUSSowT+6rBBnTjTHvew==
+X-CSE-ConnectionGUID: g1dLxpqaQiGPT31YUXvKlw==
+X-CSE-MsgGUID: GZqSTPqoTV2C7MZalp0RMA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,278,1763452800"; 
-   d="scan'208";a="211148425"
+   d="scan'208";a="211148427"
 Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
   by orviesa007.jf.intel.com with ESMTP; 07 Feb 2026 02:40:41 -0800
 Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vofjx-00000000laK-44u2;
-	Sat, 07 Feb 2026 10:40:37 +0000
-Date: Sat, 07 Feb 2026 18:39:41 +0800
+	id 1vofjy-00000000laM-01Ci;
+	Sat, 07 Feb 2026 10:40:38 +0000
+Date: Sat, 07 Feb 2026 18:39:50 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:aer] BUILD SUCCESS
- e242d09b58e869f86071b7889acace4cff215935
-Message-ID: <202602071832.FVpge5kj-lkp@intel.com>
+Subject: [pci:resource] BUILD SUCCESS
+ 2ecc1bf14e2fdaff78bd1b8e7ed3dba336a3fad5
+Message-ID: <202602071842.tUIHSpIr-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,8 +59,8 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git aer
-branch HEAD: e242d09b58e869f86071b7889acace4cff215935  PCI/AER: Clear stale errors on reporting agents upon probe
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git resource
+branch HEAD: 2ecc1bf14e2fdaff78bd1b8e7ed3dba336a3fad5  PCI: Don't claim disabled bridge windows
 
 elapsed time: 728m
 
