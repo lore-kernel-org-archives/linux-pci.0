@@ -1,185 +1,211 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazolkn19012063.outbound.protection.outlook.com [52.103.66.63])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C038237C0F7
-	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 14:59:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770649164; cv=none; b=MVQb4z1uk5rqJFCCELLdcNA38HgBOFrv8FPvPcsr1lqIC6xFwqc/AJGov0igLj8epECDjWESUeBdn0qvi+/DnDVXpn79T3Tvf4C8f7FLvPbI/MzfmbbXUnRaf/fw7aWedASdtGdFU8wZEJMgOgcHsA7Mz24gqEnmDhuBfVOmjTg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770649164; c=relaxed/simple;
-	bh=WLVJv5ugIhf3VIIc7NthdDs9sjWvcntd5T03Up5qFVk=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=CKzNTTMnfoUFtwFifqvQXJEY/Zt2uFt1jTxAt+meAxuQvQOQeWtSgytsOeKtXjOdA+SSBg38Qkwn1Uirm5Ma7wItYXhi3axQt6IAGLwBkRF1zVIw7FR9JDGf/Pbsfjsxg464LtCCTqLzVBKeOBsIX5tSL5UufSNs57nhx1awuoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=GCn7TNxA; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D8D1DED4C;
+	Mon,  9 Feb 2026 15:03:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.66.63
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770649387; cv=fail; b=ZKQqmxx1uxk71g9FEASDCu65mQWhdmK4hKjoAT5W5UyYhNW9NZgBB9lj2LJXUBqA7oKQ56y7o2E3mFA8q72RKM6RY6ob6LwxkYim3ax2MKmeHhZk6y5m5PAHSEsVPolC/tG4fQjFGcQ0/QSMrPpbFZRPkrV5OaoJDLAfYmh1Qnc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770649387; c=relaxed/simple;
+	bh=xvoJsu82vg5wXJ7gYgp8/UnvWr+EEW8CFa7ystngVHk=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=sevdAL4tWsfJfOqyvUewkQN82bI9BvsdJOSVH674eqlwBvLqsHCRV5KCI4gfNWmgXCr68Sa5Zy+ri8Ddq+FiZeWHkcmziKAiE3FSeKqzwgK7EPpgvqCtbIc0nsar0ujJypnCAcQZtrcSremmUD8yNuOuPxVJBGJkRzwDqB7mFgQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=mJe9U/cm; arc=fail smtp.client-ip=52.103.66.63
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GCn7TNxA"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-482f2599980so53044615e9.0
-        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 06:59:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1770649162; x=1771253962; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=TzlX62O2iHtDoc/wlp70TM/0Ovim/AGV2yahkY72zas=;
-        b=GCn7TNxAhV7JVuZCQEXpIBPGk0F78lMJmLJMuOJgNtwmeNNbnh9PLCRgx8++yQNWTq
-         BlczZkEtZTRiGASZvD1akuZrsEQVayDAcUD1yY+6exZENMCXQXdSAwh1mzh75FccSHwa
-         pR/LFdCzQuIBQ8F2BdOfzRyBnVMq7/lWUc1THzkyoOFsE28kSX5IrS/WtynoaCwyMoyH
-         hr7UPLMuS217FHUjTs9dS6+8XF+vLiUAG0WeOG/MkleX3WjSWZq+thky6hYNOdOQZX2n
-         p70Xh8VJF/LyzhRxNp20dhfGK1ogOfrzI+3EVG+oQKdg4PKOG81g/IfonGk6jHSIu+Mh
-         tekg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770649162; x=1771253962;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=TzlX62O2iHtDoc/wlp70TM/0Ovim/AGV2yahkY72zas=;
-        b=XnaVyMHfFbCNMvz3JyVwWi3PZbhoPFQ6KJWxN3x+gofnnuJrMBBB/WzEmbkXXS2OOb
-         dnHhfW3NvTkwX7atbIw+fZIaef6QidwnRWGMJ+a2034Eh3NgI/qJM9cdShNdRZ43yMR4
-         t0T/wP31br/OOK9DLWYhPzDIX50FrZJ1rt1Y/AVGHkpI77XcPnCUnfZbzRRb7RtyBV7O
-         5VddWDOps/Hxs4myu6o+RHVKwiTPvx9o2q7qPx2CshUr2tpA/k7Vp1O6PhIFF73M0uOI
-         6kMlBFXqV6Fd0buZghCPnXaa4FwP0Dj7srckvBo9A1zgkYI1DmxaMxqhE7/MRqiHpnqD
-         wCKA==
-X-Forwarded-Encrypted: i=1; AJvYcCXU/Dgwj1hsEOF1rGEtEcD72Nu1iunJMxqiKmuByOxjhJIgx0/pM3ulH7iQzUhfmcWn/W4wYwjP6Gg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy+5hoUlXR7pC/YeLuMcLF0IJsd6b0O6AGZp1hAg0JqeIuUNV2u
-	7zbC7oew+43r65+LJyYWojhIZZnfQAqJ29nDjM4XBcinAE+Mdv/VTzqR9J3h/li/GMptaUyUhIO
-	MKBqd
-X-Gm-Gg: AZuq6aLmT5ErAbXpMdePEaY8BabMAe9fH+4Pg7+GacFAOYmOfriKYmZ3iHxsv5f/CKq
-	avreP7tg5SEdvW78uRFEWiwzByXIXPc/lh/AG6qmcOsN3rFxsuXC+g7NsX5BeceA4wlfpcLs+db
-	43aqopzOISV43P6WW8fxcevguAuzmN5/C7Uw7hnD81Z5wtea698QeUm6/ZpDj1LVtDNsW6MMkrO
-	zfBqVLFlimfClo1e1kMsGA0JJDbn6egPoGXyl+xb3vj2vkBGSl1lDz8xTFJRpc2MxQMnR/6kaLK
-	goIoHFZZ5Uzxi32oZ2O7Rz01dnPcCiw7egQdN9yehfOnTo9bwtZxN+lnuXetNw/rGtfzhWQAt9/
-	meZ6myeD3pXLPlxyUHeHqGtkcdAAMBjyGzjocUvOkWib2fT2NQthiE2quuonRlJyqXNbgfE50un
-	SKhRcxiyEAUwxOHGbirqdeis34Mg0sWk6fFPZPi+3X528hsz6K3yXuS+pkyYib2kk=
-X-Received: by 2002:a05:600c:8719:b0:482:eec4:76d with SMTP id 5b1f17b1804b1-4832021b461mr184052445e9.17.1770649161961;
-        Mon, 09 Feb 2026 06:59:21 -0800 (PST)
-Received: from ?IPV6:2a01:e0a:106d:1080:44e3:9198:bd5d:a3f? ([2a01:e0a:106d:1080:44e3:9198:bd5d:a3f])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4376bd5a074sm10377353f8f.11.2026.02.09.06.59.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Feb 2026 06:59:21 -0800 (PST)
-Message-ID: <b46da4da-93aa-4213-ad75-ec7709008b95@linaro.org>
-Date: Mon, 9 Feb 2026 15:59:20 +0100
+	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="mJe9U/cm"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Fz6PX3QSuE4hBqOGdLLwqBj9o7IMk2nOacwG2ZNiVwDDPCCFb1YANZA9rdaSNFAjg9huWykfbHPzIMSFAXyCtdnl2LM7eozpy/Xg2J/NEFqYZGsMC0vkGc09vASvk8LYJr/QbSSeetoS6tRuDslvy75ByyBUIkM1Ja/BDcN6goSNNb3vl9IKAEUnHoM0JU1toaU0hP+tseUXW0LrxE8WuZQolJbKw+m1VZnWm52mrY7ZMvwgW1yQHTtGV69xVssW0Cu65B2gnEjZkM/+nTfxpawjebo7CaPaZ6cZzSnZNXbOgBeGhQJ/tJuJp52ykQ/NaFHpvHfbmPTHVRdqW7C0xA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7eNF/F4oSekmbeomVU/+r+hUsWCdN7RxJlrgixVKjIE=;
+ b=oEdwunhGveuiZPOiyybjNl2SRRcw1fUc05jq84y6W3aNpuvboYWnm35wlh9UxE+ZOOA0jhlE35xJCMubdlpJAGQEyS+V+HDEryfmdKiFPduwdjdOy6lNyKq6G8dEuc7da9fsahKrA9Q6gOvO7qhBjlDukOPpTOPET73VZRFxTIq9312azna6ohdlx3M/pmuMEKqP0lo2ODP3PRrd4jRS0SaUDufUccBIOElAioWuxH+OPvhlPdsneUsIpj3njqWnDTGyQ7lIqZToLVonaEJZazxGaC80HGTuF8lQZKRKUIjs1YUUqWD6dpqtoTAcgj+kL8em7pqT8ksIlYXNCHXXug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7eNF/F4oSekmbeomVU/+r+hUsWCdN7RxJlrgixVKjIE=;
+ b=mJe9U/cmZU4D1bBvweIFDh1ZHqiuF+UWeRWwxJ5WKKCHzFrsj1QuvlrJbUzUvVoVndeBKWCxMpMI/J1PrAlbb8H0IYx8vND1hRcAhBMkL3yJY2pukxYfWL0G4nE//DmgUdUCP4mingM2nXBOf2M2ZBqavu1aDwhXN8uS8LmpBHZ7qP05F6e78vHRetbqXGYEa5wtSZUMyWuGKjX1rxVvOrjXrqTYkE+DcubrZkOGW9W6L9ymUHWnILAuAnu2+LeoABMH804t9lckt5fwJVEZr5sapmhG/S5W4MhSDre1wRBvQlgZmhcx6N5zOd2pOBCAa49cCI1D32vu8NpLftAw/g==
+Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:1b0::7) by SEZPR01MB4945.apcprd01.prod.exchangelabs.com
+ (2603:1096:101:9c::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.19; Mon, 9 Feb
+ 2026 15:03:03 +0000
+Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ ([fe80::c735:fab8:6e3d:6d1c]) by SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ ([fe80::c735:fab8:6e3d:6d1c%4]) with mapi id 15.20.9587.017; Mon, 9 Feb 2026
+ 15:03:02 +0000
+From: Wei Wang <wei.w.wang@hotmail.com>
+To: bhelgaas@google.com,
+	jgg@nvidia.com,
+	akpm@linux-foundation.org,
+	bp@alien8.de,
+	rdunlap@infradead.org,
+	alex@shazbot.org,
+	kevin.tian@intel.com
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	wei.w.wang@hotmail.com
+Subject: [PATCH v4 0/2] PCI: Add support for ACS Enhanced Capability
+Date: Sat,  7 Feb 2026 19:30:57 +0800
+Message-ID:
+ <SI2PR01MB43932C799AE9111C7D2C319FDC65A@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+X-Mailer: git-send-email 2.51.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: TYCPR01CA0087.jpnprd01.prod.outlook.com
+ (2603:1096:405:3::27) To SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:1b0::7)
+X-Microsoft-Original-Message-ID:
+ <20260207113059.335295-1-wei.w.wang@hotmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH v3 4/9] pci: pwrctrl: generic: support for the
- UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-msm@vger.kernel.org
-References: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
- <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-4-5b79c5d61a03@linaro.org>
- <fbxbnou5mdlhaq5dpxr3wdzmjetwdp7auaaqeunc67tgk5ej2m@cnnkr2pcwy77>
- <a4e55e91-0e03-4e63-8542-d8ad61b38906@linaro.org>
- <o6e5qygss55p6npjgaicxffsqdpv7kojgidr46zinsvfpxfxug@vn67nq4k6jzk>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <o6e5qygss55p6npjgaicxffsqdpv7kojgidr46zinsvfpxfxug@vn67nq4k6jzk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SI2PR01MB4393:EE_|SEZPR01MB4945:EE_
+X-MS-Office365-Filtering-Correlation-Id: e0cef4b7-c6c8-48ed-fee8-08de67ec5195
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|461199028|19110799012|15080799012|23021999003|41001999006|8060799015|37102599003|5072599009|6090799003|5062599005|12121999013|51005399006|10035399007|3412199025|4302099013|440099028|1602099012|40105399003|1710799026;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?YWRJOFgyczFNUk5jdm5GUVhEcDY0VEdkQjYvT210NW1SWkdhdmhsRnRqVTJH?=
+ =?utf-8?B?L2gwY1k1NmozTW9JZ3RYY3U5M1IrUzcrRExqbFBQM3VERDV1VjBBY2F6dCty?=
+ =?utf-8?B?cGljdVliTjZWanpzQ2hqUU14alNidzliN2ZrdXFpa2V2UUpndmc0UmJTU1Zl?=
+ =?utf-8?B?Nzc0c0dIZ2VMdFVUcGMrYUpua3JzQTFCRGErbzZ4a1o4RkZwek84Rlc4RGZT?=
+ =?utf-8?B?MlZDSWRSeEVFL05MMkRNdEM5c0tXakJZN0hqam5oOElqZlowMVpTcmRFOUN4?=
+ =?utf-8?B?RkZUNkZsOGgxMmZOM3NXM2d2Z0d3ZllUWGh2eEMvSUVtYmc0V3l1em1UWXFE?=
+ =?utf-8?B?RUNzTkFDRy9HWkU5dFNkbzVmd1ZCVUx0ZjRpbGhRaXZScitZaERtVnhWeC9F?=
+ =?utf-8?B?YUhrVzZTM0FuWmV0OUlzZnpLb05FWjlkbG1abjdUUVJwTzNMTW91aXR6dmtV?=
+ =?utf-8?B?Slo1UHcwM0tjTjJoU1RBVHFVK0V6N1BiSnB6WnZLRi8rdDY5OGxTdEVlR1cr?=
+ =?utf-8?B?UHlCV3ppbm5CQTBSK0MvNk5UUHNMZUV5UGYwenRqdW1DNjBCLzhtM3Jrd1dx?=
+ =?utf-8?B?YTV5V2pxczJqck9FWGU5TjltNlVTRHBJOFR6MS9lRjMyZVNXcDUyQjZMejNX?=
+ =?utf-8?B?Q1RNRHpGY2Nhb3JFV2JCYVRUeVZ0UG1oWkpINjJxR3FlbjNFbEpzeHhFRXp5?=
+ =?utf-8?B?NC8vcWIwOTkrQk0vaDJhaEZIRGFCSy9pVVNTbm1ydEFOaHlETldTT2JibEpP?=
+ =?utf-8?B?NmFlSWgvaHRScHRPZW9nLzF4R2NNeDFjaUlCQkN3clBEMUNuUXNsZlV4V0Vk?=
+ =?utf-8?B?Z3hEQm1jOHRzZzdTUnVpRFlZeHpCN2dtbGRYUG9GRnVCby9iWW5JQ3lGeGhj?=
+ =?utf-8?B?anJWL0lmak1rQjBvbFJGRThqN1hYeHg1bC91aFVUeHFWM1J1OVhYTXdpN1RW?=
+ =?utf-8?B?TnNjQ2NXRWVIMFFwK1R5OERvMytKN2dIM1VabmNJUlRhc0JuNkNvSUFtTXdZ?=
+ =?utf-8?B?M0ZFVGwrWC9CbVExdlB6eDFSV0p5VWJFMjU5Z0FzWlBmZkJQb1FsZFBiVXdI?=
+ =?utf-8?B?K1lKcTVialJ0bWVwcVd2Rkkwck9XbndIdHFkdTluV0VnbVZPM21KYzRjY2Yr?=
+ =?utf-8?B?UEJMNmluK0tMY0MvQmNiSi9TSDQ1NG9memgwWEovenhCZEZsVldleDNpS3Br?=
+ =?utf-8?B?cmJaZ1lKMHc2ai8vQUQ4a3haVjVNSUhFZTlycjduMXpvUytoL2FjWnMrclU5?=
+ =?utf-8?B?bmQ3NTc2ZVlNL3hNTmtiMWhYZXB1d1kzQmVCdnFDNWZ5b1phVXZoTnlkdHBX?=
+ =?utf-8?B?Z2pEaFpMYzVqOE4zVXlRZ1p0cDVQbGxkV3YyVzVTN3QycVJaV2Erc1ZKSFVP?=
+ =?utf-8?B?cE1kcDVkKzZzQmxMWThTdnFKdUMwWWNoa2dEL2VUcTV3QXZDMXE2VUh2S1lO?=
+ =?utf-8?B?djVjQ3hEQ0JGN2hMZ3lLS2FKMHpQTVIvL2dneUdvSWQ5d21BVHBtb2lQc0Zl?=
+ =?utf-8?B?WnJldithQXVEZTFDY0VyRVR1eTNWT1ZPczJiajFKZHFzNjdsRGlKdk1SR1lS?=
+ =?utf-8?B?Zk1Zck9UZkdqd0x0WktJRzk3b0dtTHAvUmlmNXU0K1dzd3k4VktKRWVBU3k4?=
+ =?utf-8?B?QXFQQXpGU2t3WGIvdis1MkRVS2dkTzc5KzJMbmZvNWI0QkFNL0VKU2owaytG?=
+ =?utf-8?B?N3Y5VDBWbjkrUG92Zk1NRUlKT1hzZmFjaTR6K0hRcHdpZEV6d1c5MXVxeGVa?=
+ =?utf-8?B?QUZaU0wwSlMzang3bU1VVzNFT28zSDdncFRhaEtKc2UwRlRCNXRYbjRCL1I4?=
+ =?utf-8?B?YW1PdXZzV1VZLzE0RTY3UnZiZmxjNEdNRFBGTlpKZ2FTSWt6aGRTTE5JeWs2?=
+ =?utf-8?B?aGgzVWpoWWJnTnVUOXhNT1J2c2ZOWmZVeVJjZ0tsbVBsTllhOUNPcGUvenk1?=
+ =?utf-8?B?MFJmQ0d3ZTE3bnFqSklVTTY1eGloZDBmSXJ2eEY0bkJENGk1WkR1bmw5dTdh?=
+ =?utf-8?B?Ti94bFlVTnJGZTIvWW45TnRsRVdhSUttblVsQ3ZsTUNaajhyckx6UzF6UkFq?=
+ =?utf-8?Q?VErhlT?=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?UU02UVhGcGtMeEE4U1U4NjlwcytIenMxN3pCcE5GcWpXb2hSMEtzLysxek4x?=
+ =?utf-8?B?RWJDZFNFNXVhbFc1NWlGb2lFOTBSVXRxaHMwMWpEUWpsaFVCUkJCVWVjaFF5?=
+ =?utf-8?B?THdNN0hhd2FpUXVoN0ZmSG5sblNoQ3JmYWJsbFlyYlUzUyttdXpPKzJtTHp2?=
+ =?utf-8?B?WU1xZFZCbXBUMFdodGRIQXYwYmJMWUlrRHFNcEZDQzZZT0Q2TWxTSGhJYkVE?=
+ =?utf-8?B?OEJSZTlwTnA4eTFQYnFSUHgwV2EzakFZVWY0amxEU053b1VxZ1lETzd5RXd4?=
+ =?utf-8?B?czhkTS9MbDZrUTVPS1lVRktRZmdJeFNGaGFUWFB4ZmN2aWVjKzY4MjEvT3Rx?=
+ =?utf-8?B?UE82Ylh2aStScDV6Rm5LSnJmMjN0Z2VGa3NCa01FaXJoOUs2S29RVVdoN2tF?=
+ =?utf-8?B?T0c1V0o4M3k4YjB1a1Znd3Uya3VJRWlJYmRuMnhteTErdnEvcXgzcmtLdVNs?=
+ =?utf-8?B?YnhJRmd1UU90UitodHFCMExWOTF0cXZpTDdjRDQvdTlUZDBid2JlSXVyQ0ND?=
+ =?utf-8?B?cDA5QmtpdlBJRzlDOVI0WnZJblZHMFNXNmhpdE51Qms3eFBLMWpLOXJHTEkz?=
+ =?utf-8?B?OHJaeE1LeVV0Z1UzT1NKWitWQndBNWp1UXRIOVlpMEtGTHFiUGFCUUlNVUdS?=
+ =?utf-8?B?MWJ3cE5SeHZ5N09NMXlUcitXOUtPdDA3Wm53SkU4Tm9JMDF2REYybmc2bW5B?=
+ =?utf-8?B?cGZQb0FrbSs1YVBTVjhhVDNFRVBoQ0VWWENBN0d1UnBsc296Z1BzU2FZa2pL?=
+ =?utf-8?B?SUVGYUhpMXN4UU81Nzc3dUN5RkQ1ZHduRUZOdlh5RUVjWFB6YW5odVVsQ1JM?=
+ =?utf-8?B?WHRNaW9iVCtpWHdqOFA2aGlxU2ZFelBGOHpFVFQrV2tFbndNZ1ZNZm53OWh6?=
+ =?utf-8?B?OUtWdVBSb1VpNElhb05pRThTWjVsWDRUZENBTFNXV3B1aDgzZjhvbFFRODJN?=
+ =?utf-8?B?S2IvWE9oU0dYR2lWcDN2WnpiOWkzRGFCUDZoVXJ6WmJqNjY0SWtKSWJkYVhH?=
+ =?utf-8?B?UHhiblEySmJYODFZdGlHemRjSmRCeXZoZjIxbVhsMG9LeFd3U0c4emxqUjh3?=
+ =?utf-8?B?Uy96UU14WGhPbjFpWE9XbUw0TWFBSHVGdkVCSUp3QXkwMVFUOCtxRHhkZk1Y?=
+ =?utf-8?B?U3V2N2IzamJnSTlmOElTdzJTUzZ2QlFWaDNGbzdIcmtKRExGazJYNzhod0Ru?=
+ =?utf-8?B?WGt3Nk9BMmJHM0F0L3hwMTZzOVY1SDFnWStoN1J6ZWgvN09wUk14RVBSYnox?=
+ =?utf-8?B?bit5TnBrSnZ0UVEvVVR5WVMzQUFFM0g3SUVzNE1aUHIzZjdrWUh0Q0diMFNU?=
+ =?utf-8?B?K0Z1cXJGcU9YblljT282eEFTZFBaYmI1SmdvN29icmJ3UGRycXNxVUFoWWM1?=
+ =?utf-8?B?ZWs4eFFrNlNhOXNxUHA1Z1Mwdjd4SEtYcXdickNqVzNyNFFHekRjRDV4WlQ3?=
+ =?utf-8?B?Q2Zxb2dlc09Ld2UrRnlEVUNkV3VTallMNDM5bVRiKzIwOUpjQ3orYTFlQWRT?=
+ =?utf-8?B?US9UYVlnMWhzVlRaZ0RFVHdWVGFqbFNVQi84d1lNOWg1K0xoczFkWmRRRVNj?=
+ =?utf-8?B?ek1rSHQ1SVN5VThWWENiekxOcUsvNTZDVXUyTFhTdkZodjlCU1YxSGo5LzJ1?=
+ =?utf-8?B?TlNRU1lLQ3RGbUNoL0xob2xwYXZzanRFblVWb29HdG1xdzZCOW9neG0vQVJL?=
+ =?utf-8?B?VDhOMkRDQitDSGdQMWRLTEtwWTRmMVVCMUtsM0NWRXRYZGwwVUF3TmgvNjBw?=
+ =?utf-8?B?eE9lZWlVL1hOVWJqcy83OTJPTGZhc3FpczRLUXl1OURIQVRMTkZYUkl4Z2lT?=
+ =?utf-8?B?ZFNYbDVIRVpBYmxHN1hzZ2tTdTE5dEtVd0ptaVVybE1uYTN0TEVUSkNxK1Fz?=
+ =?utf-8?Q?4e3QLZdnTXY2G?=
+X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-5f51e.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: e0cef4b7-c6c8-48ed-fee8-08de67ec5195
+X-MS-Exchange-CrossTenant-AuthSource: SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2026 15:03:01.9358
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR01MB4945
 
-On 2/9/26 15:49, Manivannan Sadhasivam wrote:
-> On Mon, Feb 09, 2026 at 03:00:02PM +0100, Neil Armstrong wrote:
->> On 2/9/26 12:30, Manivannan Sadhasivam wrote:
->>> On Fri, Feb 06, 2026 at 03:50:32PM +0100, Neil Armstrong wrote:
->>>> Enable the generic pwrctrl driver to control the power of the
->>>> PCIe UPD720201/UPD720202 USB 3.0 xHCI Host Controller.
->>>>
->>>> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
->>>> ---
->>>>    drivers/pci/pwrctrl/generic.c | 4 ++++
->>>>    1 file changed, 4 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.c
->>>> index 08e53243cdbd..4a57a631362f 100644
->>>> --- a/drivers/pci/pwrctrl/generic.c
->>>> +++ b/drivers/pci/pwrctrl/generic.c
->>>> @@ -73,6 +73,10 @@ static const struct of_device_id pci_pwrctrl_slot_of_match[] = {
->>>>    	{
->>>>    		.compatible = "pciclass,0604",
->>>>    	},
->>>> +	/* Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller */
->>>> +	{
->>>> +		.compatible = "pci1912,0014",
->>>
->>> No need to add the compatible to the driver. Just use the existing compatible as
->>> fallback in the binding/dts.
->>
->> ???
->>
->> Sorry but this is insane, in no world a standalone PCIe USB controller could be qualified as
->> compatible as a pciclass,0604 slot.
->>
-> 
-> AFAIU, 'compatibility' implies that the driver can safely fallback and would
-> still work. If we add dedicated compatibles for each endpoint devices, then we
-> will just keep adding forever. Powering up a PCIe slot and an endpoint device
-> are conceptually same.
+This patchset adds support for the Access Control Services (ACS) Enhanced
+Capability, introduced with PCIe Gen 5. The ACS Enhanced Capability
+provides additional access control features that improve device isolation
+— particularly important in virtualization scenarios where devices are
+passed through to different virtual machines (VMs). Strong isolation is
+critical to ensure security between devices assigned to different VMs and
+the host.
 
-We're not speaking about driver here, but about compatible string which describes
-a device, a PCI endpoint and a PCIe slot are 2 very different devices that are
-nowhere compatible.
+In Linux, device grouping assumes that devices in separate IOMMU groups
+are properly isolated. To uphold this assumption, the enhanced ACS
+controls are enabled by default on hardware that supports the PCI_ACS_ECAP
+capability. As with other basic ACS access controls, these new controls
+can be configured via the config_acs= boot parameter.
 
-> 
->> Technically it would work just fine, but "compatibility" has a meaning....
->>
-> 
-> I view compatibility interms of device operation, not device as a whole. But
-> sure, I could be wrong. If the DT maintainers say so, I won't insist.
+Support for checking the enhanced ACS controls on Root and Downstream
+Ports has been added to pci_acs_enabled(). On devices that support
+PCI_ACS_ECAP, these controls must be properly enabled. To maintain
+compatibility with legacy devices that lack PCI_ACS_ECAP support,
+pci_acs_enabled() simply skips the check.
 
-In the actual way it's defined _today_, the "slot" and "endpoint" power up schemes are
-compatible, but I hope the slot bindings will get much more features to describe the
-real world slots power properties. And no, endpoints will definitely not have the same
-features as slots, using it as a fallback today is an error.
+v3->v4 changes:
+- In pci_acs_ecap_enabled(): Check the pcie type for
+  PCI_EXP_TYPE_DOWNSTREAM explicitly.
+  v3 Link: https://lore.kernel.org/all/SI2PR01MB439325B4E44D5A39F34A4015DC9AA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com/
 
-On the other side, adding a "simple-pci-endpoint" compatible that enables any supply
-and clock would be a good solution, if the DT maintainers agrees of course.
+v2->v3 changes:
+- Drop the warning when a device has no support for the enhanced
+  capability.
+  v2 Link: https://lore.kernel.org/all/SI2PR01MB4393B836EA4FEDD1823483BADC94A@SI2PR01MB4393.apcprd01.prod.exchangelabs.com/
 
-Neil
+v1->v2 changes:
+- Enabled all enhanced ACS controls by default, rather than just Unclaimed
+  Request Redirect (which addressed the primary issue we encountered).
+- Added checks for enhanced ACS controls on Root and Downstream Ports in
+  pci_acs_enabled() to ensure proper enablement when grouping devices or
+  enabling features such as IOMMU PASID.
+  v1 Link: https://lore.kernel.org/all/SI2PR01MB43931A911357962A5E986FFEDC8CA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com/
 
-> 
-> - Mani
-> 
+Thanks to Jason Gunthorpe for reviewing the patchset.
+
+Wei Wang (2):
+  PCI: Enable the enhanced ACS controls introduced by PCI_ACS_ECAP
+  PCI: Add the enhanced ACS controls check to pci_acs_flags_enabled()
+
+ .../admin-guide/kernel-parameters.txt         | 23 ++++--
+ drivers/pci/pci.c                             | 78 ++++++++++++++++++-
+ include/uapi/linux/pci_regs.h                 |  7 ++
+ 3 files changed, 100 insertions(+), 8 deletions(-)
+
+
+base-commit: 9845cf73f7db6094c0d8419d6adb848028f4a921
+-- 
+2.51.0
 
