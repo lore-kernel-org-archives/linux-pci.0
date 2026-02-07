@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C8333DEF5
-	for <linux-pci@vger.kernel.org>; Sat,  7 Feb 2026 10:40:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94C3233E345
+	for <linux-pci@vger.kernel.org>; Sat,  7 Feb 2026 10:53:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770460842; cv=none; b=YlEQD+AAwjbxDC/hABEe/8WdKCLC0X8ZszfhCLuFh3FGWtPWeqoQ9yiVG9dxbgM1oKBj3nNeXcLHspZnCTrx9U1Tl1yp8HU8K6PcGqGrJT/pDEfmCACBcHFq8qFa+zyMBi/Uvf0LsxiCw1+x42FSu0KRUarpySsDiGRhm/s6YkU=
+	t=1770461622; cv=none; b=EJ6cqq8r/aeV/UXdj1vP2zTtK6GGAdvDkZ3L5YoxzcQnj0/aIKIlrsEK/KQDCx6b0gHRoqXWx1NwEk+9cp3pZvWogQb09WpBHkLSKTHztHlfJxI73M0VNWIPvy1xNJAB2/ufFWGp80f9Yi2cLxAUcbdVrfAqU+fxDJJfTy1S5nU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770460842; c=relaxed/simple;
-	bh=jtlb6g+YjLhv+CztXc3FrbHWDtmM3ncLo/cUAPsVtAI=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=rubN7ex97aNsHj9hNBqSyQbsVyLLWO6hB6VgvPq3mlW29tY1NtOkBjfAp4E4iWoxRN8o8X8Zlw9i7vvvxlmwxrvEvN1fqgaKCZyFQ/rKqpNLj2x6NegYr1InJ0gwXu821E5TEdcLw+QbOj8kKtJfD/RSbcmHd5e+e80/uj7QFm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KduBDt38; arc=none smtp.client-ip=192.198.163.11
+	s=arc-20240116; t=1770461622; c=relaxed/simple;
+	bh=v5xs4446HxFv/RbSlzps4vs3vL0IxMGLjLNWN04RVgc=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=lyY3m4q0I6aSpKpb2PMjZr8vV+VcOZkBJAHp0Z2H2WjM5leajlQ0g/84uGscJEKw6wIy5mfFSuEagBJLdzQyLyyWftwAFx1/64EhrqTETM9LzdEZ5zX1XpehcHMJ8o5TBOdncfDCKqGeZezTotq8GLaGQLbHmSiHPy5mRMrfVfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DO5h1CbC; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KduBDt38"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DO5h1CbC"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770460842; x=1801996842;
+  t=1770461622; x=1801997622;
   h=date:from:to:cc:subject:message-id;
-  bh=jtlb6g+YjLhv+CztXc3FrbHWDtmM3ncLo/cUAPsVtAI=;
-  b=KduBDt38okbfhJpwzAbN2lyt1cB2Vx09tr60ezaLlRZ6RKfZ2cjnIUZ0
-   LIYrLRUc2hLjTW3abT6AtBFbNevpClKAm0E7WscngnFmitqj6gd+7y6B8
-   5hO45JKZzTypiSWFbNBHxvf4jcFU9Wvs5JZ1gZmKMU9XJLMagQX3MYGlR
-   WnsNLbfvJOdRN945PXzZutOj0EpE4DycUbyW7lQE5hc8VbhWjeERLTeto
-   x+pAv3szGBBRdfjwc+gFN8IZxdOvn4PYjVXkjinNPmVnyveDX6RlterMy
-   LKhvMTGhhOsfZl+AcciwqqUVgwf3Hw9Kd6zUA7uq6V9K0AIw2vgvadm+j
-   w==;
-X-CSE-ConnectionGUID: TZZ6Q4Q2SrO7Ys9Gv6pgAA==
-X-CSE-MsgGUID: AH8Oob4HSD6IVqD4zrvNjg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11693"; a="82288347"
+  bh=v5xs4446HxFv/RbSlzps4vs3vL0IxMGLjLNWN04RVgc=;
+  b=DO5h1CbCQkSbbzugfnz4q/auYAFvbd1W5AyTuqZ/v1HwniroPIhvIJbK
+   8Toq/CvTrWLcZm5TyUZKcK+na5UvVlIGB/GUSBIe8SoegP4o1TXmllWR1
+   noGXc6hfLcuVCmFHxgSoSFh5TjzUv6GdVZhn1EuNXBpCzPSpRvFSWhNWC
+   M3y5mpHgqQBNumuaQMma4w+9GDE7bjLyhVbaMnVKIPH5qF06i+Ow3+m5g
+   vMPqPX2BpS0zncUdc59amqFjhFfi+5AubVFI6fwPUoSb9iQyNx8NZlaaT
+   6gjnKLvn2azwys8Z9YvvyyfKMHtgZc43SwAXk5spAyaUtCtFHc8A9zoil
+   Q==;
+X-CSE-ConnectionGUID: jclcJIrgSK6+KLFT/KgrFw==
+X-CSE-MsgGUID: 198e1dIJTQ+c5I8/DlzSlA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11693"; a="75502789"
 X-IronPort-AV: E=Sophos;i="6.21,278,1763452800"; 
-   d="scan'208";a="82288347"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2026 02:40:41 -0800
-X-CSE-ConnectionGUID: g1dLxpqaQiGPT31YUXvKlw==
-X-CSE-MsgGUID: GZqSTPqoTV2C7MZalp0RMA==
+   d="scan'208";a="75502789"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2026 02:53:42 -0800
+X-CSE-ConnectionGUID: wGiqMOJdSUOcm8OZYd70mg==
+X-CSE-MsgGUID: u+BFZtsvTHG5oq5m57BxiA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,278,1763452800"; 
-   d="scan'208";a="211148427"
+   d="scan'208";a="234057171"
 Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 07 Feb 2026 02:40:41 -0800
+  by fmviesa002.fm.intel.com with ESMTP; 07 Feb 2026 02:53:40 -0800
 Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vofjy-00000000laM-01Ci;
-	Sat, 07 Feb 2026 10:40:38 +0000
-Date: Sat, 07 Feb 2026 18:39:50 +0800
+	id 1vofwY-00000000laq-0zrA;
+	Sat, 07 Feb 2026 10:53:38 +0000
+Date: Sat, 07 Feb 2026 18:52:54 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:resource] BUILD SUCCESS
- 2ecc1bf14e2fdaff78bd1b8e7ed3dba336a3fad5
-Message-ID: <202602071842.tUIHSpIr-lkp@intel.com>
+Subject: [pci:enumeration] BUILD SUCCESS
+ 699722468a0fca8b1b9ce1ffe2532171ddcaff95
+Message-ID: <202602071846.8OO23UG5-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git resource
-branch HEAD: 2ecc1bf14e2fdaff78bd1b8e7ed3dba336a3fad5  PCI: Don't claim disabled bridge windows
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git enumeration
+branch HEAD: 699722468a0fca8b1b9ce1ffe2532171ddcaff95  PCI/PME: Replace RMW of Root Status register with direct write
 
-elapsed time: 728m
+elapsed time: 722m
 
-configs tested: 210
+configs tested: 214
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -88,8 +88,8 @@ arm                               allnoconfig    gcc-15.2.0
 arm                              allyesconfig    clang-16
 arm                     am200epdkit_defconfig    gcc-15.2.0
 arm                        clps711x_defconfig    clang-22
+arm                     davinci_all_defconfig    gcc-15.2.0
 arm                                 defconfig    gcc-15.2.0
-arm                          exynos_defconfig    gcc-15.2.0
 arm                      footbridge_defconfig    gcc-15.2.0
 arm                       imx_v6_v7_defconfig    gcc-15.2.0
 arm                         mv78xx0_defconfig    gcc-15.2.0
@@ -151,7 +151,6 @@ m68k                             allmodconfig    gcc-15.2.0
 m68k                              allnoconfig    gcc-15.2.0
 m68k                             allyesconfig    clang-16
 m68k                                defconfig    clang-19
-m68k                        m5407c3_defconfig    gcc-15.2.0
 microblaze                        allnoconfig    gcc-15.2.0
 microblaze                       allyesconfig    gcc-15.2.0
 microblaze                          defconfig    clang-19
@@ -159,7 +158,7 @@ mips                             allmodconfig    gcc-15.2.0
 mips                              allnoconfig    gcc-15.2.0
 mips                             allyesconfig    gcc-15.2.0
 mips                          ath25_defconfig    clang-22
-mips                      maltasmvp_defconfig    gcc-15.2.0
+mips                           ip32_defconfig    gcc-15.2.0
 mips                          rb532_defconfig    clang-22
 nios2                            alldefconfig    gcc-15.2.0
 nios2                            allmodconfig    clang-22
@@ -172,10 +171,12 @@ openrisc                         allmodconfig    clang-22
 openrisc                          allnoconfig    clang-22
 openrisc                          allnoconfig    gcc-15.2.0
 openrisc                            defconfig    gcc-15.2.0
+openrisc                  or1klitex_defconfig    gcc-15.2.0
 parisc                           allmodconfig    gcc-15.2.0
 parisc                            allnoconfig    clang-22
 parisc                            allnoconfig    gcc-15.2.0
 parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
 parisc                              defconfig    gcc-15.2.0
 parisc                randconfig-001-20260207    gcc-14.3.0
 parisc                randconfig-002-20260207    gcc-14.3.0
@@ -184,12 +185,12 @@ powerpc                          allmodconfig    gcc-15.2.0
 powerpc                           allnoconfig    clang-22
 powerpc                           allnoconfig    gcc-15.2.0
 powerpc                      chrp32_defconfig    clang-22
-powerpc                     ep8248e_defconfig    gcc-15.2.0
 powerpc                        icon_defconfig    gcc-15.2.0
 powerpc                     mpc512x_defconfig    gcc-15.2.0
 powerpc                     mpc5200_defconfig    gcc-15.2.0
 powerpc                 mpc832x_rdb_defconfig    gcc-15.2.0
 powerpc                 mpc836x_rdk_defconfig    clang-22
+powerpc                     powernv_defconfig    gcc-15.2.0
 powerpc                      ppc44x_defconfig    clang-22
 powerpc               randconfig-001-20260207    gcc-14.3.0
 powerpc               randconfig-002-20260207    gcc-14.3.0
@@ -201,9 +202,9 @@ riscv                             allnoconfig    clang-22
 riscv                             allnoconfig    gcc-15.2.0
 riscv                            allyesconfig    clang-16
 riscv                               defconfig    gcc-15.2.0
-riscv                    nommu_virt_defconfig    gcc-15.2.0
 riscv                 randconfig-001-20260207    clang-18
 riscv                 randconfig-002-20260207    clang-18
+s390                             allmodconfig    clang-18
 s390                             allmodconfig    clang-19
 s390                              allnoconfig    clang-22
 s390                             allyesconfig    gcc-15.2.0
@@ -214,12 +215,15 @@ sh                               allmodconfig    gcc-15.2.0
 sh                                allnoconfig    clang-22
 sh                                allnoconfig    gcc-15.2.0
 sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
 sh                                  defconfig    gcc-14
 sh                        edosk7705_defconfig    gcc-15.2.0
 sh                          landisk_defconfig    gcc-15.2.0
 sh                    randconfig-001-20260207    clang-18
 sh                    randconfig-002-20260207    clang-18
+sh                           se7343_defconfig    gcc-15.2.0
 sh                           se7712_defconfig    gcc-15.2.0
+sh                            shmin_defconfig    gcc-15.2.0
 sparc                             allnoconfig    clang-22
 sparc                             allnoconfig    gcc-15.2.0
 sparc                               defconfig    gcc-15.2.0
