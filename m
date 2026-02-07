@@ -1,58 +1,48 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24E1317D2
-	for <linux-pci@vger.kernel.org>; Sat,  7 Feb 2026 01:42:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08B995FDA7;
+	Sat,  7 Feb 2026 05:55:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770428580; cv=none; b=QOk2o4h4F7UXLs0fn38nAuqOnzV2PCrQVy1xYyfsCNJBaxeHyS0zX3ur8eNaLjdHFVuvrk6Xrzzh6Q+/isauZDpd9P1HdTyoL5PFK9WSQynFIz4i0L+Jdsm851wbZcAkFn218fA8y/ltBh5w4EAo6pIIZ/lAwAGrqgaLlSLvXMQ=
+	t=1770443716; cv=none; b=E40mX4TmCFKo504QTHtaNwjSA/3LiR9wqP604TlwdMcquKEBV3wDr/6v+k2HBKX26XOVjYu9zduc2+a8RXwMpM7QiP20BaIAEaQHbFDby4ulzFJUNF0qKVTjl3z1GsqoijKP96eBH7lydLGqfbKMbUtTDg7nfqJGcCHnKvOLg9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770428580; c=relaxed/simple;
-	bh=nM4TD51nEBf9Es1Jv5dwYF+TQVv1NWVTHW6DIlxuT+U=;
+	s=arc-20240116; t=1770443716; c=relaxed/simple;
+	bh=8PukKFBx0ZPMJSJYocWLm+117LmZbUdDqx7PaS3ZQhE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uBrZJolhePsKfDDfWaN9vOxHhtAr8xUVmP5UJLbYdC1Wdw+dUGVLpYm+3h/NTNnSuQmvGcxCtdOLrwqPbYrmHFZ2uoH646jN9VIpAVZ77BKMA6wNWKb4hqRfLi0Z5K5vlN458gtN2xAYvI6y1uWDpUgC3dUY15Xok0YxQjwUrf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=templeofstupid.com; spf=pass smtp.mailfrom=templeofstupid.com; dkim=pass (2048-bit key) header.d=templeofstupid.com header.i=@templeofstupid.com header.b=ZmED/Hm3; arc=none smtp.client-ip=91.218.175.185
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=templeofstupid.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=templeofstupid.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=XvkfSvE7hUH+W0+bxwogy1fWhusvVT5bD/PfgqV2BMdI+3J4mOZvyIIO0LqquHllaKK09/CH+w4VP819WYyLgurr6Gy/kDRT87kzKhBKaFpwfl2A5od1MWftm9BmwD7gU/94iDfhkxthhgYmJYSRRRfqSni2BkaX1DqqgIt2iUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y4qN5NdE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=templeofstupid.com header.i=@templeofstupid.com header.b="ZmED/Hm3"
-Date: Fri, 6 Feb 2026 17:42:52 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=templeofstupid.com;
-	s=key1; t=1770428577;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ou9hbR74SGxtKKIfWKPL/WEcI3zRLMFpkLgLFcBQ8WM=;
-	b=ZmED/Hm38wTLIm/E8KHam9U0IwOQNVFtLChId7yVGj8WkDm2ltfX3VnSLUMw89j1Z3P2mr
-	LMBjoGKBzHJayj0w0wakuevLMgHz94hA+nhld9RhFKuxIdWNIGrqaaAxtVdcRfrdHIn25s
-	JKD2Z191ui71GJQdCx66Bu3tMISz95uhwCRUwLBzFPuZaBT6Ma4g7mfX33pTFWWqbfgf6o
-	xAIQ+6D+x4s1uYH6hXtL8V7sRz8nEKGDHrUxQ6DE9kLeWnCmgFf1ciaUVE+SARiCYavYQr
-	MKNgxi425jS399C0Gd1iS7qCQ9uDBXDubIw8mV2sBZePSkoZYSia2bQTc6rTEQ==
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Krister Johansen <kjlx@templeofstupid.com>
-To: Matthew Ruffell <matthew.ruffell@canonical.com>,
-	Michael Kelley <mhklinux@outlook.com>
-Cc: "DECUI@microsoft.com" <DECUI@microsoft.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>,
-	"jakeo@microsoft.com" <jakeo@microsoft.com>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"kys@microsoft.com" <kys@microsoft.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"longli@microsoft.com" <longli@microsoft.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"wei.liu@kernel.org" <wei.liu@kernel.org>
-Subject: Re: [PATCH] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Message-ID: <aYaYnMYik3SC45bb@templeofstupid.com>
-References: <SN6PR02MB4157545DAFDCCE0028439DB2D497A@SN6PR02MB4157.namprd02.prod.outlook.com>
- <20260123053909.95584-1-matthew.ruffell@canonical.com>
- <SN6PR02MB41573CD2EA6CD82A0C238F66D494A@SN6PR02MB4157.namprd02.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y4qN5NdE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F28E2C116D0;
+	Sat,  7 Feb 2026 05:55:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770443715;
+	bh=8PukKFBx0ZPMJSJYocWLm+117LmZbUdDqx7PaS3ZQhE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Y4qN5NdEJvGU5Obp06Gold/eJ5wAAyowy4yEejppiJvN44Ojl5C36+4e5JdV23tpw
+	 Ljm0YwaAhPA4H9UAksqiKW7acrebCd2QZRMOSxnRmzfklW/XTpv1C3KjHzTm9GDmc4
+	 NnC9xTffRs9rsUGrzKwnre9WCgF+dC/pi0TBo6bT/YuCPi0XPNJuGgbrkP9tq7XCtE
+	 jrMkwx98xIIK1KDETiD3HcOMTeLisGhnTp61JZJuz7VtskM12M0u0ZkQ0TdRQ9n2Av
+	 lcQFJfjv6EZQuAZnMEoNkXehFCQH8Y5kReIIXpAkBhFLe15+mXmQF96PzhleXzkI7J
+	 1qV2zgf5rHGBg==
+Date: Fri, 6 Feb 2026 22:55:13 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Breno Leitao <leitao@debian.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org, dcostantino@meta.com, rneu@meta.com,
+	kernel-team@meta.com
+Subject: Re: [PATCH] PCI/AER: Add option to panic on unrecoverable errors
+Message-ID: <aYbTwfShdDE4fouM@kbusch-mbp>
+References: <20260206-pci-v1-1-85160f02d956@debian.org>
+ <20260206185232.GA70936@bhelgaas>
+ <aYY_hMZyVp7GZvX2@kbusch-mbp>
+ <aYZU09qCN3u-_byj@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,79 +51,68 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <SN6PR02MB41573CD2EA6CD82A0C238F66D494A@SN6PR02MB4157.namprd02.prod.outlook.com>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <aYZU09qCN3u-_byj@wunner.de>
 
-Hi Matthew and Michael,
-
-On Fri, Jan 23, 2026 at 06:39:24AM +0000, Michael Kelley wrote:
-> From: Matthew Ruffell <matthew.ruffell@canonical.com> Sent: Thursday, January 22, 2026 9:39 PM
-> > > > There's a parameter to the kexec() command that governs whether it uses the
-> > > > kexec_file_load() system call or the kexec_load() system call.
-> > > > I wonder if that parameter makes a difference in the problem described for this
-> > > > patch.
+On Fri, Feb 06, 2026 at 09:53:39PM +0100, Lukas Wunner wrote:
+> On Fri, Feb 06, 2026 at 12:22:44PM -0700, Keith Busch wrote:
+> > On Fri, Feb 06, 2026 at 12:52:32PM -0600, Bjorn Helgaas wrote:
+> > > Are there any other similar flags you already use that we could
+> > > piggy-back on?  E.g., if we raised the level to KERN_WARNING, maybe
+> > > the existing "panic_on_warn" would be enough?
 > > 
-> > Yes, it does indeed make a difference. I have been debugging this the past few
-> > days, and my colleague Melissa noticed that the problem reproduces when secure
-> > boot is disabled, but it does not reproduce when secure boot is enabled.
-> > Additionally, it reproduces on jammy, but not noble. It turns out that
-> > kexec-tools on jammy defaults to kexec_load() when secure boot is disabled,
-> > and when enabled, it instead uses kexec_file_load(). On noble, it defaults to
-> > first trying kexec_file_load() before falling back to kexec_load(), so the
-> > issue does not reproduce.
+> > There are many KERN_WARNING messages that don't rise to the level of
+> > warranting a 'panic' that don't want to enable such an option in
+> > production. It looks like the panic_on_warn was introduced for developer
+> > debugging.
 > 
-> This is good info, and definitely a clue. So to be clear, the problem repros
-> only when kexec_load() is used. With kexec_file_load(), it does not repro. Is that
-> right? I saw a similar distinction when working on commit 304386373007,
-> though in the opposite direction!
+> panic_on_warn springs into action on WARN() splats, not arbitrary
+> messages with KERN_WARNING severity.  Also, sysctl kernel.warn_limit
+> may be used to grant a certain number of panic-free WARNs.
 
-Just to muddy the waters here, I have a team on the Noble 6.8 kernel
-train that's running into this issue on Standard_D#pds_v6 with secure
-boot disabled. I've validated via strace(8) that kexec(8) is calling
-kexec_file_load(2), but in this case the problem Dexuan describes in the
-cover letter occurs but affects NIC attachment instead of the NVMe
-storage device. (e.g. pci_hyperv attach of the NIC reports the
-pass-through error instead of successfully attaching).
+Okay, but the warn panic param still isn't an option for production.
 
+> FWIW, the "pcieportdrv.aer_unrecoverable_fatal" parameter introduced
+> by this patch feels somewhat oddly named.  Something like
+> "pci.panic_on_fatal" might be clearer and more succinct.
 
-> > > > >  	/*
-> > > > >  	 * Set up a region of MMIO space to use for accessing configuration
-> > > > > -	 * space.
-> > > > > +	 * space. Use the high MMIO range to not conflict with the hyperv_drm
-> > > > > +	 * driver (which normally gets MMIO from the low MMIO range) in the
-> > > > > +	 * kdump kernel of a Gen2 VM, which fails to reserve the framebuffer
-> > > > > +	 * MMIO range in vmbus_reserve_fb() due to screen_info.lfb_base being
-> > > > > +	 * zero in the kdump kernel.
-> > > > >  	 */
-> > > > > -	ret = vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, 0, -1,
-> > > > > +	ret = vmbus_allocate_mmio(&hbus->mem_config, hbus->hdev, SZ_4G, -1,
-> > > > >  				  PCI_CONFIG_MMIO_LENGTH, 0x1000, false);
-> > > > >  	if (ret)
-> > > > >  		return ret;
-> > > > > --
-> > 
-> > Thank you for the patch Dexuan.
-> > 
-> > This patch fixes the problem on Ubuntu 5.15, and 6.8 based kernels
-> > booting V6 instance types on Azure with Gen 2 images.
+Naming is hard; thanks for the suggestion.
+
+> > I agree the curnent INFO level is too low for the generic unrecovered
+> > condition, though.
 > 
-> Are you seeing the problem on x86/64 or arm64 instances in Azure?
-> "V6 instance types" could be either, I think, but I'm guessing you
-> are on x86/64.
-> 
-> And just to confirm: are you seeing the problem with the
-> Hyper-V DRM driver, or the Hyper-V FB driver? This patch mentions
-> the DRM driver, so I assume that's the problematic config.
+> At least for unbound devices, I think 918b4053184c went way too far.
+> I think an unbound device should generally be considered recoverable
+> through a reset.
 
-It's been arm64 and not x86 for the case I've seen.  They're currently
-running with the hyperv_drm driver, but they've also tried swapping to
-the fb driver without any change in results.
+Yes, I agree, especially considering the generic probe saves a
+checkpoint of the state that we can restore to that is consistent with
+the kernel's view. There's no clear reason to fail recovery when there's
+no bound driver, so this changing that behavior s a good idea.
 
-> > Tested-by: Matthew Ruffell <matthew.ruffell@canonical.com>
+> As for bound devices whose drivers lack pci_error_handlers, it has been
+> painful in practice that they're considered unrecoverable wholesale.
 
-All of the above said, I also tested Dexuan's fix on these instances and
-found that with the patch applied kdump did work again.
+Yes, it gets tricky when there is a bound driver; there's no telling
+whether or not it may initiate a broken transaction with cascading
+consequences for the rest of the system if anything in the chain is not
+cooperating with the error recovery orchestration. I don't know if there
+is a best default action, so allowing it to be user defined seems okay.
 
-Tested-by: Krister Johansen <johansen@templeofstupid.com>
+> E.g. GPUs often expose an audio device as well as telemetry devices,
+> all arranged below an integrated PCIe switch.  All of these devices
+> need drivers with pci_error_handlers in order for the GPU to be
+> recoverable.  In some cases, dummy callbacks were added to render
+> the whole thing recoverable.
 
--K
+This experience sounds familiar, and it really does appear that a hard
+reboot is the best outcome in many cases because orchestrating all the
+components to recover is not going to happen. Hence the reboot param.
+
+> So I wouldn't consider 918b4053184c to have been a universally successful
+> approach and I fear that this patch goes even further.
+
+If anyone goes through the effort of fixing that, will it be considered?
+You told me in Vienna LPC '24 that you'd help resolve the pci hotplug
+deadlocks that have been plaguing pci for the last 10 years, but not a
+single comment has happened despite multiple complete and validated
+solutions offered.
