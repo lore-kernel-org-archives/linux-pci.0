@@ -1,163 +1,289 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011033.outbound.protection.outlook.com [40.107.130.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99EA29B8E8;
-	Mon,  9 Feb 2026 08:05:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770624338; cv=none; b=NAo8XTyw1SZckCvaU9YOQJmh3lIHZza2MKJjDdOSr4262FdocnCAPAqotmgRzQhLAe2O32WIE61TCdWLrqo5obFuidV10jwYSQruFn1bzfJd6MjWFyJZwBguY4196n8hbxMrtaxLJaymRBjK83+BUu8xofPgqQspIiLWfjuhhOQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770624338; c=relaxed/simple;
-	bh=gJEZM15/SVq/PTYSQwo1djPInjZCp/MV4+oWy2cNU2E=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=mYTV3PYzGon/V47hTjv/F2kzUnmIlFTdJhxTbeGWCC3ul5dg6d0hHOvnJtGqRjl5KH/VxIojCbNhBYrdbx7iQF5pd8Phpxg8hw9iWA7mlxxhDx1U18IqHOrdMhc3pRTUWtCyGQi3qkyZtgICfdxFzQp2k1NXpUCw/hfhg9YmsIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=NYuODBvX; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A89A308F34;
+	Mon,  9 Feb 2026 08:23:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.33
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770625425; cv=fail; b=DCxvjPnB2hX9mEYBP1rCJTOpFM6IVptH1HcYWRqLar3lpTq3uqjY8Z+EwfNBrzXkUZBvI4jPQf5C0LYcL3bTUR8bX1PrnOJT3jonQth3uo5W5aOzahMNBdQpIQsHAvyPkiwA6DbZrsBORLWrO0TOc9ptH7f/xgXQmnrlgpWneqw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770625425; c=relaxed/simple;
+	bh=XVz/aqsbIiHMrjcOpI6DdSc7TgW2p7xevJp+3Pzo1dA=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=TvZMLVmzqceoEwS5BReDybnqYQ9G4l3Hfl6BtBpjWPdCKjSg+YsDQmFaPbphUbcai9YASWqDNaO2UhEZCE7gAOOCPC9qWEZrz89800SZIYwxmP/Z6iOTRR3UgvV3sqGVzSjnfdBEFWwmihmcuot01YWq7chQ5zoLkuSPYMxLgUk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=RT2qZmQj; arc=fail smtp.client-ip=40.107.130.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="NYuODBvX"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4f8cgr0GQvz9tsJ;
-	Mon,  9 Feb 2026 09:05:28 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1770624328; h=from:from:reply-to:reply-to:subject:subject:date:date:
-	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-	 content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bbHNBkkwY0k+eWzEpAzMjoiCidzv7Wk4lVR1JYv1rwQ=;
-	b=NYuODBvXHLd6tKopXrDK/WU+YwzAmFE9LRNfaysP424b4UUDZy6rKMHgnFTrKmVMvQU0GS
-	axy31E5wDR+HqroTus1ME/gmk6hx/DrpAzWD3J0I5JGRReX3EQx9DAsVwRPxvpFtuZhujt
-	WYEyzaXr6s3ftk9yMX1jyoqb7DhPk+4ltJSQUnHrzlp05HlBa6whs8LCS2zapMXbUDsaIh
-	0DPTYgKJtyLQSXyz9nZlBMMpkg1aMpBxJZpVqapebwfj9XrotwQ6zbOY4PK/4QN0wI3qJF
-	RnYGf3nXXSgX/FXujLbk8u1LtEfL30rLgPXF6dWIeghsUu3Cu3w6No8d4ewmBg==
-Message-ID: <5fb5bc0ecbd4f51791b6c330088879588a1518ac.camel@mailbox.org>
-Subject: Re: [PATCH] Documentation: PCI: Clarify pci_free_irq_vectors()
- usage for managed devices
-From: Philipp Stanner <phasta@mailbox.org>
-Reply-To: phasta@kernel.org
-To: Bjorn Helgaas <helgaas@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-doc@vger.kernel.org, Philipp Stanner <phasta@kernel.org>
-Date: Mon, 09 Feb 2026 09:05:24 +0100
-In-Reply-To: <20260206223304.GA99007@bhelgaas>
-References: <20260206223304.GA99007@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="RT2qZmQj"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=U24rh/2e7X8/PbUxA6aD+gNkX81D8b6FjRo62oK6QmLBHs43z433NwzGo/T9K63Y53BNQ5tWw8JjIP/BxP6xfJc+x1Uz2tM+jQ770hb1A3Mn0xTx1vF6cmF43nMxr0q5Tbk52LY3ESmpFTsHiNa9dvNK3P/pe+fPf/cydol0vwVi3DtSBJKXmKCstYx/9eOUgdlx2f5/D748x1G1yPoChW7kCI5OmKbQrSyE6mOo6X7fhEk9ynUzqWyA3hS9GvqcXfMlpXeFze/Qu1e6Z0eeJzHlGuETTgkJn+rypVYP4pdiS+oygPf6Z1L9cyjpFK8MRtkOzsZYpMNuF1shA7J5HA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nq/JqyhfXByHfXL8GoO6LZWvY0sLyzjjq/Mzx7/HhY4=;
+ b=DeyxmhWbenCpLGPZTAxO0LMJdDU1ZOkO9M6kp5ZCmG34VK1Ev839H4inSmqLgkhfAlpxjzafaHi3WUG3yY+L5wlxn1i7RJ6YfQjFfTddEkCbWSm8qe24ASFDDezq1ctLWfZ+emKoEt1aqbOwp7VthbgDtqoXnkL9Q/MwTzY4kw0fPZj5+9syahCrV6DYf8ldaW0pN95l7JW6J8/F/cHENSXZV8+0hFRDPf/ZN4yH32tXN8NgyqdXrBAz+6yN42Mx2VuneXd1ybKxH1p3wxYggmihSL0PzS96ZZEC0u4O+a0YvgkPkAUd74HisAOuWBGbT5GlSCaoLLHOKeXhjFLQcw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nq/JqyhfXByHfXL8GoO6LZWvY0sLyzjjq/Mzx7/HhY4=;
+ b=RT2qZmQjnBZydW1RmKmYprNVzEmJpIggolE0ZGM7v5thXGZmAu6MHRl29y48+wlOjplNq8Vv9wkCNkSL6N0xL9xOtbayqG3pyU0HjLBvir3XhPx74Xpc6cKkFcvnJM01eTlvA03DBivyjUOkRkmWn9wvHlL0B0R8X9UCk5lOxyFp0O5ph705G59Ih/5ZUoQ3o0/r7CIoUtyCqKVwauZ5Jkt98DuvaectX9suSbaSnQMeniKyQ0rqgggU17H8Hms5KJ96M/dqk/Q20Pax4wFFRPTjot5R16aDSrK8tRha8n3WBENl8cUCNXx6dKolFm9cspQht/ZA5TPOywLQAyq7Aw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13) by PA4PR04MB9661.eurprd04.prod.outlook.com
+ (2603:10a6:102:273::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.18; Mon, 9 Feb
+ 2026 08:23:41 +0000
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994%5]) with mapi id 15.20.9587.010; Mon, 9 Feb 2026
+ 08:23:40 +0000
+From: Sherry Sun <sherry.sun@nxp.com>
+To: hongxing.zhu@nxp.com,
+	l.stach@pengutronix.de,
+	Frank.Li@nxp.com,
+	bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	s.hauer@pengutronix.de,
+	festevam@gmail.com,
+	will@kernel.org
+Cc: imx@lists.linux.dev,
+	kernel@pengutronix.de,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH V4 00/11] pci-imx6: Add support for parsing the reset property in new Root Port binding
+Date: Mon,  9 Feb 2026 16:24:43 +0800
+Message-Id: <20260209082454.2097628-1-sherry.sun@nxp.com>
+X-Mailer: git-send-email 2.37.1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SI2PR01CA0039.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::16) To VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MBO-RS-META: 4hi17frz46dny1i56wud37ehnk78sqn7
-X-MBO-RS-ID: 3ea8944bdcda95a31a9
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: VI0PR04MB12114:EE_|PA4PR04MB9661:EE_
+X-MS-Office365-Filtering-Correlation-Id: 24e30a8a-8470-40a4-058a-08de67b487f9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|52116014|1800799024|7416014|376014|366016|921020|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?SEdDU3NVNXlXd1NmQWxUZ1JldGlUaXJBT1Q4Y01lVHBnVURveVZaQmdIWEsr?=
+ =?utf-8?B?K291c0lPMVRDWUhCbnljZzZHVXFaZHVQNHZzdVBoK2NydUd6bnpRUGhWcmJq?=
+ =?utf-8?B?WElpQm9EZkJ3QThCUHpmRWJoWnN4OENPbGNRNjZhemRTbTJuK092bGVrQlE4?=
+ =?utf-8?B?TDdXeHgreDRqK2lYdFJnY3FCSnowdnpESkNlaDJvME1rNWI2SDcvWlpzcmFs?=
+ =?utf-8?B?aGRHVjRlbGgwZzY3YXRTdzFoZjVvT2VvbFdrbTU5R3o5NUwxOEtHNVlBaGJ3?=
+ =?utf-8?B?UEtqMnNTc1NDRmF3V3hBUDhYdTFNYjdZTTU1ajd2ZUhseEdhdWVpbG5GSVQ2?=
+ =?utf-8?B?aDhGNGVYbldTQUhka2JwM0doc3JtQmZrYXdNdWxUU2JWUCs0cGN0Z1lESk52?=
+ =?utf-8?B?eFNNZlJodnJONmJ6TlBudElrNkR3dnkrd3V6TUdlSWZDc2xUb29HZkVGTWhl?=
+ =?utf-8?B?OHFEZWJZbVh6bG1RRUZ1SE02NUtNZzR6S3BnZFUybjdrU0ttdU9XclhuWkhJ?=
+ =?utf-8?B?ZVl5YXdFcGw5M3JFbDRkd0l6dG93SFJKbStIeE0xc3hZNlZJNjJaOFowaFlF?=
+ =?utf-8?B?aURWTE55bVJ1b3B3UnZ4OGxLZXV4QWxWYjFIc3JlTlA2aEhVOUs4dHBrNFJp?=
+ =?utf-8?B?N0NRVFc4VndkU2lZUEZnRUJiMC9XOXdxU2lYRFFqM2FNRXgyeDN2NGJ0Sm56?=
+ =?utf-8?B?QWkrbGNrcHFtWnZZUjg0V0h0YUNuSmFKYzZ5dTZhS0VadFFYUDhPbmgrWWRY?=
+ =?utf-8?B?MXZ3Um83NFNTM05nUXk0RDJsS0FCT2t4MTV3NytTVDJad3BDQUs3N3VxVGlZ?=
+ =?utf-8?B?VisyVkRtQ1IyWFpEamhydjkwWkx0OGRjSHhSRnhqVk1kazVlTzBpYS9SMnRT?=
+ =?utf-8?B?SENEd1BBZG5BOXp1blcvd2RQYjNaWXZKZzNpYXJ5dysrT242a1E2MWozZVBF?=
+ =?utf-8?B?azk0YlU5VXN4a3R1Nnk4bzZiUDJmdnlzaSsvRU5NTWZkQjRPWGFqM3oyVkd0?=
+ =?utf-8?B?c0tVTnVRTnVXaUtuaDJPRERTbFdkSThRN1Jpc1JkMSs1aittZEROY21naVlG?=
+ =?utf-8?B?a1RKT0U1U3FaRjdtL3QrVXBoRmI3Zks0VWZYTUVpQ3E4cW52MGQ2YU5BWXJI?=
+ =?utf-8?B?U2NhQW12MS95WUNRKzl3alI2RXlBMFM1RngvcytuTFRnZUlFWEh6WnZuMWxC?=
+ =?utf-8?B?Y2FsOHhiQ2tmVktsTXdFdGF0UXg5bFFwUHVIU1JJNVZhSXIvYVE2R2p3a29R?=
+ =?utf-8?B?dFhMbWdRS2NzbWdqcTlxdFVZSWs4dkJkUXRWMHBkbWpERjZDRHlOUUJxbzJO?=
+ =?utf-8?B?T1ptWnJMUFhYQ3NKVkZnNGtRZTdTYWREU3d2TUd2NDVMVjRsR0FMNlZJM0gx?=
+ =?utf-8?B?SmtCdkRjZ1dDbDBuL29LVW1icjhQWE9rVDlkMFcwdElLdEVic3YxMzNPWm1n?=
+ =?utf-8?B?QnBEYk4vbk9FTXE4bkZlRmdYU201bDBUNm1BYk1ub2paS2xVVWNzUWM4SVhL?=
+ =?utf-8?B?VW1VRDdRRUwwWExqMmY0OU4rY1hBOVpodWdNVmpSdjlQL0pvRWFtNExtQVNw?=
+ =?utf-8?B?Vko2YUFJRzA5UjVndldyUjVrSVoyWEFiUUpZb1BtVVBkTUJuNnFCZnh3VXZw?=
+ =?utf-8?B?N01ENnU1K0haQ245b2tRbUpNYURSNEphY0JOSk1mMzJxdy9ZRVBRaDNYcmY3?=
+ =?utf-8?B?NHpWM2VaY0h2UDJtWDZOQ1QyUE8rMWJxODMrdnltMms5d09XaTBhVWkzS2Q5?=
+ =?utf-8?B?ZXdwaWNnSk5GaDRpWW0zWE5rYXdsejhCcjJMUktJY2JGQW9qMUFIeldORnNT?=
+ =?utf-8?B?Nkd4YUNSMmM1L3c3VDZFWTduYXJpRU9JMGpaT01YWVNMSTNzaTBBREVLMlY0?=
+ =?utf-8?B?d05UQmhYSnJ4TG1yekxYUThBekhrQkpCaU1DUHVUOTY0THlFS2FxTjB6Q2Vi?=
+ =?utf-8?B?Y0VIbGppQTdrZk1JWnZXZ21WOTIwOXQ5b3g2UlgrQ3dMb01XUlBKN1Q2WTJL?=
+ =?utf-8?B?L3c2Z3kwVlZ0UTVSQ1RNb1RvSlhITDdUU1UwVmlib3ZHOGZ1K0M1aml0dEJH?=
+ =?utf-8?B?bGRIYTEvMnpwWXdFV0lCRk9KTXF4Q0NVdllJU1RtYXQ5RzlQeUNCL1owT0FE?=
+ =?utf-8?B?Mk00NGdGV3NFSmUzeUI1VjBxR2xQckRkTUwxcWk2NDcrd1AydUI5THdFNno4?=
+ =?utf-8?Q?+d3rucbyAN7j16tmRJlNIS+/nICMLTydyEkw5KqdwlR+?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(52116014)(1800799024)(7416014)(376014)(366016)(921020)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?UnlzREJKVDQ3UTJINVgyMGdtV05NcWR5ajRZcjQ1OCs3MS9pOWQ0eldxRjBj?=
+ =?utf-8?B?Rk1USEFFMTFyNm5LRERZUWxFSE00T0Z3MTdsUzBmTUp2cSt2TmxxNExJeTlV?=
+ =?utf-8?B?R2lNQjdSQzNqNzVyTzZIWWRXNUZLZVJjNWVTRmE4b0NlWVJheTF1LzFqZG1Y?=
+ =?utf-8?B?V205ZUpyQUM1bHUvK1o4RVhTL3RLWmhxVFE4ZnRrN2dzTE03NUt0eFBkaDNT?=
+ =?utf-8?B?V28vRnltcDNKWUxxeDUxZng3VEU1YzU4ZjFJbjBIOGQzMzhGcitwRVprM3BP?=
+ =?utf-8?B?V25TNDNhT3pyTVc2YjcvSlhTRm0rQmR4YXF2RjdxS05WWS9HM1J4bEMyWlgw?=
+ =?utf-8?B?VGc5d1FZV3RxQURma2RKNkZnTmk1UjRFTHJMWVVMZlo1NzgxRk9TWjB3S1NY?=
+ =?utf-8?B?SHJRVXRibEZqR3pFaitzT2EydWc5UUR0RXdTU3Z1RjJqTmlJVHdqKzh6RHli?=
+ =?utf-8?B?dW9XaWg5WTVlQUpJOFE0cENJNGljTWxoQWlMZ0tOeUdFVWxIMTBoS08rZDQ2?=
+ =?utf-8?B?SWVSNEY1NXNmL3p6S2t5TjBvSExuN2pkMk03VHlLRXdEVGhsckxDNmd3OGZ0?=
+ =?utf-8?B?Q2hoYy82UWdTUjBNM0ErdmZVMkJTTktmSWc1MkMrYTFjaVhPdm1hQzBBZmRU?=
+ =?utf-8?B?d0FnSFhBamJqY3NFUmtCQktQLy9aNVdTazJEQ3ppVThnV1RxamdNUGxtUDVJ?=
+ =?utf-8?B?MHRuZEhITXlHWE1OcXhYTnFwSzFOdW1yLyt6NXdzN1p4MmpqS2JpdHJqdlJR?=
+ =?utf-8?B?K1doc0NFRkxJU1RveWlPeW4zREcxLzhhVVVPcUxyR2hYaGJoaE90elpxSnRi?=
+ =?utf-8?B?RE00ZjAxa0pFNXB4aDVva08zdUd0L0hkS3AwZDdreWl4VEl5NFNMVTJKUjRQ?=
+ =?utf-8?B?eFhVTXE4Rjd0VVpHTXpmeXFlS2JnZVBpMUNEcTg5bW8xQXJHVmhOM1ZrUjNW?=
+ =?utf-8?B?YndxOWNCUU9CM1JFZVBuZmNIZit4QWEybE1JZ2M3VmdkNlI3UXF5QStMR1lF?=
+ =?utf-8?B?eXNiUk9QVW9oaENRNUg4dUFLYllxcjZIaVV0em5BV09XQ1Jya09kb21vL1VZ?=
+ =?utf-8?B?QTg4SSt2TnpyVXJjUlBwMlpGcWpaaVAzV1FRVFJWMmRYbGhCYmRkZVRmYmto?=
+ =?utf-8?B?Z1dUT3dWVzUxN2ZVdDBubG5Ia2J1anFxc3BGZm9JZXBtUXhpd2ptS0hqaGxR?=
+ =?utf-8?B?ZWI2Yjg5aVB2MnA3T2dIOHhYc2lOUFBBaGxvV0Q4WmZEb084YXVKL3hzZmVi?=
+ =?utf-8?B?UFNUV3VhVDRDbmZUeUozTVljaDFIK25UVHlicE96Z1RNMjZLdFI0cXBiSHpN?=
+ =?utf-8?B?UXVXWWhMVDNuNGtmNFZOWis3emcrbTVBYzdtTWRRSU5wTVJiMFN5bWs5ZGh1?=
+ =?utf-8?B?TTZlNE1TVURCelFKMnZaT2JLWFVLS1pVaFNEbFAvVXl3UVcyRUpJa3pCOWlP?=
+ =?utf-8?B?VVprMFdiMHZmSWtzUUpWem52RjQrSk83Z1MxY292NDAyOWtQTTY1T2MveitF?=
+ =?utf-8?B?K1lwNXhIdU9GSWNMdjJWbllCL1U4QjJCM3RoeTUxLzBpLzVGMVFyR1pJdE1C?=
+ =?utf-8?B?SVRqakF5c0h4NGFwSmpSdWNrclVtcVBKWjR0S0dPOERKUktnL05jem1KUU1m?=
+ =?utf-8?B?azcyeFM2eXJkQnJkbEc4MkxQRnYwWHZ4bVVRYlFnR1UrWTV0dlRocWI4UjFS?=
+ =?utf-8?B?SHJxU2JZVFhXSnc4ZXp6MHFMSkQ4NDZ2RU1aTFRSSWx0TW5XS3doeDV0YW4r?=
+ =?utf-8?B?REtNRy9pNXUyYVNjOTYvYU0xSVAzTlF2a3ZFaWllNFo2ZHNsTCthK3Qyc0FP?=
+ =?utf-8?B?a2NEOEdZNWlsNTBNWVBjNlo5d2ZBaEJDeklnczkrZ3U3bmFYTU0zWFRxQ1ZQ?=
+ =?utf-8?B?MEFZTkNxZGs4T2ppdngwWkpwK3hjSnRNWG96NFNGczhRNnpwWlZQVjkzbVpv?=
+ =?utf-8?B?QWl1NVhSTVo5a3dIZzRSQWxYMnRsYTJUL3RRRW5CT0drWHd1WTZZd05uRzR1?=
+ =?utf-8?B?ZFB3TVFzWERUVTZFY1lYWTN2WFhucmtxNEpVZkFSQmZKZjc2cUZXTFF3dU9v?=
+ =?utf-8?B?SUdtUkp2SXJtT1A1K25Lb04vQ2xpQ0o4Q2w3ZGtKTUNxSEdUaExPblkrT2NN?=
+ =?utf-8?B?WHY0ODY3K2ZIYk5MRmJNbStxQUZhSDhzM2ZoSDJwNFVTRlhxSmVVUkhwUG5o?=
+ =?utf-8?B?R1FZQXhRQ3ZWRUJHL1BLb0Q5OTZCbTZiSGpQTDBiWFBVc043K3Q3MGtGUnRj?=
+ =?utf-8?B?U1h5Ukh0YVNjdXVTUk1COWhjQ1NlaWlMU0FVdWFkYW4wNjQxT2swWTd3dlRG?=
+ =?utf-8?B?cEZUalc1T0tqaFFtNXZqSHJvcmhuV2JBZndTQXIxU05Nd2Nwd1Bodz09?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 24e30a8a-8470-40a4-058a-08de67b487f9
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2026 08:23:40.9007
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: cm2dRxOoPXkyhlCyJ4ksBcXMkN6rvdbpNx9unHLH1W+QNXdJ1maivwqMLd30GieVvo3Mr3WMruK0kbo2Z4e+cA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB9661
 
-On Fri, 2026-02-06 at 16:33 -0600, Bjorn Helgaas wrote:
-> [+cc Philipp, any comment? would like your ack if possible]
+This patch set adds support for parsing the reset property in new Root Port
+binding in pci-imx6 driver, similar to the implementation in the qcom pcie
+driver[1].
 
-The patch is a good idea and desirable. I think, however, that it
-should be a series with a second patch informing about this behavior in
-pci_free_irq_vectors() docu, too. I think that more people read
-function API documentation than the generated full docs, especially
-when hacking something together quickly.
+Also introduce generic helper functions to parse Root Port device tree
+nodes and extract common properties like reset GPIOs. This allows multiple
+PCI host controller drivers to share the same parsing logic.
 
->=20
-> On Mon, Jan 26, 2026 at 10:57:13AM +0800, Shawn Lin wrote:
-> > Update the msi-howto.rst documentation to clarify that drivers using th=
-e
-> > resource-managed function pcim_enable_device()
-> >=20
+Define struct pci_host_port to hold common Root Port properties and add
+pci_host_common_parse_ports() to parse Root Port nodes from device tree,
+pci_host_common_delete_ports() to cleanup the port lists.
 
-pcim_enable_device() can be called a "resource-managed function"
-because itself is managed in the sense of it setting up a consequence
-for its own actions, which is automatic device-enablement. I.e., after
-calling it, calling pci_disable_device() becomes obsolete.
+The plan is to add the wake-gpio property to the root port in subsequent
+patches. Also, the vpcie-supply property will be moved to the root port
+node later based on the refactoring patch set for the PCI pwrctrl
+framework[2]. 
 
-That's, however, not decisive here. What is decisive is that it also
-switches those MSI functions into "hybrid mode" so that they suddenly
-have side-effects. So pcim_enable_device() does *two* things.
+The initial idea is to adopt the Manivannan’s recent PCIe M.2 KeyE
+connector support patch set[3] and PCI power control framework patches[2],
+and extend them to the pcie-imx6 driver. Since the new M.2/pwrctrl model is
+implemented based on Root Ports and requires the pwrctrl driver to bind to
+a Root Port device, we need to introduce a Root Port child node on i.MX
+boards that provide an M.2 connector.
 
-Depending on what you want to achieve with your detailed commit
-message, you might want to point that out. Some inspiration might come
-from my commits in various drivers. To make it bullet proof, I would
-say sth like:
+To follow a more standardized DT structure, it also makes sense to move
+the reset-gpios and wake-gpios properties into the Root Port node. These
+signals logically belong to the Root Port rather than the host bridge,
+and placing them there aligns with the new M.2/pwrctrl model.
 
-"For legacy reasons, pcim_enable_device() switched several, normally
-un-managed, functions into managed mode. Since various cleanups, the
-only function affected in such a way by pcim_enable_device() today are
-callers of pcim_setup_msi_release(). This behavior is dangerous and
-confusing and should be removed from the kernel."
+Regarding backward compatibility, as Frank suggested, I will not remove
+the old reset-gpio property from existing DTS files to avoid function
+break.
 
-depending on how verbose you want to be. This could be merged with the
-below, of course.
+For new i.MX platforms — such as the upcoming i.MX952-evk will add
+vpcie-supply, reset-gpios, and wake-gpios directly under the Root Port
+node.
+Therefore, driver updates are needed to support both the legacy
+properties and the new standardized Root Port based layout.
 
-> >  must not call pci_free_irq_vectors().
-> > This is because such devices have automatic IRQ vector management via p=
-cim_msi_release(),
-> > which is registered by pci_setup_msi_context() when pdev->is_managed is=
- true.
+[1] https://lore.kernel.org/linux-pci/20250702-perst-v5-0-920b3d1f6ee1@qti.qualcomm.com/
+[2] https://lore.kernel.org/linux-pci/20260115-pci-pwrctrl-rework-v5-0-9d26da3ce903@oss.qualcomm.com/
+[3] https://lore.kernel.org/linux-pci/20260112-pci-m2-e-v4-0-eff84d2c6d26@oss.qualcomm.com/
 
-There is unfortunately also pdev->is_msi_managed in addition to
-is_managed.
+Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+---
+Changes in V4:
+1. Add common helpers for parsing Root Port properties in pci-host-common.c in
+   patch#2.
+2. Call common pci_host_common_parse_ports() and pci_host_common_delete_ports()
+   in pci-imx6 driver.
+3. Use PCIE_T_PVPERL_MS and PCIE_RESET_CONFIG_WAIT_MS instead of magic number
+   100 in patch#3 as Manivannan suggested.
+4. Use "PERST#" instead of "PCIe reset" for the reset gpio lable in patch#3.
 
-I think you don't need to hint at the internal implementation in the
-commit message =E2=80=93 but a separate patch with a code TODO in pci/msi/m=
-si.c
-where you point out that this is broken and should be removed sounds
-like a good idea to me.
+Changes in V3:
+1. Improve the patch#2 commit message as Frank suggested.
+2. Add Reviewed-by tag for patch#1.
 
-Could also be put on a PCI TODO list if there is one (Bjorn?)
+Changes in V2:
+1. Improve the patch#1 commit message as Frank suggested.
+2. Also mark the reset-gpio-active-high property as deprecated in
+   imx6q-pcie DT binding as Rob suggested.
+3. The imx_pcie_delete_ports() has been moved up so that the
+   imx_pcie_parse_ports() can call this helper function in error handling.
+4. Keep the old reset-gpio property in the host bridge node for the
+   existing dts files and add comments to avoid confusion.
+---
 
-> >=20
-> > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > ---
-> >=20
-> > =C2=A0Documentation/PCI/msi-howto.rst | 7 +++++--
-> > =C2=A01 file changed, 5 insertions(+), 2 deletions(-)
-> >=20
-> > diff --git a/Documentation/PCI/msi-howto.rst b/Documentation/PCI/msi-ho=
-wto.rst
-> > index 667ebe2..dc85f1e 100644
-> > --- a/Documentation/PCI/msi-howto.rst
-> > +++ b/Documentation/PCI/msi-howto.rst
-> > @@ -113,8 +113,11 @@ vectors, use the following function::
-> > =C2=A0
-> > =C2=A0=C2=A0 int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
-> > =C2=A0
-> > -Any allocated resources should be freed before removing the device usi=
-ng
-> > -the following function::
-> > +If the driver enables the device using the resource-managed function
-> > +pcim_enable_device(),
+Sherry Sun (11):
+  dt-bindings: PCI: fsl,imx6q-pcie: Add reset GPIO in Root Port node
+  PCI: host-generic: Add common helpers for parsing Root Port properties
+  PCI: imx6: Add support for parsing the reset property in new Root Port
+    binding
+  arm: dts: imx6qdl: Add Root Port node and PERST property
+  arm: dts: imx6sx: Add Root Port node and PERST property
+  arm: dts: imx7d: Add Root Port node and PERST property
+  arm64: dts: imx8mm: Add Root Port node and PERST property
+  arm64: dts: imx8mp: Add Root Port node and PERST property
+  arm64: dts: imx8mq: Add Root Port node and PERST property
+  arm64: dts: imx8dxl/qm/qxp: Add Root Port node and PERST property
+  arm64: dts: imx95: Add Root Port node and PERST property
 
-Same, "resource-managed" is not the decisive criterium. I would simply
-state "pcim_enable_device() activates automatic management for IRQ
-vectors".
+ .../bindings/pci/fsl,imx6q-pcie.yaml          | 32 ++++++++
+ .../arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  5 ++
+ arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi        | 11 +++
+ .../arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts |  5 ++
+ arch/arm/boot/dts/nxp/imx/imx6sx-sdb.dtsi     |  5 ++
+ arch/arm/boot/dts/nxp/imx/imx6sx.dtsi         | 11 +++
+ arch/arm/boot/dts/nxp/imx/imx7d-sdb.dts       |  5 ++
+ arch/arm/boot/dts/nxp/imx/imx7d.dtsi          | 11 +++
+ .../boot/dts/freescale/imx8-ss-hsio.dtsi      | 11 +++
+ arch/arm64/boot/dts/freescale/imx8dxl-evk.dts |  5 ++
+ arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi |  5 ++
+ arch/arm64/boot/dts/freescale/imx8mm.dtsi     | 11 +++
+ arch/arm64/boot/dts/freescale/imx8mp-evk.dts  |  5 ++
+ arch/arm64/boot/dts/freescale/imx8mp.dtsi     | 11 +++
+ arch/arm64/boot/dts/freescale/imx8mq-evk.dts  | 10 +++
+ arch/arm64/boot/dts/freescale/imx8mq.dtsi     | 22 ++++++
+ arch/arm64/boot/dts/freescale/imx8qm-mek.dts  | 10 +++
+ .../boot/dts/freescale/imx8qm-ss-hsio.dtsi    | 22 ++++++
+ arch/arm64/boot/dts/freescale/imx8qxp-mek.dts |  5 ++
+ .../boot/dts/freescale/imx95-15x15-evk.dts    |  5 ++
+ .../boot/dts/freescale/imx95-19x19-evk.dts    | 10 +++
+ arch/arm64/boot/dts/freescale/imx95.dtsi      | 22 ++++++
+ drivers/pci/controller/dwc/pci-imx6.c         | 69 +++++++++++++----
+ drivers/pci/controller/pci-host-common.c      | 75 +++++++++++++++++++
+ drivers/pci/controller/pci-host-common.h      | 17 +++++
+ 25 files changed, 386 insertions(+), 14 deletions(-)
 
-(I'm a bit nitty; here it's not that important, but in the commit
-message I would address this).
-
-
-You can keep me on Cc, I can do a review for the next revision.
-
-And thanks for picking this up!
-
-Philipp
-
-> >  the driver shouldn't call pci_free_irq_vectors()
-> > +because the IRQ vectors are automatically managed. Otherwise, the driv=
-er
-> > +should free any allocated IRQ vectors before removing the device using=
- the
-> > +following function::
-> > =C2=A0
-> > =C2=A0=C2=A0 void pci_free_irq_vectors(struct pci_dev *dev);
-> > =C2=A0
-> > --=20
-> > 2.7.4
-> >=20
+-- 
+2.37.1
 
