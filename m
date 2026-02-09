@@ -1,179 +1,203 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020115.outbound.protection.outlook.com [52.101.228.115])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612712D6E72
-	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 05:06:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770613594; cv=none; b=mgkYvvxVWLt8ZCBIkPH5WkMQlYUCCRpIU5bO7R4UDakliuYCv7cRt6J4NCAv87A7+Hub2gjaxI5eeb9twucmXXMvdorACqbtPd84LcJRFXbVA/2dlHyA3ZvcALaowCQC2btbzw6wkZYEk1088cy5xVZSX3g+Oe2ZIFDk6+fZbRY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770613594; c=relaxed/simple;
-	bh=m6mtiPXFLsLf5e+10JiUf4tZFNL6MFDEnTDYOBrewCU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f2XR/pERPkC0MAorj2JYeZ5m3PYGuIFCUtKjbsnlq8VR3DAvzUxfP+sYA7pE+PpfpXgRIlDmAEbZ3TKr+hkTyr/qQ8yjDVtIW1Ae9wMOcsR9rd/tUfo7kRyv2fsYPSG9v79aDwHbyaN/L6i8xn1Urh3VJs/kMj+9u4Uftk7T/9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ig68K88K; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XYKgX9kf; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76B24126F3B;
+	Mon,  9 Feb 2026 05:40:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.115
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770615618; cv=fail; b=sjsP7bELKnrtzJ/+dAIJRbFkIDUSfZ/fVUyLRGbNj7+lmUp1PlrT4Cszw/l7zo34UwHPKgSvZUo4+a2Rahv6c7qYjPcWtccnQ/43vEU4nqPXToFU8+HmxA5c0CAx5f9AxXNwdcRhgTEAT+TxzgXdhDycLIztu70fXsExXopJTaE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770615618; c=relaxed/simple;
+	bh=v5fEcvxtowe8HeoQZB1XwoQ53KjAmSTXMPAtTG3Dmxo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=ddv9HnCOW7yaSEbvIDT43LD4d2EQXdu1a1EePehZrTmz1m3jcNv2HMGOfugfBm1EyGH5RNklJ8kxglraBxl42Csg2uMsJX/5pDoADDmtid1n0HtdwpNKQ51tUxa0F4qJbgVbGKIzJy0XEj8RojpLQRFHesvmJX/OreVO2b7o7Yg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=R95KFa8d; arc=fail smtp.client-ip=52.101.228.115
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ig68K88K";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XYKgX9kf"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 618NSNbq3111687
-	for <linux-pci@vger.kernel.org>; Mon, 9 Feb 2026 05:06:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	3E7UICCtHoEft9ePbt/AmDo6Ki/Hkw8JTeF+RItunsE=; b=Ig68K88KIREo8V0x
-	dFtUOuorUJBDlr7CknJlLDN22z5MBAGDCRxUgPxneoo6C0WfIeU/79xq4a961rXr
-	7X2JO/d1rn4EM8oYkLhWfcWeUP8PGIHmDxicqKo3DvxhK/4gWDqn1siuHooixzrR
-	prrTOwrnf/xRI3sNHrLIRz9FPUrDq2hf6+IPv3ZsOVZvxAjCqZvBAT6WQZ2Lz610
-	Iiq9xa8sA7xlZ2RkuFaU2b4G8PCq6ckpuav1fQvUFz9YOvKzxqpaz+DCvWoW/H7J
-	AW3pc78NKl0laXPDb4WQtDoCkGv+ClwbiA3C3qNCSgwTeSMi0nChROyr0AbVl8fV
-	3NLhKw==
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c6g65a1c1-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 05:06:33 +0000 (GMT)
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c6de2c762aaso1831514a12.3
-        for <linux-pci@vger.kernel.org>; Sun, 08 Feb 2026 21:06:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1770613589; x=1771218389; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3E7UICCtHoEft9ePbt/AmDo6Ki/Hkw8JTeF+RItunsE=;
-        b=XYKgX9kf0kiE3y/TNn5QYTY7t7RgpHqHl64JT28f934X/jRYvYl/QJwncEBquQNlW4
-         VXb8bIWPOHSbIUptPz43qNDry9jiKTG++lel+avsYci7DcbULSZuzidWjvSiy7OKU7Uz
-         e+sfMSQ82NODX8lk8Qm05YNVeuNqreJV3KyozDnQlifi6Q8Y46OiU7/dbrxDdhxbizIy
-         RAZW4Gm7uf0EONSX4kPd0O6fTOvkvlcyASeTVi/UJI3wpcmDYyGzlwQKIqy6s52N8qGr
-         YILmVAbs4nN9qtFQ4xxCZ9QnTBrfQJEwQHYXyHcRosbeekQXMOXu/6zZbCSUxf0+4SwK
-         Rz1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770613589; x=1771218389;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3E7UICCtHoEft9ePbt/AmDo6Ki/Hkw8JTeF+RItunsE=;
-        b=epzS32dOmfKa7wZNk23naxR4MNo+Dc4FbqJoHZa92lQ3mkitJW53/rxcgDszuQ2Uyv
-         qk2mORJ7XeP0jmifAJcbeUFHdOUtd5XUSmi1B6n50cIWAIN/Bir1PVlv1lBUMZY/IzuG
-         wrnGytl5vGN9ekAsI6pifGRlY8oqN//k7HCusSROuLnS/C3rXYv8Yw1Xw5ShHZh8WQQ5
-         oZg+PCdGrcyFiy/EgKz6Nxi4oPMFbemozvCtHBVaMtl5edV1EX3tgf7qV/TocXmhntRZ
-         BYtbTDdjc0RtxWd7Y0sfGUZpxCCZ4SRybu6Zq+HC6akiMUrgSldu/mCHd3ApNNZYMaeQ
-         WT8g==
-X-Forwarded-Encrypted: i=1; AJvYcCX5i/I98NsVEjMDS0fFGJZ1tYoOE4t+j6R49nKDMWfOkxksRp0xlcn39iX9hRVmZXAZkybJTignvKM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzMqJJZmQZW2gHvrmPLp0SvkBjrF6UWUoukq8Mcifc31gJ0WXiY
-	bI7djaTK4lWkTql2F16cifrQ3rN3/pWkIGYFo22r/ALJHLghNMLLTLBwDKwDKlFLi7QtYgLkZ33
-	j0QkN033sF0Wi/6Zf7UCdkS6p0kXjAJv66k/e2anUVitXq89eEOG6hFeBykpJT4A=
-X-Gm-Gg: AZuq6aIJn3ZNateNSmdwVRsaskhjFk/Shp/nce/OQFqSw2oDiKRzjiK6gZwP80vM1yV
-	2MQgkQhR6Ciz1I4q0Sr4cWJlsW3gzFhQ+DJP+jyvEYTTpl595mVlTMTygylAoN2cCVWHixMgBsR
-	SjQgmkSKHB8xA3u1vLAtnWSrDgvxScVtIYSJ7sAxuoK+gaN9CLINbU6E1d5A0+JbA9KsulvCiek
-	L5/R1hjU36TUMS/lMKkEMLLpHB3lW2soX20+0lPzB6Zvdsy53mYZm92IAPB6cPNHm1NqxLUzfBM
-	t1aolnOUMVy91WgycGYRR8sv5vZ3b1CYSwNU6/w4hI1W2eHjCKMYjd13kOgqdDTWcRQmNPpEsj7
-	nV/HjNsDXPdvVSN9HHEcyyQuXuNTtaExPNw4WJyWjog==
-X-Received: by 2002:a05:6a00:3e02:b0:81f:fef:1fd3 with SMTP id d2e1a72fcca58-824416f8f09mr10733350b3a.41.1770613589478;
-        Sun, 08 Feb 2026 21:06:29 -0800 (PST)
-X-Received: by 2002:a05:6a00:3e02:b0:81f:fef:1fd3 with SMTP id d2e1a72fcca58-824416f8f09mr10733326b3a.41.1770613589010;
-        Sun, 08 Feb 2026 21:06:29 -0800 (PST)
-Received: from [10.218.35.45] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-824416952e4sm8810443b3a.21.2026.02.08.21.06.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 08 Feb 2026 21:06:28 -0800 (PST)
-Message-ID: <7c44e9da-e7d6-4288-b000-939ffcdf7b39@oss.qualcomm.com>
-Date: Mon, 9 Feb 2026 10:36:21 +0530
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="R95KFa8d"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=EPEcLEmFX0ozfA8v/gOK9d9PWmIe4yLdpxiZp/rI7BTPlHLI6GjVBwe23HVKFR2/BrIUj7sbcwgyr06MoGDrMIuwp8wnOavHWVrfKbNkJTdCHuqj6Mkrxm8Ypsw1j9DXjrO6rWrDrLUXDK5z/rwAq2w5uHPQzWSY5pfXosP8R/afJj57Mv4f8hMU6nhFzv+gRxruBMz3CpNw7IWihE08jxFfTDtmwZJxRYK0pe6GimdMYWNA3xeuLFrnhBTY2oVzaJxikW22wavPEDoRAW9818udv9OfZC9Rvv/GSE4VJgpbulZ1KNmgxH6loioYIA7IwRE0ukaJ+dhewM2Cl/4ydA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AZ2wNZ9Qs/Di3isUeFgtMYYNZ/ZINW8nNC1A6tmGxYM=;
+ b=dmeZqroK2NDWgvxGlQGdzH3a9+rN46lJRPj1hsVe0adQmQjI7v9NpqDMLlvJm9cvBfMswFMfbgV0zF3pp0jjPv9Ts+ySwptrVO5plhjDdFJs3Df3gmaKj40kcOwDYF1uia22DzNXWHCW+QYwkR8RCl1N+iKRLnGwhr4lGtyvOoUjOCR38IsAyLnR3K24GJKaHKDWhBMGGGinvmXevRKeMml2z9X+c+JvhygyNdOuPmS1Pws5CO6/xs6fozbTLpsq7zcmZxgq511CJcKheph12LuP5kPDgSV7/peF/QamXxqMkMyjSIlwWtJoRYDYTPy8RGyZsIRgyGqPp8JjGGeEyQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AZ2wNZ9Qs/Di3isUeFgtMYYNZ/ZINW8nNC1A6tmGxYM=;
+ b=R95KFa8dyOj4Gw9kli8eG0QGVnOJcaWRVkBsF6AbWH8VPeOp5ob70MofGBUOr2HzTjOT2bH5nGxX6ljSX0t/WrgLaAeMMhWTCCaqplGbCfADZr6CpYwqJnJSMqA/gfXdYnpp913mQeBhH5O44MRIGsnuOyknxB38QhTxYfLMFH8=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYYP286MB5965.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:2df::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.18; Mon, 9 Feb
+ 2026 05:40:15 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9587.017; Mon, 9 Feb 2026
+ 05:40:15 +0000
+Date: Mon, 9 Feb 2026 14:40:13 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: mani@kernel.org, cassel@kernel.org, kwilczynski@kernel.org, 
+	kishon@kernel.org, bhelgaas@google.com, corbet@lwn.net, jingoohan1@gmail.com, 
+	lpieralisi@kernel.org, robh@kernel.org, Frank.Li@nxp.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] PCI: dwc: ep: Fix BAR update handling with
+ in-place epf_bar reuse
+Message-ID: <vgqd74pmc6av25d2zy6alfm26sjir5nyhxjisisebuawpeqcor@gjxevxzjnbbe>
+References: <20260202145407.503348-1-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260202145407.503348-1-den@valinux.co.jp>
+X-ClientProxiedBy: TYXPR01CA0048.jpnprd01.prod.outlook.com
+ (2603:1096:403:a::18) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: epf-mhi: return 0 on success instead of positive
- jiffies
-To: Daniel Hodges <git@danielhodges.dev>, mani@kernel.org,
-        kwilczynski@kernel.org
-Cc: kishon@kernel.org, bhelgaas@google.com, mhi@lists.linux.dev,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260206200529.10784-1-git@danielhodges.dev>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <20260206200529.10784-1-git@danielhodges.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=GqNPO01C c=1 sm=1 tr=0 ts=69896b59 cx=c_pps
- a=rz3CxIlbcmazkYymdCej/Q==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=5Gk_b0IoX-7N14tGkj8A:9 a=QEXdDO2ut3YA:10
- a=bFCP_H2QrGi7Okbo017w:22
-X-Proofpoint-ORIG-GUID: xLHWiKNIhe3zLTupGNxxIj1mRgzu5L2V
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA5MDA0MCBTYWx0ZWRfX9brOSuK8uo9q
- NC3GqStxac/9vTvdhvvaSEGXSv728UzXO1MuRoHAqhacPSuh7u9q0aP+uyQtG76ZcbPQ5WztLtu
- NueSAZzKvzs34E+C3kzn2PF9hZTkDFKKBNbPYb99Vlsd9fESypHkfctmw/xCXqaF33IU+srDy3G
- ZAvIFe6mn99V1nCw0xdFiNsRN4Mvo1WkKkzQy9x/P99PwqepMRJbOVRgOX03zMQCIVuXD6n7rpK
- XKU85hpVdy2Ax3vMuTvghzSBzhV4VY9JstsAO8TkjKb0T+udCjQmxh3cniZ/b4kQbGnc33c36gf
- 0sRMChKp+ZN1IYEfJ/00NBKsOLsJ1Z2wO3M6+eJs8P1QWXwnsIZDmCUHG/XW1HyZhMJOsrUrpdW
- 6gHRivhzlcThHdycVCRwkD0Z1fLCuk1CxMIomkLDdbn1xVwlje0dHbET/My2CgIF+qlpFsSHc4Q
- 3fPFvFoRclJ547sn3sw==
-X-Proofpoint-GUID: xLHWiKNIhe3zLTupGNxxIj1mRgzu5L2V
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-08_05,2026-02-05_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 impostorscore=0 malwarescore=0 adultscore=0 spamscore=0
- bulkscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602090040
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYYP286MB5965:EE_
+X-MS-Office365-Filtering-Correlation-Id: 41848f96-b4ba-4f8f-54f9-08de679db35e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|376014|7416014|366016|1800799024|921020|27256017;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?FF624ksoCz9Zpe8KS7OKi1dPa+ps9dam21/S6YnYAMhueVO82Uw1ehQaCDWq?=
+ =?us-ascii?Q?1/PUf4gwVnGK1hCs5JT2VAjC1OfZTlUdfL0mrzBAev1O670DkuvQ04+LBQF+?=
+ =?us-ascii?Q?I6O/Px5Dg6/ccUaSGQbo0jVP6QFIGVapnXWWt/H0tZsxgOVz24NJTCpJ0qPQ?=
+ =?us-ascii?Q?F7QNy9jg+QSKtN258P1eXRr6pTXX/hunAtSSzaQAwvEcBOB8sz5jKh7vAKY6?=
+ =?us-ascii?Q?dvc1SpUelY/MibTNmSPDWpPv/oxbfhXiOpyZPZVGoktiCIgkXVo4BUaM3l9j?=
+ =?us-ascii?Q?fSsxed7iL4aMkZguSuzXSyBS/XZAhfhUm4HdGkviTLZCh+yIq/0xp4fFqIly?=
+ =?us-ascii?Q?nu820U4XQ9y9CUboRawoI6ZEM5MJg9M+mcagEP2zD50RNKqmvjhE5xlHlWKw?=
+ =?us-ascii?Q?h+3whxNi7QGiDqdx0jW+FR5oLu9rR2G5hgxiXefiuTEX6wTp9vw4jsNs5zCF?=
+ =?us-ascii?Q?fEK3aijoo1xSdJLAh24nBqEgS88ZS3EXqKB3KM+Dfd2rL6YfeY8KiKAiYHRu?=
+ =?us-ascii?Q?iKkRdGh/r3JUv/5MGDgdSnh1roacxJlpMfUYYXAsCTrljOqKXnnIH86ntTg8?=
+ =?us-ascii?Q?hLnZTiyyg5BST3lWydfhOX7xEbXztohQ5b0VdP7ZJEOEa+q2/VVetHKKUUDV?=
+ =?us-ascii?Q?6Cji5PEtLcFLG6Wz3TyVbeI3znGe7G27GD9OY5iu6CfjV3BreGURHvJuEICx?=
+ =?us-ascii?Q?fnlml3fqpKq69amYJi1VegycKR1WB3fVgclTri8hzi6EmLXUyqbK4mOH15DF?=
+ =?us-ascii?Q?kB7QCVFnSf2Mcy0qhczWRmN07betSOTMZcE7Ya6h7lxu8B0Cpd0lb1LwuZMX?=
+ =?us-ascii?Q?KUFB2L5lrSg8MUX1qKD6WBe0s6q7s7AK7L9wNG3Ylf2Mdx/uWxYJu/9Eb2/7?=
+ =?us-ascii?Q?t4RTmffvQdZ3FuqwzmIdZcfHwEz7TtBxIv/h7K+mSTz88EVFRistSVwRfyh8?=
+ =?us-ascii?Q?qgVrqODq7f6GNHDu+ejcrycxrcO/NvhEWrBGuy2I0T/hm+MDu72DiJjg2L16?=
+ =?us-ascii?Q?XAUBCDxMyKnpOOjHMhXljh/N4q2dDmlV5ZCTN82y7tobQdwdcpsFfD10DKNv?=
+ =?us-ascii?Q?FBBnTDTFVevf8PnPOBc8m694CQiqrU77CYOpLr2zmx1qoroJ2I78zAphevXD?=
+ =?us-ascii?Q?ZfIXzBE/1j4g+4tNZA9T7iM/p6EC4ogsLbhxglmw1D4oQPAcBVfkc0v/B7l3?=
+ =?us-ascii?Q?j9B831sYmZkEsMzUKVVBprsd1YyOMukqiGSEhU4wrxgWxtDeHCzLE93Eho3b?=
+ =?us-ascii?Q?4mjO187yZYNNhE6odg+CBlu6pjxgq3QHuHlGfspNd6hMtGujOJkiPr+3PSK/?=
+ =?us-ascii?Q?bQtQjn91JR00GzQx1Ia3M8Q9ucLjKheHKowZWxhhgfflwYqiS8KIPktj94dQ?=
+ =?us-ascii?Q?WEYEaUG77R9+KFvJ7tqxRAangEonIdedXsAZpl71/ycG72xeMbHGMMYdqKTy?=
+ =?us-ascii?Q?ZnGWSe9SIAfjUzW5/79Y8nw9HBDXWGSCJPoJue05n5gr/sY2+GHcKTqY/4EF?=
+ =?us-ascii?Q?VpXjGNTywB7RQ4U1ZE6DPElKFw7AG3QOpzGeO0vfcxUoRxcV8vSNZ2d/Sf3r?=
+ =?us-ascii?Q?nHkRSZpHpc4juAx2UZPdRf3JQxF/8NUnHlRqkhznAuNpdOFml/vmHCooc7gM?=
+ =?us-ascii?Q?PnD/ptT+sho2ZT8YZq0j7PmgGSlX0QIxF5KmueMWLNxE?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(376014)(7416014)(366016)(1800799024)(921020)(27256017);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?nH4TFVURwHfGS1VlcwV8HaDU2CB9lGVT8WB1a69mBxTwtjDfyvqpHiigKk7Y?=
+ =?us-ascii?Q?XEuYnolliyeXnLhZ+OPeCoVDQaKHTdankyePqSVej6QSFSiHp1r8k+zTbD/s?=
+ =?us-ascii?Q?/eWtt3xBmMUKkx5kre4m8BVPwbUhEB1lMnd9qURTjhfDgXSR+OrxWA9gfKDg?=
+ =?us-ascii?Q?04dM7ixMaBKl9cV5SPQBXgGTZCdJKbWpyKbct4VvMIdDvXWJb1FI1fv7+z+o?=
+ =?us-ascii?Q?6UWUNeH1jGXBSP52kamJc674YaEZnqHwJkGxjwByv0iB37BLmN4tKQAdoaT2?=
+ =?us-ascii?Q?hRfG1udUmkC3ZK5BUJkqyTnrwyCYatKkeJy1PXyeKT3sgX2kYSzRUnqJJWZL?=
+ =?us-ascii?Q?2hB5Oy+Sxo1eTnmqRJrxT3M/IPfCfRMAFSNZpnB+zTFu1jo+e40/fskOPopi?=
+ =?us-ascii?Q?KCGYueZaQU1XG+0h2k4p+vckgV++pOm9tDJ9ZlLfS6P+uvKxXDuhpv+z/Si2?=
+ =?us-ascii?Q?AJx+q4Ior9MGyLFS8Hel2WGkce9waovrqWXZxeq/k+o+rih3GN33IN6K1qyC?=
+ =?us-ascii?Q?iCMnTl/yaH3vNFDwEz7BvXtS+BchROuvlQBfppdWKnl+9v6IV2ObaTnalkS9?=
+ =?us-ascii?Q?3zWocwjcDwU9yLnFF4+CaOCLBQtQTwZGAsXHQ8fASzH9JGK8QqtA88Ei9uZN?=
+ =?us-ascii?Q?tjOQ0hXl/PqL0jhAZZe9YXH4wp2Qo4HX2PEomtUjTt9DYY8dLoXPrQPMijP1?=
+ =?us-ascii?Q?1XtlcTL3zBKdIvP1taH0QymOF5IgJCuMNgOyNecfAmp/oM/wLsFqVxfpkNdM?=
+ =?us-ascii?Q?eorIIhKrTuDhE7w2FWIqKH8tKSWeZRRWPaIq7mvGAOoc1UjQvqkoW5rrsAYo?=
+ =?us-ascii?Q?c+Ifq4rhT0udBSSP1pfGme3S2B4cQVs/x02tygF/FNmXm4O5pmkyyfQMefyz?=
+ =?us-ascii?Q?ysJffjDIh0uPfjq8coRjtuc5dzoJl7ZO0y6Y1qu3hcvZeM66Kuj6Mhlfn8UX?=
+ =?us-ascii?Q?J35bOeU4KRYQfKqJcLnELZ+sMqsAQ29QM66W3hnG/wDz6V+4HruYywT4ZHIr?=
+ =?us-ascii?Q?ooeiRY+i4zzAYvu+gPIUIdeNLpVASaEdZIZO8yu5lSi1hUpqaHmZgXrdtd4M?=
+ =?us-ascii?Q?c75PzdBCoRph+lIYtk4WET9Dh+t5sS4jSZJlDzCSsYs0674AhyGoPxiVPxOs?=
+ =?us-ascii?Q?sTt0hDQKoBiAXemQztnEoVEzX1V/VRYHjZA0S4/mfsEO3tcd4kPbhYMc5DOz?=
+ =?us-ascii?Q?2AmVsT2b4HiGCRW5OOYFUnNyua5d82rVB789K+TXN7tBisSoIXhM8a8sO90M?=
+ =?us-ascii?Q?78H57e0lx++mbqJ9LgzzxGzAOKxGDfxs4VezV9o4MpBQhM5pFovEqB34HCHT?=
+ =?us-ascii?Q?Q4I5HyOnYQvb62OfwkZjOX69n+RktdA3OV2etPIBGlsKRMY+TbrDU0KeOYhE?=
+ =?us-ascii?Q?M2eU/tCwRIFqG30M8Vi6/FUJ64iDTu6u69vwWGnuZfzou5YseZqyPqpbvhuq?=
+ =?us-ascii?Q?AsJqYXdU0awO8aW/oDEH8GvGiBmV6HIZXWGKEAbJnJuKBDe63WJTlVp/wyHu?=
+ =?us-ascii?Q?iHxKAb8tf7scX5QiVLFFiszfiSHZBwbxucxwXnOq2r23lOqzs+J9SDcBPr3u?=
+ =?us-ascii?Q?oI/8CgrVx7K+25oBy2xivi50JSwM2cmiMRXrF8u3PVw4DClNkWXS8Y+sNAUv?=
+ =?us-ascii?Q?e31abd5CQUXiLJqFJAqJOtBRm7iNMfPAt2JOhIQ9ADm8tUrP9D7psZNbc2pw?=
+ =?us-ascii?Q?eOihZc3mNigzSmDgis3CrLeDL8WFs+x9ghiL9aJGOfT+u+9IOH1KEsM6W36O?=
+ =?us-ascii?Q?6hQhPAuuGzj63YunaqTdNHkxeDO3lYJXXY3MrqaOz9ENu+xn/M2j?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 41848f96-b4ba-4f8f-54f9-08de679db35e
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2026 05:40:15.1352
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0qIQQ8t2RFlQmV10BpOAC+MM65Ai63PEzNgn8JjLJLwV3k4FzWZhXSe0L4+C0DMHCa775qfdeQ3KddubAd9xIg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB5965
 
+On Mon, Feb 02, 2026 at 11:54:05PM +0900, Koichiro Den wrote:
+> Hi,
+> 
+> This patch series is a follow-up to a side discussion that started from
+> Niklas' comment at:
+> https://lore.kernel.org/all/aXtrW7viGZfMNZur@ryzen/
+> 
+> This series:
+>   1) Makes BAR Match vs Address Match teardown in DesignWare EP explicit
+>      by returning right after clearing a BAR-match inbound mapping.
+>   2) Fixes the dw_pcie_ep_set_bar() mapping-update path to run
+>      dw_pcie_ep_clear_ib_maps() unconditionally, since the driver cannot
+>      reliably distinguish BAR Match -> BAR Match from Address Match ->
+>      BAR Match transitions when the same epf_bar instance is updated in
+>      place and passed in again.
+> 
+> Base: controller/dwc branch, latest:
+> commit a24149881558 ("PCI: dwc: ep: Add comment explaining controller level
+>                       PTM access in multi PF setup")
+> 
+> Changes since v1:
+>   - Switched from the v1 approach (Y) to the alternative approach (X)
+>     that was proposed earlier in the discussion.
+>     Details of the v1 (Y) vs v2 (X) are described at:
+>     https://lore.kernel.org/all/sextbnbmsur2xjfoun2l4lr5vekmpzae7sx6or2ird44t6ud6d@yprcz43tpq4p/
+>   - Changed the subject.
+> 
+> v1: https://lore.kernel.org/all/20260131133655.218018-1-den@valinux.co.jp/
+> 
+> Thanks,
 
+Hi Mani,
 
-On 2/7/2026 1:35 AM, Daniel Hodges wrote:
-> wait_for_completion_timeout() returns the number of jiffies remaining
-> on success (positive value) or 0 on timeout. The pci_epf_mhi_edma_read()
-> and pci_epf_mhi_edma_write() functions use the return value directly as
-> their own return value, only converting timeout (0) to -ETIMEDOUT.
->
-> On success, they return the positive jiffies value. The callers in
-> drivers/bus/mhi/ep/ring.c check for errors with "if (ret < 0)" for
-> read_sync and "if (ret)" for write_sync. This causes write_sync success
-> cases to be incorrectly treated as errors since the positive jiffies
-> value is non-zero.
->
-> Fix by setting ret to 0 when wait_for_completion_timeout() succeeds.
->
-> Fixes: 7b99aaaddabb ("PCI: epf-mhi: Add eDMA support")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Daniel Hodges <git@danielhodges.dev>
+Just following up on this series.
+If this looks fine to you, would you mind picking it up when you have a
+chance?
+(Niklas has also commented here: https://lore.kernel.org/all/aYSZxCtACmQyC0XT@ryzen/)
 
-Reviewed-by: Krishna Chaitanya Chundru<krishna.chundru@oss.qualcomm.com>
+Kind regards,
+Koichiro
 
-- Krishna Chaitanya.
-
-> ---
->   drivers/pci/endpoint/functions/pci-epf-mhi.c | 4 ++++
->   1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> index 6643a88c7a0c..2f077d0b7957 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-> @@ -367,6 +367,8 @@ static int pci_epf_mhi_edma_read(struct mhi_ep_cntrl *mhi_cntrl,
->   		dev_err(dev, "DMA transfer timeout\n");
->   		dmaengine_terminate_sync(chan);
->   		ret = -ETIMEDOUT;
-> +	} else {
-> +		ret = 0;
->   	}
->   
->   err_unmap:
-> @@ -438,6 +440,8 @@ static int pci_epf_mhi_edma_write(struct mhi_ep_cntrl *mhi_cntrl,
->   		dev_err(dev, "DMA transfer timeout\n");
->   		dmaengine_terminate_sync(chan);
->   		ret = -ETIMEDOUT;
-> +	} else {
-> +		ret = 0;
->   	}
->   
->   err_unmap:
-
+> 
+> 
+> Koichiro Den (2):
+>   PCI: dwc: ep: Return after clearing BAR-match inbound mapping
+>   PCI: dwc: ep: Always clear IB maps on BAR update
+> 
+>  drivers/pci/controller/dwc/pcie-designware-ep.c | 15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> -- 
+> 2.51.0
+> 
+> 
