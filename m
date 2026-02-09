@@ -1,67 +1,51 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EACBC353EE2
-	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 09:15:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E04142DCC1F
+	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 09:42:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770628555; cv=none; b=YGw32rujBFZ1K9paemJxCYr1lbX0Xsr/8tT2xwjcyVT3bk5g/QJPGGnt6irPvXXEXMhMzjfbCf1ucIU23Dgx5yOvOG7ULSqyLsN72Nzkcx3YazJ4ciTnv3i6sdYKwx4r9IaaI5fXo+XtMUnKfKddwrwM9kuZx9lkzls5uHy5HvI=
+	t=1770630176; cv=none; b=EsCQzTE68JEsVhdd+IUe0L7knE7i/Wcz4hE17DXkYo6YrWLfP9X2f6gu/BdtLVlrtpalJ9xdp8OsmtAs4J9vQ4F4beDFwbssX/SZX39aHloAj5rUE7SjQUXO4IOKHdGAo5ABBddt5JDC9dC2SDA1EVhQZKRljGcSKVsAd3NxDmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770628555; c=relaxed/simple;
-	bh=hCRbplKa9XIjvclI+PlB/dolhnudbQakjP8h3tdWGJY=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=SSb1Qt8OfL1k8SOEOfz9sks0iiMcG4RotWHtNVI4p1D8wiYIilzjm6dvXxgHFgrzRr2vrb4QBLM/MRZ0MvomDLKQxhop24MBpS6mTHZ6k+guy3yMt7PPShKL5GGu/9Ou/KuvFsNJVvH/UHZvrX+kkt2bo7fEwpcbfXq1uPVSlqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=dS/QXwJY; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1770630176; c=relaxed/simple;
+	bh=UOsVwSOTVWc4zYryltyKNWs3NU6VnGBHfl/YQ/sPQuw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TQ5kHAj4st6YtqxvcpV3cZUvtUy3s4n1H8wNttw9UiVUr4y06kuK/1RW1zngV5dym2ACvJBvbT0gNN5SuCGfJZt4heQ9d4V610TiXjUrppYbPZBBEZ+2ljNOcG2fQJFjF46B3Bzops9hpGDgwpYjBxx2j0eepj6iIK5v4k8V+vI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=HMt1kAcK; arc=none smtp.client-ip=188.68.63.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dS/QXwJY"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-4359a302794so1694965f8f.1
-        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 01:15:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1770628553; x=1771233353; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=j7LKhseSnGFUF6qSBmsqnML3SyQVCy/4OXLMkuV0OQQ=;
-        b=dS/QXwJYsoXoptVs/ChdDm8fn0UZ5G5HFysH7DAaLNzoKWCsvG+5ukFiW5c6L6FVsQ
-         Qt6ebL3f1APwTEQtSjSiKp65CHJlwB5+VGIUGn+cdpcWzEPSt4WcrqognjMdt9E6KDWh
-         5s83U7TTOT2CxGsCvvzKyjZ53vYD9Xs6WGfo7P0nbU1lNafqFIgm5gkGyWHsVqnEyR3T
-         8PF2MKHIjvIYt0U/0o9PgMdEJIE2MLJm0DDwrnQvNheG9l5Yv4J4t3fu1OEZeiFi9eK5
-         2N/XDk3lbBnWlxnL7LmqhxRM/rqeo8ICMwNs5N4kcS3BYPcJaBtJMBy/XbNk8k4Erbua
-         SMZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770628553; x=1771233353;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=j7LKhseSnGFUF6qSBmsqnML3SyQVCy/4OXLMkuV0OQQ=;
-        b=hQO9nwh94usta89Tv5J/9eIpR6PRgO/gigolfYQQHRQXouP9fpGcdUEHqqtcqm5yiX
-         z+GLJfTgdCcZq5/qyfxN5XHZ/Oi9oXK7UYyTq0INw7T2RISLdgr0wMPSl9ltBzO3cIRC
-         twCrr/j1Ve0FdGifMMA3VwqNZfQPVoY3AufRFTnV3JghcwEeYadLAEgQuZK5Rx+MKj3W
-         9HX8b+9OIdqTnNl+951Xd5tq49mRom1Y47761q4AcpEOa+tEHTuVOT3doxJ1BDNyIrpb
-         T+7Wf97wtAkJ8uO2L0ybcg/ZeTg5jP1ysgy6Uy40hsYveqRkhT75yxacdf1NtzOXhZKg
-         +Cnw==
-X-Forwarded-Encrypted: i=1; AJvYcCXqHkvzsotKL296c8eUGZoUBTiJ9pVIX0h7jL3gQtny8xBMWFjV+6JHC/20CEy5hCp6aJijuqFNnmE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdQk28rsdBldMDnjKVLeha9uzBaOI50h4eRwMt/1V2DwL+P/Ve
-	sgBYhmlItiKGoVLyQakfjTYAXgOgr5G0yTqjOE9cwn4ZpWuD7w3u5Wh4BxApe+/XHaY=
-X-Gm-Gg: AZuq6aIWYlvJ7YhJ8gvSrPXjdEJXtctZQ984/hGfAjAVytiRdt+I6XGXTxqkQD6EJSV
-	fBWKS9Hl5vsCLw49VlH1wigOIB5dI/UgQmz843mirEj3oxUFTyikeT1kjP3p8IZABxszEZsRhxk
-	Zn4K3fOaRC1buurrDvwInJ04szPcEPHVvccvgTHa+9/Yyzcl7AsqoJNoW15Zjl90jM9Ku7z/PNt
-	aLwTZD8r3K0x4LnzZinbkdejQr232gnjykz8h27DBrofffID5kgsVw3ONN1gwe+2ZR2GJe0L2mf
-	ngiZSSvC17lbXyKzTEBsdsRdVw2B1DUhtSfAnEhpy7dZczYNZeqdEpE7lqpU6GUheABAROxfMW8
-	leCEa5RSwGPIO6hsszToZxkwMCr+IbLH+vjBqiXgFgZnpGa7yvKFzh6/vHecN/jBU9BneZVZPQN
-	AWLV8YPLB2UjYrYeAFhnTyrvJfovNgxnhD4Rnd5Jdm67VdPq+F5gyZsdpOel0CEWA=
-X-Received: by 2002:a05:6000:1ace:b0:435:b068:d3c4 with SMTP id ffacd0b85a97d-43629380e94mr16816180f8f.33.1770628553209;
-        Mon, 09 Feb 2026 01:15:53 -0800 (PST)
-Received: from ?IPV6:2a01:e0a:106d:1080:44e3:9198:bd5d:a3f? ([2a01:e0a:106d:1080:44e3:9198:bd5d:a3f])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4376a78d796sm9493687f8f.20.2026.02.09.01.15.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Feb 2026 01:15:52 -0800 (PST)
-Message-ID: <b28c3d31-607d-431e-845e-c12e3e44fc23@linaro.org>
-Date: Mon, 9 Feb 2026 10:15:51 +0100
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="HMt1kAcK"
+Received: from mors-relay8204.netcup.net (localhost [127.0.0.1])
+	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4f8fjd6pJZz8dxV;
+	Mon,  9 Feb 2026 09:37:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1770629830;
+	bh=UOsVwSOTVWc4zYryltyKNWs3NU6VnGBHfl/YQ/sPQuw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=HMt1kAcKjnMrIJ+UAu4h3D0YtlXRc7t+3XZRlL5sWFYL1/jqDaY4dBxKd946HIOQ+
+	 aZhm6DDzLpbT4vQ64yH4gk5X9t9h/p3n1bE7gRdvRl8zJfJD5ckOuNnJlY0V8G0C86
+	 0hiiB7yWNwnzqTHk4Df9QfxTPuaKqVAiownHz4gA/O4PonQNjwFlZDJInix3xrTxzg
+	 itHlX9CPh2a199Su0lxtv9P2atVU/0kilwrQbOh/D7jXXECO30RQ4nB2Cq4x6PX4vT
+	 VubH+K8g53S1C9rIJX0vP49FrAAvc2vcIXlc4L1Q53kTjA5GzaiB7xfF/MldKAwWo9
+	 IINgsry+3VWmA==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay8204.netcup.net (Postfix) with ESMTPS id 4f8fjd63Zpz8dvw;
+	Mon,  9 Feb 2026 09:37:09 +0000 (UTC)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4f8fjc2J3Jz8sbs;
+	Mon,  9 Feb 2026 10:37:08 +0100 (CET)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 346F0671E0;
+	Mon,  9 Feb 2026 10:37:06 +0100 (CET)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <94b6639b-d1f4-4d03-8ec2-3b24d438bb9b@leemhuis.info>
+Date: Mon, 9 Feb 2026 10:37:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,80 +53,110 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH v3 0/9] arm64: dts: qcom: Add support for the Ayaneo
- Pocket S2
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-msm@vger.kernel.org,
- Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
- KancyJoe <kancy2333@outlook.com>
-References: <20260206213557.GA83922@bhelgaas>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <20260206213557.GA83922@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] PCI: Disable RRS polling for Intel SSDPE2KX020T8 nvme
+To: Linux-Fan <info@masysma.net>,
+ Linux regressions mailing list <regressions@lists.linux.dev>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Hui Wang <hui.wang@canonical.com>,
+ Nirmal Patel <nirmal.patel@linux.intel.com>,
+ Jonathan Derrick <jonathan.derrick@linux.dev>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, raphael.norwitz@nutanix.com, alay.shah@nutanix.com,
+ suresh.gumpula@nutanix.com, ilpo.jarvinen@linux.intel.com,
+ Chaitanya Kumar Borah <chaitanya.kumar.borah@intel.com>,
+ =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+References: <20251008165345.GA627277@bhelgaas>
+ <80340269-c702-442d-a461-300a2041a497@leemhuis.info>
+ <cone.1770586239.550948.1302334.1000@masysma-18>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <cone.1770586239.550948.1302334.1000@masysma-18>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-PPP-Message-ID: 
+ <177062982667.1071451.13713845420128483568@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: 346F0671E0
+X-NC-CID: YoQm/GuUU0Zk+dLVTzzYaruRDeiZxJC6CeBGBATAe1eTOa3qQBM=
 
-On 2/6/26 22:35, Bjorn Helgaas wrote:
-> On Fri, Feb 06, 2026 at 03:50:28PM +0100, Neil Armstrong wrote:
->> The Ayaneo Pocket S2 is a gaming console based on the Qualcomm
->> Snapdragon 8 Gen 3. It has an internal UFS storage, WiFi,
->> Bluetooth, gaming buttons, SDCard, 2K display and USB-C
->> connector.
+On 2/8/26 22:30, Linux-Fan wrote:
+> Linux regression tracking (Thorsten Leemhuis) writes:
 > 
->>        pci: pwrctrl: slot: fix dev_err_probe() usage
->>        pci: pwrctrl: rename pci-pwrctrl-slot as generic
+>> [top-posting to facilitate processing]
+>>
+>> The issue discussed in this thread is still on my list of tracked
+>> regression, which got me wondering what's the status here. Did it fall
+>> through the cracks? Or was the regression maybe fixed already and I just
+>> missed it?
 > 
-> These look fine (but please update subject lines to follow past
-> history).
-
-Ack will do
-
+> Hello Thorsten,
 > 
->>        pci: pwrctrl: generic: support for the UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+> I saw the regression was closed here:
+> <https://lore.kernel.org/regressions/e03d4af5-5cdb-4bf4-
+> a568-06b9213247a0@leemhuis.info/>
+
+That is not much relevant, what is relevant is the bug report and the
+activity, in this case this thread.
+
+> I am one of the users affected by this issue and are currently running
+> an old Linux version (Linux 6.1 from Debian oldstable) to work around
+> it. As a user I would very much appreciate an upstream fix.
 > 
-> I don't see anything here specific to UPD720201/UPD720202.  I don't
-> want a stream of patches to add more devices in the future.  Is there
-> any better design?
+> The Debian bug is still open
+> <https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1112238> whereas I
+> think Ubuntu got a patch working around the issue for their users:
+> <https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2111521>
+> 
+> Is there a chance to possibly include the workaround in the upstream?
 
-Not really, I don't see how we can avoid changing the driver compatible list
-here, I don't think we can use fallbacks here.
+The workaround: maybe. But getting it fixed is what you want, and the
+workaround might be the wrong solution for that. That's up for the
+developers of the affected area to decide.
 
-Neil
+But the thing is, this thread got messy and doesn't work on its own
+anymore (it should ideally answer questions like "What does the
+workaround look like" without providing a URL, as developers are busy
+and might not follow it; any by now devs likely have totally forgotten
+what this is about, so a kind of re-start might be needed).
+
+But maybe we are lucky, and some developers of this area will reply
+within the next two or three days.
+
+If not, I'd suggest checking if 6.19 vanilla is still affected (fixing
+6.12.y comes later, so let's ignore that for now). If it is, check if
+the workaround from Ubuntu fixes it there. It might even make sense to
+check if a revert of the culprit fixes it, too. Then report your
+findings and sum up the situation briefly (somewhat similar to a new bug
+report; people likely have forgotten what this thread is about). That
+should work as a good base to restart things here.
+
+Ciao, Thorsten
+
+> As the issue is reproducible on my system, I should be able to test some
+> patches if necessary. Tests are not easy to perform because it degrades
+> the RAID system and I would like to avoid damaging my “production” data
+> hence limit the tests to the required minimum.
+> 
+> But if there is some real doubt that the issue is still present, tell me
+> and I check it again with a more recent kernel version?
+> 
+> Thanks in advance and Kind regards
+> Linux-Fan
+> 
+>> On 10/8/25 18:53, Bjorn Helgaas wrote:
+>> > Nirmal, Jonathan, can you confirm that when RRS SV is enabled for VMD
+>> > Root Ports, we should actually see the 0x0001 value when a device
+>> > downstream of VMD responds with RRS?  From the log below, it appears
+>> > that we actually get 0xffffffff when reading Device ID after a reset.
+>> >
+>> > On Thu, Aug 21, 2025 at 11:39:36AM -0500, Bjorn Helgaas wrote:
+>> >> On Thu, Jul 03, 2025 at 08:05:05AM +0800, Hui Wang wrote:
+>> >>> On 7/2/25 17:43, Hui Wang wrote:
+> 
+> [...]
+> 
+>> > The patch is here:
+>> > https://lore.kernel.org/r/20250701232341.GA1859056@bhelgaas
+>> > and the log with that patch is here:
+> 
+> [...]
+> 
+
