@@ -1,129 +1,120 @@
-Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C1BD176FB1
-	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 06:43:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 044601C2AA;
+	Mon,  9 Feb 2026 07:47:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770619431; cv=none; b=pPriI7IbwJiDBJta7uElD9IMna0onbe6r2UgLR6VjGyM+EUyf8CfOycxL5f7g2m3W6zkJE7YkUvgILenAzZ2ZlHKCkhfLjb5rNVEu/WDNeH1YS34eaCdXHG+23mB5+lycDeoESuc2LKZYL0qxHW3mcmh0uA9q12awxulsybqqQM=
+	t=1770623221; cv=none; b=KJPGN0+K6za7yZq0tykdlpHcfNIW1ohRRa9U1cvrka2sYzmmkYL5uo6GGG030v5DN5vE6juyn4pGj83uZGKi9MpwqFnWDAny1iPxThmVbzEYTcKbN5fTAfxIhTCJ6l77iSpW8sFMzOrrO7iexL9EigGUehycJJaiNU02D8mWqHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770619431; c=relaxed/simple;
-	bh=5FdRssF3qsKB2PIZAZhVLD1SX2L7NS+dB+0kmMY93Yk=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=JjJZwipHX+2f6kXsI8/gUG3cZ+4yvc+44dzPD6KzfSu4RYVsMq+pQntScYUHoTqDJWcxGA9HVWLYHcFelU+IzbDv4T4o9CfeiaQV0+dHZ+7o2cx0hRG5N4QkUZ9TUwItqppunpb+8/gxiQEEbMcJLZQSJnipTzaBVdYbztwtJR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=HeDHhRYU; arc=none smtp.client-ip=115.124.30.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1770623221; c=relaxed/simple;
+	bh=IndfL7PE/WdXaxUDEwnvO7U+aOUsMdwiM6o/wVwo3mA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=H6124N/RW6vkBVa+MCw/G7EzVO1GqReKkOROUXwLnTROMKQuLMRnh380ufaBvnTa5mWsIu2khH3WGtDUWYeVOtfzEcek7OuPt0rQ1iH39qkFCJWMFI2ZfSfIx50yVqhdT0iuzOlsLJ/0rrVH70r9M6ncxcRXMPUuWvavfwjc6po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y35rhwkZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="HeDHhRYU"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1770619422; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type;
-	bh=GdpBtoKEEGy34xv2ANZ0Tigs/L9JKMFdf0z35fYmKxo=;
-	b=HeDHhRYUD84ukOu3g2xBjaYS5ZWZTqjhUP7+oyBwBnIMd8oKdn2CFo9WgrOV9GGd0KEVspn6vX3Uq1S5aunjK4rhDvhfoYSlOcMrEHIEKHYmxSP65vUF0+/tGsa1xbtXfbXi3PKcNo9ll+0U5AhEiwXkuSR3EQ4Cf7z1jsug4ds=
-Received: from 30.178.236.111(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WyoKfcu_1770619420 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Mon, 09 Feb 2026 14:43:41 +0800
-Message-ID: <2a9cada6-479f-4dc3-8856-a359d509e203@linux.alibaba.com>
-Date: Mon, 9 Feb 2026 14:43:39 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y35rhwkZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAA45C116C6;
+	Mon,  9 Feb 2026 07:46:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770623220;
+	bh=IndfL7PE/WdXaxUDEwnvO7U+aOUsMdwiM6o/wVwo3mA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Y35rhwkZqiZcyrO/jZVJ9yFuMHbKDay/OtzMn/OTdPXvFsik1B2Eb6UO2nMTczeQl
+	 AGoWCrY91EBEsSDTxWfXVL60k7EV2j+Nlt4GzYKfoUhqlYKlACZUOLMDLF5J+JJuva
+	 YzBnqnKa+L/cmZXze+woLRIUI3wA2tx8GcKGUno57PseBp7GEkqeXuPBaJaNobPCYo
+	 gtHSRA0sK08pkU9mKwPy03SDEiEW5kr4zXrbcn8g1ywFno7m4wbKsHb5ojp19gKanc
+	 1J1/2Fw7N4Lad2QrOOfqbFG1lfpuOijUgfqr2g4T24qJ6/nhf7bjfac1N9kKoVx4Az
+	 3z7u5r61c1L0A==
+Message-ID: <cf87856e-13f9-4d94-aa07-eed7fb4a2309@kernel.org>
+Date: Mon, 9 Feb 2026 08:46:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
-Subject: Re: [PATCH v11 0/2] PCI: Fix crash when access broken ROM
-From: Guixin Liu <kanie@linux.alibaba.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Andy Shevchenko <andriy.shevchenko@intel.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Xunlei Pang <xlpang@linux.alibaba.com>,
- oliver.yang@linux.alibaba.com
-References: <20260130080729.96152-1-kanie@linux.alibaba.com>
-In-Reply-To: <20260130080729.96152-1-kanie@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [V5,00/13] Fixes to pcie-tegra194 driver
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ thierry.reding@gmail.com, jonathanh@nvidia.com, jingoohan1@gmail.com,
+ vidyas@nvidia.com, cassel@kernel.org, 18255117159@163.com
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260208180746.2024338-1-mmaddireddy@nvidia.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20260208180746.2024338-1-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Gentling ping...
-
-Hi Bjorn and Ilpo, Could you please review these two patches?
-
-In this version, I fixed the case issues in the first patch title.
-
-Best Regards,
-Guixin Liu
-
-在 2026/1/30 16:07, Guixin Liu 写道:
-> v10 -> v11:
-> - Change 'pci rom' to 'PCI ROM' of the tittle of the first patch.
-> - Add Andy Shevchenko's rb tag in the first patch, thanks.
+On 08/02/2026 19:07, Manikanta Maddireddy wrote:
+> This series[1] was originally posted by Vidya Sagar, and I have rebased
+> it onto 6.19.0-rc6-next. I addressed review comments and split this into
+> two series, one for fixes(current) and the other is for enhancements.
+> I verified these patches on Jetson AGX Orin(Tegra234 SoC).
 > 
-> v9 -> v10:
-> - Reorder the header files, and not touch kernel.h
-> - Change PCI_ROM_IMAGE_LEN_UNIT_BYTES to PCI_ROM_IMAGE_SECTOR_SIZE.
-> - Add a comment for PCI_ROM_DATA_STRUCT_SIGNATURE.
-> 
-> v8 -> v9:
-> - Supplemental explanation for the commit body of the first patch.
-> - Change PCI_ROM_IMAGE_LEN_UNIT_SZ_512 to PCI_ROM_IMAGE_LEN_UNIT_BYTES,
-> and change it's definition to SZ_512.
-> - Use u16 and u32 for signature val instead of unsigned short/int.
-> 
-> v7 -> v8:
-> - Ordered header files alphabetically.
-> - Convert the literals too in the firt patch.
-> - Use local val to save signature instead of reading twice.
-> 
-> v6 -> v7:
-> - Put all named defines to a separate patch.
-> - Change PCI_ROM_IMAGE_LEN_UNIT_BYTES to PCI_ROM_IMAGE_LEN_UNIT_SZ_512.
-> - Named BIT(7) to PCI_ROM_LAST_IMAGE_INDICATOR_BIT.
-> - Fix all other comments from Ilpo, such as including header files,
-> and alignment fault, Thanks.
-> 
-> v5 -> v6:
-> - Convert some magic number to named defines, suggested by
-> Ilpo, thanks.
-> 
-> v4 -> v5:
-> - Add Andy Shevchenko's rb tag, thanks.
-> - Change u64 to unsigned long.
-> - Change pci_rom_header_valid() to pci_rom_is_header_valid() and
-> change pci_rom_data_struct_valid() to pci_rom_is_data_struct_valid().
-> - Change rom_end from rom+size to rom+size-1 for more readble,
-> and also change header_end >= rom_end to header_end > rom_end, same
-> as data structure end.
-> - Change if(!last_image) to if (last_image)..
-> - Use U16_MAX instead of 0xffff.
-> - Split check_add_overflow() from data_len checking.
-> - Remove !!() when reading last_image, and Use BIT(7) instead of 0x80.
-> 
-> v3 -> v4:
-> - Use "u64" instead of "uintptr_t".
-> - Invert the if statement to avoid excessive indentation.
-> - Add comment for alignment checking.
-> - Change last_image's type from int to bool.
-> 
-> v2 -> v3:
-> - Add pci_rom_header_valid() helper for checking image addr and signature.
-> - Add pci_rom_data_struct_valid() helper for checking data struct add
-> and signature.
-> - Handle overflow issue when adding addr with size.
-> - Handle alignment fault when running on arm64.
-> 
-> v1 -> v2:
-> - Fix commit body problems, such as blank line in "Call Trace" both sides,
->    thanks, (Andy Shevchenko).
-> - Remove every step checking, just check the addr is in header or data
-> struct.
-> - Add Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com> tag.
-> 
-> Guixin Liu (2):
->    PCI: Introduce named defines for PCI ROM
->    PCI: Check ROM header and data structure addr before accessing
-> 
->   drivers/pci/rom.c | 137 ++++++++++++++++++++++++++++++++++++++--------
->   1 file changed, 115 insertions(+), 22 deletions(-)
+> I added below four new patches to fix bugs, commit message of each
+> patch has the details on the bug and fix.
+>  - PCI: tegra194: Use HW version number
+>  - PCI: tegra194: Fix CBB timeout caused by DBI access before core power-on
+>  - PCI: tegra194: Disable PERST IRQ only in Endpoint mode 
 > 
 
+
+Please use standard email subjects, so with the PATCH keyword in the
+title. `git format-patch -vX` helps here to create proper versioned
+patches. Another useful tool is b4. Skipping the PATCH keyword makes
+filtering of emails more difficult thus making the review process less
+convenient.
+
+I really do not get why such big patchset is still not with b4, but if
+you insist, then at least do it correct.
+
+Best regards,
+Krzysztof
