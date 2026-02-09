@@ -1,104 +1,195 @@
-Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F17638885B
-	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 18:13:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E24A52874F5
+	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 18:16:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770660786; cv=none; b=NNTt68K2gAA3XAmIbqyt6G+Bd3zEkt9Q+X//fkcMGiEDQIZvXNxR6B6fd7G29hBEiYOiTCyKxjkRaB6aENsrHdKDZf6iNnupxM85Ddk6AMk4QP/6T/NCUP8paUL3nyO34lyvJd028pfdkoCSQvtiiOdk3SzVZaAUcjhAX+Mp2y8=
+	t=1770661009; cv=none; b=IMxGXy1ZEYt8kZqd8jImKBF8hsJdEJiI3PDrFQOp0HVAL7iuQ7ea7FR0v/qtN+bFcbB2VDPMOBgyMxafj6TX/a5e6LT4mHkBDHFrE2150lezDvDE9IPBCbPx4zSgHpAodQc8vLlRwvlWZ9wU3n2T0qslmXOCBP9pYfks2HzPXqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770660786; c=relaxed/simple;
-	bh=PeEEdOtlWgGbz3Jd1O6AJXyAdP02Oo5lyj4NDiwFBIQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lvab8GBYemnjFsUhEJH3fIs5/b6C0rgb9RzvPmfN9f0HPtWhD8D4D+beueMkr1MCXmqipORZ2rp8rt9QePeJigRT73Nj1X4SrwoaNLoh0ZlMsf+/2KQwHChXJrj64KcTijLjOnS2lbJ4jedfc0n8yuzbcynnk9hLSqa+Nqw2LJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=AbH3+lvh; arc=none smtp.client-ip=209.85.222.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1770661009; c=relaxed/simple;
+	bh=6Safa/AFdSPxR4E7qmO5/3RAlCqJFkZH663ZCt2aqqA=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iHiXw5VnjrZpeTApIQAisBiQBJpu+pFNdonZ0JflMghN2yFlG2Xvuw/bJ6PN1utdcDrTGoiDGyuMQIvhsDVOhQw5CJSdRXvbTJ0z90V4P4pFd8mH+nDyYSL8j5gWnGiNY9ZgiRpakJExonbSamxG1WpsR/FT2d+oz9vXu0P01i4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=AuKC74Tx; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="AbH3+lvh"
-Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-8c59bce68a1so3230585a.0
-        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 10:13:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="AuKC74Tx"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-43284ed32a0so3242782f8f.3
+        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 10:16:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1770660785; x=1771265585; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gj5UuRmjNHB03u99WDJiaFn+Q1sTfKxV+46xet6mPYw=;
-        b=AbH3+lvhP+aCORsv+XB1KhdCwpglgXrHZjqVkU+at4UulhW31gAR4Awws1C6o1J+mk
-         JDXBHUW/sit5R1Kj5WFCo/oUPlZPyo3Yx4SnpcKMu4ImkFpNYQXh+KcuDQOQejf4l/Qv
-         EJdxMLnr7Ec+N6WGwOXyknd4938ooiOd+8c7r6QvG9695qbM4ooG7Tl+frmQUSEImYEY
-         sRgHqqrgEfwKF1EETl1aReDnQFvMk0vo9/d3MvtU5sMbbiKVIfNGooHYmOdDKnqmXNYU
-         Sgg5JCFvw5n5hpXjHlP9F/udM7pk2R5sQGFLZg/t9I/c8cYX+7xFnJteVmVEd+sC4vDt
-         ckFg==
+        d=suse.com; s=google; t=1770661007; x=1771265807; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:date:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=aBHcqVb4t+rzmfvCo3pUilF0ZcH72MfxGN0x3yxpOVs=;
+        b=AuKC74TxBH8ATMNkhLFOyxsiwFHCLjddghE+hYyJKOBJBpklUuRJq5FIQ8Y219CRxR
+         57GCfQJlhn7DK1xkNRz4ljqEDGkWSL7PabF5MfqT2ZkyCqlDFsrxcfF+/odEntIQe4lu
+         oMH3lCyIfQXlDUo3bVzT4MSaoJxBQojW+04FDZSKTH0t4iugqVFoPv1uF71Mtg//CU51
+         t+meXbQ0nOpRKfm7vaCrFyNtQa4uN37wnK68O9xNkAfqm/944r7fdouBDJBT6+hWDY4V
+         NfYk948BYgzAn92+XwimhU2bpmSArtzAfvXk9iXhR98sZ12Ca1mPn1EEB9JhEGJSKpWs
+         1XuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770660785; x=1771265585;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gj5UuRmjNHB03u99WDJiaFn+Q1sTfKxV+46xet6mPYw=;
-        b=J2A0EoQwX/g6VfBreYe8rNuz9/gwfeQ4ajycBg6xCug95b3jBMIPVLyrm9pIM9xl2W
-         uINRJ1XDcYpysCLLS3+yt0lxJJTdpEyoxSK7vDlWpuLgrD6vpGU1CRtxmdeqSQV6zVP2
-         zzEQ1RRCt25zXTiLqauHlBOV3gix/HAj0tIwTVPfq2HWJry5F00MePlpgkuV82imbG11
-         TAB+0iHJyrA3EDSwRRQzp0KU3Zfxg7HJoiZv+7E0+7vqAOnpzYuorDzTrSgGXs8FUK1W
-         E2344OUzgZwqitxWYroSia6b4jPAliA+YPojr/mhSSGMTTE07Q2cHOhOnw3VrkhdSWOt
-         /NYQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWDoesUaALEFWA7QzqRT4mmR+pnE4PDlJuZMvM+uTCTC/+ZO3ayflhC9ewdRLzihbQ1+gDEC2yGz+A=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx87FuCXziCJ/jt0Q1jxMTmo8cNupUfZw88y5WD7J4+GlN4Jnu4
-	0nt1AXnF+hLaDE9Mc+8EJeQjVBrVH+haXlDGojv1asTdixHRG8fnmCczCZiegeZVKVI=
-X-Gm-Gg: AZuq6aKEX8zySDr7g2Zu3fOAd9ngDENt8jmnq4kXqEpucH5l6/zMJYINANXh4Q1XKMt
-	RIBwvousNkdANXZyRozmGVwQZSkXwEASaRiMC6tmQODE0BbI7vIgTolf7pFTDWM+byZEihlD4HQ
-	JUrxPtbN0hTTa+M7VwWA1vtX2vJz6W0RrOV2flNwZN6rrCqD/DKh1xRRPbHa4onOkK2OkYCkaqK
-	iB5V/QBFKfBes8bfJFVzuK7HeOUShKEwH+mr4E3A4IxT2qSGcXOr+gCE2BVdglfUCBGaDEkEBu1
-	zh9XaStV+PBtckw5BeexBE3LS9ljXJZ6AhiDoBL5I5uqDhfdXRJyb/I5IBbK1FtQxHtJGI2rHm1
-	oEMjPTNztgqpF4q6kKo73fCthGdFEcQw83DVJmo7Dni6b2tveCLEPjlNCKDwp5yYQVIDXSOevND
-	1a7ArxVErYU9gmwfzIGeMvkSwX/cTxBgftZPkulZbC3p906NR3Oz/2Dx6wCGiPeMzc1xU9LM5xS
-	pnqMg==
-X-Received: by 2002:a05:620a:3909:b0:8ca:358a:d636 with SMTP id af79cd13be357-8caf1acd680mr1662509285a.87.1770660784822;
-        Mon, 09 Feb 2026 10:13:04 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-896f79d34bcsm39740876d6.0.2026.02.09.10.13.04
+        d=1e100.net; s=20230601; t=1770661007; x=1771265807;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=aBHcqVb4t+rzmfvCo3pUilF0ZcH72MfxGN0x3yxpOVs=;
+        b=dyvdkg17CKV1lCaiU0rH53Go0gP/83KRa3v8PmckYLISUnnWPJ2eOEdPhkFEP6sHKu
+         LvArUcqsGagJe/jH5mH39+fDpUC7uK1XqVNrYl/N66y+11ki0Mejvf8wRg/T1+AB4eA9
+         N3d/oPOJOV4hmszMdcdCt+MvZKZs63QOJHIoBIM3x7tRHhYI9Tkbw9wSrgXzwGMiMZsO
+         xHHWjyDUDwdN/d+TOhYyIBgLH1N2Qn55tZ8YsRLGapFVzAzZvmfTNhG8WOPyUriViGap
+         91xelKlrMlCfrhF2OAcXBhSrLpTED3rKlBbEt+j8k2LQvVzR98ZHjZPCH7qG/c3Q/eZJ
+         FpkQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU7hRbsOoMvizRY7jKTHEzSEZbbEwryY5q278wzFpAv02T/l9d8zaRq188K2d1emSWP1vaFqbDrg7s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyVZrgF6QCkeG5YkmUrDPmx339lGlkpWMc9PqV7kI5bf/EfyJ1T
+	fRiH7Rj444depZNU0bNVc3Rst7iadlRlAYkQbKNaRtDTRtVIdOIT1DQ6VSq2Kz4dwEQ=
+X-Gm-Gg: AZuq6aLNb10gtID0WE+u90W66NvopRq64sNVuHDKRKScxj/IB9RNA6zt+k0yfr9zo9U
+	yU9MG2Xg8IRB+Geu7bfAlcryrwZXs2l8/TeHEKUT9cxDYVXxrQqg+eg+63Oe8EudnN4to2kvIXj
+	jXsr6G0fAiufz9C9Ve/8VJkGrAKyohz9kTjekLajJkva/1W+upiMJNV0HxvplHqvaZGIgF9aKp/
+	2yesPk4gHDYPwWbxrbLSnFfZLVU8V2yQUgyyIu9rdGgAewSCZxVRu0HEUfgThE6fymyycJwJAan
+	vYie4liD1OcOydexd64oDExiBcD9/OmjFoc9jQiNdlGN9eALCRu4W09a6Udz+A2lZz1GY8nQ+5n
+	sIhG4S4YBPxEwXMNDk67pG52V2HsBGlM7FBlQ+/KRFxlRX+jmR8pfpyu9hreJi0ueWfE4pEHnna
+	4EBtADyYyDHNKBOCx5iis7UUTa4T1gZU1v8VFmbw==
+X-Received: by 2002:a05:6000:1ace:b0:435:a815:dd8d with SMTP id ffacd0b85a97d-436293b244fmr16995444f8f.55.1770661007108;
+        Mon, 09 Feb 2026 10:16:47 -0800 (PST)
+Received: from localhost (93-41-3-120.ip79.fastwebnet.it. [93.41.3.120])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43629745f7asm25073238f8f.33.2026.02.09.10.16.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Feb 2026 10:13:04 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1vpVkt-0000000EmNV-2zIP;
-	Mon, 09 Feb 2026 14:13:03 -0400
-Date: Mon, 9 Feb 2026 14:13:03 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
-	Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [RFC 0/2] Retrieve tph from dmabuf for PCIe P2P memory access
-Message-ID: <20260209181303.GB943673@ziepe.ca>
-References: <20260209175317.1713406-1-zhipingz@meta.com>
+        Mon, 09 Feb 2026 10:16:46 -0800 (PST)
+From: Andrea della Porta <andrea.porta@suse.com>
+X-Google-Original-From: Andrea della Porta <aporta@suse.de>
+Date: Mon, 9 Feb 2026 19:19:34 +0100
+To: Rob Herring <robh@kernel.org>
+Cc: Herve Codina <herve.codina@bootlin.com>,
+	Andrea della Porta <andrea.porta@suse.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mbrugger@suse.com,
+	guillaume.gardet@arm.com, tiwai@suse.com,
+	Lizhi Hou <lizhi.hou@amd.com>
+Subject: Re: [PATCH v2] PCI: of: Downgrade error message on missing of_root
+ node
+Message-ID: <aYolNrRSU_IlgAFn@apocalypse>
+References: <20251106182708.03cfb6c6@bootlin.com>
+ <20251106175016.GA1960490@bhelgaas>
+ <aQ28s57R0YfrqwdG@apocalypse>
+ <20251107125828.18a034de@bootlin.com>
+ <CAL_JsqJ_gCu_A2YqX4r2UMWssJ=4FprsM_Os3Zw=V8yCTGubdA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260209175317.1713406-1-zhipingz@meta.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAL_JsqJ_gCu_A2YqX4r2UMWssJ=4FprsM_Os3Zw=V8yCTGubdA@mail.gmail.com>
 
-On Mon, Feb 09, 2026 at 09:53:10AM -0800, Zhiping Zhang wrote:
-> Currently, the steering tag can be used for a CPU on the motherboard; the
-> ACPI check is in place to query and obtain the supported tph settings. Here
-> we intend to use the tph info to improve RDMA NIC memory access on a vfio-based
-> accelerator device via PCIe peer-to-peer. When an applicantion register a
-> RDMA memory region with DMABUF for the RDMA NIC to access the device memory,
-> the tph associated with the memory region can be retrieved and used to set the
-> steering tag / process hint (ph). The tph contains additional instructions
-> or hints to the GPU or accelerator device for advanced memory operations,
-> such as, read cache selection.
+Hi,
+
+On 07:58 Fri 05 Dec     , Rob Herring wrote:
+> On Fri, Nov 7, 2025 at 5:58 AM Herve Codina <herve.codina@bootlin.com> wrote:
+> >
+> > Hi Andrea, Bjorn,
+> >
+> > On Fri, 7 Nov 2025 10:32:35 +0100
+> > Andrea della Porta <andrea.porta@suse.com> wrote:
+> >
+> > > Hi Bjorn,
+> > >
+> > > On 11:50 Thu 06 Nov     , Bjorn Helgaas wrote:
+> > > > On Thu, Nov 06, 2025 at 06:27:08PM +0100, Herve Codina wrote:
+> > > > > On Thu, 6 Nov 2025 16:21:47 +0100
+> > > > > Andrea della Porta <andrea.porta@suse.com> wrote:
+> > > > > > On 13:18 Thu 06 Nov     , Herve Codina wrote:
+> > > > > > > On Thu, 6 Nov 2025 12:04:07 +0100
+> > > > > > > Andrea della Porta <andrea.porta@suse.com> wrote:
+> > > > > > > > On 18:23 Wed 05 Nov     , Bjorn Helgaas wrote:
+> > > > > > > > > On Wed, Nov 05, 2025 at 07:33:40PM +0100, Andrea della Porta wrote:
+> > > > Patch at https://lore.kernel.org/r/955bc7a9b78678fad4b705c428e8b45aeb0cbf3c.1762367117.git.andrea.porta@suse.com,
+> > > > added back for reference:
+> > > >
+> > > >   diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> > > >   index 3579265f1198..872c36b195e3 100644
+> > > >   --- a/drivers/pci/of.c
+> > > >   +++ b/drivers/pci/of.c
+> > > >   @@ -775,7 +775,7 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
+> > > >
+> > > >       /* Check if there is a DT root node to attach the created node */
+> > > >       if (!of_root) {
+> > > >   -               pr_err("of_root node is NULL, cannot create PCI host bridge node\n");
+> > > >   +               pr_info("Missing DeviceTree, cannot create PCI host bridge node\n");
+> > > >               return;
+> > > >       }
+> > > >
+> > > > > > > > > > When CONFIG_PCI_DYNAMIC_OF_NODES is enabled, an error
+> > > > > > > > > > message is generated if no 'of_root' node is defined.
+> > > > > > > > > >
+> > > > > > > > > > On DT-based systems, this cannot happen as a root DT node
+> > > > > > > > > > is always present. On ACPI-based systems, this is not a
+> > > > > > > > > > true error because a DT is not used.
+> > > > > > > > > >
+> > > > > > > > > > Downgrade the pr_err() to pr_info() and reword the message
+> > > > > > > > > > text to be less context specific.
+> > > > > > > > >
+> > > > > > > > > of_pci_make_host_bridge_node() is called in the very generic
+> > > > > > > > > pci_register_host_bridge() path.  Does that mean every boot
+> > > > > > > > > of a kernel with CONFIG_PCI_DYNAMIC_OF_NODES on a non-DT
+> > > > > > > > > system will see this message?
+> > > > > > > >
+> > > > > > > > This is the case, indeed. That's why downgrading to info seems
+> > > > > > > > sensible.
+> > > > > > > >
+> > > > > > > > > This message seems like something that will generate user
+> > > > > > > > > questions.  Or is this really an error, and we were supposed
+> > > > > > > > > to have created of_root somewhere but it failed?  If so, I
+> > > > > > > > > would expect a message where the of_root creation failed.
+> > > >
+> > > > I think we should just remove the message completely.  I don't want
+> > > > users to enable CONFIG_PCI_DYNAMIC_OF_NODES out of curiosity or
+> > > > willingness to test, and then ask about this message.
 > 
-> Note this RFC is for the discussion on the direction and is not intended to be
-> a complete implementation. Once the direction is agreed on, we will work on the
-> implementation or a real patch set.
+> No, please keep it. Anyone that enables CONFIG_PCI_DYNAMIC_OF_NODES
+> should know what they are doing. I was thinking it should be hidden
+> behind EXPERT perhaps.
 
-you didn't cc the DRM people who really need to look at any changes to
-the dmabuf contract.
+Ok, so it seems that this message is there to stay, can we just turn
+it to a warning to relieve pressure?
 
-Jason
+Thanks,
+Andrea
+
+> 
+> > >
+> > > Agreed. This would be the easy solution, the other being creating the
+> > > empty DT so that the message will never be printed. But this require some
+> > > careful thought. The latter solution will be needed if we'll ever want to
+> > > make drivers like RP1 or lan96xx (which uses the runtime overlay) to work.
+> > >
+> > > >
+> > > > "You can avoid the message by also enabling CONFIG_OF_EARLY_FLATTREE"
+> > > > is not a very satisfactory answer.
+> > >
+> > > Unfortunately this would work on x86, but not on arm. And who knows on
+> > > other platforms.
+> > >
+> > > >
+> > > > A message at the point of *needing* this, i.e., when loading an
+> > > > overlay fails for lack of this dynamic DT, is fine.
+> > >
+> > > It seems fine to me.
+> > >
+> >
+> > Ok, even if I would prefer having an empty (or not) of_node available on all
+> > platforms, what is proposed makes sense especially in regards to potential
+> > users questions.
+> 
+> Having a DT always available was the original intent, but the arm64
+> maintainers resisted so that's a fight for another day when someone
+> really wants to use this on an ACPI system. Now riscv has done the
+> same thing unfortunately.
+> 
+> Rob
