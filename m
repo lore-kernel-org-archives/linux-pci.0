@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9903019A4;
-	Mon,  9 Feb 2026 11:33:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12BAF318B92;
+	Mon,  9 Feb 2026 11:35:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770636835; cv=none; b=uLdmpDwxSKXC4k6sO76md2WAt7XuYoI+qcqmhbmnKMHdT8bMoP5Nl2c/bHzEGfhQEpnHOs9iKkN+Rrfx8OiGlvWxT1u2C2aP9pUGpRwjIs/GUgI44TzZ/RFlb4LBEdaNZv7ZWRAsX1PXr3rk6Qz7HFJaNQK83a//2WAeeZSwKBs=
+	t=1770636938; cv=none; b=fNMvpLU90yY9Cf7/X61/OyizBnAPc6Vz4SDxZp9+QUkFJ2KAnel+VGuSF5hFRo0eubJtawRp8hcLTZ2zMyGUiEkTP9sDdmSQ1jbsiGWKY7D+lygpDP5MTYXFxyePHTbOiYgh0Mi6GcSok8vv61Ukp+HcWBqADOB3sA4TZCo7gcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770636835; c=relaxed/simple;
-	bh=Y2VLIFP5kMfdwWxrV8K6t3Tp3s4c5SWiYzVYjQpV4IU=;
+	s=arc-20240116; t=1770636938; c=relaxed/simple;
+	bh=bwgsJsBgS327LLJQnYRB/5b25RtRD7UBzxz5b/BD1c0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uuxj2fCLVdK68hsbXSVo9xT9Z1RjatvloqBWishp38kgSplrx6HIJM0X+vbGGp2mWQ5tLozf7df8bcuaSibkZi2My9vXckXaiEtNSOsyQLduxWxCQwgt4sYEZPy2PFeBLhQSsL/91dVT7YBb7dR+3o/O2YcIvsgM53mojHjkumc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pVuXxZ3d; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=MXaVUFSVPGG2DkMYtkRvmHWLDhtBosgSKaSi531DBS7RJPYLtQufgROKIHUMbRYuT4v6n9NbTp9p0XI8nxVL3SPEcSqj2EkwFI2gCTipIG7RlrdVQNeMJoz6YS7XpTzuoPpa0NS3zDnu65qYlVwxNV6TL90TVnoGgNyEa215GBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q5R4WzHy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pVuXxZ3d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49219C116C6;
-	Mon,  9 Feb 2026 11:33:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q5R4WzHy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EAEBC116C6;
+	Mon,  9 Feb 2026 11:35:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770636835;
-	bh=Y2VLIFP5kMfdwWxrV8K6t3Tp3s4c5SWiYzVYjQpV4IU=;
+	s=k20201202; t=1770636938;
+	bh=bwgsJsBgS327LLJQnYRB/5b25RtRD7UBzxz5b/BD1c0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pVuXxZ3dmHr6bJKWpKzdgd5SFLAs68fAfVKOauOS0pjNxAChraTNnZL8UHIAZ0Y4k
-	 Fe2d33tcIMWS30f/XGyyLg8Uvf058+87j22QzvYq0B4Q21TXqZ9v8UJQLZigsj4K7T
-	 emuUZs4s6yHep7jsc6fgwCA+w7UXZkKHjo40Shv45bj2FmSJvFyepdTMeCNVO0bzQc
-	 XsV+sAJ2TCQhaPHe2zFEmO2g6CEcTTCYkqB83L0zvLURRwTlbMPP+jsIbb05KCPSKT
-	 dBUEl0+3XVEXT0D0V8x21W4h72D++azahN3P3t9c6vZeOFOwIaIR6Uc1PnVmshRTNa
-	 082Fqxqq170Aw==
-Date: Mon, 9 Feb 2026 17:03:46 +0530
+	b=q5R4WzHyld5bm0v+Kep4muSPKwKjGly94mUl9A8Fuhd6dFoOCXej2xB9z0hzuJZR+
+	 DYl98LN1QtT88okD0+Iluk0tglK5/4j+vkQuvCsy6sMcEVGLuh0gjdsGHra1lYbbSZ
+	 7mWbiRAmR+y3d1NQKR82l3bn9Uywv3unIZoXFulYjXg04pIc6IlLWARGD9+GryFb63
+	 KVQleVgoqFtFS/uselWRJmNOYvm8A4MpkW1ryjqH0E5MK866AyzpOZzjNDnwrqSmTl
+	 f0TWzsJtTUy4B5IroFXwgoVPfvplwEJ5ABJ1TOhA0FvbaQrcDaIK/8E0WsZ42350+P
+	 L+JEMJL8GOUag==
+Date: Mon, 9 Feb 2026 17:05:28 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v3 3/9] pci: pwrctrl: rename pci-pwrctrl-slot as generic
-Message-ID: <ygvljxho4dh4zlkxcropjdczbyh45sexntosz2rvxdsxigmgmi@aeqhi4qit5ct>
-References: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
- <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-3-5b79c5d61a03@linaro.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: cassel@kernel.org, kwilczynski@kernel.org, kishon@kernel.org, 
+	bhelgaas@google.com, corbet@lwn.net, jingoohan1@gmail.com, lpieralisi@kernel.org, 
+	robh@kernel.org, Frank.Li@nxp.com, linux-pci@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] PCI: dwc: ep: Fix BAR update handling with
+ in-place epf_bar reuse
+Message-ID: <jovr3iwtwtcbalzm2zklhe7gmvk2edao57a67oh3shf5lsdnfs@5qohmaxx5zlj>
+References: <20260202145407.503348-1-den@valinux.co.jp>
+ <vgqd74pmc6av25d2zy6alfm26sjir5nyhxjisisebuawpeqcor@gjxevxzjnbbe>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,69 +47,52 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-3-5b79c5d61a03@linaro.org>
+In-Reply-To: <vgqd74pmc6av25d2zy6alfm26sjir5nyhxjisisebuawpeqcor@gjxevxzjnbbe>
 
-On Fri, Feb 06, 2026 at 03:50:31PM +0100, Neil Armstrong wrote:
-> The driver is pretty generic and would fit for either
-> PCI Slots or PCI devices connected to PCI ports, so rename
-> the driver and module as pci-pwrctrl-generic.
+On Mon, Feb 09, 2026 at 02:40:13PM +0900, Koichiro Den wrote:
+> On Mon, Feb 02, 2026 at 11:54:05PM +0900, Koichiro Den wrote:
+> > Hi,
+> > 
+> > This patch series is a follow-up to a side discussion that started from
+> > Niklas' comment at:
+> > https://lore.kernel.org/all/aXtrW7viGZfMNZur@ryzen/
+> > 
+> > This series:
+> >   1) Makes BAR Match vs Address Match teardown in DesignWare EP explicit
+> >      by returning right after clearing a BAR-match inbound mapping.
+> >   2) Fixes the dw_pcie_ep_set_bar() mapping-update path to run
+> >      dw_pcie_ep_clear_ib_maps() unconditionally, since the driver cannot
+> >      reliably distinguish BAR Match -> BAR Match from Address Match ->
+> >      BAR Match transitions when the same epf_bar instance is updated in
+> >      place and passed in again.
+> > 
+> > Base: controller/dwc branch, latest:
+> > commit a24149881558 ("PCI: dwc: ep: Add comment explaining controller level
+> >                       PTM access in multi PF setup")
+> > 
+> > Changes since v1:
+> >   - Switched from the v1 approach (Y) to the alternative approach (X)
+> >     that was proposed earlier in the discussion.
+> >     Details of the v1 (Y) vs v2 (X) are described at:
+> >     https://lore.kernel.org/all/sextbnbmsur2xjfoun2l4lr5vekmpzae7sx6or2ird44t6ud6d@yprcz43tpq4p/
+> >   - Changed the subject.
+> > 
+> > v1: https://lore.kernel.org/all/20260131133655.218018-1-den@valinux.co.jp/
+> > 
+> > Thanks,
 > 
-> Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
-> ---
->  drivers/pci/pwrctrl/Kconfig               | 8 ++++----
->  drivers/pci/pwrctrl/Makefile              | 4 ++--
->  drivers/pci/pwrctrl/{slot.c => generic.c} | 0
+> Hi Mani,
+> 
+> Just following up on this series.
+> If this looks fine to you, would you mind picking it up when you have a
+> chance?
+> (Niklas has also commented here: https://lore.kernel.org/all/aYSZxCtACmQyC0XT@ryzen/)
+> 
 
-I was expecting the rename inside the driver too :)
+Sorry, I cannot get this series for 7.0 as it is too late. I'll try to get it
+early once 7.0-rc1 is released.
 
 - Mani
-
->  3 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pwrctrl/Kconfig b/drivers/pci/pwrctrl/Kconfig
-> index e0f999f299bb..0a93ac4cd11b 100644
-> --- a/drivers/pci/pwrctrl/Kconfig
-> +++ b/drivers/pci/pwrctrl/Kconfig
-> @@ -11,12 +11,12 @@ config PCI_PWRCTRL_PWRSEQ
->  	select POWER_SEQUENCING
->  	select PCI_PWRCTRL
->  
-> -config PCI_PWRCTRL_SLOT
-> -	tristate "PCI Power Control driver for PCI slots"
-> +config PCI_PWRCTRL_GENERIC
-> +	tristate "Generic PCI Power Control driver for PCI slots"
->  	select PCI_PWRCTRL
->  	help
-> -	  Say Y here to enable the PCI Power Control driver to control the power
-> -	  state of PCI slots.
-> +	  Say Y here to enable the generic PCI Power Control driver to control
-> +	  the power state of PCI slots.
->  
->  	  This is a generic driver that controls the power state of different
->  	  PCI slots. The voltage regulators powering the rails of the PCI slots
-> diff --git a/drivers/pci/pwrctrl/Makefile b/drivers/pci/pwrctrl/Makefile
-> index 13b02282106c..f6bb4fb9a410 100644
-> --- a/drivers/pci/pwrctrl/Makefile
-> +++ b/drivers/pci/pwrctrl/Makefile
-> @@ -5,7 +5,7 @@ pci-pwrctrl-core-y			:= core.o
->  
->  obj-$(CONFIG_PCI_PWRCTRL_PWRSEQ)	+= pci-pwrctrl-pwrseq.o
->  
-> -obj-$(CONFIG_PCI_PWRCTRL_SLOT)		+= pci-pwrctrl-slot.o
-> -pci-pwrctrl-slot-y			:= slot.o
-> +obj-$(CONFIG_PCI_PWRCTRL_GENERIC)	+= pci-pwrctrl-generic.o
-> +pci-pwrctrl-generic-y			:= generic.o
->  
->  obj-$(CONFIG_PCI_PWRCTRL_TC9563)	+= pci-pwrctrl-tc9563.o
-> diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/generic.c
-> similarity index 100%
-> rename from drivers/pci/pwrctrl/slot.c
-> rename to drivers/pci/pwrctrl/generic.c
-> 
-> -- 
-> 2.34.1
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
