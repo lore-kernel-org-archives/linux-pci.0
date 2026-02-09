@@ -1,59 +1,77 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A1D5314D2F
-	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 17:55:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F17638885B
+	for <linux-pci@vger.kernel.org>; Mon,  9 Feb 2026 18:13:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770659753; cv=none; b=llgsynzSQWFIe5+iqnK0LtW/wOgHJ0u5QW4LrCzUoHY7y/tWyV752fumFa1GNzM8j1LxCKULgubYmGoMj/K0deCbRa5j1v/wzOb1nBYd9IoYaxx51PMWbTgTyjA0x736g3vhWGQMiM04ZUOpiExCZH3lf/wpdQsghhgs0tjYLHk=
+	t=1770660786; cv=none; b=NNTt68K2gAA3XAmIbqyt6G+Bd3zEkt9Q+X//fkcMGiEDQIZvXNxR6B6fd7G29hBEiYOiTCyKxjkRaB6aENsrHdKDZf6iNnupxM85Ddk6AMk4QP/6T/NCUP8paUL3nyO34lyvJd028pfdkoCSQvtiiOdk3SzVZaAUcjhAX+Mp2y8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770659753; c=relaxed/simple;
-	bh=r8dHtmr7XkLs5zrX+fWH/e/Ev+/xaGbxbjTk8UBoH9c=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ni2U90MTmyTVfHRWfEnerRqqmRXRDl2/9rn3DKnEwJfavsiHhnTDS8l37ncD28Q5kCqbn4PiTupBy2uEwzSHrEy0VD/aWBCBZWs5d8KWWW9EGmixjBy8h1oKKPW2hlURneDiW/YY9VZzGC+IMImbrbqGECRvB5X/L9QpYLXGBfM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=cGnT0mkM; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1770660786; c=relaxed/simple;
+	bh=PeEEdOtlWgGbz3Jd1O6AJXyAdP02Oo5lyj4NDiwFBIQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lvab8GBYemnjFsUhEJH3fIs5/b6C0rgb9RzvPmfN9f0HPtWhD8D4D+beueMkr1MCXmqipORZ2rp8rt9QePeJigRT73Nj1X4SrwoaNLoh0ZlMsf+/2KQwHChXJrj64KcTijLjOnS2lbJ4jedfc0n8yuzbcynnk9hLSqa+Nqw2LJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=AbH3+lvh; arc=none smtp.client-ip=209.85.222.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="cGnT0mkM"
-Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 619H8FX2951966
-	for <linux-pci@vger.kernel.org>; Mon, 9 Feb 2026 09:55:52 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=oHoiNKIypFbd1xk38f8sYTCN3qwAX1/eZnwAo4QjQEc=; b=cGnT0mkMA/sb
-	uhciBRHevOTVw0VjJBMabZsSRL0Z/P5fLnNx/u3kFruDyyVqFUFWUWEv3e6YkhwN
-	Z8WOenMM8H0uFNeESpuMEYo+imnuc3G00emBep85inmTNqDXP8m2PTSaBt7iCeaW
-	awIxBjCZoiwAAt7NC7G4U0PLHWiPBUUe6FIQZS/7X9ezCpTRJHx5qIJ2upIz4SPu
-	IKGoE07SRmK1Gei/HgbeiKkQagYOKgGmPowoVY5W7jy0/Q6LLvzLf0y4oKn1szNM
-	2sWgxX1l/KCqLBHUOKHCeJGlNS8oIcdFgYP+Fiqqq6qrazvloUmY8lhv4Aob+SzZ
-	98Sitlna9g==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c7f1wm5dg-7
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 09:55:52 -0800 (PST)
-Received: from twshared25002.15.frc2.facebook.com (2620:10d:c0a8:1b::8e35) by
- mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Mon, 9 Feb 2026 17:55:43 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id 2328A100D0428; Mon,  9 Feb 2026 09:53:20 -0800 (PST)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-        Bjorn
- Helgaas <bhelgaas@google.com>, <linux-rdma@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
-        Keith Busch
-	<kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-        Yishai Hadas
-	<yishaih@nvidia.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, Zhiping Zhang <zhipingz@meta.com>
-Subject: [RFC 2/2] RMDA MLX5: get tph for p2p access when registering dmabuf mr
-Date: Mon, 9 Feb 2026 09:53:12 -0800
-Message-ID: <20260209175317.1713406-3-zhipingz@meta.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260209175317.1713406-1-zhipingz@meta.com>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="AbH3+lvh"
+Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-8c59bce68a1so3230585a.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 10:13:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1770660785; x=1771265585; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gj5UuRmjNHB03u99WDJiaFn+Q1sTfKxV+46xet6mPYw=;
+        b=AbH3+lvhP+aCORsv+XB1KhdCwpglgXrHZjqVkU+at4UulhW31gAR4Awws1C6o1J+mk
+         JDXBHUW/sit5R1Kj5WFCo/oUPlZPyo3Yx4SnpcKMu4ImkFpNYQXh+KcuDQOQejf4l/Qv
+         EJdxMLnr7Ec+N6WGwOXyknd4938ooiOd+8c7r6QvG9695qbM4ooG7Tl+frmQUSEImYEY
+         sRgHqqrgEfwKF1EETl1aReDnQFvMk0vo9/d3MvtU5sMbbiKVIfNGooHYmOdDKnqmXNYU
+         Sgg5JCFvw5n5hpXjHlP9F/udM7pk2R5sQGFLZg/t9I/c8cYX+7xFnJteVmVEd+sC4vDt
+         ckFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770660785; x=1771265585;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=gj5UuRmjNHB03u99WDJiaFn+Q1sTfKxV+46xet6mPYw=;
+        b=J2A0EoQwX/g6VfBreYe8rNuz9/gwfeQ4ajycBg6xCug95b3jBMIPVLyrm9pIM9xl2W
+         uINRJ1XDcYpysCLLS3+yt0lxJJTdpEyoxSK7vDlWpuLgrD6vpGU1CRtxmdeqSQV6zVP2
+         zzEQ1RRCt25zXTiLqauHlBOV3gix/HAj0tIwTVPfq2HWJry5F00MePlpgkuV82imbG11
+         TAB+0iHJyrA3EDSwRRQzp0KU3Zfxg7HJoiZv+7E0+7vqAOnpzYuorDzTrSgGXs8FUK1W
+         E2344OUzgZwqitxWYroSia6b4jPAliA+YPojr/mhSSGMTTE07Q2cHOhOnw3VrkhdSWOt
+         /NYQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWDoesUaALEFWA7QzqRT4mmR+pnE4PDlJuZMvM+uTCTC/+ZO3ayflhC9ewdRLzihbQ1+gDEC2yGz+A=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx87FuCXziCJ/jt0Q1jxMTmo8cNupUfZw88y5WD7J4+GlN4Jnu4
+	0nt1AXnF+hLaDE9Mc+8EJeQjVBrVH+haXlDGojv1asTdixHRG8fnmCczCZiegeZVKVI=
+X-Gm-Gg: AZuq6aKEX8zySDr7g2Zu3fOAd9ngDENt8jmnq4kXqEpucH5l6/zMJYINANXh4Q1XKMt
+	RIBwvousNkdANXZyRozmGVwQZSkXwEASaRiMC6tmQODE0BbI7vIgTolf7pFTDWM+byZEihlD4HQ
+	JUrxPtbN0hTTa+M7VwWA1vtX2vJz6W0RrOV2flNwZN6rrCqD/DKh1xRRPbHa4onOkK2OkYCkaqK
+	iB5V/QBFKfBes8bfJFVzuK7HeOUShKEwH+mr4E3A4IxT2qSGcXOr+gCE2BVdglfUCBGaDEkEBu1
+	zh9XaStV+PBtckw5BeexBE3LS9ljXJZ6AhiDoBL5I5uqDhfdXRJyb/I5IBbK1FtQxHtJGI2rHm1
+	oEMjPTNztgqpF4q6kKo73fCthGdFEcQw83DVJmo7Dni6b2tveCLEPjlNCKDwp5yYQVIDXSOevND
+	1a7ArxVErYU9gmwfzIGeMvkSwX/cTxBgftZPkulZbC3p906NR3Oz/2Dx6wCGiPeMzc1xU9LM5xS
+	pnqMg==
+X-Received: by 2002:a05:620a:3909:b0:8ca:358a:d636 with SMTP id af79cd13be357-8caf1acd680mr1662509285a.87.1770660784822;
+        Mon, 09 Feb 2026 10:13:04 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-896f79d34bcsm39740876d6.0.2026.02.09.10.13.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Feb 2026 10:13:04 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1vpVkt-0000000EmNV-2zIP;
+	Mon, 09 Feb 2026 14:13:03 -0400
+Date: Mon, 9 Feb 2026 14:13:03 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
+	Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [RFC 0/2] Retrieve tph from dmabuf for PCIe P2P memory access
+Message-ID: <20260209181303.GB943673@ziepe.ca>
 References: <20260209175317.1713406-1-zhipingz@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -61,100 +79,26 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Authority-Analysis: v=2.4 cv=OMcqHCaB c=1 sm=1 tr=0 ts=698a1fa8 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=VabnemYjAAAA:8 a=tOZ8yR1yUuKf9aCP_icA:9
- a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-ORIG-GUID: 6hbNVNPoLGIATj4elHFriCI9W9qfPJ89
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA5MDE1MSBTYWx0ZWRfXz4/W1QLpvCOJ
- ePz4l7BnapqFdwL0t01dLI/ldI40I0rwhC4kOj9udbU1LT3s+IiPxxrZ/yvHaEOQqnoOi6EfCiE
- X9XiIZcu5O79esa/m09v7sgXISne5cJGBChWsQGBacuGDnM5ae1LbOddhKSvlI4/4C57d+44mer
- R2p66ZIhFFjS/ZeyB3bjHQYdh1vkkJ0XU6M3oY2nDmdFb9uMwygZduJUafdbJtSWlxRPoH46Ejo
- 8ZXn/TW1/sW9yP7EjOUHtPKKoxJeAnwFDCe1vpf7PMcxnTW+xbkZvH5CRH/mqkDTXNquQEUPRJv
- vU+J91kwFB1o0Ur3OxXMZ1ECPnoGH/kU2VGdD5vbudhqPaHtMp2d19Pzm6N3JDoqUoDMI4tR2+/
- 2uEqQRdCEw/S412mKN7uJs7wLxVDkLdEig8TcdZZA2LKBPnnpgwS/SKpmXwmAdHY9hFkTpLlAiq
- Cl08nm3ML1WwtmH4/bw==
-X-Proofpoint-GUID: 6hbNVNPoLGIATj4elHFriCI9W9qfPJ89
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-09_01,2026-02-09_03,2025-10-01_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260209175317.1713406-1-zhipingz@meta.com>
 
-The patch adds a local function to check and get tph info when available =
-during
-dmabuf mr registration. Note the DMAH workflow for CPU still takes preced=
-ence in
-the process. Currently, it only works with the direct st_mode. Compatibil=
-ity
-with other st_modes will be added in the forma patch set.
+On Mon, Feb 09, 2026 at 09:53:10AM -0800, Zhiping Zhang wrote:
+> Currently, the steering tag can be used for a CPU on the motherboard; the
+> ACPI check is in place to query and obtain the supported tph settings. Here
+> we intend to use the tph info to improve RDMA NIC memory access on a vfio-based
+> accelerator device via PCIe peer-to-peer. When an applicantion register a
+> RDMA memory region with DMABUF for the RDMA NIC to access the device memory,
+> the tph associated with the memory region can be retrieved and used to set the
+> steering tag / process hint (ph). The tph contains additional instructions
+> or hints to the GPU or accelerator device for advanced memory operations,
+> such as, read cache selection.
+> 
+> Note this RFC is for the discussion on the direction and is not intended to be
+> a complete implementation. Once the direction is agreed on, we will work on the
+> implementation or a real patch set.
 
-Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
----
- drivers/infiniband/hw/mlx5/mr.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+you didn't cc the DRM people who really need to look at any changes to
+the dmabuf contract.
 
-diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
-/mr.c
-index 325fa04cbe8a..c3eb5b24ef29 100644
---- a/drivers/infiniband/hw/mlx5/mr.c
-+++ b/drivers/infiniband/hw/mlx5/mr.c
-@@ -46,6 +46,8 @@
- #include "data_direct.h"
- #include "dmah.h"
-=20
-+MODULE_IMPORT_NS("DMA_BUF");
-+
- enum {
- 	MAX_PENDING_REG_MR =3D 8,
- };
-@@ -1623,6 +1625,32 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_at=
-tach_ops =3D {
- 	.move_notify =3D mlx5_ib_dmabuf_invalidate_cb,
- };
-=20
-+static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, int fd, u16 *st_i=
-ndex,
-+							  u8 *ph)
-+{
-+	int ret;
-+	struct dma_buf *dmabuf;
-+	struct mlx5_core_dev *mdev =3D dev->mdev;
-+
-+	dmabuf =3D dma_buf_get(fd);
-+	if (IS_ERR(dmabuf))
-+		return;
-+
-+	if (!dmabuf->ops->get_tph)
-+		goto end_dbuf_put;
-+
-+	ret =3D dmabuf->ops->get_tph(dmabuf, st_index, ph);
-+	if (ret) {
-+		*st_index =3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX;
-+		*ph =3D MLX5_IB_NO_PH;
-+		mlx5_ib_dbg(dev, "get_tph failed (%d)\n", ret);
-+		goto end_dbuf_put;
-+	}
-+
-+end_dbuf_put:
-+	dma_buf_put(dmabuf);
-+};
-+
- static struct ib_mr *
- reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
- 		   u64 offset, u64 length, u64 virt_addr,
-@@ -1662,6 +1690,8 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device =
-*dma_device,
- 		ph =3D dmah->ph;
- 		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
- 			st_index =3D mdmah->st_index;
-+	} else {
-+		get_tph_mr_dmabuf(dev, fd, &st_index, &ph);
- 	}
-=20
- 	mr =3D alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
---=20
-2.47.3
-
+Jason
