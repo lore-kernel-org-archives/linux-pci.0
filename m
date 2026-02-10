@@ -1,120 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D7C34CFBB;
-	Tue, 10 Feb 2026 11:04:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 599F130FC10;
+	Tue, 10 Feb 2026 11:32:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770721473; cv=none; b=pC8N3tWv+N5+DHPGC6XxReCfkZqGoZThaWCtIJMufEYGDLNKODgmvLLRaG0QRSiTWkBOVAp31b+nFoDlDwrjSG899dkWjnK7AKU6KcBI4I6xRuzYn6EToAa6sfZwv6zWFrHLC4wPFQ6hkVU6EJAoNC7ITDxkHNRR65o0Ce5kNfs=
+	t=1770723138; cv=none; b=fuMxU/YqKHfXY6DS8M11ev4ZdXbG9wN6olJ7/Xa0UPSLzdlpnt67RnaRoCjWUovh7s6Ehjm70dbMc2cWp6Spc55UUfEs2ICjVCEmPg9tJgJJQh4qY/EXoOVZ/llkwXi8PUtz171rkpzdlu/jwR5i5PUhaVTnr5+ywKIMLRXwRE8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770721473; c=relaxed/simple;
-	bh=7yZxFkNNQCJkdJ9pJ8Eclg+/98lS5/890gc/MqlDytE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rpM8/6Pg6r+Sv0YPGiaV34enGTmpiBHXkoDZoVOrn3qSAZAsGZhRjIivcInMyNTVJkJxQsbMW6TKTNqF9yRgeQgnulAMLVxKAACixVxq46+PSMywfxSgXL8hYmeD9LfZxraI86jIIuY9LWOun4+JHVCsAbRnFn2OapQuvAnwNVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wft85wPu; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wft85wPu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8200BC19423;
-	Tue, 10 Feb 2026 11:04:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770721473;
-	bh=7yZxFkNNQCJkdJ9pJ8Eclg+/98lS5/890gc/MqlDytE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Wft85wPujxS+9BjK2WLUDPsGY6vtTTreoK9vPzH9LeH9UgyXeKZFuQ63xNu4VKecU
-	 JPHBfH4t0OuagB0TGt6HZgqJnXcX0/97je7QQK1PtjNdtE4D21Kped2mkXpva0KPYX
-	 SL/6UB/pTKm3unBM71PslUCqZt4qddum7pbDFPnGKxiE20d3zUNBSqcY7jGhc4WQwG
-	 7bgOesbGPXv7RS0/TsDtiAgbTlwaAXnrUmrCeD3X9nxaqwinK/d3A5L1ml4leDi7Uq
-	 7DpeZR1XYO80lqYHfnHwTVfyCxgkcBLvS9lOrsK5ysDNM2FYHE33/cZku1NWXMi7Mf
-	 Ui2wBaYWwSIyQ==
-Date: Tue, 10 Feb 2026 12:04:27 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Vidya Sagar <vidyas@nvidia.com>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-	stable@vger.kernel.org, Thierry Reding <treding@nvidia.com>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Subject: Re: [PATCH v2 2/3] PCI: tegra194: Reset BARs when running in PCIe
- endpoint mode
-Message-ID: <aYsQu9lQi4IzfBiP@ryzen>
-References: <20250922140822.519796-5-cassel@kernel.org>
- <20250922140822.519796-7-cassel@kernel.org>
- <2fedf28e-83ea-4e51-b1a1-e45f0e928509@nvidia.com>
- <aYonDJyd_dbV0GBK@ryzen>
- <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com>
- <aYsDDOZA18BBeOsd@ryzen>
- <c8e42e96-212f-451d-802b-7166611f6fcd@nvidia.com>
+	s=arc-20240116; t=1770723138; c=relaxed/simple;
+	bh=r6+7M6tmZKJkU+SaH7YLVv9ouxUqs6tvKf40WWRrTVo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PsSpB7GMH9Ys0NUqr9P0fJN595bhz/gMPoM+QnpcJMEwW88Fb55CREYEY+Bn0GY/CsMkfsQfqiUFbzV+M3iyZXA4IliXRZyBrGYGx1C0RUVS3N1X6agaH8+P/FiQfJksUzVBlZFkzBZ7nc0S7QeqwC+HmVlhoyTsQjKz2Qgdqow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+X-CSE-ConnectionGUID: LhpKC8NHRg6Z9U7kClAG3Q==
+X-CSE-MsgGUID: 0WCdJohqS5u533TOPsrvmg==
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie6.idc.renesas.com with ESMTP; 10 Feb 2026 20:32:09 +0900
+Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.55])
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 5070241A118C;
+	Tue, 10 Feb 2026 20:32:03 +0900 (JST)
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+To: claudiu.beznea.uj@bp.renesas.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	geert+renesas@glider.be,
+	krzk+dt@kernel.org
+Cc: robh@kernel.org,
+	bhelgaas@google.com,
+	conor+dt@kernel.org,
+	magnus.damm@gmail.com,
+	biju.das.jz@bp.renesas.com,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-clk@vger.kernel.org,
+	john.madieu@gmail.com,
+	John Madieu <john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v5 00/16] PCI: renesas: Add RZ/G3E PCIe controller support
+Date: Tue, 10 Feb 2026 12:30:24 +0100
+Message-ID: <20260210113041.138430-1-john.madieu.xa@bp.renesas.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <c8e42e96-212f-451d-802b-7166611f6fcd@nvidia.com>
 
-On Tue, Feb 10, 2026 at 04:09:05PM +0530, Manikanta Maddireddy wrote:
-> > For pci-keystone.c, this is the only driver that is a bit weird, it marks
-> > BAR0 and BAR1 as reserved, but does not disable them in the init() callback.
-> > It seems force set BAR0 as a 32-bit BAR in the init() callback.
-> > 
-> > Thus, for all drivers except for pci-keystone.c, BAR_RESERVED does mean
-> > BAR_DISABLED. Feel free to send a patch that renames BAR_RESERVED to
-> > BAR_DISABLED.
-> > 
-> > If you send such a patch, perhaps you also want to modify the PCI endpoint
-> > core to call reset_bar() for all BARs marked as BAR_RESERVED/BAR_DISABLED,
-> > instead of each EPC driver doing so in the init() callback. I think the main
-> > reason why this is not done already is that thare is no reset_bar() op in
-> > struct pci_epc_ops epc_ops, there is only clear_bar() which clears an BAR
-> > enabled by an EPF driver. (So you would most likely also need to add a
-> > .disable_bar() op in struct pci_epc_ops epc_ops.)
-> > 
-> pci-epc.h defined
-> 
->  * @BAR_RESERVED: The BAR should not be touched by an EPF driver.
-> 
-> I believe you are interpreting this as unused BAR?
-> 
-> In Tegra PCIe, BAR2 and BAR4 are backed by PCIe HW memory which
-> 
-> shouldn't be touched by EPF, but should be kept enabled.
-> 
-> This support is not available. I suggested to add BAR_DISABLED
-> 
-> for unused and use BAR_RESERVED for bars like above.
+The Renesas RZ/G3E SoC features a PCIe controller that shares similarities with
+the existing RZ/G3S PCIe controller, but with several key differences.
+This series adds support for the RZ/G3E PCIe controller by extending the existing
+RZ/G3S driver and device tree bindings.
 
-I understand what you want. You want to have a BAR_RESERVED and a
-BAR_DISABLED.
+Key differences between RZ/G3E and RZ/G3S PCIe controllers:
 
-Sounds like a nice feature. Feel free to add that.
+Link Speed Support:
+ - RZ/G3E: Supports PCIe Gen3 (8.0 GT/s) alongside Gen2 (5.0 GT/s)
+ - RZ/G3S: Supports PCIe Gen2 (5.0 GT/s) only
+
+Reset Control:
+ - RZ/G3E: Uses register-based reset control mechanism
+ - RZ/G3S: Uses exclusively external reset control signals
+
+Inbound Window Configuration:
+ - RZ/G3E: Requires precise power-of-2 window coverage with strict address
+   alignment constraints. Non-power-of-2 memory regions must be split into
+   multiple windows to avoid over-mapping, ensuring proper hardware address
+   decoding for DMA operations.
+ - RZ/G3S: Uses a simpler approach that rounds up to the next power-of-2,
+   creating single larger windows. The hardware tolerates over-mapped regions.
+
+Class/Revision IDs:
+ - RZ/G3E: Requires explicit setting of class/revision values
+ - RZ/G3S: Has default values in hardware
+
+Clock Naming:
+ - RZ/G3E: Uses "clkpmu" clock for power management
+ - RZ/G3S: Uses "clkl1pm" PM control clock while CLKREQ_B is deasserting
+
+Phy Settings:
+ - RZ/G3E: Does not need PHY settings as it works with default hw values
+ - RZ/G3S: Requires explicit PHY settings
+
+This series extends the existing driver to detect the SoC type from the device
+tree compatible string and configure the controller appropriately. The updates
+are minimal and focused on the hardware-specific differences while keeping the
+common code paths unified.
+
+Changes:
+
+v5:
+ - Introduced new patch to reorder reset handling
+ - Introduced rzg3s_sysc_config() helper to handle SYS config
+ - Collected Tags on documentation
+
+v4:
+ - Collected Ab tag
+ - Fixed binding clock name constraint
+
+v3:
+ - Removed extra MaxItems in binding causing warnings
+ - Fix potential crash for non-initialized rcdev in CPG driver
+ - Fix binding contraints replacing 'description' with 'const' as per
+   Geert and Rob's comment
+
+v2:
+ - Address Bjorn typo comments
+ - Address Claidiu's comment on stylish
+ - Use single inbound-window-configuration function for both G3E/G3S
+ - Refactor goto laballing as per Claudiu's comments
+ - Update bindings and reused G3S's interrupt ordering
+   * This involves reordering interrupts in dt
+ - Remove Board-specific PCIe dma-range.
 
 
-But like I mentioned in my reply, for all existing drivers, except for
-pci-keystone.c, in practice BAR_RESERVED actually means BAR_DISABLED.
-(Since all drivers except for pci-keystone.c call reset_bar() in init(),
-and pci-epf-test will not enable BARs marked as BAR_RESERVED).
+John Madieu (16):
+  PCI: rzg3s-host: Fix reset handling in probe error path
+  PCI: renesas: rzg3s: Rework inbound window algorithm for multi-SoC
+    support
+  clk: renesas: rzv2h-cpg: Add support for init_{off|asserted}
+    clocks/resets
+  clk: renesas: r9a09g047: Add PCIe clocks and reset
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix naming properties
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3E SoC
+  PCI: rzg3s-host: Make SYSC register offsets SoC-specific
+  PCI: rzg3s-host: Make configuration reset lines optional
+  PCI: rzg3s-host: Reorder reset assertion during suspend
+  PCI: rzg3s-host: Add SoC-specific configuration and initialization
+    callbacks
+  PCI: rzg3s-host: Explicitly set class code for RZ/G3E compatibility
+  PCI: rzg3s-host: Add PCIe Gen3 (8.0 GT/s) link speed support
+  PCI: rzg3s-host: Add support for RZ/G3E PCIe controller
+  arm64: dts: renesas: r9a09g047: Add PCIe node
+  arm64: dts: renesas: r9a09g047e57-smarc-som: Add PCIe reference clock
+  arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
 
-So if you add a BAR_DISABLED, make sure that you convert all existing
-uses of BAR_RESERVED (except for pci-keystone.c) to BAR_DISABLED.
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 121 ++++--
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi    |  69 ++++
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts   |  16 +
+ .../boot/dts/renesas/renesas-smarc2.dtsi      |   4 +
+ .../boot/dts/renesas/rzg3e-smarc-som.dtsi     |  11 +
+ drivers/clk/renesas/r9a09g047-cpg.c           |   5 +
+ drivers/clk/renesas/rzv2h-cpg.c               |  24 +-
+ drivers/clk/renesas/rzv2h-cpg.h               |  34 +-
+ drivers/pci/controller/pcie-rzg3s-host.c      | 373 ++++++++++++++----
+ 9 files changed, 538 insertions(+), 119 deletions(-)
 
-pci-keystone.c and pcie-tegra194.c can then be the only drivers that
-have BARs marked as BAR_RESERVED (all other drivers would use BAR_DISABLED).
+-- 
+2.25.1
 
-Please just make sure that you don't regress the amount of currently passing
-pci_endpoint_test test cases that are passing for pcie-tegra194.c.
-(Which would be the case if you revert the patch in $subject without first
-adding your proposed new BAR_DISABLED, such that we can have a distinction
-between BAR_DISABLED and BAR_RESERVED.)
-
-
-Kind regards,
-Niklas
