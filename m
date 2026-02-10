@@ -1,53 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF8BB219E8D;
-	Tue, 10 Feb 2026 11:03:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D7C34CFBB;
+	Tue, 10 Feb 2026 11:04:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770721397; cv=none; b=c47bPvEv4VELPpuqvo3u6iWOykxojY3YpWUM3yoWvUNDdS0pwc9gRoTGnLBajfc+aJwqUvrLeKcsvckLpEG7u6zjFuPWNuEZXVWH831pSC/pEJDJiL1aO5EbPJcwTQ3iYXOsfI2pk++Y44lJeLOvND2/PuN9KNStf7T/vdh4GYM=
+	t=1770721473; cv=none; b=pC8N3tWv+N5+DHPGC6XxReCfkZqGoZThaWCtIJMufEYGDLNKODgmvLLRaG0QRSiTWkBOVAp31b+nFoDlDwrjSG899dkWjnK7AKU6KcBI4I6xRuzYn6EToAa6sfZwv6zWFrHLC4wPFQ6hkVU6EJAoNC7ITDxkHNRR65o0Ce5kNfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770721397; c=relaxed/simple;
-	bh=/KAJwsOfzjcbdFRa/f2yuz2k36Ieq8U26aqf651uN30=;
+	s=arc-20240116; t=1770721473; c=relaxed/simple;
+	bh=7yZxFkNNQCJkdJ9pJ8Eclg+/98lS5/890gc/MqlDytE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=liqFmdxK0cxkbPwTrMVkHs82bRkb/sS43JQodzt3MxkzDYCncZ9peEgFLPRCk5ip0jnIeJ7Zf7zElx4jCbX8SkS6tjvDFUXA7wHeylbPQohMAcOhE8FDTNXIHqjoy0Tkpfj3m4AnCtdYi0xP4ufQ0b8kSElJ9haaiCsuNP94t5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ikP5l9oN; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rpM8/6Pg6r+Sv0YPGiaV34enGTmpiBHXkoDZoVOrn3qSAZAsGZhRjIivcInMyNTVJkJxQsbMW6TKTNqF9yRgeQgnulAMLVxKAACixVxq46+PSMywfxSgXL8hYmeD9LfZxraI86jIIuY9LWOun4+JHVCsAbRnFn2OapQuvAnwNVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wft85wPu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ikP5l9oN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 245E1C116C6;
-	Tue, 10 Feb 2026 11:03:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wft85wPu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8200BC19423;
+	Tue, 10 Feb 2026 11:04:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770721397;
-	bh=/KAJwsOfzjcbdFRa/f2yuz2k36Ieq8U26aqf651uN30=;
+	s=k20201202; t=1770721473;
+	bh=7yZxFkNNQCJkdJ9pJ8Eclg+/98lS5/890gc/MqlDytE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ikP5l9oNoYzUIkoNv3xsVnpGElh6FK9rDCJCRcwtPicDAjP8fR1XkSWqAzTnBetT7
-	 d8WF/lC/kt3qBCBumWT27M80y4LKqL1Ew9kuN6lxMoIfV/uFyCW5FDy1ewthp7ukWZ
-	 a16TfnfK3Pk/auhIeh2vU1I3T3ZGLOdtHuPlm9ljTRM2U8vAP6vERfAVrNwMaHZciL
-	 SIEQ0wcBm2LiD/k7HyAC8KVU+UgmjhbA06BTq6bhIa7B/AdGgDyybrJ1nL2Ltm4c5M
-	 gTdcKFDckohBX96qFpo6I5h3KC1EUj4HrC6BUFRlxzkEPdmvRu7uwxnkc6Uz4yy2bR
-	 I4VXX6sPhg3yw==
-Date: Tue, 10 Feb 2026 16:33:08 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v3 4/9] pci: pwrctrl: generic: support for the
- UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-Message-ID: <cish7iljd23mon4onzbonpuvii7mccwygllr3bcqcpo7zbp2o2@lbzokxr6dod3>
-References: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
- <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-4-5b79c5d61a03@linaro.org>
- <fbxbnou5mdlhaq5dpxr3wdzmjetwdp7auaaqeunc67tgk5ej2m@cnnkr2pcwy77>
- <a4e55e91-0e03-4e63-8542-d8ad61b38906@linaro.org>
- <o6e5qygss55p6npjgaicxffsqdpv7kojgidr46zinsvfpxfxug@vn67nq4k6jzk>
- <b46da4da-93aa-4213-ad75-ec7709008b95@linaro.org>
- <qd5egc42mkdofs4ey7gl664e5el2p5sxwluesjtm7gc3y66hez@l4dz3bd5xm6n>
- <8b18433a-5836-4a65-b790-9f51112d1f5c@linaro.org>
+	b=Wft85wPujxS+9BjK2WLUDPsGY6vtTTreoK9vPzH9LeH9UgyXeKZFuQ63xNu4VKecU
+	 JPHBfH4t0OuagB0TGt6HZgqJnXcX0/97je7QQK1PtjNdtE4D21Kped2mkXpva0KPYX
+	 SL/6UB/pTKm3unBM71PslUCqZt4qddum7pbDFPnGKxiE20d3zUNBSqcY7jGhc4WQwG
+	 7bgOesbGPXv7RS0/TsDtiAgbTlwaAXnrUmrCeD3X9nxaqwinK/d3A5L1ml4leDi7Uq
+	 7DpeZR1XYO80lqYHfnHwTVfyCxgkcBLvS9lOrsK5ysDNM2FYHE33/cZku1NWXMi7Mf
+	 Ui2wBaYWwSIyQ==
+Date: Tue, 10 Feb 2026 12:04:27 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	stable@vger.kernel.org, Thierry Reding <treding@nvidia.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Subject: Re: [PATCH v2 2/3] PCI: tegra194: Reset BARs when running in PCIe
+ endpoint mode
+Message-ID: <aYsQu9lQi4IzfBiP@ryzen>
+References: <20250922140822.519796-5-cassel@kernel.org>
+ <20250922140822.519796-7-cassel@kernel.org>
+ <2fedf28e-83ea-4e51-b1a1-e45f0e928509@nvidia.com>
+ <aYonDJyd_dbV0GBK@ryzen>
+ <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com>
+ <aYsDDOZA18BBeOsd@ryzen>
+ <c8e42e96-212f-451d-802b-7166611f6fcd@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -57,97 +59,62 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <8b18433a-5836-4a65-b790-9f51112d1f5c@linaro.org>
+In-Reply-To: <c8e42e96-212f-451d-802b-7166611f6fcd@nvidia.com>
 
-On Tue, Feb 10, 2026 at 10:01:00AM +0100, Neil Armstrong wrote:
-> On 2/10/26 09:00, Manivannan Sadhasivam wrote:
-> > On Mon, Feb 09, 2026 at 03:59:20PM +0100, Neil Armstrong wrote:
-> > > On 2/9/26 15:49, Manivannan Sadhasivam wrote:
-> > > > On Mon, Feb 09, 2026 at 03:00:02PM +0100, Neil Armstrong wrote:
-> > > > > On 2/9/26 12:30, Manivannan Sadhasivam wrote:
-> > > > > > On Fri, Feb 06, 2026 at 03:50:32PM +0100, Neil Armstrong wrote:
-> > > > > > > Enable the generic pwrctrl driver to control the power of the
-> > > > > > > PCIe UPD720201/UPD720202 USB 3.0 xHCI Host Controller.
-> > > > > > > 
-> > > > > > > Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
-> > > > > > > ---
-> > > > > > >     drivers/pci/pwrctrl/generic.c | 4 ++++
-> > > > > > >     1 file changed, 4 insertions(+)
-> > > > > > > 
-> > > > > > > diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.c
-> > > > > > > index 08e53243cdbd..4a57a631362f 100644
-> > > > > > > --- a/drivers/pci/pwrctrl/generic.c
-> > > > > > > +++ b/drivers/pci/pwrctrl/generic.c
-> > > > > > > @@ -73,6 +73,10 @@ static const struct of_device_id pci_pwrctrl_slot_of_match[] = {
-> > > > > > >     	{
-> > > > > > >     		.compatible = "pciclass,0604",
-> > > > > > >     	},
-> > > > > > > +	/* Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller */
-> > > > > > > +	{
-> > > > > > > +		.compatible = "pci1912,0014",
-> > > > > > 
-> > > > > > No need to add the compatible to the driver. Just use the existing compatible as
-> > > > > > fallback in the binding/dts.
-> > > > > 
-> > > > > ???
-> > > > > 
-> > > > > Sorry but this is insane, in no world a standalone PCIe USB controller could be qualified as
-> > > > > compatible as a pciclass,0604 slot.
-> > > > > 
-> > > > 
-> > > > AFAIU, 'compatibility' implies that the driver can safely fallback and would
-> > > > still work. If we add dedicated compatibles for each endpoint devices, then we
-> > > > will just keep adding forever. Powering up a PCIe slot and an endpoint device
-> > > > are conceptually same.
-> > > 
-> > > We're not speaking about driver here, but about compatible string which describes
-> > > a device, a PCI endpoint and a PCIe slot are 2 very different devices that are
-> > > nowhere compatible.
-> > > 
-> > > > 
-> > > > > Technically it would work just fine, but "compatibility" has a meaning....
-> > > > > 
-> > > > 
-> > > > I view compatibility interms of device operation, not device as a whole. But
-> > > > sure, I could be wrong. If the DT maintainers say so, I won't insist.
-> > > 
-> > > In the actual way it's defined _today_, the "slot" and "endpoint" power up schemes are
-> > > compatible, but I hope the slot bindings will get much more features to describe the
-> > > real world slots power properties. And no, endpoints will definitely not have the same
-> > > features as slots, using it as a fallback today is an error.
-> > > 
-> > > On the other side, adding a "simple-pci-endpoint" compatible that enables any supply
-> > > and clock would be a good solution, if the DT maintainers agrees of course.
-> > > 
+On Tue, Feb 10, 2026 at 04:09:05PM +0530, Manikanta Maddireddy wrote:
+> > For pci-keystone.c, this is the only driver that is a bit weird, it marks
+> > BAR0 and BAR1 as reserved, but does not disable them in the init() callback.
+> > It seems force set BAR0 as a 32-bit BAR in the init() callback.
 > > 
-> > We do have a 'pci-host-cam-generic' compatible. So we can also have something
-> > like 'pci-pwrctrl-generic' IMO.
+> > Thus, for all drivers except for pci-keystone.c, BAR_RESERVED does mean
+> > BAR_DISABLED. Feel free to send a patch that renames BAR_RESERVED to
+> > BAR_DISABLED.
+> > 
+> > If you send such a patch, perhaps you also want to modify the PCI endpoint
+> > core to call reset_bar() for all BARs marked as BAR_RESERVED/BAR_DISABLED,
+> > instead of each EPC driver doing so in the init() callback. I think the main
+> > reason why this is not done already is that thare is no reset_bar() op in
+> > struct pci_epc_ops epc_ops, there is only clear_bar() which clears an BAR
+> > enabled by an EPF driver. (So you would most likely also need to add a
+> > .disable_bar() op in struct pci_epc_ops epc_ops.)
+> > 
+> pci-epc.h defined
 > 
-> I don't want to into this route, I just want to powerup the USB3 controller on
-> the Pocket S2 gaming device, not spend 6 months into _not_ modifying a driver compatible
-> list.
+>  * @BAR_RESERVED: The BAR should not be touched by an EPF driver.
 > 
-
-Sure, I don't want you to spend that much time either. But I was trying to avoid
-having a solution that just works only for your platform.
-
-> All this feels bulky, who a pci device would be compatible with something like
-> 'pci-pwrctrl-generic' we're speaking about a pci device, not a power control device.
+> I believe you are interpreting this as unused BAR?
 > 
-> It's nowhere similar to the 'pci-host-cam-generic' situation, this describes well defined
-> host controller interface.
+> In Tegra PCIe, BAR2 and BAR4 are backed by PCIe HW memory which
 > 
+> shouldn't be touched by EPF, but should be kept enabled.
+> 
+> This support is not available. I suggested to add BAR_DISABLED
+> 
+> for unused and use BAR_RESERVED for bars like above.
 
-I honestly don't see much difference. ECAM is just *a way* of accessing the
-config space of the PCIe devices. If we can have a compatible based on that,
-then I don't see why can't we have one for pwrctrl. Only difference is that
-"pwrctrl" terminology is not part of any spec, but for sure every device would
-have some kind of power control implementation.
+I understand what you want. You want to have a BAR_RESERVED and a
+BAR_DISABLED.
 
-Anyhow, I don't have other solutions on top of my head now. Let's go with
-per-device compatible for now. I'll deal with a generic solution later.
+Sounds like a nice feature. Feel free to add that.
 
-- Mani
 
--- 
-மணிவண்ணன் சதாசிவம்
+But like I mentioned in my reply, for all existing drivers, except for
+pci-keystone.c, in practice BAR_RESERVED actually means BAR_DISABLED.
+(Since all drivers except for pci-keystone.c call reset_bar() in init(),
+and pci-epf-test will not enable BARs marked as BAR_RESERVED).
+
+So if you add a BAR_DISABLED, make sure that you convert all existing
+uses of BAR_RESERVED (except for pci-keystone.c) to BAR_DISABLED.
+
+pci-keystone.c and pcie-tegra194.c can then be the only drivers that
+have BARs marked as BAR_RESERVED (all other drivers would use BAR_DISABLED).
+
+Please just make sure that you don't regress the amount of currently passing
+pci_endpoint_test test cases that are passing for pcie-tegra194.c.
+(Which would be the case if you revert the patch in $subject without first
+adding your proposed new BAR_DISABLED, such that we can have a distinction
+between BAR_DISABLED and BAR_RESERVED.)
+
+
+Kind regards,
+Niklas
