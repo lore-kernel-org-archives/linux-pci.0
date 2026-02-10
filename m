@@ -1,201 +1,205 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010024.outbound.protection.outlook.com [52.101.201.24])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A258A3815E1;
-	Tue, 10 Feb 2026 17:18:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.24
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770743892; cv=fail; b=J3C2BGdeAl7W+KE82Aplx/yp29LYZQ8jfcyl+YXUXKKOo8XsnjOgsegs4txgHzPV+9L6iHRaFCe50iZdV70TEIALZxVTgVCdUVetbnQ/xunAVeL+gpPPXEaEaDBnMc0Z/un+ADGm+kymUdI9KG/pCMl3BkNVV2sBFAG/Y2J493s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770743892; c=relaxed/simple;
-	bh=JkulP72032gxeqwjxs+rV3HPA5nFvNLCR7/uflCFOf8=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=ZqYRrl5f55rNR9xl2gJX73unbrsnDLCDAGiou9CdIPGVADeljBzcJQaS2e3L2i55PXKtW3WpmXFj3DxTDJVdqc3FU0sZ9UxcxMpxQHbl5dTQUANTw26Yjb49w5eibpTZ792UPujvgdGRrYksM7H/CUJj3eOlClkHQDg+R47KffU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=m84dX6SQ; arc=fail smtp.client-ip=52.101.201.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D46830B529;
+	Tue, 10 Feb 2026 17:22:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770744158; cv=none; b=Jz2HhF90mTz6XUXKQpPvE/ymD6320Mu634me5VVaPwWux8ZBOySwx3L/9uBAS6oiskj7xtGJnW+yx0kpjoyZ/QvxYNcS5hLDjxVFaAfNu72iqBj1vv1ylGM9EbVRfZMf9j/rBASP0TKbfTl2KvHjUqITCeiMidwiEiVv3qXwEpI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770744158; c=relaxed/simple;
+	bh=VVlNz7tYeQ5WIseRbGYbp+7DNMt/gMdrva10TSLvSXM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g9eOrIVapKz7odM+q/yRbVbvyJTBTmgLn1BLdj7Ajvd6dMiy0lYiqj1I3UP71xULSR+3CZVKqBGv2okGpED4pmHMhqLoC8iH6scDY/0AyGEUQ2NLXMAE0Wvgrfxcfdv3bxXMH3GvHhlv6RaxdngEwtOlHxpfAosDZ+LnFZ5cMnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VZKMdPYi; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="m84dX6SQ"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=EpGDJdMaTzXrJvEzQvh3dK5Y/36N7E93ShAesU03zUOyGl5rZncSxra2VUV53nMskaGcFmpDcayr5bL3R7vRO4wK/kyHxmNQO61zDX+jSdMKs3mxYwoaqtz2aE03MFv9T4Wyk/KEgs/Guc00sAqaslUD/vT1VFAxPGjgkFAbUz/npEH5Iw+pgoWpTKwylci/zkBszreMu9m0i73HczB0e79ycxRXJaIC2NMiQMCiXRlvvAbV6HIhK/PzkRub9vjYsNU/5vtY0v9wEcfWC8j5s6YqwVU1vwp3/u1SOBJ1hVkn6v6tapkIeIzYKOmb6dy6XiVuwLrz6uNq8ktjxSnzWw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=MtS4QlJJJXYh/UYzKjob8hgN04dKMlRmHTr7oIU/1ig=;
- b=cmKUy2KI3NvnnDoTbyAczPTsBr5/1k/FlMjrX6daDHUshsCLy6ylyo3g2Wo/pla+IOED0jwtVOYMbzWLzyCZxnIFp9pSczSAqf40304Jw/G463c6tyKFJVgsmZKfigQG7bFSEGrgPv3lRBu+u29KeiF0ahkbEfHkP53KDwaZLdH2hRdLBpf1PuWDTQbCIoLpx8ZvFVKFWzDuPdo9ChnwDA4cacZu7EqZGVLESBA45z2i464+366AD8opibNAphr8CqBpiuhIPZELdDv1MrrSCnlre79d4rjCLDRBlotakbCrOpUlnu/JZmuT0P0Z7/SGM9zBBP663zQGju7foNro/w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MtS4QlJJJXYh/UYzKjob8hgN04dKMlRmHTr7oIU/1ig=;
- b=m84dX6SQUO2vsNZZPVV8W74p8rxzCOm5uzpHOooRMXJn+gCz+NeLteYbD+v14pdDP7rxCKh2hpjp1dzEIiQffg/m3st/wVYcs4jGrv1g7lA5ElEEL2/J8hL7aztw1tbGBn3kBavtWBFvRgrAw4rJBwTWyQxENZ0TpO2ExGDLmwtMSPgi8cxsdJPbCFli8J/pHcnXT2QrVZIfMJfYtZfOR8aJ+AfpNw93zr7674hYMM5C0KIKw+H9C3T0q96tgxdVOiVVFVF3wR9d11ROzqiNzsCzdFUXvrtHZQboVIxgaltQplgVSs+o0nwQpmQ7j93GyHX0VQdAc3zyWBBKIbiw9g==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
- by PH0PR12MB5647.namprd12.prod.outlook.com (2603:10b6:510:144::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.19; Tue, 10 Feb
- 2026 17:18:07 +0000
-Received: from DS2PR12MB9750.namprd12.prod.outlook.com
- ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
- ([fe80::56a8:d6bf:e24c:b391%5]) with mapi id 15.20.9587.017; Tue, 10 Feb 2026
- 17:18:06 +0000
-Message-ID: <8ffc8978-878b-498a-ab6c-894fa607365c@nvidia.com>
-Date: Tue, 10 Feb 2026 17:18:01 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [V5,00/13] Fixes to pcie-tegra194 driver
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- thierry.reding@gmail.com, jingoohan1@gmail.com, vidyas@nvidia.com,
- cassel@kernel.org, 18255117159@163.com
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260208180746.2024338-1-mmaddireddy@nvidia.com>
-From: Jon Hunter <jonathanh@nvidia.com>
-Content-Language: en-US
-In-Reply-To: <20260208180746.2024338-1-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO2P265CA0339.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:d::15) To DS2PR12MB9750.namprd12.prod.outlook.com
- (2603:10b6:8:2b0::12)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VZKMdPYi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1770744156; x=1802280156;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=VVlNz7tYeQ5WIseRbGYbp+7DNMt/gMdrva10TSLvSXM=;
+  b=VZKMdPYiSMmhfUmnYsJN4qpf+DJaP4kuCEWaIFTil3QZvhvOLP48IlKY
+   Ob8jMJhqit1IDG3d6tXKVIEfasKwkzX7OCsayNe5aY3FdNQJf/uZAdHZA
+   3QetnpNgBYvb53Ldf/aAC9HdF90YOFpZfImGz+uPBZA+4LMwMkLIwEFuL
+   77X0l9++aWqlzr/KaYEvRhSsIwziZdIPVaue6/Yj/ih/E1jvMweqfvwea
+   t3gXZuHy8HgNn4TsemS3Gyyi7uxdpT6ykc2lOSDQ3D46XPZVeWXL673BI
+   yYmjV2BbNmlrF8yAILQevriwFjb4Nak06V3VV0UzRxTR6wtIwyq+VvPzv
+   A==;
+X-CSE-ConnectionGUID: TN9esrLvS+Ka+63kICjh3Q==
+X-CSE-MsgGUID: ZqCZ2CdDQ1++cTKWpxjzYQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11697"; a="75505383"
+X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
+   d="scan'208";a="75505383"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2026 09:22:36 -0800
+X-CSE-ConnectionGUID: KfNcJ/zoT9CFxk6Yvuddhw==
+X-CSE-MsgGUID: lNvkrqX2Ree5ScvOaQd6pw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
+   d="scan'208";a="211081698"
+Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2026 09:22:36 -0800
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v1] PCI: pciehp: Fix hotplug on Catlow Lake with unreliable PME status
+Date: Tue, 10 Feb 2026 09:22:31 -0800
+Message-ID: <20260210172231.1465275-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|PH0PR12MB5647:EE_
-X-MS-Office365-Filtering-Correlation-Id: e5aece91-851f-406c-afa4-08de68c85b2f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?TlBuRTRsTVFjaVNFYVlFRWNXRW1Sc05mNzMvMXdzR0Q1K0QwcEtmMytKejg0?=
- =?utf-8?B?QlJHWnFrU0RmVWYreGRlZE9jVUNTOVEzeW5ZRUY5cURzSFJMcTNSQVpBdWI0?=
- =?utf-8?B?MjJBWHA0bWhQMTU2M0ZTcjE4WEs5dUR3M3QxOFBOR2VhOHcyb2p5L1JHV1Fl?=
- =?utf-8?B?c2FyeXBOK1hWenZNRjJZNEEzSm5kTHpza2R3L3d3dk5LZTlzbG96OE9ybHFZ?=
- =?utf-8?B?dW80Qm93V28zSisxbGlWN0FyOEVBeDNYUzRrQXFXR1JRcG9MLzVaUFNyamJh?=
- =?utf-8?B?Zk5KUitUN3NzcWNmVGgrWUwvamc3S3h0dFBzTFlkRGFXS2wrMTBYZGZvUUtz?=
- =?utf-8?B?SjlidERKakpKK3BPZnJMWGxjdFcyOThnN1EwYWN5SHRsNThXSWo2cnoyYnRi?=
- =?utf-8?B?KzVrdjV6cTJqYmE1TklMd1BaMWNPQ095RHUway9tY1RVNVJQQmpWRFNlOFhy?=
- =?utf-8?B?L01XcWxCRVNuVis2UFl0dm1RMWQ1dzVzTXE0QkNHdWdhTnlSQUpLQzc5ZTdF?=
- =?utf-8?B?WTBBckhnOWxXK1dHMmtFck1QeVNMeGRQc3lFRnAwb1prR1lhU1JXRFNoZnVr?=
- =?utf-8?B?dkVoZVg0NkNPelZmTEQ1elpTMFBuUXlkdVZvdWZpcUEvdEI1ZUk3aXRQQnQ1?=
- =?utf-8?B?ZDd5bFJzMHZ1RHd5bm00K09ZZ3lFSlRaN0M4M0RUQ3NoQmtOSG11Z2xmQ3l3?=
- =?utf-8?B?VWNOY3BPNGM5WitaeHAxcnJmemhUUi9sODc4eHZtVFVwbk82RmFWOUg1VldV?=
- =?utf-8?B?VlVzWDllbGErUlZoS2NvcHNveks1c3lJSXRuNGo4bFJSZFdQTW05L3VhSEsr?=
- =?utf-8?B?U1ZGa1c4R1NBMldEbW14V3RTRmxUbEU2YWtydERqTTFpUGx2YkphUlRrdzJx?=
- =?utf-8?B?dW16alMwNk9wbmdpRWFvMkFEVlF6bHNSZWV5Q09QeThPOU9UQUNkTS9vUnA0?=
- =?utf-8?B?Y0dzRU9NSWtXdDJEQnREeUhZWTEzSUsyNTdwRGJ1VDA4R3NiUlFZSU9Balcw?=
- =?utf-8?B?MkpjSEkxbVRnanpZYWVndGVWS245WjRqUG1XV0tMSlFFd3FKZmZsNlJWSVgy?=
- =?utf-8?B?UXdXaHN1Z0M5YmkycmJsdzNETjRwd2lnOVFVbEdtb2VVL24ycTJQTFB2M0h6?=
- =?utf-8?B?NXpqMjFWZUZHTE9wanRiYkh2aEF4U0tvWUZRT1ljUVNiTlRVZ29jYVpWL090?=
- =?utf-8?B?UXUrWmFONCtEOHdrYzU2NzBzclB4bXVpVnZxNGZjeUFLcHBycFRYYjZ4RjY1?=
- =?utf-8?B?WVZpSFkyUUhjN2xmd3piYkl5R3lmWHlLUFJLazl3enpjNEl6RlkwTm05SWdh?=
- =?utf-8?B?SW1rdzhQNmd3V3NtZE54YWk0ZWt6RHhna3U1cnlROGV6bnlLT2NpN3YwZjNo?=
- =?utf-8?B?OHV4VUtwc2plajJ5U0l6VmRGRFlXa1NQV25UcEZDYlp6OEZPRzdKRUpBUVhP?=
- =?utf-8?B?U2V4Vi9GSGxvUWVJM1lyNm45TGJ5NnJ6WEt6QkZVdUVQUW5BUGw0enE1S3Uz?=
- =?utf-8?B?SWdDN0xsMlJBNWg4ZHhjMHFiYW5YNmNkUEpTU2RDVjRSUDBsK1ZBR2UwbDBV?=
- =?utf-8?B?bVZVRFNNMmNCWmhvWEE4MER2L29EVlhqNnJ1SENmRE1YdW9tOUdnWjhUUGhv?=
- =?utf-8?B?UnVQdEppT3ltcGhrNWhqemJUSFE0WkFzRzNZa0NYM0E3enR5Z0RYQ3VVcjhK?=
- =?utf-8?B?VThwaGpKQUVFUFh0cUl0dDhnZnhIVEE2TERHUEVTN1hiZHFGcm9SUEpUNGRx?=
- =?utf-8?B?TG00N20zUEt6VDhYdXhteHdwU0pEM1pscGhWejRGanBqTGVSWXpNRkwzQllk?=
- =?utf-8?B?RktDb05hZnliWTZaYUNTajYram5kSVZmUGNJQ2MrRHJNSkdDdGQ0eTdTTngw?=
- =?utf-8?B?S3o2VURPcWltOEFUcXhKSDdrUlJPMUFDV1htaXhKUHkrZzlBV1lSbzBPMnVq?=
- =?utf-8?B?UTErNm5kajh6VnZoVUZ1dytjTEc2b2cxWnZzN3d5dnJQakM5a2gvaTVtNEcr?=
- =?utf-8?B?N3hhdVJ2ajVpbnZ6b0g4bEhWV1ZxUkRsaXBnWCsvNWRjU0hZV2h4elYvNWJs?=
- =?utf-8?B?RlFwR0FDeDBleWtJb2J3RU5RRmtPVDhaY0ZhVTRYaHRpaloyd0pkeXkrNEIy?=
- =?utf-8?B?TFpVU2hwL0U0dDFiRGtqMXhmSkhZTUwzeTVLeTQxL2p6QWZuYmpXS3Yra0I1?=
- =?utf-8?B?ZFE9PQ==?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UkEwUlZkUGJQaHRIZE9HdjlsOU1maVdTRlhFZFU5NVZVUW80WGRCVkdhbTlN?=
- =?utf-8?B?eEpaZzFQRVpIb2w2cVhZMEJac29oTGIxOFhPNDFXS2EyVVVwUmZodldUOHpu?=
- =?utf-8?B?WXJWR3Y1UjhzNWk0T053RUhROHg4K1FHTE50eTgyOUVndm84QWExaUxNSTdM?=
- =?utf-8?B?ZU8xUGRoZklCTVVhWWdYMmhUS3lyRjlHakl4YWdUNzh1YkZjd2c3RlcyOW1z?=
- =?utf-8?B?cGFpZStNOHBKaDlwTXZqVTJab0lWOUhHQUg3c1gzcm1rak1Jb1JEUEIrZlJ3?=
- =?utf-8?B?cGtIK2ZWZTYyM1hqLy8wOVJvN1lYUk1ia1JNR2Nhd3NWSWxGWlFhYWRiblNG?=
- =?utf-8?B?WXJ6VUF6TTV5WmVYL2R1dWFqcGwyNmw5UDk0QWFyYU5HNzcyQUhBYjVOOWpY?=
- =?utf-8?B?YXByZk1pU0V6Z1gzSFl4U3RpYjJhOW92aUtJMzdLeXFpVUQrZVUxRkVaMVFP?=
- =?utf-8?B?V1JrR1FQMnNsY2dDemMvVVFMeUhqRG1BaGpiN2MvN0MwRVhJMUo4dlNpWUJZ?=
- =?utf-8?B?Sk1EY3h5elE1bjEzVlpKc3hta0pURFFtOVgvV3RpWnB1ZU1FYys3d0VUcTBk?=
- =?utf-8?B?MjdEbmdtakcxaGZDbCs4S29ZVUozL3haOHk3akNUS0NVWTVkWGtOb0ptTHFV?=
- =?utf-8?B?am44dGhaRGFDNlduL1F3TFRERjV2MVpxTFpxV05Wd2FlM3Z0QzU5K29tSHlY?=
- =?utf-8?B?RzNJTmJYcWhJY2NiMzdhQ2gyNTBxTHErRlJVaFdLK3VaUGtzOGNrMm9xUzZY?=
- =?utf-8?B?bEJPcTZ0Mkt3OXhPakw1b0JsR3VldHRxbVAyQnh4cVlIeFFPVG1ibldxRFpG?=
- =?utf-8?B?cG1HRUI0VlBDa25WZmd6OGE0YmhVb1BnNk9xM1NVUmZQc1phQ0dLcTB4Q1Z5?=
- =?utf-8?B?YjB1bnBVZk9DcU9iR2Fac2pqZGFVYXhVNXBKamlCNVZoLzNPMlYwVFU0RjZ5?=
- =?utf-8?B?d2grcDg2Mjl3ZHFwSkU0SWMxZzRPM2pVdzhxNXRPME9kQlpBWXIrM2UyQ3Ft?=
- =?utf-8?B?NDdDa3RTZ2lWcVpkb3FnZ04yNy84N3dadERyMUZzbXdSbXd1ZlRkV0dnQkcy?=
- =?utf-8?B?UnIzSCtFM1FLNVFzWkR3dkI1a24zMURSNjVUNmxaNmxNNGdaVitxbUtMcCtx?=
- =?utf-8?B?U1BCREtvV3RoQzFRTDg4aXdJSndpdkhRa1UzejNMNXlhOUl3RjJObUZvNisr?=
- =?utf-8?B?OFpZZDViRVZWaGdIUkY5YTQvcG9UbStmWlY4RVFxTUFZVE41anZIZlRGeStl?=
- =?utf-8?B?cS9nV3FkSkZYZUJmNmU4dldya3pmVHR6aTRYWERwZW5hS1pZUkd4MCs2TXI3?=
- =?utf-8?B?Nm1PcFRYRWg3YndXSStIeFpFZE1aeXVoMTJWdm0wVGtXYzV5QVpzbmxMOWR1?=
- =?utf-8?B?V2trVEFVODljVkQ1UnRNQXRLUE56UzgxQ2lpSGtybERLYnVDb2FsTXMrRHpI?=
- =?utf-8?B?ODJMT25BVlpEOUUwTkU5UVJpMUxLZHdXeVczMEJHQWtmakRhS0dETU5VK3Fq?=
- =?utf-8?B?MS9oVzlScUpGVVYrR2dPUDRkdmZLckxJSng5cTdxd2dTRUE0MGF4eE5jMUt5?=
- =?utf-8?B?dVo3Ry9TTnJvUm5CV0VTakw0enFaL0poUmx0Wm53M1E0TWhrWXhFOGNFUG1o?=
- =?utf-8?B?eFBFUzBqWDZQWitPR1R0U0oyNlA5VHMyZm5EQldKbXBtUW9FNUtEQVlmUlJ1?=
- =?utf-8?B?ZDNXTml6b0Q5a3luUkl2RDd2N0d6ZlpZRmZqY0FtSlFnemJXa0tydVl1b2cv?=
- =?utf-8?B?TmUxVGZPVTVrRTVuc0dyUkpaaEE1NjZXdFlzY3RXeXdLcE1PSDhwbzdlTFVO?=
- =?utf-8?B?bDRFUCtpeHF3M3p2L2dEUjFZS0VrRTJCWE9Wa3hFSVZhVWMyalN3NlBqZHc5?=
- =?utf-8?B?QnJTZ0xObC9PbmRyTmJkTGJsN3pINkVyWTQ1UW56cVc1Tlh6SGdabGxZcFlQ?=
- =?utf-8?B?UnJBQmdtSXFnTnlGVGpuRlVSNmhkWjlmSWFpMGJJdnRNNGQzQzI5Z1hHMy9O?=
- =?utf-8?B?a04vZ3I4RFZQVE9yOFcrUFlFTFBtRlRqZWJpVUI1MHJnZ0NETGtZRlBtdDRu?=
- =?utf-8?B?bkx2N2ljc3JlaXMzMnlEckR4YkR5b2pLR0VkQ2hLeHRYQnpVZlRIaFA5MXd1?=
- =?utf-8?B?aHVHMzVWVkdWMHptQTIyd3YxSEVnOUhOUEI5d1NjZVRjZ08xRXBkNkhDV0FJ?=
- =?utf-8?B?anhGSXVsZFk3THVXL2tZTUZobzVNS0RNK21mWjB1Kytsbm5OWGNBR3FUZnBw?=
- =?utf-8?B?VGJmemg4bCs4ZUZPaVZPUm9NK3VTeVgvYVZWbkxvRXl4RldRd1Z0S3NPenVs?=
- =?utf-8?B?NlVjdy93MFg3R2hON3pzd21zT0lEN0NpUUpETXg2UkJYZ3piTmVPdz09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e5aece91-851f-406c-afa4-08de68c85b2f
-X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Feb 2026 17:18:06.8395
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LZ05NtU7qPZACZQIh7maPscX38a++mGetUOcTki0FxMUxZaxvdnRsUuufCjrp1r1hWpSt8BrwuHSSJd/i6PB9g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5647
+Content-Transfer-Encoding: 8bit
 
+On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
+update PME status registers (PME Status and PME Requester_ID in the
+Root Status register) during D3hot to D0 transitions, even though PME
+interrupts are delivered correctly.
 
-On 08/02/2026 18:07, Manikanta Maddireddy wrote:
-> This series[1] was originally posted by Vidya Sagar, and I have rebased
-> it onto 6.19.0-rc6-next. I addressed review comments and split this into
-> two series, one for fixes(current) and the other is for enhancements.
-> I verified these patches on Jetson AGX Orin(Tegra234 SoC).
-> 
-> I added below four new patches to fix bugs, commit message of each
-> patch has the details on the bug and fix.
->   - PCI: tegra194: Use HW version number
->   - PCI: tegra194: Fix CBB timeout caused by DBI access before core power-on
->   - PCI: tegra194: Disable PERST IRQ only in Endpoint mode
-> 
-> Rest of the patches are same as the original V3 series, just rebased them on
-> 6.19.0-rc6-next.
+This issue manifests during PCIe hotplug operations as follows:
 
-Thanks for splitting this. As Krzysztof mentioned we need to fix the 
-subject prefix.
+1. After a hot-remove event, the PCIe port transitions to D3hot and
+   the hotplug interrupt enable (HPIE) flag is disabled as the port
+   enters low power state.
 
-Otherwise, I would just make sure the fixes are ordered with regard to 
-the fixes tag. In other words, fixes related 56e15a238d92 ("PCI: tegra: 
-Add Tegra194 PCIe support") first, then fixes related to c57247f940e8 
-("PCI: tegra: Add support for PCIe endpoint mode in Tegra194") next, 
-etc. Given that this was the order the changes were originally merged.
+2. When a hot-add occurs while the port is in D3hot, a PME interrupt
+   fires as expected to wake the port.
 
-Thanks
-Jon
+3. However, the PME interrupt handler finds the PME_Status and
+   PME_Requester_ID registers unpopulated, preventing identification
+   of which device triggered the PME. The handler returns IRQ_NONE,
+   leaving the port in D3hot.
 
+4. Because the port remains in D3hot with HPIE disabled, the hotplug
+   driver ignores the hot-add event, resulting in the newly inserted
+   device not being recognized.
+
+The PME interrupt delivery mechanism itself works correctly;
+interrupts arrive reliably. The problem is purely the missing status
+register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
+reads confirms that these registers remain empty when the PME
+interrupt fires. Neither BIOS nor kernel code is clearing these
+registers.
+
+This issue is present in all steppings of Catlow Lake PCH and affects
+customers in production deployments. A public hardware errata document
+is not yet available. While the document is being published, we need a
+quirk to address the issue for existing customers.
+
+Alternative approaches were considered to avoid modifying the pciehp
+driver. We attempted to keep these ports in D0 state by calling
+pm_runtime_disable() in the quirk. Although this approach works for
+most cases, it fails to provide wakeup when the system enters suspend
+state. Another option of modifying the PME configuration to force
+pci_target_state() to select D0 also did not help, as runtime PM
+still transitions the port to D3hot.
+
+Add a PCI quirk (PCI_DEV_FLAGS_NO_PME_WAKEUP) for affected Catlow
+Lake PCH PCIe root ports that allows the hotplug interrupt handler to
+process events regardless of the port power state, bypassing the
+broken PME-based wakeup dependency.
+
+The quirk is applied only to Catlow PCH PCIe root ports (device IDs
+0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
+they are not hotplug-capable. Systems with reliable PME signaling
+continue to operate normally.
+
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |  4 ++-
+ drivers/pci/quirks.c             | 45 ++++++++++++++++++++++++++++++++
+ include/linux/pci.h              |  2 ++
+ 3 files changed, 50 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index bcc51b26d03d..e5036bb79a08 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -631,7 +631,9 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
+ 	 */
+ 	if (pdev->current_state == PCI_D3cold ||
+-	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) && !pciehp_poll_mode))
++	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) &&
++	     !pciehp_poll_mode &&
++	     !(pdev->dev_flags & PCI_DEV_FLAGS_NO_PME_WAKEUP)))
+ 		return IRQ_NONE;
+ 
+ 	/*
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 280cd50d693b..b22eb8554ab0 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6340,3 +6340,48 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+ #endif
++
++/*
++ * When a PCIe port is in D3hot, the hotplug driver depends on PME
++ * to wake the port back to D0 and then process any hotplug-related
++ * state changes. On Intel Catlow Lake platforms, PCH PCIe root ports
++ * do not reliably update PME state during D3hot to D0 transitions.
++ *
++ * Apply a quirk to disable PME-based wakeup requirements for these
++ * specific ports, allowing the hotplug driver to handle events
++ * independently of the port power state.
++ */
++static void quirk_intel_catlow_pcie_no_pme_wakeup(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_NO_PME_WAKEUP;
++	pci_info(dev, "Catlow PCH port: PME unreliable, bypassing PME-based wakeup for hotplug\n");
++}
++/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_intel_catlow_pcie_no_pme_wakeup);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_intel_catlow_pcie_no_pme_wakeup);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b5cc0c2b9906..e4a95b36e4a0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -248,6 +248,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_HAS_MSI_MASKING = (__force pci_dev_flags_t) (1 << 12),
+ 	/* Device requires write to PCI_MSIX_ENTRY_DATA before any MSIX reads */
+ 	PCI_DEV_FLAGS_MSIX_TOUCH_ENTRY_DATA_FIRST = (__force pci_dev_flags_t) (1 << 13),
++	/* Device does not reliably update PME status to wakeup from D3 to D0 */
++	PCI_DEV_FLAGS_NO_PME_WAKEUP = (__force pci_dev_flags_t) (1 << 14),
+ };
+ 
+ enum pci_irq_reroute_variant {
 -- 
-nvpublic
+2.43.0
 
