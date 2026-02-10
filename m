@@ -1,203 +1,183 @@
-Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC29933F36B
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 09:01:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD45C3446B7;
+	Tue, 10 Feb 2026 10:06:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770714066; cv=none; b=H84pp+DDssUG5pZDKMmqytap/mRpCrsqFgtA9Iwqpblmhlk/cZo2s0ScGM6Q1Sib8TEupJ5AkyAo0UXyGLx7mv/9exca8ckw43/sjNBErZpYiQz2DNOtjMYG7aRDLRLS4oFSGrXVljmrOYFjIRWpTIwB/fLNsTM8ndBQJRhsqG4=
+	t=1770717970; cv=none; b=AgOYGKpRUgJFmY5ZqyVtbL8tw+GsLpGx4I+iQEzOTNyr8o0WSyhlsBsEfDR1wjXaFfT9dDcljZQe0m9bXcfRlM+GwJVx/+ZAd4B4D1Z02AJOr3Yx9mRqAFwotPRaidxKP2myenxjzuwhyeO8ObiSo5f34Ft52BZsDjA7kvZUK5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770714066; c=relaxed/simple;
-	bh=5TuK/1VHSDAvQJedSrFEg1hBDEt18y5IQCShE6I97Cs=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=bZK9sdGiNDc9/Khiz5gzR/Vt3z92PvCxwAWXfnmScp7ImtBAFMaUoyJuTMLBclJ6kTIGLUdohV0npxOIIwjmMl+t6qBO99BEAVu/F9ol8NPQkMRQBocwQj9asoueUW87WX05OOcBvXcOPTcpawLMG2WQvf6Y//XT74L84Uq001o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=KBNuy/zb; arc=none smtp.client-ip=209.85.221.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1770717970; c=relaxed/simple;
+	bh=E07rW57XvUp9dRCWusGbgPrZsQXq2+KThzrSXX8KsSk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IiPRYTBfNwnGpdkprAfNGZbobF9GfuAGvHyTqZUi5SwkJdrCqkXbWEIFIDWdjzLUTdI2UI/mmCZnRGC1IzfMSqZtO+KfxI+qOcxXAUkDPAtCxZJm9bj8omyLy8Np8Xi9Fn5Flq2cIeAZ07DBKa8JMndOAzTjHKkX6VJkoo4LAsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HueU6L61; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KBNuy/zb"
-Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-4359249bbacso3639544f8f.0
-        for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 01:01:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1770714063; x=1771318863; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=BNcrRuVJbDcGsHBwzSgQQzMKr5rzXqyv5RgDCsFejSY=;
-        b=KBNuy/zbAphcR2Y+H0B01by75cKJUhiEqlPbXu5D4Jl0mAdv2jyYi6VCOykNMHpEdG
-         iF7Mu2Mp50SYSdGopl/wkN/M6GkKipJIVcgPma3LCAnxuJ8YkpiDXzeQ4SfKIaoNPerb
-         w2fMcnXw3Qu44+Gy8VAOj+Ws6+aObzAjAnn12a1J6hOpOOALFF6F3rv7LnoORUxZmuXY
-         bLaGthU0qeZfgtXo2KyY3ukJ8f8VU79qHYEHSt9tAx4kknH021SNhEpp1VpOLm2licGP
-         UATNsfIPqOuxkfHEq7oad7l8nlnQ5d4bi/50842EBSuUY6YbJ5U2Poiw7AEHd7X6EvST
-         P6BQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770714063; x=1771318863;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BNcrRuVJbDcGsHBwzSgQQzMKr5rzXqyv5RgDCsFejSY=;
-        b=LzeLElna2sJlxb5YdxY77CkqVWY9X1pmpAkr23WxV14gZDloXriWAm963HE5WOCydt
-         6x2McdxatIhXUisCKRT3Kd9ks/fqsDuMFaM7Izj9o8JeEpPYxzJiir5+2NzuHAhoMu16
-         FnRYScOa3XDz0RHGXcxEOMcPHTb5QjVMf/GvzLVUXSHZS1QD9IiG2bkY+tx3IBPWwDQe
-         19NDPJzUNMC8zlmNjFd9hGVHS7pSqxuk6kd3OBgaHgfKg6KEZdA+n+aWpQpXBjpAuvLk
-         +INymoCTm420q/+PQYJ+6NxaQLLP/xCJviP/agQjL1KKlHtYIRowX5ktQE5BchZPUwHZ
-         QSYQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW4BHtrsmJUDQscWoIAaZ1sZRGypCuDbihetjW/OGphlEiuID3dxQoZBTD9y4Ta+Jo9FGaBnAmlhBs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzmho5qi9DPxsDhgj6x6FIo3fOH7B4yx2qw9nKjsaXS8Er0rFT7
-	GqAJ8IZBOQX4L+8hJy5lOpCZrqwlW9eIbhgOv7fN4iSJF5reU2El+8JO3gxyHyvtxxw=
-X-Gm-Gg: AZuq6aKy5AoaRHaGmqXeJyhzhPqqJwewlvcHcYbYBFz/MpYkwDu5eKQoiJoWiFc3V7t
-	wZzM6tI7bfU2Eh1sbP7WjqdpC38Hk4roHeJkKJ279Meu7da5ksJzNje9IMEIe8UmMjO2OyXlQvH
-	hLf2YGUiii9eLUGO4Jmkey7heR1f/OGXyElpfTvhPyCUrtgi3GEq0r4xekOKMq4T08BvMHnuJf8
-	6dsBGhm33qbr6Qemadnt8HtRNK1nRJ3BUGesXCNpJGtETmpChPzne+tQWxd4WsbeeXr8IYBVfDJ
-	A5Bt0+SbQF9tB5tj05BcxymbstEMC87wL8SpMH3JNNEGOJzBq/riFjD67bV/Pd2K4Na3TZb5lBJ
-	9OkxrZJfoKttlqvr6ewWAHXa7+zH6i+D7Pg1TNX41dZIIz2AqHGRL3mfV4LvWcP+z1ahsnkxwpt
-	WNFtzcNm8dfXk5fuDdAWVbwPuEv4DA26nAYSodbu2zznCt1Fi6DSl+qyBLgb6+9NBxq2Q9xA3Uh
-	WoaXQ==
-X-Received: by 2002:a5d:5d0d:0:b0:437:722d:5c66 with SMTP id ffacd0b85a97d-43779ead6acmr2868167f8f.16.1770714062899;
-        Tue, 10 Feb 2026 01:01:02 -0800 (PST)
-Received: from ?IPV6:2a01:e0a:106d:1080:f60f:868a:517c:18fc? ([2a01:e0a:106d:1080:f60f:868a:517c:18fc])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-436297450b4sm33534874f8f.34.2026.02.10.01.01.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Feb 2026 01:01:02 -0800 (PST)
-Message-ID: <8b18433a-5836-4a65-b790-9f51112d1f5c@linaro.org>
-Date: Tue, 10 Feb 2026 10:01:00 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HueU6L61"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63C56C116C6;
+	Tue, 10 Feb 2026 10:06:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770717970;
+	bh=E07rW57XvUp9dRCWusGbgPrZsQXq2+KThzrSXX8KsSk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=HueU6L61WhjpwVG61pkiebO4T1YOTik3YStQ1CA89k8JtPhYXv6Isn7xjvDkuG9ZW
+	 u/3MALLxPQkBT9k0CSUQZmRDkY5xb3EZEFSx9sNChsJ5AW4sva/e9JZEcjgBaWp7a0
+	 Y+IT3a2aVRLZIwyxa2VbLZtwosOIdBvXLgVCARQ1DxA1brre55YVAIskV1oQGO50mw
+	 0BBPVmU0venNiNgMjdghnzGdgwT4my9vPe6B+onEzZ5h28/ACsddgcL3p1d4tyUZAX
+	 GlhpxF01XgYakiNI54pHw80wKEdiHMALJbcJFSCjdedWUFhFJpYMEUzvKqmjwvavOj
+	 4J7xyAJ3wBDZA==
+Date: Tue, 10 Feb 2026 11:06:04 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	stable@vger.kernel.org, Thierry Reding <treding@nvidia.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Subject: Re: [PATCH v2 2/3] PCI: tegra194: Reset BARs when running in PCIe
+ endpoint mode
+Message-ID: <aYsDDOZA18BBeOsd@ryzen>
+References: <20250922140822.519796-5-cassel@kernel.org>
+ <20250922140822.519796-7-cassel@kernel.org>
+ <2fedf28e-83ea-4e51-b1a1-e45f0e928509@nvidia.com>
+ <aYonDJyd_dbV0GBK@ryzen>
+ <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH v3 4/9] pci: pwrctrl: generic: support for the
- UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-msm@vger.kernel.org
-References: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
- <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-4-5b79c5d61a03@linaro.org>
- <fbxbnou5mdlhaq5dpxr3wdzmjetwdp7auaaqeunc67tgk5ej2m@cnnkr2pcwy77>
- <a4e55e91-0e03-4e63-8542-d8ad61b38906@linaro.org>
- <o6e5qygss55p6npjgaicxffsqdpv7kojgidr46zinsvfpxfxug@vn67nq4k6jzk>
- <b46da4da-93aa-4213-ad75-ec7709008b95@linaro.org>
- <qd5egc42mkdofs4ey7gl664e5el2p5sxwluesjtm7gc3y66hez@l4dz3bd5xm6n>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <qd5egc42mkdofs4ey7gl664e5el2p5sxwluesjtm7gc3y66hez@l4dz3bd5xm6n>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com>
 
-On 2/10/26 09:00, Manivannan Sadhasivam wrote:
-> On Mon, Feb 09, 2026 at 03:59:20PM +0100, Neil Armstrong wrote:
->> On 2/9/26 15:49, Manivannan Sadhasivam wrote:
->>> On Mon, Feb 09, 2026 at 03:00:02PM +0100, Neil Armstrong wrote:
->>>> On 2/9/26 12:30, Manivannan Sadhasivam wrote:
->>>>> On Fri, Feb 06, 2026 at 03:50:32PM +0100, Neil Armstrong wrote:
->>>>>> Enable the generic pwrctrl driver to control the power of the
->>>>>> PCIe UPD720201/UPD720202 USB 3.0 xHCI Host Controller.
->>>>>>
->>>>>> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
->>>>>> ---
->>>>>>     drivers/pci/pwrctrl/generic.c | 4 ++++
->>>>>>     1 file changed, 4 insertions(+)
->>>>>>
->>>>>> diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.c
->>>>>> index 08e53243cdbd..4a57a631362f 100644
->>>>>> --- a/drivers/pci/pwrctrl/generic.c
->>>>>> +++ b/drivers/pci/pwrctrl/generic.c
->>>>>> @@ -73,6 +73,10 @@ static const struct of_device_id pci_pwrctrl_slot_of_match[] = {
->>>>>>     	{
->>>>>>     		.compatible = "pciclass,0604",
->>>>>>     	},
->>>>>> +	/* Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller */
->>>>>> +	{
->>>>>> +		.compatible = "pci1912,0014",
->>>>>
->>>>> No need to add the compatible to the driver. Just use the existing compatible as
->>>>> fallback in the binding/dts.
->>>>
->>>> ???
->>>>
->>>> Sorry but this is insane, in no world a standalone PCIe USB controller could be qualified as
->>>> compatible as a pciclass,0604 slot.
->>>>
->>>
->>> AFAIU, 'compatibility' implies that the driver can safely fallback and would
->>> still work. If we add dedicated compatibles for each endpoint devices, then we
->>> will just keep adding forever. Powering up a PCIe slot and an endpoint device
->>> are conceptually same.
->>
->> We're not speaking about driver here, but about compatible string which describes
->> a device, a PCI endpoint and a PCIe slot are 2 very different devices that are
->> nowhere compatible.
->>
->>>
->>>> Technically it would work just fine, but "compatibility" has a meaning....
->>>>
->>>
->>> I view compatibility interms of device operation, not device as a whole. But
->>> sure, I could be wrong. If the DT maintainers say so, I won't insist.
->>
->> In the actual way it's defined _today_, the "slot" and "endpoint" power up schemes are
->> compatible, but I hope the slot bindings will get much more features to describe the
->> real world slots power properties. And no, endpoints will definitely not have the same
->> features as slots, using it as a fallback today is an error.
->>
->> On the other side, adding a "simple-pci-endpoint" compatible that enables any supply
->> and clock would be a good solution, if the DT maintainers agrees of course.
->>
+Hello Manikanta,
+
+On Tue, Feb 10, 2026 at 09:40:44AM +0530, Manikanta Maddireddy wrote:
+> > On Sun, Feb 08, 2026 at 11:41:42PM +0530, Manikanta Maddireddy wrote:
+> > > Hi Niklas,
+> > > 
+> > > Tegra PCIe exposes only DMA register over BAR4, not iATU.
+
+Here you claim that DMA registers are exposed in BAR4.
+
+
+> Hi Niklas,
 > 
-> We do have a 'pci-host-cam-generic' compatible. So we can also have something
-> like 'pci-pwrctrl-generic' IMO.
+> In Tegra234 PCIe, BAR1 is MSI-X table and BAR2 is DMA registers backed
+> by PCIe HW RAM and registers.
 
-I don't want to into this route, I just want to powerup the USB3 controller on
-the Pocket S2 gaming device, not spend 6 months into _not_ modifying a driver compatible
-list.
+Here you claim that DMA registers are exposed in BAR2.
+Which one is it?
 
-All this feels bulky, who a pci device would be compatible with something like
-'pci-pwrctrl-generic' we're speaking about a pci device, not a power control device.
 
-It's nowhere similar to the 'pci-host-cam-generic' situation, this describes well defined
-host controller interface.
+> EPF driver shouldn't allocate memory for
+> these two BARs. This is the reason for marking them as reserved in
+> Tegra PCIe driver. DMA registers are exposed over BAR2 to allow
+> PCI client driver in host to transfer data from host to endpoint
+> using endpoint remote DMA read functionality. BAR test fails on this
+> because not all register bits are writable. Consider NVMe example
+> which has RO capability bits at the start of the BAR, it is not correct
+> to add BAR test on these bits.
 
-Neil
+Have you tried running
+tools/testing/selftests/pci_endpoint/pci_endpoint_test
+?
+
+pci_endpoint_test will run BAR tests against all BARs that are enabled by
+default, regardless of the BAR being marked as RESERVED or not, see:
+https://github.com/torvalds/linux/blob/v6.19/drivers/misc/pci_endpoint_test.c#L1052-L1061
+
+In the case of nvidia,tegra234-pcie-ep, before my commit 42f9c66a6d0c
+("PCI: tegra194: Reset BARs when running in PCIe endpoint mode"):
+pcie-tegra194.c marked all BARs except BAR0 as reserved.
+pci_endpoint_test would run tests against BAR0, BAR2, BAR3, BAR4, BAR5
+(it would not run against BAR1, because BAR0 is marked as "only_64bit").
+
+After my commit 42f9c66a6d0c ("PCI: tegra194: Reset BARs when running in
+PCIe endpoint mode"):
+pcie-tegra194.c still marks all BARs except BAR0 as reserved (I did not
+change this).
+pci_endpoint_test would run tests only against BAR0.
+I.e. the only BAR that is not marked as reserved.
+
 
 > 
-> - Mani
-> 
+> I think following fixes are required to address this issue,
+
+Could you please define "this issue", because right now I honestly don't
+see the issue.
+
+To me it seems like you want pci_endpoint_test to run against BARs that are
+marked as reserved (I assume that Vidya marked them as reserved for a good
+reason, most likely because all of them map to MMIO registers) and thus you
+want multiple test cases in pci_endpoint_test to fail instead of being skipped?
+
+
+> 1. BAR test in pci_endpoint_test should skip MSI-X table.
+> 2. BAR test in pci_endpoint_test should provide option to
+> skip this test on known reserved BARs, maybe we can use
+> pci_endpoint_test_data for this.
+
+pci_endpoint_test already skips disabled BARs by default.
+
+They way it works is that you disable all BARs in you EPC driver's init()
+callback (i.e. what my patch does), pci-epf-test will then allocate backing
+memory + enable all BARs that are not marked as RESERVED.
+
+
+> 3. EPC driver should provide BAR_DISABLED enum to disable
+> unused BARs.
+
+BAR_RESERVED already means disabled, it just assumes that an EPC driver
+disables all BARs by default, which is the case for:
+pci-dra7xx.c, pci-imx6.c, pci-layerscape-ep.c, pcie-artpec6.c,
+pcie-designware-plat.c, pcie-dw-rockchip.c, pcie-qcom-ep.c, pcie-rcar-gen4.c,
+pcie-stm32-ep.c, pcie-uniphier-ep.c.
+(All drivers which disables all BARs by default in the init() callback using
+dw_pcie_ep_reset_bar(). pci-epf-test will later enable all BARs that are not
+marked as BAR_RESERVED.)
+
+That leaves: pcie-keembay.c, pci-keystone.c, pcie-tegra194.c (before my patch).
+
+For pcie-keembay.c, this is not a problem, because BAR0, BAR2, BAR4 are marked
+as only_64bit, so pci-epf-test configure these BARs as 64-bit BARs, and thus
+BAR1, BAR3, and BAR5 will get disabled implicitly.
+
+For pci-keystone.c, this is the only driver that is a bit weird, it marks
+BAR0 and BAR1 as reserved, but does not disable them in the init() callback.
+It seems force set BAR0 as a 32-bit BAR in the init() callback.
+
+Thus, for all drivers except for pci-keystone.c, BAR_RESERVED does mean
+BAR_DISABLED. Feel free to send a patch that renames BAR_RESERVED to
+BAR_DISABLED.
+
+If you send such a patch, perhaps you also want to modify the PCI endpoint
+core to call reset_bar() for all BARs marked as BAR_RESERVED/BAR_DISABLED,
+instead of each EPC driver doing so in the init() callback. I think the main
+reason why this is not done already is that thare is no reset_bar() op in
+struct pci_epc_ops epc_ops, there is only clear_bar() which clears an BAR
+enabled by an EPF driver. (So you would most likely also need to add a
+.disable_bar() op in struct pci_epc_ops epc_ops.)
+
+
+> 4. Tegra PCIe driver should disable only BAR_DISABLED bars and
+> leave BAR_RESERVED untouched.
+> 5. Return NO_BAR for both BAR_DISABLED and BAR_RESERVED in
+> pci_epc_get_next_free_bar()
+
+A BAR marked as BAR_RESERVED will never be returned by
+pci_epc_get_next_free_bar(), so this is the case already.
+
+
+Kind regards,
+Niklas
 
