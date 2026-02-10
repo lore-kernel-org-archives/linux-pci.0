@@ -1,731 +1,311 @@
-Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013032.outbound.protection.outlook.com [40.107.201.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ABF830EF7F
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 16:42:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770741779; cv=none; b=a/3wSM7wQ90pX/B5kOYXtgbHoVfV29Igy8wAgFe/vN3H3ivZBTrHNr6RpsV3S9QfwAEoKH2pkA6EIDikIP1mTIM8ZTSK8/MyDK5t4C9w5CoSZTZQEN5HaqY17O1NHfU97USxLIT8FIEcdg0aSy1U/J9mMJdDe8GWrafjYBAVGZo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770741779; c=relaxed/simple;
-	bh=x0osV0/LlVn5jAug/OgRRywJb516W6Ny6v5CNH7QrVs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Plqd9z0hfQ8qVXlC94B4J0022qrSAlOiu1y3PhQmiZ5GGF0kFC0r95w/Es3OSz5gQyjL5QALsh3Xf49sWD9Y48U+Vm8Fo/6C1lYejJAB5bCV1dzexi/wYKg0WXPBFIH5ec2uF7l/NyAZYTayuLuolsd/UbE+2yD/xVpP5zV6v08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Qfxqr4ow; arc=none smtp.client-ip=91.218.175.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC2832ABF7;
+	Tue, 10 Feb 2026 17:08:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770743318; cv=fail; b=A2F8BAYb7BkiOH5BBaZDy1paVMDQ2dq4G7Wg64v+8tnb7qNSs2Me3gjItgwQfWDCl4kZcYKhWIHP7i7Gg6ZJIz0gMMzjnEeRkVuGYPIZBnK/f7SGOAZf7BMfa7OoRIiHo5lXF8C7sWGdPOBZRl1VYfM9ZFS9Rvz/GxyL6ZPujZs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770743318; c=relaxed/simple;
+	bh=+1h7BXLfCLIL7SEOjOdeWS/QJYYYWunPL1Vl+F+aM7Y=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=SZFxrQHDrynnyn5x64ghi2au8KcVRJ1Z65MS7xzWsBvPTutDSEZ2qOMudgynwu9Sda+XM0reM/m0jDqdB84JpH5dJYVfotmOHddGjpXUm9syHss4LOQtGOK7Hg/eBDT8+7YRwTfEs5lfKTUdrVhqFSmy9weNkHk1rsvcQVPwdqg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=OsfiYBtZ; arc=fail smtp.client-ip=40.107.201.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Qfxqr4ow"
-Message-ID: <5262c5b1-84cc-4abe-9d8a-a8fd48b6c79f@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770741774;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BqNtSPfXtXfusc1DAQX8JYXdbD+b429MioZG5bRqt3Y=;
-	b=Qfxqr4ow/3kY9MqO/6sXjJUSJbobDYRIEAnhj5QIwAV6uyun425IHX9smykzza55LWjBpK
-	mO7KforSp0k4INbVMEgOl9TD7vA0nWrvvKCg2W4hoUkkkDRVupt6ymC1JoaoRppFsvmJNb
-	MF1cJcbySy7uIntWYmarUADkWBzwLJ8=
-Date: Tue, 10 Feb 2026 11:42:50 -0500
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="OsfiYBtZ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VQQKgwv+a+mkMTubaCJHUcSLGj+TVl3hm+B7GAK8g66fCT5Vw+GPRLKOH9mEKEXZZ5WXKqALAXvc4ldCX1HqG5wEXDjm2wB1lQydNXFHS61lqMZ0gXmNFhOfMJ7owjDBbE9uwhXU2NaG/x6W0crswjpvvdAF9de4v5QfL41Y4i8t3KTS3WGYXD6vRbOAaXqbKmixmINL0YpNwIuzhGLDOj1odPn1Fv0dnE7yy0CYsSR8JnIWOkk2/iFEUr+MwGaKAqfhHyM/sQIo3tYGDk69Y+mMy0JkfPpwL81Uz2bkuTx+dPn9zY433vJpgkrYuo7No456ovhcd8w+1X6E5TZNfQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=zTdQXl42n9CJvmucDc4ax0YKl6Z3lMi/My+peOZ2WGk=;
+ b=pkGiZ4uZcxfZ89Z5vaBVIdotApgvX+n5u4Cxs6yaBSrDynIO5Ks6ZlkFd/hK4YqYPMkm7fA028bz0ys0kVG8MCwkBPEAcPfFK0RScm1zCFgExjLyi6YDHSs1vhBYXpq2ijf24YuNKzGoIqqKCKlbC3+CfRAB5CdAJXjGhsRA8hvB79qP/0q+1bqoESwojdBjtDP/34ikW48tnoOdJxsj95DP1LhMA0l5lCIyIR7GfccGuI1SnpYEtROrHk/gOh1+vjDDC/v4nrHsb0pyQyo5RE+0hTWGH3PXyBDHDJ53r+jTQJJmWCGRfFo7ORyDGZKikrAJ2NYTudLx5ZCX+auMkQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zTdQXl42n9CJvmucDc4ax0YKl6Z3lMi/My+peOZ2WGk=;
+ b=OsfiYBtZvKo4KKN46f2IGANSgmnLPYUXz67Lz4uEX09N5Df11qnHIEuCUjmFVsu8GvMbmvPhurB5QWJkbJ+9H9IYMN5yhlf157/GzOzHPY+bOLEMQRoNO5vaGgZnDf04u7f8vGyE8GaOpMgJwpp04yfVbU3QsMSI1GubCdu7HbMhqigQN5FvT/wV9jIfdcIrQ3LLcjnHa2iBo57bFPtM9+rhfZzjKtjdQFzRoa5rbtT6V0+gpkTHAu0cdL13btLE8/98xuIxB9rBxyEj+VjO/vvgDOLcBIsbrnmOZWtOJEU0mCLFXfUxw8ECMFV+5OA0mOwM+GoGSvYTUmSuywmlLw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
+ by DS2PR12MB9799.namprd12.prod.outlook.com (2603:10b6:8:270::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.17; Tue, 10 Feb
+ 2026 17:08:30 +0000
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391%5]) with mapi id 15.20.9587.017; Tue, 10 Feb 2026
+ 17:08:30 +0000
+Message-ID: <39f1416c-32aa-4392-a62b-00b9167b2fad@nvidia.com>
+Date: Tue, 10 Feb 2026 17:08:24 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [V5,02/13] PCI: tegra194: Refactor LTSSM state polling on
+ surprise down
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ thierry.reding@gmail.com, jingoohan1@gmail.com, vidyas@nvidia.com,
+ cassel@kernel.org, 18255117159@163.com
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260208180746.2024338-1-mmaddireddy@nvidia.com>
+ <20260208180746.2024338-3-mmaddireddy@nvidia.com>
+From: Jon Hunter <jonathanh@nvidia.com>
+Content-Language: en-US
+In-Reply-To: <20260208180746.2024338-3-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0471.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:1a8::8) To DS2PR12MB9750.namprd12.prod.outlook.com
+ (2603:10b6:8:2b0::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/8] phy: zynqmp: Calibrate ILL if necessary
-To: "Pandey, Radhey Shyam" <radhey.shyam.pandey@amd.com>,
- Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
- Vinod Koul <vkoul@kernel.org>,
- "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>
-Cc: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "Simek, Michal" <michal.simek@amd.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>,
- "Havalige, Thippeswamy" <thippeswamy.havalige@amd.com>,
- Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20260203002128.935842-1-sean.anderson@linux.dev>
- <20260203002128.935842-5-sean.anderson@linux.dev>
- <CY1PR12MB9697F67210064132883611A8B762A@CY1PR12MB9697.namprd12.prod.outlook.com>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Sean Anderson <sean.anderson@linux.dev>
-In-Reply-To: <CY1PR12MB9697F67210064132883611A8B762A@CY1PR12MB9697.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|DS2PR12MB9799:EE_
+X-MS-Office365-Filtering-Correlation-Id: b783243f-7584-4c77-57eb-08de68c7037b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|7416014|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?TjRueWd2aDdVRUdXTmRhZHJxcUxycEhGN2Y0NU1DUlk4WmhIOVJFSWEyS2RR?=
+ =?utf-8?B?Um9RT0s0aGw2TzBmb0JySi93U2ZvWld3bmRhMmZTYWo3OHZsUThSTXordnIx?=
+ =?utf-8?B?b2dkeHNab25ZUVVrZEw0RkQ2djRiY09VQ0NpUHA4T2FZa0Y4dnhnS1E0OE9Q?=
+ =?utf-8?B?OWtpSzQ1V05TbGs0V0ZIME9KRit3MWo4b21pRURtYS9tK1kyWEdWUUxtTUNQ?=
+ =?utf-8?B?TXFnSEtacUZhb2cxK09UdmIzOW1sZjE0bUZLVUtpR0IrcFdZWnNrb3dkN2hl?=
+ =?utf-8?B?YXVEZGtsRUtKb2NmemxVMUIyS2QyWXNFalVXSXZQZkRCQXN6bnVkQUU0bG5j?=
+ =?utf-8?B?UmJ6YWhXSjhEbFMyUW1USHMycnk4QWZpUzE4Y3o1QkNQQzlzY2R6NHBzeksz?=
+ =?utf-8?B?L3MxQ1R0UTZ3ZTAwWkxLWXVManNYZ3lHNVY5dTIvTWMyQkdjMythZTlNU0RC?=
+ =?utf-8?B?dnU5MDNvYzlLS2xzWGVFSjRvcUJzZnRiVEVDbFVwODhVTTllc0JMcnV6Zits?=
+ =?utf-8?B?bmY5UW1ZUjVDT0dVNUJ0aHRKZWwvN3lySGMyWkwrOHoxVUprNGtDd2MrV1RS?=
+ =?utf-8?B?ODltL3A5RFpXYU15c3lUU0gySmpRT0NlYVBnazljQjF2dW5oZzIrRmNpRUtQ?=
+ =?utf-8?B?NUVmQWJpTVp5ckwwTk9HeUhKSkZjTjlMOVZESzBLVTZiSmkrL0tybjM0V0Q1?=
+ =?utf-8?B?N1JJMWNTcVNHVEhiRFJPQlV1LzB4dGkvKyt4cEJJVkVqTWp6VnVxak9QeHJx?=
+ =?utf-8?B?dFgvQ1loa1hCdG42TWF4bnFLUnArazlWQTNBL2RnOGk3ZVp1bGQ5SjUycXJK?=
+ =?utf-8?B?dktSUVhQOW8xWjZYa3RkNG50akJId3JQYitkNnRTMlBZOFpzYVhXbTdDS09x?=
+ =?utf-8?B?anZCZGRIOWQ3NEdqYmNIN2Fwc0V1dWI3MUw4blpDNUpZejZqUWJxclJETCtw?=
+ =?utf-8?B?a3J3c2hWaXdRK3V1UUNRWmdRQUVLQVdROTBoczZNdWxRb2hpdTBqUDgzc1RE?=
+ =?utf-8?B?RHlFdE9FS05ja1RtZWVydzJ1VjdSMlFuOVgwaFNkaHQ5Vjl5RjBHUFNycFZ0?=
+ =?utf-8?B?RmlUYXAyZzhiWUdYZGcrRXVCczlZbXZvK0pJK3Z6NGtJZ3JQbDNiYmdDS0lN?=
+ =?utf-8?B?U3loaWp0TnFUUzBTMTdZUFRoK0NTR21rZXczdFlDSUtZcWZadjVEZUhsVlJB?=
+ =?utf-8?B?Y3k1NytRbUUySUh5cXlGTDBUSTdUMkpuVjNNZnhpL3lvRGVPY2tyS1ZsUy80?=
+ =?utf-8?B?bFdTdEZzRStoSjk5ZnJlU2p6N0l4Y0RXR2ZvWXFDaHFXdjZGT1E0S3M0dTFF?=
+ =?utf-8?B?bkFIWWpwSURVK0UzNFh0VEgvTk1GMlN1ejA1YkhqMGV5ZXdjNXBaZXhiclhY?=
+ =?utf-8?B?K2VDMjBjQ1RnbW40YlFJdEl3YjFqU01DanlQc1hQRzkyVkRmSDkvZk1TRWpa?=
+ =?utf-8?B?eks4MHhBcjBZWGlOUDdSSmxLUW0yRXpGM1gyNUl2c1F1WmdHMWpCQ1VhVFJw?=
+ =?utf-8?B?RlVxZnhYdm5lWU9qdzd4L01EOHd5d3E2WkdpNGIrRktMYUxsbjBJYmRXUGcr?=
+ =?utf-8?B?NEpTeEQ0cDZlM21CYW8vZFJadmszMngvaGtDVHhySkxDd1N3TWFMNFZ0amZo?=
+ =?utf-8?B?UFRTMmpFeVBsQ1pqeU51SVhWaVVzOE50SDB6Qi8vYkRSOHJUUWtrZGZBdFNh?=
+ =?utf-8?B?QlQvZ3VnRlNkRzVwdEhoemhUbnVsNGVGcnZiZzM3SHMxUXBqL281cnA3MDhv?=
+ =?utf-8?B?TEsvNWp1aU03bUU3NGtXRXp0YlhvNCtFc2NzbFMyZUJHSFJLRG1MNVpqMzBy?=
+ =?utf-8?B?bWpJd2o1TWtta1RMREZiWVR3R2RrS1pVZjBzWGNSWkdrbW50TFRib1hMUU9q?=
+ =?utf-8?B?cHFHeTYzaEp4eDYxVGg2eEFHeVRhdVJ1R2JydnZac2hYM3RRT3dwOXhzWWF1?=
+ =?utf-8?B?Zld4RW5GdEhCZTFzRkl1VWgwNEFNKy9sSTlUVnpSdGVqNzRKM3RHZUtickY5?=
+ =?utf-8?B?Q0p6Skx0SUpqeGFrMWV6NGR1c0YyTU9abmI1bThQbjM5WFkvOHk0cVdOVUhC?=
+ =?utf-8?B?SUljL1JUS0ZQVm10YmR4M05YOGZQUnA0alhWZUhWZnBHVmZFQWR4aitZdUMy?=
+ =?utf-8?B?eXA0eUV5ZkQxWTFCTi81d0JiRi9WWWNwd0NuUTdEdUI3YTV0Skd5OXF5d0VE?=
+ =?utf-8?B?eEE9PQ==?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NWJpdHZ3bi9xWm44NDUwTzVsMHJqQ3lHY0VyckQ0N2ppNzZ3ak5CUmpnVm5o?=
+ =?utf-8?B?VlBkc2R0aUQwZituWTFpTnQwZGMzMWNLMlNQdVY2eTFha1RRMEZtLzlCK2Qr?=
+ =?utf-8?B?YWJQNTRibmd2VldCd3hHUkNpbllFUTVlVzREeE82aXN1NHJNRVVjSVAyS3Ir?=
+ =?utf-8?B?ZEppMitmRER4RFZwdW1JeGxKQ24vSHNQc0M1VktoRWhYQlBoYUs1WmtnYzNk?=
+ =?utf-8?B?SS9EOEZ2dDRKWFpuR0VvdktUZVc1SlV5UHVQMUJQR2lGcDEzZzNLbE1MSUsx?=
+ =?utf-8?B?VHFUMnFZaENibUpYMllvMnd6Y0FQLzZZQm9lUnJ2WnZ0OXRTcFYxSlVqUjRw?=
+ =?utf-8?B?d1F3a21ZYTlxbnFwTnVScUFWQTZWbjZKS3JQcmtvcmJ5ckNQOFltN20vS1Yv?=
+ =?utf-8?B?U3g2dVNtbXFaSmpjRjFxekcwd1hML2VNOGlpQkhhaWxaNHlRQjMvOVcwQUpp?=
+ =?utf-8?B?VzZQWVI4TFZkaUdSWFgvZjlycUlqeWRIdWE1czdYKzlFMUVKd2VGM2I1U3Bv?=
+ =?utf-8?B?TURBM1Z3cXdGTDd5d1RySmc3Ti9lUHBsY0wxQlR4WUNTanhEcHZ1V1J3YXpn?=
+ =?utf-8?B?cVRnb3dsMnNnVStEQ0hudjBtcjNiWDdjS0F2YnF1M1VjaFRCd01BeUpGQnJR?=
+ =?utf-8?B?bXczMUovbDJzSUIrRjZLZ1FFZllxVi81aDU2RUZFc0FheWZibHBEc0lMTXdT?=
+ =?utf-8?B?WlE0Z0JlSDFOOWxIWGVvVkhQZzM0Z2kreFRCSDNsVTVCL3F5WnlKQklZby9n?=
+ =?utf-8?B?d0hSTmkxRldtemNxbEhGemNtS3RWMkRsdnJHZTVoK2lYZWljbGJPdnBPZ1Ew?=
+ =?utf-8?B?YnZ0YndBYkdKQ2ZPWFNXTmI5dERDNUZ0SWpzdkNtK2ZadVN0Rm9FaHB3QnFa?=
+ =?utf-8?B?eVBhRGwwU2JqemxWZ1VHblVjdWMybXVsNnA5UnNUT2dVUlVSU0NjN2l2WHN4?=
+ =?utf-8?B?ZVJkdVZGZ3N5V2w5L0s3V3I0VG9OWnNsUGdHMjZLZ2R0eW9Ya1JodlkvYmtw?=
+ =?utf-8?B?ZTNpdkhmNXQveXdNVWs3NW9NZVNmR2crQTVlOGJHOWIxZlErTm10cDZ4Wis0?=
+ =?utf-8?B?bUljYjd4WkhNUUZPYlUzVDJwTVVMVis3SXBMdGVINUJlcDJ3R0lQcWFlWmsr?=
+ =?utf-8?B?UldMUjNtQ0loVjh1Ui80SExBbWZBdDE4cDErYnlQZlFmY29BdlN2MWNTNFFo?=
+ =?utf-8?B?dC9kWU9NN1hLK2gwMExaVDY0a3JqYjk3WkJsZ2d0bFhNMlZKcVpQRnFqdllR?=
+ =?utf-8?B?eGlNK1BlWEtrTWRSQ050aTdGRm1lWWlTejFLeXZCbmpPenBiZURsOUp2UEdP?=
+ =?utf-8?B?NmpiOE96QjBZd1daK1YrNzBPSXpRTmhMSmxkVUxrclVCbWpuZDJvZThwNUp2?=
+ =?utf-8?B?L1B3ZEFyTmUrMVp5WitONmVyT25haHNQYkY1cEZ0K2dXRkgxa3p5Z1VOS0tB?=
+ =?utf-8?B?WjIxUjgyLzFCbHNVYnVPMlJueFhKZnVKSFpobkpsSFNNZHA3dGRYem5ReEFO?=
+ =?utf-8?B?SGkzMTlQTWhTaURtaHZ3YXJRSkd5SDV3bVpJUTNRMThyVjU5MG5IWTBlZTdB?=
+ =?utf-8?B?TjB3K05VaWJuVFdpTjV1MWlFdFZUR24vQmthNjJaL3FaU2s3Qk5QNldLK0ww?=
+ =?utf-8?B?Y1U0QVRnMXRZcUd1bkh6d2lzWnBjTDk5a3ZMK3BxUHZvb3cyb1NXLzU5NFhL?=
+ =?utf-8?B?L1U0ZkV2NmJrVnRhc0p1YkFzWkMwVXRlWlJiRC8xRUZTd0tObElrNDNmVVFR?=
+ =?utf-8?B?T3JBYXVZU0VQSlg4NkxvbDdXVDk1MldzNDlzY0dnZ1NNTW56TWRMTldCWmt3?=
+ =?utf-8?B?a1lrQ3JyVUVTN0paZGVpS01jVnNFTDNTcDlIR1I4ZnltMnVRZ1o1dlBZQllR?=
+ =?utf-8?B?aTg3Z2Q1RE9OMjNJQlpwM3ZycWVTQmpKMk5vYlMrbWxidW5aWFBNc28xZ2ZS?=
+ =?utf-8?B?K05mbUJSWG5CMDNGZkZkclQyVThNRFZqamllaGxGd2VlTmlWU0RuUDlraSto?=
+ =?utf-8?B?TUwvY3N5cUU5RE5qcFlMd2NxKzZtNGVIK1l1aVgxbHliSnNvQStMMEsyMFI2?=
+ =?utf-8?B?bmFxMkFPYVV1NDdLMXJDaUNEY3NoSFVYKzhuRE45clZyR3RvbE02MVdJc2RU?=
+ =?utf-8?B?Vm8zWXRPUVdybkVxZ0dJSFNlTlVtWW5vZ0w4YUl1d3JDQWVKOE5QbzZwb0lS?=
+ =?utf-8?B?RWNhdTBDMTJkNldPdmRoL2s1M2p2ZHNFQzQ3SmcvV1JrM05Rcml1b1MzcUdE?=
+ =?utf-8?B?RktVYTNlOWxTcUVJWjJIcWFId0hDbG1iOWpvdTlXeTN3VFNoMGo0WUVEbTJ2?=
+ =?utf-8?B?QjhPNmpjL3ZPb1hPbXJoaDBKbXFmc1J6d1lITlNJU1pBQk1meHdudz09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b783243f-7584-4c77-57eb-08de68c7037b
+X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Feb 2026 17:08:30.1282
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WT5RCAqJ1x54jTbebOTP6qv1cNc+c1pWx48NS0V4E8SnB9m2UT2D3xTIklcfSrmBU3tcuGudDK+VJZTGV8H+CA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS2PR12MB9799
 
-On 2/10/26 11:04, Pandey, Radhey Shyam wrote:
-> [Public]
+
+On 08/02/2026 18:07, Manikanta Maddireddy wrote:
+> From: Vidya Sagar <vidyas@nvidia.com>
 > 
->> -----Original Message-----
->> From: Sean Anderson <sean.anderson@linux.dev>
->> Sent: Tuesday, February 3, 2026 5:51 AM
->> To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>; Vinod Koul
->> <vkoul@kernel.org>; linux-phy@lists.infradead.org
->> Cc: Krzysztof Wilczyński <kwilczynski@kernel.org>; Lorenzo Pieralisi
->> <lpieralisi@kernel.org>; Pandey, Radhey Shyam
->> <radhey.shyam.pandey@amd.com>; linux-kernel@vger.kernel.org; Simek, Michal
->> <michal.simek@amd.com>; linux-arm-kernel@lists.infradead.org; linux-
->> pci@vger.kernel.org; Neil Armstrong <neil.armstrong@linaro.org>; Rob Herring
->> <robh@kernel.org>; Havalige, Thippeswamy <thippeswamy.havalige@amd.com>;
->> Manivannan Sadhasivam <mani@kernel.org>; Bjorn Helgaas
->> <bhelgaas@google.com>; Sean Anderson <sean.anderson@linux.dev>
->> Subject: [PATCH 4/8] phy: zynqmp: Calibrate ILL if necessary
->>
->> init_serdes in psu_init_gpl is supposed to calibrate the ILL. However, this
->> may fail if the reference clock is not running, such as if the clock needs
->> to be configured on boot. To work around this, add support for ILL
->> calibration in U-Boot. If the ILL is already calibrated (any non-zero
->> value) we skip calibration.
->>
->> The algorithm is substantially the same as serdes_illcalib [1], but it has
->> been updated for readability (and to remove all the "if (lane0_active)"
->> conditions). Due to the amount of register fields, many of which are
->> undocumented (especially the chicken bits), I have mostly used defines only
->> for the register names. There are certainly areas where register writes are
->> superfluous, but I have left these in order to minimize deviation from the
->> procedure in serdes_illcalib.
+> On surprise down, LTSSM state transits from L0 -> Recovery.RcvrLock ->
+> Recovery.RcvrSpeed -> Gen1 Recovery.RcvrLock -> Detect. Recovery.RcvrLock
+> and Recovery.RcvrSpeed transit times are 24 msec and 48 msec respectively.
+> So, the total time taken to transit from L0 to detect state is ~96 msec.
+> Hence, increase the poll time to 120 msec.
 > 
-> Please consider splitting the patch in introducing calibrate ILL functions
-> and then subsequently using them.
-
-OK
-
-> How did you validate the changes? functional testing is one part
-> but I think better to match register configuration done in psu_init vs
-> this series?
-
-I've done this in the past, but I didn't do so with this version of the
-driver. I'll make sure to do this comparison for v2. FWIW the ILL
-values achieved through this procedure are fairly close to the values I
-got from the firmware.
-
-> Have we tried running on multiple designs having
-> different GT lane and protocol combinations .
-
-Currently tested with SATA on GTR2 (on [1]) and PCIe on GTR0/1 (custom
-design). I've also tested SGMII and DP on the other lanes (although not
-USB as mentioned in the cover letter). I'd definitely appreciate if you
-(or anyone else) could test on some other boards.
-
-[1] https://developer.seco.com/hardware/product/computer-on-modules/smarc-modules/som-smarc-zu-b71/
-
-> There are multiple magic numbers. Consider renaming it to
-> meaningful defines.
-
-Some of the fields have very long names. E.g. L0_TX_ANA_TM_3 has two
-fields that we set: TX_serializer_enable and
-force_TX_serializer_enabled. Setting it would look like
-
-			xpsgtr_write_lanes(gtr_dev, lanes, L0_TX_ANA_TM_3,
-					   L0_TX_ANA_TM_3_TX_SERIALIZER_ENABLE |
-					   L0_TX_ANA_TM_3_FORCE_TX_SERIALIZER_ENABLE);
-
-and there's really no way to get that under 80 characters. This is
-probably the area where I could most improve things. But I'm not a fan
-of tripling the line count since I think it makes it harder to follow
-the flow of the initialization.
-
-Other fields have poor documentation. E.g. L0_TM_IQ_ILL8 has a single
-field ill_bypass_iq_polytrim_val documented as "IQ ILL polytrim bypass
-value." I have no idea what this field does or why it needs to be set to
-0xf3 so I can't really define a meaningful constant for it.
-
-Lastly, some fields are not documented at all, notably UPHY_SPARE0.
-
-In these latter two cases, I have not guessed at the semantics, but I'd
-more than welcome any additional info.
-
->>
->> [1] Example implementation; xpsgtr_phy_illcalib coresponds to
->>     serdes_illcalib_pcie_gen1:
->> https://source.denx.de/u-boot/u-boot/-/blob/v2026.01/board/xilinx/zynqmp/zynqmp-
->> zcu208-revA/psu_init_gpl.c?ref_type=tags#L710
->>
->> Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
->> ---
->>
->>  drivers/phy/xilinx/phy-zynqmp.c | 421 +++++++++++++++++++++++++++++++-
->>  1 file changed, 420 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/phy/xilinx/phy-zynqmp.c b/drivers/phy/xilinx/phy-zynqmp.c
->> index 152af1702bbd..854b0ea04648 100644
->> --- a/drivers/phy/xilinx/phy-zynqmp.c
->> +++ b/drivers/phy/xilinx/phy-zynqmp.c
->> @@ -12,6 +12,7 @@
->>   * PCIe should also work but that is experimental as of now.
->>   */
->>
->> +#include <linux/bitfield.h>
->>  #include <linux/clk.h>
->>  #include <linux/debugfs.h>
->>  #include <linux/delay.h>
->> @@ -31,6 +32,7 @@
->>   */
->>
->>  /* TX De-emphasis parameters */
->> +#define L0_TX_ANA_TM_3                       0x000c
->>  #define L0_TX_ANA_TM_18                      0x0048
->>  #define L0_TX_ANA_TM_118             0x01d8
->>  #define L0_TX_ANA_TM_118_FORCE_17_0  BIT(0)
->> @@ -50,16 +52,49 @@
->>  #define L0_TXPMD_TM_45_ENABLE_DP_POST2       BIT(5)
->>
->>  /* PCS control parameters */
->> +#define L0_TM_ANA_BYP_4                      0x1010
->> +#define L0_TM_ANA_BYP_7                      0x1018
->>  #define L0_TM_DIG_6                  0x106c
->> +#define L0_TM_DIG_22                 0x10ac
->>  #define L0_TM_DIS_DESCRAMBLE_DECODER 0x0f
->>  #define L0_TX_DIG_61                 0x00f4
->>  #define L0_TM_DISABLE_SCRAMBLE_ENCODER       0x0f
->> +#define L0_TM_AUX_0                  0x10cc
->> +#define L0_TM_MISC2                  0x189c
->> +#define L0_TM_MISC2_ILL_CAL_BYPASS   BIT(7)
->> +#define L0_TM_IQ_ILL1                        0x18f8
->> +#define L0_TM_IQ_ILL2                        0x18fc
+> Disable the LTSSM state after it transits to detect to avoid LTSSM
+> toggling between polling and detect states.
 > 
-> #define L0_TM_IQ_ILL3                   0x1900
+> tegra_pcie_dw_pme_turnoff() function is called in non-atomic context
+> only, so use the non-atomic poll function.
 > 
-> IQ_ILL(n) = 0x18f8 + (n - 1) * 4 ?
+> Fixes: 56e15a238d92 ("PCI: tegra: Add Tegra194 PCIe support")
+> Fixes: c57247f940e8 ("PCI: tegra: Add support for PCIe endpoint mode in Tegra194")
+
+Two fixes tags here, we should only have one.
+
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V5:
+> * None
 > 
-> Similarly for others  (when applicable)?
-
-OK
-
->> +#define L0_TM_ILL11                  0x198c
->> +#define L0_TM_ILL12                  0x1990
->> +#define L0_TM_E_ILL1                 0x1924
->> +#define L0_TM_E_ILL2                 0x1928
->> +#define L0_TM_IQ_ILL3                        0x1900
->> +#define L0_TM_E_ILL3                 0x192c
->> +#define L0_TM_IQ_ILL7                        0x1910
->> +#define L0_TM_E_ILL7                 0x193c
->> +#define L0_TM_ILL8                   0x1980
->> +#define L0_TM_IQ_ILL8                        0x1914
->> +#define L0_TM_IQ_ILL9                        0x1918
->> +#define L0_TM_EQ0                    0x194c
->> +#define L0_TM_EQ0_EQ_STG2_CTRL_BYP   BIT(5)
->> +#define L0_TM_EQ1                    0x1950
->> +#define L0_TM_EQ1_EQ_STG2_RL_PROG    GENMASK(1, 0)
->> +#define L0_TM_EQ1_EQ_STG2_PREAMP_MODE_VAL    BIT(2)
->> +#define L0_TM_E_ILL8                 0x1940
->> +#define L0_TM_E_ILL9                 0x1944
->> +#define L0_TM_ILL13                  0x1994
->> +#define L0_TM_CDR5                   0x1c14
->> +#define L0_TM_CDR5_FPHL_FSM_ACC_CYCLES       GENMASK(7, 5)
->> +#define L0_TM_CDR5_FFL_PH0_INT_GAIN  GENMASK(4, 0)
->> +#define L0_TM_CDR16                  0x1c40
->>
->>  /* PLL Test Mode register parameters */
->> +#define L0_TM_PLL_DIG_33             0x2084
->>  #define L0_TM_PLL_DIG_37             0x2094
->>  #define L0_TM_COARSE_CODE_LIMIT              0x10
->>
->>  /* PLL SSC step size offsets */
->> +#define L0_PLL_FBDIV_FRAC_3_MSB              0x2360
->>  #define L0_PLL_SS_STEPS_0_LSB                0x2368
->>  #define L0_PLL_SS_STEPS_1_MSB                0x236c
->>  #define L0_PLL_SS_STEP_SIZE_0_LSB    0x2370
->> @@ -69,6 +104,7 @@
->>  #define L0_PLL_STATUS_READ_1         0x23e4
->>
->>  /* SSC step size parameters */
->> +#define TM_FORCE_EN_FRAC             BIT(6)
->>  #define STEP_SIZE_0_MASK             0xff
->>  #define STEP_SIZE_1_MASK             0xff
->>  #define STEP_SIZE_2_MASK             0xff
->> @@ -76,6 +112,7 @@
->>  #define STEP_SIZE_SHIFT                      8
->>  #define FORCE_STEP_SIZE                      0x10
->>  #define FORCE_STEPS                  0x20
->> +#define TM_FORCE_EN                  BIT(7)
->>  #define STEPS_0_MASK                 0xff
->>  #define STEPS_1_MASK                 0x07
->>
->> @@ -84,6 +121,32 @@
->>  #define L0_REF_CLK_LCL_SEL           BIT(7)
->>  #define L0_REF_CLK_SEL_MASK          0x9f
->>
->> +/* Built-in self-test parameters */
->> +#define L0_BIST_CTRL_1                       0x3004
->> +#define L0_BIST_CTRL_2                       0x3008
->> +#define L0_BIST_RUN_LEN_L            0x300c
->> +#define L0_BIST_ERR_INJ_POINT_L              0x3010
->> +#define L0_BIST_RUNLEN_ERR_INJ_H     0x3014
->> +#define L0_BIST_IDLE_TIME            0x3018
->> +#define L0_BIST_MARKER_L             0x301c
->> +#define L0_BIST_IDLE_CHAR_L          0x3020
->> +#define L0_BIST_MARKER_IDLE_H                0x3024
->> +#define L0_BIST_LOW_PULSE_TIME               0x3028
->> +#define L0_BIST_TOTAL_PULSE_TIME     0x302c
->> +#define L0_BIST_TEST_PAT_1           0x3030
->> +#define L0_BIST_TEST_PAT_2           0x3034
->> +#define L0_BIST_TEST_PAT_3           0x3038
->> +#define L0_BIST_TEST_PAT_4           0x303c
->> +#define L0_BIST_TEST_PAT_MSBS                0x3040
->> +#define L0_BIST_PKT_NUM                      0x3044
->> +#define L0_BIST_FRM_IDLE_TIME                0x3048
->> +#define L0_BIST_PKT_CTR_L            0x304c
->> +#define L0_BIST_PKT_CTR_H            0x3050
->> +#define L0_BIST_ERR_CTR_L            0x3054
->> +#define L0_BIST_ERR_CTR_H            0x3058
->> +#define L0_BIST_FILLER_OUT           0x3068
->> +#define L0_BIST_FORCE_MK_RST         0x306c
->> +
->>  /* Calibration digital logic parameters */
->>  #define L3_TM_CALIB_DIG19            0xec4c
->>  #define L3_CALIB_DONE_STATUS         0xef14
->> @@ -139,6 +202,9 @@ static const char *const xpsgtr_icm_str[] = {
->>  #define TM_CMN_RST_SET                       0x2
->>  #define TM_CMN_RST_MASK                      0x3
->>
->> +#define LPBK_CTRL0                   0x10038
->> +#define LPBK_CTRL1                   0x1003c
->> +
->>  /* Bus width parameters */
->>  #define TX_PROT_BUS_WIDTH            0x10040
->>  #define RX_PROT_BUS_WIDTH            0x10044
->> @@ -148,9 +214,13 @@ static const char *const xpsgtr_icm_str[] = {
->>  #define PROT_BUS_WIDTH_SHIFT(n)              ((n) * 2)
->>  #define PROT_BUS_WIDTH_MASK(n)               GENMASK((n) * 2 + 1, (n) * 2)
->>
->> +#define UPHY_SPARE0                  0X10098
->> +
->>  /* Number of GT lanes */
->>  #define NUM_LANES                    4
->>
->> +#define SIOU_ECO_0                   0x1c
->> +
->>  /* SIOU SATA control register */
->>  #define SATA_CONTROL_OFFSET          0x0100
->>
->> @@ -338,6 +408,33 @@ static void xpsgtr_restore_lane_regs(struct xpsgtr_dev
->> *gtr_dev)
->>                            gtr_dev->saved_regs[i]);
->>  }
->>
->> +static inline void xpsgtr_write_lanes(struct xpsgtr_dev *gtr_dev,
->> +                                  unsigned long *lanes, u32 reg, u32 value)
->> +{
->> +     unsigned long lane;
->> +
->> +     for_each_set_bit(lane, lanes, NUM_LANES) {
->> +             void __iomem *addr = gtr_dev->serdes + lane * PHY_REG_OFFSET
->> +                                  + reg;
->> +
->> +             writel(value, addr);
->> +     }
->> +}
->> +
->> +static inline void xpsgtr_clr_set_lanes(struct xpsgtr_dev *gtr_dev,
->> +                                    unsigned long *lanes, u32 reg, u32 clr,
->> +                                    u32 set)
->> +{
->> +     unsigned long lane;
->> +
->> +     for_each_set_bit(lane, lanes, NUM_LANES) {
->> +             void __iomem *addr = gtr_dev->serdes + lane * PHY_REG_OFFSET
->> +                                  + reg;
->> +
->> +             writel((readl(addr) & ~clr) | set, addr);
->> +     }
->> +}
->> +
->>  /*
->>   * Hardware Configuration
->>   */
->> @@ -351,7 +448,7 @@ static int xpsgtr_wait_pll_lock(struct phy *phy)
->>       u8 protocol = gtr_phy->protocol;
->>       int ret;
->>
->> -     dev_dbg(gtr_dev->dev, "Waiting for PLL lock\n");
->> +     dev_vdbg(gtr_dev->dev, "Waiting for PLL lock\n");
+> V4:
+> * None
 > 
-> Unrelated change.
-
-We reconfigure the PLL many times during ILL training, and this debug
-output makes it difficult to read the ILL calibration debug.
-
->>
->>       /*
->>        * For DP and PCIe, only the instance 0 PLL is used. Switch to that phy
->> @@ -520,6 +617,231 @@ static void xpsgtr_bypass_scrambler_8b10b(struct
->> xpsgtr_phy *gtr_phy)
->>       xpsgtr_write_phy(gtr_phy, L0_TX_DIG_61,
->> L0_TM_DISABLE_SCRAMBLE_ENCODER);
->>  }
->>
->> +/* Enable or disable loopback */
->> +static void xpsgtr_phy_set_loopback(struct xpsgtr_phy *gtr_phy, bool enabled)
->> +{
->> +     struct xpsgtr_dev *gtr_dev = gtr_phy->dev;
->> +     u32 reg = gtr_phy->lane >= 2 ? LPBK_CTRL1 : LPBK_CTRL0;
->> +     u32 shift = gtr_phy->lane & 1 ? 4 : 0;
->> +
->> +     xpsgtr_clr_set(gtr_dev, reg, 7 << shift, (u32)enabled << shift);
->> +}
->> +
->> +static void xpsgtr_phy_set_ill(struct xpsgtr_phy *gtr_phy, u32 ill, bool gen2)
->> +{
->> +     u32 val = 4 + ill * 8;
->> +
->> +     if (gen2) {
->> +             xpsgtr_write_phy(gtr_phy, L0_TM_E_ILL2, val & 0xff);
->> +             xpsgtr_clr_set_phy(gtr_phy, L0_TM_ILL12, 0x0f,
->> +                                1 << (val >> 8));
->> +     } else {
->> +             xpsgtr_write_phy(gtr_phy, L0_TM_E_ILL1, val & 0xff);
->> +             xpsgtr_clr_set_phy(gtr_phy, L0_TM_ILL12, 0xf0,
->> +                                (val >> 4) & 0x10);
->> +     }
->> +}
->> +
->> +static bool xpsgtr_ill_calibrated(struct xpsgtr_phy *gtr_phy)
->> +{
->> +     u32 ill1 = xpsgtr_read_phy(gtr_phy, L0_TM_E_ILL1);
->> +     u32 ill2 = xpsgtr_read_phy(gtr_phy, L0_TM_E_ILL2);
->> +     u32 ill12 = xpsgtr_read_phy(gtr_phy, L0_TM_ILL12);
->> +
->> +     dev_dbg(gtr_phy->dev->dev, "lane %u gen1 ILL was %u gen2 ILL was
->> %u\n",
->> +             gtr_phy->lane, ill1 / 8 + (ill12 & 0x10 ? 32 : 0),
->> +             ill2 / 8 + (ill12 & 0x02 ? 32 : 0));
->> +     return ill1 || ill2 || ill12;
->> +}
->> +
->> +static void xpsgtr_init_ill(struct xpsgtr_phy *gtr_phy)
->> +{
->> +     struct xpsgtr_dev *gtr_dev = gtr_phy->dev;
->> +     struct clk *clk = gtr_dev->clk[gtr_phy->refclk];
->> +     u32 ill123 = DIV_ROUND_CLOSEST(clk_get_rate(clk), 1000000);
->> +
->> +     xpsgtr_clr_set_phy(gtr_phy, L0_TM_MISC2, 0,
->> L0_TM_MISC2_ILL_CAL_BYPASS);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_IQ_ILL1, ill123);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_IQ_ILL2, ill123);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_IQ_ILL3, ill123);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_IQ_ILL7, 0xf3);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_E_ILL7, 0xf3);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_ILL8, 0xff);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_IQ_ILL8, 0xf3);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_E_ILL8, 0xf3);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_IQ_ILL9, 1);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_E_ILL9, 1);
->> +     xpsgtr_clr_set(gtr_dev, UPHY_SPARE0, BIT(5), 0);
->> +}
->> +
->> +static void xpsgtr_phy_illcalib(struct xpsgtr_dev *gtr_dev,
->> +                                  unsigned long *lanes, bool gen2)
->> +{
->> +     bool last_ok[NUM_LANES] = { 0 };
->> +     int pass[NUM_LANES] = { 0 }, altpass[NUM_LANES] = { 0 };
->> +     int best[NUM_LANES] = { 0 }, altbest[NUM_LANES] = { 0 };
->> +     unsigned long lane;
->> +     int i;
->> +
->> +     /* Initialize the BIST */
->> +     xpsgtr_clr_set_lanes(gtr_dev, lanes, L0_BIST_CTRL_1, 0xe0, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_FILLER_OUT, 1);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_FORCE_MK_RST, 1);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_DIG_22, 0x20);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_CTRL_2, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_RUN_LEN_L, 0xf4);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_ERR_INJ_POINT_L, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_RUNLEN_ERR_INJ_H, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_IDLE_TIME, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_MARKER_L, 0xfb);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_IDLE_CHAR_L, 0xff);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_MARKER_IDLE_H, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_LOW_PULSE_TIME, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TOTAL_PULSE_TIME, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_1, 0x4a);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_2, 0x4a);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_3, 0x4a);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_4, 0x4a);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_MSBS, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_PKT_NUM, 0x14);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_FRM_IDLE_TIME, 2);
->> +     xpsgtr_clr_set_lanes(gtr_dev, lanes, L0_BIST_CTRL_1, 0xe0, 0);
->> +
->> +     for (i = 0; i < 64; i++) {
->> +             bool ok[NUM_LANES];
->> +
->> +             for_each_set_bit(lane, lanes, NUM_LANES)
->> +                     xpsgtr_phy_set_ill(&gtr_dev->phys[lane], i, gen2);
->> +
->> +             /* Reset lanes */
->> +             xpsgtr_clr_set_lanes(gtr_dev, lanes, L0_TM_ANA_BYP_7, 0x20,
->> +                                  0x10);
->> +             xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x00);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_ANA_BYP_4, 0x40);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_PLL_DIG_33, 0x80);
->> +             xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x04);
->> +             udelay(50);
->> +             if (gen2)
->> +                     xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x0e);
->> +             xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x06);
->> +             if (gen2) {
->> +                     xpsgtr_write_lanes(gtr_dev, lanes, L0_TX_ANA_TM_3, 0x04);
->> +                     xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x07);
->> +                     udelay(400);
->> +                     xpsgtr_write_lanes(gtr_dev, lanes, L0_TX_ANA_TM_3, 0x0c);
->> +                     udelay(15);
->> +                     xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x0f);
->> +                     udelay(100);
->> +             }
->> +
->> +             if (xpsgtr_wait_pll_lock(gtr_dev->phys[0].phy)) {
->> +                     memset(last_ok, 0, sizeof(last_ok));
->> +                     continue;
->> +             }
->> +
->> +             udelay(50);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_ANA_BYP_4, 0xc0);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_ANA_BYP_4, 0x80);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_PLL_DIG_33, 0xc0);
->> +             udelay(50);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_PLL_DIG_33, 0x80);
->> +             udelay(50);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_ANA_BYP_4, 0);
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_PLL_DIG_33, 0);
->> +             udelay(500);
->> +
->> +             /* Do the BIST */
->> +             for_each_set_bit(lane, lanes, NUM_LANES) {
->> +                     struct xpsgtr_phy *gtr_phy = &gtr_dev->phys[lane];
->> +                     u32 packets, errors;
->> +
->> +                     xpsgtr_phy_init_bus_width(gtr_phy, PROT_BUS_WIDTH_10);
->> +                     xpsgtr_phy_set_loopback(gtr_phy, true);
->> +                     xpsgtr_write_phy(gtr_phy, L0_TM_DIG_22, 0x20);
->> +                     xpsgtr_clr_set_phy(gtr_phy, L0_BIST_CTRL_1, 0, 1);
->> +
->> +                     udelay(200);
->> +                     xpsgtr_write_phy(gtr_phy, L0_BIST_CTRL_1, 0);
->> +                     packets = xpsgtr_read_phy(gtr_phy, L0_BIST_PKT_CTR_L);
->> +                     packets |= xpsgtr_read_phy(gtr_phy, L0_BIST_PKT_CTR_H)
->> << 8;
->> +                     errors = xpsgtr_read_phy(gtr_phy, L0_BIST_ERR_CTR_L);
->> +                     errors |= xpsgtr_read_phy(gtr_phy, L0_BIST_ERR_CTR_H)
->> << 8;
->> +                     ok[lane] = packets && !errors;
->> +
->> +                     dev_dbg(gtr_dev->dev,
->> +                             "lane %lu ILL %d packets %10u errors %10u\n",
->> +                             lane, i, packets, errors);
->> +             }
->> +
->> +             xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_CTRL_1, 0);
->> +             xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x00);
->> +             xpsgtr_write(gtr_dev, UPHY_SPARE0, 0x02);
->> +
->> +             for_each_set_bit(lane, lanes, NUM_LANES) {
->> +                     pass[lane] += ok[lane] && last_ok[lane];
->> +                     if (pass[lane] < 4) {
->> +                             if (!ok[lane] && i > 2) {
->> +                                     if (altpass[lane] < pass[lane]) {
->> +                                             altpass[lane] = pass[lane];
->> +                                             altbest[lane] =
->> +                                                     (i - 1) - (pass[lane] + 1) / 2;
->> +                                     }
->> +                                     pass[lane] = 0;
->> +                             }
->> +                     } else if (!best[lane] && (!ok[lane] || i == 63) &&
->> +                                last_ok[lane]) {
->> +                             best[lane] = (i - 1) - (pass[lane] + 1) / 2;
->> +                     }
->> +             }
->> +
->> +             memcpy(last_ok, ok, sizeof(ok));
->> +     }
->> +
->> +     for_each_set_bit(lane, lanes, NUM_LANES) {
->> +             dev_dbg(gtr_dev->dev, "lane %lu ILL best %d alt best %d\n",
->> +                     lane, best[lane], altbest[lane]);
->> +
->> +             xpsgtr_phy_set_ill(&gtr_dev->phys[lane],
->> +                                best[lane] ?: altbest[lane], gen2);
->> +     }
->> +
->> +     /* Clean up */
->> +     xpsgtr_clr_set_lanes(gtr_dev, lanes, L0_TM_ANA_BYP_7, 0x30, 0);
->> +     xpsgtr_write(gtr_dev, UPHY_SPARE0, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_CTRL_1, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_CTRL_2, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_RUN_LEN_L, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_ERR_INJ_POINT_L, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_RUNLEN_ERR_INJ_H, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_IDLE_TIME, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_MARKER_L, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_IDLE_CHAR_L, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_MARKER_IDLE_H, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_LOW_PULSE_TIME, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TOTAL_PULSE_TIME, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_1, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_2, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_3, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_4, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_TEST_PAT_MSBS, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_PKT_NUM, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_FRM_IDLE_TIME, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_PKT_CTR_L, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_PKT_CTR_H, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_ERR_CTR_L, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_ERR_CTR_H, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_FILLER_OUT, 1);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_BIST_FORCE_MK_RST, 0);
->> +     xpsgtr_write_lanes(gtr_dev, lanes, L0_TM_DIG_22, 0);
->> +
->> +     for_each_set_bit(lane, lanes, NUM_LANES) {
->> +             struct xpsgtr_phy *gtr_phy = &gtr_dev->phys[lane];
->> +
->> +             xpsgtr_phy_init_bus_width(gtr_phy, PROT_BUS_WIDTH_20);
->> +             xpsgtr_phy_set_loopback(gtr_phy, false);
->> +     }
->> +}
->> +
->>  static int xpsgtr_common_init(struct xpsgtr_phy *gtr_phy)
->>  {
->>       int ret;
->> @@ -553,6 +875,37 @@ static void xpsgtr_phy_init_sata(struct xpsgtr_phy
->> *gtr_phy)
->>  {
->>       struct xpsgtr_dev *gtr_dev = gtr_phy->dev;
->>
->> +     if (!xpsgtr_ill_calibrated(gtr_phy)) {
->> +             DECLARE_BITMAP(lanes, NUM_LANES) = { 0 };
->> +
->> +             xpsgtr_init_ill(gtr_phy);
->> +             xpsgtr_write_phy(gtr_phy, L0_TM_E_ILL3, 100);
->> +             xpsgtr_clr_set_phy(gtr_phy, L0_TM_ILL11, 0xf0, 0x20);
->> +
->> +             __set_bit(gtr_phy->lane, lanes);
->> +             xpsgtr_phy_illcalib(gtr_dev, lanes, false);
->> +             xpsgtr_phy_set_ill(gtr_phy, 7, true);
->> +     }
->> +
->> +     /* Disable SSC */
->> +     xpsgtr_write_phy(gtr_phy, L0_PLL_FBDIV_FRAC_3_MSB,
->> TM_FORCE_EN_FRAC);
->> +     xpsgtr_clr_set_phy(gtr_phy, L0_PLL_SS_STEP_SIZE_3_MSB, 0,
->> TM_FORCE_EN);
->> +
->> +     /* Disable Tx deemphasis */
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_CDR5,
->> +                      FIELD_PREP(L0_TM_CDR5_FPHL_FSM_ACC_CYCLES,
->> 7) |
->> +                      FIELD_PREP(L0_TM_CDR5_FFL_PH0_INT_GAIN, 6));
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_CDR16, 12);
->> +
->> +     /* Configure equalization */
->> +     xpsgtr_write_phy(gtr_phy, L0_TX_ANA_TM_118,
->> +                      L0_TX_ANA_TM_118_FORCE_17_0);
->> +     xpsgtr_clr_set_phy(gtr_phy, L0_TM_EQ0, 0,
->> L0_TM_EQ0_EQ_STG2_CTRL_BYP);
->> +     xpsgtr_clr_set_phy(gtr_phy, L0_TM_EQ1,
->> L0_TM_EQ1_EQ_STG2_RL_PROG,
->> +                        FIELD_PREP(L0_TM_EQ1_EQ_STG2_RL_PROG, 2) |
->> +                        L0_TM_EQ1_EQ_STG2_PREAMP_MODE_VAL);
->> +     xpsgtr_write_phy(gtr_phy, L0_TX_ANA_TM_18, 2); /* -3.5 dB deemphasis */
->> +
->>       xpsgtr_bypass_scrambler_8b10b(gtr_phy);
->>
->>       writel(gtr_phy->lane, gtr_dev->siou + SATA_CONTROL_OFFSET);
->> @@ -565,6 +918,64 @@ static void xpsgtr_phy_init_sgmii(struct xpsgtr_phy
->> *gtr_phy)
->>       xpsgtr_bypass_scrambler_8b10b(gtr_phy);
->>  }
->>
->> +/* PCIe-specific initialization. */
->> +static int xpsgtr_phy_init_pcie(struct xpsgtr_phy *gtr_phy)
->> +{
->> +     struct xpsgtr_dev *gtr_dev = gtr_phy->dev;
->> +     DECLARE_BITMAP(lanes, NUM_LANES) = { 0 };
->> +     unsigned long lane;
->> +     bool calibrated = false;
->> +
->> +     xpsgtr_clr_set_phy(gtr_phy, L0_TM_AUX_0, 0, 0x20);
->> +
->> +     for (lane = 0; lane < NUM_LANES; lane++) {
->> +             struct xpsgtr_phy *gtr_phy = &gtr_dev->phys[lane];
->> +
->> +             if (gtr_phy->protocol != ICM_PROTOCOL_PCIE)
->> +                     continue;
->> +
->> +             __set_bit(lane, lanes);
->> +             calibrated = calibrated || xpsgtr_ill_calibrated(gtr_phy);
->> +     }
->> +
->> +     if (calibrated)
->> +             return 0;
->> +
->> +     /* Write default ILL config */
->> +     for_each_set_bit(lane, lanes, NUM_LANES) {
->> +             struct xpsgtr_phy *p = &gtr_dev->phys[lane];
->> +
->> +             if (lane != gtr_phy->lane) {
->> +                     int ret = xpsgtr_common_init(p);
->> +
->> +                     if (ret)
->> +                             return ret;
->> +             }
->> +
->> +             xpsgtr_init_ill(p);
->> +             xpsgtr_write_phy(p, L0_TM_E_ILL3, 0);
->> +             xpsgtr_clr_set_phy(p, L0_TM_MISC2, 0,
->> +                                L0_TM_MISC2_ILL_CAL_BYPASS);
->> +     }
->> +
->> +     /* Perform the ILL calibration procedure */
->> +     xpsgtr_phy_illcalib(gtr_dev, lanes, false);
->> +     xpsgtr_phy_illcalib(gtr_dev, lanes, true);
->> +
->> +     /* Disable PCIe ECO */
->> +     writel(1, gtr_dev->siou + SIOU_ECO_0);
->> +     return 0;
->> +}
->> +
->> +/* USB-specific initialization. */
->> +static void xpsgtr_phy_init_usb(struct xpsgtr_phy *gtr_phy)
->> +{
->> +     xpsgtr_clr_set_phy(gtr_phy, L0_TM_AUX_0, 0, 0x20);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_IQ_ILL8, 0xf3);
->> +     xpsgtr_write_phy(gtr_phy, L0_TM_E_ILL8, 0xf3);
->> +     xpsgtr_phy_set_ill(gtr_phy, 7, false);
->> +}
->> +
->>  /* Configure TX de-emphasis and margining for DP. */
->>  static void xpsgtr_phy_configure_dp(struct xpsgtr_phy *gtr_phy, unsigned int pre,
->>                                   unsigned int voltage)
->> @@ -710,6 +1121,10 @@ static int xpsgtr_phy_init(struct phy *phy)
->>               xpsgtr_phy_init_dp(gtr_phy);
->>               break;
->>
->> +     case ICM_PROTOCOL_PCIE:
->> +             ret = xpsgtr_phy_init_pcie(gtr_phy);
->> +             break;
->> +
->>       case ICM_PROTOCOL_SATA:
->>               xpsgtr_phy_init_sata(gtr_phy);
->>               break;
->> @@ -717,6 +1132,10 @@ static int xpsgtr_phy_init(struct phy *phy)
->>       case ICM_PROTOCOL_SGMII:
->>               xpsgtr_phy_init_sgmii(gtr_phy);
->>               break;
->> +
->> +     case ICM_PROTOCOL_USB:
->> +             xpsgtr_phy_init_usb(gtr_phy);
->> +             break;
->>       }
->>
->>  out:
->> --
->> 2.35.1.1320.gc452695387.dirty
+> V3:
+> * None
 > 
+> V2:
+> * None
+> 
+>   drivers/pci/controller/dwc/pcie-tegra194.c | 55 +++++++++++++---------
+>   1 file changed, 32 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 96d38571a7e7..4ac6b1cea13f 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -137,7 +137,11 @@
+>   #define APPL_DEBUG_PM_LINKST_IN_L0		0x11
+>   #define APPL_DEBUG_LTSSM_STATE_MASK		GENMASK(8, 3)
+>   #define APPL_DEBUG_LTSSM_STATE_SHIFT		3
+> -#define LTSSM_STATE_PRE_DETECT			5
+> +#define LTSSM_STATE_DETECT_QUIET		0x00
+> +#define LTSSM_STATE_DETECT_ACT			0x08
+> +#define LTSSM_STATE_PRE_DETECT_QUIET		0x28
+> +#define LTSSM_STATE_DETECT_WAIT			0x30
+> +#define LTSSM_STATE_L2_IDLE			0xa8
+>   
+>   #define APPL_RADM_STATUS			0xE4
+>   #define APPL_PM_XMT_TURNOFF_STATE		BIT(0)
+> @@ -201,7 +205,8 @@
+>   #define PME_ACK_DELAY		100   /* 100 us */
+>   #define PME_ACK_TIMEOUT		10000 /* 10 ms */
+>   
+> -#define LTSSM_TIMEOUT 50000	/* 50ms */
+> +#define LTSSM_DELAY		10000	/* 10 ms */
+> +#define LTSSM_TIMEOUT		120000	/* 120 ms */
+>   
+>   #define GEN3_GEN4_EQ_PRESET_INIT	5
+>   
+> @@ -1591,23 +1596,22 @@ static void tegra_pcie_dw_pme_turnoff(struct tegra_pcie_dw *pcie)
+>   		data &= ~APPL_PINMUX_PEX_RST;
+>   		appl_writel(pcie, data, APPL_PINMUX);
+>   
+> +		err = readl_poll_timeout(pcie->appl_base + APPL_DEBUG, data,
+> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_QUIET) ||
+> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_ACT) ||
+> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_PRE_DETECT_QUIET) ||
+> +			((data & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_WAIT),
+> +			LTSSM_DELAY, LTSSM_TIMEOUT);
+> +		if (err)
+> +			dev_info(pcie->dev, "Link didn't go to detect state\n");
+> +
+>   		/*
+> -		 * Some cards do not go to detect state even after de-asserting
+> -		 * PERST#. So, de-assert LTSSM to bring link to detect state.
+> +		 * Deassert LTSSM state to stop the state toggling between
+> +		 * polling and detect.
+>   		 */
+>   		data = readl(pcie->appl_base + APPL_CTRL);
+>   		data &= ~APPL_CTRL_LTSSM_EN;
+>   		writel(data, pcie->appl_base + APPL_CTRL);
+> -
+> -		err = readl_poll_timeout_atomic(pcie->appl_base + APPL_DEBUG,
+> -						data,
+> -						((data &
+> -						APPL_DEBUG_LTSSM_STATE_MASK) >>
+> -						APPL_DEBUG_LTSSM_STATE_SHIFT) ==
+> -						LTSSM_STATE_PRE_DETECT,
+> -						1, LTSSM_TIMEOUT);
+> -		if (err)
+> -			dev_info(pcie->dev, "Link didn't go to detect state\n");
+>   	}
+>   	/*
+>   	 * DBI registers may not be accessible after this as PLL-E would be
+> @@ -1681,19 +1685,24 @@ static void pex_ep_event_pex_rst_assert(struct tegra_pcie_dw *pcie)
+>   	if (pcie->ep_state == EP_STATE_DISABLED)
+>   		return;
+>   
+> -	/* Disable LTSSM */
+> +	ret = readl_poll_timeout(pcie->appl_base + APPL_DEBUG, val,
+> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_QUIET) ||
+> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_ACT) ||
+> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_PRE_DETECT_QUIET) ||
+> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_DETECT_WAIT) ||
+> +		((val & APPL_DEBUG_LTSSM_STATE_MASK) == LTSSM_STATE_L2_IDLE),
+> +		LTSSM_DELAY, LTSSM_TIMEOUT);
+> +	if (ret)
+> +		dev_err(pcie->dev, "LTSSM state: 0x%x timeout: %d\n", val, ret);
+> +
+> +	/*
+> +	 * Deassert LTSSM state to stop the state toggling between
+> +	 * polling and detect.
+> +	 */
+>   	val = appl_readl(pcie, APPL_CTRL);
+>   	val &= ~APPL_CTRL_LTSSM_EN;
+>   	appl_writel(pcie, val, APPL_CTRL);
+>   
+> -	ret = readl_poll_timeout(pcie->appl_base + APPL_DEBUG, val,
+> -				 ((val & APPL_DEBUG_LTSSM_STATE_MASK) >>
+> -				 APPL_DEBUG_LTSSM_STATE_SHIFT) ==
+> -				 LTSSM_STATE_PRE_DETECT,
+> -				 1, LTSSM_TIMEOUT);
+> -	if (ret)
+> -		dev_err(pcie->dev, "Failed to go Detect state: %d\n", ret);
+> -
+>   	reset_control_assert(pcie->core_rst);
+>   
+>   	tegra_pcie_disable_phy(pcie);
+
+-- 
+nvpublic
+
