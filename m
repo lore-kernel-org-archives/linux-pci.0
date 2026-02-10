@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6929F30F924
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 20:34:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6FB32ED22
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 20:39:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770755642; cv=none; b=OVSHLR1rYYK9aJaQpzknvoLKH0ezpqb58QOEUN4ZYcNDxpbi8cP4FayFfLJlZO1qexCvJtWiE742BfQiZwBurcPnIObohdCijD9A8t4r1a/xFV9GSe5zzD26Y2B6fYWogNf5oKZ6glIOSTeT++ToVNaMPGXffaXX9/iw5cjKDLg=
+	t=1770755991; cv=none; b=ZLWUdOa6bh8Mrj/Pje4HviY3Eb/+lmast+8VhXRLkRo7ma1oYVV/M2TFqPjUlQTVn4oxpB9ee5/z9WEmzl3A2IssbAiQtCK+yrsq5j53rPa3lvmaGlSp+6m/QiGbArLeECLz2CdUeNxajOTgvxo4kVmCb7bWOXX6sU0v3Uxdc78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770755642; c=relaxed/simple;
-	bh=v8LhdM9wS77jevJ7LszGPJjhdIoPGohp8xvVJijhHN8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y2jqDoASLfqMeJwGJs44KB9HFqiSIlKO1uCgLgc9o3wFKNT0Hcouu4fS2zYHDYBJnukHcw2yy9AbMF6OKZntRN2+ehh0oZQKFdp07Q1xqIQLOQ9Wi6cm7xW62tInyXbHx8JidskDHX2UDeRE9Vm9aCwVkw5YW07Es3urtyS4quI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qR60QYHS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770755991; c=relaxed/simple;
+	bh=XWhQd1kdQDBHVububbxyqQujR9Soe5f5Gfd12ETvRZQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=MxfQUbwrv1lijizYX/cU/RSiR6hncEEpznL3ITV3rR7xEEeENNyAZvTcRP8lWoAE1WFG5AiCuTGKZA5gcxadh+F4n4jqFcGqzhoIWxCzmZsZn8vF19KkxQNG5fPvzGHYkttJ/gvjuWotnfzhkVDFq/3LiX/CmG1kaEsjuaDutWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j8175rFo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qR60QYHS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1763C16AAE;
-	Tue, 10 Feb 2026 20:33:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j8175rFo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A17E4C116C6;
+	Tue, 10 Feb 2026 20:39:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770755642;
-	bh=v8LhdM9wS77jevJ7LszGPJjhdIoPGohp8xvVJijhHN8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qR60QYHSlgq8j7Kw7PJ5oaJWgWBQJKc2xgr27LJK7oqQCWhKKEj2HWkS9DPiHvfHp
-	 NZMDljyH1qBoAOZR5JOtA9oQkQyN3k0dHJnrwr44724DUnH3K4i+zs28PUppkByjKQ
-	 S1FZ9EATOFQUAAQFyoKaKB3z8bFTHDE80uIy4szc8D0ug1wOXSO+68Edf7GiEMvoPF
-	 HjUvS7qlCFIxqh/J4C9zG3VCF+ZuN2T611csyX0xUv2ZOAMSPXbDBA8RdrqTiMC8QB
-	 yUqyUfckhnbfpTfgo0kJzRFF1iW7UIhYzLsjjBr2T9zSRslCTqRDUNXWhagdlxnF7X
-	 ibC/k1Ag105sw==
-Date: Tue, 10 Feb 2026 21:33:56 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
+	s=k20201202; t=1770755990;
+	bh=XWhQd1kdQDBHVububbxyqQujR9Soe5f5Gfd12ETvRZQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=j8175rFoV5tYwQHUYxS8zhRFcwxURx0zzz3IbOLj3+qZbLZqu15eLJCBlqB1YFOKg
+	 I7MyHi6hawHBSUez5uroY+0R8Bfw3vrcr0U0llr+9SaE02dEjqCD0+SczTFrB3V0kK
+	 SCQu8M4LJrUHUFsctOHHCa/Nk0LaVjEamL94rGPKnBpPdOGptstRNiWfnh16xRVJAb
+	 o4ZsB9cGJrvW/5fWuUbf6wsCEFr5XDN54GILHQNl3i1QSYokfERxlHZB2qCuHp0oyy
+	 PAtd7oBojr3MVFFa4Q8hSqUpbVdPi3Ozo7fEUFjfR1QItTb42cW9e82t2foJgbfcqU
+	 Ih75ImLkIWHyQ==
+Date: Tue, 10 Feb 2026 14:39:49 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
 Cc: Jingoo Han <jingoohan1@gmail.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -39,10 +39,7 @@ Cc: Jingoo Han <jingoohan1@gmail.com>,
 	linux-pci@vger.kernel.org
 Subject: Re: [PATCH] PCI: dwc: ep: Fix regression in
  dw_pcie_ep_raise_msi_irq()
-Message-ID: <aYuWNOwXO54oYCWD@ryzen>
-References: <20260210181225.3926165-2-cassel@kernel.org>
- <20260210193205.GA41950@bhelgaas>
- <aYuToukP3STMF6Tj@ryzen>
+Message-ID: <20260210203949.GA47027@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,26 +51,56 @@ Content-Disposition: inline
 In-Reply-To: <aYuToukP3STMF6Tj@ryzen>
 
 On Tue, Feb 10, 2026 at 09:22:58PM +0100, Niklas Cassel wrote:
-> What commit 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU mapping")
-> did was to map it once on startup, that way we don't re-program the outbound
-> iATU on every pci_epc_raise_irq() call. Before this commit, every
-> pci_epc_raise_irq() call could potentially cause ongoing outbound transactions
-> to be sent untranslated. Often the transactions that were sent untranslated
-> did not appear to be the MSI writel() itself, but other transactions performed
-> by the eDMA.
+> On Tue, Feb 10, 2026 at 01:32:05PM -0600, Bjorn Helgaas wrote:
+> ...
 
-I guess it could have been the MSI writel() too.
+> > Isn't there still a race between host updates of PCI_MSI_ADDRESS_*
+> > and endpoint reads of those registers?  We can't prevent the host
+> > from updating PCI_MSI_ADDRESS_* between dw_pcie_ep_map_addr() and
+> > the writel(), so maybe it's impossible to prevent the theoretical
+> > race there, and all we can really do is mitigate what we expect to
+> > be a single change at boot time of the host?
+> 
+> Normally, the MSI target address is not changed during runtime.
+> 
+> The spec allows changing the MSI-X address/data pair when the
+> corresponding vector is *masked*, and classifies the behavior as
+> undefined if address/data pair gets changed while the vector is
+> *unmasked*.
+> 
+> AFAICT, it does not mention anything for MSI, so I do not think it
+> is allowed to be changed during runtime.
+> 
+> The only reason why it is changed here is because UEFI/BIOS will
+> have one MSI target address, and then once Linux boots, it will use
+> another MSI target address. (So it only changes once.)
 
-Perhaps another fix could have been to just do a readl() after the writel(),
-before the unmap().
+Yes, hence "we expect a single change at boot time of the host" above.
 
-If that is preferred, should be simple to test, since the bug is very easy
-to reproduce, just run nvmet-pci-epf and do some transfers with a high queue
-depth and see the IOMMU errors on the host.
+> > Even for that single change, it looks like the host could update
+> > PCI_MSI_ADDRESS_* simultaneously with dw_pcie_ep_raise_msi_irq(),
+> > leading to mapping a half-updated msg_addr.  This part we *could*
+> > prevent by re-reading PCI_MSI_ADDRESS_* to detect a partial
+> > update.
+> 
+> The problem that commit 8719c64e76bf ("PCI: dwc: ep: Cache MSI
+> outbound iATU mapping") fixes is that the DWC controller does not
+> handle when the outbound iATU is re-programmed when there are
+> ongoing outbound transactions.
 
-I do like the solution that caches the MSI address though, as that avoids
-the extra latency of a map() + unmap() for every pci_epc_raise_irq() call.
+The scenario I'm asking about is the following, where the single
+change of MSI target as the host boots is concurrent with
+dw_pcie_ep_raise_msi_irq()::
 
+  - host writes PCI_MSI_ADDRESS_LO
 
-Kind regards,
-Niklas
+  - dw_pcie_ep_raise_msi_irq() reads PCI_MSI_ADDRESS_LO and
+    PCI_MSI_ADDRESS_HI
+
+  - dw_pcie_ep_raise_msi_irq() maps msg_addr built from an old
+    PCI_MSI_ADDRESS_HI and a new PCI_MSI_ADDRESS_LO
+
+  - host writes PCI_MSI_ADDRESS_HI
+
+This could be mitigated by re-reading PCI_MSI_ADDRESS_* to detect the
+tearing.
