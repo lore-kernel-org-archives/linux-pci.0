@@ -1,205 +1,163 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D46830B529;
-	Tue, 10 Feb 2026 17:22:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31E73128A3;
+	Tue, 10 Feb 2026 17:26:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770744158; cv=none; b=Jz2HhF90mTz6XUXKQpPvE/ymD6320Mu634me5VVaPwWux8ZBOySwx3L/9uBAS6oiskj7xtGJnW+yx0kpjoyZ/QvxYNcS5hLDjxVFaAfNu72iqBj1vv1ylGM9EbVRfZMf9j/rBASP0TKbfTl2KvHjUqITCeiMidwiEiVv3qXwEpI=
+	t=1770744396; cv=none; b=Ftes1j2oZftowFnmfFBkFDVMTH6xgg05j9+Exu9eUFjMAndHJnqh9lUXEQP0iZwfNCBBO9i/N106ut8ma4i2vosIdqhhJPeKaEwlqvoPJ51Bwb373iSmBIIz2CnVnyCCcXPEIwO+8HjsxLxKSK1lk9e9+Dk1AsOkH8Z1Dt8kNxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770744158; c=relaxed/simple;
-	bh=VVlNz7tYeQ5WIseRbGYbp+7DNMt/gMdrva10TSLvSXM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g9eOrIVapKz7odM+q/yRbVbvyJTBTmgLn1BLdj7Ajvd6dMiy0lYiqj1I3UP71xULSR+3CZVKqBGv2okGpED4pmHMhqLoC8iH6scDY/0AyGEUQ2NLXMAE0Wvgrfxcfdv3bxXMH3GvHhlv6RaxdngEwtOlHxpfAosDZ+LnFZ5cMnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VZKMdPYi; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1770744396; c=relaxed/simple;
+	bh=JuSaTqET9AgbGSuilSdaWrKf0PNtOEI1hRFWCwNdBNw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=OOjAJnL99m9t7NZyjp3qEs5iHv/9h0zMSYhUXtikB0slUAKZvm57uYHRKagAdyIzf4jrJ8ZB40Lhwx3alkOkrFrjMEP6jrm+9dHaC723dpvqcwiQAFk17bILZQQuXzlJ1ZVMH3zlgeeu/6rYAeObFyuMgcHKzhhR1DqVko/i6NY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sjqxb/WY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VZKMdPYi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770744156; x=1802280156;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=VVlNz7tYeQ5WIseRbGYbp+7DNMt/gMdrva10TSLvSXM=;
-  b=VZKMdPYiSMmhfUmnYsJN4qpf+DJaP4kuCEWaIFTil3QZvhvOLP48IlKY
-   Ob8jMJhqit1IDG3d6tXKVIEfasKwkzX7OCsayNe5aY3FdNQJf/uZAdHZA
-   3QetnpNgBYvb53Ldf/aAC9HdF90YOFpZfImGz+uPBZA+4LMwMkLIwEFuL
-   77X0l9++aWqlzr/KaYEvRhSsIwziZdIPVaue6/Yj/ih/E1jvMweqfvwea
-   t3gXZuHy8HgNn4TsemS3Gyyi7uxdpT6ykc2lOSDQ3D46XPZVeWXL673BI
-   yYmjV2BbNmlrF8yAILQevriwFjb4Nak06V3VV0UzRxTR6wtIwyq+VvPzv
-   A==;
-X-CSE-ConnectionGUID: TN9esrLvS+Ka+63kICjh3Q==
-X-CSE-MsgGUID: ZqCZ2CdDQ1++cTKWpxjzYQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11697"; a="75505383"
-X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
-   d="scan'208";a="75505383"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2026 09:22:36 -0800
-X-CSE-ConnectionGUID: KfNcJ/zoT9CFxk6Yvuddhw==
-X-CSE-MsgGUID: lNvkrqX2Ree5ScvOaQd6pw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
-   d="scan'208";a="211081698"
-Received: from skuppusw-desk2.jf.intel.com ([10.165.154.101])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2026 09:22:36 -0800
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v1] PCI: pciehp: Fix hotplug on Catlow Lake with unreliable PME status
-Date: Tue, 10 Feb 2026 09:22:31 -0800
-Message-ID: <20260210172231.1465275-1-sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sjqxb/WY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91322C116C6;
+	Tue, 10 Feb 2026 17:26:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770744396;
+	bh=JuSaTqET9AgbGSuilSdaWrKf0PNtOEI1hRFWCwNdBNw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Sjqxb/WYC9aclkY2Rw1DiC142glj6Byzsak5f4DFxS3gsWpNYkKwicrtu6QSxoVn9
+	 epxaoURGpCjZon9+3OuCyLGVk8LaFGS2V1nr/Lb9IQp0fhE0P95VbXl7Qrp2r+YIu8
+	 WmuSwZhMVx5VkE5HKSlppcCJxFOgsbhPa0meZbopC/YyZtkJ2mOMymbrhIK5doiWT1
+	 dk3jobpOeesfxZ/FgXhD4vbt9IKF4I0l/RHKa9QgorBWSuqfHhkMIzoIsQ4xct9QCP
+	 Grys1GZjaQNNMGVraZwSuTNUU69WYEExpv/6xjwVdI8P2E96etzBNr2tXzRnVjQ6wx
+	 N52A2Pb+tFWkw==
+Date: Tue, 10 Feb 2026 11:26:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kai-Heng Feng <kaihengf@nvidia.com>
+Cc: bhelgaas@google.com, ilpo.jarvinen@linux.intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Validate window resource type in
+ pbus_select_window_for_type()
+Message-ID: <20260210172635.GA31498@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260210142058.82701-1-kaihengf@nvidia.com>
 
-On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
-update PME status registers (PME Status and PME Requester_ID in the
-Root Status register) during D3hot to D0 transitions, even though PME
-interrupts are delivered correctly.
+On Tue, Feb 10, 2026 at 10:20:57PM +0800, Kai-Heng Feng wrote:
+> Afer commit ebe091ad81e1 ("PCI: Use pbus_select_window_for_type() during
+> IO window sizing") and commit ae88d0b9c57f ("PCI: Use
+> pbus_select_window_for_type() during mem window sizing"), many bridge
+> window can't get resource assigned:
+> pci 0006:05:00.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: can't assign; no space
+> pci 0006:05:00.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: failed to assign
+> pci 0006:05:04.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: can't assign; no space
+> pci 0006:05:04.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: failed to assign
+> pci 0006:05:08.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: can't assign; no space
+> pci 0006:05:08.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: failed to assign
+> pci 0006:05:0c.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: can't assign; no space
+> pci 0006:05:0c.0: bridge window [??? 0x00001000-0x00001fff flags 0x20080000]: failed to assign
+> 
+> Those commits replace find_bus_resource_of_type() with
+> pbus_select_window_for_type(), and the latter lacks resource type
+> validation.
+> 
+> This commit adds the resource type validation back to
+> pbus_select_window_for_type() to match the original behavior.
+> 
+> Fixes: 74afce3dfcba ("PCI: Add bridge window selection functions")
 
-This issue manifests during PCIe hotplug operations as follows:
+74afce3dfcba, ebe091ad81e1, and ae88d0b9c57f all appeared in v6.18.
+Interesting that nobody else reported this since.  In any case, this
+looks like post-merge window v7.0 material after an ack from Ilpo,
+probably with a stable tag.
 
-1. After a hot-remove event, the PCIe port transitions to D3hot and
-   the hotplug interrupt enable (HPIE) flag is disabled as the port
-   enters low power state.
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=221072
+> Signed-off-by: Kai-Heng Feng <kaihengf@nvidia.com>
 
-2. When a hot-add occurs while the port is in D3hot, a PME interrupt
-   fires as expected to wake the port.
+Thanks for bisecting and fixing this!  From the "dmesg with fix"
+attachment (https://bugzilla.kernel.org/attachment.cgi?id=309333):
 
-3. However, the PME interrupt handler finds the PME_Status and
-   PME_Requester_ID registers unpopulated, preventing identification
-   of which device triggered the PME. The handler returns IRQ_NONE,
-   leaving the port in D3hot.
+  pci_bus 0006:00: root bus resource [mem 0x618040000000-0x6180bfffffff window] (bus address [0x40000000-0xbfffffff])
+  pci_bus 0006:00: root bus resource [mem 0x6180c0000000-0x627fffffffff window]
+  pci 0006:05:00.0: [15b3:197b] type 01 class 0x060400 PCIe Switch Downstream Port
+  pci 0006:05:00.0: PCI bridge to [bus 06]
+  pci 0006:05:00.0:   bridge window [mem 0x618040300000-0x6180403fffff]
 
-4. Because the port remains in D3hot with HPIE disabled, the hotplug
-   driver ignores the hot-add event, resulting in the newly inserted
-   device not being recognized.
+Looks like the 32-bit (non-prefetchable) window was programmed by
+firmware but the 64-bit window was not programmed or maybe programmed
+incorrectly (a dmesg with "pci=earlydump" would show the raw state
+Linux received):
 
-The PME interrupt delivery mechanism itself works correctly;
-interrupts arrive reliably. The problem is purely the missing status
-register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
-reads confirms that these registers remain empty when the PME
-interrupt fires. Neither BIOS nor kernel code is clearing these
-registers.
+  pci 0006:05:00.0: bridge window [mem 0x00000000 64bit pref] to [bus 06] requires relaxed alignment rules
+  pci 0006:05:00.0: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus 06] add_size 200000 add_align 100000
 
-This issue is present in all steppings of Catlow Lake PCH and affects
-customers in production deployments. A public hardware errata document
-is not yet available. While the document is being published, we need a
-quirk to address the issue for existing customers.
+For hex_range() to print a resource with a single address like the
+"relaxed alignment" line, I think the resource must have
+start==end==0, which would mean a window at 0x0 that's one byte long.
 
-Alternative approaches were considered to avoid modifying the pciehp
-driver. We attempted to keep these ports in D0 state by calling
-pm_runtime_disable() in the quirk. Although this approach works for
-most cases, it fails to provide wakeup when the system enters suspend
-state. Another option of modifying the PME configuration to force
-pci_target_state() to select D0 also did not help, as runtime PM
-still transitions the port to D3hot.
+A memory window res.end should always have 0xfffff in the low 20 bits
+because these windows are a multiple of 1MB in size, so this suggests
+another bug somewhere.  
 
-Add a PCI quirk (PCI_DEV_FLAGS_NO_PME_WAKEUP) for affected Catlow
-Lake PCH PCIe root ports that allows the hotplug interrupt handler to
-process events regardless of the port power state, bypassing the
-broken PME-based wakeup dependency.
+  pci 0006:05:00.0: bridge window [mem 0x00100000-0x001fffff] to [bus 06] requires relaxed alignment rules
+  pci 0006:05:00.0: bridge window [mem 0x00100000-0x001fffff] to [bus 06] add_size 200000 add_align 100000
+  pci 0006:05:00.0: bridge window [mem 0x618040200000-0x6180404fffff]: assigned
 
-The quirk is applied only to Catlow PCH PCIe root ports (device IDs
-0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
-they are not hotplug-capable. Systems with reliable PME signaling
-continue to operate normally.
+I think these three lines all refer to the 32-bit window.  It's a bit
+confusing that the logging shows what looks like a
+IORESOURCE_STARTALIGN and size (same applies to the 64-bit window
+above).  I wonder if resource_string() should do something different
+when decoding this so it doesn't look like we actually programmed the
+window to this.  And maybe pci_resource_name() should explicitly say
+which window this is.
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |  4 ++-
- drivers/pci/quirks.c             | 45 ++++++++++++++++++++++++++++++++
- include/linux/pci.h              |  2 ++
- 3 files changed, 50 insertions(+), 1 deletion(-)
+Also slightly interesting that we reassigned the 32-bit window,
+increasing its size from 1MB to 3MB.  Maybe this is because the bridge
+supports hotplug.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index bcc51b26d03d..e5036bb79a08 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -631,7 +631,9 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	 * in the Slot Control register (PCIe r4.0, sec 6.7.3.4).
- 	 */
- 	if (pdev->current_state == PCI_D3cold ||
--	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) && !pciehp_poll_mode))
-+	    (!(ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE) &&
-+	     !pciehp_poll_mode &&
-+	     !(pdev->dev_flags & PCI_DEV_FLAGS_NO_PME_WAKEUP)))
- 		return IRQ_NONE;
- 
- 	/*
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 280cd50d693b..b22eb8554ab0 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -6340,3 +6340,48 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
- #endif
-+
-+/*
-+ * When a PCIe port is in D3hot, the hotplug driver depends on PME
-+ * to wake the port back to D0 and then process any hotplug-related
-+ * state changes. On Intel Catlow Lake platforms, PCH PCIe root ports
-+ * do not reliably update PME state during D3hot to D0 transitions.
-+ *
-+ * Apply a quirk to disable PME-based wakeup requirements for these
-+ * specific ports, allowing the hotplug driver to handle events
-+ * independently of the port power state.
-+ */
-+static void quirk_intel_catlow_pcie_no_pme_wakeup(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_PME_WAKEUP;
-+	pci_info(dev, "Catlow PCH port: PME unreliable, bypassing PME-based wakeup for hotplug\n");
-+}
-+/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_intel_catlow_pcie_no_pme_wakeup);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_intel_catlow_pcie_no_pme_wakeup);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b5cc0c2b9906..e4a95b36e4a0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -248,6 +248,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_HAS_MSI_MASKING = (__force pci_dev_flags_t) (1 << 12),
- 	/* Device requires write to PCI_MSIX_ENTRY_DATA before any MSIX reads */
- 	PCI_DEV_FLAGS_MSIX_TOUCH_ENTRY_DATA_FIRST = (__force pci_dev_flags_t) (1 << 13),
-+	/* Device does not reliably update PME status to wakeup from D3 to D0 */
-+	PCI_DEV_FLAGS_NO_PME_WAKEUP = (__force pci_dev_flags_t) (1 << 14),
- };
- 
- enum pci_irq_reroute_variant {
--- 
-2.43.0
+Unrelated nit: I think we should add "0x" prefixes for add_size and
+add_align to match the addresses.
 
+  pci 0006:05:00.0: bridge window [mem 0x6180c8800000-0x6180c89fffff 64bit pref]: assigned
+
+  pci 0006:05:00.0: PCI bridge to [bus 06]
+  pci 0006:05:00.0:   bridge window [mem 0x618040200000-0x6180404fffff]
+  pci 0006:05:00.0:   bridge window [mem 0x6180c8800000-0x6180c89fffff 64bit pref]
+
+> ---
+>  drivers/pci/setup-bus.c | 13 ++++++++++---
+>  1 file changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index e680f75a5b5e..1b5185697011 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -224,14 +224,21 @@ static struct resource *pbus_select_window_for_type(struct pci_bus *bus,
+>  
+>  	switch (iores_type) {
+>  	case IORESOURCE_IO:
+> -		return pci_bus_resource_n(bus, PCI_BUS_BRIDGE_IO_WINDOW);
+> +		win = pci_bus_resource_n(bus, PCI_BUS_BRIDGE_IO_WINDOW);
+> +		if (win && (win->flags & IORESOURCE_IO))
+> +			return win;
+> +		return NULL;
+>  
+>  	case IORESOURCE_MEM:
+>  		mmio = pci_bus_resource_n(bus, PCI_BUS_BRIDGE_MEM_WINDOW);
+>  		mmio_pref = pci_bus_resource_n(bus, PCI_BUS_BRIDGE_PREF_MEM_WINDOW);
+>  
+> -		if (!(type & IORESOURCE_PREFETCH) ||
+> -		    !(mmio_pref->flags & IORESOURCE_MEM))
+> +		if (mmio && !(mmio->flags & IORESOURCE_MEM))
+> +			mmio = NULL;
+> +		if (mmio_pref && !(mmio_pref->flags & IORESOURCE_MEM))
+> +			mmio_pref = NULL;
+> +
+> +		if (!(type & IORESOURCE_PREFETCH) || !mmio_pref)
+>  			return mmio;
+>  
+>  		if ((type & IORESOURCE_MEM_64) ||
+> -- 
+> 2.43.0
+> 
