@@ -1,44 +1,68 @@
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD1492DC339
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 08:00:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC29933F36B
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 09:01:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770710457; cv=none; b=e9nHaE7edrcpDAzK0Do1QmoRLK1gmIOtAJZyRsC0AMilpHBvdgnLMV74KXe3vSJZawu1RgLlC3Q9/d25nyGgNj6lJRMVmuT2lOp00/cVPYM5JIRUgNZdC3vXT0xQGT+b7IUXQzgvJ2Yk3XwG8ly0PD5w5IFjZIa+dr/0dyf21iY=
+	t=1770714066; cv=none; b=H84pp+DDssUG5pZDKMmqytap/mRpCrsqFgtA9Iwqpblmhlk/cZo2s0ScGM6Q1Sib8TEupJ5AkyAo0UXyGLx7mv/9exca8ckw43/sjNBErZpYiQz2DNOtjMYG7aRDLRLS4oFSGrXVljmrOYFjIRWpTIwB/fLNsTM8ndBQJRhsqG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770710457; c=relaxed/simple;
-	bh=alr9acrPDFQl/wkEtyJ9+6LnIT4r6q8eUgoXYcLQ56w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=XizZc/FX505nZSJOc+hriAbbWmSIKquZgl5j2kGilfl8CfsNiZkg8xuCJDm8TBHaCCDclyzKPdIEWnIk5rQB9RmZITMPFu6NYjLvfNpn3LRPIH/Ab7aWwAYlR2HrLDxffhUwhF9JGxPobaTpy4I0ihd2SlVyB1JUVJkFG4hsqGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=AEJDqeG8; arc=none smtp.client-ip=113.46.200.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1770714066; c=relaxed/simple;
+	bh=5TuK/1VHSDAvQJedSrFEg1hBDEt18y5IQCShE6I97Cs=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=bZK9sdGiNDc9/Khiz5gzR/Vt3z92PvCxwAWXfnmScp7ImtBAFMaUoyJuTMLBclJ6kTIGLUdohV0npxOIIwjmMl+t6qBO99BEAVu/F9ol8NPQkMRQBocwQj9asoueUW87WX05OOcBvXcOPTcpawLMG2WQvf6Y//XT74L84Uq001o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=KBNuy/zb; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="AEJDqeG8"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=e0EpMAqMYKY5VXAbH/yn/E2kbczOXm4DmtVcUg9K4s0=;
-	b=AEJDqeG82SPG5FKkA9WrK6sbLKnWSJOCOpvqXwYGx+KNVgh37eIx/hgckIVQzFCp1a/acTYFX
-	EGhH8xctLaXf4lJ2ZaT4i8YMkNcRN145Guyeh6xgeccyTAEb5RSwxXSIzyUg8OgBqiktgjCBUkf
-	6RZdkAedpeGFCn06S0nDQjQ=
-Received: from mail.maildlp.com (unknown [172.19.163.15])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4f9DQj68VlzmV6k;
-	Tue, 10 Feb 2026 15:56:13 +0800 (CST)
-Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
-	by mail.maildlp.com (Postfix) with ESMTPS id 79FF54056D;
-	Tue, 10 Feb 2026 16:00:52 +0800 (CST)
-Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
- dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 10 Feb 2026 16:00:49 +0800
-Received: from [10.67.120.233] (10.67.120.233) by
- kwepemn200012.china.huawei.com (7.202.194.135) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 10 Feb 2026 16:00:49 +0800
-Message-ID: <f8825b07-653b-4c8d-b805-b3ff65d4c713@huawei.com>
-Date: Tue, 10 Feb 2026 16:00:48 +0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KBNuy/zb"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-4359249bbacso3639544f8f.0
+        for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 01:01:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1770714063; x=1771318863; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=BNcrRuVJbDcGsHBwzSgQQzMKr5rzXqyv5RgDCsFejSY=;
+        b=KBNuy/zbAphcR2Y+H0B01by75cKJUhiEqlPbXu5D4Jl0mAdv2jyYi6VCOykNMHpEdG
+         iF7Mu2Mp50SYSdGopl/wkN/M6GkKipJIVcgPma3LCAnxuJ8YkpiDXzeQ4SfKIaoNPerb
+         w2fMcnXw3Qu44+Gy8VAOj+Ws6+aObzAjAnn12a1J6hOpOOALFF6F3rv7LnoORUxZmuXY
+         bLaGthU0qeZfgtXo2KyY3ukJ8f8VU79qHYEHSt9tAx4kknH021SNhEpp1VpOLm2licGP
+         UATNsfIPqOuxkfHEq7oad7l8nlnQ5d4bi/50842EBSuUY6YbJ5U2Poiw7AEHd7X6EvST
+         P6BQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770714063; x=1771318863;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BNcrRuVJbDcGsHBwzSgQQzMKr5rzXqyv5RgDCsFejSY=;
+        b=LzeLElna2sJlxb5YdxY77CkqVWY9X1pmpAkr23WxV14gZDloXriWAm963HE5WOCydt
+         6x2McdxatIhXUisCKRT3Kd9ks/fqsDuMFaM7Izj9o8JeEpPYxzJiir5+2NzuHAhoMu16
+         FnRYScOa3XDz0RHGXcxEOMcPHTb5QjVMf/GvzLVUXSHZS1QD9IiG2bkY+tx3IBPWwDQe
+         19NDPJzUNMC8zlmNjFd9hGVHS7pSqxuk6kd3OBgaHgfKg6KEZdA+n+aWpQpXBjpAuvLk
+         +INymoCTm420q/+PQYJ+6NxaQLLP/xCJviP/agQjL1KKlHtYIRowX5ktQE5BchZPUwHZ
+         QSYQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW4BHtrsmJUDQscWoIAaZ1sZRGypCuDbihetjW/OGphlEiuID3dxQoZBTD9y4Ta+Jo9FGaBnAmlhBs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzmho5qi9DPxsDhgj6x6FIo3fOH7B4yx2qw9nKjsaXS8Er0rFT7
+	GqAJ8IZBOQX4L+8hJy5lOpCZrqwlW9eIbhgOv7fN4iSJF5reU2El+8JO3gxyHyvtxxw=
+X-Gm-Gg: AZuq6aKy5AoaRHaGmqXeJyhzhPqqJwewlvcHcYbYBFz/MpYkwDu5eKQoiJoWiFc3V7t
+	wZzM6tI7bfU2Eh1sbP7WjqdpC38Hk4roHeJkKJ279Meu7da5ksJzNje9IMEIe8UmMjO2OyXlQvH
+	hLf2YGUiii9eLUGO4Jmkey7heR1f/OGXyElpfTvhPyCUrtgi3GEq0r4xekOKMq4T08BvMHnuJf8
+	6dsBGhm33qbr6Qemadnt8HtRNK1nRJ3BUGesXCNpJGtETmpChPzne+tQWxd4WsbeeXr8IYBVfDJ
+	A5Bt0+SbQF9tB5tj05BcxymbstEMC87wL8SpMH3JNNEGOJzBq/riFjD67bV/Pd2K4Na3TZb5lBJ
+	9OkxrZJfoKttlqvr6ewWAHXa7+zH6i+D7Pg1TNX41dZIIz2AqHGRL3mfV4LvWcP+z1ahsnkxwpt
+	WNFtzcNm8dfXk5fuDdAWVbwPuEv4DA26nAYSodbu2zznCt1Fi6DSl+qyBLgb6+9NBxq2Q9xA3Uh
+	WoaXQ==
+X-Received: by 2002:a5d:5d0d:0:b0:437:722d:5c66 with SMTP id ffacd0b85a97d-43779ead6acmr2868167f8f.16.1770714062899;
+        Tue, 10 Feb 2026 01:01:02 -0800 (PST)
+Received: from ?IPV6:2a01:e0a:106d:1080:f60f:868a:517c:18fc? ([2a01:e0a:106d:1080:f60f:868a:517c:18fc])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-436297450b4sm33534874f8f.34.2026.02.10.01.01.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Feb 2026 01:01:02 -0800 (PST)
+Message-ID: <8b18433a-5836-4a65-b790-9f51112d1f5c@linaro.org>
+Date: Tue, 10 Feb 2026 10:01:00 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,209 +70,134 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI/AER: Fix AER log missing in DPC case
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
-	<shiju.jose@huawei.com>, <pandoh@google.com>, <linux-pci@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>, <fanghao11@huawei.com>,
-	<shenyang39@huawei.com>
-References: <20260206201046.GA75132@bhelgaas>
-From: Sizhe LIU <liusizhe5@huawei.com>
-In-Reply-To: <20260206201046.GA75132@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemn200012.china.huawei.com (7.202.194.135)
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
+Subject: Re: [PATCH v3 4/9] pci: pwrctrl: generic: support for the
+ UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org
+References: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
+ <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-4-5b79c5d61a03@linaro.org>
+ <fbxbnou5mdlhaq5dpxr3wdzmjetwdp7auaaqeunc67tgk5ej2m@cnnkr2pcwy77>
+ <a4e55e91-0e03-4e63-8542-d8ad61b38906@linaro.org>
+ <o6e5qygss55p6npjgaicxffsqdpv7kojgidr46zinsvfpxfxug@vn67nq4k6jzk>
+ <b46da4da-93aa-4213-ad75-ec7709008b95@linaro.org>
+ <qd5egc42mkdofs4ey7gl664e5el2p5sxwluesjtm7gc3y66hez@l4dz3bd5xm6n>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <qd5egc42mkdofs4ey7gl664e5el2p5sxwluesjtm7gc3y66hez@l4dz3bd5xm6n>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 2026/2/7 4:10, Bjorn Helgaas wrote:
+On 2/10/26 09:00, Manivannan Sadhasivam wrote:
+> On Mon, Feb 09, 2026 at 03:59:20PM +0100, Neil Armstrong wrote:
+>> On 2/9/26 15:49, Manivannan Sadhasivam wrote:
+>>> On Mon, Feb 09, 2026 at 03:00:02PM +0100, Neil Armstrong wrote:
+>>>> On 2/9/26 12:30, Manivannan Sadhasivam wrote:
+>>>>> On Fri, Feb 06, 2026 at 03:50:32PM +0100, Neil Armstrong wrote:
+>>>>>> Enable the generic pwrctrl driver to control the power of the
+>>>>>> PCIe UPD720201/UPD720202 USB 3.0 xHCI Host Controller.
+>>>>>>
+>>>>>> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+>>>>>> ---
+>>>>>>     drivers/pci/pwrctrl/generic.c | 4 ++++
+>>>>>>     1 file changed, 4 insertions(+)
+>>>>>>
+>>>>>> diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.c
+>>>>>> index 08e53243cdbd..4a57a631362f 100644
+>>>>>> --- a/drivers/pci/pwrctrl/generic.c
+>>>>>> +++ b/drivers/pci/pwrctrl/generic.c
+>>>>>> @@ -73,6 +73,10 @@ static const struct of_device_id pci_pwrctrl_slot_of_match[] = {
+>>>>>>     	{
+>>>>>>     		.compatible = "pciclass,0604",
+>>>>>>     	},
+>>>>>> +	/* Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller */
+>>>>>> +	{
+>>>>>> +		.compatible = "pci1912,0014",
+>>>>>
+>>>>> No need to add the compatible to the driver. Just use the existing compatible as
+>>>>> fallback in the binding/dts.
+>>>>
+>>>> ???
+>>>>
+>>>> Sorry but this is insane, in no world a standalone PCIe USB controller could be qualified as
+>>>> compatible as a pciclass,0604 slot.
+>>>>
+>>>
+>>> AFAIU, 'compatibility' implies that the driver can safely fallback and would
+>>> still work. If we add dedicated compatibles for each endpoint devices, then we
+>>> will just keep adding forever. Powering up a PCIe slot and an endpoint device
+>>> are conceptually same.
+>>
+>> We're not speaking about driver here, but about compatible string which describes
+>> a device, a PCI endpoint and a PCIe slot are 2 very different devices that are
+>> nowhere compatible.
+>>
+>>>
+>>>> Technically it would work just fine, but "compatibility" has a meaning....
+>>>>
+>>>
+>>> I view compatibility interms of device operation, not device as a whole. But
+>>> sure, I could be wrong. If the DT maintainers say so, I won't insist.
+>>
+>> In the actual way it's defined _today_, the "slot" and "endpoint" power up schemes are
+>> compatible, but I hope the slot bindings will get much more features to describe the
+>> real world slots power properties. And no, endpoints will definitely not have the same
+>> features as slots, using it as a fallback today is an error.
+>>
+>> On the other side, adding a "simple-pci-endpoint" compatible that enables any supply
+>> and clock would be a good solution, if the DT maintainers agrees of course.
+>>
+> 
+> We do have a 'pci-host-cam-generic' compatible. So we can also have something
+> like 'pci-pwrctrl-generic' IMO.
 
-> On Thu, Jan 29, 2026 at 10:01:03PM +0800, Sizhe Liu wrote:
->> In the current DPC error reporting case, some AER log information is missing.
->>
->> -- Error log abnormal
->> pcieport 0000:20:00.0: DPC: containment event, status: 0x1f11: unmasked uncorrectable error detected
->> (------ AER error log supposed to be printed here, but missing ------)
->> nvme nvme0: frozen state error detected, reset controller
->> {4}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
->>
->> Cause:
->> In aer_print_error(), PCIe AER errors is reported, and is rate-limited
->> by info->ratelimit_print[i]. There are two entry points for
->> aer_print_error().
->>
->> 1) Native AER
->> aer_isr_one_error_type() -> aer_process_err_devices() ->
->> aer_print_error()
->> 2) DPC
->> dpc_process_error() -> aer_print_error()
->>
->> The value of info->ratelimit_print[i] is initialized correctly in
->> the native AER case:
->> aer_isr_one_error_type() -> find_source_device() ->
->> find_device_iter() -> add_error_device()
->>
->> In the DPC case, info->ratelimit_print[i] is not initialized and
->> alloc by 0 , so in aer_print_error(), it will directly return at line
->> if (!info->ratelimit_print[i])
->> This will result in losing the AER log messages in the DPC case.
->>
->> Solution:
->> 1. Move the initialization of info->ratelimit_print[i] to
->> aer_ratelimit_print_init().
->> 2. Add aer_ratelimit_print_init() in dpc_process_error().
->> 3. Replace the initialization by aer_ratelimit_print_init()in
->> Native AER case.
-> I see the problem, and I think you're right that we're not logging any
-> AER info for DPC events (including events handled via the EDR path,
-> which also calls dpc_process_error()).
->
-> Currently we do the ratelimit init in add_error_device(), which also
-> includes pci_dev_get() for the device.  I don't see a similar
-> pci_dev_get() anywhere in the DPC path.  There is one in the EDR path:
->
->    edr_handle_event
->      acpi_dpc_port_get
->        pci_dev_get                    <--
->      dpc_process_error
->        aer_get_device_error_info(aer_err_info)
->        aer_print_error(aer_err_info)
->      pcie_do_recovery
->      pci_dev_put
->
-> Maybe DPC and EDR should be using add_error_device() directly?  It
-> seems like holding that reference on the device is important.
-I agree with directly using add_error_device() – holding a reference to 
-the device is a more robust approach.
-Below is the detailed call trace for reference:
+I don't want to into this route, I just want to powerup the USB3 controller on
+the Pocket S2 gaming device, not spend 6 months into _not_ modifying a driver compatible
+list.
 
-DPC path:
-     dpc_handler
-         add_error_device           <--
-         dpc_process_error
-             aer_get_device_error_info(aer_err_info)
-             aer_print_error(aer_err_info)
-         pcie_do_recovery
-         pci_dev_put
+All this feels bulky, who a pci device would be compatible with something like
+'pci-pwrctrl-generic' we're speaking about a pci device, not a power control device.
 
-EDR path:
-     edr_handle_event
-         acpi_dpc_port_get
-             add_error_device           <--
-         dpc_process_error
-             aer_get_device_error_info(aer_err_info)
-             aer_print_error(aer_err_info)
-         pcie_do_recovery
-         pci_dev_put
+It's nowhere similar to the 'pci-host-cam-generic' situation, this describes well defined
+host controller interface.
 
-I will implement this change in the v3 patch and add relevant comments 
-to add_error_device() for clarity.
+Neil
 
-Thanks,
-Sizhe
->> Test with AER inject:
->> Set the DPC reporting priority in the BIOS and send
->> MalfTLP(AER FATAL ERROR) to device.
->>
->> -- Error log normal
->> pcieport 0000:20:00.0: DPC: containment event, status:0x1f11: unmasked uncorrectable error detected
->> pcieport 0000:20:00.0: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Transaction Layer, (Receiver ID)
->> pcieport 0000:20:00.0: device [19e5:a120] error status/mask=00040000/04580000
->> pcieport 0000:20:00.0:    [18] MalfTLP   (First)
->> pcieport 0000:20:00.0: AER:   TLP Header: 0x00000000 0x00000000 0x00000000 0x00000000
->> nvme nvme0: frozen state error detected, reset controller
->> {2}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 0
->>
->> [1] https://lore.kernel.org/linux-pci/20260127035405.712271-1-liusizhe5@huawei.com/
->>
->> Fixes: a57f2bfb4a58 ("PCI/AER: Ratelimit correctable and non-fatal error logging")
->> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
->> ---
->> v2
->> - Corrected the format and spelling errors in the commit log.
->>
->>   drivers/pci/pci.h      |  1 +
->>   drivers/pci/pcie/aer.c | 35 +++++++++++++++++++++++------------
->>   drivers/pci/pcie/dpc.c |  1 +
->>   3 files changed, 25 insertions(+), 12 deletions(-)
->>
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index 0e67014aa001..0cbcbcd52354 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -748,6 +748,7 @@ struct aer_err_info {
->>   
->>   int aer_get_device_error_info(struct aer_err_info *info, int i);
->>   void aer_print_error(struct aer_err_info *info, int i);
->> +void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info, int idx);
->>   
->>   int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
->>   		      unsigned int tlp_len, bool flit,
->> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->> index e0bcaa896803..b73915b63327 100644
->> --- a/drivers/pci/pcie/aer.c
->> +++ b/drivers/pci/pcie/aer.c
->> @@ -925,6 +925,28 @@ int cper_severity_to_aer(int cper_severity)
->>   EXPORT_SYMBOL_GPL(cper_severity_to_aer);
->>   #endif
->>   
->> +/**
->> + * aer_ratelimit_print_init - set flag whether error message is printed
->> + * @dev: pointer to pci_dev to be rate-limited
->> + * @e_info: pointer to error info
->> + * @idx: index for ratelimit_print array
->> + */
->> +void aer_ratelimit_print_init(struct pci_dev *dev, struct aer_err_info *e_info, int idx)
->> +{
->> +	/*
->> +	 * Ratelimit AER log messages.  "dev" is either the source
->> +	 * identified by the root's Error Source ID or it has an unmasked
->> +	 * error logged in its own AER Capability.  Messages are emitted
->> +	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
->> +	 * for a downstream device, make sure we print the Error Source ID
->> +	 * from the root as well.
->> +	 */
->> +	if (aer_ratelimit(dev, e_info->severity)) {
->> +		e_info->ratelimit_print[idx] = 1;
->> +		e_info->root_ratelimit_print = 1;
->> +	}
->> +}
->> +
->>   void pci_print_aer(struct pci_dev *dev, int aer_severity,
->>   		   struct aer_capability_regs *aer)
->>   {
->> @@ -990,18 +1012,7 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
->>   	e_info->dev[i] = pci_dev_get(dev);
->>   	e_info->error_dev_num++;
->>   
->> -	/*
->> -	 * Ratelimit AER log messages.  "dev" is either the source
->> -	 * identified by the root's Error Source ID or it has an unmasked
->> -	 * error logged in its own AER Capability.  Messages are emitted
->> -	 * when "ratelimit_print[i]" is non-zero.  If we will print detail
->> -	 * for a downstream device, make sure we print the Error Source ID
->> -	 * from the root as well.
->> -	 */
->> -	if (aer_ratelimit(dev, e_info->severity)) {
->> -		e_info->ratelimit_print[i] = 1;
->> -		e_info->root_ratelimit_print = 1;
->> -	}
->> +	aer_ratelimit_print_init(dev, e_info, i);
->>   	return 0;
->>   }
->>   
->> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> index fc18349614d7..d17adc642781 100644
->> --- a/drivers/pci/pcie/dpc.c
->> +++ b/drivers/pci/pcie/dpc.c
->> @@ -275,6 +275,7 @@ void dpc_process_error(struct pci_dev *pdev)
->>   			 status);
->>   		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
->>   		    aer_get_device_error_info(&info, 0)) {
->> +			aer_ratelimit_print_init(pdev, &info, 0);
->>   			aer_print_error(&info, 0);
->>   			pci_aer_clear_nonfatal_status(pdev);
->>   			pci_aer_clear_fatal_status(pdev);
->> -- 
->> 2.33.0
->>
->
+> 
+> - Mani
+> 
+
