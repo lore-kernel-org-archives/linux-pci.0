@@ -1,43 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3752F33F8BB;
-	Tue, 10 Feb 2026 10:25:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C8793168E1;
+	Tue, 10 Feb 2026 10:39:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770719122; cv=none; b=KHWC4H5rlZdidlpv78hBe1jpDoQGp9EJEVnTRLzoA1k1Kuf3hd/LQOSkmkeB4rQv2wglWMcCqRrCgncCwaAmBQKk5uoB0SF5SbtAaPyFtPAcc7NG0YJGbJlqNynOtd7Tsg8LcjeBYKTMTYRgikZOcyS6C1DzP469hL26EGfx8Go=
+	t=1770719955; cv=none; b=m1fUzQFhByNkuO6NvTakUv8WXrhzwuAq42nYaeLpAmJDXW5LbnNj/SgIqmc4UDYAZ35UcSfWK8dxigrGeFN85asSwDpS8TH2kAyG9TG4FnkbLuQfj1vbxE9lEjXtPvu7GyO8vmBDue/ONjwVCjdZSdRNdbRFnpm8zyuaz0oqVtw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770719122; c=relaxed/simple;
-	bh=/g6getKVSQyYd3x38Zsl8Rz2hdTcoGifdL6rZnD2D6I=;
+	s=arc-20240116; t=1770719955; c=relaxed/simple;
+	bh=EXWvU3l3SxXvylYPwC9SWvwtV6vz8L7IbmmOR0Dymk4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sK3/+MdFhKzgCnsYER+ps7bB4xEYToniMmt8M0tMTIGrhFH4KoO7mjJOtbTt9R65k1pRr8ZEZVs6Kj9EcXU7SY89LuTmFrYi7+q26uzM0n0OSONDvnkrlchbCpOfysTi/f2si/ewBDDdjBmEBWgddNuLiDdcBxXZzt1MN7gMdWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AppNtxBe; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uCdVYXKHMqy5mf0IvGcKPlmanBERNlhBR3BZIDxXpNymqdZ5UPhfOJbzFe7nRXTSgceRiqCF/NIaJBh2AK3IDdGwBzq0AewLnoKAXfpT+FWmFaldHUessFYcqXHNwSGkg0gaziM3IasFehpEzBz0PArSwh9zGne4+GCxGM8bxa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kbeGcdok; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AppNtxBe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47738C116C6;
-	Tue, 10 Feb 2026 10:25:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kbeGcdok"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92CEAC116C6;
+	Tue, 10 Feb 2026 10:39:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770719122;
-	bh=/g6getKVSQyYd3x38Zsl8Rz2hdTcoGifdL6rZnD2D6I=;
+	s=k20201202; t=1770719954;
+	bh=EXWvU3l3SxXvylYPwC9SWvwtV6vz8L7IbmmOR0Dymk4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AppNtxBeCON0zf2xCtoKOybKoCJAkC0AIofO64ZGBzEgYacf5IQEDONiRkYyv2j4U
-	 moqcUUC9KOeIwz694rHEGiDzQqRLnwM+mi80lmdH4GPUZZF5221upLIVnsFfJ6TELi
-	 dPg+DJ2SnG8RnMciBvaTv2CwDhjoq9FnElzADNoIzJ0WRee5aQmme8KWsZpR94uv6b
-	 kfebojyoUDQNnCsev81EwNMv9NyZ4654qt0dbQ/aM3x64r9tnE2AvBQXcS6VT+jFL9
-	 +UkqQLgWZmpSA0owa9NOISZaIRzH+Ho1rJsWekMCJs89u5fKqo9bdn97NY4bcHm4AK
-	 swOxmRMv67JTQ==
-Date: Tue, 10 Feb 2026 11:25:16 +0100
+	b=kbeGcdokdoZtL526Ut5lHEGDQMLybi9mbob1t+oHUu1v3rGDonbM4TG2GVgTgvG5+
+	 TXeE70YdEISkjLc+TrrIhwXsROXyntdKC0HFYGiJ/cHXvNfoo94UpPtjznEqovP8/U
+	 uC27PVwY93HRVWsW+AQZgdZrLVpgb5dH5uEoZcxtX59SxF5Dy66zoYzXaASec7WgIf
+	 5MoHvbSXiv30StxC8iwTQk7nwpwlXfb5RSFdDiApeb2WQpd+kmdi2vkfCwpid1Wrzo
+	 ddNAChSAwUPnSLsVI35n1ebUxLkgUij41k9i4BR8RjN4aAkc9nltBGOgLI62RhXZZf
+	 zDVJ1GEyx7b7g==
+Date: Tue, 10 Feb 2026 11:39:08 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, marek.vasut+renesas@gmail.com,
-	yoshihiro.shimoda.uh@renesas.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	bhelgaas@google.com, geert+renesas@glider.be, magnus.damm@gmail.com
-Subject: Re: [PATCH] PCI: dwc: rcar-gen4-ep: Program Resizable BARs and drop
- 1MiB BAR limit
-Message-ID: <aYsHjNL_c0Z30-KH@ryzen>
-References: <20251023072217.901888-1-den@valinux.co.jp>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	Aksh Garg <a-garg7@ti.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	stable@vger.kernel.org, Thierry Reding <treding@nvidia.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Subject: Re: [PATCH v2 2/3] PCI: tegra194: Reset BARs when running in PCIe
+ endpoint mode
+Message-ID: <aYsKzBjmGEi1z0am@ryzen>
+References: <20250922140822.519796-5-cassel@kernel.org>
+ <20250922140822.519796-7-cassel@kernel.org>
+ <2fedf28e-83ea-4e51-b1a1-e45f0e928509@nvidia.com>
+ <aYonDJyd_dbV0GBK@ryzen>
+ <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com>
+ <aYsDDOZA18BBeOsd@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,51 +58,49 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251023072217.901888-1-den@valinux.co.jp>
+In-Reply-To: <aYsDDOZA18BBeOsd@ryzen>
 
-On Thu, Oct 23, 2025 at 04:22:17PM +0900, Koichiro Den wrote:
-> R-Car Gen4 (S4) exposes BAR0 and BAR2 as Resizable BARs. Program them
-> accordingly by using dw_pcie_ep_set_bar_resizable() instead of the
-> programmable BAR path.
+On Tue, Feb 10, 2026 at 11:06:04AM +0100, Niklas Cassel wrote:
+> BAR_RESERVED already means disabled, it just assumes that an EPC driver
+> disables all BARs by default, which is the case for:
+> pci-dra7xx.c, pci-imx6.c, pci-layerscape-ep.c, pcie-artpec6.c,
+> pcie-designware-plat.c, pcie-dw-rockchip.c, pcie-qcom-ep.c, pcie-rcar-gen4.c,
+> pcie-stm32-ep.c, pcie-uniphier-ep.c.
+> (All drivers which disables all BARs by default in the init() callback using
+> dw_pcie_ep_reset_bar(). pci-epf-test will later enable all BARs that are not
+> marked as BAR_RESERVED.)
 > 
-> Before this change the driver left the Resizable BAR capability
-> untouched and only wrote the BAR register, so the RC enumerated BAR0/2
-> as 1 MiB regardless of the size requested by the endpoint function. For
-> example, configuring a 2 MiB window for pci-epf-vntb still produced:
+> That leaves: pcie-keembay.c, pci-keystone.c, pcie-tegra194.c (before my patch).
 > 
->   ntb_hw_epf 0000:01:00.0: \
->   Size:0x0000000000200000 is greater than the MW size 0x0000000000100000
+> For pcie-keembay.c, this is not a problem, because BAR0, BAR2, BAR4 are marked
+> as only_64bit, so pci-epf-test configure these BARs as 64-bit BARs, and thus
+> BAR1, BAR3, and BAR5 will get disabled implicitly.
 > 
-> Program the Resizable BAR control so the RC sees the requested size and
-> ntb_transport can use larger memory windows.
+> For pci-keystone.c, this is the only driver that is a bit weird, it marks
+> BAR0 and BAR1 as reserved, but does not disable them in the init() callback.
+> It seems force set BAR0 as a 32-bit BAR in the init() callback.
 > 
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
->  drivers/pci/controller/dwc/pcie-rcar-gen4.c | 2 ++
->  1 file changed, 2 insertions(+)
+> Thus, for all drivers except for pci-keystone.c, BAR_RESERVED does mean
+> BAR_DISABLED. Feel free to send a patch that renames BAR_RESERVED to
+> BAR_DISABLED.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> index 80778917d2dd..dbad741b8286 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> @@ -421,7 +421,9 @@ static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->  
->  static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
->  	.msi_capable = true,
-> +	.bar[BAR_0] = { .type = BAR_RESIZABLE, },
->  	.bar[BAR_1] = { .type = BAR_RESERVED, },
-> +	.bar[BAR_2] = { .type = BAR_RESIZABLE, },
->  	.bar[BAR_3] = { .type = BAR_RESERVED, },
->  	.bar[BAR_4] = { .type = BAR_FIXED, .fixed_size = 256 },
->  	.bar[BAR_5] = { .type = BAR_RESERVED, },
-> -- 
-> 2.48.1
-> 
+> If you send such a patch, perhaps you also want to modify the PCI endpoint
+> core to call reset_bar() for all BARs marked as BAR_RESERVED/BAR_DISABLED,
+> instead of each EPC driver doing so in the init() callback. I think the main
+> reason why this is not done already is that thare is no reset_bar() op in
+> struct pci_epc_ops epc_ops, there is only clear_bar() which clears an BAR
+> enabled by an EPF driver. (So you would most likely also need to add a
+> .disable_bar() op in struct pci_epc_ops epc_ops.)
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Aksh (on To:),
 
-Considering that this patch has not been picked up yet,
-perhaps resend it using [PATCH RESEND].
+since you have a @ti.com email, perhaps you can explain how pci-keystone.c
+can pass all the pci-epf-test test cases, considering that this is the only
+driver that has BARs (BAR0 and BAR1) marked as BAR_RESERVED but do not also
+disable the BARs (using dw_pcie_ep_reset_bar()) in the init() callback.
+
+Or, perhaps the simple answer is that pci-keystone.c does not pass all
+pci-epf-test test cases?
 
 
 Kind regards,
