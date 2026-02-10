@@ -1,44 +1,44 @@
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F4A3202F70
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 19:47:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A11BE2528FD
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 19:47:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770752857; cv=none; b=mH8mbcxjmI4no9nJg8vRu/N3eExWAGsq1VjBXxBkRqDcX/+vT3NUwQzPo1o7F60e1I2TVQtToG/HqKoh13F1CGAHtQXM3FsfFW+mwgoF0a7bOldYRJ7TSdyxIP+GH3lD3SiUtOTyHW1HWUoIJWwUkVSilX5yPL0sH6enUIFiyrk=
+	t=1770752860; cv=none; b=KZRfzE0HebeLN5lKvYxSfCU1T9FVTPamry22CccSCWoFBGfXqp7QW3gMKYULrGVtWbJzDG008ch7W3zCcjv6jvudMC+EMANR9yZHcpnhsGVuRyNWPXT5ei6hgvcNd2d7r80SNJcqhk5TlrTGJ+Z67JRptR3AYUW9oJIvih3sJwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770752857; c=relaxed/simple;
-	bh=Zy44/LIpSi3+agiLDUKcDMJV1qfWV/Mh2KHyfM8qNUg=;
+	s=arc-20240116; t=1770752860; c=relaxed/simple;
+	bh=k6JJU6/Xv5Bve7ALmeRsOaz8DO0O0Gst3Ha4Joxtbys=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iHSIp5GOokwHaXIgSK5T9GnHhfV333YP2p/xT51qJP1FaeYrbhC7Gw4JDFk5ghuE7MsAXk404hFSomYUJxM91Xo846BtJ2epvQs7cOIJ4413kEjQ0jT9+KiI2EA3fmn20E6Q9HZO8fGBpBsX2LfK45VPszWkXpdjqjPcXt6bX2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=e+1BrbQE; arc=none smtp.client-ip=67.231.145.42
+	 MIME-Version:Content-Type; b=aekYogt4ccc9u2TyA4cx3AnPoom33ohncaLBvvJasg7R/4QQbBDfFS68CZSFvi1nsZmSoFEhVEjKcGPVB5As5MHL3mJO1JiM3URMwLJQQtdvCauT3Vl8bpbSBWLrKDweQLyzXdTTVk5/U9VAojRFiDeqlH46uh65jueluP2xDvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=FtJeKsLo; arc=none smtp.client-ip=67.231.145.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="e+1BrbQE"
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="FtJeKsLo"
 Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61AH2JQ23309727
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 11:47:35 -0800
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61AH2Jvr3309800
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 11:47:39 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=POD6O1akvG97jkADnL5riRKuih17v4b7P7apRIwKvXg=; b=e+1BrbQEKn4p
-	+nxrVKU91fkzolnJY7veJA/CMebQB+CtL30K3XQ2x21O39oodqDWLGmiPQmt5N+S
-	5CpQsdAnIRvjJq0Vtp6z4ocoOJ2TB4xq5N4JH96dwMpQwkYr7eLxd02EsUtfhcKC
-	eyIpt8UtZ1VSOGgRy6W4p+IdEHE8jgkthU/O6VP3mmdbS+gYQPKj0XG7pDGvwuMM
-	kM5k2kEmmqjTDQPuOGChaUJHi8LhJC3HdNeUnP/GGD290ncImwrxbaafydX+2BZO
-	mQTh88utZh++8VUbANF0v8lAXWkEB+msRHvEc/0jbNs1JHsu9Y1wTWOPm7fKrKmN
-	5IaxLgz72Q==
+	 bh=+Hrz8y6M1gcSbgUEcxq2AJOX4snqaTvaf+bpG7ruQ0Y=; b=FtJeKsLoEtSp
+	dj2vTUbAcX6f2D/qj6GVpsTgNAvwdV471dpvaVruJsyLgn+ULh9a0nDLRpjvlElp
+	ILM3gxrPT1SftDVnZYi106OzP96mJgmNYVe/qISUULA5xbNDZunlAEn+JIYdPlQg
+	u+PPXT6afKkTniJnj3atePFXQbZf6vvS8R+DR7TthZs0zFlWAJ6aM/zY6AQbo8JS
+	sBDlip9d7LlqnSpq51cb3PGgRAQXfq76r5CqaBGOTVDYg2n8BYwBNi4rihRyn9GD
+	WwYhUxNdpG3DvHpcWcbs65tY9mZzk1DHW5SvCWgsRB6GW0tlgMeqG2CIIkUA87D3
+	Zm9D4Jzzbg==
 Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c88qnjd9q-4
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4c88qnjd9p-13
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 11:47:35 -0800 (PST)
-Received: from twshared13080.31.frc3.facebook.com (2620:10d:c085:208::7cb7) by
- mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 11:47:38 -0800 (PST)
+Received: from twshared41309.15.frc2.facebook.com (2620:10d:c085:208::f) by
+ mail.thefacebook.com (2620:10d:c08b:78::c78f) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Tue, 10 Feb 2026 19:47:33 +0000
+ 15.2.2562.35; Tue, 10 Feb 2026 19:47:34 +0000
 Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id C69F5102666F6; Tue, 10 Feb 2026 11:40:20 -0800 (PST)
+	id 39B50102666BF; Tue, 10 Feb 2026 11:40:19 -0800 (PST)
 From: Zhiping Zhang <zhipingz@meta.com>
 To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
         Bjorn
@@ -48,9 +48,9 @@ To: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
         Yochai
  Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>
 CC: Bjorn Helgaas <helgaas@kernel.org>, Zhiping Zhang <zhipingz@meta.com>
-Subject: [RFC 2/2] RMDA MLX5: get tph for p2p access when registering dmabuf mr
-Date: Tue, 10 Feb 2026 11:39:55 -0800
-Message-ID: <20260210194014.2147481-3-zhipingz@meta.com>
+Subject: [RFC 1/2] Vfio: add callback to get tph info for dmabuf
+Date: Tue, 10 Feb 2026 11:39:54 -0800
+Message-ID: <20260210194014.2147481-2-zhipingz@meta.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260210194014.2147481-1-zhipingz@meta.com>
 References: <20260210194014.2147481-1-zhipingz@meta.com>
@@ -63,97 +63,145 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjEwMDE2MyBTYWx0ZWRfXx27zKZiWdGXg
- Yaug+0Ww8XK9mXCm0HVYwd6MayDyi8FbcDCNlDv0KbShLdXeLK+SooVcRERUWkaWdo9N/QJDGjv
- iOWKUc5j8V8kJD2J1FI/C1XAdkdGzma8Y1ZQfokedfk4pvG6BIR3hOqB0cwUpYXlCbJQtgn7Cur
- 1q74XP7pVrvUqyPfoyGUSP95ruMG+4d9DUgOU/o5XB7wrlRMMpxtjtRfYFlPG8UZTNIEDlc+eGu
- cckzPVRLE5isvl0lfLv9ufcAtQsgTbMLvPtz9cYbAlLnlOBmGV5N4cZbcZeh0E1pfr8E2+/3eD7
- GiDjcEWefdkGmut4hWxAeLIBlQjrjjO+0euXOMghYvP+1OCijF3mw73RJXOOhFyGOwjWZb7l005
- D3Uk/7gzQvCK/I2IXjLSEeHxkncrR2S5hqlN2GMJFudJ9QDTWLmHQmzyCHRmQWnav4xLW5cA4Jb
- NNhkHTAK4jAWc8a/c2g==
-X-Authority-Analysis: v=2.4 cv=POkCOPqC c=1 sm=1 tr=0 ts=698b8b57 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjEwMDE2MyBTYWx0ZWRfX93BiVv4odLXq
+ 7Gyz4dOqsbhD/kXoBD8cI53FDQ8aJFRh2OEH/3XhXZekhFdWGcaiI/rIYB9XgcAR9I4NjWUJM+F
+ gUd1NIBi22DmrD28OCbgCtepiUUprNn/KdqCLtuCnnETO4BNhC6VS98v3cgDgmVMUj4490vSm+A
+ oYAk8XKfjQ9bSP4uHX3k7BYsbQlhHUenje6WBwiVGqtpe1N4Bd3IfqEq770l6FH7R4u0V2awVce
+ KnRlnaeXewfK3keXutNlRCtsRHVu4/1nypzXdlIEe6oezDlbeHiHMPN6mxCb9U9VAo85okljWbH
+ mfqIVkMKJ4/yrs1LiXis64ImTVW2CyVJTrfTeq52k7nYy8LT4RN0sxSh4c+oHFlTfI0P6Yy8Kjb
+ eCwaV18Om698Qb//2xQ07becKribwzX1+mi2qbMDOt//6yZAxT2ULBGut4GuokEDBMxBNBjKXtf
+ 91RH7TFyCxUefr25Yuw==
+X-Authority-Analysis: v=2.4 cv=POkCOPqC c=1 sm=1 tr=0 ts=698b8b5a cx=c_pps
  a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
  a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=VabnemYjAAAA:8 a=tOZ8yR1yUuKf9aCP_icA:9
+ a=GgsMoib0sEa3-_RKJdDe:22 a=VabnemYjAAAA:8 a=66hUaM2K5p8tY_kFZzUA:9
  a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-ORIG-GUID: rZS0KmhanwLtbdQDqmA81XOhj-AgzWB5
-X-Proofpoint-GUID: rZS0KmhanwLtbdQDqmA81XOhj-AgzWB5
+X-Proofpoint-ORIG-GUID: EU__gaovMivWEUBtjd_w7vq1a7GR8nKy
+X-Proofpoint-GUID: EU__gaovMivWEUBtjd_w7vq1a7GR8nKy
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-10_03,2026-02-10_02,2025-10-01_01
 
-The patch adds a local function to check and get tph info when available =
-during
-dmabuf mr registration. Note the DMAH workflow for CPU still takes preced=
-ence in
-the process. Currently, it only works with the direct st_mode. Compatibil=
-ity
-with other st_modes will be added in the formal patch set.
+This RFC patch adds a callback to get the tph info on DMA buffer exporter=
+s.
+The tph info includes both the steering tag and the process hint (ph).
 
 Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 ---
- drivers/infiniband/hw/mlx5/mr.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ drivers/vfio/pci/vfio_pci_dmabuf.c | 15 ++++++++++++++-
+ include/linux/dma-buf.h            | 30 ++++++++++++++++++++++++++++++
+ include/uapi/linux/vfio.h          |  2 ++
+ 3 files changed, 46 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
-/mr.c
-index 325fa04cbe8a..c3eb5b24ef29 100644
---- a/drivers/infiniband/hw/mlx5/mr.c
-+++ b/drivers/infiniband/hw/mlx5/mr.c
-@@ -46,6 +46,8 @@
- #include "data_direct.h"
- #include "dmah.h"
-=20
-+MODULE_IMPORT_NS("DMA_BUF");
-+
- enum {
- 	MAX_PENDING_REG_MR =3D 8,
- };
-@@ -1623,6 +1625,32 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_at=
-tach_ops =3D {
- 	.move_notify =3D mlx5_ib_dmabuf_invalidate_cb,
+diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
+ci_dmabuf.c
+index d4d0f7d08c53..4da1a6cc306f 100644
+--- a/drivers/vfio/pci/vfio_pci_dmabuf.c
++++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+@@ -17,6 +17,8 @@ struct vfio_pci_dma_buf {
+ 	struct dma_buf_phys_vec *phys_vec;
+ 	struct p2pdma_provider *provider;
+ 	u32 nr_ranges;
++	u16 steering_tag;
++	u8 ph;
+ 	u8 revoked : 1;
  };
 =20
-+static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, int fd, u16 *st_i=
-ndex,
-+							  u8 *ph)
+@@ -50,6 +52,15 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attach=
+ment,
+ 				       priv->size, dir);
+ }
+=20
++static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steerin=
+g_tag,
++				    u8 *ph)
 +{
-+	int ret;
-+	struct dma_buf *dmabuf;
++	struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
++	*steering_tag =3D priv->steering_tag;
++	*ph =3D priv->ph;
++	return 0;
++}
 +
-+	dmabuf =3D dma_buf_get(fd);
-+	if (IS_ERR(dmabuf))
-+		return;
-+
-+	if (!dmabuf->ops->get_tph)
-+		goto end_dbuf_put;
-+
-+	ret =3D dmabuf->ops->get_tph(dmabuf, st_index, ph);
-+
-+	if (ret) {
-+		*st_index =3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX;
-+		*ph =3D MLX5_IB_NO_PH;
-+		mlx5_ib_dbg(dev, "get_tph failed (%d)\n", ret);
-+		goto end_dbuf_put;
-+	}
-+
-+end_dbuf_put:
-+	dma_buf_put(dmabuf);
-+};
-+
- static struct ib_mr *
- reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
- 		   u64 offset, u64 length, u64 virt_addr,
-@@ -1662,6 +1690,8 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device =
-*dma_device,
- 		ph =3D dmah->ph;
- 		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
- 			st_index =3D mdmah->st_index;
-+	} else {
-+		get_tph_mr_dmabuf(dev, fd, &st_index, &ph);
+ static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment=
+,
+ 				   struct sg_table *sgt,
+ 				   enum dma_data_direction dir)
+@@ -78,6 +89,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf *dm=
+abuf)
+ static const struct dma_buf_ops vfio_pci_dmabuf_ops =3D {
+ 	.attach =3D vfio_pci_dma_buf_attach,
+ 	.map_dma_buf =3D vfio_pci_dma_buf_map,
++	.get_tph =3D vfio_pci_dma_buf_get_tph,
+ 	.unmap_dma_buf =3D vfio_pci_dma_buf_unmap,
+ 	.release =3D vfio_pci_dma_buf_release,
+ };
+@@ -274,7 +286,8 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_cor=
+e_device *vdev, u32 flags,
+ 		ret =3D PTR_ERR(priv->dmabuf);
+ 		goto err_dev_put;
  	}
+-
++	priv->steering_tag =3D get_dma_buf.steering_tag;
++	priv->ph =3D get_dma_buf.ph;
+ 	/* dma_buf_put() now frees priv */
+ 	INIT_LIST_HEAD(&priv->dmabufs_elm);
+ 	down_write(&vdev->memory_lock);
+diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+index 0bc492090237..466290c02ebf 100644
+--- a/include/linux/dma-buf.h
++++ b/include/linux/dma-buf.h
+@@ -113,6 +113,36 @@ struct dma_buf_ops {
+ 	 */
+ 	void (*unpin)(struct dma_buf_attachment *attach);
 =20
- 	mr =3D alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
++	/**
++	 * @get_tph:
++	 *
++	 * Get the TPH (TLP Processing Hints) for this DMA buffer.
++	 *
++	 * This callback allows DMA buffer exporters to provide TPH including
++	 * both the steering tag and the process hints (ph), which can be used
++	 * to optimize peer-to-peer (P2P) memory access. The TPH info is typica=
+lly
++	 * used in scenarios where:
++	 * - A PCIe device (e.g., RDMA NIC) needs to access memory on another
++	 *   PCIe device (e.g., GPU),
++	 * - The system supports TPH and can use steering tags / ph to optimize
++	 *   cache placement and memory access patterns,
++	 * - The memory is exported via DMABUF for cross-device sharing.
++	 *
++	 * @dmabuf: [in] The DMA buffer for which to retrieve TPH
++	 * @steering_tag: [out] Pointer to store the 16-bit TPH steering tag va=
+lue
++	 * @ph: [out] Pointer to store the 8-bit TPH processing-hint value
++	 *
++	 * Returns:
++	 * * 0 - Success, steering tag stored in @tph
++	 * * -EOPNOTSUPP - TPH steering tags not supported for this buffer
++	 * * -EINVAL - Invalid parameters
++	 *
++	 * This callback is optional. If not implemented, the buffer does not
++	 * support TPH.
++	 *
++	 */
++	int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph);
++
+ 	/**
+ 	 * @map_dma_buf:
+ 	 *
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index ac2329f24141..bff2f5f7e38d 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -1501,6 +1501,8 @@ struct vfio_region_dma_range {
+ struct vfio_device_feature_dma_buf {
+ 	__u32	region_index;
+ 	__u32	open_flags;
++	__u16   steering_tag;
++	__u8    ph;
+ 	__u32   flags;
+ 	__u32   nr_ranges;
+ 	struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
 --=20
 2.47.3
 
