@@ -1,79 +1,51 @@
-Received: from mail-qv1-f51.google.com (mail-qv1-f51.google.com [209.85.219.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6892AD2C
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 05:19:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D732B33BBBA;
+	Tue, 10 Feb 2026 08:00:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770700755; cv=none; b=cr/tkYs34MVx6ySFp/QisVChxHlzYFZ8D1Xh4LjQDHZKK7Zvl1oQrzBpknLw+HtDXLOh4+TIMlruAsfUPMkr25uvZUvWpJ3yRAXlIAKI68cv/IGM3erXojGlSv8/l1n+5xD9kIuLo1or6PJPu+R4ZCMH3JWasZJOJJAGnAp/FOM=
+	t=1770710415; cv=none; b=K6Oj3q9VY8LPTXiUUgfxRvvOa0NjOQz25d/Cf3GxgJL5KaeJ0pQqqqoM2RTcPC78xlguntzxxM4ZexOwdAMJjxvlFyRaPptKZ9UDhvObarNEq9CNc/dwnBRvtXBmEdET7JgfEZAZGUCtAQd5vxYPGe0Q7YC5AEpGRXyBkbjKkJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770700755; c=relaxed/simple;
-	bh=bVmcjVFnoslYz/63bfIQRLQo71Xii62siraZW/407Kw=;
+	s=arc-20240116; t=1770710415; c=relaxed/simple;
+	bh=vGVI1GPobS6Ck1Wc7xRE4xQgoD9fzTTbpIBQJmAWkN8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OlUb0dZk9sFIEt7PPhtGxIRFipA2+xNc+6MtNJ79p3vu/eWP3orVIM9lOhvlpMLa8jlM0lG/Md21EmpFJ5NXdwNIdyVUQKjio/HsU097kr3m4tQNo+zwpNTU5FLlkkAkLlrylOq44zyi815nt449rxo6p3LrEYQ2MI0ia8oS4hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=RVo8jG4t; arc=none smtp.client-ip=209.85.219.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	 Content-Type:Content-Disposition:In-Reply-To; b=tblai39I+SWkYbY8gX88aTez2U8vZ980dwFMKkSN/RuRregPlF31ngc4tvWpmyumGGIdXHoePztXs8jLAWZkbP9TCq6MJ0VeGxOTWUDDW/es1rODQGzivXTMX0f4D8CpTTF0AGUYyYna42ppAiMKcbIn0pcpWIJOf9+5GwSfybY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cf1vDTs7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="RVo8jG4t"
-Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-8947e6ffd20so73750126d6.1
-        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2026 21:19:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1770700753; x=1771305553; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=fuvU6Zz5R9gZa9j619e/7zPOTeoTrF2jAVNlPjsXQqQ=;
-        b=RVo8jG4ttvm3wGX9fGRfL1qND8wJDvtWR73LOpuQqKuzH3/NRBAQwBY5Lqp4mlkJ7i
-         AwQ0IwpnTiGV+s36pNln5X/tn5e7lPiJAEzIz6JbXlD9k+RIY+9By8I/t+t5BxZ5eNe+
-         aCKqgbNXf8hHZLEqkHOQn+siKcw5QhZHo0B33JNCbj+hQw2t32t+Kx1nPxsHETFqv8PN
-         Yv3qdLm5a7ch9O1vRv3vKdGJeWxazd7Fe+xsC/9BHjkzRNhV+Bg3DRrqRvD//kZaW+sV
-         /K59JynrQJBc9UeZKgkxSdqArRh7wmfhtds3RAzq9/eWnSEZWyoQw3cEH21ozVA6Mwk3
-         3ZCA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770700753; x=1771305553;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fuvU6Zz5R9gZa9j619e/7zPOTeoTrF2jAVNlPjsXQqQ=;
-        b=aJxjPBHm7wkpIYu4hz3cYXjF6yGlGYDeN71EHzNKM7C8djsSwlBE0b9QOhtUj+Z6de
-         C52+Wi/38ENDGrrbA8Lawh/bm5C6rz64wBZFT3YWNa7iLiXilmQyPto8zcACSbcm7VcR
-         Kkb3nKM6JkksX6JzBOl9sDBx3zMbdlkUmjBd/siMTqtM2Y0q9Rw5wxS0p9fxy1x0iXdz
-         H+TZW4GpYyDZxywaxzq3cjaAfZaQMcoFaeRG7hOrFbIiPzoc1F45mwFXaaKIMW9k6c7r
-         //uFFTFb3+PPu5SjvHxsEOy5+Qh0XUyta+YlxTngw8LDgfs5D2mQ2lJcFV26UkwP6VqS
-         eb9w==
-X-Forwarded-Encrypted: i=1; AJvYcCVFsx1hmyilAHQV9LdHxpO98iGrWWKpligTYXBeUZfWnXJc4fw3zcKXZ/7Z0+hTgpDDjlUddhaGeO8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyfFxGP+VYeh2UIFubkufv4tnB7WK9hj7yO0WminwXJzitEzqXE
-	VUHWbKqciJN+GyNEtUgqAwpKBp02KoG0yZn6tAtGyEwKyBDk6blgACD5O3scEJnhvKs=
-X-Gm-Gg: AZuq6aJA3fVgcrfOqCzreIM9lpTbwlaQamQ7wcuGXsSt+GegLyOCjsbYuB0QCSF/qeb
-	p0Ih61kDRkC+Na9AF36ppk/jc/dVh/sL/fb9+wyNgU4BeQxiFJYc+1BGC5gmNRRM10cTN3YgmaS
-	MpTJfQsp8Pia1FipN87+PwQoh4FnJNl6hZrcLIL3n3riFApNcd4XVagc1560VOQQtClfumq2Cyk
-	RQs7aVfDHdHJFw42FiHe6bd9TdLmzDHFMNuqhS13hszbKHPesmouXDUMxMq4A4cM0ByC+cUeL5E
-	RfnxfNVrPlIBIrFScTyJA4Xfo+jz3yJcSs9qOSTIrjzKpo0sjPqdLiX8jHH7n97Ll1BX4SCJyGl
-	aTlyICpj9QoflQaO8f2ZP3i1FYs/ardZ7OikOQ45WlzNfNj4VHbx4QEa2PcNlrTttWioyJTNYak
-	+i7Bf+uqOgspwQwU/QfNZK3MxRqVZ6hk36vQCFZ9qfJ4hSMQ+eA0ozh+MdS/eghivM9QNeK0sND
-	aTQpozfyhUb6B4ozo0O
-X-Received: by 2002:a05:6214:409:b0:888:4930:4c8b with SMTP id 6a1803df08f44-8970e602f34mr12786586d6.69.1770700752661;
-        Mon, 09 Feb 2026 21:19:12 -0800 (PST)
-Received: from gourry-fedora-PF4VCD3F (pool-96-255-20-138.washdc.ftas.verizon.net. [96.255.20.138])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-896ff64ad07sm36075266d6.15.2026.02.09.21.19.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Feb 2026 21:19:12 -0800 (PST)
-Date: Tue, 10 Feb 2026 00:19:10 -0500
-From: Gregory Price <gourry@gourry.net>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: dave.jiang@intel.com, linux-cxl@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Smita.KoralahalliChannabasappa@amd.com, alison.schofield@intel.com,
-	terry.bowman@amd.com, alejandro.lucero-palau@amd.com,
-	linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com,
-	Ben Cheatham <benjamin.cheatham@amd.com>,
-	Alejandro Lucero <alucerop@amd.com>
-Subject: Re: [PATCH v2 6/6] cxl/mem: Introduce cxl_memdev_attach for
- CXL-dependent operation
-Message-ID: <aYq_zpNAgNgJY_P8@gourry-fedora-PF4VCD3F>
-References: <20251216005616.3090129-1-dan.j.williams@intel.com>
- <20251216005616.3090129-7-dan.j.williams@intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cf1vDTs7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4140C116C6;
+	Tue, 10 Feb 2026 08:00:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770710415;
+	bh=vGVI1GPobS6Ck1Wc7xRE4xQgoD9fzTTbpIBQJmAWkN8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cf1vDTs7Vt5yAzTw7XCYMmNQVRMZNfbAE5sKfuaS06LYSpGraP0BFz/2Ekl4BUaaS
+	 t8eaACG3ybXmLyuBRT7bpXM5CHChiCP72i31nLi1jIOapgVehyRlOVVIx0kgCsgmIC
+	 eJ2ct79hJYRMzNYVD/reWGeObYu0yTo/r0OyMFwcfT1S+YlJWqRc2xYPknJ3zCNksP
+	 EKXK2DqAiNp43uRvSeaY0njRhWXUiM+/SHJE+cs9m64oBT4YnYlsXOhU0JZeHd1uFf
+	 08KQ4jwCIVKknAPLZ4f97rFp9cK1zF7xZy14rCr/OxQu2W1AuYCZfPpR1SHz0cq0D4
+	 n6wzNl5xqtZDg==
+Date: Tue, 10 Feb 2026 13:30:05 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
+	Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v3 4/9] pci: pwrctrl: generic: support for the
+ UPD720201/UPD720202 USB 3.0 xHCI Host Controller
+Message-ID: <qd5egc42mkdofs4ey7gl664e5el2p5sxwluesjtm7gc3y66hez@l4dz3bd5xm6n>
+References: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
+ <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-4-5b79c5d61a03@linaro.org>
+ <fbxbnou5mdlhaq5dpxr3wdzmjetwdp7auaaqeunc67tgk5ej2m@cnnkr2pcwy77>
+ <a4e55e91-0e03-4e63-8542-d8ad61b38906@linaro.org>
+ <o6e5qygss55p6npjgaicxffsqdpv7kojgidr46zinsvfpxfxug@vn67nq4k6jzk>
+ <b46da4da-93aa-4213-ad75-ec7709008b95@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -83,93 +55,71 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251216005616.3090129-7-dan.j.williams@intel.com>
+In-Reply-To: <b46da4da-93aa-4213-ad75-ec7709008b95@linaro.org>
 
-On Mon, Dec 15, 2025 at 04:56:16PM -0800, Dan Williams wrote:
-> @@ -1081,6 +1093,18 @@ static struct cxl_memdev *cxl_memdev_autoremove(struct cxl_memdev *cxlmd)
->  {
->  	int rc;
->  
-> +	/*
-> +	 * If @attach is provided fail if the driver is not attached upon
-> +	 * return. Note that failure here could be the result of a race to
-> +	 * teardown the CXL port topology. I.e. cxl_mem_probe() could have
-> +	 * succeeded and then cxl_mem unbound before the lock is acquired.
-> +	 */
-> +	guard(device)(&cxlmd->dev);
-> +	if (cxlmd->attach && !cxlmd->dev.driver) {
-> +		cxl_memdev_unregister(cxlmd);
-> +		return ERR_PTR(-ENXIO);
-> +	}
-> +
->  	rc = devm_add_action_or_reset(cxlmd->cxlds->dev, cxl_memdev_unregister,
->  				      cxlmd);
->  	if (rc)
+On Mon, Feb 09, 2026 at 03:59:20PM +0100, Neil Armstrong wrote:
+> On 2/9/26 15:49, Manivannan Sadhasivam wrote:
+> > On Mon, Feb 09, 2026 at 03:00:02PM +0100, Neil Armstrong wrote:
+> > > On 2/9/26 12:30, Manivannan Sadhasivam wrote:
+> > > > On Fri, Feb 06, 2026 at 03:50:32PM +0100, Neil Armstrong wrote:
+> > > > > Enable the generic pwrctrl driver to control the power of the
+> > > > > PCIe UPD720201/UPD720202 USB 3.0 xHCI Host Controller.
+> > > > > 
+> > > > > Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+> > > > > ---
+> > > > >    drivers/pci/pwrctrl/generic.c | 4 ++++
+> > > > >    1 file changed, 4 insertions(+)
+> > > > > 
+> > > > > diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.c
+> > > > > index 08e53243cdbd..4a57a631362f 100644
+> > > > > --- a/drivers/pci/pwrctrl/generic.c
+> > > > > +++ b/drivers/pci/pwrctrl/generic.c
+> > > > > @@ -73,6 +73,10 @@ static const struct of_device_id pci_pwrctrl_slot_of_match[] = {
+> > > > >    	{
+> > > > >    		.compatible = "pciclass,0604",
+> > > > >    	},
+> > > > > +	/* Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller */
+> > > > > +	{
+> > > > > +		.compatible = "pci1912,0014",
+> > > > 
+> > > > No need to add the compatible to the driver. Just use the existing compatible as
+> > > > fallback in the binding/dts.
+> > > 
+> > > ???
+> > > 
+> > > Sorry but this is insane, in no world a standalone PCIe USB controller could be qualified as
+> > > compatible as a pciclass,0604 slot.
+> > > 
+> > 
+> > AFAIU, 'compatibility' implies that the driver can safely fallback and would
+> > still work. If we add dedicated compatibles for each endpoint devices, then we
+> > will just keep adding forever. Powering up a PCIe slot and an endpoint device
+> > are conceptually same.
+> 
+> We're not speaking about driver here, but about compatible string which describes
+> a device, a PCI endpoint and a PCIe slot are 2 very different devices that are
+> nowhere compatible.
+> 
+> > 
+> > > Technically it would work just fine, but "compatibility" has a meaning....
+> > > 
+> > 
+> > I view compatibility interms of device operation, not device as a whole. But
+> > sure, I could be wrong. If the DT maintainers say so, I won't insist.
+> 
+> In the actual way it's defined _today_, the "slot" and "endpoint" power up schemes are
+> compatible, but I hope the slot bindings will get much more features to describe the
+> real world slots power properties. And no, endpoints will definitely not have the same
+> features as slots, using it as a fallback today is an error.
+> 
+> On the other side, adding a "simple-pci-endpoint" compatible that enables any supply
+> and clock would be a good solution, if the DT maintainers agrees of course.
+> 
 
+We do have a 'pci-host-cam-generic' compatible. So we can also have something
+like 'pci-pwrctrl-generic' IMO.
 
-This caused a deadlock when trying to unbind cxl_pci and bind a custom
-driver. 
+- Mani
 
-The followwing analysis was produced by Chris Mason's kreview scripts,
-but it did resolve my deadlock, and the analysis seems pretty straight
-forward. 
-
-Although it was likely caused by a qemu quirk I was dealing with at the
-same time (see the note about topology failing to enumerate).
-
-~Gregory
-
----
-
-    cxl_memdev_autoremove() takes device_lock(&cxlmd->dev) via guard(device)
-    and then calls cxl_memdev_unregister() when the attach callback was
-    provided but cxl_mem_probe() failed to bind.
-
-    cxl_memdev_unregister() calls cdev_device_del() → device_del() →
-    bus_remove_device() → device_release_driver() which also takes
-    device_lock(), deadlocking the calling thread.
-
-    This path is reached when a driver uses the @attach parameter to
-    devm_cxl_add_memdev() and the CXL topology fails to enumerate (e.g.
-    DVSEC range registers decode outside platform-defined CXL ranges,
-    causing the endpoint port probe to fail).
-
-    Fix by using scoped_guard() and breaking out of the guard scope before
-    calling cxl_memdev_unregister(), so device_lock() is released first.
-
-It suggested:
----
-
-static struct cxl_memdev *cxl_memdev_autoremove(struct cxl_memdev *cxlmd)
-{
-        int rc;
-
-        /*
-         * If @attach is provided fail if the driver is not attached upon
-         * return. Note that failure here could be the result of a race to
-         * teardown the CXL port topology. I.e. cxl_mem_probe() could have
-         * succeeded and then cxl_mem unbound before the lock is acquired.
-         *
-         * Check under device_lock but unregister outside of it:
-         * cxl_memdev_unregister() calls cdev_device_del() → device_del()
-         * → device_release_driver() which also takes device_lock().
-         */
-        scoped_guard(device, &cxlmd->dev) {
-                if (cxlmd->attach && !cxlmd->dev.driver) {
-                        /* Drop lock before unregister to avoid deadlock */
-                        break;
-                }
-
-                rc = devm_add_action_or_reset(cxlmd->cxlds->dev,
-                                              cxl_memdev_unregister, cxlmd);
-                if (rc)
-                        return ERR_PTR(rc);
-
-                return cxlmd;
-        }
-
-        /* Reached only when attach failed — lock is released */
-        cxl_memdev_unregister(cxlmd);
-        return ERR_PTR(-ENXIO);
-}
-
+-- 
+மணிவண்ணன் சதாசிவம்
