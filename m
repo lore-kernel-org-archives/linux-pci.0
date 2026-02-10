@@ -1,351 +1,270 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010020.outbound.protection.outlook.com [52.101.69.20])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011028.outbound.protection.outlook.com [52.101.62.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F6A2D879B;
-	Tue, 10 Feb 2026 03:09:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E2F330DED8;
+	Tue, 10 Feb 2026 04:11:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.28
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770692958; cv=fail; b=TS0iySCrGC3JcPH1PeBNsspI7C7lE5w8vUihCvEgdEdL+qwj4ZtGEIGnItN0qM5h1H3rlY+ASCNdG9Y9b1EhfvQXUUxfr+INey3qk2BQWDyMm7DvfHDtC01RMlioZVRrT733gUSGGATgqO55GW9LNfY7ArDC98qw4WPs4xlBlC8=
+	t=1770696675; cv=fail; b=pdsayykKIqXobCzUDO0hTN9iIgPYQcmYG4te6UZXr5giMichZKnfKJ14eyMXR0BDMrKAKc7ye9ojZFMXUYCwjFpAWS22axX9T5B/CgMhOxfvTBzGrzaJ/9el/XaFIT0luftVL0qK5g3UOBbaPftWjM5gFY3y97pfoOR6V2TzNzQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770692958; c=relaxed/simple;
-	bh=4Gu95eLjTtwoQm72pxNMXAtA9xqs1u2+enTvZYETqgc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=LlWTIUxvvYj3wX8qvUW2dw8laelC1VpVmYKDu1MFOi4viqoI5nh9+Wx+XdJNtGIewsb2KNHyizrinrJiL2vwk+WwYrij9OHDOmaMD+4zykPVqWMznuh/DljGYSsc+vxrmJ9oGULs4sjXDCViFrKOjC8ZS+EkcAQOF+O9e4L1/64=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=DYpVOINl; arc=fail smtp.client-ip=52.101.69.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1770696675; c=relaxed/simple;
+	bh=uUlL6pamdwoEY17HqGeQWYQBzpEeK1XhVz8We2wLzOY=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=mZNeOUdeYOvely9g5DHv01JYaMwsV4Y4dBgFSBsfMzIN2tJaUHlLMluO56okDAadjScMRfgO3aYLY6cl8S6a3NvP04+wiWtXTZzvyOqOYoZFzimuO6AbNb9nX6Q38EHQ/ofJLxRyrlcpcl2q124Dz228nbmKIqB/haRgqNgT9+Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=WwOT0AkO; arc=fail smtp.client-ip=52.101.62.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="DYpVOINl"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="WwOT0AkO"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ONPvYb7faIjt6sX9ZHDY7I3vBJb8sL8OGbtqIWrTC18k8zSAUCrxdPvqR0fxGVaxGFCeHg709de1eH4CoezhiTZNPVxi1GeI5AaUGrBUFVQMon3mlxjCR/Qe/GJF1a4q6UQ7OTSwBRyKhZxkhLr30OuB1XqljJFUO52yRds/Uce2OVy2JiMNfMkF+qZj+mD1+VjJQib8iUwxqs5JI1T9LTiD8PRmq/fRi/Baa300n1zKWL8knPHuiHRUJEcj6UUhRA1R7Tw3mZTaeluXPk3JvoKVz9O1sfpPfRag4YgKIA+zGNPiYws9Plqwa2Aamg9N8OoNXpgNwuF5qPjMrJ5rgw==
+ b=rViS7Rz5tGeucimKIl4pMNN4pGZDFiYFJPISbxuVq8v1NA0QpAiCjB5a1rtCrbQwY7P0D6/ubMSUNf6PvZHvMyxgpYPUWKDtxKCE5Xwe2ShtsEPzUbEkT87cRuLkud7lrJvyE9o58Dnb0GpRiOQdbxvg7lIEF0qB4lXJhQKWo/MTNvDC9nwD3KnrxUOKKNaV/3e0KNMI8fQvcQLpBy6dupdVEEEKIDpD18FiJYCM8G0TrPQn7RejjYdXfLY43X9PTHmUFT5RU+PXl6rUomXmevmd3O2C4/ozKlj2tJntIAm8wG9e9nCJwO472aBjq6QF29nS5QdKOzPxVPQUV+0O1A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=V1qMIQgoLynV+lTH/zlrp9mD6A5yEC628WjfTUYabLY=;
- b=oU8FIJ3aIPa3R1wOro4pBGX0xRqassOQJuD6wApHq3g+ZxHdOAmcpXkg2gi8SW842Q2ijVHhHJE04126H04JXYS9heDi4cA2YQ3lAZcwy54ST9iVB2CLJw6YmYYLt8yZJ4XgZNUbN792YrdCJIgP5baqpqcJzSpkto6dUJ5c7nhyj9D0jnZxRIUUkIauvxRIwB/DxKQ1Y/keXywbErBUWLGSJa3DQlTp9ZKK/AA97OO6xPitRjeXztQ18Q4i1hoxx+sfX+Paa5apV0GQa2c2A0U6vIdV0ZxyJD1E6XxOSdpnuJXSbgNXwGoGqXqbznVcIbzXH18pK1OfGrqWardBaA==
+ bh=uUlL6pamdwoEY17HqGeQWYQBzpEeK1XhVz8We2wLzOY=;
+ b=UzGAewpHa1nOkY7Qgd43FGsXCGoBtR4oUvKR/Bl1iDd0SmNYx/8NiMiFIJo16M9YV8l+y2N2caSDpMVsQoRXC9Hkkaukkg1EkdEYWfnaddAlJFalqsUzndIXbKQa966Tdrzgy9YDx8BKtLfm1xEWYBmBRmx4/DoiH3Ph61Cmn/l4dgHpveyqLSI4XRy2C3K4+ReuG+VJREknPz/gUeHX7t8ONtjVJ5TRNjWU04SPJWjAg0aPDVHO2yx0gWr0Ccz7faHq5G67sSR7IKbmH8qahB546N7ZT3bwUkEkCqOwYMWI3FH7z610h3WWr/Lc8kCTkaBYklHH5JATsgTCViQZuw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=V1qMIQgoLynV+lTH/zlrp9mD6A5yEC628WjfTUYabLY=;
- b=DYpVOINlb37yuzU8Cfq4vtc4pcmMiVbITvA0Fl2aele2IRcEWEph/afL/hwXdP+vr0GkOwgtBr6lt4xuNJePMSnz6FEk7lF+Kbvhvq0IrLbJhTM8vXhV8YGgTqfeuMFZ1HCRGufQqgciYv4vrteSbrmFgqa/kRZxxg0+tHsOspnhMpWU/SYB1nYA+IfNQWSQuAdmCIZeqFt71+lthH+ORVzlsTf5JW5fvUAuaKRFfVFatyM8Bhl+PL8LrMAxJAhkd04c1dnPufCl2IGhGNkj7lHUgmlrcLn+lYPry7QWQBifnyWoSTNCCuC1XvGLSrxPqSBFRJWVJEzUWTGokmd5Hw==
-Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
- (2603:10a6:800:315::13) by VI0PR04MB11938.eurprd04.prod.outlook.com
- (2603:10a6:800:307::6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.18; Tue, 10 Feb
- 2026 03:09:12 +0000
-Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
- ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
- ([fe80::feda:fd0e:147f:f994%5]) with mapi id 15.20.9587.010; Tue, 10 Feb 2026
- 03:09:12 +0000
-From: Sherry Sun <sherry.sun@nxp.com>
-To: Frank Li <frank.li@nxp.com>
-CC: Hongxing Zhu <hongxing.zhu@nxp.com>, "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
-	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "festevam@gmail.com"
-	<festevam@gmail.com>, "will@kernel.org" <will@kernel.org>,
-	"imx@lists.linux.dev" <imx@lists.linux.dev>, "kernel@pengutronix.de"
-	<kernel@pengutronix.de>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH V4 02/11] PCI: host-generic: Add common helpers for
- parsing Root Port properties
-Thread-Topic: [PATCH V4 02/11] PCI: host-generic: Add common helpers for
- parsing Root Port properties
-Thread-Index: AQHcmZ1wulbLKZisCU6/hNZuvGf+JrV6kISAgACpu9A=
-Date: Tue, 10 Feb 2026 03:09:11 +0000
-Message-ID:
- <VI0PR04MB12114013DF00830F8C9B2D9B89262A@VI0PR04MB12114.eurprd04.prod.outlook.com>
-References: <20260209082454.2097628-1-sherry.sun@nxp.com>
- <20260209082454.2097628-3-sherry.sun@nxp.com>
- <aYoMb89MeP44xV8N@lizhi-Precision-Tower-5810>
-In-Reply-To: <aYoMb89MeP44xV8N@lizhi-Precision-Tower-5810>
-Accept-Language: zh-CN, en-US
+ bh=uUlL6pamdwoEY17HqGeQWYQBzpEeK1XhVz8We2wLzOY=;
+ b=WwOT0AkONHp3KAGy6h0yDPGCa9r8tluKsMTyAFj7Foj89CqBkTp5lCKQ+xf/MAUBzAIdXD8IJFfg2wwov+BPLXQC8bf5gnH8A8ydgG8a7jojkMNB65kEifbUDJL+AECeg9nRRP+qU7mBx1pqix+5rVhHtmJQmXaYSc89wT/rxhqqGypr/j37stjJFOi0PVjCOEn6BWMg4VvfnDfEBVq87xOoH6YHK7C81KVLUT5KCTTMMxcTteU7MoXlkDxHkgTYY3IxBoz6IwMfJyY4qhNPftPJb/XzzcgFFEoNI5eEPDaOUvv6K2RMTzKTK5vUTjS0UxCC/UH8QkuLl7cEb15pFw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
+ LV2PR12MB5894.namprd12.prod.outlook.com (2603:10b6:408:174::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.17; Tue, 10 Feb
+ 2026 04:11:10 +0000
+Received: from DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
+ ([fe80::e7c5:cfca:a597:7fa4%4]) with mapi id 15.20.9587.017; Tue, 10 Feb 2026
+ 04:11:10 +0000
+Message-ID: <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com>
+Date: Tue, 10 Feb 2026 09:40:44 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] PCI: tegra194: Reset BARs when running in PCIe
+ endpoint mode
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
+ Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, stable@vger.kernel.org,
+ Thierry Reding <treding@nvidia.com>, linux-pci@vger.kernel.org,
+ linux-tegra@vger.kernel.org, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Thierry Reding <thierry.reding@gmail.com>,
+ Jonathan Hunter <jonathanh@nvidia.com>, Rob Herring <robh@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+References: <20250922140822.519796-5-cassel@kernel.org>
+ <20250922140822.519796-7-cassel@kernel.org>
+ <2fedf28e-83ea-4e51-b1a1-e45f0e928509@nvidia.com> <aYonDJyd_dbV0GBK@ryzen>
 Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|VI0PR04MB11938:EE_
-x-ms-office365-filtering-correlation-id: 00bef1d1-9203-407c-a3f8-08de6851c3cf
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|19092799006|1800799024|366016|376014|7416014|38070700021;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?643ANGM0GuKDC0l/eAbtnHneqvvxSd6OrseDeDjmZ/K3LfQiziQH6iTcN9+U?=
- =?us-ascii?Q?zs4K6qwyjMvNmRmj9L95YhkEMydNpLzH26q5ttvIiVAb6O8uxsMQroNv0Stc?=
- =?us-ascii?Q?P9pwFVefloCzlhXwbl4MbrA2YqiiS1qipbbLDLAdwdtr1atQlHCJ21ED9J4G?=
- =?us-ascii?Q?0DWjuJ9wHJR7+8M9ZvkejouwvEePIMDBeZcPrcPPKZW2X9Onbd0dUIFkrrgU?=
- =?us-ascii?Q?4jC2wVDQffmDwsG5E7s+rMIVSZD1772V4PNXMcu49Zu0aLEy+aNKBl2mvUIl?=
- =?us-ascii?Q?GMCrjj6XD3FaHHP2LEArS+SKGRJBfYDtYfQnvX/zz58J2+vwgunQ194XZHYh?=
- =?us-ascii?Q?SrqkD5dqvEQRrB2NB8xK9COrYP7Gaw6CGf2atYoZn8b4GnCBQODV55ThYV1k?=
- =?us-ascii?Q?Mlnq066IaiAvQai9ITS7TN8y8DXx1JINYSdSJT9NZ6tZ2PCt82E7hBMuEG1I?=
- =?us-ascii?Q?P+TKpLdrhHB45TKgA24WXwgS32kWRJwNRGH0wKqIBE4riMTS4c5tgWKtsO6b?=
- =?us-ascii?Q?LiYRNa6RbU+GmZqdgM6+7n/Gs6Zwldg/j7GhEUWzAxoOR3SJjMHQ/z7gqQEI?=
- =?us-ascii?Q?LHcGHLf5MAXdh2teUNKEKnk5KeDdbNDr3eo3WYG7aGj5A6BldKwYvdEyBoHl?=
- =?us-ascii?Q?YkNln5UBXwRV9Mq4suqviad+NfELAetGoGndACIUlQolzjxts0hCCuic422B?=
- =?us-ascii?Q?pdQB4jL1acu7f2MG5jmIBIIBTV6EDbal/RjZycvx9CxiV7AXSs93RlsZJCjg?=
- =?us-ascii?Q?q4iPyms6xrISZJ91E9tlJPvc5vys5KRW8iEWabgvWZreEYMbPd1G+RNIz7T4?=
- =?us-ascii?Q?D2yuxo4SkJ0pamzgwCBrby0SE887d6HDrn/pwlb9NPJIUKbQAUN/xIUfc6aP?=
- =?us-ascii?Q?Yq7FXDvplazD4QfUzJd3l8CGin3dtSAVDb+CBuCQUIcMl3QnzZU+UTB7Q3TB?=
- =?us-ascii?Q?hVTj8M4O+SuIXovKogAdgfno+5tWTBrvxaMr30jU1iRySG7QTeuJkYlklB/K?=
- =?us-ascii?Q?qBEcRucJ2Pv3/naDnN2whVOgKXS3YfMJjJMVr0U3GunPa5RjT029519VR29K?=
- =?us-ascii?Q?3VuUd1dnMVK9ZOtHFJcSK1A1zer9mZGGOvzPKx6HzEkvOCYuxIOJAOcmTwer?=
- =?us-ascii?Q?vSaZ3jpucMdkF/ujsuvNXbifkYHwBZhDw2jmE26Cd2AAOaz15mUj/wTyNOr1?=
- =?us-ascii?Q?1YLrhCieWYDRDhgrdObJ2D+v5tVK1ZrxaZCzANGgYlNOKaXCG8YEJD0jEpWV?=
- =?us-ascii?Q?VkPGkSgN1wtLBHe567MEBTtV2N9A6YS+w1Ao3VMdl3ZWV/psLDVxMyT/R2f4?=
- =?us-ascii?Q?sp3g8qREN9vT+GRT3n+fOuejI/QmYw5EURYdi/NKVVs6jE2RM4byL+gxiHqy?=
- =?us-ascii?Q?sbU+4WvAblWQz048D7w42gGn5/TyCrXj2nKis557y0NV2i5L+hk2z1x+dyJb?=
- =?us-ascii?Q?pchjqQGcu9pMePnwkDlhYg/MTymyjk8UlyFYvC1CwMB5/zcn4cBaXBjxPXNj?=
- =?us-ascii?Q?j/nBedTetb9O1NUjbZybj66EnUNTjaPaEtg/BC1EeuV62kQokSepHfL37Tjn?=
- =?us-ascii?Q?VH6wyzLtK4cS5agZMglj7BLph125TFiualuBOpzFD7qqiyhF6vQ2npGvxEvH?=
- =?us-ascii?Q?fNTDu8dMSvO9gVu/Fu5tUgY=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(376014)(7416014)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?MosjJ/03qUg6H0jMSfnQ++CQgEk/vpem8ZnCeVXoHhoFSg3P1tmJmheOIMvW?=
- =?us-ascii?Q?nnqCPMZvCTCPC4CIXDo9AjGjuDSbWK5zS60ytp9t3JVbRboPv9V0BdUghjEI?=
- =?us-ascii?Q?Qix3KJZqHRH83kTvHo+lcNDH7ChNLu8/Ea/qug5an59ZvY3WousFPKD0vPH/?=
- =?us-ascii?Q?KVQjm6B+kIcfQMfUhZK4DyzHx1zKJbbUXoBDT8t5Sq6ppyPvfls4eP/vpnNN?=
- =?us-ascii?Q?J4JvdELM24rVuhkmqoR7TdQyQ3qwfgGXRlXfA6sGTX9VdjPN/mvyZl7RAFIL?=
- =?us-ascii?Q?u3aHDUlSWVdEJMWGLAk/RZjTmo/dqlajsW4VC2kHPq8DBWAI09TpH5C3FpJT?=
- =?us-ascii?Q?fgDAnecCl4EwDYD64ZqVplM7IMzKBnXGxyVp4o0q7MZ8Rz0djtTbb9I3EP/C?=
- =?us-ascii?Q?aAZhev0h/Gfnh2IlDPoZLmQFzIGiIOH2Aw8Fvr1x2yd2Mr9BRTAlzjJvIOxH?=
- =?us-ascii?Q?X1NrDGF3SjfXyC4H9cXwyDN4vxRPwrUPRz3y0zvCmHkFs6pulLdaSfKE/jtK?=
- =?us-ascii?Q?obgX6OGX5qYPFY2CpBFj/uUvuUGjht5179ok16d7ZQRuaenew0RzoeAoQOB+?=
- =?us-ascii?Q?o+2VaYwGa2dMaUvXBM9Viblk6gGi2AgEe4zTMVGL8Y3wuoONmcPXb7XP7VM2?=
- =?us-ascii?Q?fh4nrzKpXaHv0cG/bN5PzO6K4AGc1OtXHhfDGGJK0CthxwGqsQekcRrpFX/K?=
- =?us-ascii?Q?mZJI9n6ybPFp+EkfhfqYR1u8FqB0V3euUlSmD3kF7AgKW2WliENPd+Aqb8Xp?=
- =?us-ascii?Q?Hul/KsISfjmNvSb7oPQtY2UTeE4VY4zL29q0BHZJ6GPaunhWbw3w8sl/Hmg7?=
- =?us-ascii?Q?ydEjH5CeNqX/jFGzAeWyY1TJ7Ac59rZg6y+hDtjgjvOj+cFf1X3xXu829TF0?=
- =?us-ascii?Q?igUtgrutn58rEYA8mF+5WZRL/V5BtNseXIQVUd6tI4ANoJKkM6Q56IDcpeAi?=
- =?us-ascii?Q?OxYFHAfavRT81JADQpfFyUSixYSc/fhSLWlbDXiVlZMwoKJ+4roAap/E2dgd?=
- =?us-ascii?Q?h9rFkIrKrtQkWj7p88ZiCzZAN9+cdqjfrKt4hEumFhZevyRwnTzybh/Divfn?=
- =?us-ascii?Q?WIh1dAETm3Q9tBdd+z+7zOmYOhoMeIJSJHHn4tx37zV8zPC6gl6/2zc7L9ob?=
- =?us-ascii?Q?HDHdlQy4ZuKAVabCsIiKUjEnk69+xphBWxGlDygg0n4bgIkDAgSFfk/gM0EX?=
- =?us-ascii?Q?DiaJy7HhA6EWSXuNKxD04mJtOJ17t3hL4WIyaIUf1PtMoKcz4OWAkY4I5lD8?=
- =?us-ascii?Q?W+hb8aQdRQ1Q4URFdsqCElwbYMS9hTocBE6gPokThd6oXKdTGcHsli3w28fC?=
- =?us-ascii?Q?KHCHD0+4nXx+T4mCFR4+DVJyeP1Zdw57cSsdnx1KUhuOomlLltXWxR5PBCat?=
- =?us-ascii?Q?dp/hs1faUQQQ785uUBc06YvPkFCDyDMwTCKqkI8qCqdKzuvWTcYl0urVJBQc?=
- =?us-ascii?Q?Jqcrib2Et/Vt+IQbG8y0dyCfqcWxxoT/wrn2krhnTpin77zpA6UyH775FNao?=
- =?us-ascii?Q?Ue3pEUgSWYzT5oq/bz024eoCEpcP/pecSqv99tHA1jy4PpwHi/iOFGEEv8pR?=
- =?us-ascii?Q?QFXHpULJaJDS4Tt4CChc4x1EujStgt3leRHuz+Tfbu/HKWVSvJQqjxyNJLX0?=
- =?us-ascii?Q?OgUYhWhwHmOrL11hK2fdrart1bWNqKhiOlbW1yTJTt3pwjY27D4UTNs3ONxR?=
- =?us-ascii?Q?Zt43GvO8QDVn7UEcuem3E3puijIwrnUJR2xjU4iZn3xtX0FD?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+X-Nvconfidentiality: nvpublic
+In-Reply-To: <aYonDJyd_dbV0GBK@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: MA5P287CA0050.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:a01:1d3::14) To DS0PR12MB8245.namprd12.prod.outlook.com
+ (2603:10b6:8:f2::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|LV2PR12MB5894:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5281f8ab-c21e-4869-1a00-08de685a6bdd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?ZlN1cjAwc21mMUd3d2JNK2RCUEltZ2YzTXlJeEEyZmRKZTlrMm1sNlJTNHBi?=
+ =?utf-8?B?bTlsL1Nzci9SOXZYT2NMZWxCdVFsbHVuTFA4UExLSm9MbHRpSFBCcHVERmhG?=
+ =?utf-8?B?M1pVdVpwVzgySkcrSFVjbU9IQ2lkRGRMejZ3NCtOTHE3ek9LNjhTL3hiSEFm?=
+ =?utf-8?B?QTEvejFWbGlUam9CL1p3ZkU5T2NXQnI0NVBPdDFNWEpKSFVneTkrb28vdk50?=
+ =?utf-8?B?VWdyekN0WU51MC9kRmdQRldOaXZSTTVJenFPRDNyUmNobXg0SG12ZzZPOHNx?=
+ =?utf-8?B?b0RlWHluNEpHSVBCT2l6TnYwSVIrRTJoMURJYS94VXM5UWlnYnFUaURyd3ZD?=
+ =?utf-8?B?cVpkTzd0THhSU05yTjlxUGx1SVA4L2tNUTFxL04wbWZrVmxvRFZ5bzByNll4?=
+ =?utf-8?B?V1YvWjNlQ0RHcncwNHRnbWJSWExUTS8wQ24rME9yUkRZWGV3Uituam5PS3FB?=
+ =?utf-8?B?QkIrTFFURW5OZnRwRWhiL093aFVjMnRGblRuelJKOWlheDhKUHZrM2gxYUF2?=
+ =?utf-8?B?L3pXaStTSzQrWFd5cW9PaHVhdE9oZFVmVjFRajI3RHZNZU9kYnA4eVNYdUFt?=
+ =?utf-8?B?UFZKZm9qTmQ3NDV3UTdTWHFtTmdQam1ZdlhsVTluK3Z0Skh4Mi9Eb3hKdTFh?=
+ =?utf-8?B?bTllZTgyK2ZWazR3bzBoSGJ4QXRjVHcwdStmL2crOW1HdG05S3A3M3ZUTlY0?=
+ =?utf-8?B?REF4ditxbzFCNXZKdWJPMjk4clRDMDZSc1RqdXhkRGdIaXJnVTh3Zll1MCt3?=
+ =?utf-8?B?RzdodkI0Z1lmbHMxbkp6TTZBWVVaSW4yeGE2RkNCLzl4bWpTaHVqMTBCVGVR?=
+ =?utf-8?B?eW9aUnp2TkM1ZW1OQ3ArMXA0ZDlnWlpuZVFHSCs3WmZyWlRMWGQzRy9mZkYv?=
+ =?utf-8?B?c0NPQ2hsUjJKbnNWWDNtRjhsVWJlQnl3U1VYR2xWZDZURktKQkNudWgzcEJ2?=
+ =?utf-8?B?cmVFQVEwL0Fza0RuU0dUb2lSM0srTFU2RERyL0Q4cEJxN05Bam8wQkpKaVBY?=
+ =?utf-8?B?aitIMUVDNWZ2SEtoSk9yelY3T1UzQW5PcGJIVWEydEplRC9kZHF2TG94TDI3?=
+ =?utf-8?B?QVMrR1JJWlVma3pQNXBTZmNqbll6aVF4L29pcC9nQ2NWT2JpRVk2MW5qY3A0?=
+ =?utf-8?B?Nzk1Y21SaGtzcmZLeGZzeXJlN0tLWEx5K1FEMGtqSllZUVV1bXNXZ0VDRFAz?=
+ =?utf-8?B?R0xqTG1sT01CMTZHUDFTdW5OdFFRZHNKWHkwdVlwTVM1OGVhZml3ZXdkY3Q1?=
+ =?utf-8?B?akJLN21yM2w2NFJmM2EyNnpzbGdiSE5tdkFERWdOSnArMVJiU3BGOWp4U3RU?=
+ =?utf-8?B?Q3BYeUpTdzR2OUlkS1lMdmZIUUV0eXllMjRUOWEyQUd3K0xZMEY2dzREQ0Er?=
+ =?utf-8?B?TnlJZW5YYTIraG9xZUF3dFV2dWpBc0xXd2d2MlVJWCtZd29QZTV2VGZWeFkw?=
+ =?utf-8?B?OU5OL1oxeWRXZlN1YVBWMDl0QURjZS9iRzZnUmhJWEh1UEJWTjJFY2s5Wita?=
+ =?utf-8?B?TWREMDlPazF2c3F3TEdRY05FNVlYRlFJb2lzdE5mLy9SQXplWWtvckVwUGZk?=
+ =?utf-8?B?b0tmLzkxMzgyaVdRWWJ0ampXcHVUV05ZTGs0bUJhVTFuMDlsbGVkbGJLWmk3?=
+ =?utf-8?B?MEw3OW4vS013bnh0S3drN2RxK2FoUGVkOStWS1RVemhIbW5uMnhwNVR2OEZ0?=
+ =?utf-8?B?SmdXTXVieUo1SUdSRVlGZU9LYWpOeDIrODhpc1FxU1ZhSUZic1BObUxnV2h5?=
+ =?utf-8?B?Uzc1cmdVMTl3U25sYlVrZ2k2MUtlTXFsT1NGOEwzMUVVTzcwUU9wbktXQzBt?=
+ =?utf-8?B?b3p6cTl1NUVLbFhLNGdNMG1FOTBjWXg4ZGk1WFFtK3VsYTBhejd1SkpEWWdI?=
+ =?utf-8?B?a2lLMW9RRlFIK1p6WVJoNXZWV1A5S3RKYjkzZy8wUEozQzRGbzYxdHNLT3k5?=
+ =?utf-8?B?WHVUYWNneWtTV2VSaHBVeE1QbUdNTFhtMk1zV3YweStUcDdCaDZVb2h0RjNm?=
+ =?utf-8?B?MXp0bWg1bFQvZ2tibkF1RnBSMmlnOFkvblAycDZRZmFVcnIrTHZFMXpPVkNP?=
+ =?utf-8?B?QUhQZVBkL050MFFUOXllN1pWanFrTFBxOGNEMmV5clpLZ0E2RXBOM3QvUUtZ?=
+ =?utf-8?Q?mUYg=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SVFka1hKQTBSOERiRllHSFZKUkFmcUlJOHgyL2g0c3hyc3NleENBUHEzNkxu?=
+ =?utf-8?B?N2sxRFBFYmtWTHlvdW1MZzU1R1VuMVdsZUxiajA1UkxnN2VYK0g5WVVZNWJt?=
+ =?utf-8?B?YndtSkhGR3JwTDErZzh0NWlSbUF1WTZ6UWthamJocHI4UWxGT0FSeGFORzkw?=
+ =?utf-8?B?S1FBd2VHYTdhSTd5T1NGMzl0RVhkUVhORnJ3eXUvK3BUYlhVMTc4ekZqcmdQ?=
+ =?utf-8?B?bzc3WmpKUGlYYlhWb1VjL0tjaXZ3QnBEQVBYUnRBdVUwbEwrNUdxc3FEczVI?=
+ =?utf-8?B?RWVhdHJDUklFcnRjZlZMTjlsd2N5ekVXenNSSnUycjVuWlJCTVRLZ1JraTJs?=
+ =?utf-8?B?VE9uSXcrN2xUcmJCam0zeXhKUndNbGV2YnJmTFdFUkt2S3k0amFkNlBZQS9N?=
+ =?utf-8?B?SmdoK0hkOXdkeG9nMTI2eVhacm4xWHVUQ3ZUMWxwOEFJaFpidFFzVEJENDlv?=
+ =?utf-8?B?VWsxRHhja0MzQjlDdmJsNGRtQkF6YmdTa21HMk5CeUFhRStWTzhHVGJ6bkV6?=
+ =?utf-8?B?c1RGVjFVQ1FxZnl0UEVNSGNOc3V2WWkvOUJIWXM1cURSNTVweGZUWk1kUjU4?=
+ =?utf-8?B?UExzbmoxYXBLL2xpQUxBUW83UzR0NVg0ZWlyTTdYa0RwNnFJWGg0bFBiZElJ?=
+ =?utf-8?B?bzlvaWpmV3FSSFA1aG5GWUJwZTRFejJVZVpxM3dtRDYvemROREw1MHNoMzA1?=
+ =?utf-8?B?L2VKNWpLY2RRU3RLNzVCV1RBaFMxT3RwYzIvYU14TmFmNlo1SEdUUWQ3b1Qy?=
+ =?utf-8?B?aW93clVwb0htQ29QQlg3UzJmRlpNeGFPY29rVVA0bjZ4eXIxazlUQlBRTm9h?=
+ =?utf-8?B?b2tXUUxXNXRYY2dHSmlCc0dHNHR4bHdZbzlSSUhGU1dUamZiTzdvTFh4ZCtH?=
+ =?utf-8?B?Z1JBc2NBRHVLRkxyMmRNTEsySWx1c1IvcHVLcS9LS2FBYWNXTVR3Z0t2dElP?=
+ =?utf-8?B?ancrb09VOUlyai9MV0lhMnRiU1R3Vk9mR0M3c3V1WWFrWFVXWDdjSVM3V3dK?=
+ =?utf-8?B?RmJJV09zcnR5bXRONHdIVkdsbE9LTHh0ZlgrZ2dLa2ZDWTZWc0V1eW1pOUtr?=
+ =?utf-8?B?VEJua1F3Mi9nNlcyNEdRd3hma2dhVHg4YkltcGNWbnJGdnM4NWQwaGsrTXkw?=
+ =?utf-8?B?SEkxZ0ViNmxCZmdpN3I3a2RtbGx0cVQzeDZEa1VpT3lIRXFxUGN4QlVrNjhx?=
+ =?utf-8?B?dEVUdUt0b3FydmYveDBzSFk4SHJ5R3NjTDQxUGFDNHZRUGVVV0s0R2VkbjUw?=
+ =?utf-8?B?OXVxamlUcHBycS93Y0V4S3FiY01JTUJWMzFnRUpVb2ZyUS9CandkUFNONldX?=
+ =?utf-8?B?ZjVNT1BDblY0WERyUW1OQUdtTndSK3lIOE90MTBsditzR1UxVk1DUkV1SmF1?=
+ =?utf-8?B?RXZsNlNSaHVVUG5CWXQvTW40ZzlkSnA0eExTdjJNLzY4WjVlQ3JuNEFIb05W?=
+ =?utf-8?B?K1BEelRScHhOSUlOQVBpMk1sbVl2c2tSNGZ0Z1RQTkhYYjhvRmw0bWNmb1hw?=
+ =?utf-8?B?ZHFHMS8rOEpZRVorRDF6NEtKWC82aUVEcnAvSEVmS3h5V01vQ1ZTUzM1Qm9l?=
+ =?utf-8?B?Zm5YODlQWkxFcGs0RDVlNGZRYTBZak1ZSmdPNEdyRWMxR3FGOVZ3Tng5TzZZ?=
+ =?utf-8?B?dENiMjNYSjZWeUtSWllyMTNuL0EwOW5YU0dXVFYwUThPWnl4eWszQ2svcXY0?=
+ =?utf-8?B?aFpuTUZRZzFnaG0vQTJQdHlJVmRzZlYrM1JicW9idlB2ZiszQWJ1U2NiV2Zp?=
+ =?utf-8?B?bUgxV0hydXdPTnNoRHpJay91YkNpc1k3Q0NzMTRuekx3TTZvRm9yaHl4WXFT?=
+ =?utf-8?B?SG1rVU9QQ013ZzJCTzkxeGlmSGN5RldoU1BBNEdUOTE3YUF0Z1hVaVhMb3VB?=
+ =?utf-8?B?YkxWZlNMcW1mOHJibEtldTk3TGhoa215b1dtb0w4eWlBbThQRU9wVTg4UVZv?=
+ =?utf-8?B?YkxEUVFIcnNmRm80OHhhZDhSTGhZUGlMTW9ReHdMdUQrVmJGNTF3NENVL1Vl?=
+ =?utf-8?B?R0syNHNKU3d1cnlCMVU0SXdrVW1XSzJ1b0hobE9JUGhsL0VmWDViUStZWmcr?=
+ =?utf-8?B?cGg2RUMwSTFQTFpUbmRIY0xNaGJuRkwxSnFDYS9DWFczb0QyTGhld3hGZ1Rh?=
+ =?utf-8?B?UkFqd0dlbS9PaVJ0TGVVSTcxT20xYjhhSHNKbEQvbGRDaWlXNmZEU1Q0UElZ?=
+ =?utf-8?B?N1J4bm1LaXZOYmVxZ3I2RDdIdGxLTEpjVlpMRU9udk5oQXlDSUNCc1VzaUZZ?=
+ =?utf-8?B?blZyOFBpSDVLK0xLeWFvbWd6eUVHTExtcXlrdW1reHd6TFRKbFdVclJDWkYv?=
+ =?utf-8?B?Y2RJZm44UzExcTRVWCtPblFXZ2FWcDdvVDRCQXpOTFJrUEI2UzBmQ0FHbmJC?=
+ =?utf-8?Q?f5I8IhqY6aS3OlBA=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5281f8ab-c21e-4869-1a00-08de685a6bdd
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 00bef1d1-9203-407c-a3f8-08de6851c3cf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Feb 2026 03:09:11.9622
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Feb 2026 04:11:10.2878
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ESlzT0LxQ9nOCW/r5iNRHay98QvF3OjlzyXhto0R2iUHY8NJSf7Oo3LJ0VuoGwMg9784tXEbi/hG0FbLiqe/gA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB11938
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: GQLnU5SuVjusj53lzrwXCgEGqb/MveOtLZ5oLeWBAfJ1aGNOv3c0UTTau3Oe02aUzePjLOebVR2vmMQGM+6y6g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5894
 
-> Subject: Re: [PATCH V4 02/11] PCI: host-generic: Add common helpers for
-> parsing Root Port properties
->=20
-> On Mon, Feb 09, 2026 at 04:24:45PM +0800, Sherry Sun wrote:
-> > Introduce generic helper functions to parse Root Port device tree
-> > nodes and extract common properties like reset GPIOs. This allows
-> > multiple PCI host controller drivers to share the same parsing logic.
-> >
-> > Define struct pci_host_port to hold common Root Port properties and
-> > add
-> > pci_host_common_parse_ports() to parse Root Port nodes from device
-> > tree,
-> > pci_host_common_delete_ports() to cleanup the port lists.
-> >
-> > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> > ---
-> >  drivers/pci/controller/pci-host-common.c | 75
-> > ++++++++++++++++++++++++  drivers/pci/controller/pci-host-common.h |
-> > 17 ++++++
-> >  2 files changed, 92 insertions(+)
-> >
-> > diff --git a/drivers/pci/controller/pci-host-common.c
-> > b/drivers/pci/controller/pci-host-common.c
-> > index c473e7c03bac..287e92df0092 100644
-> > --- a/drivers/pci/controller/pci-host-common.c
-> > +++ b/drivers/pci/controller/pci-host-common.c
-> > @@ -9,6 +9,7 @@
-> >
-> >  #include <linux/kernel.h>
-> >  #include <linux/module.h>
-> > +#include <linux/gpio/consumer.h>
-> >  #include <linux/of.h>
-> >  #include <linux/of_address.h>
-> >  #include <linux/of_pci.h>
-> > @@ -17,6 +18,80 @@
-> >
-> >  #include "pci-host-common.h"
-> >
-> > +/**
-> > + * pci_host_common_delete_ports - Cleanup function for port list
-> > + * @data: Pointer to the port list head  */ void
-> > +pci_host_common_delete_ports(void *data) {
-> > +	struct list_head *ports =3D data;
-> > +	struct pci_host_port *port, *tmp;
-> > +
-> > +	list_for_each_entry_safe(port, tmp, ports, list)
-> > +		list_del(&port->list);
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_host_common_delete_ports);
-> > +
-> > +/**
-> > + * pci_host_common_parse_port - Parse a single Root Port node
-> > + * @dev: Device pointer
-> > + * @node: Device tree node of the Root Port
-> > + * @ports: List head to add the parsed port to
-> > + *
-> > + * Returns: 0 on success, negative error code on failure  */ static
-> > +int pci_host_common_parse_port(struct device *dev,
-> > +				      struct device_node *node,
-> > +				      struct list_head *ports)
-> > +{
-> > +	struct pci_host_port *port;
-> > +	struct gpio_desc *reset;
-> > +
-> > +	reset =3D devm_fwnode_gpiod_get(dev, of_fwnode_handle(node),
-> > +				      "reset", GPIOD_OUT_HIGH, "PERST#");
-> > +	if (IS_ERR(reset))
-> > +		return PTR_ERR(reset);
-> > +
-> > +	port =3D devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> > +	if (!port)
-> > +		return -ENOMEM;
-> > +
-> > +	port->reset =3D reset;
-> > +	INIT_LIST_HEAD(&port->list);
-> > +	list_add_tail(&port->list, ports);
->=20
-> Suppose need spin_lock for link list.
+On 09/02/26 11:57 pm, Niklas Cassel wrote:
 
-Hi Frank,
-I think a spinlock is not necessary in this case for the following reasons:
-1. The ports list is private to each device instance, not a globally shared=
- resource.
-2. The list is built during the driver probe phase(pci_host_common_parse_po=
-rts),
-    which is serialized by the driver core. And the list cleanup
-    (pci_host_common_delete_ports) is registered as a devm action and only
-    called during device removal, which is also serialized by the driver co=
-re. There
-    should no concurrent access during list construction.
-3. Once the ports list is populated during probe, it's not modified during =
-runtime.
-    There are no code paths that add/remove ports after initialization comp=
-letes.
-4. There's no scenario where multiple threads would simultaneously access o=
-r
-     modify this list during normal operation.
-So at least currently seems spinlock would not provide any actual protectio=
-n benefit.
+> On Sun, Feb 08, 2026 at 11:41:42PM +0530, Manikanta Maddireddy wrote:
+>> Hi Niklas,
+>>
+>> Tegra PCIe exposes only DMA register over BAR4, not iATU.
+>> So, the issue described in this commit message is not applicable.
+>> This patch is disabling BAR2 and BAR4, after enumeration I see
+>> only BAR0. I think we should revert this patch.
+>> Please share your inputs on this.
+> If you look at this commit, it only disables all BARs by default,
+> which brings the tegra driver in-line with all other DWC based
+> endpoint drivers: dra7xx, imx6, layerscape-ep, artpec6, dw-rockchip,
+> qcom-ep, rcar-gen4, and uniphier-ep.
+>
+> A PCI endpoint function (EPF) driver will still be able to enable a
+> BAR that was disabled in .init().
+> However, an EPF driver will not be able to use/enable a reserved BAR.
+>
+> Look at e.g. the code in pci-epf-test. It will not allocate backing
+> memory for a BAR that is reserved, so having a BAR enabled that we
+> have not allocated backing memory for is wrong.
+>
+> Commit c57247f940e8 ("PCI: tegra: Add support for PCIe endpoint
+> mode in Tegra194") is the commit that marked all BARs other than
+> BAR0 as reserved, so if you want to test BARs other than BAR0,
+> talk to the author of that commit.
+>
+> If you revert this patch, tools/testing/selftests/pci_endpoint/pci_endpoint_test
+> will once again fail the consecutive BAR test, so I think it would
+> be wrong to revert this patch.
+>
+> If it is ATU registers or eDMA registers exposed in BAR4 does not
+> really matter. The end result is that you overwrite eDMA registers
+> that you should not be overwriting when you run the BAR tests.
+> (So BAR4 should absolutely be marked as reserved).
+>
+> I don't recall, but if you overwrite the eDMA registers, then in
+> addition to the consecutive BAR test failing, most likely the DMA
+> test cases will also fail.
+>
+> Have you tried running
+> tools/testing/selftests/pci_endpoint/pci_endpoint_test
+> ?
+>
+>
+> Kind regards,
+> Niklas
 
->=20
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/**
-> > + * pci_host_common_parse_ports - Parse Root Port nodes from device
-> > +tree
-> > + * @dev: Device pointer
-> > + * @ports: List head to store parsed ports
-> > + *
-> > + * This function iterates through child nodes of the host bridge and
-> > +parses
-> > + * Root Port properties (currently only reset GPIO).
-> > + *
-> > + * Returns: 0 on success, -ENOENT if no ports found, other negative
-> > +error codes
-> > + * on failure
-> > + */
-> > +int pci_host_common_parse_ports(struct device *dev, struct list_head
-> > +*ports) {
-> > +	int ret =3D -ENOENT;
-> > +
-> > +	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-> > +		if (!of_node_is_type(of_port, "pci"))
-> > +			continue;
-> > +		ret =3D pci_host_common_parse_port(dev, of_port, ports);
-> > +		if (ret) {
-> > +			pci_host_common_delete_ports(ports);
-> > +			return ret;
-> > +		}
-> > +	}
-> > +
-> > +	return ret;
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_host_common_parse_ports);
-> > +
-> >  static void gen_pci_unmap_cfg(void *ptr)  {
-> >  	pci_ecam_free((struct pci_config_window *)ptr); diff --git
-> > a/drivers/pci/controller/pci-host-common.h
-> > b/drivers/pci/controller/pci-host-common.h
-> > index b5075d4bd7eb..2c8df230886f 100644
-> > --- a/drivers/pci/controller/pci-host-common.h
-> > +++ b/drivers/pci/controller/pci-host-common.h
-> > @@ -12,6 +12,23 @@
-> >
-> >  struct pci_ecam_ops;
-> >
-> > +/**
-> > + * struct pci_host_port - Generic Root Port properties
-> > + * @list: List node for linking multiple ports
-> > + * @reset: GPIO descriptor for PERST# signal
-> > + *
-> > + * This structure contains common properties that can be parsed from
-> > + * Root Port device tree nodes.
-> > + */
-> > +struct pci_host_port {
-> > +	struct list_head	list;
-> > +	struct gpio_desc	*reset;
-> > +};
->=20
-> I think it should be include/linux/pci.h
->=20
-> struct pci_host_bridge {
-> 	...
-> 	struct list_head ports_header;
-> }
->=20
-> So all API should pass down struct pci_host_bridge *.
+Hi Niklas,
 
-Ok, this sounds reasonable,  will try this in V5.
+In Tegra234 PCIe, BAR1 is MSI-X table and BAR2 is DMA registers backed
 
-Best Regards
-Sherry
->=20
-> Frank
-> > +
-> > +void pci_host_common_delete_ports(void *data); int
-> > +pci_host_common_parse_ports(struct device *dev,
-> > +				struct list_head *ports);
-> > +
-> >  int pci_host_common_probe(struct platform_device *pdev);  int
-> > pci_host_common_init(struct platform_device *pdev,
-> >  			 struct pci_host_bridge *bridge,
-> > --
-> > 2.37.1
-> >
+by PCIe HW RAM and registers. EPF driver shouldn't allocate memory for
+
+these two BARs. This is the reason for marking them as reserved in
+
+Tegra PCIe driver. DMA registers are exposed over BAR2 to allow
+
+PCI client driver in host to transfer data from host to endpoint
+
+using endpoint remote DMA read functionality. BAR test fails on this
+
+because not all register bits are writable. Consider NVMe example
+
+which has RO capability bits at the start of the BAR, it is not correct
+
+to add BAR test on these bits.
+
+
+I think following fixes are required to address this issue,
+
+1. BAR test in pci_endpoint_test should skip MSI-X table.
+
+2. BAR test in pci_endpoint_test should provide option to
+
+skip this test on known reserved BARs, maybe we can use
+
+pci_endpoint_test_data for this.
+
+3. EPC driver should provide BAR_DISABLED enum to disable
+
+unused BARs.
+
+4. Tegra PCIe driver should disable only BAR_DISABLED bars and
+
+leave BAR_RESERVED untouched.
+
+5. Return NO_BAR for both BAR_DISABLED and BAR_RESERVED in
+
+pci_epc_get_next_free_bar()
+
+
+Let me know your opinion on this.
+
