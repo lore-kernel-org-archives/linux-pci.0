@@ -1,156 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C1CF2DB7AD;
-	Wed, 11 Feb 2026 16:52:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B05233A005
+	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2026 17:56:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770828780; cv=none; b=t3S26sjk4VGw8qngQ5kMSrGqkv+DYK8jM7mRjqyoW5OOOrG+9gYbu7BZJSXK8LXI48pZBdYuWAEJyvDKCjez50a3oBF0VlxzMzJ4ILm+OohxK205xGP7QCxzRmYOwrh0OtElcXzmQguBiUwEVEEV2ZBjd5p+ghdIis0NAnZImiI=
+	t=1770832585; cv=none; b=M8/v2tqwy4X1NpPaAToQX3fv24klrLH2jrnx+iU1xDGm9HBajPB90uXFjCRmiq4GgXwx6yerylEprNMc2a7kuU7NvgICTlqhRzBAFF/flaOcY3FsWXJ7KxAmnec82OSXzjvU0Z1NcU8WVpR6RrlUGdq5bq5bvR6RM1K5VbNrT8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770828780; c=relaxed/simple;
-	bh=uKGGO9qLVypn3QZ/+crQkh3WW4pRGi13JWgjd+P/5Ig=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KGplhU4kt50o0NSlo34KPU82z3pSAlRuOveAmaG8sDQaH2B6tyhR6ln2pu2qkybNpw3dDXkG2ocsBFN3hL4cR40T5O/fxmdBttyVHq3u5eS4mRrwSxR9hvCyVG1SDzd4KI/xhVmo/zWGFJVqqisGBZfEQzvJM1lUpmebB/s7AWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XmULYB3l; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770832585; c=relaxed/simple;
+	bh=l6dFfnknKlo3J3IT+NMTAKey/KbCXRZbP1BSgY2mYok=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fbHPmMooZNorzgCgH64QJXdtMbIJZhHdhVM4bIF88RQPqSg8fhrcNS/kzK0JT4/ZrTG6DAqsc/ncHPAh4KnvgDgPEXxJoBlHS652ANTgB7fDAoTdlcLTnSK/K3q72wnUf1LZmXRlcAoZaebvM7g9b2/6jJ3eR44QJCqAAh8QwQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=stON7iwI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XmULYB3l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3562C4CEF7;
-	Wed, 11 Feb 2026 16:52:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="stON7iwI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 534BAC19423;
+	Wed, 11 Feb 2026 17:56:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770828779;
-	bh=uKGGO9qLVypn3QZ/+crQkh3WW4pRGi13JWgjd+P/5Ig=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XmULYB3lnfRgAtcAZEMYWaKRgVp6jHzl0rl/2cNSnT9YmhUCKEKQbE6GhqjvBODbT
-	 ykx2GnZQMqUFS6BB+VLrbyNi3dlLefq0yzcuFDMy9CqCyrXKAfAwQhRp04yXXqvyam
-	 l5/qmBBaUEWgZf6+9AZ3/gRqNbiOkW/+W7tHlySIqpK4pGVIh1RPn8u6f4DWoEoj5U
-	 ZVErRORRUbVs1bkLqnqinNlYv+HqcHAdmo8/j7tx/Nq49+MkDXEFfTEYtgocoVNlXP
-	 TikquGef5hi9VmnPO/gT7wBizZe6f/l1G3gP9JnAGDZUrV96E+1EVya9oelv1v5F7r
-	 XofoGnRRoykxw==
-Date: Wed, 11 Feb 2026 17:52:53 +0100
+	s=k20201202; t=1770832585;
+	bh=l6dFfnknKlo3J3IT+NMTAKey/KbCXRZbP1BSgY2mYok=;
+	h=From:To:Cc:Subject:Date:From;
+	b=stON7iwIPcqmuJruMECDJrY4zPrlRMxJOGw6NyUr7vELYmzXhp/pZ7j9rp289lNR9
+	 szQKJR+8xSM3F6AFbY2j/cBQjfRTkIrSxzkQgXKzMh7+9apiJLQUXywNUbSYTTtD2e
+	 bcHy8OSE/XPuRUw2DwZPnIDOPPOOpVQeyhgV8dGlcVcSHltxFTRIYI1xwUzlxZqGf8
+	 Xv0cD2WDWQmJk4IYFG8mzHsaetpMpTggVLV1SrKHAPF1oFWPSSOzpg46vHIRDeUTLk
+	 cS7FdcY2nUgw0OCVeGqVvEtyupMGsN5AmtUA5PnR+uPbgmx2wF9q56ywsO+LpwBfz/
+	 2ct7f54LoSyPg==
 From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: vkoul@kernel.org, mani@kernel.org, Frank.Li@nxp.com,
-	jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, kishon@kernel.org,
-	jdmason@kudzu.us, allenbh@gmail.com, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org, ntb@lists.linux.dev,
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: Re: [PATCH v6 0/8] PCI: endpoint: pci-ep-msi: Add embedded doorbell
- fallback
-Message-ID: <aYyz5WF_iJuNwA35@ryzen>
-References: <20260209125316.2132589-1-den@valinux.co.jp>
- <aYsjfTtA0EsXwh69@ryzen>
- <2lii3hhzie5n2kkoan7hvittid2bo2jgvkb2fndyscc527xglp@dubt3ie7exdq>
- <aYtdEnZM5mnmcgtY@ryzen>
- <23p74hldtvi2xn6aza2rc6kh5hidzutu46ugzt6mzliyjzylka@k5gchw3amcig>
+To: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Koichiro Den <den@valinux.co.jp>,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: dwc: ep: Flush before unmap in dw_pcie_ep_raise_msix_irq()
+Date: Wed, 11 Feb 2026 18:55:41 +0100
+Message-ID: <20260211175540.105677-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <23p74hldtvi2xn6aza2rc6kh5hidzutu46ugzt6mzliyjzylka@k5gchw3amcig>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2276; i=cassel@kernel.org; h=from:subject; bh=l6dFfnknKlo3J3IT+NMTAKey/KbCXRZbP1BSgY2mYok=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDJ7Ds1R4JRfJXkjvmOJTuokcd4bs9YuOT3zZcQtDvXyS 9I33LvXd5SyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAikb8ZGY417HlQEr/hsjbn tQ0TPh44ddKhvfm2wndppiBmSdv7MncYGaZkmU/Xb+13+ZJqtPr/8R8bLv2WiHnleKDmCVegcF6 uDhsA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Thu, Feb 12, 2026 at 12:57:52AM +0900, Koichiro Den wrote:
-> Could you try a quick experiment on the Rock 5B EP side?
-> 
->   devmem 0xa403800a0 32 1
->   devmem 0xa403800a0 32 2
->   devmem 0xa403800a0 32 4
->   devmem 0xa403800a0 32 8
+When running e.g. fio with a larger queue depth against nvmet-pci-epf we
+get IOMMU errors on the host, e.g.:
 
-Here it goes:
+arm-smmu-v3 fc900000.iommu:      0x0000010000000010
+arm-smmu-v3 fc900000.iommu:      0x0000020000000000
+arm-smmu-v3 fc900000.iommu:      0x000000090000f040
+arm-smmu-v3 fc900000.iommu:      0x0000000000000000
+arm-smmu-v3 fc900000.iommu: event: F_TRANSLATION client: 0000:01:00.0 sid: 0x100 ssid: 0x0 iova: 0x90000f040 ipa: 0x0
+arm-smmu-v3 fc900000.iommu: unpriv data write s1 "Input address caused fault" stag: 0x0
 
-# cat /proc/interrupts | grep edma
- 53:          0          0          0          0          0          0          0          0    GICv3 303 Level     dw-edma-core:a40000000.pcie-ep, pci-ep-test-doorbell
- 54:          0          0          0          0          0          0          0          0    GICv3 304 Level     dw-edma-core:a40000000.pcie-ep
- 55:          0          0          0          0          0          0          0          0    GICv3 301 Level     dw-edma-core:a40000000.pcie-ep
- 56:          0          0          0          0          0          0          0          0    GICv3 302 Level     dw-edma-core:a40000000.pcie-ep
-# devmem 0xa403800a0 32 1
-# cat /proc/interrupts | grep edma
- 53:          0          0          0          0          0          0          0          0    GICv3 303 Level     dw-edma-core:a40000000.pcie-ep, pci-ep-test-doorbell
- 54:          1          0          0          0          0          0          0          0    GICv3 304 Level     dw-edma-core:a40000000.pcie-ep
- 55:          0          0          0          0          0          0          0          0    GICv3 301 Level     dw-edma-core:a40000000.pcie-ep
- 56:          0          0          0          0          0          0          0          0    GICv3 302 Level     dw-edma-core:a40000000.pcie-ep
-# devmem 0xa403800a0 32 1
-# cat /proc/interrupts | grep edma
- 53:          0          0          0          0          0          0          0          0    GICv3 303 Level     dw-edma-core:a40000000.pcie-ep, pci-ep-test-doorbell
- 54:          2          0          0          0          0          0          0          0    GICv3 304 Level     dw-edma-core:a40000000.pcie-ep
- 55:          0          0          0          0          0          0          0          0    GICv3 301 Level     dw-edma-core:a40000000.pcie-ep
- 56:          0          0          0          0          0          0          0          0    GICv3 302 Level     dw-edma-core:a40000000.pcie-ep
-# devmem 0xa403800a0 32 1
-[  104.217632] pci_epf_test_doorbell_primary
-# cat /proc/interrupts | grep edma
- 53:          1          0          0          0          0          0          0          0    GICv3 303 Level     dw-edma-core:a40000000.pcie-ep, pci-ep-test-doorbell
- 54:          2          0          0          0          0          0          0          0    GICv3 304 Level     dw-edma-core:a40000000.pcie-ep
- 55:          0          0          0          0          0          0          0          0    GICv3 301 Level     dw-edma-core:a40000000.pcie-ep
- 56:          0          0          0          0          0          0          0          0    GICv3 302 Level     dw-edma-core:a40000000.pcie-ep
-# devmem 0xa403800a0 32 1
-# cat /proc/interrupts | grep edma
- 53:          1          0          0          0          0          0          0          0    GICv3 303 Level     dw-edma-core:a40000000.pcie-ep, pci-ep-test-doorbell
- 54:          2          0          0          0          0          0          0          0    GICv3 304 Level     dw-edma-core:a40000000.pcie-ep
- 55:          1          0          0          0          0          0          0          0    GICv3 301 Level     dw-edma-core:a40000000.pcie-ep
- 56:          0          0          0          0          0          0          0          0    GICv3 302 Level     dw-edma-core:a40000000.pcie-ep
+The reason for this is that the writel() is immediately followed by a call
+to unmap(), which will tear down the outbound address translation.
 
+PCI writes are posted, i.e. don't wait for a completion. Thus, when the
+writel() returns, might not have completed yet, and could even still be
+buffered in the PCI bridge, at the time unmap() is called.
 
-Seems very random if you ask me.
+Flush the write by performing a read() of the same address, to ensure that
+the write has reached the destination before calling unmap().
 
-Same randomness is observed when I write other values, e.g. 2.
+This will add some latency, but that is certainly preferred over corrupting
+the host memory.
 
+The same problem was solved for dw_pcie_ep_raise_msi_irq(), in commit
+8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU mapping"), however
+there it was solved by dedicating an outbound iATU only for MSI. For MSI-X,
+we can't do the same, as each vector can have a different msg_addr, and
+because the msg_addr is allowed to be changed while the vector is masked.
 
-Could this randomness be because I do not have:
-https://lore.kernel.org/dmaengine/20260105075904.1254012-1-den@valinux.co.jp/
+Fixes: beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Or do you think that is completely unrelated?
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 5d8024d5e5c6..aef41f0218a3 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -1005,6 +1005,9 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 
+ 	writel(msg_data, ep->msi_mem + offset);
+ 
++	/* flush posted write before unmap */
++	readl(ep->msi_mem + offset);
++
+ 	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->msi_mem_phys);
+ 
+ 	return 0;
+-- 
+2.53.0
 
-
-
-> > RK3588 (pcie-dw-rockchip.c) exposes the DMA registers in BAR4 by default.
-> > If I hack pci-epf-test on top of your patch to unconditionally return BAR4 with
-> > offset 0xa0, it works. So my best guess is that the fixed inbound translation
-> > in BAR4 (to the eDMA registers) somehow messes with the inbound translation if
-> > another BAR tries to use an inbound translation to the eDMA registers as well.
-
-Adding Manikanta to CC.
-
-RK3588 is not the only SoC that has the eDMA registers exposed via a BAR,
-some other SoCs like Tegra234 also has the eDMA registers exposed via a BAR.
-
-Me and Manikanta were discussing this a few days ago:
-https://lore.kernel.org/linux-pci/aYsQu9lQi4IzfBiP@ryzen/
-
-
-> 
-> Thanks a lot for letting me know that. I see two possible ways forward:
-> 
->   (a) extend PCI_EPC_AUX_DMA_CTRL_MMIO to optionally describe that the DMA
->       MMIO window is already mapped to a fixed BAR and should be reused, so
->       EPFs avoid creating a second mapping to the same target. I guess it
->       could be treated as a quirk for "rockchip,rk3588-pcie-ep".
-
-I do like the idea that an EPC driver can somehow provide the BAR number
-which the eDMA registers are already exposed in, together with the offset
-and the size within that BAR. After that pci-epf-test could still work with
-the emulated doorbell (only difference is that it would not program the iATU).
-
-(This would also require Manikanta suggestion of having both a BAR_RESERVED and
-a BAR_DISABLED type, and support in pci_endpoint_test to ignore RESERVED BARs.)
-
-
-> 
->   (b) alternatively, clear the default BAR4 mapping on RK3588 at least
->       temporarily when using the pci-epf-msi doorbell fallback.
-
-So for these SoCs like RK3588 and Tegra234, it appears that the option to
-expose the eDMA registers in one of the BARs is a Synopsys DWC config that
-you set when you synthesize the DWC core.
-When you do this, it appear that that BAR will always some kind of fixed
-inbound address translation (i.e. even when you disable all inbound iATUs
-this translation for BAR4 to eDMA registers is still there).
-
-
-Kind regards,
-Niklas
