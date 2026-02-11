@@ -1,288 +1,293 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B638944F
-	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2026 12:15:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8061286A7
+	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2026 12:18:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770812131; cv=none; b=iHD0MJZKcq1LUth+RqxZA6voHGbacwMuMJODajOtE25L0zN6ybx9Z/XCngkZelo5kpFTezzdE2ck9hxe/JPAFHj9WB/aoa+upFvltDIZLsSCZCOg2bGHENYDFXid1BVjgtggEi5AwmaEdiUkCyYXj4K1a3WW/Vd6i2iFIrSGAvo=
+	t=1770812294; cv=none; b=tK2uXY/IYZYZJPmoQnqY9/KcIiKLLZV4HUh56Vg75VYrWDF5dkQFneUVi4Ct4i4dtT5NsRbaZGg9TbococEg3Gvhu4GFmFEd40/nzu4yerl8+v0Hj3QjQ5omsHoxZXmDS/58fZcLzZejLXpbC2hc8o9aXIZSahNhm7TZ86S0cbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770812131; c=relaxed/simple;
-	bh=LBpmI6Y5j6Qvc3wLInYvsAovbhw058lnWVtwKdRMjn8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Bac/x6ByU+IaduculCBjmfMBm4P6V7h3V7kJ4QLyCWQ1FEw8OG/BDH36d7yvqQIvPGVhHki+hRT5MtDHA4WLPN5Dc9Vag+h+nTvHsVShday2HZujBDkEKvraSG01CwFnTmQ6x0JZESsdFi6fsz0xmiuhO+3GGPeKMWT6CkC2kWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=F/b0xtJo; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1770812294; c=relaxed/simple;
+	bh=DfbMSsE8sukOKYPvcn8Zy+ygjaHLgqhYpGEtnbcBC7o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=JpNvuSWJFnHP3bpP/mY8SuowZFAPRqMXT4bwpXZDgdgq4W7iEHlOsyyIcAkNld9capoqU/ffzqA3sOmroNyNOvsHonBgaDEys0TF6e/sWblIUUWt0BcidKEQUqCybuon6oBN1H7y1vmTz6ynfXXqDD06K6Yxrg+hxWbG58gGM/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=qCD7LKkM; arc=none smtp.client-ip=113.46.200.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="F/b0xtJo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770812130; x=1802348130;
-  h=date:from:to:cc:subject:message-id;
-  bh=LBpmI6Y5j6Qvc3wLInYvsAovbhw058lnWVtwKdRMjn8=;
-  b=F/b0xtJoAo2GZETH8tBOzp+qz0KTxdnKJb9oD3i2KHD4hd3d1jNs7mne
-   40SRe48jSAF4Aoa7ipTyIJv4xa3sVTynWL9PhwjRqjO1ELFZH1CmpxbiA
-   knYhqGMn1BqB58Y1UK/6vCRLKyVe42yjNbpmCL7ck5Zew7iRt/LaUr1uJ
-   hYUeHjTaPrCHPnevYfP7qlAlYA092bXWhzBxb7JpQCCKpgRReRA9RCK3X
-   6iqbpMal9cEO6+RU2Y8fDDPSX4Ws3NUV6Xe3Wu0/r34w69pliJMR+k414
-   iPTtIUprEdVYZlYv1XuZ/ILEbHja/71nghNKLdqcta20CJAxWguIGPvc0
-   A==;
-X-CSE-ConnectionGUID: qmgiY0nNR/Cw5UYE8N+v3A==
-X-CSE-MsgGUID: NuaMIcIxQfSEE27xoJJ6yw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11697"; a="94598058"
-X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
-   d="scan'208";a="94598058"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2026 04:15:29 -0800
-X-CSE-ConnectionGUID: zBPw45GkQmCvXseAMGTfSg==
-X-CSE-MsgGUID: uWHQWIhVRCWvDy8MnTUzAw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,283,1763452800"; 
-   d="scan'208";a="211338070"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 11 Feb 2026 04:15:28 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vq97t-00000000pxb-2TXR;
-	Wed, 11 Feb 2026 12:15:25 +0000
-Date: Wed, 11 Feb 2026 20:15:15 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:v7.0-merge] BUILD SUCCESS
- d05e2af08bae38ddaa112b21836095665be9abec
-Message-ID: <202602112007.lkdZs0Qk-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="qCD7LKkM"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=d2bg+cvKB70XNpuj/qZm9Q7ko1rVrfy21IzS0DX6PX0=;
+	b=qCD7LKkM9pwGtDF/RNTLTnTN5048MBFm0AoaETFn+1S6rcrQA6iN79vlKe8wlLo9Ab7nzw4BL
+	fMwnuXtLRaFuq6PbgYR9rsFcc0j+rFiC98OthR3J7vGmfvP1VYxkoFt10bK2Waedd9LHzxQQ7LQ
+	jZfLAuP1nt62uH9IODUzZHg=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4f9y4z1RFBzKm49;
+	Wed, 11 Feb 2026 20:13:23 +0800 (CST)
+Received: from dggemv705-chm.china.huawei.com (unknown [10.3.19.32])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3ECE840563;
+	Wed, 11 Feb 2026 20:18:02 +0800 (CST)
+Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
+ dggemv705-chm.china.huawei.com (10.3.19.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 11 Feb 2026 20:18:02 +0800
+Received: from [10.67.120.233] (10.67.120.233) by
+ kwepemn200012.china.huawei.com (7.202.194.135) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 11 Feb 2026 20:18:01 +0800
+Message-ID: <962a43ca-9593-430b-9a89-1591a5ae9bf9@huawei.com>
+Date: Wed, 11 Feb 2026 20:18:00 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI/AER: Fix AER log missing in DPC case
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
+	<shiju.jose@huawei.com>, <pandoh@google.com>, <linux-pci@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>, <fanghao11@huawei.com>,
+	<shenyang39@huawei.com>
+References: <20260206201046.GA75132@bhelgaas>
+ <f8825b07-653b-4c8d-b805-b3ff65d4c713@huawei.com>
+From: Sizhe Liu <liusizhe5@huawei.com>
+In-Reply-To: <f8825b07-653b-4c8d-b805-b3ff65d4c713@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemn200012.china.huawei.com (7.202.194.135)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git v7.0-merge
-branch HEAD: d05e2af08bae38ddaa112b21836095665be9abec  Merge branch 'next' into v7.0-merge
+On 2026/2/10 16:00, Sizhe LIU wrote:
 
-elapsed time: 858m
+> On 2026/2/7 4:10, Bjorn Helgaas wrote:
+>
+>> On Thu, Jan 29, 2026 at 10:01:03PM +0800, Sizhe Liu wrote:
+>>> In the current DPC error reporting case, some AER log information is 
+>>> missing.
+>>>
+>>> -- Error log abnormal
+>>> pcieport 0000:20:00.0: DPC: containment event, status: 0x1f11: 
+>>> unmasked uncorrectable error detected
+>>> (------ AER error log supposed to be printed here, but missing ------)
+>>> nvme nvme0: frozen state error detected, reset controller
+>>> {4}[Hardware Error]: Hardware error from APEI Generic Hardware Error 
+>>> Source: 0
+>>>
+>>> Cause:
+>>> In aer_print_error(), PCIe AER errors is reported, and is rate-limited
+>>> by info->ratelimit_print[i]. There are two entry points for
+>>> aer_print_error().
+>>>
+>>> 1) Native AER
+>>> aer_isr_one_error_type() -> aer_process_err_devices() ->
+>>> aer_print_error()
+>>> 2) DPC
+>>> dpc_process_error() -> aer_print_error()
+>>>
+>>> The value of info->ratelimit_print[i] is initialized correctly in
+>>> the native AER case:
+>>> aer_isr_one_error_type() -> find_source_device() ->
+>>> find_device_iter() -> add_error_device()
+>>>
+>>> In the DPC case, info->ratelimit_print[i] is not initialized and
+>>> alloc by 0 , so in aer_print_error(), it will directly return at line
+>>> if (!info->ratelimit_print[i])
+>>> This will result in losing the AER log messages in the DPC case.
+>>>
+>>> Solution:
+>>> 1. Move the initialization of info->ratelimit_print[i] to
+>>> aer_ratelimit_print_init().
+>>> 2. Add aer_ratelimit_print_init() in dpc_process_error().
+>>> 3. Replace the initialization by aer_ratelimit_print_init()in
+>>> Native AER case.
+>> I see the problem, and I think you're right that we're not logging any
+>> AER info for DPC events (including events handled via the EDR path,
+>> which also calls dpc_process_error()).
+>>
+>> Currently we do the ratelimit init in add_error_device(), which also
+>> includes pci_dev_get() for the device.  I don't see a similar
+>> pci_dev_get() anywhere in the DPC path.  There is one in the EDR path:
+>>
+>>    edr_handle_event
+>>      acpi_dpc_port_get
+>>        pci_dev_get                    <--
+>>      dpc_process_error
+>>        aer_get_device_error_info(aer_err_info)
+>>        aer_print_error(aer_err_info)
+>>      pcie_do_recovery
+>>      pci_dev_put
+>>
+>> Maybe DPC and EDR should be using add_error_device() directly? It
+>> seems like holding that reference on the device is important.
+> I agree with directly using add_error_device() – holding a reference 
+> to the device is a more robust approach.
+> Below is the detailed call trace for reference:
+>
+> DPC path:
+>     dpc_handler
+>         add_error_device           <--
+>         dpc_process_error
+>             aer_get_device_error_info(aer_err_info)
+>             aer_print_error(aer_err_info)
+>         pcie_do_recovery
+>         pci_dev_put
+>
+> EDR path:
+>     edr_handle_event
+>         acpi_dpc_port_get
+>             add_error_device           <--
+>         dpc_process_error
+>             aer_get_device_error_info(aer_err_info)
+>             aer_print_error(aer_err_info)
+>         pcie_do_recovery
+>         pci_dev_put
+>
+> I will implement this change in the v3 patch and add relevant comments 
+> to add_error_device() for clarity.
+>
+> Thanks,
+> Sizhe
+Hi,
 
-configs tested: 211
-configs skipped: 3
+I attempted to do this, but found the required changes and their impact
+grew increasingly substantial. We rely on aer_err_info->severity
+to initialize ratelimit_print in add_error_device().
+To replace pci_dev_get() with add_error_device(),
+we must read registers to get the severity before the call.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Besides pci_dev_get(), acpi_dpc_port_get() uses another path
+that calls pci_get_domain_bus_and_slot() to obtain the error
+device and take a reference via BDF, not from the pci_dev structure.
+This requires a separate initialization of ratelimit_print.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              alldefconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-22
-arc                          axs103_defconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                   randconfig-001-20260211    gcc-8.5.0
-arc                   randconfig-002-20260211    gcc-8.5.0
-arm                               allnoconfig    clang-22
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                                 defconfig    gcc-15.2.0
-arm                            hisi_defconfig    gcc-15.2.0
-arm                       multi_v4t_defconfig    gcc-15.2.0
-arm                          pxa910_defconfig    gcc-15.2.0
-arm                   randconfig-001-20260211    gcc-8.5.0
-arm                   randconfig-002-20260211    gcc-8.5.0
-arm                   randconfig-003-20260211    gcc-8.5.0
-arm                   randconfig-004-20260211    gcc-8.5.0
-arm64                            allmodconfig    clang-22
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260211    gcc-15.2.0
-arm64                 randconfig-002-20260211    gcc-15.2.0
-arm64                 randconfig-003-20260211    gcc-15.2.0
-arm64                 randconfig-004-20260211    gcc-15.2.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260211    gcc-15.2.0
-csky                  randconfig-002-20260211    gcc-15.2.0
-hexagon                          allmodconfig    clang-17
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-22
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260211    clang-22
-hexagon               randconfig-002-20260211    clang-22
-i386                             allmodconfig    clang-20
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260211    clang-20
-i386        buildonly-randconfig-002-20260211    clang-20
-i386        buildonly-randconfig-003-20260211    clang-20
-i386        buildonly-randconfig-004-20260211    clang-20
-i386        buildonly-randconfig-005-20260211    clang-20
-i386        buildonly-randconfig-006-20260211    clang-20
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260211    gcc-14
-i386                  randconfig-002-20260211    gcc-14
-i386                  randconfig-003-20260211    gcc-14
-i386                  randconfig-004-20260211    gcc-14
-i386                  randconfig-005-20260211    gcc-14
-i386                  randconfig-006-20260211    gcc-14
-i386                  randconfig-007-20260211    gcc-14
-i386                  randconfig-011-20260211    clang-20
-i386                  randconfig-012-20260211    clang-20
-i386                  randconfig-013-20260211    clang-20
-i386                  randconfig-014-20260211    clang-20
-i386                  randconfig-015-20260211    clang-20
-i386                  randconfig-016-20260211    clang-20
-i386                  randconfig-017-20260211    clang-20
-loongarch                        allmodconfig    clang-22
-loongarch                         allnoconfig    clang-22
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch                loongson32_defconfig    gcc-15.2.0
-loongarch             randconfig-001-20260211    clang-22
-loongarch             randconfig-002-20260211    clang-22
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                                defconfig    clang-19
-m68k                        m5307c3_defconfig    gcc-15.2.0
-m68k                            mac_defconfig    gcc-15.2.0
-m68k                            q40_defconfig    gcc-15.2.0
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                  cavium_octeon_defconfig    gcc-15.2.0
-mips                           ci20_defconfig    gcc-15.2.0
-mips                        maltaup_defconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-22
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    clang-22
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260211    clang-22
-nios2                 randconfig-002-20260211    clang-22
-openrisc                         alldefconfig    gcc-15.2.0
-openrisc                         allmodconfig    clang-22
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    clang-22
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-openrisc                    or1ksim_defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-22
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260211    clang-22
-parisc                randconfig-002-20260211    clang-22
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-22
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc                 linkstation_defconfig    gcc-15.2.0
-powerpc               randconfig-001-20260211    clang-22
-powerpc               randconfig-002-20260211    clang-22
-powerpc                     sequoia_defconfig    gcc-15.2.0
-powerpc64             randconfig-001-20260211    clang-22
-powerpc64             randconfig-002-20260211    clang-22
-riscv                            allmodconfig    clang-22
-riscv                             allnoconfig    clang-22
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260211    gcc-13.4.0
-riscv                 randconfig-002-20260211    gcc-13.4.0
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-22
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260211    gcc-13.4.0
-s390                  randconfig-002-20260211    gcc-13.4.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-22
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                          lboxre2_defconfig    gcc-15.2.0
-sh                    randconfig-001-20260211    gcc-13.4.0
-sh                    randconfig-002-20260211    gcc-13.4.0
-sh                          rsk7264_defconfig    gcc-15.2.0
-sh                  sh7785lcr_32bit_defconfig    gcc-15.2.0
-sh                             shx3_defconfig    gcc-15.2.0
-sh                            titan_defconfig    gcc-15.2.0
-sparc                             allnoconfig    clang-22
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260211    gcc-13.4.0
-sparc                 randconfig-002-20260211    gcc-13.4.0
-sparc64                          allmodconfig    clang-22
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260211    gcc-13.4.0
-sparc64               randconfig-002-20260211    gcc-13.4.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-22
-um                               allyesconfig    gcc-14
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260211    gcc-13.4.0
-um                    randconfig-002-20260211    gcc-13.4.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                            allnoconfig    clang-22
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260211    gcc-12
-x86_64      buildonly-randconfig-002-20260211    gcc-12
-x86_64      buildonly-randconfig-003-20260211    gcc-12
-x86_64      buildonly-randconfig-004-20260211    gcc-12
-x86_64      buildonly-randconfig-005-20260211    gcc-12
-x86_64      buildonly-randconfig-006-20260211    gcc-12
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260211    clang-20
-x86_64                randconfig-002-20260211    clang-20
-x86_64                randconfig-003-20260211    clang-20
-x86_64                randconfig-004-20260211    clang-20
-x86_64                randconfig-005-20260211    clang-20
-x86_64                randconfig-006-20260211    clang-20
-x86_64                randconfig-011-20260211    gcc-14
-x86_64                randconfig-012-20260211    gcc-14
-x86_64                randconfig-013-20260211    gcc-14
-x86_64                randconfig-014-20260211    gcc-14
-x86_64                randconfig-015-20260211    gcc-14
-x86_64                randconfig-016-20260211    gcc-14
-x86_64                randconfig-071-20260211    clang-20
-x86_64                randconfig-072-20260211    clang-20
-x86_64                randconfig-073-20260211    clang-20
-x86_64                randconfig-074-20260211    clang-20
-x86_64                randconfig-075-20260211    clang-20
-x86_64                randconfig-076-20260211    clang-20
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-22
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                           allyesconfig    clang-22
-xtensa                  cadence_csp_defconfig    gcc-15.2.0
-xtensa                randconfig-001-20260211    gcc-13.4.0
-xtensa                randconfig-002-20260211    gcc-13.4.0
+A less intrusive approach in my opinion:
+1. Extract ratelimit_print initialization into a dedicated function
+    aer_ratelimit_print_init(), and call it after 
+dpc_get_aer_uncorrect_severity()
+    inside dpc_process_error().
+2. Add pci_dev_get() / pci_dev_put() pairs directly in dpc_handler().
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+I plan to incorporate these changes into the v3 patch.
+Looking forward to your feedback.
+
+Thanks,
+Sizhe
+>>> Test with AER inject:
+>>> Set the DPC reporting priority in the BIOS and send
+>>> MalfTLP(AER FATAL ERROR) to device.
+>>>
+>>> -- Error log normal
+>>> pcieport 0000:20:00.0: DPC: containment event, status:0x1f11: 
+>>> unmasked uncorrectable error detected
+>>> pcieport 0000:20:00.0: PCIe Bus Error: severity=Uncorrectable 
+>>> (Fatal), type=Transaction Layer, (Receiver ID)
+>>> pcieport 0000:20:00.0: device [19e5:a120] error 
+>>> status/mask=00040000/04580000
+>>> pcieport 0000:20:00.0:    [18] MalfTLP   (First)
+>>> pcieport 0000:20:00.0: AER:   TLP Header: 0x00000000 0x00000000 
+>>> 0x00000000 0x00000000
+>>> nvme nvme0: frozen state error detected, reset controller
+>>> {2}[Hardware Error]: Hardware error from APEI Generic Hardware Error 
+>>> Source: 0
+>>>
+>>> [1] 
+>>> https://lore.kernel.org/linux-pci/20260127035405.712271-1-liusizhe5@huawei.com/
+>>>
+>>> Fixes: a57f2bfb4a58 ("PCI/AER: Ratelimit correctable and non-fatal 
+>>> error logging")
+>>> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
+>>> ---
+>>> v2
+>>> - Corrected the format and spelling errors in the commit log.
+>>>
+>>>   drivers/pci/pci.h      |  1 +
+>>>   drivers/pci/pcie/aer.c | 35 +++++++++++++++++++++++------------
+>>>   drivers/pci/pcie/dpc.c |  1 +
+>>>   3 files changed, 25 insertions(+), 12 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>>> index 0e67014aa001..0cbcbcd52354 100644
+>>> --- a/drivers/pci/pci.h
+>>> +++ b/drivers/pci/pci.h
+>>> @@ -748,6 +748,7 @@ struct aer_err_info {
+>>>     int aer_get_device_error_info(struct aer_err_info *info, int i);
+>>>   void aer_print_error(struct aer_err_info *info, int i);
+>>> +void aer_ratelimit_print_init(struct pci_dev *dev, struct 
+>>> aer_err_info *e_info, int idx);
+>>>     int pcie_read_tlp_log(struct pci_dev *dev, int where, int where2,
+>>>                 unsigned int tlp_len, bool flit,
+>>> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+>>> index e0bcaa896803..b73915b63327 100644
+>>> --- a/drivers/pci/pcie/aer.c
+>>> +++ b/drivers/pci/pcie/aer.c
+>>> @@ -925,6 +925,28 @@ int cper_severity_to_aer(int cper_severity)
+>>>   EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+>>>   #endif
+>>>   +/**
+>>> + * aer_ratelimit_print_init - set flag whether error message is 
+>>> printed
+>>> + * @dev: pointer to pci_dev to be rate-limited
+>>> + * @e_info: pointer to error info
+>>> + * @idx: index for ratelimit_print array
+>>> + */
+>>> +void aer_ratelimit_print_init(struct pci_dev *dev, struct 
+>>> aer_err_info *e_info, int idx)
+>>> +{
+>>> +    /*
+>>> +     * Ratelimit AER log messages.  "dev" is either the source
+>>> +     * identified by the root's Error Source ID or it has an unmasked
+>>> +     * error logged in its own AER Capability.  Messages are emitted
+>>> +     * when "ratelimit_print[i]" is non-zero.  If we will print detail
+>>> +     * for a downstream device, make sure we print the Error Source ID
+>>> +     * from the root as well.
+>>> +     */
+>>> +    if (aer_ratelimit(dev, e_info->severity)) {
+>>> +        e_info->ratelimit_print[idx] = 1;
+>>> +        e_info->root_ratelimit_print = 1;
+>>> +    }
+>>> +}
+>>> +
+>>>   void pci_print_aer(struct pci_dev *dev, int aer_severity,
+>>>              struct aer_capability_regs *aer)
+>>>   {
+>>> @@ -990,18 +1012,7 @@ static int add_error_device(struct 
+>>> aer_err_info *e_info, struct pci_dev *dev)
+>>>       e_info->dev[i] = pci_dev_get(dev);
+>>>       e_info->error_dev_num++;
+>>>   -    /*
+>>> -     * Ratelimit AER log messages.  "dev" is either the source
+>>> -     * identified by the root's Error Source ID or it has an unmasked
+>>> -     * error logged in its own AER Capability.  Messages are emitted
+>>> -     * when "ratelimit_print[i]" is non-zero.  If we will print detail
+>>> -     * for a downstream device, make sure we print the Error Source ID
+>>> -     * from the root as well.
+>>> -     */
+>>> -    if (aer_ratelimit(dev, e_info->severity)) {
+>>> -        e_info->ratelimit_print[i] = 1;
+>>> -        e_info->root_ratelimit_print = 1;
+>>> -    }
+>>> +    aer_ratelimit_print_init(dev, e_info, i);
+>>>       return 0;
+>>>   }
+>>>   diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+>>> index fc18349614d7..d17adc642781 100644
+>>> --- a/drivers/pci/pcie/dpc.c
+>>> +++ b/drivers/pci/pcie/dpc.c
+>>> @@ -275,6 +275,7 @@ void dpc_process_error(struct pci_dev *pdev)
+>>>                status);
+>>>           if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
+>>>               aer_get_device_error_info(&info, 0)) {
+>>> +            aer_ratelimit_print_init(pdev, &info, 0);
+>>>               aer_print_error(&info, 0);
+>>>               pci_aer_clear_nonfatal_status(pdev);
+>>>               pci_aer_clear_fatal_status(pdev);
+>>> -- 
+>>> 2.33.0
+>>>
+>>
+>
+>
