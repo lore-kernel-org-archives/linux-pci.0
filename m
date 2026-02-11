@@ -1,159 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C9B30C60D;
-	Wed, 11 Feb 2026 15:40:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17258318BBC
+	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2026 15:54:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770824435; cv=none; b=VGoSN+eCeQDiX60yZDZBBuUUBa4HBIONCgeJTdo8+SJ4hUpRgc2JKE4CCm/kvuOBEKKZyRcKlelIiilpjisIvwdj3YtjNyEjs5miXPIT+swFvtOabftwzlAViiEN+cSuWDbl0otXWIRkB+M0A0i2u7tzU6XJr9lmmSOiP2f8Ccw=
+	t=1770825293; cv=none; b=q6yOXCiteaZE49RfmJcw1CKRUOazPeZMZUz42fs0rUjsZOrhJYazA3Peke7Q020Vuo5V/nfmDohdn/koes+p+66HOU/NOkaGoT7ICh5tEVvfXKu5yfejwwH0dyijMRhrX6s4iiAEhn6yylTm/1sAd6VRhCD86UpuNG1vvVz80v4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770824435; c=relaxed/simple;
-	bh=4XK13jjYLred8II2iFJoWFOdf1Y9k6sr2e/uAGf5JAY=;
+	s=arc-20240116; t=1770825293; c=relaxed/simple;
+	bh=Rtl2aRXU0OI6aLaQilSSkNT2RoHf2tWAPfQ4OtTBc2U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=vGdylnsmVFuMrwpBJu6KLac3gm7rhsm+MpvIzDXB0ofWsjslHrmH9LjhXv7+4CBTblLe9Vb/t6fTHU0eZzspvb/QqSROUMMKdarw9h+aunpyStrox9I50uaRMUfcfNufnIQZ0MeCLlczVbrJzeKl2bkydnjjYhHIlX/F2j24sNk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Osf1+son; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=PF5PnG98ICL+2L+wvgMOEQOxbHEM+Wa07km6s15zLwZlP41NczGrudck34fjSM/34WtiEwBGSYgmCpo1JHDdAE7TagVeaBgbfhmlhqlaW7jQbS7c3HyFmYnC1qqvGAknnjUaEv6aczM3FFK4ogDRDbRxudbf4AAxSTF9dJThvjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kv4SEQqx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Osf1+son"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E6D8C4CEF7;
-	Wed, 11 Feb 2026 15:40:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kv4SEQqx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5441AC4CEF7;
+	Wed, 11 Feb 2026 15:54:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770824435;
-	bh=4XK13jjYLred8II2iFJoWFOdf1Y9k6sr2e/uAGf5JAY=;
+	s=k20201202; t=1770825292;
+	bh=Rtl2aRXU0OI6aLaQilSSkNT2RoHf2tWAPfQ4OtTBc2U=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Osf1+sonyielfcfujsc2iqg2UF+lVBoIHnyPSvXNLhEj+wiJlUY7u3mDE0d93zCzE
-	 zBpVIqAZfadRZsH27h80LwM9BD0DSwj5cnui9xvD9fUafzn7f0owQ9Uq1ji2Owlwpo
-	 Z4s8PcmJBy8StkHpDAil94og0/4FRu5S+tbUBlzhwRuWJxa79omP4GgLLrh+kRBlYH
-	 0oU2c8wRD5ooc9cUjEyj4ly0fTzufA5SbP4ZpE4vLJxNYiGci+frhgviGdMTK5BCa8
-	 Huv/5f4XXc6H66h5N4v3lOaLSO49WYhSRPqQD61EimKM8C6aQodJSCEI2ajsqeGca8
-	 M7AnWKSbXHOIg==
-Date: Wed, 11 Feb 2026 21:10:26 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, 
-	Masami Hiramatsu <mhiramat@kernel.org>
-Subject: Re: [PATCH v4 0/3] PCI Controller event and LTSSM tracepoint support
-Message-ID: <u3es7h4mgzdqfhvpl52s3x4vcisrpazcm4qb6x7lu4srmagxpn@hca2begqypeu>
-References: <1769047340-113287-1-git-send-email-shawn.lin@rock-chips.com>
- <9e06e69c-d10a-1f21-cbf7-204319549612@rock-chips.com>
+	b=kv4SEQqxd34tHkZ7EAE9VqgLJo47xPUExoH5NPofddbOTDWM2d3hAV62hglNgEYC9
+	 1fw4ESfPlrxdcAxpVUaxmzBW9rR1nIcTJZ15lJzCctL5r/GCntOFIkdl4Ferdk1Jz0
+	 TUX0tfZteFCHDqbQuyBRpD2cuMtspufcBzist11gmpl9V8G+xcgqa0TLxKP9MeLNLa
+	 tRx/qSIB8w4Kk8antjbmYwE7ItURIoj+4zIIsJNp3YxWdvAf23wDYRdXBhGs7g4DpE
+	 itOa9FPCRDdK2WiWEOSbdqKpUZyGnuiaW8ntQIojPyGVALK9r1W+edhvQWFTJBu7h8
+	 jsEg4MwoifNKw==
+Date: Wed, 11 Feb 2026 08:54:50 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Alex Williamson <alex@shazbot.org>
+Cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org,
+	helgaas@kernel.org, lukas@wunner.de, dan.j.williams@intel.com,
+	guojinhui.liam@bytedance.com, ilpo.jarvinen@linux.intel.com
+Subject: Re: [PATCHv3 3/4] pci: remove slot specific lock/unlock and
+ save/restore
+Message-ID: <aYymSgmgSTI2D3vR@kbusch-mbp>
+References: <20260205212533.1512153-1-kbusch@meta.com>
+ <20260205212533.1512153-4-kbusch@meta.com>
+ <20260210164623.74d38699@shazbot.org>
+ <aYvJXRGnsIYVdVUm@kbusch-mbp>
+ <20260211082229.4e746e32@shazbot.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9e06e69c-d10a-1f21-cbf7-204319549612@rock-chips.com>
+In-Reply-To: <20260211082229.4e746e32@shazbot.org>
 
-On Wed, Feb 11, 2026 at 09:13:50PM +0800, Shawn Lin wrote:
-> 在 2026/01/22 星期四 10:02, Shawn Lin 写道:
-> > This patch-set adds new pci controller event and LTSSM tracepoint used by host drivers
-> > which provide LTSSM trace functionality. The first user is pcie-dw-rockchip with a 256
-> > Bytes FIFO for recording LTSSM transition.
-> > 
+On Wed, Feb 11, 2026 at 08:22:29AM -0700, Alex Williamson wrote:
+> On Tue, 10 Feb 2026 17:12:13 -0700
+> Keith Busch <kbusch@kernel.org> wrote:
+> > No, this still calls the slot's specific reset callback via
+> > pci_reset_hotplug_slot. The only thing this does is add locking, config
+> > state save/restore, and driver reset prepare/complete calls for the
+> > entire bus rather than matching "slots" on that bus. In the worst case
+> > scenario, this patch has the kernel do a little more work than it needed
+> > to.
 > 
-> Gentle ping...
+> But with this change, when vfio-pci calls pci_probe_reset_slot() we
+> test pci_bus_resettable() rather than pci_slot_resettable().  The
+> former is a superset of the latter.  Another slot on the same bus might
+> have a bridge card or quirked device that previously wouldn't have
+> affected the ability to reset a separate physical, conventional slot.
+> The risk is small, but the semantics are different.
+
+Thanks, good point.
+ 
+> > > I've always
+> > > understood these to be a subset of the bus, where we find the devices
+> > > sharing the same physical PCI slot by comparing the pci_dev.slot across
+> > > the bus, as done in all the code removed here.  pci_create_slot()
+> > > certainly is not simply a reflection of PCI_SLOT().    
+> > 
+> > pci_create_slot assigns devices that match PCI_SLOT() of the bus's
+> > devices, so it certainly is a reflection of that, no? The problem is
+> > that PCI_SLOT() macro doesn't actually reflect the true nature of what
+> > devices belong in the slot: the devices in a particular "slot" does not
+> > define the actual blast radius of resetting that "slot".
 > 
+> struct pci_slot, the thing created by pci_create_slot(), represents a
+> physical slot.  PCI_SLOT() is the bus addressing.  Not all pci_devs
+> have a struct pci_slot, not all pci_devs within the same physical slot
+> share the same B:D.F slot number (with ARI).
+> 
+> The vfio code does assume that 'slot' defines the blast radius of a
+> pci_slot_reset() and I'm confused how it should operate if we're now
+> going to conflate slot and bus reset scopes.
 
-Merge window is open now, so we can't accept any patches until -rc1. And I'm
-also waiting for an Ack from Steven for the tracing part.
+Yes, the "struct pci_slot" is that represetation. The problem is that
+its current form is missing semantics to bind to functions that don't
+match PCI_SLOT(). I don't know why PCI_SLOT is that criteria, but it's
+clearly the wrong criteria for pciehp, probably others too if they
+support ARI devices. The previous patch in this series creates entirely
+new semantics specifically for pciehp and fixes that issue. It also
+makes this patch unnecessary, but *only* for pciehp.
 
-- Mani
+> > > Is the error below
+> > > really a reflection that pci_dev.slot isn't carried over to the full
+> > > set of functions?  
+> > 
+> > Correct, the pci slot today in a pciehp hotplug slot is not getting
+> > assigned to all the functions in that slot, so slot resets completely
+> > miss handling those functions, which inevitably break them.
+> 
+> Isn't this then a pciehp hotplug issue that all children of the bus
+> should be linked via the struct pci_slot regardless of PCI_SLOT()?
 
-> > Testing
-> > =========
-> > 
-> > This series was tested on RK3588/RK3588s EVB1 with NVMe SSD connected to PCIe3 and PCIe2
-> > root ports.
-> > 
-> > echo 1 > /sys/kernel/debug/tracing/events/pci_controller/pcie_ltssm_state_transition/enable
-> > cat /sys/kernel/debug/tracing/trace_pipe
-> > 
-> >   # tracer: nop
-> >   #
-> >   # entries-in-buffer/entries-written: 64/64   #P:8
-> >   #
-> >   #                                _-----=> irqs-off/BH-disabled
-> >   #                               / _----=> need-resched
-> >   #                              | / _---=> hardirq/softirq
-> >   #                              || / _--=> preempt-depth
-> >   #                              ||| / _-=> migrate-disable
-> >   #                              |||| /     delay
-> >   #           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
-> >   #              | |         |   |||||     |         |
-> >        kworker/0:0-9       [000] .....     5.600194: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600198: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_WAIT rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600199: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600201: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_ACTIVE rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600202: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_CONFIG rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600204: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_START rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600206: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_ACEPT rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600207: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_WAI rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600208: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_ACEPT rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600210: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_COMPLETE rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600212: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_IDLE rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600213: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 2.5 GT/s
-> >        kworker/0:0-9       [000] .....     5.600214: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600216: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600217: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_SPEED rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600218: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600220: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ1 rate: Unknown
-> >        kworker/0:0-9       [000] .....     5.600221: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ2 rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600222: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ3 rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600224: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600225: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600226: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600227: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600228: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600229: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600231: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600232: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600233: pcie_ltssm_state_transition: dev: a40000000.pcie state: L123_SEND_EIDLE rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600234: pcie_ltssm_state_transition: dev: a40000000.pcie state: L1_IDLE rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600236: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600237: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600238: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
-> >        kworker/0:0-9       [000] .....     5.600239: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
-> > 
-> > 
-> > Changes in v4:
-> > - use TRACE_EVENT_FN to notify when to start and stop the tracepoint,
-> >    and export pci_ltssm_tp_enabled() for host drivers to use
-> > - skip trace if pci_ltssm_tp_enabled() is false.(Steven)
-> > - wrap into 80 columns(Bjorn)
-> > 
-> > Changes in v3:
-> > - add TRACE_DEFINE_ENUM for all enums(Steven Rostedt)
-> > - Add toctree entry in Documentation/trace/index.rst(Bagas Sanjaya)
-> > - fix mismatch section underline length(Bagas Sanjaya)
-> > - Make example snippets in code block(Bagas Sanjaya)
-> > - warp context into 80 columns and fix the file name(Bjorn)
-> > - reorder variables(Mani)
-> > - rename loop to i; rename en to enable(Mani)
-> > - use FIELD_GET(Mani)
-> > - add comment about how the FIFO works(Mani)
-> > 
-> > Changes in v2:
-> > - use tracepoint
-> > 
-> > Shawn Lin (3):
-> >    PCI: trace: Add PCI controller LTSSM transition tracepoint
-> >    Documentation: tracing: Add PCI controller event documentation
-> >    PCI: dw-rockchip: Add pcie_ltssm_state_transition trace support
-> > 
-> >   Documentation/trace/events-pci-controller.rst |  42 ++++++++++
-> >   Documentation/trace/index.rst                 |   1 +
-> >   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 111 ++++++++++++++++++++++++++
-> >   drivers/pci/trace.c                           |  20 +++++
-> >   include/linux/pci.h                           |   4 +
-> >   include/trace/events/pci_controller.h         |  57 +++++++++++++
-> >   6 files changed, 235 insertions(+)
-> >   create mode 100644 Documentation/trace/events-pci-controller.rst
-> >   create mode 100644 include/trace/events/pci_controller.h
-> > 
+It's not really a pciehp issue because pci_slot doesn't make it possible
+to do anything else. See [PATCH 2/4] from this series.
 
--- 
-மணிவண்ணன் சதாசிவம்
+In light of these concerns, I think the safest way forward is to drop
+this patch and just enable something like what patch 2 provides.
