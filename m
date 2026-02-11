@@ -1,71 +1,66 @@
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [144.76.133.112])
+Received: from out199-9.us.a.mail.aliyun.com (out199-9.us.a.mail.aliyun.com [47.90.199.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4621C84BD;
-	Wed, 11 Feb 2026 12:34:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C0C5306480;
+	Wed, 11 Feb 2026 12:43:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.199.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770813280; cv=none; b=X8WLsu0xtWPrOV5ZrHj1YU6UN+PHM3cauoQO3CYylFxnuphijgF5cRmOPLaT74CoeX8ohx+p75flrUQ3tCRWKxwgLk72X6Kpy8x7JBDvRdfhs4A2JyM8QcRHO5UVtPshYkXvxUrgVJkqLLwgTNId4oEZu+DtyY2ZNk4WAEeMOU4=
+	t=1770813837; cv=none; b=RJ/oI24uukkgYhYlclSnDduKCoWq0nXXKIVLeVDujixV3o7lJ4w/7XYaR4GqVh0tlLN+FGJDZx7/n3sGNL4iaX3YoTNGnlNwbH0c9B5CfYLPj1at5EplKKVoYyNVHr6YLgwOL9wbn7pqxUzOwv8Njf1CBVS+DXUL8Oqqeanq2tw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770813280; c=relaxed/simple;
-	bh=e3hklfL8NjYOBfoGGoSdOrS2m8b1kmDquBnKh2W+ehM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=unw6Jz/PPMNfE8qLPe0RfqStmI+UA4evNR5EgzAGe4tUW+XUDTLY6mcAAj+60FAPkv7/O1KaeyqVEnLHRavWKEF6ETDYOUK0yAN7vAFyfvs8ihqMfQHSTNZMlqDktorGr63yiNcLbzFGMMRo36hDUhS2OUlXYR4xVXXHbWjmy3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=144.76.133.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout3.hostsharing.net (Postfix) with ESMTPS id AA9252C05FEA;
-	Wed, 11 Feb 2026 13:34:27 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 874C732273; Wed, 11 Feb 2026 13:34:27 +0100 (CET)
-Date: Wed, 11 Feb 2026 13:34:27 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Shuai Xue <xueshuai@linux.alibaba.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	kbusch@kernel.org, sathyanarayanan.kuppuswamy@linux.intel.com,
-	mahesh@linux.ibm.com, oohall@gmail.com, Jonathan.Cameron@huawei.com,
-	terry.bowman@amd.com, tianruidong@linux.alibaba.com,
-	zhuo.song@linux.alibaba.com, oliver.yang@linux.alibaba.com
-Subject: Re: [PATCH v2] PCI/AER: Only clear error bits in PCIe Device Status
- register
-Message-ID: <aYx3Uy7rE6GM9xq-@wunner.de>
-References: <20260211054816.22758-1-xueshuai@linux.alibaba.com>
+	s=arc-20240116; t=1770813837; c=relaxed/simple;
+	bh=y0nrnBG3k9zKy5WlqyUc6qofV1OTOt1f0SZ1xl166Wg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hYXgulCMvEoxJ7ww6W7Hon7/tuJKd5XY/gB+4v13q/36JJwG/guhaseeH8FzJ1fcpZ0vl+eJSQ+nxthJs1P3PnYlD615GXqYvKuSB76eL+eJnGH4PGW4ce9bpPKAowTVCqH/46kNrFffuqnCn9cbowYFlQbsoZhhKOofDEQKLNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=VPq7exBO; arc=none smtp.client-ip=47.90.199.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="VPq7exBO"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1770813820; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=nvF3yViqgBbFiJpVy33G6Z/vQg2LCKK9VFbBDNSQyEY=;
+	b=VPq7exBO4wtCMjjiax1PjmXoaUik99/AR2bLaLlh8sM62DP93zicJlBGAtuTlY6Y13xcRsJTXC9aTgO+d0jo1UmA4qFFLgMrsuXiW7qFTlzUQ1icc9K5T0oeQu2rl/hJTocLWpHo2hPQcaehtd7ZEBu1zdkACHIjdgBSJKrApeU=
+Received: from 30.246.162.188(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0Wz1EWUB_1770813818 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 11 Feb 2026 20:43:39 +0800
+Message-ID: <c39b7e1f-8a02-459d-b008-2c620fbee462@linux.alibaba.com>
+Date: Wed, 11 Feb 2026 20:42:15 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260211054816.22758-1-xueshuai@linux.alibaba.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI/AER: Only clear error bits in PCIe Device Status
+ register
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com, kbusch@kernel.org,
+ sathyanarayanan.kuppuswamy@linux.intel.com, mahesh@linux.ibm.com,
+ oohall@gmail.com, Jonathan.Cameron@huawei.com, terry.bowman@amd.com,
+ tianruidong@linux.alibaba.com, zhuo.song@linux.alibaba.com,
+ oliver.yang@linux.alibaba.com
+References: <20260211054816.22758-1-xueshuai@linux.alibaba.com>
+ <aYx3Uy7rE6GM9xq-@wunner.de>
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+In-Reply-To: <aYx3Uy7rE6GM9xq-@wunner.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 11, 2026 at 01:48:16PM +0800, Shuai Xue wrote:
-> +++ b/drivers/pci/pci.c
-> @@ -2243,10 +2243,11 @@ EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
->  #ifdef CONFIG_PCIEAER
->  void pcie_clear_device_status(struct pci_dev *dev)
->  {
-> -	u16 sta;
-> -
-> -	pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &sta);
-> -	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, sta);
-> +	pcie_capability_write_word(dev, PCI_EXP_DEVSTA,
-> +				    PCI_EXP_DEVSTA_CED |
-> +				    PCI_EXP_DEVSTA_NFED |
-> +				    PCI_EXP_DEVSTA_FED |
-> +				    PCI_EXP_DEVSTA_URD);
 
-Isn't there one too many blanks before each of the PCI_EXP_DEVSTA_* macros?
 
-The available space would be sufficient to accommodate two macros per line,
-so just 2 instead of 4 lines for the macros.
+On 2/11/26 8:34 PM, Lukas Wunner wrote:
+> Isn't there one too many blanks before each of the PCI_EXP_DEVSTA_* macros?
+> 
+> The available space would be sufficient to accommodate two macros per line,
+> so just 2 instead of 4 lines for the macros.
+> 
+> Otherwise this is:
+> Reviewed-by: Lukas Wunner<lukas@wunner.de>
 
-Otherwise this is:
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Sure, will send a new patch to fix it.
+
+Thanks.
+Shuai
