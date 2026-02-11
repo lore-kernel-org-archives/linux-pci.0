@@ -1,164 +1,159 @@
-Received: from fhigh-b5-smtp.messagingengine.com (fhigh-b5-smtp.messagingengine.com [202.12.124.156])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EEC22D9EF4
-	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2026 15:22:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.156
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C9B30C60D;
+	Wed, 11 Feb 2026 15:40:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770823357; cv=none; b=H23PbrG/VbRIGQVJwZ2TckoDTaw43tWm+NtvtE2M9P7ZWyrw60fbd9LIQ0jePYwOQOFYP2s+ozX8w6OdzOoXZmP8D9Sf8qJhwhe29KM7E6OhC3qweYxg1Zj27krf6A/4rfCW6qzUonidw1d9BBehv1p8I6JOqAgri2wiYZOAuyk=
+	t=1770824435; cv=none; b=VGoSN+eCeQDiX60yZDZBBuUUBa4HBIONCgeJTdo8+SJ4hUpRgc2JKE4CCm/kvuOBEKKZyRcKlelIiilpjisIvwdj3YtjNyEjs5miXPIT+swFvtOabftwzlAViiEN+cSuWDbl0otXWIRkB+M0A0i2u7tzU6XJr9lmmSOiP2f8Ccw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770823357; c=relaxed/simple;
-	bh=+ayDMMQA/15/FwdZueY4BbYMxFTf8ljN5GxOxE2UQhw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VE9oNUZKkKrbfcMGWyGdOdbK/bt6JTgwsCM9LA/2fkMa4j0Te6H1MGN1HJnJerNL8eownBBDKtLDxBbVethjyC7CHCtacKt78ESgWF8SzYQYZ6RBeK/p71si6gAGPMbA8q0rMm+/QQZiJBsOmdWFfHYWbNP+MbYz1I8EfjvlPmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=jiOBtNeH; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=ixQ2zRsT; arc=none smtp.client-ip=202.12.124.156
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1770824435; c=relaxed/simple;
+	bh=4XK13jjYLred8II2iFJoWFOdf1Y9k6sr2e/uAGf5JAY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=vGdylnsmVFuMrwpBJu6KLac3gm7rhsm+MpvIzDXB0ofWsjslHrmH9LjhXv7+4CBTblLe9Vb/t6fTHU0eZzspvb/QqSROUMMKdarw9h+aunpyStrox9I50uaRMUfcfNufnIQZ0MeCLlczVbrJzeKl2bkydnjjYhHIlX/F2j24sNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Osf1+son; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="jiOBtNeH";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="ixQ2zRsT"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 33FFA7A00BC;
-	Wed, 11 Feb 2026 10:22:33 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-02.internal (MEProxy); Wed, 11 Feb 2026 10:22:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1770823352;
-	 x=1770909752; bh=F4a5H8RjG6BBOG7Y3Ec1/2hMLYnVsSTKzVHxAi9HsSA=; b=
-	jiOBtNeHp7UDtLtUIPsGwJCz8Sbv6Y18HgStQMx8P1W+e7XPW33wfdv3E3U5upCf
-	1+QLX6jtQnF5ESYun7oCvfsbqHNFBI+UvUaQC6zzzGtDhqtTNrRLuG3ZifTa9t3D
-	VJE+uLw7NVX1OqByK7/SCWEAkQgs1OyqMZTNpNisuHbuGBRxmRBgkWnUG94an3dU
-	NOqJ640wclmnsqyGQh5aKTgNoG/KepCNS1riTSWoDkHUUsok7lRFWjJ1ruI0diu5
-	Qh90B3YjcHo1+vZ7rB950FvHv09enQIAiPXbQI80EXe8GYJQgwxowVlyQw6QB/kt
-	gsgF9KqbQCbqsZHj1PooPw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1770823352; x=
-	1770909752; bh=F4a5H8RjG6BBOG7Y3Ec1/2hMLYnVsSTKzVHxAi9HsSA=; b=i
-	xQ2zRsT79cd8oKAINF7LrgUenxl9rK53Yg4H1XnJJ8OeGd0yqUbWrnBPZMvLqU/F
-	x+880Muz9ShRPy1Pau+v9Ta6WzFIoeo2qAYwr3V/Ba0DVioYPt0hAtaBWwydk93D
-	JKSgbI8esJ3DScd1shwoVMJKTQLGA/u/5sitLZFKpHutn6o3fkkQoXGRcLlinjAe
-	VeAAgzGA9EzSYesFcdg0awNPBCa7aDIs9PkKgA8aptuVqmrlmbY0ee5YS3DFzPtI
-	zAQcguwPZtEnnvvz6tzMA2S8cPm1TMnYvQfqPSO5+HDtMnsGzpAxTYSVo0uOCu98
-	mtd+4t7WagNNe+gwKvWhg==
-X-ME-Sender: <xms:t56MaRlLFz3uGrXbfRijP7DrR8bY7JgnNB8SM3kp47Uq3VQ1nB63YA>
-    <xme:t56MaW2NWE4SqTTUfqReptAHVn6acoUHhtpOjKUORdIJ9xKriQBFNSBk_2odxZ6iI
-    M6G0xj9q2DFjjEqghoFlzBxjjSc33EcrThnvMPvuRnsP8Jfalwc4Q>
-X-ME-Received: <xmr:t56MaeSzfvnglupSkSsPHBFvyvR0Wx9DzG3w7H6vClRYg1RdvcTUMiQIDQU>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvtddvkeelucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
-    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
-    htthgvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudeg
-    veeuueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepkedpmhhouggvpehs
-    mhhtphhouhhtpdhrtghpthhtohepkhgsuhhstghhsehkvghrnhgvlhdrohhrghdprhgtph
-    htthhopehksghushgthhesmhgvthgrrdgtohhmpdhrtghpthhtoheplhhinhhugidqphgt
-    ihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvg
-    hrnhgvlhdrohhrghdprhgtphhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghp
-    thhtohepuggrnhdrjhdrfihilhhlihgrmhhssehinhhtvghlrdgtohhmpdhrtghpthhtoh
-    epghhuohhjihhnhhhuihdrlhhirghmsegshihtvggurghntggvrdgtohhmpdhrtghpthht
-    ohepihhlphhordhjrghrvhhinhgvnheslhhinhhugidrihhnthgvlhdrtghomh
-X-ME-Proxy: <xmx:t56MafxteX8uvUWePxcaM-FRrhakp5M7VhSdC287Z7i2xx-4nGQlFw>
-    <xmx:t56MaeCMl84bTRC3FFS4lytO4QPLplc_1W8jhGllax7NwrQmCXz6zA>
-    <xmx:t56MabEbTHBjIf_ryjsIYfvPSUAVkGXv02smhKSyOLnOk6MvonxCGw>
-    <xmx:t56MaVOlkr1cekft2OR3pY43Y8EFSu5o0WmQx_7Gm5W_avBfSR4FsA>
-    <xmx:uJ6MacnhR49sH0kskp1Iu2zD4i3gJj8_fQDK504n8OzyzmyOWTYZOZ3x>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 11 Feb 2026 10:22:31 -0500 (EST)
-Date: Wed, 11 Feb 2026 08:22:29 -0700
-From: Alex Williamson <alex@shazbot.org>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Keith Busch <kbusch@meta.com>, linux-pci@vger.kernel.org,
- helgaas@kernel.org, lukas@wunner.de, dan.j.williams@intel.com,
- guojinhui.liam@bytedance.com, ilpo.jarvinen@linux.intel.com
-Subject: Re: [PATCHv3 3/4] pci: remove slot specific lock/unlock and
- save/restore
-Message-ID: <20260211082229.4e746e32@shazbot.org>
-In-Reply-To: <aYvJXRGnsIYVdVUm@kbusch-mbp>
-References: <20260205212533.1512153-1-kbusch@meta.com>
-	<20260205212533.1512153-4-kbusch@meta.com>
-	<20260210164623.74d38699@shazbot.org>
-	<aYvJXRGnsIYVdVUm@kbusch-mbp>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Osf1+son"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E6D8C4CEF7;
+	Wed, 11 Feb 2026 15:40:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770824435;
+	bh=4XK13jjYLred8II2iFJoWFOdf1Y9k6sr2e/uAGf5JAY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Osf1+sonyielfcfujsc2iqg2UF+lVBoIHnyPSvXNLhEj+wiJlUY7u3mDE0d93zCzE
+	 zBpVIqAZfadRZsH27h80LwM9BD0DSwj5cnui9xvD9fUafzn7f0owQ9Uq1ji2Owlwpo
+	 Z4s8PcmJBy8StkHpDAil94og0/4FRu5S+tbUBlzhwRuWJxa79omP4GgLLrh+kRBlYH
+	 0oU2c8wRD5ooc9cUjEyj4ly0fTzufA5SbP4ZpE4vLJxNYiGci+frhgviGdMTK5BCa8
+	 Huv/5f4XXc6H66h5N4v3lOaLSO49WYhSRPqQD61EimKM8C6aQodJSCEI2ajsqeGca8
+	 M7AnWKSbXHOIg==
+Date: Wed, 11 Feb 2026 21:10:26 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
+	linux-doc@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, 
+	Masami Hiramatsu <mhiramat@kernel.org>
+Subject: Re: [PATCH v4 0/3] PCI Controller event and LTSSM tracepoint support
+Message-ID: <u3es7h4mgzdqfhvpl52s3x4vcisrpazcm4qb6x7lu4srmagxpn@hca2begqypeu>
+References: <1769047340-113287-1-git-send-email-shawn.lin@rock-chips.com>
+ <9e06e69c-d10a-1f21-cbf7-204319549612@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9e06e69c-d10a-1f21-cbf7-204319549612@rock-chips.com>
 
-On Tue, 10 Feb 2026 17:12:13 -0700
-Keith Busch <kbusch@kernel.org> wrote:
-
-> On Tue, Feb 10, 2026 at 04:46:23PM -0700, Alex Williamson wrote:
-> > On Thu, 5 Feb 2026 13:25:32 -0800
-> > Keith Busch <kbusch@meta.com> wrote:
-> >   
-> > > From: Keith Busch <kbusch@kernel.org>
-> > > 
-> > > The Linux pci driver resolves a "slot" to the "D" in the B:D.f (see
-> > > PCI_SLOT()). A pcie "slot reset" is a secondary bus reset, which affects
-> > > every function on every "D", not just the ones with a matching "slot".
-> > > The slot lock/unlock and save/restore functions, however, are only
-> > > handling a subset of the functions, breaking the rest.  
+On Wed, Feb 11, 2026 at 09:13:50PM +0800, Shawn Lin wrote:
+> 在 2026/01/22 星期四 10:02, Shawn Lin 写道:
+> > This patch-set adds new pci controller event and LTSSM tracepoint used by host drivers
+> > which provide LTSSM trace functionality. The first user is pcie-dw-rockchip with a 256
+> > Bytes FIFO for recording LTSSM transition.
 > > 
-> > So are we deprecating conventional PCI hotplug slots?    
 > 
-> No, this still calls the slot's specific reset callback via
-> pci_reset_hotplug_slot. The only thing this does is add locking, config
-> state save/restore, and driver reset prepare/complete calls for the
-> entire bus rather than matching "slots" on that bus. In the worst case
-> scenario, this patch has the kernel do a little more work than it needed
-> to.
-
-But with this change, when vfio-pci calls pci_probe_reset_slot() we
-test pci_bus_resettable() rather than pci_slot_resettable().  The
-former is a superset of the latter.  Another slot on the same bus might
-have a bridge card or quirked device that previously wouldn't have
-affected the ability to reset a separate physical, conventional slot.
-The risk is small, but the semantics are different.
-
-> > I've always
-> > understood these to be a subset of the bus, where we find the devices
-> > sharing the same physical PCI slot by comparing the pci_dev.slot across
-> > the bus, as done in all the code removed here.  pci_create_slot()
-> > certainly is not simply a reflection of PCI_SLOT().    
+> Gentle ping...
 > 
-> pci_create_slot assigns devices that match PCI_SLOT() of the bus's
-> devices, so it certainly is a reflection of that, no? The problem is
-> that PCI_SLOT() macro doesn't actually reflect the true nature of what
-> devices belong in the slot: the devices in a particular "slot" does not
-> define the actual blast radius of resetting that "slot".
 
-struct pci_slot, the thing created by pci_create_slot(), represents a
-physical slot.  PCI_SLOT() is the bus addressing.  Not all pci_devs
-have a struct pci_slot, not all pci_devs within the same physical slot
-share the same B:D.F slot number (with ARI).
+Merge window is open now, so we can't accept any patches until -rc1. And I'm
+also waiting for an Ack from Steven for the tracing part.
 
-The vfio code does assume that 'slot' defines the blast radius of a
-pci_slot_reset() and I'm confused how it should operate if we're now
-going to conflate slot and bus reset scopes.
- 
-> > Is the error below
-> > really a reflection that pci_dev.slot isn't carried over to the full
-> > set of functions?  
-> 
-> Correct, the pci slot today in a pciehp hotplug slot is not getting
-> assigned to all the functions in that slot, so slot resets completely
-> miss handling those functions, which inevitably break them.
+- Mani
 
-Isn't this then a pciehp hotplug issue that all children of the bus
-should be linked via the struct pci_slot regardless of PCI_SLOT()?
-Thanks,
+> > Testing
+> > =========
+> > 
+> > This series was tested on RK3588/RK3588s EVB1 with NVMe SSD connected to PCIe3 and PCIe2
+> > root ports.
+> > 
+> > echo 1 > /sys/kernel/debug/tracing/events/pci_controller/pcie_ltssm_state_transition/enable
+> > cat /sys/kernel/debug/tracing/trace_pipe
+> > 
+> >   # tracer: nop
+> >   #
+> >   # entries-in-buffer/entries-written: 64/64   #P:8
+> >   #
+> >   #                                _-----=> irqs-off/BH-disabled
+> >   #                               / _----=> need-resched
+> >   #                              | / _---=> hardirq/softirq
+> >   #                              || / _--=> preempt-depth
+> >   #                              ||| / _-=> migrate-disable
+> >   #                              |||| /     delay
+> >   #           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
+> >   #              | |         |   |||||     |         |
+> >        kworker/0:0-9       [000] .....     5.600194: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600198: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_WAIT rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600199: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600201: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_ACTIVE rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600202: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_CONFIG rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600204: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_START rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600206: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_ACEPT rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600207: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_WAI rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600208: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_ACEPT rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600210: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_COMPLETE rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600212: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_IDLE rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600213: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 2.5 GT/s
+> >        kworker/0:0-9       [000] .....     5.600214: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600216: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600217: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_SPEED rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600218: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600220: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ1 rate: Unknown
+> >        kworker/0:0-9       [000] .....     5.600221: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ2 rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600222: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ3 rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600224: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600225: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600226: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600227: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600228: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600229: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600231: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600232: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600233: pcie_ltssm_state_transition: dev: a40000000.pcie state: L123_SEND_EIDLE rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600234: pcie_ltssm_state_transition: dev: a40000000.pcie state: L1_IDLE rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600236: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600237: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600238: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+> >        kworker/0:0-9       [000] .....     5.600239: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+> > 
+> > 
+> > Changes in v4:
+> > - use TRACE_EVENT_FN to notify when to start and stop the tracepoint,
+> >    and export pci_ltssm_tp_enabled() for host drivers to use
+> > - skip trace if pci_ltssm_tp_enabled() is false.(Steven)
+> > - wrap into 80 columns(Bjorn)
+> > 
+> > Changes in v3:
+> > - add TRACE_DEFINE_ENUM for all enums(Steven Rostedt)
+> > - Add toctree entry in Documentation/trace/index.rst(Bagas Sanjaya)
+> > - fix mismatch section underline length(Bagas Sanjaya)
+> > - Make example snippets in code block(Bagas Sanjaya)
+> > - warp context into 80 columns and fix the file name(Bjorn)
+> > - reorder variables(Mani)
+> > - rename loop to i; rename en to enable(Mani)
+> > - use FIELD_GET(Mani)
+> > - add comment about how the FIFO works(Mani)
+> > 
+> > Changes in v2:
+> > - use tracepoint
+> > 
+> > Shawn Lin (3):
+> >    PCI: trace: Add PCI controller LTSSM transition tracepoint
+> >    Documentation: tracing: Add PCI controller event documentation
+> >    PCI: dw-rockchip: Add pcie_ltssm_state_transition trace support
+> > 
+> >   Documentation/trace/events-pci-controller.rst |  42 ++++++++++
+> >   Documentation/trace/index.rst                 |   1 +
+> >   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 111 ++++++++++++++++++++++++++
+> >   drivers/pci/trace.c                           |  20 +++++
+> >   include/linux/pci.h                           |   4 +
+> >   include/trace/events/pci_controller.h         |  57 +++++++++++++
+> >   6 files changed, 235 insertions(+)
+> >   create mode 100644 Documentation/trace/events-pci-controller.rst
+> >   create mode 100644 include/trace/events/pci_controller.h
+> > 
 
-Alex
+-- 
+மணிவண்ணன் சதாசிவம்
