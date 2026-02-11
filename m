@@ -1,63 +1,63 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEEA13451B0
-	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2026 03:31:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAF89344D8B
+	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2026 03:31:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770780709; cv=none; b=nzhtp2ZyDJLdIVjhUYbjO6gs7/s1CCouy96pRVO8f/qD8oMqEPTnwKib1Y+gk6a3gf8CUobUD110vLj9CoAObZ3OQArpoxFAsQVZHz8PdM613CTXaZCv7hV8nVOxmM7qxlxRB+lwOLUMVyPXS3pL4T06Dk74NJY6yh6zjXsbzLk=
+	t=1770780716; cv=none; b=IumeY/7BtqdECOTl+6tEU1Up50SpS695qNWJYeoqN1rujycP2vsS117RHX1ZdbUpwwPAjPubgZezXXsRz094ca45n230qFvQlM8OtmnKvL5O1k7DZ0ojGLBtuDJPw5XP/nUJ74x7/ygV/eDUIM298BDC+DnCsnxIdbHTRfnMEas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770780709; c=relaxed/simple;
-	bh=+Dv6Jp5OhwC7087KAYCtSukovH0C5t6UM5K7Pi3a9Lk=;
+	s=arc-20240116; t=1770780716; c=relaxed/simple;
+	bh=KNLtsCq5Xccubow9+9/OB82GtlxnV14UrMdv6HEW9qY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UWqr2QdVsILtyF94KnHTpkosUw1L6868/bR8Ky1H3ah9GEiaQ8WQXRDXGeiJKqr4J8OBqmzZxxXseOZd82mOsqSPh6FU7OOnXBrQ/687rmdp6jID0H1YHE1lYL1dksRhxtZBHHIIQtt3uqULH0edK6zcPRWBmGczcxH5bKEej0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iDBYRPJQ; arc=none smtp.client-ip=209.85.210.172
+	 MIME-Version; b=Wp64gtrtS74FDtiUEy2EHuQ8FsYFhrLHQHxAHxtTsl1Qwfzmcqg5uIjgriD8Uc20qIy4V0dRZv9NdFOJj6a4rkcz3AgwPpcEwYjeFc7ix2kdxFMfQzfzYzX+ae/FTE+6lvHkKc8FEKcKspSyQN7rf4a5q3nXOHkMWt5F2qXgQtI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IPQj/TJg; arc=none smtp.client-ip=209.85.215.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iDBYRPJQ"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-81f4ba336b4so5140378b3a.1
-        for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 19:31:47 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IPQj/TJg"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-c6dcdc955a1so1774909a12.2
+        for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2026 19:31:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770780707; x=1771385507; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1770780714; x=1771385514; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3mB5YXChxH7A1l1HnU2HjGhx6UZiL0/lHVVqKO5gi7I=;
-        b=iDBYRPJQBzfiFaGZ9rh2PBQ3hmQLykXxB94fynOLlV4iaOfnt1TG/OOUgWpr8liY6E
-         ZRB+M2z2PHMCzeccm5nvMb5ciFPgx0mNA+oXyviAbeA7OlB3EQgD/qCjj1i1Nr2Cwwyh
-         DSbDiIteS0UglJBv1FsIVgTjHWBCqzoDbdQnN/IP2kCe9CR6kuBrMcfYQmIMoYeR+PR4
-         fGkQrjTB3dgpy5US6JOCRbLsg6LhMObK6lv/jttxq5JU0ZJek9RAroXoMchEPcD81CG5
-         5QAa//34HJYaus7BWWPlBRW2WVcmppp9nrEzCe6rd6WpKPnGFphsRcFTOND5woPwP9lM
-         5AqQ==
+        bh=M5JPAdrKU7Ml6bcvlYeqQgOx8uh8kBG9Pa/UFqehRTk=;
+        b=IPQj/TJgDXvdp9r6uulaZ9dh6nW9RJgW0rXU02yDqejExTrF6hA24AgQVkMucTf0ro
+         dDk2Wyf3auC0wr2EmgpbbVGk/uPvJLUyPRYF/MrnAFUwClvDjYCAtt0LAkonm2L75RD7
+         8mZJcm/a36We7KySCUIezcJwpoBNU1jiLt6+Ly7V9+eWdlX6Cj+duGMKnltIwC6mFtdN
+         QOFZcX7+6azOuTgqlpBnP8mtb4T3XlN+PoYiEQ+Ok8XmrBmzXC8qncF27AVuZquM8a/e
+         H+gByshmd1Dh+pYC1YDA2+RnJ0n8Eyg/nqTfDhAxCKiQF/rwMSvjtenNaIXp5iIKKCLD
+         k5kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770780707; x=1771385507;
+        d=1e100.net; s=20230601; t=1770780714; x=1771385514;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=3mB5YXChxH7A1l1HnU2HjGhx6UZiL0/lHVVqKO5gi7I=;
-        b=sYs4T3eDTJ8U1cnj+QBQ+r56YtFO4P/OXEQlhhGgaJQYCVpDPYga/Ns8cYXITvpAPd
-         tFHt6mA1b389YyaoY8oAeU1lpZLVlonELwVMezdi1uvj/edA6CBfNoxcBoks+tQtqVCw
-         TnfwLdZXqPBWXHkKqGHyweZ14/sUi2mnijolKmAjJb/dq/rHOhWcGNjqtr9JH8SVsESE
-         KKx1m70arCehesWX3S4gIkgLL+TsoOZ1h7P2h/c0+XmYVfadHeTuQrDxUpIqTj8W4kis
-         U6aPYimd8g8WKA95dQfiEzbF30nbEmNgvlVaz+xVB/RhqeKmyrrPg5a/7DsQiU8Q4SBr
-         84ng==
-X-Forwarded-Encrypted: i=1; AJvYcCV+0RGeZPcoHfg+NJYQqDrmCGPdxPkXMSbLTS5EhNkWh4KVHiZqSvCky8N3swj3xlTAGgA1AmF78Ew=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyGaDE7Wh7yigwNudIUmzEBYs8SukzJsWbfpC88awyqUZ4GqNzh
-	trAIgAvjW7aZK2QkMRm+h+QsCqMmB6584fR8Qcg/9ZbIxSEExEMRqXzQ
-X-Gm-Gg: AZuq6aJ+CLK/ZMQdEAJDGmCXhFt8dwA6nos8qEVVnjTJFuuTBNcI7AFT/FtOWetuML/
-	VJlk/X7nSYttI+FUWJ4d8jfenRnZAkyFhey8ZxBuTIDwZRgmpP2LG8kwv98KPUdjbwdX8FyA2Kx
-	IEGF7AndfiCYx/0ErU+kVQFacwXsgL0o6dIKfBbbqXtPrgk+yqFPglyg2+dIRNyUx6LUQGP6rJB
-	k/HCWATLm7B+376SpF3osK0rx/eZpWG39NbWV117qhP7/dwIsGD+x4qWvgwk2yZDZBUEBQVKwLF
-	YmiNjYV0GA5nr2EsujemvJI9j/8dXP7GGQhAIdW7SUQCtzwRGOyO9XIchA4WaJ4PxU4e0L4Xa0I
-	8bhu9yXV3tiMkjONMe/Uq5xWGw5WMDa81w5/JphfV2BiFP9HeBOWp6Ma1mcmCp7G/k4A7d/IL3i
-	KeQm5dyoVMWLCYWttjYIWxDtlm/Y9CcnMq6dlLjJ4IuA==
-X-Received: by 2002:a05:6a20:3ca5:b0:38b:ebdd:919f with SMTP id adf61e73a8af0-3943229ad32mr804189637.1.1770780707132;
-        Tue, 10 Feb 2026 19:31:47 -0800 (PST)
+        bh=M5JPAdrKU7Ml6bcvlYeqQgOx8uh8kBG9Pa/UFqehRTk=;
+        b=mYbGviP5IUTFU63SLTOu6oy+AqyvjmNmfHOb+IH8RSrNAMxtH8yOuaD3Gb10XnN8xw
+         ODm06PLJL1fUqjHes+zrRcAY0cgVbxaS1UmczEK8mWqAPWKAaJ6/GtwEwrEtJg6zeBIw
+         3Vmio7KkzJuuB+cIKjkEFihcd1mGQEbpXXjXvS8MwIp7Zn9a09UChyaPtAsL8kIyolYE
+         zqNUBKAQBE+5T0oH0iyX/FFSLemelmojoFKjTU0J1/6jtFLu5BxKPe/UV5MHG6Rpyg5A
+         aKp15ljsS7kJy62v2CtwMA4kd9X4a18RnGKrhm80xHxJ8t+AICV9tB3dA+WSaWtdK46L
+         Szdw==
+X-Forwarded-Encrypted: i=1; AJvYcCVAZY5UgVIPE/xMBwnV29S2hT8mfip+zNIePZuDUaEtK02GHL7zwZElyasyqclZLiAF+W6q8sdgPWE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxsx48uPqXaX6YJ+u8ibj5BdFZzyPZcnskhaWZ96hJDLpBqBBl/
+	otT0wIEWcdjVTFioD6WpO+ivp/gWySC2moOxBkybqsvWSrzsGxE1L5MxAv7UkjIEqdk=
+X-Gm-Gg: AZuq6aKlXoO5tXnIbqw8GsBoCxc7qKtr67x58JMd8hTsqHNAVRsIFXSIrAFlZ+EENU9
+	/iX6vZQBsU9r8uspH+O+mPjM1irRquBrltPRGpmvmZUkGLmujznw+urBkwgzRsFjJwjl2D9Qtc6
+	G/wwXHdtv2xDLg8q2dK/Nbbi+qoCwHIs4M/i4HFo5CfVydmlBb9u7K9zTY0FfUw8JoIdF2VEE4P
+	PmOvhaieo4BhavQ6M0Ntt24Z6KhYaBMMUTovCkuP/GXi92kZwE7ASt4BHreptmRgxeDgFmQpTvW
+	m4CxIrMBGc3A2yLXkneS06cfGq9V5l/DcM7zy2QRr2aLxlghgtKmEqKhKiNqetnFIb+RblrPI7M
+	nxZJmMzS95021zUruIBI1kvKezkXLh/fbsbYhPSdMH7OyIa84I0OS5lwWuGvcpeRatENYRTbcOF
+	HwkCzb6t76ERggrnX3zBInV5wnhWnRcLL60i+k6Hd3VQ==
+X-Received: by 2002:a05:6a21:2d42:b0:38d:ef23:12cf with SMTP id adf61e73a8af0-3943243dba2mr720441637.61.1770780714136;
+        Tue, 10 Feb 2026 19:31:54 -0800 (PST)
 Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:6209:4521:6813:45b7])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c6e197d63c9sm464856a12.20.2026.02.10.19.31.40
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c6e197d63c9sm464856a12.20.2026.02.10.19.31.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Feb 2026 19:31:46 -0800 (PST)
+        Tue, 10 Feb 2026 19:31:53 -0800 (PST)
 From: alistair23@gmail.com
 X-Google-Original-From: alistair.francis@wdc.com
 To: bhelgaas@google.com,
@@ -80,9 +80,9 @@ Cc: alex.gaynor@gmail.com,
 	wilfred.mallawa@wdc.com,
 	aliceryhl@google.com,
 	Alistair Francis <alistair@alistair23.me>
-Subject: [RFC v3 17/27] crypto: asymmetric_keys - Load certificate parsing early in boot
-Date: Wed, 11 Feb 2026 13:29:24 +1000
-Message-ID: <20260211032935.2705841-18-alistair.francis@wdc.com>
+Subject: [RFC v3 18/27] KEYS: Load keyring and certificates early in boot
+Date: Wed, 11 Feb 2026 13:29:25 +1000
+Message-ID: <20260211032935.2705841-19-alistair.francis@wdc.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260211032935.2705841-1-alistair.francis@wdc.com>
 References: <20260211032935.2705841-1-alistair.francis@wdc.com>
@@ -97,49 +97,44 @@ Content-Transfer-Encoding: 8bit
 From: Alistair Francis <alistair@alistair23.me>
 
 Work is ongoing to support PCIe device attestation and authentication.
-As part of this a PCIe device will provide a X.509 certificate chain
-via the SPDM protocol to the kernel.
+As part of this a PCIe device will provide a certificate chain via the
+SPDM protocol to the kernel.
 
 Linux should verify the chain before enabling the device, which means we
 need the certificate store ready before arch initilisation (where PCIe
 init happens). Move the certificate and keyring init to postcore to
 ensure it's loaded before PCIe devices.
 
-This patch enables X.509 certificate parsing and asymmetric key support
-early in the boot process so that it can be used by the key store and
-SPDM to verify the certificate chain provided by a PCIe device
+This allows us to verify the certificate chain provided by a PCIe device
 via SPDM before we enable it.
 
 Signed-off-by: Alistair Francis <alistair@alistair23.me>
 ---
- crypto/asymmetric_keys/asymmetric_type.c | 2 +-
- crypto/asymmetric_keys/x509_public_key.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ certs/system_keyring.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/crypto/asymmetric_keys/asymmetric_type.c b/crypto/asymmetric_keys/asymmetric_type.c
-index 2326743310b1..3f209299ee3a 100644
---- a/crypto/asymmetric_keys/asymmetric_type.c
-+++ b/crypto/asymmetric_keys/asymmetric_type.c
-@@ -677,5 +677,5 @@ static void __exit asymmetric_key_cleanup(void)
- 	unregister_key_type(&key_type_asymmetric);
+diff --git a/certs/system_keyring.c b/certs/system_keyring.c
+index 9de610bf1f4b..f3d8ea4f70b4 100644
+--- a/certs/system_keyring.c
++++ b/certs/system_keyring.c
+@@ -260,7 +260,7 @@ static __init int system_trusted_keyring_init(void)
+ /*
+  * Must be initialised before we try and load the keys into the keyring.
+  */
+-device_initcall(system_trusted_keyring_init);
++postcore_initcall(system_trusted_keyring_init);
+ 
+ __init int load_module_cert(struct key *keyring)
+ {
+@@ -293,7 +293,7 @@ static __init int load_system_certificate_list(void)
+ 
+ 	return x509_load_certificate_list(p, size, builtin_trusted_keys);
  }
+-late_initcall(load_system_certificate_list);
++postcore_initcall(load_system_certificate_list);
  
--module_init(asymmetric_key_init);
-+postcore_initcall(asymmetric_key_init);
- module_exit(asymmetric_key_cleanup);
-diff --git a/crypto/asymmetric_keys/x509_public_key.c b/crypto/asymmetric_keys/x509_public_key.c
-index 27b4fea37845..2b308345bc6f 100644
---- a/crypto/asymmetric_keys/x509_public_key.c
-+++ b/crypto/asymmetric_keys/x509_public_key.c
-@@ -258,7 +258,7 @@ static void __exit x509_key_exit(void)
- 	unregister_asymmetric_key_parser(&x509_key_parser);
- }
+ #ifdef CONFIG_SYSTEM_DATA_VERIFICATION
  
--module_init(x509_key_init);
-+postcore_initcall(x509_key_init);
- module_exit(x509_key_exit);
- 
- MODULE_DESCRIPTION("X.509 certificate parser");
 -- 
 2.52.0
 
