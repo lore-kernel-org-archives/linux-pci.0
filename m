@@ -1,81 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m49201.qiye.163.com (mail-m49201.qiye.163.com [45.254.49.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8CD23D7DE;
-	Wed, 11 Feb 2026 07:08:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D179E32C929;
+	Wed, 11 Feb 2026 07:32:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770793698; cv=none; b=TrMo5h5i0WCle8OEm8q8CPsBTkfPya0Vu06GIyaBCbbz++VVwyPxgs2Y34ok/q4gHZyo9EJgWHC2oZV9ic3q3Pyb9/fUC78mjXsGg2zme0t2sQyXWn07FAUew0+zDMasOr2jD/po6ABGlqq1iXu4X1UNpjKUbZ6ycqZv+JOvCvo=
+	t=1770795151; cv=none; b=K7DDQ6VvB7k+2GEeGl9452QNUxqQYDpckXjTTJANod6YRsikW901zfnBWlVBxMyFxZw25m9GDcBiVnkAtIXvs9TppGB4NGmjVfVR3zq/bNRX9ZfoD5aj1ylz7gv4kBToqU3BVDRJCLu/ALwr+/+KG90+hRxRG7b6KKvDL2sPKoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770793698; c=relaxed/simple;
-	bh=jB5D08cjrQR9mUiBn/Oeq3wnXs2VK+KWZhbOplypElM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TxeZImEEe4nonms3MFF7wdmKpnGS68TJzKIo0y0Ab71mL/Vn76TFlJJOneo7eouTjT/bciJi/j33T8LceoVB2C3Z1Mmk8WBqA28rK0dcVMbHDKwbXJErUTyUU2kuNw3auuPo3n3LmPor1tRp7EbxwnM8Yr3xCa+KdhxEwjqz7tE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pEi5I/0u; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770795151; c=relaxed/simple;
+	bh=41FlcwNioZ88g31eXuDyQVh3Dqp0ef6QyLPNmyndQdQ=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=YgoDWL2BGm5dfap+1yXaOGkoS7wjthXVXo2knlgqn5rgsZYQFyFL0tZUeEP+kvGsjDAZbVTwWxsFSJTUXLMojHp8dFzm1a8UQH3E+RziC58dilO1upE+450hF3ywr4Tb/MgvbjhwTEYCekFuPpWd3a7SGFFzdIHTBcw1tg1oo74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=ame38AOD; arc=none smtp.client-ip=45.254.49.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pEi5I/0u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C00D7C4CEF7;
-	Wed, 11 Feb 2026 07:08:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770793697;
-	bh=jB5D08cjrQR9mUiBn/Oeq3wnXs2VK+KWZhbOplypElM=;
-	h=From:To:Cc:Subject:Date:From;
-	b=pEi5I/0uMo2IpD58x9mtSnu5PBQELZXZyYj/R9QbWY4lyqftUubJ9CeqSa2Yd1bnv
-	 HAEaHzY2F+bcm88zzJ8j8IDLM9MfkkgfxBKtwX5+Meh5vECmkda/MYcvx+aaT7K6qZ
-	 u7EKGPDSuf8UOW2pjvIVnHFm4v6C7tg+uXG0DWrvLvgz0Ft+xCA4lHIYT0Sdw+0+J4
-	 Dbo5h3Ssv+XQWhsLdPnYNOeVjnxGQvj15grB4Q2J+B4cYbqkpmoUGb22YbHJfF7sZd
-	 Vs3vRNj/aOMUIOPFgINSTg3cqxSa+rV7nlJWGT9/Bfr4xyBDC/mY0VBDHTi+qGVR9p
-	 P3OBoiAgyfVPA==
-From: Arnd Bergmann <arnd@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: endpoint: pci-epf-test: select configfs
-Date: Wed, 11 Feb 2026 08:07:40 +0100
-Message-Id: <20260211070812.4087119-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="ame38AOD"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 33d65732f;
+	Wed, 11 Feb 2026 15:27:12 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+ Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH] Documentation: PCI: Clarify pci_free_irq_vectors() usage
+ for managed devices
+To: phasta@kernel.org
+References: <20260206223304.GA99007@bhelgaas>
+ <5fb5bc0ecbd4f51791b6c330088879588a1518ac.camel@mailbox.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <68347b24-fb59-eece-2b48-0fd90917c75b@rock-chips.com>
+Date: Wed, 11 Feb 2026 15:27:10 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <5fb5bc0ecbd4f51791b6c330088879588a1518ac.camel@mailbox.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9c4b98d09109cckunm8a859971d6021
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ04ZGFYZQkhPGR9DTU5MQklWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=ame38AODlW5B+VxaoNlZ1HjbV6FATMDpX46nJY6FMcrGxlEGqtd5a1JgLW5+/3lIECDDp8RyzJabDRfWk6Ls9YH4hN+Eienu4HAZNhIKdMt7TLlaHqrMZpKn02GRfzCOYH5uw5ROcqd1HVdGUG7QuQpdyiBESbZCW0DD6yJP+hU=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=lHoajEgjenqD27eClZ8ttgA/7VF9D+tkev7LFV+E/XM=;
+	h=date:mime-version:subject:message-id:from;
 
-From: Arnd Bergmann <arnd@arndb.de>
+在 2026/02/09 星期一 16:05, Philipp Stanner 写道:
+> On Fri, 2026-02-06 at 16:33 -0600, Bjorn Helgaas wrote:
+>> [+cc Philipp, any comment? would like your ack if possible]
+> 
+> The patch is a good idea and desirable. I think, however, that it
+> should be a series with a second patch informing about this behavior in
+> pci_free_irq_vectors() docu, too. I think that more people read
+> function API documentation than the generated full docs, especially
+> when hacking something together quickly.
+> 
+>>
+>> On Mon, Jan 26, 2026 at 10:57:13AM +0800, Shawn Lin wrote:
+>>> Update the msi-howto.rst documentation to clarify that drivers using the
+>>> resource-managed function pcim_enable_device()
+>>>
+> 
+> pcim_enable_device() can be called a "resource-managed function"
+> because itself is managed in the sense of it setting up a consequence
+> for its own actions, which is automatic device-enablement. I.e., after
+> calling it, calling pci_disable_device() becomes obsolete.
+> 
+> That's, however, not decisive here. What is decisive is that it also
+> switches those MSI functions into "hybrid mode" so that they suddenly
+> have side-effects. So pcim_enable_device() does *two* things.
+> 
+> Depending on what you want to achieve with your detailed commit
+> message, you might want to point that out. Some inspiration might come
+> from my commits in various drivers. To make it bullet proof, I would
+> say sth like:
+> 
+> "For legacy reasons, pcim_enable_device() switched several, normally
+> un-managed, functions into managed mode. Since various cleanups, the
+> only function affected in such a way by pcim_enable_device() today are
+> callers of pcim_setup_msi_release(). This behavior is dangerous and
+> confusing and should be removed from the kernel."
+> 
+> depending on how verbose you want to be. This could be merged with the
+> below, of course.
+> 
+>>>   must not call pci_free_irq_vectors().
+>>> This is because such devices have automatic IRQ vector management via pcim_msi_release(),
+>>> which is registered by pci_setup_msi_context() when pdev->is_managed is true.
+> 
+> There is unfortunately also pdev->is_msi_managed in addition to
+> is_managed.
+> 
+> I think you don't need to hint at the internal implementation in the
+> commit message – but a separate patch with a code TODO in pci/msi/msi.c
+> where you point out that this is broken and should be removed sounds
+> like a good idea to me.
+> 
+> Could also be put on a PCI TODO list if there is one (Bjorn?)
+> 
+>>>
+>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>> ---
+>>>
+>>>   Documentation/PCI/msi-howto.rst | 7 +++++--
+>>>   1 file changed, 5 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/Documentation/PCI/msi-howto.rst b/Documentation/PCI/msi-howto.rst
+>>> index 667ebe2..dc85f1e 100644
+>>> --- a/Documentation/PCI/msi-howto.rst
+>>> +++ b/Documentation/PCI/msi-howto.rst
+>>> @@ -113,8 +113,11 @@ vectors, use the following function::
+>>>   
+>>>     int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
+>>>   
+>>> -Any allocated resources should be freed before removing the device using
+>>> -the following function::
+>>> +If the driver enables the device using the resource-managed function
+>>> +pcim_enable_device(),
+> 
+> Same, "resource-managed" is not the decisive criterium. I would simply
+> state "pcim_enable_device() activates automatic management for IRQ
+> vectors".
+> 
+> (I'm a bit nitty; here it's not that important, but in the commit
+> message I would address this).
+> 
+> 
+> You can keep me on Cc, I can do a review for the next revision.
+> 
 
-Like some of the other endpoint modules, this one now also
-uses configfs, but is missing an indication in Kconfig:
+Thanks for these helpful review, will work on v2.
 
-arm-linux-gnueabi-ld: drivers/pci/endpoint/functions/pci-epf-test.o: in function `pci_epf_test_add_cfs':
-pci-epf-test.c:(.text.pci_epf_test_add_cfs+0x2c): undefined reference to `config_group_init_type_name'
-
-Select the symbol as needed.
-
-Fixes: ffcc4850a161 ("PCI: endpoint: pci-epf-test: Allow overriding default BAR sizes")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/endpoint/functions/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/endpoint/functions/Kconfig b/drivers/pci/endpoint/functions/Kconfig
-index 0c9cea0698d7..bb5a23994288 100644
---- a/drivers/pci/endpoint/functions/Kconfig
-+++ b/drivers/pci/endpoint/functions/Kconfig
-@@ -6,6 +6,7 @@
- config PCI_EPF_TEST
- 	tristate "PCI Endpoint Test driver"
- 	depends on PCI_ENDPOINT
-+	select CONFIGFS_FS
- 	select CRC32
- 	help
- 	   Enable this configuration option to enable the test driver
--- 
-2.39.5
-
+> And thanks for picking this up!
+> 
+> Philipp
+> 
+>>>   the driver shouldn't call pci_free_irq_vectors()
+>>> +because the IRQ vectors are automatically managed. Otherwise, the driver
+>>> +should free any allocated IRQ vectors before removing the device using the
+>>> +following function::
+>>>   
+>>>     void pci_free_irq_vectors(struct pci_dev *dev);
+>>>   
+>>> -- 
+>>> 2.7.4
+>>>
+> 
+> 
+> 
