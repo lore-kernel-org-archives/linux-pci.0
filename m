@@ -1,91 +1,92 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from mail-m32105.qiye.163.com (mail-m32105.qiye.163.com [220.197.32.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF924AEE2;
-	Wed, 11 Feb 2026 07:37:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 754863502B5;
+	Wed, 11 Feb 2026 08:25:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770795456; cv=none; b=gfsfIFY+yfOpoyl5OhyqNxQAWd+ycJ1oscv/R6PtcVfvpdXPt6d0gEY//3aDbaFbs36+NvEZgLBiafvNJDFOmpJfsVlxDWvIsdU+y83dzabG06QUy3RtFUQJ3M061R+0kU7raTxfI5t+KXeu575P3wioATtaPVMlzAkuV0PWBlU=
+	t=1770798325; cv=none; b=aUWql6tfnlwyI1uYjOjBM5/eOhjP4wU9e0zKCp3MUCidAn1QpaXntpkHJ02a63LOVnmLFNhIP9KehNzmSwuJA8vGl2fuv0YWQFis9QXqUrNPspKZoaWlZxcvkG+A93GqfFqQIyIiHrIGVWQMeqBp3C3ZBzLdoNOS5Et627hOc1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770795456; c=relaxed/simple;
-	bh=boz5zmopdv8v7Osoc5rQX42KCmOBWIYFY2AF5qVy4CI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ebvp7AOKpPJX+Zqa0eD2kH6YlVZZR80PI8gv9z1ZgeebkulrPhoilcCvhHtQ/aRvWA7liKCyTufJoWy12niTc6FQP6vrdYXyCH+bjmwR1sgOvWnrrIkclB79/AUceEn03gQt4l/dictWj3Z0XRw3OEdtB0oNjQ0Atkw5KOGxsuE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=oNRyjsvu; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=faWtmvce; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1770798325; c=relaxed/simple;
+	bh=YvigmLCqOr8/AoMiyT9kc2nOEGyhWmlyjRzi0fdnevs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=FuiK8lxelS0V6s0wQM9tzZX28/TSCEOYMbcX70ZzNEhc/ptANicK8Ga4pCONl59Lc41CzfNIEaCJq/t495SpWvmdQpEgFuk+iLn5CjVWdm2uLfQvPtu68gXqyu3gOzai6ENtiIjCIaF0tF3bkhvvRR249wCOEsf5Uzy9r5yG7o4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=JufUhP19; arc=none smtp.client-ip=220.197.32.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="oNRyjsvu";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="faWtmvce"
-Date: Wed, 11 Feb 2026 08:37:32 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1770795453;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+84hggVUCa/k6XVBCkVyTeANdeVxfQ9yn3EvsWf9NVI=;
-	b=oNRyjsvuFrLZjv0s1cZqjdf2eaVi6TMxG2BRR5WkLnCxzz8/9e8aZuMxTsyUCzxNOVm5Zk
-	s//MQxiIId1jIw98WGyIo013G34ktIhXMvsrnVe9kgQL6yxqKFgbVmePZFbMq1Dpy/V+vN
-	lpMKw4XVH+mWSlq+0FXmdX8brBdCsHFmLSxZjy4sLrHLhLpflTsqcjGQKQ+jdTDF4YfOMq
-	sACS3aJuwvrby7U04oGkodsotveQDdHc95UkKtupbvy2999cW46UNMfCX2zzJj0FnzDqlo
-	mFDM/Aqodg4+LqsRKAjD77mcbc01rYuwYVwCNVPypZV76oW2nq+h4hzuBdqm8w==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1770795453;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+84hggVUCa/k6XVBCkVyTeANdeVxfQ9yn3EvsWf9NVI=;
-	b=faWtmvceQpNC8U/NJZy3gO96I+H+Xl7v3pgkcqBiGg7Dn8wgvLkzbD3Eh7+yKwU5kuSLqr
-	07Ktteei//PqQmBA==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Niklas Schnelle <schnelle@linux.ibm.com>
-Cc: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
-	Benjamin Block <bblock@linux.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Clark Williams <clrkwllms@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-rt-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
-	Ionut Nechita <ionut_n2001@yahoo.com>,
-	Farhan Ali <alifm@linux.ibm.com>,
-	Julian Ruess <julianr@linux.ibm.com>
-Subject: Re: [PATCH] PCI/IOV: Fix recursive locking deadlock on
- pci_rescan_remove_lock
-Message-ID: <20260211073732.DN2yupeZ@linutronix.de>
-References: <20260209075706.16367-2-ionut.nechita@windriver.com>
- <20260209082553.1pnF4lr0@linutronix.de>
- <2b6a844619892ecaa11031705808667e0886d8b2.camel@linux.ibm.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="JufUhP19"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 33d86955b;
+	Wed, 11 Feb 2026 16:25:12 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	Philipp Stanner <phasta@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 1/3] Documentation: PCI: Clarify pci_free_irq_vectors() usage for managed devices
+Date: Wed, 11 Feb 2026 16:24:57 +0800
+Message-Id: <1770798299-202288-2-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1770798299-202288-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1770798299-202288-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Tid: 0a9c4bcdec8309cckunm6cb3bb0ee1952
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGUwYSFZDTE4YQkhJTUkeGENWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=JufUhP197s404EhhqFc+pQZhJZa9rod0V2L9oqrMUrh3NyQstJCxuZ7JOLQTpncGG7/SQftbAq5tYsEhaILjUKIWOth+0SaJAGKNk12LMXj1tbjflubP9Zcw/xeKCK3bX2jpkUxuJdwgRHZHxl8Yt6jZr7qkBqi4NKHcLhWUKHE=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=kO7osYZ7Ghm6DE8ieF75ePp5+J1QxST7/0v2tb+XADg=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <2b6a844619892ecaa11031705808667e0886d8b2.camel@linux.ibm.com>
 
-On 2026-02-09 11:12:36 [+0100], Niklas Schnelle wrote:
-> Agree, this looks related to the deadlock I later found with that
-> commit and that lead to this revert+new fix that has now been queued
-> for the v6.20/v7.00 here:
-> 
-> https://lore.kernel.org/linux-pci/20251216-revert_sriov_lock-v3-0-dac4925a7621@linux.ibm.com/
+Update the msi-howto.rst documentation to clarify that drivers using
+pcim_enable_device() must not call pci_free_irq_vectors().
 
-So this particular problem is solved then.
+For legacy reasons, pcim_enable_device() switches several normally
+un-managed functions into managed mode. Currently, the only function
+affected in this way is pcim_setup_msi_release(), which results in
+automatic IRQ vector management.
 
-> That said I do find this approach interesting. Benjamin and I are
-> actually still looking into a related problem with not taking the
-> rescan/remove lock as part of vfio-pci tear down and there this
-> approach could work better than just moving the locking up into the
-> sysfs handler. So far we haven't found a good place to take the lock in
-> that path that doesn't suffer from the recursive locking in other
-> paths. On the other hand conditionally taking a mutex is always a
-> little ugly in my opinion.
+This behavior is dangerous and confusing. Drivers using pcim_enable_device()
+should rely on the automatic IRQ vector management and avoid calling
+pci_free_irq_vectors() manually.
 
-If you could split the calling chain and have one side "I need the lock"
-and the other one "I don't need the lock" that would be nicer than this.
+Suggested-by: Philipp Stanner <phasta@kernel.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-> Thanks,
-> Niklas
+---
 
-Sebastian
+Changes in v2:
+- rework the commit message and documentation
+
+ Documentation/PCI/msi-howto.rst | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/PCI/msi-howto.rst b/Documentation/PCI/msi-howto.rst
+index 667ebe2..844c1d3 100644
+--- a/Documentation/PCI/msi-howto.rst
++++ b/Documentation/PCI/msi-howto.rst
+@@ -113,8 +113,11 @@ vectors, use the following function::
+ 
+   int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
+ 
+-Any allocated resources should be freed before removing the device using
+-the following function::
++If the driver enables the device using pcim_enable_device(), the driver
++shouldn't call pci_free_irq_vectors() because pcim_enable_device()
++activates automatic management for IRQ vectors. Otherwise, the driver should
++free any allocated IRQ vectors before removing the device using the following
++function::
+ 
+   void pci_free_irq_vectors(struct pci_dev *dev);
+ 
+-- 
+2.7.4
+
