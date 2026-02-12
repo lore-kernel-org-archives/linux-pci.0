@@ -1,144 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fhigh-b3-smtp.messagingengine.com (fhigh-b3-smtp.messagingengine.com [202.12.124.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 856697E110;
-	Thu, 12 Feb 2026 15:18:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57099F4F1;
+	Thu, 12 Feb 2026 15:26:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770909480; cv=none; b=M3aj0hF63O/9l2u7TyIL4kWGPPrpURuywcCZOb8EOGA1wZF7FXUnO5pC32GAyeE6fzs2563TPbR6FLZ7TPmtsOCa2rmgSvbQhYFGgtBzFg6hBLOHAOz+zbeTi+upqOIqIN/bq/NKk8NFVlLTYBEUTFks7xt9GwGCaG7Tg+P6PHM=
+	t=1770910018; cv=none; b=d36Y+H0ii21bwUBo9AlXt8SA4JjPXm9KsIObMlwARjhmqquwKfcK1YIGjfkilqFH7/WF2ypFhO6PrLtPUrMEiLC86AdVVSitBrN5Y1vgNJ+qZaWEwf+INjLv5KpSp8CAU3u52HqfHxZ5GgM88u5GJ117ERxkwZrJYqomEBK/h24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770909480; c=relaxed/simple;
-	bh=GNWaPpbr53BU3Z840pm9s1F3R3YM8PUA8uCQhf9EXyk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=glkbaMrLkSkUZEuRob784FCaL61gftwxIWkBny/uTMt9oPSSuhypYVv4TG9LX0qYa1Dxk0EbM4R5O/oHr3wl+VJJR/K4gF7RjddA/nrRGgC2A6pgnLjyzVXC4aWp8Wmv1tHG9rQ0gKRJ9/WSjRPuD6ZInCgaffAOm+tlCcOU/jw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=klC2+tU5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770910018; c=relaxed/simple;
+	bh=zo8EfRvL4ErM4vuWDCr9QM8yJQQnDfW6TzDH3cUDgZs=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=s+VmNJ4Rfchdd4C+fi3MGbhIiRcxhWS6ZICsQ4l4+qoosAOxxNSe57mOky/Lepor9hHlzXPNpQqvcLEtuSQS5lokXIeWTgSi7OmEbb7fKD0x3azfNUdW1J4eqwj+Q+TDdy4PMOnJVnpoUv5PFSRP5PypOJcbr5iwBCOhIbtL+eU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=RscQ3NJ/; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=MGOkiXiB; arc=none smtp.client-ip=202.12.124.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="klC2+tU5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C9A8C19425;
-	Thu, 12 Feb 2026 15:17:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770909480;
-	bh=GNWaPpbr53BU3Z840pm9s1F3R3YM8PUA8uCQhf9EXyk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=klC2+tU5ThyeaPGiln5kckSlgVK801hTcmdB64aKcQtluNwnGEb+N29aJ4mrAqWIg
-	 38Mm4pu/e7bYwLL0ujY6BYSMHD1nXV+t5CPpKSBrxFd4RX42863yQTuRcPpj6i+Nko
-	 TXHo/7Yy136kkxCE9uNU01qQSPefY8yMTu5xYVQ/hSjqqtsRhLRi8QbeVPw/VXUPqx
-	 3gpCSunUXMgOcb8B5nZDmmMWLmTOwnIlFrU6LMRu0daaCgmuTNTlO6xImpeni1QYJD
-	 DXVigqwGyL4IkzMlc4auTqqCPa04NruKsLZEpCPQ9tPHYhY4+wSL0+00bDXj3zFtoh
-	 TNjDhElNtAyEQ==
-Date: Thu, 12 Feb 2026 09:17:56 -0600
-From: Bjorn Andersson <andersson@kernel.org>
-To: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Magnus Damm <magnus.damm@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Konrad Dybcio <konradybcio@kernel.org>, linux-usb@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v3 1/9] dt-bindings: usb: document the Renesas
- UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-Message-ID: <7kkwkjnucx3cpvegilske2qd4u24vvjkykrljosi2uyknte4bz@3xvh57q5lpcv>
-References: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org>
- <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-1-5b79c5d61a03@linaro.org>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="RscQ3NJ/";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="MGOkiXiB"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id F04517A012C;
+	Thu, 12 Feb 2026 10:26:53 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-02.internal (MEProxy); Thu, 12 Feb 2026 10:26:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1770910013;
+	 x=1770996413; bh=fGs6hFzdbPYEGWzAEwqMf/QHmFwxHFZ3J98kX4iykqU=; b=
+	RscQ3NJ/NSZyYBoxHEzXalqKlWDA8RDopHlXsCgcGEZnwsx0B73WP6TCcheRtnNG
+	YT1rn9zntXsrKGWXRUvPx9BsKrx9SwuF028xpccWP92gbQOe4DFtnGFu7cMkIdrP
+	6iwv5ID8YcR5E79qMjnK8h3dqEuLtd4gKbThQ3xGE838+uotJCHc56oLkS3nmxHE
+	jvcJooeXhBddWXorRqA1BGP90a5Q+ZtoxxgNAbfnHdMc+RomWdChVMyewn2/+Bi3
+	2cMtMie+3DeRmJYvzooA894HgOJOKJ0gI+dTlIZgGnM0pMll+YkvYSEFxljOWbcY
+	BKv1T0e6ZA914BK7mjtwIQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1770910013; x=
+	1770996413; bh=fGs6hFzdbPYEGWzAEwqMf/QHmFwxHFZ3J98kX4iykqU=; b=M
+	GOkiXiBIS3cLMVP3rPgrzitzMGRSST5oKrf6s1BJgbgdJlX27lLNjyDRiXHg4sEw
+	ASBAGW2XMgaiIR/753F3vgtzWpzAMI2/XnC0kQGLY42TseWROk2oSLRahVhEgZBo
+	sXiiE+7ZhIFkIcYNybF6Z5TiX8w8t7q/gKwu2pAlzjd4CsLcSRrhTv8rwvgcodDy
+	YWJP6Xd5+Wcskpdn1rc9Y5QyYkixvxEGPFDXwpXOts4qMqGKOpHftqSZDPrqcpxx
+	tKYpP/TeoEyA4vlHqrfjGoQrMUD9q+EePq2f5AMap1A6/9NCaCPkGV1vETyoq7Nx
+	8pNs8H9g4i0fmATEIBB0A==
+X-ME-Sender: <xms:PfGNaWcCELajyZzojmVKNYJI2bEUi4GR4STsN9bQiCkhkPdcVjRAKQ>
+    <xme:PfGNaULXFz4VrkJ2u4WthKEQ3KgKJzbA5SjzKE2QUYocQU5fZI9p9svduVIQ7C2B5
+    yG_rt-3FfrDLJC7DLrD_TmTJS_JkO8SifbjcjZo12f0q7iRNTj0AA>
+X-ME-Received: <xmr:PfGNaQAzIdH522q77e9nWA5IhPyyE4DoOvu-UEyEyvWtdyOAkIEFOlrkFG0>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvtdehjedvucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
+    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
+    htthgvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudeg
+    veeuueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepvddtpdhmohguvgep
+    shhmthhpohhuthdprhgtphhtthhopehjuhhlihgrnhhrsehlihhnuhigrdhisghmrdgtoh
+    hmpdhrtghpthhtohepshgthhhnvghllhgvsehlihhnuhigrdhisghmrdgtohhmpdhrtghp
+    thhtohepfihinhhtvghrrgeslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehtsh
+    eslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehosggvrhhprghrsehlihhnuhig
+    rdhisghmrdgtohhmpdhrtghpthhtohepghgsrgihvghrsehlihhnuhigrdhisghmrdgtoh
+    hmpdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohephihishhhrghi
+    hhesnhhvihguihgrrdgtohhmpdhrtghpthhtohepshhkohhlohhthhhumhhthhhosehnvh
+    hiughirgdrtghomh
+X-ME-Proxy: <xmx:PfGNadjH0FTgv0cvFaRyZ1qlmvf4KM2nrdnsSpF2aEiI-hbzE9BRKw>
+    <xmx:PfGNaaN5WQo1kTb9jrPplf1IcjuTjt2zBJIB_sMgnSWh-1Sr_J5CFA>
+    <xmx:PfGNaUZO7kbUOl2mC5RPcwaHzLW8_1dpTIeKgHF1w9xwlnqeKCNzkw>
+    <xmx:PfGNaf9dQ3q44LK_tYQAJ2rtd_HG63Avi10SfeJP7h56AhCvRfbBrg>
+    <xmx:PfGNadmCIw9vKifu5z8BULVpQ-hPNPMPXVjPwqEog-YB2MiMi-X4zlz4>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 12 Feb 2026 10:26:52 -0500 (EST)
+Date: Thu, 12 Feb 2026 08:26:50 -0700
+From: Alex Williamson <alex@shazbot.org>
+To: Julian Ruess <julianr@linux.ibm.com>
+Cc: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+ oberpar@linux.ibm.com, gbayer@linux.ibm.com, Jason Gunthorpe
+ <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>, Shameer Kolothum
+ <skolothumtho@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
+ mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+ hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+ kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] vfio/pci: Set VFIO_PCI_OFFSET_SHIFT to 48
+Message-ID: <20260212082650.5b233d0a@shazbot.org>
+In-Reply-To: <20260212-vfio_pci_ism-v1-1-333262ade074@linux.ibm.com>
+References: <20260212-vfio_pci_ism-v1-0-333262ade074@linux.ibm.com>
+	<20260212-vfio_pci_ism-v1-1-333262ade074@linux.ibm.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-1-5b79c5d61a03@linaro.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, Feb 06, 2026 at 03:50:29PM +0100, Neil Armstrong wrote:
-> Document the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller,
-> which connects over PCIe and requires specific power supplies to
-> start up.
-> 
-> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+On Thu, 12 Feb 2026 15:02:15 +0100
+Julian Ruess <julianr@linux.ibm.com> wrote:
+
+> Extend VFIO_PCI_OFFSET_SHIFT to 48 to use the vfio-pci
+> VFIO_PCI_OFFSET_TO_INDEX() mechanism with the 256 TiB pseudo-BAR 0 of
+> the ISM device on s390. This bar is never mapped.
+
+Why does the entirety of vfio-pci need to adapt to the BAR requirements
+of this device?  There's a variant driver included here that implements
+its own read/write handlers and doesn't support mmap, so you're already
+halfway there to implement your own region offsets independent of the
+conventions of the rest of vfio-pci.  Thanks,
+
+Alex
+ 
+> Acked-by: Alexandra Winter <wintera@linux.ibm.com>
+> Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
 > ---
->  .../bindings/usb/renesas,upd720201-pci.yaml        | 61 ++++++++++++++++++++++
->  1 file changed, 61 insertions(+)
+>  drivers/vfio/pci/vfio_pci_core.c | 4 ++--
+>  include/linux/vfio_pci_core.h    | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml b/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml
-> new file mode 100644
-> index 000000000000..34acee62cdd2
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml
-> @@ -0,0 +1,61 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/usb/renesas,upd720201-pci.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: UPD720201/UPD720202 USB 3.0 xHCI Host Controller (PCIe)
-> +
-> +maintainers:
-> +  - Neil Armstrong <neil.armstrong@linaro.org>
-> +
-> +description:
-> +  UPD720201 USB 3.0 xHCI Host Controller via PCIe x1 Gen2 interface.
-> +  The UPD720202 supports up to two downstream ports, while UPD720201
-> +  supports up to four downstream USB 3.0 rev1.0 ports.
-> +
-> +properties:
-> +  compatible:
-> +    const: pci1912,0014
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  avdd33-supply:
-> +    description: +3.3 V power supply for analog circuit
-> +
-> +  vdd10-supply:
-> +    description: +1.05 V power supply
-> +
-> +  vdd33-supply:
-> +    description: +3.3 V power supply
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - avdd33-supply
-> +  - vdd10-supply
-> +  - vdd33-supply
-> +
-> +allOf:
-> +  - $ref: usb-xhci.yaml
-> +
-> +additionalProperties: false
-
-I'm trying to hang a onboard_hub off this controller and #address-cells,
-#size-cells, and hub@ comes back as invalid children. 
-
-I think this should be unevaluatedProperties instead.
-
-Regards,
-Bjorn
-
-> +
-> +examples:
-> +  - |
-> +    pcie@0 {
-> +        reg = <0x0 0x1000>;
-> +        ranges = <0x02000000 0x0 0x100000 0x10000000 0x0 0x0>;
-> +        #address-cells = <3>;
-> +        #size-cells = <2>;
-> +        device_type = "pci";
-> +
-> +        usb-controller@0 {
-> +            compatible = "pci1912,0014";
-> +            reg = <0x0 0x0 0x0 0x0 0x0>;
-> +            avdd33-supply = <&avdd33_reg>;
-> +            vdd10-supply = <&vdd10_reg>;
-> +            vdd33-supply = <&vdd33_reg>;
-> +        };
-> +    };
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 3a11e6f450f70105f17a3a621520c195d99e0671..3d70bf6668c7a69c4b46674195954d1ada662006 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1647,7 +1647,7 @@ static unsigned long vma_to_pfn(struct vm_area_struct *vma)
+>  	u64 pgoff;
+>  
+>  	pgoff = vma->vm_pgoff &
+> -		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+> +		((1UL << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+>  
+>  	return (pci_resource_start(vdev->pdev, index) >> PAGE_SHIFT) + pgoff;
+>  }
+> @@ -1751,7 +1751,7 @@ int vfio_pci_core_mmap(struct vfio_device *core_vdev, struct vm_area_struct *vma
+>  	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
+>  	req_len = vma->vm_end - vma->vm_start;
+>  	pgoff = vma->vm_pgoff &
+> -		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+> +		((1UL << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+>  	req_start = pgoff << PAGE_SHIFT;
+>  
+>  	if (req_start + req_len > phys_len)
+> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+> index 1ac86896875cf5c9b5cc8ef25fae8bbd4394de05..12781707f086a330161990dc3579ec0d75887da8 100644
+> --- a/include/linux/vfio_pci_core.h
+> +++ b/include/linux/vfio_pci_core.h
+> @@ -20,7 +20,7 @@
+>  #ifndef VFIO_PCI_CORE_H
+>  #define VFIO_PCI_CORE_H
+>  
+> -#define VFIO_PCI_OFFSET_SHIFT   40
+> +#define VFIO_PCI_OFFSET_SHIFT   48
+>  #define VFIO_PCI_OFFSET_TO_INDEX(off)	(off >> VFIO_PCI_OFFSET_SHIFT)
+>  #define VFIO_PCI_INDEX_TO_OFFSET(index)	((u64)(index) << VFIO_PCI_OFFSET_SHIFT)
+>  #define VFIO_PCI_OFFSET_MASK	(((u64)(1) << VFIO_PCI_OFFSET_SHIFT) - 1)
 > 
-> -- 
-> 2.34.1
-> 
+
