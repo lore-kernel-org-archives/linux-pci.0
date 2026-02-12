@@ -1,205 +1,232 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010027.outbound.protection.outlook.com [40.93.198.27])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012025.outbound.protection.outlook.com [52.101.43.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B588A346779;
-	Thu, 12 Feb 2026 12:04:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10DFA34AAF9;
+	Thu, 12 Feb 2026 12:11:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.25
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770897883; cv=fail; b=ZZnBJb//SIyUJyDyl3cipmBX9RNK5vfiJ8q8ogoqqdkbslxq87X1R0+j5rJ1LdT2oLvcFSo4eSJ2zy1I+qYnki4uNzc01ilvSwkZK2RS9yyPYmgChSJPlmPt0OexWjrJ2hm3CBA7Htl7PEPofzfSLUdVU1OcVc7sO4nCCrYhp30=
+	t=1770898276; cv=fail; b=R5GQuGeKtt1JTZcqy0sXTWOEWDuHjyC2+ktTlgU8FzTWrZ3RcWF+ZCSpzCDX/5Px2Nmm1IOxcZ9LGMTMBWCre37Sc+ja5rQpuU4KW8/M/pRP+xy26qV8VnTTtNd4UHfAy3ZDFshfn/3uQxAqZV9JiVciQtSWEJxtGqeDSZWK2ys=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770897883; c=relaxed/simple;
-	bh=boUW5ERyOBhWt+q4Z7z7JGiR4saIPGhstIoJr2uR8oE=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=M063IyM3xOyrHYGmCxpzzcp6D8cf/PKkYhByrVDg4BqJuMDxvZ3HQS5fQmeB+NGqEUMk6LdXhpU4X42LBve47HFS1n6iJZqJMhC6tYCDN0tjzWeCnFU/mmOd6KG/E6tnyrXjvqJu9mYGCFZ54x1TDzOHb3NhghHbb2E5s7Iqfr4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hgSN0Osx; arc=fail smtp.client-ip=40.93.198.27
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1770898276; c=relaxed/simple;
+	bh=uSe7pid2oTEXEWOJh5QJKg9wyQLUinjDq0PT8DY7wVw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=taCMvdbkM0OQbxj1V35WNF8DUBSIe7dRXWQnScaM5degrMuydgbyC+u88RnzKEA/03Ogr9zbn4PukFQfP4CNInKBLolCTGoM+eLldec/GSTPtZM3C2fNEbEW+kKrPJ7wRCfKIFM3M81Fr34TDZR2rfyPcEkQgrcqOE9vz9CUO+0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=P5TzgXl4; arc=fail smtp.client-ip=52.101.43.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hgSN0Osx"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="P5TzgXl4"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PP4lcaVudloo8qzuNx/pQAtbTcziEtBOkBK2G/Zp4YPq9CHBYAKFbzB2tDL43Sq36wzUvkJlyEK+cUeuu3j8ZDmtaDuXt4ZOykfJxjQpR9t+Lv8n05qLDZTCOxD1H2nu0vcZauYb9396aMAwGVo38z7E9SrfgoCT6t2cHQr0XoNrbRNc0ZB92XttKXDJt7uPmta0jUZ2dtPnuCm2xKrojP+XWeR8G/yTALTP7h64CGlUN+WgIhbYlw0VXOy+Y3jm8gbJDkSRaBQiU7Cp4b1XZudz2we5WdoRMJZ+M5Uw0hs0lI9BPmxpRlsDA2dTa0Ot6DmGnlzuuZ8rAo8oJc/zpA==
+ b=NlvR0/Xw41bFHXNghbG0oBkmhcbV65yJLRTigzzxR7F3Sr2rrzgAEJNke+O++QG9SPvmg4jvg+jwzxmhlcxdAIgfKlk2iCqFNKDBWK5+eTLXleHCImoPVfM1cX8pKnZiAE3Ufs1xOSsmIxbPS+4qOwZziEbUImOXvhLaf6kDH8h4kx56gYowj1Ldu5j3WzDkHwNGCtj6Klw/bpEuu0y0pOqXTUIrnph6PLC0OckobHjDCdpGfeAAh7RmglWs+10v6wKidCTpLSsX+m/A9cq90v6J4IAGR/A0SC1j170FGCdSLPZc/oELgz+2t9NWuq62pZhDT0ZJ9//1BFkXRxVPLQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=boUW5ERyOBhWt+q4Z7z7JGiR4saIPGhstIoJr2uR8oE=;
- b=aSnh0HwmCuXeY0GFn0/LrK3ubPu/jrRMHVueTYFU1q3I6sbXFahG7lOHgzJliRJshCjzcCv8cMxOtNPt6f8IGh2AcjkWcN9t0sRxLeiRhuoQv6DjoNJzkxs8jULuj7IpBwUlOLWKzW4/B3iBcB1pOmLY9v1Kcha+C5szTmilNv5rW5iCbfg3AFdUw/ASUZnO3DypSCHVD8piuMwqVGHmY0ON0uyxd9b6nf2hOs1kvEDalRahnkghuvYqc61lWRRkPiNNsuL6Ey6qAyPlrlMZo+HiLu2iLv127upIri875QGDQwsJ7glGt8pKDsPTQlsFganyZuDgyHdKVTozqFdaaA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=vlqlkO0keKNXxxE+ZaA1aw44MnHLT1iIi258zk5vpvQ=;
+ b=bLULxWIDwvE8yS71lIIKLsg8Vv23LXicZtuwdJfpUWUAsm8MBTMrRzO3P06Bsvr56Tm3TBTh8s39rkczSDhKuPmO1siOsP89m1EF6Ndi9DO7Tle3sBDjH5jyuOVzpZh/D7/+B5iSaUVxi9EdpbJKO/4aBzY12dbSsQhiF/Vms3Tcr5tDMMNdudwXZB1ZnDmNg9mltHYx6WygGil9daxjbviBoBJE2Joyj/jtaJP/XKgcYYRvwADR1hYs13TAP87KHi82ULgJO+1lAgUzIETkI4MiEH03yJDnhkNP4mvC3VCB1DIayxmDMUVUjs+vFNJv01I5VHGcaJRKZMYxQh3tIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.21.195) smtp.rcpttodomain=kernel.org smtp.mailfrom=ti.com; dmarc=pass
+ (p=quarantine sp=none pct=100) action=none header.from=ti.com; dkim=none
+ (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=boUW5ERyOBhWt+q4Z7z7JGiR4saIPGhstIoJr2uR8oE=;
- b=hgSN0OsxBb5pSGjqq8PfdmJE5Dn6CqpcPYNlTrqZnhh72iUPpP0vSNWKbrLL5W7J99NMrEW/Ty48CLt33/nUeos955NNcz4bvzxez+TpBI9h3e5kfPpa1j7/cj0o1Ad5kscPEgFsOV1OLnoaLi6n/QLNKGx7gYIJDlOEFPw5zPLJUtBBa9qz8MeHJPvhqPytPC2cpWHtk3t27cx1OUhfSfDmt7V5jnteIdW0A+vvw5EMgxmpQqO0bhIYmdukGzfEB4L5BI7H8ceK3JCyL0JwD/SI7BzIOMGwdcNYbWxd2tPWD8LTUDUHpt/k7y9JCqD/yhvg7Zrzlgdm7VNKqhq78g==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by IA4PR12MB9811.namprd12.prod.outlook.com (2603:10b6:208:54e::18) with
+ bh=vlqlkO0keKNXxxE+ZaA1aw44MnHLT1iIi258zk5vpvQ=;
+ b=P5TzgXl4lVfomaK/M9UTrHUWbHRLHR3hcN2t0+Lm1iHQVbHt4EmRr7VPcawe3nv0/M4kEjOJaWeAXmJFEE8mXxC4vTGYDYM9rVJ35w1zPPb5DKpmGggsL7DpeUKkKgn7kZzlGD531W91khPoGeUFE3IoSQiIWoYRQfhLfC8SUcI=
+Received: from BL0PR01CA0033.prod.exchangelabs.com (2603:10b6:208:71::46) by
+ DM3PPFC7DCDCAD9.namprd10.prod.outlook.com (2603:10b6:f:fc00::c4b) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.12; Thu, 12 Feb
- 2026 12:04:38 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%3]) with mapi id 15.20.9611.008; Thu, 12 Feb 2026
- 12:04:38 +0000
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 12 Feb 2026 21:04:33 +0900
-Message-Id: <DGCYWK1UF76I.A565AK23DZXS@nvidia.com>
-Subject: Re: [PATCH v2 1/6] rust: io: turn IoCapable into a functional trait
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: <lyude@redhat.com>, "Danilo Krummrich" <dakr@kernel.org>, "Alice Ryhl"
- <aliceryhl@google.com>, "Daniel Almeida" <daniel.almeida@collabora.com>
-Cc: "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun.feng@gmail.com>,
- "Gary Guo" <gary@garyguo.net>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Trevor Gross" <tmgross@umich.edu>,
- "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, "Zhi Wang"
- <zhiw@nvidia.com>, "Eliot Courtney" <ecourtney@nvidia.com>
-Content-Transfer-Encoding: quoted-printable
-References: <20260206-io-v2-0-71dea20a06e6@nvidia.com>
- <20260206-io-v2-1-71dea20a06e6@nvidia.com>
- <97fc6c36933522eaf75f34f8fcd445715432fde4.camel@redhat.com>
-In-Reply-To: <97fc6c36933522eaf75f34f8fcd445715432fde4.camel@redhat.com>
-X-ClientProxiedBy: TYCPR01CA0129.jpnprd01.prod.outlook.com
- (2603:1096:400:26d::16) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+ 2026 12:11:10 +0000
+Received: from BN3PEPF0000B070.namprd21.prod.outlook.com
+ (2603:10b6:208:71:cafe::6c) by BL0PR01CA0033.outlook.office365.com
+ (2603:10b6:208:71::46) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9611.11 via Frontend Transport; Thu,
+ 12 Feb 2026 12:11:11 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
+Received: from flwvzet201.ext.ti.com (198.47.21.195) by
+ BN3PEPF0000B070.mail.protection.outlook.com (10.167.243.75) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9632.0 via Frontend Transport; Thu, 12 Feb 2026 12:11:09 +0000
+Received: from DFLE208.ent.ti.com (10.64.6.66) by flwvzet201.ext.ti.com
+ (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 12 Feb
+ 2026 06:11:04 -0600
+Received: from DFLE210.ent.ti.com (10.64.6.68) by DFLE208.ent.ti.com
+ (10.64.6.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 12 Feb
+ 2026 06:11:04 -0600
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE210.ent.ti.com
+ (10.64.6.68) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Thu, 12 Feb 2026 06:11:04 -0600
+Received: from [172.24.231.225] (a0507033-hp.dhcp.ti.com [172.24.231.225])
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61CCAx5D3467474;
+	Thu, 12 Feb 2026 06:11:00 -0600
+Message-ID: <8d85409e-2f07-4e4b-831b-68c17a341a60@ti.com>
+Date: Thu, 12 Feb 2026 17:40:59 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] PCI: tegra194: Reset BARs when running in PCIe
+ endpoint mode
+To: Niklas Cassel <cassel@kernel.org>, Manikanta Maddireddy
+	<mmaddireddy@nvidia.com>, <kishon@kernel.org>
+CC: Manivannan Sadhasivam <mani@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, <stable@vger.kernel.org>,
+	Thierry Reding <treding@nvidia.com>, <linux-pci@vger.kernel.org>,
+	<linux-tegra@vger.kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Thierry Reding
+	<thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, "Rob
+ Herring" <robh@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+	<kwilczynski@kernel.org>
+References: <20250922140822.519796-5-cassel@kernel.org>
+ <20250922140822.519796-7-cassel@kernel.org>
+ <2fedf28e-83ea-4e51-b1a1-e45f0e928509@nvidia.com> <aYonDJyd_dbV0GBK@ryzen>
+ <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com> <aYsDDOZA18BBeOsd@ryzen>
+ <aYsKzBjmGEi1z0am@ryzen>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <aYsKzBjmGEi1z0am@ryzen>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|IA4PR12MB9811:EE_
-X-MS-Office365-Filtering-Correlation-Id: c4629476-4d36-415f-2548-08de6a2ee4e3
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B070:EE_|DM3PPFC7DCDCAD9:EE_
+X-MS-Office365-Filtering-Correlation-Id: 090e1ab9-7f2c-472e-6885-08de6a2fce60
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|10070799003|1800799024;
+	BCL:0;ARA:13230040|36860700013|82310400026|376014|7416014|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Q1Zha3gwcEd6TzVJRktQcVdqREtQbkZOTzVxbjFGeEQwVlF0QXNDeTkrZmRy?=
- =?utf-8?B?ZWJoNHB4dzhBL1J4Z0ZTTmNUbjRhOFVMczh0NHpLekZGZVpicU9YSTdzMVB2?=
- =?utf-8?B?dFgyZ2pvMWNzWHNiM3JpWm9vcGo1b1RsQzRFNHlSVnh2WFI2M1prR3doQkp6?=
- =?utf-8?B?S1l4YWFBUmJuRWlFRkZJSzFVWGtrd0I5ekcwL2lIWDZMV0UzNllRY2c1bVFJ?=
- =?utf-8?B?Z3N5VUhDL0ZNRDNaSFYzb3p4S1owNEViMHorNmdaZUdFUlVOaGFSdFBlVkwz?=
- =?utf-8?B?eTVuSk1Xdjk3aGhDb0h6UUQ5YjN3M1pJdTBlMXkvVWlZWnhsc2tqT05GMnk3?=
- =?utf-8?B?SVpVRmpNSFJGK1hCZWd2aVI2ZUoxNTRCalpzTEl4blV2NVNIR0VTVEJkZEcw?=
- =?utf-8?B?ZEZMb2F1NzdFN1BZeXdyWVYxMExxSTlZS0xhYUNqNTdVaXd4STNLeDRrMmZU?=
- =?utf-8?B?UWNLbXNNQ2pUc1JCSGhnV3FzUlR1dTBqYkNvZ042K3RGWnpzZkpqNHk1VkNY?=
- =?utf-8?B?VHl3NzZRZmlBdlQ4cVJ2THpnSlRncXBQV1A3amQycW5TY3lENWZld0JTdG9N?=
- =?utf-8?B?d016UW9ZeG1xQ2hEVlBTaHMyUmMwa01TWDVDR0lMTHI4dGFwM1dhTVkwakxx?=
- =?utf-8?B?ZmhocWFBSmQrUHhxZGFPYTgyVVRRYzdXVTdrWVo2U04rVmtzRFNqdUZvbG5R?=
- =?utf-8?B?VXc2dldiL3NZYU9PZ1dSVmh1R2ZjSkI4NW5YU3J4Si9GLzVoTm9zNVgxdTVT?=
- =?utf-8?B?MktpSkNqZTM5bVIyeUE4Q09BOEZVV2h0c09uczgyR2VoM3lTaGdBeDJKbGhp?=
- =?utf-8?B?bHFieVFod0FqY1J0NXdHUGVqeWJtYWtPbDJIdmlQT1drN0V5d3Y5VVpUOFkv?=
- =?utf-8?B?bnowWUlRSmlJcnFNemR1My9NcHBpTHY4cFhWbnBSRThrMUtUa2hSMDhyZG5W?=
- =?utf-8?B?bWlrRGhVMVNDLzRILys4em0rdVFodktVM0NsTmNDLzFydXB3NWszZWtGdVRa?=
- =?utf-8?B?RVZYd2k4ZWRUV0pxYSs4Tm5pSkp4dlJsVHdjUlRYaVBkTWRtMEpJbGkxdG5u?=
- =?utf-8?B?VUxlY29PcnplSVlFWXdVeGxwaHhRNzJrZXhzaWRaZU16WWhJcXphYnVpL0tn?=
- =?utf-8?B?L1pFUEFGRFBocGJZUFBrdU9zckN1bDF2bytBM3pKYmI4dUxRaXl5SFQzYkFI?=
- =?utf-8?B?Y2IvVkZyVko2Z2p3YVp1N094ODZzWTVEUjd6RE1uQWFtV2dQelhrM3RVb1Rq?=
- =?utf-8?B?NlBJai8wc0NJT2pydWFPVUVlVTZkRXlqY2ZOUTZLOEpwSi9vbnkyUnFVNjdu?=
- =?utf-8?B?K2dEREUwUGRyODRSdE5ESk1zN2Q2dVN0Q0Y2S3p1bWR1N1ZyNVhlSUs2bWZL?=
- =?utf-8?B?SHkwTVRZbStObnFtWVhLN0VwOTBBazZjNGoxZmpmd2tKQW0ydXRQV3FUZHVi?=
- =?utf-8?B?UTdUMzNwTkxQSWk0Zm9mMTlKcjJkaGxUV1FYdDFGTkRrSzZXQW1OSVZUTlhM?=
- =?utf-8?B?ZjcwQ3czMXBlVFpadmlCZHp1WXhjWUxuaUdDWHBwb3pJaFhlTUx5MVRWQnh0?=
- =?utf-8?B?bkMyclVBd24zN3FmVGpFbjY1ZDRWVlFLUG5oNFoyYlRoOU1vZVUzRWczS0xI?=
- =?utf-8?B?N0Q0cXQxdHUwczBZT3FkR01uRjdMR3hySmNrR2hlS1YyejVZcktRd3BVSEhJ?=
- =?utf-8?B?aGZOV3BIeTFEa3pmZmtzeFhCMmdCUXVaamliWGdVRkZDTUlGL0JpOFd0ZC9X?=
- =?utf-8?B?cFlFK21IcWdMU3NWdzNPaXFNdzNETUg4cXcyajFGTklRbHdDTXdnSlFLb21S?=
- =?utf-8?B?V2tqby8yY1AxY1NReFhwbzhGTXhsdUxRL3FYM2lFa1QyS1BqYTJZb01RZnFn?=
- =?utf-8?B?YjVMbWVzbDFYR2hzZHJ0NmdhREM4dFhsMWxwQ05aLzhrZzIwRzdlY0ZhN2V6?=
- =?utf-8?B?Yi9kd0tQOVZvVFhYUlJDTGRSbmorb2FCVHFaVzBXQXJFc3JGVmpLdU1sSWdL?=
- =?utf-8?B?WkRzTFExL0crbWM5NU5hNlE4dTlqVnA0TGpCQTVKaTBxY1ZDb0VYaXFiZzdN?=
- =?utf-8?B?Z3dEMFptaDRaZnNGWVdjeVFYWVRRUHEvcFYydzBXaUt3cU9KTUZRSkplNEdv?=
- =?utf-8?Q?+WIw=3D?=
+	=?utf-8?B?T1lxaGVhQU5GdFFlTVdhVkZpeSs1NWZIaTBwQlZZRjVRcWlRVW1rUnhheG5k?=
+ =?utf-8?B?bWJHRG9BeEx3MzdlbzdaTC9mWndmRThSUnowb0lSZlJWeStvZm1FK05XVCtp?=
+ =?utf-8?B?UDk1QUdWQ0UzbmwvQlEwQ05jTDdxTEUxZjFVbWcyaytJeXpWUW16MlNURGV4?=
+ =?utf-8?B?RFQxWmw5S2llMkV4VXlDNDByaFh2VGpMMmVZdjBvYW5vZUQySnkzenlmd1ln?=
+ =?utf-8?B?aDdZQkpCN1VER3orU2hvZDRhQnRzaDNtdHRwWmppSms1V21kQnRoVEVTenVr?=
+ =?utf-8?B?SS9rOStHR2lUMkNDR1ZCVldPWGRkZkJWMlBNaDk3aE1VL2ZRTVVNT2JWTU5s?=
+ =?utf-8?B?Q1cxZm55Wkx0YXZjRUdOdTRsQ1N3NXgvbFVyRlpONGg3TVpBTnZxdFVtK1Zr?=
+ =?utf-8?B?eFZqNW5IVHRtWTN6UHM3TG5EenZnZklQQWUreFQvQ3R5RE53bFNadzAxOGR6?=
+ =?utf-8?B?VFhvazJQdVZ2YS85YjRHR3ZRZWorSWFURmdSdSt3ZngvK083VUk1cyt3OWFF?=
+ =?utf-8?B?c25NeTlpMWtxYWFQS280dTdLY1l4NVlnVmhxKzNWclBMK01lRlBSbXBzQzk1?=
+ =?utf-8?B?TjlLWmVDVWFGWDUxdE5sWndldW9NMjFDbGhiVVFDdEdWaE9DVFpLdXYvSlp3?=
+ =?utf-8?B?WVJnT0tkcXhheUZ2Y01XYmJBaFZ5aTNLbTZXM202MTc3eUtvbVd3b1c3c1Fw?=
+ =?utf-8?B?cU5RdnRvT29kVHF2ZTlmMVl5aWpmOWVOaXhOeDdlWXM5Kytic3BINXp3Nnpw?=
+ =?utf-8?B?M1hpYUpzRm5OK3RkWnBWYW10MytQb2xSNUNCemppK29BMDBMZnJITkdaR0pH?=
+ =?utf-8?B?VEx3czhiRitKOWl5MmI1OVNzL0tSTE1iYTYwUnFpaFJQMUNRa0tMRkI3M09V?=
+ =?utf-8?B?TU5ORktXL0NmRWE5SVhqbGJVZXhKdkk1Y3pNQnFSd2xtanBFcTE5VUw2YlFJ?=
+ =?utf-8?B?bFBBdDhPekg5UnRoUVpuTFZLU0ZxUjg1UnQxKzErZ1J2SXd6cmxYZC8yY052?=
+ =?utf-8?B?L2RRYng2RzlpL2hraWFOYWJWazBIeXRzVFUxVVkxMm42NWV6ZjYzWk1Pa0Qy?=
+ =?utf-8?B?R3BrY29IdmVuNHZNdWtjQmpHTTloY1AveDMybG5SN3VWK3R0aFNuSGV2c3Rl?=
+ =?utf-8?B?MlJ3c0N1YkM3cFF1dllCU3pEeFJ6aWpwb29oMU9NWDNnMjY2dVVTaVkvNXZx?=
+ =?utf-8?B?Qkx6cmYzSWRyYWRBaHUxYzZnS0M3RkFKdVZTNitRZnExVXFOdXFYMkdxRWR4?=
+ =?utf-8?B?dWM3VFVmNGRSM3JvcDUyY3g3a0xidG5XRVRLNTlYQkhMMEhzaWFRV1dobTZC?=
+ =?utf-8?B?T1Y1WHFFdHIydjRJTXQ0RkkzT1oyWWxmdDZJa3ArTDI2dy9waXdnVFdOR09S?=
+ =?utf-8?B?TFNkZGQzV2E4S2tqLzFFcDJtc3dpcGNuT2IvcHBNV0ZBZndKdGVMQjhnVFpa?=
+ =?utf-8?B?UHIvUDdZUlE4MmhnbGxrZW9xdHNrdDdmM20wTmN6d3Zic3VWR21wQlJCQzJo?=
+ =?utf-8?B?RjgyR2RjMlczVEZTMEg1d1BtaFJHRzlVbDVpR3FlR2JoQU1ZdXdwL0N1aWJH?=
+ =?utf-8?B?NXJJOURDVktqZmdSY0hWUFJwanl2d21MVngveDVSL0RER2V0cHB1dGdaWU11?=
+ =?utf-8?B?dStGSXg5RXEzWkdVVmkyMTVBdHBLZlFBOWZMeUkwYUZWNFdQVEJRc2pMTHh5?=
+ =?utf-8?B?ZU9NOXVuN3F6bjU3VXJ6SW8wL1RUNjV1YXJma1Z6V3lEN25nVlpPTmJ6SnVt?=
+ =?utf-8?B?NlRTbUt0SVNSTHpsQy8vTGF6dEFFYXhyZGljM2FnajhHZVRjbUdmK0cxSWt5?=
+ =?utf-8?B?Nm5wdGdkVjNTM0hYU2R3M0xPMjRPYWRSWGZvbUZRaDFOYmpSTEdkeTVLYjdY?=
+ =?utf-8?B?alFZVVNUZ251SDRWM090N2I5WXlBUCtOMWpZSnU0c1FCSldaNXBTN2xnNkU3?=
+ =?utf-8?B?dEkzeFRVb1pLTWowUE9oT2hlYmhJR3JZbWtGSmdZbGlWMWpIelh5NkJyYW5F?=
+ =?utf-8?B?MWZFTEdLV25OSGhSY1ljTWFXdUk4Vm9MV3czb0gyOThGUmhYZ0lWYTJ1VkFv?=
+ =?utf-8?B?T0ZSR1JkRThRRmF6MC9jVUhPUGZpTC9UUTM1c3NWQUFzbWpmblNKZ2o0OGM0?=
+ =?utf-8?B?Q1FJVHV3K3piTUtYNXJHTlhmczhqa0twUkxlQlBYbThmOHZaN3BUNDZnUXRB?=
+ =?utf-8?B?UWNkWWR1RWtnWEl5dFFHd1V2Wkpqc1dnN1kzNlV2UDF0eXozYytPWW5mRDJz?=
+ =?utf-8?B?RmZWdlZ6MXd5WmpGdFE3cnVjN3JBPT0=?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(10070799003)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(36860700013)(82310400026)(376014)(7416014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?d2hNUDJEdFR3YmlmbWtVeXhvL0dGRTlSY2IwMzZwQnFUeEN2ZWRZN0lhTmN3?=
- =?utf-8?B?Q2RXd21abFRGdnRyRWtnVStsRmdib1JvdjVwMXlyVzEyNGtXaWtFR01sWkdF?=
- =?utf-8?B?cTFxWjB1MCtGZW9hQnl2bldzNTRtUTIyZ0JtRkJ6MjcvS21IL2l6czRoNVpC?=
- =?utf-8?B?ZFRyN0ZYb2puZjZPNUVPVDlRNm5UWFA5dVZxYWNpTGNKT0kyVHVMdmk1S0hr?=
- =?utf-8?B?UGtONS9wMVE1QTlpTlhEMndnejg3V29EOW12K2FhNlJwMHhsSm8wLzNla01V?=
- =?utf-8?B?VkNIUytzRGNEd2JhY2k0S1NSN0NCVnhUYnBDY00xcFlvcFJJNW5PditnYStq?=
- =?utf-8?B?cmQxbXJERkx3VnlnWmRsZk42Z3ZITUd4QUpGd0tKMk5HSlY2RTd0by9aQzFu?=
- =?utf-8?B?cUxlNC8wTmdpTG0vbWUya2p5UVkxY0J4ZWIwWndCM0VnZ0dnUHlDdGJ2RDQ4?=
- =?utf-8?B?b0I1MVkrV0tyZWhmaG1IdTdtRkV3QmxRZTNuMHpHZHJsb3lzdE5iMmhMR3Zy?=
- =?utf-8?B?WFBCbWliU0p6VnhMcW5lb05icnVRTGNtckRLK0NPN1I3ODFZcDBUbVB6WTdF?=
- =?utf-8?B?dHhoK29WRzFDcXI2UzcyVXF1bjRoOEFQN2RpTDdxRXdYaWdabndHOHk3RlJr?=
- =?utf-8?B?Si9aUjI2Umo4c0p6NGx3bUozOXg4ejJ1eUVVdVlwYlQyblAvMzFrRHkzKzNP?=
- =?utf-8?B?RFFkS1VWR2JHMEtrVDBiZlNLdldXeGxrNWNtaWJOL1RGK3hmMU9yZEREcFBL?=
- =?utf-8?B?RzBOazRIcmk1Z0ZYSVk2RjE1UEszTU0wNjJicWtqdXcrbGJhTTlQS0k1LytW?=
- =?utf-8?B?aDdrMkR0QmZqdER2WGxiQ3hVNm5hKzJvTjdYakh4UWZYMFh0Wk9UbjJyQWM3?=
- =?utf-8?B?c0pBbitTOCs2ZXFITm52Rno5QXAraWZPSFlSdngvaUhqVDk5U01EbHRSZnpv?=
- =?utf-8?B?dFhCNXdUNmNSSGR5TENKNURhSmZUWENBbEZ6ZVNOSENuaitsalJ4emFXU2dT?=
- =?utf-8?B?WCtqU01qRFo3clRrUUhZWWwxRXhWcmZxd1ZWWE8yR1pTNGtDenpvclpZUEFS?=
- =?utf-8?B?SEl1UUVxeGVsNnJCZWl1eWFjamc0NWhjdWd2ZlFUbzFMUjRwWGVmVlgxTkNC?=
- =?utf-8?B?VUxpTGVCcTQ2bUpwMFBCRG13c2Z1RXc0ZHlSdE9QNk5ZTm9UM1JBcUNUSThO?=
- =?utf-8?B?LzVmYWpKekF3VGhDb2crTjJtdkNhUnpETW85Q0NvZ0YySWlEdG1NNXNkSDZO?=
- =?utf-8?B?WlZYQThWS0pib0lPSEduazVaYm9qamkzSHp2Rmx2c3g2WGZDeisrd2U4czMv?=
- =?utf-8?B?NkhZVjRVNkdYSHBmSlQrSWxhWmRlWUVGYVl2dENsZ2VZMFN5T3RNeWNuS3FX?=
- =?utf-8?B?aU5UcTMzU3o1S0xBZWJrMCt3Ym53cGtXT3ZmUWJrZTVyNnhNc1h3MTM1SHpa?=
- =?utf-8?B?RFBiVitMWXgxZFhQUEJXYkhOZGd2SnNHVThRa0Z3bCt3a0xpMFBMeWtDWVll?=
- =?utf-8?B?RUJCOWxDNllEdldOaFVwNnBka0E1d1F4QkNESHNGM2w0TzZ1TVJBdkQ2VnE4?=
- =?utf-8?B?V3hNTU4xeTZ5YXVaY0NtSzJ3Ky94NHpLdGE5cHgrM2hUR3Q3VU1sSnJDZnQ0?=
- =?utf-8?B?WGF5Y2cyRCs0QnFrL1VkbkNnb3hITjJFVzhFNWdrVW0zdzZrcjRPR3JWZTAr?=
- =?utf-8?B?TWJaY1NFWURqSjJTM1dFbkNacGpQSWVTK2ZvYTVPdHJwTEY2T0tZQWEvNDcx?=
- =?utf-8?B?enlTNDNGbGg0ZjEvS29ZSzdHVXh0TjhEZHNEV2J4eSs4bGF6R0d4ZWhkNjJR?=
- =?utf-8?B?YTNseEtPSDJ3THg0U3dPWGxINTdaN1pFdkVlUnNJdnBCVDNiSVRheWdaMHgv?=
- =?utf-8?B?M3kzWVdUQzA4K2ZtYXhFK2t2UG0rNE84K2poUGdSTmQ5L0VTMm0ybXBsQStP?=
- =?utf-8?B?NXNydzlpQk9UZVRpRWdvTDJsYm5SMDhRSHR2bFRJZWRON2RvRnhFRXJTcmRN?=
- =?utf-8?B?TlAvOGpmVlpzaFArZVdKNFJnQkp1M081N3RLcVNGOFhTd2NWMnVUdU5iMVhF?=
- =?utf-8?B?OWNxUWRRMHliQ3ZRYU8vb0FkSmhmQ3VoeEFRNjl5dEFLZTVkWVkyVUJBMTFR?=
- =?utf-8?B?Z1M5SUs5MGtoVW9vOGdpTXZaUU1PVUNkM2hoa3BYRzZTMk4xVW5xN24xb0Fn?=
- =?utf-8?B?Q3VMeUk0cFpVNXVMdDE4Vjk5UzlFbDludTQrVm5ud3JUYlhuTmlUcXc0eTA1?=
- =?utf-8?B?UWtmeWJ2ZE5vRmd2U0dYZENyUS9ncDJWNndmR0MyRGtBVTREdHFiQ2ZNVHRM?=
- =?utf-8?B?eWE0dHhKVmgxZjdUaitBRTFkTU5qWTBzSFZCcHFSYWZqRUZpTmxHczdCUjNK?=
- =?utf-8?Q?mWtXzT/Hl3yq3KhJDrEsBsxFNj2ACglfFM//J7UethLjz?=
-X-MS-Exchange-AntiSpam-MessageData-1: 2QBLj+kvmheRyw==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c4629476-4d36-415f-2548-08de6a2ee4e3
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Feb 2026 12:04:37.8972
+	B6f2B784SvXo4khbbP4hQYWIR1C87SivlTbrsPkEk+KrQfRaeq3kHq9mNGhSnC+0GvJPFHYLWNt4P1jX+Do0C/tHUvtx9Sihx2d12ij+bxI+wpCuT2kyiyRfK/hXi5wKuGhLCtKj2N64MAFJlrVeTtXnl4LwyCBgybWREJDVrTjnFz6vxfbjEgUF9WavtTCTRTRb1SHUUSLSe+rzu6KjDgvq+GE6BWdOChyFt93pffc0IYaUYIu/ZQshl6yhWIZnvMEjY3xDEcDcrBGFoVGhXXfZA4DvoVc/se5uijVktI7L2FOKmzQ7vPtLf0ALLWSjhsJ0LHK5MWB0GcPcF5SrGiXZG95/DoJwm+1RM6kwMECytkKSAEX6wP5ejlAE7IU3xzL2w31XkQ8vTbgwwsR3FbDJmWe+HpMTlvel0wBsX+tXtMckZu3C8MA6F0gqgIdd
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Feb 2026 12:11:09.0409
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: OpVM4vM6si3DrQFXBUJJNPOBApQA3hZFI+KXHChn2kdQFWHZ3BHhmSpS02k6zkQ2oM/2n8X5EsQSkJoQHNbZ1w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR12MB9811
+X-MS-Exchange-CrossTenant-Network-Message-Id: 090e1ab9-7f2c-472e-6885-08de6a2fce60
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN3PEPF0000B070.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PPFC7DCDCAD9
 
-Hi Lyude,
++ Kishon
 
-On Sat Feb 7, 2026 at 5:29 AM JST, lyude wrote:
-> On Fri, 2026-02-06 at 15:00 +0900, Alexandre Courbot wrote:
->> `IoCapable<T>` is currently used as a marker trait to signal that the
->> methods of the `Io` trait corresponding to `T` have been overridden
->> by
->> the implementor (the default implementations triggering a build-time
->> error).
->>=20
->> This goes against the DRY principle and separates the signaling of
->> the
->> capability from its implementation, making it possible to forget a
->> step
->> while implementing a new `Io`.
->
-> I realized another thing that might be missing from this series while
-> porting the iosys_map code over: it seems like IoCapable is fine being
-> a safe trait, but Io and IoKnownSize both seem like they should
-> actually be unsafe traits. The main reason being that IoCapable doesn't
-> actually provide any methods that provide a guarantee of being able to
-> read/write from the IO space, but Io does - and IoKnownSize is making
-> the guarantee the IO space is at least of size IoKnownSize::MIN_SIZE.
+On 10/02/26 16:09, Niklas Cassel wrote:
+>> BAR_RESERVED already means disabled, it just assumes that an EPC driver
+>> disables all BARs by default, which is the case for:
+>> pci-dra7xx.c, pci-imx6.c, pci-layerscape-ep.c, pcie-artpec6.c,
+>> pcie-designware-plat.c, pcie-dw-rockchip.c, pcie-qcom-ep.c, pcie-rcar-gen4.c,
+>> pcie-stm32-ep.c, pcie-uniphier-ep.c.
+>> (All drivers which disables all BARs by default in the init() callback using
+>> dw_pcie_ep_reset_bar(). pci-epf-test will later enable all BARs that are not
+>> marked as BAR_RESERVED.)
+>> 
+>> That leaves: pcie-keembay.c, pci-keystone.c, pcie-tegra194.c (before my patch).
+>> 
+>> For pcie-keembay.c, this is not a problem, because BAR0, BAR2, BAR4 are marked
+>> as only_64bit, so pci-epf-test configure these BARs as 64-bit BARs, and thus
+>> BAR1, BAR3, and BAR5 will get disabled implicitly.
+>> 
+>> For pci-keystone.c, this is the only driver that is a bit weird, it marks
+>> BAR0 and BAR1 as reserved, but does not disable them in the init() callback.
+>> It seems force set BAR0 as a 32-bit BAR in the init() callback.
+>> 
+>> Thus, for all drivers except for pci-keystone.c, BAR_RESERVED does mean
+>> BAR_DISABLED. Feel free to send a patch that renames BAR_RESERVED to
+>> BAR_DISABLED.
+>> 
+>> If you send such a patch, perhaps you also want to modify the PCI endpoint
+>> core to call reset_bar() for all BARs marked as BAR_RESERVED/BAR_DISABLED,
+>> instead of each EPC driver doing so in the init() callback. I think the main
+>> reason why this is not done already is that thare is no reset_bar() op in
+>> struct pci_epc_ops epc_ops, there is only clear_bar() which clears an BAR
+>> enabled by an EPF driver. (So you would most likely also need to add a
+>> .disable_bar() op in struct pci_epc_ops epc_ops.)
+> 
+> Aksh (on To:),
+> 
+> since you have a @ti.com email, perhaps you can explain how pci-keystone.c
+> can pass all the pci-epf-test test cases, considering that this is the only
+> driver that has BARs (BAR0 and BAR1) marked as BAR_RESERVED but do not also
+> disable the BARs (using dw_pcie_ep_reset_bar()) in the init() callback.
+> 
+> Or, perhaps the simple answer is that pci-keystone.c does not pass all
+> pci-epf-test test cases?
+> 
+> 
+> Kind regards,
+> Niklas
 
-Mmm I think you are correct. For instance, nothing prevents someone from
-implementing `Io` with bogus `addr()` and `maxsize()` methods, which
-would trigger undefined behavior with purely safe code.
+Hi Niklas,
 
-Danilo/Alice/Daniel: I suppose we want this before this series gets
-merged? If so I will respin.
+I just joined the organization and have no context on why the
+pci-keystone.c have BAR0 and BAR1 as reserved, without disabling the
+bars using dw_pcie_ep_reset_bar() in the .init() callback. Because the
+AM65 do not use any BARs for any purpose like Tegra194 does (ATU
+registers or eDMA registers exposed in BAR4 for example), there would
+be no issue if the BAR0 and BAR1 are overwritten.
+
+This was introduced in the driver the time the EP support was added to
+the driver by Kishon in commit 23284ad677a9 ("PCI: keystone: Add support
+for PCIe EP in AM654x Platforms"), where no context is provided in the
+comments or commit message why the BAR0/1 are marked as reserved in the
+features. Perhaps Kishon can provide a better insight over this.
+
+Regards,
+Aksh Garg
+
+> 
+
