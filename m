@@ -1,127 +1,121 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D16928C866
-	for <linux-pci@vger.kernel.org>; Thu, 12 Feb 2026 19:50:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86B1C295DB8;
+	Thu, 12 Feb 2026 21:18:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770925857; cv=none; b=cXCvcLFLglZ+sPwX4GDQW3k/UT+yxwbAT1dERcu4B4l+B7nsyF/0RotGNymwnQQZcCf9X2tg7XXw1Sv+QEIhI5McfP62rvTEJcYZXabH4ORk//h2JTVr9jPwXHkYHZZ0d7J05NttcMs8PL717ca13k9Lx1dAFBMpBTToob+9Vls=
+	t=1770931116; cv=none; b=rEDgCmT/x9my9X78MMs2K+t9fUc9XfRnFE4dPU6qLPdL3GJUu4Wil+sna7Qf0B8MiZrgtO9Dd3B8LFa633+midl3m1uBW6C3NdCW71+nqlNox7hPgS5TygOEM4/2PkmN/hD3umkcWIVeEA6bCrE4o0pK708JXChqhgje+6cugLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770925857; c=relaxed/simple;
-	bh=9Vq7wFnmX0pcUnYPq6rTPZ4tTafUoJ52G7cQX2Fui/Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Yk5Qg90lX6ySuiShvGpIn8YjHOJOg5QURgIU4mg6zarB5GrAlFElKm834ejvR0N9/L/7CWT7lmVFSgtG3rwXJ3f1FGDI/2cU4uqHTMvq2yvbesGriey5cytAPjyPq4LFMoH7ZI7NUAkSFqKroJevqf+e9cY2FRIxCfoYWvY8zFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Zt24vuKm; arc=none smtp.client-ip=198.175.65.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1770931116; c=relaxed/simple;
+	bh=ZwjtNdHrTt4z5zvI0HCzLCKNAoAwOFoGsgaqJCN6lHc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=IOaTLJL/N80iuxLjtOMCdk96gUPQoKeVF7aMD1poBKvTs5cV9ShPkfVkkvEn23Ux3Y69r/8mm6WEfNEirht22Nph7HCNXA8iSj+3n3KEYI3zIk522w/V+mOY08X06S46cnkvmxxzhL1NslW/X2QtOXzrH00dXPO3ms3c+SirVno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZqKOS5wm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Zt24vuKm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770925856; x=1802461856;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=9Vq7wFnmX0pcUnYPq6rTPZ4tTafUoJ52G7cQX2Fui/Q=;
-  b=Zt24vuKmIXy49eLgmr067isPDeBObKHGY/revd1qgoRewHLX2IyavVy7
-   CDvMvujisCt3lecZfxQOVb3FH40ZRxqCpOFNTdJVIriy69QDaYxMfOTap
-   Jvhd15IcUvXQBZBRqHrY2kCK6EpuaMnUfvtYSnEnOGvElrg9yM8v6RnwC
-   /MLRtgFtXsnh8WsEIgZLVM35u4MM8cme/40HMMUy7pSBLGAUY6JFUyqms
-   vx9bsaiP0KXWBWaIDbGn2fPfCvQ1utGp+eMXKqK6buopH5e23Dxh/DMi9
-   KwHdl8eMMiYkD99X1WRTXRm2+QGWQtuUcgkDc9iALdZxlehfaYPanq0//
-   w==;
-X-CSE-ConnectionGUID: 1n1NBi9aQy68YCBR6g5ugw==
-X-CSE-MsgGUID: 8xg95mFaR6SdQvzOkUYPBw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11699"; a="72292546"
-X-IronPort-AV: E=Sophos;i="6.21,287,1763452800"; 
-   d="scan'208";a="72292546"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2026 11:50:55 -0800
-X-CSE-ConnectionGUID: 72EpLjS3Sl2fgja4b9ZdIg==
-X-CSE-MsgGUID: nwDGbSMrTTCZRLLu1UV29Q==
-X-ExtLoop1: 1
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2026 11:50:55 -0800
-Message-ID: <9b75cf12-a0b4-49bf-b261-cbe02c0fe310@linux.intel.com>
-Date: Thu, 12 Feb 2026 11:50:54 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZqKOS5wm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 018AFC4CEF7;
+	Thu, 12 Feb 2026 21:18:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770931116;
+	bh=ZwjtNdHrTt4z5zvI0HCzLCKNAoAwOFoGsgaqJCN6lHc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=ZqKOS5wmzLv7LH2bJxsIltWIQIbCLYwUcK2r6Uiwb0CIgWGuGHeTuWg6k20hQ8P49
+	 RZTaUSds/6ApSanFdQ5NpNeA6lS7x89gZxgNvkPqwmNk5tShRwTPm1lULIgP9P+618
+	 N6xPu6PUsNUK6sKp/z+sJFeZStTaP/YxDRWpXzTqkXiLMO0B3PEZ5bvXlV6wrnLHPk
+	 +z5OmSfLOq/13hMC7e0xpIZ7mMtlTY0fMOUFDi3mysIyUz3MWIvvs27Vx+qiVodEHk
+	 4Uz4otm2Uf4Fi5mHYyYrQFwl3m9UKc2UnGoLCVm8uW8YjX68utcSN+VMc1mDfH8ZqT
+	 deD6SyzqPhdQg==
+Date: Thu, 12 Feb 2026 15:18:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shuai Xue <xueshuai@linux.alibaba.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	kbusch@kernel.org, sathyanarayanan.kuppuswamy@linux.intel.com,
+	lukas@wunner.de, mahesh@linux.ibm.com, oohall@gmail.com,
+	Jonathan.Cameron@huawei.com, terry.bowman@amd.com,
+	tianruidong@linux.alibaba.com, zhuo.song@linux.alibaba.com,
+	oliver.yang@linux.alibaba.com
+Subject: Re: [PATCH v3] PCI/AER: Only clear error bits in PCIe Device Status
+ register
+Message-ID: <20260212211834.GA3075092@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI/DPC: Clear Interrupt Status in dpc_reset_link()
-To: Danielle Costantino <dcostantino@meta.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <kbusch@kernel.org>, Lukas Wunner <lukas@wunner.de>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>, linux-pci@vger.kernel.org
-References: <20260212191818.3625264-1-dcostantino@meta.com>
- <20260212191818.3625264-2-dcostantino@meta.com>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20260212191818.3625264-2-dcostantino@meta.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260211124624.49656-1-xueshuai@linux.alibaba.com>
 
-
-
-On 2/12/2026 11:18 AM, Danielle Costantino wrote:
-> In the native DPC interrupt path, dpc_irq() clears
-> PCI_EXP_DPC_STATUS_INTERRUPT before scheduling the threaded handler
-> that eventually calls dpc_reset_link().  However, in the firmware-first
-> EDR path, dpc_irq() is never invoked -- firmware owns the DPC interrupt
-> and notifies the OS via an ACPI EDR notification.  dpc_reset_link() is
-> then called directly from edr_handle_event() via pcie_do_recovery().
+On Wed, Feb 11, 2026 at 08:46:24PM +0800, Shuai Xue wrote:
+> Currently, pcie_clear_device_status() clears the entire PCIe Device
+> Status register (PCI_EXP_DEVSTA) by writing back the value read from
+> the register, which affects not only the error status bits but also
+> other writable bits.
 > 
-> Because dpc_reset_link() only clears PCI_EXP_DPC_STATUS_TRIGGER, the
-> Interrupt Status bit (bit 3) is left set permanently after every EDR
-> event.
+> According to PCIe Base Specification r7.0, sec 7.5.3.5 (Device Status
+> Register), this register contains:
 > 
-> Clear PCI_EXP_DPC_STATUS_INTERRUPT alongside PCI_EXP_DPC_STATUS_TRIGGER
-> in dpc_reset_link().  Both bits are RW1C in the DPC Status register per
-> PCIe r6.1, sec 7.9.14.5, so writing them together is safe.  The native
-> path is unaffected because dpc_irq() has already cleared the Interrupt
-> Status bit before dpc_reset_link() runs.
+> - RW1C error status bits (CED, NFED, FED, URD at bits 0-3): These are
+>   the four error status bits that need to be cleared.
 > 
+> - Read-only bits (AUXPD at bit 4, TRPND at bit 5): Writing to these
+>   has no effect.
+> 
+> - Emergency Power Reduction Detected (bit 6): A RW1C non-error bit
+>   introduced in PCIe r5.0 (2019). This is currently the only writable
+>   non-error bit in the Device Status register. Unconditionally
+>   clearing this bit can interfere with other software components that
+>   rely on this power management indication.
+> 
+> - Reserved bits (RsvdZ): These bits are required to be written as
+>   zero. Writing 1s to them (as the current implementation may do)
+>   violates the specification.
+> 
+> To prevent unintended side effects, modify pcie_clear_device_status()
+> to only write 1s to the four error status bits (CED, NFED, FED, URD),
+> leaving the Emergency Power Reduction Detected bit and reserved bits
+> unaffected.
+> 
+> Fixes: ec752f5d54d7 ("PCI/AER: Clear device status bits during ERR_FATAL and ERR_NONFATAL")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Lukas Wunner <lukas@wunner.de>
+> Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
 
-In native path (dpc_irq()), OS owns the interrupt delivery and handling.
-So it clears it in dpc_irq() handler.
+Applied to pci/aer for v7.1, thank you!
 
-In case of EDR, firmware owns the interrupt handling. It just uses ACPI
-method to request OS help with recovery. Since interrupt handling is
-owned by firmware, I think firmware should clear the interrupt status.
+This branch will be rebased to v7.0-rc1 when it is tagged.
 
-> Fixes: aea47413e7ce ("PCI/DPC: Expose dpc_process_error(), dpc_reset_link() for use by EDR")
-> Signed-off-by: Danielle Costantino <dcostantino@meta.com>
 > ---
->  drivers/pci/pcie/dpc.c | 10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
+> changes since v2:
+> - accommodate two macros per line per Lukas
+> - pick up Reviewed-by tag from Lukas
+> ---
+>  drivers/pci/pci.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index fc18349614d7..9baa2345e33e 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
-> @@ -171,8 +171,16 @@ pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->  		goto out;
->  	}
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 13dbb405dc31..0e6a50260555 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2243,10 +2243,9 @@ EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
+>  #ifdef CONFIG_PCIEAER
+>  void pcie_clear_device_status(struct pci_dev *dev)
+>  {
+> -	u16 sta;
+> -
+> -	pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &sta);
+> -	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, sta);
+> +	pcie_capability_write_word(dev, PCI_EXP_DEVSTA,
+> +				   PCI_EXP_DEVSTA_CED | PCI_EXP_DEVSTA_NFED |
+> +				   PCI_EXP_DEVSTA_FED | PCI_EXP_DEVSTA_URD);
+>  }
+>  #endif
 >  
-> +	/*
-> +	 * Clear both DPC Trigger Status and DPC Interrupt Status.  In the
-> +	 * native DPC path, dpc_irq() already clears Interrupt Status before
-> +	 * the threaded handler runs.  But in the EDR (firmware-first) path,
-> +	 * dpc_irq() is never called, so Interrupt Status must be cleared
-> +	 * here to prevent it from remaining stale indefinitely.
-> +	 */
->  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
-> -			      PCI_EXP_DPC_STATUS_TRIGGER);
-> +			      PCI_EXP_DPC_STATUS_TRIGGER |
-> +			      PCI_EXP_DPC_STATUS_INTERRUPT);
->  
->  	if (pci_bridge_wait_for_secondary_bus(pdev, "DPC")) {
->  		clear_bit(PCI_DPC_RECOVERED, &pdev->priv_flags);
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
-
+> -- 
+> 2.43.5
+> 
