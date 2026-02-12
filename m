@@ -1,208 +1,138 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010034.outbound.protection.outlook.com [52.101.201.34])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8945EEEAB;
-	Thu, 12 Feb 2026 13:46:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.34
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770903996; cv=fail; b=OdVT04YRel94po45ki6wBJVItWAOno+vOiSo5ikC4e2QGfqBhKrun0FslUIMiPGbkdB69psGwZ7+w4GAPQNMkDu2l33l4ehmRZmxAMScikW/lqnQnkINGaUu44WUn9fBmPvNRGUVhMdOINUeos1od7uu66mVqwgwrZromN2nyqM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770903996; c=relaxed/simple;
-	bh=CxpzYclZwqLcqMX1xNfMr50Pz7T4LuXp5wFs2XmYLd8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=RtPkrWghWR1HoWJ3uRb+lrgWRcMTLrfIXXKGkXhVb2XS7XsdBFcJNMSq5udt1M38qN3owWZWDk1yDpTNFBtrQPMUCL83qUR6wnC79o5tnzLwGkLqWD1dKvzpv4VwIgzc/jhaRRO4Rg64cRmtFGEhUgW5aa+wlVzHhi0hDg01lFQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=ChW6nw4a; arc=fail smtp.client-ip=52.101.201.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7972A2C234A;
+	Thu, 12 Feb 2026 14:02:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770904962; cv=none; b=d7wf6DbhBCdK9f6HO+lqei/tjE4b1t6GuLGD/7CqfvZ0R10HjOWAjywCcMpUvxLsPAG84APf8h7HSch69v0rfLxqmV82OOEEPX+WMCvwvgHj9jRr/tzGE6CNZYVUO67NzGZ9UNLXb3/53dNoIRnwKnw1b7FVtpEA1OgMbKI6YDw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770904962; c=relaxed/simple;
+	bh=iS+s19X3jjjts8Df2O63rWj3hlfZLHXYx/c7cTEzgEI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=nQ0BmD+9UMxdBG8JSudd0lpPIS4qq51ZJnEJS12BEIobfLz5BLWggS0YP2TfQYZSCWt3dwgDTkIlQ5nKMZWndTfnNsXy8iMyzJqma+2tHHTmEJx6bXe+dfTuaS//SwDFFFewcIyXJeSkBoTsnZIJG3bkCDvC6u/+yCadPcZ6MCs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=JDm407du; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ChW6nw4a"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=kZ2pmBnyaTfpYiWp49QfA33RyHKrteEM5ZJ8bpMONCxIuoK8tuFDVn0RdSIYF/c8CenfbSQTzOpK2PX1Pig31Dhn1tBRNGMOOYT4pYyGCaYl8ffvWZOhCAzfdpnzztdqYLwhVFq+00e8K9PpUwkWx7vamh/QlvNHTreYQj5v0gTbzNHo5TNOdJ2SLDvplHL1NqCwAGPl6KgU/KL8lPzlLiVNbC/iqPjo/V9teclPhFwZsTixk1gXz1LMC7FwgI+jfbbCpxxSQsFhoQhequog/xWttOYrG5yB5yL88w9f1AQou7J2SUdqUQOR3vuUT3TCFsIDydb6FgEuq5ha3Lb8kQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EM0Cm80Ir9qmvA/M0YYdzH8JuGYDz0KEi0GFUvUrx4w=;
- b=v/u8/jaf3m3eww93prhitxEMhKk17X4X4277SbK3qAI2+hchbxzY3G16oPjZH1lOZV5PPPeMqPBYBJWtlEglJPSGFbDwjeundqA8U0l1b2aj4oMmdyZbNqPuf+HNrquUcDl97S36pTe1L5cQ2d3i3NU0920pQm0KYP8SBu3/JNpU23y96vKvWL8+QIgSqqVqCy6M3bMNu4hvgHHPjoETFwc0YY0R8ro3X2a+ECiXFC3L414t219tM/+mrrhG7JTjY7vhuCVAHP5myrY0/NlpFcWEFQsGQA0mZnJCAHHstM4XrSICZINvCiKG3oYHCqYtpqFBhWLSSuAl2L3jpzePug==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.194) smtp.rcpttodomain=kernel.org smtp.mailfrom=ti.com; dmarc=pass
- (p=quarantine sp=none pct=100) action=none header.from=ti.com; dkim=none
- (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EM0Cm80Ir9qmvA/M0YYdzH8JuGYDz0KEi0GFUvUrx4w=;
- b=ChW6nw4ayDOfjBo0QarGtsLEC59A/lX/ub0h95tqRNUhFufkfe2UjLI25tgiFp/p8q4KJYH4cYPKNwQ0ud8OEhYLCYEQmQwjwy16AszvY9BPsYnsBKli23pUFfUNYD09WCayMuWt6LSIuTNEdL1/e6WUYMnEQNRO4JXmgatNr30=
-Received: from PH3PEPF00004099.namprd05.prod.outlook.com (2603:10b6:518:1::45)
- by IA1PR10MB6145.namprd10.prod.outlook.com (2603:10b6:208:3ab::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.15; Thu, 12 Feb
- 2026 13:46:31 +0000
-Received: from SN1PEPF0002BA51.namprd03.prod.outlook.com
- (2a01:111:f403:f90e::3) by PH3PEPF00004099.outlook.office365.com
- (2603:1036:903:49::3) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9587.15 via Frontend Transport; Thu,
- 12 Feb 2026 13:46:31 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
-Received: from flwvzet200.ext.ti.com (198.47.21.194) by
- SN1PEPF0002BA51.mail.protection.outlook.com (10.167.242.74) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9611.8 via Frontend Transport; Thu, 12 Feb 2026 13:46:30 +0000
-Received: from DFLE204.ent.ti.com (10.64.6.62) by flwvzet200.ext.ti.com
- (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 12 Feb
- 2026 07:46:29 -0600
-Received: from DFLE215.ent.ti.com (10.64.6.73) by DFLE204.ent.ti.com
- (10.64.6.62) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 12 Feb
- 2026 07:46:28 -0600
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE215.ent.ti.com
- (10.64.6.73) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Thu, 12 Feb 2026 07:46:28 -0600
-Received: from [10.249.145.65] ([10.249.145.65])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61CDkNDC3154025;
-	Thu, 12 Feb 2026 07:46:24 -0600
-Message-ID: <e9820b38-768c-45fb-a719-7a1db7a7a795@ti.com>
-Date: Thu, 12 Feb 2026 19:16:22 +0530
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="JDm407du"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61C741v5473751;
+	Thu, 12 Feb 2026 14:02:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=tmqPTD
+	XRn4fBwC657wa097v50m21rpJjL5kQW52yC6U=; b=JDm407du5dtyjZgys88DD2
+	N3eS18wKZhc86+U9mVpJOTq0LpxnVHnAWRjq5Rj7oqzSbXRikpbsloLl9uYi3/y1
+	and3Q9SVl4J/bYaA85gukYlV1Xs+HJkQTqknY5NDYBTmvyQCOpK4nrj7zOZmEb4I
+	IzMKErdCXc4tvAg3/JdUEfmtP/FhZFLsnjB0aEbeVUwgpITVLzLoHW1CUx6GIPb9
+	30DK0bQKc0KTMFOfp8/Huw5AnX2jfx1+V8NjOY3bt1pbFIViPNTjweNDEiNQJh3N
+	4LmMuL/RghdTT/0P/1K1nf9ZYG0/nNBMzhUS1FZtWwiABd+RojzXvms4B5OZjjZw
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4c696x3qvx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 12 Feb 2026 14:02:36 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61CCGKve008404;
+	Thu, 12 Feb 2026 14:02:35 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4c6g3yjrt3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 12 Feb 2026 14:02:35 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61CE2VWp61669810
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 12 Feb 2026 14:02:31 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C533E20040;
+	Thu, 12 Feb 2026 14:02:31 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 79D4F2004B;
+	Thu, 12 Feb 2026 14:02:31 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 12 Feb 2026 14:02:31 +0000 (GMT)
+From: Julian Ruess <julianr@linux.ibm.com>
+Date: Thu, 12 Feb 2026 15:02:17 +0100
+Subject: [PATCH 3/3] MAINTAINERS: add VFIO ISM PCI DRIVER section
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/3] PCI: tegra194: Reset BARs when running in PCIe
- endpoint mode
-To: Niklas Cassel <cassel@kernel.org>
-CC: Manikanta Maddireddy <mmaddireddy@nvidia.com>, <kishon@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, <stable@vger.kernel.org>,
-	Thierry Reding <treding@nvidia.com>, <linux-pci@vger.kernel.org>,
-	<linux-tegra@vger.kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Thierry Reding
-	<thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, "Rob
- Herring" <robh@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
-	<kwilczynski@kernel.org>
-References: <20250922140822.519796-5-cassel@kernel.org>
- <20250922140822.519796-7-cassel@kernel.org>
- <2fedf28e-83ea-4e51-b1a1-e45f0e928509@nvidia.com> <aYonDJyd_dbV0GBK@ryzen>
- <94458c39-587b-4bb4-a410-e921e5d99f10@nvidia.com> <aYsDDOZA18BBeOsd@ryzen>
- <aYsKzBjmGEi1z0am@ryzen> <8d85409e-2f07-4e4b-831b-68c17a341a60@ti.com>
- <aY3FhZUhb7RL80Fp@ryzen>
-Content-Language: en-US
-From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <aY3FhZUhb7RL80Fp@ryzen>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN1PEPF0002BA51:EE_|IA1PR10MB6145:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7bb6094a-70cd-4884-4c72-08de6a3d206a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|376014|7416014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?U21hRUI2S0NtQ3hWYUZMYStOaWsxRHM4OWQxQnZiQURaQVZyM0xndG1uTHBH?=
- =?utf-8?B?dEFLOEZxSlNaWGMrRmdBNDlTWVJVWGZpSERkbnBRK25laDJxc1FydmVuNlRh?=
- =?utf-8?B?bmtTamppTy91QlF3aVFsTkttamg5em1meFRYb0FycEpyVm9UV0NmVFBvRGhS?=
- =?utf-8?B?ay9GQXB1VFh4OVVIWnR0QTNENFRFOTdNRFlWVkQ1MVExbCt4K0hxZ2FiZHhR?=
- =?utf-8?B?MjlPczRpeWdwREloK0M5K3JlZkk3elViUDRYZ3ErRlpuSTB0ZHVjOVJ4MWV5?=
- =?utf-8?B?SE1OUmZpQ0ZyY2d6RFQrR2JNZ0NsUGN2aktNOEY2WS94ZlZ0WWVrVjZzNUVB?=
- =?utf-8?B?akhFdTRiTUhDYzhsTFdMcTVnY0lxeTVybmNQUnNKRWRjZjRhSkZOUG95cGx2?=
- =?utf-8?B?cTRRYmtZMHdUaG9VeVk4QU95cGlUVTFLWFg4blRxSW1lenYwZHJGZml0aVVu?=
- =?utf-8?B?R3oxUEpWb25RL2tMZnFCZWpYbkdJUUJLM1R1WTlYb1dGL1RIRVIyc2ZlWXlB?=
- =?utf-8?B?QktaTTk0bGN2ams2dzlPenp4c05pWVRGandOZ3pEanFUZHVVTFlNRXNHV1JP?=
- =?utf-8?B?dUFPZFBPU1lueTdXWlFRMUROOWhSZDYxdHBGYkJTa2FDSk9kLzBmM05oMDJz?=
- =?utf-8?B?UGJRMGJGaWszOThSWFdZRGNnbDQzeDhBYVNTWkFkeVhxNkpncW1DRjBCNWZV?=
- =?utf-8?B?TEdkbko2L3A4UGFZTDdmbG1pOTZzT2Yzckx4dC96SWxoYnRJVkEzajFGYmxG?=
- =?utf-8?B?WHE5bFpweXQ0VTlvSERVZHZKWUtvNFVRMUZoaDJCTHYzNkNCa0s3ZCtHUTJI?=
- =?utf-8?B?UFhqWUZ3aGk3VTZTSWtsa0RyMHZCNWhQT0p5TUFHZGhYYUpVcUUvVVFoeEhq?=
- =?utf-8?B?dE9Wci81ZUQ1UTNDL040YUx0THJ3UjMxaGRhUDYrTm1aY3FrbGgxSE82SW9v?=
- =?utf-8?B?QktyU2Y0Ti9HNVlwZERSaWtUNnhlRmhNV2xVUzZPTExRMUM0QTZFZzF5blRv?=
- =?utf-8?B?MXBWTUVTQUp1YUZUWW5TQU9WS1V5eTc4eFJEdmNpQndYWHF1NUx6MGkyZXl1?=
- =?utf-8?B?UFNLckR5Q1RRVUdVNmFkS0t3YjdhSGJ5L1A1ZWpoQnpYOG9UTzJKQTJmUUE2?=
- =?utf-8?B?bjBCeU9jbnFLTHoyemJ1aUlEZlh1Q2UvcUE2SWNCdmJsdEFJemV4S2ZOTXlp?=
- =?utf-8?B?YnAwZG96M1ZUNE5VOWFlWE9uVU5DNC9NcE83Z1JpRy9OcS9QSXJ5bXpxTkp3?=
- =?utf-8?B?bE5Ib3htZG9xa2UvdEYySkd3NCt4T1FpcE9jWFJNVk5XaGJGRW50OVBWSEFJ?=
- =?utf-8?B?MkJPVXVyUzZ5d2xvZzlDVUlhNGVhZGVPTkR6OWNCeDBrT1FneWJucmk3Um9o?=
- =?utf-8?B?NUYxbmxBWFFtTzljWHdNZXc4QUowckJtMnZVb0xEcHg1OUtUMzFQNGE2dUt1?=
- =?utf-8?B?ZzJ6bkNxQ1c3Q0FHbFpFaTdYNklmY1hUcE5MMENsc0h1RnhlaEFaUTE3NXl5?=
- =?utf-8?B?NXFKdU5pK2sxOFdxZjZRZEYxRkxTclM3UVNEWXg0Sm93emF3UWJ4WUQzOTRa?=
- =?utf-8?B?Vkt3ZkpJTU5pS2FWRlJMZXZpTy9yeXBKK3hWaUlueGNBcEdHbTQwcXRCd1g3?=
- =?utf-8?B?eWUwQktyYnBjUmlJZkI3L050WlZxbGkyaFRQWDQ0RFEvQUxEMGMxSnRxSUhh?=
- =?utf-8?B?dG95SkpYK1c0bkFyVHMrZitZd1RVRStubFB1UUx2ZE1OTlJtNGo0VmdnOU9U?=
- =?utf-8?B?YThoUEJhMEVJTFFsclJtK0tja1h6ODF6UVFDaFB1UktWTGtCUldMQjB4TXVv?=
- =?utf-8?B?YUNCVnJaRUphd0pRUWpycS9pU1JhS0VlVUlvOGFOVHlwQ21rQ2tUQ0RTdEZQ?=
- =?utf-8?B?SEVkbnpnTC9Ob1NlWXp0UmtZQUFqdlJIVTd5cXNudGJ3MHUrbjVEVm12OEZX?=
- =?utf-8?B?ZElmaWVWQnpJZU56M2lBc3ZQblZFOE5TQlRFLytmdWZHcXk5VElrRUZvR0Nq?=
- =?utf-8?B?V2E3NXFhNmVzNFVHbE8vWjB5OHJ3cytvZzhWZ0VhNWtFSFA3U25ST1VIUG9w?=
- =?utf-8?B?WFdqdlprcGozTTRWTCtjNFltWElhMDBKdlBsT0xHcENYSHVocDRkOVFDQVhU?=
- =?utf-8?B?RVhYRkt1RHFjV1JsMzgyUm5abDZWdUdsNmI4OTJxSElZb20vYnNaUmtreFVT?=
- =?utf-8?B?QW8zZ3lqU3F4K29DU21JS2VqZW5wc1l1Y1V6WkVaSHJWWklQRTZjdXlNOTBo?=
- =?utf-8?B?MFloODdxdXRZOW1TZWZIRnIweE9nPT0=?=
-X-Forefront-Antispam-Report:
-	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(376014)(7416014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	1hS5GH05AQE+hzO8+q4tn7P1m0tPvzjVV3A79OHrJ8BKUZawbzFveB3DXDJcH3/CY0nvdIb4A9zlvrjGd/eTChKHGsbKf2Ukid6RIkCW8309pw+qPZpsCkdfDDMS1Jliun9Sww6xSYYoXVwgfHGZBMxM2dupk5tF8pp8cCz352S3ZrK3hnwrAjqNJpW8Hn9gnnL7AZ33siOmRELSqeNDMNNiKKgXq/bApgS2JXhbc6We6F1ZynbMHalxxI0qOyOFwaMmPkKRNvJyRxuo4RVwd270Gl+GXtgiE7Ceim2bv2W24xo7YXbBJ1BG3jyOD4ectUucmEyHnwbnv59lIuzMgxpGS/zTGK2iGZT7lzcJVEJBYvZB90/kkRQ4TRnEZKl6LHNErQyiA0wwbP/IqK4jpqukEQ1BdsnoaVMQqxehsiK39dGBzc1KeLJOci5JI1NJ
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Feb 2026 13:46:30.1795
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7bb6094a-70cd-4884-4c72-08de6a3d206a
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SN1PEPF0002BA51.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB6145
+Message-Id: <20260212-vfio_pci_ism-v1-3-333262ade074@linux.ibm.com>
+References: <20260212-vfio_pci_ism-v1-0-333262ade074@linux.ibm.com>
+In-Reply-To: <20260212-vfio_pci_ism-v1-0-333262ade074@linux.ibm.com>
+To: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
+        oberpar@linux.ibm.com, gbayer@linux.ibm.com,
+        Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Shameer Kolothum <skolothumtho@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>
+Cc: mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
+        hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
+        julianr@linux.ibm.com, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org
+X-Mailer: b4 0.14.2
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=WZYBqkhX c=1 sm=1 tr=0 ts=698ddd7c cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VnNF1IyMAAAA:8
+ a=VwQbUJbxAAAA:8 a=Ikd4Dj_1AAAA:8 a=N04f8XHk16Uzgq2NRSwA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: vm_oryJQ4MZObU8Y1D8-iHXUu2E0M2me
+X-Proofpoint-ORIG-GUID: vm_oryJQ4MZObU8Y1D8-iHXUu2E0M2me
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjEyMDEwNCBTYWx0ZWRfX5hZKwaP5Pj6d
+ 2Qr9xdvlifsUyoju/hVBjA0okCcJizyINBMyQoZ8mbvtLuPDp8C1mAtKPzwzfO1SMsMaIS4BOFE
+ V/FOWUOyOQuXRa6fmSp1V5FfasFgfYghf8a7rAywMvKN4BtX9GatEAcaK5NZkyqLwu7aIoP3htT
+ kFHEgLSxZ8+cQ+If3+CCk5zVD9gyKZMOf+83oDhMQKYX0Hp0zz9XEyIcIm+o2L5OZqH+iRkSHX0
+ /tKd7FvZGdwe3ozg97envwZMbuFBOZtBsC0godOaeWULRWtE2CiyrEP+KulPyQOGDCjs+SBSpmW
+ NXSf7IhwRZhae6WR8qPn9Z7+4dGxJ23Y0nw8eH6KxsIX5EGJidKeDCow5YEwVWwAvQFTudHS04O
+ 3cGfhBS+E+JVE3iKVLQbP1vfN1uvcgknXOmtegQLZ7QynQqCPCmNmn2nGabsmr9WuT4ETzZrt4q
+ y5Vk6dt5joLuutWqBkg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-12_04,2026-02-12_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 clxscore=1015 phishscore=0 bulkscore=0 adultscore=0
+ priorityscore=1501 lowpriorityscore=0 suspectscore=0 impostorscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
+ definitions=main-2602120104
 
+ism_vfio_pci is a new kernel component that allows
+to use the ISM device from userspace. Add myself
+as a maintainer.
 
+Acked-by: Alexandra Winter <wintera@linux.ibm.com>
+Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
+---
+ MAINTAINERS | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-On 2/12/2026 5:50 PM, Niklas Cassel wrote:
-> On Thu, Feb 12, 2026 at 05:40:59PM +0530, Aksh Garg wrote:
->> > since you have a @ti.com email, perhaps you can explain how pci-keystone.c
->> > can pass all the pci-epf-test test cases, considering that this is the only
->> > driver that has BARs (BAR0 and BAR1) marked as BAR_RESERVED but do not also
->> > disable the BARs (using dw_pcie_ep_reset_bar()) in the init() callback.
->> > 
->> > Or, perhaps the simple answer is that pci-keystone.c does not pass all
->> > pci-epf-test test cases?
->> 
->> Hi Niklas,
->> 
->> I just joined the organization and have no context on why the
->> pci-keystone.c have BAR0 and BAR1 as reserved, without disabling the
->> bars using dw_pcie_ep_reset_bar() in the .init() callback. Because the
->> AM65 do not use any BARs for any purpose like Tegra194 does (ATU
->> registers or eDMA registers exposed in BAR4 for example), there would
->> be no issue if the BAR0 and BAR1 are overwritten.
->> 
->> This was introduced in the driver the time the EP support was added to
->> the driver by Kishon in commit 23284ad677a9 ("PCI: keystone: Add support
->> for PCIe EP in AM654x Platforms"), where no context is provided in the
->> comments or commit message why the BAR0/1 are marked as reserved in the
->> features. Perhaps Kishon can provide a better insight over this.
-> 
-> It is extra confusing, since the older driver from TI:
-> pci-dra7xx.c does have the dw_pcie_ep_reset_bar() calls in init()
-> (git blame shows added by Kishon), so it is a bit surprising that
-> the newer driver (pci-keystone.c) does not.
-> 
-> (And like I explained, currently all DWC drivers except keystone and
-> pcie-keembay.c do have the dw_pcie_ep_reset_bar() calls in init().)
-> 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e087673237636268346979ddc270f8cf0905c722..e9d025ea396e71102463a50b2934827175356da2 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -27393,6 +27393,12 @@ L:	kvm@vger.kernel.org
+ S:	Maintained
+ F:	drivers/vfio/pci/hisilicon/
+ 
++VFIO ISM PCI DRIVER
++M:	Julian Ruess <julianr@linux.ibm.com>
++L:	kvm@vger.kernel.org
++S:	Maintained
++F:	drivers/vfio/pci/ism/
++
+ VFIO MEDIATED DEVICE DRIVERS
+ M:	Kirti Wankhede <kwankhede@nvidia.com>
+ L:	kvm@vger.kernel.org
 
-Yes, true. I tried to backtrace why this is so for pci-keystone.c, but
-couldn't find anything on this.
-
-> Kind regards,
-> Niklas
-> 
+-- 
+2.51.0
 
