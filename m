@@ -1,100 +1,84 @@
-Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C26E811CAF
-	for <linux-pci@vger.kernel.org>; Thu, 12 Feb 2026 14:17:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770905862; cv=none; b=OetS7YFtzXPk2JJUsKKt2Ue2pIowjr4Ouee3EQSVfGIDJMgeJbcnGqOpEttgXnSwsC/aSN8+6YJLqa/swONMlU0Kp8zyzOXzJoUJxbbg4MZrbruwFP0moEPrHwXfkSHr1J3U1lUX2JJB+mUZKWeBB1vTx+OM0pVMozs6WWXXYoI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770905862; c=relaxed/simple;
-	bh=3b3igbvjtC6TzOflHJmS47zTEL8ymbacN0YsKIuJxWU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KMVkWiTj8N2h6bKGBRzQ/ShHWRkw/w/d5G+QLs6SkvqbaSaWlY6xllJhVe1WEASOfRMQ6ZJR68Unf/GDSU7JNIW2wasavJT0Ss/KggR8LYOF3RXB1EkU+P3izXM8hCXDVkxmmOLVI8uL2MvaHBJh3tlesgL65oBEMjliLv7iAmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=Q3uRx0oV; arc=none smtp.client-ip=209.85.219.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CC73B19F;
+	Thu, 12 Feb 2026 14:41:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770907280; cv=pass; b=pqIMHTHnsLeDxgsG2z48htcyS12Osu1E+yKboJU15TCfIg1zrkGcE1R9uZCUKkC8J0Y39f+lND+rm/+0vaY6ARvcnNB9NDYoBgpDerhHmupyivNj3Zsuaw3/a95+oWOXP7xkcf+FGV3pM3tw+5vUElqSYwPBy0KFklKhdZQk/yY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770907280; c=relaxed/simple;
+	bh=dvQQBsBQ2yZ1RNMToz4U18kQI9+/xsePem4SI7FnS44=;
+	h=Content-Type:From:Mime-Version:Subject:Date:Message-Id:References:
+	 Cc:In-Reply-To:To; b=DcMS/2bhSX38d1XA0I7fMwW8YBXpuW026i/Y2GwpbpnrYZYk0dDIc3U8WrKvmC/fzcIh0F0IAxXi9nvz3+zqvaOLmBIsam7FQzGwglNyL7jTr1gJr9+FgY3u00Z16fQDdLM8MJSkYWwbx5vq4BzgPmAKX8+rREMslgiiJi1pKTs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=EV7eV4YA; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Q3uRx0oV"
-Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-895341058b1so88575556d6.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Feb 2026 06:17:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1770905860; x=1771510660; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=3b3igbvjtC6TzOflHJmS47zTEL8ymbacN0YsKIuJxWU=;
-        b=Q3uRx0oVkpBtjZMZbSndCvl0/QfZMt7MAbI3D53Txnr5ruSGu9lv2TFV5MAf2viUVP
-         DBTTpZdyOU0CG9x13bvE8QdJ1Ws1qPBvvtbXzd3CGRZ/jPPL8wabZgieEAYpzhRGMF/O
-         YPNOJTeSNw+dkZ/VtglpsW0d50nHTNJyHM+tyGNLHF+MRSikENW+5UT0wSzONaWcbioI
-         0ySfyGpJ+0eaQEwRJrsNaAljb6ddCr+R4BrrICxJgWeaY8Ja6zeTgfwm7v9Cn/dmSKsy
-         uuMMALbstQPH3dip8zt8iFv9o1DHdy4Mq3g+Srd2i9qde8R7TpaO/L1Q3TtoJxdNPstJ
-         IS9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770905860; x=1771510660;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3b3igbvjtC6TzOflHJmS47zTEL8ymbacN0YsKIuJxWU=;
-        b=wu65h2NcBV0SPWwkV+BfBc3S/To9LUSwBkIWXWB41DXSl630sHpiwqcRpcBpmwlbMV
-         4XrpO7RRdw5tTD5MvfkVgOzCMQIdxiBI8iWEKMYwmRvGUnWK/V1mWtpig1+JPc1zaFRX
-         M45lcxip1xlTVwZDtoX2/qVEz+lMbDX/qa8XfxnGPzgarRy4H4VMWfqbX7d1Dscmc0QL
-         5TXtZFGslX0e/f81MmjvBYzmUAX4qWl3ozy7ZiJmTEYEGYhiLN3YoESP0x/YR0C1i3Rf
-         O7C0+X3fT33H/Z6hmyTbwhBYFsqB1IvYYHhaaqlNcwD/wd6HVIRR3QjTnanZRDL1o14+
-         N5Nw==
-X-Forwarded-Encrypted: i=1; AJvYcCVRoscTfdFIG7hZZkUsPiz97E+5V7NNiZwGRnNq2fd7cLBhkh7G4L1GBsXga26zzO1s87UUSNkhHRs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzTuCaZ8sNOlRl36nBBUF0YbWz8dKzU2tjgSQ8NN3/O6Cu+pQf5
-	6VxHumBnP8aoBWf/eZ6sMhDBTC1i10lUbEmbCevVi21brmIjnQObdutMoP7iC0TB2UA=
-X-Gm-Gg: AZuq6aJUuq9z6w5wrOilfu4gPwELWQ4NRmeRa7wDW4Tw2p2uEwXlwIPwj6YShhKJ8+X
-	l/6r8ZMe9dZIieRtbtnQviSiNEkAPxMB/2EJMLkWxjiq5l4mRtfUe9IXfeU49ku3kleZY4uaqFQ
-	5P0npE6IzHPnSuR/nIArg+DmUqSbRFFmngB6rfEZ0h3anZolZ/xlo3pMs1m1kITzJFjXQBF8mKk
-	eyBMxNGviGws3+n/WLPMpTJDmspglOSWzpcSTUmqv0HXXOWemORDisLwEH3gXxEYWOzYRyJK7C7
-	O2AgfiH8pKfNzirvtNymINgmNvKF3w4GxjujyXfqwU4OzhwIhRxLZfz9xcZc7s94dUWzH8sMVd+
-	DoXsfqSi7jub039w0J1MXE2wRl2VW+4qBDs9MvLSxWjx/dcKOGKSdL8oVCp7dSUOjugheg4Dt8o
-	5ZivW7bMGU2iIqWZPmpvRKuc4IolD4it98ltimAp3/TmhIPDQdMA2zSYweaCkbUuVoW15bQPzFv
-	8zWqwA=
-X-Received: by 2002:a05:6214:b6d:b0:888:4939:c29 with SMTP id 6a1803df08f44-89727b28033mr38655036d6.71.1770905859509;
-        Thu, 12 Feb 2026 06:17:39 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cddb9efsm45048286d6.51.2026.02.12.06.17.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Feb 2026 06:17:38 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1vqXVi-000000013HU-0xrD;
-	Thu, 12 Feb 2026 10:17:38 -0400
-Date: Thu, 12 Feb 2026 10:17:38 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Julian Ruess <julianr@linux.ibm.com>
-Cc: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
-	oberpar@linux.ibm.com, gbayer@linux.ibm.com,
-	Alex Williamson <alex@shazbot.org>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <skolothumtho@nvidia.com>,
-	Kevin Tian <kevin.tian@intel.com>, mjrosato@linux.ibm.com,
-	alifm@linux.ibm.com, raspl@linux.ibm.com, hca@linux.ibm.com,
-	agordeev@linux.ibm.com, gor@linux.ibm.com, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/3] vfio/pci: Set VFIO_PCI_OFFSET_SHIFT to 48
-Message-ID: <20260212141738.GM750753@ziepe.ca>
-References: <20260212-vfio_pci_ism-v1-0-333262ade074@linux.ibm.com>
- <20260212-vfio_pci_ism-v1-1-333262ade074@linux.ibm.com>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="EV7eV4YA"
+ARC-Seal: i=1; a=rsa-sha256; t=1770907259; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=O7tH2iA9RVnc36cSs0bNCzSylAcF1RHiqzshjF57macg9wdCXbfJ4hGGPzEpDjK8nEyNVDim68+4R549mWMD0Hq+wKp4JCVAfB2fAr55QiDEx/+wqq6yOzMGT+kdmjrtJA8IBDNOQrKIh5mNiBo9Zax+4wzHOwfr5e6cnHNbcFE=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1770907259; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=dvQQBsBQ2yZ1RNMToz4U18kQI9+/xsePem4SI7FnS44=; 
+	b=RfszTj6d5edP6/BqoIBd0sMinAfoVcb4/yZTthCuXCmVpwkxsXdTaXL2tS1PoXuCnT4yGWWOUzwwlwHB/753CEYrH84UNEUN7XalKpJKMC016Y2G3Y7ODlLL67p8veszJ2NGAbFD7C2djrO4hsnXoLhI5yZ1qNSzHvruYi5J1Rg=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
+	dmarc=pass header.from=<daniel.almeida@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1770907259;
+	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
+	h=Content-Type:Content-Transfer-Encoding:From:From:Mime-Version:Subject:Subject:Date:Date:Message-Id:Message-Id:References:Cc:Cc:In-Reply-To:To:To:Reply-To;
+	bh=dvQQBsBQ2yZ1RNMToz4U18kQI9+/xsePem4SI7FnS44=;
+	b=EV7eV4YAsxo7h2hFRvINmOIviM+YD3/Ja1eYJEaIBre79/GjgANBXbJeiOVfmZCA
+	90cnBYfo5zhtIJ8EzWYdlNww+9gVp3hp6ypI4KO413mpwb2/Akyn3cJ/2HEhfsw5Asu
+	CRqGyFloHLL0yBfBQl3dqBf5vl1ZMxDfdx7xsgVA=
+Received: by mx.zohomail.com with SMTPS id 1770907257830939.3426571428066;
+	Thu, 12 Feb 2026 06:40:57 -0800 (PST)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+From: Daniel Almeida <daniel.almeida@collabora.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260212-vfio_pci_ism-v1-1-333262ade074@linux.ibm.com>
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH v2 0/6] rust: io: turn IoCapable into a functional trait
+Date: Thu, 12 Feb 2026 11:40:17 -0300
+Message-Id: <091AF422-90EF-46EE-9A87-FDBBC7E85BFF@collabora.com>
+References: <DGCZF7HF09D2.I8ZU6A0KM91M@nvidia.com>
+Cc: lyude@redhat.com, Danilo Krummrich <dakr@kernel.org>,
+ Alice Ryhl <aliceryhl@google.com>, Miguel Ojeda <ojeda@kernel.org>,
+ Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
+ =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>,
+ Trevor Gross <tmgross@umich.edu>, Bjorn Helgaas <bhelgaas@google.com>,
+ =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Zhi Wang <zhiw@nvidia.com>, Eliot Courtney <ecourtney@nvidia.com>
+In-Reply-To: <DGCZF7HF09D2.I8ZU6A0KM91M@nvidia.com>
+To: Alexandre Courbot <acourbot@nvidia.com>
+X-Mailer: iPhone Mail (23C71)
+X-ZohoMailClient: External
 
-On Thu, Feb 12, 2026 at 03:02:15PM +0100, Julian Ruess wrote:
-> Extend VFIO_PCI_OFFSET_SHIFT to 48 to use the vfio-pci
-> VFIO_PCI_OFFSET_TO_INDEX() mechanism with the 256 TiB pseudo-BAR 0 of
-> the ISM device on s390. This bar is never mapped.
 
-Woah, this is dangerous, the size was selected to fit within a pgoff
-of a 32bit system.. Does this entirely break vfio on 32 bit?
 
-Jason
+> On 12 Feb 2026, at 09:29, Alexandre Courbot <acourbot@nvidia.com> wrote:
+>=20
+> =EF=BB=BFOn Sat Feb 7, 2026 at 4:48 AM JST, lyude wrote:
+>> A thought that crossed my mind just now with this patch series while I
+>> was working on converting iosys_map over to it: shouldn't we have some
+>> unit tests for confirming runtime bounds checking works as well?
+>=20
+> I guess we would need a mock I/O type for that - is that what you had in
+> mind, or did I miss your idea?
+>=20
+
+This is probably yet another use case for the =E2=80=9Csystem memory=E2=80=9D=
+ backend we=E2=80=99ve been discussing recently.
+
+=E2=80=94 Daniel=
+
