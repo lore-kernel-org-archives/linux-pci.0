@@ -1,100 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59EFF2E0916;
-	Thu, 12 Feb 2026 23:39:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C51AA2F872
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2026 01:22:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770939577; cv=none; b=SaF0xudh2z1mszhI0Ey6EHjgjZ9ku7cFUXOj0aa/IHr429LXPbbs+a4gvBAublGQxRPHHbc8dufMNXKKV71tMvmq7mTSoCnuFBzSI9aPGu3pMOgg3DMOIltmrfk39G6kHptokU5usPXbP1GDFMy33Ii8LVPHHOD96oHq3+kZflA=
+	t=1770945771; cv=none; b=pzl1lpZEbb1DdNxfj+NsskE/mk4A9Mx8j/qrlm1wbIUc//txYSZmmauvq7+c+EqRhJC/a5V3BPECNJXlIsA/xlJHarOmzwvliowRJ4KwRqxut+MMVHhBuK6KotBjAwxlJepStQ1p7XYE3cttANfa9ggZmHeNGLyiDiJF2pqdO8U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770939577; c=relaxed/simple;
-	bh=MHkyUcytnOGwmc4gr6wYSkPIL7Wqdv4CCDQbJLkpkLU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=q40lyhFiONUQnfeuHrMxFtRvBKScxcxnXkkZD8VuKEWINokX7UkR4yHmEAdjpcwpMfzLPZoar7DvIyD8o/v7DRY8AIq7SqXXeatqHddi1rTz3jfJvIoT6D9AkwDVkeEwR/lC6HKlcuOwSgmrhkVRuZX7FWFl23LDBZyY43Qjt4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CyGn1kke; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770945771; c=relaxed/simple;
+	bh=Zw4igzxZQEpnvo9DeEcYt/JbPfcdWvKRVQpYA0WvAJg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fRWbL9rcWrtXJ3Vy1Ew2K9tUDY1BsYQb93hx95n1j/nRmLRSOwKG/cUurlgthLre/KbVZ0Efte2e8O2LlneL+hMZTuXILJNhQu0sChRgTnAeZ+0wM4mitmXDoBH6YARwNxrXY6HAx6lynFF/ZjxuIyYBQvo/ONIA31DndEjzQxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e8l66Inr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CyGn1kke"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88C7FC19422;
-	Thu, 12 Feb 2026 23:39:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e8l66Inr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3EBFC4CEF7;
+	Fri, 13 Feb 2026 01:22:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770939577;
-	bh=MHkyUcytnOGwmc4gr6wYSkPIL7Wqdv4CCDQbJLkpkLU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=CyGn1kkekhGLDXI/BUD11YN1TYvHXZxZ1sw9zJtxbqnowimXip9YHyAsFQd1AtJiP
-	 nLkKvvuej5PYl63Nh3anLbCLn+tvfzdOVrc1IfGKcWF34BZq4fISEJt094KyQP9B+w
-	 AsA8WIaGnZngCih/YbBBSzSqWAAP6JCvQWxAGVr4Q8n7Wfrc/PYygrng3y/g31D8LZ
-	 1hxhNVd95yR8jQjq3esnQJkbrCJ2ANykrzbjQsDf+NiihSZri/UI1KvQ+26Mf5xOfJ
-	 XGAgUi4V1QNhAKR1kdggaiqDx5HfKtY5Ch4GA3F+EhelFdtbmr0VJ8hyNChuZCoTbl
-	 MsNh1nycg4/9A==
-Message-ID: <554897dc-1cd6-461d-9248-cc491b984a9e@kernel.org>
-Date: Fri, 13 Feb 2026 08:39:34 +0900
+	s=k20201202; t=1770945771;
+	bh=Zw4igzxZQEpnvo9DeEcYt/JbPfcdWvKRVQpYA0WvAJg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=e8l66InrL1UOVOS0pK77FoZ/vUP99dcoHTDMmB6thh1s43q2FHOGJL7YED44JB03H
+	 C5UHtxmhzpKImPZmRUq0EeTOXER/JrE1OWHL2KhOfF7PCvgpsMU8ac7JSbFUgramTa
+	 jZXYXQqc/BZ2bJJ8Q72VeXXXdPEY+sK4xkWFJvGpz/WNT6ObBQE7aafQ/Q6TrZyNQo
+	 qjSpvUo7ZzNCUbZrxsP/KHB2HcGsxH4V8oiAbN9j9pSRUbXztahLUGiYsY4A4bgA9D
+	 lRqDa1iudZtahyHnKNpG89KwwRhYhGeoqpCbm1TzzvkNYgfmZKE7qxZAdWZ2EvRaZ3
+	 RMIQZZ7UxX78Q==
+Date: Thu, 12 Feb 2026 18:22:49 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Danielle Costantino <dcostantino@meta.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI/DPC: Clear Interrupt Status in dpc_reset_link()
+Message-ID: <aY586W1YoKVyfBJZ@kbusch-mbp>
+References: <20260212191818.3625264-1-dcostantino@meta.com>
+ <20260212191818.3625264-2-dcostantino@meta.com>
+ <9b75cf12-a0b4-49bf-b261-cbe02c0fe310@linux.intel.com>
+ <aY5E4OWE_v0Jdyd1@kbusch-mbp>
+ <9a7a176d-4450-47ac-859c-0ce69a19afee@linux.intel.com>
+ <aY5QMlr_7XLIbOsV@kbusch-mbp>
+ <8b4800cf-7e8a-42f7-a84a-5081afe00048@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: select configfs
-To: Arnd Bergmann <arnd@arndb.de>, Niklas Cassel <cassel@kernel.org>,
- Arnd Bergmann <arnd@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
- Kishon Vijay Abraham I <kishon@kernel.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260211070812.4087119-1-arnd@kernel.org>
- <aYxGR-x3lGt7H1dp@ryzen>
- <8db96e1b-2559-4966-87d9-171854c6ce19@app.fastmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <8db96e1b-2559-4966-87d9-171854c6ce19@app.fastmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8b4800cf-7e8a-42f7-a84a-5081afe00048@linux.intel.com>
 
-On 2/11/26 18:37, Arnd Bergmann wrote:
-> On Wed, Feb 11, 2026, at 10:05, Niklas Cassel wrote:
->> On Wed, Feb 11, 2026 at 08:07:40AM +0100, Arnd Bergmann wrote:
->>
->> However, I remember that you Arnd was one of the main reasons why Kishon
->> decided to use configfs to configure a PCI endpoint controller and to
->> bind a PCI endpoint function driver with a PCI endpoint controller.
->>
->> I don't know of any other way than configfs to bind a PCI endpoint function
->> driver with a PCI endpoint controller.
->>
->> To me, it seems a bit silly to be able to build PCI_ENDPOINT without
->> configfs. What should a user do with a library that they cannot bind to
->> a PCI endpoint controller?
->>
->> Why shouldn't we just do something like:
->>
->> diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
->> index 8dad291be8b8..d6f898094509 100644
->> --- a/drivers/pci/endpoint/Kconfig
->> +++ b/drivers/pci/endpoint/Kconfig
->> @@ -8,6 +8,7 @@ menu "PCI Endpoint"
->>  config PCI_ENDPOINT
->>  	bool "PCI Endpoint Support"
->>  	depends on HAVE_PCI
->> +	select PCI_ENDPOINT_CONFIGFS
->>  	help
->>  	   Enable this configuration option to support configurable PCI
->>  	   endpoint. This should be enabled if the platform has a PCI
+On Thu, Feb 12, 2026 at 02:51:46PM -0800, Kuppuswamy Sathyanarayanan wrote:
+> On 2/12/2026 2:12 PM, Keith Busch wrote:
 > 
+> As per EDR flow, firmware waits for _OST reply from OS to complete the
+> current interrupt handling. After receiving _OST, firmware decides whether
+> recovery should continue or if the link should be disabled. When/how firmware
+> handles subsequent DPC events depends on firmware's implementation.
+
+You at least agree the OS controls the "Trigger Status". That controls
+whether the link stays contained or not, but now you're saying the
+firmware gets to yank the link after the OS returns _OST success?
+There's no flow in the spec suggesting any such behavior.
+
+> > Sure, there's no explicit language in any spec I can find that the OS
+> > must write 1 to bit 3 of the status register, but it doesn't say
+> > firmware owns that bit either. The firmware handed control of the status
+> > to the OS in this path. It would not make sense to return to firmware in
+> > a state that makes it impossible to report new errors during that
+> > transition window.
 > 
-> I think at that point we would instead drop PCI_ENDPOINT_CONFIGFS
-> as a Kconfig option, since it is never user selectable. Otherwise
-> this is probably a sensible solution as well.
+> The spec explicitly lists what the OS can write during the EDR window. For
+> few registers it gives full contro; For DPC status, it explicitly states
+> which bit it can clear (DPC trigger status). 
 
-+1. That option is mandatory, so it is not an option at all :)
-If PCI_ENDPOINT is set, we must have configfs.
+What harm do you think will come if we return the dpc status register to
+firmware in a state that indicates the OS handled it to completion?
 
+> > Besides, is firmware first even triggering off an interrupt? Pretty sure
+> > it's triggering off the ERR_COR message, no? Why would it need to own
+> > the Interrupt Status bit when it's not even relying on it?
 > 
->      Arnd
+> If it not triggered by interrupt, then interrupt status bit does not
+> matter (even for OS handler).
 
+Emperically speaking, yes, it does matter. Otherwise why would this
+patch exist?
 
--- 
-Damien Le Moal
-Western Digital Research
+Or the other way, if you think it doesn't matter, then why oppose
+improving Linux hardware interop?
