@@ -1,136 +1,264 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2117D361664
-	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2026 17:08:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE613280014;
+	Fri, 13 Feb 2026 19:26:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771002510; cv=none; b=q0+kJv5Z+VxTcIx28M/zV49VJHwhPGCOYKhAuVWuH0pfjlELNOHFvKjNg7ihsMIDFOef8afEZ9QCVrcHBKtSAEQirfgobClLiXuJLJA9IXk23pxErzReF9+Gf9msjFobu5ijXixk8+xx6ArZsqaXQFuo9Dh89cnIZ+vNN25ttmg=
+	t=1771010769; cv=none; b=V5HnIAZNZScSmMiJOCCGSXWIuyVX4H8VMejNg304kHGKJDtdZPQbMyORPyiFX7qKD02C1Yy+99YuEmaMWbCWa6k+bsRhPFCE30d015MUzbNEZwbuZppcPCQvHB3Rqwnp1kHpgLTmc83aOQtla73tecDdwPRMLumg/0EEhUpNRVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771002510; c=relaxed/simple;
-	bh=N3Eqyt+4NC5mG6rp46SmBlyT6KbE/gyPQCjvlfiJyag=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fSOXIEVCDYt2RcHclGg8TCr6ShKZjSveRSzbQK8CCDLL+Cf+qaxJ46P/GvIfcYUxnQYpLlZpoQ17pdhL3r9EzuMj4z70XfRuEPaKPOjtTmUMemEvTmjhZEO0VglBNBJN/+LJt/e+eW4pOf03MSSu4mMt5sBkTMUmIJNKs+X9uak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AM3k9Xlc; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1771010769; c=relaxed/simple;
+	bh=OWWrmiJn3brG/tKtBfwhmjftYweBWbiMSVyUQbGfjdY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=jRzd+dZePhIFyVpjHSqLhn4ecaBC1dngfgXZh/G9e1AddgM6kWvsQHKoNDDBgOLPGpk8gHZ2VfK/kZLKanqILWb5xOcKIG/M8PVZjMqX5+xUsXjIeBEYkzy78TQ3mE1dZjwJdqO0jgHMaosb4MRO4YHYtpmPzDYpPuj94ScbDsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZ2xEaJP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AM3k9Xlc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771002509; x=1802538509;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=N3Eqyt+4NC5mG6rp46SmBlyT6KbE/gyPQCjvlfiJyag=;
-  b=AM3k9XlcKUE4+tGgts/7nf930rBVP4c4hkr7u2wRCadJ0ynNpaD8iMij
-   Ub5FIvRl7lRrw5fVeI3XBoB6RB0TG7dTHvVhE2e3FklUMwY6vScz+KyBe
-   vSSqHz2Nt5Dc6nfHrFy99PlqrNEyh9cfpSaEjQm+Ad5rR254f0Ux2WGlV
-   bpJTNalJr72/QTffOkmoSfXvca0+iFscmNlpOAVhDhraZpY48rMfhDSQH
-   +jt5DFTcAQlHI5NB6ucqlAVoxR50k6/9u6M6hYTWBC3TvehXpmyBVBBtF
-   BoZnHksC/hXMQ0L/YOLM5FYSRnvyE4B1YGFtuRAm+J1u0tPni/GUNKvQ/
-   A==;
-X-CSE-ConnectionGUID: FHfSds07QzCjqc1j53lChQ==
-X-CSE-MsgGUID: NWiNY8Q8Qiy4DUsfW4xJVA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11700"; a="72084874"
-X-IronPort-AV: E=Sophos;i="6.21,288,1763452800"; 
-   d="scan'208";a="72084874"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2026 09:08:28 -0800
-X-CSE-ConnectionGUID: HYDkI30sQ86L9ozPD6zfSg==
-X-CSE-MsgGUID: 4YNUytmtTLOKMusPVGdZ0g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,288,1763452800"; 
-   d="scan'208";a="213074425"
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2026 09:08:28 -0800
-Message-ID: <837fc537-ea84-44c0-ba86-8ec4f1ba8230@linux.intel.com>
-Date: Fri, 13 Feb 2026 09:08:28 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZ2xEaJP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 762CDC116C6;
+	Fri, 13 Feb 2026 19:26:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771010768;
+	bh=OWWrmiJn3brG/tKtBfwhmjftYweBWbiMSVyUQbGfjdY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=PZ2xEaJP/jcqly9XUexxpvFbT8BX3rYWtvL2oPo/vcLtmUc8xHJMzlpYGPrAi17c3
+	 oQNlpauoUnoGQTSmTZ34X+D9X5Dd+ffuv/zeQ9RPbbKl3NBj8/+7pA4dYwfaZ6ysp2
+	 PkhtKrC/PUFerblfZ120znh8z7S4VURzu/eAqNp06Fad/L9gMwcMm3Atcvou4mhYfC
+	 WVe4okLY/t921QYjCZJ4nHLwvgMaW6GjHwsSqtVjYhZi/i37VdJNEKMNi/xiLpcIU0
+	 OAqsOWAtkKiRcZfqB/GSaMrwlnnxBd9afEDLZvXjgE6bc0o0VlhoPlTtRgYFkdbh1t
+	 Q5ASz3G2B2HDw==
+Date: Fri, 13 Feb 2026 13:26:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Matthew Ruffell <matthew.ruffell@canonical.com>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>,
+	Jay Vosburgh <jay.vosburgh@canonical.com>, kengyu@lexical.tw,
+	Brian Norris <briannorris@chromium.org>
+Subject: Re: [PROBLEM] c5.metal on AWS fails to kexec after "PCI: Explicitly
+ put devices into D0 when initializing"
+Message-ID: <20260213192607.GA3167656@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI/DPC: Clear Interrupt Status in dpc_reset_link()
-To: Keith Busch <kbusch@kernel.org>
-Cc: Danielle Costantino <dcostantino@meta.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>, linux-pci@vger.kernel.org
-References: <20260212191818.3625264-1-dcostantino@meta.com>
- <20260212191818.3625264-2-dcostantino@meta.com>
- <9b75cf12-a0b4-49bf-b261-cbe02c0fe310@linux.intel.com>
- <aY5E4OWE_v0Jdyd1@kbusch-mbp>
- <9a7a176d-4450-47ac-859c-0ce69a19afee@linux.intel.com>
- <aY5QMlr_7XLIbOsV@kbusch-mbp>
- <8b4800cf-7e8a-42f7-a84a-5081afe00048@linux.intel.com>
- <aY586W1YoKVyfBJZ@kbusch-mbp>
- <bf28da73-7189-412f-808a-2dbb6d241b4d@linux.intel.com>
- <aY8uy9BZyLMYgKua@kbusch-mbp>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <aY8uy9BZyLMYgKua@kbusch-mbp>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKAwkKuD2XF1-32RrOsWRV_wXuiPP1BoFMcH8pA0HLEczKz3jw@mail.gmail.com>
 
+[+cc Brian, author of 51c0996dadae ("PCI/PM: Prevent runtime suspend
+until devices are fully initialized") (though it's not clear to me
+whether this makes any difference)]
 
-
-On 2/13/2026 6:01 AM, Keith Busch wrote:
-> On Thu, Feb 12, 2026 at 08:28:15PM -0800, Sathyanarayanan Kuppuswamy wrote:
->> Hi Keith,
->>
->> On 2/12/26 5:22 PM, Keith Busch wrote:
->>> On Thu, Feb 12, 2026 at 02:51:46PM -0800, Kuppuswamy Sathyanarayanan wrote:
->>>> On 2/12/2026 2:12 PM, Keith Busch wrote:
->>>>
->>>> As per EDR flow, firmware waits for _OST reply from OS to complete the
->>>> current interrupt handling. After receiving _OST, firmware decides whether
->>>> recovery should continue or if the link should be disabled. When/how firmware
->>>> handles subsequent DPC events depends on firmware's implementation.
->>> You at least agree the OS controls the "Trigger Status". That controls
->>> whether the link stays contained or not, but now you're saying the
->>> firmware gets to yank the link after the OS returns _OST success?
->>> There's no flow in the spec suggesting any such behavior.
->>
->> I was referring to the flow chart and notes on page 85, in PCI firmware spec,
->> v3.3, which mention firmware can choose to disable the link in certain
->> cases (notes 3,5).
->  
-> Err, what? No, there is no path for firmware to disable the link if OS
-> returns _OST  0x80 (success). The path says firmware is supposed to
-> "Clear ...  Disable Link", not to disable the link.
-
-Let me list the firmware path after OS sends _OST(0xF, BDF<<16+0x80) indicating
-success (PCI Firmware Spec v3.3, page 85):
-
-1. "Capture error status. Optionally, validate if device should be recovered" (note 3)
-2. Decision point: "Continue Recovery?"
-    If YES: Return from _OST (recovery complete)
-    If NO: Execute "Clear error status. DPC Software Trigger or Disable Link" (note 5)
-
-Note 3 states: "FW/OS may rely on past device history, type of error, etc. to
-determine if the recovery should be performed/continued."
-Note 5 states: "If setting Disable Link and port supports DPC, DPC should be
-disabled prior to setting Disable Link."
-
-If firmware decides not to continue, it can disable link. Please correct me if
-my interpretation is wrong.
-
+On Fri, Feb 13, 2026 at 06:54:13PM +1300, Matthew Ruffell wrote:
+> Hi Mario,
 > 
-> If the firmware wants to disable the link permanently, it does so before
-> considering DPC and makes it a hotplug event instead.  
-
-Yes, it does it once before considering the DPC. And another time after
-OS completes the recovery.
-
+> I have been doing some experiments with c5.metal on AWS with an
+> Ubuntu resolute userspace and a 7.0 merge window kernel.
 > 
-> But in all honesty, that diagram is a complete mess and very poorly
-> captures what an OS is supposed to do for a DPC. You don't unbind the
-> drivers when you're trying to recover the devices they're driving.
+> Amazon AMI:
+> ami-04080dce0ccaa893d
 > 
+> Linux HEAD 582a1ef360a05bff4350bbf6e383f61d26b804f0 (Linus's tree).
+> 
+> $ sudo lspci
+> https://paste.ubuntu.com/p/mtgbn2HJtW/
+> 
+> $ sudo lspci -vvv -t
+> https://paste.ubuntu.com/p/s6NhBz5FZy/
+> 
+> I noticed that nvme_pci_enable() calls pci_set_master() with the pci
+> device, and I wondered, is this called with the NVMe device, so I
+> went and had a look.
+> 
+> I added your patch:
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 595ec12d85df..bd116dccd897 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1300,6 +1300,7 @@ int pci_power_up(struct pci_dev *dev)
+>      bool need_restore;
+>      pci_power_t state;
+>      u16 pmcsr;
+> +    u16 old_cmd;
+> 
+>      platform_pci_set_power_state(dev, PCI_D0);
+> 
+> @@ -1347,6 +1348,10 @@ int pci_power_up(struct pci_dev *dev)
+>          udelay(PCI_PM_D2_DELAY);
+> 
+>  end:
+> +        pci_read_config_word(dev, PCI_COMMAND, &old_cmd);
+> +        pci_info(dev, "Bus mastering bit is %sabled in D0\n",
+> +                (old_cmd & PCI_COMMAND_MASTER) ? "en" : "dis");
+> +
+>      dev->current_state = PCI_D0;
+>      if (need_restore)
+>          return 1;
+> 
+> as well as some additional logging in nvme_pci_enable:
+> 
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 80df992d1ae8..2d1898016d40 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -2992,6 +2992,7 @@ static bool nvme_pci_update_nr_queues(struct
+> nvme_dev *dev)
+> 
+>  static int nvme_pci_enable(struct nvme_dev *dev)
+>  {
+> +    dev_info(dev->ctrl.device, "mruffell: nvme_pci_enable() start/n");
+>      int result = -ENOMEM;
+>      struct pci_dev *pdev = to_pci_dev(dev->dev);
+>      unsigned int flags = PCI_IRQ_ALL_TYPES;
+> @@ -2999,6 +3000,7 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+>      if (pci_enable_device_mem(pdev))
+>          return result;
+> 
+> +    pci_info(pdev, "mruffell: nvme_pci_enable() set master\n");
+>      pci_set_master(pdev);
+> 
+>      if (readl(dev->bar + NVME_REG_CSTS) == -1) {
+> @@ -3064,11 +3066,13 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+>      result = nvme_pci_configure_admin_queue(dev);
+>      if (result)
+>          goto free_irq;
+> +    pci_info(pdev, "mruffell: nvme_pci_enable() end\n");
+>      return result;
+> 
+>   free_irq:
+>      pci_free_irq_vectors(pdev);
+>   disable:
+> +    pci_info(pdev, "mruffell: nvme_pci_enable() disable\n");
+>      pci_disable_device(pdev);
+>      return result;
+>  }
+> 
+> So, booting the system on a clean reboot, we see nvme_pci_enable
+> does infact get called with the nvme device, and all PCI devices in
+> D0 with the bus master bit enabled.
+> 
+> https://paste.ubuntu.com/p/zp3khwfMg2/
+> 
+> Then I did a kexec.
+> 
+> https://paste.ubuntu.com/p/SWB5jz6x4g/
+> 
+> nvme_pci_enable() still gets called, but it doesn't seem to change
+> anything.  The system still fails to issue I/O to the NVMe and all
+> pci devices say the bus mastering bit is disabled in D0.
+> 
+> I then reverted
+> 
+> commit 51c0996dadaea20d73eb0495aeda9cb0422243e8
+> Author: Brian Norris <briannorris@chromium.org>
+> Date:   Thu Jan 22 09:48:15 2026 -0800
+> Subject: PCI/PM: Prevent runtime suspend until devices are fully initialized
+> 
+> commit 907a7a2e5bf40c6a359b2f6cc53d6fdca04009e0
+> Author: Mario Limonciello <mario.limonciello@amd.com>
+> Date:   Wed Jun 11 18:31:16 2025 -0500
+> Subject: PCI/PM: Set up runtime PM even for devices without PCI PM
+> 
+> commit 4d4c10f763d7808fbade28d83d237411603bca05
+> Author: Mario Limonciello <mario.limonciello@amd.com>
+> Date:   Wed Apr 23 23:31:32 2025 -0500
+> Subject: PCI: Explicitly put devices into D0 when initializing
+> 
+> and repeated the tests.
+> 
+> This time, on a clean reboot I get:
+> 
+> https://paste.ubuntu.com/p/qm6ZBWNqG5/
+> 
+> I get no messages about bus mastering at all. I did a kexec reboot
+> and the system comes up correctly, again with no messages about bus
+> mastering. So we must return early before the printout.
+> 
+> I then added some more logging, to see if we can see what state
+> these devices are in:
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index bd116dccd897..deed439af6e4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1302,10 +1302,16 @@ int pci_power_up(struct pci_dev *dev)
+>      u16 pmcsr;
+>      u16 old_cmd;
+> 
+> +    state = platform_pci_get_power_state(dev);
+> +    pci_read_config_word(dev, PCI_COMMAND, &old_cmd);
+> +        pci_info(dev, "Initial: Bus mastering bit is %sabled in %d\n",
+> +                (old_cmd & PCI_COMMAND_MASTER) ? "en" : "dis", state);
 
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+If you include "%s", paired with "__func__", in the printf string,
+we'll get the locations directly.
 
+>      platform_pci_set_power_state(dev, PCI_D0);
+> 
+>      if (!dev->pm_cap) {
+>          state = platform_pci_get_power_state(dev);
+> +        pci_info(dev, "mruffell: pci power state is %d\n", state);
+>          if (state == PCI_UNKNOWN)
+>              dev->current_state = PCI_D0;
+>          else
+> @@ -1349,7 +1355,7 @@ int pci_power_up(struct pci_dev *dev)
+> 
+>  end:
+>          pci_read_config_word(dev, PCI_COMMAND, &old_cmd);
+> -        pci_info(dev, "Bus mastering bit is %sabled in D0\n",
+> +        pci_info(dev, "mruffell: final: Bus mastering bit is %sabled in D0\n",
+>                  (old_cmd & PCI_COMMAND_MASTER) ? "en" : "dis");
+> 
+>      dev->current_state = PCI_D0;
+> 
+> The result for a clean reboot is:
+> 
+> https://paste.ubuntu.com/p/qh84c8T9ND/
+> 
+> We seem to skip pci_power_up() entirely for most devices, including
+> the NVMe drive. Those that enter pci_power_up() are in state 5, or
+> PCI_UNKNOWN.
+> 
+> I did a kexec, and we get:
+> 
+> https://paste.ubuntu.com/p/D2GhjKxDG3/
+> 
+> Pretty much identical results, and the system comes up correctly.
+> Each time the bus mastering printout at the very end of
+> pci_power_up() is never called.
+> 
+> The only conclusions I can seem to draw from this is when "PCI:
+> Explicitly put devices into D0 when initializing" is present, all
+> devices get their bus mastering bit, and are placed into D0, and on
+> kexec, all devices lose their bus mastering bit and never get it
+> back again.
+> 
+> If we revert "PCI: Explicitly put devices into D0 when
+> initializing", devices that work bypass pci_power_up(), get their
+> bus mastering bits set correctly, and kexec works.
+
+Thanks for all your instrumentation and debugging!
+
+I don't think it's safe for the PCI core to indiscriminately enable
+bus mastering during boot.  That allows devices to DMA to/from system
+memory even if there's no driver to operate the device.  Bus mastering
+should only be enabled by a driver.
+
+Per D2GhjKxDG3, nvme_pci_enable() is being called after the kexec, as
+it should be.  We need to figure out why it isn't enabling bus
+mastering.
+
+It looks like something is wrong before we even get to
+nvme_pci_enable() because it took 80+ seconds to get there after
+kexec (D2GhjKxDG3), vs 2 seconds for the clean reboot (qh84c8T9ND).
+
+Can you please put the entire dmesg log in a pastebin, possibly also
+with a note about the circumstances and a pointer to another pastebin
+with the "git diff" from upstream to the kernel?  It's hard for me to
+pull all the pieces together from the excerpts and keep track of which
+logs correspond to reboots vs kexecs, etc.
+
+Bjorn
