@@ -1,184 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [144.76.133.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 620E617B506;
-	Sat, 14 Feb 2026 01:04:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D3372627;
+	Sat, 14 Feb 2026 06:01:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771031058; cv=none; b=EHgJQe6uWvK41TNMjRIeXhx5Oym+4Y8JIWU0d3xYxxm9LevaDRDMtuVofGZ65E87u+oCsSccx0SoOOqa83gwiuJvNTAd9pEMI2GYWQAWqUhVbuDT7qkOfh8mEZVKwOR3Vdhc3Th7CQQY3hYDnWSHkiG7+qCkp9F7bLk528zSVBI=
+	t=1771048885; cv=none; b=p+REKLC1vWEDWKsPwAUwhR/kNamUXE3Kq9KhgL8WkC8p/AYdzbzCJR16voAhkWzuOibdOb+PSR9LAdKeo707oNQJzTgTWZwd4vIlbZGKnr3+S/Puz8I++UDEDfGYDX7sNLsWuGVV55rrWhLrRA6V6yYsZjylOZplxKRm3/rCQiU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771031058; c=relaxed/simple;
-	bh=8+SbarDVbRZxOg/pWYIHay+wdz+dAk1f4lkH7xgnv24=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a4oPFppprb7g8ZytQGpeo8dDcZYmphgDTBpJvVlMLtGS4vlcfJbSXHkeUnbSVbd+taFUozBSOSfwRTsZfZp7nUdrWjbt0bRU07AA6mFytgrrx9PKwOzF1RmPTdhXIFZCNQcFR7e+O9RGrut5oDtYMHWCz4xf6l8nXeH2uEs98As=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LZLRr9vl; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LZLRr9vl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31C36C116C6;
-	Sat, 14 Feb 2026 01:04:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771031058;
-	bh=8+SbarDVbRZxOg/pWYIHay+wdz+dAk1f4lkH7xgnv24=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=LZLRr9vlc1AKJJac4JCRDaM7ZWMR9lOYo88KEbfKQ1Da1FjK4VDCJ4GAdm26WN7qe
-	 vq0HTUN7owD6k7QxpGK42FTdWTgQd+EXlAjFRSbRlRxnJBPGtKKY2WLgIAJf1jptIz
-	 +VYR/z8GTPBR+dUALtDQ78gYMZ9pPsqdWqRvlUF8GVpXx9TrnOxiOG93MpQeO0VeWx
-	 APwtihaFaQc4Imd2hLvK2nrNlRhMHkkC9WIEoGw8t/74RW+xcuTWT7P2tBPt8Sgk/U
-	 VCqZ3e1vFpFvGQcYDwMZd8H6QrOLMuDwLQNOb4PlsOa3wv65mmhVQ0xtABwrduESPt
-	 XsUvI1q4RCAnw==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>,
-	Kai Vehmanen <kai.vehmanen@linux.intel.com>,
-	Liam Girdwood <liam.r.girdwood@intel.com>,
-	Ranjani Sridharan <ranjani.sridharan@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Mark Brown <broonie@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-6.12] PCI: Add Intel Nova Lake audio Device ID
-Date: Fri, 13 Feb 2026 19:58:43 -0500
-Message-ID: <20260214010245.3671907-43-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260214010245.3671907-1-sashal@kernel.org>
-References: <20260214010245.3671907-1-sashal@kernel.org>
+	s=arc-20240116; t=1771048885; c=relaxed/simple;
+	bh=ueGrL9IclvInRIQA2Pg8K2okcqM2pcDFBnz3KSTkUiw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JW0qbwcTYGNj0m4soEj6+PPy9aFp0JoQ1b866d8gdh5jBesvcObjAWCaTQ+uukcprdifwnH/DjI3Ypbu26gJf5mlur7iV4pgs1HL6RF8EexdyJUqB4/YamuZ0j8xpgoJD0XUm0LeARNT6GzuUFTLU1Lt4HtPorbDJXqPegkslrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=144.76.133.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 82F452C0524A;
+	Sat, 14 Feb 2026 07:01:13 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 388BE1FB82; Sat, 14 Feb 2026 07:01:13 +0100 (CET)
+Date: Sat, 14 Feb 2026 07:01:13 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+Message-ID: <aZAPqQTiGQiDvX52@wunner.de>
+References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.19
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 
-From: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+On Fri, Feb 13, 2026 at 03:14:28PM -0800, Kuppuswamy Sathyanarayanan wrote:
+> On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
+> update PME status registers (PME Status and PME Requester_ID in the
+> Root Status register) during D3hot to D0 transitions, even though PME
+> interrupts are delivered correctly.
 
-[ Upstream commit b190870e0e0cfb375c0d4da02761c32083f3644d ]
+Hm, so in theory we could amend the PME driver to walk the bus below the
+Root Port and see if anything has PME_Status set in the PMCSR register.
 
-Add Nova Lake (NVL) audio Device ID
+But the PME interrupt is shared with hotplug, bandwidth control etc,
+so we'd end up gratuitouly (and frequently) runtime resuming switches
+below the Root Port to see if there's anything below which is requesting
+wakeup.
 
-The ID will be used by HDA legacy, SOF audio stack and the driver
-to determine which audio stack should be used (intel-dsp-config).
+So just keeping the Root Port runtime resumed all the time, as this
+patch does, is still a better approach IMO.
 
-Signed-off-by: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
-Reviewed-by: Kai Vehmanen <kai.vehmanen@linux.intel.com>
-Reviewed-by: Liam Girdwood <liam.r.girdwood@intel.com>
-Reviewed-by: Ranjani Sridharan <ranjani.sridharan@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Takashi Iwai <tiwai@suse.de>
-Link: https://patch.msgid.link/20260120193507.14019-2-peter.ujfalusi@linux.intel.com
-Signed-off-by: Mark Brown <broonie@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
+I'm wondering though if this causes a power regression.  Does keeping
+the Root Port in D0 prevent the Package from entering a lower power
+state?  Or is this irrelevant because the PCH is a different chip
+or tile?
 
-LLM Generated explanations, may be completely bogus:
+If you respin, please cc Rafael and linux-pm@vger.kernel.org to see
+if PM maintainers have any objections.
 
-## Analysis: PCI: Add Intel Nova Lake audio Device ID
+> +++ b/drivers/pci/quirks.c
 
-### Commit Message Analysis
+Since this is x86-specific, it could live in arch/x86/kernel/quirks.c
+or arch/x86/pci/fixup.c to prevent being compiled in on other arches.
 
-This commit adds a single PCI Device ID (`0xd328`) for Intel Nova Lake
-(NVL) audio hardware to `include/linux/pci_ids.h`. The commit message
-clearly states the ID will be used by HDA legacy, SOF audio stack, and
-the intel-dsp-config driver to determine which audio stack should be
-used.
+(I don't know why x86 quirks are spread out across two different files
+and there doesn't seem to be a consistent rule which one to pick.)
 
-The commit has strong review coverage:
-- Reviewed-by from 3 Intel audio engineers (Kai Vehmanen, Liam Girdwood,
-  Ranjani Sridharan)
-- Acked-by from the PCI maintainer (Bjorn Helgaas)
-- Acked-by from the ALSA maintainer (Takashi Iwai)
+Otherwise this is
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
 
-### Code Change Analysis
+Thanks,
 
-The change is a single line addition in `include/linux/pci_ids.h`:
-
-```c
-+#define PCI_DEVICE_ID_INTEL_HDA_NVL    0xd328
-```
-
-This is purely a PCI ID definition — a `#define` macro. It adds no
-logic, no new functions, no behavioral changes. It simply defines a
-constant that other code (HDA driver, SOF driver, intel-dsp-config) can
-reference.
-
-### Classification: New Device ID
-
-This falls squarely into the **"New Device IDs"** exception category for
-stable backports:
-- It's a trivial one-line addition defining a PCI Device ID
-- It enables hardware support for Intel Nova Lake audio
-- The drivers that consume this ID (HDA, SOF, intel-dsp-config) already
-  exist in stable trees
-
-### Important Caveat: Dependency Check
-
-However, there's a critical consideration: **this commit only adds the
-PCI ID definition**. By itself, this `#define` does nothing — it's just
-a constant. For Nova Lake audio to actually work, the drivers that
-reference `PCI_DEVICE_ID_INTEL_HDA_NVL` must also be updated with their
-own patches to add this ID to their device tables and configuration
-logic.
-
-The commit message says "The ID will be used by HDA legacy, SOF audio
-stack and the driver to determine which audio stack should be used
-(intel-dsp-config)." The subject line includes "2-" in the Link URL
-(`14019-2-peter.ujfalusi@linux.intel.com`), suggesting this is part of a
-series.
-
-Without the companion patches that actually use this define in the
-driver match tables, this define alone provides no user-visible benefit.
-However:
-
-1. The define itself is completely harmless — zero risk of regression
-2. It's a prerequisite for the actual driver patches
-3. PCI ID defines are commonly backported as part of hardware enablement
-
-### Risk Assessment
-
-- **Risk**: Essentially zero. It's a `#define` in a header file. It
-  cannot cause any regression.
-- **Benefit**: Enables Intel Nova Lake audio hardware support (when
-  companion driver patches are also present)
-- **Scope**: Single line, single file
-
-### User Impact
-
-Users with Intel Nova Lake hardware need this ID (and the companion
-driver patches) for audio to work. Without it, audio on Nova Lake
-platforms would be non-functional.
-
-### Conclusion
-
-This is a textbook example of a new device ID addition — one of the
-explicitly allowed exceptions for stable backporting. It's a single-
-line, zero-risk change that enables hardware support. The only
-consideration is that it needs companion patches in the actual drivers
-to be useful, but the define itself is harmless and is a standard
-prerequisite.
-
-**YES**
-
- include/linux/pci_ids.h | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index a9a089566b7cb..f2849ff1830b1 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -3143,6 +3143,7 @@
- #define PCI_DEVICE_ID_INTEL_HDA_CML_S	0xa3f0
- #define PCI_DEVICE_ID_INTEL_HDA_LNL_P	0xa828
- #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
-+#define PCI_DEVICE_ID_INTEL_HDA_NVL	0xd328
- #define PCI_DEVICE_ID_INTEL_HDA_BMG	0xe2f7
- #define PCI_DEVICE_ID_INTEL_HDA_PTL_H	0xe328
- #define PCI_DEVICE_ID_INTEL_HDA_PTL	0xe428
--- 
-2.51.0
-
+Lukas
