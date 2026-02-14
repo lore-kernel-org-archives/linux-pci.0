@@ -1,45 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D25142E83;
-	Sat, 14 Feb 2026 21:25:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724C03C2D;
+	Sat, 14 Feb 2026 21:25:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771104347; cv=none; b=RAtXjZcqk83GTBtsl9XutzRbiidWOF4CMf/NVdXa4aG4R029Uc0t4mP9iRJEVdf4yoLntKbgZryN+gKahRLP7TQTsz3X3jHT4/x6JOr+GaQXUodyGR7HYBmnNT7PZqh1t2UU4sVIGWrNXE4wCzHGtItD59PqE4dsPyNHKd0t64w=
+	t=1771104358; cv=none; b=BGzTgSGWI4Ew8dX2pT08/t59QM4uIl2QSExVrtgFsi142o2r+Hm5PiZBmcaXdojgNwiju39bdTwoSBZB8//kYUs6AM56cW7ZtWiFsupzw8oyVpoogimImVeVicrEEouxlYHnMmE8297YgrgcyQO+ivv78807evmYGVgqL+04rpQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771104347; c=relaxed/simple;
-	bh=/MDeQ+MloBzv0PITqc98P7UWt1PQvzBtS3gO8cMn8oE=;
+	s=arc-20240116; t=1771104358; c=relaxed/simple;
+	bh=wXXapwFeYVgtQZwgGByrjTAqhAfXkHTGrYtefsyZo9E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ab73LhwdEuguCy359lUnt5gAvWC7325xNX93IFqLgL51xs3EBOKkWHc6hewS5tcq0G427CQIhXFUi7LgcUR/ZR0qfEMtHm9ZnXle0wK3Os0gqqlCgBvpBN7OGLsYN9nxIdnF6JfytCRPDYEnAnTzJJoeYvaU+b7AWt0Q+5kfulQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLZL9dHk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Khh8ZuNb7txcWadhWbM1jv0LvD391n+BoXtCH2RYCZ6rlD8XcpzSswiZFMP2ta7MBqD7KWBaTcr1i7W44BVO1cm5w0ZOQUvkMjZ5QUrg404FP8UOdrElB28SkatRek/kRj6XS2BnNV62xtP9bcZ6P3eJ8UoLBqRHLSMCZuD7ZG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mkOcGjHS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLZL9dHk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1012FC19422;
-	Sat, 14 Feb 2026 21:25:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mkOcGjHS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0559C19422;
+	Sat, 14 Feb 2026 21:25:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771104347;
-	bh=/MDeQ+MloBzv0PITqc98P7UWt1PQvzBtS3gO8cMn8oE=;
+	s=k20201202; t=1771104356;
+	bh=wXXapwFeYVgtQZwgGByrjTAqhAfXkHTGrYtefsyZo9E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OLZL9dHkPS4n2LG/MZRJf5USLgfaroFiZ0x8C1iG8c0yKpFXfpUPyQlZRLHzfbLzx
-	 SiHIkcea0CH5BMpiy/qvyvEZpA3wjnUZhC7AX0nEAmwFkyKNKJIHhWTl4Bpqh33m9Q
-	 hL6v15mhEg9siHF4QuQIXpQeDrw9WrxDJB2d9CVYG0F4tT7Hkev/kAIggqeXt87Crb
-	 sUAoLe0gxDzK0B/OfmIzybLugPyrgNrgRaov0trU8G7qNiDkh7NCrkOoP0pK0AjS/z
-	 AkIc4Y1TmkrcdeOBzxsQsvFvSBOELWHsFdaM7YPeArykvc6v3inLbt8wyoHpO4yifB
-	 NoJD9WqjDj97g==
+	b=mkOcGjHS+MbvpM5d1YKV1UJ+L9uNRLis4jTZ6Yz6eHiEohtOmJlP05sEqhUIhXQZb
+	 fP19pi33tJwsvTOFVUBSYIRQ3swen5FvPfnCfNvy8ZZHJU2Au3O4gj8g6uwxETv+u9
+	 2z5gTIiRzv7+rlAI07jbnzf2RhzrnHN+GERNkymZ83lIuH+OGSpfanR+qE2VYHWq1x
+	 eCp0bKyrVemD3G1LPjjGhvUS1fb/1eR4I//dUlPxKOEIFJX+NsCvmh/TIPYpPad6ty
+	 8PA91dvf+4b5wQHpPDByY7EkICmF/A9FXD1QpUTR1n61Ri2mY5HyFcq4KXw6II7+dZ
+	 i+ikxghzSluBQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+Cc: Johnny-CC Chang <Johnny-CC.Chang@mediatek.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
 	Sasha Levin <sashal@kernel.org>,
-	jingoohan1@gmail.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-6.18] PCI: dwc: Skip PME_Turn_Off broadcast and L2/L3 transition during suspend if link is not up
-Date: Sat, 14 Feb 2026 16:22:54 -0500
-Message-ID: <20260214212452.782265-29-sashal@kernel.org>
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.19-5.10] PCI: Mark Nvidia GB10 to avoid bus reset
+Date: Sat, 14 Feb 2026 16:23:02 -0500
+Message-ID: <20260214212452.782265-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260214212452.782265-1-sashal@kernel.org>
 References: <20260214212452.782265-1-sashal@kernel.org>
@@ -52,140 +54,134 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.19
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+From: Johnny-CC Chang <Johnny-CC.Chang@mediatek.com>
 
-[ Upstream commit cfd2fdfd0a8da2e5bbfdc4009b9c4b8bf164c937 ]
+[ Upstream commit c81a2ce6b6a844d1a57d2a69833a9d0f00403f00 ]
 
-During system suspend, if the PCIe link is not up, then there is no need
-to broadcast PME_Turn_Off message and wait for L2/L3 transition. So skip
-them.
+After asserting Secondary Bus Reset to downstream devices via a GB10 Root
+Port, the link may not retrain correctly, e.g., the link may retrain with a
+lower lane count or config accesses to downstream devices may fail.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Tested-by: Vincent Guittot <vincent.guittot@linaro.org>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-Link: https://patch.msgid.link/20251218-pci-dwc-suspend-rework-v2-1-5a7778c6094a@oss.qualcomm.com
+Prevent use of Secondary Bus Reset for devices below GB10.
+
+Signed-off-by: Johnny-CC Chang <Johnny-CC.Chang@mediatek.com>
+[bhelgaas: drop pci_ids.h update (only used once), update commit log]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+Link: https://patch.msgid.link/20251113084441.2124737-1-Johnny-CC.Chang@mediatek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Now let me look at the full commit chain. Before v6.14, the code in
-v6.6-v6.13 had an early return (`if (dw_pcie_get_ltssm(pci) <=
-DW_PCIE_LTSSM_DETECT_ACT) return 0;`) which meant when no endpoint was
-connected, the function returned early - skipping both the PME stuff AND
-`dw_pcie_stop_link()` and `deinit()`.
+## Analysis of PCI Quirk for Nvidia GB10 Bus Reset
 
-In v6.14, commit `86a016e278b78` added `dw_pcie_stop_link()` but AFTER
-the L2 wait timeout, and `112aba9a79345` removed the early LTSSM check.
-This combination means: when no link is up, the code tries to do PME/L2
-stuff, might timeout, and returns error before reaching stop_link.
+### Commit Message Analysis
 
-The commit under review fixes this by adding a proper
-`dw_pcie_link_up()` check at the top that skips directly to
-`stop_link:`, ensuring the link is always properly stopped and deinit is
-always called.
+The commit adds a PCI quirk to prevent Secondary Bus Reset (SBR) for
+devices behind Nvidia GB10 Root Ports. The problem is clearly stated:
+after asserting SBR, the link may not retrain correctly — leading to
+reduced lane count or complete failure of config accesses to downstream
+devices. This is a real hardware bug with concrete symptoms (link
+degradation, device inaccessibility).
 
-### Dependency Analysis
+### Code Change Analysis
 
-This commit depends on:
-1. `112aba9a79345` (v6.14) - Removed the LTSSM state guard and
-   restructured the timeout handling
-2. `86a016e278b78` (v6.14) - Added `dw_pcie_stop_link()` to the suspend
-   path
-3. Possibly `e1a4ec1a9520b` (v6.14) - Added MSG TLP support for
-   PME_Turn_Off
-4. `8f4a489b370e6` - Modified dw_pcie_pme_turn_off()
+The change is minimal and surgical:
+- Two `DECLARE_PCI_FIXUP_HEADER` lines are added for two specific Nvidia
+  device IDs (`0x22CE` and `0x22D0`)
+- Both call the existing `quirk_no_bus_reset()` function, which simply
+  sets `PCI_DEV_FLAGS_NO_BUS_RESET` on the device
+- A comment block explains why the quirk is needed, with a link to the
+  mailing list discussion
 
-The code in the diff matches the state of the file as it exists in
-v6.14+. For stable trees < v6.14 (6.6.y, 6.1.y, etc.), the context is
-completely different because the old code had an early return for no-
-link case. The bug this fixes was essentially **introduced** by the
-v6.14 changes that removed the LTSSM guard.
+The diff also shows context that there's already a similar quirk pattern
+for other Nvidia GPU devices (`quirk_nvidia_no_bus_reset` matching
+`0x2340` range), as well as Atheros devices. This is a well-established
+pattern in the kernel.
 
-### Classification
+### Classification: Hardware Quirk
 
-This is a **bug fix** for the suspend path - it prevents:
-1. Timeout errors during suspend when PCIe link is down
-2. Missing stop_link/deinit calls (resource cleanup)
-3. Broken resume after failed suspend
+This falls squarely into the **hardware quirk** category, which is
+explicitly listed as a strong YES signal for stable backporting.
+Hardware quirks:
+- Fix real-world hardware issues
+- Are trivial additions to existing infrastructure
+- Have near-zero risk of regression (they only affect the specific
+  hardware identified by the PCI IDs)
 
-The fix is:
-- Small and contained (a few lines added)
-- Obviously correct (skip link-related operations if link isn't up)
-- Well-reviewed (Reviewed-by from Frank Li and Shawn Lin, Tested-by from
-  Vincent Guittot)
-- Self-contained (no additional dependencies beyond what's already in
-  the file)
+### Scope and Risk Assessment
 
-### Risk Assessment
+- **Lines changed**: ~8 lines (2 macro invocations + comment block)
+- **Files touched**: 1 (`drivers/pci/quirks.c`)
+- **Complexity**: Minimal — uses existing `quirk_no_bus_reset()`
+  function
+- **Risk**: Extremely low — only affects devices with vendor ID
+  `PCI_VENDOR_ID_NVIDIA` and device IDs `0x22CE` or `0x22D0`
+- **No dependencies**: The `quirk_no_bus_reset()` function and
+  `DECLARE_PCI_FIXUP_HEADER` macro have existed in the kernel for a very
+  long time
 
-- **Low risk**: The change only adds a guard at the top of the function.
-  If the link IS up, the behavior is completely unchanged. If the link
-  is NOT up, it skips meaningless operations and goes to cleanup.
-- **Scope**: Only affects DWC PCIe host controller suspend path, very
-  specific scenario (link down during suspend)
-- **Impact**: Fixes real suspend failures on ARM/embedded platforms
-  using DWC PCIe (Qualcomm, Rockchip, i.MX, etc.)
+### User Impact
 
-### Concerns
+- **Who is affected**: Users with Nvidia GB10 Root Ports (likely
+  MediaTek platforms given the author's affiliation)
+- **Severity without fix**: Bus reset can cause downstream devices to
+  become inaccessible (config accesses fail) or degrade link performance
+  (lower lane count). This can manifest as device failures, system
+  hangs, or degraded performance
+- **Severity with fix**: Bus reset is avoided for these specific root
+  ports, preventing the link training failure
 
-The primary concern is **dependency**: This commit effectively fixes a
-regression introduced by `112aba9a79345` and `86a016e278b78` in v6.14.
-For stable trees that don't have those commits (6.6.y, 6.1.y), the old
-code had a different guard (`dw_pcie_get_ltssm() <=
-DW_PCIE_LTSSM_DETECT_ACT`) that handled the link-down case differently
-(by returning 0 early). So:
+### Stability Indicators
 
-- For 6.14.y: This fix applies cleanly and is directly needed
-- For 6.6.y and earlier: The patch won't apply cleanly and the
-  underlying bug pattern is different
+- **Reviewed-by**: Manivannan Sadhasivam (PCI subsystem reviewer)
+- **Committed by**: Bjorn Helgaas (PCI subsystem maintainer), who also
+  edited the commit log
+- **Mailing list link**: Provided for traceability
+- The pattern is identical to many existing quirks in the same file
 
-The fix is appropriate for stable trees that contain the dependent
-commits (6.14+), and would need adaptation for older stable trees. But
-since it fixes a real suspend regression on widely-used hardware
-platforms, it's worth backporting.
+### Dependency Check
 
-### Verdict
+No dependencies. The `quirk_no_bus_reset()` function exists in all
+stable trees. `DECLARE_PCI_FIXUP_HEADER` and `PCI_VENDOR_ID_NVIDIA` are
+long-established. This will apply cleanly to any stable tree.
 
-This commit fixes a real bug where system suspend fails with timeout
-errors on DWC PCIe controllers when no endpoint is connected (link not
-up). It's small, well-reviewed, tested, and fixes a clear regression. It
-meets stable kernel criteria.
+### Conclusion
+
+This is a textbook hardware quirk addition — small, self-contained, zero
+regression risk, fixes a real hardware issue (bus reset failure causing
+device inaccessibility), uses existing well-tested infrastructure,
+reviewed and committed by the PCI subsystem maintainer. It meets all
+stable kernel criteria.
 
 **YES**
 
- drivers/pci/controller/dwc/pcie-designware-host.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/pci/quirks.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 372207c33a857..250725ced9026 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -1158,8 +1158,11 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
- int dw_pcie_suspend_noirq(struct dw_pcie *pci)
- {
- 	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	int ret = 0;
- 	u32 val;
--	int ret;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 54c76ba9a767e..5782dfb863cad 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3748,6 +3748,14 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
+ 	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
+ }
+ 
++/*
++ * After asserting Secondary Bus Reset to downstream devices via a GB10
++ * Root Port, the link may not retrain correctly.
++ * https://lore.kernel.org/r/20251113084441.2124737-1-Johnny-CC.Chang@mediatek.com
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NVIDIA, 0x22CE, quirk_no_bus_reset);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NVIDIA, 0x22D0, quirk_no_bus_reset);
 +
-+	if (!dw_pcie_link_up(pci))
-+		goto stop_link;
- 
- 	/*
- 	 * If L1SS is supported, then do not put the link into L2 as some
-@@ -1194,6 +1197,7 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
- 	 */
- 	udelay(1);
- 
-+stop_link:
- 	dw_pcie_stop_link(pci);
- 	if (pci->pp.ops->deinit)
- 		pci->pp.ops->deinit(&pci->pp);
+ /*
+  * Some NVIDIA GPU devices do not work with bus reset, SBR needs to be
+  * prevented for those affected devices.
 -- 
 2.51.0
 
