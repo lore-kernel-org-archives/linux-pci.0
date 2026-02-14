@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC84E2FDC20;
-	Sat, 14 Feb 2026 21:27:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40DA73090C1;
+	Sat, 14 Feb 2026 21:27:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771104434; cv=none; b=HGHuRtvUBYLtLmE4LZTU/PlptpBvJ08RtPASSRNqmF1+5+btliuXcJtlrVTUbAid4yueBlKlYBMDHEH7JmombxEhIkuJZtoz4vPdwKLJIQQXbRUK0wb/MiRyysN6+D3MPB0iaujQANrreZR96ewdnB9Gz7L1d3bg6WfkCkV6bbQ=
+	t=1771104439; cv=none; b=Mgge8HdZUytiha11xW1WfAcZ/vZi2qvrw2wYFJFWiK6eq8kEQPYF9o9lC9AeeEAMrgSwgfwXrVLiWsCT/dkEVzNqOGeISjZpGquMJMPDsQl0azyyRodEW1E+cwTa35FOXAjut1Fe8uow/QFh+S832KMkfyJmke9XIkEMeosO/ZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771104434; c=relaxed/simple;
-	bh=ADDlhnTR7cwcVMYUjdmYp8M6NLsPPm/L7no9GKVAU3I=;
+	s=arc-20240116; t=1771104439; c=relaxed/simple;
+	bh=5B+y1/9UFO5UHwNM95mpU5Yo9tgGTHgo0lH4ZEMMc7o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rAyXpZAzyqk0p4305fFVFF3F/UriJfX9zBS/eYtboxQc7IU8vYy4fvVJa+Eho/2m0bH2bTbT7hSJg3vwfBZa5Ugq/RQ+P2DY1uS7fiCZKkTVI+i1fHjNg1J5Rb2GMTTXuRv/vQwZOXEObCg/0Uaos3k/dicL31IBNNpZewroHVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XPhVEB9E; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=DRzm0jSVR9+oYmlLW/PbqYPW2MUfooE4L64/bkHBtKi9ou4VAYpTF7sfrID/F/RdoXPubU1sn3Ghx+txShtQf453StWgr7iWdzNjCVfdf3msYPlpxDHfH87RIwZ3eBHNdKolNofTkz4ADEWPFUPgl43LKOh8vF8JiQ8H9kt8xRo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c476ZOg5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XPhVEB9E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94471C19425;
-	Sat, 14 Feb 2026 21:27:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c476ZOg5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FDA8C19423;
+	Sat, 14 Feb 2026 21:27:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771104434;
-	bh=ADDlhnTR7cwcVMYUjdmYp8M6NLsPPm/L7no9GKVAU3I=;
+	s=k20201202; t=1771104439;
+	bh=5B+y1/9UFO5UHwNM95mpU5Yo9tgGTHgo0lH4ZEMMc7o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=XPhVEB9EY9hlgoTQrCp9pDWs8KCbKjDS8aAcgT1LDe1x6Kb/3awTG+UzmVaTPFJqK
-	 l8MQ3OWRyJ+AC0RJZhOd2uzNi+qKUVEj/WXzPivKIwgM+iacjzDGROIxhf6KAF/Jw8
-	 we/mxI4SGaFOxf9hPVJ+BpcCJ2ds4nz31ef/8oZPHjD+mdf2naJpSF1oibebo+bUii
-	 6WGS48Wn7wQJkKDPCbJNRjxuFMgpJrB2MAPUYVzf4G4td2GfdejVBsLoSSWCHwXpXS
-	 w/1TZmywFBU8z1OG/KlnfADUTWRTbj/+IJtugLg/ndRBYXk2YaDyNCQMep4h1r3ymJ
-	 4TtZ6rGxBEryQ==
+	b=c476ZOg5znoDeYJ/j14m2k0Al9UpEO53uRQ2SEgKAE9g35Kn8gZJ4lht2s1UzwgZ8
+	 8thLwKn8bRw4sCobvmBd7HNl4XJO+0nk4dc3Vgt6qufc6ZGdDv/VlLP07BBKCT4pQc
+	 a6htomWUJ5Pqqwrd4HEfGlxWBJbOV4LLxqWli+eRlz1XQFuqhLvWOkI1K9TRL8UKIg
+	 xRhULfIrr1AEFRlFLhq7gMs3U+7tOUKC9f+3BrVMumwKroCaA3af1Z1Oryz2ePsv3/
+	 Y/D4dUzI20+OW4q3Vdmmqh+MWJKKYfYF4nvMsZmQzzv0jS3H6D7bdu2zeBJOBJugUA
+	 opGFSKtoUn0zg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@nvidia.com>,
-	Patrick Bianchi <patrick.w.bianchi@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Cc: Richard Zhu <hongxing.zhu@nxp.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Alexander Stein <alexander.stein@ew.tq-group.com>,
+	Frank Li <Frank.Li@nxp.com>,
 	Sasha Levin <sashal@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-5.10] PCI: Mark ASM1164 SATA controller to avoid bus reset
-Date: Sat, 14 Feb 2026 16:23:46 -0500
-Message-ID: <20260214212452.782265-81-sashal@kernel.org>
+	l.stach@pengutronix.de,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev
+Subject: [PATCH AUTOSEL 6.19-6.18] PCI: imx6: Add CLKREQ# override to enable REFCLK for i.MX95 PCIe
+Date: Sat, 14 Feb 2026 16:23:49 -0500
+Message-ID: <20260214212452.782265-84-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260214212452.782265-1-sashal@kernel.org>
 References: <20260214212452.782265-1-sashal@kernel.org>
@@ -52,148 +56,133 @@ X-stable-base: Linux 6.19
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Alex Williamson <alex.williamson@nvidia.com>
+From: Richard Zhu <hongxing.zhu@nxp.com>
 
-[ Upstream commit beb2f81792a8a619e5122b6b24a374861309c54b ]
+[ Upstream commit 27a064aba2da6bc58fc36a6b8e889187ae3bf89d ]
 
-User forums report issues when assigning ASM1164 SATA controllers to VMs,
-especially in configurations with multiple controllers.  Logs show the
-device fails to retrain after bus reset.  Reports suggest this is an issue
-across multiple platforms.  The device indicates support for PM reset,
-therefore the device still has a viable function level reset mechanism.
-The reporting user confirms the device is well behaved in this use case
-with bus reset disabled.
+The CLKREQ# is an open drain, active low signal that is driven low by
+the card to request reference clock. It's an optional signal added in
+PCIe CEM r4.0, sec 2. Thus, this signal wouldn't be driven low if it's
+not exposed on the slot.
 
-Reported-by: Patrick Bianchi <patrick.w.bianchi@gmail.com>
-Link: https://forum.proxmox.com/threads/problems-with-pcie-passthrough-with-two-identical-devices.149003/
-Signed-off-by: Alex Williamson <alex.williamson@nvidia.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://patch.msgid.link/20260109000211.398300-1-alex.williamson@nvidia.com
+On the i.MX95 EVK board, REFCLK to the host and endpoint is gated by this
+CLKREQ# signal. So if the CLKREQ# signal is not driven by the endpoint, it
+will gate the REFCLK to host too, leading to operational failure.
+
+Hence, enable the REFCLK on this SoC by enabling the CLKREQ# override using
+imx95_pcie_clkreq_override() helper during probe. This override should only
+be cleared when the CLKREQ# signal is exposed on the slot.
+
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+[mani: reworded description]
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+Tested-by: Alexander Stein <alexander.stein@ew.tq-group.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Link: https://patch.msgid.link/20251015030428.2980427-11-hongxing.zhu@nxp.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Analysis of PCI: Mark ASM1164 SATA controller to avoid bus reset
+This is very instructive. The same author (Richard Zhu) previously fixed
+the same kind of issue for i.MX8MM — CLKREQ# not being asserted causing
+operational failures. That commit had a `Fixes:` tag and was clearly a
+bug fix. This commit for i.MX95 is the same pattern — the same bug, same
+root cause, same type of fix, just for a different SoC.
 
-### Commit Message Analysis
+### Summary Assessment
 
-The commit adds a PCI quirk for the ASMedia ASM1164 SATA controller to
-disable bus reset. The problem is clearly described: when assigning
-these controllers to VMs via VFIO/PCI passthrough, the device fails to
-retrain after a bus reset. This is particularly problematic in
-configurations with multiple controllers. The device still supports PM
-reset (power management reset) as an alternative reset mechanism, so
-disabling bus reset doesn't leave the device without any reset
-capability.
+**What the commit fixes**: On i.MX95, PCIe is non-functional when the
+endpoint doesn't drive the CLKREQ# signal (which is optional per PCIe
+CEM spec). Without this fix, the reference clock to the host is gated,
+causing complete operational failure of PCIe.
 
-Key indicators:
-- **Reported-by** tag from a real user (Patrick Bianchi)
-- **Link** to a Proxmox forum thread documenting the issue across
-  multiple platforms
-- Author is Alex Williamson, the VFIO maintainer at NVIDIA — a highly
-  authoritative source for PCI passthrough quirks
-- Reviewed/committed by Bjorn Helgaas, the PCI subsystem maintainer
+**Nature of the fix**: This is a hardware workaround — it enables
+CLKREQ# override so the reference clock isn't gated. It's analogous to
+the `imx8mm_pcie_enable_ref_clk` which does the same thing (assert
+CLKREQ# override) for i.MX8MQ/8MM/8MP.
 
-### Code Change Analysis
+**Dependencies**: The `enable_ref_clk` callback infrastructure (commit
+256867b74625a) must be present. This was added in the 6.11 timeframe
+along with i.MX95 support. The code should exist in stable trees that
+have i.MX95 support.
 
-The change is a single `DECLARE_PCI_FIXUP_HEADER` macro invocation with
-an accompanying comment:
+**Risk**: Very low — only affects i.MX95 PCIe. Simple register writes.
+Uses well-established callback pattern already in use by all other SoC
+variants.
 
-```c
-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164,
-quirk_no_bus_reset);
-```
+**User impact**: HIGH for i.MX95 users — PCIe may be completely non-
+functional without this fix when CLKREQ# is not driven by the endpoint.
 
-This calls the existing `quirk_no_bus_reset()` function, which sets the
-`PCI_DEV_FLAGS_NO_BUS_RESET` flag on the device. The function already
-exists and is used by multiple other devices (Atheros, Cavium, TI
-KeyStone) in the same file. This is purely a data addition — matching a
-specific vendor:device ID pair to an existing quirk handler.
+**Stable criteria**:
+- Fixes a real bug (PCIe non-functional) — YES
+- Obviously correct (simple register writes, tested, reviewed) — YES
+- Small and contained (~30 lines, single file) — YES
+- No new features (it's a hardware workaround for existing platform) —
+  YES
 
-### Classification: Hardware Quirk
-
-This falls squarely into the **PCI Quirks** exception category for
-stable backporting:
-
-- It's a hardware-specific workaround for a broken/buggy device
-- It uses an existing, well-tested mechanism (`quirk_no_bus_reset`)
-- It only affects the specific ASMedia ASM1164 device (vendor ID
-  ASMEDIA, device ID 0x1164)
-- Zero risk to any other hardware or code path
-
-### Scope and Risk Assessment
-
-- **Lines changed**: ~10 (comment + 1 functional line)
-- **Files touched**: 1 (`drivers/pci/quirks.c`)
-- **Risk**: Extremely low — this only affects the specific PCI device
-  ID, and only when bus reset is attempted (primarily VFIO passthrough
-  scenarios)
-- **Dependencies**: None — `PCI_VENDOR_ID_ASMEDIA` and
-  `quirk_no_bus_reset` already exist in stable kernels
-
-### User Impact
-
-- **Who is affected**: Users doing PCI passthrough of ASM1164 SATA
-  controllers to VMs (Proxmox, QEMU/KVM, etc.)
-- **Severity without fix**: Device fails to retrain after bus reset,
-  making VM assignment of these controllers unreliable or non-
-  functional, especially with multiple controllers
-- **The forum thread** indicates this affects multiple users across
-  multiple platforms — it's a real, reproducible issue
-- ASMedia SATA controllers are very common consumer/prosumer hardware
-
-### Stability Indicators
-
-- Alex Williamson (VFIO maintainer) authored it — he's the authority on
-  PCI passthrough issues
-- Bjorn Helgaas (PCI maintainer) committed it — reviewed and approved by
-  the subsystem maintainer
-- The pattern is identical to existing quirks for Atheros, Cavium, and
-  TI devices that are already in stable trees
-- User confirmed the fix resolves the issue
-
-### Dependency Check
-
-No dependencies. The `quirk_no_bus_reset` function,
-`DECLARE_PCI_FIXUP_HEADER` macro, and `PCI_VENDOR_ID_ASMEDIA` all exist
-in stable kernels. This will apply cleanly to any stable tree.
-
-### Conclusion
-
-This is a textbook example of a PCI quirk that belongs in stable trees.
-It's a minimal, zero-risk, single-device-ID addition that uses an
-existing well-tested mechanism to fix a real hardware issue reported by
-real users. It was authored and reviewed by the relevant subsystem
-maintainers. The pattern is identical to many existing quirks already in
-stable.
+This is essentially a hardware quirk/workaround that makes an existing
+driver work correctly. It falls squarely into the category of hardware-
+specific workarounds that are acceptable for stable backporting. The
+same class of fix was previously done for i.MX8MM with a `Fixes:` tag.
 
 **YES**
 
- drivers/pci/quirks.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/pci/controller/dwc/pci-imx6.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 280cd50d693bd..9100fd133a7ff 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3791,6 +3791,16 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
-  */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TI, 0xb005, quirk_no_bus_reset);
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 4668fc9648bff..34f8f69ddfae9 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -52,6 +52,8 @@
+ #define IMX95_PCIE_REF_CLKEN			BIT(23)
+ #define IMX95_PCIE_PHY_CR_PARA_SEL		BIT(9)
+ #define IMX95_PCIE_SS_RW_REG_1			0xf4
++#define IMX95_PCIE_CLKREQ_OVERRIDE_EN		BIT(8)
++#define IMX95_PCIE_CLKREQ_OVERRIDE_VAL		BIT(9)
+ #define IMX95_PCIE_SYS_AUX_PWR_DET		BIT(31)
  
-+/*
-+ * Reports from users making use of PCI device assignment with ASM1164
-+ * controllers indicate an issue with bus reset where the device fails to
-+ * retrain.  The issue appears more common in configurations with multiple
-+ * controllers.  The device does indicate PM reset support (NoSoftRst-),
-+ * therefore this still leaves a viable reset method.
-+ * https://forum.proxmox.com/threads/problems-with-pcie-passthrough-with-two-identical-devices.149003/
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1164, quirk_no_bus_reset);
+ #define IMX95_PE0_GEN_CTRL_1			0x1050
+@@ -706,6 +708,22 @@ static int imx7d_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ 	return 0;
+ }
+ 
++static void imx95_pcie_clkreq_override(struct imx_pcie *imx_pcie, bool enable)
++{
++	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_SS_RW_REG_1,
++			   IMX95_PCIE_CLKREQ_OVERRIDE_EN,
++			   enable ? IMX95_PCIE_CLKREQ_OVERRIDE_EN : 0);
++	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_SS_RW_REG_1,
++			   IMX95_PCIE_CLKREQ_OVERRIDE_VAL,
++			   enable ? IMX95_PCIE_CLKREQ_OVERRIDE_VAL : 0);
++}
 +
- static void quirk_no_pm_reset(struct pci_dev *dev)
++static int imx95_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
++{
++	imx95_pcie_clkreq_override(imx_pcie, enable);
++	return 0;
++}
++
+ static int imx_pcie_clk_enable(struct imx_pcie *imx_pcie)
  {
- 	/*
+ 	struct dw_pcie *pci = imx_pcie->pci;
+@@ -1913,6 +1931,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+ 		.core_reset = imx95_pcie_core_reset,
+ 		.init_phy = imx95_pcie_init_phy,
+ 		.wait_pll_lock = imx95_pcie_wait_for_phy_pll_lock,
++		.enable_ref_clk = imx95_pcie_enable_ref_clk,
+ 	},
+ 	[IMX8MQ_EP] = {
+ 		.variant = IMX8MQ_EP,
+@@ -1969,6 +1988,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+ 		.core_reset = imx95_pcie_core_reset,
+ 		.wait_pll_lock = imx95_pcie_wait_for_phy_pll_lock,
+ 		.epc_features = &imx95_pcie_epc_features,
++		.enable_ref_clk = imx95_pcie_enable_ref_clk,
+ 		.mode = DW_PCIE_EP_TYPE,
+ 	},
+ };
 -- 
 2.51.0
 
