@@ -1,329 +1,186 @@
-Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7F6623183F;
-	Sat, 14 Feb 2026 19:33:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.166.238
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771097632; cv=fail; b=Q6wN/yYM3Y1wPtRAxrSmhPVt4YFFhCz/xl9LF1YerKiCpmblrdFTNhiUFO9+mPH6BhBgi9tAwc4eSAxZz+acHd7vJbtqDd4Qsz4X88Gl++qrpbi9e7fyjvPV/zLRspOaRPvVhGSal6ooh/nJv1y5qXsdwEILIIIEu1Vj4yb8zAw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771097632; c=relaxed/simple;
-	bh=Dl0hwCWMgGb7PQU+8zGk8VYU+BYEs7s09q1g1Z18GMU=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F8F27B353;
+	Sat, 14 Feb 2026 21:25:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771104327; cv=none; b=nYMSVU4aT5g9o/vBaWhVrg3TyVeNZOxl1N2lB3K78H8NaLENR+DvM8BfqAb2Vs39UBy85cblNK6zeuNxt9wGeyQ4HL492VR4Fy6JcPQTwTMLLdRHsYhBC0auq+PCvirWjGi8HpBedixO4p4xhuj/PnWk0MytpdB5LeNPYAYthVw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771104327; c=relaxed/simple;
+	bh=7awT1Li4DxKat07UYtWiH20wtPbjOrZkWejQapyOazc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Uvr1an3vXJipIKd/QiRQwj15SIyFjVh//b3YhyzOYMyW0vgfag4hLQANKuW2yIJSWSf7D8L7ySGWCJbUmDdWs7z5aNJL8C1oC92kq78otIPK1cxZ77wK7EKnhlvSFbwjgiUGCaZraS9S8R2dsN/EC7NgrwZcVAqcZYqT1qE5b+o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=h1Z8g7gm; arc=fail smtp.client-ip=205.220.166.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
+	 MIME-Version:Content-Type; b=jSNc7XVd5n9BnxP74cUmA4muotT+OKCplRfJ2I/fmjO7FCAhHWDfVzLjvjFMsI98eJRqpHRa5s3uL6J0xV4Hqs4i08KxikTg4mm0yQTNZJYMSSfVW4dpn4PLa2nL9G8wDWbZp2YXVXu8VP81SPkhclaSk9yky1001dAeFO+e6vw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c9JtTOtr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="h1Z8g7gm"
-Received: from pps.filterd (m0250809.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61EJK1aD1024949;
-	Sat, 14 Feb 2026 11:33:37 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
-	 h=cc:content-transfer-encoding:content-type:date:from
-	:in-reply-to:message-id:mime-version:references:subject:to; s=
-	PPS06212021; bh=JcMkbpOC1uAJ1YlzyTspHYrJuZRirw7GYwKjB7tXR7Y=; b=
-	h1Z8g7gm5nxU7BkUIatlIxWWsQeSBqG1nH8Om5ndqQUN3vmvd49McXLcgJAHNBMc
-	kKJ4l+Q58z7zGJljcmihc3/AEgr+jTnjhWJZ84DdaLQ3OnulkJTF+u0P9KGktIg8
-	hj+rT/TgZfq0vw3cU3pXo6eIxPBMsCwfWK3Sh4wMfbY0rRCaxJBTa/ZLoAg4kwA0
-	Ohlc+aiZkVao/qdk50Aw0gTDOtkFVUFV5KsOaIy81L9D8RqkmePdL5LOXGShD6C+
-	bEJqbyU+JRUKU33rtZufAQ2HsAHa58vrVZnFJaHrx04oJ4mji0JJwccnHKudT0sz
-	GjHjUkhv85z2Ko+Bob+6Lg==
-Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11012011.outbound.protection.outlook.com [52.101.43.11])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4casehg6jy-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Sat, 14 Feb 2026 11:33:37 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yHicOYIH0rhXidjwabwOwibCKpMyoeANgIGZ5Wnq8jVKWeda12gol4ZpvbRUENMg3K3iFdIVzcx+9quf6MhYQa0Hw4bicJRxscB0ZzdaDpGEDnosbs2chO7xw3gUHLrIOc2+Eg5SBqRaTXPWTtdPk6XOK4G48r8noL1HDWwGqGvngkBxJuCsXMVuAqsw/gZabNY/97YmYOBdc00supacbs2sGshUQ4Kr7Ki4icsE5SjWgWUcINzDXDxPQRbP6i9lKmztDVlPZlbjr4QabA0XRvr4VQATR5AfPi1rWEWKIkGyrK6Uy9hKpaKiUSR8EwzIojqhNAhkJPTs9HQQJASSXQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JcMkbpOC1uAJ1YlzyTspHYrJuZRirw7GYwKjB7tXR7Y=;
- b=fB5NmkK+faKg+4pzDyWpYVYldUEIb+bNFPms9bTp+PfWa7udkE4cuJrIKIZ023vlipJtj1pz5qt50GinM/0BMnbEAQAisnWudlyhf0ZaSMsGjkqf7egHR2Z4lhT9x8BwdN/g6EIBSYXR0Mte9TYmdVmoX2O7xvGV7cxaSb6w4jYG3sP49GXCegqhGAFcZsrGKKWsH554huUGMFiUV156h/u3ckb+/DS/aQpRiSl4cLz7zCBoVLsG92fwhxePNvqmG4AB73EH3B0EXtDLbhD+ZJdlyF8ew9kLaUgvc9itwyKan4lRnJHZvdBKZ/7qTR+KwI4fCGtxBwVItMbzCefdgQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=windriver.com; dmarc=pass action=none
- header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
-Received: from MN2PR11MB3885.namprd11.prod.outlook.com (2603:10b6:208:151::27)
- by CO1PR11MB5044.namprd11.prod.outlook.com (2603:10b6:303:92::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.10; Sat, 14 Feb
- 2026 19:33:34 +0000
-Received: from MN2PR11MB3885.namprd11.prod.outlook.com
- ([fe80::a8bb:9703:986e:845]) by MN2PR11MB3885.namprd11.prod.outlook.com
- ([fe80::a8bb:9703:986e:845%4]) with mapi id 15.20.9611.008; Sat, 14 Feb 2026
- 19:33:33 +0000
-From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Sebastian Ott <sebott@linux.ibm.com>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Farhan Ali <alifm@linux.ibm.com>, Julian Ruess <julianr@linux.ibm.com>,
-        Ionut Nechita <sunlightlinux@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Ionut Nechita <ionut.nechita@windriver.com>, stable@vger.kernel.org,
-        Ionut Nechita <ionut_n2001@yahoo.com>
-Subject: [PATCH v1 1/1] PCI/IOV: Add nested locking in sriov_add_vfs/sriov_del_vfs for complete serialization
-Date: Sat, 14 Feb 2026 21:32:37 +0200
-Message-ID: <20260214193235.262219-5-ionut.nechita@windriver.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260214193235.262219-3-ionut.nechita@windriver.com>
-References: <20260214193235.262219-3-ionut.nechita@windriver.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: VI1PR0102CA0073.eurprd01.prod.exchangelabs.com
- (2603:10a6:803:15::14) To MN2PR11MB3885.namprd11.prod.outlook.com
- (2603:10b6:208:151::27)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c9JtTOtr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAA6CC16AAE;
+	Sat, 14 Feb 2026 21:25:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771104327;
+	bh=7awT1Li4DxKat07UYtWiH20wtPbjOrZkWejQapyOazc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=c9JtTOtrxOKjZZuxt4OfvFbMvgYPAnYc6owLu24UMHWZYilvQTQlYVcJHgTJss0Uj
+	 eWkuAEZYpkRy4lhkYUuLUUiCuD2dseSfRfiDfWTZaJ4YlQnlVzvryJlmix1o83uKF2
+	 JILkPXpzHuOc1VPrgRIaz6qERzhU1wSMZ9m1GcPNW5B76plOCZx85K0s3llMiHVDbT
+	 en16GgXbHz9XKp8/O/JnRqaTT5nTWUE+S1HCKafasC+SydjMdxQ8vwvJtLHtUOUzHA
+	 6pM+c0gYf9Y+YlQN+XjU50Q8E3BijhPJM0sbHBiJMYetWCI5JIJlH0lORCHZaU2lgH
+	 pgEhDW1Ed1PbA==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Adam Stylinski <kungfujesus06@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sasha Levin <sashal@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.19-6.18] PCI/bwctrl: Disable BW controller on Intel P45 using a quirk
+Date: Sat, 14 Feb 2026 16:22:44 -0500
+Message-ID: <20260214212452.782265-19-sashal@kernel.org>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260214212452.782265-1-sashal@kernel.org>
+References: <20260214212452.782265-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR11MB3885:EE_|CO1PR11MB5044:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2debb0f4-0282-4d5b-f94a-08de6bfff0ff
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|10070799003|52116014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?hSHqQ6KRomFm/QwOkCCqxXMQ+gOePjRg0I3Ed0h6NI3GCvS2hpNlUYsvF75k?=
- =?us-ascii?Q?AyYPpABJAvll/RWhWESyoBtxlECA+tTPzmJfghECHyzoTb+VYq2mhEk39xiT?=
- =?us-ascii?Q?UaxHv5Tf8rS0sds47SPsGP782W2Ux8IN46LEBgkk5WqXuWzZPcqoPhPGsb6t?=
- =?us-ascii?Q?wDuBwt/rilFdp2OL8k0mpfQfcYza5MnFHOZtrJTi9jeT4Yqgzx3zKfWLqsP+?=
- =?us-ascii?Q?Yi2S6jU9gQ4X5zckarcvm6moy0SbDPGNhXFZiq8QzRoiocRhAVSkwr6RKe0g?=
- =?us-ascii?Q?U1vUVPPIKfH8o84tPMy1L5JzmL8lwu6a9smJgSS9Auc8562ndSPY3/qc+M4N?=
- =?us-ascii?Q?bWceLRL6MoRC7rvFdhALeaRZrMuGunTTbaU4E4CEBvtDaQAqF1l/g5LmpF9U?=
- =?us-ascii?Q?t/+7wMVY5I1IkT843ysBT6Qcqo8cZDgdtimd+pj25wbtaABv2R+hY46NKUZ5?=
- =?us-ascii?Q?PjnObzNaYVyoW4IJ73qlguntOeiH2upXasDRchJVF6Y/X9pLzE4zp2x8RAWp?=
- =?us-ascii?Q?U2u5+k5mLKB2+fveV+JfrsT7FKd76iKq7sbhSkDBU13yOqWQ/dQpTk5d10V4?=
- =?us-ascii?Q?Eavn9zwgUczn1pPg9ucv7fEc9q1S2Xd57OzRROs/FcIs+FDs4WWBiOWhnffy?=
- =?us-ascii?Q?rjC4jiOEEOOOo0AAdiWhw61ILHS+efhPO6JRldVlR17P92F4vylvt7DMrlWk?=
- =?us-ascii?Q?q9Lbz5L9gIqL3KB5vJOKLhN+vZCTJxC24eE9k103unMAGGMT2KVSRrBJwZJf?=
- =?us-ascii?Q?U7FX2PtmJG5QzHRduQlA2osLPscntqm2qg1pbsoaVfm8YTk3OFYeVHr1DTjG?=
- =?us-ascii?Q?AVQRxUAlkReJmaXrcvdrcBkGNMVsWXajVd5wEsZRbPc1vvRVP/t4KyoIDCum?=
- =?us-ascii?Q?8WkxowAqKLU4FIv7f1P2tn57kHAMKPs7dz9Y7KFGBzfhJB62pWT82V6WSz41?=
- =?us-ascii?Q?WvTgWyLKLg/uLdCltI2dzZWA99+MiD1nOByyqSjXATKpoa+q+S4RljixIOdx?=
- =?us-ascii?Q?TpTRLrApwE/DfyLYwUCiitbqEmqnzP8W/CYT5FG2alz2CFW8ss3KJwk2+i/u?=
- =?us-ascii?Q?dImSsjOwLoIQVq+wlTDAmrOPj+4ayRp4ZsrpUT5wxkGXFcWKaaEnwoeT1rSU?=
- =?us-ascii?Q?aitw9y+m+V0n++pUtQHOvCbM8gFQtl9GPg3SzsmQ6kk5GJVavwJyqI1I/aT7?=
- =?us-ascii?Q?aaZxysCZ7ugSq8/QOrd254xBeiY49m+OORfUTPozBV7JcUlyuLUY5bKktg5h?=
- =?us-ascii?Q?/jv75ch1uzevVPoTB0EHXw5ILJbx2wS37lXJTNCXNCSOgCmFMbP0YrYQN+HA?=
- =?us-ascii?Q?9scmE0mhSR6MJm4jcQJG0jchg5/X7Hwb7+Y352RjigArlRvyrYFHiz8GKc+D?=
- =?us-ascii?Q?B4ItYZsn4g91I6e7EWyDGyfdzrbafyT6iEjFsVj5ot+ek7gEAhN3r0FS5mmb?=
- =?us-ascii?Q?uoYO6yid33k8bMau63D3H7TyYQl/qvgTGvzfEpIE3ExsEcOPFvg2GQ0kLPkd?=
- =?us-ascii?Q?SZ6yZy0WoO8rv7TrhJgqQR/R+GTVX7eUkkIgJGJL1Klk3B8/iscuQUCDbTul?=
- =?us-ascii?Q?c0IIHz3pVcwAFok10Q0=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR11MB3885.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(10070799003)(52116014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?CNl8HtUv+t6J2rzQAKqefUvKytoTpB/V4SVNDuWePwhOhKBTpzqqxw03l9M8?=
- =?us-ascii?Q?7X6NnK2HZXd5fDfMDCdS3qlFwTJ0TocKL7ZSDBuOuXzMKjn+fIpxjegHbzhr?=
- =?us-ascii?Q?KfixXMQhVXc61vzgWC/epuwobDF4INR67M+KfznTaLEe5pQzrh2rfPlCAcV5?=
- =?us-ascii?Q?srGGHL9roNFW7vmVPBzFh/pW+CsJQw/IQW4Swu1977YrH/Spnm7D/q8TdeRP?=
- =?us-ascii?Q?GEuEXyHGOGGcvwNEqWaedDlErJH5Ozca1stRQdR6VsrtCi3/S9eJhQIBCvty?=
- =?us-ascii?Q?3yedfr5/1mcuqTaVF1kh4AGuOL0ypvcZ+1byP52ohRT7dh2TMN7KW9EkH0EY?=
- =?us-ascii?Q?IIW5Xm0HiOUrcx9fNp9QZWCpMnLBAGE9oSl/99uFzgVpmfuUURGvyW7vdFM4?=
- =?us-ascii?Q?xZijF0af88lvE9kzY2j8ho1oYDA43WGMOg5xFauDYJxrtAJUjTvL1F1bbcWj?=
- =?us-ascii?Q?u01dbRxmIuLqdBH9vg9WvYX4fAwUFNMgk1K4q9MjKk4cIUYyQgdWd/aZv1IB?=
- =?us-ascii?Q?ilixqFchOBGh1H5y2ziAQtjvYjATZl6pipBokkAgEvv41AmUR40NzGImvKCz?=
- =?us-ascii?Q?8e71Js+xt9cGaMSD9KC1BU4nEwHgzOi1EsJdLyhB0alwKfhrtt6felmr6dum?=
- =?us-ascii?Q?bO+GZkrOEmeS8xMvbHGIx+Yvuiuo406GKjm0DTuChPsYjW1y31FqgzJBV6VB?=
- =?us-ascii?Q?181Ba1Votvsg18Af1DyKWE4Z306lhcv3H6cGHFKq9MfoFycEdtUWWkBwFBWa?=
- =?us-ascii?Q?YvtXtaNXfJwBQapRCIObgbACmvQ4TkqrU89EOy2fY3reHgG/zHJ2Ssu+hTsx?=
- =?us-ascii?Q?alp/Dia+0GlwrI4jpVbqYPFQtsbKSKKH978vdCrJHqsvuqYjmhcXjik2mSl9?=
- =?us-ascii?Q?1PoQGX/Y2h0LRHjz07KX8Ub1v341yvG6/356mHFOFp4OrP5eoX7gVS1R+mLk?=
- =?us-ascii?Q?ZXWvp9gNKfBk6bQ/5XAPsjTj2PycKLQKFK35I/VLDbYVvZh9p33odWo61FpA?=
- =?us-ascii?Q?DOB4FY+2RjsBIkg4E/I43/0hC382cJmetfWDYfpIZ8pGE6Eug5VVSE5YWn0D?=
- =?us-ascii?Q?WSbeExBj1d89jd18pWr9t7doCBBzQEv7VSrNiGdvu06f8VAaOl0rLwzH4Rod?=
- =?us-ascii?Q?3aZVMGW3c/WX/K1AjEBNwYGcrvdTld+pG/lw8GaYX8eEtItZjaq7RmVx8NNp?=
- =?us-ascii?Q?sfuh6XYiA72RJrGBukG0gkLs7snzOOy8h9K6DQTFg8VSiADR+AZ0z3r24+Na?=
- =?us-ascii?Q?rHMZy0OkVG44VBQwbf2zP4i4OUIzD/qSj3D6iIQzrRXhS/MpRaPzaGbLHbGJ?=
- =?us-ascii?Q?ZlPVoR49sTkUDDii/GMzLHu79hUC7A/ZmD5d4EFw6KtG00RQc29BSlk7BJc2?=
- =?us-ascii?Q?g1GhrRa6QlLKokTTQzN/5c+HAIKj/2OdE1wCHwHChfDZlOg9ngSoYKbNUHUF?=
- =?us-ascii?Q?lWPYDay15AhxbD1ynY634eWMA2xwuWcRey2/wXCBmP3BrlcKH4I/BSf9BJRD?=
- =?us-ascii?Q?oqpbUxG202X0+6HIp1EVf9bf1SxsG5/d0EgfX7ppR35gQaiUENCVdi/s2xT8?=
- =?us-ascii?Q?CZi273pvRdV+mE9zfRE4Z28UpVTn55L3n4lgZRe7TcOv42Wg8pSm59oz70nj?=
- =?us-ascii?Q?rgrXV8fG3l/+xaDgI3N4/EmVzP8vvXUK8NLaqWmvjEqgIOkExQFViDw82FT+?=
- =?us-ascii?Q?NB4GxgO+QiCltgpQh9IZ6NeKNVTt/AZEHFg8GK600mTLiRCFqOOLGYsxk6Sr?=
- =?us-ascii?Q?z95aOLFrBy/2vTytAPvqSyMMIgHG1V/e0Z+47kmIoWRC/gDTwWUDzJHJ6WAs?=
-X-MS-Exchange-AntiSpam-MessageData-1: 0QpyY/9KYLtn4TDEXXDzKujXIaWJdRMJGmY=
-X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2debb0f4-0282-4d5b-f94a-08de6bfff0ff
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR11MB3885.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2026 19:33:33.8804
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nyEmStleWWks32rfnrDy9CqXAxydQpXcOCrckZqLDdR4/5u7peGNa7VSqdoXIp/QlUtixee5iksTCT9qo4gRtxyOFJrturMK2Gpj6xJ63Cs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR11MB5044
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE0MDE2MyBTYWx0ZWRfX9y6InFIXSLb4
- tQFrpGV60+IKuuE7fcUjFGHGwmtrp62m0ula+GqCttbK1vwa7xoJdupl/EF1fj/tycBr8N4lNOd
- a28bjsrHlQTMP5W6tVgPhyG8NnDvZv/TIa4k7G1KLm6KDCn164ZsKPiPpntDZWwIccZ4r7sy3GU
- ZqJgooT0KNtYpoLJPLsipPXYxQBnYT5+4PcOsEagDlj9+bVvzhH7VWExHyMqqbX+FuPAaB6vqCe
- /V5jY/rjhYE2q+6MAWO4FEG0c5f4+4T362DPrfma9a2Y3YvZlWoU8bzE9bZfhkm/K1oU2pQbdKv
- D71Xb28GFeTb9EqfA/qg04rfcIiOJPLoTs/M/wVVo+UyAsM3l5OfCCzoybT3NldnVeqMaDFas2a
- Lj6ucoszpqdAJDLC4gU/TsVdHQz5H1udjkLdsERL5WXT+atSZqJeQzFql5oUE65E7wBiXnMDW7t
- gIUOC+OwEnq//gUpdxQ==
-X-Proofpoint-ORIG-GUID: d1WJwzjFOZl0sfXA0j8JAHoCcPtvvwRT
-X-Proofpoint-GUID: d1WJwzjFOZl0sfXA0j8JAHoCcPtvvwRT
-X-Authority-Analysis: v=2.4 cv=Fek6BZ+6 c=1 sm=1 tr=0 ts=6990ce11 cx=c_pps
- a=/yS4kdDgObtqNMJizKN72Q==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=t7CeM3EgAAAA:8
- a=VwQbUJbxAAAA:8 a=CjxXgO3LAAAA:8 a=6S3VQf3ZLieD-afqmuUA:9
- a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-14_02,2026-02-13_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 lowpriorityscore=0 phishscore=0 priorityscore=1501 bulkscore=0
- clxscore=1011 malwarescore=0 suspectscore=0 impostorscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602140163
+Content-Type: text/plain; charset=UTF-8
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.19
+Content-Transfer-Encoding: 8bit
 
-From: Ionut Nechita <ionut.nechita@windriver.com>
+From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-After reverting commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove
-locking when enabling/disabling SR-IOV") and moving the lock to
-sriov_numvfs_store(), the path through driver .remove() (e.g. rmmod,
-or manual unbind) that calls pci_disable_sriov() directly remains
-unprotected against concurrent hotplug events. This affects any SR-IOV
-capable driver that calls pci_disable_sriov() from its .remove()
-callback (i40e, ice, mlx5, bnxt, etc.).
+[ Upstream commit 46a9f70e93ef73860d1dbbec75ef840031f8f30a ]
 
-On s390, platform-generated hot-unplug events for VFs can race with
-sriov_del_vfs() when a PF driver is being unloaded. The platform event
-handler takes pci_rescan_remove_lock, but sriov_del_vfs() does not,
-leading to double removal and list corruption.
+The commit 665745f27487 ("PCI/bwctrl: Re-add BW notification portdrv as
+PCIe BW controller") was found to lead to a boot hang on a Intel P45
+system. Testing without setting Link Bandwidth Management Interrupt Enable
+(LBMIE) and Link Autonomous Bandwidth Interrupt Enable (LABIE) (PCIe r7.0,
+sec 7.5.3.7) in bwctrl allowed system to come up.
 
-We cannot use a plain mutex_lock() here because sriov_del_vfs() may also
-be called from paths that already hold pci_rescan_remove_lock (e.g.
-remove_store -> pci_stop_and_remove_bus_device_locked, or
-sriov_numvfs_store with the lock taken by the previous patch). Using
-mutex_lock() in those cases would deadlock.
+P45 is a very old chipset and supports only up to gen2 PCIe, so not having
+bwctrl does not seem a huge deficiency.
 
-Instead, introduce owner tracking for pci_rescan_remove_lock via a new
-pci_lock_rescan_remove_nested() helper. This function checks if the
-current task already holds the lock:
- - If the lock is not held: acquires it and returns true, providing
-   full serialization against concurrent hotplug events (including
-   platform-generated events on s390).
- - If the lock is already held by the current task (nested call from
-   remove_store or sriov_numvfs_store paths): returns false without
-   re-acquiring, avoiding deadlock while the caller already provides
-   the necessary serialization.
- - If the lock is held by another task (concurrent hotplug): blocks
-   until the lock is released, then acquires it, providing complete
-   serialization. This is the key improvement over a trylock approach.
+Add no_bw_notif in struct pci_dev and quirk Intel P45 Root Port with it.
 
-Fixes: 18f9e9d150fc ("PCI/IOV: Factor out sriov_add_vfs()")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ionut Nechita <ionut_n2001@yahoo.com>
-Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
+Reported-by: Adam Stylinski <kungfujesus06@gmail.com>
+Link: https://lore.kernel.org/linux-pci/aUCt1tHhm_-XIVvi@eggsbenedict/
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Adam Stylinski <kungfujesus06@gmail.com>
+Link: https://patch.msgid.link/20260116131513.2359-1-ilpo.jarvinen@linux.intel.com
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/iov.c   | 10 ++++++++++
- drivers/pci/pci.h   |  1 +
- drivers/pci/probe.c | 12 ++++++++++++
- 3 files changed, 23 insertions(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4a659c34935e..38372ac0e2ad 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -629,19 +629,25 @@ static int sriov_add_vfs(struct pci_dev *dev, u16 num_vfs)
- {
- 	unsigned int i;
- 	int rc;
-+	bool nested;
+LLM Generated explanations, may be completely bogus:
+
+The offending commit `665745f274870` first appeared in **v6.13-rc1**,
+meaning it's present in **6.13.y** stable trees and newer. This means
+the boot hang regression affects stable kernel users on 6.13.y and
+later.
+
+### 6. User Impact
+
+- **Severity**: CRITICAL — complete boot hang (system is unusable)
+- **Affected hardware**: Intel P45 chipset systems (older but still in
+  use)
+- **Affected versions**: v6.13 and later (wherever bwctrl was
+  introduced)
+- **Users impacted**: Anyone running an Intel P45 system who upgrades to
+  6.13+
+
+### 7. Risk vs. Benefit
+
+**Benefit**: Fixes a boot hang on Intel P45 systems — without this
+quirk, these systems cannot boot kernels 6.13+.
+
+**Risk**: Essentially zero. The quirk only fires for one specific PCI
+device ID (0x2e21). The probe check returns -ENODEV before any resources
+are allocated. This follows a well-established PCI quirk pattern used
+hundreds of times in the kernel. The only "loss" is BW notification on a
+Gen2 PCIe chipset, which is of negligible value.
+
+### 8. Backport Considerations
+
+The fix should apply cleanly to any tree that has the bwctrl code
+(6.13+). The `no_bw_notif` bit field addition to `struct pci_dev` is
+straightforward. The quirk file change is a simple addition. The
+bwctrl.c check is at the top of the probe function.
+
+One minor consideration: the `pci_dev` struct layout might differ
+slightly between stable versions, but adding a bitfield member to the
+existing bitfield group should be safe.
+
+### Summary
+
+This is a textbook stable backport candidate:
+- **Fixes a real, user-reported boot hang** (critical regression)
+- **Hardware quirk** (explicitly allowed in stable)
+- **Small, surgical fix** (~15 lines)
+- **Near-zero regression risk** (only affects one device ID)
+- **Tested by the reporter** (confirmed working)
+- **Written and reviewed by subsystem experts** (Intel engineer + PCI
+  maintainer)
+- **Fixes a regression introduced in 6.13** (affects stable users)
+
+**YES**
+
+ drivers/pci/pcie/bwctrl.c |  3 +++
+ drivers/pci/quirks.c      | 10 ++++++++++
+ include/linux/pci.h       |  1 +
+ 3 files changed, 14 insertions(+)
+
+diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+index 36f939f23d34e..4ae92c9f912a8 100644
+--- a/drivers/pci/pcie/bwctrl.c
++++ b/drivers/pci/pcie/bwctrl.c
+@@ -250,6 +250,9 @@ static int pcie_bwnotif_probe(struct pcie_device *srv)
+ 	struct pci_dev *port = srv->port;
+ 	int ret;
  
- 	if (dev->no_vf_scan)
- 		return 0;
- 
-+	nested = !pci_lock_rescan_remove_nested();
- 	for (i = 0; i < num_vfs; i++) {
- 		rc = pci_iov_add_virtfn(dev, i);
- 		if (rc)
- 			goto failed;
- 	}
-+	if (!nested)
-+		pci_unlock_rescan_remove();
- 	return 0;
- failed:
- 	while (i--)
- 		pci_iov_remove_virtfn(dev, i);
-+	if (!nested)
-+		pci_unlock_rescan_remove();
- 
- 	return rc;
- }
-@@ -764,10 +770,14 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- static void sriov_del_vfs(struct pci_dev *dev)
- {
- 	struct pci_sriov *iov = dev->sriov;
-+	bool nested;
- 	int i;
- 
-+	nested = !pci_lock_rescan_remove_nested();
- 	for (i = 0; i < iov->num_VFs; i++)
- 		pci_iov_remove_virtfn(dev, i);
-+	if (!nested)
-+		pci_unlock_rescan_remove();
- }
- 
- static void sriov_disable(struct pci_dev *dev)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c8a0522e2e1f..7d3b705728fd 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -367,6 +367,7 @@ static inline void pci_remove_legacy_files(struct pci_bus *bus) { }
- /* Lock for read/write access to pci device and bus lists */
- extern struct rw_semaphore pci_bus_sem;
- extern struct mutex pci_slot_mutex;
-+bool pci_lock_rescan_remove_nested(void);
- 
- extern raw_spinlock_t pci_lock;
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7711f579fa1d..5f38ed0c641a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -3478,19 +3478,31 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
-  * routines should always be executed under this mutex.
-  */
- DEFINE_MUTEX(pci_rescan_remove_lock);
-+static struct task_struct *pci_rescan_remove_owner;
- 
- void pci_lock_rescan_remove(void)
- {
- 	mutex_lock(&pci_rescan_remove_lock);
-+	pci_rescan_remove_owner = current;
- }
- EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
- 
- void pci_unlock_rescan_remove(void)
- {
-+	pci_rescan_remove_owner = NULL;
- 	mutex_unlock(&pci_rescan_remove_lock);
- }
- EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
- 
-+bool pci_lock_rescan_remove_nested(void)
-+{
-+	if (pci_rescan_remove_owner == current)
-+		return false;
-+	pci_lock_rescan_remove();
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(pci_lock_rescan_remove_nested);
++	if (port->no_bw_notif)
++		return -ENODEV;
 +
- static int __init pci_sort_bf_cmp(const struct device *d_a,
- 				  const struct device *d_b)
- {
+ 	/* Can happen if we run out of bus numbers during enumeration. */
+ 	if (!port->subordinate)
+ 		return -ENODEV;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 5782dfb863cad..5cf84ec1cdb2d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1359,6 +1359,16 @@ static void quirk_transparent_bridge(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82380FB,	quirk_transparent_bridge);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TOSHIBA,	0x605,	quirk_transparent_bridge);
+ 
++/*
++ * Enabling Link Bandwidth Management Interrupts (BW notifications) can cause
++ * boot hangs on P45.
++ */
++static void quirk_p45_bw_notifications(struct pci_dev *dev)
++{
++	dev->no_bw_notif = 1;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e21, quirk_p45_bw_notifications);
++
+ /*
+  * Common misconfiguration of the MediaGX/Geode PCI master that will reduce
+  * PCI bandwidth from 70MB/s to 25MB/s.  See the GXM/GXLV/GX1 datasheets
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b5cc0c2b99065..e958ff7443356 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -406,6 +406,7 @@ struct pci_dev {
+ 						      user sysfs */
+ 	unsigned int	clear_retrain_link:1;	/* Need to clear Retrain Link
+ 						   bit manually */
++	unsigned int	no_bw_notif:1;	/* BW notifications may cause issues */
+ 	unsigned int	d3hot_delay;	/* D3hot->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
 -- 
-2.53.0
+2.51.0
 
