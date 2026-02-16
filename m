@@ -1,77 +1,124 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C6E4303A02;
-	Mon, 16 Feb 2026 13:22:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771248162; cv=pass; b=KFc5ld3aYTYiojQwSHReXYCawYkx/KSEHwnkbXsEQTsN/GTARap+P7Q1pdkl8I9A+5z/EzNjrlKwUSU7IfWNC/yO3U5FGD8HAA9ab4G0E62tNIZizXmaXg2lM8leWSo0LppAfxq4kZyvMEHYFOuxeQdHwEHpiSB3xiv4UieECh4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771248162; c=relaxed/simple;
-	bh=KbfoHwiUYTfn0aGfT4Pi1rTgfaW/JssTGENDraiOZQ8=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=P9CjvYZ/eZyFUIZnQTUI5VqxxjHp2MWHVlOjDFIJaRHU0fUdKr6P9XDhse9sEybFHN4qgKzCqTNc4CuLPANPz+KDXzztgTzbqPnpaHOnb3LLUOMeoFQppkykLBVR+sKFOm6OzpFo7CnQDNSSjT+aBR+LeraBm/PywD1Kxq8GUCw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=BmSlIgeg; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D9E72C0F8E;
+	Mon, 16 Feb 2026 13:26:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771248387; cv=none; b=dP2SlWMpGGGsCPWEMGh0eirKJ3e2jAZxIB7xq8HdnspQc7ILzPiMAMsSj3UpMluADewN+POeyctQ6j6rJp1KXDaBDlt8ginkS4O05odGhAwhFaOdK9yDwC+E+FtscduJAaRmn01catVZ2jx2JDrp8P0B3/tSp6P6yDc4z+WKmTE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771248387; c=relaxed/simple;
+	bh=USoDS4LrGsrRdtGLZUzoqeua48Mf9qhS9vUwm+V3yzc=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Er7fI6Jenee50sbUt78aUwGsk0ExULNd43xwQ7MAcAY+ZNEvGMyIAIzByXhBM3ul7dCQrT981V2wgLT6oQt9EVH5rQ/LLjyQbdZuUhu0VY+kMeKkKQnNNGZnSEr0Ji2Kzp1yKakS5HHtPHjSeMnbETuvFtGJ8dHQ76A1WpEVFCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F4Y7yDA/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="BmSlIgeg"
-ARC-Seal: i=1; a=rsa-sha256; t=1771248141; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=OOIQTuxrd1+7J3G6JDaGYiTFIlhmW0cJxdXi5No/CRHbs1V/aF7CazjotX/fQDW3Ov10fdqSbw5EWP4qggPkSTkN2azp1JTl+7Mkeid7wExubKaYVdOGJDqREwyB4gSjvPZ81Vwj0fWeIeRzNgb6F2yUjy3MeYipibNmSqoDL1I=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1771248141; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=KbfoHwiUYTfn0aGfT4Pi1rTgfaW/JssTGENDraiOZQ8=; 
-	b=XxOuerdXLV0bmJSIlb/I2iJigD9cbXrlpR0wRyIXSP1d5FtTfuqRg70tDmQtt7rFi48rB5XW+pmYLjJ9l1MHvz0wZHJcq6FJZrzhFey+yTUgD2j+m2LxFh8FD7bnXY4uvENXcUPGH11n7g2EFX0tHpTYiVc0yI8f7QfQrZ1pFdI=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
-	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1771248141;
-	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
-	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
-	bh=KbfoHwiUYTfn0aGfT4Pi1rTgfaW/JssTGENDraiOZQ8=;
-	b=BmSlIgegoIcVRaC7EivEQdhZoV+6vbVhVhArqNsgpg3IxeyBTBaCD6jn9T4oqcS5
-	OK68k82ZJpevaDs7Rhuwtug9gMx8Y4nvmqEGucIpOmSYjCBnhCwdFw++QL4m7EcSEAp
-	2Eqwl7C3ZD97KZd4xF7B5vIzvW/GX0hV0GWq7YKw=
-Received: by mx.zohomail.com with SMTPS id 1771248140234149.76169704302697;
-	Mon, 16 Feb 2026 05:22:20 -0800 (PST)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F4Y7yDA/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DBA8C116C6;
+	Mon, 16 Feb 2026 13:26:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771248387;
+	bh=USoDS4LrGsrRdtGLZUzoqeua48Mf9qhS9vUwm+V3yzc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=F4Y7yDA/I2ujF53hJmCDchRz/5Pnhmpg95JLzqW7whhhN+m4NHW5T0dNeK6XVNNzM
+	 zRSpI4PxMCHl5uaB1yfY3BK9Np9wrBecnFn6dZUx6Bni5fNGOjtKuqwJtw0heFHUII
+	 U8rnvo0ECArD8ZUbNfR2P4VgNWMEcwyrntmMlc1UR/jA2ehpkfwxylhnKofmfccn1T
+	 3G9yUinP76NQQRw/FQT0vW3dpwC5imdwPH1AlwKQWpOdLBtPlzDypaai2Cco6zAKS3
+	 S7rR8tAL2F3vVHNzWBD4PVuBY/x2BZIyScWw3HD20J0LdCgT38ylsivmlUYMy6iwq/
+	 MUIUh4c9FpOHA==
+Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
+	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <maz@kernel.org>)
+	id 1vrycL-0000000BOdb-02OJ;
+	Mon, 16 Feb 2026 13:26:25 +0000
+Date: Mon, 16 Feb 2026 13:26:24 +0000
+Message-ID: <86bjhobz0f.wl-maz@kernel.org>
+From: Marc Zyngier <maz@kernel.org>
+To: Aksh Garg <a-garg7@ti.com>
+Cc: <linux-pci@vger.kernel.org>,
+	<lpieralisi@kernel.org>,
+	<kwilczynski@kernel.org>,
+	<mani@kernel.org>,
+	<robh@kernel.org>,
+	<bhelgaas@google.com>,
+	<cassel@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<s-vadapalli@ti.com>,
+	<danishanwar@ti.com>
+Subject: Re: [PATCH] PCI: Add PCI_RID_MASK macro
+In-Reply-To: <20260216120600.479738-1-a-garg7@ti.com>
+References: <20260216120600.479738-1-a-garg7@ti.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Re: [PATCH] rust: io: macro_export io_define_read!() and
- io_define_write!()
-From: Daniel Almeida <daniel.almeida@collabora.com>
-In-Reply-To: <20260216131534.65008-1-dakr@kernel.org>
-Date: Mon, 16 Feb 2026 10:22:01 -0300
-Cc: aliceryhl@google.com,
- bhelgaas@google.com,
- kwilczynski@kernel.org,
- ojeda@kernel.org,
- boqun.feng@gmail.com,
- gary@garyguo.net,
- bjorn3_gh@protonmail.com,
- lossin@kernel.org,
- a.hindborg@kernel.org,
- tmgross@umich.edu,
- zhiw@nvidia.com,
- acourbot@nvidia.com,
- driver-core@lists.linux.dev,
- rust-for-linux@vger.kernel.org,
- linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Content-Transfer-Encoding: 7bit
-Message-Id: <9DD438A4-809A-4DC7-AFF4-44AF7176CBA4@collabora.com>
-References: <20260216131534.65008-1-dakr@kernel.org>
-To: Danilo Krummrich <dakr@kernel.org>
-X-Mailer: Apple Mail (2.3826.700.81)
-X-ZohoMailClient: External
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: a-garg7@ti.com, linux-pci@vger.kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, bhelgaas@google.com, cassel@kernel.org, linux-kernel@vger.kernel.org, s-vadapalli@ti.com, danishanwar@ti.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
+On Mon, 16 Feb 2026 12:06:00 +0000,
+Aksh Garg <a-garg7@ti.com> wrote:
+> 
+> Routing ID (RID) is a 16-bit value composed of bus number and devfn.
 
-Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+No. RID here means "Requester ID". Please lookup the PCI spec.
+
+> Add a PCI_RID_MASK macro to eliminate the use of magic number 0xffff
+> when masking for RIDs.
+
+I'm not convinced this is universally true. Some RIDs (or RID-like
+identifiers, such as Stream IDs and Device IDs) are larger than 16
+bit, depending on the integration.
+
+The fact that this particular integration uses a 16bit RID without any
+extra qualifier in the upper bits doesn't make it universal.
+
+> This provides a standard way for drivers to extract RIDs without
+> resorting to magic numbers.
+> 
+> Signed-off-by: Aksh Garg <a-garg7@ti.com>
+> ---
+>  drivers/pci/controller/pcie-apple.c | 2 +-
+>  include/linux/pci.h                 | 1 +
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+> index 2d92fc79f6dd..6bf9fe102e2f 100644
+> --- a/drivers/pci/controller/pcie-apple.c
+> +++ b/drivers/pci/controller/pcie-apple.c
+> @@ -802,7 +802,7 @@ static void apple_pcie_disable_device(struct pci_host_bridge *bridge, struct pci
+>  		u32 val;
+>  
+>  		val = readl_relaxed(port_rid2sid_addr(port, idx));
+> -		if ((val & 0xffff) == rid) {
+> +		if ((val & PCI_RID_MASK) == rid) {
+>  			apple_pcie_rid2sid_write(port, idx, 0);
+>  			bitmap_release_region(port->sid_map, idx, 0);
+>  			dev_dbg(&pdev->dev, "Released %x (%d)\n", val, idx);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 864775651c6f..e3d9730121c8 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -71,6 +71,7 @@
+>  #define PCI_DEVID(bus, devfn)	((((u16)(bus)) << 8) | (devfn))
+>  /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
+>  #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
+> +#define PCI_RID_MASK	0xffff
+
+Even the naming of this macro clashes with the current nomenclature,
+where we use PCI_DEVID()/pci_dev_id() to manipulate this information.
+
+Thanks,
+
+	M.
+
+-- 
+Without deviation from the norm, progress is not possible.
