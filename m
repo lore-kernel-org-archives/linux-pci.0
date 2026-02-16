@@ -1,66 +1,67 @@
-Received: from mail-wm1-f66.google.com (mail-wm1-f66.google.com [209.85.128.66])
+Received: from mail-wm1-f67.google.com (mail-wm1-f67.google.com [209.85.128.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF9CA310768
-	for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2026 14:21:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A892C311596
+	for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2026 14:21:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771251715; cv=none; b=UxTO/DGINySckQmzwDwAttdP/XITwEKcRPgclg1d8VtUHVmnzRFdlLemi4krmpkwyM746FbX0MadDvN8Ww3Xf9U24luWyXl7Km/i8b8A18O3S5gJzk+q92JMxpv01gjAbNSeMvTWdwSxBrNPIQHvBWun/FfwBus5UWdRwXLoLoE=
+	t=1771251716; cv=none; b=LpcSi3k3/YHXhyr/5OCHy7tExb7TwypLXtukZN5hpVfGVYKWYWAXlVqid2aAhv9LpNxaLI/tnmcHXu7pMXX3ozI3i+l95hWjLqgF++bEsEJss8k74/CQODOknbV+vnr97iqOJ7lVuntR74fQN0Y+wfmqVx+WkAnE4ceYhFSdeZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771251715; c=relaxed/simple;
-	bh=3AXiIwSq8L6nzDQfXChSLBVbjYhE+/7MBD/NWJrTKsM=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=E020Z00o+U+oqjVF1045cWsxtVa4Mj/RZ6SwZsf3UlARSa8T+SccbdlS1horG/jdLcI2z0lV/t0akzWAUeFX6XUSTanZiqlI9u84tz4SRBFBwXvQGHO2LEgv5g9oIo1QEWzyowJezHpMun8yQrAN6U12smVSIVZQ42fimM8+wS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=IFiATbPe; arc=none smtp.client-ip=209.85.128.66
+	s=arc-20240116; t=1771251716; c=relaxed/simple;
+	bh=K52g4ga2yw79eCXHygCVrwkICvYG5U0dxgjsIk3GGww=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Ii5lhP+yQCq2WHoW3paCdH3i/NMmtX9DLimdfZtjcAnxB5VhufnVVtwfbfkCqM+ug7m3eQ2TWPW+Hg2ndNC4vzRT83jJrTpBpmwX+3NEOQnDNl0JIaLgY697LSj7dTtnjlJoAjjZfDRrOi71vZNPJDrNIgVOr0natZfVe19N7fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=mUwMJhE8; arc=none smtp.client-ip=209.85.128.67
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IFiATbPe"
-Received: by mail-wm1-f66.google.com with SMTP id 5b1f17b1804b1-4834826e5a0so31318615e9.2
-        for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2026 06:21:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mUwMJhE8"
+Received: by mail-wm1-f67.google.com with SMTP id 5b1f17b1804b1-48371bb515eso36261635e9.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2026 06:21:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1771251712; x=1771856512; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=rbuK1/Mkk0qHzf5Z6SkYJv1LBlhiuNH5yjaPDFPJh1c=;
-        b=IFiATbPe9OtdN3sH1xItYwqyPYRsKlNbDg6Xv69VdJ9hjvi6I8/4WtRvs1XgV14gc6
-         8yhW2/POCb1S9AOfU2eWltXRe7IlTGg6JrhlF5SmKifzqHKhH66aQ4urMh+uheF6DK4T
-         e4uAGIXxDPc1e1CMulyAcDHpT0jPuGUsSROgm486M0SEslUVHIcRO2n0NxamksjavR2k
-         kSRNsVmHYjMlJ+NUV8SX9SoVdtY+pkIy5QehLRMO+XPlvJzyzG/GwPKisyolBhiY+Weu
-         8BlT2blz6A/vzuvWLCC/CoY2R4c5IriHIl9xa8XYC26bHJ21si5SpLQxkeXDDEv8WIPY
-         7vbQ==
+        d=linaro.org; s=google; t=1771251713; x=1771856513; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Lf39OMypbd2OZzaTG40QQZ37dkFwAr6bUYbA8Mqeigo=;
+        b=mUwMJhE8kS+bxzJHkUQpwJ2b+s54uGNHhZkYlrHbJgQbY0QugewHk571bv4BoVzepd
+         o2dmmcMLdx0oxZpY21VPLAx7edEvfsLuiNgP5FzkYX+weQXFvhmbXebESscXAG9j/zFN
+         oFy8gaasvmTLwtpL7xhdWbLFU+zhlb0QUxxQpOjT/jUVsyAtXHqe6wZjJlq9M6W/OAEV
+         I+v0gaQ65Vd5b+2516EG1GUz+RhupPRPrt633EqVaVrHb9cfP/OStjjWWktfCdzwyKH4
+         Cnz9oHEteQpubw3q0WWPwImViZreayRHwOuWjblnYf4xz2M6yubYx6bf82TieZcxd3bN
+         kaPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771251712; x=1771856512;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rbuK1/Mkk0qHzf5Z6SkYJv1LBlhiuNH5yjaPDFPJh1c=;
-        b=iYV/Y4NPt+9DTC0eXgBU4uN67NlGy9n60XH28b7T+10O+aPK/1Xk+qO2sBbhpaFd7H
-         3T8HXX8sKiiyUFHH+KZPeXa5nrnewytzfYMZ38LvhdzxbsgAYLtkg+2zjSS8sINi7Oxk
-         iJIb3QOq06/Hi8q3noBus5hkuImrWDZE4bJp6d9V/LBwTzgZFZHhvOmLHCsXoCxWycmi
-         /zuCV7nTT+/Trfjwuoz1qxt2IV/Acagu5+yVAqAt3bi3rW/O0Toj3P19mIpUGhtYkOWW
-         IuSi3ut8tFvfUTkKsJ95pttg1kKHSbfSnL0nrkW2dUQiazKDnFLEdTuSKXpa6H7cmbDC
-         4CDg==
-X-Forwarded-Encrypted: i=1; AJvYcCWmOCN2JlS+YlU3hseiLC7ZNf21dLhsdH0uC2qxAgD8yZlvk2ON7RjhXQZGiV6XGzpocBxXvNrPT4U=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzp/wBP6ZNnoG038N0er4zaAYPWNCJYTio9AKqqc7peFaowGoTM
-	oBG6OJodX3awB/BtcanuJO5KRKtsz4mMfDWaPajYyiyWtTzAslZrOoCA41Mt6vRdmg8=
-X-Gm-Gg: AZuq6aKU14v8yqg9ArM0ypDB2jeTQfvyzopSUyNXFslycJU76VEeXBgR+pdotm/vWoC
-	nogg3BnYLg9vqf/kV+P1mNHn1oeOYqI4QOsJ45cbvxvAenvwAuexX5sXTJucdt0+6fRNuUa9wzr
-	lhUGGtewgLeO0dUnfmUAOW0Dh4nMlaSqYuJN1vUKkBLK07o+dOKNlT+UxcZ5Old3Y+zgKAl5Chw
-	IyqoQQVBjcDIJfXf3QoM3CPfJayNxChQClVJ5SVE90+oS+ax0/iE3jrnz59Rr5laa6daMcZCT8T
-	VaYVHZu2Pt1/XLANSta+APiaPchSqGUo72k/uWlmjLbZ7gE5ApSxxuJ7SARsR/nHf42Mf8EtLOe
-	oPZSWA5iHf+4OKZjpjkxMaF5jhG7Qqyw+LsoYIvXlXiJ4a2XnEHpKXsiKoj16ZkEj3JXWEbogMk
-	PwishUxgsln5dlTQaJ8n7+CjYeHX5TxXLj9sZM206xC8kh
-X-Received: by 2002:a05:600c:8b38:b0:483:456a:514b with SMTP id 5b1f17b1804b1-48373a1babdmr176881285e9.12.1771251711991;
-        Mon, 16 Feb 2026 06:21:51 -0800 (PST)
+        d=1e100.net; s=20230601; t=1771251713; x=1771856513;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Lf39OMypbd2OZzaTG40QQZ37dkFwAr6bUYbA8Mqeigo=;
+        b=DwKEcgvggyeEGDROfcp1mIwQsdqY4+Y0t7USj9oLGR9p6T1Aw4rm+DYAK+f54td4nd
+         XBgmaVm/uNOdsOe9rK7ACLF9w+5W9bKJ6UieuEj6MDNWHsZhA/HYmtxVJ/zonDFoFt9T
+         inmLPzR+uRIzN5PnXcCpuK6LjH3hM5fCPQ0wDoThhIKv01q8iQwTpE31Pf7W67B4HQIu
+         /Ct9ID7LoZicN9DGA2E4VxXSKGgD5sVYp8RCjmNQ5F2q/V7AnLO59ladodhsjoNKw0qC
+         kW7hZCnJ/4o7WtvMOfN/3hcBJcXXSS+AGEqwKJ0UShV6bXVNvW+OOJ7E0WsaS7E+wqcv
+         VuYw==
+X-Forwarded-Encrypted: i=1; AJvYcCXT5novxLJ2XRhKDyXpV2v9xweqkQM+bV/2pXRA1ZcfaQBJJIfDmk+MyA2WEdtdmtbpj0xFb/cSAH8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxMzJulCuFLU7RV0Ph4xsCANnCJifyRqDeBpKW++IfrWfR7EKME
+	jJkqRD+TQB498lWDLxkVoK/924tapxoU/LtuHEOtqCWIEHvN+LU9/I/5J8lPM2NRkO4=
+X-Gm-Gg: AZuq6aLbSiXF2aBtGJfV7pgrwLkXo3mLY2eHYqR31BapmbhCzQtr76hfEaQMz8EOdnx
+	/4whz4MhLNF8qgde8mKd3ss8VFnbGb8tkf1RJoCK0cQBRJLH0O+jH/Xmxso7Ats32p4HMx7z/HB
+	NVM7rZkIM3y9bwaiZfTWYJP3M7zWfj82NUqBBBVc5lWzQyBQdjmNGNJLNiTWavCzWDzAF7eBuIB
+	795cW1M0PQ9ojL3fBDkpAy3WW0tlZL1DoNfuCvh0pK1z2OgN8N1HeGXaj9IQqlfqhe5bw/aviMD
+	rd2KNw89GsvPIMWCEjbTRst6LOGblSeZTDHheji84BBeFSCsO7VHHaO5Z90CSY1kMWYBxLfS1TD
+	2Hd0vc/bnbf17Prllf+ODSIV2fhjI1bb+es+LDhZRZi9k4mTsTtlubCB43qHdLL0liFUQaIS3Za
+	PL0iQ2kG7a9q97nEBcGKcfXNcWroQdJuQQkurj2KWLTB6/
+X-Received: by 2002:a05:600c:348c:b0:47e:e91d:73c0 with SMTP id 5b1f17b1804b1-48373a5ba0dmr158418145e9.19.1771251712899;
+        Mon, 16 Feb 2026 06:21:52 -0800 (PST)
 Received: from arrakeen.starnux.net ([2a01:e0a:106d:1080:8261:5fff:fe11:bdda])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48370a63afesm86717475e9.9.2026.02.16.06.21.50
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48370a63afesm86717475e9.9.2026.02.16.06.21.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Feb 2026 06:21:51 -0800 (PST)
+        Mon, 16 Feb 2026 06:21:52 -0800 (PST)
 From: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: [PATCH v4 0/9] arm64: dts: qcom: Add support for the Ayaneo Pocket
- S2
-Date: Mon, 16 Feb 2026 15:21:44 +0100
-Message-Id: <20260216-topic-sm8650-ayaneo-pocket-s2-base-v4-0-802c82795431@linaro.org>
+Date: Mon, 16 Feb 2026 15:21:45 +0100
+Subject: [PATCH v4 1/9] dt-bindings: usb: document the Renesas
+ UPD720201/UPD720202 USB 3.0 xHCI Host Controller
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,11 +70,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAPgnk2kC/5XNu47CMBCF4VdBrhnkC2PMVvseiMKXMVhAHNlRR
- ITy7hgaQNuw5X+K79xYpZKosp/FjRUaU025a7FeLpg/2u5AkEJrJrnUXEgBQ+6Th3oxGjnYyXa
- Uoc/+RANUCc5WAo5erQ3FYHRgDeoLxXR9nuz2rY+pDrlMz89RPNZ/8aMADs6puMUoPDf4e06dL
- XmVy4E9/FG+m5uvTNlMj0heOAzGxT+mepmS669M1Ux0m63HoIXl6sOc5/kO6f25eH0BAAA=
-X-Change-ID: 20260121-topic-sm8650-ayaneo-pocket-s2-base-05c348efd86d
+Message-Id: <20260216-topic-sm8650-ayaneo-pocket-s2-base-v4-1-802c82795431@linaro.org>
+References: <20260216-topic-sm8650-ayaneo-pocket-s2-base-v4-0-802c82795431@linaro.org>
+In-Reply-To: <20260216-topic-sm8650-ayaneo-pocket-s2-base-v4-0-802c82795431@linaro.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
  Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
  Conor Dooley <conor+dt@kernel.org>, 
@@ -85,102 +84,103 @@ To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 Cc: linux-usb@vger.kernel.org, devicetree@vger.kernel.org, 
  linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
  linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
- Neil Armstrong <neil.armstrong@linaro.org>, 
- Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
- Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
- KancyJoe <kancy2333@outlook.com>
+ Neil Armstrong <neil.armstrong@linaro.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3369;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2217;
  i=neil.armstrong@linaro.org; h=from:subject:message-id;
- bh=3AXiIwSq8L6nzDQfXChSLBVbjYhE+/7MBD/NWJrTKsM=;
- b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBpkyf6wRCOG3hQ13uB+dGuF6/3bQbipSRjzs/BNhRe
- ArpkBhmJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCaZMn+gAKCRB33NvayMhJ0RjaD/
- 9Ggbw+0dtusYlUJ/EJRqi3F84Q8OVPCl+4JJWd+z2fTwmVmmvLF5vgY46JTwjSX8djllszqmm8KKXl
- vDspueP5Uy1Lbv47CXEhowgUW47dhlPgfx//zXrljOuzwy0lpkgKq+HlFgKRoaXh5OFd1zr/hPua8v
- brrvaMu/M/zZCh6cWUM7nmytIzpMwBXvYt1uwSnCV6QXn6hAWn5IL8pv/3UUruniHCNKeKTB5y1l/B
- lIAcrDfu8dSa1D1CNX/XWkG+D9p6sKkP/LYUItUtZyXIxdD0B+miLg9tR3424mzKrMrxIst7L3Ztrf
- BGQiyHYI9KM98WJIFtfmBc3I9OKTVSUbU17Wfk/F2F+wASr9gmpXHVg3voIVJWDnFE9Gfl0ZG6ZESV
- RYv4NBJS0piBPLnLAhSIwOyE31eJn3IlQCkBjFxthWmx2hTIaBbYdDdHC/aXmMiYPkbKGVtQu2WZDi
- SKZkVyr2ORIeaEgJcKhVUmC219oQNJJfN7F3/GcqxtC7aWe/QMn/ZbW3dc4dr2/0XbVBRy1Y+Hf+lF
- fzoPq/q6yWWThWmjHa+oJc+FmKGpm7Flujs0xeLujXS0J2P6sv452oI2340TOSHgk20YgWsMKqvQVd
- cCowD2KrJUzo3VFu16JDOq5FQo/pkOhimmLireDbYSuyLVwUOe978Z2qKcCw==
+ bh=K52g4ga2yw79eCXHygCVrwkICvYG5U0dxgjsIk3GGww=;
+ b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBpkyf6sQAlg/F7g2tr2IfRrZV7X4OKv0IkWw8a7hig
+ y2ec8zeJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCaZMn+gAKCRB33NvayMhJ0QeNEA
+ CW8AEXMYzR2dPqJ3oq/9XQEhpaal97JNQmm5YqPW2b5FZwfBBnflm74bDM4pjZu+wNffYL5qXfC42k
+ CwyNoK/2CLR2vTs5jj7RAzHbvjOpymTxn5HHdU4vzgDHwTCrvAhHqvFGhlZdH+mid54I2wZ2P3rKrN
+ surlTiHkc9C5pmMinmkJx5M7pGYXuX5IfzWvOw4O+gNYK3SYYcDvTd89QrX+hwI+mXq40dkoYPEB9J
+ JV7IK3K5FJEuEi/hpEyglwM3LNeWDcUKnL2pwdtC458uxaql0YvbucjjEvwH5S3rw2tDAY0i08u24e
+ cL7Svp4nuXS5ee32oQR+1U2uel2qsQgfdLukPaxGDv64cMlJZ5tQfUJSMJ/I93ulODjTSsvjAXgV36
+ aWOE77aHm60fs3SWkQF5Q26hig+RCpu3OA+lrYwfRT0WN/79hhoD52lYN7F8VtSRJ/9tp5j8rNNd88
+ 2W+X6VJSxgKmEYc9qwKMdeVPBLuVvQZIEXK03yTSN3InTk/2lEl2B/I5HyPHUq3OWld/D3u3J5oXhB
+ 3R5viMBoMkbp5Y+eVww8Sbj0/FmUML8Pbwh2Wp1fs3mx90MsXpytVzJ0OcoL28tVBl+RNYFy5uZTZR
+ SfBiMAXfoXr7hhvCU5FbjJRYw2QCzXKOhexG+SFvejJwUG85XsjW+FkAlhug==
 X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
  fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
 
-The Ayaneo Pocket S2 is a gaming console based on the Qualcomm
-Snapdragon 8 Gen 3. It has an internal UFS storage, WiFi,
-Bluetooth, gaming buttons, SDCard, 2K display and USB-C
-connector.
+Document the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller,
+which connects over PCIe and requires specific power supplies to
+start up.
 
-Product Page [1].
-
-The Initial linux port was done by KancyJoe (Sunflower2333)
-at [2].
-
-[1] https://www.ayaneo.com/goods/9344082149621
-[2] https://github.com/sunflower2333/linux/tree/master
-
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
-Changes in v4:
-- Renamed slot to generic, in the code as well, fixed Kconfig & commit message
-- Switched the UPD72020x bindings additionalProperties to true to allow devices subnodes
-- Collected acks
-- Link to v3: https://patch.msgid.link/20260206-topic-sm8650-ayaneo-pocket-s2-base-v3-0-5b79c5d61a03@linaro.org
+ .../bindings/usb/renesas,upd720201-pci.yaml        | 61 ++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
-Changes in v3:
-- Made renesas,upd720201-pci bindings supplies required
-- Fixed description and example of renesas,upd720201-pci bindings
-- Renamed slot to generic, added renesas,upd720201-pci entry
-- Used PMIC_GPIO_STRENGTH_LOW instead of numbers
-- Removed all output-low in pinconf
-- Link to v2: https://patch.msgid.link/20260127-topic-sm8650-ayaneo-pocket-s2-base-v2-0-c55ec1b5d8bf@linaro.org
+diff --git a/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml b/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml
+new file mode 100644
+index 000000000000..8b8be572c930
+--- /dev/null
++++ b/Documentation/devicetree/bindings/usb/renesas,upd720201-pci.yaml
+@@ -0,0 +1,61 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/usb/renesas,upd720201-pci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: UPD720201/UPD720202 USB 3.0 xHCI Host Controller (PCIe)
++
++maintainers:
++  - Neil Armstrong <neil.armstrong@linaro.org>
++
++description:
++  UPD720201 USB 3.0 xHCI Host Controller via PCIe x1 Gen2 interface.
++  The UPD720202 supports up to two downstream ports, while UPD720201
++  supports up to four downstream USB 3.0 rev1.0 ports.
++
++properties:
++  compatible:
++    const: pci1912,0014
++
++  reg:
++    maxItems: 1
++
++  avdd33-supply:
++    description: +3.3 V power supply for analog circuit
++
++  vdd10-supply:
++    description: +1.05 V power supply
++
++  vdd33-supply:
++    description: +3.3 V power supply
++
++required:
++  - compatible
++  - reg
++  - avdd33-supply
++  - vdd10-supply
++  - vdd33-supply
++
++allOf:
++  - $ref: usb-xhci.yaml
++
++additionalProperties: true
++
++examples:
++  - |
++    pcie@0 {
++        reg = <0x0 0x1000>;
++        ranges = <0x02000000 0x0 0x100000 0x10000000 0x0 0x0>;
++        #address-cells = <3>;
++        #size-cells = <2>;
++        device_type = "pci";
++
++        usb-controller@0 {
++            compatible = "pci1912,0014";
++            reg = <0x0 0x0 0x0 0x0 0x0>;
++            avdd33-supply = <&avdd33_reg>;
++            vdd10-supply = <&vdd10_reg>;
++            vdd33-supply = <&vdd33_reg>;
++        };
++    };
 
-Changes in v2:
-- Add proper regulators for the USB controller, with bindings & power ctrl
-- Add proper regulators for FAN
-- Dropped support for headset over USB-C, audio is connected to a jack port
-- Cleaned up Audio routing and fixed the DP endpoint index
-- Added i2c clk frequencies
-- Renamed fan node and used interrupts-extended
-- Dropped the usb-c self-powered
-- Reordered nodes alphabetically
-- Renamed pcieport1 to pcie1_port0
-- Link to v1: https://patch.msgid.link/20260121-topic-sm8650-ayaneo-pocket-s2-base-v1-0-bb3f95f1c085@linaro.org
-
----
-KancyJoe (1):
-      arm64: dts: qcom: add basic devicetree for Ayaneo Pocket S2 gaming console
-
-Neil Armstrong (8):
-      dt-bindings: usb: document the Renesas UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-      pci: pwrctrl: slot: fix dev_err_probe() usage
-      pci: pwrctrl: rename pci-pwrctrl-slot as generic
-      pci: pwrctrl: generic: support for the UPD720201/UPD720202 USB 3.0 xHCI Host Controller
-      arm64: defconfig: enable pci-pwrctrl-generic as module
-      dt-binding: vendor-prefixes: document the Ayaneo brand
-      dt-bindings: arm: qcom: document the Ayaneo Pocket S2
-      arm64: dts: qcom: sm8650: Add sound DAI prefix for DP
-
- Documentation/devicetree/bindings/arm/qcom.yaml    |    1 +
- .../bindings/usb/renesas,upd720201-pci.yaml        |   61 +
- .../devicetree/bindings/vendor-prefixes.yaml       |    2 +
- arch/arm64/boot/dts/qcom/Makefile                  |    1 +
- .../boot/dts/qcom/sm8650-ayaneo-pocket-s2.dts      | 1551 ++++++++++++++++++++
- arch/arm64/boot/dts/qcom/sm8650.dtsi               |   47 +-
- arch/arm64/configs/defconfig                       |    1 +
- drivers/pci/pwrctrl/Kconfig                        |   13 +-
- drivers/pci/pwrctrl/Makefile                       |    4 +-
- drivers/pci/pwrctrl/generic.c                      |   95 ++
- drivers/pci/pwrctrl/slot.c                         |   95 --
- 11 files changed, 1745 insertions(+), 126 deletions(-)
----
-base-commit: 492852b6c9c80e576537810995fef0de1bea7092
-change-id: 20260121-topic-sm8650-ayaneo-pocket-s2-base-05c348efd86d
-
-Best regards,
 -- 
-Neil Armstrong <neil.armstrong@linaro.org>
+2.34.1
 
