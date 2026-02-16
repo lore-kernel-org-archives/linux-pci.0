@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 852491DDC2B;
-	Mon, 16 Feb 2026 09:45:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7386D26E165;
+	Mon, 16 Feb 2026 10:38:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771235128; cv=none; b=AXGKKgq5qp27ZASQZrRnTHHOLIKt3VMZJJAoreLwtkPHTGXtRqU9q85vpxer/+i28JHoUJVeI35Ozh3AuZLb7m8Dv/BOyA8CAmICztyNI6zcMjdHgzzXhQ42xxJBo2UQX5Xu3VRBuB4FKQTD8ImyZ14eq/yj4eopTA8M1LW5xCY=
+	t=1771238319; cv=none; b=iiPuoPUvic4EuSUO6P8fGWIdQqh1iuoNlm8IeKSphgYQZPkDVF0CFGoqyUCVOOLhzT+DC2CoYMq9w0uAfCEgKqG10UhbNqRAgBAX/eur5JvXNtws9mofe/ANXgYYasYQYcAjAAzncLEyEaVA/Z7jLty4UsS3UHSu2DeCXB3IKLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771235128; c=relaxed/simple;
-	bh=7NunW6RQ2SBImUQczKO4pkXAhCVgbYmwdk+s/Y6+W4c=;
+	s=arc-20240116; t=1771238319; c=relaxed/simple;
+	bh=dB57urtMQzMFe8NbOoBddKpC4zqhyMe6pYuc1q8u1ns=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E9cMKuDmrPvxcy47VcSEc9xvOyLzkcw2s1K49fjqZf/Qy0VWT2DFObH0I4pZ7bnLJWx1PwBVA4qyqpa88ER7XhMGkdmIzFSpVwjK9Vxt1KboTXOwMNIoU2twzR9ME6o36d+5nIqFaSYwMTXtSe6Hrwv9+XNMek92UXLiaPXvThQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=xNL5Ln/G; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iZhta70RMDUMfrAtWcYJTjVB63Fl0gADAzVs/TID1hKLnl/wtYOwf8oaGdpDwLqK9IToD9kIndNNtDyvejieBcK4pPcXMrmJCW9sTKRy3pQgeTv/e9M6bj8JXcYUX4/vWIBa1F8D5djM9JAA3TadOLzHSIdt1ndbA/j0vOft/is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Giwx4Qm5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="xNL5Ln/G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8543C116C6;
-	Mon, 16 Feb 2026 09:45:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1771235128;
-	bh=7NunW6RQ2SBImUQczKO4pkXAhCVgbYmwdk+s/Y6+W4c=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Giwx4Qm5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC7BCC19422;
+	Mon, 16 Feb 2026 10:38:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771238318;
+	bh=dB57urtMQzMFe8NbOoBddKpC4zqhyMe6pYuc1q8u1ns=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=xNL5Ln/GHbKcYxO9OK9TGyqNcd/W3Shk6BTBuL2YDjBV27c6Vz4DDyLGjzv+io9hQ
-	 PdOiDxodlXjS4AQt6gi27iSLT1dCqRXkcJQqVxWZzKI70+VtmhSilMxCY2wh/9oCBZ
-	 WKCQU1RzcPAKLDryNuS/m9oJEqItky7rfCgukamY=
-Date: Mon, 16 Feb 2026 10:45:19 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Cc: Sasha Levin <sashal@kernel.org>, David Gow <davidgow@google.com>,
-	stable@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@gmail.com>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Abdiel Janulgue <abdiel.janulgue@gmail.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
-	rust-for-linux <rust-for-linux@vger.kernel.org>
-Subject: Re: Consider backporting rustdoc fixes for 6.18.y
-Message-ID: <2026021612-hazy-stank-831c@gregkh>
-References: <CANiq72n3qPsoy2u1KxfyV4ZCjJyDZLkK-54i7EesTH=TE9h1jw@mail.gmail.com>
+	b=Giwx4Qm5jaj9ggYW+CyDD0Q66FDARUJWteWS0G3QSh8qQPTUCQWenaoG6a3l1LkdY
+	 +CJZVpmwrkbEZUzvE7j7rEaIo0Fa8neG1ZMCJQuZXbbcwgtFsT0OdXEAVsQdXguM+c
+	 GPu6BYB34qJlH3rWW8vaptpPWQqbblJF7Bb1KPmNaOsrrH6junf9osKlmmRt8eg6fD
+	 /hoFebG2Mej95pDaip/10hkswUQmEHBSf9R6/SKvgKtHbJtMn7S6WaTZbLYFkp0pvK
+	 V/3RANZaXF8O6Auw2bSRdeJ5ApbW7IKOSusZ79hXaNEvZ+j36vD2xoOHcHUqqEYT3z
+	 6w5wAzjtUZwbQ==
+Date: Mon, 16 Feb 2026 11:38:34 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
+	bhelgaas@google.com, shuah@kernel.org, Frank.Li@nxp.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: endpoint: pci-epf-test: Advertise dynamic
+ inbound mapping support
+Message-ID: <aZLzqk25C9pZVu1_@ryzen>
+References: <20260215150334.3391943-1-den@valinux.co.jp>
+ <20260215150334.3391943-2-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,24 +46,20 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CANiq72n3qPsoy2u1KxfyV4ZCjJyDZLkK-54i7EesTH=TE9h1jw@mail.gmail.com>
+In-Reply-To: <20260215150334.3391943-2-den@valinux.co.jp>
 
-On Sun, Feb 15, 2026 at 03:11:31PM +0100, Miguel Ojeda wrote:
-> Hi Greg, Sasha, David,
+On Mon, Feb 16, 2026 at 12:03:32AM +0900, Koichiro Den wrote:
+> The doorbell test requires the EPC driver to support dynamic inbound
+> mapping so the host can map the doorbell target address into a BAR
+> aperture.
 > 
-> I have been seeing these warnings (errors with `WERROR=y`) in stable
-> 6.18 UML + Rust on the `rustdoc` target [1].
+> Expose epc_features->dynamic_inbound_mapping via a new
+> CAP_DYNAMIC_INBOUND_MAPPING bit in the pci-epf-test capability register,
+> so the host-side pci_endpoint_test driver can detect missing support and
+> return -EOPNOTSUPP instead of running the test fruitlessly.
 > 
-> Unless David (who works around UML + Rust) or the different
-> maintainers (Cc'd) have a concern, please consider backporting:
-> 
->   a9a42f0754b6 ("rust: device: fix broken intra-doc links")
->   32cb3840386f ("rust: dma: fix broken intra-doc links")
->   4c9f6a782f60 ("rust: driver: fix broken intra-doc links to example
-> driver types")
-> 
-> They had Fixes tags, but not Cc: stable tags.
+> Suggested-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
 
-All now queued up, thanks.
-
-greg k-h
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
