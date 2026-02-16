@@ -1,44 +1,44 @@
-Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazolkn19013076.outbound.protection.outlook.com [52.103.74.76])
+Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazolkn19012059.outbound.protection.outlook.com [52.103.66.59])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A353029B200;
-	Mon, 16 Feb 2026 02:27:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3D1220F2A;
+	Mon, 16 Feb 2026 02:27:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.66.59
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771208838; cv=fail; b=B8mqTCUvJnk4N+VIrKFULjkzJQlTM1fBEm73HFzr75Z5wTktb7NSWL5rkfgMa/r81IlCVnSDEAWwcS8QO2ltkjoxMZeswBPmI8PoREHJ6swsRlC7ifVn4PFvxzUxJ3H44GNXTux6+JKkaNWbDhk3KLwklVRHrMdb38S8nubXFIM=
+	t=1771208842; cv=fail; b=SZaMtbD6i/UQAjpV/kGOMtAgN09m08rnVgu92C6mz+skoJpCbztV/GFfYPKfryXURJTLhpxOSLh939P9Gifsf4jXRw7r3NsdOx9tz2p46Q3ms2eYpPsJWV7Nk/QObyK22heq/42uUV1Lg04LKRzKI1yEWNgkqgzLmzdQe78ljJg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771208838; c=relaxed/simple;
-	bh=kT9yFDJOJyXT6zUhr9HidIqrgt7TjIjp8JhXPtsJ6d0=;
+	s=arc-20240116; t=1771208842; c=relaxed/simple;
+	bh=xs5nQVGPAGV6p210nd6mRn3KhvRsrRDI79ZawuvrUqY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tGdxknXqa/mVVWUyczNx8PmJGdSv0OEONUXoLqx6AzFRJkTNh1CH1N491PHOR7rM7a6wFJpZ215s7OFIoRYQHymKU/biklaxI+HaX+C7KB7BIMBbVG4+GmLQP2jfAuRyNik6ep2D/xLghCXOFcXgaaonx70MK4VbKL3GRdAoL4I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=m981DtoW; arc=fail smtp.client-ip=52.103.74.76
+	 Content-Type:MIME-Version; b=pN33pgn/PLRuR7ZwRiVntmHlrhpfD/cFFCeZvw91oHhtAXSoW7AOiZRUhT9d1SY1TvnnS1x4GPF6C4TZabqw09PPPkcMZLCPo/xRzyVa1ZLYbPVzVebS4i6X7DvkdZpl/+4sMNfZsF5bkw8sU97EiEkUnKm9sBAiCPRzekvN7Ik=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=HvOX0Q8S; arc=fail smtp.client-ip=52.103.66.59
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="m981DtoW"
+	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="HvOX0Q8S"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=LBhj7IN4BuSbGTlmrh8r7jiyIsrqpG7LczB4D+5JPBw59jYSD9HDq273t0hw6howXajXraCabBn0lO236u2lrzL0DiKdep3eVOOsKJyeb0zRCr+BhZxBaq0S/oth5Qgv2QAlaOcGzWi5uiTzZSoU9nBqjIlmgdPCIiEaQHDDaAlT8SGL4O9Ano1gHArgXXZcDyrGYkiw1Ngc+x4CzoJsM1sCgXTSgqJ6/94m22mePRr/vOPIHU4AffCcBnsJcy4Mr4KmMLS2u3e+bfWu6UtKqeyxoo3+XlXbw57CbCnXi2e6WVHm2R2yXoKsRwNOZXYS43Klw6AcKENnP0vUe/U4MQ==
+ b=dyY4Yx4b+fd9uxF1NqOinYVQd6uuQi64mDkd++wxcPwv5ioa9byB/cwiqZn6Xh4dPN8vn+VzsjmBg+y7zFvDbolwdMuQPD97JAgNP7SFcqlXyjvgIK5/YRIxTxq4QPCslLrMSJBKLEr48DP10gMnb4ax+THcWwSxRRzjKHOAzzyyCiZFdVIc3e8AGCoTY/eYegiDD8zjDFhk4nOS8e9FCdtp63lJ//MZ6WC11yEXYneDaU+EyqEAnFks0zCKXb+TLWd6BiETSpNQqFh1XmNwcljbv8UJd06xB0tzXEaaP/BDUTihBhlOmmPoBtEYv32cQ5q8fdqi9tI1YKz36OmF+A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KwpgY6vCpECJEC/Nr5qPH+gD53c7iC8KMzAvdM2a2vU=;
- b=bETLIqZYGR5ZfBy4avHNgXomhHaeoxAGKkaq2mwKSXZDbzamicP/wa0FYSIfpdiufbYw+WgMVi6zvLy+KBEJd65mKtGLwtbuWrgDfzh9jvl83KaVfs5eeI23tLTH5GbR4AH8ot8zd2dDBmAz4xwRW6h+Ag7PAxEDAMEoGvmAREJ1jE03b8HAjBBqJEbQ+g7E8Ku3BndULpCnT7FD7Y3ilmkgfD+C48Db+LW5tR6jPdFjwh5N/36j5a9/zoO+KdVLdZSS74FjYGWSpg76WoUgto7RhPcwbKIs1D75E8RHBCWR0uvkCovij6VizgTijZ/YZteaRBHaPbim0X1opKG76g==
+ bh=I7PLXq2SRHEq6nWilsnGkOfA/X1gkzlUkSElH1dAVfo=;
+ b=dROtHtbjouj6i1Xb9GjI8p5zJUPo5qYO5ZREUS2iP3Una/g3ickXcGyuws5NzEtcKkiFsZwPIXP6nVtvQxbFFRkDjENCASKOlthtNXWW31qlx30jiHJk6uV6OV+Se9xh5jCLuGBZqHRcQM7pa7aRcFQ3aWqwcbXgb5UQBedgmsd2QR/6Rr17HKNKmQ9cqV9btK6/WwWAlu9BnL+eCYKHePbaQokJeP9hJseoz2LGsX6POTIL3Kz4hElgrlBbXu3S4TanOYGqrDHwx3ziQAL3YH7Y6VrvOfwQkYzATl3aUIZL8g6Bovl2EWf4vT+/3fXwPFamtGR9bZN51P8SO4Aa9Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KwpgY6vCpECJEC/Nr5qPH+gD53c7iC8KMzAvdM2a2vU=;
- b=m981DtoWN9fBuxt8hsgy0lGrO+U98z9FVb9zCEO0GBDg5Ee1yKkJL4BABIOz5Ouvj3pIuoSxA6BKcQHPeUSLnRJ4LtOWl+MpnJMcXBmcjt0LjASpoa24Wfg+dJqJnLWOnFKygV+rCKZj07fPbjPBe8oXRLyDzz6xauNwvwlGMXKUJa/D6tqhxVG4XdFPyk92zuDX5POQ/JGUr7hRxulBvb6nO5VV+/dJahV0k6o62psIRdHR9C6TButL29tbtxEi2hwsDLsaGyouyhWinCNvniw+2XPFvrR+/kEqP2vezKjbhcdjvdW8pxGPCCPDsODjYJzdipNTOlY9piZwTT5Erg==
+ bh=I7PLXq2SRHEq6nWilsnGkOfA/X1gkzlUkSElH1dAVfo=;
+ b=HvOX0Q8SSxufvjjTUIZmp0ftzJXLLouRC1/lMC0LZAc7g9EdELuUCKwdEE0JE1EnzWL/2Dpftojmt/4p9WpnzfS9XxucvOCc0cI5pvbcHOdfP0RxKLiMSkT46TxK/oXaQQAThIGbk7Pmo+RRLNTyZz+U9n0KcYrk0me5vVpGqG8eglp85iyhp4H/4O/xH+yKAfaJLztcMQjf66OKgKq78JoEJqj0jrT4JJObO2q+DluOOoc6r+T5/TgOVf6Yo6QRPP3bzhIwfNqiQtdyOhAUZzQKxoGRAkUQxoEUEEkjOAcZO/s/PCC9GWlIHc/oxGdIQtIyPkQabcPTK2BaEdU5fA==
 Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  (2603:1096:4:1b0::7) by SEL0PF89D6F6B8B.apcprd01.prod.exchangelabs.com
  (2603:1096:108:1::5b3) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.16; Mon, 16 Feb
- 2026 02:27:13 +0000
+ 2026 02:27:16 +0000
 Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  ([fe80::c735:fab8:6e3d:6d1c]) by SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  ([fe80::c735:fab8:6e3d:6d1c%4]) with mapi id 15.20.9611.012; Mon, 16 Feb 2026
- 02:27:13 +0000
+ 02:27:16 +0000
 From: Wei Wang <wei.w.wang@hotmail.com>
 To: bhelgaas@google.com,
 	jgg@nvidia.com,
@@ -51,20 +51,20 @@ To: bhelgaas@google.com,
 Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	wei.w.wang@hotmail.com
-Subject: [PATCH v5 1/6] PCI: Validate ACS enable flags against device-specific ACS capabilities
-Date: Mon, 16 Feb 2026 10:26:37 +0800
+Subject: [PATCH v5 2/6] Documentation/kernel-parameters: Add multi-device config_acs example
+Date: Mon, 16 Feb 2026 10:26:38 +0800
 Message-ID:
- <SI2PR01MB43935B55263CD29E5B125212DC6CA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+ <SI2PR01MB439374DAD3F3E7F95D72E801DC6CA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <SI2PR01MB439326AF08A79D1C5661C29BDC6CA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 References: <SI2PR01MB439326AF08A79D1C5661C29BDC6CA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-ClientProxiedBy: TY4P301CA0029.JPNP301.PROD.OUTLOOK.COM
  (2603:1096:405:2be::12) To SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  (2603:1096:4:1b0::7)
 X-Microsoft-Original-Message-ID:
- <20260216022642.112923-2-wei.w.wang@hotmail.com>
+ <20260216022642.112923-3-wei.w.wang@hotmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -74,64 +74,79 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SI2PR01MB4393:EE_|SEL0PF89D6F6B8B:EE_
-X-MS-Office365-Filtering-Correlation-Id: b2f9b80d-f674-4b69-88ab-08de6d02e4d4
+X-MS-Office365-Filtering-Correlation-Id: 731a1604-8f80-4fbc-4ceb-08de6d02e688
 X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|15080799012|19110799012|23021999003|41001999006|8060799015|461199028|5072599009|37102599003|51005399006|12121999013|440099028|3412199025|40105399003|1710799026;
+	BCL:0;ARA:14566002|15080799012|19110799012|23021999003|41001999006|8060799015|461199028|5072599009|6090799003|37102599003|51005399006|440099028|3412199025|40105399003|1710799026;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?1ddeA7yzPsM1pjCNcatKao08hvY0ckZu6ctp/rflGH0Riwo9V+SDiDrISSJJ?=
- =?us-ascii?Q?XCMJQ6G+S4kgcE2Yh6dkFlOtFARAnASQdZmaOWc5oOJ2F3sRIHKi8ykPcHK+?=
- =?us-ascii?Q?lPxve9rLO7mvf6zW2G8ZTpnOAuFVPBcvih4rAD+bjq9t7hdDuN/laxmFqSXi?=
- =?us-ascii?Q?UJTZvVuvESn6LxH2tXGDMEzoJuFHQJuZ5/S1w5Y9l+hhTgkpBHT2TuzKvXOp?=
- =?us-ascii?Q?vaDYCF1QbWvu1dGXC4U+KZ4PTxFAHr5PMTFR2fkkdP4ByM75pTzFmOxTagnC?=
- =?us-ascii?Q?xztFB4/9SJ4vWwGYf+ARBRRJsO50UQOHXxs2Veny8q1dJ9A9V2GfS0VSvpV8?=
- =?us-ascii?Q?p7lk3AahpUBMlTpcdmgkvUhQdMipbv1j7XbRs1m+fWP8PGSDsDD8Q6b81enl?=
- =?us-ascii?Q?u7R8c6Uxr7ZDMuabaWmi12dSMQF2VqusdWa/AKfa7nGpp09uuk5iM+eryY7G?=
- =?us-ascii?Q?MOvErSr/dl7ab+2mz2GkX6OGiQLE3u5tPR3J92NgvbsCn0G8GfcwaUiczfog?=
- =?us-ascii?Q?31SzwDd7QF/WVLRYuiRDhzgmmQ2tvDaamg/btxR80BzixNtAiS9ATmKRZZzK?=
- =?us-ascii?Q?tbQgrll0VC8TxHAwo+suavy6oO609sd+aKbVAAU1h2mOyAZ1T26Q9RMJ/UFR?=
- =?us-ascii?Q?gkEqrSD0nym3+Ez7UVPs/L5yrPMHEzeQcCaiLoFlljwdVk/Fy+XbCDT8PkmE?=
- =?us-ascii?Q?UtDSWl6BSQXb+aGOmwDtXytNWPWZpvUuFc89m/nqcm+wq8rilDHcFFYfQgTH?=
- =?us-ascii?Q?7u3rou/TtOwZLDohYDl/mK6gicKVq41OhVZ7dylPNG6exlmQ6kIKHwcpX6X8?=
- =?us-ascii?Q?dpHliE06LSVjDebvfU8aeU35oKYDgEk2hwW/HKAdvOyS68XqeNEwDNAlPauu?=
- =?us-ascii?Q?uT0EO87qFvsZxhGIl5/OUFL9Mhqa8tO6+sBSUccilr4xjC76BYuhmFlM/Gpv?=
- =?us-ascii?Q?DJYOjNnTt+ZdmEzNSiOI06T0oi86Q15ipP+z6ih6PTCzWqqdUZ3Ko+1iMrMM?=
- =?us-ascii?Q?Wkcou5W43BkiheTcQ11HRm0hjLS8s0rXPu0E+s0tyKhoW+iwvk/3dRqEoNgZ?=
- =?us-ascii?Q?so3h932Ceku0db8F3zAjjfx9hyjl7fFbYzFThYA1+gUOhi/a3v5xevNYwxhD?=
- =?us-ascii?Q?IFrfzC3+lMFD8ZIrqWHBvUIytH1jR6+HAxI8yvvSA07qkUOn9w3SDk9RVr44?=
- =?us-ascii?Q?5uCTvTZDhfoqDIuVm46iVZCD4MEcc52rJkoVV7BQp+RIUSoFJ8tPz/TyRnF8?=
- =?us-ascii?Q?rbqLCLGNCR2eNsUFGUaq6Yt/tPl9q+lUkqLLyjdwYKiCkFM8OSQu+zfEs6hs?=
- =?us-ascii?Q?5z0=3D?=
+	=?utf-8?B?NVpVRW9xMDhXTXBuRS9rak5ZZkt5TG4wUHYrMFZMd2FQS0NzeGh6K1d5NTY5?=
+ =?utf-8?B?TDBMRTBkcWFhazZMeDMyL3FoRE1rSHpGdStGM3gvZXdWYU1PVFdMSXhzQ2dB?=
+ =?utf-8?B?UHl0QnFkRnhTS3h1QiszdjhsYnlvb0Y0R0hMVkYzNHBUMVpLRU40UUovUkVo?=
+ =?utf-8?B?Yy9sblNiWTl2Zy9yWWwzSVR5UVhEUGJPSzVWcUtYeXFkRktUOXFuTUVrSEE5?=
+ =?utf-8?B?WVZYTXBSZmhkMDE4L3JIZU9FSFVwWklPVXZCKzl3b1k1Y3dhczlqREsxUWc1?=
+ =?utf-8?B?Q0d3a2ZrZkJjWkNQQ1ozRjVKN0xBNjNzR0tzYmlCVVBNMWM2eXpjZFlhVytu?=
+ =?utf-8?B?WGFFR2dZS2xVQVNJZW1MWlFqUm5ibGxja0RxS1dTMmQ4OFZkcW9VOHh1OG1W?=
+ =?utf-8?B?TkllMHN0RzJjbVhkTFNXeW93TGhSd29Dc3RuMHJnb2Q2ZnRuYTVXZmtwZWMw?=
+ =?utf-8?B?aDhNUXNZamMyL1VQcW9SZW03UC9OZEp0R1JhbEdYVjRsckh6dHc0Qnc5NnZR?=
+ =?utf-8?B?aUVyN01iU01qdU5QbHZTNTVEQ3RVSVk0Zi8xdjBkNml4Z0NFTWRYamYybDN5?=
+ =?utf-8?B?UVE5cld1bkY5WVVQMGJjNWVnYmZpdzg3VHNyemNaYVJSTXFFTFY1ekw0M3ZS?=
+ =?utf-8?B?dzl6K091TlpaWHZtRlo2ZmlKWXFGRTA1RzNRdk9iMXExczhwSmJad0dvd05G?=
+ =?utf-8?B?anZvWGNpdTBVdC9jVlQ5TE5CT2haY2RzZDJVMTZuWGYwM2NVZGF5TmZFYUx3?=
+ =?utf-8?B?WVViblZFVkJDOVQ0OHo5VWhrTHVlN1lYN2FaaERwUTBOT1VPMis0WkljbTBL?=
+ =?utf-8?B?dUY4U0xGbG1waVcrMGMyZ0VjTnFqbCsyTTdxeFYwZlphbW1oQkw3UGxwUml1?=
+ =?utf-8?B?N1A3cVM5SWxFMlNiMWFpcGxneExVc0JMWGtVekNBZE43TUNPNkRlM2RqWHQv?=
+ =?utf-8?B?L3FtVnJDNHdOZmd6R2RIUlV6UWU1a3IzT0NBMUhQbXFMTmpmaGRLU0V6Mlpi?=
+ =?utf-8?B?WnJGQU1RMVNWR3ZtYjJQNlBDVG50SWliQzBhcWZBaDRWY04wVENZZnFOTFFm?=
+ =?utf-8?B?Y2ZNNzg3VmVlS3NxRjBRWnpuWlZJY3M3MnJYbE5saEoxRkNhc29hTVZBOEJM?=
+ =?utf-8?B?dGVMUzM4Ry9xSzJnWXZkdEQveCtWRUw4L3hTdFhjaDZBWDBac01DcllzQTM3?=
+ =?utf-8?B?QVFsa1ozYWJ6V0x2alhlVkFxaHdydjZLWEdwaXRpenp4Z3VDYjUxbXIwenZJ?=
+ =?utf-8?B?d3BGRHhKZVpkclBCQU5OUC9RNDE0NFU3ek40c3JudVVidVdlVWJLVUNjZThW?=
+ =?utf-8?B?amNhZ0VRcUNhRjVCdTQrcjUrMUZxeFd1TC9pRHBYbUJaTkJiZHd1ZkxkR3R5?=
+ =?utf-8?B?dXZxeWJua2tsUXkvRU5kS05MOXFsZERFQ1FFK1NGYWVpbnZVVE5VYzVkUS9q?=
+ =?utf-8?B?d0FENjZOME5RZG9IMm9jK1QwUjhEclNBNGsxZlNUOEpBOW9SQ2tvVUJoTmZG?=
+ =?utf-8?B?ZExuRHdUQzRqY0tFLzNOUTdtL2ZlQS91djlJYjlMbTBPTll1ZUR2dlhQWTJ3?=
+ =?utf-8?B?NnVqZVhqWVBLMW15OTlrSVZZODhyQ1dHV2tOT2FRdWxnQXdleFNSYnZ1aFAx?=
+ =?utf-8?B?bG9vWDVSSTdRN1lFeHhGaTU3K0hFa2dvZksvenoyNHA3STJRcTRsTzBBa1U4?=
+ =?utf-8?B?dUF5Qzhyck9JSVpMOFRZeThHb0h6UUhuYSswKzg0R25sRnByODRkZmcwUXh1?=
+ =?utf-8?Q?ls2e0jsladNN+Bc7lI=3D?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Xoph/QwSOFAIsmTeFEkWd/R526Pcv6Rr2cPPmZtS5tytjSz2XybLYZUPrwmy?=
- =?us-ascii?Q?O/aolz90qr6Gu+8EeslhMu2mZ0lus5+w/FeHTHtcPtMgN/Yf8FZnzLBXZRyK?=
- =?us-ascii?Q?kSapRivN0uxA2AmvUXv4QVSt26SIxTY8RsSeOo59pKSwa4QlcPXH2yUlkA0j?=
- =?us-ascii?Q?I/kP5b2QUR4Fp/zSrY18pBUlEhElUAABdbXAJACgX+75mewW+lqZ/Jkoc1A7?=
- =?us-ascii?Q?leSLM8mH77jVOzBtoe0Yv7k4ZnXM27u8EwiWB5yt0CmHq+5LzA+2/vj4Ndc2?=
- =?us-ascii?Q?KB3zlKdy3Bc+2IzOJt1Egs1CCxa6uGu9Yi7qpjVDKw0slYyL0QHCO04/EaW4?=
- =?us-ascii?Q?Ey8ljtSSXYe/HsXmsy6+ZqA0T4cwPUKYglpOPIeH8m05R+D0k7gI1RpMp4+l?=
- =?us-ascii?Q?toSd/aa9f70Mu0pFBv7VuV6AmhfIBUu7q5a6czfn2Y/nSVdXRE0rYhTP/iMe?=
- =?us-ascii?Q?UkPDFtnHk/0z0UPVSge6/hxdDHiha+/HxcpZvpvXFMbA8oR0kbngq0BmrlVr?=
- =?us-ascii?Q?TubI8i6GQuaUBojfOqazVIh3+oXJO1xmHbHPe+T9uf+P1AvuqXRWfalomOTn?=
- =?us-ascii?Q?A5ZGXwqhnsMI0d/tlO0zs50tpnb6Xobq0RK2dRWqCEGwTCowkUjwDKOd+3wY?=
- =?us-ascii?Q?SkBOniMfM4BscsOsrjsRh8dMI0qxCeVuZvzeehg1AetJkRDlkZJy7SHmR9P2?=
- =?us-ascii?Q?AuYYDzBp4DRNCOdZuWXwOPeImcI2Zl92MJKKqxUZpZBE2aK/dlnaxy5yMLbV?=
- =?us-ascii?Q?FvR9I6ffNof/QNrJZlGrradz2oOTSuYJtfxW+xoCplDLWSTBMRi2omau5dRs?=
- =?us-ascii?Q?H6YvaE4Nj2A0+LVKYbDCbORDXedHP9fj+DxDCsrA6/8LWKWiA/ZTTWnBqM51?=
- =?us-ascii?Q?uqCTgt7TKWn8rk5dXAmgGPROfJVli/79mWQbtCO6hHJDeQslN+wO46xi2BuI?=
- =?us-ascii?Q?H+U7EhbJIDJsuMeS5692+8JYVaclVCi9nWMBqpVRn0ClDGq2L9Xxu8uaCm9Q?=
- =?us-ascii?Q?6VPeGyKzpWUe7pjify+bBfxHYztZhdfaf5HutoJgr6wHxgosZfLYLzwk6LSX?=
- =?us-ascii?Q?aWdEXUB+8oX4FWUlSrl7ewhbqmTUErRo4zfA+XyL5BBnXiw8vBtoV970Ialb?=
- =?us-ascii?Q?hfGbIHw145Z7i8u9AoPsmHnMHi926upPVGukdR1n467SEHX3+1OBQRoysCzA?=
- =?us-ascii?Q?y53KbMrY8La3MyNNnwAi+34LaJMp+11MqNPztJ+BQDwUvfc839EonIooBMbN?=
- =?us-ascii?Q?IvrUw3ii2e5Oio3QLb04ItrWgmPKpwnMsI0WM625fd+QEt8heCbq8V3g1K2I?=
- =?us-ascii?Q?Edcn53AN8hm220RgAJMasNkNuIdZs4mBeJ+4kEcAF/TbBJAyN6+XLOpqF3KT?=
- =?us-ascii?Q?IMSCJv9qyaipTCV27NLVFFla/Ji6?=
+	=?utf-8?B?T3o5c0NhRGd2ZlJQVnlqbzFySkJxZXJrUnpmdW1Ua205RGoxS2RIS0xIcXMw?=
+ =?utf-8?B?WWhyZDNqM2QzSm95Z2d2MWZFYlZudHpKeXpnbU9BM2JKVmhvb3FhVm4vbHVu?=
+ =?utf-8?B?a3M0bEpmekVuRVplQUFGVEdOKzZraEZ6VTZQNDliZEhPVFdpUmk1MHIxSHFj?=
+ =?utf-8?B?d3llOUR5ZFl1RXFNVWhybnFNZ1RsUklUQ0FkdjBkekszbzBGNzN0T1hTUWdI?=
+ =?utf-8?B?VDdaQ09MbGUzSWZRSFZvWHFCMGR5Q3lEalV1RkFUcTdBTHV3dmVTYU1rZHhM?=
+ =?utf-8?B?dFd1SFFybW5pdlQ0MTlwUE1MSmdrNVJNTFExcEJ4ZTdmV2ltYlQwN0lwTHlO?=
+ =?utf-8?B?cEZrTXZuczdEeEcrWEN4YWJjbklhcGYzcllXNmtCdWllSG0yNXZOQVZ3V2g3?=
+ =?utf-8?B?bWpRTjdaTVpsU0VFRy8rbVBNMTBrTXlGcFNZUVNOZWtDWTl1NWhKRThmNFJi?=
+ =?utf-8?B?M2hYUXYxOWxJTWFBd0NWRzlnRDBZTVlzQ2dzdVNwaW9SSWFJK1ROK3dMeXdP?=
+ =?utf-8?B?V1l0dUdrcGY2YTZ5RDB0MHovZTUrRmZuQXF4dllOMmc0bHVvNWZGam9QMzFI?=
+ =?utf-8?B?NUZxdEw2ZmJJSGMxUi83dUo3b2ZEaUtjbzBPZWw4aHFtRlc1OTQ1Sk9SUWt2?=
+ =?utf-8?B?TkhvMVpwN2VPdkV6Qi9lMjFoV0Y3TVR3L2tOS09ZRkhqZVRaNzlpSGtxckVK?=
+ =?utf-8?B?d3ZzeUZabVlwK0k2OW1ZeVAxeWhxYStQWTRsMkxldDJkU1I4cXJJS0QvNU15?=
+ =?utf-8?B?WDl5dW5kVkNBT1BNak5UeXdvTFJFUkh6QW01eUFiVkZyR1o5ZUluQjZJQ2Z3?=
+ =?utf-8?B?aFgydGJHSlhlWmlhYnE0NUdKTFZTSURRalVPekp3YzdjM0FiQTlOcnNOaVp4?=
+ =?utf-8?B?SE5KOEFQU2FQMytHYWttOVVHemlLaGVTN3NUdjM0ZWRrL0FyWDJaUUdlckVD?=
+ =?utf-8?B?Tmw4eUI5RnhuSjNpaGIwUG0yamdIN0JjaE9hTDZlN1JiV1JqZVBEZGxCTzBX?=
+ =?utf-8?B?eGNuYnRSdHkxZ3p2THNyYllzMFNMVmRva3JEM2FFWVlZUjljSklQSUFodFUr?=
+ =?utf-8?B?ZTg4T1hwZ0tqME85RitpQ044Ym12RFFzdjNMMW52Q1RuYjlVRWE5UDhzbE54?=
+ =?utf-8?B?WC9sWm1vbUZySFBnOUlHOEtGNXVsSzU1NGx2RjdQdzFUNkpPUnNIdk55N2pN?=
+ =?utf-8?B?bHlEK1VaemxJR01jUk1PcjlwSXMzT1lQditGaU50OXlXcVZ3THo5ZnhhVkkw?=
+ =?utf-8?B?RDExZTY5VDFTVVBZakl2YytGbU1vaUZZcnk4QlU1azkyMmRWSUdGbXVOVEkx?=
+ =?utf-8?B?K01SN2NVWXRHdWRVY0xKcWlZTzhLNllnbk9IWi9kd3NLNmNjOG9TLzM1N1hG?=
+ =?utf-8?B?ZGtaQUtWWUhlTVhZemhZbEZWTjBwVmttSmRoUllycEszYlJhV3VqUEMwZ2JP?=
+ =?utf-8?B?MkdjbTFmR2hReU5ZQmk4V00ya0w2cEtIT0s1b1Y5d093alJodjZrSGliOEtT?=
+ =?utf-8?B?bWFmWFRLWEZTSnAzYVk5UnJFNFJ1YncrMFRRUHE0Y3JIemttUHc0YXZvQXdY?=
+ =?utf-8?B?RGpWL1BUdjQwYm4xK2ZUMUp0TzkrWjZPd0NBMzU0bGZydzdyNS9aZm9SaDFC?=
+ =?utf-8?B?WVVtYkpiSGlaT2NVMTdtbHllWUtGd2ZjN2hoTVhFWHBRa1l6UitkcFpPZEgz?=
+ =?utf-8?B?T2FyMXpEanZrd0FSdG1LSElmT1M3bnJTNVcyYVhvNHIwNVVJQldmR3NGb3NM?=
+ =?utf-8?B?MUtJb2Q5Tm44V2ovWWpmZzNyMG9tc1N2djVJTHZLVW1zYklZRHBLYXpnNy9u?=
+ =?utf-8?B?enJDRjQyZ3ArSlJySURjWGs5ZGdRSWtxbmRKSldwRmFVNFRsS1M4TXhmYk0r?=
+ =?utf-8?Q?7DXqBDJ6dSmjy?=
 X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-5f51e.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2f9b80d-f674-4b69-88ab-08de6d02e4d4
+X-MS-Exchange-CrossTenant-Network-Message-Id: 731a1604-8f80-4fbc-4ceb-08de6d02e688
 X-MS-Exchange-CrossTenant-AuthSource: SI2PR01MB4393.apcprd01.prod.exchangelabs.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2026 02:27:13.3616
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2026 02:27:16.2893
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
@@ -139,56 +154,51 @@ X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEL0PF89D6F6B8B
 
-The ACS flag validation used the kernel's full set of ACS control bits,
-which allowed users to request ACS features that the device does not
-support. These unsupported bits would be silently ignored by hardware.
-Validate the requested enable flags against dev->acs_capabilities so
-that only device-supported ACS bits are accepted. Accordingly, move the
-check after the device is matched, since the enable bits apply only to
-the matched device.
+The config_acs parameter allows configuring ACS settings for multiple PCI
+devices by separating entries with semicolons. The current documentation
+only illustrates applying one configuration pattern to all devices, but
+does not show how to specify multiple devices with different ACS settings
+in a single parameter. Add an example demonstrating multi-device usage
+with distinct ACS configurations.
 
-Also change the validation to apply only to bits being enabled, since
-attempting to disable unsupported features does not cause functional
-issues.
-
-Finally, improve the error message to report which invalid bits were
-requested.
+Some bootloaders interpret ';' as a command separator, which can cause
+the parameter to be split as multiple commands. Document that the entire
+parameter may need to be quoted to avoid bootloader parsing issues. This
+avoids confusing bootloader errors such as ‘can't find command <BDF>’
+when passing multiple device entries.
 
 Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
 ---
- drivers/pci/pci.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ Documentation/admin-guide/kernel-parameters.txt | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f3244630bfd0..8973658441ec 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -941,12 +941,6 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
- 			}
- 		}
- 
--		if (mask & ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | PCI_ACS_CR |
--			    PCI_ACS_UF | PCI_ACS_EC | PCI_ACS_DT)) {
--			pci_err(dev, "Invalid ACS flags specified\n");
--			return;
--		}
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index cb850e5290c2..bfd13197658f 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -5293,15 +5293,20 @@ Kernel parameters
+ 				  '1' – force enabled
+ 				  'x' – unchanged
+ 				For example,
+-				  pci=config_acs=10x@pci:0:0
++				- pci=config_acs=10x@pci:0:0
+ 				would configure all devices that support
+ 				ACS to enable P2P Request Redirect, disable
+ 				Translation Blocking, and leave Source
+ 				Validation unchanged from whatever power-up
+ 				or firmware set it to.
 -
- 		ret = pci_dev_str_match(dev, p, &p);
- 		if (ret < 0) {
- 			pr_info_once("PCI: Can't parse ACS command line parameter\n");
-@@ -969,6 +963,12 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
- 	if (!pci_dev_specific_disable_acs_redir(dev))
- 		return;
- 
-+	if (flags & ~dev->acs_capabilities) {
-+		pci_err(dev, "Invalid ACS enable flags specified: %#06x\n",
-+			(u16)(flags & ~dev->acs_capabilities));
-+		return;
-+	}
+ 				Note: this may remove isolation between devices
+ 				and may put more devices in an IOMMU group.
++				- 'pci=config_acs=10x@0000:04:00.0;1x101@0000:84:00.0'
++				configures two devices with different ACS settings.
++				Note: Some bootloaders interpret ';' as a command
++				separator. If so, quote the entire parameter to
++				ensure it is passed to the kernel unchanged.
 +
- 	pci_dbg(dev, "ACS mask  = %#06x\n", mask);
- 	pci_dbg(dev, "ACS flags = %#06x\n", flags);
- 	pci_dbg(dev, "ACS control = %#06x\n", caps->ctrl);
+ 		force_floating	[S390] Force usage of floating interrupts.
+ 		nomio		[S390] Do not use MIO instructions.
+ 		norid		[S390] ignore the RID field and force use of
 -- 
 2.51.0
 
