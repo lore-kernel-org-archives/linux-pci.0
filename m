@@ -1,907 +1,310 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011033.outbound.protection.outlook.com [40.107.130.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A668531195B;
-	Mon, 16 Feb 2026 15:36:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771256170; cv=none; b=Y2ExrXwuybXYofCJWTvI8g5b5kQuUAdGiEiZFvgtQIDug9zC0QV6o10vhuMmDi3kdHgnCkbcu0PUmD6vgVK5YUL1k2t827djbqA6IIjnb/tVQ2jTnpFHKCLUn3R70dpikR3JCKBdNX0/gfHKwhdUXZmKvkO1t2qCpZZAFLNrGPs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771256170; c=relaxed/simple;
-	bh=oHPLw2/QBa0tOYo+6wZXHwiQUno5nMJSwU1uEe4E59I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WCXQOBw+cRl29v8eWqLpOI7YpX+Qg2tNh81EHYoxmCL/EGG+1O3/TUpUGnOaNNXKdEwj/Uqmp9E990Gt44GoKbtyU9m0sYU98rOqwhQA8jPCOd8H1HG69AJKLhT/rkmuUY6/kPRYiqf+3M7WjtWiCmoCyDt1Je8P938PJM8FAEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LGWiOZKp; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91115331237;
+	Mon, 16 Feb 2026 15:56:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.33
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771257389; cv=fail; b=A/yx4OoPwVO8KwH5M+l+lJln/9gxDLGzhWy8gzpzj79UH7+GuTKXJteGtuERQVwmdaNmvqO2UpuEDsehBVP8IvQpiNHCfwz7wKUxB8tt3i0z+XRmBEzZXbNlssB3uAkzjwZ/ku2lDq0D1KLIpGP/FFbpZOhD5cW7VUnTUHDXwK8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771257389; c=relaxed/simple;
+	bh=mDRkrfMhXFawGBCbzS3SfmztcfH6qPL6Ffmf06dcGm4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=mvXgx7huNQRXZ8jOFFbGhJvjIzvEp1RAMbWRPJc1ygYe3qi7AKHyPDXbDPR3DEHMC28PpEguio/cvem1yBYgy9Rh/rJKdf/6hEEG8w9jrsGKw0325kYKptRVkbMXO1LekrAFbFLH4Rs5VkosKgSpoL+zHjHMu48Sp3OoWdHYnbs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=LsgllSeN; arc=fail smtp.client-ip=40.107.130.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LGWiOZKp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A913C19424;
-	Mon, 16 Feb 2026 15:35:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771256170;
-	bh=oHPLw2/QBa0tOYo+6wZXHwiQUno5nMJSwU1uEe4E59I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LGWiOZKpfsawgJlzIQ+ve9jrm1mjzyRjGDhY95Ftv2Dqfqo71Z126BNFKVUu7k1+1
-	 ruFeMHVeD3E43zyuAoV+x7UO3G+EgE3iXBILvyijRoemyy8n3JNtsAH+C0J8YmV8Ut
-	 pP9UGk7a0DftEQkl/QLem6u3Ii0ULC8B/INJ0JTVUISmDgZapBcl4Ht2q94c1Y3wNe
-	 Fek5nDLxnOGQ6MTj/krGEXGFmyDZttpDp7MtNhOrDrqb4fyMW2mZnZC1QJe562XSef
-	 gXlCOmiuU5b1YBu6XSXDDDemC+xyY9ABHKgyastFFFAQwp50LTSmQ/SnMdUc0PPBx/
-	 /PQtjGq6dsrMQ==
-Date: Mon, 16 Feb 2026 21:05:46 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Richard Zhu <hongxing.zhu@nxp.com>, 
-	Lucas Stach <l.stach@pengutronix.de>, Shawn Guo <shawnguo@kernel.org>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, Yue Wang <yue.wang@amlogic.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Kevin Hilman <khilman@baylibre.com>, 
-	Jerome Brunet <jbrunet@baylibre.com>, Martin Blumenstingl <martin.blumenstingl@googlemail.com>, 
-	Paul Walmsley <paul.walmsley@sifive.com>, Greentime Hu <greentime.hu@sifive.com>, 
-	Samuel Holland <samuel.holland@sifive.com>, Chuanhua Lei <lchuanhua@maxlinear.com>, 
-	Marek Vasut <marek.vasut+renesas@gmail.com>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
-	Pratyush Anand <pratyush.anand@gmail.com>, Thierry Reding <thierry.reding@gmail.com>, 
-	Jonathan Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, imx@lists.linux.dev, 
-	linux-amlogic@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	linux-tegra@vger.kernel.org, linux-riscv@lists.infradead.org
-Subject: Re: [PATCH 2/2] PCI: dwc: Add multi-port controller support
-Message-ID: <c3aes3z2scnzlsa56qhzlcoizvbejmpmzi2mesi56hnvskkmio@lqxqyfdtwozi>
-References: <20260105-dt-parser-v1-0-b11c63cb5e2c@oss.qualcomm.com>
- <20260105-dt-parser-v1-2-b11c63cb5e2c@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="LsgllSeN"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eR4DZLOgDH1yBzmRPhz0HBwKSLehAT//n4ozxYDbG9GREUYbVcxNxs/5iXVSnUnlnvx+ThuoWNmMUXJrtrHIl9oqGjqsjk7YkqZDQ5mTP6zJWSbq79Z9kfw95speNdpX7jFHdcNcq66hFgfk+XOXKRh4b63fQEbXi7+3ksnLZJYAvk8eytTZZkL3+SA0ID3MoeJAuHu/aoU74kXg0zwY3osCKpblEmu87rN2cuUjQq/yRE9Gqh0XWSk7foFv0pCXgqkLnN0d7WZV4N2SLyyC13Vd7DhvmCtaRMFsbwhF49O6lzRXGV6LqkcgeibcQMu5nyKbl4nOcLLT5Blr/HgV3g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=T1UAHd6WHlSK06Ajhui5jk60lZ8zNg3D5D+/WDmuU/c=;
+ b=KfNnevn9pB43Y+BVDgL4NEV0MLQL4WILBqqURLn2y6A5MS0hCu0d8FgAE6tL4SafFsbL8jfLXsiY7bNLLJ4SW/C3kZgwfra7/XFScyBIAGObY/lQh+C8dgw2PeXaMFG4/eKOGWWiHNsqa0CqMjcw0EVsCiFDv+Gg/CHUIRRNFKDOG+B4NFAxZwz0ALlAXDNd98VTCvpxL3zqe/3fKpfe6Xz33IP0lXDHgHoVhChao0uRfvMmIgkIp0QUdFuYMsFClnFTwu/pCCwUKpeg82ZQvsulE4q7vB52dKDSGLbsk6589LG55AgZ+tJt1cmLq0vDET4Z2v+kklbFhEZ+DEqi8A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=T1UAHd6WHlSK06Ajhui5jk60lZ8zNg3D5D+/WDmuU/c=;
+ b=LsgllSeNibZWRPfgXpxgwRMJ7EBBu3ww/Ds1xeIDWnzlofqp4V0Ric8yn2pJrI6Q2IsFYGZid4Q49AenASMjV2pvMVS0gIQ5IZwrurYMmPnqQSRP6porX1WJexc0Qu0RdW1MFciHTAuf6q2K/Kr7ni2WLoZylCAPbUT4I3fwKNVlTjCf4pPsQgWhsKcA7zB3w5i7u+WkOOYyXsOoqrDT0z5ApuQuowqNeB5XhLodNA8AlqiLrWiIf+24AtvQr8Vt1xFQQ7M2PE3eoFNSDYAa46udn491Cq5suM2Od0TvJ5JRL6Ol/D8yXgMsHvjKqolHHNyCFS1/XVhlDnJ30NZOuA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by DBBPR04MB7961.eurprd04.prod.outlook.com (2603:10a6:10:1ee::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.16; Mon, 16 Feb
+ 2026 15:56:23 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9611.013; Mon, 16 Feb 2026
+ 15:56:23 +0000
+Date: Mon, 16 Feb 2026 10:56:14 -0500
+From: Frank Li <Frank.li@nxp.com>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	heiko@sntech.de, kishon@kernel.org, jdmason@kudzu.us,
+	dave.jiang@intel.com, allenbh@gmail.com, cassel@kernel.org,
+	shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org, ntb@lists.linux.dev
+Subject: Re: [PATCH v7 3/9] PCI: endpoint: Add auxiliary resource query API
+Message-ID: <aZM-HsMHFLycyNAE@lizhi-Precision-Tower-5810>
+References: <20260215163847.3522572-1-den@valinux.co.jp>
+ <20260215163847.3522572-4-den@valinux.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260215163847.3522572-4-den@valinux.co.jp>
+X-ClientProxiedBy: PH7P223CA0003.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:510:338::34) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260105-dt-parser-v1-2-b11c63cb5e2c@oss.qualcomm.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DBBPR04MB7961:EE_
+X-MS-Office365-Filtering-Correlation-Id: c6f3ae61-73f4-4cf5-6c84-08de6d73ef14
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|1800799024|52116014|7416014|376014|366016|38350700014|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?yXgAFZtsoTH/XOlwOeJQWvdCCHC34ddTbUphGDDaD1Gl89GPPks6LguS3h3r?=
+ =?us-ascii?Q?cE1XeqK95iptGgaQtClxjfcKEGZ+kOWjO2uS223z7V/+Sw3rP/yhuwegLb0U?=
+ =?us-ascii?Q?YxNWHFMYz3+KkbDd6mlE0aCbSzI2o2vEW39bEm2osbKnwesit0M4/D4hDpET?=
+ =?us-ascii?Q?0VXIK9RrClgtAECV/oFZeMg3fDH+fBGBHUcrbD0dMznKlFh3adFSj7TZbYr0?=
+ =?us-ascii?Q?RISmEHF4zfk770Z+qzflywvDO1MGTL0MDBEEUUqbFKDVI9BjSOR++iJccYGA?=
+ =?us-ascii?Q?XzyUZsQNeanj7NxJ507quZyB10lT7OBst/XUYLP1l+81XN264m1gwsn49WDq?=
+ =?us-ascii?Q?d35m/1N6DvAyHciLljgOAM6RXkZK7SHoh9xVVv5/cXYZeaJpjIQdMmqRSTxM?=
+ =?us-ascii?Q?gS6ZPln2qxbZdv7ZWuUEHhRYCklIBEj+sk5jfj/MI5++wBZWWWnFWUf5RS+3?=
+ =?us-ascii?Q?FCSG5QTsWvpV5wfiZYh76spKRIL8A10fQKgedIBWolVUtwt7OqI7PWY9xtyX?=
+ =?us-ascii?Q?myRLAHCWGJKYOFfB+JqJcfy+89TY9jJ8G4o7HtcvIXxOXvG77eJLOEM4Uiuw?=
+ =?us-ascii?Q?do9OHcDRLtY7PyuhQiUxKbhKv3u27n0b6nWj4M0cx5+KkF0lDs8Jl15ojFd2?=
+ =?us-ascii?Q?Zxh67PnqXrXgpTNXUQFKTdIRnd5EIvbv/kEVkA7GQ8mZ35n/+NOmQp/cXL5o?=
+ =?us-ascii?Q?muCbmquU9ZR3S7FSbUv5f43JJe+xuXOCYWYhZ23Kg0kSZwmojM+XnhE/TEsP?=
+ =?us-ascii?Q?8ZR+RL8vYBNN7vRnCqwG/bp5b6Vvsxprs4ZJrfzsRrX9JYctGySMIW2fmr8F?=
+ =?us-ascii?Q?EoNcnHD5lNh3LTSJHcV8mio4cCsMCDwHPLDQl0lvA8eX4ExsOnaH6vrTqbmb?=
+ =?us-ascii?Q?ai+X+8vngwJvtTHCnYxCWFlmJYu+uSYv6kxZaCjvhbjRoSUlaG4IdLJjB0IG?=
+ =?us-ascii?Q?yC5pcQA6etSq7XGnb6RhEKrVHk0D2iH9e8kDT8FRfeIb5lZgPskGY/5fbX61?=
+ =?us-ascii?Q?V7FbJmloMwBSQM8Qx8dsF8ZPnZfJrpd6Yj14eDQTNPy7mZYBzEE+QAc5cleo?=
+ =?us-ascii?Q?WcYRbQjHkgDoa/35OubOr16TexHmi9QFLk3wEwRkzoSx86tNzt7IPPaP+UUo?=
+ =?us-ascii?Q?LH6pq1+CzpMGascP9cjhwU/cdoDErnZp4c8p6HW9pqvUgGWFqUzb/Fo8WZYH?=
+ =?us-ascii?Q?MarX136p/4OV6rsDwE+zC7cem6NhzYcyrIrlyCesgPc9z5S8GvWVh/PK/rqL?=
+ =?us-ascii?Q?mjw/wRJ7jGXW1xeW+qje9BVf0aTHQ1/MrvrIQW3P2nDlGjs1kQq7c53sXIU1?=
+ =?us-ascii?Q?nJ0wTC5BeI6hqPbZauIwDDuDnSLTjOKiCiPlr1daIBy8RjniRcbRuLR8zzOA?=
+ =?us-ascii?Q?uu0uwN71w2igWkeJ+CdPF0vmj4Ny9GgGjRpza2cklfgQSNSHvP4FOe3RTV3d?=
+ =?us-ascii?Q?5Ys5XOK1jb2s6JBqwmJ2n5xB+zcgTto5SVXqkw4KgnRRQW0c2337W/p3wy3n?=
+ =?us-ascii?Q?nB1FBpRDrtGZSb4vOb/esvYARwKdP0MDFZlx1MkHX/lufI1NUoUtlnAAMxFw?=
+ =?us-ascii?Q?qANHCFBKhG/7Q2wIX/hEijF1xWokoJ33/n15g4Ip5ol1oLc0rWPQSxblX+xZ?=
+ =?us-ascii?Q?dADrWDu2LUz+w3OMz3Oj6fU=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(52116014)(7416014)(376014)(366016)(38350700014)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?8w8ZgxmhabxM7IYPTQ31XeXUkNbjp4x0owuYXIJCdzRlSgjkUokKtFKcJBXP?=
+ =?us-ascii?Q?tDyvSwyq/+GOvSYB6RapiaG6fYzvB7oYzSyVEfPzvc5kHSUD5X2UiLDl+c77?=
+ =?us-ascii?Q?rJ/ZGnWQwKNGz3Yvz4I/b1UeuGERaEJYByWrBRFxuia9zKGoYzKZJ1cdVLWQ?=
+ =?us-ascii?Q?bwKSvNeRvlA7AseExjdMowugJEuiEUTmcVAuFov4gU53NV43WNoVHTQoNT/X?=
+ =?us-ascii?Q?aznPwDGwWFeNOSJQJnHuWqY6yHd9mje5SjVq8yb/HlJK8IBq/M60sS2IdsdE?=
+ =?us-ascii?Q?OU1uhup2wEMrSrsQ3KHYgs4ZblrFQNQ+Oak1s79Z9eJeq8JAkV7umOTHxpYy?=
+ =?us-ascii?Q?OCzVDQauJMW5kc3tNSvM2llG4YS7hizL09lABj77BFaTRs2K2mTdRzKh2Ngv?=
+ =?us-ascii?Q?y54UShWyQKlaGyqAvaJAL35se0j256RPSqxQV6lrJFUCbJVCj5FiVca1xorl?=
+ =?us-ascii?Q?Bi5FVt+sMgkTZhV780ZLjXGjHAcYZAhGl3MEEGetx6sCc/BVUFqRO7HDpdUG?=
+ =?us-ascii?Q?Ev/bkxGvkTGc7AQ6A5hq8KuZMb+6cqnWGNSsHyLpeWtZtlygfK3R26g4lzON?=
+ =?us-ascii?Q?zlp8zyvK+/90zOZpJJijCd1FVnJh8WXXE0qk9mrp7W/yeca4AFpOTM4+3hUb?=
+ =?us-ascii?Q?corURBhykSrCuNT7cnHNlnXzAX779TdIiTCOl2bkqh11UpfLNwsilqMFfxaj?=
+ =?us-ascii?Q?r55yJIf7ISyJKBbYIdd/KOYFOM4rh/VzgDjhfiXvLdSZsh3VankV43DokdSp?=
+ =?us-ascii?Q?i5nGrKwUsWBxEYw1+/FzeCm7UhzAcsRdFlGxeVYuywoneLRzPqfEb1oi7jOr?=
+ =?us-ascii?Q?nDcqSvLmObpC4Pu8+HjmHGAnzSEoOOPHucL4Vwwl8rBjl+x4kXZkj8UROUJG?=
+ =?us-ascii?Q?UlmX6Cdr52LwDeejkN/IdY28S0pXRE9AX8xe2+W/5yQ+XEX1UQ4glhdj6EuQ?=
+ =?us-ascii?Q?FYGRkFAANu4l9N8nwRSspBqixfKMUfCkSRlDl+P+7ViTP5M4EbjqD9oULXmn?=
+ =?us-ascii?Q?zAGtVGGFyI9b0Ur+XPXTmgo68NTaj3U+Ozqa0Ut7zH2wWo6lgya4e49wfUhN?=
+ =?us-ascii?Q?3YV1CdHYRRZw6JQVIPgzCtxG4TbJr5o0FxJPLsiYr16fWUGS9wwoOfoPgw2h?=
+ =?us-ascii?Q?XEKFRZq23GVyVluxFttJbuyVIY1eF5wQtd3UqHD/Q28qgI0ALw4JUZf1gkg8?=
+ =?us-ascii?Q?4XjeOXcjdNbZfkHLeklRB1TTOm0oUQip0fuHnHXYGNFhw7PkxndFDFQS6NC4?=
+ =?us-ascii?Q?S9IFz96EX/dAgtuiMO96e7MQgAhXBIG52zmo0CIbSkr54eTNnSsMLAcTYOc1?=
+ =?us-ascii?Q?O68bBzvwhJgFtllzOe+LYmc17ZrPrMar/x/qDj34Xgo3ZhraehFc6WQoEsWi?=
+ =?us-ascii?Q?wH2GubjuFPh73Zmx0GoYW0fSHlH4cw0dMgK/oUclksq0al4tUL6QQ3rAnzt5?=
+ =?us-ascii?Q?+JeFnhJtmwFMs/XN2zgze6MJNQJCKB4QrUTkJvjLOR03CqUTA8BJyJvtm7FV?=
+ =?us-ascii?Q?xdnrPKYa2n1qJUUQ36MdM0Phdu2VLyAOqay5ZkLCV2WISk53hNw5IcUo7KPp?=
+ =?us-ascii?Q?bp92s4eXWjPE4CwCWNHlJgb7zXnToC1lpxl32kMH27KtISieYW05Bg7tvMfv?=
+ =?us-ascii?Q?9+y88CqhrGHg3XLDfYgc81kVpqEFEfSi1wEh/9+bIXe4uQYz5KeLPLYQuJTT?=
+ =?us-ascii?Q?F8LrI4IrmrMc+De9kNWCkfuMeAsnE/AH4LmmPCVM9kPxe0B3?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c6f3ae61-73f4-4cf5-6c84-08de6d73ef14
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2026 15:56:23.4676
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WsV3svqv08V3a4/xfNOlrdDHaHJr10nP9+BBJEB14MJNac843aMiyPBQqgrAYqi1gh/oAe/sR1t9NerjnPzd8w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB7961
 
-On Mon, Jan 05, 2026 at 05:57:55PM +0530, Sumit Kumar wrote:
-> The current DesignWare PCIe RC implementation supports only the controller
-> (Host Bridge) node for specifying the Root Port properties in an assumption
-> that the underlying platform only supports a single root Port per
-> controller instance. This limits support for multi-port controllers where
-> different ports may have different lane configurations and speed limits.
-> 
-> Introduce a separate dw_pcie_port structure to enable multi-port support.
-> Each Root Port can have independent lane count, speed limit through pcie@N
-> child nodes in device tree. Add dw_pcie_parse_root_ports()
-> API to parse these child nodes.
-> 
-> Equalization presets and link width detection currently use common DBI
-> space for all the root ports. Per-port DBI space assignment for these
-> features will be added in future.
-> 
-> Signed-off-by: Sumit Kumar <sumit.kumar@oss.qualcomm.com>
+On Mon, Feb 16, 2026 at 01:38:41AM +0900, Koichiro Den wrote:
+> Endpoint controller drivers may integrate auxiliary blocks (e.g. DMA
+> engines) whose register windows and descriptor memories metadata need to
+> be exposed to a remote peer. Endpoint function drivers need a generic
+> way to discover such resources without hard-coding controller-specific
+> helpers.
+>
+> Add pci_epc_get_aux_resources() and the corresponding pci_epc_ops
+> get_aux_resources() callback. The API returns a list of resources
+> described by type, physical address and size, plus type-specific
+> metadata.
+>
+> Passing resources == NULL (or num_resources == 0) returns the required
+> number of entries.
+>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 > ---
->  drivers/pci/controller/dwc/pci-exynos.c           |   4 +-
->  drivers/pci/controller/dwc/pci-imx6.c             |  15 +-
->  drivers/pci/controller/dwc/pci-meson.c            |   1 -
->  drivers/pci/controller/dwc/pcie-designware-host.c | 168 ++++++++++++++++++----
->  drivers/pci/controller/dwc/pcie-designware.c      |  32 ++---
->  drivers/pci/controller/dwc/pcie-designware.h      |  17 ++-
->  drivers/pci/controller/dwc/pcie-fu740.c           |   6 +-
->  drivers/pci/controller/dwc/pcie-intel-gw.c        |  13 +-
->  drivers/pci/controller/dwc/pcie-qcom-common.c     |   5 +-
->  drivers/pci/controller/dwc/pcie-qcom-ep.c         |   4 +-
->  drivers/pci/controller/dwc/pcie-qcom.c            |   4 +-
->  drivers/pci/controller/dwc/pcie-rcar-gen4.c       |  13 +-
->  drivers/pci/controller/dwc/pcie-spear13xx.c       |   5 +-
->  drivers/pci/controller/dwc/pcie-tegra194.c        |   4 +-
->  14 files changed, 220 insertions(+), 71 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
-> index 1f0e98d07109353e7321667e98ead2695151184c..af991a14b52792d2376fd30875854c46fd65155a 100644
-> --- a/drivers/pci/controller/dwc/pci-exynos.c
-> +++ b/drivers/pci/controller/dwc/pci-exynos.c
-> @@ -358,6 +358,8 @@ static int exynos_pcie_resume_noirq(struct device *dev)
->  	struct exynos_pcie *ep = dev_get_drvdata(dev);
->  	struct dw_pcie *pci = &ep->pci;
->  	struct dw_pcie_rp *pp = &pci->pp;
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +						struct dw_pcie_port, list);
->  	int ret;
->  
->  	ret = regulator_bulk_enable(ARRAY_SIZE(ep->supplies), ep->supplies);
-> @@ -368,7 +370,7 @@ static int exynos_pcie_resume_noirq(struct device *dev)
->  	exynos_pcie_host_init(pp);
->  	dw_pcie_setup_rc(pp);
->  	exynos_pcie_start_link(pci);
-> -	return dw_pcie_wait_for_link(pci);
-> +	return dw_pcie_wait_for_link(pci, port);
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+>  drivers/pci/endpoint/pci-epc-core.c | 41 +++++++++++++++++++++++
+>  include/linux/pci-epc.h             | 51 +++++++++++++++++++++++++++++
+>  2 files changed, 92 insertions(+)
+>
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 068155819c57..01de4bd5047a 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -155,6 +155,47 @@ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
 >  }
->  
->  static const struct dev_pm_ops exynos_pcie_pm_ops = {
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 80e48746bbaf6815d8b9e879be5fa0bb992d9189..107367b72afc937daf26305dea2b5ad9ce3f86ae 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -939,6 +939,8 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
->  	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
->  	struct device *dev = pci->dev;
->  	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +						struct dw_pcie_port, list);
->  	u32 tmp;
->  	int ret;
->  
-> @@ -963,8 +965,8 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
->  	/* Start LTSSM. */
->  	imx_pcie_ltssm_enable(dev);
->  
-> -	if (pci->max_link_speed > 1) {
-> -		ret = dw_pcie_wait_for_link(pci);
-> +	if (port->max_link_speed > 1) {
-> +		ret = dw_pcie_wait_for_link(pci, port);
->  		if (ret)
->  			goto err_reset_phy;
->  
-> @@ -972,7 +974,7 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
->  		dw_pcie_dbi_ro_wr_en(pci);
->  		tmp = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
->  		tmp &= ~PCI_EXP_LNKCAP_SLS;
-> -		tmp |= pci->max_link_speed;
-> +		tmp |= port->max_link_speed;
->  		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, tmp);
->  
->  		/*
-> @@ -1605,6 +1607,7 @@ static int imx_pcie_probe(struct platform_device *pdev)
->  	struct dw_pcie *pci;
->  	struct imx_pcie *imx_pcie;
->  	struct device_node *np;
-> +	struct dw_pcie_port *port;
->  	struct device_node *node = dev->of_node;
->  	int ret, domain;
->  	u16 val;
-> @@ -1741,9 +1744,9 @@ static int imx_pcie_probe(struct platform_device *pdev)
->  				 &imx_pcie->tx_swing_low))
->  		imx_pcie->tx_swing_low = 127;
->  
-> -	/* Limit link speed */
-> -	pci->max_link_speed = 1;
-> -	of_property_read_u32(node, "fsl,max-link-speed", &pci->max_link_speed);
-> +	port = list_first_entry(&pci->pp.ports, struct dw_pcie_port, list);
-> +	port->max_link_speed = 1;
-> +	of_property_read_u32(node, "fsl,max-link-speed", &port->max_link_speed);
->  
->  	imx_pcie->vpcie = devm_regulator_get_optional(&pdev->dev, "vpcie");
->  	if (IS_ERR(imx_pcie->vpcie)) {
-> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-> index 787469d1b396d4c7b3e28edfe276b7b997fb8aee..45d855e72e8479432c66b5c00a9755163ecd2741 100644
-> --- a/drivers/pci/controller/dwc/pci-meson.c
-> +++ b/drivers/pci/controller/dwc/pci-meson.c
-> @@ -411,7 +411,6 @@ static int meson_pcie_probe(struct platform_device *pdev)
->  	pci->dev = dev;
->  	pci->ops = &dw_pcie_ops;
->  	pci->pp.ops = &meson_pcie_host_ops;
-> -	pci->num_lanes = 1;
->  
->  	mp->phy = devm_phy_get(dev, "pcie");
->  	if (IS_ERR(mp->phy)) {
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 952f8594b501254d2b2de5d5e056e16d2aa8d4b7..a864b90bd51ce475a2fd7de83573cf3ddea196e7 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -456,11 +456,86 @@ static int dw_pcie_host_get_resources(struct dw_pcie_rp *pp)
->  	return 0;
->  }
->  
-> +static int dw_pcie_parse_root_ports(struct dw_pcie_rp *pp)
+>  EXPORT_SYMBOL_GPL(pci_epc_get_features);
+>
+> +/**
+> + * pci_epc_get_aux_resources() - query EPC-provided auxiliary resources
+> + * @epc: EPC device
+> + * @func_no: function number
+> + * @vfunc_no: virtual function number
+> + * @resources: output array (may be NULL to query required count)
+> + * @num_resources: size of @resources array in entries (0 when querying count)
+> + *
+> + * Some EPC backends integrate auxiliary blocks (e.g. DMA engines) whose control
+> + * registers and/or descriptor memories can be exposed to the host by mapping
+> + * them into BAR space. This helper queries the backend for such resources.
+> + *
+> + * Return:
+> + *   * >= 0: number of resources returned (or required, if @resources is NULL)
+> + *   * -EOPNOTSUPP: backend does not support auxiliary resource queries
+> + *   * other -errno on failure
+> + */
+> +int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +			      struct pci_epc_aux_resource *resources,
+> +			      int num_resources)
 > +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct dw_pcie_port *port, *tmp;
-> +	struct device *dev = pci->dev;
-> +	int max_link_speed;
-> +	u32 num_lanes;
 > +	int ret;
-
-Should this be initialized to -ENOENT?
-
 > +
-> +	if (!of_get_available_child_count(dev->of_node)) {
-> +		port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> +		if (!port)
-> +			return -ENOMEM;
+> +	if (!epc || !epc->ops)
+> +		return -EINVAL;
 > +
-> +		port->dev_node = dev->of_node;
-> +		list_add_tail(&port->list, &pp->ports);
+> +	if (func_no >= epc->max_functions)
+> +		return -EINVAL;
 > +
-> +		return 0;
-> +	}
+> +	if (!epc->ops->get_aux_resources)
+> +		return -EOPNOTSUPP;
 > +
-> +	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-> +		num_lanes = 0;
-> +		max_link_speed = 0;
-> +		of_property_read_u32(of_port, "num-lanes", &num_lanes);
-> +		max_link_speed = of_pci_get_max_link_speed(of_port);
-> +
-> +		port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> +		if (!port) {
-> +			ret = -ENOMEM;
-> +			goto err_port_del;
-> +		}
-> +
-> +		port->dev_node = of_port;
-> +		port->num_lanes = num_lanes;
-> +		port->max_link_speed = max_link_speed;
-> +		list_add_tail(&port->list, &pp->ports);
-> +	}
-> +
-> +	return 0;
-> +
-> +err_port_del:
-> +	list_for_each_entry_safe(port, tmp, &pp->ports, list)
-> +		list_del(&port->list);
+> +	mutex_lock(&epc->lock);
+> +	ret = epc->ops->get_aux_resources(epc, func_no, vfunc_no, resources,
+> +					  num_resources);
+> +	mutex_unlock(&epc->lock);
 > +
 > +	return ret;
 > +}
+> +EXPORT_SYMBOL_GPL(pci_epc_get_aux_resources);
 > +
-> +static int dw_pcie_parse_legacy_binding(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct device *dev = pci->dev;
-> +	struct dw_pcie_port *port;
-> +	int max_link_speed;
-> +	u32 num_lanes;
-> +	int ret;
-> +
-> +	ret = of_property_read_u32(dev->of_node, "num-lanes", &num_lanes);
-> +	max_link_speed = of_pci_get_max_link_speed(dev->of_node);
-> +
-> +	if (ret && max_link_speed <= 0)
-> +		return -ENOENT;
-> +
-> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> +	if (!port)
-> +		return -ENOMEM;
-> +
-> +	port->dev_node = dev->of_node;
-> +	port->num_lanes = num_lanes;
-> +	port->max_link_speed = max_link_speed;
-> +	list_add_tail(&port->list, &pp->ports);
-> +
-> +	return 0;
-> +}
-> +
->  int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	struct device *dev = pci->dev;
->  	struct device_node *np = dev->of_node;
-> +	struct dw_pcie_port *port, *tmp;
->  	struct pci_host_bridge *bridge;
->  	int ret;
->  
-> @@ -472,6 +547,8 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  
->  	pp->bridge = bridge;
->  
-> +	INIT_LIST_HEAD(&pp->ports);
-> +
->  	ret = dw_pcie_host_get_resources(pp);
->  	if (ret)
->  		return ret;
-> @@ -480,10 +557,25 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  	bridge->ops = &dw_pcie_ops;
->  	bridge->child_ops = &dw_child_pcie_ops;
->  
-> +	/*
-> +	 * Try to parse legacy binding first (properties in Host Bridge node).
-> +	 * If not found, try parsing Root Port child nodes.
-> +	 */
-> +	ret = dw_pcie_parse_legacy_binding(pp);
-> +	if (ret == -ENOENT) {
-> +		ret = dw_pcie_parse_root_ports(pp);
-> +		if (ret && ret != -ENOENT) {
-
-Skipping -ENOENT failure is OK at this point since this driver only parses the
-optional properties like 'num-lanes'... But once the code gets extended to parse
-non-optional ones like PHYs in the future skipping might become problematic.
-Maybe we should treat those properties as optional then.
-
-> +			dev_err(dev, "Failed to parse Root Port: %d\n", ret);
-> +			return ret;
-> +		}
-> +	} else if (ret) {
-> +		return ret;
-> +	}
-> +
->  	if (pp->ops->init) {
->  		ret = pp->ops->init(pp);
->  		if (ret)
-> -			return ret;
-> +			goto err_cleanup_ports;
->  	}
->  
->  	if (pci_msi_enabled()) {
-> @@ -518,12 +610,15 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  
->  	dw_pcie_iatu_detect(pci);
->  
-> -	if (pci->num_lanes < 1)
-> -		pci->num_lanes = dw_pcie_link_get_max_link_width(pci);
-> +	list_for_each_entry(port, &pp->ports, list) {
-> +		if (port->num_lanes < 1)
-> +			port->num_lanes = dw_pcie_link_get_max_link_width(pci, port);
->  
-> -	ret = of_pci_get_equalization_presets(dev, &pp->presets, pci->num_lanes);
-> -	if (ret)
-> -		goto err_free_msi;
-> +		ret = of_pci_get_equalization_presets(dev, port->dev_node,
-> +						      &port->presets, port->num_lanes);
-> +		if (ret)
-> +			goto err_free_msi;
-> +	}
->  
->  	/*
->  	 * Allocate the resource for MSG TLP before programming the iATU
-> @@ -557,8 +652,8 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  	 * because that would require users to manually rescan for devices.
->  	 */
->  	if (!pp->use_linkup_irq)
-> -		/* Ignore errors, the link may come up later */
-> -		dw_pcie_wait_for_link(pci);
-> +		list_for_each_entry(port, &pp->ports, list)
-> +			dw_pcie_wait_for_link(pci, port);
->  
->  	bridge->sysdata = pp;
->  
-> @@ -586,6 +681,9 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  err_deinit_host:
->  	if (pp->ops->deinit)
->  		pp->ops->deinit(pp);
-> +err_cleanup_ports:
-> +	list_for_each_entry_safe(port, tmp, &pp->ports, list)
-> +		list_del(&port->list);
->  
->  	return ret;
->  }
-> @@ -594,6 +692,7 @@ EXPORT_SYMBOL_GPL(dw_pcie_host_init);
->  void dw_pcie_host_deinit(struct dw_pcie_rp *pp)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct dw_pcie_port *port, *tmp;
->  
->  	dwc_pcie_debugfs_deinit(pci);
->  
-> @@ -607,6 +706,9 @@ void dw_pcie_host_deinit(struct dw_pcie_rp *pp)
->  	if (pp->has_msi_ctrl)
->  		dw_pcie_free_msi(pp);
->  
-> +	list_for_each_entry_safe(port, tmp, &pp->ports, list)
-> +		list_del(&port->list);
-> +
->  	if (pp->ops->deinit)
->  		pp->ops->deinit(pp);
->  }
-> @@ -830,7 +932,9 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->  	return 0;
->  }
->  
-> -static void dw_pcie_program_presets(struct dw_pcie_rp *pp, enum pci_bus_speed speed)
-> +/*TODO: Handling preset values according to dbi space of each port */
-> +static void dw_pcie_program_presets(struct dw_pcie_rp *pp, struct dw_pcie_port *port,
-> +				    enum pci_bus_speed speed)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	u8 lane_eq_offset, lane_reg_size, cap_id;
-> @@ -839,23 +943,23 @@ static void dw_pcie_program_presets(struct dw_pcie_rp *pp, enum pci_bus_speed sp
->  	int i;
->  
->  	if (speed == PCIE_SPEED_8_0GT) {
-> -		presets = (u8 *)pp->presets.eq_presets_8gts;
-> +		presets = (u8 *)port->presets.eq_presets_8gts;
->  		lane_eq_offset =  PCI_SECPCI_LE_CTRL;
->  		cap_id = PCI_EXT_CAP_ID_SECPCI;
->  		/* For data rate of 8 GT/S each lane equalization control is 16bits wide*/
->  		lane_reg_size = 0x2;
->  	} else if (speed == PCIE_SPEED_16_0GT) {
-> -		presets = pp->presets.eq_presets_Ngts[EQ_PRESET_TYPE_16GTS - 1];
-> +		presets = port->presets.eq_presets_Ngts[EQ_PRESET_TYPE_16GTS - 1];
->  		lane_eq_offset = PCI_PL_16GT_LE_CTRL;
->  		cap_id = PCI_EXT_CAP_ID_PL_16GT;
->  		lane_reg_size = 0x1;
->  	} else if (speed == PCIE_SPEED_32_0GT) {
-> -		presets =  pp->presets.eq_presets_Ngts[EQ_PRESET_TYPE_32GTS - 1];
-> +		presets =  port->presets.eq_presets_Ngts[EQ_PRESET_TYPE_32GTS - 1];
->  		lane_eq_offset = PCI_PL_32GT_LE_CTRL;
->  		cap_id = PCI_EXT_CAP_ID_PL_32GT;
->  		lane_reg_size = 0x1;
->  	} else if (speed == PCIE_SPEED_64_0GT) {
-> -		presets =  pp->presets.eq_presets_Ngts[EQ_PRESET_TYPE_64GTS - 1];
-> +		presets =  port->presets.eq_presets_Ngts[EQ_PRESET_TYPE_64GTS - 1];
->  		lane_eq_offset = PCI_PL_64GT_LE_CTRL;
->  		cap_id = PCI_EXT_CAP_ID_PL_64GT;
->  		lane_reg_size = 0x1;
-> @@ -874,31 +978,38 @@ static void dw_pcie_program_presets(struct dw_pcie_rp *pp, enum pci_bus_speed sp
->  	 * Write preset values to the registers byte-by-byte for the given
->  	 * number of lanes and register size.
->  	 */
-> -	for (i = 0; i < pci->num_lanes * lane_reg_size; i++)
-> +	for (i = 0; i < port->num_lanes * lane_reg_size; i++)
->  		dw_pcie_writeb_dbi(pci, cap + lane_eq_offset + i, presets[i]);
->  }
->  
->  static void dw_pcie_config_presets(struct dw_pcie_rp *pp)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> -	enum pci_bus_speed speed = pcie_link_speed[pci->max_link_speed];
-> +	enum pci_bus_speed port_speed;
-> +	struct dw_pcie_port *port;
->  
->  	/*
-> -	 * Lane equalization settings need to be applied for all data rates the
-> -	 * controller supports and for all supported lanes.
-> +	 * Lane equalization settings need to be applied for all data rates each
-> +	 * port supports and for all supported lanes per port.
->  	 */
-> +	list_for_each_entry(port, &pp->ports, list) {
-> +		if (port->max_link_speed > 0)
-> +			port_speed = pcie_link_speed[port->max_link_speed];
-> +		else
-> +			port_speed = PCIE_SPEED_2_5GT;
->  
-> -	if (speed >= PCIE_SPEED_8_0GT)
-> -		dw_pcie_program_presets(pp, PCIE_SPEED_8_0GT);
-> +		if (port_speed >= PCIE_SPEED_8_0GT)
-> +			dw_pcie_program_presets(pp, port, PCIE_SPEED_8_0GT);
->  
-> -	if (speed >= PCIE_SPEED_16_0GT)
-> -		dw_pcie_program_presets(pp, PCIE_SPEED_16_0GT);
-> +		if (port_speed >= PCIE_SPEED_16_0GT)
-> +			dw_pcie_program_presets(pp, port, PCIE_SPEED_16_0GT);
->  
-> -	if (speed >= PCIE_SPEED_32_0GT)
-> -		dw_pcie_program_presets(pp, PCIE_SPEED_32_0GT);
-> +		if (port_speed >= PCIE_SPEED_32_0GT)
-> +			dw_pcie_program_presets(pp, port, PCIE_SPEED_32_0GT);
->  
-> -	if (speed >= PCIE_SPEED_64_0GT)
-> -		dw_pcie_program_presets(pp, PCIE_SPEED_64_0GT);
-> +		if (port_speed >= PCIE_SPEED_64_0GT)
-> +			dw_pcie_program_presets(pp, port, PCIE_SPEED_64_0GT);
-> +	}
->  }
->  
->  int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
-> @@ -1054,6 +1165,7 @@ EXPORT_SYMBOL_GPL(dw_pcie_suspend_noirq);
->  
->  int dw_pcie_resume_noirq(struct dw_pcie *pci)
->  {
-> +	struct dw_pcie_port *port;
->  	int ret;
->  
->  	if (!pci->suspended)
-> @@ -1075,9 +1187,9 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
->  	if (ret)
->  		return ret;
->  
-> -	ret = dw_pcie_wait_for_link(pci);
-> -	if (ret)
-> -		return ret;
-> +	list_for_each_entry(port, &pci->pp.ports, list)
-> +		if (dw_pcie_wait_for_link(pci, port))
-> +			return -ETIMEDOUT;
-
-Why are you overriding the errno?
-
-- Mani
-
->  
->  	return ret;
->  }
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 89aad5a08928cc29870ab258d33bee9ff8f83143..804f633874a7a33c7788e90ea45b529a5622060c 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -178,11 +178,6 @@ int dw_pcie_get_resources(struct dw_pcie *pci)
->  			return ret;
->  	}
->  
-> -	if (pci->max_link_speed < 1)
-> -		pci->max_link_speed = of_pci_get_max_link_speed(np);
-> -
-> -	of_property_read_u32(np, "num-lanes", &pci->num_lanes);
-> -
->  	if (of_property_read_bool(np, "snps,enable-cdm-check"))
->  		dw_pcie_cap_set(pci, CDM_CHECK);
->  
-> @@ -696,7 +691,7 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index)
->  	dw_pcie_writel_atu(pci, dir, index, PCIE_ATU_REGION_CTRL2, 0);
->  }
->  
-> -int dw_pcie_wait_for_link(struct dw_pcie *pci)
-> +int dw_pcie_wait_for_link(struct dw_pcie *pci, struct dw_pcie_port *port)
->  {
->  	u32 offset, val;
->  	int retries;
-> @@ -719,7 +714,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
->  	 * speeds greater than 5.0 GT/s, software must wait a minimum of 100 ms
->  	 * after Link training completes before sending a Configuration Request.
->  	 */
-> -	if (pci->max_link_speed > 2)
-> +	if (port && port->max_link_speed > 2)
->  		msleep(PCIE_RESET_CONFIG_WAIT_MS);
->  
->  	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> @@ -756,10 +751,11 @@ void dw_pcie_upconfig_setup(struct dw_pcie *pci)
->  }
->  EXPORT_SYMBOL_GPL(dw_pcie_upconfig_setup);
->  
-> -static void dw_pcie_link_set_max_speed(struct dw_pcie *pci)
-> +static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, struct dw_pcie_port *port)
->  {
->  	u32 cap, ctrl2, link_speed;
->  	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	int max_speed = port->max_link_speed;
->  
->  	cap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
->  
-> @@ -768,15 +764,16 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci)
->  	 * just cache the hardware default value so that the vendor drivers can
->  	 * use it to do any link specific configuration.
->  	 */
-> -	if (pci->max_link_speed < 1) {
-> -		pci->max_link_speed = FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
-> +	if (max_speed < 1) {
-> +		max_speed = FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
-> +		port->max_link_speed = max_speed;
->  		return;
->  	}
->  
->  	ctrl2 = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCTL2);
->  	ctrl2 &= ~PCI_EXP_LNKCTL2_TLS;
->  
-> -	switch (pcie_link_speed[pci->max_link_speed]) {
-> +	switch (pcie_link_speed[max_speed]) {
->  	case PCIE_SPEED_2_5GT:
->  		link_speed = PCI_EXP_LNKCTL2_TLS_2_5GT;
->  		break;
-> @@ -800,10 +797,10 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci)
->  
->  	cap &= ~((u32)PCI_EXP_LNKCAP_SLS);
->  	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
-> -
->  }
->  
-> -int dw_pcie_link_get_max_link_width(struct dw_pcie *pci)
-> +/* TODO: Implement per-port max link width detection using port-specific DBI space */
-> +int dw_pcie_link_get_max_link_width(struct dw_pcie *pci, struct dw_pcie_port *port)
->  {
->  	u8 cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
->  	u32 lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
-> @@ -1141,9 +1138,14 @@ void dw_pcie_edma_remove(struct dw_pcie *pci)
->  
->  void dw_pcie_setup(struct dw_pcie *pci)
->  {
-> +	struct dw_pcie_port *port;
->  	u32 val;
->  
-> -	dw_pcie_link_set_max_speed(pci);
-> +	/* Configure per-port settings */
-> +	list_for_each_entry(port, &pci->pp.ports, list) {
-> +		dw_pcie_link_set_max_speed(pci, port);
-> +		dw_pcie_link_set_max_link_width(pci, port->num_lanes);
-> +	}
->  
->  	/* Configure Gen1 N_FTS */
->  	if (pci->n_fts[0]) {
-> @@ -1173,8 +1175,6 @@ void dw_pcie_setup(struct dw_pcie *pci)
->  	val &= ~PORT_LINK_FAST_LINK_MODE;
->  	val |= PORT_LINK_DLL_LINK_EN;
->  	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
-> -
-> -	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
->  }
->  
->  resource_size_t dw_pcie_parent_bus_offset(struct dw_pcie *pci,
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 00f52d472dcdd794013a865ad6c4c7cc251edb48..5ead9a40f0e91fb33d65d77cfa3cb61b19dceea7 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -18,6 +18,7 @@
->  #include <linux/dma/edma.h>
->  #include <linux/gpio/consumer.h>
->  #include <linux/irq.h>
-> +#include <linux/list.h>
->  #include <linux/msi.h>
->  #include <linux/pci.h>
->  #include <linux/reset.h>
-> @@ -392,6 +393,14 @@ struct dw_pcie_ob_atu_cfg {
->  	u64 size;
+>  /**
+>   * pci_epc_stop() - stop the PCI link
+>   * @epc: the link of the EPC device that has to be stopped
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index 7a87f5962dd0..fd79784b31db 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -61,6 +61,50 @@ struct pci_epc_map {
+>  	void __iomem	*virt_addr;
 >  };
->  
-> +struct dw_pcie_port {
-> +	struct list_head	list;
-> +	struct device_node	*dev_node;
-> +	u32			num_lanes;
-> +	int			max_link_speed;
-> +	struct pci_eq_presets	presets;
+>
+> +/**
+> + * enum pci_epc_aux_resource_type - auxiliary resource type identifiers
+> + * @PCI_EPC_AUX_DMA_CTRL_MMIO: Integrated DMA controller register window (MMIO)
+> + * @PCI_EPC_AUX_DMA_CHAN_DESC: Per-channel DMA descriptor
+> + * @PCI_EPC_AUX_DOORBELL_MMIO: Doorbell MMIO, that might be outside the DMA
+> + *                             controller register window
+> + *
+> + * EPC backends may expose auxiliary blocks (e.g. DMA engines) by mapping their
+> + * register windows and descriptor memories into BAR space. This enum
+> + * identifies the type of each exposable resource.
+> + */
+> +enum pci_epc_aux_resource_type {
+> +	PCI_EPC_AUX_DMA_CTRL_MMIO,
+> +	PCI_EPC_AUX_DMA_CHAN_DESC,
+> +	PCI_EPC_AUX_DOORBELL_MMIO,
 > +};
 > +
->  struct dw_pcie_host_ops {
->  	int (*init)(struct dw_pcie_rp *pp);
->  	void (*deinit)(struct dw_pcie_rp *pp);
-> @@ -424,7 +433,7 @@ struct dw_pcie_rp {
->  	int			msg_atu_index;
->  	struct resource		*msg_res;
->  	bool			use_linkup_irq;
-> -	struct pci_eq_presets	presets;
-> +	struct list_head	ports;		/* List of dw_pcie_port structures */
+> +/**
+> + * struct pci_epc_aux_resource - a physical auxiliary resource that may be
+> + *                               exposed for peer use
+> + * @type:       resource type, see enum pci_epc_aux_resource_type
+> + * @phys_addr:  physical base address of the resource
+> + * @size:       size of the resource in bytes
+> + * @bar:        BAR number where this resource is already exposed to the RC
+> + *              (NO_BAR if not)
+> + * @bar_offset: offset within @bar where the resource starts (valid iff
+> + *              @bar != NO_BAR)
+> + * @u:          type-specific metadata
+> + */
+> +struct pci_epc_aux_resource {
+> +	enum pci_epc_aux_resource_type type;
+> +	phys_addr_t phys_addr;
+> +	resource_size_t size;
+> +	enum pci_barno bar;
+> +	resource_size_t bar_offset;
+> +
+> +	union {
+> +		/* PCI_EPC_AUX_DOORBELL_MMIO */
+> +		struct {
+> +			int irq;
+> +		} db_mmio;
+> +	} u;
+> +};
+> +
+>  /**
+>   * struct pci_epc_ops - set of function pointers for performing EPC operations
+>   * @write_header: ops to populate configuration space header
+> @@ -84,6 +128,7 @@ struct pci_epc_map {
+>   * @start: ops to start the PCI link
+>   * @stop: ops to stop the PCI link
+>   * @get_features: ops to get the features supported by the EPC
+> + * @get_aux_resources: ops to retrieve controller-owned auxiliary resources
+>   * @owner: the module owner containing the ops
+>   */
+>  struct pci_epc_ops {
+> @@ -115,6 +160,9 @@ struct pci_epc_ops {
+>  	void	(*stop)(struct pci_epc *epc);
+>  	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
+>  						       u8 func_no, u8 vfunc_no);
+> +	int	(*get_aux_resources)(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +				     struct pci_epc_aux_resource *resources,
+> +				     int num_resources);
+>  	struct module *owner;
 >  };
->  
->  struct dw_pcie_ep_ops {
-> @@ -505,8 +514,6 @@ struct dw_pcie {
->  	u32			version;
->  	u32			type;
->  	unsigned long		caps;
-> -	int			num_lanes;
-> -	int			max_link_speed;
->  	u8			n_fts[2];
->  	struct dw_edma_chip	edma;
->  	struct clk_bulk_data	app_clks[DW_PCIE_NUM_APP_CLKS];
-> @@ -556,8 +563,8 @@ void dw_pcie_write_dbi(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
->  void dw_pcie_write_dbi2(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
->  bool dw_pcie_link_up(struct dw_pcie *pci);
->  void dw_pcie_upconfig_setup(struct dw_pcie *pci);
-> -int dw_pcie_wait_for_link(struct dw_pcie *pci);
-> -int dw_pcie_link_get_max_link_width(struct dw_pcie *pci);
-> +int dw_pcie_wait_for_link(struct dw_pcie *pci, struct dw_pcie_port *port);
-> +int dw_pcie_link_get_max_link_width(struct dw_pcie *pci, struct dw_pcie_port *port);
->  int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
->  			      const struct dw_pcie_ob_atu_cfg *atu);
->  int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
-> diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
-> index 66367252032b84fd42c719287057471b1fe44e9a..39d9d2c8e1806dd805b669371ae4abc194469e57 100644
-> --- a/drivers/pci/controller/dwc/pcie-fu740.c
-> +++ b/drivers/pci/controller/dwc/pcie-fu740.c
-> @@ -179,6 +179,8 @@ static int fu740_pcie_start_link(struct dw_pcie *pci)
->  {
->  	struct device *dev = pci->dev;
->  	struct fu740_pcie *afp = dev_get_drvdata(dev);
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +						struct dw_pcie_port, list);
->  	u8 cap_exp = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
->  	int ret;
->  	u32 orig, tmp;
-> @@ -202,7 +204,7 @@ static int fu740_pcie_start_link(struct dw_pcie *pci)
->  	/* Enable LTSSM */
->  	writel_relaxed(0x1, afp->mgmt_base + PCIEX8MGMT_APP_LTSSM_ENABLE);
->  
-> -	ret = dw_pcie_wait_for_link(pci);
-> +	ret = dw_pcie_wait_for_link(pci, port);
->  	if (ret) {
->  		dev_err(dev, "error: link did not start\n");
->  		goto err;
-> @@ -220,7 +222,7 @@ static int fu740_pcie_start_link(struct dw_pcie *pci)
->  		tmp |= PORT_LOGIC_SPEED_CHANGE;
->  		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
->  
-> -		ret = dw_pcie_wait_for_link(pci);
-> +		ret = dw_pcie_wait_for_link(pci, port);
->  		if (ret) {
->  			dev_err(dev, "error: link did not start at new speed\n");
->  			goto err;
-> diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> index c21906eced61896c8a8307dbd6b72d229f9a5c5f..565aaa3da635749c64693268a8e5c1a59e1f040e 100644
-> --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-> +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> @@ -131,7 +131,10 @@ static void intel_pcie_link_setup(struct intel_pcie *pcie)
->  
->  static void intel_pcie_init_n_fts(struct dw_pcie *pci)
->  {
-> -	switch (pci->max_link_speed) {
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +							struct dw_pcie_port, list);
-> +
-> +	switch (port->max_link_speed) {
->  	case 3:
->  		pci->n_fts[1] = PORT_AFR_N_FTS_GEN3;
->  		break;
-> @@ -250,8 +253,10 @@ static int intel_pcie_wait_l2(struct intel_pcie *pcie)
->  	u32 value;
->  	int ret;
->  	struct dw_pcie *pci = &pcie->pci;
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +						      struct dw_pcie_port, list);
->  
-> -	if (pci->max_link_speed < 3)
-> +	if (port->max_link_speed < 3)
->  		return 0;
->  
->  	/* Send PME_TURN_OFF message */
-> @@ -282,6 +287,8 @@ static int intel_pcie_host_setup(struct intel_pcie *pcie)
->  {
->  	int ret;
->  	struct dw_pcie *pci = &pcie->pci;
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +						struct dw_pcie_port, list);
->  
->  	intel_pcie_core_rst_assert(pcie);
->  	intel_pcie_device_rst_assert(pcie);
-> @@ -313,7 +320,7 @@ static int intel_pcie_host_setup(struct intel_pcie *pcie)
->  	intel_pcie_device_rst_deassert(pcie);
->  	intel_pcie_ltssm_enable(pcie);
->  
-> -	ret = dw_pcie_wait_for_link(pci);
-> +	ret = dw_pcie_wait_for_link(pci, port);
->  	if (ret)
->  		goto app_init_err;
->  
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.c b/drivers/pci/controller/dwc/pcie-qcom-common.c
-> index 3aad19b56da8f6ea6525f1aad0102a4d8df0369b..2d0295bd0b377f158017f7dba7a64b88e1dd8f68 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-common.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-common.c
-> @@ -49,6 +49,8 @@ EXPORT_SYMBOL_GPL(qcom_pcie_common_set_16gt_equalization);
->  void qcom_pcie_common_set_16gt_lane_margining(struct dw_pcie *pci)
->  {
->  	u32 reg;
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +					struct dw_pcie_port, list);
->  
->  	reg = dw_pcie_readl_dbi(pci, GEN4_LANE_MARGINING_1_OFF);
->  	reg &= ~(MARGINING_MAX_VOLTAGE_OFFSET |
-> @@ -70,7 +72,8 @@ void qcom_pcie_common_set_16gt_lane_margining(struct dw_pcie *pci)
->  		MARGINING_MAXLANES |
->  		MARGINING_SAMPLE_RATE_TIMING |
->  		MARGINING_SAMPLE_RATE_VOLTAGE);
-> -	reg |= FIELD_PREP(MARGINING_MAXLANES, pci->num_lanes) |
-> +
-> +	reg |= FIELD_PREP(MARGINING_MAXLANES, port->num_lanes) |
->  		FIELD_PREP(MARGINING_SAMPLE_RATE_TIMING, 0x3f) |
->  		FIELD_PREP(MARGINING_SAMPLE_RATE_VOLTAGE, 0x3f);
->  	dw_pcie_writel_dbi(pci, GEN4_LANE_MARGINING_2_OFF, reg);
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> index bf7c6ac0f3e3962de8346ab6e75dfff1d9642aad..6812ab020b3bdb99733dc12a0615ea98a471da63 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> @@ -389,6 +389,8 @@ static void qcom_pcie_disable_resources(struct qcom_pcie_ep *pcie_ep)
->  
->  static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
->  {
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +					struct dw_pcie_port, list);
->  	struct qcom_pcie_ep *pcie_ep = to_pcie_ep(pci);
->  	struct device *dev = pci->dev;
->  	u32 val, offset;
-> @@ -511,7 +513,7 @@ static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
->  		goto err_disable_resources;
->  	}
->  
-> -	if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT) {
-> +	if (pcie_link_speed[port->max_link_speed] == PCIE_SPEED_16_0GT) {
->  		qcom_pcie_common_set_16gt_equalization(pci);
->  		qcom_pcie_common_set_16gt_lane_margining(pci);
->  	}
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 294babe1816e4d0c2b2343fe22d89af72afcd6cd..9690ab97cc01160a26034bf8026fe4dbafe48731 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -321,8 +321,10 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
->  static int qcom_pcie_start_link(struct dw_pcie *pci)
->  {
->  	struct qcom_pcie *pcie = to_qcom_pcie(pci);
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +						      struct dw_pcie_port, list);
->  
-> -	if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT) {
-> +	if (pcie_link_speed[port->max_link_speed] == PCIE_SPEED_16_0GT) {
->  		qcom_pcie_common_set_16gt_equalization(pci);
->  		qcom_pcie_common_set_16gt_lane_margining(pci);
->  	}
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> index 18055807a4f5f9f1233097e1e47604a3555dccf0..f8c85984025a329b092c788dae270911aec9c51f 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> @@ -132,6 +132,8 @@ static int rcar_gen4_pcie_speed_change(struct dw_pcie *dw)
->  static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
->  {
->  	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-> +	struct dw_pcie_port *port = list_first_entry(&dw->pp.ports,
-> +						struct dw_pcie_port, list);
->  	int i, changes, ret;
->  
->  	if (rcar->drvdata->ltssm_control) {
-> @@ -144,7 +146,7 @@ static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
->  	 * Require direct speed change with retrying here if the max_link_speed
->  	 * is PCIe Gen2 or higher.
->  	 */
-> -	changes = min_not_zero(dw->max_link_speed, RCAR_MAX_LINK_SPEED) - 1;
-> +	changes = min_not_zero(port->max_link_speed, RCAR_MAX_LINK_SPEED) - 1;
->  
->  	/*
->  	 * Since dw_pcie_setup_rc() sets it once, PCIe Gen2 will be trained.
-> @@ -173,6 +175,8 @@ static void rcar_gen4_pcie_stop_link(struct dw_pcie *dw)
->  static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
->  {
->  	struct dw_pcie *dw = &rcar->dw;
-> +	struct dw_pcie_port *port = list_first_entry(&dw->pp.ports,
-> +						struct dw_pcie_port, list);
->  	u32 val;
->  	int ret;
->  
-> @@ -195,7 +199,7 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
->  		goto err_unprepare;
->  	}
->  
-> -	if (dw->num_lanes < 4)
-> +	if (port->num_lanes < 4)
->  		val |= BIFUR_MOD_SET_ON;
->  
->  	writel(val, rcar->base + PCIEMSR0);
-> @@ -563,12 +567,15 @@ static int r8a779f0_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
->  static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
->  {
->  	struct dw_pcie *dw = &rcar->dw;
-> +	struct dw_pcie_port *port = list_first_entry(&dw->pp.ports,
-> +						struct dw_pcie_port, list);
->  	u32 val;
->  
->  	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
->  	val &= ~PORT_LANE_SKEW_INSERT_MASK;
-> -	if (dw->num_lanes < 4)
-> +	if (port->num_lanes < 4)
->  		val |= BIT(6);
-> +
->  	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
->  
->  	val = readl(rcar->base + PCIEPWRMNGCTRL);
-> diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/controller/dwc/pcie-spear13xx.c
-> index 01794a9d3ad293419c9322ca53fe86036689b287..9221b37cc58ec75986bfc2898ab2879eee794cdc 100644
-> --- a/drivers/pci/controller/dwc/pcie-spear13xx.c
-> +++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
-> @@ -191,6 +191,7 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
->  	struct dw_pcie *pci;
->  	struct spear13xx_pcie *spear13xx_pcie;
->  	struct device_node *np = dev->of_node;
-> +	struct dw_pcie_port *port;
->  	int ret;
->  
->  	spear13xx_pcie = devm_kzalloc(dev, sizeof(*spear13xx_pcie), GFP_KERNEL);
-> @@ -228,9 +229,9 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
->  		dev_err(dev, "couldn't enable clk for pcie\n");
->  		return ret;
->  	}
-> -
-> +	port = list_first_entry(&pci->pp.ports, struct dw_pcie_port, list);
->  	if (of_property_read_bool(np, "st,pcie-is-gen1"))
-> -		pci->max_link_speed = 1;
-> +		port->max_link_speed = 1;
->  
->  	platform_set_drvdata(pdev, spear13xx_pcie);
->  
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 4f26086f25daf8e23cafbb2b460e1934734f4103..7b82c2509e966404892a29691f7c21a27279b71f 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -957,6 +957,8 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
->  static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
->  {
->  	struct tegra_pcie_dw *pcie = to_tegra_pcie(pci);
-> +	struct dw_pcie_port *port = list_first_entry(&pci->pp.ports,
-> +						struct dw_pcie_port, list);
->  	struct dw_pcie_rp *pp = &pci->pp;
->  	u32 val, offset, tmp;
->  	bool retry = true;
-> @@ -986,7 +988,7 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
->  
->  	msleep(100);
->  
-> -	if (dw_pcie_wait_for_link(pci)) {
-> +	if (dw_pcie_wait_for_link(pci, port)) {
->  		if (!retry)
->  			return 0;
->  		/*
-> 
-> -- 
-> 2.34.1
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+>
+> @@ -337,6 +385,9 @@ int pci_epc_start(struct pci_epc *epc);
+>  void pci_epc_stop(struct pci_epc *epc);
+>  const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+>  						    u8 func_no, u8 vfunc_no);
+> +int pci_epc_get_aux_resources(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +			      struct pci_epc_aux_resource *resources,
+> +			      int num_resources);
+>  enum pci_barno
+>  pci_epc_get_first_free_bar(const struct pci_epc_features *epc_features);
+>  enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
+> --
+> 2.51.0
+>
