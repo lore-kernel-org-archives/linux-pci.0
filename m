@@ -1,212 +1,328 @@
-Received: from mail-wm1-f66.google.com (mail-wm1-f66.google.com [209.85.128.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013007.outbound.protection.outlook.com [40.107.162.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 319F9286D72
-	for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2026 17:19:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.66
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771262392; cv=none; b=L5bn0SLQyQGc/OU73ER3/kzNY72l0KBsIy6CsBk7V5VJ1hYfbZ/rlPr88abtqKHF4p1EqXUzgtDhjctM3suKHnNWUPavWXSGXT9j6Q6mBJXk+E+3iCAOi1SG6EC9cIlqNl0qBMHiTrD+HttW5pV9wswO+81P6TZhIj86CfHg4Ds=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771262392; c=relaxed/simple;
-	bh=ga8bFx44y5iHuBGB1mwGqWfMHjMxGLHos9sO3Y6x/f0=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=oZSVohtQhBe3pRitN1wewMrrGziyyfvhktp1X99VAolSEhS+Vz0xB5qNdzDZJgMU7CdyRN8cWx+qlnVttakJ7bgROXEADnNmY7bk/1EqyLNLW6zqbwVdkcqG7/T9RaISoOXjW+T1l3nDZCOlkg35ImgDK0T9uX/fldEGrTbEH+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=ouscKI7n; arc=none smtp.client-ip=209.85.128.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD095263C9F;
+	Mon, 16 Feb 2026 19:28:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.7
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771270096; cv=fail; b=JYxV1Popat1tM3cctKit2mHRvjqDQLmtV5JF5eghUtauJXBUFOy4Fa40xVIEtDfHPGxqFSIQgmGhZdclOiHv+3GEeu3/m9W9uUnLypgi07wOVhmBCRceZVfMZ7argpQ/kl9+jgURwcD84JigWKKZH/dBUkDOXzsAuRSuCJlQiNo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771270096; c=relaxed/simple;
+	bh=GLVcV5h5ROAqwulDIyq6x0d8FmbgVbjIpHxIBepMgA4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=kClDWGhRYLAWlOqiS/Uz3Vx3b6UphxjIAtVhZxyGWQ56McL5J8/h6VB++W5x5KYCRz204u1au82uYiEz1IE7ksTyA/+fqCLemZYfMAV4XuJ0b16hDnuO92haavqi9DeZmN+igP3QHUbKV7AJqgbcKA99TACzqUBbpWLJ2WOuGl0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=idNJYuGL; arc=fail smtp.client-ip=40.107.162.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="ouscKI7n"
-Received: by mail-wm1-f66.google.com with SMTP id 5b1f17b1804b1-483770e0b25so28965345e9.0
-        for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2026 09:19:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1771262389; x=1771867189; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Ox2zOip8ex/pPOz0MZ66YdomhlQUxEYWyv12vdPkcRw=;
-        b=ouscKI7nRWgutqDs3djCZalbPdY3KKPAX3HU8E/wYE7M4Um+sF8DflDyPXUnOoTK4k
-         ZYAvn1TK82QUQRHXaS/gieKaRxsOkBUbvkfX185CWX1m8D/0/puUi3v+aWMH07H9idVG
-         +OK1sGS1zXzVxu+wrzAC0TbNwSk3deJvUNJyZAG9J8Rzfusd/siRn1Crg2fpjyIYREKX
-         phC5sx6sqEOjWOLZE9QITN37NJIqBZeBXBQEfQIHrqD81g+ibXibemNqG8xgv2iiy5Df
-         QZ+WYNmJtp4oLmZN0AZhtoNYaWVtSqIuCxpaJh7aYASfCAekdzrmOAnTNoDY1tEZr1+D
-         rkEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771262389; x=1771867189;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ox2zOip8ex/pPOz0MZ66YdomhlQUxEYWyv12vdPkcRw=;
-        b=I0JpxVt3AzWwFaNE0MldhnB+UkizfYlCF5ekhtJRXkrxuESZ+vMZCTekOc2QJbAW8W
-         VPsbrNocWXi8k9yPjqC/lAMzS2iHlEpjf+JDyvs3upSqvRo2L4eh+4IrX22nxpXrb4D2
-         YcLa7xlnxVdB26QRBcREiO/uLB5TspYuHpBs7fF7v6l29k1nm0tJYWBkGUC4roRWdbc9
-         DHFHpui+0y3pR59A+f4U4kgJXolhZOtIKDUGBY5mQ83LAZBeQofT1H7QZB+ffE/uioCj
-         QVq9hpp4qA4V9+8nSyP17F5767fB8SfmLkTYp1th/w1WUGAAw0+kHOgDp7eYSkGQiGDn
-         LPng==
-X-Forwarded-Encrypted: i=1; AJvYcCU8MrhQW4W+gvGSyAJi5yZqUzTopbtPrBuLaXv/txubzCBc3e95bcH3+GY1AdpSx55eDxToaPTZaGw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4tjBXkzMi/unGTKK5A83ozBEvYgKcffUgSbwInIhhLgKilYGc
-	XBTw9/ZeMOeCrNAbcBktjy4NWFMiSmrPOHIYEb8OsOKuZg2dimnhtSr33C9NzAVMXEo=
-X-Gm-Gg: AZuq6aJd496NaWjCsgfMU4S7G+LdfNrBVgcYPfRKMCbVrPZt5bPkjJ4+oK7XY0NfuYm
-	tqrFhCbWXB3ud2abyzB2DppsgK/8WS7I0e35RahD0AqWSj4v8E2qiWL9XGFWfiXWRijyq8PTwEs
-	nkJBMK0c+lSScrnU398kAHiFExPyxWXC6IhEy98rf4B8A7PrG1PYHtMXQCP/fuBAsBjiDArji5/
-	wzsIMNChnGRsHLPS2GuXMZAr+CXMl1BJAb9HkYik6nTg6W2N2dCYF3Kz5ZWMOy7tcf011gxdEWv
-	m36ZV4rtZXHCjdmdkjQ4LL6eaSpUn4kZtNBnqzuD5GRMnk3C88wBwmPA3te1yaYyrEiASUyB1i0
-	6/GR3blei1ildWgCV805dGy58PE2rr5OF76jujZUPtxhD8+WW9wSyyvRnJ2aCACJRSVhc4WLce5
-	9VTJAHk7E9KVVbB0VVZ+T7kmvUoUJU5/adAOMSm3ya4Q==
-X-Received: by 2002:a05:600c:1547:b0:477:afc5:fb02 with SMTP id 5b1f17b1804b1-483710858c8mr218566385e9.21.1771262389276;
-        Mon, 16 Feb 2026 09:19:49 -0800 (PST)
-Received: from [192.168.50.4] ([82.78.167.215])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4834d5ebd34sm502143425e9.7.2026.02.16.09.19.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 16 Feb 2026 09:19:48 -0800 (PST)
-Message-ID: <ccf3bfd6-c060-4b88-bf4d-37425aea4cfa@tuxon.dev>
-Date: Mon, 16 Feb 2026 19:19:46 +0200
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="idNJYuGL"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=a1ql2K/l9/459IUU3PUvqL6K8NuidZejJOytXwjdAc9Rkwyinm2szLKdtFHe7z5mLN3Ry01iRcI2/Us2+nmSce260BHarZxvvwMBOYjkwmhTZzUwiueRpNg3UZpDsDyZA8rLmVt8uT/viV2wGRYjoMCKApPMGFFx23oWjZQ6JtvedKy7/ZipZ6YA34szu5Ai4A4MaiCfdcgAWqzB/jggPqbQKiyny1QmTQ4O4/BjdYOo9Px/d2ylHfQaxBvatWLNr9LefD2IJ/fh7XZzVQTIq0iX58dkWAMRU6AD+REqJ54KNf7xZTJoGw0jhs3yjVVR2PxNS73lhHWP08HAlPWC1A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Jzffdr9oFVMK874WyNKULWLWR4TMUSFKB2DVJJBaJM0=;
+ b=i+uZYqy9l0Rufm50GzszRmvl3NMngyVDBdwsFpz0cNHIpiYcKIQ9HBpXsNiX1arQtn5ZHH5brIGr7uVWvx/U92i5DUnMjnuEkKrL98rmnE/+YGJs1g1wivMz9NGC8JIMK90mbBgcdMq17YMYgTNYapidnMNj5v4Ow9kiqgxa1cmCQ/deq6Y47VTEiq4e80JeSK0RYKDk7FTiabDlhh/MAt+hE21A8y45prCuSfR9sqAs3egg6dbhnZNPvVA4ddf8Uad/tHb3950x8HADO1F2pOKXRMnguOhyFK/NApXaNGAvCdAHWWB1AWORaR4lM2MY0/S8c4a2kl42xHZas+e1hQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Jzffdr9oFVMK874WyNKULWLWR4TMUSFKB2DVJJBaJM0=;
+ b=idNJYuGL2pohz4Ems8m2UExNa75V5HHeL/UIdeE+ckOeKbfqFSmttnZSZI4koJUOA3W8yXuJYtGQDNCzDnwgYCbBdT1R9yaQGeviFHCT4bUBsm526pPb6liE6g7qZpcju0nnhciGZmN7uxhibJFPk5dlQQsJ4fhkAEe1C9KD6HXgG/+VAGnYK0LntkbWdjjyfrtr6iNgk9eKtCCsvUJt2kQ49Syk2WhTrXPXTfr29KpCvNbpiDPoPDPsyD5bT1aQ7se+fSR8iFhRwbb0GCIo5l6A+q8V3ygyuy64O+XMal/yzLCc+4Q67oHlwmj1Hl2eBEYx3UeVzyhDDK1IN6Lnpg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by AM9PR04MB7588.eurprd04.prod.outlook.com (2603:10a6:20b:2dd::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.16; Mon, 16 Feb
+ 2026 19:28:08 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9611.013; Mon, 16 Feb 2026
+ 19:28:08 +0000
+Date: Mon, 16 Feb 2026 14:28:00 -0500
+From: Frank Li <Frank.li@nxp.com>
+To: Devendra K Verma <devendra.verma@amd.com>
+Cc: bhelgaas@google.com, mani@kernel.org, vkoul@kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, michal.simek@amd.com
+Subject: Re: [PATCH RESEND v10 1/2] dmaengine: dw-edma: Add AMD MDB Endpoint
+ Support
+Message-ID: <aZNvwOa4sexnlHdy@lizhi-Precision-Tower-5810>
+References: <20260216105547.13457-1-devendra.verma@amd.com>
+ <20260216105547.13457-2-devendra.verma@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260216105547.13457-2-devendra.verma@amd.com>
+X-ClientProxiedBy: PH5P222CA0004.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:510:34b::7) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
- set by BIOS for devicetree platforms
-To: Manivannan Sadhasivam <mani@kernel.org>,
- Bjorn Helgaas <helgaas@kernel.org>, Jon Hunter <jonathanh@nvidia.com>
-Cc: manivannan.sadhasivam@oss.qualcomm.com,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- "David E. Box" <david.e.box@linux.intel.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Heiner Kallweit <hkallweit1@gmail.com>,
- Chia-Lin Kao <acelan.kao@canonical.com>,
- "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
- Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvme@lists.infradead.org, John Madieu <john.madieu.xa@bp.renesas.com>
-References: <7306256a-b380-489b-8248-b774e6d3d80e@nvidia.com>
- <20260122152903.GA1247682@bhelgaas>
- <5z7c25nkb35prvax6vq6ud7eaeuhzsswbf7fqvmlgys3xftgwb@odocboejrdrv>
-Content-Language: en-US
-In-Reply-To: <5z7c25nkb35prvax6vq6ud7eaeuhzsswbf7fqvmlgys3xftgwb@odocboejrdrv>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|AM9PR04MB7588:EE_
+X-MS-Office365-Filtering-Correlation-Id: fee36be7-f000-4df8-11d7-08de6d918384
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|52116014|376014|19092799006|38350700014|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?8Gh6ysvYQO/8bDQL8cy54arLLGceSJ8UWA0JGEyBPognO21h69hu7uxSRWh3?=
+ =?us-ascii?Q?KAYfbwS1cuYCljt06K0OzeE3Og/hM7HLtFRVe0XMxtjn7yH3ILc3OvM6ERIE?=
+ =?us-ascii?Q?Q8QB47m6bqkzu6NeaZoTNZGLI8S0rpGZqL/7H3doaXdKRvDTK0v274cLF/Se?=
+ =?us-ascii?Q?F4c0qFAY3K976l7zR/JA6CDRlRRzv0zYOprh7U9Ve3faFaTihYhQluciaC6r?=
+ =?us-ascii?Q?cizQ0WCYES6qr8+jvTaAKxg7S1Ey04nOFApY8hk53MyL0cXHk5xKcWb419q3?=
+ =?us-ascii?Q?7YWFgMG+wjkXITDjz4eGPBPviITsYEKBUvgKdp6gtkAoxIgj/oOwtigB0kEY?=
+ =?us-ascii?Q?BylfckGjaqhhNmG03CNHVUp1EbhzeVXj6p/4H85fVmmh3Nqt3/uG9XGBm8vz?=
+ =?us-ascii?Q?sgnsgfdymw9Ng7o+FgdXRY/flvBvjIoa5pGqmqhSrkAdo9tT7NXjBP4twXoF?=
+ =?us-ascii?Q?l/4rc+THIxsk9JUWDxBokDJfqS5Lx4uOMW1sVU9TTIm0UblssuVePqT+gf1V?=
+ =?us-ascii?Q?TnuenKoehiY+Ca97nVcNDNmo0kDjYewrB0PqnS8MEzl1H461z3yj6/sS5BCY?=
+ =?us-ascii?Q?N3+5eX8NFtvy+MibY2lhvyFvSu/UN3NV/ZoTTqM4CmmfPZF2JV12mKktlrdm?=
+ =?us-ascii?Q?vuk7V8yyvC9k4Rxz7adsDvsQyi3+7u9jdpUi5vPrwnXNt+b3Uz8Id+jAvC5X?=
+ =?us-ascii?Q?GsYGuhaQDNfWV2oSFF69k84FEDmiV5K86GFvlfrg9Lenrok1+miLVwwvTHeD?=
+ =?us-ascii?Q?t3BSj2sf6zs0xcIWwJHBpBo4r29iv+uRYx9D9Um6MtBpHquLdEZ/m5awp3hI?=
+ =?us-ascii?Q?nvcxvemW+MC2Z23VtzDNScpzH+AAxtiD4ePyLH07hRfnFskmhjgXCP4UhYED?=
+ =?us-ascii?Q?YyA24We4cIDqyHmwyoo39mcJQfhiA/HEwpInyYyZq/fp5Fv5v1w95Zn13ZQO?=
+ =?us-ascii?Q?wxh94LuwCZoPMEl05mfM8UmZRrmIB6mz7ianMsD22tbfKW8kg2MVWTJaVWf7?=
+ =?us-ascii?Q?DMImQpsAj0f7Uw+amF92wK0OUNiWAKJ5LGitQniURdHdLWtPleaIqOVx/uKc?=
+ =?us-ascii?Q?9bJYrdSgNhMqI1nbIUd6VqPTCTU6XpXhCLhlCgK2ZJj9ypmqHeMykuttk5cH?=
+ =?us-ascii?Q?9CW6CzMhB1S1if2DxVZSb1WbnauncZbwjEK2rlwmzLwUT0RMpYm4uRr6QKrG?=
+ =?us-ascii?Q?PhvtKvFPYTKcc0XaEKPrSbI88HU3bDS7AAwCFMjNw6k8sPYkCQ2h5lv6KTyX?=
+ =?us-ascii?Q?lyjLb51SyNAl594ET9jQdJ/cFJwQCeOX1JBRUapHGakdVluGEk/KBJvf98Ik?=
+ =?us-ascii?Q?uE8OD7bTYfOGQOIher/8ulBPqqHZBDE4pqHGS2DcHISffYaiaJzM22+g24C8?=
+ =?us-ascii?Q?e0LK++2mXejUUI+wVeK5Mgx/GVLObryxc9PUKqClRD35jP+oPMMgIaPzYs9r?=
+ =?us-ascii?Q?rTk/qopK1O1LVm7OkLNTklsyv+Zq9zX3SX8NnEZTEvHrufn1KsIA0+Qi79Lz?=
+ =?us-ascii?Q?+Q30H3MD5ItPl+x2puWhHUV0jeUGvvmI11uHHx78IIsz4QWp2p/J1pXcIVNZ?=
+ =?us-ascii?Q?grM95hAgTqZaFZnh7C5ag5AMLkJ5p0/nQ1200r4rjK0erfF78ncRCVzYmqtz?=
+ =?us-ascii?Q?tJeBp8bYgu5PvQBQqdAcf4c=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(52116014)(376014)(19092799006)(38350700014)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Z1hGY5X2Y0dSxWeOdOVVGA5l+Et9RKt1fEKDZr5ht6ji7oMytB4Dd4Fu50+a?=
+ =?us-ascii?Q?Disr+vXe1/a3JInTrvwYZjzw5JaZTdIRdwPBxz+iMbzma22WTVhtwqF75MiS?=
+ =?us-ascii?Q?OA4sf0/nd4nXqjmK/4GxBf/fw8MXFmMydDsQ8tp0UnurNZYVxR2KjH9y7HaG?=
+ =?us-ascii?Q?G3TBQzPn3t2bCs+frymwjrs833L0vu8feHLtKw+mYn+hgMOzr8PEXVQ7SLpI?=
+ =?us-ascii?Q?1MmGFQvlbBnhrrafer97RTC0d1KVb1oQthJlaE2xSVTugj18KWLsBQ4rB4j9?=
+ =?us-ascii?Q?gel5iblbVKHq3rb1MKskd00CH7Iwf/6mSuJwIcgONIlL9BcMgHCOQ9WebvQf?=
+ =?us-ascii?Q?fgNVIEOLk85oEetey0wM95pqYKr2Nf+90r6wwNHGe0DAAgbLsKgy5CkEf9QI?=
+ =?us-ascii?Q?GgEh8IrUdfzTndR11Efn7dkRB9zEVqsLDg57A8nqi1wyaVpvLEXC4gPp7vRb?=
+ =?us-ascii?Q?nRzLPDpk3khCgnq9o/sYLfCnZDihDV3Bp0jnneUqHLBjzuNZw+nJFX3KWSYU?=
+ =?us-ascii?Q?h4kkgAJHcdILCq4pRxoU7+oBlGmWdeuah7EjsheWNsGXODPBRXsG9LSjXsR9?=
+ =?us-ascii?Q?IF/1T9ILTkMILHIcXJ1WXiTuGLbt3DJqQfbq/zeWzCov6EWuSROG/hnz0VNB?=
+ =?us-ascii?Q?YTCEGv9ltzFR1d2kuVqOvWJKSUp0WlvzEsmRbTyJHY15bGw2kGGxqsIqiyKq?=
+ =?us-ascii?Q?2571yBhbvbEMCg0DlUAlOsYXBUdgfbFkuiqYt0A2jGf8nniOyifbHVfp/3mL?=
+ =?us-ascii?Q?d9ExwY0FUOc761dNjQ05iz/buXvZjBzjxFjY+mSBRUqcs0+qfQT0Sog9zBWO?=
+ =?us-ascii?Q?eorPEG/6R336pvYQXEGCkCLwftkog1NIPbDtnPzysziZX2+LZ/nFlZh4DO9S?=
+ =?us-ascii?Q?hMc1QLofgUnDMXEArS2KyiYAOQ7C4jsFIY7I4+UZRA7fYn8kTWr6pGVUWHej?=
+ =?us-ascii?Q?NNuDtVka6fyZYHlViQY/UQY4ayXIgLn2jehVRmKKw7rd0jFS1Ao0unCnQkXn?=
+ =?us-ascii?Q?A5PazEwIjjZDwqLIuRhbTZ3vdweY5l0gSsIpfc0CUqqhIK9DWIC0MPmXOwyi?=
+ =?us-ascii?Q?XUrsvf/WGE/342C1OBpYu/Fx+KZJxvpTU6xeQbS6oPlX2T8Mc+2utauYBu1a?=
+ =?us-ascii?Q?G7sh7ka4ra4C8nLIaJt/XHiEVpGQSpsf8OTyAD8Kdol2cHcaiHEPVCCkUzjX?=
+ =?us-ascii?Q?la63nYXhrpw/xtxuiDV1TJrmMGKE3FPxPlRPTiL1VK2cw8Q6ngptiDIjxAb7?=
+ =?us-ascii?Q?KeDktTn6J4I9Vaxiv4SqQSt5aO8jjA4JdwfY7QVhAAS+Ip1I1CqKi7FyopGO?=
+ =?us-ascii?Q?Ds4rxOKbg29my4nki0mo2M4mDWT538tct2yR6IEp/wfVbcU3k2BzAv73JdDj?=
+ =?us-ascii?Q?fEhSsRU3ZWV/diUaeK094q1qm0EowfAV9ey8FRXvcFzkuDFu/IWQc5NDMKg/?=
+ =?us-ascii?Q?54h6RfymPZcpYxc6w4BE6HGYPVKfrd0bHNRnYju3kTtQeZhamqIt5MeswooM?=
+ =?us-ascii?Q?ysVQks1jMKUom2ZMujWcl7aRlX8gCFUoaucXIr3KbVjU/kQcqL7d/wMixevs?=
+ =?us-ascii?Q?shcIbE9U/qUxl25owfjF6hAfaM/+PFrTYUGvZTibboPJNS3Sec76avAzEgR4?=
+ =?us-ascii?Q?VE5ZbfqPuWkV2lt3rWLpcxAV31YImzz+SmR6W2TnsUx3hp4CIPnwD/GZ0T0D?=
+ =?us-ascii?Q?s0bvw7AFZn6KlnioHKV2MPg8KiSP66HqD+KVaD0ORSV0xzmrE+zw2+/FQka/?=
+ =?us-ascii?Q?elMMei2YJw=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fee36be7-f000-4df8-11d7-08de6d918384
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2026 19:28:07.9555
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YGvo10v5AC9fRG+SVx5/AEhaTHx1y2rImFSyngmnPOO8PUdyxAk6A1Ntb+/ap3w12DmGaRf3+Tj6cRlRY0BWRQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB7588
 
-Hi,
+On Mon, Feb 16, 2026 at 04:25:45PM +0530, Devendra K Verma wrote:
+> AMD MDB PCIe endpoint support. For AMD specific support
+> added the following
+>   - AMD supported PCIe Device IDs and Vendor ID (Xilinx).
+>   - AMD MDB specific driver data
+>   - AMD MDB specific VSEC capability to retrieve the device DDR
+>     base address.
+>
+> Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
+> ---
+> Changes in v10:
+> For Xilinx VSEC function kept only HDMA map format as
+> Xilinx only supports HDMA.
+>
+> Changes in v9:
+> Moved Xilinx specific VSEC capability functions under
+> the vendor ID condition.
+>
+> Changes in v8:
+> Changed the contant names to includer product vendor.
+> Moved the vendor specific code to vendor specific functions.
+>
+> Changes in v7:
+> Introduced vendor specific functions to retrieve the
+> vsec data.
+>
+> Changes in v6:
+> Included "sizes.h" header and used the appropriate
+> definitions instead of constants.
+>
+> Changes in v5:
+> Added the definitions for Xilinx specific VSEC header id,
+> revision, and register offsets.
+> Corrected the error type when no physical offset found for
+> device side memory.
+> Corrected the order of variables.
+>
+> Changes in v4:
+> Configured 8 read and 8 write channels for Xilinx vendor
+> Added checks to validate vendor ID for vendor
+> specific vsec id.
+> Added Xilinx specific vendor id for vsec specific to Xilinx
+> Added the LL and data region offsets, size as input params to
+> function dw_edma_set_chan_region_offset().
+> Moved the LL and data region offsets assignment to function
+> for Xilinx specific case.
+> Corrected comments.
+>
+> Changes in v3:
+> Corrected a typo when assigning AMD (Xilinx) vsec id macro
+> and condition check.
+>
+> Changes in v2:
+> Reverted the devmem_phys_off type to u64.
+> Renamed the function appropriately to suit the
+> functionality for setting the LL & data region offsets.
+>
+> Changes in v1:
+> Removed the pci device id from pci_ids.h file.
+> Added the vendor id macro as per the suggested method.
+> Changed the type of the newly added devmem_phys_off variable.
+> Added to logic to assign offsets for LL and data region blocks
+> in case more number of channels are enabled than given in
+> amd_mdb_data struct.
+> ---
+>  drivers/dma/dw-edma/dw-edma-pcie.c | 190 ++++++++++++++++++++++++++---
+>  1 file changed, 176 insertions(+), 14 deletions(-)
+>
+...
+>
+> +static void dw_edma_pcie_get_xilinx_dma_data(struct pci_dev *pdev,
+> +					     struct dw_edma_pcie_data *pdata)
+> +{
+> +	u32 val, map;
+> +	u16 vsec;
+> +	u64 off;
+> +
+> +	pdata->devmem_phys_off = DW_PCIE_XILINX_MDB_INVALID_ADDR;
+> +
+> +	vsec = pci_find_vsec_capability(pdev, PCI_VENDOR_ID_XILINX,
+> +					DW_PCIE_XILINX_MDB_VSEC_DMA_ID);
+> +	if (!vsec)
+> +		return;
+> +
+> +	pci_read_config_dword(pdev, vsec + PCI_VNDR_HEADER, &val);
+> +	if (PCI_VNDR_HEADER_REV(val) != 0x00 ||
+> +	    PCI_VNDR_HEADER_LEN(val) != 0x18)
+> +		return;
+> +
+> +	pci_dbg(pdev, "Detected Xilinx PCIe Vendor-Specific Extended Capability DMA\n");
+> +	pci_read_config_dword(pdev, vsec + 0x8, &val);
+> +	map = FIELD_GET(DW_PCIE_XILINX_MDB_VSEC_DMA_MAP, val);
+> +	if (map != EDMA_MF_HDMA_NATIVE)
+> +		return;
+> +
+> +	pdata->mf = map;
+> +	pdata->rg.bar = FIELD_GET(DW_PCIE_XILINX_MDB_VSEC_DMA_BAR, val);
+> +
+> +	pci_read_config_dword(pdev, vsec + 0xc, &val);
+> +	pdata->wr_ch_cnt = min_t(u16, pdata->wr_ch_cnt,
+> +				 FIELD_GET(DW_PCIE_XILINX_MDB_VSEC_DMA_WR_CH, val));
+> +	pdata->rd_ch_cnt = min_t(u16, pdata->rd_ch_cnt,
+> +				 FIELD_GET(DW_PCIE_XILINX_MDB_VSEC_DMA_RD_CH, val));
 
-On 1/22/26 19:01, Manivannan Sadhasivam wrote:
-> On Thu, Jan 22, 2026 at 09:29:03AM -0600, Bjorn Helgaas wrote:
->> [+cc NVMe folks]
->>
->> On Thu, Jan 22, 2026 at 12:12:42PM +0000, Jon Hunter wrote:
->>> ...
->>
->>> Since this commit was added in Linux v6.18, I have been observing a suspend
->>> test failures on some of our boards. The suspend test suspends the devices
->>> for 20 secs and before this change the board would resume in about ~27 secs
->>> (including the 20 sec sleep). After this change the board would take over 80
->>> secs to resume and this triggered a failure.
->>>
->>> Looking at the logs, I can see it is the NVMe device on the board that is
->>> having an issue, and I see the reset failing ...
->>>
->>>   [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
->>>    flow control rx/tx
->>>   [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
->>>    0 timeout, reset controller
->>>   [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
->>>   [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
->>>   [ 1003.050481] OOM killer enabled.
->>>   [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
->>>
->>>  From the above timestamps the delay is coming from the NVMe. I see this
->>> issue on several boards with different NVMe devices and I can workaround
->>> this by disabling ASPM L0/L1 for these devices ...
->>>
->>>   DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
->>>   DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
->>>   DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
->>>   DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
->>>
->>> I am curious if you have seen any similar issues?
->>>
->>> Other PCIe devices seem to be OK (like the realtek r8169) but just
->>> the NVMe is having issues. So I am trying to figure out the best way
->>> to resolve this?
->>
->> For context, "this commit" refers to f3ac2ff14834, modified by
->> df5192d9bb0e:
->>
->>    f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for devicetree platforms")
->>    df5192d9bb0e ("PCI/ASPM: Enable only L0s and L1 for devicetree platforms")
->>
->> The fact that this suspend issue only affects NVMe reminds me of the
->> code in dw_pcie_suspend_noirq() [1] that bails out early if L1 is
->> enabled because of some NVMe expectation:
->>
->>    dw_pcie_suspend_noirq()
->>    {
->>      ...
->>      /*
->>       * If L1SS is supported, then do not put the link into L2 as some
->>       * devices such as NVMe expect low resume latency.
->>       */
->>      if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
->>        return 0;
->>      ...
->>
->> That suggests there's some NVMe/ASPM interaction that the PCI core
->> doesn't understand yet.
->>
-> 
-> We have this check in place since NVMe driver keeps the device in D0 and expects
-> the link to be in L1ss on platforms not passing below checks:
-> 
->          if (pm_suspend_via_firmware() || !ctrl->npss ||
->              !pcie_aspm_enabled(pdev) ||
->              (ndev->ctrl.quirks & NVME_QUIRK_SIMPLE_SUSPEND))
-> 
+In https://lore.kernel.org/all/20251119224140.8616-1-david.laight.linux@gmail.com/
 
-We noticed a similar issue with the Renesas RZ/G3S host driver and NVMe devices. 
-We currently have 2 SoCs where we identified this problem (RZ/G3S and RZ/G3E), 
-both present on SoM modules, and the SoM modules could be connected to the same 
-carrier board where the PCIe signals are routed and connectors exists. On the 
-carrier board we have 2 connectors were we can attach NVMe devices, one M.2 Key 
-B and one PCIe x4 connector 
-(https://www.amphenol-cs.com/product/10061913111plf.html).
+suggest direct use min()
 
-The issue described in this thread is reproducible for us only after suspend and 
-only for the NVMe device connected to the the PCIe x4 connector. The device is 
-working correctly just after boot. On suspend, power to the most SoC components 
-(including PCIe) is lost but the endpoints remains powered.
-
-The issue is not reproducible if the following command is executed before 
-suspend: echo performance > /sys/module/pcie_aspm/parameters/policy
-
-The difference we identified in terms of signals connected from the SoC to the 
-on board connectors relies in the CLKREQ#. This signal is only connected to the 
-PCIe x4 slot.
-
-On RZ/G3E the CLKREQ# is configured as a individual GPIO pin. On RZ/G3S it is 
-muxed by the pin controller with PCIe function. We tried on RZ/G3E to not 
-configure the CLKREQ# pin at all and with this the NVMe connected on the PCIe x4 
-slot started to work even after suspend. We cannot reproduce the same behavior 
-on RZ/G3S.
-
-Initially, we considered we might have to update the existing code to do 
-specific configuration for the boards were CLKREQ# is not connected (through 
-supports-clkreq DT property that some controllers are using).
-
-Currently, the manual is unclear on how to control CLKREQ#.
-
-Apart from the suggestions mentioned in [1], could you please let me know if you 
-have any others?
-
-Thank you,
-Claudiu
-
-[1] 
-https://lore.kernel.org/all/unc5zefwndgcv7wufaezz3gkg3qtaymkjlmymhyqdqwzn3wybl@ow2rhbyt772h/
+Frank
+> +
+> +	pci_read_config_dword(pdev, vsec + 0x14, &val);
+> +	off = val;
+> +	pci_read_config_dword(pdev, vsec + 0x10, &val);
+> +	off <<= 32;
+> +	off |= val;
+> +	pdata->rg.off = off;
+> +
+> +	vsec = pci_find_vsec_capability(pdev, PCI_VENDOR_ID_XILINX,
+> +					DW_PCIE_XILINX_MDB_VSEC_ID);
+> +	if (!vsec)
+> +		return;
+> +
+> +	pci_read_config_dword(pdev,
+> +			      vsec + DW_PCIE_XILINX_MDB_DEVMEM_OFF_REG_HIGH,
+> +			      &val);
+> +	off = val;
+> +	pci_read_config_dword(pdev,
+> +			      vsec + DW_PCIE_XILINX_MDB_DEVMEM_OFF_REG_LOW,
+> +			      &val);
+> +	off <<= 32;
+> +	off |= val;
+> +	pdata->devmem_phys_off = off;
+> +}
+> +
+>  static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  			      const struct pci_device_id *pid)
+>  {
+> @@ -184,7 +322,29 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  	 * Tries to find if exists a PCIe Vendor-Specific Extended Capability
+>  	 * for the DMA, if one exists, then reconfigures it.
+>  	 */
+> -	dw_edma_pcie_get_vsec_dma_data(pdev, vsec_data);
+> +	dw_edma_pcie_get_synopsys_dma_data(pdev, vsec_data);
+> +
+> +	if (pdev->vendor == PCI_VENDOR_ID_XILINX) {
+> +		dw_edma_pcie_get_xilinx_dma_data(pdev, vsec_data);
+> +
+> +		/*
+> +		 * There is no valid address found for the LL memory
+> +		 * space on the device side.
+> +		 */
+> +		if (vsec_data->devmem_phys_off == DW_PCIE_XILINX_MDB_INVALID_ADDR)
+> +			return -ENOMEM;
+> +
+> +		/*
+> +		 * Configure the channel LL and data blocks if number of
+> +		 * channels enabled in VSEC capability are more than the
+> +		 * channels configured in xilinx_mdb_data.
+> +		 */
+> +		dw_edma_set_chan_region_offset(vsec_data, BAR_2, 0,
+> +					       DW_PCIE_XILINX_MDB_LL_OFF_GAP,
+> +					       DW_PCIE_XILINX_MDB_LL_SIZE,
+> +					       DW_PCIE_XILINX_MDB_DT_OFF_GAP,
+> +					       DW_PCIE_XILINX_MDB_DT_SIZE);
+> +	}
+>
+>  	/* Mapping PCI BAR regions */
+>  	mask = BIT(vsec_data->rg.bar);
+> @@ -367,6 +527,8 @@ static void dw_edma_pcie_remove(struct pci_dev *pdev)
+>
+>  static const struct pci_device_id dw_edma_pcie_id_table[] = {
+>  	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, &snps_edda_data) },
+> +	{ PCI_VDEVICE(XILINX, PCI_DEVICE_ID_XILINX_B054),
+> +	  (kernel_ulong_t)&xilinx_mdb_data },
+>  	{ }
+>  };
+>  MODULE_DEVICE_TABLE(pci, dw_edma_pcie_id_table);
+> --
+> 2.43.0
+>
