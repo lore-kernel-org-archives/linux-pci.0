@@ -1,37 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E9FE36E475
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 16:11:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0540E36CE16;
+	Tue, 17 Feb 2026 16:24:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771344681; cv=none; b=mBpzp2TtxQv/zI+3bwt369tl3uKGgRNdVsdIkx4EhJM7rDuLkMsGCFXyANiJvKtcKjfODVgyxCj1SSd33QLwom/pcK2nM8JWiaIGS1la7i1k4pAS2xRTbKQHV19PocF/5HeV9t05BTCoIMPef6gb4JFteVAA+tLPVoDEJXbEbbE=
+	t=1771345490; cv=none; b=uAwKQV9V/P8CtZsF1hjkIoGakJ3/mcd0GAnuNLe3arDmr9bCaMoAh/sEPK8X5xr3uLgeGh0GA5iwRACt5Sqn6830vrcMhUdzuyoRr/jOYG7kns90+ObvgedPPwTtuhYAbqFEJTyNJJdvgu93ydvXLrJcGYgSrMe6QOfyLlIpR7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771344681; c=relaxed/simple;
-	bh=28BzoBXIOX9p4kVAfbqN4gzQmpmGYGqOr6Sc5MMD8pA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Syv2fIuf2mq98TvqotepqEpSG6Fi53X4AeJzUWXQOtWxLLfZgcz2OI4LsDWPG7sS5GYHs39ec4odNCv+IUTaicVggDP+VuM7nTE2Km2ihwrvOaNKuCYoySxNmIBlnJr0J0dJnNrboheaiMJW6KIxhiDCZNHWgVnzJw+lNKXoEJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CChDiZfn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771345490; c=relaxed/simple;
+	bh=CxjI4EcPft0Rpldoj7YGuMkMsBYoUfDCaN28yBYqKzo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QY2cWGMMqXF4pP8mxTBzKLWPG6wRHck5W5HuJpgyFJz0Xpu5cnE4PGP5cIAeMkXD7/uJyXewffsHr+wGU7KB2isWRIZP/ZvzBqURy7iyCCPxExHsy3nyVSEPkutHPbQRCS4yme44AyCRBofFDoyUUq18xCkD0u5G8lJnukTY6NA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aKoABufb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CChDiZfn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28545C4CEF7;
-	Tue, 17 Feb 2026 16:11:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aKoABufb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3D7AC19421;
+	Tue, 17 Feb 2026 16:24:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771344681;
-	bh=28BzoBXIOX9p4kVAfbqN4gzQmpmGYGqOr6Sc5MMD8pA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=CChDiZfndJ91zPxGJ3ooX3L2n0RklzFx+BfHxLWYS0PnaL+wTkOF8M6UUI97elLlv
-	 nm59BFsgvZ5lW1udbltSg+Fhe8CxZd2/vkSqcr8X8A0H8eb+A8gI5113IqImJvBqz+
-	 6hpP6WxFKYqd1ar/mDaR7bLPcL0K35OsvxsKO7hE8mJB1oWOQTk0ynzEAMwAB9znci
-	 4mUdzgAVjxfnwwPkIiF96KYzWrcNVu5s0EVlxzsPIkpn7qH+dJIQLmAS01Xv2850wU
-	 2OHMdyTwKM20LFCwEKpALJlt/nDXdVo1zPcZvQ1rwR+QtqDKDunGWIh1+tChzDzxVW
-	 IMfbVy7cCxKhw==
-Date: Tue, 17 Feb 2026 10:11:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Adria Vilanova Martinez <me@avm99963.com>
-Subject: Re: [PATCH] PCI/ASPM: Fix pci_clear_and_set_config_dword() usage
-Message-ID: <20260217161119.GA3378634@bhelgaas>
+	s=k20201202; t=1771345489;
+	bh=CxjI4EcPft0Rpldoj7YGuMkMsBYoUfDCaN28yBYqKzo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aKoABufbSEWKCTQU0W3hJxtxA0rlKoUjPTBPTbNcGYQCWMcE0uduOgyWQZHi+7kA9
+	 3OnVoBJtRa7z8lDJQ6/EmkjYW8rPnHKPM8m6v8+ljvyIAfu44Bv9fn2oVtqgJid3j/
+	 +fMSnV/kIITGZk31SDfD4q81evzlpcVbib088Fmb672lF6LagEbvnVC34QVPcaRgtR
+	 7p4c7zEVehgLWX8j2XJLlAOsJ9EuaM/ch6QXEjVW5yQvqDvqwQ8Loroiv1DgDp9a9W
+	 R5Ut4Il7FrUD+jWM1FmHk4ycbG+5sA7HwKLyL11Ll4Pzl7ooR5BDo8llWYhjmxLkXu
+	 Dz4WFiTmIhGhw==
+Date: Tue, 17 Feb 2026 21:54:43 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bartosz Golaszewski <brgl@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, 
+	Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
+Subject: Re: [PATCH 0/2] PCI/pwrctrl: A couple of fixes
+Message-ID: <sq6wub733a7lwmwpjsxp6cxnl3zchzn632b6ni342f4g63rlz3@poxbx7d5vc4y>
+References: <20260217-pwrctrl-fixes-7-0-v1-0-b5671e58934f@oss.qualcomm.com>
+ <20260217160608.GA3377925@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,95 +47,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <5c1752d7512eed0f4ea57b84b12d7ee08ca61fc5.1771226659.git.lukas@wunner.de>
+In-Reply-To: <20260217160608.GA3377925@bhelgaas>
 
-On Mon, Feb 16, 2026 at 08:46:13AM +0100, Lukas Wunner wrote:
-> When aspm_calc_l12_info() programs the L1 PM Substates Control 1 register
-> fields Common_Mode_Restore_Time, LTR_L1.2_THRESHOLD_Value and _Scale, it
-> invokes pci_clear_and_set_config_dword() in an incorrect way:
+On Tue, Feb 17, 2026 at 10:06:08AM -0600, Bjorn Helgaas wrote:
+> On Tue, Feb 17, 2026 at 03:48:45PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> > Hi,
+> > 
+> > This series fixes a couple of issues introduced in the recent pwrctrl rework
+> > for v7.0. Both issues are due to some incorrect assumptions on deciding when to
+> > create pwrctrl devices. First issue is due to assuming that all OF graph nodes
+> > require pwrctrl and another one is due to assuming that all PCI child nodes are
+> > PCI devices.
+> > 
+> > Both issues are fixed by changing the pwrctrl device creation logic in
+> > pwrctrl/core.
+> > 
+> > Testing
+> > =======
+> > 
+> > This series is tested on Lenovo Thinkpad T14s.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> > Manivannan Sadhasivam (2):
+> >       PCI/pwrctrl: Ensure that the remote endpoint node parent has the supply requirement
+> >       PCI/pwrctrl: Only create pwrctrl device if the device node is of type "pci"
+> > 
+> >  drivers/pci/pwrctrl/core.c | 51 ++++++++++++++++++++++++++++++++++------------
+> >  1 file changed, 38 insertions(+), 13 deletions(-)
+> > ---
+> > base-commit: 1c2b4a4c2bcb950f182eeeb33d94b565607608cf
+> > change-id: 20260217-pwrctrl-fixes-7-0-b90eb30bbfe7
 > 
-> For the bits to clear it selects those corresponding to the field.  So far
-> so good.  But for the bits to set it passes a full register value.
-> pci_clear_and_set_config_dword() performs a boolean OR operation which
-> sets all bits of that value, not just the ones that were just cleared.
+> Are these v7.0 material?  I assume the pwrctrl changes merged for v7.0
+> were tested but maybe not on this platform or this DT structure?
 > 
-> Thus, when setting the LTR_L1.2_THRESHOLD_Value and _Scale on the child of
-> an ASPM link, aspm_calc_l12_info() also sets the Common_Mode_Restore_Time.
-> That's a spec violation:  PCIe r7.0 sec 7.8.3.3 says this field is RsvdP
-> for Upstream Ports.  On Adrià's Pixelbook Eve, Common_Mode_Restore_Time
-> of the Intel 7265 "Stone Peak" wifi card is zero, yet aspm_calc_l12_info()
-> does not preserve the zero bits but instead programs the value calculated
-> for the Root Port into the wifi card.
-> 
-> Likewise, when setting the Common_Mode_Restore_Time on the Root Port,
-> aspm_calc_l12_info() also changes the LTR_L1.2_THRESHOLD_Value and _Scale
-> from the initial 163840 nsec to 237568 nsec (due to ORing those fields),
-> only to reduce it afterwards to 106496 nsec.
-> 
-> Amend all invocations of pci_clear_and_set_config_dword() to only set bits
-> which are cleared.
-> 
-> Finally, when setting the T_POWER_ON_Value and _Scale on the Root Port and
-> the wifi card, aspm_calc_l12_info() fails to preserve bits declared RsvdP
-> and instead overwrites them with zeroes.  Replace pci_write_config_dword()
-> with pci_clear_and_set_config_dword() to avoid this.
-> 
-> Fixes: aeda9adebab8 ("PCI/ASPM: Configure L1 substate settings")
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=220705#c22
-> Tested-by: Adrià Vilanova Martínez <me@avm99963.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: stable@vger.kernel.org # v4.11+
 
-Applied to pci/aspm for v7.1, thanks!  Will be rebased after v7.0-rc1.
+Yes!
 
-> ---
-> Only a "Link" tag, not a "Closes" tag because this patch is just a
-> byproduct that was created while working on the above-linked bugzilla.
-> The actual root cause of the bugzilla seems to be an ASPM erratum
-> of the Sunrise Point PCH which needs to be addressed in coreboot.
-> 
->  drivers/pci/pcie/aspm.c | 17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index cedea47..a1f2752 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -706,22 +706,29 @@ static void aspm_calc_l12_info(struct pcie_link_state *link,
->  	}
->  
->  	/* Program T_POWER_ON times in both ports */
-> -	pci_write_config_dword(parent, parent->l1ss + PCI_L1SS_CTL2, ctl2);
-> -	pci_write_config_dword(child, child->l1ss + PCI_L1SS_CTL2, ctl2);
-> +	pci_clear_and_set_config_dword(parent, parent->l1ss + PCI_L1SS_CTL2,
-> +				       PCI_L1SS_CTL2_T_PWR_ON_VALUE |
-> +				       PCI_L1SS_CTL2_T_PWR_ON_SCALE, ctl2);
-> +	pci_clear_and_set_config_dword(child, child->l1ss + PCI_L1SS_CTL2,
-> +				       PCI_L1SS_CTL2_T_PWR_ON_VALUE |
-> +				       PCI_L1SS_CTL2_T_PWR_ON_SCALE, ctl2);
->  
->  	/* Program Common_Mode_Restore_Time in upstream device */
->  	pci_clear_and_set_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1,
-> -				       PCI_L1SS_CTL1_CM_RESTORE_TIME, ctl1);
-> +				       PCI_L1SS_CTL1_CM_RESTORE_TIME,
-> +				       ctl1 & PCI_L1SS_CTL1_CM_RESTORE_TIME);
->  
->  	/* Program LTR_L1.2_THRESHOLD time in both ports */
->  	pci_clear_and_set_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1,
->  				       PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
->  				       PCI_L1SS_CTL1_LTR_L12_TH_SCALE,
-> -				       ctl1);
-> +				       ctl1 & (PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
-> +					       PCI_L1SS_CTL1_LTR_L12_TH_SCALE));
->  	pci_clear_and_set_config_dword(child, child->l1ss + PCI_L1SS_CTL1,
->  				       PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
->  				       PCI_L1SS_CTL1_LTR_L12_TH_SCALE,
-> -				       ctl1);
-> +				       ctl1 & (PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
-> +					       PCI_L1SS_CTL1_LTR_L12_TH_SCALE));
->  
->  	if (pl1_2_enables || cl1_2_enables) {
->  		pci_clear_and_set_config_dword(parent,
-> -- 
-> 2.51.0
-> 
+> Is there a functional regression from v6.19 to v7.0 that would justify
+> including these in v7.0?
+
+Atleast patch 1 is a fix for the regression on IPQ platform, but patch 2 is
+required for an upcoming support.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
