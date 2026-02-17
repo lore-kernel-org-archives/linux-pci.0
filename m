@@ -1,121 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9AE918DF9D;
-	Tue, 17 Feb 2026 10:15:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7542281532;
+	Tue, 17 Feb 2026 10:18:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771323315; cv=none; b=o+GYNNvUYzRJTfkmK6+9c7YnJSLbXjr0DyzZWdXreoP1kzrwStpuB+IzWJUhQzy9Yl4CDAcIzJlzTBYIUkZ57pfASQVD7Dekf9Qm4hM6/nfDccfoSdMNgf8I1WzsA8aDLgJ+zicVzIMKd9ocC3AYHgdIMNROnuNhIT8ZHfp1MZI=
+	t=1771323531; cv=none; b=VmOufF+Ej2QtsjKeTlqxeiNWbjWqEdKydjiaCFeBHvkwogx1et1i88aH9VDpJbnmHKc4yrwGb98s7M1pYf+Cou6ZcoaRfli6y79dX0WwmNHdz0JMGIBQLKLiQ/vm8vo28mmYjV3Y330nMyRNBm+IC3hflzVd/ybHBA2plLTvCT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771323315; c=relaxed/simple;
-	bh=OGD8WP2U6z3wfYpBqrc79dXSrFIB1z1mQYqmiQxCRSg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kh/PsvtGQTF9n9nz0tQF++it2cBKlsIefMt0rFdMGkPeKRldooD7JuQrJCpf/enWuUvDEuis9Z0ubhV0Gbo9CI9WqC7DjcuAt5X7sk1jSfwqEltKkq6WJE4GwbosZGhjpTspNMTUgclSfA1fft7HX6VpcjeoPxJKzZboiiuo96s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uUrmsjtg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771323531; c=relaxed/simple;
+	bh=+FvIOo6LaMp1nwA9zSJb2lGx0Ul6585dauW/Ve0I6mk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=YwG09uTJJOKhluuvbTrZxS1UA8udo6GLHpW8Ss25pDfEK5RFE/JffFSNoJ8mOzrr6aKBGMDthjYL93qmIoD9eKY9ze8RUBlad7y65OEF1uc7RP6LjqVul/71ngacRXEZGmBxg5Fb6dJEq4z2M+KkikK/WjNC2M+yraY2F9mZoy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NMf6YQrD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uUrmsjtg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4F29C4CEF7;
-	Tue, 17 Feb 2026 10:15:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NMf6YQrD"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A0AE6C19424;
+	Tue, 17 Feb 2026 10:18:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771323315;
-	bh=OGD8WP2U6z3wfYpBqrc79dXSrFIB1z1mQYqmiQxCRSg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uUrmsjtg2NzB9GBijzWHyd5UlPbNQXVOSfa+2N4CkDQU7U3WdT/IBcnIWdw6I/b6H
-	 a6M/ZpSSMAPNAoky6xNnpqZI4vIBYOkXUYalVkrwPmKVWgqPNYLwDQUDothtEJ1ttD
-	 N5KYng6ICleloi6Ab8+IsMRyD86RQo9s/waKhFrL4TqhkP2kkMreFGzGq26I9bmI01
-	 JKzyJUU9m//hKptt+Xr/lWAHuNbhKdYEXqRBicWGyM57oJfUFeOQBf68lDsUp+jCag
-	 oXCD1H0cg9oFQ+778sztMPTxZrU1U3OSSaCSsVllU9BE2ViXUDfq/GKLR2JNodiN0n
-	 xdpE7pOmhJJSg==
-Date: Tue, 17 Feb 2026 11:15:08 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	heiko@sntech.de, kishon@kernel.org, jdmason@kudzu.us,
-	dave.jiang@intel.com, allenbh@gmail.com, shawn.lin@rock-chips.com,
-	Frank.Li@nxp.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org, ntb@lists.linux.dev
-Subject: Re: [PATCH v8 8/9] PCI: endpoint: pci-epf-test: Reuse pre-exposed
- doorbell targets
-Message-ID: <aZQ_rEkzWnDeJrMe@ryzen>
-References: <20260217080601.3808847-1-den@valinux.co.jp>
- <20260217080601.3808847-9-den@valinux.co.jp>
+	s=k20201202; t=1771323531;
+	bh=+FvIOo6LaMp1nwA9zSJb2lGx0Ul6585dauW/Ve0I6mk=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=NMf6YQrDoQfqmjJ2yZ7fD2NOzKge4aBPHtJkwpiRBEAQsLumo1BGla4kSwq3uvfVK
+	 BFwhdZmf1M7vKA5XMACq0FijQVb0mLFaLQ2j6MqMUrqdsEL+H36Wmkm4A9n1xAIRAW
+	 4KgaKqVPB2zhNJld75OctGPfe9lRwBtn7AdjzShMOFMDi5eBzxuJ2lkRfrKrDpB2oq
+	 Hla1K1kO4HpGFzov0YWK0phPZz7e7GbRfobLh/jyLZebcxIbRdr5xgpifyoX1dvddc
+	 NVD+cVHBhhBcLo34qAlsUrOQ63Eh674xPE0JtvVP412fT9uv0prZrXAwUhNhH2UUzg
+	 OgnJOEUzPTLHQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92A87E68163;
+	Tue, 17 Feb 2026 10:18:51 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Tue, 17 Feb 2026 15:48:47 +0530
+Subject: [PATCH 2/2] PCI/pwrctrl: Only create pwrctrl device if the device
+ node is of type "pci"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260217080601.3808847-9-den@valinux.co.jp>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260217-pwrctrl-fixes-7-0-v1-2-b5671e58934f@oss.qualcomm.com>
+References: <20260217-pwrctrl-fixes-7-0-v1-0-b5671e58934f@oss.qualcomm.com>
+In-Reply-To: <20260217-pwrctrl-fixes-7-0-v1-0-b5671e58934f@oss.qualcomm.com>
+To: Bartosz Golaszewski <brgl@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1885;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=aNEcD1tWIRurJpHegw9tQESfw9DiViDCcnlJdYscw3w=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBplECJBvvbUtKjqgm7Y5/W5vm/aHOgtEqONDvkP
+ l078hE72uCJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaZRAiQAKCRBVnxHm/pHO
+ 9Y+dB/9qein+EP7oXQE9zMgLPXSx0XxeSLsxXSKneM6oVh6c/ypC+5r3ahlhx1AcvSWrT0Zvl+K
+ icHW2vegkchJe2pHv1YYPe5OvJlsn5rmSF5Sk/IoKJs4q5F+WIwlbg+pB9o8rR/HfDsWUM5/S2e
+ 8lXc08sUyYAE7x5YsHsL3YNSkx1JQ0hPNIkh21k7Do5LIWyyWb1Xe6N7gwhudu3z+Cp/YIvckva
+ NOAbFgNtINUWz28zMIGL317KwMdhZGhyFihxQKbE5BD96/oXxEUzuYgOzLvXdcapIURhJlOnvVS
+ IhBA87WxKKlqX8xKU+UsIPszOX+wm1IPF+APCi4jJsRmNLpB
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hello Koichiro,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-On Tue, Feb 17, 2026 at 05:06:00PM +0900, Koichiro Den wrote:
-> pci-epf-test advertises the doorbell target to the RC as a BAR number
-> and an offset, and the RC rings the doorbell with a single DWORD MMIO
-> write.
-> 
-> Some doorbell backends may report that the doorbell target is already
-> exposed via a platform-owned fixed BAR (db_msg[0].bar/offset). In that
-> case, reuse the pre-exposed window and do not reprogram the BAR with
-> pci_epc_set_bar().
-> 
-> Also honor db_msg[0].irq_flags when requesting the doorbell IRQ, and
-> only restore the original BAR mapping on disable if pci-epf-test
-> programmed it.
-> 
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
+The PCI host bridge node can have non-PCI child nodes as well, like OPP
+tables, USB controller node etc... So the pwrctrl core must check for the
+presence of 'device_type' property with value of "pci" to ensure that the
+pwrctrl device is only created for PCI device nodes.
 
-(snip)
+Fixes: 4c4132489201 ("PCI/pwrctrl: Add APIs to create, destroy pwrctrl devices")
+Reported-by: Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
+Closes: https://lore.kernel.org/all/20260212-rb3gen2-upd-gl3590-v1-1-18fb04bb32b0@oss.qualcomm.com
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/pci/pwrctrl/core.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-> @@ -753,22 +771,33 @@ static void pci_epf_test_enable_doorbell(struct pci_epf_test *epf_test,
->  	reg->doorbell_data = cpu_to_le32(msg->data);
->  	reg->doorbell_bar = cpu_to_le32(bar);
->  
-> -	msg = &epf->db_msg[0].msg;
-> -	ret = pci_epf_align_inbound_addr(epf, bar, ((u64)msg->address_hi << 32) | msg->address_lo,
-> -					 &epf_test->db_bar.phys_addr, &offset);
-> +	if (db->bar == NO_BAR) {
-> +		ret = pci_epf_align_inbound_addr(epf, bar,
-> +						 ((u64)msg->address_hi << 32) |
-> +						 msg->address_lo,
-> +						 &epf_test->db_bar.phys_addr,
-> +						 &offset);
->  
-> -	if (ret)
-> -		goto err_free_irq;
-> +		if (ret)
-> +			goto err_free_irq;
-> +	}
+diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
+index 8325858cc379..7404d48427ce 100644
+--- a/drivers/pci/pwrctrl/core.c
++++ b/drivers/pci/pwrctrl/core.c
+@@ -272,8 +272,9 @@ EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
+  * Check whether the pwrctrl device really needs to be created or not. The
+  * pwrctrl device will only be created if the node satisfies below requirements:
+  *
+- * 1. Presence of compatible property to match against the pwrctrl driver (AND)
+- * 2. At least one of the power supplies defined in the devicetree node of the
++ * 1. Presence of 'device_type = "pci"' property to identify PCI node (AND)
++ * 2. Presence of compatible property to match against the pwrctrl driver (AND)
++ * 3. At least one of the power supplies defined in the devicetree node of the
+  *    device (OR) in the remote endpoint parent node to indicate pwrctrl
+  *    requirement.
+  */
+@@ -281,6 +282,9 @@ static bool pci_pwrctrl_is_required(struct device_node *np)
+ {
+ 	struct device_node *endpoint;
+ 
++	if (!of_node_is_type(np, "pci"))
++		return false;
++
+ 	if (!of_property_present(np, "compatible"))
+ 		return false;
+ 
 
-I tried this series on Rock5b (RK3588), and was surprised to see the doorbell
-test case still failing.
-
-
-> +
-> +	if (size_add(offset, sizeof(u32)) > epf->bar[bar].size)
-> +		goto err_doorbell_cleanup;
-
-It turns out that this check is the reason for it still failing.
-
-You see, for a BAR that is marked as BAR_RESERVED, pci-epf-test will not
-allocate backing memory, so epf->bar[bar].size will be 0.
-
-If I removed this check, I could get the test case to pass.
-
-As I suggested in my previous email, perhaps this check is better suited
-in pci_epf_alloc_doorbell(). (As a DWORD alignment check inside
-pci_epf_alloc_doorbell(). pci_epf_alloc_doorbell() could itself return
-error if the doorbell is not DWORD aligned.)
-
-That way, you could remove this check from pci_epf_test_enable_doorbell(),
-and we don't need to care about epf->bar[bar].size.
+-- 
+2.51.0
 
 
-Kind regards,
-Niklas
