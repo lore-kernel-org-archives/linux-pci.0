@@ -1,68 +1,67 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+Received: from mail-wr1-f66.google.com (mail-wr1-f66.google.com [209.85.221.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B08332ECF
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 15:40:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2634636C0D1
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 15:40:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771342815; cv=none; b=DLr7Q2122fEqqfy1HzMBLNtEDe7lf9CuRtpg+XfGSo0EmosD+PVIudY5dMsgd+qsZVTZrp3tEOVkIn/CBtqUoNnHv2PdHNWclKeMhFvPox0TnusUVST88YWMauQoNKUZO+jzjcnqgf6IVeKLYjeNgh+igSmduUlnL6HacFtKyfs=
+	t=1771342821; cv=none; b=WN5DqFIc14Ye1Ef+jBeAcUT09K9Ue8PafWtm0Y3SKjN35aubuo4emMeAh9jiymUKBlIaiIMqk6LWwA+Y8/8EUdE1E1U7TX+/g+84UCBVufDk07Um22/TlA9UkzjNjNkNsYXksckALwrtSH6TFxH0AvEw42jbtfTtq+1CahL6QOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771342815; c=relaxed/simple;
-	bh=s70PzdSc3Ao+4XNUlHdv9TJh2ewm61rZ/huM10n9mVQ=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=XmMVn0fR3wc2HYTM4z2pp2sT5CN1rwsVh3T3hxwYCiQ3/Rxps1LtR2B1KuFvhDFj3L/EcslNmg2rRFHl8hBvcF+z4CYEo/rvGhnfUNhRBe/NrZisxRCi7ZcQxdz1Ft0xNn5zWl31P9ntgZ7l7K5sS/lHlh3+4enUSzXEFRTt/9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JmmoOooQ; arc=none smtp.client-ip=209.85.221.44
+	s=arc-20240116; t=1771342821; c=relaxed/simple;
+	bh=ay9Wt6Ibuo8nK54rsRjwtFVihyzfkYk8X1+hpdmItI8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZOCgnrAP6FBMYFVHsyLhGDYbILjav1gSfqV35Fv5An6TnIIymXwis8bpBvkXS66dSe8/0jDbvgE4fX/yB0NMERj8aiPlNQQ4icuyb4KllUYWsJgMC0czQ09zDpHs23y8k5hfWmr8qb16qwkthUt81K7fwhr4o1IemLLnnj1uD4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=bfnTCh/P; arc=none smtp.client-ip=209.85.221.66
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JmmoOooQ"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-43638a33157so4220557f8f.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 07:40:13 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bfnTCh/P"
+Received: by mail-wr1-f66.google.com with SMTP id ffacd0b85a97d-436317c80f7so4334345f8f.1
+        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 07:40:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1771342812; x=1771947612; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1771342817; x=1771947617; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :content-language:from:references:cc:to:subject:reply-to:user-agent
          :mime-version:date:message-id:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=ppRI04Iu3sbbEiHUrACiv+HFyJ+09EOEv1pAadTo60c=;
-        b=JmmoOooQGFcPVsjOJ+lx/igi/h3lwi+mIJc5UHRTdtzjegU42q0wpLRc5NG2v5BtLp
-         s9Om3CyMqdzmTWdoQ2YzGQ4MonexPosH9jovS1MIEunQ6VURad09lZr8lJ6VQ+/W4h0S
-         cl9P9SEp8DyxSHyzk5ZHtNp+MLWqRqKnKS5X4rBr+N+AHabEIdPi630VaAJcsbNWvomn
-         Tqb+h/BbjaLvOYP0mOMPe3ZWmWrhQyDI7Gbd4r0s2tcldRJ59jH5NrbpthOBXHk8am0S
-         UPtTuNvy9ds307HeIojY6dLmBlgO/fMnHQTmWp1U/+ZYfOysxPPy2BLF3c1tu499mZN/
-         UWhA==
+        bh=HkqHe1XyX/ctvoneyaOWC6ZPxkehSDSZz4eMTlKnIo8=;
+        b=bfnTCh/PZ3P/sQPror+VmybRX2ljMM5Mj9G9jRAxj8+nxpT4JrOU1Ar4+RV08D3XcY
+         N+TuQTY/R8S61c2tBBsh6HGYIZX6JR+8VAgEniWprqEj18kGYZGPXBXcWOtsikbns9Uo
+         3/KbdI7ymNhV7wOroILIdvZTTIuD1MVlZ+LMkAHQBwTAk5sD7Xe1ofwvj/pUKLXtq9RT
+         bJP7CiaV9Ddn3jbAmUp/k15ZW7GBexYC+OVz1rmcOHxkLdNXVr9n4jCRfYuagrSLyVx+
+         +0MCqnHytKRo4SE8+rY3LQHySANcCP/1ab3c/BkmuIes7hI4EZPAvyfVKkVw6GanKFHO
+         GR9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771342812; x=1771947612;
+        d=1e100.net; s=20230601; t=1771342817; x=1771947617;
         h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :content-language:from:references:cc:to:subject:reply-to:user-agent
          :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ppRI04Iu3sbbEiHUrACiv+HFyJ+09EOEv1pAadTo60c=;
-        b=ensEdlce67yfnPVGQsh/Du44YgDYnOhwF4UAPJB3ZoLMCDBMGSpGHDGe7LATJhE8Kt
-         dhJNQZjyYy+8LyeNix9ct/vxZxqIE3nvG+bjf3dFRH/x5mKXm11+YEo6MPLKbUBH2lT/
-         IGlWNBdn7O71pejss0FC5sOfSZsvLeBgkOhtQqHk420TUvTCgZZeGUb1NaIBQY9O4XHd
-         xTP+51LjmMzH3+CMwsGgLKF+ctoEfrarY86PECVjT0nbKqPVfN3gxNV6U0reHM3VO7PU
-         WBSFAkNsycdP6LdIjbt6/YM5KJZazAhD66JeiQO23w7pFvWxtRG+5T2EUd1N4J5pmezw
-         qz4Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVapMtWTqc4l2xa2/bogTVSz+bHaUeCKsQSU+DZxcQxYVF6siP6qjryU2jbe8gCkKY7kHuILIbLrkQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzsOOwAyP8PuebAB0CFd3GL2Ewx3RxBtfg3fnQkh8b8bWa/bEbc
-	LG0JDyl2IeEBw/Y2ugFu74TGTPk6JPd61ug3ctxIVLtqx8ZtsUyoap8xQkd0aw5RWQ8=
-X-Gm-Gg: AZuq6aIGliI6K6wlj43YHaKX4zECpLI3d8rYWO+hDkoif9WVadi4nEyH+PMkbOme92I
-	QMhmSIEo3DWsfYiYltjeLuLTigXZXmHf+tZK7z4FnTvOZCuNgJ/Hg7LkEdIrMvQfuWx/U50vp7+
-	VOa93ourRatanfLFdCkaZXy8GMYiWbp4NX1sbehd7bdAS+n4vxhKqLPzdE/eK5QAZSmLl22vNYU
-	4jc2LaWIOV1fV5ovpKvZt+Dw2WLyCbW1rq8VGdCIIvJ+LlUHBP/p5YZhZfKFuv7+bAM5e+g1e/k
-	ArrRl0Iuu8JIMTbxiNEnivyKET1Oh8pBAieDjsexUbwDhfKnCZSMyvuskbNm4Hr2QJOUuOMPS+O
-	bvqp4IwgtWO/A+7kNBWlaYTMuHOHR5LH/qgF/ly0VHTsAMT1TLxLhI2Gtxd+S2TVa6sA3jK5HmZ
-	QcXVaJ5DUFEwJJQI4lNS0haYFRphvnmwO4vCMprQ1y2hc/7DICAPF7my+pNII1tmOatRLkL9K4F
-	fSySg==
-X-Received: by 2002:a5d:5d11:0:b0:436:34e8:e665 with SMTP id ffacd0b85a97d-43797943442mr28768881f8f.54.1771342811730;
-        Tue, 17 Feb 2026 07:40:11 -0800 (PST)
+        bh=HkqHe1XyX/ctvoneyaOWC6ZPxkehSDSZz4eMTlKnIo8=;
+        b=V1RsweelDsjrAazkHRBT65wVjV2O+y6Ep/R3+YMC4sAI0MVN9wQ81XLbbimoXqItFB
+         TUjK3kCdIZLoSlNUuaeYEhZthSBIQ1ko8ZkD/CT4Dau6q1Z24y+zGaExNKqK3AWjo0VS
+         itSsh95IqDpAoVZnTy4joVETE4ji2ofYYhmIrk1qErwRjfCoIbxmEQge0FD1tgPnzciP
+         vZdnsZO+tlg7GVMbAzUbFSp2RSWQmwRiVccYqOsdVbdkkvVJvsdBtqsbPwGpo2TySHse
+         yXC1YemqVzrvKjC5xJSwvzfEXKghqBS9NPhfj+gAB9LflFu0r75nUAaxSKvjlMukmHc1
+         4AMw==
+X-Gm-Message-State: AOJu0Ywo/GOrORBfnd+88DinHAj/qk8Y41zmF/leQZ9LAfKQEkR4tO9D
+	zli+1HUCqk3gHYjodLUt/tGvi17NY5Sdx4GkxUDsuq5bd9MSpk79eShFucrXf4bjbbM=
+X-Gm-Gg: AZuq6aLz7kYZ9u59nyMGlGqfPDZDl2bWWhtyfJVifIipBrzt8n+bsFZ+sXveaYxIf9/
+	OzZi0liAYACrEKsAGfomI75AdUlO24SsGhDM6oawljWpvTC9vn2eSIHVnPnt3gNFvTRlJ4bqwTS
+	euAZJA+fHJCe1DBuK/jgxKG70NU/Qz7WMbklQI9HY2byXsph0/CYdoI7rQmNXv1e6cqYFcb6N8P
+	8gIzpO+TvdNL05R7jrMauu12bEjl03EmxbHxkT40az25m0Qza02Ro4Dz9FmKs7Sk21DxmFAl67c
+	j03y4Zlbwp29DVtv07TM8EwQleYlXVcX96zJx71oJYmBAyQQ0b5ftPTd4fnrNibP9hYsKyS2im3
+	pAZztSCExHmbnB0ok9h/6bHWLsXJfgSH/9JNXa4dkcRVvWp/96xGwcPLEeUcBDUlvgFyycMyqAV
+	x/eOHZz6qlgGP+0BFsE4Kn/ESvSJiEAYxZO+uyAukvuPFVwQP6nPr7lR0U2QuvRRWG7Mh2/RPwu
+	96JnENF3uEkC76f
+X-Received: by 2002:a05:6000:2890:b0:436:1405:3ef8 with SMTP id ffacd0b85a97d-4379d5da8bdmr24192213f8f.1.1771342817327;
+        Tue, 17 Feb 2026 07:40:17 -0800 (PST)
 Received: from ?IPV6:2a01:e0a:106d:1080:72a2:f5f2:e023:2a2e? ([2a01:e0a:106d:1080:72a2:f5f2:e023:2a2e])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43796ad009bsm34212046f8f.39.2026.02.17.07.40.11
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43796ad009bsm34212046f8f.39.2026.02.17.07.40.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Feb 2026 07:40:11 -0800 (PST)
-Message-ID: <66da94f1-7016-4fe6-bab0-693b55adc05d@linaro.org>
-Date: Tue, 17 Feb 2026 16:40:10 +0100
+        Tue, 17 Feb 2026 07:40:17 -0800 (PST)
+Message-ID: <12f8346f-3df4-4081-a009-7a3ca83e2c36@linaro.org>
+Date: Tue, 17 Feb 2026 16:40:16 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,15 +69,19 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
 Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH v2] PCI: dwc: Proceed with system suspend even if the
- endpoint doesn't respond with PME_TO_Ack message
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
- kwilczynski@kernel.org, bhelgaas@google.com
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260217113142.9140-1-manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH v2 0/5] PCI: qcom: Add D3cold support
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Will Deacon <will@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ jonathanh@nvidia.com, bjorn.andersson@oss.qualcomm.com
+References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
+From: Neil Armstrong <neil.armstrong@linaro.org>
 Content-Language: en-US, fr
 Autocrypt: addr=neil.armstrong@linaro.org; keydata=
  xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
@@ -105,53 +108,91 @@ Autocrypt: addr=neil.armstrong@linaro.org; keydata=
  4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
  QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
 Organization: Linaro
-In-Reply-To: <20260217113142.9140-1-manivannan.sadhasivam@oss.qualcomm.com>
+In-Reply-To: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2/17/26 12:31, Manivannan Sadhasivam wrote:
-> PCIe spec r7.0, sec 5.3.3.2.1, recommends proceeding with L2/L3 sequence
-> even if one or devices do not respond with PME_TO_Ack message after 10ms
-> timeout.
+On 2/17/26 12:19, Krishna Chaitanya Chundru wrote:
+> This series adds support for putting Qualcomm PCIe host bridges into D3cold
+> when downstream conditions allow it, and introduces a small common helper
+> to determine D3cold eligibility based on endpoint state.
 > 
-> So just print a warning if the timeout happens and proceed with the system
-> suspend.
+> On Qualcomm platforms, PCIe host controllers are currently kept powered
+> even when there are no active endpoints (i.e. all endpoints are already in
+> PCI_D3hot). This prevents the SoC from entering deeper low‑power states
+> such as CXPC.
 > 
-> Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> While PCIe D3cold support exists in the PCI core, host controller drivers
+> lack a common mechanism to determine whether it is safe to power off the
+> host bridge without breaking active devices or wakeup functionality.
+> As a result, controllers either avoid entering D3cold or depend on rough,
+> driver‑specific workarounds.
+> 
+> This series addresses that gap.
+> 
+> 1. Introduces pci_host_common_can_enter_d3cold(), a helper that determines
+>     whether a host bridge may enter D3cold based on downstream PCIe endpoint
+>     state. The helper permits D3cold only when all *active* endpoints are
+>     already in PCI_D3hot, and any wakeup‑enabled endpoint supports PME
+>     from D3cold.
+> 
+> 2. Updates the Designware PCIe host driver to use this helper in the
+>     suspend_noirq() path, replacing the existing heuristic that blocked
+>     D3cold whenever L1 ASPM was enabled.
+> 
+> 3. Enables D3cold support for Qualcomm PCIe controllers by wiring them into
+>     the DesignWare common suspend/resume flow and explicitly powering down
+>     controller resources when all endpoints are in D3hot.
+> 
+> The immediate outcome of this series is that Qualcomm PCIe host bridges can
+> enter D3cold when all endpoints are in D3hot.
+> 
+> This is a necessary but not sufficient step toward unblocking CXPC. With
+> this series applied, CXPC can be achieved on systems with no attached NVMe
+> devices. Support for NVMe‑attached systems requires additional changes
+> in NVMe driver, which are being worked on separately.
+> 
+> Tested on:
+>    - Qualcomm Lemans EVK, Monaco & sc7280 platforms.
+> 
+> Validation steps:
+>    - Boot without NVMe attach:
+>        * PCIe host enters D3cold during suspend
+>        * SoC is able to reach CXPC provided other drivers also remove
+> 	their votes as part of suspend.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 > ---
-> 
 > Changes in v2:
+> - Updated the cover letter (Bjorn Andersson)
+> - Add get_ltssm helper function to read LTSSM state from parf.
+> - Allow D3cold if there is no driver enabled for a endpoint.
+> - Added a seperate patch to make phy down in deinit part to avoid power
+>    leakage.
+> - Revert icc bw voting if resume fails(Bjorn Andersson).
+> - Link to v1: https://lore.kernel.org/r/20260128-d3cold-v1-0-dd8f3f0ce824@oss.qualcomm.com
 > 
-> * Added 'ret = 0' to avoid failing callers
+> ---
+> Krishna Chaitanya Chundru (5):
+>        PCI: host-common: Add helper to determine host bridge D3cold eligibility
+>        PCI: dwc: Use common D3cold eligibility helper in suspend path
+>        PCI: qcom: Add .get_ltssm() helper
+>        PCI: qcom: Power down PHY via PARF_PHY_CTRL before disabling rails/clocks
+>        PCI: qcom: Add D3cold support
 > 
->   drivers/pci/controller/dwc/pcie-designware-host.c | 10 +++++++---
->   1 file changed, 7 insertions(+), 3 deletions(-)
+>   drivers/pci/controller/dwc/pcie-designware-host.c |   9 +-
+>   drivers/pci/controller/dwc/pcie-qcom.c            | 162 +++++++++++++++-------
+>   drivers/pci/controller/pci-host-common.c          |  45 ++++++
+>   drivers/pci/controller/pci-host-common.h          |   2 +
+>   4 files changed, 162 insertions(+), 56 deletions(-)
+> ---
+> base-commit: 9702969978695d9a699a1f34771580cdbb153b33
+> change-id: 20251229-d3cold-bf99921960bb
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 6ae6189e9b8a..ba183fc3e77c 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -1256,9 +1256,13 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->   				PCIE_PME_TO_L2_TIMEOUT_US/10,
->   				PCIE_PME_TO_L2_TIMEOUT_US, false, pci);
->   	if (ret) {
-> -		/* Only log message when LTSSM isn't in DETECT or POLL */
-> -		dev_err(pci->dev, "Timeout waiting for L2 entry! LTSSM: 0x%x\n", val);
-> -		return ret;
-> +		/*
-> +		 * Failure is non-fatal since spec r7.0, sec 5.3.3.2.1,
-> +		 * recommends proceeding with L2/L3 sequence even if one or more
-> +		 * devices do not respond with PME_TO_Ack after 10ms timeout.
-> +		 */
-> +		dev_warn(pci->dev, "Timeout waiting for L2 entry! LTSSM: 0x%x\n", val);
-> +		ret = 0;
->   	}
->   
->   	/*
+> Best regards,
 
-Allows ath12k to go ind3cold with [1]:
+With [1] to allow ath12k to go in d3cold:
 
 Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-HDK
 
-[1] https://lore.kernel.org/all/20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com/
+[1] https://lore.kernel.org/all/20260217113142.9140-1-manivannan.sadhasivam@oss.qualcomm.com/
