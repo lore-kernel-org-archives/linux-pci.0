@@ -1,86 +1,85 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CC2B330672
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 11:19:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819BF32C33A
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 11:19:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771327175; cv=none; b=WuTdMVJ/GLq0lK2pWVdyIOnOC4MW3IDCDOvJ7E8bwZqGX1OnK7+g8CvMy0wE81mtXZHLaxPn8UzFJC1Wy+mH9MJvF9ZlrTMJJZKeuaIGc8U/7NyP22BUmsvF3/tfbKZA+l+QK/G/e4uXSOxh5TmLgnzW4PvWg2r+igv0Q1D0BBk=
+	t=1771327178; cv=none; b=fWLtnxNGCV0/0UWsizjkVzYxTHFNxwLFO7izd3tKoyoWFWQR8xo+ACt9k+B3mkQYlka2Xi6CQ7pWV10R6TV3gtHHQAV9dZVbhmC4v1rRQWm2N7710+EL+5s7lk9rNuYZ+P6sw2lvpjYhpClEe5Fv7Vq/bvpcgGzSrlH59/WeYss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771327175; c=relaxed/simple;
-	bh=RI4q6fSSubOmDgNNa0gqplTxflnkQiZtd27PDlBbjys=;
+	s=arc-20240116; t=1771327178; c=relaxed/simple;
+	bh=IAVEMPt0tOVYVQCFgBm15tr3uSMRBtLlDbxbCnOFZrQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=oRB710n3c2CdwupbUYoihssyUtvyEbg72TLUSli6JMoqqGGZKdYYVjE8iWbt/3v+0mmaEnAoqjez61o/dmaEZ5DRT78BoIsUykFri06y2FhHDA7ZygP7TJDJ5wtlW7jktk0q6L0TCsDbknufk/p74R3yY2DW5pA/qg4WMkdBjSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=NEL5cgui; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=eFtmxDb7; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:Cc; b=BLuWD/T6nHyE/U5wWqljOiYfru6ONdETmaBTVoisc3kp/8WDMSkM0HJI0NSA+97qDYcNPToOJpN0XVX98dLATvcYN1b5OCspRIIuK4lrNhNOHPgQ4dyhcZf5vGXBmjf7Ds3fYUMYW2OtfZ1dhOGSNGdYjaGbnN23P50xN9jl2sA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UsNyqI0P; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=boqNUyMY; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="NEL5cgui";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="eFtmxDb7"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UsNyqI0P";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="boqNUyMY"
 Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61H8ihw3288959
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 11:19:32 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61H96fMO287788
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 11:19:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Ufl5jZDzffZq1Bxrg/McQqGCvj9/TyQy203e6kES/BI=; b=NEL5cguilh1bR/cM
-	a7PuV9BQ7AW0HX4J9m2MdiGrG7Fp46J7YHAotQdZJ99z6/tpvSWGq5aapmVf6WIl
-	mVHE48iPMzUegKNvvF+8XDpPBV7klhOu65cFgU4kb6HhUepYDIuWqTZE6VLlc/7E
-	1gSBeEnAA2psW0prH43t/H3TNRGYcS+PAIrHPpicWQV4fbanLwIBkdwOVheoo7xx
-	tw93XnNt/gsh6CuvrcyOLmlr7h14cePr5rCZVtXh5r+F1JrWOVvFrcdYlnebaykL
-	DsrkIZ/OWeTcCqUv5blkxgBJfWSGrZxbch77/zrE+qeiuACaIloYhimyD/+pAOzX
-	DrcxeA==
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cc6nrt23r-1
+	rMBPdn2LsAmivgwpb9UlFxbQ9zyThXTU/1K9VkXS3k0=; b=UsNyqI0Pm/RmWoKl
+	ymA2wqIzXteu5X5pBcvJ6asNk1aNLXpsaFUORhO3J/G24jq7mbr7a8smaMha9G3+
+	LaBYZlcaXmO/UtpQ7ZlD+48WYGsmSUS6MlVLZV+Uff1Uo89y4/mqxccHU8jwYZLt
+	3nW+V6heBwywIxUGP/zKp/TAfkoiBW6yDjjG2MoHCi3mJJdzjTLctRzkfl47WsJ5
+	n7rUHjnIEIKzriLWiCYYQ1JMK5UZma7bHyKlq20eiI0nG+J1L0wj2hrCG1GQaCtP
+	KltZ6j0esTAhfMDt8hwm7mFOBrbDVX35HC820e4+l2dVh3hjUEWMIR7sVQMak2U8
+	ce/Udw==
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cc6nrt23y-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 11:19:32 +0000 (GMT)
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-824a02e4d29so1844956b3a.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 03:19:31 -0800 (PST)
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 11:19:36 +0000 (GMT)
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-824ae2c9ff4so10646697b3a.0
+        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 03:19:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1771327171; x=1771931971; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1771327176; x=1771931976; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Ufl5jZDzffZq1Bxrg/McQqGCvj9/TyQy203e6kES/BI=;
-        b=eFtmxDb79BG5Rkqb+xGKLy77w0mcHOeZHZpr53xwMaCNvO1qM2ebhnXIbpL6FmHcfb
-         fAuQQRfN9E7eUnjL/FFV0HgzDHPMyGYmN9nV8aZN+86eKUjl96FtzJIEuhvNWpyC4C0e
-         lrfXl10UwcBi9cfyquWlfkpt/4PJN7qbF1RD4T+J4BV3U8TyWdKKM/0x/fkkSyrb4dQk
-         tvUrCd8KVqu8hgbl+f9y+DZYR0afaJv3DMn4t8XhABBU/FIqy3XQUjnzRxKoDOzFQXsU
-         5bnoGzTbKx8n7gaXhMwjP9Cwsp8SAXDqULS3bRgREeywW7UOnHkmqZMD8txrW6R/3oZc
-         TESw==
+        bh=rMBPdn2LsAmivgwpb9UlFxbQ9zyThXTU/1K9VkXS3k0=;
+        b=boqNUyMYdAFS+DFLCLUgqd1vX01La8ck8o3gdMKc2L9Bz97W2ZxQicBDKmHRoZl7ZU
+         sO/EQKjAcIydcTNnBCz8NK60uEW7FNF4ySsA+nVFPW7N2p33lzsF3SUH7OLVXPaCRHbZ
+         6Rxcpe5iiFx8cIQypokIOzoHs93ss/uK2yKob+V72QhRQ8dBM15Jwx4TpBtKyCv6+YIK
+         oIIQMkhIMokpELWulMx1dhbc1WnM6byplLUGkn5VSCAzgtNTvBPhoWKr84epY1KMgxAs
+         QhkjZnNanRAanoRtzzjtFSmNBODaSxRL2hgbXXVbjo2LzW596n2Pj/cl2mN0gB/UI5LO
+         pRuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771327171; x=1771931971;
+        d=1e100.net; s=20230601; t=1771327176; x=1771931976;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=Ufl5jZDzffZq1Bxrg/McQqGCvj9/TyQy203e6kES/BI=;
-        b=f5eSIv++G4kWP0pSum908rfPt63ymtioktt/iGyqzcpLbHTKA9LTPmoaGPpxYcRocq
-         BB3VSyzZDCyNRQbQXM6X4z+GPspm1VwiSYiAioNGBOGRTgZctw+S/n9BC4Dm3heBF751
-         qEFx70ulF+yTzzo6mpEFbGwz2bl1XiaVxOxtSG80GNKQoEyiHXeZjG5A0uQBApB5PBhM
-         6NKwAy23k8LVloUjoc7inTQJw7y18A1LOKh9iOFQoxAUh9jpHvftj44Q0kZ6DRjxnKKp
-         TirqmA0C6x1BUT0qIZG5WHMIT2H3w6ZWFCMrb7DmeopRyjDz7DxCk9aMnCx4YlFCrEtA
-         SKdA==
-X-Gm-Message-State: AOJu0Yw5HfnRBHr7DIrRJT7rSV00JpvItTiyf86gQvBfG7k0SP+wzhtr
-	RpCla/eTEDgWRqVfwpLbLCAivHcM3CkvymGvjm/s3Wztg2QabyxBc4gzYa+TPEZwwLNNDFZaTHM
-	aUhhLSE5vzUd6IdTTfYVOkyY9UjIEafgLHpe8fWNg3DxDYzdx+tgIz5cmT0WchxQ=
-X-Gm-Gg: AZuq6aL6pM8jfvz3uJcXWPBLXfwGoq7dzq/ZSbUGfdaMUAf8LeAZ48Sk5Mcoxe4mRY7
-	qYR04nDqPOaaKOmf/TOoTNloXszQPbEFA1Slau2GyzfPCrS+++EL5TWqVKXn9ctMX4EvRvdhDBK
-	jY0ee1Ipl74XB7aqPIw5fPQr1VonJENjxH0zbI88d8jUgwxPdHm/Ub6IYbyBk+6iN0pfbocpg2t
-	fD4Q69YxyV+PuwJR+Lka1kX7aD+u6MjlsH9znd15Uut0upXY8YYYMlTaafAgp9IGSNpoPCmWhjH
-	xWK41jup13zsmeznPV/HCB+d9bwtR00Pn7kbs/BjrjIwwPiDLmgKRwYPvk4tjSDNedZJHCX2g2c
-	nPTt/QxXmNTPtF13jDVoJBAYQrC+ws9X1Ai3ImEuOE+akSYZdf3raHVJc
-X-Received: by 2002:a05:6a00:4acd:b0:823:1406:8797 with SMTP id d2e1a72fcca58-824d953488cmr8975252b3a.31.1771327171079;
-        Tue, 17 Feb 2026 03:19:31 -0800 (PST)
-X-Received: by 2002:a05:6a00:4acd:b0:823:1406:8797 with SMTP id d2e1a72fcca58-824d953488cmr8975235b3a.31.1771327170627;
-        Tue, 17 Feb 2026 03:19:30 -0800 (PST)
+        bh=rMBPdn2LsAmivgwpb9UlFxbQ9zyThXTU/1K9VkXS3k0=;
+        b=hpb7OyrHFg0iUUEjKAptsMvyqk85f071KOIkyLNGguj7rGdx7xwPyoStCSwWimWjRW
+         kT4z1ur7aXowCsOb2nuy+AOLQafBa8+t5iz+cakyImbg9+RBYfr4YlnE7tdY9JzIplpW
+         lUsRuxkyr0EpUeuc9tQNpEl4sf+D2gfJVelBIL6PipK74umVHXSbys2Bm/dpuaL6B5EV
+         YcFnckLkmq2tOlyCRSh+TMFCtpZL8CWns9BRtjwj2H/Bnkjx/vWORHVt5wx+o8CRYW4K
+         GGpf1vLcOffrs4bplFXpl8Iip6fNuHbq6l3Tgw0vV5hfueFnZmDMbxr0wKXJn8SDcHFA
+         Tqlw==
+X-Gm-Message-State: AOJu0YzqgdBwk4g7OAS2Y9Rlf3KdHbaxc8cAw+DsaFhjdHLSIJZKnNMT
+	/VWEqaYIvpCrPRg+RLH8qu5jT71i0TTx0WV2yS+r9Ou2jH7z+Ec7pPrYsfZpIs5Y9iPS2JraZEH
+	PfFtqvXE4r6xaOUA412V9XKZ6aEea6VRMORMLk83cXb02+TFs+pzXreq9Il6l41M=
+X-Gm-Gg: AZuq6aIM4C5aS6gI63P7ZCHv4P+BBuVPzlV6QOlyUEJLMNYtb2Xs+aVNX/6/vIyJ+es
+	OXAwNc/AMOhhNG0q9vp63xaSJF1xWlQd0xGtaTTXosDCep8s/xEtz5pokjeR8HTCvijDCN1/gyS
+	o4OdDniSwsmgApGMgJ5t4oPkrr/Sno/fQO24OJvWkdG8sKLTB4zbMO33dQPd8GyDAEVZ+zxkXLq
+	/7qBpIAK4HztxYpxBMeRvDuKHhV7T9TtUyWSw06RA71V/yh72BXaablB1fFl/YqiwMnr+WrKAIZ
+	D1LywHjlxXWfFo5OipsvZ7oo/NqcDW9svENQIqx/jKciIJUP5XtHQfMSZy7MP9eFcwNacIz27Wh
+	y+v1pAGQFRBgEtiLH9g5VLBxKH4luDynTAbOzEeYcUm6Lzgwa2dMdk0Rf
+X-Received: by 2002:a05:6a00:2d28:b0:824:374a:13f7 with SMTP id d2e1a72fcca58-824c613370cmr13273737b3a.55.1771327175578;
+        Tue, 17 Feb 2026 03:19:35 -0800 (PST)
+X-Received: by 2002:a05:6a00:2d28:b0:824:374a:13f7 with SMTP id d2e1a72fcca58-824c613370cmr13273711b3a.55.1771327175048;
+        Tue, 17 Feb 2026 03:19:35 -0800 (PST)
 Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-824c6b9a661sm13181914b3a.50.2026.02.17.03.19.26
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-824c6b9a661sm13181914b3a.50.2026.02.17.03.19.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Feb 2026 03:19:30 -0800 (PST)
+        Tue, 17 Feb 2026 03:19:34 -0800 (PST)
 From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Date: Tue, 17 Feb 2026 16:49:09 +0530
-Subject: [PATCH v2 4/5] PCI: qcom: Power down PHY via PARF_PHY_CTRL before
- disabling rails/clocks
+Date: Tue, 17 Feb 2026 16:49:10 +0530
+Subject: [PATCH v2 5/5] PCI: qcom: Add D3cold support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -89,7 +88,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260217-d3cold-v2-4-89b322864043@oss.qualcomm.com>
+Message-Id: <20260217-d3cold-v2-5-89b322864043@oss.qualcomm.com>
 References: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
 In-Reply-To: <20260217-d3cold-v2-0-89b322864043@oss.qualcomm.com>
 To: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
@@ -102,29 +101,29 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         jonathanh@nvidia.com, bjorn.andersson@oss.qualcomm.com,
         Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1771327148; l=4007;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1771327148; l=6515;
  i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
- bh=RI4q6fSSubOmDgNNa0gqplTxflnkQiZtd27PDlBbjys=;
- b=li0xu+gi3ab5XV55aDVCdK4EDUgeaa7g/6a4LpfP39jcV9HM2K+TWtxoLN665Lm7JJn/gDR6A
- p55CKSh6k9fAoU1f+ldOyKH3B3W6LSkcx7zyXglg17snwRy2jUfcT+Y
+ bh=IAVEMPt0tOVYVQCFgBm15tr3uSMRBtLlDbxbCnOFZrQ=;
+ b=wjF9Ok40l0LOgqKQkkPhl/h8dRDieyHrE+JHl4vXu3qG6H5Qh11tQtZ8Q5SfvNRzzzehxTmMs
+ jJvG1KZaYAcBoHrk9mJo/xorBCcy23VvTGS4SE/tE4tf96AU3a1QeZ7
 X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
  pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
-X-Authority-Analysis: v=2.4 cv=XKo9iAhE c=1 sm=1 tr=0 ts=69944ec4 cx=c_pps
- a=m5Vt/hrsBiPMCU0y4gIsQw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+X-Authority-Analysis: v=2.4 cv=XKo9iAhE c=1 sm=1 tr=0 ts=69944ec8 cx=c_pps
+ a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
  a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
  a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22
- a=EUspDBNiAAAA:8 a=h4B-02p0z56_JbXvspoA:9 a=QEXdDO2ut3YA:10
- a=IoOABgeZipijB_acs4fv:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE3MDA5NCBTYWx0ZWRfX8wzrnIoWUM+s
- g19YfzBCEEQgMmCQHNdxE+B/GRWOUhsSVGoUxvHeCfc25zDnEnUsN8DykhRLQ1jZ2GpuSXXMPT5
- vQsOxIGvTa7r0oSMro2JHMQ3epQ2jDCNMcwu7YI0PeReQIxbnD/318tuSpo0vTUMdr3H+2A9pob
- wuEroujU6T6iriJg60onYD/w0etJE8QhFXBXhRZ/iUsUXs1eEqEn5zsvUSlgT0FWS6+Lw8DAsY7
- 58UOVlHi1edHVWfN0+VR0Ju2Aqqhrz8TzxF+hzbOalxLwJqtnAYOK7V96T1ChO+zKmwdaHNQ13x
- 19wQSTLACW+K4583Dgmcw5pFriZkSILZx95ksdiqq3OqNYvTjki75Btau8x86APbIXgqyfLPhBM
- rEeA4UAnXpSyuqYCdVIExyl/mnzpEg7mYiqQ/xqEnn7pftimJcp0VuSiOi+/UkDSWpDsmxdF2NH
- T5qtEFneZGpwEdfA7QQ==
-X-Proofpoint-ORIG-GUID: uaLTS7NP5Jbs7lCih-AexPB-sE0Zjs7C
-X-Proofpoint-GUID: uaLTS7NP5Jbs7lCih-AexPB-sE0Zjs7C
+ a=EUspDBNiAAAA:8 a=RN3yzfvplrNe8VIVIhoA:9 a=QEXdDO2ut3YA:10
+ a=zc0IvFSfCIW2DFIPzwfm:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE3MDA5NCBTYWx0ZWRfXwwiSs2qpridl
+ WttgRar6I19x7NdDuZ/MlWeiUuNvhK0iCF+Ex/720piyj6NkNDbvPhds5y0PZH7d5VsWC15xQWb
+ gAIvXgekBaTE2L9DC89wkdDU2fKugkbqPVoMFz9sBJTyi/VzgvOIUV+vd/SMjq6gRcsBvWMAOun
+ T8I6NFhrFxjvDv5WRqLmUInCRhIsAmA15LSS8EQro2zqJiAXuqdICODpQ4Cj1rfWXgW+j8rj3CG
+ WlRy25dm8LVH8Jse9pJVBulqfnWI/I3baHewpquMqK6SyKOxpX1yydVaKmGbSS28afjuioTcVUa
+ EBpFk0tpE5haFZejuFpSvkaMLQ1YayfllZU4bc+31Kb+OUUEBj26YIdk3N0ui5v4ST54LbkGuA9
+ IqRtRzE5oJY6Nf1hsIke0k8Y7XcINv+AS1P7tOLCfX2qExAzA5PSCM3oUh0Jpvc0HiF68bBcD24
+ Yubef5XWZXWdgAva/bA==
+X-Proofpoint-ORIG-GUID: r-xi2sJCbWKINQRJPL-L1Qy7a1HUgI-9
+X-Proofpoint-GUID: r-xi2sJCbWKINQRJPL-L1Qy7a1HUgI-9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-17_01,2026-02-16_04,2025-10-01_01
@@ -134,108 +133,210 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602170094
 
-Some Qcom PCIe controller variants bring the PHY out of test power-down
-(PHY_TEST_PWR_DOWN) during init. When the link is later transitioned
-towards D3cold and the driver disables PCIe clocks and/or regulators
-without explicitly re-asserting PHY_TEST_PWR_DOWN, the PHY can remain
-partially powered, leading to avoidable power leakage.
+Add support for transitioning Qcom PCIe controllers into D3cold by
+integrating with the DWC core suspend/resume helpers.
 
-Update the init-path comments to reflect that PARF_PHY_CTRL is used to
-power the PHY on. Also, for controller revisions that enable PHY power
-in init (2.3.2, 2.3.3, 2.7.0 and 2.9.0), explicitly power the PHY down
-via PARF_PHY_CTRL in the deinit path before disabling clocks/regulators.
+Implement PME_TurnOff message generation via ELBI_SYS_CTRL and hook it
+into the DWC host operations so the controller follows the standard
+PME_TurnOff-based power-down sequence before entering D3cold.
 
-This ensures the PHY is put into a defined low-power state prior to
-removing its supplies, preventing leakage when entering D3cold.
+When the link is suspended into D3cold, fully tear down interconnect
+bandwidth, OPP votes. If D3cold is not entered, retain existing behavior
+by keeping the required interconnect and OPP votes.
+
+Drop the qcom_pcie::suspended flag and rely on the existing
+dw_pcie::suspended state, which now drives both the power-management
+flow and the interconnect/OPP handling.
 
 Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 30 +++++++++++++++++++++++++++---
- 1 file changed, 27 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 121 ++++++++++++++++++++-------------
+ 1 file changed, 74 insertions(+), 47 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 2c4dc7134e006d3530a809f1bcc1a6488d4632ad..b02c19bbdf2ea5db252c2a0281a569bb3a0cc497 100644
+index b02c19bbdf2ea5db252c2a0281a569bb3a0cc497..37442bbe588c36b0b0414cc4d0016da2d8424a87 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -513,7 +513,7 @@ static int qcom_pcie_post_init_2_1_0(struct qcom_pcie *pcie)
- 	u32 val;
- 	int ret;
+@@ -145,6 +145,7 @@
  
--	/* enable PCIe clocks and resets */
-+	/* PHY power ON */
- 	val = readl(pcie->parf + PARF_PHY_CTRL);
- 	val &= ~PHY_TEST_PWR_DOWN;
- 	writel(val, pcie->parf + PARF_PHY_CTRL);
-@@ -680,6 +680,12 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
- static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
-+	u32 val;
-+
-+	/* PHY Power down */
-+	val = readl(pcie->parf + PARF_PHY_CTRL);
-+	val |= PHY_TEST_PWR_DOWN;
-+	writel(val, pcie->parf + PARF_PHY_CTRL);
+ /* ELBI_SYS_CTRL register fields */
+ #define ELBI_SYS_CTRL_LT_ENABLE			BIT(0)
++#define ELBI_SYS_CTRL_PME_TURNOFF_MSG		BIT(4)
  
- 	clk_bulk_disable_unprepare(res->num_clks, res->clks);
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-@@ -712,7 +718,7 @@ static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
- {
- 	u32 val;
+ /* AXI_MSTR_RESP_COMP_CTRL0 register fields */
+ #define CFG_REMOTE_RD_REQ_BRIDGE_SIZE_2K	0x4
+@@ -283,7 +284,6 @@ struct qcom_pcie {
+ 	const struct qcom_pcie_cfg *cfg;
+ 	struct dentry *debugfs;
+ 	struct list_head ports;
+-	bool suspended;
+ 	bool use_pm_opp;
+ };
  
--	/* enable PCIe clocks and resets */
-+	/* PHY Power ON */
- 	val = readl(pcie->parf + PARF_PHY_CTRL);
- 	val &= ~PHY_TEST_PWR_DOWN;
- 	writel(val, pcie->parf + PARF_PHY_CTRL);
-@@ -844,6 +850,12 @@ static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
- static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+	u32 val;
-+
-+	/* PHY Power down */
-+	val = readl(pcie->parf + PARF_PHY_CTRL);
-+	val |= PHY_TEST_PWR_DOWN;
-+	writel(val, pcie->parf + PARF_PHY_CTRL);
- 
- 	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+@@ -1401,10 +1401,18 @@ static void qcom_pcie_host_post_init(struct dw_pcie_rp *pp)
+ 		pcie->cfg->ops->host_post_init(pcie);
  }
-@@ -994,7 +1006,7 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 	/* configure PCIe to RC mode */
- 	writel(DEVICE_TYPE_RC, pcie->parf + PARF_DEVICE_TYPE);
  
--	/* enable PCIe clocks and resets */
-+	/* PHY power ON */
- 	val = readl(pcie->parf + PARF_PHY_CTRL);
- 	val &= ~PHY_TEST_PWR_DOWN;
- 	writel(val, pcie->parf + PARF_PHY_CTRL);
-@@ -1065,6 +1077,12 @@ static void qcom_pcie_host_post_init_2_7_0(struct qcom_pcie *pcie)
- static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-+	u32 val;
++static void qcom_pcie_host_pme_turn_off(struct dw_pcie_rp *pp)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
 +
-+	/* PHY Power down */
-+	val = readl(pcie->parf + PARF_PHY_CTRL);
-+	val |= PHY_TEST_PWR_DOWN;
-+	writel(val, pcie->parf + PARF_PHY_CTRL);
- 
- 	clk_bulk_disable_unprepare(res->num_clks, res->clks);
- 
-@@ -1169,6 +1187,12 @@ static int qcom_pcie_get_resources_2_9_0(struct qcom_pcie *pcie)
- static void qcom_pcie_deinit_2_9_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
-+	u32 val;
++	writel(ELBI_SYS_CTRL_PME_TURNOFF_MSG, pci->elbi_base + ELBI_SYS_CTRL);
++}
 +
-+	/* PHY Power down */
-+	val = readl(pcie->parf + PARF_PHY_CTRL);
-+	val |= PHY_TEST_PWR_DOWN;
-+	writel(val, pcie->parf + PARF_PHY_CTRL);
+ static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
+ 	.init		= qcom_pcie_host_init,
+ 	.deinit		= qcom_pcie_host_deinit,
+ 	.post_init	= qcom_pcie_host_post_init,
++	.pme_turn_off	= qcom_pcie_host_pme_turn_off,
+ };
  
- 	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+ /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
+@@ -2069,53 +2077,51 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
+ 	if (!pcie)
+ 		return 0;
+ 
+-	/*
+-	 * Set minimum bandwidth required to keep data path functional during
+-	 * suspend.
+-	 */
+-	if (pcie->icc_mem) {
+-		ret = icc_set_bw(pcie->icc_mem, 0, kBps_to_icc(1));
+-		if (ret) {
+-			dev_err(dev,
+-				"Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
+-				ret);
+-			return ret;
+-		}
+-	}
++	ret = dw_pcie_suspend_noirq(pcie->pci);
++	if (ret)
++		return ret;
+ 
+-	/*
+-	 * Turn OFF the resources only for controllers without active PCIe
+-	 * devices. For controllers with active devices, the resources are kept
+-	 * ON and the link is expected to be in L0/L1 (sub)states.
+-	 *
+-	 * Turning OFF the resources for controllers with active PCIe devices
+-	 * will trigger access violation during the end of the suspend cycle,
+-	 * as kernel tries to access the PCIe devices config space for masking
+-	 * MSIs.
+-	 *
+-	 * Also, it is not desirable to put the link into L2/L3 state as that
+-	 * implies VDD supply will be removed and the devices may go into
+-	 * powerdown state. This will affect the lifetime of the storage devices
+-	 * like NVMe.
+-	 */
+-	if (!dw_pcie_link_up(pcie->pci)) {
+-		qcom_pcie_host_deinit(&pcie->pci->pp);
+-		pcie->suspended = true;
+-	}
++	if (pcie->pci->suspended) {
++		ret = icc_disable(pcie->icc_mem);
++		if (ret)
++			dev_err(dev, "Failed to disable PCIe-MEM interconnect path: %d\n", ret);
+ 
+-	/*
+-	 * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
+-	 * Because on some platforms, DBI access can happen very late during the
+-	 * S2RAM and a non-active CPU-PCIe interconnect path may lead to NoC
+-	 * error.
+-	 */
+-	if (pm_suspend_target_state != PM_SUSPEND_MEM) {
+ 		ret = icc_disable(pcie->icc_cpu);
+ 		if (ret)
+ 			dev_err(dev, "Failed to disable CPU-PCIe interconnect path: %d\n", ret);
+ 
+ 		if (pcie->use_pm_opp)
+ 			dev_pm_opp_set_opp(pcie->pci->dev, NULL);
++	} else {
++		/*
++		 * Set minimum bandwidth required to keep data path functional during
++		 * suspend.
++		 */
++		if (pcie->icc_mem) {
++			ret = icc_set_bw(pcie->icc_mem, 0, kBps_to_icc(1));
++			if (ret) {
++				dev_err(dev,
++					"Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
++					ret);
++				return ret;
++			}
++		}
++
++		/*
++		 * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
++		 * Because on some platforms, DBI access can happen very late during the
++		 * S2RAM and a non-active CPU-PCIe interconnect path may lead to NoC
++		 * error.
++		 */
++		if (pm_suspend_target_state != PM_SUSPEND_MEM) {
++			ret = icc_disable(pcie->icc_cpu);
++			if (ret)
++				dev_err(dev, "Failed to disable CPU-PCIe interconnect path: %d\n",
++					ret);
++
++			if (pcie->use_pm_opp)
++				dev_pm_opp_set_opp(pcie->pci->dev, NULL);
++		}
+ 	}
+ 	return ret;
  }
+@@ -2129,25 +2135,46 @@ static int qcom_pcie_resume_noirq(struct device *dev)
+ 	if (!pcie)
+ 		return 0;
+ 
+-	if (pm_suspend_target_state != PM_SUSPEND_MEM) {
++	if (pcie->pci->suspended) {
+ 		ret = icc_enable(pcie->icc_cpu);
+ 		if (ret) {
+ 			dev_err(dev, "Failed to enable CPU-PCIe interconnect path: %d\n", ret);
+ 			return ret;
+ 		}
+-	}
+ 
+-	if (pcie->suspended) {
+-		ret = qcom_pcie_host_init(&pcie->pci->pp);
+-		if (ret)
+-			return ret;
++		ret = icc_enable(pcie->icc_mem);
++		if (ret) {
++			dev_err(dev, "Failed to enable PCIe-MEM interconnect path: %d\n", ret);
++			goto disable_icc_cpu;
++		}
+ 
+-		pcie->suspended = false;
++		/*
++		 * Ignore -ETIMEDOUT here since it is expected when no endpoint is
++		 * connected to the PCIe link.
++		 */
++		ret = dw_pcie_resume_noirq(pcie->pci);
++		if (ret && (ret != -ETIMEDOUT))
++			goto disable_icc_mem;
++	} else {
++		if (pm_suspend_target_state != PM_SUSPEND_MEM) {
++			ret = icc_enable(pcie->icc_cpu);
++			if (ret) {
++				dev_err(dev, "Failed to enable CPU-PCIe interconnect path: %d\n",
++					ret);
++				return ret;
++			}
++		}
+ 	}
+ 
+ 	qcom_pcie_icc_opp_update(pcie);
+ 
+ 	return 0;
++disable_icc_mem:
++	icc_disable(pcie->icc_mem);
++disable_icc_cpu:
++	icc_disable(pcie->icc_cpu);
++
++	return ret;
+ }
+ 
+ static const struct of_device_id qcom_pcie_match[] = {
 
 -- 
 2.34.1
