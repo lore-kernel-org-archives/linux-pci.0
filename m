@@ -1,254 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7359D299A84
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 18:08:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA711A317D;
+	Tue, 17 Feb 2026 18:09:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771351698; cv=none; b=NAzPvV0WNNPFYCPwg6rgwRyKd5S8ztUhor8vz0p/5lOXzklcuown6ZlweLlxo8LjDOCplPwhn7SF0M9JnfpfbhP5TGFqkpus/ERfFGjIGIUiHP0IOqeiELBHlWeQLmvdLZXKSztc5ZS9NAFWoxP/MDDc0yjetaAgQbHkXYDA1EE=
+	t=1771351799; cv=none; b=q9bYFHOG851iYuUW/Nj/wCKYRUdFjbDzezvzYNwcpw371hEhQ+L2/UZZB6iuOGwj++IrQJGeworhyKfa8dGMiG0lOIBBzgjKlY2uO+fFcwObljs/o0YH/8rZw/kl6Y5tK3GYG+T42dx31Eguo0EhKzdMAseEdfocSpZ4AFah9q4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771351698; c=relaxed/simple;
-	bh=p5jlAeJWQT9jP36UEQY5+BLhULFC1X5SsO1VXhX+J3Q=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dOI0kE6IUoZW75n664Q5eGgEnxCYy9BlzueoqpGdgBGUsR3fQkGrKmZvc0rAkNaRrUwAb+sWNL50V6f4AG6v0CiKPaKodI7PYZr8WnazxmZxBr37SthkZbu8Y1BOykf3YPsE/aeI4WegeKQQI9IIavkMLP2fd3hn0HTbnZy9l3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PPnX4YSB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771351799; c=relaxed/simple;
+	bh=NaoDLfmTaxs/N1GB34EEql1MFaxLE8IQ8fe/MwDgm2c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NaTuHBURf+FGWCGWpBjcvYGSmsj50Sqg9gJ0471DzD0AvBZbaAVW6i+O08GSscUX8GorKsgvZbXuSPTqdLJ+Gbswu5RUz6B/MoDljy81/JWlz23Y7jH9I+zIjQ2+bYdnIt060yWVpA4tSrA1wPD+9fF/jM1zrrzE2+fCXPVNvIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KKhLOm9C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PPnX4YSB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30D22C4CEF7
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 18:08:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KKhLOm9C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 923DAC4CEF7;
+	Tue, 17 Feb 2026 18:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771351698;
-	bh=p5jlAeJWQT9jP36UEQY5+BLhULFC1X5SsO1VXhX+J3Q=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=PPnX4YSBjB+vIgvQVz5AeLwAul7wkZwJZ4GZ5r/mgjP00uHlM4SGOWjMfwwg6TfPi
-	 Zprgk0kS7vWftAChkfS8Jdmt0h5iV5eSF5SBDJPRcG+iwkXHsLHpedGtxOtJz9yd2a
-	 MzzkiN5C/XmeFNL9CL8w3XCVIg8ONTVHM6le7o7WXZ2g1rhJJtpMirTGYe3vT64ui9
-	 /XVsHWbJjTCRXN30Ps6p8owndjVp6f0WYOMuNp+DTu3RMHM7O9AlmMOK3fmUSneuB4
-	 6LF6rPDnnLIlo33m27qQ+OKKMagL0yA1gt3y3s+lGncvykni8og/r4uH714XFrZLcA
-	 jvHu19NqwKDRw==
-Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7d4bc6a8021so3550581a34.3
-        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 10:08:18 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVGQQMEQQi+8uhw+/X1cxJyHjIRFPbhUXOZ/xmcbbClT1p2JuDNH09n6qKWXAduK77S8BgNf5AAkfQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyNVd2lp5Zgyfzr/MA+8NREKDEM8ya5urOUh6Z1mFMparV9hKKm
-	qqt6pS7S0be+d5dGQ+RDZyh1txLIoCzgFCfuD4nSmj7t7FOxDqykc2NBqcQ4gp+pPv2edDVOTE+
-	kMLwxOX5cPu6KLjg1XgJp6QD4/tL/CsE=
-X-Received: by 2002:a05:6820:3095:b0:662:c0f7:bee1 with SMTP id
- 006d021491bc7-67859a88133mr6052382eaf.26.1771351697181; Tue, 17 Feb 2026
- 10:08:17 -0800 (PST)
+	s=k20201202; t=1771351799;
+	bh=NaoDLfmTaxs/N1GB34EEql1MFaxLE8IQ8fe/MwDgm2c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KKhLOm9CfWyfDy/SNQrhAAqeVMc4Zbn2BTIvi6JgFfIokzCl5Yvkf4eKPqTthmM1B
+	 aA3CwgxckINN5vdBPi1WowveecpoSumJiuTH9RF32rZYslUCikIMDT0lLrTcOO3Zyi
+	 44+x8OMacfxm8u9RZHukZZJg3XnvM36GDugoG6lBta6ZAoASJmZtEIw4TduxbWckKh
+	 ybeHLa58fQn78nQgX1/eyCY0kI9z+yniOJ0xp5Su/6NV9HtZGk5jmPSsqGqfcNIxFf
+	 inhItfD3getqHs6yHh+sXdu+pK4oc5fKpIKXTwIxN6OX6i1NSO++mIsMDwzl/zTzuW
+	 q9C9JNssm+UfA==
+Date: Tue, 17 Feb 2026 12:09:56 -0600
+From: Bjorn Andersson <andersson@kernel.org>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
+Subject: Re: [PATCH 2/2] PCI/pwrctrl: Only create pwrctrl device if the
+ device node is of type "pci"
+Message-ID: <jmy7rvoatiyvqjfhd27vqqbu64glnksyl23j2akrdb7iet3oqx@c5jxbrplubd3>
+References: <20260217-pwrctrl-fixes-7-0-v1-0-b5671e58934f@oss.qualcomm.com>
+ <20260217-pwrctrl-fixes-7-0-v1-2-b5671e58934f@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com>
-In-Reply-To: <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 17 Feb 2026 19:08:06 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
-X-Gm-Features: AaiRm50VBLOxg_JalVLz0F1rUg6ugsQjBC2M2nOiIbDavrZqpQwZovep0jNjUD8
-Message-ID: <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
- unreliable PME status
-To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki" <rafael@kernel.org>, 
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260217-pwrctrl-fixes-7-0-v1-2-b5671e58934f@oss.qualcomm.com>
 
-On Tue, Feb 17, 2026 at 5:54=E2=80=AFPM Kuppuswamy Sathyanarayanan
-<sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
->
-> Hi Rafael,
->
-> On 2/13/2026 3:14 PM, Kuppuswamy Sathyanarayanan wrote:
-> > On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
-> > update PME status registers (PME Status and PME Requester_ID in the
-> > Root Status register) during D3hot to D0 transitions, even though PME
-> > interrupts are delivered correctly.
-> >
-> > This issue manifests during PCIe hotplug operations as follows:
-> >
-> > 1. After a hot-remove event, the PCIe port transitions to D3hot and
-> >    the hotplug interrupt enable (HPIE) flag is disabled as the port
-> >    enters low power state.
-> >
-> > 2. When a hot-add occurs while the port is in D3hot, a PME interrupt
-> >    fires as expected to wake the port.
-> >
-> > 3. However, the PME interrupt handler finds the PME_Status and
-> >    PME_Requester_ID registers unpopulated, preventing identification
-> >    of which device triggered the PME. The handler returns IRQ_NONE,
-> >    leaving the port in D3hot.
+On Tue, Feb 17, 2026 at 03:48:47PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> The PCI host bridge node can have non-PCI child nodes as well, like OPP
+> tables, USB controller node etc...
 
-I think that you mean the
+Yes, but the usb-controller in my case is a PCI child and should be
+pwrctrl'ed. The entity that I don't want pcictrl to handle is the HUB
+child on the USB bus.
 
-if (PCI_POSSIBLE_ERROR(rtsta) || !(rtsta & PCI_EXP_RTSTA_PME))
+> So the pwrctrl core must check for the
+> presence of 'device_type' property with value of "pci" to ensure that the
+> pwrctrl device is only created for PCI device nodes.
+> 
+> Fixes: 4c4132489201 ("PCI/pwrctrl: Add APIs to create, destroy pwrctrl devices")
+> Reported-by: Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
+> Closes: https://lore.kernel.org/all/20260212-rb3gen2-upd-gl3590-v1-1-18fb04bb32b0@oss.qualcomm.com
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+>  drivers/pci/pwrctrl/core.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
+> index 8325858cc379..7404d48427ce 100644
+> --- a/drivers/pci/pwrctrl/core.c
+> +++ b/drivers/pci/pwrctrl/core.c
+> @@ -272,8 +272,9 @@ EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
+>   * Check whether the pwrctrl device really needs to be created or not. The
+>   * pwrctrl device will only be created if the node satisfies below requirements:
+>   *
+> - * 1. Presence of compatible property to match against the pwrctrl driver (AND)
+> - * 2. At least one of the power supplies defined in the devicetree node of the
+> + * 1. Presence of 'device_type = "pci"' property to identify PCI node (AND)
+> + * 2. Presence of compatible property to match against the pwrctrl driver (AND)
+> + * 3. At least one of the power supplies defined in the devicetree node of the
+>   *    device (OR) in the remote endpoint parent node to indicate pwrctrl
+>   *    requirement.
+>   */
+> @@ -281,6 +282,9 @@ static bool pci_pwrctrl_is_required(struct device_node *np)
+>  {
+>  	struct device_node *endpoint;
+>  
+> +	if (!of_node_is_type(np, "pci"))
+> +		return false;
 
-check in pcie_pme_irq().  Or do you mean something else?
+This "solves" my problem by no longer attempting to power on the
+onboard_hub. But it also ensures that Neil's added μPD720201 power
+controller doesn't power on.
 
-An alternative workaround might be to add a (new) "always poll PME"
-flag for the port in question that will cause it to go to pci_pme_list
-in pci_pme_active() every time wakeup is enabled (essentially, an
-override for pme_poll clearing).
+This is based on the expectation that I shouldn't mark the PCI device
+(the μPD720201) as device_type = "pci", right? (Doing so makes dtc barf,
+but the μPD720201 is powered up, and functional).
 
-> > 4. Because the port remains in D3hot with HPIE disabled, the hotplug
-> >    driver ignores the hot-add event, resulting in the newly inserted
-> >    device not being recognized.
-> >
-> > The PME interrupt delivery mechanism itself works correctly;
-> > interrupts arrive reliably. The problem is purely the missing status
-> > register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
-> > reads confirms that these registers remain empty when the PME
-> > interrupt fires. Neither BIOS nor kernel code is clearing these
-> > registers.
-> >
-> > This issue is present in all steppings of Catlow Lake PCH and affects
-> > customers in production deployments. A public hardware errata document
-> > is not yet available.
-> >
-> > Work around this issue by disabling runtime PM for affected ports,
-> > keeping them in D0 during runtime operation. This ensures hotplug
-> > events are handled via direct interrupts rather than relying on
-> > unreliable PME-based wakeup.
-> >
-> > During system suspend/resume, PCIe ports are resumed unconditionally
-> > when coming out of system sleep due to DPM_FLAG_SMART_SUSPEND set by
-> > pcie_portdrv_probe(), and pciehp re-enables interrupts and checks slot
-> > occupation status during resume.
-> >
-> > The quirk is applied only to Catlow PCH PCIe root ports (device IDs
-> > 0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
-> > they are not hotplug-capable.
-> >
-> > Suggested-by: Lukas Wunner <lukas@wunner.de>
-> > Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@l=
-inux.intel.com>
-> > ---
->
-> Could you please review this patch and let us know if calling
-> pm_runtime_disable() from a PCI quirk is acceptable?
->
-> The quirk keeps specific Catlow Lake PCH PCIe root ports in D0 to
-> work around a hardware bug where PME status registers are not reliably
-> updated during D3hot to D0 transitions, causing hotplug events to be
-> missed.
->
-> System suspend/resume is unaffected as DPM_FLAG_SMART_SUSPEND ensures
-> ports are resumed unconditionally and pciehp checks slot occupation
-> on resume.
->
->
-> >
-> > Changes since v1:
-> >  * Removed hack in hotplug driver and disabled runtime PM on affected p=
-orts.
-> >  * Fixed the commit log and comments accordingly.
-> >
-> >  drivers/pci/quirks.c | 49 ++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 49 insertions(+)
-> >
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 280cd50d693b..779cd65b1a8a 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -6340,3 +6340,52 @@ static void pci_mask_replay_timer_timeout(struct=
- pci_dev *pdev)
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_tim=
-er_timeout);
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_tim=
-er_timeout);
-> >  #endif
-> > +
-> > +/*
-> > + * Intel Catlow Lake PCH PCIe root ports have a hardware issue where
-> > + * PME status registers (PME Status and PME Requester_ID in Root Statu=
-s)
-> > + * are not reliably updated during D3hot to D0 transitions, even thoug=
-h
-> > + * PME interrupts are delivered correctly.
-> > + *
-> > + * When a hotplug event occurs while the port is in D3hot, the PME
-> > + * interrupt fires but the status registers remain empty. This prevent=
-s
-> > + * the PME handler from identifying the event source, leaving the port
-> > + * in D3hot and causing the hotplug driver to miss the event.
-> > + *
-> > + * Disable runtime PM to keep these ports in D0, ensuring hotplug even=
-ts
-> > + * are handled via direct interrupts.
-> > + */
-> > +static void quirk_intel_catlow_pcie_no_pme_wakeup(struct pci_dev *dev)
-> > +{
-> > +     pm_runtime_disable(&dev->dev);
+If this is incorrect, can you please help me understand how the
+usb-controller@0,0 node should look like in
+https://lore.kernel.org/all/20260212-rb3gen2-upd-gl3590-v1-1-18fb04bb32b0@oss.qualcomm.com/
 
-Personally, I would use pm_runtime_get_sync() here instead which would
-really mean "never suspend".
+Regards,
+Bjorn
 
-> > +     pci_info(dev, "Catlow PCH port: PME status unreliable, disabling =
-runtime PM\n");
-> > +}
-> > +/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_intel_catlo=
-w_pcie_no_pme_wakeup);
->
-> --
-> Sathyanarayanan Kuppuswamy
-> Linux Kernel Developer
->
+> +
+>  	if (!of_property_present(np, "compatible"))
+>  		return false;
+>  
+> 
+> -- 
+> 2.51.0
+> 
+> 
