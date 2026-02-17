@@ -1,142 +1,254 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45BC81465B4
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 17:46:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7359D299A84
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 18:08:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771350378; cv=none; b=JSHN2Pdj+4Y7WGuuQyWQO4lw3GAsp0GPTdnv+SsCO5pFPI3Tv6wYqvldl1pTD/IC8I3uoDoa26FiTDwhBpKxPJNLdHtCKG35HeuIV2bQcPEUSPsS+AxO12rM0ObDf4L1j/eTtq4HenyDOubjcVxwyiyTptQ26Tz6HzOvLOAFXMg=
+	t=1771351698; cv=none; b=NAzPvV0WNNPFYCPwg6rgwRyKd5S8ztUhor8vz0p/5lOXzklcuown6ZlweLlxo8LjDOCplPwhn7SF0M9JnfpfbhP5TGFqkpus/ERfFGjIGIUiHP0IOqeiELBHlWeQLmvdLZXKSztc5ZS9NAFWoxP/MDDc0yjetaAgQbHkXYDA1EE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771350378; c=relaxed/simple;
-	bh=xFTaSDPkEL9f26RzMeWR2n9SC7ygHoXiguNp+/V3Edg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UErXatIiqHLUloRDe9qqATK4GgF2d/o6eDPw5mds2/X8PnIl/U3IN4Fzw2uvKojc98Ej70LUWhA/jor7iB5gc3HMG+X1JG4x9V80Gy+W56HsQXY5Cou4FwEkWnZyow6wgNXHYF42sFYZUv9KySAnIjNBB/873xrkmtvck+iNfHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=tXTDBxfx; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1771351698; c=relaxed/simple;
+	bh=p5jlAeJWQT9jP36UEQY5+BLhULFC1X5SsO1VXhX+J3Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dOI0kE6IUoZW75n664Q5eGgEnxCYy9BlzueoqpGdgBGUsR3fQkGrKmZvc0rAkNaRrUwAb+sWNL50V6f4AG6v0CiKPaKodI7PYZr8WnazxmZxBr37SthkZbu8Y1BOykf3YPsE/aeI4WegeKQQI9IIavkMLP2fd3hn0HTbnZy9l3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PPnX4YSB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="tXTDBxfx"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61HAfAbH3648080;
-	Tue, 17 Feb 2026 17:45:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=3G0u7SK0ibdhCr4vMdf4WTAuV9tpPqMRjkiFzuavq
-	Ts=; b=tXTDBxfxu7mubZQfoC9l8yYAnkdd7UCVwRe6rt4/dLMvzfESGWIsQOrSb
-	mZvgWyZeErDGJ/kvhdEhJ0eiGEfBfBu5G4eHjY9sxeNxGC+q0ZKBI5QjvfYrwaPr
-	nnDStrDyua/JuaXRwyGIPwfu4kdgIC6ximLqEMilWjDVhhpGZzzTT/CjggMwsLrM
-	6Q/80ExFtWUaIEgErPisyQQGrxN+8ReId31OI0nakYpL4NL6JSD7MHFJg7rJgwig
-	rvKnS24PNUyEaThvJBXMYS9VjOU/DUtyiWEL5X7CilL9YogQGz+Fv1GkkUp1lEGO
-	ZkRq3FLiIyot5Rtp5Iiwy5Tq5yFFg==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4caj6unedu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 17 Feb 2026 17:45:58 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61HFtUZa017774;
-	Tue, 17 Feb 2026 17:45:57 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ccb28byfj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 17 Feb 2026 17:45:57 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61HHjrWq46924108
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 17 Feb 2026 17:45:53 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1C48E2004B;
-	Tue, 17 Feb 2026 17:45:53 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8AC5220040;
-	Tue, 17 Feb 2026 17:45:48 +0000 (GMT)
-Received: from li-c9696b4c-3419-11b2-a85c-f9edc3bf8a84.ibm.com.com (unknown [9.87.129.74])
-	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 17 Feb 2026 17:45:48 +0000 (GMT)
-From: Nilay Shroff <nilay@linux.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Cc: wangruikang@iscas.ac.cn, tglx@kernel.org, maddy@linux.ibm.com,
-        mpe@ellerman.id.au, npiggin@gmail.com, chleroy@kernel.org,
-        gjoyce@ibm.com, Nilay Shroff <nilay@linux.ibm.com>
-Subject: [PATCH] powerpc/pci: Initialize msi_addr_mask for OF-created PCI devices
-Date: Tue, 17 Feb 2026 23:15:26 +0530
-Message-ID: <20260217174537.1154686-1-nilay@linux.ibm.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PPnX4YSB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30D22C4CEF7
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 18:08:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771351698;
+	bh=p5jlAeJWQT9jP36UEQY5+BLhULFC1X5SsO1VXhX+J3Q=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=PPnX4YSBjB+vIgvQVz5AeLwAul7wkZwJZ4GZ5r/mgjP00uHlM4SGOWjMfwwg6TfPi
+	 Zprgk0kS7vWftAChkfS8Jdmt0h5iV5eSF5SBDJPRcG+iwkXHsLHpedGtxOtJz9yd2a
+	 MzzkiN5C/XmeFNL9CL8w3XCVIg8ONTVHM6le7o7WXZ2g1rhJJtpMirTGYe3vT64ui9
+	 /XVsHWbJjTCRXN30Ps6p8owndjVp6f0WYOMuNp+DTu3RMHM7O9AlmMOK3fmUSneuB4
+	 6LF6rPDnnLIlo33m27qQ+OKKMagL0yA1gt3y3s+lGncvykni8og/r4uH714XFrZLcA
+	 jvHu19NqwKDRw==
+Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7d4bc6a8021so3550581a34.3
+        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 10:08:18 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVGQQMEQQi+8uhw+/X1cxJyHjIRFPbhUXOZ/xmcbbClT1p2JuDNH09n6qKWXAduK77S8BgNf5AAkfQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyNVd2lp5Zgyfzr/MA+8NREKDEM8ya5urOUh6Z1mFMparV9hKKm
+	qqt6pS7S0be+d5dGQ+RDZyh1txLIoCzgFCfuD4nSmj7t7FOxDqykc2NBqcQ4gp+pPv2edDVOTE+
+	kMLwxOX5cPu6KLjg1XgJp6QD4/tL/CsE=
+X-Received: by 2002:a05:6820:3095:b0:662:c0f7:bee1 with SMTP id
+ 006d021491bc7-67859a88133mr6052382eaf.26.1771351697181; Tue, 17 Feb 2026
+ 10:08:17 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=E+/AZKdl c=1 sm=1 tr=0 ts=6994a956 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=6ccs27PMiSGM24VvTn0A:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE3MDE0MCBTYWx0ZWRfXyPOKqDVHzmMq
- dm1biqlfm/jNyc9zFszH/lxDWCT6TFEc0QhYQT4F10mKnxYQ9SDNq+XzJuhxtiyuaRgnbF6MSax
- bRhdUwn9/4mf4urBvMGv3Z1Fk7tqRkye4ROP+LcQbaXMHHSo7BlwwCdIueBxtSMQuRBaYAH3Y08
- EVEYmsTMmVFe8AUya8Za5vWb85FDZuwAxy2YXaVqegRdHdpyKVkjMAM9Vrl2OH4Y6dWTTBoiS0h
- CQUg1TJgcAuOf4iWj2kbVgaePX7wrtY1UiPAOKj1JqPDKPvJVFzV7p/gdHnKgxIVaHHTmmMLjG/
- 5yo+MuMfXMShs39FRnDvZ5BxFQDFmBdtHWM570QWse/X7kSaEYeimoDQbfaLAe8eKAn3LqEfXPg
- G2UWz4u0eTfhRlfKUkvUeZEnBeWvao8pZBok8Gw9eLslMG7D7ch1OY0YRJNmgfGDSI7zmqRUPVy
- 6FC4n6MGFlKKegutQfQ==
-X-Proofpoint-ORIG-GUID: lZj2HitPoHMptHL_54AK7TlOxGTEDrvT
-X-Proofpoint-GUID: 0O4mTSN_morF-4_k6oCPTNua1YfSUZ9X
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-17_02,2026-02-16_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 priorityscore=1501 malwarescore=0 phishscore=0 bulkscore=0
- suspectscore=0 spamscore=0 clxscore=1011 impostorscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602170140
+References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com>
+In-Reply-To: <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 17 Feb 2026 19:08:06 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
+X-Gm-Features: AaiRm50VBLOxg_JalVLz0F1rUg6ugsQjBC2M2nOiIbDavrZqpQwZovep0jNjUD8
+Message-ID: <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Recent changes [1] replaced the use of no_64bit_msi with msi_addr_mask.
-As a result, msi_addr_mask is now expected to be initialized to
-DMA_BIT_MASK(64) when a pci_dev is set up. However, this initialization
-was missed on powerpc due to differences in the device initialization
-path compared to other architectures. Due to this, now pci device probe
-method fails on powerpc system.
+On Tue, Feb 17, 2026 at 5:54=E2=80=AFPM Kuppuswamy Sathyanarayanan
+<sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
+>
+> Hi Rafael,
+>
+> On 2/13/2026 3:14 PM, Kuppuswamy Sathyanarayanan wrote:
+> > On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
+> > update PME status registers (PME Status and PME Requester_ID in the
+> > Root Status register) during D3hot to D0 transitions, even though PME
+> > interrupts are delivered correctly.
+> >
+> > This issue manifests during PCIe hotplug operations as follows:
+> >
+> > 1. After a hot-remove event, the PCIe port transitions to D3hot and
+> >    the hotplug interrupt enable (HPIE) flag is disabled as the port
+> >    enters low power state.
+> >
+> > 2. When a hot-add occurs while the port is in D3hot, a PME interrupt
+> >    fires as expected to wake the port.
+> >
+> > 3. However, the PME interrupt handler finds the PME_Status and
+> >    PME_Requester_ID registers unpopulated, preventing identification
+> >    of which device triggered the PME. The handler returns IRQ_NONE,
+> >    leaving the port in D3hot.
 
-On powerpc systems, struct pci_dev instances are created from device
-tree nodes via of_create_pci_dev(). Because msi_addr_mask was not
-initialized there, it remained zero. Later, during MSI setup,
-msi_verify_entries() validates the programmed MSI address against
-pdev->msi_addr_mask. Since the mask was not set correctly, the
-validation fails, causing PCI driver probe failures for devices on
-powerpc systems.
+I think that you mean the
 
-Initialize pdev->msi_addr_mask to DMA_BIT_MASK(64) in
-of_create_pci_dev() so that MSI address validation succeeds and device
-probe works as expected.
+if (PCI_POSSIBLE_ERROR(rtsta) || !(rtsta & PCI_EXP_RTSTA_PME))
 
-[1] https://lore.kernel.org/all/20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn/
+check in pcie_pme_irq().  Or do you mean something else?
 
-Fixes: 386ced19e9a3 ("PCI/MSI: Convert the boolean no_64bit_msi flag to a DMA address mask")
-Signed-off-by: Nilay Shroff <nilay@linux.ibm.com>
----
- arch/powerpc/kernel/pci_of_scan.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+An alternative workaround might be to add a (new) "always poll PME"
+flag for the port in question that will cause it to go to pci_pme_list
+in pci_pme_active() every time wakeup is enabled (essentially, an
+override for pme_poll clearing).
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 756043dd06e9..26ec97ce6b40 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -211,6 +211,12 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 	dev->current_state = PCI_UNKNOWN;	/* unknown power state */
- 	dev->error_state = pci_channel_io_normal;
- 	dev->dma_mask = 0xffffffff;
-+	/*
-+	 * Assume 64-bit addresses for MSI initially. Will be changed to 32-bit
-+	 * if MSI (rather than MSI-X) capability does not have
-+	 * PCI_MSI_FLAGS_64BIT. Can also be overridden by driver.
-+	 */
-+	dev->msi_addr_mask = DMA_BIT_MASK(64);
- 
- 	/* Early fixups, before probing the BARs */
- 	pci_fixup_device(pci_fixup_early, dev);
--- 
-2.52.0
+> > 4. Because the port remains in D3hot with HPIE disabled, the hotplug
+> >    driver ignores the hot-add event, resulting in the newly inserted
+> >    device not being recognized.
+> >
+> > The PME interrupt delivery mechanism itself works correctly;
+> > interrupts arrive reliably. The problem is purely the missing status
+> > register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
+> > reads confirms that these registers remain empty when the PME
+> > interrupt fires. Neither BIOS nor kernel code is clearing these
+> > registers.
+> >
+> > This issue is present in all steppings of Catlow Lake PCH and affects
+> > customers in production deployments. A public hardware errata document
+> > is not yet available.
+> >
+> > Work around this issue by disabling runtime PM for affected ports,
+> > keeping them in D0 during runtime operation. This ensures hotplug
+> > events are handled via direct interrupts rather than relying on
+> > unreliable PME-based wakeup.
+> >
+> > During system suspend/resume, PCIe ports are resumed unconditionally
+> > when coming out of system sleep due to DPM_FLAG_SMART_SUSPEND set by
+> > pcie_portdrv_probe(), and pciehp re-enables interrupts and checks slot
+> > occupation status during resume.
+> >
+> > The quirk is applied only to Catlow PCH PCIe root ports (device IDs
+> > 0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
+> > they are not hotplug-capable.
+> >
+> > Suggested-by: Lukas Wunner <lukas@wunner.de>
+> > Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@l=
+inux.intel.com>
+> > ---
+>
+> Could you please review this patch and let us know if calling
+> pm_runtime_disable() from a PCI quirk is acceptable?
+>
+> The quirk keeps specific Catlow Lake PCH PCIe root ports in D0 to
+> work around a hardware bug where PME status registers are not reliably
+> updated during D3hot to D0 transitions, causing hotplug events to be
+> missed.
+>
+> System suspend/resume is unaffected as DPM_FLAG_SMART_SUSPEND ensures
+> ports are resumed unconditionally and pciehp checks slot occupation
+> on resume.
+>
+>
+> >
+> > Changes since v1:
+> >  * Removed hack in hotplug driver and disabled runtime PM on affected p=
+orts.
+> >  * Fixed the commit log and comments accordingly.
+> >
+> >  drivers/pci/quirks.c | 49 ++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 49 insertions(+)
+> >
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 280cd50d693b..779cd65b1a8a 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -6340,3 +6340,52 @@ static void pci_mask_replay_timer_timeout(struct=
+ pci_dev *pdev)
+> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_tim=
+er_timeout);
+> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_tim=
+er_timeout);
+> >  #endif
+> > +
+> > +/*
+> > + * Intel Catlow Lake PCH PCIe root ports have a hardware issue where
+> > + * PME status registers (PME Status and PME Requester_ID in Root Statu=
+s)
+> > + * are not reliably updated during D3hot to D0 transitions, even thoug=
+h
+> > + * PME interrupts are delivered correctly.
+> > + *
+> > + * When a hotplug event occurs while the port is in D3hot, the PME
+> > + * interrupt fires but the status registers remain empty. This prevent=
+s
+> > + * the PME handler from identifying the event source, leaving the port
+> > + * in D3hot and causing the hotplug driver to miss the event.
+> > + *
+> > + * Disable runtime PM to keep these ports in D0, ensuring hotplug even=
+ts
+> > + * are handled via direct interrupts.
+> > + */
+> > +static void quirk_intel_catlow_pcie_no_pme_wakeup(struct pci_dev *dev)
+> > +{
+> > +     pm_runtime_disable(&dev->dev);
 
+Personally, I would use pm_runtime_get_sync() here instead which would
+really mean "never suspend".
+
+> > +     pci_info(dev, "Catlow PCH port: PME status unreliable, disabling =
+runtime PM\n");
+> > +}
+> > +/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_intel_catlo=
+w_pcie_no_pme_wakeup);
+>
+> --
+> Sathyanarayanan Kuppuswamy
+> Linux Kernel Developer
+>
