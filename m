@@ -1,151 +1,121 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FA51FC7C5;
-	Tue, 17 Feb 2026 08:51:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9AE918DF9D;
+	Tue, 17 Feb 2026 10:15:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771318292; cv=none; b=rMYHRWxXu7ig+DXZIC0kOi/keaXaa5sTu/c3OU/ItkmGItTuDTaSp5ghGUY7gFe3c8W9CKiBSVbSDv9gc0WSL9MSf6d38/ZKIypIWjOzai0yt8UyTwNtA5vtWF8sGfmhSwOiSSY1r6FFD3mfgVUD8R7VQCCEaWJbfh/ud0Gh8sw=
+	t=1771323315; cv=none; b=o+GYNNvUYzRJTfkmK6+9c7YnJSLbXjr0DyzZWdXreoP1kzrwStpuB+IzWJUhQzy9Yl4CDAcIzJlzTBYIUkZ57pfASQVD7Dekf9Qm4hM6/nfDccfoSdMNgf8I1WzsA8aDLgJ+zicVzIMKd9ocC3AYHgdIMNROnuNhIT8ZHfp1MZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771318292; c=relaxed/simple;
-	bh=Ak5l5B78z2+i6VxujSVuvES1+t65n0YPEMshaJnG+bI=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eTbJyqIv8thtvaqfXPiwzqLXar7cYbL+7nfw8sgIK1yKaUnNH+0fovl7l2Y71RbZ4gVk+ZlrnHktoAR52+sIZYxRHctaaQLH2+8XVYwjyyr6bjmaFbS9TKf8NJJe6Ii55kSxWXb9aTAnDqqxmOW7LR7Gpt3BNr8Su6KqvDXWb84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TAyCoU+t; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771323315; c=relaxed/simple;
+	bh=OGD8WP2U6z3wfYpBqrc79dXSrFIB1z1mQYqmiQxCRSg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kh/PsvtGQTF9n9nz0tQF++it2cBKlsIefMt0rFdMGkPeKRldooD7JuQrJCpf/enWuUvDEuis9Z0ubhV0Gbo9CI9WqC7DjcuAt5X7sk1jSfwqEltKkq6WJE4GwbosZGhjpTspNMTUgclSfA1fft7HX6VpcjeoPxJKzZboiiuo96s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uUrmsjtg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TAyCoU+t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D471AC4CEF7;
-	Tue, 17 Feb 2026 08:51:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uUrmsjtg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4F29C4CEF7;
+	Tue, 17 Feb 2026 10:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771318291;
-	bh=Ak5l5B78z2+i6VxujSVuvES1+t65n0YPEMshaJnG+bI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=TAyCoU+tIQConif+khdTParOVzMjStHUlL38FqLBAG8gqk9rXJS40uriiqWsGtVsF
-	 SH7Hhm+x7iWMLegQT1qG15UC8yUWoZ8qZ/IaNCi+k2o5j1eYrT6zhXGehJZewaZDsk
-	 EjBD5rRC8iAm7lh4fbWWNqsRPON3EssER61BMlSLStRfZsobVlz1UcPX3iArpVV5CR
-	 pyuI7kvTZ/9spphjr3NO7YrqhGiwNvo8JuizkbZI9hdZARJZ+/c7YRee+AU9YD8SNG
-	 UNv1EyV9sSl9dMU1yNFj4HzEiNUQd2JRU2kvynZSMW5E6QCqYzzrhN5tADomda8X2c
-	 dpYEp/BLWGldA==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1vsGnp-0000000Ba0k-0TDn;
-	Tue, 17 Feb 2026 08:51:29 +0000
-Date: Tue, 17 Feb 2026 08:51:28 +0000
-Message-ID: <865x7vbvn3.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Aksh Garg <a-garg7@ti.com>
-Cc: <lukas@wunner.de>,
-	<linux-pci@vger.kernel.org>,
-	<lpieralisi@kernel.org>,
-	<kwilczynski@kernel.org>,
-	<mani@kernel.org>,
-	<robh@kernel.org>,
-	<bhelgaas@google.com>,
-	<cassel@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<s-vadapalli@ti.com>,
-	<danishanwar@ti.com>
-Subject: Re: [PATCH] PCI: Add PCI_RID_MASK macro
-In-Reply-To: <d86a9cbf-900d-4561-836c-1c5a9fb2c4a3@ti.com>
-References: <20260216120600.479738-1-a-garg7@ti.com>
-	<86bjhobz0f.wl-maz@kernel.org>
-	<d86a9cbf-900d-4561-836c-1c5a9fb2c4a3@ti.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	s=k20201202; t=1771323315;
+	bh=OGD8WP2U6z3wfYpBqrc79dXSrFIB1z1mQYqmiQxCRSg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uUrmsjtg2NzB9GBijzWHyd5UlPbNQXVOSfa+2N4CkDQU7U3WdT/IBcnIWdw6I/b6H
+	 a6M/ZpSSMAPNAoky6xNnpqZI4vIBYOkXUYalVkrwPmKVWgqPNYLwDQUDothtEJ1ttD
+	 N5KYng6ICleloi6Ab8+IsMRyD86RQo9s/waKhFrL4TqhkP2kkMreFGzGq26I9bmI01
+	 JKzyJUU9m//hKptt+Xr/lWAHuNbhKdYEXqRBicWGyM57oJfUFeOQBf68lDsUp+jCag
+	 oXCD1H0cg9oFQ+778sztMPTxZrU1U3OSSaCSsVllU9BE2ViXUDfq/GKLR2JNodiN0n
+	 xdpE7pOmhJJSg==
+Date: Tue, 17 Feb 2026 11:15:08 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	heiko@sntech.de, kishon@kernel.org, jdmason@kudzu.us,
+	dave.jiang@intel.com, allenbh@gmail.com, shawn.lin@rock-chips.com,
+	Frank.Li@nxp.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org, ntb@lists.linux.dev
+Subject: Re: [PATCH v8 8/9] PCI: endpoint: pci-epf-test: Reuse pre-exposed
+ doorbell targets
+Message-ID: <aZQ_rEkzWnDeJrMe@ryzen>
+References: <20260217080601.3808847-1-den@valinux.co.jp>
+ <20260217080601.3808847-9-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: a-garg7@ti.com, lukas@wunner.de, linux-pci@vger.kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org, bhelgaas@google.com, cassel@kernel.org, linux-kernel@vger.kernel.org, s-vadapalli@ti.com, danishanwar@ti.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260217080601.3808847-9-den@valinux.co.jp>
 
-On Tue, 17 Feb 2026 07:52:54 +0000,
-Aksh Garg <a-garg7@ti.com> wrote:
+Hello Koichiro,
+
+On Tue, Feb 17, 2026 at 05:06:00PM +0900, Koichiro Den wrote:
+> pci-epf-test advertises the doorbell target to the RC as a BAR number
+> and an offset, and the RC rings the doorbell with a single DWORD MMIO
+> write.
 > 
-> Marc, Lukas,
+> Some doorbell backends may report that the doorbell target is already
+> exposed via a platform-owned fixed BAR (db_msg[0].bar/offset). In that
+> case, reuse the pre-exposed window and do not reprogram the BAR with
+> pci_epc_set_bar().
 > 
-> On 16/02/26 18:56, Marc Zyngier wrote:
-> > On Mon, 16 Feb 2026 12:06:00 +0000,
-> > Aksh Garg <a-garg7@ti.com> wrote:
-> >> 
-> >> Routing ID (RID) is a 16-bit value composed of bus number and devfn.
-> > 
-> > No. RID here means "Requester ID". Please lookup the PCI spec.
-> > 
-> >> Add a PCI_RID_MASK macro to eliminate the use of magic number 0xffff
-> >> when masking for RIDs.
-> > 
-> > I'm not convinced this is universally true. Some RIDs (or RID-like
-> > identifiers, such as Stream IDs and Device IDs) are larger than 16
-> > bit, depending on the integration.
-> > 
-> > The fact that this particular integration uses a 16bit RID without any
-> > extra qualifier in the upper bits doesn't make it universal.
-> > 
-> >> This provides a standard way for drivers to extract RIDs without
-> >> resorting to magic numbers.
-> >> 
-> >> Signed-off-by: Aksh Garg <a-garg7@ti.com>
-> >> ---
-> >>   drivers/pci/controller/pcie-apple.c | 2 +-
-> >>   include/linux/pci.h                 | 1 +
-> >>   2 files changed, 2 insertions(+), 1 deletion(-)
-> >> 
-> >> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-> >> index 2d92fc79f6dd..6bf9fe102e2f 100644
-> >> --- a/drivers/pci/controller/pcie-apple.c
-> >> +++ b/drivers/pci/controller/pcie-apple.c
-> >> @@ -802,7 +802,7 @@ static void apple_pcie_disable_device(struct pci_host_bridge *bridge, struct pci
-> >>   		u32 val;
-> >>     		val = readl_relaxed(port_rid2sid_addr(port, idx));
-> >> -		if ((val & 0xffff) == rid) {
-> >> +		if ((val & PCI_RID_MASK) == rid) {
-> >>   			apple_pcie_rid2sid_write(port, idx, 0);
-> >>   			bitmap_release_region(port->sid_map, idx, 0);
-> >>   			dev_dbg(&pdev->dev, "Released %x (%d)\n", val, idx);
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index 864775651c6f..e3d9730121c8 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -71,6 +71,7 @@
-> >>   #define PCI_DEVID(bus, devfn)	((((u16)(bus)) << 8) | (devfn))
-> >>   /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
-> >>   #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
-> >> +#define PCI_RID_MASK	0xffff
-> > 
-> > Even the naming of this macro clashes with the current nomenclature,
-> > where we use PCI_DEVID()/pci_dev_id() to manipulate this information.
-> > 
+> Also honor db_msg[0].irq_flags when requesting the doorbell IRQ, and
+> only restore the original BAR mapping on disable if pci-epf-test
+> programmed it.
 > 
-> Is the below proposed macro acceptable at the same place:
-> #define PCI_GET_DEVID(x) ((x) & 0xffff)
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
 
-But what meaning does this have? What containing type are you
-extracting the value from?
+(snip)
 
-The code you're hacking extracts the value from a register. What if
-the register had a completely different layout? Would you move the
-mask to match the layout of that particular register?
+> @@ -753,22 +771,33 @@ static void pci_epf_test_enable_doorbell(struct pci_epf_test *epf_test,
+>  	reg->doorbell_data = cpu_to_le32(msg->data);
+>  	reg->doorbell_bar = cpu_to_le32(bar);
+>  
+> -	msg = &epf->db_msg[0].msg;
+> -	ret = pci_epf_align_inbound_addr(epf, bar, ((u64)msg->address_hi << 32) | msg->address_lo,
+> -					 &epf_test->db_bar.phys_addr, &offset);
+> +	if (db->bar == NO_BAR) {
+> +		ret = pci_epf_align_inbound_addr(epf, bar,
+> +						 ((u64)msg->address_hi << 32) |
+> +						 msg->address_lo,
+> +						 &epf_test->db_bar.phys_addr,
+> +						 &offset);
+>  
+> -	if (ret)
+> -		goto err_free_irq;
+> +		if (ret)
+> +			goto err_free_irq;
+> +	}
 
-If you really want to get rid of what you consider a magic number, add
-a bunch of fields to the apple driver to describe the rid2sid
-registers, and use that with FIELD_GET()/FIELD_PREP() to manipulate
-the registers.
+I tried this series on Rock5b (RK3588), and was surprised to see the doorbell
+test case still failing.
 
-But what you are proposing here is not generic. It has no defined
-semantics, and is actively misleading.
 
-Thanks,
+> +
+> +	if (size_add(offset, sizeof(u32)) > epf->bar[bar].size)
+> +		goto err_doorbell_cleanup;
 
-	M.
+It turns out that this check is the reason for it still failing.
 
--- 
-Without deviation from the norm, progress is not possible.
+You see, for a BAR that is marked as BAR_RESERVED, pci-epf-test will not
+allocate backing memory, so epf->bar[bar].size will be 0.
+
+If I removed this check, I could get the test case to pass.
+
+As I suggested in my previous email, perhaps this check is better suited
+in pci_epf_alloc_doorbell(). (As a DWORD alignment check inside
+pci_epf_alloc_doorbell(). pci_epf_alloc_doorbell() could itself return
+error if the doorbell is not DWORD aligned.)
+
+That way, you could remove this check from pci_epf_test_enable_doorbell(),
+and we don't need to care about epf->bar[bar].size.
+
+
+Kind regards,
+Niklas
