@@ -1,174 +1,409 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020081.outbound.protection.outlook.com [52.101.229.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 700A22D838E
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 08:01:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771315314; cv=none; b=Oqv2MJmaKh8S0+eEE6qcBpyo8tiP22cHdXOPEHgCpP1KQyZQxCl5TbylKlOsZeZfnhr9NWkTX2Bfj+wQFUsL3JiVlyQwTEm1lchQeRZYPONV3d31WPC6Pw/MKG5bO041NBb9GOVLTK/MuKNaYFDTWYCG0g/5di9A8m3qRYFeymk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771315314; c=relaxed/simple;
-	bh=8nP+G60xORVioRFODry6ZjQeDIwlkPrlnyc6+fGyYoA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aNCrcl3L7G5OqQZmac98WtIHbM9YdVep51ttQloSHBGWOZhA+TFmBNj+HnHFXZ3iW7DklcbbNqp+gnwf8o7pmpoidvDLjCnEoVusY9MRTKg52koNq3yLqlGZFNbJe8J5FzYQ5Fbxog5CmLVioSlhGockC0vG4iR3hxvv1ET41fE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EXR/Z1rL; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C35402DA74C;
+	Tue, 17 Feb 2026 08:06:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.81
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771315573; cv=fail; b=OXOF4LCbmup9ELy9QFB+g1ty93o92gFgRpEKO7M4Pvb7DRK4yzaWRjfEOav7Q6IfS3+ftlGK7bYpyI4a5UZR1OYqfFXsHoY/Hf8cu2TuHDQt1A4yxVYBZOW5KkCPR/NtsYSVUOAqHstiecIh7wWBZITTClLorrohPStoRZgtl2I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771315573; c=relaxed/simple;
+	bh=npNLrhZZhDEpt6U44Dj36mqFUIvZXvaJ9rckyng2isY=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=gvYD56MWJmAg7rWDBRaQfssMDD1bSTik1w4I0Bq8yqNz+IdVRbdm5dBe67YZ82E5Q4TYH7D7TD9TCKE3iqWAq+M4ijqfgKSphEYatawsVT9sWFySYA8csyeHiITkBDeudOA//BJKA0s+yv7puY93NDgH1XIbT3ilsxpLfWYo8po=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=etRGdEsq; arc=fail smtp.client-ip=52.101.229.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EXR/Z1rL"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-483487335c2so36767395e9.2
-        for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 00:01:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771315312; x=1771920112; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Y8SIe7TJNGTZOpsiu2TBh23Lr0Mt6PONYwJs1/+BcyM=;
-        b=EXR/Z1rLunDELUYp//7MJ+GeqVb1qx49bnC/1KU1ULDBI+i8CJQ2Ib1gh4EUGwOHKw
-         atnyado78PyU0TLJsvEfbIQO6lVr56X301nutCUzRy4uI3iCwrf9Kh4lJ68ooBSNQHwM
-         HfFJ9FmqvAyTQxsqCTJ/jozImYQyyzru9eBb3p+gGd+5lW1mwsc9LrWmPLjOf/6Nwqes
-         NMElAiJOSOVoe9KHv5bUFW2D3yPe6imhWOuGuHHSrf5B0af1L7J2ny0puTwN3bPwbh4t
-         K5wm0qCKOGLqyAymL7Pah0elDgAobHtCVNH8t54n+istwJxd3mWY9amVqVC5/SqEoI+o
-         S78g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771315312; x=1771920112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Y8SIe7TJNGTZOpsiu2TBh23Lr0Mt6PONYwJs1/+BcyM=;
-        b=FCaXZc43ogvespACCZEbz5mO9QagxyTqDoXLDDBOjwUW1GSScCN7Ccr0GcnrgBet/v
-         +hpR5RrdONINpqe47PYGF9NU0OiMmOhwp2Ae+8dj2/vNbwdS8td08dlxi9yAiHbUG3y0
-         T41nal2obdn40h7Mr4cjsM7J4Kiw26k/ahlAVsLakZEp5MP9fJ8eqXHYbEMr8lB2gjv9
-         ZOAGHsOFhei8YXlluh+hlBF4QlBwJOSrl3uA6GWQQE7y+RkdQXLstXMzXMWwfLS/N2Jg
-         +nrhg0CXxnZWTI0C5KPkmk+PJCgrllrvPuJomtjr4GUgl6Li3cVaeQAQroFAiaiS7pap
-         vHRQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUlQ1oKTJL+Of63Z4GNAjCxUeuyfngqpRQHf19ltYVga1ysdoSlD1S8c35X5aNfcrEFUV0O2gHe7kA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzQLnoW0vWLg3uNx4JTq24CHNyQtCQ0tXsWz5SUBjCndl7uFL9m
-	L1GU2FekRkw+2ZNMgHdlOA1GNoi7UgLjGcIhRPfmG2NVRHiGP0tMiJlM
-X-Gm-Gg: AZuq6aK9qO9v4SQfQjLUtilcXT01Pd6396JaObiic1/uZWXESbjOLeWw7L7B68B0rmZ
-	MwWPFILpQOnzhyroKVwdu7J2HWR8pK51mQMmqFeZvUqmBVaFO4ntAlHTyS6wgkUfB4UyZXAxfeE
-	jK2NnXiTZTweSoINBBjjy3BgcPLUXqEkvUWpOpi+DzCBYPWT29r/1jB4RONVnd0yXd60QVcqplE
-	SXS2i77gjDiqg9Rd1Vr1B1nl9B/2vXce0pA/+JVMq4MQLGIOaz1V6XpPZrP/YENsGMB9ZSo3dxa
-	3gQJeDzKaS+fP+jzlXe2WfrEyZcBE9JB4IhuIOB1rblDJT221OFcgTK2f6fEEbHZCq87K0R61Eu
-	czMTxKlSSMpOXY6lTA7u4Ep1S9lO0sPcUqDO/k6Q4GmOFVlNflZVHg+ybQbVFfO6Ln+CrbDjZgt
-	6Ucp07npXuZhwC8jRfbwlKGMXJAoXm+QaEoUNhNG+1OxySSFoj9IMGaO1AFz262oA4K+aFDg==
-X-Received: by 2002:a05:600c:529b:b0:47d:92bb:2723 with SMTP id 5b1f17b1804b1-483739fc4d0mr244661825e9.3.1771315311694;
-        Tue, 17 Feb 2026 00:01:51 -0800 (PST)
-Received: from ionutnechita-arz2022.localdomain ([2a02:2f07:6006:8800:54ea:a0a1:e16b:9ca4])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48371a21cbesm153558775e9.5.2026.02.17.00.01.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Feb 2026 00:01:51 -0800 (PST)
-From: "Ionut Nechita (Sunlight Linux)" <sunlightlinux@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: Zhang Rui <rui.zhang@intel.com>,
-	Lukasz Luba <lukasz.luba@arm.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Ionut Nechita <sunlightlinux@gmail.com>,
-	linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="etRGdEsq"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=RMqaTcapTwwAJOTwJUUoAXaZkomDz1EKHMN03qvv/PNF6JuEA3zD/ZcK/7+M5GogyEwbtsY4cHDvjfqVwH5ngV+I2z1YKww8zwoBFWQlopgAnoDAgIxImMRNyKH6zBV60n48vPSwG7OIe0i7qz0DL8L4s+0JawDToPORxkMYEPkFr2bw1USHmo5rY4cu3//qiEXVUIjSKRJ0yqQl6j2jx71C3l6cU24QX0TtbsqHFUctSdspT653ioOyOoziS6Uk45sCCTTxv6+skev71jP5iSQWSXZueARfy5D13OU91iKvKbYdATB6K7zDbG80lQWbsAKTraVWPbJyyos2cmnLRA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=frS66RaTiuw9CWICCg69JaLUv896JQfpx/e3U/sEPws=;
+ b=Lzqwns1Frll1jd6LxSugxP1A27mJgL+81aPMDdwxBWTPLPtRT2lWhtps5iXL/Yi4CqiP05yvjPPat2XxFuW/nd4p3emwC4hCFXZBvCK17RzZt9x9xE7VA/beVi9+BcTS0DPDOZUw5yIFSJy3afO4D9gLxKezCKynAGM+oPVON4U1/TE8lFDkzCe6NNSXy7BKofKDgQ2rIY7dLiZmBemKh4xRzvP2AFDJkKJaNCaYnXJW9fAJDV8gFERSmkYTWIQ+bHCWkElel4sb/ZOagsgVAGoe7Zt1QSS8YRxh30PcU1O0STXMsjh5x/+E6oSMh3Ds/D9uZCM3fk9N3OjGkmmUgw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=frS66RaTiuw9CWICCg69JaLUv896JQfpx/e3U/sEPws=;
+ b=etRGdEsqympbwMCXUvL+W/qseQqHK2KT2p+p/x3sl48p/ZV6AhE9lrudmhI4WL4+TltAq2R9lF9YEUb++EKraJhAP5t85DPAq5i4UdbuVis1MdJAK+lHCchmb4XrxFApqf2F112nDgvft9QCPVzttBjTCp6aU6m9wq0pEDhpIFg=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by OS7P286MB7132.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:42f::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.16; Tue, 17 Feb
+ 2026 08:06:07 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9611.013; Tue, 17 Feb 2026
+ 08:06:07 +0000
+From: Koichiro Den <den@valinux.co.jp>
+To: jingoohan1@gmail.com,
+	mani@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	heiko@sntech.de,
+	kishon@kernel.org,
+	jdmason@kudzu.us,
+	dave.jiang@intel.com,
+	allenbh@gmail.com,
+	cassel@kernel.org,
+	shawn.lin@rock-chips.com,
+	Frank.Li@nxp.com
+Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Ionut Nechita <ionut_n2001@yahoo.com>
-Subject: [RFC PATCH 3/3] PCI: Update bandwidth control and thermal cooling for Gen 7 (128 GT/s)
-Date: Tue, 17 Feb 2026 10:01:02 +0200
-Message-ID: <20260217080102.206581-8-sunlightlinux@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260217080102.206581-2-sunlightlinux@gmail.com>
-References: <20260217080102.206581-2-sunlightlinux@gmail.com>
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	ntb@lists.linux.dev
+Subject: [PATCH v8 0/9] PCI: endpoint: pci-ep-msi: Add embedded doorbell fallback
+Date: Tue, 17 Feb 2026 17:05:52 +0900
+Message-ID: <20260217080601.3808847-1-den@valinux.co.jp>
+X-Mailer: git-send-email 2.51.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TY4P301CA0029.JPNP301.PROD.OUTLOOK.COM
+ (2603:1096:405:2be::12) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|OS7P286MB7132:EE_
+X-MS-Office365-Filtering-Correlation-Id: 33a47462-c772-44d8-0d3f-08de6dfb6791
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|1800799024|7416014|10070799003|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?mawuaKsflY0KZ6TrCwY5Iay+4777zTZRL1XARn63+n/MaoYcUmKXJbqZFNJ+?=
+ =?us-ascii?Q?T8g9wnnearZ0zWE6BglERb4VDG1WRVHD9kKQd7zlQi1TSu1P3VTETLuVZahK?=
+ =?us-ascii?Q?4k0Bo/ZwsiYSAhLKZLQw+Z1yVPWJBksEkpgECSsv7HPBOWtN2nI8w2QXknlF?=
+ =?us-ascii?Q?gnKUbXRurzeixAbRcuvGTDmPRyxV+cT8qV2sK49zT0NVn/u8PC5fSZ+wGbCI?=
+ =?us-ascii?Q?c9dEgbpxH9nVFQ3lxPBbj0d6Tobn/Q83fGFFS1jSxgCfvZtPyPFjr/kk43xQ?=
+ =?us-ascii?Q?LK1fYGuNKYBfDTMWvzOaLqNTabjDf335fKTO4O4HpoY6iNlrCdcxqJJbPJLT?=
+ =?us-ascii?Q?Vx3iaNpre6ORCLuKkfDplPruecyP0BWkMARSSP8Lqr/v9WSYyrF5me+S5+Q9?=
+ =?us-ascii?Q?JgxyQn0/3dOKyMJnOk/cq9rfLjZg6pRNa+sqGbe8T+1Zn/r1IoyD4U5AruiV?=
+ =?us-ascii?Q?qVT2R79pH+16Gj+7qzHKfqWEb64e4AkU87DR1U6cPtX3jEgo4+uxHGEAyNP6?=
+ =?us-ascii?Q?RK/CLlh/c7VOY0ulNEMgHO0xjzyriq64BARR+gOMiMfB/aadqNuvk8Z3UISJ?=
+ =?us-ascii?Q?9ufOFR6b6hnxYvOZiLi+ffX8a7z7Aryay6lp1p+D1hZXIDnehSiFi1B/fw+6?=
+ =?us-ascii?Q?39YkrIqp78sJ0VhWCGWTAxAstJTsTC8WkWTgOFYMHkauUKEe+ljZl2LJw08V?=
+ =?us-ascii?Q?okQr4dXNxRgPCOBSgGd1hftmd0mygegfR+Cc/S8qIqC/0baNq9Ae0uaM2D0v?=
+ =?us-ascii?Q?M6OvK4+Vu2AQRCsbsW6UjIs2UrdUHVG6NWRnq/6o7QZ91Ez98my4/sN6S1fe?=
+ =?us-ascii?Q?vfNyxXq6jVi4X9GJSM2h4qP4zaOgOpB0XKoSjqjqVbt3gMx6Kw1w1JRNcf1E?=
+ =?us-ascii?Q?NaL59piBg+tqeoQhZJarWx2qa+9Zx7c7eQxa/AFeOxbwBln2Rg33A3bRvez8?=
+ =?us-ascii?Q?h5KtEABapCalRZ5xokDxjrOA7KtVZNBWUTP3wsfPHGlpSSZ5QSpr18/W3Lk3?=
+ =?us-ascii?Q?cB6yeiOMBh70LsUT44SaPN69KOFlZd9/0ggmx7l8ZIBAGJeNl/GKJ1gAtQsU?=
+ =?us-ascii?Q?VGqLGNnPxX20UwL/2p3oACL0nEX+Oo9YRlEZaibg3sTAwxTGeiv5FyB5UPzL?=
+ =?us-ascii?Q?DYzkMmIaRtgflNRPxDI1LJkwVzxdljFO9S/Edbc7S+dbWMv+L/2nhuc/EcvJ?=
+ =?us-ascii?Q?WbQpwxfoPBGW6udV1gDKOKmJzusGl9DREBxBKPXmRUdHui5YKUcPCngpmjO/?=
+ =?us-ascii?Q?HCZsHcMcVFlBXkcLmvMu//E0Ml08hmN1mgPtLVzlXUsJsOVfKrdCuzTT/1Db?=
+ =?us-ascii?Q?DbWvczPEffhvvvvDbUQeN713iHoqwb/ZMT94DtqWAkvXva2Y16vzVI0dItUE?=
+ =?us-ascii?Q?QFPKnBEsnl/cT7MnYVULTL/Nkr+FyAkzJk0AvYVDjaKIL9NHrPAtktORBgwN?=
+ =?us-ascii?Q?eBTTJURG1BQBJtrWSkHTbRdrY0bWDaHE0oj+PFO5qxPehERzRhmrOTdqZiLZ?=
+ =?us-ascii?Q?XXL6rcL60g2qLXmt5lFaDcYkiPgF20MqrWTeMxXbBZIkz2ON2QTAmMzpbITQ?=
+ =?us-ascii?Q?HByyzV/Ri+zyTCmEqOn5RHH3TosFuaaJdUkHDKG8jUQCF923aqcXR4j1zc4m?=
+ =?us-ascii?Q?+aU2e+sX5dJe6a0d9kyzpes=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(7416014)(10070799003)(921020);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?a32D8twZjHug7FSNFVREc+Aso5BuDckSM8GkuTFO0AFeSWGQIuCpAIHaSKSZ?=
+ =?us-ascii?Q?XWdGGJrIMmnrgFMC3oekuLTSzY1Umie36+h3sKZRWxtRZBUX64bI+K5SNL8e?=
+ =?us-ascii?Q?T/xdsuogUzn6dp4K5qziizr6bsd97Su3cO3S40Gl4RmISrU0dSQHRcUVWs/o?=
+ =?us-ascii?Q?+Ke02BeeYz8CK2qbim/2dndtcchsm+GhoKOtnfpc25qW3x9QXjQRYSsCNNR1?=
+ =?us-ascii?Q?DocTivqMJbzIZBQ95c/U0aBS56vWFDY0POiZV4chsuQryloLwQKSXunF18ru?=
+ =?us-ascii?Q?gq1H32cRwp593EZiZP2Iap2gicOWajOStRKybTE9fPGHX9GYkOLogSkT1nz8?=
+ =?us-ascii?Q?EAApOPRhJFBlprAJ6+CSnT6yHMoDGIQnKYDd9TrAejIrcIxjmW7Tnb6ov4ou?=
+ =?us-ascii?Q?LciSCYkP38SCO39t9PD8vN+CPsk05dNe687AvQMSJtxFH4F7smes+dX0Esv+?=
+ =?us-ascii?Q?bO6TfustOv6iWkuYklbNDFRjaDXeHDF4qUpilQg+0pTbjejTc97JI1XUbVDP?=
+ =?us-ascii?Q?RiDZGuToMXb7jW+2Tr6ydVT99uYCSKDQyHfFZZ0WigUfyUuDDQ2yCDO7df3x?=
+ =?us-ascii?Q?xoY2PRC4slmgOdCDhoayJwYYoRoexPILPcWBCXoqgkXQ46rKSk+3Fbl9u+zy?=
+ =?us-ascii?Q?p3BiPuMasHBBrQMG1CThqEsCRSYoxHhCFWcv1G9lNbCAbvcCTVipAvfkUhxm?=
+ =?us-ascii?Q?dELy8ontMMqopUct58QvSFxRrfwMMqd/5nVSnDGyb3K///Ti2A291gCQMUlG?=
+ =?us-ascii?Q?3uVXLdTQCoDRzMTCfvnJJ+RovktTLTNlSV4/RkuN5tXTU86ONDvr1YqiEh1/?=
+ =?us-ascii?Q?Nzi1DaVRRYxhLSakV+fGGs2fAizuz+MgWB9lTnQtUNJGSArGiXK/t+n6atkn?=
+ =?us-ascii?Q?zWJvvB4tjGuxxVM5De9e5HjhXw87gl3PQOoZLjYHpjdaU3WmyEz2g6xJEGEt?=
+ =?us-ascii?Q?j2cvj5MPAVJ5vV5Isff1miwyMZ2hxtXdie1PGRwIxwaTmgHtAmmDq2iZ4A7v?=
+ =?us-ascii?Q?8sCbSXfIxXPmja0Ys/fch/BDErhMKatgnvQNfMOlxkNO/TEtH5WTp3VjiCyA?=
+ =?us-ascii?Q?pBq4XC4jWU8bz/ByXR0UcYD6IxER4v5e4OuYjycDZCycRaWVp7ERD8GG0+M6?=
+ =?us-ascii?Q?9bg7LQuYZVZfEIINfGHlWDF1EbypCZf8jdoKnQHtoVto0rP75au2JOBFaqKS?=
+ =?us-ascii?Q?pByt4zW1N+nFHWSWJKrMoM0O6VWbQU8mbGm+NNieE40BZzgSqLsFHh8kljrI?=
+ =?us-ascii?Q?OuK74Ta6Hcz3yaFsvkdfsQuIYX6W0NIO3LG48zIU39SoFVBvrFAAktvI0Ri5?=
+ =?us-ascii?Q?PTWKbFZQqLNaOeopvADBV5OlZib3QFM0KatOQ9A1uWVQfxeRUbKlE69gUg3z?=
+ =?us-ascii?Q?OBftUFyc3C3WmBsTV6WSGRAr/5hwtFXfRVM0vVAL0gU03wbB35f5uULqyfQC?=
+ =?us-ascii?Q?8UhwB18nTSa1Z+OPAIF441PVS0ed/F4sC9StdBPQ4i3AGRHvyo3LJn50Ww3p?=
+ =?us-ascii?Q?rOTMQ+ba2fTf8WOZESVB2025lz/j+Zsb3IGh+s7dw5mSphjCcLilFsnx2H33?=
+ =?us-ascii?Q?pvJzBpcoBmrKqUB1OxeG6zErgdLvU7DA8W4qSqKjWRaLiJj2CfUN6YMqRS7G?=
+ =?us-ascii?Q?JYcJFV3PgdxKvI8i7pM6lF1/B2MYcrrKMy1x7qYGpfghQX/c/2b2IWMnPLrv?=
+ =?us-ascii?Q?JldGjFSb3tctS0pFieik5ycQCyyOHZ+XQfbfsMoNvV8hPZ05VB7+/v7UFk80?=
+ =?us-ascii?Q?QJ59MKmAQJoHL2f2R1QXwCFAdUrkVHscUoBlHClJ/jcOOtSzqrJU?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33a47462-c772-44d8-0d3f-08de6dfb6791
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Feb 2026 08:06:07.6073
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: caFebBFoE3rpMxoUgV7xWQQBY4VFdh7/BRZhTOu6xh48m1NiJSQH/sbTc8MRphIVve2eDGpPj9HzkLWxXJSuDg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS7P286MB7132
 
-From: Ionut Nechita <ionut_n2001@yahoo.com>
+Hi,
 
-Update PCIe subsystem components to support 128 GT/s link speed:
+Some endpoint platforms cannot use a GIC ITS-backed MSI domain for
+EP-side doorbells. In those cases, endpoint function (EPF) drivers
+cannot provide a doorbell to the root complex (RC), and features such as
+vNTB may fall back to polling with significantly higher latency.
 
-  - bwctrl: Extend pcie_valid_speed() range to PCIE_SPEED_128_0GT,
-    add PCIE_SPEED_128_0GT to speed conversion table, widen
-    supported_speeds variables from u8 to u16
-  - portdrv: Switch hweight8() to hweight16() for supported_speeds
-    to match the widened type
-  - pcie_cooling: Add static_assert for PCIE_SPEED_128_0GT enum
-    contiguity check
+This series adds an alternate doorbell backend based on the DesignWare
+PCIe controller's integrated eDMA interrupt-emulation feature. The RC
+rings the doorbell by doing a single 32-bit MMIO write to an eDMA
+doorbell location exposed in a BAR window. The EP side receives a Linux
+IRQ that EPF drivers can use as a doorbell interrupt, without relying on
+MSI message writes reaching the ITS.
 
-Signed-off-by: Ionut Nechita <ionut_n2001@yahoo.com>
+To support this, the series:
+
+  - Adds an EPC auxiliary resource query API so EPF drivers can discover
+    controller-integrated resources (DMA MMIO, doorbell MMIO, and DMA LL
+    memory).
+  - Updates DesignWare EP controllers to report integrated eDMA
+    resources via the new API.
+  - Updates dw-edma to provide a dedicated virtual IRQ for interrupt
+    emulation and to perform the core-specific deassert sequence.
+  - Describes an RK3588 BAR4 reserved subregion so EPF drivers can reuse
+    a platform-owned fixed BAR mapping for the doorbell target.
+  - Updates pci-epf-test and pci-epf-vntb to reuse a pre-exposed
+    BAR/offset and to honor per-doorbell IRQ flags.
+
+
+Dependencies
+------------
+
+The following two split-out series are prerequisite for this series:
+
+  (1). [PATCH v2 0/4] PCI: endpoint: Doorbell-related fixes
+       https://lore.kernel.org/linux-pci/20260217063856.3759713-1-den@valinux.co.jp/
+  (2). [PATCH 0/2] dmaengine: dw-edma: Interrupt-emulation doorbell support
+       https://lore.kernel.org/dmaengine/20260215152216.3393561-1-den@valinux.co.jp/
+
+
+Tested on
+---------
+
+I re-tested the v8 embedded (DMA) doorbell fallback path (via pci-epf-test)
+on R-Car Spider boards:
+
+  $ ./pci_endpoint_test -t DOORBELL_TEST
+  TAP version 13
+  1..1
+  # Starting 1 tests from 1 test cases.
+  #  RUN           pcie_ep_doorbell.DOORBELL_TEST ...
+  #            OK  pcie_ep_doorbell.DOORBELL_TEST
+  ok 1 pcie_ep_doorbell.DOORBELL_TEST
+  # PASSED: 1 / 1 tests passed.
+  # Totals: pass:1 fail:0 xfail:0 xpass:0 skip:0 error:0
+
+with the following message observed on the EP side:
+
+  [   51.332944] pci_epf_vntb pci_epf_vntb.0: Can't find MSI domain for EPC
+  [   51.333507] pci_epf_vntb pci_epf_vntb.0: Using embedded (DMA) doorbell fallback
+
+(Note: for the test to pass on R-Car Spider, one of the following was required:
+ - echo 1048576 > functions/pci_epf_test/func1/pci_epf_test.0/bar2_size
+ - apply https://lore.kernel.org/linux-pci/20260210160315.2272930-1-den@valinux.co.jp/)
+
+
+Performance test: vNTB ping latency
+-----------------------------------
+
+Setup:
+  - configfs (R-Car Spider in EP mode):
+
+      cd /sys/kernel/config/pci_ep/
+      mkdir functions/pci_epf_vntb/func1
+      echo 0x1912 >   functions/pci_epf_vntb/func1/vendorid
+      echo 0x0030 >   functions/pci_epf_vntb/func1/deviceid
+      echo 32 >       functions/pci_epf_vntb/func1/msi_interrupts
+      echo 4 >        functions/pci_epf_vntb/func1/pci_epf_vntb.0/db_count
+      echo 128 >      functions/pci_epf_vntb/func1/pci_epf_vntb.0/spad_count
+      echo 1 >        functions/pci_epf_vntb/func1/pci_epf_vntb.0/num_mws
+      echo 0x100000 > functions/pci_epf_vntb/func1/pci_epf_vntb.0/mw1
+      echo 0x1912 >   functions/pci_epf_vntb/func1/pci_epf_vntb.0/vntb_vid
+      echo 0x0030 >   functions/pci_epf_vntb/func1/pci_epf_vntb.0/vntb_pid
+      echo 0x10 >     functions/pci_epf_vntb/func1/pci_epf_vntb.0/vbus_number
+      echo 0 >        functions/pci_epf_vntb/func1/pci_epf_vntb.0/ctrl_bar
+      echo 4 >        functions/pci_epf_vntb/func1/pci_epf_vntb.0/db_bar [*]
+      echo 2 >        functions/pci_epf_vntb/func1/pci_epf_vntb.0/mw1_bar
+      ln -s controllers/e65d0000.pcie-ep functions/pci_epf_vntb/func1/primary/
+      echo 1 > controllers/e65d0000.pcie-ep/start
+
+      [*]: On R-Car Spider, a hack is currently needed to use BAR4 for
+	   the doorbell. I'll consider posting a patch for that
+	   separately.
+
+  - ensure ntb_transport/ntb_netdev are loaded on both sides
+
+Results:
+
+  - Without this series (pci.git main)
+
+    $ ping -c 10 10.0.0.11
+    PING 10.0.0.11 (10.0.0.11) 56(84) bytes of data.
+    64 bytes from 10.0.0.11: icmp_seq=1 ttl=64 time=6.04 ms
+    64 bytes from 10.0.0.11: icmp_seq=2 ttl=64 time=12.6 ms
+    64 bytes from 10.0.0.11: icmp_seq=3 ttl=64 time=7.40 ms
+    64 bytes from 10.0.0.11: icmp_seq=4 ttl=64 time=5.38 ms
+    64 bytes from 10.0.0.11: icmp_seq=5 ttl=64 time=11.4 ms
+    64 bytes from 10.0.0.11: icmp_seq=6 ttl=64 time=9.42 ms
+    64 bytes from 10.0.0.11: icmp_seq=7 ttl=64 time=3.36 ms
+    64 bytes from 10.0.0.11: icmp_seq=8 ttl=64 time=9.48 ms
+    64 bytes from 10.0.0.11: icmp_seq=9 ttl=64 time=4.24 ms
+    64 bytes from 10.0.0.11: icmp_seq=10 ttl=64 time=10.4 ms
+
+  - With this series (on top of pci.git main + Dependency (1) and (2))
+
+    $ ping -c 10 10.0.0.11
+    PING 10.0.0.11 (10.0.0.11) 56(84) bytes of data.
+    64 bytes from 10.0.0.11: icmp_seq=1 ttl=64 time=0.935 ms
+    64 bytes from 10.0.0.11: icmp_seq=2 ttl=64 time=0.805 ms
+    64 bytes from 10.0.0.11: icmp_seq=3 ttl=64 time=0.833 ms
+    64 bytes from 10.0.0.11: icmp_seq=4 ttl=64 time=0.886 ms
+    64 bytes from 10.0.0.11: icmp_seq=5 ttl=64 time=0.861 ms
+    64 bytes from 10.0.0.11: icmp_seq=6 ttl=64 time=0.929 ms
+    64 bytes from 10.0.0.11: icmp_seq=7 ttl=64 time=0.970 ms
+    64 bytes from 10.0.0.11: icmp_seq=8 ttl=64 time=0.946 ms
+    64 bytes from 10.0.0.11: icmp_seq=9 ttl=64 time=0.975 ms
+    64 bytes from 10.0.0.11: icmp_seq=10 ttl=64 time=0.881 ms
+
 ---
- drivers/pci/pcie/bwctrl.c      | 7 ++++---
- drivers/pci/pcie/portdrv.c     | 2 +-
- drivers/thermal/pcie_cooling.c | 1 +
- 3 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
-index 36f939f23d34e..b9125b40cb860 100644
---- a/drivers/pci/pcie/bwctrl.c
-+++ b/drivers/pci/pcie/bwctrl.c
-@@ -50,7 +50,7 @@ static DECLARE_RWSEM(pcie_bwctrl_setspeed_rwsem);
- 
- static bool pcie_valid_speed(enum pci_bus_speed speed)
- {
--	return (speed >= PCIE_SPEED_2_5GT) && (speed <= PCIE_SPEED_64_0GT);
-+	return (speed >= PCIE_SPEED_2_5GT) && (speed <= PCIE_SPEED_128_0GT);
- }
- 
- static u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
-@@ -62,6 +62,7 @@ static u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
- 		[PCIE_SPEED_16_0GT] = PCI_EXP_LNKCTL2_TLS_16_0GT,
- 		[PCIE_SPEED_32_0GT] = PCI_EXP_LNKCTL2_TLS_32_0GT,
- 		[PCIE_SPEED_64_0GT] = PCI_EXP_LNKCTL2_TLS_64_0GT,
-+		[PCIE_SPEED_128_0GT] = PCI_EXP_LNKCTL2_TLS_128_0GT,
- 	};
- 
- 	if (WARN_ON_ONCE(!pcie_valid_speed(speed)))
-@@ -70,7 +71,7 @@ static u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
- 	return speed_conv[speed];
- }
- 
--static inline u16 pcie_supported_speeds2target_speed(u8 supported_speeds)
-+static inline u16 pcie_supported_speeds2target_speed(u16 supported_speeds)
- {
- 	return __fls(supported_speeds);
- }
-@@ -88,7 +89,7 @@ static inline u16 pcie_supported_speeds2target_speed(u8 supported_speeds)
- static u16 pcie_bwctrl_select_speed(struct pci_dev *port, enum pci_bus_speed speed_req)
- {
- 	struct pci_bus *bus = port->subordinate;
--	u8 desired_speeds, supported_speeds;
-+	u16 desired_speeds, supported_speeds;
- 	struct pci_dev *dev;
- 
- 	desired_speeds = GENMASK(pci_bus_speed2lnkctl2(speed_req),
-diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-index 38a41ccf79b9a..5ee8795107f26 100644
---- a/drivers/pci/pcie/portdrv.c
-+++ b/drivers/pci/pcie/portdrv.c
-@@ -274,7 +274,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 
- 		pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &linkcap);
- 		if (linkcap & PCI_EXP_LNKCAP_LBNC &&
--		    hweight8(dev->supported_speeds) > 1)
-+		    hweight16(dev->supported_speeds) > 1)
- 			services |= PCIE_PORT_SERVICE_BWCTRL;
- 	}
- 
-diff --git a/drivers/thermal/pcie_cooling.c b/drivers/thermal/pcie_cooling.c
-index a876d64f15827..9a2e39398674b 100644
---- a/drivers/thermal/pcie_cooling.c
-+++ b/drivers/thermal/pcie_cooling.c
-@@ -75,6 +75,7 @@ static_assert(PCIE_SPEED_5_0GT + 1 == PCIE_SPEED_8_0GT);
- static_assert(PCIE_SPEED_8_0GT + 1 == PCIE_SPEED_16_0GT);
- static_assert(PCIE_SPEED_16_0GT + 1 == PCIE_SPEED_32_0GT);
- static_assert(PCIE_SPEED_32_0GT + 1 == PCIE_SPEED_64_0GT);
-+static_assert(PCIE_SPEED_64_0GT + 1 == PCIE_SPEED_128_0GT);
- 
- MODULE_AUTHOR("Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>");
- MODULE_DESCRIPTION("PCIe cooling driver");
+Changelog
+---------
+
+* v7->v8 changes:
+  - Deduplicate request_irq()/free_irq() calls based on virq (shared
+    IRQ) rather than doorbell type, as suggested during review of v7
+    Patch #7.
+  - Clean up the pci_epf_alloc_doorbell() error path, as suggested
+    during review of v7 Patch #9.
+  - Use range_end_overflows_t() instead of an open-coded overflow check,
+    following discussion during review of v7 Patch #5.
+  - Add a write-data field to the DOORBELL_MMIO aux-resource metadata
+    and plumb it through to the embedded doorbell backend (DesignWare
+    uses data=0).
+
+* v6->v7 changes:
+  - Split out preparatory patches to keep the series below 10 patches.
+  - Add support for platforms where the eDMA register block is fixed
+    within a reserved BAR window (e.g. RK3588 BAR4) and must be reused
+    as-is.
+  - Introduce a dedicated virtual IRQ and irq_chip (using
+    handle_level_irq) for interrupt-emulation doorbells instead of
+    reusing per-channel IRQs. This avoids delivery via different IRQs on
+    platforms with chip->nr_irqs > 1.
+
+* v5->v6 changes:
+  - Fix a double-free in v5 Patch 8/8 caused by mixing __free(kfree) with
+    an explicit kfree(). This is a functional bug (detectable by KASAN),
+    hence the respin solely for this fix. Sorry for the noise. No other
+    changes.
+
+* v4->v5 changes:
+  - Change the series subject now that the series has evolved into a
+    consumer-driven set focused on the embedded doorbell fallback and its
+    in-tree users (epf-test and epf-vntb).
+  - Drop [PATCH v4 01/09] (dw-edma per-channel interrupt routing control)
+    from this series for now, so the series focuses on what's needed by the
+    current consumer (i.e. the doorbell fallback implementation).
+  - Replace the v4 embedded-doorbell "test variant + host/kselftest
+    plumbing" with a generic embedded-doorbell fallback in
+    pci_epf_alloc_doorbell(), including exposing required IRQ request flags
+    to EPF drivers.
+  - Two preparatory fix patches (Patch 6/8 and 7/8) to clean up error
+    handling and state management ahead of Patch 8/8.
+  - Rename *_get_remote_resource() to *_get_aux_resources() and adjust
+    relevant variable namings and kernel docs. Discussion may continue.
+  - Rework dw-edma per-channel metadata exposure to cache the needed info
+    in dw_edma_chip (IRQ number + emulation doorbell offset) and consume it
+    from the DesignWare EPC auxiliary resource provider without calling back
+    to dw-edma.
+
+* v3->v4 changes:
+  - Drop dma_slave_caps.hw_id and the dmaengine selfirq callback
+    registration API. Instead, add a dw-edma specific dw_edma_chan_info()
+    helper and extend the EPC remote resource metadata accordingly.
+  - Add explicit acking for eDMA interrupt emulation and adjust the
+    dw-edma IRQ path for embedded-doorbell usage.
+  - Replace the previous EPC API smoke test with an embedded doorbell
+    test variant (pci-epf-test + pci_endpoint_test/selftests).
+  - Rebase onto pci.git controller/dwc commit 43d324eeb08c.
+
+* v2->v3 changes:
+  - Replace DWC-specific helpers with a generic EPC remote resource query API.
+  - Add pci-epf-test smoke test and host/kselftest support for the new API.
+  - Drop the dw-edma-specific notify-only channel and polling approach
+    ([PATCH v2 4/7] and [PATCH v2 5/7]), and rework notification handling
+    around a generic dmaengine_(un)register_selfirq() API implemented
+    by dw-edma.
+
+* v1->v2 changes:
+  - Combine the two previously posted series into a single set (per Frank's
+    suggestion). Order dmaengine/dw-edma patches first so hw_id support
+    lands before the PCI LL-region helper, which assumes
+    dma_slave_caps.hw_id availability.
+
+v6: https://lore.kernel.org/all/20260209125316.2132589-1-den@valinux.co.jp/
+v5: https://lore.kernel.org/all/20260209062952.2049053-1-den@valinux.co.jp/
+v4: https://lore.kernel.org/all/20260206172646.1556847-1-den@valinux.co.jp/
+v3: https://lore.kernel.org/all/20260204145440.950609-1-den@valinux.co.jp/
+v2: https://lore.kernel.org/all/20260127033420.3460579-1-den@valinux.co.jp/
+v1: https://lore.kernel.org/dmaengine/20260126073652.3293564-1-den@valinux.co.jp/
+    +
+    https://lore.kernel.org/linux-pci/20260126071550.3233631-1-den@valinux.co.jp/
+
+
+Thanks for reviewing.
+
+Many thanks to Frank and Niklas for the continued review and
+constructive feedback throughout the development of this series.
+
+
+Koichiro Den (9):
+  PCI: endpoint: Describe reserved subregions within BARs
+  PCI: dw-rockchip: Describe RK3588 BAR4 DMA ctrl window
+  PCI: endpoint: Add auxiliary resource query API
+  PCI: dwc: Record integrated eDMA register window
+  PCI: dwc: ep: Expose integrated eDMA resources via EPC aux-resource
+    API
+  PCI: endpoint: pci-ep-msi: Refactor doorbell allocation for new
+    backends
+  PCI: endpoint: pci-epf-vntb: Reuse pre-exposed doorbells and IRQ flags
+  PCI: endpoint: pci-epf-test: Reuse pre-exposed doorbell targets
+  PCI: endpoint: pci-ep-msi: Add embedded eDMA doorbell fallback
+
+ .../pci/controller/dwc/pcie-designware-ep.c   | 151 ++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.c  |   4 +
+ drivers/pci/controller/dwc/pcie-designware.h  |   2 +
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c |  15 +-
+ drivers/pci/endpoint/functions/pci-epf-test.c |  87 ++++++----
+ drivers/pci/endpoint/functions/pci-epf-vntb.c |  61 ++++++-
+ drivers/pci/endpoint/pci-ep-msi.c             | 146 +++++++++++++++--
+ drivers/pci/endpoint/pci-epc-core.c           |  41 +++++
+ include/linux/pci-epc.h                       |  80 ++++++++++
+ include/linux/pci-epf.h                       |  23 ++-
+ 10 files changed, 562 insertions(+), 48 deletions(-)
+
 -- 
-2.53.0
+2.51.0
 
