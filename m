@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E26631A800;
-	Tue, 17 Feb 2026 11:10:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B9031A800;
+	Tue, 17 Feb 2026 11:11:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771326642; cv=none; b=fmbaeu+Gywn32B23druJH5MEIVxT58Ce7dhWYUmo943ByTRjzZA4Gc/GiJEDuEZPmjrKHGcoQD65C/HJqy3KdyBswFXTnNykzMmACUztPQ0DJAUkAgtknukiTBAFMhLS+8LRE0YFf+sj6k17eYeoTUMmbVuePtdL/V9PkpNk7ew=
+	t=1771326694; cv=none; b=DwO/yFyXBh+A++1/csOFa6yx1hglP73GigUJdTB3jYhf3H8mc26RIVnr8lKAByOI9sqxqO5syzFAeNRLuu+sXTmkignX6l8V38d+rRrDb8LQiK9EMwuXxjNnegrsrYpr9HwquuW7t48lEG9M8R42UXOK6jvali8WObcJdx/OV7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771326642; c=relaxed/simple;
-	bh=gHQK+7Chcd4VthUF4prpwCvbHfkpJN2yH4VNIqApsd0=;
+	s=arc-20240116; t=1771326694; c=relaxed/simple;
+	bh=ksGhkyEQ/4iARM3Z/FpKDgBdKFLwJoclNfAttGf4/RI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OmrPA6F2524JDgoqfK7EnP3hmb9prrwI2CeqqJ6bW49K8PPkQywaeyQVf42cvNeQmQJc/oDTk5h9l9kyiUhKWp1FLsDGEFPW2ItSMuKOyHY2hSWzgW/P6AOUdxgzgCS3ZO0MGxO0lrz2z68IAysXiAIg3doJiLYG9sDooqqQ89E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HqXLYE7x; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Hpb2meNkX+7LCgI5Ey9DTidHQKLKn4xqz7HmdhWhaYj81mJ6hmcAZzzg1sOUOa4HK5WxhRMq8DjSDCSCIk8xu2+2+WqYngtMWOJ1mA98yPis+sXyZjrcVTtluRAJnFc+uane6nmHqmhmEE2y09o4u1xHZpBfK36uzk+yVhMIeYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rFxO1fjQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HqXLYE7x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F53DC4CEF7;
-	Tue, 17 Feb 2026 11:10:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rFxO1fjQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20F64C4CEF7;
+	Tue, 17 Feb 2026 11:11:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771326641;
-	bh=gHQK+7Chcd4VthUF4prpwCvbHfkpJN2yH4VNIqApsd0=;
+	s=k20201202; t=1771326693;
+	bh=ksGhkyEQ/4iARM3Z/FpKDgBdKFLwJoclNfAttGf4/RI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HqXLYE7xpPVZuxMxVbW2zFnh8282AFd8JY7ggX663f57ysjq7cuU8c9qYGIhR2HC9
-	 sHbV7Kc+xvHEpxsPEuP+U9Y6jocx+0qtx8FkM61d69EtMFQSRxoDrgaSIz1uvqi4gw
-	 vBSrynBXszjDJuNxI2P483WbIitweAHQWR9SALhIJ68UiueXwBdovwVLyIWzmCWgxU
-	 a4hos7NF72b8I9f7qR9mgJrTIhwaZ7zqNwXdlM51m4+03oMmfkq1tvquQz73jMKfgT
-	 mBGLbvR0i2xqf6IpGZM/7SAh/Fgb4kR7MN1M3SOARxnhQJTIe3RTzu7hsRow2on/Ig
-	 PeBwuFIbrMAFg==
-Date: Tue, 17 Feb 2026 12:10:36 +0100
+	b=rFxO1fjQ7OEepB9DUlC5a1figPaxvzHShpc0qF/sX1jm2mXLAFCJxww+jcNi8Ybv3
+	 VE3IY331gCqbbPSl2oUnlQKxdaj6dxxsF2PBscnThEnYAIupHT7rshuJ/1mvnnAn5c
+	 4ecjxSTfXCydWxcwdxkZ4F90TosVqjOpSSx6LeDv50P67wFVic67xxMek1yDxmmBXv
+	 7mF4Zy7jejnzmEgGxSXyf3azDD/vb3rQ+EgDPSg7pZvhB7DZ9uz0DfG4oXGcjFUm2t
+	 KQT5zJi3Wpbd6MR3LsubVeqBla7cZVzx6oLbqVsQfm6eZI8Rhs/DtdpxRlx0UOae4H
+	 /nc0wwN8nw9xQ==
+Date: Tue, 17 Feb 2026 12:11:28 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: Koichiro Den <den@valinux.co.jp>
 Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
 	bhelgaas@google.com, jdmason@kudzu.us, dave.jiang@intel.com,
 	allenbh@gmail.com, Frank.Li@nxp.com, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, ntb@lists.linux.dev
-Subject: Re: [PATCH v2 1/3] PCI: endpoint: pci-epf-vntb: Fix MSI doorbell IRQ
- unwind
-Message-ID: <aZRMrNlmU6cgrnVo@ryzen>
+Subject: Re: [PATCH v2 2/3] PCI: endpoint: pci-epf-test: Don't free doorbell
+ IRQ unless requested
+Message-ID: <aZRM4ICyyuAe3Gix@ryzen>
 References: <20260217063856.3759713-1-den@valinux.co.jp>
- <20260217063856.3759713-2-den@valinux.co.jp>
+ <20260217063856.3759713-3-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,21 +46,19 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260217063856.3759713-2-den@valinux.co.jp>
+In-Reply-To: <20260217063856.3759713-3-den@valinux.co.jp>
 
-On Tue, Feb 17, 2026 at 03:38:54PM +0900, Koichiro Den wrote:
-> epf_ntb_db_bar_init_msi_doorbell() requests ntb->db_count doorbell IRQs
-> and then performs additional MSI doorbell setup that may still fail.
-> The error path unwinds the requested IRQs, but it uses a loop variable
-> that is reused later in the function. When a later step fails, the
-> unwind can run with an unexpected index value and leave some IRQs
-> requested.
+On Tue, Feb 17, 2026 at 03:38:55PM +0900, Koichiro Den wrote:
+> pci_epf_test_doorbell_cleanup() unconditionally calls free_irq() for the
+> doorbell virq, which can trigger "Trying to free already-free IRQ"
+> warnings when the IRQ was never requested or when request_threaded_irq()
+> failed.
 > 
-> Track the number of successfully requested IRQs separately and use that
-> counter for the unwind so all previously requested IRQs are freed on
-> failure.
+> Move free_irq() out of pci_epf_test_doorbell_cleanup() and invoke it
+> only after a successful request, so that free_irq() is not called for
+> an unrequested IRQ.
 > 
-> Fixes: dc693d606644 ("PCI: endpoint: pci-epf-vntb: Add MSI doorbell support")
+> Fixes: eff0c286aa91 ("PCI: endpoint: pci-epf-test: Add doorbell test support")
 > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 > ---
 
