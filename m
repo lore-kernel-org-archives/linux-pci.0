@@ -1,45 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3AF359FB0;
-	Tue, 17 Feb 2026 14:00:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38B7332EB0;
+	Tue, 17 Feb 2026 14:10:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771336832; cv=none; b=B3UZftSkJvBpy2Y7jO661aroevPAceaHAQ6KRGA8RmCzwhDVHKz9RP/2zUxA4w/gpjMDUf32sT/nm9toS/GNoWBhZycbcoNyZFJagZ0nouVoufi4ekzwtIeWlXbQy7SECdPRnl8a+KQVPlvo+g7qARqNIGJwJdl5KmcxIhH1yHY=
+	t=1771337415; cv=none; b=MdMPQXuWWgF8JXcxHKwx9d0awI5rTyNBCuYnxNzWKKveIZSiSW3FdbREoON+Lggbt4DInhjCn9UJT8J0j+1DPrWKUCqpIF+9xWQx9k4Lrw9f9xMl8VwI2Ur2KYtrmMXXrZnuqjXEnebeD2kiHsTP0WqN1oJqL7MkLWgRZWnPsnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771336832; c=relaxed/simple;
-	bh=yZ7EZjJ35vE1okONnm6nlL8GwNn4qtBojbitFN7sh+s=;
+	s=arc-20240116; t=1771337415; c=relaxed/simple;
+	bh=vTbSQEsSE8u+24OYbcc6B0HuNs2Lq3FmPPQ2RJxcH8c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FjFDFr8pRiZjttzxF5i0Wg2YrtpKzo+D2pBfg5MTFrJvgfuwb5ceMtlJVhZfMDZIxntUx4D+XIsxCaLDjH8cJHKkccJj/KbT3ZSKcRGeNe3ozHuzWURbVIlxKMUAUG2/VrUL6S381ysx5wZITFLFVeRn1D19M/mGrPCRQYisa1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jmH4cT3S; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CjkGoZiug4oHQPdaa1guE7lUj1AECl2dJF1JEwGZp4QuFaGPluZJCl3wiJBgPG1CsQf6KxLUbPjfsrVzSx51ED++CBSogF+pQlEZSrHSwUaH/yBygkZdutEHo2y+tKd7wBr2b1CFnsX3zOTyl2XgjCL3JRScuIaupJ/65OvYKRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yr3T16Y+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jmH4cT3S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BC8CC19423;
-	Tue, 17 Feb 2026 14:00:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yr3T16Y+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCECDC4CEF7;
+	Tue, 17 Feb 2026 14:10:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771336831;
-	bh=yZ7EZjJ35vE1okONnm6nlL8GwNn4qtBojbitFN7sh+s=;
+	s=k20201202; t=1771337415;
+	bh=vTbSQEsSE8u+24OYbcc6B0HuNs2Lq3FmPPQ2RJxcH8c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jmH4cT3Sx9zCRZQH9kFVGIW5ensgdZJTn4zf48NZ0YIB5BBUVYe/yZsiM/TYW6vwC
-	 HZm8v8gds4F9qE+hm3rVhCNougf376hLCEhkLbD1loeG8gWj+hsahepoTD8lB6MGD1
-	 cigUXjIg3vvTFDAWpna9VMH2+QrdThxiCuV8wmRPZF+XyKxszSrJVtH3ueDgsyIcTu
-	 gseHHGa6vH4aNL2TPSu/iyflRGBzXaabqwa15SbYUlgbezZLNONS9JEXFNYzuLpxTZ
-	 ghIWeLYGiXKqgfRTTjKwTr0bdfxQIqmCcAd5wTOHC5HWJrTT7hUgnHGZZHlwbyRPi7
-	 pnZxxaNiP6jBA==
-Date: Tue, 17 Feb 2026 19:30:24 +0530
+	b=Yr3T16Y+mq9EgUFPoISna1IfoaKURU7W3FzNyANzrp9ExRMXw/iz0HhL5Z5QDEM7D
+	 pE1CZElyyrIFnn83ECBeZwDS0jHeFZdY0anTUsKByhNn3kVGZ4nBGmatV5n1YkCcvE
+	 RNr3NXb+J/G64Fi8lbSlKCAFPT3weKvn9vr0rL4RugM9riXRZ9HZX2YQ5elewZKz9d
+	 8Y4dXZOY0wYocSibOTrs4xcwGqKdJe9c6bdJfBNbSbv5p600XtUrsrzGFDqCY+Dm0G
+	 dNiJCVFta62S6DEnaQvokxJbll5eugxpWdgtaQYFj06Bghu9nAcGpAyRaqOnr+A6G7
+	 iVVNxJDWL0idg==
+Date: Tue, 17 Feb 2026 19:40:04 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Marc Kleine-Budde <mkl@pengutronix.de>
-Cc: Steffen Trumtrar <s.trumtrar@pengutronix.de>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Minghuan Lian <minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>, 
-	Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, 
-	Sascha Hauer <s.hauer@pengutronix.de>
-Subject: Re: [PATCH] PCI: layerscape: Allow to compile as module
-Message-ID: <a3fn5vt73n6ggnr6euuba7gbmv7uhx4c6wdelxwtkcdzn2dn7e@btqsm5glgffr>
-References: <20260112-v6-19-topic-layerscape-pcie-v1-1-1cd863fce50e@pengutronix.de>
- <20260216-mahogany-caterpillar-of-certainty-38b0bc-mkl@pengutronix.de>
+To: Randolph <randolph@andestech.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, devicetree@vger.kernel.org, jingoohan1@gmail.com, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, alex@ghiti.fr, aou@eecs.berkeley.edu, 
+	palmer@dabbelt.com, paul.walmsley@sifive.com, ben717@andestech.com, 
+	inochiama@gmail.com, thippeswamy.havalige@amd.com, namcao@linutronix.de, 
+	shradha.t@samsung.com, pjw@kernel.org, christian.bruel@foss.st.com, 
+	quic_wenbyao@quicinc.com, vincent.guittot@linaro.org, elder@riscstar.com, 
+	s-vadapalli@ti.com, randolph.sklin@gmail.com, tim609@andestech.com
+Subject: Re: [PATCH v10 3/4] PCI: qilai: Add Andes QiLai SoC PCIe host driver
+ support
+Message-ID: <gun4nwn7zrutg3ebcg224jiektnf4sfh3zd3bcf3q56klxjndt@fhzelxv7t2fk>
+References: <20260116110234.1908263-1-randolph@andestech.com>
+ <20260116110234.1908263-4-randolph@andestech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,103 +52,268 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260216-mahogany-caterpillar-of-certainty-38b0bc-mkl@pengutronix.de>
+In-Reply-To: <20260116110234.1908263-4-randolph@andestech.com>
 
-On Mon, Feb 16, 2026 at 10:49:42PM +0100, Marc Kleine-Budde wrote:
-> Hello,
+On Fri, Jan 16, 2026 at 07:02:33PM +0800, Randolph wrote:
+> From: Randolph Lin <randolph@andestech.com>
 > 
-> Bjorn can you take this patch?
+> Add driver support for DesignWare based PCIe controller in Andes
+> QiLai SoC. The driver only supports the Root Complex mode.
 > 
+> Signed-off-by: Randolph Lin <randolph@andestech.com>
 
-Will do once -rc1 is out.
+Just a couple of nits. Overall this driver LGTM!
+
+> ---
+>  drivers/pci/controller/dwc/Kconfig            |  13 ++
+>  drivers/pci/controller/dwc/Makefile           |   1 +
+>  drivers/pci/controller/dwc/pcie-andes-qilai.c | 198 ++++++++++++++++++
+>  3 files changed, 212 insertions(+)
+>  create mode 100644 drivers/pci/controller/dwc/pcie-andes-qilai.c
+> 
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index 519b59422b47..de5ff883e2ba 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -61,6 +61,19 @@ config PCI_MESON
+>  	  and therefore the driver re-uses the DesignWare core functions to
+>  	  implement the driver.
+>  
+> +config PCIE_ANDES_QILAI
+> +	tristate "Andes QiLai PCIe controller"
+> +	depends on ARCH_ANDES || COMPILE_TEST
+> +	depends on PCI_MSI
+> +	select PCIE_DW_HOST
+> +	help
+> +	  Say Y here to enable PCIe controller support on Andes QiLai SoCs,
+> +	  which operate in Root Complex mode. The Andes QiLai SoC PCIe
+> +	  controller is based on DesignWare IP (5.97a version) and therefore
+
+Avoid mentioning IP revision here as this driver may evolve to support multiple
+IP versions.
+
+> +	  the driver re-uses the DesignWare core functions to implement the
+> +	  driver. The Andes QiLai SoC features three Root Complexes, each
+> +	  operating on PCIe 4.0.
+> +
+>  config PCIE_ARTPEC6
+>  	bool
+>  
+> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+> index 67ba59c02038..9e61458dff00 100644
+> --- a/drivers/pci/controller/dwc/Makefile
+> +++ b/drivers/pci/controller/dwc/Makefile
+> @@ -5,6 +5,7 @@ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+>  obj-$(CONFIG_PCIE_AMD_MDB) += pcie-amd-mdb.o
+> +obj-$(CONFIG_PCIE_ANDES_QILAI) += pcie-andes-qilai.o
+>  obj-$(CONFIG_PCIE_BT1) += pcie-bt1.o
+>  obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+>  obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+> diff --git a/drivers/pci/controller/dwc/pcie-andes-qilai.c b/drivers/pci/controller/dwc/pcie-andes-qilai.c
+> new file mode 100644
+> index 000000000000..daa0281abd24
+> --- /dev/null
+> +++ b/drivers/pci/controller/dwc/pcie-andes-qilai.c
+> @@ -0,0 +1,198 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Driver for the PCIe Controller in QiLai from Andes
+> + *
+> + * Copyright (C) 2025 Andes Technology Corporation
+
+2026
+
+> + */
+> +
+> +#include <linux/bitfield.h>
+> +#include <linux/bits.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/types.h>
+> +
+> +#include "pcie-designware.h"
+> +
+> +#define PCIE_INTR_CONTROL1			0x15c
+> +#define PCIE_MSI_CTRL_INT_EN			BIT(28)
+> +
+> +#define PCIE_LOGIC_COHERENCY_CONTROL3		0x8e8
+> +
+> +/*
+> + * Refer to Table A4-5 (Memory type encoding) in the
+> + * AMBA AXI and ACE Protocol Specification.
+> + *
+> + * The selected value corresponds to the Memory type field:
+> + * "Write-back, Read and Write-allocate".
+> + *
+> + * The last three rows in the table A4-5 in
+> + * AMBA AXI and ACE Protocol Specification:
+> + * ARCACHE        AWCACHE        Memory type
+> + * ------------------------------------------------------------------
+> + * 1111 (0111)    0111           Write-back Read-allocate
+> + * 1011           1111 (1011)    Write-back Write-allocate
+> + * 1111           1111           Write-back Read and Write-allocate (selected)
+> + */
+> +#define IOCP_ARCACHE				0b1111
+> +#define IOCP_AWCACHE				0b1111
+> +
+> +#define PCIE_CFG_MSTR_ARCACHE_MODE		GENMASK(6, 3)
+> +#define PCIE_CFG_MSTR_AWCACHE_MODE		GENMASK(14, 11)
+> +#define PCIE_CFG_MSTR_ARCACHE_VALUE		GENMASK(22, 19)
+> +#define PCIE_CFG_MSTR_AWCACHE_VALUE		GENMASK(30, 27)
+> +
+> +#define PCIE_GEN_CONTROL2			0x54
+> +#define PCIE_CFG_LTSSM_EN			BIT(0)
+> +
+> +#define PCIE_REGS_PCIE_SII_PM_STATE		0xc0
+> +#define SMLH_LINK_UP				BIT(6)
+> +#define RDLH_LINK_UP				BIT(7)
+> +#define PCIE_REGS_PCIE_SII_LINK_UP		(SMLH_LINK_UP | RDLH_LINK_UP)
+> +
+> +struct qilai_pcie {
+> +	struct dw_pcie pci;
+> +	void __iomem *apb_base;
+> +};
+> +
+> +#define to_qilai_pcie(_pci) container_of(_pci, struct qilai_pcie, pci)
+> +
+> +static bool qilai_pcie_link_up(struct dw_pcie *pci)
+> +{
+> +	struct qilai_pcie *pcie = to_qilai_pcie(pci);
+> +	u32 val;
+> +
+> +	/* Read smlh & rdlh link up by checking debug port */
+
+No need of this comment.
+
+> +	val = readl(pcie->apb_base + PCIE_REGS_PCIE_SII_PM_STATE);
+> +
+> +	return (val & PCIE_REGS_PCIE_SII_LINK_UP) == PCIE_REGS_PCIE_SII_LINK_UP;
+
+Use FIELD_ macros throughout the driver.
+
+> +}
+> +
+> +static int qilai_pcie_start_link(struct dw_pcie *pci)
+> +{
+> +	struct qilai_pcie *pcie = to_qilai_pcie(pci);
+> +	u32 val;
+> +
+> +	val = readl(pcie->apb_base + PCIE_GEN_CONTROL2);
+> +	val |= PCIE_CFG_LTSSM_EN;
+> +	writel(val, pcie->apb_base + PCIE_GEN_CONTROL2);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct dw_pcie_ops qilai_pcie_ops = {
+> +	.link_up = qilai_pcie_link_up,
+> +	.start_link = qilai_pcie_start_link,
+> +};
+> +
+> +/*
+> + * Set up the QiLai PCIe IOCP (IO Coherence Port) Read/Write Behaviors to the
+> + * Write-Back, Read and Write Allocate mode.
+> + *
+> + * The IOCP HW target is SoC last-level cache (L2 Cache), which serves as the
+> + * system cache. The IOCP HW helps maintain cache monitoring, ensuring that
+> + * the device can snoop data from/to the cache.
+
+If the IP allows device to snoop data to/from the cache, the controller should
+be marked as 'dma-coherent' in devicetree. And you need to add this property in
+the binding too.
+
+> + */
+> +static void qilai_pcie_iocp_cache_setup(struct dw_pcie_rp *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	u32 val;
+> +
+> +	dw_pcie_dbi_ro_wr_en(pci);
+> +
+> +	dw_pcie_read(pci->dbi_base + PCIE_LOGIC_COHERENCY_CONTROL3,
+> +		     sizeof(val), &val);
+> +	FIELD_MODIFY(PCIE_CFG_MSTR_ARCACHE_MODE, &val, IOCP_ARCACHE);
+> +	FIELD_MODIFY(PCIE_CFG_MSTR_AWCACHE_MODE, &val, IOCP_AWCACHE);
+> +	FIELD_MODIFY(PCIE_CFG_MSTR_ARCACHE_VALUE, &val, IOCP_ARCACHE);
+> +	FIELD_MODIFY(PCIE_CFG_MSTR_AWCACHE_VALUE, &val, IOCP_AWCACHE);
+> +	dw_pcie_write(pci->dbi_base + PCIE_LOGIC_COHERENCY_CONTROL3,
+> +		      sizeof(val), val);
+> +
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+> +}
+> +
+> +static void qilai_pcie_enable_msi(struct qilai_pcie *pcie)
+> +{
+> +	u32 val;
+> +
+> +	val = readl(pcie->apb_base + PCIE_INTR_CONTROL1);
+> +	val |= PCIE_MSI_CTRL_INT_EN;
+> +	writel(val, pcie->apb_base + PCIE_INTR_CONTROL1);
+> +}
+> +
+> +static int qilai_pcie_host_init(struct dw_pcie_rp *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct qilai_pcie *pcie = to_qilai_pcie(pci);
+> +
+> +	qilai_pcie_enable_msi(pcie);
+> +
+> +	return 0;
+> +}
+> +
+> +static void qilai_pcie_host_post_init(struct dw_pcie_rp *pp)
+> +{
+> +	qilai_pcie_iocp_cache_setup(pp);
+> +}
+> +
+> +static const struct dw_pcie_host_ops qilai_pcie_host_ops = {
+> +	.init = qilai_pcie_host_init,
+> +	.post_init = qilai_pcie_host_post_init,
+> +};
+> +
+> +static int qilai_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct qilai_pcie *pcie;
+> +	struct dw_pcie *pci;
+> +	struct device *dev = &pdev->dev;
+> +	int ret;
+> +
+> +	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+> +	if (!pcie)
+> +		return -ENOMEM;
+> +
+> +	platform_set_drvdata(pdev, pcie);
+> +
+> +	pci = &pcie->pci;
+> +	pcie->pci.dev = dev;
+> +	pcie->pci.ops = &qilai_pcie_ops;
+> +	pcie->pci.pp.ops = &qilai_pcie_host_ops;
+> +	pci->use_parent_dt_ranges = true;
+> +
+> +	dw_pcie_cap_set(&pcie->pci, REQ_RES);
+> +
+> +	pcie->apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
+> +	if (IS_ERR(pcie->apb_base))
+> +		return PTR_ERR(pcie->apb_base);
+> +
+
+Mark controller PM runtime status as enabled:
+
+        pm_runtime_set_active(dev);
+        pm_runtime_no_callbacks(dev);
+        devm_pm_runtime_enable(dev);
+
+> +	ret = dw_pcie_host_init(&pcie->pci.pp);
+> +	if (ret) {
+> +		dev_err_probe(dev, ret, "Failed to initialize PCIe host\n");
+
+return dev_err_probe()...
 
 - Mani
-
-> On 12.01.2026 20:17:11, Steffen Trumtrar wrote:
-> > From: Sascha Hauer <s.hauer@pengutronix.de>
-> >
-> > The layerscape pcie host controller could also be compiled as module.
-> > Add the necessary infrastructure to allow building as module instead of
-> > only as builtin driver.
-> >
-> > Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-> > Signed-off-by: Steffen Trumtrar <s.trumtrar@pengutronix.de>
-> > ---
-> >  drivers/pci/controller/dwc/Kconfig          |  2 +-
-> >  drivers/pci/controller/dwc/pci-layerscape.c | 16 +++++++++++++++-
-> >  2 files changed, 16 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> > index 519b59422b479..abfa4a6e62c25 100644
-> > --- a/drivers/pci/controller/dwc/Kconfig
-> > +++ b/drivers/pci/controller/dwc/Kconfig
-> > @@ -121,7 +121,7 @@ config PCI_IMX6_EP
-> >  	  DesignWare core functions to implement the driver.
-> >
-> >  config PCI_LAYERSCAPE
-> > -	bool "Freescale Layerscape PCIe controller (host mode)"
-> > +	tristate "Freescale Layerscape PCIe controller (host mode)"
-> >  	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
-> >  	depends on PCI_MSI
-> >  	select PCIE_DW_HOST
-> > diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-> > index a44b5c256d6e2..14d6ac4fc53fd 100644
-> > --- a/drivers/pci/controller/dwc/pci-layerscape.c
-> > +++ b/drivers/pci/controller/dwc/pci-layerscape.c
-> > @@ -13,6 +13,7 @@
-> >  #include <linux/interrupt.h>
-> >  #include <linux/init.h>
-> >  #include <linux/iopoll.h>
-> > +#include <linux/module.h>
-> >  #include <linux/of_pci.h>
-> >  #include <linux/of_platform.h>
-> >  #include <linux/of_address.h>
-> > @@ -403,8 +404,16 @@ static const struct dev_pm_ops ls_pcie_pm_ops = {
-> >  	NOIRQ_SYSTEM_SLEEP_PM_OPS(ls_pcie_suspend_noirq, ls_pcie_resume_noirq)
-> >  };
-> >
-> > +static void ls_pcie_remove(struct platform_device *pdev)
-> > +{
-> > +	struct ls_pcie *pcie = platform_get_drvdata(pdev);
-> > +
-> > +	dw_pcie_host_deinit(&pcie->pci->pp);
-> > +}
-> > +
-> >  static struct platform_driver ls_pcie_driver = {
-> >  	.probe = ls_pcie_probe,
-> > +	.remove = ls_pcie_remove,
-> >  	.driver = {
-> >  		.name = "layerscape-pcie",
-> >  		.of_match_table = ls_pcie_of_match,
-> > @@ -412,4 +421,9 @@ static struct platform_driver ls_pcie_driver = {
-> >  		.pm = &ls_pcie_pm_ops,
-> >  	},
-> >  };
-> > -builtin_platform_driver(ls_pcie_driver);
-> > +module_platform_driver(ls_pcie_driver);
-> > +
-> > +MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
-> > +MODULE_DESCRIPTION("Layerscape PCIe host controller driver");
-> > +MODULE_LICENSE("GPL");
-> > +MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-> >
-> > ---
-> > base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
-> > change-id: 20260112-v6-19-topic-layerscape-pcie-9d10b6542139
-> >
-> > Best regards,
-> > --
-> > Steffen Trumtrar <s.trumtrar@pengutronix.de>
-> >
-> >
-> 
-> --
-> Pengutronix e.K.                 | Marc Kleine-Budde          |
-> Embedded Linux                   | https://www.pengutronix.de |
-> Vertretung Nürnberg              | Phone: +49-5121-206917-129 |
-> Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-9   |
-
-
 
 -- 
 மணிவண்ணன் சதாசிவம்
