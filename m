@@ -1,328 +1,278 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021140.outbound.protection.outlook.com [40.107.74.140])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012005.outbound.protection.outlook.com [52.101.43.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7908127442;
-	Tue, 17 Feb 2026 04:00:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCA401FC7C5;
+	Tue, 17 Feb 2026 05:55:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.5
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771300855; cv=fail; b=o3PCTwnM4ts6svdywCNWhdJ0Wy3hhEbSNTXA6Yj6vsfsz0NvvkQkQw3XoRuAcNhv70QrZKe/fihSJm72AC8hQk6AsI/bsH4CJ5YfiEnOgbUOAyYpIW4qpI3Pbg1TltUOdA+AxyBr+XcqR0zVwpMotdzSZ3gZ+a/CMcvGKUmYYDI=
+	t=1771307734; cv=fail; b=a+jZuyMf7w8TlatSsK4kXBcFI752FkpYxZsz8lvHuDR6vLXgRJqTuTk1WR9FLruYzweDbCTK5QlWYaBlHsuvB/bbbSAr/SzOoeTJldxDgEQ3n/lnREe0A2z9h4hvexLZM3ldONy0enRiPJDUztj9IEL5emmtqGfd+e81A2nAzbw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771300855; c=relaxed/simple;
-	bh=DpoWE2uMRQZ5ldpLj4nrjmrPMhglfwadLKMIgWDU3w8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=hVi8yGEIXSgTH0z/84NV0LKlJL0ezqWJkZqeTdPxvjx5rnF0HXsmJAigp8aS+NTaREEttDNdjmcpru5Fe49BAzcnrlLCwU2hIfKSfOP1CGWVFpPrrHuil2R82sJGEaUJYTkK59bz7PBqcKwe5OxR62kGDqjo/R0gKYqZQhOk8u4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=WjMS/Syn; arc=fail smtp.client-ip=40.107.74.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	s=arc-20240116; t=1771307734; c=relaxed/simple;
+	bh=AShLmSHBKOzYk7Ov1c8Vf5kJH1R65ywKaRnhHixo98Q=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QM4LCJ8i2kShYigF3WQoNZxHzNKEskgsLoW12tS9+yO/DgEjB3gtRo8VPZ7y3Gf7uDmTmfb1hwOnPbgl7mZNNCfwIBRjAXnF/Ez2yfqaL0hQHdfpm3mlbiv05IwCUK2/EAGERgPqFHLReyalfJlzJNyRhatleIL5UWwgFJehAr0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=JsFdanci; arc=fail smtp.client-ip=52.101.43.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="WjMS/Syn"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="JsFdanci"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=sGenFSVb5YiYLnJHOuK2n7tJpu27//T92clOCepJ7qkc6IOFBEetz9eUS1rxaOZFV9MYtzw+hpkQg+Iyly39/+34RTG/J/B+hy0ObPb72+L2a5NzB0zcuGe7KcuLumydC3xUP+glut+oiobMIWozuSpFWX6iZhujrsBWeF/ywo6snrcKXnwhjyahHOpzb1NtXUAgd1/cC09CI72VeHHkk3Qk5uESQRouv6aJVxpmFfXSTUn807Zwak3sxjD6jaj4Qk2g7+djCQYKLc6BaNm9q0bofaB7xPuAUav7S+rEcQCVTn9mMFyp3ApIyuHdJKhGwf/pKfaAGGievRGmU+hjyw==
+ b=r3MIi/HR9bfQBTRtpI9bnZEUO1gN88z+U+LJH6VNv3i0Oz48K5+4WIbw70oSskFByr3hY5XN2OAtK5wTdmPjOt1MPTIWr1QRX6eNhKWyBjxbEhcMbQTo3YXtU+ULA9prl7smEmcg9OZOa3nbJc7uw2r6A3no3lKLkGsuETs3iBe5lVvDn3sJvJ3xxIMQ0hBYvc7uzRJLsh7jjgKjxu/HQqm166L3vicL+gwNUAyzPtHKt9cmPGoto0zYI8D+Bqnc5CkF5GLxWUI7uUdl6O9XiAJ+9QP5GnbImIEmxe5KW9qKSonrcG7ih44XOy9t/0R1pk+qOHsOduDssdZBJO1h2w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=eHYfEiQ9a1SAD8Zi6oY61GJ0yfV4c3+wZRvSoC4gjpg=;
- b=ZTBjbSNIOPuwxVX4pUSCenxhlbh7wZAh7y/jyuXkfnmgVF+hohJ9qpGxu2SvyRI/NLnhJjnZeM97pWzU+2q/BS8u4X4pGsAUasHXj3ispt+Dxgn6bY9WDjhcnRiesqt/Ns15V9EMo1YWsM9X0/ojtlcQi+l1HcF+vNSV2pOfdgRsh7d9c7AF7YWMYZUZ/tEhgFHnik5LKQedoJxofVUZOk0NxO4dedlV8IlQSUSeG2JT1vldqCSxw0/0dy3+trjl8XhTuxN+e9nNpz0Z1QEZPiexqlpIRyF9DFNiH2NS0VobVgbXtKnM6pxDRyvm+4n2cmEGkVSyw6w6OCY01IlZBQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
+ bh=GQualhvtE6361UvCQ45Z5JQsNkMieK3ZZD1bRswjmS8=;
+ b=PVgkrUvUNkV76+vYj/eUPBTe8lG62snJu3ropYMzdq3xVaK4cnQEQcJ63IF/5DRIPANzLuZL1MsnhRB/drJquiX3Oq4eZ075dTmesP0QWHGBsjuaeswC31h34t/ozf22D/+NgvP8eQOKCnbQ38IovvH46JsofVCqnTP/wt6XQ2sPRIiIAfGhzCTiY6Y1x0BGm6b2r0QEa5qszlLH4lvxJzsfGg+ysqs8Jy8r/FB729hz36SfIOcmc4zih2tulb9mDCQ80azySUv04foUafm2fG4T8po8YvvxfSfsDi+U5T3mVHDEYSl3im7aw89KUWNQIKIYi4SNEuit5z3UoBRGNw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eHYfEiQ9a1SAD8Zi6oY61GJ0yfV4c3+wZRvSoC4gjpg=;
- b=WjMS/SynY0cL1d6CiAs/i62buRxBtKdoq6LcWnx6shl02olgKSNgGq9UWh0MA/rkM4b/VY1neZLdcypl9pjaWC2SZm0MulTAs5CSes2o7sv0uYJi6dJkSLEjLvpOnuKWltXzpOhBhgWAyvymHZyXgRXpy8UNAp4itb+KrDiYKLY=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TYWP286MB3333.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:2d8::8) with
+ bh=GQualhvtE6361UvCQ45Z5JQsNkMieK3ZZD1bRswjmS8=;
+ b=JsFdanciAb0l/fNdwJIufA1omJ5Z/C9Kil6GdUwpawtVicL0IIV6ZKLkbcD/TA7V+0n/rtVBu+i+J21hEVCHhacJ1pZNvmvnLihRgHgVqmr2cqP/O0wGnhObrSZjKknAOGx2WEeXUJqMyo621gm9k6Vo5wR9P2t3uYr0MmF37IK71yAZ0mksNjloQD33cTqcfDtd6+UVO8bn9j6VP5oOvBgP8gjRC3cSG79ihE82n5b0ICmX5hyVfqPhgvPphzzbf0ZzCFWApRHYAVLx75JHgCUvlDGeIEk468SWJAyKFAjTFXzd4G88hjJPpGTvrU9tLx5zIlAtKbYsA+94CQPCFg==
+Received: from DM6PR08CA0060.namprd08.prod.outlook.com (2603:10b6:5:1e0::34)
+ by DM3PR12MB9286.namprd12.prod.outlook.com (2603:10b6:8:1ae::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.16; Tue, 17 Feb
- 2026 04:00:49 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9611.013; Tue, 17 Feb 2026
- 04:00:48 +0000
-Date: Tue, 17 Feb 2026 13:00:47 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Frank.Li@nxp.com
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, heiko@sntech.de, 
-	kishon@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com, 
-	cassel@kernel.org, shawn.lin@rock-chips.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-rockchip@lists.infradead.org, ntb@lists.linux.dev
-Subject: Re: [PATCH v7 9/9] PCI: endpoint: pci-ep-msi: Add embedded eDMA
- doorbell fallback
-Message-ID: <tiop7ujeu3igrr7trw3mtsecz3qu7n2zqnylzdy3fqbrhwoein@srvfygwi6g5v>
-References: <20260215163847.3522572-1-den@valinux.co.jp>
- <20260215163847.3522572-10-den@valinux.co.jp>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260215163847.3522572-10-den@valinux.co.jp>
-X-ClientProxiedBy: TYCP286CA0023.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:263::10) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+ 2026 05:55:26 +0000
+Received: from DS3PEPF0000C381.namprd04.prod.outlook.com
+ (2603:10b6:5:1e0:cafe::27) by DM6PR08CA0060.outlook.office365.com
+ (2603:10b6:5:1e0::34) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.13 via Frontend Transport; Tue,
+ 17 Feb 2026 05:55:26 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ DS3PEPF0000C381.mail.protection.outlook.com (10.167.23.11) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9632.12 via Frontend Transport; Tue, 17 Feb 2026 05:55:26 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 16 Feb
+ 2026 21:55:13 -0800
+Received: from mmaddireddy-ubuntu.nvidia.com (10.126.230.35) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Mon, 16 Feb 2026 21:55:07 -0800
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: Niklas Cassel <cassel@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	=?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Kishon Vijay
+ Abraham I" <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "Lorenzo
+ Pieralisi" <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, "Thierry
+ Reding" <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>,
+	Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
+	<gregkh@linuxfoundation.org>, Kunihiko Hayashi
+	<hayashi.kunihiko@socionext.com>, Masami Hiramatsu <mhiramat@kernel.org>
+CC: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-tegra@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH 0/4] PCI: endpoint: Add BAR_DISABLED support to PCI endpoint framework
+Date: Tue, 17 Feb 2026 11:24:40 +0530
+Message-ID: <20260217-master-v1-0-727e26cdfaf5@nvidia.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20260217-master-27db95eb02bd
+X-Mailer: b4 0.14.3
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYWP286MB3333:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2cbc91ca-75d3-46e4-a7d1-08de6dd92269
+X-MS-TrafficTypeDiagnostic: DS3PEPF0000C381:EE_|DM3PR12MB9286:EE_
+X-MS-Office365-Filtering-Correlation-Id: 02ef24ce-60c5-445d-2082-08de6de925e8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|7416014|10070799003|1800799024|7053199007;
+	BCL:0;ARA:13230040|82310400026|1800799024|376014|36860700013|7416014|921020;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?XAl1lYbXjzhUBiCXMuU6P01cExyeePrZ2eyK2cjNjB39zZ48D+4J2kLpm9fD?=
- =?us-ascii?Q?Lu00mXdnaHzY8yyUg+l7CihgEwt63Lw0SLXSJfTGr4JdhjM2b6SWaPSMPX0T?=
- =?us-ascii?Q?XWjjohjFg0fZJJeEA/Zvyepu2ZPqNNm4QC+sGIaaX8b/Y1jtGOrcwm0HwOp0?=
- =?us-ascii?Q?dn9/55dLK7EA/vk0Y31RbyTXTRIVa1bWC9UX2bSGXtX0tQSj1FrBSDQ54C6c?=
- =?us-ascii?Q?cijTHnbNUQp0KoPFduSJyM1ZV6Rc1aGxIVzWPg/RKi1t1pgALRN59Mr/NSLe?=
- =?us-ascii?Q?ghc+qGWCfS9ew5i+w3YIE+TXyi5zdCl2VCr94/deL2LR6ZU5m6uTLJd7jZT0?=
- =?us-ascii?Q?GbzhSTXjMnubyrz3UuGL7+/ZowC/2SPLfSWDjBBD5DUhnsXbOrAUuh30wHdV?=
- =?us-ascii?Q?eEuYNE3qUvtZOIVLLifVibryiEuSq75c4VPP/xnLM7Vgby2sSxdK5P8E6TPD?=
- =?us-ascii?Q?o0tYi7AkL48WCfSJkp3N7OQoCmfbiIrGwQfqcDK9+S2AuP/d1lQMK5waw8hH?=
- =?us-ascii?Q?DETs8NepqscHKX8r67chdEJPC16uxMxT1jxokZa8PRrqeWSrcwqExKvyqPlL?=
- =?us-ascii?Q?mW7z4k4vpB55Q4+gLGopQRHUFEL4VNZ+7qylpVshzdlggDPg4twM/byAFP/A?=
- =?us-ascii?Q?TmxYws92GIxRvGXMhp/I4CAudGi3LBQWf3b2wnDClsUKGgeMMr2+2bfYZE0b?=
- =?us-ascii?Q?2+rD1ZhP1RCkfUsjs5VcBC4HyqS7Jow/zFE1PgMoIhoIQ+czYLXr4hhyzyLj?=
- =?us-ascii?Q?hP/2xYWGQXlF36dziJvKgw3otHF4KAgAUfoyH4GoqzKpfHlH4ollunUcJrr9?=
- =?us-ascii?Q?7yukz8nhI1GuMHCYkf12eiDz2c2qgLTMumVT7tAyiXREl0mNFgke3Y/HJuB2?=
- =?us-ascii?Q?Vyv2Qaq90c+Rd+WxLVDZ/oETA/CXD3MvjeiOs8wfvxF7iTqZBiVcWFj5tMNl?=
- =?us-ascii?Q?ekWzQoIhvigzDkaII7hZDO9L9sW97JfXiC+fcmpdjODAkdV5emHaquXsevVI?=
- =?us-ascii?Q?3B2WT0ZGeRAYE4UhUUEroll61Pklkr9hETQXpYJwejdzfeaMNymHAE7wN+A8?=
- =?us-ascii?Q?dEW45MH14LCqLWf+vsOUiJqSqjoVh0uIC8v+NuH5SzaMWZH7x2NY6GB02Mwz?=
- =?us-ascii?Q?WccXMS3H7vRITSXrqBNupTWMf41p/u/aHcsqtIVXoEqOAn9wi9T5fAQu4M8+?=
- =?us-ascii?Q?S44/veHLToAU5aiaZxxSluUQvc+hheiT2U4JzTq+NDgFhxvVoCbg5ZgqclK5?=
- =?us-ascii?Q?irKojlHzOtRXTg2yMA2sefm7PZX1fG3T1RETv7uLs8WLGN5xvBQcNEQXU0RG?=
- =?us-ascii?Q?giy37Oy9n+JGrgTv6JHCdVoQWox7ncMm91jugUsA+WED26lRtrYrsbALmzVN?=
- =?us-ascii?Q?Vzd3/KvG0vjT63JnVHK9wEY5bIkSaCHKds/i1KrkAyN6R9QSfyjO8Naa+64S?=
- =?us-ascii?Q?cQc1sWazI0C3Yro41fZ+MeQVZ1Kezfw5zE9i5qVvEqnzHPT0NITo6c8hvr/s?=
- =?us-ascii?Q?WUBO17OQfdhthQCs0IRXA56+shxv9dTkecO3jhx1Iw4npT3lHfYuGSjOKCG9?=
- =?us-ascii?Q?W+5DgCZ4KA5mI0hgJSc=3D?=
+	=?utf-8?B?SUxzOWxZNzl6ZzJiQXNqdTRSZ3RmcWl3VVpVZmFtZk01WnZpM3puTEhjdGV5?=
+ =?utf-8?B?ODhyRmt6bXNzYUxMUExOWG9jYWp0MCsrNTgxd1JZSHVRd3daOTR3c0xoSUZU?=
+ =?utf-8?B?cTRRZm5QVXlBWEV4dldhT0p0NXo0dTVhNWdxMURmNDFrZVYxLzErajdlS2Nl?=
+ =?utf-8?B?N3JTNS80dmdRM2Izak1aMHUzNG5lN2tlUVp3clNzV3pFWlB4SCtOZytJQk9L?=
+ =?utf-8?B?K0wrK3lFK3hoKzdqVXU3N3RNZ0hNSExKYWNNOG9ObGhReDMweWZ2TUVaZ3lT?=
+ =?utf-8?B?UkpkZUhDOXJmS3RiMTFMQVlIMEMra3kyODhoSFdPN1VzdTExVGJ1U09QbU5u?=
+ =?utf-8?B?bCt1VVRoRXF2NWdueG5iem5Za3NlVy9hUW9HaVF6V3RIZ3k0WG5ZQnhabGFn?=
+ =?utf-8?B?MUt0bFVycEVpcmkwWFY4c3c3SUcraHFoYkpGRVVYaXZodmtEL09GOENJMXFa?=
+ =?utf-8?B?L3ZNdjNXRVlUd0E5eVExTjJHbWY2N00vdC9DaW14RlNORTE5dkpSTEJJM0tW?=
+ =?utf-8?B?T3Vsd0NpRTFTT0Z0SzF0T2lKWEVFYnEwOHYxZU5PMUFFOGFBWTdzZzlkbDFG?=
+ =?utf-8?B?ZWFCWFE1b0ZNVGZmbElqM043Z2YwbW5MOGt6c2drS1l6RjZ2R3kvMU5ZMDgy?=
+ =?utf-8?B?NWt6SWJ0WUR3MGZPc3NZOS91RnVkcFZtRlR2UFR2ZnRsNjludy9WbDhIeEU5?=
+ =?utf-8?B?YVVudFhOem1MTlRoNW9iZGszSE1sZWdrVXYxMkw1T1J2ZklQNy80cGhhQm1y?=
+ =?utf-8?B?eTlveSsvTE03SE9ncVhiUy9aVkRwVm96ZlNoeHRaRVMrOFVKa3hNMUFNSzJh?=
+ =?utf-8?B?MEZMT2pPalB3b0IwRGE4TGZ0dXFFdEN5blNBekNXYmxFQWdNeEIxUVJzcEJX?=
+ =?utf-8?B?ek1vZkdwa2U1bzdNVithUUZ4US9rUys2TnhCM3cyM0QwQkZJdkpVd2dra3h3?=
+ =?utf-8?B?eFBHZytNdFltMG1tNmpGVWc1bjUwVUxCRHZpRnNVYmVBdldneHRSTW1JdjR0?=
+ =?utf-8?B?NDVvVyszclFoK1FmMEZXR0hMUTFSTS8yV1BqTXk4MlMwYkEyUVplNHNRdlZQ?=
+ =?utf-8?B?ZUR6bWJLZUZLWkNvaGN0dFVQNzJLOFR2VmoyQzNLb0doK2FpU3hWYmdzaG9x?=
+ =?utf-8?B?QVdQNjRGUFhCVVBWWlVwNFRhdmpyM2o3YnIrY3UrR3RNSmxCTHR1ZVY2eUtB?=
+ =?utf-8?B?K1c0bG1Md1NqTWhXTkhwa3g4dC95U3NEaXhhZmZxcnlhS1BOVWI1aWVyNHlj?=
+ =?utf-8?B?V0V1YmQ2MmZQQ1RWYjBPQnhVU0hyTURXc3BVT0ZyMWsvZGFWMG5VOVZnL3k5?=
+ =?utf-8?B?L3ZoVkRlY3ZlN3l3K3JWVTVldTJ2VjZUamtDdEFpQnFCMW1ad1FVdFRGYXJS?=
+ =?utf-8?B?cDhLWmEyLzBVeisvS3JSbmkzOHRRTHpyS294VnpOaE5ESGNSTE1uT0dTdGsr?=
+ =?utf-8?B?NFQ0MUdIY1p2WmlDUEZKM2Z5NFhWOGVyZWNPcXl6Um5wRzduSGJUSnh2bDlu?=
+ =?utf-8?B?dFVhanlCWHJ4SEEyZXJzWjZRdG9QR1NLRjdacWltUmZDU3kzU2ZYdkdDcEFX?=
+ =?utf-8?B?dWU5djhBajNUNXR2TjB0ZFdkUDRhTHlORDBHWTNzNnVUcDczZlF6b3B0S0Zk?=
+ =?utf-8?B?TTBxKzdXQ1M0Wlpnd0pubDlQS0wyVnFtd0tGUjM2Wmp2SzN1NzZHNHc0eXhG?=
+ =?utf-8?B?MUdiZXIvemxqaC8rU3h4NGtqSnRTaFYyc1ZINnlFKzVuZk5Kd3hyUmZ4b3ow?=
+ =?utf-8?B?ekhxQXZuT3p2YlNueWVzTWdNemE3ZFZOZWw2dlcxK09hZUk2RE95TGJFYlJy?=
+ =?utf-8?B?YS9FSGMvRUc1YjBHVnNKUWQzVVo0QXR6dWJ1SklTNDg0dy91Zk5xTnV6Z293?=
+ =?utf-8?B?dTFQL1hjY0JadWp0R2FFRzhheUtJaWlvN1gwalVSK3VCUGM5aXdpaWxjMTJG?=
+ =?utf-8?B?eFlQSHRsSHNnSGpzL3RyZWw4NjJjVGc0MW1aaUlBNXB5MENtNEI3UGhobk1T?=
+ =?utf-8?B?aERIRkhBK05xSU5Vc2wzWXd6ZGZLYTFpdkNhNXJyNkpyWTZjSDZZTU9VM0dF?=
+ =?utf-8?B?UmhMb3ZnYjRYNzkzNFo5ZnJ4TXdtY3hYbTFzOGVMSlUzamJWMmYzTTZlaDhG?=
+ =?utf-8?B?SGhHV2xNcDYyNG9kYy81ODFOQnJkbWk1QXNYL2NJYXJUNlRSczZXTzJyQTg0?=
+ =?utf-8?B?UExDSUF2eUg5cDlJVW5qQ0hPcGxSaFkzKzA5NTFyRnN2SVNydUEvb1FqZG9N?=
+ =?utf-8?B?SUYwOHBTOEZNYVlYbHZaMjFDbjFBPT0=?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(10070799003)(1800799024)(7053199007);DIR:OUT;SFP:1102;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(376014)(36860700013)(7416014)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?XZNEW3pQXCIVkN6wPxf9sDZxsfeQpZiiaskpuoQ7gXzxUB9uCNIYDYbsy81E?=
- =?us-ascii?Q?mdbdrktFB3ndbzaW4iBIHx1f6ToMRaTnhyOOLMNPO8kNJXnUHDB9O3N78x04?=
- =?us-ascii?Q?Yf0e/JNsJlqF2IHLJtecR7HG9VyHvakeJJtrcwBsCNuBgraUxLrO/REieCfF?=
- =?us-ascii?Q?IAudTD0bhETZk/pr6ac+oH+BLKi6LzVjs9dH+MJ9cuONHU1osDXZKo7un7EG?=
- =?us-ascii?Q?x1n3Rdon7cZglH0nTGHXKlNmEiAx99LagzvmWZTVnFvMVWjURLr9RA5ZmVr+?=
- =?us-ascii?Q?PKamTUHZHlf+sEguqu38X0FPFccSN2Seq6yml+sdOtkVYRgc4DJgpdiSBaF1?=
- =?us-ascii?Q?aC8O2fJhMtYo45ATZvCizXmMcqSUkwGe72ircvQW2bRt/8vbU8bhUzJ31BtF?=
- =?us-ascii?Q?3OpLh/+A2BUC0Li3cNLcgwoCa3Tdtpj3tJd4MLaSAGehZblW4o4KC12a/2TY?=
- =?us-ascii?Q?PbZrB/E/neVxMkhyv3Zwk4ahKcKOScR2Z2jVB7VrA1/fjQRG2TVPsO+G7CTt?=
- =?us-ascii?Q?ZTG0EG6VGtXLRXfZuD7WySNk6Z1M8cVf6GVHRK5d6YkYUSE0nhPH//JaWH8O?=
- =?us-ascii?Q?mA4mVBjFDUAuxmHiceIewWMOGz+xnYIzkmh6sxoANlKwmg4LPHE+1d+pMHHE?=
- =?us-ascii?Q?3FYE06HkGw6r0ZyNvlUlILlqcxpWVmC+LdEyY/wWybibdbK9vp3qSCd95PnF?=
- =?us-ascii?Q?xcfWynwXBsGdjq9JuZeWArHOr3K/zT5BbNHlMQTQN2uHYIUnCIllcmxmirXX?=
- =?us-ascii?Q?cwdgg4fq228x+lM//x5wqgGX8LYvD/PAD/0iL4xNpA4NZ4+bNw1MLzmDfScn?=
- =?us-ascii?Q?fg/iKGNs/+O5tdUPZj/4+VdL2TGzICV1cCNABn/4tYiytnai7EAMnlzfl2o+?=
- =?us-ascii?Q?/J5wAqm5cwrytfAbRTiH1pj7mR901E4lTD1RukponZImKmuqI8v3d5uJVCKq?=
- =?us-ascii?Q?QxOJKspuYFOl7OqWOSwH5rGOTQi3/qFoiszkRM715cG9dxmsmPe4nCePTK5f?=
- =?us-ascii?Q?2n9Sr7BIMxjxIJSXP29rJIgzJWKyDP8dy/zPhnotgQetSZJavmudAPkdRq3/?=
- =?us-ascii?Q?VfDYtNC2dudXOg8VtRA5Ui0ycSSnsYptI3kxjULkwrA03F+w0wT1csgcHsF7?=
- =?us-ascii?Q?sGjv0PagXzhfJXHo7u12pxfHgaQ1D5jM8IrC0zIC0/4DcrGv5CiUrKGCW6hC?=
- =?us-ascii?Q?lJcsGsbuiVFwmk3TUIKBkoHvY9haNPF+/E6pbZGGrJUEO3YukUhF8YVmNrgA?=
- =?us-ascii?Q?krzLwngF52AV2xNgeFddaowduB2WJjlpl2falWPUZ2hGvvMgIYM0gSXglJ6V?=
- =?us-ascii?Q?LWjFCj09gr3Jr9MHCL7m9Y7bDQUz/QDIb6tufIgzEqJhZTry/LyVfYWnJBOi?=
- =?us-ascii?Q?oicXsFJFNfJWKg+eE+oyuB3mEF6pPsx7SnO6fr9AtzkYV2X5OZU0ydFmVjak?=
- =?us-ascii?Q?x6YeWuIKC30LtWEhXDQ/f+6WzO31vIl/hGF4/hspZUvfeecaq0JJZKfOkyhh?=
- =?us-ascii?Q?XsFS6kpUdP8wqLRBDjxJyT0nnEbmuNodUNgK6c9rB4dD2l+FbxHmpLf7qZxa?=
- =?us-ascii?Q?+orm8Kcf1/9Nmh7BXo79NckOdk/Q4ffCoG27IF46kp1vKCiNknW/b41zNN8H?=
- =?us-ascii?Q?hPy1lPdmNf7zMFDXpQm4KftQA2IbTvk7tyr41+s3kB1ltpPv/inKsbrzEOpz?=
- =?us-ascii?Q?PSrv3Zcs/4OPWVbLFBvyQofOQiiUanxsCgXgngKIdVtFA9+0xJgD89QO4oXa?=
- =?us-ascii?Q?lYUBr3E9oDMHatpxiS8wJYe7hXNsGP6o3qizhWeLW5kR47z0n4B2?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2cbc91ca-75d3-46e4-a7d1-08de6dd92269
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Feb 2026 04:00:48.8031
+	3nD791PGhNSs1srywJYmQcw5LmHRg4F3hPWJLTXM9L2XwkmkbYM7sxHMr0+yMDUF//pSuuhvZt5acO8ymj4tdia5AR4SJLzkGNP50gU0uR6NrYXu0X7ZHSBMNSWQ8Gxx9xgOFk2+bJRZW/NI890Bo7hoyO3/ZR2EKGPwJtlCicvgfqunjxFhkBsKK6aBGXoERME3B/YPNlMaM09zAqQot/1BhpOk6RLM2IqcWvU8Q90WEpIPGgi/Zi52AIMiCIHSRgV/pIwLmYRfSp0cGYZquBiDNzgqzz1hBMASFHyvB44IEIiktN3NeJEMcDSgztWkFisyKck0H/MZL2ZTOAit4nFJrvn0uYjfT2hQ/9sssEaAP/7iV6s2rE5uhty7TSbFIc4Jzywc9RI33RsTXjwxAHLSUzf9Uf6v9NN2VDCBNMmDSIGu5IcYR/KQ1IfgqEBV
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Feb 2026 05:55:26.2571
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MgYhQX9AJ8LG93MtO7L28X3+oepZVsF1deFi1YXc9fgoAOlnr4zeT5a1HJcO/0V5Ik8WIOBGwK/r8mAlqaOc5A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWP286MB3333
+X-MS-Exchange-CrossTenant-Network-Message-Id: 02ef24ce-60c5-445d-2082-08de6de925e8
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS3PEPF0000C381.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PR12MB9286
 
-On Mon, Feb 16, 2026 at 01:38:47AM +0900, Koichiro Den wrote:
-> Some endpoint platforms cannot use platform MSI / GIC ITS to implement
-> EP-side doorbells. In those cases, EPF drivers cannot provide an
-> interrupt-driven doorbell and often fall back to polling.
-> 
-> Add an "embedded" doorbell backend that uses a controller-integrated
-> doorbell target (e.g. DesignWare integrated eDMA interrupt-emulation
-> doorbell).
-> 
-> The backend locates the doorbell register and a corresponding Linux IRQ
-> via the EPC aux-resource API. If the doorbell register is already
-> exposed via a fixed BAR mapping, provide BAR+offset. Otherwise provide
-> the physical address so EPF drivers can map it into BAR space.
-> 
-> When MSI doorbell allocation fails with -ENODEV,
-> pci_epf_alloc_doorbell() falls back to this embedded backend.
-> 
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
->  drivers/pci/endpoint/pci-ep-msi.c | 90 +++++++++++++++++++++++++++++++
->  1 file changed, 90 insertions(+)
-> 
-> diff --git a/drivers/pci/endpoint/pci-ep-msi.c b/drivers/pci/endpoint/pci-ep-msi.c
-> index a42f69ad24ad..6e1524c2d891 100644
-> --- a/drivers/pci/endpoint/pci-ep-msi.c
-> +++ b/drivers/pci/endpoint/pci-ep-msi.c
-> @@ -6,6 +6,7 @@
->   * Author: Frank Li <Frank.Li@nxp.com>
->   */
->  
-> +#include <linux/cleanup.h>
->  #include <linux/device.h>
->  #include <linux/export.h>
->  #include <linux/interrupt.h>
-> @@ -36,6 +37,82 @@ static void pci_epf_write_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
->  	pci_epc_put(epc);
->  }
->  
-> +static int pci_epf_alloc_doorbell_embedded(struct pci_epf *epf, u16 num_db)
-> +{
-> +	const struct pci_epc_aux_resource *doorbell = NULL;
-> +	struct pci_epf_doorbell_msg *msg;
-> +	struct pci_epc *epc = epf->epc;
-> +	struct device *dev = &epf->dev;
-> +	int count, ret, i;
-> +	u64 addr;
-> +
-> +	count = pci_epc_get_aux_resources(epc, epf->func_no, epf->vfunc_no,
-> +					  NULL, 0);
-> +	if (count == -EOPNOTSUPP || count == 0)
-> +		return -ENODEV;
-> +	if (count < 0)
-> +		return count;
-> +
-> +	struct pci_epc_aux_resource *res __free(kfree) =
-> +				kcalloc(count, sizeof(*res), GFP_KERNEL);
-> +	if (!res)
-> +		return -ENOMEM;
-> +
-> +	ret = pci_epc_get_aux_resources(epc, epf->func_no, epf->vfunc_no,
-> +					res, count);
-> +	if (ret == -EOPNOTSUPP || ret == 0)
-> +		return -ENODEV;
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	count = ret;
-> +
-> +	for (i = 0; i < count; i++) {
-> +		if (res[i].type == PCI_EPC_AUX_DOORBELL_MMIO) {
-> +			if (doorbell) {
-> +				dev_warn(dev,
-> +					 "Duplicate DOORBELL_MMIO resource found\n");
-> +				continue;
-> +			}
-> +			doorbell = &res[i];
-> +		}
-> +	}
-> +	if (!doorbell)
-> +		return -ENODEV;
-> +
-> +	msg = kcalloc(num_db, sizeof(*msg), GFP_KERNEL);
-> +	if (!msg)
-> +		return -ENOMEM;
-> +
-> +	addr = doorbell->phys_addr;
-> +
-> +	/*
-> +	 * Embedded doorbell backends (e.g. DesignWare eDMA interrupt emulation)
-> +	 * typically provide a single IRQ and do not offer per-doorbell
-> +	 * distinguishable address/data pairs. The EPC aux resource therefore
-> +	 * exposes one DOORBELL_MMIO entry (u.db_mmio.irq).
-> +	 *
-> +	 * Still, pci_epf_alloc_doorbell() allows requesting multiple doorbells.
-> +	 * For such backends we replicate the same address/data for each entry
-> +	 * and mark the IRQ as shared (IRQF_SHARED). Consumers must treat them
-> +	 * as equivalent "kick" doorbells.
-> +	 */
-> +	for (i = 0; i < num_db; i++) {
-> +		msg[i].msg.address_lo = (u32)addr;
-> +		msg[i].msg.address_hi = (u32)(addr >> 32);
-> +		msg[i].msg.data = 0;
+When Tegra194 runs in PCIe endpoint mode, BAR1–BAR5 are marked BAR_RESERVED so the
+EPF does not allocate backing memory. The host-side pci_endpoint_test driver
+still ioremaps all enabled BARs and runs BAR read/write tests on them. Writing to
+BAR2 (MSI-X table) or BAR4 (DMA registers) corrupts controller state and breaks
+CONSECUTIVE_BAR_TEST. A prior fix reset all BARs in the EPC .init(), so only
+BAR0 was visible to the host—tests passed but 64-bit BAR 2 and BAR 4 were no
+longer available for real use (e.g. host DMA via BAR4).
 
-Hi Frank,
+This series addresses that by:
 
-Thanks for your feedback on [PATCH v7 6/9]:
-https://lore.kernel.org/linux-pci/aZNA3lQCne2laAW6@lizhi-Precision-Tower-5810/
-I realized that pci_epf_alloc_doorbell_embedded() assumes a "write-0-to-assert"
-semantics, which appears to be specific to DesignWare eDMA interrupt emulation.
+1) Adding BAR_DISABLED and clarifying BAR_RESERVED in the PCI endpoint core.
+   BAR_RESERVED is used for (a) HW-backed BARs (MSI-X, DMA) that the EPC may
+   leave enabled, and (b) the second register of a 64-bit BAR. BAR_DISABLED is
+   for unused BARs that the EPC must disable in .init() and the EPF must not
+   use. pci_epc_get_next_free_bar() treats both as not free.
 
-I'm wondering whether it would be better to extend pci_epc_aux_resource
-(introduced in [PATCH v7 3/9]) from the beginning, instead of deferring the
-change until another vendor wants to support a PCI_EPC_AUX_DOORBELL_MMIO
-resource description with different semantics (i.e. not "write-0-to-assert"):
+2) Updating Tegra194 endpoint to use three 64-bit BARs at indices 0, 2, and 4:
+   BAR0+BAR1 for EPF test/data, BAR2+BAR3 for MSI-X table, BAR4+BAR5 for DMA.
+   Only BAR0 and BAR1 are reset in .init(); BAR2/BAR3 and BAR4/BAR5 stay
+   enabled so the host can use MSI-X and DMA.
 
-Personally, I'm inclined to extend it at this point, like this:
+3) Adding a BAR skip mask to pci_endpoint_test so endpoints can skip the
+   destructive BAR test on HW-backed BARs. Tegra EP test data skips BAR1–BAR5
+   (test only BAR0). Adding NVIDIA Tegra194 EP (0x1AD4) and Tegra234 EP (0x229B)
+   to the pci_endpoint_test_tbl so the host driver can bind and run tests
+   without corrupting MSI-X or DMA registers.
 
-     struct pci_epc_aux_resource {
-             enum pci_epc_aux_resource_type type;
-             phys_addr_t phys_addr;
-             resource_size_t size;
-             enum pci_barno bar;
-             resource_size_t bar_offset;
-     
-             union {
-                     /* PCI_EPC_AUX_DOORBELL_MMIO */
-                     struct {
-                             int irq;
-    +                        u32 data; /* write data to kick */
-                     } db_mmio;
-             } u;
-     };
+4) Converting unused BAR_RESERVED to BAR_DISABLED in the Uniphier Pro5 endpoint
+   (BAR4 and BAR5); BAR1 and BAR3 remain BAR_RESERVED as the high halves of
+   64-bit BAR0 and BAR2.
 
-In that case, I suppose I would need to drop your Reviewed-by tag for that commit.
+With this, CONSECUTIVE_BAR_TEST and DMA tests pass while Tegra194 keeps 64-bit
+BAR 2 (MSI-X) and BAR 4 (DMA) enabled for host use.
+
+pci_endpoint_test results on Tegra234 SoC,
+
+$ ./pci_endpoint_test -f pci_ep_bar -f pci_ep_basic -v memcpy -T COPY_TEST -V dma
+TAP version 13
+1..13
+ Starting 13 tests from 8 test cases.
+  RUN           pci_ep_bar.BAR0.BAR_TEST ...
+            OK  pci_ep_bar.BAR0.BAR_TEST
+ok 1 pci_ep_bar.BAR0.BAR_TEST
+  RUN           pci_ep_bar.BAR1.BAR_TEST ...
+            OK  pci_ep_bar.BAR1.BAR_TEST
+ok 2 pci_ep_bar.BAR1.BAR_TEST
+  RUN           pci_ep_bar.BAR2.BAR_TEST ...
+            OK  pci_ep_bar.BAR2.BAR_TEST
+ok 3 pci_ep_bar.BAR2.BAR_TEST
+  RUN           pci_ep_bar.BAR3.BAR_TEST ...
+            OK  pci_ep_bar.BAR3.BAR_TEST
+ok 4 pci_ep_bar.BAR3.BAR_TEST
+  RUN           pci_ep_bar.BAR4.BAR_TEST ...
+            OK  pci_ep_bar.BAR4.BAR_TEST
+ok 5 pci_ep_bar.BAR4.BAR_TEST
+  RUN           pci_ep_bar.BAR5.BAR_TEST ...
+            OK  pci_ep_bar.BAR5.BAR_TEST
+ok 6 pci_ep_bar.BAR5.BAR_TEST
+  RUN           pci_ep_basic.CONSECUTIVE_BAR_TEST ...
+            OK  pci_ep_basic.CONSECUTIVE_BAR_TEST
+ok 7 pci_ep_basic.CONSECUTIVE_BAR_TEST
+  RUN           pci_ep_basic.LEGACY_IRQ_TEST ...
+            OK  pci_ep_basic.LEGACY_IRQ_TEST
+ok 8 pci_ep_basic.LEGACY_IRQ_TEST
+  RUN           pci_ep_basic.MSI_TEST ...
+      SKIP      MSI17 is disabled
+            OK  pci_ep_basic.MSI_TEST
+ok 9 pci_ep_basic.MSI_TEST # SKIP MSI17 is disabled
+  RUN           pci_ep_basic.MSIX_TEST ...
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X1
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X2
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X3
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X4
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X5
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X6
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X7
+ pci_endpoint_test.c:144:MSIX_TEST:Expected 0 (0) == ret (-5)
+ pci_endpoint_test.c:144:MSIX_TEST:Test failed for MSI-X8
+      SKIP      MSI-X9 is disabled
+            OK  pci_ep_basic.MSIX_TEST
+ok 10 pci_ep_basic.MSIX_TEST # SKIP MSI-X9 is disabled
+  RUN           pci_ep_data_transfer.memcpy.READ_TEST ...
+            OK  pci_ep_data_transfer.memcpy.READ_TEST
+ok 11 pci_ep_data_transfer.memcpy.READ_TEST
+  RUN           pci_ep_data_transfer.memcpy.WRITE_TEST ...
+            OK  pci_ep_data_transfer.memcpy.WRITE_TEST
+ok 12 pci_ep_data_transfer.memcpy.WRITE_TEST
+  RUN           pci_ep_data_transfer.memcpy.COPY_TEST ...
+            OK  pci_ep_data_transfer.memcpy.COPY_TEST
+ok 13 pci_ep_data_transfer.memcpy.COPY_TEST
+ PASSED: 13 / 13 tests passed.
+ 2 skipped test(s) detected. Consider enabling relevant config options to improve coverage.
+ Totals: pass:11 fail:0 xfail:0 xpass:0 skip:2 error:0
+
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+Manikanta Maddireddy (4):
+      PCI: endpoint: Add BAR_DISABLED and document BAR_RESERVED semantics
+      PCI: tegra194: Use 64-bit BAR layout and reset only first BAR in EP mode
+      misc: pci_endpoint_test: Add BAR skip mask and NVIDIA Tegra EP device IDs
+      PCI: uniphier-ep: Convert unused BAR_RESERVED to BAR_DISABLED for Pro5
+
+ drivers/misc/pci_endpoint_test.c              | 34 ++++++++++++++++++++++++---
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 26 +++++++++++---------
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c |  8 +++----
+ drivers/pci/endpoint/pci-epc-core.c           |  5 ++--
+ include/linux/pci-epc.h                       | 13 ++++++++--
+ 5 files changed, 64 insertions(+), 22 deletions(-)
+---
+base-commit: 6f54fb70124423ec417b5efe81f8ced5b9891d62
+change-id: 20260217-master-27db95eb02bd
 
 Best regards,
-Koichiro
+-- 
+Manikanta Maddireddy <mmaddireddy@nvidia.com>
 
-> +		msg[i].virq = doorbell->u.db_mmio.irq;
-> +		msg[i].irq_flags = IRQF_SHARED;
-> +		msg[i].type = PCI_EPF_DOORBELL_EMBEDDED;
-> +		msg[i].bar = doorbell->bar;
-> +		msg[i].offset = (doorbell->bar == NO_BAR) ? 0 : doorbell->bar_offset;
-> +	}
-> +
-> +	epf->num_db = num_db;
-> +	epf->db_msg = msg;
-> +	return 0;
-> +}
-> +
->  static int pci_epf_alloc_doorbell_msi(struct pci_epf *epf, u16 num_db)
->  {
->  	struct pci_epf_doorbell_msg *msg;
-> @@ -110,6 +187,19 @@ int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 num_db)
->  	if (!ret)
->  		return 0;
->  
-> +	/*
-> +	 * Fall back to embedded doorbell only when platform MSI is unavailable
-> +	 * for this EPC.
-> +	 */
-> +	if (ret != -ENODEV)
-> +		return ret;
-> +
-> +	ret = pci_epf_alloc_doorbell_embedded(epf, num_db);
-> +	if (!ret) {
-> +		dev_info(dev, "Using embedded (DMA) doorbell fallback\n");
-> +		return 0;
-> +	}
-> +
->  	dev_err(dev, "Failed to allocate doorbell: %d\n", ret);
->  	return ret;
->  }
-> -- 
-> 2.51.0
-> 
-> 
