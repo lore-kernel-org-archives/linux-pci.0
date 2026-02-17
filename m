@@ -1,16 +1,16 @@
 Received: from psionic.psi5.com (psionic.psi5.com [185.187.169.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB74A36E48D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB7C836E491
 	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 17:13:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.187.169.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771348435; cv=none; b=AxaeKFy0KasTNsF1IsVWECC49Pb41tFUhv6drf/UT/rtZGlft/WiGCPh5tBCX3gS6iFReRn9JS3qCZPZyLxKIExmoRN5NuQhA37/LO8cs61oYELkwniw2dSZut9FM5zf5uEIZX0PZ6kUHbQKZueVlZiFqWxoP3vF+VvQWGQ8R04=
+	t=1771348435; cv=none; b=Vae5FruVu25BZFn3Lo0gQ8GK0We+sTcJa0RE14hFyTAG/M58+1K6IIEOf+0rFG6dkEoo2LawimJzo9XBCrR/OL0fXTXM8ltXWWcd7N1Gs278GUiVp/SX3W9i/1ZQqoc1RifdCmFZTYxtP+oFwTM5UO0j1hQmY+7KNDFrXDTKZpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1771348435; c=relaxed/simple;
-	bh=3hDP8E2QyMRL7go9lPyXxzIl4hUdlfEoRBHkpCisrms=;
+	bh=YcG2+sY91S7CPMpIvFiMm5l+Kluf4+CWdFaeP7g0DxU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=g4CXyf3CjCWwgu5di/WmyC+ecY+lqPgfu9GldarPEUbKocxr5KYN6bWNFcmVd1FhIY2U12isB0q/lWlydt2yYav6gyvFnMtoGGulMgaI0brH/Wx59h5c/xvBU/3CtDciAq4SUyoN4NIkGHhhd3NA9HQF7lm0D22/Xk07Q6pFaqI=
+	 MIME-Version; b=IVHLQVjVJICyHe8lk2sGrrtR8WeDCO6XedPB7gBsoyb7JxwO0Ip3kwZtYRd2qKzQH41HRnwpItn8wFmTLBqll48iNBMxBkh1ciFTcsABl92fNKx0BTm1guVdJdXemUCTv67cEvy4/3hZRH+3BDjQXAE5jOcoMjTX2FVfgKmZM+g=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hogyros.de; spf=pass smtp.mailfrom=hogyros.de; arc=none smtp.client-ip=185.187.169.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hogyros.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hogyros.de
@@ -18,16 +18,16 @@ Received: from localhost.localdomain (unknown [IPv6:2400:2410:b120:f200:2e09:4df
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(Client did not present a certificate)
-	by psionic.psi5.com (Postfix) with ESMTPSA id EE5CE3F213;
-	Tue, 17 Feb 2026 18:04:45 +0100 (CET)
+	by psionic.psi5.com (Postfix) with ESMTPSA id 34A883F204;
+	Tue, 17 Feb 2026 18:04:41 +0100 (CET)
 From: Simon Richter <Simon.Richter@hogyros.de>
 To: linux-pci@vger.kernel.org
 Cc: intel-xe@lists.freedesktop.org,
 	dri-devel@lists.freedesktop.org,
 	Simon Richter <Simon.Richter@hogyros.de>
-Subject: [PATCH 3/5] vgaarb: mark vga_get family as __must_check
-Date: Wed, 18 Feb 2026 02:04:17 +0900
-Message-ID: <20260217170419.236739-4-Simon.Richter@hogyros.de>
+Subject: [PATCH 1/5] vgaarb: pass vga_get errors to userspace
+Date: Wed, 18 Feb 2026 02:04:15 +0900
+Message-ID: <20260217170419.236739-2-Simon.Richter@hogyros.de>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260217170419.236739-1-Simon.Richter@hogyros.de>
 References: <20260217170419.236739-1-Simon.Richter@hogyros.de>
@@ -39,55 +39,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-These functions can return an error, but some callers expect they don't, and
-unconditionally access VGA registers afterwards and call vga_put.
+If vga_get fails, return the error code via the write syscall.
 
 Signed-off-by: Simon Richter <Simon.Richter@hogyros.de>
 ---
- include/linux/vgaarb.h | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/pci/vgaarb.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index 97129a1bbb7d..de683d499dfa 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -27,7 +27,8 @@ struct pci_dev;
+diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+index 87143e235033..5c2719cb1bfa 100644
+--- a/drivers/pci/vgaarb.c
++++ b/drivers/pci/vgaarb.c
+@@ -1134,6 +1134,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+ 	char kbuf[64], *curr_pos;
+ 	size_t remaining = count;
  
- #ifdef CONFIG_VGA_ARB
- void vga_set_legacy_decoding(struct pci_dev *pdev, unsigned int decodes);
--int vga_get(struct pci_dev *pdev, unsigned int rsrc, int interruptible);
-+int __must_check vga_get(struct pci_dev *pdev, unsigned int rsrc,
-+		int interruptible);
- void vga_put(struct pci_dev *pdev, unsigned int rsrc);
- struct pci_dev *vga_default_device(void);
- void vga_set_default_device(struct pci_dev *pdev);
-@@ -39,7 +40,7 @@ static inline void vga_set_legacy_decoding(struct pci_dev *pdev,
- 		unsigned int decodes)
- {
- };
--static inline int vga_get(struct pci_dev *pdev, unsigned int rsrc,
-+static inline int __must_check vga_get(struct pci_dev *pdev, unsigned int rsrc,
- 		int interruptible)
- {
- 	return 0;
-@@ -74,7 +75,7 @@ static inline int vga_client_register(struct pci_dev *pdev,
-  *
-  * On success, release the VGA resource again with vga_put().
-  */
--static inline int vga_get_interruptible(struct pci_dev *pdev,
-+static inline int __must_check vga_get_interruptible(struct pci_dev *pdev,
- 					unsigned int rsrc)
- {
- 	return vga_get(pdev, rsrc, 1);
-@@ -89,7 +90,7 @@ static inline int vga_get_interruptible(struct pci_dev *pdev,
-  *
-  * On success, release the VGA resource again with vga_put().
-  */
--static inline int vga_get_uninterruptible(struct pci_dev *pdev,
-+static inline int __must_check vga_get_uninterruptible(struct pci_dev *pdev,
- 					  unsigned int rsrc)
- {
- 	return vga_get(pdev, rsrc, 0);
++	int err;
+ 	int ret_val;
+ 	int i;
+ 
+@@ -1165,7 +1166,12 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
+ 			goto done;
+ 		}
+ 
+-		vga_get_uninterruptible(pdev, io_state);
++		err = vga_get_uninterruptible(pdev, io_state);
++		if (unlikely(err))
++		{
++			ret_val = err;
++			goto done;
++		}
+ 
+ 		/* Update the client's locks lists */
+ 		for (i = 0; i < MAX_USER_CARDS; i++) {
 -- 
 2.47.3
 
