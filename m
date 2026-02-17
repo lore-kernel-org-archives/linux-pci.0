@@ -1,310 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C061632B9AA;
-	Tue, 17 Feb 2026 10:56:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E26631A800;
+	Tue, 17 Feb 2026 11:10:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771325799; cv=none; b=cDkIStssYW9fVGIKfBZJl2i6VeGHqUMcH1rs09xZK7XNJEevrF71eAPhbWUyCt1mS51k68hX+lkZ1OLQHo8Du32tquV5iGP0dMWfIlQYc6B9zmBwt5hJsWiTly5aHpSXpQGGqgyeVakxmMYAFERpPWXZ10Fk2dENgWY+OcneqRc=
+	t=1771326642; cv=none; b=fmbaeu+Gywn32B23druJH5MEIVxT58Ce7dhWYUmo943ByTRjzZA4Gc/GiJEDuEZPmjrKHGcoQD65C/HJqy3KdyBswFXTnNykzMmACUztPQ0DJAUkAgtknukiTBAFMhLS+8LRE0YFf+sj6k17eYeoTUMmbVuePtdL/V9PkpNk7ew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771325799; c=relaxed/simple;
-	bh=fiVPQ/yNhAM22IWrlpLSSAw8EzUR+ZTusrxwQYxkzAQ=;
+	s=arc-20240116; t=1771326642; c=relaxed/simple;
+	bh=gHQK+7Chcd4VthUF4prpwCvbHfkpJN2yH4VNIqApsd0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JLWV4X76md1juW/T+K+yHNpN8+I9TQzp+N66pDqswceJEOfasFDrvKDkkdYz0MohmZUWBrGzFkCTPDX4zX6FHjivuu2LvnU08ywX5EgFO2iw25cNBco2rsK3DmgVsdpzdgadeapWo4meFqEhxXHP5no6Kon2e67O/zs/ux9qBT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CnL3qMQk; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OmrPA6F2524JDgoqfK7EnP3hmb9prrwI2CeqqJ6bW49K8PPkQywaeyQVf42cvNeQmQJc/oDTk5h9l9kyiUhKWp1FLsDGEFPW2ItSMuKOyHY2hSWzgW/P6AOUdxgzgCS3ZO0MGxO0lrz2z68IAysXiAIg3doJiLYG9sDooqqQ89E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HqXLYE7x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CnL3qMQk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C00A5C19423;
-	Tue, 17 Feb 2026 10:56:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HqXLYE7x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F53DC4CEF7;
+	Tue, 17 Feb 2026 11:10:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771325799;
-	bh=fiVPQ/yNhAM22IWrlpLSSAw8EzUR+ZTusrxwQYxkzAQ=;
+	s=k20201202; t=1771326641;
+	bh=gHQK+7Chcd4VthUF4prpwCvbHfkpJN2yH4VNIqApsd0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CnL3qMQkIwiSmefNCwkKictQvqQw9xRYNI2fHY1r+ER8d3/xQua8Aq7QEhzbt2mKd
-	 6pgJ3b0S/HxyTzfJdcORc2yxTt92dserDvMvmuLpjv/eR01zPeZw9Uh9cFOr9QXWhu
-	 aKYzmdMUV2OVWTeazpCChYln7dhMNcSLGF24e5ganTGjbI8UsQzkUhdq1ln7T3CxRk
-	 1veorUJXkxgME7h3dQtrrRcFiJfC2LDROzUZUeMmVed9W5GOu7ytPA6wDmb06pYUWV
-	 ZE8MikHmB+ID2fjRnUAlUiMKDn9Thohslo6xzjjVMmcm06QzwEykEuiptDLGwvQdL0
-	 HBdcbhosKVJ6g==
-Date: Tue, 17 Feb 2026 16:26:23 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Pavel Machek <pavel@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, linux-pm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, 
-	quic_vbadigan@quicinc.com, quic_mrana@quicinc.com, sherry.sun@nxp.com
-Subject: Re: [PATCH v6 2/2] PCI: Add support for PCIe WAKE# interrupt
-Message-ID: <ehfnyld4ek5znhqkrwoctsat55uvoqixms4gcwbinh5sjs3lgw@ydqhl3s3p3lg>
-References: <20251127-wakeirq_support-v6-0-60f581f94205@oss.qualcomm.com>
- <20251127-wakeirq_support-v6-2-60f581f94205@oss.qualcomm.com>
- <ip6k4kjyu5lrnafqyrnq54dw6lqixaqx7wckwn3ttxr7hpu4ob@77l52tthlfnp>
+	b=HqXLYE7xpPVZuxMxVbW2zFnh8282AFd8JY7ggX663f57ysjq7cuU8c9qYGIhR2HC9
+	 sHbV7Kc+xvHEpxsPEuP+U9Y6jocx+0qtx8FkM61d69EtMFQSRxoDrgaSIz1uvqi4gw
+	 vBSrynBXszjDJuNxI2P483WbIitweAHQWR9SALhIJ68UiueXwBdovwVLyIWzmCWgxU
+	 a4hos7NF72b8I9f7qR9mgJrTIhwaZ7zqNwXdlM51m4+03oMmfkq1tvquQz73jMKfgT
+	 mBGLbvR0i2xqf6IpGZM/7SAh/Fgb4kR7MN1M3SOARxnhQJTIe3RTzu7hsRow2on/Ig
+	 PeBwuFIbrMAFg==
+Date: Tue, 17 Feb 2026 12:10:36 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org,
+	bhelgaas@google.com, jdmason@kudzu.us, dave.jiang@intel.com,
+	allenbh@gmail.com, Frank.Li@nxp.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ntb@lists.linux.dev
+Subject: Re: [PATCH v2 1/3] PCI: endpoint: pci-epf-vntb: Fix MSI doorbell IRQ
+ unwind
+Message-ID: <aZRMrNlmU6cgrnVo@ryzen>
+References: <20260217063856.3759713-1-den@valinux.co.jp>
+ <20260217063856.3759713-2-den@valinux.co.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ip6k4kjyu5lrnafqyrnq54dw6lqixaqx7wckwn3ttxr7hpu4ob@77l52tthlfnp>
+In-Reply-To: <20260217063856.3759713-2-den@valinux.co.jp>
 
-On Fri, Jan 16, 2026 at 05:26:33PM +0530, Manivannan Sadhasivam wrote:
-> On Thu, Nov 27, 2025 at 06:15:43PM +0530, Krishna Chaitanya Chundru wrote:
-> > According to the PCIe specification 6, sec 5.3.3.2, there are two defined
-> > wakeup mechanisms: Beacon and WAKE# for the Link wakeup mechanisms to
-> > provide a means of signaling the platform to re-establish power and
-> > reference clocks to the components within its domain. Beacon is a hardware
-> > mechanism invisible to software (PCIe r7.0, sec 4.2.7.8.1). Adding WAKE#
-> > support in PCI framework.
+On Tue, Feb 17, 2026 at 03:38:54PM +0900, Koichiro Den wrote:
+> epf_ntb_db_bar_init_msi_doorbell() requests ntb->db_count doorbell IRQs
+> and then performs additional MSI doorbell setup that may still fail.
+> The error path unwinds the requested IRQs, but it uses a loop variable
+> that is reused later in the function. When a later step fails, the
+> unwind can run with an unexpected index value and leave some IRQs
+> requested.
 > 
-> Use imperative tone.
+> Track the number of successfully requested IRQs separately and use that
+> counter for the unwind so all previously requested IRQs are freed on
+> failure.
 > 
-> > 
-> > According to the PCIe specification, multiple WAKE# signals can exist in
-> > a system.
-> 
-> Add 'or each component in the hierarchy could share a single WAKE# signal'.
-> 
-> > In configurations involving a PCIe switch, each downstream port
-> > (DSP) of the switch may be connected to a separate WAKE# line, allowing
-> > each endpoint to signal WAKE# independently. From figure 5.4, WAKE# can
-> 
-> Add spec revision.
-> 
-> > also be terminated at the switch itself. To support this, the WAKE#
-> > should be described in the device tree node of the endpint/bridge. If all
-> 
-> 'endpoint'
-> 
-> > endpoints share a single WAKE# line, then WAKE# should be defined in the
-> > each node.
-> > 
-> 
-> '.., then each endpoint node should describe the same WAKE# signal or a single
-> WAKE# in the Root Port node'.
-> 
-> > To support legacy devicetree in direct attach case, driver will search
-> > in root port node for WAKE# if the driver doesn't find in the endpoint
-> > node.
-> > 
-> 
-> This is not a legacy way. If there is a single WAKE#, then DTS may still
-> describe it only in the Root Port node.
-> 
-> > In pci_device_add(), PCI framework will search for the WAKE# in its node,
-> 
-> s/its/device
-> 
-> > If not found, it searches in its upstream port only if upstream port is
-> > root port to support legacy bindings. Once found, register for the wake IRQ
-> 
-> s/root port/Root Port
-> 
-> Again, drop 'legacy binding'.
-> 
-> > in shared mode, as the WAKE# may be shared among multiple endpoints.
-> > 
-> > When the IRQ is asserted, the handle_threaded_wake_irq() handler triggers
-> 
-> handle_threaded_wake_irq() is not part of this patch. So maybe say,
-> 
-> 'When a device asserts WAKE#, PM core will wakeup the system, resume the device
-> and its parent(s) in the hierarchy, which will cause the restoration of power
-> and refclk to the device.'
-> 
-> > a pm_runtime_resume().
-> > The PM framework ensures that the parent device is
-> > resumed before the child i.e controller driver which can bring back device
-> > state to D0.
-> > 
-> > WAKE# is added in dts schema and merged based on below links.
-> > 
-> > Link: https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
-> > Link: https://github.com/devicetree-org/dt-schema/pull/170
-> > Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-> > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> > ---
-> >  drivers/pci/of.c     | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/pci.h    |  6 ++++++
-> >  drivers/pci/probe.c  |  2 ++
-> >  drivers/pci/remove.c |  1 +
-> >  include/linux/pci.h  |  2 ++
-> >  5 files changed, 69 insertions(+)
-> > 
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> > index 3579265f119845637e163d9051437c89662762f8..fc33405a7b1f001e171277434663cc9dfe57c69b 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -7,6 +7,7 @@
-> >  #define pr_fmt(fmt)	"PCI: OF: " fmt
-> >  
-> >  #include <linux/cleanup.h>
-> > +#include <linux/gpio/consumer.h>
-> >  #include <linux/irqdomain.h>
-> >  #include <linux/kernel.h>
-> >  #include <linux/pci.h>
-> > @@ -15,6 +16,7 @@
-> >  #include <linux/of_address.h>
-> >  #include <linux/of_pci.h>
-> >  #include <linux/platform_device.h>
-> > +#include <linux/pm_wakeirq.h>
-> >  #include "pci.h"
-> >  
-> >  #ifdef CONFIG_PCI
-> > @@ -586,6 +588,62 @@ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
-> >  	return irq_create_of_mapping(&oirq);
-> >  }
-> >  EXPORT_SYMBOL_GPL(of_irq_parse_and_map_pci);
-> > +
-> > +static void pci_configure_wake_irq(struct pci_dev *pdev, struct gpio_desc *wake)
-> > +{
-> > +	int ret, wake_irq;
-> > +
-> > +	if (!wake)
-> > +		return;
-> > +
-> > +	wake_irq = gpiod_to_irq(wake);
-> > +	if (wake_irq < 0) {
-> > +		dev_err(&pdev->dev, "Failed to get wake irq: %d\n", wake_irq);
-> 
-> Why not pci_err()?
-> 
-> > +		return;
-> > +	}
-> > +
-> > +	device_init_wakeup(&pdev->dev, true);
-> 
-> I don't think we should enable wakeup by default for all devices, but only
-> conditionally in platform_pci_set_wakeup().
-> 
+> Fixes: dc693d606644 ("PCI: endpoint: pci-epf-vntb: Add MSI doorbell support")
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
 
-This is fine as long as we call device_init_wakeup() only when the platform
-supports WAKE# for this device.
-
-> > +
-> > +	ret = dev_pm_set_dedicated_shared_wake_irq(&pdev->dev, wake_irq,
-> > +						   IRQ_TYPE_EDGE_FALLING);
-> > +	if (ret < 0) {
-> > +		dev_err(&pdev->dev, "Failed to set wake IRQ: %d\n", ret);
-> 
-> pci_err()?
-> 
-> > +		device_init_wakeup(&pdev->dev, false);
-> > +	}
-> > +}
-> > +
-> > +void pci_configure_of_wake_gpio(struct pci_dev *dev)
-> > +{
-> > +	struct device_node *dn = pci_device_to_OF_node(dev);
-> > +	struct gpio_desc *gpio;
-> > +	struct pci_dev *root;
-> 
-> s/root/upstream
-> 
-> > +
-> > +	if (!dn)
-> > +		return;
-> > +
-> > +	gpio = fwnode_gpiod_get_index(of_fwnode_handle(dn),
-> > +				      "wake", 0, GPIOD_IN | GPIOD_FLAGS_BIT_NONEXCLUSIVE, NULL);
-> 
-> You can add a new fwnode_gpiod_get() API that wraps
-> fwnode_gpiod_get_index(..0..), similar to devm_fwnode_gpiod_get().
-> 
-> > +	if (IS_ERR(gpio)) {
-> > +		/*
-> > +		 * To support legacy devicetree, search in root port for WAKE#
-> > +		 * in direct attach case.
-> 
-> "In case the entire topology shares a single WAKE# signal, look for it in the
-> upstream bridge node. But if it is not Root Port, then skip it."
-> 
-
-You should also check for the presence of WAKE# here before calling
-pci_configure_wake_irq().
-
-- Mani
-
-> > +		 */
-> > +		root = pci_upstream_bridge(dev);
-> > +		if (pci_is_root_bus(root->bus))
-> > +			pci_configure_wake_irq(dev, root->wake);
-> > +	} else {
-> > +		dev->wake = gpio;
-> > +		pci_configure_wake_irq(dev, gpio);
-> > +	}
-> > +}
-> > +
-> > +void pci_remove_of_wake_gpio(struct pci_dev *dev)
-> > +{
-> > +	dev_pm_clear_wake_irq(&dev->dev);
-> > +	device_init_wakeup(&dev->dev, false);
-> > +	gpiod_put(dev->wake);
-> > +	dev->wake = NULL;
-> > +}
-> >  #endif	/* CONFIG_OF_IRQ */
-> >  
-> >  static int pci_parse_request_of_pci_ranges(struct device *dev,
-> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > index 4492b809094b5794bd94dfbc20102cb208c3fa2f..05cb240ecdb59f9833ca6dae2357fdbd012195d6 100644
-> > --- a/drivers/pci/pci.h
-> > +++ b/drivers/pci/pci.h
-> > @@ -1056,6 +1056,9 @@ void pci_release_of_node(struct pci_dev *dev);
-> >  void pci_set_bus_of_node(struct pci_bus *bus);
-> >  void pci_release_bus_of_node(struct pci_bus *bus);
-> >  
-> > +void pci_configure_of_wake_gpio(struct pci_dev *dev);
-> > +void pci_remove_of_wake_gpio(struct pci_dev *dev);
-> > +
-> >  int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge);
-> >  bool of_pci_supply_present(struct device_node *np);
-> >  int of_pci_get_equalization_presets(struct device *dev,
-> > @@ -1101,6 +1104,9 @@ static inline int devm_of_pci_bridge_init(struct device *dev, struct pci_host_br
-> >  	return 0;
-> >  }
-> >  
-> > +static inline void pci_configure_of_wake_gpio(struct pci_dev *dev) { }
-> > +static inline void pci_remove_of_wake_gpio(struct pci_dev *dev) { }
-> > +
-> >  static inline bool of_pci_supply_present(struct device_node *np)
-> >  {
-> >  	return false;
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 0ce98e18b5a876afe72af35a9f4a44d598e8d500..f9b879c8e3f72a9845f60577335019aa2002dc23 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -2762,6 +2762,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
-> >  	ret = device_add(&dev->dev);
-> >  	WARN_ON(ret < 0);
-> >  
-> > +	pci_configure_of_wake_gpio(dev);
-> 
-> This should be wrapped inside a new platform_pci_configure_wake() API, similar
-> to other platform APIs.
-> 
-> > +
-> >  	pci_npem_create(dev);
-> >  
-> >  	pci_doe_sysfs_init(dev);
-> > diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> > index ce5c25adef5518e5aec30c41de37ea66d682f3b0..26e9c1df51c76344a1d7f5cc7edd433780e73474 100644
-> > --- a/drivers/pci/remove.c
-> > +++ b/drivers/pci/remove.c
-> > @@ -54,6 +54,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
-> >  	if (pci_dev_test_and_set_removed(dev))
-> >  		return;
-> >  
-> > +	pci_remove_of_wake_gpio(dev);
-> 
-> Same as above, wrap it inside platform_pci_remove_wake() API.
-> 
-> - Mani
-> 
-> -- 
-> மணிவண்ணன் சதாசிவம்
-
--- 
-மணிவண்ணன் சதாசிவம்
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
