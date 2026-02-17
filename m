@@ -1,113 +1,135 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C8AB34D4F8
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 16:08:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E9FE36E475
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 16:11:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771344538; cv=none; b=SPdel8Hz4lPM3xxXgh78JVDBDn9bjPNa4cU6GbmmFVLRTo/YF9Y8Pj3YAg+ensr1ic8lOSdhiKJLueMsspqnGwtq85OwL9gfRJvUD6QydzVKtJGJToFb3jqXrJuUS7DlUgMjOZEPmVI8oEqdXYVbylR7Ph3BR1BF+E9InHHed0E=
+	t=1771344681; cv=none; b=mBpzp2TtxQv/zI+3bwt369tl3uKGgRNdVsdIkx4EhJM7rDuLkMsGCFXyANiJvKtcKjfODVgyxCj1SSd33QLwom/pcK2nM8JWiaIGS1la7i1k4pAS2xRTbKQHV19PocF/5HeV9t05BTCoIMPef6gb4JFteVAA+tLPVoDEJXbEbbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771344538; c=relaxed/simple;
-	bh=+QLhHTb/5WCShdm7aJysxsh21rUg6QAbVvR1WVUV/3E=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=urq+rKQLbKfoYc3nxoOitzLM+I5bMM1qVmC9MVmvl2Xcjal7R8bbZ8RoPZ0HqyQ8mjlnkfAc1e5wXMA8E2Vr7C09KCj6mowNrugHzwMAPn7sX6jNxFATJ09+HeITJwuxS0Xw+xNYrbhf9lZGrmTAqkj8uOby7Gct76IKwHXH3oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=c5NsGo/N; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1771344681; c=relaxed/simple;
+	bh=28BzoBXIOX9p4kVAfbqN4gzQmpmGYGqOr6Sc5MMD8pA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Syv2fIuf2mq98TvqotepqEpSG6Fi53X4AeJzUWXQOtWxLLfZgcz2OI4LsDWPG7sS5GYHs39ec4odNCv+IUTaicVggDP+VuM7nTE2Km2ihwrvOaNKuCYoySxNmIBlnJr0J0dJnNrboheaiMJW6KIxhiDCZNHWgVnzJw+lNKXoEJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CChDiZfn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="c5NsGo/N"
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-	by m0089730.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 61HEqw06545977
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 08:08:56 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2025-q2; bh=4hue1uQO4tWvAph7y2
-	OqQEQYhPJ4kFv4dZ4pBmeUiVY=; b=c5NsGo/NKz0qanALLwl468ypRcA0GWGA+4
-	JgswcXma177TiEJh/Km07dn13BfGLRWSF0qaPxG/UM8VjEiFvUO1otIVZxgiOBvs
-	cC1ZbQUPFuhpYGM7KVXkqpcWuc4K2wK987KIkStEZjs4BPW92S7wmbWu651Ol4ia
-	tFv2nrffKMOqr52UUiQayLeql7zR5EaNTOOBfdELtO2WLhxjzKDLR9zyP7ShQmhN
-	HLg4CjCkmfH8oRI/HNo6yWeTKNtf6QAl8trCirmYZwGA07Hn8DqAl1WevcPpYvbN
-	vmyvm0xznNPiRrDxvLFESzoZ2H4eTP8KLq4UjZDqyzTuD70Qiaqg==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by m0089730.ppops.net (PPS) with ESMTPS id 4cctg217ja-6
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2026 08:08:56 -0800 (PST)
-Received: from twshared18017.01.snb2.facebook.com (2620:10d:c0a8:1b::30) by
- mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.35; Tue, 17 Feb 2026 16:08:54 +0000
-Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
-	id 55AB0811FAF7; Tue, 17 Feb 2026 08:08:39 -0800 (PST)
-From: Keith Busch <kbusch@meta.com>
-To: <linux-pci@vger.kernel.org>, <helgaas@kernel.org>,
-        <dan.j.williams@intel.com>
-CC: <alex@shazbot.org>, <ilpo.jarvinen@linux.intel.com>,
-        Keith Busch
-	<kbusch@kernel.org>
-Subject: [PATCHv5 0/3] pci slot reset handling fixes
-Date: Tue, 17 Feb 2026 08:08:33 -0800
-Message-ID: <20260217160836.2709885-1-kbusch@meta.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CChDiZfn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28545C4CEF7;
+	Tue, 17 Feb 2026 16:11:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771344681;
+	bh=28BzoBXIOX9p4kVAfbqN4gzQmpmGYGqOr6Sc5MMD8pA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=CChDiZfndJ91zPxGJ3ooX3L2n0RklzFx+BfHxLWYS0PnaL+wTkOF8M6UUI97elLlv
+	 nm59BFsgvZ5lW1udbltSg+Fhe8CxZd2/vkSqcr8X8A0H8eb+A8gI5113IqImJvBqz+
+	 6hpP6WxFKYqd1ar/mDaR7bLPcL0K35OsvxsKO7hE8mJB1oWOQTk0ynzEAMwAB9znci
+	 4mUdzgAVjxfnwwPkIiF96KYzWrcNVu5s0EVlxzsPIkpn7qH+dJIQLmAS01Xv2850wU
+	 2OHMdyTwKM20LFCwEKpALJlt/nDXdVo1zPcZvQ1rwR+QtqDKDunGWIh1+tChzDzxVW
+	 IMfbVy7cCxKhw==
+Date: Tue, 17 Feb 2026 10:11:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Adria Vilanova Martinez <me@avm99963.com>
+Subject: Re: [PATCH] PCI/ASPM: Fix pci_clear_and_set_config_dword() usage
+Message-ID: <20260217161119.GA3378634@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE3MDEzMSBTYWx0ZWRfX+HY55r4wHk0E
- l+zXy4tXZ1Hesv0u/xIF/uf82h7NWD/e/zoP4EvTiSKA8sR5vdArrq4IHASI5HnvwPZ4W5ZnstD
- H+etKfVIGTtxQ1kxLCwO1rbbGFBSqOyolC9N3m5dSxn+G1wu/myazitTe3abSg0VnerKG2Jv8J0
- n+WVAy3OF4iWgT1szQnxP++x6vKJFSnNbOVUoUm5vOTka7CLmCmUtyqoqboO8MMB6iTkPzxPkk0
- 9DKacGMXhcqTWdO1XAdy8wtZGEZMuPRnqc8yckglcQsz3emYi6dm7Hknfw4SFeBEVsTcBKD7iAD
- chLo3UeGqfWrvbAdKCKszXyqx1zEdqEOe0dRXYw8nPbR5PGDqbHgGmKSQivicL/AOU1CbXJ8sth
- tdSmzS5sqvH3e+ctxky1oZvwVkPbR1O8fIsdEppXPQv6lnlQd9P8/JO/o1+O2bRZjwp1RFey4Pq
- NdrqFoTzjREdusYIvLw==
-X-Authority-Analysis: v=2.4 cv=RbWdyltv c=1 sm=1 tr=0 ts=69949298 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8
- a=3IWuNq70jU1TmibXWOcA:9 a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-ORIG-GUID: LkRdJsNLmTVdREx5ZwTIwiozKuGiQugL
-X-Proofpoint-GUID: LkRdJsNLmTVdREx5ZwTIwiozKuGiQugL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-17_02,2026-02-16_04,2025-10-01_01
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5c1752d7512eed0f4ea57b84b12d7ee08ca61fc5.1771226659.git.lukas@wunner.de>
 
-From: Keith Busch <kbusch@kernel.org>
+On Mon, Feb 16, 2026 at 08:46:13AM +0100, Lukas Wunner wrote:
+> When aspm_calc_l12_info() programs the L1 PM Substates Control 1 register
+> fields Common_Mode_Restore_Time, LTR_L1.2_THRESHOLD_Value and _Scale, it
+> invokes pci_clear_and_set_config_dword() in an incorrect way:
+> 
+> For the bits to clear it selects those corresponding to the field.  So far
+> so good.  But for the bits to set it passes a full register value.
+> pci_clear_and_set_config_dword() performs a boolean OR operation which
+> sets all bits of that value, not just the ones that were just cleared.
+> 
+> Thus, when setting the LTR_L1.2_THRESHOLD_Value and _Scale on the child of
+> an ASPM link, aspm_calc_l12_info() also sets the Common_Mode_Restore_Time.
+> That's a spec violation:  PCIe r7.0 sec 7.8.3.3 says this field is RsvdP
+> for Upstream Ports.  On Adrià's Pixelbook Eve, Common_Mode_Restore_Time
+> of the Intel 7265 "Stone Peak" wifi card is zero, yet aspm_calc_l12_info()
+> does not preserve the zero bits but instead programs the value calculated
+> for the Root Port into the wifi card.
+> 
+> Likewise, when setting the Common_Mode_Restore_Time on the Root Port,
+> aspm_calc_l12_info() also changes the LTR_L1.2_THRESHOLD_Value and _Scale
+> from the initial 163840 nsec to 237568 nsec (due to ORing those fields),
+> only to reduce it afterwards to 106496 nsec.
+> 
+> Amend all invocations of pci_clear_and_set_config_dword() to only set bits
+> which are cleared.
+> 
+> Finally, when setting the T_POWER_ON_Value and _Scale on the Root Port and
+> the wifi card, aspm_calc_l12_info() fails to preserve bits declared RsvdP
+> and instead overwrites them with zeroes.  Replace pci_write_config_dword()
+> with pci_clear_and_set_config_dword() to avoid this.
+> 
+> Fixes: aeda9adebab8 ("PCI/ASPM: Configure L1 substate settings")
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=220705#c22
+> Tested-by: Adrià Vilanova Martínez <me@avm99963.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org # v4.11+
 
-Previous version:
+Applied to pci/aspm for v7.1, thanks!  Will be rebased after v7.0-rc1.
 
-  https://lore.kernel.org/linux-pci/20260212224112.1913980-1-kbusch@meta.=
-com/
-
-Changes from previous version:
-
-  * Fix subject line to match convenction (s/pci/PCI)
-
-  * Added example kernel panic logs for fatal hardware errors observed
-    without the slot handling fixes
-
-  * Rearraged some code in the last patch to avoid the need for a
-    forward declaration.
-
-  * Expanded on the comment explaing the difference between the
-    restore values for the bridge reset
-
-Keith Busch (3):
-  PCI: rename __pci_bus_reset and __pci_slot_reset
-  PCI: allow all bus devices to use the same slot
-  PCI: make reset_subordinate hotplug safe
-
- drivers/pci/hotplug/pciehp_core.c |  3 +-
- drivers/pci/pci-sysfs.c           |  3 +-
- drivers/pci/pci.c                 | 97 ++++++++++++++++++++-----------
- drivers/pci/pci.h                 |  2 +-
- drivers/pci/slot.c                | 27 +++++++--
- include/linux/pci.h               |  8 ++-
- 6 files changed, 97 insertions(+), 43 deletions(-)
-
---=20
-2.47.3
-
+> ---
+> Only a "Link" tag, not a "Closes" tag because this patch is just a
+> byproduct that was created while working on the above-linked bugzilla.
+> The actual root cause of the bugzilla seems to be an ASPM erratum
+> of the Sunrise Point PCH which needs to be addressed in coreboot.
+> 
+>  drivers/pci/pcie/aspm.c | 17 ++++++++++++-----
+>  1 file changed, 12 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index cedea47..a1f2752 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -706,22 +706,29 @@ static void aspm_calc_l12_info(struct pcie_link_state *link,
+>  	}
+>  
+>  	/* Program T_POWER_ON times in both ports */
+> -	pci_write_config_dword(parent, parent->l1ss + PCI_L1SS_CTL2, ctl2);
+> -	pci_write_config_dword(child, child->l1ss + PCI_L1SS_CTL2, ctl2);
+> +	pci_clear_and_set_config_dword(parent, parent->l1ss + PCI_L1SS_CTL2,
+> +				       PCI_L1SS_CTL2_T_PWR_ON_VALUE |
+> +				       PCI_L1SS_CTL2_T_PWR_ON_SCALE, ctl2);
+> +	pci_clear_and_set_config_dword(child, child->l1ss + PCI_L1SS_CTL2,
+> +				       PCI_L1SS_CTL2_T_PWR_ON_VALUE |
+> +				       PCI_L1SS_CTL2_T_PWR_ON_SCALE, ctl2);
+>  
+>  	/* Program Common_Mode_Restore_Time in upstream device */
+>  	pci_clear_and_set_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1,
+> -				       PCI_L1SS_CTL1_CM_RESTORE_TIME, ctl1);
+> +				       PCI_L1SS_CTL1_CM_RESTORE_TIME,
+> +				       ctl1 & PCI_L1SS_CTL1_CM_RESTORE_TIME);
+>  
+>  	/* Program LTR_L1.2_THRESHOLD time in both ports */
+>  	pci_clear_and_set_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1,
+>  				       PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
+>  				       PCI_L1SS_CTL1_LTR_L12_TH_SCALE,
+> -				       ctl1);
+> +				       ctl1 & (PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
+> +					       PCI_L1SS_CTL1_LTR_L12_TH_SCALE));
+>  	pci_clear_and_set_config_dword(child, child->l1ss + PCI_L1SS_CTL1,
+>  				       PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
+>  				       PCI_L1SS_CTL1_LTR_L12_TH_SCALE,
+> -				       ctl1);
+> +				       ctl1 & (PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
+> +					       PCI_L1SS_CTL1_LTR_L12_TH_SCALE));
+>  
+>  	if (pl1_2_enables || cl1_2_enables) {
+>  		pci_clear_and_set_config_dword(parent,
+> -- 
+> 2.51.0
+> 
