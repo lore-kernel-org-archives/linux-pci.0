@@ -1,69 +1,67 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011000.outbound.protection.outlook.com [52.101.70.0])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013045.outbound.protection.outlook.com [40.107.162.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB990340A67;
-	Wed, 18 Feb 2026 15:49:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF22C289367
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 16:00:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.45
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771429796; cv=fail; b=uGibIawoLFmgrjlMA6nel3wXy4O9Tpma25Igx6lAA+wVu+baS1h7Uw2dHGu880lHDWv4NtM2u49vlDx5jT7cuAqjjlmeHolPk2/nAGo7jrfO6HKiZETPqv3jHgCgTvemkkSzokjh9zJxW8oEZRcOmB7dvc4Uuauyw7x60Cc+kr8=
+	t=1771430433; cv=fail; b=oA/zixEQZXDNSaB074zS9FScMCLsX+xlYQkWEDH/M1yRyvqWEEhgDoQm6h2I+w3evEoaFnfvsYXEaPE00Nosfr4qi4VhIRZD7k0QX58Zqk8XCF9NA0CYXkArIWYl6k35pzgKMYgtL5CQtdr3SJRR7HCuU0cuJCBbCIfpXIna8ZA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771429796; c=relaxed/simple;
-	bh=Y13Yi0XeURiMwSqoovBhhqb6SwJvEYkZ7lG2SjB3hnQ=;
+	s=arc-20240116; t=1771430433; c=relaxed/simple;
+	bh=ScT7DJy8BWSDUawKSzA7qWqq4j28hTiO8u7Z7XEJIB8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=MLvEQrvysvi+1veT2xWld1K1lbyazEEnzmOqM86sJvcIEDG9dbpF86ebvcfuOmqbaHRgM5gkD0A56HsXvKTT5+7pyOBBI3LgjklzuoxDucYgqn/DDrn0EpMfWxswrzJ3/kYGuQ8L34V2xc3ElRUYk+jTw3t02D1vr9MYa4JJuyA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=V5OHRL0M; arc=fail smtp.client-ip=52.101.70.0
+	 Content-Disposition:In-Reply-To:MIME-Version; b=R1Nd1antHIdJOS00Dt8VKW10/RA0OLh732yYaFSvwEYR5zXHeU+2iYwB7IqEgd/tHWUa2OHVPnJVZ0gHvqJT7B+cvkmzmci82Y/4GCL7t4IUHlPsSklBfSJjYXenCpl00D8kigdGf+9C1WmzVWm1NX/X4OSRSddwZVvBEsc1BMY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=bcP3OC65; arc=fail smtp.client-ip=40.107.162.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="V5OHRL0M"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="bcP3OC65"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=wYeetmagOJTkmi07ltYCIKAFYK4iuZOzndelXW7J/pUmMrptZCq1oXEFBn+jzH/je6cK9CiM2o0X2jMpZk/Diur15d5P8eO9laOiVxhae894lyKYbTUCq/agpA5DOxJPX1UwABQF/OlO4+Rps5fGHY5ELCNLOh9P55Z4aCFk0jjW2n9CuksV539Ro+ywMfRzm9nF70Bcp+L8MgR7Y+oxKfcgxhLDf+itAwE8N/dPvFyzJCNuS00zxCvOIlWs5SdNcQ8XlBxlNkdKXgv4n+x+61+8CFWDC882Zj5MWJLJM5t9xl74cyagwtexf6ElxYP6S1D/0WXgzzslTOdUMeAJww==
+ b=BSHVftpoXZr4r3gEy5hngPnIgmUOcAn+kHc0wF9xhrOap5ICL6S9S5SJAxN49E3uVY2dc8RvSYi4Vn5n0CmleUu6drrKOJdL5AChMIQnQLGGtGKUFygCGO09WJftu1Km4nfkoLjS0rHgAclU7OpZwgRnonyjKe+dik1u54PpSfzHxwoicOEU3dr/HOhKXZoJKP90uHwNLl//TdcsoCB2LgnkYuro9i4zS/BGBxrBgGn8Hs9hGYEIlFwS/HtB/rW8lCmZ65fgibQmvJtbi6hUXRhqbfRoS9ygYoSu/4ZX6Y6ZLlERa38w1o7Ghxkt6aaPb4cPE+cphH9u01c2uIJ+xg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ct32sK8Z5yqiyltNNR3mN3VaG/ac7LHqJOnsWUEy/kA=;
- b=u7wXNzYaq/D+9IFcPz8Wrfh3FEn+QEMVvKooYZS8v1pGPAPRmov5wanVDyl4i5O9ZxFrePlzRCYSCe81SokadGFFgUmsWn+GeaZ7PqTRWxJJ4S0ZiuHKsCaPziTAbqmxovHRjfgsjy7jtk7SzCVMU6l+G6d44DZAtXPsqK3zEzDkFsbTXwopLCXSAV6Rlex7Wl2UvXqrP6brTiq4xY785mw/PUJsJio6c6VnRG9umHMoumMmhj+m7NwUhC9B+pwTSgmyJfniTZ9RgBw1906HTe/hHk06DNVt9KmKjxIR4HmjLTmi+XvnesAWbhG+6dAQg4inCM4bHDJjwum1pNxM7Q==
+ bh=CN58ZrvhcNIfelKKsgKVO7Y6AUaTi08B75sdjRUQJdg=;
+ b=MBGPjBg4k1NkQOxLwZ3UMuMwHxiI/HXop8YmBUFglIu3Vxzx+fdVBdM7tPUB4ICYfAiMeHYV5yuUxYj2CFAKa+9jlmx5p/3uM9eB8WGJUJ6O6bz+3XgPVv3QpXGDXeBULqweLmUHXEkqTgQBGXJNw6BI2fo4eN0jqGRdX8L7Rm8x70QqUxr5M+PWhDjjteBTsLke+wXl7mopOgFkMNNgWDYkgqHbEefHjseMz5MrktUSdYXycrb1M5SfVzYB/3EJto5S+mKIIg1XfMMIxUai4HSIul2h8LUSmPEOg/fTJOgMw0e2Lh73QvX/jiu9TNHGZ9rG7QLV+ZBcptnhatu2tw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ct32sK8Z5yqiyltNNR3mN3VaG/ac7LHqJOnsWUEy/kA=;
- b=V5OHRL0MDz64Xqn4J6rEzMAx49Gk/pNr3IFTBjkWairNne5xWtslOiin9nD9m3pYeFNBonMBu/nL7sAmJafCt3y6smWI29IqfoVkRJW1sZHJQuKMgCojDzUgePoOw3oK0b3Y8gDT4+ZEaYsCDZ4w2k38P7iQ0NUCpUnbRlhnIPq0sxE3ezFEp/JGzrsqiqyvR1q2UWuG9HXWUhpsBGte4MCcEZaVQxWbDiO3xflfEAZhvfw0wpmWnHfZcpErPCTQ5nv7amu5uxQu60fudZsy2HaK7JIQ7dp+ElxFiMIatVp0GpUGUhfueUxY3AD1C7Rsi9iqhxowRT6bvgM9vB8usA==
+ bh=CN58ZrvhcNIfelKKsgKVO7Y6AUaTi08B75sdjRUQJdg=;
+ b=bcP3OC655tUCR/mV/ggPDf6zDFeHjxPGbaU+k4xu80vaLZMrGmSRjRgP0qsJYbj4kLnZFj4RXblFHtTxL8DjVjfimbtJsVNNDVXxvypCsZixK7bBLdxmD5FSkz+bzCXwX3yr64B4958Uqq5ZhpuudRYoS3AzK9ELy/xgSbIgZyhmU6/R/vqvigQzFkXz6G750iUr8BSkMOKWe0j2ZvfQxwQVo0RvoalZ37aiIcLH2IKd0Z7oERWRfNSBNhyvEeJw5t5Y14LJXNsbriZsUl5TZfWdXhLyGsGBJFxd2ugzA/VD8NKjhDuYe1IlR/E2VWmbv20ZJnYgRXipD2VPrGhFHQ==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by DB8PR04MB6938.eurprd04.prod.outlook.com (2603:10a6:10:117::14) with
+ by GV2PR04MB11350.eurprd04.prod.outlook.com (2603:10a6:150:2ae::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.13; Wed, 18 Feb
- 2026 15:49:51 +0000
+ 2026 16:00:26 +0000
 Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
  ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
  ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9632.010; Wed, 18 Feb 2026
- 15:49:51 +0000
-Date: Wed, 18 Feb 2026 10:49:44 -0500
+ 16:00:26 +0000
+Date: Wed, 18 Feb 2026 11:00:17 -0500
 From: Frank Li <Frank.li@nxp.com>
-To: "Verma, Devendra" <Devendra.Verma@amd.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"mani@kernel.org" <mani@kernel.org>,
-	"vkoul@kernel.org" <vkoul@kernel.org>,
-	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Simek, Michal" <michal.simek@amd.com>
-Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL mode
-Message-ID: <aZXfmKs5_KzCDSPq@lizhi-Precision-Tower-5810>
-References: <20260216105547.13457-1-devendra.verma@amd.com>
- <20260216105547.13457-3-devendra.verma@amd.com>
- <aZNz3DxDdzuIf2Ar@lizhi-Precision-Tower-5810>
- <SA1PR12MB8120CDACB96008B2BD4246D3956DA@SA1PR12MB8120.namprd12.prod.outlook.com>
- <aZSZrROMrvt8jHvw@lizhi-Precision-Tower-5810>
- <SA1PR12MB812019D701E0B188611DFE7D956AA@SA1PR12MB8120.namprd12.prod.outlook.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+	Koichiro Den <den@valinux.co.jp>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 7/9] PCI: endpoint: pci-epf-test: Advertise reserved BARs
+Message-ID: <aZXiEWmNEdCfXse2@lizhi-Precision-Tower-5810>
+References: <20260217212707.2450423-11-cassel@kernel.org>
+ <20260217212707.2450423-18-cassel@kernel.org>
+ <aZTzn-R6f9acu-2J@lizhi-Precision-Tower-5810>
+ <aZWXzzul8xRaDQgm@ryzen>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <SA1PR12MB812019D701E0B188611DFE7D956AA@SA1PR12MB8120.namprd12.prod.outlook.com>
-X-ClientProxiedBy: PH7P220CA0048.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:510:32b::19) To PA4PR04MB9366.eurprd04.prod.outlook.com
+In-Reply-To: <aZWXzzul8xRaDQgm@ryzen>
+X-ClientProxiedBy: BY3PR10CA0028.namprd10.prod.outlook.com
+ (2603:10b6:a03:255::33) To PA4PR04MB9366.eurprd04.prod.outlook.com
  (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -72,357 +70,150 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DB8PR04MB6938:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6e85a0c5-b7b4-48d1-b5fc-08de6f0559e6
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|GV2PR04MB11350:EE_
+X-MS-Office365-Filtering-Correlation-Id: 97efeeab-977b-4b76-5de4-08de6f06d485
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|376014|52116014|19092799006|7053199007|38350700014;
+	BCL:0;ARA:13230040|19092799006|1800799024|366016|376014|52116014|38350700014|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?Zn/p567MwlHSQ1PppbRGWALaCbznzUK9COUMHAZJN/eqBj0pcgLoI49iUOZ4?=
- =?us-ascii?Q?FdRZmK//VtGQYhrso8qZapm4ARqh1dmdfh5J1jZnH8CMsLx0lH9ssAjKaGqd?=
- =?us-ascii?Q?yO+kB8ctTk4t1y8GmJ9ZTfFGAZT/ICgMs+ABVUWVlypl6WC+ErdF+5g+LCHQ?=
- =?us-ascii?Q?IW743hXqWIjgzm5/l++/Zmz99llkfbilO+q2n3/u/lye2AaYOdD4tEPsa2Tw?=
- =?us-ascii?Q?c7030o9R3Dx1ymBm9PtDC9+8MzRWJHMUqkwjid7hiX2v/U0oczgs9i96H6qx?=
- =?us-ascii?Q?/1n6aQ1JCM36pOSsQgia+oYDjV3yqoWbCAQ+5m1WvLQjueT6h9bYaNX8gvw+?=
- =?us-ascii?Q?+vJnBQ9X7GkzN6yvUkYt2oOLLSCgthAJrgBO8w6FD0Uq7E+F7Sc8yPVITLSD?=
- =?us-ascii?Q?wD9NF3nMhtAkl57sGqyCCpdHBskZ3qgxRZyoy0Kg1vB2N4zubk3UokxOrkRO?=
- =?us-ascii?Q?7FM9ONiLkLVZ9SeP5kBjvCy0d0zmKLepznynxA2TPjF/7maY7NISCmkM1AN4?=
- =?us-ascii?Q?wQBpmhbq0DjSQlxp7bdIGeY0/WDxbovipZfQglpFNef8sRK7Ko0TkxRW7Qna?=
- =?us-ascii?Q?uhodhsrrCyjKvdIj5eE8gYrOVLDZAmshDHpjbMaZrqTJo3MxLQN9C60q0uG2?=
- =?us-ascii?Q?1m8yBLWGsCk8o62bczzXFvdHIOk7lTJ41hIRwRJHFI9RC2pLYD/1j0NkB2ly?=
- =?us-ascii?Q?sVXUUgWa1aA4FljjDEaLt+rot4LzDG/HE9jE/D469qi7uDlTj7T53ui//Y3d?=
- =?us-ascii?Q?5SwLVZcMat4kglFzA5pUCal6DrUwMCvD4vAkS/gFfFuPDodCFQ3met+kqz1C?=
- =?us-ascii?Q?+q6lvDbI9d84DlIBk8x9i982S87PHr8ogOEWe1eLLrtz5fBQx2GOfHp8r0NR?=
- =?us-ascii?Q?YLPVn7PKZnqkMQMS/gvPxaS7W0cCAj17v8gPGnK2wSAwX1nspPObaCHR4gVU?=
- =?us-ascii?Q?tcsYIEoXCmaRM1+MKY35yfvzXkdxAwse6FJ69x4T3cb2rVZsU4VmoHBVBR0D?=
- =?us-ascii?Q?3YlLzqIrvKm4IqLidaB/tWnYew+xa5keKN3o/blDK7UyshExa8LGJnAOU7+D?=
- =?us-ascii?Q?eoXmWv7j2Yx+Kob1Q/MDP0hpRlEUpO3h7j1YbCEJ/20Ir3K+t3JcuU0iS2hg?=
- =?us-ascii?Q?yd1tXgZ4u59Hop6/VBqdlzrCbsTWL8rb1lRwjLL6FxZeq1D4v52snpkvfimw?=
- =?us-ascii?Q?9iFWr3uDuQuFsWt4+JEiHqtHP9XyjXV3bRGIEU9wk1KEwE7mcfr0NregIAlm?=
- =?us-ascii?Q?LJgP+L+GAGX73gESjzB9CtANMP14d433anTBFgXzS9gjDxs5tS8zKqE/MRxO?=
- =?us-ascii?Q?6SUi5tKT9b4ca8V4O+1UOcBBP3gdGcDXH8TiuXXmaeHtrcKiO0GpU9tXsPiA?=
- =?us-ascii?Q?G7o0xOfqAcp6cdSe64vG5+qXooJkyxwHxVqEopVEjH2B6TNDUYbHh7eNlzF+?=
- =?us-ascii?Q?a2kGaP53rMwgTwvelvtsqV0pt+3fN2Mj8l8WdGQuk3UOR3zi0mpxK/howoa2?=
- =?us-ascii?Q?8wpToEMlPwkoFcugzGOcKzddQcpua9xrCFe5+B8AmRnix7PR0FRJBWD6BhkB?=
- =?us-ascii?Q?6nBIKEHicGqikhib8niRI+eYXLrSps7oD2oOB0RGbFoFImg81BdU+QwOIwSV?=
- =?us-ascii?Q?cOYnjkZycGCRjELNFhKqv0U=3D?=
+	=?us-ascii?Q?C1WF63+HZUe5UOeu7/PJ+08+wmMc7th00Kah32g+T66mCs4UmAYgx8c93Mml?=
+ =?us-ascii?Q?LWVpuxG6WIPbOJmFoc+6g1h0uXZVEj9HdMPQmN8nKzE8wGWMw+IpxU/RGqQE?=
+ =?us-ascii?Q?Awm6OyAeTCb8TocJdAbkf7rvIfRAe7QuwH3dRJg0czSqeXG5gYLdSOI4nkxB?=
+ =?us-ascii?Q?vV10fAqvQFDm3BYMOULiwuBG4YS4v+XSieG1XEawx+fCcEJfUDDJiT/czIl3?=
+ =?us-ascii?Q?mn/nRNFK5a5Yo4vCc7Ns24GkHVDYK1NmG5bE/rJkClkXenpWyOV9F6XzFBNK?=
+ =?us-ascii?Q?yRBnaz4y6Vg5mp1BOCc2zEeRNq8U82YXDBEiKZqw0PTfXtpXrB7TPwab7ozC?=
+ =?us-ascii?Q?TOHEivGTk1u0j7FgPmQQ2nv2EE6rJv/i3+C88k3bS/pKUjhrIBb9eem71i/B?=
+ =?us-ascii?Q?MMrK5K8VcoTaB/OCS4U9haAEzLe4qmCbvcLp++lO6EBqm/tlqluZqdDnwT9+?=
+ =?us-ascii?Q?DhbLm5P4mxb+9hv1qd4cBe20XS9oq18Chn2VmEl3eNVCS1BoVVvy0LTpnwHI?=
+ =?us-ascii?Q?DEp2nHUyYuGnqwT3KjJmiQQ7BlPo+EnWJEXZfvxtFN4qZvEU++O38cm7kaj4?=
+ =?us-ascii?Q?BA+w55r9oZBW0LLllM2SKSKKGiQeldGOTXAQpXSe4GPVLwF/OcUgtl3s8cbL?=
+ =?us-ascii?Q?YyLCsGvpRCxr42cA7XukOUEbu5Tau4gxwJ40QLXlvkCul2nWaeD8ZZKJhamZ?=
+ =?us-ascii?Q?e4Y8u/nkKS4Ej+vpYXHBCN3Ahun+D5fo+G13rPRtCwnaxhRgIoF+w6F9PSwP?=
+ =?us-ascii?Q?hWj4q7r6HBuPX/ZUA5ykFCVNSv8RcxTDoQYOBBY6Qhdmfa4OnuzTCy9p1hrk?=
+ =?us-ascii?Q?jlnIAkd0T8aN4s8T+nAeSHcQkUVqdtea4MtlnGAyJkpdA4WQliUzZf4+cyhW?=
+ =?us-ascii?Q?nYblm+8hJE0OC/pFt9U/b/q/UJ6NdObZNe1+0xHa2iByMBk2izGyltb84SGp?=
+ =?us-ascii?Q?xEIfZOZt9rt8Cq3Ls2I9gxuEAUd0x5k6Cwk8n1qa2s9muyctrQxIJzer59Tt?=
+ =?us-ascii?Q?WST6TX/nKmcjWpXitDjYMRwF031YSlm+t0UJFTV9IteAwZkkiF/Ub/atlFiw?=
+ =?us-ascii?Q?3vjmZfym8JdiKfavAucaFPgB6yJfvIqkU5PO+a/auLx3m56AGb5S7G7FsDew?=
+ =?us-ascii?Q?pnQRLF6FXQ3Gkzqlias7md3UV+GtOLga2p6ZIL6S15hSsZxexojhrcP4tIMz?=
+ =?us-ascii?Q?hKut/jcygb8xnDWnAQyO7uj+UZKjdV3+ezqdPznR8HV+zUISbyoWCnqhk4Jg?=
+ =?us-ascii?Q?NZokjrSwolC1r/7tb1yAZPhxzYK9Yvb83+4u9momU3ZYXOSIkUN3uAQzFyeS?=
+ =?us-ascii?Q?RCzeG6Q715AsQpNTRMtTxz0iykq6c3KLSOuzUkB9EGuR4YIzw/rL+fI6910r?=
+ =?us-ascii?Q?VBjZXQ6WBvOaubn9CRgDExiYQKjys7grQF9PBClKKKcqPZx3F2X1cHaNYacv?=
+ =?us-ascii?Q?koJnnMpMvJ0Fd7+zaaq35P9mKUFl7AtKI9KAKJRgH9EEUh7ApeExp8aXjBpp?=
+ =?us-ascii?Q?tshOoH4N4gnEj0g5eATwHdsDkOyitDzzsIgMUbBM9fhjFAENo4dQ2/ZMXPon?=
+ =?us-ascii?Q?W8+zD5ITMaNUqmK9SfY=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(52116014)(19092799006)(7053199007)(38350700014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(376014)(52116014)(38350700014)(7053199007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?u9gs0TTnzLp31XprZBW2Uz2nP/BEm4ELfJ97anF9mTmk++IhyEqQZmQ5/Yo4?=
- =?us-ascii?Q?mAzkBg08YKIG3z3R0l4ezOG4SZoy5v3jtoDkVNnQWWwnOdj0Iuvxh4xb6AVN?=
- =?us-ascii?Q?6ePUa4ZVwR8ROZwG6oueu9Tj2tn/4l2Oosjwtl0d7BuRAj7bLRB1CjzSOZaA?=
- =?us-ascii?Q?f3Qbs1RmbvBxn82dxBlj2n+AvB7Z+/34L/dwuLwqmYLuQ1hljmXNpaYH5u0b?=
- =?us-ascii?Q?jZkZcHxoT4uIdoekQSvkcqV3K5jC1m5hH6MARWzCW03X1nJ1QhAXlIz6F0d4?=
- =?us-ascii?Q?nzX3SlbuwN72Ty18dphHszRONfAPOzImbrFKPvXYph2tWkbC+AIIaEMVsOiM?=
- =?us-ascii?Q?S6Q7JWwRRU6WYWAUGaboJCG+/3uUpACk4SZ6kSMMUh2R5yaNkscD6Bb6RGdn?=
- =?us-ascii?Q?P1etdZ5OrTNAZBU6iiOEsiTyDQRTQvT+fO2JUY+iyObrSp7UcS4B2xlMfnPi?=
- =?us-ascii?Q?WY260FgLfbeuDPqfBvm30jG2V1LH6amH+xMuaNUyi/6XKCOXaAUXdWOpWasP?=
- =?us-ascii?Q?AnBtUODy0Dv/+9NJzLll624yFfX/pn1UuJjkZVzoRNnWn6RMvP7Q4dEQkjdl?=
- =?us-ascii?Q?ZSV48jp9UrrOrLgTHuvJDqV6Sc4n1PEJOjC+KFcZ9tB1tyAT/3ATQsAQSyLs?=
- =?us-ascii?Q?Ma1jKCmopCoYl+gmdIAz3WHMBYHyXFVZcA7Me9erm8YwCtknfFhDfZYX7Oih?=
- =?us-ascii?Q?mc84R6kbYlxswyH48oYRTODIBtpWylxvbuzJp40qs6QDjrdfBO8Roi2f347a?=
- =?us-ascii?Q?+iFe0DysQfOC7ERmZ+FxqtLngkNghAFf9/bWPFx8hmng/l9aYU9z5zdNVSvc?=
- =?us-ascii?Q?ffiXmqAFf4r4htWGVf8YEV4CXMw5RB5uTwBMZWEWsvPUrQGerLAM9kgu3Fca?=
- =?us-ascii?Q?1ZK1zsWeLh2bHVovH74rpGW+0iCfIlPEQsT1iLMJo3ZwxWzygGA5vQV9Te6r?=
- =?us-ascii?Q?EaQ8akH71wOm9CUoUlGxfoRi8qIlkSgjxTErpqvX5lJWVn5X02QMZUTGFcno?=
- =?us-ascii?Q?nYZJFcK/eK9Yk2gk9vNiRzxKPXg4t0Qzjemv/w2oLpZnVkNniKquzrxspixQ?=
- =?us-ascii?Q?FxaA7/ZYzi6OLdjApsqtMyxf8gz2XqAbsITGCybdl3eF1CdT7VZxLO4FOoVG?=
- =?us-ascii?Q?mLpflSOKUQhWWCXj0JI9l+xLZIVUwm0PGzVx6QSgy3bUnYyFp6FOzad5divk?=
- =?us-ascii?Q?aCfpNvtHnUcYHN075ZKLpr0HW6Lz6J9V2d8X5tPzS5ytyVpZdJnjykAxWgIv?=
- =?us-ascii?Q?1QE6qOCZjt7PWU+4xVpk8dcIACyH+awLGMo5SxsfIuFEzzNXe+AmhEfzhFUe?=
- =?us-ascii?Q?jrK+mX7/qUcHkTbzSBQmHp8JI63Lgo5cUVToXc7hMHy9BRZrt+GsQlSfTnxu?=
- =?us-ascii?Q?kanH5EuCP6PT3mkzfaXwRKjEoKbi5O0d4XRtWUAqqDZGCe5EskxDphjd7KVD?=
- =?us-ascii?Q?zlV7ELGLZE4ndbhGXYxBe2FQ5iaOeq1e8yjKRf50/rU72tjWvzDCMywbndzv?=
- =?us-ascii?Q?7RJLkI3uTIP4nFT7mR+zXpXG/Xd3LEiBJcAUHXQgneCPicM54YW/98S4JiiF?=
- =?us-ascii?Q?AGZM07EAf8XtAjbRkiyMtYqzWJnDUvczfiqoVw/vg15legwsuuPmUIoDzDvF?=
- =?us-ascii?Q?PYXvc0kbth6XTq+vGhR4gf4TynvFfQScdhbpGox+SnMeFkhwVtsxAxf4fgpr?=
- =?us-ascii?Q?nQyiNM9bMRyzjzoxlSNviBgwNcNg0aoixPdvg+99kEAIaTLN?=
+	=?us-ascii?Q?IhHD3ert0MGorJt9njPqw+H9JpoOJ1uIPw/rPdVBdAmxA6ku+m/uTfFmvzIF?=
+ =?us-ascii?Q?Kj5eerjBvcJtl5C0wPS0+zuke55LsBer6qUi/X+p3txkqQFmt5+FFZzbCHLa?=
+ =?us-ascii?Q?EREsQOMZUNqNQHu6KL+X3R7r03gnTSBkSMn7oGQ19X+/jwkNJP5PZSEmbQel?=
+ =?us-ascii?Q?xR4OF03DWSXtMT4hFzzTKhqXMX700xBpA35ox6YBV5w92M/Ckrysh56j5Jjt?=
+ =?us-ascii?Q?IeVE2yQFkE4eW2sh5UhNoTy4x32R3/pwYTnysgaPUJkgXURpISC59nNqEL+c?=
+ =?us-ascii?Q?/Od3S6Pww5YOv6BgBj8vq5p8rEjz3F08LYY+nm/wl9ex5/fS1wXqOHyv9ak6?=
+ =?us-ascii?Q?FkUffTLsbClwblp2ksyuGBlHxEjTeO6WXdyE8voXLAXzALuHfLxZUNSMrNsc?=
+ =?us-ascii?Q?GvoJAInk3gD2RI1mBgdCxTrBPezrjKE+MCP3VrFN78oUpimMLhqTnDNkbuN0?=
+ =?us-ascii?Q?E2dGMp9QUvZTv80wKoaYfJz6KpXSn55pyQtrAehgxAVHpO11Lz2tHyz1dbuv?=
+ =?us-ascii?Q?4a6/JKS7bEjGz6+B100yWYgjdvbROQFwBxh5gsFfx+8fSVwGJUa7fpf3bb1C?=
+ =?us-ascii?Q?VRY1Tgi83FVUOu1DXHqMU62tMWOqA1eEm0OgBTfoKW/gRO9ADEo/eZAowArr?=
+ =?us-ascii?Q?kKJr93lPIHzTIA/ep2t8SV+y8TDNarNt8PxCOp+R5lmn6Enbmk0orjhXsPIn?=
+ =?us-ascii?Q?eK8Lowp79sfI8B+I7seowS/lj8C2PS0yC6hVTCyXngLUr1PQP2XROCF3rXK6?=
+ =?us-ascii?Q?4Buch6Xk7yr6BAcU3d7Zhe7KzNnyIcIWba6kePhBLi4tqH+RHDrMTEHuoSCf?=
+ =?us-ascii?Q?dQgRM/iH5BQ8gjjUBL5iZkSeMmYJ107Yk319LO0VbyKQ4oC3g7WfW0+eOrE/?=
+ =?us-ascii?Q?Pq25sHbJdTWpDkWq5xQXkuUpKADJ7UI8siXVdpnHul/NiMpa7nL+tPUjAc7B?=
+ =?us-ascii?Q?or2ea/zyTvJB8LCLgphve6IHw//g05BzITIoVr437Hcq3NgMaq9F+PGuxESm?=
+ =?us-ascii?Q?cTPMLpr4cLQZvkT0kk7+BclOz7nCEf5xt1DjwwvaxEtW56yTY7WRLJkDWd/h?=
+ =?us-ascii?Q?VhbWj9Zx638JBF9Uzo3eudf4HHf30WPEEm8nDNbwCa5rsuhFs8jFaaTPIeaO?=
+ =?us-ascii?Q?/2whweJ2VAq8Yk+TNghxRFtTl8kznccS8K31OzfVSkhipok9ha0iRUlCV/kr?=
+ =?us-ascii?Q?PoeRJj8HX8yC1FyRmS0BbmZlqnaHBw2y0nmswLT861yIyeJk8O073vP8HquA?=
+ =?us-ascii?Q?AX4v2ZnI/V67e3GgeyWzCFY+/F/49h71cQkwXTy1ucqzXGtyCHa2OgWh40VF?=
+ =?us-ascii?Q?l5rcECRcEt6owR5J/YGJYsr/iA7Qibps9LjAhql0SUnI37koLcig5b3+024b?=
+ =?us-ascii?Q?B/F/Ik4i/VqYguM5iQzEt1DXEUnMbbCCEvUBt/gU9bKQHdRoSEbcOfp6EWjI?=
+ =?us-ascii?Q?Tp6MvPZabWEicois8TSehr9ZyO/NZYutgCLEOgh2fLPNu8irABjzsD8dcN/d?=
+ =?us-ascii?Q?/vqWrVnE33BVmn1K/TxhTNqNYJ7ro5LO+OIDS/uWVBac1+9fUbXzX8ySmC4z?=
+ =?us-ascii?Q?ItzZMpPjS+G9nkPt9OTAmF8htkJ+UW58BXdtmb8hTtzRRekwk0WLEFeZTBlo?=
+ =?us-ascii?Q?vGx2RS/UaYskeUQQRQsTmVt2mHWnO6Yqy5PkkO/E+AeVWf4g2gxCngR+LUJd?=
+ =?us-ascii?Q?cKx1hQes1rahlKq4CQxBlp3AErqEsZPTSzdPgL89vFuyafw7?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6e85a0c5-b7b4-48d1-b5fc-08de6f0559e6
+X-MS-Exchange-CrossTenant-Network-Message-Id: 97efeeab-977b-4b76-5de4-08de6f06d485
 X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2026 15:49:51.5095
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2026 16:00:26.1223
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cG5GxB1W2d3sTUEK8ZgVJ6p3URsGoBrOMJr33NTB6UKp0c2FyNrddBXT/tISKVNzMspNfcjL7z/tgQqEeIhfqQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8PR04MB6938
+X-MS-Exchange-CrossTenant-UserPrincipalName: Zu9uIZz3WNsvJ/cxAp+3yrzBTi9DQkaGrDzSt1sHZRWMU0sLzLiFYRA8CNV6Qsxxl4cF8QyDCgsqhEAI6mXkCw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11350
 
-On Wed, Feb 18, 2026 at 11:32:57AM +0000, Verma, Devendra wrote:
-> [AMD Official Use Only - AMD Internal Distribution Only]
->
-> > -----Original Message-----
-> > From: Frank Li <Frank.li@nxp.com>
-> > Sent: Tuesday, February 17, 2026 10:09 PM
-> > To: Verma, Devendra <Devendra.Verma@amd.com>
-> > Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
-> > dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
-> > Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL
-> > mode
->
-> ---[ Snipped some text to reduce mail size ]---
->
-> > > > On Mon, Feb 16, 2026 at 04:25:46PM +0530, Devendra K Verma wrote:
-> > > > > AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
-> > > > > The current code does not have the mechanisms to enable the DMA
-> > > > > transactions using the non-LL mode. The following two cases are
-> > > > > added with this patch:
-> > > > > - For the AMD (Xilinx) only, when a valid physical base address of
-> > > > >   the device side DDR is not configured, then the IP can still be
-> > > > >   used in non-LL mode. For all the channels DMA transactions will
-> > > > >   be using the non-LL mode only. This, the default non-LL mode,
-> > > > >   is not applicable for Synopsys IP with the current code addition.
-> > > > >
-> > > > > - If the default mode is LL-mode, for both AMD (Xilinx) and Synosys,
-> > > > >   and if user wants to use non-LL mode then user can do so via
-> > > > >   configuring the peripheral_config param of dma_slave_config.
-> > > > >
-> > > > > Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
-> > > > > ---
-> > > > > Changes in v10
-> > > > >   Added the peripheral_config check only for HDMA IP in
-> > > > >   dw_edma_device_config().
-> > > > >   Replaced the loop with single entry retrieval for non-LL
-> > > > >   mode.
-> > > > >   Addressed review comments and handled the burst allocation
-> > > > >   by defining 'bursts_max' as per suggestions.
-> > > > >
-> > > > > Changes in v9
-> > > > >   Fixed compilation errors related to macro name mismatch.
-> > > > >
-> > > > > Changes in v8
-> > > > >   Cosmetic change related to comment and code.
-> > > > >
-> > > > > Changes in v7
-> > > > >   No change
-> > > > >
-> > > > > Changes in v6
-> > > > >   Gave definition to bits used for channel configuration.
-> > > > >   Removed the comment related to doorbell.
-> > > > >
-> > > > > Changes in v5
-> > > > >   Variable name 'nollp' changed to 'non_ll'.
-> > > > >   In the dw_edma_device_config() WARN_ON replaced with dev_err().
-> > > > >   Comments follow the 80-column guideline.
-> > > > >
-> > > > > Changes in v4
-> > > > >   No change
-> > > > >
-> > > > > Changes in v3
-> > > > >   No change
-> > > > >
-> > > > > Changes in v2
-> > > > >   Reverted the function return type to u64 for
-> > > > >   dw_edma_get_phys_addr().
-> > > > >
-> > > > > Changes in v1
-> > > > >   Changed the function return type for dw_edma_get_phys_addr().
-> > > > >   Corrected the typo raised in review.
-> > > > > ---
-> > > > >  drivers/dma/dw-edma/dw-edma-core.c    | 35 ++++++++++++++-
-> > > > >  drivers/dma/dw-edma/dw-edma-core.h    |  1 +
-> > > > >  drivers/dma/dw-edma/dw-edma-pcie.c    | 44 ++++++++++++------
-> > > > >  drivers/dma/dw-edma/dw-hdma-v0-core.c | 65
-> > > > > ++++++++++++++++++++++++++-  drivers/dma/dw-edma/dw-hdma-v0-
-> > > > regs.h |  1 +
-> > > > >  include/linux/dma/edma.h              |  1 +
-> > > > >  6 files changed, 132 insertions(+), 15 deletions(-)
-> > > > >
-> > > > > diff --git a/drivers/dma/dw-edma/dw-edma-core.c
-> > > > > b/drivers/dma/dw-edma/dw-edma-core.c
-> > > > > index b43255f914f3..ef3d79a9f88d 100644
-> > > > > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > > > > +++ b/drivers/dma/dw-edma/dw-edma-core.c
-> > > > > @@ -223,6 +223,31 @@ static int dw_edma_device_config(struct
-> > > > dma_chan *dchan,
-> > > > >                                struct dma_slave_config *config)  {
-> > > > >       struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> > > > > +     int non_ll = 0;
-> > > > > +
-> > > > > +     chan->non_ll = false;
-> > > > > +     if (chan->dw->chip->mf == EDMA_MF_HDMA_NATIVE) {
-> > > >
-> > > > Need handle EMDA case. if mf is EDMA, need return error when
-> > > > config->peripheral_config is not NULL. Or remove above check to make
-> > > > code work for both EDMA or HDMA.
-> > > >
+On Wed, Feb 18, 2026 at 11:43:27AM +0100, Niklas Cassel wrote:
+> On Tue, Feb 17, 2026 at 06:02:55PM -0500, Frank Li wrote:
+> > On Tue, Feb 17, 2026 at 10:27:13PM +0100, Niklas Cassel wrote:
+> > > Advertise reserved BARs as reserved in the Capabilities register,
+> > > such that the host side driver will be able to skip reserved BARs.
 > > >
-> > > For the case of EDMA, the behavior is unchanged.
-> > > Even if the config->peripheral_config param is set then it would be simply
-> > ignored.
-> > > This is retention of the previous behavior. This is done because
-> > > device_slave_config has other params which affect the behavior of the
-> > > DMA transactions, we do not check all those params and return any
-> > > error. The error is returned only in the cases where particular
-> > > parameter from dma_slave_config is used and if the parameter is not as
-> > > expected or in the expected form. The parameter used from
-> > > dma_slave_config for the particular IP type need to be known first then it
-> > can be checked for its correctness. This is behavior for the peripheral_config
-> > which is used for HDMA and thus error checked.
-> >
-> > It actaully hidden error. Your patch provide an option, which need't ll memory
-> > to do DMA transfer. DMA consumer actaully don't know which backend used,
-> > which is private information by DMA engine providor.
-> >
-> > dw-edma-pcie.c is only one of all edma users, which know DMA engine's
-> > information because it creates this interface.
-> >
-> > PCIE-EP framework also create dmaegine, PCIE-EP function driver use DMA
-> > standard interface to get dma-chan.
-> >
-> > if (config->peripheral_config) { /* only your specific dma consumer set it now
-> > */
-> >         /* optional config information */
-> >         if (chan->dw->chip->mf != EDMA_MF_HDMA_NATIVE) {
-> >                 dev_err("edma have not implmentent no-lll mode\n")
-> >                 return -EINVAL
-> >         }
-> >
-> >         ...
-> > }
-> >
-> > Add EDMA support no-ll mode is quite easily in future.
-> >
->
-> This looks reasonable provided that HDMA got the support for this param.
-> An error check can be added in the next revision.
-> The addition may be slightly different as following:
-> If (chan->dw->chip->mf == EDMA_MF_HDMA_NATIVE) {
-> ...
-> } else if (config->peripheral_config) {
->  /* error handling */
-> }
->
-> Using the above, if support needs to be added to EDMA then a check for correct 'mf'
-> in the if() shall be sufficient.
->
+> > > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> > > ---
+> > >  drivers/pci/endpoint/functions/pci-epf-test.c | 24 +++++++++++++++++++
+> > >  1 file changed, 24 insertions(+)
 > > >
-> > > > > +             if (config->peripheral_config &&
-> > > > > +                 config->peripheral_size != sizeof(int)) {
-> > > > > +                     dev_err(dchan->device->dev,
-> > > > > +                             "config param peripheral size mismatch\n");
-> > > > > +                     return -EINVAL;
-> > > > > +             }
-> > > > > +
-> > > > > +             /*
-> > > > > +              * When there is no valid LLP base address available then the
-> > > > > +              * default DMA ops will use the non-LL mode.
-> > > > > +              *
-> > > > > +              * Cases where LL mode is enabled and client wants to use the
-> > > > > +              * non-LL mode then also client can do so via providing the
-> > > > > +              * peripheral_config param.
-> > > > > +              */
-> > > > > +             if (config->peripheral_config)
-> > > > > +                     non_ll = *(int *)config->peripheral_config;
-> > > > > +
-> > > > > +             if (chan->dw->chip->non_ll ||
-> > > > > + (!chan->dw->chip->non_ll && non_ll))
-> > > >
-> > > > if chan->dw->chip->non_ll is true, It should return error if you set
-> > > > non_ll false because no LLP base available.
-> > > >
+> > > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > index 0cb7af0919dc..4c7e42fe5d8e 100644
+> > > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > @@ -64,6 +64,12 @@
+> > >  #define CAP_MSIX			BIT(2)
+> > >  #define CAP_INTX			BIT(3)
+> > >  #define CAP_SUBRANGE_MAPPING		BIT(4)
+> > > +#define CAP_BAR0_RESERVED		BIT(5)
+> > > +#define CAP_BAR1_RESERVED		BIT(6)
+> > > +#define CAP_BAR2_RESERVED		BIT(7)
+> > > +#define CAP_BAR3_RESERVED		BIT(8)
+> > > +#define CAP_BAR4_RESERVED		BIT(9)
+> > > +#define CAP_BAR5_RESERVED		BIT(10)
 > > >
-> > > In case the 'chan->dw->chip->non_ll' is true, then the default mode
-> > > becomes non-LL for HDMA ONLY. There is no option to the user to
-> > > configure the LL mode by giving 'non_ll = false' as part of the config-
-> > >peripheral_config.
-> >
-> > This is API's callback, you can't assume caller do all correct things.
-> >
-> > > The configuration of default non-LL mode depends on how the IP is
-> > > programmed by the user. The user is aware of the IP configuration.
-> >
-> > It is not true. DMA consumer don't know such detail information, which only
-> > know which dma engineer providor.
-> >
->
-> For the DMA consumer the only option is LL mode as default mode. In order to
-> use the non-LL mode it need to provide the parameter in the form of peripheral_config.
-> Given the above statement, the consumer even if gives the 'non_ll = false', it is not going
-> to change any behavior.
-> Even if the user is not giving the option the assumption is that controller is in LL mode,
-> unless the DMA engine provider provides the information regarding non-LL mode as default mode
-> to the DMA consumer explicitly.
-> In the case where chan->dw->chip->non_ll = true, following case may happen:
-> - DMA consumer provides no peripheral_config param or simply config->peripheral_config = NULL,
->    in this case non_ll = false which is the current flow.
-> - DMA consumer provides a valid peripheral_config (!= NULL) param but the value is '0', in this case
->   It is explicit but it would have the same effect as above case.
->
-> DMA consumer is supposed to provide the only option non_ll as it was not available and LL mode
-> is set as default for the DMA operations.
-> When 'chan->dw->chip->non_ll = true' then this was added to make the chip usable when
-> the LLP base addresses are not configured. Without this, user cannot use any of the modes
-> be it LL or non-LL if the LLP base address is not configured.
-
-little bit confuse, Maybe the same as you. I expected behavor
-
-config->peripheral_config = NULL        choose hardware default one
-					- 	    LL mode if hardware support
-					-      none-LL mode if not ll list region
-
-config->peripheral_config != NULL
-EDMA: return false
-HDMA:
-		0			force to none_ll mode. (always success)
-		1			force back to ll mode  (return false if no ll list region in chip)
-
-DMA consumer decide if fall back to none_ll to continue.
-
->
-> > > The check for non-LL option
-> > > provided by the user is useful when LL-mode is default. That is why
-> > > the value of non_ll == false is not even evaluated.
+> > >  #define PCI_EPF_TEST_BAR_SUBRANGE_NSUB	2
 > > >
-> > > > > +                     chan->non_ll = true;
-> > > > > +     }
-> > > > >
-> > ...
-> > > > > diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-> > > > > index 3080747689f6..78ce31b049ae 100644
-> > > > > --- a/include/linux/dma/edma.h
-> > > > > +++ b/include/linux/dma/edma.h
-> > > > > @@ -99,6 +99,7 @@ struct dw_edma_chip {
-> > > > >       enum dw_edma_map_format mf;
-> > > > >
-> > > > >       struct dw_edma          *dw;
-> > > > > +     bool                    non_ll;
-> > > >
-> > > > Can you check ll_region directly? it should be equal to (ll_region->sz == 0)
-> > ?
+> > > @@ -1106,6 +1112,24 @@ static void pci_epf_test_set_capabilities(struct pci_epf *epf)
+> > >  	    epf_test->epc_features->subrange_mapping)
+> > >  		caps |= CAP_SUBRANGE_MAPPING;
+> > >
+> > > +	if (epf_test->epc_features->bar[BAR_0].type == BAR_RESERVED)
+> > > +		caps |= CAP_BAR0_RESERVED;
 > >
-> > Do you miss this questin?
-> >
-> > Frank
-> >
+> > Is it BAR_DISABLE? suppose BAR_RESERVED redefine as hardware MMIO mapped
+> > bar
 >
-> Yes, looks like I missed this question. Could you explain a little bit more? I am unable to understand the context.
+>
+> A BAR that is defined as BAR_DISABLE will always be disabled by the EPC
+> driver, so the host side driver will not see the BAR in the first place.
+>
+> If you try to run pci_endpoint_test against a disabled BAR, the size will
+> be zero, and pci_endpoint_test will return -ENODATA:
+> https://github.com/torvalds/linux/blob/v6.19/drivers/misc/pci_endpoint_test.c#L300-L302
+>
+> and the pci_endpoint selftest will print SKIP for that test case.
+>
+>
+> BAR_RESERVED is describing a BAR that has hardware backed resources, e.g. eDMA
+> registers, iATU registers, MSI-X table. These BARs are never disabled by an
+> EPC driver by default. See the kdoc for these enum values here:
+> https://lore.kernel.org/linux-pci/20260217212707.2450423-15-cassel@kernel.org/
+>
+>
+> Thus, we need to tell pci_endpoint_test that these reserved BARs (which are
+> not disabled) has to be skipped, because if we perfrom READ/WRITE tests
+> against these BARs, bad things will happen. E.g. if you write to a BAR that
+> exposes iATU registers, you will clear/overwrite the current inbound addresss
+> translation configured by the endpoint.
 
-you set chip->non_ll = non_ll in dw_edma_pcie_probe()
-
-and only set ll_region->sz = ll_block->sz when !chip->non_ll.
-
-Thats means ll_region->sz is 0 when chip->non_ll is true.
-
-So non_ll have not bring new infomation into dw_edma_chip.
-
-check !ll_region->sz, which should be equal to this non_ll.
-
-dw_edma_chip is the exchange information between controller and dma core
-driver. Needn't cache it here because you already save a copy in dma-chan.
+I see. it actually means skip bar test. is CAP_SKIP_BAR<n>_TEST better?
 
 Frank
 >
-> > > >
-> > > > Frank
-> > > > >  };
-> > > > >
-> > > > >  /* Export to the platform drivers */
-> > > > > --
-> > > > > 2.43.0
-> > > > >
+>
+> Kind regards,
+> Niklas
