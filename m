@@ -1,980 +1,276 @@
-Received: from fout-a7-smtp.messagingengine.com (fout-a7-smtp.messagingengine.com [103.168.172.150])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020112.outbound.protection.outlook.com [52.101.228.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6F7F3EBF22;
-	Wed, 18 Feb 2026 04:28:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.150
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771388915; cv=none; b=PAoY9NBk/Rze42ugeLKAE/T/KnpOQtovylB6I9GrE627hrBi3VEFPw/0vYCmc1kYUoKGIgNNnRZxuS9IMZb1G9yA7SQ/8frCr2ysJSDVE4d8jyDS4ookRdms9bzgwOEOesP7XECSoJAkt/hEFWgcg7lto7r+P3LfSW1hEUB4TSE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771388915; c=relaxed/simple;
-	bh=ds5Ios1armbe4reV8ooRYsDyPkB3v5rEH2yhGi/+5B4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=deM7LRGFlSii48rv/CzSk0yBcm/ljRCzaDu0Bsbo35m9ubqIuCuaJb1kcNEf74kfPu1lN3TfV8aRX9E2RrnFEY2gsAhBn6WnqeacxL1GqvUUXhTunLc4tIFsjs2prNwI+kkRYJfI1wdV3ZzG1Ax0iFIVYUwDBsmTupxl8RoyBzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me; spf=pass smtp.mailfrom=alistair23.me; dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b=aQcKFDtS; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=PEl4l/UK; arc=none smtp.client-ip=103.168.172.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=alistair23.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alistair23.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A910E1A9FA7;
+	Wed, 18 Feb 2026 04:47:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771390059; cv=fail; b=LVoNL6g8E4AY7oVgS8cuZpYPpfGzFinDXz6ZcWxfQ0YKabFcUNTit08t8e6X8zEaEF8g0xucIZpWoUNzNhykYDqR6AGBnyHOz91N1qCHE+NBp1EIGSDdlamhjhtzoW3TcX0S1mWrMhc/m4ZtIP5oN24QAKI6YLrxicwngECbaGE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771390059; c=relaxed/simple;
+	bh=Sfzk62QKSGnqO7/WUbZk9U+YN7fxQJ6w6vSkB2WpUx8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=ev+KhxPB4bnzWbl/XpDtXDEoRg9yKMQXbvzwVrjt6IlK8f5l+reE+b5oJPLDiv6mQ1TVUBdAS/C3kR2efKKl1WqN1VTv9djpwnYkOtEwJecXpHduSI3uZd/RWSlHbH2Jp8kLVGiSoK6VcYYsoqwxghx5T4OiRAHxTGOWCD4LqsQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=Za7p/lT2; arc=fail smtp.client-ip=52.101.228.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alistair23.me header.i=@alistair23.me header.b="aQcKFDtS";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="PEl4l/UK"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.phl.internal (Postfix) with ESMTP id DFC8FEC0166;
-	Tue, 17 Feb 2026 23:28:31 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-04.internal (MEProxy); Tue, 17 Feb 2026 23:28:31 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alistair23.me;
-	 h=cc:cc:content-transfer-encoding:content-type:content-type
-	:date:date:from:from:in-reply-to:in-reply-to:message-id
-	:mime-version:references:reply-to:subject:subject:to:to; s=fm3;
-	 t=1771388911; x=1771475311; bh=OsvaQ6b7frP77OW5BGNRmpUpkhOr/Xev
-	yko0DHISrDM=; b=aQcKFDtSgE0aD9NenBGBxi1VUE6nNUceY/GwcjW4ZvsJI9MW
-	OgLfef9v1HI/NSe6iFQbwBN26RhTLVd+mHFgmXjEvW4ZOYFdmupa6WRIjIkVQsoY
-	yslV+yYwJUjxGpm4pbdXzEUJcoC1oi4MNUXAWZKJ06oBTunlzKRs7rsLWgV8j+j0
-	l0kstFy44ORGsUH8zOP04hG5tAh1xFG6PwosTjoQRoy/BKL+W5eAmq0d/KWC4acs
-	aMU460bZRc0x27x8CPk2MMU8zVs0BirEN5jskJabcf3IuFjiIqE+TL4bXkgrc9ev
-	LpqV2C4JuWSH+vb8JQ7O1KPxlskuMNYLIKOQWA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1771388911; x=
-	1771475311; bh=OsvaQ6b7frP77OW5BGNRmpUpkhOr/Xevyko0DHISrDM=; b=P
-	El4l/UKVcl0t6Dt/yXsi6D9ZLrWneBVFahVeXY2AZyuPpvc+aMts0HmPo95gE68w
-	gG8U5OoAd2WF6chRm4WDJxzyYpyfj+eZZREejGSGdBVQJ9tDTzgcMoc0nnXcPu/9
-	P49l/RFusge0ypoV9+X+55neM2/ZLOBWbrtgLehCuTltyc6e9WKcJWQFfpeW1acQ
-	p5J7/FVFrRfrldA0z/nsfQTtkZ5r3WhGGoY167QIgHAg6pEi1tsAB05zebVKyUc/
-	tAj95FDfhB1yPGPGJVOQYQqjcBD0CRL38c3XGB9wKu+6+N99tujYGIEEUFj5J+NW
-	cu/X6Y3e6JKbOhlLWnh3w==
-X-ME-Sender: <xms:7z-VaXlSjsN7vfGmUxe_5w-0LEzeA2Z5i-AMB1qECP3AzYSlNiLoqg>
-    <xme:7z-VaWo-b9QdOqR9hKoZbgaHc6HzZjDL6VGa2qUXzTl3lac2xyxUw_pw5WwYqLpby
-    Yni7ZpxsmSWyQGszFbwKDjlekyaoWOXpHmrYlfhk0yUsAuw3Ru7dbc>
-X-ME-Received: <xmr:7z-VaZAIeqPdx61wgQk6-YFby8HpzpDlOsItxDhNPXI8MxyLaKb7ODAraTUG0H6vEA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvvdduieekucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtvdejnecuhfhrohhmpeetlhhishht
-    rghirhcuhfhrrghntghishcuoegrlhhishhtrghirhesrghlihhsthgrihhrvdefrdhmvg
-    eqnecuggftrfgrthhtvghrnhepkefgtdetvddvtdeljeeitdeiveelfeeiueffkeeifedt
-    ieekkeefjedtiefgfeeinecuffhomhgrihhnpehtihdrtghomhenucevlhhushhtvghruf
-    hiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrlhhishhtrghirhesrghlihhs
-    thgrihhrvdefrdhmvgdpnhgspghrtghpthhtohepuddupdhmohguvgepshhmthhpohhuth
-    dprhgtphhtthhopegrqdhgrghrghejsehtihdrtghomhdprhgtphhtthhopehlihhnuhig
-    qdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqug
-    hotgesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegshhgvlhhgrggrshes
-    ghhoohhglhgvrdgtohhmpdhrtghpthhtoheptghorhgsvghtsehlfihnrdhnvghtpdhrtg
-    hpthhtoheptggrshhsvghlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhig
-    qdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuh
-    igqdgrrhhmqdhkvghrnhgvlheslhhishhtshdrihhnfhhrrgguvggrugdrohhrghdprhgt
-    phhtthhopehsqdhvrggurghprghllhhisehtihdrtghomh
-X-ME-Proxy: <xmx:7z-VaZFCFTanCOyulBDFny0ECKKcegqAzYlX6d7VBSLElNI4pPeJow>
-    <xmx:7z-VaT00EoPJBeIZA3U6kbSi7Rl77UPhkcv52S46jRnQVafcuYfJAw>
-    <xmx:7z-VaaPd6WIL3rnz6_83mbL6yDql8FKES486LBWflwfgUe8Beq77eA>
-    <xmx:7z-VaTbekLCrra5Ss6J12UeBed8dw5S42aVA76dU0_T0s7wBrJq1xA>
-    <xmx:7z-VacMTy0dT2r-cwc6spxPx_4KV57cJBf2Her9l0qqUoeUZiPvFpbY3>
-Feedback-ID: ifd214418:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 17 Feb 2026 23:28:26 -0500 (EST)
-Message-ID: <1907366a-e6d6-41ac-b61d-6e65e9dafe9a@alistair23.me>
-Date: Wed, 18 Feb 2026 14:28:23 +1000
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="Za7p/lT2"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=NRWLFrEkNpklSyJKIuBatq25VLXFQun7jqzV5vD0xjQZsQaBReby9DYiXHCf9mRnaeeSLf0nbTOIS7T3m2GCdQZeGueuB3VFDZmMa1br9NT/moLg7++sRfsxbHaKrRHNvKqsjMee1Wdekq4MAKZPytge/2Wwe9oyHEELAZKTQiSlS4suGAZSE86hs28Mam3YWPKCCd5OHqzZTIAShkTHLStvE2CQq4LrWA4uY5KfHw9crZVKGPg+54B26vkuUEO5WJqypUF1rl5BW1/JtSAkCfxFM1ZxUQh1HyNVlsXjzrzvF0+mfIpFqKaARGuV0ylhhFlxIbSoVTo2sS+dbWuhIA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=N86OmXSXH8lHvHmTSRMI1qEsQOFtrb+8FF3ZCaETadU=;
+ b=GIUQ0w+JXpcwOJzyjc22ECoGEUoMeIXv/nkKN9dE0j31IjIi7kcR8IFo4HVxD1Xpk1cT8xsSyfhpZ5BOYJ2reh+Wnr/mbMnjwFNhxUro/ekPiEA9I9H54mQcy3++afPgLlQEvzWJj9Wf0q6CyAhmVb9I85YujbjQEVmqSK+RLxU8crR0S1e/SJFZR0SsJU+x+V7aPpCnQh6Q7MSTgMV0rx0ccqf3l2dwae3WHYfLsHxUej2R3bFzd/fFIxZPvkCEmIEpKBRS/dt/9/RnEf+OcQGRs1CCn25FRrgRSKl0O3+8R+lQCHmunn5jqCG1jttUu+CDD8pahRmBZuL3Un6JPg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=N86OmXSXH8lHvHmTSRMI1qEsQOFtrb+8FF3ZCaETadU=;
+ b=Za7p/lT25CyAh2Ho1xThTEnLscYhzeYDJFVlVDS0NeyexZD1hYra6kW34VDNr3mI5p94/9dSGZjw/sSme5A03Y7ICu53SQ6eGyxI1peBgTUVNIutpXbe8scqh4PynsadUlU99CdND5QDLZyRu5PLGS5BRT33MD/ILjT9FOUxONw=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYCP286MB2701.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:244::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.13; Wed, 18 Feb
+ 2026 04:47:34 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9632.010; Wed, 18 Feb 2026
+ 04:47:34 +0000
+Date: Wed, 18 Feb 2026 13:47:33 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com, 
+	kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com, ntb@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: pci-epf-vntb: Use array_index_nospec() on
+ mws_size[] access
+Message-ID: <zyaurygtzi4qapq3n4lfcae7uahqumvdni5ojwcexpx2rbmbde@rzol5arwg7l2>
+References: <20260105075606.1253697-1-den@valinux.co.jp>
+ <n7griejk7mlutc5mdi6b3ysedn2dgcius43urhxnfohjeo32fc@d5gymxxhrutw>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <n7griejk7mlutc5mdi6b3ysedn2dgcius43urhxnfohjeo32fc@d5gymxxhrutw>
+X-ClientProxiedBy: TYCP286CA0008.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:26c::15) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 3/4] PCI/DOE: Add DOE mailbox support for endpoint
- functions
-To: Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
- cassel@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- s-vadapalli@ti.com, danishanwar@ti.com, srk@ti.com
-References: <20260213123603.420941-1-a-garg7@ti.com>
- <20260213123603.420941-4-a-garg7@ti.com>
-Content-Language: en-AU
-From: Alistair Francis <alistair@alistair23.me>
-In-Reply-To: <20260213123603.420941-4-a-garg7@ti.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB2701:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4c8f486d-948d-44ab-a535-08de6ea8d522
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|7416014|10070799003;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?dkxvbXpMemtlbkVPWXgrSStDVGJRR2FTeVVuVjNlcTl3aGE2TjMwdVFtOFE4?=
+ =?utf-8?B?K05BY2QrWHdZNy9RbmVKajNJRVFBd3RQblNWMFR5YmZ4Qkw5YzI1eHU4V2k4?=
+ =?utf-8?B?UVhZMzliUjY2NS84YitqcUJRZTMrNHFpK3YvdjI2ZnFxOWFienRUc0VLbDRM?=
+ =?utf-8?B?VTZ2WW5oZWJkaUU3MmswcWhCR0srL2w3TUpJSE93RElEVTUyWXd3QW9WOWNr?=
+ =?utf-8?B?WVFPa05HQW1FWGpZN3NxY0VGSEp4YmlwOURhTkt3UXZpOTEreXdaZGxmbXpY?=
+ =?utf-8?B?Wml1dmdpT2ptUEwrSTcvaFIxQmNTMmIrRXc0aHB0bHlOanB1TGVFWFVCNUR6?=
+ =?utf-8?B?M3JONWorb1ExY2FWMms3TTRublZDOFNVODgwU04wSEZaVTA0OWJsZUhzeGhZ?=
+ =?utf-8?B?ZHJOUHdpalU2b2NmRHhnTjY3UjRmeEhVTERiQllqcGliRHFTUGs0OFlCRHQ5?=
+ =?utf-8?B?YUYvZVB3cU9UWFAveDA1Tk1KamxEZGc2T3NsakZsYWZUbmswZUtUZm5PK0RJ?=
+ =?utf-8?B?T01ZYVBKSk1uT0NKZzhKbFhVbVB1YWlGU0VHREpENVdVNEZ4eTlNZHN2Q3Zp?=
+ =?utf-8?B?Ym90dWhVQ3I3QXJLNmZsZWRxUWpHN2xUNWxsVUpBSk43bi9pV1drNllUOHc5?=
+ =?utf-8?B?T2NONVFRZkZMQXh5RCtpQkpodkhSUmZjWkMxd3BsZmtpd1AvdHh6dkNFbEZm?=
+ =?utf-8?B?aGpFZmo4THAwc04vbm9ubHNQQTZFbElBUXdnTDJtVHFVSnNVQ2E0eXp4N3l3?=
+ =?utf-8?B?RHFEQUN4ODNnV29CMFhRRGRDWW1hWTNNUjBWVXQ0MmJaa2xZeW1pLzVlaXVr?=
+ =?utf-8?B?QkV1dkJUdTd2SUp6d2NYc0RXTDkvTHZrRzYxb2tnTHN2YjVoSTBISi9sOGVM?=
+ =?utf-8?B?bCtJL0NTcjJxTnVnOWhYcmpEcitCTzE2Ynd5aDEyekRUcGJpdHJORVlvako4?=
+ =?utf-8?B?RnFmRy94bVpHSkl2QUFmOTVRZnZUU2hGOVNQTlpXbHRRRFpIMHFzeVNxYnF4?=
+ =?utf-8?B?ajEvbEdESlVLZ2YreUVUTTg3ZkVaM0pnYkF3VzllckN2OTlrRkVkSE4ya0F0?=
+ =?utf-8?B?RE41bzgwLzlWaEZBSWJJcmJuOFp0eHlZemhSUlozaHlHU3hXWjlnS0t5RXI3?=
+ =?utf-8?B?YkFxRWtMN1lmQ2VNSFpsZ3h3M2ZaSTZPZlZVb1pRRVFjYjIvU0JVcWZSazA4?=
+ =?utf-8?B?T1hXTXUvd2dwcGVjdENXM3FuWHFhZ1pPL1Rnd3YxSmt0R0xOYllHUXJkZFRJ?=
+ =?utf-8?B?L0x2dnM3cUt4bk1GRmtxTGRxZHIrNSs3eDVyZGVsVWdHak9JN0UzRHpZMUdZ?=
+ =?utf-8?B?Z0dLTThwVXBDN0ZSNHp3VXVNMklpd1h2ZEpwbjliWlVjQkxOcjMyUHFtamlH?=
+ =?utf-8?B?aWFFNkNwQm5VWXhCb0dDcmFwdmtDUERFQ2w1eDM0a3VnWlFwclc1K1dHRmtK?=
+ =?utf-8?B?Q1BZeS9ZU2NYNUFEbFBXTWxWbzFoYm9GNkhUZ3cwM0xrV1EwVkthMGZZRXU5?=
+ =?utf-8?B?RWNSVVBlOE83ZlBCR3VILzcyaUxSVXNweGY3RmJBR3hnZUlsVGdueXAzYlI5?=
+ =?utf-8?B?MUJhdXhlVk16c2ExaXdQVkY3c1hFQ0pJemZvS28wK0M5QjV5cUNJeEw3QkNa?=
+ =?utf-8?B?VnBReG93K3dZYVo5a0h6K1owS2RkSVQ0VVQydVA3ODR4TTg4NnlpSGFzaG1a?=
+ =?utf-8?B?T1RaWGlaY2RFcTEvRC9GbExkMnlBM09neDk3d2JNZFRSN1A2a3N4QnQ1Zkwz?=
+ =?utf-8?B?ZXNxWVFLWEhrWHVFZHF2bVZUUXhNM2g5d21TQUdWZ29zY21GZUhnUWRKVkJZ?=
+ =?utf-8?B?YStKZ3hEMms2aWdvcTJ5OVAxN2oxZ2V6WUQrNzYvWkRoaGFSYUxZbWduSjFh?=
+ =?utf-8?B?VWF6SlJOcmVlWDhPbXR6akc3ek81TnBUSkQ4M080bEZwT2g1bXdnMkswT3BL?=
+ =?utf-8?B?bVdFdUpkQTFKdWJPclh1c3RYMjNLTnlVSzVidWhLNFFvd0RNTlpzVkZoRG11?=
+ =?utf-8?B?ajZNVWRRek9rOUNHZU9ZLytSZ3Q2VlZDb2R1SEZJZ3hhMDdUK0U3MTgyWkdh?=
+ =?utf-8?B?cXdWSm8wYTMyUW1SOFZHMVY3SkQ2Q0VnTHd0S1BDVXIrTGg0R1Y0YUhTbEJQ?=
+ =?utf-8?Q?51mM=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(10070799003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?c0N5a1dKbDR6ZFRKSXZZRjBQNTlIS2hMbzM4bm44WFliLzI3Z0paei9pN1po?=
+ =?utf-8?B?aEZEMDdVQkY0ME1MUWJzbTJjOTRTV0RETFhJSUJObjN1YkwwTXJLaEc0RHNn?=
+ =?utf-8?B?Tks2MllhOWRlR2pzOG5GcXBIdk5qQzQ3aGlvbFlkU1hYdDlpNzU3OUdiMEJS?=
+ =?utf-8?B?Ym1XT01tckZMNTc4VU1ESThYTlIySGNZMzBRRGNJcS9BelphZzBuSmVBU2tZ?=
+ =?utf-8?B?UkdrQXZ4UWVKRTJ2U25NcEhJS1UxeU9GUVozY25waWtnaVFXQXg2QU9ScFBp?=
+ =?utf-8?B?b3VlTzJXbTFwemtzNEZ6L2loZm8vQVFXNGs3eGF2UkxLemVieE4vSXFuMkhK?=
+ =?utf-8?B?amEwTzhLMjFoeTFWelUySW84TUdmNUpFQjhMbnUyLzJQOW9pS2xMM2NJaWw4?=
+ =?utf-8?B?MXVEYzJUaEd6N2JhbGRmdnFVRkEwLzhDUTJCdDQ5TUR0YXFqdUc0LzF0dEFx?=
+ =?utf-8?B?ODhXSE1yWnhFZkdPcWg4dVF3MHR4bzJnN0ZMLzFUVGJtTW41OENpTXkvMFVi?=
+ =?utf-8?B?VDFBck84c1RTa3NGWU1qaXQrWmtZVlp4bytXRXZkc0RORWplV2pKQXB6c2hJ?=
+ =?utf-8?B?QzFvVUJvRDJFZ2JtMzM2c1lPb2dBSlFpWkVBbE9Bd3huVktpVzBPSGFvOU5H?=
+ =?utf-8?B?amo4enRGM3ZCb2dtVFUvS3o0eEFHMjBkdVlYOUdsbC9NZ0FXSkJwa2swWjlY?=
+ =?utf-8?B?aHV3N0tPZjVXOHdFY3JsZlFlOGorS3dHK1RCZXdjeStlbVNzNjdhbmcyQlAx?=
+ =?utf-8?B?cHoveEZ3Q3BBcFZDN2ZNL0FYTTk1bm82dURpaFI0NnJ1bmp1Mm9tRHo4cG91?=
+ =?utf-8?B?OVJYWmJHTWdQTUU2NDVtem5xbUNOL0YrbXlXaWRRbm14d080OWhYSHVxN0Rq?=
+ =?utf-8?B?RjRXQjRoalJTbWtyVFhYM3RwU2RhQkJLTlEwaTNodkpuSGhTS3hpVXBkT0VG?=
+ =?utf-8?B?RDdFV2RMT3BUdlBIaGlXSFFWMXpCK0pvblhGU2Z5YUlTSjhUbnd5YVRDb3M5?=
+ =?utf-8?B?VCtFVEFoZ1FBS3Q0Q2dkSUhvc2h1QTM5dGZQMkZ5TXdNVlVkYUxwNHRPWWtG?=
+ =?utf-8?B?Ny9Vd1Rzc1lzVmJFS2x2VmNHY1dyeHNQR2JnWVZMTE9zbFNuOGdaSDJIRytG?=
+ =?utf-8?B?U0tIdFJINmplRW42UU5KU0I3NlJjVUh0VW1Dd29UQUppUEtSdEhhUW5xdExS?=
+ =?utf-8?B?bVV4UWRzaHJFbGZjN1YraDh0ZWZQcStBUUZZWW1JRjNkSURKbk9MTWpWSlVY?=
+ =?utf-8?B?ZGtsbGtvM28zK0FLWElsTG5aMk9yN2RzWVNWRk9sVTlJWEpWVnpZbW4yZ0Q2?=
+ =?utf-8?B?MVRmcExaQU1QcmJPM0RvMXF3ekxqZ0xGMTRObi9uTjhnTzcxNFI5RnFsV1d2?=
+ =?utf-8?B?OXZobUh6YS91YjlVOC9zaUdhMEpFVEZYZVp3Y1lwNlduYzFyWmlYVlBSVUpo?=
+ =?utf-8?B?YzhtdEVicXBWOGR1N2pER2ViNXdzdVFsQXlkdzU5YWIxQXBVMFpoQVBxY1RV?=
+ =?utf-8?B?bWhIRW1OczVHU1BKdHE0K0dCdThza0x5M3pOOEVSMHdHTGNqSDB2Vml1VGZz?=
+ =?utf-8?B?M2diSmpXSEdXTk85aFJNZW5KL1hRazM0RW1FajVTc05MU1NkV3M1QWdLc09x?=
+ =?utf-8?B?SFVFQklZZzd2SGxMdHZFL3pRTW0xQWlVeG41WkJLcWsxUElWbkVvZ2tobUN0?=
+ =?utf-8?B?L0lQUExvMWt1YUFGaU1XcUUxcHNHMFF3Lzd1bFRmYnk1NGsvVm5rUFBOT0ln?=
+ =?utf-8?B?OW5vUEdrTmZVOGNzbWMrbkN3eGt6T21uaVF4N3p5WGEyMHJKSFhXb3l1clVJ?=
+ =?utf-8?B?Y2kyQzBNTjczekhiMGI5Q25IekVFOHYvalhnQ0U3dGh2VGJ1bmx0a2RvWmJQ?=
+ =?utf-8?B?UE9SQnJVbUNmM04yM0poK2xNNzBCODNDWktoWlZvTUM0RUtRcXZyWHliS1Fr?=
+ =?utf-8?B?eE53QnRCTlFDUmlyM1A1eURud0dCSGNTcnQ1WWJJRGlid3lSRWpHdEpMUXdy?=
+ =?utf-8?B?UW0reGZMMTJSVEQwaTB2QkNaWjJVVU1kUzdhbmxPbEFsSFM3dzRkb0lCUTFR?=
+ =?utf-8?B?dDA5MEp4TTdZSjVuaDdBM2hEQ0VuZHRsK2prNEZ6Y1FYWkxCMG5NRzJWeXhn?=
+ =?utf-8?B?ZlRzK2JLUnA1amlJOFZvM1VRUm5ZZFo2VEhnemY4TmlOMWlxWjJoWlRQTkxF?=
+ =?utf-8?B?UFZTQzJRL3hiRTRmQU85SHprbjJDUUJ3OTlvTWRvcEI4dUhoQjd3ZEIyeExG?=
+ =?utf-8?B?cy9EWDk2djl2aExac1Z4WE1qK0JmaHFIRTdoaG5qRFo4OXo2QTRRaTVoMmgr?=
+ =?utf-8?B?cWRpU3ZoUm9MbzQxdDFjbEdyUGxTY1lXTEl6SFlPTWZvaCtBWGlFUU4rRldh?=
+ =?utf-8?Q?/AbTX4WMXcCTkTQqPNHhXNp7xXR3LNTIv/F//?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4c8f486d-948d-44ab-a535-08de6ea8d522
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2026 04:47:34.3690
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: eDL5Jubc0q4FzDGEXPffndE4mehoe/dQXzWnjUVMhSjyjzOUP04vwvBcicREltyt9243Ix360g5JKbUNeVbG1A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2701
 
-On 13/2/26 22:36, Aksh Garg wrote:
-> From: Aksh Garg <a-garg7@ti.com>
+On Tue, Feb 17, 2026 at 07:20:23PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Jan 05, 2026 at 04:56:06PM +0900, Koichiro Den wrote:
+> > Follow common kernel idioms for indices derived from configfs attributes
+> > and suppress Smatch warnings:
+> > 
+> >   epf_ntb_mw1_show() warn: potential spectre issue 'ntb->mws_size' [r]
+> >   epf_ntb_mw1_store() warn: potential spectre issue 'ntb->mws_size' [w]
+> > 
+> > Also fix the error message for out-of-range MW indices and %lld format
+> > for unsigned values.
+> > 
+> > Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > ---
+> > Base: https://github.com/jonmason/ntb/commit/68113d260674 (ntb-next)
+> > This is a spin-off patch from the following series:
+> > https://lore.kernel.org/all/20251217151609.3162665-2-den@valinux.co.jp/
+> > 
+> >  drivers/pci/endpoint/functions/pci-epf-vntb.c | 24 +++++++++++--------
+> >  1 file changed, 14 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > index 83e9ab10f9c4..192dd4f4de8d 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > @@ -876,17 +876,19 @@ static ssize_t epf_ntb_##_name##_show(struct config_item *item,		\
+> >  	struct config_group *group = to_config_group(item);		\
+> >  	struct epf_ntb *ntb = to_epf_ntb(group);			\
+> >  	struct device *dev = &ntb->epf->dev;				\
+> > -	int win_no;							\
+> > +	int win_no, idx;						\
+> >  									\
+> >  	if (sscanf(#_name, "mw%d", &win_no) != 1)			\
+> >  		return -EINVAL;						\
+> >  									\
+> > -	if (win_no <= 0 || win_no > ntb->num_mws) {			\
+> > -		dev_err(dev, "Invalid num_nws: %d value\n", ntb->num_mws); \
+> > +	idx = win_no - 1;						\
+> > +	if (idx < 0 || idx >= ntb->num_mws) {				\
+> > +		dev_err(dev, "MW%d out of range (num_mws=%d)\n",	\
+> > +			win_no, ntb->num_mws);				\
+> >  		return -EINVAL;						\
 > 
-> DOE (Data Object Exchange) is a standard PCIe extended capability
-> feature introduced in the Data Object Exchange (DOE) ECN for
-> PCIe r5.0. It provides a communication mechanism primarily used for
-> implementing PCIe security features such as device authentication, and
-> secure link establishment. Think of DOE as a sophisticated mailbox
-> system built into PCIe. The root complex can send structured requests
-> to the endpoint device through DOE mailboxes, and the endpoint device
-> responds with appropriate data.
+> This should be -ERANGE, but in a separate patch.
 > 
-> Add the DOE support for PCIe endpoint devices, enabling endpoint
-> functions to process the DOE requests from the host. The implementation
-> provides framework APIs for controller drivers to register mailboxes,
-> protocol handler registration for different DOE data object types, and
-> request processing with workqueues ensuring sequential handling per
-> mailbox. The Discovery protocol is handled internally by the DOE core.
+> >  	}								\
+> > -									\
+> > -	return sprintf(page, "%lld\n", ntb->mws_size[win_no - 1]);	\
+> > +	idx = array_index_nospec(idx, ntb->num_mws);			\
+> > +	return sprintf(page, "%llu\n", ntb->mws_size[idx]);		\
+> >  }
+> >  
+> >  #define EPF_NTB_MW_W(_name)						\
+> > @@ -896,7 +898,7 @@ static ssize_t epf_ntb_##_name##_store(struct config_item *item,	\
+> >  	struct config_group *group = to_config_group(item);		\
+> >  	struct epf_ntb *ntb = to_epf_ntb(group);			\
+> >  	struct device *dev = &ntb->epf->dev;				\
+> > -	int win_no;							\
+> > +	int win_no, idx;						\
+> >  	u64 val;							\
+> >  	int ret;							\
+> >  									\
+> > @@ -907,12 +909,14 @@ static ssize_t epf_ntb_##_name##_store(struct config_item *item,	\
+> >  	if (sscanf(#_name, "mw%d", &win_no) != 1)			\
+> >  		return -EINVAL;						\
+> >  									\
+> > -	if (win_no <= 0 || win_no > ntb->num_mws) {			\
+> > -		dev_err(dev, "Invalid num_nws: %d value\n", ntb->num_mws); \
+> > +	idx = win_no - 1;						\
+> > +	if (idx < 0 || idx >= ntb->num_mws) {				\
+> > +		dev_err(dev, "MW%d out of range (num_mws=%d)\n",	\
+> > +			win_no, ntb->num_mws);				\
+> >  		return -EINVAL;						\
 > 
-> This implementation complements the existing DOE implementation for
-> root complex in drivers/pci/doe.c.
+> Same here.
+> 
+> - Mani
 
-This looks good to me!
+Thanks for the comment. I will send a separate patch for that.
 
-I would love to see a handler implementation and integration with a 
-driver as well.
+Before doing so, I have a quick question regarding the routing of pci-epf-vntb
+patches.
 
-For SPDM the handler could even be in userspace
+Commit e4fe2a2fc423 ("MAINTAINERS: add PCI Endpoint NTB drivers to NTB files")
+places pci-epf-vntb under the NTB subsystem. However, I'm not entirely sure
+which tree (NTB or PCI EP) is expected to take changes to pci-epf-vntb.
 
-Alistair
+Should updates be based on the NTB tree or the PCI EP tree?
+Sorry if this has already been clarified and I just overlooked it.
+
+Best regards,
+Koichiro
 
 > 
-> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-> Signed-off-by: Aksh Garg <a-garg7@ti.com>
-> ---
->   drivers/pci/Kconfig     |  14 +
->   drivers/pci/Makefile    |   1 +
->   drivers/pci/doe-ep.c    | 671 ++++++++++++++++++++++++++++++++++++++++
->   include/linux/pci-doe.h |  69 +++++
->   include/linux/pci-epc.h |   4 +
->   5 files changed, 759 insertions(+)
->   create mode 100644 drivers/pci/doe-ep.c
+> >  	}								\
+> > -									\
+> > -	ntb->mws_size[win_no - 1] = val;				\
+> > +	idx = array_index_nospec(idx, ntb->num_mws);			\
+> > +	ntb->mws_size[idx] = val;					\
+> >  									\
+> >  	return len;							\
+> >  }
+> > -- 
+> > 2.51.0
+> > 
 > 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index e3f848ffb52a..2a57a314054c 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -146,6 +146,20 @@ config PCI_DOE
->   	  Say Y here if you want be able to communicate with PCIe DOE
->   	  mailboxes.
->   
-> +config PCI_DOE_EP
-> +	bool "PCI Endpoint Data Object Exchange (DOE) support"
-> +	depends on PCI_ENDPOINT
-> +	help
-> +	  This enables support for Data Object Exchange (DOE) protocol
-> +	  on PCI Endpoint controllers. It provides a communication
-> +	  mechanism through mailboxes, primarily used for PCIe security
-> +	  features.
-> +
-> +	  Say Y here if you want be able to communicate using PCIe DOE
-> +	  mailboxes.
-> +
-> +	  If unsure, say N.
-> +
->   config PCI_ECAM
->   	bool
->   
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index e10cfe5a280b..66084e2ef9b2 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -34,6 +34,7 @@ obj-$(CONFIG_PCI_P2PDMA)	+= p2pdma.o
->   obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
->   obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
->   obj-$(CONFIG_PCI_DOE)		+= doe.o
-> +obj-$(CONFIG_PCI_DOE_EP)	+= doe-ep.o
->   obj-$(CONFIG_PCI_IDE)		+= ide.o
->   obj-$(CONFIG_PCI_TSM)		+= tsm.o
->   obj-$(CONFIG_PCI_DYNAMIC_OF_NODES) += of_property.o
-> diff --git a/drivers/pci/doe-ep.c b/drivers/pci/doe-ep.c
-> new file mode 100644
-> index 000000000000..ff0551644f54
-> --- /dev/null
-> +++ b/drivers/pci/doe-ep.c
-> @@ -0,0 +1,671 @@
-> +// SPDX-License-Identifier: GPL-2.0-only or MIT
-> +/*
-> + * Data Object Exchange for PCIe Endpoint
-> + *	PCIe r7.0, sec 6.30 DOE
-> + *
-> + * Copyright (C) 2026 Texas Instruments Incorporated - https://www.ti.com
-> + *	Aksh Garg <a-garg7@ti.com>
-> + *	Siddharth Vadapalli <s-vadapalli@ti.com>
-> + */
-> +
-> +#define dev_fmt(fmt) "DOE EP: " fmt
-> +
-> +#include <linux/bitfield.h>
-> +#include <linux/completion.h>
-> +#include <linux/device.h>
-> +#include <linux/mutex.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci-epc.h>
-> +#include <linux/pci-doe.h>
-> +#include <linux/slab.h>
-> +#include <linux/workqueue.h>
-> +#include <linux/xarray.h>
-> +
-> +/*
-> + * Combines function number and capability offset into a unique lookup key
-> + * for storing/retrieving DOE mailboxes in an xarray.
-> + */
-> +#define PCI_DOE_MB_KEY(func, offset) \
-> +	(((unsigned long)(func) << 16) | (offset))
-> +
-> +/**
-> + * struct pci_doe_protocol - DOE protocol handler entry
-> + * @vid: Vendor ID
-> + * @type: Protocol type
-> + * @handler: Handler function pointer
-> + */
-> +struct pci_doe_protocol {
-> +	u16 vid;
-> +	u8 type;
-> +	pci_doe_protocol_handler_t handler;
-> +};
-> +
-> +/*
-> + * Global registry of protocol handlers,
-> + * holding struct pci_doe_protocol
-> + */
-> +static DEFINE_XARRAY_ALLOC(pci_doe_protocols);
-> +
-> +/* Serializes concurrent accesses to pci_doe_protocols xarray */
-> +static DEFINE_MUTEX(protocols_mutex);
-> +
-> +/**
-> + * struct pci_ep_doe_mb - State for a single DOE mailbox on EP
-> + *
-> + * This state is used to manage a single DOE mailbox capability on the
-> + * endpoint side.
-> + *
-> + * @epc: PCI endpoint controller this mailbox belongs to
-> + * @func_no: Physical function number of the function this mailbox belongs to
-> + * @cap_offset: Capability offset
-> + * @work_queue: Queue of work items
-> + * @flags: Bit array of PCI_DOE_FLAG_* flags
-> + */
-> +struct pci_ep_doe_mb {
-> +	struct pci_epc *epc;
-> +	u8 func_no;
-> +	u16 cap_offset;
-> +	struct workqueue_struct *work_queue;
-> +	unsigned long flags;
-> +};
-> +
-> +/**
-> + * struct pci_ep_doe_task - Represents a single DOE request/response task
-> + *
-> + * @feat: DOE feature (vendor ID and type)
-> + * @request_pl: Request payload
-> + * @request_pl_sz: Size of request payload in bytes
-> + * @response_pl: Output pointer for response buffer
-> + * @response_pl_sz: Output pointer for response size
-> + * @task_status: Task completion status (0 on success, -errno on failure)
-> + * @complete: Completion callback
-> + * @private: Private data for completion
-> + * @work: Work structure for workqueue
-> + * @doe_mb: DOE mailbox handling this task
-> + */
-> +struct pci_ep_doe_task {
-> +	struct pci_doe_feature feat;
-> +	const void *request_pl;
-> +	size_t request_pl_sz;
-> +	void **response_pl;
-> +	size_t *response_pl_sz;
-> +	int task_status;
-> +	void (*complete)(struct pci_ep_doe_task *task);
-> +	void *private;
-> +
-> +	/* Initialized by pci_ep_doe_submit_task() */
-> +	struct work_struct work;
-> +	struct pci_ep_doe_mb *doe_mb;
-> +};
-> +
-> +/**
-> + * pci_ep_doe_init() - Initialize the DOE framework for a controller in EP mode
-> + * @epc: PCI endpoint controller
-> + *
-> + * Initialize the DOE framework data structures. This only initializes
-> + * the xarray that will hold the mailboxes.
-> + *
-> + * RETURNS: 0 on success, -errno on failure
-> + */
-> +int pci_ep_doe_init(struct pci_epc *epc)
-> +{
-> +	if (!epc)
-> +		return -EINVAL;
-> +
-> +	xa_init(&epc->doe_mbs);
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ep_doe_init);
-> +
-> +/**
-> + * pci_ep_doe_add_mailbox() - Add a DOE mailbox for a physical function
-> + * @epc: PCI endpoint controller
-> + * @func_no: Physical function number
-> + * @cap_offset: Offset of the DOE capability
-> + *
-> + * Create and register a DOE mailbox for the specified physical function
-> + * and capability offset. The controller driver should call this for each
-> + * DOE capability it finds in its config space.
-> + *
-> + * RETURNS: 0 on success, -errno on failure
-> + */
-> +int pci_ep_doe_add_mailbox(struct pci_epc *epc, u8 func_no, u16 cap_offset)
-> +{
-> +	struct pci_ep_doe_mb *doe_mb;
-> +	unsigned long key;
-> +	int ret;
-> +
-> +	if (!epc)
-> +		return -EINVAL;
-> +
-> +	doe_mb = kzalloc(sizeof(*doe_mb), GFP_KERNEL);
-> +	if (!doe_mb)
-> +		return -ENOMEM;
-> +
-> +	doe_mb->epc = epc;
-> +	doe_mb->func_no = func_no;
-> +	doe_mb->cap_offset = cap_offset;
-> +
-> +	doe_mb->work_queue = alloc_ordered_workqueue("pci_ep_doe[%s:pf%d:offset%x]", 0,
-> +						     dev_name(&epc->dev),
-> +						     func_no, cap_offset);
-> +	if (!doe_mb->work_queue) {
-> +		dev_err(epc->dev.parent,
-> +			"[pf%d:offset%x] failed to allocate work queue\n",
-> +			func_no, cap_offset);
-> +		ret = -ENOMEM;
-> +		goto err_free;
-> +	}
-> +
-> +	/* Add to xarray with composite key */
-> +	key = PCI_DOE_MB_KEY(func_no, cap_offset);
-> +	ret = xa_insert(&epc->doe_mbs, key, doe_mb, GFP_KERNEL);
-> +	if (ret) {
-> +		dev_err(epc->dev.parent,
-> +			"[pf%d:offset%x] failed to insert mailbox: %d\n",
-> +			func_no, cap_offset, ret);
-> +		goto err_destroy;
-> +	}
-> +
-> +	dev_dbg(epc->dev.parent,
-> +		"DOE mailbox added: pf%d offset 0x%x\n",
-> +		func_no, cap_offset);
-> +
-> +	return 0;
-> +
-> +err_destroy:
-> +	destroy_workqueue(doe_mb->work_queue);
-> +err_free:
-> +	kfree(doe_mb);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ep_doe_add_mailbox);
-> +
-> +/**
-> + * pci_ep_doe_register_protocol() - Register a protocol handler
-> + * @vendor: Vendor ID
-> + * @type: Protocol type
-> + * @handler: Handler function pointer
-> + *
-> + * Register a protocol handler that will be called when DOE requests
-> + * with the specified vendor ID and type are received. Protocol libraries
-> + * should call this during module initialization.
-> + *
-> + * RETURNS: 0 on success, -errno on failure
-> + */
-> +int pci_ep_doe_register_protocol(u16 vendor, u8 type,
-> +				 pci_doe_protocol_handler_t handler)
-> +{
-> +	struct pci_doe_protocol *protocol;
-> +	unsigned long index;
-> +	int ret;
-> +	u32 id;
-> +
-> +	if (!handler)
-> +		return -EINVAL;
-> +
-> +	/* Don't allow registering discovery protocol */
-> +	if (vendor == PCI_VENDOR_ID_PCI_SIG && type == PCI_DOE_FEATURE_DISCOVERY)
-> +		return -EINVAL;
-> +
-> +	mutex_lock(&protocols_mutex);
-> +
-> +	/* Check if already registered */
-> +	xa_for_each(&pci_doe_protocols, index, protocol) {
-> +		if (protocol->vid == vendor && protocol->type == type) {
-> +			ret = -EEXIST;
-> +			goto err;
-> +		}
-> +	}
-> +
-> +	protocol = kzalloc(sizeof(*protocol), GFP_KERNEL);
-> +	if (!protocol) {
-> +		ret = -ENOMEM;
-> +		goto err;
-> +	}
-> +
-> +	protocol->vid = vendor;
-> +	protocol->type = type;
-> +	protocol->handler = handler;
-> +
-> +	ret = xa_alloc(&pci_doe_protocols, &id, protocol,
-> +		       xa_limit_32b, GFP_KERNEL);
-> +	if (ret) {
-> +		kfree(protocol);
-> +		goto err;
-> +	}
-> +
-> +	mutex_unlock(&protocols_mutex);
-> +
-> +	pr_debug("DOE EP: Registered protocol %04x:%02x at index %u\n",
-> +		 vendor, type, id);
-> +
-> +	return 0;
-> +
-> +err:
-> +	mutex_unlock(&protocols_mutex);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ep_doe_register_protocol);
-> +
-> +/**
-> + * pci_ep_doe_unregister_protocol() - Unregister a protocol handler
-> + * @vendor: Vendor ID
-> + * @type: Protocol type
-> + *
-> + * Unregister a previously registered protocol handler. Protocol libraries
-> + * should call this during module cleanup.
-> + */
-> +void pci_ep_doe_unregister_protocol(u16 vendor, u8 type)
-> +{
-> +	struct pci_doe_protocol *protocol;
-> +	unsigned long index;
-> +
-> +	mutex_lock(&protocols_mutex);
-> +
-> +	/* Find and remove the protocol entry */
-> +	xa_for_each(&pci_doe_protocols, index, protocol) {
-> +		if (protocol->vid == vendor && protocol->type == type) {
-> +			xa_erase(&pci_doe_protocols, index);
-> +			kfree(protocol);
-> +			mutex_unlock(&protocols_mutex);
-> +			pr_debug("DOE EP: Unregistered protocol %04x:%02x\n",
-> +				 vendor, type);
-> +			return;
-> +		}
-> +	}
-> +
-> +	mutex_unlock(&protocols_mutex);
-> +	pr_warn("DOE EP: Attempted to unregister non-existent protocol %04x:%02x\n",
-> +		vendor, type);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ep_doe_unregister_protocol);
-> +
-> +/**
-> + * pci_ep_doe_cancel_tasks() - Cancel all pending tasks
-> + * @doe_mb: DOE mailbox
-> + *
-> + * Cancel all pending tasks in the mailbox. Mark the mailbox as dead
-> + * so no new tasks can be submitted.
-> + */
-> +static void pci_ep_doe_cancel_tasks(struct pci_ep_doe_mb *doe_mb)
-> +{
-> +	if (!doe_mb)
-> +		return;
-> +
-> +	/* Mark the mailbox as dead */
-> +	set_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags);
-> +
-> +	/* Stop all pending work items from starting */
-> +	set_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags);
-> +}
-> +
-> +/**
-> + * pci_ep_doe_get_mailbox() - Get DOE mailbox by function and offset
-> + * @epc: PCI endpoint controller
-> + * @func_no: Physical function number
-> + * @cap_offset: Offset of the DOE capability
-> + *
-> + * Internal helper to look up a DOE mailbox by its function number and
-> + * capability offset.
-> + *
-> + * RETURNS: Pointer to the mailbox or NULL if not found
-> + */
-> +static struct pci_ep_doe_mb *pci_ep_doe_get_mailbox(struct pci_epc *epc,
-> +						    u8 func_no, u16 cap_offset)
-> +{
-> +	unsigned long key;
-> +
-> +	if (!epc)
-> +		return NULL;
-> +
-> +	key = PCI_DOE_MB_KEY(func_no, cap_offset);
-> +	return xa_load(&epc->doe_mbs, key);
-> +}
-> +
-> +/**
-> + * pci_ep_doe_find_protocol() - Find protocol handler
-> + * @vendor: Vendor ID
-> + * @type: Protocol type
-> + *
-> + * Look up a protocol handler in the registered protocols.
-> + *
-> + * RETURNS: Handler function pointer or NULL if not found
-> + */
-> +static pci_doe_protocol_handler_t pci_ep_doe_find_protocol(u16 vendor, u8 type)
-> +{
-> +	pci_doe_protocol_handler_t handler = NULL;
-> +	struct pci_doe_protocol *protocol;
-> +	unsigned long index;
-> +
-> +	mutex_lock(&protocols_mutex);
-> +
-> +	xa_for_each(&pci_doe_protocols, index, protocol) {
-> +		if (protocol->vid == vendor && protocol->type == type) {
-> +			handler = protocol->handler;
-> +			break;
-> +		}
-> +	}
-> +
-> +	mutex_unlock(&protocols_mutex);
-> +	return handler;
-> +}
-> +
-> +/**
-> + * pci_ep_doe_handle_discovery() - Handle Discovery protocol request
-> + * @request: Request payload
-> + * @request_sz: Request size
-> + * @response: Output pointer for response buffer
-> + * @response_sz: Output pointer for response size
-> + *
-> + * Handle the DOE Discovery protocol. The request contains an index specifying
-> + * which protocol to query. This function creates a response containing the
-> + * vendor ID and protocol type for the requested index, along with the next
-> + * index value for further discovery:
-> + *
-> + * - next_index = 0: Signals this is the last protocol supported
-> + * - next_index = n (non-zero): Signals more protocols available,
-> + *   query index n next
-> + *
-> + * RETURNS: 0 on success, -errno on failure
-> + */
-> +static int pci_ep_doe_handle_discovery(const void *request, size_t request_sz,
-> +				       void **response, size_t *response_sz)
-> +{
-> +	struct pci_doe_protocol *protocol;
-> +	u8 requested_index, next_index;
-> +	unsigned long index;
-> +	u8 xarray_count = 0;
-> +	u32 *response_pl;
-> +	u32 request_pl;
-> +	u16 vendor;
-> +	u8 type;
-> +
-> +	if (request_sz != sizeof(u32))
-> +		return -EINVAL;
-> +
-> +	request_pl = *(u32 *)request;
-> +	requested_index = FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_REQ_3_INDEX, request_pl);
-> +
-> +	mutex_lock(&protocols_mutex);
-> +
-> +	/* Count protocols in xarray */
-> +	xa_for_each(&pci_doe_protocols, index, protocol)
-> +		xarray_count++;
-> +
-> +	if (requested_index > xarray_count) {
-> +		mutex_unlock(&protocols_mutex);
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* Index 0 is always Discovery protocol */
-> +	if (requested_index == 0) {
-> +		vendor = PCI_VENDOR_ID_PCI_SIG;
-> +		type = PCI_DOE_FEATURE_DISCOVERY;
-> +	} else {
-> +		protocol = xa_load(&pci_doe_protocols, (unsigned long)(requested_index - 1));
-> +		if (!protocol) {
-> +			mutex_unlock(&protocols_mutex);
-> +			return -EINVAL;
-> +		}
-> +		vendor = protocol->vid;
-> +		type = protocol->type;
-> +	}
-> +	mutex_unlock(&protocols_mutex);
-> +
-> +	/* Calculate next index */
-> +	next_index = (requested_index < xarray_count) ? requested_index + 1 : 0;
-> +
-> +	response_pl = kzalloc(sizeof(*response_pl), GFP_KERNEL);
-> +	if (!response_pl)
-> +		return -ENOMEM;
-> +
-> +	/* Build response */
-> +	*response_pl = FIELD_PREP(PCI_DOE_DATA_OBJECT_DISC_RSP_3_VID, vendor) |
-> +		       FIELD_PREP(PCI_DOE_DATA_OBJECT_DISC_RSP_3_TYPE, type) |
-> +		       FIELD_PREP(PCI_DOE_DATA_OBJECT_DISC_RSP_3_NEXT_INDEX, next_index);
-> +
-> +	*response = response_pl;
-> +	*response_sz = sizeof(*response_pl);
-> +
-> +	return 0;
-> +}
-> +
-> +static void signal_task_complete(struct pci_ep_doe_task *task, int status)
-> +{
-> +	task->task_status = status;
-> +	destroy_work_on_stack(&task->work);
-> +	task->complete(task);
-> +}
-> +
-> +/**
-> + * doe_ep_task_work() - Work function for processing DOE EP tasks
-> + * @work: Work structure
-> + *
-> + * Process a DOE request by calling the appropriate protocol handler.
-> + */
-> +static void doe_ep_task_work(struct work_struct *work)
-> +{
-> +	struct pci_ep_doe_task *task = container_of(work, struct pci_ep_doe_task,
-> +						    work);
-> +	struct pci_ep_doe_mb *doe_mb = task->doe_mb;
-> +	pci_doe_protocol_handler_t handler;
-> +	int rc;
-> +
-> +	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags)) {
-> +		signal_task_complete(task, -EIO);
-> +		return;
-> +	}
-> +
-> +	/* Check if request was aborted */
-> +	if (test_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags)) {
-> +		signal_task_complete(task, -ECANCELED);
-> +		return;
-> +	}
-> +
-> +	/* Handle Discovery protocol directly */
-> +	if (task->feat.vid == PCI_VENDOR_ID_PCI_SIG &&
-> +	    task->feat.type == PCI_DOE_FEATURE_DISCOVERY) {
-> +		rc = pci_ep_doe_handle_discovery(task->request_pl,
-> +						 task->request_pl_sz,
-> +						 task->response_pl,
-> +						 task->response_pl_sz);
-> +		signal_task_complete(task, rc);
-> +		return;
-> +	}
-> +
-> +	/* Find protocol handler in xarray */
-> +	handler = pci_ep_doe_find_protocol(task->feat.vid, task->feat.type);
-> +	if (!handler) {
-> +		dev_warn(doe_mb->epc->dev.parent,
-> +			 "[%d:%x] Unsupported protocol VID=%04x TYPE=%02x\n",
-> +			 doe_mb->func_no, doe_mb->cap_offset,
-> +			 task->feat.vid, task->feat.type);
-> +		signal_task_complete(task, -EOPNOTSUPP);
-> +		return;
-> +	}
-> +
-> +	/* Call protocol handler */
-> +	rc = handler(task->request_pl, task->request_pl_sz,
-> +		     task->response_pl, task->response_pl_sz);
-> +
-> +	signal_task_complete(task, rc);
-> +}
-> +
-> +/**
-> + * pci_ep_doe_submit_task() - Submit a task to be processed
-> + * @doe_mb: DOE mailbox
-> + * @task: Task to submit
-> + *
-> + * Submit a DOE task to the workqueue for processing.
-> + * Task must be allocated on the stack.
-> + *
-> + * RETURNS: 0 on success, -errno on failure
-> + */
-> +static int pci_ep_doe_submit_task(struct pci_ep_doe_mb *doe_mb,
-> +				  struct pci_ep_doe_task *task)
-> +{
-> +	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags))
-> +		return -EIO;
-> +
-> +	task->doe_mb = doe_mb;
-> +	INIT_WORK_ONSTACK(&task->work, doe_ep_task_work);
-> +	queue_work(doe_mb->work_queue, &task->work);
-> +	return 0;
-> +}
-> +
-> +static void pci_ep_doe_task_complete(struct pci_ep_doe_task *task)
-> +{
-> +	complete(task->private);
-> +}
-> +
-> +/**
-> + * pci_ep_doe_process_request() - Process DOE request on endpoint
-> + * @epc: PCI endpoint controller
-> + * @func_no: Physical function number
-> + * @cap_offset: DOE capability offset
-> + * @vendor: Vendor ID from request header
-> + * @type: Protocol type from request header
-> + * @request: Request payload in CPU-native format
-> + * @request_sz: Size of request payload (bytes)
-> + * @response: Output pointer for response buffer in CPU-native format
-> + * @response_sz: Output pointer for response size (bytes)
-> + *
-> + * Process a DOE request received on the endpoint. The request payload should
-> + * not include the DOE header (vendor/type/length). The protocol handler will
-> + * allocate the response buffer, which the caller (controller driver) must
-> + * free after use.
-> + *
-> + * As per DOE specification, a mailbox processes one request at a time.
-> + * Therefore, this function will never be called concurrently for the same
-> + * mailbox by different callers.
-> + *
-> + * The caller is responsible for the conversion of the received DOE request
-> + * with le32_to_cpu() before calling this function.
-> + * Similarly, it is responsible for converting the response payload with
-> + * cpu_to_le32() before sending it back over the DOE mailbox.
-> + *
-> + * The caller is also responsible for ensuring that the request size
-> + * is within the limits defined by PCI_DOE_MAX_LENGTH.
-> + *
-> + * RETURNS: 0 on success, -errno on failure
-> + */
-> +int pci_ep_doe_process_request(struct pci_epc *epc, u8 func_no, u16 cap_offset,
-> +			       u16 vendor, u8 type, const void *request,
-> +			       size_t request_sz, void **response, size_t *response_sz)
-> +{
-> +	DECLARE_COMPLETION_ONSTACK(c);
-> +	struct pci_ep_doe_mb *doe_mb;
-> +	struct pci_ep_doe_task task = {
-> +		.feat.vid = vendor,
-> +		.feat.type = type,
-> +		.request_pl = request,
-> +		.request_pl_sz = request_sz,
-> +		.response_pl = response,
-> +		.response_pl_sz = response_sz,
-> +		.complete = pci_ep_doe_task_complete,
-> +		.private = &c,
-> +	};
-> +	int rc;
-> +
-> +	doe_mb = pci_ep_doe_get_mailbox(epc, func_no, cap_offset);
-> +	if (!doe_mb)
-> +		return -ENODEV;
-> +
-> +	rc = pci_ep_doe_submit_task(doe_mb, &task);
-> +	if (rc)
-> +		return rc;
-> +
-> +	wait_for_completion(&c);
-> +
-> +	return task.task_status;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ep_doe_process_request);
-> +
-> +/**
-> + * pci_ep_doe_abort() - Abort DOE operations on a mailbox
-> + * @epc: PCI endpoint controller
-> + * @func_no: Physical function number
-> + * @cap_offset: DOE capability offset
-> + *
-> + * Abort all queued and wait for in-flight DOE operations to complete for the
-> + * specified mailbox. This function is called by the EP controller driver
-> + * when the RC sets the ABORT bit in the DOE Control register.
-> + *
-> + * The function will:
-> + *
-> + * - Set CANCEL flag to prevent new requests in the queue from starting
-> + * - Wait for the currently executing handler to complete (cannot interrupt)
-> + * - Flush the workqueue to wait for all requests to be handled appropriately
-> + * - Clear CANCEL flag to prepare for new requests
-> + *
-> + * RETURNS: 0 on success, -errno on failure
-> + */
-> +int pci_ep_doe_abort(struct pci_epc *epc, u8 func_no, u16 cap_offset)
-> +{
-> +	struct pci_ep_doe_mb *doe_mb;
-> +
-> +	if (!epc)
-> +		return -EINVAL;
-> +
-> +	doe_mb = pci_ep_doe_get_mailbox(epc, func_no, cap_offset);
-> +	if (!doe_mb)
-> +		return -ENODEV;
-> +
-> +	/* Set CANCEL flag - worker will abort queued requests */
-> +	set_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags);
-> +	flush_workqueue(doe_mb->work_queue);
-> +
-> +	/* Clear CANCEL flag - mailbox ready for new requests */
-> +	clear_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags);
-> +
-> +	dev_dbg(epc->dev.parent,
-> +		"DOE mailbox aborted: PF%d offset 0x%x\n",
-> +		func_no, cap_offset);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ep_doe_abort);
-> +
-> +/**
-> + * pci_ep_doe_destroy_mb() - Destroy a single DOE mailbox
-> + * @doe_mb: DOE mailbox to destroy
-> + *
-> + * Internal function to destroy a mailbox and free its resources.
-> + */
-> +static void pci_ep_doe_destroy_mb(struct pci_ep_doe_mb *doe_mb)
-> +{
-> +	if (!doe_mb)
-> +		return;
-> +
-> +	pci_ep_doe_cancel_tasks(doe_mb);
-> +
-> +	if (doe_mb->work_queue)
-> +		destroy_workqueue(doe_mb->work_queue);
-> +
-> +	kfree(doe_mb);
-> +}
-> +
-> +/**
-> + * pci_ep_doe_destroy() - Destroy all DOE mailboxes
-> + * @epc: PCI endpoint controller
-> + *
-> + * Destroy all DOE mailboxes and free associated resources.
-> + *
-> + * This function should be called during controller cleanup to free all
-> + * DOE resources.
-> + */
-> +void pci_ep_doe_destroy(struct pci_epc *epc)
-> +{
-> +	struct pci_ep_doe_mb *doe_mb;
-> +	unsigned long index;
-> +
-> +	if (!epc)
-> +		return;
-> +
-> +	xa_for_each(&epc->doe_mbs, index, doe_mb)
-> +		pci_ep_doe_destroy_mb(doe_mb);
-> +
-> +	xa_destroy(&epc->doe_mbs);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ep_doe_destroy);
-> diff --git a/include/linux/pci-doe.h b/include/linux/pci-doe.h
-> index a966626c47f9..b353c3a1aa82 100644
-> --- a/include/linux/pci-doe.h
-> +++ b/include/linux/pci-doe.h
-> @@ -13,6 +13,8 @@
->   #ifndef LINUX_PCI_DOE_H
->   #define LINUX_PCI_DOE_H
->   
-> +#include <linux/types.h>
-> +
->   /* Mailbox state flags */
->   #define PCI_DOE_FLAG_CANCEL		0
->   #define PCI_DOE_FLAG_DEAD		1
-> @@ -24,12 +26,19 @@
->   #define PCI_DOE_FEATURE_CMA		1
->   #define PCI_DOE_FEATURE_SSESSION	2
->   
-> +typedef int (*pci_doe_protocol_handler_t)(const void *request,
-> +					  size_t request_sz,
-> +					  void **response,
-> +					  size_t *response_sz);
-> +
->   struct pci_doe_feature {
->   	u16 vid;
->   	u8 type;
->   };
->   
->   struct pci_doe_mb;
-> +struct pci_dev;
-> +struct pci_epc;
->   
->   #ifdef CONFIG_PCI_DOE
->   struct pci_doe_mb *pci_find_doe_mailbox(struct pci_dev *pdev, u16 vendor,
-> @@ -54,4 +63,64 @@ static inline int pci_doe(struct pci_doe_mb *doe_mb, u16 vendor, u8 type,
->   }
->   #endif /* CONFIG_PCI_DOE */
->   
-> +#ifdef CONFIG_PCI_DOE_EP
-> +int pci_ep_doe_init(struct pci_epc *epc);
-> +
-> +int pci_ep_doe_add_mailbox(struct pci_epc *epc, u8 func_no, u16 cap_offset);
-> +
-> +int pci_ep_doe_register_protocol(u16 vendor, u8 type,
-> +				 pci_doe_protocol_handler_t handler);
-> +
-> +void pci_ep_doe_unregister_protocol(u16 vendor, u8 type);
-> +
-> +int pci_ep_doe_process_request(struct pci_epc *epc, u8 func_no, u16 cap_offset,
-> +			       u16 vendor, u8 type, const void *request,
-> +			       size_t request_sz, void **response, size_t *response_sz);
-> +
-> +int pci_ep_doe_abort(struct pci_epc *epc, u8 func_no, u16 cap_offset);
-> +
-> +void pci_ep_doe_destroy(struct pci_epc *epc);
-> +
-> +#else
-> +static inline int pci_ep_doe_init(struct pci_epc *epc)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static inline int pci_ep_doe_add_mailbox(struct pci_epc *epc, u8 func_no,
-> +					 u16 cap_offset)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static inline int pci_ep_doe_register_protocol(u16 vendor, u8 type,
-> +					       pci_doe_protocol_handler_t handler)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static inline void pci_ep_doe_unregister_protocol(u16 vendor, u8 type)
-> +{
-> +}
-> +
-> +static inline int pci_ep_doe_process_request(struct pci_epc *epc, u8 func_no, u16 cap_offset,
-> +					     u16 vendor, u8 type,
-> +					     const void *request, size_t request_sz,
-> +					     void **response, size_t *response_sz)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static inline int pci_ep_doe_abort(struct pci_epc *epc, u8 func_no,
-> +				   u16 cap_offset)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static inline void pci_ep_doe_destroy(struct pci_epc *epc)
-> +{
-> +}
-> +
-> +#endif /* CONFIG_PCI_DOE_EP */
-> +
->   #endif /* LINUX_PCI_DOE_H */
-> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-> index 4286bfdbfdfa..ad4de4d33da3 100644
-> --- a/include/linux/pci-epc.h
-> +++ b/include/linux/pci-epc.h
-> @@ -165,6 +165,7 @@ struct pci_epc_mem {
->    * @domain_nr: PCI domain number of the endpoint controller
->    * @init_complete: flag to indicate whether the EPC initialization is complete
->    *                 or not
-> + * @doe_mbs: array of DOE mailboxes (CONFIG_PCI_DOE_EP)
->    */
->   struct pci_epc {
->   	struct device			dev;
-> @@ -182,6 +183,9 @@ struct pci_epc {
->   	unsigned long			function_num_map;
->   	int				domain_nr;
->   	bool				init_complete;
-> +#ifdef CONFIG_PCI_DOE_EP
-> +	struct xarray			doe_mbs;
-> +#endif
->   };
->   
->   /**
-
+> -- 
+> மணிவண்ணன் சதாசிவம்
