@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7509D31B10F;
-	Wed, 18 Feb 2026 12:47:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84148322753;
+	Wed, 18 Feb 2026 13:38:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771418856; cv=none; b=dSR9rAel3hsYIDRn2E32A8a8KtQ4KAxdrZXHNevDQox9G06U0KyD778UeDlBNfQARXxQqcmtPnx1McCfssi4wjU4Zp11PVtQ+uEVH4XOYVysVs+jMJQp36PWI8NzWw3xchDDgLIwVQHgWpy7yTta59DV1pDU0cZBSRWoPW9TBHc=
+	t=1771421917; cv=none; b=mSkjdaZREDSALqw4h8t4jtKuA84bcad5vvieOCzgoc3aUhlVS5kPTp3p1BWXnC4GdCkUGiOo5LhgPMiRlNXDg1QI6DTkGRULCKYl6K38/DDysOhiuY9FzfCje4Z9D/8eNRoMcbtULGm85h4qMlT1mHj7oZEXqX4TF9UBw56+3JQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771418856; c=relaxed/simple;
-	bh=M8V/eYew5+oQjujuFnO/JTwxmf9cGf5L5oP/gBTGvOw=;
+	s=arc-20240116; t=1771421917; c=relaxed/simple;
+	bh=nf1PQ7PDf17bWRa+TIlLPQWoQMncV54jISORCxewpYg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u3Yi6GfLAgr9StkxBB657LENlpmqFKcBAEban5zNcsqwwNHjg5OybKTtXZEl1z/to6FvFWMBaJB/iZBHT0AHcGyITB1bklXvcsHPJKO1EcNH8RMMCgQU26KUxsO77LF15XdktuYmtoAj3NwmfGg2m/NXQBkIHCT51ML6vI4tPkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fEOGWFDG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=AN0VDpvLDqwP0DThpUR6KTnxXccLFyUGRfKdbm/whBjZonW0UrA51srCw6QBTIXC0dPnpj02xHDUrd5+ef5E1vzQ58GqepCkXUXAjTZGxhjEL6iFe+yieKc81ck6bgWy/J2sLAnneJiFEgDKN3g699saRy49yLfKYzo128v60to=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJduA/yD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fEOGWFDG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8132FC19425;
-	Wed, 18 Feb 2026 12:47:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJduA/yD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C162DC19421;
+	Wed, 18 Feb 2026 13:38:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771418855;
-	bh=M8V/eYew5+oQjujuFnO/JTwxmf9cGf5L5oP/gBTGvOw=;
+	s=k20201202; t=1771421917;
+	bh=nf1PQ7PDf17bWRa+TIlLPQWoQMncV54jISORCxewpYg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fEOGWFDGkevDXRvj6ERV9AuGDkEQLx1BvtRNSYjywGO5kg1Ya0M1WJizmN2qrYTwN
-	 ESHlO/LMfrLK2NSGSeOBVEaaS+Xeb45fLVtsGANU+aeIP7I7ffuIUORZA9OXhp4w0X
-	 1PatiW70rKAp/fC7v7y/KpvUqtbB8x401zG2BjWG46pcf9UVeAP9L/TENP58zgx6iS
-	 bs9SnTxkTHTWzYM6DXtCkdkJzeqzuPbn3laHrP+snUj5pF7sioMPxB6iER46d++QdI
-	 EO4KVWqMJTWJ4mGQC5kJO3sb194k79jXDj70q5HP7BQUX7oeqtPoqf1NBqc7bKe+6h
-	 zhYhvr3CnRdqg==
-Date: Wed, 18 Feb 2026 18:17:14 +0530
+	b=LJduA/yDMzIvXgLIrqqVScUPApQ+a3R9gqkW1mTsvQxhDugJB/EQWrxuQICg7tgC/
+	 tV47Zdu7tv+mV11w9J/6/Lx7AxwOuDTWKmy/vQJ6LlZC+qEs6lOBxRMiiF2AsDH6kz
+	 ot6iNCG+WBsXUK8qtOr04H2LZuA65Yec13xgEya30KFlMQ+jVBaLgjKdLnGf/W9Tez
+	 dikAxUJMggCBImjt/zH/xfNdc+VKwSShZEwuKE/+wEKacgFrnT9ZOW8vO3/3D06t9J
+	 DLmA331yGjXrTkv5iTH54nsKE9BTySeX+0CPsLisoHIv91O2u+dNUEcOEzVwk4uQ5X
+	 q2mY2nwBQGq8Q==
+Date: Wed, 18 Feb 2026 19:08:20 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: zhangsenchuan@eswincomputing.com
-Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	christian.bruel@foss.st.com, shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com, 
-	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com, ningyu@eswincomputing.com, 
-	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com, ouyanghui@eswincomputing.com
-Subject: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host controller
- driver
-Message-ID: <a3yu54e6feo5immtdju4fgvne7fh3p4ytlawfdhawmpzvagi64@o7wuhhdiitft>
-References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
- <20260129092900.1900-1-zhangsenchuan@eswincomputing.com>
+To: Aksh Garg <a-garg7@ti.com>
+Cc: linux-pci@vger.kernel.org, jingoohan1@gmail.com, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, 
+	yoshihiro.shimoda.uh@renesas.com, fancer.lancer@gmail.com, Zhiqiang.Hou@nxp.com, 
+	gustavo.pimentel@synopsys.com, cassel@kernel.org, linux-kernel@vger.kernel.org, 
+	s-vadapalli@ti.com, danishanwar@ti.com
+Subject: Re: [PATCH 2/2] PCI: dwc: ep: Mirror the max link width and speed
+ fields to all functions
+Message-ID: <kr3yh3unbsynddcgzhl2zpxmna7hbc4dxgbqo3bmlwsn5twlyr@7gxzh4rqjubg>
+References: <20260202072758.101845-1-a-garg7@ti.com>
+ <20260202072758.101845-3-a-garg7@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,484 +48,89 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260129092900.1900-1-zhangsenchuan@eswincomputing.com>
+In-Reply-To: <20260202072758.101845-3-a-garg7@ti.com>
 
-On Thu, Jan 29, 2026 at 05:29:00PM +0800, zhangsenchuan@eswincomputing.com wrote:
-> From: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
+On Mon, Feb 02, 2026 at 12:57:58PM +0530, Aksh Garg wrote:
+> PCIe r6.0, section 7.5.3.6 states that for multi-function devices, the
+> Max Link Width and Max Link Speed fields in the Link Capabilities
+> Register must report the same values for all functions.
 > 
-> Add driver for the Eswin EIC7700 PCIe host controller, which is based on
-> the DesignWare PCIe core, IP revision 5.96a. The PCIe Gen.3 controller
-> supports a data rate of 8 GT/s and 4 channels, support INTx and MSI
-> interrupts.
+> Currently, dw_pcie_setup() programs these fields only for physical
+> function 0 (PF0) via dw_pcie_link_set_max_speed() and
+> dw_pcie_link_set_max_link_width(). For multi-function endpoint
+> configurations, PF1 and beyond retain their default values, violating
+> the PCIe specification.
 > 
-> Signed-off-by: Yu Ning <ningyu@eswincomputing.com>
-> Signed-off-by: Yanghui Ou <ouyanghui@eswincomputing.com>
-> Signed-off-by: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
+> Fix this by reading the Max Link Width and Max Link Speed fields from
+> PF0's Link Capabilities Register after dw_pcie_setup() completes,
+> then mirroring these values to all other physical functions.
+> 
+> Fixes: 24ede430fa49 ("PCI: designware-ep: Add multiple PFs support for DWC")
+> Fixes: 89db0793c9f2 ("PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling")
+> Signed-off-by: Aksh Garg <a-garg7@ti.com>
 > ---
->  drivers/pci/controller/dwc/Kconfig        |  11 +
->  drivers/pci/controller/dwc/Makefile       |   1 +
->  drivers/pci/controller/dwc/pcie-eic7700.c | 410 ++++++++++++++++++++++
->  3 files changed, 422 insertions(+)
->  create mode 100644 drivers/pci/controller/dwc/pcie-eic7700.c
 > 
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index 519b59422b47..c837cb5947b6 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -93,6 +93,17 @@ config PCIE_BT1
->  	  Enables support for the PCIe controller in the Baikal-T1 SoC to work
->  	  in host mode. It's based on the Synopsys DWC PCIe v4.60a IP-core.
+> The link speed and width would be negotiated through PF0 during
+> initialization that controls the link behaviour, hence it didn't broke
+> the driver. However, the change is proposed just to make the driver
+> compatible with the PCIe base specifications.
+> 
+> The fix is implemented in pcie-designware-ep.c rather than modifying
+> dw_pcie_setup() directly to keep pcie-designware.c independent of RC/EP
+> specifics and maintain it as common code.
+> 
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 24 ++++++++++++++++++-
+>  1 file changed, 23 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 771241e1a2c9..4ac25da2b117 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -1094,7 +1094,8 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
+>  {
+>  	struct dw_pcie_ep *ep = &pci->ep;
+>  	u8 funcs = ep->epc->max_functions;
+> -	u8 func_no;
+> +	u32 ref_lnkcap, lnkcap;
+> +	u8 func_no, offset;
 >  
-> +config PCIE_EIC7700
-> +	tristate "Eswin EIC7700 PCIe controller"
-> +	depends on ARCH_ESWIN || COMPILE_TEST
-> +	depends on PCI_MSI
-> +	select PCIE_DW_HOST
-> +	help
-> +	  Say Y here if you want PCIe controller support for the Eswin EIC7700.
-> +	  The PCIe controller on EIC7700 is based on DesignWare hardware,
-> +	  enables support for the PCIe controller in the EIC7700 SoC to work in
-> +	  host mode.
-> +
->  config PCI_IMX6
->  	bool
+>  	dw_pcie_dbi_ro_wr_en(pci);
 >  
-> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-> index 67ba59c02038..7c5a5186ea83 100644
-> --- a/drivers/pci/controller/dwc/Makefile
-> +++ b/drivers/pci/controller/dwc/Makefile
-> @@ -6,6 +6,7 @@ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
->  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
->  obj-$(CONFIG_PCIE_AMD_MDB) += pcie-amd-mdb.o
->  obj-$(CONFIG_PCIE_BT1) += pcie-bt1.o
-> +obj-$(CONFIG_PCIE_EIC7700) += pcie-eic7700.o
->  obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
->  obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
->  obj-$(CONFIG_PCIE_FU740) += pcie-fu740.o
-> diff --git a/drivers/pci/controller/dwc/pcie-eic7700.c b/drivers/pci/controller/dwc/pcie-eic7700.c
-> new file mode 100644
-> index 000000000000..dab8e3b98810
-> --- /dev/null
-> +++ b/drivers/pci/controller/dwc/pcie-eic7700.c
-> @@ -0,0 +1,410 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * ESWIN EIC7700 PCIe root complex driver
-> + *
-> + * Copyright 2026, Beijing ESWIN Computing Technology Co., Ltd.
-> + *
-> + * Authors: Yu Ning <ningyu@eswincomputing.com>
-> + *          Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-> + *          Yanghui Ou <ouyanghui@eswincomputing.com>
-> + */
-> +
-> +#include <linux/interrupt.h>
-> +#include <linux/iopoll.h>
-> +#include <linux/module.h>
-> +#include <linux/of.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/pm_runtime.h>
-> +#include <linux/resource.h>
-> +#include <linux/reset.h>
-> +#include <linux/types.h>
-> +
-> +#include "pcie-designware.h"
-> +
-> +/* ELBI registers */
-> +#define PCIEELBI_CTRL0_OFFSET		0x0
-> +#define PCIEELBI_STATUS0_OFFSET		0x100
-> +
-> +/* LTSSM register fields */
-> +#define PCIEELBI_APP_LTSSM_ENABLE	BIT(5)
-> +
-> +/* APP_HOLD_PHY_RST register fields */
-> +#define PCIEELBI_APP_HOLD_PHY_RST	BIT(6)
-> +
-> +/* PM_SEL_AUX_CLK register fields */
-> +#define PCIEELBI_PM_SEL_AUX_CLK		BIT(16)
-> +
-> +/* DEV_TYPE register fields */
-> +#define PCIEELBI_CTRL0_DEV_TYPE		GENMASK(3, 0)
-> +
-> +/* Vendor and device ID value */
-> +#define PCI_VENDOR_ID_ESWIN		0x1fe1
-> +#define PCI_DEVICE_ID_ESWIN_EIC7700	0x2030
-> +
-> +#define EIC7700_NUM_RSTS		ARRAY_SIZE(eic7700_pcie_rsts)
-> +
-> +static const char * const eic7700_pcie_rsts[] = {
-> +	"pwr",
-> +	"dbi",
-> +};
-> +
-> +struct eic7700_pcie_port {
-> +	struct list_head list;
-> +	struct reset_control *perst;
-> +	int num_lanes;
-> +};
-> +
-> +struct eic7700_pcie {
-> +	struct dw_pcie pci;
-> +	struct clk_bulk_data *clks;
-> +	struct reset_control_bulk_data resets[EIC7700_NUM_RSTS];
-> +	struct list_head ports;
-> +	int num_clks;
-> +};
-> +
-> +#define to_eic7700_pcie(x) dev_get_drvdata((x)->dev)
-> +
-> +static int eic7700_pcie_start_link(struct dw_pcie *pci)
-> +{
-> +	u32 val;
-> +
-> +	/* Enable LTSSM */
-> +	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-> +	val |= PCIEELBI_APP_LTSSM_ENABLE;
-> +	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-> +
-> +	return 0;
-> +}
-> +
-> +static bool eic7700_pcie_link_up(struct dw_pcie *pci)
-> +{
-> +	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	u16 val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
-> +
-> +	return val & PCI_EXP_LNKSTA_DLLLA;
-> +}
-> +
-> +static int eic7700_pcie_perst_reset(struct eic7700_pcie_port *port,
-> +				    struct eic7700_pcie *pcie)
-> +{
-> +	int ret;
-> +
-> +	ret = reset_control_assert(port->perst);
-> +	if (ret) {
-> +		dev_err(pcie->pci.dev, "Failed to assert PERST#\n");
-> +		return ret;
-> +	}
-> +
-> +	/* Ensure that PERST# has been asserted for at least 100 ms */
-> +	msleep(PCIE_T_PVPERL_MS);
-> +
-> +	ret = reset_control_deassert(port->perst);
-> +	if (ret) {
-> +		dev_err(pcie->pci.dev, "Failed to deassert PERST#\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void eic7700_pcie_assert(struct eic7700_pcie *pcie)
-> +{
-> +	struct eic7700_pcie_port *port;
-> +
-> +	list_for_each_entry(port, &pcie->ports, list)
-> +		reset_control_assert(port->perst);
-> +	reset_control_bulk_assert(EIC7700_NUM_RSTS, pcie->resets);
-> +}
-> +
-> +static int eic7700_pcie_parse_port(struct eic7700_pcie *pcie,
-> +				   struct device_node *node)
-> +{
-> +	struct device *dev = pcie->pci.dev;
-> +	struct eic7700_pcie_port *port;
-> +
-> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> +	if (!port)
-> +		return -ENOMEM;
-> +
-> +	port->perst = of_reset_control_get_exclusive(node, "perst");
-> +	if (IS_ERR(port->perst)) {
-> +		dev_err(dev, "Failed to get PERST# reset\n");
-> +		return PTR_ERR(port->perst);
-> +	}
+> @@ -1102,6 +1103,27 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
+>  		dw_pcie_ep_init_rebar_registers(ep, func_no);
+>  
+>  	dw_pcie_setup(pci);
 > +
 > +	/*
-> +	 * TODO: Since the Root Port node is separated out by pcie devicetree,
-> +	 * the DWC core initialization code can't parse the num-lanes attribute
-> +	 * in the Root Port. Before entering the DWC core initialization code,
-> +	 * the platform driver code parses the Root Port node. The EIC7700 only
-> +	 * supports one Root Port node, and the num-lanes attribute is suitable
-> +	 * for the case of one Root Port.
+> +	 * PCIe r6.0, section 7.5.3.6 states that for multi-function endpoints,
+> +	 * max link width and speed fields must report same values for all functions.
+> +	 * However, dw_pcie_setup() programs these fields only for physical function 0.
+> +	 * Hence, mirror these fields to all other physical functions as well.
 > +	 */
-> +	if (!of_property_read_u32(node, "num-lanes", &port->num_lanes))
-> +		pcie->pci.num_lanes = port->num_lanes;
-> +
-> +	INIT_LIST_HEAD(&port->list);
-> +	list_add_tail(&port->list, &pcie->ports);
-> +
-> +	return 0;
-> +}
-> +
-> +static int eic7700_pcie_parse_ports(struct eic7700_pcie *pcie)
-> +{
-> +	struct eic7700_pcie_port *port, *tmp;
-> +	struct device *dev = pcie->pci.dev;
-> +	int ret;
-> +
-> +	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-> +		ret = eic7700_pcie_parse_port(pcie, of_port);
-> +		if (ret)
-> +			goto err_port;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_port:
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> +		reset_control_put(port->perst);
-> +		list_del(&port->list);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static int eic7700_pcie_host_init(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct eic7700_pcie *pcie = to_eic7700_pcie(pci);
-> +	struct eic7700_pcie_port *port;
-> +	u32 val;
-> +	int ret;
-> +
-> +	ret = clk_bulk_prepare_enable(pcie->num_clks, pcie->clks);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/*
-> +	 * The PWR and DBI reset signals are respectively used to reset the
-> +	 * PCIe controller and the DBI register.
-> +	 *
-> +	 * The PERST# signal is a reset signal that simultaneously controls the
-> +	 * PCIe controller, PHY, and Endpoint. Before configuring the PHY, the
-> +	 * PERST# signal must first be deasserted.
-> +	 *
-> +	 * The external reference clock is supplied simultaneously to the PHY
-> +	 * and EP. When the PHY is configurable, the entire chip already has
-> +	 * stable power and reference clock. The PHY will be ready within 20ms
-> +	 * after writing app_hold_phy_rst register bit of ELBI register space.
-> +	 */
-> +	ret = reset_control_bulk_deassert(EIC7700_NUM_RSTS, pcie->resets);
-> +	if (ret) {
-> +		dev_err(pcie->pci.dev, "Failed to deassert resets\n");
-> +		goto err_deassert;
-> +	}
-> +
-> +	/* Configure Root Port type */
-> +	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-> +	val &= ~PCIEELBI_CTRL0_DEV_TYPE;
-> +	val |= FIELD_PREP(PCIEELBI_CTRL0_DEV_TYPE, PCI_EXP_TYPE_ROOT_PORT);
-> +	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-> +
-> +	list_for_each_entry(port, &pcie->ports, list) {
-> +		ret = eic7700_pcie_perst_reset(port, pcie);
-> +		if (ret)
-> +			goto err_perst;
-> +	}
-> +
-> +	/* Configure app_hold_phy_rst */
-> +	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-> +	val &= ~PCIEELBI_APP_HOLD_PHY_RST;
-> +	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-> +
-> +	/* The maximum waiting time for the clock switch lock is 20ms */
-> +	ret = readl_poll_timeout(pci->elbi_base + PCIEELBI_STATUS0_OFFSET, val,
-> +				 !(val & PCIEELBI_PM_SEL_AUX_CLK), 1000,
-> +				 20000);
-> +	if (ret) {
-> +		dev_err(pci->dev, "Timeout waiting for PM_SEL_AUX_CLK ready\n");
-> +		goto err_phy_init;
-> +	}
-> +
-> +	/*
-> +	 * Configure ESWIN VID:DID for Root Port as the default values are
-> +	 * invalid.
-> +	 */
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_ESWIN);
-> +	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, PCI_DEVICE_ID_ESWIN_EIC7700);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	return 0;
-> +
-> +err_phy_init:
-> +	list_for_each_entry(port, &pcie->ports, list)
-> +		reset_control_assert(port->perst);
-> +err_perst:
-> +	reset_control_bulk_assert(EIC7700_NUM_RSTS, pcie->resets);
-> +err_deassert:
-> +	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
-> +
-> +	return ret;
-> +}
-> +
-> +static void eic7700_pcie_host_deinit(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct eic7700_pcie *pcie = to_eic7700_pcie(pci);
-> +
-> +	eic7700_pcie_assert(pcie);
-> +	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
-> +}
-> +
-> +static const struct dw_pcie_host_ops eic7700_pcie_host_ops = {
-> +	.init = eic7700_pcie_host_init,
-> +	.deinit = eic7700_pcie_host_deinit,
-> +};
-> +
-> +static const struct dw_pcie_ops dw_pcie_ops = {
-> +	.start_link = eic7700_pcie_start_link,
-> +	.link_up = eic7700_pcie_link_up,
-> +};
-> +
-> +static int eic7700_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct eic7700_pcie_port *port, *tmp;
-> +	struct device *dev = &pdev->dev;
-> +	struct eic7700_pcie *pcie;
-> +	struct dw_pcie *pci;
-> +	int ret, i;
-> +
-> +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-> +	if (!pcie)
-> +		return -ENOMEM;
-> +
-> +	INIT_LIST_HEAD(&pcie->ports);
-> +
-> +	pci = &pcie->pci;
-> +	pci->dev = dev;
-> +	pci->ops = &dw_pcie_ops;
-> +	pci->pp.ops = &eic7700_pcie_host_ops;
-> +
-> +	pcie->num_clks = devm_clk_bulk_get_all(dev, &pcie->clks);
-> +	if (pcie->num_clks < 0)
-> +		return dev_err_probe(dev, pcie->num_clks,
-> +				     "Failed to get pcie clocks\n");
-> +
-> +	for (i = 0; i < EIC7700_NUM_RSTS; i++)
-> +		pcie->resets[i].id = eic7700_pcie_rsts[i];
-> +
-> +	ret = devm_reset_control_bulk_get_exclusive(dev, EIC7700_NUM_RSTS,
-> +						    pcie->resets);
-> +	if (ret)
-> +		return dev_err_probe(dev, ret, "Failed to get resets\n");
-> +
-> +	ret = eic7700_pcie_parse_ports(pcie);
-> +	if (ret)
-> +		return dev_err_probe(dev, ret, "Failed to parse Root Port\n");
-> +
-> +	platform_set_drvdata(pdev, pcie);
-> +
-> +	pm_runtime_no_callbacks(dev);
-> +	devm_pm_runtime_enable(dev);
-> +	ret = pm_runtime_get_sync(dev);
-> +	if (ret < 0)
-> +		goto err_pm_runtime_put;
-> +
-> +	ret = dw_pcie_host_init(&pci->pp);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to init host\n");
-> +		goto err_pm_runtime_put;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_pm_runtime_put:
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> +		reset_control_put(port->perst);
-> +		list_del(&port->list);
-> +	}
-> +	pm_runtime_put(dev);
-> +
-> +	return ret;
-> +}
-> +
-> +static int eic7700_pcie_suspend_noirq(struct device *dev)
-> +{
-> +	struct eic7700_pcie *pcie = dev_get_drvdata(dev);
-> +
-> +	/*
-> +	 * The ESWIN EIC7700 SoC lacks hardware support for the L2/L3 low-power
-> +	 * link states. It cannot enter the L2/L3 Ready state through the
-> +	 * PME_Turn_Off/PME_To_Ack handshake protocol. To avoid this problem,
-> +	 * the dw_pcie_suspend_noirq API is not used.
-> +	 */
+> +	if (funcs > 1) {
+> +		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +		ref_lnkcap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+> +		ref_lnkcap &= PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS;
 
-With 7.0, you can provide a dummy pme_turn_off() API and set
-'pci->pp.skip_l23_ready' to reuse the dw_pcie_{suspend/resume}_noirq APIs.
+Use FIELD_* macros please.
 
 - Mani
 
-> +	eic7700_pcie_host_deinit(&pcie->pci.pp);
 > +
-> +	return 0;
-> +}
-> +
-> +static int eic7700_pcie_resume_noirq(struct device *dev)
-> +{
-> +	struct eic7700_pcie *pcie = dev_get_drvdata(dev);
-> +	struct eic7700_pcie_port *port, *tmp;
-> +	int ret;
-> +
-> +	ret = eic7700_pcie_host_init(&pcie->pci.pp);
-> +	if (ret) {
-> +		dev_err(dev, "Host init failed: %d\n", ret);
-> +		goto err_init;
+> +		for (func_no = 1; func_no < funcs; func_no++) {
+> +			offset = dw_pcie_ep_find_capability(ep, func_no, PCI_CAP_ID_EXP);
+> +			lnkcap = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_EXP_LNKCAP);
+> +			lnkcap &= ~(PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS);
+> +			lnkcap |= ref_lnkcap;
+> +			dw_pcie_ep_writel_dbi(ep, func_no, offset + PCI_EXP_LNKCAP, lnkcap);
+> +		}
 > +	}
 > +
-> +	ret = dw_pcie_setup_rc(&pcie->pci.pp);
-> +	if (ret)
-> +		goto err_setup_rc;
-> +
-> +	ret = eic7700_pcie_start_link(&pcie->pci);
-> +	if (ret)
-> +		goto err_setup_rc;
-> +
-> +	dw_pcie_wait_for_link(&pcie->pci);
-> +
-> +	return 0;
-> +
-> +err_setup_rc:
-> +	eic7700_pcie_host_deinit(&pcie->pci.pp);
-> +err_init:
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> +		reset_control_put(port->perst);
-> +		list_del(&port->list);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +DEFINE_NOIRQ_DEV_PM_OPS(eic7700_pcie_pm, eic7700_pcie_suspend_noirq,
-> +			eic7700_pcie_resume_noirq);
-> +
-> +static const struct of_device_id eic7700_pcie_of_match[] = {
-> +	{ .compatible = "eswin,eic7700-pcie" },
-> +	{}
-> +};
-> +
-> +static struct platform_driver eic7700_pcie_driver = {
-> +	.probe = eic7700_pcie_probe,
-> +	.driver = {
-> +		.name = "eic7700-pcie",
-> +		.of_match_table = eic7700_pcie_of_match,
-> +		.suppress_bind_attrs = true,
-> +		.pm = &eic7700_pcie_pm,
-> +		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
-> +	},
-> +};
-> +builtin_platform_driver(eic7700_pcie_driver);
-> +
-> +MODULE_DESCRIPTION("Eswin EIC7700 PCIe host controller driver");
-> +MODULE_AUTHOR("Yu Ning <ningyu@eswincomputing.com>");
-> +MODULE_AUTHOR("Senchuan Zhang <zhangsenchuan@eswincomputing.com>");
-> +MODULE_AUTHOR("Yanghui Ou <ouyanghui@eswincomputing.com>");
-> +MODULE_LICENSE("GPL");
+>  	dw_pcie_dbi_ro_wr_dis(pci);
+>  }
+>  
 > -- 
-> 2.25.1
+> 2.34.1
 > 
 
 -- 
