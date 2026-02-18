@@ -1,336 +1,621 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9D6F285CAD
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 08:58:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D27633D6C9
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 09:45:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771405126; cv=none; b=FyA/S/FJNsLAWwF5HNZ+knknLuSuXamv+7aqQwHnWrlb4pZMV0ISaRDvRNCdgdvOCS+GkHBhHWa4WEAwrxwQ9MwDHFF9Xohgd+063nAephwt8axlglhrTkd21dZZwHyGxILa9V7CCGvh0fD1xChWs1TT4L930wi55eLPfwrQmvw=
+	t=1771407904; cv=none; b=lcOuZTuicFQj12v+gyFPGAIxZUIrt/HvmetnyYJrbQPRRjG5I9jj6jJFKOSuX1ruD31XkfvLqQQkY9Zyhu8nr1cF1qXJP38rk9DPcyl1PP5uLH2RyGGB+vWOl1OenHX7OKsShylncYaoR5SRtw2Jgtkc3DJ3vbMFqhZeCAVO5Rs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771405126; c=relaxed/simple;
-	bh=FwCyi8+UpXRV2XJ3n60unAraNd2Kv5Hb7PIFy8eMQss=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=dtOcuKMicBm+LuGQ/Ww+eN4JlDnsy9gnl5v4ywiEo97pox2XsUtMgl2TsgjGOgZEshqNkifAxwLtR5KoiJnkWpS4uOaGesAJiR2NbYNCMo7N15JVGoanWpWCBRbFmGP4yI15z51en78rvf79QXmPmFZ9Vmu5ppHrdmqGovtjLBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iWCCFwHC; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1771407904; c=relaxed/simple;
+	bh=CL9soAKZWnSZZkdKPe8QbrfJgbx6ptDGhfh7XJANNiM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kVvgnMK986oT/LAmoOXNM4/v+jhM6IG2zW9pzxT+N8SZn0ZsN2zZjBDXtgsIPaiv5TEF/dqsCdIagb1NRQLqp4mvl8uFhbTYyqXBLSLJIa++jwvgZuvHjSjxvrOrWwaThzrYzOndgNjPDLN4wTomVbF7/tCl91yMxufNJLki3ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=O10WuU5K; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iWCCFwHC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771405125; x=1802941125;
-  h=date:from:to:cc:subject:message-id;
-  bh=FwCyi8+UpXRV2XJ3n60unAraNd2Kv5Hb7PIFy8eMQss=;
-  b=iWCCFwHCV4LpqNR/AvsOzUVGPH3oO4fyMD341EPPX3Ndjd2yxNsMwckH
-   B/aMhZ3WdMezRCOdoyaPwz1jichxT6kYYls0YZNS0EgaqNCjrJSQ+LjHg
-   G0pxH9yzYMTGIwKRfInBC6Ih2pnEAshcoJc26RaqzqYXrgUcwRFoX6JZ3
-   0GGuX597zOLV7D7V01FmValJaR5dZ3As0/UPjppIDibNdKipONDPd4eeG
-   J0maOYGsa/d+VeDFSPjXUI7oh1y+Jq5TBCTjMyZ41vob06D0nagkfBxxP
-   qMdIBpTYouaDFLkXZfbTdbBdTGo8bm8bVi/qfl0FFqBsm4wX3rdk27n7Z
-   Q==;
-X-CSE-ConnectionGUID: jm0MTMMGSLSZcDSy0+o2PA==
-X-CSE-MsgGUID: oXfZBZ+QQoeUs8FkeuFzYA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11704"; a="90063174"
-X-IronPort-AV: E=Sophos;i="6.21,297,1763452800"; 
-   d="scan'208";a="90063174"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2026 00:58:44 -0800
-X-CSE-ConnectionGUID: vv7HSNJnRNOs5xxGoQ7yVg==
-X-CSE-MsgGUID: oeYsA7BURouSgTzVMXnrag==
-X-ExtLoop1: 1
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 18 Feb 2026 00:58:43 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vsdOK-000000012DE-3oeG;
-	Wed, 18 Feb 2026 08:58:40 +0000
-Date: Wed, 18 Feb 2026 16:58:19 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:aspm] BUILD SUCCESS
- 60c6a34d21504fb9182917f3b0667a473343befb
-Message-ID: <202602181611.z4qRSGdf-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="O10WuU5K"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-48371bb515eso58570965e9.1
+        for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 01:45:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=tuxon.dev; s=google; t=1771407901; x=1772012701; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=hSgaH5qN66tTg9I9+UItJTauIg80NYLcXtWxdyYbWoQ=;
+        b=O10WuU5KbCw5KB108YKVwVaWMKCoKqVu6h4NJZavl9oaP6uw1fPpohFzvaIsCFEsZP
+         cN1vu1kduYwW8foGaMk39VSIlxmItn2a6OrESUYKneYDpJGmK0fkBuJZAruNjglU2x/C
+         R71Q75019mZ62hThPr7O8+9zQD17u/IUdMkwXfg5xVb9jW3YiTuHZXd4qT+MvDS+lLWt
+         aN3bPBmfdmKDazKNIDyX7WnQdWVOq3uHW2fz+iQHZdjGoiIDm5UzzdMZeAX1hTnHpobd
+         mL1lf/BKgLMZZAokyk5d6pQm7w1lawF4oMP1mh+0/P6HrshWYY6s6xAY4CPVEj8MHbPK
+         U5Yw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771407901; x=1772012701;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=hSgaH5qN66tTg9I9+UItJTauIg80NYLcXtWxdyYbWoQ=;
+        b=agRDMMUXk8FJChoFAPFnMdntzyNg81fQjkspWzpV04GvVRKTDrz+HNgcSg6GCQYjDz
+         QjYxzA89pqCo/2t2i91W9wNKTw2hVhEd6M9b60P9cZVOdGScz98YSWYIhnXSYlvZHqQX
+         X6iob376iTyMjCJYoa9Jbn2h4Uf3V4JvxAMn0D31oFOaIE0cTdEeBP0Y4Iyg3xjDy11Q
+         4Dys+5syBlPKHcGaZri6n6nY+NCJXUYGrt5LL72mgypQeQD3+YrX2j0OfplAhlHT/ATX
+         i+bamXNc655gBO6xwXnH+0zUNRG7Sl5/u6LMOi7TD5s+BVhw9ZmYLe7ibeXDNEDDHGpV
+         bZkg==
+X-Forwarded-Encrypted: i=1; AJvYcCVsDIyGOL9YrCmqTbdwjBN4uEU1O7N0M3YF0p5YFzkRZf4GdeFOV+hg96PMZb9OCNKd+1Un2hyg3ps=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCGFdJmUPeEYeuv0LC7cvEeVWZ8zkswduRaSAoMIePhBhtg6+J
+	ndSaIOpR/PBtjTuEWCI/AmrQ/hNNzGPF7ueosieH3KImYeO2+ih73o/RsbbaWLUefwI=
+X-Gm-Gg: AZuq6aLweE0uqX5+1Ke5IW8v9h+bjo2zYpRpm6TZDJ2m+8sFwpePcrg7jPzmgohljvt
+	IWlWKbkMpqEUQCFNijoZWxhArzkUnNsu1mcM3XMX2a1hwt8nihN+WRtz+WRFT0n/iXNOLimmjuH
+	yxQu3Qb9vAGX2WpjY5VhMFNrTmUTvCoSF+Hv0T0GQR6MfmeGPffd3K6QQt3FLJu/E/0fc3wSax5
+	woPlCm7+M//V74C0L9heGGSrEIyqTjupN4V65FfiDkN7YQV5knORGZJcR9GVJb38zRu7O6Ux7GQ
+	XrQBr3ZMsZpW3Vjv0/qHqEV7m7bNy0aULN52XosW8P+WR52ZyISusNqToMJ8Kj3pFnegpxULqTR
+	EhhEleMF/0bgHV33OLqhpXKewcfNkeNgxnuhONunH+bS0WehH4rLLBggRpFxzql5A5aVaUvBtl4
+	mWPU1K3TIOBin/Kt860yrsiI7rTZqpyg==
+X-Received: by 2002:a05:600c:458a:b0:477:5c58:3d42 with SMTP id 5b1f17b1804b1-48398a7e1e2mr23585475e9.10.1771407900211;
+        Wed, 18 Feb 2026 01:45:00 -0800 (PST)
+Received: from [192.168.50.4] ([82.78.167.73])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4834d5d78cfsm835667815e9.1.2026.02.18.01.44.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Feb 2026 01:44:59 -0800 (PST)
+Message-ID: <d09e741a-8ad2-4386-9c88-98694fbcf644@tuxon.dev>
+Date: Wed, 18 Feb 2026 11:44:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 13/16] PCI: rzg3s-host: Add support for RZ/G3E PCIe
+ controller
+To: John Madieu <john.madieu.xa@bp.renesas.com>,
+ claudiu.beznea.uj@bp.renesas.com, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org, geert+renesas@glider.be,
+ krzk+dt@kernel.org
+Cc: robh@kernel.org, bhelgaas@google.com, conor+dt@kernel.org,
+ magnus.damm@gmail.com, biju.das.jz@bp.renesas.com,
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-clk@vger.kernel.org, john.madieu@gmail.com
+References: <20260210113041.138430-1-john.madieu.xa@bp.renesas.com>
+ <20260210113041.138430-14-john.madieu.xa@bp.renesas.com>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+In-Reply-To: <20260210113041.138430-14-john.madieu.xa@bp.renesas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git aspm
-branch HEAD: 60c6a34d21504fb9182917f3b0667a473343befb  PCI/ASPM: Fix pci_clear_and_set_config_dword() usage
+Hi, John,
 
-elapsed time: 985m
+On 2/10/26 13:30, John Madieu wrote:
+> Add support for the PCIe controller found in RZ/G3E SoCs to the existing
+> RZ/G3S PCIe host driver. The RZ/G3E PCIe controller is similar to the
+> RZ/G3S's, with the following key differences:
+> 
+>   - Supports PCIe Gen3 (8.0 GT/s) link speeds alongside Gen2 (5.0 GT/s)
+>   - Uses a different reset control mechanism via AXI registers instead
+>     of the Linux reset framework
+>   - Requires specific SYSC configuration for link state control and
+>     Root Complex mode selection
+> 
+> Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+> ---
+> 
+> Changes:
+> 
+> v5:
+>   - Introduce rzg3s_sysc_config() helper for sys configuration
+> 
+> v4: No changes
+> v3: No changes
+> v2: Collected tag.
+> 
+>   drivers/pci/controller/pcie-rzg3s-host.c | 152 ++++++++++++++++++++---
+>   1 file changed, 137 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+> index 22858a876fd8..77313cc01c02 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> @@ -111,6 +111,16 @@
+>   #define RZG3S_PCI_PERM_CFG_HWINIT_EN		BIT(2)
+>   #define RZG3S_PCI_PERM_PIPE_PHY_REG_EN		BIT(1)
+>   
+> +/* RZ/G3E specific registers */
+> +#define RZG3E_PCI_RESET				0x310
+> +#define RZG3E_PCI_RESET_RST_OUT_B		BIT(6)
+> +#define RZG3E_PCI_RESET_RST_PS_B		BIT(5)
+> +#define RZG3E_PCI_RESET_RST_LOAD_B		BIT(4)
+> +#define RZG3E_PCI_RESET_RST_CFG_B		BIT(3)
+> +#define RZG3E_PCI_RESET_RST_RSM_B		BIT(2)
+> +#define RZG3E_PCI_RESET_RST_GP_B		BIT(1)
+> +#define RZG3E_PCI_RESET_RST_B			BIT(0)
+> +
+>   #define RZG3S_PCI_MSIRE(id)			(0x600 + (id) * 0x10)
+>   #define RZG3S_PCI_MSIRE_ENA			BIT(0)
+>   
+> @@ -183,9 +193,13 @@ struct rzg3s_sysc_function {
+>   /**
+>    * struct rzg3s_sysc_info - RZ/G3S System Controller function info
+>    * @rst_rsm_b: Reset RSM_B function descriptor
+> + * @l1_allow: L1 power state management function descriptor
+> + * @mode: Mode configuration function descriptor
+>    */
+>   struct rzg3s_sysc_info {
+>   	struct rzg3s_sysc_function rst_rsm_b;
+> +	struct rzg3s_sysc_function l1_allow;
+> +	struct rzg3s_sysc_function mode;
+>   };
+>   
+>   /**
+> @@ -1124,6 +1138,49 @@ static int rzg3s_config_deinit(struct rzg3s_pcie_host *host)
+>   					 host->cfg_resets);
+>   }
+>   
+> +/* RZ/G3E SoC-specific config implementations */
+> +static void rzg3e_pcie_config_pre_init(struct rzg3s_pcie_host *host)
+> +{
+> +	/*
+> +	 * De-assert LOAD_B and CFG_B during configuration phase.
+> +	 * These are part of the RZ/G3E reset register, not reset framework.
+> +	 * Other reset bits remain asserted until config_post_init.
+> +	 */
+> +	rzg3s_pcie_update_bits(host->axi, RZG3E_PCI_RESET,
+> +			       RZG3E_PCI_RESET_RST_LOAD_B | RZG3E_PCI_RESET_RST_CFG_B,
+> +			       RZG3E_PCI_RESET_RST_LOAD_B | RZG3E_PCI_RESET_RST_CFG_B);
+> +}
+> +
+> +static int rzg3e_config_deinit(struct rzg3s_pcie_host *host)
+> +{
+> +	writel_relaxed(0, host->axi + RZG3E_PCI_RESET);
+> +	return 0;
+> +}
+> +
+> +static int rzg3e_config_post_init(struct rzg3s_pcie_host *host)
+> +{
+> +	/* De-assert PS_B, GP_B, RST_B */
+> +	rzg3s_pcie_update_bits(host->axi, RZG3E_PCI_RESET,
+> +			       RZG3E_PCI_RESET_RST_PS_B | RZG3E_PCI_RESET_RST_GP_B |
+> +			       RZG3E_PCI_RESET_RST_B,
+> +			       RZG3E_PCI_RESET_RST_PS_B | RZG3E_PCI_RESET_RST_GP_B |
+> +			       RZG3E_PCI_RESET_RST_B);
+> +
+> +	/*
+> +	 * According to the RZ/G3E HW manual (Rev.1.15, Table 6.6-130
+> +	 * Initialization Procedure (RC)), hardware requires >= 500us delay
+> +	 * before final reset deassert.
+> +	 */
+> +	fsleep(500);
+> +
+> +	/* De-assert OUT_B and RSM_B to complete reset sequence */
+> +	rzg3s_pcie_update_bits(host->axi, RZG3E_PCI_RESET,
+> +			       RZG3E_PCI_RESET_RST_OUT_B | RZG3E_PCI_RESET_RST_RSM_B,
+> +			       RZG3E_PCI_RESET_RST_OUT_B | RZG3E_PCI_RESET_RST_RSM_B);
+> +
+> +	return 0;
+> +}
+> +
+>   static void rzg3s_pcie_irq_init(struct rzg3s_pcie_host *host)
+>   {
+>   	/*
+> @@ -1266,6 +1323,47 @@ static int rzg3s_pcie_host_init_port(struct rzg3s_pcie_host *host)
+>   	return ret;
+>   }
+>   
+> +/**
+> + * rzg3s_sysc_config - Configure SYSC registers for PCIe
+> + * @sysc: SYSC descriptor
+> + * @mode: Mode value to set (-1 to skip)
+> + * @rsm_b: RST_RSM_B value to set (-1 to skip)
+> + * @l1_allow: L1_ALLOW value to set (-1 to skip)
+> + *
+> + * Return: 0 on success, negative error code on failure
+> + */
+> +static int rzg3s_sysc_config(struct rzg3s_sysc *sysc, int mode, int rsm_b,
+> +			     int l1_allow)
+> +{
+> +	const struct rzg3s_sysc_info *info = sysc->info;
+> +	int ret;
+> +
+> +	if (mode >= 0 && info->mode.mask) {
+> +		ret = regmap_write(sysc->regmap, info->mode.offset,
+> +				   field_prep(info->mode.mask, mode));
 
-configs tested: 261
-configs skipped: 3
+Can't we use regmap_update_bits() here as well to have everything using the same 
+pattern?
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	if (rsm_b >= 0 && info->rst_rsm_b.mask) {
+> +		ret = regmap_update_bits(sysc->regmap, info->rst_rsm_b.offset,
+> +					 info->rst_rsm_b.mask,
+> +					 field_prep(info->rst_rsm_b.mask, rsm_b));
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	if (l1_allow >= 0 && info->l1_allow.mask) {
+> +		ret = regmap_update_bits(sysc->regmap, info->l1_allow.offset,
+> +					 info->l1_allow.mask,
+> +					 field_prep(info->l1_allow.mask, l1_allow));
+> +		if (ret)
+> +			return ret;
+> +	}
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                      axs103_smp_defconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                     haps_hs_smp_defconfig    clang-23
-arc                   randconfig-001-20260218    clang-23
-arc                   randconfig-002-20260218    clang-23
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                              allyesconfig    gcc-15.2.0
-arm                                 defconfig    gcc-15.2.0
-arm                            dove_defconfig    gcc-15.2.0
-arm                          exynos_defconfig    clang-23
-arm                            hisi_defconfig    gcc-15.2.0
-arm                         lpc18xx_defconfig    gcc-15.2.0
-arm                        multi_v5_defconfig    gcc-15.2.0
-arm                        mvebu_v5_defconfig    clang-23
-arm                        mvebu_v5_defconfig    gcc-15.2.0
-arm                         orion5x_defconfig    clang-23
-arm                             pxa_defconfig    gcc-15.2.0
-arm                   randconfig-001-20260218    clang-23
-arm                   randconfig-002-20260218    clang-23
-arm                   randconfig-003-20260218    clang-23
-arm                   randconfig-004-20260218    clang-23
-arm                         socfpga_defconfig    clang-23
-arm                           spitz_defconfig    gcc-15.2.0
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260218    clang-23
-arm64                 randconfig-001-20260218    gcc-8.5.0
-arm64                 randconfig-002-20260218    clang-23
-arm64                 randconfig-003-20260218    clang-23
-arm64                 randconfig-003-20260218    gcc-14.3.0
-arm64                 randconfig-004-20260218    clang-23
-arm64                 randconfig-004-20260218    gcc-11.5.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260218    clang-23
-csky                  randconfig-001-20260218    gcc-15.2.0
-csky                  randconfig-002-20260218    clang-23
-csky                  randconfig-002-20260218    gcc-15.2.0
-hexagon                          allmodconfig    clang-17
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260218    clang-16
-hexagon               randconfig-002-20260218    clang-16
-i386                             allmodconfig    clang-20
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260218    clang-20
-i386        buildonly-randconfig-002-20260218    clang-20
-i386        buildonly-randconfig-003-20260218    clang-20
-i386        buildonly-randconfig-004-20260218    clang-20
-i386        buildonly-randconfig-004-20260218    gcc-13
-i386        buildonly-randconfig-005-20260218    clang-20
-i386        buildonly-randconfig-006-20260218    clang-20
-i386                                defconfig    gcc-15.2.0
-i386                  randconfig-001-20260218    clang-20
-i386                  randconfig-002-20260218    clang-20
-i386                  randconfig-003-20260218    clang-20
-i386                  randconfig-004-20260218    clang-20
-i386                  randconfig-005-20260218    clang-20
-i386                  randconfig-006-20260218    clang-20
-i386                  randconfig-007-20260218    clang-20
-i386                  randconfig-011-20260218    gcc-12
-i386                  randconfig-011-20260218    gcc-14
-i386                  randconfig-012-20260218    gcc-14
-i386                  randconfig-013-20260218    clang-20
-i386                  randconfig-013-20260218    gcc-14
-i386                  randconfig-014-20260218    gcc-14
-i386                  randconfig-015-20260218    gcc-14
-i386                  randconfig-016-20260218    clang-20
-i386                  randconfig-016-20260218    gcc-14
-i386                  randconfig-017-20260218    gcc-14
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260218    clang-16
-loongarch             randconfig-001-20260218    clang-23
-loongarch             randconfig-002-20260218    clang-16
-loongarch             randconfig-002-20260218    clang-23
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    clang-19
-m68k                       m5249evb_defconfig    gcc-15.2.0
-microblaze                       alldefconfig    gcc-15.2.0
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                          eyeq6_defconfig    gcc-15.2.0
-mips                           ip22_defconfig    gcc-15.2.0
-nios2                         3c120_defconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-23
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260218    clang-16
-nios2                 randconfig-001-20260218    gcc-11.5.0
-nios2                 randconfig-002-20260218    clang-16
-nios2                 randconfig-002-20260218    gcc-8.5.0
-openrisc                         allmodconfig    clang-23
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc         de0_nano_multicore_defconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                generic-32bit_defconfig    gcc-15.2.0
-parisc                randconfig-001-20260218    gcc-8.5.0
-parisc                randconfig-002-20260218    gcc-8.5.0
-parisc                randconfig-002-20260218    gcc-9.5.0
-parisc64                            defconfig    clang-19
-powerpc                     akebono_defconfig    gcc-15.2.0
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc                   currituck_defconfig    gcc-15.2.0
-powerpc                      ep88xc_defconfig    clang-23
-powerpc                     kmeter1_defconfig    clang-23
-powerpc                 linkstation_defconfig    gcc-15.2.0
-powerpc                      mgcoge_defconfig    gcc-15.2.0
-powerpc                     ppa8548_defconfig    gcc-15.2.0
-powerpc               randconfig-001-20260218    clang-23
-powerpc               randconfig-001-20260218    gcc-8.5.0
-powerpc               randconfig-002-20260218    gcc-8.5.0
-powerpc                     tqm8540_defconfig    gcc-15.2.0
-powerpc64             randconfig-001-20260218    gcc-8.5.0
-powerpc64             randconfig-002-20260218    clang-23
-powerpc64             randconfig-002-20260218    gcc-8.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260218    clang-23
-riscv                 randconfig-002-20260218    clang-23
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                          debug_defconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260218    clang-23
-s390                  randconfig-002-20260218    clang-23
-s390                       zfcpdump_defconfig    gcc-15.2.0
-sh                               alldefconfig    clang-23
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                          kfr2r09_defconfig    gcc-15.2.0
-sh                          landisk_defconfig    gcc-15.2.0
-sh                          polaris_defconfig    gcc-15.2.0
-sh                    randconfig-001-20260218    clang-23
-sh                    randconfig-001-20260218    gcc-15.2.0
-sh                    randconfig-002-20260218    clang-23
-sh                    randconfig-002-20260218    gcc-13.4.0
-sh                          urquell_defconfig    gcc-15.2.0
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260218    gcc-10.5.0
-sparc                 randconfig-001-20260218    gcc-14.3.0
-sparc                 randconfig-002-20260218    gcc-10.5.0
-sparc                 randconfig-002-20260218    gcc-8.5.0
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260218    gcc-10.5.0
-sparc64               randconfig-001-20260218    gcc-11.5.0
-sparc64               randconfig-002-20260218    gcc-10.5.0
-sparc64               randconfig-002-20260218    gcc-12.5.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260218    clang-23
-um                    randconfig-001-20260218    gcc-10.5.0
-um                    randconfig-002-20260218    gcc-10.5.0
-um                    randconfig-002-20260218    gcc-14
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260218    gcc-14
-x86_64      buildonly-randconfig-002-20260218    clang-20
-x86_64      buildonly-randconfig-002-20260218    gcc-14
-x86_64      buildonly-randconfig-003-20260218    clang-20
-x86_64      buildonly-randconfig-003-20260218    gcc-14
-x86_64      buildonly-randconfig-004-20260218    gcc-14
-x86_64      buildonly-randconfig-005-20260218    gcc-14
-x86_64      buildonly-randconfig-006-20260218    clang-20
-x86_64      buildonly-randconfig-006-20260218    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260218    gcc-14
-x86_64                randconfig-002-20260218    gcc-14
-x86_64                randconfig-003-20260218    gcc-14
-x86_64                randconfig-004-20260218    gcc-14
-x86_64                randconfig-005-20260218    gcc-14
-x86_64                randconfig-006-20260218    gcc-14
-x86_64                randconfig-011-20260218    clang-20
-x86_64                randconfig-011-20260218    gcc-13
-x86_64                randconfig-012-20260218    gcc-13
-x86_64                randconfig-013-20260218    gcc-13
-x86_64                randconfig-013-20260218    gcc-14
-x86_64                randconfig-014-20260218    clang-20
-x86_64                randconfig-014-20260218    gcc-13
-x86_64                randconfig-015-20260218    gcc-13
-x86_64                randconfig-016-20260218    gcc-13
-x86_64                randconfig-016-20260218    gcc-14
-x86_64                randconfig-071-20260218    clang-20
-x86_64                randconfig-072-20260218    clang-20
-x86_64                randconfig-073-20260218    clang-20
-x86_64                randconfig-074-20260218    clang-20
-x86_64                randconfig-075-20260218    clang-20
-x86_64                randconfig-076-20260218    clang-20
-x86_64                randconfig-076-20260218    gcc-14
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                           allyesconfig    clang-23
-xtensa                randconfig-001-20260218    gcc-10.5.0
-xtensa                randconfig-001-20260218    gcc-9.5.0
-xtensa                randconfig-002-20260218    gcc-10.5.0
-xtensa                    smp_lx200_defconfig    gcc-15.2.0
+Seeing how this function looks like, I think the overall code (and this 
+function) would be simpler if instead of describing functions in
+struct rzg3s_sysc_info as individual struct members, would use an array of 
+functions. This is how this function will looks like in the end:
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+static int rzg3s_sysc_config_func(struct rzg3s_sysc *sysc,
+				  enum rzg3s_sysc_func_id fid,
+				  u32 val)
+{
+	const struct rzg3s_sysc_info *info = sysc->info;
+	const struct rzg3s_sysc_function *functions = info->functions;
+
+	if (fid >= RZG3S_SYSC_FUNC_ID_MAX)
+		return -EINVAL;
+
+	if (!functions[fid].mask)
+		return 0;
+
+	return regmap_update_bits(sysc->regmap, functions[fid].offset,
+				  functions[fid].mask,
+				  field_prep(functions[fid].mask, val));
+}
+
+The following diff could be applied on top of this series to give you a clue:
+
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c 
+b/drivers/pci/controller/pcie-rzg3s-host.c
+index 639b2d781d66..fc61ac02a4ea 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -190,16 +190,26 @@ struct rzg3s_sysc_function {
+         u32 mask;
+  };
+
++/**
++ * enum rzg3s_sysc_func_id - System controller function IDs
++ * @RZG3S_SYSC_FUNC_ID_RST_RSM_B: RST_RSM_B SYSC function ID
++ * @RZG3S_SYSC_FUNC_ID_L1_ALLOW: L1 allow SYSC function ID
++ * @RZG3S_SYSC_FUNC_ID_MODE: Mode SYSC function ID
++ * @RZG3S_SYSC_FUNC_ID_MAX: Max SYSC function ID
++ */
++enum rzg3s_sysc_func_id {
++       RZG3S_SYSC_FUNC_ID_RST_RSM_B,
++       RZG3S_SYSC_FUNC_ID_L1_ALLOW,
++       RZG3S_SYSC_FUNC_ID_MODE,
++       RZG3S_SYSC_FUNC_ID_MAX,
++};
++
+  /**
+   * struct rzg3s_sysc_info - RZ/G3S System Controller function info
+- * @rst_rsm_b: Reset RSM_B function descriptor
+- * @l1_allow: L1 power state management function descriptor
+- * @mode: Mode configuration function descriptor
++ * @functions: SYSC function descriptors array
+   */
+  struct rzg3s_sysc_info {
+-       struct rzg3s_sysc_function rst_rsm_b;
+-       struct rzg3s_sysc_function l1_allow;
+-       struct rzg3s_sysc_function mode;
++       const struct rzg3s_sysc_function functions[RZG3S_SYSC_FUNC_ID_MAX];
+  };
+
+  /**
+@@ -1324,45 +1334,22 @@ static int rzg3s_pcie_host_init_port(struct 
+rzg3s_pcie_host *host)
+         return ret;
+  }
+
+-/**
+- * rzg3s_sysc_config - Configure SYSC registers for PCIe
+- * @sysc: SYSC descriptor
+- * @mode: Mode value to set (-1 to skip)
+- * @rsm_b: RST_RSM_B value to set (-1 to skip)
+- * @l1_allow: L1_ALLOW value to set (-1 to skip)
+- *
+- * Return: 0 on success, negative error code on failure
+- */
+-static int rzg3s_sysc_config(struct rzg3s_sysc *sysc, int mode, int rsm_b,
+-                            int l1_allow)
++static int rzg3s_sysc_config_func(struct rzg3s_sysc *sysc,
++                                 enum rzg3s_sysc_func_id fid,
++                                 u32 val)
+  {
+         const struct rzg3s_sysc_info *info = sysc->info;
+-       int ret;
+-
+-       if (mode >= 0 && info->mode.mask) {
+-               ret = regmap_write(sysc->regmap, info->mode.offset,
+-                                  field_prep(info->mode.mask, mode));
+-               if (ret)
+-                       return ret;
+-       }
++       const struct rzg3s_sysc_function *functions = info->functions;
+
+-       if (rsm_b >= 0 && info->rst_rsm_b.mask) {
+-               ret = regmap_update_bits(sysc->regmap, info->rst_rsm_b.offset,
+-                                        info->rst_rsm_b.mask,
+-                                        field_prep(info->rst_rsm_b.mask, rsm_b));
+-               if (ret)
+-                       return ret;
+-       }
++       if (fid >= RZG3S_SYSC_FUNC_ID_MAX)
++               return -EINVAL;
+
+-       if (l1_allow >= 0 && info->l1_allow.mask) {
+-               ret = regmap_update_bits(sysc->regmap, info->l1_allow.offset,
+-                                        info->l1_allow.mask,
+-                                        field_prep(info->l1_allow.mask, l1_allow));
+-               if (ret)
+-                       return ret;
+-       }
++       if (!functions[fid].mask)
++               return 0;
+
+-       return 0;
++       return regmap_update_bits(sysc->regmap, functions[fid].offset,
++                                 functions[fid].mask,
++                                 field_prep(functions[fid].mask, val));
+  }
+
+  static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+@@ -1384,7 +1371,8 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+                 goto config_deinit;
+
+         /* Enable ASPM L1 transition for SoCs that use it */
+-       ret = rzg3s_sysc_config(host->sysc, -1, -1, 1);
++       ret = rzg3s_sysc_config_func(host->sysc,
++                                    RZG3S_SYSC_FUNC_ID_L1_ALLOW, 1);
+         if (ret)
+                 goto config_deinit;
+
+@@ -1735,12 +1723,13 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+                 goto port_refclk_put;
+         }
+
+-       /*
+-        * Put controller in RC (Root Complex) mode for SoCs that
+-        * support it. These can operate in either EP or RC mode.
+-        * While at it, do also de-assert RST_RSM_B.
+-        */
+-       ret = rzg3s_sysc_config(sysc, 1, 1, -1);
++       /* Put controller in RC (Root Complex) mode. */
++       ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
++       if (ret)
++               goto port_refclk_put;
++
++       /* De-assert RST_RSM_B. */
++       ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
+         if (ret)
+                 goto port_refclk_put;
+
+@@ -1792,7 +1781,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+          * SYSC RST_RSM_B signal need to be asserted before turning off the
+          * power to the PHY.
+          */
+-       rzg3s_sysc_config(sysc, -1, 0, -1);
++       rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+  port_refclk_put:
+         clk_put(host->port.refclk);
+
+@@ -1823,7 +1812,7 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+         if (ret)
+                 goto config_reinit;
+
+-       ret = rzg3s_sysc_config(sysc, -1, 0, -1);
++       ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+         if (ret)
+                 goto power_resets_restore;
+
+@@ -1848,7 +1837,11 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+         struct rzg3s_sysc *sysc = host->sysc;
+         int ret;
+
+-       ret = rzg3s_sysc_config(sysc, 1, 1, -1);
++       ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_MODE, 1);
++       if (ret)
++               return ret;
++
++       ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
+         if (ret)
+                 return ret;
+
+@@ -1877,7 +1870,7 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+         reset_control_bulk_assert(data->num_power_resets,
+                                   host->power_resets);
+  assert_rst_rsm_b:
+-       rzg3s_sysc_config(sysc, -1, 0, -1);
++       rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+         return ret;
+  }
+
+@@ -1903,9 +1896,11 @@ static const struct rzg3s_pcie_soc_data rzg3s_soc_data = {
+         .config_deinit = rzg3s_config_deinit,
+         .init_phy = rzg3s_soc_pcie_init_phy,
+         .sysc_info = {
+-               .rst_rsm_b = {
+-                       .offset = 0xd74,
+-                       .mask = BIT(0),
++               .functions = {
++                       [RZG3S_SYSC_FUNC_ID_RST_RSM_B] = {
++                               .offset = 0xd74,
++                               .mask = BIT(0),
++                       },
+                 },
+         },
+  };
+@@ -1919,13 +1914,15 @@ static const struct rzg3s_pcie_soc_data rzg3e_soc_data = {
+         .config_post_init = rzg3e_config_post_init,
+         .config_deinit = rzg3e_config_deinit,
+         .sysc_info = {
+-               .l1_allow = {
+-                       .offset = 0x1020,
+-                       .mask = BIT(0),
+-               },
+-               .mode = {
+-                       .offset = 0x1024,
+-                       .mask = BIT(0),
++               .functions = {
++                       [RZG3S_SYSC_FUNC_ID_L1_ALLOW] = {
++                               .offset = 0x1020,
++                               .mask = BIT(0),
++                       },
++                       [RZG3S_SYSC_FUNC_ID_MODE] = {
++                               .offset = 0x1024,
++                               .mask = BIT(0),
++                       },
+                 },
+         },
+  };
+
+To have this implemented, patch 07/16 "PCI: rzg3s-host: Make SYSC register 
+offsets SoC-specific" would have to be update with enum rzg3s_sysc_func_id, 
+rzg3s_sysc_config_func() should be introduced and used there.
+
+With that addressed, this patch will have to only introduce SYSC function IDs 
+for L1 allow and mode and set it accordingly though rzg3s_sysc_config_func().
+
+That would, in the end, drop the usage of -1 as argument for rzg3s_sysc_config() 
+which is a bit ugly.
+
+Sorry for not spotting this earlier.
+
+Thank you,
+Claudiu
+
+> +
+> +	return 0;
+> +}
+> +
+>   static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+>   {
+>   	u32 val;
+> @@ -1284,6 +1382,11 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
+>   	if (ret)
+>   		goto config_deinit;
+>   
+> +	/* Enable ASPM L1 transition for SoCs that use it */
+
+"Enable ASPM L1 transitions should be enough". But if using the above proposed 
+code, the function ID macro would be meaningful enough and thus, I don't 
+consider a comment would be needed anymore.
+
+> +	ret = rzg3s_sysc_config(host->sysc, -1, -1, 1);
+> +	if (ret)
+> +		goto config_deinit;
+> +
+>   	/* Initialize the interrupts */
+>   	rzg3s_pcie_irq_init(host);
+>   
+> @@ -1631,9 +1734,12 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+>   		goto port_refclk_put;
+>   	}
+>   
+> -	ret = regmap_update_bits(sysc->regmap, sysc->info->rst_rsm_b.offset,
+> -				 sysc->info->rst_rsm_b.mask,
+> -				 field_prep(sysc->info->rst_rsm_b.mask, 1));
+> +	/*
+> +	 * Put controller in RC (Root Complex) mode for SoCs that
+> +	 * support it. These can operate in either EP or RC mode.
+> +	 * While at it, do also de-assert RST_RSM_B.
+> +	 */
+
+This should be enough here:
+
+/* Put controller in RC mode and de-assert RST_RSM_B. */
+
+Thank you,
+Claudiu
+
+> +	ret = rzg3s_sysc_config(sysc, 1, 1, -1);
+>   	if (ret)
+>   		goto port_refclk_put;
+>   
+> @@ -1685,9 +1791,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+>   	 * SYSC RST_RSM_B signal need to be asserted before turning off the
+>   	 * power to the PHY.
+>   	 */
+> -	regmap_update_bits(sysc->regmap, sysc->info->rst_rsm_b.offset,
+> -			   sysc->info->rst_rsm_b.mask,
+> -			   field_prep(sysc->info->rst_rsm_b.mask, 0));
+> +	rzg3s_sysc_config(sysc, -1, 0, -1);
+>   port_refclk_put:
+>   	clk_put(host->port.refclk);
+>   
+> @@ -1718,9 +1822,7 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+>   	if (ret)
+>   		goto config_reinit;
+>   
+> -	ret = regmap_update_bits(sysc->regmap, sysc->info->rst_rsm_b.offset,
+> -				 sysc->info->rst_rsm_b.mask,
+> -				 field_prep(sysc->info->rst_rsm_b.mask, 0));
+> +	ret = rzg3s_sysc_config(sysc, -1, 0, -1);
+>   	if (ret)
+>   		goto power_resets_restore;
+>   
+> @@ -1745,9 +1847,7 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+>   	struct rzg3s_sysc *sysc = host->sysc;
+>   	int ret;
+>   
+> -	ret = regmap_update_bits(sysc->regmap, sysc->info->rst_rsm_b.offset,
+> -				 sysc->info->rst_rsm_b.mask,
+> -				 field_prep(sysc->info->rst_rsm_b.mask, 1));
+> +	ret = rzg3s_sysc_config(sysc, 1, 1, -1);
+>   	if (ret)
+>   		return ret;
+>   
+> @@ -1776,9 +1876,7 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+>   	reset_control_bulk_assert(data->num_power_resets,
+>   				  host->power_resets);
+>   assert_rst_rsm_b:
+> -	regmap_update_bits(sysc->regmap, sysc->info->rst_rsm_b.offset,
+> -			   sysc->info->rst_rsm_b.mask,
+> -			   field_prep(sysc->info->rst_rsm_b.mask, 0));
+> +	rzg3s_sysc_config(sysc, -1, 0, -1);
+>   	return ret;
+>   }
+>   
+> @@ -1811,11 +1909,35 @@ static const struct rzg3s_pcie_soc_data rzg3s_soc_data = {
+>   	},
+>   };
+>   
+> +static const char * const rzg3e_soc_power_resets[] = { "aresetn" };
+> +
+> +static const struct rzg3s_pcie_soc_data rzg3e_soc_data = {
+> +	.power_resets = rzg3e_soc_power_resets,
+> +	.num_power_resets = ARRAY_SIZE(rzg3e_soc_power_resets),
+> +	.config_pre_init = rzg3e_pcie_config_pre_init,
+> +	.config_post_init = rzg3e_config_post_init,
+> +	.config_deinit = rzg3e_config_deinit,
+> +	.sysc_info = {
+> +		.l1_allow = {
+> +			.offset = 0x1020,
+> +			.mask = BIT(0),
+> +		},
+> +		.mode = {
+> +			.offset = 0x1024,
+> +			.mask = BIT(0),
+> +		},
+> +	},
+> +};
+> +
+>   static const struct of_device_id rzg3s_pcie_of_match[] = {
+>   	{
+>   		.compatible = "renesas,r9a08g045-pcie",
+>   		.data = &rzg3s_soc_data,
+>   	},
+> +	{
+> +		.compatible = "renesas,r9a09g047-pcie",
+> +		.data = &rzg3e_soc_data,
+> +	},
+>   	{}
+>   };
+>   
+
