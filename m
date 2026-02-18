@@ -1,119 +1,232 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20EE31FC7C5;
-	Wed, 18 Feb 2026 20:58:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E57F3191BB;
+	Wed, 18 Feb 2026 21:05:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771448340; cv=none; b=pW7t1/PfIMKwoR+O4BQ41x5u8HvQncX9QLJddaVlv/HrIBMbd93TGAy5PxrX7fbczgXZ+6oEtNO900DkXfDz9g+evK9OM6j0PdB0nbCj8DT1YxX2Za2Zf0Yxuuoj2rzCFoyMTpvsWwFWkOMA2NiGp1B+a3SsYRdUx6WnxUrJUS0=
+	t=1771448733; cv=none; b=DjprKWBFKTQRzAphQ0WjPsnnJW0dE9+i17/k8vJqM033qw3PoYtiq3nD5/6Z4Hy9Tgr9LvUlwSlLvtOSgvXrk3QF6SwYT/HsS5FZTceQshqC14Rtd6AnJOIjqTmWoWGlPxRlanfcjmUT0oJZRmgwGf2P7hxSnmKToRaH5AzxvVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771448340; c=relaxed/simple;
-	bh=/ttJEItCc/N1SCo1cPgCWrMZiePvmzoXTIQZC7x//5Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=KHNPv1skZX8wcpjHixX0fYq+jBniecZWpw9lRY4SbIMXGRcIouXzSfWxbDYj4kFFMOML2FpV59G8xs4axyKLTJn5JBYIVcFkCPW1428eSWxEuFAmZ8A9vpKTEkEvbUTecEAYOmx4p/o/nd5u3stqQKfgwgo/VYfQUc7LoVV0jlA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qRc2Z5O5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771448733; c=relaxed/simple;
+	bh=1Lfxpeg8BSocI20oyn128+XYsg+gyDtAclOE5cwZdX0=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=ra3BcN23z8FvU8pL1qvBga6A96lD+n1IKNRYsdYpQ7ysN8j6sQnRYDUE44s/3QmbPdFdrtdZ3rcTl15dY+iPoDYg+Y98mNQiED93MSVhLK/7OZpVClTPkYBkF2wtmwx2Zd5i0XRT6sS69t0VQYbb5L7aCs/CkRGF6SKyeceEXtc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nqEk6aEq; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qRc2Z5O5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92358C116D0;
-	Wed, 18 Feb 2026 20:58:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771448339;
-	bh=/ttJEItCc/N1SCo1cPgCWrMZiePvmzoXTIQZC7x//5Y=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=qRc2Z5O5XWQWiiH1ENEIq/6n49zbNl8rdTVzjQl7ejxfAkgIVNOTc0jJ6aKCa39di
-	 DLlJWavl8EZjR8EkdAG3FOITXosGf/bQgFJhFoHdGtGSV32k6SmqbbCVni8zCUl9vf
-	 zSc7UNXf9Jcpx3y0n2m3F0dHCF0DJkK20xX625HY19yvJaTLiqouVJUCRJkEBBSMJY
-	 mFbfn0EospZSTJVRJzuYfPa5B7zwpAnYzznFpBR9SEP7V1BII03WHWDvD8qwtQ5Js5
-	 LXny4u1Ty2T+FDXTLTrOt1S8ajUS8C8bAM/GlLpLXPTHrNVDWoW2ELHKKVCqZJog+G
-	 G3W7/iopo9Dhg==
-Date: Wed, 18 Feb 2026 14:58:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: George Abraham P <george.abraham.p@intel.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, giovanni.cabiddu@intel.com
-Subject: Re: [PATCH V2 RESEND] PCI/TPH: Skip Root Port completer check for
- RC_END devices
-Message-ID: <20260218205858.GA3443049@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nqEk6aEq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771448731; x=1802984731;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=1Lfxpeg8BSocI20oyn128+XYsg+gyDtAclOE5cwZdX0=;
+  b=nqEk6aEqJA560T9t69tH9QD4kX3OrbvieaT9R1p4azHF0VBJBVvZCKiy
+   Qae0SwYEODT+9h5Yn8u/yiYBwGic7CxTerg6ztFWsfV4YPNIUoe0y/b+X
+   B4CryxfeRtyI+cMxhU3YYsSBM3YavhrOYWdiH8U0+qy+XqZJSHeuY+hA8
+   y5/38+DoAGQsjL6uTU5oG9qkis1vDKI9gmR9LQ4dzYz+8Dq3vg91n18LP
+   KglvdcEmbIpcqnJX7ovs1tR5n0LFSxQnteohnp1NCF46go+ID/5qeltEo
+   22+wWPbWKpwWUfbrGvWysOei/r9DIsOL15G5hu9FBmxHQwYgt6VyFXWmw
+   g==;
+X-CSE-ConnectionGUID: gvgjpUL2SeqMSD05gLkpkQ==
+X-CSE-MsgGUID: vCb92ym3Toiz4y+AsuE+jg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11705"; a="75144495"
+X-IronPort-AV: E=Sophos;i="6.21,299,1763452800"; 
+   d="scan'208";a="75144495"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2026 13:05:30 -0800
+X-CSE-ConnectionGUID: YNzBpVIIQ8GTvFcVkiTgaw==
+X-CSE-MsgGUID: kmvd8FMMSCi7Ag/6sT7PLA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,299,1763452800"; 
+   d="scan'208";a="214163119"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.54])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2026 13:05:26 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Wed, 18 Feb 2026 23:05:23 +0200 (EET)
+To: "Ionut Nechita (Sunlight Linux)" <sunlightlinux@gmail.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, 
+    "Rafael J . Wysocki" <rafael@kernel.org>, 
+    Daniel Lezcano <daniel.lezcano@linaro.org>, 
+    Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, 
+    Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, 
+    linux-pm@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
+    Ionut Nechita <ionut_n2001@yahoo.com>
+Subject: Re: [RFC PATCH 2/3] PCI: Add PCIe Gen 7 (128 GT/s) speed detection
+ and reporting
+In-Reply-To: <20260217080102.206581-6-sunlightlinux@gmail.com>
+Message-ID: <b4147a1c-0c2f-f4f1-a0c1-c296b3d1346a@linux.intel.com>
+References: <20260217080102.206581-2-sunlightlinux@gmail.com> <20260217080102.206581-6-sunlightlinux@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260109052923.1170070-1-george.abraham.p@intel.com>
+Content-Type: text/plain; charset=US-ASCII
 
-On Fri, Jan 09, 2026 at 10:59:23AM +0530, George Abraham P wrote:
-> Root Complex Integrated Endpoint devices (PCI_EXP_TYPE_RC_END) are
-> directly integrated into the root complex and do not have an
-> associated Root Port in the traditional PCIe hierarchy. The current
-> TPH implementation incorrectly attempts to find and check a Root Port's
-> TPH completer capability for these devices.
-> 
-> Add a check to skip Root Port completer type verification for RC_END
-> devices, allowing them to use their full TPH requester capability
-> without being limited by a non-existent Root Port's completer support.
-> 
-> For RC_END devices, the root complex itself acts as the TPH completer,
-> and this relationship is handled differently than the standard
-> endpoint-to-Root-Port model.
-> 
-> Fixes: f69767a1ada3 ("PCI: Add TLP Processing Hints (TPH) support")
-> Signed-off-by: George Abraham P <george.abraham.p@intel.com>
+On Tue, 17 Feb 2026, Ionut Nechita (Sunlight Linux) wrote:
 
-Applied to pci/enumeration with the following commit log for v7.1,
-thanks!  This will be rebased after v7.0-rc1.
+> From: Ionut Nechita <ionut_n2001@yahoo.com>
+> 
+> Add kernel infrastructure to detect and report PCIe Gen 7 128 GT/s
+> link speeds:
+> 
+>   - Extend PCIE_LNKCAP_SLS2SPEED, PCIE_LNKCAP2_SLS2SPEED, and
+>     PCIE_LNKCTL2_TLS2SPEED macros with 128 GT/s mapping
+>   - Add 128 GT/s to PCIE_SPEED2MBS_ENC bandwidth calculation using
+>     1:1 Flit mode encoding (no overhead), consistent with Gen 6
+>   - Add PCIE_SPEED_128_0GT to pcie_dev_speed_mbps() switch
+>   - Map link speed encoding 7 to PCIE_SPEED_128_0GT in
+>     pcie_link_speed[] table
+>   - Add "128.0 GT/s PCIe" display string
+>   - Add pcie_speed_requires_flit() helper for Gen 6+ speed
+>     validation with proper range check against PCI_SPEED_UNKNOWN
+>   - Widen pcie_get_supported_speeds() return type from u8 to u16
 
-    PCI/TPH: Allow TPH enable for RCiEPs
-    
-    Previously, pcie_enable_tph() only enabled TLP Processing Hints (TPH) if
-    both the Endpoint and its Root Port advertised TPH support.
-    
-    Root Complex Integrated Endpoints (RCiEPs) are directly integrated into a
-    Root Complex and do not have an associated Root Port, so pcie_enable_tph()
-    never enabled TPH for RCiEPs.
-    
-    PCIe r7.0 doesn't seem to include a way to learn whether a Root Complex
-    supports TPH, but sec 2.2.7.1.1 says Functions that lack TPH support should
-    ignore TPH, and maybe the same is true for Root Complexes:
-    
-      A Function that does not support the TPH Completer or Routing capability
-      and receives a transaction with the TH bit [which indicates the presence
-      of TPH in the TLP header] Set is required to ignore the TH bit and handle
-      the Request in the same way as Requests of the same transaction type
-      without the TH bit Set.
-    
-    Allow drivers to enable TPH for any RCiEP with a TPH Requester Capability.
-    
+These are all visible from the patch and as such seem pretty redundant 
+information.
+
+>   - Add Flit mode diagnostic warning when Gen 6+ speed is active
+>     but PCI_EXP_LNKSTA2_FLIT is not set
+> 
+> Signed-off-by: Ionut Nechita <ionut_n2001@yahoo.com>
 > ---
-> v1->v2:
->   - Added "Fixes:" tag to link the commit hash that introduced the code
-> ---
->  drivers/pci/tph.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
+>  drivers/pci/pci.c   |  7 +++++--
+>  drivers/pci/pci.h   | 28 ++++++++++++++++++++++------
+>  drivers/pci/probe.c |  3 ++-
+>  3 files changed, 29 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index ca4f97be7538..e896b3958281 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-> @@ -407,10 +407,13 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
->  	else
->  		pdev->tph_req_type = PCI_TPH_REQ_TPH_ONLY;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 13dbb405dc31f..8091f7bf30e6f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5912,10 +5912,10 @@ EXPORT_SYMBOL(pcie_bandwidth_available);
+>   *
+>   * Return: Supported Link Speeds Vector (+ reserved 0 at LSB).
+>   */
+> -u8 pcie_get_supported_speeds(struct pci_dev *dev)
+> +u16 pcie_get_supported_speeds(struct pci_dev *dev)
+>  {
+>  	u32 lnkcap2, lnkcap;
+> -	u8 speeds;
+> +	u16 speeds;
 >  
-> -	rp_req_type = get_rp_completer_type(pdev);
-> +	/* Check if the device is behind a Root Port */
-> +	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
-> +		rp_req_type = get_rp_completer_type(pdev);
+>  	/*
+>  	 * Speeds retain the reserved 0 at LSB before PCIe Supported Link
+> @@ -6020,6 +6020,9 @@ void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
 >  
-> -	/* Final req_type is the smallest value of two */
-> -	pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
-> +		/* Final req_type is the smallest value of two */
-> +		pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
-> +	}
+>  	if (dev->bus && dev->bus->flit_mode)
+>  		flit_mode = ", in Flit mode";
+> +	else if (dev->bus && pcie_speed_requires_flit(dev->bus->cur_bus_speed))
+> +		pci_warn(dev, "Flit mode not active at %s, expected for Gen 6+\n",
+> +			 pci_speed_string(dev->bus->cur_bus_speed));
+
+This looks entirely unrelated to the new speed, please put it into own 
+patch (and justification in the changelog).
+
 >  
->  	if (pdev->tph_req_type == PCI_TPH_REQ_DISABLE)
->  		return -EINVAL;
-> -- 
-> 2.40.1
+>  	if (bw_avail >= bw_cap && verbose)
+>  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)%s\n",
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 60542b05de0c6..4dd23f0d5de9f 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -487,7 +487,8 @@ void pci_bus_put(struct pci_bus *bus);
+>  ({									\
+>  	u32 lnkcap_sls = (lnkcap) & PCI_EXP_LNKCAP_SLS;			\
+>  									\
+> -	(lnkcap_sls == PCI_EXP_LNKCAP_SLS_64_0GB ? PCIE_SPEED_64_0GT :	\
+> +	(lnkcap_sls == PCI_EXP_LNKCAP_SLS_128_0GB ? PCIE_SPEED_128_0GT :	\
+> +	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_64_0GB ? PCIE_SPEED_64_0GT :	\
+>  	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_32_0GB ? PCIE_SPEED_32_0GT :	\
+>  	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_16_0GB ? PCIE_SPEED_16_0GT :	\
+>  	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_8_0GB ? PCIE_SPEED_8_0GT :	\
+> @@ -498,7 +499,8 @@ void pci_bus_put(struct pci_bus *bus);
+>  
+>  /* PCIe link information from Link Capabilities 2 */
+>  #define PCIE_LNKCAP2_SLS2SPEED(lnkcap2) \
+> -	((lnkcap2) & PCI_EXP_LNKCAP2_SLS_64_0GB ? PCIE_SPEED_64_0GT : \
+> +	((lnkcap2) & PCI_EXP_LNKCAP2_SLS_128_0GB ? PCIE_SPEED_128_0GT : \
+> +	 (lnkcap2) & PCI_EXP_LNKCAP2_SLS_64_0GB ? PCIE_SPEED_64_0GT : \
+>  	 (lnkcap2) & PCI_EXP_LNKCAP2_SLS_32_0GB ? PCIE_SPEED_32_0GT : \
+>  	 (lnkcap2) & PCI_EXP_LNKCAP2_SLS_16_0GB ? PCIE_SPEED_16_0GT : \
+>  	 (lnkcap2) & PCI_EXP_LNKCAP2_SLS_8_0GB ? PCIE_SPEED_8_0GT : \
+> @@ -510,7 +512,8 @@ void pci_bus_put(struct pci_bus *bus);
+>  ({									\
+>  	u16 lnkctl2_tls = (lnkctl2) & PCI_EXP_LNKCTL2_TLS;		\
+>  									\
+> -	(lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_64_0GT ? PCIE_SPEED_64_0GT :	\
+> +	(lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_128_0GT ? PCIE_SPEED_128_0GT :	\
+> +	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_64_0GT ? PCIE_SPEED_64_0GT :	\
+>  	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_32_0GT ? PCIE_SPEED_32_0GT :	\
+>  	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_16_0GT ? PCIE_SPEED_16_0GT :	\
+>  	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_8_0GT ? PCIE_SPEED_8_0GT :	\
+> @@ -519,9 +522,14 @@ void pci_bus_put(struct pci_bus *bus);
+>  	 PCI_SPEED_UNKNOWN);						\
+>  })
+>  
+> -/* PCIe speed to Mb/s reduced by encoding overhead */
+> +/* PCIe speed to Mb/s reduced by encoding overhead:
+> + *   Gen 1-2 (2.5, 5 GT/s):       8b/10b encoding
+> + *   Gen 3-5 (8, 16, 32 GT/s):    128b/130b encoding
+> + *   Gen 6+  (64, 128 GT/s):      Flit mode, 1:1 (no encoding overhead)
+> + */
+>  #define PCIE_SPEED2MBS_ENC(speed) \
+> -	((speed) == PCIE_SPEED_64_0GT ? 64000*1/1 : \
+> +	((speed) == PCIE_SPEED_128_0GT ? 128000*1/1 : \
+> +	 (speed) == PCIE_SPEED_64_0GT ? 64000*1/1 : \
+>  	 (speed) == PCIE_SPEED_32_0GT ? 32000*128/130 : \
+>  	 (speed) == PCIE_SPEED_16_0GT ? 16000*128/130 : \
+>  	 (speed) == PCIE_SPEED_8_0GT  ?  8000*128/130 : \
+> @@ -544,6 +552,8 @@ static inline int pcie_dev_speed_mbps(enum pci_bus_speed speed)
+>  		return 32000;
+>  	case PCIE_SPEED_64_0GT:
+>  		return 64000;
+> +	case PCIE_SPEED_128_0GT:
+> +		return 128000;
+>  	default:
+>  		break;
+>  	}
+> @@ -551,7 +561,13 @@ static inline int pcie_dev_speed_mbps(enum pci_bus_speed speed)
+>  	return -EINVAL;
+>  }
+>  
+> -u8 pcie_get_supported_speeds(struct pci_dev *dev);
+> +/* PCIe Gen 6+ (>= 64 GT/s) requires Flit mode with 1:1 encoding */
+> +static inline bool pcie_speed_requires_flit(enum pci_bus_speed speed)
+> +{
+> +	return speed >= PCIE_SPEED_64_0GT && speed <= PCIE_SPEED_128_0GT;
+> +}
+> +
+> +u16 pcie_get_supported_speeds(struct pci_dev *dev);
+>  const char *pci_speed_string(enum pci_bus_speed speed);
+>  void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+>  void pcie_report_downtraining(struct pci_dev *dev);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 9d4eeda5ea946..031c3ec8615d2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -774,7 +774,7 @@ const unsigned char pcie_link_speed[] = {
+>  	PCIE_SPEED_16_0GT,		/* 4 */
+>  	PCIE_SPEED_32_0GT,		/* 5 */
+>  	PCIE_SPEED_64_0GT,		/* 6 */
+> -	PCI_SPEED_UNKNOWN,		/* 7 */
+> +	PCIE_SPEED_128_0GT,		/* 7 */
+>  	PCI_SPEED_UNKNOWN,		/* 8 */
+>  	PCI_SPEED_UNKNOWN,		/* 9 */
+>  	PCI_SPEED_UNKNOWN,		/* A */
+> @@ -816,6 +816,7 @@ const char *pci_speed_string(enum pci_bus_speed speed)
+>  	    "16.0 GT/s PCIe",		/* 0x17 */
+>  	    "32.0 GT/s PCIe",		/* 0x18 */
+>  	    "64.0 GT/s PCIe",		/* 0x19 */
+> +	    "128.0 GT/s PCIe",		/* 0x1a */
+>  	};
+>  
+>  	if (speed < ARRAY_SIZE(speed_strings))
 > 
+
+-- 
+ i.
+
