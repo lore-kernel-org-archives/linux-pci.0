@@ -1,145 +1,248 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C57D4334C09;
-	Wed, 18 Feb 2026 16:22:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2ABD301460;
+	Wed, 18 Feb 2026 16:27:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771431745; cv=none; b=bBHsMgBnEmk78cT6cwcWuVgXEQHd+jbdh1wS+xzmdbYHCzp/tHnujwnq1J/8arSDXz2bwLlo1JrTF7ocH0Q4IznmFaG9p/PqAmjJc85NFGhP7AVvID7LnHjQCi3Ctm1/dPXF2U9GUpDXfMcOntRBW5kgXgYKuNp8RrQRhQuADxU=
+	t=1771432056; cv=none; b=D/Hwkn6mI65LF0fCdw8bQ7MB8HmOg+ZvjDnaxHJZ//vzuZ7sDVRX0vZ6gC2Kp0e4fFnJ/aKlVHVKhZKGD9n5bAVSJKpL2agqp8TyRugpZGspD/h/0GeJjiRoZFu9DbTlMttyvrC6ZF9SrgJ/UBrE0NvfN+WNPSCO2jQXxk7UgcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771431745; c=relaxed/simple;
-	bh=QHeYoV0xXXjlabDfUTEfiijGUyGfxHXv+WajrUN8hkY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Tu1YJbucoKTSZbkc+LJZZs4fl+4rlgGwUr8+IAcTPaPU5S7LBVupW3p28AV4O8FiaizWiSJhb1IOGbuoBwufAMLDdu7Og3NlSAHaLXAYXqymAIGM0RuLBC7z9EbV1QTMn3twonNgZiJa7Ro0lmN6sOb1NmufKFpctKPtjHsdRww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M1HPwZqM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771432056; c=relaxed/simple;
+	bh=/iSVujH+BgQbdiqANA/IPDHm2T2rE2DWj42mhBMSkoY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fvlWbPdlzCLh0YQYIEwlTvEH6dtdFEbiRMftK1jWJztxg0XlNqzEj1KBA8Qa3TBkhDI7Erl/O8gGwdq7ZqxFoIAcCnBINCJjrFFllxI2LuQpbA/vAmXfe6nnX5QrvMILOqkZ0xsRiEDJfC9aRmcNiBYM6Z9FlvgTujiaUsb5DNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Be+TGLhr; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M1HPwZqM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8CB5C19422;
-	Wed, 18 Feb 2026 16:22:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771431745;
-	bh=QHeYoV0xXXjlabDfUTEfiijGUyGfxHXv+WajrUN8hkY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=M1HPwZqM4qiLvLTHW5ALbt9HGj5y91Zlj5YRut8nCMjJwiPyKtnyaK6sURpJLL4zi
-	 38IaigZ8dTHSAuirInpBWu7nttSGiEjv3nKOESwCerGuLp2gqcdF2IBAV/kb9hp/IS
-	 ZZ+uZCxKUvCvhsIiuoOgiVUIFWOn8prXykqjk6IgMNRAhXkO4HkOuH1J2BiCZ1MtnY
-	 l2W0eqh9QzGm7mvg9rvxX3rPPgHLpi6epDgQVz12mw+3OtOIJmc9xziDKX2DxvIeAj
-	 /drZuL4MR5IpCRlqRjm4Zsq0K9DLzwxDLEjTomofkFUZFmhXrz6A7anh99s0056Mcx
-	 wb9gnZRy4bc6w==
-Date: Wed, 18 Feb 2026 21:52:08 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Frank.Li@nxp.com, jdmason@kudzu.us, dave.jiang@intel.com, 
-	allenbh@gmail.com, kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com, 
-	jbrunet@baylibre.com, lpieralisi@kernel.org, yebin10@huawei.com, 
-	geert+renesas@glider.be, arnd@arndb.de
-Subject: Re: [PATCH v4 0/7] PCI: endpoint/NTB: Harden vNTB resource management
-Message-ID: <ap43e4jypppkpavrhf4ewgeivwnfrlldykkqyf3oqk6i4ckbhx@cg47vhgjzbrc>
-References: <20251202072348.2752371-1-den@valinux.co.jp>
- <7hqhqbtqvrw6bqraykdbccllags6gyal6rekb6yehcfx2tzhet@lex46cqheta5>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Be+TGLhr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771432055; x=1802968055;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=/iSVujH+BgQbdiqANA/IPDHm2T2rE2DWj42mhBMSkoY=;
+  b=Be+TGLhrSClgNVdS263B44XDpbjbBYJ8A6TKfweNPNVOaKYgfeUt+ZoH
+   3o/Pe5+w3WwTZ6CFe4U5qFPtt2Xb0d18590HswnQMQGMnW35LZ1vGjfws
+   6sdDLYdOVyWDj9OVxMVmuFoNkabvo+2yTbGeEDKDG1bjGOUp+qhxE3MFG
+   4T3iiKS0HGE8vzPjVHnKf8qJmbYKyr9c3q6EtJMp9cUIn1uAqALM1IVkn
+   7JiiWtaJbzg+syBnf3hmICJPnN4mTYS4fVvfD2TD/UKTCLfjLPWHh7rhx
+   bbh//AdVMWMX65vuG7K3EUcYjcvZ9J5cz4lwb1/xFUlLi+9L1toLAc7+t
+   Q==;
+X-CSE-ConnectionGUID: amDq/WoDRYyEmNzZ+ZhlmA==
+X-CSE-MsgGUID: I2tPgxAISom0jSNsXLkAFQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11705"; a="90095119"
+X-IronPort-AV: E=Sophos;i="6.21,298,1763452800"; 
+   d="scan'208";a="90095119"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2026 08:27:34 -0800
+X-CSE-ConnectionGUID: AIhdKESDShazAcjEIvfzNg==
+X-CSE-MsgGUID: jqTJfDlzQumnRTd3YVfgLQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,298,1763452800"; 
+   d="scan'208";a="213478670"
+Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2026 08:27:35 -0800
+Message-ID: <7b4dd756-2ab7-4331-b560-268f9cff0887@linux.intel.com>
+Date: Wed, 18 Feb 2026 08:27:34 -0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pm@vger.kernel.org
+References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com>
+ <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
+Content-Language: en-US
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <7hqhqbtqvrw6bqraykdbccllags6gyal6rekb6yehcfx2tzhet@lex46cqheta5>
 
-On Wed, Feb 18, 2026 at 09:45:22PM +0530, Manivannan Sadhasivam wrote:
-> On Tue, Dec 02, 2025 at 04:23:41PM +0900, Koichiro Den wrote:
-> > The vNTB endpoint function (pci-epf-vntb) can be configured and reconfigured
-> > through configfs (link/unlink functions, start/stop the controller, update
-> > parameters). In practice, several pitfalls present: double-unmapping when two
-> > windows share a BAR, wrong parameter order in .drop_link leading to wrong
-> > object lookups, duplicate EPC teardown that leads to oopses, a work item
-> > running after resources were torn down, and inability to re-link/restart
-> > fundamentally because ntb_dev was embedded and the vPCI bus teardown was
-> > incomplete.
-> > 
-> > This series addresses those issues and hardens resource management across NTB
-> > EPF and PCI EP core:
-> > 
-> > - Avoid double iounmap when PEER_SPAD and CONFIG share the same BAR.
-> > - Fix configfs .drop_link parameter order so the correct groups are used during
-> >   unlink.
-> > - Remove duplicate EPC resource teardown in both pci-epf-vntb and pci-epf-ntb,
-> >   avoiding crashes on .allow_link failures and during .drop_link.
-> > - Stop the delayed cmd_handler work before clearing BARs/doorbells.
-> > - Manage ntb_dev as a devm-managed allocation and implement .remove() in the
-> >   vNTB PCI driver. Switch to pci_scan_root_bus().
-> > 
-> > With these changes, the controller can now be stopped, a function unlinked,
-> > configfs settings updated, and the controller re-linked and restarted
-> > without rebooting the endpoint, as long as the underlying pci_epc_ops
-> > .stop() is non-destructive and .start() restores normal operation.
-> > 
-> > Patches 1-5 carry Fixes tags and are candidates for stable.
-> > Patch 6 is a preparatory one for Patch 7.
-> > Patch 7 is a behavioral improvement that completes lifetime management for
-> > relink/restart scenarios.
-> > 
-> 
-> Are there any dependencies between pci-epf-vntb and ntb-epf drivers? If they are
-> not dependent, you should always post them separately. For this series, I can
-> merge the endpoint patches (except patch 4 which got merged in other form).
-> 
 
-Sry, patch 2.
 
-- Mani
+On 2/17/2026 10:08 AM, Rafael J. Wysocki wrote:
+> On Tue, Feb 17, 2026 at 5:54 PM Kuppuswamy Sathyanarayanan
+> <sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
+>>
+>> Hi Rafael,
+>>
+>> On 2/13/2026 3:14 PM, Kuppuswamy Sathyanarayanan wrote:
+>>> On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
+>>> update PME status registers (PME Status and PME Requester_ID in the
+>>> Root Status register) during D3hot to D0 transitions, even though PME
+>>> interrupts are delivered correctly.
+>>>
+>>> This issue manifests during PCIe hotplug operations as follows:
+>>>
+>>> 1. After a hot-remove event, the PCIe port transitions to D3hot and
+>>>    the hotplug interrupt enable (HPIE) flag is disabled as the port
+>>>    enters low power state.
+>>>
+>>> 2. When a hot-add occurs while the port is in D3hot, a PME interrupt
+>>>    fires as expected to wake the port.
+>>>
+>>> 3. However, the PME interrupt handler finds the PME_Status and
+>>>    PME_Requester_ID registers unpopulated, preventing identification
+>>>    of which device triggered the PME. The handler returns IRQ_NONE,
+>>>    leaving the port in D3hot.
+> 
+> I think that you mean the
+> 
+> if (PCI_POSSIBLE_ERROR(rtsta) || !(rtsta & PCI_EXP_RTSTA_PME))
+> 
+> check in pcie_pme_irq().  Or do you mean something else?
 
-> - Mani
+Yes, I was referring to the above check.
+
 > 
-> > 
-> > v3->v4 changes:
-> >   - Added Reviewed-by tag for [PATCH v3 6/6].
-> >   - Corrected patch split by moving the blank-line cleanup,
-> >     based on the feedback from Frank.
-> >   (No code changes overall.)
-> > v2->v3 changes:
-> >   - Added Reviewed-by tag for [PATCH v2 4/6].
-> >   - Split [PATCH v2 6/6] into two, based on the feedback from Frank.
-> >   (No code changes overall.)
-> > v1->v2 changes:
-> >   - Incorporated feedback from Frank.
-> >   - Added Reviewed-by tags (except for patches #4 and #6).
-> >   - Fixed a typo in patch #5 title.
-> >   (No code changes overall.)
-> > 
-> > v3: https://lore.kernel.org/all/20251130151100.2591822-1-den@valinux.co.jp/
-> > v2: https://lore.kernel.org/all/20251029080321.807943-1-den@valinux.co.jp/
-> > v1: https://lore.kernel.org/all/20251023071757.901181-1-den@valinux.co.jp/
-> > 
-> > 
-> > Koichiro Den (7):
-> >   NTB: epf: Avoid pci_iounmap() with offset when PEER_SPAD and CONFIG
-> >     share BAR
-> >   PCI: endpoint: Fix parameter order for .drop_link
-> >   PCI: endpoint: pci-epf-vntb: Remove duplicate resource teardown
-> >   PCI: endpoint: pci-epf-ntb: Remove duplicate resource teardown
-> >   NTB: epf: vntb: Stop cmd_handler work in epf_ntb_epc_cleanup
-> >   PCI: endpoint: pci-epf-vntb: Switch vpci_scan_bus() to use
-> >     pci_scan_root_bus()
-> >   PCI: endpoint: pci-epf-vntb: manage ntb_dev lifetime and fix vpci bus
-> >     teardown
-> > 
-> >  drivers/ntb/hw/epf/ntb_hw_epf.c               |  3 +-
-> >  drivers/pci/endpoint/functions/pci-epf-ntb.c  | 56 +-----------
-> >  drivers/pci/endpoint/functions/pci-epf-vntb.c | 86 ++++++++++++-------
-> >  drivers/pci/endpoint/pci-ep-cfs.c             |  8 +-
-> >  4 files changed, 62 insertions(+), 91 deletions(-)
-> > 
-> > -- 
-> > 2.48.1
-> > 
+> An alternative workaround might be to add a (new) "always poll PME"
+> flag for the port in question that will cause it to go to pci_pme_list
+> in pci_pme_active() every time wakeup is enabled (essentially, an
+> override for pme_poll clearing).
+
+I will check whether this approach works. I want to make sure the poll
+logic eventually triggers the hotplug handler to detect slot state
+changes.
+
+But if you think there is no power-related issue with keeping these ports
+in D0, then we can adopt the pm_runtime_disable() approach. I think this
+approach looks clean and simple.
+
+What's your preference?
+
 > 
-> -- 
-> மணிவண்ணன் சதாசிவம்
+>>> 4. Because the port remains in D3hot with HPIE disabled, the hotplug
+>>>    driver ignores the hot-add event, resulting in the newly inserted
+>>>    device not being recognized.
+>>>
+>>> The PME interrupt delivery mechanism itself works correctly;
+>>> interrupts arrive reliably. The problem is purely the missing status
+>>> register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
+>>> reads confirms that these registers remain empty when the PME
+>>> interrupt fires. Neither BIOS nor kernel code is clearing these
+>>> registers.
+>>>
+>>> This issue is present in all steppings of Catlow Lake PCH and affects
+>>> customers in production deployments. A public hardware errata document
+>>> is not yet available.
+>>>
+>>> Work around this issue by disabling runtime PM for affected ports,
+>>> keeping them in D0 during runtime operation. This ensures hotplug
+>>> events are handled via direct interrupts rather than relying on
+>>> unreliable PME-based wakeup.
+>>>
+>>> During system suspend/resume, PCIe ports are resumed unconditionally
+>>> when coming out of system sleep due to DPM_FLAG_SMART_SUSPEND set by
+>>> pcie_portdrv_probe(), and pciehp re-enables interrupts and checks slot
+>>> occupation status during resume.
+>>>
+>>> The quirk is applied only to Catlow PCH PCIe root ports (device IDs
+>>> 0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
+>>> they are not hotplug-capable.
+>>>
+>>> Suggested-by: Lukas Wunner <lukas@wunner.de>
+>>> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+>>> ---
+>>
+>> Could you please review this patch and let us know if calling
+>> pm_runtime_disable() from a PCI quirk is acceptable?
+>>
+>> The quirk keeps specific Catlow Lake PCH PCIe root ports in D0 to
+>> work around a hardware bug where PME status registers are not reliably
+>> updated during D3hot to D0 transitions, causing hotplug events to be
+>> missed.
+>>
+>> System suspend/resume is unaffected as DPM_FLAG_SMART_SUSPEND ensures
+>> ports are resumed unconditionally and pciehp checks slot occupation
+>> on resume.
+>>
+>>
+>>>
+>>> Changes since v1:
+>>>  * Removed hack in hotplug driver and disabled runtime PM on affected ports.
+>>>  * Fixed the commit log and comments accordingly.
+>>>
+>>>  drivers/pci/quirks.c | 49 ++++++++++++++++++++++++++++++++++++++++++++
+>>>  1 file changed, 49 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index 280cd50d693b..779cd65b1a8a 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -6340,3 +6340,52 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+>>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+>>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+>>>  #endif
+>>> +
+>>> +/*
+>>> + * Intel Catlow Lake PCH PCIe root ports have a hardware issue where
+>>> + * PME status registers (PME Status and PME Requester_ID in Root Status)
+>>> + * are not reliably updated during D3hot to D0 transitions, even though
+>>> + * PME interrupts are delivered correctly.
+>>> + *
+>>> + * When a hotplug event occurs while the port is in D3hot, the PME
+>>> + * interrupt fires but the status registers remain empty. This prevents
+>>> + * the PME handler from identifying the event source, leaving the port
+>>> + * in D3hot and causing the hotplug driver to miss the event.
+>>> + *
+>>> + * Disable runtime PM to keep these ports in D0, ensuring hotplug events
+>>> + * are handled via direct interrupts.
+>>> + */
+>>> +static void quirk_intel_catlow_pcie_no_pme_wakeup(struct pci_dev *dev)
+>>> +{
+>>> +     pm_runtime_disable(&dev->dev);
+> 
+> Personally, I would use pm_runtime_get_sync() here instead which would
+> really mean "never suspend".
+> 
+>>> +     pci_info(dev, "Catlow PCH port: PME status unreliable, disabling runtime PM\n");
+>>> +}
+>>> +/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_intel_catlow_pcie_no_pme_wakeup);
+>>
+>> --
+>> Sathyanarayanan Kuppuswamy
+>> Linux Kernel Developer
+>>
 > 
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
+
