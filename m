@@ -1,142 +1,227 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CA45306D40
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 05:59:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6017313527
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 08:12:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771394381; cv=none; b=ofhXzSlxwoGeIPxxYI6/LuyuvoXUWw4czCMLz8bETmwlJ4phwRIFilL38lsQTW0oVcqGd9MrMGx6ZImBksnyO8V5+d+jNruVPsvF3CJzW8hdMMhJCUMSpw/jVdLvp9nwlDn55M/3YH00743jTzLPzPZ97PZQNymEHa6FDNO5NZk=
+	t=1771402358; cv=none; b=C+9xscype/VFR30qyEp23NBnFegOrAkz+zXxkqBCH4ObFeGd22gbaqva2SBjKqAxniS+HXGkV+MvUXbZHyBzAjjMqJEF2Dx00qRTASxuBHpDZZ9Ywv4apk/C6bAYy2CZtzrqchUEPHtX9fwFfpOTkgtsa5r8CoXZE993VdeNFWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771394381; c=relaxed/simple;
-	bh=DLItL20ZbEHuUuPcnGLdYf8yVxg7xkjOqr1FMwt1L3Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s69le79hPBobMFFx89bcTx4eNmCn2zrca2m4+kA399B9Y/CBdP+hho2TBVoucnpEWiSTiVNSlrd76xEw6QnD7V7CD7smsDYNm/+BEA0NLH0gDE6LRgvkQsLqc0eGXiJoBjwZCsd5Swe9B81XRYBRBw6di3dL/SmkspKG/v3+kE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YiHAYhz/; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1771402358; c=relaxed/simple;
+	bh=cn9bRtPL63s+L/kliS2QPtYEnu9wEkOpMMxQLo4/E2w=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=NI972Y5wGHbz/FE213iujz1ddis6I/T66mWc6CW8r4MrMhcMeaAFyo+dYr0SxqMtmODcbLyyO2N/HPHRlY8/vIZZF+oB94BoIEGM5193B7NEAFzUFBajARPTjv1eUVC8vVPM01S2QBWJ/KIgd3kK11nCBEbHsIdKnZRS8JUEK2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=SoudCh3i; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=GOitX+81; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YiHAYhz/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771394380; x=1802930380;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=DLItL20ZbEHuUuPcnGLdYf8yVxg7xkjOqr1FMwt1L3Y=;
-  b=YiHAYhz/wDVxBXkXPTD6zG/kPVrEsInlzvjOEo2DaBeq+wax+AXETXw9
-   kK9SNXjV1ioN/XzSy4RKw1TB3z4XJu02WhqG/E1qW0ZvTqrHfLL4QJmWj
-   G/XLL3fPEEa9ZCPYGwpa9EvDb8+APXdMClmXq5z82JYUrtdZ/JC+NSvvs
-   yyVDPiftdaKsZNdtYpzzu+LLzOgCwX+0dGa1fkc+vVZkJIyeGxYvuiHTV
-   WUlVlqDE0WOchMQTFl/AEzZd1g9usjoBqnZ3TIryw9qTLox2FGfhug++q
-   OnwU7vwZvn1AhkEHw6fdVtWiBAtn5vYOEk2tDV02VtjzXMkdAlQ3X7ygj
-   w==;
-X-CSE-ConnectionGUID: GXcT8JYNSu+gxq2x8Q5Bsg==
-X-CSE-MsgGUID: kZow7HSfSuabTfgr3uVKlA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11704"; a="72515354"
-X-IronPort-AV: E=Sophos;i="6.21,297,1763452800"; 
-   d="scan'208";a="72515354"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2026 21:59:39 -0800
-X-CSE-ConnectionGUID: vDiaKcdXSNSrTvLxUt+5Yg==
-X-CSE-MsgGUID: R0Aq4GcxSZGgIIjI/Oqtvw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,297,1763452800"; 
-   d="scan'208";a="214211115"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 17 Feb 2026 21:59:37 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vsab1-0000000126m-08zs;
-	Wed, 18 Feb 2026 05:59:35 +0000
-Date: Wed, 18 Feb 2026 13:59:27 +0800
-From: kernel test robot <lkp@intel.com>
-To: Simon Richter <Simon.Richter@hogyros.de>, linux-pci@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, intel-xe@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	Simon Richter <Simon.Richter@hogyros.de>
-Subject: Re: [PATCH 3/5] vgaarb: mark vga_get family as __must_check
-Message-ID: <202602181332.NDKD0g1P-lkp@intel.com>
-References: <20260217170419.236739-4-Simon.Richter@hogyros.de>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="SoudCh3i";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="GOitX+81"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61HJ2Bnl1943469
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 08:12:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=hKZlV/zjE2Jec2OpeZ2fnA
+	tbU0O5jNpjC5Zzj54JMio=; b=SoudCh3imLq2oU6ZjxDWGq5hV9LuNb8hMdba9z
+	ojq/3g7mEHZFFRrl7y4UDbtNPY/XiG64lwQ2k9BtGNwW5OYYBkE5QN1otE5j5jZT
+	BkRYQsdXmEH4MOvyGcvN62/T5T3HXp4PiqY9bF1nyek6QB4wBNL2Hf/57/G+wmtz
+	8yKPlODlzOCYDEU194hbfNTMPAPwpEWB5ISxRLg+4aDuhxBGneql9PnIiPd2xPYx
+	flTG5nDtiJ27GB4oe1E5m+ksN+faIlKBEMnTNpVRKP+s7fgKZlBA2kBrO5XMuaG2
+	KzvcyLTjUIiRrOgHtXNVqTPgrO+46Cvl6WDrKOWI7nnOIMkA==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ccq4g3b59-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 08:12:34 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2a944e6336eso296733345ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 00:12:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1771402354; x=1772007154; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=hKZlV/zjE2Jec2OpeZ2fnAtbU0O5jNpjC5Zzj54JMio=;
+        b=GOitX+81H93knGYFn+IPnoHSc77dudhUXucU7w2N2mbNtfEr5HkRiSaHlDfwcNOVfV
+         ITfEdU2KdruU2k7KTBU/60KqKL5KkWE2G6EtqH4wKR34WyD+a66mgPlZQQygA8y0c426
+         evweFfpyN1nigRxh8W+B/azn0plwiZ15+1kS1jshRpDYeCD+ro57mTg3rN95frLz1DvW
+         nij/kgT/cr8RfxtOZ3VepBXh7Gh/3j0QPCpF98Ott8/RhnaQF8L1YoCXraJlM0BjNfzn
+         hSQ2tPmLRr5UWlbh2aYpUhjifKJu+PEjqphxbw23D4JaH9EQqrrp4IK+pLAMoRV/OtnZ
+         CzEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771402354; x=1772007154;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hKZlV/zjE2Jec2OpeZ2fnAtbU0O5jNpjC5Zzj54JMio=;
+        b=pgv9RPKgJUWe85PKwz7jEmTfaEqSoY+vO/qhIYfpEjpWDlvNBQ37IaJL8jeb3hyf7q
+         Tj0evNTkWNM3+ClszaospuVVDvzS4+9GEqLSj0YDGxznnxwlw6Uv9HESNft6H+99Vrbi
+         1upsmEByCEGDYsdpGO0EWhQlj61ioFyXRYU4hiJhhVPQ2EzqErt+pniPNZ0C7HRjqk+u
+         WDZjZi+TsEWz1hLnLEtUbS7iIShHTBU6CDG8tXcvM4R4huOK3aryOLxMAhPbP+MPeS1Q
+         7BNxhxrPczlNnGDO+rBpAzHoFoXG1SsSyufv2HQU8rIb7OZEPHtW1tGPRQMVHvNkXkhP
+         h0xw==
+X-Forwarded-Encrypted: i=1; AJvYcCVMkxB5bgy4zIxHUC+teD46v4DroKzrRQLsYg2WSJq5g43nrvCHOFqbqpe7PmBRzsqH4Kg6DaqtGuo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPOWoihFPsoWh5SKeDY3Bt/89lZgzFvQJ1ckBeh3gI8T7IYw8o
+	ZDC9MXT3w8plIAu6O7e8lZ+pH6LOAmLAKKd5yNcmVSgZR1GDsO2CgDzKNRfZtgSkoBubhsahSu5
+	WcZerbTQO5wnRzlAlmWwOQtQMcNyxlY8iueikDQIuScqdLjYuwcLjiD61I4w6i5k=
+X-Gm-Gg: AZuq6aLG/wsjQ+pxPECoTalE8l1YboKaNoKBU1E4Xp63gX7QvKEX4Ksg2L3CJvsqx8t
+	gueKmw5zV6c/5zdUuuaeTp9YglbJTOLTzMxh9nQH7IjSITNyQ9hi6SpKfil92fQCs0Tc8KN3ERB
+	nIpu61Hl4Wl5rslE8D0/2Hpu0Xelay132R7uly0nheZrRXi7TONVb7eGsusXfZ1Ti38jDe7Si/Y
+	P4+Lxr1Ha4y6WEFY7Xbe41wJsb79GoODOzlYVGfPPckZD+gQvCLN7I6BIs7NnGuNZuRW6RrWexD
+	udo4d0cHimoIxQ2Poxe+0Zlq4aWiQn91umNEba1azG9xseubuxwvMseibELH/qEy0Xfbc2KnIVD
+	HpMfjbQitusXBiNJH6uakbDcvh/1U+g423lH7InKqVEKv369ol/R49h3R
+X-Received: by 2002:a17:903:2b05:b0:2aa:3b3:d633 with SMTP id d9443c01a7336-2ad50ff1164mr12524595ad.61.1771402353738;
+        Wed, 18 Feb 2026 00:12:33 -0800 (PST)
+X-Received: by 2002:a17:903:2b05:b0:2aa:3b3:d633 with SMTP id d9443c01a7336-2ad50ff1164mr12524395ad.61.1771402353204;
+        Wed, 18 Feb 2026 00:12:33 -0800 (PST)
+Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad1a9d624esm118123685ad.49.2026.02.18.00.12.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Feb 2026 00:12:32 -0800 (PST)
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: [PATCH v7 0/3] PCI: Add support for PCIe WAKE# interrupt
+Date: Wed, 18 Feb 2026 13:42:22 +0530
+Message-Id: <20260218-wakeirq_support-v7-0-0d4689830207@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260217170419.236739-4-Simon.Richter@hogyros.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAGZ0lWkC/23N0QrCIBSA4VcZXudQUbe62ntEhJm2Q21uulkx9
+ u65QRC0mwP/gfOdCQXjwQR0yCbkTYQArk1R7DKka9XeDIZrasQIE5QSjp/qbsD35zB2nfMDtoJ
+ rflGKllqgdNV5Y+G1isdT6hrC4Px7fRDFsv1axZ8VBSaYS25oYZlmRFcuhLwf1UO7psnTQAsZ5
+ Q/DNhiZGEmsKKndc0bEBjPP8wdTuRzb/AAAAA==
+X-Change-ID: 20251104-wakeirq_support-f54c4baa18c5
+To: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+        Pavel Machek <pavel@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Danilo Krummrich <dakr@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bartosz Golaszewski <brgl@bgdev.pl>, Linus Walleij <linusw@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Linus Walleij <linusw@kernel.org>
+Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org,
+        quic_vbadigan@quicinc.com, quic_mrana@quicinc.com, sherry.sun@nxp.com,
+        driver-core@lists.linux.dev,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1771402347; l=3933;
+ i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
+ bh=cn9bRtPL63s+L/kliS2QPtYEnu9wEkOpMMxQLo4/E2w=;
+ b=1NrTUTrlOuXkM10nOweTJb+5me+RqaT/bCS5HXsMXfsEdvuIFx663a7YJjaz1VTUelwNaOP1Q
+ nggN0JcfMQ3DKk5PZt6fd2/sIATbUJC/GcjnDkQjc++4i37OtQ/mhLg
+X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE4MDA3MSBTYWx0ZWRfXyrrAi+rdn0Pg
+ wFZozgQPo0PVrP5FrN9s8h15yv55H3xLNQBMkZDJZdKwTKhLYlq/JxQBBsdKL6WmOsr1fR6GxRk
+ 7oF+j2tZ/NNkzN1Rytyedn5uK2ElEIzi4V2E+5b0mMdslNvsIDfI9qMwYcB/ViuBnrYZjBg1IIK
+ VHYEvVe9+m3+ggIqGEIcn+4q57+5gxs9mziDzrf8uR5ZMYALwAVhH5Xo0/deIAp3P1Qv+axKbpm
+ lhwSQ6CkjSpj5tdTD/DexsYSVzWO6VsdRdvQPzD2TZv4XZAYmJTydXGFw68iZU8zGY1sNYnzCwt
+ u4kgu7ou3BWKqBfFyrLNX0PRWII0ggSlZxmXEGzV41CxhEMfE4oGGgcb9Uof3hm2qA39MMdqpiy
+ 4qfQ0btbN5jVEfqA8+mATCDswK7owyF2/K2dmfjHnCBozddZT6GWC7UK4yb6C7jOccTDfwyn7fP
+ AoAR3tmq3gablFRc5vQ==
+X-Proofpoint-ORIG-GUID: u17ELbwfBMs6dqjwpL03Drp-8c_TZnxE
+X-Proofpoint-GUID: u17ELbwfBMs6dqjwpL03Drp-8c_TZnxE
+X-Authority-Analysis: v=2.4 cv=YdiwJgRf c=1 sm=1 tr=0 ts=69957472 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=Ikd4Dj_1AAAA:8 a=s8YR1HE3AAAA:8
+ a=7FPx-eIICnbx9kjoaAIA:9 a=QEXdDO2ut3YA:10 a=324X-CrmTo6CU4MGRt3R:22
+ a=jGH_LyMDp9YhSvY-UuyI:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-17_04,2026-02-16_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 adultscore=0 spamscore=0 bulkscore=0 malwarescore=0
+ lowpriorityscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
+ definitions=main-2602180071
 
-Hi Simon,
+PCIe WAKE# interrupt is needed for bringing back PCIe device state from
+D3cold to D0.
 
-kernel test robot noticed the following build warnings:
+This is pending from long time, there was two attempts done previously to
+add WAKE# support[1], [2]. Those series tried to add support for legacy
+interrupts along with WAKE#. Legacy interrupts are already available in
+the latest kernel and we can ignore them. For the wake IRQ the series is
+trying to use interrupts property define in the device tree.
 
-[auto build test WARNING on 9702969978695d9a699a1f34771580cdbb153b33]
+This series is using gpio property instead of interrupts, from
+gpio desc driver will allocate the dedicate IRQ.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Simon-Richter/vgaarb-pass-vga_get-errors-to-userspace/20260218-010647
-base:   9702969978695d9a699a1f34771580cdbb153b33
-patch link:    https://lore.kernel.org/r/20260217170419.236739-4-Simon.Richter%40hogyros.de
-patch subject: [PATCH 3/5] vgaarb: mark vga_get family as __must_check
-config: i386-randconfig-141-20260218 (https://download.01.org/0day-ci/archive/20260218/202602181332.NDKD0g1P-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-smatch version: v0.5.0-8994-gd50c5a4c
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260218/202602181332.NDKD0g1P-lkp@intel.com/reproduce)
+WAKE# is added in dts schema and merged based on this patch.
+https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202602181332.NDKD0g1P-lkp@intel.com/
+[1]: https://lore.kernel.org/all/b2b91240-95fe-145d-502c-d52225497a34@nvidia.com/T/
+[2]: https://lore.kernel.org/all/20171226023646.17722-1-jeffy.chen@rock-chips.com/
 
-All warnings (new ones prefixed by >>):
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+---
+Changes in v7:
+- Updated the commit text (Mani).
+- Couple of nits like using pci_err instead of dev_err,
+  use platform_pci_configure_wake(), platform_pci_remove_wake() instead
+  of calling directly calling pci_configure_of_wake_gpio() & pci_remove_of_wake_gpio() etc (Mani).
+- Add a new fwnode_gpiod_get() API that wraps fwnode_gpiod_get_index(..0..), similar to
+  devm_fwnode_gpiod_get() (Mani).
+- Link to v6: https://lore.kernel.org/r/20251127-wakeirq_support-v6-0-60f581f94205@oss.qualcomm.com
 
->> drivers/gpu/drm/i915/display/intel_vga.c:68:2: warning: ignoring return value of function declared with 'warn_unused_result' attribute [-Wunused-result]
-      68 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/gpu/drm/i915/display/intel_vga.c:93:2: warning: ignoring return value of function declared with 'warn_unused_result' attribute [-Wunused-result]
-      93 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~ ~~~~~~~~~~~~~~~~~~~~~~~~
-   2 warnings generated.
+Changes in v6:
+- Change the name to dev_pm_set_dedicated_shared_wake_irq() and make the
+  changes pointed by (Rafael). 
+- Link to v5: https://lore.kernel.org/r/20251107-wakeirq_support-v5-0-464e17f2c20c@oss.qualcomm.com
 
+Changes in v5:
+- Enable WAKE# irq only when there is wake -gpios defined in its device
+  tree node (Bjorn).
+- For legacy bindings for direct atach check in root port if we haven't
+  find the wake in the endpoint node.
+- Instead of hooking wake in driver bound case, do it in the framework
+  irrespective of the driver state (Bjorn).
+- Link to v4: https://lore.kernel.org/r/20250801-wake_irq_support-v4-0-6b6639013a1a@oss.qualcomm.com
 
-vim +/warn_unused_result +68 drivers/gpu/drm/i915/display/intel_vga.c
+Changes in v4:
+- Move wake from portdrv to core framework to endpoint (Bjorn).
+- Added support for multiple WAKE# case (Bjorn). But traverse from
+  endpoint upstream port to root port till you get WAKE#. And use
+  IRQF_SHARED flag for requesting interrupts.
+- Link to v3: https://lore.kernel.org/r/20250605-wake_irq_support-v3-0-7ba56dc909a5@oss.qualcomm.com
 
-0c80d60ae63461 Ville Syrjälä 2025-04-17  43  
-4fb8783165b7c6 Jani Nikula   2019-10-01  44  /* Disable the VGA plane that we never use */
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  45  void intel_vga_disable(struct intel_display *display)
-4fb8783165b7c6 Jani Nikula   2019-10-01  46  {
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  47  	struct pci_dev *pdev = to_pci_dev(display->drm->dev);
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  48  	i915_reg_t vga_reg = intel_vga_cntrl_reg(display);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  49  	enum pipe pipe;
-0c80d60ae63461 Ville Syrjälä 2025-04-17  50  	u32 tmp;
-4fb8783165b7c6 Jani Nikula   2019-10-01  51  	u8 sr1;
-4fb8783165b7c6 Jani Nikula   2019-10-01  52  
-0c80d60ae63461 Ville Syrjälä 2025-04-17  53  	tmp = intel_de_read(display, vga_reg);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  54  	if (tmp & VGA_DISP_DISABLE)
-a3af0140663dc3 Emil Velikov  2021-06-04  55  		return;
-a3af0140663dc3 Emil Velikov  2021-06-04  56  
-0c80d60ae63461 Ville Syrjälä 2025-04-17  57  	if (display->platform.cherryview)
-0c80d60ae63461 Ville Syrjälä 2025-04-17  58  		pipe = REG_FIELD_GET(VGA_PIPE_SEL_MASK_CHV, tmp);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  59  	else if (has_vga_pipe_sel(display))
-0c80d60ae63461 Ville Syrjälä 2025-04-17  60  		pipe = REG_FIELD_GET(VGA_PIPE_SEL_MASK, tmp);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  61  	else
-0c80d60ae63461 Ville Syrjälä 2025-04-17  62  		pipe = PIPE_A;
-0c80d60ae63461 Ville Syrjälä 2025-04-17  63  
-0c80d60ae63461 Ville Syrjälä 2025-04-17  64  	drm_dbg_kms(display->drm, "Disabling VGA plane on pipe %c\n",
-0c80d60ae63461 Ville Syrjälä 2025-04-17  65  		    pipe_name(pipe));
-0c80d60ae63461 Ville Syrjälä 2025-04-17  66  
-4fb8783165b7c6 Jani Nikula   2019-10-01  67  	/* WaEnableVGAAccessThroughIOPort:ctg,elk,ilk,snb,ivb,vlv,hsw */
-4fb8783165b7c6 Jani Nikula   2019-10-01 @68  	vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-f0bb41fad02e03 Jani Nikula   2022-02-02  69  	outb(0x01, VGA_SEQ_I);
-f0bb41fad02e03 Jani Nikula   2022-02-02  70  	sr1 = inb(VGA_SEQ_D);
-f0bb41fad02e03 Jani Nikula   2022-02-02  71  	outb(sr1 | VGA_SR01_SCREEN_OFF, VGA_SEQ_D);
-4fb8783165b7c6 Jani Nikula   2019-10-01  72  	vga_put(pdev, VGA_RSRC_LEGACY_IO);
-4fb8783165b7c6 Jani Nikula   2019-10-01  73  	udelay(300);
-4fb8783165b7c6 Jani Nikula   2019-10-01  74  
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  75  	intel_de_write(display, vga_reg, VGA_DISP_DISABLE);
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  76  	intel_de_posting_read(display, vga_reg);
-4fb8783165b7c6 Jani Nikula   2019-10-01  77  }
-4fb8783165b7c6 Jani Nikula   2019-10-01  78  
+Changes in v3:
+- Update the commit messages, function names etc as suggested by Mani.
+- return wake_irq if returns error (Neil).
+- Link to v2: https://lore.kernel.org/r/20250419-wake_irq_support-v2-0-06baed9a87a1@oss.qualcomm.com
 
+Changes in v2:
+- Move the wake irq teardown after pcie_port_device_remove
+  and move of_pci_setup_wake_irq before pcie_link_rcec (Lukas)
+- teardown wake irq in shutdown also.
+- Link to v1: https://lore.kernel.org/r/20250401-wake_irq_support-v1-0-d2e22f4a0efd@oss.qualcomm.com
+
+---
+Krishna Chaitanya Chundru (3):
+      PM: sleep: wakeirq: Add support for dedicated shared wake IRQ setup
+      gpio: Add fwnode_gpiod_get() helper
+      PCI: Add support for PCIe WAKE# interrupt
+
+ drivers/base/power/wakeirq.c  | 39 ++++++++++++++++++++++++++----
+ drivers/pci/of.c              | 55 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c             |  9 +++++++
+ drivers/pci/pci.h             |  8 +++++++
+ drivers/pci/probe.c           |  2 ++
+ drivers/pci/remove.c          |  1 +
+ include/linux/gpio/consumer.h |  9 +++++++
+ include/linux/pci.h           |  2 ++
+ include/linux/pm_wakeirq.h    |  6 +++++
+ 9 files changed, 126 insertions(+), 5 deletions(-)
+---
+base-commit: cee73b1e840c154f64ace682cb477c1ae2e29cc4
+change-id: 20251104-wakeirq_support-f54c4baa18c5
+
+Best regards,
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+
