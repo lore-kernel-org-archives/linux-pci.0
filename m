@@ -1,50 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A25BA2E8DEC;
-	Wed, 18 Feb 2026 16:36:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFE7333D4EA;
+	Wed, 18 Feb 2026 16:39:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771432607; cv=none; b=C4KIRMYxn3jIS/BmuhSCk5M3pLtf/fFI+5hRxrwinw33mjJiX4aTvH15V5VT1/U7kb70iHNlFoltYWqW205/kQF7/qYCWY11S+Ec1G8jwaV8pbTN7pLBufvSWTfsRmjcf1aXscM8yp78CgVtRA3GvkAJyK4mnsMPICssYPaeaCI=
+	t=1771432771; cv=none; b=QNax6SsLKDNY3DXWkmZJWu9gGgFr6f6IV2VmVdOyyt2NzfFoRtJED6+riDKutz76n+RhSw1B0ccc7bo7DU3P4lsyGNaxPijvm0Qx8IbQOMHHPJJu7tpPD/NuTLpqIYSMzlAIZHSYbwHKn/EzYh3a2pAS2KAbF8YxC1uDT99preY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771432607; c=relaxed/simple;
-	bh=cZtx7DmmsQtOs5cgW5qKB4n145O37dojE3He8nE95zo=;
+	s=arc-20240116; t=1771432771; c=relaxed/simple;
+	bh=NpGp8Mnblggjo5IJmyOgPnGrUykA/Hq6AosixqRXm7s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q6YttDRF3M84XGw1HlF22tBvQTbmoeGGca7nCP9baohxSRsBRpSgFnyBr87YUA6Qc4YfUiCQHQZSRec0tD76pz8LOa7n/6v9+0ofXxFH4aQvR/+278+B8XFnhdhuezc1jbsWzr2ZECQ6CW6hl1+rHyICsjg8hRvL/L21SFx795Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fug49kQ0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=pCaUr8TD3Dq9NMZgM+uJWc9V1gx9gnm3U4I3OSMYx3+tqTyjXUr6H1ydx+wtzlU2UO3jtIMX5RYLE+sXk8WPeRnam9jwc1tSMDouVtnGGR9S+QIndkTL5dbuL71X2WQFk6cIpmzem/KvGQ4TfdVOn0PqCVcErvaIIDM0/uScLnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZJpoOlQn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fug49kQ0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7FDFC19422;
-	Wed, 18 Feb 2026 16:36:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZJpoOlQn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C274C116D0;
+	Wed, 18 Feb 2026 16:39:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771432607;
-	bh=cZtx7DmmsQtOs5cgW5qKB4n145O37dojE3He8nE95zo=;
+	s=k20201202; t=1771432770;
+	bh=NpGp8Mnblggjo5IJmyOgPnGrUykA/Hq6AosixqRXm7s=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fug49kQ0NHqozjO5RhVCrMU8ypPZA00+VlJC0RtLfwOiwTrTsRf8S9uxBEeY3Fx52
-	 gZYf8UAcDQmTi33jZOluEQboWW98K2KdS4NIJFpTgSVnYadztiVP+qanW+tPy8acfn
-	 XAiAWRG7WhyNaelPsMUid9SeLvFpVXfrWXLX73cTDEew/H0UG//raP72EuZchNr6p7
-	 jIFBakoVL/HKfUOUmZtpj/brKU/VbuyMELHQqMim+FLABVBA6c3DoE99WU7y12vXbT
-	 wuhJDV+LAsqhZh/sCiM8XG7N58VNHGgmx4IeLbxyZHz0Leb2veGbamTuWxSgLLJf9A
-	 2sOLASP+7kJLg==
-Date: Wed, 18 Feb 2026 22:06:29 +0530
+	b=ZJpoOlQn+5H4n8CGMHMFIqWAiSPuh1Tg5sEkCz5ZXTxn3tmZ/GBYIgAb3mwud2+1j
+	 GPI6Hw7JqQgjKQUfGo5HAVWrSGV9BNWEKr2ALwTVThhUrHa9KZGtHRKM1DfegNiVRY
+	 zAp/zkIJeD2frw0JOkOty8j+ndT1QjwJr2b/GDMiFBQ2+iZDVkJTY27IUZEx+hdIWy
+	 ogcYsaTGBPhI6NK46YjEn8K9DpK8a/eaQ/4i8+hAFrcMJKxSrM5ss6n+jMDXFTn5J5
+	 fjMUKendEH/8VosZ4tDp4BIXdrVT/popEMLQp1FT2bWWh/yUoacda97VpIkmjg19Gu
+	 wjISZnBHp3FBQ==
+Date: Wed, 18 Feb 2026 22:09:13 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sean Anderson <sean.anderson@linux.dev>
-Cc: "Pandey, Radhey Shyam" <radhey.shyam.pandey@amd.com>, 
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Vinod Koul <vkoul@kernel.org>, 
-	"linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"Simek, Michal" <michal.simek@amd.com>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
-	"Havalige, Thippeswamy" <thippeswamy.havalige@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Conor Dooley <conor+dt@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/8] dt-bindings: pci: xilinx-nwl: Add resets
-Message-ID: <rli6pqtityds6xitz5ki3fxzwd63i2hsovlopikpz6xnjf4ial@x4iiu2xzdsdg>
-References: <20260203002128.935842-1-sean.anderson@linux.dev>
- <20260203002128.935842-2-sean.anderson@linux.dev>
- <MN0PR12MB59537BC8B60D76CCE0B1391CB798A@MN0PR12MB5953.namprd12.prod.outlook.com>
- <89516358-7b13-43ad-b303-1731f61d72e7@linux.dev>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Frank.Li@nxp.com, jdmason@kudzu.us, dave.jiang@intel.com, 
+	allenbh@gmail.com, kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com, 
+	jbrunet@baylibre.com, lpieralisi@kernel.org, yebin10@huawei.com, 
+	geert+renesas@glider.be, arnd@arndb.de
+Subject: Re: [PATCH v4 0/7] PCI: endpoint/NTB: Harden vNTB resource management
+Message-ID: <eazctmg7ptxadg4oq34e2ydib2frm4x76f6jpzm763uswocufl@uwpz5zhkd7sr>
+References: <20251202072348.2752371-1-den@valinux.co.jp>
+ <7hqhqbtqvrw6bqraykdbccllags6gyal6rekb6yehcfx2tzhet@lex46cqheta5>
+ <ap43e4jypppkpavrhf4ewgeivwnfrlldykkqyf3oqk6i4ckbhx@cg47vhgjzbrc>
+ <zet2ktcxydgsbf5ij4476vqqrb4apwfk2iag737ht5htphobhs@3dbc6i4vl26y>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,105 +49,129 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <89516358-7b13-43ad-b303-1731f61d72e7@linux.dev>
+In-Reply-To: <zet2ktcxydgsbf5ij4476vqqrb4apwfk2iag737ht5htphobhs@3dbc6i4vl26y>
 
-On Thu, Feb 05, 2026 at 10:47:21AM -0500, Sean Anderson wrote:
-> On 2/4/26 03:32, Pandey, Radhey Shyam wrote:
-> > [AMD Official Use Only - AMD Internal Distribution Only]
-> > 
-> >> -----Original Message-----
-> >> From: Sean Anderson <sean.anderson@linux.dev>
-> >> Sent: Tuesday, February 3, 2026 5:51 AM
-> >> To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>; Vinod Koul
-> >> <vkoul@kernel.org>; linux-phy@lists.infradead.org
-> >> Cc: Krzysztof Wilczyński <kwilczynski@kernel.org>; Lorenzo Pieralisi
-> >> <lpieralisi@kernel.org>; Pandey, Radhey Shyam
-> >> <radhey.shyam.pandey@amd.com>; linux-kernel@vger.kernel.org; Simek, Michal
-> >> <michal.simek@amd.com>; linux-arm-kernel@lists.infradead.org; linux-
-> >> pci@vger.kernel.org; Neil Armstrong <neil.armstrong@linaro.org>; Rob Herring
-> >> <robh@kernel.org>; Havalige, Thippeswamy <thippeswamy.havalige@amd.com>;
-> >> Manivannan Sadhasivam <mani@kernel.org>; Bjorn Helgaas
-> >> <bhelgaas@google.com>; Sean Anderson <sean.anderson@linux.dev>; Conor
-> >> Dooley <conor+dt@kernel.org>; Krzysztof Kozlowski <krzk+dt@kernel.org>;
-> >> devicetree@vger.kernel.org
-> >> Subject: [PATCH 1/8] dt-bindings: pci: xilinx-nwl: Add resets
-> >>
-> >> Add resets so we can hold the bridge in reset while we perform phy calibration.
-> > 
-> > Seems like this should a required property?
+On Thu, Feb 19, 2026 at 01:36:16AM +0900, Koichiro Den wrote:
+> On Wed, Feb 18, 2026 at 09:52:08PM +0530, Manivannan Sadhasivam wrote:
+> > On Wed, Feb 18, 2026 at 09:45:22PM +0530, Manivannan Sadhasivam wrote:
+> > > On Tue, Dec 02, 2025 at 04:23:41PM +0900, Koichiro Den wrote:
+> > > > The vNTB endpoint function (pci-epf-vntb) can be configured and reconfigured
+> > > > through configfs (link/unlink functions, start/stop the controller, update
+> > > > parameters). In practice, several pitfalls present: double-unmapping when two
+> > > > windows share a BAR, wrong parameter order in .drop_link leading to wrong
+> > > > object lookups, duplicate EPC teardown that leads to oopses, a work item
+> > > > running after resources were torn down, and inability to re-link/restart
+> > > > fundamentally because ntb_dev was embedded and the vPCI bus teardown was
+> > > > incomplete.
+> > > > 
+> > > > This series addresses those issues and hardens resource management across NTB
+> > > > EPF and PCI EP core:
+> > > > 
+> > > > - Avoid double iounmap when PEER_SPAD and CONFIG share the same BAR.
+> > > > - Fix configfs .drop_link parameter order so the correct groups are used during
+> > > >   unlink.
+> > > > - Remove duplicate EPC resource teardown in both pci-epf-vntb and pci-epf-ntb,
+> > > >   avoiding crashes on .allow_link failures and during .drop_link.
+> > > > - Stop the delayed cmd_handler work before clearing BARs/doorbells.
+> > > > - Manage ntb_dev as a devm-managed allocation and implement .remove() in the
+> > > >   vNTB PCI driver. Switch to pci_scan_root_bus().
+> > > > 
+> > > > With these changes, the controller can now be stopped, a function unlinked,
+> > > > configfs settings updated, and the controller re-linked and restarted
+> > > > without rebooting the endpoint, as long as the underlying pci_epc_ops
+> > > > .stop() is non-destructive and .start() restores normal operation.
+> > > > 
+> > > > Patches 1-5 carry Fixes tags and are candidates for stable.
+> > > > Patch 6 is a preparatory one for Patch 7.
+> > > > Patch 7 is a behavioral improvement that completes lifetime management for
+> > > > relink/restart scenarios.
+> > > > 
+> > > 
+> > > Are there any dependencies between pci-epf-vntb and ntb-epf drivers? If they are
+> > > not dependent, you should always post them separately.
 > 
-> It's optional as it does not exist in previous versions of the
-> devicetree. In the past I have received pushback against making these
-> sort of properties required.
+> I'll make sure to be more careful.
 > 
-> If the resets don't exist we just don't assert them and assume the
-> bootloader has deasserted them.
+> > > For this series, I can
+> > > merge the endpoint patches (except patch 4 which got merged in other form).
+> > > 
+> > 
+> > Sry, patch 2.
+> 
+> There are no dependencies between Patch 1 and Patch 3-7.
+> 
+> One minor note: I just realized that the Patch 5 subject is inconsistent.
+> 
+>   NTB: epf: vntb: Stop cmd_handler work in epf_ntb_epc_cleanup
+> 
+> should have been
+> 
+>   PCI: endpoint: pci-epf-vntb: Stop cmd_handler work in epf_ntb_epc_cleanup
+> 
+> If possible, could you please adjust the subject when applying?
 > 
 
-If the resets are pretty much required for the hardware functionality, we can
-mark them as required in the binding and accept the ABI breakage. This scenario
-keeps coming with devicetree as the initial devicetree bindings lacked full
-hardware description in most of the cases.
+Will do.
 
 - Mani
 
-> --Sean
+> Best regards,
+> Koichiro
 > 
-> > Rest looks fine to me.
 > > 
-> >>
-> >> Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
-> >> ---
-> >>
-> >>  .../devicetree/bindings/pci/xlnx,nwl-pcie.yaml  | 17 +++++++++++++++++
-> >>  1 file changed, 17 insertions(+)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml
-> >> b/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml
-> >> index 9de3c09efb6e..7efb3dd9955f 100644
-> >> --- a/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml
-> >> +++ b/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml
-> >> @@ -69,6 +69,18 @@ properties:
-> >>    power-domains:
-> >>      maxItems: 1
-> >>
-> >> +  resets:
-> >> +    maxItems: 3
-> >> +
-> >> +  reset-names:
-> >> +    items:
-> >> +      - description: APB register block reset
-> >> +        const: cfg
-> >> +      - description: AXI-PCIe bridge reset
-> >> +        const: bridge
-> >> +      - description: PCIe MAC reset
-> >> +        const: ctrl
-> >> +
-> >>    iommus:
-> >>      maxItems: 1
-> >>
-> >> @@ -117,6 +129,7 @@ examples:
-> >>      #include <dt-bindings/interrupt-controller/irq.h>
-> >>      #include <dt-bindings/phy/phy.h>
-> >>      #include <dt-bindings/power/xlnx-zynqmp-power.h>
-> >> +    #include <dt-bindings/reset/xlnx-zynqmp-resets.h>
-> >>      soc {
-> >>          #address-cells = <2>;
-> >>          #size-cells = <2>;
-> >> @@ -146,6 +159,10 @@ examples:
-> >>              msi-parent = <&nwl_pcie>;
-> >>              phys = <&psgtr 0 PHY_TYPE_PCIE 0 0>;
-> >>              power-domains = <&zynqmp_firmware PD_PCIE>;
-> >> +            resets = <&zynqmp_reset ZYNQMP_RESET_PCIE_CFG>,
-> >> +                     <&zynqmp_reset ZYNQMP_RESET_PCIE_BRIDGE>,
-> >> +                     <&zynqmp_reset ZYNQMP_RESET_PCIE_CTRL>;
-> >> +            reset-names = "cfg", "bridge", "ctrl";
-> >>              iommus = <&smmu 0x4d0>;
-> >>              pcie_intc: legacy-interrupt-controller {
-> >>                  interrupt-controller;
-> >> --
-> >> 2.35.1.1320.gc452695387.dirty
+> > - Mani
 > > 
+> > > - Mani
+> > > 
+> > > > 
+> > > > v3->v4 changes:
+> > > >   - Added Reviewed-by tag for [PATCH v3 6/6].
+> > > >   - Corrected patch split by moving the blank-line cleanup,
+> > > >     based on the feedback from Frank.
+> > > >   (No code changes overall.)
+> > > > v2->v3 changes:
+> > > >   - Added Reviewed-by tag for [PATCH v2 4/6].
+> > > >   - Split [PATCH v2 6/6] into two, based on the feedback from Frank.
+> > > >   (No code changes overall.)
+> > > > v1->v2 changes:
+> > > >   - Incorporated feedback from Frank.
+> > > >   - Added Reviewed-by tags (except for patches #4 and #6).
+> > > >   - Fixed a typo in patch #5 title.
+> > > >   (No code changes overall.)
+> > > > 
+> > > > v3: https://lore.kernel.org/all/20251130151100.2591822-1-den@valinux.co.jp/
+> > > > v2: https://lore.kernel.org/all/20251029080321.807943-1-den@valinux.co.jp/
+> > > > v1: https://lore.kernel.org/all/20251023071757.901181-1-den@valinux.co.jp/
+> > > > 
+> > > > 
+> > > > Koichiro Den (7):
+> > > >   NTB: epf: Avoid pci_iounmap() with offset when PEER_SPAD and CONFIG
+> > > >     share BAR
+> > > >   PCI: endpoint: Fix parameter order for .drop_link
+> > > >   PCI: endpoint: pci-epf-vntb: Remove duplicate resource teardown
+> > > >   PCI: endpoint: pci-epf-ntb: Remove duplicate resource teardown
+> > > >   NTB: epf: vntb: Stop cmd_handler work in epf_ntb_epc_cleanup
+> > > >   PCI: endpoint: pci-epf-vntb: Switch vpci_scan_bus() to use
+> > > >     pci_scan_root_bus()
+> > > >   PCI: endpoint: pci-epf-vntb: manage ntb_dev lifetime and fix vpci bus
+> > > >     teardown
+> > > > 
+> > > >  drivers/ntb/hw/epf/ntb_hw_epf.c               |  3 +-
+> > > >  drivers/pci/endpoint/functions/pci-epf-ntb.c  | 56 +-----------
+> > > >  drivers/pci/endpoint/functions/pci-epf-vntb.c | 86 ++++++++++++-------
+> > > >  drivers/pci/endpoint/pci-ep-cfs.c             |  8 +-
+> > > >  4 files changed, 62 insertions(+), 91 deletions(-)
+> > > > 
+> > > > -- 
+> > > > 2.48.1
+> > > > 
+> > > 
+> > > -- 
+> > > மணிவண்ணன் சதாசிவம்
+> > > 
+> > 
+> > -- 
+> > மணிவண்ணன் சதாசிவம்
 
 -- 
 மணிவண்ணன் சதாசிவம்
