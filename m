@@ -1,386 +1,92 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ECAD33D6D7
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 09:52:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41D002D7DC4
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 10:01:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771408336; cv=none; b=hpTDGF2ICBghAhrAN9ZbyKyu9bzWHcO+Mb1J/6Ay/FeVgkXZQpgZ9mgeQBjbJRGq7eY305wpnUmiTLmu2VYIODSHxCywdI+CwkkLHjlh3gcY9TLykoyb++6YNqKuX2g6f7cD8Dn0F88Kka0PHa+jdMlfgvBdLMlcOLZs+N8mJOk=
+	t=1771408898; cv=none; b=jHcIJsxH0bWvfKEntjMb+ePsxaZvYhDRi/m7v3FKPndi83vBfAy5eSYsxznCA4kiXWABgH1S9f0yNjoyBopYixv3mN5DZmEl9/k8yk91amsnYfBguomjUxiLeZNVfyNeis5vyAC+USY6XsU8iaHLZK3urgWlBilaY8jUNcKDuzA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771408336; c=relaxed/simple;
-	bh=+WiMPZuiVWDpA26v84iJj1lyMcSCoRLxU6pm7lV8xo0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tc+pl72w0Rbrz3nopa8xChUWiuwv2KRyvhbHxNnSpxDgZwiXalRqBSNrIrss1g+5lvt5Z8MaZiZ2ZMONDfKQgPRg7k1uHHWUiKn3eN8p+dCcBe8e/hWtYWWJ0IoXP+YAnC2/BYr5isYjRjLUNuFDM5T1NesfFGlAYe6mCDVPrCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=HwDxVjLb; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=HwDxVjLb; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1771408898; c=relaxed/simple;
+	bh=m58O7PVPOQr0/+2MnMIyHDol0SFhNpA2733D8qV8B5A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=m4RA5lHFXHZoU99cNGzRpAmDSKml7SMNVJlDxX2rBqqfnYsvjNAfKJJ/6BNqHEwd94aHlxbVejnCdN8LG8BjMcPP1Q1z1dte2MT7k4GJqUAOgWTVx0o2/NkTAEtNcRU1IX6xasAaNyAiNP6EGJRWppgzzQqd894AGHKDvOWSTRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FBIWtVEa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="HwDxVjLb";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="HwDxVjLb"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 496CB3E6CC;
-	Wed, 18 Feb 2026 09:52:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1771408333; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6an1q48KjRbAhbQVvdoHYoaIrt1Vz4lUP6AS4HcAAwE=;
-	b=HwDxVjLb5rzDl98jUuVjANDuW0gyL4FJdreRStmSyureZa5ALvayYjScEEWK1ueAgSPLG2
-	jNYC5qBwn0mUXSImvJfemPNtD2iXHRxpT8NsXkaDIiLAFbWL3Rn2lg2KJqS46DqXsoWwhM
-	uJJkkR0Y5EEtyMsOifaOGmOjBTifh40=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1771408333; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6an1q48KjRbAhbQVvdoHYoaIrt1Vz4lUP6AS4HcAAwE=;
-	b=HwDxVjLb5rzDl98jUuVjANDuW0gyL4FJdreRStmSyureZa5ALvayYjScEEWK1ueAgSPLG2
-	jNYC5qBwn0mUXSImvJfemPNtD2iXHRxpT8NsXkaDIiLAFbWL3Rn2lg2KJqS46DqXsoWwhM
-	uJJkkR0Y5EEtyMsOifaOGmOjBTifh40=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D48623EA65;
-	Wed, 18 Feb 2026 09:52:12 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 25S1MsyLlWnqfQAAD6G6ig
-	(envelope-from <jgross@suse.com>); Wed, 18 Feb 2026 09:52:12 +0000
-From: Juergen Gross <jgross@suse.com>
-To: linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	xen-devel@lists.xenproject.org,
-	=?UTF-8?q?Marek=20Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
-Subject: [PATCH v2 1/2] xenbus: add xenbus_device parameter to xenbus_read_driver_state()
-Date: Wed, 18 Feb 2026 10:52:04 +0100
-Message-ID: <20260218095205.453657-2-jgross@suse.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260218095205.453657-1-jgross@suse.com>
-References: <20260218095205.453657-1-jgross@suse.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FBIWtVEa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2556EC2BCB5
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 10:01:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771408898;
+	bh=m58O7PVPOQr0/+2MnMIyHDol0SFhNpA2733D8qV8B5A=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=FBIWtVEagYxNybbLeWFhSmozTuipcKaksil5psxnXXKZdeZ6TH1QB+vUnDzAZe2Eq
+	 3Jr9UZKg0+Wm02q4UCDdV7yNRPCmqPpJJrFM6QYPNexflgnjrbU6rUWwXi4IYGPPEb
+	 FzAduE8g5S3AzZ/AEbbZuolWfEd6LXqZGw4WuNkeOud+uFEyjTGHXV/QOO5h5qntgs
+	 76TlLr2pfgNnzLry0jn8uafDfjMDItJSjHGRZ4Inqq6qxrohI15UmpwtHR6uRgszQa
+	 uChviY2PLQ/sLRCfTlx/rx41TK11jnVlhCElVfs20ZbaNl3WHCYNNMQ8SvRJFsZxVr
+	 DAxjEmVdTTTRQ==
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-59e646a4b9eso5548352e87.3
+        for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 02:01:38 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWfYKlCGDCv7rCMuPfE5VR9YecTDbR467ORpOHsEcj5yJyH9gW340IzfhOM8sfrrSoBleMIVj1vdQQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwiS8l0VfzwOoAeL1vDknrhvJhIJRIdHJ/ETPuhe4HGvAzn3m1A
+	JBEV2FpJweKGqxVbEsHSNA8+4tW0Uonkc61PPwrEeBft1LD0b5d6kCKJ9zs27ED6rsrDu0BGE92
+	NbXZr13s/ruDvAt5NxTkRjVC+E9kP1ZQ6V54NzOayKA==
+X-Received: by 2002:a05:6512:39cb:b0:59f:6a01:c18a with SMTP id
+ 2adb3069b0e04-59f6d38d6c2mr5090738e87.50.1771408896561; Wed, 18 Feb 2026
+ 02:01:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -5.80
-X-Spam-Level: 
-X-Spamd-Result: default: False [-5.80 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[17];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[netdev];
-	R_RATELIMIT(0.00)[to_ip_from(RLsote1drt81dzioaq3931x19g)];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
+References: <20260218-wakeirq_support-v7-0-0d4689830207@oss.qualcomm.com>
+In-Reply-To: <20260218-wakeirq_support-v7-0-0d4689830207@oss.qualcomm.com>
+From: Bartosz Golaszewski <brgl@kernel.org>
+Date: Wed, 18 Feb 2026 11:01:23 +0100
+X-Gmail-Original-Message-ID: <CAMRc=MdF92kriuT_-Fbk3pj6YeJiNv6RSiDE7aB0AKL9oFZg5w@mail.gmail.com>
+X-Gm-Features: AaiRm53iJbAvCfNi8W89R1ZOmelHBmdb900XClGvZBpW4TQR7OEInUOA7xLLbTI
+Message-ID: <CAMRc=MdF92kriuT_-Fbk3pj6YeJiNv6RSiDE7aB0AKL9oFZg5w@mail.gmail.com>
+Subject: Re: [PATCH v7 0/3] PCI: Add support for PCIe WAKE# interrupt
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Danilo Krummrich <dakr@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Linus Walleij <linusw@kernel.org>, linux-pm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, quic_vbadigan@quicinc.com, quic_mrana@quicinc.com, 
+	sherry.sun@nxp.com, driver-core@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-In order to prepare checking the xenbus device status in
-xenbus_read_driver_state(), add the pointer to struct xenbus_device
-as a parameter.
+On Wed, Feb 18, 2026 at 9:12=E2=80=AFAM Krishna Chaitanya Chundru
+<krishna.chundru@oss.qualcomm.com> wrote:
+>
+> PCIe WAKE# interrupt is needed for bringing back PCIe device state from
+> D3cold to D0.
+>
+> This is pending from long time, there was two attempts done previously to
+> add WAKE# support[1], [2]. Those series tried to add support for legacy
+> interrupts along with WAKE#. Legacy interrupts are already available in
+> the latest kernel and we can ignore them. For the wake IRQ the series is
+> trying to use interrupts property define in the device tree.
+>
+> This series is using gpio property instead of interrupts, from
+> gpio desc driver will allocate the dedicate IRQ.
+>
+> WAKE# is added in dts schema and merged based on this patch.
+> https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.=
+qualcomm.com/
+>
+> [1]: https://lore.kernel.org/all/b2b91240-95fe-145d-502c-d52225497a34@nvi=
+dia.com/T/
+> [2]: https://lore.kernel.org/all/20171226023646.17722-1-jeffy.chen@rock-c=
+hips.com/
+>
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.co=
+m>
+> ---
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
-Tested-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
-V2:
-- add dev parameter description (kernel test robot)
----
- drivers/net/xen-netfront.c                 | 34 +++++++++++-----------
- drivers/pci/xen-pcifront.c                 |  8 ++---
- drivers/scsi/xen-scsifront.c               |  2 +-
- drivers/xen/xen-pciback/xenbus.c           | 10 +++----
- drivers/xen/xenbus/xenbus_client.c         |  4 ++-
- drivers/xen/xenbus/xenbus_probe.c          |  6 ++--
- drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
- include/xen/xenbus.h                       |  3 +-
- 8 files changed, 36 insertions(+), 33 deletions(-)
+This spans three subsystems, how do you want to get it upstream?
 
-diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index 0969d5c9f6b7..2c414b77dd0f 100644
---- a/drivers/net/xen-netfront.c
-+++ b/drivers/net/xen-netfront.c
-@@ -1646,7 +1646,7 @@ static int xennet_xdp_set(struct net_device *dev, struct bpf_prog *prog,
- 
- 	/* avoid the race with XDP headroom adjustment */
- 	wait_event(module_wq,
--		   xenbus_read_driver_state(np->xbdev->otherend) ==
-+		   xenbus_read_driver_state(np->xbdev, np->xbdev->otherend) ==
- 		   XenbusStateReconfigured);
- 	np->netfront_xdp_enabled = true;
- 
-@@ -1764,9 +1764,9 @@ static struct net_device *xennet_create_dev(struct xenbus_device *dev)
- 	do {
- 		xenbus_switch_state(dev, XenbusStateInitialising);
- 		err = wait_event_timeout(module_wq,
--				 xenbus_read_driver_state(dev->otherend) !=
-+				 xenbus_read_driver_state(dev, dev->otherend) !=
- 				 XenbusStateClosed &&
--				 xenbus_read_driver_state(dev->otherend) !=
-+				 xenbus_read_driver_state(dev, dev->otherend) !=
- 				 XenbusStateUnknown, XENNET_TIMEOUT);
- 	} while (!err);
- 
-@@ -2627,31 +2627,31 @@ static void xennet_bus_close(struct xenbus_device *dev)
- {
- 	int ret;
- 
--	if (xenbus_read_driver_state(dev->otherend) == XenbusStateClosed)
-+	if (xenbus_read_driver_state(dev, dev->otherend) == XenbusStateClosed)
- 		return;
- 	do {
- 		xenbus_switch_state(dev, XenbusStateClosing);
- 		ret = wait_event_timeout(module_wq,
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateClosing ||
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateClosed ||
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateUnknown,
--				   XENNET_TIMEOUT);
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateClosing ||
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateClosed ||
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateUnknown,
-+				XENNET_TIMEOUT);
- 	} while (!ret);
- 
--	if (xenbus_read_driver_state(dev->otherend) == XenbusStateClosed)
-+	if (xenbus_read_driver_state(dev, dev->otherend) == XenbusStateClosed)
- 		return;
- 
- 	do {
- 		xenbus_switch_state(dev, XenbusStateClosed);
- 		ret = wait_event_timeout(module_wq,
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateClosed ||
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateUnknown,
--				   XENNET_TIMEOUT);
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateClosed ||
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateUnknown,
-+				XENNET_TIMEOUT);
- 	} while (!ret);
- }
- 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 11636634ae51..cd22bf984024 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -856,7 +856,7 @@ static void pcifront_try_connect(struct pcifront_device *pdev)
- 	int err;
- 
- 	/* Only connect once */
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
- 	    XenbusStateInitialised)
- 		return;
- 
-@@ -876,7 +876,7 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
- 	enum xenbus_state prev_state;
- 
- 
--	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
-+	prev_state = xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename);
- 
- 	if (prev_state >= XenbusStateClosing)
- 		goto out;
-@@ -895,7 +895,7 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
- 
- static void pcifront_attach_devices(struct pcifront_device *pdev)
- {
--	if (xenbus_read_driver_state(pdev->xdev->nodename) ==
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) ==
- 	    XenbusStateReconfiguring)
- 		pcifront_connect(pdev);
- }
-@@ -909,7 +909,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
- 	struct pci_dev *pci_dev;
- 	char str[64];
- 
--	state = xenbus_read_driver_state(pdev->xdev->nodename);
-+	state = xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename);
- 	if (state == XenbusStateInitialised) {
- 		dev_dbg(&pdev->xdev->dev, "Handle skipped connect.\n");
- 		/* We missed Connected and need to initialize. */
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 924025305753..ef74d4da5ab0 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -1175,7 +1175,7 @@ static void scsifront_backend_changed(struct xenbus_device *dev,
- 			return;
- 		}
- 
--		if (xenbus_read_driver_state(dev->nodename) ==
-+		if (xenbus_read_driver_state(dev, dev->nodename) ==
- 		    XenbusStateInitialised)
- 			scsifront_do_lun_hotplug(info, VSCSIFRONT_OP_ADD_LUN);
- 
-diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-index b11e401f1b1e..4bd1c7a8957e 100644
---- a/drivers/xen/xen-pciback/xenbus.c
-+++ b/drivers/xen/xen-pciback/xenbus.c
-@@ -149,12 +149,12 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
- 
- 	mutex_lock(&pdev->dev_lock);
- 	/* Make sure we only do this setup once */
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
- 	    XenbusStateInitialised)
- 		goto out;
- 
- 	/* Wait for frontend to state that it has published the configuration */
--	if (xenbus_read_driver_state(pdev->xdev->otherend) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->otherend) !=
- 	    XenbusStateInitialised)
- 		goto out;
- 
-@@ -374,7 +374,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev,
- 	dev_dbg(&pdev->xdev->dev, "Reconfiguring device ...\n");
- 
- 	mutex_lock(&pdev->dev_lock);
--	if (xenbus_read_driver_state(pdev->xdev->nodename) != state)
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) != state)
- 		goto out;
- 
- 	err = xenbus_scanf(XBT_NIL, pdev->xdev->nodename, "num_devs", "%d",
-@@ -572,7 +572,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
- 	/* It's possible we could get the call to setup twice, so make sure
- 	 * we're not already connected.
- 	 */
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
- 	    XenbusStateInitWait)
- 		goto out;
- 
-@@ -662,7 +662,7 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
- 	struct xen_pcibk_device *pdev =
- 	    container_of(watch, struct xen_pcibk_device, be_watch);
- 
--	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
-+	switch (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename)) {
- 	case XenbusStateInitWait:
- 		xen_pcibk_setup_backend(pdev);
- 		break;
-diff --git a/drivers/xen/xenbus/xenbus_client.c b/drivers/xen/xenbus/xenbus_client.c
-index 2dc874fb5506..e502435145ae 100644
---- a/drivers/xen/xenbus/xenbus_client.c
-+++ b/drivers/xen/xenbus/xenbus_client.c
-@@ -931,12 +931,14 @@ static int xenbus_unmap_ring_hvm(struct xenbus_device *dev, void *vaddr)
- 
- /**
-  * xenbus_read_driver_state - read state from a store path
-+ * @dev: xenbus device pointer
-  * @path: path for driver
-  *
-  * Returns: the state of the driver rooted at the given store path, or
-  * XenbusStateUnknown if no state can be read.
-  */
--enum xenbus_state xenbus_read_driver_state(const char *path)
-+enum xenbus_state xenbus_read_driver_state(const struct xenbus_device *dev,
-+					   const char *path)
- {
- 	enum xenbus_state result;
- 	int err = xenbus_gather(XBT_NIL, path, "state", "%d", &result, NULL);
-diff --git a/drivers/xen/xenbus/xenbus_probe.c b/drivers/xen/xenbus/xenbus_probe.c
-index 9f9011cd7447..2eed06ba5d38 100644
---- a/drivers/xen/xenbus/xenbus_probe.c
-+++ b/drivers/xen/xenbus/xenbus_probe.c
-@@ -191,7 +191,7 @@ void xenbus_otherend_changed(struct xenbus_watch *watch,
- 		return;
- 	}
- 
--	state = xenbus_read_driver_state(dev->otherend);
-+	state = xenbus_read_driver_state(dev, dev->otherend);
- 
- 	dev_dbg(&dev->dev, "state is %d, (%s), %s, %s\n",
- 		state, xenbus_strstate(state), dev->otherend_watch.node, path);
-@@ -364,7 +364,7 @@ void xenbus_dev_remove(struct device *_dev)
- 	 * closed.
- 	 */
- 	if (!drv->allow_rebind ||
--	    xenbus_read_driver_state(dev->nodename) == XenbusStateClosing)
-+	    xenbus_read_driver_state(dev, dev->nodename) == XenbusStateClosing)
- 		xenbus_switch_state(dev, XenbusStateClosed);
- }
- EXPORT_SYMBOL_GPL(xenbus_dev_remove);
-@@ -514,7 +514,7 @@ int xenbus_probe_node(struct xen_bus_type *bus,
- 	size_t stringlen;
- 	char *tmpstring;
- 
--	enum xenbus_state state = xenbus_read_driver_state(nodename);
-+	enum xenbus_state state = xenbus_read_driver_state(NULL, nodename);
- 
- 	if (state != XenbusStateInitialising) {
- 		/* Device is not new, so ignore it.  This can happen if a
-diff --git a/drivers/xen/xenbus/xenbus_probe_frontend.c b/drivers/xen/xenbus/xenbus_probe_frontend.c
-index f04707d1f667..ca04609730df 100644
---- a/drivers/xen/xenbus/xenbus_probe_frontend.c
-+++ b/drivers/xen/xenbus/xenbus_probe_frontend.c
-@@ -253,7 +253,7 @@ static int print_device_status(struct device *dev, void *data)
- 	} else if (xendev->state < XenbusStateConnected) {
- 		enum xenbus_state rstate = XenbusStateUnknown;
- 		if (xendev->otherend)
--			rstate = xenbus_read_driver_state(xendev->otherend);
-+			rstate = xenbus_read_driver_state(xendev, xendev->otherend);
- 		pr_warn("Timeout connecting to device: %s (local state %d, remote state %d)\n",
- 			xendev->nodename, xendev->state, rstate);
- 	}
-diff --git a/include/xen/xenbus.h b/include/xen/xenbus.h
-index c94caf852aea..15319da65b7f 100644
---- a/include/xen/xenbus.h
-+++ b/include/xen/xenbus.h
-@@ -228,7 +228,8 @@ int xenbus_unmap_ring_vfree(struct xenbus_device *dev, void *vaddr);
- int xenbus_alloc_evtchn(struct xenbus_device *dev, evtchn_port_t *port);
- int xenbus_free_evtchn(struct xenbus_device *dev, evtchn_port_t port);
- 
--enum xenbus_state xenbus_read_driver_state(const char *path);
-+enum xenbus_state xenbus_read_driver_state(const struct xenbus_device *dev,
-+					   const char *path);
- 
- __printf(3, 4)
- void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);
--- 
-2.53.0
-
+Bartosz
