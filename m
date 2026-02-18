@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21077286D57;
-	Wed, 18 Feb 2026 12:25:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81D3E30F7FA;
+	Wed, 18 Feb 2026 12:33:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771417513; cv=none; b=TmRoZYjmE4W7AgvEBJS2sNP8iRDTlBrdplE/OLeWBMtX1/AVHAXxxA+Vgl9WkDNSTL+wrCuDDO1v6DcsYKETG1ygMB/eAaFExFhGQZIyfHsjWVeIY70jSYoZL3LeYPG7UqwLC0ObK0Rc0aFYc0d5nYF0tKnLRiF73YgLAiy+ir0=
+	t=1771418002; cv=none; b=jAWNeRZJO1QdZAjHHEhszSUKJLESJSO123+m40dpC5WbmhmwYSBT8goZHalJV6VMo9eMYFpxINR86EO2qovFlAZP+T4oxOgOxC0WOccFpQhR5SEx0YERKlqWfL2a+ID/3UcPDzpIhYo+Gn3+0kmKy57lNloNv5SxqvghvSSO6Zw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771417513; c=relaxed/simple;
-	bh=t07p9ECT7bUMx/cyw0tO918mUa6oHHrLDEO+w+U6KxQ=;
+	s=arc-20240116; t=1771418002; c=relaxed/simple;
+	bh=onXJKG7ABpWysLLjHoB0FgkcOtPQuvl7ThpLtjN1wno=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ss1YKSwK4Y9DE85p8BE7NcBKzNpX3xU6ytDg8Px/ioNCZWalh1IgmwFxedpSL6TsmsQswQB6TeP4p9g6yZg8CIlV4sgGOrI8pSXBgZAakxmc4lRiXiwka71ABbx0xNHAg4DxATfCeN18SLG86RsmJ0dBb2PgFp2suzOGE8edz+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G8MKFjEo; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=CFGkP5/aBSPhBxdU9/iVDCR04iTk6vt/VG5MFvW8HRzPw9rNYHuiGA2NlRfXgdP7YnDfBBYnYZ9brslmVFwj9pgGBfOfhPX9DdJy4pRydCZ3g8/73t72JvraVRYls+vZP40jWMjHCgblvaxFEZIswskavjqpBSAoU6y3Z/dedIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D9dM+KVn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G8MKFjEo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 586C4C19421;
-	Wed, 18 Feb 2026 12:25:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D9dM+KVn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E19B8C19424;
+	Wed, 18 Feb 2026 12:33:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771417512;
-	bh=t07p9ECT7bUMx/cyw0tO918mUa6oHHrLDEO+w+U6KxQ=;
+	s=k20201202; t=1771418002;
+	bh=onXJKG7ABpWysLLjHoB0FgkcOtPQuvl7ThpLtjN1wno=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=G8MKFjEoCgVvti0AiGuIuWwxjNfB2zr6kx4FokOGUfbyo1S/3iz/l85y70MIHEyLY
-	 aT0YXjqRc1j/y0CyL2YNpYKyACsJ7J6admDaGCj/EdD/DRShc+TFMVzPlBbVfqNur6
-	 geRYT4RU3Ze7rsYd8uClJfafmOd3zal1C0O99W6wAJmpYFG0JyL783bHuWFdzbTtdT
-	 qb3U046hN5Sl1opwcvhMtRjY51OY3Docg13dtisbz7b19TYkY8wriYTv6umfaj13o9
-	 iuRxg88vEY5MrXSdHWlF5Q03gk+pDc00Vw8QdOYlAZfAsHSTcgwIPGyv1AysOszt/Q
-	 WkE9TE3UlqwfA==
-Date: Wed, 18 Feb 2026 17:54:58 +0530
+	b=D9dM+KVnFofAmcGqIps4U3wTWoSnPT8rf5sNM9imouD8LmX0ZYz0s5ivZjJP++vuZ
+	 Oppn+ckqo6ODDrfaT0gzbg/w0mV2vS6YuqM09iu2KoRpY6MiK2rK/aEhmKVUpDeI40
+	 RLrR0bmvc+h45jzRqchndMO9+AdnpuPwtVakvSaQTkIRS9JU3EdChxHEzqcIG/VSot
+	 rIJEnGlvLD2MqsLiEu2ALuKZI1mQDopC914AIBq15v/rqy/AHn69+9wCCfsGgLqT3w
+	 +CFVAJUOSlDgcCxUb4RbCrCqbllyMjhCOc29u7qH7TF//mk4Yjjm9KDqImq+F9S/Ep
+	 ldmd/hUWBobbA==
+Date: Wed, 18 Feb 2026 18:03:07 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Bjorn Andersson <andersson@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bartosz Golaszewski <brgl@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
-Subject: Re: [PATCH 2/2] PCI/pwrctrl: Only create pwrctrl device if the
- device node is of type "pci"
-Message-ID: <5qrvtbr2vnjp2qcopf3fgygto54lsma6bpz37hgjealbuso43u@ijolgjmtk2er>
-References: <20260217-pwrctrl-fixes-7-0-v1-0-b5671e58934f@oss.qualcomm.com>
- <20260217-pwrctrl-fixes-7-0-v1-2-b5671e58934f@oss.qualcomm.com>
- <jmy7rvoatiyvqjfhd27vqqbu64glnksyl23j2akrdb7iet3oqx@c5jxbrplubd3>
+Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Stanimir Varbanov <svarbanov@mm-sol.com>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Prevent GDSC power down on suspend
+Message-ID: <6osboej6luxekrw4okhlbf3irednx7gduhmqbzqkkgd3ldm2cn@esalet4ruwcb>
+References: <20260128-genpd_fix-v1-1-cd45a249d12f@oss.qualcomm.com>
+ <zfs6krk2whthgdjl2s2w4o5pjwimzw37afoiyrqllykrk6jugt@4ijk5iqplohr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,115 +47,92 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <jmy7rvoatiyvqjfhd27vqqbu64glnksyl23j2akrdb7iet3oqx@c5jxbrplubd3>
+In-Reply-To: <zfs6krk2whthgdjl2s2w4o5pjwimzw37afoiyrqllykrk6jugt@4ijk5iqplohr>
 
-On Tue, Feb 17, 2026 at 12:09:56PM -0600, Bjorn Andersson wrote:
-> On Tue, Feb 17, 2026 at 03:48:47PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Wed, Jan 28, 2026 at 08:13:48AM -0600, Bjorn Andersson wrote:
+> On Wed, Jan 28, 2026 at 05:52:42PM +0530, Krishna Chaitanya Chundru wrote:
+> > Currently, the driver expects the devices to remain in D0 across system
+> > suspend, but the genpd framework may still power down the associated
+> > GDSC during suspend. When that happens, the PCIe link goes down and
+> > cannot be recovered on resume.
 > > 
-> > The PCI host bridge node can have non-PCI child nodes as well, like OPP
-> > tables, USB controller node etc...
 > 
-> Yes, but the usb-controller in my case is a PCI child and should be
-> pwrctrl'ed. The entity that I don't want pcictrl to handle is the HUB
-> child on the USB bus.
+> The GDSC is a child of CX, so by keeping it always-on, you effectively
+> put an always-on vote on CX, forever preventing CXPC.
+> 
+> In fact, this is one of the reasons why the PCIe GDSCs on most targets
+> is marked PWRSTS_RET_ON (in the clock driver) so that the "off state"
+> doesn't actually turn off the GDSC, but it relinquishes the inherited
+> vote on CX.
 > 
 
-I was wrong here. More below...
+So this means, you favor the patch that marks the PCIe GDSCs as PWRSTS_RET_ON?
 
-> > So the pwrctrl core must check for the
-> > presence of 'device_type' property with value of "pci" to ensure that the
-> > pwrctrl device is only created for PCI device nodes.
+> > Prevent genpd from turning off the PCIe GDSC by using
+> > dev_pm_genpd_rpm_always_on() so that the power domain stays on while
+> > the controller is suspended. This preserves the link state across
+> > suspend/resume and avoids unrecoverable link failures.
 > > 
-> > Fixes: 4c4132489201 ("PCI/pwrctrl: Add APIs to create, destroy pwrctrl devices")
-> > Reported-by: Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
-> > Closes: https://lore.kernel.org/all/20260212-rb3gen2-upd-gl3590-v1-1-18fb04bb32b0@oss.qualcomm.com
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >  drivers/pci/pwrctrl/core.c | 8 ++++++--
-> >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-> > index 8325858cc379..7404d48427ce 100644
-> > --- a/drivers/pci/pwrctrl/core.c
-> > +++ b/drivers/pci/pwrctrl/core.c
-> > @@ -272,8 +272,9 @@ EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
-> >   * Check whether the pwrctrl device really needs to be created or not. The
-> >   * pwrctrl device will only be created if the node satisfies below requirements:
-> >   *
-> > - * 1. Presence of compatible property to match against the pwrctrl driver (AND)
-> > - * 2. At least one of the power supplies defined in the devicetree node of the
-> > + * 1. Presence of 'device_type = "pci"' property to identify PCI node (AND)
-> > + * 2. Presence of compatible property to match against the pwrctrl driver (AND)
-> > + * 3. At least one of the power supplies defined in the devicetree node of the
-> >   *    device (OR) in the remote endpoint parent node to indicate pwrctrl
-> >   *    requirement.
-> >   */
-> > @@ -281,6 +282,9 @@ static bool pci_pwrctrl_is_required(struct device_node *np)
-> >  {
-> >  	struct device_node *endpoint;
-> >  
-> > +	if (!of_node_is_type(np, "pci"))
-> > +		return false;
 > 
-> This "solves" my problem by no longer attempting to power on the
-> onboard_hub. But it also ensures that Neil's added μPD720201 power
-> controller doesn't power on.
+> We are able to suspend/resume a whole bunch of platforms today, which
+> one are you on?
 > 
-> This is based on the expectation that I shouldn't mark the PCI device
-> (the μPD720201) as device_type = "pci", right? (Doing so makes dtc barf,
-> but the μPD720201 is powered up, and functional).
+> That said, while we can suspend/resume, we're not allowing CXPC today.
+> On many systems the main culprit is the icc_set_bw() vote in
+> qcom_pcie_suspend_noirq().
 > 
 
-Ah, this property is applicable only to bridges, not endpoints. So dt checker
-was right and I was wrong :(
-
-> If this is incorrect, can you please help me understand how the
-> usb-controller@0,0 node should look like in
-> https://lore.kernel.org/all/20260212-rb3gen2-upd-gl3590-v1-1-18fb04bb32b0@oss.qualcomm.com/
-> 
-
-Will the below diff on top of this series help? It checks for the presence of
-the 'pci' prefix in the device compatible, which should always exist for all
-kind of PCI devices including the USB controller and will be absent for the
-internal USB hub, which will have 'usb' prefix.
-
----
-diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-index 7404d48427ce..7754baed67f2 100644
---- a/drivers/pci/pwrctrl/core.c
-+++ b/drivers/pci/pwrctrl/core.c
-@@ -272,20 +272,23 @@ EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
-  * Check whether the pwrctrl device really needs to be created or not. The
-  * pwrctrl device will only be created if the node satisfies below requirements:
-  *
-- * 1. Presence of 'device_type = "pci"' property to identify PCI node (AND)
-- * 2. Presence of compatible property to match against the pwrctrl driver (AND)
-- * 3. At least one of the power supplies defined in the devicetree node of the
-+ * 1. Presence of compatible property with "pci" prefix to match against the
-+ *    pwrctrl driver (AND)
-+ * 2. At least one of the power supplies defined in the devicetree node of the
-  *    device (OR) in the remote endpoint parent node to indicate pwrctrl
-  *    requirement.
-  */
- static bool pci_pwrctrl_is_required(struct device_node *np)
- {
-        struct device_node *endpoint;
-+       const char *compat;
-+       int ret;
- 
--       if (!of_node_is_type(np, "pci"))
-+       ret = of_property_read_string(np, "compatible", &compat);
-+       if (ret < 0)
-                return false;
- 
--       if (!of_property_present(np, "compatible"))
-+       if (!strstarts(compat, "pci"))
-                return false;
- 
-        if (of_pci_supply_present(np))
+Yeah, I still need to look deeply into this part. The stray vote keeps the PCIe
+link active as irq core tries to masks the MSIs at the very end of suspend. This
+design works fine for firmware controlled suspends, but not for kernel
+controlled ones.
 
 - Mani
+
+> Regards,
+> Bjorn
+> 
+> > Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-qcom.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > index 5a318487b2b3f6c61d8f5b1fd5cdf2738a1f1dcd..314cf334a313dff35efaf0c023597e6eef483925 100644
+> > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> > @@ -25,6 +25,7 @@
+> >  #include <linux/pci.h>
+> >  #include <linux/pci-ecam.h>
+> >  #include <linux/pm_opp.h>
+> > +#include <linux/pm_domain.h>
+> >  #include <linux/pm_runtime.h>
+> >  #include <linux/platform_device.h>
+> >  #include <linux/phy/pcie.h>
+> > @@ -2052,6 +2053,11 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
+> >  		pcie->suspended = true;
+> >  	}
+> >  
+> > +	if (pcie->suspended)
+> > +		dev_pm_genpd_rpm_always_on(dev, false);
+> > +	else
+> > +		dev_pm_genpd_rpm_always_on(dev, true);
+> > +
+> >  	/*
+> >  	 * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
+> >  	 * Because on some platforms, DBI access can happen very late during the
+> > 
+> > ---
+> > base-commit: 1f97d9dcf53649c41c33227b345a36902cbb08ad
+> > change-id: 20260128-genpd_fix-3aa413d9a383
+> > 
+> > Best regards,
+> > -- 
+> > Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > 
+> > 
 
 -- 
 மணிவண்ணன் சதாசிவம்
