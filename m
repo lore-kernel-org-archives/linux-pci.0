@@ -1,317 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 539F13019BE;
-	Wed, 18 Feb 2026 16:43:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A8D533A9C5;
+	Wed, 18 Feb 2026 16:59:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771432989; cv=none; b=gwGjM7WdP1Jcpw9bzK1yW5ST/4zs/sVPos/TkHjw4stfQ4iRONPm/x/uT2i8GjlgjTTGUlPY2joFLvRlp/R9dS1WkQBvB5KugRTHwodddVlw7m4JAvh/sTZTUv1Jdmaa0a+aSuhFu6o5/RBYd4oui/zfZ0ErVomGi3Fh104TeAk=
+	t=1771433948; cv=none; b=Bj6wa9qgHIAhAQy03KzQ1UbtGx9koga0ucFhqT/yuwyXsFLn8l7YBEp0dmcg96Fw9AZiBxcDzra3ACvGDvBF1xVCp2bZSd16RVINNW8JMJgsIywnCkS9kFeUkwDl0jzZnMoD9FuoctRsharJjMT5gPZcNm1dfzoaDFttEpCd4To=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771432989; c=relaxed/simple;
-	bh=dj3eQKTqmGH29R7zQS8gpeEsE6QcOmVz4CshF/Dp7is=;
+	s=arc-20240116; t=1771433948; c=relaxed/simple;
+	bh=rv0N2rf5GatvQtHBquY8uQJtkNYnn9jlDezi83Fnk1w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PhskIjLSRUwX46B0eciDC9swwSzFkblshGkM7MYJmap5c45GlpEUW6mXEV1JLXbvJ9+JvSyW1vUdrq6bvgqKPCdyZ4vLt/05CARSBwbHO9Kc1saH30tkTHvzvpL92qSX9bycSrwkkQq8f78HOsCvPl7fij07vC48B2FQf4Ug9tg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cwih0YWG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=VpZVZRiiEVECXi9Cgb5CYgTNgOtfv1ia6vYjCudEHIP92EP64mf7XT24SI/nSVZgWJWJyWI9Gqnii9vnmb4lXlqPEzDWX99PHON+e3dxkalnFFGNVVXwECnhkS+0ooEUY4mIJt5/QJRS0wRyLQs8SlaSvcSJ03VgqbpATlJqyTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iVd1CVn9; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cwih0YWG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EA9DC116D0;
-	Wed, 18 Feb 2026 16:43:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771432988;
-	bh=dj3eQKTqmGH29R7zQS8gpeEsE6QcOmVz4CshF/Dp7is=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cwih0YWGPYmqx/PmT9sZ3jnS9/xW6YwMNTsC5P5U0KGQAMzovasEdfdPDvr1BzUU9
-	 2J+F7HoYScit3dce5srGgeRjDCf8vU9EvuOAuheqmmXmwPT7MqdwjZ+U84/NDRkd+p
-	 nuLQw+YvQdqj3OKVcWhC40p4EjHSb8LzKbwUHdDQXss3wutU2Wa2Y7v1Bnehko6bzA
-	 MQpcRw8BQSDupVUm6ZaLCTatKfRW14+gdP1TvZEZgBdosK2xC/VeS6TJm6mpRgSJZN
-	 si2IHtEAjxRSC7/l9qESmuXi9ZAU2YwmUtCf77XEBV0QW8nLNIJV3qNxKX/HQVVDKC
-	 g+lNRAD8naQUw==
-Date: Wed, 18 Feb 2026 22:12:52 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sean Anderson <sean.anderson@linux.dev>, 
-	Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>, Michal Simek <michal.simek@amd.com>, 
-	Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>, 
-	Vinod Koul <vkoul@kernel.org>, linux-phy@lists.infradead.org, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 7/8] PCI: xilinx-nwl: Reset the core during probe
-Message-ID: <6ugot5mmhaepx5u7b5xatq7d3rwv3nlpl5sfd6hn3whqnojw3o@rc2lietsxpdm>
-References: <20260203002128.935842-1-sean.anderson@linux.dev>
- <20260203002128.935842-8-sean.anderson@linux.dev>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iVd1CVn9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771433946; x=1802969946;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=rv0N2rf5GatvQtHBquY8uQJtkNYnn9jlDezi83Fnk1w=;
+  b=iVd1CVn9BnXCiDkQjaOe7DhL7staLTqHY6jFPCMlGaeEMUfDrJkpOVT4
+   +iHIzFD0x+kIK4vxE251YMaimrebjbV00YFnig3IVLOP74cAqDhNVxjrW
+   ukp/bunmRvssV4tm6u5uk7azxo4YHmVbexgasQUSVLmyTZbSKOqSR5Vp8
+   AlEKnsrA0AFWdmNVUyeO5nVg2LOSxdaq+2hpTw2xNg6tEtlzDYCOyiqwc
+   kVfzQ4qNr5cQQJJsvPRcHAFR6mWCLVn0V/RGk/RhE79kGgM59+dbdbBLW
+   HC0HbJ2e0fPIMXwk1mTcbHfpEXw1ac9NKDT9oBBSfgBRLaQ1t0c/dDNPU
+   Q==;
+X-CSE-ConnectionGUID: qQ8AmmpzTG2kwfCmusdjow==
+X-CSE-MsgGUID: 8IIrChlFSV6dniMjkAajww==
+X-IronPort-AV: E=McAfee;i="6800,10657,11705"; a="83964062"
+X-IronPort-AV: E=Sophos;i="6.21,298,1763452800"; 
+   d="scan'208";a="83964062"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2026 08:59:06 -0800
+X-CSE-ConnectionGUID: pDJla79oSkW0ateKXGfvvw==
+X-CSE-MsgGUID: cNlPIIxzRGO6mWXNNZtOgw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,298,1763452800"; 
+   d="scan'208";a="218775369"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa005.fm.intel.com with ESMTP; 18 Feb 2026 08:59:01 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vskt8-000000012Yu-3H6h;
+	Wed, 18 Feb 2026 16:58:58 +0000
+Date: Thu, 19 Feb 2026 00:58:34 +0800
+From: kernel test robot <lkp@intel.com>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Linus Walleij <linusw@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-pm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-gpio@vger.kernel.org, quic_vbadigan@quicinc.com,
+	quic_mrana@quicinc.com, sherry.sun@nxp.com,
+	driver-core@lists.linux.dev,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: Re: [PATCH v7 3/3] PCI: Add support for PCIe WAKE# interrupt
+Message-ID: <202602190038.BHg9UcM5-lkp@intel.com>
+References: <20260218-wakeirq_support-v7-3-0d4689830207@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260203002128.935842-8-sean.anderson@linux.dev>
+In-Reply-To: <20260218-wakeirq_support-v7-3-0d4689830207@oss.qualcomm.com>
 
-On Mon, Feb 02, 2026 at 07:21:27PM -0500, Sean Anderson wrote:
-> The PCIe core must be held in reset when initializing phys.
-> Assert/deassert the appropriate resets.
-> 
-> Resetting the core also resets the PCIe attributes to their default
-> values, so initialize those too. For the most part the defaults are
-> fine, but there are many attributes that default to an endpoint
-> configuration and must be reprogrammed to function as a root device.
-> We generally follow the controller programming sequence from UG1085.
-> 
-> Xilinx was extremely imaginative and named all the registers ATTR_1,
-> ATTR_2 etc. (with the fields organized in alphabetical order) so we
-> follow the same convention. Only the fields are named, but sometimes a
-> field is split across multiple registers. All the BARs are unused but
-> some are repurposed as bridge registers when used as a root port.
-> 
+Hi Krishna,
 
-Can someone from AMD/Xilinx review this patch?
+kernel test robot noticed the following build errors:
 
-- Mani
+[auto build test ERROR on cee73b1e840c154f64ace682cb477c1ae2e29cc4]
 
-> Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
-> ---
-> 
->  drivers/pci/controller/pcie-xilinx-nwl.c | 177 +++++++++++++++++++++++
->  1 file changed, 177 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-> index 7cfdc21e6f40..b78fbad1efa5 100644
-> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-> @@ -22,6 +22,7 @@
->  #include <linux/pci-ecam.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
-> +#include <linux/reset.h>
->  #include <linux/irqchip/chained_irq.h>
->  
->  #include "../pci.h"
-> @@ -133,6 +134,54 @@
->  #define CFG_DMA_REG_BAR			GENMASK(2, 0)
->  #define CFG_PCIE_CACHE			GENMASK(7, 0)
->  
-> +#define PCIE_ATTR2_AER_CAP_PERMIT_ROOTERR_UPDATE	BIT(0)
-> +
-> +#define PCIE_ATTR25_CPL_TIMEOUT_DISABLE_SUPPORTED	BIT(9)
-> +#define PCIE_ATTR25_INTX_IMPLEMENTED			BIT(8)
-> +#define PCIE_ATTR25_CLASS_CODE				GENMASK(7, 0)
-> +
-> +#define PCIE_ATTR27_DEV_CAP_ENDPOINT_L1_LATENCY		GENMASK(5, 3)
-> +
-> +#define PCIE_ATTR34_HEADER_TYPE				GENMASK(7, 0)
-> +
-> +#define PCIE_ATTR35_LINK_CAP_DLL_ACTIVE_REPORTING	BIT(15)
-> +
-> +#define PCIE_ATTR37_LINK_CAP_MAX_LINK_SPEED		GENMASK(13, 10)
-> +#define PCIE_ATTR37_LINK_CAP_MAX_LINK_SPEED_2_5		1
-> +#define PCIE_ATTR37_LINK_CAP_MAX_LINK_SPEED_5_0		2
-> +#define PCIE_ATTR37_LINK_CAP_BANDWIDTH_NOTIFICATION	BIT(9)
-> +
-> +#define PCIE_ATTR50_CAP_DEVICE_PORT_TYPE		GENMASK(7, 4)
-> +#define PCIE_ATTR50_CAP_NEXTPTR				GENMASK(15, 8)
-> +
-> +#define PCIE_ATTR53_CAP_NEXTPTR				GENMASK(7, 0)
-> +
-> +#define PCIE_ATTR93_LL_REPLAY_TIMEOUT_EN		BIT(15)
-> +
-> +#define PCIE_ATTR97_LTSSM_MAX_LINK_WIDTH		GENMASK(11, 6)
-> +#define PCIE_ATTR97_LINK_CAP_MAX_LINK_WIDTH		GENMASK(5, 0)
-> +
-> +#define PCIE_ATTR100_UPSTREAM_FACING			BIT(6)
-> +
-> +#define PCIE_ATTR101_EN_MSG_ROUTE			GENMASK(15, 5)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_PME_TURN_OFF		BIT(15)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_UNLOCK		BIT(14)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_PME_TO_ACK		BIT(13)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_PM_PME		BIT(12)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_INTD			BIT(11)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_INTC			BIT(10)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_INTB			BIT(9)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_INTA			BIT(8)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_ERR_FATAL		BIT(7)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_ERR_NONFATAL		BIT(6)
-> +#define PCIE_ATTR101_EN_MSG_ROUTE_ERR_COR		BIT(5)
-> +#define PCIE_ATTR101_DISABLE_BAR_FILTERING		BIT(1)
-> +
-> +#define PCIE_ATTR106_VC0_TOTAL_CREDITS_NPH		GENMASK(13, 7)
-> +#define PCIE_ATTR106_VC0_TOTAL_CREDITS_CH		GENMASK(6, 0)
-> +
-> +#define PCIE_ATTR109_VC0_TOTAL_CREDITS_PH		GENMASK(6, 0)
-> +
->  #define INT_PCI_MSI_NR			(2 * 32)
->  
->  /* Readin the PS_LINKUP */
-> @@ -159,6 +208,7 @@ struct nwl_pcie {
->  	void __iomem *pcireg_base;
->  	void __iomem *ecam_base;
->  	struct phy *phy[4];
-> +	struct reset_control *ctrl_reset;
->  	phys_addr_t phys_breg_base;	/* Physical Bridge Register Base */
->  	phys_addr_t phys_pcie_reg_base;	/* Physical PCIe Controller Base */
->  	phys_addr_t phys_ecam_base;	/* Physical Configuration Base */
-> @@ -173,6 +223,115 @@ struct nwl_pcie {
->  	raw_spinlock_t leg_mask_lock;
->  };
->  
-> +static void nwl_pcie_write_attr(struct nwl_pcie *pcie, u32 attr, u16 val)
-> +{
-> +	writel(val, pcie->pcireg_base + attr * 4);
-> +}
-> +
-> +static void nwl_pcie_modify_attr(struct nwl_pcie *pcie, u32 attr, u16 clear,
-> +				u16 set)
-> +{
-> +	u32 val = readl(pcie->pcireg_base + attr * 4);
-> +
-> +	nwl_pcie_write_attr(pcie, attr, (val & ~clear) | set);
-> +}
-> +
-> +static void nwl_pcie_attr_init(struct nwl_pcie *pcie)
-> +{
-> +	unsigned int width;
-> +
-> +	for (width = ARRAY_SIZE(pcie->phy); width; width--)
-> +		if (pcie->phy[width - 1])
-> +			break;
-> +
-> +	/* Set TLP header to type-1 */
-> +	nwl_pcie_modify_attr(pcie, 34, PCIE_ATTR34_HEADER_TYPE, PCI_HEADER_TYPE_BRIDGE);
-> +	nwl_pcie_modify_attr(pcie, 100, PCIE_ATTR100_UPSTREAM_FACING, 0);
-> +
-> +	/* Disable BAR0/1 */
-> +	nwl_pcie_write_attr(pcie, 7, 0);
-> +	nwl_pcie_write_attr(pcie, 8, 0);
-> +	nwl_pcie_write_attr(pcie, 9, 0);
-> +	nwl_pcie_write_attr(pcie, 10, 0);
-> +	/* Enable primary/secondary/subordinate busses, disable latency timer */
-> +	nwl_pcie_write_attr(pcie, 11, 0xffff);
-> +	nwl_pcie_write_attr(pcie, 12, 0x00ff);
-> +	nwl_pcie_write_attr(pcie, 13, 0x0000); /* Disable I/O window */
-> +	nwl_pcie_write_attr(pcie, 14, 0x0000); /* Enable secondary status */
-> +	/* Enable memory window */
-> +	nwl_pcie_write_attr(pcie, 15, (u16)PCI_MEMORY_RANGE_MASK);
-> +	nwl_pcie_write_attr(pcie, 16, (u16)PCI_MEMORY_RANGE_MASK);
-> +	/* Enable 64-bit prefetchable window */
-> +	nwl_pcie_write_attr(pcie, 17,
-> +			    (u16)PCI_PREF_RANGE_MASK | PCI_PREF_RANGE_TYPE_64);
-> +	nwl_pcie_write_attr(pcie, 18,
-> +			    (u16)PCI_PREF_RANGE_MASK | PCI_PREF_RANGE_TYPE_64);
-> +	nwl_pcie_modify_attr(pcie, 101, 0, PCIE_ATTR101_DISABLE_BAR_FILTERING);
-> +
-> +	/* Set class code to PCI_CLASS_BRIDGE_PCI_NORMAL */
-> +	nwl_pcie_write_attr(pcie, 24, PCI_CLASS_BRIDGE_PCI_NORMAL & 0xffff);
-> +	nwl_pcie_modify_attr(pcie, 25, PCIE_ATTR25_CLASS_CODE,
-> +			     PCIE_ATTR25_CPL_TIMEOUT_DISABLE_SUPPORTED |
-> +			     PCI_BASE_CLASS_BRIDGE);
-> +
-> +	/* Enable PCIe capability */
-> +	nwl_pcie_modify_attr(pcie, 53, PCIE_ATTR53_CAP_NEXTPTR, 0x60);
-> +	nwl_pcie_modify_attr(pcie, 50,
-> +			     PCIE_ATTR50_CAP_NEXTPTR |
-> +			     PCIE_ATTR50_CAP_DEVICE_PORT_TYPE,
-> +			     FIELD_PREP(PCIE_ATTR50_CAP_DEVICE_PORT_TYPE,
-> +					PCI_EXP_TYPE_ROOT_PORT));
-> +
-> +	/* Disable MSI(-X) capability */
-> +	nwl_pcie_write_attr(pcie, 41, 0);
-> +	nwl_pcie_write_attr(pcie, 43, 0);
-> +	nwl_pcie_write_attr(pcie, 44, 0);
-> +	nwl_pcie_write_attr(pcie, 45, 0);
-> +	nwl_pcie_write_attr(pcie, 46, 0);
-> +	nwl_pcie_write_attr(pcie, 48, 0);
-> +
-> +	/* Disable DSN capability */
-> +	nwl_pcie_write_attr(pcie, 31, 0);
-> +	nwl_pcie_write_attr(pcie, 82, PCI_CFG_SPACE_SIZE);
-> +
-> +	/* Enable AER */
-> +	nwl_pcie_modify_attr(pcie, 2, 0,
-> +			     PCIE_ATTR2_AER_CAP_PERMIT_ROOTERR_UPDATE);
-> +
-> +	/* Disable L1 latency for root port */
-> +	nwl_pcie_modify_attr(pcie, 27,
-> +			     PCIE_ATTR27_DEV_CAP_ENDPOINT_L1_LATENCY, 0);
-> +
-> +	/* Enable bandwidth notification */
-> +	nwl_pcie_modify_attr(pcie, 37, 0,
-> +			     PCIE_ATTR37_LINK_CAP_BANDWIDTH_NOTIFICATION);
-> +
-> +	/* Set max link width */
-> +	nwl_pcie_write_attr(pcie, 97,
-> +			    FIELD_PREP(PCIE_ATTR97_LTSSM_MAX_LINK_WIDTH, width) |
-> +			    FIELD_PREP(PCIE_ATTR97_LINK_CAP_MAX_LINK_WIDTH, width));
-> +
-> +	/* Route misc. TLPs to controller */
-> +	nwl_pcie_modify_attr(pcie, 101, PCIE_ATTR101_EN_MSG_ROUTE,
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_INTA |
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_INTB |
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_INTC |
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_INTD |
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_PM_PME |
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_PME_TO_ACK |
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_UNLOCK |
-> +			     PCIE_ATTR101_EN_MSG_ROUTE_PME_TURN_OFF);
-> +
-> +	/* Initialize completion credits */
-> +	nwl_pcie_write_attr(pcie, 105, 205); /* CD */
-> +	nwl_pcie_write_attr(pcie, 106,
-> +			    FIELD_PREP(PCIE_ATTR106_VC0_TOTAL_CREDITS_NPH, 12) |
-> +			    FIELD_PREP(PCIE_ATTR106_VC0_TOTAL_CREDITS_CH, 36));
-> +	nwl_pcie_write_attr(pcie, 107, 24); /* NPD */
-> +	nwl_pcie_write_attr(pcie, 108, 181); /* PD */
-> +	nwl_pcie_modify_attr(pcie, 109, PCIE_ATTR109_VC0_TOTAL_CREDITS_PH, 32);
-> +}
-> +
->  static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
->  {
->  	return readl(pcie->breg_base + off);
-> @@ -806,6 +965,9 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
->  	irq_set_chained_handler_and_data(pcie->irq_intx,
->  					 nwl_pcie_leg_handler, pcie);
->  
-> +	pcie->ctrl_reset = devm_reset_control_get_optional(dev, "ctrl");
-> +	if (IS_ERR(pcie->ctrl_reset))
-> +		return PTR_ERR(pcie->ctrl_reset);
->  
->  	for (i = 0; i < ARRAY_SIZE(pcie->phy); i++) {
->  		pcie->phy[i] = devm_of_phy_get_by_index(dev, dev->of_node, i);
-> @@ -852,6 +1014,12 @@ static int nwl_pcie_probe(struct platform_device *pdev)
->  	if (IS_ERR(pcie->clk))
->  		return PTR_ERR(pcie->clk);
->  
-> +	err = reset_control_assert(pcie->ctrl_reset);
-> +	if (err) {
-> +		dev_err(dev, "could not enter reset\n");
-> +		return err;
-> +	}
-> +
->  	err = clk_prepare_enable(pcie->clk);
->  	if (err) {
->  		dev_err(dev, "can't enable PCIe ref clock\n");
-> @@ -864,6 +1032,15 @@ static int nwl_pcie_probe(struct platform_device *pdev)
->  		goto err_clk;
->  	}
->  
-> +	if (pcie->ctrl_reset)
-> +		nwl_pcie_attr_init(pcie);
-> +
-> +	err = reset_control_deassert(pcie->ctrl_reset);
-> +	if (err) {
-> +		dev_err(dev, "could not release from reset\n");
-> +		goto err_phy_init;
-> +	}
-> +
->  	err = nwl_pcie_phy_power_on(pcie);
->  	if (err) {
->  		dev_err(dev, "could not power on PHYs\n");
-> -- 
-> 2.35.1.1320.gc452695387.dirty
-> 
+url:    https://github.com/intel-lab-lkp/linux/commits/Krishna-Chaitanya-Chundru/PM-sleep-wakeirq-Add-support-for-dedicated-shared-wake-IRQ-setup/20260218-162247
+base:   cee73b1e840c154f64ace682cb477c1ae2e29cc4
+patch link:    https://lore.kernel.org/r/20260218-wakeirq_support-v7-3-0d4689830207%40oss.qualcomm.com
+patch subject: [PATCH v7 3/3] PCI: Add support for PCIe WAKE# interrupt
+config: sparc64-randconfig-002-20260218 (https://download.01.org/0day-ci/archive/20260219/202602190038.BHg9UcM5-lkp@intel.com/config)
+compiler: sparc64-linux-gcc (GCC) 12.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260219/202602190038.BHg9UcM5-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202602190038.BHg9UcM5-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   sparc64-linux-ld: drivers/pci/pci.o: in function `platform_pci_configure_wake':
+>> drivers/pci/pci.c:1128:(.text+0x39c8): undefined reference to `pci_configure_of_wake_gpio'
+   sparc64-linux-ld: drivers/pci/pci.o: in function `platform_pci_remove_wake':
+>> drivers/pci/pci.c:1133:(.text+0x39d4): undefined reference to `pci_remove_of_wake_gpio'
+
+
+vim +1128 drivers/pci/pci.c
+
+  1125	
+  1126	void platform_pci_configure_wake(struct pci_dev *dev)
+  1127	{
+> 1128		return pci_configure_of_wake_gpio(dev);
+  1129	}
+  1130	
+  1131	void platform_pci_remove_wake(struct pci_dev *dev)
+  1132	{
+> 1133		return pci_remove_of_wake_gpio(dev);
+  1134	}
+  1135	/**
+  1136	 * pci_update_current_state - Read power state of given device and cache it
+  1137	 * @dev: PCI device to handle.
+  1138	 * @state: State to cache in case the device doesn't have the PM capability
+  1139	 *
+  1140	 * The power state is read from the PMCSR register, which however is
+  1141	 * inaccessible in D3cold.  The platform firmware is therefore queried first
+  1142	 * to detect accessibility of the register.  In case the platform firmware
+  1143	 * reports an incorrect state or the device isn't power manageable by the
+  1144	 * platform at all, we try to detect D3cold by testing accessibility of the
+  1145	 * vendor ID in config space.
+  1146	 */
+  1147	void pci_update_current_state(struct pci_dev *dev, pci_power_t state)
+  1148	{
+  1149		if (platform_pci_get_power_state(dev) == PCI_D3cold) {
+  1150			dev->current_state = PCI_D3cold;
+  1151		} else if (dev->pm_cap) {
+  1152			u16 pmcsr;
+  1153	
+  1154			pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+  1155			if (PCI_POSSIBLE_ERROR(pmcsr)) {
+  1156				dev->current_state = PCI_D3cold;
+  1157				return;
+  1158			}
+  1159			dev->current_state = pmcsr & PCI_PM_CTRL_STATE_MASK;
+  1160		} else {
+  1161			dev->current_state = state;
+  1162		}
+  1163	}
+  1164	
 
 -- 
-மணிவண்ணன் சதாசிவம்
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
