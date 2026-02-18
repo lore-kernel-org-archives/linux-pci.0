@@ -1,293 +1,334 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69A2034164B
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 17:33:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 072DF32ED55;
+	Wed, 18 Feb 2026 17:44:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771436007; cv=none; b=MgLiMjpJRCLT9js0tG08ZbsPi5DlDFhdT+gRcD+9lAAIHpWQgEbn4LlerdxWcJgzBOhbS5kSU/qZV/v6Y/FaBIHig63XD84O1LZCVMnWfIfvg0HwooE88QnZVvMcl05WAlIQHPnggsM2u7ZQHpPBpgNGpuI8WSaxn6Iqpyfm7aU=
+	t=1771436654; cv=none; b=lYCqySwj7giIE7TlZ7Qa+fJy8fMpMZjTqESszOSc6KNWm2a3aGhFmlP27TPU8TAEG5+pYuvnxgn8H2oXduZM3PbmyJoZJdf61uEt/sRTJGEsCd2is7BUO270kKbxtKKsNHOeNXj2Lm5wTwnbRnpZZiNypoThXh3kcqMEH5L8Ya4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771436007; c=relaxed/simple;
-	bh=5v9J391b7L6dhILj2Qm9Fm20OyHnHPk6MpFqYhJWXwI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dLabeDXOz/8c6BCBLaAb8ZXFP7LNHcoFkpi93yelQMqA8e0pmnZjzvjnW7AqFiyFeKbkN5GClm70Skbl36t99ZGk58uGoIY75DBRje7P+ONryZa5DbKwT5dS3C5wId3c3j7HI6hbrZ97VG20GPJgn+bn9OgTVPdM/p5RVM6aHvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZTFcljFB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771436654; c=relaxed/simple;
+	bh=Fudqi39z3fKIjZN21JHFU9sp7Q8l8iy+U+/yWrTdC3Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=liOdtZq7VZbQhjU4beMgnep5ZYLiNBjj+ySWeKPJAR6Go1JpKOkk2rL7M7nFBoW5OPBCejki9OSJRMtpJhO0l/Tlde3DMoIg8cgmXMNFWTni2vT0DsIfE19efPYYsZo4xo+V74fNi0A3x287wjV56ZCuUPpzaM3/5TpYt78O/RY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bwaxpARd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZTFcljFB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06F2DC19422
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 17:33:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bwaxpARd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54290C116D0;
+	Wed, 18 Feb 2026 17:44:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771436007;
-	bh=5v9J391b7L6dhILj2Qm9Fm20OyHnHPk6MpFqYhJWXwI=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=ZTFcljFBRpYkPmuT42o/oS0GEXCstvA0/8oWtVkfV1ViqPW8Fzq31+sLP+FExZQps
-	 qVB7owdVCp1RpQIUrwvFb+6vK93PIkGYghE+rsYpNf/pZm9HhZdfgaeooefTsxwznv
-	 goRHHnEWFbhxUU8GkQvTpBF6PygqVWUqmfH5t3M1LrEXF4qFg943XPf81XxqcFMnZy
-	 8ZFlGKTXXaYAixkAVKVt+G66HZXvyDplE2gY18diwb3DiEq5UcaBqrz92OdhH/cY07
-	 FV1W8ZMXfvjXWm5bR3ML83hTlwecLQiQxfCOQD+rJdpbj88gkkoqqiD9tRVrCS01M2
-	 vDGDIOibN/MHQ==
-Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-676815e147dso43300eaf.3
-        for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 09:33:26 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWw+FBsKxgGIOrZ3PZGLbNQuNwXZMkYw+iQJhrER0DquWGibps3VaAUczYxBM2RYcpHmS7PRuG8oJE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywn2qU5FnSn2IAx+tGVaIo7fgQH4OtaszNa8/UnKS9pMfJC3o1j
-	U6sOszSROyNvtOdbczR/8Gm55+TqBhvKHQYFMOMvs08STq3LwYinkzWidnwshS8Q0ecAkYWZHN9
-	QYHutFNJt0m/Yqo/BnNFcNjqAOD2DUhY=
-X-Received: by 2002:a05:6820:1518:b0:679:a463:c933 with SMTP id
- 006d021491bc7-679a7468861mr1398503eaf.71.1771436006075; Wed, 18 Feb 2026
- 09:33:26 -0800 (PST)
+	s=k20201202; t=1771436653;
+	bh=Fudqi39z3fKIjZN21JHFU9sp7Q8l8iy+U+/yWrTdC3Y=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=bwaxpARdI1IwCU7FcAI2SYSxnBe2vufuu+wpk2Yyd/5+yt+PIQZiJ2bIh1nu9+s0S
+	 oHgnfB7ek7MZDe+w7w3//NWm0Xwod0AJDeCeoBt7Hs5w0gVYr3P6MWVFRSArsteZpG
+	 9g/EvgnwdcOgHRse8jAlN5j0YZrt3x1yiPLbjxq4Zkt2ORakaSLb/CY5Mh74Bekwn8
+	 t22kRm8mZo7bBhik52x58TczcFyzmzBLH0XI3WSfwwNo5y+IILXKi37YtiQhUsH4zq
+	 SJC5CvNbWSBGfNRf/Vh06PQ9nK9bwV8FLwuw3AVNnVmkl03XbRDFdJ7pWlqtRMJVFa
+	 I/UhxLmcFSP1g==
+Date: Wed, 18 Feb 2026 11:44:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Juergen Gross <jgross@suse.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	xen-devel@lists.xenproject.org,
+	Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
+Subject: Re: [PATCH v2 1/2] xenbus: add xenbus_device parameter to
+ xenbus_read_driver_state()
+Message-ID: <20260218174411.GA3434134@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com> <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
- <7b4dd756-2ab7-4331-b560-268f9cff0887@linux.intel.com>
-In-Reply-To: <7b4dd756-2ab7-4331-b560-268f9cff0887@linux.intel.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 18 Feb 2026 18:33:15 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0gcZ5vs4WcS0GhvQrG9Kf05LNrNfd+oXz3WDdCA0xGjjw@mail.gmail.com>
-X-Gm-Features: AaiRm51F3J8ThL5jliX9cNzWnrP1r0gGs-YSzm9jCj25p5MijccT6COJNOXZ5-0
-Message-ID: <CAJZ5v0gcZ5vs4WcS0GhvQrG9Kf05LNrNfd+oXz3WDdCA0xGjjw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
- unreliable PME status
-To: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260218095205.453657-2-jgross@suse.com>
 
-On Wed, Feb 18, 2026 at 5:27=E2=80=AFPM Kuppuswamy Sathyanarayanan
-<sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
->
->
->
-> On 2/17/2026 10:08 AM, Rafael J. Wysocki wrote:
-> > On Tue, Feb 17, 2026 at 5:54=E2=80=AFPM Kuppuswamy Sathyanarayanan
-> > <sathyanarayanan.kuppuswamy@linux.intel.com> wrote:
-> >>
-> >> Hi Rafael,
-> >>
-> >> On 2/13/2026 3:14 PM, Kuppuswamy Sathyanarayanan wrote:
-> >>> On Intel Catlow Lake platforms, PCH PCIe root ports do not reliably
-> >>> update PME status registers (PME Status and PME Requester_ID in the
-> >>> Root Status register) during D3hot to D0 transitions, even though PME
-> >>> interrupts are delivered correctly.
-> >>>
-> >>> This issue manifests during PCIe hotplug operations as follows:
-> >>>
-> >>> 1. After a hot-remove event, the PCIe port transitions to D3hot and
-> >>>    the hotplug interrupt enable (HPIE) flag is disabled as the port
-> >>>    enters low power state.
-> >>>
-> >>> 2. When a hot-add occurs while the port is in D3hot, a PME interrupt
-> >>>    fires as expected to wake the port.
-> >>>
-> >>> 3. However, the PME interrupt handler finds the PME_Status and
-> >>>    PME_Requester_ID registers unpopulated, preventing identification
-> >>>    of which device triggered the PME. The handler returns IRQ_NONE,
-> >>>    leaving the port in D3hot.
-> >
-> > I think that you mean the
-> >
-> > if (PCI_POSSIBLE_ERROR(rtsta) || !(rtsta & PCI_EXP_RTSTA_PME))
-> >
-> > check in pcie_pme_irq().  Or do you mean something else?
->
-> Yes, I was referring to the above check.
->
-> >
-> > An alternative workaround might be to add a (new) "always poll PME"
-> > flag for the port in question that will cause it to go to pci_pme_list
-> > in pci_pme_active() every time wakeup is enabled (essentially, an
-> > override for pme_poll clearing).
->
-> I will check whether this approach works. I want to make sure the poll
-> logic eventually triggers the hotplug handler to detect slot state
-> changes.
->
-> But if you think there is no power-related issue with keeping these ports
-> in D0, then we can adopt the pm_runtime_disable() approach. I think this
-> approach looks clean and simple.
->
-> What's your preference?
+On Wed, Feb 18, 2026 at 10:52:04AM +0100, Juergen Gross wrote:
+> In order to prepare checking the xenbus device status in
+> xenbus_read_driver_state(), add the pointer to struct xenbus_device
+> as a parameter.
+> 
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> Tested-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> ---
+> V2:
+> - add dev parameter description (kernel test robot)
+> ---
+>  drivers/net/xen-netfront.c                 | 34 +++++++++++-----------
+>  drivers/pci/xen-pcifront.c                 |  8 ++---
 
-First, keeping the ports in D0 may gate runtime PC10.  Does it not?
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# drivers/pci/xen-pcifront.c
 
-Second, I'd use pm_runtime_get_sync() in the quirk as I said because
-pm_runtime_disable() generally breaks runtime PM dependency chains
-between devices and may cause subtle side-effects to appear.
-
-> >
-> >>> 4. Because the port remains in D3hot with HPIE disabled, the hotplug
-> >>>    driver ignores the hot-add event, resulting in the newly inserted
-> >>>    device not being recognized.
-> >>>
-> >>> The PME interrupt delivery mechanism itself works correctly;
-> >>> interrupts arrive reliably. The problem is purely the missing status
-> >>> register updates. Verification via IOSF-SideBand (IOSF-SB) backdoor
-> >>> reads confirms that these registers remain empty when the PME
-> >>> interrupt fires. Neither BIOS nor kernel code is clearing these
-> >>> registers.
-> >>>
-> >>> This issue is present in all steppings of Catlow Lake PCH and affects
-> >>> customers in production deployments. A public hardware errata documen=
-t
-> >>> is not yet available.
-> >>>
-> >>> Work around this issue by disabling runtime PM for affected ports,
-> >>> keeping them in D0 during runtime operation. This ensures hotplug
-> >>> events are handled via direct interrupts rather than relying on
-> >>> unreliable PME-based wakeup.
-> >>>
-> >>> During system suspend/resume, PCIe ports are resumed unconditionally
-> >>> when coming out of system sleep due to DPM_FLAG_SMART_SUSPEND set by
-> >>> pcie_portdrv_probe(), and pciehp re-enables interrupts and checks slo=
-t
-> >>> occupation status during resume.
-> >>>
-> >>> The quirk is applied only to Catlow PCH PCIe root ports (device IDs
-> >>> 0x7a30 through 0x7a4b). Catlow CPU PCIe ports are not affected as
-> >>> they are not hotplug-capable.
-> >>>
-> >>> Suggested-by: Lukas Wunner <lukas@wunner.de>
-> >>> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy=
-@linux.intel.com>
-> >>> ---
-> >>
-> >> Could you please review this patch and let us know if calling
-> >> pm_runtime_disable() from a PCI quirk is acceptable?
-> >>
-> >> The quirk keeps specific Catlow Lake PCH PCIe root ports in D0 to
-> >> work around a hardware bug where PME status registers are not reliably
-> >> updated during D3hot to D0 transitions, causing hotplug events to be
-> >> missed.
-> >>
-> >> System suspend/resume is unaffected as DPM_FLAG_SMART_SUSPEND ensures
-> >> ports are resumed unconditionally and pciehp checks slot occupation
-> >> on resume.
-> >>
-> >>
-> >>>
-> >>> Changes since v1:
-> >>>  * Removed hack in hotplug driver and disabled runtime PM on affected=
- ports.
-> >>>  * Fixed the commit log and comments accordingly.
-> >>>
-> >>>  drivers/pci/quirks.c | 49 ++++++++++++++++++++++++++++++++++++++++++=
-++
-> >>>  1 file changed, 49 insertions(+)
-> >>>
-> >>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >>> index 280cd50d693b..779cd65b1a8a 100644
-> >>> --- a/drivers/pci/quirks.c
-> >>> +++ b/drivers/pci/quirks.c
-> >>> @@ -6340,3 +6340,52 @@ static void pci_mask_replay_timer_timeout(stru=
-ct pci_dev *pdev)
-> >>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_t=
-imer_timeout);
-> >>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_t=
-imer_timeout);
-> >>>  #endif
-> >>> +
-> >>> +/*
-> >>> + * Intel Catlow Lake PCH PCIe root ports have a hardware issue where
-> >>> + * PME status registers (PME Status and PME Requester_ID in Root Sta=
-tus)
-> >>> + * are not reliably updated during D3hot to D0 transitions, even tho=
-ugh
-> >>> + * PME interrupts are delivered correctly.
-> >>> + *
-> >>> + * When a hotplug event occurs while the port is in D3hot, the PME
-> >>> + * interrupt fires but the status registers remain empty. This preve=
-nts
-> >>> + * the PME handler from identifying the event source, leaving the po=
-rt
-> >>> + * in D3hot and causing the hotplug driver to miss the event.
-> >>> + *
-> >>> + * Disable runtime PM to keep these ports in D0, ensuring hotplug ev=
-ents
-> >>> + * are handled via direct interrupts.
-> >>> + */
-> >>> +static void quirk_intel_catlow_pcie_no_pme_wakeup(struct pci_dev *de=
-v)
-> >>> +{
-> >>> +     pm_runtime_disable(&dev->dev);
-> >
-> > Personally, I would use pm_runtime_get_sync() here instead which would
-> > really mean "never suspend".
-> >
-> >>> +     pci_info(dev, "Catlow PCH port: PME status unreliable, disablin=
-g runtime PM\n");
-> >>> +}
-> >>> +/* Apply quirk to Catlow Lake PCH root ports (0x7a30 - 0x7a4b) */
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a30, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a31, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a32, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a33, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a34, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a35, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a36, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a37, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a38, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a39, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3a, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3b, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3c, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3d, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3e, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a3f, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a40, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a41, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a42, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a43, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a44, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a45, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a46, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a47, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a48, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a49, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4a, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7a4b, quirk_intel_cat=
-low_pcie_no_pme_wakeup);
-> >>
-> >> --
-> >> Sathyanarayanan Kuppuswamy
-> >> Linux Kernel Developer
-> >>
-> >
->
-> --
-> Sathyanarayanan Kuppuswamy
-> Linux Kernel Developer
->
->
+>  drivers/scsi/xen-scsifront.c               |  2 +-
+>  drivers/xen/xen-pciback/xenbus.c           | 10 +++----
+>  drivers/xen/xenbus/xenbus_client.c         |  4 ++-
+>  drivers/xen/xenbus/xenbus_probe.c          |  6 ++--
+>  drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
+>  include/xen/xenbus.h                       |  3 +-
+>  8 files changed, 36 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
+> index 0969d5c9f6b7..2c414b77dd0f 100644
+> --- a/drivers/net/xen-netfront.c
+> +++ b/drivers/net/xen-netfront.c
+> @@ -1646,7 +1646,7 @@ static int xennet_xdp_set(struct net_device *dev, struct bpf_prog *prog,
+>  
+>  	/* avoid the race with XDP headroom adjustment */
+>  	wait_event(module_wq,
+> -		   xenbus_read_driver_state(np->xbdev->otherend) ==
+> +		   xenbus_read_driver_state(np->xbdev, np->xbdev->otherend) ==
+>  		   XenbusStateReconfigured);
+>  	np->netfront_xdp_enabled = true;
+>  
+> @@ -1764,9 +1764,9 @@ static struct net_device *xennet_create_dev(struct xenbus_device *dev)
+>  	do {
+>  		xenbus_switch_state(dev, XenbusStateInitialising);
+>  		err = wait_event_timeout(module_wq,
+> -				 xenbus_read_driver_state(dev->otherend) !=
+> +				 xenbus_read_driver_state(dev, dev->otherend) !=
+>  				 XenbusStateClosed &&
+> -				 xenbus_read_driver_state(dev->otherend) !=
+> +				 xenbus_read_driver_state(dev, dev->otherend) !=
+>  				 XenbusStateUnknown, XENNET_TIMEOUT);
+>  	} while (!err);
+>  
+> @@ -2627,31 +2627,31 @@ static void xennet_bus_close(struct xenbus_device *dev)
+>  {
+>  	int ret;
+>  
+> -	if (xenbus_read_driver_state(dev->otherend) == XenbusStateClosed)
+> +	if (xenbus_read_driver_state(dev, dev->otherend) == XenbusStateClosed)
+>  		return;
+>  	do {
+>  		xenbus_switch_state(dev, XenbusStateClosing);
+>  		ret = wait_event_timeout(module_wq,
+> -				   xenbus_read_driver_state(dev->otherend) ==
+> -				   XenbusStateClosing ||
+> -				   xenbus_read_driver_state(dev->otherend) ==
+> -				   XenbusStateClosed ||
+> -				   xenbus_read_driver_state(dev->otherend) ==
+> -				   XenbusStateUnknown,
+> -				   XENNET_TIMEOUT);
+> +				xenbus_read_driver_state(dev, dev->otherend) ==
+> +				XenbusStateClosing ||
+> +				xenbus_read_driver_state(dev, dev->otherend) ==
+> +				XenbusStateClosed ||
+> +				xenbus_read_driver_state(dev, dev->otherend) ==
+> +				XenbusStateUnknown,
+> +				XENNET_TIMEOUT);
+>  	} while (!ret);
+>  
+> -	if (xenbus_read_driver_state(dev->otherend) == XenbusStateClosed)
+> +	if (xenbus_read_driver_state(dev, dev->otherend) == XenbusStateClosed)
+>  		return;
+>  
+>  	do {
+>  		xenbus_switch_state(dev, XenbusStateClosed);
+>  		ret = wait_event_timeout(module_wq,
+> -				   xenbus_read_driver_state(dev->otherend) ==
+> -				   XenbusStateClosed ||
+> -				   xenbus_read_driver_state(dev->otherend) ==
+> -				   XenbusStateUnknown,
+> -				   XENNET_TIMEOUT);
+> +				xenbus_read_driver_state(dev, dev->otherend) ==
+> +				XenbusStateClosed ||
+> +				xenbus_read_driver_state(dev, dev->otherend) ==
+> +				XenbusStateUnknown,
+> +				XENNET_TIMEOUT);
+>  	} while (!ret);
+>  }
+>  
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 11636634ae51..cd22bf984024 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -856,7 +856,7 @@ static void pcifront_try_connect(struct pcifront_device *pdev)
+>  	int err;
+>  
+>  	/* Only connect once */
+> -	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
+> +	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
+>  	    XenbusStateInitialised)
+>  		return;
+>  
+> @@ -876,7 +876,7 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>  	enum xenbus_state prev_state;
+>  
+>  
+> -	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
+> +	prev_state = xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename);
+>  
+>  	if (prev_state >= XenbusStateClosing)
+>  		goto out;
+> @@ -895,7 +895,7 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
+>  
+>  static void pcifront_attach_devices(struct pcifront_device *pdev)
+>  {
+> -	if (xenbus_read_driver_state(pdev->xdev->nodename) ==
+> +	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) ==
+>  	    XenbusStateReconfiguring)
+>  		pcifront_connect(pdev);
+>  }
+> @@ -909,7 +909,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>  	struct pci_dev *pci_dev;
+>  	char str[64];
+>  
+> -	state = xenbus_read_driver_state(pdev->xdev->nodename);
+> +	state = xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename);
+>  	if (state == XenbusStateInitialised) {
+>  		dev_dbg(&pdev->xdev->dev, "Handle skipped connect.\n");
+>  		/* We missed Connected and need to initialize. */
+> diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+> index 924025305753..ef74d4da5ab0 100644
+> --- a/drivers/scsi/xen-scsifront.c
+> +++ b/drivers/scsi/xen-scsifront.c
+> @@ -1175,7 +1175,7 @@ static void scsifront_backend_changed(struct xenbus_device *dev,
+>  			return;
+>  		}
+>  
+> -		if (xenbus_read_driver_state(dev->nodename) ==
+> +		if (xenbus_read_driver_state(dev, dev->nodename) ==
+>  		    XenbusStateInitialised)
+>  			scsifront_do_lun_hotplug(info, VSCSIFRONT_OP_ADD_LUN);
+>  
+> diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
+> index b11e401f1b1e..4bd1c7a8957e 100644
+> --- a/drivers/xen/xen-pciback/xenbus.c
+> +++ b/drivers/xen/xen-pciback/xenbus.c
+> @@ -149,12 +149,12 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
+>  
+>  	mutex_lock(&pdev->dev_lock);
+>  	/* Make sure we only do this setup once */
+> -	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
+> +	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
+>  	    XenbusStateInitialised)
+>  		goto out;
+>  
+>  	/* Wait for frontend to state that it has published the configuration */
+> -	if (xenbus_read_driver_state(pdev->xdev->otherend) !=
+> +	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->otherend) !=
+>  	    XenbusStateInitialised)
+>  		goto out;
+>  
+> @@ -374,7 +374,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev,
+>  	dev_dbg(&pdev->xdev->dev, "Reconfiguring device ...\n");
+>  
+>  	mutex_lock(&pdev->dev_lock);
+> -	if (xenbus_read_driver_state(pdev->xdev->nodename) != state)
+> +	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) != state)
+>  		goto out;
+>  
+>  	err = xenbus_scanf(XBT_NIL, pdev->xdev->nodename, "num_devs", "%d",
+> @@ -572,7 +572,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
+>  	/* It's possible we could get the call to setup twice, so make sure
+>  	 * we're not already connected.
+>  	 */
+> -	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
+> +	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
+>  	    XenbusStateInitWait)
+>  		goto out;
+>  
+> @@ -662,7 +662,7 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
+>  	struct xen_pcibk_device *pdev =
+>  	    container_of(watch, struct xen_pcibk_device, be_watch);
+>  
+> -	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
+> +	switch (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename)) {
+>  	case XenbusStateInitWait:
+>  		xen_pcibk_setup_backend(pdev);
+>  		break;
+> diff --git a/drivers/xen/xenbus/xenbus_client.c b/drivers/xen/xenbus/xenbus_client.c
+> index 2dc874fb5506..e502435145ae 100644
+> --- a/drivers/xen/xenbus/xenbus_client.c
+> +++ b/drivers/xen/xenbus/xenbus_client.c
+> @@ -931,12 +931,14 @@ static int xenbus_unmap_ring_hvm(struct xenbus_device *dev, void *vaddr)
+>  
+>  /**
+>   * xenbus_read_driver_state - read state from a store path
+> + * @dev: xenbus device pointer
+>   * @path: path for driver
+>   *
+>   * Returns: the state of the driver rooted at the given store path, or
+>   * XenbusStateUnknown if no state can be read.
+>   */
+> -enum xenbus_state xenbus_read_driver_state(const char *path)
+> +enum xenbus_state xenbus_read_driver_state(const struct xenbus_device *dev,
+> +					   const char *path)
+>  {
+>  	enum xenbus_state result;
+>  	int err = xenbus_gather(XBT_NIL, path, "state", "%d", &result, NULL);
+> diff --git a/drivers/xen/xenbus/xenbus_probe.c b/drivers/xen/xenbus/xenbus_probe.c
+> index 9f9011cd7447..2eed06ba5d38 100644
+> --- a/drivers/xen/xenbus/xenbus_probe.c
+> +++ b/drivers/xen/xenbus/xenbus_probe.c
+> @@ -191,7 +191,7 @@ void xenbus_otherend_changed(struct xenbus_watch *watch,
+>  		return;
+>  	}
+>  
+> -	state = xenbus_read_driver_state(dev->otherend);
+> +	state = xenbus_read_driver_state(dev, dev->otherend);
+>  
+>  	dev_dbg(&dev->dev, "state is %d, (%s), %s, %s\n",
+>  		state, xenbus_strstate(state), dev->otherend_watch.node, path);
+> @@ -364,7 +364,7 @@ void xenbus_dev_remove(struct device *_dev)
+>  	 * closed.
+>  	 */
+>  	if (!drv->allow_rebind ||
+> -	    xenbus_read_driver_state(dev->nodename) == XenbusStateClosing)
+> +	    xenbus_read_driver_state(dev, dev->nodename) == XenbusStateClosing)
+>  		xenbus_switch_state(dev, XenbusStateClosed);
+>  }
+>  EXPORT_SYMBOL_GPL(xenbus_dev_remove);
+> @@ -514,7 +514,7 @@ int xenbus_probe_node(struct xen_bus_type *bus,
+>  	size_t stringlen;
+>  	char *tmpstring;
+>  
+> -	enum xenbus_state state = xenbus_read_driver_state(nodename);
+> +	enum xenbus_state state = xenbus_read_driver_state(NULL, nodename);
+>  
+>  	if (state != XenbusStateInitialising) {
+>  		/* Device is not new, so ignore it.  This can happen if a
+> diff --git a/drivers/xen/xenbus/xenbus_probe_frontend.c b/drivers/xen/xenbus/xenbus_probe_frontend.c
+> index f04707d1f667..ca04609730df 100644
+> --- a/drivers/xen/xenbus/xenbus_probe_frontend.c
+> +++ b/drivers/xen/xenbus/xenbus_probe_frontend.c
+> @@ -253,7 +253,7 @@ static int print_device_status(struct device *dev, void *data)
+>  	} else if (xendev->state < XenbusStateConnected) {
+>  		enum xenbus_state rstate = XenbusStateUnknown;
+>  		if (xendev->otherend)
+> -			rstate = xenbus_read_driver_state(xendev->otherend);
+> +			rstate = xenbus_read_driver_state(xendev, xendev->otherend);
+>  		pr_warn("Timeout connecting to device: %s (local state %d, remote state %d)\n",
+>  			xendev->nodename, xendev->state, rstate);
+>  	}
+> diff --git a/include/xen/xenbus.h b/include/xen/xenbus.h
+> index c94caf852aea..15319da65b7f 100644
+> --- a/include/xen/xenbus.h
+> +++ b/include/xen/xenbus.h
+> @@ -228,7 +228,8 @@ int xenbus_unmap_ring_vfree(struct xenbus_device *dev, void *vaddr);
+>  int xenbus_alloc_evtchn(struct xenbus_device *dev, evtchn_port_t *port);
+>  int xenbus_free_evtchn(struct xenbus_device *dev, evtchn_port_t port);
+>  
+> -enum xenbus_state xenbus_read_driver_state(const char *path);
+> +enum xenbus_state xenbus_read_driver_state(const struct xenbus_device *dev,
+> +					   const char *path);
+>  
+>  __printf(3, 4)
+>  void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);
+> -- 
+> 2.53.0
+> 
