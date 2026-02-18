@@ -1,69 +1,109 @@
-Received: from psionic.psi5.com (psionic.psi5.com [185.187.169.70])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07468328B44
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 13:47:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.187.169.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F72E32862F;
+	Wed, 18 Feb 2026 13:49:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771422429; cv=none; b=cF8UR2/yXFlZnVQVpnmsE1xSUZ2Cxf+0id27Rqqk/LunQXyCUvE4SmM7DEW1PTgqwngoulxf44/IfQu7fyIRFTScbA6/YpywO2q/u0STrLkUKIyeEga8SRjcfozX4rs3VC9+Fz2KvGi54uTb4ojfQxi1o8bSOpEKUZdjU4EGB8c=
+	t=1771422600; cv=none; b=GSzpHug3HO1SjO1Qpgr/JYrjb60NmXTLNviah8W9Xfabifj0+TSz8Ak+HAdCCXy7qOHk3l/5t3fsSRRQtuDjhDtjvWABWvRDt1B3o7wkswE8+JJ7FMza7LgEPFv++R3P2aHSz/bqnCX1z8ATRvO47RCt8VukbIrKZvU4bNECGPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771422429; c=relaxed/simple;
-	bh=YqtN64zjt6WcjFBZVypSO7UTvisvmqOTiwfZumwNiIs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hAUyihXP369NcYJmGoSXxBcd0C27dkiM6rKtHiieNJyiM7Vm0bBRF4YyZv+mKUQ3IH85lNB2vJZdLz72M0srbMWSlwrY0JXZhh8dU+YWaA0xfWu/gekX/nsNPOxz30Bdlo/DgjqpD/TxhiY17mB6HmLKzJ0QzvCOMDeB67EldA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hogyros.de; spf=pass smtp.mailfrom=hogyros.de; arc=none smtp.client-ip=185.187.169.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hogyros.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hogyros.de
-Received: from localhost.localdomain (unknown [IPv6:2400:2410:b120:f200:2e09:4dff:fe00:2e9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by psionic.psi5.com (Postfix) with ESMTPSA id 0E3C83F204;
-	Wed, 18 Feb 2026 14:47:04 +0100 (CET)
-From: Simon Richter <Simon.Richter@hogyros.de>
-To: linux-pci@vger.kernel.org
-Cc: intel-xe@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	Simon Richter <Simon.Richter@hogyros.de>
-Subject: [PATCH v2 5/5] pci: mark return value of pci_set_vga_state as __must_check
-Date: Wed, 18 Feb 2026 22:46:33 +0900
-Message-ID: <20260218134633.461181-6-Simon.Richter@hogyros.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260218134633.461181-1-Simon.Richter@hogyros.de>
-References: <20260217170419.236739-1-Simon.Richter@hogyros.de>
- <20260218134633.461181-1-Simon.Richter@hogyros.de>
+	s=arc-20240116; t=1771422600; c=relaxed/simple;
+	bh=W31iI7LLVILK7kkuE1ElHWcjo1PB1NNAmLYxWimCXC8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MvquV6Mez9HjZS0XF1M7Q6/U4d/rKsl3jlMHm+12qFFvEsnktG9eh2xgHwZ6W+OG9WV969E7VPT0WviPW8FCT531s0sv3K7E3RtPRVS4vcq27/d2fPCEAIFjxoSD5G+Ps9g1y1YcImhf+W0cjVYCVQZe2oB60ubzaGrBKc3/dYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jEQOS/9M; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jEQOS/9M"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771422599; x=1802958599;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=W31iI7LLVILK7kkuE1ElHWcjo1PB1NNAmLYxWimCXC8=;
+  b=jEQOS/9MNPuaHWZ3eXRZkSf3S3Q1+dRlF8qYYjDZcFc2166vo6H8r5Mr
+   6FpSb0MAAuX7xDNqwfA5hM9/L/9tDQnyM115kgF1jHe3CXzVj5iefupIt
+   J7ewS1+Qj1lwU7a/iSPGDD65rBhIZLd+Ct7XRa0GXWkhXBCd7O74EEcTd
+   np+TDfVdkR9jjBQE7ZggbiuVUb5rEZlnpreDQqobTC7ZaUBIxBGmkWzaI
+   rxsO/9Oo5s+yV5FQYcUqUToLprg1+qXh3Mb6J0LQWEY4diQe7DDVRJDqV
+   ifWsgqXQxiP3w7wXB/dtgnLCI7QlgVtRCdFr4G6/Z2YmL7ZdIaU6I7ML9
+   w==;
+X-CSE-ConnectionGUID: o76mS4BiSDC0nkORfIGOTA==
+X-CSE-MsgGUID: BCgjWBHHSQOE3WBrCKLYiQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11704"; a="83120855"
+X-IronPort-AV: E=Sophos;i="6.21,298,1763452800"; 
+   d="scan'208";a="83120855"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2026 05:49:57 -0800
+X-CSE-ConnectionGUID: ZD8PmMrXRNyK6JJMyH8kfw==
+X-CSE-MsgGUID: IULIxgMpT5WculU9T9y3Yw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,298,1763452800"; 
+   d="scan'208";a="218040471"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa004.fm.intel.com with ESMTP; 18 Feb 2026 05:49:54 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vshw7-000000012Oo-1N5a;
+	Wed, 18 Feb 2026 13:49:51 +0000
+Date: Wed, 18 Feb 2026 21:49:38 +0800
+From: kernel test robot <lkp@intel.com>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Linus Walleij <linusw@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-pm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-gpio@vger.kernel.org, quic_vbadigan@quicinc.com,
+	quic_mrana@quicinc.com, sherry.sun@nxp.com,
+	driver-core@lists.linux.dev,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: Re: [PATCH v7 3/3] PCI: Add support for PCIe WAKE# interrupt
+Message-ID: <202602182100.CSUJWXc8-lkp@intel.com>
+References: <20260218-wakeirq_support-v7-3-0d4689830207@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260218-wakeirq_support-v7-3-0d4689830207@oss.qualcomm.com>
 
-This function can return an error, which should be checked.
+Hi Krishna,
 
-The only caller so far is __vga_tryget in vgaarb, which did not check.
+kernel test robot noticed the following build errors:
 
-Signed-off-by: Simon Richter <Simon.Richter@hogyros.de>
----
- include/linux/pci.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[auto build test ERROR on cee73b1e840c154f64ace682cb477c1ae2e29cc4]
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1c270f1d5123..aa1451d402d1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1720,8 +1720,8 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
- #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
- 
--int pci_set_vga_state(struct pci_dev *pdev, bool decode,
--		      unsigned int command_bits, u32 flags);
-+int __must_check pci_set_vga_state(struct pci_dev *pdev, bool decode,
-+				   unsigned int command_bits, u32 flags);
- 
- /*
-  * Virtual interrupts allow for more interrupts to be allocated
+url:    https://github.com/intel-lab-lkp/linux/commits/Krishna-Chaitanya-Chundru/PM-sleep-wakeirq-Add-support-for-dedicated-shared-wake-IRQ-setup/20260218-162247
+base:   cee73b1e840c154f64ace682cb477c1ae2e29cc4
+patch link:    https://lore.kernel.org/r/20260218-wakeirq_support-v7-3-0d4689830207%40oss.qualcomm.com
+patch subject: [PATCH v7 3/3] PCI: Add support for PCIe WAKE# interrupt
+config: sparc-randconfig-001-20260218 (https://download.01.org/0day-ci/archive/20260218/202602182100.CSUJWXc8-lkp@intel.com/config)
+compiler: sparc64-linux-gcc (GCC) 14.3.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260218/202602182100.CSUJWXc8-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202602182100.CSUJWXc8-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   sparc64-linux-ld: drivers/pci/pci.o: in function `platform_pci_configure_wake':
+>> pci.c:(.text+0x5d0c): undefined reference to `pci_configure_of_wake_gpio'
+   sparc64-linux-ld: drivers/pci/pci.o: in function `platform_pci_remove_wake':
+>> pci.c:(.text+0x5d4c): undefined reference to `pci_remove_of_wake_gpio'
+   sparc64-linux-ld: drivers/pci/endpoint/functions/pci-epf-test.o: in function `pci_epf_test_add_cfs':
+   pci-epf-test.c:(.text+0xec): undefined reference to `config_group_init_type_name'
+
 -- 
-2.47.3
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
