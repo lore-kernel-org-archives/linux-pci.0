@@ -1,24 +1,24 @@
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0066232D0FE;
-	Thu, 19 Feb 2026 22:41:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C109032B998;
+	Thu, 19 Feb 2026 22:41:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771540884; cv=none; b=t0FtXM5hi8EYIqFlfQnp6YLEuQFL52UyJISJ2PuBS9X971ocBAu/RcBUbWUAmIFL45FxmuK4NhFJcJib2HsrREof2DYkN+lJTlc7e0YF2n5JOTVZGX8oq8O0rW06zWATNp3shmZS00oW9VxAomlO6G2xA0VhoNVxCwN8fCSDhPs=
+	t=1771540913; cv=none; b=oUHmp7GkO9QA4rklQrJUahNwaZzLZ4gXt0LWIFFEWK48GDRsB/FUmkHdcuATvZffBOJdGV5sYLwEGyfQ+iy+TtViTd7FRALYMdfAso2bny8vWZARS2LXRqDKo8kioVHYQx/5uMGfjApy7dC9+NhV2yDXTigWN9rvUw5bMKHLmww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771540884; c=relaxed/simple;
-	bh=EIiAFLCrjiZpH3SBI5Gg+wwoMUF9Kw69mNXGGGlaCzM=;
+	s=arc-20240116; t=1771540913; c=relaxed/simple;
+	bh=IYdawa7MMcah8PNWrrnL147hAYerye7QUwZsWLyKJ1A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cudV+JzF3i0Y+hWdBlQiibuPHhklFRfConvAlDRUQPw5avlu/eXV9Atg7qhmeBlPV9jKal9OaKnazZ/NBw2T3vs7yqoA1bZlXOxnUxQ3vQ/mVISURtUXdkStM4gnFnw/cRaraIDHm9Odpe/A2obgUI5r/D1PNeUrvthGU6bfph0=
+	 MIME-Version; b=ix8UTdPPFQRlEHv/NVk6/xdVyKgQjpa89MW8JmV9fADm/ZBM1bxXFsp3Shj/TUfJYzQjQGKlcPSNVL0nMZ2QchTgFb4dsH+Rggdv78+updykNdnessx/uv8nTtJaQ0BZUFbxW2jURhId+ds+hBHys7dqIZeDJSreiNAP4gO1YMo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: a/xfYw+JQPK7MF5w2E1FHw==
-X-CSE-MsgGUID: vPn6dvijR4eJI2jWjYSkNg==
+X-CSE-ConnectionGUID: BsbVAofiSiGTydDTZDIIOA==
+X-CSE-MsgGUID: 7hm0ihsXSUSf6YJQ7oekoA==
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 20 Feb 2026 07:36:18 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 20 Feb 2026 07:36:48 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.24.0.22])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 3FAF64010DC2;
-	Fri, 20 Feb 2026 07:36:12 +0900 (JST)
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 593044010DC2;
+	Fri, 20 Feb 2026 07:36:43 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,9 +37,9 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v6 03/16] PCI: renesas: rzg3s: Rework inbound window algorithm for multi-SoC support
-Date: Thu, 19 Feb 2026 23:35:29 +0100
-Message-ID: <20260219223542.6364-4-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v6 08/16] PCI: rzg3s-host: Make SYSC register offsets SoC-specific
+Date: Thu, 19 Feb 2026 23:35:34 +0100
+Message-ID: <20260219223542.6364-9-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
 References: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
@@ -51,141 +51,274 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The existing inbound window configuration algorithm has two issues that
-prevent proper operation on RZ/G3E:
+In preparation for adding RZ/G3E support, move the RST_RSM_B register
+offset and mask into a SoC-specific data structure. Compared with RZ/G3S,
+the RZ/G3E SYSC controls different functionalities for the PCIe controller.
 
-1. Over-mapping: Using roundup_pow_of_two() on the remaining region size
-   can result in windows that extend beyond the intended memory region.
+Make SYSC operations conditional on the presence of register offset
+information, allowing the driver to handle SoCs that don't use the
+RST_RSM_B signal.
 
-2. Alignment violation: Addresses are only aligned to 4K regardless of
-   the actual window size. According to the RZ/G3S HW manual (Rev.1.10,
-   section 34.6.6.7) and RZ/G3E HW manual (Rev.1.15, section 6.6.7.6),
-   bit carry must not occur when adding AXI Window Base and AXI Window
-   Mask registers. This effectively requires the base address to be
-   aligned to the window size.
-
-RZ/G3E strictly enforces these constraints and requires precise window
-boundaries with properly aligned addresses.
-
-Rework the algorithm to properly handle arbitrary region sizes and
-alignment constraints by splitting non-power-of-2 regions into multiple
-windows. The new approach iteratively selects the largest power-of-2
-size that:
- - Fits within the remaining region (__fls of remaining size)
- - Does not exceed the natural alignment of the CPU address (__ffs)
- - Does not exceed the natural alignment of the PCI address (__ffs)
-
-This ensures windows never over-map beyond the intended region and
-satisfies the hardware requirement that base address + mask must not
-cause bit carry, while maintaining the 4K * 2^N byte window size
-constraint.
-
-The reworked algorithm is required for RZ/G3E support and remains
-fully compatible with RZ/G3S.
-
-Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
 
 Changes:
 
-v6: No changes
+v6:
+ - Introduce enum rzg3s_sysc_func_id and rzg3s_sysc_config_func() as
+   suggested by Claudiu. This replaces direct regmap calls and drops
+   the -1 skip pattern.
+ - Removed Rb tag from Claudiu
 
-v5:
- - Updated HW manual section specification
- - Collected Rb tag
-
+v5: No changes
 v4: No changes
 v3: No changes
-v2: New patch
+v2: Collected tag.
 
- drivers/pci/controller/pcie-rzg3s-host.c | 53 +++++++++++++-----------
- 1 file changed, 29 insertions(+), 24 deletions(-)
+ drivers/pci/controller/pcie-rzg3s-host.c | 120 ++++++++++++++++++-----
+ 1 file changed, 94 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index 222891324374..7f5ffc5c218a 100644
+index 7f5ffc5c218a..a90487610b37 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1270,50 +1270,55 @@ static int rzg3s_pcie_set_inbound_windows(struct rzg3s_pcie_host *host,
- 	u64 pci_addr = entry->res->start - entry->offset;
- 	u64 cpu_addr = entry->res->start;
- 	u64 cpu_end = entry->res->end;
--	u64 size_id = 0;
- 	int id = *index;
- 	u64 size;
+@@ -159,10 +159,6 @@
  
--	while (cpu_addr < cpu_end) {
-+	/*
-+	 * According to the RZ/G3S HW manual (Rev.1.10, section 34.6.6.7) and
-+	 * RZ/G3E HW manual (Rev.1.15, section 6.6.7.6):
-+	 * - Each window must be a single memory size of power of two
-+	 * - Mask registers must be set to (2^N - 1)
-+	 * - Bit carry must not occur when adding base and mask registers,
-+	 *   meaning the base address must be aligned to the window size
-+	 *
-+	 * Split non-power-of-2 regions into multiple windows to satisfy
-+	 * these constraints without over-mapping.
-+	 */
-+	while (cpu_addr <= cpu_end) {
-+		u64 remaining_size = cpu_end - cpu_addr + 1;
-+		u64 align_limit;
-+
- 		if (id >= RZG3S_MAX_WINDOWS)
- 			return dev_err_probe(host->dev, -ENOSPC,
- 					     "Failed to map inbound window for resource (%s)\n",
- 					     entry->res->name);
+ #define RZG3S_PCI_CFG_PCIEC			0x60
  
--		size = resource_size(entry->res) - size_id;
-+		/* Start with largest power-of-two that fits in remaining size */
-+		size = 1ULL << __fls(remaining_size);
- 
- 		/*
--		 * According to the RZ/G3S HW manual (Rev.1.10,
--		 * section 34.3.1.71 AXI Window Mask (Lower) Registers) the min
--		 * size is 4K.
-+		 * The "no bit carry" rule requires base addresses to be
-+		 * aligned to the window size. Find the maximum window size
-+		 * that both addresses can support based on their natural
-+		 * alignment (lowest set bit).
- 		 */
--		size = max(size, SZ_4K);
-+		align_limit = min(cpu_addr ? (1ULL << __ffs(cpu_addr)) : ~0ULL,
-+				  pci_addr ? (1ULL << __ffs(pci_addr)) : ~0ULL);
- 
--		/*
--		 * According the RZ/G3S HW manual (Rev.1.10, sections:
--		 * - 34.3.1.69 AXI Window Base (Lower) Registers
--		 * - 34.3.1.71 AXI Window Mask (Lower) Registers
--		 * - 34.3.1.73 AXI Destination (Lower) Registers)
--		 * the CPU addr, PCIe addr, size should be 4K aligned and be a
--		 * power of 2.
--		 */
--		size = ALIGN(size, SZ_4K);
--		size = roundup_pow_of_two(size);
+-/* System controller registers */
+-#define RZG3S_SYS_PCIE_RST_RSM_B		0xd74
+-#define RZG3S_SYS_PCIE_RST_RSM_B_MASK		BIT(0)
 -
--		cpu_addr = ALIGN(cpu_addr, SZ_4K);
--		pci_addr = ALIGN(pci_addr, SZ_4K);
-+		size = min(size, align_limit);
+ /* Maximum number of windows */
+ #define RZG3S_MAX_WINDOWS			8
  
- 		/*
--		 * According to the RZ/G3S HW manual (Rev.1.10, section
--		 * 34.3.1.71 AXI Window Mask (Lower) Registers) HW expects first
--		 * 12 LSB bits to be 0xfff. Subtract 1 from size for this.
-+		 * Minimum window size is 4KB.
-+		 * See RZ/G3S HW manual (Rev.1.10, section 34.3.1.71) and
-+		 * RZ/G3E HW manual (Rev.1.15, section 6.6.4.1.3.(74)).
- 		 */
-+		size = max(size, SZ_4K);
+@@ -174,6 +170,45 @@
+ /* Timeouts experimentally determined */
+ #define RZG3S_REQ_ISSUE_TIMEOUT_US		2500
+ 
++/**
++ * struct rzg3s_sysc_function - System Controller register function descriptor
++ * @offset: Register offset from the System Controller base address
++ * @mask: Bit mask for the function within the register
++ */
++struct rzg3s_sysc_function {
++	u32 offset;
++	u32 mask;
++};
 +
- 		rzg3s_pcie_set_inbound_window(host, cpu_addr, pci_addr,
- 					      size - 1, id);
++
++/**
++ * enum rzg3s_sysc_func_id - System controller function IDs
++ * @RZG3S_SYSC_FUNC_ID_RST_RSM_B: RST_RSM_B SYSC function ID
++ * @RZG3S_SYSC_FUNC_ID_MAX: Max SYSC function ID
++ */
++enum rzg3s_sysc_func_id {
++	RZG3S_SYSC_FUNC_ID_RST_RSM_B,
++	RZG3S_SYSC_FUNC_ID_MAX,
++};
++
++/**
++ * struct rzg3s_sysc_info - RZ/G3S System Controller function info
++ * @functions: SYSC function descriptors array
++ */
++struct rzg3s_sysc_info {
++	const struct rzg3s_sysc_function functions[RZG3S_SYSC_FUNC_ID_MAX];
++};
++
++/**
++ * struct rzg3s_sysc - RZ/G3S System Controller descriptor
++ * @regmap: System controller regmap
++ * @info: System controller info
++ */
++struct rzg3s_sysc {
++	struct regmap *regmap;
++	const struct rzg3s_sysc_info *info;
++};
++
+ /**
+  * struct rzg3s_pcie_msi - RZ/G3S PCIe MSI data structure
+  * @domain: IRQ domain
+@@ -203,6 +238,7 @@ struct rzg3s_pcie_host;
+  *                power-on
+  * @cfg_resets: array with the resets that need to be de-asserted after
+  *              configuration
++ * @sysc_info: SYSC functionalities
+  * @num_power_resets: number of power resets
+  * @num_cfg_resets: number of configuration resets
+  */
+@@ -210,6 +246,7 @@ struct rzg3s_pcie_soc_data {
+ 	int (*init_phy)(struct rzg3s_pcie_host *host);
+ 	const char * const *power_resets;
+ 	const char * const *cfg_resets;
++	struct rzg3s_sysc_info sysc_info;
+ 	u8 num_power_resets;
+ 	u8 num_cfg_resets;
+ };
+@@ -233,7 +270,7 @@ struct rzg3s_pcie_port {
+  * @dev: struct device
+  * @power_resets: reset control signals that should be set after power up
+  * @cfg_resets: reset control signals that should be set after configuration
+- * @sysc: SYSC regmap
++ * @sysc: SYSC descriptor
+  * @intx_domain: INTx IRQ domain
+  * @data: SoC specific data
+  * @msi: MSI data structure
+@@ -248,7 +285,7 @@ struct rzg3s_pcie_host {
+ 	struct device *dev;
+ 	struct reset_control_bulk_data *power_resets;
+ 	struct reset_control_bulk_data *cfg_resets;
+-	struct regmap *sysc;
++	struct rzg3s_sysc *sysc;
+ 	struct irq_domain *intx_domain;
+ 	const struct rzg3s_pcie_soc_data *data;
+ 	struct rzg3s_pcie_msi msi;
+@@ -1161,6 +1198,31 @@ static int rzg3s_pcie_host_parse_port(struct rzg3s_pcie_host *host)
+ 	return 0;
+ }
  
- 		pci_addr += size;
- 		cpu_addr += size;
--		size_id = size;
- 		id++;
++/**
++ * rzg3s_sysc_config_func - Configure a single SYSC function
++ * @sysc: SYSC descriptor
++ * @fid: Function ID to configure
++ * @val: Value to set
++ *
++ * Return: 0 on success, negative error code on failure
++ */
++static int rzg3s_sysc_config_func(struct rzg3s_sysc *sysc,
++				  enum rzg3s_sysc_func_id fid, u32 val)
++{
++	const struct rzg3s_sysc_info *info = sysc->info;
++	const struct rzg3s_sysc_function *functions = info->functions;
++
++	if (fid >= RZG3S_SYSC_FUNC_ID_MAX)
++		return -EINVAL;
++
++	if (!functions[fid].mask)
++		return 0;
++
++	return regmap_update_bits(sysc->regmap, functions[fid].offset,
++				  functions[fid].mask,
++				  field_prep(functions[fid].mask, val));
++}
++
+ static int rzg3s_pcie_host_init_port(struct rzg3s_pcie_host *host)
+ {
+ 	struct rzg3s_pcie_port *port = &host->port;
+@@ -1521,6 +1583,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	struct device_node *sysc_np __free(device_node) =
+ 		of_parse_phandle(np, "renesas,sysc", 0);
+ 	struct rzg3s_pcie_host *host;
++	struct rzg3s_sysc *sysc;
+ 	int ret;
+ 
+ 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*host));
+@@ -1532,6 +1595,13 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	host->data = device_get_match_data(dev);
+ 	platform_set_drvdata(pdev, host);
+ 
++	host->sysc = devm_kzalloc(dev, sizeof(*host->sysc), GFP_KERNEL);
++	if (!host->sysc)
++		return -ENOMEM;
++
++	sysc = host->sysc;
++	sysc->info = &host->data->sysc_info;
++
+ 	host->axi = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(host->axi))
+ 		return PTR_ERR(host->axi);
+@@ -1545,15 +1615,13 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	host->sysc = syscon_node_to_regmap(sysc_np);
+-	if (IS_ERR(host->sysc)) {
+-		ret = PTR_ERR(host->sysc);
++	sysc->regmap = syscon_node_to_regmap(sysc_np);
++	if (IS_ERR(sysc->regmap)) {
++		ret = PTR_ERR(sysc->regmap);
+ 		goto port_refclk_put;
  	}
- 	*index = id;
+ 
+-	ret = regmap_update_bits(host->sysc, RZG3S_SYS_PCIE_RST_RSM_B,
+-				 RZG3S_SYS_PCIE_RST_RSM_B_MASK,
+-				 FIELD_PREP(RZG3S_SYS_PCIE_RST_RSM_B_MASK, 1));
++	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
+ 	if (ret)
+ 		goto port_refclk_put;
+ 
+@@ -1605,9 +1673,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
+ 	 * SYSC RST_RSM_B signal need to be asserted before turning off the
+ 	 * power to the PHY.
+ 	 */
+-	regmap_update_bits(host->sysc, RZG3S_SYS_PCIE_RST_RSM_B,
+-			   RZG3S_SYS_PCIE_RST_RSM_B_MASK,
+-			   FIELD_PREP(RZG3S_SYS_PCIE_RST_RSM_B_MASK, 0));
++	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+ port_refclk_put:
+ 	clk_put(host->port.refclk);
+ 
+@@ -1619,7 +1685,7 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
+ 	const struct rzg3s_pcie_soc_data *data = host->data;
+ 	struct rzg3s_pcie_port *port = &host->port;
+-	struct regmap *sysc = host->sysc;
++	struct rzg3s_sysc *sysc = host->sysc;
+ 	int ret;
+ 
+ 	ret = pm_runtime_put_sync(dev);
+@@ -1638,9 +1704,7 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+ 	if (ret)
+ 		goto cfg_resets_restore;
+ 
+-	ret = regmap_update_bits(sysc, RZG3S_SYS_PCIE_RST_RSM_B,
+-				 RZG3S_SYS_PCIE_RST_RSM_B_MASK,
+-				 FIELD_PREP(RZG3S_SYS_PCIE_RST_RSM_B_MASK, 0));
++	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+ 	if (ret)
+ 		goto power_resets_restore;
+ 
+@@ -1663,12 +1727,10 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ {
+ 	struct rzg3s_pcie_host *host = dev_get_drvdata(dev);
+ 	const struct rzg3s_pcie_soc_data *data = host->data;
+-	struct regmap *sysc = host->sysc;
++	struct rzg3s_sysc *sysc = host->sysc;
+ 	int ret;
+ 
+-	ret = regmap_update_bits(sysc, RZG3S_SYS_PCIE_RST_RSM_B,
+-				 RZG3S_SYS_PCIE_RST_RSM_B_MASK,
+-				 FIELD_PREP(RZG3S_SYS_PCIE_RST_RSM_B_MASK, 1));
++	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 1);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1697,9 +1759,7 @@ static int rzg3s_pcie_resume_noirq(struct device *dev)
+ 	reset_control_bulk_assert(data->num_power_resets,
+ 				  host->power_resets);
+ assert_rst_rsm_b:
+-	regmap_update_bits(sysc, RZG3S_SYS_PCIE_RST_RSM_B,
+-			   RZG3S_SYS_PCIE_RST_RSM_B_MASK,
+-			   FIELD_PREP(RZG3S_SYS_PCIE_RST_RSM_B_MASK, 0));
++	rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
+ 	return ret;
+ }
+ 
+@@ -1722,6 +1782,14 @@ static const struct rzg3s_pcie_soc_data rzg3s_soc_data = {
+ 	.cfg_resets = rzg3s_soc_cfg_resets,
+ 	.num_cfg_resets = ARRAY_SIZE(rzg3s_soc_cfg_resets),
+ 	.init_phy = rzg3s_soc_pcie_init_phy,
++	.sysc_info = {
++		.functions = {
++			[RZG3S_SYSC_FUNC_ID_RST_RSM_B] = {
++				.offset = 0xd74,
++				.mask = BIT(0),
++			},
++		},
++	},
+ };
+ 
+ static const struct of_device_id rzg3s_pcie_of_match[] = {
 -- 
 2.25.1
 
