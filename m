@@ -1,24 +1,23 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E1D522EDD52;
-	Thu, 19 Feb 2026 22:37:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5A254212F98;
+	Thu, 19 Feb 2026 22:41:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771540658; cv=none; b=tDXrR3RZfGmGxqHmtinBDv98iEokswGVDQUE9mpdZXXZnC/NDw3Ya4EKCTDnOn1CV3nPfhJQ2EDsne6ZLQ9S3JADFgBpnLGVkcrozcporSv8+ynIedSSag+PWRkcqIzeXBhzycPFNLKJhMakaPG6s88lFw42gISbMplXJQ+86Yc=
+	t=1771540871; cv=none; b=ipQCfxDU6Ed5sZD9kyizZhZsSI9m/qfXsFUpDDVmkwn5ikRRjt3HKnc36tl/VdUCgezx32xzTj+EmCfjAbMz5kV+yIjGI5QIgGYsNofGDwdmLRNS52+pAnAHGVQRLarXEL/bvH6VLmnZmZb3S8GF/wqT93LpRxg1sF/Y4Qbv/Zo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771540658; c=relaxed/simple;
-	bh=8e+pCou12heex+BCJDtXT9FyqFR/S1jS5xn0ncZjflg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UTJTDXc5jJueDFRnpZPeKLPJhkNGPsROJtpXBkNh6KPMh1XiyVgnTCmOUICJIxYTpFtPiQS8rlNKMg+IkuS56cSMVkeighTG7as3cp+OVlGNO129vO8+Q/w9Vt+Hzm3zTEEH4ZAEGgajCUaSD6lfLAKSSVY4NShzwl2CZU+Rkwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
+	s=arc-20240116; t=1771540871; c=relaxed/simple;
+	bh=Ae8qLYFoZHhu8XDHiEzWL7f0/lzsdpI/ofjwFZLuhd0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TFQ8fgrCsGOZ2Rsbaj3M/+TcwTA0IE+8ElAZnPYvRL6QMXmuo/WVYKXFB3Jayn8NF7p7wRrTjc5OAGyRTztTBRpMNETgHjAvwTP1zzCy5Q8m3IQh4E+N5Hk6lyQdgQU0CIcO2ECg+yvPDA5Wr+Q2KeTAUTjbfLOqlNx75dRhlnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: OxbcbcAVRK61ZLMMtYFUUA==
-X-CSE-MsgGUID: 7nk0XSVLSM6xnt51gdGtSg==
+X-CSE-ConnectionGUID: mss6xaU3SVa/pvhs9Mb3gw==
+X-CSE-MsgGUID: o6DaVZB8T/S+FUDGrvlSaA==
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 20 Feb 2026 07:37:35 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 20 Feb 2026 07:36:00 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.24.0.22])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id AF3074006196;
-	Fri, 20 Feb 2026 07:37:30 +0900 (JST)
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 3B20B4010DDE;
+	Fri, 20 Feb 2026 07:35:54 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,12 +36,10 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v6 16/16] arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
-Date: Thu, 19 Feb 2026 23:35:42 +0100
-Message-ID: <20260219223542.6364-17-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v6 00/16] PCI: renesas: Add RZ/G3E PCIe controller support
+Date: Thu, 19 Feb 2026 23:35:26 +0100
+Message-ID: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
-References: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,78 +48,117 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The RZ Smarc Crarrier-II board has PCIe slots mounted on it.
-Enable PCIe support.
+The Renesas RZ/G3E SoC features a PCIe controller that shares similarities with
+the existing RZ/G3S PCIe controller, but with several key differences.
+This series adds support for the RZ/G3E PCIe controller by extending the existing
+RZ/G3S driver and device tree bindings.
 
-Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
----
+Key differences between RZ/G3E and RZ/G3S PCIe controllers:
+
+Link Speed Support:
+ - RZ/G3E: Supports PCIe Gen3 (8.0 GT/s) alongside Gen2 (5.0 GT/s)
+ - RZ/G3S: Supports PCIe Gen2 (5.0 GT/s) only
+
+Reset Control:
+ - RZ/G3E: Uses register-based reset control mechanism
+ - RZ/G3S: Uses exclusively external reset control signals
+
+Inbound Window Configuration:
+ - RZ/G3E: Requires precise power-of-2 window coverage with strict address
+   alignment constraints. Non-power-of-2 memory regions must be split into
+   multiple windows to avoid over-mapping, ensuring proper hardware address
+   decoding for DMA operations.
+ - RZ/G3S: Uses a simpler approach that rounds up to the next power-of-2,
+   creating single larger windows. The hardware tolerates over-mapped regions.
+
+Class/Revision IDs:
+ - RZ/G3E: Requires explicit setting of class/revision values
+ - RZ/G3S: Has default values in hardware
+
+Clock Naming:
+ - RZ/G3E: Uses "clkpmu" clock for power management
+ - RZ/G3S: Uses "clkl1pm" PM control clock while CLKREQ_B is deasserting
+
+Phy Settings:
+ - RZ/G3E: Does not need PHY settings as it works with default hw values
+ - RZ/G3S: Requires explicit PHY settings
+
+This series extends the existing driver to detect the SoC type from the device
+tree compatible string and configure the controller appropriately. The updates
+are minimal and focused on the hardware-specific differences while keeping the
+common code paths unified.
 
 Changes:
 
-v6: No changes
-v5: No changes
-v4: No changes
+v6:
+ - Replaced rzg3s_sysc_config() with enum-based rzg3s_sysc_config_func()
+   as suggested by Claudiu, dropping the -1 skip pattern
+ - Introduced enum rzg3s_sysc_func_id and array-based SYSC function
+   descriptors in patch 08
+ - Used regmap_update_bits() consistently for all SYSC accesses
+ - Fixed config_reinit error path in suspend_noirq: call config_pre_init
+   before config_post_init as spotted by Claudiu
+ - Fixed double config_deinit in rzg3s_pcie_host_init() error path by
+   separating config_deinit_post into a non-fall-through path
+ - Shortened comments as per Claudiu's suggestions
+ - Reordered patchset, moving v5's patch 09/16 to 02/16 and added Fixes tag 
+
+v5:
+ - Introduced new patch to reorder reset handling
+ - Introduced rzg3s_sysc_config() helper to handle SYS config
+ - Collected Tags on documentation
+
+v4:
+ - Collected Ab tag
+ - Fixed binding clock name constraint
 
 v3:
- - Splitted enablement into common carrier dtsi and board dts
+ - Removed extra MaxItems in binding causing warnings
+ - Fix potential crash for non-initialized rcdev in CPG driver
+ - Fix binding contraints replacing 'description' with 'const' as per
+   Geert and Rob's comment
 
 v2:
- - Removed board-specific dma-ranges.
- - Merged enablement and pinmux assignment in same file
+ - Address Bjorn typo comments
+ - Address Claidiu's comment on stylish
+ - Use single inbound-window-configuration function for both G3E/G3S
+ - Refactor goto laballing as per Claudiu's comments
+ - Update bindings and reused G3S's interrupt ordering
+   * This involves reordering interrupts in dt
+ - Remove Board-specific PCIe dma-range.
 
- .../boot/dts/renesas/r9a09g047e57-smarc.dts      | 16 ++++++++++++++++
- arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi  |  4 ++++
- 2 files changed, 20 insertions(+)
+John Madieu (16):
+  PCI: rzg3s-host: Fix reset handling in probe error path
+  PCI: rzg3s-host: Reorder reset assertion during suspend
+  PCI: renesas: rzg3s: Rework inbound window algorithm for multi-SoC
+    support
+  clk: renesas: rzv2h-cpg: Add support for init_{off|asserted}
+    clocks/resets
+  clk: renesas: r9a09g047: Add PCIe clocks and reset
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix naming properties
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3E SoC
+  PCI: rzg3s-host: Make SYSC register offsets SoC-specific
+  PCI: rzg3s-host: Make configuration reset lines optional
+  PCI: rzg3s-host: Add SoC-specific configuration and initialization
+    callbacks
+  PCI: rzg3s-host: Explicitly set class code for RZ/G3E compatibility
+  PCI: rzg3s-host: Add PCIe Gen3 (8.0 GT/s) link speed support
+  PCI: rzg3s-host: Add support for RZ/G3E PCIe controller
+  arm64: dts: renesas: r9a09g047: Add PCIe node
+  arm64: dts: renesas: r9a09g047e57-smarc-som: Add PCIe reference clock
+  arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
 
-diff --git a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-index 696903dc7a63..1ba50512f4ef 100644
---- a/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-+++ b/arch/arm64/boot/dts/renesas/r9a09g047e57-smarc.dts
-@@ -122,6 +122,11 @@ key-sleep {
- #endif
- };
- 
-+&pcie {
-+	pinctrl-0 = <&pcie_pins>;
-+	pinctrl-names = "default";
-+};
-+
- &pinctrl {
- 	canfd_pins: canfd {
- 		can1_pins: can1 {
-@@ -167,6 +172,17 @@ rsci9_pins: rsci9 {
- 		bias-pull-up;
- 	};
- 
-+	pcie-clkreq-n {
-+		gpio-hog;
-+		gpios = <RZG3E_GPIO(4, 5) GPIO_ACTIVE_HIGH>;
-+		output-low;
-+		line-name = "pcie_clkreq_n";
-+	};
-+
-+	pcie_pins: pcie {
-+		pinmux = <RZG3E_PORT_PINMUX(G, 7, 1)>; /* PCIE_RST_OUT# */
-+	};
-+
- 	scif_pins: scif {
- 		pins = "SCIF_TXD", "SCIF_RXD";
- 		renesas,output-impedance = <1>;
-diff --git a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
-index b607b5d6c259..e2a34577a1a1 100644
---- a/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
-+++ b/arch/arm64/boot/dts/renesas/renesas-smarc2.dtsi
-@@ -96,6 +96,10 @@ &i2c0 {
- 	clock-frequency = <400000>;
- };
- 
-+&pcie {
-+	status = "okay";
-+};
-+
- &scif0 {
- 	status = "okay";
- };
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 121 ++++--
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi    |  69 ++++
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts   |  16 +
+ .../boot/dts/renesas/renesas-smarc2.dtsi      |   4 +
+ .../boot/dts/renesas/rzg3e-smarc-som.dtsi     |  11 +
+ drivers/clk/renesas/r9a09g047-cpg.c           |   5 +
+ drivers/clk/renesas/rzv2h-cpg.c               |  24 +-
+ drivers/clk/renesas/rzv2h-cpg.h               |  34 +-
+ drivers/pci/controller/pcie-rzg3s-host.c      | 379 ++++++++++++++----
+ 9 files changed, 544 insertions(+), 119 deletions(-)
+
 -- 
 2.25.1
 
