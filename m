@@ -1,47 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24D8B20C463;
-	Thu, 19 Feb 2026 13:04:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4EB3CA6F;
+	Thu, 19 Feb 2026 13:45:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771506269; cv=none; b=p0MemiWQm1K+EAd0q3sj826simPbCNHKCC3GI6dn7YOTAjsHRNJneLirsS5Px/iTBW8FuyA2PmFdfIF/sRV5Vr3GLdiROrHkEPqEAgsIWcEwGwFPgm5gm9IEEXZLrtvt2vm+qgLl5bYI/BRNJGhFUrZxh9FURARU+xRooGWD/uw=
+	t=1771508729; cv=none; b=W7bqr28MNOYlmtA2CgvqZzS4k3UVzq3KTRaxrbIK3Lc6q2WSE7ifuXqV3Vt0hMouEEvx4WC2REyKNv+uPcRncJkDVLv1bGsx/oXwjymqUMtJclnK/AZfBm4OEnu9CjS8F/GjNBZiSYlpeWw3xS38dakvyxGsNhd142owwjnjCnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771506269; c=relaxed/simple;
-	bh=YaupYybKXPk8brOSgB4K4h8v8tV/LOUKRVKup6Bhfqo=;
+	s=arc-20240116; t=1771508729; c=relaxed/simple;
+	bh=YNhO5Ar2EvZfD+jNSpkur8t2JjgD5F5KFNpP+al4NSI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aUpTlWP3RUbCZqHuRUQJcZOaZc+zWwUbVmo2BCz/YpXIzHgFUoJkLehh02doBshn1ooNyjTD74DNMa/96pNOB4dT7QnU60YCXgLOw9y+RJbXsP4AmNc/TTPObKm57fRYhD05P1phh+BmDtFgOwqA/lTYCM39I5uTTA6xprP6VfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y02RrbMJ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=qFccK24IJhqtKROGVN/dnZDRzwWRQBG35k+Hci9ET214VL79xxNAlug110H9/osZ50wRpR6NOKQdYA6PxyxmK3MZ28lWbFlDSvXctx1PdR+6QB2v1dxMmX72ECaiXppu8bpQ/S7LyzoWty8bWnFn5D73wAwyG+RFhLgCbFEWj2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QoaomqNf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y02RrbMJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A86BC19423;
-	Thu, 19 Feb 2026 13:04:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QoaomqNf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 551C2C4CEF7;
+	Thu, 19 Feb 2026 13:45:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771506268;
-	bh=YaupYybKXPk8brOSgB4K4h8v8tV/LOUKRVKup6Bhfqo=;
+	s=k20201202; t=1771508728;
+	bh=YNhO5Ar2EvZfD+jNSpkur8t2JjgD5F5KFNpP+al4NSI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y02RrbMJ4BEHjvpBPzELosF1WSulsrklhevqx+3k8uQqGHwk1MG+tYLPTcroZv3WW
-	 przOYF9tGvA05dA3xCTXwhmx7fK8z+5Az9348LlKKinBWruLKM+l33FQHV06SzbWeo
-	 X+oCo/SNU2LqIWFUVRy+jrxRE+S0TKNlEn9sjzAFHsoEngVlaOcLo4eXJnKBtF3Tzp
-	 0WbK+8pvCUuIkbF7tO9iGdhI7KROrTQkMDCrAtgTCgAgCskFaNHlRhzT58U/m/Cjew
-	 V5Z5+x1j7W1RY3UaGIe/gjCOQ02KeNDP5UPa0QSxDxOWuT7xYnqxVM4w6/ZGjj8q1K
-	 e07H8FyZJQmaA==
-Date: Thu, 19 Feb 2026 14:04:20 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Arnd Bergmann <arnd@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Koichiro Den <den@valinux.co.jp>
-Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: select configfs
-Message-ID: <aZcKVLGNSifE60-P@ryzen>
-References: <aY7wXJQJsfdqJ4j9@ryzen>
- <20260218180027.GA3435176@bhelgaas>
- <aZbRkXM2vIgAwvzz@ryzen>
+	b=QoaomqNfKl5dE/L3S0IJ5q5qwRKsGNgjqxKICtkDVgc8Y3YiWO2z6RybGxQ2s/dk0
+	 DHbnzA9idwGFAiZ5ZgBwf/MM4Cgxv2lENCZ0P8eHcI9dnXGfMZ+Fz2Hrkp85beOtZ6
+	 locSoQ/8WbJnfBY/WhJIOcuzfvVuqBC5ecCa/WmI4KnY/uYMvRzclvqsNgeastPXTC
+	 P8shbDMXsiEiohi3A5vdZXr4hblcUNds2srGUrD45AnCD8HwRhczEubmIUaZwlM1iT
+	 c+J0EPf2BUbHAmXEi8V0P8TmNTM/NujOx3SgDBkBT0DDa8xDNsjHgduT9ern3PaSXs
+	 vayYfKEaqlGZA==
+Date: Thu, 19 Feb 2026 07:45:27 -0600
+From: Rob Herring <robh@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: andersson@kernel.org, mani@kernel.org, krzk@kernel.org,
+	helgaas@kernel.org, linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org, lpieralisi@kernel.org, kw@linux.com,
+	conor+dt@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree-spec@vger.kernel.org,
+	lukas@wunner.de
+Subject: Re: [PATCH v4] schemas: pci: Document PCIe T_POWER_ON
+Message-ID: <20260219134527.GA2438773-robh@kernel.org>
+References: <20260205093346.667898-1-krishna.chundru@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,23 +46,21 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aZbRkXM2vIgAwvzz@ryzen>
+In-Reply-To: <20260205093346.667898-1-krishna.chundru@oss.qualcomm.com>
 
-Hello Bjorn,
+On Thu, Feb 05, 2026 at 03:03:46PM +0530, Krishna Chaitanya Chundru wrote:
+> >From PCIe r7, sec 5.5.4 & Table 5-11 in sec 5.5.5 T_POWER_ON is the
+> minimum amount of time (in us) that each component must wait in L1.2.Exit
+> after sampling CLKREQ# asserted before actively driving the interface to
+> ensure no device is ever actively driving into an unpowered component and
+> these values are based on the components and AC coupling capacitors used
+> in the connection linking the two components.
+> 
+> This property should be used to indicate the T_POWER_ON and drivers using
+> this property are responsible for programming both the scale and the value
+> of T_POWER_ON to comply with the PCIe specification.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 
-Since there now is a for-linus branch, is there any chance that we could
-include:
-https://lore.kernel.org/linux-pci/20260202145407.503348-3-den@valinux.co.jp/
-
-In the for-linus branch?
-
-Otherwise, the new inbound submapping feature in the PCI endpoint framework,
-that was added in the v7.0 merge window, will be buggy with regards to
-in-place updates.
-
-If we include the above series before v7.0 final, all kernel versions with
-this new feature will have non-buggy in-place updates.
-
-
-Kind regards,
-Niklas
+Applied, thanks.
