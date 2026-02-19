@@ -1,45 +1,47 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D80C4332EC1;
-	Thu, 19 Feb 2026 09:02:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF8E533A9ED;
+	Thu, 19 Feb 2026 09:13:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771491744; cv=none; b=UsldG0nKFcupAn4D7ZKTzK6uIBiakg782mBeIxflcT/vg38C8GdnGt59XBduETklrxVbOQC6CuVGIWbBvihxvUwYWOfOrAxHIh6ESchadnUsagDkO+qeSoSJtuyzJNu6VCORcNyuLLHWXasuhg2A8MQM1RrKz06bj204eYbqR2s=
+	t=1771492437; cv=none; b=rjDjtdHL5ieDsmllRIGj3DXJ9nCFE2vqxBBnGR+xTTqWE81yTTRIwpLMuy5PWeWRRpqSH3Ls8x0VJSs3QWq8ZC+bFC4OzmlERLriQbHKUBv+p4IDilGTbbkXEzdO39DnoqdDlprX6nmJLJXjNlXgbpG0htH/l73Jz0kE/bXSzwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771491744; c=relaxed/simple;
-	bh=cmzwAyQlD7aw4KeWpqKfb6cmRQVYU+DuusqIqogTB34=;
+	s=arc-20240116; t=1771492437; c=relaxed/simple;
+	bh=gh8WIMy4GOJKBZ0m6I6h9UqYVLePX6Dtn1gEFMYmy+w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QXHtMpuv4CN8mRlCn1R03qiCVTyhh0NcR1n39GLUAmqIvKQaNNL+V8RWN/GbrXKNoOBhIg6Zlv5ttrp/SGkTdY9Z+RADlVl8IKAO720uznqqp+Trwo1xy6avTIn/B3TzKtFbQ7YhsLMPqhbdWdXdiawBv7C8dZBXW7SIiwWtcR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XKAuuE02; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XKAuuE02"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 589BDC4CEF7;
-	Thu, 19 Feb 2026 09:02:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771491744;
-	bh=cmzwAyQlD7aw4KeWpqKfb6cmRQVYU+DuusqIqogTB34=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XKAuuE02c8jiqE6UGa7AjTdDiv4ALgLhZDxU+gT/mBYL3Zw/L85OmBWsRggQoiJdm
-	 DfQ0Y1GuVjpml8T6BkOOtE0Yfav9eT73Ecs9Cw3BG9KuomFW1fb534n5NRMedKGHx/
-	 BpEn5E5bGgCy3qLasqkGgT6WUyuwAvHUqOxFA46ebsOuUWtF1i9S7a3E0ISf4Sxz9T
-	 aYsSsv21s8WS2OpEHCM3wTw56J5LFBbHmzJZ6rCjWBYmiFZB4MDTeGeAMU9Q4IbIJ8
-	 T3ZHS5zvScuoq/Moz14DiokT03uPOTHj4cQz/QqBz0amB6+6Gm1D3oK9GdcdXgUwuO
-	 DqH3hgjc6hb/g==
-Date: Thu, 19 Feb 2026 10:02:16 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Arnd Bergmann <arnd@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: select configfs
-Message-ID: <aZbRkXM2vIgAwvzz@ryzen>
-References: <aY7wXJQJsfdqJ4j9@ryzen>
- <20260218180027.GA3435176@bhelgaas>
+	 Content-Type:Content-Disposition:In-Reply-To; b=SDpF/Jwn2YZvF9tuYnbz8I7Im5OMTL28qx59n5Hv9x7v7K3JB+mbMSYAUsas3CH0C9MpSR4ZQsUSAUG/CU8GLxXYB7H4s8qmzVRAlamukER0PkEBW32HSMTtggAahrUx5TITdS9GdjuEyaFnjugxORkJKqBW6tDE7WnNp0KOILE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 5CFBF2021BF3;
+	Thu, 19 Feb 2026 10:13:47 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 38B094AAE6; Thu, 19 Feb 2026 10:13:47 +0100 (CET)
+Date: Thu, 19 Feb 2026 10:13:47 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: dan.j.williams@intel.com
+Cc: Alistair Francis <alistair23@gmail.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, bhelgaas@google.com,
+	rust-for-linux@vger.kernel.org, akpm@linux-foundation.org,
+	linux-pci@vger.kernel.org, Jonathan.Cameron@huawei.com,
+	linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alex.gaynor@gmail.com, benno.lossin@proton.me, boqun.feng@gmail.com,
+	a.hindborg@kernel.org, gary@garyguo.net, bjorn3_gh@protonmail.com,
+	tmgross@umich.edu, ojeda@kernel.org, wilfred.mallawa@wdc.com,
+	aliceryhl@google.com, Alistair Francis <alistair.francis@wdc.com>,
+	aneesh.kumar@kernel.org, yilun.xu@linux.intel.com, aik@amd.com
+Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
+Message-ID: <aZbUS31_lsLr72Uq@wunner.de>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+ <20260217235604.GA1595019@nvidia.com>
+ <CAKmqyKNeyEN-h9tAnfM9j0GWiFU9idXheGQ1COCqT9MVZgsZYw@mail.gmail.com>
+ <69964ddaa5471_1cc5100c3@dwillia2-mobl4.notmuch>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,93 +50,38 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260218180027.GA3435176@bhelgaas>
+In-Reply-To: <69964ddaa5471_1cc5100c3@dwillia2-mobl4.notmuch>
 
-On Wed, Feb 18, 2026 at 12:00:27PM -0600, Bjorn Helgaas wrote:
-> Are there other undefined references lurking that we just haven't
-> tripped over yet?
+On Wed, Feb 18, 2026 at 03:40:10PM -0800, dan.j.williams@intel.com wrote:
+> However, I notice that Aneesh needs x509 certificate parsing for his TSM
+> driver [1], I think TDX would benefit from the same to offload needing
+> to specify the wall-clock time to the module [2] for cert verification,
+> and SEV-TIO (already upstream) is currently missing any facility for the
+> host to attest the device.
+> 
+> [1]: http://lore.kernel.org/20250728135216.48084-17-aneesh.kumar@kernel.org
 
-I guess time (or Arnd's randconfig builds, or kernel test robot) will tell :)
+There's a newer version:
 
-On a more serious note:
-I don't think there are any other undefined references caused by my
-commit ffcc4850a161 ("PCI: endpoint: pci-epf-test: Allow overriding
-default BAR sizes").
+https://lore.kernel.org/all/20251027095602.1154418-1-aneesh.kumar@kernel.org/
 
+This would allow upstreaming at least the three X.509 patches at the
+beginning of my CMA series (and Alistair's rSPDM series) and thus
+reduce the patch count a little bit.
 
-Bjorn, btw, is it perhaps possible for you to remove the tag:
-pci/for-linus
+However I don't know how far along Aneesh's CCA work is.
 
-tag pci/for-linus
-Tagger: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Aug 20 16:37:46 2012 -0600
+Note that David Howells' introduction of ML-DSA in v7.0 moves around
+a lot of the X.509 code so the three X.509 patches for CMA will no longer
+apply cleanly:
 
-PCI updates for v3.6:
+https://lore.kernel.org/all/2977832.1770384806@warthog.procyon.org.uk/
 
-  Power management
-    - Fix EHCI-related crash during hibernation on ASUS (extension of similar suspend fix we merged in v3.6-rc1) (Rafael Wysocki)
-    - Clarify D3/D3cold/D4 messages related to runtime D3cold support we added in v3.6-rc1 (Rafael Wysocki)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+I'll rebase my development branch after v7.0-rc1 is out and Aneesh can
+then pick up the latest version from it:
 
-iQIcBAABAgAGBQJQMr2TAAoJEPGMOI97Hn6zcIYP/0GNPqoPWKxummEVZJO4ctZW
-l/c1HrsBdh8Yd296wLsI8LFb4ELWL9YYusFxRXjbBiq45QyH50f1n7plq4qxH6gZ
-cjf1s2OkMEK3/nh2kXj4FNjFDSAA2vgcTQI8p4M+BcNaKq87hvvT/OQ0iEi4fOul
-E9UMrSf1RP9hkHit/pbPm53JARYHNEWoZxc1p8+Dd0I6i6igdRuYDoT8eUYp6l+c
-Fw7oR0qmxy6fByqhjKGJjc1rzs/1J7SDPDUzPuMtd6XAUni0+V9gfOl2/YoMzB8H
-C5f8OYB4Raoz3uKR/rqNXS8dcxAxkzhtUQQ+CvZ4t7qhQueGI0KZMrJItJyinvQb
-NJuaE/7VJJP3/sPtO0X4Q+UPWvMoASswcDyR59NAUroD/WmlGLSg+GiySPC/kn+H
-URUeqF2ZlNsQmZNnw2j3g1HD3dipYEAivDIt2Z6CCi0080tokFINAxEibkpCyjB2
-WiMKkC6tw5ol9avbRtV6OlJDwbEKSqm+LmwBcTCTz09lUBD1+aMTL+s8SnE9y4aN
-AowpRWkKhRyiZsYrRSsiL16wAZZB11ueRWIJ6veA4+KFQxyoVof1IvbmBZ1EEhAU
-/AJ7jkPHG4yKfk/K9w7oCCVI4lT7rKTerjzvw1kd8Z4zs0KMfI4TJKBRaDK49gA7
-p3b1r1nisHMhPPh1zXal
-=2g7M
------END PGP SIGNATURE-----
+https://github.com/l1k/linux/commits/doe
 
-commit 10c63c9aec648402f593b6c883ca247ece7b2af9 (tag: pci/for-linus)
-Merge: c3e2f79d2d48 8f057d7bca54
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon Aug 20 13:14:22 2012 -0700
+Thanks,
 
-    Merge tag 'usb-3.6-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb
-    
-    Pull more USB patches from Greg Kroah-Hartman:
-     "Here are 10 more USB patches for 3.6-rc3.  They all fix reported
-      problems (build problems for one of them, and easily repeatable oopses
-      for the others.)
-    
-      Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>"
-    
-    * tag 'usb-3.6-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb:
-      gpu/mfd/usb: Fix USB randconfig problems
-      USB: CDC ACM: Fix NULL pointer dereference
-      USB: emi62: remove __devinit* from the struct usb_device_id table
-      USB: winbond: remove __devinit* from the struct usb_device_id table
-      USB: vt6656: remove __devinit* from the struct usb_device_id table
-      USB: rtl8187: remove __devinit* from the struct usb_device_id table
-      USB: p54usb: remove __devinit* from the struct usb_device_id table
-      USB: spca506: remove __devinit* from the struct usb_device_id table
-      USB: jl2005bcd: remove __devinit* from the struct usb_device_id table
-      USB: smsusb: remove __devinit* from the struct usb_device_id table
-
-
-
-It was created in 2012, and looking at the commit which the tag points to,
-it is just merge commit from Linus, which is merging the USB tree, so it
-does not even seem to correspond to the description of the tag.
-
-The tag is annoying because, if the remote is named pci (which I assume I'm
-not alone to name the PCI tree remote as), you will get a warning from git:
-warning: refname 'pci/for-linus' is ambiguous.
-
-Because the ref pci/for-linus can mean both your branch (for-linus) and the
-ancient tag pci/for-linus.
-
-Since most people why do a git log pci/for-linus wants to see what you have
-queued for linus, and since the ancient tag seems bogus anyway, perhaps you
-could just remove the tag from the PCI tree?
-
-
-Kind regards,
-Niklas
+Lukas
