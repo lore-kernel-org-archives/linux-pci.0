@@ -1,70 +1,70 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011044.outbound.protection.outlook.com [52.101.62.44])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011040.outbound.protection.outlook.com [52.101.52.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E565427AC4D;
-	Thu, 19 Feb 2026 06:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D63430EF64;
+	Thu, 19 Feb 2026 06:45:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.40
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771483535; cv=fail; b=B7ETtNJkVAdU0tS+/FxzFgmebIQtlvtfGv+HFZpebz0B9ZK4YVZWEbxea73upqtkvGiw0Ks9GjaNFNoxmNVEaPJqWEKk0INS1wNYCsfDqKLLqxqxnXD8YjM/PhgmJz7JZJu4to6yVmKmXvjpv16fHTRn2uMEfb02sHGAaqNByhE=
+	t=1771483537; cv=fail; b=d4N7KRVITQUnMjry4PI9wkMyt52q/2e128R2QvCFPw6MJUfM0HhR4+Ts2doxdYIRzugiCmffLcsCFET6FRjxTMIeV/Wanz0gXRiwiHpEsOV/ZCKJTiXG9+5UV1Y1opKdQEw2OuCiTjffm3hduVFkS/5fISihDAgEiOUD5lwrp7w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771483535; c=relaxed/simple;
-	bh=2KXUgdQ2V18Gudv+G4GKSTleaiNAF2FJ39i1gXI9b6U=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aVWuuSIyUj7buq3mYPY927mLTwG+pDJgjpp9PlLaw8eLTwgw5S1zGRFXC4kHcr75EdkvHR4VUz5c4sWGvRU/KQx0951II7N07huUgKcy82MP2bYOgGodEaHW9pm7v2jx2SNd+i1Wsix3f4qSHelU8+WgmitjAeL5qsetZnaCfDI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=NVCgBTMM; arc=fail smtp.client-ip=52.101.62.44
+	s=arc-20240116; t=1771483537; c=relaxed/simple;
+	bh=R3DPrZlB7TB1/2UmtXbgqMAmPmwJ+Bffb0o7CBU97AY=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=PF/Mx8X0C2M7pvmF3fYLC1gftBkC/4AJ/fYKJ+omAQYFBQW5MRdEc39MJJZyS35JTPfB1d0I7aKGk7O4kYKwfXIaKxdcxEkfYe66/EtVJxn68FOeMsSrOucuzJCrYJtv/LqbkRUzwRbqWekNAOg8CbZ9dvwPW9loz3jwHJBcSFE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=PeMqhhjh; arc=fail smtp.client-ip=52.101.52.40
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="NVCgBTMM"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="PeMqhhjh"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lJ47BzoAfH9YQ6dE0xoPIAXSChpB3FTF9OKHonvwnruAm/c/zeI/XhSijTeQANOkKU1awER+inlDpAees+eLUHDlYUNGSx1H1xslCrLHde/RiLnPqs7kF6HqbPmckOWG/CDpdB5iTPZm58q9JLmNNIqLzdEV2cQI0PadwzzaBHuz60lNRCW5HrZ6jsGbVYZ8/KE+3ffbFqiL4Fec4LiwZesMpAGOQQqM+Bx8NkUJnbrJcvCoMcDQbi79QjzGwX5EmPzlY1b0MqySaeaPBL3+N2ceGNF0VrovFJwh/G6r8u88Xc77+7P6Cj/1v6TEr5UhP3agT1stBcDoAY1LHpAboA==
+ b=KPFic4C4Xa2UAxNU8IhEpnpcxDvLeFi16foBDXcSx87BDeQ++MCLU6XHbHnBGIjzHSNoO/v4aMZg6b0DjuG3sxVDEf/+P4k1TRhdhhz8TwX7lp0rPtJB1KylU7bPqPv+7nGiJcxgVW+4yF6ps4aBUONgt5RmLtL59BlR94gyere0698bQujskNbGS6HoRKYx880IqIxeOZ4Vnepu1MGUcpAt0WOV0oOWIeDpQVekI3/95ssrmSwVtAhTttt2/ScEsYQ8jFGtYvRpt9fn3c8fvbC7GNCOhMJps0ce+ftsg7fzJ+XrzkeDLbAe23dQwukiI4jBnNHS1zZoOkm69fdx5A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rL4cPuZbI6GPs8ukg9GNHiHyR41wJwpW1vmSAlwfEg4=;
- b=BCs3cbREVEU+D+S/7JkT0WqBAzv94yJT1n2havfQ8IrPKn+daMbT4ikbpnmJzwOjVcKoDtgWqtAaih7qfIbQ2Kq2cdHG3tIJp8sGDSyhlNebfhklmp46ttf6FZuvuvOe8Y1NwUI0KMyTjyFxWMpahH1xrDNtj2JZwlpfvlfOS+7Cma8KeMJKeV/biMRAc0C2JnpJoq+hUOorxCtvjvYqmnrRRfJAkoFl5seSvm0ddmfohgpsmaB4ym/cJSA/38euzKUAr1Wgv2v23zxLowMIPB8FwyF+wCUbvin7Ru/b8Rlwhf2rfwhsn8pDOTh8nSyxq/P8RNMoBCyY5tGezZxtRA==
+ bh=KzYe2JkRE9EY1QMSNbum4UC+WYgBZTEPIHRvQmUUcDY=;
+ b=ql0sDcQtSzrPS7zVm5SijPHxuR7HtDPktFDhGx0nXWZZjQybtvqp7FD53CQuLM0e4Jx/ubzltRuap17WeBGu9djIEK12EcsHt9J0lihi9UmFKCRMx3LDhz/dhwzR0hzOzkciYcmOZLPMaLYkWizVQui1TOqzaHIINOB5xMv6qKdg2+9MbLIsT/Za1TaluNZdE6PhDOWvaJuJHFjDOMN+796bfy6d+HkaXLfOJeySrkjuYDYjEKjcLQ5evEL7+1yBkZsLcrxvwqYdpt/TP7xR8b4KO3chYnUw3zL8KzYg1jToiFHc2gjnoViT+AQU20qAilcUYs1kUmkJjhCmiUjcDA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.23.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ 198.47.23.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
  dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rL4cPuZbI6GPs8ukg9GNHiHyR41wJwpW1vmSAlwfEg4=;
- b=NVCgBTMMzRJxj+LmHU8I/AuqzX+k7Ncx409SBRoBhO1hz+iDkYKGbptGsM2pvQqaVg+EezQmtpHHexXnAymKkZFnVDy0JAAr+NUV0/OREGrTslTcfcNMaJrGRF9c8hH2BjcMCyHXe1CAa4n3SFaOv6OGXHqHiNaHMurHMS468Ag=
-Received: from DS7PR05CA0050.namprd05.prod.outlook.com (2603:10b6:8:2f::9) by
- IA1PR10MB7116.namprd10.prod.outlook.com (2603:10b6:208:3f1::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9632.15; Thu, 19 Feb 2026 06:45:29 +0000
-Received: from CY4PEPF0000EE3F.namprd03.prod.outlook.com
- (2603:10b6:8:2f:cafe::d) by DS7PR05CA0050.outlook.office365.com
- (2603:10b6:8:2f::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.14 via Frontend Transport; Thu,
- 19 Feb 2026 06:45:27 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.194)
+ bh=KzYe2JkRE9EY1QMSNbum4UC+WYgBZTEPIHRvQmUUcDY=;
+ b=PeMqhhjhGnxZdjsUHmEIHH1B1qMxSltgA2elc3d4P7ZdRrNxL0gAlmsdcaCZHIPFj3fpJmXezQoqOlUS7ICCovo1hI/Osp5vhBBZBFPdsDEqUguy8NN+hhMRFEdj8hxNnvxeAH5xtSazcKlHKc30fiuwhC27kYc2jUxPQme0nws=
+Received: from SJ0P220CA0009.NAMP220.PROD.OUTLOOK.COM (2603:10b6:a03:41b::25)
+ by EAYPR10MB997807.namprd10.prod.outlook.com (2603:10b6:303:2bf::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.14; Thu, 19 Feb
+ 2026 06:45:33 +0000
+Received: from CO1PEPF000066E7.namprd05.prod.outlook.com
+ (2603:10b6:a03:41b:cafe::ee) by SJ0P220CA0009.outlook.office365.com
+ (2603:10b6:a03:41b::25) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.15 via Frontend Transport; Thu,
+ 19 Feb 2026 06:45:31 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
  smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
  action=none header.from=ti.com;
 Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.23.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.23.194; helo=lewvzet200.ext.ti.com; pr=C
-Received: from lewvzet200.ext.ti.com (198.47.23.194) by
- CY4PEPF0000EE3F.mail.protection.outlook.com (10.167.242.17) with Microsoft
+ 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
+Received: from lewvzet201.ext.ti.com (198.47.23.195) by
+ CO1PEPF000066E7.mail.protection.outlook.com (10.167.249.9) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9632.12 via Frontend Transport; Thu, 19 Feb 2026 06:45:27 +0000
-Received: from DLEE214.ent.ti.com (157.170.170.117) by lewvzet200.ext.ti.com
- (10.4.14.103) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.9632.12 via Frontend Transport; Thu, 19 Feb 2026 06:45:33 +0000
+Received: from DLEE203.ent.ti.com (157.170.170.78) by lewvzet201.ext.ti.com
+ (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 19 Feb
- 2026 00:45:23 -0600
-Received: from DLEE211.ent.ti.com (157.170.170.113) by DLEE214.ent.ti.com
- (157.170.170.117) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 00:45:18 -0600
+Received: from DLEE215.ent.ti.com (157.170.170.118) by DLEE203.ent.ti.com
+ (157.170.170.78) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 19 Feb
- 2026 00:45:23 -0600
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE211.ent.ti.com
- (157.170.170.113) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 00:45:18 -0600
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE215.ent.ti.com
+ (157.170.170.118) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Thu, 19 Feb 2026 00:45:23 -0600
+ Transport; Thu, 19 Feb 2026 00:45:18 -0600
 Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [172.24.231.225])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61J6jDwi2156628;
-	Thu, 19 Feb 2026 00:45:19 -0600
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61J6jDwh2156628;
+	Thu, 19 Feb 2026 00:45:14 -0600
 From: Aksh Garg <a-garg7@ti.com>
 To: <linux-pci@vger.kernel.org>, <jingoohan1@gmail.com>, <mani@kernel.org>,
 	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <robh@kernel.org>,
@@ -73,12 +73,10 @@ To: <linux-pci@vger.kernel.org>, <jingoohan1@gmail.com>, <mani@kernel.org>,
 	<gustavo.pimentel@synopsys.com>, <cassel@kernel.org>
 CC: <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>,
 	<danishanwar@ti.com>, Aksh Garg <a-garg7@ti.com>
-Subject: [PATCH v2 1/2] PCI: dwc: ep: Fix MSI-X configuration to write to correct physical function
-Date: Thu, 19 Feb 2026 12:15:10 +0530
-Message-ID: <20260219064511.695086-2-a-garg7@ti.com>
+Subject: [PATCH v2 0/2] PCI: dwc: ep: Multi-function endpoint configuration fixes
+Date: Thu, 19 Feb 2026 12:15:09 +0530
+Message-ID: <20260219064511.695086-1-a-garg7@ti.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260219064511.695086-1-a-garg7@ti.com>
-References: <20260219064511.695086-1-a-garg7@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -90,93 +88,80 @@ Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000EE3F:EE_|IA1PR10MB7116:EE_
-X-MS-Office365-Filtering-Correlation-Id: dfbcf269-647f-4c49-0340-08de6f8277cf
+X-MS-TrafficTypeDiagnostic: CO1PEPF000066E7:EE_|EAYPR10MB997807:EE_
+X-MS-Office365-Filtering-Correlation-Id: 831513ba-864b-41a6-5d10-08de6f827b1d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|1800799024|376014|7416014|82310400026|921020;
+	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|7416014|376014|921020;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?i1GQPqFZpBJL9wjH4NWqN5sYEIx386A7y7UkK+nx6OCpU5LP6XnGSja2/Hjj?=
- =?us-ascii?Q?nNSWnEynhB83WwD9mh6CGqa0mgeK2TxHZ4+q63h7pnQGJht/+2teKXF+COPn?=
- =?us-ascii?Q?w9OeZaixaVQyB2v2puhnyXo7VOFxKzJ9CW0YSmwqARH5JB6xWKBy+CLFkVAM?=
- =?us-ascii?Q?cC9WByZ4Qb8mVEO4GZRIfjxT7aTH/xLSWOeRqbPC4y37K2BbhoME1La94WXK?=
- =?us-ascii?Q?uL0mKPZx6mGHJio8h0cuhZ1XeYKyZ8a7k0U75yOyNQI65sS8i5F59Z+glaIU?=
- =?us-ascii?Q?GSaiXjCkFOu6spIhZ8vG9ENiMeBHI+2+jWHGfVKrgiZOWoM9ZLLFmWA1Q00y?=
- =?us-ascii?Q?cWyoJq+wSjUSE432tt5lm2uojCKuXJxVF3WBh8lrcCNj268VINV1bK49tQm3?=
- =?us-ascii?Q?g3UdS+GmQ80oJa2pd5xE3O/0fRxyC95GQKuE2dlEwwvaBRGbjp1yJnBEwBD3?=
- =?us-ascii?Q?tm0oJj4UTE6eKtGcMkJcpdroUzb9r6s/MLOeUR7oONnCtjwOiKDsYrMNQhSw?=
- =?us-ascii?Q?vzXzCmY5Y5q29DVsF+PVGwXYRY6LpHNN/gu6WrEFCB80XC3YylLWQlGmys+s?=
- =?us-ascii?Q?tbFINsHcDPGuPtCxMtYGMho9z/xQVrlB2xHbrD1XGaP4l1uQkolQNf1ZK556?=
- =?us-ascii?Q?M5ySBKxlsW+nt5Q8Vr+z3N6YrkqAoS0/jpT6vzm/4x0vQiMcjnOWHPZUXIyl?=
- =?us-ascii?Q?83NySmEgIYB3fjhojQ16KyrR/P/KjkCsgd3FPYoR1419cCd9phzHJOXLZUb0?=
- =?us-ascii?Q?/iTZn+pX2ieWl0x9FDzYKj3raa4t67ZMYJUW8B4NB7TXg7euo4c0b3NX9mE5?=
- =?us-ascii?Q?NhxfZ3hCM4okJLNhvqO4PiqwCYRRs7ZotW1N9CdpEeIl3M3FRqXChZcIEDxb?=
- =?us-ascii?Q?ewlEbNXwFze38iOYlrsHfHsMzAUFqjs6IloesfXMH+8K0fSb0vD8iMllqJ+9?=
- =?us-ascii?Q?khN20sTFp3yzOPjilAEaoQGVSSJ5l0q4/gpaLJpUBl4gOJz1MCYLKjdf79Rs?=
- =?us-ascii?Q?ouBbi+5kmqkd5k3zDglE57+SfvghZPfoB97w3CnvATXGq57f4JB6F3bXWTZR?=
- =?us-ascii?Q?BftTQH8wgFU8mJujHpoOhLFerMmip/XSy4rKQwJQuSXd+8+OVc4iCTYzVJRC?=
- =?us-ascii?Q?fkMXi3cL32mTOhLLOfFiGD6JHAPnqeXdrihywpgXqih1JRYpKXS5c4GMqLN0?=
- =?us-ascii?Q?AU5bcgZqncn1Ach2add+htE9fzFlAmjNsbIpinwjG3xsWtbe1JiT0T4N2Mm/?=
- =?us-ascii?Q?z4PVykvpr+oom1DSamXl6MLXCguGDZnMUFnB7YHOiNRdz9M4oJO90M1I9VQX?=
- =?us-ascii?Q?Ksc5R+8USRPunm1cm/PZujkVREFmjh7/iAjW3cLD1AEhqDMfnSS2OKVWkUpF?=
- =?us-ascii?Q?QIeA1umz9kxkGZsU37qtMZnnDmdb2njfEDy1HF1kekjqVvg7R9E8xTvgqLtJ?=
- =?us-ascii?Q?U1I17w6X4NmcEpGTL3f16H3JCJPU/J9GnaC8fJEltCmIcLQcY9M7VCFmofBE?=
- =?us-ascii?Q?OsigO8zyLeXMG4R8JMJi1JqOUEwO4V/wKzhAa8UrKWdOYzsWfYZOzInjLAY/?=
- =?us-ascii?Q?cKO/EUKzKWy4dYwNH3WJ/Ohj05CbTFnHyJeeWixrWD1mQKYd94d7VgJu77gz?=
- =?us-ascii?Q?ffMtl1O8+o3th2UJRJzQ+hNcS3iG1bfpTEoXrWQKwJ6mR8UF88iqb5yxnMt5?=
- =?us-ascii?Q?RAX+e4HPwNR4Cw1P07xhSh7C8TU=3D?=
+	=?us-ascii?Q?whIB0coT2gBP270ZkpOd9jmMGTPKQZEB8ZuYiQ2K7lUakkg8KBkRb97tm8+c?=
+ =?us-ascii?Q?CFnMNojIZw2Zsj/xvSNet2vK/2h8qGMzy37UP3XrUzV7VlI6a5cqibWX9Q8v?=
+ =?us-ascii?Q?5eFRjjUgDAJ2TTsNk+QhS8UKFhtQ2EfWmW4sD81I54zccq3eI2dJF9zfN+FB?=
+ =?us-ascii?Q?8/rSnn2rV/o8gzNVvA8RrRBwJhNzB9QTfxOwVprnRM+pancGjd/6dzCr/pB2?=
+ =?us-ascii?Q?gJvJk+yDz9i/zEmDvERIOpAlp7GO8cHUsltzGSL12tsrByLW9ozgI80tiYkx?=
+ =?us-ascii?Q?HIB816YTCiI8xc7zSMdrVB/Mqjtzj5JIHuK2UHZyepB4+bQCS5tLlR7tdXcG?=
+ =?us-ascii?Q?gNFfEyfDUytFsJ7p/0Qmf+1PtzE5NJzUGgF0VYu9XFDuwpkbHA/ImmE+xuxP?=
+ =?us-ascii?Q?INS2N4BvSG8yGF2L3/J03selLQ6q2b7tL9vX24e0zEZ9lMYU3xAFH8acdWeI?=
+ =?us-ascii?Q?oNCbMqgjVaFa24BMFn37D7SibYkM/DjEcdipnPZyapPYP6w/nLJQTXq4yrLi?=
+ =?us-ascii?Q?HhusJF9plV8WHhUwceosMy+Fv4j0hO2K8iK/Ab63Mya26dsOkHbMkMPeuIlW?=
+ =?us-ascii?Q?LfJ1w9ZeTd3QL2bYop4PzB+xKz1tq1uMLXdUaN+uzbScnq2Uj0lERuunZJZE?=
+ =?us-ascii?Q?S0m0HAl0uq9HLABRFGAxuYIAG3p3xwvSSTynrLDRjD/SImAx6z1YamU8sntd?=
+ =?us-ascii?Q?jTLlaNwtF083cEUPiipyUZiJtR0MxgVJERxkoe4Gea3rWPWfrm/Bn6i0bMcQ?=
+ =?us-ascii?Q?vY4rkXev0HN4cNv/ES3wT4W8mdPqB77f4QuFg1bEdjbIrH8jp9aWN9r9/27c?=
+ =?us-ascii?Q?iENaVe4iKE7LmDlH7+cUfqBs+YyRmO/+mjULve9pLs3tJ1EfcDxz4ZBNINgG?=
+ =?us-ascii?Q?QkPeLjFzqwBa59PSx1gwB8AQpiNQLHvPmKtWlUNIXBRRrHDUd2B1GsEH9ABI?=
+ =?us-ascii?Q?2ncXj0ZuvHVX+/Nm5QbuqtZOr5Z1fLERf8UzAMCZjoQkoV0TA3Ofxaxyqub9?=
+ =?us-ascii?Q?LfCLM8G7tqiq4QkutcbplRRPQ+NzV6J/ka97FtPm+OeP0c+x3iAH+SNByJ1E?=
+ =?us-ascii?Q?2K2sq1zaCYWmIAQcHsLwiTHvPEjeo/N5aBB79ReDI28YKh5O41dcX/uZ1OCK?=
+ =?us-ascii?Q?1FKYmB45RyfkTiaEJJeRAPMGtpKe0tapBdee6OpBo423wxLw/OxGDEIrdJR+?=
+ =?us-ascii?Q?VkDSm4h4GNvCfBVuth53BmvdSeuI/WWIzflNNFIgrj2k0lcn5lBAlNtY/yDo?=
+ =?us-ascii?Q?E14oVdjVHHFrUpBHY/jn2UJEcQH2T2nJB4kOcjhU66/l8vgHUXXNOZoN1G29?=
+ =?us-ascii?Q?pLmgmVVNhwrLn60e/r1vYoyeNte2qTBnWGYleC/YNxzfqxw2W/0JkxJCopF3?=
+ =?us-ascii?Q?YrndeoIqAz4H+zs68EKohWOV19nli1mam04mgH5HWcywRi54gQW0Oj8N+Qwh?=
+ =?us-ascii?Q?x38BvuJlIdqmIb3wuZe1wqUZe1vUGElwknyjvTX15laU1nwHuIqC52Fr/1Ko?=
+ =?us-ascii?Q?VdPFaQMW/IGrhVL1bAKKKCmCD1SUbkeMT23WxLhQZuupQYPRcdgrB1WuKfeR?=
+ =?us-ascii?Q?DZb2T+P1olgxL3bk2btilU6fC5g70PPebgqvfGhDzW23diDHx1VvQigiUoh6?=
+ =?us-ascii?Q?tFfjU7mK/IuAism0J5WoGRhomMn2ffLIq0RfrWpHDINm1F1vWqQVw52JOBTH?=
+ =?us-ascii?Q?B91ctFC1nKYjulhJefwxDHmH/+E=3D?=
 X-Forefront-Antispam-Report:
-	CIP:198.47.23.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet200.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700013)(1800799024)(376014)(7416014)(82310400026)(921020);DIR:OUT;SFP:1101;
+	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(7416014)(376014)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	fejENUhHGaSWs7EGRLW/7/5Z5LC8zytYzbeWgv4GiUGExunrub126A/L0z7GsdzKWrK8wBv0M75LJqj9lzv41tHeM2wdH267klZQW2vAOsRXL6OUqSKURAx+DKPUBgcV3o+WFFTgshgtBoHDLgwwYER37jsboL7hZ9XIsLyL3nAAfjxpSI6BN5kWz51WIrFSKumyAAYNWDEGIABxWm8iauYu3oUcu5AVtHVw6aomi8yHDZs6DgOWslo2CErCAqXzNBNzni6l0nMp4H5f4TRbrHyz+2wcOqoMFJrZT+5aFbiGXFEImQUIHThAxCXFmDeJLd8eqdubn+dBJ6mrvhYeX+zb9zGauaqqIoL2zrSJ0NVJigxB/yx2nxPhpQv5ncjj7IsCi+VD1cMgtKRWjxiPnPFWfPirfwhsA6HoHWGazARq04eZZBONTzKpeMB4/Ze9
+	zKpfEc5SvT/zPyYMxYMH3k/omkvJ7jyGE/FHQMt+bLxL3Orld/jZaSn93dOaQ1SrDpb6y9wIys5SSAhRXVhllGx1FhedZB6gqzQ73dZfPdCu/9O1aWJ1VVS4RIUK/tZi6PQXQYXUql7MMjNamUAn1hRkV05r3oqfdH62P/I7hHhb21Dp3oYbtpzd01/0meheQYsAEKFE71+FOoDNxIfWc1+Kq75IN3SvdWXTimjIJevGGvNfkBKqXZRnJbpbX43fsnNBLDBD/zur5zu04rIANyErAOaZ9oMIMrskXaSdgfM8sXlUc7ucpxK6OoayCSTiGzV1MSZh0CMDeYwPP2NIXBdgjv9VWU1uWkVICpO4ZkAJz7r/mDQx03d8bNbeau4ST1th4ZJiz6tNfCsm9O9P8+TDMtyQrMKL3bkbDl5lnfHZyrdSmNdseMwOTMy3PtV1
 X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Feb 2026 06:45:27.8878
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Feb 2026 06:45:33.3739
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: dfbcf269-647f-4c49-0340-08de6f8277cf
+X-MS-Exchange-CrossTenant-Network-Message-Id: 831513ba-864b-41a6-5d10-08de6f827b1d
 X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.194];Helo=[lewvzet200.ext.ti.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CY4PEPF0000EE3F.namprd03.prod.outlook.com
+	CO1PEPF000066E7.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB7116
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: EAYPR10MB997807
 
-The MSI-X configuration code reads from the correct physical function's
-register space using dw_pcie_ep_readw_dbi(), but writes back only to
-PF0 using the old dw_pcie_writew_dbi() helper. This causes incorrect
-MSI-X configuration for other PFs.
+This series addresses multi-function endpoint configuration issues in
+the DWC PCIe controller driver. The changes enable proper operations
+for physical functions and enhance the multi-function endpoint support.
 
-Fix this by using dw_pcie_ep_writew_dbi() to write to the correct PF's
-register space, matching the read operation.
-
-Fixes: 70fa02ca1446 ("PCI: dwc: Add dw_pcie_ep_{read,write}_dbi[2] helpers")
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
----
+This patch series can be seen as an extension of the patch series:
+https://lore.kernel.org/all/20260130115516.515082-1-a-garg7@ti.com/
 
 Changes from v1 to v2:
-- None
+- Fixed the minor nits in the patches
 
-v1: https://lore.kernel.org/all/20260202072758.101845-2-a-garg7@ti.com/
+v1: https://lore.kernel.org/all/20260202072758.101845-1-a-garg7@ti.com/
 
- drivers/pci/controller/dwc/pcie-designware-ep.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Aksh Garg (2):
+  PCI: dwc: ep: Fix MSI-X configuration to write to correct physical
+    function
+  PCI: dwc: ep: Mirror the max link width and speed fields to all
+    functions
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 7e7844ff0f7e..771241e1a2c9 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -745,7 +745,7 @@ static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 	val = dw_pcie_ep_readw_dbi(ep, func_no, reg);
- 	val &= ~PCI_MSIX_FLAGS_QSIZE;
- 	val |= nr_irqs - 1; /* encoded as N-1 */
--	dw_pcie_writew_dbi(pci, reg, val);
-+	dw_pcie_ep_writew_dbi(ep, func_no, reg, val);
- 
- 	reg = ep_func->msix_cap + PCI_MSIX_TABLE;
- 	val = offset | bir;
+ .../pci/controller/dwc/pcie-designware-ep.c   | 25 +++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
 -- 
 2.34.1
 
