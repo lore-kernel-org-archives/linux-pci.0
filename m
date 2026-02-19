@@ -1,173 +1,247 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8B15284898;
-	Thu, 19 Feb 2026 18:06:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771524377; cv=none; b=QFEWwcrlkOUgyo5IN9c2MWRFV7OJr66wIRPqeEFPhhBoxEvCT+Kh9259qZL+wvvcJV7+wFjKqRoj+YStHl0UG2agtRypgKuooIcppAjTxZGnqFX+BfseUwbE3TE0aIWUGafX0pqYn2A8l2asCOJkCMSZbUIHCHwl2BlbhniFa0M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771524377; c=relaxed/simple;
-	bh=ei+32J12dH5XTmY6HIsq/qfutT8wLhlFs3aD7kLVufI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eJh4TwNDHHHxvTIZGbMvD7YZuLSTv2ixwZWge1fzWb4qXwNrDqjER4p+kjrspbBDylgoZ+ipNKrtGCCe7khCGbCJIgs7Ms+7xoGsa6NV8ZY0QldjuW40MuowolimQfKnf1eECGy3mM2zfN9cYrcNuUnq2FphLX74waetLtKQRgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=jsuEO8X1; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA811F4CB3;
+	Thu, 19 Feb 2026 18:42:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771526562; cv=fail; b=l5FzIXNf+ve1uAtAJPakL65i8D6Y7v6W0NstuqKs78hyChH/FXKI+XqI+TuPaj4WP6GresIaU0I62K5U9TWlhZSzeNwAIPzBc/PTpsIvUNyOa0xPwO3TFXNFmRGw5DiTPt07bcQwYod7rXhTqNsOFHz9QcGTn1+7FSChZ/rkvAc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771526562; c=relaxed/simple;
+	bh=NFcU+hjWvTtt/JUlGe/xEyL+i0vLy8uhHSSKI8H5TkY=;
+	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
+	 Content-Type:MIME-Version; b=h2ygu1noYz8rwy3kpCQ5BfZSNHSIJaqGVum6W073yh3K5+5nkKVAw5gZMjMAHd2vX1RaSouy87LW4Igi9ceHF8OLzvgaaHZXOGtTnyMY1IGArHX6268B4QFtYOj1sSokVXzPZM6CSu5ywsXa0lcr2Txcm0W/SM73b9l4GVwvYg8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=T+bkNbZ3; arc=fail smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="jsuEO8X1"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61J9A0nR1260396;
-	Thu, 19 Feb 2026 18:06:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=i77lVC
-	+87WV3PYgyMRs88BGYUND9L7VM9FRfQUTm8vk=; b=jsuEO8X1bgt+KZBXDNNNQY
-	paLZQ5ZgSZosZeqUYn1pe9WXnMzqGo04a3KJrh3bLvR5inW6+N8w+anvmdLMpMvx
-	EXyImY+hxbqyFcJg/yO7NGzOo91Y4OMXjlFjrgBjdTR5TntVg1tjDKgT9QVR0evy
-	lUVt+QvozMaEMA6cjafXxAvRUDztLzKDK/i8rxb8gT7CuhFLDoDsMEr7Ae+NjXuE
-	f5dxwsGjw6LOj0fOy8vwW9IyzMWnqBlRxv+6g5k5B4Mp0DZTk3YM79IRn8/t9EL4
-	mQ/3YC1wwjk8y1hmxArm0BudYv+wgarB6iwzs1bNb1q7jGyUTT1uzQNLLZVEz71A
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4caj6s7dsa-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 19 Feb 2026 18:06:09 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61JHWwkH024324;
-	Thu, 19 Feb 2026 18:06:08 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ccb45da1g-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 19 Feb 2026 18:06:08 +0000
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61JI678C13632220
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 19 Feb 2026 18:06:07 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 88D465804B;
-	Thu, 19 Feb 2026 18:06:07 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4C08658059;
-	Thu, 19 Feb 2026 18:06:06 +0000 (GMT)
-Received: from [9.61.251.177] (unknown [9.61.251.177])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 19 Feb 2026 18:06:06 +0000 (GMT)
-Message-ID: <f6ef9900-ae3a-4580-a89d-f497fb4e5adf@linux.ibm.com>
-Date: Thu, 19 Feb 2026 10:06:05 -0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="T+bkNbZ3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771526561; x=1803062561;
+  h=from:date:to:cc:message-id:in-reply-to:references:
+   subject:content-transfer-encoding:mime-version;
+  bh=NFcU+hjWvTtt/JUlGe/xEyL+i0vLy8uhHSSKI8H5TkY=;
+  b=T+bkNbZ3iiwY4saULFhlKYuaDsiFFdLkUdMfLgm3fvUS4ISW252fO3lp
+   Wt9UyeM6mzla7e4byQGH/rw+ZI8zjlom0rV1zeQEbEtnGOohu2fa9RlD9
+   eq/Vs8ETFffR3ZVJ6yaJD3eLqj8nsjOWn0pB4pGdzt3Co2YxxBe173F98
+   QqlrnU+Inp11CRGBDW2tOuGD71RAdg0toMi+nWLyzERHz7PN4Ih32Z9o/
+   +iQJgQceY0tRCgxqKiumVgOpnYjyDJOu7zz2EPo0IbggEghdsudYfCSjR
+   hOrkTVcQueF/fXSJS7ixFWfcNNc8J5F6RIWgv4jrP+3TBCMw04wA7Fe8U
+   w==;
+X-CSE-ConnectionGUID: nHgrJVviQyCzM0wV4E5Rkg==
+X-CSE-MsgGUID: DqOYx1WKQi24Dmdrce38cg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11706"; a="71646315"
+X-IronPort-AV: E=Sophos;i="6.21,300,1763452800"; 
+   d="scan'208";a="71646315"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2026 10:42:40 -0800
+X-CSE-ConnectionGUID: /1UxOccUToymMPzmVS2Jwg==
+X-CSE-MsgGUID: 4aA9WNAaQ1WfXYpAXeShBQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,300,1763452800"; 
+   d="scan'208";a="252296386"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2026 10:42:40 -0800
+Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Thu, 19 Feb 2026 10:42:39 -0800
+Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
+ FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35 via Frontend Transport; Thu, 19 Feb 2026 10:42:39 -0800
+Received: from PH0PR06CU001.outbound.protection.outlook.com (40.107.208.57) by
+ edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Thu, 19 Feb 2026 10:42:38 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Ow/iobvkTBetXv3yHoLrNn23sesL+c/RP84IsFmlsFKeTgkHr3mZM/nVnxi1gIcGwwV3kqbBYXOPFvtAFJ/IDLMY/2lgL2afHQRjusOZEZJ88u6tnF55hlamAH2Vsyqp6MpLIMrrrVBGyGFe8cJtRxGm/luO2nEIhlszjdxrPwxIPQFxI5FnUN5RU83yFHoKDPC65BSOYBw1tNDjv0AOOgtpl6njj+oqiC+3th3rOp1LkgwMNCOJz+eM5aQvEReLipXjSsqGg2mw8L/ZgdtYmESUslW20t4siHC187z6i0w3AZkS8bV6jEUwgHuO9Yds1GriQFNWWEp97k4LjmudPQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=auVbDHi9euLkc7aVlUwKyx1IIWKbbS3rRGZeBjarTCs=;
+ b=Sizwb4Im5C1B1ZrPioBy0GUR3AmjHgaaproIoJbVMWTfWoIHSn+ifqAYSep2M5VIjAkx+0bZNIMZh1+7Qx+h1mBvYmFDeXJsYXEjtRVnAU42xYhELmj5tAGnKndPr2sJY2DKzD8vWF8lA+iNUKU/nBUzuZ4xOadOLKHMhDYszhY4j2epHLEKQjTyf0bXrB0J9AZJvbItYBGyEsZhg1zv/joVMbrU9a9uF6bKfVguskHIYYpTYVJOFWeEu59iP26i6qPtGv7WFQsAyrNgPbYvt1+UhfqMNeBzyz1Jc41T51SrJHBk9Huc5Y6Q235BvQ37U8PAv9mbnsW/wYkrD6ugaw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by MW4PR11MB5822.namprd11.prod.outlook.com (2603:10b6:303:185::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.15; Thu, 19 Feb
+ 2026 18:42:36 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::1ff:1e09:994b:21ff%5]) with mapi id 15.20.9632.010; Thu, 19 Feb 2026
+ 18:42:36 +0000
+From: <dan.j.williams@intel.com>
+Date: Thu, 19 Feb 2026 10:42:34 -0800
+To: Lukas Wunner <lukas@wunner.de>, <dan.j.williams@intel.com>
+CC: Alistair Francis <alistair23@gmail.com>, Jason Gunthorpe <jgg@nvidia.com>,
+	<bhelgaas@google.com>, <rust-for-linux@vger.kernel.org>,
+	<akpm@linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<Jonathan.Cameron@huawei.com>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	Alistair Francis <alistair.francis@wdc.com>, <aneesh.kumar@kernel.org>,
+	<yilun.xu@linux.intel.com>, <aik@amd.com>
+Message-ID: <6997599a471ce_2f4a1004@dwillia2-mobl4.notmuch>
+In-Reply-To: <aZbUS31_lsLr72Uq@wunner.de>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+ <20260217235604.GA1595019@nvidia.com>
+ <CAKmqyKNeyEN-h9tAnfM9j0GWiFU9idXheGQ1COCqT9MVZgsZYw@mail.gmail.com>
+ <69964ddaa5471_1cc5100c3@dwillia2-mobl4.notmuch>
+ <aZbUS31_lsLr72Uq@wunner.de>
+Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: BY1P220CA0024.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:a03:5c3::9) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 3/9] PCI: Avoid saving config space state in reset path
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <kbusch@kernel.org>, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        lukas@wunner.de, Alex Williamson <alex@shazbot.org>, clg@redhat.com,
-        stable@vger.kernel.org, schnelle@linux.ibm.com, mjrosato@linux.ibm.com,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20260219002010.GA3445930@bhelgaas>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260219002010.GA3445930@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=dvvWylg4 c=1 sm=1 tr=0 ts=69975112 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=KHt2tSRMWXP2V5P9C2UA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: PgvV2eCn__ZMzQDdTIqaBapV090V5-Fl
-X-Proofpoint-ORIG-GUID: WrJCnkgNYeeWHdlD_Gt9-2Vk2ySxY_MN
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE5MDE2MCBTYWx0ZWRfXzR8yYh1Mxv/K
- tMs2C07tybTT8Qi9XaYmMINHICXHqr3uXBGdfqKzXjaM8B1GBKwh/U1/G9SwLK7tyjXseXc+N3Q
- 1/3m9xzLAdaBNFTBpm4pgpMULg5+XoRFdEaX/oYT2kBc8NeBtyHaOoDa/d3YvYGsSxCucyve+Xt
- vWL9zBX+o1FMArKEeFfg16RkxLmmtFZHUJUg3SCZqWMecHifW2Ia4w1pIyqkZooVL3ZuBxvVAhe
- u4RigeZi5y3eG9P35f+gNOE4TYsMP0GGlmXxSjHPAKRm2B10mKy61KRsh0jqcUlFIj172I6qoPw
- 2InjNQzO3WpZZ9Mv2Q+VbVxHHI96uYG/vicm4VzQx8qRmQbcQsGnR22xLfwpHz+RX+zwRPBUCQX
- 3niqoiq8Ov5TCIGvYzdARRzpZcDYOid6f0MF9SPfYVrQffqI80d68O8bD3f/Nn7Va93k05z5Ifi
- ibfLMwpr2SRu+bCC8dg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-19_04,2026-02-19_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 lowpriorityscore=0 impostorscore=0 adultscore=0
- priorityscore=1501 clxscore=1015 malwarescore=0 phishscore=0 suspectscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
- definitions=main-2602190160
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|MW4PR11MB5822:EE_
+X-MS-Office365-Filtering-Correlation-Id: d9dae410-55ba-40ff-5af8-08de6fe6a666
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014|7416014;
+X-Microsoft-Antispam-Message-Info: =?utf-8?B?eWxzNGNqSFNkR0h6R1VML1ArbHJlRFZuaWR2elhSS3JyNE1PVzBubC84Ukxa?=
+ =?utf-8?B?amZndGlhNGdXVXdML25hWHdNaUQvekdxVTIwMkFibk9vMVd5RWFnK1hPT1Ns?=
+ =?utf-8?B?bUREaXZDbkFnYXNoN0JvVUtUT1FEZkRNRzg5Y0dGNnhBRGdWYS9Mb3drQ01R?=
+ =?utf-8?B?L2dMajhEZHRGSFNWaFZ2Q1lGMStIQit2RnJ5UUpzekFKWU9HNktJcWFUSGlQ?=
+ =?utf-8?B?S3graldFOXhETTJPOFljUS9NOThTNUVKRy9XS2Q5S1lnTGdNNHMvM1RETW1K?=
+ =?utf-8?B?L2paeG9NQWN4b0Z4MEVwMkFnejlqUkNMOXU2WTk0QXJQYlMxZ3JhbDE4QkJH?=
+ =?utf-8?B?TDN4SklRL0xoaTNKQ054anMra3NuUFhvYTdVQ3JnUkhENERadVZ4Nk9YS2tF?=
+ =?utf-8?B?N2I0YlJPMGk4bExGdXpxN1BXeXBmRGYwWWl0RmRNaGRSVW5WZmRjK0hGcWI0?=
+ =?utf-8?B?OWtjTTdXcTVEYkJmMjdDRHJxQ1BQd0VUcmJrZzlKSzJvL3JxazMxNmdtNlJ5?=
+ =?utf-8?B?d0VrWUU5V04ySk00THVYZXlKNmtDcTFEdU1rcnRqcDc0aHNjT2hFWnNzM3Zh?=
+ =?utf-8?B?cXpzZlljZE9JTkk0ZFlaZjN0bXZGRXQ0NXR5OGNBbVYwYy81RkJaeGsyN3ZB?=
+ =?utf-8?B?K0Q2VHRoV3JCcGkva3BtREVEa0pNYUFwSEsyRTdKdTVrUE5tV00xZ055Ynd6?=
+ =?utf-8?B?bzdNenBsQWMwTmxiNC9ub25WVC9nVXV3QkpmVnhQaEs0VHp0Yk1pSkZjVmVm?=
+ =?utf-8?B?SFgzU1RYY09yc1U5SDltVFpDaCt0aTNKVjhmeDVJVmprRlJhbktGN3NISlN1?=
+ =?utf-8?B?a2ZuYkFaUHVRSUJOSzFPdFJ0RFFkM1g2ekVpVUV2ei9XMEVCRDR5SVh4d09a?=
+ =?utf-8?B?Qlhlci9zQlJuL29vQkNqWFdvM0hTVXcyNlp6RzM3dGpKTVh4Ums2QVUyQzlx?=
+ =?utf-8?B?UDkzdnMwakU5dzIvRmVBL1FUV0EvbDc5ZUxPaUdzWGxYYUJaRmt1K3ZVZGdi?=
+ =?utf-8?B?V2lQV1VieXhDZ1lTTnR1ZDJ4cWZtOGJlQzA2N2ZYSHk1MkViY1dUaWs1dGYw?=
+ =?utf-8?B?YWsvQjNkaFVTWVBteWJxMkNlTVJraENPdGczc3Q1VUFLY2NjYXFjVHdBSUtX?=
+ =?utf-8?B?UndTQll3OUhuYm5sMXpsdmd1cXhyZGdVZ2w0Ny93MTJuVk94dzJ5UUp1MEdm?=
+ =?utf-8?B?KzdJbmxGNmYxa3JPK2x6ZTM2ZHlTZTI0LzE4ejEvSDd4L2dVOW9jbWlZd1pJ?=
+ =?utf-8?B?dURLUUdwQ3ZFSXk5elFBS05sN1RlZzd5dHVPclk3WEFGaTNuUjBaMkJUOVky?=
+ =?utf-8?B?S0lEYWpwak8zQlpGaWN5TU1zZkxpQ0FEUVFlZVNhY2ZJTmJiVmN3WnpIWkJo?=
+ =?utf-8?B?SVJ6RmpUTWJGL0l2Q3dMM1EyWkF0MWtLREU4SHFnekpJMnlEWkU3cUQzcTBB?=
+ =?utf-8?B?MjdNUkIwMkNYTFlTTkdjNkNkQTdiT3doWmpyS2FyQ1BIdkRBbitGdEFKYmFa?=
+ =?utf-8?B?U1Nlbk0rNzUzR240NG5VTGp2T1dLakhJRzA2d3VZMTEzNWdwNS9RazBwSFZD?=
+ =?utf-8?B?ajNIdS9VUkVacnVVT0RyZS9kY0Z2aVhudERXUmFLbjVpKzMwb1FsRmNvdXha?=
+ =?utf-8?B?Nk5qVDZVc3RIZG1zbnBwK3ljVStPNjhPU1Z3UnFPOGd0VWJFckxQNlE1QzdC?=
+ =?utf-8?B?K2dLRmtlei9vZEpyMitFTzdKeVZqT2UvekplOExEaXRWckdvZmVyUW9UWUNh?=
+ =?utf-8?B?Yzd4M1lUckFBVDRXUDZaL3dLV0l5U2p5cDY0Y0RXcEt3OUFac0RMRmtLMHll?=
+ =?utf-8?B?SDBDVWpLUldjakU1aU5mc3ZHTEsxYmFKZ2UrajFRK1B0bWdXZStINis0UXVX?=
+ =?utf-8?B?WFdFZ1k2dm40NkQyV2pGVmlsS0hocExseVk3RHVLOEVocWVZV2dtZDB0ajhC?=
+ =?utf-8?B?U0l2QStBd1VDN0dZL1dKQTZ2T0VIWDlaRmdLL2ZTRkk3d0FEL2lHTVhJMlVB?=
+ =?utf-8?B?OUxXZm5sNHB0c1V1OWI3WVlKbERVNTBQalZPN2s0Rks0QllsaytLeE1kb0dx?=
+ =?utf-8?B?U2k4RlZiUGx1L1RCNjh6Sk9qN0dRakJyY1lDVHZXSDFONHFqM3RvcDVuYjV3?=
+ =?utf-8?Q?8EKm5guHB7I853UKoLjoslk85?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?VUFHbTg5b1NPRjdKdjlqQStJbTN6M0IybUw5YktEU2JUbXVXNXhsc3E2QW5o?=
+ =?utf-8?B?TWR2Z2ZTQXFpM3dIdXQva1VvZFJkUWVCZ0hPL0Z5OUI0eWhFRnh2eWViY0ZI?=
+ =?utf-8?B?UjNxMDRlbnpicFhCNnk1Tit3engvVm9McDhTMVphcXFmL2wwRjV5Mjc3Uzc0?=
+ =?utf-8?B?U1hIZzZEODVuZEgvUTJzcExsS2lEN2tRNVNnYzRHMysxMFNvWFNZKzNOelNH?=
+ =?utf-8?B?dldlMHZwSERwbldUL0RHR3c4V1JwWWxkRDB0RHU2U3BJQ1A4VzJadm1VS2wr?=
+ =?utf-8?B?dUZCSnJmS0U0M2oxNSs0aS9Id1NONEZrQVpmdWxoYTlnUTkzMnRMSElEcXRz?=
+ =?utf-8?B?TTNGOFFvdGtSSWd0cmRlbXNhK3NWciswNFlyZU92UUNqUWJPUWdLdmVZa01t?=
+ =?utf-8?B?Mm12cnAyMStjc3V4TzlnK3pqNXN5dHIvYVMxQUJZOXdhMXpDQ0xyYUxOcjNP?=
+ =?utf-8?B?Mk9vanJyeUd4Z3JwbmV5YnJsVzRGR3B4aWF2V1lrZ2FaYkFoMXJlenN2SU05?=
+ =?utf-8?B?MzJXbksvWGZZYjdBYTExV2JXRmpRZXpWNkViSWY1NWtjWkd1dUhKNUhUaU1Z?=
+ =?utf-8?B?ekE1UUdOeWkzbUZSbTNwc3hPQnNwSkFOQnJRQy9ZSlY5VEtWS1pwTHg3RC84?=
+ =?utf-8?B?OVR6ekZYUEZKeGhRaDNNRTNDcjlXNnBDa21VQXE2SWwyWStTVzJnYm16R254?=
+ =?utf-8?B?T0lLUGtJWFVtWDF6bndsbDlYbmtkYzM5alpwY2dWU1MzRHdIL0Rlb1pZRFFX?=
+ =?utf-8?B?cjI0c3grR1hCTE1rRE1JL0dLNFNqQ0lTVk04WGpzY3N2SXJGT0tSRlI1WFBi?=
+ =?utf-8?B?aFRhTXd4d21HUnVRMlhlWmV3RmovcGFBVEt1MHFSdTJEUTJtOXIrYU9jVTVx?=
+ =?utf-8?B?dk5qK2tYdEprejNVNTBYVW5FNVNTU0x3RzgyWUJMRzg2bUdlMmtadGh0cmc2?=
+ =?utf-8?B?Qzh6d3ZoSFlDSGx3cXhFQ3FDZlgwOGR5ZGl3MnZLN2lBY3JudDRTd1VZYkZY?=
+ =?utf-8?B?UmJrNUFZTlFJVjRvQjE3b3RHK3RzbVBrQzY3MXZRZk0vRGJwaXlQaEc2M1dr?=
+ =?utf-8?B?MnJEL1dXaC9iMTRZYis4RzFPdjFjZzk1SnZHdVlENXgrMlE5LytOTzAwTGlD?=
+ =?utf-8?B?eWhVazNLd1FkR0VIVG5EOEtLVFA4ak1TaWRMN0lMYlFmS1ZES2lHazMxNXlB?=
+ =?utf-8?B?WmtsSDVNVEl4bXFwN0pDTmdRb2VMWVQxL28yZ2dKUXhUa0RWd001RThNQTRB?=
+ =?utf-8?B?SXJJZVZLdXR4SEtHZ3RUcDhmV3lZY2tvZTJTclVYM1ZINXpyUnlZM3Y4b1hM?=
+ =?utf-8?B?ZmdpUEdRWkJXUWIzRUtxWlh6blQwSzBoV0lWUkJ4T0F5TG92RUQ1eURpNGFa?=
+ =?utf-8?B?K1Y4V0JwMCtUUFVtL2l1RTRTWkRmM0Nlc29ZeGluTDhROVlaUG1rakR2dUkx?=
+ =?utf-8?B?V2ZJVi9sSEo3clNzQUJyUTR1b3pCMS8wZjUzRWFiby9jU0s1UW0xVnpZNWkx?=
+ =?utf-8?B?ejFHd3NHdFgxK3hxYTdpZmxra0pJdGc1RlpYQURFaXRXOUVzVXZwVm1hK1hH?=
+ =?utf-8?B?R1FJSE1HdnB4K3NBME5peFcwR1l5WXAzOXRrdjJ5SDdSZ2JrUitPSHhTZ0R2?=
+ =?utf-8?B?cFlIVThQTnU4UUNzRmVCdVVQdDRCUlVwZyt6N1B2SE9IQlJMRmphRkl4MmNB?=
+ =?utf-8?B?eklwc29kQmJmTERORzhXZVR0WVlCRkRVaFJPNUYrbTRKaDlDVHV1Mk1nVER4?=
+ =?utf-8?B?dFQvbUY1VUdZdTVGL2RyZmNBOWkwZmk2U0hvNWVXM2pUcEoxTkRqdUNFZ1ZZ?=
+ =?utf-8?B?OThOaWVDQlpTN2IvNWgrQnlKUWhGS2MydDZ3WXkrZ0xiWXRqbmhMakFXbnJv?=
+ =?utf-8?B?UjArdGFYRzd2cWxYTFVNNm16SWl6aXlLdm1IcXBVa01xNWZvMEVFclhNVi9z?=
+ =?utf-8?B?OGx0RUVFbnpoVGZvRTNxbEV4REVuc2J2YXdidStOYjVBQ1Y1T3NGbDJ5blF6?=
+ =?utf-8?B?Kzc0bzFVUko3MDRUNWFXYVAvZy8rbHRUYWlSemRMcUgzWVgybXRzL1RjT1hN?=
+ =?utf-8?B?Q25VT1l1NTBNcTdWY1Z0bmF1aDRtb2hiY1hvbXI1VlV6TWxxUlM5NytFNmI0?=
+ =?utf-8?B?OGsxVnBpaG9yeGRvNzg4TFJ3emlwcGdFejRKM2xWd3IxVmlwMWk3WWZMbE16?=
+ =?utf-8?B?bFBUK2ZtejJWUFdCb09lWXU3QjA3bDYybGd5L2JiQktoYkZJU082SmlaZUov?=
+ =?utf-8?B?dmJ1SnB4Y3lMakJzOTRySWdkN2xOZlMzVFArYlllNkZycC9qUlowNGV6TERS?=
+ =?utf-8?B?TitCZzZRMHVHalpOYjRDTXM4QkRSbnRlS25hSVR1NlVlUGp2M3oxQmQvNVBN?=
+ =?utf-8?Q?Gt2pWNRncPqOVTU0=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: d9dae410-55ba-40ff-5af8-08de6fe6a666
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Feb 2026 18:42:35.9633
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: zulBtwk7Jp3QBZs0dAPUsy9GZAC0ZDIQbwPhmc/6Ge3zw+nbKA3s9r8OpQnGT7dlx5q93BH0w0N2uCFXlpJ9F+Yeh4utWvBtWbzdEjFdG/k=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR11MB5822
+X-OriginatorOrg: intel.com
 
+Lukas Wunner wrote:
+> On Wed, Feb 18, 2026 at 03:40:10PM -0800, dan.j.williams@intel.com wrote:
+> > However, I notice that Aneesh needs x509 certificate parsing for his TSM
+> > driver [1], I think TDX would benefit from the same to offload needing
+> > to specify the wall-clock time to the module [2] for cert verification,
+> > and SEV-TIO (already upstream) is currently missing any facility for the
+> > host to attest the device.
+> > 
+> > [1]: http://lore.kernel.org/20250728135216.48084-17-aneesh.kumar@kernel.org
+> 
+> There's a newer version:
+> 
+> https://lore.kernel.org/all/20251027095602.1154418-1-aneesh.kumar@kernel.org/
 
-On 2/18/2026 4:20 PM, Bjorn Helgaas wrote:
-> On Wed, Feb 18, 2026 at 01:48:57PM -0800, Farhan Ali wrote:
->> On 2/18/2026 11:35 AM, Bjorn Helgaas wrote:
->>> On Wed, Feb 18, 2026 at 12:02:01PM -0700, Keith Busch wrote:
->>>> On Tue, Feb 17, 2026 at 11:55:43AM -0800, Farhan Ali wrote:
->>>>> Yes I think you are right, with this change the PCI Command
->>>>> register gets restored to state at enumeration. So we will
->>>>> lose the updated state after pci_clear_master() and
->>>>> pci_enable_device(). I think we can update the vfio driver to
->>>>> call pci_save_state() after pci_enable_device()?
->>>> Either that, or move the pci_enable_device() call to after the
->>>> function reset.
->>> I kind of like the latter idea because it seems a little simpler
->>> for the rule of thumb to be that a reset done by the PCI core
->>> returns the device to the same state as when the driver first
->>> probed the device.  Drivers would generally not use
->>> pci_save_state() at all, and they could share some initialization
->>> logic between probe and post-reset recovery.
->> I think the vfio-pci driver was intentionally doing the
->> pci_enable_device() before doing the reset. As per commit
->> 9a92c5091a42 ("vfio-pci: Enable device before attempting reset") it
->> was done to handle devices using PM reset, that were getting
->> incorrectly identified not supporting PM reset due to current state
->> of the device not being D0. It looks like pci_pm_reset() still
->> returns -EINVAL if current power state is not D0. So I think we
->> can't move pci_enable_device() after reset. Unless we want to update
->> pci_pm_reset() to not use cached value of current_state and read it
->> directly from register?
-> Devices are generally disabled at .probe() time, so that will be the
-> default saved state.  But every driver will expect the device to be
-> enabled after the reset.  Skipping the save state at reset time seems
-> like it would need a lot of work first and maybe it wouldn't ever be
-> practical.  It wasn't really thought out; I was just hoping we could
-> simplify the save-state model and maybe unify driver reset and error
-> recovery paths.  I think we need to drop this patch at least for now.
+As I understand this still has a dependency on a new base ARM CCA
+posting. So the nearest term solution is to just wire up the existing
+certificate blobs retrieved by the upstream SEV-TIO driver.
 
-Yeah, I agree this patch might be too disruptive for drivers. In that 
-case would my previous version [1] to at least prevent saving state in 
-case of an error be acceptable? Or is there another approach we should 
-consider?
+> This would allow upstreaming at least the three X.509 patches at the
+> beginning of my CMA series (and Alistair's rSPDM series) and thus
+> reduce the patch count a little bit.
 
-[1] https://lore.kernel.org/all/20260122194437.1903-4-alifm@linux.ibm.com/
+ARM CCA only needs to parse the certificates to confirm to the TSM which
+public-key to use. I am struggling to find another near term need for
+the kernel to parse the certificate.
 
->
-> 9a92c5091a42 ("vfio-pci: Enable device before attempting reset") was
-> mostly done to make pci_pm_reset() work, which requires the device to
-> be in D0.  The main purpose of pci_enable_device() is to make device
-> BARs accessible; it *does* also put the device in D0 because BARs are
-> only accessible in D0, but pci_pm_reset() itself doesn't need the
-> BARs.
->
-> Other reset methods, e.g., FLR, don't seem to require the device to be
-> in D0, so I'm not sure why pci_pm_reset() requires that.  I think the
-> critical piece is the D3->D0 transition, and maybe we could arrange
-> for that to happen even if the device is already in D1/D2/D3hot or
-> even D3cold.
+> However I don't know how far along Aneesh's CCA work is.
+> 
+> Note that David Howells' introduction of ML-DSA in v7.0 moves around
+> a lot of the X.509 code so the three X.509 patches for CMA will no longer
+> apply cleanly:
+> 
+> https://lore.kernel.org/all/2977832.1770384806@warthog.procyon.org.uk/
+> 
+> I'll rebase my development branch after v7.0-rc1 is out and Aneesh can
+> then pick up the latest version from it:
+> 
+> https://github.com/l1k/linux/commits/doe
 
-Looking at the PCI spec (v6.1) I didn't see any requirement for the 
-device to be in D0 state to perform a power state change. So I think we 
-should be able to transition from D1/D2/D3hot to D0. But IIUC if a 
-device is in D3cold, then won't register reads/writes fail till power is 
-available to the device?
-
-Thanks
-
-Farhan
-
-
+Sounds good, but I want to focus on the blob dump interface for the
+existing upstream SPDM requester, SEV-TIO, and then go from there.
