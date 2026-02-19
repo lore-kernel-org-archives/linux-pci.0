@@ -1,226 +1,213 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011029.outbound.protection.outlook.com [40.107.208.29])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f65.google.com (mail-wm1-f65.google.com [209.85.128.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF95E27AC4D;
-	Thu, 19 Feb 2026 06:45:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.29
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771483548; cv=fail; b=DOGEBg8AgOqV1oFQFGNswt4xyeeo7wI/pU1WrO0Z/UEfQpfpV1UhblVSR7kzr//prwKtJaODKKBKS+eWUH0MTAHv8n/uL+YYWkEWThRSXJioP/0ZTQ8BAno2GX+BNH0sqOs5bdPTdf/cbdZNi9wyhY2XDiBUkRAZmrjedKvNLwI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771483548; c=relaxed/simple;
-	bh=xsYNTREu9XK3WQjh2Lq83Ktq3LCfEwssbqo4xN1HdrI=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hGOo9cG43+QE1jNNXSWEDlwFkszxkg6acJyKlEdpocaVCGSO3Vypou6k9WkO48LWn5YWB7tAIPf8RIs8SL0WKL2ck7DEGFp4D9/z0hAypkjcVBBPQUvlJf1UjTT/PG2dgMYiLqnlgc8WsYWtP5F2pWM6lddwhpuBcu2J9Qox4XQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=h3wGRqnM; arc=fail smtp.client-ip=40.107.208.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25502284665
+	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 07:12:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.65
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771485131; cv=none; b=men9RugmOenAREDZ2oaYRC0Yg0DQVlGZdTMU09UZ1b1wLCFUShJXt7a+yPCJuU1DAXodfW+EvTt0mA1niiwH3trM9uDtgC0F/EsMnE8GYF3wFTdUK94j8P1YySmSY9Z3axBSm5kGstQxcEV6wakLveFnxpOwx4lHeXcFsfhXfZI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771485131; c=relaxed/simple;
+	bh=s3pcYxTN6pNiFdwhSuxUgJESB7S9WAt9L1M4abRykII=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=pKYN1cuJk9YNbkS8SNAXgmfy5a/MTYNclb4SB9B/y/kQvPuYdWo9VsHYPxn+HqWnUkKsE5uOQ0+mjJCJpsNcjhE+Ug2tWVhtyrXwZs0A+JwOApzAnfi6ZUDh+VtD41iRaBALeeeSkWhrMMZ6as5Qbaj8UHk4asA5VLeO7pv2ifQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=uBdwSayD; arc=none smtp.client-ip=209.85.128.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="h3wGRqnM"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=h+w5RjGCUODwDEcl0y8gkCuZXIB581276yvHP71Ne9Pkt/8zIlLOTtpe3vTpD8MP428wlM9510GBIF2sakcDAvM0yMInqma6euZ7d+JgU+OR1H2KXeZb6B/R2pG9xMfVyhlzb9JpXliI2QQYq2/LJvEowclPTT2vbstGImdp7SJAGgw0f8CbTCXyCusKt0/GxDW+weP2cK1dtvmi7KjX0bpzaa2ozwmzUE52ij0k6o2kdze2pf5yJ7yVwDX8linsfTQI4cIwBrBHcMlljPxcIzWJZpxWcP7ytF9+N9//QRl2pJABKLDSBkrzJRztDR60eP2Ei3nhS5fOeRfAphcC2Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=633mlxtij+R8xduUUkojgXALF8t1UJjnfskKkEq4VWU=;
- b=JNrI4KM+CnPAmztgzpiJ6/IVK5G7xRt7Z11E7UW24PeBD6yDCOJP5wmT7QQLUgWMfClR0wNyMauHni4nx1Ml/WoiI4rLVm1ZjVabgD4lzXlfEYPPqDEEs0SJw2PSdTrCe+EZ/2NYxDEOfcw2AdvxKrnfLGIPovvLtMOAcF7j2HZKNCSWGwei89wTx/Vvdybv0O6D/ZM+s6p4+1jZgLv03Uo/57toi6oJx/ZgYCXIO1w9wepQKfWetljAP/7qMw0P01CNPje/YZSqQehwERNVVuHjyl+c/6Lp9EUAy2NolTQS8KE7FflRTpFKtlzk3dT6iIHTfvTLmF4SNvWWpzkxlg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=633mlxtij+R8xduUUkojgXALF8t1UJjnfskKkEq4VWU=;
- b=h3wGRqnMy9tIHJFIZ4VhIxkhtwGtf50qi7BM+f13kiZew4rG9NfLPRqD9vCUfULLXmfOvNXIN0U9P6gR3VJ1T6vvn44LnUH6n5d3ySyMeCeACvBBYeExVlvPtEB1Pi5GEV78lvht81+v7M5nFmJsbl8bzulowPe0MUeoCuy1G6o=
-Received: from SJ0PR05CA0025.namprd05.prod.outlook.com (2603:10b6:a03:33b::30)
- by CO6PR10MB5618.namprd10.prod.outlook.com (2603:10b6:303:149::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.16; Thu, 19 Feb
- 2026 06:45:44 +0000
-Received: from SJ1PEPF000023DA.namprd21.prod.outlook.com
- (2603:10b6:a03:33b:cafe::9e) by SJ0PR05CA0025.outlook.office365.com
- (2603:10b6:a03:33b::30) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.15 via Frontend Transport; Thu,
- 19 Feb 2026 06:45:44 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
-Received: from flwvzet200.ext.ti.com (198.47.21.194) by
- SJ1PEPF000023DA.mail.protection.outlook.com (10.167.244.75) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9654.0 via Frontend Transport; Thu, 19 Feb 2026 06:45:42 +0000
-Received: from DFLE203.ent.ti.com (10.64.6.61) by flwvzet200.ext.ti.com
- (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 19 Feb
- 2026 00:45:28 -0600
-Received: from DFLE207.ent.ti.com (10.64.6.65) by DFLE203.ent.ti.com
- (10.64.6.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 19 Feb
- 2026 00:45:27 -0600
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE207.ent.ti.com
- (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Thu, 19 Feb 2026 00:45:27 -0600
-Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [172.24.231.225])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61J6jDwj2156628;
-	Thu, 19 Feb 2026 00:45:23 -0600
-From: Aksh Garg <a-garg7@ti.com>
-To: <linux-pci@vger.kernel.org>, <jingoohan1@gmail.com>, <mani@kernel.org>,
-	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <robh@kernel.org>,
-	<bhelgaas@google.com>, <yoshihiro.shimoda.uh@renesas.com>,
-	<fancer.lancer@gmail.com>, <Zhiqiang.Hou@nxp.com>,
-	<gustavo.pimentel@synopsys.com>, <cassel@kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>,
-	<danishanwar@ti.com>, Aksh Garg <a-garg7@ti.com>
-Subject: [PATCH v2 2/2] PCI: dwc: ep: Mirror the max link width and speed fields to all functions
-Date: Thu, 19 Feb 2026 12:15:11 +0530
-Message-ID: <20260219064511.695086-3-a-garg7@ti.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260219064511.695086-1-a-garg7@ti.com>
-References: <20260219064511.695086-1-a-garg7@ti.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uBdwSayD"
+Received: by mail-wm1-f65.google.com with SMTP id 5b1f17b1804b1-4836f363d0dso5157965e9.3
+        for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2026 23:12:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1771485128; x=1772089928; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7mNljJmo8xYMg1FSiw5iNlLCoBCy730ouXhyirQsq0Y=;
+        b=uBdwSayDpp//R4VfT3JrAyHeMkLf70+zhSGw7fP5wkDuDMDtxnKwGSjfEmutxX81Ov
+         EbAJJ3vyWQbN2/77sBufszclr3YuG8rQrc+k5ksrMV0Ld77z1TpXoZpjZlrgKJUsZ4Ny
+         cf202Vyv6KAARgjhPrSfGmT3WNJCrPDTkHEaYfUcKqSSmzIoQFiPcyEIWtCM5uW56nTt
+         TE6ZjYlrPtyXpHv8Z6qIVKKg7kYkYlswyBJg1pVQfgVXgHnqYo67Y6lprqb24aqdg0TQ
+         PMFLh7V0atFv43T7JtYrRlhJm8D23kp4n7p72wa0jHZzTBMSPI/eUjdQC5htDtQjJkUF
+         QNKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771485128; x=1772089928;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7mNljJmo8xYMg1FSiw5iNlLCoBCy730ouXhyirQsq0Y=;
+        b=Mkhtwbuu/4+Ue9hJCjA6iMni8w4ZF/GA5sUywSWDWEuMYlxF2GS5U/zNhVkkCA6sD/
+         3iQ3dWQfed+6WKU6d9Q3Q9tlNW4uDK6veKRovfg/p3K7vImXMXCBb8F2BDnAWvbtiZuq
+         zgDw09UqjQ8u6F3yNJSJ12sndmqi1gpO5Q+UFFHu2PeC4/dsenHDIcvoJoebTH6gP4s/
+         ONfRH3rFUyIMo0EEruRHW+gksHHww2DQaZUB5O0pcL4aI6m2CFfp3c//AVIZ6Necj5ft
+         AC1NP/xZ7LiYLUO6X4J7ZBBzbn4/djD8UkmPDx8vvMgQi8C0ybuwg4gn+PjNHowuB5jL
+         3Ucg==
+X-Forwarded-Encrypted: i=1; AJvYcCWTBhYGfbwhKhi/yn3WbMeqRtcoKPor3icH/ZbXWklPkF3L0UXFdT11RkxJnwQjs26gKbQU8cLpnnU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxEpka2jf+9ikK8l3Jb+0eYw6RBHUMxHOS0Tq2Em1X3onyHhMmL
+	nGrpqfhra3E72N2FcoCUV6tNJuJtxc5oS0sdTzxrd4gcPDdPclN0+PjqnpRC1wqKx5w=
+X-Gm-Gg: AZuq6aJ4K066jydLwpcxsgeWq2SYyWAUldjjSY2A/rHoHOIJ0zCRRknLbGeGo2b0Bx+
+	mIel7WbaVcD2s4fXmynC//CzXtvd76mijJxgdQjFd8eDKjOr1jzPv4Mc/HEmofmb1xXAYXqz5mO
+	fEiYu8QZKGht01sicQmi+CjtxtBWhSJQnkrtb0I7afJEg0IrVyp/AK1aXfpNv/gXRpIHEGl213X
+	OOzRCIbW/PH7F3ajPICguDRo2Q0E3TYMYYHdOmmpht1cVWp3ibIZN+kSLm46CnFz7H3N2r+DE7P
+	xhH6Zr29G+LdelqFiI5+K5zgFkeOw3aIX7AdDDmCHiJxlJl/MnWgSlSWJw1WUEhYW9kzPzMa3LR
+	WX00xlo0avIismwzw7cz24Jj3LZIgilXP5gtO2jnFPH+GuYmxdJYSdBnhUXWuq/p0iqxrld9V0f
+	URAxScAofjDe7o9GvIDSkCIc5Fe8Ck
+X-Received: by 2002:a05:600c:4e93:b0:47a:814c:ee95 with SMTP id 5b1f17b1804b1-48379bbcbd0mr277963325e9.12.1771485128222;
+        Wed, 18 Feb 2026 23:12:08 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4834d482480sm675803505e9.0.2026.02.18.23.12.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Feb 2026 23:12:07 -0800 (PST)
+Date: Thu, 19 Feb 2026 10:12:04 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: oe-kbuild@lists.linux.dev, Wei Wang <wei.w.wang@hotmail.com>,
+	bhelgaas@google.com, jgg@nvidia.com, jonathan.cameron@huawei.com,
+	akpm@linux-foundation.org, bp@alien8.de, rdunlap@infradead.org,
+	alex@shazbot.org, kevin.tian@intel.com
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	wei.w.wang@hotmail.com
+Subject: Re: [PATCH v5 3/6] PCI: Consolidate delimiter handling into
+ pci_dev_str_match()
+Message-ID: <202602161621.2nyGIEhM-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF000023DA:EE_|CO6PR10MB5618:EE_
-X-MS-Office365-Filtering-Correlation-Id: c9e5b5fe-4d4c-40b5-e26d-08de6f8280d2
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|36860700013|376014|7416014|1800799024|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?zDQQKEBlh6vEVSi899VsBrkkYF1STIDZ7y906LqSlHNHlT2BOPyLlWk/N9Mp?=
- =?us-ascii?Q?PRuAfYPQh9sIODiqGOtwDXG2XCMltMEJxr9gTf0g8IytOxs7OHcMfXKQjw32?=
- =?us-ascii?Q?rSJuTClwebM5vX1lnLEw/IgDvW/Y7aQIRkfiJWWiUgm84IPdJwqtwFnX4InE?=
- =?us-ascii?Q?sk6DOfLBklhI9uBb4NeWIVn1KQOXGm2EnspX+HKILeT8z27QKwl6UjUGOkeF?=
- =?us-ascii?Q?prUxHC6123g4IBHZR2F6verj7fKL5lAdcW0NvuG1DJ3nJjpGct1JrSDkKC58?=
- =?us-ascii?Q?PjMkS0QE1oh3fReHmtBUtKctBWSTnq7BW7TxJLPiMGR3UcCeGJPB16NuE4Ws?=
- =?us-ascii?Q?rErJafarI605/0hN/6Pf5ge2KHOlzjNrVzSm9iQ5+InBG6NUN6e98V95rGKV?=
- =?us-ascii?Q?Y0KdSilYPcaW3bp7fMtX7UwwX0ifidklhXVBDq9KfnaLqsYSaserDYWC2ql9?=
- =?us-ascii?Q?19Q7uRw9VwvaTToqb/fgPQL/EfkIBG8e0CSyDb+ToTDj3hPyqQKpqcruv3L7?=
- =?us-ascii?Q?QoCQaq/+Lo0wbOqiu+gsFlcx8ZaOeFwiGzFcycKF13nmp6yDnOBYwidSR1a4?=
- =?us-ascii?Q?DhbMHvDok3I+DPsidNYhrvLGEnfqIgrxC8/Cl2aRtaLlA+gK5OYJ9si1A95d?=
- =?us-ascii?Q?mWVI0nFXQZrLXmhNbBMpjtCW7Ve/t2l+Tej1mbsJQgblfsJXTmPPABvI67qy?=
- =?us-ascii?Q?bUcp6PUTAKiiCLHloDub3SJRPBvaiWWAzgQRHU+57gyO9th3e+i0ZyyRwVey?=
- =?us-ascii?Q?Amtc9pH4L01pSQAhEKrff2ImpVP6EWPkvQrvAhFMz54oqxGJvLU1rolvEtdQ?=
- =?us-ascii?Q?azyZZAfnURBjzNWt8EYgGUR4dw/aq+pVuo4vIoBaryE618WY+yz+hZmE+yvs?=
- =?us-ascii?Q?xb7LPW9mgN+duMXyVaSvJ4XIvm4kqIl4xswf4pPx2Sretw1iwg6MELw0OsO1?=
- =?us-ascii?Q?O011cLXdXy5kv3pzbuCmZIoJxpjTFpC+BNgemlORkxb74jZSHb5BoK45ieAI?=
- =?us-ascii?Q?fH5J1gPq0Y+82JzyU5MHh9NYe73JmSdGYCDGF0rMJduczFSc6G5soAShUPzp?=
- =?us-ascii?Q?JqJ51xSGdLVJiBN8ieN3iI1JTJv6/i0tdq9brm8pSt+2HDyrUE0cNcNmN3jT?=
- =?us-ascii?Q?zHU1pZ4oFb2qI10B2ZIO9N3TuFUqh+sARfZyefXaqp5RwECFDfCJ03++jfiA?=
- =?us-ascii?Q?GyWlkGHd4Js/d6U9yH3rIW7zaCqy3/OUf0m6S9BI6dRRDFgyE4aiaQXygl6A?=
- =?us-ascii?Q?CC/j7WEb2liJIvjC4URjlNRn02AiGXrjFBI2W7oMYXJJI2YnUD6du0ZMBIpu?=
- =?us-ascii?Q?FbtZQ2JXG9DIJ8hPE0st9XQ/Ti95txxAhAJ6uJlkBdd+5HGA13akTlU7oQyR?=
- =?us-ascii?Q?Kr+Ycf6fv1bTRUluIHPv8KH6jGF8+TqwRKzj8gR5E5K2aKMka866AjLb/kT1?=
- =?us-ascii?Q?hoNDAeP4QBEvRePhm5QzNG2t6hj4rWvbC/9abC1RYs4GoDYWx64OhF79vea9?=
- =?us-ascii?Q?4NaL4LCyaNMvwSt+Gowgi5gRWqsbYqojJwu5y1HZnKw0TrhnskULPZU5vHTI?=
- =?us-ascii?Q?TY/lbPzvDZFOKkDyxeRLXZWrbzkJEeGswDFOBNLozZBPrDLRPb+CZikH4vKK?=
- =?us-ascii?Q?EnyFqjvNOTAH1hglsCisojAitEu/P0OJXxdC/llsOrNUbbaL7zGulxr4+NDS?=
- =?us-ascii?Q?fDik151go85RhDVPtHGFX0/4dk8=3D?=
-X-Forefront-Antispam-Report:
-	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(82310400026)(36860700013)(376014)(7416014)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	NZSXdUzBP4XaEvjpyO4irsxnWJnlQDWNPW8WAUHIcjcQdcD3pKRhzJb2xucL6r2aTrIskIvgnDuEzxZSlinUPxW87UrNc0idwcfioPmlICFpYUjXOEo7btXj+eTpLrmrP5YaUyDfXOoVQP5TxvnGdbv9VhX0F9ixwriqgTQqEerkl96T+nibDwEhsyvEPfG356vkrlupMb+UGK9q/WHqTtqO2sgZ7iNtzInlfRv+2wJmvWUPKo+D5ls4wHfd/FZV+PQd+BWmVqCyeAwXP/v4xSf+RKRMgZ/NcvXCDlFH8Q9Q1+9+FWgAxhcXIhPvCefXxWrFcT4fTeXxMjhFg63pynqf8dq61HTGSPzKz+sbCfmFQxKR0fAdHTAtYNk5XB+rZILEc5CbsYdRxNErVkpN/NBNxzRYIpMF6Ascg5hLL0l6NjkpYJvR1HgxDLuMxwvr
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Feb 2026 06:45:42.9648
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c9e5b5fe-4d4c-40b5-e26d-08de6f8280d2
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ1PEPF000023DA.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR10MB5618
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <SI2PR01MB439352E0D54243099CAAA118DC6CA@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 
-PCIe r6.0, section 7.5.3.6 states that for multi-function devices, the
-Max Link Width and Max Link Speed fields in the Link Capabilities
-Register must report the same values for all functions.
+Hi Wei,
 
-Currently, dw_pcie_setup() programs these fields only for physical
-function 0 (PF0) via dw_pcie_link_set_max_speed() and
-dw_pcie_link_set_max_link_width(). For multi-function endpoint
-configurations, PF1 and beyond retain their default values, violating
-the PCIe specification.
+kernel test robot noticed the following build warnings:
 
-Fix this by reading the Max Link Width and Max Link Speed fields from
-PF0's Link Capabilities Register after dw_pcie_setup() completes,
-then mirroring these values to all other physical functions.
+url:    https://github.com/intel-lab-lkp/linux/commits/Wei-Wang/PCI-Validate-ACS-enable-flags-against-device-specific-ACS-capabilities/20260216-103055
+base:   635c467cc14ebdffab3f77610217c1dacaf88e8c
+patch link:    https://lore.kernel.org/r/SI2PR01MB439352E0D54243099CAAA118DC6CA%40SI2PR01MB4393.apcprd01.prod.exchangelabs.com
+patch subject: [PATCH v5 3/6] PCI: Consolidate delimiter handling into pci_dev_str_match()
+config: x86_64-randconfig-r072-20260216 (https://download.01.org/0day-ci/archive/20260216/202602161621.2nyGIEhM-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+smatch version: v0.5.0-8994-gd50c5a4c
 
-Fixes: 24ede430fa49 ("PCI: designware-ep: Add multiple PFs support for DWC")
-Fixes: 89db0793c9f2 ("PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling")
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
----
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+| Closes: https://lore.kernel.org/r/202602161621.2nyGIEhM-lkp@intel.com/
 
-The link speed and width would be negotiated through PF0 during
-initialization that controls the link behaviour, hence it didn't broke
-the driver. However, the change is proposed just to make the driver
-compatible with the PCIe base specifications.
+smatch warnings:
+drivers/pci/pci.c:430 pci_dev_str_match() warn: sscanf doesn't return error codes
 
-The fix is implemented in pcie-designware-ep.c rather than modifying
-dw_pcie_setup() directly to keep pcie-designware.c independent of RC/EP
-specifics and maintain it as common code.
+vim +430 drivers/pci/pci.c
 
-Changes from v1 to v2:
-- Used FIELD_* macros
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  343  /**
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  344   * pci_dev_str_match - test if a string matches a device
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  345   * @dev: the PCI device to test
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  346   * @p: string to match the device against
+40549484c434de Wei Wang         2026-02-16  347   * @endptr: pointer to the string after the match, with the delimiter skipped
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  348   *
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  349   * Test if a string (typically from a kernel parameter) matches a specified
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  350   * PCI device. The string may be of one of the following formats:
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  351   *
+45db33709ccc73 Logan Gunthorpe  2018-07-30  352   *   [<domain>:]<bus>:<device>.<func>[/<device>.<func>]*
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  353   *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  354   *
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  355   * The first format specifies a PCI bus/device/function address which
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  356   * may change if new hardware is inserted, if motherboard firmware changes,
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  357   * or due to changes caused in kernel parameters. If the domain is
+45db33709ccc73 Logan Gunthorpe  2018-07-30  358   * left unspecified, it is taken to be 0.  In order to be robust against
+45db33709ccc73 Logan Gunthorpe  2018-07-30  359   * bus renumbering issues, a path of PCI device/function numbers may be used
+45db33709ccc73 Logan Gunthorpe  2018-07-30  360   * to address the specific device.  The path for a device can be determined
+45db33709ccc73 Logan Gunthorpe  2018-07-30  361   * through the use of 'lspci -t'.
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  362   *
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  363   * The second format matches devices using IDs in the configuration
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  364   * space which may match multiple devices in the system. A value of 0
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  365   * for any field will match all devices. (Note: this differs from
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  366   * in-kernel code that uses PCI_ANY_ID which is ~0; this is for
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  367   * legacy reasons and convenience so users don't have to specify
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  368   * FFFFFFFFs on the command line.)
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  369   *
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  370   * Returns 1 if the string matches the device, 0 if it does not and
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  371   * a negative error code if the string cannot be parsed.
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-v1: https://lore.kernel.org/all/20260202072758.101845-3-a-garg7@ti.com/
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  372   */
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  373  static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  374  			     const char **endptr)
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  375  {
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  376  	int ret;
+45db33709ccc73 Logan Gunthorpe  2018-07-30  377  	int count;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  378  	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  379  
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  380  	if (strncmp(p, "pci:", 4) == 0) {
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  381  		/* PCI vendor/device (subvendor/subdevice) IDs are specified */
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  382  		p += 4;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  383  		ret = sscanf(p, "%hx:%hx:%hx:%hx%n", &vendor, &device,
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  384  			     &subsystem_vendor, &subsystem_device, &count);
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  385  		if (ret != 4) {
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  386  			ret = sscanf(p, "%hx:%hx%n", &vendor, &device, &count);
+40549484c434de Wei Wang         2026-02-16  387  			if (ret != 2) {
+40549484c434de Wei Wang         2026-02-16  388  				ret = -EINVAL;
+40549484c434de Wei Wang         2026-02-16  389  				goto not_found;
+40549484c434de Wei Wang         2026-02-16  390  			}
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  391  
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  392  			subsystem_vendor = 0;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  393  			subsystem_device = 0;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  394  		}
 
- .../pci/controller/dwc/pcie-designware-ep.c   | 23 ++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
+At this point ret is either 2 or 4.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 771241e1a2c9..6b9f90810fec 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -1094,7 +1094,8 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
- {
- 	struct dw_pcie_ep *ep = &pci->ep;
- 	u8 funcs = ep->epc->max_functions;
--	u8 func_no;
-+	u32 ref_lnkcap, lnkcap;
-+	u8 func_no, offset;
- 
- 	dw_pcie_dbi_ro_wr_en(pci);
- 
-@@ -1102,6 +1103,26 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
- 		dw_pcie_ep_init_rebar_registers(ep, func_no);
- 
- 	dw_pcie_setup(pci);
-+
-+	/*
-+	 * PCIe r6.0, section 7.5.3.6 states that for multi-function endpoints,
-+	 * max link width and speed fields must report same values for all functions.
-+	 * However, dw_pcie_setup() programs these fields only for physical function 0.
-+	 * Hence, mirror these fields to all other physical functions as well.
-+	 */
-+	if (funcs > 1) {
-+		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+		ref_lnkcap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
-+		ref_lnkcap = FIELD_GET(PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS, ref_lnkcap);
-+
-+		for (func_no = 1; func_no < funcs; func_no++) {
-+			offset = dw_pcie_ep_find_capability(ep, func_no, PCI_CAP_ID_EXP);
-+			lnkcap = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_EXP_LNKCAP);
-+			FIELD_MODIFY(PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS, &lnkcap, ref_lnkcap);
-+			dw_pcie_ep_writel_dbi(ep, func_no, offset + PCI_EXP_LNKCAP, lnkcap);
-+		}
-+	}
-+
- 	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  395  
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  396  		p += count;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  397  
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  398  		if ((!vendor || vendor == dev->vendor) &&
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  399  		    (!device || device == dev->device) &&
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  400  		    (!subsystem_vendor ||
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  401  			    subsystem_vendor == dev->subsystem_vendor) &&
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  402  		    (!subsystem_device ||
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  403  			    subsystem_device == dev->subsystem_device))
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  404  			goto found;
+
+No imagine that we don't goto found.
+
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  405  	} else {
+45db33709ccc73 Logan Gunthorpe  2018-07-30  406  		/*
+45db33709ccc73 Logan Gunthorpe  2018-07-30  407  		 * PCI Bus, Device, Function IDs are specified
+45db33709ccc73 Logan Gunthorpe  2018-07-30  408  		 * (optionally, may include a path of devfns following it)
+45db33709ccc73 Logan Gunthorpe  2018-07-30  409  		 */
+45db33709ccc73 Logan Gunthorpe  2018-07-30  410  		ret = pci_dev_str_match_path(dev, p, &p);
+45db33709ccc73 Logan Gunthorpe  2018-07-30  411  		if (ret < 0)
+40549484c434de Wei Wang         2026-02-16  412  			goto not_found;
+45db33709ccc73 Logan Gunthorpe  2018-07-30  413  		else if (ret)
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  414  			goto found;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  415  	}
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  416  
+40549484c434de Wei Wang         2026-02-16  417  not_found:
+40549484c434de Wei Wang         2026-02-16  418  	if (ret < 0)
+40549484c434de Wei Wang         2026-02-16  419  		pr_err("PCI: Can't parse parameter: %s\n", p);
+40549484c434de Wei Wang         2026-02-16  420  
+40549484c434de Wei Wang         2026-02-16  421  	if (*p != ';' && *p != ',') {
+40549484c434de Wei Wang         2026-02-16  422  		/*
+40549484c434de Wei Wang         2026-02-16  423  		 * End of param or invalid format. Return -ENODEV so the caller
+40549484c434de Wei Wang         2026-02-16  424  		 * stops parsing.
+40549484c434de Wei Wang         2026-02-16  425  		 */
+40549484c434de Wei Wang         2026-02-16  426  		return -ENODEV;
+40549484c434de Wei Wang         2026-02-16  427  	}
+40549484c434de Wei Wang         2026-02-16  428  
+40549484c434de Wei Wang         2026-02-16  429  	*endptr = p + 1;
+40549484c434de Wei Wang         2026-02-16 @430  	return ret;
+
+It should return 0 here but instead it returns 2 or 4.
+
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  431  
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  432  found:
+40549484c434de Wei Wang         2026-02-16  433  	*endptr = *p == '\0' ? p : p + 1;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  434  	return 1;
+07d8d7e57c28ca Logan Gunthorpe  2018-07-30  435  }
+
 -- 
-2.34.1
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
 
