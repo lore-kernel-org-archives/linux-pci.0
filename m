@@ -1,113 +1,109 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26FEC29B79B;
-	Thu, 19 Feb 2026 21:54:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 817E632AAAF
+	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 22:10:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771538074; cv=none; b=LDfDa0LXXPFS/6gPhfSFnGOOKOwVs26ag/dqOR86qe8k9laYQfpI/y5JbrdlZMYwzdEoRzabc5VNc9sMivT4A58M1wJl/Xm6DWgBOL6eGHhoWH4Da0XpT8SpPdJY8lMO/YU/dGHax2+suFp9nVjI5MT+hOHrdS3T/n48z1CtzXA=
+	t=1771539031; cv=none; b=ngo00e0bQYN6cSnq21y6nnvxk9fJTEhYlA09y5iMG5Hk2OlWKP/9SkyXA1mM6hVSuDN8Az5MlkBe5Wl4p55/8y+6CmEqSR6QYSuUJtSVy7cJv7pGzoPWoshnubN+KNUp8GU+SaIvyGEMz0qKSB0UYY8wuR+ZIC7TnBcMe9N3PHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771538074; c=relaxed/simple;
-	bh=jagUBTaMCIQfudCOmXqFI8P9Z4QR8ZxmREKJ1O7JsuQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qlLlspWpcPPVh0suq338giqVmuYx7dpn7/5J+VmVeVtmWv40NdplfqziuHlWeEW1JVCQKRrPUgmcZUUAIfnreHWWtk23LfgDK5WfXwvEHiQhWoOazQnwnsyqR1YToL9I4XF8OPl7Hq1m5CeCS8EwqjytR1b6NqqWP7FYKvg5DbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eyZoXa04; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1771539031; c=relaxed/simple;
+	bh=tvjo6YREoPXGkfdT+8T8KpbpJ8V+nnWXdCE1HZOHry0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LkDiYZX/ATH43EY/O1LkomP5sY2wNtF6zQvbvFx6ZUHe/qSRhnyepSKTntdvjRlVLdJE8UZvF0RQFhsZA5tM7QbqcUv9ligPl6RZffZwiBZesqHZGw/HFTv/FPkqnuMyXfIVWaphaf6Dy7uo+qLTs6aNMmeoQnflfMN7NPhYxUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=IFEMThtE; arc=none smtp.client-ip=74.125.82.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eyZoXa04"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771538073; x=1803074073;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=jagUBTaMCIQfudCOmXqFI8P9Z4QR8ZxmREKJ1O7JsuQ=;
-  b=eyZoXa04xab54OQlwi5cBOFPLX1O34/dH+BKf8RfyTiDGZPjhFEmXHD4
-   Az4Ya9cEEl4RrSTHxOWlThzTYuWzLrQegjt5qDJFyPt6FvJxtLmTj/A9x
-   DVEonDpV61k7csktUFNg6prdfs6Fb7frXVWUSjqzZ6QyhaOxYqtQzeTKn
-   P2f89e6gDQvNlCJ7eh/HDPS4k9ObVtNjFlq0Jz/QxkQD14BzFzUH8H6xg
-   cq0WNnSVBx8VXYzZ7hC+/Oy9+EykfM64nciBmwfM6gF18LTymtJj8z8gG
-   ec2dbD7Sq9phCdITltgIMk8wxz9SkU9kVdzpeHkIGZ5AX8Qmcez3bCZ/h
-   g==;
-X-CSE-ConnectionGUID: NNdo2p+5QfKEUmxmNpS6lw==
-X-CSE-MsgGUID: 6F8nsNP9R4iYrY1Sb/YcAA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11706"; a="72339465"
-X-IronPort-AV: E=Sophos;i="6.21,300,1763452800"; 
-   d="scan'208";a="72339465"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2026 13:54:33 -0800
-X-CSE-ConnectionGUID: bJJDZJ6KRf2KbpccunroVw==
-X-CSE-MsgGUID: DMR1zxleTuCaJ6JgJF4CAQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,300,1763452800"; 
-   d="scan'208";a="213762370"
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2026 13:54:33 -0800
-Message-ID: <09db5a83-980c-432e-adbc-2582680c8cf9@linux.intel.com>
-Date: Thu, 19 Feb 2026 13:54:32 -0800
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="IFEMThtE"
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-2ba895adfeaso1466362eec.0
+        for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 14:10:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1771539030; x=1772143830; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=htR2cKXbmE7p8X2oCaV5WAydK1PmqVneZFKmCe9IrrA=;
+        b=IFEMThtEc/BdNcZ4RhXqegzxlcd1BqsqK/Qgqhc+7Pw0E6tNwYDY1SrPW+O7jRdtYS
+         Yk2acCi0VntLzRpo2+C3TzX2v7qeVNPYKf60bMIXSW1TB0bZF8TFfXD6QtAc6Aa0wPFH
+         Ew+BBqKp1iB6g9T2p2aTbSUWJNJzePH+eW5Nk4OzZ0wu12DwIPKWhWTSjxyeC4ToCZgQ
+         gXXcBqx+WAcUk5TNBzQd6OleUI6tM6HPxW5JIGp08Q+02Ctvju4t+D+U4IH+njHzbWRN
+         Aw+7+JYVvvMSKerijb4v9pmY9fZ12nPU4hPSF3DfwWAEa6ObA2mVty561pgcku3RD+YA
+         V1mw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771539030; x=1772143830;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=htR2cKXbmE7p8X2oCaV5WAydK1PmqVneZFKmCe9IrrA=;
+        b=KqY7w0cqm09v9xd2fZkVFRT/OXGrGF+WcIoQyjzL4lZKhgssJ3DXBJvI1wqCNDZXUl
+         2xua882WZc79JqtlESZn03L6TqkXYGTLRgkCBVc29EJ/dUEukwG+a3wbYE4eASPNnY8i
+         0Ekd9Xt9Kh2vLDSoaOU1XHd6JYyTlTAQlYKzonA+9C9p2Mia8yguHoWUZrskdboNKfSY
+         NKJHhE2WVsND11+SoAaZx79bwgolclLEQkGo/wpCQoIJDi5wQGCtK5qka4qy2iCHfwKc
+         n4IyvCjh+tUdfWz2uxKYF/BMQaFMYPKygmEGonegn2RijTNBfHo2WT1WsLqVd4LpDpY3
+         sX7g==
+X-Forwarded-Encrypted: i=1; AJvYcCXqfsRJz+98u4WVzuReElsDx/jXn1f/Mb05l/5TBX9usQ3CRTMHMVhPUXVSwjXuwguO1edK9KwZFuk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwOCu8qr+RJbZJMYZz67ql2cOuk5zbMiaLs7FzT8t7NABykC+kV
+	6A439Q+cZQFT8h2bnFJ3hLMZ+wiLLQCjr4s/G9fWbRNeeA4w8HqBUos7EiRJDCxLVnM=
+X-Gm-Gg: AZuq6aKnzo//TIsXkQ8pevzf3ej74T454iVJMM9624cA5RfNgItnVL/E50x2yN0D/eY
+	whnQHuFbJQNXj/+DyGcF3pAC2AajkSypgta8uGDSryi1iCsEMrT7goCB026jyGx1+q7XMvRDIS9
+	Zd9KnYXlXYeGClYeFsCKi7yV1surNzddtGaJOOKxgzpDAFeIaaghXN9ECbQCPDCynmMFjfE3A6x
+	XcZ1+PLGptotMilyXzhSWDZngaHtLowTeS1Fb8ZYxB3CPmef3rGw1u480YkA/hkXWqfNNsAFbZE
+	26PCsMLyIqe7nLcWfEzBXrv0KSKTaEbcZ+yQFMCCxo/itCSQfjUtE49SGizp4nqQ8V/UcknVObi
+	ikdhdu8sDusAGUjZqHbXRfOt8vIKdoHCjIW0uLt73iSCrFDDJDNFoOQrRJJRgDpPPokV/oTNBjD
+	ampvz+yKL01LYQDz7tUqtSavQo4S3qm33HKok1XEvuMzfyIY1ace20ytAoSGd7Bmwelxc73SVJx
+	PESqt7Rx5OOV3SfjmIVHGPIfOrrdY4+gVXqguY9S0HqH3bHW1I=
+X-Received: by 2002:a05:7301:6884:b0:2ae:579d:2038 with SMTP id 5a478bee46e88-2bd5003727dmr3955779eec.4.1771539029464;
+        Thu, 19 Feb 2026 14:10:29 -0800 (PST)
+Received: from dev-mattc2.dev.purestorage.com ([208.88.159.128])
+        by smtp.googlemail.com with ESMTPSA id 5a478bee46e88-2bacb543d40sm26735057eec.2.2026.02.19.14.10.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Feb 2026 14:10:29 -0800 (PST)
+From: Matthew W Carlis <mattc@purestorage.com>
+To: helgaas@kernel.org
+Cc: ahuang12@lenovo.com,
+	alok.a.tiwari@oracle.com,
+	ashishk@purestorage.com,
+	bhelgaas@google.com,
+	guojinhui.liam@bytedance.com,
+	ilpo.jarvinen@linux.intel.com,
+	jiwei.sun.bj@qq.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	lukas@wunner.de,
+	macro@orcam.me.uk,
+	mattc@purestorage.com,
+	msaggi@purestorage.com,
+	sconnor@purestorage.com,
+	sunjw10@lenovo.com
+Subject: Re: [PATCH] PCI: Always lift 2.5GT/s restriction in PCIe failed link retraining
+Date: Thu, 19 Feb 2026 15:09:59 -0700
+Message-ID: <20260219220959.19900-1-mattc@purestorage.com>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <20260219212602.GA3498590@bhelgaas>
+References: <20260219212602.GA3498590@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
- unreliable PME status
-To: "Rafael J. Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
-References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com>
- <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
- <7b4dd756-2ab7-4331-b560-268f9cff0887@linux.intel.com>
- <CAJZ5v0gcZ5vs4WcS0GhvQrG9Kf05LNrNfd+oXz3WDdCA0xGjjw@mail.gmail.com>
- <aZbEDldZxV1KG_5B@wunner.de>
- <CAJZ5v0gF244JC5C9pLqmzxUuQkxMOXXBf92ckTKfeo9n8wgb1w@mail.gmail.com>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <CAJZ5v0gF244JC5C9pLqmzxUuQkxMOXXBf92ckTKfeo9n8wgb1w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi,
+On Thu, 19 Feb 2026, Bjorn Helgaas wrote:
 
-On 2/19/2026 3:09 AM, Rafael J. Wysocki wrote:
-> On Thu, Feb 19, 2026 at 9:04 AM Lukas Wunner <lukas@wunner.de> wrote:
->>
->> On Wed, Feb 18, 2026 at 06:33:15PM +0100, Rafael J. Wysocki wrote:
->>> First, keeping the ports in D0 may gate runtime PC10.  Does it not?
->>
->> The Root Port in question is on the PCH.  I'm not sure, does keeping a
->> PCH Root Port in D0 also prevent PC10 entry or is that only the case
->> for Root Ports on the CPU die/tile?
-> 
-> If it is located in the PCH, it should not gate PC10 if in D0 at least
-> in theory, but it would be good to verify that.
-> 
-> Of course, it will still gate S0ix entry through runtime idle, but
-> that's a bit moot if the platform is unable to enter S0ix through
-> runtime idle anyway for other reasons (which is quite likely), or if
-> the power difference between S0ix and PC10 is small.
+> Applied to pci/enumeration for v7.1, thanks.  This will be rebased
+> after v7.0-rc1.
 
-I will gather current PC10 and S0ix numbers. If there is a significant
-difference between the two power savings, I will implement the
-pme_is_broken() approach.
+We're heading down a path here where we keep working around the work-around &
+now have decided that the kernel will be meddling with the link on potentially
+all of the PCIe devices in the world. The trade off that we're making here to
+accommodate a device specific interaction doesn't seem like the right direction. 
 
+Can we reconsider my patch that restricts the link retrain mechanism
+to the specific device that created the work-around?
+https://lore.kernel.org/all/20250702052430.13716-1-mattc@purestorage.com/
 
-> 
->> If this does cause a power regression, the pme_is_broken() approach
->> suggested upthread might be a viable alternative.  It'll allow the
->> Root Port to go to D3hot but will keep interrupts enabled in the
->> Slot Control register.
-> 
-> Sounds reasonable to me.
+How do we decide which device to fix and which devices to break?
 
-Sounds good. 
-
-> 
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
-
+- Matt
