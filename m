@@ -1,88 +1,87 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 290DB38FA3;
-	Thu, 19 Feb 2026 10:19:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F1C5274B37
+	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 11:10:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771496392; cv=none; b=G/IEyXchVlfNQdQ8eL426UwPgJoo2Wcni4I3kT4JFjAscnlwDHI14HhaVwDgWQ/7vucIkYqfz6k8AngxQR93i4PAntnThdAe4LGDLv8uTKEh5VOU9HqFmzCFcRgOMPMHD2XyhdTlJ+aBJ2CTCFApX7JwsEQD1WYnFjmXtVwxCkE=
+	t=1771499406; cv=none; b=rv0t5iSvc3ZlXlcc/fMJcl9YHAz5THUljjxjyXJR11XTfRIANFUkTaLyyHarv5koTGLm5YcG5arUoq4WlR/934oVGaqbijnDh0TuysF55Dr77vfglMcDL2njqcSQQXxEtFTdPX3zGnA5ONrVGSIpbrMkEM9tqoMUFOC3/BwPhIU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771496392; c=relaxed/simple;
-	bh=v7nRuBhs/efhlLKH96QuC8e1U8C49z270WZ13oY6b9U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Kd5bsKHWX94JQ6GxxLuV5HP23T9RZ3POSQgc8sMh2uRuE7eB0xU24HYByLzAKqmBksiTM3GagBCLN9CJwaqk+D9ju1M6PmjqjwFUrBYQLB7QD4CHIfeBzSCQvoXvmMWQZSarRzujGW6herqNwgJFzXpEs9NMlZOGwSEetwi6G04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 078222021BE5;
-	Thu, 19 Feb 2026 11:19:48 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id E87F54BBEE; Thu, 19 Feb 2026 11:19:47 +0100 (CET)
-Date: Thu, 19 Feb 2026 11:19:47 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: alistair23@gmail.com
-Cc: bhelgaas@google.com, rust-for-linux@vger.kernel.org,
-	akpm@linux-foundation.org, linux-pci@vger.kernel.org,
-	Jonathan.Cameron@huawei.com, linux-cxl@vger.kernel.org,
-	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com,
-	benno.lossin@proton.me, boqun.feng@gmail.com, a.hindborg@kernel.org,
-	gary@garyguo.net, bjorn3_gh@protonmail.com, tmgross@umich.edu,
-	ojeda@kernel.org, wilfred.mallawa@wdc.com, aliceryhl@google.com,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@google.com>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	Alistair Francis <alistair.francis@wdc.com>
-Subject: Re: [RFC v3 27/27] rspdm: Multicast received signatures via netlink
-Message-ID: <aZbjw48-tcYkH4vK@wunner.de>
-References: <20260211032935.2705841-1-alistair.francis@wdc.com>
- <20260211032935.2705841-28-alistair.francis@wdc.com>
+	s=arc-20240116; t=1771499406; c=relaxed/simple;
+	bh=jdHXiG+Zjon1kIoMLTsKMp9qCqagjcDQtQe0UL1HCxU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fIqoYXqVx/nKI7Su5kzHhf3CxFEqJu6NJwv6zs+tMH2rEeaxonj3y8UejH6jOhFWWzIjmEx0f1CMLDxFzrVIGSnzVgOtPF24ksMi9W6FQw2tE6aZgvsDHUe7K32+aYXiwRD+6rAT01OaIXYgHKMijV+c9nqh9JpUzUXWLZyiiWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=muHXkXDW; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="muHXkXDW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36ED0C4AF09
+	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 11:10:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771499406;
+	bh=jdHXiG+Zjon1kIoMLTsKMp9qCqagjcDQtQe0UL1HCxU=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=muHXkXDW6OzSnp0MtREQQ44AdWCsmSUDMSt5m7zXRMWUkHnxJy2f1/rQgwRPGC/N4
+	 dr3oXZ3H8jg65k3tgEkh4OEP32QP1UqDZzYDPpGQQJZrZz4QUc4LUX6spinTwsBQN/
+	 ds/BQM2DVEjCwSPt7dUJb/cMGip48V/scRGFtN4StxXm0GtDOoWYPbZcckew7+ad9Q
+	 IsmwEfniC/tVSzAHkN9mTdWksDu5lU81mOcwOyobS8uXQ5gYlJ1Va+k1iPJl5drNTo
+	 2bkUzLJzoOPD4563xuGO+3eHnxlSWoig+39bJ+hbSqu/d7wWf6TDNWfutJObZqwZIO
+	 yCEiL6Pf5r+mw==
+Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-40ee196dd78so516810fac.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 03:10:06 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXQ+E4V1xOXzFPronUwDZyAPThCk1dTleNAAa6enRhVco8rq8bhqwkmEhnn/aCYk+RXHfeqiNpiNjY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNhQYOYBmlFRvMPty4V77W/GzUXshhX13pc/DeRYKS3dULi1Ut
+	LUALvAtqLL/E66NBKc+/n8QJK39DxGYYikT7/fniQ5MHu/cvei4tuC8/Z83TsFVEWOXW8OYQrZu
+	Pp6HD30l3Ck87V8JRQnsFrLX6VNnXQho=
+X-Received: by 2002:a05:6871:2b20:b0:409:62ce:83f6 with SMTP id
+ 586e51a60fabf-4154539f5a3mr795303fac.5.1771499405213; Thu, 19 Feb 2026
+ 03:10:05 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260211032935.2705841-28-alistair.francis@wdc.com>
+References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com> <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
+ <7b4dd756-2ab7-4331-b560-268f9cff0887@linux.intel.com> <CAJZ5v0gcZ5vs4WcS0GhvQrG9Kf05LNrNfd+oXz3WDdCA0xGjjw@mail.gmail.com>
+ <aZbEDldZxV1KG_5B@wunner.de>
+In-Reply-To: <aZbEDldZxV1KG_5B@wunner.de>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 19 Feb 2026 12:09:52 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0gF244JC5C9pLqmzxUuQkxMOXXBf92ckTKfeo9n8wgb1w@mail.gmail.com>
+X-Gm-Features: AaiRm527QJf5y11Cuo8LtYdIEYVrrNAUXYnydvlX1VYcNxGiGxAQYCgufHCg68c
+Message-ID: <CAJZ5v0gF244JC5C9pLqmzxUuQkxMOXXBf92ckTKfeo9n8wgb1w@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
+ unreliable PME status
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Feb 11, 2026 at 01:29:34PM +1000, alistair23@gmail.com wrote:
-> This is based on Lukas's patch from [1]. This exposes all of the SPDM
-> information to userspace via netlink. This includes the certificate
-> chain and communication transcript.
-> 
-> 1: https://github.com/l1k/linux/commit/fe90b5700ee9bc595a21c030192eac4060eaeae1
+On Thu, Feb 19, 2026 at 9:04=E2=80=AFAM Lukas Wunner <lukas@wunner.de> wrot=
+e:
+>
+> On Wed, Feb 18, 2026 at 06:33:15PM +0100, Rafael J. Wysocki wrote:
+> > First, keeping the ports in D0 may gate runtime PC10.  Does it not?
+>
+> The Root Port in question is on the PCH.  I'm not sure, does keeping a
+> PCH Root Port in D0 also prevent PC10 entry or is that only the case
+> for Root Ports on the CPU die/tile?
 
-Just a heads-up, the above-linked commit is from Dec 11, but I spent
-the calm days around Christmas and New Year testing and improving the
-SPDM netlink code.  I ended up squashing quite a few bugs and refactoring
-things for clarity.  Latest version is on my development branch:
+If it is located in the PCH, it should not gate PC10 if in D0 at least
+in theory, but it would be good to verify that.
 
-https://github.com/l1k/linux/commits/doe
+Of course, it will still gate S0ix entry through runtime idle, but
+that's a bit moot if the platform is unable to enter S0ix through
+runtime idle anyway for other reasons (which is quite likely), or if
+the power difference between S0ix and PC10 is small.
 
-The branch contains a separate commit introducing a nla_put_blob()
-helper to add a zero-copy blob attribute to an skb.  And the SPDM
-netlink code uses that helper instead of open coding its contents.
+> If this does cause a power regression, the pme_is_broken() approach
+> suggested upthread might be a viable alternative.  It'll allow the
+> Root Port to go to D3hot but will keep interrupts enabled in the
+> Slot Control register.
 
-The SPDM netlink code can be tested with:
-
-tools/net/ynl/pyynl/cli.py \
-     --spec Documentation/netlink/specs/spdm.yaml \
-     --subscribe sig  --sleep 10
-
-Just reauthenticate the device and the signature with ancillary
-data gets dumped via netlink.
-
-The commit message and kernel-doc of the SPDM netlink commit is
-still a WIP because right after the calm of the holidays I got
-swamped (again) with AER work that my employeer prioritizes.
-But the code is now well-tested.
-
-Thanks,
-
-Lukas
+Sounds reasonable to me.
