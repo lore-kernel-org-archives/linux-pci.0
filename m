@@ -1,144 +1,237 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D9172D7D47;
-	Thu, 19 Feb 2026 22:25:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 107CE2EDD52;
+	Thu, 19 Feb 2026 22:36:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771539916; cv=none; b=bU0gOIiBp/1KALD/iiJv27DFoAE5W5hO6I7Urm+k2qWFReSw5YXm6F5D/EsyKI1u5rhIB5DHDzITC56aFrrWU4ZTDaOSYuIAKJTW/4FZrSWQg9xOOfoP0sOxuhISTYe1LFwqrk/NvihFl05RsapGpIwlka+ERDHmM12eE6qdJF8=
+	t=1771540589; cv=none; b=q+NZtcx5sapdk8nGCIuXV06efxmaqgJzfy55gFnTTs1lo3WEeCXiSaVQ7U4ziweLRfptpF0+OKfZS1Gx22ESnS4uqW4I2g7vnBwTE+acxM0GwJ4v/hWuA+Y3csWEmhOueAbJznDArqY9+0KNH6HG+nqJwfHKnomfpUZA8IkGyYs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771539916; c=relaxed/simple;
-	bh=jbamHdYNftJ4XHQZGC04/aHaeAeWrJEVXWzFownvB+E=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=FxoaMPT6iUpKV1SQyHdXB7WmelnMOI0p3U1+Ear9CiOJjjPKMdVL8JqN6J/BCSnzkLVVcxatiYleRbW7wLjNUjJafqhDk4nIiyl9ePOgzuUxgPNpftL3xAoXk8Xgva3aGgG/F+PH4GZ0HJofCTpxuXuJx+5/Vu1WAqxKM5tTKvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qpgiE1pj; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qpgiE1pj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19B0CC4CEF7;
-	Thu, 19 Feb 2026 22:25:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771539916;
-	bh=jbamHdYNftJ4XHQZGC04/aHaeAeWrJEVXWzFownvB+E=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=qpgiE1pjdpW56Y+cs1/DjG9uokbmlgAvWca1BWMBR2VXeVX6QmSYXpxfzTrMP1kik
-	 L47r8X5lRXZ4I76EJHj2bjSzJLFsirdKr0kK6yekrnz9pSeVsLUqxdo3Rkpp9+zWGg
-	 tRw/0FOsfUqDKsAejkZZAR6mS/LI9MTvGjyaA5/2xqnxL1LMXYMGFFSejWX+uBqzqg
-	 43mY4aQHvSlk8HffA+6NNSETGIvmEwE78h5uzf64JnfLfCSX4WJi1IvpqvkQm3dCys
-	 avtopjIH6GtSvVrqrtqiELjdn10gnFZnnRFvrS5jN/Ek1vbOIFfrjy6QIyb0jUNP+S
-	 pxLji4crlsllg==
-Date: Thu, 19 Feb 2026 16:25:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
-	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI/portdrv: Allow probing even without child services
-Message-ID: <20260219222514.GA3499908@bhelgaas>
+	s=arc-20240116; t=1771540589; c=relaxed/simple;
+	bh=VepEKFoJVCzXFJ4mrg/0V57ellXKl1xlb3jR4CMxPgE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=RlUce5aE8t1wyM8WHT+PJKubpQDfr4U5OWp55Vnq/AbMzMzXbYnpJRQsfdWC2cJd5g/P+b+jaJ61dPi6hQ28faDNoSCfHXskJ1LmYYqKgqKMXGw1amYTktcHC2slPvnCMcm/xJW7Q1DekjQm2QI20yRlWer405/MN2HkHa976WE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+X-CSE-ConnectionGUID: 63UxcGnCSR606+GmGFyMHQ==
+X-CSE-MsgGUID: kMY8E3BUT9ugGEx4W/KIxA==
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie6.idc.renesas.com with ESMTP; 20 Feb 2026 07:36:24 +0900
+Received: from ubuntu.adwin.renesas.com (unknown [10.24.0.22])
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 49A5C4010DC2;
+	Fri, 20 Feb 2026 07:36:18 +0900 (JST)
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+To: claudiu.beznea.uj@bp.renesas.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	geert+renesas@glider.be,
+	krzk+dt@kernel.org
+Cc: robh@kernel.org,
+	bhelgaas@google.com,
+	conor+dt@kernel.org,
+	magnus.damm@gmail.com,
+	biju.das.jz@bp.renesas.com,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-clk@vger.kernel.org,
+	john.madieu@gmail.com,
+	John Madieu <john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v6 04/16] clk: renesas: rzv2h-cpg: Add support for init_{off|asserted} clocks/resets
+Date: Thu, 19 Feb 2026 23:35:30 +0100
+Message-ID: <20260219223542.6364-5-john.madieu.xa@bp.renesas.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
+References: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260209171535.v2.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Feb 09, 2026 at 05:15:35PM -0800, Brian Norris wrote:
-> The PCIe port driver fails to probe if it finds no child services,
-> presumably under the assumption that the driver is not useful in that
-> case. However, the driver *can* still be useful for power management
-> support -- namely, it still configures the port for runtime PM / D3,
-> which may be important for allowing a bridge to enter low power modes.
-> 
-> Thus, allow probe to succeed even if no IRQs and no child services are
-> available. This also mirrors existing behavior for ports that have no
-> PCIe capabilities, where we'd also probe successfully.
-> 
-> This change is a bit more important after commit f5cd8a929c82 ("PCI:
-> dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
-> controller"), because it's common for some DWC-based systems to:
-> 
-> 1. have only have the "aer" and "pcie_pme" port services available and
-> 2. not define legacy INTx interrupts properly in their device tree.
-> 
-> After commit f5cd8a929c82, such systems may fail
-> pcie_init_service_irqs() and so exit with -ENODEV.
-> 
-> Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
-> 
-> Changes in v2:
->  * clear master when we have no child services
-> 
->  drivers/pci/pcie/portdrv.c | 21 +++++++--------------
->  1 file changed, 7 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index 88af0dacf351..19b08f3653ee 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->   */
->  static int pcie_port_device_register(struct pci_dev *dev)
->  {
-> -	int status, capabilities, i, nr_service;
-> +	int status, capabilities, i;
->  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
->  
->  	/* Enable PCI Express port device */
-> @@ -355,29 +355,22 @@ static int pcie_port_device_register(struct pci_dev *dev)
->  	if (status) {
->  		capabilities &= PCIE_PORT_SERVICE_HP;
->  		if (!capabilities)
-> -			goto error_disable;
-> +			goto out;
->  	}
->  
->  	/* Allocate child services if any */
-> -	status = -ENODEV;
-> -	nr_service = 0;
->  	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
->  		int service = 1 << i;
->  		if (!(capabilities & service))
->  			continue;
-> -		if (!pcie_device_init(dev, service, irqs[i]))
-> -			nr_service++;
-> +		pcie_device_init(dev, service, irqs[i]);
->  	}
-> -	if (!nr_service)
-> -		goto error_cleanup_irqs;
->  
-> +out:
-> +	/* With no child services, we shouldn't need bus mastering. */
-> +	if (!capabilities)
-> +		pci_clear_master(dev);
+Some peripherals may be left enabled by the bootloader but should be
+explicitly disabled by the kernel to ensure a known initial state.
+This is particularly important for PCIe which requires proper
+initialization sequencing.
 
-I'm curious about this part because we pci_set_master()
-unconditionally just above:
+Add new macros DEF_MOD_INIT_OFF() and DEF_RST_INIT_ASSERTED() to declare
+module clocks that should be turned off and resets that should be
+asserted during CPG probe if found in the opposite state.
 
-  pci_set_master(dev);
-  pcie_init_service_irqs(dev, irqs, capabilities);
-  for (i = 0; ...; i++)
-    pcie_device_init(dev, service, irqs[i]);
-  if (!capabilities)
-    pci_clear_master(dev);
+Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
+---
 
-Bus mastering on a bridge must be enabled for DMA from downstream
-devices to work, but I think that's done by pci_enable_bridge() when a
-driver calls pci_enable_device() for an endpoint.
+Changes:
 
-I assume the reason we call pci_set_master() here is so MSI/MSI-X from
-the bridge will work, even if there is no downstream device.
+v6: No changes
+v5: No changes
+v4: No changes
 
-I don't think either pcie_init_service_irqs() or pcie_device_init()
-requires bus mastering, so I don't know why we enable it here.  It
-seems like we should do it when we set up MSI/MSI-X interrupts.
+v3: 
+ - Fixed potential unitialized rcdev crash
+ - Removed duplicated message
 
-If we want to do it in pcie_port_device_register() (instead of in
-service driver when they set up an interrupt), maybe we should drop
-the initial pci_set_master() and do it conditionally, e.g.,
+v2:
+ - Added reset-specific assert on probe
+ - Removed Rb tag from Geert due to previous point
 
-  if (capabilities)
-    pci_set_master(dev);
+ drivers/clk/renesas/rzv2h-cpg.c | 24 ++++++++++++++++++++++-
+ drivers/clk/renesas/rzv2h-cpg.h | 34 +++++++++++++++++++++++++--------
+ 2 files changed, 49 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/clk/renesas/rzv2h-cpg.c b/drivers/clk/renesas/rzv2h-cpg.c
+index 3f6299b9fec0..8e45f6f48e29 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.c
++++ b/drivers/clk/renesas/rzv2h-cpg.c
+@@ -1337,6 +1337,13 @@ rzv2h_cpg_register_mod_clk(const struct rzv2h_mod_clk *mod,
+ 		spin_unlock_irqrestore(&priv->rmw_lock, flags);
+ 	}
+ 
++	/*
++	 * Turn off clocks marked with init_off flag if they were left
++	 * enabled by the bootloader. This ensures a known initial state.
++	 */
++	if (mod->init_off && rzv2h_mod_clock_is_enabled(&clock->hw))
++		rzv2h_mod_clock_endisable(&clock->hw, false);
++
+ 	return;
+ 
+ fail:
+@@ -1585,7 +1592,7 @@ static int __init rzv2h_cpg_probe(struct platform_device *pdev)
+ 	struct rzv2h_cpg_priv *priv;
+ 	unsigned int nclks, i;
+ 	struct clk **clks;
+-	int error;
++	int error, ret;
+ 
+ 	info = of_device_get_match_data(dev);
+ 
+@@ -1635,6 +1642,21 @@ static int __init rzv2h_cpg_probe(struct platform_device *pdev)
+ 	for (i = 0; i < info->num_mod_clks; i++)
+ 		rzv2h_cpg_register_mod_clk(&info->mod_clks[i], priv);
+ 
++	/*
++	 * Assert resets marked with init_asserted flag if they were left
++	 * deasserted by the bootloader. This ensures a known initial state.
++	 */
++	priv->rcdev.dev = dev;
++	for (i = 0; i < info->num_resets; i++) {
++		if (!info->resets[i].init_asserted)
++			continue;
++
++		/* Check if reset is currently deasserted (status == 0) */
++		ret = rzv2h_cpg_status(&priv->rcdev, i);
++		if (ret == 0)
++			rzv2h_cpg_assert(&priv->rcdev, i);
++	}
++
+ 	error = of_clk_add_provider(np, rzv2h_cpg_clk_src_twocell_get, priv);
+ 	if (error)
+ 		return error;
+diff --git a/drivers/clk/renesas/rzv2h-cpg.h b/drivers/clk/renesas/rzv2h-cpg.h
+index dc957bdaf5e9..927009431a73 100644
+--- a/drivers/clk/renesas/rzv2h-cpg.h
++++ b/drivers/clk/renesas/rzv2h-cpg.h
+@@ -250,6 +250,7 @@ enum clk_types {
+  * @parent: id of parent clock
+  * @critical: flag to indicate the clock is critical
+  * @no_pm: flag to indicate PM is not supported
++ * @init_off: flag to indicate the clock should be turned off during probe
+  * @on_index: control register index
+  * @on_bit: ON bit
+  * @mon_index: monitor register index
+@@ -262,6 +263,7 @@ struct rzv2h_mod_clk {
+ 	u16 parent;
+ 	bool critical;
+ 	bool no_pm;
++	bool init_off;
+ 	u8 on_index;
+ 	u8 on_bit;
+ 	s8 mon_index;
+@@ -269,14 +271,15 @@ struct rzv2h_mod_clk {
+ 	s8 ext_clk_mux_index;
+ };
+ 
+-#define DEF_MOD_BASE(_name, _mstop, _parent, _critical, _no_pm, _onindex, \
+-		     _onbit, _monindex, _monbit, _ext_clk_mux_index) \
++#define DEF_MOD_BASE(_name, _mstop, _parent, _critical, _no_pm, _init_off, \
++		     _onindex, _onbit, _monindex, _monbit, _ext_clk_mux_index) \
+ 	{ \
+ 		.name = (_name), \
+ 		.mstop_data = (_mstop), \
+ 		.parent = (_parent), \
+ 		.critical = (_critical), \
+ 		.no_pm = (_no_pm), \
++		.init_off = (_init_off), \
+ 		.on_index = (_onindex), \
+ 		.on_bit = (_onbit), \
+ 		.mon_index = (_monindex), \
+@@ -285,17 +288,20 @@ struct rzv2h_mod_clk {
+ 	}
+ 
+ #define DEF_MOD(_name, _parent, _onindex, _onbit, _monindex, _monbit, _mstop) \
+-	DEF_MOD_BASE(_name, _mstop, _parent, false, false, _onindex, _onbit, _monindex, _monbit, -1)
++	DEF_MOD_BASE(_name, _mstop, _parent, false, false, false, _onindex, _onbit, _monindex, _monbit, -1)
+ 
+ #define DEF_MOD_CRITICAL(_name, _parent, _onindex, _onbit, _monindex, _monbit, _mstop) \
+-	DEF_MOD_BASE(_name, _mstop, _parent, true, false, _onindex, _onbit, _monindex, _monbit, -1)
++	DEF_MOD_BASE(_name, _mstop, _parent, true, false, false, _onindex, _onbit, _monindex, _monbit, -1)
++
++#define DEF_MOD_INIT_OFF(_name, _parent, _onindex, _onbit, _monindex, _monbit, _mstop) \
++	DEF_MOD_BASE(_name, _mstop, _parent, false, false, true, _onindex, _onbit, _monindex, _monbit, -1)
+ 
+ #define DEF_MOD_NO_PM(_name, _parent, _onindex, _onbit, _monindex, _monbit, _mstop) \
+-	DEF_MOD_BASE(_name, _mstop, _parent, false, true, _onindex, _onbit, _monindex, _monbit, -1)
++	DEF_MOD_BASE(_name, _mstop, _parent, false, true, false, _onindex, _onbit, _monindex, _monbit, -1)
+ 
+ #define DEF_MOD_MUX_EXTERNAL(_name, _parent, _onindex, _onbit, _monindex, _monbit, _mstop, \
+ 			     _ext_clk_mux_index) \
+-	DEF_MOD_BASE(_name, _mstop, _parent, false, false, _onindex, _onbit, _monindex, _monbit, \
++	DEF_MOD_BASE(_name, _mstop, _parent, false, false, false, _onindex, _onbit, _monindex, _monbit, \
+ 		     _ext_clk_mux_index)
+ 
+ /**
+@@ -305,24 +311,36 @@ struct rzv2h_mod_clk {
+  * @reset_bit: reset bit
+  * @mon_index: monitor register index
+  * @mon_bit: monitor bit
++ * @init_asserted: flag to indicate the reset should be asserted during probe
+  */
+ struct rzv2h_reset {
+ 	u8 reset_index;
+ 	u8 reset_bit;
+ 	u8 mon_index;
+ 	u8 mon_bit;
++	bool init_asserted;
+ };
+ 
+-#define DEF_RST_BASE(_resindex, _resbit, _monindex, _monbit)	\
++#define DEF_RST_BASE(_resindex, _resbit, _monindex, _monbit, _init_asserted)	\
+ 	{ \
+ 		.reset_index = (_resindex), \
+ 		.reset_bit = (_resbit), \
+ 		.mon_index = (_monindex), \
+ 		.mon_bit = (_monbit), \
++		.init_asserted = (_init_asserted), \
+ 	}
+ 
+ #define DEF_RST(_resindex, _resbit, _monindex, _monbit)	\
+-	DEF_RST_BASE(_resindex, _resbit, _monindex, _monbit)
++	DEF_RST_BASE(_resindex, _resbit, _monindex, _monbit, false)
++
++/**
++ * DEF_RST_INIT_ASSERTED - Define a reset that should be asserted during probe
++ *
++ * Use this for peripherals that require their reset to be asserted at boot
++ * to ensure a known initial state before the peripheral driver takes over.
++ */
++#define DEF_RST_INIT_ASSERTED(_reset_index, _reset_bit, _mon_index, _mon_bit) \
++	DEF_RST_BASE(_reset_index, _reset_bit, _mon_index, _mon_bit, true)
+ 
+ /**
+  * struct rzv2h_cpg_info - SoC-specific CPG Description
+-- 
+2.25.1
+
