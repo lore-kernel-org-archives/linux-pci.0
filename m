@@ -1,87 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F1C5274B37
-	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 11:10:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F9F2C0F7F;
+	Thu, 19 Feb 2026 11:24:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771499406; cv=none; b=rv0t5iSvc3ZlXlcc/fMJcl9YHAz5THUljjxjyXJR11XTfRIANFUkTaLyyHarv5koTGLm5YcG5arUoq4WlR/934oVGaqbijnDh0TuysF55Dr77vfglMcDL2njqcSQQXxEtFTdPX3zGnA5ONrVGSIpbrMkEM9tqoMUFOC3/BwPhIU=
+	t=1771500267; cv=none; b=LEOzC+4hevssFp2f5xEKY5F3hPjQGQRX4Cocz4BGt5S5+e/7Q8c242wQiJPuSb+mjVS+OaDRdhCTjelH8/rhVNZoRqvTSXmtzklgnEGFbf2d6B+n/B0TXt8oCwKbN3mAliHURul+BYHxW0jrTvH9qi1/r1brIJd5q35OJrxC/zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771499406; c=relaxed/simple;
-	bh=jdHXiG+Zjon1kIoMLTsKMp9qCqagjcDQtQe0UL1HCxU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fIqoYXqVx/nKI7Su5kzHhf3CxFEqJu6NJwv6zs+tMH2rEeaxonj3y8UejH6jOhFWWzIjmEx0f1CMLDxFzrVIGSnzVgOtPF24ksMi9W6FQw2tE6aZgvsDHUe7K32+aYXiwRD+6rAT01OaIXYgHKMijV+c9nqh9JpUzUXWLZyiiWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=muHXkXDW; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="muHXkXDW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36ED0C4AF09
-	for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 11:10:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771499406;
-	bh=jdHXiG+Zjon1kIoMLTsKMp9qCqagjcDQtQe0UL1HCxU=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=muHXkXDW6OzSnp0MtREQQ44AdWCsmSUDMSt5m7zXRMWUkHnxJy2f1/rQgwRPGC/N4
-	 dr3oXZ3H8jg65k3tgEkh4OEP32QP1UqDZzYDPpGQQJZrZz4QUc4LUX6spinTwsBQN/
-	 ds/BQM2DVEjCwSPt7dUJb/cMGip48V/scRGFtN4StxXm0GtDOoWYPbZcckew7+ad9Q
-	 IsmwEfniC/tVSzAHkN9mTdWksDu5lU81mOcwOyobS8uXQ5gYlJ1Va+k1iPJl5drNTo
-	 2bkUzLJzoOPD4563xuGO+3eHnxlSWoig+39bJ+hbSqu/d7wWf6TDNWfutJObZqwZIO
-	 yCEiL6Pf5r+mw==
-Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-40ee196dd78so516810fac.1
-        for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 03:10:06 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXQ+E4V1xOXzFPronUwDZyAPThCk1dTleNAAa6enRhVco8rq8bhqwkmEhnn/aCYk+RXHfeqiNpiNjY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwNhQYOYBmlFRvMPty4V77W/GzUXshhX13pc/DeRYKS3dULi1Ut
-	LUALvAtqLL/E66NBKc+/n8QJK39DxGYYikT7/fniQ5MHu/cvei4tuC8/Z83TsFVEWOXW8OYQrZu
-	Pp6HD30l3Ck87V8JRQnsFrLX6VNnXQho=
-X-Received: by 2002:a05:6871:2b20:b0:409:62ce:83f6 with SMTP id
- 586e51a60fabf-4154539f5a3mr795303fac.5.1771499405213; Thu, 19 Feb 2026
- 03:10:05 -0800 (PST)
+	s=arc-20240116; t=1771500267; c=relaxed/simple;
+	bh=kiWWMJPRnZszwBRPKCM3XhoHzxajw/7QqLZcR1h9gdc=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=vCZN7w1PleqzQCUC3TKmNl1gvi53r3JXHi/U5iCRPqWyxfC/yK98b7QURH5rRz/gb6w9xZN9hPNDxn3DFZDsZFnbac3K0aq2Z9CsxzYHxLPz96fhCUUeGO6+ZxbJpiS1Mjh8n2xwO9sDX9iAcjuTS5EpWA67CprxwcCob6E78QQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.107])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fGrcS4fvzzJ46ZK;
+	Thu, 19 Feb 2026 19:24:08 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id E7DA440584;
+	Thu, 19 Feb 2026 19:24:21 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 19 Feb
+ 2026 11:24:20 +0000
+Date: Thu, 19 Feb 2026 11:24:19 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+CC: <alistair23@gmail.com>, <bhelgaas@google.com>, <lukas@wunner.de>,
+	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	Alistair Francis <alistair.francis@wdc.com>
+Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
+Message-ID: <20260219112419.00000903@huawei.com>
+In-Reply-To: <20260217235604.GA1595019@nvidia.com>
+References: <20260211032935.2705841-1-alistair.francis@wdc.com>
+	<20260217235604.GA1595019@nvidia.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260213231428.613164-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <9b639ed0-1765-4cca-814e-18a1260e01b9@linux.intel.com> <CAJZ5v0iaKU6QJ7sxYCS21H0fv99DBNny-_bXzKH4g8RXgFuN6w@mail.gmail.com>
- <7b4dd756-2ab7-4331-b560-268f9cff0887@linux.intel.com> <CAJZ5v0gcZ5vs4WcS0GhvQrG9Kf05LNrNfd+oXz3WDdCA0xGjjw@mail.gmail.com>
- <aZbEDldZxV1KG_5B@wunner.de>
-In-Reply-To: <aZbEDldZxV1KG_5B@wunner.de>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 19 Feb 2026 12:09:52 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0gF244JC5C9pLqmzxUuQkxMOXXBf92ckTKfeo9n8wgb1w@mail.gmail.com>
-X-Gm-Features: AaiRm527QJf5y11Cuo8LtYdIEYVrrNAUXYnydvlX1VYcNxGiGxAQYCgufHCg68c
-Message-ID: <CAJZ5v0gF244JC5C9pLqmzxUuQkxMOXXBf92ckTKfeo9n8wgb1w@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: pciehp: Fix hotplug on Catlow Lake with
- unreliable PME status
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Thu, Feb 19, 2026 at 9:04=E2=80=AFAM Lukas Wunner <lukas@wunner.de> wrot=
-e:
->
-> On Wed, Feb 18, 2026 at 06:33:15PM +0100, Rafael J. Wysocki wrote:
-> > First, keeping the ports in D0 may gate runtime PC10.  Does it not?
->
-> The Root Port in question is on the PCH.  I'm not sure, does keeping a
-> PCH Root Port in D0 also prevent PC10 entry or is that only the case
-> for Root Ports on the CPU die/tile?
+On Tue, 17 Feb 2026 19:56:04 -0400
+Jason Gunthorpe <jgg@nvidia.com> wrote:
 
-If it is located in the PCH, it should not gate PC10 if in D0 at least
-in theory, but it would be good to verify that.
+> On Wed, Feb 11, 2026 at 01:29:07PM +1000, alistair23@gmail.com wrote:
+> > From: Alistair Francis <alistair.francis@wdc.com>
+> > 
+> > Security Protocols and Data Models (SPDM) [1] is used for authentication,
+> > attestation and key exchange. SPDM is generally used over a range of
+> > transports, such as PCIe, MCTP/SMBus/I3C, ATA, SCSI, NVMe or TCP.
+> >   
+> > >From the kernels perspective SPDM is used to authenticate and attest devices.  
+> > In this threat model a device is considered untrusted until it can be verified
+> > by the kernel and userspace using SPDM. As such SPDM data is untrusted data
+> > that can be mallicious.
+> > 
+> > The SPDM specification is also complex, with the 1.2.1 spec being almost 200
+> > pages and the 1.3.0 spec being almost 250 pages long.
+> > 
+> > As such we have the kernel parsing untrusted responses from a complex
+> > specification, which sounds like a possible exploit vector. This is the type
+> > of place where Rust excels!  
+> 
+> I was arguing for exactly this at a recent conference, so I'm glad to
+> see it. It is a great meaningful usecase for rust in the kernel.
 
-Of course, it will still gate S0ix entry through runtime idle, but
-that's a bit moot if the platform is unable to enter S0ix through
-runtime idle anyway for other reasons (which is quite likely), or if
-the power difference between S0ix and PC10 is small.
+FWIW I'm fully on board with this as well.  More than happy to see my C
+code Lukas has been carrying go away in favor of the Rust :)
+It'll also finally make me learn more than a trivial level of Rust.
 
-> If this does cause a power regression, the pme_is_broken() approach
-> suggested upthread might be a viable alternative.  It'll allow the
-> Root Port to go to D3hot but will keep interrupts enabled in the
-> Slot Control register.
+Jonathan
 
-Sounds reasonable to me.
