@@ -1,119 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 442DD349B18;
-	Thu, 19 Feb 2026 15:47:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F43D1D5160;
+	Thu, 19 Feb 2026 16:00:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771516041; cv=none; b=u0pwKUJEPVklrzcrMTITRWoztv2+ZM/wujb2QEssByMR4smsAPEtxxH9P6RRGXJldSn+N16kpcrD7yCJt8D1PClinX0fgxzNHmdSijDKl8ObrmvYIDXoVacxbcx7QZGell/aYuYc8dcRqXBzrSavrv67RG19LP8FaV4gIHRClG8=
+	t=1771516802; cv=none; b=Fd0VWTcIIomUzai9bW/fyoVuJvHLLrr75s60Xn6papQSKGga+LVSGumGbTlhacCmmdLhNTdYfZqo013NejI5R6o65vi8V6OHs7+Ot4xe6Elnq500fjLwChAK9SBpk8veO59ar6lQe3zIlthKiWzbVVP28iSZBRlQFMShpY/p284=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771516041; c=relaxed/simple;
-	bh=6jZLbT+JuUsgAjaLJvA0T7UDOHhQK4+JWXfz+1inNe0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tapOqTYsMmWwDTSom1DXnpA85L2mFsVsUkcVqKJriApFSYX6FuG1RK89yTEdBOT5l3GCGPSxUAZtwwFoINohyab+7mIbewj4Z247H9dRyUZymy2+5vIX0Gv0GRM1MMJX5stOp0sbbVyxBPVPHG1rjp76r8Kn94rXmSnRgGFRva4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YiFvl9yQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771516802; c=relaxed/simple;
+	bh=0v/L4Xesw/whMXC5xx+pNjMoEam92Sd85B3MP7yKj50=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=hF4PZUTUdweWLt8uQOKR5KTEnZ8oIFehCirwIXwzVlEnln0iLnPyFwz2/Fa+ggqB0VzoiX2LKXjGJdpGd+hImzoJe6pL9V+4mSTySER0wac3w3e25/KnZGWi78jGMIppRZD3e1RuXjD/SL7PjwHo0l2fKd4Z1Ug8Bssz7M8EGJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dcxTfZPj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YiFvl9yQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B02A2C4CEF7;
-	Thu, 19 Feb 2026 15:47:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dcxTfZPj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3B8DC4CEF7;
+	Thu, 19 Feb 2026 16:00:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771516041;
-	bh=6jZLbT+JuUsgAjaLJvA0T7UDOHhQK4+JWXfz+1inNe0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YiFvl9yQEqPgVMa17paCcsApkXqXxPDC9INi1Es2mmdAetSjEQ0C6iYgWwRZDGBPl
-	 T5q2p4xK5DJSE+ax2Hoz09rQk5fv0YvwjEGmVz0trJeqhE3W3byvZuFumBEQl61ssF
-	 cayjjGSqQU6eGeVGCmRc/OFBNOWfgPM8oDLWkPfGsgJ9+pQiEIOT68q6C90nwJatVP
-	 4bvJDf/hfPBV7jkpsVOlipwi+COGGqHuMrFczDEr0ZpeQaaIcS7OkRpG/ESSwihg29
-	 a6fD+1rduNex036MvIhfIfItvvcJH/+f4AWeHzq7IsUVYS1FkhqkXugAJjZrAXoMha
-	 j+xsRubgHcR6A==
-Date: Thu, 19 Feb 2026 16:47:09 +0100
-From: Lorenzo Pieralisi <lpieralisi@kernel.org>
-To: Sunil V L <sunilvl@ventanamicro.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, huyuye <huyuye812@163.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Paul Walmsley <pjw@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Robert Moore <robert.moore@intel.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-kernel@vger.kernel.org, dai.hualiang@zte.com.cn,
-	deng.weixian@zte.com.cn, guo.chang2@zte.com.cn,
-	liu.qingtao2@zte.com.cn, wu.jiabao@zte.com.cn,
-	lin.yongchun@zte.com.cn, hu.yuye@zte.com.cn,
-	zhang.longxiang@zte.com.cn, zuo.jiang@zte.com.cn,
-	li.kunpeng@zte.com.cn, Sunil V L <sunilvl@oss.qualcomm.com>
-Subject: Re: [PATCH v2] ACPI: pci_root: Clear the acpi dependencies after PCI
- root bridge initialization on RISC-V
-Message-ID: <aZcwfeG3y7EuLDzB@lpieralisi>
-References: <CAJZ5v0iZukqD0atbdfBnmZAxUzNB6sTcJ1YUeAo5a8NRn-emEg@mail.gmail.com>
- <20260127194648.GA368841@bhelgaas>
- <aXtld38sQ9qFoNKk@sunil-laptop>
+	s=k20201202; t=1771516802;
+	bh=0v/L4Xesw/whMXC5xx+pNjMoEam92Sd85B3MP7yKj50=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=dcxTfZPjMlojLC1vKYkCtUiJIX0r38JcIOE+hQHvRA4MLGylqx7xVIEDllbcrN2sr
+	 D2s//k9e6KOaq2b4ovmM5PLHn7SdZD8G7N47JpBrrDYMGO/gF1GizIFXY8oMp6PzlB
+	 YI9Zm9pggJFi55WaVocx1wFqhigFb2daAxcMjtHmzlPOysooaHAjGtVLiTmPYFQvFh
+	 nvHBqp/ocCZ2RW2KF9r4AFCPTXzZLd+GxOiuZCFgw3r7ydNbhPBOY2KkcT3amjJ3DK
+	 t8u1YpSe8iegk1F57JTpKUAQaqqWSKYBVzDSlAxvZXwcmHPpXNfzpmxLNlvScrMdX7
+	 akdxRiCn8+2Zg==
+Date: Thu, 19 Feb 2026 10:00:00 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Arnd Bergmann <arnd@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: pci-epf-test: select configfs
+Message-ID: <20260219160000.GA3477038@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aXtld38sQ9qFoNKk@sunil-laptop>
+In-Reply-To: <aZbRkXM2vIgAwvzz@ryzen>
 
-On Thu, Jan 29, 2026 at 07:19:43PM +0530, Sunil V L wrote:
-> On Tue, Jan 27, 2026 at 01:46:48PM -0600, Bjorn Helgaas wrote:
-> > On Tue, Jan 27, 2026 at 06:50:24PM +0100, Rafael J. Wysocki wrote:
-> > > On Tue, Jan 27, 2026 at 6:26 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > On Tue, Jan 27, 2026 at 04:00:49PM +0100, Rafael J. Wysocki wrote:
-> > > > > On Mon, Jan 12, 2026 at 3:17 PM huyuye <huyuye812@163.com> wrote:
-> > > > > >
-> [...]
+On Thu, Feb 19, 2026 at 10:02:16AM +0100, Niklas Cassel wrote:
+> Bjorn, btw, is it perhaps possible for you to remove the tag:
+> pci/for-linus
 > 
-> > > Not really.
-> > > 
-> > > acpi_dev_clear_dependencies() is related to the way Linux uses _DEP
-> > > which is to defer the enumeration of dependent devices until the
-> > > devices they depend on are ready.
-> > > 
-> > > So by calling acpi_dev_clear_dependencies() the driver basically
-> > > allows other drivers to bind to devices.
-> > 
-> > I assumed the dependency expressed by _DEP would be satisfied by the
-> > execution of some other ACPI method.  E.g., the dependency might be
-> > satisfied when a _REG method makes an opregion available (although the
-> > spec seems to suggest that's only one of the possible dependencies).
-> > 
-> > But in this case it sounds like RISC-V is using _DEP not because of
-> > any ACPI-related ordering requirement, but simply to enforce the OS
-> > enumeration order (and therefore naming).  I guess this refers to PCI
-> > device naming, so I suppose that dependency is on
-> > pci_acpi_scan_root().
-> > 
-> Right. Devices that use wired interrupts (or GSIs) depend on the APLIC
-> interrupt controller being probed first. ACPI uses the _DEP mechanism to
-> enforce this probe order. However, when multiple dependent PCI bridges
-> are present in the system, there is no guarantee that they will be
-> probed in the same order on every reboot. This patch addresses the issue
-> by adding _DEP relationships between the PCI bridge nodes in the
-> platform, ensuring that they are always probed in a deterministic
-> order.
-> 
-> > I thought udev was supposed to be the real solution for consistent
-> > naming.  Is this sort of a workaround to accomplish the same end?
-> >
-> Yes, Marc had suggested this as well, but it looks like it’s not easy to
-> use in this environment [1].
+> tag pci/for-linus
+> ...
 
-FWIW I agree with Marc - I read [1] and still don't understand what the problem
-is with implementing a udev set of rules to fix it.
+> Since most people why do a git log pci/for-linus wants to see what
+> you have queued for linus, and since the ancient tag seems bogus
+> anyway, perhaps you could just remove the tag from the PCI tree?
 
-> > In any case, your IS_ENABLED(CONFIG_RISCV) proposal seems fine to me.
-> > I think it's nice if we can avoid adding another __weak function.
-> > 
-> I agree. But I am not sure if ARM also can get into this situation with
-> GICv5. Adding Lorenzo.
+Thanks for reminding me about this.  I've tried in the past but was
+unsuccessful.  I tried again and I *think* got it removed.  I'm
+including the details in case I ever need to do this again :)
 
-It can happen with GICv5 but I don't think that's the point. It can happen
-on any arch regardless of interrupt controller probe ordering and udev is
-the de facto solution to this problem AFAIU, please correct me if I am wrong.
+Current pci/for-linus branch in case I delete it by mistake:
 
-Lorenzo
+  $ git show --oneline for-linus | cat
+  a7b3343bbb57 PCI: endpoint: pci-epf-test: Select configfs
+
+Local pci/for-linus tag:
+
+  $ git tag -l pci/for-linus | cat
+  pci/for-linus
+  $ cat .git/refs/tags/pci/for-linus
+  b4aef5ce82f1d27e0f14d1f8488dc2db9c22dd38
+
+Delete local tag:
+
+  $ git tag -d pci/for-linus
+  Deleted tag 'pci/for-linus' (was b4aef5ce82f1)
+  $ cat .git/refs/tags/pci/for-linus
+  cat: .git/refs/tags/pci/for-linus: No such file or directory (os error 2)
+
+Delete remote tag:
+
+  $ git push --delete pci pci/for-linus
+  remote: Recorded in the transparency log
+  remote:  manifest: updated /pub/scm/linux/kernel/git/pci/pci.git
+  To ra.kernel.org:/pub/scm/linux/kernel/git/pci/pci.git
+   - [deleted]                   pci/for-linus
+
+Verify:
+
+  $ git fetch --prune --prune-tags
+  $ git tag -l pci/for-linus | cat
+  <none>
+  $ git fetch pci
+  $ git tag -l pci/for-linus | cat
+  <none>
