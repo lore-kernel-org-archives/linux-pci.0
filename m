@@ -1,43 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4EB3CA6F;
-	Thu, 19 Feb 2026 13:45:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E094B1AA1F4;
+	Thu, 19 Feb 2026 14:15:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771508729; cv=none; b=W7bqr28MNOYlmtA2CgvqZzS4k3UVzq3KTRaxrbIK3Lc6q2WSE7ifuXqV3Vt0hMouEEvx4WC2REyKNv+uPcRncJkDVLv1bGsx/oXwjymqUMtJclnK/AZfBm4OEnu9CjS8F/GjNBZiSYlpeWw3xS38dakvyxGsNhd142owwjnjCnA=
+	t=1771510539; cv=none; b=mzPX5VbfzMs6gAQq5IlOZhgpTiAVEv7Cp4N+c6nJ26/AXDWKSLSRlDxiKK1v225wKdReov1dj2wbkrWI2l7pn4fUlqMSyPEqnGNGgh7cnHdPStTJSsDS66aYCUVeg3ANwJPMlSbLzbJ89l8LxIUrn7D4dhf3SQsidgNG2t+aSi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771508729; c=relaxed/simple;
-	bh=YNhO5Ar2EvZfD+jNSpkur8t2JjgD5F5KFNpP+al4NSI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qFccK24IJhqtKROGVN/dnZDRzwWRQBG35k+Hci9ET214VL79xxNAlug110H9/osZ50wRpR6NOKQdYA6PxyxmK3MZ28lWbFlDSvXctx1PdR+6QB2v1dxMmX72ECaiXppu8bpQ/S7LyzoWty8bWnFn5D73wAwyG+RFhLgCbFEWj2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QoaomqNf; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QoaomqNf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 551C2C4CEF7;
-	Thu, 19 Feb 2026 13:45:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771508728;
-	bh=YNhO5Ar2EvZfD+jNSpkur8t2JjgD5F5KFNpP+al4NSI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=QoaomqNfKl5dE/L3S0IJ5q5qwRKsGNgjqxKICtkDVgc8Y3YiWO2z6RybGxQ2s/dk0
-	 DHbnzA9idwGFAiZ5ZgBwf/MM4Cgxv2lENCZ0P8eHcI9dnXGfMZ+Fz2Hrkp85beOtZ6
-	 locSoQ/8WbJnfBY/WhJIOcuzfvVuqBC5ecCa/WmI4KnY/uYMvRzclvqsNgeastPXTC
-	 P8shbDMXsiEiohi3A5vdZXr4hblcUNds2srGUrD45AnCD8HwRhczEubmIUaZwlM1iT
-	 c+J0EPf2BUbHAmXEi8V0P8TmNTM/NujOx3SgDBkBT0DDa8xDNsjHgduT9ern3PaSXs
-	 vayYfKEaqlGZA==
-Date: Thu, 19 Feb 2026 07:45:27 -0600
-From: Rob Herring <robh@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: andersson@kernel.org, mani@kernel.org, krzk@kernel.org,
-	helgaas@kernel.org, linux-arm-msm@vger.kernel.org,
-	devicetree@vger.kernel.org, lpieralisi@kernel.org, kw@linux.com,
-	conor+dt@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree-spec@vger.kernel.org,
-	lukas@wunner.de
-Subject: Re: [PATCH v4] schemas: pci: Document PCIe T_POWER_ON
-Message-ID: <20260219134527.GA2438773-robh@kernel.org>
-References: <20260205093346.667898-1-krishna.chundru@oss.qualcomm.com>
+	s=arc-20240116; t=1771510539; c=relaxed/simple;
+	bh=YgJ3m1ERZod0UHaaHi4tbBT0nLInatR5Medvj0ySv3Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=VyzSeaqeQe1ZapKgrDNOdSgM3FQK0vkKibDVz0Ghsd3DzJ6jHmx9oRjVfzJOD59v78ldC7QF70EFSRHfsKFKFWvgvpH9htEHC/CqBpaJuqb2VYIYM0UceLitaoCG7Hbc+Ob0VMt4OkW/dUM736j6uL+wWUWeI87Aql6emswA4pU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout1.hostsharing.net (Postfix) with ESMTPS id E18E920202F9;
+	Thu, 19 Feb 2026 15:15:34 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id C702126687; Thu, 19 Feb 2026 15:15:34 +0100 (CET)
+Date: Thu, 19 Feb 2026 15:15:34 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: dan.j.williams@intel.com, Alistair Francis <alistair23@gmail.com>,
+	bhelgaas@google.com, rust-for-linux@vger.kernel.org,
+	akpm@linux-foundation.org, linux-pci@vger.kernel.org,
+	Jonathan.Cameron@huawei.com, linux-cxl@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com,
+	benno.lossin@proton.me, boqun.feng@gmail.com, a.hindborg@kernel.org,
+	gary@garyguo.net, bjorn3_gh@protonmail.com, tmgross@umich.edu,
+	ojeda@kernel.org, wilfred.mallawa@wdc.com, aliceryhl@google.com,
+	Alistair Francis <alistair.francis@wdc.com>,
+	aneesh.kumar@kernel.org, yilun.xu@linux.intel.com, aik@amd.com
+Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
+Message-ID: <aZcbBt7OmNeH3oA0@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,21 +46,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260205093346.667898-1-krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <20260219124313.GE723117@nvidia.com>
+ <20260219124119.GD723117@nvidia.com>
 
-On Thu, Feb 05, 2026 at 03:03:46PM +0530, Krishna Chaitanya Chundru wrote:
-> >From PCIe r7, sec 5.5.4 & Table 5-11 in sec 5.5.5 T_POWER_ON is the
-> minimum amount of time (in us) that each component must wait in L1.2.Exit
-> after sampling CLKREQ# asserted before actively driving the interface to
-> ensure no device is ever actively driving into an unpowered component and
-> these values are based on the components and AC coupling capacitors used
-> in the connection linking the two components.
+On Thu, Feb 19, 2026 at 08:41:19AM -0400, Jason Gunthorpe wrote:
+> Kernel auto acceptance is not desirable for the same reasons it is not
+> desirable in a TVM.
 > 
-> This property should be used to indicate the T_POWER_ON and drivers using
-> this property are responsible for programming both the scale and the value
-> of T_POWER_ON to comply with the PCIe specification.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+> If we do some automatic re-accept for RAS/resume it should be strongly
+> tied to some target pre-set by the userspace acceptance process - ie
+> "the device must present exactly this specific cert chain and nothing
+> else", and probably more too since we may want to exclude swapping out
+> device FW versions or similar.
 
-Applied, thanks.
+The way this works in my series (and I presume Alistair's) is that
+trusted root certificates for devices need to be added to the .cma
+keyring.
+
+This can be done from user space using keyctl(1) or some other utility
+that can talk to the kernel's existing keyctl ABI.
+
+It is also possible to link the .builtin_trusted_keys or .platform
+keyrings into the .cma keyring and thereby declare anything trusted
+that is used for UEFI Secure Boot.  Likewise blacklisted certificates
+added to the .blacklisted keyring are rejected for SPDM device
+authentication.  These are existing, well-established roots of trust
+in the kernel that CMA simply inherits.  I think it is reasonable
+to base auto-acceptance on these existing mechanisms.  No need to
+reinvent the wheel.
+
+If you want to trust exactly one specific End Entity certificate,
+you could provision an SPDM slot with that certificate, add it to
+the .cma keyring and clean out all the other 7 SPDM certificate slots
+on the device.
+
+> > It has turned out to be super convenient to expose the 8 slots with
+> > certificate chains in sysfs for direct examination with openssl and
+> > similar tools, without having to go through netlink.
+> 
+> Honestly, I'm reluctant to add permanent sysfs uAPI just for temporary
+> debugging. Put it in debugfs.
+
+Exposure of the certificates in the SPDM slots is not for debugging,
+it's just super convenient for day-to-day use.
+
+> Having to find/remember some baroque openssl command line with a
+> million options is not reasonable for a production kind of
+> environment.
+
+Personally I find something like the following neither baroque nor
+unreasonable:
+
+  # What's the certificate chain in slot0?
+  openssl storeutl -text /sys/bus/pci/devices/0000:03:00.0/certificates/slot0
+
+  # Fingerprint of root cert in slot0, does it match what vendor claims?
+  openssl x509 -fingerprint -in /sys/bus/pci/devices/0000:03:00.0/certificates/slot0
+
+  # Looks good, let's trust it:
+  keyctl padd asymmetric "" %:.cma < /sys/bus/pci/devices/0000:03:00.0/certificates/slot0
+
+> There should be a tool suite that runs on top of this stuff and
+> presents a sensible user experiance, with man pages and so on.
+
+Device authentication is currently trickling down from server to
+client to embedded/edge devices and you don't want to require users
+to install a tool suite on space-constrained embedded devices where
+busybox + openssl is otherwise enough, doubly so with skyrocketing
+eMMC prices.
+
+Thanks,
+
+Lukas
