@@ -1,191 +1,148 @@
-Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC3733DEDD
-	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 10:35:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771583717; cv=none; b=fEFuDFua2PdF/bSudxXgqd4H9xVFHv+4daFTpWgYUd/0Y4HdE22BV87P/xP8wazcGHv/BjoOEiOJwSrKHKgGOA2RjOiGWWEvSwB8p4h0CMMFjAhXmoYF4XvcZnynC5D1Oh8vNhex9aajMjbL+nVzQxNPkbIU1KYnX0vftXMSM/A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771583717; c=relaxed/simple;
-	bh=+0veVdhvJiXHWfU3srloHvG6XN01ATLsuTVbT5o95C4=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=PqNkhy7uRd2ir92IX/IHQTcn4Xn3/iZMoh/ZDPYMtGtHATgQ8mE9C+JNHCcxco8H8hjOaGjbKEhGbg29tpNERHH5EQs0h309HYQHuEoznS31d3jMjnlWTPVtyNi4cX17g8RTrlKSav6qRyuFslvTVpG6UFsogXYEVAj7A9hizOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=1IXVmEbR; arc=none smtp.client-ip=209.85.128.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E791F33EB01
+	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 10:49:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771584561; cv=pass; b=s+2COg+SwpbCH2z4LBVXu5FRW3W+JPl0fTmOm2LhtLBE5DAGQq9ABuiMs278OkgeQEeAVLMvcwqcZcLt/psXCHcDga55cBxIcZRUZEXdtWA3/ijIaWNVGW2nNJPAqLCRwZMBZrtFJdkMcyCphMUEcCpcAqkDSYHploGWl7Q9gDI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771584561; c=relaxed/simple;
+	bh=aOLVDIR4WnlUw1nvqXwQwf234Bh2W6bojDklxd8Gees=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=covuS2DLgYj1SHC0C2sYta5H03v/Ho09N6aNT8bxmR2Do9J8s15LJptAVxJvLdT6iEBkUFpX0B9kR6k4dO0YKPIbV7+OuGcuyjrMIguUL0j/CV9D0mmiIThsurxef8KGExBzXroAg+/x8mFXbENBq4D04Kh0EhfN/uax2KSgMRk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=JABONran; arc=pass smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="1IXVmEbR"
-Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-4836ff58111so21044675e9.1
-        for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 02:35:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="JABONran"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-48375f1defeso13660695e9.0
+        for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 02:49:19 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771584558; cv=none;
+        d=google.com; s=arc-20240605;
+        b=PUUFbaSycThD6KK82mttQDdP8vO674Im04fiM5KBy89OpRmUbpXDcZTyJiVD4BSymy
+         7JXb7/yC6Icu+kPBS6wl5N4u19ojtP4KqAyN34NDubS5SS/QMmdaFYh7FWKNyNAnemJh
+         9KQ6nlBt57CzHtcvJIF0EjQJbBruaAOFAnUowdzMFSJcJrhArv1szfmiaAjJuiEHvkob
+         ObNaTtN1evfCway9yNQ/OGeCJgYpUh4ur2lWztz5BXDg4hLYxcrMhkBf+5iVW5cFmdSe
+         U3iMppbfsVyBD8uctdUUZIZhQgFiRHpWmkHorT0YUn2CiyIy8IWga6KvRA7D+p4Guqdp
+         rNtQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Ab0aEJOyc1j8sAVck7x1NuXrJJFBzT+zHKOVXAo2rqQ=;
+        fh=Mmjk/kacBs6sT6eLcZc9WoQtV5PvUIeVWYr6TYlh2Ow=;
+        b=ESosviBpG3ze3PP85T3bWU8nQVEUv6SCetLE0gVAA6NgnRUPq3SZAOX7iAYg62HXVM
+         cQFNQaWNUPsFEQmn9nWr8oxs4Q/CncpmsIgc6X5qodBts7tR1FYBs9AHpvNO0cdtYeqC
+         H+YKHmP+vSt8XY6cJP5jdtCyILt0W9/5A6XfKo56HdfuGWCQLdek1/I+oMDSOih4g3kC
+         M4w4PFfaqd3TcvU5xcR0yHwzkdt1wHRW5XieWPpAulKt1P39JXC0+0fv62l1boxRHmjc
+         U8+4hmzNLvKJcvf9VMgthIuSkirL0keow+oHcpRV/t/HJkUfHuZPnb0aXY1cSP6+0ane
+         3dNQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771583714; x=1772188514; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=SuBBZbTgNeFNGP2KTDBOL9VXYwpq19RWtpTtqUl4jLA=;
-        b=1IXVmEbR3x/gwrILo+4+FcRcD/u6auiA1qN6OHuF2E4HiKwOiUZV/WZYg7nR01wBRC
-         uDc6mN3J7GSC90Cjq/Pl/PdqeVANNljGGVlRQ93GXbKdeP4BAL2CYdSf2odeAiSP926f
-         8VvMYgO17j0x4H1kkJt4pw3YR0mvMPf25DbJxkP+1Fy4uPdK2x7u+CnvTohxPUtIcJJ2
-         lRq08/yfv6iagcLUZRNAR/c3bd/e0bOGQuLoTAVq328hLV4823aO7H0mvGVAAqO9Bf4u
-         pyqYEnbThNivwRIBXpA1eOALuzFWBp/BM6GVy1T4rlAt4NjsZDt3y7QY3qBN4fNLaBLR
-         EdjQ==
+        d=google.com; s=20230601; t=1771584558; x=1772189358; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Ab0aEJOyc1j8sAVck7x1NuXrJJFBzT+zHKOVXAo2rqQ=;
+        b=JABONranC/t/ZRWaTeXGCdbAg3MlyNGEm32nb8g+0L+PjkN0k7v4kud2f/Lc8HtI9p
+         RSJ70uRPi9eRvWSiQdR4rSEaIEyNlubpm35GfQ3YOcWC3G9WcVSK61xAwUJAmv+fEQjH
+         U0VDLzRhvDs3mprDIFVy3TKWENLnYZA8lvak3zCs19Vc7dc+4ymdsOOcoNXANG+9O4wA
+         yAElmODqtzgqw7FDaasHWfeg3jDiHmL7dRWAknBHeykcq12ka7XVCsyOk7kCewg+AQ13
+         iGKyafSskeM/uBbKXgMnW0Dq60qRd6tC6hK6mVrNBSjRBZQXO7HJmMLT1etJbZnXuKpV
+         q+4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771583714; x=1772188514;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SuBBZbTgNeFNGP2KTDBOL9VXYwpq19RWtpTtqUl4jLA=;
-        b=a1vQj4lwbMurr71eWWyPDeyo6CbA3Riw6qGgxtljJX2ddU9edGD89DUvlk0XgtAmiu
-         BVmMZrCbZl0qXB2CRY+cN6setteFelfgo6SyFat7MMzceaEPI+v0XnNrfPn2JZCZ5taw
-         Y8UGB5u19n5d4YeRZ7tFbGHW/RrqMBNEvFdXLz14KNssNWLqyTHXp77KfX9oIsk4SU8W
-         Oe04p+8XNJ66079zgPIRWRAxWjFyUrjNSjbhi+3fX4EZtwRiBSohwHsKUoSunD+s693T
-         3YxRi0gr7h9jOnHx+/5WaMqDo4EYibBYmYvC96Gxmoe9S8oUICZIxHi341OlmLtb/7rC
-         N5yg==
-X-Forwarded-Encrypted: i=1; AJvYcCUHsH18+7t/Ywb4bynGGkbpgIpGuOYhM/hwGzcK9Qob/qxi2x8QsxuWGeaPZDjgHlQCQTpV3xrDo10=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxq1Gf7WFJRnNp1/sNYkdCsoiIV6uXHxUJoK0/0KnOjH5IABS13
-	HiBRvYB5T6aFikZ30eP6TKWcvk+WS9JN7HNg0DtxlnIx4HQDmFsWXOwp3PsFAobIBIrVNgqGGfG
-	o4HM+dvJgterbZKw+aw==
-X-Received: from wmbdr17.prod.google.com ([2002:a05:600c:6091:b0:480:4a03:7b73])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:8b26:b0:465:a51d:d4 with SMTP id 5b1f17b1804b1-48398a47222mr123364405e9.6.1771583713704;
- Fri, 20 Feb 2026 02:35:13 -0800 (PST)
-Date: Fri, 20 Feb 2026 10:35:12 +0000
-In-Reply-To: <20260220-unique-ref-v15-1-893ed86b06cc@kernel.org>
+        d=1e100.net; s=20230601; t=1771584558; x=1772189358;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=Ab0aEJOyc1j8sAVck7x1NuXrJJFBzT+zHKOVXAo2rqQ=;
+        b=JySGpyqQivqpbH21qbggJZ9Ec6nUzXYM1/JMCbkXw8a8odoiwlUiVw/Xq7Lcm+j0g1
+         cxb/M8gKDj7ZGyzJ2/Jus4UQYfTyNQDwutOAVcXMLX6geWZXgfBKh4LQ95s8f4+2aSYP
+         tc/Xn1VSdq9IYQHe92Z4X/Hq0gn+k4eaQKtWFFCVR9Ys9NTI061R7mnYbNrTXNcYdccT
+         1E/SpgrfKAt9n4Cu8Ln/ITVCMGaV+sqbarz9e5cY4cnsZVYYKWttpiezZ4ki9qKMjLca
+         2s9bbRJ3p2vfhs3appurZ/r6Mu/wO/iokS1RdvlFaL80u03zENdFo36XL6jEfCFOo5os
+         7XYg==
+X-Forwarded-Encrypted: i=1; AJvYcCUATsloeOrAPVRh1shdZAQ25YE59zCexgjdgSvTwb0gPxTm0AyNUId32oHjuoo1KsCwuqQRyJXOgwI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyZCKTMq37EuorrJYQoN1Ur+yBX2dXNObiKaY5LoSq888CgBKw5
+	XG+kTtK+lTOiIH5n9gyiHrYhqYop7Vypm4b1m+z/PDfiLrzjGqOUnW/HX2+LOd7KDUIGCJWD9vG
+	IQvHndzkt6YR8hcKGdwzI9FaAmgbEEJNCMQrGBs5l
+X-Gm-Gg: AZuq6aIzfSJc1UfY9p9TXaKqUFMoyNfHOOtSnZwQL82Q8VIeuyvhWmuR+4bzWF4tJPY
+	7RY77LuTatX6NbsptWkcfcxbP4laoe9hnBz8m/y8QBqMJiGnAcRweN03lNrta7ScU0k4LQ51PbK
+	RRqBibU8AFfkA9n6LM+CnJ0PhTQE4Pyll/+yYL+9dSAbjdjjBAov2zARc9hgNZH0Trt6ExO/IEZ
+	H3kPp+t0dcnbuf6idbl7hNIuYbmNWRmpeOLhqAVAck2Vn34c0orkPh6lQfNhGCA5oNqU5HvhSEk
+	hvFGbPuU9Tz079DsJaj+AHb8DPajpSq55kd0hA==
+X-Received: by 2002:a05:600c:5289:b0:483:71f7:2782 with SMTP id
+ 5b1f17b1804b1-48398b0990dmr130223325e9.12.1771584557648; Fri, 20 Feb 2026
+ 02:49:17 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260220-unique-ref-v15-0-893ed86b06cc@kernel.org> <20260220-unique-ref-v15-1-893ed86b06cc@kernel.org>
-Message-ID: <aZg44EmMWKK-z5KP@google.com>
-Subject: Re: [PATCH v15 1/9] rust: types: Add Ownable/Owned types
+MIME-Version: 1.0
+References: <20260220-unique-ref-v15-0-893ed86b06cc@kernel.org> <20260220-unique-ref-v15-9-893ed86b06cc@kernel.org>
+In-Reply-To: <20260220-unique-ref-v15-9-893ed86b06cc@kernel.org>
 From: Alice Ryhl <aliceryhl@google.com>
+Date: Fri, 20 Feb 2026 11:49:06 +0100
+X-Gm-Features: AaiRm51MAhLW1OtRkAHOYwRwshfGarw67yqaE2vYRvgLvB2RCqsl8u_ReojFPGo
+Message-ID: <CAH5fLggNQD+TbA7rXVB5w+O+qHcJcYC4u0b3W+mHR2DZiUe4eQ@mail.gmail.com>
+Subject: Re: [PATCH v15 9/9] rust: page: add `from_raw()`
 To: Andreas Hindborg <a.hindborg@kernel.org>
 Cc: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
-	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
-	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman <david.m.ertman@intel.com>, 
-	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
-	Serge Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Benno Lossin <lossin@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
+	Danilo Krummrich <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
 	Igor Korotin <igor.korotin.linux@gmail.com>, 
 	Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
 	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
 	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Boqun Feng <boqun@kernel.org>, linux-kernel@vger.kernel.org, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Boqun Feng <boqun@kernel.org>, linux-kernel@vger.kernel.org, 
 	rust-for-linux@vger.kernel.org, linux-block@vger.kernel.org, 
 	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, 
 	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
-	linux-pci@vger.kernel.org, Asahi Lina <lina+kernel@asahilina.net>, 
-	Oliver Mangold <oliver.mangold@pm.me>
-Content-Type: text/plain; charset="utf-8"
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Feb 20, 2026 at 10:51:10AM +0100, Andreas Hindborg wrote:
-> From: Asahi Lina <lina+kernel@asahilina.net>
-> 
-> By analogy to `AlwaysRefCounted` and `ARef`, an `Ownable` type is a
-> (typically C FFI) type that *may* be owned by Rust, but need not be. Unlike
-> `AlwaysRefCounted`, this mechanism expects the reference to be unique
-> within Rust, and does not allow cloning.
-> 
-> Conceptually, this is similar to a `KBox<T>`, except that it delegates
-> resource management to the `T` instead of using a generic allocator.
-> 
-> [ om:
->   - Split code into separate file and `pub use` it from types.rs.
->   - Make from_raw() and into_raw() public.
->   - Remove OwnableMut, and make DerefMut dependent on Unpin instead.
->   - Usage example/doctest for Ownable/Owned.
->   - Fixes to documentation and commit message.
-> ]
-> 
-> Link: https://lore.kernel.org/all/20250202-rust-page-v1-1-e3170d7fe55e@asahilina.net/
-> Signed-off-by: Asahi Lina <lina+kernel@asahilina.net>
-> Co-developed-by: Oliver Mangold <oliver.mangold@pm.me>
-> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
-> Reviewed-by: Boqun Feng <boqun.feng@gmail.com>
-> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
-> [ Andreas: Updated documentation, examples, and formatting ]
-> Reviewed-by: Gary Guo <gary@garyguo.net>
-> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
-> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
-
-> +///         let result = NonNull::new(KBox::into_raw(result))
-> +///             .expect("Raw pointer to newly allocation KBox is null, this should never happen.");
-
-KBox should probably have an into_raw_nonnull().
-
-> +///    let foo = Foo::new().expect("Failed to allocate a Foo. This shouldn't happen");
-> +///    assert!(*FOO_ALLOC_COUNT.lock() == 1);
-
-Use ? here.
-
-> +/// }
-> +/// // `foo` is out of scope now, so we expect no live allocations.
-> +/// assert!(*FOO_ALLOC_COUNT.lock() == 0);
-> +/// ```
-> +pub unsafe trait Ownable {
-> +    /// Releases the object.
+On Fri, Feb 20, 2026 at 10:52=E2=80=AFAM Andreas Hindborg <a.hindborg@kerne=
+l.org> wrote:
+>
+> Add a method to `Page` that allows construction of an instance from `stru=
+ct
+> page` pointer.
+>
+> Signed-off-by: Andreas Hindborg <a.hindborg@samsung.com>
+> ---
+>  rust/kernel/page.rs | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> diff --git a/rust/kernel/page.rs b/rust/kernel/page.rs
+> index 4591b7b01c3d2..803f3e3d76b22 100644
+> --- a/rust/kernel/page.rs
+> +++ b/rust/kernel/page.rs
+> @@ -191,6 +191,17 @@ pub fn nid(&self) -> i32 {
+>          unsafe { bindings::page_to_nid(self.as_ptr()) }
+>      }
+>
+> +    /// Create a `&Page` from a raw `struct page` pointer
 > +    ///
 > +    /// # Safety
 > +    ///
-> +    /// Callers must ensure that:
-> +    /// - `this` points to a valid `Self`.
-> +    /// - `*this` is no longer used after this call.
-> +    unsafe fn release(this: NonNull<Self>);
+> +    /// `ptr` must be valid for use as a reference for the duration of `=
+'a`.
+> +    pub unsafe fn from_raw<'a>(ptr: *const bindings::page) -> &'a Self {
+> +        // SAFETY: By function safety requirements, ptr is not null and =
+is
+> +        // valid for use as a reference.
+> +        unsafe { &*Opaque::cast_from(ptr).cast::<Self>() }
 
-Honestly, not using it after this call may be too strong. I can imagine
-wanting a value where I have both an ARef<_> and Owned<_> reference to
-something similar to the existing Arc<_>/ListArc<_> pattern, and in that
-case the value may in fact be accessed after this call if you still have
-an ARef<_>.
-
-If you modify Owned<_> invariants and Owned::from_raw() safety
-requirements along the lines of what I say below, then this could just
-say that the caller must have permission to call this function. The
-concrete implementer can specify what that means more directly, but here
-all it means is that a prior call to Owned::from_raw() promised to give
-you permission to call it.
-
-> +/// A mutable reference to an owned `T`.
-> +///
-> +/// The [`Ownable`] is automatically freed or released when an instance of [`Owned`] is
-> +/// dropped.
-> +///
-> +/// # Invariants
-> +///
-> +/// - The [`Owned<T>`] has exclusive access to the instance of `T`.
-> +/// - The instance of `T` will stay alive at least as long as the [`Owned<T>`] is alive.
-> +pub struct Owned<T: Ownable> {
-> +    ptr: NonNull<T>,
-> +}
-
-I think some more direct and less fuzzy invariants would be:
-
-- This `Owned<T>` holds permissions to call `T::release()` on the value once.
-- Until `T::release()` is called, this `Owned<T>` may perform mutable access on the `T`.
-- The `T` value is pinned.
-
-> +    /// Get a pinned mutable reference to the data owned by this `Owned<T>`.
-> +    pub fn as_pin_mut(&mut self) -> Pin<&mut T> {
-> +        // SAFETY: The type invariants guarantee that the object is valid, and that we can safely
-> +        // return a mutable reference to it.
-> +        let unpinned = unsafe { self.ptr.as_mut() };
-> +
-> +        // SAFETY: We never hand out unpinned mutable references to the data in
-> +        // `Self`, unless the contained type is `Unpin`.
-> +        unsafe { Pin::new_unchecked(unpinned) }
-
-I'd prefer if "pinned" was a type invariant, rather than make an
-argument about what kind of APIs exist.
-
-> +impl<T: Ownable + Unpin> DerefMut for Owned<T> {
-> +    fn deref_mut(&mut self) -> &mut Self::Target {
-> +        // SAFETY: The type invariants guarantee that the object is valid, and that we can safely
-> +        // return a mutable reference to it.
-> +        unsafe { self.ptr.as_mut() }
-
-Surely this safety comment should say something about pinning.
+If you're going to do a pointer cast, then keep it simple and just do
+&*ptr.cast().
 
 Alice
