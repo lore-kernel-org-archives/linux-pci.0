@@ -1,112 +1,74 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id DE85C34D911;
-	Fri, 20 Feb 2026 14:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48AE641C62;
+	Fri, 20 Feb 2026 15:01:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771598759; cv=none; b=seF0FmQ9g19dY+szxuwdOlRlckR9MM9239/ouTO66AikX1BrYR4iDUrAOIeLE0nW7vqRfZwRlY3WoTSiVYgQYdhDCpkC1bmwcFbxlt5B975ehdM4QJX/Ig1Z+1gijL/uyUX9pw+KXh03Y/g5SQrjXaadLIlqXBNmaKextiFHoWM=
+	t=1771599682; cv=none; b=gSjLWnUjthETvsaDrb6+BW7AHfWLj2HfvNyJ647nLk6q6AwScdO7ZrNhNwlxVEaeEQaydknqJjhsT7gKj5y1a+xAK3Lr6AcjXswDlhnr15JEt0hTSZ7mo30JZDBKbscQXkeBJc9c9BxC7pXkSfpwZ47O6cW8268D8LFBkPLYEp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771598759; c=relaxed/simple;
-	bh=yRZxUtegdpNdrUNI41pSLi9+EsvVjIWvmtl+5DmnZ+8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YT5auQkAEIXdsPKEMYu2dvyOl8fR16vq3tXGZB94R0naU+1X0DmnL4lOZjZAH6xGYwk4X17V3i/r1zKLimkNTlEBzqbqF55dKqp8KygdahoFApXQBdIXb0unUQgQV+CJoDFAybGVgW7tivbBt+3mQWCl/l37csXStIon6CZ1jac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 98E4A339;
-	Fri, 20 Feb 2026 06:45:49 -0800 (PST)
-Received: from [10.57.58.244] (unknown [10.57.58.244])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B7AE33F62B;
-	Fri, 20 Feb 2026 06:45:52 -0800 (PST)
-Message-ID: <c7cd42ff-f95a-4aaf-ab79-5af476bca894@arm.com>
-Date: Fri, 20 Feb 2026 14:45:49 +0000
+	s=arc-20240116; t=1771599682; c=relaxed/simple;
+	bh=geeZwow0omq4iGvEb9n1I0qYYor1p0V7EJ8MHKrdJPc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=C3whixp3BiBqPh5ONffqHxJYl1gtWtnjCY/D8PPLLg4PIEe9ePn6ac7ErFN/KpSt/ORMDdVmKHkd29LsAYMJpkM2ILGRimBE7P8VsBXI26kiFf6xLB42+M73cuyzkGiLm2JfukjVMZf8nJKEMAEEeGvs2cvsBabD/7LCp6+8W0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Geume5Rf; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Geume5Rf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9AACC116C6;
+	Fri, 20 Feb 2026 15:01:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771599681;
+	bh=geeZwow0omq4iGvEb9n1I0qYYor1p0V7EJ8MHKrdJPc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Geume5RfRbfNtdFKyr3H80G0Bdl+KgYMXiMrRLqJMPo8nnPTnaKCapRcZjafwKOmc
+	 p+OImXC/YPUrimJJuXbED7u1ZCn9DZp8H+l78xIUbfYzSfTNENeC5hO2nblL9tfb8O
+	 nxlgZdYOePQWvKgSzgSXyP7A83BJ0oB0OCD9OqnNnCHgUAZ6FMVucQ7LJ5CpxSJfr+
+	 j3bKhZOjlWt01J8ISU7C6Zt22W0plziWYNwCHKfuc1MqndTxu3tS+ymYPKMrrjKrYi
+	 kteM5ZkXHX46asI0cBPNm98hQhQnjh/5XnjPuoDpmRSan2XRwQfH7q+KEh/B3kptCL
+	 woJJyX60u4KKQ==
+Date: Fri, 20 Feb 2026 09:01:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Steve Oswald <stevepeter.oswald@gmail.com>
+Subject: Re: [PATCH v2 1/1] PCI: Prevent shrinking bridge window from its
+ required size
+Message-ID: <20260220150120.GA3525869@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFCv1 1/3] PCI: Allow ATS to be always on for CXL.cache
- capable devices
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: Nicolin Chen <nicolinc@nvidia.com>, dan.j.williams@intel.com,
- "Tian, Kevin" <kevin.tian@intel.com>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- "will@kernel.org" <will@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "joro@8bytes.org" <joro@8bytes.org>, "praan@google.com" <praan@google.com>,
- "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
- "miko.lenczewski@arm.com" <miko.lenczewski@arm.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>
-References: <20260203143348.GA3931454@nvidia.com>
- <aYI0LUdXqrjmRcMo@Asurada-Nvidia> <20260203175540.GC3931454@nvidia.com>
- <aZZDo3BeuBKh9q24@nvidia.com> <20260219143737.GG723117@nvidia.com>
- <aZc//6kvH3Eqfwfe@nvidia.com> <20260219174139.GI723117@nvidia.com>
- <aZfoqETxb31jp/Pk@nvidia.com> <20260220125044.GK723117@nvidia.com>
- <6a842339-3f0a-48db-830a-326add917519@arm.com>
- <20260220135124.GA1894399@nvidia.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <20260220135124.GA1894399@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0a425bb6-f08b-0aee-c494-843e42150a2f@linux.intel.com>
 
-On 2026-02-20 1:51 pm, Jason Gunthorpe wrote:
-> On Fri, Feb 20, 2026 at 01:22:49PM +0000, Robin Murphy wrote:
-> 
->> But is that an issue? Until the device has a driver, surely it shouldn't be
->> expected to send interrupts at all, much less depend on them being received
->> and understood by Linux? The MSI cookie is only populated once a driver
->> actually requests some MSI vectors (since it doesn't know what ITS
->> address(es) may or may not need mapping), so an empty DMA domain is still no
->> better than a true blocking domain in this regard anyway.
-> 
-> Oh, the issue is the driver_managed_dma flag.
-> 
-> In this mode we do bind a driver but the iommu callbacks at driver
-> bind are not called anymore because that flag says the driver itself
-> will call them later.
-> 
-> Things like PCI port driver that never issue DMA at all will set the
-> flag and never make any calls, while still expecting interrupts to
-> work.
-> 
-> This is why the other option is to rework this somewhat so these
-> drivers still make call in to the iommu and can get an interrupt
-> setup.
+On Fri, Feb 20, 2026 at 01:32:43PM +0200, Ilpo Järvinen wrote:
+> On Thu, 19 Feb 2026, Bjorn Helgaas wrote:
+> ...
 
-Or perhaps we handle BUS_NOTIFY_BIND_DRIVER to manage the switch from 
-BLOCKED to (empty) DMA independently from whether the driver 
-subsequently claims the DMA domain or not? That said, I wouldn't have 
-any particular objection to generalising iommu_use_default_domain() into 
-something like iommu_prepare_default_domain(bool managed) either.
-
-> All of this is only for multi-device groups where we want to ignore
-> some bad grouping with VFIO on old HW without sufficient ACS. Thinking
-> about it some more I suspect this entire concept has been broken from
-> day 1 in VFIO on ARM. If the iommu_group has two members, port driver
-> and a VFIO device then:
+> > These both date back to v5.10 (Dec 2020), but Steve's report below is
+> > only from Aug 2025, so I'm sort of assuming this is v7.1 material?
 > 
->   The port driver will start first, install the ITS page in the DMA
->   domain, VFIO will start second an switch the domain to BLOCKED, then
->   to PAGING, and the ITS mapping used by the port driver will be lost.
+> It's an old problem yes and impacts limited set of configurations
+> (a device with big BARs attached to TB).
 > 
-> And nobody will notice this has happened because the interrupts in the
-> port driver are only used for RAS IIRC so the net effect is your
-> system doesn't print AERs anymore.
+> v7.1 is okay for me, this could cause some not immediately obvious problem 
+> in some other case so it gives more time for us to hear about them 
+> (hopefully).
+> 
+> > If we want it for v7.0, I'm going to need a CliffsNotes summary of the
+> > commit log to justify it :)
+> 
+> Even if it's not going to be needed in this cases, what's "CliffsNotes 
+> summary" ??
 
-Indeed VFIO's MSI cookie doesn't inherit any existing mappings from the 
-DMA domain, and that wouldn't work anyway since the IOVAs would almost 
-certainly be different. So we'd have to somehow free any existing AER 
-interrupts before the domain switch, then fully re-request and reprogram 
-them afterwards, in both DMA->UNMANAGED and UNMANAGED->DMA directions. 
-Oof...
-
-Thanks,
-Robin.
+Slang for a short summary :)  I.e., a sentence or two to motivate a
+pull request.  Big BARs attached via Thunderbolt sounds like an
+important piece; e.g., maybe this helps fix Thunderbolt docks with
+GPUs in them?
