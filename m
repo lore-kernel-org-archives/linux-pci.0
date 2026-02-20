@@ -1,189 +1,157 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0125F329E62;
-	Fri, 20 Feb 2026 16:40:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771605649; cv=none; b=g+uc4YyyAGbY/yYKsoPVmp2gWdCv1LCF8SIZ9Lo1RhVXsl4ZUJBahi5pdyLghBVCvf7V+QklaUSA6mSRss9fvCp4cW8OEm5OIDjKtsLmpMuJ94M0oahds0ZTW9ivdZEzpzHF9xJyCVJ+4KxQvPnUD76mPYrFHKe6lqRDgKrjpP4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771605649; c=relaxed/simple;
-	bh=7bopRjgeCMkxfOz5hoQeo1KxTHPUS1QZQ2F/Hzwz7as=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Usjd8HLQelXkoS0JvDB6JZx/tCCNY0YuJHPRJ+Aam60mVeRJUUtrT14JsmiPOW2Htopuj3apQOeEGDmNlnIl+ykbHMxCGkI0Glvyywg77td7oOmqRMHOS+VOUeLdUqgIub8PwAXYEMs4CaqaLU+qlJ1NpEfVJRDBFe0pUm4q5Wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GJyqZJe3; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95EB365A0E
+	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 17:34:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771608845; cv=pass; b=Wyx9E2WJ6qffG0OJe3gslw3uRuR0+wflsN0IrUxVNYvRAxcP8jaSLhzd2l/zegqj+70CaTQF9r8oU1fkK7hJCK3ilwnhWxzsB7IQDiHgYlybhruQ6I2h18jjWPQhWT0BDASQ3FU3wh7l0Gvanq3PIjq9sQWCL3kZ0gUNhYaFqrY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771608845; c=relaxed/simple;
+	bh=dW69iUku9IRFksYkhFKb49OwK2nuvLOXPied0JTmtvA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HH1V0TmtfhafVvWeq14DE0MDgTVz2j4vf58XlqMw6bEurZOwUuM9WUOtjQCDnSlhsLeMeMG/KLLhSq3CkDcUHFfKWT0nMKPYjomc5YYPUchNVR8A/8+8PuRIRfHxg/2mWhpXCfzoO4gx1VI5VGR8cGU6FVpZ9ZRaZ006fVC+pZ4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GUmovhQZ; arc=pass smtp.client-ip=74.125.82.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GJyqZJe3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C2BC116C6;
-	Fri, 20 Feb 2026 16:40:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771605648;
-	bh=7bopRjgeCMkxfOz5hoQeo1KxTHPUS1QZQ2F/Hzwz7as=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=GJyqZJe3Ui+UseWudoI1uCbUKjLKLL/izuZT9Uja+YqADhXMOdoA4YjPRrZ/dtloP
-	 phj8J836fEuMCDUyD6AIT4ag7TfFKCC8NkUScKFYRnAudzrWKMWsOHQJv4fY9MWYLo
-	 jpUNn4V6l+6qTMfoOykd+J7rdjWntcM4jFB4enRht/lUuG4VBTmxCMd83UpIoZS2lJ
-	 KgI7iSzsYqlwri+wXa2bmTRyGsuUrDHTmEx+mE5T/PUOoee+qxs8rPAQyP5Fm5KXAk
-	 t0X1rxicbY01x8vwJLqvR2gV3dHaZwZs2EjsjBPTrVw4qUpdQTALdIq4l1KlLPChsF
-	 ZiWjOL/xv5gfg==
-Date: Fri, 20 Feb 2026 10:40:46 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
-	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI/portdrv: Allow probing even without child services
-Message-ID: <20260220164046.GA3528004@bhelgaas>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GUmovhQZ"
+Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-127148c2112so221442c88.3
+        for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 09:34:03 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771608843; cv=none;
+        d=google.com; s=arc-20240605;
+        b=UtqenyqNILisXvTbht1CxUB1AHAEL9SALALL9oEbv4VV/bp8yt0XMYSkqyd8svzOWy
+         H+xRouZl5huvsOzu+JckmxPLosKUJeBMbFsYtziACg61sFosyTNXbE7vLlCh5vSpVG5i
+         A664mjPX+js0aybS/eS9c3R9+v4kvmKclX0NeULr0oVxEMxVi/37YuYKKEglIHZWBzRa
+         JxYL5DMYdx6ckjLkmVHudJ2Sz+kKHD92Hm2UFm0NrGNBC8zo8VEaes4e+6SG+XzZNrf9
+         nH96Xh4guC1Inr/6sbirWjOBljTHgC/oItBC0HsINPJ6zxe0ycrU82KPTxLQU7SBxNoj
+         qwUg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=B3RiLfffpu7Ffa96sGXtUyFTXMqhEfmtMEWOofkZHzs=;
+        fh=5o0/a1aig8BddK8WdMChpIHHkykoj0vr/jD9wdWuAlQ=;
+        b=CCaxVytMOUK/YJrSLHLx7yJbKFISpD1lAVDh2fxShzi+Wg2dEQN6sYXyt0RCWnhTL6
+         8MjwiVsQPhg2D2zD6XflWG/Hfv0B/a65n0r4v6QaMz3Hzyv+A9+EEnyADXHl/udfGU8q
+         Wge/k03CXvNMon98BvN0xD5L6WCpPNS26awzsgiJd5Xcorib3nn5C4WpEvIc3PrhaTyF
+         Rq0mtqisCVj6prz6BCXuxMNZ2KG+XWDwNM8FMxskV5nyn40deaYhfulV3KKH4+K0WjTH
+         2WdXjBeysuaiy+Um+fNQEtDJt7t4C30uHYmTFhUxPiA/zAqd5kku3a8T2vHrHsrgERwZ
+         nZDw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771608843; x=1772213643; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=B3RiLfffpu7Ffa96sGXtUyFTXMqhEfmtMEWOofkZHzs=;
+        b=GUmovhQZ0/gL6Csm9lB/oZvXQzoRbh+uVmBzc8YSv+cMKg9Uubues33H/9RyfdILfj
+         k+zc557ufFVnuu02HgkHoFuAOrYPjf492rTJMSJs+Y14GZdZJ6vatA+cSh9f6oo963Io
+         d0+6cjq3IXdboW94NV5+1nI2XbXJvpX520Bj2HNaDdIOD88O4E6cx87O+l9159ye1JVx
+         z5ECFYUXaEaFv94IyKrGZwFgzAl9mjpRAIoxg2VDDG4MXRpqli7BRe0VZzFziNXygZdF
+         C5HOej3GIe0ixLu5QAUeJFlzHR9sfGixz9LuDB31Pak32LJ1sCx/7snoqduumBjN/l3T
+         gKng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771608843; x=1772213643;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=B3RiLfffpu7Ffa96sGXtUyFTXMqhEfmtMEWOofkZHzs=;
+        b=ZMTCpvpoaJW+jPoNUuLWsQF60ElrlvrNXN08Dwzq1NoBkNse5ayVyAfwW4+kZitdMP
+         ZqYdPRzxQpsfut1oLhNcdvmL83A+DSFWv9WnxPWtCZuhw1sdht81EvWEh8vG1fw+yzo3
+         2loUJFKK05Sc2cUnAwc/G2WLCzdBCwR+DkZgSg8ID4J5kvYJlSEm2UPyC6kP7WDmpR/4
+         umI316e15H7oi6pWR2ooBibln68axg06qmm1d2WLkKns4pvZQQ+Infj+X11AXo2o9iy/
+         +AobJDv2PrwiEhK2z9hONGDCQhLC8RHRcdGY+8aj0HmdIV0mCw+fHa4On6fIcedjpf/1
+         vgbQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWZ9Q6NKFg8F4ReNPzWTmL0IKW2kUW6B6zg2Boaswuhi28YkiTHNheDF5orv2rdAKqv39c4mrYOmgo=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2em+HM731H8jx19MSMDe0qFh+fzj00N/eLKqi4Se58qdt8Y4P
+	HIZub6UQqzdEYB0KH9Di6YuG+LdNkE7tIfO2+UdmTzLanK+uJrJYk8JvlbzkVvYt4vB2NZaVHo0
+	nygfvNJLEF6B+JMiQ5DkiAiQj35n93W8=
+X-Gm-Gg: AZuq6aL5gE+cALDyIHQivmFBlPOQwG6bBodyC37/35sK/ntyVc2HrHD0Cv52E0soeG5
+	XcKqxpw4ElAuQUwZOd52dWgGwsei/CT3QIfvqBNfbonlDgTvMHpi1bNDcWg2uy6kw91Lmcl6miT
+	FL+ucugXAVpEwaz8A8Bq9WmNElT5+F3MaX0J2YCd+C+fmyPZTg7wXwiT1wTc2rkBjQWEEAiZ+KE
+	WEXB7lP/F3CQX+Svu8xxQJkwpTliQpWw+lIsu8iznTYdf1A+YWgweLv0SdWLfoj20a85o5ypAjy
+	HAPdlW3jImUn0CX8DEyWj9xWAn9jDjYSkEaAVPvDJK3J/21YlkAYdYeAVWEgTATv6dlhLwtOHbS
+	0EC5ygP3juwHZuYJdEEp3YKvH
+X-Received: by 2002:a05:693c:2c17:b0:2ba:674a:dbe8 with SMTP id
+ 5a478bee46e88-2bd7bdbce7cmr74947eec.8.1771608842904; Fri, 20 Feb 2026
+ 09:34:02 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aZfIfn9viQRj4uy4@google.com>
+References: <20260220-unique-ref-v15-0-893ed86b06cc@kernel.org> <20260220-unique-ref-v15-9-893ed86b06cc@kernel.org>
+In-Reply-To: <20260220-unique-ref-v15-9-893ed86b06cc@kernel.org>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Fri, 20 Feb 2026 18:33:49 +0100
+X-Gm-Features: AaiRm53lo0keI-FayfnRj4AYfVuM2jzmE06bNyAO-n4MO92LWSUkvblDHz_tCFM
+Message-ID: <CANiq72myc+tCEHm0WtZspZHWwsSzvesxsmUvk31=GCdUN_zVNA@mail.gmail.com>
+Subject: Re: [PATCH v15 9/9] rust: page: add `from_raw()`
+To: Andreas Hindborg <a.hindborg@kernel.org>, Tamir Duberstein <tamird@kernel.org>, 
+	Benno Lossin <lossin@kernel.org>
+Cc: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
+	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+	Danilo Krummrich <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Igor Korotin <igor.korotin.linux@gmail.com>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
+	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Boqun Feng <boqun@kernel.org>, linux-kernel@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Feb 19, 2026 at 06:35:42PM -0800, Brian Norris wrote:
-> On Thu, Feb 19, 2026 at 04:25:14PM -0600, Bjorn Helgaas wrote:
-> > On Mon, Feb 09, 2026 at 05:15:35PM -0800, Brian Norris wrote:
-> > > The PCIe port driver fails to probe if it finds no child services,
-> > > presumably under the assumption that the driver is not useful in that
-> > > case. However, the driver *can* still be useful for power management
-> > > support -- namely, it still configures the port for runtime PM / D3,
-> > > which may be important for allowing a bridge to enter low power modes.
-> > > 
-> > > Thus, allow probe to succeed even if no IRQs and no child services are
-> > > available. This also mirrors existing behavior for ports that have no
-> > > PCIe capabilities, where we'd also probe successfully.
-> > > 
-> > > This change is a bit more important after commit f5cd8a929c82 ("PCI:
-> > > dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
-> > > controller"), because it's common for some DWC-based systems to:
-> > > 
-> > > 1. have only have the "aer" and "pcie_pme" port services available and
-> > > 2. not define legacy INTx interrupts properly in their device tree.
-> > > 
-> > > After commit f5cd8a929c82, such systems may fail
-> > > pcie_init_service_irqs() and so exit with -ENODEV.
-> > > 
-> > > Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
-> > > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > > ---
-> > > 
-> > > Changes in v2:
-> > >  * clear master when we have no child services
-> > > 
-> > >  drivers/pci/pcie/portdrv.c | 21 +++++++--------------
-> > >  1 file changed, 7 insertions(+), 14 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> > > index 88af0dacf351..19b08f3653ee 100644
-> > > --- a/drivers/pci/pcie/portdrv.c
-> > > +++ b/drivers/pci/pcie/portdrv.c
-> > > @@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
-> > >   */
-> > >  static int pcie_port_device_register(struct pci_dev *dev)
-> > >  {
-> > > -	int status, capabilities, i, nr_service;
-> > > +	int status, capabilities, i;
-> > >  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
-> > >  
-> > >  	/* Enable PCI Express port device */
-> > > @@ -355,29 +355,22 @@ static int pcie_port_device_register(struct pci_dev *dev)
-> > >  	if (status) {
-> > >  		capabilities &= PCIE_PORT_SERVICE_HP;
-> > >  		if (!capabilities)
-> > > -			goto error_disable;
-> > > +			goto out;
-> > >  	}
-> > >  
-> > >  	/* Allocate child services if any */
-> > > -	status = -ENODEV;
-> > > -	nr_service = 0;
-> > >  	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
-> > >  		int service = 1 << i;
-> > >  		if (!(capabilities & service))
-> > >  			continue;
-> > > -		if (!pcie_device_init(dev, service, irqs[i]))
-> > > -			nr_service++;
-> > > +		pcie_device_init(dev, service, irqs[i]);
-> > >  	}
-> > > -	if (!nr_service)
-> > > -		goto error_cleanup_irqs;
-> > >  
-> > > +out:
-> > > +	/* With no child services, we shouldn't need bus mastering. */
-> > > +	if (!capabilities)
-> > > +		pci_clear_master(dev);
-> > 
-> > I'm curious about this part because we pci_set_master()
-> > unconditionally just above:
-> > 
-> >   pci_set_master(dev);
-> >   pcie_init_service_irqs(dev, irqs, capabilities);
-> >   for (i = 0; ...; i++)
-> >     pcie_device_init(dev, service, irqs[i]);
-> >   if (!capabilities)
-> >     pci_clear_master(dev);
-> > 
-> > Bus mastering on a bridge must be enabled for DMA from downstream
-> > devices to work, but I think that's done by pci_enable_bridge() when a
-> > driver calls pci_enable_device() for an endpoint.
-> > 
-> > I assume the reason we call pci_set_master() here is so MSI/MSI-X from
-> > the bridge will work, even if there is no downstream device.
-> > 
-> > I don't think either pcie_init_service_irqs() or pcie_device_init()
-> > requires bus mastering, so I don't know why we enable it here.  It
-> > seems like we should do it when we set up MSI/MSI-X interrupts.
-> 
-> I'm no expert here, but by code inspection, pcie_init_service_irqs() may
-> call pci_msi_set_enable() which sets PCI_MSI_FLAGS_ENABLE. Could that
-> confuse a device to see MSI enabled but bus mastering disabled?
+On Fri, Feb 20, 2026 at 10:52=E2=80=AFAM Andreas Hindborg <a.hindborg@kerne=
+l.org> wrote:
+>
+> +    /// Create a `&Page` from a raw `struct page` pointer
 
-You're right that this path may set the MSI Enable bit:
+Please end sentences with a period.
 
-  pcie_init_service_irqs
-    pcie_port_enable_irq_vec
-      pci_alloc_irq_vectors
-        pci_alloc_irq_vectors_affinity
-          __pci_enable_msi_range
-            msi_capability_init
-              __msi_capability_init
-                pci_msi_set_enable(1)
-                  # set PCI_MSI_FLAGS_ENABLE
+> +        // SAFETY: By function safety requirements, ptr is not null and =
+is
 
-Setting MSI Enable allows the device to use MSI when it asserts an
-interrupt, but my understanding is that it doesn't enable the
-interrupt source itself.  The MSI Capability is an interrupt
-mechanism, not itself a source -- there's no interrupt handler at this
-point.
+Please use Markdown in comments: `ptr`.
 
-The sources have their own interrupt enable bits, e.g, Root Control
-PME Interrupt Enable, Link Control Link Bandwidth Management Interrupt
-Enable, Slot Control Hot-Plug Interrupt Enable, DPC Interrupt Enable,
-AER Root Error Command Error Reporting Enable bits, 
+> +    /// `ptr` must be valid for use as a reference for the duration of `=
+'a`.
 
-The drivers using these interrupts should be setting up their
-interrupt handlers before setting their interrupt enable bit.
+Since we will likely try to starting introducing at least a subset of
+the Safety Standard soon, we should try to use standard terms.
 
-Bus master is a global thing that affects all kinds of transactions
-coming from the device.  There's no problem setting in from various
-places, but clearing it in a single place affects all of them, so we
-basically need global knowledge to know that it's safe.  That's why I
-suggested doing a conditional bus master enable instead of the
-unconditional enable followed by a conditional disable.
+So I think this "valid for use as a reference" is not an established
+one, no? Isn't "convertible to a shared reference" the official term?
 
-But I still do think this is not quite the right place even to enable
-it.  I think it would make more sense to enable bus mastering in the
-drivers that need the MSI/MSI-X, e.g., PME, pciehp, bwctrl, aer, etc.
-At this point in pcie_port_device_register(), I don't think we can be
-certain that any of those services will actually enable the interrupt.
+  https://doc.rust-lang.org/std/ptr/index.html#pointer-to-reference-convers=
+ion
 
-> > If we want to do it in pcie_port_device_register() (instead of in
-> > service driver when they set up an interrupt), maybe we should drop
-> > the initial pci_set_master() and do it conditionally, e.g.,
-> > 
-> >   if (capabilities)
-> >     pci_set_master(dev);
+In fact, I see `as_ref_unchecked()` and `as_mut_unchecked()` just got
+stabilized for 1.95.0, so we should probably starting using those were
+applicable as we bump the minimum, but we should probably use already
+a similar wording as the standard library for the safety section and
+the comment:
+
+  "`ptr` must be [convertible to a reference](...)."
+
+where the term is a link to that section. Cc'ing Benno.
+
+I have created a (future) issue for that:
+
+  https://github.com/Rust-for-Linux/linux/issues/1225
+
+Cc'ing Tamir since this is close to the cast work, so it may interest
+him as well.
+
+Cheers,
+Miguel
