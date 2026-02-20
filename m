@@ -1,169 +1,184 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64AC832C94A
-	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 10:50:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771584613; cv=pass; b=Mwwsi1BbrKB5o1lHhg8Im2gFqobaZQ1AXAUs9FmN3RsJDqlzrCIx6jTZoDuvnOpmRg2sf8MrAkHbcWR2iSdanUcpm35WHDdiRHyb+U1x461iIRcm9CGwMu1qWR1eRnYfS2XUvDnAqRDF4bbQyX1BvjpmZziLKeCdsyv2lana/gk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771584613; c=relaxed/simple;
-	bh=oIngJ6S5SUKbvESTbw5vt2bQmTdKhr5N3+wDe58Yw5E=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pWEcQhxWZDmUURa7DAR1AtVQTOo5Mq60QtuLX+3q264G/mGJZHMt++cd2tjbadBx2MXpCFMR8ukoK8TNigcOXjgVTdRFDXolegjt1VoGeMOjuFxhz+q4V6/Wj8/qpyRPhjnzVWCJZ0+DZB872/lbit1GLZHHVnMqYQJD0jB3Ekk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=WrSMJnVF; arc=pass smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DEC232E132;
+	Fri, 20 Feb 2026 11:19:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771586398; cv=none; b=ijfHWNEABQhQ///WK19otmdbgbHmNfSWAguYdF6PBMrW7T1JCvWRtXJnrZ+cvVYud4ffsMupIiP4lPO1CEQ4PwtdsHL0RCAROoo4cvrZmDC+7g7hhm/sXwh1ppNYQJFU0/IyTC36wxMSAZ+5pkAo6Fc7JjFjyI0z6FK6HumOajE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771586398; c=relaxed/simple;
+	bh=YdwYL+1IyhDnPHQcLJTAomqNZp88Modu80gL8LdvHk8=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=QIunMjYVIxxeBNouzc3jK7bdVd5dRVDSiw5SK25oT6/PHwjFZBR6UugNRfcQhceNFkM2GR/owDex+GT4Updsg62RLqko+r3Y+w2iNVlfzuhbv7X3L1fgJE+i5fivXEbKjV1tP/B+upT6He/zKgl6fbkZ51/Kjxj5b+wqzW7bCOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BxJKl2in; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WrSMJnVF"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-43638a33157so1805134f8f.1
-        for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 02:50:11 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771584610; cv=none;
-        d=google.com; s=arc-20240605;
-        b=VZYk/gi3uxdf5XleHThpNCRXNIhblBkvlw421l+SudUybHjmwRylQYWfmDZT52UlII
-         wa8fipeg8oOhNjPINw5Tsl79UPQ8EaAGN+jywANKysjSoLt4w5W6uotIhasa/ImgrO9u
-         BRjabQxIdOKKFcYRtKX5VoahS5hVtv5of5FgtWLgpUI+ky6XVKPIwywjASet7C+GuSMo
-         3ss2uBup3uq3YdOdeEQxLMlsdlg8SnJydTGQRRnpF1+Fy0iAVbrJoWoOCuarLecsN3k6
-         jfg/FIoR30rXsZu3dv1xyh6myD03lBb2VaJwPAU9Y/OJQlNQQxzfALKRL5yJP/ffHj1D
-         lxmQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=UAf0+WPiEFSXz/CCPkkC3DmUlSyhmOoTBssum21ipoU=;
-        fh=ujkHFZvR1Y4wW0pYvh2AquNejTTVTh6fcbrOciopDLI=;
-        b=j746005KZcPr8h+LCi06LzEIUF2yOWoga20/RfhhQHU9uiBrrB5r+HxeBOenIpl6ao
-         Q8NmWtLlau2SyQnPFZLHO0bL4LYj1OJ5FrzBhqdOlPPwVZXgvrRcddLY1ppP/eoaA6Zw
-         hpLsonjBLUUXXHqztZewgf2hTBKuebjRAaDqFx8IJKfyjb85r7xbpeeYrg9lWR/0F0Yz
-         Bz2X0wLoemN4uYojytfPDEO7wJXCMYFRIS4w4xjXBYrj7XW47RB41Y80QxoFKRhrCRIU
-         zelURdN1H/xpsyAkIzTKYVpL9h+mRzqm2YpZMcZO5FU+yNQgOR02puQ+LWM3Cun0lAwY
-         S23g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771584610; x=1772189410; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UAf0+WPiEFSXz/CCPkkC3DmUlSyhmOoTBssum21ipoU=;
-        b=WrSMJnVF5uBG1etU8Ao1aJIH79rL4B/ID7aOQVzdXbXEAdapztjr+4Ojw8JeHNFzt2
-         dlIX5bMaHjSwAwqSEjpbFcjWcCz/Ytn+K1E6hC7kI3h9qjQUDh33ZJHsKdwmHuuhVGRP
-         YFF0cE/9CorGsiF8nd1xmbzJ3t3K/qoPOti9J8BMYJ/xUB/nPHYgwPenjrQey3oTVuLG
-         c1sOzkT6SCPTSC1qWfTj6n+lkDppOSu17WoIm0D9qCdM74Q/2YDEWRK19PZ3iOOmz7QI
-         hGSxz50RSjTI4gysJQiaeqVVYLKibaZlO+bWe1TNVaOl6HXS7zjCEKcoetqQAgYiZCyB
-         y61g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771584610; x=1772189410;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=UAf0+WPiEFSXz/CCPkkC3DmUlSyhmOoTBssum21ipoU=;
-        b=J8wUykSbvhdZutnB2j7tDSFCXE1MfaLHnrv6LnnQehJluQmHq37JPCPwOc7oqgxeaP
-         3wFxgLXuAx0lRu/XYbr/6Ptpd+xdBEJBG03EkMx8PFfQ4JwJK59rU5ZM4Q19NYT6FJet
-         Qo4yh7X7MeeBzgDpJ3EeeeCbXDMDGVfKC6OKzuMVBtCd71goYDodc8FgnqUxjZCqgsso
-         sW16vSrGQa1ZqodoWX6BYfCF3m4ZUlGtZPCPrWoJSZmxCY0esMMJFSMbTADrdGqfj4Lx
-         SBXjmXZiVQkuGvJZU8tXMTgiKXADNK7aSGxBRBEYKYtGYULJlwneOYkZ/NZ1kNbAjyij
-         NNzg==
-X-Forwarded-Encrypted: i=1; AJvYcCVKhD/urEf3eZSeWsICn5VNvqpuwvB3fhdhHJz7d2FC18CngGS65MBrs5EUF451xGvXpFWVSSS+f+8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzYMM9co+/+LgSWAzRPgQVUXbNM3sdDkD2RUn611nKjtOJdulg+
-	eEpywrgbQUoS7u/jAiE/+SN0wMtouG1DC2rXQn5dBV/Hh5bSN9qJYARGBxOvDm2QvLDHeopcOIF
-	Qng8V3HK92zIs5AL9VShC3uHhZwWqyCaeIcUezl+N
-X-Gm-Gg: AZuq6aKCyljSsIVyNaO6cMzfqVXTZq9bxk8vevzPvrIzMcNW4pxFbWZOePLnyQbp9d6
-	h9Z8uJNwF9QP7lq5yoCykRSQmB+Jz0dH6QbyWX4HozccIcYaT0TKOQSOw/G1m0ZGttLHsK04WzR
-	bq1I0QonN8ZgSq+LIyHGSqljJT25HAMsF+1UQhN362d0M+ezerLSGev8UeDH92wOGx9sXSp09h4
-	/FERjH/vZL1KHtnFQu0gZQ5JIRl0aYxb5jVeVhUtjj7iNTM6tpXWZOlA6Vfx/X0tLxbfKq2OOcv
-	/mk9isfp0W5B1PHvsonBe8s6M5eWQzt8my9NfA==
-X-Received: by 2002:a05:6000:2409:b0:435:95c9:6895 with SMTP id
- ffacd0b85a97d-43958e00ce5mr15101201f8f.18.1771584608836; Fri, 20 Feb 2026
- 02:50:08 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BxJKl2in"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771586398; x=1803122398;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=YdwYL+1IyhDnPHQcLJTAomqNZp88Modu80gL8LdvHk8=;
+  b=BxJKl2inKFVtwjjcaUkXZvq8F5FmryPygG1MHMKniN2jWHd8jUQzGA0f
+   BlwiLCsp768vByFs+eXDprCjYJbHAw6YkAfP7huzequIlYRtZiV6HHloQ
+   GpW0P952f6SgJCqsFVxpxmJP/qJ2gLnCR/H9Gc4r3FmSj2akTV7kP9U2n
+   KqCb4nQd4iYUYGi3dbY421hQuNZCzGAAZfnioafmEg9kMJMnaZBueB1l2
+   1kRLgTZAOSMgcsOuUgjjNwtiM13owp3XLpzPhf+w81wje0zWKATWUPhoA
+   mYmhw3gUzgIofMUwa+IJvyLnbaxFBMlug9FQjArJ1R7BxjnifUQxhNyN4
+   w==;
+X-CSE-ConnectionGUID: QQ6/B7GyTGKk6e6+6I2mVg==
+X-CSE-MsgGUID: UlNYyJIkTjCoHfPXmFhX0w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11706"; a="84039076"
+X-IronPort-AV: E=Sophos;i="6.21,301,1763452800"; 
+   d="scan'208";a="84039076"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2026 03:19:57 -0800
+X-CSE-ConnectionGUID: txO0B58QR2yXBy9LluWKWw==
+X-CSE-MsgGUID: YWxv2cSdQEea53CFAFZR0Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,301,1763452800"; 
+   d="scan'208";a="245403675"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.88])
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2026 03:19:55 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 20 Feb 2026 13:19:51 +0200 (EET)
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, 
+    RavitejaX Veesam <ravitejax.veesam@intel.com>
+Subject: Re: [PATCH 1/1] PCI: Account fully optional bridge windows
+ correctly
+In-Reply-To: <20260219213238.GA3498861@bhelgaas>
+Message-ID: <0b09757e-c88c-4838-f063-1219c22bc4f9@linux.intel.com>
+References: <20260219213238.GA3498861@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260220-unique-ref-v15-0-893ed86b06cc@kernel.org> <20260220-unique-ref-v15-3-893ed86b06cc@kernel.org>
-In-Reply-To: <20260220-unique-ref-v15-3-893ed86b06cc@kernel.org>
-From: Alice Ryhl <aliceryhl@google.com>
-Date: Fri, 20 Feb 2026 11:49:57 +0100
-X-Gm-Features: AaiRm525n9TXR47KvplRQPUHuuUwgU5iN4_ng3kUHWK8LN9TrQcHulfhA1IhjZ4
-Message-ID: <CAH5fLggNjCZ3AvHnhO8O0cmd33B3zMbfq+hhNvonznTsLLtgYw@mail.gmail.com>
-Subject: Re: [PATCH v15 3/9] rust: Add missing SAFETY documentation for `ARef` example
-To: Andreas Hindborg <a.hindborg@kernel.org>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
-	Danilo Krummrich <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
-	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, Serge Hallyn <sergeh@kernel.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Igor Korotin <igor.korotin.linux@gmail.com>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
-	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Boqun Feng <boqun@kernel.org>, linux-kernel@vger.kernel.org, 
-	rust-for-linux@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
-	linux-pci@vger.kernel.org, Oliver Mangold <oliver.mangold@pm.me>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; BOUNDARY="8323328-902767794-1771585950=:974"
+Content-ID: <c63633d1-40a8-4f08-3598-4025fb523ebd@linux.intel.com>
 
-On Fri, Feb 20, 2026 at 10:52=E2=80=AFAM Andreas Hindborg <a.hindborg@kerne=
-l.org> wrote:
->
-> From: Oliver Mangold <oliver.mangold@pm.me>
->
-> SAFETY comment in rustdoc example was just 'TODO'. Fixed.
->
-> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
-> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
-> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
-> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
-> ---
->  rust/kernel/sync/aref.rs | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
-> index 61caddfd89619..efe16a7fdfa5d 100644
-> --- a/rust/kernel/sync/aref.rs
-> +++ b/rust/kernel/sync/aref.rs
-> @@ -129,12 +129,14 @@ pub unsafe fn from_raw(ptr: NonNull<T>) -> Self {
->      /// # Examples
->      ///
->      /// ```
-> -    /// use core::ptr::NonNull;
-> -    /// use kernel::sync::aref::{ARef, RefCounted};
-> +    /// # use core::ptr::NonNull;
-> +    /// # use kernel::sync::aref::{ARef, RefCounted};
->      ///
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Either keep the imports visible or delete this empty line. And either
-way, it doesn't really fit in this commit.
+--8323328-902767794-1771585950=:974
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <7d02b6f0-1269-99b4-c57b-fa5e16ba78dd@linux.intel.com>
 
->      /// struct Empty {}
->      ///
-> -    /// # // SAFETY: TODO.
-> +    /// // SAFETY: The `RefCounted` implementation for `Empty` does not =
-count references and never
-> +    /// // frees the underlying object. Thus we can act as owning an inc=
-rement on the refcount for
-> +    /// // the object that we pass to the newly created `ARef`.
->      /// unsafe impl RefCounted for Empty {
->      ///     fn inc_ref(&self) {}
->      ///     unsafe fn dec_ref(_obj: NonNull<Self>) {}
-> @@ -142,7 +144,7 @@ pub unsafe fn from_raw(ptr: NonNull<T>) -> Self {
->      ///
->      /// let mut data =3D Empty {};
->      /// let ptr =3D NonNull::<Empty>::new(&mut data).unwrap();
-> -    /// # // SAFETY: TODO.
-> +    /// // SAFETY: We keep `data` around longer than the `ARef`.
->      /// let data_ref: ARef<Empty> =3D unsafe { ARef::from_raw(ptr) };
->      /// let raw_ptr: NonNull<Empty> =3D ARef::into_raw(data_ref);
->      ///
->
-> --
-> 2.51.2
->
->
+On Thu, 19 Feb 2026, Bjorn Helgaas wrote:
+
+> On Thu, Feb 19, 2026 at 12:34:18AM +0200, Ilpo J=E4rvinen wrote:
+> > pbus_size_mem_optional() adds dev_res->add_size of a bridge window into
+> > children_add_size when the window has a non-optional part. However, if
+> > the bridge window is fully optional, only r_size is added (which is
+> > zero for such a window).
+>=20
+> I guess this means we might not make a bridge window big enough for
+> optional resources, even if space is available?
+
+Yes, the size calculations are off for the upstream windows.
+
+> > Also, a second dev_res entry will be added by pci_dev_res_add_to_list()
+> > into realloc_head for the bridge window (resulting in triggering the
+> > realloc_head-must-be-fully-consumed sanity check after a single pass of
+> > the resource assignment algorithm):
+> >=20
+> >   WARNING: drivers/pci/setup-bus.c:2153 at pci_assign_unassigned_root_b=
+us_resources+0xa5/0x260
+> >=20
+> > Correct these problems by always adding dev_res->add_size for bridge
+> > windows and not calling pci_dev_res_add_to_list() if the dev_res entry
+> > exists.
+> >=20
+> > Fixes: 6a5e64c75e82 ("PCI: Add pbus_mem_size_optional() to handle optio=
+nal sizes")
+>=20
+> We merged 6a5e64c75e82 for v7.0, so it looks like this fix is also
+> v7.0 material, right?
+
+Preferrably yes.
+
+> > Reported-by: RavitejaX Veesam <ravitejax.veesam@intel.com>
+>=20
+> Is there a public report of this?  I didn't see anything on lore that
+> looked relevant.
+
+I got an internal report a CI failure from gfx people. I couldn't=20
+immediately find anything from gitlab.freedesktop.org (not a guarantee=20
+there wouldn't be anything there).
+
+--=20
+ i.
+
+> > Tested-by: RavitejaX Veesam <ravitejax.veesam@intel.com>
+> > Signed-off-by: Ilpo J=E4rvinen <ilpo.jarvinen@linux.intel.com>
+> > ---
+> >  drivers/pci/setup-bus.c | 29 ++++++++++++++++-------------
+> >  1 file changed, 16 insertions(+), 13 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > index 32aa72456a44..0c8cbbfaf8d7 100644
+> > --- a/drivers/pci/setup-bus.c
+> > +++ b/drivers/pci/setup-bus.c
+> > @@ -1217,31 +1217,34 @@ static bool pbus_size_mem_optional(struct pci_d=
+ev *dev, int resno,
+> >  =09struct resource *res =3D pci_resource_n(dev, resno);
+> >  =09bool optional =3D pci_resource_is_optional(dev, resno);
+> >  =09resource_size_t r_size =3D resource_size(res);
+> > -=09struct pci_dev_resource *dev_res;
+> > +=09struct pci_dev_resource *dev_res =3D NULL;
+> > =20
+> >  =09if (!realloc_head)
+> >  =09=09return false;
+> > =20
+> > -=09if (!optional) {
+> > -=09=09/*
+> > -=09=09 * Only bridges have optional sizes in realloc_head at this
+> > -=09=09 * point. As res_to_dev_res() walks the entire realloc_head
+> > -=09=09 * list, skip calling it when known unnecessary.
+> > -=09=09 */
+> > -=09=09if (!pci_resource_is_bridge_win(resno))
+> > -=09=09=09return false;
+> > -
+> > +=09/*
+> > +=09 * Only bridges have optional sizes in realloc_head at this
+> > +=09 * point. As res_to_dev_res() walks the entire realloc_head
+> > +=09 * list, skip calling it when known unnecessary.
+> > +=09 */
+> > +=09if (pci_resource_is_bridge_win(resno)) {
+> >  =09=09dev_res =3D res_to_dev_res(realloc_head, res);
+> >  =09=09if (dev_res) {
+> >  =09=09=09*children_add_size +=3D dev_res->add_size;
+> >  =09=09=09*add_align =3D max(*add_align, dev_res->min_align);
+> >  =09=09}
+> > +=09}
+> > =20
+> > +=09if (!optional)
+> >  =09=09return false;
+> > -=09}
+> > =20
+> > -=09/* Put SRIOV requested res to the optional list */
+> > -=09pci_dev_res_add_to_list(realloc_head, dev, res, 0, align);
+> > +=09/*
+> > +=09 * Put requested res to the optional list if not there yet (SRIOV,
+> > +=09 * disabled ROM). Bridge windows with an optional part are already
+> > +=09 * on the list.
+> > +=09 */
+> > +=09if (!dev_res)
+> > +=09=09pci_dev_res_add_to_list(realloc_head, dev, res, 0, align);
+> >  =09*children_add_size +=3D r_size;
+> >  =09*add_align =3D max(align, *add_align);
+> > =20
+> >=20
+> > base-commit: 1c2b4a4c2bcb950f182eeeb33d94b565607608cf
+> > --=20
+> > 2.39.5
+> >=20
+>=20
+--8323328-902767794-1771585950=:974--
