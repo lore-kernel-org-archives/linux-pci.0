@@ -1,200 +1,125 @@
-Received: from fout-a5-smtp.messagingengine.com (fout-a5-smtp.messagingengine.com [103.168.172.148])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BC69309EFC;
-	Fri, 20 Feb 2026 20:53:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.148
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E5E1DF755;
+	Fri, 20 Feb 2026 21:21:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771620796; cv=none; b=qMPMp/42VHFbdqL+H3aLzlVOVPQVGGARIQcrE8ZIPDi1qFWVQtdy5YAy6A6p/d0SskZr38Ii5a61Hkoxqqj62ca3TJG5cJiaUqMGaQ3Hxj7BdJeNb0IAk3jTE7bgfgCP7NEFns/VLEtttHtlMYZ1PPAadXqiMr7BOXso2ZO0VV0=
+	t=1771622491; cv=none; b=Tp5iZII70wSoUisbZ1MVNLTl977YpM4C0lAiyqGj4V6NPLz2kxO9RRtHUz7dYSdnLJQq5C8CrRGhSVCzE7NJlQNkWvXirshOFIb3y0uK38NR4Re6YixAydDVPsgDEpHCJuhs0lXTE0Sg7VT4QqaK/OAggkm5POwolBw33CUz5HQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771620796; c=relaxed/simple;
-	bh=wvPZ+iAZm0GaEH+FUhgCt1TsGu2hBXjc9GP/9tT7qZY=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nnXBYodK9h6zpKzjQ5EbNj2cMZ9sa+T4TgonULP2nlrUxCWUwoRJKZDyljvKTrpeimITeHBfVQ5RwiKI7ndIrMIA9AbOKzqO+3XlQMzZLZTtceyUdaEeLN112MPcELCDXN3D07wa5aaAS1Bc1Yqnea7RitwpxawyF5iUOm4AbXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Yu/+eoeN; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=CGzfpmTn; arc=none smtp.client-ip=103.168.172.148
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1771622491; c=relaxed/simple;
+	bh=bUkrBcum9rV45ttLKW3UY8qSv1nhE/clRvq2R8oa9Oc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GHvuhN0VqYe3fkcm0OxwF0L7M6TToe7zo3AWF7xJ5JVdqE215CIJIHjFl+gp9iseaNQCTgvOPXj+B62sG1+S0VmJSH+ULJDKoxZMxQTMUjmzrnloKViMCwyiVaWuqae6Gfk3HwgmpkzE6lpyowflRO/Zbz3YDeCO+mozFJfEr8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WcT/lruS; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Yu/+eoeN";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="CGzfpmTn"
-Received: from phl-compute-12.internal (phl-compute-12.internal [10.202.2.52])
-	by mailfout.phl.internal (Postfix) with ESMTP id 15293EC05A5;
-	Fri, 20 Feb 2026 15:53:12 -0500 (EST)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-12.internal (MEProxy); Fri, 20 Feb 2026 15:53:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1771620792;
-	 x=1771707192; bh=D9VGSeggv5pbXKRZhKSaAquvTwtnNjiZ0IjcroFhx90=; b=
-	Yu/+eoeN3KHq3XOCG6vANYO7WgqR6V6wbP5JTAnymrYMQSGbOBGtQu/ZFfdMS8NY
-	CeDErX91mg51KXANmVtzuJ3e33yYC8I8OFCQrwIxsQCgikd5Dq8Bpzm4mLm5WUjF
-	8nlLD3KNOFDFUAgUX6N0pSyNQhOQbhJwAbMMythR2WNDwJj5buaXjnZ9p36wNfk3
-	sBfiSc3NZUrur1WfYnCvGzHLvSPIB7Yrf3lJqey1ynsWxHDT+x+66/cJ6DsiL24t
-	DOQ+YYcHDz1T2axBkdiLgq1J6sOwmkeAqDG07z9GhrsipF4aw6f3nkqs49k21/zH
-	KgBjlhow8MgCFyNalwY5VA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1771620792; x=
-	1771707192; bh=D9VGSeggv5pbXKRZhKSaAquvTwtnNjiZ0IjcroFhx90=; b=C
-	GzfpmTnvcFLr7cbCxnDGZMtReQ7v1VNOBFojknS0p7E4QHg7JbgcTfzb/hVKV55m
-	Q7z29FvctnpWFzyjuP1/rmiA3LkxU4RgyiS9YjqAKQ8tNMK+s8wQPyhQE0hig2PQ
-	CZ8RoWiXdKHR5ZgLweOkTVoA6VDEBKpCGht/XKQ+Zei99goq99T0Z/zuDgzHoxjD
-	pIvOI4ZVUyPYAA20twRtVzOQTjafZ4T/wioN+JN8i5ZFASj8JJe5KNOUlpHkhx8K
-	G8jyB/CbXDZqvCnBIbgfGg/YlehKaQVBuOjuSxK4hIqTdgqpCb1YZANml53tQimY
-	4DNFbD1Zl+UqVsAwISXfA==
-X-ME-Sender: <xms:t8mYaaYl882_KgUMUPCceDYTR8_LeMvjuOVTtL7mdYlCFgV3UpO5xQ>
-    <xme:t8mYadi8HRBgwUPeV92bKUyIPLtlV-CobZ7Ehjo12RZx-2o56NTuNIqvnTq21r-Q8
-    FOpf75mvb5YULKbTx8eVh6tfMEa5Mhg5XeiDt4KCo1lB6V3T1ecrQ>
-X-ME-Received: <xmr:t8mYacaMqILaMPhnTmt5Kmt5jLA1wEpusgdgn0LNP0aS5ALXT-JNgZo8lrE>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvvdelgeehucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
-    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeekheejieetffefueeiteejtdejffdvleelvdeuvdffvdefteeghfevkeeu
-    vdefvdenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivg
-    eptdenucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhg
-    pdhnsggprhgtphhtthhopedufedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtoheprg
-    hlihhfmheslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehhvghlghgrrghssehk
-    vghrnhgvlhdrohhrghdprhgtphhtthhopehksghushgthheskhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtoheplhhinhhugidqshefledtsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhr
-    tghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
-    phhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghpthhtoheptghlghesrhgvug
-    hhrghtrdgtohhmpdhrtghpthhtohepshhtrggslhgvsehvghgvrhdrkhgvrhhnvghlrdho
-    rhhg
-X-ME-Proxy: <xmx:t8mYaTN0jDcRPdW5IcUxnqWblm_mDv5i2fZyRmYyZHrHoylB1Et_vA>
-    <xmx:t8mYadZvnkttPZT0I6OyWPhobqpD7U9mMTnjoNFSQJPEjxik_Gxwaw>
-    <xmx:t8mYaTXnYsx7XSF7b0mCcRBAUTva9wfnzRiPSx40r9mct62hs1m9EA>
-    <xmx:t8mYacCCXDBslqBgwjS5EpXvqNNvZsbaFKD76RZiLgEHBarNsFJ5FQ>
-    <xmx:uMmYaXjCDZf-j-BOV6qgBe3YvRI25Sy9hztBI4-25pKxjlQE4gIITBUS>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 20 Feb 2026 15:53:10 -0500 (EST)
-Date: Fri, 20 Feb 2026 13:53:09 -0700
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <kbusch@kernel.org>,
- linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, lukas@wunner.de, clg@redhat.com,
- stable@vger.kernel.org, schnelle@linux.ibm.com, mjrosato@linux.ibm.com,
- Bjorn Helgaas <bhelgaas@google.com>, alex@shazbot.org
-Subject: Re: [PATCH v9 3/9] PCI: Avoid saving config space state in reset
- path
-Message-ID: <20260220135309.0014e308@shazbot.org>
-In-Reply-To: <f6ef9900-ae3a-4580-a89d-f497fb4e5adf@linux.ibm.com>
-References: <20260219002010.GA3445930@bhelgaas>
-	<f6ef9900-ae3a-4580-a89d-f497fb4e5adf@linux.ibm.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WcT/lruS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771622490; x=1803158490;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=bUkrBcum9rV45ttLKW3UY8qSv1nhE/clRvq2R8oa9Oc=;
+  b=WcT/lruSYyHvKyk8gC8+0OgTRJkT/F1vt7BlcSIkDmLHfNL3VPpAXpm7
+   +H546yfLDkmSzB8EBTpdv6mZNx5VjK6eAnIhe3oJYDad1z/Ov1+CkO4PI
+   K7otLIunQP39MSpZw/odRgkCb0snrpS0eF/0KjBQZtyLjXoRjQYEP9U1I
+   +jhfDTSCkFuyuiYwwqy53HUmhXc3NixX8GhMNtu/x10bsdX9JP6O/dhMG
+   BcxHrU/KqpJ3RrPeFDkFO0r6kVWb8gVsa16K/nsLwKg2ddCHczPD8ZNTd
+   EKMcjoAzLlqxfAOmGhgIAuT4IjgYFoYlc8eFcVCmCkOORLBI3ga0kT62v
+   g==;
+X-CSE-ConnectionGUID: FfenKU8IRxmYl7PLi6aslQ==
+X-CSE-MsgGUID: 4BJc7BOTSQihuvDSvVwoEw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11707"; a="84172600"
+X-IronPort-AV: E=Sophos;i="6.21,302,1763452800"; 
+   d="scan'208";a="84172600"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2026 13:21:29 -0800
+X-CSE-ConnectionGUID: ht+gyMkFT3+BLn3Humo8lQ==
+X-CSE-MsgGUID: ZUPap9+FSeW6ePlC5CoJYA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,302,1763452800"; 
+   d="scan'208";a="219499078"
+Received: from aduenasd-mobl5.amr.corp.intel.com (HELO [10.125.110.116]) ([10.125.110.116])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2026 13:21:28 -0800
+Message-ID: <835de7c9-a64f-4aaa-95e0-b91c2ae5885e@intel.com>
+Date: Fri, 20 Feb 2026 14:21:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V1] PCI: Hide SBR from reset_methods if masked by CXL
+To: Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
+ Jonathan.Cameron@huawei.com, alex.williamson@redhat.com,
+ raphael.norwitz@nutanix.com, Dan Williams <dan.j.williams@intel.com>
+Cc: vsethi@nvidia.com, sdonthineni@nvidia.com, smadhavan@nvidia.com,
+ skancherla@nvidia.com, vaslot@nvidia.com, linux-pci@vger.kernel.org,
+ linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org, kthota@nvidia.com,
+ mmaddireddy@nvidia.com, sagar.tv@gmail.com
+References: <20260220195259.2397847-1-vidyas@nvidia.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260220195259.2397847-1-vidyas@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On Thu, 19 Feb 2026 10:06:05 -0800
-Farhan Ali <alifm@linux.ibm.com> wrote:
 
-> On 2/18/2026 4:20 PM, Bjorn Helgaas wrote:
-> > On Wed, Feb 18, 2026 at 01:48:57PM -0800, Farhan Ali wrote:  
-> >> On 2/18/2026 11:35 AM, Bjorn Helgaas wrote:  
-> >>> On Wed, Feb 18, 2026 at 12:02:01PM -0700, Keith Busch wrote:  
-> >>>> On Tue, Feb 17, 2026 at 11:55:43AM -0800, Farhan Ali wrote:  
-> >>>>> Yes I think you are right, with this change the PCI Command
-> >>>>> register gets restored to state at enumeration. So we will
-> >>>>> lose the updated state after pci_clear_master() and
-> >>>>> pci_enable_device(). I think we can update the vfio driver to
-> >>>>> call pci_save_state() after pci_enable_device()?  
-> >>>> Either that, or move the pci_enable_device() call to after the
-> >>>> function reset.  
-> >>> I kind of like the latter idea because it seems a little simpler
-> >>> for the rule of thumb to be that a reset done by the PCI core
-> >>> returns the device to the same state as when the driver first
-> >>> probed the device.  Drivers would generally not use
-> >>> pci_save_state() at all, and they could share some initialization
-> >>> logic between probe and post-reset recovery.  
-> >> I think the vfio-pci driver was intentionally doing the
-> >> pci_enable_device() before doing the reset. As per commit
-> >> 9a92c5091a42 ("vfio-pci: Enable device before attempting reset") it
-> >> was done to handle devices using PM reset, that were getting
-> >> incorrectly identified not supporting PM reset due to current state
-> >> of the device not being D0. It looks like pci_pm_reset() still
-> >> returns -EINVAL if current power state is not D0. So I think we
-> >> can't move pci_enable_device() after reset. Unless we want to update
-> >> pci_pm_reset() to not use cached value of current_state and read it
-> >> directly from register?  
-> > Devices are generally disabled at .probe() time, so that will be the
-> > default saved state.  But every driver will expect the device to be
-> > enabled after the reset.  Skipping the save state at reset time seems
-> > like it would need a lot of work first and maybe it wouldn't ever be
-> > practical.  It wasn't really thought out; I was just hoping we could
-> > simplify the save-state model and maybe unify driver reset and error
-> > recovery paths.  I think we need to drop this patch at least for now.  
+
+On 2/20/26 12:52 PM, Vidya Sagar wrote:
+> The CXL specification (e.g., CXL r3.1 v1.0, sec 8.1.5.2) defines
+> the "Unmask SBR" bit in the Port Control Extensions Register.
+> When this bit is 0 (default), asserting the Secondary Bus Reset (SBR) bit
+> in the Bridge Control register has no effect on the downstream bus.
 > 
-> Yeah, I agree this patch might be too disruptive for drivers. In that 
-> case would my previous version [1] to at least prevent saving state in 
-> case of an error be acceptable? Or is there another approach we should 
-> consider?
+> Currently, the Linux PCI core checks this condition in
+> pci_reset_bus_function(). If SBR is masked, it returns -ENOTTY during the
+> execution of the reset. However, during the probe phase (when probe=true),
+> the function currently returns 0. This 0 return value incorrectly signals
+> to the PCI subsystem that SBR is a viable reset method for the device.
+
+
+The "Unmask SBR" bit is a toggle bit. It does not give indicator whether the device is capable of SBR or not. The original thought was that if the user is issuing CXL SBR, you know what you are doing and the kernel will set that bit and issue the SBR.
+
+DJ
+
 > 
-> [1] https://lore.kernel.org/all/20260122194437.1903-4-alifm@linux.ibm.com/
+> As a result, 'bus' is listed in the device's
+> /sys/bus/pci/devices/.../reset_methods attribute, even though the hardware
+> is incapable of performing it. If a user attempts to write bus to reset
+> method or triggers a reset that falls back to SBR, the operation fails
+> with: "bash: echo: write error: Inappropriate ioctl for device" error.
 > 
-> >
-> > 9a92c5091a42 ("vfio-pci: Enable device before attempting reset") was
-> > mostly done to make pci_pm_reset() work, which requires the device to
-> > be in D0.  The main purpose of pci_enable_device() is to make device
-> > BARs accessible; it *does* also put the device in D0 because BARs are
-> > only accessible in D0, but pci_pm_reset() itself doesn't need the
-> > BARs.
-> >
-> > Other reset methods, e.g., FLR, don't seem to require the device to be
-> > in D0, so I'm not sure why pci_pm_reset() requires that.  I think the
-> > critical piece is the D3->D0 transition, and maybe we could arrange
-> > for that to happen even if the device is already in D1/D2/D3hot or
-> > even D3cold.  
+> This patch modifies pci_reset_bus_function() to return -ENOTTY immediately
+> if cxl_sbr_masked() is true, regardless of the probe argument. This
+> ensures that 'bus' is not advertised in reset_methods when the hardware
+> prevents it, improving clarity for users and aligning the sysfs capability
+> report with actual hardware behavior.
 > 
-> Looking at the PCI spec (v6.1) I didn't see any requirement for the 
-> device to be in D0 state to perform a power state change. So I think we 
-> should be able to transition from D1/D2/D3hot to D0. But IIUC if a 
-> device is in D3cold, then won't register reads/writes fail till power is 
-> available to the device?
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+>  drivers/pci/pci.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f3244630bfd0..57e24300d1c7 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4915,12 +4915,8 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+>  	 * If "dev" is below a CXL port that has SBR control masked, SBR
+>  	 * won't do anything, so return error.
+>  	 */
+> -	if (bridge && cxl_sbr_masked(bridge)) {
+> -		if (probe)
+> -			return 0;
+> -
+> +	if (bridge && cxl_sbr_masked(bridge))
+>  		return -ENOTTY;
+> -	}
+>  
+>  	rc = pci_dev_reset_iommu_prepare(dev);
+>  	if (rc) {
 
-Yes, config space could be inaccessible in D3cold.  IIRC, 9a92c5091a42
-was specifically addressing that devices are typically provided to the
-driver in the PCI_UNKNOWN state and at the time vfio-pci wasn't
-changing that in the .probe function, like most drivers would, so we
-needed to adjust the ordering of enabling the device versus calling
-reset function.
-
-Now that we've gained PM management in vfio-pci, that's no longer an
-issue, but pci_pm_reset() does still require the device to arrive in
-D0.  Accepting devices arriving in D3cold or D3hot (with NoSoftReset-)
-might avoid a power state bounce in some circumstances, but would not
-have solved the original 9a92c5091a42 scenario where the device was in
-PCI_UNKNOWN power state.
-
-Sorry I missed my opportunity to reply to the suggestion for this
-approach in the previous revision.  I'm not sure if anything
-specifically breaks with this approach to restore the initial device
-state, but it's certainly not the contract I currently expect as a
-user of the reset-function interfaces.  I think that contract is
-"reset the internal state of the device while saving and restoring
-current config space".  If we stray from that, what's the expectation
-for things like resizable BARs?  I don't think we want to reprovision
-resources as a result of reset.
-
-Here we seem to be worried about a specific, testable scenario where
-config space might be inaccessible after error and applying the
-workaround to that regardless whether that specific scenario is preset.
-I don't see that a "test if config space is accessible and stuff the
-original save state into the buffer rather than creating an invalid
-save state" should be so complex as to require this simplification and
-associated risk.  Thanks,
-
-Alex
