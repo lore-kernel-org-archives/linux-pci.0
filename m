@@ -1,265 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 466781B7F4;
-	Thu, 19 Feb 2026 23:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2442243968
+	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 02:35:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771543007; cv=none; b=jPdWY6ZoGuTpEgdK2uawb6/NI0vr9lARtZSKgMxQp63xEpzQ0an777n9KPBXJaWFM5OTKHcG+uawjEpHkPGu4oczASnsma+tWlHDRaz1n1KntHkcEPyOyPvE/xctkK+f4YqsvUPMJ84EkEHXWb1+FLNox1NYRZSHIOKQS+c9D/Y=
+	t=1771554947; cv=none; b=e5796TA/e86ZsD/mEFF0cMX8T4wNkZSFh8BXvEQyIpTCSZdDlnWFwRzRQFWoR20aV+PuIpCD8j7pPjY93ZQ+knwvV4bAcMSXMK67PQRP1fuVPZFFV8Q9jzhbLbFY3KY8aK37aLwAy3YKBqIUxOFJnNGT+wu3qSDH4gKjYa+Xmfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771543007; c=relaxed/simple;
-	bh=XnVFS7FtJ60bPHMRKdudt9cXaaf2vUZ32Fyk35EvGto=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=iG9uBrQDjkaDmhkgM4MUo3okDQ/moY+Py6eOT9c7Oa8yEQUSiQW+bzXIp3m1J12pCdNrwJz6oDc2IO77wOMhWcLvCWK3QwcKd9sq9ZHdYiMHflsV91b+TT955VpnWAWtJPtSvEdviX4uri+gUdCR2XED3Z54tIxxAIOt4wo5iWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UjnQJYNb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771554947; c=relaxed/simple;
+	bh=mWPhZyYURQ0YONkUez9Ot+U9ClHTwh7bAMMh2lp8K0c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NcnztvSwdIclZRTVLCF00xBCEhZz/V8dRdzB/7fzR4Chbq5RrEEWpt3g2u+qve+N8mPhuafPP6IWbi+nGlpBs+KH4skTWmgtlZnoMTYePs/cHSK1y0JJ3IqNjVJY0VoWOChapw1vhdH2seAovPDKiEQ1qss1DUW+sLn5/zkXkwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=lNkxLamT; arc=none smtp.client-ip=74.125.82.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UjnQJYNb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE7A5C4CEF7;
-	Thu, 19 Feb 2026 23:16:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771543007;
-	bh=XnVFS7FtJ60bPHMRKdudt9cXaaf2vUZ32Fyk35EvGto=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=UjnQJYNb9EwPTc/RycBXz32be/4DSaCUrgg9GGoUw3DCCOJAiv1//y6QYSIeGySRg
-	 19h3+OrBW+mv3vKzT/lDAQyCagWO//CH5V5kJTtKAaYE5f5yT32kiWS9PrYYdvs2iY
-	 CnnTIRBiPEtA+xR41Nv/hUfk3D050V9ewBx76TRTN2Q8/GI8bZHz/Z8QolZDP+tHmB
-	 LB4zk9CWSDPMHZ4u3OlHTehScLhW6m2gZTWo1H8rqJYruwl8qFJfrzAnchPqooVmed
-	 zHkNRmpcDrQ3HMZmXg+SfO8owjt+jGLKzqg68wfmHJcE4sjgxlvRQPWfas/Ht2n4Ta
-	 BABYTQ5xSbLjg==
-Date: Thu, 19 Feb 2026 17:16:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Steve Oswald <stevepeter.oswald@gmail.com>
-Subject: Re: [PATCH v2 1/1] PCI: Prevent shrinking bridge window from its
- required size
-Message-ID: <20260219231645.GA3503276@bhelgaas>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="lNkxLamT"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-2b86ce04c5cso3144197eec.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2026 18:35:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1771554945; x=1772159745; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=WKl07S17w64kERMwAulaQia7WxG11Km9CX0SRJpkeS8=;
+        b=lNkxLamT7nF7Sk+ZyNR+lPqoNxVDG0flMt+oUshWnrhWgYx6GqczWTUaLv+atdXRQZ
+         0uYrLjs9WE8x4KdkTD+3b01UYi33Kg4YE4TZqKBKOeuVoO1E7InlJPYO0wbvVdKQOCLq
+         OiJyD1pIFITykUrV6HHwJUPKGZ+udyaamlGEg=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771554945; x=1772159745;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=WKl07S17w64kERMwAulaQia7WxG11Km9CX0SRJpkeS8=;
+        b=cbcOvxj5R1ZwUP/lCyj3iZucPbi2QI92/WaY4sJDXcabaoo+R3xGUT9OX7eCCD1j1M
+         D+s0ozW27LRD8sWApy2N7aqivbG3uN6eHEtDlyCyT19Cc3EtUa/WCgXOg0qbY+Zjq31+
+         lZRUr6irZ558pvFlMsYIOtUEVOXkgMtWXv9cJXB6pjyl74aI19ZDOEZMeYBxSFtDF2ll
+         HSrVTze90a6TdkgUBTwQsDq2Am1cPZclSbbxccX5mqzKoP8M7f0HidDzOmBQUNOLYXjR
+         WP9/dQeVKs/03YIX3X3BpvrVKo+B6ubYZIIFLfi9IweD8mdY0tWJnF7K7EswrvAuJvJv
+         M32w==
+X-Forwarded-Encrypted: i=1; AJvYcCXWcXyN6wKGUqzhPBxRB3YMz1a9BkozRtjExLFvjX1/cVR6lxNujEKdeTQZmS/fVkAgqePhNlXkeNI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzP0se/uYDiKAVQ9PFTHWuPMo1xh6atAqFQmVVGOn+3rvckJgbr
+	YJScTruIR5ya17D9cy3d3JRJcXXzzs4qZjV78feEX9tsZOX6UrUc84BRBhrw2LMh1qMRFNPUorx
+	NABo=
+X-Gm-Gg: AZuq6aKD+0Pn79lwk3A/VETfJie1wxMaHUskuWdYA0Dy+hw2qOCugKO37T3wBRdprdD
+	DtQmsVHvN6LxFq5nhlM996fFWRssL1FkJRAoFmy71MxpjHgQ8VCFCLzu6f5gcRBcZVlIpuVA6FH
+	qzTA0pdPfWncaaubAY0GyZkQE97nOB8NCO3KHr6tbglTaGfO+tT/A93WL1PglWSi+QNO15YBilu
+	2E7oDezhZ4astCFSMbCIS628D6nbWj3djmNXOnqWm5eDrBY2vHSulRckoJPbzpnp7g3sI+SiwUw
+	D4oEWbwCsPIoI2AjJJQ0YidRIbOT9vHZwfDsMA3NEbMXu9Qiqned7qL0uw6mnZqF7bmbyz+QrXX
+	AMcCksx/n0Dg6wtpAHhf2J+YKfVXko7XCtdybMPn9mt8cEFph8EbPK84srVi/ZdbFN3UcALjjjz
+	KrcE3QlEAdfwWIUQWuJ1aEyFtAee3xBxCavXRx0F+lmHPPXx6S5DYw3r4pub1yvw==
+X-Received: by 2002:a05:7300:c89:b0:2b7:2bf3:ce01 with SMTP id 5a478bee46e88-2bd733cbeadmr25728eec.30.1771554945339;
+        Thu, 19 Feb 2026 18:35:45 -0800 (PST)
+Received: from localhost ([2a00:79e0:2e7c:8:951b:c053:896e:489f])
+        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-2bacb582bebsm21724692eec.15.2026.02.19.18.35.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Feb 2026 18:35:44 -0800 (PST)
+Date: Thu, 19 Feb 2026 18:35:42 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>,
+	Manivannan Sadhasivam <mani@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/portdrv: Allow probing even without child services
+Message-ID: <aZfIfn9viQRj4uy4@google.com>
+References: <20260209171535.v2.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+ <20260219222514.GA3499908@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260219153951.68869-1-ilpo.jarvinen@linux.intel.com>
+In-Reply-To: <20260219222514.GA3499908@bhelgaas>
 
-On Thu, Feb 19, 2026 at 05:39:51PM +0200, Ilpo Järvinen wrote:
-> pci_bridge_distribute_available_resources() -> ... ->
-> adjust_bridge_window() is called in between __pci_bus_size_bridges()
-> and assigning the resources. Since the commit 948675736a77 ("PCI: Allow
-> adjust_bridge_window() to shrink resource if necessary")
-> adjust_bridge_window() can also shrink the bridge window to force it to
-> a smaller size. The shrunken size, however, conflicts what
-> __pci_bus_size_bridges() -> pbus_size_mem() calculated as the required
-> bridge window size. By shrinking the resource size,
-> adjust_bridge_window() prevents rest of the resource fitting algorithm
-> working as intended. Resource fitting logic is expecting assignment
-> failures when bridge windows need resizing, but there are cases where
-> failures are no longer happening after the commit 948675736a77 ("PCI:
-> Allow adjust_bridge_window() to shrink resource if necessary").
-> 
-> The commit 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink
-> resource if necessary") justifies the change by the extra reservation
-> made due to hpmemsize parameter, however, the kernel code contradicts
-> with that statement. (For simplicity, finer-grained hpmmiosize and
-> hpmmiopref parameters that can be used to the same effect as hpmemsize
-> are ignored in this description.)
-> 
-> pbus_size_mem() calls calculate_memsize() twice. First with add_size=0
-> to find out the minimal required resource size. The second call occurs
-> with add_size=hpmemsize (effectively) but the result does not directly
-> affect the resource size only resulting in an entry on the realloc_head
-> list (a.k.a. add_list). Yet, adjust_bridge_window() directly changes
-> the resource size which does not include what is reserved due to
-> hpmemsize. Also, if the required size for the bridge window exceeds
-> hpmemsize, the parameter does not have any effect even on the second
-> size calculcation made by pbus_size_mem(); from calculate_memsize():
-> 
->   size = max(size, add_size) + children_add_size;
-> 
-> The commit ae4611f1d7e9 ("PCI: Set resource size directly in
-> adjust_bridge_window()") that precedes the commit 948675736a77 ("PCI:
-> Allow adjust_bridge_window() to shrink resource if necessary") is also
-> related to causing this problem. Its changelog explicitly states
-> adjust_bridge_window() wants to "guarantee" allocation success.
-> Guaranteed allocations, however, are incompatible with how the other
-> parts of the resource fitting algorithm work. The given justification
-> fails to explain why guaranteed allocations at this stage are required
-> nor why forcing window to a smaller value than what was calculated by
-> pbus_size_mem() is correct. While the change might have worked by chance
-> in some test scenario, too small bridge window does not "guarantee"
-> success from the point of view of the endpoint device resource
-> assignments. No issue is mentioned within the changelog so it's unclear
-> if the change was made to fix some observed issue nor and what that
-> issue was.
-> 
-> The unwanted shrinking of a bridge window occurs, e.g., when a device
-> with large BARs such as eGPU is attached using Thunderbolt and the Root
-> Port holds less than enough resource space for the eGPU. The GPU
-> resources are in order of GBs and the default hotplug allocation is
-> mere 2M (DEFAULT_HOTPLUG_MMIO_PREF_SIZE). The problem is illustrated by
-> this log (filtered to the relevant content only):
-> 
-> pci 0000:00:07.0: PCI bridge to [bus 03-2c]
-> pci 0000:00:07.0:   bridge window [mem 0x6000000000-0x601bffffff 64bit pref]
-> pci 0000:03:00.0: PCI bridge to [bus 00]
-> pci 0000:03:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-> pci 0000:03:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> pci 0000:03:00.0: PCI bridge to [bus 04-2c]
-> pcieport 0000:00:07.0: Assigned bridge window [mem 0x6000000000-0x601bffffff 64bit pref] to [bus 03-2c] cannot fit 0xc00000000 required for 0000:03:00.0 bridging to [bus 04-2c]
-> pci 0000:03:00.0: bridge window [mem 0x800000000-0x10003fffff 64bit pref] to [bus 04-2c] add_size 100000 add_align 100000
-> pcieport 0000:00:07.0: distributing available resources
-> pci 0000:03:00.0: bridge window [mem 0x800000000-0x10003fffff 64bit pref] shrunken by 0x00000007e4400000
-> pci 0000:03:00.0: bridge window [mem 0x6000000000-0x601bffffff 64bit pref]: assigned
-> 
-> The initial size of the Root Port's window is 448MB (0x601bffffff -
-> 0x6000000000). __pci_bus_size_bridges() -> pbus_size_mem() calculates
-> the required size to be 32772 MB (0x10003fffff - 0x800000000) which
-> would fit the eGPU resources. adjust_bridge_window() then shrinks the
-> bridge window down to what is guaranteed to fit into the Root Port's
-> bridge window. The bridge window for 03:00.0 is also eliminated from
-> the add_list (a.k.a. realloc_head) list by adjust_bridge_window().
-> 
-> After adjustment, the resources are assigned and as the bridge window
-> for 03:00.0 is assigned successfully, no failure is recorded. Without a
-> failure, no attempt to resize the window of the Root Port is required.
-> The end result is eGPU not having large enough resources to work.
-> 
-> The commit 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink
-> resource if necessary") also claims nested bridge windows are sized the
-> same, which is false. pbus_size_mem() calculates the size for the
-> parent bridge window by summing all the downstream resources so the
-> resource fitting calculates larger bridge window for the parent to
-> accomodate the childen. That is, hpmemsize does not result the same
-> size for the case where there are nested bridge windows.
-> 
-> In order to fix the most immediate problem, don't shrink the resource
-> size in adjust_bridge_window() as hpmemsize had nothing to do with it.
-> When considering add_size, only reduce it up to what is added due to
-> hpmemsize (if required size is larger than hpmemsize, the parameter has
-> no impact, see calculate_memsize()). Unfortunately, if the tail of the
-> bridge window was aligned in calculate_memsize() from below hpmemsize
-> to above it, the size check will falsely match but the check at least
-> errs to the side of caution. There's not enough information available
-> in adjust_bridge_window() to know the calculated size precisely.
-> 
-> This is not exactly a revert of the commits e4611f1d7e9 ("PCI: Set
-> resource size directly in adjust_bridge_window()") and 948675736a77
-> ("PCI: Allow adjust_bridge_window() to shrink resource if necessary")
-> as shrinking still remains in place but is implemented differently,
-> and the end result behaves very differently.
-> 
-> It is possible that those two commits fixed some other issue that is
-> not described with enough detail in the changelog and undoing parts of
-> them results in another regression due to behavioral change.
-> Nonetheless, as described above, the solution by those two commits was
-> flawed and the issue, if one exists, should be solved in a way that is
-> compatible with the rest of the resource fitting algorithm instead of
-> working against it.
-> 
-> Besides shrinking, the case where adjust_bridge_window() expands the
-> bridge window is likely somewhat wrong as well because it removes the
-> entry from add_list (a.k.a. realloc_head), but it is less damaging as
-> that only impacts optional resources and may have no impact if
-> expanding by hpmemsize is larger than what add_size was. Fixing it is
-> left as further work.
-> 
-> Fixes: 948675736a77 ("PCI: Allow adjust_bridge_window() to shrink resource if necessary")
-> Fixes: ae4611f1d7e9 ("PCI: Set resource size directly in adjust_bridge_window()")
+Hi,
 
-These both date back to v5.10 (Dec 2020), but Steve's report below is
-only from Aug 2025, so I'm sort of assuming this is v7.1 material?
+On Thu, Feb 19, 2026 at 04:25:14PM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 09, 2026 at 05:15:35PM -0800, Brian Norris wrote:
+> > The PCIe port driver fails to probe if it finds no child services,
+> > presumably under the assumption that the driver is not useful in that
+> > case. However, the driver *can* still be useful for power management
+> > support -- namely, it still configures the port for runtime PM / D3,
+> > which may be important for allowing a bridge to enter low power modes.
+> > 
+> > Thus, allow probe to succeed even if no IRQs and no child services are
+> > available. This also mirrors existing behavior for ports that have no
+> > PCIe capabilities, where we'd also probe successfully.
+> > 
+> > This change is a bit more important after commit f5cd8a929c82 ("PCI:
+> > dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
+> > controller"), because it's common for some DWC-based systems to:
+> > 
+> > 1. have only have the "aer" and "pcie_pme" port services available and
+> > 2. not define legacy INTx interrupts properly in their device tree.
+> > 
+> > After commit f5cd8a929c82, such systems may fail
+> > pcie_init_service_irqs() and so exit with -ENODEV.
+> > 
+> > Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
+> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > ---
+> > 
+> > Changes in v2:
+> >  * clear master when we have no child services
+> > 
+> >  drivers/pci/pcie/portdrv.c | 21 +++++++--------------
+> >  1 file changed, 7 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> > index 88af0dacf351..19b08f3653ee 100644
+> > --- a/drivers/pci/pcie/portdrv.c
+> > +++ b/drivers/pci/pcie/portdrv.c
+> > @@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+> >   */
+> >  static int pcie_port_device_register(struct pci_dev *dev)
+> >  {
+> > -	int status, capabilities, i, nr_service;
+> > +	int status, capabilities, i;
+> >  	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
+> >  
+> >  	/* Enable PCI Express port device */
+> > @@ -355,29 +355,22 @@ static int pcie_port_device_register(struct pci_dev *dev)
+> >  	if (status) {
+> >  		capabilities &= PCIE_PORT_SERVICE_HP;
+> >  		if (!capabilities)
+> > -			goto error_disable;
+> > +			goto out;
+> >  	}
+> >  
+> >  	/* Allocate child services if any */
+> > -	status = -ENODEV;
+> > -	nr_service = 0;
+> >  	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+> >  		int service = 1 << i;
+> >  		if (!(capabilities & service))
+> >  			continue;
+> > -		if (!pcie_device_init(dev, service, irqs[i]))
+> > -			nr_service++;
+> > +		pcie_device_init(dev, service, irqs[i]);
+> >  	}
+> > -	if (!nr_service)
+> > -		goto error_cleanup_irqs;
+> >  
+> > +out:
+> > +	/* With no child services, we shouldn't need bus mastering. */
+> > +	if (!capabilities)
+> > +		pci_clear_master(dev);
+> 
+> I'm curious about this part because we pci_set_master()
+> unconditionally just above:
+> 
+>   pci_set_master(dev);
+>   pcie_init_service_irqs(dev, irqs, capabilities);
+>   for (i = 0; ...; i++)
+>     pcie_device_init(dev, service, irqs[i]);
+>   if (!capabilities)
+>     pci_clear_master(dev);
+> 
+> Bus mastering on a bridge must be enabled for DMA from downstream
+> devices to work, but I think that's done by pci_enable_bridge() when a
+> driver calls pci_enable_device() for an endpoint.
+> 
+> I assume the reason we call pci_set_master() here is so MSI/MSI-X from
+> the bridge will work, even if there is no downstream device.
+> 
+> I don't think either pcie_init_service_irqs() or pcie_device_init()
+> requires bus mastering, so I don't know why we enable it here.  It
+> seems like we should do it when we set up MSI/MSI-X interrupts.
 
-If we want it for v7.0, I'm going to need a CliffsNotes summary of the
-commit log to justify it :)
+I'm no expert here, but by code inspection, pcie_init_service_irqs() may
+call pci_msi_set_enable() which sets PCI_MSI_FLAGS_ENABLE. Could that
+confuse a device to see MSI enabled but bus mastering disabled?
 
-> Reported-by: Steve Oswald <stevepeter.oswald@gmail.com>
-> Closes: https://lore.kernel.org/linux-pci/CAN95MYEaO8QYYL=5cN19nv_qDGuuP5QOD17pD_ed6a7UqFVZ-g@mail.gmail.com/
-> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-> ---
+Brian
+
+> If we want to do it in pcie_port_device_register() (instead of in
+> service driver when they set up an interrupt), maybe we should drop
+> the initial pci_set_master() and do it conditionally, e.g.,
 > 
-> v2:
-> - Rebased
-> - Adjust to pci_dev_res_remove_from_list() rename
-> 
-> 
-> Hi Bjorn,
-> 
-> v1 of this seems to have fallen through cracks. I might have accidently
-> marked it "superceded" myself in Patchwork when I moved most of my fix
-> patches into the large series to avoid conflicts but not this one.
-> 
->  drivers/pci/setup-bus.c | 42 +++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 40 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 32aa72456a44..1b94ed55aa7a 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1827,6 +1827,7 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
->  				 resource_size_t new_size)
->  {
->  	resource_size_t add_size, size = resource_size(res);
-> +	struct pci_dev_resource *dev_res;
->  
->  	if (resource_assigned(res))
->  		return;
-> @@ -1839,9 +1840,46 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
->  		pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
->  			&add_size);
->  	} else if (new_size < size) {
-> +		int idx = pci_resource_num(bridge, res);
-> +
-> +		/*
-> +		 * hpio/mmio/mmioprefsize hasn't been included at all? See the
-> +		 * add_size param at the callsites of calculate_memsize().
-> +		 */
-> +		if (!add_list)
-> +			return;
-> +
-> +		/* Only shrink if the hotplug extra relates to window size. */
-> +		switch (idx) {
-> +			case PCI_BRIDGE_IO_WINDOW:
-> +				if (size > pci_hotplug_io_size)
-> +					return;
-> +				break;
-> +			case PCI_BRIDGE_MEM_WINDOW:
-> +				if (size > pci_hotplug_mmio_size)
-> +					return;
-> +				break;
-> +			case PCI_BRIDGE_PREF_MEM_WINDOW:
-> +				if (size > pci_hotplug_mmio_pref_size)
-> +					return;
-> +				break;
-> +			default:
-> +				break;
-> +		}
-> +
-> +		dev_res = res_to_dev_res(add_list, res);
->  		add_size = size - new_size;
-> -		pci_dbg(bridge, "bridge window %pR shrunken by %pa\n", res,
-> -			&add_size);
-> +		if (add_size < dev_res->add_size) {
-> +			dev_res->add_size -= add_size;
-> +			pci_dbg(bridge, "bridge window %pR optional size shrunken by %pa\n",
-> +				res, &add_size);
-> +		} else {
-> +			pci_dbg(bridge, "bridge window %pR optional size removed\n",
-> +				res);
-> +			pci_dev_res_remove_from_list(add_list, res);
-> +		}
-> +		return;
-> +
->  	} else {
->  		return;
->  	}
-> 
-> base-commit: 1c2b4a4c2bcb950f182eeeb33d94b565607608cf
-> -- 
-> 2.39.5
-> 
+>   if (capabilities)
+>     pci_set_master(dev);
