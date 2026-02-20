@@ -1,145 +1,191 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC6D931A56C;
-	Fri, 20 Feb 2026 10:27:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC3733DEDD
+	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 10:35:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771583236; cv=none; b=VG0N2jwsT/h9f5Mu5Ffr7OCMWM9eYnHv2ec4Fj+YVCVB0LjlGRKQq6XApEKNZ9+hPWem8YxbSti30WCK25QqsjxGTOHZ8oLkN96nHwWokbqD9j5I1/cMWrCUo0vl1zf65nCltAB2WAbUabQTYYV3+V82D12k6i1vVW/5M+45plk=
+	t=1771583717; cv=none; b=fEFuDFua2PdF/bSudxXgqd4H9xVFHv+4daFTpWgYUd/0Y4HdE22BV87P/xP8wazcGHv/BjoOEiOJwSrKHKgGOA2RjOiGWWEvSwB8p4h0CMMFjAhXmoYF4XvcZnynC5D1Oh8vNhex9aajMjbL+nVzQxNPkbIU1KYnX0vftXMSM/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771583236; c=relaxed/simple;
-	bh=cJ2IM3upnXR8IW4btue8CPFwbptHGKWmYdiEiAEhNsU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F+UF62OktlLj+24z+rkrDRotNT19VZ0L/yFIFq86tD7RcilPu+G0cAUmQ8DiwLb838VtCcwvw/Smfu9NsftN5kfmqEq/EXjNcY2p8q9y2fpIMEqBioMUNmFmEhWjtuVAVtDi40YZG+TUqfqA9XCVRFzs96g3NsxxizwTjkOWqlY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DP6QwK+O; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771583717; c=relaxed/simple;
+	bh=+0veVdhvJiXHWfU3srloHvG6XN01ATLsuTVbT5o95C4=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=PqNkhy7uRd2ir92IX/IHQTcn4Xn3/iZMoh/ZDPYMtGtHATgQ8mE9C+JNHCcxco8H8hjOaGjbKEhGbg29tpNERHH5EQs0h309HYQHuEoznS31d3jMjnlWTPVtyNi4cX17g8RTrlKSav6qRyuFslvTVpG6UFsogXYEVAj7A9hizOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=1IXVmEbR; arc=none smtp.client-ip=209.85.128.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DP6QwK+O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2BF3C116C6;
-	Fri, 20 Feb 2026 10:27:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771583236;
-	bh=cJ2IM3upnXR8IW4btue8CPFwbptHGKWmYdiEiAEhNsU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DP6QwK+OKhiQRxmij17aSnX+vifGjJ+99tBVhDdzmMH+teAJJMm+33ZagDRl2annp
-	 KaPggN9DKm2jKpnZSZUppg60t0oZ/3UkSJUzwA6bg++jmtoSTg0qzAbs6wdthLoefV
-	 jZl4ZumV/lNUcByDDmcD/sCo+UJrn+zIWOYtqbJdDbEh7HBOvXHLmR00+AQh/zJvB7
-	 cP+vP4RrAK8yGvi2tnMJRPzUK0eX+M7YqVsj2usFuDsJ0xQeaXBcr8rvpcpFeUjW9D
-	 aopTFTNc9wcNQiUjjqojrHq/E3sVvNrL1Awd8Aujy9c3xdR6kM7drd7HPOYnVFQb0g
-	 6O3k0jT4799qg==
-Date: Fri, 20 Feb 2026 11:27:05 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: ALOK TIWARI <alok.a.tiwari@oracle.com>, jingoohan1@gmail.com,
-	mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, kishon@kernel.org,
-	jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com,
-	Frank.Li@nxp.com, shinichiro.kawasaki@wdc.com,
-	christian.bruel@foss.st.com, mmaddireddy@nvidia.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ntb@lists.linux.dev
-Subject: Re: [PATCH v9 5/7] PCI: endpoint: pci-epf-vntb: Reuse pre-exposed
- doorbells and IRQ flags
-Message-ID: <aZg28ligp2ovwuiT@ryzen>
-References: <20260219081318.4156901-1-den@valinux.co.jp>
- <20260219081318.4156901-6-den@valinux.co.jp>
- <9067af7b-9794-4313-aec2-98c2c5e018b2@oracle.com>
- <4hn7xbjltx6z37j5foj4mikuz5t5wntf4pr4hxiy577ebuw24w@efke5jakhhjh>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="1IXVmEbR"
+Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-4836ff58111so21044675e9.1
+        for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2026 02:35:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1771583714; x=1772188514; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=SuBBZbTgNeFNGP2KTDBOL9VXYwpq19RWtpTtqUl4jLA=;
+        b=1IXVmEbR3x/gwrILo+4+FcRcD/u6auiA1qN6OHuF2E4HiKwOiUZV/WZYg7nR01wBRC
+         uDc6mN3J7GSC90Cjq/Pl/PdqeVANNljGGVlRQ93GXbKdeP4BAL2CYdSf2odeAiSP926f
+         8VvMYgO17j0x4H1kkJt4pw3YR0mvMPf25DbJxkP+1Fy4uPdK2x7u+CnvTohxPUtIcJJ2
+         lRq08/yfv6iagcLUZRNAR/c3bd/e0bOGQuLoTAVq328hLV4823aO7H0mvGVAAqO9Bf4u
+         pyqYEnbThNivwRIBXpA1eOALuzFWBp/BM6GVy1T4rlAt4NjsZDt3y7QY3qBN4fNLaBLR
+         EdjQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771583714; x=1772188514;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=SuBBZbTgNeFNGP2KTDBOL9VXYwpq19RWtpTtqUl4jLA=;
+        b=a1vQj4lwbMurr71eWWyPDeyo6CbA3Riw6qGgxtljJX2ddU9edGD89DUvlk0XgtAmiu
+         BVmMZrCbZl0qXB2CRY+cN6setteFelfgo6SyFat7MMzceaEPI+v0XnNrfPn2JZCZ5taw
+         Y8UGB5u19n5d4YeRZ7tFbGHW/RrqMBNEvFdXLz14KNssNWLqyTHXp77KfX9oIsk4SU8W
+         Oe04p+8XNJ66079zgPIRWRAxWjFyUrjNSjbhi+3fX4EZtwRiBSohwHsKUoSunD+s693T
+         3YxRi0gr7h9jOnHx+/5WaMqDo4EYibBYmYvC96Gxmoe9S8oUICZIxHi341OlmLtb/7rC
+         N5yg==
+X-Forwarded-Encrypted: i=1; AJvYcCUHsH18+7t/Ywb4bynGGkbpgIpGuOYhM/hwGzcK9Qob/qxi2x8QsxuWGeaPZDjgHlQCQTpV3xrDo10=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxq1Gf7WFJRnNp1/sNYkdCsoiIV6uXHxUJoK0/0KnOjH5IABS13
+	HiBRvYB5T6aFikZ30eP6TKWcvk+WS9JN7HNg0DtxlnIx4HQDmFsWXOwp3PsFAobIBIrVNgqGGfG
+	o4HM+dvJgterbZKw+aw==
+X-Received: from wmbdr17.prod.google.com ([2002:a05:600c:6091:b0:480:4a03:7b73])
+ (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:600c:8b26:b0:465:a51d:d4 with SMTP id 5b1f17b1804b1-48398a47222mr123364405e9.6.1771583713704;
+ Fri, 20 Feb 2026 02:35:13 -0800 (PST)
+Date: Fri, 20 Feb 2026 10:35:12 +0000
+In-Reply-To: <20260220-unique-ref-v15-1-893ed86b06cc@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4hn7xbjltx6z37j5foj4mikuz5t5wntf4pr4hxiy577ebuw24w@efke5jakhhjh>
+Mime-Version: 1.0
+References: <20260220-unique-ref-v15-0-893ed86b06cc@kernel.org> <20260220-unique-ref-v15-1-893ed86b06cc@kernel.org>
+Message-ID: <aZg44EmMWKK-z5KP@google.com>
+Subject: Re: [PATCH v15 1/9] rust: types: Add Ownable/Owned types
+From: Alice Ryhl <aliceryhl@google.com>
+To: Andreas Hindborg <a.hindborg@kernel.org>
+Cc: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
+	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
+	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman <david.m.ertman@intel.com>, 
+	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
+	Serge Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Igor Korotin <igor.korotin.linux@gmail.com>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
+	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Boqun Feng <boqun@kernel.org>, linux-kernel@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+	linux-pci@vger.kernel.org, Asahi Lina <lina+kernel@asahilina.net>, 
+	Oliver Mangold <oliver.mangold@pm.me>
+Content-Type: text/plain; charset="utf-8"
 
-On Fri, Feb 20, 2026 at 12:35:31PM +0900, Koichiro Den wrote:
-> On Thu, Feb 19, 2026 at 10:00:19PM +0530, ALOK TIWARI wrote:
-> > 
-> > 
-> > On 2/19/2026 1:43 PM, Koichiro Den wrote:
-> > >   static int epf_ntb_db_bar_init_msi_doorbell(struct epf_ntb *ntb,
-> > >   					    struct pci_epf_bar *db_bar,
-> > >   					    const struct pci_epc_features *epc_features,
-> > 
-> > The return value of pci_epc_get_features() seems to be used here
-> > without checking for NULL.
-> > 
-> > Since this function can return NULL, and other EPF drivers
-> > (pci-epf-test.c, pci-epf-ntb.c) handle that case,
-> > is VNTB assuming that epc_features is always non-NULL,
-> > or should a defensive NULL check be added for pci_epc_get_features()?
+On Fri, Feb 20, 2026 at 10:51:10AM +0100, Andreas Hindborg wrote:
+> From: Asahi Lina <lina+kernel@asahilina.net>
 > 
-> Thanks for the comment, good catch.
+> By analogy to `AlwaysRefCounted` and `ARef`, an `Ownable` type is a
+> (typically C FFI) type that *may* be owned by Rust, but need not be. Unlike
+> `AlwaysRefCounted`, this mechanism expects the reference to be unique
+> within Rust, and does not allow cloning.
 > 
-> AFAICT, this is a pre-existing issue (at least since the initial vNTB merge,
-> commit e35f56bb0330), and the same pattern can be found in a few other paths in
-> epf-vntb, such as:
+> Conceptually, this is similar to a `KBox<T>`, except that it delegates
+> resource management to the `T` instead of using a generic allocator.
 > 
->   - epf_ntb_config_spad_bar_alloc()
->   - epf_ntb_configure_interrupt()
->   - epf_ntb_db_bar_init() (the one you pointed out)
+> [ om:
+>   - Split code into separate file and `pub use` it from types.rs.
+>   - Make from_raw() and into_raw() public.
+>   - Remove OwnableMut, and make DerefMut dependent on Unpin instead.
+>   - Usage example/doctest for Ownable/Owned.
+>   - Fixes to documentation and commit message.
+> ]
 > 
-> From the current mainline state, all in-tree pci_epc_ops implementations provide
-> a .get_features callback and return a non-NULL pointer, and the same holds for
-> the in-tree dw_pcie_ep_ops implementations. So in practice this does not appear
-> to be triggering a NULL-dereference issue today.
+> Link: https://lore.kernel.org/all/20250202-rust-page-v1-1-e3170d7fe55e@asahilina.net/
+> Signed-off-by: Asahi Lina <lina+kernel@asahilina.net>
+> Co-developed-by: Oliver Mangold <oliver.mangold@pm.me>
+> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
+> Reviewed-by: Boqun Feng <boqun.feng@gmail.com>
+> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+> [ Andreas: Updated documentation, examples, and formatting ]
+> Reviewed-by: Gary Guo <gary@garyguo.net>
+> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
+> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
 
-We should really clean this up somehow.
+> +///         let result = NonNull::new(KBox::into_raw(result))
+> +///             .expect("Raw pointer to newly allocation KBox is null, this should never happen.");
 
+KBox should probably have an into_raw_nonnull().
 
-The problems are:
+> +///    let foo = Foo::new().expect("Failed to allocate a Foo. This shouldn't happen");
+> +///    assert!(*FOO_ALLOC_COUNT.lock() == 1);
 
-1) A long time ago, not all EPC driver had a get_features callback.
-   Now, EPC drivers do have such a callback.
-   Ideally, we should probably add a check that an EPC driver implements
-   epc->ops_get_features in __pci_epc_create(), and return failure if it
-   doesn't.
+Use ? here.
 
-This way we can remove the if (!epc->ops_get_features) check in e.g.
-pci_epc_get_features().
+> +/// }
+> +/// // `foo` is out of scope now, so we expect no live allocations.
+> +/// assert!(*FOO_ALLOC_COUNT.lock() == 0);
+> +/// ```
+> +pub unsafe trait Ownable {
+> +    /// Releases the object.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// Callers must ensure that:
+> +    /// - `this` points to a valid `Self`.
+> +    /// - `*this` is no longer used after this call.
+> +    unsafe fn release(this: NonNull<Self>);
 
+Honestly, not using it after this call may be too strong. I can imagine
+wanting a value where I have both an ARef<_> and Owned<_> reference to
+something similar to the existing Arc<_>/ListArc<_> pattern, and in that
+case the value may in fact be accessed after this call if you still have
+an ARef<_>.
 
-2) DWC based glue drivers have their own get_features callback in
-struct dw_pcie_ep
-But here we should just have some check in dw_pcie_ep_init() that
-returns failure if the glue driver has not implemented
-(struct dw_pcie_ep *)->ops->get_features)
+If you modify Owned<_> invariants and Owned::from_raw() safety
+requirements along the lines of what I say below, then this could just
+say that the caller must have permission to call this function. The
+concrete implementer can specify what that means more directly, but here
+all it means is that a prior call to Owned::from_raw() promised to give
+you permission to call it.
 
-This way we can remove the
-if (!ep->ops->get_features) checks in pcie-designware-ep.c.
+> +/// A mutable reference to an owned `T`.
+> +///
+> +/// The [`Ownable`] is automatically freed or released when an instance of [`Owned`] is
+> +/// dropped.
+> +///
+> +/// # Invariants
+> +///
+> +/// - The [`Owned<T>`] has exclusive access to the instance of `T`.
+> +/// - The instance of `T` will stay alive at least as long as the [`Owned<T>`] is alive.
+> +pub struct Owned<T: Ownable> {
+> +    ptr: NonNull<T>,
+> +}
 
+I think some more direct and less fuzzy invariants would be:
 
-3) Even if the get_features callback is implemented, EPF drivers call
-   pci_epc_get_features(), which has this code:
+- This `Owned<T>` holds permissions to call `T::release()` on the value once.
+- Until `T::release()` is called, this `Owned<T>` may perform mutable access on the `T`.
+- The `T` value is pinned.
 
-        if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
-                return NULL;
+> +    /// Get a pinned mutable reference to the data owned by this `Owned<T>`.
+> +    pub fn as_pin_mut(&mut self) -> Pin<&mut T> {
+> +        // SAFETY: The type invariants guarantee that the object is valid, and that we can safely
+> +        // return a mutable reference to it.
+> +        let unpinned = unsafe { self.ptr.as_mut() };
+> +
+> +        // SAFETY: We never hand out unpinned mutable references to the data in
+> +        // `Self`, unless the contained type is `Unpin`.
+> +        unsafe { Pin::new_unchecked(unpinned) }
 
-So, it will return NULL for invalid func_no / vfunc_no.
+I'd prefer if "pinned" was a type invariant, rather than make an
+argument about what kind of APIs exist.
 
-I think this currently makes it quite hard to remove the NULL checks on the
-return value from a epc->ops_get_features() call in the EPF drivers.
+> +impl<T: Ownable + Unpin> DerefMut for Owned<T> {
+> +    fn deref_mut(&mut self) -> &mut Self::Target {
+> +        // SAFETY: The type invariants guarantee that the object is valid, and that we can safely
+> +        // return a mutable reference to it.
+> +        unsafe { self.ptr.as_mut() }
 
+Surely this safety comment should say something about pinning.
 
-
-
-How pci-epf-test has managed to "workaround" this the silliness of having
-
-features = pci_epc_get_features(epc, func_no, vfunc_no);
-if (!features)
-
-checks everywhere (problem 3): It calls pci_epc_get_features() once in .bind()
-and if it fails, it fails bind(), if it returns non-NULL, it caches the result:
-https://github.com/torvalds/linux/blob/v6.19/drivers/pci/endpoint/functions/pci-epf-test.c#L1112-L1123
-
-That way, all other places in pci-epf-test.c does not need to NULL check
-pci_epc_get_features(). (Instead it uses the cached value in struct pci_epf_test *)
-
-pci-epf-vntb.c should probably do something similar to avoid sprinkling
-NULL checks all over pci-epf-vntb.c.
-
-
-Kind regards,
-Niklas
+Alice
