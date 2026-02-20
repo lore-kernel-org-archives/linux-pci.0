@@ -1,109 +1,119 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20DB82BDC32;
-	Fri, 20 Feb 2026 15:48:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AA01EEB3;
+	Fri, 20 Feb 2026 16:02:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771602483; cv=none; b=bxW5AVR+T2cnhn6Tr/RM/bL1y4qP1zesceuoqjIirMHqIP8v44IBAlaOV2eBohdQXgylfFoIOcIhRmp/T28VYQnwmWcwQiKZfVmYPcWMEECCRY3ssMBGCEz95yuDgcjmk6gvplbgks0hKg+yesDE6fK0zrZhE3s13SvfBbeNhAE=
+	t=1771603364; cv=none; b=beqyWgkgrE7P2tFy0S1Z1zI1DQSSZvs1M/pZEFgLk1WMgqk0mYALqMFdR4OobL5kXb7Q6O9mt1NKjSO3oC36o57hej+b6msohnJ1YGZ0ES9EpiG+K5zEtSWgc2/K/N0xcM7i8F8Ef/c3HHfYFoPlEJeR12X55IB2YhvmUXd0+hw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771602483; c=relaxed/simple;
-	bh=fh9bim7ssVqLim9HHorn9RpIpWGtbAsT8DW1WSQnYJE=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=jsOURCoLJhZTJocMpFSg+f37d7An0Y41O4iiQs0kgF4QAbs9qLaJUsJ7fJYKrJ7GsIf/4yErfPGHFV1NZNsBIl9sV8FCHnBdS72q+gwHGhK8A9Kaaf09tpHlnD14mDSh8mAXsVivAYvYRwax9pVqn7p5EyTvvcM7AW99UWmjYXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oKHpbVty; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1771603364; c=relaxed/simple;
+	bh=z4D+rjzLJrvwt0j/2rwSKMKLetwvyNgn3D4AF3jSF3Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dMgH3IT7LlCDdw+M7YBfA52YdwpE6r8VOk+kGmKeXmBdEW8mTMTrqt0NMsUohKaS15W8p8wNUiF96hBEJGb7F4S312qsB4pnJNbaqeAg8+dK4VQsWrgCKKDK+BSGIC0G/bwALFCTL+B7de+u1ECfByDXFBeJq1OKl9Kv9CO+5k4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FylfdZxd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oKHpbVty"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771602482; x=1803138482;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=fh9bim7ssVqLim9HHorn9RpIpWGtbAsT8DW1WSQnYJE=;
-  b=oKHpbVtyO0pTtjW/w5BLtaDBzpH1qKHXrDwtQMO1t//BBD5Sp2Viv9zf
-   ouFf2rAumhAV5Wxu6WUh62bAa6Ql4ghU8GkAgWLPKx4s/C3pM/c5JOg1o
-   XsNyTPQ8m89CdS6Bs/EUh51HTaxNv/2Fb0ja2rBbkjCyAqppgqHdoAKM+
-   kpLOeHknnk5+XJ+Qx0kkpEmpE37+xlyTIHeXp3xWnVfyxuXsm4duZPeug
-   5ueSzZZTenJ3sfNYUK+/QlMc9EjRV14tY6ZD0qFXGNGYlZF8qfEAxEXBX
-   v3qRNCeZCKy0DfQUeTVwCAsSU9xgyMABBCrf4saBdng+XkIHmUCDi4CVU
-   g==;
-X-CSE-ConnectionGUID: tjNvBSg2Q92kQ4Soo1ZU6Q==
-X-CSE-MsgGUID: 2P989wzLQhCV7HkKwzL+iw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11707"; a="90278478"
-X-IronPort-AV: E=Sophos;i="6.21,302,1763452800"; 
-   d="scan'208";a="90278478"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2026 07:48:01 -0800
-X-CSE-ConnectionGUID: tpVEgg2jQfK8U3fAJqCSnQ==
-X-CSE-MsgGUID: ABC1ovJ1Tv2qGvBc/BU3zA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,302,1763452800"; 
-   d="scan'208";a="214732577"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.88])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2026 07:47:58 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 20 Feb 2026 17:47:55 +0200 (EET)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FylfdZxd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57F00C116C6;
+	Fri, 20 Feb 2026 16:02:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771603363;
+	bh=z4D+rjzLJrvwt0j/2rwSKMKLetwvyNgn3D4AF3jSF3Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FylfdZxdLXBY7qyGKhqDRXMw54lgOgtn6y21jEneuqC+xt06MRS2lPSL8lpj5MW5M
+	 9j48zIHlBLIQPTrQmtEanumn3wzAXyNITXQn93TSx8EvX95TIzCGkZC8AyxXCtWJXI
+	 Tr/VuDd5ZqcEcrEq1hZhJjJYmUfxoNSiFaAhIgLwj8HTGHIFlQF86tGfkWzr0lC+ZT
+	 E/QIlFvQ2otdenJnyqJF4W+frOt+MI95KOHDv6VYd1BwSx35XO3PNhKFlb77v3ZEjc
+	 yFNOwckQQsWuhVNfm2PKK5vtnemz5LCEZObpE8jjy+ttlQY4xH7IgzIdLxMB96RP6H
+	 1+YDYxp8pIpGQ==
+Date: Fri, 20 Feb 2026 17:02:34 +0100
+From: Niklas Cassel <cassel@kernel.org>
 To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>, 
-    Mika Westerberg <mika.westerberg@linux.intel.com>, 
-    Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>, 
-    linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-    Steve Oswald <stevepeter.oswald@gmail.com>
-Subject: Re: [PATCH v2 1/1] PCI: Prevent shrinking bridge window from its
- required size
-In-Reply-To: <20260220150120.GA3525869@bhelgaas>
-Message-ID: <9cc4a973-257f-7dd4-0519-e8f5bf3e411b@linux.intel.com>
-References: <20260220150120.GA3525869@bhelgaas>
+Cc: Koichiro Den <den@valinux.co.jp>, mani@kernel.org,
+	kwilczynski@kernel.org, kishon@kernel.org, bhelgaas@google.com,
+	corbet@lwn.net, jingoohan1@gmail.com, lpieralisi@kernel.org,
+	robh@kernel.org, Frank.Li@nxp.com, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] PCI: dwc: ep: Fix BAR update handling with
+ in-place epf_bar reuse
+Message-ID: <aZiFe6Pl-LI0fIVg@ryzen>
+References: <20260202145407.503348-1-den@valinux.co.jp>
+ <20260219194356.GA3493507@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1018775426-1771602475=:974"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260219194356.GA3493507@bhelgaas>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, Feb 19, 2026 at 01:43:56PM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 02, 2026 at 11:54:05PM +0900, Koichiro Den wrote:
+> > Hi,
+> > 
+> > This patch series is a follow-up to a side discussion that started from
+> > Niklas' comment at:
+> > https://lore.kernel.org/all/aXtrW7viGZfMNZur@ryzen/
+> > 
+> > This series:
+> >   1) Makes BAR Match vs Address Match teardown in DesignWare EP explicit
+> >      by returning right after clearing a BAR-match inbound mapping.
+> >   2) Fixes the dw_pcie_ep_set_bar() mapping-update path to run
+> >      dw_pcie_ep_clear_ib_maps() unconditionally, since the driver cannot
+> >      reliably distinguish BAR Match -> BAR Match from Address Match ->
+> >      BAR Match transitions when the same epf_bar instance is updated in
+> >      place and passed in again.
+> > 
+> > Base: controller/dwc branch, latest:
+> > commit a24149881558 ("PCI: dwc: ep: Add comment explaining controller level
+> >                       PTM access in multi PF setup")
+> > 
+> > Changes since v1:
+> >   - Switched from the v1 approach (Y) to the alternative approach (X)
+> >     that was proposed earlier in the discussion.
+> >     Details of the v1 (Y) vs v2 (X) are described at:
+> >     https://lore.kernel.org/all/sextbnbmsur2xjfoun2l4lr5vekmpzae7sx6or2ird44t6ud6d@yprcz43tpq4p/
+> >   - Changed the subject.
+> > 
+> > v1: https://lore.kernel.org/all/20260131133655.218018-1-den@valinux.co.jp/
+> > 
+> > Thanks,
+> > 
+> > 
+> > Koichiro Den (2):
+> >   PCI: dwc: ep: Return after clearing BAR-match inbound mapping
+> >   PCI: dwc: ep: Always clear IB maps on BAR update
+> > 
+> >  drivers/pci/controller/dwc/pcie-designware-ep.c | 15 ++++++++++++---
+> >  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> Since this fixes an issue with the new inbound submapping feature
+> we merged for v7.0, I put both of these on pci/for-linus for v7.0.
 
---8323328-1018775426-1771602475=:974
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Thank you Bjorn!
 
-On Fri, 20 Feb 2026, Bjorn Helgaas wrote:
+If possible, I please consider sending these to Linus as well:
+https://patchwork.kernel.org/project/linux-pci/patch/20260210181225.3926165-2-cassel@kernel.org/
 
-> On Fri, Feb 20, 2026 at 01:32:43PM +0200, Ilpo J=C3=A4rvinen wrote:
-> > On Thu, 19 Feb 2026, Bjorn Helgaas wrote:
-> > ...
->=20
-> > > These both date back to v5.10 (Dec 2020), but Steve's report below is
-> > > only from Aug 2025, so I'm sort of assuming this is v7.1 material?
-> >=20
-> > It's an old problem yes and impacts limited set of configurations
-> > (a device with big BARs attached to TB).
-> >=20
-> > v7.1 is okay for me, this could cause some not immediately obvious prob=
-lem=20
-> > in some other case so it gives more time for us to hear about them=20
-> > (hopefully).
-> >=20
-> > > If we want it for v7.0, I'm going to need a CliffsNotes summary of th=
-e
-> > > commit log to justify it :)
-> >=20
-> > Even if it's not going to be needed in this cases, what's "CliffsNotes=
-=20
-> > summary" ??
->=20
-> Slang for a short summary :)  I.e., a sentence or two to motivate a
-> pull request.  Big BARs attached via Thunderbolt sounds like an
-> important piece; e.g., maybe this helps fix Thunderbolt docks with
-> GPUs in them?
+The Fixes tag:
+Fixes: 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU mapping")
+references a commit that was included in v7.0 merge window, so it would be
+nice to have the above fix patch in v7.0.
 
-At least some of them (the reported case exactly that, IIRC).
 
---=20
- i.
 
---8323328-1018775426-1771602475=:974--
+This is fixing the same problem as 8719c64e76bf ("PCI: dwc: ep: Cache MSI
+outbound iATU mapping") fixed for dw_pcie_ep_raise_msi_irq():
+https://patchwork.kernel.org/project/linux-pci/patch/20260211175540.105677-2-cassel@kernel.org/
+
+Mani has marked this commit as "Awaiting Upstream", I'm guessing he plans
+to queue it for v7.1 ?
+If not to much trouble, I think it would be nice to have in v7.0 as well,
+so we have both functional dw_pcie_ep_raise_msi_irq() and
+dw_pcie_ep_raise_msix_irq() in v7.0.
+
+
+Kind regards,
+Niklas
