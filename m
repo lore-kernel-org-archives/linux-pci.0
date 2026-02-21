@@ -1,125 +1,117 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [144.76.133.112])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F01732571B;
-	Sat, 21 Feb 2026 16:36:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F0F030CDAF;
+	Sat, 21 Feb 2026 18:56:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771691822; cv=none; b=M8pEqGa8LapDotqz9izhRZi755Fnu69ytBNLvWxu5AtA5AHc9+koBUYGVm7C23p/cT7ropXUT2RyAmBFl+5A4GtIxzqegBIjzChQZuXjna9uGW1sDRDaPucAXElW7bYq4GdoxDnbl/9KwO7YzobtOpNQ1jrzJNIZHBtMthU/0r8=
+	t=1771700180; cv=none; b=WpNGp7GKoHxVrDq0QfgbQuqZXCOPVWB9MGzouf3PrEfwuQeX3/BncPcYSTajjoP13bqsFJXZkDUdskinCuwr06mdKUPmhD3qT6z8gYu+yN29YiApj/7x2CIevETt3hlRGHiITNE/YPJuf4B3Mo23kHsv+vANQEFURZ4UqZ9iZsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771691822; c=relaxed/simple;
-	bh=eE2b6J8MoKoJciV+vNZFu4wv1hIVgksS6b0uGzsvRYo=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=t6ELXLwM9drLGRggQMX35BCsjCQO7FCEwzGaRvKjw2oLcbKlYEam5XCnF/oCjWa58jekI9xg/tMZLm1CG+fk3WWQhtHd+ycHvvSSQh8aQ4PpbCiZs/zkyDZpbAvQf8H0kRGxA8sNTegNZc5OMOJwJfcUIHsXlbrJLgF8nmbn4Mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from smtpclient.apple (unknown [58.38.117.196])
-	by APP-03 (Coremail) with SMTP id rQCowABnTOMQ35lplLf9CA--.17993S2;
-	Sun, 22 Feb 2026 00:36:33 +0800 (CST)
-Content-Type: text/plain;
-	charset=us-ascii
+	s=arc-20240116; t=1771700180; c=relaxed/simple;
+	bh=UplSoHBDp0C7KLgjuZnxw/crtajsmQ6FkeGRVXaX+9o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T+8rvGgikGY0I1G/nnU9E8qPiMyXl8zkKnectdt8nxWX5y4Rhxtr+T69ucBJKi0FJpEzMZnRZZ7HB8NIUkb3nBuLPFUL4fklNtSCGif4xiRLSiBJr+Zi5VbXJL+OZ36QgJhqt25T6DpL9bxiSiOvqioGZ07HJcptPu490gcJXN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=144.76.133.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 8B5C12020A57;
+	Sat, 21 Feb 2026 19:46:09 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 3B88F2D06C; Sat, 21 Feb 2026 19:46:09 +0100 (CET)
+Date: Sat, 21 Feb 2026 19:46:09 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: dan.j.williams@intel.com, Alistair Francis <alistair23@gmail.com>,
+	bhelgaas@google.com, rust-for-linux@vger.kernel.org,
+	akpm@linux-foundation.org, linux-pci@vger.kernel.org,
+	Jonathan.Cameron@huawei.com, linux-cxl@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com,
+	benno.lossin@proton.me, boqun.feng@gmail.com, a.hindborg@kernel.org,
+	gary@garyguo.net, bjorn3_gh@protonmail.com, tmgross@umich.edu,
+	ojeda@kernel.org, wilfred.mallawa@wdc.com, aliceryhl@google.com,
+	Alistair Francis <alistair.francis@wdc.com>,
+	aneesh.kumar@kernel.org, yilun.xu@linux.intel.com, aik@amd.com,
+	Mathieu Poirier <mathieu.poirier@linaro.org>,
+	Thomas Fossati <thomas.fossati@linaro.org>
+Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
+Message-ID: <aZn9cfhv0YRxI1mw@wunner.de>
+References: <20260219124313.GE723117@nvidia.com>
+ <20260219124119.GD723117@nvidia.com>
+ <aZcbBt7OmNeH3oA0@wunner.de>
+ <20260219143129.GF723117@nvidia.com>
+ <aZcnTnYJ61Kma0yd@wunner.de>
+ <20260219173937.GH723117@nvidia.com>
+ <aZgbukYiIxg44_e7@wunner.de>
+ <20260220141057.GL723117@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.400.21\))
-Subject: Re: [PATCHv2 2/2] sparc/pci: Initialize msi_addr_mask for OF-created
- PCI devices
-From: Han Gao <gaohan@iscas.ac.cn>
-In-Reply-To: <20260220070239.1693303-3-nilay@linux.ibm.com>
-Date: Sun, 22 Feb 2026 00:36:22 +0800
-Cc: Han Gao <gaohan@iscas.ac.cn>,
- linuxppc-dev@lists.ozlabs.org,
- linux-pci@vger.kernel.org,
- sparclinux@vger.kernel.org,
- wangruikang@iscas.ac.cn,
- tglx@kernel.org,
- maddy@linux.ibm.com,
- mpe@ellerman.id.au,
- npiggin@gmail.com,
- chleroy@kernel.org,
- gjoyce@ibm.com,
- helgaas@kernel.org,
- davem@davemloft.net,
- andreas@gaisler.com,
- "Han Gao (Revy)" <rabenda.cn@gmail.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <47EB6E53-3E20-4E95-A329-928E5BDDFB81@iscas.ac.cn>
-References: <20260220070239.1693303-1-nilay@linux.ibm.com>
- <20260220070239.1693303-3-nilay@linux.ibm.com>
-To: Nilay Shroff <nilay@linux.ibm.com>
-X-Mailer: Apple Mail (2.3864.400.21)
-X-CM-TRANSID:rQCowABnTOMQ35lplLf9CA--.17993S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cr1fXr18CFWkJr1UWFWDtwb_yoW8CF4Upr
-	Z7CFn3trWUt347Ga9xAr1UZFyjgan8u3s3Wr98K34IqryI9r10vrnrWrWjkw4jqrsYka1F
-	va9YvrWjqw1DWaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9C14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
-	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-	n2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE14v_JwCF04k20xvY0x0EwIxGrw
-	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-	14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-	IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
-	x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
-	0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUeq2_UUUUU=
-X-CM-SenderInfo: xjdrxt3q6l2u1dvotugofq/1tbiBgwFDGmZySEWPgAAsz
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260220141057.GL723117@nvidia.com>
 
-Tested and passed on SPARC Enterprise T5220.=20
+On Fri, Feb 20, 2026 at 10:10:57AM -0400, Jason Gunthorpe wrote:
+> IOW the resume/RAS acceptance criteria is that the second nonce was
+> signed with the same private key(s) that the first nonce was signed
+> with.
 
-Without this patch, the e1000e would use intx.
+What you seem to have in mind is essentially a "trust on first use"
+model where trust is given to a specific device certificate
+(i.e. leaf certificate), not to a root certificate.
 
-Tested-by: Han Gao <gaohan@iscas.ac.cn <mailto:gaohan@iscas.ac.cn>> # on =
-SPARC Enterprise T5220
+Whereas the SPDM spec (and by extension CMA, i.e. PCIe r7.0 sec 6.31)
+envisions a model where each of the 8 slots may contain a certificate
+*chain* (comprising a root certificate, optional intermediate certificates
+and a leaf certificate).  In this model, trust is given to root
+certificates.  These could be vendors, but it's also possible that
+e.g. a CSP operates its own CA and provisions one of the 8 slots with
+a custom certificate chain anchored in its own CA.
 
-> On Feb 20, 2026, at 15:02, Nilay Shroff <nilay@linux.ibm.com> wrote:
->=20
-> Recent changes replaced the use of no_64bit_msi with msi_addr_mask,
-> which is now expected to be initialized to DMA_BIT_MASK(64) during PCI
-> device setup. On SPARC systems, this initialization was inadvertently
-> missed for devices instantiated from device tree nodes, leaving
-> msi_addr_mask unset for OF-created pci_dev instances. As a result,
-> MSI address validation fails during probe, causing affected devices
-> to fail initialization.
->=20
-> Initialize pdev->msi_addr_mask to DMA_BIT_MASK(64) in
-> of_create_pci_dev() so that MSI address validation succeeds and PCI
-> device probing works as expected.
->=20
-> Fixes: 386ced19e9a3 ("PCI/MSI: Convert the boolean no_64bit_msi flag =
-to a DMA address mask")
-> Signed-off-by: Nilay Shroff <nilay@linux.ibm.com>
-> ---
-> arch/sparc/kernel/pci.c | 7 +++++++
-> 1 file changed, 7 insertions(+)
->=20
-> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> index b290107170e9..a4815d544781 100644
-> --- a/arch/sparc/kernel/pci.c
-> +++ b/arch/sparc/kernel/pci.c
-> @@ -355,6 +355,13 @@ static struct pci_dev *of_create_pci_dev(struct =
-pci_pbm_info *pbm,
-> dev->error_state =3D pci_channel_io_normal;
-> dev->dma_mask =3D 0xffffffff;
->=20
-> + /*
-> + * Assume 64-bit addresses for MSI initially. Will be changed to =
-32-bit
-> + * if MSI (rather than MSI-X) capability does not have
-> + * PCI_MSI_FLAGS_64BIT. Can also be overridden by driver.
-> + */
-> + dev->msi_addr_mask =3D DMA_BIT_MASK(64);
-> +
-> if (of_node_name_eq(node, "pci")) {
-> /* a PCI-PCI bridge */
-> dev->hdr_type =3D PCI_HEADER_TYPE_BRIDGE;
-> --=20
-> 2.52.0
->=20
->=20
+Your "trust on first use" model could be made to fit into the
+SPDM model by adding the leaf certificate (= device certificate)
+to the .cma keyring and provisioning one of the certificate slots
+with just the leaf certificate (and nothing else in the cert chain).
+The verifier in user space could add the leaf certificate to the keyring
+and provision a slot with it after having verified the device successfully.
 
+That would make verification in user space compatible with RAS & resume,
+at least the certificate validation part.
+
+An alternative solution would be to have the verifier in user space
+operate its own mini CA.  The root certificate of that mini CA would be
+added to the .cma keyring.  Upon successful verification, the verifier
+would create a short-lived certificate for the device which is signed
+by its mini CA.  The verifier would provision one of the 8 cert slots
+of the device with this custom short-lived certificate and thereby
+allow the kernel to re-authenticate the device without reliance on
+user space until the short-lived certificate expires.  User space
+would have to monitor expiration of those certificates and re-new
+them to ensure continued re-authentication.
+
+I'm adding Mathieu and Thomas to cc as they have been exploring ways
+to take advantage of the .cma keyring for Confidential Computing
+use cases.
+
+> Linux will have its own sw model, the spec is just the protocol
+> definition. In the CC world everyone just knows the verifier needs to
+> be external.. How else could it even work?
+
+There are products out there which support CMA but not TDISP.
+In other words, the CC world isn't everything.  The modest goal
+of this series is to allow authentication of devices in compliance
+with PCIe r7.0 sec 6.31 and the SPDM spec.  I understand there are
+features and authentication modes which are important for the
+Confidential Computing world, but CoCo needs to fit into the
+spec-defined mechanisms.
+
+Thanks,
+
+Lukas
