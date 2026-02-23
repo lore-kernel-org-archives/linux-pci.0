@@ -1,147 +1,113 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1217257843
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 00:52:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B1BE26D4C7
+	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 02:37:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771807975; cv=none; b=QmLfo3UDOS3VAvpdlAAaxOqWoNyusoJlSsuHvgv3tRAztcymvfX7+NzY3cxp1lujY2xpLXFBIgIJrKBvhVTJRPzCaujsg3rbwaQj3FYkpLTt/PutRKB6AR9dt8ZkYg8+8z0yJJoVOQlOneFXg8uL226LYEdigj0+q1LBxjkUf/s=
+	t=1771814275; cv=none; b=dqwne+T0WTNYj+EKV7KSnNiBGBh+y2ncEHoM/oieW/jyhLk8S5iRNd2MiGwPbosiWRiniMdGbLT6pVMuYIxTPBPZe0r0qNviAuEaFi0mn5oNB0WAVttObRf4hUz50uulIgsp3YLukW67d2Wq2InUtPtj15QyNZdLGPx6PR/fpyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771807975; c=relaxed/simple;
-	bh=v3O/hJRhtaAfIBGB6kmmYnPZnpbQ1I1GcL6Vp1dZWrE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sMb4dTUo8R30mq2Hk+WbM3n77eD0WlHFxcsav5NeBrZYOaub7/jooBXFqRkx7r8BpypW2WjNcgHEIzstWvTjB/osUTZ3qH6xqA/KRRkBkYuA1I2Rd4BfVdQ2oLlrs+cxi2Cq1mWD2jQ6aVTTPkbaU+1AEc+2Id6pu30bgvGfJYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kRqJTC7i; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1771814275; c=relaxed/simple;
+	bh=U1qqUSl+ekG80aAN0BL8qAKe1EwwuLWWeKmOeg3iaTI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kUnyr87FPGi/et4Bar6c3rpIWP2PNvbo2QvcBRL7hxdwEkjPEqd6HoU4cO1bO7x3KqYHKLEQtaRXJvgpKvkWR2V8zT5ZKtx47Ah9OuNTWpw6+b7gKOEMdhxp54zcVwDDRi3t0i3WCOMB/CFdKOzRSk6LKWd0xnpQVpTcZ7rQAGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RdoClBb/; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kRqJTC7i"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771807973; x=1803343973;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=v3O/hJRhtaAfIBGB6kmmYnPZnpbQ1I1GcL6Vp1dZWrE=;
-  b=kRqJTC7iXrE/YYDZCXeBo2rbN+M/x9GpF2Z5JM6vNxYZV50HecatDuDC
-   L+anv1DJzqNh8tpJmsbdmT0rAkG77/huV17ARaaJpKJwYJsier8hr6mlN
-   JxovYrYmxl5dCRl1P9nqAcLvBSKKCs+ZuXP3m0VUUuoJM3Vu5WnTJ0yuu
-   ylIUg1DDk4FsDPvurryJ755fvF+E0AnRpVaxmtX/hKPr2mA3w7xKWRDvS
-   G4qAO1xpLeNXxi7mf7DOitw1u99GaMdGFpHp+V+1/bg4SvYJFKKraXOY2
-   ECnWDyWS3JgmgVxqt2Dz1kz461TyjopeMmp7Rc3wrwm4umz5YIAq6l0H4
-   w==;
-X-CSE-ConnectionGUID: c2vbIeUPTLeCHp4Gz5hdhQ==
-X-CSE-MsgGUID: oSxFelteRoSu70YjKb5sbA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11709"; a="75410491"
-X-IronPort-AV: E=Sophos;i="6.21,305,1763452800"; 
-   d="scan'208";a="75410491"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2026 16:52:52 -0800
-X-CSE-ConnectionGUID: LDlkWnofToWijWfQSBvBGA==
-X-CSE-MsgGUID: V8Xq84WXR6yJFnoAkA+ScA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,305,1763452800"; 
-   d="scan'208";a="238365912"
-Received: from lkp-server01.sh.intel.com (HELO c63097897875) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 22 Feb 2026 16:52:51 -0800
-Received: from kbuild by c63097897875 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vuKBs-000000000Dx-3dpO;
-	Mon, 23 Feb 2026 00:52:48 +0000
-Date: Mon, 23 Feb 2026 08:52:05 +0800
-From: kernel test robot <lkp@intel.com>
-To: Simon Richter <Simon.Richter@hogyros.de>, linux-pci@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, intel-xe@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	Simon Richter <Simon.Richter@hogyros.de>
-Subject: Re: [PATCH v2 3/5] vgaarb: mark vga_get family as __must_check
-Message-ID: <202602230802.stvvFCIZ-lkp@intel.com>
-References: <20260218134633.461181-4-Simon.Richter@hogyros.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RdoClBb/"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4806bf39419so35191845e9.1
+        for <linux-pci@vger.kernel.org>; Sun, 22 Feb 2026 18:37:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771814272; x=1772419072; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Y4l6XEq4Cu+6mytZi6jUh4pUu7eeB+DRuzflxR/izUA=;
+        b=RdoClBb/OMWfGFJM7XkFF/caTESIOqOGSB1Q8Q5NYgivP9950wr42D30rTtpwdI2Yp
+         UUfb0vQP5UwWffd2DWRZnBuNN0n9qxxOB1oy0U1K5xvdFM3Za5L1sby94JpAnEy/3PbW
+         7vDRg5UrYE1FW+7ATxoSgX3Za4N1egi3a95XZoo1d9NEYHJEDLPXPLMLH6+0ssVJ/Np9
+         gDt4aaEnuLJr8sAruoZY1pHriEuAGZ3ua6ZIgVZy47II7KOgrmZyUOqQADWJTjsB/X4Z
+         84+pR1gtxRw8HWg6Rh4X/K2iSVHqLBq7DSwL5PdJaen+7zoPUg3sPT2ydZiC4rxFoy7l
+         7Yhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771814272; x=1772419072;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Y4l6XEq4Cu+6mytZi6jUh4pUu7eeB+DRuzflxR/izUA=;
+        b=QypvSSkegtHOecVIjW+9x8ir4kwDgneBkhvxPbsL/yuN1hAKA9SKDLWSEOeBv4tnf3
+         9E9gnc0AD+su5lKCRXQ/FYgS0T+2MzmXqRM/1YJuv52i9BcIwND11gdEc1fxFbfU5Xx6
+         NfsD4W0iDtxZ36eIxjkCb1FCshlv7MhR0Sr6rVzP4tQtVEX+vGRhIyOvKj0ndnF4J+MN
+         +24xxGCjUjpPar1BMKcsIuW62Q8ND9qCYPRV+4x2aw0IQYKScVwzN7GwwGMG6EyidK1i
+         ktjF+ss0HGyBGwW9z4TtvP3AlQxB8mEs1AP1kgSFIfiG99huULY6zEJWscXNqVF+lV9S
+         xkaw==
+X-Gm-Message-State: AOJu0YwNmaM6FVP10dPH7aUAviz20Mlpge2mqzOWla3/xeYOlzBrtUCr
+	58SMruq2C7uJjrqsz+T/N1/SH/usrj2FgydgYoxDZkGh7he/yD9oVqUX
+X-Gm-Gg: AZuq6aIZTBTd083BJj520BY9378JkJQNfs7eLOtk9I2nTQ5KE+5g1SGICrrLELUQVX/
+	hDqriEvshmAUFououvrQKna+HPS3VI2250/6F91tJcbWo4aEbPsZJAEwqBhMwuoCBJjwalZRZK4
+	bvXAmIky20s3YboabQAmNz8foxkec0igbXAWsdris6foopGlwcGLuGDNveYC1BeGzz5B9Pn5dfJ
+	kimCWLIsvsWmYzfO1UkfTS+gDREhtizI0dGrlr8dWC2HS0y3U5iyy2a4xE8iV4Wjmi04nQAs9De
+	vpMDKEzW3IO2UneMMfrR6e+EWiOx90dDVFMpgGT7fwrT6cSyOUFxqqyF0Z0qLlS12leLMUKSm6a
+	AvHySRcavUbPGn16gjbQSxtNRDHnhBY8OSiLkLrOqlJQkq3bYtRKYAOvubRGuFu1dwxoV2WyAL4
+	DNLIh50eYsXCzZOfjSGYupb5ctlu8V073pBdIRcNJfE0aXXLnK+6NP9CYmAjditHQ=
+X-Received: by 2002:a05:600c:214b:b0:47e:e051:79ee with SMTP id 5b1f17b1804b1-4839fe90522mr178048815e9.3.1771814272381;
+        Sun, 22 Feb 2026 18:37:52 -0800 (PST)
+Received: from LAPTOP-B9QI2C1K.localdomain ([31.205.125.101])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43970bf9f77sm17687341f8f.5.2026.02.22.18.37.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 22 Feb 2026 18:37:51 -0800 (PST)
+From: Majed Alkhaleefah <majedalkhaleefah@gmail.com>
+To: Scott Murray <scott@spiteful.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Majed Alkhaleefah <majedalkhaleefah@gmail.com>
+Subject: [PATCH] PCI: cpcihp: Check pci_hp_add_bridge() return value
+Date: Mon, 23 Feb 2026 02:36:46 +0000
+Message-ID: <20260223023645.344137-2-majedalkhaleefah@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260218134633.461181-4-Simon.Richter@hogyros.de>
 
-Hi Simon,
+Check the return value of pci_hp_add_bridge() in cpci_configure_slot(). If
+bridge initialization fails, log an error message using err().
 
-kernel test robot noticed the following build errors:
+Current functionality doesn't consider uninitialized bridges a failure.
+Changing this may introduce regressions. As such, intentionally avoid
+propagating the failure (e.g., returning -ENODEV).
 
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus drm-misc/drm-misc-next drm/drm-next linus/master v6.19 next-20260220]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+This patch addresses an item in the cpcihp TODO list.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Simon-Richter/vgaarb-pass-vga_get-errors-to-userspace/20260218-214939
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260218134633.461181-4-Simon.Richter%40hogyros.de
-patch subject: [PATCH v2 3/5] vgaarb: mark vga_get family as __must_check
-config: x86_64-randconfig-072-20250919 (https://download.01.org/0day-ci/archive/20260223/202602230802.stvvFCIZ-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260223/202602230802.stvvFCIZ-lkp@intel.com/reproduce)
+Compile-tested only.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202602230802.stvvFCIZ-lkp@intel.com/
+Signed-off-by: Majed Alkhaleefah <majedalkhaleefah@gmail.com>
+---
+ drivers/pci/hotplug/cpci_hotplug_pci.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-All errors (new ones prefixed by >>):
-
-   drivers/gpu/drm/i915/display/intel_vga.c: In function 'intel_vga_disable':
->> drivers/gpu/drm/i915/display/intel_vga.c:68:9: error: ignoring return value of 'vga_get_uninterruptible' declared with attribute 'warn_unused_result' [-Werror=unused-result]
-      68 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/gpu/drm/i915/display/intel_vga.c: In function 'intel_vga_reset_io_mem':
-   drivers/gpu/drm/i915/display/intel_vga.c:93:9: error: ignoring return value of 'vga_get_uninterruptible' declared with attribute 'warn_unused_result' [-Werror=unused-result]
-      93 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   cc1: all warnings being treated as errors
-
-
-vim +68 drivers/gpu/drm/i915/display/intel_vga.c
-
-0c80d60ae63461 Ville Syrjälä 2025-04-17  43  
-4fb8783165b7c6 Jani Nikula   2019-10-01  44  /* Disable the VGA plane that we never use */
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  45  void intel_vga_disable(struct intel_display *display)
-4fb8783165b7c6 Jani Nikula   2019-10-01  46  {
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  47  	struct pci_dev *pdev = to_pci_dev(display->drm->dev);
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  48  	i915_reg_t vga_reg = intel_vga_cntrl_reg(display);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  49  	enum pipe pipe;
-0c80d60ae63461 Ville Syrjälä 2025-04-17  50  	u32 tmp;
-4fb8783165b7c6 Jani Nikula   2019-10-01  51  	u8 sr1;
-4fb8783165b7c6 Jani Nikula   2019-10-01  52  
-0c80d60ae63461 Ville Syrjälä 2025-04-17  53  	tmp = intel_de_read(display, vga_reg);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  54  	if (tmp & VGA_DISP_DISABLE)
-a3af0140663dc3 Emil Velikov  2021-06-04  55  		return;
-a3af0140663dc3 Emil Velikov  2021-06-04  56  
-0c80d60ae63461 Ville Syrjälä 2025-04-17  57  	if (display->platform.cherryview)
-0c80d60ae63461 Ville Syrjälä 2025-04-17  58  		pipe = REG_FIELD_GET(VGA_PIPE_SEL_MASK_CHV, tmp);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  59  	else if (has_vga_pipe_sel(display))
-0c80d60ae63461 Ville Syrjälä 2025-04-17  60  		pipe = REG_FIELD_GET(VGA_PIPE_SEL_MASK, tmp);
-0c80d60ae63461 Ville Syrjälä 2025-04-17  61  	else
-0c80d60ae63461 Ville Syrjälä 2025-04-17  62  		pipe = PIPE_A;
-0c80d60ae63461 Ville Syrjälä 2025-04-17  63  
-0c80d60ae63461 Ville Syrjälä 2025-04-17  64  	drm_dbg_kms(display->drm, "Disabling VGA plane on pipe %c\n",
-0c80d60ae63461 Ville Syrjälä 2025-04-17  65  		    pipe_name(pipe));
-0c80d60ae63461 Ville Syrjälä 2025-04-17  66  
-4fb8783165b7c6 Jani Nikula   2019-10-01  67  	/* WaEnableVGAAccessThroughIOPort:ctg,elk,ilk,snb,ivb,vlv,hsw */
-4fb8783165b7c6 Jani Nikula   2019-10-01 @68  	vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
-f0bb41fad02e03 Jani Nikula   2022-02-02  69  	outb(0x01, VGA_SEQ_I);
-f0bb41fad02e03 Jani Nikula   2022-02-02  70  	sr1 = inb(VGA_SEQ_D);
-f0bb41fad02e03 Jani Nikula   2022-02-02  71  	outb(sr1 | VGA_SR01_SCREEN_OFF, VGA_SEQ_D);
-4fb8783165b7c6 Jani Nikula   2019-10-01  72  	vga_put(pdev, VGA_RSRC_LEGACY_IO);
-4fb8783165b7c6 Jani Nikula   2019-10-01  73  	udelay(300);
-4fb8783165b7c6 Jani Nikula   2019-10-01  74  
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  75  	intel_de_write(display, vga_reg, VGA_DISP_DISABLE);
-4b6e05c43b7542 Ville Syrjälä 2024-09-06  76  	intel_de_posting_read(display, vga_reg);
-4fb8783165b7c6 Jani Nikula   2019-10-01  77  }
-4fb8783165b7c6 Jani Nikula   2019-10-01  78  
-
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index 6c48066acb44..331c21833c44 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -269,8 +269,12 @@ int cpci_configure_slot(struct slot *slot)
+ 	parent = slot->dev->bus;
+ 
+ 	for_each_pci_bridge(dev, parent) {
+-		if (PCI_SLOT(dev->devfn) == PCI_SLOT(slot->devfn))
+-			pci_hp_add_bridge(dev);
++		if (PCI_SLOT(dev->devfn) == PCI_SLOT(slot->devfn)) {
++			if (pci_hp_add_bridge(dev) != 0) {
++				err("Failed to initialize bridge %s at slot %02x",
++				    pci_name(dev), slot->number);
++			}
++		}
+ 	}
+ 
+ 	pci_assign_unassigned_bridge_resources(parent->self);
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.43.0
+
