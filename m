@@ -1,84 +1,97 @@
-Received: from mail-m12810.netease.com (mail-m12810.netease.com [103.209.128.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A93B832ED58
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 17:15:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.209.128.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C3C4331235;
+	Mon, 23 Feb 2026 17:26:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771866942; cv=none; b=JcnhLnlG0K2v9j2QiDZlfI87Noei/saYYb89qX/4JGAmwMckl30KCUaqPe4Yx+CQpsYfsJ5UhB1rIapQngewMVnvYBcZrQ/7LGeR+8eNqf+3Toh2o5AKbbf97G2sAUg6lfpbozwDxc6YQEQFsfGiANvWymUDNtAftdKIavQPPRE=
+	t=1771867602; cv=none; b=Xc8XOE2o1iRXxGoZF7M7+90VJFFdTeGlxxFjFBwAglJdf9Ooh9yAOK0CHsLSidSNPCwD86prMfYsqNPf5nGeZpLHvjE3xIFYc7TiYOUKwqFEqYWOAom8Qk4c8xRHRTBp/jXyf+cDkWnHqAg9djJ7hseKwyyLE1nyE/a35PLlMPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771866942; c=relaxed/simple;
-	bh=M9dfM7kM0B2QF8u0K8XsEcdcBR/TFNQvo9bdDteonbY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=oUEqRiZ5InJiu8eTjZEtSqA7eNN7FEDzwNOj/JHP0ZSYfhAM/b2Ck27GodlOmRiiK78giQELyQ6HLRuzhIQFBBGRP+CG97nUzwpTDQKfdpKSuNYxQTDnUcx9n/eW/+96y+qS4N4JJYXq6I3Mgwto5UVQmXM4Q+Jv45bd4XlTGhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=FOJn001k; arc=none smtp.client-ip=103.209.128.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1771867602; c=relaxed/simple;
+	bh=Uvz67bHig6UnP5k/OJHaj1rc/mxmm8La2NYZIr2bPfs=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=s/2rJw+Xq2G+h02ALeMQW6U7eIvcFkzunxByRuen/w/ltv+fUtkkHCe6GTkTM67RZYvVczh0CoXXJ4Kr0miLeD/g3UugtK3Jw/SfigGujI28YrTQPFQEVFqkLskUleL5YpYrahIFfLCvDCdjuM8Dz9LoAldVWNj/fvES1spy+w4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AbCoF66A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="FOJn001k"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 34b404682;
-	Tue, 24 Feb 2026 00:00:02 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: vaibhaavram.tl@microchip.com,
-	Kumaravel Thiagarajan <kumaravel.thiagarajan@microchip.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philipp Stanner <phasta@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 36/37] misc: microchip: pci1xxxx: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
-Date: Mon, 23 Feb 2026 23:59:59 +0800
-Message-Id: <1771862399-91250-1-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9c8b3aa45209cckunma21ec8c19882f3
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGhlMS1ZDSh9OSU5DHUJPSk5WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=FOJn001kgrsdwpdu3/hjw4o6lYwngSiWZib1MK05D/qrTXpnlR1OBTVqvSwYwQOtHzsdGceeDxpuD3rnaVvUF9Xvs7DR5AmIOJIlBQmroxxPDwMgESZDxs52bqwiIFHXSM8yHzRicSvjWgi5Wjhwvlkts5Q10Jkhz/82mKZaF0c=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=ZgDE1wFTFiECq/zQqzXr8g+8KwWlhlhXp5fG1CepAfA=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AbCoF66A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05643C116C6;
+	Mon, 23 Feb 2026 17:26:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771867602;
+	bh=Uvz67bHig6UnP5k/OJHaj1rc/mxmm8La2NYZIr2bPfs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=AbCoF66AzKxSBrVHsNJK9wNWGoOf+brMtC34hE6Ot1wMdn2UhUt3wPIJRMA0DMapC
+	 ipVazdR0iswNuKYAw+HVcN8gEFgxqxRqc91xN7IimzWUdYzvdVNg0CN5Tj6+gCwGTd
+	 s1BsdTl38p67woi/eSQ9ujo0+v6XBfhh1ki9XrUIkO5VY+s7U0dGy2t6lDShsE/pho
+	 T1HYX6G9IHDrmSQfb4uux+bTVI/yuhet62EG81VnOhqZasSLlBkUDBineRj2Xm5oX3
+	 4hQ2EJGmS/XrQiLYY3pYjA4giT+g3DxVwpVSyWgRPusI79qJRzQTJytkpfqq4Vuc/P
+	 /iiz4ebq9eGpg==
+Date: Mon, 23 Feb 2026 11:26:40 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Majed Alkhaleefah <majedalkhaleefah@gmail.com>
+Cc: Scott Murray <scott@spiteful.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: cpcihp: Check pci_hp_add_bridge() return value
+Message-ID: <20260223172640.GA3697753@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260223023645.344137-2-majedalkhaleefah@gmail.com>
 
-pcim_enable_device() no longer automatically manages IRQ vectors via devres.
-Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
-pcim_alloc_irq_vectors() should be used.
+On Mon, Feb 23, 2026 at 02:36:46AM +0000, Majed Alkhaleefah wrote:
+> Check the return value of pci_hp_add_bridge() in cpci_configure_slot(). If
+> bridge initialization fails, log an error message using err().
+> 
+> Current functionality doesn't consider uninitialized bridges a failure.
+> Changing this may introduce regressions. As such, intentionally avoid
+> propagating the failure (e.g., returning -ENODEV).
+> 
+> This patch addresses an item in the cpcihp TODO list.
 
-To: vaibhaavram.tl@microchip.com
-To: Kumaravel Thiagarajan <kumaravel.thiagarajan@microchip.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Philipp Stanner <phasta@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+This sentence could just be dropped and the item removed from the list
+in the same patch.
 
- drivers/misc/mchp_pci1xxxx/mchp_pci1xxxx_gp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Compile-tested only.
+> 
+> Signed-off-by: Majed Alkhaleefah <majedalkhaleefah@gmail.com>
+> ---
+>  drivers/pci/hotplug/cpci_hotplug_pci.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+> index 6c48066acb44..331c21833c44 100644
+> --- a/drivers/pci/hotplug/cpci_hotplug_pci.c
+> +++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+> @@ -269,8 +269,12 @@ int cpci_configure_slot(struct slot *slot)
+>  	parent = slot->dev->bus;
+>  
+>  	for_each_pci_bridge(dev, parent) {
+> -		if (PCI_SLOT(dev->devfn) == PCI_SLOT(slot->devfn))
+> -			pci_hp_add_bridge(dev);
+> +		if (PCI_SLOT(dev->devfn) == PCI_SLOT(slot->devfn)) {
+> +			if (pci_hp_add_bridge(dev) != 0) {
+> +				err("Failed to initialize bridge %s at slot %02x",
+> +				    pci_name(dev), slot->number);
 
-diff --git a/drivers/misc/mchp_pci1xxxx/mchp_pci1xxxx_gp.c b/drivers/misc/mchp_pci1xxxx/mchp_pci1xxxx_gp.c
-index 34c9be4..ef8446f 100644
---- a/drivers/misc/mchp_pci1xxxx/mchp_pci1xxxx_gp.c
-+++ b/drivers/misc/mchp_pci1xxxx/mchp_pci1xxxx_gp.c
-@@ -86,7 +86,7 @@ static int gp_aux_bus_probe(struct pci_dev *pdev, const struct pci_device_id *id
- 	aux_bus->aux_device_wrapper[1]->gp_aux_data.region_start = pci_resource_start(pdev, 0);
- 	aux_bus->aux_device_wrapper[1]->gp_aux_data.region_length = pci_resource_end(pdev, 0);
- 
--	retval = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
-+	retval = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
- 
- 	if (retval < 0)
- 		goto err_aux_dev_init_1;
--- 
-2.7.4
+There are five callers of pci_hp_add_bridge(), and none of them checks
+the return value, so I'm not sure it's worth just changing this one.
 
+I suspect something in the pci_hp_add_bridge() path would already log
+a message in the event of a failure.  If that's the case, I doubt it's
+worth adding another message here (and maybe pci_hp_add_bridge()
+should just be made a void function).  If we *do* need a message here,
+I would want to update all the callers similarly.
+
+> +			}
+> +		}
+>  	}
+>  
+>  	pci_assign_unassigned_bridge_resources(parent->self);
+> -- 
+> 2.43.0
+> 
