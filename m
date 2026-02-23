@@ -1,91 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m8255.xmail.ntesmail.com (mail-m8255.xmail.ntesmail.com [156.224.82.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C1A526E6E1;
-	Mon, 23 Feb 2026 18:12:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760AB31A7F6;
+	Mon, 23 Feb 2026 18:33:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.224.82.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771870374; cv=none; b=THnpBfVPnESoKsXo1dH6dccZVjY4jjJ4R9Kay6jVwcOZTzakzSvDjtF2ZRicRCM+i1lJ5xHuClkp7UkXo8ulp+83CEZfKzvUXjdA50KZGmv+PC8BNDqP+sEI1PI/pUoRySltRfQqqtqSwsKIfrgYWFDschZ8EpCawXJiFXFpLwE=
+	t=1771871604; cv=none; b=o8biD3TmSwOV3VoTpNbOj9rAPpAbI2jcek7FF5Ulxsbbi3SrGAlckeN+Y+uPvGPlSDCDNcFJRwWtKEqCh4h5/887fFKtgtnFca87cULsUb5/v6T51p67g+QwfNWbcvuBi1idrHK9b55dARji/cYenJ5MQMbbemf9fBM4P5lcyQE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771870374; c=relaxed/simple;
-	bh=mAfMACn7cA0xwRCSeRbxVKVfjuZLUNZIAjgI633b7C0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=FmPiBbsRh/sRKcUKcQodw5Q6gUSTaIBre7KwBULx1551kAcQTbF/cHtBHfBOKPQjqJ7vRYkP0+NxUl4vLnIw/eccmbWkcLmnNMGh753tqjhrZr/Yu2e51qyjaNihvlBny+q5rp0DKMWR7WMOBppy+GFm39jaIRWx5ywhykcUh/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4RNga8v; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771871604; c=relaxed/simple;
+	bh=5uEGHGgIhfEXC3hAJ6HJNKX2hEnyoWEhmBZoOQ+H6Bw=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=Aao5NmpGgKOcEmPovFaHpu1XlGHyma4yuzVv5dRkqyu4aB1FGkGyc2rdsDEI0a22yGmi8Jx1cMgapRn5U+c9ZNTg+h7y7FjsnyUig+l9/eLV6XxNwjRtVi5bm5nG3VPBsNBIgxi4y9BbwRR/71Xc6LAi651GZK9C9lLd+av1hto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=SZ5I+XzO; arc=none smtp.client-ip=156.224.82.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4RNga8v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E48C5C116C6;
-	Mon, 23 Feb 2026 18:12:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771870374;
-	bh=mAfMACn7cA0xwRCSeRbxVKVfjuZLUNZIAjgI633b7C0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=D4RNga8vvgBBNuDtJryd47Zs1Sz8vw3i06nSUtAiXhD10Wl91pqO3AqzY/o0IOdFL
-	 YBQ+jG9Lrf8arOcrBeQ8g0do3xapT8KRwsCcd5sYxcR7luO2BfP6kZ2MLPEh0tkox9
-	 MGO9f6nPils2W9RmFVXNgd/R4Y6zVUqOntp+wCI7lzR0xNKKTY7ANJa0bfhPTP5hrX
-	 wNBDGcEvRDys6zkIz4ttCem+oDIrpTFGNfNj06xvPueYnFhWiyfss2tosJ+PDW6Rpe
-	 93Jv4e3Y/260WbZE+apjYoK24Y6meKO9TcKRRx+UyOny0X+FxSqfCO5YE8Nx1UcLU7
-	 4WrAV6R2coK8g==
-Date: Mon, 23 Feb 2026 12:12:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org,
-	jingoohan1@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	robh@kernel.org, bhelgaas@google.com,
-	yoshihiro.shimoda.uh@renesas.com, fancer.lancer@gmail.com,
-	Zhiqiang.Hou@nxp.com, gustavo.pimentel@synopsys.com,
-	cassel@kernel.org, linux-kernel@vger.kernel.org, s-vadapalli@ti.com,
-	danishanwar@ti.com
-Subject: Re: [PATCH 2/2] PCI: dwc: ep: Mirror the max link width and speed
- fields to all functions
-Message-ID: <20260223181252.GA3700622@bhelgaas>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="SZ5I+XzO"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34b1f7ddc;
+	Mon, 23 Feb 2026 21:57:13 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH v2 3/3] PCI: qcom: Program T_POWER_ON
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+References: <20260223-t_power_on_fux-v2-0-20c921262709@oss.qualcomm.com>
+ <20260223-t_power_on_fux-v2-3-20c921262709@oss.qualcomm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <85631e65-6328-3154-67a9-cc1b5ae8183e@rock-chips.com>
+Date: Mon, 23 Feb 2026 21:57:11 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <kr3yh3unbsynddcgzhl2zpxmna7hbc4dxgbqo3bmlwsn5twlyr@7gxzh4rqjubg>
+In-Reply-To: <20260223-t_power_on_fux-v2-3-20c921262709@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9c8aca34c709cckunmdf98552e97fbc8
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQklNTFYfSRpPSEoYTkMZSktWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpKQk
+	xVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=SZ5I+XzOQiw25JRycw+G43RuMAQ+1RWtoG65LcESRkLjG/PiXXyNRkNqAkDLopv7NJ7MPHO2P6BYHeFCpKvbhyOrR5HkGqLkP2QYZvjUNXTpddVtZ+bqg+/cCuNc+uFojH2UZVyL6Kic1E5w1zXOJ24MICpjxRZLClntG1exJ34=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=w0R6TmAzkowlIBvQ5OXp4sHjKGLma/nnPd9O00qSoS8=;
+	h=date:mime-version:subject:message-id:from;
 
-On Wed, Feb 18, 2026 at 07:08:20PM +0530, Manivannan Sadhasivam wrote:
-> On Mon, Feb 02, 2026 at 12:57:58PM +0530, Aksh Garg wrote:
-> > PCIe r6.0, section 7.5.3.6 states that for multi-function devices, the
-> > Max Link Width and Max Link Speed fields in the Link Capabilities
-> > Register must report the same values for all functions.
-> ...
+Hi Krishna,
 
-> > @@ -1102,6 +1103,27 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
-> >  		dw_pcie_ep_init_rebar_registers(ep, func_no);
-> >  
-> >  	dw_pcie_setup(pci);
-> > +
-> > +	/*
-> > +	 * PCIe r6.0, section 7.5.3.6 states that for multi-function endpoints,
-> > +	 * max link width and speed fields must report same values for all functions.
-> > +	 * However, dw_pcie_setup() programs these fields only for physical function 0.
-> > +	 * Hence, mirror these fields to all other physical functions as well.
-> > +	 */
-> > +	if (funcs > 1) {
-> > +		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> > +		ref_lnkcap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
-> > +		ref_lnkcap &= PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS;
+在 2026/02/23 星期一 19:13, Krishna Chaitanya Chundru 写道:
+> Some platforms have incorrect T_POWER_ON value programmed in hardware.
+> Generally these will be corrected by bootloaders, but not all targets
+> support bootloaders to program correct values due to that
+> LTR_L1.2_THRESHOLD value calculated by aspm driver can be wrong, which
+> can result in improper L1.2 exit behavior and can trigger AER's.
 > 
-> Use FIELD_* macros please.
+> Parse "t-power-on-us" property from each root port node and program them
+> as part of host initialization using dw_pcie_program_t_power_on() before
+> link training.
 > 
-> > +
-> > +		for (func_no = 1; func_no < funcs; func_no++) {
-> > +			offset = dw_pcie_ep_find_capability(ep, func_no, PCI_CAP_ID_EXP);
-> > +			lnkcap = dw_pcie_ep_readl_dbi(ep, func_no, offset + PCI_EXP_LNKCAP);
-> > +			lnkcap &= ~(PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS);
-> > +			lnkcap |= ref_lnkcap;
+> This property in added to the dtschema here[1].
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> Link[1]: https://lore.kernel.org/all/20260205093346.667898-1-krishna.chundru@oss.qualcomm.com/
+> ---
+>   drivers/pci/controller/dwc/pcie-qcom.c | 15 +++++++++++++++
+>   1 file changed, 15 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 67a16af69ddc75fca1b123e70715e692a91a9135..489ed64c1df0fa3ed9f6b0d4c3e0bb65cfc3308e 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -269,6 +269,7 @@ struct qcom_pcie_perst {
+>   struct qcom_pcie_port {
+>   	struct list_head list;
+>   	struct phy *phy;
+> +	u32 t_power_on;
+>   	struct list_head perst;
+>   };
+>   
+> @@ -1283,6 +1284,16 @@ static int qcom_pcie_phy_power_on(struct qcom_pcie *pcie)
+>   	return 0;
+>   }
+>   
+> +static int qcom_pcie_configure_ports(struct qcom_pcie *pcie)
+> +{
+> +	struct qcom_pcie_port *port;
+> +
+> +	list_for_each_entry(port, &pcie->ports, list)
+> +		dw_pcie_program_t_power_on(pcie->pci, port->t_power_on);
+> +
+> +	return 0;
+> +}
+> +
+>   static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+>   {
+>   	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> @@ -1317,6 +1328,8 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+>   	dw_pcie_remove_capability(pcie->pci, PCI_CAP_ID_MSIX);
+>   	dw_pcie_remove_ext_capability(pcie->pci, PCI_EXT_CAP_ID_DPC);
+>   
+> +	qcom_pcie_configure_ports(pcie);
+> +
+>   	qcom_pcie_perst_deassert(pcie);
+>   
+>   	if (pcie->cfg->ops->config_sid) {
+> @@ -1759,6 +1772,8 @@ static int qcom_pcie_parse_port(struct qcom_pcie *pcie, struct device_node *node
+>   	if (ret)
+>   		return ret;
+>   
+> +	of_property_read_u32(node, "t-power-on-us", &port->t_power_on);
 
-I think this can also use FIELD_MODIFY().
+Your patch 2 adds a common helper in pcie-designware, but why not add
+this parse as well as what the qcom_pcie_configure_ports() does, into to
+the pcie-designware core, etc dw_pcie_host_init()/dw_pcie_ep_init()?
+Because I don't see anything qcom specific here.
 
-> > +			dw_pcie_ep_writel_dbi(ep, func_no, offset + PCI_EXP_LNKCAP, lnkcap);
-> > +		}
-> > +	}
-> > +
-> >  	dw_pcie_dbi_ro_wr_dis(pci);
-> >  }
+
+> +
+>   	port->phy = phy;
+>   	INIT_LIST_HEAD(&port->list);
+>   	list_add_tail(&port->list, &pcie->ports);
+> 
