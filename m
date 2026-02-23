@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A67392C027C;
-	Mon, 23 Feb 2026 15:29:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88B0285C88;
+	Mon, 23 Feb 2026 15:38:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771860543; cv=none; b=gni7aHpxH5fogr4QFkMwELXBd18/RLyy1b2LnnA1akbTPT9fCUDu7wO5AEdCP5R0g0Q0HBsBC4EJ489ZScdSp+YY+AKp+az0nQDAoCwguX58FUN4I6Eke/420cnZeR6xcmI3VjCRA9HvkM554O/rN9O+eesT0azPOGx5l9eAhyc=
+	t=1771861137; cv=none; b=GirTKBuqUGtziPmDGvxclEuyLy7b9kGD95ur23KB0yLmw2Iyud4akACOjrADTDbHFLjisR6fGpik7PPNjXIqjX01lknPDqUqa8KLS2RJYUvLbMVYgwGw/AhOQivlQMqBRyn4oqtLfYUHtKofZOjsPjPH7Oqs2qXGs6kMxnsulcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771860543; c=relaxed/simple;
-	bh=I3iet3x99uxDCI36yFxWvwNJLu73fsxRnYcMhsEpYJM=;
+	s=arc-20240116; t=1771861137; c=relaxed/simple;
+	bh=a91x6ZjyFVgYhiuh7Il+46iAHGDPqn7LDIlyqFnTu5k=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=s82lE2HfGUc0VnYauI9dXTFzpMw6jvxqrLi1OcGPjq0Y/0WCroV1H2aajvpJp9KXP+wgw1+o0WpqG5Lu3WzGErzJqUnTkKLnGzo89icHkHiiiiwWQsj2z2URoiJDevkbBz10hvsVp6DIaymOqjskHf9X5NUrrHVZhiEzdTik8+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t+6MAdil; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=BmQ7bJ/JuxMcL+OAsl0D25sV3eHHDhKe1vAgvjavYez8OEfGuwI6Rm+aJxg5p3U115lqCo6LUhkbvHsTrB7zU0JwZ/3+BHnYWWW3FDeR6hT1SMaNJwvRpcFwwkQksNuSObQbxZVgxSjpHkreMHbYFa39ZFy0+WOvqMlHUleS/MU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=svfrjplP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t+6MAdil"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D907C19424;
-	Mon, 23 Feb 2026 15:29:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="svfrjplP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5716FC116D0;
+	Mon, 23 Feb 2026 15:38:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771860543;
-	bh=I3iet3x99uxDCI36yFxWvwNJLu73fsxRnYcMhsEpYJM=;
+	s=k20201202; t=1771861137;
+	bh=a91x6ZjyFVgYhiuh7Il+46iAHGDPqn7LDIlyqFnTu5k=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=t+6MAdilOqzVrZjqbFVM86h+VPcrYbuB9lU3ebrEoYlYZxVwHiCkffCX6P4SMOYx1
-	 DbDdiYkN2jYygHIvqg1updb9MZtG31bmJMmpv58iniLpBQx6kbC6qkQFqw6Rs3E8nO
-	 vnH+BwC3SrXKdqTKGQL8JNPfFE3J5C780pbWOvwAdt44RlXl6M0c16dy9WHb6btKiy
-	 M1Jfj3TaDIBYw4QnfuxRvBvY359Op7vmPH5WzuJ3Pj6F8bLeZylZRz2QI4v9HbhEAn
-	 a0Sxn3ek/l6sc+WotOo8nZ007mfXVrTZT5ou7LrlVbDmsabgllfs2LJZLDuwY/ma+5
-	 FPnktH01oyczQ==
-Date: Mon, 23 Feb 2026 09:29:01 -0600
+	b=svfrjplPzw4A3l5INpYv4WC3llJq3EA60Vw5jgFk5X3FlJ0MpNOm2yUTf1jhe3xqH
+	 ZZ27tio3TdQS80zkmxsvMFTiN2UC6yawBWdYrXvfM9rHPZQV1Sqac+gwlb8fQzs3J7
+	 uh/ldIyq760LZH/kC+7nv8OdaXB8MNSiC/BWObgasnDMfRwdFQ3S86MjPWRcaqgnlu
+	 gQZI6JChPhhkRhkW6Y/x7DZnZGmklsIAfXfqevVrw+vd/MwuYHRjwXDauaz/MXG3h2
+	 kzO0EKp57slNQlwM3qXctibSJbP8Q5JK4nphZ2dcM+NJPWd4SIiBJTFdh3Jmp+1XZ7
+	 rr/RmiA7kqoYQ==
+Date: Mon, 23 Feb 2026 09:38:56 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
@@ -36,116 +36,101 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
 	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
 	mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com
-Subject: Re: [PATCH v2 1/3] PCI/ASPM: Add helper to encode L1SS T_POWER_ON
- fields
-Message-ID: <20260223152901.GA3694918@bhelgaas>
+Subject: Re: [PATCH v2 2/3] PCI: dwc: Add helper to Program T_POWER_ON
+Message-ID: <20260223153856.GA3695024@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260223-t_power_on_fux-v2-1-20c921262709@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260223-t_power_on_fux-v2-2-20c921262709@oss.qualcomm.com>
 
-On Mon, Feb 23, 2026 at 04:43:30PM +0530, Krishna Chaitanya Chundru wrote:
-> Add a shared helper to encode the PCIe L1 PM Substates T_POWER_ON
-> parameter into the T_POWER_ON_Scale and T_POWER_ON_Value fields.
+
+  PCI: dwc: Add dw_pcie_program_t_power_on() helper for L1SS T_POWER_ON
+
+On Mon, Feb 23, 2026 at 04:43:31PM +0530, Krishna Chaitanya Chundru wrote:
+> The T_POWER_ON indicates the time (in μs) that a Port requires the port
+> on the opposite side of Link to wait in L1.2.Exit after sampling CLKREQ#
+> asserted before actively driving the interface. This value is used by
+> the ASPM driver to compute the LTR_L1.2_THRESHOLD.
 > 
-> This helper can be used by the controller drivers to change the
-> default/wrong value of T_POWER_ON in L1ss capability register to
-> avoid incorrect calculation of LTR_L1.2_THRESHOLD value.
-> 
-> The helper converts a T_POWER_ON time specified in microseconds into
-> the appropriate scale/value encoding defined by the PCIe spec r7.0,
-> sec 7.8.3.2. Values that exceed the maximum encodable range are clamped
-> to the largest representable encoding.
-> 
+> Currently, some controllers exposes T_POWER_ON value of zero in the L1SS
+> capability registers, leading to incorrect LTR_L1.2_THRESHOLD calculations,
+> which  can result in improper L1.2 exit behavior and can trigger AER's.
+
+s/some controllers exposes/some controllers expose/
+
+> Add a helper to override T_POWER_ON value by the DWC controller drivers.
+
+s/a helper/dw_pcie_program_t_power_on()/
+
 > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 > ---
->  drivers/pci/pcie/aspm.c | 43 +++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h     |  2 ++
->  2 files changed, 45 insertions(+)
+>  drivers/pci/controller/dwc/pcie-designware.c | 27 +++++++++++++++++++++++++++
+>  drivers/pci/controller/dwc/pcie-designware.h |  1 +
+>  2 files changed, 28 insertions(+)
 > 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 21f5d23e0b61bd7e1163cc869fe9356d1ab87b34..d7f9ae9e48c25dbc2d9b4887e2f74623688098e0 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -525,6 +525,49 @@ static u32 calc_l12_pwron(struct pci_dev *pdev, u32 scale, u32 val)
->  	return 0;
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 5741c09dde7f40487c6da6dfd66f7c8d96a74259..f56e2c07ddc57bd84882c14bebc7d4b4961f601a 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -1249,6 +1249,33 @@ void dw_pcie_hide_unsupported_l1ss(struct dw_pcie *pci)
+>  	dw_pcie_writel_dbi(pci, l1ss + PCI_L1SS_CAP, l1ss_cap);
 >  }
 >  
-> +/**
-> + * pcie_encode_t_power_on - Encode T_POWER_ON into scale and value fields
-> + * @t_power_on_us: T_POWER_ON time in microseconds
-> + * @scale: Encoded T_POWER_ON_Scale (0..2)
-> + * @value: Encoded T_POWER_ON_Value
-> + *
-> + * T_POWER_ON is encoded as:
-> + *   T_POWER_ON(us) = scale_unit(us) * value
-> + *
-> + * where scale_unit is selected by @scale:
-> + *   0: 2us
-> + *   1: 10us
-> + *   2: 100us
-> + *
-> + * If @t_power_on_us exceeds the maximum representable value, the result
-> + * is clamped to the largest encodable T_POWER_ON.
-> + *
-> + * See PCIe r7.0, sec 7.8.3.2.
-> + */
-> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+> +/* TODO: Need to handle multi root ports */
+> +void dw_pcie_program_t_power_on(struct dw_pcie *pci, u16 t_power_on)
 > +{
-> +	u8 maxv = FIELD_MAX(PCI_L1SS_CTL2_T_PWR_ON_VALUE);
+> +	u8 scale, value;
+> +	u16 offset;
+> +	u32 val;
 > +
-> +	/*
-> +	 * T_POWER_ON_Value ("value") is a 5-bit field with max
-> +	 * value of 31.
-> +	 */
-> +	if (t_power_on_us <= 2 * maxv) {
-> +		*scale = 0; /* Value times 2us */
-> +		*value = DIV_ROUND_UP(t_power_on_us, 2);
-> +	} else if (t_power_on_us <= 10 * maxv) {
-> +		*scale = 1; /* Value times 10us */
-> +		*value = DIV_ROUND_UP(t_power_on_us, 10);
-> +	} else if (t_power_on_us <= 100 * maxv) {
-> +		*scale = 2; /* value times 100us */
-> +		*value = DIV_ROUND_UP(t_power_on_us, 100);
-> +	} else {
-> +		*scale = 2;
-> +		*value = maxv;
+> +	if (!t_power_on)
+> +		return;
+> +
+> +	offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_L1SS);
+> +	if (offset) {
+
+  if (!offset)
+    return;
+
+> +		pcie_encode_t_power_on(t_power_on, &scale, &value);
+> +
+> +		dw_pcie_dbi_ro_wr_en(pci);
+> +
+> +		val = readl(pci->dbi_base + offset + PCI_L1SS_CAP);
+> +		val &= ~(PCI_L1SS_CAP_P_PWR_ON_SCALE | PCI_L1SS_CAP_P_PWR_ON_VALUE);
+> +		val |= FIELD_PREP(PCI_L1SS_CAP_P_PWR_ON_SCALE, scale);
+> +		val |= FIELD_PREP(PCI_L1SS_CAP_P_PWR_ON_VALUE, value);
+
+  FIELD_MODIFY(PCI_L1SS_CAP_P_PWR_ON_SCALE, &reg, scale);
+  FIELD_MODIFY(PCI_L1SS_CAP_P_PWR_ON_VALUE, &reg, value);
+
+> +		writel(val, pci->dbi_base + offset + PCI_L1SS_CAP);
+> +
+> +		dw_pcie_dbi_ro_wr_dis(pci);
 > +	}
 > +}
-> +EXPORT_SYMBOL(pcie_encode_t_power_on);
 > +
->  /*
->   * Encode an LTR_L1.2_THRESHOLD value for the L1 PM Substates Control 1
->   * register.  Ports enter L1.2 when the most recent LTR value is greater
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1c270f1d512301de4d462fe7e5097c32af5c6f8d..eec16fdcb9996ab0f663f4587a2367a676a49ce6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1911,6 +1911,7 @@ int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
->  void pcie_no_aspm(void);
->  bool pcie_aspm_support_enabled(void);
->  bool pcie_aspm_enabled(struct pci_dev *pdev);
-> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value);
-
-This looks like it should go in drivers/pci/pci.h.  I don't think it's
-needed outside drivers/pci/.
-
->  #else
->  static inline int pci_disable_link_state(struct pci_dev *pdev, int state)
->  { return 0; }
-> @@ -1923,6 +1924,7 @@ static inline int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
->  static inline void pcie_no_aspm(void) { }
->  static inline bool pcie_aspm_support_enabled(void) { return false; }
->  static inline bool pcie_aspm_enabled(struct pci_dev *pdev) { return false; }
-> +static inline void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value) { }
->  #endif
->  
->  #ifdef CONFIG_HOTPLUG_PCI
+>  void dw_pcie_setup(struct dw_pcie *pci)
+>  {
+>  	u32 val;
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index ae6389dd9caa5c27690f998d58729130ea863984..da67beece3f11e33d9a1937fa23d443feea3bbc7 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -602,6 +602,7 @@ int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+>  				u8 bar, size_t size);
+>  void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index);
+>  void dw_pcie_hide_unsupported_l1ss(struct dw_pcie *pci);
+> +void dw_pcie_program_t_power_on(struct dw_pcie *pci, u16 t_power_on);
+>  void dw_pcie_setup(struct dw_pcie *pci);
+>  void dw_pcie_iatu_detect(struct dw_pcie *pci);
+>  int dw_pcie_edma_detect(struct dw_pcie *pci);
 > 
 > -- 
 > 2.34.1
