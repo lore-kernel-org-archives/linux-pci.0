@@ -1,68 +1,81 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010000.outbound.protection.outlook.com [52.101.85.0])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012010.outbound.protection.outlook.com [52.101.43.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4C983EBF3C
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 04:18:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 916D32BB17;
+	Mon, 23 Feb 2026 04:47:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.10
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771820282; cv=fail; b=AUyj3v3QlaXuP2CAxC1wU3BrwFvo6oyopj5R3pABRpBtEkaupdn3QVyLrlU1BqSMkulgIRj5MyXtblcgdbPmj+NriRHkVCThx2P1ZKWwyP2mfylapNMEjb6iuPj5ILh+fpoOW4RsU9pGSKbzEX/pDnOi2Gp/VEx3T6NbK6tjLsE=
+	t=1771822038; cv=fail; b=Qbc4ReQYi9Jwl1MrsY0LkZn8dbrziLtd8fd7p0mhBIfrYeoK1tvgTUme/79kGj9BdcovXH1N0teaQNBBodzhIleucEWOHUX13K2tM5RM+tlCbRm44LFTm4ff5YFDm0zzNWS/keRFubKgZWTRIKaPKOF497cBA65xAV1BXM2clKU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771820282; c=relaxed/simple;
-	bh=+MB7DEVdIiKg2c8lmWk7Lr8XayGs8v5BzxqJFA9TB+c=;
+	s=arc-20240116; t=1771822038; c=relaxed/simple;
+	bh=A9Sljt0mb4wtL3EZKqRAirQG8Ot+kWInSMXLeavq/Dg=;
 	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=a00hrfPyPIDtWEtveJVE05eIumFJ7f1WDhgl4kyahf2QwTMh8+cMY/JlE7Thq+EqThwzaCCH1M2YCVyoJMzMEA+RZFYBhlzs7RmvS7NRTB6TQASzZlYmSgiW64lHLuUJhhS5jNeuwB37uZBhN1yQb6hF1v3x46HAXrEuNOyDg8o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Leu1vLqM; arc=fail smtp.client-ip=52.101.85.0
+	 Content-Type:MIME-Version; b=nbRZwPn3HzV3GX89kYbWwmVhpgVQRxTIrQngubtlguDc0SPnsWUO7U22u7fBQXTokoVfEF+VkyqwQLgPXlpK2m8Bps5HAAa+fck2hPXk9bLKML55Qgpr5kus/uF2aBnwgcNirTbR8rBdmjaSJWbmGQX2vM4ks54Bx5HlpHCNdaA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=MFh2b2kx; arc=fail smtp.client-ip=52.101.43.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Leu1vLqM"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="MFh2b2kx"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZVFrK+Y6pDfbxiYlaXdWbLR4uadfBY3wZIalCYOXCC6K4xomPKUgDo0y8aksugHQCkT/HAcuOMnQWbDwpRVAGwHZnqP1EQNzEsFEDHxSGwCUn5AVCcK9ijs1BFBGvh7hObZ9TFrOp89VfIcxRl+cngEtA/+/kI9HjARkCscsodNGDq11rnAhVrcLCKJ1hcB9S7fohqnTQ+1ad6SP4Hd1PPxNibAyULhbL88QX4sM74rwc34QSgFDbkb8RUrbHtpLm9mDfNIrWTOKf9gAzZ4A0RGxrvbwLfx/2pIIslJKoigZRdR886P7w/ss1Tq+tlx37Afe3ge4Jc1pyLLnVbT/BQ==
+ b=g3ROuSl9QISza8m+jRriwDZCBClPX9/HbQYC9k3Y6Ri0NjywZYh7a/B41z57K0SOj8ShJBhZ3W6Ra93U7wl/LMH+6XV7cfg3kaaRW2f799gOlw1PSqcUS6AhlS1/eBALnI65Rk/aaYyf7LC/+HICy2jBJJGK59Q73bOLuDhmshwWOYlFzL1b2AaYYAM6niUfuD8ugkmDfM/9Bf3OF/xoi3GvW/1o0r4XWrc9ZSoX3B+NDMPU7cA46RsiySIPUwewrNwQ+7QwetD196sJg5D7yJWg+YVTxBc7cPfHRj7b1WkLS8ceqovmTfXDCDcpPF9pNFB0cLhqpOvkPg+NKZDrJw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=sp2PGc0FARDbUDisV4MNZ8bVS5djrtgPkqMdRvjaZpY=;
- b=gDoej7g+AZXxSPtEEYH3e7YDRnMT6Q8uziVZ16bR/JQhAZkNljhgR8kHgPaaGHlNzhBnWHiAbNlqEMOH+mh08SCpiDgnXAyQl2gdXzplFFA6nkkEXNVd2mLHbPN27iuSUfTImHQhIqFJuDB6Gz90S+4C2cyyGB3FF+g5MM599A2hh61HZSFNjTn686baLo3/TfsvkrTaONcZPz4VzlQE6f8MnHqO7JWoAgwfLhuVx5sJHiN4Dy7oijy4g9JMMcuEtRgOeYdTg95AfR4q+HfwPQLIOYEiJvjicxljn6cLcgManpN1DGTMIPpD/8EOwJtf2XHs9JmXoHohA+FL4rvZnw==
+ bh=NdxnlW1dAYeVpcxB+9cPMwRsm3aCok/F67z2cr3O9ss=;
+ b=I/jwkjfiSMbedzka1RG0bo4RHbp0zTplvfyyjTz+9xWR9f/IWaAgx/JiDzYWZwKoK3cfnjoxQL7TsBMuwqC2VIUZsuen6w6rfpTe6rRJ4nOXE4GA8l9swwZv/a1ziXj12IvD/51Bgo4xc7CmOXAkcXmSTeOJ3mGabYTRIRXTE2diPuJ6fzn3o0QbOPIzmZe7WW8uiJz5p7L7hLb7r4QmQyzb7x96Id8AOn2ypl3e/+r2iAoySd17W6WNFhOlcH0sK3trmy1lPttRv/DuNLH4UHhsrarak/98Flfu04epEB6kyRQXZsCUsAnLr0nBUcG83F+PjHvSRGRurtCsWuZ3pw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sp2PGc0FARDbUDisV4MNZ8bVS5djrtgPkqMdRvjaZpY=;
- b=Leu1vLqMB9BfmKas0S5tB6d9jr4eZeG0CxPUyMjmg7sfKtQZ1TKXTjO/zBCFsGV/S4i8s2++WmF6vzmv0tQJxJyLYYpWaDrWryrGNbFkgQNNfB8K72RtRmzoK+I5B1ZCLrwxS/hZFrSYBrIOnCK0jJspB/ANdZpfWCJdQGcMQPqtHDh9/h+myOdxpl+MKYayv6vBTFN2tSI57vT6hjVH0oKPYNohQ92treXwMVOQY43f9Qd2zlg/rXAGyX1t5thVfAhurOtzLivHNaCnH4pJNy499MZHxPI1pympEYRf/EzukuvfobKnBjm2+p4rtEX1bwS1OyH6nKh0rBfUuNVOLA==
+ bh=NdxnlW1dAYeVpcxB+9cPMwRsm3aCok/F67z2cr3O9ss=;
+ b=MFh2b2kxaOCpgtleaxHt0MYTO87cj351ptLHRSxsfe8o1hp/N6J+vwovIwaGUE04IJG7qoXmQAEZUgJCfOW13bnj5u4Ws8dJ47qvmoWcUAJpuu6Pn62CM5wSsP69P87dvrRK/nv9904un7Lkrydno9AmQJnfJW6aH0eygIyd9NFsvlPF77+ZI74LlB4nDg4W1Oh9dRDxIIFnB7PNP8jPl2LuzS/0Qs249rT5Z+MGKy4xFDRgw1CMVHtkzRzknnyE+k6EfB2N7PxcEzo33z6r3O+l9rpHG1OJZ6Ei/TNW9DPGi9/V0596fNBtp7tjUNtP3Jdv1R8GB3iUFLN3ll+Nyg==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
- DS7PR12MB8290.namprd12.prod.outlook.com (2603:10b6:8:d8::15) with Microsoft
+ DS7PR12MB5718.namprd12.prod.outlook.com (2603:10b6:8:71::10) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9632.21; Mon, 23 Feb 2026 04:17:58 +0000
+ 15.20.9632.21; Mon, 23 Feb 2026 04:47:05 +0000
 Received: from DS0PR12MB8245.namprd12.prod.outlook.com
  ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
  ([fe80::e7c5:cfca:a597:7fa4%4]) with mapi id 15.20.9632.017; Mon, 23 Feb 2026
- 04:17:58 +0000
-Message-ID: <99c36994-bec6-432b-9b8c-8a238db41960@nvidia.com>
-Date: Mon, 23 Feb 2026 09:47:44 +0530
+ 04:47:05 +0000
+Message-ID: <bc3e8be5-8ffa-47f3-91e2-b3c0e9f8a28b@nvidia.com>
+Date: Mon, 23 Feb 2026 10:16:51 +0530
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/9] PCI: endpoint: Introduce pci_epc_bar_type
- BAR_DISABLED
+Subject: Re: [PATCH 5/9] PCI: dwc: Replace BAR_RESERVED with BAR_DISABLED in
+ glue drivers
 To: Frank Li <Frank.li@nxp.com>, Niklas Cassel <cassel@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, Lucas Stach <l.stach@pengutronix.de>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
  =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Koichiro Den <den@valinux.co.jp>,
- Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>,
+ Marek Vasut <marek.vasut+renesas@gmail.com>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>,
+ Thierry Reding <thierry.reding@gmail.com>,
+ Jonathan Hunter <jonathanh@nvidia.com>,
+ Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+ Masami Hiramatsu <mhiramat@kernel.org>, Koichiro Den <den@valinux.co.jp>,
+ Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+ linux-renesas-soc@vger.kernel.org, linux-tegra@vger.kernel.org
 References: <20260217212707.2450423-11-cassel@kernel.org>
- <20260217212707.2450423-15-cassel@kernel.org>
- <aZTlsQedwzvGtD7K@lizhi-Precision-Tower-5810>
+ <20260217212707.2450423-16-cassel@kernel.org>
+ <aZToh35w7GYrOmgc@lizhi-Precision-Tower-5810>
 Content-Language: en-US
 X-Nvconfidentiality: public
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-In-Reply-To: <aZTlsQedwzvGtD7K@lizhi-Precision-Tower-5810>
+In-Reply-To: <aZToh35w7GYrOmgc@lizhi-Precision-Tower-5810>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: PN3PR01CA0161.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:c01:c8::17) To DS0PR12MB8245.namprd12.prod.outlook.com
+X-ClientProxiedBy: PNYP287CA0067.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:c01:25a::6) To DS0PR12MB8245.namprd12.prod.outlook.com
  (2603:10b6:8:f2::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -71,185 +84,223 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|DS7PR12MB8290:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3ff50021-2a65-4ce0-0db9-08de7292867f
+X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|DS7PR12MB5718:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0bf370bf-62c6-4989-35f9-08de729697a9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|366016|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?bVlOOW9pSGM2R2l6Tm13NzBGSFhXbDNPaHhtYTUzRVdsZUprUW55bW5ZOS9D?=
- =?utf-8?B?SlhWckt4RUpmbVIrYzdVbGx1azNIZ09vQnBScmVKN3pQS3FkZjdVTXdCM1hu?=
- =?utf-8?B?Zkh6VWtlOC9UTFJzdUhUTmZKWTE1RTdIRmtqU25xS2hsS2tscFFERExQZGcw?=
- =?utf-8?B?Q28wYzIrTm5wV0hwV0VRN0FyVnM3OE5FUkpoSUNwWmt2NUtPa21IVnNoRUZ0?=
- =?utf-8?B?REc4Vjg3R1BVNXgxUUFtRjNpLy80eFN4TXhnZng2T3R1UlJTOTVMZmJsek5q?=
- =?utf-8?B?b0RwQXlsbW5sU2pTNlJQUjVQZlVWUE5vaVZXY1hnQkVMNDdNbTZTamdHU3E1?=
- =?utf-8?B?Rk4wbnYyT2RpaEswSXBqbFNWdFRobDZUallZUXBmYTBqT08rNUFzRTlKQW1y?=
- =?utf-8?B?N0NSd3J1Vlc1cVk0Y3JRVVBlWmdQSUQ1cWNOMGhMU2JBZmYzQ2hKNVJFTENh?=
- =?utf-8?B?RW5XMnV5UHJaQjRqUmFJaUtjUUZZR1FwbURuakxQc0pMcnowUEF5WnhnQ21E?=
- =?utf-8?B?dm9Fa25TV3QzQUJFQk9RZU1lQWExc1pWM3JxbC8rL0lOWXU5M0VVcmovU3VW?=
- =?utf-8?B?REUvYmF1bnRablBmS045MCthcjlvNEpHaEdXakNkVEpjZGRlak5pbFVvOTBR?=
- =?utf-8?B?KzJZaHVVVlEyRno0UnJSWTFwSnZMbzM5aGxKR1JHRUtXVnhxZ29BVk50L3ZF?=
- =?utf-8?B?ZEYwZWVVelVpSUlqakEyOUNPK1I2OFhEQWdaU0E4QzhiYWxBMFA4NEJoT280?=
- =?utf-8?B?dTFtMjFNT2dtRVlDMWVSajRBejZIWVJRNE0wa1FHY0JtMnp5Q0FMYmxkRjRa?=
- =?utf-8?B?a2dkVk4rRW1laElCeFh2MzcwQkdGQU5UOEF6SCtlSmZ6L0x3b3lsRVlsSVJx?=
- =?utf-8?B?RjQ5dUg1Vi9nYzhPZEdpWnphWVlzQ0lPa2V1ODVQMndsdG50MXhpcVQ5Q2tU?=
- =?utf-8?B?TDhXcjgvN2d5aUJhN1RNcEZSek00T3dNem56d2hDL29qM0V3MHl2L204NzZT?=
- =?utf-8?B?V0tZYU85cWRyRTlSOXRvdzJISzdnZUF0QVREQURzMTNkWGFHa25MbUt5WDRI?=
- =?utf-8?B?eU1MZVFRY1FrWGpEeCs3bHkyREhoeXdyZFRpOStxeW1yRHJQL3hSbitEZzBu?=
- =?utf-8?B?K1c0RnBHbHJtZWJQbnlUaHFwWUJodGRJcXNIb29oYXByWUNtWlFiaG8wdWVn?=
- =?utf-8?B?WkNudkpiYWgrV2NXT3JnZHl4WDZueVBaZWs3YnBOUHJGRnhUNklZVGtQZ3Ay?=
- =?utf-8?B?S1cycEJpdzA5QTBWZ2VQRS9ZVWpPblpEL3dHTVovelF4RVZwcUFKZVQwcjIv?=
- =?utf-8?B?WWJaam9BaDBzT3Qrd1U4d20xTllNVExUQzRuSnl5cTl5OXNDVlJWQWdjdUEv?=
- =?utf-8?B?RUVFUTkvc0VkNXI2TnloQ1ZTY21ta2FIa1pwQ3hGdEFRYnVHNGNQRU1mL05R?=
- =?utf-8?B?YmVhQmxxUVZVSm1sdEYyRWc1S2JlTkpUVUZMdDJCdE5KTnFFQlBEM1loT0xt?=
- =?utf-8?B?VXp2QUxuOHBSZnFuRnJaaEFZbGlIcUlKUHB2K3VzWHMzOS8rTWtkMFc4Y2xr?=
- =?utf-8?B?VTMwb3hSWGVQdUdSZFRJWXQ0b0JJVzBQWGZ4SnA5MVpHR0F4azlraFpjZ3hE?=
- =?utf-8?B?cHd0OHdhVXBPQmJhaThNNTlTNDh0UXE2V3k3MTNaS3FxS2o1WkJlVjR4VzU4?=
- =?utf-8?B?WkNIbDVEUDk2NEh1RDVLMkZyNkMyVnQzODNzNGxmY0JqdktjWVozSGxLcEJS?=
- =?utf-8?B?alJxOFdaVmF4NGhTemJwN0p4SkFNdEZLN2szVlVlZ0hKVVR1cFVuVjB1b01Y?=
- =?utf-8?B?WUJsNDd2ZXJrRi9xT2lkK2todTNYTmUxdXFTeWNIT1B6d1pHeDZGaVlqQmFo?=
- =?utf-8?B?ckU1MnlPM0pkdmloVVd0NEdjSHFOMmZZdEh4WWxvVHdJRDdNS2ZkMkxMU3lu?=
- =?utf-8?B?RlhWS1phY3hlRkxHKzhkTHI2STdVME9TYVo3dk90TURCd1IyOHVOYTA3Zlln?=
- =?utf-8?B?OS91Sk14ZWNHc3loTkZKWUFBWmtKSmhKaURzVlhJUDlLVzRnRHZGSjN4azd6?=
- =?utf-8?B?d3dvdlNwb3hIV0dBWGlqeGR4cy9UdHlGa3o4NmNNeFhKV2ZMSW5DcjV1NXhY?=
- =?utf-8?Q?DtaY=3D?=
+	=?utf-8?B?Qnp1UzQwY0J6MitocWllTUprbWF6WHVYR3k4RzByWU1aWS9LYnpSY25tM3Z0?=
+ =?utf-8?B?azJpNEdZQkxEdXd3MWNNY0hUNFEzTFV0aGU2aGVpU3Z5WHRSc1BrN3JNMFpj?=
+ =?utf-8?B?eFhDbXJ6blNyQWp3RTBFN1RvUmI1TVVlU2R2dUs0Mk1YNVVLN0pQbEVuRTU2?=
+ =?utf-8?B?VW1qcmloRnRRR1hhZEZRR0JLYlhMMjVvd3pCOTRrczJ0MDZnajFrUnd2VFhV?=
+ =?utf-8?B?MTZaaGhZY3V0SDM5d2xRdFdjTGVURzdHckdIbVFxWGthajBnZ0lOamtobDBM?=
+ =?utf-8?B?c2xEM05ncC80SW5mVmtQaXBJWEZReXR5TEl3MmpDMHJKSnV1N0gzSlNJMmhL?=
+ =?utf-8?B?RzRsK3kyNlVmOC9Zc0pyczVFQjhxMEdqOEwxNVhXRHJ4Y200em40Y3NacmxT?=
+ =?utf-8?B?b205M2p2ZE9seWtlaVpLMDhQVnVDMldvdjAxaGJ5U055cEhSbitaYmVmY3N3?=
+ =?utf-8?B?QjNSNE40M2s5bktjZGZYd29vaFlTMGw5aUhqUWxQUE9waTM4eFdGa0ZKSllh?=
+ =?utf-8?B?bXZwL3RCTStWQkYyOGFRWDlSVUY3Zmt5YXRyTkdWaXM5NEcwQVpJNE9TYzRK?=
+ =?utf-8?B?MVdKMnRSQ29lYTFGTisxaWI1NnRQdW9EVWxCYzhRcTlmc2gyd3I3dTFEMVlV?=
+ =?utf-8?B?cDBqN09aUUQvK1Q3cnpRd1JwaVNDTjd3YnJseUV3RFo3YzNRbDc5Z215TnZO?=
+ =?utf-8?B?SWN6SDBsS0k1ZkszaWNlaWF3M2VFL3dVRzBvMlpuOFNBMi9iQ2F2ZU1uM0cw?=
+ =?utf-8?B?YzhaeE5kWVYxcVVMazhsV3lyUzF1NHd1amJDVXR2a25BUHlGWkZiSE9xRzVN?=
+ =?utf-8?B?Tzk4UzJCYUoyajlTQkF5NFNDZCtOVm1EZU5pbVlIUUhTaEYvN05GWE9GNENk?=
+ =?utf-8?B?QzVvelk0aXpJVUtIMGZSU2xEN0lidUZ6eHFZWkhPYllpb1JzYTc2VTlSdUNa?=
+ =?utf-8?B?NWQzNU9JNFhuYTV4NjEwYmRyRlVodTBYN3BKSThUSEJCWUQ3ZjVlajB4S1RZ?=
+ =?utf-8?B?UDhoNXlCRnpVVUM1dGh3UGwyeU1USkkxaWlBdGFPc3JIYUdTU0ZzdFJFekln?=
+ =?utf-8?B?VnBCKzJOdzNjRnlLcXdQUXl6ejJqaktWazc3TE9YRFJYekRGck45Mk5DcCtW?=
+ =?utf-8?B?WU5MaXo4ZFpyb2FJUHJNZXFKL09FenBZSjlBV2MycFRzV2NjNVA2UVV1dTRH?=
+ =?utf-8?B?RjBFbEQwVGxNcU5ReUJXK0VlYm82blpKRTdyM2hEMDFWK2RHcHkwK1BHVFdl?=
+ =?utf-8?B?Qlk0czJlUWZKdEFBM3ZobVRvZzRoekZqd1VzblQvTThKc2JkblJvZVE2Q0tJ?=
+ =?utf-8?B?TGlzRlQ5ZHNsMTRCY0o2S25tSnpGQ1BWWjYzZzBiL3IreEQxRHlRdW03MDBa?=
+ =?utf-8?B?NklyeTlpZWlCbXlFNERvaDU2RGx5Y3VYeTN1TFVoMmdSeE5neXZCd3UrTUUx?=
+ =?utf-8?B?cWRUaVlLTDZVNm1paW1ydDd0V0VqSG9iOE1Eenl6RkoxZVpaQmg4eHlJU3Bw?=
+ =?utf-8?B?dXQzTEVCMGdhVWxQQW01SWVxa0owWmU4OXJxcS9lMHI2K040bTdrZ3AxV09r?=
+ =?utf-8?B?OFlmZXQvNXhiVE5NY2pQV3lWT3FyS0ZZc1NvY1VYZTNKQ2dGVUxlcW1Sb3hV?=
+ =?utf-8?B?enQ4WGxEd3YxYVREY0xUcVNYU3lUWDRYUmFUdk00MmlEUE5zU1g5SzlWNGxi?=
+ =?utf-8?B?NkJiek1GTUhWS3NjN3I4Y21iYkNDSHprbFh6cjcyV3czUVZwNHZhUlZwTEtK?=
+ =?utf-8?B?U1F4SHBldlRSMjlIS0xRZTNVMUtOMUg4UkE1RXhlekhmSXk2b1FZeEJZNEJz?=
+ =?utf-8?B?TGEyUHV2bDBlZTRucjdscHMrckU0eTcyZ3ViUWt4OXZ0RzVBWEJjNTA3WWVi?=
+ =?utf-8?B?V1BWWjR5eDFSM0F3dWFkZ2VVRWtOeDloTVNhOGNnTE1WM0l1MHNNYzA5Z0Fh?=
+ =?utf-8?B?ZXRNSlZiYjVCUFNHb09YeW1VaXlqYW82SU10MjhIZUhrSEtOclZqTlZiYTgy?=
+ =?utf-8?B?cVNZSE9Md0ZkcVJONTJqS2JyY1hoQ3YzY21xVkNYYmRIbXIwR053eFFGcFFU?=
+ =?utf-8?B?V28rK2RpMXZiUDVMTzBYSlJtY01jODBPQnY5ZU03ZWhhM2l4emNmeWZXejdE?=
+ =?utf-8?Q?C8uk=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?RWppWGV3aGd1bThKOWtSNGpOend3VjJQQWFJSXVOM1dOazRDQ2NacW90WTBT?=
- =?utf-8?B?S2ExdVJPaC9PWTRvcmZOanNsak9XKzVvQUJhNXZqdkQ4QlBvNHl0TjNhenh0?=
- =?utf-8?B?NEJMU25HOXh1UlBVc2dpazdMU2V2K04yU0E3TXBaQXU5RUJ2dUVoVmdPeUs0?=
- =?utf-8?B?dXNtbEdSR2V1NWdrU0RjNnhNT0YrU0hwY0EwRkVISHlDdVhYd1pnWDl3S0JS?=
- =?utf-8?B?VXVDM0FEZzVSa1BKQjY3SzRYci9mYmlTRlBzOWZWbThQVDRSSUNqY0pDVzlZ?=
- =?utf-8?B?aWFsemc4M2QxVTVTOGdOWFZkcG5Xc1dkcVdOSm5QeTVoa295eEZVbzgxRGs0?=
- =?utf-8?B?MDFRK1RvT2g2bUszU0p4S3J2OWV5R1dqWUsvMEM0dVp2YkVZSnZQaWZUNS9R?=
- =?utf-8?B?SW1Scnd4a3FNT1NUSVF5KzBVLzVyZ3FkcS9yQS9JNjg3NUxUSmdIQ1JxZ1Np?=
- =?utf-8?B?RXY1NnhUSGs0NytUTmZET2lvMWFVNVFZNzloU1BRVHNVQ09laHRTaHRzZUdj?=
- =?utf-8?B?a3FhRlM1OUlJSVdFQjNac3FGS09GeG9IMTZMY0czVXdjRlJGTXVVQjBuRzA3?=
- =?utf-8?B?Q3ZhTlFYeElNNWNlU2piaEtUaVE0NFA1bVdvNGcxZ1JYSFdqb2VrRFZ3M1Np?=
- =?utf-8?B?Nm1YOUorTUw4VkgzYlJsUkpIWE44aXdnZWxLYks0b05LeHU3bUY2by9wblVy?=
- =?utf-8?B?S0pFVHBsZCsxOGw1Vzg1YnNPODlIT3VoWGdLbVBybWZqRklWcHBBalVYcTJo?=
- =?utf-8?B?UjNMVTUrR2tVeEdZQnNabEJMYmFUeG4xYTZsWW9tNWdGbG9IcmwzaXZhYndM?=
- =?utf-8?B?YW44S08wdjF3Q1dDK2xONTU1ci9tdk13UG5iS0llUDJiWm5ET3luM1VQMWYz?=
- =?utf-8?B?a0VWTi8zZUZ0VERIQmdBMlY5NjcyakVtN1JxRHhoallTMnZBbHErdWM3NElC?=
- =?utf-8?B?RlZrT2FyeDE2QUdYRmRYMWYrU0tCc3czRkRPVWl4aHJ1aDNHakoyWDArQnBv?=
- =?utf-8?B?eVpkeGlyTEdIZUhleCtMWEVpZkNTTUVjNGE1OWxwQmd4YTNmMzMrbHM2a0N4?=
- =?utf-8?B?WmRYK2RNc3VpaU1Qa1pxNHE2bUVxY3dRbGhSVGR6dG5QY1NaV3lpNG5qRHhN?=
- =?utf-8?B?NU1xU3IwQ3NEM2xpSlpoQm1pOWtiUXQyZjREdlpvbXp3cWxlV3gzejZLR0Yy?=
- =?utf-8?B?c2pZbjluTzlIRzFxcHJ1Zm9vVEVKeUFOSEZCMzJIdGs1bnhPUEE4VndRemk1?=
- =?utf-8?B?elZBeG52eENqeDlMclp4dnEybThQSVV2ei9wbjFuSUQ3R2IrTzlmL3V5a2pJ?=
- =?utf-8?B?WGR5TU5VT2lhWlphMCtUN2RBcFFtNDdHVDF4U3MrZ0hBTnl1eXJkTXlsZXho?=
- =?utf-8?B?aGJEYk1Lcmt5L1VYQlk5NEt2cFlTc1NJWDdhL1lMUkxNRi9MMUhCVzhuVmJo?=
- =?utf-8?B?WGY5S3hXc0NoeTdCR3JBS2JoMzJxV1ZYV1NDRUJ1eE9vVzRwc1NrbTNrTXJF?=
- =?utf-8?B?SDhkMDdxV3NvcHlKcmhLZE5iVGd4akJkdy8vRGQ5cGFWNWhuS3VSQUlIWWhq?=
- =?utf-8?B?eUhhUkhSMGFLT3llNG9KR3c0WWl6NDc3aU9yK2NIWElOZUtmODFUQnQ0WCs5?=
- =?utf-8?B?Zm96QUFOYUdEWUYrWnFBdW5xZWM4NzJnWG9JRlFadUczVFk0Z3Nrc2daZmZk?=
- =?utf-8?B?Z0VWMXFQSGQwUENaNDhtZ0kyNGR4a2dsM0pOQ003V211UUFYUlNrUU1FUW8y?=
- =?utf-8?B?TS9zVk5DbHhORHBOYUhkaTFSZHJMZzd2bFlTZWRJalJMcEp1SGNKdjRDaDVL?=
- =?utf-8?B?OGM1ZlRvL25pa1VhSGVaVlh0M1JWZWRUSEJ2b1FvVTEzY3Fpek5lMkpqU3J2?=
- =?utf-8?B?R21rbkdpMWVyZWNkcUVYUnhVaWx0ZVhnMk96d1dnaFFTaUd3ZngzdVlweFV4?=
- =?utf-8?B?QnB1NTBvV2JjM0JtT2Y4L05JNHAzSU9JU3ZvbWhZSFJHallzdFVCN0xCc1dr?=
- =?utf-8?B?L2Q0Mk5zaldpd1dRdkNQVllIMzJqdVlsdzJVU2JkWjhpWmR4WVB3RTFydEJY?=
- =?utf-8?B?ajJOM2FQTndhQlBDSVRSMFMwaEFJbVRCL0RGeGlJMzJJeU9zRTNjc0JyWnFv?=
- =?utf-8?B?aFpEelFTb1JBYlhSMVpTLzRSYVVRd2xyZlcvWjNZOUxoNEtHSk1sM2xOYkpY?=
- =?utf-8?B?ZFlERVlGQjFaZEUrWU94NGZHTVVyaEp1L0hCZTVzWTNtakQvYnp2RXl0K09J?=
- =?utf-8?B?TWZWME5OMGJRUG5qdHBwejlOQTZNYXF4VkEzQlVQdTVKK0JaOTJ3ZHhaczds?=
- =?utf-8?B?S2ZhK2JXNGNsME1jUGRBMGtjUTFodFZkNHltTGJnc1VZeG04dlRpdz09?=
+	=?utf-8?B?OE1GNE90SGJpN3NncjlaQk1pT1NXVTh4T05xemJXRjBPL1lrWHpYbEkzVFlC?=
+ =?utf-8?B?UkNHdnJGaHA5VWRWQXUzQkJlTHkxTjRHd2NLVDVRTGZKQ3h6eUhOYWUxVkNE?=
+ =?utf-8?B?bVpMN25PeVdDV1hMcXNacDFSTXhyQ282WDMyOG9IVU1VNWtnZ2NZWnVCSHNl?=
+ =?utf-8?B?RXZKc0V2bTh6N01kVGhJaDA0Mm9DTUxmOG1jUzlkWEhLbzhuTUQyRDlnS1FU?=
+ =?utf-8?B?VHF3S0luODFGdkJzUnBuZ2IrUWdXRkc1cndEdjRzejJnYXh4VUljbGYwekc1?=
+ =?utf-8?B?aXNsMU91L214d1R6d0Z4VUdhSVpOdHJ0SDUyL3R0NGxlZmVPRTRLS3phZ2Ju?=
+ =?utf-8?B?Q2FHTHFaSlQzL0ozdjJWWnZMZGpsclNrUTJLR2xMb1BVREZuNXE5blh2Rk1w?=
+ =?utf-8?B?bmU2NGpIZThvcnZhWmEzdXROdUpvZ1dLR0RqVXNvQXUxVTZxbFpveTJnSzNX?=
+ =?utf-8?B?OGlSRmZucFhLVzQ4WlQ3U1JxY0tMVmxDVHlVejVQc0tRRW11VGFtaGNpVERP?=
+ =?utf-8?B?VWZwbitxQ2xDa0xtSW9NNVp2TWtRY1FrRW5DUE1jUHhPVzMyVktGaFlsRnRv?=
+ =?utf-8?B?L21pMEpteElsZmZhOTdtbk5ralBmR3N3MDBxL3dYeGtHYzNHZytFeGorZ2hp?=
+ =?utf-8?B?Z1krQWZlN05ubW1RNXNabTFOU3NBQ3F3eUpqMDJSZTUrWHBBNDhCU0xrMXdW?=
+ =?utf-8?B?RE9rRk5nK0l3OTBRWFVTdEZzdDBkR3FvNzJ1Z2E3T3BvbGY4ZXhtYk5oZGdZ?=
+ =?utf-8?B?Y1RqRThDTUhqV2dTS1RlenA0ejk3SVh5Yzlna3pOY3c4V2d2R0RTdEEvWTZ0?=
+ =?utf-8?B?TDhYaElpa3ZJK3hUQ2NRR2lUSzhDQkpENWVLVFp1b2hyTW5UU25RRjFEdGIr?=
+ =?utf-8?B?NmQvak5zUzZlK20xazc1elp5VEQyeHRaUmFjNTU1eTh4aTJ1Yjd3Q3BnclhR?=
+ =?utf-8?B?QkUzeG1rNlhNNmttanRSSTlOMlNBTmRtZWR1c0NZdjFWdFMrRkMzWHI4dVJ5?=
+ =?utf-8?B?VFJvWUpKSDhROGNMUiszUHZkeVczcnVTNnVSazBxcVJvUmZHYmhhWVk1aXRr?=
+ =?utf-8?B?UU1pN2pEVENHS1MyYm9WSVh3eU1LMHlWRExiTGRBVlRMTnM3MmpRVlI1eHdv?=
+ =?utf-8?B?ekVuWE1UTjhzM1J0S3ErK25mcFpzUkJIK2xtVlJvNmYxT25KZkVjQkRuMUdG?=
+ =?utf-8?B?UWFUdGNaSC9TMmhFci85WngwN2Z2TG5EVENqanlUZmxHUUp6dTdHRVRCUDV1?=
+ =?utf-8?B?UjF5dXBscDIxdzNoaUVlZ1ZiaWVQWEJjblExUTQ5UC9OelZvUHZVSXlPa0hN?=
+ =?utf-8?B?SHpzK0tON0hWeHVpTXIzK2lKQW1rbXh2Y2JwbzIxa3pQZ3pSTjloa25FNGhm?=
+ =?utf-8?B?OU56WG9jZlMzaXFwdE5PaGVIdHpkZ1V6M0JLRnBqRDZtVnpmaUorbWNUWDFK?=
+ =?utf-8?B?cm5wdzZBc1VoaU5HbWxNdFJteXRVTk5YYUQzektteDV2V0FuUHFmT29KU25m?=
+ =?utf-8?B?YmJBWXdpeDJpa2tTSDB1SlZFcXFDZnRKYk5OQ25rWDNjRUowTmd4eTFGbW13?=
+ =?utf-8?B?TXBhcHBTcDU4aDJVd3ZWNGdKY3NlZUtSSGZFMVJHa2s5dXJXWmdMWndtcFhF?=
+ =?utf-8?B?R29yU0tJSjYxb1Q2bEFpVjk0QlIyc2VIbndNeXNZdEF5ZkVxamovVFd3QjVC?=
+ =?utf-8?B?dHVFaDN4am40Y2lBMFNaK0g5MnR1ZWRuVEt4eTlGZTVLdk4vRHJ0VEk1TnJF?=
+ =?utf-8?B?aEFkbG5NYTQ4TmJwVHhDS0doMEhLN3NoZnFjK3hpQXJaWEhqYktLaDMzOEJJ?=
+ =?utf-8?B?SzJiMThKUWNDd1ZkRDEvQkw4emw3djVWM3k5QnZuendtRWJlMGYzQWROeVZ2?=
+ =?utf-8?B?NEdkQVhwalNvcnBPMVNBM2tEQllsYm9kOUJBL2pxT3JaOXNlRENwWWROLzQy?=
+ =?utf-8?B?cml3Y0pVZHhETENqaEEyc1RoQWI0bmJnTWI0anYzbk1DOXJtZElBdlhKRVFM?=
+ =?utf-8?B?NUFzTGM1aWZRcFRGa1loZER6bWZ0dVI0R3BNMUI0ZGR4VnJzNEJCa0pxYXlz?=
+ =?utf-8?B?QlJDbUl3MmNtYVdVc1EvekhJK2RJZHEzV0c0MHYrZkdrblY1OVhMRUxHSGla?=
+ =?utf-8?B?VGt6S29VMXdWR0p6ckZhTEpDT1NSUmw4MWRMaWtWc1VGWk9HR3RuOFJhd0Qr?=
+ =?utf-8?B?VVNTb3FaTklRRGJzRlBraU4veEYrY2ZTS2Q1czMydnNSQTNnT3kzSy9qZVlR?=
+ =?utf-8?B?bDd3NVFHenBYRUZPd2Y0cEM2NlV5bWgvaUJoQmk0RjBjR2ZhZFJzZUZxNE5h?=
+ =?utf-8?B?SEk3bGpwM2l6V00waFJOT0dCM05LZGVMOXg3cFErRG5TSk5IdUhPQT09?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3ff50021-2a65-4ce0-0db9-08de7292867f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0bf370bf-62c6-4989-35f9-08de729697a9
 X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2026 04:17:58.3819
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2026 04:47:05.1464
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3SK0SfvnfRlDnsuXXWmuwYHzZAtzLaHCIpiZygV5wtIPZwaJ9S/Smdl5IiKNF03Ttx3yB6UbRF+3MlrTLaUc+Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB8290
+X-MS-Exchange-CrossTenant-UserPrincipalName: SeJHeafxF3GC4Jrr2de09V9ggsYfXOcd6Lq6oQfLcX6RN1/Kx+p5AvyIwvKItoQpHeNp0Wsr6u7rq8vf8yPQGg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5718
 
 
-On 18/02/26 3:33 am, Frank Li wrote:
-> On Tue, Feb 17, 2026 at 10:27:10PM +0100, Niklas Cassel wrote:
->> Add a pci_epc_bar_type BAR_64BIT_UPPER to more clearly differentiate
-> s/BAR_64BIT_UPPER/BAR_DISABLED/
+On 18/02/26 3:45 am, Frank Li wrote:
+> On Tue, Feb 17, 2026 at 10:27:11PM +0100, Niklas Cassel wrote:
+>> Most DWC based EPC glue drivers that have BARs marked as BAR_RESERVED in
+>> epc_features also call dw_pcie_ep_reset_bar() for these reserved BARs in
+>> ep->ops->init().
+>>
+>> An EPF driver will be able to get/enable BARs that have been disabled/reset
+>> unless they are marked as BAR_RESERVED (see pci_epc_get_next_free_bar()).
+>>
+>> Thus all EPC drivers that have a BAR marked as BAR_RESERVED in epc_features
+>> AND call dw_pcie_ep_reset_bar() should really be marked as BAR_DISABLED.
+>>
+>> BARs that are marked as BAR_RESERVED in epc_features but for which
+>> dw_pcie_ep_reset_bar() is not called in ep->ops->init() are still kept as
+>> BAR_RESERVED.
+> combine the same condition together to make easy to read. like
 >
->> BAR_DISABLED from BAR_RESERVED.
-> from BAR_RESERVED.
->
->> This BAR type will only be used for a BAR that the EPC driver should
->> disable. (Unlike a BAR_RESERVED, which is still enabled.)
-> confused. it looks, "this bar type will be never used by EPC drivers"
+> "For BAR_RESERVED bars, change to BAR_DISABLED if call dw_pcie_ep_reset_bar().
+> and keep as BAR_RESERVED if not dw_pcie_ep_reset_bar() in ep-ops-init()"
 >
 > Frank
 >
->> Co-developed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> No EPC drivers outside drivers/pci/controllers/dwc mark their BARs as
+>> BAR_RESERVED, so there is nothing to do in non-DWC based EPC drivers.
+>>
 >> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Tested by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-with the comment fixes
-Reviewed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 >> ---
->>   drivers/pci/endpoint/pci-epc-core.c |  5 +++--
->>   include/linux/pci-epc.h             | 12 ++++++++++--
->>   2 files changed, 13 insertions(+), 4 deletions(-)
+>>   drivers/pci/controller/dwc/pci-imx6.c         | 12 ++++++------
+>>   drivers/pci/controller/dwc/pcie-rcar-gen4.c   |  6 +++---
+>>   drivers/pci/controller/dwc/pcie-tegra194.c    |  8 ++++----
+>>   drivers/pci/controller/dwc/pcie-uniphier-ep.c |  4 ++--
+I see BAR_RESERVED in pci-keystone.c driver in linux-next branch.
+Do you have any patch which changed BAR_RESERVED to different type
+in pci-keystone.c driver?
+>>   4 files changed, 15 insertions(+), 15 deletions(-)
 >>
->> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
->> index 8de321e1c342..5045e22367cf 100644
->> --- a/drivers/pci/endpoint/pci-epc-core.c
->> +++ b/drivers/pci/endpoint/pci-epc-core.c
->> @@ -103,9 +103,10 @@ enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
->>   		bar++;
->>
->>   	for (i = bar; i < PCI_STD_NUM_BARS; i++) {
->> -		/* If the BAR is not reserved, return it. */
->> +		/* If the BAR is not reserved or disabled, return it. */
->>   		if (epc_features->bar[i].type != BAR_RESERVED &&
->> -		    epc_features->bar[i].type != BAR_64BIT_UPPER)
->> +		    epc_features->bar[i].type != BAR_64BIT_UPPER &&
->> +		    epc_features->bar[i].type != BAR_DISABLED)
->>   			return i;
->>   	}
->>
->> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
->> index f7f48f43d370..8687b9c3462b 100644
->> --- a/include/linux/pci-epc.h
->> +++ b/include/linux/pci-epc.h
->> @@ -191,7 +191,14 @@ struct pci_epc {
->>    * @BAR_RESIZABLE: The BAR implements the PCI-SIG Resizable BAR Capability.
->>    *		   NOTE: An EPC driver can currently only set a single supported
->>    *		   size.
->> - * @BAR_RESERVED: The BAR should not be touched by an EPF driver.
->> + * @BAR_RESERVED: Used for HW-backed BARs (e.g. MSI-X table, DMA regs). The BAR
->> + *		  should not be disabled an EPC driver. The BAR should not be
-
-should not be disabled by an EPC driver. The BAR should not be
->> + *		  reprogrammed by an EPF driver. An EPF driver is allowed to
->> + *		  disable the BAR if absolutely necessary. (However, right now
->> + *		  there is no EPC operation to disable a BAR that has not been
->> + *		  programmed using pci_epc_set_bar().)
->> + * @BAR_DISABLED: The BAR should be disabled by an EPC driver. The BAR will be
->> + *		  unavailable to an EPF driver.
->>    * @BAR_64BIT_UPPER: Should only be set on a BAR if the preceding BAR is marked
->>    *		     as only_64bit.
->>    */
->> @@ -200,6 +207,7 @@ enum pci_epc_bar_type {
->>   	BAR_FIXED,
->>   	BAR_RESIZABLE,
->>   	BAR_RESERVED,
->> +	BAR_DISABLED,
->>   	BAR_64BIT_UPPER,
+>> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+>> index a5b8d0b71677..ec1e3557ca53 100644
+>> --- a/drivers/pci/controller/dwc/pci-imx6.c
+>> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+>> @@ -1433,19 +1433,19 @@ static int imx_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>   static const struct pci_epc_features imx8m_pcie_epc_features = {
+>>   	DWC_EPC_COMMON_FEATURES,
+>>   	.msi_capable = true,
+>> -	.bar[BAR_1] = { .type = BAR_RESERVED, },
+>> -	.bar[BAR_3] = { .type = BAR_RESERVED, },
+>> +	.bar[BAR_1] = { .type = BAR_DISABLED, },
+>> +	.bar[BAR_3] = { .type = BAR_DISABLED, },
+>>   	.bar[BAR_4] = { .type = BAR_FIXED, .fixed_size = SZ_256, },
+>> -	.bar[BAR_5] = { .type = BAR_RESERVED, },
+>> +	.bar[BAR_5] = { .type = BAR_DISABLED, },
+>>   	.align = SZ_64K,
 >>   };
 >>
->> @@ -238,7 +246,7 @@ struct pci_epc_bar_rsvd_region {
->>    *
->>    *		only_64bit should not be set on a BAR of type BAR_RESERVED.
->>    *		(If BARx is a 64-bit BAR that an EPF driver is not allowed to
->> - *		touch, then both BARx and BARx+1 must be set to type
->> + *		reprogram, then both BARx and BARx+1 must be set to type
->>    *		BAR_RESERVED.)
->>    * @nr_rsvd_regions: number of fixed subregions described for BAR_RESERVED
->>    * @rsvd_regions: fixed subregions behind BAR_RESERVED
+>>   static const struct pci_epc_features imx8q_pcie_epc_features = {
+>>   	DWC_EPC_COMMON_FEATURES,
+>>   	.msi_capable = true,
+>> -	.bar[BAR_1] = { .type = BAR_RESERVED, },
+>> -	.bar[BAR_3] = { .type = BAR_RESERVED, },
+>> -	.bar[BAR_5] = { .type = BAR_RESERVED, },
+>> +	.bar[BAR_1] = { .type = BAR_DISABLED, },
+>> +	.bar[BAR_3] = { .type = BAR_DISABLED, },
+>> +	.bar[BAR_5] = { .type = BAR_DISABLED, },
+>>   	.align = SZ_64K,
+>>   };
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+>> index a6912e85e4dd..9dd05bac22b9 100644
+>> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+>> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+>> @@ -422,10 +422,10 @@ static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>   static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
+>>   	DWC_EPC_COMMON_FEATURES,
+>>   	.msi_capable = true,
+>> -	.bar[BAR_1] = { .type = BAR_RESERVED, },
+>> -	.bar[BAR_3] = { .type = BAR_RESERVED, },
+>> +	.bar[BAR_1] = { .type = BAR_DISABLED, },
+>> +	.bar[BAR_3] = { .type = BAR_DISABLED, },
+>>   	.bar[BAR_4] = { .type = BAR_FIXED, .fixed_size = 256 },
+>> -	.bar[BAR_5] = { .type = BAR_RESERVED, },
+>> +	.bar[BAR_5] = { .type = BAR_DISABLED, },
+>>   	.align = SZ_1M,
+>>   };
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+>> index 31aa9a494dbc..9f9453e8cd23 100644
+>> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+>> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+>> @@ -1994,10 +1994,10 @@ static const struct pci_epc_features tegra_pcie_epc_features = {
+>>   	.bar[BAR_0] = { .type = BAR_FIXED, .fixed_size = SZ_1M,
+>>   			.only_64bit = true, },
+>>   	.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
+>> -	.bar[BAR_2] = { .type = BAR_RESERVED, },
+>> -	.bar[BAR_3] = { .type = BAR_RESERVED, },
+>> -	.bar[BAR_4] = { .type = BAR_RESERVED, },
+>> -	.bar[BAR_5] = { .type = BAR_RESERVED, },
+>> +	.bar[BAR_2] = { .type = BAR_DISABLED, },
+>> +	.bar[BAR_3] = { .type = BAR_DISABLED, },
+>> +	.bar[BAR_4] = { .type = BAR_DISABLED, },
+>> +	.bar[BAR_5] = { .type = BAR_DISABLED, },
+>>   	.align = SZ_64K,
+>>   };
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-uniphier-ep.c b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+>> index f873a1659592..5bde3ee682b5 100644
+>> --- a/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+>> +++ b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+>> @@ -429,8 +429,8 @@ static const struct uniphier_pcie_ep_soc_data uniphier_pro5_data = {
+>>   		.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
+>>   		.bar[BAR_2] = { .only_64bit = true, },
+>>   		.bar[BAR_3] = { .type = BAR_64BIT_UPPER, },
+>> -		.bar[BAR_4] = { .type = BAR_RESERVED, },
+>> -		.bar[BAR_5] = { .type = BAR_RESERVED, },
+>> +		.bar[BAR_4] = { .type = BAR_DISABLED, },
+>> +		.bar[BAR_5] = { .type = BAR_DISABLED, },
+>>   	},
+>>   };
+>>
 >> --
 >> 2.53.0
 >>
