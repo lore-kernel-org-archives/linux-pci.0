@@ -1,86 +1,159 @@
-Received: from mail-m25493.xmail.ntesmail.com (mail-m25493.xmail.ntesmail.com [103.129.254.93])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2A7533AD8D;
-	Mon, 23 Feb 2026 18:05:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.129.254.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D2DC33B6FA;
+	Mon, 23 Feb 2026 18:10:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771869909; cv=none; b=TTQZNFuyBNLgtPumrUtqDeqWlsnOxCZpjO6pc9Iu/Wz4FLsqT799piKwF62up6w4+i3d/MpFHKusdNidv7mh+mZ/hZO0tR+ARIXbktW3OHPYL2Aj1GshWtOuuYj7PliGUtggnmVVe8jTwm47Mdk/RRfI7QBpI0HKdeT9JtclNvU=
+	t=1771870221; cv=none; b=EjwUc9P42vbe3xQGCQGibnU5yXBc2tf3DMJzMgiS7oUwdwGRZNpvMRxqGljIs6eV2MCtbe4Eg04/AVs9rwmXcQUY/qGKyErW5yZ+G/4/sDgeGLwVSL/E0QfcagbCwOsPFeDJWpIEoiSx3BbXzA/GCRY/61hNvrughahjSQqK9bQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771869909; c=relaxed/simple;
-	bh=+Zmx9HFXd3J1WMpSSkClIvvvSDK/h8AC9XbuO3aIJpw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=ph+TmLsyG0SOzPmiNATrVR6sfDzEB3/HbYROqbOtK4aCiRY/9pte3aQHuUSvW/Vxlz4DqtoB5uTs3ySZBEyiZhd9gQ3fz3ijaMoR6VfHUqC5WFYf+GqyQZ1HcHC4D31qGG5BH3bf0PvR2jrcK6tBoh1/5LATIPGDTe+6j95l170=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=S9Ih2+Zx; arc=none smtp.client-ip=103.129.254.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1771870221; c=relaxed/simple;
+	bh=16cOUP8C9o+EwrZvc78geBBZllCsV2dgigYYBQoJhoA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=h03ck0AEMD/ew+dsldkEthxJ2TWeWWkPOnAcuHBBwHyz9nwzDsE8gVyuAvqvtz23gXSoEc+eoX7AyCAq2arveWdHkW56H/shP+D0FyhB2ODpQq08uMqpy/Fyxm6i/Op+DWfFcc84fIzGlwziQ/PbGLb2LQ8OnJCN8N/VRMdM8wY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ge7InMPi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="S9Ih2+Zx"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 34b3c9189;
-	Mon, 23 Feb 2026 23:42:38 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Bingbu Cao <bingbu.cao@intel.com>,
-	Tianshu Qiu <tian.shu.qiu@intel.com>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
-	linux-media@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philipp Stanner <phasta@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 03/37] media: ipu6: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
-Date: Mon, 23 Feb 2026 23:42:23 +0800
-Message-Id: <1771861343-85256-1-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9c8b2ab7c109cckunm348ae840986fa0
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQx1KTFZOQksfGh0ZSUJKH0tWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=S9Ih2+ZxJOD2xWedJlRXj3vAypT5C9ewv2kSioBCFmH7hwEztuYBtKu15ryQA0dZ29eiC5xp6f6YYaNRg7+tPWpq6nWjmWFlNnearyipGOfUyfGkmU5oSh074R7eDKFuIZoypcUx+5z1BkOWynBL8CPW8ka1rxhPHDP5noLEEog=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=968HR2FsOyt4L9TQuezVAWJYaCmhjAu3piY44vWApCw=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ge7InMPi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E68CC116C6;
+	Mon, 23 Feb 2026 18:10:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771870220;
+	bh=16cOUP8C9o+EwrZvc78geBBZllCsV2dgigYYBQoJhoA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Ge7InMPiu+LiA49+/qUlTyPFdeX/VLo2FmpjYMVekRpxG8DwIpZZLLJGHvuciBb/F
+	 BiJbJRfZ3kyZVGu/ykJQJhBc/X6DN7getwKS8cmKu2D14oivJw1HQW1Q4JQdodyBbd
+	 lygozEiECso5Xb8cBqTojfUQ0r1Dk5v9ZEa0Pk0BODbUW3jC6ov7L/fL30hC033jDC
+	 fpLzenRyc4/7FrizehKsOF9cqmj7Ikf0+8XfVRJv84rmU4HoQigfciiXUXI7C6ZyfA
+	 jjiu537s4GsdsHayFjk2RtLtInMQQYEyhHdtzO8h6kpQ3m0RoBCpgieQBWlD7nPLki
+	 W6xQbOZiQTarw==
+Date: Mon, 23 Feb 2026 12:10:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com,
+	bjorn.andersson@oss.qualcomm.com,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2 1/5] PCI: host-common: Add helper to determine host
+ bridge D3cold eligibility
+Message-ID: <20260223181019.GA3700351@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260217-d3cold-v2-1-89b322864043@oss.qualcomm.com>
 
-pcim_enable_device() no longer automatically manages IRQ vectors via devres.
-Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
-pcim_alloc_irq_vectors() should be used.
+[+cc Rafael, linux-pm]
 
-To: Sakari Ailus <sakari.ailus@linux.intel.com>
-To: Bingbu Cao <bingbu.cao@intel.com>
-To: Tianshu Qiu <tian.shu.qiu@intel.com>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: linux-media@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Philipp Stanner <phasta@kernel.org>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+On Tue, Feb 17, 2026 at 04:49:06PM +0530, Krishna Chaitanya Chundru wrote:
+> Add a common helper, pci_host_common_can_enter_d3cold(), to determine
+> whether a PCI host bridge can safely transition to D3cold.
+> 
+> This helper is intended to be used by PCI host controller drivers to
+> decide whether they may safely put the host bridge into D3cold based on
+> the power state and wakeup capabilities of downstream endpoints.
+> 
+> The helper walks all devices on the bridge's primary bus and only allows
+> the host bridge to enter D3cold if all PCIe endpoints are already in
+> PCI_D3hot. This ensures that we do not power off the host bridge while
+> any active endpoint still requires the link to remain powered.
+> 
+> For devices that may wake the system, the helper additionally requires
+> that the device supports PME wake from D3cold (via WAKE#). Devices that
+> do not have wakeup enabled are not restricted by this check and do not
+> block the host bridge from entering D3cold.
+> 
+> Devices without a bound driver and with PCI not enabled via sysfs are
+> treated as inactive and therefore do not prevent the host bridge from
+> entering D3cold. This allows controllers to power down more aggressively
+> when there are no actively managed endpoints.
 
- drivers/media/pci/intel/ipu6/ipu6.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This series is currently structured so it's only applicable to native
+host bridge drivers, i.e., things using DT.  Is there anything that
+prevents using D3cold for host bridges in ACPI systems?
 
-diff --git a/drivers/media/pci/intel/ipu6/ipu6.c b/drivers/media/pci/intel/ipu6/ipu6.c
-index 24238f8..6ab94db 100644
---- a/drivers/media/pci/intel/ipu6/ipu6.c
-+++ b/drivers/media/pci/intel/ipu6/ipu6.c
-@@ -471,7 +471,7 @@ static int ipu6_pci_config_setup(struct pci_dev *dev, u8 hw_ver)
- 		return 0;
- 	}
- 
--	ret = pci_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_MSI);
-+	ret = pcim_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_MSI);
- 	if (ret < 0)
- 		return dev_err_probe(&dev->dev, ret, "Request msi failed");
- 
--- 
-2.7.4
-
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/pci/controller/pci-host-common.c | 45 ++++++++++++++++++++++++++++++++
+>  drivers/pci/controller/pci-host-common.h |  2 ++
+>  2 files changed, 47 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> index d6258c1cffe5ec480fd2a7e50b3af39ef6ac4c8c..b0a4a3c995e80e0245657f0273a349334071013c 100644
+> --- a/drivers/pci/controller/pci-host-common.c
+> +++ b/drivers/pci/controller/pci-host-common.c
+> @@ -106,5 +106,50 @@ void pci_host_common_remove(struct platform_device *pdev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_host_common_remove);
+>  
+> +static int pci_host_common_check_d3cold(struct pci_dev *pdev, void *userdata)
+> +{
+> +	bool *d3cold_allow = userdata;
+> +
+> +	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ENDPOINT)
+> +		return 0;
+> +
+> +	if (!pdev->dev.driver && !pci_is_enabled(pdev))
+> +		return 0;
+> +
+> +	if (pdev->current_state != PCI_D3hot)
+> +		goto exit;
+> +
+> +	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
+> +		goto exit;
+> +
+> +	return 0;
+> +exit:
+> +	*d3cold_allow = false;
+> +	return -EBUSY;
+> +}
+> +
+> +/**
+> + * pci_host_common_can_enter_d3cold - Determine whether a host bridge may enter D3cold
+> + * @bridge: PCI host bridge to check
+> + *
+> + * Walk downstream PCIe endpoint devices and determine whether the host bridge
+> + * is permitted to transition to D3cold.
+> + *
+> + * The host bridge may enter D3cold only if all active PCIe endpoints are in
+> + * %PCI_D3hot and any wakeup-enabled endpoint is capable of generating PME from
+> + * D3cold. Inactive endpoints are ignored.
+> + *
+> + * Return: %true if the host bridge may enter D3cold, otherwise %false.
+> + */
+> +bool pci_host_common_can_enter_d3cold(struct pci_host_bridge *bridge)
+> +{
+> +	bool d3cold_allow = true;
+> +
+> +	pci_walk_bus(bridge->bus, pci_host_common_check_d3cold, &d3cold_allow);
+> +
+> +	return d3cold_allow;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_host_common_can_enter_d3cold);
+> +
+>  MODULE_DESCRIPTION("Common library for PCI host controller drivers");
+>  MODULE_LICENSE("GPL v2");
+> diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
+> index b5075d4bd7eb31fbf1dc946ef1a6afd5afb5b3c6..18a731bca058828340bca84776d0e91da1edbbf7 100644
+> --- a/drivers/pci/controller/pci-host-common.h
+> +++ b/drivers/pci/controller/pci-host-common.h
+> @@ -20,4 +20,6 @@ void pci_host_common_remove(struct platform_device *pdev);
+>  
+>  struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
+>  	struct pci_host_bridge *bridge, const struct pci_ecam_ops *ops);
+> +
+> +bool pci_host_common_can_enter_d3cold(struct pci_host_bridge *bridge);
+>  #endif
+> 
+> -- 
+> 2.34.1
+> 
