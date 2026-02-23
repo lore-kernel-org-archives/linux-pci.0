@@ -1,137 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m1973182.qiye.163.com (mail-m1973182.qiye.163.com [220.197.31.82])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88B0285C88;
-	Mon, 23 Feb 2026 15:38:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3A9F25DD1E;
+	Mon, 23 Feb 2026 15:42:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.82
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771861137; cv=none; b=GirTKBuqUGtziPmDGvxclEuyLy7b9kGD95ur23KB0yLmw2Iyud4akACOjrADTDbHFLjisR6fGpik7PPNjXIqjX01lknPDqUqa8KLS2RJYUvLbMVYgwGw/AhOQivlQMqBRyn4oqtLfYUHtKofZOjsPjPH7Oqs2qXGs6kMxnsulcg=
+	t=1771861338; cv=none; b=IvJvHxWWgXWRVhmY/Bol+VXyiGn4g+nvwzZD5oU1j1qGTJkb3LNJ0Zq5dlFhUqCB6Bc91TFkI/i22/3a5gbxoonlATm/n3yHdv7Ieswpr9hVEsPl/ib6tPAOEvGIVqt5riqrH3VPvqTHULGLnjXimO2tO5kyuUoYsT7ImaP3FJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771861137; c=relaxed/simple;
-	bh=a91x6ZjyFVgYhiuh7Il+46iAHGDPqn7LDIlyqFnTu5k=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=BmQ7bJ/JuxMcL+OAsl0D25sV3eHHDhKe1vAgvjavYez8OEfGuwI6Rm+aJxg5p3U115lqCo6LUhkbvHsTrB7zU0JwZ/3+BHnYWWW3FDeR6hT1SMaNJwvRpcFwwkQksNuSObQbxZVgxSjpHkreMHbYFa39ZFy0+WOvqMlHUleS/MU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=svfrjplP; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771861338; c=relaxed/simple;
+	bh=Ogeto/EnD71LOarK5o3fEJM9A88tBkrJwTRn9x7DRhU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=eoA2rlmd4tvdjwIqpy+XOa+NuV3yazCrmc4Vin++OEU7XWfkyQOcQuxBS4qMSRjKV99ht+911vEigvOPAlzLGBePrOSBi2/wO6pJCmbzXQ4hALozqF8YEi3BJ1opMA/7A04Uvz7DYK8nhQnFaZAvJo6rg0s2L5UvMVUhUDMPcHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=NUJS3oSB; arc=none smtp.client-ip=220.197.31.82
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="svfrjplP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5716FC116D0;
-	Mon, 23 Feb 2026 15:38:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771861137;
-	bh=a91x6ZjyFVgYhiuh7Il+46iAHGDPqn7LDIlyqFnTu5k=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=svfrjplPzw4A3l5INpYv4WC3llJq3EA60Vw5jgFk5X3FlJ0MpNOm2yUTf1jhe3xqH
-	 ZZ27tio3TdQS80zkmxsvMFTiN2UC6yawBWdYrXvfM9rHPZQV1Sqac+gwlb8fQzs3J7
-	 uh/ldIyq760LZH/kC+7nv8OdaXB8MNSiC/BWObgasnDMfRwdFQ3S86MjPWRcaqgnlu
-	 gQZI6JChPhhkRhkW6Y/x7DZnZGmklsIAfXfqevVrw+vd/MwuYHRjwXDauaz/MXG3h2
-	 kzO0EKp57slNQlwM3qXctibSJbP8Q5JK4nphZ2dcM+NJPWd4SIiBJTFdh3Jmp+1XZ7
-	 rr/RmiA7kqoYQ==
-Date: Mon, 23 Feb 2026 09:38:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com
-Subject: Re: [PATCH v2 2/3] PCI: dwc: Add helper to Program T_POWER_ON
-Message-ID: <20260223153856.GA3695024@bhelgaas>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="NUJS3oSB"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34b3c9167;
+	Mon, 23 Feb 2026 23:42:09 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: linux-mmc@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philipp Stanner <phasta@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 02/37] mmc: cavium: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
+Date: Mon, 23 Feb 2026 23:41:50 +0800
+Message-Id: <1771861310-84988-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Tid: 0a9c8b2a43ea09cckunm7f2aa7e0986f0c
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQx8YSlZMSxoeGB9KGkoYSR9WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=NUJS3oSBGeWqnMxrcPY69IM1XQxic2UBGfUfSO71zOvOcnHABCm++sJPY64O/aTVFRZ/NgFZSp5/ns9sN582nNdOMqKzePQrSzUPEMfh/pNTDwksu2waW8NYmzOjck9Tukcq3RFstJ1DOmyM+J3vMlxktqrXCh3mcO/cEexh+zg=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=razRCj/KdwH/QWQ4NPFgL/dcqZf1iVw1sY1Lb13uoWA=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260223-t_power_on_fux-v2-2-20c921262709@oss.qualcomm.com>
 
+pcim_enable_device() no longer automatically manages IRQ vectors via devres.
+Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
+pcim_alloc_irq_vectors() should be used.
 
-  PCI: dwc: Add dw_pcie_program_t_power_on() helper for L1SS T_POWER_ON
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: linux-mmc@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Philipp Stanner <phasta@kernel.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-On Mon, Feb 23, 2026 at 04:43:31PM +0530, Krishna Chaitanya Chundru wrote:
-> The T_POWER_ON indicates the time (in μs) that a Port requires the port
-> on the opposite side of Link to wait in L1.2.Exit after sampling CLKREQ#
-> asserted before actively driving the interface. This value is used by
-> the ASPM driver to compute the LTR_L1.2_THRESHOLD.
-> 
-> Currently, some controllers exposes T_POWER_ON value of zero in the L1SS
-> capability registers, leading to incorrect LTR_L1.2_THRESHOLD calculations,
-> which  can result in improper L1.2 exit behavior and can trigger AER's.
+ drivers/mmc/host/cavium-thunderx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-s/some controllers exposes/some controllers expose/
+diff --git a/drivers/mmc/host/cavium-thunderx.c b/drivers/mmc/host/cavium-thunderx.c
+index 1373deb..55c46ae 100644
+--- a/drivers/mmc/host/cavium-thunderx.c
++++ b/drivers/mmc/host/cavium-thunderx.c
+@@ -39,7 +39,7 @@ static int thunder_mmc_register_interrupts(struct cvm_mmc_host *host,
+ {
+ 	int nvec, ret, i;
+ 
+-	nvec = pci_alloc_irq_vectors(pdev, 1, 9, PCI_IRQ_MSIX);
++	nvec = pcim_alloc_irq_vectors(pdev, 1, 9, PCI_IRQ_MSIX);
+ 	if (nvec < 0)
+ 		return nvec;
+ 
+-- 
+2.7.4
 
-> Add a helper to override T_POWER_ON value by the DWC controller drivers.
-
-s/a helper/dw_pcie_program_t_power_on()/
-
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-designware.c | 27 +++++++++++++++++++++++++++
->  drivers/pci/controller/dwc/pcie-designware.h |  1 +
->  2 files changed, 28 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 5741c09dde7f40487c6da6dfd66f7c8d96a74259..f56e2c07ddc57bd84882c14bebc7d4b4961f601a 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -1249,6 +1249,33 @@ void dw_pcie_hide_unsupported_l1ss(struct dw_pcie *pci)
->  	dw_pcie_writel_dbi(pci, l1ss + PCI_L1SS_CAP, l1ss_cap);
->  }
->  
-> +/* TODO: Need to handle multi root ports */
-> +void dw_pcie_program_t_power_on(struct dw_pcie *pci, u16 t_power_on)
-> +{
-> +	u8 scale, value;
-> +	u16 offset;
-> +	u32 val;
-> +
-> +	if (!t_power_on)
-> +		return;
-> +
-> +	offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_L1SS);
-> +	if (offset) {
-
-  if (!offset)
-    return;
-
-> +		pcie_encode_t_power_on(t_power_on, &scale, &value);
-> +
-> +		dw_pcie_dbi_ro_wr_en(pci);
-> +
-> +		val = readl(pci->dbi_base + offset + PCI_L1SS_CAP);
-> +		val &= ~(PCI_L1SS_CAP_P_PWR_ON_SCALE | PCI_L1SS_CAP_P_PWR_ON_VALUE);
-> +		val |= FIELD_PREP(PCI_L1SS_CAP_P_PWR_ON_SCALE, scale);
-> +		val |= FIELD_PREP(PCI_L1SS_CAP_P_PWR_ON_VALUE, value);
-
-  FIELD_MODIFY(PCI_L1SS_CAP_P_PWR_ON_SCALE, &reg, scale);
-  FIELD_MODIFY(PCI_L1SS_CAP_P_PWR_ON_VALUE, &reg, value);
-
-> +		writel(val, pci->dbi_base + offset + PCI_L1SS_CAP);
-> +
-> +		dw_pcie_dbi_ro_wr_dis(pci);
-> +	}
-> +}
-> +
->  void dw_pcie_setup(struct dw_pcie *pci)
->  {
->  	u32 val;
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index ae6389dd9caa5c27690f998d58729130ea863984..da67beece3f11e33d9a1937fa23d443feea3bbc7 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -602,6 +602,7 @@ int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
->  				u8 bar, size_t size);
->  void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index);
->  void dw_pcie_hide_unsupported_l1ss(struct dw_pcie *pci);
-> +void dw_pcie_program_t_power_on(struct dw_pcie *pci, u16 t_power_on);
->  void dw_pcie_setup(struct dw_pcie *pci);
->  void dw_pcie_iatu_detect(struct dw_pcie *pci);
->  int dw_pcie_edma_detect(struct dw_pcie *pci);
-> 
-> -- 
-> 2.34.1
-> 
