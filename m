@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF37C13D638;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6AB14A60C;
 	Mon, 23 Feb 2026 14:46:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771857963; cv=none; b=gjVrG9/7ssWk7UnM/nlKkT5oBTa5h3oxosiq6bgV07r0TMJXIWglegxVLHww3KHOaS+64VECreQmBM7JroRorks2l9VSLSo2wQhW/jceiN96RruCJR4yLtGuWS9vdXBlMStAQtEkG+6TWK8GPeM4Z8gAdMbVkX1EzGIt3Zg4VT8=
+	t=1771857963; cv=none; b=VUGrkRNiXcPABbkMPXKFMEMCtc2tsl1bXKQ5WiKDnHAny6zbt5rC6xCvAZeV6visRrx4cHUkiKJcsCKs3hjgRLvNfK6JzfjrMLzQIG2ytsWS+fIPCBWltSdOJzZakMsB8GdmF+33cq0eb1juFDTfYIDTD6cTA/LNBnGVNGz515M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1771857963; c=relaxed/simple;
-	bh=0oOacB7wekfab+QGwcpYIGrgFEdHi1JQuMOHXuEbmYE=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VXSXp7+El8Te0CGQacFl168rI+m/e9IMuCrfpSTxZ5HQujGok7euSCX9GeZf7zrkA043NXa1KE7hPW1t2LErJQrvlN/17uqCzGZjhUtRitNHQXhFoaM1eXVs95V25Zctrv+Lllzg61BteI9MW3OQB8CsgqiO9MJDEiSNkn5hoKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ImI0cTgH; arc=none smtp.client-ip=10.30.226.201
+	bh=iWmqYcni0cz3MRc5Qemm8sPMRUd1k7zTynVw4lp1/8w=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Owmr1bLt0qN95gospWf6gO/9SsjDFl/LXFRSSteXxAF59Z9/Hiyo3Ztfjt3JYLkznqEfWKlpcyMkqu3iZ11yGACk6mgAfo5xTqTUUAvCTNT6KkFhaoScDDnm2YLvfLfEuMsN/hfHnY90QyXsOiMBpZfzqw18wOEQm/awcmWor40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tDuLuz7F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ImI0cTgH"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8B600C116C6;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tDuLuz7F"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AD58EC116D0;
 	Mon, 23 Feb 2026 14:46:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1771857963;
-	bh=0oOacB7wekfab+QGwcpYIGrgFEdHi1JQuMOHXuEbmYE=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=ImI0cTgHNGr1GsDYBSBk4HyxLkGcIXDf2IriqbL/fPtG0hZzk6nQpF9Y6wLjJQ386
-	 I5Ek8voK8B/lXaYL2c6+gcw68y2TQZBtUSaG4eS4ZpC3mSNeFNb6Vnfs0fvozk1YSu
-	 Ug+AHbFQHCNmpdO5rkrDW/p0XgBus65ZCfkApFhg4LotdzCsAnbAxE6u+Ojuqt+SM+
-	 Bo6px52A9QqoZK8AU2F0InDGq26KBBPjOTd91NlEo7cqLSqPVoRAxK6pqBfFH0fXBc
-	 aBtWaJdmR/hz7WM7xf8tsGoIr55Gm8slq0bM7wRRsMiD58AhCm7M3zW0H4GxiWUoca
-	 VodG0fjeH5i5g==
+	bh=iWmqYcni0cz3MRc5Qemm8sPMRUd1k7zTynVw4lp1/8w=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=tDuLuz7F+vhwJItu7PNkRG/g4DPQ/DVxPV7ffTW+G9hazgzovDU0WgPEG0BgXGVcA
+	 ajP4bIkMIfUJR/yTEwTd9zmhm4PdP6k+Wtb1ec1Q45PTpimi6u5uo9ZBBPPg9BdNbx
+	 RRYPzGDjMwYP1yFdegrXIOoBqufXWaVaPBspy+KG2fo+XhnfHVJc2xDhESCngvVE7z
+	 hcTayj3BaZOhGCUhyxZg3pgcIKpoCJAJeHRsdhBMfpcm7l20pjHcBsrIEl9wOKEZx6
+	 sPjpJgL1hreO3WlMl98oV54e0opvFRnSfPwzzpLqdduwSDrP4E0vp9alMSEJ9xvzBj
+	 Duza/Hp0cPuvA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 823AFEA4FC6;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A365AEA4FC7;
 	Mon, 23 Feb 2026 14:46:03 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH v2 0/2] PCI/pwrctrl: A couple of fixes
-Date: Mon, 23 Feb 2026 20:15:58 +0530
-Message-Id: <20260223-pwrctrl-fixes-7-0-v2-0-97566dfb1809@oss.qualcomm.com>
+Date: Mon, 23 Feb 2026 20:16:00 +0530
+Subject: [PATCH v2 2/2] PCI/pwrctrl: Only create pwrctrl device if the
+ device node belongs to a PCI device
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,11 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIACZonGkC/32NQQ6CMBREr0L+2pK2CBVW3sOwoPUjTYBiP1YN6
- d0tHMDNJG8mM7MBobdI0GQbeAyWrJsTyFMGZujmBzJ7TwySy4pLodjy9mb1I+vtB4kpxpmuOeq
- Ca92jgtRbPB5hqt3axIOl1fnvcRHE7v5bC2KfLCslsLzUxbm/OqL8+epG46YpTwJtjPEH5dUs/
- 7kAAAA=
-X-Change-ID: 20260217-pwrctrl-fixes-7-0-b90eb30bbfe7
+Message-Id: <20260223-pwrctrl-fixes-7-0-v2-2-97566dfb1809@oss.qualcomm.com>
+References: <20260223-pwrctrl-fixes-7-0-v2-0-97566dfb1809@oss.qualcomm.com>
+In-Reply-To: <20260223-pwrctrl-fixes-7-0-v2-0-97566dfb1809@oss.qualcomm.com>
 To: Bartosz Golaszewski <brgl@kernel.org>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
  Bjorn Helgaas <bhelgaas@google.com>, 
@@ -52,19 +51,18 @@ To: Bartosz Golaszewski <brgl@kernel.org>,
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>, 
  Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1760;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1922;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=0oOacB7wekfab+QGwcpYIGrgFEdHi1JQuMOHXuEbmYE=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpnGgpmt4euzNlq9RltGhY8m2X7sgkRa8vB45wV
- NBkzXb+7K2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaZxoKQAKCRBVnxHm/pHO
- 9Y48B/wJzuwMEfa6vNHi9r0Gd95e9L7tbzABDyDIZDY+B76k4pE95SFkhRhQz8IOwgk0Wp5k6lc
- ++WYLoIiw5YGqnaHbq9+grzTVygO1oQQqiqVQme+EWNBmhfn3kzf71H1qMgBn/N5dEoX7jkCbys
- yf4tdRILk+rR2C7MkvhljuiGYlETnXmRsI0bp2qDyToud2FwpFh9BR0eUlBql7B9NTMnMYTR7KP
- hd4kQUaw2B110rsfLncxb7mbpDfDhwwLYH3VNqIpz5pcfnEZH6W/mMmc0d/dQ8NQ6X243TE3eJn
- n3k+P9DK6wk1tzXr96oeICdXYu7V7Siz2ZZy572hFUsZ9or3
+ bh=C+DZSejy79J+txqGCNv0wX73UYcOZysDCQlY4IL7Iwk=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpnGgqzSl5jRV8X8rKF8Q9KRccqVgEhgq/xbbmM
+ xWDhExESTOJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaZxoKgAKCRBVnxHm/pHO
+ 9TO9B/9IRnAAzaAi2ocvJBj+ICEUmVjCXX7kNpexpHjyGteK51xJQCj5Me6fpQT6w/dgf2zAIiP
+ 9xv1D5aEUAz3hd5y8MD08TDoYdE3Id5YKuxtAJTN5brvNAfdggQI7B4TOwqBuabcaI4znQS9+NL
+ TPqLXkxnjNi8oLZ1mI13pi9fCe1cbHMsJDQag+bVBusQjMXzF1xN+YuXkZFhTufUW6JwDfxua2l
+ qU6B+JBpnDhHaT7bkGWgl1sEE0y246QPz25zxXmVZBmzYg2D2lXHxjQWo86L85G15dHGhtlLgae
+ qs+maqeAPwG9RbnbhtLA+gtXWYc4mbw30kxNSZxIrcox64hE
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -72,51 +70,53 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series fixes a couple of issues introduced in the recent pwrctrl rework
-for v7.0. Both issues are due to some incorrect assumptions on deciding when to
-create pwrctrl devices. First issue is due to assuming that all OF graph nodes
-require pwrctrl and another one is due to assuming that all PCI child nodes are
-PCI devices.
+The PCI host bridge node can have non-PCI child nodes as well, like OPP
+tables, USB hub etc... So the pwrctrl core must ensure that the pwrctrl
+device is only created for PCI device nodes by checking for the 'pci'
+prefix in the compatible property.
 
-Both issues are fixed by changing the pwrctrl device creation logic in
-pwrctrl/core.
-
-Testing
-=======
-
-This series is tested on Lenovo Thinkpad T14s.
-
-Note for Bjorn H
-================
-
-Even though only patch 1 is fixing a regression on the IPQ board which was not
-part of the testbed of the pwrctrl rework went in for v7.0, patch 2 is also
-fixing an actual issue, but it is not impacting any of the current upstream
-supported platforms. But I'd like to get these two patches merged for v7.0 so
-that both the issues are fixed in the same major release where the issues
-originated.
-
+Fixes: 4c4132489201 ("PCI/pwrctrl: Add APIs to create, destroy pwrctrl devices")
+Reported-by: Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>
+Closes: https://lore.kernel.org/all/20260212-rb3gen2-upd-gl3590-v1-1-18fb04bb32b0@oss.qualcomm.com
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Changes in v2:
-- Used the compatible match for detecting the PCI devices in DT
-- Link to v1: https://lore.kernel.org/r/20260217-pwrctrl-fixes-7-0-v1-0-b5671e58934f@oss.qualcomm.com
+ drivers/pci/pwrctrl/core.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
----
-Manivannan Sadhasivam (2):
-      PCI/pwrctrl: Ensure that the remote endpoint node parent has the supply requirement
-      PCI/pwrctrl: Only create pwrctrl device if the device node belongs to a PCI device
+diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
+index 8325858cc379..7754baed67f2 100644
+--- a/drivers/pci/pwrctrl/core.c
++++ b/drivers/pci/pwrctrl/core.c
+@@ -272,7 +272,8 @@ EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
+  * Check whether the pwrctrl device really needs to be created or not. The
+  * pwrctrl device will only be created if the node satisfies below requirements:
+  *
+- * 1. Presence of compatible property to match against the pwrctrl driver (AND)
++ * 1. Presence of compatible property with "pci" prefix to match against the
++ *    pwrctrl driver (AND)
+  * 2. At least one of the power supplies defined in the devicetree node of the
+  *    device (OR) in the remote endpoint parent node to indicate pwrctrl
+  *    requirement.
+@@ -280,8 +281,14 @@ EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
+ static bool pci_pwrctrl_is_required(struct device_node *np)
+ {
+ 	struct device_node *endpoint;
++	const char *compat;
++	int ret;
++
++	ret = of_property_read_string(np, "compatible", &compat);
++	if (ret < 0)
++		return false;
+ 
+-	if (!of_property_present(np, "compatible"))
++	if (!strstarts(compat, "pci"))
+ 		return false;
+ 
+ 	if (of_pci_supply_present(np))
 
- drivers/pci/pwrctrl/core.c | 54 +++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 41 insertions(+), 13 deletions(-)
----
-base-commit: 1c2b4a4c2bcb950f182eeeb33d94b565607608cf
-change-id: 20260217-pwrctrl-fixes-7-0-b90eb30bbfe7
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.51.0
 
 
