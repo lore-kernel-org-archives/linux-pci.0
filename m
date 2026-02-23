@@ -1,87 +1,160 @@
-Received: from mail-m12894.netease.com (mail-m12894.netease.com [103.209.128.94])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB2F5329C49;
-	Mon, 23 Feb 2026 17:11:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.209.128.94
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7877275AFB;
+	Mon, 23 Feb 2026 17:15:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771866691; cv=none; b=KumhN+GCz7sSSRmHkoHBO8uw78VITst1qcEQgjHl13J9PMqAtMt0fJL9iJRB4Bwy+RO29U3z3jlLQ4XmCExZ+PKLutKrfYwnSUG5u6ay9K5m57p4EtfjkK+J/U5dIffi06dD5F/+klhW0bUjyiyiG6c1tjiin0OMiL6T1QhxL9Y=
+	t=1771866936; cv=none; b=lR2/d1HVDKths0SDDmQ/4/DQvgpIdio2AXc7SkkyUinlf5IM0LeM8GuqBkNAX1D2r9D9QzwBhJfAzQVasc184Dzi2bIO3kFUj1grJsVmzDE7/1skQw3mtM8kWz0zo8/3MEb9d1tih8eKaHJh4OvqyBg6NpSWvtXvucmzfFfXgGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771866691; c=relaxed/simple;
-	bh=HDbUMH5fLCW3QDujMYPW6hfScbc2Q7nQozPx79oCCAo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=qnBRIaf3D0Rh1TRsJugTd1n/Ef/Gm9gJSGfxPgJwTDd91015MKb6teA+S/aF62z3uM9MnR+Mg7IbC0D1icl2jDjgSyelPiEpzfJjXGKxnpA6Uczw2N0FkcxXbEElVUnC0IIPHJ51VWstdZLWKtLNmQ12WO6bXGOoM1WMUX0g5AM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=dVSoW8g1; arc=none smtp.client-ip=103.209.128.94
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="dVSoW8g1"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 34b4045df;
-	Mon, 23 Feb 2026 23:55:50 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
-	Oded Gabbay <ogabbay@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philipp Stanner <phasta@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 25/37] accel/qaic: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
-Date: Mon, 23 Feb 2026 23:55:43 +0800
-Message-Id: <1771862143-89507-1-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9c8b36cac509cckunm2c284481987e59
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGhkdS1YdQ08ZHk1JT04dSkpWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=dVSoW8g1lEI3HkEB6qjaZRW4c9soowDTVMHkEgroBTKM8VWjhfseLOy4FI+2x/5jgz6wXVSuPmsJzTmDFf8t6dvsXUHTIfS3IUSQZb6GGJNczS1QMpXh/6wXvRLfABeIRnWaceT/Xa5Qs0wpg7Yt8zpsK1EnLFn3P3UwG84f614=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=YC4f9L+xeX6KWxsvQnkRnBIDjAYLF8oj1n+EW/lf3qs=;
-	h=date:mime-version:subject:message-id:from;
+	s=arc-20240116; t=1771866936; c=relaxed/simple;
+	bh=5WCDUqqUaCC/EdbQ/WC19N68G8OmPJbTU90snkSfaFg=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=IvlPvWqpUabEHFCGZav+gl/u6JBg3CXGeDPzALO+hmpxy1P8pt+EAyI5iVgUvcSkMmHkZ3kkfbiKtLL6FVp28eLqlYAEXG58L6LhOSho0M0tely+r7HTPIQbq6aA/6wyqHoEm0bgYHCyeDoj/Nb++MezIeNKlcwtuGxemi+YVFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fKSCH3FJBzHnGgl;
+	Tue, 24 Feb 2026 01:14:51 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id C117240539;
+	Tue, 24 Feb 2026 01:15:29 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Mon, 23 Feb
+ 2026 17:15:28 +0000
+Date: Mon, 23 Feb 2026 17:15:27 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: <dan.j.williams@intel.com>
+CC: Lukas Wunner <lukas@wunner.de>, Jason Gunthorpe <jgg@nvidia.com>, Alistair
+ Francis <alistair23@gmail.com>, <bhelgaas@google.com>,
+	<rust-for-linux@vger.kernel.org>, <akpm@linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alex.gaynor@gmail.com>,
+	<benno.lossin@proton.me>, <boqun.feng@gmail.com>, <a.hindborg@kernel.org>,
+	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <tmgross@umich.edu>,
+	<ojeda@kernel.org>, <wilfred.mallawa@wdc.com>, <aliceryhl@google.com>,
+	"Alistair Francis" <alistair.francis@wdc.com>, <aneesh.kumar@kernel.org>,
+	<yilun.xu@linux.intel.com>, <aik@amd.com>, Mathieu Poirier
+	<mathieu.poirier@linaro.org>, Thomas Fossati <thomas.fossati@linaro.org>
+Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
+Message-ID: <20260223171527.000016ef@huawei.com>
+In-Reply-To: <699a3ff3f019a_1cc5100e1@dwillia2-mobl4.notmuch>
+References: <20260219124313.GE723117@nvidia.com>
+	<20260219124119.GD723117@nvidia.com>
+	<aZcbBt7OmNeH3oA0@wunner.de>
+	<20260219143129.GF723117@nvidia.com>
+	<aZcnTnYJ61Kma0yd@wunner.de>
+	<20260219173937.GH723117@nvidia.com>
+	<aZgbukYiIxg44_e7@wunner.de>
+	<20260220141057.GL723117@nvidia.com>
+	<aZn9cfhv0YRxI1mw@wunner.de>
+	<699a3ff3f019a_1cc5100e1@dwillia2-mobl4.notmuch>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-pcim_enable_device() no longer automatically manages IRQ vectors via devres.
-Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
-pcim_alloc_irq_vectors() should be used.
+On Sat, 21 Feb 2026 15:29:55 -0800
+dan.j.williams@intel.com wrote:
 
-To: Jeff Hugo <jeff.hugo@oss.qualcomm.com>
-To: Oded Gabbay <ogabbay@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Philipp Stanner <phasta@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+> Lukas Wunner wrote:
+> > On Fri, Feb 20, 2026 at 10:10:57AM -0400, Jason Gunthorpe wrote: =20
+> > > IOW the resume/RAS acceptance criteria is that the second nonce was
+> > > signed with the same private key(s) that the first nonce was signed
+> > > with. =20
+> [..]
+> > > Linux will have its own sw model, the spec is just the protocol
+> > > definition. In the CC world everyone just knows the verifier needs to
+> > > be external.. How else could it even work? =20
+> >=20
+> > There are products out there which support CMA but not TDISP.
+> > In other words, the CC world isn't everything.  The modest goal
+> > of this series is to allow authentication of devices in compliance
+> > with PCIe r7.0 sec 6.31 and the SPDM spec.  I understand there are
+> > features and authentication modes which are important for the
+> > Confidential Computing world, but CoCo needs to fit into the
+> > spec-defined mechanisms. =20
+>=20
+> The TDISP proposal from Jason and I bears repeating because it is a
+> superset of what a CMA-only solution needs, and security guarantees it
+> provides. I also submit that "identity revalidation over reset/resume"
+> is not a *primary* concern. It is certainly *a* concern that needs to be
+> part of the ongoing discussion to avoid painting ourselves into a
+> corner, but certainly a complexity that is incremental to the base
+> enabling. Recall CMA is only a building block to trusting the rest of
+> the device interface outside of the SPDM session.
+>=20
+> Userspace is in charge of all trust and verification decisions. A TSM
+> driver, whether that driver is in-kernel-SPDM-library, or platform TSM,
+> establishes a session with a device with a given certificate slot. The
+> session establishment makes cert-chain+transcript available to userspace
+> and caches the public-key. If userspace does not like that result, it
+> opts to not bind a driver to that device, or retries with a different
+> cert slot.
+>=20
+> If later we want to support a "same device" capability in scenarios
+> where a userspace round trip is infeasible then that is incremental ABI.
+> That ABI would allow userspace to cache golden cert-chain+measurements.
+> The resume path can revalidate that identity description with a fresh
+> nonce and the cached public key.
 
- drivers/accel/qaic/qaic_drv.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+=46rom a simple case of 'what is here' in this set, the only bit I'm seeing
+change in order to implement what I think you and Jason are describing is we
+don't bother checking the cert chain in kernel for the first time: We
+provide that to userspace to decide if it's good. If I understand
+correctly, this will be at the end of the full sequence once we've pushed
+through a nonce and gotten signatures + measurements.  Same as checking a
+TSM provided transcript. That was sort of happening anyway if we consider
+the .cma keyring as just providing a short cut filter if we didn't trust
+the device provided root cert.
+User space got the transcripts before it had to make any decision on
+binding and could do anything it liked with them.
 
-diff --git a/drivers/accel/qaic/qaic_drv.c b/drivers/accel/qaic/qaic_drv.c
-index 4c70bd9..2b2e0c5 100644
---- a/drivers/accel/qaic/qaic_drv.c
-+++ b/drivers/accel/qaic/qaic_drv.c
-@@ -525,9 +525,9 @@ static int init_msi(struct qaic_device *qdev, struct pci_dev *pdev)
- 	int i;
- 
- 	/* Managed release since we use pcim_enable_device */
--	ret = pci_alloc_irq_vectors(pdev, irq_count, irq_count, PCI_IRQ_MSI | PCI_IRQ_MSIX);
-+	ret = pcim_alloc_irq_vectors(pdev, irq_count, irq_count, PCI_IRQ_MSI | PCI_IRQ_MSIX);
- 	if (ret == -ENOSPC) {
--		ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI | PCI_IRQ_MSIX);
-+		ret = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI | PCI_IRQ_MSIX);
- 		if (ret < 0)
- 			return ret;
- 
--- 
-2.7.4
+For that caching the public key bit, I'm not clear on whether you intend
+to do that from kernel side (which I think I'd prefer) or have user space
+squirt that key back in again?  If we are doing it in kernel we can
+at least always verify the transcript is self consistent and refuse to
+give anything to user space if it's not consistent (other than debug materi=
+al).
+By self consistent I mean we verify the signature against the device provid=
+ed
+cert (might as well verify whole chain as that's trivial given we have to p=
+artly
+parse them anyway to find the cert).  I don't think it maters hugely if
+we do this in kernel beyond advantage of removing a few foot guns and
+simplifying the userpace interface to "I'm fine with the provided transcript
+for use when I'm not here next time" write. Disadvantage is we use the
+cert parsing code (which is there anyway) and parse it all twice - once
+in kernel and probably again in userspace or at some remote verifier.
+
+Measurement verification (in kernel) is potentially a trickier bit of ABI
+design as the space of what might be in there and what matters for a given
+device is complex to say the least.  Only a small part of that is spec
+defined.
+
+I can see there may be some use cases where we relax things beyond this
+(potentially including .cma keyring and root cert only)
+
+Jonathan
+
+
+>=20
+> For TDISP the violence of dropping the device out of the TCB likely
+> needs more sophistication than golden measurement revalidation. For CMA
+> mere trust in the root cert is not sufficient for many of the
+> adversarial device threat models, so the kernel need not carry that
+> responsibility.
+>=20
+> Aneesh and I are putting together some POC patches along these lines.
+>=20
+>=20
 
