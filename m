@@ -1,156 +1,112 @@
-Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com [209.85.167.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7A537D134
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 23:08:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771888131; cv=pass; b=TmS1vpV2hdsjLhK1elDNiGBY0LOjwx1eXzy2NrYN0Tn9cHF+X41aiE+0MSQ0DwV7wAad17to8yFg1UcdKKhVKAWaRrDHUpsDSuDn9wC22fw8NbD/G9gKF4BCDE/tv5o6A65E2QEMfPtBx/i4Dahb6lxUNd9EmPVX7p7QZPe79Wk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771888131; c=relaxed/simple;
-	bh=Ydbc6rbyk4KLWrkHSXSI7j05eAvfIq7SG6ROABriCE0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Hi39ymakq1Id0BdCsgpU5HzTjILqUjki1vMVrSsmnUQF+LoSsK/JIVOanb44Jmr+EBYBoqxhn7awY3qzoQIoG08NYiO9Gz5QOPWVgXhwMvpMrlMsKSx/J8dVjYzj0DH9N+x/PzUUsCD/c0Rk7XECMkorNz09hbmqozdGlwgKfkw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=d2jOm9V3; arc=pass smtp.client-ip=209.85.167.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="d2jOm9V3"
-Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-59de8155501so4894594e87.3
-        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 15:08:49 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771888128; cv=none;
-        d=google.com; s=arc-20240605;
-        b=IhUMgM9XLgRj1PJt1t989tIR1r/JXeEnM5Yh4kiyJyPrprIjt+iQjUzcrfJUx/s1UN
-         b00g6q35UNEaZpAjz/Mp/kmVr0gkrfeAPJmfWjFLY4V3OUbhxRWPxnKy2KZxYfRcl4Kx
-         q7n4+NEE/WkzfPS9/PlumAO1AweGOB7P0+FL285auest2Wykt6rdfMj8O/L/Qj4TMH2u
-         JQUTIKhKFyYPxI53GYwghLaaSFrzitNSwSkFCRr+ZIb2++VxpWw6Ark8sfFF/6DNDGUe
-         EPmEFoMRYp8WcSzkkTCkNk3GQzMEBqZZIajlvz1FgeDXzzjc1o1J4XSm70Vz4gB8KSOH
-         KP4g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=c4ne1Ls/uKmuDNTWcMVVG01PBoi2SfFbs/naiop9R80=;
-        fh=dSSRyNSIxZuN/g+ge8+dQxKjKLgS5X/dRY1grldx3qw=;
-        b=RA52mFvb0fba6dNfMrLY0ZCej4TgBMvyYr75GTVUHYpP6uY2/QroYpOj3jKC1niMvu
-         s7M8vfZfwk7N+RSRz2Lf0uVMBi4snozeV3jXUZuieOLeBGhO3xml9urC72fazkmam81a
-         pw6hsABBHVwEblB7zlYQV3h9w/AXzpH28or1wm003HcVgTD10WMUGv3SiCERAYv9ki/R
-         n8JHWO1O9kCAgq/2Jbv0r0GXA0Lzjo23MrnytI/j4vyQR3waWY+sN7U7i5uW+wYRWxnE
-         8yHd2G5wRSMxnoXYeuFrwoc+hfEdrnuySRO/Ux4r9j/satJLs1VXv7KCotos8Qb97MbF
-         NWIQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771888128; x=1772492928; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=c4ne1Ls/uKmuDNTWcMVVG01PBoi2SfFbs/naiop9R80=;
-        b=d2jOm9V3cdZfFgFgtcOR6roP0zV6o54zg6vrHNIGDgRJKHwNbJiF1oKLByePDLu+RZ
-         RvMt3et4QhS2OXYEZLCppfk879ITR1XE3hdUPE0ThGM4C5mKeUT1c6Dnw3A0lQECdVkl
-         MLoG2wBeARg8OaPUQOIlRAOfeFOFaPvyTTni1e89jNXDRH3Y9eV5MY26WNXGwo94WMnt
-         BXxRYZWJ2B8+cz37pMBIO8DoV8yI9noiFuHZhCyj7m7o3+hGADuNCMWgfkYrPxRDSG8F
-         BiW+Yp8TW7QxilchJG8UantylCuotfQo/2+FVQfg77AktnxQ2HvZ5eoU2Dy5tsafT9wJ
-         KNGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771888128; x=1772492928;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=c4ne1Ls/uKmuDNTWcMVVG01PBoi2SfFbs/naiop9R80=;
-        b=hnYlbI4RxL05F7U7bjQepELAtz6+Wfffcxvdgr/SyeQA35OhsswlGbiCQmQnpQuoe6
-         RY3WeueI79+zgCrPTKfLKKEW86Jv3ZYQAQybGkso1EgBUXDRgUIUhqTjFouC6IY5GIIL
-         dijkmnJLMjwAK2zEAlnWmBnYvQEAXan225kK732UATfMvW6j/8vXjUxV9uT1tRbQVid1
-         MfQI8FJfRmogFvTjNRwBakCrF9pbsu86PbDim9L/i8rhb0K0zCk204uSEaCAXBviE970
-         WF5O1ka/XaYqhbQJCoxtuphUCfk1n2UaytWhVaDKE3gxFxqxHFPE1/O/AYo84KmZFqoY
-         nMLg==
-X-Forwarded-Encrypted: i=1; AJvYcCVOI1sStAbJg6g5Jx6jlIcbon9dpGtNCZMIbIEyCMMGfgtGTwMXuaYzWIhMJ+JvdmVvx3yUjOP4MEs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YykyH3+wZ13gXn/cP56276SeV96BwuNhyx1o7A3xoOqHF56jdPp
-	6dncPRSz1KIzVR23NXkOl6ni7c0hHrHKjLevkSYIbev6u+ZRzh8P2LzHMUEzivY4Yal6lBgpbVF
-	sncjPxywEy6AtfTZJF5A4T6s8/q/9SX+Vu9So3Tat
-X-Gm-Gg: ATEYQzx6F7wH5Ju5jf1BixQ8sDQX1Vl09OJ+JKV87z4Mp2nHoFjOzvdpIY0tpPDTgmC
-	YhlYY12j3ZQyDJdKIwKT0ssHAHV1LGt4xiy0zMxfMS6sAS+8Fd+3XJ3cCNlpp3P7P0/jzdaDppI
-	G+DzdzICnkKZr+sxbmQFghiO5iTQ4DmJ/UcHf4RgVg2m6s9koHsx2029D0gxKupqqsmvb8cQwye
-	UBg6m+9NJfUJgHyCDux5fcBLPR2bRMOLAdMFh6hznsWhnbUgfkzh4Ab5KW1kuxph+NBYQGB2cPR
-	REGRN84=
-X-Received: by 2002:a05:6512:3b9c:b0:59f:8546:1899 with SMTP id
- 2adb3069b0e04-5a0ed87de41mr2986457e87.11.1771888127316; Mon, 23 Feb 2026
- 15:08:47 -0800 (PST)
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 29A1B227B8E;
+	Mon, 23 Feb 2026 23:14:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771888489; cv=none; b=evSmGCGSUUosHzfe4PCVAZ3wiok1uSug3TK3Y1Lsr9z29i2tKzz0hv0C4ORfW7zF/NLanyLXMC5Y/lcL0IfrOZdfxDIf58b0VkqkYKVL82SrulTY4k4eWfY6Tp/JYTkMliacXA0c17ZBhzdfKRkwEYEJ1IQnJzP5gIDCyq2tU1c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771888489; c=relaxed/simple;
+	bh=e01YIAWrx5GdNXgnWAkVWPXUF0aGhD02lZKJLFSQmyc=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=P7phHOaJUI8FB1PSeLlaUV5Gaz6GDKNtJJ1zdfXWSoE4EZFFlRDZBQk2JhI4Be+4N4THbtArmbnJdflGOaPGIlYAD9XsadWZKow3zsNJY9DxsZLiPbd+i8pvocu+pD+WNMIsLGUDtYAyo3wlHOiaXncGEB4UbinQnGerWEz7lo0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id 9335E92009C; Tue, 24 Feb 2026 00:14:37 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id 8D2CF92009B;
+	Mon, 23 Feb 2026 23:14:37 +0000 (GMT)
+Date: Mon, 23 Feb 2026 23:14:37 +0000 (GMT)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Matthew W Carlis <mattc@purestorage.com>, ahuang12@lenovo.com, 
+    alok.a.tiwari@oracle.com, ashishk@purestorage.com, 
+    Bjorn Helgaas <bhelgaas@google.com>, guojinhui.liam@bytedance.com, 
+    =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+    jiwei.sun.bj@qq.com, linux-kernel@vger.kernel.org, 
+    linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+    msaggi@purestorage.com, sconnor@purestorage.com, sunjw10@lenovo.com
+Subject: Re: [PATCH] PCI: Always lift 2.5GT/s restriction in PCIe failed link
+ retraining
+In-Reply-To: <20260223173603.GA3698515@bhelgaas>
+Message-ID: <alpine.DEB.2.21.2602231829500.46231@angie.orcam.me.uk>
+References: <20260223173603.GA3698515@bhelgaas>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260129212510.967611-1-dmatlack@google.com> <20260129212510.967611-3-dmatlack@google.com>
- <4mbhcmimhin2ulz57mbzpe5p5dkhfziiyep5k3vgls4zmom3sb@g6jlouyvmpuz>
-In-Reply-To: <4mbhcmimhin2ulz57mbzpe5p5dkhfziiyep5k3vgls4zmom3sb@g6jlouyvmpuz>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 23 Feb 2026 15:08:19 -0800
-X-Gm-Features: AaiRm50_OD8BarR0N1ju3iFQZFALazFmYS4w16LFHF58C19D7VPNrgpsKvMORCE
-Message-ID: <CALzav=eXY=ZBshmpi9axt+_0SxaAm0Xbo7w==nCWJwKK3xcThw@mail.gmail.com>
-Subject: Re: [PATCH v2 02/22] PCI: Add API to track PCI devices preserved
- across Live Update
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, 
-	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, 
-	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
-	Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>, 
-	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
 
-On Mon, Feb 23, 2026 at 2:04=E2=80=AFPM Samiullah Khawaja <skhawaja@google.=
-com> wrote:
-> On Thu, Jan 29, 2026 at 09:24:49PM +0000, David Matlack wrote:
+On Mon, 23 Feb 2026, Bjorn Helgaas wrote:
 
-> >Drivers can notify the PCI subsystem whenever a device is preserved and
-> >unpreserved with the following APIs:
-> >
-> >  pci_liveupdate_outgoing_preserve(pci_dev)
-> >  pci_liveupdate_outgoing_unpreserve(pci_dev)
->
-> nit: Preserve and Unpreserve can only be done from outgoing kernel, maybe
-> remove the "outgoing" from the function name.
+> > > > Can we reconsider my patch that restricts the link retrain mechanism
+> > > > to the specific device that created the work-around?
+> > > > https://lore.kernel.org/all/20250702052430.13716-1-mattc@purestorage.com/
+> > > 
+> > > I think we already at least potentially meddle with the link on every
+> > > device, and it definitely makes me nervous.  I would like it much
+> > > better if it's possible to limit it to devices with known defects.
+> > > 
+> > > I'll defer these for now and we can see if a consensus emerges.
+> > 
+> > As I say it's logically impossible to figure out whether or not to
+> > apply such a workaround where the culprit is the downstream device,
+> > because until you've succeeded establishing a link you have no way
+> > to figure out what the downstream device actually is.
+> 
+> IIUC Matthew [1] and Alok [2] have reported issues that only happen
+> when we run pcie_failed_link_retrain().  The issues seem to be with
+> NVMe devices, but I don't see a root cause or a solution (other than
+> skipping pcie_failed_link_retrain()).
 
-That's reasonable, I can make that change in v3.
+ I argue that by applying this change the issues with NVMe hot-plug will 
+be sorted while keeping the configuration working that 
+pcie_failed_link_retrain() is needed for.  Win-win.
 
-> >+static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
-> >+{
-> >+      struct pci_dev *dev =3D NULL;
-> >+      int max_nr_devices =3D 0;
-> >+      struct pci_ser *ser;
-> >+      unsigned long size;
-> >+
-> >+      for_each_pci_dev(dev)
-> >+              max_nr_devices++;
->
-> This will not work for SRIOV as new devices will be registered when
-> sriov is enabled and the max will increase. As we are not handling VFs
-> with this patch series, this can be fine?
+ I note that active links are unaffected, so to say it's meddling with the 
+link on every device is I think a bit of an overstatement, and reports of 
+issues are from a few people only, of which Matthew insists on dropping 
+the pcie_failed_link_retrain() stuff while Alok is happy with the solution 
+proposed.
 
-That's right. Since this series does not support VFs
-(pci_liveupdate_outgoing_preserve(VF) will return -EINVAL), I dropped
-the logic from v1 that included the maximum possible number of VFs in
-max_nr_devices.
+ Shall we try this change and drop the whole pcie_failed_link_retrain() 
+stuff after all if it turns out to cause issues yet again?
 
-Once we add support for preserving VFs, we can update this logic.
+ What outcome would you envisage had I taken the approach from this update 
+right away with the original change?  My only fault was I have no use(*) 
+for PCIe hot-plug and did not predict the impact there.  But no one can 
+predict everything and I think dropping a solution rather than fixing it 
+just because it wasn't perfect right from the beginning would be unfair.
 
-Another way that pci_liveupdate_outgoing_preserve() could fail due to
-running out of room is if hot-plugged devices are preserved. But I
-don't think that's an important problem to solve right now.
+ As to the root cause, I suppose it's hw people who see the problem in the 
+lab could say more.
+
+ I can only guess LBMS is set in the course of device removal, perhaps due 
+to contacts bouncing.  It's not clear to me if this is compliant even, as 
+the spec is explicit that LBMS is only allowed to be set if the port has 
+not transitioned through the DL_Down status, which the loss of electrical 
+connection (circuit open) would seem (?) to imply.
+
+ Then again at x4 width which NVMe tends to imply the lanes may disconnect 
+at different times each, so the loss of connection on one lane would not 
+imply the loss of link, so the setting of LBMS could be legitimate before 
+the device has gone for good.
+
+ At insertion the link has to get running stable at 2.5GT/s first before 
+switching to a higher speed, so even more so the LBMS is not supposed to 
+be set.
+
+ As I say it's only a guess and I may be missing something.  I can't claim 
+any familiarity with the PCIe physical layer, though I can take some time 
+and study it.
+
+ In any case the unconditional unclamping and retraining actions proposed 
+are expected to clean up the state, whether compliant or not.
+
+(*) Except for ExpressCard in my laptop, but that's another story.
+
+  Maciej
