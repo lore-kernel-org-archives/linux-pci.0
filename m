@@ -1,27 +1,28 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012000.outbound.protection.outlook.com [40.93.195.0])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010068.outbound.protection.outlook.com [52.101.56.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B08CC339875;
-	Mon, 23 Feb 2026 18:46:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF380368271;
+	Mon, 23 Feb 2026 18:46:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.68
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771872395; cv=fail; b=HnSrZAPmBA1ly1IHd57/XMsHWs2klIDNUzYUn/BmBsxr+SUUnUFEjNf1lQflPVzp11jKlJdoBAyPwoxs/joAy9WiyEW5AbF3x4C7IC68LsFDCxNUvYvjIXmpf+ExResG+BVl/00p/MV+VkunCcvSmHkzs7sEQuhpO5F2QSiwZVs=
+	t=1771872406; cv=fail; b=K1FHhBTXKRtUW1wroCj3BfUZR606s6qH/psJiOpHS6XxkBuFPyitv8L2KFxGDU13tHx3JuhQRFShpCkcVCC6L+AX6RAJtPwFVJGqbVHVmzJxA9Efm3vgLffxf5WZiTGJ+VytGwL9Ug0SPfd17khKe37TYf9NXXjpfG/ac3r04zU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771872395; c=relaxed/simple;
-	bh=eE0W2XsaAScbibZJMVEsldJPNVfSuxczJOSsDRM05ow=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=h7GAEbvjQohOyqIwJ91AguMM6xKj9mZZfxw9LL8HGVKGAbrJSHBjl4dGX3VDNQX9EwQqjQfE59rj7Y8lYHTCwtEeb4Xpfz+bfHxVnxrQXjeAgEEiN/ws9pzMK6N+DJnRMBuAFPmg3VTMRJOGA4+9rwmEuSdBnGEbzZd7WGz2erk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Vv5SGvmj; arc=fail smtp.client-ip=40.93.195.0
+	s=arc-20240116; t=1771872406; c=relaxed/simple;
+	bh=OBlUggWYMCKdif8VZJNTKPbme+xn8TnyL394GJUHqno=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aKs5aFdQnIBpjoVaZIHbyHOqY1TRMsFDSR0mDUE+JqQAOjNm04SJr+h1AOu01xDyPotkgIz9+WoiZ2caP1DXhH87ryNsfGw/exdF6qYEXFnjtVOYDYQK83Tz4+UhoTH+xHOquv4wQH/avfx+kS7H9I49pno8r36Du0GF9EC1HdM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=BiLNNXwO; arc=fail smtp.client-ip=52.101.56.68
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Vv5SGvmj"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="BiLNNXwO"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=l87YgbFRkfDdvlhDA8bdO4pHUtsGzrN5cexXwtDdYBfwQop4cwTxKXZSssCPd8WiLomMTnuOjtBiHm3AemXN3v0+iMHCLAniEtbU3npSbSH9DefXTGQwwyTFCx9SG8Nbqwkq1srUeB/j5EoRXnHOvSYeKuYt5PV1K37YuQG82eZnFrLpPGYErqLlL7MgtR/HXU70htdL2Uy7L5WLQ+R1+NcxGSDFwTXEzT8XqPKIaoh9x8EjT2XvvXvmwmpa4wnnqsqgq9KrsbnVTHT92h/VJS/nNiPl83HjMBTHITdL23Flgbix6NlvUgO3jF1QTADUEKBKWKfBYLcR6Nh2DJrUDw==
+ b=ukLYJ52z7Y6ECFrllGaQL1Vn0OnIGqzBx/RIi9oSuwd7U4rP+TLIcXU2hWVhA+MTbKTGM7g6p0+KpGNp8uqxL+lUOz3DV5gzgDBN2R8ij4W3F8/ku3ywz0AME3M6i2RWawllGOTH9p+o3cUVdlDVKCBeCPm8vaYZcWXwX15HnNoXcxIsy4JH/sY42qSkTNthMT0QQFtuMSB6wzv7mCLeUp2NNT2+FJUoEOPY+uUvjsCqfjs2V1+MKCDjVhLvg9I8LU/b+ezMh048wHlEryJBO8sRrRdn5FSgS8oC33/epYgapfLbqt6exTaKPwsxegii8TXCGBC14MljSiM8WoX1zg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AuzofrG4Eihh29prvUPmOZo/9iYZeepA57UfO7WqHKg=;
- b=vGCHccZ0gkbuy7o1BuQf8ZdT+S9jWslrCW/8ivRE46M1aO0RIyUvDgvjjK4q0kJ3srHYkHGDdD3HQo1FhwA/fRRgz2evXy3pj1e3A5lYP18FRGvadjbZl13hdyeX0uQ+Q8heDKy35akqnHSTs8ipuHvpJbKDfB8t+VNNuz99jUnNnRbJYmJlrzW+yXL+WqKqCSvovuR00b9YMhrSWX2HSFEGt98jPVeF2gTtgujIOV5jXfgnL+gcr8T7gyMu9R2RruvhPin9pE9P5ZXiV5P5iIbjeOJjq5X2ts2to/U9gMs7XTfp4wR9PEMzivmA5/vVE52OEw6Yk3VEy4G77KT1sg==
+ bh=3GU+7U09BsNXyrDEr4WbyVJ54pcVM2du2y7lcs6xPpE=;
+ b=DMutTAs8IrbjG7y5E9uoobJ2PDhXQIunNnl6RuDG4pw0afWHWPJZc6cVNhPWoU0ec/UeuAkveW3pDNoRksdjfjG14FtmJo4Wy1b3Br4bo6QoUtZ0fWCpTFQ8EBoNIpWZjrznnmSNcvAhxVPnsteFC2hHDOM4ZOQyQOLKEk6TnNJnn+grwgT9GxKNt/ubAnKIrFHcE4mIIRGXTKzVAAWGSio3egJg3FhXHM5IkBEg8tAUANl8nd8K6Leaic9OKmeemQ+Pm5x9kXmBw4FYeo86/x2W0WjzTrPPhDhzFZJDnMFcocICIa1XHumBHK1rgcyuxKRKiN0UByw+q649JTQJ2A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -29,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AuzofrG4Eihh29prvUPmOZo/9iYZeepA57UfO7WqHKg=;
- b=Vv5SGvmjyOL33bAxav+X7g6kU4kYEktZqTJ855HXX//SkfWuM8w93i/43IS3fHit/Ae19M1CIn2IGTWsE4VV9Kda30SARX2mcwOnNOlDbFF4mseY0Do0jnS7HUIkif1WR695N2i29gel30rdtE/PJt0uIVMJ9EjH/7cZIUAfWwsEBY6sDURGM48pCEArUP7lR0Mtn13L2/Ou5+xQrG6FjbYzySBG/MbDUn9jmT700x5xDQu5dbFlQudrcnIubtgAOiN629nCpgEjB95kV1/yERkF9Wr1qHBoMq15HE5TYRzXPupRhdZjneARHB0BF19ebuucLisHjytxidxMzJC6KQ==
-Received: from PH7PR10CA0002.namprd10.prod.outlook.com (2603:10b6:510:23d::28)
- by CH3PR12MB8186.namprd12.prod.outlook.com (2603:10b6:610:129::10) with
+ bh=3GU+7U09BsNXyrDEr4WbyVJ54pcVM2du2y7lcs6xPpE=;
+ b=BiLNNXwOKISPk/TJK8iaQQyzBZY3qmomHIjONqD671Eltg+7i54aJGo61zxs2abimxBvBFDMu642yc8eQ8tSPMJRi/jX84jcd3gztfmy/fY6QzWIIIxXkqOYSn4G+0NjR76FWQtJfUM6//VhxeS4gDwbKzmvOCqYcV4gFfVy6Xc95QTtpZQXbiDL0iNJSvaaE07qGJFkqXbTv91qHwYXnPZBVNBuC7YqxbTrN0wDEFbLAZkTIgEYOJxmYcfx8ad17C7Zn69q22B3eddYOmkGiZkfRDt99APvHPQMCcEgnEHN1sPvLDFDqHYblAEKI3sB4weT4jOaP5NrQffxpehBvA==
+Received: from BY5PR17CA0021.namprd17.prod.outlook.com (2603:10b6:a03:1b8::34)
+ by BN5PR12MB9487.namprd12.prod.outlook.com (2603:10b6:408:2aa::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.21; Mon, 23 Feb
- 2026 18:46:26 +0000
-Received: from SJ1PEPF000023D4.namprd21.prod.outlook.com
- (2603:10b6:510:23d:cafe::3a) by PH7PR10CA0002.outlook.office365.com
- (2603:10b6:510:23d::28) with Microsoft SMTP Server (version=TLS1_3,
+ 2026 18:46:32 +0000
+Received: from SJ1PEPF000023D8.namprd21.prod.outlook.com
+ (2603:10b6:a03:1b8:cafe::29) by BY5PR17CA0021.outlook.office365.com
+ (2603:10b6:a03:1b8::34) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.21 via Frontend Transport; Mon,
- 23 Feb 2026 18:46:21 +0000
+ 23 Feb 2026 18:46:32 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -48,17 +49,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- SJ1PEPF000023D4.mail.protection.outlook.com (10.167.244.69) with Microsoft
+ SJ1PEPF000023D8.mail.protection.outlook.com (10.167.244.73) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9654.0 via Frontend Transport; Mon, 23 Feb 2026 18:46:25 +0000
+ 15.20.9654.0 via Frontend Transport; Mon, 23 Feb 2026 18:46:31 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 23 Feb
- 2026 10:46:02 -0800
+ 2026 10:46:08 -0800
 Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.35) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 23 Feb 2026 10:45:56 -0800
+ 15.2.2562.20; Mon, 23 Feb 2026 10:46:02 -0800
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
 	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
@@ -69,10 +70,12 @@ To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
 	<18255117159@163.com>
 CC: <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH v6 0/9] Enhancements to pcie-tegra194 driver
-Date: Tue, 24 Feb 2026 00:15:29 +0530
-Message-ID: <20260223184538.3084753-1-mmaddireddy@nvidia.com>
+Subject: [PATCH v6 1/9] PCI: tegra194: Drive CLKREQ signal low explicitly
+Date: Tue, 24 Feb 2026 00:15:30 +0530
+Message-ID: <20260223184538.3084753-2-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260223184538.3084753-1-mmaddireddy@nvidia.com>
+References: <20260223184538.3084753-1-mmaddireddy@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -86,109 +89,102 @@ X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF000023D4:EE_|CH3PR12MB8186:EE_
-X-MS-Office365-Filtering-Correlation-Id: 18177b8d-4c59-42cd-29d8-08de730bd92d
+X-MS-TrafficTypeDiagnostic: SJ1PEPF000023D8:EE_|BN5PR12MB9487:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6d610f52-2451-4f59-2efd-08de730bdc63
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|1800799024|82310400026|376014|7416014|921020|13003099007;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|36860700013|82310400026|921020;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?Z2BWJbTEbIukeuNffkOUVURwctASewRFuQMGl008mwT39u36f+Qt4SMAWF1a?=
- =?us-ascii?Q?SBpuSnaqH6Dw3sIhuzhXN+XqPDc7K6sK7B/85wedcKpSxeNFMNLPAiPnK8hI?=
- =?us-ascii?Q?DIEDNFSsYQJtCKrvnlU3ClHl+z4U7o3EPfcR+iKH1sGL6dfFGUXrJagtf5Tn?=
- =?us-ascii?Q?1JeSOKBKN/pDe/T+lTx/BuUCRZQZJq348IBajd/8tSs27STBpiDaLQVA86Dl?=
- =?us-ascii?Q?hA0VD0tEIqpF1LBjENI4xGrOfK7GnyQ6JKLsya3vfdHdcN++vRccOBPMrRXS?=
- =?us-ascii?Q?TQ63KmbttrbCIXrnptgP5rl75Mh724ksNSWyJdUBkTdfObdk6i22E7K2eL4S?=
- =?us-ascii?Q?Lojz6RafgMZavnzJ6jJxz6OKBSj0EhVmG2Gc5pmmhpfyH12U3zly+9iwBclB?=
- =?us-ascii?Q?N/QSEEtvp9Wa4/8P3J9hbGfuyRQexpX0DiM12fVPq1Fe8zVt9dgPQkTVhVOT?=
- =?us-ascii?Q?r5ViJFFkFQM9qA4osr8/ee3Cf9Terc7CWAqfgaN+5EnfvOf7O0eobjlCuF6v?=
- =?us-ascii?Q?B9yGWpr/tHDwP5npRc0c+CkYH1icgbPOudOg+wUaUaA/SpSMIQyvCCjW0Gbd?=
- =?us-ascii?Q?F5K2Xmb9tzF3XmC73z6T1cWprxH5z/ydTzdwYhzvpvEWngYBjXj//tXJX4t9?=
- =?us-ascii?Q?zB3bk41WqCpJrsLnQoxZMdMDREGwyGfki8LPZaKSTQi2/LS4IjHZxrh2pHBT?=
- =?us-ascii?Q?RrQ8vNd/n05O9rTyGwDpSaH11Vkf8CEZ8IKBB/Gs4gvk0ZYnbj/Kr+MaZlPI?=
- =?us-ascii?Q?hoFgiVMgQmxe1J+LnOeXmbFynRzPQ1DecaxNPa09B0CSJg7OOi+aqncn6viI?=
- =?us-ascii?Q?BUBCUhL2sEib/C7/z91ZKTy1+82dweXNrA8MTPby28O3urMPUBgR37wSsPVB?=
- =?us-ascii?Q?Yb/8bO/n+TsQMywZ5eUs966ZH2F4BLVO5a26ERtqgTRvHvJoFYt4Y7nqK4XQ?=
- =?us-ascii?Q?mI0oEv6vKFqobbcCIfyBXiaFE3W5BNkecbBjK2UJsS1Uuimn2EmcR0yjGH4v?=
- =?us-ascii?Q?LSvvSQYWE6mFeI0RqozpeyDv70TQxk61iDzvdir6SLQk6rjf/oSKgJpZ7LkD?=
- =?us-ascii?Q?eswTPwFVz64ZRDzV4nGY9hiMmbJGZ6F/J21Naxpx9wZaf4uV86dZ3J+8LtPs?=
- =?us-ascii?Q?t8BJZsQPB4gU99UfCwhWrakxXer+9NMjL523Ay/5Msa4Lz8Isxqw5ZU2X6mc?=
- =?us-ascii?Q?2dkf/CHdAuM4Qgqj6oT9pexqVi5x3U6Mv54Sj2/0a64O2U8akB1HtKAUTllt?=
- =?us-ascii?Q?9h8SropDZ8OB06EbltZ8g38LQJnOaCwb32YuBQr+lHlbvzwtm94dWUg9Yxyc?=
- =?us-ascii?Q?7Dd7R0vYAnB2IyQD8rIKEy2/fAOL3A0Y5tmn87OCFJTL1ZC1f3qYl3eg969E?=
- =?us-ascii?Q?BzLrSbD9HDmKuEcTnevyO818eDMNxn8e02iqR3T1xsGZuxCmyfR4YaNuckKv?=
- =?us-ascii?Q?E5mjQSpCgX4/9t1hiwFUgwAJcKCkT60DJ+AQwmIziPVkNkPZf/g8AJEKxw2O?=
- =?us-ascii?Q?Auc2h02EAP0/jyU1Z4EcvJ//qTr6seqJeb/sa8zQVoNdPPvPmb70PFuY5Cqd?=
- =?us-ascii?Q?qNPmnzjcJlqty7wvH6GRpVyCpHohpokwWswoaHtXXGJtIOplBNY66GSvJww2?=
- =?us-ascii?Q?sgY/C2+rmtaYw3UAG6SxTbjbnKKKyEdWT3Niiwc1xP9dMBrO1y37uDYAPIrz?=
- =?us-ascii?Q?L9lKgzJroR5eo+IXrAG2J67WSrM=3D?=
+	=?us-ascii?Q?A1oLIf9wtnLyH7wcfXemEjHXqX/r+A7KxIgyAGKMxW/7Q8gL/8i4Ya0RcJkC?=
+ =?us-ascii?Q?0oHgdIQpBu0mtbGHG4YAx9l+3Xt1CicdIglXUkJ3GLQde3r7vIVgz7rjtvtI?=
+ =?us-ascii?Q?vV+TyekXfzu9YA8f4u6dgseZsslK1mf6KhP359g2/ln0nCLZKB+sxExOGqf/?=
+ =?us-ascii?Q?E3zG4b+oE4OalEtBP+m3Ph9129A7ANKHet5x3jcc04Q4nEoZuCIE2ZySnlV+?=
+ =?us-ascii?Q?IkKlok9fPRcrMGGOxWcjVe0V+uJV7t8NM2/wM3v0Kco3OAf91mbqsPkq0t1/?=
+ =?us-ascii?Q?1qCSrUG8JN7XiIkZnEh/JKU/zV2qGpKqbenQ9h2XGCwojZFMAVGJ6+V6nPLN?=
+ =?us-ascii?Q?3Gsx2LuPeMRGjkGI5x/439JrZspiS8U9+NSYYvNhNj0JssriT+FKIzEzTm9A?=
+ =?us-ascii?Q?rT30SkP/aUcCaqpz2UnrjJ36qh3trvyxFq2e4Cw2lxhj97mFJaE+M4bfy/gY?=
+ =?us-ascii?Q?vayUMTVVdLkXowZLtCP//DyT9LaiYq5jjSy3XDB/2KVo9vAvzW0BpTkTSjlM?=
+ =?us-ascii?Q?oJCswurVXlO76GirT1wUltYNrx0lY5O0xy8iyXSMPwdU8a89N/6+S6EY0qLh?=
+ =?us-ascii?Q?fL54T1ASjIqEKxQcgheJzGv+ogyDS47L3Uo7WwYnfeMpgOIh9/CeszkawQmC?=
+ =?us-ascii?Q?Wq1AZyPU228jJqfpxpehaNzMhuYWhsJekXB/gDqEUDoGA+j8AXaJnQYqUc8K?=
+ =?us-ascii?Q?mUpvy0SmM+dAj1+2uNAC0Dfjwz2MV2WW1NYOni/I6eTErrUmFPjT7tSIIl6W?=
+ =?us-ascii?Q?NDObe1q3zLdD94mtP3QHbPiggQZrKCur05RtBZy0h3krrWv+iqY/j1HvgD4u?=
+ =?us-ascii?Q?BfuVjReeDtllELoYcLIKNdKKNT96hcxVoUOV+5ORPfeGvJ7UMEuGMBWenhEB?=
+ =?us-ascii?Q?M/G/qOTxVtyH+ZBtjqVEddpbUSH1LcxNP4zqQaocKupvjGvjj0J8Wju+Nyu6?=
+ =?us-ascii?Q?jI7xxPEQVmFFZr7clQnXgfWJoZQcv6FcMuQqo97H2yjCIxtZM2X/zBCbG1Jv?=
+ =?us-ascii?Q?FDT9MFJ4QQte5dyP8Ae5MULRtpZUN/Az+9dsP6B4wH9Zef2tXOA3Nno0IH5i?=
+ =?us-ascii?Q?HdkYb4qTDmjGV5ef16xjk74q7TsNXQO/wbGydM9FPbOCUZvpyEaYKVM2BkcI?=
+ =?us-ascii?Q?eS7ofMK4IRsc6t7DLhELbeU/bt7vntt28h+pqR2L+mG6HFdBF+0rnf1gyAgh?=
+ =?us-ascii?Q?N2iD4rEQVsb4EnE9MPykHBmP55E6Rm4FF7hdbclXr8sG0eWtV+Zb1NjzEQED?=
+ =?us-ascii?Q?DtlO14hOhR0pz6a+EdVvA3+GpZP3IC8HCaVM/ruLEr/a+H+3Tf+ztF67KpEN?=
+ =?us-ascii?Q?8CVh0p2US0yAMlscTP5PhUZp2zYEWb6cd4Sd5fA1f5LByWvRPlkLZbsHXCw8?=
+ =?us-ascii?Q?IRbZElMGN691kr8TPVMi6aZVptnZvtvSCkqamMz7aK0BJG8NQASGDW01M2kq?=
+ =?us-ascii?Q?equce1aHq1mFCBlhKJqDTPaeTH3WktIH+9ejawHYWrnZ246sb7352Ne/9CYX?=
+ =?us-ascii?Q?VNTJJML0gnPKSiDlcTiH4PU3FpkLBOV66gKiHTL+HiVINOEQWMbPhfvbsqnV?=
+ =?us-ascii?Q?mO2U0YQ0uXYQ40eh87xVa3xcxtQkJUjb9EPvQiiPHa68Te98u2sHNpHPNJcf?=
+ =?us-ascii?Q?gX5IdWL7pLxAe+IpiOtrEZXv5T0BJ8ddIPMNr/5hQVZuLh2Y34VMbOx+dyLD?=
+ =?us-ascii?Q?HE/FwPw+4WuabgyAgiF/Rfs6ljs=3D?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700013)(1800799024)(82310400026)(376014)(7416014)(921020)(13003099007);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(36860700013)(82310400026)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	6CBwoAIe3GLGHh0Ec4AQ2KL2joQATd9uffpwf/nSODmZG3DNXwJLrJojBOP/flwgP+IeTLGUAfJqcucI78GOP11H/vVH72mGoN5Sb/pyk874remVhiXru+PGHgszV1KLKBn/tbPENpMM7GoKs7QbjGSVZhrNXUkXK+J8jqNnAMHJpF8kJWxSsqej/StoctRbmt8BHUZcb8zfS64+YvvszzrUG+stpU3Ps+jqYvoUTdaJvZ34Bk1reJjqvir2WWsGrXkXhf1/8OfQv3sUaf81xD0iqYM4N+jXvQ3e+Vk0aBPR2bEXF+BDx0IfrhUYkuVAjWm2uYfjLGTrMaNY7dUkKyFRwVwXJv/lXT1KFtWlmXD2LwCMc/Oq1oJ8IH8o3c7/8raC1fmfMlOpTgqKgd/TJna4CmXwVK/GPZ09Kq27I0RlrNiISR5IzdpB+r2oDmSR
+	JVZp21SsEGFgNj3ww9oeSZoUY/spFy/XgdNzXyRwGtIHg/B9YS+C7NY9L1HpazN1oTziudCnPJ575N1dNwOQ6dxOGh3BBWXj1Etx1Lb6Ox42WolXBYTc/wmMp0C/YuAFFeMZAiaK4L0z8i+OMiIaWyvodbuZv+XSR8X38qtTNi68w1eKNDZ9v2F/SNK//ikp8axDGSOuvIN24C5yJWaHieXfqMJr8C5ExQBWxkDYN30+xZeBUxG/+0bRDM6FXt5rdwFiVrUYi/u0kktHECZtIZ0QhBee4jru/A6VQXNXP1mMoRWq7RdpuC/lhKttPCI6WGHX4dyg2GzLoL/mzBimBlKFVRGIogK57RgFZi/dV9P/7/U7A02P3kKRrsLmx8FGSQbLG0FudOgM7y0YtR28wCO2+0wHgp0CzcL0FN5e/s1tY8429uUjU+otN3UuaMv8
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2026 18:46:25.7905
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2026 18:46:31.1256
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 18177b8d-4c59-42cd-29d8-08de730bd92d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6d610f52-2451-4f59-2efd-08de730bdc63
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SJ1PEPF000023D4.namprd21.prod.outlook.com
+	SJ1PEPF000023D8.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8186
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN5PR12MB9487
 
-This series[1] was originally posted by Vidya Sagar, and I have rebased
-it onto 6.19.0-rc6-next. I addressed review comments and split this into
-two series, one for fixes and the other is for enhancements(current).
-I verified these patches on Jetson AGX Orin(Tegra234 SoC).
+From: Vidya Sagar <vidyas@nvidia.com>
 
-Disabling L1SS capability based on support-clkreq device tree property
-is moved to common DWC driver, so I reworked below patch to disable
-just L1.2 capability on Tegra234 SoC.
- - PCI: tegra194: Disable L1.2 capability of Tegra234 EP
+Currently, the default setting is that CLKREQ signal of a Root Port
+is internally overridden to '0' to enable REFCLK to flow out to the slot.
+It is observed that one of the PCIe switches (case in point Broadcom PCIe
+Gen4 switch) is propagating the CLKREQ signal of the root port to the
+downstream side of the switch and expecting the endpoints to pull it low
+so that it (PCIe switch) can give out the REFCLK although the Switch as
+such doesn't support CLK-PM or ASPM-L1SS. So, as a workaround, this patch
+drives the CLKREQ of the Root Port itself low to avoid link up issues
+between PCIe switch downstream port and endpoints. This is not a wrong
+thing to do after all the CLKREQ is anyway being overridden to '0'
+internally and now it is just that the same is being propagated outside
+also.
 
-I added below new patch to tune the ASPM parameters, commit message of the
-patch has the details on the bug and fix.
- - PCI: tegra194: Add ASPM L1 entrance latency config
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+Changes V1 -> V6: None
 
-I added more context in the commit message for below patch based on review
-comment in V3.
- - PCI: tegra194: Remove IRQF_ONESHOT flag during Endpoint interrupt registration
+ drivers/pci/controller/dwc/pcie-tegra194.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Rest of the patches are same as the original V3 series, just rebased them on
-6.19.0-rc6-next.
-
-I fixed the missing PATCH prefix in the subject in V6.
-
-Verification details.
- - I verified both Root port and Endpoint mode controllers on Tegra234 SoC.
- - Basic sanity Link up, configuration space access and BAR access are verified.
- - I verified that ASPM L1.2 capability is disabled for Endpoint mode.
- - I verified suspend to RAM tests with Endpoint mode.
-
-[1] https://patchwork.kernel.org/project/linux-pci/patch/20221013183854.21087-1-vidyas@nvidia.com/
-
-Manikanta Maddireddy (1):
-  PCI: tegra194: Add ASPM L1 entrance latency config
-
-Vidya Sagar (8):
-  PCI: tegra194: Drive CLKREQ signal low explicitly
-  PCI: tegra194: Calibrate P2U for endpoint mode
-  PCI: tegra194: Remove IRQF_ONESHOT flag during Endpoint interrupt
-    registration
-  PCI: tegra194: Enable DMA interrupt
-  PCI: tegra194: Enable hardware hot reset mode in Endpoint
-  PCI: tegra194: Disable L1.2 capability of Tegra234 EP
-  dt-bindings: PCI: tegra194: Add monitor clock support
-  PCI: tegra194: Add core monitor clock support
-
- .../bindings/pci/nvidia,tegra194-pcie-ep.yaml |  6 +-
- .../bindings/pci/nvidia,tegra194-pcie.yaml    |  6 +-
- drivers/pci/controller/dwc/pcie-tegra194.c    | 67 ++++++++++++++++++-
- 3 files changed, 76 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 9883d14f7f97..f026af7c2ce0 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -44,6 +44,7 @@
+ #define APPL_PINMUX_CLKREQ_OVERRIDE		BIT(3)
+ #define APPL_PINMUX_CLK_OUTPUT_IN_OVERRIDE_EN	BIT(4)
+ #define APPL_PINMUX_CLK_OUTPUT_IN_OVERRIDE	BIT(5)
++#define APPL_PINMUX_CLKREQ_DEFAULT_VALUE	BIT(13)
+ 
+ #define APPL_CTRL				0x4
+ #define APPL_CTRL_SYS_PRE_DET_STATE		BIT(6)
+@@ -1415,6 +1416,7 @@ static int tegra_pcie_config_controller(struct tegra_pcie_dw *pcie,
+ 		val = appl_readl(pcie, APPL_PINMUX);
+ 		val |= APPL_PINMUX_CLKREQ_OVERRIDE_EN;
+ 		val &= ~APPL_PINMUX_CLKREQ_OVERRIDE;
++		val &= ~APPL_PINMUX_CLKREQ_DEFAULT_VALUE;
+ 		appl_writel(pcie, val, APPL_PINMUX);
+ 	}
+ 
 -- 
 2.34.1
 
