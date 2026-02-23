@@ -1,101 +1,82 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from mail-m8132.xmail.ntesmail.com (mail-m8132.xmail.ntesmail.com [156.224.81.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F04837F8C5;
-	Mon, 23 Feb 2026 23:34:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FE4837F8B0
+	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 23:40:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.224.81.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771889701; cv=none; b=nM0H0Jiy69D2V5Vz/Eufuj2aodQHh8+91zGOkiZIFktoa2r5+QQ7vGVlpUhzij+gORy3kaaT3/e2FjVMapwDjab5Bws8nu9gCqznGrisJEUN9snzh8pKgB2qiTMfqTP6DuHg0ULh6o0hn8+IeeJMmqoNCTcQiNtJ6j4YshlJS2o=
+	t=1771890024; cv=none; b=VVUTV4nRP/pLQG5tMPnd8Y1SM5QkSRjuSc6IziWGXAvp7nCnuHMWPUVpfnkKuBRvHL5NO92FnLw8ChI1GCQQGmkPEV1Kqd3UOfYae9FXcNA1nDw83TbQz2YxNwBS4oz7lt+Z8t1hfQ21Itk35uBwn/d9vY5/Uq9V09nlm63+kwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771889701; c=relaxed/simple;
-	bh=12QBzguf+Sdz92WxcJUhXyt70Tdl6GQe5lxoiPkm+S8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OsiR62yH8YhPuUk61JKHy35lEDOiYAxIZcnYoKKT0IbMiBLc+ewWO9u92vA3mLqpSfUQ1BwmfIv49b2s+c1QeNIsFynWo/2PII/JSI68deGi7Ea+Lk7KCu/Z9MvOfPSjZh2x/kZpuL8RlrI4TUJAmo6glqCwrfbjpJM+tgbzWJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iGo9FyHb; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1771890024; c=relaxed/simple;
+	bh=Tr5rpOmnIkWq/5q13H3fUoNVDX06v0Igl0YeiVZ0CFY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=P3igRi1ZUbaggTHmqBYwQkpNInz8HoZrwg3sTAhaCXOEOS2bhRieuxI7bZiEx49IoDwSb2DzkxFQmfw+qQvCDPfkszfcyJbGlp840RtWPVXZU5ubVB5iPK0AH4lFMQ2uy19ZIds46fTOiN9AQMJ0Sjrb+Gv+qzNZYrDXkSYfbCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=aN7THkUm; arc=none smtp.client-ip=156.224.81.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iGo9FyHb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771889698; x=1803425698;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=12QBzguf+Sdz92WxcJUhXyt70Tdl6GQe5lxoiPkm+S8=;
-  b=iGo9FyHbguqGth8ZTqLl8UmiDyQNCwi+8HBUw3W6rqEWbknJpxw4NbcZ
-   dU5AYKEpBNGO119gj9oF5zpMBXZxk2XE+mD0Xxhm4yC7rwAdzNzTSGNsH
-   65FCJ8Sa4boqivC6ZidHs/f6QydGZc/aIkkLGIw22ZZMOC/M8BNogKQcj
-   jhnlrRKrENm7x9wzsPpijNSLMgB3smH8WJmpizADWJbrbWmOgC+iD92vL
-   yPuM1SCvwSP3LFD3PnNtU8dspnJCdLNg8sVxxOV3CP/MUFTYEol9JGfVR
-   9jKeNelVKxgUuVVmC0H9nd+I3xxwAFCLmTHoOwMogv7P8EEmLqUi/HN0V
-   g==;
-X-CSE-ConnectionGUID: /tRDocv9RJOcoT/mT36vrA==
-X-CSE-MsgGUID: gkn9Y0PbQSGklvbagmMAGQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11710"; a="72808685"
-X-IronPort-AV: E=Sophos;i="6.21,307,1763452800"; 
-   d="scan'208";a="72808685"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2026 15:34:58 -0800
-X-CSE-ConnectionGUID: MXqlupThQmmH4PZM0z+Q+w==
-X-CSE-MsgGUID: Q+Y5IiqsQ2iSTcUgG2X6JQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,307,1763452800"; 
-   d="scan'208";a="215568156"
-Received: from lkp-server02.sh.intel.com (HELO a3936d6a266d) ([10.239.97.151])
-  by orviesa009.jf.intel.com with ESMTP; 23 Feb 2026 15:34:54 -0800
-Received: from kbuild by a3936d6a266d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vufS0-000000000wH-227N;
-	Mon, 23 Feb 2026 23:34:52 +0000
-Date: Tue, 24 Feb 2026 07:33:56 +0800
-From: kernel test robot <lkp@intel.com>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mayank.rana@oss.qualcomm.com,
-	quic_vbadigan@quicinc.com,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Subject: Re: [PATCH v2 2/3] PCI: dwc: Add helper to Program T_POWER_ON
-Message-ID: <202602240705.ujRk6agl-lkp@intel.com>
-References: <20260223-t_power_on_fux-v2-2-20c921262709@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="aN7THkUm"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34b3c91e3;
+	Mon, 23 Feb 2026 23:43:53 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Derrick <jonathan.derrick@linux.dev>,
+	Philipp Stanner <phasta@kernel.org>,
+	linux-pci@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 06/37] PCI: vmd: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
+Date: Mon, 23 Feb 2026 23:43:45 +0800
+Message-Id: <1771861425-85632-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Tid: 0a9c8b2bdbc509cckunmc13620789870fb
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGUtDSlZMGBhCHUhDGU9MGU9WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=aN7THkUmSYfbWJpVLAqYaJdRBrcszZyf5kq3kmYKqQTfxAC91dhGbcDwyEIuG3fGkDuGX6Mgb15O/6IEYDrifC+rEZF9yYBm6Goo3+7Aj4ufvRfYsC2AtL7EMA4wMC4qFJ8I3QIGDIjM2AzBjO9+2kNv2d8Z+fOCJNtxCbxFIDk=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=aRLsu5o3PDui1IgL5lIBC4ONbhZYNaxjwLFZYD4r4kk=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260223-t_power_on_fux-v2-2-20c921262709@oss.qualcomm.com>
 
-Hi Krishna,
+pcim_enable_device() no longer automatically manages IRQ vectors via devres.
+Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
+pcim_alloc_irq_vectors() should be used.
 
-kernel test robot noticed the following build errors:
+To: Nirmal Patel <nirmal.patel@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Derrick <jonathan.derrick@linux.dev>
+Cc: Philipp Stanner <phasta@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-[auto build test ERROR on 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f]
+ drivers/pci/controller/vmd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Krishna-Chaitanya-Chundru/PCI-ASPM-Add-helper-to-encode-L1SS-T_POWER_ON-fields/20260223-192621
-base:   6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
-patch link:    https://lore.kernel.org/r/20260223-t_power_on_fux-v2-2-20c921262709%40oss.qualcomm.com
-patch subject: [PATCH v2 2/3] PCI: dwc: Add helper to Program T_POWER_ON
-config: i386-buildonly-randconfig-004-20260223 (https://download.01.org/0day-ci/archive/20260224/202602240705.ujRk6agl-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260224/202602240705.ujRk6agl-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202602240705.ujRk6agl-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> ld.lld: error: call to __compiletime_assert_421 marked "dontcall-error": FIELD_PREP: value too large for the field
-
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index ec6afc3..7c3db78 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -684,8 +684,8 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+ 	if (vmd->msix_count < 0)
+ 		return -ENODEV;
+ 
+-	vmd->msix_count = pci_alloc_irq_vectors(dev, vmd->first_vec + 1,
+-						vmd->msix_count, PCI_IRQ_MSIX);
++	vmd->msix_count = pcim_alloc_irq_vectors(dev, vmd->first_vec + 1,
++						 vmd->msix_count, PCI_IRQ_MSIX);
+ 	if (vmd->msix_count < 0)
+ 		return vmd->msix_count;
+ 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.7.4
+
