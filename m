@@ -1,158 +1,84 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m81135.netease.com (mail-m81135.netease.com [47.88.81.135])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0103B3783CE
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 21:27:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771882056; cv=pass; b=i4+I5mO+MzZOCdkVsa8OJ/olrb4SaNRUQuj6e8lpmR+CYf0oMiIb4PJz2gu9ko0QZUTQHRr+nOq+eHDDwNVHydnqQnXAWgB9WEs+bNJGw07tiiqbhNtX55CVEMZMSxNNcgYte0f3xXBXD5/FQKiR9TnpHdh7f+fJ9yD7/Zw9abw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771882056; c=relaxed/simple;
-	bh=didkkmMeA554Dxj/ZdCbtum+QUKQIqmhPv1W1r9HzYY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=V9AUfmbrzNvBXka4iNIHG0siCDqpAv7Zd38LAL03/XWhkUQgp4ukG+DbKrkzowNsH/hqWlt4DfMY5bZLf0bWO/3w+YKygtHBsZj8oyl0nczv9kOh6Qx6az2Kg5CqaBXIDJXCPhD2cxxTwJM8ypg84QDcv1p7ptVHhA0itrvJ8+o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DZSyS0ri; arc=pass smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 846DE36CDE3;
+	Mon, 23 Feb 2026 21:32:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.88.81.135
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771882348; cv=none; b=KZoYW+NuA/Po66+RWP1OAelk3Y0Rq6tQMHvnoe2pQ1Z8hIluO46frb8VsPBG0DVbTJ8tLlYPikEQMTB4qIyaofvl/Y5yO50MFlVVRlQX+kscYE0iyDC/wMFmBpWss1IwzWWTH2Iz9BV6EB/+5mY036ZHwtCpLOflV8RKFi/bfM8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771882348; c=relaxed/simple;
+	bh=X0yoJZuT7xjH5wBkLm3JVPjVdS31FZTdK07HJ6YpbCI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=aGT0BcFl59Hi8rcm4EATEPWzSe8P629ofdIMf1i2rbp9cilbQ1zFrdT0wZ71wIA+tLM6wH6ahSHmMQ2Ikz9DqAe/7YC6JkjclYJpOieQ+VUIyGsq93QvbwYzAIluJ34jHr94Hj0oAhtHPnsbOs1dJSRKCAhEAU5jLsL/+6ifY9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=OoRvQR09; arc=none smtp.client-ip=47.88.81.135
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DZSyS0ri"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-4376de3f128so3439174f8f.0
-        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 13:27:34 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771882053; cv=none;
-        d=google.com; s=arc-20240605;
-        b=AOKcKkIVU4EB1ionmegTEZh3Q1d5VVDrOtXPEC5sHPOeEnPF8TauoOe9US9zsRx/69
-         MJGzlxpHizKI3J7MoXopI/+ZTulYRNZb7jacA8wu3ocPO6J9/TzZfI4n4hG7BnrVmHsc
-         De6aTFxySJz117YexEYF4XMl4kUEDsutMFW3pg92x57kFxW4P+b9S8rAgHeaTbvWgdGq
-         g3WkqResrgNkges08rsr1rd8joCsbttaCultQvDpmYxXClffc/2EeGm38erz1/+itgvC
-         iNx473RAdZPgZ/ugZKXOC/AjtFLSCKUyWHPpFt6L0/+PjvBpG5NSk75pRrS9ofvjcmT1
-         iNKg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=3TLtkDhp5yvjNfBzirqBO5/FyIhc8TMr7bRoRTvtMt0=;
-        fh=DtCqDRxre40P22EcCV+Sb0B+FPJn9Jv2gmLhqxKEbgc=;
-        b=c4Nxp5Ccj2PyDMLqtakmbT7trv/cEcv+UhGGTVupzOHFNAnDsbo8Yyh9YIez1UP6O7
-         tsDlUv+PDgAKkrNZN6cHSqy97eG39b1yAaooQRPDzGDIOi/w2E4KaPUIj9tjbqwcB8Jn
-         YVxmC5ZNZr6ZvTI6ZSyn9By1+3de2kW4KaFom47tBsoPGtkGWQGvkG1s8f/Qvw6bYPFd
-         ZzbQVMT9dSDhjq/fqCTaMfeBGUnaLC4iHeGJro9PoiMYG8bDAE437MwNqRIvTTPXyw/n
-         /Md1/Oh6+zHCgqfvLoN6w8jfkWJZUgVh3MkMlQh/cYTilzA7Ot4iYzuCaYem9y1vlxLn
-         s9KA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771882053; x=1772486853; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3TLtkDhp5yvjNfBzirqBO5/FyIhc8TMr7bRoRTvtMt0=;
-        b=DZSyS0riRLv6DfivVmna1TefOP8SBQFJcVmvfN2qZaiD21+nhCtRJxgr6DIoVKg7Fd
-         nfynEr3YXUqQKAzAmZBB7vfSjrS6vkqRR4tzjHZaf26TgjYhimkEYamQ6do/vqUBUnBl
-         I0gTPdDAqvP1Og7QhMhS/L7t8jQGg0yMBzy7hNC7ifXW06I7Ot8vYrB4b9WAb1aYArw4
-         eGc0WG6uyjWoCS7c1TDXvR32ccsHAn0Ymzfq6WsYn7ZRBjEsPCoVhhewPh8BLn6+AA5Q
-         mrhpgErqGXJ3avnvCpYerMFSIDJrOxiQeva9KtcV57GN455J+11Ws8DccSEMGS9ZGbq0
-         3QEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771882053; x=1772486853;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=3TLtkDhp5yvjNfBzirqBO5/FyIhc8TMr7bRoRTvtMt0=;
-        b=nsglpDGLN8/hzRsZThFFfJDKSctdKkipGvOqSgNpPjs0A5a+jEXr87zuBBSiabhDup
-         Lhsz8qElUIIUg8u37oCoHBJbdaadmRXUERUYFBDMJKGQjvMYQRL6VDySHif6nKO7sRex
-         jnJ2dWTI9b4NbPrztMjFOV9aXKCpeL8MSMcTuM2TGo8C2iIlRRJ3MrlQXnz6j2y1mNCY
-         24pJkBlcJAEjcH+0qMSdSXdf/q7cRC037aljLANK2YenldwsoBuxVbdRtPNBmXE6uOjv
-         z6PVHtLfh6wLFjD8xFS+bVYz8l8ajrZmR0WLq8d2CjSQXFHyQLJ8cYDWdiHWiUo5OhVF
-         RLbQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUXucgl5+uxjA1xzRlWR2JXQVbpBoWtCdYS+AEKFsCKI+68XZ8aDsap3OPCGCkhq6NlDowG4ZBRgkk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwP6db0tYCR2KXvdg/rwEyyamzHIIItb3vQRz+RPPNWKR1/E9cK
-	36pWovoyx6pkRWEPINj5qftYfawqig10QXkEOuFGTmaBCmNUQpbsacvNVpQH6ggVy5mP+Jqln0s
-	7sReNazKBpI4oOcbaCw3pp4fb4W6SRJyAxAwoX2A2
-X-Gm-Gg: ATEYQzxG4vHnANcImaARcR9YiSbK+TclMtmwCrUhdmvWcN70hUZrvORIx4kWkYlOdyl
-	jGS/WiJoH4+q3Bs1TMKXEW9CWUzoyyRq0XzQAh0uu4AupHvQQ4EnhLoHKpuCnzFT9Joy6lID7w7
-	ji6eXGOreSV4RLLqQsGTJbycnYW8B6xhB9silUXDOzQSYfgLTQdHLFf1S6oLESgmjNuwalLLHad
-	I4ARjbVu4WgI6J1gR/bJaJCmIDivTqCmLXoaFwvXbhv2heJxnxKx1iY7KCaSzD6YTw80WgGaEtJ
-	UqrEX6/D19f0iTOS2EIPV+k9XAvOpWlkDLpUog==
-X-Received: by 2002:a05:6000:26c2:b0:435:a8e7:62de with SMTP id
- ffacd0b85a97d-4396f18f942mr16385137f8f.58.1771882053091; Mon, 23 Feb 2026
- 13:27:33 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="OoRvQR09"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34b40453c;
+	Mon, 23 Feb 2026 23:49:32 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Andy Shevchenko <andy@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>
+Cc: linux-serial@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philipp Stanner <phasta@kernel.org>,
+	linux-pci@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 14/37] serial: 8250_mid: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
+Date: Mon, 23 Feb 2026 23:49:18 +0800
+Message-Id: <1771861758-87458-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Tid: 0a9c8b31061f09cckunm674146da98781a
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0lIQlZNSkpCTR1CGU8eTxpWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUJDQ0
+	xVSktLVUtZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=OoRvQR09/OjTEBMj1MuIP710sOtWu1MFtyhnKP51dUkF4DulNwDKdvemC+wY/h1QWzU9RQIjYxvU6PSGEuJqM2u7JfKvKSEtgBLOYOd6WOL9UgCsX8KKf9I+H2btjBBktfTiZsQGu4Lz2tvYgtJRVUmxaQVvdH/Kdc1ki9i6DKU=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=qnb/sQc/YHkI/kZw6WGyai5I/38LWua9U1mFjVrUjOg=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260216131534.65008-1-dakr@kernel.org> <aZMaFhvZWiknu8UK@google.com>
- <DGGF97AAA3HF.3DSNMFJTCNI9Z@kernel.org>
-In-Reply-To: <DGGF97AAA3HF.3DSNMFJTCNI9Z@kernel.org>
-From: Alice Ryhl <aliceryhl@google.com>
-Date: Mon, 23 Feb 2026 22:27:21 +0100
-X-Gm-Features: AaiRm51eKGoP_MuYqn_kp-y0-YSen_uHZo47Hlce9OFpI8_rE8a7FBFjXKSXZpk
-Message-ID: <CAH5fLgh6MvjN3AHCVUROeYFWr+0CPxoYcgFfa99wu1EaNJAn-g@mail.gmail.com>
-Subject: Re: [PATCH] rust: io: macro_export io_define_read!() and io_define_write!()
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: daniel.almeida@collabora.com, bhelgaas@google.com, kwilczynski@kernel.org, 
-	ojeda@kernel.org, boqun.feng@gmail.com, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, lossin@kernel.org, a.hindborg@kernel.org, 
-	tmgross@umich.edu, zhiw@nvidia.com, acourbot@nvidia.com, 
-	driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Feb 16, 2026 at 2:31=E2=80=AFPM Danilo Krummrich <dakr@kernel.org> =
-wrote:
->
-> On Mon Feb 16, 2026 at 2:22 PM CET, Alice Ryhl wrote:
-> > You should keep these re-exports (as full `pub`) so that they can be
-> > accessed from kernel::io. Exposing all macros from crate root via
-> > #[macro_export] is legacy approach.
->
-> Good catch!
->
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index 58f464cf5efd..e5fba6bf6db0 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -249,6 +249,7 @@ macro_rules! io_define_read {
->          }
->      };
->  }
-> +pub use io_define_read;
->
->  /// Generates an accessor method for writing to an I/O backend.
->  ///
-> @@ -305,6 +306,7 @@ macro_rules! io_define_write {
->          }
->      };
->  }
-> +pub use io_define_write;
->
->  /// Checks whether an access of type `U` at the given `offset`
->  /// is valid within this region.
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index 2c8d7d00e54d..fb6edab2aea7 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -8,14 +8,14 @@
->      device,
->      devres::Devres,
->      io::{
-> +        io_define_read,
-> +        io_define_write,
->          Io,
->          IoCapable,
->          IoKnownSize,
->          Mmio,
->          MmioRaw, //
->      },
-> -    io_define_read,
-> -    io_define_write,
->      prelude::*,
->      sync::aref::ARef, //
->  };
->
->
-> (I'd still keep the `io_` prefix though.)
+pcim_enable_device() no longer automatically manages IRQ vectors via devres.
+Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
+pcim_alloc_irq_vectors() should be used.
 
-With the above change: RB
+To: Andy Shevchenko <andy@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Jiri Slaby <jirislaby@kernel.org>
+Cc: linux-serial@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Philipp Stanner <phasta@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
+
+ drivers/tty/serial/8250/8250_mid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/8250/8250_mid.c b/drivers/tty/serial/8250/8250_mid.c
+index 8ec0386..3ad9213 100644
+--- a/drivers/tty/serial/8250/8250_mid.c
++++ b/drivers/tty/serial/8250/8250_mid.c
+@@ -172,7 +172,7 @@ static int dnv_setup(struct mid8250 *mid, struct uart_port *p)
+ 
+ 	pci_set_master(pdev);
+ 
+-	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
++	ret = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-- 
+2.7.4
+
