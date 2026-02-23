@@ -1,219 +1,183 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012044.outbound.protection.outlook.com [52.101.43.44])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C506435C18D;
-	Mon, 23 Feb 2026 10:44:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771843493; cv=fail; b=Ajz9Iaf56m/mxOMdKe0/xtumSkpAjUXeudx8TVY5sCAw9RskrKRkou9JNcx70/atpOSHk92Zd9gUKc/aB9CpfqeRf/cFdCNfPU8dthvQtFly3Ky5gxttFBFVLcCKBzpt7wjDge07x/CsaGsyYWcyFeUAI32dDF6WPv21FhiEGoo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771843493; c=relaxed/simple;
-	bh=iL4SoswRWSCKck62yJPLVMKpk8QzoVq5w+kAPqxCwg4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Et2H31i9WQ86S9bLPdlbB8/6VAIVoNiglr40dRzX7OHbII5g4br+IwQC0iKJl2Rtlu1kTGt5cJOC7PYEcqJ5WbKEEycSvJB5qyP/Ik4kYk2QryCU5lZUYKppdlpDMszXnMG4YsK1Dr7u3wESU4g65Ri1Gk18qnQvXPswyQlS39A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=xIkWhRpg; arc=fail smtp.client-ip=52.101.43.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 971A835C190
+	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 11:20:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771845646; cv=none; b=FqQB/wV02TA0qLYJwPe8qvvEqe5FGhF6GmX3iShYXoiOYy0wb8FQ9hZMRuPkxycKCP7ArWHDIAF8PmyNbam/bRMTIo25Nbfte+KQpYzvMlDz7NpTPHgJsgAO6avWiB45sv3PpqnF5KJgXmGst6PTm0K2TEno+M5HBY0e4IyWvvA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771845646; c=relaxed/simple;
+	bh=vR4GbE5tO0t7eMAiqDkRls4S2OCBvskL0+rRHRV0jaw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=u2gnXyn5gY0UV9fF6+y+AyeGlAX7LY+pPxi5gzJPrtra+5qnB5C5XBbRvtfAMujhW7VNBS8CIVuIf60ZsIMDYBS8/DP1m5RTQz6s20MGVpr5bQTwEdAzJ83iGriqo5iFj0E4Sd55PCZNaua1Wq9qKUyrQi15Cp0rEHqlr1NntV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=BWOzKElX; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=SvT/ykT2; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="xIkWhRpg"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fzSNPNXGtRTUSg039BXlD8axdmbPgYqVN2hJ44A32wL1L0yOHGTyF3lGeKf3EcTX+3K1bm2CYM3qHxgngM5FFePs5DOt3A0pwI9pkR16WwUZA8QAmUJygCUj+8Euz5VST49/A3qFbHjwfn7iFFYrTl+uwSI7oGgiGe9u7AX7f6ePBCVSEfHogwbBHh2kWq+pkGKQf+iwLQeYW635CHWJKe+uULY+Yj2LGJzKb/WaX3KLS6rz+stFXZFhQXq0TdGr3yVOwg4C7jErrqLhwidZKQOLfZgFHcMPupVqPqk6uq5/qvMnHDV9EQ2Wkutxj2fxFq8ZinAaq77Kyv/J3oVI6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PGlaHEdwrrXTusD4aBpdCue8yRdOf2fPl5nJ/NTEFf4=;
- b=jNg9H45pzBiSzQxZYY7Vini0j53X2oaGZ+eBUiI/lsjf+60auO+COPpbMVRP4cltpkTvv0sn5VuPvDqjO9uHsXDCW8g1To6M7v2CXa+iFK614HZU3Epal5plQfpGOE2339uxdA7i+QTNhA6KCKuucfSCrrzIa/63tIdchbNPTXLGkPFFlNRnA6HcC8mKxOEkE6mbOOx+EKa2OaUt2ySV2tWL+UFhKoyUNLvPxdIal84pRp8vrIsmty8jrSoDb24r6w9z/o74oYfhMJHWmDcNAUChHEItuV/5k6n/he5BIhcG+gQQB6LSNSrS27GDcjxySmc/R08yKyjuqRsft7YZSQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.194) smtp.rcpttodomain=lists.infradead.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PGlaHEdwrrXTusD4aBpdCue8yRdOf2fPl5nJ/NTEFf4=;
- b=xIkWhRpgYc2tJb/pSWbHrNy/GwkGxXHp7cqz8HQ4/m7tvlgEhcM+V+danzqvWKQdlemOj4wP5W72M4J81I/5FLsxl9KeoByOj/eiptqcKJr0IQBKBVS6C2op/bstCFCRHSvew+ZIxjFvkJbIONotQ7jfozp2fHO/6eMbUFd7XDQ=
-Received: from BN9PR03CA0866.namprd03.prod.outlook.com (2603:10b6:408:13d::31)
- by SA2PR10MB4459.namprd10.prod.outlook.com (2603:10b6:806:11f::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.21; Mon, 23 Feb
- 2026 10:44:48 +0000
-Received: from BN1PEPF00005FFF.namprd05.prod.outlook.com
- (2603:10b6:408:13d:cafe::63) by BN9PR03CA0866.outlook.office365.com
- (2603:10b6:408:13d::31) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.21 via Frontend Transport; Mon,
- 23 Feb 2026 10:44:47 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
-Received: from flwvzet200.ext.ti.com (198.47.21.194) by
- BN1PEPF00005FFF.mail.protection.outlook.com (10.167.243.231) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9632.12 via Frontend Transport; Mon, 23 Feb 2026 10:44:47 +0000
-Received: from DFLE206.ent.ti.com (10.64.6.64) by flwvzet200.ext.ti.com
- (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 23 Feb
- 2026 04:44:46 -0600
-Received: from DFLE210.ent.ti.com (10.64.6.68) by DFLE206.ent.ti.com
- (10.64.6.64) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 23 Feb
- 2026 04:44:46 -0600
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE210.ent.ti.com
- (10.64.6.68) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Mon, 23 Feb 2026 04:44:46 -0600
-Received: from [172.24.231.225] (a0507033-hp.dhcp.ti.com [172.24.231.225])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61NAihvm170191;
-	Mon, 23 Feb 2026 04:44:43 -0600
-Message-ID: <33c4d9c3-d4aa-44bd-bab0-65445cb7014e@ti.com>
-Date: Mon, 23 Feb 2026 16:14:42 +0530
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="BWOzKElX";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="SvT/ykT2"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61N95bxY1427508
+	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 11:20:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=vWZFhNaftSjOq2EUx2lrdP
+	hoLMUbbWMLwGx3JjXujmo=; b=BWOzKElXVoIJpB+l0OZENCMAUZq/JHUZjdnzOp
+	UmhNfbTNhz9eQbQW8DZr4lo4siNn2GSuVdI7dCw37jP3wbfLaWy8YzvCjxYBj5fL
+	D7NFaI1mZojmYF+P+vYnvrDsCNqsaFh68FbItGtiJ3HxRYKlBHuIzvW+mv9MkvQc
+	2hum5isFVQzHI2z1U+g8vAtqUhmq1UVjUDshz3YPXxV3Gne2okr8viEW2nOWIoBE
+	299RX5zp9nOVnVYCPEDem5Rrjo/q7jnHUixrhyNijK+QLqDTpULFg7dDDd9gHIEH
+	neAZnEMioN7RUftgu3fqcqiXXh191n1rMTY5ewSI5JMWxq3A==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cf5x7vh53-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 11:20:42 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c6e1dab2235so2541760a12.3
+        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 03:20:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1771845642; x=1772450442; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vWZFhNaftSjOq2EUx2lrdPhoLMUbbWMLwGx3JjXujmo=;
+        b=SvT/ykT2ReR8ISmC2NOpl/5Wj1brEdTc/KRaRpKbFOuw59kz+GsYPTseN/w+AOox2M
+         Qksv+XKCiXVia4s4aohhl9mgUYsynfkClV6LeHKAGgt9mKErz7cmI7nRlU+w81hXC9N/
+         /o0m4NmF2DCjuQeX2kAdlW+sCGbEXtw09cP+rYlQDOUoMrPi90wckFPBiBTlyI+Bvz7W
+         JEUoRpB0c81jnsl0icUCvBrl+TgCOP64ligjezcmHMQSRZChgjiKLL84I/4n3L+bDtHr
+         RVDdBLzrlz4h2sPj8zrPpF/b72q/shWLizk82AvTzWH3jg5nbru/H7yF7HBCYHd84ix5
+         wN3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771845642; x=1772450442;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vWZFhNaftSjOq2EUx2lrdPhoLMUbbWMLwGx3JjXujmo=;
+        b=wah7ML02pQxLbjP9+9jTrLWcUDd6q7yhQuQiXuQIP2COifWMlzGQfcpK+RkaqW20LP
+         hJsozhB1w9FvSpJ6pNbOrJVyv+xveiZ2IvYJW5dsMfvQAqnbCm4o/ZwQBQ8pjlnKzHwL
+         tM945QSjEMwUsajY3+WO+nlwcBuPmGPKwXlTrCIpEMW9pOq8Ha9T7bm31sP6ozjAnXgx
+         LMvqVkuAbrzhEIl+3S09qggoRkTkfheA0B2/n7qwNUNbnQZuciNNQQAjlEf1+JdKgq+w
+         hvRSAnFzUAR/lVuSOy4MXEyeTZASQSDNY18Eu32ACxlk5Nku2QxH79aSs9i8sPU2YT3U
+         MqTA==
+X-Gm-Message-State: AOJu0YzfNtkhldnj0gejQ0RJatdGmFxbWFNQ2KgY3zXNT1463uBF51lT
+	uMUMpQ6b+HaFlFigfLwlxyhn6asCYba1mmUkVDfjYlGQRczS/9WQUU4WbXdKLNP/Rk4ligMRceV
+	l+yh/lehMIOxY+kYBrbFI9UbW2ndhttNvlCuwG2LBWtEeeknjm+915g/myYrJ9qGkoeUB/fg=
+X-Gm-Gg: AZuq6aLfgd5q6kU5YAMQ7mWwLzUFeidD949S99m1sB0g5TnpLoVQ5lvnJoT1UxLY5nM
+	jz0LG4gy27f3HoJxI0flMyQA90ULxIl1ofHi4fcD+x8X7q6a2ykfDzcXHe1vJuZ5qdfxe/vwMND
+	d6P/wW3vr8FuG2t6eoRhesVWUv1IANBl5USyzC9GYqh+dqEFdTRbbHYNFLe0VlHlZXfevXZ8ukB
+	CWPyGJQFzjafn0+U65nwCJPLcWy7wOiRQf0qkHMPlZBhQoTyuXglXo4lj9hWCoGIY2MBTSijQ1h
+	SP71GqA5TnpArpXKSfh299I29xqRllQyAe493qQJU2C7HUKe3Ijb+UwRMaLcutwtl/rNOPAQ1GG
+	npizA3yNQ3OjuOTMIEJFt8akWTTQrWgQ8lscM5QYUa6NFrRbn2uOa2itf
+X-Received: by 2002:a05:6a00:6c81:b0:824:b304:2ce7 with SMTP id d2e1a72fcca58-826da906f7fmr7181451b3a.17.1771845641555;
+        Mon, 23 Feb 2026 03:20:41 -0800 (PST)
+X-Received: by 2002:a05:6a00:6c81:b0:824:b304:2ce7 with SMTP id d2e1a72fcca58-826da906f7fmr7181434b3a.17.1771845641085;
+        Mon, 23 Feb 2026 03:20:41 -0800 (PST)
+Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-826dd899386sm6744057b3a.43.2026.02.23.03.20.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Feb 2026 03:20:40 -0800 (PST)
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: [PATCH v2 0/3] PCI: qcom: Program T_POWER_ON value for L1.2 exit
+ timing
+Date: Mon, 23 Feb 2026 16:43:29 +0530
+Message-Id: <20260223-t_power_on_fux-v2-0-20c921262709@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 3/4] PCI/DOE: Add DOE mailbox support for endpoint
- functions
-To: Lukas Wunner <lukas@wunner.de>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<bhelgaas@google.com>, <corbet@lwn.net>, <cassel@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
-References: <20260213123603.420941-1-a-garg7@ti.com>
- <20260213123603.420941-4-a-garg7@ti.com> <aZr_cD9LIQgvywri@wunner.de>
-Content-Language: en-US
-From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <aZr_cD9LIQgvywri@wunner.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00005FFF:EE_|SA2PR10MB4459:EE_
-X-MS-Office365-Filtering-Correlation-Id: 38b7d51b-1d38-4c70-7a12-08de72c89040
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?aVJ4aWlJd01BTDc5UnRJNE1zTUVqR1MrZlJaTlBJVEhYbzRYTmVNalorc2Ro?=
- =?utf-8?B?Ym9IUlBLRjFTNkdPcGZidDBQbnJPZWpHOGZxR1RYV2pSWFZLdFVQekplMllQ?=
- =?utf-8?B?ZjZ4RWZJSmdVTHE0NzJRa200YXVNZjMxVDRqbkNvakpDYklMRzFIUUtxbkUz?=
- =?utf-8?B?bXBYUmJwcDF6am1GZ0U5eGQzNG1HNS9xUW5QeHRBZ0JVTWcrMnhiZ1VFbEk1?=
- =?utf-8?B?Yis1a2NKamVaQWl2akRoSTU3S0VIUEZvU2hXN1l2WHZ3NW1FOVE4YUZ4UGF5?=
- =?utf-8?B?d0tPakd0K25aRlJFeUk0STJoNE1qa2kvQzBscE5zSHZwbG1ZYm9QbzhYdVFv?=
- =?utf-8?B?dTE3cWM1ZG5MY0kzVC82V3ZNSkhxdFRJNkpicWFkbUVoSzA4eGpWb21xbkV4?=
- =?utf-8?B?aHdwd0hqWk5FVnd1a015YXFsMkE5Sm51Z1dQdzVHM010Qy94UXR5bldRVWcz?=
- =?utf-8?B?YkZjS2JIdzFleHJobUhWVE9tL1RsOUx3VlFrM1hOU1hrbkhJc1phNDNjV0hI?=
- =?utf-8?B?UTlpOCtBMXV0bTQ3R0c5Y21ZdVcxcnNZa0dibWpJcEU2V3l0bmpOcDUwU01t?=
- =?utf-8?B?dTNGaFNEK2dJcWdBMG4yRzZDd2RzdE50WHJieXR3bStHeGlBSUo2N05NYnMw?=
- =?utf-8?B?VVludUZQV1FoQTduTXhIeG1pOFlpZm0valBBZDVSelNuSkVKcFA2UU50cy9P?=
- =?utf-8?B?eit2aXRLY0poSldWdXBiZFUxdG1Dc1dhQ05BM3NtcWlYN2FaQ3F2WU0zbXYw?=
- =?utf-8?B?Ynk1WG1ZQmJCMkE2NDh4M3NCazYxek1KZjg2Z2ZlRkdZa3lNV1ZudWRPQmg3?=
- =?utf-8?B?RXN6TnhlOE82b3RrNG5BR05EWnhLSER2TnJpRy84cTcyVmRRbStXR2VzbElk?=
- =?utf-8?B?Q3pSc3FjRld1UHFxbk9ZU2JxRVp2TThMM2VQRk12WmI3TFhaWG14QnQ1WEpa?=
- =?utf-8?B?YzZ2aXNCWlFUb3I3VGp5YytoZHYwNi9DdG9yekZpa1luaEUwdXRmOHlabmtH?=
- =?utf-8?B?cklGYjdKa3Q0RnRhUGhEWGdLUHB4VmRQTEU0cDhpRHFGQnVwOUlIbGg3M1V2?=
- =?utf-8?B?UzNLSHhjK3RyeUpTb20vS3E2R01IK25TWHg4UEY2dWU4K2cwYVl0N2plSVhs?=
- =?utf-8?B?NU1GRHpZRlVIVURLcXpTNFZRNHZCQWwvbDI2OTRlOVh1R1lMeWJnNDBvRnZy?=
- =?utf-8?B?YUhEakx3ejNEOFFiMjhSUndnWGNGUFNGQm83RjNWb3l1RDMxdlJLak5nUG8y?=
- =?utf-8?B?d21sZWo5dWIzYWs4NThUMDFSSFd2QTVBQzlXajRYaXdoN3NIZGJjUk9leXJH?=
- =?utf-8?B?bzhCOWpEcTNKaGN6SGhkd25Nbkc3MlR4NENVY0xkVlo2SEVORnF6cjZHemxF?=
- =?utf-8?B?K1FCcXhpYVVoTUxVa01uSytQZnRpLzg3UzVpMnZpSzIwakFmK25UMExLZ2NZ?=
- =?utf-8?B?SXA0ZXIrOTllM1NKbWQ3TW94dDRldjFseFZmemJ5ZFE2QXk4OGVUNWJVbVFX?=
- =?utf-8?B?K3R2c0IwRFphMG9wc2ppNXVGZzJyWjJsKzFtWHhlbnBmYStrVFV6ZDVvM1dw?=
- =?utf-8?B?RkY2L3A1d0oyYVpjTkpZRmtXSSt6K0RRdkRCVklXMng3UUJMWW5Fc2d0OVdt?=
- =?utf-8?B?REhsblFkTk9MQjNQVEJTMDRnOXB5SWJrcENjVUhEekRnSmlRTE1uY3BneFNk?=
- =?utf-8?B?OXFRMG4rQTNxb1dSakVUUVd0Y25NNHA5ZUxaN1pkT1VGRlA1WjBEMXN3cjMx?=
- =?utf-8?B?SWI2NlFLenY2WmxSUXJEaEdJTTcyUWZxMzhWNThyNW52M1V5SGtIZnRCTndh?=
- =?utf-8?B?VDZLelYycFR0dlRMZUx1TWEvaUdMYnRNeTYzM1h1cUFVVmxicFhSc0dCdkZM?=
- =?utf-8?B?cXBpWkJDejNVUXkzTnBxMVptMVU2WUVDWTJRczJtNkxRR0lLak9xaUNaam5K?=
- =?utf-8?B?NlFVczIrV25ZTDE3RmxKSldQMGxqRDFXZDVVYjNmLzBCZ3RadXpsd3ZuN2RU?=
- =?utf-8?B?eWhpenM2UXdReVNrd3ZnaVBmZCtjRXFtL29PZC9vTkNQZXQvaEo1RnJzeUEx?=
- =?utf-8?B?MXR1bkk0K1NzRk9ZVXIvVElJOGRnNVRYdU02OWREZVl5ejJOaEJCMkdzdDNp?=
- =?utf-8?B?eG1jYmppWkp6MVJNaW1ldFJhaFRnY1RuU1JlN1VsMVUxV1d4SFRJbUFHL0w5?=
- =?utf-8?B?d2pKUXYvU2wxZzBVQ2JCcXFLYUVQN2lPeXdTRUxzSnlTZHJSUEZQRWR5VzBk?=
- =?utf-8?B?ZVJPdXBTMElaWkdRaHRGM0ZYcitnPT0=?=
-X-Forefront-Antispam-Report:
-	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	mXFaH0jpPZaGPqASUiEeLj7R9skRPjlaN+I7d4UIUsvkc7VEoXsUmizERX8DDoCVNrogkkZjsPeZU+bOic6EkvnEfiIWOEJ8cxbxZS+OGOdrUIPkGZC80DWtjiU7fL6JpX8UFA+sXa8y9GCAg/hoHM6h8xML7iZi+PTaLQ1QvZVJtxdBb+TUt26JMFbYaRxD74TDP3P5p13RSQKg9s4xX1VC3kL6oaW9+PzsQXYiCp0PVDWlBH/LhJbDa4xMWBUWR+RbAbyxzfo53M+Rm391CBAqgnwFWoDzjxYimZFdKlFBtHGbpxNWY8by5iyPnl7G3FK4f/U1AQJYb+Kh0RLlPHef+uXiyk4YUcu+3L4nqcMHtpHcUPQoRuHWqcCA8ZRcabD9pAlYG9Ep9MvLONIVEqmXNoHQvXh4pVxcRPEiO+Km8PRABzlbM7i8JT649f33
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2026 10:44:47.1226
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 38b7d51b-1d38-4c70-7a12-08de72c89040
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF00005FFF.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4459
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAFk2nGkC/3WMwQ6CMBAFf4Xs2ZIuFiqc/A9DCNKtNJEWW0AM4
+ d+t3L28ZF4ys0EgbyhAlWzgaTHBOBshOyXQ9a19EDMqMmQ8yxG5YFMzujf5xtlGzyuTXHXF5Sx
+ lKRCiNHrSZj2Ctzpyb8Lk/OfoL/h7/6YWZMjonpdYkJBayasLIX3N7bNzw5DGgXrf9y+BZj28s
+ wAAAA==
+X-Change-ID: 20251104-t_power_on_fux-70dc68377941
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mayank.rana@oss.qualcomm.com,
+        quic_vbadigan@quicinc.com,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1771845636; l=2048;
+ i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
+ bh=vR4GbE5tO0t7eMAiqDkRls4S2OCBvskL0+rRHRV0jaw=;
+ b=2zljMSIfVVuOWOyVO8iNsGgVjX5qYYHvu4cQLOgGWzSvCVf8O+rjn9akO5wPajSbEPhtug0sL
+ 71l9HfyiA1XCVT5Ab27GtDwQOtRSOhA8DGIDcxHQYq3iyTbZqZki12e
+X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjIzMDA5NyBTYWx0ZWRfX55/rhMPU1w/i
+ JP9nnYAmxIXL7bLmOHRiFAw+fgMjaLANU8EVJp7LF2TC6kvDh4vUyrLtPXiLOK/FemW6PGK35LL
+ IBtNNuwamquZownANPm/DhlDorHAXWsnXA271UuTl0yJY18VLlOjeCD8SxrUvoxzYjtkoL46qPc
+ nARjuaZ2kC39vBm22J7oJ0ggDECahgzPJuXzftg4BudTS0nFYbk/50u2hGqVtn/CWxG/fl0w50k
+ +5Jc59VJ43Iiq8RgFTh92za2VK1aHiTVfPAAIy2+idNBLESk/kdAqaORYYvvSv2nVoNuCsvTjLc
+ W31tPMRu4TdbtfTCbeWeahIF9rmdLuXQZ0kXc5/jwWoCvIUKooiMWaNVPrZ/aqCIgT0WkgMRE/Y
+ nwGTRdGbuD4EtSbdmDouiFsvz//v44qysWGxIi21fTkcFvQkayPUBQJic2uR+3KYkPL+eF/sOk3
+ HBUESCBhAszC5SH0LfA==
+X-Proofpoint-GUID: sQfshfCRPz6dCnA05HZ0IZHg3WZ8Ip8u
+X-Authority-Analysis: v=2.4 cv=X71f6WTe c=1 sm=1 tr=0 ts=699c380a cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=zkpMToBQJcapbifWyZsA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=_Vgx9l1VpLgwpw_dHYaR:22
+X-Proofpoint-ORIG-GUID: sQfshfCRPz6dCnA05HZ0IZHg3WZ8Ip8u
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-23_02,2026-02-20_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 priorityscore=1501 adultscore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 malwarescore=0 spamscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602230097
 
+The T_POWER_ON indicates the time (in μs) that a Port requires the port
+on the opposite side of Link to wait in L1.2.Exit after sampling CLKREQ#
+asserted before actively driving the interface. This value is used by
+the ASPM driver to compute the LTR_L1.2_THRESHOLD.
 
+Currently, qcom root port exposes T_POWER_ON value of zero in the L1SS
+capability registers, leading to incorrect LTR_L1.2_THRESHOLD calculations,
+which can result in improper L1.2 exit behavior and can trigger AER's.
 
-On 22/02/26 18:36, Lukas Wunner wrote:
-> On Fri, Feb 13, 2026 at 06:06:02PM +0530, Aksh Garg wrote:
->> Add the DOE support for PCIe endpoint devices, enabling endpoint
->> functions to process the DOE requests from the host. The implementation
->> provides framework APIs for controller drivers to register mailboxes,
->> protocol handler registration for different DOE data object types, and
->> request processing with workqueues ensuring sequential handling per
->> mailbox. The Discovery protocol is handled internally by the DOE core.
-> 
-> This looks like it is largely a duplication of drivers/pci/doe.c,
-> including the asynchronous request support that was originally added
-> but was never needed and so was clearly a mistake.
-> 
-> I'm wondering why the async suport is needed in the endpoint case?
-> Why can't this (only) be synchronous?
+In this series, qcom controller drivers read the devicetree property
+"t-power-on" which got merged recently[1], and use that value to over
+write default/wrong value.
 
-The DOE framework for the endpoint case needs to be asynchronous because
-a PF can have multiple instances of DOE mailboxes, and the requests may
-be interleaved across the mailboxes (the request processing of one
-mailbox should not result in blocking the request processing of other
-mailbox, as per the DOE ECN). Hence, the request on each of them needs
-to be handled in parallel for optimization. For the EP controller driver
-to handle requests on multiple mailboxes per-PF in parallel,
-pci_ep_doe_process_request() needs to be asynchronous.
-However, I noticed the use of wait_for_completion() within this function
-makes the overall function synchronous for the caller, which I
-overlooked while posting this patch.
+To convert T_POWER_ON in to T_POWER_ON_SCALE & T_POWER_ON_VALUE created
+a pcie_encode_t_power_on() helper in aspm.c and also created
+dw_pcie_program_t_power_on() helper for other drivers to use these
+helpers.
 
+Link [1]: https://lore.kernel.org/all/20260205093346.667898-1-krishna.chundru@oss.qualcomm.com/
 
-Please provide feedback if the following framework would work instead:
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+---
+Changes in v2:
+- Instead of hard coding the values in the driver, created a devicetree
+  property "t-power-on" to program it (Bjorn & Mani).
+- Link to v1: https://lore.kernel.org/r/20251104-t_power_on_fux-v1-1-eb5916e47fd7@oss.qualcomm.com
 
-The function pci_ep_doe_process_request() would be called by the EP
-controller driver when a request arrives on a mailbox. Instead of
-wait_for_completion() in this function, the function would return
-immediately after submitting the work in the queue, hence eliminating
-the need of private data for completion in the task structure.
+---
+Krishna Chaitanya Chundru (3):
+      PCI/ASPM: Add helper to encode L1SS T_POWER_ON fields
+      PCI: dwc: Add helper to Program T_POWER_ON
+      PCI: qcom: Program T_POWER_ON
 
-A completion callback from the EP driver would be passed to this
-function along with the current parameters, which would be passed to the
-task structure as task->complete. Whenever signal_task_complete() is
-invoked, the completion callback of the EP driver would be called, which
-would take func_no, cap_offset (to help the EP driver to identify the
-mailbox), and the status of the work as input, hence eliminating the
-need of task_status in the task structure as well.
+ drivers/pci/controller/dwc/pcie-designware.c | 27 +++++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h |  1 +
+ drivers/pci/controller/dwc/pcie-qcom.c       | 15 ++++++++++
+ drivers/pci/pcie/aspm.c                      | 43 ++++++++++++++++++++++++++++
+ include/linux/pci.h                          |  2 ++
+ 5 files changed, 88 insertions(+)
+---
+base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
+change-id: 20251104-t_power_on_fux-70dc68377941
 
-This would make pci_ep_doe_process_request() asynchronous as per the
-requirement.
-
-
-While going through the driver implementation of doe.c, I noticed that
-the pci_doe() was made synchronous in commit 62e8b17ffc2f ("PCI/DOE:
-Provide synchronous API and use it internally"), which builds on the
-internal asynchronous machinery using WORK_QUEUES. As the pci_doe() is
-synchronous for the callers, why the WORK_QUEUE framework was not 
-removed from the doe.c implementation in that commit?
-
-> 
-> Thanks,
-> 
-> Lukas
+Best regards,
+-- 
+Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
