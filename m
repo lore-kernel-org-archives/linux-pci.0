@@ -1,129 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m93231.xmail.ntesmail.com (mail-m93231.xmail.ntesmail.com [103.126.93.231])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A800376498
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 20:03:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7F4E377548;
+	Mon, 23 Feb 2026 20:24:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.126.93.231
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771876993; cv=none; b=k7bFKfbQ4SrCk6M3H/Ost/G10ht436BxKQfWDgqRqmKbXH3H7J2i999Pl0FL9PLuZVyJqJkMPoOfLXO//lV6ZlKjqPFoZrZSdhXeKz96p/qdzKq2iXfsp9EkSpLU98SkwEOqruqm8STVw3rG6qmY3IwXEwnjJ+9iYgGQqAuF9fk=
+	t=1771878263; cv=none; b=PK/47aOEZRxo167T/wHUeZfhQd699Ls5v7R6XXP36x+6oZBZileYzEuXLaF/e3iLED/1ADoSdIuuy/ODWveICpxY4vzpk7vjsHRWzxhLhe2Nu6PqAffuYI1lZCJ5Ky6KbC2ulhJqyjZzojkL06AicQmF+H9VN7J4neIOiA6GpsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771876993; c=relaxed/simple;
-	bh=JBhOcyNghPQnyLeqt4d+gn4z6mbPuf4O77nqGdBnWZs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WDA0fHCT0+QeTdz+wYFEPwKyKOsv2e9FGSklsaLUAShUC/O/Dc406ZnhRxgNX/FML67mWqv+kcQeXTT29OPwMZiQBChF/cCqdTQl4ewuR/wzjT8/E9nwxbE71/QvYrXvzq/CrIA8FfbEuugvNDXk4fahgyJS5oFI7KOq1Io+0cU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y8NCt8LA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771878263; c=relaxed/simple;
+	bh=qorg6TmtZ22TlloKeRF+oP40teEITKL0Bs3LFtaIC6k=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=N/toT6nWERGiYeLeYQKjtHQ+buz9NWHSAmIJLMbYCL+GBEj7H9H39fze9QR9itD1m8iIoIKNImfxfzw9LDM48IhRVspdBKTChCHHkCyRkQ2n6ptamclx4doVQLqwB6Hk+siCH4Npfor53zPDO6AshBUMftzjEb6H+rg9+3DyhCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Gg+jsbSA; arc=none smtp.client-ip=103.126.93.231
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y8NCt8LA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCD8EC2BC87
-	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 20:03:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771876992;
-	bh=JBhOcyNghPQnyLeqt4d+gn4z6mbPuf4O77nqGdBnWZs=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=Y8NCt8LAVnc0fbhRneGkNB1037xboOU/bLB7M7bbAQh2oLQ+SLsY7k4Bw9TGV0/b8
-	 P1bzud//oT1dhKXG+aIzV1cIWYeZmt36GZszk5pEhqO8u8SHChut/2qccJxtk4d7up
-	 5rPqkUTH0Goe0PH6fyi0Lji0Wdyb8AZTV4JLE+ErQHB3jQn0QfrzEOx7YzaP2aAJOz
-	 Fn205da8dhwryiZCDsERBy3sZfFcszk7cCOmpxivSQQGSQVV+Eo/1ZIOs07AP0jiyh
-	 Nknfbsq73UupsR9/tjgClbiUAwtPlmhzCNPORHgAGR0C8mFrkP98CGQ4jWjRckvddg
-	 mE70jldWC/VRg==
-Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-7d4c383f2fcso4078227a34.0
-        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 12:03:12 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCX/P7Pt/sGKJSKtTJBE0fD0GRJMXERbTVzS3IbjcUb3Y11I0+6gpVi0+/kvpLvoOY9wTj2NrgqlC4Q=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxBOiEtx7Puf9j3uir8UNIcCYOKiusJsPM6PVSVeq/Yr/2aGcLc
-	WqPf7kF2ktL7BR/FCHybucuioTaeWQe3Ev8LG/CQE6SMPGg9JKwpiy8OpLzm1OEjlNTgQpEa1Mb
-	d75ONkXrRNakveNKJZV2eDukkZTEfZw0=
-X-Received: by 2002:a05:6820:160f:b0:679:2797:7a0f with SMTP id
- 006d021491bc7-679c44e39dbmr4828682eaf.45.1771876991832; Mon, 23 Feb 2026
- 12:03:11 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Gg+jsbSA"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34b4044c9;
+	Mon, 23 Feb 2026 23:48:16 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Robert Richter <rric@kernel.org>,
+	Andi Shyti <andi.shyti@kernel.org>
+Cc: linux-i2c@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philipp Stanner <phasta@kernel.org>,
+	linux-pci@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 11/37] i2c: thunderx: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
+Date: Mon, 23 Feb 2026 23:48:08 +0800
+Message-Id: <1771861688-87083-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Tid: 0a9c8b2fde4309cckunm510d336798763d
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkNKSlZJQ09ITB1KS0xDSBhWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=Gg+jsbSArrnIeyfNwaJx+/VqSnRe36F6GbWY37en5PInBf0b/xaXSYrLxqA0ax80CjamCMWH0KeivVIqpt/1GtWPxjH5mTKs6bOVlse4FKWWcgNNNCwsYM5a/DMrmy+qG4K+MLKKjEh+2BggfHxJj0MrCfVyNVo7nVUHZWW2aPU=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=EDQEAOeRTB4T28nPwNfIInakvVxbnFihUpDI4ZRKYOc=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <CAJZ5v0h8dQ10oH4KQM8Pdv0jvXyTE6yD1fn5eBPkS_jDYgA8gQ@mail.gmail.com>
- <20260223195508.GA3703404@bhelgaas>
-In-Reply-To: <20260223195508.GA3703404@bhelgaas>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 23 Feb 2026 21:03:00 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0haUg8VtzfQ4U8PV2ww2NDHx8jbL9HTer3P6jJe+mfr7w@mail.gmail.com>
-X-Gm-Features: AaiRm522tekkYjnNwAaBXy4xZO6OyIG3-2vg_uzvGJPeWrFp-lyBHkYh-K_XrN4
-Message-ID: <CAJZ5v0haUg8VtzfQ4U8PV2ww2NDHx8jbL9HTer3P6jJe+mfr7w@mail.gmail.com>
-Subject: Re: [PATCH v2 1/5] PCI: host-common: Add helper to determine host
- bridge D3cold eligibility
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, Jingoo Han <jingoohan1@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Will Deacon <will@kernel.org>, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	jonathanh@nvidia.com, bjorn.andersson@oss.qualcomm.com, 
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Feb 23, 2026 at 8:55=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Mon, Feb 23, 2026 at 07:46:08PM +0100, Rafael J. Wysocki wrote:
-> > On Mon, Feb 23, 2026 at 7:10=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.o=
-rg> wrote:
-> > > On Tue, Feb 17, 2026 at 04:49:06PM +0530, Krishna Chaitanya Chundru w=
-rote:
-> > > > Add a common helper, pci_host_common_can_enter_d3cold(), to determi=
-ne
-> > > > whether a PCI host bridge can safely transition to D3cold.
-> > > >
-> > > > This helper is intended to be used by PCI host controller drivers t=
-o
-> > > > decide whether they may safely put the host bridge into D3cold base=
-d on
-> > > > the power state and wakeup capabilities of downstream endpoints.
-> > > >
-> > > > The helper walks all devices on the bridge's primary bus and only a=
-llows
-> > > > the host bridge to enter D3cold if all PCIe endpoints are already i=
-n
-> > > > PCI_D3hot. This ensures that we do not power off the host bridge wh=
-ile
-> > > > any active endpoint still requires the link to remain powered.
-> > > >
-> > > > For devices that may wake the system, the helper additionally requi=
-res
-> > > > that the device supports PME wake from D3cold (via WAKE#). Devices =
-that
-> > > > do not have wakeup enabled are not restricted by this check and do =
-not
-> > > > block the host bridge from entering D3cold.
-> > > >
-> > > > Devices without a bound driver and with PCI not enabled via sysfs a=
-re
-> > > > treated as inactive and therefore do not prevent the host bridge fr=
-om
-> > > > entering D3cold. This allows controllers to power down more aggress=
-ively
-> > > > when there are no actively managed endpoints.
-> > >
-> > > This series is currently structured so it's only applicable to native
-> > > host bridge drivers, i.e., things using DT.  Is there anything that
-> > > prevents using D3cold for host bridges in ACPI systems?
-> >
-> > Do you mean in principle or in practice?
->
-> Just in principle.  I was hoping for some way to tie this decision
-> making back to a spec.  Everything downstream being in D3 already, and
-> any wakeup devices supporting PME from D3cold sounds plausible to me,
-> but I don't know about any prescriptive spec language, and I wouldn't
-> want to get locked into a scheme that couldn't be supported on ACPI.
+pcim_enable_device() no longer automatically manages IRQ vectors via devres.
+Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
+pcim_alloc_irq_vectors() should be used.
 
-In principle, I guess someone might want to add ACPI PM support to a
-PCI host bridge device object.
+To: Robert Richter <rric@kernel.org>
+To: Andi Shyti <andi.shyti@kernel.org>
+Cc: linux-i2c@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Philipp Stanner <phasta@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-In theory, there may be a problem with message-based PME wakeup unless
-the host bridge device has some D3cold aux power, but it at least
-seems to be doable.
+ drivers/i2c/busses/i2c-thunderx-pcidrv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I think that this question is for non-x86 folks who use ACPI in their
-platforms because they may just have this use case.
+diff --git a/drivers/i2c/busses/i2c-thunderx-pcidrv.c b/drivers/i2c/busses/i2c-thunderx-pcidrv.c
+index 3959f23f..74e7d05 100644
+--- a/drivers/i2c/busses/i2c-thunderx-pcidrv.c
++++ b/drivers/i2c/busses/i2c-thunderx-pcidrv.c
+@@ -198,7 +198,7 @@ static int thunder_i2c_probe_pci(struct pci_dev *pdev,
+ 	i2c->hlc_int_enable = thunder_i2c_hlc_int_enable;
+ 	i2c->hlc_int_disable = thunder_i2c_hlc_int_disable;
+ 
+-	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
++	ret = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
+ 	if (ret < 0)
+ 		goto error;
+ 
+-- 
+2.7.4
+
