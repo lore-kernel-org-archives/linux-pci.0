@@ -1,129 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m3274.qiye.163.com (mail-m3274.qiye.163.com [220.197.32.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2119D28C869;
-	Mon, 23 Feb 2026 16:09:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4044C3090C1;
+	Mon, 23 Feb 2026 16:09:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771862945; cv=none; b=tu8UD6wMo/hVdP+EMVeCNepHq2i0Qt4owF/WVtRELei9CpM4Trjqoy5BRRnX4TqeVXqYasWfoMI+TS9I4SqVPr3xhnk7KDackJi7KxEGfHioBDGvmq97nm0Z3ksFxZVvSx+Q/lNGDjiAJU4Zj0H4g0mIA57smazg3CJPuHWJQc8=
+	t=1771862993; cv=none; b=NZWiBPIlGdmnFAg3C+bwqlesBjeaxNCoVhpHyuSf2OVtmR+7ETv2ehkBtOlM8nm9C/Y0z/FIqBhUNWU03Ftq+uIpEXP9vlMzI4Yxp/TBXr2H5/pFrUN0p7ijiRuQEM/RE4i+RGp0g22jfwirHwZn+Yht4hon1Pm+npx1SmvTnno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771862945; c=relaxed/simple;
-	bh=U1f4VUWvlVoHVRzjSsvSj6+GTfFekKDeqZn6GrwXI0o=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=h/BOkjva8uPoNlA87lW1vnTJV0L42mPpMMwkGRvuYmqENEHrzwDUeeEEUve3dhXf4L0WulaToDpFbsNE1ihtn/MzJkZAQFdKXAJfE6nc+8JiTT94YWQFfs/0clxtyH0yZ+a81h5JoUfJDhq3pcZAnpJqZwNRaEku1tz8+NjRDxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l9pVaPN/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771862993; c=relaxed/simple;
+	bh=AHx0h1hO5knesFXxZVApDK1swS5oE7zMU5mMkaIob88=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=gZPtP7sBDWcXNLShBalb+Y2iEoEZxwfbJ8Bi48jQEm+hWXxoddw8cWJT49xKfIkcajFyx/rzcHN/UE6ytJau09R6W7AqO9sb80tUHdNfe/a63OdFKgXbYdgPlGGd0dReAEhrN+ZZI6Lo3e3PyFRdJsUmd0dL00girDGCcY3r/2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=QIa8w6+m; arc=none smtp.client-ip=220.197.32.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l9pVaPN/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91C5AC116C6;
-	Mon, 23 Feb 2026 16:09:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771862944;
-	bh=U1f4VUWvlVoHVRzjSsvSj6+GTfFekKDeqZn6GrwXI0o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=l9pVaPN/cxEh/suCVhuWE9zKuRvobiCEGJ0txgkBo9PpXkl47x3YeBE24NtYlHPBp
-	 Z9MvnO0WtjK2zPWfQ/IfIVLCZffKJlqemIihS/QeSLhwIJq8IdOPIU+1f9688A4XMp
-	 gwlAn+/8UAVE4a0QW6Jp5dz96715FKWMWVIWgA0sngCXHv+7g87EwavNZvdprMhmg7
-	 MahbRAl/A4ygOiEtD77hedrDSCJEvgQIk8RNwhzzo9fFOFuUA/+QEBobC2lco7cD/+
-	 etfl/NJ7Xp0yiJtecEPjRZB5hFueUHK0rlemZus13jXbfPV+sMsHDxL+4n4NsgZMVR
-	 B+47pl7GCN5cg==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1vuYUX-0000000D3Lu-3QOf;
-	Mon, 23 Feb 2026 16:09:01 +0000
-Date: Mon, 23 Feb 2026 16:09:01 +0000
-Message-ID: <86jyw3a1cy.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: David Lechner <dlechner@baylibre.com>
-Cc: Frederic Weisbecker <frederic@kernel.org>,	LKML
- <linux-kernel@vger.kernel.org>,	Michal =?UTF-8?B?S291dG7DvQ==?=
- <mkoutny@suse.com>,	Andrew Morton <akpm@linux-foundation.org>,	Bjorn
- Helgaas <bhelgaas@google.com>,	Catalin Marinas <catalin.marinas@arm.com>,
-	Chen Ridong <chenridong@huawei.com>,	Danilo Krummrich <dakr@kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,	Eric Dumazet
- <edumazet@google.com>,	Gabriele Monaco <gmonaco@redhat.com>,	Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>,	Ingo Molnar <mingo@redhat.com>,
-	Jakub Kicinski <kuba@kernel.org>,	Jens Axboe <axboe@kernel.dk>,	Johannes
- Weiner <hannes@cmpxchg.org>,	Lai Jiangshan <jiangshanlai@gmail.com>,	Marco
- Crivellari <marco.crivellari@suse.com>,	Michal Hocko <mhocko@suse.com>,
-	Muchun Song <muchun.song@linux.dev>,	Paolo Abeni <pabeni@redhat.com>,	Peter
- Zijlstra <peterz@infradead.org>,	Phil Auld <pauld@redhat.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,	Roman Gushchin
- <roman.gushchin@linux.dev>,	Shakeel Butt <shakeel.butt@linux.dev>,	Simon
- Horman <horms@kernel.org>,	Tejun Heo <tj@kernel.org>,	Thomas Gleixner
- <tglx@linutronix.de>,	Vlastimil Babka <vbabka@suse.cz>,	Waiman Long
- <longman@redhat.com>,	Will Deacon <will@kernel.org>,
-	cgroups@vger.kernel.org,	linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org,	linux-mm@kvack.org,	linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 04/33] mm: vmstat: Prepare to protect against concurrent isolated cpuset change
-In-Reply-To: <47be2ff3-c25a-4aab-89fc-53921af8b0a9@baylibre.com>
-References: <20260101221359.22298-1-frederic@kernel.org>
-	<20260101221359.22298-5-frederic@kernel.org>
-	<47be2ff3-c25a-4aab-89fc-53921af8b0a9@baylibre.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="QIa8w6+m"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34b44f421;
+	Tue, 24 Feb 2026 00:09:40 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ "Vaibhaav Ram T . L" <vaibhaavram.tl@microchip.com>,
+ Kumaravel Thiagarajan <kumaravel.thiagarajan@microchip.com>,
+ Even Xu <even.xu@intel.com>, Xinpeng Sun <xinpeng.sun@intel.com>,
+ Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+ Jiri Kosina <jikos@kernel.org>,
+ Alexandre Belloni <alexandre.belloni@bootlin.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Longfang Liu <liulongfang@huawei.com>,
+ Vinod Koul <vkoul@kernel.org>, Lee Jones <lee@kernel.org>,
+ Jijie Shao <shaojijie@huawei.com>, Jian Shen <shenjian15@huawei.com>,
+ Sunil Goutham <sgoutham@marvell.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ Heiner Kallweit <hkallweit1@gmail.com>,
+ "David S . Miller" <davem@davemloft.net>,
+ Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Oded Gabbay <ogabbay@kernel.org>,
+ Maciej Falkowski <maciej.falkowski@linux.intel.com>,
+ Karol Wachowski <karol.wachowski@linux.intel.com>,
+ Min Ma <mamin506@gmail.com>, Lizhi Hou <lizhi.hou@amd.com>,
+ Andreas Noever <andreas.noever@gmail.com>,
+ Mika Westerberg <westeri@kernel.org>, Tomasz Jeznach
+ <tjeznach@rivosinc.com>, Will Deacon <will@kernel.org>,
+ Xinliang Liu <xinliang.liu@linaro.org>, Tian Tao <tiantao6@hisilicon.com>,
+ Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Srujana Challa <schalla@marvell.com>, Bharat Bhushan
+ <bbhushan2@marvell.com>, Antoine Tenart <atenart@kernel.org>,
+ Herbert Xu <herbert@gondor.apana.org.au>, Raag Jadav <raag.jadav@intel.com>,
+ Hans de Goede <hansg@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Jiri Slaby <jirislaby@kernel.org>, Andy Shevchenko <andy@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Andi Shyti <andi.shyti@kernel.org>, Robert Richter <rric@kernel.org>,
+ Mark Brown <broonie@kernel.org>, Nirmal Patel
+ <nirmal.patel@linux.intel.com>, Kurt Schwemmer
+ <kurt.schwemmer@microsemi.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>,
+ Sakari Ailus <sakari.ailus@linux.intel.com>,
+ Bingbu Cao <bingbu.cao@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>,
+ Arnd Bergmann <arnd@arndb.de>, Benjamin Tissoires <bentiss@kernel.org>,
+ linux-input@vger.kernel.org, linux-i3c@lists.infradead.org,
+ dmaengine@vger.kernel.org, Philipp Stanner <phasta@kernel.org>,
+ netdev@vger.kernel.org, nic_swsd@realtek.com, linux-arm-msm@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-usb@vger.kernel.org,
+ iommu@lists.linux.dev, linux-riscv@lists.infradead.org,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ linux-cxl@vger.kernel.org, linux-crypto@vger.kernel.org,
+ platform-driver-x86@vger.kernel.org, linux-serial@vger.kernel.org,
+ mhi@lists.linux.dev, Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Jan Dabros <jsd@semihalf.com>, linux-i2c@vger.kernel.org,
+ Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>,
+ linux-spi@vger.kernel.org, Jonathan Derrick <jonathan.derrick@linux.dev>,
+ linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org,
+ Mauro Carvalho Chehab <mchehab@kernel.org>, linux-media@vger.kernel.org,
+ linux-mmc@vger.kernel.org
+Subject: Re: [PATCH 0/37] PCI/MSI: Enforce explicit IRQ vector management by
+ removing devres auto-free
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+ <CAHp75VeWD5A0r7-Uayyte1ZXXxdhLixd+z_y0xNeki0N+Ro=jQ@mail.gmail.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <cb878741-7b61-b72c-5a72-6ed6d5091b1f@rock-chips.com>
+Date: Tue, 24 Feb 2026 00:09:37 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: dlechner@baylibre.com, frederic@kernel.org, linux-kernel@vger.kernel.org, mkoutny@suse.com, akpm@linux-foundation.org, bhelgaas@google.com, catalin.marinas@arm.com, chenridong@huawei.com, dakr@kernel.org, davem@davemloft.net, edumazet@google.com, gmonaco@redhat.com, gregkh@linuxfoundation.org, mingo@redhat.com, kuba@kernel.org, axboe@kernel.dk, hannes@cmpxchg.org, jiangshanlai@gmail.com, marco.crivellari@suse.com, mhocko@suse.com, muchun.song@linux.dev, pabeni@redhat.com, peterz@infradead.org, pauld@redhat.com, rafael@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, horms@kernel.org, tj@kernel.org, tglx@linutronix.de, vbabka@suse.cz, longman@redhat.com, will@kernel.org, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, netdev@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+In-Reply-To: <CAHp75VeWD5A0r7-Uayyte1ZXXxdhLixd+z_y0xNeki0N+Ro=jQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9c8b4376c609cckunm3fddd3f4988fc3
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQh9CQlYeGUkeS01CTB5IS0tWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUJNS0
+	pVSktLVUtZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=QIa8w6+mvkPs5yiMg8fVRt+gi3F6m/qkhqhjD+6XgiSvEJjtpIRJHvdkclp/pXy7G5fSEbf/NetLr/rXCYIFm/CQEBB6zjl+aiz8R4JS9N+fvFShWzFTgOlhNPDfffXHGWPxdi8/iAaZQWZ16BNVBWgFXcFRVBUKCW34Wu0UCFI=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=scr8hCA+aPfGKwMjupeE8viSs7WuDndPG1pZF3mByMQ=;
+	h=date:mime-version:subject:message-id:from;
 
-On Mon, 23 Feb 2026 16:01:03 +0000,
-David Lechner <dlechner@baylibre.com> wrote:
+Hi Andy
+
+在 2026/02/23 星期一 23:50, Andy Shevchenko 写道:
+> On Mon, Feb 23, 2026 at 5:32 PM Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>>
+>> This patch series addresses a long-standing design issue in the PCI/MSI
+>> subsystem where the implicit, automatic management of IRQ vectors by
+>> the devres framework conflicts with explicit driver cleanup, creating
+>> ambiguity and potential resource management bugs.
+>>
+>> ==== The Problem: Implicit vs. Explicit Management ====
+>> Historically, `pcim_enable_device()` not only manages standard PCI resources
+>> (BARs) via devres but also implicitly triggers automatic IRQ vector management
+>> by setting a flag that registers `pcim_msi_release()` as a cleanup action.
+>>
+>> This creates an ambiguous ownership model. Many drivers follow a pattern of:
+>> 1. Calling `pci_alloc_irq_vectors()` to allocate interrupts.
+>> 2. Also calling `pci_free_irq_vectors()` in their error paths or remove routines.
+>>
+>> When such a driver also uses `pcim_enable_device()`, the devres framework may
+>> attempt to free the IRQ vectors a second time upon device release, leading to
+>> a double-free. Analysis of the tree shows this hazardous pattern exists widely,
+>> while 35 other drivers correctly rely solely on the implicit cleanup.
 > 
-> On 1/1/26 4:13 PM, Frederic Weisbecker wrote:
-> > The HK_TYPE_DOMAIN housekeeping cpumask will soon be made modifiable at
-> > runtime. In order to synchronize against vmstat workqueue to make sure
-> > that no asynchronous vmstat work is pending or executing on a newly made
-> > isolated CPU, target and queue a vmstat work under the same RCU read
-> > side critical section.
-> > 
-> > Whenever housekeeping will update the HK_TYPE_DOMAIN cpumask, a vmstat
-> > workqueue flush will also be issued in a further change to make sure
-> > that no work remains pending after a CPU has been made isolated.
-> > 
-> > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-> > ---
-> >  mm/vmstat.c | 10 ++++++----
-> >  1 file changed, 6 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/mm/vmstat.c b/mm/vmstat.c
-> > index 65de88cdf40e..ed19c0d42de6 100644
-> > --- a/mm/vmstat.c
-> > +++ b/mm/vmstat.c
-> > @@ -2144,11 +2144,13 @@ static void vmstat_shepherd(struct work_struct *w)
-> >  		 * infrastructure ever noticing. Skip regular flushing from vmstat_shepherd
-> >  		 * for all isolated CPUs to avoid interference with the isolated workload.
-> >  		 */
-> > -		if (cpu_is_isolated(cpu))
-> > -			continue;
-> > +		scoped_guard(rcu) {
-> > +			if (cpu_is_isolated(cpu))
-> > +				continue;
+> Is this confirmed? What I read from the cover letter, this series was
+> only compile-tested, so how can you prove the problem exists in the
+> first place?
+
+Yes, it's confirmed. My debug of a double free issue of a out-of-tree
+PCIe wifi driver which uses
+pcim_enable_device + pci_alloc_irq_vectors + pci_free_irq_vectors expose
+it. And we did have a TODO to cleanup this hybrid usage, targeted in
+this cycle[1] suggested by Philipp:
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=msi
+
 > 
-> I think this might have introduced a bug - or at least an
-> unintentional change in the program flow.
+>> ==== The Solution: Making Management Explicit ====
+>> This series enforces a clear, predictable model:
+>> 1.  New Managed API (Patch 1/37): Introduces pcim_alloc_irq_vectors() and
+>>      pcim_alloc_irq_vectors_affinity(). Drivers that desire devres-managed IRQ
+>>      vectors should use these functions, which set the is_msi_managed flag and
+>>      ensure automatic cleanup.
+>> 2.  Patches 2 through 36 convert each driver that uses pcim_enable_device() alongside
+>>      pci_alloc_irq_vectors() and relies on devres for IRQ vector cleanup to instead
+>>      make an explicit call to pcim_alloc_irq_vectors().
+>> 3.  Core Change (Patch 37/37): With the former cleanup, now modifies pcim_setup_msi_release()
+>>      to check only the is_msi_managed flag. This decouples automatic IRQ cleanup from
+>>      pcim_enable_device(). IRQ vectors allocated via pci_alloc_irq_vectors*()
+>>      are now solely the driver's responsibility to free with pci_free_irq_vectors().
+>>
+>> With these changes, we clear ownership model: Explicit resource management eliminates
+>> ambiguity and follows the "principle of least surprise." New drivers choose one model and
+>> be consistent.
+>> - Use `pci_alloc_irq_vectors()` + `pci_free_irq_vectors()` for explicit control.
+>> - Use `pcim_alloc_irq_vectors()` for devres-managed, automatic cleanup.
 > 
-> scoped_guard() is implemented using a for loop. Now this continue
-> statement will only exit the scoped_guard() scope rather than
-> continuing the outer for loop. This means that cond_resched() will
-> be called when it previously was not.
+> Have you checked previous attempts? Why is your series better than those?
 
-Yup, I've been bitten by that once before. It lead to very subtle
-breakage that took me a while to figure out. I've now mentally
-banished the use of scoped_guard() inside any form of loop, but that's
-a pretty brittle strategy...
+There seems not previous attempts.
 
-	M.
-
--- 
-Without deviation from the norm, progress is not possible.
+> 
+>> ==== Testing And Review ====
+>> 1. This series is only compiled test with allmodconfig.
+>> 2. Given the substantial size of this patch series, I have structured the mailing
+>>     to facilitate efficient review. The cover letter, the first patch and the last one will be sent
+>>     to all relevant mailing lists and key maintainers to ensure broad visibility and
+>>     initial feedback on the overall approach. The remaining subsystem-specific patches
+>>     will be sent only to the respective subsystem maintainers and their associated
+>>     mailing lists, reducing noise.
+> 
