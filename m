@@ -1,47 +1,45 @@
-Received: from mail-m3298.qiye.163.com (mail-m3298.qiye.163.com [220.197.32.98])
+Received: from mail-m3294.qiye.163.com (mail-m3294.qiye.163.com [220.197.32.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DC9E307AD5;
-	Mon, 23 Feb 2026 15:58:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B0D303A26
+	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 15:59:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.94
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771862307; cv=none; b=EfIXPGCmE6wFFjIp0HN6h58At0/lFcoE+7dWhiHBA20x9/DbtBg6CVZ2H35LAln1wYhJV51T3Xs6kSocXoo2EWkutgU6fJWVOW1CYOtXBJ/zoNpnafHKKOBDxnBWZ7UQCTdY2HKLDn3k6qM9FhqzqtZJqc12sQpWwMXSzNDgnJs=
+	t=1771862347; cv=none; b=lUZmV/QFefH1GhalfcSdlK+8gHU650AQVV6F+oL9czDDmkC73w1Kbb26eYHYzG4S0sW/94MNhz0DZy26tIZ2r64DfzHx7ceDdzPPDlNH8tk9jB8N4qleQl4HIMfz3QxATIA4l/Qgx4KWh8c2vsltoxXRRnL2lY3HpXZJBXyEAAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771862307; c=relaxed/simple;
-	bh=yhn4umOHX/qL3rQ2lLDL3Spna4O/g5RwNXae27JUG8I=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=C+C2Z8k3WOmFDu2pf3W+bZqZGkYoAvk4b+Dp57R3qFW0+9PLzghWOhcbe2hKSvoUbhG7MLIeqmUbMzW+CorqXFc1lu8VcfWvFsV1qQktlBlyCWO150OzomdzVmpRI1+FFERl4c13HAew/nmu5fdOur1XjJbjawg0Vyu8MYQD/x0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=kKsGpa6K; arc=none smtp.client-ip=220.197.32.98
+	s=arc-20240116; t=1771862347; c=relaxed/simple;
+	bh=FvsuT97iDUezd+6wk+6zbuTx9wKn3tMyNCAq0lMJIpQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=PN1XUDDH0JwqRHc3a3/QLtAjbsJTDywtwYm0P/t44zhG0CH76bNiw2ybcmDiJvFGtdsItjW0hzLiGuFODuNKb1jCjV43YUNOlwbik/++I/Cfq0KB95lDFJvZMu+stUzNh8dpnNy4ZAwFec164VigVfb4PstC+IaMHBYzddoFQeQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=YNO9v1Z6; arc=none smtp.client-ip=220.197.32.94
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="kKsGpa6K"
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="YNO9v1Z6"
 Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 34b3c91a9;
-	Mon, 23 Feb 2026 23:43:05 +0800 (GMT+08:00)
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34b404656;
+	Mon, 23 Feb 2026 23:59:02 +0800 (GMT+08:00)
 From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Linus Walleij <linusw@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>
-Cc: Andy Shevchenko <andy@kernel.org>,
-	linux-gpio@vger.kernel.org,
+To: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc: linux-i3c@lists.infradead.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Philipp Stanner <phasta@kernel.org>,
 	linux-pci@vger.kernel.org,
 	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 04/37] gpio: merrifield: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
-Date: Mon, 23 Feb 2026 23:42:56 +0800
-Message-Id: <1771861376-85311-1-git-send-email-shawn.lin@rock-chips.com>
+Subject: [PATCH 33/37] i3c: mipi-i3c-hci-pci: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
+Date: Mon, 23 Feb 2026 23:58:58 +0800
+Message-Id: <1771862338-90817-1-git-send-email-shawn.lin@rock-chips.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
 References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Tid: 0a9c8b2b1fb809cckunm1621ec01987012
+X-HM-Tid: 0a9c8b39b9e109cckunmf5f76d2a9881ba
 X-HM-MType: 1
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGR8aGFZJGUlJQkpCGElJSk1WFRQJFh
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQh1LH1ZMGkhMGUxLSE8eTEJWFRQJFh
 	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
 	hVSktLVUpCS0tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=kKsGpa6Ka1kKfCIGsDzptshsrEnrXt/ps2ob0XOOfykSrQgimIDr0k0eX7PJxibT8yNZjcrZgyxlSGVXGo4ZosjVZj/jZX8Tx+7i/u+y3C1ixUbczEEVRkBHijSxDzyExe/9ez+j1PqkIuDEMv1yVuNh3gS4I9qtAsYeM7GV6f4=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=DEZLiJ5kZT1iX68qIn873ULjQuOthsi0jZy8Dwt+PA0=;
+	b=YNO9v1Z6NhYs4X2lshtGqHdv5eLghlB+AZQv1cm2dgedCNUITfes+pb4VAx9JxTmAzQDkc2MzG7GjaJEQCnRGBQM+Xhc+J3oZLqtjOEgIvVs7A6SZe388WvfWlN+1yL7+n465iQHhtaenfpTgjGZ7s4ySk6CKgnGmk6PXdR0WB0=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=WjRyROOuQkm98HjtuYvshmAzggKr91+4U1QFqEn0zbw=;
 	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -53,31 +51,29 @@ pcim_enable_device() no longer automatically manages IRQ vectors via devres.
 Drivers must now manually call pci_free_irq_vectors() for cleanup. Alternatively,
 pcim_alloc_irq_vectors() should be used.
 
-Cc: Andy Shevchenko <andy@kernel.org>
-To: Linus Walleij <linusw@kernel.org>
-To: Bartosz Golaszewski <brgl@kernel.org>
-Cc: linux-gpio@vger.kernel.org
+To: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc: linux-i3c@lists.infradead.org
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Philipp Stanner <phasta@kernel.org>
 Cc: linux-pci@vger.kernel.org
 Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
 
- drivers/gpio/gpio-merrifield.c | 2 +-
+ drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/gpio/gpio-merrifield.c b/drivers/gpio/gpio-merrifield.c
-index 4335a5d..9272474 100644
---- a/drivers/gpio/gpio-merrifield.c
-+++ b/drivers/gpio/gpio-merrifield.c
-@@ -108,7 +108,7 @@ static int mrfld_gpio_probe(struct pci_dev *pdev, const struct pci_device_id *id
- 	priv->info.ngpio = MRFLD_NGPIO;
- 	priv->info.first = irq_base;
+diff --git a/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c b/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
+index 0f05a15..4753008 100644
+--- a/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
++++ b/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
+@@ -282,7 +282,7 @@ static int mipi_i3c_hci_pci_probe(struct pci_dev *pci,
+ 	if (IS_ERR(hci->base))
+ 		return PTR_ERR(hci->base);
  
--	retval = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
-+	retval = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
- 	if (retval < 0)
- 		return retval;
+-	ret = pci_alloc_irq_vectors(pci, 1, 1, PCI_IRQ_ALL_TYPES);
++	ret = pcim_alloc_irq_vectors(pci, 1, 1, PCI_IRQ_ALL_TYPES);
+ 	if (ret < 0)
+ 		return ret;
  
 -- 
 2.7.4
