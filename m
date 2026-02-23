@@ -1,217 +1,147 @@
-Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012025.outbound.protection.outlook.com [52.101.53.25])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 227572B9BA;
-	Sun, 22 Feb 2026 19:35:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.25
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771788961; cv=fail; b=H4j/kMt1O3IWu7omPNcxHgdPFdZhdSzKrhIdsjbqMyzdp/pPVnsVOC5/HsGSsE+QXrJTHZAvD4ZWdImCH+oY5I3LZ0ZZHkg+I+vYewlpLeH9MWyVEpYOjxVlvM4M0e/HOxdXVSrecoYIGWxJ/f/tbpvaJABTtKL6x8IdZVEU8ZY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771788961; c=relaxed/simple;
-	bh=yeQ0iLuXDRoKpjKLOuRk5txuB9LLLeEoodDnZOnkYAU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n7ttJmqEV9D1s2QShZnI/J0C7RMqMv3wLtvO0ZFws1Qb2Bgyiqt1LRP1nQs+ZwLiEOoDr9YJtStzYJ8KlJtKHX/jzYbnfItQ8QsnV8Ck9cDfB6iHRHUFSNR551x5EtS8e6kSV3Fa5dgzae+f/dBvKw2ZrJ0rxtjdO/qiQ+cO1pI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=YELuFfD4; arc=fail smtp.client-ip=52.101.53.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1217257843
+	for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 00:52:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771807975; cv=none; b=QmLfo3UDOS3VAvpdlAAaxOqWoNyusoJlSsuHvgv3tRAztcymvfX7+NzY3cxp1lujY2xpLXFBIgIJrKBvhVTJRPzCaujsg3rbwaQj3FYkpLTt/PutRKB6AR9dt8ZkYg8+8z0yJJoVOQlOneFXg8uL226LYEdigj0+q1LBxjkUf/s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771807975; c=relaxed/simple;
+	bh=v3O/hJRhtaAfIBGB6kmmYnPZnpbQ1I1GcL6Vp1dZWrE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sMb4dTUo8R30mq2Hk+WbM3n77eD0WlHFxcsav5NeBrZYOaub7/jooBXFqRkx7r8BpypW2WjNcgHEIzstWvTjB/osUTZ3qH6xqA/KRRkBkYuA1I2Rd4BfVdQ2oLlrs+cxi2Cq1mWD2jQ6aVTTPkbaU+1AEc+2Id6pu30bgvGfJYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kRqJTC7i; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="YELuFfD4"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=h0mjW3I0ENRfCINBONPgN2Z834YaEzD1YMtS/vqNMl0QWsTFLuuBdMDKtYsB40xa4b57jAo+3vwpeVYPfAV6NFsfm8AjmwnepujUwN8PAiaOvAvtddFsqCMvxPspZhi5kVF13byUgKGa+UvcwSn+YP1fHr6wGTig1bEnd/smcU3wYtBnuWATAjaV8NnJT1TeYSXKRzqZVOFmf+N7enimHs/zd/i+rRCqsM6yj6ax2nqhs4aI9rKDLhqxpyf7X02+ttFKVHr50KHwpYkE225+VMnW/RB1AhxQsUFJb22ddCcZP3bDaH1jmveyQo9yGCckKBgaGYLpotYzzvdS/Z462w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EVXNia+HixdPH7ZEZkmpqCtdL3ySyeZjGodGRnxyq38=;
- b=V/4DR+wvOkYmVzYuQzoSPs+3JkR5StLGaAfzksSA7MXveXIs9bgASf58fB/uPBK17EyzTMhCUi0RmdsR7/9hKOcEDfbke+acfjowXpBVxLYgdasDlBhFH596zGkkIUHZRHheIjJo6PJvaYcg0diPXd3s2pb3Ymor1X6487Suc9mIVD4UIXsC/5bYY9t0xAEpFtUsvoYmHUstkRda1xPdGdx9Goyl4MBpHrt5w4dTca6wLkTFXf3Xc4z+gbM+kjW/xAnoAb7/WL6nsyzXoIk7sBNFeTpP7pEwEj3auUcdDGtf0QaEivgFeBW1H9yab/d99fwsdGLJVXWaY5BB56uLRg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EVXNia+HixdPH7ZEZkmpqCtdL3ySyeZjGodGRnxyq38=;
- b=YELuFfD459VkMaUwe9TAKZzQ5pvcH/PFBTRgKsjqBp7TaQmDyk9ZS059P7v4ZbVMNO1pmEd/IsnxszAmQdNLKJDqGsPyZOvsftOBvlaiYsevbEaGIG9nRu455mHdhJ9at6tVHLndGMk0RyGxAnCVjIQQt9frSPn6PWZI2Kv9IMnDPtm76JFQnkQMG1U5XrkWjR2jiurlxpS+G49QdqD6OglY1NZBDtwrOKvCJGUP79uWY1OhUerfHTPTxvu4rjgiTfTdlJeRe0IcOoxQn4cx6HONY5g0kCHczDryZ0ZwnVRnV9MjfqKbKgcLq0QagDLmTwDPytBJslIkhceCqFU8fw==
-Received: from CH0PR03CA0075.namprd03.prod.outlook.com (2603:10b6:610:cc::20)
- by DM4PR12MB5940.namprd12.prod.outlook.com (2603:10b6:8:6b::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.19; Sun, 22 Feb
- 2026 19:35:54 +0000
-Received: from CH2PEPF00000148.namprd02.prod.outlook.com
- (2603:10b6:610:cc:cafe::2b) by CH0PR03CA0075.outlook.office365.com
- (2603:10b6:610:cc::20) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.21 via Frontend Transport; Sun,
- 22 Feb 2026 19:35:47 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- CH2PEPF00000148.mail.protection.outlook.com (10.167.244.105) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9632.12 via Frontend Transport; Sun, 22 Feb 2026 19:35:54 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Sun, 22 Feb
- 2026 11:35:45 -0800
-Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.35) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Sun, 22 Feb 2026 11:35:38 -0800
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-	<conor+dt@kernel.org>, <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-	<kishon@kernel.org>, <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-	<Frank.Li@nxp.com>, <den@valinux.co.jp>, <hongxing.zhu@nxp.com>,
-	<jingoohan1@gmail.com>, <vidyas@nvidia.com>, <cassel@kernel.org>,
-	<18255117159@163.com>
-CC: <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 3/4] PCI: tegra194: Expose BAR2 (MSI-X) and BAR4 (DMA) as 64-bit BAR_RESERVED
-Date: Mon, 23 Feb 2026 01:04:55 +0530
-Message-ID: <20260222193456.2460963-4-mmaddireddy@nvidia.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260222193456.2460963-1-mmaddireddy@nvidia.com>
-References: <20260222193456.2460963-1-mmaddireddy@nvidia.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kRqJTC7i"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771807973; x=1803343973;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=v3O/hJRhtaAfIBGB6kmmYnPZnpbQ1I1GcL6Vp1dZWrE=;
+  b=kRqJTC7iXrE/YYDZCXeBo2rbN+M/x9GpF2Z5JM6vNxYZV50HecatDuDC
+   L+anv1DJzqNh8tpJmsbdmT0rAkG77/huV17ARaaJpKJwYJsier8hr6mlN
+   JxovYrYmxl5dCRl1P9nqAcLvBSKKCs+ZuXP3m0VUUuoJM3Vu5WnTJ0yuu
+   ylIUg1DDk4FsDPvurryJ755fvF+E0AnRpVaxmtX/hKPr2mA3w7xKWRDvS
+   G4qAO1xpLeNXxi7mf7DOitw1u99GaMdGFpHp+V+1/bg4SvYJFKKraXOY2
+   ECnWDyWS3JgmgVxqt2Dz1kz461TyjopeMmp7Rc3wrwm4umz5YIAq6l0H4
+   w==;
+X-CSE-ConnectionGUID: c2vbIeUPTLeCHp4Gz5hdhQ==
+X-CSE-MsgGUID: oSxFelteRoSu70YjKb5sbA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11709"; a="75410491"
+X-IronPort-AV: E=Sophos;i="6.21,305,1763452800"; 
+   d="scan'208";a="75410491"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2026 16:52:52 -0800
+X-CSE-ConnectionGUID: LDlkWnofToWijWfQSBvBGA==
+X-CSE-MsgGUID: V8Xq84WXR6yJFnoAkA+ScA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,305,1763452800"; 
+   d="scan'208";a="238365912"
+Received: from lkp-server01.sh.intel.com (HELO c63097897875) ([10.239.97.150])
+  by fmviesa002.fm.intel.com with ESMTP; 22 Feb 2026 16:52:51 -0800
+Received: from kbuild by c63097897875 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vuKBs-000000000Dx-3dpO;
+	Mon, 23 Feb 2026 00:52:48 +0000
+Date: Mon, 23 Feb 2026 08:52:05 +0800
+From: kernel test robot <lkp@intel.com>
+To: Simon Richter <Simon.Richter@hogyros.de>, linux-pci@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, intel-xe@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org,
+	Simon Richter <Simon.Richter@hogyros.de>
+Subject: Re: [PATCH v2 3/5] vgaarb: mark vga_get family as __must_check
+Message-ID: <202602230802.stvvFCIZ-lkp@intel.com>
+References: <20260218134633.461181-4-Simon.Richter@hogyros.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-NVConfidentiality: public
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PEPF00000148:EE_|DM4PR12MB5940:EE_
-X-MS-Office365-Filtering-Correlation-Id: 40f81da1-5bd4-42a5-5dcb-08de7249981b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|7416014|376014|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?ZeKiNLYgNexd4ZKgQuk2u21blbKgnUPFSSwNyZ60C/cFnjVNbgSdqfTNio10?=
- =?us-ascii?Q?zwtZntq0DIFl27CNIzIh4Chf1T2S9uhCXnjblDSvi1pPHpOqnGZbPHQPvNRY?=
- =?us-ascii?Q?PWTYRlI8I1cOcxmZXsna4kdSS8jNMItmcELgxmJl0c8vsBpm4EoLslP7tjcR?=
- =?us-ascii?Q?MJxiN1Pp9n7IOjUD61oSNo9kBYmc0Ht6A8hLPkN5mQehzP/gw8jhMZ4oqi/t?=
- =?us-ascii?Q?vMKTAVd3YyM9rlru2Wl39gGwpGz90zyzBUgqJ4N+rYXquj6E4bCQ+M5JyGPZ?=
- =?us-ascii?Q?6n9DObJ8EwcHZJrkMDuSwqb63ea+qe+kNVdHkoeMIKEMD/ARp94s2IfeGlV4?=
- =?us-ascii?Q?dh7aiaR72RSboiuwDdu5ru48rlTYUyBv9EZafIU0KyydPwk4dyGmzy1mxG+Y?=
- =?us-ascii?Q?3sgysfsU8GDYDZsn3V4M4jdv0j677GVpG8LjPX5FdU+DqFQk6Yc2LMPC4KIx?=
- =?us-ascii?Q?LaoRQDUlzlBdx2jgexz4Pf9eYVYQB5ECgFNUTX3IIBJzBJ/V7zK8jR/hbh6P?=
- =?us-ascii?Q?TOUXycECTfM6zQsW0hCWhUdiGMbrQH6Dodcilr+GXyOXyKCHyfRPiYAxr2/i?=
- =?us-ascii?Q?miiEht3uucLuXMdJ5+ZMw7eSGyDjhPBV94QXlpN514exRjwleP21423oLlqQ?=
- =?us-ascii?Q?NkttSWfVPswHLiqYPBObvdmur53+Sve9yCi3EmRwehTIg0KUHC+p6k2KvaAw?=
- =?us-ascii?Q?OjjkkvCZ0UOo9txynR+xPUXLuFDBN6qAU4DWwreYCWhJAwy9zItV9fVRAv/V?=
- =?us-ascii?Q?lJfwj2QzaT7w8U4qXiCs9TShkYNWunIXfb7+xVqt90W7fDyfNncyZP70yfWu?=
- =?us-ascii?Q?A/AvOAQLLdnYB9VgXQ+mNdRdwQ/jPlDzENvipRzghX1do/otLztFkcTiGNfq?=
- =?us-ascii?Q?a/tMi+gC8nSMpIsRCkllXwP3w59ecwb3g8qyjvAslHvCk7bO+nLRnIBF+7Ch?=
- =?us-ascii?Q?BiDIk8TVZQZ1rODh3ZzNBD4LcAtRQ58VFfDYTOqUAPHoQpqmn/pfhoiluMRr?=
- =?us-ascii?Q?eH7bhPD+1AKYxMMtOpI++kS5mKtmzZAIL6guWIBKD43rA2G6Pv82ZEX/fktK?=
- =?us-ascii?Q?9LuTtwQa7VFQ9UxU3m2cOYxgtnAc2ez3cxfMIG3wMOjp9bLTqdLFvGf44t5v?=
- =?us-ascii?Q?+Hg1hPOzC4cINB3IuFItYEkHTSiVfuxyrwIWZH5MxU7/y2YKOOT4W/SR9ljQ?=
- =?us-ascii?Q?vAc2TkFg7hwgaLWDAd2BdpIFswieyvkA2WSMEKrsfW44hEgCdeN8oJjrdqo8?=
- =?us-ascii?Q?WEk5JcVZZqnFlxS5/ffm9vfctg6lkh6Ign6NQHlxdc0vzm43ZmlEtoGMMnbR?=
- =?us-ascii?Q?Z8HVt6vK23x/R6+kMMDDN/X+iA1N4yy43OeCEr6o5oGcBBqE/vd6JavtQAaq?=
- =?us-ascii?Q?Tu4yuLsyX54cVdN0JpwO3oLGz8ecAF56nmXNHSKvGPVYXPbEz4nFzZjAfXbN?=
- =?us-ascii?Q?Sr/qM6Pff/5auo8Hk508KJYFAcM9p6lbp1jsnhV4aEfIbymqoc2AXs+GPKoY?=
- =?us-ascii?Q?+4tv6WzHR2fJHttUpyMPhP+CJIYKE3cLYZdiu59+/dHPClq+nEHAITLlD5AT?=
- =?us-ascii?Q?LSPZFEeJXwyRXzLIkYuRtTT7sDAlBhEeX7i9xiKKDiEfUElCotEumKJ8j9gU?=
- =?us-ascii?Q?r9TPuFMt4Z6ArdW5c2CQMgHEZwq9yCDuhWV6zc+6bYhXCOEjQKUxhtcNaDch?=
- =?us-ascii?Q?DR6ThEF3HIAE3YcT64hMndDYyl8=3D?=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(7416014)(376014)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	ZpUgYl9Bhe3DXYSYnJ85LenFcIO0HjYvqvBAMAjPpGO1xKsi/nM8+o6iopwjyDzFsw7r2RIG2N5dA2M+st4JpiGDzyHlaHm59rTVik//h5Ddl6vtxeOwi4zYDxHX/1jCDNo96Hxsfkn+VNk9kiaeiLxr4STpcuHJYlZ9TPc5yVMvw0+f2W5G1qb/ENRAr1kZFQt+AjJIyk3hDF8RQKmTwvq7G+/y33o8hwpuR+HZz46ETeuZzbSDg1x7NFQScuh5Uoj6SnZpVr42Ab3/Vl5b3/au7NfsbHRs/ZPBaemP07qGjTXHhzbxcznNNQZ9vFSedeb257rnNh9soLP+n9CL1KiSUqOE0QJMWYDirThBt27kz6q1TaXYPtjs7EkFhhMhvw7MbTXV2WsOciKKgASbFtU3DOp7MUZX8D/zeH6iUsGSvrCJwIW1I3GuVzevWPCM
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Feb 2026 19:35:54.1956
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40f81da1-5bd4-42a5-5dcb-08de7249981b
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH2PEPF00000148.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5940
+In-Reply-To: <20260218134633.461181-4-Simon.Richter@hogyros.de>
 
-Tegra endpoint exposes three 64-bit BARs at indices 0, 2, and 4:
-- BAR0+BAR1: EPF test/data (programmable 64-bit BAR)
-- BAR2+BAR3: MSI-X table (hardware-backed)
-- BAR4+BAR5: DMA registers (hardware-backed)
+Hi Simon,
 
-Update tegra_pcie_epc_features so BAR2 is BAR_RESERVED with
-PCI_EPC_BAR_RSVD_MSIX_CTRL_MMIO (128KB), BAR3 is BAR_64BIT_UPPER,
-BAR4 is BAR_RESERVED with PCI_EPC_BAR_RSVD_DMA_CTRL_MMIO (4KB), and
-BAR5 is BAR_64BIT_UPPER. This keeps CONSECUTIVE_BAR_TEST working
-while allowing the host to use 64-bit BAR2 (MSI-X) and BAR4 (DMA).
+kernel test robot noticed the following build errors:
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
- drivers/pci/controller/dwc/pcie-tegra194.c | 38 +++++++++++++++++++---
- 1 file changed, 33 insertions(+), 5 deletions(-)
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus drm-misc/drm-misc-next drm/drm-next linus/master v6.19 next-20260220]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 3c84a230dc79..b5397a63461f 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -2000,16 +2000,44 @@ static int tegra_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	return 0;
- }
- 
--/* Tegra EP: BAR0 = 64-bit programmable BAR */
-+static const struct pci_epc_bar_rsvd_region tegra194_bar2_rsvd[] = {
-+	{
-+		/* MSI-X structure */
-+		.type = PCI_EPC_BAR_RSVD_MSIX_CTRL_RAM,
-+		.offset = 0x0,
-+		.size = SZ_128K,
-+	},
-+};
-+
-+static const struct pci_epc_bar_rsvd_region tegra194_bar4_rsvd[] = {
-+	{
-+		/* DMA_CAP (BAR4: DMA Port Logic Structure) */
-+		.type = PCI_EPC_BAR_RSVD_DMA_CTRL_MMIO,
-+		.offset = 0x0,
-+		.size = SZ_4K,
-+	},
-+};
-+
-+/* Tegra EP: BAR0 = 64-bit programmable BAR,  BAR2 = 64-bit MSI-X table, BAR4 = 64-bit DMA regs. */
- static const struct pci_epc_features tegra_pcie_epc_features = {
- 	.linkup_notifier = true,
- 	.msi_capable = true,
- 	.bar[BAR_0] = { .type = BAR_PROGRAMMABLE, .only_64bit = true, },
- 	.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
--	.bar[BAR_2] = { .type = BAR_DISABLED, },
--	.bar[BAR_3] = { .type = BAR_DISABLED, },
--	.bar[BAR_4] = { .type = BAR_DISABLED, },
--	.bar[BAR_5] = { .type = BAR_DISABLED, },
-+	.bar[BAR_2] = {
-+		.type = BAR_RESERVED,
-+		.only_64bit = true,
-+		.nr_rsvd_regions = ARRAY_SIZE(tegra194_bar2_rsvd),
-+		.rsvd_regions = tegra194_bar2_rsvd,
-+	},
-+	.bar[BAR_3] = { .type = BAR_64BIT_UPPER, },
-+	.bar[BAR_4] = {
-+		.type = BAR_RESERVED,
-+		.only_64bit = true,
-+		.nr_rsvd_regions = ARRAY_SIZE(tegra194_bar4_rsvd),
-+		.rsvd_regions = tegra194_bar4_rsvd,
-+	},
-+	.bar[BAR_5] = { .type = BAR_64BIT_UPPER, },
- 	.align = SZ_64K,
- };
- 
+url:    https://github.com/intel-lab-lkp/linux/commits/Simon-Richter/vgaarb-pass-vga_get-errors-to-userspace/20260218-214939
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20260218134633.461181-4-Simon.Richter%40hogyros.de
+patch subject: [PATCH v2 3/5] vgaarb: mark vga_get family as __must_check
+config: x86_64-randconfig-072-20250919 (https://download.01.org/0day-ci/archive/20260223/202602230802.stvvFCIZ-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260223/202602230802.stvvFCIZ-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202602230802.stvvFCIZ-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/gpu/drm/i915/display/intel_vga.c: In function 'intel_vga_disable':
+>> drivers/gpu/drm/i915/display/intel_vga.c:68:9: error: ignoring return value of 'vga_get_uninterruptible' declared with attribute 'warn_unused_result' [-Werror=unused-result]
+      68 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/gpu/drm/i915/display/intel_vga.c: In function 'intel_vga_reset_io_mem':
+   drivers/gpu/drm/i915/display/intel_vga.c:93:9: error: ignoring return value of 'vga_get_uninterruptible' declared with attribute 'warn_unused_result' [-Werror=unused-result]
+      93 |         vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   cc1: all warnings being treated as errors
+
+
+vim +68 drivers/gpu/drm/i915/display/intel_vga.c
+
+0c80d60ae63461 Ville Syrjälä 2025-04-17  43  
+4fb8783165b7c6 Jani Nikula   2019-10-01  44  /* Disable the VGA plane that we never use */
+4b6e05c43b7542 Ville Syrjälä 2024-09-06  45  void intel_vga_disable(struct intel_display *display)
+4fb8783165b7c6 Jani Nikula   2019-10-01  46  {
+4b6e05c43b7542 Ville Syrjälä 2024-09-06  47  	struct pci_dev *pdev = to_pci_dev(display->drm->dev);
+4b6e05c43b7542 Ville Syrjälä 2024-09-06  48  	i915_reg_t vga_reg = intel_vga_cntrl_reg(display);
+0c80d60ae63461 Ville Syrjälä 2025-04-17  49  	enum pipe pipe;
+0c80d60ae63461 Ville Syrjälä 2025-04-17  50  	u32 tmp;
+4fb8783165b7c6 Jani Nikula   2019-10-01  51  	u8 sr1;
+4fb8783165b7c6 Jani Nikula   2019-10-01  52  
+0c80d60ae63461 Ville Syrjälä 2025-04-17  53  	tmp = intel_de_read(display, vga_reg);
+0c80d60ae63461 Ville Syrjälä 2025-04-17  54  	if (tmp & VGA_DISP_DISABLE)
+a3af0140663dc3 Emil Velikov  2021-06-04  55  		return;
+a3af0140663dc3 Emil Velikov  2021-06-04  56  
+0c80d60ae63461 Ville Syrjälä 2025-04-17  57  	if (display->platform.cherryview)
+0c80d60ae63461 Ville Syrjälä 2025-04-17  58  		pipe = REG_FIELD_GET(VGA_PIPE_SEL_MASK_CHV, tmp);
+0c80d60ae63461 Ville Syrjälä 2025-04-17  59  	else if (has_vga_pipe_sel(display))
+0c80d60ae63461 Ville Syrjälä 2025-04-17  60  		pipe = REG_FIELD_GET(VGA_PIPE_SEL_MASK, tmp);
+0c80d60ae63461 Ville Syrjälä 2025-04-17  61  	else
+0c80d60ae63461 Ville Syrjälä 2025-04-17  62  		pipe = PIPE_A;
+0c80d60ae63461 Ville Syrjälä 2025-04-17  63  
+0c80d60ae63461 Ville Syrjälä 2025-04-17  64  	drm_dbg_kms(display->drm, "Disabling VGA plane on pipe %c\n",
+0c80d60ae63461 Ville Syrjälä 2025-04-17  65  		    pipe_name(pipe));
+0c80d60ae63461 Ville Syrjälä 2025-04-17  66  
+4fb8783165b7c6 Jani Nikula   2019-10-01  67  	/* WaEnableVGAAccessThroughIOPort:ctg,elk,ilk,snb,ivb,vlv,hsw */
+4fb8783165b7c6 Jani Nikula   2019-10-01 @68  	vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
+f0bb41fad02e03 Jani Nikula   2022-02-02  69  	outb(0x01, VGA_SEQ_I);
+f0bb41fad02e03 Jani Nikula   2022-02-02  70  	sr1 = inb(VGA_SEQ_D);
+f0bb41fad02e03 Jani Nikula   2022-02-02  71  	outb(sr1 | VGA_SR01_SCREEN_OFF, VGA_SEQ_D);
+4fb8783165b7c6 Jani Nikula   2019-10-01  72  	vga_put(pdev, VGA_RSRC_LEGACY_IO);
+4fb8783165b7c6 Jani Nikula   2019-10-01  73  	udelay(300);
+4fb8783165b7c6 Jani Nikula   2019-10-01  74  
+4b6e05c43b7542 Ville Syrjälä 2024-09-06  75  	intel_de_write(display, vga_reg, VGA_DISP_DISABLE);
+4b6e05c43b7542 Ville Syrjälä 2024-09-06  76  	intel_de_posting_read(display, vga_reg);
+4fb8783165b7c6 Jani Nikula   2019-10-01  77  }
+4fb8783165b7c6 Jani Nikula   2019-10-01  78  
+
 -- 
-2.34.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
