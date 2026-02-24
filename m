@@ -1,185 +1,269 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010027.outbound.protection.outlook.com [52.101.85.27])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 687B826ED3D;
-	Tue, 24 Feb 2026 18:43:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.27
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771958618; cv=fail; b=LErrndhI2yz0VOPROKNOm+LuCWytqaDOOP9I1Qb/zeU+IXDph90Dk5t4cNuXz2LvmMKIWt87xjKL+W7Xsc74Y/3lke0SqJQ7WElAtTPVR/XPA4SU1mHWHtJHKjXz7vGLWCH529Zrtttq6CrBhYdVul/T0SgpZE2TYPoDPJqSh4U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771958618; c=relaxed/simple;
-	bh=sI13xaSwYwti/ggjw7PYpPoE5T5iu2u8Kf8eZAE7joE=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YYyEqxtIQX/8Plu35laG+tUrF7q3cK2MfGzH4uDkNYMurm5M4rKNIx+ettnOQ+bFiIM4vvEbL0sFsxwFOxu1+Jee/ZGQ61017gPpcVykAi8jDMLfhWdc9rXW31jqG7H9CfJy/Ol8nMiaWPVyxiUs+i8pcw2izlA+IYlT2fdJD+U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=X9zsGXE1; arc=fail smtp.client-ip=52.101.85.27
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC5B42E5B27
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 19:03:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771959790; cv=none; b=dq2aAoa87DT48tTndExGPds5EEIrCq41Av8UvXMBcj5m0Gc8+ia0pxFsjDExgfFpKtQLL31rkoGzQBut9G5E0QH0AMkH/ZXNI/T2kxwC36jnFcUqFZ/SSlpJ641Fjrp3tL3lhm1LJomnJZ3tqpiSfPLPOwUodgi/p8RqkrlIBXg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771959790; c=relaxed/simple;
+	bh=BPzlPvPufPvOXP3pdB2UQNj5Uct014GMnFkHawwDFwY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=grrbVqxZIanDmnY/GAMa7CG9BfRLDkMuPQXcpHrtJFNJJwdif2wOjJJdv/p26h28o353El+D9o08HoGHiyGJgiqXfsBIemxifD6k72GjK+TE/b/QYRD5fzjQ7HREvQU6iWAafItFhd/ekH5XtL2PDXN6htUfL9jyszUd3nPDSpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=C5BRflp7; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="X9zsGXE1"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=i1afiRi1NBhKwavY0Vp0Ds/N7zUjbgrHTG84ZHyk77LBTUmv7ipKmAXJRuy5Pq8v7B7CKN8tRjYMOmEjFat5Rdy3a+jI8mHLy/Vat952pF61leXZ4y3WqMOGzRHFPLMA1YQW0KXt6iXnPmORVmNygTy1wbWU0kjfJllCe3UakBp1RP0+2gCjfmNuBREKClQAx4rIPo88Xz+kNxaBZuAsLEcmga6yoRnkwNQMKqtzjf5yJCE5a+qJM5gqI5WjWvLb53hARSb1ttylfiJ07I7pE4/WtvMMz+RiIznP8AXeKS3YYy5jnfRDw3OBwTrUtDPSP//RK8ODkjP6NnuXo/T+1g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1Ejxtmjd+leFDCLPlLnzsZoC0ONJIMPcfOeHYdiemfk=;
- b=U87zCFJ8P5KFXEaaqKqz3KqD9wSg4A12aOGrSOnPAmJWenNcXGBShCLIR5xoHPwTMsToOHd2E7BxWhK+eJC1iBT96h8nwK3zRwNlOZLxcEZzmnSIVRlFjrfIqp5rVrWHxSTxj0O94OEj8ogh1J1EKFISRlFvl635UluEaIZZV3gTpJvRu0lVSpMow6rt9+rHbqWdCwLirXx60U3fE5KnIuJrvx/4MISziTO0iETYIL7Kar29UETBWIvLVBef9xATlEBvyDE3Xk3PZIU0aLtzLWcg5C7UvSTNM5VcGfNDdFik/K34vlbTEGK+ZuMz4RQEKR1ChF94P1Ua+5lOgOlhRA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=huawei.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1Ejxtmjd+leFDCLPlLnzsZoC0ONJIMPcfOeHYdiemfk=;
- b=X9zsGXE10ZF4ujlDZwqwen+sYFot79KMUrylQo4vhyC6nooOkC6x/0Q/MgEIZ6TT6zTSYIj1s1S5zz7N5zkgUcgHZa484Lxdg+qnrawIRDQ2tp0L/C8YInV7UZZJu+FhfgpnCRkzzFJYvfVRWRMvKwSOHupB7sBhENA6xKZqXrUj37FLnd1JCN5AybNagSuwmAxpSSzDc+0G3Cc4dKwKWteKfGbgsnFdl2zF0wMeegof9yr2mIIUytBvAr3+ZtPgTV/gmbhH6pPRDgkko2dmCm5fXqtES4hacfpZZ+c3qLUvXHD2wCI9f/SVY0FKdC8DIHX97LuaArC575dWFGf+eQ==
-Received: from BLAPR05CA0039.namprd05.prod.outlook.com (2603:10b6:208:335::20)
- by DS7PR12MB6069.namprd12.prod.outlook.com (2603:10b6:8:9f::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.22; Tue, 24 Feb
- 2026 18:43:29 +0000
-Received: from BL6PEPF00020E60.namprd04.prod.outlook.com
- (2603:10b6:208:335:cafe::55) by BLAPR05CA0039.outlook.office365.com
- (2603:10b6:208:335::20) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.22 via Frontend Transport; Tue,
- 24 Feb 2026 18:43:22 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- BL6PEPF00020E60.mail.protection.outlook.com (10.167.249.21) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9632.12 via Frontend Transport; Tue, 24 Feb 2026 18:43:28 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 24 Feb
- 2026 10:43:06 -0800
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 24 Feb
- 2026 10:43:06 -0800
-Received: from nvidia.com (10.127.8.10) by mail.nvidia.com (10.129.68.6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Tue, 24 Feb 2026 10:43:03 -0800
-Date: Tue, 24 Feb 2026 10:43:00 -0800
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
-CC: <jgg@nvidia.com>, <will@kernel.org>, <robin.murphy@arm.com>,
-	<bhelgaas@google.com>, <joro@8bytes.org>, <praan@google.com>,
-	<baolu.lu@linux.intel.com>, <kevin.tian@intel.com>,
-	<miko.lenczewski@arm.com>, <linux-arm-kernel@lists.infradead.org>,
-	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <dan.j.williams@intel.com>,
-	<linux-cxl@vger.kernel.org>
-Subject: Re: [PATCH v2 1/3] PCI: Allow ATS to be always on for CXL.cache
- capable devices
-Message-ID: <aZ3xNJZV6YZv6QFf@nvidia.com>
-References: <cover.1771886695.git.nicolinc@nvidia.com>
- <ad4efe2f85958ee1ab0673a1ceb0db5141852732.1771886695.git.nicolinc@nvidia.com>
- <20260224115534.00000ac7@huawei.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="C5BRflp7"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2aad8123335so10125ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 11:03:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1771959788; x=1772564588; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=X93b96xDCWqbNSn/Osk0k6D0QiHzoDXCBhSgmB8C344=;
+        b=C5BRflp7hBmvCOLgrrC9JjY3twQOp4qCXCTstDD4ptm7eSR2E39Bks8f90j+qmqyxI
+         bjtiYPVwZe4NHktOTYXcr0b8fH5F8qYur5JC/kMuGDe6cPPGvS8fW92HDMornloiLHh/
+         wHyxwKd4palG6NtIRkDe5crr/Ut5WU9PuGXX16ETlj0XPCLKUB1NakSUvLXhHbzUBLS+
+         bYCF1ZPn3cEbF9lllRIOwLpr5Kuq3R7mKBAsKWT5JVone/CG6Y0QazPDWDLyCqos0fBn
+         0Zg8CwS2nVL64xRMZmqKPXpQgwI2QthEsePUWb2xp9uFFsR5WidLPPMzgnw18m2A5BSO
+         HJBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771959788; x=1772564588;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=X93b96xDCWqbNSn/Osk0k6D0QiHzoDXCBhSgmB8C344=;
+        b=scOuFodCHGMnxOVV8yR3Lwo2yZjaug5Bt5WcAF8Bys11cvf+Dwuk84ZJKtbHkvRS+f
+         udUcoJslUMIPMXfi8Xki/7jAp1m4JNC2LUMsQc7Hgs0UlzrlKIOrYX+PEzJrV2LApI+C
+         pMnmgIzqyMXAoNAYyrje1thEGIvgsHjuLdguV95Sd5V0qmkfEAeA6BKFfAfQ01U2lNE8
+         Vj3NJMEOhW0/BOC7QwJQImmQ2XQ/kw9PHO186xIu3XBVhfdXCm0KsM5lbUkP+H6idSSb
+         DXsEkLgOfIiwReGatBFB/jr02nHTwhkmyydcq8U4TCvblyVhhmQgVC4nzNUhLeSpMj9D
+         iygg==
+X-Forwarded-Encrypted: i=1; AJvYcCUbsEMJSUqBV+20ejLCa6usdns4etaZsjqnynDzV1RF60nl/fW0LqasMJ3Am2LbzF2ICu6aEkI0OHg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwWil41R2Va72/dB6EL4mwEHJbDzK6HPr63j1GlKP69kUb7jurF
+	UXYGJS8Y961w1gaszvIUBw+wkoSkK0h9GAtR4bY8wgs62DThCWt2vrpws+twhOH+LQ==
+X-Gm-Gg: ATEYQzzXUW4ltAhnxmyx+nVYarcSEWYEc15yV33OPgNHQldSuwCDzoFtUDcba6p34ZH
+	8L9gqj8arAwWdSpiJx+kWcqKrxPw7Hot6bLayS7PVhcTHuP4B0YdTSfuukZ6+9NhlyGfw7lJYJW
+	t8FdaxrcbBNKi4ILhfsxVkQeXTvakPJ9cylSqOdVl///vdRI8OvXPXcNKsY9Kt6kbIAZeJmJP2+
+	Mv8qE3XvjYYxUI8P8vtsGYte0vIsI/Vkg1SyrMQthUwUwTocHFqvcl8eGBAxoeC++KfAHCllZoW
+	asmRvP6QKkxMJ3CdGgVb3m+n8gIuxc6lTsEei1C39ES8U6H8VWRzfip6fsiRNDLTyQQKwLCMFyV
+	sBxxeJJs4Jw8Dp0t+CTlXF6UCbSBkZRgShsXu3lWu/GGO8HCjO021UKHYDPawVnCVh9y/EUYzY7
+	nnMp+IC7IggNoYyfVCdTCBm0ZqJVxfFPQTRC9NXjmHBJSx7+gQuwTXDbWAM83i
+X-Received: by 2002:a17:902:c412:b0:2a9:5bfa:54ef with SMTP id d9443c01a7336-2adca6c8e0amr234085ad.10.1771959787309;
+        Tue, 24 Feb 2026 11:03:07 -0800 (PST)
+Received: from google.com (222.245.187.35.bc.googleusercontent.com. [35.187.245.222])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad74d36911sm114902575ad.0.2026.02.24.11.02.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Feb 2026 11:03:06 -0800 (PST)
+Date: Tue, 24 Feb 2026 19:02:56 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Alex Williamson <alex@shazbot.org>,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
+	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
+	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Raghavendra Rao Ananta <rananta@google.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Tomita Moeko <tomitamoeko@gmail.com>,
+	Vipin Sharma <vipinsh@google.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v2 02/22] PCI: Add API to track PCI devices preserved
+ across Live Update
+Message-ID: <aZ314HSRnYtGinTU@google.com>
+References: <20260129212510.967611-1-dmatlack@google.com>
+ <20260129212510.967611-3-dmatlack@google.com>
+ <aZ1svGur9IxQ7Td2@google.com>
+ <CALzav=fSpd6H5pQNtJoFHdNtWVO11vffhWQFsMFkM+osGuE0wQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260224115534.00000ac7@huawei.com>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF00020E60:EE_|DS7PR12MB6069:EE_
-X-MS-Office365-Filtering-Correlation-Id: f52aedb8-bd0a-44a0-3d51-08de73d49a44
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|7416014|376014|82310400026|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?3H0OXsbIJ9hQhKlyxwg0Bz9OWOQms73AtTUVNwgkmcYmoIor5Zciie1p9dz/?=
- =?us-ascii?Q?8yN6iT1uXC9SK1UviGtJFHpJgprhWUSqUGPBxq1SgyAYuXKyw18HdkBKZ0jQ?=
- =?us-ascii?Q?VkKsCigTYhp0KEbqgKEKDWgOtMU/e+oBstqgHujpYXdfZIeMq5KRJvN3fy5d?=
- =?us-ascii?Q?YR1Q9ZLFyp8iM30RR/7Jf93QIeust7YcOJ2azAbTY4NwSf0ARSvEqq04MVGO?=
- =?us-ascii?Q?5iqj49rAbRfX+k9P6mt9COx0fEFVqZAWSH65mOs3S60JkSK4KC+Ti44wCv0w?=
- =?us-ascii?Q?XN+gMIfb2CayTfFtkKPcWUrXyLzfB6uZoO93KT9uAenpOgIKgZf11UZeUSSr?=
- =?us-ascii?Q?5G2G1UZKG76AFrvZIe3zopOguDUtcn14ze9WS8gPA4tg155QaywPnIxPcubM?=
- =?us-ascii?Q?ihx1cn+1JqZ3A8W286cJabOd2S9BavaUGZTPWWcBz3yoaUu+njqa5MPEijvP?=
- =?us-ascii?Q?iBtlFHZSO1C5wSjVBZv9JDsf9E/xS3aPZZhehxwUtF7/yu8cYc4I5zvwD+Qx?=
- =?us-ascii?Q?s7pDUq/QecZb+QukzaSN1CLzNUh9pPxdWufu6m/fP7qbtMrE3uiESp98iAe5?=
- =?us-ascii?Q?LEs83gMc0mjpv7ASARnpTyEZaIkifS6E4C8RklfIJD5Lcewd76LE4MuZoQ5g?=
- =?us-ascii?Q?WLvw5exzc6+G3Jp8FYSKu7NkUh7Oc814innkuE6FJ2+R/5rpkesLziYHb4cK?=
- =?us-ascii?Q?/zT++hJG4AnHNU3RuXO1XCtj5gTtrgAEFVYXO28WKSmdejowP9EqKcoxnMkF?=
- =?us-ascii?Q?PKgzLod2j+utegWkzJeAMebcsgPbQ/9vlxaYhwBAHW8R6Mwuj9aUAkmiAmQj?=
- =?us-ascii?Q?Ym6YeLvb9fPyHjn2X+gQDnP2cQmPNpmBD2ZLfuz6w+5ujuZfoDw5VX8ByDli?=
- =?us-ascii?Q?9wsW38UiVGOfaos2AquJ3YTMeC2Hgu3rLalEAELv3dxgOQTTxSIiPO0BIYqf?=
- =?us-ascii?Q?BsdMwU4naluKdyT55KrUkH/gUB2h3V4DnSbDscN6HS0zo17e62J+lc9xB/JX?=
- =?us-ascii?Q?KRDpgujrTS71Je9UtP69YQeukk4IiYQNP78lCjniiRtXs5aKqZdkclBtvXI5?=
- =?us-ascii?Q?fiRtmD9pmW7nZiFGneFL3IGOcL2WDMi744KpY39eoyYNOj/9H/TptjAYNg2K?=
- =?us-ascii?Q?r8ixczbeT8cU46Nm6Wp2US0LL9nyT7iNtElC7Vf6+xDAhesVzVN8fHcMjtOA?=
- =?us-ascii?Q?IPx2rMiS7kxiUoyb31LNfOfO2E/JcZUSZBiIntl5OujDypJjgObaq9zpquE0?=
- =?us-ascii?Q?kBVtk1aeg5bhxaERIE8KA8Bl6l3R8YKBh1UtD2L3g+7CZsMnM0Ij+O7tLc3Q?=
- =?us-ascii?Q?/LKbuSnL6z+GtQ5ZcFnXVRNjEMBqONcg57H/n++tyS7wrC6gs+wqNbMAvNv1?=
- =?us-ascii?Q?SOwFWg3SnLj/HON4X8rOXZ7CLwXgeg8XmHF4wlwQMALxtq2Dv3nybLrUUPAL?=
- =?us-ascii?Q?K7fYYQTtEowncmBydu/1Fjk8qWIySZQO+mTYwktulel6kE0UMD9tmGEHINV9?=
- =?us-ascii?Q?yKy/sBmBfeSrckasqDjfaz0DI4pw87u3C6OVvvWP0ZDqOBtivbus4j+IGVoC?=
- =?us-ascii?Q?yhNzz+bmIT0jxC/BamCaS0VF7+IKH9GV/NVcxRh8hoOlLMaa//fjnQBbXa7D?=
- =?us-ascii?Q?QojfWgZemYC6REhsXE/jUbXBr6ANvGnvVrvPGMPe7uEsX5KaMtFEJHjWpxQa?=
- =?us-ascii?Q?J/HJeA=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700013)(7416014)(376014)(82310400026)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	gqOMf7vIn11I+gUa24sgOtdjAvpz09FzUJd20nje4Y0UhrHriW+xt8pFzL8jwDLSPZ04RbL30xirvbx00TMegBH29l4RPWjPdrGQ+fQR9o0peStkgKtOFgm9V6SbpJJyxaIo8Bz02lyOvXNp7QH9RTIGVLOkeigDGdwB2yNnb/42JwTQoI3Z7l8wNEUK954y5jlUOtrP1GEautQlAnwnxWdS1xkm44SFwJf1XPHOrvPc+dMtkDciJEpiAed6WDrSXevi5kWxgZzPwm0ZKU3QlVGrjf61xvEQ2BVZwBr3HY57fU8m7DdJKqpVQqd+YALboi22M5/hw72KFIgKxAw7K98pOCz1fGTfTPZclMZ7Ygp65YgLLXj3geGLi0P28ztXjfpXTFmnbR+h3Co+0FFpE/FnXgNsfiw/EW3/HeB4m1X+6d7edKLo3Az7tTEAKeQe
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2026 18:43:28.9742
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f52aedb8-bd0a-44a0-3d51-08de73d49a44
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL6PEPF00020E60.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6069
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALzav=fSpd6H5pQNtJoFHdNtWVO11vffhWQFsMFkM+osGuE0wQ@mail.gmail.com>
 
-On Tue, Feb 24, 2026 at 11:55:34AM +0000, Jonathan Cameron wrote:
-> On Mon, 23 Feb 2026 14:52:20 -0800
-> Nicolin Chen <nicolinc@nvidia.com> wrote:
-> > +/*
-> > + * CXL r4.0, sec 3.2.5.13 Memory Type on CXL.cache notes: to source requests on
-> > + * CXL.cache, devices need to get the Host Physical Address (HPA) from the Host
-> > + * by means of an ATS request on CXL.io.
-> > + *
-> > + * In other world, CXL.cache devices cannot access physical memory without ATS.
+On Tue, Feb 24, 2026 at 09:33:28AM -0800, David Matlack wrote:
+> On Tue, Feb 24, 2026 at 1:18 AM Pranjal Shrivastava <praan@google.com> wrote:
+> > On Thu, Jan 29, 2026 at 09:24:49PM +0000, David Matlack wrote:
+> > > + * Copyright (c) 2025, Google LLC.
+> >
+> > Nit: Should these be 2026 now?
 > 
-> Maybe tweak that to "host physical memory"
+> Yes! Thanks for catching that.
 > 
-> There are too many physical memories in CXL land...
+> > > +int pci_liveupdate_outgoing_preserve(struct pci_dev *dev)
+> > > +{
+> > > +     struct pci_dev_ser new = INIT_PCI_DEV_SER(dev);
+> > > +     struct pci_ser *ser;
+> > > +     int i, ret;
+> > > +
+> > > +     /* Preserving VFs is not supported yet. */
+> > > +     if (dev->is_virtfn)
+> > > +             return -EINVAL;
+> > > +
+> > > +     guard(mutex)(&pci_flb_outgoing_lock);
+> > > +
+> > > +     if (dev->liveupdate_outgoing)
+> > > +             return -EBUSY;
+> > > +
+> > > +     ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void **)&ser);
+> > > +     if (ret)
+> > > +             return ret;
+> > > +
+> > > +     if (ser->nr_devices == ser->max_nr_devices)
+> > > +             return -E2BIG;
+> >
+> > I'm wondering how (or if) this handles hot-plugged devices?
+> > max_nr_devices is calculated based on for_each_pci_dev at the time of
+> > the first preservation.. what happens if a device is hotplugged after
+> > the first device is preserved but before the second one is, does
+> > max_nr_devices become stale? Since ser->max_nr_devices will not reflect
+> > the actual possible device count, potentially leading to an unnecessary
+> > -E2BIG failure?
 > 
-> > + */
-> > +static bool pci_cxl_ats_always_on(struct pci_dev *pdev)
-> > +{
-> > +	int offset;
-> > +	u16 cap;
-> > +
-> > +	offset = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> > +					   PCI_DVSEC_CXL_DEVICE);
-> > +	if (!offset)
-> > +		return false;
-> > +
-> > +	pci_read_config_word(pdev, offset + PCI_DVSEC_CXL_CAP, &cap);
-> > +	if (cap & PCI_DVSEC_CXL_CACHE_CAPABLE)
-> > +		return true;
+> Yes, it's possible to run out space to preserve devices if devices are
+> hot-plugged and then preserved. But I think it's better to defer
+> handling such a use-case exists (unless you see an obvious simple
+> solution). So far I am not seeing preserving hot-plugged devices
+> across Live Update as a high priority use-case to support.
 > 
-> Could just do
-> 
-> 	return cap & PCI_DVSEC_CXL_CACHE_CAPABLE;
-> 
-> Unless the thinking is there may be other stuff that comes here.
 
-I will fix both. Thanks for the review!
+Ack. If we aren't supporting preservation for hot-plug at this point.
+Let's mention that somewhere? Maybe just a little comment or the kdoc?
 
-Nicolin
+> > > +u32 pci_liveupdate_incoming_nr_devices(void)
+> > > +{
+> > > +     struct pci_ser *ser;
+> > > +     int ret;
+> > > +
+> > > +     ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)&ser);
+> > > +     if (ret)
+> > > +             return 0;
+> >
+> > Masking this error looks troubled, in the following patch, I see that
+> > the retval 0 is treated as a fresh boot, but the IOMMU mappings for that
+> > BDF might still be preserved? Which could lead to DMA aliasing issues,
+> > without a hint of what happened since we don't even log anything.
+> 
+> All fo the non-0 errors indicate there are 0 incoming devices at the
+> time of the call, so I think returning 0 is appropriate.
+> 
+>  - EOPNOTSUPP: Live Update is not enabled.
+>  - ENODATA: Live Update is finished (all incoming devices have been restored).
+>  - ENOTENT: No PCI data was preserved across the Live Update.
+> 
+> None of these cover the case where an IOMMU mapping for BDF X is
+> preserved, but device X is not preserved. This is a case we should
+> handle in some way... but here is not that place.
+> 
+> >
+> > Maybe we could have something like the following:
+> >
+> > int pci_liveupdate_incoming_nr_devices(void)
+> > {
+> >         struct pci_ser *ser;
+> >         int ret;
+> >
+> >         ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)&ser);
+> >         if (ret) {
+> >                 if (ret != -ENOENT)
+> >                         pr_warn("PCI: Failed to retrieve preservation list: %d\n", ret);
+> 
+> This would cause this warning to get printed if Live Update was
+> disabled, or if no PCI devices were preserved. But both of those are
+> not error scenarios.
+> 
+
+I agree, the snippet was just an example. What I'm trying to say here
+is, what if the retval is -ENOMEM / -ENODATA, the existing code will
+treat it as a fresh boot because it believes there are no incoming 
+devices. However, since this was an incoming device which failed to be
+retrieved, there's a chance that it's IOMMU mapping was preserved too.
+By returning 0, the PCI core will feel free to rebalance bus numbers or
+reassign BARs. For instance, if the IOMMU already inherited mappings for
+BDF 02:00.0, but the PCI core (due to this masked error) reassigns a 
+different device to that BDF, we face DMA aliasing or IOMMU faults.
+Am I missing some context here?
+
+> > > +void pci_liveupdate_setup_device(struct pci_dev *dev)
+> > > +{
+> > > +     struct pci_ser *ser;
+> > > +     int ret;
+> > > +
+> > > +     ret = liveupdate_flb_get_incoming(&pci_liveupdate_flb, (void **)&ser);
+> > > +     if (ret)
+> > > +             return;
+> >
+> > We should log something here either at info / debug level since the
+> > error isn't bubbled up and the luo_core doesn't scream about it either.
+> 
+> Any error from liveupdate_flb_get_incoming() simply means there are no
+> incoming devices. So I don't think there's any error to report in
+> dmesg.
+> 
+> > > +     dev->liveupdate_incoming = !!pci_ser_find(ser, dev);
+> >
+> > This feels a little hacky, shall we go for something like:
+> >
+> > dev->liveupdate_incoming = (pci_ser_find(ser, dev) != NULL); ?
+> 
+> In my experience in the kernel (mostly from KVM), explicity comparison
+> to NULL is less preferred to treating a pointer as a boolean. But I'm
+> ok with following whatever is the locally preferred style for this
+> kind of check.
+> 
+
+No strong feelings there, I see both being used in drivers/pci.
+
+> > > @@ -582,6 +583,10 @@ struct pci_dev {
+> > >       u8              tph_mode;       /* TPH mode */
+> > >       u8              tph_req_type;   /* TPH requester type */
+> > >  #endif
+> > > +#ifdef CONFIG_LIVEUPDATE
+> > > +     unsigned int    liveupdate_incoming:1;  /* Preserved by previous kernel */
+> > > +     unsigned int    liveupdate_outgoing:1;  /* Preserved for next kernel */
+> > > +#endif
+> > >  };
+> >
+> > This would start another anon bitfield container, should we move this
+> > above within the existing bitfield? If we've run pahole and found this
+> > to be better, then this should be fine.
+> 
+> Yeah I simply appended these new fields to the very end of the struct.
+> If we care about optimizing the packing of struct pci_dev I can find a
+> better place to put it.
+
+If you have pahole handy, it would be great to see if these can slide 
+into an existing hole. If not, no big deal for v3.. we can keep it as is
+
+Thanks,
+Praan
