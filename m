@@ -1,236 +1,172 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012046.outbound.protection.outlook.com [40.107.209.46])
+Received: from mail-m49209.qiye.163.com (mail-m49209.qiye.163.com [45.254.49.209])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C47FF366DD7;
-	Tue, 24 Feb 2026 08:38:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771922320; cv=fail; b=Z5+TqT4qQDIn9xabMwm6SxwlxMN1/4UBjbk8AeUXSMxX66kcve69i54HfsVyBZDBAs3fIZsnrUsdauKhWsWOQVk2D8TYd3i52NEbdpo082gLybbG1vy4xXjFe2DtJXGWYALNlWdqyIA0dOhObxYruDlLO4UOCcP3gFdj+plXybg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771922320; c=relaxed/simple;
-	bh=4RvFDvY8qv2JKPVHEcENWd7WfHAHEMzWfeHyhUuYY2E=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OOLoxK4PPB/CKxxNE4Wia062vcOpHz1jxxRAa/ypvTn/694yU05r8nf8Z9d8oVo5b17YeKfsjtxieCZ5/Qv6vx1NiEuMrhpd9/e/lb9OcezoMdpYvr0mGAR5htcsdOIZ1HT1hopGIeR8xajNTlidodegiwBvoBiUNG8HS8XZoJE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=ZwQ/lLo4; arc=fail smtp.client-ip=40.107.209.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16813286A9;
+	Tue, 24 Feb 2026 08:49:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.209
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771922995; cv=none; b=VzXOVc1o/Z0CZ4TpCV1S9QpvLpZK8+qMyuzdhbPlJwSSlyYl1Dybc5Qc2NG+WjJcgDyiwYZvhnfT2eUEH/SnW4I/JLD1ARxG+3JW7FV0oThLyZWrBADfwLY2HfJ5NTLmIuDJEC8DKiWbGYM3v1LcIrKAE3qyhCIqmuSvNu8uUKk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771922995; c=relaxed/simple;
+	bh=uU7ldyVWgJ3IjjXxuYKTDQ44EeBd9vmenmQj+XJ45rU=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=jqtKu8my8M+iEFFuoKTIh+gTUfpP6pFL7MqeCiL7smhJWze/H1aNZJvQYFuEh799G4bEWQ3ELo7bCkOM7rcSZKH1/S5meoFnm2ohJpaI8Qc1EEsvCqlY789EP7QWPC8VGmhcwshY+H14xGBpkjU42QvNtOh9YjU9skazxiKAEzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=K8bae7uI; arc=none smtp.client-ip=45.254.49.209
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ZwQ/lLo4"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xYqxHk5G5w092sU9P3kGerGvqoFjgCH/IUuECmgkGJaxHN+tXTrDXPbo+ILKtuzyHmlxWWUs+hXK4eBQ0zuKQFGbHL3Iw1+TDjqsecC8wod7BuZ01l4RdDd1lfha7rlaXiNMdBocW9ggXh7zWLLA9knjjfHPkcd0bgf3uz3VDUNHXphnsiMX+9AJonx2BKVJ7XQ99Kt/8FMOhyJo5QBH42tnd0B7iYviqe9NXRtafKPPJ4X05W403ZsLT0PRkqKkAeRy49jkf9bUBI6R/vI2324ZPxaYj2MHxVdmI3loGFS5IGAcGe/4hjHsV3L42m025bauxAzZQ52lfP0dUajdRA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ei/HyK0jkgg65by0H1Gs5PdHcZ3/kc72xXVdOoDuyKE=;
- b=E/vyZPjaelQW4SipUMijg6ozQFb0xbnf3+pJlb0OrmkimOamfIJiYC4eXUVGLJWYCeh4wcJQdb9tUfSPsG5ub4abkpfzM1Iu64tcUtkTU9yTX41JOMZBdif/VSGBEzbXf+lmmArSfMV3wxHcfKQz9ao5fwdOBZ3lZAs+BKapxk4sWDvZYNbrx669ZBdCJmwcaNzqMnuyQ+JVrR4fj7zet6njTM9wLIhgKRpOtGkCejEQEfC+MC6vW8p7GSX+Jf+zRvVzR2bVeLCl4Vy3W9v2n3hGYcC2idaUslkcivvXBtX8DV5wl5QzqpepRCK9PxpC6PL7khoMYgC6avY3DBaScQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.23.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ei/HyK0jkgg65by0H1Gs5PdHcZ3/kc72xXVdOoDuyKE=;
- b=ZwQ/lLo4ECmopjgmedXAmQOEsEomldMWs3De0HaYxwTUGiiSAdelL/ar0nuXYzqWXQMuMr4WO5pnAvF6blYFfgvT7tp5RAWuwl353swBcaLOwYvvoW4EMfPtQnZvHpMPwY41B/HLxeKGZszyC+FMkVTTb0q2RlxT8FEA1Kh7cAI=
-Received: from BN9PR03CA0055.namprd03.prod.outlook.com (2603:10b6:408:fb::30)
- by IA4PR10MB8469.namprd10.prod.outlook.com (2603:10b6:208:561::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.10; Tue, 24 Feb
- 2026 08:38:35 +0000
-Received: from BN1PEPF00004689.namprd05.prod.outlook.com
- (2603:10b6:408:fb:cafe::fc) by BN9PR03CA0055.outlook.office365.com
- (2603:10b6:408:fb::30) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.21 via Frontend Transport; Tue,
- 24 Feb 2026 08:38:16 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
-Received: from lewvzet201.ext.ti.com (198.47.23.195) by
- BN1PEPF00004689.mail.protection.outlook.com (10.167.243.134) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9632.12 via Frontend Transport; Tue, 24 Feb 2026 08:38:35 +0000
-Received: from DLEE203.ent.ti.com (157.170.170.78) by lewvzet201.ext.ti.com
- (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 24 Feb
- 2026 02:38:34 -0600
-Received: from DLEE202.ent.ti.com (157.170.170.77) by DLEE203.ent.ti.com
- (157.170.170.78) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 24 Feb
- 2026 02:38:34 -0600
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE202.ent.ti.com
- (157.170.170.77) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Tue, 24 Feb 2026 02:38:34 -0600
-Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [172.24.231.225])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61O8cKBZ2414416;
-	Tue, 24 Feb 2026 02:38:30 -0600
-From: Aksh Garg <a-garg7@ti.com>
-To: <linux-pci@vger.kernel.org>, <jingoohan1@gmail.com>, <mani@kernel.org>,
-	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <robh@kernel.org>,
-	<bhelgaas@google.com>, <yoshihiro.shimoda.uh@renesas.com>,
-	<fancer.lancer@gmail.com>, <Zhiqiang.Hou@nxp.com>,
-	<gustavo.pimentel@synopsys.com>, <cassel@kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>,
-	<danishanwar@ti.com>, Aksh Garg <a-garg7@ti.com>
-Subject: [PATCH v3 2/2] PCI: dwc: ep: Mirror the max link width and speed fields to all functions
-Date: Tue, 24 Feb 2026 14:08:17 +0530
-Message-ID: <20260224083817.916782-3-a-garg7@ti.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260224083817.916782-1-a-garg7@ti.com>
-References: <20260224083817.916782-1-a-garg7@ti.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="K8bae7uI"
+Received: from [172.16.12.14] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 34c8ca9e5;
+	Tue, 24 Feb 2026 16:49:48 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>
+Subject: Re: [PATCH v4 0/3] PCI Controller event and LTSSM tracepoint support
+To: Steven Rostedt <rostedt@goodmis.org>
+References: <1769047340-113287-1-git-send-email-shawn.lin@rock-chips.com>
+ <9e06e69c-d10a-1f21-cbf7-204319549612@rock-chips.com>
+ <u3es7h4mgzdqfhvpl52s3x4vcisrpazcm4qb6x7lu4srmagxpn@hca2begqypeu>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <5549b86e-36f7-e5b2-e16c-f70e328ca6c2@rock-chips.com>
+Date: Tue, 24 Feb 2026 16:49:47 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <u3es7h4mgzdqfhvpl52s3x4vcisrpazcm4qb6x7lu4srmagxpn@hca2begqypeu>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN1PEPF00004689:EE_|IA4PR10MB8469:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3a94f943-7891-445a-1459-08de7380198c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|376014|7416014|36860700013|1800799024|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?2GYnW5mtiMFYxytNKWJ14mFXxy9xMbzQaGP/pN7px5uBYD4X699FLEBmLChZ?=
- =?us-ascii?Q?KYCc4udPepSXQiV7mdmRpaMzjaLGDEDtqHCKFjPSE8aH9zfQ9Ftw0WtCUabe?=
- =?us-ascii?Q?JedGYFGHsj8jYpKYVToIv5B055Hv4eQTyXrh0xEOywPr4m/jlgSyfMwRwqTg?=
- =?us-ascii?Q?KImy4S+kI7FGcC0WtdULUIVFdDLW4DQYr/tgEb4w8mL6CKL/1dhROp5AFw8k?=
- =?us-ascii?Q?k8DDrEN0HNIcCCl1Vbv+XoyyFJ0ORhyJBhSVS3YQkTq8TDiBufhu1Dw0QKD/?=
- =?us-ascii?Q?wuTMhW2tQei37UGYQPZrSzwteeYEBGLXBP5LcnJT7PPafiKktZNC9gVEasvz?=
- =?us-ascii?Q?zc95EdBXSqXh7wi0TwiZGka2HZmOT5mMtM/Z1ILHKHc4tXS/CnbHn+aKZZw+?=
- =?us-ascii?Q?MdRBvlGOk+8WBW1Pdv7vNIAM0szauWOS8DRLEf9z8+OfalCDEixoZS2ponHy?=
- =?us-ascii?Q?VEZR4G6jLyLMOtpa3UkenQNRYjejFJ/KFyCZMIw7KedAlCnk7/29H/9vTYgX?=
- =?us-ascii?Q?90HxTB05/2h6oqm2FyYlQyt+Hh1u0IwYM+80/TkeMW8mF/QnUp4Snexiq8XI?=
- =?us-ascii?Q?w6Vh2eNZmL+crMZpt0BlmsP0tl9bH60WuHwjln+UWy68i3PDwle/smbIPO3N?=
- =?us-ascii?Q?1QkjJuMFVmFt7jYWUVRszxKNYb38lzPHpob7fmaAMmgkh0FePswqBRVnNOEU?=
- =?us-ascii?Q?uthdBLOk6AKRQ6e6AaWwBWpTQwLwI+3k54q4ZCY/EjCL52hgX3KEX8MK7QJh?=
- =?us-ascii?Q?knRYVncJkQosNQSbF+Cn8vhZOOj02D2sHQoKlCS0VojeQU8ZuPCNrlfVATd1?=
- =?us-ascii?Q?zC7Llax0dm8Xjpkr6yq7iOD8rXtaC3gxoJCInyw1tYtiS3jgd3zGIViKgYQx?=
- =?us-ascii?Q?X4YNVXk5ApYgesb4mgIZkt8sKS0wagHpr5lO6TOTVIsNf/r82jlyj7mqTyaJ?=
- =?us-ascii?Q?HkzArjjjs7XP27K6q0UIsyX1yUJNYy9qhXPW4vsOnRem5taiyMug4pzztCAs?=
- =?us-ascii?Q?T4bYEmv9STg5C0yk7lOkiyk/cniAy676mjHUPjvYhH6bo7Pw/6HEJ7MDwkcl?=
- =?us-ascii?Q?xEzyhLmWTo/A43FHHWJ3BRKXgevjcbsZk6euACC4T+6y6ZDcIAyxfwFY7D7c?=
- =?us-ascii?Q?kFBC+C52t3dFe1pENM1aV5l2s9yQxy/MNCqR6gPIMLPNWxGX+XZIhgAuM697?=
- =?us-ascii?Q?al/XO0H/lOHerID/2yQYbjtBCFdrxtqntfYsZuYkk9Ze/EtSW4E8w1sOlmd2?=
- =?us-ascii?Q?uBZuzKr+xqeriFsQOLqMOe6cB3fF16Qknhz7y7RqE1eUHkNoomLABz+ZbMq3?=
- =?us-ascii?Q?PGQRdycJ6kIDIc9MgcYmNvNyT9IR8FauQe7PihsWyEpx0DjmbpBVgsI/6SuP?=
- =?us-ascii?Q?pxyeXa4hUVaazAB5/A8Z+etUDmKB9LAZXtQ61y+8QaqGAMaFGHxdRj7RTlO3?=
- =?us-ascii?Q?8RB/WlU9jVsBOSxZP3RDOKnck2YFE4covs5Q0eYss6l0xhA2Drl27k/90gEk?=
- =?us-ascii?Q?3jDVjoFu1OHTdESYruVev+qktEg49ex3dpHFLwK8jGQo05/ro0bjaSAsVQWt?=
- =?us-ascii?Q?IFs7n18Hy0MRM1CbOlOM5ApueNxkevbgj64WOAfmHEOeQLoXgwshGsxi79+i?=
- =?us-ascii?Q?33a3errK43U2YOO7ZmBmlmUy7GhLl3c+PZU2n9e6lWfRo69h7gpquH3YewvR?=
- =?us-ascii?Q?olaWxDqVTxpPPTyX7vJt0JqhwRo=3D?=
-X-Forefront-Antispam-Report:
-	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(36860700013)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	obYN6X74wdvJvMCMs2e4HFKmUmuCZFimzs72aPQBAJ80CZTGVVJm4GS+El9kqSYERP+TGEZwvn8V+4Js9Ym+Sv5Fe+/o/+OPdVFl1gDEETO1tChVgFgopzKGaHXCd5En0DgMO3nFVbg6arPGZPH/llm+fluCYTnujASP9kYx/tG4+OTqBk4cy6lqlCqWLHztp1YqFRSgxYyPVrScptH0aV7art21YFao0JqMWD2r0LsZo4XUtvXCpXC1FUDpTq/vjn4xdpNNtJ47j+yUMbAhweNhBSu1qO8cy9nIvZ8ilrY5WYnpMAyIUorkt5oHzi3rlODQ2juomCd14YDxH4mPDGDfcXXl6AV9VLoq8+4smePxBUEXPa06hxvziIpp/UtJW8um+7mnZMwA2J7wdGlkubIb2LVtT9Y7eOAlyLFMPgDNc9HpNCVRhIZBNZxY6gqN
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2026 08:38:35.3566
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3a94f943-7891-445a-1459-08de7380198c
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BN1PEPF00004689.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR10MB8469
+X-HM-Tid: 0a9c8ed71d8609cckunm615550f2a3d87c
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQxlIH1ZIGR1OSUtMSB1LSxlWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=K8bae7uIKn3Hztc6iPpwFtwdRlGkBsbKJTFptSlPv4liR8OW0OZH3rWthDv9UXzbJvF+a+fMe1JysyBcQwGcBsZA0xW+brsXCOsFqwo9R0uTblifkeQAcRBeOWwjVGKFKZx7kPL7GLmFRpBWB43xnpuvCndkEuk9Z06xyCJCbl0=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=1ZtDx6p9eQciNBSS2yVaAQSBq8mXFIkhNhuoivr3Ggo=;
+	h=date:mime-version:subject:message-id:from;
 
-PCIe r7.0, section 7.5.3.6 states that for multi-function devices, the
-Max Link Width and Max Link Speed fields in the Link Capabilities
-Register must report the same values for all functions.
+Hi Steven,
 
-Currently, dw_pcie_setup() programs these fields only for Function 0
-via dw_pcie_link_set_max_speed() and dw_pcie_link_set_max_link_width().
-For multi-function endpoint configurations, Function 1 and beyond retain
-their default values, violating the PCIe specification.
+在 2026/02/11 星期三 23:40, Manivannan Sadhasivam 写道:
+> On Wed, Feb 11, 2026 at 09:13:50PM +0800, Shawn Lin wrote:
+>> 在 2026/01/22 星期四 10:02, Shawn Lin 写道:
+>>> This patch-set adds new pci controller event and LTSSM tracepoint used by host drivers
+>>> which provide LTSSM trace functionality. The first user is pcie-dw-rockchip with a 256
+>>> Bytes FIFO for recording LTSSM transition.
+>>>
+>>
+>> Gentle ping...
+>>
+> 
+> Merge window is open now, so we can't accept any patches until -rc1. And I'm
+> also waiting for an Ack from Steven for the tracing part.
+> 
 
-Fix this by reading the Max Link Width and Max Link Speed fields from
-Link Capabilities Register of Function 0 after dw_pcie_setup() completes,
-then mirroring these values to all other functions.
+I'd appreciate it if you could share any concerns you might have about 
+v4. :)
 
-Fixes: 24ede430fa49 ("PCI: designware-ep: Add multiple PFs support for DWC")
-Fixes: 89db0793c9f2 ("PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling")
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
----
+Thanks.
 
-The link speed and width would be negotiated through PF0 during
-initialization that controls the link behaviour, hence it didn't broke
-the driver. However, the change is proposed just to make the driver
-compatible with the PCIe base specifications.
-
-The fix is implemented in pcie-designware-ep.c rather than modifying
-dw_pcie_setup() directly to keep pcie-designware.c independent of RC/EP
-specifics and maintain it as common code.
-
-Changes from v2 to v3:
-- Wrapped the patches to fit within 80 columns
-- Updated the term 'physical function' to 'Function'
-
-Changes from v1 to v2:
-- Used FIELD_* macros
-
-v2: https://lore.kernel.org/all/20260219064511.695086-3-a-garg7@ti.com/
-v1: https://lore.kernel.org/all/20260202072758.101845-3-a-garg7@ti.com/
-
- .../pci/controller/dwc/pcie-designware-ep.c   | 29 ++++++++++++++++++-
- 1 file changed, 28 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 771241e1a2c9..8041c7a0d381 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -1094,7 +1094,8 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
- {
- 	struct dw_pcie_ep *ep = &pci->ep;
- 	u8 funcs = ep->epc->max_functions;
--	u8 func_no;
-+	u32 ref_lnkcap, lnkcap;
-+	u8 func_no, offset;
- 
- 	dw_pcie_dbi_ro_wr_en(pci);
- 
-@@ -1102,6 +1103,32 @@ static void dw_pcie_ep_init_non_sticky_registers(struct dw_pcie *pci)
- 		dw_pcie_ep_init_rebar_registers(ep, func_no);
- 
- 	dw_pcie_setup(pci);
-+
-+	/*
-+	 * PCIe r7.0, section 7.5.3.6 states that for multi-function
-+	 * endpoints, max link width and speed fields must report same
-+	 * values for all functions. However, dw_pcie_setup() programs
-+	 * these fields only for function 0. Hence, mirror these fields
-+	 * to all other functions as well.
-+	 */
-+	if (funcs > 1) {
-+		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+		ref_lnkcap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
-+		ref_lnkcap = FIELD_GET(PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS,
-+				       ref_lnkcap);
-+
-+		for (func_no = 1; func_no < funcs; func_no++) {
-+			offset = dw_pcie_ep_find_capability(ep, func_no,
-+							    PCI_CAP_ID_EXP);
-+			lnkcap = dw_pcie_ep_readl_dbi(ep, func_no,
-+						      offset + PCI_EXP_LNKCAP);
-+			FIELD_MODIFY(PCI_EXP_LNKCAP_MLW | PCI_EXP_LNKCAP_SLS,
-+				     &lnkcap, ref_lnkcap);
-+			dw_pcie_ep_writel_dbi(ep, func_no,
-+					      offset + PCI_EXP_LNKCAP, lnkcap);
-+		}
-+	}
-+
- 	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
--- 
-2.34.1
-
+> - Mani
+> 
+>>> Testing
+>>> =========
+>>>
+>>> This series was tested on RK3588/RK3588s EVB1 with NVMe SSD connected to PCIe3 and PCIe2
+>>> root ports.
+>>>
+>>> echo 1 > /sys/kernel/debug/tracing/events/pci_controller/pcie_ltssm_state_transition/enable
+>>> cat /sys/kernel/debug/tracing/trace_pipe
+>>>
+>>>    # tracer: nop
+>>>    #
+>>>    # entries-in-buffer/entries-written: 64/64   #P:8
+>>>    #
+>>>    #                                _-----=> irqs-off/BH-disabled
+>>>    #                               / _----=> need-resched
+>>>    #                              | / _---=> hardirq/softirq
+>>>    #                              || / _--=> preempt-depth
+>>>    #                              ||| / _-=> migrate-disable
+>>>    #                              |||| /     delay
+>>>    #           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
+>>>    #              | |         |   |||||     |         |
+>>>         kworker/0:0-9       [000] .....     5.600194: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600198: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_WAIT rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600199: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600201: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_ACTIVE rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600202: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_CONFIG rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600204: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_START rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600206: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_ACEPT rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600207: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_WAI rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600208: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_ACEPT rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600210: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_COMPLETE rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600212: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_IDLE rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600213: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 2.5 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600214: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600216: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600217: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_SPEED rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600218: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600220: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ1 rate: Unknown
+>>>         kworker/0:0-9       [000] .....     5.600221: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ2 rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600222: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ3 rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600224: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600225: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600226: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600227: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600228: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600229: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600231: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600232: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600233: pcie_ltssm_state_transition: dev: a40000000.pcie state: L123_SEND_EIDLE rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600234: pcie_ltssm_state_transition: dev: a40000000.pcie state: L1_IDLE rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600236: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600237: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600238: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
+>>>         kworker/0:0-9       [000] .....     5.600239: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
+>>>
+>>>
+>>> Changes in v4:
+>>> - use TRACE_EVENT_FN to notify when to start and stop the tracepoint,
+>>>     and export pci_ltssm_tp_enabled() for host drivers to use
+>>> - skip trace if pci_ltssm_tp_enabled() is false.(Steven)
+>>> - wrap into 80 columns(Bjorn)
+>>>
+>>> Changes in v3:
+>>> - add TRACE_DEFINE_ENUM for all enums(Steven Rostedt)
+>>> - Add toctree entry in Documentation/trace/index.rst(Bagas Sanjaya)
+>>> - fix mismatch section underline length(Bagas Sanjaya)
+>>> - Make example snippets in code block(Bagas Sanjaya)
+>>> - warp context into 80 columns and fix the file name(Bjorn)
+>>> - reorder variables(Mani)
+>>> - rename loop to i; rename en to enable(Mani)
+>>> - use FIELD_GET(Mani)
+>>> - add comment about how the FIFO works(Mani)
+>>>
+>>> Changes in v2:
+>>> - use tracepoint
+>>>
+>>> Shawn Lin (3):
+>>>     PCI: trace: Add PCI controller LTSSM transition tracepoint
+>>>     Documentation: tracing: Add PCI controller event documentation
+>>>     PCI: dw-rockchip: Add pcie_ltssm_state_transition trace support
+>>>
+>>>    Documentation/trace/events-pci-controller.rst |  42 ++++++++++
+>>>    Documentation/trace/index.rst                 |   1 +
+>>>    drivers/pci/controller/dwc/pcie-dw-rockchip.c | 111 ++++++++++++++++++++++++++
+>>>    drivers/pci/trace.c                           |  20 +++++
+>>>    include/linux/pci.h                           |   4 +
+>>>    include/trace/events/pci_controller.h         |  57 +++++++++++++
+>>>    6 files changed, 235 insertions(+)
+>>>    create mode 100644 Documentation/trace/events-pci-controller.rst
+>>>    create mode 100644 include/trace/events/pci_controller.h
+>>>
+> 
