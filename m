@@ -1,148 +1,103 @@
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB42D3EBF08
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 00:01:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.180
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771891288; cv=pass; b=manB15dLt7UPK/0ewluKHX6d05WRkY+Ajl2XL1nOfps/94Q6WZWWVxNZg5TcmrgwTZ/ueAUDdluIUWx1iHg99+mvF7x4OmVwtIx4CMzRYZEXOwpE4u+JwowJADKpO6GTh3idi5Ws5ENEwV4mD4gVqBJloWX3a/brgPt0NKcXcxI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771891288; c=relaxed/simple;
-	bh=aTxboB9GucgmRPcQO44MW8P/VNQdv72V6gXQcbjiD4I=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mpO00VeI9lJ5tui2KRIdsixBYOk/TPwY9Wsbzv5oqjsElKKN9mSckWHguEMhdsH+QxgJ6/HugyX+lAySOtWv+gguLSAzJwmb+fe51ai4IZZSNNm6dH8sJtVt+gc7FLU/Q72EodTPy/urrWKplLN4hPXyYpVRbnPB0VAgGQp22EM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=kbdryrbW; arc=pass smtp.client-ip=209.85.208.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB3473EBF3A;
+	Tue, 24 Feb 2026 00:04:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771891447; cv=none; b=IZhNJnfHSwRwgEeBoyhtx/43E80eSQkLqvXAExdXib7UlrgcV1cESIdEnVFg4flNCsdQXWRhKOSGuvxzegrj+smCRAT7RD9GW7pBbjEdPiMykd9ma7YxoPrKiTaH6TFWv2WJnsGQt61gpm27n2EZN92qwa4zJPNN9Kn4yFNPAew=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771891447; c=relaxed/simple;
+	bh=eSEVzSG1u7kDX0qIB57v1bGEdvuxp7q/644aS2mjq3Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EUWhWVfdRsZ9Quo3bUn6Vo+FlBriw+gEfnVK9MtfSoow7SkR/FBrUN2FPNGDok1FeyKeJcbQwZYYOhvDb46X9nSr7xyUHXM0Oiugx0fhQw8f/wUbPBGzDnJZ8SOLvEOe5eqEUT/E+tC1RCHRl0T0JpDL80/J2Yam9Uoffkwb3YY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BiCxi3L9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="kbdryrbW"
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-38708180241so38653641fa.1
-        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 16:01:26 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771891285; cv=none;
-        d=google.com; s=arc-20240605;
-        b=DEUjABoAscDqq2SmfrKjoXnlraiiGt+h27RIVdyJeMbi9zWi79zU3XiLdYZa1aifIi
-         xL2vTUpw95JoRAgxptYaMHa1oCQtfozTyxJ8zTEWqZ5BwMaXoxaO1pBk5AB6HbqTlMFH
-         S4LKA8Nlu5hBIw0q50c9j4jz5nrNF6XGs0ZWtrC/oInjQK4jms52k5t9dSgn/tASvp0h
-         x5vhg7JG4XuHmuTlzaB1b3p6f96dJ/uspQt/4QrbLQ6UqaWCB6S4tm7Ptcn6NuktgC1g
-         xCd7INcApZ4culNYW5KN2VNqRf192f3Kx1vCKpQlqZgLoq8UGWc3oLhlaXlLyQp7gnx5
-         Wnig==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=GriSu+rHCn93XDuWZWOQkqMZohlC+6Y/CRMlBkyQGvI=;
-        fh=/BGpcyYJXPNMR/xhIOvQUFEKuv0NTDbB8WKjxRRh6Vc=;
-        b=lkY9S+RKE+qg/HeHaOJUDlMlTVHeqyFww3HNJVrBgu3h6a2a//XJtoLrWC5MWfwH5J
-         v1koJPJgAIkWIEle0e1aR4627NudoS/F6p66KgCHUce1P7JRDfAiWBLdj8KhOJ6Yunko
-         /U7W4r35oqKEJzjCoyGyy2jNCtomg0bEUFEulk1nkRQ6xyiynLUgxWESRsC1P7caCklJ
-         Qmy8EmYAHpSqdNqF+xQw9e8weHi+qy5LY72qe7rz3tlAwbSEJ9jromgxsGVFli9bfPaN
-         esLIu5FEWKlxKYmbRHT8O1ZqRphVcyC+R7ydY6uTuVb2C5Ng1o/KBcOW4mg80FigYj8i
-         538w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771891285; x=1772496085; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GriSu+rHCn93XDuWZWOQkqMZohlC+6Y/CRMlBkyQGvI=;
-        b=kbdryrbWSHHGm5iTQP90PmBJfqS6sz6+HaWhcI5gmuaBT/st9JgTmvff1uccm2oXX2
-         Ujaryx+/uNxY5D1tnjOZACsbEQLejgaRR+D8/XrwNcQ1ivGf/IieQnqx1CqWFUwcJMrk
-         80mMdPGTjFjai52mrSqnyfVanhWjQ1JhuscFG9RB8freLq7X+CFQaQuyycQ3dYOnWDgq
-         bZYHsZu5rK2V8qr2DSRL1jPiXSmcV+Fz1s/1KmGV+FYnTeDc3DIYq21U1B1mrxC0rMX7
-         sYuMk0buDVYZv8NmVJoWZoT3cwVw/6K9+qJdRdbFvNVxL82YlJoCRCexFGbrtSnZt6ZP
-         1mIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771891285; x=1772496085;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=GriSu+rHCn93XDuWZWOQkqMZohlC+6Y/CRMlBkyQGvI=;
-        b=hqzJGNhODUSZvx2WP0JyCuYixlL8R5sTEtNiFKh6HWDVjOmFC88m2l5p8mM911Kxj5
-         if3Vv4u+x+LIspOZbsFKNTC+RFZaO0z/c3qKffb/o0DY0ta4Fds7WiuVNBFSi22Nfxky
-         2NXE/CjlyvKp6Uia3rm96BG/gY0xoFFcYV9fLEX1HnTin2DPAlrVmiJTKoWga4IjJz4F
-         ZGP9HhebR2FKuNGD8A46fmzNgrzwUMC/gGESWeelwt2tPnNLe9Jusz+j94iWwNxgAJdw
-         F1dR58YTiTm099ck6/sSiZ+IWvLw7jUVfsLmleFGDwYcbn3WYr9Lu+WwGyI58GPX713O
-         BZbA==
-X-Forwarded-Encrypted: i=1; AJvYcCVZywoHpcx5aPxn8aHZtTKKjEcoCrazGMJuBx9LiG5nDUeACOXTesicYVmgZ2wIiCXlnMal/oStZIE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNRnyO7Atr8mFLS8kt7fG5H+lIu2y2kk8HgdUkxzgx26+C0ogJ
-	b2ggWK1m9VvJJlotKVxeR071WJkBITrFbq54kZJwsd99kB1XSX9OTyzHTL4+ZsUy/+FxWknVn4Y
-	zRKO9C5xyCEAFBfFAtLW9ItIiwxJtUhnUWnRVGK9G
-X-Gm-Gg: ATEYQzwfwaXk5EHi3au3Orwr31foHw97RFlAQIqc1fZOGZgWjdk8UaIOKY9UTn9N+AK
-	+XN/c6B/n6TvEiPz4eK+5OhVr64j0IwJdd13qE/aBW9FH2iA7R1PNLBFZFvmfsDxHGTr8vancDk
-	ZYMoC7JKobfaqRY1HzNozeEIFZ9nLAFbuZlK8Le+atKRhy4ewFwBJmj8l8OvdgGFcY6VkYAfauN
-	LWGeBWGO/BYtFwzvMkZ7CQmqU8O4pEgsu6UsdLS04ct2uiHeffA/Gq6vvutIVRBEwrspFYz55jk
-	lqWsYlY=
-X-Received: by 2002:a05:651c:305b:b0:37c:c84a:99b9 with SMTP id
- 38308e7fff4ca-389a5dbcff8mr25152861fa.24.1771891284261; Mon, 23 Feb 2026
- 16:01:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BiCxi3L9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E022C116C6;
+	Tue, 24 Feb 2026 00:04:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771891447;
+	bh=eSEVzSG1u7kDX0qIB57v1bGEdvuxp7q/644aS2mjq3Y=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=BiCxi3L9JoXgkrh8SC5MAkJMhbY/Gt/ee8dkTYQlEReSuB4BTdHAinqlJ2OFDp6yS
+	 K2IocFIKpN9ibOJpRL9+VOLTSUbH7qQsPiBKrovipxTbo9eajt0gUvhxCDhwVDhO+8
+	 5Rlxa1CWbGyQ9Q36KM5NC+FfklyKper67d1Qv2aJIuTZ7s4KnLHKQM7iB0zRPc84mq
+	 jsXCWBPoX2cNDpVLYgAQmic4uvU8sr2uc48rEwfkKkj6Mxf3f1OBn5Wx+AaROlWqSn
+	 ntIjCz+6RR634lgigRfzRx83aoqzpm4WdYAuAXJwSFy0UCaudKb02bX6tegaaBV0nb
+	 MfkMoAbVPBZkQ==
+Date: Mon, 23 Feb 2026 16:04:02 -0800
+From: Jakub Kicinski <kuba@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Vaibhaav Ram T . L"
+ <vaibhaavram.tl@microchip.com>, Kumaravel Thiagarajan
+ <kumaravel.thiagarajan@microchip.com>, Even Xu <even.xu@intel.com>, Xinpeng
+ Sun <xinpeng.sun@intel.com>, Srinivas Pandruvada
+ <srinivas.pandruvada@linux.intel.com>, Jiri Kosina <jikos@kernel.org>,
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, Zhou Wang
+ <wangzhou1@hisilicon.com>, Longfang Liu <liulongfang@huawei.com>, Vinod
+ Koul <vkoul@kernel.org>, Lee Jones <lee@kernel.org>, Jijie Shao
+ <shaojijie@huawei.com>, Jian Shen <shenjian15@huawei.com>, Sunil Goutham
+ <sgoutham@marvell.com>, Andrew Lunn <andrew+netdev@lunn.ch>, Heiner
+ Kallweit <hkallweit1@gmail.com>, "David S . Miller" <davem@davemloft.net>,
+ Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Oded Gabbay <ogabbay@kernel.org>,
+ Maciej Falkowski <maciej.falkowski@linux.intel.com>, Karol Wachowski
+ <karol.wachowski@linux.intel.com>, Min Ma <mamin506@gmail.com>, Lizhi Hou
+ <lizhi.hou@amd.com>, Andreas Noever <andreas.noever@gmail.com>, Mika
+ Westerberg <westeri@kernel.org>, Tomasz Jeznach <tjeznach@rivosinc.com>,
+ Will Deacon <will@kernel.org>, Xinliang Liu <xinliang.liu@linaro.org>, Tian
+ Tao <tiantao6@hisilicon.com>, Davidlohr Bueso <dave@stgolabs.net>, Jonathan
+ Cameron <jonathan.cameron@huawei.com>, Srujana Challa
+ <schalla@marvell.com>, Bharat Bhushan <bbhushan2@marvell.com>, Antoine
+ Tenart <atenart@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, Raag
+ Jadav <raag.jadav@intel.com>, Hans de Goede <hansg@kernel.org>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
+ <jirislaby@kernel.org>, Andy Shevchenko <andy@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>, Andi Shyti <andi.shyti@kernel.org>,
+ Robert Richter <rric@kernel.org>, Mark Brown <broonie@kernel.org>, Nirmal
+ Patel <nirmal.patel@linux.intel.com>, Kurt Schwemmer
+ <kurt.schwemmer@microsemi.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>,
+ Sakari Ailus <sakari.ailus@linux.intel.com>, Bingbu Cao
+ <bingbu.cao@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Arnd Bergmann
+ <arnd@arndb.de>, Benjamin Tissoires <bentiss@kernel.org>,
+ linux-input@vger.kernel.org, linux-i3c@lists.infradead.org,
+ dmaengine@vger.kernel.org, Philipp Stanner <phasta@kernel.org>,
+ netdev@vger.kernel.org, nic_swsd@realtek.com,
+ linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-usb@vger.kernel.org, iommu@lists.linux.dev,
+ linux-riscv@lists.infradead.org, David Airlie <airlied@gmail.com>, Simona
+ Vetter <simona@ffwll.ch>, linux-cxl@vger.kernel.org,
+ linux-crypto@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+ linux-serial@vger.kernel.org, mhi@lists.linux.dev, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Jan Dabros <jsd@semihalf.com>,
+ linux-i2c@vger.kernel.org, Daniel Mack <daniel@zonque.org>, Haojian Zhuang
+ <haojian.zhuang@gmail.com>, linux-spi@vger.kernel.org, Jonathan Derrick
+ <jonathan.derrick@linux.dev>, linux-pci@vger.kernel.org,
+ linux-gpio@vger.kernel.org, Mauro Carvalho Chehab <mchehab@kernel.org>,
+ linux-media@vger.kernel.org, linux-mmc@vger.kernel.org
+Subject: Re: [PATCH 01/37] PCI/MSI: Add Devres managed IRQ vectors
+ allocation
+Message-ID: <20260223160402.3ad8f079@kernel.org>
+In-Reply-To: <1771860581-82092-2-git-send-email-shawn.lin@rock-chips.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+	<1771860581-82092-2-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260129212510.967611-1-dmatlack@google.com> <20260129212510.967611-3-dmatlack@google.com>
- <4mbhcmimhin2ulz57mbzpe5p5dkhfziiyep5k3vgls4zmom3sb@g6jlouyvmpuz>
- <CALzav=eXY=ZBshmpi9axt+_0SxaAm0Xbo7w==nCWJwKK3xcThw@mail.gmail.com> <574e4wq43zm5tyfvvtjfvzqlhoyijcgvvk7gptghrx3ofq5ck2@l2q7xbmtibbq>
-In-Reply-To: <574e4wq43zm5tyfvvtjfvzqlhoyijcgvvk7gptghrx3ofq5ck2@l2q7xbmtibbq>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 23 Feb 2026 16:00:56 -0800
-X-Gm-Features: AaiRm52Dp6IBp6nUtMfXlMTK93T1cVz8F1V8LZFFdJp40no7f29X-MFiBmci9Nk
-Message-ID: <CALzav=c1P7aoGzhSuGsFi6VYsNjygPvBR5jWXb9uqbJ+3MqARQ@mail.gmail.com>
-Subject: Re: [PATCH v2 02/22] PCI: Add API to track PCI devices preserved
- across Live Update
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, 
-	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, 
-	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
-	Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>, 
-	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, Feb 23, 2026 at 3:43=E2=80=AFPM Samiullah Khawaja <skhawaja@google.=
-com> wrote:
->
-> On Mon, Feb 23, 2026 at 03:08:19PM -0800, David Matlack wrote:
-> >On Mon, Feb 23, 2026 at 2:04=E2=80=AFPM Samiullah Khawaja <skhawaja@goog=
-le.com> wrote:
-> >> On Thu, Jan 29, 2026 at 09:24:49PM +0000, David Matlack wrote:
-> >
-> >> >Drivers can notify the PCI subsystem whenever a device is preserved a=
-nd
-> >> >unpreserved with the following APIs:
-> >> >
-> >> >  pci_liveupdate_outgoing_preserve(pci_dev)
-> >> >  pci_liveupdate_outgoing_unpreserve(pci_dev)
-> >>
-> >> nit: Preserve and Unpreserve can only be done from outgoing kernel, ma=
-ybe
-> >> remove the "outgoing" from the function name.
-> >
-> >That's reasonable, I can make that change in v3.
->
-> I should have added it earlier, but the same applies to the
-> pci_liveupdate_incoming_finish() as it can only be done with incoming
-> kernel. Maybe we can remove incoming from it also for consistency?
+On Mon, 23 Feb 2026 23:29:40 +0800 Shawn Lin wrote:
+> pcim_alloc_irq_vectors() and pcim_alloc_irq_vectors_affinity() are created for
+> pci device drivers which rely on the devres machinery to help cleanup the IRQ
+> vectors.
 
-Yeah I can make that change as well.
-
-I was erring on the side of being overly explicity with the
-incoming/outgoing terminology, but I agree it's unnecessary in these
-APIs.
+If you can please add this API with just a few users, and then convert
+remaining users via the subsystem trees in the next cycle.
+There's no need to risk wasting maintainer time on conflicts with
+conversions like this.
