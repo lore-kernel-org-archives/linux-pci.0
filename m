@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 894B430C37A;
-	Tue, 24 Feb 2026 07:08:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 674DB2989B0;
+	Tue, 24 Feb 2026 07:09:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771916922; cv=none; b=n/M7unqFGDh2ujzA1U80KAgSfVV7ZNTzZZHkBGFw8DLhRBQJcr/Hwzkl3TT4pZWmaLoUKDq8Ml+xQpqOUktrQUZ/if6q8crwsagN22n7HJ4JymcYTgUn6f5uox0zRM8WT4Wq6akPfad1Qe1G1bWfO0Dp7+Qcsnou9fXT/IpMLBc=
+	t=1771916960; cv=none; b=A4ELuX1GkUfFvcpvnCghCxRfoN73u98sLKsWNxtt/SqCj6cEWJZ2rvZ1B1voYT7tzWLvi3rIwDnfdYxEcKjjiGHEB2PWVKd69t0r8ARyQCQPyuRws07XPsbDaBkldviMrr1MzHnEmZfTOSDAquRE4j28fNvEEo6zcWCQAaOrVzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771916922; c=relaxed/simple;
-	bh=/V/hHhQ2b7WfVY3rzwK9dYim/SznhJbEO7CC9q9v9lI=;
+	s=arc-20240116; t=1771916960; c=relaxed/simple;
+	bh=1qlmj3BqzE+0ZGQDuqGDZoZh4B0NZy3eXBhDSGRTahs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JepHn4FQd0IwxYVAJ6HyCS87AWQu7USF6hhfeNiD5DJ1ke2pwn/TqEAoV3B1cMcYt9T7t9SBKZHF9OntTj3byJtjqa92Y3BlYHlXWsQIAbAqEcNn2Jg0vA6hQq3M6owQx+9FIvwTliy6tn5ZPwLQatTBOURVVuUv2qbH2umX9f0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EJJDOxeH; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=AcubD8KW4ZfQsNhMc5/a0cOCAJruUF1CMSsTVXFYYna+9e1P8NThbUr8DAl4ir397p4fc+++biv6qAR52jpa+5gOxBIMtggeiX7RYMNcvCsNorxWBhef/lYE1aDwqcD2H6pTog5zl17KpbR9qjVpV2UF9aCKr2PiQsRRFJKE3/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i0a0tK4x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EJJDOxeH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1AA6C116D0;
-	Tue, 24 Feb 2026 07:08:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i0a0tK4x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D508C116D0;
+	Tue, 24 Feb 2026 07:09:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771916922;
-	bh=/V/hHhQ2b7WfVY3rzwK9dYim/SznhJbEO7CC9q9v9lI=;
+	s=k20201202; t=1771916960;
+	bh=1qlmj3BqzE+0ZGQDuqGDZoZh4B0NZy3eXBhDSGRTahs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=EJJDOxeHqnPRb+mPchVhwWrE7tQWkEC5WschrQAkweDw8xdd2c1DA43e8fqzCbzZQ
-	 DROEaVurzmJCj3XMALX4GWo8AR5ALrPCiT9PzAX/cmG5YmK2s6DRghAIwxoM3AeqZM
-	 oTl0jSl9nL7axH2FpfP8+QrnjI0+jbqpmnHnbWT5ywHNNkDckJyaTw2rhrTb2LzbXR
-	 ITT9gKFVFFhtmnnaMNcc6Qtl5c27b6bQePr7dCoAQWe6THGvts4oKW7+vX/mhKTTzj
-	 WjtGzb/JdsQLfDRohdgBgfY05LkgIz2BIJ3J6c2pb9xgKtjwmQTAasT9ByyZKo+rW5
-	 tIF/v4Bn3RFBA==
-Date: Tue, 24 Feb 2026 08:08:39 +0100
+	b=i0a0tK4xNgGMM/MtPHj6zYx8R2qTm7i4dUfHbC7a2t9mhOOjdqIMR7UT8pb6vS00e
+	 gZKX6hCLCOshLQY3SUnxxX1FHQajonXyyrlOjr0K3tdn7X0fuADixaYyCBB7Pr/gEW
+	 JbgqhWmaoXAGUvGGXlrw6rIHM2LQC7WbYFWGMU6A7jUoWee/yTyZ8ONUmjdMUXBka4
+	 n+/6gkY2kcbLtMWP9uk8dUS7uzGDBPbAUD16l8Hn5eKjLIsiKu6uz6nvpd11jHYOg7
+	 0fn9sAEli3iGzVPZ8BeKmEWeH3E06VZ5KWaqENdHi+ayih36ZKKZF0SZ/hdGd8oy1H
+	 SRzqxprq1X9iw==
+Date: Tue, 24 Feb 2026 08:09:17 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Cc: Rob Herring <robh@kernel.org>, 
@@ -42,12 +42,12 @@ Cc: Rob Herring <robh@kernel.org>,
 	platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
 	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
 	Stephan Gerhold <stephan.gerhold@linaro.org>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	linux-acpi@vger.kernel.org, Hans de Goede <johannes.goede@oss.qualcomm.com>
-Subject: Re: [PATCH v5 5/9] dt-bindings: connector: Add PCIe M.2 Mechanical
- Key E connector
-Message-ID: <20260224-delectable-acoustic-gecko-8f5da3@quoll>
+	linux-acpi@vger.kernel.org, Hans de Goede <johannes.goede@oss.qualcomm.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Subject: Re: [PATCH v5 4/9] dt-bindings: serial: Document the graph port
+Message-ID: <20260224-peacock-of-improbable-poetry-b4cfdc@quoll>
 References: <20260224-pci-m2-e-v5-0-dd9b9501d33c@oss.qualcomm.com>
- <20260224-pci-m2-e-v5-5-dd9b9501d33c@oss.qualcomm.com>
+ <20260224-pci-m2-e-v5-4-dd9b9501d33c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,26 +56,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260224-pci-m2-e-v5-5-dd9b9501d33c@oss.qualcomm.com>
+In-Reply-To: <20260224-pci-m2-e-v5-4-dd9b9501d33c@oss.qualcomm.com>
 
-On Tue, Feb 24, 2026 at 11:00:51AM +0530, Manivannan Sadhasivam wrote:
-> Add the devicetree binding for PCIe M.2 Mechanical Key E connector defined
-> in the PCI Express M.2 Specification, r4.0, sec 5.1.2. This connector
-> provides interfaces like PCIe or SDIO to attach the WiFi devices to the
-> host machine, USB or UART+PCM interfaces to attach the Bluetooth (BT)
-> devices. Spec also provides an optional interface to connect the UIM card,
-> but that is not covered in this binding.
-> 
-> The connector provides a primary power supply of 3.3v, along with an
-> optional 1.8v VIO supply for the Adapter I/O buffer circuitry operating at
-> 1.8v sideband signaling.
-> 
-> The connector also supplies optional signals in the form of GPIOs for fine
-> grained power management.
+On Tue, Feb 24, 2026 at 11:00:50AM +0530, Manivannan Sadhasivam wrote:
+> A serial controller could be connected to an external connector like PCIe
+> M.2 for controlling the serial interface of the card. Hence, document the
+> OF graph port.
 > 
 > Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
 
-Please drop, cannot and did not happen.
+Please drop. The binding is not being sent to the device during testing,
+thus it is impossible to test it.
 
 Best regards,
 Krzysztof
