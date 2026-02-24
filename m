@@ -1,140 +1,124 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E149A3A4F57
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 17:08:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EAC93A1E8C
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 17:13:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771952899; cv=none; b=no/ZIX687Wqa4Bxl/mTdFehR+6x0HaeMipPyau76SKGMQN2eRA83Vg3xhoW4naoCbBSUE0CH7Dsed4n4F78fLC/ulTP4Cx+jrO4jxtI35991PJJz89iKq/lGelsYO/SATYy7B9vmLZMxJLMpvs/mU2Awab1qb9ao32CNQpIU+Y0=
+	t=1771953190; cv=none; b=KMpJsdqQeU43UEFUAYAOtWcTdrGRkqywgmJFDNfWGi49BGOft5O/d2E/0uAUSP9EOKGo+lTjgOWt1kKwJrZUGSyB48KHIyQNuDLkKyV7kgf9xzr/vgAiuP3FZ2vU572a/CQ/p6D7ikdhKjZDHIr8ALTybygimtqCabiKtysLP8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771952899; c=relaxed/simple;
-	bh=U6OeKTFflZEsOwAbudBFuNdKmsclm262M3wZ2aA4UMs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hjEHbi73hXv59GKPAJRuz49SOs8cMfaMzAOlmNy4kJrYIPWvPPXDHaUCT4JgOCIwF3ovSwd4Mykde2kw23un9Admpigrkb8qfInzQEEQI7EdnfUAHA9cG90uCabgO9yZ4ofy7dhh3f99NrE65qGpo9wa+M3W1cFP5DzoD7PElLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cnrMBM1h; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1771953190; c=relaxed/simple;
+	bh=NulEL6fqLs0czE4T5z48TsWluNiFQuZ3KFDTeVj9E5M=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=IBFEDZ2r2EwYGkOQZ7MLzlEW+lcAOUZ+EPolOHZikE+3kn+koSRlRCcE7SndQ5b7sqtssJYGMFjSSwnzSoXZp1hhPw+Z5ng/GdTCb0JdLBGpBEgq25IfutZDnRF9J61HzXqfeyd1ITOzx08DpKmCCABLeBislnEPIaPqIY65o9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DCTNLL77; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cnrMBM1h"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2ada9e4ea32so15115ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 09:08:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771952897; x=1772557697; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xJz4QDTcumvz9JVrQMb51pWWatd7LKwHk5h8C7Rf46E=;
-        b=cnrMBM1hieWtTBHXZV0gag7wLK8HvLxY28h/SBDTCUIy6KPFOgIem9w8RNsm0u42jv
-         NtW5HOeVPUIIi0C0GZAXq0mZc+shIo1MsC2vucGY4BEcRYIobcf6+VnGX9kWz5Sd33xM
-         Qc9/scTuCIwMZboy3D0dv4n5vVIvAQrbTBPQnsghsjzUwJu4I3XVFoo1dQb0JJeAYF53
-         zfZlw59RVfhClDrz2sMZKWRjsM/VqsY9uqVbbuCPQpEy22Sq/Mwb39yTmzWoXxbNFfx4
-         337KTEAs+MfsoWA6UkjlZyPE03Vhr2alGa8K4p1lQYJrgLZiuDggmP/DMrMTHtJoM5Y0
-         bwcw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771952897; x=1772557697;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xJz4QDTcumvz9JVrQMb51pWWatd7LKwHk5h8C7Rf46E=;
-        b=EGepX3XxBKS3zd5U1RYMtXUj+xd91kFkdOR4Gc++z/GBgNZ8ocoRsZbEYzDZfR2MsH
-         v3BGXoCR6lT7J+P084lT1FYg9Y9Q0sbcqijMfxNfNYFpkFHwkkwLX78njVoZ77kLhNVg
-         0Vb/CkivsCl/KHivRZes2T7W4t/OxmtJ/VDJPw3B6QLWfKIMqLXeLqf9kKbpe0oWBlUJ
-         lUtKGJBMD7QMgldN9peUCn1vklhK8uRKNthmz1677tmXhQnqEHy1mOksMKSVMlLVMmDn
-         xLsUWFq1Az9vpLEjO3SN8k2pK5Y9r8S9i/lAgxsDFOgaZb4TwAy88og/hIHPbhvxm8lq
-         VMmA==
-X-Forwarded-Encrypted: i=1; AJvYcCW6qjVgXxOR56sZ3umjITR67pKOQCA7/UsF59uvdyprDEziKSTcDzTEsNpxep5MRxQhup2xEQgHzeI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzZyjAY1K6gTJA9pQervL0PoNV0x0AlOjrEYW6ms6eRP4LoWYeJ
-	gWxHWYJFMkXck6nz2Srni9jJcYSP28W/2wvaX087AI2aqZJRxEUWwjF9raFBKL6IOw==
-X-Gm-Gg: ATEYQzy/FBNh3OLgbxZFnel118USsApj6kXev6C0ook/D0WNjkjumxxCNPRslW/Vt/G
-	SRfDVM4+oMB8kDrtNKc9oyV/rFY9Bl1PTF007+YLfkOfGrRk1oGx9wqu3WZQQ7JguzcBknVzTWo
-	ZRNBYn2XaInZeAluDUtoy8tnyCapFx7R1OAWCsLOutn3x30C4XYlPNa18FdkrNzD3qy9aBNbsU6
-	ucMdP4/QWRnN8p/6YhnHf8lmh1/FDFsvc8etuuvLMoTYYaU4Ti6NyYFVykkSidyJfZL6kqt1oaa
-	wRNX31y5c40OmX7a03oCfM1BV8MGK3w+e0aHXITVo8EOkr9c7rpOzqlB/P8nh0NG836N6a3Hg5q
-	HnuCYYXh+mzlqoptawG2oqt+KZN9BE4g398I2sbzxGimV4RHH4HUDgzl2bARpieoDGGoxei9bR4
-	P1FC6yyetfQQhsFwAhhs8CeE4BDT41DEMxe3wverauhw6GdCxFSde3tlwz8h3Pcw==
-X-Received: by 2002:a17:903:b87:b0:297:f2a0:e564 with SMTP id d9443c01a7336-2ada346b6c2mr1775335ad.11.1771952896593;
-        Tue, 24 Feb 2026 09:08:16 -0800 (PST)
-Received: from google.com (168.136.83.34.bc.googleusercontent.com. [34.83.136.168])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82719e7ed8asm1521995b3a.5.2026.02.24.09.08.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Feb 2026 09:08:15 -0800 (PST)
-Date: Tue, 24 Feb 2026 17:08:11 +0000
-From: Samiullah Khawaja <skhawaja@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Alex Williamson <alex@shazbot.org>, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, 
-	Alistair Popple <apopple@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
-	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
-	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, 
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, Tomita Moeko <tomitamoeko@gmail.com>, 
-	Vipin Sharma <vipinsh@google.com>, Vivek Kasireddy <vivek.kasireddy@intel.com>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v2 01/22] liveupdate: Export symbols needed by modules
-Message-ID: <rlftyyae4w4frzcpvyecda32vxod6uambsb7cja274lugs4nhy@3yk3oki2kwo5>
-References: <20260129212510.967611-1-dmatlack@google.com>
- <20260129212510.967611-2-dmatlack@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DCTNLL77"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79D1FC116D0;
+	Tue, 24 Feb 2026 17:13:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771953189;
+	bh=NulEL6fqLs0czE4T5z48TsWluNiFQuZ3KFDTeVj9E5M=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=DCTNLL770X8FvQXcamjZnxBqUTQ2CgMojtGXy8g3eVWwMWxhX3P/EsK9vjcXgD0+K
+	 s6yFtX+c0GRBW/HxZ5RT9uuQzg9kmS2MdSYUOiqMULwBLscaI7RjzRxsZnSVt7G08c
+	 2T4KsgoB9f5RmMUMf3eCcMs3GKzMflLAEZpCCMztlXClKHu3aEEVGW0ggvg7OzUYtG
+	 kud+6vVxeR8FMigP7AWYN2aG5hFxnfDJgDAJ7Ui+GIlmChOyUdNsTqWCKsfbT7frFn
+	 Px5Snu8wU+mMju5n1nHOpOFV5j0LZ5TDa/UyxqVrKjIKdAZIdzDSVa8zdxEDFtkY9M
+	 6l0ndDg9qmong==
+Date: Tue, 24 Feb 2026 11:13:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S . Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Leon Romanovsky <leon@kernel.org>, Tariq Toukan <tariqt@nvidia.com>,
+	Mark Bloch <mbloch@nvidia.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	Vitaly Lifshits <vitaly.lifshits@intel.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Vinicius Costa Gomes <vinicius.gomes@intel.com>,
+	Dima Ruinskiy <dima.ruinskiy@intel.com>
+Subject: Re: [PATCH 0/5] PCI / igc: Improvements related to PTM enabling
+Message-ID: <20260224171308.GA3737399@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260129212510.967611-2-dmatlack@google.com>
+In-Reply-To: <20260224111044.3487873-1-mika.westerberg@linux.intel.com>
 
-On Thu, Jan 29, 2026 at 09:24:48PM +0000, David Matlack wrote:
->Export liveupdate_enabled(), liveupdate_register_file_handler(), and
->liveupdate_unregister_file_handler(). All of these will be used by
->vfio-pci in a subsequent commit, which can be built as a module.
->
->Signed-off-by: David Matlack <dmatlack@google.com>
->---
-> kernel/liveupdate/luo_core.c | 1 +
-> kernel/liveupdate/luo_file.c | 2 ++
-> 2 files changed, 3 insertions(+)
->
->diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
->index dda7bb57d421..59d7793d9444 100644
->--- a/kernel/liveupdate/luo_core.c
->+++ b/kernel/liveupdate/luo_core.c
->@@ -255,6 +255,7 @@ bool liveupdate_enabled(void)
-> {
-> 	return luo_global.enabled;
-> }
->+EXPORT_SYMBOL_GPL(liveupdate_enabled);
->
-> /**
->  * DOC: LUO ioctl Interface
->diff --git a/kernel/liveupdate/luo_file.c b/kernel/liveupdate/luo_file.c
->index 35d2a8b1a0df..32759e846bc9 100644
->--- a/kernel/liveupdate/luo_file.c
->+++ b/kernel/liveupdate/luo_file.c
->@@ -872,6 +872,7 @@ int liveupdate_register_file_handler(struct liveupdate_file_handler *fh)
-> 	luo_session_resume();
-> 	return err;
-> }
->+EXPORT_SYMBOL_GPL(liveupdate_register_file_handler);
->
-> /**
->  * liveupdate_unregister_file_handler - Unregister a liveupdate file handler
->@@ -917,3 +918,4 @@ int liveupdate_unregister_file_handler(struct liveupdate_file_handler *fh)
-> 	liveupdate_test_register(fh);
-> 	return err;
-> }
->+EXPORT_SYMBOL_GPL(liveupdate_unregister_file_handler);
->-- 
->2.53.0.rc1.225.gd81095ad13-goog
->
+On Tue, Feb 24, 2026 at 12:10:39PM +0100, Mika Westerberg wrote:
+> Hi all,
+> 
+> There is (still) an issue with Linux PCIe PTM enabling that happens because
+> Linux automatically enables PTM if certain capabilities are set. However,
+> turns out this is not enough because once we enumerate PCIe Switch Upstream
+> port we also enable PTM but the Downstream Ports are not yet enumerated.
+> This triggers floods of AER errors like this:
+> 
+>       pcieport 0000:00:07.1: AER: Multiple Uncorrectable (Non-Fatal) error message received from 0000:00:07.1
+>       pcieport 0000:00:07.1: PCIe Bus Error: severity=Uncorrectable (Non-Fatal), type=Transaction Layer, (Receiver ID)
+>       pcieport 0000:00:07.1:   device [8086:d44f] error status/mask=00200000/00000000
+>       pcieport 0000:00:07.1:    [21] ACSViol                (First)
+>       pcieport 0000:00:07.1: AER:   TLP Header: 0x34000000 0x00000052 0x00000000 0x00000000
+>       pcieport 0000:00:07.1: AER: device recovery successful
+>       pcieport 0000:00:07.1: AER: Uncorrectable (Non-Fatal) error message received from 0000:00:07.1
+> 
+> We have ACS Source Validation enabled so Requester ID 0 which is sent by
+> the not-enumerated Downstream Port triggers the ACS violation AER.
+> 
+> This can be prevented by enabling PTM when the whole topology has been
+> enumerated and doing it like that seems to be reasonable anyway because we
+> only have a couple of drivers enabling it now so it does not make sense to
+> enable otherwise as it consumes bandwidth.
+> 
+> I did that fix and the problem went away but wanted to test with a device
+> and driver that actually enables PTM. I have a couple of igc NICs here that
+> has this support. However, when testing I noticed that during power state
+> transitions we still get errors like this from igc:
+> 
+>   igc 0000:03:00.0 enp3s0: Timeout reading IGC_PTM_STAT register
+> 
+> and after this PTM for the device stays disabled.
+> 
+> This series includes fixes for igc that deal with the issues I found and
+> now PTM gets succesfully enabled and works accross suspend and runtime
+> suspend of igc, and there are no flood of AER errors as above. While there
+> there is one cleanup patch in the middle that drops unused parameter.
+> 
+> Mika Westerberg (5):
+>   igc: Call netif_queue_set_napi() with rntl locked
+>   igc: Let the PCI core deal with the PM resume flow
+>   igc: Don't reset the hardware on suspend path
+>   PCI/PTM: Drop granularity parameter from pci_enable_ptm()
+>   PCI/PTM: Do not enable PTM automatically for Root and Switch Upstream Ports
 
-Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
+These last two don't look dependent on the igc patches, so I applied
+them to pci/ptm for v7.1, thanks!
+
+Let me know if there is some dependency and I can ack them and drop
+them from the PCI tree.
+
+>  drivers/net/ethernet/intel/ice/ice_main.c     |  2 +-
+>  drivers/net/ethernet/intel/idpf/idpf_main.c   |  2 +-
+>  drivers/net/ethernet/intel/igc/igc.h          |  2 +-
+>  drivers/net/ethernet/intel/igc/igc_ethtool.c  |  6 +-
+>  drivers/net/ethernet/intel/igc/igc_main.c     | 33 ++++----
+>  .../net/ethernet/mellanox/mlx5/core/main.c    |  2 +-
+>  drivers/pci/pcie/ptm.c                        | 77 ++++++++++---------
+>  include/linux/pci.h                           |  6 +-
+>  8 files changed, 64 insertions(+), 66 deletions(-)
+> 
+> -- 
+> 2.50.1
+> 
