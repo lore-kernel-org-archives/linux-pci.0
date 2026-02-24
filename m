@@ -1,111 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2FDD39E6F6
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 16:58:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E149A3A4F57
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 17:08:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771952319; cv=none; b=Nk1+6x/WcjYvX/1u93Yyy3PmWdWU3caulK8APk9aa7jsTJtlCLtR+6fNpZpqqiDNKPYGim1B0Qj1NGM/oV5GDoT3qBXMKaSuLBqRYIEjV5SuEzKJO1ntloXktlzqNtpN/wKpAviMML41K19nQncveitVk1Q6h8m0az4LmCB7/4g=
+	t=1771952899; cv=none; b=no/ZIX687Wqa4Bxl/mTdFehR+6x0HaeMipPyau76SKGMQN2eRA83Vg3xhoW4naoCbBSUE0CH7Dsed4n4F78fLC/ulTP4Cx+jrO4jxtI35991PJJz89iKq/lGelsYO/SATYy7B9vmLZMxJLMpvs/mU2Awab1qb9ao32CNQpIU+Y0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771952319; c=relaxed/simple;
-	bh=siQjsKnJuhuW3XUqku5HX25GJOs/BK8nuegDHFGMHIc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=XPL1iwCQUchVAarV53CAWPAQcKgLQdgH/r/UBQKfWvzyooCZsqJNJBe1IFpLKLE4oIHK2NbvSdw9JIDQ48PAGF8x2Shttp8hx35h+0yRzN4hQOr4EtxMfFmhwioa5vy0xEztUhZ/puMJLyfiemryMEVfNGVjmBWzyKW5NtDJXTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DYMc6Wsk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771952899; c=relaxed/simple;
+	bh=U6OeKTFflZEsOwAbudBFuNdKmsclm262M3wZ2aA4UMs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hjEHbi73hXv59GKPAJRuz49SOs8cMfaMzAOlmNy4kJrYIPWvPPXDHaUCT4JgOCIwF3ovSwd4Mykde2kw23un9Admpigrkb8qfInzQEEQI7EdnfUAHA9cG90uCabgO9yZ4ofy7dhh3f99NrE65qGpo9wa+M3W1cFP5DzoD7PElLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cnrMBM1h; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DYMc6Wsk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30BD2C116D0;
-	Tue, 24 Feb 2026 16:58:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771952319;
-	bh=siQjsKnJuhuW3XUqku5HX25GJOs/BK8nuegDHFGMHIc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=DYMc6Wskj4xkhmLQdMdsuiEdJWI66KqbasbEvT1KFsX6E1TzKu52L6jtI10bVP97u
-	 n6YC1U3/juI+0meYG5LC2+/64CG23usJvSmZ3mlrd1S7179/rIsdhGHWwABwbdalk6
-	 tKYHjcpL+kdnnZcOkr+4UvWs/fnYyv3Fh6+7Y3X4jaPlJEmJ5MRTGoZZyFv7zH0hK0
-	 1Remt4YfQvRY1kuCWWzeeJJtjg6qaVxHUYjsF6ePqRzVzCCyDf8/iR8S1B94WiEq79
-	 6PNUwZxVN0/D3BXOfLHS4tB7ih+DUMs0OwRAy5HtXvNBtJd5gw0Gl9pTVnfAqu2RAx
-	 eqEEYdXDnvyHQ==
-Date: Tue, 24 Feb 2026 10:58:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Leon Romanovsky <leon@kernel.org>, Tariq Toukan <tariqt@nvidia.com>,
-	Mark Bloch <mbloch@nvidia.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@intel.com>,
-	Vitaly Lifshits <vitaly.lifshits@intel.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Vinicius Costa Gomes <vinicius.gomes@intel.com>,
-	Dima Ruinskiy <dima.ruinskiy@intel.com>
-Subject: Re: [PATCH 2/5] igc: Let the PCI core deal with the PM resume flow
-Message-ID: <20260224165837.GA3736201@bhelgaas>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cnrMBM1h"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2ada9e4ea32so15115ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 09:08:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1771952897; x=1772557697; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=xJz4QDTcumvz9JVrQMb51pWWatd7LKwHk5h8C7Rf46E=;
+        b=cnrMBM1hieWtTBHXZV0gag7wLK8HvLxY28h/SBDTCUIy6KPFOgIem9w8RNsm0u42jv
+         NtW5HOeVPUIIi0C0GZAXq0mZc+shIo1MsC2vucGY4BEcRYIobcf6+VnGX9kWz5Sd33xM
+         Qc9/scTuCIwMZboy3D0dv4n5vVIvAQrbTBPQnsghsjzUwJu4I3XVFoo1dQb0JJeAYF53
+         zfZlw59RVfhClDrz2sMZKWRjsM/VqsY9uqVbbuCPQpEy22Sq/Mwb39yTmzWoXxbNFfx4
+         337KTEAs+MfsoWA6UkjlZyPE03Vhr2alGa8K4p1lQYJrgLZiuDggmP/DMrMTHtJoM5Y0
+         bwcw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771952897; x=1772557697;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=xJz4QDTcumvz9JVrQMb51pWWatd7LKwHk5h8C7Rf46E=;
+        b=EGepX3XxBKS3zd5U1RYMtXUj+xd91kFkdOR4Gc++z/GBgNZ8ocoRsZbEYzDZfR2MsH
+         v3BGXoCR6lT7J+P084lT1FYg9Y9Q0sbcqijMfxNfNYFpkFHwkkwLX78njVoZ77kLhNVg
+         0Vb/CkivsCl/KHivRZes2T7W4t/OxmtJ/VDJPw3B6QLWfKIMqLXeLqf9kKbpe0oWBlUJ
+         lUtKGJBMD7QMgldN9peUCn1vklhK8uRKNthmz1677tmXhQnqEHy1mOksMKSVMlLVMmDn
+         xLsUWFq1Az9vpLEjO3SN8k2pK5Y9r8S9i/lAgxsDFOgaZb4TwAy88og/hIHPbhvxm8lq
+         VMmA==
+X-Forwarded-Encrypted: i=1; AJvYcCW6qjVgXxOR56sZ3umjITR67pKOQCA7/UsF59uvdyprDEziKSTcDzTEsNpxep5MRxQhup2xEQgHzeI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZyjAY1K6gTJA9pQervL0PoNV0x0AlOjrEYW6ms6eRP4LoWYeJ
+	gWxHWYJFMkXck6nz2Srni9jJcYSP28W/2wvaX087AI2aqZJRxEUWwjF9raFBKL6IOw==
+X-Gm-Gg: ATEYQzy/FBNh3OLgbxZFnel118USsApj6kXev6C0ook/D0WNjkjumxxCNPRslW/Vt/G
+	SRfDVM4+oMB8kDrtNKc9oyV/rFY9Bl1PTF007+YLfkOfGrRk1oGx9wqu3WZQQ7JguzcBknVzTWo
+	ZRNBYn2XaInZeAluDUtoy8tnyCapFx7R1OAWCsLOutn3x30C4XYlPNa18FdkrNzD3qy9aBNbsU6
+	ucMdP4/QWRnN8p/6YhnHf8lmh1/FDFsvc8etuuvLMoTYYaU4Ti6NyYFVykkSidyJfZL6kqt1oaa
+	wRNX31y5c40OmX7a03oCfM1BV8MGK3w+e0aHXITVo8EOkr9c7rpOzqlB/P8nh0NG836N6a3Hg5q
+	HnuCYYXh+mzlqoptawG2oqt+KZN9BE4g398I2sbzxGimV4RHH4HUDgzl2bARpieoDGGoxei9bR4
+	P1FC6yyetfQQhsFwAhhs8CeE4BDT41DEMxe3wverauhw6GdCxFSde3tlwz8h3Pcw==
+X-Received: by 2002:a17:903:b87:b0:297:f2a0:e564 with SMTP id d9443c01a7336-2ada346b6c2mr1775335ad.11.1771952896593;
+        Tue, 24 Feb 2026 09:08:16 -0800 (PST)
+Received: from google.com (168.136.83.34.bc.googleusercontent.com. [34.83.136.168])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82719e7ed8asm1521995b3a.5.2026.02.24.09.08.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Feb 2026 09:08:15 -0800 (PST)
+Date: Tue, 24 Feb 2026 17:08:11 +0000
+From: Samiullah Khawaja <skhawaja@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Alex Williamson <alex@shazbot.org>, 
+	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, 
+	Alistair Popple <apopple@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
+	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
+	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, kvm@vger.kernel.org, 
+	Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, 
+	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, Tomita Moeko <tomitamoeko@gmail.com>, 
+	Vipin Sharma <vipinsh@google.com>, Vivek Kasireddy <vivek.kasireddy@intel.com>, 
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v2 01/22] liveupdate: Export symbols needed by modules
+Message-ID: <rlftyyae4w4frzcpvyecda32vxod6uambsb7cja274lugs4nhy@3yk3oki2kwo5>
+References: <20260129212510.967611-1-dmatlack@google.com>
+ <20260129212510.967611-2-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20260224111044.3487873-3-mika.westerberg@linux.intel.com>
+In-Reply-To: <20260129212510.967611-2-dmatlack@google.com>
 
-On Tue, Feb 24, 2026 at 12:10:41PM +0100, Mika Westerberg wrote:
-> Currently igc driver calls pci_set_power_state() and pci_restore_state()
-> and the like to bring the device back from low power states. However,
-> PCI core handles all this on behalf of the driver. Furthermore with PTM
-> enabled the PCI core re-enables it on resume but the driver calls
-> pci_restore_state() which ends up disabling it again.
-> 
-> For this reason let the PCI core handle the common PM resume flow.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+On Thu, Jan 29, 2026 at 09:24:48PM +0000, David Matlack wrote:
+>Export liveupdate_enabled(), liveupdate_register_file_handler(), and
+>liveupdate_unregister_file_handler(). All of these will be used by
+>vfio-pci in a subsequent commit, which can be built as a module.
+>
+>Signed-off-by: David Matlack <dmatlack@google.com>
+>---
+> kernel/liveupdate/luo_core.c | 1 +
+> kernel/liveupdate/luo_file.c | 2 ++
+> 2 files changed, 3 insertions(+)
+>
+>diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
+>index dda7bb57d421..59d7793d9444 100644
+>--- a/kernel/liveupdate/luo_core.c
+>+++ b/kernel/liveupdate/luo_core.c
+>@@ -255,6 +255,7 @@ bool liveupdate_enabled(void)
+> {
+> 	return luo_global.enabled;
+> }
+>+EXPORT_SYMBOL_GPL(liveupdate_enabled);
+>
+> /**
+>  * DOC: LUO ioctl Interface
+>diff --git a/kernel/liveupdate/luo_file.c b/kernel/liveupdate/luo_file.c
+>index 35d2a8b1a0df..32759e846bc9 100644
+>--- a/kernel/liveupdate/luo_file.c
+>+++ b/kernel/liveupdate/luo_file.c
+>@@ -872,6 +872,7 @@ int liveupdate_register_file_handler(struct liveupdate_file_handler *fh)
+> 	luo_session_resume();
+> 	return err;
+> }
+>+EXPORT_SYMBOL_GPL(liveupdate_register_file_handler);
+>
+> /**
+>  * liveupdate_unregister_file_handler - Unregister a liveupdate file handler
+>@@ -917,3 +918,4 @@ int liveupdate_unregister_file_handler(struct liveupdate_file_handler *fh)
+> 	liveupdate_test_register(fh);
+> 	return err;
+> }
+>+EXPORT_SYMBOL_GPL(liveupdate_unregister_file_handler);
+>-- 
+>2.53.0.rc1.225.gd81095ad13-goog
+>
 
-I love it, thanks a lot for doing this!
-
-Do we still need the pci_enable_device_mem() and pci_set_master()
-in __igc_resume()?
-
-I suppose some of that is related to the pci_disable_device() in the
-suspend path (__igc_shutdown()), but there are only a few dozen
-drivers that do this, so I'm not sure it's essential.
-
-> ---
->  drivers/net/ethernet/intel/igc/igc_main.c | 6 ------
->  1 file changed, 6 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
-> index 7ffd34bfa14e..99a4c99ddd57 100644
-> --- a/drivers/net/ethernet/intel/igc/igc_main.c
-> +++ b/drivers/net/ethernet/intel/igc/igc_main.c
-> @@ -7526,9 +7526,6 @@ static int __igc_resume(struct device *dev)
->  	struct igc_hw *hw = &adapter->hw;
->  	u32 err, val;
->  
-> -	pci_set_power_state(pdev, PCI_D0);
-> -	pci_restore_state(pdev);
-> -
->  	if (!pci_device_is_present(pdev))
->  		return -ENODEV;
->  	err = pci_enable_device_mem(pdev);
-> @@ -7538,9 +7535,6 @@ static int __igc_resume(struct device *dev)
->  	}
->  	pci_set_master(pdev);
->  
-> -	pci_enable_wake(pdev, PCI_D3hot, 0);
-> -	pci_enable_wake(pdev, PCI_D3cold, 0);
-> -
->  	if (igc_is_device_id_i226(hw))
->  		pci_disable_link_state(pdev, PCIE_LINK_STATE_L1_2);
->  
-> -- 
-> 2.50.1
-> 
+Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
