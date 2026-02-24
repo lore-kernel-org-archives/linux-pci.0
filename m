@@ -1,154 +1,165 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F32C33C18C
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 08:26:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 504021DFDB8;
+	Tue, 24 Feb 2026 08:33:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771921581; cv=none; b=h+SdWmU1JpDOLlVdy4TKyUdvM0PMkrCRdGw7ym2z0+jB8XtNpUE0KTMoezPNsKPtSp4WRv57NrHhbb5HjLUl28+D8wwyFlSusxsEtvFDvDBFGgOD6yQ4HCq4awLOyE0cG7jgxYa9M+X5kjQ1oeNiFG5tv/zRNmE6ge1947r1R3w=
+	t=1771922004; cv=none; b=nbQ2/uCUgp9QZBVSrJptxHleqA8dFTbM7/FYKEvb6PPxZUnN0D1BhwRzOY2U4ZFuQH9T3i0sDDDWPEjXT+IqGBuEeCZ8xrATCcmSLBM79mLOoJ//pyfI8vdfDJr6U0g3XjJSj5sXeOoYyc6oYTA1Qas0nlgz40bj7DfP2pVfdxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771921581; c=relaxed/simple;
-	bh=FtVWnKmSAhQscaTbVknx7Fz3wyNfwC/jGqjGpMz7VS0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g7K1iWsRj+/vDUAt4jvUqUwRAIxutbDPVQPfv3ESCr6fX5A+v45wTYkGNywjBTMoPWd+qTjxQ9BGr7rQCfn03JVg+SpwhCDOz9rUMWMWcTLRpM9eQZrPeN9d4akHGyZpINdCUNVTwPC20wmMlXeq4VlnriMVOWnpDN7m/BsW8Q4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=G4CFCtsM; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1771922004; c=relaxed/simple;
+	bh=jbJfsDf/AFVBkWOy7rSA4AaZdHLzv8lJvtIZjuKCFtE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=EVf9aGxuXIcgilZMvncrDKL8sy8rQMUpPk83/EANmYRE+zOBqUqjNk38gUY1tx6dnuiF5c0LRCjZprClLlgD9Wl36Tnhy+ZBQagmEtPjrrYfC2NjaivYsrUhc9FT61FJ1OpQ6eD2Ezl4gWHK3InAKL9ZbHKFdyRfTiYE0KlqhzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ed6RPlZl; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="G4CFCtsM"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2a964077671so69475ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 00:26:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771921579; x=1772526379; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=iUKKSXBfGZuIEKcFLX2f8iJcwGvlTC3YM5y4lXwVnQE=;
-        b=G4CFCtsMICVyzaAypfUZ338DIBY4soPUuU0FX3024SLL9l4H00OcgqGF6c9hviu/dF
-         J41eDXW05Ks4RBO7Ds5Nhj1WCm9uLK4XiYCaulfk/w49OHDWYMajuutoLuzgYB+Wl3xh
-         hDtfhHGv5C6yz8z/yqv/FaqwI4g9LRtCNwOd6nzCJHpCOcpOgVrKm+uHioWFW0bh/KhH
-         2RvCRzKl6tz9Py3Sn04bbF3PwE7r+jgbVzzWkZj89y+9OPofQ2CZzHTRsvrZX5AC2bGN
-         oo3379qQzfaOHCQ5euxTJRqNUcYRgQy139PVKTdlNfq6wz7nKSw68X59IedHMvyIBJQR
-         BZsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771921579; x=1772526379;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=iUKKSXBfGZuIEKcFLX2f8iJcwGvlTC3YM5y4lXwVnQE=;
-        b=QTvD5ML+TYRxan2oCH3hjZN1IiXmYWxv1quHXDd9jUq5KgwMZ87Rve0ReMQjRJWdzv
-         pN7zsvKSx4ti/YxbSMdjnkXjWDSpuT9l8yx5YExMg4bG39cztvBnaq8qq4EWqigNAjyB
-         yqYPydqbH178AlRMAxBJ05vDG+n9JmEkBCrG/OX7w3Ihbaz71wBk/Inl3ryxLDq2GpR5
-         x6IasdVC8FkHbKsYkiBmLrRJ06/wLtqkGLsyuj84sadjH6OAA3h74p+SjCzBebldIGw6
-         35pAX8PIKzRlpwHVecu3WpzfVPPGG46qQ6GBDR7N08MC4Ta54NioJZEa/kSHeAvZN/KN
-         mzGw==
-X-Forwarded-Encrypted: i=1; AJvYcCVk+9cLyoq4F6gGJI2toEWVXVlbVimeBJ/VDhWhw61uc/41q8+TZb1NjISVUCRnae6r/jlmTJZvz3Y=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwQHTdNEXGqMB8tleiI6LXc0OtfIks6joA006sPYZ+gu9cmb1Fn
-	0ihTYbPsmnJb8E7dvb3CjTWWRPMlKYhXoFEgWn8RGbW3ukGg82Om7f3ZDm+apDfuQw==
-X-Gm-Gg: ATEYQzyV3KOCFIQZLyiANsT2ENgTZc5p2YwUc9+3NqB5fIIvhQTL+wqR7C3WshlXMNC
-	98gQ5u8nkxhjhzCouiFJdwQzfEDsjT9mFwl7mWx7i/RYlmb2ZRVYGWwaSz73sZakEFxVcpF4ZSw
-	uGh7XJmG6dshnPvtf5dLfll+GjlnJLUj7a/fvyROM4ygxvEhiTRLNy7EPqqQIYVi10U7xFSD53F
-	BVGFGITcRCbQSkHNtmnrDnLo1Mk1gIN3Sc1+cpIoiUwNyOTb20tQGC/e39hV22Cp2w9xiQqQsss
-	Ks8Ph7PezWUmZiQoZPNjgvvGoE2GjCNm+TgtLqP7rjuWYJdNYjGMZmhgplqF0SQJ6OZnI0WNOwr
-	URunn1QokvAKx3SfJmf6eAIsuzOEnjV7QrUgNEmMTj/7xthLZoJa3yvyEiIDwOZ50321kFgWBpC
-	Dst3WFiD2rm63df3A4UQDmi+6LzYPMfCK1p6MIQZvueLasVYSgCgFmKxs5pukcFy5U/d0jK+s=
-X-Received: by 2002:a17:903:2f04:b0:2a0:7fac:c031 with SMTP id d9443c01a7336-2ad997f5113mr1474945ad.14.1771921579006;
-        Tue, 24 Feb 2026 00:26:19 -0800 (PST)
-Received: from google.com (222.245.187.35.bc.googleusercontent.com. [35.187.245.222])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ada77cc13bsm13228715ad.47.2026.02.24.00.26.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Feb 2026 00:26:18 -0800 (PST)
-Date: Tue, 24 Feb 2026 08:26:08 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Alex Williamson <alex@shazbot.org>,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
-	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
-	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
-	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-mm@kvack.org, linux-pci@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
-	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Raghavendra Rao Ananta <rananta@google.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	Tomita Moeko <tomitamoeko@gmail.com>,
-	Vipin Sharma <vipinsh@google.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v2 01/22] liveupdate: Export symbols needed by modules
-Message-ID: <aZ1goNCgY8xz9n6K@google.com>
-References: <20260129212510.967611-1-dmatlack@google.com>
- <20260129212510.967611-2-dmatlack@google.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ed6RPlZl"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4fKrZw3WpFz9vHN;
+	Tue, 24 Feb 2026 09:33:12 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1771921992; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BYg4q6UpxC9QuXXiNNDVGkJ25zHrTtqhRQuiGoCwbvc=;
+	b=ed6RPlZlOUibWHwOocSfYTbtNmFVbXwAr31lgxNkh51bR+5xZFRh30ChM/VGa7gukLud7Z
+	gjTbJ0LWe52KAN52GeHh8bJ/s/WoNKVXWlvSRa1yRizbR3EpzoiYW3Wbfme/2w9YFsXFEw
+	1Sfja1+XOBY3ofP3UjIRgt036+qwuwuFFrM+HEUlokbyx8ydCENU7J4uyTEkj1BUrJue4J
+	99L7hKKIyf8MBC9C72PvXh5nuwMG3ygnRsPehMi1rXkCt72nSQ/Sw/iY4BR8htDmahaWW7
+	ev+dgehPQrgSupmjoTGs4VKws0G0Lm/uzKdxtzYsBciIbPjnvhapWs+EIlsL6g==
+Message-ID: <3014988f8a26dbac18a32ec22e0da3f5a383fd97.camel@mailbox.org>
+Subject: Re: [PATCH 01/37] PCI/MSI: Add Devres managed IRQ vectors allocation
+From: Philipp Stanner <phasta@mailbox.org>
+Reply-To: phasta@kernel.org
+To: Shawn Lin <shawn.lin@rock-chips.com>, phasta@kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Vaibhaav Ram T . L"
+ <vaibhaavram.tl@microchip.com>, Kumaravel Thiagarajan
+ <kumaravel.thiagarajan@microchip.com>, Even Xu <even.xu@intel.com>, Xinpeng
+ Sun <xinpeng.sun@intel.com>, Srinivas Pandruvada
+ <srinivas.pandruvada@linux.intel.com>, Jiri Kosina <jikos@kernel.org>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, Zhou Wang
+ <wangzhou1@hisilicon.com>, Longfang Liu <liulongfang@huawei.com>, Vinod
+ Koul <vkoul@kernel.org>, Lee Jones <lee@kernel.org>, Jijie Shao
+ <shaojijie@huawei.com>, Jian Shen <shenjian15@huawei.com>, Sunil Goutham
+ <sgoutham@marvell.com>, Andrew Lunn <andrew+netdev@lunn.ch>, Heiner
+ Kallweit <hkallweit1@gmail.com>, "David S . Miller" <davem@davemloft.net>,
+ Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Oded Gabbay <ogabbay@kernel.org>,
+ Maciej Falkowski <maciej.falkowski@linux.intel.com>,  Karol Wachowski
+ <karol.wachowski@linux.intel.com>, Min Ma <mamin506@gmail.com>, Lizhi Hou
+ <lizhi.hou@amd.com>,  Andreas Noever <andreas.noever@gmail.com>, Mika
+ Westerberg <westeri@kernel.org>, Tomasz Jeznach <tjeznach@rivosinc.com>,
+ Will Deacon <will@kernel.org>, Xinliang Liu <xinliang.liu@linaro.org>, Tian
+ Tao <tiantao6@hisilicon.com>, Davidlohr Bueso <dave@stgolabs.net>, Jonathan
+ Cameron <jonathan.cameron@huawei.com>, Srujana Challa
+ <schalla@marvell.com>, Bharat Bhushan <bbhushan2@marvell.com>, Antoine
+ Tenart <atenart@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, Raag
+ Jadav <raag.jadav@intel.com>, Hans de Goede <hansg@kernel.org>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
+ <jirislaby@kernel.org>, Andy Shevchenko <andy@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>, Andi Shyti <andi.shyti@kernel.org>, 
+ Robert Richter <rric@kernel.org>, Mark Brown <broonie@kernel.org>, Nirmal
+ Patel <nirmal.patel@linux.intel.com>, Kurt Schwemmer
+ <kurt.schwemmer@microsemi.com>,  Logan Gunthorpe <logang@deltatee.com>,
+ Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+ Sakari Ailus <sakari.ailus@linux.intel.com>, Bingbu Cao
+ <bingbu.cao@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Arnd Bergmann
+ <arnd@arndb.de>, Benjamin Tissoires <bentiss@kernel.org>,
+ linux-input@vger.kernel.org,  linux-i3c@lists.infradead.org,
+ dmaengine@vger.kernel.org, netdev@vger.kernel.org,  nic_swsd@realtek.com,
+ linux-arm-msm@vger.kernel.org,  dri-devel@lists.freedesktop.org,
+ linux-usb@vger.kernel.org,  iommu@lists.linux.dev,
+ linux-riscv@lists.infradead.org, David Airlie <airlied@gmail.com>, Simona
+ Vetter <simona@ffwll.ch>, linux-cxl@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
+ linux-serial@vger.kernel.org, mhi@lists.linux.dev, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Jan Dabros <jsd@semihalf.com>, 
+ linux-i2c@vger.kernel.org, Daniel Mack <daniel@zonque.org>, Haojian Zhuang
+ <haojian.zhuang@gmail.com>, linux-spi@vger.kernel.org, Jonathan Derrick
+ <jonathan.derrick@linux.dev>, linux-pci@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, Jakub Kicinski
+ <kuba@kernel.org>
+Date: Tue, 24 Feb 2026 09:32:39 +0100
+In-Reply-To: <d601ec05-ef38-5e8e-c643-c05010717ebe@rock-chips.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+	 <1771860581-82092-2-git-send-email-shawn.lin@rock-chips.com>
+	 <20260223160402.3ad8f079@kernel.org>
+	 <ec226aa1-5cc8-855f-8f90-1d7f89efe766@rock-chips.com>
+	 <07fc896007d86b731cbfb3cf6bbdf4e5315d7a77.camel@mailbox.org>
+	 <d601ec05-ef38-5e8e-c643-c05010717ebe@rock-chips.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260129212510.967611-2-dmatlack@google.com>
+X-MBO-RS-META: 9xmyhhcgdmozckmn6yfrqrcxte8ryx4p
+X-MBO-RS-ID: 6c93f1b6d9c4844e3a5
 
-On Thu, Jan 29, 2026 at 09:24:48PM +0000, David Matlack wrote:
-> Export liveupdate_enabled(), liveupdate_register_file_handler(), and
-> liveupdate_unregister_file_handler(). All of these will be used by
-> vfio-pci in a subsequent commit, which can be built as a module.
-> 
-> Signed-off-by: David Matlack <dmatlack@google.com>
-> ---
->  kernel/liveupdate/luo_core.c | 1 +
->  kernel/liveupdate/luo_file.c | 2 ++
->  2 files changed, 3 insertions(+)
-> 
+On Tue, 2026-02-24 at 16:21 +0800, Shawn Lin wrote:
+> =E5=9C=A8 2026/02/24 =E6=98=9F=E6=9C=9F=E4=BA=8C 15:47, Philipp Stanner =
+=E5=86=99=E9=81=93:
+> > On Tue, 2026-02-24 at 10:08 +0800, Shawn Lin wrote:
+> > > =E5=9C=A8 2026/02/24 =E6=98=9F=E6=9C=9F=E4=BA=8C 8:04, Jakub Kicinski=
+ =E5=86=99=E9=81=93:
+> > > > On Mon, 23 Feb 2026 23:29:40 +0800 Shawn Lin wrote:
+> > > > > pcim_alloc_irq_vectors() and pcim_alloc_irq_vectors_affinity() ar=
+e created for
+> > > > > pci device drivers which rely on the devres machinery to help cle=
+anup the IRQ
+> > > > > vectors.
+> > > >=20
+> > > > If you can please add this API with just a few users, and then conv=
+ert
+> > > > remaining users via the subsystem trees in the next cycle.
+> > > > There's no need to risk wasting maintainer time on conflicts with
+> > > > conversions like this.
+> > >=20
+> > > Thanks for the suggestion, Jakub. I have little experience with
+> > > cross-subsystem cleanups like this, so your suggestion is very helpfu=
+l.
+> >=20
+> >=20
+> > When I removed the hybrid nature of pci_request_region() et al., I
+> > concluded that there were so few users that doing them all in one run
+> > was sufficient.
+> >=20
+> > For larger reworks, like removing pcim_iomap_table(), a slower step-by-
+> > step strategy is necessary for the reasons that Jakub details.
+> >=20
+> > It is then smart to omit an easy to port subsystem / driver for the
+> > ultimate patch series where one then removes the hybrid behavior from
+> > PCI itself, after porting the last driver.
+> >=20
+> > In general,=C2=A0 as Jakub details, those step-by-step cleanups are a b=
+it
+> > safer, since you can proof valid behavior early on and in case of an
+> > explosion they are very easy to revert.
+> >=20
+>=20
+> Thank you, Philipp. I wish I had attended your talk at FOSDEM 2025 on
+> removing pcim_iomap_table earlier. This first version was perhaps a bit=
+=20
+> too aggressive.
 
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
+No worries at all, it's very cool that you pick this work up!
 
-> diff --git a/kernel/liveupdate/luo_core.c b/kernel/liveupdate/luo_core.c
-> index dda7bb57d421..59d7793d9444 100644
-> --- a/kernel/liveupdate/luo_core.c
-> +++ b/kernel/liveupdate/luo_core.c
-> @@ -255,6 +255,7 @@ bool liveupdate_enabled(void)
->  {
->  	return luo_global.enabled;
->  }
-> +EXPORT_SYMBOL_GPL(liveupdate_enabled);
->  
->  /**
->   * DOC: LUO ioctl Interface
-> diff --git a/kernel/liveupdate/luo_file.c b/kernel/liveupdate/luo_file.c
-> index 35d2a8b1a0df..32759e846bc9 100644
-> --- a/kernel/liveupdate/luo_file.c
-> +++ b/kernel/liveupdate/luo_file.c
-> @@ -872,6 +872,7 @@ int liveupdate_register_file_handler(struct liveupdate_file_handler *fh)
->  	luo_session_resume();
->  	return err;
->  }
-> +EXPORT_SYMBOL_GPL(liveupdate_register_file_handler);
->  
->  /**
->   * liveupdate_unregister_file_handler - Unregister a liveupdate file handler
-> @@ -917,3 +918,4 @@ int liveupdate_unregister_file_handler(struct liveupdate_file_handler *fh)
->  	liveupdate_test_register(fh);
->  	return err;
->  }
-> +EXPORT_SYMBOL_GPL(liveupdate_unregister_file_handler);
-> -- 
-> 2.53.0.rc1.225.gd81095ad13-goog
-> 
+>  For v2, I think the plan should start with addressing
+> the switchtec and vmd drivers, since both of those, along with the new=
+=20
+> API additions, can be handled entirely within the PCI subsystem scope.
+
+Sounds reasonable to me.
+
+Regards
+Philipp
