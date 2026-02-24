@@ -1,165 +1,171 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011005.outbound.protection.outlook.com [52.101.52.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 504021DFDB8;
-	Tue, 24 Feb 2026 08:33:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771922004; cv=none; b=nbQ2/uCUgp9QZBVSrJptxHleqA8dFTbM7/FYKEvb6PPxZUnN0D1BhwRzOY2U4ZFuQH9T3i0sDDDWPEjXT+IqGBuEeCZ8xrATCcmSLBM79mLOoJ//pyfI8vdfDJr6U0g3XjJSj5sXeOoYyc6oYTA1Qas0nlgz40bj7DfP2pVfdxw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771922004; c=relaxed/simple;
-	bh=jbJfsDf/AFVBkWOy7rSA4AaZdHLzv8lJvtIZjuKCFtE=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EVf9aGxuXIcgilZMvncrDKL8sy8rQMUpPk83/EANmYRE+zOBqUqjNk38gUY1tx6dnuiF5c0LRCjZprClLlgD9Wl36Tnhy+ZBQagmEtPjrrYfC2NjaivYsrUhc9FT61FJ1OpQ6eD2Ezl4gWHK3InAKL9ZbHKFdyRfTiYE0KlqhzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ed6RPlZl; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7402A1F30A9;
+	Tue, 24 Feb 2026 08:38:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.5
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771922311; cv=fail; b=Qg8hT7c+gkDukSxTsfnu2TuDeTBEIiVTPib8b1Udq7nhfIH7J47jvty5c/gN7hxITX0P7F6uC+U5adFnBSgh0xv5DbHBym/FIqhpiIRCCkARFz19hKprvmgiEIllWTLHnZwdjDTrD6kbHD/z1e4Frd+i5jXq1InzPMAxv15Mxxo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771922311; c=relaxed/simple;
+	bh=qw2ztsb8gIkg8AbuYZycFDrPAVMu9SX+mkgx0PIV7To=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=F3paOHyQXhAWyIG9XhU6kUOYZEEZNxFgvk+M5DRnINiY4lukRRUY0G0Pszl0ugrT/t7xR2n3IoCO3IpZxAGu09EwGYLoEOj0bOI0GNGXVmlukn6TnmBQTmEPCj6G54TTkSkJFM4a1yMLPw5ifzK9WeyFo15boSC33obhDx8GPzo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=lgCGhIQw; arc=fail smtp.client-ip=52.101.52.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ed6RPlZl"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4fKrZw3WpFz9vHN;
-	Tue, 24 Feb 2026 09:33:12 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1771921992; h=from:from:reply-to:reply-to:subject:subject:date:date:
-	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-	 content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BYg4q6UpxC9QuXXiNNDVGkJ25zHrTtqhRQuiGoCwbvc=;
-	b=ed6RPlZlOUibWHwOocSfYTbtNmFVbXwAr31lgxNkh51bR+5xZFRh30ChM/VGa7gukLud7Z
-	gjTbJ0LWe52KAN52GeHh8bJ/s/WoNKVXWlvSRa1yRizbR3EpzoiYW3Wbfme/2w9YFsXFEw
-	1Sfja1+XOBY3ofP3UjIRgt036+qwuwuFFrM+HEUlokbyx8ydCENU7J4uyTEkj1BUrJue4J
-	99L7hKKIyf8MBC9C72PvXh5nuwMG3ygnRsPehMi1rXkCt72nSQ/Sw/iY4BR8htDmahaWW7
-	ev+dgehPQrgSupmjoTGs4VKws0G0Lm/uzKdxtzYsBciIbPjnvhapWs+EIlsL6g==
-Message-ID: <3014988f8a26dbac18a32ec22e0da3f5a383fd97.camel@mailbox.org>
-Subject: Re: [PATCH 01/37] PCI/MSI: Add Devres managed IRQ vectors allocation
-From: Philipp Stanner <phasta@mailbox.org>
-Reply-To: phasta@kernel.org
-To: Shawn Lin <shawn.lin@rock-chips.com>, phasta@kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, "Vaibhaav Ram T . L"
- <vaibhaavram.tl@microchip.com>, Kumaravel Thiagarajan
- <kumaravel.thiagarajan@microchip.com>, Even Xu <even.xu@intel.com>, Xinpeng
- Sun <xinpeng.sun@intel.com>, Srinivas Pandruvada
- <srinivas.pandruvada@linux.intel.com>, Jiri Kosina <jikos@kernel.org>, 
- Alexandre Belloni <alexandre.belloni@bootlin.com>, Zhou Wang
- <wangzhou1@hisilicon.com>, Longfang Liu <liulongfang@huawei.com>, Vinod
- Koul <vkoul@kernel.org>, Lee Jones <lee@kernel.org>, Jijie Shao
- <shaojijie@huawei.com>, Jian Shen <shenjian15@huawei.com>, Sunil Goutham
- <sgoutham@marvell.com>, Andrew Lunn <andrew+netdev@lunn.ch>, Heiner
- Kallweit <hkallweit1@gmail.com>, "David S . Miller" <davem@davemloft.net>,
- Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Oded Gabbay <ogabbay@kernel.org>,
- Maciej Falkowski <maciej.falkowski@linux.intel.com>,  Karol Wachowski
- <karol.wachowski@linux.intel.com>, Min Ma <mamin506@gmail.com>, Lizhi Hou
- <lizhi.hou@amd.com>,  Andreas Noever <andreas.noever@gmail.com>, Mika
- Westerberg <westeri@kernel.org>, Tomasz Jeznach <tjeznach@rivosinc.com>,
- Will Deacon <will@kernel.org>, Xinliang Liu <xinliang.liu@linaro.org>, Tian
- Tao <tiantao6@hisilicon.com>, Davidlohr Bueso <dave@stgolabs.net>, Jonathan
- Cameron <jonathan.cameron@huawei.com>, Srujana Challa
- <schalla@marvell.com>, Bharat Bhushan <bbhushan2@marvell.com>, Antoine
- Tenart <atenart@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, Raag
- Jadav <raag.jadav@intel.com>, Hans de Goede <hansg@kernel.org>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
- <jirislaby@kernel.org>, Andy Shevchenko <andy@kernel.org>, Manivannan
- Sadhasivam <mani@kernel.org>, Mika Westerberg
- <mika.westerberg@linux.intel.com>, Andi Shyti <andi.shyti@kernel.org>, 
- Robert Richter <rric@kernel.org>, Mark Brown <broonie@kernel.org>, Nirmal
- Patel <nirmal.patel@linux.intel.com>, Kurt Schwemmer
- <kurt.schwemmer@microsemi.com>,  Logan Gunthorpe <logang@deltatee.com>,
- Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
- Sakari Ailus <sakari.ailus@linux.intel.com>, Bingbu Cao
- <bingbu.cao@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Arnd Bergmann
- <arnd@arndb.de>, Benjamin Tissoires <bentiss@kernel.org>,
- linux-input@vger.kernel.org,  linux-i3c@lists.infradead.org,
- dmaengine@vger.kernel.org, netdev@vger.kernel.org,  nic_swsd@realtek.com,
- linux-arm-msm@vger.kernel.org,  dri-devel@lists.freedesktop.org,
- linux-usb@vger.kernel.org,  iommu@lists.linux.dev,
- linux-riscv@lists.infradead.org, David Airlie <airlied@gmail.com>, Simona
- Vetter <simona@ffwll.ch>, linux-cxl@vger.kernel.org, 
- linux-crypto@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
- linux-serial@vger.kernel.org, mhi@lists.linux.dev, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Jan Dabros <jsd@semihalf.com>, 
- linux-i2c@vger.kernel.org, Daniel Mack <daniel@zonque.org>, Haojian Zhuang
- <haojian.zhuang@gmail.com>, linux-spi@vger.kernel.org, Jonathan Derrick
- <jonathan.derrick@linux.dev>, linux-pci@vger.kernel.org, 
- linux-gpio@vger.kernel.org, Mauro Carvalho Chehab <mchehab@kernel.org>, 
- linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, Jakub Kicinski
- <kuba@kernel.org>
-Date: Tue, 24 Feb 2026 09:32:39 +0100
-In-Reply-To: <d601ec05-ef38-5e8e-c643-c05010717ebe@rock-chips.com>
-References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
-	 <1771860581-82092-2-git-send-email-shawn.lin@rock-chips.com>
-	 <20260223160402.3ad8f079@kernel.org>
-	 <ec226aa1-5cc8-855f-8f90-1d7f89efe766@rock-chips.com>
-	 <07fc896007d86b731cbfb3cf6bbdf4e5315d7a77.camel@mailbox.org>
-	 <d601ec05-ef38-5e8e-c643-c05010717ebe@rock-chips.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="lgCGhIQw"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=j58JOVKvD2/U3zML9ypRkzKy3bKlGj4KgA+yKhA6hIrBgnLkJKhGR1NI+CLGNFXjRY4ghslpnIAFcc6lK6EKs7soCI9UwKTLTapnHhdjQVvp1b/shqFcGyN+N3nbtlUC/vZCOpPTxcKGBFMDGR7a09h3i4fUWOvhZRekzaaou7yhZhmEMJB9hCanV47VsmaQ43CfEjurW1gfakkdILK69a9hQciu81sy0QJYKjY9R38KKpIluuwG9XXx5te+BF/DYKfh4p2UOij7IGMH78yhqGpNt+BMRtM72m/p7mcuTzw251yfUGAW/OjkarBdD25713KfoUdkRaUGi2heljFhgg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=6oBtS3fTo2elH/VtTDvW6+pZ2m7EPJCNDP078B8BaYs=;
+ b=cOKTiiDU5wX8QErYgMeirMjYYlHGcCFl/gNJOfQk/zKPNnDaM2eoZPjfkdXcoI6y+IS8ipBXDJc/n61Axxp8gHINOP8001RrG4tn4O7chOawQD8G82d+oAuwkLchgF97j7MsLIhI+zahDROnorGtVu3NQ67+ILGkSB+8r+PUtE4tQCO1rww0tMWru0D1Na4ua/TOymPC7DKoNTLCSgQcQsM8y7t/4i8a5DgIEQt/iDLaoKuJUy8+0aKJJ8iFibkfdxVqxaIDLPQQmV92jNCKFdOWpXAhC3HbXnIiWpbSNlf0ei6PynHVwvTBKCOMK3w5IxL1dz1CUlh1Jpn4cyk7QA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.23.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6oBtS3fTo2elH/VtTDvW6+pZ2m7EPJCNDP078B8BaYs=;
+ b=lgCGhIQwPwxoIcYNOsiS7j5QzHBvM+Os+SP+1u9QuiV2Nhq3+tN9bXaTglc1QLwi/xIU7NBA6chOSpbzk+UrOkCvZyq5sqEAVpXZNHlNev5q01eEdXGTWUcwrpSYxBNS/trnP3SUxa+zYtFySvQcqVVoVXVpqhZ/hMkC1kDXSHg=
+Received: from SJ0P220CA0002.NAMP220.PROD.OUTLOOK.COM (2603:10b6:a03:41b::10)
+ by LV3PR10MB7842.namprd10.prod.outlook.com (2603:10b6:408:1b3::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.21; Tue, 24 Feb
+ 2026 08:38:27 +0000
+Received: from SJ5PEPF000001CE.namprd05.prod.outlook.com
+ (2603:10b6:a03:41b:cafe::a4) by SJ0P220CA0002.outlook.office365.com
+ (2603:10b6:a03:41b::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.22 via Frontend Transport; Tue,
+ 24 Feb 2026 08:38:22 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.194)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.23.194 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.194; helo=lewvzet200.ext.ti.com; pr=C
+Received: from lewvzet200.ext.ti.com (198.47.23.194) by
+ SJ5PEPF000001CE.mail.protection.outlook.com (10.167.242.38) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9632.12 via Frontend Transport; Tue, 24 Feb 2026 08:38:26 +0000
+Received: from DLEE201.ent.ti.com (157.170.170.76) by lewvzet200.ext.ti.com
+ (10.4.14.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 24 Feb
+ 2026 02:38:25 -0600
+Received: from DLEE207.ent.ti.com (157.170.170.95) by DLEE201.ent.ti.com
+ (157.170.170.76) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 24 Feb
+ 2026 02:38:25 -0600
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE207.ent.ti.com
+ (157.170.170.95) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Tue, 24 Feb 2026 02:38:25 -0600
+Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [172.24.231.225])
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 61O8cKBX2414416;
+	Tue, 24 Feb 2026 02:38:21 -0600
+From: Aksh Garg <a-garg7@ti.com>
+To: <linux-pci@vger.kernel.org>, <jingoohan1@gmail.com>, <mani@kernel.org>,
+	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <robh@kernel.org>,
+	<bhelgaas@google.com>, <yoshihiro.shimoda.uh@renesas.com>,
+	<fancer.lancer@gmail.com>, <Zhiqiang.Hou@nxp.com>,
+	<gustavo.pimentel@synopsys.com>, <cassel@kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>,
+	<danishanwar@ti.com>, Aksh Garg <a-garg7@ti.com>
+Subject: [PATCH v3 0/2] PCI: dwc: ep: Multi-function endpoint configuration fixes
+Date: Tue, 24 Feb 2026 14:08:15 +0530
+Message-ID: <20260224083817.916782-1-a-garg7@ti.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MBO-RS-META: 9xmyhhcgdmozckmn6yfrqrcxte8ryx4p
-X-MBO-RS-ID: 6c93f1b6d9c4844e3a5
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001CE:EE_|LV3PR10MB7842:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2b18d6e2-3147-455a-b145-08de7380148d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700013|82310400026|7416014|376014|1800799024|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?nuGid431YLfQhtW1+VzZpc5Rf4L3/1CCUfpkRgfj8M8sME1zRuFkYygOHPN2?=
+ =?us-ascii?Q?sg/G0yqpak3G++A8X7HokDXBrF3t7cSY09fsgY+rd1w1FhqBuNO6G/LhxnZN?=
+ =?us-ascii?Q?Ppb5tqDNLo6IByZEUIFSQ7Xcp66LKWBxLDza+GnfPZPcksK5LqT88NbwD07o?=
+ =?us-ascii?Q?8ayj4EyMJ3K46fQGmjmz6vqLuTCAj+Ey/WBAZ+k9K99azbqK1CviJuTZF7UF?=
+ =?us-ascii?Q?woYElob4FuVRn5CO9H1RaffZLdbpv2bWubFsTsHsUrx36ER81AiXAX4jNH5i?=
+ =?us-ascii?Q?EtH2x3yPrM6Yc8ZjfpA+kyDbj7BgrDl+ev8ft6hf2AvlgB3u3e/LueDbXGyt?=
+ =?us-ascii?Q?vmBK5kY5Tr4jExFlk+WP8qi2+L0JdE7t2Ey9uORK6j2HoicdcqgcHft/7IZv?=
+ =?us-ascii?Q?2K6sY1yAW/6L6W+7eiTrDr/iPD19zcwnTJ8paoalkI52ThSHXa75mj1wwZh/?=
+ =?us-ascii?Q?PZpVicb31Oz5PtYkhlyc2NB6/WYV7USBU4vsrqrAQomek+yc/nxLo7EMHzpk?=
+ =?us-ascii?Q?SrxyTs0g+aNozM3A44YWDeMzFkkxsnZERRu2E9dSyp5glj0TR4Hm0xP2qvTg?=
+ =?us-ascii?Q?BFLnWOyxinfIQH5hkkyiNOiWV+5qhTwOs9wZiB2WyzYLbD4r31/jgeYoQVJp?=
+ =?us-ascii?Q?lByoiHxboeTo6OPNGvrDJABClp+RUamiYnqLUbyeGqN93GSmWoPEYJoGNxdS?=
+ =?us-ascii?Q?LszwtzTcfhzjMSlRBr7JPc1bsa4dDAxQh1JzclQFG0mHKL4uRxTTElSCiP8Y?=
+ =?us-ascii?Q?Sp3CDiCV46n1+pQw+5fDDJbUNw0p01E7QzXVqNOZnhjriteq4hn1pJxsB6Uc?=
+ =?us-ascii?Q?Adg91ViJp9OguRATNsM8fDLNusTBqrfZwUir0US0FxaIhKUJulwnPh1Ai3Jg?=
+ =?us-ascii?Q?NcJlzZ1Z1z2FpEvyv+DSFpBPbQS/cFsqYHGifErAIm/m1GLquOTnmWyjDW5f?=
+ =?us-ascii?Q?YX8v48Hc/a9+75vk336rFtAbdBUa+K0hDfnQE2Jj40AElBtenFZRCL9snqcZ?=
+ =?us-ascii?Q?VolsN3qsIB5CM20FQn8Ik1AHIUmecX8lAwr/9l6rKSEmw6HVBRYn3en3zjxZ?=
+ =?us-ascii?Q?KQnpEc+YWcq5E5OTSAKMKD8uBZKg6f4V5F+hwPYlYnI9tx8WnGfMM1d2AiOk?=
+ =?us-ascii?Q?1y/KATvolPUOjPOc+l+Qk8RoRGnK8TNfRWsIYlSnpQtauBgipq6ZnhACAdgN?=
+ =?us-ascii?Q?2AXC5JOH6H54w4hHB1Vt5N/3Gm4i1Owh6k2QmRhKzyVyG2ErHQtNtjwJbZAg?=
+ =?us-ascii?Q?FDYOgbYNMjtUOE+QuFylMGoFu2e/JRWbaRS79azkoe/8omNKqifv0mFNeNFD?=
+ =?us-ascii?Q?sprwDPuKYrMLtgn0ADeKT1l5WyAhzX7pmZlLAcK4QobbyxIZ++JiXbqQzy9g?=
+ =?us-ascii?Q?WxWxTQxRSfqTIg8LrT5dAhAAoIuWEiFgU9u4QskHFayTJPeLQZbEERDpoXoz?=
+ =?us-ascii?Q?dx3Gc0k0eRPIOhhnU7mxQ39aYHL3eSmFvsC11Xjk0jOF4Guck0KhX1zC8PfB?=
+ =?us-ascii?Q?l0gOGlfDKgR2+G9uxzZu/6J2rmUas8nrmh0mDPu4J4R/rEdSYALAqemqbXt3?=
+ =?us-ascii?Q?3D6ewbqUk+91jquU59p4n6Kqrlbkfj3HApbaYjK/VFs/gSoDCZsLx87jWfp/?=
+ =?us-ascii?Q?42cI2KntwYYsALixPwoDfR6YA0PPl8aCpS40+Z8hz7PjZydasbk5E+htzqDh?=
+ =?us-ascii?Q?czUk4d4byxXGURW3tLXoXeGNggA=3D?=
+X-Forefront-Antispam-Report:
+	CIP:198.47.23.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet200.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700013)(82310400026)(7416014)(376014)(1800799024)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	TEEeiS8RuK/xep6xpDkIWfemGoNi6OXTPGTsTKq9QKxaXzlqpDo6HcYlnzqxKMaS7mz3qwXTfXnBsaEZCtDBCELe+MxsB3lVcDBJCNPh1Lm1QteaOKJayK+7ln3OtNuJaBuZJNeFWH/3leora+HUSrH/dZuS+t65TtL8QPefDn6jjJVYZDXRJVR2H0vvx6MWgbn3/cy7XN01Hm5TJsrPffP6J1aH1pgXF1UrDpinSESdzILC8rcMI4SS++fYC+UMKS3pGXLzkl/1EUn6je3GMhLRY5LRHhiYpeROMtsWqjV65PAd6ghcXA8ZMB99XSlcJGW2yqHrAF0ThYqrR5YEMADbz2/Xt1tFQbhuWF098LV2P18PqkbdP9EJf3RlbR6TY6U0kxJ6MotQh5mgbiXEjL3cUTeF+xC195gv9yV8zH29Hs5RzrOHC+GzqaEpsl53
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2026 08:38:26.9656
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2b18d6e2-3147-455a-b145-08de7380148d
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.194];Helo=[lewvzet200.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ5PEPF000001CE.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR10MB7842
 
-On Tue, 2026-02-24 at 16:21 +0800, Shawn Lin wrote:
-> =E5=9C=A8 2026/02/24 =E6=98=9F=E6=9C=9F=E4=BA=8C 15:47, Philipp Stanner =
-=E5=86=99=E9=81=93:
-> > On Tue, 2026-02-24 at 10:08 +0800, Shawn Lin wrote:
-> > > =E5=9C=A8 2026/02/24 =E6=98=9F=E6=9C=9F=E4=BA=8C 8:04, Jakub Kicinski=
- =E5=86=99=E9=81=93:
-> > > > On Mon, 23 Feb 2026 23:29:40 +0800 Shawn Lin wrote:
-> > > > > pcim_alloc_irq_vectors() and pcim_alloc_irq_vectors_affinity() ar=
-e created for
-> > > > > pci device drivers which rely on the devres machinery to help cle=
-anup the IRQ
-> > > > > vectors.
-> > > >=20
-> > > > If you can please add this API with just a few users, and then conv=
-ert
-> > > > remaining users via the subsystem trees in the next cycle.
-> > > > There's no need to risk wasting maintainer time on conflicts with
-> > > > conversions like this.
-> > >=20
-> > > Thanks for the suggestion, Jakub. I have little experience with
-> > > cross-subsystem cleanups like this, so your suggestion is very helpfu=
-l.
-> >=20
-> >=20
-> > When I removed the hybrid nature of pci_request_region() et al., I
-> > concluded that there were so few users that doing them all in one run
-> > was sufficient.
-> >=20
-> > For larger reworks, like removing pcim_iomap_table(), a slower step-by-
-> > step strategy is necessary for the reasons that Jakub details.
-> >=20
-> > It is then smart to omit an easy to port subsystem / driver for the
-> > ultimate patch series where one then removes the hybrid behavior from
-> > PCI itself, after porting the last driver.
-> >=20
-> > In general,=C2=A0 as Jakub details, those step-by-step cleanups are a b=
-it
-> > safer, since you can proof valid behavior early on and in case of an
-> > explosion they are very easy to revert.
-> >=20
->=20
-> Thank you, Philipp. I wish I had attended your talk at FOSDEM 2025 on
-> removing pcim_iomap_table earlier. This first version was perhaps a bit=
-=20
-> too aggressive.
+This series addresses multi-function endpoint configuration issues in
+the DWC PCIe controller driver. The changes enable proper operations
+for physical functions and enhance the multi-function endpoint support.
 
-No worries at all, it's very cool that you pick this work up!
+This patch series can be seen as an extension of the patch series:
+https://lore.kernel.org/all/20260130115516.515082-1-a-garg7@ti.com/
 
->  For v2, I think the plan should start with addressing
-> the switchtec and vmd drivers, since both of those, along with the new=
-=20
-> API additions, can be handled entirely within the PCI subsystem scope.
+Changes from v2 to v3:
+- Wrap the patches to fit within 80 columns
 
-Sounds reasonable to me.
+Changes from v1 to v2:
+- Fixed the minor nits in the patches
 
-Regards
-Philipp
+v2: https://lore.kernel.org/all/20260219064511.695086-1-a-garg7@ti.com/
+v1: https://lore.kernel.org/all/20260202072758.101845-1-a-garg7@ti.com/
+
+Aksh Garg (2):
+  PCI: dwc: ep: Fix MSI-X configuration to write to correct physical
+    function
+  PCI: dwc: ep: Mirror the max link width and speed fields to all
+    functions
+
+ .../pci/controller/dwc/pcie-designware-ep.c   | 31 +++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
+
+-- 
+2.34.1
+
