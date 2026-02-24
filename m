@@ -1,172 +1,171 @@
-Received: from mail-m49209.qiye.163.com (mail-m49209.qiye.163.com [45.254.49.209])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16813286A9;
-	Tue, 24 Feb 2026 08:49:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.209
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 062852BD58A;
+	Tue, 24 Feb 2026 09:12:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771922995; cv=none; b=VzXOVc1o/Z0CZ4TpCV1S9QpvLpZK8+qMyuzdhbPlJwSSlyYl1Dybc5Qc2NG+WjJcgDyiwYZvhnfT2eUEH/SnW4I/JLD1ARxG+3JW7FV0oThLyZWrBADfwLY2HfJ5NTLmIuDJEC8DKiWbGYM3v1LcIrKAE3qyhCIqmuSvNu8uUKk=
+	t=1771924358; cv=none; b=Da1BbYqToPVGJ6oYRmQU3VJeycTgPPT9MrRU9Hn/m0Sk2kkzFhrK4uvKYr6Q+UsEMjvVHuYvK+KGgxSWqGgBA653iOFBF/uLy4X8XNbGlKL2Wv1Q35jHi//DVENfQiwAduYeFjA2kq1PhJral3Bh/b2ouDfRqnI21aqjYHlvY4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771922995; c=relaxed/simple;
-	bh=uU7ldyVWgJ3IjjXxuYKTDQ44EeBd9vmenmQj+XJ45rU=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=jqtKu8my8M+iEFFuoKTIh+gTUfpP6pFL7MqeCiL7smhJWze/H1aNZJvQYFuEh799G4bEWQ3ELo7bCkOM7rcSZKH1/S5meoFnm2ohJpaI8Qc1EEsvCqlY789EP7QWPC8VGmhcwshY+H14xGBpkjU42QvNtOh9YjU9skazxiKAEzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=K8bae7uI; arc=none smtp.client-ip=45.254.49.209
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1771924358; c=relaxed/simple;
+	bh=sllJU41EvNnfq6cfH0Cm3WpH9/CrTwdLF2yCyQc6C20=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=E/gAMpgHSZ1SRP7q4jSbxH6lKlJB0RkbVOgj2Ou31ACwVTXselEnNkatNS1c7f0mLJigu1lzQrCqdYVii9Ul292BC+YJHzV1Oj1PyQBwaa3v/0QKk9qQDF9FNohkXy3pDeIhilETSKGPTrbqLFXvohvzHrDQDQabwYX7h+iyuwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AbGlTJ0Y; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="K8bae7uI"
-Received: from [172.16.12.14] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 34c8ca9e5;
-	Tue, 24 Feb 2026 16:49:48 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
- Masami Hiramatsu <mhiramat@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH v4 0/3] PCI Controller event and LTSSM tracepoint support
-To: Steven Rostedt <rostedt@goodmis.org>
-References: <1769047340-113287-1-git-send-email-shawn.lin@rock-chips.com>
- <9e06e69c-d10a-1f21-cbf7-204319549612@rock-chips.com>
- <u3es7h4mgzdqfhvpl52s3x4vcisrpazcm4qb6x7lu4srmagxpn@hca2begqypeu>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <5549b86e-36f7-e5b2-e16c-f70e328ca6c2@rock-chips.com>
-Date: Tue, 24 Feb 2026 16:49:47 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AbGlTJ0Y"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771924357; x=1803460357;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=sllJU41EvNnfq6cfH0Cm3WpH9/CrTwdLF2yCyQc6C20=;
+  b=AbGlTJ0YkokTsxQHaqiXwXrINmz91wb1ZioaSAF+CsR+O56xETJkqY5S
+   8RdcSWqpL/MIaJAwKcVfwiX6frQgP6fjGdYpiL3PSETbSWDksFYjApTdQ
+   IuaSY1vp1e2RlL10rItHevyWNK7rf8mNnjALd+jy211Jc9xdEreTZ32yv
+   FBijpVAAGR3yg5b+TV7b7gPC7qUjtwVehNpqTc58PQPMfj5gqhXtEg+xK
+   gZoH6SwtfJeO86zDyORjTJxLMsaeBBs40t/GNKo6JHFyTpuZPbpbrYpnc
+   Bl9a+Ogeax8CUXgHTMri8ECjaQ3Nc7KDR/Il3Fju0vuAsXM14vxaySz47
+   A==;
+X-CSE-ConnectionGUID: 1nHSjMqyQwuBAY0+m+QfCQ==
+X-CSE-MsgGUID: sq0LcavZRq+p34ZMSVo+Rw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11710"; a="73039913"
+X-IronPort-AV: E=Sophos;i="6.21,308,1763452800"; 
+   d="scan'208";a="73039913"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2026 01:12:35 -0800
+X-CSE-ConnectionGUID: v4GiDQV6T1ycBQRHOBv6QA==
+X-CSE-MsgGUID: yR3Uba70Qr6uzGgc8QUkgw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,308,1763452800"; 
+   d="scan'208";a="219937945"
+Received: from egrumbac-mobl6.ger.corp.intel.com (HELO localhost) ([10.245.244.146])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2026 01:12:17 -0800
+Date: Tue, 24 Feb 2026 11:12:15 +0200
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: phasta@kernel.org
+Cc: Simon Richter <Simon.Richter@hogyros.de>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Vaibhaav Ram T . L" <vaibhaavram.tl@microchip.com>,
+	Kumaravel Thiagarajan <kumaravel.thiagarajan@microchip.com>,
+	Even Xu <even.xu@intel.com>, Xinpeng Sun <xinpeng.sun@intel.com>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Longfang Liu <liulongfang@huawei.com>,
+	Vinod Koul <vkoul@kernel.org>, Lee Jones <lee@kernel.org>,
+	Jijie Shao <shaojijie@huawei.com>,
+	Jian Shen <shenjian15@huawei.com>,
+	Sunil Goutham <sgoutham@marvell.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	"David S . Miller" <davem@davemloft.net>,
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
+	Oded Gabbay <ogabbay@kernel.org>,
+	Maciej Falkowski <maciej.falkowski@linux.intel.com>,
+	Karol Wachowski <karol.wachowski@linux.intel.com>,
+	Min Ma <mamin506@gmail.com>, Lizhi Hou <lizhi.hou@amd.com>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <westeri@kernel.org>,
+	Tomasz Jeznach <tjeznach@rivosinc.com>,
+	Will Deacon <will@kernel.org>,
+	Xinliang Liu <xinliang.liu@linaro.org>,
+	Tian Tao <tiantao6@hisilicon.com>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Srujana Challa <schalla@marvell.com>,
+	Bharat Bhushan <bbhushan2@marvell.com>,
+	Antoine Tenart <atenart@kernel.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Raag Jadav <raag.jadav@intel.com>, Hans de Goede <hansg@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Andy Shevchenko <andy@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andi Shyti <andi.shyti@kernel.org>,
+	Robert Richter <rric@kernel.org>, Mark Brown <broonie@kernel.org>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Bingbu Cao <bingbu.cao@intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	linux-input@vger.kernel.org, linux-i3c@lists.infradead.org,
+	dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+	nic_swsd@realtek.com, linux-arm-msm@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-usb@vger.kernel.org,
+	iommu@lists.linux.dev, linux-riscv@lists.infradead.org,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	linux-cxl@vger.kernel.org, linux-crypto@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-serial@vger.kernel.org,
+	mhi@lists.linux.dev, Jan Dabros <jsd@semihalf.com>,
+	linux-i2c@vger.kernel.org, Daniel Mack <daniel@zonque.org>,
+	Haojian Zhuang <haojian.zhuang@gmail.com>,
+	linux-spi@vger.kernel.org,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	linux-media@vger.kernel.org, linux-mmc@vger.kernel.org
+Subject: Re: [PATCH 0/37] PCI/MSI: Enforce explicit IRQ vector management by
+ removing devres auto-free
+Message-ID: <aZ1rb8zoqmQmakDP@smile.fi.intel.com>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+ <6223f3cb-693f-42e7-9147-30f659f08563@hogyros.de>
+ <7ca512d133f7a3bcfe00e9b0b2af5fe5f147ad77.camel@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <u3es7h4mgzdqfhvpl52s3x4vcisrpazcm4qb6x7lu4srmagxpn@hca2begqypeu>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9c8ed71d8609cckunm615550f2a3d87c
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQxlIH1ZIGR1OSUtMSB1LSxlWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=K8bae7uIKn3Hztc6iPpwFtwdRlGkBsbKJTFptSlPv4liR8OW0OZH3rWthDv9UXzbJvF+a+fMe1JysyBcQwGcBsZA0xW+brsXCOsFqwo9R0uTblifkeQAcRBeOWwjVGKFKZx7kPL7GLmFRpBWB43xnpuvCndkEuk9Z06xyCJCbl0=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=1ZtDx6p9eQciNBSS2yVaAQSBq8mXFIkhNhuoivr3Ggo=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7ca512d133f7a3bcfe00e9b0b2af5fe5f147ad77.camel@mailbox.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Hi Steven,
+On Tue, Feb 24, 2026 at 08:39:43AM +0100, Philipp Stanner wrote:
+> On Tue, 2026-02-24 at 13:14 +0900, Simon Richter wrote:
+> > On 2/24/26 12:29 AM, Shawn Lin wrote:
 
-在 2026/02/11 星期三 23:40, Manivannan Sadhasivam 写道:
-> On Wed, Feb 11, 2026 at 09:13:50PM +0800, Shawn Lin wrote:
->> 在 2026/01/22 星期四 10:02, Shawn Lin 写道:
->>> This patch-set adds new pci controller event and LTSSM tracepoint used by host drivers
->>> which provide LTSSM trace functionality. The first user is pcie-dw-rockchip with a 256
->>> Bytes FIFO for recording LTSSM transition.
->>>
->>
->> Gentle ping...
->>
+> > > When such a driver also uses `pcim_enable_device()`, the devres framework may
+> > > attempt to free the IRQ vectors a second time upon device release, leading to
+> > > a double-free. Analysis of the tree shows this hazardous pattern exists widely,
+> > > while 35 other drivers correctly rely solely on the implicit cleanup.
+> > 
+> > Would it make sense to have a function pcim_free_irq_vectors(), to allow 
+> > explicit freeing even if the device is otherwise managed, analogous to 
+> > pcim_iounmap()?
 > 
-> Merge window is open now, so we can't accept any patches until -rc1. And I'm
-> also waiting for an Ack from Steven for the tracing part.
+> We used to add those. In part because it is easier to port old users.
 > 
-
-I'd appreciate it if you could share any concerns you might have about 
-v4. :)
-
-Thanks.
-
-> - Mani
+> Nowadays I tend to think that those APIs were more on the too-complex
+> than too-simple side for a long time. As an expert or as the API
+> designer you wouldn't expect it, but there are actually far too many
+> users who came to believe they always have to use pcim_iounmap() and
+> counter parts.
 > 
->>> Testing
->>> =========
->>>
->>> This series was tested on RK3588/RK3588s EVB1 with NVMe SSD connected to PCIe3 and PCIe2
->>> root ports.
->>>
->>> echo 1 > /sys/kernel/debug/tracing/events/pci_controller/pcie_ltssm_state_transition/enable
->>> cat /sys/kernel/debug/tracing/trace_pipe
->>>
->>>    # tracer: nop
->>>    #
->>>    # entries-in-buffer/entries-written: 64/64   #P:8
->>>    #
->>>    #                                _-----=> irqs-off/BH-disabled
->>>    #                               / _----=> need-resched
->>>    #                              | / _---=> hardirq/softirq
->>>    #                              || / _--=> preempt-depth
->>>    #                              ||| / _-=> migrate-disable
->>>    #                              |||| /     delay
->>>    #           TASK-PID     CPU#  |||||  TIMESTAMP  FUNCTION
->>>    #              | |         |   |||||     |         |
->>>         kworker/0:0-9       [000] .....     5.600194: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600198: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_WAIT rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600199: pcie_ltssm_state_transition: dev: a40000000.pcie state: DETECT_ACT rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600201: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_ACTIVE rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600202: pcie_ltssm_state_transition: dev: a40000000.pcie state: POLL_CONFIG rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600204: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_START rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600206: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LINKWD_ACEPT rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600207: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_WAI rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600208: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_LANENUM_ACEPT rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600210: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_COMPLETE rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600212: pcie_ltssm_state_transition: dev: a40000000.pcie state: CFG_IDLE rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600213: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 2.5 GT/s
->>>         kworker/0:0-9       [000] .....     5.600214: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600216: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600217: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_SPEED rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600218: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600220: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ1 rate: Unknown
->>>         kworker/0:0-9       [000] .....     5.600221: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ2 rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600222: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_EQ3 rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600224: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600225: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600226: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600227: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600228: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600229: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600231: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600232: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600233: pcie_ltssm_state_transition: dev: a40000000.pcie state: L123_SEND_EIDLE rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600234: pcie_ltssm_state_transition: dev: a40000000.pcie state: L1_IDLE rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600236: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_LOCK rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600237: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_RCVRCFG rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600238: pcie_ltssm_state_transition: dev: a40000000.pcie state: RCVRY_IDLE rate: 8.0 GT/s
->>>         kworker/0:0-9       [000] .....     5.600239: pcie_ltssm_state_transition: dev: a40000000.pcie state: L0 rate: 8.0 GT/s
->>>
->>>
->>> Changes in v4:
->>> - use TRACE_EVENT_FN to notify when to start and stop the tracepoint,
->>>     and export pci_ltssm_tp_enabled() for host drivers to use
->>> - skip trace if pci_ltssm_tp_enabled() is false.(Steven)
->>> - wrap into 80 columns(Bjorn)
->>>
->>> Changes in v3:
->>> - add TRACE_DEFINE_ENUM for all enums(Steven Rostedt)
->>> - Add toctree entry in Documentation/trace/index.rst(Bagas Sanjaya)
->>> - fix mismatch section underline length(Bagas Sanjaya)
->>> - Make example snippets in code block(Bagas Sanjaya)
->>> - warp context into 80 columns and fix the file name(Bjorn)
->>> - reorder variables(Mani)
->>> - rename loop to i; rename en to enable(Mani)
->>> - use FIELD_GET(Mani)
->>> - add comment about how the FIFO works(Mani)
->>>
->>> Changes in v2:
->>> - use tracepoint
->>>
->>> Shawn Lin (3):
->>>     PCI: trace: Add PCI controller LTSSM transition tracepoint
->>>     Documentation: tracing: Add PCI controller event documentation
->>>     PCI: dw-rockchip: Add pcie_ltssm_state_transition trace support
->>>
->>>    Documentation/trace/events-pci-controller.rst |  42 ++++++++++
->>>    Documentation/trace/index.rst                 |   1 +
->>>    drivers/pci/controller/dwc/pcie-dw-rockchip.c | 111 ++++++++++++++++++++++++++
->>>    drivers/pci/trace.c                           |  20 +++++
->>>    include/linux/pci.h                           |   4 +
->>>    include/trace/events/pci_controller.h         |  57 +++++++++++++
->>>    6 files changed, 235 insertions(+)
->>>    create mode 100644 Documentation/trace/events-pci-controller.rst
->>>    create mode 100644 include/trace/events/pci_controller.h
->>>
-> 
+> If I could design it from scratch I would probably try to tell users to
+> use the unmanaged versions instead of revoking the devres consequence.
+
++many.
+
+> Devres is actually about your consequence always happening whenever the
+> driver unloads, for whatever reason.
+
+I believe you meant "unbinds". The device<-->driver link can be broken
+without unloading the driver.
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
