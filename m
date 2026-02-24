@@ -1,330 +1,224 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBB643ACA5B
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 19:19:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771960783; cv=none; b=uJCFm0zYtaKoN0G7xreSZ8uqVkMLCmPphtrPyI+CWuBqwEC4pfDWQR+EhXPHmNj+zPE4BH1hn7yCQjAoD+iwcvT6E13Ml/snRLmZLFhb+g+epP/KRACJVV07v3edD+1Bcti19IA0UGkXNr+T0XSSW0IvWGeHJPnQo4MeJpFwBik=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771960783; c=relaxed/simple;
-	bh=vOxQW4tIZDupBiA9aw4OS9PPKVcBbPJeLo4Nl1HE1fs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tMNw+hnbODli5fyscAvvNXsq44zve/H9k7TXLHjHWDDv2aYNUMEAiAEf18habRijpdgemajkpd9tByj6c4JjHWrE0TdqsPFcEKpl2atim3gp6YJosNhIBwgmDtRzpoegoi6tVZS/u/5QAAzFIdnM9hhHhABdurZxTImiqi/PTX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=2knlyTTs; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE803A782E;
+	Tue, 24 Feb 2026 19:21:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771960884; cv=fail; b=J8j+quYffEpLmtyDzLAjAqClTlJ3JKSxTQ1xLs+RgMQ51DOXfIGYIbm7H2ulrOWtDuepK6V6nZBHEnnyWCIh1gcm0gCeACdUDlz9llw2IOoGe0onlbN+26jrBRiwgovyQ/WTCBVw911KmqG1+ZxW9aiHKUkjiU7tbtX5vqWgJkM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771960884; c=relaxed/simple;
+	bh=SMn5/4PD41DmQyzAbGZSXDiRF0IveCs/sioQQoEsq9s=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=Txjqpgc1O7UH1jJGthwU540Iyek3+zGmy7YBpKFKRwHQJ4Uw1Kzz7TyGCiQD1S1S2Hbc1Zn+dgt3sERrwkveUqe9YP99bskfZawx9shHgjJIzR27fnRoWNQNKdwCNpHH6iY5xMD9q/IMQY386YGt/WpNQj3JVvR6X+0+uIkTUFU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=g0PomlG+; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=m/9aqNNV; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="2knlyTTs"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2ada9e4ea32so10305ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 11:19:41 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="g0PomlG+";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="m/9aqNNV"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61OIu0Wq359748;
+	Tue, 24 Feb 2026 19:20:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=IgsceM7KoVsQTOcEoy
+	KK1bM3/3qbvrJtkeBWprSgzgY=; b=g0PomlG+7WGXomb4LeEEkT8ZLFyPvlUufZ
+	nULEAVe64Pmfe4hlF1X+/O2yYy0paDr3ujMaaJE5KeXCiE0jBFJI4P4qoe1tg/Jm
+	e+noji21Sg+O+fyzY2YtA4A1rGfBAHZOS0iTiYeyI7eBnAK2m3Ru6a9aDPU3DTMo
+	mbub/jQXc1n3GeG9zbpmNUdQY17VBX/XQm6YF1wpg/nlkwvzkB5M0Qla+/IBvpk5
+	03GaZKvXt8fwEEi9s4SzkOu1fSTgURoKLeLLexC6EOM7mz3eiNAzmmlCy45KugGx
+	oqfsdyXMo+XqoG55Wn4ndsTdimmosKT9BFaCWNzuM5P2HbmtftUg==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cf3m7vw94-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 24 Feb 2026 19:20:57 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61OJ0IYL012544;
+	Tue, 24 Feb 2026 19:20:56 GMT
+Received: from ch4pr04cu002.outbound.protection.outlook.com (mail-northcentralusazon11013014.outbound.protection.outlook.com [40.107.201.14])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4cf35ec6d5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 24 Feb 2026 19:20:56 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=COfwCAKromz9rVOiiOuNKjjZnvCORSTMIggEk1KTpwFt4IcQNPKtRCJKV+reP3f8z7DmzIwbhiEIwn41YyVE2I5Nosvm4Yh6qNa5P0+5jPYGiqq9QEZKi1iIBe+Iu7zErNAbBn4LGAqGem28kKSLmFcoKZvDgiVBIY2cceSKj/BlzJdcsmDzXMfV4EbtdeDYn94fmj5dOrW1NCLKynpLchJjbfRJ7MhKOkMfpF8WM4abW5vEWDefspUUvdBuG1+CrMc9nQkuFgvylUVmnJSaaIdtf/+JXRIIx3Fww7+fxBWCDI3cq89YSigHngN2QqC5Rqo7hphw+Tz2wo+PP/9XaA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=IgsceM7KoVsQTOcEoyKK1bM3/3qbvrJtkeBWprSgzgY=;
+ b=FbihNHgxh41Rag6s0tnLOsNHLYG9jYO62Q5kb2wHkfs+/jM7bu1Y1TLMTbfF9j5XZZbZCWL8ekTIeJC/2FLYR9qCV9fLGgN5h03nbtGkz/Xbj/P+hEq7Ql0pBfili5CJjVMOdXORaIqFPkCdgq0qGswCwZlQsUtg/Ajje0wBvufMbRfA08bqIACwPpEgkhvxU7L36fmrvZXHM4BML5KTAcQ+EX70SUqspdBAoMG0jQZjzx7S96D35pYatQU1HNcFuZDZEsY5uSvuzUXhtBhduB970ZAaiT/SbNezhHb03Nchdb96RpcfPL6wDYBFgceiGLlw2CS438VeLHtcm5CT1A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771960781; x=1772565581; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gr8G2sJEnb4CcsPQ1rrAHuOyQl/uEocyHUTrMBlTuWs=;
-        b=2knlyTTsvu2arP7M0ydIZT2YU23Ry9AcZ3C7VvMMQPZ6zbn9QTYj02FgPAmCyXV+0x
-         jt/Wdd+6wQQrd7V+iTZwVu5VPj8nqxwiEx2Oa4hdhhhRa7nabopQmuwsX1/jIokX0oVi
-         nDOee/RnAlwK8R+B8m0WXcjhIuYhlY3EVsSi42MPTjt5rGbnm1iUk8l3uFLxSuUisXgx
-         wOO4tD2yQr9LyhjIkQyGi1f4s+INDLO+RYEw63/EOJMd5SQlE9CFYTLIDDMW6Ac36513
-         307IKl8xNptgcDjBnSvrNOEWTw12I3255UpEheps0gZjxENuWIZy2/CgmjVnK2I60vck
-         by4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771960781; x=1772565581;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gr8G2sJEnb4CcsPQ1rrAHuOyQl/uEocyHUTrMBlTuWs=;
-        b=fJ8NiqsIaEHbwQ84JtHrCAb810eqSICHuapl63YhQjJDTEg6DWk2Vcs9Vh6vza8qU8
-         0ApyjiEs6RVdlz1ah5c7sn6OThMirJSPTT+k+2eWbjMnbAyWv9a9/rtiT5J1o3oM3Vrh
-         J7DFaqLAev7H6WklKVyyY0/i7/RAj8BQ9mfRxc2jn9bpe0+kd/Ir2pJPL/3iKqpaLG6o
-         cXBGz9yJh/HCfAutQSlfkNq9Yw8SJYMjzG593aNvGf2q+quglBripIV8Tr0bdIGFbmOb
-         CksqyFMU8OstAoUskzqRxruiaefX+Gaek+JtLnj9KmRnFeEvW3cmehxCcVdVeqlcwKzA
-         qFww==
-X-Forwarded-Encrypted: i=1; AJvYcCX824pojkCoe2IPp97lbsf+fhflSZ+Jgne3HykMSjyyKcmlurDGSNhVbU6rElFCtWTMfqlW3+bwLcU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzpeiMCeR5hN7j1KbCklnrJAWJBjDiBLW+O/7/DWGKjPDKbQbjx
-	xM5BY4a6iYELHUOsJgjJFbZxip2NaOZF7sp4fKv0NKZXYVwBuqdBJVbd2grwmQsqvQ==
-X-Gm-Gg: ATEYQzxqQ7t7Ifqq0WUS+S95pbvIJPHSuYm9qzLrJ3wllaS6lf5AnVNOKs52w/leBzC
-	owS1vfO1MmkR+La+FBK/C5H+AxVc2XTGxFuYOjohNO/TLAmwU8X9duijzuRUNs7C04xU1WvxDcN
-	ZkWfDUe9yfgKgCTWVDlKcq6d4e115mFzhcIvhmbFgI6qUdn5PUlCiNDKzwkgn4UCKQBZFYC4mx3
-	xONjpm+vSTQXEufroyavdDXsFz8x7Sqj6/QZKx1Pn0FRjB9Ap77Dc3a/WfpeUOis5nZBbGKmLeO
-	CGH2IQ627u47X9TlcGqxBH+aGbBWKHD0/j0Q9MprP1hbt0m0E+1yYgyFIGrE4DHulm1uiPwQ+MW
-	1yt3qI29hFcu7nS251c1yCSlz+BbckDgamORX2Xhq5tMm8KM0+bjPm7lDAisGK14RRtf+1rhoZM
-	Q8CmSAERbJ8Eu77xm+xrWFNWJkKtOcC/4wc9Vniy4JAcdPDnEIAguifDkF5c2w
-X-Received: by 2002:a17:902:f64a:b0:2aa:d604:62f3 with SMTP id d9443c01a7336-2adca6c8c34mr298805ad.10.1771960780478;
-        Tue, 24 Feb 2026 11:19:40 -0800 (PST)
-Received: from google.com (222.245.187.35.bc.googleusercontent.com. [35.187.245.222])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-826dd64367bsm11607309b3a.4.2026.02.24.11.19.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Feb 2026 11:19:39 -0800 (PST)
-Date: Tue, 24 Feb 2026 19:19:30 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: Alex Williamson <alex@shazbot.org>,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
-	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
-	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
-	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-mm@kvack.org, linux-pci@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
-	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Raghavendra Rao Ananta <rananta@google.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	Tomita Moeko <tomitamoeko@gmail.com>,
-	Vipin Sharma <vipinsh@google.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
-	Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v2 06/22] vfio/pci: Retrieve preserved device files after
- Live Update
-Message-ID: <aZ35wv5CKUtVoYII@google.com>
-References: <20260129212510.967611-1-dmatlack@google.com>
- <20260129212510.967611-7-dmatlack@google.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IgsceM7KoVsQTOcEoyKK1bM3/3qbvrJtkeBWprSgzgY=;
+ b=m/9aqNNVHq0LsSr4xaRYCHUEeDH3J2420lELYPe2Oqzz/Ne8E4Te1krdSskmrj07TsQnl1/6SATKaVJo+tNw2rT5tlDWpNSD+cOmbKAajlfYx77Nl3OwEVYbkMov5shkNjmLVcinHHbgx35HDpl1qP1Vm9OF+oMThsLCOguNoPk=
+Received: from DS7PR10MB5344.namprd10.prod.outlook.com (2603:10b6:5:3ab::6) by
+ CH3PR10MB6836.namprd10.prod.outlook.com (2603:10b6:610:14f::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.22; Tue, 24 Feb
+ 2026 19:20:50 +0000
+Received: from DS7PR10MB5344.namprd10.prod.outlook.com
+ ([fe80::21c0:ebf5:641:3dee]) by DS7PR10MB5344.namprd10.prod.outlook.com
+ ([fe80::21c0:ebf5:641:3dee%6]) with mapi id 15.20.9632.017; Tue, 24 Feb 2026
+ 19:20:50 +0000
+To: Juergen Gross <jgross@suse.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Stefano
+ Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko
+ <oleksandr_tyshchenko@epam.com>,
+        Andrew Lunn <andrew+netdev@lunn.ch>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet
+ <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni
+ <pabeni@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        xen-devel@lists.xenproject.org,
+        Marek
+ =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
+Subject: Re: [PATCH v2 1/2] xenbus: add xenbus_device parameter to
+ xenbus_read_driver_state()
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20260218095205.453657-2-jgross@suse.com> (Juergen Gross's
+	message of "Wed, 18 Feb 2026 10:52:04 +0100")
+Organization: Oracle Corporation
+Message-ID: <yq1y0ki6j9d.fsf@ca-mkp.ca.oracle.com>
+References: <20260218095205.453657-1-jgross@suse.com>
+	<20260218095205.453657-2-jgross@suse.com>
+Date: Tue, 24 Feb 2026 14:20:48 -0500
+Content-Type: text/plain
+X-ClientProxiedBy: YQZPR01CA0085.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c01:84::13) To DS7PR10MB5344.namprd10.prod.outlook.com
+ (2603:10b6:5:3ab::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260129212510.967611-7-dmatlack@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS7PR10MB5344:EE_|CH3PR10MB6836:EE_
+X-MS-Office365-Filtering-Correlation-Id: 365bcef8-b2d8-4724-0cf9-08de73d9d1de
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?nAUMVaBUf8gSW9KHc6Jzt8XyiBFmmMKYPbTGZ8UVMA9nwOt6/WQxOimYuCPa?=
+ =?us-ascii?Q?50DmTa0XRus16nmY/YB6t6klbzyiFjH/rHywbEj3pKLy9WQmK1142YucYcfp?=
+ =?us-ascii?Q?XnoGeMO/ovl89mHMPUjqEsIC8/Weja/bT9Pf+096qixFoCsnY+2fGCDbAjGB?=
+ =?us-ascii?Q?AnxhfXgp+BnRNKtNw7yf11cvw8Qf9AvwTNslz7e4ksppe7/9792ikbSh0eHR?=
+ =?us-ascii?Q?iVuPFhQ0ul/Gy4jRlE7wMpJTPQ/3AWxKTdDQ0sn8dUZzv/QfSDh3V4yg7E24?=
+ =?us-ascii?Q?e8LHb0aTmpXxCOt5cqrmxmsUyQQntULpQ6ZLjfGijOauoPEj6QaTWi6odB8T?=
+ =?us-ascii?Q?CYtJ9Ommr6qVePM0e+t0kyjVEMSE///KTQXB8us0WZfqPjBeuD9b1/1BwNh5?=
+ =?us-ascii?Q?MGtLDYKSypT7StAwhVPjsf+XW99qcWTDt1zqygVzyWE2Qr6b1ronfj0yGhr2?=
+ =?us-ascii?Q?i8n2wEIPi2rFuIUZLL99ZfqaWm7/cpRKkD8TnuKsiuKo+MfEaycLJWyHygjE?=
+ =?us-ascii?Q?070W1lRHsGI0VoCcpAS78wjMFAqZls7RRfmTHBx3Bh2l0KYSCfZiNtgOcJBv?=
+ =?us-ascii?Q?h8e/Kd9RfKQdH1qekJ6v+gqFKwTyJbEHh7Sl1wvVG5lidjqh61xh7JXGnmY0?=
+ =?us-ascii?Q?iSI+B9Mm/GGMB6zH9lQ7VfkhN9qisa9HTcoktGbjOHsQiBFWO3F5qvKegNQT?=
+ =?us-ascii?Q?0SPEnYIiRtn4SHvJcdeAhRAZA3XsYwhBbKg01S27q+hOeqMDAI4NCfA1VBNo?=
+ =?us-ascii?Q?8LpX8jR4j4fDpLEJ9a4hH+bOO5kZ5owcyHJ0uZlOQL7kUau4KLQG5SFMCo22?=
+ =?us-ascii?Q?oD3NTeMa3vBqICc3ySU7lOJ0U2jgVM7pjB67cG45GnhjCC1+psIQB/4zDkqc?=
+ =?us-ascii?Q?5pKvZPMIet+fAES3HpMdRZ7GB8BO8Nbzmde4vAWeBmkvcSpTHpeXNtxIAeNn?=
+ =?us-ascii?Q?xey6e3qsBrCCJwhJaU0VSTXXWSFrkbkiNmy2Y+FDVBXx+YqYqD/2f9iR/SIA?=
+ =?us-ascii?Q?bvIG424J6fuzgwI2oWyxNU3Q//zPm5/b1Vf+KsEtNon4lT20Ds1E/aFS+Npg?=
+ =?us-ascii?Q?EL6TCaebaWkZGBXC0+urrrG4OvX+3gnIJAPwOQTnLHNjSGaW/CaMuDWkfgkq?=
+ =?us-ascii?Q?cWTqTY9opVPFL2bEqlY7Wvg+F1aFrYLQodU+jVY9Un2+8wWfrIscl1LWTNxC?=
+ =?us-ascii?Q?X3WGCsTCvg0rFtFLmO1W8PoUHo5qwWAHefmAOTxoqmD9rk1ml+U10k7JE4y+?=
+ =?us-ascii?Q?BPFZRfmCVlKc0Kfb2Na7ww+hjVCXYIbzc88sn0mPkA2eFEgsXhGTVdYgSyrY?=
+ =?us-ascii?Q?Zt9a6jN+Gn65TNqwlSRWd1txC+tRmrRN2e91WP/0LOrIim4XC5NW96h+nH6t?=
+ =?us-ascii?Q?3Svy8ynFfdFZBehPpe/Nj+jbCm8hIdILTRD0ZgWdN2sJsKKQvYgNfqQu2vNo?=
+ =?us-ascii?Q?NPyDfcbC2Nn/f8KulQv8LzB69G6/03sjfaElibUSH+KsHmGhlFdp+r7oQNHG?=
+ =?us-ascii?Q?gj0Yk8s2QK2jQTyhm+W/wogzc/SfEgnw9qN+GT063KeZNgc18Dj4NRcNxYYB?=
+ =?us-ascii?Q?Lj0bjG7ydC6fP+TmF3c=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR10MB5344.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Fzaj6HHZmlqHKqbno9EMooJTD+sn0fMAV7oqS4PI8m9lM0Kyv2i9n+YF+GyA?=
+ =?us-ascii?Q?NK4IbOmf8BcRbc5WsP3uxveqjNmSRw5dPWJNuU++9umzZpkurt3HWLc0vOuN?=
+ =?us-ascii?Q?5FpqY9Hu+hXU3X1G6eP/GLLsbMDakCsEw4rTj0CczADpyTaDG4MQ+w+f5KWD?=
+ =?us-ascii?Q?Y9GNAGEW+BPvp4slWrFfr+XFR42+mHuWaT9K7nqS/h7mBYsyJYFRzaiJIwtD?=
+ =?us-ascii?Q?t9Cw+2P0OFOA2pdzvIitVg97/LN0wKFD4Op355K2L8Iy/7pjL0vKy25veVnT?=
+ =?us-ascii?Q?gcOBWF5tHMY4IHrNYv3+Ccy7DvihZ9l95JYnvHEndYPNDkROIylutM6EZ0eq?=
+ =?us-ascii?Q?vyANQTeq3D1fME+9nICV3oV9VKWgoPogCxUB/mSWC0/sad8V0qZRiw4NtYB3?=
+ =?us-ascii?Q?nJYIFx9FOWI5NkxqWMzAlDEI45cEwx0WuI/C9ibcxSjNQplcsBfr5s5ofPYN?=
+ =?us-ascii?Q?lVs8nVkt+lJ8ZMJakspRl607UNxjFMB35xiVOnAVPxzuIcKNcCgOT10aomh2?=
+ =?us-ascii?Q?tRL8+B6H+Zr63fum1bxA+g5LLR1c8an8eKcVSRtGro1/ZVoGBHbctRMSaPWc?=
+ =?us-ascii?Q?u7jX7FOaRtnecuUQzyI/hWd4cWArBRDY1cTdnm2YQ1HM6c7C1zQEQGpJ8SPV?=
+ =?us-ascii?Q?UEbTNhq9NCJd38WSfu0l8GRaCcDGmimjxfsGLKi0iFWtilZ16QpEb3XXkpSK?=
+ =?us-ascii?Q?UhsEoljkrjXif68JUvD++bW6yhT6XB3zKBY9dqfgouQ2NQXS8P9tT+KIIu8d?=
+ =?us-ascii?Q?f1fFIoCqD2/cdRv/DEK4eIo7uvAE8MAIe2EhP/92mennMc8osJC/OaO6HE5q?=
+ =?us-ascii?Q?Kfu2iwF7V5B1pNZ1ACGkKRQkQ8PLXbanP1ppTwVdjgwkeiCsAmcjvNorhnCO?=
+ =?us-ascii?Q?zDZVG9BqlB1AoacIQurFxxW+q1t4/c46Ck2x3jyQMIYuzH72uexUfgt1IvIk?=
+ =?us-ascii?Q?wB7y96T+fvgo/el7o3KmYqK2yLx/xAgNBuzO1rC3SoW/Um2MR7jj+RlytNAM?=
+ =?us-ascii?Q?0a2JeeVSH42RGMyYmJlzCystanRgGwbQoCJh95xcOdsHD+81LNupleknf6d/?=
+ =?us-ascii?Q?7ExAA06LKgfQtXX4Vic7A15sxNB1pUNnuvtPgorAUBQE8+pfeJd2nV6I2myd?=
+ =?us-ascii?Q?RxyyWwRIL0CZgeGtJha1N15oVIQ7V4YM+GVboIWTm4I4BYv1jwAgD9/QEo3M?=
+ =?us-ascii?Q?0AUPZel3besQRQRzjUCNqB42ZI3qsuGwQV7Di9gY/HS3J8mbyVFOMcILGxws?=
+ =?us-ascii?Q?MGu3u9aX7nyHSQusUkrJJXOTEzeTez5Bjvk2IWG9VDsosP9/jY0w+OK+qvIv?=
+ =?us-ascii?Q?2PzYERf7iZJt8Toj4E1dQEpJutNf1Sracgmu7yhki9TYPnGCnVeaO29jOEdH?=
+ =?us-ascii?Q?heuYXPSY4rBk0tkv1bhPnaTvwjvgSrM/P2zJezDrC1gT2+/0X/O2Hej1PS9E?=
+ =?us-ascii?Q?afKQcW9J5N4HTR3oleLAPskl/1OurrJUCErIDY4XEnz40ZwDNsEBfYcjhqTg?=
+ =?us-ascii?Q?Z2oS5PFemBFszb5TuIQp0K7GlvJpf5evWkFyIudV/l9+CpKLOXLo8RjZtpNG?=
+ =?us-ascii?Q?JIzEWr3iQ+rm9W2wPCSrZ1k1Ufef9nAP4DbtVIc4CrXKVr7mPqSNx+pyiAvW?=
+ =?us-ascii?Q?DDmwRjVJYC7corJmW2UQT8JRMN7QHLIC2XKflb9Pw4yQ2Iy9Wmet3wXS08qC?=
+ =?us-ascii?Q?nopgsNg12VniZw6lnVtAcFK78ZU6lSozA3AycCM6Jqa/KU2sJ0J+eK+jYVtE?=
+ =?us-ascii?Q?Hx+BfixVJBq0xN3/32y35X07L5RJ2ao=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	TINT7GD7/OXYS7Gukpnu3h2+omXNqGt7Y4AQ9rLRNP37u0jZpglVcAskCMbgRCx7emDWu1uQXpvNF5NZU4CfxB9Gh8G5I4qkxKLuiTYvibn4wO35pnB+BaTS4g29GpwfT4ZNgqeCuJVCH9DefC7DTQrDt02axFcp7yMVW+DTDLm4VHKJaS70Dk7qoaDv5lEnBrzMF7C8/uQU8I3YG1GakNwmi6MqjeoCIRqFW5lxiNWxxw4ICN5nWpu8/gqoPXruLuox/M0OmgqAIU9kNO7gZ1OUWmLOVmYczDCFJJLEMBx/WVS8zpTaJvZsjzCaGbXXbiBl7zK1P7quc3sz60p1qLoymecv4S6eDrZexcKagU/EaeANq18trW3kSROJg/FwD0AOj2wgUcUnmuL4+WOGeaGcGr7iJOdleupteWeoy978noq8h0iCl1n075axXKOk917oXfCExUZjXjPBWUUeR4/sKPGLmQCDNvpi87JjwJIzZioZiqR/ZrVGK5z07W6/5N3gyxRQnQwZsNkLuUCMUZmnME1bmC/2cLTslLbRNhyzSto9+uxiLHncbsoZfJ5IGTNHZMwSB1TXv4hLv7xBJtdOzpdaGAQDlQwBZkkgU2g=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 365bcef8-b2d8-4724-0cf9-08de73d9d1de
+X-MS-Exchange-CrossTenant-AuthSource: DS7PR10MB5344.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2026 19:20:50.0405
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8pIDsUSNBBbEEdbRLMhBHHwtC9QG2oognFI8ksnaPulWs9C1df/Pgqe4/dw2ARbRY9szaObhMsDXEk7lKwF8S5Depq6FvcUmzol0fLmFFw8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR10MB6836
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-24_02,2026-02-23_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ bulkscore=0 spamscore=0 phishscore=0 malwarescore=0 suspectscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2602130000 definitions=main-2602240165
+X-Authority-Analysis: v=2.4 cv=O5U0fR9W c=1 sm=1 tr=0 ts=699dfa19 b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=HzLeVaNsDn8A:10
+ a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
+ a=GgsMoib0sEa3-_RKJdDe:22 a=yPCof4ZbAAAA:8 a=wpu5ODVmw2F8npshYt0A:9
+ a=MTAcVbZMd_8A:10 a=zgiPjhLxNE0A:10 cc=ntf awl=host:13810
+X-Proofpoint-GUID: 361dM82ULZvU17ekq_QYlLqKlC2pJcSZ
+X-Proofpoint-ORIG-GUID: 361dM82ULZvU17ekq_QYlLqKlC2pJcSZ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI0MDE2NSBTYWx0ZWRfX6Eokb0vMHDDz
+ gt+VLswIriZmkrkb0T/V17/FmWl9qjgkkFAK3wk28yI8EtJ+IoAba1Z7qSqPo1YdFgPwHRuCWLR
+ sm1PGdXN0ZfaFQh8xX5aspPKErq0Is11hEH5PiKqe1EoKX+GXtqy2PG6K+JRMkvvxFv4qqaddgb
+ 52bhT29JGsElkoW1UmoLY9I9+NkIdVn/vyFhFf/6jEiHZBpoIi0WU4xG7l2lzRq6u1gSvH9Fur5
+ Dc7ZNNrdCT9BAuU6zHzgV43NESqHBPWizkZEj73n/wOwXTzwA3S8osVR7woWQt8YQcfrqTYhDA0
+ iT59x5wGMtBfk3I6L1fkqXwmQ11d0E2sfVwH5am4z/5vuvoBIgTv75bFKPuHZNdqeRy6I+et8t9
+ ZE6kso9qKchp+zXaE0/Biw44i44Lo7xvKdw8nu0Qw806je4hEC9+Y7O2PJqLa6s9LKAHkrssdEj
+ 5IaogSKD7UlMxCmtjM87oru4d0WzD8tkWL8pfT90=
 
-On Thu, Jan 29, 2026 at 09:24:53PM +0000, David Matlack wrote:
-> From: Vipin Sharma <vipinsh@google.com>
-> 
-> Enable userspace to retrieve preserved VFIO device files from VFIO after
-> a Live Update by implementing the retrieve() and finish() file handler
-> callbacks.
-> 
-> Use an anonymous inode when creating the file, since the retrieved
-> device file is not opened through any particular cdev inode, and the
-> cdev inode does not matter in practice.
-> 
-> For now the retrieved file is functionally equivalent a opening the
-> corresponding VFIO cdev file. Subsequent commits will leverage the
-> preserved state associated with the retrieved file to preserve bits of
-> the device across Live Update.
-> 
-> Signed-off-by: Vipin Sharma <vipinsh@google.com>
-> Co-developed-by: David Matlack <dmatlack@google.com>
-> Signed-off-by: David Matlack <dmatlack@google.com>
-> ---
->  drivers/vfio/device_cdev.c             | 21 ++++++---
->  drivers/vfio/pci/vfio_pci_liveupdate.c | 60 +++++++++++++++++++++++++-
->  drivers/vfio/vfio_main.c               | 13 ++++++
->  include/linux/vfio.h                   | 12 ++++++
->  4 files changed, 98 insertions(+), 8 deletions(-)
-> 
 
-The use of anon_inode_getfile_fmode() is clever! The abstraction is
-clean as well. 
+Juergen,
 
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
+> In order to prepare checking the xenbus device status in
+> xenbus_read_driver_state(), add the pointer to struct xenbus_device
+> as a parameter.
 
-Thanks!
-Praan
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com> # SCSI
 
-> diff --git a/drivers/vfio/device_cdev.c b/drivers/vfio/device_cdev.c
-> index 8ceca24ac136..935f84a35875 100644
-> --- a/drivers/vfio/device_cdev.c
-> +++ b/drivers/vfio/device_cdev.c
-> @@ -16,14 +16,8 @@ void vfio_init_device_cdev(struct vfio_device *device)
->  	device->cdev.owner = THIS_MODULE;
->  }
->  
-> -/*
-> - * device access via the fd opened by this function is blocked until
-> - * .open_device() is called successfully during BIND_IOMMUFD.
-> - */
-> -int vfio_device_fops_cdev_open(struct inode *inode, struct file *filep)
-> +int __vfio_device_fops_cdev_open(struct vfio_device *device, struct file *filep)
->  {
-> -	struct vfio_device *device = container_of(inode->i_cdev,
-> -						  struct vfio_device, cdev);
->  	struct vfio_device_file *df;
->  	int ret;
->  
-> @@ -52,6 +46,19 @@ int vfio_device_fops_cdev_open(struct inode *inode, struct file *filep)
->  	vfio_device_put_registration(device);
->  	return ret;
->  }
-> +EXPORT_SYMBOL_GPL(__vfio_device_fops_cdev_open);
-> +
-> +/*
-> + * device access via the fd opened by this function is blocked until
-> + * .open_device() is called successfully during BIND_IOMMUFD.
-> + */
-> +int vfio_device_fops_cdev_open(struct inode *inode, struct file *filep)
-> +{
-> +	struct vfio_device *device = container_of(inode->i_cdev,
-> +						  struct vfio_device, cdev);
-> +
-> +	return __vfio_device_fops_cdev_open(device, filep);
-> +}
->  
->  static void vfio_df_get_kvm_safe(struct vfio_device_file *df)
->  {
-> diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/vfio_pci_liveupdate.c
-> index f01de98f1b75..7f4117181fd0 100644
-> --- a/drivers/vfio/pci/vfio_pci_liveupdate.c
-> +++ b/drivers/vfio/pci/vfio_pci_liveupdate.c
-> @@ -8,6 +8,8 @@
->  
->  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
->  
-> +#include <linux/anon_inodes.h>
-> +#include <linux/file.h>
->  #include <linux/kexec_handover.h>
->  #include <linux/kho/abi/vfio_pci.h>
->  #include <linux/liveupdate.h>
-> @@ -108,13 +110,68 @@ static int vfio_pci_liveupdate_freeze(struct liveupdate_file_op_args *args)
->  	return ret;
->  }
->  
-> +static int match_device(struct device *dev, const void *arg)
-> +{
-> +	struct vfio_device *device = container_of(dev, struct vfio_device, device);
-> +	const struct vfio_pci_core_device_ser *ser = arg;
-> +	struct pci_dev *pdev;
-> +
-> +	pdev = dev_is_pci(device->dev) ? to_pci_dev(device->dev) : NULL;
-> +	if (!pdev)
-> +		return false;
-> +
-> +	return ser->bdf == pci_dev_id(pdev) && ser->domain == pci_domain_nr(pdev->bus);
-> +}
-> +
->  static int vfio_pci_liveupdate_retrieve(struct liveupdate_file_op_args *args)
->  {
-> -	return -EOPNOTSUPP;
-> +	struct vfio_pci_core_device_ser *ser;
-> +	struct vfio_device *device;
-> +	struct file *file;
-> +	int ret;
-> +
-> +	ser = phys_to_virt(args->serialized_data);
-> +
-> +	device = vfio_find_device(ser, match_device);
-> +	if (!device)
-> +		return -ENODEV;
-> +
-> +	/*
-> +	 * Simulate opening the character device using an anonymous inode. The
-> +	 * returned file has the same properties as a cdev file (e.g. operations
-> +	 * are blocked until BIND_IOMMUFD is called).
-> +	 */
-> +	file = anon_inode_getfile_fmode("[vfio-device-liveupdate]",
-> +					&vfio_device_fops, NULL,
-> +					O_RDWR, FMODE_PREAD | FMODE_PWRITE);
-> +	if (IS_ERR(file)) {
-> +		ret = PTR_ERR(file);
-> +		goto out;
-> +	}
-> +
-> +	ret = __vfio_device_fops_cdev_open(device, file);
-> +	if (ret) {
-> +		fput(file);
-> +		goto out;
-> +	}
-> +
-> +	args->file = file;
-> +
-> +out:
-> +	/* Drop the reference from vfio_find_device() */
-> +	put_device(&device->device);
-> +
-> +	return ret;
-> +}
-> +
-> +static bool vfio_pci_liveupdate_can_finish(struct liveupdate_file_op_args *args)
-> +{
-> +	return args->retrieved;
->  }
->  
->  static void vfio_pci_liveupdate_finish(struct liveupdate_file_op_args *args)
->  {
-> +	kho_restore_free(phys_to_virt(args->serialized_data));
->  }
->  
->  static const struct liveupdate_file_ops vfio_pci_liveupdate_file_ops = {
-> @@ -123,6 +180,7 @@ static const struct liveupdate_file_ops vfio_pci_liveupdate_file_ops = {
->  	.unpreserve = vfio_pci_liveupdate_unpreserve,
->  	.freeze = vfio_pci_liveupdate_freeze,
->  	.retrieve = vfio_pci_liveupdate_retrieve,
-> +	.can_finish = vfio_pci_liveupdate_can_finish,
->  	.finish = vfio_pci_liveupdate_finish,
->  	.owner = THIS_MODULE,
->  };
-> diff --git a/drivers/vfio/vfio_main.c b/drivers/vfio/vfio_main.c
-> index 276f615f0c28..89c5feef75d5 100644
-> --- a/drivers/vfio/vfio_main.c
-> +++ b/drivers/vfio/vfio_main.c
-> @@ -13,6 +13,7 @@
->  #include <linux/cdev.h>
->  #include <linux/compat.h>
->  #include <linux/device.h>
-> +#include <linux/device/class.h>
->  #include <linux/fs.h>
->  #include <linux/idr.h>
->  #include <linux/iommu.h>
-> @@ -1758,6 +1759,18 @@ int vfio_dma_rw(struct vfio_device *device, dma_addr_t iova, void *data,
->  }
->  EXPORT_SYMBOL(vfio_dma_rw);
->  
-> +struct vfio_device *vfio_find_device(const void *data, device_match_t match)
-> +{
-> +	struct device *device;
-> +
-> +	device = class_find_device(vfio.device_class, NULL, data, match);
-> +	if (!device)
-> +		return NULL;
-> +
-> +	return container_of(device, struct vfio_device, device);
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_find_device);
-> +
->  /*
->   * Module/class support
->   */
-> diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-> index 9aa1587fea19..dc592dc00f89 100644
-> --- a/include/linux/vfio.h
-> +++ b/include/linux/vfio.h
-> @@ -419,4 +419,16 @@ int vfio_virqfd_enable(void *opaque, int (*handler)(void *, void *),
->  void vfio_virqfd_disable(struct virqfd **pvirqfd);
->  void vfio_virqfd_flush_thread(struct virqfd **pvirqfd);
->  
-> +#if IS_ENABLED(CONFIG_VFIO_DEVICE_CDEV)
-> +int __vfio_device_fops_cdev_open(struct vfio_device *device, struct file *filep);
-> +#else
-> +static inline int __vfio_device_fops_cdev_open(struct vfio_device *device,
-> +					       struct file *filep)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-> +#endif /* IS_ENABLED(CONFIG_VFIO_DEVICE_CDEV) */
-> +
-> +struct vfio_device *vfio_find_device(const void *data, device_match_t match);
-> +
->  #endif /* VFIO_H */
-> -- 
-> 2.53.0.rc1.225.gd81095ad13-goog
-> 
+-- 
+Martin K. Petersen
