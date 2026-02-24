@@ -1,379 +1,256 @@
-Received: from mail-vk1-f228.google.com (mail-vk1-f228.google.com [209.85.221.228])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 349D01EB5E1
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 21:10:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFB2A344D81
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 22:26:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.14
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771967436; cv=pass; b=OqYzgCRTfO+gV6slH55whbVk+XKCTqzIU0PMqcx3WIgLFutUP1Z0HChUCF35HEqcmLs9sS2T8T/xri8xeI8u+6d5w0KRE/jKRnTGmsOPn8MgYS3fq1m6jotfPUy2Rtoc0o66wZD3MRfB3toJz2FcHkPg+vKEpTGtHHtK7Ky8zIk=
+	t=1771972011; cv=fail; b=dMI67MjkG0ViZyE3LsWdlyCcW0LTFhJwp91GadMQB5c616K6LxEHeFkwZaoByA0xXx7v4IVaukb33/1YaxNlqqQGXB7pi1OdTSFvgIId6WuA6OWCJXjMpE7D9rfAO0tCNaEVaiAnyCCi5vJkhYmRX0xQ8p85qElE+sFxjnKGuCg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771967436; c=relaxed/simple;
-	bh=elVVRfK1LsoT5rqDw7kQMhatrByH9FXqXiNlOlih740=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uJ6DlfP6HwNQGBeszjcrITDgC2CQ/JfKNdxOohvheQI9z/4QTtw2omixRgl4HSs163Zos2/pWnFH9tyRs9V18VoGdxFnQEnoyrKySfNZGGkyorzaRx53jHqQ4gv19z1vHwAzU+dkTzQK0v+JXbnfdx/FFpGLqmDgwD0a86bLSkw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=UyxusLJp; arc=pass smtp.client-ip=209.85.221.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1771972011; c=relaxed/simple;
+	bh=eD6tLETiN4/GW0R8OJpJzmASA8oO3RWuTYhGeMOmUCE=;
+	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=E+GIORsE+k+KiVvyhmTZYQYWYQYl7Z7IMHek7kx5fp6WzZnp8I/FA7JG+KCu5VuiqgFC+5dtxCYwDBbK8+e7yHo9Wm3ytwaJIX1biGxhrxgbYRfsirnAiwUBit0REOAZP78GhiETTiqN2mnF1m3nBhS5gK6CWQ8hiSmJmgx7p9o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nGiE1PF5; arc=fail smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UyxusLJp"
-Received: by mail-vk1-f228.google.com with SMTP id 71dfb90a1353d-5674689e507so2528897e0c.3
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 13:10:33 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771967432; x=1772572232;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UDWJucdoUfy9BMkP3+pz5hUeYcqXSeuUH00YgRisRKQ=;
-        b=bFedzKnobA+XSros9ERl7v/ybtnOzcbNQwCvGnSNOhm3myNM0fx1nB+a56hMD3vktd
-         UYCuCjFyS9fMgFbiV7TpyV+1muG7oAxffFzuGWN7fjJ1GXmzZtTyeYwD4OzvwBKTiF09
-         ZSYbyMCBaHij3K/7WnAFfT2+3YGCAfNNLPvvajQ/nX3YV0l/uwDeNcGdghpMHo9Ma4N4
-         AjzQWMiE77VViTfRjKVgEAzXbZqStfxcv2iQPJd5U7EIxz2lNQzRnMoBMkyIDs4yHixb
-         G+2Gp141E+hdF41yQu9xUv4cQFf9Lf770HSYFmdUOdOpKTOfUUCfaU8EpNCRzMWkTiAN
-         mRtQ==
-X-Gm-Message-State: AOJu0YztZK0Eh4n1XwdTQB217U4Y33bwEEmCBudKXM37H8hVsWwdNkaO
-	21maFA3o7DhQZvrLm++lVf047U8/rjEdxzlZvTjPHN3+HiMGr7EnawaXGuBHUvrTjOK6RGxTfEi
-	hHox4nlfSc4SDJqnS/qM1NqOTBrC8zbXBgPxTuYd0kSfiiYAEUTT7KuX+E5oCHU/e2mGxMPoEDx
-	nRprdgByQkT1gpS87aADL9wtnQUbgPjQAZ1Wczuz8DvsXvUlXgbkb4OHfS+zN5oxoVurqB2mAUK
-	8Ue3yiV2ybiyNr7
-X-Gm-Gg: ATEYQzxjjfUzkf5DCn3uP3EwHB4EGAOkwu5QYqL1M95VL93RdFw7GP1WuXATETs9/uw
-	Dlr4YgXYPZAg6m8caO1XqkmYiilhwSUii5DGO6UGY5Zc9Fqp4M1zhvItWo2zHG24XnZZ/ftYi4D
-	rsMrb6N8bPDjnvlI0MA76Up5FGigNWPiA2f8uEDV7Ya/C38BHiLbArtBts662Qv7noHrJIGWg0N
-	OCqaJVxxvT8YdL96/j+abNTbUhrUJYbqpabpqoj9GINLHHOOGrKTUfRvnCb/2VmMZFolwgUUyGU
-	X8CuGDH51rdqIeSTWLfBm6CaqAoOrPnqrI8WnaPAShGDGNM8M0D2jVKABHERSnM2pCTg8YaGyza
-	/JvxTBzUFLiWjLayiPUNGInJFdnV2Jnkk0AAqcjDva83QSK+Odocm8CC1PVdTNEJzR0r00Xn69m
-	fvaNIJcAzQ/j7QIWj+BnHFbDEZdBZL0LS6bUH+cr/MvOdDKZgV32QVZnyoXsGz
-X-Received: by 2002:a05:6122:1d53:b0:55f:c41f:e841 with SMTP id 71dfb90a1353d-568e4904ef1mr5293396e0c.19.1771967431919;
-        Tue, 24 Feb 2026 13:10:31 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-103.dlp.protect.broadcom.com. [144.49.247.103])
-        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-568e5866a7fsm2001322e0c.4.2026.02.24.13.10.31
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 24 Feb 2026 13:10:31 -0800 (PST)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-lj1-f198.google.com with SMTP id 38308e7fff4ca-389e0db12cbso740631fa.3
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 13:10:31 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771967430; cv=none;
-        d=google.com; s=arc-20240605;
-        b=kQXuTP43g7EnHawwA54+iFFcwsasLgFn3GcishZXwePseJyObmqugvngPiEqTnh5Sb
-         o6KMcTKklPmZQ26mSImC+RM5AnXufg5EJHLbcRmxTj/uLI5tBi5IEzSemvGD9qTr+Eur
-         PkjDRiAbd1RIlCgMQIPyHIrM13E7Wc4bXeV61TVES255r7hBGyXZYZmxbuKukAtb8MwY
-         y7oyk6tcXl2oUR3JT0oGPOsd0EOAVgUPpk7yQoam+xE6DWOPEze9DfjOzHRHOv8R+s1w
-         sZSkertBX77UsyZc44ATTCeI/JMQcIYp3HffuEVBbzEShO+ERvIgqp65MwbCQgWyuday
-         UMKQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=UDWJucdoUfy9BMkP3+pz5hUeYcqXSeuUH00YgRisRKQ=;
-        fh=7IlF+BoJet//4Naqb67Be76JSxT1NAv44cZQAn3GAFc=;
-        b=bBfe0acvO1TEoJ/avRsHqJocwAq4EsQHMqRlb9wM+ME1wz+r9i2ILVsSPHPkSpJrMD
-         bQbf6TrT2vnYPfpMbB+NKNXGu8bDAAzX6qFdMIFxK59wRc1CdKhD1ay4Nd0+NvDhCRQd
-         TfCbCOLBVygprueiOnMDlhCsCVabcNRxsl32Nvp4Qd9wprdLzL6C3A7Gt5OYS4ct3qX6
-         YS2QQ7bLQnMZPLHeP/ikMXFHt6GXNFWFyvLknjLdAgzLnMd6lhmDFzqEhncFOKdjYCPG
-         mTnqrmBMdH86bYK6TnHYlv+3M+IA0j4H6IQIBtgQD41EuhsRuA0IMRs9XOpmFJszpW+G
-         WSOg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1771967430; x=1772572230; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=UDWJucdoUfy9BMkP3+pz5hUeYcqXSeuUH00YgRisRKQ=;
-        b=UyxusLJpYuLkxd/4DaA27C6U2Cp5C17ly/1AVq3tWmL/S1qJcJkCKpoCUGd9k9gDL1
-         UMJedCljmDExYQQRNYhRhrOpgAzjaHwr/nwg7VUlCKAdexQEfcb1OjsqLcxQFwwbqEIh
-         8OvijGvYyY9/ZLromEBCAcYYKH0O+I/EKsi6U=
-X-Received: by 2002:a05:6512:33c6:b0:59d:f47c:100d with SMTP id 2adb3069b0e04-5a0ed9a833fmr4237684e87.24.1771967430103;
-        Tue, 24 Feb 2026 13:10:30 -0800 (PST)
-X-Received: by 2002:a05:6512:33c6:b0:59d:f47c:100d with SMTP id
- 2adb3069b0e04-5a0ed9a833fmr4237672e87.24.1771967429505; Tue, 24 Feb 2026
- 13:10:29 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nGiE1PF5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1771972010; x=1803508010;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=eD6tLETiN4/GW0R8OJpJzmASA8oO3RWuTYhGeMOmUCE=;
+  b=nGiE1PF59FBal4yggwzlUBsanX56jvsjbEMs/nFVt/68IuZ1Eo727gUU
+   RfXIKXgeLvVPVHElXQNZxY1pPlzVceDAjdb064C/5dDLgP1Wb0mWQzwq3
+   QZgJbeh7zLIFT6OwwboDza2cdQ5wBRofA+RCf6GG9tfsyOVBAeiaoD1f8
+   samoUtBwFOZHGHvD5XQ53q2kxTxyegxvTj4TfvMhMOjkiVL6HxzVitWP4
+   8cKRKQygIimXL37UVke/3T3hPljgzfYJqHUkKA3Vr+dOkMrKQLXdRNy0r
+   KPHDTALl16WW0m9vqnfEv7XC1rG8LWIZu3aFETlFP7D9DvrCKgqomTPqN
+   Q==;
+X-CSE-ConnectionGUID: xGdrppZrSLyCpEdDcJj5iA==
+X-CSE-MsgGUID: LsNpVLE4SbSvZpnrvCH+cQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11711"; a="76835895"
+X-IronPort-AV: E=Sophos;i="6.21,309,1763452800"; 
+   d="scan'208";a="76835895"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2026 14:26:50 -0800
+X-CSE-ConnectionGUID: dQdbWUgmS1O07o0pcf0wJw==
+X-CSE-MsgGUID: sQLPKhKqSo6fHPlSjQwvqg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,309,1763452800"; 
+   d="scan'208";a="243919818"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by fmviesa001.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2026 14:26:50 -0800
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Tue, 24 Feb 2026 14:26:49 -0800
+Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35 via Frontend Transport; Tue, 24 Feb 2026 14:26:49 -0800
+Received: from PH8PR06CU001.outbound.protection.outlook.com (40.107.209.16) by
+ edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Tue, 24 Feb 2026 14:26:49 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wqDJzHRnQ2c7Syp74RGmChEsmg+albNkjEGXo7qa3/WcBLj2kmkm9bIKO/4qFt11TtRBA8iS2KuWaV0397bFt2UCifqYBwg259aCg/vVKyE5193z7bpC0pjDf0kP5Qm8S09t77Dc9CFE7VPmIGXlAGPtF4pMxCK5Q2d4xhNrLE2SrLEGBgv8JoCiN18Bl/vdiLw5VZosJOg5NLtTxlUbdk8p1pv5Sfsl7nciqqaCvUTTKXxPXJQ/nEi9/7/sAkL+3iyg4fivCvLLPKOuWBIaFIp441ZnDoXYLcAyON3T/FeLnQ1tJzCkydAScRvcvJVBb0wLpB1rYcySV8nmznEywQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3jfNK2lkOtcNGwb5YzY715uZJvpyN5jv5YKnikcpqBk=;
+ b=Ci5Vic/fkYXVJZi1Kc+WJmMX/o9UiWqgnnM7UwBgTtLIkYjCmdh1LSDg1O13o/PGkVgPcENW2ej2BmRg5PyWvyufBrIJsLkHozdeKLycrRud2zApxbbuxNoZOzvXFbOwMe5gXM0jsl90l01ED+Fmfo0pZgC0IHtODvvu88i0gvWqStFneH5xBCjA8gLQoHhCBQbZ228g29shO7QNj8uJhVRgQEcDtQ4EaR+7r/8FjrbNY5kO4cgvWVMBAX154uWDCbHOMK9DyqSW5D16gF/ovlo6zAIwj8wudaTrh3pRrLj2ioiCdPo9z9QedtlKAzHUsJgPWrJvFL0Af2eWEbjY2Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH0PR11MB7588.namprd11.prod.outlook.com (2603:10b6:510:28b::16)
+ by SJ1PR11MB6276.namprd11.prod.outlook.com (2603:10b6:a03:455::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.22; Tue, 24 Feb
+ 2026 22:26:46 +0000
+Received: from PH0PR11MB7588.namprd11.prod.outlook.com
+ ([fe80::42ad:6451:1ae2:edd3]) by PH0PR11MB7588.namprd11.prod.outlook.com
+ ([fe80::42ad:6451:1ae2:edd3%6]) with mapi id 15.20.9632.017; Tue, 24 Feb 2026
+ 22:26:46 +0000
+Message-ID: <d3709fce-b94f-49fd-ac12-a75d20180d86@intel.com>
+Date: Tue, 24 Feb 2026 14:26:42 -0800
+User-Agent: Mozilla Thunderbird
+Subject: Re: [Intel-wired-lan] [PATCH 4/5] PCI/PTM: Drop granularity parameter
+ from pci_enable_ptm()
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	<linux-pci@vger.kernel.org>
+CC: <intel-wired-lan@lists.osuosl.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>, Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>, Andrew Lunn
+	<andrew+netdev@lunn.ch>, "David S . Miller" <davem@davemloft.net>, "Eric
+ Dumazet" <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>, "Saeed
+ Mahameed" <saeedm@nvidia.com>, Leon Romanovsky <leon@kernel.org>, Tariq
+ Toukan <tariqt@nvidia.com>, Mark Bloch <mbloch@nvidia.com>, Richard Cochran
+	<richardcochran@gmail.com>, Andy Shevchenko <andriy.shevchenko@intel.com>,
+	Vitaly Lifshits <vitaly.lifshits@intel.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?=
+	<ilpo.jarvinen@linux.intel.com>, Vinicius Costa Gomes
+	<vinicius.gomes@intel.com>, Dima Ruinskiy <dima.ruinskiy@intel.com>
+References: <20260224111044.3487873-1-mika.westerberg@linux.intel.com>
+ <20260224111044.3487873-5-mika.westerberg@linux.intel.com>
+Content-Language: en-US
+From: Jacob Keller <jacob.e.keller@intel.com>
+In-Reply-To: <20260224111044.3487873-5-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MW4PR04CA0040.namprd04.prod.outlook.com
+ (2603:10b6:303:6a::15) To PH0PR11MB7588.namprd11.prod.outlook.com
+ (2603:10b6:510:28b::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20200928194651.5393-2-james.quinlan@broadcom.com> <20260220221106.GA3552425@bhelgaas>
-In-Reply-To: <20260220221106.GA3552425@bhelgaas>
-From: Jim Quinlan <james.quinlan@broadcom.com>
-Date: Tue, 24 Feb 2026 16:10:17 -0500
-X-Gm-Features: AaiRm51D-NQUaTrqsM8O8awPCdzmE1fTYI6dgi9Q7qoLI220Sp9oF5_6K8TmXUY
-Message-ID: <CA+-6iNzJM=C+Byb+wnmPYdJcYoTT7N-XwE3o2OpJzmcJrtOc8A@mail.gmail.com>
-Subject: Re: [PATCH v2 RESEND 1/1] PCI: pcie_bus_config can be set at build time
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>, 
-	Hans Zhang <18255117159@163.com>, Niklas Cassel <cassel@kernel.org>
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="00000000000040d0d8064b9851a6"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR11MB7588:EE_|SJ1PR11MB6276:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6a357d89-4e04-4cdd-3892-08de73f3cb9c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014;
+X-Microsoft-Antispam-Message-Info: =?utf-8?B?ZzlVL2ZIKzBjSmgrUVZZd25iQjVYSDc3K1VUNHg0K1FCcTlaSHhNcUNEZktM?=
+ =?utf-8?B?cklaN1djKzZKMm9ZVjZEaWFOYlhhVlJHRFQxT1A2Rk0yRVljTk9iMjV2aDc2?=
+ =?utf-8?B?STJPejhCMVQyOTVCQzgyZWlaWWN5VHlOaEFWMXZjUzVOcDh6S3pkdzk5bVBT?=
+ =?utf-8?B?cTR4NVBveTVkcTZ6Q29ZWnlQaURBVWQzVjJrUHltcGpSTHRJSVg4VVpHeW4z?=
+ =?utf-8?B?QXVjRXZtdzlJZHhQRERPWUN5aHdEZUgzdUY2bXQvSWNWcnlQWHdZSGtEMjNH?=
+ =?utf-8?B?dmdCQkFsNmRKc2tKTFNMM3p5ODBkOStvd1hZbU9vUkJES1U1bUhpZisyWFF1?=
+ =?utf-8?B?aDBpTXdzS1VYS3FTVEh1WGIrU3VnSCtEQjU0MXFTV1M1L3FMd3k0KzZQMzBs?=
+ =?utf-8?B?OXhvZnlqYjVnVTU5QkhVaGFiZEdwNmR3ME9GMDBTRzNVQXRObXJ2NU4wNE1y?=
+ =?utf-8?B?WEN6RllsdlVHSW9HSlhPYmpiUnF2VktIcUsybk56TGlUUFEya3ZsTVdyYVJm?=
+ =?utf-8?B?QzVTY2NMRmlrWnBYNm1MMERoTkRta3JrcW14U1FsUlB3Y2ordEtpZzhkS3B6?=
+ =?utf-8?B?RC9LNDZIdm9kUUczb0wyZXRSTFZCVlZodk55Z3kxRVZOVTdLeDlNbTl0UG5P?=
+ =?utf-8?B?MHBEcENDaVZDVUh0QkhrTmg1eUNqNUJBVVl2QTh4NFo0Q3RtS3h5b09LWnJs?=
+ =?utf-8?B?aTBzR2VaN1VsUFNYdjlpei90cHJkUnhBWmRlL0NGODIwVDlIRUhrSXpxQ0xa?=
+ =?utf-8?B?dldlT2w4eUxRL0xnbGVrZ2IxRkNJT0VYZTU3QitSTkdZb1FRVU1xM1ZMbmVQ?=
+ =?utf-8?B?aTAwRkkyRUxQTno5WUlMN3gvSTNkZjcyeFM0MnR0TUNrTWlRbmN0TDhjaXcy?=
+ =?utf-8?B?MExrTFc2eVREaHRMZ0VJQmNPU0ZlSms3OVhyYWRwNlRlYjFDNHN1cGF3cUp6?=
+ =?utf-8?B?d1JJcFdkSUZBcGVwK2t1NFZram10dXBVOGxpWk9WL20vS1ZlZU5oclRWZ2Fz?=
+ =?utf-8?B?NUsraW9CVS96dHdMM2RSV2lvdk0rN2pIMkozaDVlVmFNRnQxamdXMDdnMzRs?=
+ =?utf-8?B?bzB2RWdmTmtLazlnNGpRc2lUeEV0Mm80dEVUQ0EzSVBkQmswTHNKbVhYcFBM?=
+ =?utf-8?B?akRMVWRvZVlJRHcrcjBSTHRDblljRGxEd3RnZDBCK1NGaktZM2V0TFVoSklw?=
+ =?utf-8?B?R3N5dENLYm5aZkQxbkRJaDIydVkxUzlCN0FGT3dZQUtOY0ZnRTh2aEUrQ1ZL?=
+ =?utf-8?B?WldMd2lvMUY0K0VyK1RYd2Fqb1lLMVp5ellMeGlHcmI1Zk01U0NvMnhXRERo?=
+ =?utf-8?B?dmpmYVV2cms5QzJlVzMzaTFqUnJ1VTR2SHFscW9EK0J0ODZydGhMeldYQlNq?=
+ =?utf-8?B?NUE2ME1VMzN4aFFKQWtYOHV6R0lDMldyOWpPcFYrazNlaUNFZEVDdGhGQVNS?=
+ =?utf-8?B?bitEak5lbDl6dmdmbFVYS3QwUTdQWENmNU1LcnhPZ1k5U2luV2kzTzdHcldh?=
+ =?utf-8?B?SStDMWtBbGtYak1Tdkt0aHpBbUlVMDNHVk1XN0ZFYU8zTjRhNm9ycDl5MHcy?=
+ =?utf-8?B?UnFhdUlzdzdlMmJrdE81M3hBTlllZ2pTa2RpNnI3SEFFK2NHUnVtbSt5LzFw?=
+ =?utf-8?B?bDQ5RVJ0OFdRNVdmUkdFTHRoZTBLcTRpanloMHFRM3E0TitTWGxRWEVMQVNl?=
+ =?utf-8?B?eVF5emdHQ3NEVzhBaWs2L2toNVl2SER5TFFUK0xNS1F4c2hNYjg5d0FmbU5J?=
+ =?utf-8?B?cE9KOTJyR01KVjR3ZmV1c0k2d3lzQy9QeVpyTXRCZEl5M1lNR0F5eGZ3c0ZB?=
+ =?utf-8?B?VzV6dFR3VmoyMkMzZUVpdlI4ZHpMcGxmZ1Bzc3F4TTFYMkU5VitBWFk2cm5W?=
+ =?utf-8?B?WlNCWU13bXNJbjdLRXJXZFZuNkMyWVVlYlA3T0N3UUVzSHFSUEQ0UUQvTVNz?=
+ =?utf-8?B?aWk1aTR4VWUvSktXdmJUdUs2aXk4dVRCTlNjQUN1MWdhLys4UUplc0tWNzcv?=
+ =?utf-8?B?K29zWlU4clVkL1dmMVRuT05vdkMvRWx0WE85S0lxbUhUZHNZOXN1M1ByWjJi?=
+ =?utf-8?B?a3QwSjY4QklMb2pveE92ZHd2S2xTMzZiRmRZRWtIVk5oSm03SmZyd0ZmcUNO?=
+ =?utf-8?Q?tlQs=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB7588.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bC9iSW8vOTVwV1l0T2VEaVFRUkVMd0NHNExONW9PWjNpMys3Wk9paVNkSkR2?=
+ =?utf-8?B?UlFxeDZVRVU0R2FjYm5JbjFNaTJkL2dSNFRsa3A5Q0dtdUIwS2dPM3I4ZEsx?=
+ =?utf-8?B?Y0pLeE1yTlBPM0ErZGhOMmJPYVc0TkRpd29Sc3IwdnlFNjAwazFRS2FDZGc1?=
+ =?utf-8?B?aDlTeS90YlRkL2o5blB1SmxtNzRSMTZRUFFLdkFqNFpZMmRJOEtRdWtKOWdT?=
+ =?utf-8?B?SzNPYzlPdzl2anN5REpoTU9YVEdjZTdDMXBSM3dhNWxlREg3MjZNai9yS0hp?=
+ =?utf-8?B?WXd0VzF4U2FyWlgrcW8zWU1DY25OKzhmSVRBSllPNUx5WDhudlM0U3A0dkp2?=
+ =?utf-8?B?UjNWVWFHcDJMUVNFTHpiMXZIUG00OXZtUUpzWHRoTTBudDJ4VVQrV0ZqQXFY?=
+ =?utf-8?B?SHMzeXBzcU9OdU8yREU3ME5Kb2p2YUtxTGdMbGJYOTZaQzVMNDN1SERqRndi?=
+ =?utf-8?B?Wmk2enVYZUxoblBVNUFlNnpucmxPeGQwK1U0ZmUzellzbEhHTFpMYzNyZVRw?=
+ =?utf-8?B?d1hpaDU1anFVRmkzK04rNlpOVnZZVzYzRldzQ0p4RGJ1UUFVYVk0VTlXeGp4?=
+ =?utf-8?B?WU9MOEhlRi9rS0V1MnZ6YjlZMVRYSUpvZjB6MVd6c2RpWkNnaGI1dWV6bkE2?=
+ =?utf-8?B?QTczczNycndyUFJHcUQzeTdXV2ZYTnFTVFh2bzJuc01GYzhYaUQwU1FIcGRV?=
+ =?utf-8?B?cXE1bWZaTVFra0JlRUJuWUZ2cC9lQ1RpS1c0a0pNa1doY050cUFuUno4ODZk?=
+ =?utf-8?B?emI1S2hNcFRKcU1rUEtRRU5sVUxGY0RhWmFVbWhzNjdXUDd1SThKZWZTOGZh?=
+ =?utf-8?B?Y1NEQ3J4OUdveXcyL0ZoY1dTOEF4VXpkR0xjWkFXRnRkWUJUSi9oWCtJSjU3?=
+ =?utf-8?B?Z24vNy9STGNrcUthS2tCSnNMSy9tZ2dVSmwyUEdibm1SMy9DVWNpYTNBYjYy?=
+ =?utf-8?B?d2p5aGhCTGw0TWlhREw2ZkczNkdldlI1UVNmT0pRMXVsRlVpV1Q2eTZudEJU?=
+ =?utf-8?B?NS9WREh0RkVHQ2FIRkNKSExPTmtySE41Zk9nemNzWS96eHBHRXlybWNPQkEy?=
+ =?utf-8?B?Y2hYamNqY1RwTUJaQjdNcklMaEQ0TUNDOHNoS3ZkaEYweTl6Q0RDcENGUm81?=
+ =?utf-8?B?cXJZMVpJOE9mSlJhcG9INE9ISThUZUJaKytXanpIVWE1MS9uMUF0SHFZTmRm?=
+ =?utf-8?B?aUV2WUVaSGxpcCtvR2QvQitENmZja2VVc0RUMSsxSDZEV2pTUC9NNEMyZGNx?=
+ =?utf-8?B?VlBIczlBNCtKNVFtL3pSdXRYWENTMGZvS3BRcHVRL3NReTRibGVyU2hYMFNx?=
+ =?utf-8?B?SjJpZk85cjdLdXF0c2IrWUJkdGtIRjhPMVNLSnZkenpUcVM2WHBrclZzTFJS?=
+ =?utf-8?B?TWRLZVRSYi95eDVFODE2dTE1MmY4a014MW9BbnhLckVTK3hnK3E0L3JWWFNr?=
+ =?utf-8?B?bExqYm94RWoxSzFnOXdYVmc5T3MrUytudVd3S2RTZmUrN0lKdzNkZTU5QW9S?=
+ =?utf-8?B?MGNtSnIxL0EzbWdxQ3VOeFg2QkMydkNWRi9DU2M2SVdvcGZpVmJRSjFVZjl1?=
+ =?utf-8?B?YlUxZWRua1F3S3FmYzM1RlJOa1o5eUxCcm1IOXovRWR4SlBQQVFLUzhrUWdL?=
+ =?utf-8?B?SzlFbmdsVktkY2ZFcDdqejRPSDBUdFZtZXBkWU9tdldPc0hCWW5RLzNEUU5J?=
+ =?utf-8?B?QmJubzlwUzNseGZxOEVBOE5UMDl6c0hVOGFlbWkxbkdxM0xjS0FzKzRtamNS?=
+ =?utf-8?B?M2Y0SmRwVXpwYnljd01kNFFTN1hTSmo4SEpTcUp6UjdiTE5hOTBqMHRyK1dk?=
+ =?utf-8?B?cGZvZWhSREIyaFA1Ui9INXJHTFNuakI4RWVTM0RabVJWK3R2OEFCT0RRcGJi?=
+ =?utf-8?B?eDdqeThJa3NoYnpjWFNCU2xuL2dSOUovUGt0VXhNQ1AwNVZ0cjRzb3hxY1R1?=
+ =?utf-8?B?bzQ5d0pTcXFRQVJueXdWVzVVTklYcHNUYU9Uem5LOVhLYVdaMU1ndVlaeEJC?=
+ =?utf-8?B?RVFoaTVKSWQ0Vnl5ZlUzU1AyL3lRbGpHb1g1emxCaDRtZjNuN2NjZkR1amx2?=
+ =?utf-8?B?K1Rrc3BsQmlabjBDMlJTWFRrTllMOEtHNEoydGpBcnpvUkdYR1MrdVFjN3VP?=
+ =?utf-8?B?T3ZsY2NCUFBQci90ZGl1ZUNHZUszK2VlUk9IRkNNSC9TejIrR01adHBRckRR?=
+ =?utf-8?B?VXdkeEdWNzE2SEFKL3IxeHBiTzM2RUFuSWJ3WG9QdVMzcEtnaENlemEvZDJ0?=
+ =?utf-8?B?a21QZ3RDNm9OakhFWFFrSHNSM0E0Zmd3eTROTzJwdEV2eXl2dDlONUN3YW5r?=
+ =?utf-8?B?S2Q4eEJxR09xOTAzUEtmTVlkQ3YwUTdLZm5NK1JxcUw4UkQ5bG9qZz09?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6a357d89-4e04-4cdd-3892-08de73f3cb9c
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB7588.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2026 22:26:46.4861
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BU9ZT9dcmpNHggT64N/wQuRP1gpDqjEAitDGw64o5VFo9ksfy2gKxozyStN80CZfLrIkGjYieFYleriUeRldL8XP9lAGf91YDRWSv5E28lY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR11MB6276
+X-OriginatorOrg: intel.com
 
---00000000000040d0d8064b9851a6
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, Feb 20, 2026 at 5:11=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> [+cc Hans, Niklas]
->
-> On Mon, Sep 28, 2020 at 03:46:51PM -0400, Jim Quinlan wrote:
-> > The Kconfig is modified so that the pcie_bus_config setting can be done=
- at
-> > build time in the same manner as the CONFIG_PCIEASPM_XXXX choice.  The
-> > pci_bus_config setting may still be overridden by the bootline param.
-> >
-> > Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
->
-> We merged this as b0e85c3c8554 ("PCI: Add Kconfig options for MPS/MRRS
-> strategy"), which appeared in v5.10.
->
-> In retrospect, I think this might have been a mistake because it
-> forces a build-time configuration for something that may not be known
-> at build time and can be set via command-line parameter.
 
-Hi Bjorn,
+On 2/24/2026 3:10 AM, Mika Westerberg wrote:
+> diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+> index 91a598ed534c..2c848ae4f15f 100644
+> --- a/drivers/pci/pcie/ptm.c
+> +++ b/drivers/pci/pcie/ptm.c
+> @@ -88,7 +88,7 @@ void pci_ptm_init(struct pci_dev *dev)
+>   
+>   	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+>   	    pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM)
+> -		pci_enable_ptm(dev, NULL);
+> +		pci_enable_ptm(dev);
+>   }
+>   
+>   void pci_save_ptm_state(struct pci_dev *dev)
+> @@ -182,15 +182,13 @@ static int __pci_enable_ptm(struct pci_dev *dev)
+>   /**
+>    * pci_enable_ptm() - Enable Precision Time Measurement
+>    * @dev: PCI device
+> - * @granularity: pointer to return granularity
+>    *
+> - * Enable Precision Time Measurement for @dev.  If successful and
+> - * @granularity is non-NULL, return the Effective Granularity.
+> + * Enable Precision Time Measurement for @dev.
+>    *
+>    * Return: zero if successful, or -EINVAL if @dev lacks a PTM Capability or
+>    * is not a PTM Root and lacks an upstream path of PTM-enabled devices.
+>    */
+> -int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+> +int pci_enable_ptm(struct pci_dev *dev)
+>   {
+>   	int rc;
+>   	char clock_desc[8];
+> @@ -201,9 +199,6 @@ int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+>   
+>   	dev->ptm_enabled = 1;
+>   
+> -	if (granularity)
+> -		*granularity = dev->ptm_granularity;
+> -
 
-I don't see much difference between setting the default at build time
-versus setting it via the boot command line --  both methods are
-performed before runtime and make assumptions.
 
->
-> But I can't find any discussion about it.  Did you have a use case
-> where command line parameters weren't usable?
+Presumably, if a driver ever actually needs this ptm_granularity in the 
+future, they can just read it from the device, or we can add a helper to 
+access if needed. Makes sense.
 
-Yes.  We have a Cable Modem (CM) customer who can update their Linux
-version but cannot update their boot loader or its default bootline.
-FWIW, they only want the option to set pcie_bus_config to
-PCIE_BUS_SAFE via the .config.
-
->
-> If there's a platform that requires one of these settings, maybe
-> there's a way to do that programmatically in the host bridge driver
-> rather than using a Kconfig symbol.
-
-It's a CM product which uses a particular Wifi chip.  Recognizing this
-scenario would have the RC trying to grab the EP's vendor-id (and
-possibly more info) , and that seems awkward at best.
-
-Regards,
-Jim Quinlan
-Broadcom STB/CM
-
->
-> > ---
-> >  drivers/pci/Kconfig | 56 +++++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/pci.c   | 12 ++++++++++
-> >  2 files changed, 68 insertions(+)
-> >
-> > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> > index 4bef5c2bae9f..15ce948858fb 100644
-> > --- a/drivers/pci/Kconfig
-> > +++ b/drivers/pci/Kconfig
-> > @@ -187,6 +187,62 @@ config PCI_HYPERV
-> >         The PCI device frontend driver allows the kernel to import arbi=
-trary
-> >         PCI devices from a PCI backend to support PCI driver domains.
-> >
-> > +choice
-> > +     prompt "PCIE default bus config setting"
-> > +     default PCIE_BUS_DEFAULT
-> > +     depends on PCI
-> > +     help
-> > +       One of the following choices will set the pci_bus_config at
-> > +       compile time.  The choices offered are the same as those offere=
-d
-> > +       for the bootline parameter 'pci'; i.e. 'pci=3Dpcie_bus_tune_off=
-',
-> > +       'pci=3Dpcie_bus_safe', 'pci=3Dpcie_bus_perf', and 'pci=3Dpcie_b=
-us_peer2peer'.
-> > +       This is a compile-time setting and is still be overridden by th=
-e
-> > +       above bootline parameters, if present.  If unsure, chose PCIE_B=
-US_DEFAULT.
-> > +
-> > +config PCIE_BUS_TUNE_OFF
-> > +     bool "Tune Off"
-> > +     depends on PCI
-> > +     help
-> > +       Use the BIOS defaults; doesn't touch MPS at all.  This is the s=
-ame
-> > +       as booting with 'pci=3Dpcie_bus_tune_off'.
-> > +
-> > +config PCIE_BUS_DEFAULT
-> > +     bool "Default"
-> > +     depends on PCI
-> > +     help
-> > +       Default choice; ensures that the MPS matches upstream bridge.
-> > +
-> > +config PCIE_BUS_SAFE
-> > +     bool "Safe"
-> > +     depends on PCI
-> > +     help
-> > +       Use largest MPS that boot-time devices support.  If you have a
-> > +       closed system with no possibility of adding new devices,
-> > +       this will use the largest MPS that's supported by all devices.
-> > +       This is the same as booting with 'pci=3Dpcie_bus_safe'.
-> > +
-> > +config PCIE_BUS_PERFORMANCE
-> > +     bool "Performance"
-> > +     depends on PCI
-> > +     help
-> > +       Use MPS and MRRS for best performance.  This setting ensures
-> > +       that a given device's MPS is no larger than its parent MPS,
-> > +       which allows us to keep all switches/bridges to the max MPS sup=
-ported
-> > +       by their parent and eventually the PHB.  This is the same as
-> > +       booting with 'pci=3Dpcie_bus_perf'.
-> > +
-> > +config PCIE_BUS_PEER2PEER
-> > +     bool "Peer2peer"
-> > +     depends on PCI
-> > +     help
-> > +       Set MPS =3D 128 for all devices.  MPS configuration effected by
-> > +       the other options could cause the MPS on one root port to be
-> > +       different than that of the MPS on another.  Simply making the s=
-ystem
-> > +       wide MPS be set to the smallest possible value (128B) solves
-> > +       this issue.  This is the same as booting with 'pci=3Dpcie_bus_p=
-eer2peer'.
-> > +
-> > +endchoice
-> > +
-> >  source "drivers/pci/hotplug/Kconfig"
-> >  source "drivers/pci/controller/Kconfig"
-> >  source "drivers/pci/endpoint/Kconfig"
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index e39c5499770f..dfb52ed4a931 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -101,7 +101,19 @@ unsigned long pci_hotplug_mmio_pref_size =3D DEFAU=
-LT_HOTPLUG_MMIO_PREF_SIZE;
-> >  #define DEFAULT_HOTPLUG_BUS_SIZE     1
-> >  unsigned long pci_hotplug_bus_size =3D DEFAULT_HOTPLUG_BUS_SIZE;
-> >
-> > +
-> > +/* PCIE bus config, can be overridden by bootline param */
-> > +#ifdef CONFIG_PCIE_BUS_TUNE_OFF
-> > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_TUNE_OFF;
-> > +#elif defined CONFIG_PCIE_BUS_SAFE
-> > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_SAFE;
-> > +#elif defined CONFIG_PCIE_BUS_PERFORMANCE
-> > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_PERFORMANCE;
-> > +#elif defined CONFIG_PCIE_BUS_PEER2PEER
-> > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_PEER2PEER;
-> > +#else
-> >  enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_DEFAULT;
-> > +#endif
-> >
-> >  /*
-> >   * The default CLS is used if arch didn't set CLS explicitly and not
-> > --
-> > 2.17.1
-> >
->
->
-
---00000000000040d0d8064b9851a6
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-P6nIShznyqOL2EoCa0IXujxvXUo0pANFYsDhrCVF5JOVPeEL3Y2m+4flRtOI+YlRQoepb+TEVdkY
-/g1rlWG7GIYrtHxrFFRvn2/Iqqpv/x5kzJgoTYFOyTTGlXIqGkKTqCWFrN09kJWzhhmxhxtJprJs
-KveDLF8yhHSbqmXfKTkT+CIrynXXDro+80qXEXC8CM9W9d+2lDDM+hWTlC6Pt/ikMYf/ZB4K2Nr8
-VFruDYGZfAHhh9/lqK3SpS2Z/8cB88K62U+Eb1yNAgMBAAGjggHeMIIB2jAOBgNVHQ8BAf8EBAMC
-BaAwDAYDVR0TAQH/BAIwADCBkwYIKwYBBQUHAQEEgYYwgYMwRgYIKwYBBQUHMAKGOmh0dHA6Ly9z
-ZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjZzbWltZWNhMjAyMy5jcnQwOQYIKwYB
-BQUHMAGGLWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjZzbWltZWNhMjAyMzBlBgNV
-HSAEXjBcMAkGB2eBDAEFAwMwCwYJKwYBBAGgMgEoMEIGCisGAQQBoDIKAwIwNDAyBggrBgEFBQcC
-ARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wQQYDVR0fBDowODA2oDSg
-MoYwaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3I2c21pbWVjYTIwMjMuY3JsMCUGA1Ud
-EQQeMByBGmphbWVzLnF1aW5sYW5AYnJvYWRjb20uY29tMBMGA1UdJQQMMAoGCCsGAQUFBwMEMB8G
-A1UdIwQYMBaAFAApNp5ceroPry1QLdugI4UYsKCSMB0GA1UdDgQWBBQiuRLoBkhIaas+1j3yf23P
-ffVFcjANBgkqhkiG9w0BAQsFAAOCAgEAp1y0fznw9Uo7UzExANVpYjj+OG1c3C7MhWOvAd7LvfPX
-BSFisMaabop5Pyfc/sWzb/jCNfVkkDW5Ij2mzpUsUca2qpILoFhOUT9b0d+nc48MCZ4/Wj6vX5QJ
-i9VdYeuv3DYASZsQdH8iYnV5X5YCYo1AO/pyW+M4gG022Nsji9+3A9zkx8JRPDIXkPaDLrzcGD9L
-rEVIYnnSK9b/4VHzITVgEmSsUTAIzOD6M6TzgrSoJZFmKNMXlAqo+m1nlNyJkM4OyOvaDx5y+2hA
-mp4tzD9gJNU9TzQpQRZFz53+c8BkCpzvcHqT8lMluRlCrIYWqaSOUDHX9HPYvzbtO4iYV+irMdGN
-2PBz6Wtfaoi1xTfFSKK9ON1mvxACK+E4B5gycSoZcOBADTbGXLDMqiygl7Wz0oooAPqZpUnaD1nc
-x/pX7N8Ff6YK+iN3vVah34vLkE1CMFyDQMtyTCzQPW+7XCTxCL9ML3LBAF+eNAtKpPOsrGIdRHy5
-6oQr+2ZquSMvWj447q4v3sk1LHs7ata+sP8/kmcPKn3WPXQ/4xMevqFVyv2VIFrBK9ZnOZ//fz8R
-7SjJ7t2kOITvbWcMkizMc33S9hfmYiXaVTjIi89NiO3EXCJouYShpptgGNG6mpYHcddnfdKiILOS
-06KlKNuHO4IpRmaGrzcDjsUQQSn8amMxggJXMIICUwIBATBiMFIxCzAJBgNVBAYTAkJFMRkwFwYD
-VQQKExBHbG9iYWxTaWduIG52LXNhMSgwJgYDVQQDEx9HbG9iYWxTaWduIEdDQyBSNiBTTUlNRSBD
-QSAyMDIzAgwHM7pH5w7o7Qb7yXUwDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEIBiV
-wQkF3kLB1C4+1YeoPCpxUl3yqkYpRQQWWSac4rhJMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEw
-HAYJKoZIhvcNAQkFMQ8XDTI2MDIyNDIxMTAzMFowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQME
-ASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQcwCwYJ
-YIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAD+0k3Ii/tFI9qQS+G7rknPQ+ahdLAlPet/gswEx
-JzdOw6KhfVGyi5Jf5ojFDPFhD4XwcIz59nUiWrW9/Mz38i3yWIgOlzhV59AVJfgYD0Ox4kYrvYWF
-DhxHCrfQwNrpcJugwqrLB80GZsA/FEos3D9kgvjmBY0XgO78IHf6DymfzysqJ7YDpD1o2ySBBbdG
-lRoyyipIJ5ALyCcBC4z1b7Pyvi58W4RX8mBJ6ghXWtuV0d/T9RZC6Q7H5Ql4kg88OevExzK4YhHG
-L44fqHG7KUPNMGF8D7asLKGncdIYLT+mRdAJ6oerINuCfB64qVV2/BepVcCin5GfaWdnDUQDC+Y=
---00000000000040d0d8064b9851a6--
+Thanks,
+Jake
