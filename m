@@ -1,63 +1,63 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF63F38B7D8
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 12:20:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9A8F396D03
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 12:20:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771935639; cv=none; b=pJ+TTTuSqVDAN8fqTUYi307+8xjsJ/E0uqgMpzvQM6YyJWRZkS4yIAN0Hc+TEmropC/5E8byC/qn9GB5veiDkP4W6P1gxVxEm6SD80rMQN9BjuKKeges7a5+ZpxXYE3LiJvOOX66Th+4qBKwL+o1AHZNXTYKWUCU0D3E5PRvOAA=
+	t=1771935651; cv=none; b=DyN58KHq7WtpjG//foiXUf0NUCneivpWNzgfCn1+XeSE8G90m9pvpG0d7lM2hKCsQdmbagHvE6WxaCczGaEFhVERknMeYArg2KIc7G9hOwwUJKdpzgz16Hw2/kLiXa/aHJXMlw77hkGuZlC70QPwvKLtaZItnrCAjajY0MMdi70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771935639; c=relaxed/simple;
-	bh=jdzWYyYQqakXllbhH/zeMWJPPh6SiIY6qluU0wDrWYM=;
+	s=arc-20240116; t=1771935651; c=relaxed/simple;
+	bh=XLbatLTUJXw9A3hBonWnh0l0ZSHoVwD+j7EQZ/FCueU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HaWkdxzqkDcMuLJkJHzuiUVgcodao9PHMQS0LrOUnCXIbZOi/dJm0QmrCKT9zpaAkfpOGwEVpdSWCbidDc4IRbwVHyNIfVyzTTEQS0hourZ21gkH6WPs2lzCBBwZLNipiXnJfJZoUWm5yCOYun1/63Nnik5qmr/qSisLIOdOdaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h8GWtOFF; arc=none smtp.client-ip=209.85.210.169
+	 MIME-Version; b=bpVtdwughfvwu6+uFG4V7nKO9rpT4Ua8fjcjd7tPpIPviDje2cPEAp2rGt2adv52Wijo09maBw1TTqucZafLptNbV7fgkOC6XFI4dA1n5acQl8argpF3woKrdh90z74qY1yoR4Cw3PTNNmcR1iD0mZ26/JSZiLxwptj3uRELQGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LbYgykEp; arc=none smtp.client-ip=209.85.210.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h8GWtOFF"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-8217f2ad01eso5245435b3a.2
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 04:20:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LbYgykEp"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-826c49b7628so2846567b3a.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 04:20:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771935637; x=1772540437; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1771935649; x=1772540449; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=qNK6vbvi37qs9tkDMjIRAkoSxo6WGQaG2DgYfv4s/Ig=;
-        b=h8GWtOFFo/bfHSI7tEeK29OSTV6fztgiqwg50/ZisrJzJy5nLZxHgb3WADKxkjbKJ5
-         uGE9Kg4ngyDYjJdDI7doAmmasR+PD+i2KhUiombf8PaPoZlPlJ8ww2IkOa0SLcJuArpa
-         xZTUn27nS/qmE+rATbJ19bKKNPsx7rC9I6vw+A2/YjEsskBw3ZEylLSVni2LIYpJFHzJ
-         rsozP5Jnd94Cw4TZ+3tMOQbGekJgcDCwuir/BCZVaDhZwf67t0fxjJlMFoc4XMoQ41KR
-         tjs+YwuoVv6ms+lTnkq29lYhGa2JAbDRZdAyRwISoVKAUdmmSk0GHtAaSHILQj/B1fxD
-         YsxQ==
+        bh=QKJ9zh45ZdopaEOQEByGr+CA6Hn9q+QZHG4I18FgvD8=;
+        b=LbYgykEpPFsd+Hn5rQ3PQWzwmKjZzFfEKdVfup3XaJeUQK4/CLnsfRLSYjR6U9Fg9d
+         Jtt84NNJXWzGxK5eymcMonZtRpVPuxTey/Q89YIU70we/nxFV0t1fb9aXMVete0XwnyP
+         xEubDm/68ithFXMF8QHUChZOsOfku18/tWrXraWTZmnxWGrDJPj5IVN0ibGxpQo4M8O3
+         WMJG4e4DmpF4QWym7ihUYztFL8uUPlCz6pxC4X3tAG0wItKuOwFWpkzeH56TeNkffugq
+         3xDsD8V0v4AQHQ28N95Bvovp8Py5c+eZvIsG7sR7DIz5ffUoq3p3l/Oc53tfAuM6Bden
+         lcWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771935637; x=1772540437;
+        d=1e100.net; s=20230601; t=1771935649; x=1772540449;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=qNK6vbvi37qs9tkDMjIRAkoSxo6WGQaG2DgYfv4s/Ig=;
-        b=V/qECGgS8Ek1dvOr5DrMM1AS+GjFRjaXPp7IETezDorTllHNyzgohfErD4BSM/mZJ2
-         XN71oOmy6vVhLiBWc8gfpZVDGPtT/a+VqEiNthdjztp/Mm1TDSnsoJ59Xgs3j/pjgVGr
-         VH2z+WjKydHNnSJ9EePzNk2TLuJs9ommAcx8RZdU36KLlN2bNpXzIA4FKGNWYRDlIUQL
-         bN+8pKAVuGPNX7e5A0actzaZ5hthDBk8C77LPEEvk0rMmI+tMa1IT0FnfZ3ODc7PD6sc
-         6vsWMnjYpktWCyVgQ2bTdsMpPD2qYFRpIkieNOOk+6NINW0SdnPzDorV44xpzHfYQW6c
-         lcKQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU0xRYCfuZfG5gOhbEXG0vPaYRS5Hiaf297tblRHg7eFmSCaJOxcEGb6zhFiAveUiKp3kYIFiRuKPQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwOy8Hr3L+w0hJZzEiPleThBW0wen+r3nM4ryIVk2WGedWF0IXe
-	LBPeKNtE+4jltq/CWgZPltBLR0/5kXZoc+IJyH+aSdWwuXiizwUuxX6nyo+xpg==
-X-Gm-Gg: ATEYQzzxROYmhM405DcxJpxJT7PVUlZCwsTZQ1a9AAQtEzcn0wobGplWp0ni7/xD6UN
-	cj21jJrezHe2Jd92DnqP9NBkSnC/vgVwSCRthCYIUwXPL5pGQYTB8vzxBbZTfro3sTpTwbF03Oj
-	GkZQL5pXYi7qJmBAtIqwuN8lt3wL87ZnelO1+zvn34PUTHCV7zQ8VIJZ+h8A754rvvZ0beAQv5E
-	wPAtct/esaPi9Ix/VT5AmGpTHQb1RJ5/w3W7x1A95vmCbijGyYKO44eswiNKa0Z74lxJH5WjAS3
-	nl5xNUxpofcJX0IrKXtgKGrnBnyF5gn2u3eKJCK4n0OK6QzW6bIM0AaDUg8a1EProRP2ydpaiyZ
-	HEEuSGURPYA5JITmAcUmAchTM/YeqIhGL/tTTNSfxlBK+TRsd/JnBKQ400HtpfRBF3nEgtskbfC
-	DLCXXHSi/MRw+Oj5DvlVlRSYysyBjApg==
-X-Received: by 2002:aa7:88c1:0:b0:824:9a12:deb1 with SMTP id d2e1a72fcca58-826daa81cb6mr12030602b3a.62.1771935637215;
-        Tue, 24 Feb 2026 04:20:37 -0800 (PST)
+        bh=QKJ9zh45ZdopaEOQEByGr+CA6Hn9q+QZHG4I18FgvD8=;
+        b=vlkF2oLE1S1a3CvPNGuE2gelqWj5cfIzrVNCz9PRnM0PZ75HhgcVQ7/oeddFFAjkyH
+         3Wok/DXYJFjQnNZ6lYBT7O00xuypCBxV4UwsSNV9nk+fYtk8OHuaDDzKKpYlGQodXuQu
+         t0zZM2Rz7dhdPfYB4EFAWy9PnMqGRC6zAysFUtCrGqII0EveiMGbTOQK9t2DgRRIC/nf
+         4r5+bgwvl1vY44o55KIj+hb4MilJ/OLKMI+G9uRC80ArF4yT9B9dFJNpEEnwdXWj6TuB
+         X1J7qyIeDiYHm27zVPKgZWgWR/yrHY0Snmn1AyoeULMMyzr8jgr1SduZpY3W25vLp8DK
+         3eVA==
+X-Forwarded-Encrypted: i=1; AJvYcCXEAKnz72lGdPx31Hr+MqwwNu5QPNn0hWn2LpcNyoHIsSPWNyM71+TMADVMwXh/kI8gx+W0mWQALZE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzh7Md1992onzBe+KySVyi0PZXvtrnP1B4q6DNgPUpoYvwjsFhH
+	3OqzRI/bh5mH6bMqlT0y2T/ufjbHylxF1nZ1PfDcYBDX74+LMTSPdnzX
+X-Gm-Gg: ATEYQzzjg39H8lbxT8WXDrQphUL7vj6+hZby3b1GltuFhD+VWkAO4yYXaFziGYzgLy2
+	4cdT7dD5hgGt9de6uIBC+BLDn9bmctMYaOr7zQL13NvCHJZjP15Vtm7LtT+IOYdwXsbreIQrXnN
+	/L9S80SkrEwnFUDvDUHePCMg08d9jinHE1Zl5REAzqWNxCebYywmI+CWVoykmDJF6JRauW3sW7z
+	0Vp0twNR0eI9pw+tqodE11XDTnq6f+4VGFJ4HM7+OyvqH3DFgYrj5KC2iG5O62xhcJqeeFpp0Kj
+	e1Kk/kFhV481lqgGCiVFXWVHAQfCAMXq81Ul1eR3pjSfKzM9aOdGpdjEE4W0rP6gRoag4HoiMtg
+	EIQCjlGJLPLWdKEkGh8Wn/daQkbryC6z9iYgq4A0GWa8EEkmwBOOyO1iOMApYV4AECx/wSwm3wW
+	+Rez3akGypcKUyaD9a/0iOEXSZIUWfkg==
+X-Received: by 2002:a05:6a00:1d83:b0:823:3056:c2b9 with SMTP id d2e1a72fcca58-826daaf421amr9257126b3a.65.1771935649115;
+        Tue, 24 Feb 2026 04:20:49 -0800 (PST)
 Received: from rockpi-5b ([45.112.0.78])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-826dd8ba11bsm10613950b3a.50.2026.02.24.04.20.32
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-826dd8ba11bsm10613950b3a.50.2026.02.24.04.20.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Feb 2026 04:20:36 -0800 (PST)
+        Tue, 24 Feb 2026 04:20:48 -0800 (PST)
 From: Anand Moon <linux.amoon@gmail.com>
 To: Thierry Reding <thierry.reding@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -74,9 +74,9 @@ To: Thierry Reding <thierry.reding@gmail.com>,
 	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
 	linux-kernel@vger.kernel.org (open list)
 Cc: Anand Moon <linux.amoon@gmail.com>
-Subject: [PATCH v3 3/5] PCI: tegra: Simplify clock handling by using clk_bulk*() functions
-Date: Tue, 24 Feb 2026 17:48:59 +0530
-Message-ID: <20260224121948.25218-4-linux.amoon@gmail.com>
+Subject: [PATCH v3 4/5] PCI: tegra: Use readl_poll_timeout() for link status polling
+Date: Tue, 24 Feb 2026 17:49:00 +0530
+Message-ID: <20260224121948.25218-5-linux.amoon@gmail.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20260224121948.25218-1-linux.amoon@gmail.com>
 References: <20260224121948.25218-1-linux.amoon@gmail.com>
@@ -88,233 +88,78 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Currently, the driver acquires clocks and prepare/enable/disable/unprepare
-the clocks individually thereby making the driver complex to read.
-
-The driver can be simplified by using the clk_bulk*() APIs.
-
-Use:
-  - devm_clk_bulk_get_all() API to acquire all the clocks
-  - clk_bulk_prepare_enable() to prepare/enable clocks
-  - clk_bulk_disable_unprepare() APIs to disable/unprepare them in bulk
-
-As part of this cleanup:
-  - Remove the legacy has_cml_clk flag
-  - Drop explicit handling of individual clocks (pex, afi, pll_e, cml)
-  - Rely on device tree ordering for clock sequencing, eliminating
-    hardcoded logic and improving readability and maintainability
-
-This improves clarity, and makes future changes easier for maintainers.
+Replace the manual `do-while` polling loops with the readl_poll_timeout()
+helper when checking the link DL_UP and DL_LINK_ACTIVE status bits
+during link bring-up. This simplifies the code by removing the open-coded
+timeout logic in favor of the standard, more robust iopoll framework.
+The change improves readability and reduces code duplication.
 
 Cc: Thierry Reding <thierry.reding@gmail.com>
 Signed-off-by: Anand Moon <linux.amoon@gmail.com>
 ---
 v3: None
-
-v2: Switch back to devm_clk_bulk_get_all from devm_clk_bulk_get()
-
-Mani - But you are converting it to .yaml, so you can safely
-use devm_clk_bulk_get_all()
-
-v1: Switch from devm_clk_bulk_get_all() -> devm_clk_bulk_get() with
-        fix clks array.
-
-nvidia,tegra20-pcie and nvidia,tegra186-pcie uses three clocks
-        pex, afi, pll_e
-where as nvidia,tegra30-pcie, nvidia,tegra124-pcie, nvidia,tegra210-pcie
-uses four clks
-        pex, afi, pll_e, cml
+v2: None
+v1: dropped the include  <linux/iopoll.h> header file.
 ---
- drivers/pci/controller/pci-tegra.c | 71 +++++-------------------------
- 1 file changed, 12 insertions(+), 59 deletions(-)
+ drivers/pci/controller/pci-tegra.c | 37 +++++++++++-------------------
+ 1 file changed, 14 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 512309763d1f..32dc11d95cc9 100644
+index 32dc11d95cc9..459a2bb1a065 100644
 --- a/drivers/pci/controller/pci-tegra.c
 +++ b/drivers/pci/controller/pci-tegra.c
-@@ -298,7 +298,6 @@ struct tegra_pcie_soc {
- 	bool has_pex_clkreq_en;
- 	bool has_pex_bias_ctrl;
- 	bool has_intr_prsnt_sense;
--	bool has_cml_clk;
- 	bool has_gen2;
- 	bool force_pca_enable;
- 	bool program_uphy;
-@@ -331,10 +330,8 @@ struct tegra_pcie {
+@@ -2156,37 +2156,28 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
+ 	value |= RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT;
+ 	writel(value, port->base + RP_PRIV_MISC);
  
- 	struct resource cs;
+-	do {
+-		unsigned int timeout = TEGRA_PCIE_LINKUP_TIMEOUT;
++	while (retries--) {
++		int err;
  
--	struct clk *pex_clk;
--	struct clk *afi_clk;
--	struct clk *pll_e;
--	struct clk *cml_clk;
-+	struct clk_bulk_data *clks;
-+	int    num_clks;
- 
- 	struct reset_control *pex_rst;
- 	struct reset_control *afi_rst;
-@@ -1154,15 +1151,11 @@ static void tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- static void tegra_pcie_power_off(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
--	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
- 
- 	reset_control_assert(pcie->afi_rst);
- 
--	clk_disable_unprepare(pcie->pll_e);
--	if (soc->has_cml_clk)
--		clk_disable_unprepare(pcie->cml_clk);
--	clk_disable_unprepare(pcie->afi_clk);
-+	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
- 
- 	if (!dev->pm_domain)
- 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-@@ -1175,7 +1168,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
- static int tegra_pcie_power_on(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
--	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
- 
- 	reset_control_assert(pcie->pcie_xrst);
-@@ -1203,35 +1195,16 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+-		do {
+-			value = readl(port->base + RP_VEND_XP);
+-
+-			if (value & RP_VEND_XP_DL_UP)
+-				break;
+-
+-			usleep_range(1000, 2000);
+-		} while (--timeout);
+-
+-		if (!timeout) {
++		err = readl_poll_timeout(port->base + RP_VEND_XP, value,
++					 value & RP_VEND_XP_DL_UP,
++					 1000,
++					 TEGRA_PCIE_LINKUP_TIMEOUT * 1000);
++		if (err) {
+ 			dev_dbg(dev, "link %u down, retrying\n", port->index);
+ 			goto retry;
  		}
- 	}
  
--	err = clk_prepare_enable(pcie->afi_clk);
-+	err = clk_bulk_prepare_enable(pcie->num_clks, pcie->clks);
- 	if (err < 0) {
--		dev_err(dev, "failed to enable AFI clock: %d\n", err);
-+		dev_err(dev, "filed to enable clocks: %d\n", err);
- 		goto powergate;
- 	}
- 
--	if (soc->has_cml_clk) {
--		err = clk_prepare_enable(pcie->cml_clk);
--		if (err < 0) {
--			dev_err(dev, "failed to enable CML clock: %d\n", err);
--			goto disable_afi_clk;
--		}
--	}
+-		timeout = TEGRA_PCIE_LINKUP_TIMEOUT;
 -
--	err = clk_prepare_enable(pcie->pll_e);
--	if (err < 0) {
--		dev_err(dev, "failed to enable PLLE clock: %d\n", err);
--		goto disable_cml_clk;
--	}
+-		do {
+-			value = readl(port->base + RP_LINK_CONTROL_STATUS);
 -
- 	reset_control_deassert(pcie->afi_rst);
- 
- 	return 0;
- 
--disable_cml_clk:
--	if (soc->has_cml_clk)
--		clk_disable_unprepare(pcie->cml_clk);
--disable_afi_clk:
--	clk_disable_unprepare(pcie->afi_clk);
- powergate:
- 	if (!dev->pm_domain)
- 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-@@ -1255,25 +1228,11 @@ static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
- static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
--	const struct tegra_pcie_soc *soc = pcie->soc;
+-			if (value & RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE)
+-				return true;
 -
--	pcie->pex_clk = devm_clk_get(dev, "pex");
--	if (IS_ERR(pcie->pex_clk))
--		return PTR_ERR(pcie->pex_clk);
+-			usleep_range(1000, 2000);
+-		} while (--timeout);
++		err = readl_poll_timeout(port->base + RP_LINK_CONTROL_STATUS,
++					 value,
++					 value & RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE,
++					 1000, TEGRA_PCIE_LINKUP_TIMEOUT * 1000);
++		if (!err)
++			return true;
  
--	pcie->afi_clk = devm_clk_get(dev, "afi");
--	if (IS_ERR(pcie->afi_clk))
--		return PTR_ERR(pcie->afi_clk);
--
--	pcie->pll_e = devm_clk_get(dev, "pll_e");
--	if (IS_ERR(pcie->pll_e))
--		return PTR_ERR(pcie->pll_e);
--
--	if (soc->has_cml_clk) {
--		pcie->cml_clk = devm_clk_get(dev, "cml");
--		if (IS_ERR(pcie->cml_clk))
--			return PTR_ERR(pcie->cml_clk);
--	}
-+	pcie->num_clks = devm_clk_bulk_get_all(dev, &pcie->clks);
-+	if (pcie->num_clks < 0)
-+		return dev_err_probe(dev, pcie->num_clks,
-+				     "failed to get clocks\n");
+ retry:
+ 		tegra_pcie_port_reset(port);
+-	} while (--retries);
++	}
  
- 	return 0;
+ 	return false;
  }
-@@ -2344,7 +2303,6 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.has_pex_clkreq_en = false,
- 	.has_pex_bias_ctrl = false,
- 	.has_intr_prsnt_sense = false,
--	.has_cml_clk = false,
- 	.has_gen2 = false,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-@@ -2373,7 +2331,6 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
--	.has_cml_clk = true,
- 	.has_gen2 = false,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-@@ -2394,7 +2351,6 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
--	.has_cml_clk = true,
- 	.has_gen2 = true,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-@@ -2417,7 +2373,6 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
--	.has_cml_clk = true,
- 	.has_gen2 = true,
- 	.force_pca_enable = true,
- 	.program_uphy = true,
-@@ -2458,7 +2413,6 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
--	.has_cml_clk = false,
- 	.has_gen2 = true,
- 	.force_pca_enable = false,
- 	.program_uphy = false,
-@@ -2642,7 +2596,7 @@ static int tegra_pcie_pm_suspend(struct device *dev)
- 	}
- 
- 	reset_control_assert(pcie->pex_rst);
--	clk_disable_unprepare(pcie->pex_clk);
-+	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
-@@ -2676,9 +2630,9 @@ static int tegra_pcie_pm_resume(struct device *dev)
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_enable_msi(pcie);
- 
--	err = clk_prepare_enable(pcie->pex_clk);
-+	err = clk_bulk_prepare_enable(pcie->num_clks, pcie->clks);
- 	if (err) {
--		dev_err(dev, "failed to enable PEX clock: %d\n", err);
-+		dev_err(dev, "failed to enable clock: %d\n", err);
- 		goto pex_dpd_enable;
- 	}
- 
-@@ -2699,7 +2653,6 @@ static int tegra_pcie_pm_resume(struct device *dev)
- 
- disable_pex_clk:
- 	reset_control_assert(pcie->pex_rst);
--	clk_disable_unprepare(pcie->pex_clk);
- pex_dpd_enable:
- 	pinctrl_pm_select_idle_state(dev);
- poweroff:
 -- 
 2.50.1
 
