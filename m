@@ -1,49 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8017837B3F0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADFDE37B3F7
 	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 11:10:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771931453; cv=none; b=UgWhq2Yy1NJYKFVq1vurpU2xo9z+65bl7p1j8PCxQktE7tAcsj+ebEmsJ8B/LjlAwXc5zQYvSkefDw8iWV0ddj7duehxyADHTtssvtK3ecluIVLXSSpk2rw9i5SLo57QlGL8/7ka4c4mkS26XZ2Iw6mdArp894se7uLGTmgMkjc=
+	t=1771931454; cv=none; b=ptqERRPNBEDjVQwW8nTmPaRKcPOlYFC4e7EePB084XHCX7/G34GW1jGjrSt2fevXmK2etPNd2z0Dzhp7/0G0zuyDbBCv9VgcH/IUc3Q4LnnY4xKzAvP/bY5R4Zqws5G9CIHERB3TRwXfVcMriXdjWsATnALwZb0J1F0pfTAoaYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771931453; c=relaxed/simple;
-	bh=/yCQtpg7l1ZDCjOdUuFIA9/TuYYY4m2dg5A5Iqb7IMc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M8hH6N+lG+8Q17Mk7ummnHWwX7uZQGJcGgfgyw86H4nbbbi+lZ726Cr0rLEQyq6OCUFuzXf3IVbbgymvf1ycMh2gLGR5JFio1FELmI/ARPwVBMasFErLpDlREya+IB4nIuxyu6pVp6eMTlLR5yvDrJlbYrGuPrhg7e7ppOwNGTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aAzUGdOk; arc=none smtp.client-ip=192.198.163.7
+	s=arc-20240116; t=1771931454; c=relaxed/simple;
+	bh=QKZD5okm1xqkM8oQst752FNnt6DZN162fiSZYKIDKYE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=fYq54RnrdEzh+nyxOMS6/TBW+OemPSkeZv9Fs+OeTiyUPlme8s5AVxehhogsjvkhYRYsX2yyL9UZP6KPnpqwd6ZhlHpNM0Zd+ROH1kBqnWQ1PuZVplWuJuOAqi3GTK53NPWHIrd2p1suQHjfdXS5ruSAIYWbMQClHG+6NVaP+VI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YLogq8ub; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aAzUGdOk"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YLogq8ub"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771931452; x=1803467452;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=/yCQtpg7l1ZDCjOdUuFIA9/TuYYY4m2dg5A5Iqb7IMc=;
-  b=aAzUGdOkmnBU1SL5CePlEyGPjBPxhGztQo+G3rdk7TgvuZlB18n6paga
-   BVlDItrcVPtTOyoDGMBvP5eMswY6/wpRplDWAFpgl61lgy41cZjOzPKa3
-   qr+xb1SlO01ONl6KOH7DxgUHOOsIXBXh+lEu12EMULVkfy3Zuv3W4cxHW
-   PtzbMRwsNgP0q3wDNDdYSmG+tVJCqhfntHSSXG6QH3PTtewPt/WSq/4/K
-   8u/RsoUYL89aJRK76kkG7jUBuGqXfbGtUZ1U1PeLjijLuaUXGeMYMzwyg
-   DspVitE1YtfJCw3auE7pcQVqT9J3jl77JDfNm9Ep/Z1bEKtcx6qlHdnBX
-   A==;
-X-CSE-ConnectionGUID: wANDYwSZR/GRCFa9pU7iOQ==
-X-CSE-MsgGUID: 3qvfPh0LSnyosPCJkwdqFA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11710"; a="98405010"
+  t=1771931453; x=1803467453;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=QKZD5okm1xqkM8oQst752FNnt6DZN162fiSZYKIDKYE=;
+  b=YLogq8ub2pk/MonFVaVLNsjlTxu9kddXmxtmO4u+OBdmpAwjcny5Czse
+   qYZkNU3MJkzkF6M9oAtmzUZ6UgeT8CvZNUKQdMwcZ+LnP+6au4fQh4LdI
+   LtQTvmMxR+GwPq2X+TkFnW+daXThPApqfXDrqq1FUZyGS398vkmdY4XPx
+   7mfSX36B6HNrOag/RC05IR11T8V3DEaV24kXDB+RzrZshwzosFjbkPwKG
+   goUjEeHnW97CrNv56MlpmP5VJbMspihD5KM7GECyio+dp1fAV14AydfnJ
+   B0GWWHB4R7ohmAfQzA8uqK23Us0iacr6FsQH44/Rx4SUVCjc4hEg289rR
+   g==;
+X-CSE-ConnectionGUID: hTPB/2ZrQNOlE2Z0gfJ3FA==
+X-CSE-MsgGUID: a/vCa9r9TX20R13vMYMwSA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11710"; a="71974269"
 X-IronPort-AV: E=Sophos;i="6.21,308,1763452800"; 
-   d="scan'208";a="98405010"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2026 03:10:50 -0800
-X-CSE-ConnectionGUID: 0E2qZSbRQzmW17znr/jcSA==
-X-CSE-MsgGUID: l37B6SpOSwWEV/47tJ08Qg==
+   d="scan'208";a="71974269"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2026 03:10:51 -0800
+X-CSE-ConnectionGUID: EvVGT46fTLGP6NSmhSxlbg==
+X-CSE-MsgGUID: yMJFeygtSkalUPvVEKcnxQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,308,1763452800"; 
-   d="scan'208";a="215892057"
+   d="scan'208";a="216037802"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa008.jf.intel.com with ESMTP; 24 Feb 2026 03:10:45 -0800
+  by orviesa007.jf.intel.com with ESMTP; 24 Feb 2026 03:10:46 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 182A098; Tue, 24 Feb 2026 12:10:44 +0100 (CET)
+	id 25D989E; Tue, 24 Feb 2026 12:10:44 +0100 (CET)
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: linux-pci@vger.kernel.org
 Cc: intel-wired-lan@lists.osuosl.org,
@@ -66,10 +67,12 @@ Cc: intel-wired-lan@lists.osuosl.org,
 	Vinicius Costa Gomes <vinicius.gomes@intel.com>,
 	Dima Ruinskiy <dima.ruinskiy@intel.com>,
 	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 0/5] PCI / igc: Improvements related to PTM enabling
-Date: Tue, 24 Feb 2026 12:10:39 +0100
-Message-ID: <20260224111044.3487873-1-mika.westerberg@linux.intel.com>
+Subject: [PATCH 4/5] PCI/PTM: Drop granularity parameter from pci_enable_ptm()
+Date: Tue, 24 Feb 2026 12:10:43 +0100
+Message-ID: <20260224111044.3487873-5-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20260224111044.3487873-1-mika.westerberg@linux.intel.com>
+References: <20260224111044.3487873-1-mika.westerberg@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,61 +81,131 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+This is not used by any of the existing callers so we can simplify the
+function slightly and get rid of that.
 
-There is (still) an issue with Linux PCIe PTM enabling that happens because
-Linux automatically enables PTM if certain capabilities are set. However,
-turns out this is not enough because once we enumerate PCIe Switch Upstream
-port we also enable PTM but the Downstream Ports are not yet enumerated.
-This triggers floods of AER errors like this:
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+---
+ drivers/net/ethernet/intel/ice/ice_main.c      |  2 +-
+ drivers/net/ethernet/intel/idpf/idpf_main.c    |  2 +-
+ drivers/net/ethernet/intel/igc/igc_main.c      |  2 +-
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |  2 +-
+ drivers/pci/pcie/ptm.c                         | 11 +++--------
+ include/linux/pci.h                            |  4 ++--
+ 6 files changed, 9 insertions(+), 14 deletions(-)
 
-      pcieport 0000:00:07.1: AER: Multiple Uncorrectable (Non-Fatal) error message received from 0000:00:07.1
-      pcieport 0000:00:07.1: PCIe Bus Error: severity=Uncorrectable (Non-Fatal), type=Transaction Layer, (Receiver ID)
-      pcieport 0000:00:07.1:   device [8086:d44f] error status/mask=00200000/00000000
-      pcieport 0000:00:07.1:    [21] ACSViol                (First)
-      pcieport 0000:00:07.1: AER:   TLP Header: 0x34000000 0x00000052 0x00000000 0x00000000
-      pcieport 0000:00:07.1: AER: device recovery successful
-      pcieport 0000:00:07.1: AER: Uncorrectable (Non-Fatal) error message received from 0000:00:07.1
-
-We have ACS Source Validation enabled so Requester ID 0 which is sent by
-the not-enumerated Downstream Port triggers the ACS violation AER.
-
-This can be prevented by enabling PTM when the whole topology has been
-enumerated and doing it like that seems to be reasonable anyway because we
-only have a couple of drivers enabling it now so it does not make sense to
-enable otherwise as it consumes bandwidth.
-
-I did that fix and the problem went away but wanted to test with a device
-and driver that actually enables PTM. I have a couple of igc NICs here that
-has this support. However, when testing I noticed that during power state
-transitions we still get errors like this from igc:
-
-  igc 0000:03:00.0 enp3s0: Timeout reading IGC_PTM_STAT register
-
-and after this PTM for the device stays disabled.
-
-This series includes fixes for igc that deal with the issues I found and
-now PTM gets succesfully enabled and works accross suspend and runtime
-suspend of igc, and there are no flood of AER errors as above. While there
-there is one cleanup patch in the middle that drops unused parameter.
-
-Mika Westerberg (5):
-  igc: Call netif_queue_set_napi() with rntl locked
-  igc: Let the PCI core deal with the PM resume flow
-  igc: Don't reset the hardware on suspend path
-  PCI/PTM: Drop granularity parameter from pci_enable_ptm()
-  PCI/PTM: Do not enable PTM automatically for Root and Switch Upstream Ports
-
- drivers/net/ethernet/intel/ice/ice_main.c     |  2 +-
- drivers/net/ethernet/intel/idpf/idpf_main.c   |  2 +-
- drivers/net/ethernet/intel/igc/igc.h          |  2 +-
- drivers/net/ethernet/intel/igc/igc_ethtool.c  |  6 +-
- drivers/net/ethernet/intel/igc/igc_main.c     | 33 ++++----
- .../net/ethernet/mellanox/mlx5/core/main.c    |  2 +-
- drivers/pci/pcie/ptm.c                        | 77 ++++++++++---------
- include/linux/pci.h                           |  6 +-
- 8 files changed, 64 insertions(+), 66 deletions(-)
-
+diff --git a/drivers/net/ethernet/intel/ice/ice_main.c b/drivers/net/ethernet/intel/ice/ice_main.c
+index ebf48feffb30..b35c4e4ecd2a 100644
+--- a/drivers/net/ethernet/intel/ice/ice_main.c
++++ b/drivers/net/ethernet/intel/ice/ice_main.c
+@@ -5028,7 +5028,7 @@ static int ice_init(struct ice_pf *pf)
+ 	}
+ 
+ 	if (pf->hw.mac_type == ICE_MAC_E830) {
+-		err = pci_enable_ptm(pf->pdev, NULL);
++		err = pci_enable_ptm(pf->pdev);
+ 		if (err)
+ 			dev_dbg(dev, "PCIe PTM not supported by PCIe bus/controller\n");
+ 	}
+diff --git a/drivers/net/ethernet/intel/idpf/idpf_main.c b/drivers/net/ethernet/intel/idpf/idpf_main.c
+index 0dd741dcfcdb..ab3c409e587b 100644
+--- a/drivers/net/ethernet/intel/idpf/idpf_main.c
++++ b/drivers/net/ethernet/intel/idpf/idpf_main.c
+@@ -257,7 +257,7 @@ static int idpf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto err_free;
+ 	}
+ 
+-	err = pci_enable_ptm(pdev, NULL);
++	err = pci_enable_ptm(pdev);
+ 	if (err)
+ 		pci_dbg(pdev, "PCIe PTM is not supported by PCIe bus/controller\n");
+ 
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index 84f5d92c81cc..291222b06915 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -7124,7 +7124,7 @@ static int igc_probe(struct pci_dev *pdev,
+ 	if (err)
+ 		goto err_pci_reg;
+ 
+-	err = pci_enable_ptm(pdev, NULL);
++	err = pci_enable_ptm(pdev);
+ 	if (err < 0)
+ 		dev_info(&pdev->dev, "PCIe PTM not supported by PCIe bus/controller\n");
+ 
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index fdc3ba20912e..0b94d4ed0ef6 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -960,7 +960,7 @@ static int mlx5_pci_init(struct mlx5_core_dev *dev, struct pci_dev *pdev,
+ 
+ 	mlx5_pci_vsc_init(dev);
+ 
+-	pci_enable_ptm(pdev, NULL);
++	pci_enable_ptm(pdev);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+index 91a598ed534c..2c848ae4f15f 100644
+--- a/drivers/pci/pcie/ptm.c
++++ b/drivers/pci/pcie/ptm.c
+@@ -88,7 +88,7 @@ void pci_ptm_init(struct pci_dev *dev)
+ 
+ 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+ 	    pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM)
+-		pci_enable_ptm(dev, NULL);
++		pci_enable_ptm(dev);
+ }
+ 
+ void pci_save_ptm_state(struct pci_dev *dev)
+@@ -182,15 +182,13 @@ static int __pci_enable_ptm(struct pci_dev *dev)
+ /**
+  * pci_enable_ptm() - Enable Precision Time Measurement
+  * @dev: PCI device
+- * @granularity: pointer to return granularity
+  *
+- * Enable Precision Time Measurement for @dev.  If successful and
+- * @granularity is non-NULL, return the Effective Granularity.
++ * Enable Precision Time Measurement for @dev.
+  *
+  * Return: zero if successful, or -EINVAL if @dev lacks a PTM Capability or
+  * is not a PTM Root and lacks an upstream path of PTM-enabled devices.
+  */
+-int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
++int pci_enable_ptm(struct pci_dev *dev)
+ {
+ 	int rc;
+ 	char clock_desc[8];
+@@ -201,9 +199,6 @@ int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+ 
+ 	dev->ptm_enabled = 1;
+ 
+-	if (granularity)
+-		*granularity = dev->ptm_granularity;
+-
+ 	switch (dev->ptm_granularity) {
+ 	case 0:
+ 		snprintf(clock_desc, sizeof(clock_desc), "unknown");
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1c270f1d5123..8aaa72dcb164 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1975,11 +1975,11 @@ struct pci_ptm_debugfs {
+ };
+ 
+ #ifdef CONFIG_PCIE_PTM
+-int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
++int pci_enable_ptm(struct pci_dev *dev);
+ void pci_disable_ptm(struct pci_dev *dev);
+ bool pcie_ptm_enabled(struct pci_dev *dev);
+ #else
+-static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
++static inline int pci_enable_ptm(struct pci_dev *dev)
+ { return -EINVAL; }
+ static inline void pci_disable_ptm(struct pci_dev *dev) { }
+ static inline bool pcie_ptm_enabled(struct pci_dev *dev)
 -- 
 2.50.1
 
