@@ -1,88 +1,160 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 303DA366DD6
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 10:03:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413B537755D
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 10:16:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771927434; cv=none; b=HfzDALeWPMptK3A543ps6f9FNrT1Ts5pIJt9ce5T2lkP91p5wEYM46wxnSYIgPNnuCQfKZHt/Xbbn4mEbIISFQMGEw8WuxSOTwWq9ALeKHk5Wpcj97IfOlVhpss3q4o7Le6bt0jEPbfhUFdqCDlMtNEKCAyQ1mZstWvpeU5/nkg=
+	t=1771928180; cv=none; b=BrO4DLgiBMGhqx2zRR1UMwJZATdzS3UZm688QKrH+DDLt4na21+OHv4npe60qr/3qMF1a7sTzq9sZJFxJBbH4u9LiyMBWv2GJVEsM5Pvn1IGdchvaB/rQdTPf6n2CDRvPWE+7EDACfusH7NfViiPR/3ZGqnHHIIEDRBeOoGfzqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771927434; c=relaxed/simple;
-	bh=UpQ2+CjRYbdqAYCsjnR0hzz+Gs0xsp1F8m+cr8HP7qY=;
+	s=arc-20240116; t=1771928180; c=relaxed/simple;
+	bh=p7Hur+ZLTgSQNp7dSnaF30I5DS+Sq/MFqFTWXOZW21k=;
 	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Hc4hH0SUuexmflKcuAmvBV7VkjXlX2fg/3KvenSZy3hotrHmSxWCQPvsO8KnuiTYUz6upzjMUjfoD+W3BJzOcDQdqSCeN4shqbhvZxhk3nz538Jm9t2CbV5k6CHzC4/8az5PT3kV05dtueDwOL1FlfWcejz1Tj8v5TJxPieRhTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pZ6JHx/e; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=sUD7EFM6S9hbJ3eMKgh8LeWv8siBnH7i7X58SJrACA5oIsgXDLTWbn83wpQky3qUM/Bqd1vkORM5cnqGYd1IW/6woW5BRfuEQ9KOapZoTgL5syJUtorkHCumFkgZP2AaGUfQHb+ie6uN3hayJUVymd/cTsZJYgtm+RrUJpp3eNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J2i13CEQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pZ6JHx/e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4ED1C19424
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 10:03:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J2i13CEQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D27AC2BCB2
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 10:16:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771927433;
-	bh=UpQ2+CjRYbdqAYCsjnR0hzz+Gs0xsp1F8m+cr8HP7qY=;
+	s=k20201202; t=1771928180;
+	bh=p7Hur+ZLTgSQNp7dSnaF30I5DS+Sq/MFqFTWXOZW21k=;
 	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
-	b=pZ6JHx/etCgr3g6nKx1e/xCNnxZXnfjzBxxjqXUOBuZGIaCdaS+qBDd8Yihx9BePg
-	 N3iQzbkkDcT6iUMVpR5DMUacJnPq2wAsVnnuyYtU1gkDcGm+upcXLhvkC5/sXbJq1q
-	 K44GFlH01pHd1kZI1TK0jBvaNZMwcqE0nTl4zWcxT6DuYA/gnPr7o8s+8LIud8yef5
-	 7Bw5KIradsZM8nXmwXpN2nWC8AKRvMBjHUk00afmHwuvbvMvInlUZ/NzYWq2Om0i4b
-	 iDa6Fai4ZlSIj9dBcCBRlUpC6PY9vq3LWPyBuDouySvEc9GeL8B2dJX/j53Vldtqd3
-	 ATPiiZ0G+W/mQ==
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-3871126dcceso41938841fa.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 02:03:53 -0800 (PST)
-X-Gm-Message-State: AOJu0Yw5g1HsC2qgaasrjyvVXt0SrTizS/zdDrSKh3TT4Rg1H1R/IDgv
-	qoxagxTDM277uOqhtoYmeaemPtwO3ypnhFXG3gHBoWITaUFq9RtawHNuU/DIbo1xlQ7IKIKoqs/
-	zx9Y6T50yqeiaLhuOg6kt87x0bbILlC2U5QmXh3KZvQ==
-X-Received: by 2002:a05:651c:2105:b0:388:62de:d8b2 with SMTP id
- 38308e7fff4ca-389a5aa0c1bmr39142241fa.8.1771927432629; Tue, 24 Feb 2026
- 02:03:52 -0800 (PST)
+	b=J2i13CEQ+Em64sZc2ce5aHPCYCMLB9EOZonejhWsu2QqJh+kDGoBGljLLKSK1Z3ig
+	 vwV6LVUIZt5VuKDPzg2cKsZPNldl9vImMw3+54HH0jbtnZavg5iMDyC70H70AlUq16
+	 bZNCY9/zIE9upPytFggL4FxUjVmlTGS9tf9uvFRkNwLo2Gab6SYVpTBOxN4N92jv5A
+	 F9pGHslex/NI8vSXtozdZJfNAmPDobMUSKAmz013q8P1ptJqmOF1S09HcBdRzqrdYP
+	 JlZlTxSx/rSASoMvCkc54z3qgesNroo7b56hbKd3ilvdJX8DIfFtzCKREsYOn4acX+
+	 F3kdl3dnyGevA==
+Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-59dd54b1073so5129859e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 02:16:19 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWEIkmtwU2quvqE6wDwKCewVtid65Crah1akwwOA0eTtulBnsm78nyW0q7uhXI6FIkE71LnhvFxM+Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzzJdWxCXldoBaemIcrN5DXDLezDk/s0QRf3x1sz7KORW3wfDZH
+	y6QySanL4eT4xPE/7N4hDZKvfuCuhs1r3smK99EuYyZUozQWQgKQd9Lak8GuoM6sm2JKFtn/Ngz
+	xWyS+Pst4WUQ7qknpOdSJgjXz0WifTQRbmomKScotgA==
+X-Received: by 2002:a05:6512:3f16:b0:59e:44fd:8047 with SMTP id
+ 2adb3069b0e04-5a0ed8a5360mr3968763e87.28.1771928178627; Tue, 24 Feb 2026
+ 02:16:18 -0800 (PST)
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 24 Feb 2026 02:03:51 -0800
+ HTTPREST; Tue, 24 Feb 2026 02:16:17 -0800
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 24 Feb 2026 02:03:51 -0800
+ HTTPREST; Tue, 24 Feb 2026 02:16:17 -0800
 From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260224071258.2654521-1-wenst@chromium.org>
+In-Reply-To: <20260224-pci-m2-e-v5-2-dd9b9501d33c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260224071258.2654521-1-wenst@chromium.org>
-Date: Tue, 24 Feb 2026 02:03:51 -0800
-X-Gmail-Original-Message-ID: <CAMRc=MeXhB-=vT8d+u+-od7t9WqziHRtN2aCum0Tg_7vSrkv3Q@mail.gmail.com>
-X-Gm-Features: AaiRm52Hi0Zoo6U7PoLWPBCoo07CV456ICsm8hKjm-acKhNUwq16XM4ftmJm_fs
-Message-ID: <CAMRc=MeXhB-=vT8d+u+-od7t9WqziHRtN2aCum0Tg_7vSrkv3Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI/pwrctrl: Do not power off on pwrctrl device removal
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+References: <20260224-pci-m2-e-v5-0-dd9b9501d33c@oss.qualcomm.com> <20260224-pci-m2-e-v5-2-dd9b9501d33c@oss.qualcomm.com>
+Date: Tue, 24 Feb 2026 02:16:17 -0800
+X-Gmail-Original-Message-ID: <CAMRc=MethnZu_GrujadpBZwj4SpgdNXEnTfEikSvPkO2f9MJjg@mail.gmail.com>
+X-Gm-Features: AaiRm52E9GG7sUX8QY-OJorqLhZbSTriYRV39ykZ2pMd-1A19dZUhSz2lCghp98
+Message-ID: <CAMRc=MethnZu_GrujadpBZwj4SpgdNXEnTfEikSvPkO2f9MJjg@mail.gmail.com>
+Subject: Re: [PATCH v5 2/9] serdev: Add an API to find the serdev controller
+ associated with the devicetree node
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
+	linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
+	Hans de Goede <johannes.goede@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
+	Hans de Goede <hansg@kernel.org>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Bartosz Golaszewski <brgl@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 24 Feb 2026 08:12:56 +0100, Chen-Yu Tsai <wenst@chromium.org> said:
-> With the move to explicit pwrctrl power on/off APIs, the caller, i.e.
-> the PCI driver should manage the power state. The pwrctrl drivers should
-> not try to clean up or power off when they are removed, as this might
-> end up disabling an already disabled regulator, causing a big warning.
-> This can be triggered if a PCI controller driver's .remove() callback
-> calls pci_pwrctrl_destroy_devices() after pci_pwrctrl_power_off_devices().
+On Tue, 24 Feb 2026 06:30:48 +0100, Manivannan Sadhasivam via B4 Relay
+<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 >
-> Drop the devm cleanup parts that turn off regulators from the pwrctrl
-> drivers.
+> Add of_find_serdev_controller_by_node() API to find the serdev controller
+> device associated with the devicetree node.
 >
-> Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off, destroy APIs")
-> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+> Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 > ---
-> Hi,
+>  drivers/tty/serdev/core.c | 19 +++++++++++++++++++
+>  include/linux/serdev.h    |  9 +++++++++
+>  2 files changed, 28 insertions(+)
 >
-> I ran into this while integrating the new pci_pwrctrl_*() API into the
-> MediaTek driver. I am sending this separately since this change is
-> unrelated and does not conflict with or depend on the other changes for
-> the driver itself.
+> diff --git a/drivers/tty/serdev/core.c b/drivers/tty/serdev/core.c
+> index 8f25510f89b6..bf88b95f7458 100644
+> --- a/drivers/tty/serdev/core.c
+> +++ b/drivers/tty/serdev/core.c
+> @@ -514,6 +514,25 @@ struct serdev_controller *serdev_controller_alloc(struct device *host,
+>  }
+>  EXPORT_SYMBOL_GPL(serdev_controller_alloc);
 >
-> I think this should be merged for fixes.
->
+> +#ifdef CONFIG_OF
+> +/**
+> + * of_find_serdev_controller_by_node() - Find the serdev controller associated
+> + *					 with the devicetree node
+> + * @node:	Devicetree node
+> + *
+> + * Return: Pointer to the serdev controller associated with the node. NULL if
+> + * the controller is not found. Caller is responsible for calling
+> + * serdev_controller_put() to drop the reference.
+> + */
+> +struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node)
+> +{
+> +	struct device *dev = bus_find_device_by_of_node(&serdev_bus_type, node);
+> +
+> +	return (dev && dev->type == &serdev_ctrl_type) ? to_serdev_controller(dev) : NULL;
+> +}
+> +EXPORT_SYMBOL_GPL(of_find_serdev_controller_by_node);
 
-Makes sense.
+I'm not sure if I commented on it before but there's no reason for this to be
+OF-centric. It would work equally well as (I think the same should keep the
+"serdev" prefix too for correct namespacing):
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+struct serdev_controller *serdev_find_controller_by_fwnode(struct
+fwnode_handle *fwnode)
+{
+	struct device *dev = bus_find_device_by_fwnode();
+
+	...
+}
+
+It would be more flexible and users can always use to_of_node().
+
+Bart
+
+> +#endif
+> +
+>  static int of_serdev_register_devices(struct serdev_controller *ctrl)
+>  {
+>  	struct device_node *node;
+> diff --git a/include/linux/serdev.h b/include/linux/serdev.h
+> index 0c7d3c27d1f8..188c0ba62d50 100644
+> --- a/include/linux/serdev.h
+> +++ b/include/linux/serdev.h
+> @@ -334,4 +334,13 @@ static inline bool serdev_acpi_get_uart_resource(struct acpi_resource *ares,
+>  }
+>  #endif /* CONFIG_ACPI */
+>
+> +#ifdef CONFIG_OF
+> +struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node);
+> +#else
+> +static inline struct serdev_controller *of_find_serdev_controller_by_node(struct device_node *node)
+> +{
+> +	return NULL;
+> +}
+> +#endif /* CONFIG_OF */
+> +
+>  #endif /*_LINUX_SERDEV_H */
+>
+> --
+> 2.51.0
+>
+>
+>
