@@ -1,104 +1,82 @@
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [144.76.133.112])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F5B3A63F1;
-	Tue, 24 Feb 2026 15:54:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56C2F3A7826;
+	Tue, 24 Feb 2026 15:57:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771948459; cv=none; b=NN5AB6NLl8y9oB5O+yy2k433lIaPYcAGGalQsybUM/Rqrwp/t9vn8YTQdlM3CbQB50nZzX04FD1OVx4wJPZWi3V8n3FvB/ZRsSeCD7wcsl87ozXfWjBBu2DNDbQLV5ptVZRATPk5mXGQzmy/Lk8XzosR9C9o/Vor8Pj0uVIZ4tU=
+	t=1771948669; cv=none; b=YBBJX60BiXCAfnPUebU3VDVKzeys2apVG/6zCWsHepaOoK9Tsu8DlplMlGsQyPtYoRnEJVygIKs1eSKoaH8q+N9Fk3JunlwBdM8YzUyuPJQ1EGkEwXLD+jZCgfl25kkxdaA608dFyFm6vBSkow1rXExyPsTSOno/rp/DwFUxA6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771948459; c=relaxed/simple;
-	bh=Udque7qFhbJQNTo354i/fLu2ZbGrFtgGZcB9KkMEpkY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tqGd1CNDivdmdIoQy+Lqy1Ny4Eg6W7x3c6yypeLAkk/J8Gc51fXuwi0sEwqgeFlL3UeF0nOV9BQBxkI9XkoRI9ExVqQPk18cAQ3Awc2s6TPSrjTgxlm8k+O4cPiG9n9KSyFR6dLWj4gAlH802kQ9tcYGcqZqmPBqIeBxUUNJNU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=144.76.133.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 5DFEC20326E8;
-	Tue, 24 Feb 2026 16:54:15 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 288FD30008; Tue, 24 Feb 2026 16:54:15 +0100 (CET)
-Date: Tue, 24 Feb 2026 16:54:15 +0100
-From: Lukas Wunner <lukas@wunner.de>
+	s=arc-20240116; t=1771948669; c=relaxed/simple;
+	bh=3HmCSU8v0qUIZEPgi6VtfWbbw6DAODzcruLTpi09h4E=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AdAW8Ybl1j+XjkWlKMKdwaVmF/3P+IGhkj9IH4Sat3ocYs7sT/wOQm44PLLMpAJNlsyHqkFzUL0V52zBxumHrqbPprsrmZZcL0kZJxtKOhoTPH7GVvKAgE24oWX6h44EwOZrWE+k6RhgBHSw/GhrtZk83DdEFVHg1IaUE1Dwny4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fL2RQ5VB5zJ46Zj;
+	Tue, 24 Feb 2026 23:57:22 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8DCEA40539;
+	Tue, 24 Feb 2026 23:57:44 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 24 Feb
+ 2026 15:57:43 +0000
+Date: Tue, 24 Feb 2026 15:57:42 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
 To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: dan.j.williams@intel.com, Alistair Francis <alistair23@gmail.com>,
-	bhelgaas@google.com, rust-for-linux@vger.kernel.org,
-	akpm@linux-foundation.org, linux-pci@vger.kernel.org,
-	Jonathan.Cameron@huawei.com, linux-cxl@vger.kernel.org,
-	linux-kernel@vger.kernel.org, alex.gaynor@gmail.com,
-	benno.lossin@proton.me, boqun.feng@gmail.com, a.hindborg@kernel.org,
-	gary@garyguo.net, bjorn3_gh@protonmail.com, tmgross@umich.edu,
-	ojeda@kernel.org, wilfred.mallawa@wdc.com, aliceryhl@google.com,
-	Alistair Francis <alistair.francis@wdc.com>,
-	aneesh.kumar@kernel.org, yilun.xu@linux.intel.com, aik@amd.com,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	Thomas Fossati <thomas.fossati@linaro.org>
-Subject: Re: [RFC v3 00/27] lib: Rust implementation of SPDM
-Message-ID: <aZ3Jp-8ZjYwgfq0Z@wunner.de>
-References: <20260219124313.GE723117@nvidia.com>
- <20260219124119.GD723117@nvidia.com>
- <aZcbBt7OmNeH3oA0@wunner.de>
- <20260219143129.GF723117@nvidia.com>
- <aZcnTnYJ61Kma0yd@wunner.de>
- <20260219173937.GH723117@nvidia.com>
- <aZgbukYiIxg44_e7@wunner.de>
- <20260220141057.GL723117@nvidia.com>
- <aZn9cfhv0YRxI1mw@wunner.de>
- <aZ2yqpdf8cBGG4Gs@nvidia.com>
+CC: Nicolin Chen <nicolinc@nvidia.com>, <will@kernel.org>,
+	<robin.murphy@arm.com>, <bhelgaas@google.com>, <joro@8bytes.org>,
+	<praan@google.com>, <baolu.lu@linux.intel.com>, <kevin.tian@intel.com>,
+	<miko.lenczewski@arm.com>, <linux-arm-kernel@lists.infradead.org>,
+	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
+Message-ID: <20260224155742.00000282@huawei.com>
+In-Reply-To: <aZ261odHq5gwQYXg@nvidia.com>
+References: <cover.1771886695.git.nicolinc@nvidia.com>
+	<bdeebd35e81cfa5f76d16706a775b23ee1f01fdd.1771886695.git.nicolinc@nvidia.com>
+	<20260224120615.00003ad9@huawei.com>
+	<aZ261odHq5gwQYXg@nvidia.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aZ2yqpdf8cBGG4Gs@nvidia.com>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-On Tue, Feb 24, 2026 at 10:16:10AM -0400, Jason Gunthorpe wrote:
-> This is why I'm insistent the starting point for resmue is a very
-> strong same-device check that prevents attackers from replacing the
-> device with something that wouldn't pass remote verification.
+On Tue, 24 Feb 2026 10:51:02 -0400
+Jason Gunthorpe <jgg@nvidia.com> wrote:
+
+> On Tue, Feb 24, 2026 at 12:06:15PM +0000, Jonathan Cameron wrote:
 > 
-> If you don't do this and instead try to revalidate the certificate
-> chains the kernel can be tricked into accepting a different device on
-> resume and that will completely destroy the entire security model.
+> > In my head at least, it would be nice if a driver had to explicitly opt in
+> > to this behavior. The presence of CXL.cache support for instance doesn't
+> > actually mean the driver is going to enable it.  However it is probably
+> > harmless so lets go with this as path of least resistance.  
+> 
+> That same remark applies to ATS in general, we have no idea if the
+> device is going to use it when turned on or not..
 
-Finding a different device on resume is par for the course for hotplug.
+Yup. Understood. That's the bit that smells bad to me.
 
-> As Dan and I keep saying you should focus on enabling userspace
-> verifier as the very first modest step and then come with proposals to
-> add additional things like resume and perhaps a kernel-internal
-> verifier.
+> 
+> Generally Linux has taken the approach of almost always enabling ATS
+> if the device offers the PCIe capability.
+> 
+> The purpose of this series is to close of the few "almost" cases so it
+> is always on.
+Absolutely understood.  I just took the opportunity to moan!
 
-There is nothing to "add".  Seamless re-verification on resume and
-error recovery is already implemented in my patches.  I don't see
-the point of throwing that out the window and start from scratch
-just because you think it doesn't have priority.
+J
+> 
+> Jason
+> 
 
-> I don't see a role for a cma keyring outside a kernel-internel
-> verifier
-
-That sounds like we have minimal consensus.
-
-I'm coming from a very different direction, I want this to seamlessly
-integrate with all the infrastructure we already have in the PCI core
-(hotplug, suspend/resume, error recovery, ...), so I made sure it does.
-
-I don't share the view that CMA is merely a building block for TDISP.
-It's useful on its own.
-
-I also believe that the vast majority of users will simply need this
-to ensure the devices they attach to their chromebooks, phones etc
-are authentic (seems important given the reports of counterfeit
-hard drives).  A .cma keyring is good enough for Grandma's chromebook,
-no need for a user space verifier.
-
-Thanks,
-
-Lukas
