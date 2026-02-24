@@ -1,267 +1,140 @@
-Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E11F3644BE
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 07:37:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B7526ADC;
+	Tue, 24 Feb 2026 07:40:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771918663; cv=none; b=EwjXUiqKV6/xJEkXN5foQRq28Ql6b0EmqAh895TJO4QfVjvEObiQIj/IBybU6odmllxVZgIAYzcRqdwatVHf/j23h1gMjmdBlXg9Lrjfu7Pg1Y7slhDQKXqGQIyo+3bGTaXx6wufWwpMOXHG4iyGRa86PVsL9QeNAXjjp3CGidI=
+	t=1771918830; cv=none; b=ZAf6DoS0p87tadAqumqKwQy8C9lHnlXjTgfcbuICRsOIXOZaoWtCfjMhtlKmoQ5ENGdWs+QAFbTzIJqvEzSGvPiXcVUaUzGY3XKHk2MKK59l0SN5PrWMgZrSn2gYiybcjg80Kon1jdStZAdRvX2AmvCG6b1+9J104oHodYF0C4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771918663; c=relaxed/simple;
-	bh=rdtI/eBapYxisnhkJe8WgbchqvYRdF1p2iiYViIA4sA=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=UU88ToUahNKbeTb17wDMcIDr4BSX3NY9p+wcULVdDkl01unNdkQPOzBWVQgIzw7s3S7Xt0t2+zSl1JfW4G1AmSgoW6DRRdLBI+XKllOmvM7Iga0y8pG5ulue7w9d11zHyk4l/wy22Co2UwN7/k3JMwDYpRhBI/CxpGXK7yLbXpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=SWdRoK+K; arc=none smtp.client-ip=209.85.128.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+	s=arc-20240116; t=1771918830; c=relaxed/simple;
+	bh=nO29udC/TvyKqbOOxAxOz7i5aFfdank76tWIHV3k8yo=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Id41uLY/PCsfYRV6s33Rs/wEFPM0sOR34I08YnMJrihV6b/vgcBB5JwXgZwlgEshsOJ+uRRk52SuAIP8Be98J3N8UI6NbrCQqywnanM4FjNOUuNWAKHJ3Kvazf7voGf8vSdIU/XcuVKuHay+JMfB55hxfjdrHqJ4EHcLXd1Jayc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=FKEAxwg8; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="SWdRoK+K"
-Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-4837907ec88so60843595e9.0
-        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2026 23:37:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771918660; x=1772523460; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :f2079rom:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ccaw3Qp4EtXU0xb2rrWk95YgoDmXX+bj8GIv5SpCaTk=;
-        b=SWdRoK+KhzJadfTvadCRAPVuKb0sl8vOFEf8WLcK11pL2IwUxnCQdNoc/JD+m/GGSv
-         HOXKA26IhZsphuq3ASrefnsrga6VaBIVqaDzDmSWj+KVhzXjmlpTnINzrdAk09yHyODl
-         mcm9g8FsIefz5Y4s87s6li5kmGVsh9vAgUhREzI0lzQg3wAOSD2jDRH3O1ZLhoMvMJfF
-         cghnpmgcIsjwJ//GjYxWryxt5tsS7ADSeL4Q29LnOEOG4qDtt/e+rZwbtWXkmPYsrGWd
-         XOOd74xD/13110wH9rovGcjfGe3HXgQH2a2Gt2vE3e/DXTCTucX/WO9TNN+QSs/GEiLD
-         y+dw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771918660; x=1772523460;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :f2079rom:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Ccaw3Qp4EtXU0xb2rrWk95YgoDmXX+bj8GIv5SpCaTk=;
-        b=UaA5JRtKaxueRBMNNQi5+XGYt9paCC2K6QkL0zBYhBtV5+nsiTYKWOc2/TdF2rPr52
-         OOPO7lwveCYytaNY8yui8r69Xwt98nLr/EstI7NO91IOtPuQ0IsmevwRg0O1rtevcZs1
-         OW3/1v1WbaA9JCXssxihH39D8zYd070oL1NCC36A9CweyiHAnb/CGEOM7QO9sIngtV0d
-         kiX5eDD+5if7jMofmLL4l6b/9L9wWnZWsryOSUzKE+E3MXKavbNw4aP0aWoWnh8IYHay
-         XTYUYSRabmYn4353oEr122xJ+XgqbMNgjtqyxmZVsJ1nVlEu7XCSqQtXhQzMIhGcVHvs
-         xbxQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX9tGSRzId59AeCtdplUSf3MOCS4IKNn6YNjQMp3xuVSS/K2kVLl/azMvKj+rsgZ8kYFMWUGAxUcoc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyXlcXU9yzglBhLtuX/mqDzjWNaFWPQCNMmuv6pHT5NVw0cxu/E
-	IPg0QfpQ609nXFfAjbs4A5OLkAFV/kFldySntiyOUpD+6AqxOy1H3Yjdf2wPzTd2IlQZURuLSvO
-	JoNZ7hja24Vj1rEH9xg==
-X-Received: from wmxb5-n2.prod.google.com ([2002:a05:600d:8445:20b0:483:43dc:999f])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:674f:b0:483:6ff1:18b with SMTP id 5b1f17b1804b1-483a9555bafmr189459985e9.0.1771918659820;
- Mon, 23 Feb 2026 23:37:39 -0800 (PST)
-Date: Tue, 24 Feb 2026 07:37:38 +0000
-F2079rom: Alice Ryhl <aliceryhl@google.com>
-In-Reply-To: <87wm0333qt.fsf@t14s.mail-host-address-is-not-set>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="FKEAxwg8"
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [10.196.197.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4fKqQ11RwVz9v7N;
+	Tue, 24 Feb 2026 08:40:25 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1771918825; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nO29udC/TvyKqbOOxAxOz7i5aFfdank76tWIHV3k8yo=;
+	b=FKEAxwg8/2TVXMyYr/OiVCz5K1q4W+C/xn+JVXi//EMazudZywyjLwZrwzHNLYzROrIGjJ
+	WiOn32rHS7oEwHLLm6QL2yCRYinpfVLqqwTh7sT6RAQNG0u4EURZ5HxR4OK58Z3/n7gZZV
+	8caQG4lw5WqV9qVnTFk84Cn+SoVQbSZKgx07St5+8pxpkc99ybs0qQSpkSnjhqX/fK2fVh
+	R1e9tX2O0SBa7kFE1+a+xKqHOjB9jmAde03Ko6m7uo3zhkzAiDlzUONdZOidXL54Qs7PfF
+	bCIWc/77Lvrh1BnmhbO6+/6V4uapf65BSL0fwPQx8DWsFH0Szy8rGeRiOsWY+A==
+Message-ID: <7ca512d133f7a3bcfe00e9b0b2af5fe5f147ad77.camel@mailbox.org>
+Subject: Re: [PATCH 0/37] PCI/MSI: Enforce explicit IRQ vector management by
+ removing devres auto-free
+From: Philipp Stanner <phasta@mailbox.org>
+Reply-To: phasta@kernel.org
+To: Simon Richter <Simon.Richter@hogyros.de>, Shawn Lin
+ <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>, "Vaibhaav
+ Ram T . L" <vaibhaavram.tl@microchip.com>, Kumaravel Thiagarajan
+ <kumaravel.thiagarajan@microchip.com>,  Even Xu <even.xu@intel.com>,
+ Xinpeng Sun <xinpeng.sun@intel.com>, Srinivas Pandruvada
+ <srinivas.pandruvada@linux.intel.com>, Jiri Kosina <jikos@kernel.org>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, Zhou Wang
+ <wangzhou1@hisilicon.com>, Longfang Liu <liulongfang@huawei.com>, Vinod
+ Koul <vkoul@kernel.org>, Lee Jones <lee@kernel.org>, Jijie Shao
+ <shaojijie@huawei.com>, Jian Shen <shenjian15@huawei.com>, Sunil Goutham
+ <sgoutham@marvell.com>, Andrew Lunn <andrew+netdev@lunn.ch>, Heiner
+ Kallweit <hkallweit1@gmail.com>, "David S . Miller" <davem@davemloft.net>,
+ Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Oded Gabbay <ogabbay@kernel.org>,
+ Maciej Falkowski <maciej.falkowski@linux.intel.com>,  Karol Wachowski
+ <karol.wachowski@linux.intel.com>, Min Ma <mamin506@gmail.com>, Lizhi Hou
+ <lizhi.hou@amd.com>,  Andreas Noever <andreas.noever@gmail.com>, Mika
+ Westerberg <westeri@kernel.org>, Tomasz Jeznach <tjeznach@rivosinc.com>,
+ Will Deacon <will@kernel.org>, Xinliang Liu <xinliang.liu@linaro.org>, Tian
+ Tao <tiantao6@hisilicon.com>, Davidlohr Bueso <dave@stgolabs.net>, Jonathan
+ Cameron <jonathan.cameron@huawei.com>, Srujana Challa
+ <schalla@marvell.com>, Bharat Bhushan <bbhushan2@marvell.com>, Antoine
+ Tenart <atenart@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, Raag
+ Jadav <raag.jadav@intel.com>, Hans de Goede <hansg@kernel.org>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
+ <jirislaby@kernel.org>, Andy Shevchenko <andy@kernel.org>, Manivannan
+ Sadhasivam <mani@kernel.org>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>, Andi Shyti <andi.shyti@kernel.org>, 
+ Robert Richter <rric@kernel.org>, Mark Brown <broonie@kernel.org>, Nirmal
+ Patel <nirmal.patel@linux.intel.com>, Kurt Schwemmer
+ <kurt.schwemmer@microsemi.com>,  Logan Gunthorpe <logang@deltatee.com>,
+ Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+ Sakari Ailus <sakari.ailus@linux.intel.com>, Bingbu Cao
+ <bingbu.cao@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Benjamin Tissoires <bentiss@kernel.org>, 
+ linux-input@vger.kernel.org, linux-i3c@lists.infradead.org, 
+ dmaengine@vger.kernel.org, Philipp Stanner <phasta@kernel.org>, 
+ netdev@vger.kernel.org, nic_swsd@realtek.com,
+ linux-arm-msm@vger.kernel.org,  dri-devel@lists.freedesktop.org,
+ linux-usb@vger.kernel.org,  iommu@lists.linux.dev,
+ linux-riscv@lists.infradead.org, David Airlie <airlied@gmail.com>, Simona
+ Vetter <simona@ffwll.ch>, linux-cxl@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
+ linux-serial@vger.kernel.org, mhi@lists.linux.dev, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Jan Dabros <jsd@semihalf.com>, 
+ linux-i2c@vger.kernel.org, Daniel Mack <daniel@zonque.org>, Haojian Zhuang
+ <haojian.zhuang@gmail.com>, linux-spi@vger.kernel.org, Jonathan Derrick
+ <jonathan.derrick@linux.dev>, linux-pci@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ linux-media@vger.kernel.org, linux-mmc@vger.kernel.org
+Date: Tue, 24 Feb 2026 08:39:43 +0100
+In-Reply-To: <6223f3cb-693f-42e7-9147-30f659f08563@hogyros.de>
+References: <1771860581-82092-1-git-send-email-shawn.lin@rock-chips.com>
+	 <6223f3cb-693f-42e7-9147-30f659f08563@hogyros.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260220-unique-ref-v15-0-893ed86b06cc@kernel.org>
- <20260220-unique-ref-v15-1-893ed86b06cc@kernel.org> <aZg44EmMWKK-z5KP@google.com>
- <87wm0333qt.fsf@t14s.mail-host-address-is-not-set>
-Message-ID: <aZ1VQmtapuoerpVo@google.com>
-Subject: Re: [PATCH v15 1/9] rust: types: Add Ownable/Owned types
-From: <aliceryhl@google.com>
-To: Andreas Hindborg <a.hindborg@kernel.org>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
-	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, 
-	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Ertman <david.m.ertman@intel.com>, 
-	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
-	Serge Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Igor Korotin <igor.korotin.linux@gmail.com>, 
-	Daniel Almeida <daniel.almeida@collabora.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, 
-	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=" <kwilczynski@kernel.org>, Boqun Feng <boqun@kernel.org>, linux-kernel@vger.kernel.org, 
-	rust-for-linux@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
-	linux-pci@vger.kernel.org, Asahi Lina <lina+kernel@asahilina.net>, 
-	Oliver Mangold <oliver.mangold@pm.me>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+X-MBO-RS-META: nd43b1cq9px89dfwjyyj71p3i7rr7fs9
+X-MBO-RS-ID: 9e24931f76f65785344
 
-On Mon, Feb 23, 2026 at 03:59:22PM +0100, Andreas Hindborg wrote:
-> Alice Ryhl <aliceryhl@google.com> writes:
-> 
-> > On Fri, Feb 20, 2026 at 10:51:10AM +0100, Andreas Hindborg wrote:
-> >> From: Asahi Lina <lina+kernel@asahilina.net>
-> >> 
-> >> By analogy to `AlwaysRefCounted` and `ARef`, an `Ownable` type is a
-> >> (typically C FFI) type that *may* be owned by Rust, but need not be. Unlike
-> >> `AlwaysRefCounted`, this mechanism expects the reference to be unique
-> >> within Rust, and does not allow cloning.
-> >> 
-> >> Conceptually, this is similar to a `KBox<T>`, except that it delegates
-> >> resource management to the `T` instead of using a generic allocator.
-> >> 
-> >> [ om:
-> >>   - Split code into separate file and `pub use` it from types.rs.
-> >>   - Make from_raw() and into_raw() public.
-> >>   - Remove OwnableMut, and make DerefMut dependent on Unpin instead.
-> >>   - Usage example/doctest for Ownable/Owned.
-> >>   - Fixes to documentation and commit message.
-> >> ]
-> >> 
-> >> Link: https://lore.kernel.org/all/20250202-rust-page-v1-1-e3170d7fe55e@asahilina.net/
-> >> Signed-off-by: Asahi Lina <lina+kernel@asahilina.net>
-> >> Co-developed-by: Oliver Mangold <oliver.mangold@pm.me>
-> >> Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
-> >> Reviewed-by: Boqun Feng <boqun.feng@gmail.com>
-> >> Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
-> >> [ Andreas: Updated documentation, examples, and formatting ]
-> >> Reviewed-by: Gary Guo <gary@garyguo.net>
-> >> Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
-> >> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
-> >
-> >> +///         let result = NonNull::new(KBox::into_raw(result))
-> >> +///             .expect("Raw pointer to newly allocation KBox is null, this should never happen.");
-> >
-> > KBox should probably have an into_raw_nonnull().
-> 
-> I can add that.
-> 
-> >
-> >> +///    let foo = Foo::new().expect("Failed to allocate a Foo. This shouldn't happen");
-> >> +///    assert!(*FOO_ALLOC_COUNT.lock() == 1);
-> >
-> > Use ? here.
-> 
-> Ok.
-> 
-> >
-> >> +/// }
-> >> +/// // `foo` is out of scope now, so we expect no live allocations.
-> >> +/// assert!(*FOO_ALLOC_COUNT.lock() == 0);
-> >> +/// ```
-> >> +pub unsafe trait Ownable {
-> >> +    /// Releases the object.
-> >> +    ///
-> >> +    /// # Safety
-> >> +    ///
-> >> +    /// Callers must ensure that:
-> >> +    /// - `this` points to a valid `Self`.
-> >> +    /// - `*this` is no longer used after this call.
-> >> +    unsafe fn release(this: NonNull<Self>);
-> >
-> > Honestly, not using it after this call may be too strong. I can imagine
-> > wanting a value where I have both an ARef<_> and Owned<_> reference to
-> > something similar to the existing Arc<_>/ListArc<_> pattern, and in that
-> > case the value may in fact be accessed after this call if you still have
-> > an ARef<_>.
-> 
-> I do not understand your use case.
-> 
-> You are not supposed to have both an `ARef` and an `Owned` at the same
-> time. The `Owned` is to `ARef` what `UniqueArc` is to `Arc`. It is
-> supposed to be unique and no `ARef` can be live while the `Owned` is
-> live.
-> 
-> A `ListArc` is "at most one per list link" and it takes a refcount on
-> the object by owning an `Arc`. As far as I recall, it does not provide
-> mutable access to anything but the list link. To me, that is a very
-> different situation.
+On Tue, 2026-02-24 at 13:14 +0900, Simon Richter wrote:
+> Hi,
+>=20
+> On 2/24/26 12:29 AM, Shawn Lin wrote:
+>=20
+> > When such a driver also uses `pcim_enable_device()`, the devres framewo=
+rk may
+> > attempt to free the IRQ vectors a second time upon device release, lead=
+ing to
+> > a double-free. Analysis of the tree shows this hazardous pattern exists=
+ widely,
+> > while 35 other drivers correctly rely solely on the implicit cleanup.
+>=20
+> Would it make sense to have a function pcim_free_irq_vectors(), to allow=
+=20
+> explicit freeing even if the device is otherwise managed, analogous to=
+=20
+> pcim_iounmap()?
 
-I mean, even Page is kind of an example like that.
+We used to add those. In part because it is easier to port old users.
 
-Pages are refcounted, but when you have a higher-order page, the
-__free_pages() call does something special beyond what put_page(). For
-example, if you have an order-2 page, which consists of 4 pages, then
-the refcount only keeps the first page alive, and __free_pages() frees
-the 3 extra pages right away even if refcount is still non-zero. The
-first page then stays alive until the last put_page() is called.
+Nowadays I tend to think that those APIs were more on the too-complex
+than too-simple side for a long time. As an expert or as the API
+designer you wouldn't expect it, but there are actually far too many
+users who came to believe they always have to use pcim_iounmap() and
+counter parts.
 
-> > If you modify Owned<_> invariants and Owned::from_raw() safety
-> > requirements along the lines of what I say below, then this could just
-> > say that the caller must have permission to call this function. The
-> > concrete implementer can specify what that means more directly, but here
-> > all it means is that a prior call to Owned::from_raw() promised to give
-> > you permission to call it.
-> 
-> I don't think we need the "permission" wording. How about this:
-> 
-> 
-> /// A mutable reference to an owned `T`.
-> ///
-> /// The [`Ownable`] is automatically freed or released when an instance of [`Owned`] is
-> /// dropped.
-> ///
-> /// # Invariants
-> ///
-> /// - Until `T::release` is called, this `Owned<T>` exclusively owns the underlying `T`.
-> /// - The `T` value is pinned.
-> pub struct Owned<T: Ownable> {...}
-> 
-> 
-> impl<T: Ownable> Owned<T> {
->     /// Creates a new instance of [`Owned`].
->     ///
->     /// This function takes over ownership of the underlying object.
->     ///
->     /// # Safety
->     ///
->     /// Callers must ensure that:
->     /// - `ptr` points to a valid instance of `T`.
->     /// - Until `T::release` is called, the returned `Owned<T>` exclusively owns the underlying `T`.
->     pub unsafe fn from_raw(ptr: NonNull<T>) -> Self {...}
-> }
-> 
-> pub trait Ownable {
->     /// Tear down this `Ownable`.
->     ///
->     /// Implementers of `Ownable` can use this function to clean up the use of `Self`. This can
->     /// include freeing the underlying object.
->     ///
->     /// # Safety
->     ///
->     /// Callers must ensure that the caller has exclusive ownership of `T`, and this ownership can
->     /// be transferred to the `release` method.
->     unsafe fn release(&mut self);
-> }
-> 
-> 
-> Note `Ownable` not being an unsafe trait.
+If I could design it from scratch I would probably try to tell users to
+use the unmanaged versions instead of revoking the devres consequence.
 
-It looks ok but see my above reply.
+Devres is actually about your consequence always happening whenever the
+driver unloads, for whatever reason.
 
-> >> +/// A mutable reference to an owned `T`.
-> >> +///
-> >> +/// The [`Ownable`] is automatically freed or released when an instance of [`Owned`] is
-> >> +/// dropped.
-> >> +///
-> >> +/// # Invariants
-> >> +///
-> >> +/// - The [`Owned<T>`] has exclusive access to the instance of `T`.
-> >> +/// - The instance of `T` will stay alive at least as long as the [`Owned<T>`] is alive.
-> >> +pub struct Owned<T: Ownable> {
-> >> +    ptr: NonNull<T>,
-> >> +}
-> >
-> > I think some more direct and less fuzzy invariants would be:
-> >
-> > - This `Owned<T>` holds permissions to call `T::release()` on the value once.
-> > - Until `T::release()` is called, this `Owned<T>` may perform mutable access on the `T`.
-> 
-> I do not like the wording for mutable access. Formulating safety
-> requirements for `from_raw` and safety comments for that function
-> becomes convoluted like this. I'd rather formulate the
-> access capability in terms of ownership;
-> 
->  - Until `T::release()` is called, this `Owned<T>` exclusively owns the
->    underlying `T`.
-> 
-> How is that?
-> 
-> > - The `T` value is pinned.
-> 
-> I am unsure about the pinning terminology. If we say that `T` is pinned,
-> does this mean that it will never move, even if `T: Unpin`? Or is it
-> implied that `T` may move if it is `Unpin`?
 
-Values that are `Unpin` can always move - pinning is a no-op for them.
-
-Alice
+P.
