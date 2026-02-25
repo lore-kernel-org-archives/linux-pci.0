@@ -1,46 +1,46 @@
-Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011032.outbound.protection.outlook.com [52.101.65.32])
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010051.outbound.protection.outlook.com [52.101.84.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13D40392836;
-	Wed, 25 Feb 2026 10:54:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C53193939D5;
+	Wed, 25 Feb 2026 10:54:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772016884; cv=fail; b=WPIh1I3qyidEISRvp+nDDCSCXtrmvxjohSHOtxJVK0yTVW1NXtnjkA2j/d6JtUJ85DDLjggP3mnZ3OdOhXs1q/dSfxmKGMvJSKO8CSB7fGerHZuFZL//8md97pjVqnoZjWE6wxO+Xpum+Xn/iCd/ehAaQ64X5D6pHMbWIk/CJA0=
+	t=1772016889; cv=fail; b=qTayWoNNlpjaYLoV9a5Ca+PpoqpEPY8GGVin3HV8GJWfVUczhStarpCpZzZIO9rgKxHlhvqv+lyB7PJ//qFSCwYrqfvySWnW8h3HIgbnlraYHy+vNUkUFoYC2yqebVvWSptQj1TEIy1qFrdXOEjRo/m0d7kiGvI578ftb+ixHtk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772016884; c=relaxed/simple;
-	bh=nZQyTn6PGG8IvUyO83n6k6AnEIuD5gqehcXsiQ71Kow=;
+	s=arc-20240116; t=1772016889; c=relaxed/simple;
+	bh=bsCqGmkv2u1Exe8rVk/RPtpssCoCE9tOWWvSplVk7Co=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=RkcCue+A2s5dC56R1dZDmh2CAm41Uysi0cbNk0m7Owtgv2iK2Y8TQY6XXDPn1YQVDQfRyESRlKyz59D0U91xf966cg1stxeax3gXx29I8fXdvAPfnmqGUzDyUK8C5ziO9VvTAJCgwjg/agDAI+Jvmiv6gS0H1cQ/Q8yasAu9RzA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=YlALMSit; arc=fail smtp.client-ip=52.101.65.32
+	 Content-Type:MIME-Version; b=Xt1Xq9w1g6xuqPfRFRvLonkaqQ7vtYz1i+hPmNkD278ZyU1EHmcVj35feF5KW1Hyrki5MDMJPWXi7gYcNep4jjSW0FRsSxTdKbA78ibQbPaYzldy3tcdaE3Ez8TcMcTJKZdFUi+/gqtuvlofNlgnMIX6uWtxDgl9OGkzelALjU0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=dkFgfVgT; arc=fail smtp.client-ip=52.101.84.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="YlALMSit"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="dkFgfVgT"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XOpmfE0/B/FR2L8Zs1PgrkjF2k5WU6v5EtIJMqGMBlSeh4Rv/rbSHSa3WeVniUSYnkznqMVqeDj3QsqbhVyf6NWHO3f9sRNt6tRlR/AN/3BZ2VxP42HxBmBNEaaFSoHMWN8gGwN31qhMvLOchzPqZTCOLBqS07D+mmw4/67qZX6Ac1pthnDlIX+TXMxa/qkLn8cQUiPSRemQ0yZIhu0LHcBf3g+7Q5s4JxeEhlNbJnHU/b9uMxoIdpl1ps/BIhOmzcOJ49Jy0Pnc4iIAVo74yzwwEe0QyBUMF8eKh78msbMY1TT7/DJ4se/5I1I6u+EJwuZ9ZMTf+H71QPl41rHLFg==
+ b=MpfPkS94d3WUXThUn8UKPGTlbqRvSEGsEBEJvIKPXSEZfj0yYnA/urjuQNDCPpptA6bFz769l9fp88qMdcskuEpf/jRpzYJEg0FYZw5mFQvoLP6YYkrorIn04/HBV0J5sI37mgH0iWRZIfbgJaTbco84PvKb6ubS3KNiXUw8SN4hDe8I9CksrYjzzXsrwGXt/8LAkZRvfp9K7JujCD+wXkVqbLB1hq/DnWTh6eEM0uc7cVUGmnSb7rl0lYAsGk1WyMhRM+D6H5r8bjcWtDWy84XDSHS4Za1l7z9XBth/3mARJVdXzmp/PITKZvDbqAST1mA/n/H533vn69KTI5Papw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ava05WHNzO1jfUGevvoYRh3wq4xwKKoVgpdqBOTSvFY=;
- b=dasGd1uoeosEP2trWRrrQv+hgXWbXLcBsNitw8dCS/dMgw3fvv7VsjkEQzfmpiQukBbnSums6wU48BKvGbuGNwwh2YQ346HuxURwDfFPD2XCepy1V/eiaKlExHQEYPgoYQ+HJSWQXI4k03xtocQ7e5FlZamp8Qu2FIy1v/jNU1LMqtbQJ7RbBm2J7kpaSACJnkIhufA6vY0Rc/2kIuPPJvErg7KkzqDxC16O/1AQOAdrQJGoSKY7gwr8iyCRC2HLqScCVnQMB9kGPVm7g8+lY5k3Q6nwAiw2YCWaC1IBhxT7ujKbQqxmngZEfxZ7ock7CVOBqFmSDoBBZKGNYz8RDQ==
+ bh=e87oTYFo6x0wcbv2G/DM3RlOz3RZ3sk7332K9QNWF+A=;
+ b=l90+m6hDm8o3RCECZQDK2Okm3/wpsTui2V65Z71R/Zil7S6i6MjBBgagwt1se0HdfvE4T/7rDk/o9h+aCAmaQpe42QIB7urmHxTWRtKaVY5jhxPV3ddoRuarlyqMRAKJRO1FVCj1aD6nq2vGX2Rt8gj1WBCJULoFN3+UNfDZHLswmkqOwtmycn7K/CxuyjvDwbp13Cb26vo57olF1pbFE7CXgLB1VeLPiJk0na/HZ5RFJpaFnbXOBRWrpwxtYNbplGhM8+zwYKlXHd+0pQ7zjqcuUBNtlsgDr5pwWlYBh3tAkNTJaUPgwH1CdTZST0+qR0nP0qCOvAgxH9WYx6h7lA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ava05WHNzO1jfUGevvoYRh3wq4xwKKoVgpdqBOTSvFY=;
- b=YlALMSitfsS5DVFxSZlKIQm9q+ZJ2FGC8K26Nzxdh6cYqUe6vOAJ/vm3Pc9s4bXBDeMwkY13DPl1/Ag1SJqqX+WLATvdv412eR8uAUtrWEvPtK0M2FxdQzwTBm6SB77opeuAVd7vxyiZp2UXrkE2991sFeTh15CtK12eEAhHDTXs29almVQbw5DM0K/FhvS9Vl1HO/R30GWePnQm3dmM/6etvd3Rncy57OGb8Vdk03g4NZLBKzSUzMMKqinSehADk/i9/C3CDpLwhLnbTOoSu14mr9xqaUPTvQpAQEL58z7AY+TjUqKQarnCzgIBwbM7CZmkg0a2h2eHkr/DblOPbA==
+ bh=e87oTYFo6x0wcbv2G/DM3RlOz3RZ3sk7332K9QNWF+A=;
+ b=dkFgfVgTGQVd9xpYkVNZP+ynkOKCEP5J0B2ORNAfBSKpBQSKGAbsd92WnDTF4yMNuyi/RVzv/gkQdGXzDGt0GDg+QL7ReSl/3KW8kKM4TkyzoNIf37oC751E7dGpPaKO4lTPznZM+CCXloBZ/CnAjetAt4JGWDNvkizcuaCPLkJfuKKr5xWqp8wEVgkszklWurBnTWyyKvjv7rnlri82t387pxnYP1BtL15l+M4qCypEB9hY/OMRJD/5RQf97yR8yjOkWOyYQXttW/1JU4wQ5lNkPzLMB7QnxR8LTmZX6U4mIFPo+PQ7ZicYlTw4ARfUIyvoO88GBhGKcGBT2Srvhw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
  (2603:10a6:800:315::13) by AM9PR04MB7668.eurprd04.prod.outlook.com
  (2603:10a6:20b:2dd::10) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.23; Wed, 25 Feb
- 2026 10:54:38 +0000
+ 2026 10:54:44 +0000
 Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
  ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
  ([fe80::feda:fd0e:147f:f994%5]) with mapi id 15.20.9632.017; Wed, 25 Feb 2026
- 10:54:38 +0000
+ 10:54:44 +0000
 From: Sherry Sun <sherry.sun@nxp.com>
 To: hongxing.zhu@nxp.com,
 	l.stach@pengutronix.de,
@@ -60,9 +60,9 @@ Cc: imx@lists.linux.dev,
 	linux-arm-kernel@lists.infradead.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH V6 04/12] PCI: imx6: Add support for parsing the reset property in new Root Port binding
-Date: Wed, 25 Feb 2026 18:55:15 +0800
-Message-Id: <20260225105523.748775-5-sherry.sun@nxp.com>
+Subject: [PATCH V6 05/12] arm: dts: imx6qdl: Add Root Port node and PERST property
+Date: Wed, 25 Feb 2026 18:55:16 +0800
+Message-Id: <20260225105523.748775-6-sherry.sun@nxp.com>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20260225105523.748775-1-sherry.sun@nxp.com>
 References: <20260225105523.748775-1-sherry.sun@nxp.com>
@@ -79,215 +79,134 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: VI0PR04MB12114:EE_|AM9PR04MB7668:EE_
-X-MS-Office365-Filtering-Correlation-Id: ac14d23b-1e8a-4527-47c3-08de745c452d
+X-MS-Office365-Filtering-Correlation-Id: 3b3be93b-2d60-43cc-851c-08de745c48e9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|366016|19092799006|1800799024|52116014|376014|7416014|38350700014|921020;
 X-Microsoft-Antispam-Message-Info:
-	6gmQwRLbs88JqgtYIAH6qb8+Nc0SDjm62LpqFQ6VK+keUgBoqyUByNg0ob9OlrnA0XXOLai4DzMtR3eR2vVN3HHZ+W4pLPByfIjOX9HBAYibjJvCmMAIIlc4sfJP5axSxFDe5mTjmrtt+6J/QKZFPWqq5FQ8kWSu8hpW93Pb/tMremksBofKyGHWTu4jtpnvpeLurz48eVdKxlV2GqA6vdq8y+DVp5KEmKxNyk4BKEvF2tbc3Ap1VP5CfL7QVxZ8qNsNgtMKq3YHyLhCV2ySNjarQOsCeXw16/odsaXCLLxONnuvIuFTVeuMatC5XVpxih4kAGY6kExd5x9JLTifK4anJQXp6LAQp7fKAKDX8RByOrYPoY9UGmzMkrETQ4FKUXL90bE92rXWp738j2YbdWPcP0bufNlGpbgZIbo/1ibXneyqyQkrQbOGcSwJcdOTuJrHYP5TkG9BK2EyVJA8SRAGmVJZU1RjvZpOs7ykDfzUC6zXark25JI9R1xEumlE0anM/2bopWOxQ/qGj8LzYePYrLt7gCooZG2qoa2XA/9mKW+RHoSw+q+GH6ftyPA+5QURXVadLfgdsJ2JlLQPecEmDK1ohfuPlIFgC//bnj190FJfSrv++VnJ/niPo+obWikrBAmuZyPkt8c+uo9XA4FQO6XP9JUpIGbS+0A/ftEyGxxSDv8dVzbXOxl4xMhtw9sj99eTo7BfZygHKsoE5e0kuOXTAfH7DuRWFfqmmCVKKdfDF06sS+KWyZVLGOWAN0fJYHsezT5JYPY0wW8J01EytWIJD9EGoLfVekrNAyPkUYRpN1Bb8oPEteOuI/FC
+	olCek7GlfTLhS5fBpFSEvrHjPTTPBtzwD9g6Nzi0VHQ3QLxCM1mq1EKyADWjMOPifnqQqoX8I4m7+eZIWOYLkMEGv9DlZ7PepJgFkvmnitb5C/ljHRr+p5eUcC56L+TNelajPhVnxSV07erzXSFkbIROCHqRyT+4ap92270dabZ9fAsMtvcV667kX+KdBubZCaRiT9+zxk4tWo64nJlEed6msX1tDE5znT4jioXljc6k/fZBJI2uVE0zFUuceLC1qtQM80Msgw+NpD2BhOlM7IwIrO8Pa/TjW9/cNVwpHji1WutW0xZH5cxbQwZn2vOg+Q3bVjgvskYAQGhc1QsRygzgMWSNvirJsVLbgo/w3HN0dDzDQG0XF7bu2fqaGwjovXywi2CvTWenUXS9tZrv9zf+3TrZLqmB3cqk1im3MnnXbT68NZFqfGSEyL4jTBG49DW795y89dvna510mHtq/cjv9jTfC2eJ+iy/HK2xK99KSvRSA3eYoJgp18M0wdsW8A19I9Y7Jb8Pf7azaTauSXIQGTnoPMantyTrNxhSE9wveKr8UZfOsjymTBem2LYFadYI6T9a3shqPaXJckcSqODuaziAX6paZ7XyXFdTHehw0KnE1BScPOMMHsmzCN/UdC8gv2hwnm+5JZ3ejQbthE4+JbeEdKQYujb4ZfvQaHxHXr4UEENcC+LbAWaVi76QNIiWefJOgd3RhvU1SpJ5tekMbzzs6yrPs3TOqwgbYk2GiO1fJV+6WKgYChenVBMoqUYN6LzeH9F2dS7hlLnDeXyg3HeaDRt8jIFLDWDmVsvWV7hdxJrUk+wNiH6iqZ9I
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(1800799024)(52116014)(376014)(7416014)(38350700014)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?MFvk7SALK+DqZ4kkmENP0IMfAkokeVjXSsWiq4yM5nDy8waEfcQz7Gx+eIJs?=
- =?us-ascii?Q?y3tIXou+J3zTrJ9gsUJcr5ibKqKl5DkkfsvAEfk/d5k4A/LD6RrRMuODhkhr?=
- =?us-ascii?Q?3hxm20v33ZFZkVs0MoHbVmdigoCNITBLFbREHUC7xH88aE04gYGxa4GwOhIV?=
- =?us-ascii?Q?1uv9MSS7kdki+9j7XDqua4UQnbtj9mxshSXaFH6JF6qmvTn95kXGT0adP3nQ?=
- =?us-ascii?Q?8fbexskjrSIlKOjvsAHzSEjDDKkCMoud8yzI0RRKXpebjRcsmkdkBn/kvLe6?=
- =?us-ascii?Q?AvkAmmhztZEFxyrP0zBMLAmho8NphsnfpdXXhkr6OEuQiKQcfOTm3vWGOFL3?=
- =?us-ascii?Q?FYnFUeGJjljxoP9XGBsGE2pw9M8Uraw/TRvdqUqzVUOVqb0jCK9VlIHpxM+X?=
- =?us-ascii?Q?2GvxovxB+OI2qdPu46TLMtgzUnQhjBAI0QJW6vse7WqAmboCpyJoVSSXy0Ov?=
- =?us-ascii?Q?lLLfvSTn2irXh5lW3GARRcA0JWnbctVX3Q2fIErIxjYtzv1RvCUcNk+aF8rM?=
- =?us-ascii?Q?uZZ+IG23EGOavuPd+qntDHXSuFYbdstBVx52js/WVODPx63XrT0vZOh/N5SH?=
- =?us-ascii?Q?wgY67c6M/E80S2x13bapmxSczbNaXhjzOp/C8ZOQa0bpfpXedbOKR0c6quv3?=
- =?us-ascii?Q?wBSs+JEGiDhAvD3Z8nl4k8Kd+TGcd7Z4RnGV0d8HqQzfdhqNyX5xkhRnhhDP?=
- =?us-ascii?Q?TMYh/aiOuaJXZGwM+Z2cbhRjvIX66xVcjs43nqbkvxQbu1PfUM3WVXtFXrf3?=
- =?us-ascii?Q?9nwoDqimWMmIGPf+wPLGD46C2Wb1HUQ6rRQOygrONgKJ4ShUqDtqPgVGYhYR?=
- =?us-ascii?Q?CJ0GAS61ejNh3skzacU0Nr98mOuWTj2Yyf6HCmVpxItexZS5iqrYXc6mqOTP?=
- =?us-ascii?Q?8sGGx+9oliX4sD1PzRjxbwv5yfm5qex5m+ljJs5ARtBCqB5YzJDQpzhOo6Jl?=
- =?us-ascii?Q?0nVIKRUc3g267GfuCIMCQUHC3nJQQOWC1JriHUR0ErAXbakiB/Rtp16xgL4/?=
- =?us-ascii?Q?+6f9x3X7svg9f5ym8lzPP5logTRL1CaQzdzF4hPPV9qHjHHa8h1iRayfkhv0?=
- =?us-ascii?Q?bVdDWSN/InB+3QN1CwBiYihh5i1uTLdO0vTNbabuaoQdBHLpbDTx8qdX+kji?=
- =?us-ascii?Q?LrbfMwnlfk0FuO0HOcAY1Ra+3JW5K0++jyU9ILVBK3UfGFkEJ9tq1BAVcq9s?=
- =?us-ascii?Q?cBmcggq+eqj8cw/i1svKjoP7pttctADNBp2Nxc3pqkMFuoNlmgTqY042TrQ3?=
- =?us-ascii?Q?FJ7WO/wWNSPBshxa/RA9SvIz1b//QqcLFlo+luG8AVZRi74whCeqss7Z7oeI?=
- =?us-ascii?Q?0UBFkYkQ4JtVnJ1mm1E7R1DQEh75Z+dnhTePZ5a6Sha5j/DodApvWxt4t9CY?=
- =?us-ascii?Q?FD1YqCPzjg6CqxjQQ4Kgt2C/B1YHt0jgMUj9hY8Wc4+3GLmQcoxULpZrYPII?=
- =?us-ascii?Q?ajLgOtiE4YrCaAZV4r7M/GZleAQuJS0uz+njY7D/ep2mDqC/cLXEqEV2ryrr?=
- =?us-ascii?Q?2a680YJYeKgO4i1xz3r28xrSD8Ubx86jvfk/6h2rM5+hbKVTIOeMmCpUBzye?=
- =?us-ascii?Q?CbceGG1Y3olDejqtvLqjRGJffsMk5dLOr5rHdepPW9i0fvESDoGQqp5kjpdi?=
- =?us-ascii?Q?q6zHg0H0uv1WYPtnPp/uU0C9PBE/iwD1d74THz6yQT5XYu26ZYiCPjBxS7PM?=
- =?us-ascii?Q?HxNBuTB0M/oZoZAjXRbfqvh//LWXMblrEh2MymUd4Os6fg3hmwLEyj5JQZfo?=
- =?us-ascii?Q?ufMRQTlUZg=3D=3D?=
+	=?us-ascii?Q?2djC7vNk8SxxexO1nqKmx+daXc9UOkK+6xI1torLtzJ5v59WSPrnwKqKhT/v?=
+ =?us-ascii?Q?ltY3XEYoaZ/+IqSIgbNRWQtKXsTCf59vxgGxTwp2cNVnV5zJmY91HjdZYoh3?=
+ =?us-ascii?Q?CDU6DJKozEBDMiXTZGPdfSTrmFHYyjiy5tKU03HWnmdJs6DjkCcv8JwkLiZc?=
+ =?us-ascii?Q?8sbkihRoyMkUk0XhFEcLaKeOryN4hpe+0yuzj81gSS4S4eUPmE+EGy2Zl7I9?=
+ =?us-ascii?Q?tZrVr8zvFKpzaQWih4n6HmMfNz824jH90bULP0Xgg9AW8RnIPC4lctKSzvDa?=
+ =?us-ascii?Q?yg0k48007+C9UG4bFuqRlCURb6VYWeq5FEqBBEtAr/MJheMOwtdg8miux2vI?=
+ =?us-ascii?Q?cU/KP/vA7SeM7I1NGJp+Oly4KgNYuoESbd50rtdedClCjQkH6nXJ6uIZ9MmI?=
+ =?us-ascii?Q?8tgnNyEQhdiGwQw8tn7GAeQsdl5E6KGxQs2drbEbxQyzV+RConvLr1CT+XzT?=
+ =?us-ascii?Q?sGB73wkFWoKUljnaF3dKr9KYkzk2gBGorduiwdkrNecdh3ESErQE0psGldj9?=
+ =?us-ascii?Q?aSgxDJRLKPHnR0Z6nKBs5tIUeMt5LMr60ls4fZ0OpyRPz2ccbktGntqnTj3O?=
+ =?us-ascii?Q?Wz2I9+/bwS3ftEW2c3+5Rqj9VCuik5Ifg9gYWz9QApitxjfzR+HpJMKJL6Jc?=
+ =?us-ascii?Q?uVAfcdU0HbkJws2UMqtAaygPEgyAt6u+R5KdoF0maif1K/NHah/qAcYEJYTH?=
+ =?us-ascii?Q?fCn4fiSp6qiAq7vJjM5DX9ffoa0Qe9ZqnBCw5vNSQtsr0ElPVddnccRWUYlX?=
+ =?us-ascii?Q?IKLBHw1rKw4BTXFF0EPazsmNmOlil0pkL8CjAt8/7cAlC/Bv94lHe3JkOoIO?=
+ =?us-ascii?Q?1C4CrZSWHEYfN6gaMVbW1Ssuu6TewWTtJ1Tkamf/LnTh+Sken0pepW3nCeqQ?=
+ =?us-ascii?Q?MfPn3PWcHinnsXFAucd1yVOoZ2xFIvPRHla/Q+TCas3+kiDNblQph8zWIKC5?=
+ =?us-ascii?Q?jH+1gLjckt/MAhm2psjZhUhOVaqFr2oFkkrig97MeSM9Nob+/scyb8YSKBLj?=
+ =?us-ascii?Q?pAGFx5edOhV4HK9QNDTRxy0jywRFcOPJVZC+CJcPnEgTMcRHpMvFMXzixLrU?=
+ =?us-ascii?Q?rJ4kL3msLcJn5Ov+TUFXik/tjpcXhHmbKFpPxLezUi9aFpvED9zXOSmmc0Hi?=
+ =?us-ascii?Q?lIY9fhsKV11FZnyTFXyuzHNWxe7uNzq/DwyucCf5R6SeRvEzks+X2dtCdhTB?=
+ =?us-ascii?Q?B7UaJbQXeE5262CqD4P//Ky63r+INLkACIK6c9h9rMZ6EVX0/6s4n0QEDxpI?=
+ =?us-ascii?Q?6JlZkqFktZr0XKSlDoJyCsdWgcQ2OkaDisacu9aJ/GrWad37tGRMWLc1eqRq?=
+ =?us-ascii?Q?JxPDL27uhFFPS3d2V+NYDHYz/lYjGhSscqvZ8QBEh5L38C8pMMyX/u1Yhcqt?=
+ =?us-ascii?Q?H57FfBnxD11msthRJ0Rx5VuOXP1/tvaLR9J/9BUpwc9570UwfA78rpy+QJnk?=
+ =?us-ascii?Q?hzMpSSbbNnfBj+tiMRRWNZqW+C8Uu7+ogrSrcoILsNR+igVYsQNTXduubscP?=
+ =?us-ascii?Q?ODHcVztiIUGbSqZYy6btAfE5sb9j4ucvSJ8sTTR/C55YTvNntK8nwdGrLG5y?=
+ =?us-ascii?Q?DioxOagUI2iPkuphC6LlqrGogwjA7ag7pYhWQlVTxD2TMRI406zCzt83RNjr?=
+ =?us-ascii?Q?h7zvbXD/gESDnOKvj6d3Qhv+ZByyQedl6F4h0rtwTMxSbsc0iYCh0j+jpLs9?=
+ =?us-ascii?Q?ntsDyAsOlmyblWEfhd8CMqUkKFbDWrpNmSw5TFYrDUfEH0FlL3f+k/km8phl?=
+ =?us-ascii?Q?GGzOCy+Buw=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac14d23b-1e8a-4527-47c3-08de745c452d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3b3be93b-2d60-43cc-851c-08de745c48e9
 X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 10:54:38.1536
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 10:54:44.3329
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /WZWiwyyp02eBP+mLDcoU7dyjcBkqRwNouREu9vEVRQve1MWyKmcJMjR7owp3plA1UpTC5P5o8kjh/mMC2vREA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: spnVEAtmENxxNdZi11Dq5IoeIGkRUPAHALOt1AS7hzMf/yVjE0deA5f1f+07gu5u8cG0fw9rj5kYetPFJN4XnQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB7668
 
-The current DT binding for pci-imx6 specifies the 'reset-gpios' property
-in the host bridge node. However, the PERST# signal logically belongs to
-individual Root Ports rather than the host bridge itself. This becomes
-important when supporting PCIe KeyE connector and PCI power control
-framework for pci-imx6 driver, which requires properties to be specified
-in Root Port nodes.
-
-With the common Root Port parsing now handled in dw_pcie_host_init(),
-update the reset GPIO handling to use the parsed port list from
-bridge->ports. To maintain DT backwards compatibility, fallback to the
-legacy method of parsing the host bridge node if the reset property is
-not present in the Root Port node (indicated by an empty ports list).
+Since describing the PCIe PERST# property under Host Bridge node is now
+deprecated, it is recommended to add it to the Root Port node, so
+creating the Root Port node and add the reset-gpios property in Root
+Port.
 
 Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 76 +++++++++++++++++++++------
- 1 file changed, 61 insertions(+), 15 deletions(-)
+ arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  5 +++++
+ arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi         | 11 +++++++++++
+ arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts |  5 +++++
+ 3 files changed, 21 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index a5b8d0b71677..4860575f5005 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -34,6 +34,7 @@
- #include <linux/pm_runtime.h>
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+index ba29720e3f72..fe9046c03ddd 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi
+@@ -754,11 +754,16 @@ lvds0_out: endpoint {
+ &pcie {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pcie>;
++	/* This property is deprecated, use reset-gpios from the Root Port node. */
+ 	reset-gpio = <&gpio7 12 GPIO_ACTIVE_LOW>;
+ 	vpcie-supply = <&reg_pcie>;
+ 	status = "okay";
+ };
  
- #include "../../pci.h"
-+#include "../pci-host-common.h"
- #include "pcie-designware.h"
- 
- #define IMX8MQ_GPR_PCIE_REF_USE_PAD		BIT(9)
-@@ -150,7 +151,6 @@ struct imx_lut_data {
- 
- struct imx_pcie {
- 	struct dw_pcie		*pci;
--	struct gpio_desc	*reset_gpiod;
- 	struct clk_bulk_data	*clks;
- 	int			num_clks;
- 	bool			supports_clkreq;
-@@ -897,29 +897,40 @@ static int imx95_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
- 
- static void imx_pcie_assert_core_reset(struct imx_pcie *imx_pcie)
- {
-+	struct dw_pcie *pci = imx_pcie->pci;
-+	struct pci_host_bridge *bridge = pci->pp.bridge;
-+	struct pci_host_port *port;
++&pcie_port0 {
++	reset-gpios = <&gpio7 12 GPIO_ACTIVE_LOW>;
++};
 +
- 	reset_control_assert(imx_pcie->pciephy_reset);
+ &pwm1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pwm1>;
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+index 76e6043e1f91..eeb376193398 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+@@ -289,6 +289,17 @@ pcie: pcie@1ffc000 {
+ 				 <&clks IMX6QDL_CLK_PCIE_REF_125M>;
+ 			clock-names = "pcie", "pcie_bus", "pcie_phy";
+ 			status = "disabled";
++
++			pcie_port0: pcie@0 {
++				compatible = "pciclass,0604";
++				device_type = "pci";
++				reg = <0x0 0x0 0x0 0x0 0x0>;
++				bus-range = <0x01 0xff>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges;
++			};
+ 		};
  
- 	if (imx_pcie->drvdata->core_reset)
- 		imx_pcie->drvdata->core_reset(imx_pcie, true);
+ 		aips1: bus@2000000 { /* AIPS1 */
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts b/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
+index c5b220aeaefd..6b12cab7175f 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
++++ b/arch/arm/boot/dts/nxp/imx/imx6qp-sabreauto.dts
+@@ -45,10 +45,15 @@ MX6QDL_PAD_GPIO_6__ENET_IRQ		0x000b1
+ };
  
- 	/* Some boards don't have PCIe reset GPIO. */
--	gpiod_set_value_cansleep(imx_pcie->reset_gpiod, 1);
-+	if (bridge)
-+		list_for_each_entry(port, &bridge->ports, list)
-+			gpiod_set_value_cansleep(port->reset, 1);
- }
+ &pcie {
++	/* This property is deprecated, use reset-gpios from the Root Port node. */
+ 	reset-gpio = <&max7310_c 5 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
+ };
  
- static int imx_pcie_deassert_core_reset(struct imx_pcie *imx_pcie)
- {
-+	struct dw_pcie *pci = imx_pcie->pci;
-+	struct pci_host_bridge *bridge = pci->pp.bridge;
-+	struct pci_host_port *port;
++&pcie_port0 {
++	reset-gpios = <&max7310_c 5 GPIO_ACTIVE_LOW>;
++};
 +
- 	reset_control_deassert(imx_pcie->pciephy_reset);
- 
- 	if (imx_pcie->drvdata->core_reset)
- 		imx_pcie->drvdata->core_reset(imx_pcie, false);
- 
- 	/* Some boards don't have PCIe reset GPIO. */
--	if (imx_pcie->reset_gpiod) {
--		msleep(100);
--		gpiod_set_value_cansleep(imx_pcie->reset_gpiod, 0);
--		/* Wait for 100ms after PERST# deassertion (PCIe r5.0, 6.6.1) */
--		msleep(100);
--	}
-+	if (bridge)
-+		list_for_each_entry(port, &bridge->ports, list)
-+			if (port->reset) {
-+				msleep(PCIE_T_PVPERL_MS);
-+				gpiod_set_value_cansleep(port->reset, 0);
-+				msleep(PCIE_RESET_CONFIG_WAIT_MS);
-+			}
- 
- 	return 0;
- }
-@@ -1233,6 +1244,44 @@ static void imx_pcie_disable_device(struct pci_host_bridge *bridge,
- 	imx_pcie_remove_lut(imx_pcie, pci_dev_id(pdev));
- }
- 
-+static int imx_pcie_parse_legacy_binding(struct imx_pcie *pcie)
-+{
-+	struct device *dev = pcie->pci->dev;
-+	struct pci_host_bridge *bridge = pcie->pci->pp.bridge;
-+	struct pci_host_port *port;
-+	struct gpio_desc *reset;
-+
-+	if (!bridge) {
-+		dev_err(dev, "Bridge not allocated yet\n");
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * For DT backward compatibility: if no Root Port nodes were parsed
-+	 * (indicated by empty ports list), parse reset-gpios from the host
-+	 * bridge node.
-+	 */
-+	if (!list_empty(&bridge->ports))
-+		return 0;
-+
-+	reset = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_HIGH);
-+	if (IS_ERR(reset))
-+		return PTR_ERR(reset);
-+
-+	if (!reset)
-+		return 0;
-+
-+	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-+	if (!port)
-+		return -ENOMEM;
-+
-+	port->reset = reset;
-+	INIT_LIST_HEAD(&port->list);
-+	list_add_tail(&port->list, &bridge->ports);
-+
-+	return 0;
-+}
-+
- static int imx_pcie_host_init(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -1240,6 +1289,10 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
- 	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
- 	int ret;
- 
-+	ret = imx_pcie_parse_legacy_binding(imx_pcie);
-+	if (ret)
-+		return ret;
-+
- 	if (imx_pcie->vpcie) {
- 		ret = regulator_enable(imx_pcie->vpcie);
- 		if (ret) {
-@@ -1688,13 +1741,6 @@ static int imx_pcie_probe(struct platform_device *pdev)
- 			return PTR_ERR(imx_pcie->phy_base);
- 	}
- 
--	/* Fetch GPIOs */
--	imx_pcie->reset_gpiod = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_HIGH);
--	if (IS_ERR(imx_pcie->reset_gpiod))
--		return dev_err_probe(dev, PTR_ERR(imx_pcie->reset_gpiod),
--				     "unable to get reset gpio\n");
--	gpiod_set_consumer_name(imx_pcie->reset_gpiod, "PCIe reset");
--
- 	/* Fetch clocks */
- 	imx_pcie->num_clks = devm_clk_bulk_get_all(dev, &imx_pcie->clks);
- 	if (imx_pcie->num_clks < 0)
+ &sata {
+ 	status = "okay";
+ };
 -- 
 2.37.1
 
