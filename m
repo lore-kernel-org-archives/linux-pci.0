@@ -1,65 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FA803DA7E4;
-	Wed, 25 Feb 2026 17:04:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A0F73E8C5B
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 17:04:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772039040; cv=none; b=ElLr+JfPTIw6m9snYXJZKLI2M0vi+1Bs9zoJdR9eh41Mn88m9+yEeBNDtpxMkKDLj8RJK5zrdOUW+AnyPViny0mPjCLaS6ZfZO4YkcbNqXmLWZzwJSWC8tw9p6ztiEtbLUNzWZk+c9paAr2OazNQN5ryhdSj1rj+FwLnV9Gjqdo=
+	t=1772039042; cv=none; b=NS07/iAc6JtuDG0mX//cEM+oiui7A2j746HcNCgJGs0xcEF+8Y8z42LPq5ETXQ2FeZa8XhcA19+KcWu1U2xuqRXjpfVSakdHqn8SKSZndao+jXTl3B1nAEbP/ywM1vv7sq9UAIJgNshNRy6ucXmOtN9Fx8G2al9ymkqkJdjHSqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772039040; c=relaxed/simple;
-	bh=RGTq2r18gzctz4JuOYOuKDVbbCaqEX2oIvtQSlFHBiU=;
+	s=arc-20240116; t=1772039042; c=relaxed/simple;
+	bh=gdnQ2oa8KH5dZ6v9FdwvXRJzfd31Kif7Og4mRlS0AJE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EZRbl+Yqhgl1iLLpzBiHzMBTR1Bacj4opbnigAAA88QQ/y18KYPR2p7Nhw9DWLrzuWfiVHPbhrwuLU/0Kx0LcepjU5YA3XzVPPu2sgl9DCf//WFhKVjm5WAPTgpenVkcYeAp+f7oLkhd//biPo+uofGWBCMRj7Zl0pHG+j8v5sA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CLmKNEGd; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=dwHuGOuZaO5DfXo2S1OP19or4KnA2I+89hjCWDTtjSxuDdyiRm0E7z3bF6cFflbXQGJIk+4sEgR6r5CTsTWW115u453QbWqHmvD5oS/pPi7Pn0vDfx2lxd6SOrr0zZf8EYj76lsI6UU87cy8ZnHAPYhD6YBx4SZ6NDs/wNe93p0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s/ek3fgJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CLmKNEGd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 654D0C116D0;
-	Wed, 25 Feb 2026 17:03:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s/ek3fgJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1C04C19421;
+	Wed, 25 Feb 2026 17:04:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772039040;
-	bh=RGTq2r18gzctz4JuOYOuKDVbbCaqEX2oIvtQSlFHBiU=;
+	s=k20201202; t=1772039042;
+	bh=gdnQ2oa8KH5dZ6v9FdwvXRJzfd31Kif7Og4mRlS0AJE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CLmKNEGdcK2zbWeegsql3ttZ/G0nbTxxNv0XSGCdbEkUgCFuDFdBvpwjyheON8HnR
-	 09zAHVHOJqlQG9KDpbRca2tPvPOhCDb/MvYOfyr6kDKyU9FNj1rafDBltVUYM9AxAm
-	 5dilpw6O800XwarBNRxYaCf3Nx6Ps496P6dw9NI3juZSl1Foe4YRgSKgKhLcwbWxvo
-	 QYTjeh8pCYDrrMbOK1bs34jF+NkD6NBPehShsKNdlCOpFpBZHxfa29YA72Lvbi6Fwl
-	 Or3vXRwGWSn10GVBn63B6ETqxHqjlSG/HR8u30JhmT8ZCtyNAVqswCG8mQnq3kaIrd
-	 sGfrYHRkldxLg==
+	b=s/ek3fgJpzB+yzzTkfRFDws85m9H4P6S+1qMQ2wdOwV9lvp2cGDLYxKZpQdL4iMQ9
+	 ft9wWpBt05FwNVmRWvQjVCw47pj1Z+y9LwMRbq0h5je0GPPwaDSWl8bi9Nt7jjIaJI
+	 3E8FF2iHzaMsf0FVZQeVXrlG+TiaNH04fMYKFAX718La1FkAz25tKMJeceq7lsmcKF
+	 KH7ztSy35PuAIDRxf3YDtw1B/kBwB/xut+EyUy6UakrFi/daVO7DPKkFxdyb5NKyOw
+	 51aRQvZJd+ryXyDMlJ5BOirglxJN5trmRDkzUtTIUQfHPEFjRu/Ddgdw4czrZqKsgO
+	 Vn2jno+1FHwKg==
 From: Niklas Cassel <cassel@kernel.org>
-To: Minghuan Lian <minghuan.Lian@nxp.com>,
-	Mingkai Hu <mingkai.hu@nxp.com>,
-	Roy Zang <roy.zang@nxp.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Srikanth Thokala <srikanth.thokala@intel.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Marek Vasut <marek.vasut+renesas@gmail.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
 	Koichiro Den <den@valinux.co.jp>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,
-	linux-arm-msm@vger.kernel.org,
-	linux-tegra@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v2 1/9] PCI: endpoint: Introduce pci_epc_bar_type BAR_64BIT_UPPER
-Date: Wed, 25 Feb 2026 18:03:24 +0100
-Message-ID: <20260225170324.4033466-12-cassel@kernel.org>
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/9] PCI: endpoint: Describe reserved subregions within BARs
+Date: Wed, 25 Feb 2026 18:03:25 +0100
+Message-ID: <20260225170324.4033466-13-cassel@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260225170324.4033466-11-cassel@kernel.org>
 References: <20260225170324.4033466-11-cassel@kernel.org>
@@ -69,194 +45,82 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7896; i=cassel@kernel.org; h=from:subject; bh=RGTq2r18gzctz4JuOYOuKDVbbCaqEX2oIvtQSlFHBiU=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDLnayctW3Lxod/+JDe558cXxpiWLNH87L5dOvdbyXXZl pWKbOrLOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRJAaGf9qx249vjgvfNlmg hmtliuqzqUFvFB4f/rSOyYQpnOuEyVFGhk19spL56Q3vZSqvLm2sVt5w8eojiz1uv+XWCPWG7dW ZwgoA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2499; i=cassel@kernel.org; h=from:subject; bh=v0TCYkwR/jCRhmmjaPbfNq0OZyqA5YkaaLgpPTYSH3Q=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDLnayfFeCTpTPLbV8Dn4v3EK3KNeaWbkMo/9UALjkQ5Q cUtPyZ3lLIwiHExyIopsvj+cNlf3O0+5bjiHRuYOaxMIEMYuDgFYCJnOxj+R59lzd7rVhLT8FFg 1s8Hl8zvJAi2nfDcpfrDcHfbuu5H/xgZTjI7vvPZWNrkm3TswPbKHykvcsyFXhy7sXzug0dy2m9 /cwAA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-Add a pci_epc_bar_type BAR_64BIT_UPPER to more clearly differentiate from
-BAR_RESERVED.
+From: Koichiro Den <den@valinux.co.jp>
 
-This BAR type will only be used for a BAR following a "only_64bit" BAR.
+Some endpoint controllers expose platform-owned, fixed register windows
+within a BAR that EPF drivers must not reprogram (e.g. a BAR marked
+BAR_RESERVED). Even in that case, EPF drivers may need to reference a
+well-defined subset of that BAR, e.g. to reuse an integrated DMA
+controller MMIO window as a doorbell target.
 
-This makes the BAR description more clear, and the reader does no longer
-need to check the BAR type for the preceding BAR to know how to interpret
-the BAR type.
+Introduce struct pci_epc_bar_rsvd_region and extend struct
+pci_epc_bar_desc so EPC drivers can advertise such fixed subregions in a
+controller-agnostic way.
 
-No functional changes.
+No functional change for existing users.
 
 Tested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Signed-off-by: Koichiro Den <den@valinux.co.jp>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/pci/controller/dwc/pci-layerscape-ep.c |  4 ++--
- drivers/pci/controller/dwc/pcie-keembay.c      |  6 +++---
- drivers/pci/controller/dwc/pcie-qcom-ep.c      |  4 ++--
- drivers/pci/controller/dwc/pcie-tegra194.c     |  2 +-
- drivers/pci/controller/dwc/pcie-uniphier-ep.c  | 10 +++++-----
- drivers/pci/controller/pcie-rcar-ep.c          |  6 +++---
- drivers/pci/endpoint/pci-epc-core.c            |  3 ++-
- include/linux/pci-epc.h                        |  5 ++++-
- 8 files changed, 22 insertions(+), 18 deletions(-)
+ include/linux/pci-epc.h | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index a4a800699f89..5a03a8f895f9 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -251,9 +251,9 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
- 	pci->ops = pcie->drvdata->dw_pcie_ops;
- 
- 	ls_epc->bar[BAR_2].only_64bit = true;
--	ls_epc->bar[BAR_3].type = BAR_RESERVED;
-+	ls_epc->bar[BAR_3].type = BAR_64BIT_UPPER;
- 	ls_epc->bar[BAR_4].only_64bit = true;
--	ls_epc->bar[BAR_5].type = BAR_RESERVED;
-+	ls_epc->bar[BAR_5].type = BAR_64BIT_UPPER;
- 	ls_epc->linkup_notifier = true;
- 
- 	pcie->pci = pci;
-diff --git a/drivers/pci/controller/dwc/pcie-keembay.c b/drivers/pci/controller/dwc/pcie-keembay.c
-index 2666a9c3d67e..5a00b8cf5b53 100644
---- a/drivers/pci/controller/dwc/pcie-keembay.c
-+++ b/drivers/pci/controller/dwc/pcie-keembay.c
-@@ -313,11 +313,11 @@ static const struct pci_epc_features keembay_pcie_epc_features = {
- 	.msi_capable		= true,
- 	.msix_capable		= true,
- 	.bar[BAR_0]		= { .only_64bit = true, },
--	.bar[BAR_1]		= { .type = BAR_RESERVED, },
-+	.bar[BAR_1]		= { .type = BAR_64BIT_UPPER, },
- 	.bar[BAR_2]		= { .only_64bit = true, },
--	.bar[BAR_3]		= { .type = BAR_RESERVED, },
-+	.bar[BAR_3]		= { .type = BAR_64BIT_UPPER, },
- 	.bar[BAR_4]		= { .only_64bit = true, },
--	.bar[BAR_5]		= { .type = BAR_RESERVED, },
-+	.bar[BAR_5]		= { .type = BAR_64BIT_UPPER, },
- 	.align			= SZ_16K,
- };
- 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 18460f01b2c6..e55675b3840a 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -850,9 +850,9 @@ static const struct pci_epc_features qcom_pcie_epc_features = {
- 	.msi_capable = true,
- 	.align = SZ_4K,
- 	.bar[BAR_0] = { .only_64bit = true, },
--	.bar[BAR_1] = { .type = BAR_RESERVED, },
-+	.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
- 	.bar[BAR_2] = { .only_64bit = true, },
--	.bar[BAR_3] = { .type = BAR_RESERVED, },
-+	.bar[BAR_3] = { .type = BAR_64BIT_UPPER, },
- };
- 
- static const struct pci_epc_features *
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 06571d806ab3..31aa9a494dbc 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1993,7 +1993,7 @@ static const struct pci_epc_features tegra_pcie_epc_features = {
- 	.msi_capable = true,
- 	.bar[BAR_0] = { .type = BAR_FIXED, .fixed_size = SZ_1M,
- 			.only_64bit = true, },
--	.bar[BAR_1] = { .type = BAR_RESERVED, },
-+	.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
- 	.bar[BAR_2] = { .type = BAR_RESERVED, },
- 	.bar[BAR_3] = { .type = BAR_RESERVED, },
- 	.bar[BAR_4] = { .type = BAR_RESERVED, },
-diff --git a/drivers/pci/controller/dwc/pcie-uniphier-ep.c b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
-index d52753060970..f873a1659592 100644
---- a/drivers/pci/controller/dwc/pcie-uniphier-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
-@@ -426,9 +426,9 @@ static const struct uniphier_pcie_ep_soc_data uniphier_pro5_data = {
- 		.msix_capable = false,
- 		.align = 1 << 16,
- 		.bar[BAR_0] = { .only_64bit = true, },
--		.bar[BAR_1] = { .type = BAR_RESERVED, },
-+		.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
- 		.bar[BAR_2] = { .only_64bit = true, },
--		.bar[BAR_3] = { .type = BAR_RESERVED, },
-+		.bar[BAR_3] = { .type = BAR_64BIT_UPPER, },
- 		.bar[BAR_4] = { .type = BAR_RESERVED, },
- 		.bar[BAR_5] = { .type = BAR_RESERVED, },
- 	},
-@@ -445,11 +445,11 @@ static const struct uniphier_pcie_ep_soc_data uniphier_nx1_data = {
- 		.msix_capable = false,
- 		.align = 1 << 12,
- 		.bar[BAR_0] = { .only_64bit = true, },
--		.bar[BAR_1] = { .type = BAR_RESERVED, },
-+		.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
- 		.bar[BAR_2] = { .only_64bit = true, },
--		.bar[BAR_3] = { .type = BAR_RESERVED, },
-+		.bar[BAR_3] = { .type = BAR_64BIT_UPPER, },
- 		.bar[BAR_4] = { .only_64bit = true, },
--		.bar[BAR_5] = { .type = BAR_RESERVED, },
-+		.bar[BAR_5] = { .type = BAR_64BIT_UPPER, },
- 	},
- };
- 
-diff --git a/drivers/pci/controller/pcie-rcar-ep.c b/drivers/pci/controller/pcie-rcar-ep.c
-index 657875ef4657..9b3f5391fabe 100644
---- a/drivers/pci/controller/pcie-rcar-ep.c
-+++ b/drivers/pci/controller/pcie-rcar-ep.c
-@@ -440,13 +440,13 @@ static const struct pci_epc_features rcar_pcie_epc_features = {
- 	/* use 64-bit BARs so mark BAR[1,3,5] as reserved */
- 	.bar[BAR_0] = { .type = BAR_FIXED, .fixed_size = 128,
- 			.only_64bit = true, },
--	.bar[BAR_1] = { .type = BAR_RESERVED, },
-+	.bar[BAR_1] = { .type = BAR_64BIT_UPPER, },
- 	.bar[BAR_2] = { .type = BAR_FIXED, .fixed_size = 256,
- 			.only_64bit = true, },
--	.bar[BAR_3] = { .type = BAR_RESERVED, },
-+	.bar[BAR_3] = { .type = BAR_64BIT_UPPER, },
- 	.bar[BAR_4] = { .type = BAR_FIXED, .fixed_size = 256,
- 			.only_64bit = true, },
--	.bar[BAR_5] = { .type = BAR_RESERVED, },
-+	.bar[BAR_5] = { .type = BAR_64BIT_UPPER, },
- };
- 
- static const struct pci_epc_features*
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index e546b3dbb240..1ad2f62963c8 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -104,7 +104,8 @@ enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
- 
- 	for (i = bar; i < PCI_STD_NUM_BARS; i++) {
- 		/* If the BAR is not reserved, return it. */
--		if (epc_features->bar[i].type != BAR_RESERVED)
-+		if (epc_features->bar[i].type != BAR_RESERVED &&
-+		    epc_features->bar[i].type != BAR_64BIT_UPPER)
- 			return i;
- 	}
- 
 diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index c021c7af175f..c22f8a6cf9a3 100644
+index c22f8a6cf9a3..f7f48f43d370 100644
 --- a/include/linux/pci-epc.h
 +++ b/include/linux/pci-epc.h
-@@ -192,12 +192,15 @@ struct pci_epc {
-  *		   NOTE: An EPC driver can currently only set a single supported
-  *		   size.
-  * @BAR_RESERVED: The BAR should not be touched by an EPF driver.
-+ * @BAR_64BIT_UPPER: Should only be set on a BAR if the preceding BAR is marked
-+ *		     as only_64bit.
+@@ -203,6 +203,30 @@ enum pci_epc_bar_type {
+ 	BAR_64BIT_UPPER,
+ };
+ 
++/**
++ * enum pci_epc_bar_rsvd_region_type - type of a fixed subregion behind a BAR
++ * @PCI_EPC_BAR_RSVD_DMA_CTRL_MMIO: Integrated DMA controller MMIO window
++ *
++ * BARs marked BAR_RESERVED are owned by the SoC/EPC hardware and must not be
++ * reprogrammed by EPF drivers. Some of them still expose fixed subregions that
++ * EPFs may want to reference (e.g. embedded doorbell fallback).
++ */
++enum pci_epc_bar_rsvd_region_type {
++	PCI_EPC_BAR_RSVD_DMA_CTRL_MMIO = 0,
++};
++
++/**
++ * struct pci_epc_bar_rsvd_region - fixed subregion behind a BAR
++ * @type: reserved region type
++ * @offset: offset within the BAR aperture
++ * @size: size of the reserved region
++ */
++struct pci_epc_bar_rsvd_region {
++	enum pci_epc_bar_rsvd_region_type	type;
++	resource_size_t				offset;
++	resource_size_t				size;
++};
++
+ /**
+  * struct pci_epc_bar_desc - hardware description for a BAR
+  * @type: the type of the BAR
+@@ -216,11 +240,15 @@ enum pci_epc_bar_type {
+  *		(If BARx is a 64-bit BAR that an EPF driver is not allowed to
+  *		touch, then both BARx and BARx+1 must be set to type
+  *		BAR_RESERVED.)
++ * @nr_rsvd_regions: number of fixed subregions described for BAR_RESERVED
++ * @rsvd_regions: fixed subregions behind BAR_RESERVED
   */
- enum pci_epc_bar_type {
- 	BAR_PROGRAMMABLE = 0,
- 	BAR_FIXED,
- 	BAR_RESIZABLE,
- 	BAR_RESERVED,
-+	BAR_64BIT_UPPER,
+ struct pci_epc_bar_desc {
+ 	enum pci_epc_bar_type type;
+ 	u64 fixed_size;
+ 	bool only_64bit;
++	u8 nr_rsvd_regions;
++	const struct pci_epc_bar_rsvd_region *rsvd_regions;
  };
  
  /**
-@@ -207,7 +210,7 @@ enum pci_epc_bar_type {
-  * @only_64bit: if true, an EPF driver is not allowed to choose if this BAR
-  *		should be configured as 32-bit or 64-bit, the EPF driver must
-  *		configure this BAR as 64-bit. Additionally, the BAR succeeding
-- *		this BAR must be set to type BAR_RESERVED.
-+ *		this BAR must be set to type BAR_64BIT_UPPER.
-  *
-  *		only_64bit should not be set on a BAR of type BAR_RESERVED.
-  *		(If BARx is a 64-bit BAR that an EPF driver is not allowed to
 -- 
 2.53.0
 
