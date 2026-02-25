@@ -1,50 +1,25 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A972222A9;
-	Wed, 25 Feb 2026 17:04:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1EE2F3E8C67;
+	Wed, 25 Feb 2026 17:08:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772039086; cv=none; b=Ny7gAtwQmRk5zzQUiRIN4uS+Br3U0K0Lofhajgx9oIlpNJkEnZRMZsp2Pfx2EMb860BG7phPTgoCVSgfxfQlCCvs8EQqINgonwcr3cdzsYShymy48TvaxHLQKmIr8xhpBiRo4UKhLl2+GY4avkoQXy66/vsGKIfqufnOIgsaLnU=
+	t=1772039331; cv=none; b=BGPBGvHcCFB9R+VpGWNzaQazo/vV31YltMIw4EdCAW+lKJ6pVa7+eaiEEgfOerntBzzNRofkfk+BbDQ7oh9XHzrLZcmZbVP8lcuoarTjGSblzdUPEOfI+aJUruH1Jaar+91DiX/A02x1Pa3eudCu/Y4Db4k6btqJs4qfvd7B7QI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772039086; c=relaxed/simple;
-	bh=NNSLk/mzuRhlf5SQt4v4wmAT/v/xmMkOUnUanR8BoQ8=;
+	s=arc-20240116; t=1772039331; c=relaxed/simple;
+	bh=e86dy79TKlUxU3xf80Vcy6z1TEZmqr9y+GYyp3xRW3I=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J/+1Ph3Bh6bwQYDjCu22ThxW5ayP+6zUury1+0Yy/CeQOtBpgWdkGeuBz3/8Li/EhVrGMGPoIwxfs/oer2z4XhvVAp981VJZ3Bb1ggl+OPUi96+3A+BD/parqaD5piQ6wdOgUMcYaZcaN9by/hQKsL32kW7TzCMTKRZw7LqV/hc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=F8l25Um0; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="F8l25Um0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772039084; x=1803575084;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=NNSLk/mzuRhlf5SQt4v4wmAT/v/xmMkOUnUanR8BoQ8=;
-  b=F8l25Um0TGDpJrY2KxFUZ+b+uqDurpte4e/YAiBYP4NB9l2fx10JP0jI
-   +eoYI0WtLXvga9yDMrCESY/xR97jkY3FA40YBrnBOYklkuVmbN3BuKAZr
-   Cr5D3vbRKcPUHoESgV62kDpm8a4QNrR2DfvLqFDBQhWFuWqGLxC9f863S
-   Oox1PzTNa3XM7WL8nB+zS410q+4ZYfkm2Vm9I2by3b8IYZrHC980e/U58
-   nEEPrNrdreU/FO/HRGjpXbqyB+QoBVwKcFKukSw4p7hYv7yETFuc5G7mR
-   YdLXwsaUiSgnipvXs2YqXdHHD02NlkpAYOaeVdnCxoPfN3GHALo1NolFi
-   g==;
-X-CSE-ConnectionGUID: qrISB1CJTOOlo8vonm5klQ==
-X-CSE-MsgGUID: 6jWcW8SFRbic/IkQ/5qflw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="76956232"
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="76956232"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 09:04:44 -0800
-X-CSE-ConnectionGUID: D8rcoCrTT2WDAXFLjVm+Bg==
-X-CSE-MsgGUID: yo0Y5VVsR9yyooLhsIBrbg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="239299311"
-Received: from gabaabhi-mobl2.amr.corp.intel.com (HELO [10.125.111.98]) ([10.125.111.98])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 09:04:43 -0800
-Message-ID: <99bea052-80f4-4552-8e98-4b99094c8335@intel.com>
-Date: Wed, 25 Feb 2026 10:04:42 -0700
+	 In-Reply-To:Content-Type; b=WU6dQZ7Kgb8TxIOWdJ8ENeTvs6Ca923kigX4AWDDhcq9ScuJPX+9pVS3pOPRR65qlmaFprsnEAYaezUNmZKtCIvYD3442CL+lOfeTn8c4KJ1ghWQYjdDEsXjvGzy074YlSMKYfZJxGnDWJviSV5ny5uBTJPRVeqLfrHWzWpYFHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1AF5B165C;
+	Wed, 25 Feb 2026 09:08:43 -0800 (PST)
+Received: from [10.57.58.107] (unknown [10.57.58.107])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3A8BC3F62B;
+	Wed, 25 Feb 2026 09:08:40 -0800 (PST)
+Message-ID: <d8102507-e537-4e7c-8137-082a43fd270d@arm.com>
+Date: Wed, 25 Feb 2026 17:08:37 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,100 +27,153 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 09/10] NTB: epf: Fix doorbell bitmask handling in
- db_read/db_clear
-To: Koichiro Den <den@valinux.co.jp>, Frank.Li@nxp.com, kishon@kernel.org,
- jdmason@kudzu.us, mani@kernel.org, allenbh@gmail.com,
- kwilczynski@kernel.org, bhelgaas@google.com, jbrunet@baylibre.com,
- lpieralisi@kernel.org
-Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev,
- linux-kernel@vger.kernel.org
-References: <20260224133459.1741537-1-den@valinux.co.jp>
- <20260224133459.1741537-10-den@valinux.co.jp>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260224133459.1741537-10-den@valinux.co.jp>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH kernel 6/9] x86/dma-direct: Stop changing encrypted page
+ state for TDISP devices
+To: Alexey Kardashevskiy <aik@amd.com>, x86@kernel.org
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
+ Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Peter Zijlstra <peterz@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Marek Szyprowski <m.szyprowski@samsung.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Mike Rapoport <rppt@kernel.org>,
+ Tom Lendacky <thomas.lendacky@amd.com>, Ard Biesheuvel <ardb@kernel.org>,
+ Neeraj Upadhyay <Neeraj.Upadhyay@amd.com>,
+ Ashish Kalra <ashish.kalra@amd.com>, Stefano Garzarella
+ <sgarzare@redhat.com>, Melody Wang <huibo.wang@amd.com>,
+ Seongman Lee <augustus92@kaist.ac.kr>, Joerg Roedel <joerg.roedel@amd.com>,
+ Nikunj A Dadhania <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Andi Kleen <ak@linux.intel.com>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ Tony Luck <tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Denis Efremov <efremov@linux.com>, Geliang Tang <geliang@kernel.org>,
+ Piotr Gregor <piotrgregor@rsyncme.org>, "Michael S. Tsirkin"
+ <mst@redhat.com>, Alex Williamson <alex@shazbot.org>,
+ Arnd Bergmann <arnd@arndb.de>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+ Jacob Pan <jacob.jun.pan@linux.intel.com>, Yinghai Lu <yinghai@kernel.org>,
+ Kevin Brodsky <kevin.brodsky@arm.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
+ <herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Stefano Stabellini <sstabellini@kernel.org>,
+ Claire Chang <tientzu@chromium.org>, linux-coco@lists.linux.dev,
+ iommu@lists.linux.dev
+References: <20260225053806.3311234-1-aik@amd.com>
+ <20260225053806.3311234-7-aik@amd.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <20260225053806.3311234-7-aik@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-
-On 2/24/26 6:34 AM, Koichiro Den wrote:
-> The EPF driver currently stores the incoming doorbell as a vector number
-> (irq_no + 1) in db_val and db_clear() clears all bits unconditionally.
-> This breaks db_read()/db_clear() semantics when multiple doorbells are
-> used.
+On 2026-02-25 5:37 am, Alexey Kardashevskiy wrote:
+> TDISP devices operate in CoCo VMs only and capable of accessing
+> encrypted guest memory.
 > 
-> Store doorbells as a bitmask (BIT_ULL(vector)) and make
-> db_clear(db_bits) clear only the specified bits. Use atomic64 operations
-> as db_val is updated from interrupt context.
+> Currently when SME is on, the DMA subsystem forces the SME mask in
+> DMA handles in phys_to_dma() which assumes IOMMU pass through
+> which is never the case with CoCoVM running with a TDISP device.
 > 
-> Fixes: 812ce2f8d14e ("NTB: Add support for EPF PCI Non-Transparent Bridge")
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> Define X86's version of phys_to_dma() to skip leaking SME mask to
+> the device.
+> 
+> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
 > ---
->  drivers/ntb/hw/epf/ntb_hw_epf.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> index 00956ab2fbf5..0018adc35f16 100644
-> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> @@ -6,6 +6,7 @@
->   * Author: Kishon Vijay Abraham I <kishon@ti.com>
->   */
->  
-> +#include <linux/atomic.h>
->  #include <linux/delay.h>
->  #include <linux/module.h>
->  #include <linux/pci.h>
-> @@ -102,7 +103,7 @@ struct ntb_epf_dev {
->  	unsigned int self_spad;
->  	unsigned int peer_spad;
->  
-> -	int db_val;
-> +	atomic64_t db_val;
->  	u64 db_valid_mask;
->  };
->  
-> @@ -331,15 +332,16 @@ static irqreturn_t ntb_epf_vec_isr(int irq, void *dev)
->  	int irq_no;
->  
->  	irq_no = irq - pci_irq_vector(ndev->ntb.pdev, 0);
-> -	ndev->db_val = irq_no + 1;
->  
->  	if (irq_no == 0) {
->  		ntb_link_event(&ndev->ntb);
->  	} else if (irq_no == 1) {
->  		dev_warn_ratelimited(ndev->dev,
->  				     "Unexpected irq_no 1 received. Treat it as DB#0.\n");
-> +		atomic64_or(BIT_ULL(0), &ndev->db_val);
->  		ntb_db_event(&ndev->ntb, 0);
->  	} else {
-> +		atomic64_or(BIT_ULL(irq_no - 2), &ndev->db_val);
+> Doing this in the generic version breaks ARM which uses
+> the SME mask in DMA handles, hence ARCH_HAS_PHYS_TO_DMA.
 
-Again here the bits probably can use a define or enum instead of magic numbers.
+That smells a bit off... In CCA we should be in the same boat, wherein a 
+trusted device can access memory at a DMA address based on its "normal" 
+(private) GPA, rather than having to be redirected to the shared alias 
+(it's really not an "SME mask" in that sense at all).
 
-DJ
+I guess this comes back to the point I just raised on the previous patch 
+- the current assumption is that devices cannot access private memory at 
+all, and thus phys_to_dma() is implicitly only dealing with the 
+mechanics of how the given device accesses shared memory. Once that no 
+longer holds, I don't see how we can find the right answer without also 
+consulting the relevant state of paddr itself, and that really *should* 
+be able to be commonly abstracted across CoCo environments. And if in 
+the process of that we could untangle the "implicit vs. explicit SME 
+mask for shared memory or non-CoCo SME" case from common code and punt 
+*that* into an x86-specific special case, all the better :)
 
->  		ntb_db_event(&ndev->ntb, irq_no - 2);
->  	}
->  
-> @@ -524,7 +526,7 @@ static u64 ntb_epf_db_read(struct ntb_dev *ntb)
->  {
->  	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
->  
-> -	return ndev->db_val;
-> +	return atomic64_read(&ndev->db_val);
->  }
->  
->  static int ntb_epf_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
-> @@ -536,7 +538,7 @@ static int ntb_epf_db_clear(struct ntb_dev *ntb, u64 db_bits)
->  {
->  	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
->  
-> -	ndev->db_val = 0;
-> +	atomic64_and(~db_bits, &ndev->db_val);
->  
->  	return 0;
->  }
+Thanks,
+Robin.
+
+> pci_device_add() enforces the FFFF_FFFF coherent DMA mask so
+> dma_alloc_coherent() fails when SME=on, this is how I ended up fixing
+> phys_to_dma() and not quite sure it is the right fix.
+> ---
+>   arch/x86/Kconfig                  |  1 +
+>   arch/x86/include/asm/dma-direct.h | 39 ++++++++++++++++++++
+>   2 files changed, 40 insertions(+)
+> 
+> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+> index fa3b616af03a..c46283064518 100644
+> --- a/arch/x86/Kconfig
+> +++ b/arch/x86/Kconfig
+> @@ -112,6 +112,7 @@ config X86
+>   	select ARCH_HAS_UBSAN
+>   	select ARCH_HAS_DEBUG_WX
+>   	select ARCH_HAS_ZONE_DMA_SET if EXPERT
+> +	select ARCH_HAS_PHYS_TO_DMA
+>   	select ARCH_HAVE_NMI_SAFE_CMPXCHG
+>   	select ARCH_HAVE_EXTRA_ELF_NOTES
+>   	select ARCH_MHP_MEMMAP_ON_MEMORY_ENABLE
+> diff --git a/arch/x86/include/asm/dma-direct.h b/arch/x86/include/asm/dma-direct.h
+> new file mode 100644
+> index 000000000000..f50e03d643c1
+> --- /dev/null
+> +++ b/arch/x86/include/asm/dma-direct.h
+> @@ -0,0 +1,39 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +#ifndef ASM_X86_DMA_DIRECT_H
+> +#define ASM_X86_DMA_DIRECT_H 1
+> +
+> +static inline dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
+> +{
+> +	if (dev->dma_range_map)
+> +		return translate_phys_to_dma(dev, paddr);
+> +	return paddr;
+> +}
+> +
+> +static inline dma_addr_t phys_to_dma(struct device *dev, phys_addr_t paddr)
+> +{
+> +	/*
+> +	 * TDISP devices only work in CoCoVMs and rely on IOMMU to
+> +	 * decide on the memory encryption.
+> +	 * Stop leaking the SME mask in DMA handles and return
+> +	 * the real address.
+> +	 */
+> +	if (device_cc_accepted(dev))
+> +		return dma_addr_unencrypted(__phys_to_dma(dev, paddr));
+> +
+> +	return dma_addr_encrypted(__phys_to_dma(dev, paddr));
+> +}
+> +
+> +static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t daddr)
+> +{
+> +	return daddr;
+> +}
+> +
+> +static inline dma_addr_t phys_to_dma_unencrypted(struct device *dev,
+> +						 phys_addr_t paddr)
+> +{
+> +	return dma_addr_unencrypted(__phys_to_dma(dev, paddr));
+> +}
+> +
+> +#define phys_to_dma_unencrypted phys_to_dma_unencrypted
+> +
+> +#endif /* ASM_X86_DMA_DIRECT_H */
 
