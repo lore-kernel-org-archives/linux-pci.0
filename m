@@ -1,182 +1,137 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B4E3D902C;
-	Wed, 25 Feb 2026 16:09:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD3662798E5
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 16:24:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772035753; cv=none; b=XSszBp/OAR8gxs09rW3PeuVlZWXFV+i1PA9nKQPfxH4tcQn9RuM6ZNx7GWvezbJbbkjyEuf6PM7gktDRUFJ7oPNM0A3fxHDGZkLnK3lCWIUjfU+4+jrjTWdBtsULwo5RoSMWNBT+5wHqUi9Q8/f3aorPJIQJ2qUY1Orjkf19qmQ=
+	t=1772036660; cv=none; b=Jyzaxjk4kFvcju1zHD1sxtgr3pweLlIU6cG5ocrP6Zt9Q/lObqlTtH0qANQ0I2jCIFJLzufEn4HKPNWwK2f+cyPuJrztPLmy2RafxkTBhYxq/MQq5SSm3ego0okhrlCGDnzwwBdzzYV6vmLhjalnURMxqYQA/Nb67PnSZ88RKoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772035753; c=relaxed/simple;
-	bh=ANomuQGtwJBVOlScVj0hlbIkzsKM2420UHn1bHN/8uM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MSpGOjm430Z7azayMtCKTeD/oyFgxw7uvrUXCqHPMeTND7petP4ziN8E/CNm90qMYGVPjK2Ora56Ev1RNj5ml5uGIklHq0zGmLBA1/xpGik3XaDOur0P4YP4tIsm8E2+uzRipfh0GnJgPyW2Eie3ypt/bO0ZLZyCs5XCvQgTeME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U5oXl5ir; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1772036660; c=relaxed/simple;
+	bh=OnAuwuDAn4JNmt6nlJBWAsbx5rUhDyU5/zoK9uZ1KKM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Gl1qfN/LVQY50f66Wmy+JCO/nIzrHRd/1tuG3Wgk2umEEeNQS/uQ04/rG1DpJcpzthsVN/VAjhjKoipENKw4/pvs0WTiNWMZP995s62KWpYfwMWK5mXTetTemMzfscG9ZB+mGyd4BUkKPTqWy8wYZQyKROQ8yUAk6Kvu1A8mrDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=duio2Jl/; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BaTmxvZB; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U5oXl5ir"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772035750; x=1803571750;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=ANomuQGtwJBVOlScVj0hlbIkzsKM2420UHn1bHN/8uM=;
-  b=U5oXl5ir52cRK2USN/5XaHbMqQAOX7Beu3LblQvFA/W8aFSBYbxbrJvP
-   NyLUphu3jKAbT58g5N45ATcdX7c8e7dmau5glS61to5kevVVL705D2Aus
-   dHSxXq/v+XNPgX7J46lTdBQNyFDBXnmR40+6GZqy1UHAxcxkQN2O8cMad
-   yU7Vzy7fc0ZGS8+Ynjxp5IfTj5XZawpyGz9YP/R+0isSysGljzxkvw+PL
-   9+QBQnLcRtONS7djxKXHhOqASKiT3VJTC/hV1yicTPm/4BsfXtl1Vt/wC
-   +moFjgDPHyMCXph2aHWrZlU1dcBMsQsBeFWJN8o2WFCngPWHpk7XoZh18
-   g==;
-X-CSE-ConnectionGUID: PQ9CMmuKRR+lV/wn74vkCQ==
-X-CSE-MsgGUID: XWjndECPQjGL6WDvT68eGw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="73055976"
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="73055976"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:09:09 -0800
-X-CSE-ConnectionGUID: UR4/Jk+VRJODQQTWkH3JUg==
-X-CSE-MsgGUID: 0W+OyvvtRi2vxkDH+C2S1Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="239283690"
-Received: from tfalcon-desk.amr.corp.intel.com (HELO [10.125.111.86]) ([10.125.111.86])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:09:08 -0800
-Message-ID: <0df25574-6de7-4453-9012-e5538f36b7cf@intel.com>
-Date: Wed, 25 Feb 2026 09:09:06 -0700
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="duio2Jl/";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BaTmxvZB"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61P9SIGk1363608
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 16:24:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=5yb5yc2XqWZmCyxSLHrH8s1QgfV8dMzPG6b
+	rBBJFJ3k=; b=duio2Jl/4tDLNMBZzO2c/SuRJG1PIXMC6QpyA1noM+0BbyZr6pM
+	zQOg+n1XSKqdt7C3r1iZW6RFLx9gognM6S1ceodK1SWy2e+RU8B+905MrhivyO5N
+	mdv+re2vFxMg6vgSJjhyvnwa3Zt5rVaronTcNwWywl61dfeI5i37u9y1/3qtNaBB
+	A43Zvv4vTk5KrSmk3KuBsWgujnurCzGHk4qC2lM2kLpeTa6TdOa+wIdgWCStZSx8
+	D56csf4Ebj9OjLiNw60RydNJnnbZ/Ar9+Pz0jgq5YLK6RfEmZuOy/5pjLr4G8l3B
+	0ppeQvFDvW21EOYUqgzLFhYeMdSYFgpJw7A==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4chp15apjq-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 16:24:18 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c6e74e55d35so4481216a12.3
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 08:24:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1772036658; x=1772641458; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=5yb5yc2XqWZmCyxSLHrH8s1QgfV8dMzPG6brBBJFJ3k=;
+        b=BaTmxvZBk3odd4j1XGY2llteOLset17E9VhGohbVHIqu+VrVRHa1k7wlcBNiIZCZJs
+         Faipusc9nDlxFsRULpiNAkjHm6JgoaAN+W8hXZpWA6g6erJahwKiRc2m5Ytfmc+IUb79
+         E0YugjwJEsLGupFX4YMlm/u94BkALNpBtzBK8OYgmP4CDTj6/iLYSHVWDG2et9C9VBkK
+         RlvbPLFyGh/ba0M1VhiK77q1HUAcVJ8zeTfD3jtRuhAHH2GIQe7nbCxJUnm2tvSDi4Xf
+         oLWwIkfkoXN4z4Y3ULxmShS18aen1uNMhnx9OB5GpLAkrDDbLqv7hVVMGm45JIZavMAj
+         4DAg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772036658; x=1772641458;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5yb5yc2XqWZmCyxSLHrH8s1QgfV8dMzPG6brBBJFJ3k=;
+        b=wI5Jsk+KzNmGhlon0uhQyXUtR8rThYJla814PuPTddroy77ZcUkqlWTovb3jAO+caf
+         8ZE49SoLMJHSqXtoRKjoycL7UJHheURyxS0BUWv7x5gWmr723linCkekJIFMqRgj33Tu
+         02NebCkMAD15PnkEqVqGNx2eql7EJ+PqYa8P23pPucZCHQa9zF+wOyQG/ZxoXFGCVQCj
+         jthZLStOTxPIrN8CaAvUhbo0gkVt7jW17KHYhy70LxC/PDtLKb7gGvgMao43r8q+hlSz
+         Gyktxsoz0xPV6LjK4OImNTyWShEBJ1BhnExyNdeFacW+iu6H8eZBschdFcxMhJBIVOuz
+         NPdg==
+X-Forwarded-Encrypted: i=1; AJvYcCVArAfSi77RY1/vjFuhpI0p2u5AISg3zdoszLelx6xqMFHWY9w3XJsH8igH/RrIouLVRtmztNidJ40=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzP4Za8Gx9DsH5tuldirVqoUnDCp6TYZr4Hoc2TB1npmRq+rID7
+	dmklnYRRtqfnbHjxsz7ejV2ecdBB821KxrPlxbk9ouE1FwQRO+ToNS+2yFGqN9k7BysEyMWPD7Z
+	6a96Qbj0EfeYa14DZuIbWgCyH4ToqO1EWPZgjmgBQxtaEphSejJSBzfb0e3Wv9Hg=
+X-Gm-Gg: ATEYQzwz2YcHPgy1DAi2yzuAkNjX+talINWl/W8phTXSxc1mqe0mPjePHtTUsd2g6R5
+	tFQRkifOhwvOiF7ifG5ijM9n2WnNXOJWZywR7x/9Z6TvDbCceLyR71sc17qniD8soUxIQ0iBnMP
+	1Wus2o9ivCB9sLtTE+gJZmk2BI2+X1NtVfSB4lKuLE/jNWeOSkyWVg/K0Lwl3vstlxfbCn9GQgX
+	1PonSbEYJTfUZf+URbynVIMDZNvbXM5U0Q80PBLaJHI2pKnd1sSOKDlaHG6VTwIcZQzfioKnHcw
+	DzPzO+PwSjzsDxh34AO1a/uFzXcmLTC2rH4xvpEFna9XnVXKu/Gi5OXYZVw3IlZcu+2NpwzBlks
+	ZGzAuVVgRf6mb7vfUIPlbREZcs9DFxYAKm4V1Z+Nx0g==
+X-Received: by 2002:a05:6a20:94cf:b0:35f:68d:430e with SMTP id adf61e73a8af0-39545e50a02mr13415407637.9.1772036657488;
+        Wed, 25 Feb 2026 08:24:17 -0800 (PST)
+X-Received: by 2002:a05:6a20:94cf:b0:35f:68d:430e with SMTP id adf61e73a8af0-39545e50a02mr13415371637.9.1772036656880;
+        Wed, 25 Feb 2026 08:24:16 -0800 (PST)
+Received: from work ([2401:4900:8fe5:3076:4038:f293:b188:d52d])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c70b71a735csm12822380a12.12.2026.02.25.08.24.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Feb 2026 08:24:16 -0800 (PST)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+        kwilczynski@kernel.org, bhelgaas@google.com
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        cassel@kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: [PATCH 0/2] PCI: dwc: ep: MSI/MSI-X checks
+Date: Wed, 25 Feb 2026 21:53:57 +0530
+Message-ID: <20260225162359.116000-1-manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1] PCI: Hide SBR from reset_methods if masked by CXL
-To: Vidya Sagar <vidyas@nvidia.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>,
- "Jonathan.Cameron@huawei.com" <Jonathan.Cameron@huawei.com>,
- "raphael.norwitz@nutanix.com" <raphael.norwitz@nutanix.com>,
- Dan Williams <dan.j.williams@intel.com>
-Cc: Vikram Sethi <vsethi@nvidia.com>,
- Shanker Donthineni <sdonthineni@nvidia.com>,
- Srirangan Madhavan <smadhavan@nvidia.com>,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Krishna Thota <kthota@nvidia.com>,
- Manikanta Maddireddy <mmaddireddy@nvidia.com>,
- "sagar.tv@gmail.com" <sagar.tv@gmail.com>
-References: <20260220195259.2397847-1-vidyas@nvidia.com>
- <835de7c9-a64f-4aaa-95e0-b91c2ae5885e@intel.com>
- <82a5a344-26d7-40ef-9047-60657c6923b0@nvidia.com>
- <d6e2617b-6dd2-4c08-830d-e6d917387c66@intel.com>
- <66a7d3e6-d97d-43e3-8629-e793dbabb1f8@nvidia.com>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <66a7d3e6-d97d-43e3-8629-e793dbabb1f8@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI1MDE1NyBTYWx0ZWRfX6kgP7msZaDaB
+ DN3FWObbPJX5X55F7XgVQd0WGEM+VvwkZRX8cJDtj7blyGpD9SpQIG5UY7wx281vnrVAMPzXB3m
+ Tyl+ajw/dK9pIShAUF3aAqNAgD18EFEIWBsf1JbLlLSo1DUkE5WmscpCO2NAFrs5Re9rKIQlYlS
+ 65nuT1cKCVx3aZLY9R1bIx/PnjmHXBZdHburS+2ixO0l9KwJBuU8Ovm8H4JWxAL2ngn9HEkSG4e
+ 8yoeFBId9vLuQ0B2BPZlwUfo87GsKAT6eF8MiwDizMMoYaZn7wRuOApkIxNN/biUw3cNUm2o58M
+ WgKEjJ2UBIrdtIzM+fCErREfXLuaaNgvaLLE7UFPh/mV3XkFy1eZkz71x0BoHMwWZ3NuWCe0uJu
+ XvJL8EKumHSe85j9McO6+5EBpuZxBCJJQ3BYyEKfNmUtuACyuz3p6KrxrRA4kFGAYHLIV0UOsoT
+ YNlB6g8FXLSf+0AyYBg==
+X-Proofpoint-GUID: SslJm9q4yMBclrzKnThpCjgyVFFq7f0_
+X-Proofpoint-ORIG-GUID: SslJm9q4yMBclrzKnThpCjgyVFFq7f0_
+X-Authority-Analysis: v=2.4 cv=etXSD4pX c=1 sm=1 tr=0 ts=699f2232 cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=xqWC_Br6kY4A:10 a=HzLeVaNsDn8A:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=yx91gb_oNiZeI1HMLzn7:22 a=9dj_KKastReSFRWJUqsA:9 a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-25_02,2026-02-25_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 lowpriorityscore=0 impostorscore=0 adultscore=0 malwarescore=0
+ suspectscore=0 bulkscore=0 phishscore=0 spamscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602250157
 
+Hi,
 
+This series adds checks mandated by the PCIe spec before raising MSI and MSI-X
+from the DWC EP driver.
 
-On 2/25/26 6:13 AM, Vidya Sagar wrote:
-> On 23/02/26 21:22, Dave Jiang wrote:
->> External email: Use caution opening links or attachments
->>
->>
->> On 2/23/26 6:11 AM, Vidya Sagar wrote:
->>> On 21/02/26 02:51, Dave Jiang wrote:
->>>> External email: Use caution opening links or attachments
->>>>
->>>>
->>>> On 2/20/26 12:52 PM, Vidya Sagar wrote:
->>>>> The CXL specification (e.g., CXL r3.1 v1.0, sec 8.1.5.2) defines
->>>>> the "Unmask SBR" bit in the Port Control Extensions Register.
->>>>> When this bit is 0 (default), asserting the Secondary Bus Reset (SBR) bit
->>>>> in the Bridge Control register has no effect on the downstream bus.
->>>>>
->>>>> Currently, the Linux PCI core checks this condition in
->>>>> pci_reset_bus_function(). If SBR is masked, it returns -ENOTTY during the
->>>>> execution of the reset. However, during the probe phase (when probe=true),
->>>>> the function currently returns 0. This 0 return value incorrectly signals
->>>>> to the PCI subsystem that SBR is a viable reset method for the device.
->>>>
->>>> The "Unmask SBR" bit is a toggle bit. It does not give indicator whether the device is capable of SBR or not.
->>>
->>> Not sure how is this point relevant here. Can you help me understand?
->>
->> That means it's not a capability bit. It's a r/w toggle bit to mask or unmask SBR for CXL.
->>
->>>
->>> BTW, what do you mean by "whether the device is capable of SBR or not". My understanding is that each downstream port
->>>
->>> must support SBR. The patch I made would ensure that 'bus' entry is not shown under 'reset_methods' if the downstream
->>>
->>> port is a CXL capable port and 'Unmask SBR' is '0'.
->>
->> The purpose of introducing the cxl bus reset method is, "you know what you are doing" because you selected this method and the kernel will set the bit to allow the reset.
-> I'm not really questioning the purpose of 'cxl_bus' reset method.
-> I'm only wondering why is 'bus' reset method shown if it can't be used.
->> By default the Unmask SBR bit is clear. So if you hide the reset attribute then the user can't reset without going through other means to set the bit first (i.e. via setpci tool). This is intentionally setup to do this through total control of the
->> kernel and not having to jump through hoops to toggle bit via a user tool first. Otherwise you can just toggle the bit with a user tool and use the standard PCI bus reset method.
-> This doesn't make much sense to me. Since the 'cxl_bus' method is anyway going to update the 'Unmask SBR' before applying the SBR through Bride Control register, what is the point in showing 'bus' which doesn't work by default and expecting the user to toggle the 'Unmask SBR' through tools like setpci? The user can very well use 'cxl_bus' directly which does the same thing, right?
+Note: I've compiled tested this series only. It'd be good if someone with EP
+hardware can test it and report back.
 
-Ok I think I see where I made a mistake. You are hiding the regular PCI bus reset method and not the cxl_bus reset method. Yes then I agree what you are doing is fine. This does not impact the cxl_bus reset method. Sorry about the noise. 
+- Mani
 
-DJ
+Manivannan Sadhasivam (2):
+  PCI: dwc: ep: Add MSI Enable checks before raising MSI to the host
+  PCI: dwc: ep: Add MSI-X Enable checks before raising MSI-X to the host
 
-> BTW, I found one issue with my current patch where I try to hide 'bus' if 'Unmask SBR' is '0', but the CXL spec also says that for the SBR bit in Bridge Control Register to be ineffective, both 'Unmask SBR' should be '0' and also the link as such must be operating in the CXL mode. I'll push V2 patch to add this check as well.
->>
->> Please see commit log of this commit:
->> 53c49b6e6dd2 ("PCI/CXL: Add 'cxl_bus' reset method for devices below CXL Ports")
->>
->> DJ
->>
->>>
->>>> The original thought was that if the user is issuing CXL SBR, you know what you are doing and the kernel will set that bit and issue the SBR.
->>>>
->>>> DJ
->>>>
->>>>> As a result, 'bus' is listed in the device's
->>>>> /sys/bus/pci/devices/.../reset_methods attribute, even though the hardware
->>>>> is incapable of performing it. If a user attempts to write bus to reset
->>>>> method or triggers a reset that falls back to SBR, the operation fails
->>>>> with: "bash: echo: write error: Inappropriate ioctl for device" error.
->>>>>
->>>>> This patch modifies pci_reset_bus_function() to return -ENOTTY immediately
->>>>> if cxl_sbr_masked() is true, regardless of the probe argument. This
->>>>> ensures that 'bus' is not advertised in reset_methods when the hardware
->>>>> prevents it, improving clarity for users and aligning the sysfs capability
->>>>> report with actual hardware behavior.
->>>>>
->>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>>>> ---
->>>>>  drivers/pci/pci.c | 6 +-----
->>>>>  1 file changed, 1 insertion(+), 5 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>> index f3244630bfd0..57e24300d1c7 100644
->>>>> --- a/drivers/pci/pci.c
->>>>> +++ b/drivers/pci/pci.c
->>>>> @@ -4915,12 +4915,8 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
->>>>>        * If "dev" is below a CXL port that has SBR control masked, SBR
->>>>>        * won't do anything, so return error.
->>>>>        */
->>>>> -     if (bridge && cxl_sbr_masked(bridge)) {
->>>>> -             if (probe)
->>>>> -                     return 0;
->>>>> -
->>>>> +     if (bridge && cxl_sbr_masked(bridge))
->>>>>               return -ENOTTY;
->>>>> -     }
->>>>>
->>>>>       rc = pci_dev_reset_iommu_prepare(dev);
->>>>>       if (rc) {
->>>
->>>
->>
-> 
+ .../pci/controller/dwc/pcie-designware-ep.c   | 52 ++++++++++++++++---
+ 1 file changed, 46 insertions(+), 6 deletions(-)
+
+-- 
+2.51.0
 
