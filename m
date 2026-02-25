@@ -1,50 +1,25 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2424A36A006;
-	Wed, 25 Feb 2026 16:47:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 575E2399016;
+	Wed, 25 Feb 2026 16:48:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772038066; cv=none; b=lVbEQGhUmIU5kV3M+CokrJxLzB/zB9O1ry1K6LCMbtLmv9OfJ0oZHgSO+OeD3OejDEWUBBTw56GnYQ+y1s8iO14wFklxp1VgKROrKs0VcbAq6QVogHbabQA1daMt/O19zXP2tJ7CPC1VkjNbTDlx6QQav0QD8TqjrRt3m6C1N7A=
+	t=1772038134; cv=none; b=TwUqUPK/p83Er8KI8OBv7O5aYG2LZk98WjvZZ+7b5bSCVcxDOfmoZnUCX6LZW7ZfX7Y0gPTp+2yAc0rU8u2dFy+VWWb7xyibtK6UQw/+3p9X6Eo0R0oC2R69fM7LVc1mckG/kYjNX1d4FNkfAu90XEpWhERIJH4OHsQgbjMu1AM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772038066; c=relaxed/simple;
-	bh=Ww7jBXJpFuUjgO2c/UkPWNS73bT08e3YJt0wwVSjjDM=;
+	s=arc-20240116; t=1772038134; c=relaxed/simple;
+	bh=r5gGFSVYhvJcPkljV7V4evIL4PFLXO1KiDhxZ5xgajY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L0VmQfJTbfBc2F+7AytywVFU7T6paHlepLdVic1f9kGQv1aUkhzM7PaNroQ7esr9GoMiTgZz6CzjbsN+/cdd0klvZLMMcJKJyK3AKVgmYB4l5Vwsaj53zRhZPsyMWI9gmcw6JKjaQy4KdZVFG+mGBatPtBwPe5Tz9KoNGhrIhKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OT/cA+t0; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OT/cA+t0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772038065; x=1803574065;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Ww7jBXJpFuUjgO2c/UkPWNS73bT08e3YJt0wwVSjjDM=;
-  b=OT/cA+t0CRFyuu26pds2fGEOZFhosYvwQbTOIYpsTVZtJypovBLRZS03
-   UsxYkZStiFvfWrtIGw/E65EhrHRDgiqubaiKFu61N3GggpeoSmMkbJF9S
-   wf7xeQCq5Zln6yIXRiF33hipJnaPhX429rtcjDmibF/Uq4yB4tBJoPxH9
-   DNYWpNZq5YjS+o5UhavALrxQ4NSQZKmnchnnYPJ33dQNNtOHHnQ/VII/h
-   CEaPagrCNCPUR/OpVFXXziF25Ul44XoBXGCLJN7O/N9cS6csHxh2ikYba
-   OcG+0AudUfWoCZwO/TxtuEj2XDLW93HlPGRpBBq+fja0hPubLfQdEe1qj
-   A==;
-X-CSE-ConnectionGUID: Cc7z6lNzQcKuufABsFS+Nw==
-X-CSE-MsgGUID: 6Uj3MTXNRf6n2iGl8Fhf8Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="98552756"
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="98552756"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:47:44 -0800
-X-CSE-ConnectionGUID: D4OKonMzS0OuYauDIlGuAA==
-X-CSE-MsgGUID: B1ez37z+RhK0joDrepZ6SQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="215506610"
-Received: from gabaabhi-mobl2.amr.corp.intel.com (HELO [10.125.111.98]) ([10.125.111.98])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:47:43 -0800
-Message-ID: <8ff7a843-bc0d-4ee0-b1d4-94d31e071fcd@intel.com>
-Date: Wed, 25 Feb 2026 09:47:43 -0700
+	 In-Reply-To:Content-Type; b=JPyx6MqX7secVsZ2o6bwFVMglmAuQf2fzqB6dlDimlF7yGGJjslMt8ZHebKrg/i73M2dhFMvYeMvsLjMeamMMqXZVAfkO1zzkvO9O9keTxGJOjfXVpxb+0n5xTW/3M4tiCr1QbgYMycjFQXg2wNWVlTySLaxeigAi0DJEUWSiRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 70F9B165C;
+	Wed, 25 Feb 2026 08:48:46 -0800 (PST)
+Received: from [10.57.58.107] (unknown [10.57.58.107])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 530033F73B;
+	Wed, 25 Feb 2026 08:48:41 -0800 (PST)
+Message-ID: <5c7397b5-0368-4bd7-af5a-e513f289c775@arm.com>
+Date: Wed, 25 Feb 2026 16:48:38 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,59 +27,108 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/10] NTB: epf: Make db_valid_mask cover only real
- doorbell bits
-To: Koichiro Den <den@valinux.co.jp>, Frank.Li@nxp.com, kishon@kernel.org,
- jdmason@kudzu.us, mani@kernel.org, allenbh@gmail.com,
- kwilczynski@kernel.org, bhelgaas@google.com, jbrunet@baylibre.com,
- lpieralisi@kernel.org
-Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev,
- linux-kernel@vger.kernel.org
-References: <20260224133459.1741537-1-den@valinux.co.jp>
- <20260224133459.1741537-8-den@valinux.co.jp>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260224133459.1741537-8-den@valinux.co.jp>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH kernel 4/9] dma/swiotlb: Stop forcing SWIOTLB for TDISP
+ devices
+To: Alexey Kardashevskiy <aik@amd.com>, x86@kernel.org
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
+ Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Peter Zijlstra <peterz@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Marek Szyprowski <m.szyprowski@samsung.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Mike Rapoport <rppt@kernel.org>,
+ Tom Lendacky <thomas.lendacky@amd.com>, Ard Biesheuvel <ardb@kernel.org>,
+ Neeraj Upadhyay <Neeraj.Upadhyay@amd.com>,
+ Ashish Kalra <ashish.kalra@amd.com>, Stefano Garzarella
+ <sgarzare@redhat.com>, Melody Wang <huibo.wang@amd.com>,
+ Seongman Lee <augustus92@kaist.ac.kr>, Joerg Roedel <joerg.roedel@amd.com>,
+ Nikunj A Dadhania <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Andi Kleen <ak@linux.intel.com>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ Tony Luck <tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Denis Efremov <efremov@linux.com>, Geliang Tang <geliang@kernel.org>,
+ Piotr Gregor <piotrgregor@rsyncme.org>, "Michael S. Tsirkin"
+ <mst@redhat.com>, Alex Williamson <alex@shazbot.org>,
+ Arnd Bergmann <arnd@arndb.de>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+ Jacob Pan <jacob.jun.pan@linux.intel.com>, Yinghai Lu <yinghai@kernel.org>,
+ Kevin Brodsky <kevin.brodsky@arm.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
+ <herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Stefano Stabellini <sstabellini@kernel.org>,
+ Claire Chang <tientzu@chromium.org>, linux-coco@lists.linux.dev,
+ iommu@lists.linux.dev
+References: <20260225053806.3311234-1-aik@amd.com>
+ <20260225053806.3311234-5-aik@amd.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <20260225053806.3311234-5-aik@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-
-On 2/24/26 6:34 AM, Koichiro Den wrote:
-> ndev->db_count includes an unused doorbell slot due to the legacy extra
-> offset in the peer doorbell path. db_valid_mask must cover only the real
-> doorbell bits and exclude the unused slot.
+On 2026-02-25 5:37 am, Alexey Kardashevskiy wrote:
+> SWIOTLB is enforced when encrypted guest memory is detected
+> in pci_swiotlb_detect() which is required for legacy devices.
 > 
-> Set db_valid_mask to BIT_ULL(db_count - 1) - 1.
+> Skip SWIOTLB for TDISP devices.
 > 
-> Fixes: 812ce2f8d14e ("NTB: Add support for EPF PCI Non-Transparent Bridge")
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
 > ---
->  drivers/ntb/hw/epf/ntb_hw_epf.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
+>   include/linux/swiotlb.h | 9 +++++++++
+>   1 file changed, 9 insertions(+)
 > 
-> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> index bce7130fec39..ee499eaed4f3 100644
-> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-> @@ -580,7 +580,13 @@ static int ntb_epf_init_dev(struct ntb_epf_dev *ndev)
->  		return ret;
->  	}
->  
-> -	ndev->db_valid_mask = BIT_ULL(ndev->db_count) - 1;
-> +	if (ndev->db_count < NTB_EPF_MIN_DB_COUNT) {
-> +		dev_err(dev, "db_count %u is less than %u\n", ndev->db_count,
-> +			NTB_EPF_MIN_DB_COUNT);
-> +		return -EINVAL;
-> +	}
+> diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
+> index 3dae0f592063..119c25d639a7 100644
+> --- a/include/linux/swiotlb.h
+> +++ b/include/linux/swiotlb.h
+> @@ -173,6 +173,15 @@ static inline bool is_swiotlb_force_bounce(struct device *dev)
+>   {
+>   	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
+>   
+> +	/*
+> +	 * CC_ATTR_GUEST_MEM_ENCRYPT enforces SWIOTLB_FORCE in
+> +	 * swiotlb_init_remap() to allow legacy devices access arbitrary
+> +	 * VM encrypted memory.
+> +	 * Skip it for TDISP devices capable of DMA-ing the encrypted memory.
+> +	 */
+> +	if (device_cc_accepted(dev))
+> +		return false;
+
+This seems backwards - how does it make sense for arch code to force 
+SWIOTLB globally on the grounds that all DMA must be to shared memory, 
+but then generic code override that because it claims to know better?
+
+I'd expect to see something more like:
+
+	if (is_cc_platform && !device_cc_accepted)
+		return true;
+
+here, and then get rid of the rest of the (ab)use of SWIOTLB_FORCE for 
+this purpose entirely.
+
+However there is the fiddly aspect that it's not necessarily strictly 
+enough to just un-force SWIOTLB; we really want to actively ensure that 
+no private memory can *ever* end up getting bounced through a shared 
+SWIOTLB buffer. The private/shared state is really a property of the 
+individual DMA mappings, though, rather than an overall property of the 
+device itself (since a device that's trusted to access private memory 
+isn't necessarily prohibited from still also accessing shared memory as 
+well), hmmm...
+
+Thanks,
+Robin.
+
 > +
-> +	ndev->db_valid_mask = BIT_ULL(ndev->db_count - 1) - 1;
-
-I would suggest adding a comment in the code for why this is for future readers.
-
-DJ
-
->  	ndev->mw_count = readl(ndev->ctrl_reg + NTB_EPF_MW_COUNT);
->  	ndev->spad_count = readl(ndev->ctrl_reg + NTB_EPF_SPAD_COUNT);
->  
+>   	return mem && mem->force_bounce;
+>   }
+>   
 
