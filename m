@@ -1,100 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61AD33D666A
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 16:30:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05B853D6692;
+	Wed, 25 Feb 2026 16:34:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772037053; cv=none; b=aRyFoy59Xb4YkkrkWnRNzgfQ2rFdXlqcTz0/sprMkAzBjnrYDFztOmejSh7MsckUgXYTz0qEwuM6gVboy/cMJ+pbBDa9dHrs1ZxhhG0Ekks1ipF2bcsHsN78pr19sOkgCXElRbZDtY82VJcXW59Qg+7BeTtXOB7l0LcjX9xlC1k=
+	t=1772037245; cv=none; b=mWHmrsVtOXZgXF0Xh0qA15eWTiv1eWWQpYdqZ3uAk6b6yszwutiXUFWogleGGAnUAdCgBRQ0f2f2rEM51QJR+8UC6TsbIa1jC/KCvhWVV4ciDdOKPWvqT/TgAU4ddXRm8Mh4+SZqqPQjBkNam6Glz0QDL6cu6SfoTRtlTCXno5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772037053; c=relaxed/simple;
-	bh=HbgliABWRB27ZxWGlVdnILh+nPE6hNzoc0yZWDsBgLY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OdDn+xsB1UyLCb5l9T06913ZC6EGNQ0ZoOnDJbc+Og5EC0ldf/QknLXGELmwTPQXfixulu03lcS2/SIjUe2tAmibIShByJzhAZhoseW+TEOXBG/PJlz7UJHMI2jSLTwGr4cIGr9tMAops41PZ2T9lyRkSMtojNEC8N20G/SDXtY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BRNbAqg3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772037245; c=relaxed/simple;
+	bh=nA5ubXR7ldqmvu+5ms32j4vZptre4X8kYgLmhb/ey2o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PSTTQQrCtZMPT5ASzcgZs51gXeDiE4I/bkvSX/LsXRvGciVu1PUAnNcwwrK4Pdafluzd7e6hqlTJ7aMozE5Ydkp89StkBQZLBLaaBVhmB/XRrWAyr4x9c2MSznfcaDLVxGjj1fOMY5Yrcloh1ulu9M9+6U5WrDBJ4kNoOxMe9Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Tl9y7LdO; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BRNbAqg3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8A44C19421;
-	Wed, 25 Feb 2026 16:30:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772037053;
-	bh=HbgliABWRB27ZxWGlVdnILh+nPE6hNzoc0yZWDsBgLY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BRNbAqg3cT/m8XkCiyJsV1uKz6x+DAEK83vPpdCgi/oYWN5oLY1Lz+TIOOPIiC0Yz
-	 9V66sphNjgahGejeXHgoV7PFPzFLhp+t8khhbLQ6W/hhvtRDSdvNaOQmbXLc4IdtPb
-	 tXqAQJevVc1DlbZuWcbywce/tES7+VlldnxABBzRREhTu45pEe645Xed0Y9iymXRZ0
-	 YHvwhEftTm1ib43pXCaQGo1jdFi/Ms4Vxa02JGpNdcrS644eXu3TM+52IPlPVCsBdV
-	 Q6rO0JG0/qvONwCaNmDHMYE8WDUEiqMgss2R40x+jNG5a3vuJh6bG9ndL8SydHx4WU
-	 IGTgddYDifTcw==
-Date: Wed, 25 Feb 2026 22:00:45 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Koichiro Den <den@valinux.co.jp>, 
-	Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: ep: Fix regression in
- dw_pcie_ep_raise_msi_irq()
-Message-ID: <j5f3kvvxwf6ixcgqn234caowpckwve76ltydsdkaxp24tkphkr@fzszv644hvx6>
-References: <20260210181225.3926165-2-cassel@kernel.org>
- <qxcf4idjsbscd5tlgsbt3yg6xyngkn3wgaubaedgr24dx3pcsx@ejbrdqpryipe>
- <aZ8an10tlBmWOKE6@ryzen>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Tl9y7LdO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772037244; x=1803573244;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=nA5ubXR7ldqmvu+5ms32j4vZptre4X8kYgLmhb/ey2o=;
+  b=Tl9y7LdOj0dwIYCIVg1IipjTUv6oVeRx9Htnly11ICfFYKM20KLwEShn
+   HQC4TQ9V4FfwbSTSOVMsptqYfPc2noeElSzAVuTUY1ZU0SyQ6fxifV2la
+   0UJGgUrNfFfEWMDQ46B31nBw8QHCtVi9Z5G+uxmgfnBkrxPROhX/69zyp
+   mCRsaYq/+c8nwjj/KB/ApRsnVQqUQkC4NwG/tFuCd7ERiyZ6nCCEztUpg
+   fRwCAmwQuy+P90wh+a3CvZupchLS61txZ9dtf/gZuyQoBGpWD9i3wdDXT
+   a5qSUMgGQYXG3IJpgLNgKc9NdDA2z729klt+IBFuto4U8NbzhCCxEiWpR
+   w==;
+X-CSE-ConnectionGUID: 9vHPuv2HTnuPhMnzYLoFLA==
+X-CSE-MsgGUID: XFV6uylbRH+p+uls+OD4/A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="90494521"
+X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
+   d="scan'208";a="90494521"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:34:03 -0800
+X-CSE-ConnectionGUID: TwyXHUZ+SOmrLJlCru2idQ==
+X-CSE-MsgGUID: 7wBMd34LRcapbIpMa+i/cQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
+   d="scan'208";a="220419879"
+Received: from gabaabhi-mobl2.amr.corp.intel.com (HELO [10.125.111.98]) ([10.125.111.98])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:34:02 -0800
+Message-ID: <b7c04f27-39a9-41df-af0a-14bc5005518e@intel.com>
+Date: Wed, 25 Feb 2026 09:34:00 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aZ8an10tlBmWOKE6@ryzen>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V2] PCI: Hide SBR from reset_methods if masked by CXL
+To: Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
+ Jonathan.Cameron@huawei.com, raphael.norwitz@nutanix.com
+Cc: vsethi@nvidia.com, sdonthineni@nvidia.com, smadhavan@nvidia.com,
+ skancherla@nvidia.com, vaslot@nvidia.com, linux-pci@vger.kernel.org,
+ linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org, kthota@nvidia.com,
+ mmaddireddy@nvidia.com, sagar.tv@gmail.com
+References: <20260220195259.2397847-1-vidyas@nvidia.com>
+ <20260225133801.30231-1-vidyas@nvidia.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260225133801.30231-1-vidyas@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 25, 2026 at 04:51:59PM +0100, Niklas Cassel wrote:
-> On Wed, Feb 25, 2026 at 08:31:24PM +0530, Manivannan Sadhasivam wrote:
-> > On Tue, Feb 10, 2026 at 07:12:25PM +0100, Niklas Cassel wrote:
-> > > When using the nvmet-pci-epf EPF driver, and starting the EP before
-> > > starting a host with UEFI, the UEFI performs NVMe commands e.g.
-> > > Identify Controller, to get the name of the controller.
-> > > 
-> > > nvmet-pci-epf will post the CQE (completion queue entry) to the Admin
-> > > Completion Queue, and then raise an IRQ (using
-> > > dw_pcie_ep_raise_msi_irq()).
-> > > 
-> > > Once the host boots Linux, we will see a WARN_ON_ONCE() from
-> > > dw_pcie_ep_raise_msi_irq(), and then the booting of the host hangs,
-> > > because it never gets an IRQ when loading the nvme driver.
-> > > 
-> > > The reason is that the MSI target address used by UEFI and Linux might
-> > > be different, which will cause dw_pcie_ep_raise_msi_irq() to simply
-> > > return -EINVAL.
-> > > 
-> > > This was working before commit 8719c64e76bf ("PCI: dwc: ep: Cache MSI
-> > > outbound iATU mapping"), so this is a regression.
-> > > 
-> > > Also, remove the warning, as we cannot know if there are operations in
-> > > flight or not, so it seems wrong to print this warning unconditionally
-> > > at every boot when e.g. nvmet-pci-epf is used with a host with UEFI.
-> > > 
-> > > Fixes: 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU mapping")
-> > > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> > 
-> > Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-> > 
-> > Bjorn, since this patch fixes a regression introduced in v7.0, could you please
-> > take it for current -rc?
-> 
-> 
-> While not introduced in v7.0, it would be nice if you could also consider:
-> https://patchwork.kernel.org/project/linux-pci/patch/20260211175540.105677-2-cassel@kernel.org/
-> 
-> (Such that v7.0 could have both working dw_pcie_ep_raise_msix_irq() and
-> dw_pcie_ep_raise_msi_irq())
-> 
 
-That's upto Bjorn actually. I'd also prefer to get the fixes in ASAP.
 
-- Mani
+On 2/25/26 6:38 AM, Vidya Sagar wrote:
+> The CXL specification (e.g., CXL r3.1 v1.0, sec 8.1.5.2) defines
+> the "Unmask SBR" bit in the Port Control Extensions Register.
+> When this bit is 0 (default), asserting the Secondary Bus Reset (SBR) bit
+> in the Bridge Control register has no effect on the downstream bus.
+> 
+> Currently, the Linux PCI core checks this condition in
+> pci_reset_bus_function(). If SBR is masked, it returns -ENOTTY during the
+> execution of the reset. However, during the probe phase (when probe=true),
+> the function currently returns 0. This 0 return value incorrectly signals
+> to the PCI subsystem that SBR is a viable reset method for the device.
+> 
+> As a result, 'bus' is listed in the device's
+> /sys/bus/pci/devices/.../reset_methods attribute, even though the hardware
+> is incapable of performing it. If a user attempts to write bus to reset
+> method or triggers a reset that falls back to SBR, the operation fails
+> with: "bash: echo: write error: Inappropriate ioctl for device" error.
+> 
+> This patch modifies pci_reset_bus_function() to return -ENOTTY immediately
+> if cxl_sbr_masked() is true, regardless of the probe argument. This
+> ensures that 'bus' is not advertised in reset_methods when the hardware
+> prevents it, improving clarity for users and aligning the sysfs capability
+> report with actual hardware behavior.
+> 
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 
--- 
-மணிவண்ணன் சதாசிவம்
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+
+> ---
+> v2:
+> * Before deciding to hide 'bus' reset method, add an extra check to make sure
+>   that the link is indeed operating in the CXL mode and not in PCIe mode as
+>   the spec clearly says that a '0' in 'Unmask SBR' doesn't have any effect if
+>   the link is not operating in the CXL mode.
+> 
+>  drivers/pci/pci.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f3244630bfd0..a176566ba56f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4915,12 +4915,8 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+>  	 * If "dev" is below a CXL port that has SBR control masked, SBR
+>  	 * won't do anything, so return error.
+>  	 */
+> -	if (bridge && cxl_sbr_masked(bridge)) {
+> -		if (probe)
+> -			return 0;
+> -
+> +	if (bridge && bridge->is_cxl && cxl_sbr_masked(bridge))
+>  		return -ENOTTY;
+> -	}
+>  
+>  	rc = pci_dev_reset_iommu_prepare(dev);
+>  	if (rc) {
+
