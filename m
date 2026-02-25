@@ -1,39 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39C920DD52
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 23:34:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E58318131
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 23:41:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772062482; cv=none; b=XxkCSFeTzpKJWpi6jXGgy0OGmUB8bM//LPCgFjCdIJi6U1PXKVff7b52OYXZyYTZ9CoZ/26Y1jn2lJHNG/eI3DX8HRkElMTHNyIE+36QYmNqrcOrZPfzZpBjuUCk5YShfbWPzS26krhJTXF7+PSNBp+ZT9VxxRfpRUfn1oDS4SM=
+	t=1772062871; cv=none; b=kryPWA/Q1Od6FCOxk/OcJ0j8oMCEsnJb0+JOlAGZBb1xvn2IIMxRjOP04pqA/+x2Vd96v/CeoyNI3T/nNsgbrChuuIjJ4Up1KMUsAOvidbGIcEGt2psu5uDT+CU5d9PEtcyKSAZ5KrE5HAMsb3mkmTC/mz4Y7ttNKCXZqHplfJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772062482; c=relaxed/simple;
-	bh=osfSnlLS3RF6U84Twh6FK1eEHlJivBPLYr0GmBlXMIA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=c3GYIhVgOBq7Qfqs4bxSvJsk7DQYpg5bdwdfxeOSlYsVDJ9qunlegI0ZZCHgnqo1brrA5cCD77vi7lJl5BnBwN3DtOnJdoasRrn9Lsj19iVMGhbRQghhKOIJxQ8xeaxmQ9Bcs1wXbTGHedxe1pNUw8j6zTASfbfMy7gvgSWHqNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B5B4gtZW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772062871; c=relaxed/simple;
+	bh=bKI2pGpfY+ZCgdQUPM1XvD0dVj7imv1jMLjUvrJ34gY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Rn/owKxLCjSV1R5SDXL0aF/N+Rwpj0MhvRYrkHlw8zNjX6cGFOFjWIC5RheSeeBqEolxbwnZ4BLuPTZZRtBnqPKDI4qHfmxqf6RApLjFgQ1w7tYpI6cjssB8lz28UU4HFjgaQgLOxyZsMIffwsdFYA+5EygCKPIHWEN1CxlJU2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ic4P6Fkf; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B5B4gtZW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CE99C116D0;
-	Wed, 25 Feb 2026 23:34:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772062482;
-	bh=osfSnlLS3RF6U84Twh6FK1eEHlJivBPLYr0GmBlXMIA=;
-	h=Date:From:To:Cc:Subject:From;
-	b=B5B4gtZWdhA7GaIop9enO6UE7fOrpZRg50lX+l36GkvkLn5XV+RN1j/uufDQ48mNZ
-	 iQI9gHDBcj5TW7v99GP0eiTE68V5VKPesOD07w+OPXKWl/8bUOVAiz+7Z/HPhDoX85
-	 b3QyHOXPiMV4zwXQDe/CwXSkVr0187v5el02tivU4E1eI5OZZjNno1pAXEuxmDSCsf
-	 mXOMBbrEabC6OaT/4G/g9fRMW1qWbHMgPLSHvpIOJm/OyGAnEu0F1tZLpQQ6esFPDM
-	 v7C/5HuMSx4qLAenLneByOyCiZe9GT1W5uEsueBIi09Ojk05ny4lBazLnWG8bYhHGG
-	 GRML2S/6vz+Ag==
-Date: Wed, 25 Feb 2026 17:34:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>
-Cc: linux-pci@vger.kernel.org
-Subject: [Bug 221130] New: [BUG] PCI: vmd: Missing Mode 3 (Dynamic Bus
- Offset) support for Intel Arrow Lake-S (0x09ab)
-Message-ID: <20260225233440.GA3743606@bhelgaas>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ic4P6Fkf"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2adcede372cso754815ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 15:41:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1772062870; x=1772667670; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/CK8Xw2Z8/jwhJKdKy0esOogFCKRH5zkiTBeIKoVGlM=;
+        b=Ic4P6Fkf/OXgNQ7BDlUnM2oIkuJMigxtpE353Q9PHMHUy8KOdfb/1AhXq8PqsRxaSa
+         m6syzRvsuaI1TgkDNs2grnAoEIj7bWPlrj4VWShTXl7iDrARPiMPoSqkpGqHNQED7SJq
+         sjDbCi10DOaC+SHAoHd9Q4nCSS8RWBjp9qw6oz5NoO6dSD4QNeh2TJHWLpYw0ODvYnTn
+         v+8wV7PBBRjogrV24GXaeu7V/xKAw+w/ubVwn7sNdvaxR1vkIGn3FaUkv9a/jCqto8SF
+         Gpe4rhG8F06u8QkjdUIFYrSI6mk1aDROt2IVSF511yCdy54NqgTXDMOVGZ7X+hVAhKvE
+         Tf1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772062870; x=1772667670;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/CK8Xw2Z8/jwhJKdKy0esOogFCKRH5zkiTBeIKoVGlM=;
+        b=ctAXxRKuKxj56Q2mUezrydV7EiBnnYC3Vt0RUVQCvxbg7CkrGTn2OqOdXp1Nr3doCZ
+         si1X3jBZEDGOZUpDMfZw6+5xUYC+gYe/AWNKT5gOWTPYF76GNSE1P1P1QlZu+jHqcRpy
+         J9C94keAcOPfADsSyK+Bst+WZd4zx/fsajvPpMCa9bDWgddVYnWhKhddVD+FF6d9Hjef
+         0c3TzOceWr/o5L4fTCAOTLt+d28v/tI7ZVzBFGbUO/QBR5fp2LBpK5IcWr0AUz3sDXQ+
+         nT2BCyd/uzwpKNmAEUVhXfDRAS5kRwz7vraJaa8rRm5lUsCIRNPF6Flim29qgM94pDRr
+         4xhQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUAF02nPUsSFGqJL/wUzTYRlwfnM7yf5iSQR4UIht4HtIHciWaAjU2i46jLSq93K6HrF7GqLEWc3Ao=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyBRu145z3YKY/54kLnklmKRJRDqV3YtdNfsX3/JjpStsgG0aZo
+	myT964Z4/VRmPolA8Oql0oJHzLIUISaopiQaRhgYxGkexHZA7xtgB97y2JgziHlCDw==
+X-Gm-Gg: ATEYQzy+km428rQ3p36FMTSpmzgjjFqD+Cu5duWFGdXPEV/XZtBQ63+sBQrjrSH1EYB
+	Myeoxuu7Bxa69rlBxxoK+YHEh6jn+UozT0jXMoWCD/5eiOeupxSeKEGXwaZItNCFpnBOEm5A2wr
+	sNpSShvMyDI5Qn4pQ8AClRyMuQE1B0lI6tuRO7VQLhYjL3NtT/t2ZD6CestpfwtSWramFOELN9T
+	tYVV8EoAxDzROKbrLfGWSBoRzKK4JT5Si5VhscCVQ57coRP9O5Te42VtT/qRQ1Oc9taEquNmJQ/
+	xmholI4psKSXlIfBKDzndU7QrB/JYnVCOmlpK0w91zdK9SPyuof5Kw0+6QBXAijoKX8s6nShOnK
+	2/Ol5394PA6t7wnc53RU1ZdgencaWLclV9gH2kdAdK7gPgb4dTfvkTKElZV0gpDfL1v8NtBaDXq
+	n9iQgDwsMiRkSS+6GLv7wY8yudrqesVmIkwg6FQHkXAjhLDoynnluGTe7U6m3MTg==
+X-Received: by 2002:a17:902:cccf:b0:2a1:e19:ff0 with SMTP id d9443c01a7336-2ae035d235dmr1928845ad.39.1772062869584;
+        Wed, 25 Feb 2026 15:41:09 -0800 (PST)
+Received: from google.com (239.23.105.34.bc.googleusercontent.com. [34.105.23.239])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb6b5813sm3778175ad.63.2026.02.25.15.41.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Feb 2026 15:41:08 -0800 (PST)
+Date: Wed, 25 Feb 2026 23:41:04 +0000
+From: David Matlack <dmatlack@google.com>
+To: Alex Williamson <alex@shazbot.org>
+Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
+	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
+	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>,
+	 =?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Raghavendra Rao Ananta <rananta@google.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Tomita Moeko <tomitamoeko@gmail.com>,
+	Vipin Sharma <vipinsh@google.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v2 05/22] vfio/pci: Preserve vfio-pci device files across
+ Live Update
+Message-ID: <aZ-IkNFOLJUff1hC@google.com>
+References: <20260129212510.967611-1-dmatlack@google.com>
+ <20260129212510.967611-6-dmatlack@google.com>
+ <20260225154124.78e18fa4@shazbot.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,44 +106,103 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20260225154124.78e18fa4@shazbot.org>
 
-Forwarding to VMD maintainers since they may not follow bugzilla.  I
-guess this problem only happens when VMD/RST enabled in BIOS.
+On 2026-02-25 03:41 PM, Alex Williamson wrote:
+> On Thu, 29 Jan 2026 21:24:52 +0000 David Matlack <dmatlack@google.com> wrote:
 
-From https://bugzilla.kernel.org/show_bug.cgi?id=221130 (reporter
-bcc'd):
+> >  static bool vfio_pci_liveupdate_can_preserve(struct liveupdate_file_handler *handler,
+> >  					     struct file *file)
+> >  {
+> > -	return false;
+> > +	struct vfio_device_file *df = to_vfio_device_file(file);
+> > +
+> > +	if (!df)
+> > +		return false;
+> > +
+> > +	/* Live Update support is limited to cdev files. */
+> > +	if (df->group)
+> > +		return false;
+> > +
+> > +	return df->device->ops == &vfio_pci_ops;
+> >  }
+> 
+> Why can't we use vfio_device_cdev_opened() here and avoid all the new
+> exposure in public headers?
 
-> [PROBLEM]
-> On Intel Arrow Lake-S (Core Ultra 200S) platforms, the VMD controller
-> (8086:09ab) fails to initialize on Linux 6.19.3. All storage devices
-> (NVMe/SATA) under the VMD domain are invisible.
+I thought I explored using vfio_device_cdev_opened() but I can't
+remember now why I went with df->group. Maybe there wasn't a good
+reason. I'll switch to vfio_device_cdev_opened() in the next version.
+
+> >  
+> >  static int vfio_pci_liveupdate_preserve(struct liveupdate_file_op_args *args)
+> >  {
+> > -	return -EOPNOTSUPP;
+> > +	struct vfio_device *device = vfio_device_from_file(args->file);
+> > +	struct vfio_pci_core_device_ser *ser;
+> > +	struct vfio_pci_core_device *vdev;
+> > +	struct pci_dev *pdev;
+> > +
+> > +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
+> > +	pdev = vdev->pdev;
+> > +
+> > +	if (IS_ENABLED(CONFIG_VFIO_PCI_ZDEV_KVM))
+> > +		return -EINVAL;
+> > +
+> > +	if (vfio_pci_is_intel_display(pdev))
+> > +		return -EINVAL;
 > 
-> [DMESG LOG]
-> vmd 0000:00:0e.0: Unknown Bus Offset Setting (3)
-> vmd 0000:00:0e.0: probe with driver vmd failed with error -19
+> Some comments describing what's missing, if these are TODO or DONTCARE
+> would be useful.
+
+Will do.
+
+> > +static int vfio_pci_liveupdate_freeze(struct liveupdate_file_op_args *args)
+> > +{
+> > +	struct vfio_device *device = vfio_device_from_file(args->file);
+> > +	struct vfio_pci_core_device *vdev;
+> > +	struct pci_dev *pdev;
+> > +	int ret;
+> > +
+> > +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
+> > +	pdev = vdev->pdev;
+> > +
+> > +	guard(mutex)(&device->dev_set->lock);
+> > +
+> > +	/*
+> > +	 * Userspace must disable interrupts on the device prior to freeze so
+> > +	 * that the device does not send any interrupts until new interrupt
+> > +	 * handlers have been established by the next kernel.
+> > +	 */
+> > +	if (vdev->irq_type != VFIO_PCI_NUM_IRQS) {
+> > +		pci_err(pdev, "Freeze failed! Interrupts are still enabled.\n");
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	pci_dev_lock(pdev);
 > 
-> [ROOT CAUSE]
-> Based on Intel documentation, Arrow Lake-S introduces "Mode 3"
-> (BUS_RESTRICT_CFG == 3) for dynamic bus range allocation.
-> Currently, drivers/pci/controller/vmd.c only handles Case 0, 1, and 2 (static
-> offsets).
-> The switch statement in vmd_get_bus_number_start() lacks Case 3, causing the
-> driver to return -ENODEV and abort the probe.
+> device_lock() is a dangerous source of deadlocks, for instance how can
+> we know the freeze isn't occurring with an outstanding driver unbind?
+
+I can change this to a try-lock and return an error if taking the lock
+fails. The freeze() callbacks are triggered by liveupdate_reboot() which
+is called from kernel_kexec(). So returning an error to userspace is
+possible.
+
+My only concern is whether using try-lock would make kexec flaky, or if
+it would only fail if userspace is misbehavior (e.g. unbinding drivers
+while kexecing).
+
+> > -static struct vfio_device *vfio_device_from_file(struct file *file)
+> > -{
+> > -	struct vfio_device_file *df = file->private_data;
+> > -
+> > -	if (file->f_op != &vfio_device_fops)
+> > -		return NULL;
+> > -	return df->device;
+> > -}
+> > +EXPORT_SYMBOL_GPL(vfio_device_fops);
 > 
-> [REPRODUCTION]
-> 
-> Enable VMD/RST mode in BIOS.
-> 
-> Boot Linux kernel 6.19 or later.
-> 
-> Check dmesg for "Unknown Bus Offset Setting (3)".
-> 
-> [PROPOSED FIXES]
-> 
-> Add Case 3 to vmd_get_bus_number_start() to read busn_start from config
-> registers (e.g., offset 0xC8).
-> 
-> Implement Quirk to override Class ID 0880 to 0106 for SATA controllers behind
-> VMD.
-> 
-> Ensure compatibility with dual-VMD domain resource allocation.
+> Seems we just need to export vfio_device_from_file().  Thanks,
+
+Will do.
