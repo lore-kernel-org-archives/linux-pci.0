@@ -1,137 +1,154 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D010D2BFC7B;
-	Wed, 25 Feb 2026 18:01:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772042469; cv=none; b=JnTNHT3zY7PiNuuat/wE/iiqGxdEF5+zUk0RV1tRXF89ZncrEuoryixUdlvzT63oEp4j2R45B8BvtvLc3jtKpvhnEhVB5pfXcC7zF1jeOZKlvoNr0533ZoXY2XtIauDfZQJZI9J2Fl9MSz/AkJ/mGZWkrUiX153aBRN+WPASaK8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772042469; c=relaxed/simple;
-	bh=TFbc+GUeADGuSdjbQmqIPxN+gMoOKkRGcSTStzMjyJQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kUSFoLSr1YVP/kvSO+traA1Cf2sDE2fQ/nhNLFY3BnVflZynY7PkCpr9bgMe3AdWbI15PYZhgtGXj0KJACKElgXNyV9lMLA0vEcSDve1mz8ivQJkoo2vMAEvd2u+81/DfnejiKn6O4AuBORPBvEGdR9vE+cFk5i2SiPmJr8Tx7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BFFA015A1;
-	Wed, 25 Feb 2026 10:01:00 -0800 (PST)
-Received: from [10.57.58.107] (unknown [10.57.58.107])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 162483F62B;
-	Wed, 25 Feb 2026 10:00:57 -0800 (PST)
-Message-ID: <04b06a53-769c-44f1-a157-34591b9f8439@arm.com>
-Date: Wed, 25 Feb 2026 18:00:55 +0000
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010055.outbound.protection.outlook.com [52.101.85.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6527A2E11C7;
+	Wed, 25 Feb 2026 18:05:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.55
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772042746; cv=fail; b=M9ClyCSCodqusfS35zSgccpIWLeYqeet5WjgYhW8dERxo7uiKv0HH4p4CZsApRjmmSIZsvvgB/wTc9K+KGvFBr4SDrnwq8gpKh/mq3N6fKveKraccClLEEkEcIsC+qGfwKm5Ve69inKRi028jITPX+2L7NB+U83VRdxm6zf2j5w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772042746; c=relaxed/simple;
+	bh=cRkx8UKVx4b5dqolCi+BVh5cFARASaOnETdPtoYf9hE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eECGAU4NWWcvcslG65D+LyswiAvHVAl+UFxFIhq17n0Jn5h5Pgt3593dQu3TReXhhEzGl47J85oFhIuI2rGNpVjXf4tqLTylvrGJA8fa/Ahj1/DLc8AJSOtMhq692HqJ57T2aU2VGNV3Xt8P2eUaiy5/CEFfzpJ7AfiZapW80Qg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=VL5aae/r; arc=fail smtp.client-ip=52.101.85.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="VL5aae/r"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Sp7uXHr32IFpFsUBiSE2yK5lCSTJAM5w5WF5UqaAlhL1CMPrKtrNyoRN2ekowxIs62VqpOX7+DJEJj4lCEeI6UHKMj4xKJf0WatAeZ7rub4tXzhqgTzK/LuBjZXPGvNRBU8Oid3fdzce2Zcw/NJUqrxJ7kDWCUNZyKX+ULu2Fop2BfuqVubI7OTsYJ1m9rEHuXyBSO0DbvWEsoQVoifWsj/ylh0TimwbGMxdZ7xXonqOONn553zuNl0H5MvnN05anEgyHYtAMQO9ISqA4RoTBIv20u0/AuLn9LZXMyUbM5p/eOTASJqv9bq/PItyr6Ip1KuLsQbR/Xz/X5pyyKdqSg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NCtIpOxdlZQW05hnzjffy7um17Y3GJ2ud7+bIqKoMhM=;
+ b=KmtV01vO0bYpD5vb3q2Q7IDBM9Rr7n56sbzC4UP3iEHjnSsvGWaShPHQVp3lOfb8whpyNovXuawxcPcybg/wDMm98Ma7az8+8WqiiDCc5Jt6btCmPuCYSuA4koma4LWorNlSJw3SwDsQmBt+O2AS82v5MvOtMRtQnTdAIdVEMxFnrqWMWbXcz4f7K/pLuNkJuMuQbaTzZ2nXJQEZAzIf8I5HHIPK665T2cGAMi4uVkhRZOJX5HpWle1q1a+6gMNopqSp7jJ7D3r/rz1fTFnEApa6GZalM6liliFFAM4kkrF0gfQvc6GU61oEe3le43NNtglp56QBbuxGkoZfOBgaTQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NCtIpOxdlZQW05hnzjffy7um17Y3GJ2ud7+bIqKoMhM=;
+ b=VL5aae/ry/jKqmJBq2M+q5ZrbhSgO1JQucF40Jz3Zz8VVnOLVy0GWbXTAP7VTWU7r863TcxR0SytrVQApCe1n0m3SitU8YUXaKmiBxyq+wWaEulJVs7/rn8n4XVL2rZ7Ngz4gO5XnsFRZy+Z6LB4xiBNxySSpjLXhvoWtXzM7w1gdHzGFEI7IlmrbIUvI+3V2mYdRv8i/9tZI0WfuxN3E30siOCM0tU0NLfqc0m0KQzT/YgINwwDxk/KvPSym0DikwFXLpAcftDMziw0FrA8Yka+Vc0+8J0sOQqZMD6DzVSOocO5AiDarhqCYXUFoNUWHeUElRYjDnOpcfMrD9sWsA==
+Received: from BYAPR06CA0072.namprd06.prod.outlook.com (2603:10b6:a03:14b::49)
+ by CH1PPF5EBD457EF.namprd12.prod.outlook.com (2603:10b6:61f:fc00::610) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.10; Wed, 25 Feb
+ 2026 18:05:29 +0000
+Received: from SJ5PEPF000001EE.namprd05.prod.outlook.com
+ (2603:10b6:a03:14b:cafe::3) by BYAPR06CA0072.outlook.office365.com
+ (2603:10b6:a03:14b::49) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.23 via Frontend Transport; Wed,
+ 25 Feb 2026 18:05:28 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ SJ5PEPF000001EE.mail.protection.outlook.com (10.167.242.202) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9632.12 via Frontend Transport; Wed, 25 Feb 2026 18:05:28 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 25 Feb
+ 2026 10:05:04 -0800
+Received: from rnnvmail205.nvidia.com (10.129.68.10) by rnnvmail203.nvidia.com
+ (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 25 Feb
+ 2026 10:05:03 -0800
+Received: from inno-dell.nvidia.com (10.127.8.10) by mail.nvidia.com
+ (10.129.68.10) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
+ Transport; Wed, 25 Feb 2026 10:04:53 -0800
+From: Zhi Wang <zhiw@nvidia.com>
+To: <rust-for-linux@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+CC: <dakr@kernel.org>, <aliceryhl@google.com>, <bhelgaas@google.com>,
+	<kwilczynski@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
+	<boqun.feng@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+	<lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
+	<markus.probst@posteo.de>, <helgaas@kernel.org>, <cjia@nvidia.com>,
+	<smitra@nvidia.com>, <ankita@nvidia.com>, <aniketa@nvidia.com>,
+	<kwankhede@nvidia.com>, <targupta@nvidia.com>, <acourbot@nvidia.com>,
+	<joelagnelf@nvidia.com>, <jhubbard@nvidia.com>, <kjaju@nvidia.com>,
+	<zhiwang@kernel.org>, Zhi Wang <zhiw@nvidia.com>
+Subject: [RFC v2 0/1] Rust PCI capability infrastructure and SR-IOV support
+Date: Wed, 25 Feb 2026 20:04:47 +0200
+Message-ID: <20260225180449.1813833-1-zhiw@nvidia.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH kernel 4/9] dma/swiotlb: Stop forcing SWIOTLB for TDISP
- devices
-To: dan.j.williams@intel.com, Alexey Kardashevskiy <aik@amd.com>,
- x86@kernel.org
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
- Sean Christopherson <seanjc@google.com>, Paolo Bonzini
- <pbonzini@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Peter Zijlstra <peterz@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Marek Szyprowski <m.szyprowski@samsung.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Mike Rapoport <rppt@kernel.org>,
- Tom Lendacky <thomas.lendacky@amd.com>, Ard Biesheuvel <ardb@kernel.org>,
- Neeraj Upadhyay <Neeraj.Upadhyay@amd.com>,
- Ashish Kalra <ashish.kalra@amd.com>, Stefano Garzarella
- <sgarzare@redhat.com>, Melody Wang <huibo.wang@amd.com>,
- Seongman Lee <augustus92@kaist.ac.kr>, Joerg Roedel <joerg.roedel@amd.com>,
- Nikunj A Dadhania <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Andi Kleen <ak@linux.intel.com>,
- Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
- Tony Luck <tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Denis Efremov <efremov@linux.com>, Geliang Tang <geliang@kernel.org>,
- Piotr Gregor <piotrgregor@rsyncme.org>, "Michael S. Tsirkin"
- <mst@redhat.com>, Alex Williamson <alex@shazbot.org>,
- Arnd Bergmann <arnd@arndb.de>, Jesse Barnes <jbarnes@virtuousgeek.org>,
- Jacob Pan <jacob.jun.pan@linux.intel.com>, Yinghai Lu <yinghai@kernel.org>,
- Kevin Brodsky <kevin.brodsky@arm.com>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
- Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
- <herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Stefano Stabellini <sstabellini@kernel.org>,
- Claire Chang <tientzu@chromium.org>, linux-coco@lists.linux.dev,
- iommu@lists.linux.dev
-References: <20260225053806.3311234-1-aik@amd.com>
- <20260225053806.3311234-5-aik@amd.com>
- <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001EE:EE_|CH1PPF5EBD457EF:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4ca7d15b-ecb7-40c5-b4df-08de74987589
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|36860700013|82310400026|376014|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	8sgx++NzxfoWNtuVypQu+zMUpQY/X6ZOaWkoKyiNrUHUmgY2dn/Riov8N3WOGCfdjxCw725KjCaGo7yv4EuS/ZmwNVTLQz+cyHZkzsl0dXxlM1jAiKeEIvHpKDBi4Evrj2SHbW3S0OLIrbnoKEZ3zhvjicNdewdzizMFRadulPaY62JJN+ugRrzFao3f9wFPQAAu7KbXGRtsSMDxV9cYQevHuNnjDjG7pMBaJFAPqcCmOua6npZUr0XwSU4UGcSW51/yjp36C+ctdnZy9jeY3h8rphO5qAppQgFaFfu2RNGHvCa7sWXw6wzxYsEqS/LvAfLrhBpMsaVKDxsWJPAkBWNyeLzovUNG8G6BFL+/F1B3UQOzNo4MeV6VIcFRwey/CfIiA8ZC80DPdfaP3K2dJZ03jOyUicuzeNczdtOf9n9yeyOUOJehB3EFg7V+mH32x2BXw/ITpWc6kpE6dSNMumsM7XuKyOR5oGwFK8icpTq041iJtqcfl360MjWibhlI/xMTj2XrrgdK6rdCtTwgiVcp/BfkRRMpa0v0Yq5gS9zfcmMihKecqur1oJSj+j329lh3IS9s6F3ki1EY3dlf40MFEkKH1+2pLWrLeQRnT4rwcT2D3PCvq7RMfvwzVYOtXYRVPNFYH80crpE4R2ZnlbPYjXpfpXWFxua4cGjo90zn5zTdWtgPk4gYjV+/VqbTfqmerFG1xojHcmZeV+vOdk4ce3N+yGmvMRjUET3AhwkpI71FUvbO1hXHzE+lo2DY5/M/qd9DSfeLvrd1QccZOzxqaCp7C+7mJLcmt127SVREdJs43PpzdbBDYjHjL6kJqMH+8NrqP/+0b4nSHXO5sg==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(36860700013)(82310400026)(376014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	BGjtwa691NWTzJdMZacSJMSCfwkH/o+DLeFR3u2ZFfUHAnzVdbkAkOlDRk/hODNJKqbWbgU4b4k88Yt5dbmiy29Qozt/wPwHoA9SbDXRihqQrjvZS+ooXwRhm8O5qPbUALbSa+7hUfKqt+2QGotafo5hM7iqovBP6L03fiKg2jgXvIPOtZ/aQLK338/Zvatlw1/gTmI+Kg2fb+K+7Lj+yYY4WB8a3COJtYFlgr/7lwsC3XaytjCg4kINoBqivl8e/aavEvQNG4X6kNvwG3vM2uPBOq6KAbMrRi9AncFJaLMCufl8DMld/yWRVCgx9eguetU118ykz8avwzHCV1mnGQYNh5Ot5VKj0s7enpaJC5HFPZhyJ4U0I9tw2mAP3LMJI+a3Y+91znqdw6CXJjPDHdX++gvBpOSyDJfMxx38D7rnlw6eP7r0E+HCcze1Sd7C
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 18:05:28.7587
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4ca7d15b-ecb7-40c5-b4df-08de74987589
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ5PEPF000001EE.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH1PPF5EBD457EF
 
-On 2026-02-25 4:30 pm, dan.j.williams@intel.com wrote:
-> Alexey Kardashevskiy wrote:
->> SWIOTLB is enforced when encrypted guest memory is detected
->> in pci_swiotlb_detect() which is required for legacy devices.
->>
->> Skip SWIOTLB for TDISP devices.
->>
->> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
->> ---
->>   include/linux/swiotlb.h | 9 +++++++++
->>   1 file changed, 9 insertions(+)
->>
->> diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
->> index 3dae0f592063..119c25d639a7 100644
->> --- a/include/linux/swiotlb.h
->> +++ b/include/linux/swiotlb.h
->> @@ -173,6 +173,15 @@ static inline bool is_swiotlb_force_bounce(struct device *dev)
->>   {
->>   	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
->>   
->> +	/*
->> +	 * CC_ATTR_GUEST_MEM_ENCRYPT enforces SWIOTLB_FORCE in
->> +	 * swiotlb_init_remap() to allow legacy devices access arbitrary
->> +	 * VM encrypted memory.
->> +	 * Skip it for TDISP devices capable of DMA-ing the encrypted memory.
->> +	 */
->> +	if (device_cc_accepted(dev))
->> +		return false;
-> 
-> I worry this further muddies the meaning of the swiotlb force option.
-> What if you want to force swiotlb operation on accepted devices?
+This is a follow-up to the RFC series [1], reworked on top of Gary's
+io_projection branch [2] to use the Io/IoCapable/View infrastructure.
 
-For that we'd need a whole other private SWIOTLB plus the logic to 
-decide which one to use in the first place. And if you really wanted an 
-option to forcibly expose all DMA through shared memory regardless of 
-TDISP and friends, that would logically want to be a higher-level CoCo 
-option rather than belonging to SWIOTLB itself ;)
+Patch 1 from the RFC (fallible config space I/O) is no longer needed,
+as it is already covered by Alex's "IoCapable to functional trait" change.
 
-Thanks,
-Robin.
+This patch introduces ExtCapability<T>, which implements the Io trait
+for PCI extended capability regions. It delegates IoCapable to the
+underlying ConfigSpace, so io_project!/io_read!/io_write! work directly
+on capability register structs. ExtSriovRegs provides the #[repr(C)]
+SR-IOV register layout, and ExtSriovCapability is a convenience alias.
 
-> For example:
-> 
-> @@ -173,7 +176,13 @@ static inline bool is_swiotlb_force_bounce(struct device *dev)
->   {
->          struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
->   
-> -       return mem && mem->force_bounce;
-> +       if (!mem)
-> +               return false;
-> +       if (mem->force_bounce)
-> +               return true;
-> +       if (mem->bounce_unaccepted && !device_cc_accepted(dev))
-> +               return true;
-> +       return false;
->   }
->   
->   void swiotlb_init(bool addressing_limited, unsigned int flags);
+Changes since RFC:
+- Rebased on io_projection branch, using Gary's Io/IoCapable traits
+- ExtCapability implements Io and delegates IoCapable to ConfigSpace
+  instead of duplicating config read/write logic
+- Dropped the fallible I/O patch (now upstream in this tree)
+- Added rust helper for PCI_EXT_CAP_NEXT() macro
+- Replaced raw `as` casts with From conversions where possible
+- Renamed SriovRegs/SriovCapability to ExtSriovRegs/ExtSriovCapability
+
+[1] https://lore.kernel.org/rust-for-linux/20260126215957.541180-1-zhiw@nvidia.com/
+[2] https://github.com/nbdd0121/linux/tree/io_projection
+
+Zhi Wang (1):
+  rust: pci: add extended capability and SR-IOV support
+
+ rust/helpers/pci.c     |   5 +
+ rust/kernel/pci.rs     |   7 ++
+ rust/kernel/pci/cap.rs | 244 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 256 insertions(+)
+ create mode 100644 rust/kernel/pci/cap.rs
+
+
+base-commit: d6d357817b3fea5798607d04ee5668894705a0e1
+-- 
+2.51.0
 
