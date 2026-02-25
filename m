@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05B853D6692;
-	Wed, 25 Feb 2026 16:34:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20ECB3D7D89;
+	Wed, 25 Feb 2026 16:46:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772037245; cv=none; b=mWHmrsVtOXZgXF0Xh0qA15eWTiv1eWWQpYdqZ3uAk6b6yszwutiXUFWogleGGAnUAdCgBRQ0f2f2rEM51QJR+8UC6TsbIa1jC/KCvhWVV4ciDdOKPWvqT/TgAU4ddXRm8Mh4+SZqqPQjBkNam6Glz0QDL6cu6SfoTRtlTCXno5w=
+	t=1772037997; cv=none; b=BDx4vKS7bmbEn/YBga6iaf2PRsNotvB1YxHQjmLLr/ot+I2D2yUJ1czHZ5Yr+1eX0G4HxdsMc4ep0vvOw8+EsC+7+ZW/+kw8aRqKFsEBPYDr7eW27LfQuKI8yODqtKGeUr4IstKkA6BbPA/qhKh6IL/aMacdiF7FM0yDQ9URIuQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772037245; c=relaxed/simple;
-	bh=nA5ubXR7ldqmvu+5ms32j4vZptre4X8kYgLmhb/ey2o=;
+	s=arc-20240116; t=1772037997; c=relaxed/simple;
+	bh=XQkON2hH42xh3feu1yecYPdnJyLWGJ7ivFADftHZw+w=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PSTTQQrCtZMPT5ASzcgZs51gXeDiE4I/bkvSX/LsXRvGciVu1PUAnNcwwrK4Pdafluzd7e6hqlTJ7aMozE5Ydkp89StkBQZLBLaaBVhmB/XRrWAyr4x9c2MSznfcaDLVxGjj1fOMY5Yrcloh1ulu9M9+6U5WrDBJ4kNoOxMe9Qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Tl9y7LdO; arc=none smtp.client-ip=198.175.65.10
+	 In-Reply-To:Content-Type; b=Y2vUiVZ8Ia5ULek/pr4PFIv60+19yTVQC24yG8v8aSij3IRYYs1n7zbj1jwyASsVNgEs9+Wqa9A9oRtBVvP4nveV4uYG1ahEg7S1DoAIiTd/Ghi9hUzoQrxUwM214YYSztdNhLBE1vh4fuv6GCEo/4BagqJuvsCNeSubSE2th8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fdMV+FBN; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Tl9y7LdO"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fdMV+FBN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772037244; x=1803573244;
+  t=1772037996; x=1803573996;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=nA5ubXR7ldqmvu+5ms32j4vZptre4X8kYgLmhb/ey2o=;
-  b=Tl9y7LdOj0dwIYCIVg1IipjTUv6oVeRx9Htnly11ICfFYKM20KLwEShn
-   HQC4TQ9V4FfwbSTSOVMsptqYfPc2noeElSzAVuTUY1ZU0SyQ6fxifV2la
-   0UJGgUrNfFfEWMDQ46B31nBw8QHCtVi9Z5G+uxmgfnBkrxPROhX/69zyp
-   mCRsaYq/+c8nwjj/KB/ApRsnVQqUQkC4NwG/tFuCd7ERiyZ6nCCEztUpg
-   fRwCAmwQuy+P90wh+a3CvZupchLS61txZ9dtf/gZuyQoBGpWD9i3wdDXT
-   a5qSUMgGQYXG3IJpgLNgKc9NdDA2z729klt+IBFuto4U8NbzhCCxEiWpR
+  bh=XQkON2hH42xh3feu1yecYPdnJyLWGJ7ivFADftHZw+w=;
+  b=fdMV+FBNEUChHEYajswxP0AMRS0YdBnDF76AXdypoS3kNIDACYt5Y4MO
+   9SPK31G2//cGqs/0x7KezwaCsfi0/A0Tz9KHgeBeuqq6tLL3GSOHEbF+L
+   12yzLktWeEUNzTmauyNjoo67fV6+onWuFl6gpBdBWOOkxtP+JNeMBU4dG
+   HxHh3u1K/hvkcOakY8Ci6BmLibUWfFUXj4jJX5nIYZyd+REWroOoIiYMc
+   llePMysiVhKhmAUAXd8cKqjC/ee/RuYw6ViPKVHnbnlSTGKL51fd6PJ69
+   OHBdeLa+93nvu1uroeSj6qL3La8wmXBwzZVX/azr1q6TY7Y5bU02cUdOV
    w==;
-X-CSE-ConnectionGUID: 9vHPuv2HTnuPhMnzYLoFLA==
-X-CSE-MsgGUID: XFV6uylbRH+p+uls+OD4/A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="90494521"
+X-CSE-ConnectionGUID: YCpIBAB4QSO5YydY2RHN3A==
+X-CSE-MsgGUID: CpjYtXY7TU2SISLEhVXBXw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="73189128"
 X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="90494521"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:34:03 -0800
-X-CSE-ConnectionGUID: TwyXHUZ+SOmrLJlCru2idQ==
-X-CSE-MsgGUID: 7wBMd34LRcapbIpMa+i/cQ==
+   d="scan'208";a="73189128"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:46:35 -0800
+X-CSE-ConnectionGUID: +2kv7+BPQ42sVuL63eEtug==
+X-CSE-MsgGUID: hi7i7lsoTQq0dn4Ocmp7+Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="220419879"
+   d="scan'208";a="215506290"
 Received: from gabaabhi-mobl2.amr.corp.intel.com (HELO [10.125.111.98]) ([10.125.111.98])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:34:02 -0800
-Message-ID: <b7c04f27-39a9-41df-af0a-14bc5005518e@intel.com>
-Date: Wed, 25 Feb 2026 09:34:00 -0700
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 08:46:34 -0800
+Message-ID: <38d9206d-08a3-4b69-a97f-902160bd9e31@intel.com>
+Date: Wed, 25 Feb 2026 09:46:33 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,77 +52,81 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2] PCI: Hide SBR from reset_methods if masked by CXL
-To: Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
- Jonathan.Cameron@huawei.com, raphael.norwitz@nutanix.com
-Cc: vsethi@nvidia.com, sdonthineni@nvidia.com, smadhavan@nvidia.com,
- skancherla@nvidia.com, vaslot@nvidia.com, linux-pci@vger.kernel.org,
- linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org, kthota@nvidia.com,
- mmaddireddy@nvidia.com, sagar.tv@gmail.com
-References: <20260220195259.2397847-1-vidyas@nvidia.com>
- <20260225133801.30231-1-vidyas@nvidia.com>
+Subject: Re: [PATCH 06/10] NTB: epf: Document legacy doorbell slot offset in
+ ntb_epf_peer_db_set()
+To: Koichiro Den <den@valinux.co.jp>, Frank.Li@nxp.com, kishon@kernel.org,
+ jdmason@kudzu.us, mani@kernel.org, allenbh@gmail.com,
+ kwilczynski@kernel.org, bhelgaas@google.com, jbrunet@baylibre.com,
+ lpieralisi@kernel.org
+Cc: linux-pci@vger.kernel.org, ntb@lists.linux.dev,
+ linux-kernel@vger.kernel.org
+References: <20260224133459.1741537-1-den@valinux.co.jp>
+ <20260224133459.1741537-7-den@valinux.co.jp>
 Content-Language: en-US
 From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260225133801.30231-1-vidyas@nvidia.com>
+In-Reply-To: <20260224133459.1741537-7-den@valinux.co.jp>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 
 
-On 2/25/26 6:38 AM, Vidya Sagar wrote:
-> The CXL specification (e.g., CXL r3.1 v1.0, sec 8.1.5.2) defines
-> the "Unmask SBR" bit in the Port Control Extensions Register.
-> When this bit is 0 (default), asserting the Secondary Bus Reset (SBR) bit
-> in the Bridge Control register has no effect on the downstream bus.
+On 2/24/26 6:34 AM, Koichiro Den wrote:
+> ntb_epf_peer_db_set() uses ffs(db_bits) to select a doorbell to ring.
+> ffs() returns a 1-based bit index (bit 0 -> 1).
 > 
-> Currently, the Linux PCI core checks this condition in
-> pci_reset_bus_function(). If SBR is masked, it returns -ENOTTY during the
-> execution of the reset. However, during the probe phase (when probe=true),
-> the function currently returns 0. This 0 return value incorrectly signals
-> to the PCI subsystem that SBR is a viable reset method for the device.
+> Entry 0 is reserved for link events, so doorbell bit 0 must map to entry
+> 1. However, since the initial commit 812ce2f8d14e ("NTB: Add support for
+> EPF PCI Non-Transparent Bridge"), the implementation has been adding an
+> extra +1, ending up using entry 2 for bit 0. Fixing the extra increment
+> would break interoperability with peers running older kernels.
 > 
-> As a result, 'bus' is listed in the device's
-> /sys/bus/pci/devices/.../reset_methods attribute, even though the hardware
-> is incapable of performing it. If a user attempts to write bus to reset
-> method or triggers a reset that falls back to SBR, the operation fails
-> with: "bash: echo: write error: Inappropriate ioctl for device" error.
+> Keep the legacy behavior and document the offset and the resulting slot
+> layout to avoid confusion when enabling per-db-vector handling.
 > 
-> This patch modifies pci_reset_bus_function() to return -ENOTTY immediately
-> if cxl_sbr_masked() is true, regardless of the probe argument. This
-> ensures that 'bus' is not advertised in reset_methods when the hardware
-> prevents it, improving clarity for users and aligning the sysfs capability
-> report with actual hardware behavior.
-> 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
 
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 
 > ---
-> v2:
-> * Before deciding to hide 'bus' reset method, add an extra check to make sure
->   that the link is indeed operating in the CXL mode and not in PCIe mode as
->   the spec clearly says that a '0' in 'Unmask SBR' doesn't have any effect if
->   the link is not operating in the CXL mode.
+>  drivers/ntb/hw/epf/ntb_hw_epf.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
 > 
->  drivers/pci/pci.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index f3244630bfd0..a176566ba56f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4915,12 +4915,8 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
->  	 * If "dev" is below a CXL port that has SBR control masked, SBR
->  	 * won't do anything, so return error.
->  	 */
-> -	if (bridge && cxl_sbr_masked(bridge)) {
-> -		if (probe)
-> -			return 0;
-> -
-> +	if (bridge && bridge->is_cxl && cxl_sbr_masked(bridge))
->  		return -ENOTTY;
-> -	}
+> diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
+> index d3ecf25a5162..bce7130fec39 100644
+> --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
+> +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
+> @@ -43,6 +43,18 @@
+>  #define NTB_EPF_DB_DATA(n)	(0x34 + (n) * 4)
+>  #define NTB_EPF_DB_OFFSET(n)	(0xB4 + (n) * 4)
 >  
->  	rc = pci_dev_reset_iommu_prepare(dev);
->  	if (rc) {
+> +/*
+> + * Legacy doorbell slot layout when paired with pci-epf-*ntb:
+> + *
+> + *   slot 0 : reserved for link events
+> + *   slot 1 : unused (historical extra offset)
+> + *   slot 2 : DB#0
+> + *   slot 3 : DB#1
+> + *   ...
+> + *
+> + * Thus, NTB_EPF_MIN_DB_COUNT=3 means that we at least create vectors for
+> + * doorbells DB#0 and DB#1.
+> + */
+>  #define NTB_EPF_MIN_DB_COUNT	3
+>  #define NTB_EPF_MAX_DB_COUNT	31
+>  
+> @@ -473,6 +485,14 @@ static int ntb_epf_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
+>  static int ntb_epf_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+>  {
+>  	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
+> +	/*
+> +	 * ffs() returns a 1-based bit index (bit 0 -> 1).
+> +	 *
+> +	 * With slot 0 reserved for link events, DB#0 would naturally map to
+> +	 * slot 1. Historically an extra +1 offset was added, so DB#0 maps to
+> +	 * slot 2 and slot 1 remains unused. Keep this mapping for
+> +	 * backward-compatibility.
+> +	 */
+>  	u32 interrupt_num = ffs(db_bits) + 1;
+>  	struct device *dev = ndev->dev;
+>  	u32 db_entry_size;
 
