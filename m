@@ -1,123 +1,143 @@
-Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36DA2494FE
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 01:41:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771983689; cv=none; b=KFWlQa2t4q1A8nOq++DQpqGd07NPDHUJbcV+twU2JKdrN9byJXSkmVlHov0esUT5rTdKr6CKUR0E9o6Wmtnv1EvmsGnvESrIm5kOKI6S2sKK417zNfFvQB/nf+OMhUYkJjm6LHzJBMREkrkaOpiC8KZasrMzWg5OcuPO1Zwrg/E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771983689; c=relaxed/simple;
-	bh=HBEYlcIc7GnTW+YvomdTIW6EpchdhjkgOCxL0C09iL4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H+7SoyVFp900aucfwdZd4CRtyvjixU+vO78hRjqh/HUtt7P6LFZ5jSx6cz8AUyNJ2j09z1+l26NkbNzCVPd9TV54iuu7IUzbWwHaJ/BU6Y6a0wKQgmf8hInf2CQL7sJl++xt9D3ZLvxxwtgHSaw6Zgw6W9NcUnnO2WaTAJkuXXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=Yj7z40Lh; arc=none smtp.client-ip=209.85.219.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9D3281357
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 05:21:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=185.125.188.123
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771996884; cv=pass; b=I/x0GrcP5ZwvnLWS/9M6ZLIYqsfhLGALcHHF6hIbJB+y1XlomzbzRNiKUqczwP4Hltyr8SgEIsBeaPM9jocXN9PW+FLahQgxDtP0QDrL547+C4qwTJJmZlqlFQq6+wbKojXRLTt0xDADcBRPWqLQ7cXe8xIqpX1+Z9ffW5br2mc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771996884; c=relaxed/simple;
+	bh=no5EgKxT37sHSxh65x/itckUFlueTX70grjul+hXFuo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=WdWuUXnUzxVO7hyz+pWPrABleJfzusTv2EzWKnfWfrb/zZHLC0ACkux2ppN1SQyXeUgYC4eIvtD8ezaQVnMukJ/iyQxO1rf/MxUwde1+0Hab852QaEocuwiKTpFwM1IAriUMmAMKVAHI3lNG19EovNVHIerMEoHy6OrpXUG1weQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=UT3BYpxN; arc=pass smtp.client-ip=185.125.188.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="Yj7z40Lh"
-Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-899aede64e8so4643576d6.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 17:41:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1771983687; x=1772588487; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=o6MLMChCRx+KMQSVhypR0LNDXIFTtxCcdGqYANLUR40=;
-        b=Yj7z40Lh8YvvI0HY/SjXM+yzmUSthKZ2bWjOwb1BR8IXrZg7AJlCrGMsDp6OVa+6yi
-         jwFc7mv1YXh/e+LzqoUiIbC+H6NMU2aFbChHXiJFNKLu7AFxJWGipaHlyB93maVAOsqQ
-         Pg6XhYBTlfQGLonvWW6Ygy7R4o9JJyMy4SObpzo/kwLtwhR7hoT2iKYtrH9gOxq9zjKx
-         XjxaV4HMlR9TS/c5RV41IbwswK6oOvsqVJji36wg6PaG9FjBlyMvgG/vtQIxwRVStDZw
-         kpwfiOuKJMKGskDWqor7IsmSPBZkH9BdHd5mLEGgFktfesz+oszuQ56xRZQk7NM4FRHZ
-         o+rg==
+	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="UT3BYpxN"
+Received: from mail-yx1-f69.google.com (mail-yx1-f69.google.com [74.125.224.69])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id B6BC33F2AF
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 05:21:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20251003; t=1771996873;
+	bh=MC+0NNgbi/K/QP35P5O4s/8rtyImFnr1erlyFQnnOWU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type;
+	b=UT3BYpxNj72mkcUAadhfcIoZO5XdPOcvU530+peF2It5bkiVzGC+/Ex9y/Xkcyc2L
+	 YE2lYdcqTSJOMDJD0b++MgKn+4KIsJQT4rq9iXulx2uSGrxixabtQ6q1GFDc/0jSgG
+	 rDJq2d7S2WCEBh0rmoAlT2b+r8RXbqW3Ncej97vT/cY4CDEV0+GSENPfzcYkDfWfoa
+	 UzI26fu5V7b4KPSemyVgkT8JLNkVkvBlS33qAlNl4QMpAolMPDJ1ABTm47Tsab3Mvr
+	 DuumnAi47KyHL1nOCDNrGgX3jyQvzJOEO0Y9ba+LWIJs/3HhNd9s/KwM5MIymKqD87
+	 LdyCLVe4+eIlSWOdSnEzIOkwbDmK3Bz7r0DidieUVny1flgooh2B0XMgohjiE2mRJN
+	 tIbb95ZUuZWrnkTbqLxRMbSsmBm/roY8tpF/sBJDoYZ3w7ubA/ENjFbSEPh+ahE9dr
+	 Q4nNsIKLpS6bwKDmBDodoMf87USQRE1WY/Stk06gxXZ2dT10BQZFPWHNM8A3A/+dNN
+	 P+SaOcXoYHODPea5NF5X4mSyOMrGDXtA20wH2y1s8F+8Xn68+zf+v26xWZZ6/XcvhY
+	 lg53eTpneg9B4GV7WziBNgPOHHyApKuVgGVDSn6FroynP8sZloKGpw6NtdQOCbeQxn
+	 xxcrjqlt55XY9idqeR21LnLg=
+Received: by mail-yx1-f69.google.com with SMTP id 956f58d0204a3-644548b1dcfso10493037d50.3
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 21:21:13 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771996872; cv=none;
+        d=google.com; s=arc-20240605;
+        b=c4XuDhsf3w8Pmp++RSpEpnoFucB93L1H4yA8XpK2oIlRURjuMmeDK0K7DINEsdV3y2
+         t1hVYugEiVqSkZhTWcAlQfgjFCFWns/O+JhWceMjEFlABYN5gyAz6rLvU8RuSEYe6PgA
+         kWhYYtFB6lwQzUF6ntxiPe/O+IWKUZREdd+fGSgfUfEIv1+8WRMTj/H0fH32tI83vYe7
+         iCd64QToAwST/JMxMX/PgeV553T5ncQf0MwmjAOREmdnvhvc+v28J0dkT7cFYgVRhdIg
+         YBIqWuylP3BY4Xh2EXz10rPa84yqZU2XxzdoRQNspjsoZaOokFej7F1gBuCb9HXiuYmH
+         Z38A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version;
+        bh=MC+0NNgbi/K/QP35P5O4s/8rtyImFnr1erlyFQnnOWU=;
+        fh=5jhDIeSNX0LUh1X6im7ZlQ5oUnslVbisDQtvUNbQBQA=;
+        b=VIoXj9eaadrq7iSM9Ke7TYNWXZdd0+h+qQpSLiVTFKgGBqxhnLOKJgUvCp1WCbe/ZS
+         9+/v9ZNSZgh/ZOxbBMxcZJCavLTj2i6o0pUoqkprlmrr13i1TJhCB6p0O9n9+wCK8N6b
+         GAXBzlsj/lRfh2jivp6QOsSCWvgcp/dscc+JIyEEGflozMeoEs6fltmL+kUnIanr+oxh
+         yq8BWAYCMC6yJPiTqpAX2gzZx2tOiQXoxGnk6S8v1SeIU9W2GVH1Oo7hSHZEq0kI1/+B
+         IhdhAMM9Ha2/x4Dx2ZOvEVLylYQV9i0RRxXbGtwXmGlzsGb2GfuL1rTiTau71FmnYRjA
+         6e+g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771983687; x=1772588487;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=o6MLMChCRx+KMQSVhypR0LNDXIFTtxCcdGqYANLUR40=;
-        b=Ok3I13oX2JDP4OGA2Qax8YkR6HztGAMi0WNnUGRLHVdM7T+IRUaWd4X6gzNvyEJHiL
-         2ZsS7A3K69qSWs4CN8xu+/4D8+Qw7Uo768IIhwPlG+yDTjHsywjYgzYXyadtj0cwG24d
-         N2pSmIh/MZ6z/4SnZ98K0AfXtyemaxauQn//+47b8pFAv+BCvkJ21WxuhHc0rFoULiqq
-         mbspFJ1zAmNBQJXEdW2uXat0q2sjA9iijA6ci0lOpki3SWt+B0pkMejRM8lmXC4FFSvI
-         Kq4hcU2XKlqJ4fbBKZjxr+4SW31Ck2Vz6DF9Z6DujEyW28dAQc1mW2g073HllWAMmLYl
-         JxQg==
-X-Forwarded-Encrypted: i=1; AJvYcCV2RhKqBXAJe9MmDCleyr0MS9fyMxFwI4HCvl1C1GnH6atdbtdRkDhGiF5j1sjLbLxxqdUzLGjQX+Q=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmdSvqNW+Qm08zzwBcwqG7f33lArPahlrR8mbh9aG0qsi+kES4
-	zFIqyjVwupSUGIqNqlS6UNIZ4WVodcPvbg9jqccmd84zmsPi7GClLoWtVDqvbSdlrS8=
-X-Gm-Gg: ATEYQzxbluxagnkmhO0ZgU7q7ivUG5DKmDLbZP2+qJqRj16JktFhUJNUPTyJgBnVINQ
-	9K1Sw6hSKOjnsCu8ShgPCwqtxRQSkn+4tqs9DWkjo962ybS3fOkHHCQbkaLYV8BEgw30NX123Fs
-	dgbLdkBT1ikKCr6grjcobF4uy8MewK3FQYj5RGtiMau5ZdQHEFZh384tTq6TmMw1QC5loitGykV
-	hEjlg3/N9/LguBJGv6yV00eDDGtX6atImpKNhOLA1RZz9mv0hf7+Cr8VJlo5EwKia1KoiF/5eNX
-	OwLa+Tzgs9u8v3n3rBJMn/fAZcB/VQA9YQL2YsdPEhMTvvQoi7xl5lIBLLnyAK6u18rc141iBFQ
-	nwSvYNvB/WLAG09w5QwcuMGC8p6zYFQcuTnZTaezSt5W96vwvAtlU9vCFdD6+EPD03euQqs9Ml5
-	mql2PSae91ub4W+vdGseWzHPI9V7fL9Gf1Hnzd8AwWpq8tRAP6gHJZ34OAdwergCJT6A6sO6K31
-	yKLPsWIljTmuzvmcavhTmCsz2jo3Bc/H4OtMKiOLLntfbichKY=
-X-Received: by 2002:ad4:5f09:0:b0:895:46be:2983 with SMTP id 6a1803df08f44-899b34c5bafmr32547266d6.12.1771983686726;
-        Tue, 24 Feb 2026 17:41:26 -0800 (PST)
-Received: from dev-mattc2.dev.purestorage.com ([208.88.159.129])
-        by smtp.googlemail.com with ESMTPSA id 6a1803df08f44-899a617f875sm30942756d6.40.2026.02.24.17.41.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Feb 2026 17:41:26 -0800 (PST)
-From: Matthew W Carlis <mattc@purestorage.com>
-To: macro@orcam.me.uk
-Cc: ahuang12@lenovo.com,
-	alok.a.tiwari@oracle.com,
-	ashishk@purestorage.com,
-	bhelgaas@google.com,
-	guojinhui.liam@bytedance.com,
-	helgaas@kernel.org,
-	ilpo.jarvinen@linux.intel.com,
-	jiwei.sun.bj@qq.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	lukas@wunner.de,
-	mattc@purestorage.com,
-	msaggi@purestorage.com,
-	sconnor@purestorage.com,
-	sunjw10@lenovo.com
-Subject: Re: [PATCH] PCI: Always lift 2.5GT/s restriction in PCIe failed link retraining
-Date: Tue, 24 Feb 2026 18:41:19 -0700
-Message-ID: <20260225014119.10047-1-mattc@purestorage.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <alpine.DEB.2.21.2602231829500.46231@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2602231829500.46231@angie.orcam.me.uk>
+        d=1e100.net; s=20230601; t=1771996872; x=1772601672;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MC+0NNgbi/K/QP35P5O4s/8rtyImFnr1erlyFQnnOWU=;
+        b=WE6mHyN1KMn5K/fqjz9arqv3An0+gv0lm9/P6rLPoqsS7UBn8nOuF4fL2dN1LchxEx
+         ycla6oRY/HrVDQu69toOX4+oYquqnu4sJBoxlUj6l7vUXvV9kLlO/p/hycUwjuHVeCC7
+         5n0XlsqZ/GCQzeCvHU9PhQaXQSRGVKPFBeYxN8Wwr1nFVvAkDFN1DnG51NMoVEE+8tHZ
+         fq+jpkXPr5hAVLQvA/yRJO2eAt0V537n4YGTC4rPnyz//TSljU0+70E5SPdvNEMEPK16
+         0GBklV/w2n6wWV/hAl1sWFuRf1+OQIy8ambX983IA9nhSlX3JwLR6kPW32bO46OHPhiG
+         UjZg==
+X-Forwarded-Encrypted: i=1; AJvYcCXOqYsFUHIdO846Uj6OJJZ1MBK/IVH4FQyF86Py3T3W2dqEQHN9soHh528rnuNZEtXMaLW4Kgy2538=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrdkM2ekS77hMS41r02SCTQbYkOVzPvj23VhCdCstpS1LUGat6
+	MbhNd2gY44S9hHa9xCTEkB5+EdCkfdVYoiAk6zYmZN7dAPchA7Gw34O2WoNUt62kIGSHOBQOaQa
+	tUR2Udi8X8rMkou9pa/x42uqLweLKUX45oWMBR0OD6IJ40150WzJTeZRhrzvh0Y2yZS02Qd+qg7
+	a6irTLabz3SaE2WXj3URvEguX7zV+IfSgnK9FlAq9OGOwYi0UuDB3ij4YVIEalyf0=
+X-Gm-Gg: ATEYQzx3yowIRTCZyA1+C3Ii/qApxf7VDcmzSo7H7UbN72l0cVFyd6gsMnDU2hdpoM5
+	ICcYPOVCelewl4VPWxj9rNtCnFPA2aCnKr0rW153hy9b2qgyaVegwspyJW31TDM7vrlmnbiYXGS
+	HnjPkaXDvhHbLvYlxVskOUldgOkam8jdzYtyIDILtUwSPOIRKump4D1rNZLoPK9wHGd5My/02QR
+	nMPdQ==
+X-Received: by 2002:a05:690e:16cd:b0:64c:a5f9:9b2d with SMTP id 956f58d0204a3-64ca5f99b88mr1743693d50.21.1771996872522;
+        Tue, 24 Feb 2026 21:21:12 -0800 (PST)
+X-Received: by 2002:a05:690e:16cd:b0:64c:a5f9:9b2d with SMTP id
+ 956f58d0204a3-64ca5f99b88mr1743686d50.21.1771996872224; Tue, 24 Feb 2026
+ 21:21:12 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260213192607.GA3167656@bhelgaas> <a7d03703-04fa-4c26-987a-a34d2e96a4a7@amd.com>
+ <842e6a0a-1288-4b79-88a9-f866d38292f1@amd.com>
+In-Reply-To: <842e6a0a-1288-4b79-88a9-f866d38292f1@amd.com>
+From: Matthew Ruffell <matthew.ruffell@canonical.com>
+Date: Wed, 25 Feb 2026 18:21:01 +1300
+X-Gm-Features: AaiRm53EhjBJSs2fXyS6DGMjbBVSP0MEaC3D6JuGvwlg3qKsluBP74vOuDcOi20
+Message-ID: <CAKAwkKu8wpdvJ2_gUWvNd+1ajU9CpbPpF-UsaGXkk6ciBgDT3w@mail.gmail.com>
+Subject: Re: [PROBLEM] c5.metal on AWS fails to kexec after "PCI: Explicitly
+ put devices into D0 when initializing"
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	lkml <linux-kernel@vger.kernel.org>, Jay Vosburgh <jay.vosburgh@canonical.com>, 
+	kengyu@lexical.tw, Brian Norris <briannorris@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, 23 Feb 2026 23:14:37 +0000, Maciej W. Rozycki wrote:
->  I argue that by applying this change the issues with NVMe hot-plug will 
-> be sorted while keeping the configuration working that 
-> pcie_failed_link_retrain() is needed for.  Win-win.
+Hi Mario,
 
-I don't think that what you are saying is true there is invariably going to be
-some other consequence of this change.. Its hard to believe there can be any
-changes to the pci drivers that won't break something.
+> Matthew,
+>
+> Can you please try with this diff that applies my idea?
+>
+> Thanks,
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 1f6fd7c372932..5955a273c9ba7 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3196,6 +3196,7 @@ void pci_pm_init(struct pci_dev *dev)
+>          }
+>
+>   poweron:
+> +       pci_clear_master(dev);
+>          pci_pm_power_up_and_verify_state(dev);
+>          pm_runtime_forbid(&dev->dev);
 
->  I note that active links are unaffected, so to say it's meddling with the 
-> link on every device is I think a bit of an overstatement, and reports of 
-> issues are from a few people only...
+I applied this ontop of current head 7dff99b from 7.0-rc1.
 
-There is no discrimination about which device it can be invoked on..
-I'm looking at a fleet of millions of hot-plug'able devices.... I don't really
-know if it matters how many people report an issue, I think what probably
-matters is making the right change. Initially was there any other reports
-of the quirk helping with other devices besides the delock 41433?
+c5.metal on AWS did not come back from a clean reboot. Looking at the serial
+console shows the exact same behaviour as attempting a kexec. It gets stuck
+trying to locate the rootfs, because the NVMe drive has no bus master bit set.
 
->  What outcome would you envisage had I taken the approach from this update 
-> right away with the original change?  My only fault was I have no use(*) 
-> for PCIe hot-plug and did not predict the impact there. 
+That is also maybe not a viable path to take.
 
-What I'm seeing now is an overall confusion about whether a link failed to train
-to gen 1 or was recovered by the quirk or recovered on its own etc... In my systems
-I would prefer to NEVER invoke the quirk under any circumstances because I expect
-my devices to work. With the quirk it becomes more unclear about what the cause
-of a link issue might have been or whether it was even a real link issue in the
-first place or some weird timing.. 
+I'm currently working on some instrumentation, will try get my results,
+including a full dmesg capture, soon.
 
--Matt
+Thanks,
+Matthew
