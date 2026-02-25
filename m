@@ -1,66 +1,67 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9BB93806A1
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 23:15:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65CB53803FA
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 23:20:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772061350; cv=none; b=EBdUcLMEUWqkZ19nGWuN83hDxdNSmFAixKXSufwPJ0EHC58ttboQeNn0EwtHKhmPZ+f+S1w179FYCmYZjOi8kA5zQeDuBHes7GNdAXYrT2XDCR8K4A+6po342mHtljWYFKkGE9Xy8VhA0uf4kiJ24cY1EDQzx9oTkwyAGVYdYig=
+	t=1772061618; cv=none; b=oYpjPNaMPqLliAJbKPuKbgB13ojThj+M4ckEMUUcT0U8blJEWxIJQg4rL6vdq984fhceyDNL/fqfeH9tR5IEVOrUYLCzENu+fnNJ+TpD/s9KoR/R/UJT1s5u/ykfUsWSmfiBzFtwucwmnhTObIzP5GVsRK7xOz+rxeTavYpIYDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772061350; c=relaxed/simple;
-	bh=5WhoQCUa24yhiUF/WAnlscnk6BtiGnEv65SGVktgBo8=;
+	s=arc-20240116; t=1772061618; c=relaxed/simple;
+	bh=ncJ/yZrFQwmQDLQRu5VuYVpooUS7GC0HT5ZYkkiWhy4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EiDMPPUp4NNNln9FtPZSwwjH3V4oGWhq0DtI4s5Odk0NTtDhUGnRfhqrK8mquIpNPnQH4xmoRZwpxf797cyAyV/EDPCJGWjRdtpeoF3vY5M/rdBKLM4gzvtRMeJ22x7AK8kkyIkvQ53R3CmBF0lFhtqVuFDTP3YIlwUjcBczWko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=SAzDj0cM; arc=none smtp.client-ip=209.85.210.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=h7IAj5dwwpsoW217WdMcFTv0wm8XcgsGwNwYdzD8ggZv6EJZZwj96zP8ZfZVt0kLT/b7ZdQCEfJsE/tKZWRT9dNbcmHXJyrT6N/vZ1aUJisQhm24weTt2mstMU59TJi86PDvIXtADJQTm6GfE6DpuelCQrLts7rkztSl17yDxDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=uhzn4w6U; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="SAzDj0cM"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-827390e8a3cso154518b3a.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 15:15:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="uhzn4w6U"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-824ac5d28f9so339008b3a.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 15:20:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1772061349; x=1772666149; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1772061617; x=1772666417; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+aqTMCmmaBlC6BgaLKDJu82UvyrNA1bTtUP5fONJU9U=;
-        b=SAzDj0cMcnIVDVrDDPPeF9qTI17Q90maO4BP4ziO34L6rUv6mL1YVRMwWENMo6UhoK
-         S78EAj0tAdojwdpSjIA1UkcviDGE+9Lxu3qaHYDAc05L/iXb9ov7ebzJsisQrXP+7LBB
-         QVHvs0lTdzYR0O90hbeUPUchlgS7775rDPTxygZUTyBZ3kfpKOm6XJ0Tt5imThS0a3sN
-         wpGGuuvNGcQ+rBhHIy7hUPDjjGOFLsJGRKM0AyKSXOOc6Bb3Ybn1ReYri10kI2GEZEoD
-         k9znRzQvb6GWXEr+5SAaHM1IYk2QE/OuzpOz/R81m/aBLtCV0eXShGkNMvVBmBfptHuz
-         v9Fw==
+        bh=aEWfuL1WgCP/eH/o3qO74sPfk+Pg3+xsCKw2mq2gLYE=;
+        b=uhzn4w6UtRIAbnLkkRvfqKWxBco+JaWGwiRza1DyJHeGRsQPcwqUw/970G9aidfPJB
+         mZbdRLAhnelthWtXAM066H0ITzo931/rXkSCh69hexdD2OHYrTbdKJlhKIhprEmP7w/b
+         rdddN8iQOeNU9st4sqX59824wjd8ufl7mLW0cssGI4D/bDvqtJsRQqxFdJIJ3WTtKIHm
+         qc6NKD8dG52/9IkgsB+Vj1v6QZTk5/LgnyXMn08D/0xnIx6K2VYpmHTPCUmEHzHN4dMl
+         EerY3NyQyRZA07tRMRN0OSocjAxMABPEh4iUXLFHvJwdvP4D9d+//76ht8k2auMf9DHp
+         1h4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772061349; x=1772666149;
+        d=1e100.net; s=20230601; t=1772061617; x=1772666417;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=+aqTMCmmaBlC6BgaLKDJu82UvyrNA1bTtUP5fONJU9U=;
-        b=qLNxLY+iozuMf95MSk3Rb3qkAB2OMkhpnGsg+0ZSN1Oz9KOlN3U5i0x8fdVZjL8owN
-         3S2E8Jc8G9oMDwm7m6qkn4ITuo8NUeZooATJcOSYVBNKMJXkCVws4VtLOqeBucbNbtLb
-         kdxJ6VJyZVIqh77eGItARgUiOhjgo2cNoJypAJLf2AwW6VUlKycrx2LQkuE2EMJgtno3
-         zGkDUUgKBzIWgK7QMfPE6Ub0ijJn099f2BJv/Mk5geQWOdfvvD7JtRZfSNWaiQ7ehutM
-         +I2d04SfycIncNRaPUO7GZNgy0InwmVvYkI/WYBWg5Q7TJhc2nlNJR0CWBCOmNe6Ql2a
-         n1vQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXJy/0dppRY62bbpknvyx0DC5dc2/sJFy8bmDdI2YAi98RgmzK/WJjrav/EdoHZAc5gtevJLQ4GTMA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw/RN96eSAo71PxnoNIBzgzufTfIH7yp+wfknh5ABFx5kT5iHhV
-	Ty3db8RzHwCNW1BF4/u9qd7XRHe3kg6NsktVjUQT++aLgws8EuNU8WzNssdTvS6V6Q==
-X-Gm-Gg: ATEYQzyZaMWB9azARnEqVqVpFVhPrmij7hEXj0s/PrwfCl55l0WqVqYYqd4tMuRTlrF
-	vNoFfn3GPoJlJqxd/MIFPVEGdCiJESRLCFHJuElHbvqdvmo5CPvVYDiZfQLynOQK1gfpBgRBWfS
-	0ba/BrLKkHrxa1Id1/Q09Xotalu/N4MYGTz3xGVYfElOuNvbgRWYXlNLdL8342Aev/fCdK6q9DR
-	4vttomm6mqIkNOk4J5qh5cbaA8L351/7VYr5OlYqdALQMCKzDEHD0oXrqlOQ0Fgye56o3R1GTsv
-	U3qVGMOIX3rF7nswBI7qtdsD4b8nXnP5DpC0hp72Nek0zAoZkJM5HpL9MLEtiIn4kVQDobVxit4
-	QPZpH3txnCG8052ugVTjO2Mw8yDt41r3M2jtGV+oRq9P3RmSxFhsPn3KqVj/L1OUZXB3zOpOa+v
-	3UfCkXWcNVXEUrSxBpMWs10zcp/vt5511x8hgVICWvcxlotYfol188/wKacZFDWQ==
-X-Received: by 2002:a05:6a21:7e0c:b0:395:46aa:4467 with SMTP id adf61e73a8af0-395b1d39ecdmr623014637.14.1772061348571;
-        Wed, 25 Feb 2026 15:15:48 -0800 (PST)
+        bh=aEWfuL1WgCP/eH/o3qO74sPfk+Pg3+xsCKw2mq2gLYE=;
+        b=d7yS+rSkVcHbKVqQ8y6Ntu4Z1prVMYLgUIdxt2itAKTcQzyTxyoNZWelrKoPzZNXQ0
+         TqmmxtKn2ILNoSX35amqitwLORW8VBulN3z2NtcdFNZjzjFoRAvL52OevVCR5q+hAVj3
+         HcN9fPiKw+xytnPhoYMDTNKlKa6oilCCoLNwPuUDt32g/S+FTOQZoalwDmWrltMh3cep
+         ySL1Gq2uoBNWWc/mL5YZhsMKRztLiANawmuudyfp5Aen8CtOnRjsR2I5WkLvmVjuwRJe
+         gpUuDdDCtYZXnMQswoJqMLkd5b7cIAIDkgZ9tqfkdSYP8j9yIqVKYElggR+bXE9CMCC4
+         7Kyw==
+X-Forwarded-Encrypted: i=1; AJvYcCX49yokOjNhSi8U6sKNdfDbPsJxv23g3N9SSs/qL/TN8pYnS7zv2mF8tq5WPj+A+SadD6FXpmESCk0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy0M5kiLPVBLnCLBndaeSTGCJiPe5jOuFHKg++mfoOy4OqHMb7X
+	YyQ3Hp+pTgrKGKkAiflb/cJWEq0YPD/z/dIQoN4a5lJ7NXasJbKcXr/v6Kluztknmg==
+X-Gm-Gg: ATEYQzwRnEdzWE+HGLzcDefU6ai2hkakGHIwDSIPIR7qrQizn3jIKBN3+aZf74WX7QJ
+	yzshW71f/fxRhBFig8g/raXVqprZcBaVNGeyS4TlnRWI3CEcXuk3kDLQzz5dD3/ZeJRxpDtTWES
+	P1Ehu4UkvW9+GR/ppZqzZpbRi077UFQwUBVyHb8TRCrpj+AfcQ4rz9QbWvF9UvhLUE4Mn/pnDbu
+	Wy+aDQqU6aYQFjtuuskv4QwqpQavdA3vGW+LrToLf8W7ncQut4HMtAIGYyw1WmGfmEWLwHPub1o
+	Ybjopt+nsHZsD+sldQruJ+VTTI1AIvICyIOP7yd3KwQyarWo+Jt1BTgBKWhnnZl4sqhUXSmP4iS
+	NFvGuMyfI9PCfbAYUxeThjkxU6+tOq8fybGxMRj7vhGt0blnisMmNyQTLbcY6eIzY/PlcIyN5JS
+	CYDaYBnxPC77BYErNydNxR71soYLWB8wo/1qaD0hj6CxcSgzk6vNwB+AtTc+3m+A==
+X-Received: by 2002:a05:6a00:18a7:b0:81f:852b:a91c with SMTP id d2e1a72fcca58-8273390dcc3mr1547131b3a.64.1772061616376;
+        Wed, 25 Feb 2026 15:20:16 -0800 (PST)
 Received: from google.com (239.23.105.34.bc.googleusercontent.com. [34.105.23.239])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c70fa8479aasm89953a12.31.2026.02.25.15.15.47
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82739ff37f1sm347240b3a.40.2026.02.25.15.20.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Feb 2026 15:15:47 -0800 (PST)
-Date: Wed, 25 Feb 2026 23:15:43 +0000
+        Wed, 25 Feb 2026 15:20:14 -0800 (PST)
+Date: Wed, 25 Feb 2026 23:20:10 +0000
 From: David Matlack <dmatlack@google.com>
-To: Alex Williamson <alex@shazbot.org>
-Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alex Williamson <alex@shazbot.org>,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
 	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
 	Alistair Popple <apopple@nvidia.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
@@ -76,7 +77,7 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
 	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
 	linux-mm@kvack.org, linux-pci@vger.kernel.org,
 	Lukas Wunner <lukas@wunner.de>,
-	 =?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
 	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
 	Pasha Tatashin <pasha.tatashin@soleen.com>,
 	Pranjal Shrivastava <praan@google.com>,
@@ -92,12 +93,11 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
 	Vivek Kasireddy <vivek.kasireddy@intel.com>,
 	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
 	Zhu Yanjun <yanjun.zhu@linux.dev>
-Subject: Re: [PATCH v2 04/22] vfio/pci: Register a file handler with Live
- Update Orchestrator
-Message-ID: <aZ-CnywNgMnr6f1k@google.com>
-References: <20260129212510.967611-1-dmatlack@google.com>
- <20260129212510.967611-5-dmatlack@google.com>
- <20260225143328.35be89f6@shazbot.org>
+Subject: Re: [PATCH v2 03/22] PCI: Inherit bus numbers from previous kernel
+ during Live Update
+Message-ID: <aZ-Dqi782aafiE_-@google.com>
+References: <20260129212510.967611-4-dmatlack@google.com>
+ <20260225224746.GA3714478@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -106,26 +106,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260225143328.35be89f6@shazbot.org>
+In-Reply-To: <20260225224746.GA3714478@bhelgaas>
 
-On 2026-02-25 02:33 PM, Alex Williamson wrote:
-> On Thu, 29 Jan 2026 21:24:51 +0000
-> David Matlack <dmatlack@google.com> wrote:
-
-> > +int __init vfio_pci_liveupdate_init(void)
-> > +{
-> > +	if (!liveupdate_enabled())
-> > +		return 0;
-> > +
-> > +	return liveupdate_register_file_handler(&vfio_pci_liveupdate_fh);
-> > +}
+On 2026-02-25 04:47 PM, Bjorn Helgaas wrote:
+> On Thu, Jan 29, 2026 at 09:24:50PM +0000, David Matlack wrote:
+> > Inherit bus numbers from the previous kernel during a Live Update when
+> > one or more PCI devices are being preserved. This is necessary so that
+> > preserved devices can DMA through the IOMMU during a Live Update
+> > (changing bus numbers would break IOMMU translation).
 > 
-> liveupdate_register_file_handler() "pins" vfio-pci with a
-> try_module_get().  Since this is done in our module_init function and
-> unregister occurs in our module_exit function, rather than relative
-> to any actual device binding or usage, this means vfio-pci CANNOT be
-> unloaded.  That seems bad.  Thanks,
+> I think changing bus numbers would break DMA regardless of whether an
+> IOMMU is involved.  Completions carrying the data for DMA reads are
+> routed back to the Requester ID of the read.
 
-Good point. So a better approach that would allow vfio-pci to be
-unloaded would be to register the file handler when the number of
-devices bound to vfio-pci goes from 0->1 and then unregister on 1->0.
+Ahh, makes sense. I'll clarify the commit message in the next version.
