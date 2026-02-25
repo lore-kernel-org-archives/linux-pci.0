@@ -1,160 +1,206 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CABDF315D29
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 07:23:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7567230CDB6
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 07:56:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772004191; cv=none; b=P8lWfz1GG0mk02zg7hDXs/I+hVf0gEfowyeD1wUWCzUMP9aNdL9n5ipJw0OLgyNyLKa41j2VKvsITuFlCfuy46phZrPU8HsbtIbrX0Umh7aOTMqdYlqTOOVjNbKMCHI+27mqzS9O4hYs/BouZDf66puA/6WR5xhTCTo9hzbeoCU=
+	t=1772006164; cv=none; b=mZN9s9dsc7UMBu32sUoZoz1yLxb0k1+DGRh60ZbGE0RFcNrmkThwUCcog/KAMoXfaFyYDE1NFE/awTCymtGihmhQvquXj0PQMk/cQ1gtkPiBgi2YBVSXlBhR9sTekGN7wvUQhdDJUbtmk8sx1W5qFrW85o/PjEO4Cd/JddJuBts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772004191; c=relaxed/simple;
-	bh=soEZe9eXpi1gpdG2KC7zwnFARDxojsqUJRhYaCtZeXo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uc00qltATRlBtvEIYWM2EnMCJ3QNJpIz1P1/HhUy6uUrec6pHdIMURyvpLA0e1q+8+J6zm6eXbFz9Wzm7aKYyl3KyhbXRqFJoxWaZirAWxDistTj07H8GvsS6fECW4hDLZ69C/E5iq9/g0+D2HxCvWejbZ8Ot1CE9/XOgvltx+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=CAXbGoMs; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1772006164; c=relaxed/simple;
+	bh=/phNhW5Uy8/CpWeGcbySlurAcomYqpo/e8d49tUgN+Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fG0R674fKpUxyXYb6v2Sm/bhZ5WvJa4sxHs82deRXsBZn/QUtVTp8hhH+jKkdoykGDzIkb5lfHVb3ydP8uhDbiHw2NKBpEbUixfaMRaVbRe+W02LRSZL2yFsUjKeylZDAn+TOZoVIiL9rLVcxaFH9sElhAHI2RBIfmNL9M4cGb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cMr5HWXx; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="CAXbGoMs"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2a7a9b8ed69so56799335ad.2
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 23:23:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cMr5HWXx"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2aad8123335so58375ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2026 23:56:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1772004190; x=1772608990; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=296zJScy32zZ99pggZVYgRNpwHzrGar0aPdVMmqKLxo=;
-        b=CAXbGoMs3gHPCg2BmJyoWG5U7kONH7Ci8MTJr3W0bsSbP0gJuN6/0StUhVOj2trMbv
-         Av5IGOoIa8Bx740txGylVMnZp9NuaxE02PlqFE3D2r2VAbjL3YQVvwFyfx1scHmMBkx/
-         57ZXVXg2+vEyWXI4UxA0A/fxefF43zIy7FtJ4=
+        d=google.com; s=20230601; t=1772006163; x=1772610963; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=sT2VtKh2V5oEus0jIgTdEjDE+//UyVLRT7BohuHzzWw=;
+        b=cMr5HWXxsinnyXoEwMHazVNRF3kOv/wkVKQxR+M98tFKdRWHFYT8B06/GW9yfsBqAW
+         j5fFyDjk/0eKSa7ZENGTrj1QKZkZ75EZZYioyJhoS34pkZFhd3iC3jGQldklBdUtr90D
+         ox8GgTpNMyc5aFO8FWk/RCKCyXYWDJ5Iqe2S1AVAbuiYtc54b7/YCL5SkVCCXzLcow+s
+         2FpsosqfcxYfpLVjeGADRu3H4JO0TBCamAHtADHIVnFtQh98APl2+mvxIAJR5+qrI1XZ
+         QPCVl26UKxp+e6jQQ+SOE1Q4WxjNLJYKkT4sCVAvh3byNDLO4broTTmZ4rO3wlC5jvso
+         3PxQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772004190; x=1772608990;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=296zJScy32zZ99pggZVYgRNpwHzrGar0aPdVMmqKLxo=;
-        b=qF020E8SyYwXP4IPDYKQxlxl5omVb2Pw1E8tvPHlC+APslyBXBJByhAZg13e79dh3H
-         G9ABK5DAPA5s7SiZYXNLIpDYBLyK7TuYUaDpgk0TX7JwpJhIVJF9EqbcRRbaJq1lYqnh
-         wNvkLoqlxfgVxpy4qT7GnV8Pt3PAmv86115yA5SnloG2i3QYWLMk7eIsNr3FDtDvhS1a
-         jE3FbmrUCpyZofoQN56Fjptl8NDwi6isg5AUro8REyZLMJE407eXj+UfL6Vm2j3sWSA4
-         39cHz9Ci0JX/95uj+Ck/EeINKz5WeZv/+RrtcrlAO75lPM9ewtO3n+kc/yTTJ1lNhpGW
-         j1ZQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUwnMt3Rc2QS2Z3B6qjJwsWy16WefGqib3vEbzYoMv1kbIuqDgFIiqF72201AJXhfd+MlVxFXaxTR0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQnpPNa94auwK5k1Hdxeijt+dY1rBuEKTKKDLK2Psx3Kd12YpB
-	6zmefqgmvV1XGnQhf1v/R8n6EIGBVJ3H6+AZim9kNHSP1bgjv9eQycKMI+HcOYaYgQ==
-X-Gm-Gg: ATEYQzyM71gYWexjMhofdD0esV4RmPDPhsGdRXWiPQIXvGOY54uaGdQm7+9QW8dtS/J
-	s7zTmyf76Og1KArV5s1YcEQDUNPALmWBofBYN/XrXIFm7i7w4W8/sRnm8NQjYWVpo4PZvO/KapB
-	ySzGPjNgfpURIcCDYnurjtnGb58xDhR6Bj655lClVwgwY3e4tk5iBAqXe3cUsP9XetDeLNwKE+g
-	an7njZZoXYVWLz2KfrQ1mJ0TxdNBvN98pF45i2lmyCrSBOHg+m6QN8ABcysHUVp8tMZiRnJ2it/
-	HYfa/EAYHCVovSFphFYt+FZvvdHw5zqOHN0HssWlKj6unWafa/mw4axHIj+JjTSSVze5tssKHA5
-	/v+DzQfi6rYcp5hyh2YMoyzTzkFAOqv5CuGZhLcrBGaqbLlJ3VVGoRhSa5Vx1D7+g4sKVXBRv9G
-	iBwrzUIlR1aaUTh6c1SwC2a4R9v+WlrXP6nrJCNy48gc12OpYWz0wKVs7yYqTF5GC2EMFlpm2TC
-	Ul1SQ==
-X-Received: by 2002:a17:903:37c5:b0:2a7:5751:5b27 with SMTP id d9443c01a7336-2ad7451eaabmr146610585ad.39.1772004190346;
-        Tue, 24 Feb 2026 23:23:10 -0800 (PST)
-Received: from wenstp920.tpe.corp.google.com ([2a00:79e0:201d:8:9d6:2e6a:941b:690])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad7503fdc9sm130814435ad.80.2026.02.24.23.23.07
+        d=1e100.net; s=20230601; t=1772006163; x=1772610963;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sT2VtKh2V5oEus0jIgTdEjDE+//UyVLRT7BohuHzzWw=;
+        b=w3dF85vAu8SphkMmjRGrWGJAzi5CJhBtViXQvnpVtdkiNZTLYZmuD2G53JJo8S1dOL
+         jSeFOfTStFkdh7mgpTiwaRYRVLnUPm1hyR8//fExwLNiGYeDkCfX9KnRVzEU5yVoprmj
+         weSqZtKL80WqU53+EKMwOfvz3DW+KBjGKYZ01J1mBDaoxyDS3WtGCBVF86YhM0PT3eGq
+         +bR5ssW3086KB8qYgUBUC4YVmkNyVPC8E7ziQ677SceMZvDFn0bDbMZomXXEzNPUa2xp
+         yhFJ7jGxWkHbmuxOhvqgBgBsFJ6DGqKq/JRU+O1/HVKMCTn1G8ldjrLabZYVjF9S7Zxg
+         0e3Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWoyWxo/egwQgFym3r8Z6tJByDi+MoaL6U2Mdk5HezkV9/bcaEV6PNHQu41yN7dgnrxn7OausyeVGc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxot4/LRIKBehOwiBEltAtnX62YRPJW8L/IWVvXXi2Cl9ZG0aj8
+	h4+VZ1XFJKydRDwUyU0OeAOjToGZoGF4eUONowcZiSugbPyzmFjkmgh+ZDF+MoPuzw==
+X-Gm-Gg: ATEYQzyrSpdUqwcRBThUVc5VnSTaWEIMirte7NLGfA2gKLaXLoJGfDS563nT2PL6LM9
+	NZ0bUJdbbVW0uHBvbBoHuz20TMo5d20Bn1bLoI6OVXCSw7qbo89I/OdYl+10w1ZQPHKIeNlJq/u
+	F+pHZ8EGV0ZsyGAHxcxutV1MH3GYt50wQg8e1aCQ8OcbkLfvCEETZPJCLDTUP55wFpFsGI5gP6u
+	4MNlK9ZFkBbSBjHmLc88Oqd3kBBkfAr9zcfcEp8uV2XdPaqP5XPp68eLLLVWSrobRMgTADURA+g
+	OqU8Xjjp+IsYRWKY1+8xnJTbqXh1eoSm3IWjzDX0gX5PF8+UkhMffA1BK1IJPVPaGUTKi4EIWG0
+	2HDEcnXvjcpnf46NN5WDXz3WAnzCL24v9hIfrboHROac2GPGrrqVX3MD61pV0DDlItzIPVeQLFh
+	UY8zt0wck+eWnyxAQAJxBEGq3lKYGXDzYRvk8ZI4rT/LWR6zywMYxiPB1laUKG
+X-Received: by 2002:a17:902:d592:b0:2a7:6c4e:5924 with SMTP id d9443c01a7336-2adca6e950fmr1322615ad.12.1772006162194;
+        Tue, 24 Feb 2026 23:56:02 -0800 (PST)
+Received: from google.com (222.245.187.35.bc.googleusercontent.com. [35.187.245.222])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad7500e2b2sm124024035ad.52.2026.02.24.23.55.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Feb 2026 23:23:09 -0800 (PST)
-From: Chen-Yu Tsai <wenst@chromium.org>
-To: Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Jianjun Wang <jianjun.wang@mediatek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Chen-Yu Tsai <wenst@chromium.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 7/7] arm64: dts: mediatek: mt8195-cherry-dojo: Describe M.2 M-key NVMe slot
-Date: Wed, 25 Feb 2026 15:22:24 +0800
-Message-ID: <20260225072225.3345307-8-wenst@chromium.org>
-X-Mailer: git-send-email 2.53.0.414.gf7e9f6c205-goog
-In-Reply-To: <20260225072225.3345307-1-wenst@chromium.org>
-References: <20260225072225.3345307-1-wenst@chromium.org>
+        Tue, 24 Feb 2026 23:56:01 -0800 (PST)
+Date: Wed, 25 Feb 2026 07:55:51 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: Alex Williamson <alex@shazbot.org>,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
+	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
+	Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Raghavendra Rao Ananta <rananta@google.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Tomita Moeko <tomitamoeko@gmail.com>,
+	Vipin Sharma <vipinsh@google.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Subject: Re: [PATCH v2 07/22] vfio/pci: Notify PCI subsystem about devices
+ preserved across Live Update
+Message-ID: <aZ6rB-zmpaR3RLB_@google.com>
+References: <20260129212510.967611-1-dmatlack@google.com>
+ <20260129212510.967611-8-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260129212510.967611-8-dmatlack@google.com>
 
-The Dojo device has a M.2 M-key slot for an included NVMe on some
-models.
+On Thu, Jan 29, 2026 at 09:24:54PM +0000, David Matlack wrote:
+> Notify the PCI subsystem about devices vfio-pci is preserving across
+> Live Update by registering the vfio-pci liveupdate file handler with the
+> PCI subsystem's FLB handler.
+> 
+> Notably this will ensure that devices preserved through vfio-pci will
+> have their PCI bus numbers preserved across Live Update, allowing VFIO
+> to use BDF as a key to identify the device across the Live Update and
+> (in the future) allow the device to continue DMA operations across
+> the Live Update.
+> 
+> This also enables VFIO to detect that a device was preserved before
+> userspace first retrieves the file from it, which will be used in
+> subsequent commits.
+> 
+> Signed-off-by: David Matlack <dmatlack@google.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_liveupdate.c | 25 ++++++++++++++++++++++++-
+>  1 file changed, 24 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/vfio_pci_liveupdate.c
+> index 7f4117181fd0..ad915352303f 100644
+> --- a/drivers/vfio/pci/vfio_pci_liveupdate.c
+> +++ b/drivers/vfio/pci/vfio_pci_liveupdate.c
+> @@ -53,6 +53,8 @@ static int vfio_pci_liveupdate_preserve(struct liveupdate_file_op_args *args)
+>  	if (IS_ERR(ser))
+>  		return PTR_ERR(ser);
+>  
+> +	pci_liveupdate_outgoing_preserve(pdev);
+> +
+>  	ser->bdf = pci_dev_id(pdev);
+>  	ser->domain = pci_domain_nr(pdev->bus);
+>  
+> @@ -62,6 +64,9 @@ static int vfio_pci_liveupdate_preserve(struct liveupdate_file_op_args *args)
+>  
+>  static void vfio_pci_liveupdate_unpreserve(struct liveupdate_file_op_args *args)
+>  {
+> +	struct vfio_device *device = vfio_device_from_file(args->file);
+> +
+> +	pci_liveupdate_outgoing_unpreserve(to_pci_dev(device->dev));
+>  	kho_unpreserve_free(phys_to_virt(args->serialized_data));
+>  }
+>  
+> @@ -171,6 +176,9 @@ static bool vfio_pci_liveupdate_can_finish(struct liveupdate_file_op_args *args)
+>  
+>  static void vfio_pci_liveupdate_finish(struct liveupdate_file_op_args *args)
+>  {
+> +	struct vfio_device *device = vfio_device_from_file(args->file);
+> +
+> +	pci_liveupdate_incoming_finish(to_pci_dev(device->dev));
+>  	kho_restore_free(phys_to_virt(args->serialized_data));
+>  }
+>  
+> @@ -192,10 +200,24 @@ static struct liveupdate_file_handler vfio_pci_liveupdate_fh = {
+>  
+>  int __init vfio_pci_liveupdate_init(void)
+>  {
+> +	int ret;
+> +
+>  	if (!liveupdate_enabled())
+>  		return 0;
+> 
+> -	return liveupdate_register_file_handler(&vfio_pci_liveupdate_fh);
+> +	ret = liveupdate_register_file_handler(&vfio_pci_liveupdate_fh);
+> +	if (ret)
+> +		return ret;
 
-Add a proper device tree description based on the new M.2 M-key binding.
-Power for the slot is controlled by the embedded controller. As far as
-the main SoC is concerned, it is always on.
+Nit: We might need to handle the retval here if we remove the
+liveupdate_enabled() check above (as discussed in patch 2).
 
-Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
----
- .../dts/mediatek/mt8195-cherry-dojo-r1.dts    | 38 +++++++++++++++++++
- 1 file changed, 38 insertions(+)
+> +
+> +	ret = pci_liveupdate_register_fh(&vfio_pci_liveupdate_fh);
+> +	if (ret)
+> +		goto error;
+> +
+> +	return 0;
+> +
+> +error:
+> +	liveupdate_unregister_file_handler(&vfio_pci_liveupdate_fh);
+> +	return ret;
+>  }
+>  
+>  void vfio_pci_liveupdate_cleanup(void)
+> @@ -203,5 +225,6 @@ void vfio_pci_liveupdate_cleanup(void)
+>  	if (!liveupdate_enabled())
+>  		return;
+>  
+> +	WARN_ON_ONCE(pci_liveupdate_unregister_fh(&vfio_pci_liveupdate_fh));
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts b/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-index 49664de99b88..57cc329f49c4 100644
---- a/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-@@ -11,6 +11,28 @@ / {
- 	compatible = "google,dojo-sku7", "google,dojo-sku5",
- 		     "google,dojo-sku3", "google,dojo-sku1",
- 		     "google,dojo", "mediatek,mt8195";
-+
-+	nvme-connector {
-+		compatible = "pcie-m2-m-connector";
-+		/* power is controlled by EC */
-+		vpcie3v3-supply = <&pp3300_z2>;
-+
-+		ports {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			port@0 {
-+				reg = <0>;
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+
-+				nvme_ep: endpoint@0 {
-+					reg = <0>;
-+					remote-endpoint = <&pcie0_ep>;
-+				};
-+			};
-+		};
-+	};
- };
- 
- &audio_codec {
-@@ -72,6 +94,22 @@ &pcie0 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie0_pins_default>;
- 	status = "okay";
-+
-+	pcie@0 {
-+		compatible = "pciclass,0604";
-+		reg = <0 0 0 0 0>;
-+		device_type = "pci";
-+		num-lanes = <2>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges;
-+
-+		port {
-+			pcie0_ep: endpoint {
-+				remote-endpoint = <&nvme_ep>;
-+			};
-+		};
-+	};
- };
- 
- &pciephy {
--- 
-2.53.0.414.gf7e9f6c205-goog
+same here.
 
+>  	liveupdate_unregister_file_handler(&vfio_pci_liveupdate_fh);
+>  }
+
+Reviewed-by: Pranjal Shrivastava <praan@google.com>
+Thanks,
+Praan
