@@ -1,133 +1,139 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 041203B8BB5;
-	Wed, 25 Feb 2026 14:56:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13B223ACF0A
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 14:59:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772031402; cv=none; b=tktjas7bY5H4BHMqNbAUONbV+YkXoxvcQiSy2NXivzD8BYdZ5uQ6+CGGhsA+ETbP3hKLLL2So7Ep1EJFDCMwNqerQoHGqIn5QPfd+iQ2pRhCF+hcGZJygNhj+jK/boihKVAJtmJA3OzTyqkQxM3enEuFCjUZJitrhlhLBKIE+Ec=
+	t=1772031600; cv=none; b=sEkrepJ81af/DjNgZD9wWRnDomqYSuDCesajid9WMNqnlp9sti2kNxpiqiJR23rOm/R26D7TSWPwYHh27H5CPsTW00+YtQms287l+5E3SJq1iCYp50RN4Fu4H1peCnOBLohGMSQiTfMxxBPBG8QDykxCT5d3v0Ufh42h3t8Eh5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772031402; c=relaxed/simple;
-	bh=/ekAI3FxEdBx7sDxmd8e8+qIb8tpNERvcll8LbBLE/k=;
+	s=arc-20240116; t=1772031600; c=relaxed/simple;
+	bh=cfuIhRMmPy5mKdx+B/bkRcqFvLi3iTrgyzImk6G8P7E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YW30GxjBX9wvBBDbq/O7Yymhc7+a/RgcB1kKjVrEbJ4ZFqFWP91Fx0dcxMqeAWS5O8qYy3XE46kPfXPxOUlJHTLjT+Tu5WGMsriAvPBLAnEE62JypVfQjaUvM6/9dYu4rUozAL9U6Pk1YutVxKLKgdXzNgN6shs6PCHc4wBq5BM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=axqu1wIa; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=lqnx1bR6V5D4fRhJNzi237zpgEQF1ILi4H1BNqGWrqfgFzLkMJ2MWhrHYuT377c3jvpcT+EU18kFYTA5zMTxZeY47Ot21ImY7T6/Yi1K8oGqeNHOvGMXCpFT55TeBfesnqCtTAFmW4jB+3s/ckXGAURbhvoK7MPKUaCE7JBQKcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NsROKgTJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="axqu1wIa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B96BDC116D0;
-	Wed, 25 Feb 2026 14:56:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NsROKgTJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E96CC116D0;
+	Wed, 25 Feb 2026 14:59:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772031401;
-	bh=/ekAI3FxEdBx7sDxmd8e8+qIb8tpNERvcll8LbBLE/k=;
+	s=k20201202; t=1772031599;
+	bh=cfuIhRMmPy5mKdx+B/bkRcqFvLi3iTrgyzImk6G8P7E=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=axqu1wIaL2/ctIDTLk86l1FqIjBKZEVDSINEXFudV+MBsskAR9rsTAyDwpUrI5JJm
-	 mtErxFDeN3PzpCOH8msfSvguy4/7cuC7jJFRHAvw4FGXzJGRN7Mjys/gHkLVAnVedy
-	 Ol4p16uTOJN3Mg3RiHELnqFagmyA2m3ip7J7UfQCWZsfJaU1RqjlTgI8L2XqZm8Yy+
-	 YV67o2Gli0kR7+BKwXrmJs0YkwkStO2tk7bjc6UM3QL9u6HeAguiRleO3v+oJtavi9
-	 9qaAWTTpi084DL0GDHmDXmuL8hPts3cHccNHu7DUeuOq14571C13WjhU5kf2qzVu8F
-	 Z52b7DeQ1R31A==
-Date: Wed, 25 Feb 2026 15:56:34 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: Frank Li <Frank.li@nxp.com>, Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Marek Vasut <marek.vasut+renesas@gmail.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Koichiro Den <den@valinux.co.jp>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
-	linux-renesas-soc@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 5/9] PCI: dwc: Replace BAR_RESERVED with BAR_DISABLED in
- glue drivers
-Message-ID: <aZ8Nom0TJKnYdIiJ@ryzen>
-References: <20260217212707.2450423-11-cassel@kernel.org>
- <20260217212707.2450423-16-cassel@kernel.org>
- <aZToh35w7GYrOmgc@lizhi-Precision-Tower-5810>
- <bc3e8be5-8ffa-47f3-91e2-b3c0e9f8a28b@nvidia.com>
+	b=NsROKgTJpvVxVaUxHaFRrXX9eTlYJukPvfisgTvEeK3sF3BpBqWcEJfn8AqlK09yq
+	 g52DcSRKMLrYISlqQB1+W9QvlD12cgivnXycrpb3HAeFawV3wCPf2o/7Y0ZXcDAvFL
+	 Vx97WpUcH3KJ8ivUWhF4ODeGS76P3m55RT3siLiahujYQ0/6ZGGD7xfcaSwloet2Br
+	 6EDptk4StQTggF/s7Yj+/Lk8XqLozAJNQXzW/+7yCutr7U23xJ47IYnzv6KJkwuNS6
+	 MumFgslYy5T51OT7Jz7pB5xxDGrzyy4LZSSNghhQmCDSRBKv0l2/4zsLPpe2gVNPmc
+	 Dqz1MpvlXdLow==
+Date: Wed, 25 Feb 2026 20:29:51 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Koichiro Den <den@valinux.co.jp>, Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>, 
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: ep: Fix regression in
+ dw_pcie_ep_raise_msi_irq()
+Message-ID: <p3p6m3fadboxxwtwyvuwiompfe2apvjzctprvoo2lg4556f2vb@p63lgfcp5kho>
+References: <20260210181225.3926165-2-cassel@kernel.org>
+ <20260210193205.GA41950@bhelgaas>
+ <aYuToukP3STMF6Tj@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <bc3e8be5-8ffa-47f3-91e2-b3c0e9f8a28b@nvidia.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aYuToukP3STMF6Tj@ryzen>
 
-On Mon, Feb 23, 2026 at 10:16:51AM +0530, Manikanta Maddireddy wrote:
+On Tue, Feb 10, 2026 at 09:22:58PM +0100, Niklas Cassel wrote:
+> On Tue, Feb 10, 2026 at 01:32:05PM -0600, Bjorn Helgaas wrote:
+> > IIUC, the sequence is like this:
+> > 
+> >   - nvmet-pci-epf calls pci_epc_raise_irq() leading to
+> >     dw_pcie_ep_raise_msi_irq()
+> > 
+> >   - dw_pcie_ep_raise_msi_irq() reads PCI_MSI_ADDRESS_*, maps msg_addr,
+> >     and saves it in ep->msi_msg_addr
+> > 
+> >   - host updates PCI_MSI_ADDRESS_*
+> > 
+> >   - nvmet-pci-epf calls pci_epc_raise_irq() again
+> > 
+> >   - dw_pcie_ep_raise_msi_irq() reads PCI_MSI_ADDRESS_*, notices that
+> >     msg_addr has changed, and WARNs and returns -EINVAL
+> > 
+> > and this patch makes it so the second time through
+> > dw_pcie_ep_raise_msi_irq(), we notice the msg_addr change, remove the
+> > old mapping, and map it again with the new address.
 > 
-> On 18/02/26 3:45 am, Frank Li wrote:
-> > On Tue, Feb 17, 2026 at 10:27:11PM +0100, Niklas Cassel wrote:
-> > > Most DWC based EPC glue drivers that have BARs marked as BAR_RESERVED in
-> > > epc_features also call dw_pcie_ep_reset_bar() for these reserved BARs in
-> > > ep->ops->init().
-> > > 
-> > > An EPF driver will be able to get/enable BARs that have been disabled/reset
-> > > unless they are marked as BAR_RESERVED (see pci_epc_get_next_free_bar()).
-> > > 
-> > > Thus all EPC drivers that have a BAR marked as BAR_RESERVED in epc_features
-> > > AND call dw_pcie_ep_reset_bar() should really be marked as BAR_DISABLED.
-> > > 
-> > > BARs that are marked as BAR_RESERVED in epc_features but for which
-> > > dw_pcie_ep_reset_bar() is not called in ep->ops->init() are still kept as
-> > > BAR_RESERVED.
-> > combine the same condition together to make easy to read. like
+> Correct.
+> 
+> 
 > > 
-> > "For BAR_RESERVED bars, change to BAR_DISABLED if call dw_pcie_ep_reset_bar().
-> > and keep as BAR_RESERVED if not dw_pcie_ep_reset_bar() in ep-ops-init()"
+> > Isn't there still a race between host updates of PCI_MSI_ADDRESS_* and
+> > endpoint reads of those registers?  We can't prevent the host from
+> > updating PCI_MSI_ADDRESS_* between dw_pcie_ep_map_addr() and the
+> > writel(), so maybe it's impossible to prevent the theoretical race
+> > there, and all we can really do is mitigate what we expect to be a
+> > single change at boot time of the host?
+> 
+> Normally, the MSI target address is not changed during runtime.
+> 
+> The spec allows changing the MSI-X address/data pair when the corresponding
+> vector is *masked*, and classifies the behavior as undefined if address/data
+> pair gets changed while the vector is *unmasked*.
+> 
+> AFAICT, it does not mention anything for MSI, so I do not think it is allowed
+> to be changed during runtime.
+> 
+> The only reason why it is changed here is because UEFI/BIOS will have one
+> MSI target address, and then once Linux boots, it will use another MSI target
+> address. (So it only changes once.)
+> 
+> 
 > > 
-> > Frank
+> > Even for that single change, it looks like the host could update
+> > PCI_MSI_ADDRESS_* simultaneously with dw_pcie_ep_raise_msi_irq(), 
+> > leading to mapping a half-updated msg_addr.  This part we *could*
+> > prevent by re-reading PCI_MSI_ADDRESS_* to detect a partial update.
+> 
+> The problem that commit 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU
+> mapping") fixes is that the DWC controller does not handle when the outbound
+> iATU is re-programmed when there are ongoing outbound transactions.
+> 
+> What commit 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU mapping")
+> did was to map it once on startup, that way we don't re-program the outbound
+> iATU on every pci_epc_raise_irq() call. Before this commit, every
+> pci_epc_raise_irq() call could potentially cause ongoing outbound transactions
+> to be sent untranslated. Often the transactions that were sent untranslated
+> did not appear to be the MSI writel() itself, but other transactions performed
+> by the eDMA.
+> 
+> So even with this patch, since we are still not mapping + unmapping the MSI
+> target address on every pci_epc_raise_irq(), it should just be a single time
+> where we might trigger this problematic behavior (when MSI target address
+> changes, UEFI -> Linux). (Which is still much better than possibly triggering
+> this problematic behavior on every pci_epc_raise_irq().)
+> 
+> 
 > > 
-> > > No EPC drivers outside drivers/pci/controllers/dwc mark their BARs as
-> > > BAR_RESERVED, so there is nothing to do in non-DWC based EPC drivers.
-> > > 
-> > > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> > Probably unrelated question: the pci_epc_raise_irq() path doesn't seem
+> > to check PCI_MSI_FLAGS_ENABLE or PCI_MSIX_FLAGS_ENABLE.  Is that
+> > intended?
+> 
+> I guess we could improve pci_epc_raise_irq() to check those bits, in a
+> separate patch.
+> 
 
-Note: the proper tag is Tested-by.
-(I noticed that b4 did not pick up your tags.)
+Yes, this looks like bug which should be fixed in separate patch(es).
 
-> Tested by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> > > ---
-> > >   drivers/pci/controller/dwc/pci-imx6.c         | 12 ++++++------
-> > >   drivers/pci/controller/dwc/pcie-rcar-gen4.c   |  6 +++---
-> > >   drivers/pci/controller/dwc/pcie-tegra194.c    |  8 ++++----
-> > >   drivers/pci/controller/dwc/pcie-uniphier-ep.c |  4 ++--
+- Mani
 
-> I see BAR_RESERVED in pci-keystone.c driver in linux-next branch.
-> Do you have any patch which changed BAR_RESERVED to different type
-> in pci-keystone.c driver?
-
-No, I did not change keystone, because that is the only DWC base glue driver
-that has never disabled these BARs by default.
-
-I will add a TODO to the keystone driver:
-
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 20fa4dadb82a..576a78a9f6e5 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -933,6 +933,11 @@ static const struct pci_epc_features ks_pcie_am654_epc_features = {
-        DWC_EPC_COMMON_FEATURES,
-        .msi_capable = true,
-        .msix_capable = true,
-+       /*
-+        * TODO: BAR_RESERVED should either be replaced with BAR_DISABLED or,
-+        * if the should continue to be enabled, then the driver should define
-+        * what is behind the reserved BARs, see struct pci_epc_bar_rsvd_region.
-+        */
-        .bar[BAR_0] = { .type = BAR_RESERVED, },
-        .bar[BAR_1] = { .type = BAR_RESERVED, },
-        .bar[BAR_2] = { .type = BAR_RESIZABLE, },
+-- 
+மணிவண்ணன் சதாசிவம்
