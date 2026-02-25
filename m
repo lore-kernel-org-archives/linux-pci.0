@@ -1,162 +1,243 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazon11011011.outbound.protection.outlook.com [52.101.62.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77BD913A244
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 11:22:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772018574; cv=none; b=llSxDP2z8K2YkI4A73ORqNB8sJf2r4jnG3Yg5RU+ZYYGQPVib9ifGf2RUdvtYsFUWn+/nMvBz8uuXpQATNhOTKWIjLGsA7gF40agWPswmbGp7oTDw7ZKEAup2ggBRFPj0nPnsr+20h8ELJwuR2TeQNLp6TY5yZmVXqLtwcYyK8A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772018574; c=relaxed/simple;
-	bh=6gev5tZqUw00NLGRGzGj1w6G1r7M37S8MzU31Ep9P3c=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JhxEb6Bo4l60Cp1UEfuJ61MAbHD4RyEKXzd/48EkyNsWs0i0TwmmAL62gZRqqPB4SNw0bBIKAOFksimBJiimULO1lYfeLV+D3/cqIIv+qaDVge8431dRiE6Og+3DmzXR8QIzeWbQvkfUp1xwVUM/IORZHuiZRnTB8bhod6G+aR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WaRacXYw; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC0B7221F24;
+	Wed, 25 Feb 2026 12:06:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.62.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772021177; cv=fail; b=i88w+IMEiu1HFy5MH5G3A/2dWB3KuRMM846MkpW7fTyVUIzdWIYh30CVVfjfjNklcMalcncubqamHfVTNsU2lP4H5gzXmQ/9pWO4aiMl/UM4C8gGZRd4tYMKzNbalSdmRgfp/z6B7BXH9YI+V8tc+YqXbjEMYl4V7Cf+x+nlF2I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772021177; c=relaxed/simple;
+	bh=kn0iUMd1QUnJC+2fHRBcETYxTo7vexQz4JKQJ/mtw8c=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=QmJ+1pKX9+zHnaH+ROlwsWLEkrMz6ZdkOPiy/W0AqSUxQrOIWEiyeNlBviB6s6u0yXF7cKBZdw/3ROIHw7/noJkG0Xk5E879m9qDSLsvBDskG2bFyaxeHXPDMHnq0Caqo7EVKugbyUszxMKaDu/ddCr2ZKEeZk7S4tWwvmGGJnw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=RZhqQQfQ; arc=fail smtp.client-ip=52.101.62.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WaRacXYw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CD97C2BCB0
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 11:22:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772018574;
-	bh=6gev5tZqUw00NLGRGzGj1w6G1r7M37S8MzU31Ep9P3c=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
-	b=WaRacXYwBEbkSqFnb09HqJI8/90YgW1HTGqdQiaAlv2yd7eCoDinW+Oj4IwkPKsDY
-	 LFfX1TX5a5CAuN+cu2tJ1G7N6aMRD7dnUqxgvpksCBQ7R6cEWKyTOO9YIbUTQEpDRB
-	 D7TFtEJNAMVvKTGgZ7H2rUC0dPf6Zap+wJMUrzPe9h2ZjhriDOAJJ3o7r7JMe3a1Fe
-	 BEFzbAAUmwV+HgmiEpS/K/733VIZwgEMNacF9T+xAGLjQdlF2WVt43F9FJt0eisMpd
-	 Y5ZBh+uA0ro6birUuESD8EclhzzWezKSAydu/YQWH0bbWU5hgp7svPLI2TZlpjn5VP
-	 c23oiYayZRYfg==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-59e63b427aaso7173752e87.2
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 03:22:54 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUE2Rld6utQe+CqAPmAihjt4AL588uK+B5/1d4XP1smUrGGPsNQP6eTMNQtXheR1CZ639DYwjZE6Ug=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJVsw2nIr89HwezkI4E+x9UJy6RJvwmDw1u7Zxf1lhkw8DZ9zZ
-	fopDVMscY+DYvp+hBQdA4nAuKlkG3X04tyVPPfqej0JQl95ivM4jlQ8oA+v/M7r5eucywMqiOFa
-	Pp9w1ldK0Xl3kTHE6YCBlrdJCpFJgOnhF0Ab37Py8Jg==
-X-Received: by 2002:ac2:4e13:0:b0:59f:7a22:fae with SMTP id
- 2adb3069b0e04-5a0ed9bc6demr5028853e87.43.1772018572919; Wed, 25 Feb 2026
- 03:22:52 -0800 (PST)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 25 Feb 2026 03:22:51 -0800
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Wed, 25 Feb 2026 03:22:50 -0800
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260224-pci-m2-e-v5-9-dd9b9501d33c@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="RZhqQQfQ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=brhQBThlGqD3TBYk2t21Pwu+1FHNTku7s7wE4GArNFNXBmiTTL1Pyv6yoAMerj2ocmas2ESpahUIKD48S4m6FSo/m0HhvjJUr6lRC0f8PrF8EYyqFfDUqSe/3qZjUuJOGjnhDftiaEKcb/k5rDbmAzKmY6cZwabB0qwsdGqrZPSr/aGDhKlRWKTU1paKF7z8aPmR18bgbb2bsUNDgEALMYFK0qxN6CDIZDtIKsEMbsV5aM5yUAQdMs5kSF5rbBKXIQIoAfSZH9QCoV0CTsFiegAXF7iB3gGcyhtkSJOQcQw3SSLiF8hIregUjcAVRfpv0JyBW7jBZ8IhYAF6hJx0Rg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ulRj1wcknTa5LFvXjRJsfXxAr/QerJ2x+1A+0HFYbvU=;
+ b=BIeqOzWhAGfcxZeQubBUnqrlgSeJykK3XnBMsPV0ILg4+fK2hwhR/N6ps3ZIq3MzqqzEMBfKySVIesggMt5rwlqU5WSeJuYOBOijeFSh5btKMgyrEGLlKDkxVOK/2wixabjQuv8K25x3mJIFgD29BRPl5R6CNJWaY8bCiQ9JDsg6gy4EsWya1rn2V/gF9vXrKvr7XbPJUu/Zhr3IYt1rFt2Q88byL2UseWCfHJV70YIgxblrMjQ8MiuBV+BEDo7sLtPjjVeFvbZw8GUlD/gwdToSOXwvCQATbKHPwepC42tCAtMjuI8+zgqh7wS6mHJ685JD70PcBeIwHz2hFYVT3g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ulRj1wcknTa5LFvXjRJsfXxAr/QerJ2x+1A+0HFYbvU=;
+ b=RZhqQQfQWswJPpXfJBI3ZgwftwRuwPARK/G+pNDb2OgpSquzqjVy1VpTW0DbVpt8K3TURCq3Xaqw8+Oxr82TLLm+5gL9wEryrfezOoZKla4nvDO3tYdObf1HwtAVWo56L/g5VzTvVgr9Ji95Qer9mFPjYXI/+EVHJSTxx8kHNTU=
+Received: from SA1PR12MB8120.namprd12.prod.outlook.com (2603:10b6:806:331::16)
+ by BN5PR12MB9486.namprd12.prod.outlook.com (2603:10b6:408:2ac::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.11; Wed, 25 Feb
+ 2026 12:06:12 +0000
+Received: from SA1PR12MB8120.namprd12.prod.outlook.com
+ ([fe80::2fd:1a4e:2042:7dd3]) by SA1PR12MB8120.namprd12.prod.outlook.com
+ ([fe80::2fd:1a4e:2042:7dd3%5]) with mapi id 15.20.9632.017; Wed, 25 Feb 2026
+ 12:06:12 +0000
+From: "Verma, Devendra" <Devendra.Verma@amd.com>
+To: Frank Li <Frank.li@nxp.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, "mani@kernel.org"
+	<mani@kernel.org>, "vkoul@kernel.org" <vkoul@kernel.org>,
+	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Simek,
+ Michal" <michal.simek@amd.com>, "Verma, Devendra" <Devendra.Verma@amd.com>
+Subject: RE: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL mode
+Thread-Topic: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL mode
+Thread-Index:
+ AQHcnzLWCO8+PlOBsUyeigW/SoG/H7WFuzkAgACmYXCAALfggIABEsjwgABxvwCAAOnmsIAAvjoAgAEKjvCAAHWzAIAEwNdwgAHz+ACAAMV0oA==
+Date: Wed, 25 Feb 2026 12:06:12 +0000
+Message-ID:
+ <SA1PR12MB81203E3A32F0670DB15D63059575A@SA1PR12MB8120.namprd12.prod.outlook.com>
+References: <aZNz3DxDdzuIf2Ar@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120CDACB96008B2BD4246D3956DA@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZSZrROMrvt8jHvw@lizhi-Precision-Tower-5810>
+ <SA1PR12MB812019D701E0B188611DFE7D956AA@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZXfmKs5_KzCDSPq@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120DC54060E415153AA8CDE956BA@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZdDYJIUuceu0guJ@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120F99F2A675C17B1F649EA9568A@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZiFtgcMzs-U2MkN@lizhi-Precision-Tower-5810>
+ <SA1PR12MB8120E7C753B717E4C8B9E7819577A@SA1PR12MB8120.namprd12.prod.outlook.com>
+ <aZ4l4IHqObEP8DfP@lizhi-Precision-Tower-5810>
+In-Reply-To: <aZ4l4IHqObEP8DfP@lizhi-Precision-Tower-5810>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_Enabled=True;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_SetDate=2026-02-25T10:14:27.0000000Z;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_Name=AMD
+ Internal Distribution
+ Only;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_ContentBits=3;MSIP_Label_dce362fe-1558-4fb5-9f64-8a6240d76441_Method=Standard
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR12MB8120:EE_|BN5PR12MB9486:EE_
+x-ms-office365-filtering-correlation-id: 5edf87df-4a82-4b65-a658-08de746644e6
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700021;
+x-microsoft-antispam-message-info:
+ QRgRNdmfdZV4EJQkZ6yVZ4F2dlMyS82B5F3HQ41qkbwwMVwt2KQYMbS97zaaB/OZM6g4sUBmlQ/rxHIDJIEPQrZ783ax3NA/k8Wp2yViivRHCVuoBIhv33BCHDc6j7s60JiPN9mdDLfCPeHDuico3xNbFzTEnIZPPltSzpetuSwtQa0hAFp+E98wBtckQfrBue1m/B7PUjtBRrTue7Ws2C3S8LozagFdBJGgoPVbdP7KBpSvqY2X5/3BjdKxvec1eDW6P1KXvSGDyvUxcmKoENCoz6WBs5/yOJrAcCrIpwtXAWC0N+EwQctmrGAU7o5ghvUsqCHX+DXCx/FGAT1ClcvQiQaeVfTymGnfP52nrW0QQOxOrW3Lx4SNEhXRoqPALwLuUdhs5PovaXLcpWh0jb8l59ystQEe9R3WSOWaXas9f9BXVCcGOw3nnXpV6sz5drby2NQ8NDSWkvZYn7KDWEELV9hNXB6kH+g7IHemOXzu15WxoS6j+YL6bQ/FQwmbkQejG3lIbZAMf/Hq1W/aywX8fZ2V5ML7cy9k2PxVgVuPlh9uHg+pPCzqx1X93Lzbkq4Y/Qlby82rgf6KzghlSeVY8jpXsq2pWYXZVAX9UyZGcVryp0S+WWM2S1kTFs3+DS7WJ8KA64OzoLzulsj2PLkx1ZR5lL3wH8CsRaMqbXDaQgXGqsDyUg/e6m+MAi050qAeXzTQDbIvrRDh3JW3Wr20mUmfU3MQ/8xIPMY5uW40Af6Zw7o891Kyl1oN1H5oUXVuKQAll8xTbbKRDjLxaK36EBwI+q7d0nJUT/qNF+A=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR12MB8120.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?4jnyGbUcj/f3DC80g4GDfJELApqY3Dwo7aEM6pZ1PgEKcPpSG24PUPP7AdJh?=
+ =?us-ascii?Q?d+FD9mStMTBd+yjY3bkWNxRWJ5nakKXBxr39IyXQdQwdmmZvtDx1S55J8Ebo?=
+ =?us-ascii?Q?Pdu6WKIeBIH/k9W91Kqy9Mjt9dm/+383nMAezL60im4wpfNHgR+XLQYMSje0?=
+ =?us-ascii?Q?YcSYvczVUlZ/7MRfpZFUO/pGMeLtPzUFONcOKWPxGT4MFRn1xzv8JM14HSnQ?=
+ =?us-ascii?Q?y84T/Za1kx85OcyULbqG0F5X7hTDZa2FiLohOg1IUkUUi5uNb68+/lBCY0PA?=
+ =?us-ascii?Q?rtYkmWNkd9BA58cjIZJZEV2LiiclFvm32GCX9oV2+2Pb2IgRYF/v8lOt/xFs?=
+ =?us-ascii?Q?vLLqhm8kCSfqisaaQlDSt3etxZG9axz+OS8ONlS2dmFdeoWtXBmO4Y6EZAla?=
+ =?us-ascii?Q?7hSpCNh9RBj72gRZCKwxB8e0UmF5qDULbDOCd1750gZKSuavgd50VVtToZ69?=
+ =?us-ascii?Q?JvDOzL27JB3nvX9S6AnrqmVnKk+xV4i2AgmH7cWj9rXv/DUe7b4w2q8vC7yt?=
+ =?us-ascii?Q?Mm75TDbE527cXMauAdx0fR4bFHP92m3sfDGl7d2Fh+BqHJmaK0l48idQELYd?=
+ =?us-ascii?Q?g7tgvU5fbMrj0mxyMGgEDMyOyPoKM/MqaEABVeoDo2tDYIINtiFCbMmOktau?=
+ =?us-ascii?Q?G1VnL1IAzbkAdZI4+I4uQzuHcdx9tL5hvFA7rGa30Q12uHD69daDk6XNZPNi?=
+ =?us-ascii?Q?JTeTfYJxEpuhqMGdku7OVc2ff1+BLNNHEEFbaX0G5x8Rmo36AP3BbWWhyWJX?=
+ =?us-ascii?Q?GTqdjVmGBR8THVLPlCFavmGQwH/qKF//OwMOt/iJxTk6HC/t+dIjpoQ8oot3?=
+ =?us-ascii?Q?cSs12y/BLVKQ+h9xdPxH46QzitEfL+cWzvSv4qDdQFPaQHBkCdJONHicGw/J?=
+ =?us-ascii?Q?j34MECcPWoT9MR0f0cwXbVlGJuujOdtZoREt/Tp/Qdc59iP7jEQaGmtwaJzA?=
+ =?us-ascii?Q?/vCgGS/LsOqg1jLTs/uRBBIZnmGDvn4CQp3eVrHkPROAuZHdLnikR+jwJC9w?=
+ =?us-ascii?Q?eiWmlkTwDQ2iAJt9/PWomZVVJKQowA4AKvh7LjWXiEAa7UkQHrX0Q0tAk5qD?=
+ =?us-ascii?Q?Z9QC0dXJa4OUl31PPffGBgfwvY1qwosRAqYD2EnmBFW9GxdaniE2aDc7lhX7?=
+ =?us-ascii?Q?/P00WcIK+nhRd4W3miRZNeX3VAfXldQplpK8cF91CTcaQ7z2Hd4iv+xgPlEo?=
+ =?us-ascii?Q?kjtWdFAqXIbGEyz2XGvLCgyimKvwAZqIHhxuj8A9gLG9/M3nj5H0fO3OJzYK?=
+ =?us-ascii?Q?WQ+OELhVbzO5n2C56ypAJ82Tpbj2qA0U2QefgYuvC0XFzXulUrV3M78C12rb?=
+ =?us-ascii?Q?RP1DjLsyCn/SAXjWP9rtD6Mv9mezFATUPjUI8ABMVgM1QYs3ng+kHe+NQCKy?=
+ =?us-ascii?Q?vWufO+P0FKxFNrDdEAyaGc7Zc9C6/w40pw6DojHMJEMvUzH/o175Y7XIb2By?=
+ =?us-ascii?Q?lCLpNQnz2XixCnxg5+ZrWAOiySb76J6S4GD/ZyDqoxiJM9VzaU30grPeicD8?=
+ =?us-ascii?Q?uYeeYha8UMDRM48wCEeN61HVSRmmtnY1TC7B6YOvmhweZO04J+ugW+R15o6S?=
+ =?us-ascii?Q?cI+n/hD9sQkx6SbiioBP+3HO3aZdTrXnrpXlrF+uVQ8qGG1+k4Wdreo+VjmE?=
+ =?us-ascii?Q?N2sYy0iIaM7tXCT9frI4S4BRzmHrK1SNJ49ux0+kIXLFnKLY1ZihBPQhDM55?=
+ =?us-ascii?Q?YNmJn58qKJ2usqqM3jlKMxMyYr+CRxNiI2iqY1SQkGidmZoH?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260224-pci-m2-e-v5-0-dd9b9501d33c@oss.qualcomm.com> <20260224-pci-m2-e-v5-9-dd9b9501d33c@oss.qualcomm.com>
-Date: Wed, 25 Feb 2026 03:22:50 -0800
-X-Gmail-Original-Message-ID: <CAMRc=MeJP-BLf3_zM9b+nz1nMOGVzyUhXemejHkV+AJREGPz_w@mail.gmail.com>
-X-Gm-Features: AaiRm52oa36SxdO2esRz0tZiEY1x2dCziUGws1cBwrcfkRk5CfGY9pNkO3m4CZg
-Message-ID: <CAMRc=MeJP-BLf3_zM9b+nz1nMOGVzyUhXemejHkV+AJREGPz_w@mail.gmail.com>
-Subject: Re: [PATCH v5 9/9] power: sequencing: pcie-m2: Create serdev device
- for WCN7850 bluetooth
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kbuild@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-pm@vger.kernel.org, Stephan Gerhold <stephan.gerhold@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-acpi@vger.kernel.org, 
-	Hans de Goede <johannes.goede@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Nathan Chancellor <nathan@kernel.org>, Nicolas Schier <nicolas.schier@linux.dev>, 
-	Hans de Goede <hansg@kernel.org>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	Mark Pearson <mpearson-lenovo@squebb.ca>, "Derek J. Clark" <derekjohn.clark@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Bartosz Golaszewski <brgl@kernel.org>, 
-	Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR12MB8120.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5edf87df-4a82-4b65-a658-08de746644e6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Feb 2026 12:06:12.4547
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: jrIRAdzQiXOs20gi1rFctkIVx4JX6TZDi7c8ZVjYH97gbdfeZmtphe1w3OauZxWePS/FKNkkmDRBbh3o5bjkIg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN5PR12MB9486
 
-On Tue, 24 Feb 2026 06:30:55 +0100, Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->
-> For supporting bluetooth over the non-discoverable UART interface of
-> WCN7850, create the serdev device after enumerating the PCIe interface.
-> This is mandatory since the device ID is only known after the PCIe
-> enumeration and the ID is used for creating the serdev device.
->
-> Since by default there is no OF or ACPI node for the created serdev,
-> create a dynamic OF 'bluetooth' node with the 'compatible' property and
-> attach it to the serdev device. This will allow the serdev device to bind
-> to the existing bluetooth driver.
->
-> Tested-by: Hans de Goede <johannes.goede@oss.qualcomm.com> # ThinkPad T14s gen6 (arm64)
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->
+[AMD Official Use Only - AMD Internal Distribution Only]
 
-[snip]
-
-> -static void pwrseq_pcie_m2_free_regulators(void *data)
-> +static void pwrseq_pcie_m2_free_resources(void *data)
->  {
->  	struct pwrseq_pcie_m2_ctx *ctx = data;
+> -----Original Message-----
+> From: Frank Li <Frank.li@nxp.com>
+> Sent: Wednesday, February 25, 2026 3:58 AM
+> To: Verma, Devendra <Devendra.Verma@amd.com>
+> Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
+> dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
+> Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL
+> mode
 >
-> +	serdev_device_remove(ctx->serdev);
-> +	bus_unregister_notifier(&pci_bus_type, &ctx->nb);
-> +	of_changeset_revert(ctx->ocs);
-> +	of_changeset_destroy(ctx->ocs);
->  	regulator_bulk_free(ctx->num_vregs, ctx->regs);
->  }
+> Caution: This message originated from an External Source. Use proper
+> caution when opening attachments, clicking links, or responding.
 >
-> +static int pwrseq_m2_pcie_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
-> +					struct device_node *parent)
-> +{
-> +	struct device *dev = ctx->dev;
-> +	struct device_node *np;
-> +	int ret;
-> +
-> +	ctx->ocs = devm_kzalloc(dev, sizeof(*ctx->ocs), GFP_KERNEL);
-> +	if (!ctx->ocs)
-> +		return -ENOMEM;
-> +
-> +	of_changeset_init(ctx->ocs);
-> +
-> +	np = of_changeset_create_node(ctx->ocs, parent, "bluetooth");
-> +	if (!np) {
-> +		dev_err(dev, "Failed to create bluetooth node\n");
-> +		ret = -ENODEV;
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = of_changeset_add_prop_string(ctx->ocs, np, "compatible", "qcom,wcn7850-bt");
-> +	if (ret) {
-> +		dev_err(dev, "Failed to add bluetooth compatible: %d\n", ret);
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = of_changeset_apply(ctx->ocs);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to apply changeset: %d\n", ret);
-> +		goto err_destroy_changeset;
-> +	}
-> +
-> +	ret = device_add_of_node(&ctx->serdev->dev, np);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to add OF node: %d\n", ret);
-> +		goto err_revert_changeset;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_revert_changeset:
-> +	of_changeset_revert(ctx->ocs);
-> +err_destroy_changeset:
-> +	of_changeset_destroy(ctx->ocs);
-> +
+>
+> On Mon, Feb 23, 2026 at 04:40:07PM +0000, Verma, Devendra wrote:
+> > [AMD Official Use Only - AMD Internal Distribution Only]
+> >
+> > > -----Original Message-----
+> > > From: Frank Li <Frank.li@nxp.com>
+> > > Sent: Friday, February 20, 2026 9:33 PM
+> > > To: Verma, Devendra <Devendra.Verma@amd.com>
+> > > Cc: bhelgaas@google.com; mani@kernel.org; vkoul@kernel.org;
+> > > dmaengine@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+> > > kernel@vger.kernel.org; Simek, Michal <michal.simek@amd.com>
+> > > Subject: Re: [PATCH RESEND v10 2/2] dmaengine: dw-edma: Add non-LL
+> > > mode
+> > >
+> ...
+> > > > But if it about writing a new function to check the LL mode
+> > > > support then I think the current variable is good enough which
+> > > > provides good readability and do not create any ambiguity compared
+> > > > to the ll region size
+> > > comparison.
+> > >
+> > > It is not big deal,  use 'bool cap_non_ll: 1' in dw_edma_chip. So we
+> > > add more cap flags in future.
+> > >
+> > > Frank
+> > >
+> >
+> > Hi Frank, could you elaborate what you mean by adding the cap flag?
+> > How it is going To help identify the overall chip state?
+> > I do not understand what is being implied here.
+>
+> non_ll in chan means current status, which indicate one channel work at
+> non_ll mode or ll mode.
+>
+> here dw_edma_chip means hardware's captiblity, indicate if hardware
+> support ll mode.
+>
+> Distingiush hardware limition or current working mode.
+>
+> Frank
 
-I would prefer pwrseq_pcie_m2_free_resources() to be split into separate
-devm actions, otherwise it's not much different from simply having the
-.remove() callback. With a split like that you'd avoid having these labels
-here.
+Thanks for the explanation!
+Hardware supports the LL mode / non-LL mode, just that there is no
+piece of code available which can perform the non-LL mode as only one
+mode was supported initially by the respective developers.
+So, providing it as capability does not look justified as in any scenario
+hardware is capable of non-LL mode. Theoretically, non-LL mode should
+have been the default mode.
 
-Otherwise looks good.
+The non-LL mode is not a hardware limitation either. LL mode needs extra
+configurations and in the absence of that, interpretation could be, enable
+the supported other mode which is non-LL mode.
 
-Bart
+With the current non_ll inside the dw_edma_chip, when non_ll =3D false, ind=
+icates
+It supports both the modes LL and non-LL, but requires user inputs to enabl=
+e it.
+With non_ll =3D true, the dw_edma_chip or the hardware has no choice but to=
+ work in non-LL
+mode only. This is the interpretation for the flag in non_ll.
+
+With the capability, would it not make the statement, that if non_ll =3D tr=
+ue, it supports
+non-LL mode but that does not mean to be mutually exclusive and not support=
+ LL mode
+at the same time?
+If there is a requirement regarding the capability then it can be taken as =
+a separate update
+but I am not sure what purpose it can serve wrt non-LL functionality.
+Please let me know your thoughts on this and lets conclude.
+
+Thanks!
+
+> >
+> > - Regards,
+> > Devendra
+> >
+> > > >
+> > > > > Frank
+> > > > > >
+> > > > > > > >
+> > > > > > > > > > >
+> > > > > > > > > > > Frank
+> > > > > > > > > > > >  };
+> > > > > > > > > > > >
+> > > > > > > > > > > >  /* Export to the platform drivers */
+> > > > > > > > > > > > --
+> > > > > > > > > > > > 2.43.0
+> > > > > > > > > > > >
