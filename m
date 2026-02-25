@@ -1,111 +1,431 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E64083A1D04
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 12:29:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE9623AEF23
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 12:33:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772022542; cv=none; b=OgfRRMef5quoyfHBgV61NjXg4R92yoaQcrbsweC+1lv8LYhHKQXQ9Ts025cFGcGWHzYTC+EedPBP9pDhUf6GekI7wsOQynNDPjZcqGeWe6t6HPk7R2U7QWyvrTui7XKNg7XEvP39pMMRzrvzXKJKZzJIkHusUfhx9pYD0ByhSvk=
+	t=1772022784; cv=none; b=CjBhvFMca3ddnft09tTcU6/+98xembrO3nT8KoD4bFQjV3I4KHMuQDbd6VtTT3eYckjjHErjKaVtCj388lckhASWHkauAzgcos7QOIitXCTLaEYC0pMxIHEd6FLxPFvsTzMR7kUmn71xzqW58Yu2Im/qvn3QofYMUQbO787pSYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772022542; c=relaxed/simple;
-	bh=7g+d2bSnzpz2QCpHfxO/sRHUP6mOIul7BC/cDoNCzrY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UEYFSCo0HDireuf6QuEy6Bssirr5Jzh0NNqLTrammNzLdwhBEwzPuBwP+3PWMRkZr/o28cjIYG8/+XT4W7v+9fKKUjzDDtvCueDHat7ivs66Wk2A0sMX2b3FnUl909yXS6cggMmigYvdber6PXmvrlOQqTnpVWYsoYxoNGty7cU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lZXFjEoP; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1772022784; c=relaxed/simple;
+	bh=LtELDaF5sq+sB18P62W54VA8G1PC1HSPJ/ZM2pbLYnc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fIw3pR2+QlToxz9X05MLWqo68D50CtMxk9hwuJZbQnKcywqAVU/ZGNxYe9i7WGbptyDrORbD39vq9sncDOcmeattaRs8/SkcuDr80WUPz7/C/x64OL2aIdB8aCQzPgxXwmjuuodR4WzlJWa4LRSFWtd6Y2GSmifbTMe3k1wHUWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kVInIVhU; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JVNMJuKC; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lZXFjEoP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772022541; x=1803558541;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=7g+d2bSnzpz2QCpHfxO/sRHUP6mOIul7BC/cDoNCzrY=;
-  b=lZXFjEoPK96dDscrqOFSgvv3XGcCtXIwBiX62Plx3wc3I7o6XKR/D1x2
-   72E79JIufkQKte7wmRWPa/D5vLXgqeypLlXPN0BquD+79MWJEokUvsrWr
-   Y9nXv9R6fTML1xyRF+jD+OIWjbw5UStpdF62+0aPSR/m04LuZrRxDHd0b
-   88x0O+7WkpY07Iq8sq4sGUIp5tMMr0V0Cvb5y95rumyBOIjxcfi1vH6kF
-   /ZyO5Y2vAfw4hjSrr20zRHMrqkHHG22+FcFxvdpHh/qAAQ6Jo+Bd3wxFd
-   tyP+ruoZp0ldDGKe5bGYD3PXOTPJ8YcHTBUSaAH7zY5inK23vSejQJY6E
-   g==;
-X-CSE-ConnectionGUID: fYAyCyMIQV+LTJ7NjIh/yA==
-X-CSE-MsgGUID: cXK2sqXZTKiIBajFk4hkfQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11711"; a="72960807"
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="72960807"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 04:29:00 -0800
-X-CSE-ConnectionGUID: I3xwHY4JTKidB9QAeTmyOA==
-X-CSE-MsgGUID: z3uDptVlQUyHrQZjyUOZwA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,310,1763452800"; 
-   d="scan'208";a="215323366"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa006.jf.intel.com with ESMTP; 25 Feb 2026 04:28:56 -0800
-Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id 238D198; Wed, 25 Feb 2026 13:28:55 +0100 (CET)
-Date: Wed, 25 Feb 2026 13:28:55 +0100
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Leon Romanovsky <leon@kernel.org>, Tariq Toukan <tariqt@nvidia.com>,
-	Mark Bloch <mbloch@nvidia.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@intel.com>,
-	Vitaly Lifshits <vitaly.lifshits@intel.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Vinicius Costa Gomes <vinicius.gomes@intel.com>,
-	Dima Ruinskiy <dima.ruinskiy@intel.com>
-Subject: Re: [PATCH 2/5] igc: Let the PCI core deal with the PM resume flow
-Message-ID: <20260225122855.GC2275908@black.igk.intel.com>
-References: <20260224111044.3487873-3-mika.westerberg@linux.intel.com>
- <20260224165837.GA3736201@bhelgaas>
- <20260225122619.GA2275908@black.igk.intel.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kVInIVhU";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JVNMJuKC"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61P9SCmC806796
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 12:33:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	b/lps+5NVJfzR1ZbAH0T5eG7oVjapVtfLtLhJNeInsY=; b=kVInIVhUvJCsXrf0
+	sL0BXRIt5hDpXEjUT9mRdxADaiDKSG3pGItuf0XsUubWlJBW5afxUEStRcUjdtOC
+	LRGeQHTS8quLcExDWzH1dRiYj0E1HoJwkeuuh878jbSUxr4XZZvczUVWvaKoqf/1
+	jHribSwYfk4/SsF5TBpVVXB/r2GprUFsP5foL5j1iuXSJA6znCf0vwB7sxMsJhOX
+	ITmD/yqB3cHD7bHPaqLyyHXD1978H5tycX5S/O4G8dkQ17VomFk+fzKNMErF4Y8f
+	mzREVElUgP0VobbuB1qYrpiU7GcIKaoZWKpnTMUqzIUgbQ3I1My19fwrvruyNMVj
+	nTXgsg==
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4chr5p9k6d-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 12:33:01 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c70efa3b730so196894a12.2
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 04:33:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1772022781; x=1772627581; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=b/lps+5NVJfzR1ZbAH0T5eG7oVjapVtfLtLhJNeInsY=;
+        b=JVNMJuKCbKKE8LgnTuFNqqvHzS0z2KWpiXAHOXmJQ24kSAf3G3XxYRdrUbAAzDFbUn
+         I0y2K4mAW5SqY72rueYFC5eZPA2PNMpSvsnqTS/m/XbVzTQ3s0sLEbiQLUkwAq/kTRD9
+         D5dKDJj/xwCa2dyXSnjFiOEp4q3MosXN4ka7aJx8xkAo3tlIa86+uKsER514vLiYY34W
+         7KjAsR3cGXolA6r0IecHNATFLtFwuSUJC8qMoGNazhXGjVNARkoFnvTvxMkRWNaO0B3D
+         C+foaHzOA/OBV6VHn79HHH7Hdv/dk37//icYgv7pYR8zHMHyB67fmx1p3NFEcKNh7MgO
+         rSRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772022781; x=1772627581;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=b/lps+5NVJfzR1ZbAH0T5eG7oVjapVtfLtLhJNeInsY=;
+        b=NKXSfbZr7PakTXkSL2sPqIBGXQk50MAJX/jDKYXWp9V/U0wbG4KcaM5AqBEai+1mf8
+         DAGWYsc2QBA6yhglPdy4rS+uWEEWcFioA1VoLaGoE4VpMBuypgKeo57a+YN2fraWkAFq
+         GqRoA8bANte99IRYZkyW5PdMNg8qD3Oo56RNKJE9sEAd+er5BIQV9MMFVooWPbi+WjeZ
+         tJx0cOGz7nO1frluKfA6CVuaZJ+X2Kum5Prl/37/pgeZkUjehqSRrZ3DI4v6et8VRaeY
+         He3hOQZHAUOG9YdOvjNKxrPYY3yXDWbjXZ20EQmj9MzXp01qJ2MtcyNZIQlbWJSK8WaV
+         BKzA==
+X-Forwarded-Encrypted: i=1; AJvYcCXXDw2i/AWyXZ+nRrToV4bx1k3IGqK+Xy526EeDDe8y9rxe5JdUOkORjMHNe8DUicTQV0dA6MlwlxA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6cmIkqWpAxJ0jJzl96Ff3/JJo984jt31X+fTKIjQdaOsp81mh
+	XrGP+bOeEq0k7UX9mKyzAvNPkn1HLrQwuqvjRn+l2RYLWdLMcq1XUvZskjcqpZKACM+dvhFlqZt
+	S3le9+9YWlpSd2qnCdzzh4al2oaebwlwB4rWGQ9DqJZDmJagXXi/0R0H2ApXYpOg=
+X-Gm-Gg: ATEYQzyeHLodz1BskEXgiKGdYziRbsNESZ0SQZvEQZbhRIrvdYrV9fPIaI+OeZsvHag
+	L0z+/ie3QetE0UwGi/nXbjcMEDsYT5rnkckSxBaG4J8RdyrYWRgvq6l9rqDRCbk46PIH853Wku5
+	vPO7ibCKtWU1VQDHENW9jrrRlypjob6AtwlUjMf9LZgEFdix0y87XtSPBEHV56fxytOLxPzpgX+
+	fXONvDz7Z+I35mJauW+VLMh62OcYyz3T5h/yL7QkiQby7GKKNADSuApBN7rq0IHhSeEm9afS21u
+	/Lwjf/7BxVuaH61wUWW0B42CcIG78/5Fw5A2xOb0Znu7lmR6gWSZPUusgx8pYLziWMdY4nSuan6
+	bZ27eI9Rt3I2Chhz89Y8MSy+hWK5nKjUNkncWQjoIqAMLMwzNYDFxxw==
+X-Received: by 2002:a05:6a21:512:b0:38b:e750:bc31 with SMTP id adf61e73a8af0-39545eeb17fmr13378772637.32.1772022780493;
+        Wed, 25 Feb 2026 04:33:00 -0800 (PST)
+X-Received: by 2002:a05:6a21:512:b0:38b:e750:bc31 with SMTP id adf61e73a8af0-39545eeb17fmr13378734637.32.1772022779902;
+        Wed, 25 Feb 2026 04:32:59 -0800 (PST)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad74e34fe7sm133133125ad.2.2026.02.25.04.32.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Feb 2026 04:32:59 -0800 (PST)
+Message-ID: <8b6e1772-6659-4c80-a3fd-ed624218d7be@oss.qualcomm.com>
+Date: Wed, 25 Feb 2026 18:02:52 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260225122619.GA2275908@black.igk.intel.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 3/3] PCI: Add support for PCIe WAKE# interrupt
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+        Pavel Machek <pavel@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Danilo Krummrich <dakr@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bartosz Golaszewski <brgl@bgdev.pl>, Linus Walleij <linusw@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-gpio@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_mrana@quicinc.com, sherry.sun@nxp.com,
+        driver-core@lists.linux.dev
+References: <20260218-wakeirq_support-v7-0-0d4689830207@oss.qualcomm.com>
+ <20260218-wakeirq_support-v7-3-0d4689830207@oss.qualcomm.com>
+ <pjeee3vwggsrvp4kxarc46vjx2igk53xd6eoxjqh7ri5rf6fhi@5d3ccirqnxu6>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <pjeee3vwggsrvp4kxarc46vjx2igk53xd6eoxjqh7ri5rf6fhi@5d3ccirqnxu6>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI1MDEyMiBTYWx0ZWRfXwYhB2Y36+Itu
+ S6vD+yZN+zF7gU2BdQPe0c5NkoxqkRvAPDJq8Nl6phmctiv+/oo+MI0EmZDm8DdOylpyhnvdlBM
+ +xFdVvD3i3Sr2K9GVkLsWsaOA4VN1NKGwWdXz/4F6kosLV82VCBvkn2YHZkYJFbmiebib4D01Gl
+ /EiMVPQ0d9jeJOKkFQH0sNwfP7AaG0jub6Pi9sdU56lDWUNB3W//xZtHLsscRU6Hp0HB9k+uQl+
+ U71WmvAC8btGU7dv4Aw8NK8emFuNPpfVbDf35LoQpxvkA7SVk/HekDwDGZDTVJ3QUSYCipr5x3Q
+ Czq5cEHuMjPQ1E1jNSWN6lQWO+hB4efDyqjaCVt9eajortzo1jNTC1Zkyn+yCCRV2joQroXLk3M
+ FPLe6CNzsejRb7B9aAlceo9Vokj0GbV1WbkNNuiwFI9CpHC0S2ZpH8/0MVp4GE6rni0yDkQR1j1
+ HWLximo2S5TOfJo0bIw==
+X-Authority-Analysis: v=2.4 cv=GstPO01C c=1 sm=1 tr=0 ts=699eebfd cx=c_pps
+ a=rz3CxIlbcmazkYymdCej/Q==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=NEAV23lmAAAA:8 a=P-IC7800AAAA:8
+ a=KKAkSRfTAAAA:8 a=XLNvHsjt_HEOQZ6RAGwA:9 a=QEXdDO2ut3YA:10
+ a=bFCP_H2QrGi7Okbo017w:22 a=d3PnA9EDa4IxuAV0gXij:22 a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-GUID: XewaVyvGxz2PYqUDoFxXwfoYdN1xHTvj
+X-Proofpoint-ORIG-GUID: XewaVyvGxz2PYqUDoFxXwfoYdN1xHTvj
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-24_03,2026-02-25_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 suspectscore=0 priorityscore=1501 malwarescore=0 impostorscore=0
+ phishscore=0 adultscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602250122
 
-On Wed, Feb 25, 2026 at 01:26:19PM +0100, Mika Westerberg wrote:
-> On Tue, Feb 24, 2026 at 10:58:37AM -0600, Bjorn Helgaas wrote:
-> > On Tue, Feb 24, 2026 at 12:10:41PM +0100, Mika Westerberg wrote:
-> > > Currently igc driver calls pci_set_power_state() and pci_restore_state()
-> > > and the like to bring the device back from low power states. However,
-> > > PCI core handles all this on behalf of the driver. Furthermore with PTM
-> > > enabled the PCI core re-enables it on resume but the driver calls
-> > > pci_restore_state() which ends up disabling it again.
-> > > 
-> > > For this reason let the PCI core handle the common PM resume flow.
-> > > 
-> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
-> > 
-> > I love it, thanks a lot for doing this!
-> > 
-> > Do we still need the pci_enable_device_mem() and pci_set_master()
-> > in __igc_resume()?
-> >
-> > I suppose some of that is related to the pci_disable_device() in the
-> > suspend path (__igc_shutdown()), but there are only a few dozen
-> > drivers that do this, so I'm not sure it's essential.
-> 
-> I think they are just as you describe due the fact there are explicit
-> pci_disable_device() calls. Probably we can get rid of them as well but
-> that requires careful testing that nothing accidentally breaks.
-> 
-> @Vitaly, what do you think? I can take a look.
 
-Sorry @Vitaly and @Vinicius I meant :)
+
+On 2/23/2026 7:37 PM, Manivannan Sadhasivam wrote:
+> On Wed, Feb 18, 2026 at 01:42:25PM +0530, Krishna Chaitanya Chundru wrote:
+>> According to the PCI Express specification (PCIe r7.0, Section 5.3.3.2),
+>> two link wakeup mechanisms are defined: Beacon and WAKE#. Beacon is a
+>> hardware-only mechanism and is invisible to software (PCIe r7.0,
+>> Section 4.2.7.8.1). This change adds support for the WAKE# mechanism in
+>> the PCI core.
+>>
+>> According to the PCIe specification, multiple WAKE# signals can exist in
+>> a system or each component in the hierarchy could share a single WAKE#
+>> signal. In configurations involving a PCIe switch, each downstream port
+>> (DSP) of the switch may be connected to a separate WAKE# line, allowing
+>> each endpoint to signal WAKE# independently. From figure 5.4 in sec
+>> 5.3.3.2, WAKE# can also be terminated at the switch itself. To support
+>> this, the WAKE# should be described in the device tree node of the
+>> endpoint/bridge. If all endpoints share a single WAKE# line, then each
+>> endpoint node should describe the same WAKE# signal or a single WAKE# in
+>> the Root Port node.
+>>
+>> In pci_device_add(), PCI framework will search for the WAKE# in device
+>> node, If not found, it searches in its upstream port only if upstream port
+>> is Root Port. Once found, register for the wake IRQ in shared mode, as the
+>> WAKE# may be shared among multiple endpoints.
+>>
+>> When a device asserts WAKE#, PM core will wakeup the system, resume the
+>> device and its parent(s) in the hierarchy, which will cause the restoration
+>> of power and refclk to the device.
+>>
+>> WAKE# is added in dts schema and merged based on below links.
+>>
+>> Link: https://lore.kernel.org/all/20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com/
+>> Link: https://github.com/devicetree-org/dt-schema/pull/170
+>> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>   drivers/pci/of.c     | 55 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   drivers/pci/pci.c    |  9 +++++++++
+>>   drivers/pci/pci.h    |  8 ++++++++
+>>   drivers/pci/probe.c  |  2 ++
+>>   drivers/pci/remove.c |  1 +
+>>   include/linux/pci.h  |  2 ++
+>>   6 files changed, 77 insertions(+)
+>>
+>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+>> index 9bb5f258759be3f1e23496f083353600a4ef6743..23248900253faafaf9509d87c531b454fca41798 100644
+>> --- a/drivers/pci/of.c
+>> +++ b/drivers/pci/of.c
+>> @@ -7,6 +7,7 @@
+>>   #define pr_fmt(fmt)	"PCI: OF: " fmt
+>>   
+>>   #include <linux/cleanup.h>
+>> +#include <linux/gpio/consumer.h>
+>>   #include <linux/irqdomain.h>
+>>   #include <linux/kernel.h>
+>>   #include <linux/pci.h>
+>> @@ -15,6 +16,7 @@
+>>   #include <linux/of_address.h>
+>>   #include <linux/of_pci.h>
+>>   #include <linux/platform_device.h>
+>> +#include <linux/pm_wakeirq.h>
+>>   #include "pci.h"
+>>   
+>>   #ifdef CONFIG_PCI
+>> @@ -586,6 +588,59 @@ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+>>   	return irq_create_of_mapping(&oirq);
+>>   }
+>>   EXPORT_SYMBOL_GPL(of_irq_parse_and_map_pci);
+>> +
+>> +static void pci_configure_wake_irq(struct pci_dev *pdev, struct gpio_desc *wake)
+>> +{
+>> +	int ret, wake_irq;
+>> +
+>> +	wake_irq = gpiod_to_irq(wake);
+>> +	if (wake_irq < 0) {
+>> +		pci_err(pdev, "Failed to get wake irq: %d\n", wake_irq);
+>> +		return;
+>> +	}
+>> +
+>> +	device_init_wakeup(&pdev->dev, true);
+>> +
+>> +	ret = dev_pm_set_dedicated_shared_wake_irq(&pdev->dev, wake_irq,
+>> +						   IRQ_TYPE_EDGE_FALLING);
+>> +	if (ret < 0) {
+>> +		pci_err(pdev, "Failed to set wake IRQ: %d\n", ret);
+>> +		device_init_wakeup(&pdev->dev, false);
+>> +	}
+>> +}
+>> +
+>> +void pci_configure_of_wake_gpio(struct pci_dev *dev)
+>> +{
+>> +	struct device_node *dn = pci_device_to_OF_node(dev);
+>> +	struct pci_dev *upstream;
+>> +	struct gpio_desc *gpio;
+>> +
+>> +	if (!dn)
+>> +		return;
+>> +
+>> +	gpio = fwnode_gpiod_get(of_fwnode_handle(dn), "wake",
+>> +				GPIOD_IN | GPIOD_FLAGS_BIT_NONEXCLUSIVE, NULL);
+>> +	if (IS_ERR(gpio)) {
+>> +		/*
+>> +		 * In case the entire topology shares a single WAKE# signal, look for it
+>> +		 * in the upstream bridge node. But if it is not Root Port, then skip it.
+>> +		 */
+> This comment need to be a bit more verbose. Something like,
+>
+> "The devices in a hierarchy expose wakeup capability through the 'wake-gpios'
+> property defined either in the device node or in the Slot node. So first check
+> for the property in device node and if not available, check in the Slot node."
+>
+> Also, move it above fwnode_gpiod_get().
+ack.
+>> +		upstream = pci_upstream_bridge(dev);
+>> +		if (upstream && pci_is_root_bus(upstream->bus) && upstream->wake)
+> Check directly in the Root Port (Slot) node.
+>
+>> +			pci_configure_wake_irq(dev, upstream->wake);
+> I don't think we need to request an IRQ in the fallback case. Let's assume that
+> there is a single device in hierarchy and the wake-gpios property is defined in
+> the Slot node. So here, we should just let the PCI/PM core know that this device
+> supports wakeup and PME_EN needs to be set (if the device is also capable of
+> generating PME#).
+>
+> And then we should call pci_configure_wake_irq() from platform_pci_set_wakeup()
+> to setup the IRQ handler only for the device which has the wake-gpios property.
+>
+> So the flow would be:
+>
+> pci_device_add()->platform_pci_init_wakeup()->of_pci_init_wakeup():
+> Request fwnode_gpiod_get() and call device_init_wakeup()
+> and set 'dev->wake' if WAKE# is available in the device node. If not, then check
+> the Root Port (Slot) node and if WAKE# is available, then just call
+> device_init_wakeup() to indicate the PCI and PM cores that this device *may*
+> support wakeup.
+>
+> pci_enable_wake()->platform_pci_set_wakeup()->of_pci_set_wakeup():
+> Request WAKE# IRQ only if the device has the wake-gpios property ie., dev->wake
+> set. If only the Slot supports wakeup, then the IRQ should be requested for the
+> Root Port device. This will allow us to keep both the ACPI and OF platform code
+> in sync to some extent.
+>
+> Then once the WAKE# is asserted, the platform will wakeup with the help of the
+> above wakeup event and the host controller driver will apply power to the
+> hierarchy.
+>
+> But you do not seem to call pci_pme_wakeup_bus() after resume...
+when we call dev_pm_set_dedicated_shared_wake_irq(), this will request 
+an IRQ and by default it will be disabled. The IRQ will be enabled only 
+in case of system suspend & after runtime suspend and only if wakeup is 
+enabled for the device. I will add this info as a comment, so that it 
+will be more clear and also in the commit text. The IRQ handler which 
+will be triggered as part of WAKE# IRQ will trigger pm_runtime_resume() 
+as per[1]. This will resume the devcie from D3cold to D0. once the 
+device is in D0, the endpoint which requests the wake will send PME 
+event and that is handled by PCI core already either through polling in 
+pci core [2] or pme service in porbus driver[3] [1] wakeirq.c - 
+drivers/base/power/wakeirq.c - Linux source code v6.19-rc5 - Bootlin 
+Elixir Cross Referencer 
+<https://elixir.bootlin.com/linux/v6.19-rc5/source/drivers/base/power/wakeirq.c#L163>
+[2] pci.c - drivers/pci/pci.c - Linux source code v6.19-rc5 - Bootlin 
+Elixir Cross Referencer 
+<https://elixir.bootlin.com/linux/v6.19-rc5/source/drivers/pci/pci.c#L2378>
+[3] pme.c - drivers/pci/pcie/pme.c - Linux source code v6.19-rc5 - 
+Bootlin Elixir Cross Referencer 
+<https://elixir.bootlin.com/linux/v6.19-rc5/source/drivers/pci/pcie/pme.c#L82>
+
+- Krishna Chaitanya.
+>> +	} else {
+>> +		dev->wake = gpio;
+>> +		pci_configure_wake_irq(dev, gpio);
+>> +	}
+>> +}
+>> +
+>> +void pci_remove_of_wake_gpio(struct pci_dev *dev)
+>> +{
+> Missing of_node check.
+>
+>> +	dev_pm_clear_wake_irq(&dev->dev);
+>> +	device_init_wakeup(&dev->dev, false);
+>> +	gpiod_put(dev->wake);
+>> +	dev->wake = NULL;
+>> +}
+>>   #endif	/* CONFIG_OF_IRQ */
+>>   
+>>   static int pci_parse_request_of_pci_ranges(struct device *dev,
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index f3244630bfd05b15d52f866d80a015ed21f98f49..225cb861b3425700fc0d9d4805f5d9efcaab6f56 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -1123,6 +1123,15 @@ static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
+>>   	return acpi_pci_bridge_d3(dev);
+>>   }
+>>   
+>> +void platform_pci_configure_wake(struct pci_dev *dev)
+>> +{
+>> +	return pci_configure_of_wake_gpio(dev);
+>> +}
+>> +
+>> +void platform_pci_remove_wake(struct pci_dev *dev)
+>> +{
+>> +	return pci_remove_of_wake_gpio(dev);
+>> +}
+> As mentioned above, these should go away and be part of
+> platform_pci_set_wakeup().
+>
+>>   /**
+>>    * pci_update_current_state - Read power state of given device and cache it
+>>    * @dev: PCI device to handle.
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 13d998fbacce6698514d92500dfea03cc562cdc2..22709573e41caf0ed45b20ee7ded5963f55aa9fe 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -282,6 +282,8 @@ void pci_msix_init(struct pci_dev *dev);
+>>   bool pci_bridge_d3_possible(struct pci_dev *dev);
+>>   void pci_bridge_d3_update(struct pci_dev *dev);
+>>   int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type);
+>> +void platform_pci_configure_wake(struct pci_dev *dev);
+>> +void platform_pci_remove_wake(struct pci_dev *dev);
+>>   
+>>   static inline bool pci_bus_rrs_vendor_id(u32 l)
+>>   {
+>> @@ -1195,6 +1197,9 @@ void pci_release_of_node(struct pci_dev *dev);
+>>   void pci_set_bus_of_node(struct pci_bus *bus);
+>>   void pci_release_bus_of_node(struct pci_bus *bus);
+>>   
+>> +void pci_configure_of_wake_gpio(struct pci_dev *dev);
+>> +void pci_remove_of_wake_gpio(struct pci_dev *dev);
+>> +
+>>   int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge);
+>>   bool of_pci_supply_present(struct device_node *np);
+>>   int of_pci_get_equalization_presets(struct device *dev,
+>> @@ -1240,6 +1245,9 @@ static inline int devm_of_pci_bridge_init(struct device *dev, struct pci_host_br
+>>   	return 0;
+>>   }
+>>   
+>> +static inline void pci_configure_of_wake_gpio(struct pci_dev *dev) { }
+>> +static inline void pci_remove_of_wake_gpio(struct pci_dev *dev) { }
+>> +
+> You've added function definitions under CONFIG_OF_IRQ, but stubs under
+> CONFIG_OF. This is why kernel robot also barks at you.
+>
+> Move the stubs to include/linux/of_pci.h under CONFIG_OF_IRQ guard.
+>
+> - Mani
+>
+>>   static inline bool of_pci_supply_present(struct device_node *np)
+>>   {
+>>   	return false;
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 2975974f35e88b5025701d2b721df8386419de8d..7f5132c0c8de36a6ec2775468a3d4e5156a046d0 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -2771,6 +2771,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>>   	/* Establish pdev->tsm for newly added (e.g. new SR-IOV VFs) */
+>>   	pci_tsm_init(dev);
+>>   
+>> +	platform_pci_configure_wake(dev);
+>> +
+>>   	pci_npem_create(dev);
+>>   
+>>   	pci_doe_sysfs_init(dev);
+>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>> index e9d519993853f92f1810d3eff9f44ca7e3e1abd9..d781b41e57c4444077075690cec926a9fe15334f 100644
+>> --- a/drivers/pci/remove.c
+>> +++ b/drivers/pci/remove.c
+>> @@ -35,6 +35,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>>   	if (pci_dev_test_and_set_removed(dev))
+>>   		return;
+>>   
+>> +	platform_pci_remove_wake(dev);
+>>   	pci_doe_sysfs_teardown(dev);
+>>   	pci_npem_remove(dev);
+>>   
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 1c270f1d512301de4d462fe7e5097c32af5c6f8d..d1e08df8a8deaa87780589f23242767fdcdba541 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -586,6 +586,8 @@ struct pci_dev {
+>>   	/* These methods index pci_reset_fn_methods[] */
+>>   	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
+>>   
+>> +	struct gpio_desc *wake; /* Holds WAKE# gpio */
+>> +
+>>   #ifdef CONFIG_PCIE_TPH
+>>   	u16		tph_cap;	/* TPH capability offset */
+>>   	u8		tph_mode;	/* TPH mode */
+>>
+>> -- 
+>> 2.34.1
+>>
+>>
+
