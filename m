@@ -1,63 +1,63 @@
-Received: from mail-vs1-f49.google.com (mail-vs1-f49.google.com [209.85.217.49])
+Received: from mail-vk1-f182.google.com (mail-vk1-f182.google.com [209.85.221.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7372330652
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 22:27:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3AEF30EF9B
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 22:27:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772058444; cv=none; b=sm0zG5qAg4cfQrYbq9iz0Z8B4QNPreE3xlRdfhmxUdVeJf0mJI4M86CTQCm+xOfCYICZIb/qvOyr64D5Is2pYbtkXEfo9IsK7lmu46YQAzUGTu2gKN8xLKusWNFRoX+mZcQELiE0jF2ER09tW1izKeRbzzbczMogW2jL5tzSRBg=
+	t=1772058476; cv=none; b=Il+2jRkQd76Ds6vTGbBTLUrfhz0kN/4JkemmxGA7c259JWytrFq3GbN4bkzb6ha9foI3VJs5az9LYmV8s+j7KRdRJT+S10zxx0BVOiVA1QwTMipuUZwh3iCthIuaOnB92ad5CSwnx7Cq6fcNnynDAEibyzG/PnuLuReKg7wsBH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772058444; c=relaxed/simple;
-	bh=l0H724e9NQ6AE2z4R41tH3LSIG79C+xWDlNOKExlgdo=;
+	s=arc-20240116; t=1772058476; c=relaxed/simple;
+	bh=iyTeSfTJMYGYxdgoCrwsYsndSeF9ybjDDhtlwvg2Ytc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IgXDKWJCeIVqPVw+xLFyotWAoDSRLy28SYNrSz9JVlf1T6exkyLgaad2SDHdk6VmFx4lhOYd0cHuyKGmCrIXDm/4AhQ3nTz13t42czX+8Y+woIZvcKkaBYV4afR3ZrpQQL+g0poBo1muMllHG+ZoFDS9xnlUi+msf+2PivAQflo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SDe71/w4; arc=none smtp.client-ip=209.85.217.49
+	 Content-Type:Content-Disposition:In-Reply-To; b=AqkdGwUAoJNNjDNYwvRSBcu+NApKZ6VZ0Fk1alU1rhiWD5ppQbRXHbBTIaSz8UZIEvHFkcHIkjeybJu8Bb0a+1LnHZq423CESJti7yKx71uvmlvMcUtjDTtXS+2RsEG7WXg8aMcnSweDP5HYYt0w6j00YM5q31O5Wu8DXVJ7UHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bBoZuO5K; arc=none smtp.client-ip=209.85.221.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SDe71/w4"
-Received: by mail-vs1-f49.google.com with SMTP id ada2fe7eead31-5ff196450feso160481137.1
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 14:27:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bBoZuO5K"
+Received: by mail-vk1-f182.google.com with SMTP id 71dfb90a1353d-56753dc51baso136337e0c.1
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 14:27:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772058442; x=1772663242; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1772058471; x=1772663271; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=uboqhfp40Aonx6VAcop9KiDSGvsRTqn5HTahIQ0GvEU=;
-        b=SDe71/w46NsaaLnjWf+n9ftZAL37dF/OJOMnO1VFZGPtVETXL3W7sBeSsEuJuwD29O
-         aXCEj1mLfUfSE97mLidZ4yLgS9db5AxDmNMpHUoYG891mi+P0fjUwLBwrDpf6zdzBsOF
-         vWx7OIHCJGz3xqg9H2svTvLIuWkoCYzVPIk3cEOYnyCSReXPmbxQcJ2eq38L6zyOsFGU
-         SXEcc2PemINmeFGrCTXDVRS6zpIyPbptfKMKKEFWf+jlgkKXN/TIY/0QpBlUjlrP9J+3
-         6Bx+TpdQptT0bYpQynOelxOQcHLjwSm8d++t+olnbj5e8C4AZw78lUKTeuDRVYAnKG7l
-         OpYQ==
+        bh=RbmElmhsWLmxkCWwbLCza2bJ6ctDAX0b+gZt/+eBHkg=;
+        b=bBoZuO5KyP+4PLXPuu42xPJ8lUzGcdlNWo7aoycArjbY+fLwE1x8ukpY02aVIkwKfs
+         1tUco5HIH7c+Bvz11U/my0A5l8KUK7dalPnL2cInjGFOTcRA/yPpR5HDPf7F10DOhgX4
+         mblZEgxXdh8uf0vGhwhCwG3RxGFBdEO79BQWuFVM3oluL4k6dhsjTafgMzEQtq8JorEa
+         FKt8bLZn4yrLfzo79qzjIB/VGBwQP6thKltG3gTQk372jtk0NbFHhnE24NfWcNQlRsLO
+         aLe7mBrA/DuBnWoRPJ/aRQFQ3oTEE9rmz+yOkX3bfBFQxrt6YyHhHFxJwO94R41pOyLS
+         niQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772058442; x=1772663242;
+        d=1e100.net; s=20230601; t=1772058471; x=1772663271;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=uboqhfp40Aonx6VAcop9KiDSGvsRTqn5HTahIQ0GvEU=;
-        b=P+Se2DlIar11MDniMqg4AQf3+4VT3MLY+MNsRs4gNV3TtYFvLnQ7e5p89nCpS7PIoF
-         Zi08qv0sZmDVFDXjcYEk/pg+FdArImHcR07lzaKkAXl9R+WrTgTwWgRTofseOUvudTkZ
-         ltA2EcuIPsvR8H39m7bpcXiWcWvCbSMvfrzYzJ68FSQmW1SxBrX1UIZcObqniH3SriKp
-         +GfHYy3eG2f22wID5rYQ8vQSS+tsJXjCuLay6NDeVgIdq+5YQi7PBPG0B3rAjMB+NSKo
-         5hRo605S3fdmG/cB3ztvCGKTZ33Gb/VnZ0pyIh7SwyW9eh4oAz1LpHPprc2cfXdc+YXJ
-         7zkQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU+YQvQlclAHkIwpPp7St4pIuEu7WUSzPuFHFlQ+J34Njd+WgFx6qb12qBacjHwlngfivlzAQGfzis=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyaRkqTbRlKgMH21mU/Zypfmcqsfyd5JTezWXKIaCpuH1zUfUVi
-	aPzMrTHAX7nu/1ZYJf8ywZaCdh3Wdljg4b7CG59iFc2aXMM8Y7kHggoP
-X-Gm-Gg: ATEYQzx8wnmRB+uYEOgsPNJMN+QDaBqqM/4GOqBHfTYuXe8or0E0hJtRTwJbhzBSljE
-	S3nIhzOlh7KH9UsS0jLUZ08hgqEor93uo4x/sEEYLM3Zm9Dk5P7NRSHfic8xY4Kr8AD0ROmfYAO
-	Z7UAEAoWBW3R1M8m3FfDTpG7Vc+qJP3gyALECQHfERpEWq05kljegxlyJCxbq9tYcs0Y1MdiiXK
-	FqwIHdioxJ5v+oazMp/VLplcn6+LMjkD9Ck+Y4YN7ldOWDgzI9JTqBD6kYdh+s8lhEeLMkz4oeg
-	gcrwinOl4vDb6ya9XxSWlsOD+q+n1FDwTeTEFcfsw8BNyI9gHsCgKmTgY3qX9o+uRpgF5c13RsC
-	NZsbdxTtsMSUKMCUSO1f3NG4ylYNQm9/e2GpuQnTvun8DgGcJjNhAU2htZCMssSYVeKry2QJBKN
-	DTUx2G8FD7CA==
-X-Received: by 2002:a05:6102:c49:b0:5ef:a1ea:bd33 with SMTP id ada2fe7eead31-5ff1ce3253dmr369646137.9.1772058441734;
-        Wed, 25 Feb 2026 14:27:21 -0800 (PST)
+        bh=RbmElmhsWLmxkCWwbLCza2bJ6ctDAX0b+gZt/+eBHkg=;
+        b=oUxgMeaV2WDatOw/6eTlmmVMzxZzBfpXskMYQ91JLyEyf1I/FOIFEfDzx/Ul2rDsdR
+         kMr5E461CQQO9XQmTPYLKehr+0y/7KQtZ6Ie/XQ+pUFY8GC8Olvuh4U7S2HYxgEvFMfh
+         qQEXxbJe9jSFqFvBzKFnNHaoOJaj6t85Z16oY3IWGEBVADrLMH7/r9/3rKKe+cixleA5
+         cLNgtI/1/yIv7CD7e+BCihqBREvnZ87vd2aL1BFEqpeAaoS5t1SZ+/VcKy2Z7TthGXI6
+         fbLEZqAjOMCI8JJUCEkJQlcSJd99ZP/Z2rAHlkPVvjIe+pde/VSIgh0XKev8SVjfppWl
+         FEAg==
+X-Forwarded-Encrypted: i=1; AJvYcCVPNNN1igzaN7Twra+lHjUiiw2radb4ufLCZI2hSiJ3OOKuxY7kFF4fPuBSqADi/GN7cLi6rYaUSEc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwS/GqGKFk/Vs0VPfAcOmlfA7xEwiFdT7p8y8kIHhyXRxR22c0J
+	zEMPfnW0XaOso1m5QB5YDGGBe08Be8dUPc4MY52WwfBekNZihNSc1PEW
+X-Gm-Gg: ATEYQzwD2A234iSbOPewD3WKaAMquZaHCo7iYHGvkGMoYIupuH4YicpiGNJd5Uwmxk7
+	XeAgw05Tz1hvry2Sld16UL8HKT61xHnlI5LDy16l3A0PO3A9jCK0ppwluzAhdkiSDEcu9r/YHIS
+	HxBeZg5OGdPRVD7DM5Cl6OCkravj6tsU67LGLg/8bfKmdD/kN7frK2e7ftv0yfFX6P8GN19cIOS
+	awSV5LjLDAddiwC2xcMOx/7Ups9tbMprkUUx8h0urcvTe6g2JqHeBNJPOh7ZuP0PjP8flc5vYmq
+	c+vJJlB5gzfyiZHOQZ7YuLiHeYHQyfnDGhzO2wiaUucCzNlUnPOrnlwG9sjZDnN07QH5m7v8IXr
+	PVhGJDfiFS/1inX86k5XV3rSpRzisuf8kWErxQC8iSuTMgcVXTHqxn1BD3hVM2fwZXPWyLEj5Sg
+	3RpPFM7ajknw==
+X-Received: by 2002:a05:6122:3306:b0:566:37dc:e219 with SMTP id 71dfb90a1353d-568e48c946cmr7126900e0c.15.1772058470884;
+        Wed, 25 Feb 2026 14:27:50 -0800 (PST)
 Received: from geday ([2804:7f2:800b:f14d::dead:c001])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-56a91659421sm593526e0c.0.2026.02.25.14.27.17
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-56a922afe47sm399366e0c.20.2026.02.25.14.27.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Feb 2026 14:27:21 -0800 (PST)
-Date: Wed, 25 Feb 2026 19:27:14 -0300
+        Wed, 25 Feb 2026 14:27:50 -0800 (PST)
+Date: Wed, 25 Feb 2026 19:27:44 -0300
 From: Geraldo Nascimento <geraldogabriel@gmail.com>
 To: Shawn Lin <shawn.lin@rock-chips.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -69,9 +69,8 @@ To: Shawn Lin <shawn.lin@rock-chips.com>,
 	Dragan Simic <dsimic@manjaro.org>
 Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 1/2] PCI: rockchip: limit RK3399 to 2.5 GT/s to avoid data
- loss
-Message-ID: <6238f93890ede7726c342e81f2726c909dabbad7.1772057799.git.geraldogabriel@gmail.com>
+Subject: [PATCH v3 2/2] PCI: rockchip-host: comment danger of 5.0 GT/s speed
+Message-ID: <8db835ffe384db63ee598a203751b298ad1cc267.1772057799.git.geraldogabriel@gmail.com>
 References: <cover.1772057799.git.geraldogabriel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -83,19 +82,11 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <cover.1772057799.git.geraldogabriel@gmail.com>
 
-Shawn Lin from Rockchip has reiterated that there may be danger of
-"catastrophic failure" in using their PCIe with 5.0 GT/s speeds.
+According to Rockchip sources, there is grave danger in enabling 5.0
+GT/s speed for this core. Add a comment documenting this risk of
+"catastrophic failure" and discouraging end-users from forcing
+higher speed.
 
-This may cause data loss or worse. Warn the user if they make a DT
-change from the default and drive at 2.5 GT/s only, even if the DT
-max-link-speed property is invalid or inexistent.
-
-This change is corroborated by RK3399 official datasheet [1], which
-states maximum link speed for this platform is 2.5 GT/s.
-
-[1] https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datasheet_V2.1-20200323.pdf
-
-Fixes: 956cd99b35a8 ("PCI: rockchip: Separate common code from RC driver")
 Link: https://lore.kernel.org/all/ffd05070-9879-4468-94e3-b88968b4c21b@rock-chips.com/
 Cc: stable@vger.kernel.org
 Reported-by: Dragan Simic <dsimic@manjaro.org>
@@ -103,30 +94,24 @@ Reported-by: Shawn Lin <shawn.lin@rock-chips.com>
 Reviewed-by: Dragan Simic <dsimic@manjaro.org>
 Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
 ---
- drivers/pci/controller/pcie-rockchip.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pcie-rockchip-host.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
-index 0f88da378805..25a6f67af839 100644
---- a/drivers/pci/controller/pcie-rockchip.c
-+++ b/drivers/pci/controller/pcie-rockchip.c
-@@ -66,8 +66,14 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 	}
- 
- 	rockchip->link_gen = of_pci_get_max_link_speed(node);
--	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
--		rockchip->link_gen = 2;
-+	if (rockchip->link_gen < 0 || rockchip->link_gen > 2) {
-+		rockchip->link_gen = 1;
-+		dev_warn(dev, "invalid max-link-speed, set to 2.5 GT/s\n");
-+	}
-+	else if (rockchip->link_gen == 2) {
-+		rockchip->link_gen = 1;
-+		dev_warn(dev, "5.0 GT/s may cause data loss, force 2.5 GT/s\n");
-+	}
- 
- 	for (i = 0; i < ROCKCHIP_NUM_PM_RSTS; i++)
- 		rockchip->pm_rsts[i].id = rockchip_pci_pm_rsts[i];
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index ee1822ca01db..4faf3e29b7d5 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -332,6 +332,10 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+ 		/*
+ 		 * Enable retrain for gen2. This should be configured only after
+ 		 * gen1 finished.
++		 *
++		 * Dangerous and may lead to "catastrophic failure", with data loss
++		 * or worse!
++		 *
+ 		 */
+ 		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_CR + PCI_EXP_LNKCTL2);
+ 		status &= ~PCI_EXP_LNKCTL2_TLS;
 -- 
 2.52.0
 
