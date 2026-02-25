@@ -1,124 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 317B627B353;
-	Wed, 25 Feb 2026 17:59:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D010D2BFC7B;
+	Wed, 25 Feb 2026 18:01:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772042342; cv=none; b=VRUqQx4ROdzqdu+Tx+OaCqgBiiulY7XEoEcx1iAGVX+hiQnTzx8Yod7SO5hvezBi8qphxZiKoW2ChvL9cK6aZ1hag72SS7hkIXGrqtW2DFT29zXkMe8ksJQoK7oOiZyulyqsssuorcNP4xljbLufGCgY0Gsm91S8TmovSP83Lrg=
+	t=1772042469; cv=none; b=JnTNHT3zY7PiNuuat/wE/iiqGxdEF5+zUk0RV1tRXF89ZncrEuoryixUdlvzT63oEp4j2R45B8BvtvLc3jtKpvhnEhVB5pfXcC7zF1jeOZKlvoNr0533ZoXY2XtIauDfZQJZI9J2Fl9MSz/AkJ/mGZWkrUiX153aBRN+WPASaK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772042342; c=relaxed/simple;
-	bh=N4wXMQlWHmTX1LiqSpKdHAChcSwxUp7ndYxlO5ZdoSU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bMyNuQByJlWlCmb4aRnoKygAwtv6MX4HT4oVXkIr1rEiINw8jOecj/Juyh4qVGmDXfbW5TryQKBjV610WpZIFhybkeEI+Zhzn03MYY+QIKzEIORl799X48tQxeJat4YIU7Fb4ckIVPVSxAWb2DXx8Ph6EPwY9KNqRd2n84Ci3QU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BktQS4Om; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BktQS4Om"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 909C5C19421;
-	Wed, 25 Feb 2026 17:58:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772042341;
-	bh=N4wXMQlWHmTX1LiqSpKdHAChcSwxUp7ndYxlO5ZdoSU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BktQS4Omv4DfG1VuGpfSVk2VBRCHZJLtT0N/q443lfcQQ36bLOE6y5o7S5v1fhula
-	 mP418zNCOUVRMvyQKFn8nqdmwO1mBnZgrMOn2B3y4EMGdOM9IrP5C1hu93iExT8sPc
-	 GXRIfU4H562eMxIUIF3Lt5Lo5V6MaDN26+LoV/c0110mX2BrFu69cf+kDTIUNGC/gi
-	 qwl29SI8gZhHi9K8TY2U4V8RJy5jV1Tgm38sz5DhZ3SmiuPDoCMDqEye87vFPgGcJ6
-	 MtsqiCMWyWwNK+mYcvAF1hyqNuQ3yqRsxRMMeor7TbTkcePyEu0UwIpMXl39BEuUek
-	 8i3RXVYM4mTVw==
-Date: Wed, 25 Feb 2026 18:58:54 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, thierry.reding@gmail.com, jonathanh@nvidia.com,
-	kishon@kernel.org, arnd@arndb.de, gregkh@linuxfoundation.org,
-	Frank.Li@nxp.com, den@valinux.co.jp, hongxing.zhu@nxp.com,
-	jingoohan1@gmail.com, vidyas@nvidia.com, 18255117159@163.com,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] misc: pci_endpoint_test: Add Tegra194 and Tegra234
- device table entries
-Message-ID: <aZ84XkM3RzJLCIYX@ryzen>
-References: <20260222193456.2460963-1-mmaddireddy@nvidia.com>
- <20260222193456.2460963-5-mmaddireddy@nvidia.com>
+	s=arc-20240116; t=1772042469; c=relaxed/simple;
+	bh=TFbc+GUeADGuSdjbQmqIPxN+gMoOKkRGcSTStzMjyJQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kUSFoLSr1YVP/kvSO+traA1Cf2sDE2fQ/nhNLFY3BnVflZynY7PkCpr9bgMe3AdWbI15PYZhgtGXj0KJACKElgXNyV9lMLA0vEcSDve1mz8ivQJkoo2vMAEvd2u+81/DfnejiKn6O4AuBORPBvEGdR9vE+cFk5i2SiPmJr8Tx7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BFFA015A1;
+	Wed, 25 Feb 2026 10:01:00 -0800 (PST)
+Received: from [10.57.58.107] (unknown [10.57.58.107])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 162483F62B;
+	Wed, 25 Feb 2026 10:00:57 -0800 (PST)
+Message-ID: <04b06a53-769c-44f1-a157-34591b9f8439@arm.com>
+Date: Wed, 25 Feb 2026 18:00:55 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260222193456.2460963-5-mmaddireddy@nvidia.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH kernel 4/9] dma/swiotlb: Stop forcing SWIOTLB for TDISP
+ devices
+To: dan.j.williams@intel.com, Alexey Kardashevskiy <aik@amd.com>,
+ x86@kernel.org
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>,
+ Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Peter Zijlstra <peterz@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Marek Szyprowski <m.szyprowski@samsung.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Mike Rapoport <rppt@kernel.org>,
+ Tom Lendacky <thomas.lendacky@amd.com>, Ard Biesheuvel <ardb@kernel.org>,
+ Neeraj Upadhyay <Neeraj.Upadhyay@amd.com>,
+ Ashish Kalra <ashish.kalra@amd.com>, Stefano Garzarella
+ <sgarzare@redhat.com>, Melody Wang <huibo.wang@amd.com>,
+ Seongman Lee <augustus92@kaist.ac.kr>, Joerg Roedel <joerg.roedel@amd.com>,
+ Nikunj A Dadhania <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>,
+ Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+ Andi Kleen <ak@linux.intel.com>,
+ Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+ Tony Luck <tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Denis Efremov <efremov@linux.com>, Geliang Tang <geliang@kernel.org>,
+ Piotr Gregor <piotrgregor@rsyncme.org>, "Michael S. Tsirkin"
+ <mst@redhat.com>, Alex Williamson <alex@shazbot.org>,
+ Arnd Bergmann <arnd@arndb.de>, Jesse Barnes <jbarnes@virtuousgeek.org>,
+ Jacob Pan <jacob.jun.pan@linux.intel.com>, Yinghai Lu <yinghai@kernel.org>,
+ Kevin Brodsky <kevin.brodsky@arm.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
+ <herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Stefano Stabellini <sstabellini@kernel.org>,
+ Claire Chang <tientzu@chromium.org>, linux-coco@lists.linux.dev,
+ iommu@lists.linux.dev
+References: <20260225053806.3311234-1-aik@amd.com>
+ <20260225053806.3311234-5-aik@amd.com>
+ <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Feb 23, 2026 at 01:04:56AM +0530, Manikanta Maddireddy wrote:
-> Add PCI device IDs and test data for Tegra194 (0x1ad4) and Tegra234
-> (0x229b) endpoints so pci_endpoint_test can bind and run on these
-> controllers (64K BAR alignment).
+On 2026-02-25 4:30 pm, dan.j.williams@intel.com wrote:
+> Alexey Kardashevskiy wrote:
+>> SWIOTLB is enforced when encrypted guest memory is detected
+>> in pci_swiotlb_detect() which is required for legacy devices.
+>>
+>> Skip SWIOTLB for TDISP devices.
+>>
+>> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
+>> ---
+>>   include/linux/swiotlb.h | 9 +++++++++
+>>   1 file changed, 9 insertions(+)
+>>
+>> diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
+>> index 3dae0f592063..119c25d639a7 100644
+>> --- a/include/linux/swiotlb.h
+>> +++ b/include/linux/swiotlb.h
+>> @@ -173,6 +173,15 @@ static inline bool is_swiotlb_force_bounce(struct device *dev)
+>>   {
+>>   	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
+>>   
+>> +	/*
+>> +	 * CC_ATTR_GUEST_MEM_ENCRYPT enforces SWIOTLB_FORCE in
+>> +	 * swiotlb_init_remap() to allow legacy devices access arbitrary
+>> +	 * VM encrypted memory.
+>> +	 * Skip it for TDISP devices capable of DMA-ing the encrypted memory.
+>> +	 */
+>> +	if (device_cc_accepted(dev))
+>> +		return false;
 > 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
->  drivers/misc/pci_endpoint_test.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+> I worry this further muddies the meaning of the swiotlb force option.
+> What if you want to force swiotlb operation on accepted devices?
+
+For that we'd need a whole other private SWIOTLB plus the logic to 
+decide which one to use in the first place. And if you really wanted an 
+option to forcibly expose all DMA through shared memory regardless of 
+TDISP and friends, that would logically want to be a higher-level CoCo 
+option rather than belonging to SWIOTLB itself ;)
+
+Thanks,
+Robin.
+
+> For example:
 > 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index f166b6fea698..43545dbad26f 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -106,6 +106,9 @@
->  
->  #define PCI_DEVICE_ID_ROCKCHIP_RK3588		0x3588
->  
-> +#define PCI_DEVICE_ID_NVIDIA_TEGRA194_EP	0x1ad4
-> +#define PCI_DEVICE_ID_NVIDIA_TEGRA234_EP	0x229b
-> +
->  static DEFINE_IDA(pci_endpoint_test_ida);
->  
->  #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
-> @@ -1202,6 +1205,10 @@ static const struct pci_endpoint_test_data rk3588_data = {
->  	.alignment = SZ_64K,
->  };
->  
-> +static const struct pci_endpoint_test_data tegra_ep_data = {
-> +	.alignment = SZ_64K,
-> +};
+> @@ -173,7 +176,13 @@ static inline bool is_swiotlb_force_bounce(struct device *dev)
+>   {
+>          struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
+>   
+> -       return mem && mem->force_bounce;
+> +       if (!mem)
+> +               return false;
+> +       if (mem->force_bounce)
+> +               return true;
+> +       if (mem->bounce_unaccepted && !device_cc_accepted(dev))
+> +               return true;
+> +       return false;
+>   }
+>   
+>   void swiotlb_init(bool addressing_limited, unsigned int flags);
 
-An explcit .alignment is not needed anymore, it was only needed before we
-introduced capabilities. New entries should be added without an explicit
-alignment, since it will be provided by the capabilties register.
-
-
-> +
->  /*
->   * If the controller's Vendor/Device ID are programmable, you may be able to
->   * use one of the existing entries for testing instead of adding a new one.
-> @@ -1246,6 +1253,12 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ROCKCHIP, PCI_DEVICE_ID_ROCKCHIP_RK3588),
->  	  .driver_data = (kernel_ulong_t)&rk3588_data,
->  	},
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_TEGRA194_EP),
-> +	  .driver_data = (kernel_ulong_t)&tegra_ep_data,
-> +	},
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_TEGRA234_EP),
-> +	  .driver_data = (kernel_ulong_t)&tegra_ep_data,
-> +	},
-
-
-Just add the PCI device and vendor ID without providing any additional
-driver data. See e.g. these existing entries:
-
-
-	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_IMX8),},
-
-        { PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774A1),},
-        { PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
-        { PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
-        { PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),},
-        { PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
-
-
-
-
-Kind regards,
-Niklas
