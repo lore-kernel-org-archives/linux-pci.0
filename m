@@ -1,215 +1,269 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021140.outbound.protection.outlook.com [52.101.125.140])
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010017.outbound.protection.outlook.com [52.101.85.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 416902D63F6
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 05:21:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0D681ADC97;
+	Wed, 25 Feb 2026 05:38:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.17
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771996904; cv=fail; b=i2nqLyayuWiZ4Ml4TEg2TIWwRk/snOQunuL4h32Hp96DQHwQdfU1/niYl+GUIZvtZWCSnzHULBTV9P+8E6zp2mzgiZtD3sglrhTi3jkl/n+W9Y+DDJ3/Bi0x8FvECG+i4q4ABw/ecu9caXNGdMx14xuK/OrYgoMV41KGrLmquno=
+	t=1771997927; cv=fail; b=sJvoiHvKD0EiktA+EPEL9g8tVgmSc3mAeW35nSNjjO4TfTT0kmwYidCww1fyQEijiSgmIfWeFaARbOv72NgNX6toMnKtUiVJLZH+YnCIL2+wC62RwToj/oQ/khtkLX8MIgNTI+dgHhhS01yqIblv8mXnICyoeJoCidgwKyrdZW4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771996904; c=relaxed/simple;
-	bh=UY2M7U5ygslqIG6ErpjR7O3QvqegAza2iUNE4sYaaOQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=Wnzr+dAgKK/uV6ZZGg6HwOiZKkp/c7TzcPYMGIjFOSfEzUhJeipD5ZT45l+CrrqFN2+aOPQZK8HbbqP9yPqLh37/aOXvmdnAIeqoS/SRUfp9qz3aI+R43y5XiwGrWAP+c1aoEElL9tcJM1wfY708LLCcN6kcFWrh9wggSyfge74=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=u+B1MfFB; arc=fail smtp.client-ip=52.101.125.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	s=arc-20240116; t=1771997927; c=relaxed/simple;
+	bh=IvZ3tfPjx6m9VEPH+TTLEY1g2ZzCXODxwnkRYVNGa7M=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=POaHC3WFzpG4ynUqfjPqh/pFP5g5BPTO2MU2cw0rLLpwPUTiB+t39TtHYmMUnOgKe4qLcs/Kt54VbT1jUEJd0+n+v5ALPAPPr9NbokfiiqRn7KFr/3d1ngFk9ckbsgQS5fmxvC8ZsQuxbqao2iK0mDrk6YFvr2/kCtMXc+hGyYU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=Wsys2JUQ; arc=fail smtp.client-ip=52.101.85.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="u+B1MfFB"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Wsys2JUQ"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vEcRmJ6kHXv7CWcXqw4eq+Dh9wQOGp4KkccEDCTnvffthVzq/rN8V0GOBqVuAqmx+2kjF2OKHlPIkZsq9u5JozeMF2hUyv4/zOBNZLH53yoPi5ujBoh/7lwWJVgV9r5ED82GDMMyzjql+5AczzxlXca/uq7jYaUmOH7dYO9ixZOcXUzk3UZd3UnKN3rnqgrVPYnPqH0i3pqOS11SfcjZTO/rCahhHsgYH9/bL4KdPZXHLfORye3ZQtPBQaYZ6k7NTXqHekkcwzA7qCBt9JH9ZHUFHClq4gYZmhL6ED6qmR8yCs318TDNtCwhBA+F1NAqqg9Y7sYuCMI+iDAdXB7zDg==
+ b=UxSBN54FDr0BFf8VcGWglS3sn7ikpud3f2yTVH6sLQTLyyLnSV0Zrno+kVRS1kHLYXtJMIHCB+sZ6Fr0nRsTstlr1OLT8SZ5d+etGG4TBHKiE58+LT02RBOfTKtFrFjDQD7Xxub+wtAbftzpzdq07HH9JEK0xtarFXpn/lhgP9OxVuq0cFFdIf78yiEkhSTUooP9PMx5FqRFpofgFtI46X0yHro5MxFWTzLCmnDWAPROdmdcUJHsSi8P4TKnBSEWC2pIf8v04FWgjC3CECtidOREHEQNjnYOOq8JyDIy6IZxZUuz9y40qpQd/cTP9+uiIUx3MkurMoEYkhT85PGTPw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jRIwDxhNU/CwFx6f1uFGp5d2TiYE3oDACULkt7U94dU=;
- b=FC/knC4ZqdBBN1azlpJaHlijarcRzq1cMfIroaLDlpBM8d/x9prsan7HZH2/eC+pHRsR9uyBtmBMl2y53KX19vzEDdMcjU2lBW5S7ATXMU+fI7RCeJsfnHQU3jxmVL948pGz0ipv5cG1AY5Ehqlfmmn/wjy7sO1lez0TS8BDPTtmTak1Ad9wY2/uhwFcxAU1Rjm/+n1ymS+UrdupysZs2thVSvrEFm1KIj/+lw63wFkZzRyNRZUV9tTjwQc6hywfbqR/aW0mwZvVB0128U31EMtQpR/YpIM8bb9yjsliRsxXnyj/ssOpMxAmpPQTNMCs5fSo3dvYHgru9nA2dlGSsA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
+ bh=gEcXqix1FcxZDGvHB5O42Rf1EVfLADdGkL0kx2L9UwA=;
+ b=C0t+guV2aL6nU83dKgOb9OKjROrajTAIG70mpZVOl7PF5bcpgj+pLowbLt4NocNtzmCFSnP/NhxKwbpARBkkzrRf4aWsDGCdEizW5A3tPm1rd2JYMCPhNh40/SkxuVT6G3KP20+fUgtJhk8IviVerMP/MypDn3ST2IShbYT6g8iTitCpNyUZQ+xbp/9yar01xI6iGc6NPCBUEFpxMY2ooQcxUilzbiHzKpjrZlMXa1Ce4oH+T4QKMedbFBNT/vvVobepo52b7oiOskhzp2gW0/o2tUnxFu9NCfadT/i4gY/9C4/byK1sx1bCrhErmMSueVvIn2j3ZXXcE8wWmqzr0g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jRIwDxhNU/CwFx6f1uFGp5d2TiYE3oDACULkt7U94dU=;
- b=u+B1MfFBNMSWAyjqwgfo+yVFUUtaftpZL9Qq99jCQjprht1SAeHgD3EodYwSE088WsDb/R0WfuKk6FjbRIxDhe5rvEItiGo0nZ4nJV+ZKWq+AUBfvCltJB6HfT18RFXaydtOvPGTcA7HtPlYmWqukzUBiwiQhubRMgt4cAMqdLw=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY4P286MB5504.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:25c::11) with
+ bh=gEcXqix1FcxZDGvHB5O42Rf1EVfLADdGkL0kx2L9UwA=;
+ b=Wsys2JUQQd6TgdkHtPaU7F1Itv0EXKBMQGaNxI/9QSYJoWflWvTNMmpDkuNh/6DlTOM6Xsc00vUSAS45ugyZOco9S3omwtHsmiriefuTDDMc7/Ln0oPaORuuIJ1c6+DE07ZpTk7qzjC5omdO/vzar+0kqudxnMhq6ObE8WJdt+o=
+Received: from BN0PR04CA0011.namprd04.prod.outlook.com (2603:10b6:408:ee::16)
+ by LV9PR12MB9808.namprd12.prod.outlook.com (2603:10b6:408:2e7::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.23; Wed, 25 Feb
- 2026 05:21:40 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9632.017; Wed, 25 Feb 2026
- 05:21:40 +0000
-Date: Wed, 25 Feb 2026 14:21:38 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Alok Tiwari <alok.a.tiwari@oracle.com>
-Cc: cassel@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com, 
-	allenbh@gmail.com, mani@kernel.org, kwilczynski@kernel.org, kishon@kernel.org, 
-	bhelgaas@google.com, ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
-	alok.a.tiwarilinux@gmail.com
-Subject: Re: [PATCH] PCI: endpoint: pci-epf-vntb: Check
- pci_epc_get_features() return value
-Message-ID: <l634rs2neo22jkdlpldkvraqzapi5pj6kz6j7gcpqz4xkd7c7y@5ar7zor4f3q6>
-References: <20260224133112.1356612-1-alok.a.tiwari@oracle.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260224133112.1356612-1-alok.a.tiwari@oracle.com>
-X-ClientProxiedBy: TYCP286CA0204.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:385::8) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.22; Wed, 25 Feb
+ 2026 05:38:42 +0000
+Received: from BN3PEPF0000B06E.namprd21.prod.outlook.com
+ (2603:10b6:408:ee:cafe::bc) by BN0PR04CA0011.outlook.office365.com
+ (2603:10b6:408:ee::16) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9632.22 via Frontend Transport; Wed,
+ 25 Feb 2026 05:38:22 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ BN3PEPF0000B06E.mail.protection.outlook.com (10.167.243.73) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9654.0 via Frontend Transport; Wed, 25 Feb 2026 05:38:41 +0000
+Received: from aiemdee.amd.com (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Tue, 24 Feb
+ 2026 23:38:22 -0600
+From: Alexey Kardashevskiy <aik@amd.com>
+To: <x86@kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Ingo
+ Molnar" <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+	<dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, "Sean
+ Christopherson" <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>,
+	"Andy Lutomirski" <luto@kernel.org>, Peter Zijlstra <peterz@infradead.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>, Dan Williams
+	<dan.j.williams@intel.com>, "Marek Szyprowski" <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>, Andrew Morton
+	<akpm@linux-foundation.org>, Catalin Marinas <catalin.marinas@arm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>, "Mike Rapoport" <rppt@kernel.org>, Tom
+ Lendacky <thomas.lendacky@amd.com>, "Ard Biesheuvel" <ardb@kernel.org>,
+	Neeraj Upadhyay <Neeraj.Upadhyay@amd.com>, Ashish Kalra
+	<ashish.kalra@amd.com>, Stefano Garzarella <sgarzare@redhat.com>, Melody Wang
+	<huibo.wang@amd.com>, Seongman Lee <augustus92@kaist.ac.kr>, Joerg Roedel
+	<joerg.roedel@amd.com>, "Nikunj A Dadhania" <nikunj@amd.com>, Michael Roth
+	<michael.roth@amd.com>, "Suravee Suthikulpanit"
+	<suravee.suthikulpanit@amd.com>, Andi Kleen <ak@linux.intel.com>, Kuppuswamy
+ Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, Tony Luck
+	<tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, Denis Efremov
+	<efremov@linux.com>, Geliang Tang <geliang@kernel.org>, Piotr Gregor
+	<piotrgregor@rsyncme.org>, "Michael S. Tsirkin" <mst@redhat.com>, "Alex
+ Williamson" <alex@shazbot.org>, Arnd Bergmann <arnd@arndb.de>, Jesse Barnes
+	<jbarnes@virtuousgeek.org>, Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, Kevin Brodsky <kevin.brodsky@arm.com>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>, "Aneesh Kumar K.V (Arm)"
+	<aneesh.kumar@kernel.org>, Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
+	<herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>, "Konrad
+ Rzeszutek Wilk" <konrad.wilk@oracle.com>, Stefano Stabellini
+	<sstabellini@kernel.org>, Claire Chang <tientzu@chromium.org>,
+	<linux-coco@lists.linux.dev>, <iommu@lists.linux.dev>, Alexey Kardashevskiy
+	<aik@amd.com>
+Subject: [PATCH kernel 0/9] PCI/TSM: coco/sev-guest: Implement SEV-TIO PCIe TDISP (phase2)
+Date: Wed, 25 Feb 2026 16:37:43 +1100
+Message-ID: <20260225053806.3311234-1-aik@amd.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
+ (10.181.42.216)
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB5504:EE_
-X-MS-Office365-Filtering-Correlation-Id: a506bfbf-6d92-4c4b-b08d-08de742dc16a
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B06E:EE_|LV9PR12MB9808:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6145cbdb-a345-4bd7-5ca1-08de74302291
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|10070799003|366016|7053199007;
+	BCL:0;ARA:13230040|376014|7416014|36860700013|1800799024|82310400026|13003099007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?IHoe8PPHIteP+d0BvSukEDZRX2dCY5T/5own3QUokt/xAuZ1E5LwhpkxmfIm?=
- =?us-ascii?Q?uY2CDHu86jf6jDPHBsxwMZGi469WtUFQrbiGxzHiNMPB6pdhIZfDbsbumpGQ?=
- =?us-ascii?Q?QeiqRuibQ0Gee5ghHZJ8VIXehZ9C4OJhN/bUiSOpeXwMRHzYhBb/oK8YtI5G?=
- =?us-ascii?Q?iFy2jdMs42EZYyraxF/DH+HF4OK3/t2vhoUBXuOoz9u3KKrz8kM2gf6h7naG?=
- =?us-ascii?Q?zhzXbpj4yBNEvOlDvdThnG8uSOD0fhD2t0KUxNBiNxCYagY3zYKfJdCKAV+I?=
- =?us-ascii?Q?2mo3Ne1XzAPTDgFJw38zhJ+z/eI7P2Gr9+Tqm6x7OwpzWI0MuYQqNfRZJv3i?=
- =?us-ascii?Q?0ilF+m0S1wF1Nj3Lc4HO3AtneYrNzdhSVCItARuZhpsFW4me39gMyI2rzkIG?=
- =?us-ascii?Q?W+Wff55UHAhw5UewLO00NdoZphC0ZrCU3oYILNXToFdpXVRrGYB0Ut7syI8u?=
- =?us-ascii?Q?gMdCcXf3yLwCGcVYLLwD89mqG15e4wC0EW1s+8wvk/NjoAJC7rwL5RXdgc0a?=
- =?us-ascii?Q?IDPGu5JdDLnvaf8tRUFjgV+NJZ3jW0RR44xy6eqIR83jae8Hm9JbDHJG8+5O?=
- =?us-ascii?Q?+EgQe6mNZfHNjhIHpBeLnpdlwmPU2nSCrG/IUXcU0kDgaa3JLibVUtfNwwgC?=
- =?us-ascii?Q?89UMDNMXc+bSHihDj8xR9C5hVnqRvlzzmU8hd/9y8jvmSzkSffAqx8oxddd6?=
- =?us-ascii?Q?04UYe51zZD60PDCeOml317MbaYM10PcNemdwYjWmjxhpT+TndasHHygCeyNF?=
- =?us-ascii?Q?BC3aWanskFVeUL0tZiflKJ2gR3ORHk0BxHmgyAERKk96GIv1EL3FdMrXlel9?=
- =?us-ascii?Q?6X9oVoihvP15u55vFb/BaHdHJm9VZKd7FeLESMlt2xFTrTxXT0Rr6M3SouD1?=
- =?us-ascii?Q?mvYWI5u3ZO4ni1R/dQpZRLrt/R2mwXh+MeEs81SWVr2ITPvxyC0bSTK/x7xY?=
- =?us-ascii?Q?JbZom+cEQ7edlfxyz53p70ngWLPSnBsK4etEf/MV47a592WEq0goDlkVv3Ep?=
- =?us-ascii?Q?tPhTqwta2HpTZJSqsPpzTVnzLLdO7w6TG8z0aTjUGDSNdVNL+dsmdvgT7mla?=
- =?us-ascii?Q?YPTtDS0fsxZJi1D6sz+f6ywTPcp8CzM8Jk27gTcBEXCObwgOm9i/1ODeFHge?=
- =?us-ascii?Q?EHqZc7l5cjZsCnEjpYlrYbNy3cdPo9iw6HEspq3FVluP45QwG430qRy8hPWz?=
- =?us-ascii?Q?d8DzNoJhVJcdwZGUSuCQcaUTuw7BdD2+VoE62VvO3NgS0QW7ShiZ4fSt0iJ7?=
- =?us-ascii?Q?esyxnLSG5CoZKB9X/RQVTmA3bWEgArK5ATbYj5T+zdWZU4i5S1dwcc1GSwXV?=
- =?us-ascii?Q?R2oV1nB2+oG8rAW3o2HBAWaMHpGhow0hICAzEOT8ZgWQHU5ybApqUFqjCM6u?=
- =?us-ascii?Q?Iz3tnDTN2rJAqPr78gc8VZBk9lV2hgENvi43t3TPtUTngDI5CPz2NUQsE4XV?=
- =?us-ascii?Q?mJna8owoiQGKYx8W8f4aFrVaYDkGUIUg3juvrldXqP8MdeY+jfOoJPS+KNFm?=
- =?us-ascii?Q?auE8nI9Z45a8QFKqbcSTF9wYeDMT+obowRGXTy4Img+Ss8xBV/H6cGNXvJuc?=
- =?us-ascii?Q?frAC/dIlgJqh7+hRG2g=3D?=
+	=?us-ascii?Q?0aoAF81zS/ka8d5MMMD1yI0+0wyN18DRhds4LB4v9ouGH3iHrtCrU2KoOfK6?=
+ =?us-ascii?Q?wO212tOiwIoKZk9PLRS3Ki20+kZcanBPWsz5hE1zNBcYlBLLRvbvMRpyVlR+?=
+ =?us-ascii?Q?lFmsXukBxU9Mt99MiVHLyfOZsEupESCwEwQmTVgNvqukvVIHcaS5+t+u04Ct?=
+ =?us-ascii?Q?1f716l9MZmtzSVED8PwJyCPCYBQkYRJ+vf036BVf8B0UE4m11tzC0YA8333p?=
+ =?us-ascii?Q?kXHOYiSpwNQId7XETZIGZxXJ1Nfjvfb+zeB+CBEBskIHe0TXtY4UBC6VuHAo?=
+ =?us-ascii?Q?5vNADBdvLQw/dWJ1LhxQbjVXHHPRv2unEi2N8F6OMAQq+Sd7qzTGSzyOESQc?=
+ =?us-ascii?Q?BPZY/XoStWxxRa89xqucy2iitw9CLv+srKw7nxUk9e26Jff6IHTBl4j7WfWC?=
+ =?us-ascii?Q?nX+3MiWNEFpiuTY2pSyjqgNYOKrlMCKZgfuGPn0fvKKT1i1fZOQkrJDKKWBd?=
+ =?us-ascii?Q?UxiHBLryfAjaQbjUjBpCeIJhJViSyanJDWpY5E33NG0r+Ui96PA4iBmNgUha?=
+ =?us-ascii?Q?zruu0wpcOQttQLXS1c9SY9xkYdYg8QX1M8lmu2A43CuZnu9EQURTCdIrjdyx?=
+ =?us-ascii?Q?YvUsduhbkgPjL3KrK6S9Rdu2J8A8eukpcsN9iYm/P3aFrPKiRQPEbH4kRII7?=
+ =?us-ascii?Q?XHb9CxaZZ1KxWBQKUj0oX/2f9QzWn1I/8nYRlOac4KW8+FgyZfVF/DkvIK/M?=
+ =?us-ascii?Q?ty6KbhGyWvsB6gZoeO5vk2otFatqlg3TmT0dm5NxHbwBgaHVkLLlMHh5UIyp?=
+ =?us-ascii?Q?w47YtppWQ7Kk8qKSkriW9xn2MKTsZIzGPkw+mqwrDrA7mtlowOTKqYVRf/vX?=
+ =?us-ascii?Q?B9ZvsK8564PIHFQCAhJXra1BAPy2+wWCEsciBuUIpqVBGCG2ni4XMYVdiCaK?=
+ =?us-ascii?Q?3aLnSJdV+cdFpjUfYNap/doPQrwkali/CUq/ahdPDgs02tn8fDjyU+Q4jtkU?=
+ =?us-ascii?Q?hRDKAF06sdeuIgpVP0xOVjCXHOkcZ5RBGv1esxiS94HYq0xSXqAvD5+K6/jN?=
+ =?us-ascii?Q?GweWDddR42Mijul7T3TYpoBfRlbmviAs4q3BBZNnjuSNfKqyWa0A0blpy9b0?=
+ =?us-ascii?Q?xQVCCr8uTxkKS7fDmMjvx6b76PJSvlml/Mc6AXkjfOwSiBIWZP/PJ08Rlimc?=
+ =?us-ascii?Q?H4BLzZcYd8N8y20Fgbpgr3ZRKrpXThyGihtqszbO9A/1p7MUQdYB/8/8Zd1G?=
+ =?us-ascii?Q?r33Bf4Mz5JEXx3FIWReZ0J+mnOcYh52xMeGKVxncdbU+oFHlianQ6obLIyL5?=
+ =?us-ascii?Q?3gZxClNTnuPu4H6l1IM5MMn5LjiFMi61LBYrvvJiS4Y+wRGNLUdOGRRvR8Yn?=
+ =?us-ascii?Q?6nhCMwj7NL7nJ7t5lBR1ZS9n5l3zgFgbKb93aU3vGuGBBWf1JE1HWdZBFhGf?=
+ =?us-ascii?Q?Io6Y/crDOkOo+M1ZqjnlfolbA1Fzk5+ggQ3OfnP8XhnnYsAoYDReev4Q+PWp?=
+ =?us-ascii?Q?MUeNrxl8lD5R0urA19QdZQB2vhP8N6qaZq2rv5nPNI/uTnGeulvAuPV1nmmd?=
+ =?us-ascii?Q?boR/KOe+2JfCOkcRvIJtLEzLgbV7AcbDr0fZcA+4rBRWjEWsVuQXEMi8JLUD?=
+ =?us-ascii?Q?Q+Z9sw7fyTSJrqKlRWWcyC9AqdjfN2Oxynp8sUC2ue0aH1JJvX5aYQvLRp4y?=
+ =?us-ascii?Q?83o2wF8/HRzvFCX91hgqabXs143UkMEwbFzYE9f/TGyN35PS7tIG5IR6lTFX?=
+ =?us-ascii?Q?86CADA=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(10070799003)(366016)(7053199007);DIR:OUT;SFP:1102;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(7416014)(36860700013)(1800799024)(82310400026)(13003099007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?1f2uyZoV5/0E3XP9S6fPJnvQN6I4QELe3DdBS8YjY2kGeXtEbzozDTwWsR93?=
- =?us-ascii?Q?C4lA+hl53kFCZj1hK2J7mOSTGsgBUTslgLQTgPDEiiSlGF4smQV0hdVXJ6s1?=
- =?us-ascii?Q?OJM2ZtRUHO8QyLIZlytBtQO5DM1AuLaQrSXvnMRefMfLPEaF3odwIRqei+/U?=
- =?us-ascii?Q?foQizIkSADnMaFWapYFRuy9QYgsegciZInOgHznTBX+4AvTm4VpiX4jlcZfQ?=
- =?us-ascii?Q?K58mHrLaa6VtQ9wJ/t/61Y9joGMLY1SknW5cOYUrymVRNbKaebT/RgtNDUOz?=
- =?us-ascii?Q?BcSKCXMdk1cblu+grAR6PZ9h4eaRN1cpA8LWB/M19wiUBWBBFdPox8RI+jzI?=
- =?us-ascii?Q?/yiIsbWt5l7aUKkTMxHeQyRrjfsbLC3pz2HlL1uijOikfcvPUJ9u59fu/BvJ?=
- =?us-ascii?Q?L1wTLHb4Ua2xxRtlDhS+7AigRild3ySqp4DmPYhVQ0abe3IDoiFFtZZb2ab1?=
- =?us-ascii?Q?ptbquESVh0hI/FkI2CbM+nRfOeZYNFv9XRQZkClSu82POd43w2THIfSj/gLQ?=
- =?us-ascii?Q?jNqdFfy3SMVrnadQglkTn5n7IzH5xeQyasLwy2eyywCPTQskfM3jNsVgRVTI?=
- =?us-ascii?Q?5Lr/oOw7nl77VFquhCd/0POqtn9gqNy9Q57eYESQ0v0zs3nVk8dNwyPOCuLT?=
- =?us-ascii?Q?LS5d3siBLsMvICOJCQd/2i/K1RAwqfw1d3dE/D4tzAgBMexqprdB4qWGm0j2?=
- =?us-ascii?Q?VqMiYF+r8P727CKa97A0G9Dpzb8MNUKK/K2xsrk7nxlIkxd9r6MVz9qW/XMF?=
- =?us-ascii?Q?NeNuvP8Q0n/FSDCkaerlA8s0+28I7R5bReYhMWG0OWhse5jC0Djn5ZIcyxnC?=
- =?us-ascii?Q?QIBLjkWmmiQc8JP290Pqtwh+W6YLsv6FIAGButNhCn4ekB/Yv/LnoEEPfkjl?=
- =?us-ascii?Q?QyvSYL8Y1iSOFcAlw55U2BvS7bRuPQi6iqkMhE9WHjHvo58yMKAkICNvGVxn?=
- =?us-ascii?Q?WkfpqYRQDxUkxUhNfyDtcc4f9VOSVCFy9CPurt8lx3t85DZAIIYQe241VxsX?=
- =?us-ascii?Q?WYpB99cxQdUoXvTlvoG8h0/96PE3+hJk5DlPGB/Vvv5jaATCsKG/yxMlkJvh?=
- =?us-ascii?Q?3gAlvC6N1HtnozuxmptayIfJnoShWQpLP1yVKSjBmdkMW61/dWBp8xcok560?=
- =?us-ascii?Q?oczw722WRzL39zDBH4OIVdCkAd7+6YdQmFA/BXPTJucqO1WijQlhaAsCQ9uF?=
- =?us-ascii?Q?NQ9HyNRgQ07N5fMkypf/h78R+Cpn4ENj18tkLRRXhzxAyL6hTmygG+jxSbRZ?=
- =?us-ascii?Q?MWCMQ5wlRVGlOngzpVbt5FHf6dC7Mu14A9ObIGSK8VPCQFaB92o9bcm+PH6Y?=
- =?us-ascii?Q?uRSziJ9qoQuWdEuUVygaoA2FKIsaz81NFvhLA1Tofo9BLiQh83/YdrVXWdQL?=
- =?us-ascii?Q?19cLUcdSO3FGtAJRNCMeaRwDdXLJY3SmvpOD1Hn0VnxPJy0ec5pOiyTuNNGd?=
- =?us-ascii?Q?hi/tJDlleRl4kbCtTKqzfXh6WDLOULRluVihA6grrJuE8DyR4KKhb1WfJfIb?=
- =?us-ascii?Q?YvZX3S47g1CQHLgP1AUDb9I13MkFvb4wBS0IUAcde4Sbgkmc4UJH4d5Kv4S+?=
- =?us-ascii?Q?ImQ1erVOvgdwdkYyMq04DWTJIDBu96FQRUz+upq6r7Mssz4+oLrxzq+i9Rqr?=
- =?us-ascii?Q?ngR1v3DYVyHJCLzurMx4FONK9ugm3hHFSJUD5v8uSTMltvB3E2YfDzdDY3az?=
- =?us-ascii?Q?HIdY7rVz1E8KnWuzxKx1KRDcgf9CsW/q+eqZzOMMLYY50CNel9eu/n2ESPtm?=
- =?us-ascii?Q?JCX9EulfA4EuCLqYUu7vllFjj2ZHCr9yl+bU0gWfVNYbPtpAsnLp?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: a506bfbf-6d92-4c4b-b08d-08de742dc16a
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 05:21:40.1871
+	L6ZrePEp+ap4jMJBKre66wMakyBaTFjY7V/Gnc165oGMq91ot9iCfgmZMI/hNsDiT3adaHf/BmIv+KkgKznpr3K0nnGTOP8MVsuyWvybI6CB42MH2AM8SXq02TDOeLtwnC/d4RFT+dKK4WdXUUqEf2MsDYvM3IXTJ1Ojir0CckGOmVluXnYzhxOZ/EXwGHpIxV5twQPyK7HwwgDtqAkVSH8uH+txUTK/OH2lANQSNVH5MvIdS16WDckXD8q8RKUGr2XVg8AOQ/t8kqSknfIrmrvq2lbyHAuFxy0UZ9tutb55PwNNOp74oUyUOrfd+dxjR/q2x4WNp83VX0rHz1//NPaDEiJvoKRpN0RRPv13WTlit6s67ZfZXni6+cLxQKdZ7qomfnt79iuh4ENd6GcSgOpN5kJPX3oNzfpcydSwgs+dFu1ilCd2elyfETv/UxVF
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 05:38:41.9947
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cr7JZZ1oxpMEk69+YHxxkhRHYZVbcxGQa2ZN431vW5Bw7bg9FULY/AuES5kHzPaxzgoArHcBnRZ/Jg1PCRaEgQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB5504
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6145cbdb-a345-4bd7-5ca1-08de74302291
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN3PEPF0000B06E.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV9PR12MB9808
 
-On Tue, Feb 24, 2026 at 05:31:03AM -0800, Alok Tiwari wrote:
-> pci_epc_get_features() may return NULL for invalid function numbers or
-> if the EPC driver does not provide feature information. Other EPF drivers
-> such as pci-epf-ntb.c and pci-epf-test.c already handle this case.
-> 
-> Add a defensive NULL check to avoid a potential NULL pointer dereference.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
-> ---
->  drivers/pci/endpoint/functions/pci-epf-vntb.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
+Here are some patches to continue enabling SEV-TIO on AMD.
 
-Hi Alok,
+SEV-TIO allows guests to establish trust in a device that supports TEE
+Device Interface Security Protocol (TDISP, defined in PCIe r6.0+) and
+then interact with the device via private memory.
 
-Thanks for picking this up. I have a similar view to Niklas [1], so if you
-agree, I'll wait for a respin.
-[1] https://lore.kernel.org/linux-pci/hew5wbd4fkaqlykv763wss3jirv52b5fyypzirvywysldbw5hh@qpds3syxgxgc/
+In order to streamline upstreaming process, a common TSM infrastructure
+is being developed in collaboration with Intel+ARM+RiscV. There is
+Documentation/driver-api/pci/tsm.rst with proposed phases:
+1. IDE: encrypt PCI, host only
+2. TDISP: lock + accept flow, host and guest, interface report
+3. Enable secure MMIO + DMA: IOMMUFD, KVM changes
+4. Device attestation: certificates, measurements
 
-Best regards,
-Koichiro
+This is phase2 == basic guest support allowing TDISP CONFIG_LOCKED and RUN states, and unlocking as well.
 
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> index 20a400e83439..93943e4497a6 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> @@ -438,6 +438,8 @@ static int epf_ntb_config_spad_bar_alloc(struct epf_ntb *ntb)
->  	const struct pci_epc_features *epc_features = pci_epc_get_features(epf->epc,
->  								epf->func_no,
->  								epf->vfunc_no);
-> +	if (!epc_features)
-> +		return -EINVAL;
->  	barno = ntb->epf_ntb_bar[BAR_CONFIG];
->  	spad_count = ntb->spad_count;
->  
-> @@ -489,6 +491,8 @@ static int epf_ntb_configure_interrupt(struct epf_ntb *ntb)
->  	dev = &ntb->epf->dev;
->  
->  	epc_features = pci_epc_get_features(ntb->epf->epc, ntb->epf->func_no, ntb->epf->vfunc_no);
-> +	if (!epc_features)
-> +		return -EINVAL;
->  
->  	if (!(epc_features->msix_capable || epc_features->msi_capable)) {
->  		dev_err(dev, "MSI or MSI-X is required for doorbell\n");
-> @@ -624,6 +628,8 @@ static int epf_ntb_db_bar_init(struct epf_ntb *ntb)
->  	epc_features = pci_epc_get_features(ntb->epf->epc,
->  					    ntb->epf->func_no,
->  					    ntb->epf->vfunc_no);
-> +	if (!epc_features)
-> +		return -EINVAL;
->  	barno = ntb->epf_ntb_bar[BAR_DB];
->  	epf_bar = &ntb->epf->bar[barno];
->  
-> @@ -852,6 +858,8 @@ static int epf_ntb_init_epc_bar(struct epf_ntb *ntb)
->  	num_mws = ntb->num_mws;
->  	dev = &ntb->epf->dev;
->  	epc_features = pci_epc_get_features(ntb->epf->epc, ntb->epf->func_no, ntb->epf->vfunc_no);
-> +	if (!epc_features)
-> +		return -EINVAL;
->  
->  	/* These are required BARs which are mandatory for NTB functionality */
->  	for (bar = BAR_CONFIG; bar <= BAR_MW1; bar++) {
-> -- 
-> 2.50.1
-> 
+Acronyms:
+TEE - Trusted Execution Environments, a concept of managing trust between the host and devices
+TSM - TEE Security Manager (TSM), an entity which ensures security on the host
+PSP - AMD platform secure processor (also "ASP", "AMD-SP"), acts as TSM on AMD.
+SEV TIO - the TIO protocol implemented by the PSP and used by the host, extension to SEV-SNP
+GHCB - guest/host communication block - a protocol for guest-to-host communication via a shared page
+TDISP - TEE Device Interface Security Protocol (PCIe).
+
+
+
+Flow:
+- Boot guest OS, load sev-guest.ko which registers itself as a TSM
+- PCI TSM creates sysfs nodes under "tsm" subdirectory in for all
+  TDISP-capable devices
+  - lock the device via:
+  	echo tsm0 > "/sys/bus/pci/devices/0000:01:00.0/tsm/lock"
+  - accept the device via:
+  	echo 1 > "/sys/bus/pci/devices/0000:01:00.0/tsm/accept"
+  - load the device driver:
+  	- DMA to encrypted memory should work right away
+	- MMIO regions reported in TDISP interface report will be mapped as encrypted
+
+
+Since one of my test devices does not use private MMIO for the main function,
+there is 9/9 which allows https://github.com/billfarrow/pcimem.git mapping MMIO as private.
+
+
+The previous conversation is here:
+https://lore.kernel.org/r/20250218111017.491719-1-aik@amd.com 
+
+This is based on sha1
+4fe8662d1a9c Dan Williams PCI/TSM: Documentation: Add Maturity Map
+from
+https://git.kernel.org/pub/scm/linux/kernel/git/devsec/tsm.git/log/?h=staging
+and 3 cherrypicks on top, please find the exact tree at:
+https://github.com/AMDESE/linux-kvm/commits/tsm-staging
+
+The host support is pushed here:
+https://github.com/AMDESE/linux-kvm/commits/tsm
+
+The SEV TIO spec:
+https://www.amd.com/content/dam/amd/en/documents/epyc-technical-docs/specifications/58271.pdf
+
+Individual patches have extra "---" comments (could have been "RFC"?)
+
+Please comment. Thanks.
+
+ps: quite a cc list from get_maintainers.pl.
+
+
+
+Alexey Kardashevskiy (9):
+  pci/tsm: Add TDISP report blob and helpers to parse it
+  pci/tsm: Add tsm_tdi_status
+  coco/sev-guest: Allow multiple source files in the driver
+  dma/swiotlb: Stop forcing SWIOTLB for TDISP devices
+  x86/mm: Stop forcing decrypted page state for TDISP devices
+  x86/dma-direct: Stop changing encrypted page state for TDISP devices
+  coco/sev-guest: Implement the guest support for SEV TIO (phase2)
+  RFC: PCI: Avoid needless touching of Command register
+  pci: Allow encrypted MMIO mapping via sysfs
+
+ arch/x86/Kconfig                        |   1 +
+ drivers/virt/coco/sev-guest/Kconfig     |   1 +
+ drivers/virt/coco/sev-guest/Makefile    |   6 +-
+ arch/x86/include/asm/dma-direct.h       |  39 ++
+ arch/x86/include/asm/sev-common.h       |   1 +
+ arch/x86/include/asm/sev.h              |  13 +
+ arch/x86/include/uapi/asm/svm.h         |  13 +
+ drivers/virt/coco/sev-guest/sev-guest.h |  20 +
+ include/linux/pci-tsm.h                 | 110 +++
+ include/linux/pci.h                     |   2 +-
+ include/linux/psp-sev.h                 |  31 +
+ include/linux/swiotlb.h                 |   9 +
+ include/uapi/linux/sev-guest.h          |  43 ++
+ arch/x86/coco/sev/core.c                |  53 ++
+ arch/x86/mm/mem_encrypt.c               |   5 +-
+ drivers/pci/mmap.c                      |  11 +-
+ drivers/pci/pci-sysfs.c                 |  27 +-
+ drivers/pci/probe.c                     |   5 +
+ drivers/pci/proc.c                      |   2 +-
+ drivers/pci/quirks.c                    |   9 +
+ drivers/virt/coco/sev-guest/sev-guest.c |  23 +-
+ drivers/virt/coco/sev-guest/tio.c       | 707 ++++++++++++++++++++
+ drivers/virt/coco/tsm-core.c            |  19 +
+ 23 files changed, 1129 insertions(+), 21 deletions(-)
+ create mode 100644 arch/x86/include/asm/dma-direct.h
+ create mode 100644 drivers/virt/coco/sev-guest/sev-guest.h
+ create mode 100644 drivers/virt/coco/sev-guest/tio.c
+
+-- 
+2.52.0
+
