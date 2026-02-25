@@ -1,222 +1,118 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 532432ED141;
-	Wed, 25 Feb 2026 21:35:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772055338; cv=fail; b=G26NI9elP98cELLddHD/AyFP5O4w22q6YS8GjN1IVvUGK4DT2+Y9j7HxzNNpGZj1RH5t5JQ92bGp77kalswf2nYanb2b/J4HuWYm6RSWTVOORDDWHCysGjlyha+kryIVoMEw2J2alWx9dfIFxsGurBGJY4yd9MG3oPhc5oK3NmM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772055338; c=relaxed/simple;
-	bh=IBrnBGOoTW4ToUbPRLtd/NuO5SEBZ6WzAJZoTl1J228=;
-	h=From:Date:To:CC:Message-ID:In-Reply-To:References:Subject:
-	 Content-Type:MIME-Version; b=tpEjQPszHelWvx0bMR/gA4IamlczLS6rZ+KIJsO3GPE+fhfhEm/Vkv+UyLCHWlAmZ5eiR2vnlXNdFQS+4xlekHKSTBYDtYwjSoMEd+t8YhXVj/xheOYL3SEcCWW333yuuMLvGNSv2pJuqHoZqvCm1pU/hKQxX1uqX9MmDGr12uM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lD7pE4TF; arc=fail smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A47315D23
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 21:44:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772055882; cv=none; b=DRdeQNgi98dGDg9QSl18yV2FjZyMly8pJsSmH3ql8JDzS5T0LftyVHzT3mXoioNAxWzdCdWmICaXcMzTDrR0E4Z5K2i1cO6HATLEUYC/38JV/ojg0+PGw6RhOuLCO9Wer7dx8B7X2FrgJlN7mnXI/BQnNmT8VX8QOS+rYOSNvIg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772055882; c=relaxed/simple;
+	bh=LVpKFReP7FADrFzqcpW76EWpgSyMiR/NCg5/YkB+B9c=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=OCGbx/ueU5jgupivN9TM5tYRDUfm6F15J87iwMV/bu+73di2gp78NomEyCRhtF1BJ34LXOo8cvsebKwrFAaIwHdrKQoo9FP64yj8rqcaH2gYFZu/Un+2eTwtwssWULVbDknRiiDSAxurkiEPZFwE+zg8tYy1XgeJCov2+qTTc1A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rVSoLv4Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lD7pE4TF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772055336; x=1803591336;
-  h=from:date:to:cc:message-id:in-reply-to:references:
-   subject:content-transfer-encoding:mime-version;
-  bh=IBrnBGOoTW4ToUbPRLtd/NuO5SEBZ6WzAJZoTl1J228=;
-  b=lD7pE4TFNAEBNHA6x5wwEnOVCdap+oila6AxvydOC+AKcXea8My7dzVs
-   zVoaETBjtMVWLyD6poLrz1YF4nhSb/tp85d4HDexGAbVnxDmeXr5W1sdh
-   a9czAViOD7rEOL/2F70NoeUXVzx+KdUolAvLjzvSZQQ1oeB0jYlK4VUZg
-   8kiniitpNirBdUu5WLPME/WNJDykviylXLFGUF4XHKJHRrFn7MiQ0ux1x
-   HvS1LA8qbH8llmFjiKcEVyvamiKo6aiRRg+xZxvLkqYCP9XGk1ihhwXcX
-   XhjhqR+q3+4xUeLBt96K380VHJ2HCffo/PCv/3v0HC7tbqNu1sY27APkF
-   A==;
-X-CSE-ConnectionGUID: HH0fOjpXTc6ElDhcEfNVQw==
-X-CSE-MsgGUID: 2U1OaIsTSLeH+4rKQWTfCQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="83438664"
-X-IronPort-AV: E=Sophos;i="6.21,311,1763452800"; 
-   d="scan'208";a="83438664"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 13:35:35 -0800
-X-CSE-ConnectionGUID: pdnLTzmLRX26ZSCLbCKtfw==
-X-CSE-MsgGUID: n3w5P7qnRHieUlFtx3Si9w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,311,1763452800"; 
-   d="scan'208";a="216496674"
-Received: from fmsmsx903.amr.corp.intel.com ([10.18.126.92])
-  by orviesa007.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Feb 2026 13:35:34 -0800
-Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
- fmsmsx903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.35; Wed, 25 Feb 2026 13:35:33 -0800
-Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
- FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.35 via Frontend Transport; Wed, 25 Feb 2026 13:35:33 -0800
-Received: from CY7PR03CU001.outbound.protection.outlook.com (40.93.198.37) by
- edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.35; Wed, 25 Feb 2026 13:35:32 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ea3AjjnJOyS6FF9XI80v8E5Mj7joQPiSjYAeAciZga4vOhH+ml2qpSVJ36rrdhzShBzQT0Q+7LfmByg8Ra4rAa19d5a74CG8trVsQ6qoHcnk1XGIWtdpbe93msLQd9lwWWGDam12wWgdex5AeqVV8s/xlWkj1d8aRMw/jsE9UEh+FOyQIH+4jiiNeAgFlA5jash2cdUaVnn+0k28L7hv8Qde2OTBEQq/c/jyFqUrAcvuda8rLlInnHKbTPkPt0v1kzZKp32YPN4m7Z/iqTAc6LvQodvLb5rrfyf0pzekTlmwr9WiaD8nEMSP7NsKrmlxfTJIx3ByzxoizkQpL8QQtg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/s6RnTeNZdZ0H4PRllfMgkUcWCxR2VYnlAq05zp63Q4=;
- b=NwAi4BeiWOyZMyecRlqtvJP5Lr6GcdtbGG9fmUDx4plACNu5KVt8qgpPS7sOH7SSBWhGx/FoZG1mHE9tGyJwwKtqrQDx1XfKzrwjwG3CAscGRIUAAmAR2HZ2mhtReLUDjEOYYMrzb7aO7a/dHOWCAXKbvSIgt0YXhUGOa7lA1OoGESndaCXzjUDAl/awd7zzrR1UfhtrW9HgxQ0jpD+lIpJeEW1sP8GatqjFctnbJkt3QpXAFMEnQi5v/glvnm4iZtJRjGAZkFCjDFcYn5UdjY7Pdm/4jEa9p9DJ0e5nDpB1/m4oFE59uvWzBFIBiLBdwNJzJcDFuxe44x4Uhum9Mw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by SA3PR11MB8047.namprd11.prod.outlook.com (2603:10b6:806:2fc::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.22; Wed, 25 Feb
- 2026 21:35:25 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::1ff:1e09:994b:21ff%5]) with mapi id 15.20.9632.017; Wed, 25 Feb 2026
- 21:35:25 +0000
-From: <dan.j.williams@intel.com>
-Date: Wed, 25 Feb 2026 13:35:22 -0800
-To: Robin Murphy <robin.murphy@arm.com>, Alexey Kardashevskiy <aik@amd.com>,
-	<x86@kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Ingo
- Molnar" <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
-	<dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, "Sean
- Christopherson" <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>,
-	"Andy Lutomirski" <luto@kernel.org>, Peter Zijlstra <peterz@infradead.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, Dan Williams
-	<dan.j.williams@intel.com>, "Marek Szyprowski" <m.szyprowski@samsung.com>,
-	Andrew Morton <akpm@linux-foundation.org>, Catalin Marinas
-	<catalin.marinas@arm.com>, Michael Ellerman <mpe@ellerman.id.au>, Mike
- Rapoport <rppt@kernel.org>, "Tom Lendacky" <thomas.lendacky@amd.com>, Ard
- Biesheuvel <ardb@kernel.org>, "Neeraj Upadhyay" <Neeraj.Upadhyay@amd.com>,
-	Ashish Kalra <ashish.kalra@amd.com>, Stefano Garzarella
-	<sgarzare@redhat.com>, Melody Wang <huibo.wang@amd.com>, Seongman Lee
-	<augustus92@kaist.ac.kr>, Joerg Roedel <joerg.roedel@amd.com>, Nikunj A
- Dadhania <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>, Suravee
- Suthikulpanit <suravee.suthikulpanit@amd.com>, Andi Kleen
-	<ak@linux.intel.com>, Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>, Tony Luck
-	<tony.luck@intel.com>, David Woodhouse <dwmw@amazon.co.uk>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, Denis Efremov
-	<efremov@linux.com>, Geliang Tang <geliang@kernel.org>, Piotr Gregor
-	<piotrgregor@rsyncme.org>, "Michael S. Tsirkin" <mst@redhat.com>, "Alex
- Williamson" <alex@shazbot.org>, Arnd Bergmann <arnd@arndb.de>, Jesse Barnes
-	<jbarnes@virtuousgeek.org>, Jacob Pan <jacob.jun.pan@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Kevin Brodsky <kevin.brodsky@arm.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>, "Aneesh Kumar K.V (Arm)"
-	<aneesh.kumar@kernel.org>, Xu Yilun <yilun.xu@linux.intel.com>, Herbert Xu
-	<herbert@gondor.apana.org.au>, Kim Phillips <kim.phillips@amd.com>, "Konrad
- Rzeszutek Wilk" <konrad.wilk@oracle.com>, Stefano Stabellini
-	<sstabellini@kernel.org>, Claire Chang <tientzu@chromium.org>,
-	<linux-coco@lists.linux.dev>, <iommu@lists.linux.dev>
-Message-ID: <699f6b1ad77cd_1cc51005d@dwillia2-mobl4.notmuch>
-In-Reply-To: <d8102507-e537-4e7c-8137-082a43fd270d@arm.com>
-References: <20260225053806.3311234-1-aik@amd.com>
- <20260225053806.3311234-7-aik@amd.com>
- <d8102507-e537-4e7c-8137-082a43fd270d@arm.com>
-Subject: Re: [PATCH kernel 6/9] x86/dma-direct: Stop changing encrypted page
- state for TDISP devices
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR05CA0148.namprd05.prod.outlook.com
- (2603:10b6:a03:33d::33) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rVSoLv4Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D6C3C116D0;
+	Wed, 25 Feb 2026 21:44:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772055882;
+	bh=LVpKFReP7FADrFzqcpW76EWpgSyMiR/NCg5/YkB+B9c=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=rVSoLv4ZpemrWfpmNZ5LqS0REz1bs4wa4z2sOUf3+bjQiGiMOrXQX0+qWFghLW8/h
+	 Irc3pi1FBkOPKKE4UIhEz11k84fu9/IRPu4DJePsvfnFv/A0AdYbnc25MytqgPpGy7
+	 0+0ZAD5WZc38hK2cnsBJmhrT+wDon/c7oewyE6fm0PAMzME0lIPOsl0GnW8YhEjQdU
+	 PAZ/HkbvyRRKzXrPakQ2RsZ3fuhG3iy07qiHmZIg0Gi5rZVZe5ZHgc4DUv4HU49wki
+	 mzjzPgMsOW6KAlVIl1yFNeoT9ki0Ff1jKTcavUvi/a0V5BWqTdq9OvDStVbOecffZi
+	 /rx5ueKoresXg==
+Date: Wed, 25 Feb 2026 15:44:40 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Koichiro Den <den@valinux.co.jp>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: ep: Flush before unmap in
+ dw_pcie_ep_raise_msix_irq()
+Message-ID: <20260225214440.GA3786788@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SA3PR11MB8047:EE_
-X-MS-Office365-Filtering-Correlation-Id: b2a50f56-1d8d-4dee-5c5d-08de74b5c92f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016;
-X-Microsoft-Antispam-Message-Info: 5D3urZwrm6b+JKBj9oqAGE/OOEXneEkX2gF+sQtN2lyGQkobNVl1xQs7Aqi2vPigujPYlVh1zEIKM7fdJJNBeYp516gYiwimYPS/JTfBlMXjaHAWMfi5cohLut6iDAQ01FiRsM1l5v1ra12H2ICOA2ZfCzjRDMMKUK35lIXqHHvAB9kg4eEIxKP2CgH3ZQQC3q+oS95vnmT6yw40dph7OPUJ6zUmVbHMOrOHqkZmU2MotIcypg2zAHDaOhhvH0f9ps14bqedAXVJOGJYiLQpr6ApBJ9AtMEFI4onNxOSNLjx2stUhjMRVzfp7tAROIyVRSX+pg+Pehhs2E1b0MCXJis31k1zvPecL6WitszWFEwA067u/3Vf2nF4dTw3PY6V18DqPtANkEkSgtBqbuyyJGV9HKWdYGHj6OpdvTssNXdQ5hsY1JfsEerHBVKy+E9XfqdqQAgDdMS/Z6jWLXwi6Me7GmTz4G6mUq/5aPnHwzu/uh+k1UbsU3nizFrQUh8wpygZK85uNVVwUHmRR7JBz+XWw1qMxNKYIh0nPtBqcmb4GIS9H7DdJdsfqM6F0+pOWcqj0BtmJhhicIl2/vQ9XQkw+ttN89TJ61V0OiFg+NW5dDaN25zBRgqeexio7uyzr+mXcPbbluLoF7hUmgWiVURb7jGTgPSjw/vg6MOHNJd2/Aphj7FhfAZv22sLTfmlOrtZDxgDqmmlb7+aPqirvN9YcWhUmtupph88h/WfTG4=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UUJ6UHFlUGZ6UCtPUkxWSjRFZFNtQ090cjJtM21yZ0tWUVB3dzVLczhCeTVt?=
- =?utf-8?B?S1R6RjY4K0IvM2xOcWZ2OWtmNGZwUy9nS0pReU1BT1RabnZSelNpMm1ZWlhK?=
- =?utf-8?B?b3huUnY0MmVPbVA1cVF1UDhRMWlXNytEQVNYWkZzWmhsSzNBUE44N01UWlIr?=
- =?utf-8?B?OUZjcW41cTlTeUU2Si9NbXhFSWRhcmVOZGh2VGFpYmZ4TjhIWW02QkFxNVFD?=
- =?utf-8?B?b0V3blhTZzBWMGZLeFh6Q202U3NpSytqRmZiZjAvNnhsb2NCWTY2SXVVaTA2?=
- =?utf-8?B?c0YyUjZ3ZlhCVHJrdnNMWnRSM1FRWkx3V2F4bUorRUdiWlo1SE5pcGRRZjJT?=
- =?utf-8?B?WFBJVEtVdlluSW8zWFdrM1ZqRTVHUlArYjlBUzlWWEViS01JMkMzRytBOWl0?=
- =?utf-8?B?WmNHbVpDYWkzeVBFRFdZZGVwbnlHSFJ4cDJXMThFa2t5YUtzM2tlNGVGanRF?=
- =?utf-8?B?UlFxcU0zaGV1QUN4aGlTS3JsaGZWTmptSTFZK2E2NS8yWGVmV05WMVFKcmlZ?=
- =?utf-8?B?aHpuVXhMNzZUY2xCRE8xaEtVaHJHQXlCWkhRL2hLM291dVZvaERNazRZT0VX?=
- =?utf-8?B?U052Z2UwZ2dqMGt1UmV5V1RpcHhkM2FkODRLOEJJdWVNblltQkd0QnhkbHdp?=
- =?utf-8?B?Z2M1QU9WOEJ6TE5sRGdyYXJuQ0R2R3lSVDFBM1hHUWlrWStlT2ZIYzVoaXFR?=
- =?utf-8?B?YjhFMkMvU2M1VUtQcmY0aFkzZGxEdytNQXpLVXN5QU1FeWdqMHN6YkpESjhl?=
- =?utf-8?B?cytvWmhrdnptUUpvb2NNRDJ3T1VIQ2FnSmpZcXYxQXZFS3lBdG1JTnNUVm9D?=
- =?utf-8?B?dVp2TFpXRkV5eVVMR3VIU0dtVUQycHhGZUdsRzZUQ0wrK2h1TVpPYUxFaFZM?=
- =?utf-8?B?UlA4N0VxdzRQMTRUZ0xTclBGYVU5M2xRMEVhejVTY2VwQUQzOUVpaUNmSmZp?=
- =?utf-8?B?VElvVWFrVEJqbWFXQmFzaytkZGN2Z2hhbHlKb3Z0SFNQdG9MaWNsSFZhS04v?=
- =?utf-8?B?ejVZdUdLMWVRSVBGN0x4Z21ZMDRGZmY0QlBWNVZJdVZXa016WE9pN3AxZXR3?=
- =?utf-8?B?OGhHbGExTXZ0cmxFUUExVWtqVlk3V2FUb1J4dVM5WTFJOEVsSjAya3BNYyt6?=
- =?utf-8?B?NDZXV2FKTDlBcml6VlU3SUpGVkU1eTh6TDcrWmVJU09lM0QzRG80WmtrR25T?=
- =?utf-8?B?Qkd2eENkT1NNYlRwMUVUckQvYk1yUlVJbzcxc0xXQjkxWk1BWGR3dzVmeEo3?=
- =?utf-8?B?SnEvUkI0eU8vQmpmaU1EdGFhN2lhbkFDL20vbDl3OUVJSEFwMGthUkZVTGVn?=
- =?utf-8?B?N0lZNkhWb1Ztd2c0OWtBa0lQZWkyK1ZkSTArM3dxWEQ1VU1sSm5MRUtCaDFJ?=
- =?utf-8?B?NC83Q2dpeUtqaXZGU3RBVjRCRW1qNnEyOUZibnZ3QVFHV0tsdjBBZTZuT1pX?=
- =?utf-8?B?d3dRdHE2R1gwQlBWL3E5a0cxaGhJbUJXQStURjUwaWE4K0YwdXF4L2FqY2Nk?=
- =?utf-8?B?WTFBbUNIZlN3OWFqcXhaU1FqTXlEMEVnRyt1VjA5THVXdmtMNmhvQXBrWnNt?=
- =?utf-8?B?QnJMMWtCQk91YUhMS0pONXlvWStTK2tNcWZuWVJyNXdMblMvaGkrU2Vwb3Qr?=
- =?utf-8?B?NUF0a2tiSXFQcTFycDhxaWVyK0dOSzl3M21wV3pESy9ndkxwTE1qSy9Tc0Jx?=
- =?utf-8?B?WXNrbmh6NnFlYnlNSGdnbll6bzA5TXBGZFFoQjdXY2tTcmZwMTFNd3FCek9V?=
- =?utf-8?B?VHBOOWI3bnFoaDY2UFcvYlArUVA5TFlvYUVXM2Y4RVRLSk9jZFB0Y2lXR1Jk?=
- =?utf-8?B?QkJ5VTRMNDMyMjRZaWZkUS9BOHpnQVhVZlhPU0p6QWQ1b04wVWwvNXVqWXBv?=
- =?utf-8?B?Ry84OHdKTG5MOEdNemxHaytFZE8rK3ViMzhFSytGUEpaYm9ERVB6WWxEMFAy?=
- =?utf-8?B?NGpDNXIyNFk0b21paWlVaDBVVVNLTjk3eWN5L2c4QlZZMGFuTDRNcXl5bWV5?=
- =?utf-8?B?VkdlUElLUDlwRUhralJHbXZLZXFwdWQ5S0ZhcHlRcUExRCtRWnhsYjRMVXE5?=
- =?utf-8?B?eFdRVWJXTU15N2xCeGwrd09TRlphWDVvNGZUVGJqWm9HL04yZVZGNGR3elZI?=
- =?utf-8?B?SHpTbGlnZ0Ezb1RSVzZPaXFSQ1N3b3lvVitFM2RsQzhGV3lBYU9pREEwQnpx?=
- =?utf-8?B?eVNQOHZmMjBzb3VXbTNLRDArVzdEbTc5NXJCZlFYOFBCc08xVk9oMjZMZm1v?=
- =?utf-8?B?KzdHRElTV01hRmNTQml6UkMwZ1BJUEdPWS9MSFZZcnZpSjFaa3ZoL2g1VGhr?=
- =?utf-8?B?ejdHVHlCRFVNNS82dFFYaDI2YnQydjVRcjdiS3I2RE9GaEtCbzl6MlVKaUhk?=
- =?utf-8?Q?x2JD/3MzTddzZMUU=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2a50f56-1d8d-4dee-5c5d-08de74b5c92f
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 21:35:24.9415
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: EY8vf1F+QWkIzGNea7xQBnp6cQnuZuXCwPE/FgUz1azreItRYiiqqrIO01ijFX9FS5vfX9rj72nExz1ZAJ/WQAPoMRnyLDE8VvOrdZHnjZU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR11MB8047
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260211175540.105677-2-cassel@kernel.org>
 
-Robin Murphy wrote:
-> On 2026-02-25 5:37 am, Alexey Kardashevskiy wrote:
-> > TDISP devices operate in CoCo VMs only and capable of accessing
-> > encrypted guest memory.
-> > 
-> > Currently when SME is on, the DMA subsystem forces the SME mask in
-> > DMA handles in phys_to_dma() which assumes IOMMU pass through
-> > which is never the case with CoCoVM running with a TDISP device.
-> > 
-> > Define X86's version of phys_to_dma() to skip leaking SME mask to
-> > the device.
-> > 
-> > Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
-> > ---
-> > 
-> > Doing this in the generic version breaks ARM which uses
-> > the SME mask in DMA handles, hence ARCH_HAS_PHYS_TO_DMA.
+On Wed, Feb 11, 2026 at 06:55:41PM +0100, Niklas Cassel wrote:
+> When running e.g. fio with a larger queue depth against nvmet-pci-epf we
+> get IOMMU errors on the host, e.g.:
 > 
-> That smells a bit off... In CCA we should be in the same boat, wherein a 
-> trusted device can access memory at a DMA address based on its "normal" 
-> (private) GPA, rather than having to be redirected to the shared alias 
-> (it's really not an "SME mask" in that sense at all).
+> arm-smmu-v3 fc900000.iommu:      0x0000010000000010
+> arm-smmu-v3 fc900000.iommu:      0x0000020000000000
+> arm-smmu-v3 fc900000.iommu:      0x000000090000f040
+> arm-smmu-v3 fc900000.iommu:      0x0000000000000000
+> arm-smmu-v3 fc900000.iommu: event: F_TRANSLATION client: 0000:01:00.0 sid: 0x100 ssid: 0x0 iova: 0x90000f040 ipa: 0x0
+> arm-smmu-v3 fc900000.iommu: unpriv data write s1 "Input address caused fault" stag: 0x0
+> 
+> The reason for this is that the writel() is immediately followed by a call
+> to unmap(), which will tear down the outbound address translation.
+> 
+> PCI writes are posted, i.e. don't wait for a completion. Thus, when the
+> writel() returns, might not have completed yet, and could even still be
+> buffered in the PCI bridge, at the time unmap() is called.
+> 
+> Flush the write by performing a read() of the same address, to ensure that
+> the write has reached the destination before calling unmap().
+> 
+> This will add some latency, but that is certainly preferred over corrupting
+> the host memory.
+> 
+> The same problem was solved for dw_pcie_ep_raise_msi_irq(), in commit
+> 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU mapping"), however
+> there it was solved by dedicating an outbound iATU only for MSI. For MSI-X,
+> we can't do the same, as each vector can have a different msg_addr, and
+> because the msg_addr is allowed to be changed while the vector is masked.
+> 
+> Fixes: beb4641a787d ("PCI: dwc: Add MSI-X callbacks handler")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Not quite, no, CCA *is* in the same boat as TDX, not SEV-SNP. Only
-SEV-SNP has this concept that the DMA handle for private memory is the
-dma_addr_unencrypted() conversion (C-bit masked) of the CPU physical
-address. For CCA and TDX the typical expectation of dma_addr_encrypted()
-for accepted devices holds. It just so happens that dma_addr_encrypted()
-does not munge the address on  is a nop conversion for CCA and TDX.
+beb4641a787d appeared in v4.19 (2018!) so it doesn't strictly qualify
+as a post-merge window fix, but I do understand that it fixes a
+problem similar to the 8719c64e76bf bug that we added in v7.0.
+
+I don't think 8719c64e76bf and its fix make it any more likely that
+we'll hit *this* problem, but it's certainly a trivial low-risk
+change.
+
+I put this on pci/for-linus for v7.0, thanks!
+
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-ep.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 5d8024d5e5c6..aef41f0218a3 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -1005,6 +1005,9 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  
+>  	writel(msg_data, ep->msi_mem + offset);
+>  
+> +	/* flush posted write before unmap */
+> +	readl(ep->msi_mem + offset);
+> +
+>  	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->msi_mem_phys);
+>  
+>  	return 0;
+> -- 
+> 2.53.0
+> 
