@@ -1,157 +1,115 @@
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C26F93EDAD6
-	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 19:38:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772048311; cv=pass; b=gDVsDT9QiT3uHf4BTl7WO/Jbr3hVYShJs6pSxSY0HzyHklbOvu5BhqFXb4WS+R0wuohphNd1+Vz5a9+BS2j8TzRE/BuHAPBOocZqevopADJU5ogguTOQAKkyXMBFFd3o0hGWstrpeo+u8CdeBpT/E4/mrcEYNYOMRBTRzdeBRKE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772048311; c=relaxed/simple;
-	bh=Hmo3oDa3Cv086zgof3dOkp8NLgtKrbC0xTyF5LKmpE0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=le97WoHyJlft3we69JtIszlsS1qk/m48okWqBjZkDHC3HNvOoMf3alH+7u9WCatZFCgk0HVqpp5ouiQMeh1f7jd/3VxpkjJZjEftqjJ2qu466t7RnLkyryMi2Ucr4dIENg8Qi4pxoq6BLEx4PMckCidRh5CB7u/rjKDH2c5MvsM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mfeUP8Uc; arc=pass smtp.client-ip=209.85.167.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A121B26ED2A
+	for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 20:05:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772049955; cv=none; b=t6at0HpxqTDzPhBlXV+HJQsarViRAU5DCfui6u+rn9W6RJCuaRC56LymV4QnBr+2rw/yCtOngVIRhjHCg72+2RfECVrp7+AITVV0UmrL6jI+F3t7DBA9W/2PVVMLYhMVbePndXRJjnVk7GxhopARC18AwsRry2tthwrx0jN1QMo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772049955; c=relaxed/simple;
+	bh=G+13jD3aEdDflz2E3Io8a00YH1qTgwDWphN2CdkI4X4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=PW0HNMWBY3SEYfG+OXFe7o/oJW7y1BzAxydme0pIgPWW4XD1Cpo3MSrOYxZ9rppQaI8WybnmJ2Ekoh4Of5JPnkxIF2rKsw5TJvfSGvjRkux/JY4b7nqoTYy+8x5neJI7XxEqG/9kRJ14s7EP5SB4wJ5DEY0kc0+9R3Yca7g010w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c3n9TKeb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mfeUP8Uc"
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-59e63b427aaso7869288e87.2
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 11:38:29 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772048308; cv=none;
-        d=google.com; s=arc-20240605;
-        b=AqY3JcNceE2Ci3p1cVtMcihGR+aYxqDBbzZknJB261eVqu6esNWhBVjPzszJfel33T
-         Ka8SxJGe494RmVzBOiUQnQWIto44Vg3raf++cYnD0s0zve9MjCwd3Trorb/KrtyF6FP5
-         sLXBNE4f18iRJaq4OS67WoCZAbSiPrrC5eCZAp0RfaT4xUDdF4M0hevcPl+7/QMiQzB1
-         5WLZIrKv3oqClUuv42MHwo9MIQWMjF/6d1nxdWako+XehWXL18Anh3/pwf5wLS7qppp+
-         TPsfIs8COaJXSu5uctzUNoQltv2+QSH8n/wTS8sKaH4xuMZAIx9HjRhX4FA+8Opp5HwW
-         pE0Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Hmo3oDa3Cv086zgof3dOkp8NLgtKrbC0xTyF5LKmpE0=;
-        fh=R7QbPBcQNL+YHQg2hi74IYt0+HGrgs+Mt3Ew2f77HSQ=;
-        b=Oq4aVEawJX0Hp/CsG4u/RG6kAcQgxbT6HjxFQPHQPDkAB7Z7J7w4cKM93xdpKHY2OO
-         bzlwtP/CDbpT9a4HJH+dcWT7NkiofOd3taa9pX845rNfY9EZWCdMxvgwEVr2oNeoMJGJ
-         VVmPT+zhumKd7vci3AzxN88MOm9sVYib9I1wrOknY9ZvOIDZtK1h8TT29vuMSm75DE7X
-         xLdbvT5o4QZ7+el7tqkPbf5LF3TslSs/Fkb0pAvnd1yL0VBH98OdbwmbImvlNzq5Uy09
-         jIfeU/AA4rV56/Y+zv9UN5R/iCl2OvsQ1fgZIjtgFUNsUmgMzKiYCwZxwlSmzrSKv2Pa
-         F/Yg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1772048308; x=1772653108; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Hmo3oDa3Cv086zgof3dOkp8NLgtKrbC0xTyF5LKmpE0=;
-        b=mfeUP8UcmKH8ePJjxOzTvIHSgUN4airLqi5UY7sfBZE/hfPTt9lZDMQyvtjhMFot80
-         Y5hv9YEJNB0yX/KHxTvVqVme+BY/mxq0SOoDuhHEPSQffKeFmUnSrUKCk13CXYr46r1+
-         91U8dXpyBYu3du569iGKdREakXXQuc4KB0dlcwJmzJOfI0+6EcIaGeaO926BHVXEIq0s
-         uFCllUTEPRo1Own0hox8Zt4FRb2S9IqGMXi7EukWeHwLWfeE6OUQ5WRHoULXJZ4hF71j
-         TIGAw/mhDHuBTyADP2UXctV5vYtve81voky+5VNN9wcG5fiBuuJoR3Df7APfD29cfD/F
-         B+Hw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772048308; x=1772653108;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Hmo3oDa3Cv086zgof3dOkp8NLgtKrbC0xTyF5LKmpE0=;
-        b=mlQr4t5BtkoTtjkgVOmeObMoBx4AyTjXd6IkeGhLxZrhI1alX+RLjKwJ4gc+xGVB6D
-         swFpHKtSaHRptOYLN+8Tva/PrxtGuPdToOISLa5/VnV23ZKbX/NPPQRBxv54xix4dkgD
-         8JVhYOaz2YFjKw5WIvAjP1qAQJrlk5DAp9lttkuvjlt7cFPf+7j+gebVSbOPvgleN48A
-         fUsYK+k6OStMx12ERGVfV+8y2BhWzdnvbJ39t/UKXwf6RWK87XPh+FMvnLvLmPHlPjFX
-         PdSnNRA9eJwAMLvJ/sjtxSK9qLVUYQB//qQB8I9yZEdHXdgmNJg6F8DL8566f2fYEMdA
-         ZhLA==
-X-Forwarded-Encrypted: i=1; AJvYcCXULyoJm808wM6OcspEOvyjCRZ5eNoqM85BwuCjU6f4FORiyiKvBmoW/8B7pXJ9PQwtOjflAoD3gRU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxn0q4+CbjZI1aoeIeFk76Y+4YGDufGp+FB5pWr71vLGUtWFFdk
-	1E1NqnAydCB2UVHQwJ6Ynrbf9tzNIvz+7ZE1Ajb9YBbJIt29zjTbBRMoZfuTZ17ExbGWwV7g+A5
-	ZqtLXg5P/zOcgZfHk8GGjB3OWVxN3eHCQnCKqxpeo
-X-Gm-Gg: ATEYQzzUtTDXOUxZbeJbJJpBbRp3fYpNpaApw2bbXO8k7rKNCIg0o4bfrnnHLv492Iz
-	zv9aPuC1izjtaqEC0Bvg2IaQJwuESS4GMFJXEoqyL2jTQd1BEvq05aK66aoRob/zlHP3W7swg4F
-	nxvkhHQIu+opBWlCBG446MkJBl5Qc3iV4v8qycItCWbv9fTpaavSue0FcKPVz18Iz3jkGoC4bvM
-	/k9Vm+rFYgy44OfRXMlnnLYZDXDlvDd7V1uYpkNFZNeR1t0NrQDKCvmYeHL5qLjIoGoMgVLEWqZ
-	LiyA4RY=
-X-Received: by 2002:a05:6512:31c7:b0:59e:45ae:7035 with SMTP id
- 2adb3069b0e04-5a0ed88dc26mr6092032e87.3.1772048307624; Wed, 25 Feb 2026
- 11:38:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c3n9TKeb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B28DC116D0;
+	Wed, 25 Feb 2026 20:05:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772049955;
+	bh=G+13jD3aEdDflz2E3Io8a00YH1qTgwDWphN2CdkI4X4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=c3n9TKeb/GvnFuJ0ynX8pCbrjPqO7nQaaf/QkSZUnh7efNSto6Clu8adV6wlESeAS
+	 chc2acsQyySeiQRPpQaUiSmeCcYxD302yOQ7hyLV9MXZfawFT1Hk/6l6LU5DHR1yW5
+	 B+hJF5V4BBIR3VbvWxIcfWSUjtbPiQPXOzg4X79cD3/uBMhWikZ5mLAKfPrf29mekP
+	 pGEWJGoPYjlpLfdQVtmpD+KAbMdYDlLqAkESaPCvHzUhpOMACA6/C7auubLmgRhpvZ
+	 Lyii+NQDgaKkRT6wKmpgZAB2yX9vkfjyQFrS1+CtAu1G12YOM6IADMszWQssHyj+hI
+	 ayMJcEDXBKQpA==
+Date: Wed, 25 Feb 2026 14:05:53 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Koichiro Den <den@valinux.co.jp>,
+	Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: ep: Fix regression in
+ dw_pcie_ep_raise_msi_irq()
+Message-ID: <20260225200553.GA3783348@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260223184017.688212-1-dmatlack@google.com> <aZy6cge_a9a7O03g@smile.fi.intel.com>
- <CALzav=f+p3bcq78dunjEqTOhRHxr8WhTxojYNwJOdYH49p0_Hw@mail.gmail.com>
- <aZ3fCdkCIAW-Q4-k@smile.fi.intel.com> <CALzav=eCZf_N=J9pfO8=-8k9TvCbT7m-=ByCL2jZYni=Kaeopw@mail.gmail.com>
- <aZ7EOa8NEMKAlGA_@smile.fi.intel.com>
-In-Reply-To: <aZ7EOa8NEMKAlGA_@smile.fi.intel.com>
-From: David Matlack <dmatlack@google.com>
-Date: Wed, 25 Feb 2026 11:37:59 -0800
-X-Gm-Features: AaiRm53hekLg6hh9uiJ_-J4HWrUo4bMuo2zeP1wB6eVI1ECvLj-J7HHR6VW4bZY
-Message-ID: <CALzav=dnzZ8t4-dg6Q=TzgYt8aaZsytj8FUXPpifR+fXxnyg0Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Disable ATS via quirk before notifying IOMMU drivers
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Alexander Lobakin <aleksander.lobakin@intel.com>, 
-	Bartosz Pawlowski <bartosz.pawlowski@intel.com>, David Woodhouse <dwmw2@infradead.org>, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	Lu Baolu <baolu.lu@linux.intel.com>, Raghavendra Rao Ananta <rananta@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260210181225.3926165-2-cassel@kernel.org>
 
-On Wed, Feb 25, 2026 at 1:43=E2=80=AFAM Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
->
-> On Tue, Feb 24, 2026 at 09:41:30AM -0800, David Matlack wrote:
-> > On Tue, Feb 24, 2026 at 9:25=E2=80=AFAM Andy Shevchenko
-> > <andriy.shevchenko@linux.intel.com> wrote:
-> > > On Tue, Feb 24, 2026 at 09:19:05AM -0800, David Matlack wrote:
-> > > > On Mon, Feb 23, 2026 at 12:37=E2=80=AFPM Andy Shevchenko
-> > > > <andriy.shevchenko@linux.intel.com> wrote:
-> > > > > On Mon, Feb 23, 2026 at 06:40:16PM +0000, David Matlack wrote:
->
-> ...
->
-> > > > > > Fix this by disabling ATS via quirk during "early" fixups inste=
-ad of
-> > > > > > "final" fixups.
-> > > > >
-> > > > > Hmm... Sounds to me like a premature disablement, but I leave it =
-the experts.
-> > > >
-> > > > What do you mean by "premature disablement"?
-> > >
-> > > On early stage instead of final stage.
-> >
-> > Is your concern that applying the quirk at early stage won't be
-> > effective because ATS will be enabled after early fixups are applied?
->
-> My concern that applying this quirk too early may affect something else.
-> But I'm not an expert in the PCI mysterious ways, I just share my feeling=
-s.
+On Tue, Feb 10, 2026 at 07:12:25PM +0100, Niklas Cassel wrote:
+> When using the nvmet-pci-epf EPF driver, and starting the EP before
+> starting a host with UEFI, the UEFI performs NVMe commands e.g.
+> Identify Controller, to get the name of the controller.
+> 
+> nvmet-pci-epf will post the CQE (completion queue entry) to the Admin
+> Completion Queue, and then raise an IRQ (using
+> dw_pcie_ep_raise_msi_irq()).
+> 
+> Once the host boots Linux, we will see a WARN_ON_ONCE() from
+> dw_pcie_ep_raise_msi_irq(), and then the booting of the host hangs,
+> because it never gets an IRQ when loading the nvme driver.
+> 
+> The reason is that the MSI target address used by UEFI and Linux might
+> be different, which will cause dw_pcie_ep_raise_msi_irq() to simply
+> return -EINVAL.
+> 
+> This was working before commit 8719c64e76bf ("PCI: dwc: ep: Cache MSI
+> outbound iATU mapping"), so this is a regression.
+> 
+> Also, remove the warning, as we cannot know if there are operations in
+> flight or not, so it seems wrong to print this warning unconditionally
+> at every boot when e.g. nvmet-pci-epf is used with a host with UEFI.
 
-Ahh ok, gotcha. Thanks for the raising the concern.
+I put this on pci/for-linus for v7.0, thanks!
 
-> > > > > What I think about the case, that IOMMU should be probably fixed =
-to avoid such
-> > > > > situation for all level of quirks. Can it be feasible?
-> > > >
-> > > > What do you mean by the "IOMMU should be fixed"? Are you saying the
-> > > > IOMMU should be prepared to handle quirks disabling features on
-> > > > devices after the IOMMU driver is notified about a device?
-> > >
-> > > Something like this, yes. At least the commit message is unclear why
-> > > "This fixes at least one bug in the Intel IOMMU driver..." not in IOM=
-MU
-> > > driver code.
-> >
-> > Gotcha. It felt wrong to have the IOMMU driver be notified about a
-> > device with ATS enabled and then have ATS later disabled. It seem like
-> > it would add complexity to the IOMMU drivers to handle such a case,
-> > and would be much simpler to have ATS in its final state when the
-> > IOMMU driver is notified about the device being created.
->
-> Can this be elaborated in the commit message? Then a reviewer will not
-> have questions like me.
+I'd like to make the commit log a little more general, since the issue
+affects any endpoint driver.  Here's my proposal; I'll update it based
+on your feedback:
 
-Will do in v2, thanks for the suggestion.
+  PCI: dwc: ep: Fix dw_pcie_ep_raise_msi_irq() Message Address cache
+
+  Endpoint drivers use dw_pcie_ep_raise_msi_irq() to raise MSI interrupts to
+  the host.  After 8719c64e76bf ("PCI: dwc: ep: Cache MSI outbound iATU
+  mapping"), dw_pcie_ep_raise_msi_irq() caches the Message Address from the
+  MSI Capability in ep->msi_msg_addr.  But that Message Address is controlled
+  by the host, and it may change.  For example, if:
+
+    - firmware on the host configures the Message Address and triggers an
+      MSI,
+
+    - a driver on the Endpoint raises the MSI via dw_pcie_ep_raise_msi_irq(),
+      which caches the Message Address,
+
+    - a kernel on the host reconfigures the Message Address and the host
+      kernel driver triggers another MSI,
+
+  dw_pcie_ep_raise_msi_irq() notices that the Message Address no longer
+  matches the cached ep->msi_msg_addr, warns about it, and returns error
+  instead of raising the MSI.  The host kernel may hang because it never
+  receives the MSI.
+
+  This was seen with the nvmet_pci_epf_driver: the host UEFI performs NVMe
+  commands, e.g. Identify Controller to get the name of the controller,
+  nvmet-pci-epf posts the completion queue entry and raises an IRQ using
+  dw_pcie_ep_raise_msi_irq().  When the host boots Linux, we see a
+  WARN_ON_ONCE() from dw_pcie_ep_raise_msi_irq(), and the host kernel hangs
+  because the nvme driver never gets an IRQ.
+
+  Remove the warning when dw_pcie_ep_raise_msi_irq() notices that Message
+  Address has changed, remap using the new address, and update the
+  ep->msi_msg_addr cache.
+
