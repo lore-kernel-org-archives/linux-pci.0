@@ -1,143 +1,183 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8326B36896E;
-	Thu, 26 Feb 2026 17:14:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CECD5368965;
+	Thu, 26 Feb 2026 17:53:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772126045; cv=none; b=YRP3Su2Fnk1GLkzbnAGa+fnJt3o1GWujRHy66cHt5JnLpzPj+8sp+dLRq/ar1PyeErquuFQ2W6WKJlBKwIAGlvadDQz4AxhQWmOlByy936hF8eDzmSXWV+fdxV9S/ZDrbma5UU4Hh7LzoGwdlsqqQ6FY43L4xbIrcH35rVEQ8yc=
+	t=1772128420; cv=none; b=sLBW8UTo/i2FUCa43Dg/fQ3oHwqaSG2cHTxGv/ot9DS7aUpf5N5KAopNA6tGphQxMv0HUpvN2/MG33YF+tt1ftT9ujv6ozCAGi9P6V7oVelCVXs/FHCT8ZoGi/zie5oxMF+QayosZJAxcqG+pPRZO27SXUcSzq4PtMQBThgowgU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772126045; c=relaxed/simple;
-	bh=X6A6fowkZ6aMRZIizNYBTrL8TqiDPcG1Re2wby4Fwmk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=hIXpolEsEWRAbobQdGMMwnJFvwM8W/uw5kunKVis/ZNn+JhfpDZN8ehsChg1fR7Ognh9rYbnH30/aFJQW4XwyAjxCRBS28aDNNh8LYp8Fftn6gIAzH6oiGXjEbzF4wuBaDg15G+fP2/JqueJ8Ntprpsd9JBRz3t94Pd57e5tnDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pM+CplqC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772128420; c=relaxed/simple;
+	bh=KLe66cESz6+dilREiHGNz7462oAcVOJ/8nxD3/w0iG4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TEMXBvllsT6kzAJNMNo079B99mkmqwyRSypVtB0WHYhnpQHBJgoCw+Z2TPk+ex/FPp8qU3vY4xpzcA/AmW2sV2PBtISRJLC1TbOEA/HVk1UglpdnlgAEU1CqjE3AY7XrNTeae0S+eSxEjLDcwfHAdSNAYDUkxUZrNbUwiKMdN+E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=M5iAK9xr; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pM+CplqC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A913C116C6;
-	Thu, 26 Feb 2026 17:14:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772126045;
-	bh=X6A6fowkZ6aMRZIizNYBTrL8TqiDPcG1Re2wby4Fwmk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=pM+CplqCQUwdcubr2VbwkskrbIxgGL/zqagGZ4QWlVOKjrRx7riK3fx6NBN4/e+/p
-	 t+6MjadWoj5O9u5VkWiezCzb4y9Gtp0Oib3oUqRjKDK8EQMbmvsqQDs/a7OpvdRtXx
-	 Sd8m1v979Wt8/gJhsSAteLFBSkGCHpQmxipjf+22v7LmkSX4EqvK5zMYFAIPxfTuvm
-	 pEl7TGr088dCGvvG7gElhPQZlzmDgwfsuSgv6kVSpqG04DM8pMhWGcgpVyJ0qmeJDC
-	 yld26L4LM81pwUYL9M6f8WJoh5B18fBK2Y69DNUMdRti0IQ91r0wppCwxNVIQbNwZt
-	 LFGudnJxEp6Rw==
-Date: Thu, 26 Feb 2026 11:14:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ziming Du <duziming2@huawei.com>
-Cc: bhelgaas@google.com, alex@shazbot.org, chrisw@redhat.com,
-	jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, liuyongqiang13@huawei.com
-Subject: Re: [PATCH v4 2/4] PCI/sysfs: Fix null pointer dereference during
- hotplug
-Message-ID: <20260226171403.GA3813150@bhelgaas>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="M5iAK9xr"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61QEsGbI2346014;
+	Thu, 26 Feb 2026 17:53:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:to; s=pp1;
+	 bh=G36YKZFvqd9qA6S9InMPsEzM7Y+Whm6qcGCLT5WsJ00=; b=M5iAK9xrzlHi
+	sy63aWcDGtsFXmcCQZTYjAkbjxCvetRWdmlTDtQhOaLl2T8EEVLqgQ2NqBFfveYu
+	LUsmg6HYI7r+jXCiyqFQ1Qmlla4bfy5DpcPuZPufLSBpJTDpFGMxw4QBykuuVRCC
+	keiBQsOjF5ZoikYs3/c+Q5XgUZAWrgDJm6UhjDdm5zFlah5acq3qh2T3gii0SNCe
+	+j8brr6J9buTDO0j6Z+Js3bbDzEYU3GCdg/KVj22brbIOGTLF1zjs+9U4iJDHBoZ
+	vGIFnGiFf11qeT84+ajRtDBKI9uUTH+mAhs3RwmRY5APzIrSOWmVN5DIlsgcukiw
+	3agyi+UgSA==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ch858whdc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 26 Feb 2026 17:53:35 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61QFmLVo001653;
+	Thu, 26 Feb 2026 17:53:34 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cfr1nd4pd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 26 Feb 2026 17:53:34 +0000
+Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61QHrX2U30343738
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 26 Feb 2026 17:53:33 GMT
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 46C125805A;
+	Thu, 26 Feb 2026 17:53:33 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E864F58056;
+	Thu, 26 Feb 2026 17:53:32 +0000 (GMT)
+Received: from [9.61.243.9] (unknown [9.61.243.9])
+	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 26 Feb 2026 17:53:32 +0000 (GMT)
+Message-ID: <b4d83f50-c3c1-4fdf-bc7c-50a3cc8353b6@linux.ibm.com>
+Date: Thu, 26 Feb 2026 11:53:32 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260116081723.1603603-3-duziming2@huawei.com>
+User-Agent: Mozilla Thunderbird
+Reply-To: ramesh@linux.ibm.com
+Subject: Re: [PATCH v1] PCI: Add write-only 'uevent' sysfs attribute for PCI
+ slots
+To: Leon Romanovsky <leon@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>
+References: <20260225150815.81268-1-ramesh@linux.ibm.com>
+ <20260226083427.GF12611@unreal>
+Content-Language: en-US
+From: Ramesh Errabolu <ramesh@linux.ibm.com>
+In-Reply-To: <20260226083427.GF12611@unreal>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI2MDE2MCBTYWx0ZWRfX2wARRGVJzCor
+ ukyb171YZRxT3TqCRdTR7wHd/1AsKnS6ybY605nEmlh62h6sGa+msRMchz1Jm15JmIOt47iNVVl
+ 9BLCz4HKVB4eGze+vFtIvhJTOu25vNLgPYBj90ibpRfw3Ldop74Jalx1SFAobVqaT3mxmabmp1N
+ Il8RSeF4EYU4qrNVA5I+/wzw7rZEPffUM3kdQWme2s54N8VAgewB+3sHyDio/8qb64kIoRShesn
+ Kp+KvKBcs0+/YChNd+3I1xjww5IX51JP5wLTjwAz3qhw+rRbD2orPXJIMbhwJWNWxSvUwukqvO/
+ fCqyiyKgZm7m+CtUOzgTFYOq8b1U9wi6VDCP7tEVd6sgWm0JNgoczm743XL7N344cCId6FAmhbK
+ AxjmRWvF3m/qInQmjhCbJRrHbGxR06fNqbQfpnaa9sRIOLtOEylw6+99j9itu9cIFn7350j9Z6+
+ CdX0Ynn6E4XDjoRwQbA==
+X-Proofpoint-GUID: IwsRsZ958oQ8U8nwRnE7-OtFnjzL4kxZ
+X-Authority-Analysis: v=2.4 cv=S4HUAYsP c=1 sm=1 tr=0 ts=69a088a0 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VnNF1IyMAAAA:8
+ a=zhNUnha_GGVnsERX1NwA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: p_mm7JRBLgt4qQnF8IrLSe2eun0x_xHH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-26_02,2026-02-26_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 clxscore=1011 impostorscore=0 malwarescore=0 bulkscore=0
+ phishscore=0 adultscore=0 lowpriorityscore=0 spamscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602260160
 
-On Fri, Jan 16, 2026 at 04:17:19PM +0800, Ziming Du wrote:
-> During the concurrent process of creating and rescanning in VF, the
-> resource files for the same pci_dev may be created twice.
 
-Where are the two resource file creations?  This will help review the
-patch.
+On 2/26/2026 2:34 AM, Leon Romanovsky wrote:
+> On Wed, Feb 25, 2026 at 09:08:15AM -0600, Ramesh Errabolu wrote:
+>> Add a new write-only 'uevent' attribute to PCI slot sysfs
+>> entries. This provides a mechanism for userspace to explicitly
+>> synthesize PCI slot uevents when needed.
+>>
+>> For cold-plugged PCI devices, slots may be created before
+>> udev is ready to receive events, causing the initial 'add'
+>> uevents to be missed. As a result, slot specific udev
+>> rules that define naming, permissions, and related policies,
+>> are not applied at boot. Allowing userspace to resynthesize
+>> the 'add' uevent ensures these rules are processed correctly.
+> This patch sounds like a hack to me. AFAIK, "udevadm trigger"
+> performs exactly that.
+>
+> Thanks
 
-> The second
-> creation attempt fails, resulting the res_attr in pci_dev to kfree(),
-> but the pointer is not set to NULL. This will subsequently lead to
-> dereferencing a null pointer when removing the device.
-> 
-> When we perform the following operation:
->   echo $sriov_totalvfs > /sys/class/net/"$pfname"/device/sriov_numvfs &
+AFAIK, PCI slots do not yet raise a uevent. Secondly there is no uevent 
+attribute in slot-id directory to submit requests to raise a uevent. 
+This  patch fills that gap
 
-I think it would be more informative to include an actual sample here.
-We can easily substitute the device names and numbers, given a
-concrete example.  It's a little bit harder to intuit what $pfname and
-$sriov_totalvfs should be.  E.g.,
-
-  $ cat /sys/bus/pci/devices/0000:02:00.0/sriov_totalvfs
-  128
-  $ echo 128 > /sys/bus/pci/devices/0000:02:00.0/sriov_numvfs &
-
-Unless it's important to use /sys/class/net/..., use
-/sys/bus/pci/devices/... both places to make it simpler.
-
->   sleep 0.5
->   echo 1 > /sys/bus/pci/rescan
-
-These look like shell commands ...
-
->   pci_remove "$pfname"
-
-but what is "pci_remove"?  I guess it must be an echo into
-/sys/bus/pci/devices/.../remove; expanding it here would be better.
-
-> system will crash as follows:
-> 
->   Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
->   Call trace:
->    __pi_strlen+0x14/0x150
->    kernfs_find_ns+0x54/0x120
->    kernfs_remove_by_name_ns+0x58/0xf0
->    sysfs_remove_bin_file+0x24/0x38
->    pci_remove_resource_files+0x44/0x90
->    pci_remove_sysfs_dev_files+0x28/0x40
->    pci_stop_bus_device+0xb8/0x118
->    pci_stop_and_remove_bus_device+0x20/0x40
->    pci_iov_remove_virtfn+0xb8/0x138
->    sriov_disable+0xbc/0x190
->    pci_disable_sriov+0x30/0x48
->    hinic_pci_sriov_disable+0x54/0x138 [hinic]
->    hinic_remove+0x140/0x290 [hinic]
->    pci_device_remove+0x4c/0xf8
->    device_remove+0x54/0x90
->    device_release_driver_internal+0x1d4/0x238
->    device_release_driver+0x20/0x38
->    pci_stop_bus_device+0xa8/0x118
->    pci_stop_and_remove_bus_device_locked+0x28/0x50
->    remove_store+0x128/0x208
-> 
-> Fix this by set the pointer to NULL after releasing 'res_attr' immediately.
-
-This *sounds* like it would still be racy unless there's a lock around
-this.  If there is a lock, please mention what it is and where it's
-held.
-
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Signed-off-by: Ziming Du <duziming2@huawei.com>
-> ---
->  drivers/pci/pci-sysfs.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 18e5d4603b472..fbcbf39232732 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1227,12 +1227,14 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
-> +			pdev->res_attr[i] = NULL;
->  		}
->  
->  		res_attr = pdev->res_attr_wc[i];
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
-> +			pdev->res_attr_wc[i] = NULL;
->  		}
->  	}
->  }
-> -- 
-> 2.43.0
-> 
+>
+>> The patch was validated by manually triggering PCI slot 'add'
+>> uevents through the slot’s 'uevent' sysfs file and confirming
+>> that udev received and processed those events. The following
+>> command raises an 'add' uevent for a specific PCI slot:
+>>
+>>      $ echo "add $(uuidgen)" | sudo tee   \
+>>                  /sys/bus/pci/slots/<slot-id>/uevent
+>>
+>> Signed-off-by: Ramesh Errabolu <ramesh@linux.ibm.com>
+>> ---
+>>   drivers/pci/slot.c | 12 ++++++++++++
+>>   1 file changed, 12 insertions(+)
+>>
+>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+>> index 787311614e5b..cbc7cf6ab7ad 100644
+>> --- a/drivers/pci/slot.c
+>> +++ b/drivers/pci/slot.c
+>> @@ -63,6 +63,15 @@ static ssize_t cur_speed_read_file(struct pci_slot *slot, char *buf)
+>>   	return bus_speed_read(slot->bus->cur_bus_speed, buf);
+>>   }
+>>   
+>> +static ssize_t uevent_write_file(struct pci_slot *slot,
+>> +				 const char *buf, size_t len)
+>> +{
+>> +	int rc;
+>> +
+>> +	rc = kobject_synth_uevent(&slot->kobj, buf, len);
+>> +	return rc ? rc : len;
+>> +}
+>> +
+>>   static void pci_slot_release(struct kobject *kobj)
+>>   {
+>>   	struct pci_dev *dev;
+>> @@ -89,11 +98,14 @@ static struct pci_slot_attribute pci_slot_attr_max_speed =
+>>   	__ATTR(max_bus_speed, S_IRUGO, max_speed_read_file, NULL);
+>>   static struct pci_slot_attribute pci_slot_attr_cur_speed =
+>>   	__ATTR(cur_bus_speed, S_IRUGO, cur_speed_read_file, NULL);
+>> +static struct pci_slot_attribute pci_slot_attr_uevent =
+>> +	__ATTR(uevent, S_IWUSR, NULL, uevent_write_file);
+>>   
+>>   static struct attribute *pci_slot_default_attrs[] = {
+>>   	&pci_slot_attr_address.attr,
+>>   	&pci_slot_attr_max_speed.attr,
+>>   	&pci_slot_attr_cur_speed.attr,
+>> +	&pci_slot_attr_uevent.attr,
+>>   	NULL,
+>>   };
+>>   ATTRIBUTE_GROUPS(pci_slot_default);
+>> -- 
+>> 2.43.0
+>>
+>>
