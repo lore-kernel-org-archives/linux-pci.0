@@ -1,57 +1,75 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87D1A330667;
-	Thu, 26 Feb 2026 11:08:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC3ED33A6E8
+	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 11:12:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772104100; cv=none; b=XOmtckBnY4XWaaEMWFrdN1J3dRsnxngaTI/4+Ay5Yuux9w7DK2ji7lC/w5Q6SzJwHmWHkrNBDiJkEjc4ULTJ+UhGbixQt5tfmDtwvfpG28773Uv/cFs/wdxeI7pkEf6zmUUCmk1BFpEDS2gfDdkt5rh0P+C1h90JCY6Se2G8DAY=
+	t=1772104353; cv=none; b=tkjk2BXVehTI+5qPOsl8FIpwahx3OHp9Sc+lEpFqlMT/xLwGfxPMLbJxYj1IVtzy8nEmvLllbkN2mjv9gsBvVI7X4iQ7RJwTf7jwdVk+ygnUY7rQ3CmEyHVslvCGO6qnbj4K+FPBp9XMCDdqjcK55dGWXGi5MrFRS5BHQqSFzoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772104100; c=relaxed/simple;
-	bh=ZqDP46s+6rmPQNKnbTHue5NpRIIQUVz+qdDzaCWyLos=;
+	s=arc-20240116; t=1772104353; c=relaxed/simple;
+	bh=WFfTXvkY3j+SoJDH54wiCqus/kuOOnnLM0PuPglxNMQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V7Nn2hXIcnLJ+AKkDZFHUs8jbXQ3TnQigTtLg+AIlt3RQgoWT4rpvxo6stmWCIw0Q7emdQh6z0GIY6tfMM/RIXxCWS11a+0SJb67mWRJeS5/ktMFX/tIcTAFDpMXTCadrX3jy0ON1oJ+2dFwpzD8ZZ0OUViD9OcPXD3en60mm8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MmDaF1SB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FgQ4/MlQ+gEuZ4j7a7+IZxHdnSZzsR7rhMZbxFzSec+Pmp1aHn1jn0uYCZn9MqTq3X8M8KF4bxKANdEEYNnpA/Q1w4Gqj11wPX1gEC6Wp518xcN2kXdu8hvR1k8Mr/W5welgCkFAKjTEU4IB70YQt7Xn1eVLVabzQ04zshDCMno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DEPCYBHT; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MmDaF1SB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 558DFC116C6;
-	Thu, 26 Feb 2026 11:08:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772104100;
-	bh=ZqDP46s+6rmPQNKnbTHue5NpRIIQUVz+qdDzaCWyLos=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MmDaF1SBq/2+8xAErIRzxqfb3pdbZKsesu1po+yRhZJCCyu0qL49fg4f8TdnzDFQO
-	 BybPJkTRDnX/eWmdoOKBse+FAyeSrW4EAnw71bps/I1pb+rtQfKq7Ls8IlTt1wnknp
-	 QTD9BCD2gkdIb07QQUtWi1A+lgQ3yaH1JbxE1vr07NoGvNkpNMcgCm3FSMFVxkJqRQ
-	 GVxiDyTLJ4p9FXo6YdgkT6iOYTI/m82iRa7il58q24/q51h9eIGMymriPp57t37gcm
-	 Lgv0alYggKsysn39KjjpOAejwI7mkgi2tDF513hUZnP4enM9ilTwoFg/EJBHpL+Jpl
-	 MRG6ZlsM/kjRg==
-Date: Thu, 26 Feb 2026 16:38:08 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
-	Bjorn Helgaas <helgaas@kernel.org>, krishna.chundru@oss.qualcomm.com, 
-	manivannan.sadhasivam@oss.qualcomm.com, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, "David E. Box" <david.e.box@linux.intel.com>, 
-	Kai-Heng Feng <kai.heng.feng@canonical.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Chia-Lin Kao <acelan.kao@canonical.com>, 
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
- set by BIOS for devicetree platforms
-Message-ID: <vpwe273ehsbsyjpysyky4ypgnawosjehen34rr2n5bpoaqjsyg@3uylwh3oyyqc>
-References: <20260122152903.GA1247682@bhelgaas>
- <5z7c25nkb35prvax6vq6ud7eaeuhzsswbf7fqvmlgys3xftgwb@odocboejrdrv>
- <e44c330b-778b-4fa1-b678-fa909cc05b03@nvidia.com>
- <bf37b6a5-268d-4c07-a536-a826b3d5953b@nvidia.com>
- <unc5zefwndgcv7wufaezz3gkg3qtaymkjlmymhyqdqwzn3wybl@ow2rhbyt772h>
- <f9ac8c8f-8959-416b-ba90-14f0886c5bc0@nvidia.com>
- <a5m4pqtiaxsq5lmq64roro633ganbeq7mypa5ojuuqy4npkvok@wcogdbzaq6xe>
- <7157c68e-97f3-43b0-bfb5-e271a8f2a4b8@nvidia.com>
- <cf1e685a-a1cb-45ec-bdc3-1ef1a3d1044e@nvidia.com>
- <e0a0dc6d-fff0-41ec-92eb-7f2dbefa967b@nvidia.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DEPCYBHT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772104351; x=1803640351;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=WFfTXvkY3j+SoJDH54wiCqus/kuOOnnLM0PuPglxNMQ=;
+  b=DEPCYBHTNdqvLrlOznwRN4B+yoRyEJdkixjinYLlPX/2S3GCF78qkY6o
+   cRNpIcqBVFQ2tTJ0D2DxJ7tae1Q4G/+gXVYKexTvE6YvMR376EssK3z+q
+   8/rpawIa+9gCpR0N75RvLUdIE85LatzTFp9MbX6SS8chfgISwr+ljlwvj
+   q0IVfpq7oXIM2pHUjWik1+sisf33a1+dzNj69pizpA8Fk8UIk2L6676mO
+   3Vwh41mHEj5BGwY9HondPkoJq/FxBUvXQKsuNitlUCzYc1ydhXFpbneLu
+   q846bFUsKdJb+AcWQAQde1tH4FHIxd4k16W8K8zI9ejtVB0QcQCWzV5zM
+   A==;
+X-CSE-ConnectionGUID: Rfr5s1YOSNG/6DMnI0/WiA==
+X-CSE-MsgGUID: gq7a85b+Q1maCgwZuOq51A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11712"; a="83490452"
+X-IronPort-AV: E=Sophos;i="6.21,312,1763452800"; 
+   d="scan'208";a="83490452"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2026 03:12:30 -0800
+X-CSE-ConnectionGUID: 2CKX5bs0QT2/SF3IDQgZ6Q==
+X-CSE-MsgGUID: 5F9yTyDCT3imhCDA6WsdmQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,312,1763452800"; 
+   d="scan'208";a="244130173"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa001.fm.intel.com with ESMTP; 26 Feb 2026 03:12:25 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1001)
+	id A041B99; Thu, 26 Feb 2026 12:12:24 +0100 (CET)
+Date: Thu, 26 Feb 2026 12:12:24 +0100
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org,
+	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S . Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Leon Romanovsky <leon@kernel.org>, Tariq Toukan <tariqt@nvidia.com>,
+	Mark Bloch <mbloch@nvidia.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	Vitaly Lifshits <vitaly.lifshits@intel.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Dima Ruinskiy <dima.ruinskiy@intel.com>
+Subject: Re: [PATCH 2/5] igc: Let the PCI core deal with the PM resume flow
+Message-ID: <20260226111224.GL2275908@black.igk.intel.com>
+References: <20260224111044.3487873-3-mika.westerberg@linux.intel.com>
+ <20260224165837.GA3736201@bhelgaas>
+ <20260225122619.GA2275908@black.igk.intel.com>
+ <87jyw09y2r.fsf@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,122 +78,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <e0a0dc6d-fff0-41ec-92eb-7f2dbefa967b@nvidia.com>
+In-Reply-To: <87jyw09y2r.fsf@intel.com>
 
-On Thu, Feb 26, 2026 at 10:34:18AM +0000, Jon Hunter wrote:
-> Hi Mani, Bjorn,
+On Wed, Feb 25, 2026 at 03:56:44PM -0800, Vinicius Costa Gomes wrote:
+> Mika Westerberg <mika.westerberg@linux.intel.com> writes:
 > 
-> On 19/02/2026 17:42, Jon Hunter wrote:
-> > Hi Mani,
-> > 
-> > On 16/02/2026 14:35, Jon Hunter wrote:
-> > 
-> > ...
-> > 
-> > > > Krishna posted the series a couple of weeks before but forgot to CC you:
-> > > > https://lore.kernel.org/linux-pci/20260128-d3cold-v1-0-
-> > > > dd8f3f0ce824@oss.qualcomm.com/
-> > > > 
-> > > > You are expected to use the helper
-> > > > pci_host_common_can_enter_d3cold() in the
-> > > > suspend path.
-> > 
-> > 
-> > I have been playing around with this, but so far I have not got anything
-> > to work. Right now I have just made the following change (note that this
-> > is based upon Manikanta's fixes series [0]) ...
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/
-> > controller/dwc/pcie-tegra194.c
-> > index 9883d14f7f97..9f88e4c1db08 100644
-> > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> > @@ -2311,6 +2311,7 @@ static int tegra_pcie_dw_suspend_late(struct
-> > device *dev)
-> >   static int tegra_pcie_dw_suspend_noirq(struct device *dev)
-> >   {
-> >          struct tegra_pcie_dw *pcie = dev_get_drvdata(dev);
-> > +       struct dw_pcie *pci = &pcie->pci;
-> > 
-> >          if (pcie->of_data->mode == DW_PCIE_EP_TYPE)
-> >                  return 0;
-> > @@ -2318,6 +2319,9 @@ static int tegra_pcie_dw_suspend_noirq(struct
-> > device *dev)
-> >          if (!pcie->link_state)
-> >                  return 0;
-> > 
-> > +       if (!pci_host_common_can_enter_d3cold(pci->pp.bridge))
-> > +               return 0;
-> > +
-> >          tegra_pcie_dw_pme_turnoff(pcie);
-> >          tegra_pcie_unconfig_controller(pcie);
-> > 
-> > 
-> > At first I was thinking that is we are not actually suspending the
-> > controller we can skip the configuration of the controller in the
-> > resume. However, if we skip configuring the controller in the resume
-> > then the device does not resume at all. So right now I have the
-> > above, but clearly this is not sufficient. The device resumes but
-> > the NVMe is not working ...
-> > 
-> >   nvme nvme0: ctrl state 1 is not RESETTING
-> >   nvme nvme0: Disabling device after reset failure: -19
-> >   nvme nvme0: Ignoring bogus Namespace Identifiers
-> >   Aborting journal on device nvme0n1p1-8.
-> >   nvme0n1: detected capacity change from 0 to 976773168
-> >   EXT4-fs error (device nvme0n1p1): __ext4_find_entry:1613: inode
-> > #18622533: comm (t-helper): reading directory lblock 0
-> >   Buffer I/O error on dev nvme0n1p1, logical block 60850176, lost sync
-> > page write
-> >   Buffer I/O error on dev nvme0n1p1, logical block 0, lost sync page write
-> >   JBD2: I/O error when updating journal superblock for nvme0n1p1-8.
-> >   EXT4-fs (nvme0n1p1): I/O error while writing superblock
-> >   EXT4-fs error (device nvme0n1p1): ext4_journal_check_start:86: comm
-> > rs:main Q:Reg: Detected aborted journal
-> >   Buffer I/O error on dev nvme0n1p1, logical block 0, lost sync page write
-> >   EXT4-fs (nvme0n1p1): I/O error while writing superblock
-> >   EXT4-fs (nvme0n1p1): Remounting filesystem read-only
-> >   EXT4-fs (nvme0n1p1): shut down requested (2)
-> > 
-> > Is the above what you were thinking? Anything else I am missing?
+> > On Tue, Feb 24, 2026 at 10:58:37AM -0600, Bjorn Helgaas wrote:
+> >> On Tue, Feb 24, 2026 at 12:10:41PM +0100, Mika Westerberg wrote:
+> >> > Currently igc driver calls pci_set_power_state() and pci_restore_state()
+> >> > and the like to bring the device back from low power states. However,
+> >> > PCI core handles all this on behalf of the driver. Furthermore with PTM
+> >> > enabled the PCI core re-enables it on resume but the driver calls
+> >> > pci_restore_state() which ends up disabling it again.
+> >> > 
+> >> > For this reason let the PCI core handle the common PM resume flow.
+> >> > 
+> >> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> >> > Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+> >> 
+> >> I love it, thanks a lot for doing this!
+> >> 
+> >> Do we still need the pci_enable_device_mem() and pci_set_master()
+> >> in __igc_resume()?
+> >>
+> >> I suppose some of that is related to the pci_disable_device() in the
+> >> suspend path (__igc_shutdown()), but there are only a few dozen
+> >> drivers that do this, so I'm not sure it's essential.
+> >
+> > I think they are just as you describe due the fact there are explicit
+> > pci_disable_device() calls. Probably we can get rid of them as well but
+> > that requires careful testing that nothing accidentally breaks.
+> >
 > 
-> So NVMe is still broken for us and I admit, I don't fully understand the
-> issue. However, it seems to me that this change is not working for all
-> device-tree platforms as intended. So for now, would it be acceptable to add
-> a callback function for drivers such as the Tegra194 PCIe driver to opt out
-> of this? This would at least allow NVMe to work as it was before.
-> 
+> This series is solving real problems (thank you btw), I think the
+> pci_disable_device() one would be better as a separate series.
 
-Since we know that ASPM is the issue on your platform and the failure also
-confirms that ASPM was never enabled before, I'd suggest disabling ASPM for the
-Root Port as a workaround:
-
-```
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 06571d806ab3..f504b4ffbcb6 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -2499,6 +2499,13 @@ module_platform_driver(tegra_pcie_dw_driver);
- 
- MODULE_DEVICE_TABLE(of, tegra_pcie_dw_of_match);
- 
-+static void tegra_pcie_quirk_disable_aspm(struct pci_dev *dev)
-+{
-+       pcie_aspm_remove_cap(dev, PCI_EXP_LNKCAP_ASPM_L1 |
-+                                 PCI_EXP_LNKCAP_ASPM_L0S);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID, tegra_pcie_quirk_disable_aspm);
-+
- MODULE_AUTHOR("Vidya Sagar <vidyas@nvidia.com>");
- MODULE_DESCRIPTION("NVIDIA PCIe host controller driver");
- MODULE_LICENSE("GPL v2");
-```
-
-You can use specific Root Port IDs or PCI_ANY_ID depending on the impact. We can
-also work on fixing the actual issue parallelly.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Okay works for me :)
