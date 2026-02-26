@@ -1,169 +1,185 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B480E2877C3
-	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 13:40:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAD8B363C6B;
+	Thu, 26 Feb 2026 13:41:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772113208; cv=none; b=oGPSiuYNX/QDNDs6SaSP/ZpZy2yMyLF0nqdcKYlzZP/7BC1CdsZUEuyZ8SO0cAOM0cxtdb3N3uF7BsUjDy0EkDlRSRjpSkFTscKWgutzdQjOIjUsFmJ/lUKZw7M3cgg+ZyKWoD+yF5gQmz7Hkoyg36Kw5xN9LC4LxmgsGRcgAJk=
+	t=1772113264; cv=none; b=G3VGng9Pjfi0hdbwjJgUrOsLvH6l6Z9nab7NSRfHKz3y1SF+kBwi3EvlFFxh1ig0ABGqQDomRSukDtxbLuumxsXFQS+fIZOj0Uqk72+8tCadTLEMY2zYb4wnQMOfkCMfIAvoiffyls2Fd/V+aOuSxlGch2+hnzWjFiZtR8PaxpQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772113208; c=relaxed/simple;
-	bh=J62PbT+KnxTsMw7VMieKbDTerOoCCuXHu60WqWgn7yk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RPbi47tLa+4ItfGaLqhEp1YJK2LRJx3/q9mY0aWs6t9/7flvItCKq9NT2ApLjpWGHDwGemTYgiNDZnaoI4vO4XWSf1IMvhyRvrJpShUHnpipRo1FNZtObQfsw3bunGQtKjFsrgDcXNZZLAl+2C1F2kzLMxSR3d8RCq4XsYsMDqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=g4Ir3i0d; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=kaSCs0Q7; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1772113264; c=relaxed/simple;
+	bh=Cd4dpBLUHEkDK0iuCRBFU+xopfpY+DpvYGCUImgDuuk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uk0D1LMol2DMBhiLQtPbTg9ZY5zVMiYKFlvm8QuUioB5AP+TQC4cQBfCxlsmCTC0XwHtA3Oj77Pju6i7Z66OQzkdSoAkMVIaYDalKhD7+JZAb/Nb8PieAJnl1fXkCR7+LgDQxQ6UouZO3WIlFaYhMAwz6DikzDbqPjbycZtrn/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=jcb9LgjN; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="g4Ir3i0d";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="kaSCs0Q7"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61QAKjUC2376147
-	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 13:40:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=Y+hnAw9byw7VsoKquyQktEK2L5U4UdglZDx
-	00bpdQ08=; b=g4Ir3i0djJoOBbb9zyR3vSLA/3nbLNf8IORmxV4+8cvnehH/uIz
-	CI7o+se6iVDu3rU7W3VmWVshOd092pN9mRA6jkz9BLVad5rsDODMSNMMJz2GZmiW
-	jSHo1tq700XdvTnBQh+IJr20fHK4IlRxnBBQwCElrFQVmLm1TbCEhva+AbLwos0G
-	DnTNxSuYgqf4ttcJgJxyBXgtAF9iRXPMvcnhdYghhKJwbVFMa7Nt5QHs6WAXG/I+
-	+OGiISfhWCIrPP5/egrejvP50DU/M6l0/6nHY8uf616gUJsdMRfW0k33dbO8rzat
-	3lpKslCHCX+5BbUI4rijEBuhtqg+5R4f8cQ==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cjm8d8jmd-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 13:40:04 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2addb9ba334so9034675ad.2
-        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 05:40:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772113204; x=1772718004; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Y+hnAw9byw7VsoKquyQktEK2L5U4UdglZDx00bpdQ08=;
-        b=kaSCs0Q7Kya1KRJyOAPkqQqXdjJaWOQVuoIyNmeot0sOiO1p2JcZfy+n9NNnUF6kc+
-         aJm2WDKGSj/rr/eNLai49iAhmtym+ricoE3670QiY6kmvGvIudj4CB05P7h4kYPKtmHk
-         ICqTTzFw0VmokxPA3D4PfUA7jIWeXJidf/feQPv5eNgSpQXUgP59cCd4ArDHXBvwa1Rr
-         fud+4xfiTWaAX6v0xnBWv6dGdOUx5EVpJafFTi6Gb09iFCf7iHTm7P94oLFkuaeEEIrN
-         55XCsmg9oZqBr3VsUOsuS1Z6yr4xNFhqvYxt1f3R8HMhU+nYAPRIzB53yto35MHRZqho
-         l40g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772113204; x=1772718004;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Y+hnAw9byw7VsoKquyQktEK2L5U4UdglZDx00bpdQ08=;
-        b=CMF27Q6v2o8SA5Ul6VTWDYpPb2lZyJSW14y90PPxA3NdUbNJMZ1LZ/z4MB7fyoBSm/
-         0DUmqQKpB/aZ1iZcdi5kbWmK7UsHWsqbo0qIsXcgWi8xGsLI9nEzLutgwBRfJbm0VhSp
-         oDQHfTmVzhlJF6nS4p3GeUXV38YeGaWIh6kZRew2EtkSTZ97a0dhMXvye+cD6IujlecM
-         n1GU1euEPR8CBo/WSbiTZVPct9JdIWmFNLMl9epHYcF7rYsRg+90ZTjAQon8vmi73DSs
-         BLwjuALAGK0/0z3BtjRgvoomaQ/PB3gWthcJiJv7eahMT0AshWV5pXcf7YWP7mjfGZhB
-         FAOQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX1YN5L21WQGHpIZPUea6HYmd3ZFBp2NeehTPJzqZvSc82iYiaJRiemBGEE9KJ2Jlf7Y5amOss/15U=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx25aNDBB8OOV+NEs6L7vV/JkTccu8mLbgQDeZTsiC6tp5zNx/5
-	05qMM+kzHipxcTVugjIqK9ftoE039CnRSmbYF3CN/bDbFoj+vZCVKjQkdTSBX7YuBHtSfqM9UM0
-	vgTqK+7Kp7Rr5j+KQ7N+68kTehW8VDZzGIFdzBqO3d6LI3Wgh68AWUVFbWbRvSmQ=
-X-Gm-Gg: ATEYQzy/vDgEqDWVAc4JSWPlBtJaZ5bts4QZaDqhyqy4+N/lDzAg5ZqZiZjcUYn+650
-	8+PX+Xxai8wcO5XFAkHcJyoNf9EC7uZO7vPAqyMwpxVU+Y1pt1ZmK6r0xmYfr3O4XW6cOfiZTym
-	u1xaanURN37vn9SHddbB3FkhtNcWhBFk3XuK51L4OO2Cswqdx5gOHZyzAUR813iB+KXOhGvw+k8
-	22nEdgIjjDKCUfG/jxkYTcDLxCW6+8xs3MI9T3w0ijB0CaelGpkJXAPL1VRuUF8Y71BNZvWpEzD
-	j0SCgaK+PjpW/bRq782065q0RjHwpq5He0uFE7LLsqfwMTqVTPog/KP9CjjqzGUJP+icqB4Z+w1
-	bpGXV+BcNvzw=
-X-Received: by 2002:a17:902:f608:b0:2a8:f8bd:bb72 with SMTP id d9443c01a7336-2ae035d05b1mr23395375ad.50.1772113203405;
-        Thu, 26 Feb 2026 05:40:03 -0800 (PST)
-X-Received: by 2002:a17:902:f608:b0:2a8:f8bd:bb72 with SMTP id d9443c01a7336-2ae035d05b1mr23394975ad.50.1772113202820;
-        Thu, 26 Feb 2026 05:40:02 -0800 (PST)
-Received: from work ([2401:4900:8fe5:3076:521d:50c0:367d:1d7b])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb6a03fbsm34960915ad.43.2026.02.26.05.39.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Feb 2026 05:40:02 -0800 (PST)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-        kwilczynski@kernel.org, bhelgaas@google.com
-Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-Subject: [PATCH] PCI: dwc: Perform cleanup in the error path of dw_pcie_resume_noirq()
-Date: Thu, 26 Feb 2026 19:09:51 +0530
-Message-ID: <20260226133951.296743-1-mani@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="jcb9LgjN"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61Q99f0k2839736;
+	Thu, 26 Feb 2026 13:40:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:sender:subject:to; s=pp1;
+	 bh=uMssfxhPFSn/6vIySmtb07vru5Ln5O2CT/2uar6TikI=; b=jcb9LgjNBXfm
+	gmB0RiZ9M7lUG0G/EHKTtZYmZLM2oslFGR9wrTdi6D6sqUywGZ7KPsE9aKMER7E7
+	iJ6BoSjJY1TDCaiQyKHyZFZbUsbloRsFbDiGbEb4r45SmXeAXKjcSJYhgdlFng3j
+	6Q2/0rMVRJd/sMj4+pq2+tiBmM5XDTX0TWWCggmmApdRAaOmyIJHyCuLOK0uN426
+	FYQDDmaRRvq4zsL4zJL7kVTrus2nA9d8LktJER2C882/Q0vNOUYYcztVe9dp96Wm
+	kfry53xPD/WDmKZ6QVdUHkzLwfxKNFbrR/8xYdNXhAOlnVYwvjjkU0utezYB/KaC
+	0u8aHVERHA==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cf4bs5smg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 26 Feb 2026 13:40:57 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61QBFsu4027797;
+	Thu, 26 Feb 2026 13:40:57 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cfsr23eu2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 26 Feb 2026 13:40:56 +0000
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61QDerQ048955798
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 26 Feb 2026 13:40:53 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id EEEB520049;
+	Thu, 26 Feb 2026 13:40:52 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DD25B20040;
+	Thu, 26 Feb 2026 13:40:52 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
+	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu, 26 Feb 2026 13:40:52 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
+	(envelope-from <bblock@linux.ibm.com>)
+	id 1vvbbo-00000001FWX-2Zix;
+	Thu, 26 Feb 2026 14:40:52 +0100
+Date: Thu, 26 Feb 2026 14:40:52 +0100
+From: Benjamin Block <bblock@linux.ibm.com>
+To: ionut.nechita@windriver.com
+Cc: bhelgaas@google.com, helgaas@kernel.org, schnelle@linux.ibm.com,
+        alifm@linux.ibm.com, julianr@linux.ibm.com, dtatulea@nvidia.com,
+        ionut_n2001@yahoo.com, sunlightlinux@gmail.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH v3 1/1] PCI/IOV: Add reentrant locking in
+ sriov_add_vfs/sriov_del_vfs for complete serialization
+Message-ID: <20260226134052.GA13050@p1gen4-pw042f0m>
+References: <20260225202434.18737-1-ionut.nechita@windriver.com>
+ <20260225202434.18737-2-ionut.nechita@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=QMtlhwLL c=1 sm=1 tr=0 ts=69a04d34 cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=xqWC_Br6kY4A:10 a=HzLeVaNsDn8A:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=_K5XuSEh1TEqbUxoQ0s3:22 a=VwQbUJbxAAAA:8 a=h4SL0BZ7AAAA:8 a=EUspDBNiAAAA:8
- a=K8sXToTmQG9RiKs_eVkA:9 a=1OuFwYUASf3TG4hYMiVC:22 a=Cfupvnr7wbb3QRzVG_cV:22
-X-Proofpoint-GUID: _hHweQFjVYShX4U3pVnACcYK6c5WgE1x
-X-Proofpoint-ORIG-GUID: _hHweQFjVYShX4U3pVnACcYK6c5WgE1x
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI2MDEyNCBTYWx0ZWRfXwjJSyPcmgFK1
- TBDzpx5K9m94r7rsOcZs56474Ga4RdTqn/bHNv51K/2YH7QrwCC1xWJBNgQrS3wJ7Ejtt7QtV48
- zhETN+zKpmUww0HkQxal4KsRvLoud5wN31TDBNjFedhLjbS7LZ3G2Qu+uWiTNEDU5AUNyT7q7o1
- 9oA0QE4lkLW5fj5NM9pkYJTbSmdpn27f5kXt71yQ9sgZjgflnb5Fa8uNzAExKSk9v2xlzk78JFU
- v2W+dY5fGZaZyy0PwYskxY9U3ooiqz/8IOaG501a9+xfvvj+NX3u04BpwArnHMIfLqS8ot3Y/Cm
- rj1dYsDyVGmUT9isuit7lf+UbmjyBlOaYSr+rCODwxgWNd/RUZGRHi8HTJwRS+nbqV76PWvDNYE
- KMl+mFMAQxf7j47H27dmnBF4cidCaTc2MRiJnvSOUwQbNHm4KnRACk1gDxSQ5cw06n4jOfbnvRO
- CR7VUtQE9ewrA4Byr8g==
+In-Reply-To: <20260225202434.18737-2-ionut.nechita@windriver.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-ORIG-GUID: DvPWJn3ZgTygi4SYrUIl9MfbtT4yi3fi
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI2MDEyMyBTYWx0ZWRfX5QXDFr9MaSr3
+ LpuVYBOV/PgMhZwsw+LMUcltH48RrFTe0dH2bXTp45ncuWiTvYa000XvKCvIDpArzOAk8U8Hzrz
+ ibpqDhkExZa7VBsKpFqQH6q23WiNRKelAXwyABGZ6xI2xwrJQk0Kpy5RL5M9E25y26QVuY8Yj6b
+ lQFLBdwIfvoyAU5+7+BI7Dqa+646ugU+vZy3IM/446YO2RCkvMULE2lwOuj1uYRSNHPA5Q202/O
+ kt2y8smdxkMswijlvnfX9Zsa1MAL11rjGsZPCcVhxFkXo6z2Hc6aFwriaZcJsB/MbvqgeFPtNVT
+ 5sZrQYnM1yiKz9gepUkIVURntTR5t61Ejh6kCZLQKyzNXjqQRQWmAUZQd8CFHcOt9H+4nuA6jaS
+ ZhDBKOOqqNQe1vqDscyJ7wgcj76cO7DVdd0VTEjjLw/dwwXi45Uc+nbblicxQGHzUDhWTERprnJ
+ GvjswCCPZW4lo8lPq7A==
+X-Authority-Analysis: v=2.4 cv=eNceTXp1 c=1 sm=1 tr=0 ts=69a04d6a cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=8nJEP1OIZ-IA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VnNF1IyMAAAA:8
+ a=t7CeM3EgAAAA:8 a=Gb5hSY02JU1MmV-but8A:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
+ a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-GUID: mQi7RIAWRoQiojNv512PgMEhbY7_QUR4
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-25_04,2026-02-26_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 lowpriorityscore=0 impostorscore=0 phishscore=0
- bulkscore=0 adultscore=0 spamscore=0 priorityscore=1501 suspectscore=0
+ clxscore=1015 priorityscore=1501 phishscore=0 suspectscore=0 adultscore=0
+ bulkscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0 spamscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602260124
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602260123
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Wed, Feb 25, 2026 at 10:24:34PM +0200, ionut.nechita@windriver.com wrote:
+> From: Ionut Nechita <ionut.nechita@windriver.com>
+> 
+--8<--
+> 
+> Instead, introduce owner tracking for pci_rescan_remove_lock via a new
+> pci_lock_rescan_remove_reentrant() helper. This function checks if the
+> current task already holds the lock:
+>  - If the lock is not held: acquires it and returns true, providing
+>    full serialization against concurrent hotplug events (including
+>    platform-generated events on s390).
+>  - If the lock is already held by the current task (reentrant call from
+>    remove_store or sriov_numvfs_store paths): returns false without
+>    re-acquiring, avoiding deadlock while the caller already provides
+>    the necessary serialization.
+>  - If the lock is held by another task (concurrent hotplug): blocks
+>    until the lock is released, then acquires it, providing complete
+>    serialization. This is the key improvement over a trylock approach.
+> 
+--8<--
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index bccc7a4bdd794..467362c277f19 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -3509,19 +3509,38 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
+>   * routines should always be executed under this mutex.
+>   */
+>  DEFINE_MUTEX(pci_rescan_remove_lock);
+> +static struct task_struct *pci_rescan_remove_owner;
+                            ^
+                            const *pci_rescan_remove_owner
 
-If the dw_pcie_resume_noirq() API fails, it just returns the errno without
-doing cleanup in the error path, leading to resource leak.
+Minor nitpick: you could declare this `const`; making it clear that this is
+not meant to be used to modify the task in any way.
 
-So perform cleanup in the error path.
+>  void pci_lock_rescan_remove(void)
+>  {
+>  	mutex_lock(&pci_rescan_remove_lock);
+> +	pci_rescan_remove_owner = current;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
+>  
+>  void pci_unlock_rescan_remove(void)
+>  {
+> +	pci_rescan_remove_owner = NULL;
+>  	mutex_unlock(&pci_rescan_remove_lock);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
+>  
+> +bool pci_lock_rescan_remove_reentrant(void)
+> +{
+> +	if (pci_rescan_remove_owner == current)
+> +		return false;
+> +	pci_lock_rescan_remove();
+> +	return true;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_lock_rescan_remove_reentrant);
 
-Fixes: 4774faf854f5 ("PCI: dwc: Implement generic suspend/resume functionality")
-Reported-by: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-Closes: https://lore.kernel.org/linux-pci/78296255.3869.19c8eb694d6.Coremail.zhangsenchuan@eswincomputing.com
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+Otherwise this looks good to me.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index ba183fc3e77c..a74339982c24 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -1304,15 +1304,24 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
- 
- 	ret = dw_pcie_start_link(pci);
- 	if (ret)
--		return ret;
-+		goto err_deinit;
- 
- 	ret = dw_pcie_wait_for_link(pci);
--	if (ret)
--		return ret;
-+	if (ret == -ETIMEDOUT)
-+		goto err_stop_link;
- 
- 	if (pci->pp.ops->post_init)
- 		pci->pp.ops->post_init(&pci->pp);
- 
-+	return 0;
-+
-+err_stop_link:
-+	dw_pcie_stop_link(pci);
-+
-+err_deinit:
-+	if (pci->pp.ops->deinit)
-+		pci->pp.ops->deinit(&pci->pp);
-+
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(dw_pcie_resume_noirq);
+I've run tests on s390 with hot-unplug from within Linux and externally
+triggered, driver unbind/unload, s390 PCI recovery, and some other minor
+tests.
+No lockdep splats, no other warnings/splats; it looks good to me.
+
+
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Tested-by: Benjamin Block <bblock@linux.ibm.com>
+
 -- 
-2.51.0
-
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
+Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
