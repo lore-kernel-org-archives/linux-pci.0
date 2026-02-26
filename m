@@ -1,148 +1,150 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F12813876A5
-	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 06:43:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 278642E1EE0
+	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 06:46:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772088223; cv=none; b=nVuwjHYYUvJWzivmjiijH3Dkhg6FNwE1VGMt57J+bN6vEkB1j/0TbSSprJKNi1DI935OgrUNwf4jLAtUyZ6SQD0IoHw/hVfJwQ7HCV99p6vFmo6j/SZtKaJAtKeMlUTd/nXQD/9dXJS2U9Wp8KA+vHrFitLa+GCsGXReCYDAgWM=
+	t=1772088403; cv=none; b=KU21QPs5Uo9PqLgyQOHt4KSdcxtWRPAH7hIO6Qe0r8XDn27vACKZAM7pexh5S+LPl5iUORPdDwuHrwDp8ooFa/HLmfTRZ2c9Z9KjLqfm5pQVCzPu0lK9AhPxyz9yxBLMzyVuNoQYqfIDJ16j3Eco9PHbKy//7R9aAze+q+XaUpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772088223; c=relaxed/simple;
-	bh=FufQji+7Ewrr7vcq8PkZtbwA3C6p0/81Ayvn998N2Fc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JN6HzXUi5WF2fGL//HfUGf9yVM00XqpzcFwQvSgZQGjrqbIZNrIgMw7ZhY0+fcxZfmRJyDgTLfNe/ao9VV0Y10PO9wBceegn4wgpQ1Rd8tiqI7/WGtqlewypHS2lbyRfNdUQYPkTJ2SJkfuugyV3PdRlHwOfr3KwqBtLqs+Ocus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-35851eadc17so256889a91.2
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 22:43:41 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772088221; x=1772693021;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+	s=arc-20240116; t=1772088403; c=relaxed/simple;
+	bh=MHprEKGJ7TJgPffHT6hB4hfpFsv6f68mRCwU1c78FkA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Yr5fVPgjnmbV//5ll/r8sueLEgg+YgJvzG+VQ13EhEkZrmIE90jpUaEBVzF4pONI13atDTEiV28kEGMuNUSu7q+F+ZvoFRJS4kXAcvHM8bRWYfnsDxWOFhrxemAnXW1lciHPWZ9e9fImgpbMFIJgKqlbEGLs4TggkkTWidVAW7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=RzUw2lE6; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JFnJYkvA; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="RzUw2lE6";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JFnJYkvA"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61Q4V3dM3226132
+	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 06:46:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	HtW2bFRzDCHNDseCd5JWULZWJjDZJJs0SedB2d4noy4=; b=RzUw2lE6O0S/GDw6
+	x1tDc46Jr/9kjuoNhiTy2WNhpfLHRrh2nGDD59kj/i52bvXE3U5JGEtY0uS5iJUX
+	cp5bxZm88mj4YILnU9VZtmT82AI579sfS79xQQDkHY5++1oP1+mZ+PrDci76Povn
+	s4Syvu87xc0cmdUwfzQsXbXvYv8FTmjQK1TncyhVjXS+DTl+RXJKM9pN+BPAWMmg
+	AEb3j/6cOgnDm/c4nTfxHx5jInHsuZzDLnh4W8wghEX3zbldubqudhyr1QQQB2ti
+	5DkXMD5oOLP5C0z/ytkq38k6/s0c+y78XuGRiaAokSxXgPK9nuAEXuF+YfOs4kXM
+	M/QBGA==
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cjdph0ka3-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 06:46:40 +0000 (GMT)
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2adae76a9d0so6100625ad.2
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 22:46:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1772088400; x=1772693200; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=b+gS9rzm17IOsOjXDE1pbAIlvnilZzxzhAM4Cjn+O+I=;
-        b=jPCxb0K+qJ6EM5qjwRj2XGTaS5z07i1LYDf6dLg9KZfmgGRTXn3bsQDR+0edZyqWP8
-         9bJNElj5rDQcwOHqmFNf7An40PocPytPxDrUJzDOfu/nfuHAEQwT7LJDnlZG5d6LfdRJ
-         XWGKhvF6odrKCflrrtO5Fxoglbyhe/44icY6nEWpIvRjYhBLA87l8DqIY1JlP/sU1sQX
-         GmYNHyUOSBPDqSLbt5Gwmy8iEzUpsCqv82obnj3JW9hUZk4eLau/6uAUfAi0kDFcNTXX
-         oqBu90GWehpSVXjnTBmyGCARbAPlGW4ukde4tKLKPZ1DWKYGcrVMoRajt7i4U/k0s/Fq
-         k9ig==
-X-Gm-Message-State: AOJu0Yz1W+Gy2XNeW70ltBOx+6bIJcm/P1jVqFRd3fn1iKgNBp1HMQRN
-	PuxxAq2WITasbD1AXT4wQv9CaAY+ovHBgeAzylZG6ims+3MEwCGqooRy
-X-Gm-Gg: ATEYQzyR0yT+73SD71yMP9mohAUZQsu+cyg7ik9E9xMfPFLrESBTSpf/TUeg4lkLirc
-	mi18V/gE3NU84i4zR2e08zuI8PIulXG+rtDEVTmlG/LEDqfigaN6Cu9xt+bUqmrvKr/SlpSoS6J
-	yaQmYq/p/qbMVPl6GlXrT+dLzcnURyGYrhvhu3eCl3KXUQmQ+fcxhnLfWI58rX5bHtJJ0aomNLP
-	7oYdDQzJi/NBwt28raT14FuyYGzTM8BInck+DyAULDeUNI83tQ1JOeqKu7o/AfWFnWRWrRo/KH+
-	Yd3mmKSsekljK63U+0cEScAzMgHZYOmlvOXs5TEvMHPvZaCIQbfpZREedKJSPN0LbfBJUhG/9W6
-	7za1DXZBqjIPkU1v3xl01M0Eb2UcKCWz5XG0jiZQi0J76ddnkkB00mn4+JFCL2aSlp3vT4djn+a
-	ImuqtoTkwrAqXgr8c8OsLHC3Y/N28+zruk1fewE4OQe6RMpS1Ljg==
-X-Received: by 2002:a17:90b:1dc8:b0:354:a608:30a2 with SMTP id 98e67ed59e1d1-358aea0818bmr15837823a91.35.1772088221270;
-        Wed, 25 Feb 2026 22:43:41 -0800 (PST)
-Received: from localhost.localdomain ([116.128.244.169])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3593dcad6ddsm1040973a91.1.2026.02.25.22.43.38
+        bh=HtW2bFRzDCHNDseCd5JWULZWJjDZJJs0SedB2d4noy4=;
+        b=JFnJYkvAqHKJ+bbMgTPBx/VVc2xsmpfIfBIA+k5LGzNR20C7L6oXwAjY2u1pi+c/40
+         M2u0ICMXUMwSh+Qux8UMD0UR90ALHMscntv0KzIKgrg+GAVIXQ2eyBWIyzQm55DiQqEw
+         LdHXWPngrwAavjJGz6YLdLmTJsC9y2DGMTddRrkZB1CQSf5o6CrVnJcqoA3aLh+g/Buw
+         ZaaRKoQ3Sd00v1nqLYkCXokQy+Pm25trgxr4lkBJtKwY5OzDJ6qDp0ZguxV5jhaySxro
+         H2zZkah1cjMK2ch9wwkL/6m/Wo3Lb762GTJSI5d6pJVo0fD3JuiQQ9lpuBXe/lPfiTvb
+         OOdg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772088400; x=1772693200;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=HtW2bFRzDCHNDseCd5JWULZWJjDZJJs0SedB2d4noy4=;
+        b=H33Scx7rnnOCcmKpf1kDmsjYiOk+bEO5kFGFh3RIRe4/SU5mKkkqEOXknO0sjtu1XK
+         7hV6zMl9RZoM/JXGsqCZidpouFscsuScbNqQxv21tO7/y//PfoIi9FFNKdGXL9mM8Mx1
+         +N+rxSFqR090IcEV05fComLG6d2zby3yWunLqDsBO/CZviVXDBgAYJHvXVFRG0mjBBv4
+         9rW+oYnVDaNX5kgNOSivtJinwiSFKP13mNj1GvCek97Iwk9oBicgOVB5pmeCcPtdMmlN
+         s2LDjXJIMAriwdT0lW92O6scRgtoW1oDZgfn+cXvvC/dZioP1sG6kqHJKaaDCzi+Q4sp
+         fc+A==
+X-Gm-Message-State: AOJu0YzvxE85Q7gmm3/o5096+M6/V2aoaebsjly4ot/KolFGER1iDpwn
+	jYrw9mgJho5lJLyOqnxNKiI0b2kP6refOjIEWie+ScbhBpLP5hPqC6pyx4348A3gFMYZm2N8dTl
+	X52ElncZJyihRhjuArH4jW2hG4NZvJ+Z5Wz4quLBEwWeoNhaegOKO1xVhBBumbYY=
+X-Gm-Gg: ATEYQzwSH4f0mTxZ11eacINE7XqjED93UxePme7Yejdr1aBrq/PUWC/FrI3SKEr9JYf
+	XilB+tbAJ8ApnYPGgLSg/3euMvH3QnTVYrJm+cgAEbwqYpPGQwg9qK+orAgGpKGNDSB7zS2bpDu
+	Z+udInXy0hWVpEGC81BC4J2Tf77FpmdOGg5mEXlH4ZeWiy6xWx8/aubUOHqjGBBeOePDh9VMhFa
+	PKo8RajAJ8JoLH3l28GXT3C7+ypnbkRwgt3EYD/AENduL13GBz+8GddKgf4G01pTZKcHiZ6i0RY
+	MQeqaadmwEHukQngDk+3/+5g3Jvt/aMY8dfzed/Am60X7UshPvSgzzXXRBFMfLat70uBjcYQuHM
+	v1GZgAVODRtCSrKCTC8ET/7g=
+X-Received: by 2002:a17:903:1a28:b0:2a0:de4f:c99 with SMTP id d9443c01a7336-2ae0305eecamr13245735ad.9.1772088399991;
+        Wed, 25 Feb 2026 22:46:39 -0800 (PST)
+X-Received: by 2002:a17:903:1a28:b0:2a0:de4f:c99 with SMTP id d9443c01a7336-2ae0305eecamr13245475ad.9.1772088399484;
+        Wed, 25 Feb 2026 22:46:39 -0800 (PST)
+Received: from [192.168.1.2] ([2401:4900:8fe5:3076:521d:50c0:367d:1d7b])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb5db596sm14382225ad.35.2026.02.25.22.46.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Feb 2026 22:43:40 -0800 (PST)
-From: Hongyu Xie <xiehongyu1@kylinos.cn>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	ilpo.jarvinen@linux.intel.com,
-	Hongyu Xie <xiehongyu1@kylinos.cn>
-Subject: [PATCH v2] PCI: replace msleep to save waiting time
-Date: Thu, 26 Feb 2026 14:43:33 +0800
-Message-Id: <20260226064333.538857-1-xiehongyu1@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+        Wed, 25 Feb 2026 22:46:39 -0800 (PST)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: Richard Zhu <hongxing.zhu@nxp.com>, Lucas Stach <l.stach@pengutronix.de>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>, Trent Piepho <tpiepho@impinj.com>,
+        Felix Gu <ustc.gu@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        imx@lists.linux.dev, linux-kernel@vger.kernel.org
+In-Reply-To: <20260124-pci_imx6-v2-1-acb8d5187683@gmail.com>
+References: <20260124-pci_imx6-v2-1-acb8d5187683@gmail.com>
+Subject: Re: [PATCH v2] PCI: imx6: Fix device node reference leak in
+ imx_pcie_probe()
+Message-Id: <177208839386.15535.2535030930377494480.b4-ty@kernel.org>
+Date: Thu, 26 Feb 2026 12:16:33 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
+X-Proofpoint-ORIG-GUID: SuCvGPkRxiSUiSGb_qUifCA7-ndmYFXX
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI2MDA1OCBTYWx0ZWRfX1oMTaDPonK7J
+ 1H8rolm+R2NMyTfQlOSdVICk7y3OTTNeMqpxoxvqou90JggrGkOAVOaliUG9/tIn3jKfQuTON6K
+ CCSQzQ+tBy6HEBQdacJ1qTCbmnLkTzi91+K7G6B8k5GLtAcapE9Fa+2eiqP6rQrAy8CMJUcbfuk
+ kJP8deRbQuyHg7w3Zgm8524KKLr7HnN8uieTfgBaQiJOsgzVo6NuPptmvCQfCLHybEfQ/mT3TSP
+ c+tgY6z68ge/wuWbHXlVl8olfSpEgYfDKGPZ54l2vaeIOKsT2y2OWVCjHmPPIPhl7KKT5JGhExb
+ GXoDCDNA2b/oKWJiureV8eQuhk1k1+VIso90ytcwT8jaHyvHujVV3hoPVM9vYK/fYeU+izWzcyd
+ d60a7s9WW4tY6UFUx9cjaCbaiw4DJ18kHvNUNx068wC1PZ6CwHYyqTU+9fjMyaiDmnm6y0bMSJK
+ 8raPUn1KTkP3pFsIY9Q==
+X-Authority-Analysis: v=2.4 cv=NJLYOk6g c=1 sm=1 tr=0 ts=699fec51 cx=c_pps
+ a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=VwQbUJbxAAAA:8
+ a=vwxMJ2_kboZHlRSlzigA:9 a=QEXdDO2ut3YA:10 a=GvdueXVYPmCkWapjIL-Q:22
+X-Proofpoint-GUID: SuCvGPkRxiSUiSGb_qUifCA7-ndmYFXX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-25_04,2026-02-25_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 priorityscore=1501 impostorscore=0 bulkscore=0 suspectscore=0
+ malwarescore=0 clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602260058
 
-On a arm64 platform, there is a 10~11ms gap during PCI bus scan(last two
-line below, between 0000:01:00.0 and 0000:02:00.0):
-[    0.078871] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff window]
-[    0.078873] pci_bus 0000:00: root bus resource [mem 0x1000000000-0x1fffffffff window]
-[    0.078875] pci_bus 0000:00: root bus resource [io  0x0000-0xffff window]
-[    0.078877] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.078888] pci 0000:00:00.0: [1db7:dc01] type 01 class 0x060400
-[    0.078895] pci 0000:00:00.0: reg 0x38: [mem 0xfff00000-0xffffffff pref]
-[    0.078914] pci 0000:00:00.0: supports D1
-[    0.078916] pci 0000:00:00.0: PME# supported from D0 D1 D3hot
-[    0.078979] pci 0000:00:01.0: [1db7:dc01] type 01 class 0x060400
-[    0.078984] pci 0000:00:01.0: reg 0x10: [mem 0x1000000000-0x10000fffff 64bit pref]
-[    0.079001] pci 0000:00:01.0: supports D1 D2
-[    0.079003] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
-[    0.079073] pci 0000:01:00.0: [1e49:1101] type 00 class 0x010802
-[    0.079086] pci 0000:01:00.0: reg 0x10: [mem 0x58100000-0x58103fff 64bit]
-[    0.079201] pci 0000:01:00.0: 31.504 Gb/s available PCIe bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:00.0 (capable ojjf 63.012 Gb/s with 16.0 GT/s PCIe x4 link)
-[    0.091501] pci 0000:02:00.0: [10ec:b852] type 00 class 0x028000
 
-In pcie_wait_for_link_status(), using msleep(1) to wait for link status
-change.
-But msleep(1) can sleep for nearly 5ms.
+On Sat, 24 Jan 2026 23:42:45 +0800, Felix Gu wrote:
+> In imx_pcie_probe, np is obtained by of_parse_phandle() and must be
+> released when it's no longer needed. However, it doesn't release the
+> reference, which cuases a reference leak.
+> Fix this by using the __free(device_node) cleanup handler to release the
+> reference when it goes out of scope.
+> 
+> 
+> [...]
 
-ftrace shows:
- 0)               |                pcie_wait_for_link_status() {
- 0)   0.500 us    |                  pcie_capability_read_word();
- 0)   0.580 us    |                  pcie_capability_read_word();
- 0) * 10292.26 us |                }
+Applied, thanks!
 
- after changing to usleep_range().
- ftrace shows:
+[1/1] PCI: imx6: Fix device node reference leak in imx_pcie_probe()
+      commit: 4836ad727486563370b213ef594d644d1bf85b8d
 
- 0)               |                pcie_wait_for_link_status() {
- 0)   0.320 us    |                  pcie_capability_read_word();
- 0)   0.480 us    |                  pcie_capability_read_word();
- 0) # 2483.980 us |                }
-
- After changing to usleep_range(), the time gap is gone:
- ...
-[    0.076763] PCI host bridge to bus 0000:00
-[    0.076766] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff window]
-[    0.076768] pci_bus 0000:00: root bus resource [mem 0x1000000000-0x1fffffffff window]
-[    0.076770] pci_bus 0000:00: root bus resource [io  0x0000-0xffff window]
-[    0.076772] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.076783] pci 0000:00:00.0: [1db7:dc01] type 01 class 0x060400
-[    0.076791] pci 0000:00:00.0: reg 0x38: [mem 0xfff00000-0xffffffff pref]
-[    0.076811] pci 0000:00:00.0: supports D1
-[    0.076813] pci 0000:00:00.0: PME# supported from D0 D1 D3hot
-[    0.076874] pci 0000:00:01.0: [1db7:dc01] type 01 class 0x060400
-[    0.076880] pci 0000:00:01.0: reg 0x10: [mem 0x1000000000-0x10000fffff 64bit pref]
-[    0.076897] pci 0000:00:01.0: supports D1 D2
-[    0.076898] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
-[    0.076969] pci 0000:01:00.0: [1e49:1101] type 00 class 0x010802
-[    0.076982] pci 0000:01:00.0: reg 0x10: [mem 0x58100000-0x58103fff 64bit]
-[    0.077098] pci 0000:01:00.0: 31.504 Gb/s available PCIe bandwidth, limited by 8.0 GT/s PCIe x4 link at 0000:00:00.0 (capable of 63.012 Gb/s with 16.0 GT/s PCIe x4 link)
-[    0.078281] pci 0000:02:00.0: [10ec:b852] type 00 class 0x028000
-
-To speed up booting, replace msleep() by using fsleep() (more generic
-then usleep_range()).
-
-Signed-off-by: Hongyu Xie <xiehongyu1@kylinos.cn>
----
-
-v2->v1:
-1, add booting log
-2, change usleep_range to fsleep
-
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f3244630bfd0..15fd15f24df3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4519,7 +4519,7 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
- 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
- 		if ((lnksta & lnksta_mask) == lnksta_match)
- 			return 0;
--		msleep(1);
-+		fsleep(1000);
- 	} while (time_before(jiffies, end_jiffies));
- 
- 	return -ETIMEDOUT;
+Best regards,
 -- 
-2.25.1
+Manivannan Sadhasivam <mani@kernel.org>
 
