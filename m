@@ -1,102 +1,171 @@
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F2454A33;
-	Thu, 26 Feb 2026 09:07:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 637B6387571;
+	Thu, 26 Feb 2026 09:22:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772096869; cv=none; b=FyASP3qciVfjOj3+43w5VBIhs/gEyXTG7qj478HlcIRSHWBbyFJEHMeIDdJPRuBLM4Zix0G1Bi69HhtP7yyHYoBcPzLhmczN4kl5osEMJMfRmNjv9S8Us9JrQBy9fjZ+EZivxSvFNJGGjJyzpW0FDL0NTao9oKu8SBKZtkkjIMA=
+	t=1772097757; cv=none; b=NzeyLIZdILZIyI1y1ynUlk30kf+Z/CL/PjfxCf9ZdrTwtjg3A0OKQZSg5gk0K8Xx+7bQsTlOQCL3dPSYJJGb9mElYA80E1RpSDkLtHvMBm1BiUautkkhu61QWZ8JXlBg7YkzzdxdnTNwowq9AEbw1ttoyf2WU+YKEf9ZXv2+s5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772096869; c=relaxed/simple;
-	bh=N6DmY/Auqmm31rRqJXdX1mJqdtSrqWGfjdGUvxs5C80=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=CLfTrQzTHlIyd5S+kwIe9v+VFNDn7HTS22w5Z6rkNkqhI0Hk/KHt+iu8ODSb6Sv63MRTTfouvQcIRB+HY0zvpoisUoJ+3NLI2Xe+qq5QmZoWWKjsWJyt2HRJ8Bisnm3sBo3yeh7ZAqotZ+qDnWl746J81xYZ+HzkRmRSdqZ/yXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=N5F2cFT2; arc=none smtp.client-ip=113.46.200.222
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1772097757; c=relaxed/simple;
+	bh=lTviYClUxN/Jy/GEH3hHKw2Bo7FZdJvHg/GokOuKFtY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ke7qHOZelfodX7BJEJ5y9J+2J1pNSLyRxZ/zpXvyCMNoxpQbdu1WpWYmOA7vN2fNrOonJ2VZ3LDDw03Ra9CkpYsrd/WUkqPL6+DsLSDpzCKgi9aZcFZInJdtKH55yEtA7VuxLDiZqNz6Eiyr/5b5n2vnRDlcjQrx80hJFcw7hbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VNryg4PW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="N5F2cFT2"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=msFOCavQxADz3tmmF8NqTgdYIhYjr0sDnPVbw3lFN9E=;
-	b=N5F2cFT29uso15Nno/oymItctoIJ1ypjRn5rTr19Ts0LcHgiQDdwNMzkA6P0pjb879mdEz/+U
-	JH3bRKGKngzBmpjscwDUB5Co46dh9rBVyFe3ObjyxTXIwppID4CYpPCVGdkcakPFMfHwFRga2dg
-	GW7n0Ttl245S7Is/SXCbeW4=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4fM58J0Hs5zLlZc;
-	Thu, 26 Feb 2026 17:02:56 +0800 (CST)
-Received: from kwepemr500012.china.huawei.com (unknown [7.202.195.23])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5B12740565;
-	Thu, 26 Feb 2026 17:07:43 +0800 (CST)
-Received: from [100.103.109.121] (100.103.109.121) by
- kwepemr500012.china.huawei.com (7.202.195.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 26 Feb 2026 17:07:42 +0800
-Message-ID: <1f4d4b42-701a-4c92-b243-66127529a8dc@huawei.com>
-Date: Thu, 26 Feb 2026 17:07:42 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VNryg4PW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E24D3C19422;
+	Thu, 26 Feb 2026 09:22:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772097757;
+	bh=lTviYClUxN/Jy/GEH3hHKw2Bo7FZdJvHg/GokOuKFtY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VNryg4PWTAuvORVuHnvt5kZc5X4tAy0uAKyhHWedPbqvTRTmJK9GeV+YqDv1OvbwD
+	 t65rRZEWIQPzU0+uFtN7pJCYZyo2bKCPNqRuVajKebqgdXxQBauVYJRw15Cl4keyvG
+	 hd/nHVJtdaFsk57IurP46ICAlQIuLkIF8+wdTr+sRYDXZrAW1/VH1ZkuIwM59wgQyR
+	 /CN3/KiMp4nNqI/9ED4z7OrZTWQoTDLQLgpAX+p7KPZOSjq2jOikp5eB48HuumwSf5
+	 6CXcVk0yF/spNQWd11os5JH14EZOj5hpIgsVlepmNzhNPwjv6OMzK/eSIPh02x+Yqz
+	 z0IRaxmlG9UPw==
+Date: Thu, 26 Feb 2026 14:52:30 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH] PCI/pwrctrl: Do not power off on pwrctrl device removal
+Message-ID: <3xz5crqb5ez3n2tvz3lkj2f3lpvgwfiiwdk5qtwzsxsegro345@l4gpn3wdr32j>
+References: <20260224071258.2654521-1-wenst@chromium.org>
+ <sgxqu7oz7zoytjk6mtfnlrvyqjqjtk4w7jy2jb4iowfzxv7kly@2k2kgfsjcfdy>
+ <CAGXv+5GGv-+UK458GU1wc3RuyOesRPi7LGWDXoU2S4yfoOtbVg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/4] Miscellaneous fixes for pci subsystem
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <alex@shazbot.org>, <bhelgaas@google.com>, <chrisw@redhat.com>,
-	<jbarnes@virtuousgeek.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <liuyongqiang13@huawei.com>
-References: <20260206222923.GA98884@bhelgaas>
-From: duziming <duziming2@huawei.com>
-In-Reply-To: <20260206222923.GA98884@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemr500012.china.huawei.com (7.202.195.23)
+In-Reply-To: <CAGXv+5GGv-+UK458GU1wc3RuyOesRPi7LGWDXoU2S4yfoOtbVg@mail.gmail.com>
 
+On Thu, Feb 26, 2026 at 04:57:59PM +0800, Chen-Yu Tsai wrote:
+> On Thu, Feb 26, 2026 at 4:23 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Tue, Feb 24, 2026 at 03:12:56PM +0800, Chen-Yu Tsai wrote:
+> > > With the move to explicit pwrctrl power on/off APIs, the caller, i.e.
+> > > the PCI driver should manage the power state. The pwrctrl drivers should
+> > > not try to clean up or power off when they are removed, as this might
+> > > end up disabling an already disabled regulator, causing a big warning.
+> > > This can be triggered if a PCI controller driver's .remove() callback
+> > > calls pci_pwrctrl_destroy_devices() after pci_pwrctrl_power_off_devices().
+> > >
+> >
+> > Also, we should add the devlink dependency as below so that the pwrctrl driver
+> > becomes the supplier of the controller driver. This will prevent the pwrctrl
+> > driver from being removed before the controller driver.
+> >
+> > diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
+> > index 6f7dea6746e0..0c1cc9599b41 100644
+> > --- a/drivers/pci/pwrctrl/core.c
+> > +++ b/drivers/pci/pwrctrl/core.c
+> > @@ -311,6 +311,12 @@ static int pci_pwrctrl_create_device(struct device_node *np,
+> >                 return -EINVAL;
+> >         }
+> >
+> > +       if (device_link_add(parent, &pdev->dev, DL_FLAG_AUTOREMOVE_CONSUMER)) {
+> > +               dev_info(parent, "Failed to add device link\n");
+> > +               of_platform_device_destroy(&pdev->dev, NULL);
+> > +               return -EINVAL;
+> > +       }
+> > +
+> >         return 0;
+> >  }
+> >
+> >
+> > Even so, the pwrctrl drivers should not power off the resources on their own.
+> > So this patch is valid on its own. I just have one comment below.
+> >
+> > > Drop the devm cleanup parts that turn off regulators from the pwrctrl
+> > > drivers.
+> > >
+> > > Fixes: b921aa3f8dec ("PCI/pwrctrl: Switch to pwrctrl create, power on/off, destroy APIs")
+> > > Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+> > > ---
+> > > Hi,
+> > >
+> > > I ran into this while integrating the new pci_pwrctrl_*() API into the
+> > > MediaTek driver. I am sending this separately since this change is
+> > > unrelated and does not conflict with or depend on the other changes for
+> > > the driver itself.
+> > >
+> > > I think this should be merged for fixes.
+> > >
+> > >  drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c | 12 ------------
+> > >  drivers/pci/pwrctrl/slot.c               | 12 ------------
+> > >  2 files changed, 24 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> > > index 0d0377283c37..c7e4beec160a 100644
+> > > --- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> > > +++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+> > > @@ -68,13 +68,6 @@ static int pwrseq_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
+> > >       return pwrseq_power_off(pwrseq->pwrseq);
+> > >  }
+> > >
+> > > -static void devm_pwrseq_pwrctrl_power_off(void *data)
+> > > -{
+> > > -     struct pwrseq_pwrctrl *pwrseq = data;
+> > > -
+> > > -     pwrseq_pwrctrl_power_off(&pwrseq->pwrctrl);
+> > > -}
+> > > -
+> > >  static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
+> > >  {
+> > >       const struct pwrseq_pwrctrl_pdata *pdata;
+> > > @@ -101,11 +94,6 @@ static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
+> > >               return dev_err_probe(dev, PTR_ERR(pwrseq->pwrseq),
+> > >                                    "Failed to get the power sequencer\n");
+> > >
+> > > -     ret = devm_add_action_or_reset(dev, devm_pwrseq_pwrctrl_power_off,
+> > > -                                    pwrseq);
+> > > -     if (ret)
+> > > -             return ret;
+> > > -
+> > >       pwrseq->pwrctrl.power_on = pwrseq_pwrctrl_power_on;
+> > >       pwrseq->pwrctrl.power_off = pwrseq_pwrctrl_power_off;
+> > >
+> > > diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
+> > > index 082af81efe25..0ad920d8596d 100644
+> > > --- a/drivers/pci/pwrctrl/slot.c
+> > > +++ b/drivers/pci/pwrctrl/slot.c
+> > > @@ -59,14 +59,6 @@ static int slot_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
+> > >       return 0;
+> > >  }
+> > >
+> > > -static void devm_slot_pwrctrl_release(void *data)
+> > > -{
+> > > -     struct slot_pwrctrl *slot = data;
+> > > -
+> > > -     slot_pwrctrl_power_off(&slot->pwrctrl);
+> > > -     regulator_bulk_free(slot->num_supplies, slot->supplies);
+> >
+> > Here you are leaking the regulators as they will never get freed.
+> 
+> Oops. You're right. I guess we should just add a devres version of
+> of_regulator_bulk_get_all(), but that ends up being a cross-tree
+> dependency.
 
-在 2026/2/7 6:29, Bjorn Helgaas 写道:
-> On Fri, Jan 30, 2026 at 03:53:10PM +0800, duziming wrote:
->> Hi all,
->>
->> Gentle ping on this patchset. Any feedback would be greatly appreciated.
-> Sorry I didn't get to this.  Poke again after v6.20-rc1.
-ping？
->> On 2026/1/15 15:52, Ziming Du wrote:
->>
->>> Miscellaneous fixes for pci subsystem
->>>
->>> Changes in v4:
->>> - Remove the architecture-specific #ifdef to apply the alignment
->>>     check for all platforms (including x86), as device registers are
->>>     naturally aligned anyway.
->>> - Fix a potential issue in proc_bus_pci_read() to make it consistent
->>>     with proc_bus_pci_write(), as suggested by Ilpo Järvinen.
->>> - Link to v3:https://lore.kernel.org/linux-pci/20260108015944.3520719-1-duziming2@huawei.com/
->>>
->>> Changes in v3:
->>> - Check *ppos before assign it to pos.
->>> - Link to v2:https://lore.kernel.org/linux-pci/20251224092721.2034529-1-duziming2@huawei.com/
->>>
->>> Changes in v2:
->>> - Correct grammer and indentation.
->>> - Remove unrelated stack traces from the commit message.
->>> - Modify the handling of pos by adding a non-negative check to ensure
->>>     that the input value is valid.
->>> - Use the existing IS_ALIGNED macro and ensure that after modification,
->>>     other cases still retuen -EINVAL as before.
->>> - Link to v1:https://lore.kernel.org/linux-pci/20251216083912.758219-1-duziming2@huawei.com/
->>>
->>> Yongqiang Liu (2):
->>>     PCI: Prevent overflow in proc_bus_pci_write()
->>>     PCI/sysfs: Prohibit unaligned access to I/O port
->>> Ziming Du (2):
->>>     PCI/sysfs: Fix null pointer dereference during hotplug
->>>     PCI: Prevent overflow in proc_bus_pci_read()
->>>
->>>    drivers/pci/pci-sysfs.c |  7 +++++++
->>>    drivers/pci/proc.c      | 11 +++++++++--
->>>    2 files changed, 16 insertions(+), 2 deletions(-)
->> Thanx du!
->>
+I'm not sure if Mark will accept it as he was not happy with bulk_get_all()
+version first of all.
+
+> For the immediate fix I would keep the release function
+> to free the regulators, and then do the rework for -next.
+> 
+
+Sounds good to me.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
