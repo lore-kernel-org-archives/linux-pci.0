@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FAAB2DC783;
-	Thu, 26 Feb 2026 06:31:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C360C28643C;
+	Thu, 26 Feb 2026 06:33:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772087505; cv=none; b=WzHYjPfaJvYfc3IuuyuffDITwVNf9I7UCStnpvBGdob+V0baCsC6JLCz2mcIY9xV+MnnsqjZGPcNMSvVATXSxmUZnV45yhMhajX1utaggfNJaJURWRUKQ0/2AcH+Ozs/L36HeDCQQzto/Fxfp+K09IsZ6L/L/XNWHubzemW+/Bo=
+	t=1772087613; cv=none; b=kW+1QafDlq9Vkf/G1aZl3kuRjZ9quMSMr1JkBeVYZwghOxEISjACoRcrblWo5lkC8Jykww18qPBtWnCvj7FW2DwUw233ySpxPejeIbDTJDPKOrmxJhlqJQf51ZZymdrlBxVeVM1SnvYN+EkLpC2y3+47MX/YgPbJlwHfIQ5V5VQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772087505; c=relaxed/simple;
-	bh=Rg0sp/qeKk/n/CsiBDt2E7lGex79tuAYp/erhRShyug=;
+	s=arc-20240116; t=1772087613; c=relaxed/simple;
+	bh=TQcjNDCthRmxoghOT2T0FWsXkA4piqIaaOpYR6a5s4o=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Q2xSYVdiw1cLLpeSQu8OPjSDy1cnZpzgp7o9m4rT/0h+KmElnx5Oe58n4x+GRmiYyMIcOSqN5qISPnyoaF7ojI1pux4zQR6zDfOvDHvGqFM5HzzAhtcOpI6WFZgrf9puqnq1hY9WqdLMrZ58j2L6/4P06MRlruoM1CnCvL8qCuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JPQR+jTQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=QAqQ9PP6a8Kn/KQAdVyM3HErvjfmDAlppQLC6rpNJkF/50yk/xQ0dzQA34gNw325IDjf5EpsyzhA4pSR+2jL1ugjE/E8loi0EURTeMsQB9/l4L1VOKxxmoE8ZHeXnaA292rdYLVXYDk87xRooCCdx8NbRzu9f+iczX9yidTyyMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hbGSrvcu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JPQR+jTQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDDB9C19422;
-	Thu, 26 Feb 2026 06:31:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hbGSrvcu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92C6FC19422;
+	Thu, 26 Feb 2026 06:33:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772087505;
-	bh=Rg0sp/qeKk/n/CsiBDt2E7lGex79tuAYp/erhRShyug=;
+	s=k20201202; t=1772087613;
+	bh=TQcjNDCthRmxoghOT2T0FWsXkA4piqIaaOpYR6a5s4o=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JPQR+jTQSJz6TSsWLbsn3O8vlUzTcBNji1CEN7eWZJQzN+4Akb7098a5E/LsDAuiQ
-	 ZUU7W9o/lphLNVpypXqOdJ21HxbSOwc+r65cEPGuKytsoLEWohea+MwHvGzE+uEVJu
-	 LforkieBEEmic1/nMstjnqy+uxmgzpUKgVKH6aFD1gg3i7TxbqWFIrQoEDp78ssLbO
-	 EGufe8yZprk3xNmt+h//UE+CV2P0uNkTLOUxZ7jZaF1r0MvvuMz5SFAku3oCmRWa6i
-	 rzuYLg2TX4SkU6PV/0zjJBvSPIh9r404NuqCqGGS01XIwxlKMekfnLnDEQe6hUDjb6
-	 XNvdulBv0HTHQ==
-Date: Thu, 26 Feb 2026 12:01:34 +0530
+	b=hbGSrvcupcn+h4fSa+L/b7cSolIXGPrRwp3dyI0q9iPQYaqipe3QccDiDR54tHkHW
+	 F+4AIwN/JRG5wOv/BWdUi71OGxvlhvmA2Is7wj2VbS3L7yoIZpWN2DNNJNHL4q0TdM
+	 dcV1WucverRdKdncs4SYMtwxg800QKxv1DVxsKktYcExupBmWynxOmvBQvt6J+80aW
+	 /pOkRY82quk9Y8q9pCTCwGS9oDzcaSTAf4QAHpMtsIFqqt07/OlbDMfTaHUuXxuSC6
+	 Y2eVFhzbQB6Y+mdr+k8L8jd4To3IDy0BpTfFJoP/Gavqj0VrJNBHy0lMkBI5mfeFTJ
+	 G2owFRTaeTFiA==
+Date: Thu, 26 Feb 2026 12:03:24 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: liziyao@uniontech.com
+To: Steffen Trumtrar <s.trumtrar@pengutronix.de>
 Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, niecheng1@uniontech.com, zhanjun@uniontech.com, 
-	guanwentao@uniontech.com, Kexy Biscuit <kexybiscuit@aosc.io>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, loongarch@lists.linux.dev, kernel@uniontech.com, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Lain Fearyncess Yang <fsf@live.com>, 
-	Ayden Meng <aydenmeng@yeah.net>, Mingcong Bai <jeffbai@aosc.io>, Xi Ruoyao <xry111@xry111.site>, 
-	stable@vger.kernel.org, Huacai Chen <chenhuacai@kernel.org>
-Subject: Re: [PATCH v7] PCI: loongson: Override PCIe bridge supported speeds
- for Loongson-3C6000 series
-Message-ID: <taoupjxwaewzvolh2n6bciji36j4dx6jtvjf7k6tt5hdt54hjw@rrgbu47umz4v>
-References: <20260121-loongson-pci1-v7-1-fc79c85a574d@uniontech.com>
+	Bjorn Helgaas <bhelgaas@google.com>, Minghuan Lian <minghuan.Lian@nxp.com>, 
+	Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>, Jingoo Han <jingoohan1@gmail.com>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, Sascha Hauer <s.hauer@pengutronix.de>
+Subject: Re: [PATCH] PCI: layerscape: Allow to compile as module
+Message-ID: <6xnmjhwm5mfrff6gyomwrnft3bfuxvun2cxi56lx6qvlugxg6l@yossniactj2r>
+References: <20260112-v6-19-topic-layerscape-pcie-v1-1-1cd863fce50e@pengutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,154 +47,88 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260121-loongson-pci1-v7-1-fc79c85a574d@uniontech.com>
+In-Reply-To: <20260112-v6-19-topic-layerscape-pcie-v1-1-1cd863fce50e@pengutronix.de>
 
-On Wed, Jan 21, 2026 at 04:22:40PM +0800, Ziyao Li via B4 Relay wrote:
-> From: Ziyao Li <liziyao@uniontech.com>
+On Mon, Jan 12, 2026 at 08:17:11PM +0100, Steffen Trumtrar wrote:
+> From: Sascha Hauer <s.hauer@pengutronix.de>
 > 
-> Older steppings of the Loongson-3C6000 series incorrectly report the
-> supported link speeds on their PCIe bridges (device IDs 0x3c19, 0x3c29)
-> as only 2.5 GT/s, despite the upstream bus supporting speeds from
-> 2.5 GT/s up to 16 GT/s.
+> The layerscape pcie host controller could also be compiled as module.
+> Add the necessary infrastructure to allow building as module instead of
+> only as builtin driver.
 > 
-> As a result, since commit 774c71c52aa4 ("PCI/bwctrl: Enable only if more
-> than one speed is supported"), bwctrl will be disabled if there's only
-> one 2.5 GT/s value in vector `supported_speeds`.
-> 
-> Also, the amdgpu driver reads the value by pcie_get_speed_cap() in
-> amdgpu_device_partner_bandwidth(), for its dynamic adjustment of PCIe
-> clocks and lanes in power management. We hope this patch can prevent
-> similar problems in future driver changes (similar checks may be
-> implemented in other GPU, storage controller, NIC, etc. drivers).
-> 
-> Manually override the `supported_speeds` field for affected PCIe bridges
-> with those found on the upstream bus to correctly reflect the supported
-> link speeds.
-> 
-> This patch was originally found from AOSC OS[1].
-> 
-> Link: https://github.com/AOSC-Tracking/linux/pull/2 #1
-> Tested-by: Lain Fearyncess Yang <fsf@live.com>
-> Tested-by: Ayden Meng <aydenmeng@yeah.net>
-> Signed-off-by: Ayden Meng <aydenmeng@yeah.net>
-> Signed-off-by: Mingcong Bai <jeffbai@aosc.io>
-> [Xi Ruoyao: Fix falling through logic and add kernel log output.]
-> Signed-off-by: Xi Ruoyao <xry111@xry111.site>
-> Link: https://github.com/AOSC-Tracking/linux/commit/4392f441363abdf6fa0a0433d73175a17f493454
-> [Ziyao Li: move from drivers/pci/quirks.c to drivers/pci/controller/pci-loongson.c]
-> Signed-off-by: Ziyao Li <liziyao@uniontech.com>
-> Tested-by: Mingcong Bai <jeffbai@aosc.io>
-> Cc: stable@vger.kernel.org
+> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+> Signed-off-by: Steffen Trumtrar <s.trumtrar@pengutronix.de>
 
-Since this is a bug fix which needs to be backported, what is the commit SHA for
-the Fixes tag? The one which added Loongson-3C6000 support to this driver.
+Applied to controller/dwc-layerscape, thanks!
 
 - Mani
 
-> Reviewed-by: Huacai Chen <chenhuacai@loongson.cn>
 > ---
-> The reason of not just copying pdev->bus->self->supported_speeds is
-> that we're concerned that this approach assumes the upstream port
-> reports the same capabilities as bridge, which may not always be the
-> case in future silicon revisions.
+>  drivers/pci/controller/dwc/Kconfig          |  2 +-
+>  drivers/pci/controller/dwc/pci-layerscape.c | 16 +++++++++++++++-
+>  2 files changed, 16 insertions(+), 2 deletions(-)
 > 
-> Our current conservative approach ensures we only enable speeds that
-> are physically supported by checking the actual max_bus_speed. For
-> example, if there's a future Loongson-3C9999 where the virtual bridge
-> reports Gen4 support but the physical bridge only supports Gen3.
-> 
-> In this scenario, directly copying the upstream port's supported_speeds
-> would incorrectly report Gen4 support for the downstream bridge. The
-> current patch ensures we only set speed bits up to what the hardware
-> actually supports, based on the measured max_bus_speed. This seems
-> safer for future silicon.
-> 
-> Changes in v7:
-> - adjust commit message
-> - Link to v6: https://lore.kernel.org/r/20260114-loongson-pci1-v6-1-ee8a18f5d242@uniontech.com
-> 
-> Changes in v6:
-> - adjust commit message
-> - Link to v5: https://lore.kernel.org/r/20260113-loongson-pci1-v5-1-264c9b4a90ab@uniontech.com
-> 
-> Changes in v5:
-> - style adjust
-> - Link to v4: https://lore.kernel.org/r/20260113-loongson-pci1-v4-1-1921d6479fe4@uniontech.com
-> 
-> Changes in v4:
-> - rename subject
-> - use 0x3c19/0x3c29 instead of 3c19/3c29
-> - Link to v3: https://lore.kernel.org/r/20260109-loongson-pci1-v3-1-5ddc5ae3ba93@uniontech.com
-> 
-> Changes in v3:
-> - Adjust commit message
-> - Make the program flow more intuitive
-> - Link to v2: https://lore.kernel.org/r/20260104-loongson-pci1-v2-1-d151e57b6ef8@uniontech.com
-> 
-> Changes in v2:
-> - Link to v1: https://lore.kernel.org/r/20250822-loongson-pci1-v1-1-39aabbd11fbd@uniontech.com
-> - Move from arch/loongarch/pci/pci.c to drivers/pci/controller/pci-loongson.c
-> - Fix falling through logic and add kernel log output by Xi Ruoyao
-> ---
->  drivers/pci/controller/pci-loongson.c | 36 +++++++++++++++++++++++++++++++++++
->  1 file changed, 36 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
-> index bc630ab8a283..a4250d7af1bf 100644
-> --- a/drivers/pci/controller/pci-loongson.c
-> +++ b/drivers/pci/controller/pci-loongson.c
-> @@ -176,6 +176,42 @@ static void loongson_pci_msi_quirk(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LOONGSON, DEV_LS7A_PCIE_PORT5, loongson_pci_msi_quirk);
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index 519b59422b479..abfa4a6e62c25 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -121,7 +121,7 @@ config PCI_IMX6_EP
+>  	  DesignWare core functions to implement the driver.
 >  
-> +/*
-> + * Older steppings of the Loongson-3C6000 series incorrectly report the
-> + * supported link speeds on their PCIe bridges (device IDs 0x3c19,
-> + * 0x3c29) as only 2.5 GT/s, despite the upstream bus supporting speeds
-> + * from 2.5 GT/s up to 16 GT/s.
-> + */
-> +static void loongson_pci_bridge_speed_quirk(struct pci_dev *pdev)
+>  config PCI_LAYERSCAPE
+> -	bool "Freescale Layerscape PCIe controller (host mode)"
+> +	tristate "Freescale Layerscape PCIe controller (host mode)"
+>  	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+>  	depends on PCI_MSI
+>  	select PCIE_DW_HOST
+> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
+> index a44b5c256d6e2..14d6ac4fc53fd 100644
+> --- a/drivers/pci/controller/dwc/pci-layerscape.c
+> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
+> @@ -13,6 +13,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/init.h>
+>  #include <linux/iopoll.h>
+> +#include <linux/module.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/of_platform.h>
+>  #include <linux/of_address.h>
+> @@ -403,8 +404,16 @@ static const struct dev_pm_ops ls_pcie_pm_ops = {
+>  	NOIRQ_SYSTEM_SLEEP_PM_OPS(ls_pcie_suspend_noirq, ls_pcie_resume_noirq)
+>  };
+>  
+> +static void ls_pcie_remove(struct platform_device *pdev)
 > +{
-> +	u8 old_supported_speeds = pdev->supported_speeds;
+> +	struct ls_pcie *pcie = platform_get_drvdata(pdev);
 > +
-> +	switch (pdev->bus->max_bus_speed) {
-> +	case PCIE_SPEED_16_0GT:
-> +		pdev->supported_speeds |= PCI_EXP_LNKCAP2_SLS_16_0GB;
-> +		fallthrough;
-> +	case PCIE_SPEED_8_0GT:
-> +		pdev->supported_speeds |= PCI_EXP_LNKCAP2_SLS_8_0GB;
-> +		fallthrough;
-> +	case PCIE_SPEED_5_0GT:
-> +		pdev->supported_speeds |= PCI_EXP_LNKCAP2_SLS_5_0GB;
-> +		fallthrough;
-> +	case PCIE_SPEED_2_5GT:
-> +		pdev->supported_speeds |= PCI_EXP_LNKCAP2_SLS_2_5GB;
-> +		break;
-> +	default:
-> +		pci_warn(pdev, "unexpected max bus speed");
-> +
-> +		return;
-> +	}
-> +
-> +	if (pdev->supported_speeds != old_supported_speeds)
-> +		pci_info(pdev, "fixing up supported link speeds: 0x%x => 0x%x",
-> +			 old_supported_speeds, pdev->supported_speeds);
+> +	dw_pcie_host_deinit(&pcie->pci->pp);
 > +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c19, loongson_pci_bridge_speed_quirk);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c29, loongson_pci_bridge_speed_quirk);
 > +
->  static struct loongson_pci *pci_bus_to_loongson_pci(struct pci_bus *bus)
->  {
->  	struct pci_config_window *cfg;
+>  static struct platform_driver ls_pcie_driver = {
+>  	.probe = ls_pcie_probe,
+> +	.remove = ls_pcie_remove,
+>  	.driver = {
+>  		.name = "layerscape-pcie",
+>  		.of_match_table = ls_pcie_of_match,
+> @@ -412,4 +421,9 @@ static struct platform_driver ls_pcie_driver = {
+>  		.pm = &ls_pcie_pm_ops,
+>  	},
+>  };
+> -builtin_platform_driver(ls_pcie_driver);
+> +module_platform_driver(ls_pcie_driver);
+> +
+> +MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
+> +MODULE_DESCRIPTION("Layerscape PCIe host controller driver");
+> +MODULE_LICENSE("GPL");
+> +MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
 > 
 > ---
-> base-commit: ea1013c1539270e372fc99854bc6e4d94eaeff66
-> change-id: 20250822-loongson-pci1-4ded0d78f1bb
+> base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
+> change-id: 20260112-v6-19-topic-layerscape-pcie-9d10b6542139
 > 
 > Best regards,
 > -- 
-> Ziyao Li <liziyao@uniontech.com>
-> 
+> Steffen Trumtrar <s.trumtrar@pengutronix.de>
 > 
 
 -- 
