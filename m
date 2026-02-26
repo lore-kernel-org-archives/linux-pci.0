@@ -1,46 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2BDB3921C2;
-	Thu, 26 Feb 2026 08:34:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE71B393DE9;
+	Thu, 26 Feb 2026 08:37:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772094873; cv=none; b=NagiuLAu/FVMizaomK3W8GhFVlFyDRcLCFAB8mAAA2VgbpDwaI77LQ7OBlQ+uRbMrO/G9tpJYm0tyOqo6ckac6GrMSjtV/skEAF+/gVwzZDaHvtyqTdCimjOCoQiKbwvLk/s0LBq+IQBhFL27L15rTNa0Un3+H57D6gQmnBMXzE=
+	t=1772095025; cv=none; b=r/FA2rkC3XkcZ+209NdbX3c2B1J6t0ti5CNQ//boj8ANAAOtgu/8VRStwJnlXYL08jpjf2I3SxdO16smTllrOictAhb6hbJCFQjG8A/ulwelFeQFZbOSVfWcxw2VV8iXIsX1aMhMyBtu437cEyTzNKniyPel2eMuv8DXYlzaQSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772094873; c=relaxed/simple;
-	bh=mzOWD7mNshXx7nO5MZ/qJg04qYnAJtMUBh8qbBXsI9Y=;
+	s=arc-20240116; t=1772095025; c=relaxed/simple;
+	bh=4XfkjpUD1HWkRvY5xSHxtLpEXIsBytkEIyTNzWFgnUg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TETPNpfYVCRbhv6i8ilvFdRm4+K63QOGwEK9/DvIX6de7tjhLMBxbA7hUrRqrwj6ZK3I59JvZg4HH9hHXbFWRf+pffSXzbNDZiL+8aak0UUljWESIAf7OhYd03j9jONdc094Q8jSYa+Hjs0EoWpozVSdNZuauEH7QgezjbU5rw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T3z6MHfv; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nghBPgr+Kt3iroY2d5NVs3yFK9Ml/gb8AFZntK8kBrbzme+ijmbGJS/h0SQoR+Jvls1Ailz3FJsx15OmT3rquI/wkDjiOWh6E3G/YmNoh5jJgIWDButiOvugLem+DJox2U2QrleZFH+hWB9UpqBjM8eX0rk6ajqvCe5vrgKASL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UayT8M8b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T3z6MHfv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C564CC19422;
-	Thu, 26 Feb 2026 08:34:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UayT8M8b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71808C19422;
+	Thu, 26 Feb 2026 08:36:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772094873;
-	bh=mzOWD7mNshXx7nO5MZ/qJg04qYnAJtMUBh8qbBXsI9Y=;
+	s=k20201202; t=1772095025;
+	bh=4XfkjpUD1HWkRvY5xSHxtLpEXIsBytkEIyTNzWFgnUg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=T3z6MHfvpib4/bK4lwRNcneTS9mLJOI5+tcz0bevnlp2s6jA/4VgZYOlp7HLSnjvq
-	 Y4sm91jJXe9lS0YDlI82S+pIhu9eEFlTTdyNwDcYNSTl6/iyccVg9Bji+abwdDnJiV
-	 DXpYBfvS2BmA+MdpJwA1gARIc40PzJZkB9pBfTE4jLSncjL6fjLDR7Jn8zqKX6AaXp
-	 oAwvDCofeJsKub8Lz2NtkHaFxYiuDbzW4rbM5Fj80C5Vp3281i2QCHSEdXSTzrIZFs
-	 ++P/p8c/MuK5FycrMO+7QDI8tZdI9XTjivGUiEPSKs/IjyUEfEvtEu646FdKEfBA1Y
-	 qPyTfLr9e5BOg==
-Date: Thu, 26 Feb 2026 10:34:27 +0200
-From: Leon Romanovsky <leon@kernel.org>
-To: Ramesh Errabolu <ramesh@linux.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-s390@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Peter Oberparleiter <oberpar@linux.ibm.com>,
-	Matthew Rosato <mjrosato@linux.ibm.com>,
-	Gerd Bayer <gbayer@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>
-Subject: Re: [PATCH v1] PCI: Add write-only 'uevent' sysfs attribute for PCI
- slots
-Message-ID: <20260226083427.GF12611@unreal>
-References: <20260225150815.81268-1-ramesh@linux.ibm.com>
+	b=UayT8M8b7tk5oHubPD0MfhABCADHfcRn6hWNDbac/Zbq3MwLR5Q5WK8DZnI2hl4lK
+	 DuYIFa1JnP6S8bNsXgijNUt1IbvrNIXwnm8TgpC9zkIC8bvnwaUsLirb8CrNIOrTAV
+	 HYMGp10GsAHpo005y0bAYuB4qckOsDNJdIPPyu2VCMSi0YYvIR495YCG2d0xptML7g
+	 HhH188HN3aBIvPu+0FAVMUQa20jhr7HRp6T1z26NBu4SlW9mQ583LyVdxcCkBQmaoE
+	 rkN/81BzeaTnjIM3OnMhUlL4wq2i/dXGSlDJlvzezSh9MNIgA3huzou1Q2SYyxoxzH
+	 hRjogGL7z/+9Q==
+Date: Thu, 26 Feb 2026 14:06:54 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: zhangsenchuan <zhangsenchuan@eswincomputing.com>
+Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	christian.bruel@foss.st.com, shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com, 
+	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com, ningyu@eswincomputing.com, 
+	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com, ouyanghui@eswincomputing.com
+Subject: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host controller
+ driver
+Message-ID: <rbmoxlc45bf4ij2o2mf3ofgni6vxqmsp52vdiqtc4wxxufmxkt@w2u5rkpq5mhs>
+References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
+ <20260129092900.1900-1-zhangsenchuan@eswincomputing.com>
+ <a3yu54e6feo5immtdju4fgvne7fh3p4ytlawfdhawmpzvagi64@o7wuhhdiitft>
+ <78296255.3869.19c8eb694d6.Coremail.zhangsenchuan@eswincomputing.com>
+ <cxfbgzwsybfvixu3qqi66fvspmhe5knuevwcj6zwsakkzqwd3z@czmitvgl7nwt>
+ <694aeb1a.398e.19c98ff2727.Coremail.zhangsenchuan@eswincomputing.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,75 +53,92 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260225150815.81268-1-ramesh@linux.ibm.com>
+In-Reply-To: <694aeb1a.398e.19c98ff2727.Coremail.zhangsenchuan@eswincomputing.com>
 
-On Wed, Feb 25, 2026 at 09:08:15AM -0600, Ramesh Errabolu wrote:
-> Add a new write-only 'uevent' attribute to PCI slot sysfs
-> entries. This provides a mechanism for userspace to explicitly
-> synthesize PCI slot uevents when needed.
+On Thu, Feb 26, 2026 at 04:09:44PM +0800, zhangsenchuan wrote:
 > 
-> For cold-plugged PCI devices, slots may be created before
-> udev is ready to receive events, causing the initial 'add'
-> uevents to be missed. As a result, slot specific udev
-> rules that define naming, permissions, and related policies,
-> are not applied at boot. Allowing userspace to resynthesize
-> the 'add' uevent ensures these rules are processed correctly.
+> > > > Subject: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host controller driver
+> > > > 
+> > > > On Thu, Jan 29, 2026 at 05:29:00PM +0800, zhangsenchuan@eswincomputing.com wrote:
+> > > > > From: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
+> > > > >
+> > > > > +static int eic7700_pcie_suspend_noirq(struct device *dev)
+> > > > > +{
+> > > > > +	struct eic7700_pcie *pcie = dev_get_drvdata(dev);
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * The ESWIN EIC7700 SoC lacks hardware support for the L2/L3 low-power
+> > > > > +	 * link states. It cannot enter the L2/L3 Ready state through the
+> > > > > +	 * PME_Turn_Off/PME_To_Ack handshake protocol. To avoid this problem,
+> > > > > +	 * the dw_pcie_suspend_noirq API is not used.
+> > > > > +	 */
+> > > > 
+> > > > With 7.0, you can provide a dummy pme_turn_off() API and set
+> > > > 'pci->pp.skip_l23_ready' to reuse the dw_pcie_{suspend/resume}_noirq APIs.
+> > > > 
+> > > 
+> > > Hi Mani,
+> > > 
+> > > Setting pci->pp.skip_l23_ready does indeed allow us to reuse the
+> > > dw_pcie_suspend_noirq function. However, for the dw_pcie_resume_noirq
+> > > function, if the dw_pcie_start_link and dw_pcie_wait_for_link APIs fail to
+> > > execute, the clk/reset resources in the pci->pp.ops->init function cannot
+> > > be released. Perhaps the dw_pcie_resume_noirq function needs to be optimized.
+> > 
+> > Will this help?
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > index 6ae6189e9b8a..38ad79bbeab1 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > @@ -1300,15 +1300,24 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
+> >  
+> >         ret = dw_pcie_start_link(pci);
+> >         if (ret)
+> > -               return ret;
+> > +               goto err_deinit;
+> >  
+> >         ret = dw_pcie_wait_for_link(pci);
+> >         if (ret)
+> > -               return ret;
+> > +               goto err_stop_link;
+> >  
+> >         if (pci->pp.ops->post_init)
+> >                 pci->pp.ops->post_init(&pci->pp);
+> >  
+> > +       return 0;
+> > +
+> > +err_stop_link:
+> > +       dw_pcie_stop_link(pci);
+> > +
+> > +err_deinit:
+> > +       if (pci->pp.ops->deinit)
+> > +               pci->pp.ops->deinit(&pci->pp);
+> > +
+> >         return ret;
+> >  }
+> >  EXPORT_SYMBOL_GPL(dw_pcie_resume_noirq);
+> > 
+> 
+> Yes, this can release the resources after init, after optimizing the 
+> resume function, i can reuse the dw_pcie_{suspend/resume}_noirq APIs.
+> 
+> I noticed that the dw_pcie_wait_for_link function has been optimized. Is 
+> it necessary to release the resources only when it return -ETIMEOUT?
+> Perhaps it needs to be slightly improved：
+> 
+>  ret = dw_pcie_wait_for_link(pci);
+>  if (ret == -ETIMEOUT)
+>          goto err_stop_link;
+> 
+> What about your suggestion?
+> 
 
-This patch sounds like a hack to me. AFAIK, "udevadm trigger"
-performs exactly that.
+Absolutely! I forgot my own rework ;) I'll cook a patch for the above. Then if
+you base your controller driver patch on top of it, we can merge both in a
+single tree (if Bjorn agrees).
 
-Thanks
+- Mani
 
-> 
-> The patch was validated by manually triggering PCI slot 'add'
-> uevents through the slot’s 'uevent' sysfs file and confirming
-> that udev received and processed those events. The following
-> command raises an 'add' uevent for a specific PCI slot:
-> 
->     $ echo "add $(uuidgen)" | sudo tee   \
->                 /sys/bus/pci/slots/<slot-id>/uevent
-> 
-> Signed-off-by: Ramesh Errabolu <ramesh@linux.ibm.com>
-> ---
->  drivers/pci/slot.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index 787311614e5b..cbc7cf6ab7ad 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-> @@ -63,6 +63,15 @@ static ssize_t cur_speed_read_file(struct pci_slot *slot, char *buf)
->  	return bus_speed_read(slot->bus->cur_bus_speed, buf);
->  }
->  
-> +static ssize_t uevent_write_file(struct pci_slot *slot,
-> +				 const char *buf, size_t len)
-> +{
-> +	int rc;
-> +
-> +	rc = kobject_synth_uevent(&slot->kobj, buf, len);
-> +	return rc ? rc : len;
-> +}
-> +
->  static void pci_slot_release(struct kobject *kobj)
->  {
->  	struct pci_dev *dev;
-> @@ -89,11 +98,14 @@ static struct pci_slot_attribute pci_slot_attr_max_speed =
->  	__ATTR(max_bus_speed, S_IRUGO, max_speed_read_file, NULL);
->  static struct pci_slot_attribute pci_slot_attr_cur_speed =
->  	__ATTR(cur_bus_speed, S_IRUGO, cur_speed_read_file, NULL);
-> +static struct pci_slot_attribute pci_slot_attr_uevent =
-> +	__ATTR(uevent, S_IWUSR, NULL, uevent_write_file);
->  
->  static struct attribute *pci_slot_default_attrs[] = {
->  	&pci_slot_attr_address.attr,
->  	&pci_slot_attr_max_speed.attr,
->  	&pci_slot_attr_cur_speed.attr,
-> +	&pci_slot_attr_uevent.attr,
->  	NULL,
->  };
->  ATTRIBUTE_GROUPS(pci_slot_default);
-> -- 
-> 2.43.0
-> 
-> 
+-- 
+மணிவண்ணன் சதாசிவம்
