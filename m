@@ -1,61 +1,61 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9ABC38F243
-	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 07:46:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 794472E0B58
+	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 07:46:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772092017; cv=none; b=jJLj8YUxjcrSry+OWGtHlWd/UkjPEPZm97DCoXFcj/KssrOzB/EG84aRBGrBZTFoOVtA3jHN0n8g/2JGL/YyWLErFCbS/hGV07eOuieoC3ecXSCRPLc4SNB4wMiPCyeCpxTjlvupMrSQjlsYuOxgBfKDEtmtmnaWfUZZn9z3JGA=
+	t=1772092019; cv=none; b=swTWAoPMIX0PiJUbJc51BO89ZrZyzOSylSYsxFchbm8tWl2tTz9DuxItcWF1q67RFFobS2ore+n54e1N8ILdBWmqs812JnpP0xEroAJEYC8xnlYuC/yzlDIaU5hYkMWhYcE8ydtBTmyUtz9R3FxbCJx0vxOs5wUuxux94vAsWBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772092017; c=relaxed/simple;
-	bh=Bnwlk0mFSJRiSnUWwIKAs1aTXmWvlpAV9tyINHz65K4=;
+	s=arc-20240116; t=1772092019; c=relaxed/simple;
+	bh=ox8NATtkYE0tkr9tJOefc2pJWXV/3MDxkq2VG6zVd7U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HX9hJCgOBOxk4/5Qfbv3N105Cx/snFWgvN9Rh62t39MlIAE4rb40S0XgMfH6zu6/lERpEIjc80CDs3lLb4nqLdf7v6ewseqq40yF1jGST3S4kG/PcDxaLJL5Hav6jh4SVB7RYhfXPmLwtdUvLm80i8e91kBOATc+euE1VYXrSys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=ETaI3hJb; arc=none smtp.client-ip=209.85.214.172
+	 MIME-Version; b=asyfi7FpwSa2YnkozL5pLNzU+eZHYiGP0VZ7uG/Y8fP0TKNspWnFfwiYea9k5ClAT6bx0ux+WAVnFOEsK6camGTTsRFyeH8WJHI4lO0ch7KKlZ4KqwkuRv2hDCCJ9gB605XGuy5fAw4KFOyBGfT+9evFlVyyCH7ZUJiBY3yB8Q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=lXqmsY0a; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ETaI3hJb"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2adae92249eso6026805ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 23:46:54 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="lXqmsY0a"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2addb31945aso3834295ad.1
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 23:46:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1772092014; x=1772696814; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1772092017; x=1772696817; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=B3twAdKSjYAUPCtN8pakztOmGIbXnsgFqASCUc/1Hg8=;
-        b=ETaI3hJbczHOs2MHDTxN0PT/0pO9GsW/JtpvLKh+/0WXkoS9M9Ut18ibGZxfb8Ceet
-         Q5VBgKL9x31gkbsdDpsmY2Sk9o+bydLQII4OVYMMM0Ul3HHF//s608a9qXSe64wYn4IV
-         VfVhGLaoOEAjy9nsw38u5LHvyVmY1Hu0u61oI=
+        bh=rNr9GUXcZ2JMX/g86l+sUCt0HEQieC19OqXNz4Aux8Q=;
+        b=lXqmsY0aNSKUSH0LgSbLRWI7GOvyxo6wk3VbW5h9+/YSxAgmyK2kv149x9bMk8pEH5
+         agp5rJpnsGfWSye/IOhj+j4s0KvtcomRaK+oFyAbcefugUzWNkEVK1lPNfWBlaYSbRKf
+         Vb8opiLooY2OjuoHGoe5z51ZAhe2wZrqtV6JE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772092014; x=1772696814;
+        d=1e100.net; s=20230601; t=1772092017; x=1772696817;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=B3twAdKSjYAUPCtN8pakztOmGIbXnsgFqASCUc/1Hg8=;
-        b=HLIjZ6IoxMKQeSAA9Vzw/9IzHifMJ0zsHxJipNVSOLbhpYsTaU/9P7QGBY/6yjihYQ
-         IBBge7pAedm3t91GfKTDxm7u8ZAMazkJuXIZZPRBLRi+OEPlUVyqew4OcD5yq8yG7yqg
-         edko8NEKsiFmvRVwGcQN2oitkwam6fl92DanamW62Xr2ZeC+85qnmiNcOPSNzou99hPd
-         byVou2SqbnHgiFSyPLWgrWhgrdXnicutAyeAAOiQKVM+4wQN8/EGQ3EDmvThpzF4XVBQ
-         sWtvQquEiLsuJ15fYeKhEagEsPCq9Qwihh+wbmR1fCmRcZOdKRmCsu26M14uyVun7qNP
-         eJgw==
-X-Forwarded-Encrypted: i=1; AJvYcCUnJOgxL1spfXNTY6buzfvkJgvdfTDPDyLTMJNrgk44I6aDTR+pkWIguNZflhA7eAQgquo6ZNxSXAM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz/sUJHshTm+301DcwlUS5bpWSPsbayWf56Jj76hJWpCTMNdVAv
-	7BavOeYwzv/FTSO/nOSYJ45eLI5d/YXsejYrcgSs60rPnEMIpNFPZyKSrAkIF2H0tg==
-X-Gm-Gg: ATEYQzw0iE4sfd8zjCCB2gZ/DyxWZ6VnMNTWZ7V3JfPDqESGoFPYGWoSsFqBID9OoCA
-	l1Ry3090sSTPuGdrJdGCb/OYjnKj4yCs0lWSchMKVFMSrhOurhO91NITjDwMFrdktIkBbI/20jI
-	3yYx1YS9P1IbmpDC+Nsn9KlcPM9UiiRszENX06u0RYJ31VzTBcRR1zzlHi08OxlRZwn4Qz1jFAR
-	4mkg7aT7Y3A/vnnuqbeE0oN5uMveT9pT/GEEemzubdSfDzvZmLIC14a3eghSn1zSPFLYKcrGeoY
-	yCMZhnEus2ChEQ3/XI+GyHHUJrCa8dZ++I3OU3vfqHCaD8mAthCKFWASI22BGKKEY/ZiMKpbL/g
-	VzSGcBIEgUdbJbdQQ6VIDFrHHVXmwjYImC8kHwI0qYQohnPvGsTonqWHk87SkwHTF126dqX4OGY
-	xK1yhQOHHg6mJ2yrNHXJ6j2IysWPZ9Mr4A8UMOpXlo6+fXhhKHCHKSgwpKKYO/MLPC+ysGxEH5Y
-	gEf+STq
-X-Received: by 2002:a17:903:1cc:b0:2ad:ba80:df60 with SMTP id d9443c01a7336-2adba80e2d7mr69699565ad.32.1772092014180;
-        Wed, 25 Feb 2026 23:46:54 -0800 (PST)
+        bh=rNr9GUXcZ2JMX/g86l+sUCt0HEQieC19OqXNz4Aux8Q=;
+        b=g3qEBYbswFs3Qd6orB7rKjKRhh5xGmaBuqIcY7D0WzSRmaBEOhQrtpquXyba65h/0H
+         lKlefkidmjbAHkgRrxPNNF+a1L42XLuQ5GZb0nPGJAsjWu4aWqqd6rcLhKvhGFhiZJe2
+         ImRvCu7cnwgBB6Rnb/HJkPzjpHZ5oY0uZzNOEcJKZ175VEolqOju6WYEcpq9IC5oAQpk
+         ZGQ1NiqV7H4Y7eGiQ+VbEAgxsw/c+yv/ZB//lVShLFI86AvKVrbofBHu1okicLXMz3+4
+         J6s4sCjuz3uqSqsCmDPxlQvCx0GSpAAyFI8g5wQdOpEr1YHdQjgeub1I2qqighLYovLG
+         BLGg==
+X-Forwarded-Encrypted: i=1; AJvYcCXYoWpd54HXOccy0GkWr4DYTygAOf5wwe31lDnhlASeyhuxJp8v/dSMjCuST3d3yql/Kw/AhSsUrpo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKyzwvOUXvd+HYFQA2IHvODOaaqSdSE+pZdNuin4oG8ZYthrcH
+	o5v3qe+N3og4C0UIx6Ty15ltyNGd7+WpM6DO+SelWx2HAPfsRv5tVwgPxbnK54u0qg==
+X-Gm-Gg: ATEYQzw4Sar3V1lNlgOR3kbPRX1lFcf45OGA7GTvXSFl+nDjKkcjb91eem2B6o75mEp
+	iQuow1Wwysm9ZKCgUf4YWoUu/Xo2ek8npg1TShlWJd99Ti3jGcb2Bi/IJZjTRhfHIA/cbrjG8Q3
+	jo/nPBlt+HOkH+5AcWxr5AJMUQTgJ++zJN58i1iHFLR7hoR2Sk40QV34ts+hx3sFx7ubmGHq+uE
+	HfG7gHsUL7X0I/h19UpgA30ngbRPCR/J0tV1QpbkZXPZktf65U3GYchgEy9zPvs8NH6ISAb1DbM
+	iPUXtiVDFHz9DULfFj3WdUjFY3nLRxh4gAhBxySTx1Jn1qn+CnKVqd+fDVFrrAsqT+CZ7RIidDL
+	eV/pE64QjRqEDUOaLMeXgmdwtfdmv4S69ZSY/YCUUsMZdVUbRPcU4V0s0R6eoK++1718fJlol2W
+	bYshVY+0w11hZ4kXFqMnAt12TLp3jJ0FfVzESMMCHt+etkbY9FrZMY3WXzf8nrhRj/nKCFR1psg
+	8Kti31tl/0x0I8zWIA=
+X-Received: by 2002:a17:903:1a8f:b0:2aa:e0d3:cad7 with SMTP id d9443c01a7336-2ad744dfa4cmr164499035ad.27.1772092016979;
+        Wed, 25 Feb 2026 23:46:56 -0800 (PST)
 Received: from wenstp920.tpe.corp.google.com ([2a00:79e0:201d:8:bf01:7f64:477a:2f97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb5b22f3sm15238245ad.12.2026.02.25.23.46.51
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb5b22f3sm15238245ad.12.2026.02.25.23.46.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Feb 2026 23:46:53 -0800 (PST)
+        Wed, 25 Feb 2026 23:46:56 -0800 (PST)
 From: Chen-Yu Tsai <wenst@chromium.org>
 To: Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
@@ -71,9 +71,9 @@ Cc: Chen-Yu Tsai <wenst@chromium.org>,
 	linux-mediatek@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: [PATCH v2 1/7] PCI: mediatek-gen3: Clean up mtk_pcie_parse_port() with dev_err_probe()
-Date: Thu, 26 Feb 2026 15:45:17 +0800
-Message-ID: <20260226074524.3808081-2-wenst@chromium.org>
+Subject: [PATCH v2 2/7] PCI: mediatek-gen3: Add error path for probe and resume driver callbacks
+Date: Thu, 26 Feb 2026 15:45:18 +0800
+Message-ID: <20260226074524.3808081-3-wenst@chromium.org>
 X-Mailer: git-send-email 2.53.0.414.gf7e9f6c205-goog
 In-Reply-To: <20260226074524.3808081-1-wenst@chromium.org>
 References: <20260226074524.3808081-1-wenst@chromium.org>
@@ -85,88 +85,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mtk_pcie_parse_port() in the pcie-mediatek-gen driver has a bunch of
+The probe and resume callbacks currently do teardown in the conditional
+block directly. This is going to get ugly when the pwrctrl calls are
+added.
 
-    if (err) {
-    	dev_err(dev, "error message\n");
-	return err; # or goto
-    }
-
-patterns.
-
-Simplify these with dev_err_probe(). The system also gains proper
-deferred probe messages that can be seen in
-
-    /sys/kernel/debug/devices_deferred
+Move the teardown to proper error cleanup paths.
 
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
 ---
- drivers/pci/controller/pcie-mediatek-gen3.c | 36 ++++++---------------
- 1 file changed, 10 insertions(+), 26 deletions(-)
+ drivers/pci/controller/pcie-mediatek-gen3.c | 22 ++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index 75ddb8bee168..1939cac995b5 100644
+index 1939cac995b5..f2bf4afbdc2f 100644
 --- a/drivers/pci/controller/pcie-mediatek-gen3.c
 +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -876,10 +876,8 @@ static int mtk_pcie_parse_port(struct mtk_gen3_pcie *pcie)
- 	if (!regs)
- 		return -EINVAL;
- 	pcie->base = devm_ioremap_resource(dev, regs);
--	if (IS_ERR(pcie->base)) {
--		dev_err(dev, "failed to map register base\n");
--		return PTR_ERR(pcie->base);
+@@ -1189,13 +1189,15 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	host->sysdata = pcie;
+ 
+ 	err = pci_host_probe(host);
+-	if (err) {
+-		mtk_pcie_irq_teardown(pcie);
+-		mtk_pcie_power_down(pcie);
+-		return err;
 -	}
-+	if (IS_ERR(pcie->base))
-+		return dev_err_probe(dev, PTR_ERR(pcie->base), "failed to map register base\n");
++	if (err)
++		goto err_teardown_irq_and_power_down;
  
- 	pcie->reg_base = regs->start;
+ 	return 0;
++
++err_teardown_irq_and_power_down:
++	mtk_pcie_irq_teardown(pcie);
++	mtk_pcie_power_down(pcie);
++	return err;
+ }
  
-@@ -888,34 +886,20 @@ static int mtk_pcie_parse_port(struct mtk_gen3_pcie *pcie)
+ static void mtk_pcie_remove(struct platform_device *pdev)
+@@ -1301,14 +1303,16 @@ static int mtk_pcie_resume_noirq(struct device *dev)
+ 		return err;
  
- 	ret = devm_reset_control_bulk_get_optional_shared(dev, num_resets,
- 							  pcie->phy_resets);
--	if (ret) {
--		dev_err(dev, "failed to get PHY bulk reset\n");
--		return ret;
+ 	err = mtk_pcie_startup_port(pcie);
+-	if (err) {
+-		mtk_pcie_power_down(pcie);
+-		return err;
 -	}
-+	if (ret)
-+		return dev_err_probe(dev, ret, "failed to get PHY bulk reset\n");
++	if (err)
++		goto err_power_down;
  
- 	pcie->mac_reset = devm_reset_control_get_optional_exclusive(dev, "mac");
--	if (IS_ERR(pcie->mac_reset)) {
--		ret = PTR_ERR(pcie->mac_reset);
--		if (ret != -EPROBE_DEFER)
--			dev_err(dev, "failed to get MAC reset\n");
--
--		return ret;
--	}
-+	if (IS_ERR(pcie->mac_reset))
-+		return dev_err_probe(dev, PTR_ERR(pcie->mac_reset), "failed to get MAC reset\n");
+ 	mtk_pcie_irq_restore(pcie);
  
- 	pcie->phy = devm_phy_optional_get(dev, "pcie-phy");
--	if (IS_ERR(pcie->phy)) {
--		ret = PTR_ERR(pcie->phy);
--		if (ret != -EPROBE_DEFER)
--			dev_err(dev, "failed to get PHY\n");
--
--		return ret;
--	}
-+	if (IS_ERR(pcie->phy))
-+		return dev_err_probe(dev, PTR_ERR(pcie->phy), "failed to get PHY\n");
+ 	return 0;
++
++err_power_down:
++	mtk_pcie_power_down(pcie);
++	return err;
+ }
  
- 	pcie->num_clks = devm_clk_bulk_get_all(dev, &pcie->clks);
--	if (pcie->num_clks < 0) {
--		dev_err(dev, "failed to get clocks\n");
--		return pcie->num_clks;
--	}
-+	if (pcie->num_clks < 0)
-+		return dev_err_probe(dev, pcie->num_clks, "failed to get clocks\n");
- 
- 	ret = of_property_read_u32(dev->of_node, "num-lanes", &num_lanes);
- 	if (ret == 0) {
+ static const struct dev_pm_ops mtk_pcie_pm_ops = {
 -- 
 2.53.0.414.gf7e9f6c205-goog
 
