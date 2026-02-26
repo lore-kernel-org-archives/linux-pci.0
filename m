@@ -1,130 +1,113 @@
-Received: from mail1.manjaro.org (mail1.manjaro.org [142.132.176.110])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f170.google.com (mail-vk1-f170.google.com [209.85.221.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91A7838A298;
-	Thu, 26 Feb 2026 04:53:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=142.132.176.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BDE72DECBF
+	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 05:06:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772081593; cv=none; b=B/Y+CajImxNXjKiGEb3Zpm51bukQeAjDx0PZxYICb3fyuBVfAgEQB/RZ7pl+hXcIi+K4vGsJ+ngK0Q0hTn/58EV7E72UNS9OndRY3giAykkJi4YkpWtOs+aChi6KcIbvcnxqtq5Kb5VzbG9keGIKqlktqKHIyui7tXfWwlqjk98=
+	t=1772082396; cv=none; b=IjZw1NUShhfY/Yo7IxHVPhttiD+/NiMl0X/5uQuJ18uu3sTJWmV1deBVvskBJJkg4x6N3mX/elv/Xs5eJjDf8Ir5KslozvRNKGMVgWysZyHolEvAuSie+6Tvzh+E1tGGLH4TK7P3zJw7oihyibMXez1jecdKS5ckV0aatN+J7lk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772081593; c=relaxed/simple;
-	bh=e2x3Ilzd94O5EBiKf2VQVnVjI3fUbVuwUcpAuhch9z0=;
-	h=From:In-Reply-To:Content-Type:References:Date:Cc:To:MIME-Version:
-	 Message-ID:Subject; b=LBc4mWxytXKB9NE7AMblxlz+f2G5bpbJmX2XycKVip3nWtOg2i+wmtnu6FRa9HDfhUanRinFj38UB+GzdO/SNAWR5nrYPDYgzzHOEOHrVqTle+PRtLfErduru3nPGC+jMhOh3Zc50p0t+FlfIM9H+1Hkv0gCzMrjBcAm6xVAdlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org; spf=pass smtp.mailfrom=manjaro.org; dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b=B60mAHbt; arc=none smtp.client-ip=142.132.176.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=manjaro.org
+	s=arc-20240116; t=1772082396; c=relaxed/simple;
+	bh=pKmLHC4ttZAACciM0OSMF4btoJdPKFJpJGewfgj9D/Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=G4iA4AntysHL3apdD66xzNbW1NqnVUHINoxvyPg2J/EXthK+1iQvkFA/NCPu5VjeNK/Xuua7YDI6rXksqyWAKhE6B2o9UL7gaReeKFn4CcPIh0Sq4B/U9uUHxOBuubWBtxOkSO2wn9ZU80k78n9tPdm0bOvdAXN+m+BU7/VSUSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yyu3MZto; arc=none smtp.client-ip=209.85.221.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b="B60mAHbt"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPA id 294C442053;
-	Thu, 26 Feb 2026 05:52:58 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=manjaro.org; s=dkim;
-	t=1772081582; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=ng3zv82xhOSBFnbYUmWaLkKZuWzEHGZYyz7mquCv+AY=;
-	b=B60mAHbtY4h0REVywWQLt6HGshTl3/zo3YgAro3ysEruPLY9H7lIb8U2NVryz2wE2dzR/9
-	T1Qu6DTp2lsD6toPJyDidLVlTY5LetXqJYgEhlDFEk/yPhfGmQCoAmf7GiEuJWPYek0ZsG
-	6XWvCrcMHg7167k+pqJg5YeqyyqM43uruT4Pyc4WDo9e1lDAfMx5gg+wV7Ef0HBM3b5Ysj
-	1Cq//twsLcMFzuRWBToe56EBHOFS1xu32VTDqkTiU8qoLxIaldz3+zJnKhArfzsQlEXC9T
-	rr21LusDOw+xLVtUs0LwDW+ZYaZK4VT2Ht/s4kzfqatJsGLSmFasXlOT61AjeA==
-From: "Dragan Simic" <dsimic@manjaro.org>
-In-Reply-To: <aZ-RaBLVfEZA_FxU@geday>
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yyu3MZto"
+Received: by mail-vk1-f170.google.com with SMTP id 71dfb90a1353d-5673fd077b4so245653e0c.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 21:06:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772082394; x=1772687194; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OHjA+gD2gl/+zcPzbbJ9jvIxiqgAysEUeuXfqossHNc=;
+        b=Yyu3MZtoaOhdmHz5Eogpn4tXmNnBTYuDsA23AIAdgED9no/nbU/fDACfylthkp4sph
+         i3wrJnukB5aZ+Jup6KXHiQRaVq+Nt05EC4rDh39aLRYI/9cIdg1qi105WYPaitq6BR+E
+         xf6C+DF1aZvYTxpAU/eZkZP6yadjVnQRMo5sEjQ3NKbsng4UhkMCc1V8AWeAuOrSOR8N
+         brHeeMYic16Q0+y3wRbwGTYzaBkJJ5IvuurI1N7dvWbUYov/+cHRbyYgK+LdZ/zqQDQz
+         UupaDZruh0xoRlhTp7jK4rKX336T6SXitzfZfhWA3iJZhlf2/eANSORcM3MPZdXyQRNb
+         NFdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772082394; x=1772687194;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OHjA+gD2gl/+zcPzbbJ9jvIxiqgAysEUeuXfqossHNc=;
+        b=Abn4bAwVszs5lWpQirrzq8hgneaf05NI22hE2mZKRhhA11oxwtot+QuCH5KancdhVN
+         PVCRxZUFc7DRTR2U8tBTP/5oAHOUD5vptD+HgLMppN3fhWKT3MPYXXj8BQV06q2lOS6y
+         CfLYNQNB118yPQTlTRr2XiASkGpL4aDBZjh+owjNLJ+sbXtiNO5A3+kyJOQaecZbEgc9
+         I9tGBABr/imb8PQt7h3fyTngpBW7LScnrElyAFLjMcm7fDAWWOZBLeZjTQm3S0amUgJ7
+         +kDfdVZUyMRKsaLT4Lf1DYjhK0cqrFoCL70c1YmDfx56cXJ0j1w/+aHrCIKpRufCTWnE
+         HR6A==
+X-Forwarded-Encrypted: i=1; AJvYcCUzz6weeAXGfb6dILfrWMzrlkvIUpgwnjgunCKpwDpV8dhq0NC1WqovP4yS8cieSvdjzA5mqJLkTQc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YziUgWhmb+qA80G3tgE0PBQsZ9dPiBp3RCrQxFqKoB6b/ipk02E
+	lrRAPuXfnHKyU/QACbpkfTK881Ye2Bzy5OIoPObBwnVeLgDGWIS/YmrW
+X-Gm-Gg: ATEYQzyjmnYBdA261H4Dukcq/h9TvxZRC9hAS8VvUT5fipoTM8nlNR+F7Yns4gBVUuI
+	KfE7Dv8eKLIW3kZRECvNGZYkWr3hLx7TYjWjgfYkqScqP62rrtiE63o28DuHrjUN8vEzgtjO96a
+	KzNdSR6KsgyE9qqer45+8AhI/9aiZsuof7FgxDzPEINeAtHTcGWfRYV2VxNbYkzSBP0Lfn5zgeN
+	72R2SEQC5iuWWSWLZ9i8f5QKVnkBg3mbJ1aKeVoYZNGj7dXh1p9tHsFk4VaFzlP8XAoxpt0XB6G
+	O2yh7SONe6pR+Ydq42BFKfmJ4Cyb8MKDnXzXvnbwpXMDblyf6GTWvB4fopWggWrW5x+J9F/ZcK6
+	KDDmwbEk301pPIS2VamLW9sFhctP1quvRgvBN/SU0oXkIv4bI/xM/1bR5SNZyOK6AxP7Cu+0LJs
+	JD7pvt2hOWxg==
+X-Received: by 2002:a05:6122:2a55:b0:566:221e:a98e with SMTP id 71dfb90a1353d-568e48f5862mr7505040e0c.18.1772082393912;
+        Wed, 25 Feb 2026 21:06:33 -0800 (PST)
+Received: from geday ([2804:7f2:800b:f14d::dead:c001])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-56a920493f9sm1290815e0c.13.2026.02.25.21.06.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Feb 2026 21:06:32 -0800 (PST)
+Date: Thu, 26 Feb 2026 02:06:24 -0300
+From: Geraldo Nascimento <geraldogabriel@gmail.com>
+To: Dragan Simic <dsimic@manjaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] PCI: rockchip-host: comment danger of 5.0 GT/s
+ speed
+Message-ID: <aZ_U0ASjuK2fZi5h@geday>
 References: <8db835ffe384db63ee598a203751b298ad1cc267.1772057799.git.geraldogabriel@gmail.com>
- <20260226001229.GA3794668@bhelgaas> <aZ-RaBLVfEZA_FxU@geday>
-Date: Thu, 26 Feb 2026 05:52:58 +0100
-Cc: "Bjorn Helgaas" <helgaas@kernel.org>, "Shawn Lin" <shawn.lin@rock-chips.com>, "Lorenzo Pieralisi" <lpieralisi@kernel.org>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Manivannan Sadhasivam" <mani@kernel.org>, "Rob Herring" <robh@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>, "Heiko Stuebner" <heiko@sntech.de>, linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-To: "Geraldo Nascimento" <geraldogabriel@gmail.com>
+ <20260226001229.GA3794668@bhelgaas>
+ <aZ-RaBLVfEZA_FxU@geday>
+ <e0aa10e5-ec0a-4d0d-6f71-6797286221cc@manjaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <e0aa10e5-ec0a-4d0d-6f71-6797286221cc@manjaro.org>
-Subject: =?utf-8?q?Re=3A?= [PATCH v3 2/2] =?utf-8?q?PCI=3A?=
- =?utf-8?q?_rockchip-host=3A?= comment danger of =?utf-8?q?5=2E0?= GT/s 
- speed
-User-Agent: SOGoMail 5.12.3
-Content-Transfer-Encoding: quoted-printable
-X-Last-TLS-Session-Version: None
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e0aa10e5-ec0a-4d0d-6f71-6797286221cc@manjaro.org>
 
-Hello Geraldo and Bjorn,
+Hi Dragan, thank you for the review!
 
-On Thursday, February 26, 2026 01:18 CET, Geraldo Nascimento <geraldoga=
-briel@gmail.com> wrote:
-> On Wed, Feb 25, 2026 at 06:12:29PM -0600, Bjorn Helgaas wrote:
-> > On Wed, Feb 25, 2026 at 07:27:44PM -0300, Geraldo Nascimento wrote:
-> > > According to Rockchip sources, there is grave danger in enabling =
-5.0
-> > > GT/s speed for this core. Add a comment documenting this risk of
-> > > "catastrophic failure" and discouraging end-users from forcing
-> > > higher speed.
-> >=20
-> > A comment in the code might be useful but doesn't discourage end
-> > users.
->=20
-> Hi Bjorn, thanks for the quick review.
->=20
-> > > Link: https://lore.kernel.org/all/ffd05070-9879-4468-94e3-b88968b=
-4c21b@rock-chips.com/
-> > > Cc: stable@vger.kernel.org
-> > > Reported-by: Dragan Simic <dsimic@manjaro.org>
-> > > Reported-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > > Reviewed-by: Dragan Simic <dsimic@manjaro.org>
-> > > Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
-> > > ---
-> > >  drivers/pci/controller/pcie-rockchip-host.c | 4 ++++
-> > >  1 file changed, 4 insertions(+)
-> > >=20
-> > > diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/driver=
-s/pci/controller/pcie-rockchip-host.c
-> > > index ee1822ca01db..4faf3e29b7d5 100644
-> > > --- a/drivers/pci/controller/pcie-rockchip-host.c
-> > > +++ b/drivers/pci/controller/pcie-rockchip-host.c
-> > > @@ -332,6 +332,10 @@ static int rockchip=5Fpcie=5Fhost=5Finit=5Fp=
-ort(struct rockchip=5Fpcie *rockchip)
-> > >  		/*
-> > >  		 * Enable retrain for gen2. This should be configured only aft=
-er
-> > >  		 * gen1 finished.
-> > > +		 *
-> > > +		 * Dangerous and may lead to "catastrophic failure", with data=
- loss
-> > > +		 * or worse!
-> > > +		 *
-> >=20
-> > Wrap comment to fit in 80 columns like the rest of the file.
-> >=20
-> > Remove spurious blank line at end.
-> >=20
-> > This should probably be squashed with the first patch; I don't see =
-the
-> > benefit of having them separate.
-> >=20
-> > Why don't we just remove this whole "link=5Fgen =3D=3D 2" block?  I=
-f we
-> > don't want to use it, there's no point in keeping the code.
->=20
-> Yes, I think I'll go with this second option and remove the code
-> block outright.
+On Thu, Feb 26, 2026 at 05:52:58AM +0100, Dragan Simic wrote:
+> I agree about removing the effectively unused code block that handles
+> the "link_gen == 2" case from pcie-rockchip-host.c, but then please
+> remove the PCIE_CLIENT_GEN_SEL_2 define from pcie-rockchip.h and its
+> single "link_gen == 2" use from pcie-rockchip.c as well.
 
-I agree about removing the effectively unused code block that handles
-the "link=5Fgen =3D=3D 2" case from pcie-rockchip-host.c, but then plea=
-se
-remove the PCIE=5FCLIENT=5FGEN=5FSEL=5F2 define from pcie-rockchip.h an=
-d its
-single "link=5Fgen =3D=3D 2" use from pcie-rockchip.c as well.
+Good.
 
-As part of that additional removal, an early check for "link=5Fgen =3D=3D=
- 1"
-should be added to function rockchip=5Fpcie=5Finit=5Fport() in pcie-roc=
-kchip.c,
-because that will become the only "link=5Fgen" value it supports.
+There's also some code that needs to be dropped from the endpoint
+driver.
 
-> >=20
-> > >  		 */
-> > >  		status =3D rockchip=5Fpcie=5Fread(rockchip, PCIE=5FRC=5FCONFIG=
-=5FCR + PCI=5FEXP=5FLNKCTL2);
-> > >  		status &=3D ~PCI=5FEXP=5FLNKCTL2=5FTLS;
+> 
+> As part of that additional removal, an early check for "link_gen == 1"
+> should be added to function rockchip_pcie_init_port() in pcie-rockchip.c,
+> because that will become the only "link_gen" value it supports.
 
+What do you think, should the driver bail out completely if
+link_gen != 1 or just let it force 2.5 GT/s speed with a warning?
+
+I tend to go with the latter.
+
+Thanks,
+Geraldo Nascimento
