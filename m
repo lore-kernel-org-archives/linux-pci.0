@@ -1,185 +1,159 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAD8B363C6B;
-	Thu, 26 Feb 2026 13:41:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E512A396B79;
+	Thu, 26 Feb 2026 13:46:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772113264; cv=none; b=G3VGng9Pjfi0hdbwjJgUrOsLvH6l6Z9nab7NSRfHKz3y1SF+kBwi3EvlFFxh1ig0ABGqQDomRSukDtxbLuumxsXFQS+fIZOj0Uqk72+8tCadTLEMY2zYb4wnQMOfkCMfIAvoiffyls2Fd/V+aOuSxlGch2+hnzWjFiZtR8PaxpQ=
+	t=1772113585; cv=none; b=C+R3RO71+4h68eN1tnneY1G2xQY0vYYdhqDTLmfAihp/iJTnjNaKHEEWaIs2fhXAaLZ+qWboYPRFOuUOX85TiVZ1NiFDM8Q7X+i622+KJIqiPZg3n1rdhwGZC4ZIhJNQ9o/XtY6KNGBeo2ydkxz0UOmhfxojw+sHqkBH1v5l4cw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772113264; c=relaxed/simple;
-	bh=Cd4dpBLUHEkDK0iuCRBFU+xopfpY+DpvYGCUImgDuuk=;
+	s=arc-20240116; t=1772113585; c=relaxed/simple;
+	bh=LJEd8akXY0AvZBT/adjkcnZC7NY6MjQKMDMipnrccIU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uk0D1LMol2DMBhiLQtPbTg9ZY5zVMiYKFlvm8QuUioB5AP+TQC4cQBfCxlsmCTC0XwHtA3Oj77Pju6i7Z66OQzkdSoAkMVIaYDalKhD7+JZAb/Nb8PieAJnl1fXkCR7+LgDQxQ6UouZO3WIlFaYhMAwz6DikzDbqPjbycZtrn/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=jcb9LgjN; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=f8kJ4YOiNnE6jDYdZZJ/F5J5tY/F+7PEZePWxyxcJpIyK4+NgEKEpu1BH5mWlYyIFvag8CpHCQf0zLIUbhpnZhiK/otWNa8MvignlPVm1GHRJqJ7qOYj0N2i1a7IfaFnQCZG2ldZfzdSgVYFARLx2DuSbcpg75CQwUK0tjSuRcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cNGTGTKp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="jcb9LgjN"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61Q99f0k2839736;
-	Thu, 26 Feb 2026 13:40:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=uMssfxhPFSn/6vIySmtb07vru5Ln5O2CT/2uar6TikI=; b=jcb9LgjNBXfm
-	gmB0RiZ9M7lUG0G/EHKTtZYmZLM2oslFGR9wrTdi6D6sqUywGZ7KPsE9aKMER7E7
-	iJ6BoSjJY1TDCaiQyKHyZFZbUsbloRsFbDiGbEb4r45SmXeAXKjcSJYhgdlFng3j
-	6Q2/0rMVRJd/sMj4+pq2+tiBmM5XDTX0TWWCggmmApdRAaOmyIJHyCuLOK0uN426
-	FYQDDmaRRvq4zsL4zJL7kVTrus2nA9d8LktJER2C882/Q0vNOUYYcztVe9dp96Wm
-	kfry53xPD/WDmKZ6QVdUHkzLwfxKNFbrR/8xYdNXhAOlnVYwvjjkU0utezYB/KaC
-	0u8aHVERHA==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cf4bs5smg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 26 Feb 2026 13:40:57 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61QBFsu4027797;
-	Thu, 26 Feb 2026 13:40:57 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cfsr23eu2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 26 Feb 2026 13:40:56 +0000
-Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
-	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61QDerQ048955798
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 26 Feb 2026 13:40:53 GMT
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EEEB520049;
-	Thu, 26 Feb 2026 13:40:52 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id DD25B20040;
-	Thu, 26 Feb 2026 13:40:52 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu, 26 Feb 2026 13:40:52 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1vvbbo-00000001FWX-2Zix;
-	Thu, 26 Feb 2026 14:40:52 +0100
-Date: Thu, 26 Feb 2026 14:40:52 +0100
-From: Benjamin Block <bblock@linux.ibm.com>
-To: ionut.nechita@windriver.com
-Cc: bhelgaas@google.com, helgaas@kernel.org, schnelle@linux.ibm.com,
-        alifm@linux.ibm.com, julianr@linux.ibm.com, dtatulea@nvidia.com,
-        ionut_n2001@yahoo.com, sunlightlinux@gmail.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/1] PCI/IOV: Add reentrant locking in
- sriov_add_vfs/sriov_del_vfs for complete serialization
-Message-ID: <20260226134052.GA13050@p1gen4-pw042f0m>
-References: <20260225202434.18737-1-ionut.nechita@windriver.com>
- <20260225202434.18737-2-ionut.nechita@windriver.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cNGTGTKp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59B4DC116C6;
+	Thu, 26 Feb 2026 13:46:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772113584;
+	bh=LJEd8akXY0AvZBT/adjkcnZC7NY6MjQKMDMipnrccIU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cNGTGTKp7GmCD1YsCDskTB16UDD2sdloGb/ijYqDzP6NsW7ScbQmAYnxgaqtkxyZE
+	 aoT3Z/IXyItuo7rZKa54skUDOtnk2sbkdqcJZY6E0ecc6kYVc9feBxDxv3/x/uKLO+
+	 R9vo+QHR1FI8vXINA2g7a942kZIEdsxw61XhNx2Pka+3qbf5Wc6TtJdy2rHQT3MBAK
+	 2WnM/CDqGSieFGXItWiOeuzeCq8VUTDVMJCdPrjT13FWD/0JhuiHSNChMAg5P09eot
+	 0cqgMNGwfRUmvsL0019nYP4ETzS7nhGwiuswkrKSNlxqccxTWKtmu/imobE3cSYghq
+	 3get+Tqdw5NAg==
+Date: Thu, 26 Feb 2026 19:16:13 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: zhangsenchuan <zhangsenchuan@eswincomputing.com>
+Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, p.zabel@pengutronix.de, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	christian.bruel@foss.st.com, shradha.t@samsung.com, krishna.chundru@oss.qualcomm.com, 
+	thippeswamy.havalige@amd.com, inochiama@gmail.com, Frank.li@nxp.com, ningyu@eswincomputing.com, 
+	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com, ouyanghui@eswincomputing.com
+Subject: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host controller
+ driver
+Message-ID: <4lhrl2lqnndbieuctdtdrwdjlvjafw32googpv322kv5xe35ue@gtojpiksle74>
+References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
+ <20260129092900.1900-1-zhangsenchuan@eswincomputing.com>
+ <a3yu54e6feo5immtdju4fgvne7fh3p4ytlawfdhawmpzvagi64@o7wuhhdiitft>
+ <78296255.3869.19c8eb694d6.Coremail.zhangsenchuan@eswincomputing.com>
+ <cxfbgzwsybfvixu3qqi66fvspmhe5knuevwcj6zwsakkzqwd3z@czmitvgl7nwt>
+ <694aeb1a.398e.19c98ff2727.Coremail.zhangsenchuan@eswincomputing.com>
+ <rbmoxlc45bf4ij2o2mf3ofgni6vxqmsp52vdiqtc4wxxufmxkt@w2u5rkpq5mhs>
+ <470bb42a.39bb.19c994fc998.Coremail.zhangsenchuan@eswincomputing.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260225202434.18737-2-ionut.nechita@windriver.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: DvPWJn3ZgTygi4SYrUIl9MfbtT4yi3fi
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI2MDEyMyBTYWx0ZWRfX5QXDFr9MaSr3
- LpuVYBOV/PgMhZwsw+LMUcltH48RrFTe0dH2bXTp45ncuWiTvYa000XvKCvIDpArzOAk8U8Hzrz
- ibpqDhkExZa7VBsKpFqQH6q23WiNRKelAXwyABGZ6xI2xwrJQk0Kpy5RL5M9E25y26QVuY8Yj6b
- lQFLBdwIfvoyAU5+7+BI7Dqa+646ugU+vZy3IM/446YO2RCkvMULE2lwOuj1uYRSNHPA5Q202/O
- kt2y8smdxkMswijlvnfX9Zsa1MAL11rjGsZPCcVhxFkXo6z2Hc6aFwriaZcJsB/MbvqgeFPtNVT
- 5sZrQYnM1yiKz9gepUkIVURntTR5t61Ejh6kCZLQKyzNXjqQRQWmAUZQd8CFHcOt9H+4nuA6jaS
- ZhDBKOOqqNQe1vqDscyJ7wgcj76cO7DVdd0VTEjjLw/dwwXi45Uc+nbblicxQGHzUDhWTERprnJ
- GvjswCCPZW4lo8lPq7A==
-X-Authority-Analysis: v=2.4 cv=eNceTXp1 c=1 sm=1 tr=0 ts=69a04d6a cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=8nJEP1OIZ-IA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VnNF1IyMAAAA:8
- a=t7CeM3EgAAAA:8 a=Gb5hSY02JU1MmV-but8A:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
- a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-GUID: mQi7RIAWRoQiojNv512PgMEhbY7_QUR4
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-25_04,2026-02-26_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 priorityscore=1501 phishscore=0 suspectscore=0 adultscore=0
- bulkscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602260123
+In-Reply-To: <470bb42a.39bb.19c994fc998.Coremail.zhangsenchuan@eswincomputing.com>
 
-On Wed, Feb 25, 2026 at 10:24:34PM +0200, ionut.nechita@windriver.com wrote:
-> From: Ionut Nechita <ionut.nechita@windriver.com>
+On Thu, Feb 26, 2026 at 05:37:48PM +0800, zhangsenchuan wrote:
+> > > > > > Subject: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host controller driver
+> > > > > > 
+> > > > > > On Thu, Jan 29, 2026 at 05:29:00PM +0800, zhangsenchuan@eswincomputing.com wrote:
+> > > > > > > From: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
+> > > > > > >
+> > > > > > > +static int eic7700_pcie_suspend_noirq(struct device *dev)
+> > > > > > > +{
+> > > > > > > +	struct eic7700_pcie *pcie = dev_get_drvdata(dev);
+> > > > > > > +
+> > > > > > > +	/*
+> > > > > > > +	 * The ESWIN EIC7700 SoC lacks hardware support for the L2/L3 low-power
+> > > > > > > +	 * link states. It cannot enter the L2/L3 Ready state through the
+> > > > > > > +	 * PME_Turn_Off/PME_To_Ack handshake protocol. To avoid this problem,
+> > > > > > > +	 * the dw_pcie_suspend_noirq API is not used.
+> > > > > > > +	 */
+> > > > > > 
+> > > > > > With 7.0, you can provide a dummy pme_turn_off() API and set
+> > > > > > 'pci->pp.skip_l23_ready' to reuse the dw_pcie_{suspend/resume}_noirq APIs.
+> > > > > > 
+> > > > > 
+> > > > > Hi Mani,
+> > > > > 
+> > > > > Setting pci->pp.skip_l23_ready does indeed allow us to reuse the
+> > > > > dw_pcie_suspend_noirq function. However, for the dw_pcie_resume_noirq
+> > > > > function, if the dw_pcie_start_link and dw_pcie_wait_for_link APIs fail to
+> > > > > execute, the clk/reset resources in the pci->pp.ops->init function cannot
+> > > > > be released. Perhaps the dw_pcie_resume_noirq function needs to be optimized.
+> > > > 
+> > > > Will this help?
+> > > > 
+> > > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > > index 6ae6189e9b8a..38ad79bbeab1 100644
+> > > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > > @@ -1300,15 +1300,24 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
+> > > >  
+> > > >         ret = dw_pcie_start_link(pci);
+> > > >         if (ret)
+> > > > -               return ret;
+> > > > +               goto err_deinit;
+> > > >  
+> > > >         ret = dw_pcie_wait_for_link(pci);
+> > > >         if (ret)
+> > > > -               return ret;
+> > > > +               goto err_stop_link;
+> > > >  
+> > > >         if (pci->pp.ops->post_init)
+> > > >                 pci->pp.ops->post_init(&pci->pp);
+> > > >  
+> > > > +       return 0;
+> > > > +
+> > > > +err_stop_link:
+> > > > +       dw_pcie_stop_link(pci);
+> > > > +
+> > > > +err_deinit:
+> > > > +       if (pci->pp.ops->deinit)
+> > > > +               pci->pp.ops->deinit(&pci->pp);
+> > > > +
+> > > >         return ret;
+> > > >  }
+> > > >  EXPORT_SYMBOL_GPL(dw_pcie_resume_noirq);
+> > > > 
+> > > 
+> > > Yes, this can release the resources after init, after optimizing the 
+> > > resume function, i can reuse the dw_pcie_{suspend/resume}_noirq APIs.
+> > > 
+> > > I noticed that the dw_pcie_wait_for_link function has been optimized. Is 
+> > > it necessary to release the resources only when it return -ETIMEOUT?
+> > > Perhaps it needs to be slightly improved：
+> > > 
+> > >  ret = dw_pcie_wait_for_link(pci);
+> > >  if (ret == -ETIMEOUT)
+> > >          goto err_stop_link;
+> > > 
+> > > What about your suggestion?
+> > > 
+> > 
+> > Absolutely! I forgot my own rework ;) I'll cook a patch for the above. Then if
+> > you base your controller driver patch on top of it, we can merge both in a
+> > single tree (if Bjorn agrees).
+> > 
 > 
---8<--
+> Okey,thanks!
 > 
-> Instead, introduce owner tracking for pci_rescan_remove_lock via a new
-> pci_lock_rescan_remove_reentrant() helper. This function checks if the
-> current task already holds the lock:
->  - If the lock is not held: acquires it and returns true, providing
->    full serialization against concurrent hotplug events (including
->    platform-generated events on s390).
->  - If the lock is already held by the current task (reentrant call from
->    remove_store or sriov_numvfs_store paths): returns false without
->    re-acquiring, avoiding deadlock while the caller already provides
->    the necessary serialization.
->  - If the lock is held by another task (concurrent hotplug): blocks
->    until the lock is released, then acquires it, providing complete
->    serialization. This is the key improvement over a trylock approach.
+> I'm a little unsure. Do I need to send the v11 patch here first? Or should I wait
+> until you release the new fix patch, and then send the v11 patch?
 > 
---8<--
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bccc7a4bdd794..467362c277f19 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -3509,19 +3509,38 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
->   * routines should always be executed under this mutex.
->   */
->  DEFINE_MUTEX(pci_rescan_remove_lock);
-> +static struct task_struct *pci_rescan_remove_owner;
-                            ^
-                            const *pci_rescan_remove_owner
 
-Minor nitpick: you could declare this `const`; making it clear that this is
-not meant to be used to modify the task in any way.
+I've just sent the fix:
+https://lore.kernel.org/linux-pci/20260226133951.296743-1-mani@kernel.org
 
->  void pci_lock_rescan_remove(void)
->  {
->  	mutex_lock(&pci_rescan_remove_lock);
-> +	pci_rescan_remove_owner = current;
->  }
->  EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
->  
->  void pci_unlock_rescan_remove(void)
->  {
-> +	pci_rescan_remove_owner = NULL;
->  	mutex_unlock(&pci_rescan_remove_lock);
->  }
->  EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
->  
-> +bool pci_lock_rescan_remove_reentrant(void)
-> +{
-> +	if (pci_rescan_remove_owner == current)
-> +		return false;
-> +	pci_lock_rescan_remove();
-> +	return true;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_lock_rescan_remove_reentrant);
+You can post your series on top of it. There should be no build dependency, but
+there is a functional dependency. So we may put this patch and your series in a
+single branch.
 
-Otherwise this looks good to me.
-
-I've run tests on s390 with hot-unplug from within Linux and externally
-triggered, driver unbind/unload, s390 PCI recovery, and some other minor
-tests.
-No lockdep splats, no other warnings/splats; it looks good to me.
-
-
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-Tested-by: Benjamin Block <bblock@linux.ibm.com>
+- Mani
 
 -- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Gesch�ftsf�hrung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
+மணிவண்ணன் சதாசிவம்
