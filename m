@@ -1,159 +1,107 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD0A53939BA
-	for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 07:47:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 42B6A23BD05;
+	Thu, 26 Feb 2026 08:10:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772092036; cv=none; b=Z2ItmpWqIYkRZ5EDtNDLujGo2oQMaT7KphLRl0MPFUsascgVGutTRVhto/HKp+wmalNUJbsoknmkKwSgds8RYpsuIZRziES3bkcbtx5Z9n7bEyvfYBOuxe2MzrquinxfCgkLc5YbucAbM9FMzbNTDHHnJf5YHsmE9aeWzzvnFg0=
+	t=1772093417; cv=none; b=Kab6O6fPnTCu6MN8pm//gBlb6ZgpvqaPGRMZ0ygceYN/qaYuyEoVcMiorYbT9ZO4+jTLFf5NDCmkG6TerDSbf+gUCD5u85qgy1JpuR7FKbE5FHr6lcBDhClrAVaj6ElFM1CKUa3jTIGLSlulwwdp8o6LoY6J81DILdiZR3wxiK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772092036; c=relaxed/simple;
-	bh=AypPDr4UgXhu7uIff8wANG2+W1ncKwh2QK1mDknKf9o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mlLYXueFv2oaL2kxy4Fh5cuYmuaFyuPetGu8mlI8wIkZHhtGALxR2h1w2o6HW6SqJGb5SpX0CiSPROkHXvCiNl/kBKmj5gUn/gXj2UMD6IWYknN7NxAgQXWdnBX7hIuS8bw/FKSN9AkUXY7rwkd4UtMghGFryd/SbuGfClKbMe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=PLp3F/3E; arc=none smtp.client-ip=209.85.215.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="PLp3F/3E"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-c648bc907ebso326360a12.3
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2026 23:47:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1772092032; x=1772696832; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cfwUdpA5rCWf9a4/nMgxhcP8TttgZio63fOINzploZA=;
-        b=PLp3F/3EUGSCRffLeldwyJIeyW7QQf1M+/XDzP1JYOWRLnuYQ6m6rPs+K8ViO66cCV
-         xdjYXHtAezUkhOMLSOkHoTRoIvgJhRarox/WVmewai9ml0igJ3Q7znIwdEaNkciLYUCD
-         53T9VYNKcOBUhVAXAs6VFCvcheU22iBI7KxXo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772092032; x=1772696832;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=cfwUdpA5rCWf9a4/nMgxhcP8TttgZio63fOINzploZA=;
-        b=Mg6pPBY+5Y58ejPzw4Nz1UThskINOD+z3WkIbjteaGgm9H+jX8VfRCjNAHSZ5WKPyU
-         jk+pjsOIE6URdQKx7a1KTtkaOhOkJrfhBej8yae3WyNtYDOVSlPoU/RlyMHb97rWXfhu
-         tQfIQbGwTloIU+2jcNVwb8UeC65cFd96S1JKXPK2sLa/G8rha1z81OaHwh5n40okhAEv
-         ObJF5HkMeeqzIzjQNCnr8EQmcM9SgMJHP5ldOtc0CpLAzNaHcnlYxkUchWnMZs7V1qF1
-         g00yiHJHu467KyGX2T/w+u5/8h65N6REFGs5jnNFoAGPfG3yBsvrvv88iZe/2nu4G6G2
-         y1oQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXR5eMSXIir4rPgmCARR+QN52y+MLfC0K1Y/g/GVbkdnt66+tCT9LvziduKmE3xzqB2iR7Z9ZRnZLs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxH2Kb1Hcf8wkF+RC2q7i7E0QL+FFKeAGnR5JobmVCNdYlBHTgi
-	0hZYcZM42x4Y9Xyl3KZdR55yBRP6WvBbt5Ft4EAxei03mKzg4BHlrHmr6Fw58qN9Wg==
-X-Gm-Gg: ATEYQzzURavshI1mUXY+sYiPdT7MzMAFFLM9u+2LeSbxpsGndCi0EBjwaGY9U2RqU9O
-	PDCgiQfnuECB0WzMWWXdPpZQkizWbltGv2owQj94RDk3CsrAD45ch7nOFHhasE6YlYkeFRBlHZw
-	+9r6PEX8Ej9SnT1t7ikZm8fWha+17RhC5FfNsQVt2VcbRCUdn7ou9W11SaclDpzRVkWSRenzB38
-	zSsveH+sNGZvSq+feP0dWNSOHCwJes52A3e2b4ZQojx2ESnX0irPRfCmqlauqnpvCmc794Xgifh
-	DiBh0oAwimeypLk1GmKslTR/cwrzZyysB5s+owt85ZGV6ohL+zowv6cOD30QR7wfxuNnk3B3lHV
-	55O6iZnQZHlPSnshjwsSbjjiWsPygX3PQhIiM8PPjjbmwofLUqlJEoXn3OQHVYlTQzZeDEm4Cv4
-	QMANV8Vw8bgIVixXpV7AaLPVnqav3I5dCO7YlwpIpeLR3vjzcDt6eVftW2znO+02TYZuNh0WrkD
-	x4D1VBygbk+kVIqAHM=
-X-Received: by 2002:a17:903:41cf:b0:2ad:ae4f:345a with SMTP id d9443c01a7336-2adae4f36bcmr89126745ad.36.1772092031982;
-        Wed, 25 Feb 2026 23:47:11 -0800 (PST)
-Received: from wenstp920.tpe.corp.google.com ([2a00:79e0:201d:8:bf01:7f64:477a:2f97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb5b22f3sm15238245ad.12.2026.02.25.23.47.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Feb 2026 23:47:11 -0800 (PST)
-From: Chen-Yu Tsai <wenst@chromium.org>
-To: Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chen-Yu Tsai <wenst@chromium.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 7/7] arm64: dts: mediatek: mt8195-cherry-dojo: Describe M.2 M-key NVMe slot
-Date: Thu, 26 Feb 2026 15:45:23 +0800
-Message-ID: <20260226074524.3808081-8-wenst@chromium.org>
-X-Mailer: git-send-email 2.53.0.414.gf7e9f6c205-goog
-In-Reply-To: <20260226074524.3808081-1-wenst@chromium.org>
-References: <20260226074524.3808081-1-wenst@chromium.org>
+	s=arc-20240116; t=1772093417; c=relaxed/simple;
+	bh=0tbnDj4UNBcIFrI5kbDXah6aZZNKwW3vaIo+z7tG2rw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=pRyACJdVW+xxq1UzmJZMyftMyblc4MYl7F6TexgsH/WO6dXA3LAZW4ZdOT3sjE3Z5w+ZvjNKMgV7DpDF+auIj+pmjxxJDyg42xARTCau4fPHmqspwv50bcDqaUt+3xrln5ZQAautWELrmD7dj1/v58+VV7IREqZNz3cwB2OSuIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=206.189.21.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
+ ajax-webmail-app2 (Coremail) ; Thu, 26 Feb 2026 16:09:44 +0800 (GMT+08:00)
+Date: Thu, 26 Feb 2026 16:09:44 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
+To: "Manivannan Sadhasivam" <mani@kernel.org>
+Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
+	p.zabel@pengutronix.de, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	christian.bruel@foss.st.com, shradha.t@samsung.com,
+	krishna.chundru@oss.qualcomm.com, thippeswamy.havalige@amd.com,
+	inochiama@gmail.com, Frank.li@nxp.com, ningyu@eswincomputing.com,
+	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com,
+	ouyanghui@eswincomputing.com
+Subject: Re: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host
+ controller driver
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <cxfbgzwsybfvixu3qqi66fvspmhe5knuevwcj6zwsakkzqwd3z@czmitvgl7nwt>
+References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
+ <20260129092900.1900-1-zhangsenchuan@eswincomputing.com>
+ <a3yu54e6feo5immtdju4fgvne7fh3p4ytlawfdhawmpzvagi64@o7wuhhdiitft>
+ <78296255.3869.19c8eb694d6.Coremail.zhangsenchuan@eswincomputing.com>
+ <cxfbgzwsybfvixu3qqi66fvspmhe5knuevwcj6zwsakkzqwd3z@czmitvgl7nwt>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-ID: <694aeb1a.398e.19c98ff2727.Coremail.zhangsenchuan@eswincomputing.com>
+X-Coremail-Locale: en_US
+X-CM-TRANSID:TQJkCgDH3aDI_59pPrgDAA--.810W
+X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAgEKBmmfJ
+	IYfLwAAsr
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-The Dojo device has a M.2 M-key slot for an included NVMe on some
-models.
-
-Add a proper device tree description based on the new M.2 M-key binding.
-Power for the slot is controlled by the embedded controller. As far as
-the main SoC is concerned, it is always on.
-
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
----
- .../dts/mediatek/mt8195-cherry-dojo-r1.dts    | 38 +++++++++++++++++++
- 1 file changed, 38 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts b/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-index 49664de99b88..57cc329f49c4 100644
---- a/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt8195-cherry-dojo-r1.dts
-@@ -11,6 +11,28 @@ / {
- 	compatible = "google,dojo-sku7", "google,dojo-sku5",
- 		     "google,dojo-sku3", "google,dojo-sku1",
- 		     "google,dojo", "mediatek,mt8195";
-+
-+	nvme-connector {
-+		compatible = "pcie-m2-m-connector";
-+		/* power is controlled by EC */
-+		vpcie3v3-supply = <&pp3300_z2>;
-+
-+		ports {
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			port@0 {
-+				reg = <0>;
-+				#address-cells = <1>;
-+				#size-cells = <0>;
-+
-+				nvme_ep: endpoint@0 {
-+					reg = <0>;
-+					remote-endpoint = <&pcie0_ep>;
-+				};
-+			};
-+		};
-+	};
- };
- 
- &audio_codec {
-@@ -72,6 +94,22 @@ &pcie0 {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie0_pins_default>;
- 	status = "okay";
-+
-+	pcie@0 {
-+		compatible = "pciclass,0604";
-+		reg = <0 0 0 0 0>;
-+		device_type = "pci";
-+		num-lanes = <2>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges;
-+
-+		port {
-+			pcie0_ep: endpoint {
-+				remote-endpoint = <&nvme_ep>;
-+			};
-+		};
-+	};
- };
- 
- &pciephy {
--- 
-2.53.0.414.gf7e9f6c205-goog
-
+Cj4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjEwIDIvMl0gUENJOiBlaWM3NzAwOiBBZGQgRXN3
+aW4gUENJZSBob3N0IGNvbnRyb2xsZXIgZHJpdmVyCj4gPiA+IAo+ID4gPiBPbiBUaHUsIEphbiAy
+OSwgMjAyNiBhdCAwNToyOTowMFBNICswODAwLCB6aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5n
+LmNvbSB3cm90ZToKPiA+ID4gPiBGcm9tOiBTZW5jaHVhbiBaaGFuZyA8emhhbmdzZW5jaHVhbkBl
+c3dpbmNvbXB1dGluZy5jb20+Cj4gPiA+ID4KPiA+ID4gPiArc3RhdGljIGludCBlaWM3NzAwX3Bj
+aWVfc3VzcGVuZF9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gPiA+ID4gK3sKPiA+ID4gPiAr
+CXN0cnVjdCBlaWM3NzAwX3BjaWUgKnBjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsKPiA+ID4g
+PiArCj4gPiA+ID4gKwkvKgo+ID4gPiA+ICsJICogVGhlIEVTV0lOIEVJQzc3MDAgU29DIGxhY2tz
+IGhhcmR3YXJlIHN1cHBvcnQgZm9yIHRoZSBMMi9MMyBsb3ctcG93ZXIKPiA+ID4gPiArCSAqIGxp
+bmsgc3RhdGVzLiBJdCBjYW5ub3QgZW50ZXIgdGhlIEwyL0wzIFJlYWR5IHN0YXRlIHRocm91Z2gg
+dGhlCj4gPiA+ID4gKwkgKiBQTUVfVHVybl9PZmYvUE1FX1RvX0FjayBoYW5kc2hha2UgcHJvdG9j
+b2wuIFRvIGF2b2lkIHRoaXMgcHJvYmxlbSwKPiA+ID4gPiArCSAqIHRoZSBkd19wY2llX3N1c3Bl
+bmRfbm9pcnEgQVBJIGlzIG5vdCB1c2VkLgo+ID4gPiA+ICsJICovCj4gPiA+IAo+ID4gPiBXaXRo
+IDcuMCwgeW91IGNhbiBwcm92aWRlIGEgZHVtbXkgcG1lX3R1cm5fb2ZmKCkgQVBJIGFuZCBzZXQK
+PiA+ID4gJ3BjaS0+cHAuc2tpcF9sMjNfcmVhZHknIHRvIHJldXNlIHRoZSBkd19wY2llX3tzdXNw
+ZW5kL3Jlc3VtZX1fbm9pcnEgQVBJcy4KPiA+ID4gCj4gPiAKPiA+IEhpIE1hbmksCj4gPiAKPiA+
+IFNldHRpbmcgcGNpLT5wcC5za2lwX2wyM19yZWFkeSBkb2VzIGluZGVlZCBhbGxvdyB1cyB0byBy
+ZXVzZSB0aGUKPiA+IGR3X3BjaWVfc3VzcGVuZF9ub2lycSBmdW5jdGlvbi4gSG93ZXZlciwgZm9y
+IHRoZSBkd19wY2llX3Jlc3VtZV9ub2lycQo+ID4gZnVuY3Rpb24sIGlmIHRoZSBkd19wY2llX3N0
+YXJ0X2xpbmsgYW5kIGR3X3BjaWVfd2FpdF9mb3JfbGluayBBUElzIGZhaWwgdG8KPiA+IGV4ZWN1
+dGUsIHRoZSBjbGsvcmVzZXQgcmVzb3VyY2VzIGluIHRoZSBwY2ktPnBwLm9wcy0+aW5pdCBmdW5j
+dGlvbiBjYW5ub3QKPiA+IGJlIHJlbGVhc2VkLiBQZXJoYXBzIHRoZSBkd19wY2llX3Jlc3VtZV9u
+b2lycSBmdW5jdGlvbiBuZWVkcyB0byBiZSBvcHRpbWl6ZWQuCj4gCj4gV2lsbCB0aGlzIGhlbHA/
+Cj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdu
+d2FyZS1ob3N0LmMgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUt
+aG9zdC5jCj4gaW5kZXggNmFlNjE4OWU5YjhhLi4zOGFkNzliYmVhYjEgMTAwNjQ0Cj4gLS0tIGEv
+ZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1kZXNpZ253YXJlLWhvc3QuYwo+ICsrKyBi
+L2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0LmMKPiBAQCAt
+MTMwMCwxNSArMTMwMCwyNCBAQCBpbnQgZHdfcGNpZV9yZXN1bWVfbm9pcnEoc3RydWN0IGR3X3Bj
+aWUgKnBjaSkKPiAgCj4gICAgICAgICByZXQgPSBkd19wY2llX3N0YXJ0X2xpbmsocGNpKTsKPiAg
+ICAgICAgIGlmIChyZXQpCj4gLSAgICAgICAgICAgICAgIHJldHVybiByZXQ7Cj4gKyAgICAgICAg
+ICAgICAgIGdvdG8gZXJyX2RlaW5pdDsKPiAgCj4gICAgICAgICByZXQgPSBkd19wY2llX3dhaXRf
+Zm9yX2xpbmsocGNpKTsKPiAgICAgICAgIGlmIChyZXQpCj4gLSAgICAgICAgICAgICAgIHJldHVy
+biByZXQ7Cj4gKyAgICAgICAgICAgICAgIGdvdG8gZXJyX3N0b3BfbGluazsKPiAgCj4gICAgICAg
+ICBpZiAocGNpLT5wcC5vcHMtPnBvc3RfaW5pdCkKPiAgICAgICAgICAgICAgICAgcGNpLT5wcC5v
+cHMtPnBvc3RfaW5pdCgmcGNpLT5wcCk7Cj4gIAo+ICsgICAgICAgcmV0dXJuIDA7Cj4gKwo+ICtl
+cnJfc3RvcF9saW5rOgo+ICsgICAgICAgZHdfcGNpZV9zdG9wX2xpbmsocGNpKTsKPiArCj4gK2Vy
+cl9kZWluaXQ6Cj4gKyAgICAgICBpZiAocGNpLT5wcC5vcHMtPmRlaW5pdCkKPiArICAgICAgICAg
+ICAgICAgcGNpLT5wcC5vcHMtPmRlaW5pdCgmcGNpLT5wcCk7Cj4gKwo+ICAgICAgICAgcmV0dXJu
+IHJldDsKPiAgfQo+ICBFWFBPUlRfU1lNQk9MX0dQTChkd19wY2llX3Jlc3VtZV9ub2lycSk7Cj4g
+CgpZZXMsIHRoaXMgY2FuIHJlbGVhc2UgdGhlIHJlc291cmNlcyBhZnRlciBpbml0LCBhZnRlciBv
+cHRpbWl6aW5nIHRoZSAKcmVzdW1lIGZ1bmN0aW9uLCBpIGNhbiByZXVzZSB0aGUgZHdfcGNpZV97
+c3VzcGVuZC9yZXN1bWV9X25vaXJxIEFQSXMuCgpJIG5vdGljZWQgdGhhdCB0aGUgZHdfcGNpZV93
+YWl0X2Zvcl9saW5rIGZ1bmN0aW9uIGhhcyBiZWVuIG9wdGltaXplZC4gSXMgCml0IG5lY2Vzc2Fy
+eSB0byByZWxlYXNlIHRoZSByZXNvdXJjZXMgb25seSB3aGVuIGl0IHJldHVybiAtRVRJTUVPVVQ/
+ClBlcmhhcHMgaXQgbmVlZHMgdG8gYmUgc2xpZ2h0bHkgaW1wcm92ZWTvvJoKCiByZXQgPSBkd19w
+Y2llX3dhaXRfZm9yX2xpbmsocGNpKTsKIGlmIChyZXQgPT0gLUVUSU1FT1VUKQogICAgICAgICBn
+b3RvIGVycl9zdG9wX2xpbms7CgpXaGF0IGFib3V0IHlvdXIgc3VnZ2VzdGlvbj8KCktpbmQgcmVn
+YXJkcywKU2VuY2h1YW4=
