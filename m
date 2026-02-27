@@ -1,24 +1,24 @@
 Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BC01232825D;
-	Fri, 27 Feb 2026 15:33:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B237A43CEFD;
+	Fri, 27 Feb 2026 15:33:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772206402; cv=none; b=Fe32loa/XVIEhHwFzEHl8jTOcxDcTPj8O7pkmhhEtenRiIG0chUeix1FhPCOWVzHDZzwhHcze6enGqBZuO6GzcTN3GnBtIhoReMr+O5Cigi9huLGv9rG0qh0XQvwncDqR73xsTMi5DRe5mBAEXIBzYw0C8DJ6lC1zom4vE3sZ9M=
+	t=1772206407; cv=none; b=uf97nbtecpNnqAMQlgYg1CJJhYvySGuuR91AzViKWGYDQ1LXj5M3SvxCr+l2+yzq5uS9Jn5z4gga9rpPfBR9xcZinsi62WdtTlX7TYfCPQ7M4R/+Okcpi+rNqmVX625OHi9ngVcVHM5rfOSpalKB+yp1XivumyQWE0e5pIFc7DA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772206402; c=relaxed/simple;
-	bh=cRaRLGkH3mjilxGqalanQYVnea/oP7/EIvj6Bq0bW0g=;
+	s=arc-20240116; t=1772206407; c=relaxed/simple;
+	bh=WtFHCNGjsWLI3a0WbwSqCvLqMb55tMllJC3qlMJCveM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AQMujf8OdCRlCH1L2/nJPvL/GarkLddydfXqONgbJD5AB0/QiTcNLMP0EgDkwx+XpU7GtbroHtUHc8FqevY/cRFTkBkTJGbrR4bBFnAnu1R+TsPUDg3Sz10/7WsawWAwo4S4mwyQVjdYDqs32jsmlllaALLpD9PMdciH1DHnnmU=
+	 MIME-Version; b=OnPrYK4n0tc78lgqpTIKabU0bZXAtOVRxtz0X/law+jGyYE/O4l1NEpt/2Jqu5hD/uTTl5zwg53xVI597hdBijC8K24XyjB6iWPaCB8WnLG9vyBdcbhLbUgFANq5dCfVDhVhjftB/wR+MeAOVxGzBLabn3iBRt/38IMUSJGyUIo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: 74rCxnaAQqi84Q2ou+4Q/w==
-X-CSE-MsgGUID: GMnoP2ziQ4q3+29eW1FWrA==
+X-CSE-ConnectionGUID: qppQCwIvSParb7whLD6jWw==
+X-CSE-MsgGUID: No/HWlCNRa2USKlIlvxQ9g==
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 28 Feb 2026 00:33:19 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 28 Feb 2026 00:33:25 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.57])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 203B04006C61;
-	Sat, 28 Feb 2026 00:33:13 +0900 (JST)
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 2F1754006C61;
+	Sat, 28 Feb 2026 00:33:19 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -37,9 +37,9 @@ Cc: robh@kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
 	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v7 02/15] PCI: rzg3s-host: Reorder reset assertion during suspend
-Date: Fri, 27 Feb 2026 16:32:22 +0100
-Message-ID: <20260227153236.55988-3-john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v7 03/15] PCI: renesas: rzg3s: Rework inbound window algorithm for multi-SoC support
+Date: Fri, 27 Feb 2026 16:32:23 +0100
+Message-ID: <20260227153236.55988-4-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
 References: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
@@ -51,82 +51,142 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Reorder the reset assertion sequence during suspend from
-power_resets -> cfg_resets to cfg_resets -> power_resets.
-This change ensures the suspend sequence follows the reverse order
-of the probe/init sequence, where power_resets are deasserted first
-followed by cfg_resets.
+The existing inbound window configuration algorithm has two issues that
+prevent proper operation on RZ/G3E:
 
-Additionally, this ordering is required for RZ/G3E support where
-cfg resets are controlled through PCIe AXI registers (offset 0x310h).
-According to the RZ/G3E hardware manual (Rev.1.15, section 6.6.6.1.1
-"Changing the Initial Values of the Registers"), AXI register access
-requires ARESETn to be de-asserted and the clock to be supplied.
-Since ARESETn is part of power_resets, cfg_resets must be asserted
-before power_resets, otherwise the AXI registers become inaccessible.
+1. Over-mapping: Using roundup_pow_of_two() on the remaining region size
+   can result in windows that extend beyond the intended memory region.
 
-Fixes: 7ef502fb35b2 ("PCI: Add Renesas RZ/G3S host controller driver")
+2. Alignment violation: Addresses are only aligned to 4K regardless of
+   the actual window size. According to the RZ/G3S HW manual (Rev.1.10,
+   section 34.6.6.7) and RZ/G3E HW manual (Rev.1.15, section 6.6.7.6),
+   bit carry must not occur when adding AXI Window Base and AXI Window
+   Mask registers. This effectively requires the base address to be
+   aligned to the window size.
+
+RZ/G3E strictly enforces these constraints and requires precise window
+boundaries with properly aligned addresses.
+
+Rework the algorithm to properly handle arbitrary region sizes and
+alignment constraints by splitting non-power-of-2 regions into multiple
+windows. The new approach iteratively selects the largest power-of-2
+size that:
+ - Fits within the remaining region (__fls of remaining size)
+ - Does not exceed the natural alignment of the CPU address (__ffs)
+ - Does not exceed the natural alignment of the PCI address (__ffs)
+
+This ensures windows never over-map beyond the intended region and
+satisfies the hardware requirement that base address + mask must not
+cause bit carry, while maintaining the 4K * 2^N byte window size
+constraint.
+
+The reworked algorithm is required for RZ/G3E support and remains
+fully compatible with RZ/G3S.
+
 Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
 
 Changes:
 
-v7:
- - Reworded commit message and removed useless paragraph
- - Collect Claudiu's Rb tag
+v7: No changes
+v6: No changes
 
-v6: Moved as Patch 02/16 instead of 09/16 and added Fixes tag
-v5: New patch as per Claudiu requirement
+v5:
+ - Updated HW manual section specification
+ - Collected Rb tag
 
- drivers/pci/controller/pcie-rzg3s-host.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+v4: No changes
+v3: No changes
+v2: New patch
+
+ drivers/pci/controller/pcie-rzg3s-host.c | 53 +++++++++++++-----------
+ 1 file changed, 29 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index 58e78fc52913..222891324374 100644
+index 222891324374..7f5ffc5c218a 100644
 --- a/drivers/pci/controller/pcie-rzg3s-host.c
 +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1623,31 +1623,31 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
+@@ -1270,50 +1270,55 @@ static int rzg3s_pcie_set_inbound_windows(struct rzg3s_pcie_host *host,
+ 	u64 pci_addr = entry->res->start - entry->offset;
+ 	u64 cpu_addr = entry->res->start;
+ 	u64 cpu_end = entry->res->end;
+-	u64 size_id = 0;
+ 	int id = *index;
+ 	u64 size;
  
- 	clk_disable_unprepare(port->refclk);
+-	while (cpu_addr < cpu_end) {
++	/*
++	 * According to the RZ/G3S HW manual (Rev.1.10, section 34.6.6.7) and
++	 * RZ/G3E HW manual (Rev.1.15, section 6.6.7.6):
++	 * - Each window must be a single memory size of power of two
++	 * - Mask registers must be set to (2^N - 1)
++	 * - Bit carry must not occur when adding base and mask registers,
++	 *   meaning the base address must be aligned to the window size
++	 *
++	 * Split non-power-of-2 regions into multiple windows to satisfy
++	 * these constraints without over-mapping.
++	 */
++	while (cpu_addr <= cpu_end) {
++		u64 remaining_size = cpu_end - cpu_addr + 1;
++		u64 align_limit;
++
+ 		if (id >= RZG3S_MAX_WINDOWS)
+ 			return dev_err_probe(host->dev, -ENOSPC,
+ 					     "Failed to map inbound window for resource (%s)\n",
+ 					     entry->res->name);
  
--	ret = reset_control_bulk_assert(data->num_power_resets,
--					host->power_resets);
-+	ret = reset_control_bulk_assert(data->num_cfg_resets,
-+					host->cfg_resets);
- 	if (ret)
- 		goto refclk_restore;
+-		size = resource_size(entry->res) - size_id;
++		/* Start with largest power-of-two that fits in remaining size */
++		size = 1ULL << __fls(remaining_size);
  
--	ret = reset_control_bulk_assert(data->num_cfg_resets,
--					host->cfg_resets);
-+	ret = reset_control_bulk_assert(data->num_power_resets,
-+					host->power_resets);
- 	if (ret)
--		goto power_resets_restore;
-+		goto cfg_resets_restore;
+ 		/*
+-		 * According to the RZ/G3S HW manual (Rev.1.10,
+-		 * section 34.3.1.71 AXI Window Mask (Lower) Registers) the min
+-		 * size is 4K.
++		 * The "no bit carry" rule requires base addresses to be
++		 * aligned to the window size. Find the maximum window size
++		 * that both addresses can support based on their natural
++		 * alignment (lowest set bit).
+ 		 */
+-		size = max(size, SZ_4K);
++		align_limit = min(cpu_addr ? (1ULL << __ffs(cpu_addr)) : ~0ULL,
++				  pci_addr ? (1ULL << __ffs(pci_addr)) : ~0ULL);
  
- 	ret = regmap_update_bits(sysc, RZG3S_SYS_PCIE_RST_RSM_B,
- 				 RZG3S_SYS_PCIE_RST_RSM_B_MASK,
- 				 FIELD_PREP(RZG3S_SYS_PCIE_RST_RSM_B_MASK, 0));
- 	if (ret)
--		goto cfg_resets_restore;
-+		goto power_resets_restore;
+-		/*
+-		 * According the RZ/G3S HW manual (Rev.1.10, sections:
+-		 * - 34.3.1.69 AXI Window Base (Lower) Registers
+-		 * - 34.3.1.71 AXI Window Mask (Lower) Registers
+-		 * - 34.3.1.73 AXI Destination (Lower) Registers)
+-		 * the CPU addr, PCIe addr, size should be 4K aligned and be a
+-		 * power of 2.
+-		 */
+-		size = ALIGN(size, SZ_4K);
+-		size = roundup_pow_of_two(size);
+-
+-		cpu_addr = ALIGN(cpu_addr, SZ_4K);
+-		pci_addr = ALIGN(pci_addr, SZ_4K);
++		size = min(size, align_limit);
  
- 	return 0;
+ 		/*
+-		 * According to the RZ/G3S HW manual (Rev.1.10, section
+-		 * 34.3.1.71 AXI Window Mask (Lower) Registers) HW expects first
+-		 * 12 LSB bits to be 0xfff. Subtract 1 from size for this.
++		 * Minimum window size is 4KB.
++		 * See RZ/G3S HW manual (Rev.1.10, section 34.3.1.71) and
++		 * RZ/G3E HW manual (Rev.1.15, section 6.6.4.1.3.(74)).
+ 		 */
++		size = max(size, SZ_4K);
++
+ 		rzg3s_pcie_set_inbound_window(host, cpu_addr, pci_addr,
+ 					      size - 1, id);
  
- 	/* Restore the previous state if any error happens */
--cfg_resets_restore:
--	reset_control_bulk_deassert(data->num_cfg_resets,
--				    host->cfg_resets);
- power_resets_restore:
- 	reset_control_bulk_deassert(data->num_power_resets,
- 				    host->power_resets);
-+cfg_resets_restore:
-+	reset_control_bulk_deassert(data->num_cfg_resets,
-+				    host->cfg_resets);
- refclk_restore:
- 	clk_prepare_enable(port->refclk);
- 	pm_runtime_resume_and_get(dev);
+ 		pci_addr += size;
+ 		cpu_addr += size;
+-		size_id = size;
+ 		id++;
+ 	}
+ 	*index = id;
 -- 
 2.25.1
 
