@@ -1,56 +1,56 @@
-Received: from flow-b7-smtp.messagingengine.com (flow-b7-smtp.messagingengine.com [202.12.124.142])
+Received: from flow-b4-smtp.messagingengine.com (flow-b4-smtp.messagingengine.com [202.12.124.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368F33328E7;
-	Thu, 26 Feb 2026 23:42:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55E3618A6D4;
+	Fri, 27 Feb 2026 00:00:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772149367; cv=none; b=cJQojp8PA804Fap0z1f1b/G6wkpLtLmEUrHSBySHlz44LmaJh+2D1Xgz9ND101ZAXJTSgIZ8CDr4gofJJKgahQpAw8E76Gio8IlEHmFtrtc68GNRICIfp8yzZx3rbVU8668MtNwJxS2LQIBdAY4ZrM3RV4jqAaZkxUNmcyixucc=
+	t=1772150442; cv=none; b=ejzDHrf8ZyDvnYINe8yQ+AmG+4gDJfum7v5CgxNKVKU7LWts7Joro3t5e4QmgsOXkXgSh8Lp+HVVp/3JiQFHYpeVlvrRWTqgyQrSd07mibkg6DIWFN6WDuxt2bj5c9MzvMiB5VffYkelmWTmpJrxGNROYwgV+bG0GrNrluaI45E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772149367; c=relaxed/simple;
-	bh=IENANlu85/u2WVrzmqkEiDnGXgZ22/KDKpTypluMqyQ=;
+	s=arc-20240116; t=1772150442; c=relaxed/simple;
+	bh=HzdAag1U7o4sXDozY+dYlvFhjNUh9q66cL4sCv1B3fc=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cJuNWLQHyOnanul1muIoYTlFhDiEWBo90B7DhTH6e3WaKmPjTDy/hDTBCctV1qk2HVXEtP30clN3ajAkGCafAGqaHjsy0/WPwQ5ZOjiWwpMYyD8wZ999zam8f2BtAV997687wWpaQR98bVk8XC51jxgXQ9d7ol9Y07Sd4ORw9K4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=gLN0v/HG; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=AVqkdu04; arc=none smtp.client-ip=202.12.124.142
+	 MIME-Version:Content-Type; b=pB8BCCrSvRYPFFDF5ycXAWgHCmE4BEvalXEXcGiwLRqueb5eHdjfJ8C6C5uztfjeGyFJbiMO/DeVIherUUmOVp9yc+4FyKdEOgJrWkoWR40B2cbcF/jtO/vSMkeRNq3lbYbuDZMhI7hGr01XYL9N77ZkZiPzJCxjMd9hAKtxVqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=KfdyHubK; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=ZglLpMDr; arc=none smtp.client-ip=202.12.124.139
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="gLN0v/HG";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="AVqkdu04"
-Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
-	by mailflow.stl.internal (Postfix) with ESMTP id B11A81300CD7;
-	Thu, 26 Feb 2026 18:42:41 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-03.internal (MEProxy); Thu, 26 Feb 2026 18:42:43 -0500
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="KfdyHubK";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="ZglLpMDr"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailflow.stl.internal (Postfix) with ESMTP id C7E2F13010DF;
+	Thu, 26 Feb 2026 19:00:36 -0500 (EST)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-06.internal (MEProxy); Thu, 26 Feb 2026 19:00:38 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1772149361;
-	 x=1772156561; bh=du7fewflJTiy4RY4M9JcEhPtcfpcGR3V2HHqx7PYFdQ=; b=
-	gLN0v/HGUd/V0nfv+tewCC0psNtLQyjZbWvqVO9SniKU+XNel86qvzNsxsTS2rhP
-	+Sasie1tUUqBrpPWrS09obG6ygRmkANwrxgWOkCDM99YeG1dyTDlauIbYKRX8PE2
-	WMakPQx/cPdRv4HjyoQeOHuAIZTAsaIRiUHu3wpM4uMYzA7nCBVjEz06MLdEm41A
-	Sd4QgIB3SB6ZjLRB8hTA+mwlxHlwx7LRGMAhY+tlWeo8q2rfRxajhWY6qzz8WA9h
-	w990EEzbp4MIikkoNHGMBz72bsWhYPccOx4lL3iso06dObf9sebg+f59s/ouRF2H
-	bgZsfIzIQ8mNqjwY526TqA==
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1772150436;
+	 x=1772157636; bh=7/IXhnnADeIhqB8XjstCGNDdQ5WTGWIX32H4Qcjj2Qw=; b=
+	KfdyHubK7T6mgbCHRhIr5mD6ruTZ/iS4/fLNIWNjGnhl1gAn6fwi3ppJ06Gd2dJg
+	4j+2iEI1NgIVGtQ1kbajwBmSZ3kucQpabC7rYBW1w7C9Ns95JC7G2sCDHFGTcMha
+	kv7zoWe4YzeFKlalXC30X01vESpzdydowfQQQlWMPV+oZxWYLCz283lVR3zv2Nju
+	eVuYQ9dFy2UDeoXJmZYe7S7vvDRP/TCyDm8hpE/sG7rbMKSh1TvkY8QDSsY8Cpg1
+	4cwajHsmuyHaZiq7C2NI+9LmP/V6+FqeD6vXWgw/vHSpDK1AbcXQc1HLUA6FGUn8
+	/XDw5I/P8HNRXjdutcMDoA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1772149361; x=
-	1772156561; bh=du7fewflJTiy4RY4M9JcEhPtcfpcGR3V2HHqx7PYFdQ=; b=A
-	Vqkdu04ZkIyGghzqKCUsqcO0POg3Ui7ZMXshuBnxTI388SOk5n10HzYar+rqSDAe
-	C/6uGkhD0UC469ivtIUm6MMC5QT+s8RjGroeEQvOS7hXEzSI7hPHQ1ifklfb12AJ
-	PZd4rLcWNzS3UBm315m+HpVcQYcoJZ47S4md1oBQZBtfB/90epcrjjt5NDuahanp
-	yQ3OJeL9M9U+r3JPhk7hScLGNo3WIMaBA+LMuiOdPtSeCN+7DALf2bLoYs+W0zFh
-	vTB1GITGhgd6ioaYRTmpsF+ZbOVhD3SSJMh1OEJPx8/oaB0nIvL/n0pYvarZcmQ1
-	/SgJdlDJNbNiv4KcTcrxQ==
-X-ME-Sender: <xms:cNqgaXpMmxoB3kSOky1mjx1TJLbpYE_Q3lq2_z-dSIS4jA6vVHQ8qA>
-    <xme:cNqgaec7-4keVSCV7QvjAX8g0Bou_cq9lPLalblxCAnCUWGc4psij64v2CSOOGvJO
-    09nNikj6hf5yRVfrj5XEWa0utzNlcS8aA1clUFTK3T5w5NPDwIqAQ>
-X-ME-Received: <xmr:cNqgaYaQZ8vQYnZbKPuXo5gMhT_Lqft1yYIxjfNrQSAa3SsKG1FQ_U4-QlY>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvgeejgeegucetufdoteggodetrf
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1772150436; x=
+	1772157636; bh=7/IXhnnADeIhqB8XjstCGNDdQ5WTGWIX32H4Qcjj2Qw=; b=Z
+	glLpMDrdH3ybIl6Jfbe8ZlqPwGEGiWIaKq84xdJ3XK72dVh252bgdeEHLhNGg88w
+	3pDfMb8G+6ch5QZiYiTb2vdJac0ZiodwaNo8erWlfsW8wftbBkxgQ4hNNT4SzETg
+	9xNYNGzd4JBoge3B2Vd6F//62u+9NBZ8XoKc5pbywbz8xoA1EsZcAiF6eo4hfyBI
+	JQaANqURgm9EvX0L6bVDkSvv6JL/0ItofsOMGisEwrBldJgavCTL7e3d4uzr8Pqy
+	wuJsoR33BNh7JMaPMshYytFmb9FjXE8o89NSJtN+p3BgZBE7aDmAMqP3zTdWMVzY
+	8D3Z60+RKBqTkQZw6Ixcg==
+X-ME-Sender: <xms:o96gaWTEnV5FxcL75W1_K7e8Bz0ZcR-1S0u_5NyytHtXv8SBEpirYQ>
+    <xme:o96gaYmGfC4xz6mPRb4i8ZcE1LMJgkqCiSZk9yheAKn241ll_R_etVV_6kTxHHE7w
+    H8cKRlU2sq26FM569T0VHWBriy5PaH5bhbbLCiPC0f2S_CXrBMYJA>
+X-ME-Received: <xmr:o96gaYDj2UgYwWTCfXWlvCbKyPOUQXrlnfVEIrq7NLCPnXZSaSIprk1Y1HE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvgeejgeejucetufdoteggodetrf
     dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
     rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
     gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
@@ -66,15 +66,15 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvgeejgeegucetufdote
     hopegrnhhkihhtrgesnhhvihguihgrrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghs
     sehgohhoghhlvgdrtghomhdprhgtphhtthhopegthhhrihhslheskhgvrhhnvghlrdhorh
     hg
-X-ME-Proxy: <xmx:cNqgaZBWGEMBMo6wAeDnQPoMQ1RB3_FyXD2bgYUBYWWoy3Nil71WIQ>
-    <xmx:cNqgabDwuVEK97fr6qnquLcLxnx5_OEE9X7aEzrRhC22YMC0y9IyVw>
-    <xmx:cNqgabV1-aqR1IFCc4MWo42xThetUjXbFjeGkiZ1NoD4KZoSUHe_tw>
-    <xmx:cNqgaSC5ljiRgzmy6yv2HrPe3PYxrEU4Q8gCyruiHKSfRU2iM0Ohlw>
-    <xmx:cdqgadKScMQkDT3KYeKNbDm9q2hUFzCVi1EFn1C9LtAtHYSjWGZ0Cjjz>
+X-ME-Proxy: <xmx:o96gaQJHyq02-tY5B_dgovb6RPEIgf6Zra2A8BonvF1GTzX4maPZjQ>
+    <xmx:o96gaTq9myJ60d7pE_4qLYmIRw3gnIkLVp-szI7JBnBn6iTrqiLQZw>
+    <xmx:o96gaXeIGbQgQvAmt_4Ob1Gt3PjoRrw-qPHspQrSOhWEA3H5bkLJxg>
+    <xmx:o96gaboB8XLmP2v_WRvZDm7kWd2k5QB2M1rchi9hpS9YGiFsZlw84w>
+    <xmx:pN6gacyXTZuNPPKKceRhRy0cZc3qSkBNvPabhXzUVrNJ42U27GWaTM6T>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 26 Feb 2026 18:42:37 -0500 (EST)
-Date: Thu, 26 Feb 2026 16:42:36 -0700
+ 26 Feb 2026 19:00:32 -0500 (EST)
+Date: Thu, 26 Feb 2026 17:00:30 -0700
 From: Alex Williamson <alex@shazbot.org>
 To: David Matlack <dmatlack@google.com>
 Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
@@ -92,9 +92,8 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
  linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
  linux-mm@kvack.org, linux-pci@vger.kernel.org,
  Lukas Wunner <lukas@wunner.de>,
- =?UTF-8?B?TWlj?= =?UTF-8?B?aGHFgg==?= Winiarski
- <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>,
- Parav Pandit <parav@nvidia.com>,
+ " =?UTF-8?B?TWljaGHFgg==?= Winiarski" <michal.winiarski@intel.com>,
+ Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
  Pasha Tatashin <pasha.tatashin@soleen.com>,
  Pranjal Shrivastava <praan@google.com>,
  Pratyush Yadav <pratyush@kernel.org>,
@@ -103,19 +102,17 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
  Saeed Mahameed <saeedm@nvidia.com>,
  Samiullah Khawaja <skhawaja@google.com>,
  Shuah Khan <skhan@linuxfoundation.org>,
- Thomas =?UTF-8?B?SGVsbHN0csO2bQ==?= <thomas.hellstrom@linux.intel.com>,
+ "Thomas =?UTF-8?B?SGVsbHN0csO2bQ==?=" <thomas.hellstrom@linux.intel.com>,
  Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>,
  Vivek Kasireddy <vivek.kasireddy@intel.com>,
  William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
  Zhu Yanjun <yanjun.zhu@linux.dev>, alex@shazbot.org
-Subject: Re: [PATCH v2 08/22] vfio: Enforce preserved devices are retrieved
- via LIVEUPDATE_SESSION_RETRIEVE_FD
-Message-ID: <20260226164236.1d091ffe@shazbot.org>
-In-Reply-To: <aaDW86eWuQLZ3cfP@google.com>
+Subject: Re: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after
+ Live Update
+Message-ID: <20260226170030.5a938c74@shazbot.org>
+In-Reply-To: <20260129212510.967611-11-dmatlack@google.com>
 References: <20260129212510.967611-1-dmatlack@google.com>
-	<20260129212510.967611-9-dmatlack@google.com>
-	<20260226161512.532609ec@shazbot.org>
-	<aaDW86eWuQLZ3cfP@google.com>
+	<20260129212510.967611-11-dmatlack@google.com>
 X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -126,31 +123,117 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Thu, 26 Feb 2026 23:27:47 +0000
+On Thu, 29 Jan 2026 21:24:57 +0000
 David Matlack <dmatlack@google.com> wrote:
 
-> On 2026-02-26 04:15 PM, Alex Williamson wrote:
-> > On Thu, 29 Jan 2026 21:24:55 +0000 David Matlack <dmatlack@google.com> wrote:  
+> From: Vipin Sharma <vipinsh@google.com>
 > 
-> > > +	/*
-> > > +	 * This device was preserved across a Live Update. Accessing it via
-> > > +	 * VFIO_GROUP_GET_DEVICE_FD is not allowed.
-> > > +	 */
-> > > +	if (vfio_liveupdate_incoming_is_preserved(device)) {
-> > > +		vfio_device_put_registration(device);
-> > > +		return -EBUSY;  
-> > 
-> > Is this an EPERM issue then?  
+> Do not reset the device when a Live Update preserved vfio-pci device is
+> retrieved and first enabled. vfio_pci_liveupdate_freeze() guarantees the
+> device is reset prior to Live Update, so there's no reason to reset it
+> again after Live Update.
 > 
-> I was thinking EBUSY in the sense that the device is only temporarily
-> inaccesible through this interface due it being in a preserved state as
-> part of a Live Update. Once the preserved device file is retreived and
-> closed, the device can be accessed again through
-> VFIO_GROUP_GET_DEVICE_FD.
+> Since VFIO normally uses the initial reset to detect if the device
+> supports function resets, pass that from the previous kernel via
+> struct vfio_pci_core_dev_ser.
 > 
-> EPERM might lead to confusion that there is a filesystem permission
-> issue?
+> Signed-off-by: Vipin Sharma <vipinsh@google.com>
+> Signed-off-by: David Matlack <dmatlack@google.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_core.c       | 22 +++++++++++++++++-----
+>  drivers/vfio/pci/vfio_pci_liveupdate.c |  1 +
+>  include/linux/kho/abi/vfio_pci.h       |  2 ++
+>  include/linux/vfio_pci_core.h          |  1 +
+>  4 files changed, 21 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index b01b94d81e28..c9f73f597797 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -515,12 +515,24 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+>  	if (ret)
+>  		goto out_power;
+>  
+> -	/* If reset fails because of the device lock, fail this path entirely */
+> -	ret = pci_try_reset_function(pdev);
+> -	if (ret == -EAGAIN)
+> -		goto out_disable_device;
+> +	if (vdev->liveupdate_incoming_state) {
+> +		/*
+> +		 * This device was preserved by the previous kernel across a
+> +		 * Live Update, so it does not need to be reset.
+> +		 */
+> +		vdev->reset_works = vdev->liveupdate_incoming_state->reset_works;
+> +	} else {
+> +		/*
+> +		 * If reset fails because of the device lock, fail this path
+> +		 * entirely.
+> +		 */
+> +		ret = pci_try_reset_function(pdev);
+> +		if (ret == -EAGAIN)
+> +			goto out_disable_device;
+> +
+> +		vdev->reset_works = !ret;
+> +	}
 
-Ok, fair explanation.  Thanks,
+This could maybe be incrementally cleaner in a
+int vfio_pci_core_probe_reset(struct vfio_pci_core_device *vdev)
+helper.
+
+>  
+> -	vdev->reset_works = !ret;
+>  	pci_save_state(pdev);
+>  	vdev->pci_saved_state = pci_store_saved_state(pdev);
+
+Isn't this a problem too?  In the first kernel we store the initial,
+post reset state of the device, now we're storing some arbitrary state.
+This is the state we're restore when the device is closed.
+
+>  	if (!vdev->pci_saved_state)
+> diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/vfio_pci_liveupdate.c
+> index 1ad7379c70c4..c52d6bdb455f 100644
+> --- a/drivers/vfio/pci/vfio_pci_liveupdate.c
+> +++ b/drivers/vfio/pci/vfio_pci_liveupdate.c
+> @@ -57,6 +57,7 @@ static int vfio_pci_liveupdate_preserve(struct liveupdate_file_op_args *args)
+>  
+>  	ser->bdf = pci_dev_id(pdev);
+>  	ser->domain = pci_domain_nr(pdev->bus);
+> +	ser->reset_works = vdev->reset_works;
+>  
+>  	args->serialized_data = virt_to_phys(ser);
+>  	return 0;
+> diff --git a/include/linux/kho/abi/vfio_pci.h b/include/linux/kho/abi/vfio_pci.h
+> index 9bf58a2f3820..6c3d3c6dfc09 100644
+> --- a/include/linux/kho/abi/vfio_pci.h
+> +++ b/include/linux/kho/abi/vfio_pci.h
+> @@ -34,10 +34,12 @@
+>   *
+>   * @bdf: The device's PCI bus, device, and function number.
+>   * @domain: The device's PCI domain number (segment).
+> + * @reset_works: Non-zero if the device supports function resets.
+>   */
+>  struct vfio_pci_core_device_ser {
+>  	u16 bdf;
+>  	u16 domain;
+> +	u8 reset_works;
+>  } __packed;
+>  
+>  #endif /* _LINUX_LIVEUPDATE_ABI_VFIO_PCI_H */
+> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+> index 350c30f84a13..95835298e29e 100644
+> --- a/include/linux/vfio_pci_core.h
+> +++ b/include/linux/vfio_pci_core.h
+> @@ -16,6 +16,7 @@
+>  #include <linux/types.h>
+>  #include <linux/uuid.h>
+>  #include <linux/notifier.h>
+> +#include <linux/kho/abi/vfio_pci.h>
+>  
+>  #ifndef VFIO_PCI_CORE_H
+>  #define VFIO_PCI_CORE_H
+
+Wouldn't a forward declaration do, and the kho/abi include can be kept
+out of the public header?  Also should be in the previous patch?
+Thanks,
 
 Alex
