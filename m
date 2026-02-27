@@ -1,127 +1,116 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB831B425C
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 18:01:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772215276; cv=none; b=K59qrq+VYRwkfWUNbb/2Z+O3aukTb9NCWrdt/HPX+zbyho9OEIw+aRO56Rz5w9BtL8JJ7ff53CwLou6F/TxUjttqUgy03quBihXVy97mO8c4VH7BioiPzywbSIBJUBRUxjUi0p8JzUY3NdBrVCdQiFEjKlWPtmU015hcdA63OfY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772215276; c=relaxed/simple;
-	bh=P5bbUYuFNAPflWkxQIFMgULdonwa8RYwr/kCHg9CDBs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ogj/Mv43nZukCJtTO0qMBe/dx7c3+SvzZYtDnGmHEslyppFp8wDMtBtBW3e4ceUNNRYnrxAUYA0PQtFlfXQWqQRH4/TgLnX9+Qs4QIF2uniplQi77hzYsZ5eCOEoqF28xAmWZZ9EGuGIIlEE/TlUyh4chWqUe5gbvTDaUREjYL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jHVQEkjO; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 080C636EA93;
+	Fri, 27 Feb 2026 18:20:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772216411; cv=pass; b=rzshS5skGWIg3tUJ7lNIbX71gPfP8mHYGQiuZEOoYndt5kHuIfBnP2KZ4jjcRmDGa+2MpI51iP/f8EL+lB3Edc7x4xaJB/VHYVswryde2296qmgK9QspJR/Q5ACNooT3BmlWG+0DPapT5XZJRhX4Hw8xGxQDA3dpqBm40SdNt3Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772216411; c=relaxed/simple;
+	bh=dTicyHKk+McSfpxEeZN0vSk+Xryaq0ZOArBbB3BN5dk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jz4AbwwkFlVKsLeibeaTECEfYJ0FGL1uoWBbAB08YmcL7ZJBAOE5n+X2tEllytOwD+c//hVn/CyVuQUCdFtqPAA0Lpob9dUX4xsybfOKHk3F2yNaaiUzETe9nb7kKmCFSXIOMJmihACZDQIkJo14k9OZKcJhtPftlfB8q+NXx5Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=jA9viMYR; arc=pass smtp.client-ip=136.143.188.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jHVQEkjO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772215275; x=1803751275;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=P5bbUYuFNAPflWkxQIFMgULdonwa8RYwr/kCHg9CDBs=;
-  b=jHVQEkjO0g3wJl2iIr+ROR6NEDgaucHcq4P8LkbRqHVGgIsMuMf1m+e/
-   1BhJt+pe7ZaQROKcyiimIQ0rL/fv7FUWUEOxokEil2JVNWlIHu465gYeY
-   nSXvjY9WU8qMl2weoWP5j8+Mt19SM9NuJdFiOTSEfj1W5nil/FfVLPUDK
-   MHh41hJDE8Hj+b+tDviWjvDyJZbPGCANKWFBOhuTgQC6zdwylw+iSpxU/
-   Ri/o0Vp4X4C+VlT6LzQqFefDCJYVzIyn6A9JN4NWZPeJ8n57Fm0CwOa80
-   dgkUUEJO+MGtNdeSFfZyBzSMxSC1VFDbe7ponzCFvdmvV0EH3Gm1Z6EYT
-   w==;
-X-CSE-ConnectionGUID: vwYJklrKSRqL3Y1S8FAzVQ==
-X-CSE-MsgGUID: FoLzLdHxRUyrRGweNxQl6A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11714"; a="77143455"
-X-IronPort-AV: E=Sophos;i="6.21,314,1763452800"; 
-   d="scan'208";a="77143455"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2026 10:01:14 -0800
-X-CSE-ConnectionGUID: 0XWfsnxhRBCPYMrTKyUOdw==
-X-CSE-MsgGUID: NTYAy2XCRhKzXTokjTmJzg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,314,1763452800"; 
-   d="scan'208";a="214360302"
-Received: from soc-pf446t5c.clients.intel.com (HELO [10.24.81.126]) ([10.24.81.126])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2026 10:01:14 -0800
-Message-ID: <d7224e3c-bec1-4c4c-ac83-a664de7b931a@linux.intel.com>
-Date: Fri, 27 Feb 2026 10:01:13 -0800
+	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="jA9viMYR"
+ARC-Seal: i=1; a=rsa-sha256; t=1772216387; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=UiYoH/z0W8BnpfNkMeB3QdwZrVCke4wlPXFl7O5uQigNgGu/qUUYZIbnspczE1kCdP4+7QCrr+z4m9QpTrTBv4xEYXHG1jCa9gHhgKWnciGXFdVAxZAy962wnu8P4RcP8KMVcBZ4DWm+//qI/nAyQmtGqydI9etrLEE0nU6QIaY=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1772216387; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=+T7bP85E5zPnMI829R0Q1ILAaLJkVoa523XyYyDXKJM=; 
+	b=L1gwreoyzC2wlBCNEdMge0bbncv8sC1bxLngRWWQfQc1oqZExT6FxBMy5YXb2e1DlNMAC9YgojE5sNUPOnrVSzWHcPutHypVFY3QiZjDq0p/MnTE1REW/71kj7z/VyCjUT33bxDyN7aNxAMhtQ7kF1CzITVP+9Fa0poYUnjHcBI=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=ziyao.cc;
+	spf=pass  smtp.mailfrom=me@ziyao.cc;
+	dmarc=pass header.from=<me@ziyao.cc>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772216387;
+	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=+T7bP85E5zPnMI829R0Q1ILAaLJkVoa523XyYyDXKJM=;
+	b=jA9viMYRIi5zhfSIIJZQ046ls2P+vF0TI0zUGclaIed4o6A2nfKTQgcB3VtF8pfE
+	m7JqRniArj5OjEGeLZMriKYaqkzGLxtBUsqw20YFHnvpLqk8PU7S4tb0ktWsbuGNGi8
+	sHfS/rVVf/QSWpV421z08/y5lQYdK9rEKNNM5FiY=
+Received: by mx.zohomail.com with SMTPS id 1772216383532234.26718016226664;
+	Fri, 27 Feb 2026 10:19:43 -0800 (PST)
+From: Yao Zi <me@ziyao.cc>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Hans Zhang <18255117159@163.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Chen Wang <unicorn_wang@outlook.com>,
+	Manikandan K Pillai <mpillai@cadence.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Inochi Amaoto <inochiama@gmail.com>,
+	Han Gao <rabenda.cn@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yao Zi <me@ziyao.cc>
+Subject: [PATCH v2 0/2] PCI/sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe Root Ports
+Date: Fri, 27 Feb 2026 18:19:23 +0000
+Message-ID: <20260227181925.52475-1-me@ziyao.cc>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/ERR: Clear fatal status of the reporting device
-To: Bjorn Helgaas <helgaas@kernel.org>, Sizhe Liu <liusizhe5@huawei.com>
-Cc: bhelgaas@google.com, jonathan.cameron@huawei.com, shiju.jose@huawei.com,
- keith.busch@intel.com, linux-pci@vger.kernel.org, linuxarm@huawei.com,
- prime.zeng@hisilicon.com, fanghao11@huawei.com, shenyang39@huawei.com,
- Shuai Xue <xueshuai@linux.alibaba.com>, Lukas Wunner <lukas@wunner.de>,
- Terry Bowman <terry.bowman@amd.com>
-References: <20260227163118.GA3897131@bhelgaas>
-Content-Language: en-US
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20260227163118.GA3897131@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-Hi,
+After talking to Inochi privately, I'll take the patch instead.
 
-On 2/27/2026 8:31 AM, Bjorn Helgaas wrote:
-> [+cc others interested in error handling]
-> 
-> On Fri, Feb 27, 2026 at 06:25:05PM +0800, Sizhe Liu wrote:
->> During PCIe native AER error recovery, ERR_FATAL status bits are not cleared
->> after fatal error handling. This causes stale ERR_FATAL bits to be reported
->> in subsequent AER events, even after reporting "device recovery successful".
->>
->> Prior to commit bdb5ac85777d ("PCI/ERR: Handle fatal error recovery"), native
->> AER handled non-fatal and fatal errors separately, clearing the corresponding
->> status bits for both types after processing. That commit unified the error
->> paths through pcie_do_recovery(), which began invoking
->> pci_cleanup_aer_uncorrect_error_status() after commit bfcb79fca19d
->> ("PCI/ERR: Run error recovery callbacks for all affected devices").
->>
->> This function only clears non-fatal error (NFE) bits and leaves ERR_FATAL
->> bits uncleared, resulting in stale error status.
->>
->> Fix this by explicitly clearing the ERR_FATAL status bits for the reporting
->> device during recovery, restoring the original fatal error handling behavior.
->>
+This series defines initialization/de-initialization hooks for Cadence
+PCIe host driver to allow platform drivers to override RC ports
+properties, and provides such an initialization hook in SG2042 PCIe
+driver to clear PCI_EXP_LNKCAP_ASPMS since SG2042's implementation is
+broken.
 
-It seem to be a valid fix to me. You probably need to add Fixes: tag and
-cc stable.
+I've considered to re-write LNKCAP after cdns_pcie_host_setup(), like
+what has been done in the previous version of patch. However,
+cdns_pcie_host_setup() performs pci_host_probe(), which finally invokes
+set_pcie_port_type() on the root port. It reads ASPM-related LNKCAP,
+which might lead to dangling pci_dev.aspm_{l0s,l1}_support values.
+Early PCI device fixup won't work for similar reasons, since the fixup
+is performed in pci_setup_device() after calling set_pcie_port_type().
 
->> Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
->> ---
->>  drivers/pci/pcie/err.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->> index bebe4bc111d7..f51225f2592d 100644
->> --- a/drivers/pci/pcie/err.c
->> +++ b/drivers/pci/pcie/err.c
->> @@ -281,6 +281,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->>  	if (host->native_aer || pcie_ports_native) {
->>  		pcie_clear_device_status(dev);
->>  		pci_aer_clear_nonfatal_status(dev);
->> +		pci_aer_clear_fatal_status(dev);
->>  	}
+It's hard to fix up the LNKCAP earlier than invokation of
+cdns_pcie_host_setup() in SG2042's PCIe driver, either, since
+the function also performs resource allocation/mapping, and we have no
+access to the RC registers before it returns.
 
-This code path is common for both fatal and non-fatal recovery. Clearing
-the fatal status here during non-fatal recovery could silently erase newly
-detected fatal errors. I suggest clearing it in the AER driver after it
-parses the error.
+The safest solution which also depends on no PCI subsystem
+implementation detail is to have the LNKCAP fixed up right before
+informing the PCI subsystem of the device through pci_host_probe(), so
+here come the platform-specific hooks.
 
->>  
->>  	pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
->> -- 
->> 2.33.0
->>
-> 
+Changed from v1:
+- Disable L0s/L1 capabilities through LNKCAP instead of LNKCTL
+- Introduce platform-specific init/deinit hooks (new PATCH 1) to
+  realiably overwrite PCIe RC properties
+- Link to v1: https://lore.kernel.org/all/20260109040756.731169-2-inochiama@gmail.com/
+
+Changed from the original patch:
+- Use driver to mask the ASPM advertisement
+- Separate from the following patch
+  https://lore.kernel.org/all/20251225100530.1301625-1-inochiama@gmail.com
+
+Yao Zi (2):
+  PCI: cadence: Support platform-specific hooks for RC init/deinit
+  PCI: sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe Root Ports
+
+ .../controller/cadence/pcie-cadence-host.c    |  8 +++++++-
+ drivers/pci/controller/cadence/pcie-cadence.h |  7 +++++++
+ drivers/pci/controller/cadence/pcie-sg2042.c  | 20 +++++++++++++++++++
+ 3 files changed, 34 insertions(+), 1 deletion(-)
 
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.53.0
 
