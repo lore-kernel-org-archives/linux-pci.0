@@ -1,96 +1,101 @@
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4B56393DD4
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 10:25:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66C93B530B;
+	Fri, 27 Feb 2026 10:47:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772187914; cv=none; b=V/uVq5RTkh4o7a45WqTt1TRMxHJ2sMWVMtTT7jrCU2ub9Kotxz47tdElrwtX3dJu7smNV3d6DP8rV9z8PUCtezdI+PAgMnLWDpDaeuDn826C0FaR39NNB9veVA3vMFj95aSkNr4ifToyXxieRpZ7EH6tXmGfUKMhxjuL6m1XvJw=
+	t=1772189257; cv=none; b=QIFFoV+pfrcjr/AOP7KYSVSeloU+naby25Pgy1IMyaMXloprUVJTlJfusKkZLh9fwYWGn06HuyM2KTQx8Kaj3FBdp5VImCkhW62DqtLOMgX4B50gd/kQd/MRSRdRp6Bjlt6k9e27RXYv6Lm0GCtS2azi24DsqNYh0wnHUn7zfmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772187914; c=relaxed/simple;
-	bh=dIgDvxqdfK6led+l2ocuZWsNizuqqLIkLz3gumzoZzI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uvUm51lKuCPD6T+GGbdgc2A91QqY+jxxci4PrxumaB3PjCJ9MKyqdXuljqf9pu0VTZBL2cs7FrG/mxFv9AiJ7fVPzGAf+F3nzadlcPpvOtGa2QM2wgTFBbm1IAHpEYftWrgGSW7RXKpwFz7Wy9o6BD0VeBEW7NdPNGwxdEbySfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=S5ZJwPDd; arc=none smtp.client-ip=113.46.200.222
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="S5ZJwPDd"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=wjFhWpdw82lmWFWzEPKMjJiaYwU+qTRQ2p5Ku29JCUM=;
-	b=S5ZJwPDdEcRT68nqaGsocZoXTni7wLqRXqZ/KAM9t2ovo+h8zLw7Ly6E3yJZccLEGQwBOKNyT
-	hGWGWcUHujh9bH+59y9CPCbD2WNfd952VMNl29uLxxIGG/3swktgl3sKNVjV/KYGW70eyfESgmx
-	fo2vyOl3g7cVEOrpBquuezg=
-Received: from mail.maildlp.com (unknown [172.19.163.15])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4fMkq81pSszLlSN
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 18:20:20 +0800 (CST)
-Received: from dggemv712-chm.china.huawei.com (unknown [10.1.198.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3CA5D4056E
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 18:25:08 +0800 (CST)
-Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
- dggemv712-chm.china.huawei.com (10.1.198.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 27 Feb 2026 18:25:06 +0800
-Received: from huawei.com (10.50.163.32) by kwepemn200012.china.huawei.com
- (7.202.194.135) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 27 Feb
- 2026 18:25:05 +0800
-From: Sizhe Liu <liusizhe5@huawei.com>
-To: <bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
-	<shiju.jose@huawei.com>, <keith.busch@intel.com>
-CC: <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
-	<prime.zeng@hisilicon.com>, <fanghao11@huawei.com>, <shenyang39@huawei.com>,
-	<liusizhe5@huawei.com>
-Subject: [PATCH] PCI/ERR: Clear fatal status of the reporting device
-Date: Fri, 27 Feb 2026 18:25:05 +0800
-Message-ID: <20260227102505.3966864-1-liusizhe5@huawei.com>
-X-Mailer: git-send-email 2.33.0
+	s=arc-20240116; t=1772189257; c=relaxed/simple;
+	bh=fVv5zBuRcCekN2NRFCyR8h3vvkeohKD4FEnh9uqtzsM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NfXqkzPjvM28OHnp2CaJHDSt73xvr1RuvU2mCr85RrP+/d3t6iNl24tyntbqlnLewN2c8D83wCh1h5OFGBO0Hx6iJvP1V0hnxM+3Ub/+WWmhD0HOQhkgmbAA1SaBIJPHoN3NlHTPBM/l0wLzPbJXKdH+q2YsaEpiUH9XQuDXqPA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout1.hostsharing.net (Postfix) with ESMTPS id 8AF3F2020218;
+	Fri, 27 Feb 2026 11:47:24 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 86E064F39A; Fri, 27 Feb 2026 11:47:24 +0100 (CET)
+Date: Fri, 27 Feb 2026 11:47:24 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Shuai Xue <xueshuai@linux.alibaba.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	kbusch@kernel.org, sathyanarayanan.kuppuswamy@linux.intel.com,
+	mahesh@linux.ibm.com, oohall@gmail.com, Jonathan.Cameron@huawei.com,
+	terry.bowman@amd.com, tianruidong@linux.alibaba.com
+Subject: Re: [PATCH v7 2/5] PCI/DPC: Run recovery on device that detected the
+ error
+Message-ID: <aaF2PAOZsHr4PuC_@wunner.de>
+References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
+ <20260124074557.73961-3-xueshuai@linux.alibaba.com>
+ <aYCujqZIvxElSsOE@wunner.de>
+ <aYESh4bCE2lzTg2S@wunner.de>
+ <924dce22-171e-4508-907c-74f57f1bdea8@linux.alibaba.com>
+ <234dcf9e-05ff-485c-a330-019a4fbb5f3b@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemn200012.china.huawei.com (7.202.194.135)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <234dcf9e-05ff-485c-a330-019a4fbb5f3b@linux.alibaba.com>
 
-During PCIe native AER error recovery, ERR_FATAL status bits are not cleared
-after fatal error handling. This causes stale ERR_FATAL bits to be reported
-in subsequent AER events, even after reporting "device recovery successful".
+On Fri, Feb 27, 2026 at 04:28:59PM +0800, Shuai Xue wrote:
+> On 2/7/26 3:48 PM, Shuai Xue wrote:
+> > Regarding pci_restore_state() in slot_reset(): I see now that it does
+> > call pci_aer_clear_status(dev) (at line 1844 in pci.c), which will
+> > clear the AER Status registers. So if we walk the hierarchy after
+> > the slot_reset callbacks, the error bits accumulated during DPC will
+> > already be cleared.
+> > 
+> > To avoid losing those errors, I think the walk should happen after
+> > dpc_reset_link() succeeds but *before* pcie_do_recovery() invokes the
+> > slot_reset callbacks. That way, we can capture the AER Status bits
+> > before pci_restore_state() clears them.
+> > 
+> > Does that sound like the right approach, or would you prefer a
+> > different placement?
 
-Prior to commit bdb5ac85777d ("PCI/ERR: Handle fatal error recovery"), native
-AER handled non-fatal and fatal errors separately, clearing the corresponding
-status bits for both types after processing. That commit unified the error
-paths through pcie_do_recovery(), which began invoking
-pci_cleanup_aer_uncorrect_error_status() after commit bfcb79fca19d
-("PCI/ERR: Run error recovery callbacks for all affected devices").
+The problem is that if the hierarchy that was reset is deeper than
+one level, you first need to call pci_restore_state() on all the
+PCIe Upstream and Downstream Ports that were reset before you can
+access the Endpoints at the bottom of the hierarchy.
 
-This function only clears non-fatal error (NFE) bits and leaves ERR_FATAL
-bits uncleared, resulting in stale error status.
+E.g. if DPC occurs at a Root Port with multiple nested PCIe switches
+below, the Endpoints at the "leafs" of that tree are only accessible
+once Config Space has been restored at all the PCIe switches
+in-between the Endpoints and the DPC-capable Root Port.
 
-Fix this by explicitly clearing the ERR_FATAL status bits for the reporting
-device during recovery, restoring the original fatal error handling behavior.
+Hence your proposal unfortunately won't work.
 
-Signed-off-by: Sizhe Liu <liusizhe5@huawei.com>
----
- drivers/pci/pcie/err.c | 1 +
- 1 file changed, 1 insertion(+)
+I think the solution is to move pci_aer_clear_status() out of
+pci_restore_state() into the callers that actually need it.
+But that requires going through every single caller.
+I've begun doing that last week and am about 60% done.
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index bebe4bc111d7..f51225f2592d 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -281,6 +281,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 	if (host->native_aer || pcie_ports_native) {
- 		pcie_clear_device_status(dev);
- 		pci_aer_clear_nonfatal_status(dev);
-+		pci_aer_clear_fatal_status(dev);
- 	}
- 
- 	pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
--- 
-2.33.0
+Once pci_restore_state() no longer clears the error bits, we can
+report and clear them after the "report_slot_reset" stage (which
+is where drivers call pci_restore_state()).
 
+I've also changed my mind and I think reporting and clearing
+the error bits *could* happen in pcie_do_recovery() even if it
+were used for EEH and s390 because those platforms may plug in
+AER-capable devices as well and so we do need to clear the bits
+regardless of the error recovery mechanism used.
+
+Let me get back to you once I've gone through all the callers of
+pci_restore_state().  Please be patient.
+
+Thank you!
+
+Lukas
