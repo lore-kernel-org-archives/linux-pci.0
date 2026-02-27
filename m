@@ -1,70 +1,63 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9935F2C237E
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 21:15:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC3123644C9;
+	Fri, 27 Feb 2026 21:46:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772226930; cv=none; b=fPK/625eWk+J1VknfAROnoxM2HqUsek54yeR4QPhKmKY9SJySgn6EkYoAAtiDy/h92GIz6oVBkVHVpkkKfGgsMp0kZZSasRyfS25fXVD6aKUHsTtTDZNR60FKD2Ek3m5qDYYHBefDfW0KipHbFSK/Ea1kMa7ozWscoS0eH5MB/0=
+	t=1772228811; cv=none; b=rkDxens3ryG4A5NpHm4U+Y3E7q8J2IGBLihOQVtXP0W7oz2m55Hbc6sGJtT7N+b/mbu2pj+eB4jnP5oVg5UMW0ctwzNp+RAceSOEdKtf6qXyhYhggWKrNKCQe0VM3GTpoFqZNtOD1+Vw42a8ug+//0HxwViMlXBvwjABh2Z6izo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772226930; c=relaxed/simple;
-	bh=GLNKKQCpfivgD8nRR+YfFy5Iq0VKI3RCPIbSqPekDFU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sc5YkMjNerQUeonQTIXpWX1hgrWCZs+Fc5kiCfb1kKLJytKGUo2jq8HXc2mJIAwCz+U5KGimq8AXdkUpAbGmMSB8GWJYCELDsr4WJmXb40C1zCbzBaNp37DbgQxBSETNB6IVaBmzhlHfl/N1qTnQXz3iH0H+ceJ9oyt9xJJnUyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id F255B202019F;
-	Fri, 27 Feb 2026 22:15:23 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id E26AC27C72; Fri, 27 Feb 2026 22:15:23 +0100 (CET)
-Date: Fri, 27 Feb 2026 22:15:23 +0100
-From: Lukas Wunner <lukas@wunner.de>
+	s=arc-20240116; t=1772228811; c=relaxed/simple;
+	bh=bfFqfg34JQ70oKrrmSHJMW1lQghTvl7YQD/EXhTg5Ao=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=fZzzHNjSXbt4XjY+7R5uWVnT1gQjxJRdn3y7Y3r/xxsDq1KyTjIRzlGT7b9Rw3Y2iBgj5oqyk5By58pDSdAFeyDWI+4nQUJmsuzdN6ad+pTSXk8/0MFe3AeYsgAEZamQ8/a3lq9vozJxTMU8cuk+dHj/UpiRIsVUrDntBuYgar0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bKfXHw78; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bKfXHw78"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EDB8C116C6;
+	Fri, 27 Feb 2026 21:46:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772228811;
+	bh=bfFqfg34JQ70oKrrmSHJMW1lQghTvl7YQD/EXhTg5Ao=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=bKfXHw781Yqs+cfxkGwre/AFKhoEOAnOqcCk0mFJ5DgBeFqhs7sQv7euoryHUlSOb
+	 w0Md1KhUdHozHv9AaYW0leuDNj2pXJGbVHq9ALCAmk8ykR2IJWxCNPGkSL5ge+ZcVf
+	 ccQeFv3/1l/AXg9qaWSBShgx2lpxxQJn/y6XFL2cqBUbD9xllgwwhc3esVT7txw4Sx
+	 0g5bVwLM79NBZw8jKDBAjrBPAOJBYgLEI0Awj/JVoawNPaH4RbBE970gT9Evdat09t
+	 kmm0mWqCSP3FdJ9zE5LnaoLPxgXn4IJtd87BRmAaa4SRxZzdNwJmQV71CcOTO5oLcy
+	 AUdVqVfMch4yg==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 7D06F39E961E;
+	Fri, 27 Feb 2026 21:46:56 +0000 (UTC)
+Subject: Re: [GIT PULL] PCI fixes for v7.0
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20260227200859.GA3913790@bhelgaas>
+References: <20260227200859.GA3913790@bhelgaas>
+X-PR-Tracked-List-Id: <kvm.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20260227200859.GA3913790@bhelgaas>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.0-fixes-2
+X-PR-Tracked-Commit-Id: 39195990e4c093c9eecf88f29811c6de29265214
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 1c63df24be5f06f61b94e63cbe01aa852e463438
+Message-Id: <177222881540.2772866.14710365594855540486.pr-tracker-bot@kernel.org>
+Date: Fri, 27 Feb 2026 21:46:55 +0000
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sizhe Liu <liusizhe5@huawei.com>, bhelgaas@google.com,
-	jonathan.cameron@huawei.com, shiju.jose@huawei.com,
-	keith.busch@intel.com, linux-pci@vger.kernel.org,
-	linuxarm@huawei.com, prime.zeng@hisilicon.com, fanghao11@huawei.com,
-	shenyang39@huawei.com, Shuai Xue <xueshuai@linux.alibaba.com>,
-	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Terry Bowman <terry.bowman@amd.com>
-Subject: Re: [PATCH] PCI/ERR: Clear fatal status of the reporting device
-Message-ID: <aaIJa_2XiQht4swq@wunner.de>
-References: <20260227102505.3966864-1-liusizhe5@huawei.com>
- <20260227163118.GA3897131@bhelgaas>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, David Woodhouse <dwmw2@infradead.org>, Baruch Siach <baruch@tkos.co.il>, Alex Williamson <alex@shazbot.org>, Niklas Cassel <cassel@kernel.org>, Frank Li <Frank.Li@nxp.com>, Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>, Koichiro Den <den@valinux.co.jp>, Shawn Guo <shawnguo@kernel.org>, kvm@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260227163118.GA3897131@bhelgaas>
 
-On Fri, Feb 27, 2026 at 06:25:05PM +0800, Sizhe Liu wrote:
-> During PCIe native AER error recovery, ERR_FATAL status bits are not cleared
-> after fatal error handling. This causes stale ERR_FATAL bits to be reported
-> in subsequent AER events, even after reporting "device recovery successful".
+The pull request you sent on Fri, 27 Feb 2026 14:08:59 -0600:
 
-Wrong.	The bits are cleared by:
+> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.0-fixes-2
 
-report_slot_reset()
-  err_handler->slot_reset()
-    pci_restore_state()
-      pci_aer_clear_status()
-      	pci_aer_raw_clear_status()
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/1c63df24be5f06f61b94e63cbe01aa852e463438
 
-Is this an LLM-generated submission?  The confidently worded but incorrect
-commit message seems to suggest that it is.  If so, please follow the
-guidelines in Documentation/process/generated-content.rst and be
-transparent about the tools you used to come up with the patch.
+Thank you!
 
-Thanks,
-
-Lukas
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
