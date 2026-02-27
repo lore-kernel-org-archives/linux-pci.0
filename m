@@ -1,24 +1,24 @@
 Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E30E543C07C;
-	Fri, 27 Feb 2026 15:33:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id CF7C443D4E6;
+	Fri, 27 Feb 2026 15:33:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772206413; cv=none; b=tzwWFN8FH2a4XBTaJ18QeHkvoSkVU4q1GsH+2MH5Ug5vs3eSB5RCLfudABp6ggT/FPWmoi+k8ue/oCCOof9foR9cn1P+SCQucCey+riGg9gdaYvayAiyZ4rien+9QGKSTBNOc34T8nZEQYqrm1cXvImiKN0sUyrL7XSc2EbmkOA=
+	t=1772206419; cv=none; b=DTtmkttJ0G9ZUMLPpVjKDiK6yovBlzID5dEn/m0jz56yav7JJOdOxB80GnEcaENtIYYiXY6o3IsMtK/AzN7U8gRVZKilTewo7apnAeFKSZzdOfkehsyKulKZpWKKxudVdWdc7mjxDlWPGUwBSGT57FMXLEoVCTXKr7mZM1QvstU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772206413; c=relaxed/simple;
-	bh=hZ9BQDFQURY9N7XIBPXIg+lbe8mLTbd8CT6fwEameQo=;
+	s=arc-20240116; t=1772206419; c=relaxed/simple;
+	bh=kx6N1RtAye7JUvjnaNpE1GYHv8pIJzY/a9Qs4gvrZPE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U1eZn9qa0BhuMxpbC1d0hL078F3RKurG1Woj/4X32/zS74zXZapg7LOcJkFrPQkM6w6m9bpFXNNCRdxzPDTnFR9vrau2EijsRzzsPgtu1++AtRO/c60JXHnszVdz8jU8gcnB8fKaCVyq5VKiU4jpAUhVytS65kH+HVOWgeC33jE=
+	 MIME-Version; b=q2G3k8noBkV8/pgKei7d0zbBnAQqJQN3O2AyVrZ9xoY2VoKSH1C4RHiGhM8MnQ8DYq97fZe1TGFtiF5PeeVFOub74chpElCDZFlszFaudQtzjLdFpbkQKSU6H1nGjAewTs68mvI0aZxHQ9b39Q8T6qA5qq7emQawiRB1wTonVHc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: fSQfKnX3T0WGXxc0ryjo+Q==
-X-CSE-MsgGUID: kcrP31mYT4eE1BM4dGafMQ==
+X-CSE-ConnectionGUID: ALqp3Q8hS968zm9s1jhtIg==
+X-CSE-MsgGUID: no0gZvizRVusmDS+qxWz6g==
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 28 Feb 2026 00:33:31 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 28 Feb 2026 00:33:37 +0900
 Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.57])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 175B84006C61;
-	Sat, 28 Feb 2026 00:33:25 +0900 (JST)
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 369774007131;
+	Sat, 28 Feb 2026 00:33:31 +0900 (JST)
 From: John Madieu <john.madieu.xa@bp.renesas.com>
 To: claudiu.beznea.uj@bp.renesas.com,
 	lpieralisi@kernel.org,
@@ -36,10 +36,11 @@ Cc: robh@kernel.org,
 	devicetree@vger.kernel.org,
 	linux-clk@vger.kernel.org,
 	john.madieu@gmail.com,
-	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v7 04/15] clk: renesas: r9a09g047: Add PCIe clocks and reset
-Date: Fri, 27 Feb 2026 16:32:24 +0100
-Message-ID: <20260227153236.55988-5-john.madieu.xa@bp.renesas.com>
+	John Madieu <john.madieu.xa@bp.renesas.com>,
+	Conor Dooley <conor.dooley@microchip.com>
+Subject: [PATCH v7 05/15] dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix naming properties
+Date: Fri, 27 Feb 2026 16:32:25 +0100
+Message-ID: <20260227153236.55988-6-john.madieu.xa@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
 References: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
@@ -51,55 +52,105 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add necessary clocks and reset entries for the PCIe controller
+Fix a typo in interrupt-names: "ser_cor" should be "serr_cor" (System
+Error Correctable).
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Also convert interrupt-names, clock-names, and reset-names properties
+from "description" to "const" to enable proper validation with
+dtbs_check.
+
+Fixes: e7534e790557 ("dt-bindings: PCI: Add Renesas RZ/G3S PCIe controller binding")
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
 ---
 
 Changes:
 
-v7:
- - Reused standard clock/reset definition macros
-
+v7: Fixed checkpatch commit message line length warnings
 v6: No changes
 v5: No changes
-v4: No changes
+v4: Collected Acked-by tag from Conor
+v3: New patch
 
-v3:
- - Collected Rb tag
- - Preserved sort order (by _onindex, _onbit); 
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 50 +++++++++----------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
-v2:
- - Fixed clock names
- - Used assert-variant for reset
-
- drivers/clk/renesas/r9a09g047-cpg.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/clk/renesas/r9a09g047-cpg.c b/drivers/clk/renesas/r9a09g047-cpg.c
-index 1e9896742a06..6f5c4b0a6256 100644
---- a/drivers/clk/renesas/r9a09g047-cpg.c
-+++ b/drivers/clk/renesas/r9a09g047-cpg.c
-@@ -424,6 +424,10 @@ static const struct rzv2h_mod_clk r9a09g047_mod_clks[] __initconst = {
- 						BUS_MSTOP(8, BIT(6))),
- 	DEF_MOD("gbeth_1_aclk_i",		CLK_PLLDTY_DIV8, 12, 3, 6, 3,
- 						BUS_MSTOP(8, BIT(6))),
-+	DEF_MOD("pcie_0_aclk",			CLK_PLLDTY_ACPU_DIV2, 12, 4, 6, 4,
-+						BUS_MSTOP(1, BIT(15))),
-+	DEF_MOD("pcie_0_clk_pmu",		CLK_PLLDTY_ACPU_DIV2, 12, 5, 6, 5,
-+						BUS_MSTOP(1, BIT(15))),
- 	DEF_MOD("cru_0_aclk",			CLK_PLLDTY_ACPU_DIV2, 13, 2, 6, 18,
- 						BUS_MSTOP(9, BIT(4))),
- 	DEF_MOD_NO_PM("cru_0_vclk",		CLK_PLLVDO_CRU0, 13, 3, 6, 19,
-@@ -503,6 +507,7 @@ static const struct rzv2h_reset r9a09g047_resets[] __initconst = {
- 	DEF_RST(10, 15, 5, 0),		/* USB2_0_PRESETN */
- 	DEF_RST(11, 0, 5, 1),		/* GBETH_0_ARESETN_I */
- 	DEF_RST(11, 1, 5, 2),		/* GBETH_1_ARESETN_I */
-+	DEF_RST(11, 2, 5, 3),		/* PCIE_0_ARESETN */
- 	DEF_RST(12, 5, 5, 22),		/* CRU_0_PRESETN */
- 	DEF_RST(12, 6, 5, 23),		/* CRU_0_ARESETN */
- 	DEF_RST(12, 7, 5, 24),		/* CRU_0_S_RESETN */
+diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+index d668782546a2..d1eb92995e2c 100644
+--- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+@@ -41,22 +41,22 @@ properties:
+ 
+   interrupt-names:
+     items:
+-      - description: serr
+-      - description: ser_cor
+-      - description: serr_nonfatal
+-      - description: serr_fatal
+-      - description: axi_err
+-      - description: inta
+-      - description: intb
+-      - description: intc
+-      - description: intd
+-      - description: msi
+-      - description: link_bandwidth
+-      - description: pm_pme
+-      - description: dma
+-      - description: pcie_evt
+-      - description: msg
+-      - description: all
++      - const: serr
++      - const: serr_cor
++      - const: serr_nonfatal
++      - const: serr_fatal
++      - const: axi_err
++      - const: inta
++      - const: intb
++      - const: intc
++      - const: intd
++      - const: msi
++      - const: link_bandwidth
++      - const: pm_pme
++      - const: dma
++      - const: pcie_evt
++      - const: msg
++      - const: all
+ 
+   interrupt-controller: true
+ 
+@@ -67,8 +67,8 @@ properties:
+ 
+   clock-names:
+     items:
+-      - description: aclk
+-      - description: pm
++      - const: aclk
++      - const: pm
+ 
+   resets:
+     items:
+@@ -82,13 +82,13 @@ properties:
+ 
+   reset-names:
+     items:
+-      - description: aresetn
+-      - description: rst_b
+-      - description: rst_gp_b
+-      - description: rst_ps_b
+-      - description: rst_rsm_b
+-      - description: rst_cfg_b
+-      - description: rst_load_b
++      - const: aresetn
++      - const: rst_b
++      - const: rst_gp_b
++      - const: rst_ps_b
++      - const: rst_rsm_b
++      - const: rst_cfg_b
++      - const: rst_load_b
+ 
+   power-domains:
+     maxItems: 1
 -- 
 2.25.1
 
