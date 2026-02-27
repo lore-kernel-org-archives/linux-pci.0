@@ -1,144 +1,89 @@
 Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0768A329378;
-	Fri, 27 Feb 2026 18:20:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25511348445;
+	Fri, 27 Feb 2026 18:24:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772216420; cv=pass; b=D2nEFM0DwfY6lEeDJJ7vD92GIGHlxO9jW1U+8Whph11IJIX3rBy6n5KcOIqqUD2W90Pe3Q7IeQCSpW3vgQg83FF3yoyDPj3lTGtB6vCcydBtabp5d8Epz94zpjLV7TiJ13vj++qz281QAF8wCKtnuMWVswnqWOH5rYa3Ksb6f9k=
+	t=1772216683; cv=pass; b=izlILMXO/9KTzMIroIfAye+a/WBmUl5vnq4NEYeHgp/MSUybPgRksQ35nC8pRG6DKvd1QqPG88r0GIU4LatFEGEyVxcjAhjsQT+pGmDZkiQ22CId1ixbd0gCYh4KMdp1q8BHzIKoW70meQI9VRwjaXVZDGFTRRssYmEXcgiSg38=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772216420; c=relaxed/simple;
-	bh=jlBgykaoybBsE50JpU+s1pJbOK1ihHam1pIJPE9uJZE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=m2NbIvGqoaBpjuInFKPHTLhTO2CX00+FKobHoDoqKSVXEylCvHc430DIG75vHu5NtU8Fdf3OyG3pHxT0pAdmedNGZ2RRk13xDwq1Gh1L/5WghXkLZxHwB6Lw5kz4MkNHkZIFlxn48iOttE6mWoNd1iZmfsk/miUejakgZ+bfHr4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=CsIqqo1e; arc=pass smtp.client-ip=136.143.188.15
+	s=arc-20240116; t=1772216683; c=relaxed/simple;
+	bh=Ii3WkfOxQ6JChecRZKEDyLtaWP3XvgTOInRY7W3jkHM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=apBAfIa1qj/Svr+7vT8VA5Pie3tqxFbybMY97snrvaTOpLyurB85BoGKY7z1pO5LDWsu0gPKLH7tbcFVfL1VtGz0gPICoP0OL8dzXX7n1khr1GIK+12GHXCZDPrajOv6/HPBrXVqZkKVJvDzicMPrivBW96q474vhZVX6692Jac=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=Aqv6z4XH; arc=pass smtp.client-ip=136.143.188.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="CsIqqo1e"
-ARC-Seal: i=1; a=rsa-sha256; t=1772216389; cv=none; 
+	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="Aqv6z4XH"
+ARC-Seal: i=1; a=rsa-sha256; t=1772216664; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=fxIaR/JsenmVlaX9N7eMoANr82gCqzfnNJDxoPfieVAzxddyufIKfMwgG+r2jRe5SzphLWAaBzNAQ1On0zZLpG9VJ+cNhVMSJWkZkQTRh97MhAvRbDRli3BlASahkY3q49SFFxRQPNkjv7eB40sP4N9KXgIwEP7C+x955owmsas=
+	b=Gah7o/1uWwo3IF2458yscMfz1xOlXVnJVRBa1xwaaFGJWZVZRhXsjs1UTgYy6kQEC3i8uW/1yxxh5GPlHo260Evl1+XoIHNOV75/vbBgQZhf2ORCM/nRaqDttgSO4GCGeVgTvC+5wKYFXf2OcKA5zjn2yhIeymd1I4T4A/z5YBA=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1772216389; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=nbSM/THfEdWQW3wugixnc0FOxvJ9hPfcGOFPI8AYuoY=; 
-	b=nGOPYaGUmZgQ5KQcQ0xIu3kySx6i8ooBDoJtX2jS8QK3MyWoWXg70qOPDRGtndZWXJAaA5b14+U3lQaRh5M584NrCZGkWBoBo0cXnaeaASiz8jeNUqSENpUKvHo1j2GYO7UNjHUKrw1MoO7SeD4wSoG7Mt09WIftzXYn5/7rSEw=
+	t=1772216664; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=mI8yeyHAyhIcdue3vlH9m104I7N5rePgew2fh6OCLaw=; 
+	b=hQe+oUB3qGpra/qEQ4g6xDM0YAW8S9+Ej7w1YjhhPMkdgaSAY0R8+r2YCyeb55pShYK5XfEKSoMd4OkxlXN3FH6v2L8WvG+5FNDbbnIYP09KYILVn6onUtbm4crTXFCuC5eI7yssr5+2+bVnzflk8IiIf+pLyChdpdTDkS66qTk=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=ziyao.cc;
 	spf=pass  smtp.mailfrom=me@ziyao.cc;
 	dmarc=pass header.from=<me@ziyao.cc>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772216389;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772216664;
 	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=nbSM/THfEdWQW3wugixnc0FOxvJ9hPfcGOFPI8AYuoY=;
-	b=CsIqqo1eGsusoIrpoIBB9gZl4IHRWFoEhcBAokKf1oeJtu41knxOHY5ouQIZHKRP
-	9J6AWNnpjpV7N/SbCVSwhJPSi6XCbSLAAgQG0WiMo5FnxIOHWRevnaave7Y9tEkJqhE
-	SzUgQBEFgpTfO/8AUxbNi+G1wrT8Lv67QLnCLS2Q=
-Received: by mx.zohomail.com with SMTPS id 17722163883274.204326094009275;
-	Fri, 27 Feb 2026 10:19:48 -0800 (PST)
+	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
+	bh=mI8yeyHAyhIcdue3vlH9m104I7N5rePgew2fh6OCLaw=;
+	b=Aqv6z4XHIjAYCP8xhwZpX9K4FnKem93HCPTtJGxwGwQGc6ovnlV3VzrAvHm6uHnI
+	pVyBMVhpX+sA7krGlw1yCv1VIM5oetDJcyJH1n47494R7cCL+SeZ5ZJ9L6Ue1DoOQbK
+	aTtF2qC4u0Xpprf73nVYZoUhxjrYNInuGd9+4L+c=
+Received: by mx.zohomail.com with SMTPS id 1772216662000130.63085640564987;
+	Fri, 27 Feb 2026 10:24:22 -0800 (PST)
+Date: Fri, 27 Feb 2026 18:24:12 +0000
 From: Yao Zi <me@ziyao.cc>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
 	Siddharth Vadapalli <s-vadapalli@ti.com>,
 	Hans Zhang <18255117159@163.com>,
 	Kishon Vijay Abraham I <kishon@kernel.org>,
 	Chen Wang <unicorn_wang@outlook.com>,
 	Manikandan K Pillai <mpillai@cadence.com>,
 	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	Inochi Amaoto <inochiama@gmail.com>,
-	Han Gao <rabenda.cn@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yao Zi <me@ziyao.cc>
-Subject: [PATCH v2 1/2] PCI: cadence: Support platform-specific hooks for RC init/deinit
-Date: Fri, 27 Feb 2026 18:19:24 +0000
-Message-ID: <20260227181925.52475-2-me@ziyao.cc>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260227181925.52475-1-me@ziyao.cc>
+	Inochi Amaoto <inochiama@gmail.com>, Han Gao <rabenda.cn@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: sg2042: Avoid L0s and L1 on Sophgo 2042 PCIe
+ Root Ports
+Message-ID: <aaHhTNEhY4ytMvAw@pie>
 References: <20260227181925.52475-1-me@ziyao.cc>
+ <20260227181925.52475-3-me@ziyao.cc>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260227181925.52475-3-me@ziyao.cc>
 X-ZohoMailClient: External
 
-Support initialization and de-initialization hooks provided by
-platform-specific drivers. Initialization ones run after everything
-else has been set up for RC, but before it's probed by the PCI
-subsystem, to allow platform drivers to easily override RC properties
-like LNKCAP. De-initialization ones run before anything else has been
-cleaned-up.
+On Fri, Feb 27, 2026 at 06:19:25PM +0000, Yao Zi wrote:
+> Since commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM
+> states for devicetree platforms") force enable ASPM on all device tree
+> platform, the SG2042 root port breaks as it advertises L0s and L1
+> capabilities without supporting it.
+> 
+> Provide a platform-specific initialization hook to override the L0s and
+> L1 support advertised in LNKCAP register of SG2042 Root Ports, so it
+> doesn't try to enable those states.
+> 
+> Fixes: 4e27aca4881a ("riscv: sophgo: dts: add PCIe controllers for SG2042")
+> Co-authored-by: Inochi Amaoto <inochiama@gmail.com>
 
-Signed-off-by: Yao Zi <me@ziyao.cc>
----
- drivers/pci/controller/cadence/pcie-cadence-host.c | 8 +++++++-
- drivers/pci/controller/cadence/pcie-cadence.h      | 7 +++++++
- 2 files changed, 14 insertions(+), 1 deletion(-)
+Oops, this should be Co-developed-by instead of Co-authored-by, sorry
+for the silly mistake...
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index db3154c1eccb..23ee5a9c240d 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -304,6 +304,8 @@ static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
- 
- static void cdns_pcie_host_deinit(struct cdns_pcie_rc *rc)
- {
-+	if (rc->ops->deinit)
-+		rc->ops->deinit(rc);
- 	cdns_pcie_host_deinit_address_translation(rc);
- 	cdns_pcie_host_deinit_root_port(rc);
- }
-@@ -316,7 +318,11 @@ int cdns_pcie_host_init(struct cdns_pcie_rc *rc)
- 	if (err)
- 		return err;
- 
--	return cdns_pcie_host_init_address_translation(rc);
-+	err = cdns_pcie_host_init_address_translation(rc);
-+	if (err)
-+		return err;
-+
-+	return rc->ops->init ? rc->ops->init(rc) : 0;
- }
- EXPORT_SYMBOL_GPL(cdns_pcie_host_init);
- 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 443033c607d7..7d8f8e87915b 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -100,6 +100,11 @@ struct cdns_pcie {
- 	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
- };
- 
-+struct cdns_pcie_rc_ops {
-+	int	(*init)(struct cdns_pcie_rc *rc);
-+	void	(*deinit)(struct cdns_pcie_rc *rc);
-+};
-+
- /**
-  * struct cdns_pcie_rc - private data for this PCIe Root Complex driver
-  * @pcie: Cadence PCIe controller
-@@ -115,6 +120,7 @@ struct cdns_pcie {
-  * @quirk_detect_quiet_flag: LTSSM Detect Quiet min delay set as quirk
-  * @ecam_supported: Whether the ECAM is supported
-  * @no_inbound_map: Whether inbound mapping is supported
-+ * @ops: Platform-specific hooks to initialize/de-initialize PCIe Root Complex
-  */
- struct cdns_pcie_rc {
- 	struct cdns_pcie	pcie;
-@@ -127,6 +133,7 @@ struct cdns_pcie_rc {
- 	unsigned int		quirk_detect_quiet_flag:1;
- 	unsigned int            ecam_supported:1;
- 	unsigned int            no_inbound_map:1;
-+	const struct cdns_pcie_rc_ops *ops;
- };
- 
- /**
--- 
-2.53.0
+> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
+> Signed-off-by: Yao Zi <me@ziyao.cc>
 
+Regards,
+Yao Zi
