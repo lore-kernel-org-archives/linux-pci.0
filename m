@@ -1,110 +1,132 @@
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mail-vk1-f172.google.com (mail-vk1-f172.google.com [209.85.221.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 481AC2D73A6;
-	Fri, 27 Feb 2026 05:25:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D25629B204
+	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 05:35:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772169948; cv=none; b=FXwcZJPIjopiYO5FTWx7FF3OgsoDtEz+aztRph6Dd6RztjcjIjNnRLWznGrAGUS09zL084bxngH1Pm2xi3GVJi7OKJo6nZ8nZOHhP46ql9IGssIveYp+GF8YR0AK3/s4nzd2vePTuPJlABr75FJ11BaBkbQwoaNmV5zsE3IaaOk=
+	t=1772170548; cv=none; b=cRb4jYK8WHMVLZ8LYHYQShqz2GcSvdA3rQvefw78pEyYqaDL/wZSNMh8NB+sa+F0HxZ+gXP1Fx0DwrZoLbDDIIiMV7FPvyosmG1KBsLoTkAsicupaNvMbs8BYaXACDlOrM8Y+bqxYaskM3aCN6+PzWMbetbLg4nmbAGRzolIlB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772169948; c=relaxed/simple;
-	bh=+31iF3OoYMGJbCN6LTtZ31nBlwQ8uRo+RoyxWzMNZYc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oPf9bgBiQXYfFyPvmTVKYnIUzj7p1jhV8YW8LZyB8DRJ40TdIVF3ZzlG/vvlXo03SOGD7ZuRb6MmQtEcvIVuwbCmb+AMX1hcAZUi4Sjguo9Pdq51kgmSE7b8aRoBPyehhfYDis9XbNpFN/KkE8GV0/6dIGaGOIJQ8KPG+pMs1CA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from [192.168.0.103] (unknown [123.118.222.47])
-	by APP-01 (Coremail) with SMTP id qwCowABH72qvKqFp4fXQCA--.7323S2;
-	Fri, 27 Feb 2026 13:25:04 +0800 (CST)
-Message-ID: <c9329ae2-721d-4127-9380-b1ea454bd8f2@iscas.ac.cn>
-Date: Fri, 27 Feb 2026 13:25:03 +0800
+	s=arc-20240116; t=1772170548; c=relaxed/simple;
+	bh=6F3W35vU/J16kpZ9vXP91agnuRRh6iZ2Kw1OizQw1Y4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=DNBT2cw0zI7JEvguZ/cpnY+2NKG/GFhmPlS53GDi93qURfb1EE9nspUPHAQ0PdVXyF0QGWtWk+KcmTrMBf4pqva0gpF6CXMD4of0w8K3CJtZAxq+QnhARdk+FfKzNSgFwZnv9UBtzpdJ/ZuTnIA21cwQssYkHXfqp8AabQloi8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nZb8nZy+; arc=none smtp.client-ip=209.85.221.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nZb8nZy+"
+Received: by mail-vk1-f172.google.com with SMTP id 71dfb90a1353d-56a84f2bf7bso1840581e0c.2
+        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2026 21:35:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772170546; x=1772775346; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=cPTGvYA/GKdj9wqcQAjT8fmJEQ+pcQdfunMA1ORun7I=;
+        b=nZb8nZy+F8l7JbmK5Dpw74DARUe4euk5pm+grODvGomFQH08ZU+4zCmjqtdyigwogZ
+         zv/3RFJY/ACr3uykkHqBDpy4XZvDD81ZDLNmbIICP0W0vpnJ5wjy+OIW+/1iJ2x/6Qpv
+         j4joMZHrW+Z7SI0svcUR+nbZa9Iu9auqXmlx2d+GbzzeY7rtaCuwS8Nq1AbohAYhisX+
+         AM5KrNYBP+9L8Z4kP8+HnQ+Rk1tTkaSEQP9j4ZxmU9cPtgpWQx8pKbDJEOF/cnNRFmg5
+         yXEGwAm6TiSKbwLx4xT4KVHJrX0YMkZQZP4u3ZrSl/knsq6wnK/tIM1rYisl1PMcGPyU
+         kikg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772170546; x=1772775346;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cPTGvYA/GKdj9wqcQAjT8fmJEQ+pcQdfunMA1ORun7I=;
+        b=NCJQjMn4x97B4CR4I+8MNG7a61Y9sxmlEVMMrkBlenGUhoYYUEEbzDgYI8b07TEX2Y
+         27aRIsHmW7ldOHhX4RnAbX/MZpNLj+HCzuOIKVy3hN+PAhvZ/k3FbqDSAzg0QuzHz0a+
+         kbXZNzsYfmKkn7z8++ahqpN4VxKcJytUtzA4bw0fr+mZtZ2WMUKpebPWpUe53rtgz3Zn
+         kTcSmOnCMMOwUXNQti9hPo835TviSVCnvbpbd+/CsjtItML0f20nLVaeR9iYZ5wQCrmV
+         zZ31PjcxlCKUyESlXM0o3ickvuHUNwo6Z9eYTFrH7z9dWshoD2RYKiwh2vIEtv33fW15
+         Zrmg==
+X-Forwarded-Encrypted: i=1; AJvYcCX1Bx34hu/nes9MErO4COkBuGZzrSSaVQhMWfHTfKcDObpspIWqeroevyKmArZzFA7JoK0onLsbfp4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxeIVHzylcNgqZ5fTgroekRUGoZ2wiQXIlBXsARwCobnwIieg9X
+	rJkbC67iegh0QULxRPX88wDIKABqXUUGJo8eK8oJ/QlrhSQ3FHj9KzMx
+X-Gm-Gg: ATEYQzxcve6vvvfGdcrOw6im0wGxyd2YZmnZeb8MnKceTe1zqxb8TjpXbLO84I66SQm
+	in9Csc6LaXXirDY7AzFgDdLbbno/1ciP5FD6RXOoABzbMUGwB2i0hZ0DKEmReloxz399DOK+BxW
+	1eLUbsvHJQknFDdifob4inbOHF/7VC6GwlixytWz3T2kW22YVTMJ8mxHWAhobTOnX9ucKP5+TKt
+	H7BkNkWDaD5a9EcEvILNHu7cP43tg06S0Y8jc7QMwPNHfog+aELSFkWtMv3l3DFYJT2pJyZQ86q
+	MTpg/o+JRWXcMiP/v4fwC6Y2dJrzKcnZm4GIrJmYDcSQ6/qEGD+K8VqLwKmdBdqyM5HjmBI3YYr
+	VhnA4nkGwJDyCfAiveicJP916xZ2GeayLzvcnOHyrMMMj3IAILm7Bto9+GAcxoQY7X1XSxAv5s5
+	y5+KDH0Tnc9w==
+X-Received: by 2002:a05:6122:4219:b0:566:2fc9:6c89 with SMTP id 71dfb90a1353d-56aa0a890a1mr1063240e0c.10.1772170546147;
+        Thu, 26 Feb 2026 21:35:46 -0800 (PST)
+Received: from geday ([2804:7f2:800b:feb1::dead:c001])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-56a9204b91esm5028673e0c.11.2026.02.26.21.35.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Feb 2026 21:35:44 -0800 (PST)
+Date: Fri, 27 Feb 2026 02:35:31 -0300
+From: Geraldo Nascimento <geraldogabriel@gmail.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Geraldo Nascimento <geraldogabriel@gmail.com>,
+	Dragan Simic <dsimic@manjaro.org>
+Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4 0/4] PCI: rockchip: 5.0 GT/s speed discouraged by Rockchip
+Message-ID: <cover.1772169998.git.geraldogabriel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/4] PCI/MSI: Conservatively generalize no_64bit_msi
- into msi_addr_mask
-To: Mark Bloch <mbloch@nvidia.com>, Madhavan Srinivasan
- <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
- Nicholas Piggin <npiggin@gmail.com>,
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>,
- Takashi Iwai <tiwai@suse.com>, Brett Creeley <brett.creeley@amd.com>
-Cc: Han Gao <gaohan@iscas.ac.cn>, Thomas Gleixner <tglx@kernel.org>,
- linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
- amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
- netdev@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org, linux-riscv@lists.infradead.org,
- sophgo@lists.linux.dev, Takashi Iwai <tiwai@suse.de>,
- Maor Gottlieb <maorg@nvidia.com>
-References: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
- <20260129-pci-msi-addr-mask-v4-1-70da998f2750@iscas.ac.cn>
- <fb23d54a-fca0-43a2-ae1d-03ae52112192@nvidia.com>
-Content-Language: en-US
-From: Vivian Wang <wangruikang@iscas.ac.cn>
-In-Reply-To: <fb23d54a-fca0-43a2-ae1d-03ae52112192@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:qwCowABH72qvKqFp4fXQCA--.7323S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7WrykArWkCrW7tr1xAr48tFb_yoW8Gr4fpF
-	WDWF4rtF4UKry7t39Fvw1DZF45Zws5Z3s3Wry5twnakan0v3W2qr1qyr4aga42gr48Jw4Y
-	kryjgw1vqrs8Z37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
-	v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
-	1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
-	AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI
-	42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWI
-	evJa73UjIFyTuYvjTRM6wCDUUUU
-X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 2/27/26 02:25, Mark Bloch wrote:
+Dragan Simic already had warned me of potential issues with 5.0 GT/s
+speed operation in Rockchip PCIe. However, in recent interactions
+with Shawn Lin from Rockchip it came to my attention there's grave
+danger in the unknown errata regarding 5.0 GT/s operational speed
+of their PCIe core.
 
-> On 29/01/2026 3:56, Vivian Wang wrote:
->> Some PCI devices have PCI_MSI_FLAGS_64BIT in the MSI capability, but
->> implement less than 64 address bits. This breaks on platforms where such
->> a device is assigned an MSI address higher than what's reachable.
->>
->> Currently, the no_64bit_msi bit is set for these devices, meaning that
->> only 32-bit MSI addresses are allowed for them. However, on some
->> platforms the MSI doorbell address is above the 32-bit limit but within
->> the addressable range of the device.
->>
->> As a first step to enabling MSI on those combinations of devices and
->> platforms, conservatively generalize the single-bit flag no_64bit_msi
->> into msi_addr_mask. (The name msi_addr_mask is chosen to avoid confusion
->> with msi_mask.)
->>
->> The translation is essentially:
->>
->> - no_64bit_msi = 1    ->    msi_addr_mask = DMA_BIT_MASK(32)
->> - no_64bit_msi = 0    ->    msi_addr_mask = DMA_BIT_MASK(64)
->> - if (no_64bit_msi)   ->    if (msi_addr_mask < DMA_BIT_MASK(64))
->>
-> Hey Vivian,
->
-> We are seeing issues while reloading mlx5 on a PPC64 platform.
+Drop all code related to 5.0 GT/s operational speed from this driver.
 
-Mea culpa. There's a fix on the list [1] since last Friday. I'm not sure
-why it hasn't moved yet, but please take a look.
+Endpoint Mode driver was not tested. There's a bit of redundancy in the
+commit messages but it's the best I could do to ensure people will
+actually understand why perfectly working code is being dropped.
 
-Vivian "dramforever" Wang
+---
 
-[1]: https://lore.kernel.org/all/20260220070239.1693303-1-nilay@linux.ibm.com/
+Changes in v4:
+- Incorporate suggestion by Bjorn and refined by Dragan to drop the
+  "catastrophic" code
+- Link to v3: https://lore.kernel.org/linux-rockchip/cover.1772057799.git.geraldogabriel@gmail.com/T/
+
+Changes in v3:
+- Clarify warning message even though Rockchip won't disclose details
+- Drop DT changes as they were applied as subset by Heiko
+- Link to v2: https://lore.kernel.org/all/cover.1763415705.git.geraldogabriel@gmail.com/T/
+
+Changes in v2:
+- hard limit to 2.5 GT/s, not just warn
+- add Reported-by: and Reviewed-by: Dragan Simic
+- remove redundant declaration of max-link-speed from helios64 dts
+- fix Link: of helios64 patch
+- simplify RC mode comment
+- Link to v1: https://lore.kernel.org/all/aRhR79u5BPtRRFw3@geday/T/
+
+
+---
+
+Geraldo Nascimento (4):
+  PCI: rockchip: drop 2.5 GT/s defines
+  PCI: rockchip: drive at 2.5 GT/s only and error out other speeds
+  PCI: rockchip-host: do not attempt 5.0 GT/s retraining
+  PCI: rockchip-ep: do not attempt 5.0 GT/s retraining
+
+ drivers/pci/controller/pcie-rockchip-ep.c   | 13 -------------
+ drivers/pci/controller/pcie-rockchip-host.c | 20 --------------------
+ drivers/pci/controller/pcie-rockchip.c      | 13 +++++--------
+ drivers/pci/controller/pcie-rockchip.h      |  3 ---
+ 4 files changed, 5 insertions(+), 44 deletions(-)
+
+-- 
+2.52.0
 
