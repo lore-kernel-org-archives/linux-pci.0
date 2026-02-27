@@ -1,111 +1,110 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39DD30BB84
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 03:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 481AC2D73A6;
+	Fri, 27 Feb 2026 05:25:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772161638; cv=none; b=dPzprTHf9aS4Xt6My36zdwbDqDoSZcu1ERadrFluLhsCBqeHyf3kzF6TEDc0/T0lsAuAZ6uEJOg+8devM9ypxdZVNEh+FUAl5Blw2pF8RGE+zPBPS8E2ql2nb8XRLyxFNIUzMKnB/zvKopSkgtIbWxVHccf7G7RByjdmz57MrgQ=
+	t=1772169948; cv=none; b=FXwcZJPIjopiYO5FTWx7FF3OgsoDtEz+aztRph6Dd6RztjcjIjNnRLWznGrAGUS09zL084bxngH1Pm2xi3GVJi7OKJo6nZ8nZOHhP46ql9IGssIveYp+GF8YR0AK3/s4nzd2vePTuPJlABr75FJ11BaBkbQwoaNmV5zsE3IaaOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772161638; c=relaxed/simple;
-	bh=LwA5mnedTzlvaAUV61x5m6fTGnNuqthGFIww1JZHLpQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GAmecjjlu8+rVnJzp2B5+5N4aWEjh79VfC3wSDni2frM2PzjSzf5m3zG+A2jnd3EGjy6ORN/mTtKU8+lFomqbC7Zz/YafHYYtkSqFfViqSgWeVO+65qnMLvTp8O9pT3tH20AgAVRtr9eWjHm5F/ndEXGa++4iBqSB+a/erRljEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=cj1PUz8t; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cj1PUz8t"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61QKZJ3C763729;
-	Fri, 27 Feb 2026 03:07:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=corp-2025-04-25; bh=lFsdDYv0E1/DXJXxa6KhxxlPE4di3
-	xA6cb3oIdVLjxQ=; b=cj1PUz8t0vw5Rjz9iVKGNQcq2ZaJJQWlgpF0BZKdC9zH0
-	ajmNgtXQdg6U7FvaHBcvAnFsz03iRw/MfA/dDLc1v4SbXr6FDOD2zUYkbwrCzhWt
-	mcKg5BgcmvGDLKlX5JyLfs3rAZgJlUtkiNLrtbovsfsZSh4MJ6mAL4mhyNKg/kTv
-	c/+17sWLcD+vMZQXbSh2UqyydN0PECLdoVpA2A+hAZGDpGCjs/urMKuTkcZudJZX
-	WOGxFk7pX3PscZ97QMoX/y9xhekYpWTv8jcC7sGUjrT5uaixsULMQpkKLLe7b/3f
-	T/6vNoOOITCjviaQhn46+t/ksldbvXC8GwwLct8uA==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cf4k61ffu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 27 Feb 2026 03:07:04 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61R1UOUW006331;
-	Fri, 27 Feb 2026 03:07:04 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4cf35dj0p5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 27 Feb 2026 03:07:04 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61R373x8011351;
-	Fri, 27 Feb 2026 03:07:03 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4cf35dj0nt-1;
-	Fri, 27 Feb 2026 03:07:03 +0000
-From: Alok Tiwari <alok.a.tiwari@oracle.com>
-To: kishon@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: alok.a.tiwarilinux@gmail.com, alok.a.tiwari@oracle.com
-Subject: [PATCH] PCI: endpoint: Propagate error from pci_epf_create()
-Date: Thu, 26 Feb 2026 19:06:53 -0800
-Message-ID: <20260227030701.40533-1-alok.a.tiwari@oracle.com>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1772169948; c=relaxed/simple;
+	bh=+31iF3OoYMGJbCN6LTtZ31nBlwQ8uRo+RoyxWzMNZYc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oPf9bgBiQXYfFyPvmTVKYnIUzj7p1jhV8YW8LZyB8DRJ40TdIVF3ZzlG/vvlXo03SOGD7ZuRb6MmQtEcvIVuwbCmb+AMX1hcAZUi4Sjguo9Pdq51kgmSE7b8aRoBPyehhfYDis9XbNpFN/KkE8GV0/6dIGaGOIJQ8KPG+pMs1CA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [192.168.0.103] (unknown [123.118.222.47])
+	by APP-01 (Coremail) with SMTP id qwCowABH72qvKqFp4fXQCA--.7323S2;
+	Fri, 27 Feb 2026 13:25:04 +0800 (CST)
+Message-ID: <c9329ae2-721d-4127-9380-b1ea454bd8f2@iscas.ac.cn>
+Date: Fri, 27 Feb 2026 13:25:03 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-26_04,2026-02-26_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 bulkscore=0
- malwarescore=0 mlxlogscore=999 phishscore=0 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
- definitions=main-2602270021
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI3MDAyMSBTYWx0ZWRfX21/x8jOKJQWf
- KfhFs2tD9Am3lp1OZcsRgXML3Jjw2Odqid3dvvTtsxFIstisBPTSIM6Jv/LmC+UJj/OiLFC77mh
- VXIlO4wV+WJaqqetTMdMCabOgkajMmQ60wrr0D7G9NjFpq9WZgcyJz629mY3RpDrgvQY5Q6Qcpd
- lXvvzvUxG/VQTArdqwCVKMH9nj5N+a6MiBDg/r3ig18tIt6u6ON7L7f2+beoT0cFfdY7aufox/A
- Na2RtfXge/MFaBH8SiVdUvFqlTVOytEkuv48mU3Y9wamY5qfPSauiwDv+Ah+e5VM8DPizeZ/KDj
- h101PlRZDI4qRU037i3ChauUfGKHH41Ip+77j7gmJ5bp8509uhPRHEQkygH8rY/ewy4hJ9xVaXv
- +ZipRmDgHTKViaFsoedlvmxQxsHaxFxhsJPxrvSTHSrQLbL0G0HAhKDfsvpAb3oPduuOaA+EdMv
- ALC4qR+BvDrThvkA/fA==
-X-Proofpoint-GUID: 3ttCBdeNSx2XV2_vrNcJ7aXkWiZek-n1
-X-Authority-Analysis: v=2.4 cv=b9C/I9Gx c=1 sm=1 tr=0 ts=69a10a59 b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=yPCof4ZbAAAA:8 a=vY20Ln-xx2hFoXBo0AkA:9
- a=EBa_rOYxF3VBboPlVeQ_:22
-X-Proofpoint-ORIG-GUID: 3ttCBdeNSx2XV2_vrNcJ7aXkWiZek-n1
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 1/4] PCI/MSI: Conservatively generalize no_64bit_msi
+ into msi_addr_mask
+To: Mark Bloch <mbloch@nvidia.com>, Madhavan Srinivasan
+ <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
+ Nicholas Piggin <npiggin@gmail.com>,
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, Brett Creeley <brett.creeley@amd.com>
+Cc: Han Gao <gaohan@iscas.ac.cn>, Thomas Gleixner <tglx@kernel.org>,
+ linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+ amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+ netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, linux-riscv@lists.infradead.org,
+ sophgo@lists.linux.dev, Takashi Iwai <tiwai@suse.de>,
+ Maor Gottlieb <maorg@nvidia.com>
+References: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
+ <20260129-pci-msi-addr-mask-v4-1-70da998f2750@iscas.ac.cn>
+ <fb23d54a-fca0-43a2-ae1d-03ae52112192@nvidia.com>
+Content-Language: en-US
+From: Vivian Wang <wangruikang@iscas.ac.cn>
+In-Reply-To: <fb23d54a-fca0-43a2-ae1d-03ae52112192@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:qwCowABH72qvKqFp4fXQCA--.7323S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7WrykArWkCrW7tr1xAr48tFb_yoW8Gr4fpF
+	WDWF4rtF4UKry7t39Fvw1DZF45Zws5Z3s3Wry5twnakan0v3W2qr1qyr4aga42gr48Jw4Y
+	kryjgw1vqrs8Z37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+	v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+	1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+	AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI
+	42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWI
+	evJa73UjIFyTuYvjTRM6wCDUUUU
+X-CM-SenderInfo: pzdqw2pxlnt03j6l2u1dvotugofq/
 
-pci_epf_make() overwrites the actual error returned by
-pci_epf_create() with -EINVAL, which hides the real failure
-reason. Use PTR_ERR(epf) instead and print the error code.
+On 2/27/26 02:25, Mark Bloch wrote:
 
-Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
----
- drivers/pci/endpoint/pci-ep-cfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> On 29/01/2026 3:56, Vivian Wang wrote:
+>> Some PCI devices have PCI_MSI_FLAGS_64BIT in the MSI capability, but
+>> implement less than 64 address bits. This breaks on platforms where such
+>> a device is assigned an MSI address higher than what's reachable.
+>>
+>> Currently, the no_64bit_msi bit is set for these devices, meaning that
+>> only 32-bit MSI addresses are allowed for them. However, on some
+>> platforms the MSI doorbell address is above the 32-bit limit but within
+>> the addressable range of the device.
+>>
+>> As a first step to enabling MSI on those combinations of devices and
+>> platforms, conservatively generalize the single-bit flag no_64bit_msi
+>> into msi_addr_mask. (The name msi_addr_mask is chosen to avoid confusion
+>> with msi_mask.)
+>>
+>> The translation is essentially:
+>>
+>> - no_64bit_msi = 1    ->    msi_addr_mask = DMA_BIT_MASK(32)
+>> - no_64bit_msi = 0    ->    msi_addr_mask = DMA_BIT_MASK(64)
+>> - if (no_64bit_msi)   ->    if (msi_addr_mask < DMA_BIT_MASK(64))
+>>
+> Hey Vivian,
+>
+> We are seeing issues while reloading mlx5 on a PPC64 platform.
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 0f3921f28f17..7ddf9e3c04d3 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -624,8 +624,8 @@ static struct config_group *pci_epf_make(struct config_group *group,
- 
- 	epf = pci_epf_create(epf_name);
- 	if (IS_ERR(epf)) {
--		pr_err("failed to create endpoint function device\n");
--		err = -EINVAL;
-+		err = PTR_ERR(epf);
-+		pr_err("failed to create endpoint function device: %d\n", err);
- 		goto free_name;
- 	}
- 
--- 
-2.50.1
+Mea culpa. There's a fix on the list [1] since last Friday. I'm not sure
+why it hasn't moved yet, but please take a look.
+
+Vivian "dramforever" Wang
+
+[1]: https://lore.kernel.org/all/20260220070239.1693303-1-nilay@linux.ibm.com/
 
