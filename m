@@ -1,115 +1,81 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E2C35D5F8
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 17:00:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9AE926D4C3
+	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 17:06:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772211607; cv=none; b=K0t5Hn8PE9iNfWz3j3cCJ3P0+cSjU36a6zlr4C+tghAIQyc2vhZhkaK1giYLGXOWWxmcWArSHi3XUtIzWVUnqqx9o7bbZ4N4/Z+vVwSQIjCnbBEl7Gs05CKDWCMMahMBUDBjtwU9/RVN7Hfr1/kAjKbbUl4/cRAizrsLV8Wkmdo=
+	t=1772211982; cv=none; b=RUA7P7n2XGBAz5VYOPsN8fwnWvfv28pifwDN3/X3LzO4M0RMrzNAydxs8b8y4gstXMRvTXlArmOy7SYl1003mFKQFXv9YoeOaYBA1qnrYpsnbrO9vkjbGuFrOzhwXiWdjKb3EZacUo1BVsz5wnk8nul3vGvX/n2fYEeVQkkrJ68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772211607; c=relaxed/simple;
-	bh=oC2Zs14lpqc+KoWFpjTryVFAJSLb63H0KdFepDU/dvI=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=mOtRXbzNWsklfYcMqIUiV8T/kvO6YcC16DKotUkQv8ppMA6f+4XXYDts6+MkMpajsYCuKmysxz3Vyp6f4TiyupimO3PIcYw2z7vICvpMJoHHGk35cSTELISY4p1s1QlCs5cH3IeDPwpMQ3gVf2N7MzuAZKfY9HSfnIrq4jNhdZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=T324cFJM; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1772211982; c=relaxed/simple;
+	bh=u4cnBmp1+s0bCU1pYa/9RSQ0jw1GMHSt3yjxofDLA3k=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=t7HIv2eUMp4hm/m/haRjY80RLmBgXmTIbmEK8ixrX3Rv8JfDUENlIA6s61ZoDokUrYncFmpoM5mUWgHkqC+qj/lIPlhV9xUV9a9zhI19oh8bpuyJsH4QdvQK4qL8Apjm4i8t+USizeGtWmkZo5hDkStkTPFGK+PKNiGY2+Q1bmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ova4w3u5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="T324cFJM"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 6E9DC240103
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 18:00:04 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.net; s=2017;
-	t=1772211604; bh=29xGwZx4QmtZUrfPtkG3nKCYS3+MgHmL/NsrLP4T1A8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 From;
-	b=T324cFJML0YvQ2TOys9nnjk9fwDx8Te/HibiDWHLIVeZ0VUjfkt+YB8F+fFttRp2c
-	 hJWgtfhjqFYfUiIuPSztPeq0xx1frDojLy8adNOFaEXZoxC9qe4a+V7oH+UAqAQ6U9
-	 egsD33xTLHanYHWn9NNnN5Ld/1U3NNRKnXLiw29iQMzF01db5TCyPRF8B8DRh8Uv8q
-	 5DLDw2z3BofmiXHUCl3m75ZicYwHg7z+9vEiPZot+dMSbmnX43q11JNIvAV8pYERZF
-	 /Ry2MkUIUwCBnF+708HAghE++wGnJQ2MmC93/RFOePv/sd1jONmlnMNr6tdWcfgbg6
-	 UxLawYm9xfHvQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4fMvhK3Zmfz9rxN;
-	Fri, 27 Feb 2026 18:00:01 +0100 (CET)
-From: Charalampos Mitrodimas <charmitro@posteo.net>
-To: Geraldo Nascimento <geraldogabriel@gmail.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,  Lorenzo Pieralisi
- <lpieralisi@kernel.org>,  Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>,
-  Manivannan Sadhasivam <mani@kernel.org>,  Rob Herring <robh@kernel.org>,
-  Bjorn Helgaas <bhelgaas@google.com>,  Heiko Stuebner <heiko@sntech.de>,
-  Dragan Simic <dsimic@manjaro.org>,  linux-rockchip@lists.infradead.org,
-  linux-pci@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 4/4] PCI: rockchip-ep: do not attempt 5.0 GT/s
- retraining
-In-Reply-To: <c51c804bea56d772a59fd29fcb080541b7a367d2.1772169998.git.geraldogabriel@gmail.com>
-References: <cover.1772169998.git.geraldogabriel@gmail.com>
-	<c51c804bea56d772a59fd29fcb080541b7a367d2.1772169998.git.geraldogabriel@gmail.com>
-Date: Fri, 27 Feb 2026 17:00:03 +0000
-Message-ID: <87zf4ujf5b.fsf@posteo.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ova4w3u5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 762C9C19421;
+	Fri, 27 Feb 2026 17:06:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772211981;
+	bh=u4cnBmp1+s0bCU1pYa/9RSQ0jw1GMHSt3yjxofDLA3k=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=ova4w3u5EIBJojn02hwX4KjfNjhMFywBZ4j8cdmhEuHoMpanieKuCCDF1Li3/lxnu
+	 ApTHXrBYUbvEyFkRhl4ns8DUrO3SB59lMLL0OIx3SCbDR/Pl+kJYMQtQN2hMLfdKoO
+	 CKkeM1vOOngQB4dwzrKcvXYCtkQwXKkzmD5rYrpo/ff/FxYO5TjSzsEjA+PQ6VS4/E
+	 RnEWUPzRG2+vJKjgCYKqzzdZcOH7HOVxx4DIWYs1ae7So1ynlFJfQCYUwNbmMPB9Mh
+	 czCAjibNXM0jqXZlPv3N/SQsMqwbAmYrrr/SWAHXWRYeTXYc/JdgmkfoVoiHVqno3W
+	 6m4flu5AyFB9Q==
+Date: Fri, 27 Feb 2026 11:06:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alok Tiwari <alok.a.tiwari@oracle.com>
+Cc: kishon@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	alok.a.tiwarilinux@gmail.com
+Subject: Re: [PATCH] PCI: endpoint: Propagate error from pci_epf_create()
+Message-ID: <20260227170620.GA3898635@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260227030701.40533-1-alok.a.tiwari@oracle.com>
 
-Geraldo Nascimento <geraldogabriel@gmail.com> writes:
-
-> Drop the 5.0 GT/s Link Speed retraining code block from Rockchip PCIe
-> header definitions. The reason is that Shawn Lin from Rockchip has
-> reiterated that there may be danger of "catastrophic failure" in
-> using their PCIe with 5.0 GT/s speeds.
-
-Patch body says "header definitions" but the change is to the drivers'
-source. Maybe you need to reword in a way that is clear as to what
-happened?
-
-Cheers!
-
->
-> While Rockchip has done so informally without issuing a proper
-> errata, and the particulars are thus unknown, this may cause data
-> loss or worse.
->
-> This change is corroborated by RK3399 official datasheet [1], which
-> states maximum link speed for this platform is 2.5 GT/s.
->
-> [1] https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datasheet_V2.1-20200323.pdf
->
-> Link: https://lore.kernel.org/all/ffd05070-9879-4468-94e3-b88968b4c21b@rock-chips.com/
-> Cc: stable@vger.kernel.org
-> Reported-by: Dragan Simic <dsimic@manjaro.org>
-> Reported-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
+On Thu, Feb 26, 2026 at 07:06:53PM -0800, Alok Tiwari wrote:
+> pci_epf_make() overwrites the actual error returned by
+> pci_epf_create() with -EINVAL, which hides the real failure
+> reason. Use PTR_ERR(epf) instead and print the error code.
+> 
+> Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
 > ---
->  drivers/pci/controller/pcie-rockchip-ep.c | 13 -------------
->  1 file changed, 13 deletions(-)
->
-> diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
-> index 799461335762..9ebc227a1ef8 100644
-> --- a/drivers/pci/controller/pcie-rockchip-ep.c
-> +++ b/drivers/pci/controller/pcie-rockchip-ep.c
-> @@ -553,19 +553,6 @@ static void rockchip_pcie_ep_link_training(struct work_struct *work)
->  	if (ret)
->  		goto again;
+>  drivers/pci/endpoint/pci-ep-cfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index 0f3921f28f17..7ddf9e3c04d3 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -624,8 +624,8 @@ static struct config_group *pci_epf_make(struct config_group *group,
 >  
-> -	/*
-> -	 * Check the current speed: if gen2 speed was requested and we are not
-> -	 * at gen2 speed yet, retrain again for gen2.
-> -	 */
-> -	val = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
-> -	if (!PCIE_LINK_IS_GEN2(val) && rockchip->link_gen == 2) {
-> -		/* Enable retrain for gen2 */
-> -		rockchip_pcie_ep_retrain_link(rockchip);
-> -		readl_poll_timeout(rockchip->apb_base + PCIE_CORE_CTRL,
-> -				   val, PCIE_LINK_IS_GEN2(val), 50,
-> -				   LINK_TRAIN_TIMEOUT);
-> -	}
-> -
->  	/* Check again that the link is up */
->  	if (!rockchip_pcie_ep_link_up(rockchip))
->  		goto again;
+>  	epf = pci_epf_create(epf_name);
+>  	if (IS_ERR(epf)) {
+> -		pr_err("failed to create endpoint function device\n");
+> -		err = -EINVAL;
+> +		err = PTR_ERR(epf);
+> +		pr_err("failed to create endpoint function device: %d\n", err);
+
+Unrelated to *this* patch, but messages like this that claim to be
+about a device, but don't mention any related device, e.g., with
+pci_err(), seem dubious to me.  I don't think users can really do
+anything useful with a message like this.  There's no obvious device
+available here, but we at least have a "name".
+
+>  		goto free_name;
+>  	}
+>  
+> -- 
+> 2.50.1
+> 
