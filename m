@@ -1,541 +1,134 @@
-Received: from zg8tmja5ljk3lje4mi4ymjia.icoremail.net (zg8tmja5ljk3lje4mi4ymjia.icoremail.net [209.97.182.222])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8FC4733C1A9;
-	Fri, 27 Feb 2026 11:18:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.97.182.222
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [4.193.249.245])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5CC4E3EF0C0;
+	Fri, 27 Feb 2026 11:23:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=4.193.249.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772191108; cv=none; b=rPiTJnVV8apJaH9UdVnFaYGMbb88hbCx+1GYmd0+JnHFUPwXy3DMzFtMMhT4VYVmPsvxxPep0KqmMT9NkE/FdvJ7f447ZeC6QqnSLxgpC8aA8HL6THmct5nvgR2986rhAnbY7leY9tUSC+A7bPVAvqqlm94MMDQsyufvEPaYSKA=
+	t=1772191392; cv=none; b=QMCZ2HYfc/6UThBwZ5hLFuUXmrInnloL9Z1j+xwZXcAGCpBKGvoKl+FQV7boXH2sgU4OJhWiTAZMXanpj0YEDNi3ruPio2N8+GhOGEhOHCXWk0x7Gakx8EZmZjVXLtDwVrRg/r/PYTq0Af+jlwMm3F2pX3+Fo41hE3X7zYzrfWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772191108; c=relaxed/simple;
-	bh=1F8tk+wyTFKmfcgcfGHf8ivQgBcFBTs+jo84oFUP23o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K+oe2H9wDtu5StzNUD/ll5JiR/2SPXS9kAoRZALl33gvrIBeOJMfIfSthXphNTCkv1PozQJ0udQSuC+DbtnD/Qj5Zqk8mQEhKjf0gvdOV4XPLpdXHsLKTvv5lPoShElmtZ9+1Fc6hB7iMcIa3MNNrZD5SWSnLccZYNFatV+gsxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=209.97.182.222
+	s=arc-20240116; t=1772191392; c=relaxed/simple;
+	bh=tAFIuFIKr0q2vXjiGgvB9bJkuyy0Yn91+HO/bU0+DLM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=NRCWEDAQ1KHsn6viXNNHA9dGpLHpEcdf6Cfyn2m1jxVkaAo6i3JA3646oBnF0yj3weL8Vp2dUBC+exY/ncFJCgCIuSdHHxPr7eNP6tfkewGQ0yhaDERBuJyMP2uBZa2wD95Pc1U+vbZb9nVXxwCn+1x7rvYR7mmGS3U6435ywbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=4.193.249.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from E0004758DT.eswin.cn (unknown [10.12.96.83])
-	by app1 (Coremail) with SMTP id TAJkCgAHqXJyfaFpfB4EAA--.19052S2;
-	Fri, 27 Feb 2026 19:18:11 +0800 (CST)
-From: zhangsenchuan@eswincomputing.com
-To: bhelgaas@google.com,
-	mani@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	robh@kernel.org,
-	p.zabel@pengutronix.de,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	christian.bruel@foss.st.com,
-	shradha.t@samsung.com,
-	krishna.chundru@oss.qualcomm.com,
-	thippeswamy.havalige@amd.com,
-	inochiama@gmail.com,
-	Frank.li@nxp.com
-Cc: ningyu@eswincomputing.com,
-	linmin@eswincomputing.com,
-	pinkesh.vaghela@einfochips.com,
-	ouyanghui@eswincomputing.com,
-	Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-Subject: [PATCH v11 2/2] PCI: eic7700: Add Eswin PCIe host controller driver
-Date: Fri, 27 Feb 2026 19:18:08 +0800
-Message-ID: <20260227111808.1996-1-zhangsenchuan@eswincomputing.com>
-X-Mailer: git-send-email 2.49.0.windows.1
-In-Reply-To: <20260227111536.1940-1-zhangsenchuan@eswincomputing.com>
-References: <20260227111536.1940-1-zhangsenchuan@eswincomputing.com>
+Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
+ ajax-webmail-app2 (Coremail) ; Fri, 27 Feb 2026 19:22:43 +0800 (GMT+08:00)
+Date: Fri, 27 Feb 2026 19:22:43 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
+To: "Manivannan Sadhasivam" <mani@kernel.org>
+Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
+	p.zabel@pengutronix.de, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	christian.bruel@foss.st.com, shradha.t@samsung.com,
+	krishna.chundru@oss.qualcomm.com, thippeswamy.havalige@amd.com,
+	inochiama@gmail.com, Frank.li@nxp.com, ningyu@eswincomputing.com,
+	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com,
+	ouyanghui@eswincomputing.com
+Subject: Re: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host
+ controller driver
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <4lhrl2lqnndbieuctdtdrwdjlvjafw32googpv322kv5xe35ue@gtojpiksle74>
+References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
+ <20260129092900.1900-1-zhangsenchuan@eswincomputing.com>
+ <a3yu54e6feo5immtdju4fgvne7fh3p4ytlawfdhawmpzvagi64@o7wuhhdiitft>
+ <78296255.3869.19c8eb694d6.Coremail.zhangsenchuan@eswincomputing.com>
+ <cxfbgzwsybfvixu3qqi66fvspmhe5knuevwcj6zwsakkzqwd3z@czmitvgl7nwt>
+ <694aeb1a.398e.19c98ff2727.Coremail.zhangsenchuan@eswincomputing.com>
+ <rbmoxlc45bf4ij2o2mf3ofgni6vxqmsp52vdiqtc4wxxufmxkt@w2u5rkpq5mhs>
+ <470bb42a.39bb.19c994fc998.Coremail.zhangsenchuan@eswincomputing.com>
+ <4lhrl2lqnndbieuctdtdrwdjlvjafw32googpv322kv5xe35ue@gtojpiksle74>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:TAJkCgAHqXJyfaFpfB4EAA--.19052S2
-X-Coremail-Antispam: 1UD129KBjvAXoW3Kw4fZFWDKrW5Cr1DXFW5ZFb_yoW8GFWrto
-	Z7Xrn3Xw4fGryrurWxZF1IvryxZa4IvFW3JFsY9397Ca40yr15tryDGwnIvw1akr40kry5
-	Xw17Xw17CF4Iqa1rn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UjIYCTnIWjp_UUUYN7AC8VAFwI0_Xr0_Wr1l1xkIjI8I6I8E6xAIw20EY4v20xva
-	j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2
-	x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8
-	Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26r
-	xl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-	8cxan2IY04v7M4kE6xkIj40Ew7xC0wCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42
-	xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWU
-	GwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI4
-	8JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4U
-	JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcV
-	C2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRiBT5PUUUUU==
-X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/
+Message-ID: <7dcea145.3a7f.19c9ed63012.Coremail.zhangsenchuan@eswincomputing.com>
+X-Coremail-Locale: en_US
+X-CM-TRANSID:TQJkCgAHHaCDfqFpsB0EAA--.396W
+X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAQELBmmgd
+	ZEl5wACsg
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-From: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-
-Add driver for the Eswin EIC7700 PCIe host controller, which is based on
-the DesignWare PCIe core, IP revision 5.96a. The PCIe Gen.3 controller
-supports a data rate of 8 GT/s and 4 channels, support INTx and MSI
-interrupts.
-
-Signed-off-by: Yu Ning <ningyu@eswincomputing.com>
-Signed-off-by: Yanghui Ou <ouyanghui@eswincomputing.com>
-Signed-off-by: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
----
- drivers/pci/controller/dwc/Kconfig        |  11 +
- drivers/pci/controller/dwc/Makefile       |   1 +
- drivers/pci/controller/dwc/pcie-eic7700.c | 409 ++++++++++++++++++++++
- 3 files changed, 421 insertions(+)
- create mode 100644 drivers/pci/controller/dwc/pcie-eic7700.c
-
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index d0aa031397fa..fd7945b0747a 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -93,6 +93,17 @@ config PCIE_BT1
- 	  Enables support for the PCIe controller in the Baikal-T1 SoC to work
- 	  in host mode. It's based on the Synopsys DWC PCIe v4.60a IP-core.
- 
-+config PCIE_EIC7700
-+	tristate "Eswin EIC7700 PCIe controller"
-+	depends on ARCH_ESWIN || COMPILE_TEST
-+	depends on PCI_MSI
-+	select PCIE_DW_HOST
-+	help
-+	  Say Y here if you want PCIe controller support for the Eswin EIC7700.
-+	  The PCIe controller on EIC7700 is based on DesignWare hardware,
-+	  enables support for the PCIe controller in the EIC7700 SoC to work in
-+	  host mode.
-+
- config PCI_IMX6
- 	bool
- 
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index 67ba59c02038..7c5a5186ea83 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -6,6 +6,7 @@ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
- obj-$(CONFIG_PCIE_AMD_MDB) += pcie-amd-mdb.o
- obj-$(CONFIG_PCIE_BT1) += pcie-bt1.o
-+obj-$(CONFIG_PCIE_EIC7700) += pcie-eic7700.o
- obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCIE_FU740) += pcie-fu740.o
-diff --git a/drivers/pci/controller/dwc/pcie-eic7700.c b/drivers/pci/controller/dwc/pcie-eic7700.c
-new file mode 100644
-index 000000000000..2690399bc70d
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-eic7700.c
-@@ -0,0 +1,409 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * ESWIN EIC7700 PCIe root complex driver
-+ *
-+ * Copyright 2026, Beijing ESWIN Computing Technology Co., Ltd.
-+ *
-+ * Authors: Yu Ning <ningyu@eswincomputing.com>
-+ *          Senchuan Zhang <zhangsenchuan@eswincomputing.com>
-+ *          Yanghui Ou <ouyanghui@eswincomputing.com>
-+ */
-+
-+#include <linux/interrupt.h>
-+#include <linux/iopoll.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
-+#include <linux/resource.h>
-+#include <linux/reset.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+
-+/* ELBI registers */
-+#define PCIEELBI_CTRL0_OFFSET		0x0
-+#define PCIEELBI_STATUS0_OFFSET		0x100
-+
-+/* LTSSM register fields */
-+#define PCIEELBI_APP_LTSSM_ENABLE	BIT(5)
-+
-+/* APP_HOLD_PHY_RST register fields */
-+#define PCIEELBI_APP_HOLD_PHY_RST	BIT(6)
-+
-+/* PM_SEL_AUX_CLK register fields */
-+#define PCIEELBI_PM_SEL_AUX_CLK		BIT(16)
-+
-+/* DEV_TYPE register fields */
-+#define PCIEELBI_CTRL0_DEV_TYPE		GENMASK(3, 0)
-+
-+/* Vendor and device ID value */
-+#define PCI_VENDOR_ID_ESWIN		0x1fe1
-+#define PCI_DEVICE_ID_ESWIN_EIC7700	0x2030
-+
-+#define EIC7700_NUM_RSTS		ARRAY_SIZE(eic7700_pcie_rsts)
-+
-+static const char * const eic7700_pcie_rsts[] = {
-+	"pwr",
-+	"dbi",
-+};
-+
-+struct eic7700_pcie_data {
-+	bool skip_l23;
-+};
-+
-+struct eic7700_pcie_port {
-+	struct list_head list;
-+	struct reset_control *perst;
-+	int num_lanes;
-+};
-+
-+struct eic7700_pcie {
-+	struct dw_pcie pci;
-+	struct clk_bulk_data *clks;
-+	struct reset_control_bulk_data resets[EIC7700_NUM_RSTS];
-+	struct list_head ports;
-+	const struct eic7700_pcie_data *data;
-+	int num_clks;
-+};
-+
-+#define to_eic7700_pcie(x) dev_get_drvdata((x)->dev)
-+
-+static int eic7700_pcie_start_link(struct dw_pcie *pci)
-+{
-+	u32 val;
-+
-+	/* Enable LTSSM */
-+	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-+	val |= PCIEELBI_APP_LTSSM_ENABLE;
-+	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-+
-+	return 0;
-+}
-+
-+static bool eic7700_pcie_link_up(struct dw_pcie *pci)
-+{
-+	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	u16 val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
-+
-+	return val & PCI_EXP_LNKSTA_DLLLA;
-+}
-+
-+static int eic7700_pcie_perst_reset(struct eic7700_pcie_port *port,
-+				    struct eic7700_pcie *pcie)
-+{
-+	int ret;
-+
-+	ret = reset_control_assert(port->perst);
-+	if (ret) {
-+		dev_err(pcie->pci.dev, "Failed to assert PERST#\n");
-+		return ret;
-+	}
-+
-+	/* Ensure that PERST# has been asserted for at least 100 ms */
-+	msleep(PCIE_T_PVPERL_MS);
-+
-+	ret = reset_control_deassert(port->perst);
-+	if (ret) {
-+		dev_err(pcie->pci.dev, "Failed to deassert PERST#\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void eic7700_pcie_assert(struct eic7700_pcie *pcie)
-+{
-+	struct eic7700_pcie_port *port;
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		reset_control_assert(port->perst);
-+	reset_control_bulk_assert(EIC7700_NUM_RSTS, pcie->resets);
-+}
-+
-+static int eic7700_pcie_parse_port(struct eic7700_pcie *pcie,
-+				   struct device_node *node)
-+{
-+	struct device *dev = pcie->pci.dev;
-+	struct eic7700_pcie_port *port;
-+
-+	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-+	if (!port)
-+		return -ENOMEM;
-+
-+	port->perst = of_reset_control_get_exclusive(node, "perst");
-+	if (IS_ERR(port->perst)) {
-+		dev_err(dev, "Failed to get PERST# reset\n");
-+		return PTR_ERR(port->perst);
-+	}
-+
-+	/*
-+	 * TODO: Since the Root Port node is separated out by pcie devicetree,
-+	 * the DWC core initialization code can't parse the num-lanes attribute
-+	 * in the Root Port. Before entering the DWC core initialization code,
-+	 * the platform driver code parses the Root Port node. The EIC7700 only
-+	 * supports one Root Port node, and the num-lanes attribute is suitable
-+	 * for the case of one Root Port.
-+	 */
-+	if (!of_property_read_u32(node, "num-lanes", &port->num_lanes))
-+		pcie->pci.num_lanes = port->num_lanes;
-+
-+	INIT_LIST_HEAD(&port->list);
-+	list_add_tail(&port->list, &pcie->ports);
-+
-+	return 0;
-+}
-+
-+static int eic7700_pcie_parse_ports(struct eic7700_pcie *pcie)
-+{
-+	struct eic7700_pcie_port *port, *tmp;
-+	struct device *dev = pcie->pci.dev;
-+	int ret;
-+
-+	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-+		ret = eic7700_pcie_parse_port(pcie, of_port);
-+		if (ret)
-+			goto err_port;
-+	}
-+
-+	return 0;
-+
-+err_port:
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+		reset_control_put(port->perst);
-+		list_del(&port->list);
-+	}
-+
-+	return ret;
-+}
-+
-+static int eic7700_pcie_host_init(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct eic7700_pcie *pcie = to_eic7700_pcie(pci);
-+	struct eic7700_pcie_port *port, *tmp;
-+	u32 val;
-+	int ret;
-+
-+	ret = clk_bulk_prepare_enable(pcie->num_clks, pcie->clks);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * The PWR and DBI reset signals are respectively used to reset the
-+	 * PCIe controller and the DBI register.
-+	 *
-+	 * The PERST# signal is a reset signal that simultaneously controls the
-+	 * PCIe controller, PHY, and Endpoint. Before configuring the PHY, the
-+	 * PERST# signal must first be deasserted.
-+	 *
-+	 * The external reference clock is supplied simultaneously to the PHY
-+	 * and EP. When the PHY is configurable, the entire chip already has
-+	 * stable power and reference clock. The PHY will be ready within 20ms
-+	 * after writing app_hold_phy_rst register bit of ELBI register space.
-+	 */
-+	ret = reset_control_bulk_deassert(EIC7700_NUM_RSTS, pcie->resets);
-+	if (ret) {
-+		dev_err(pcie->pci.dev, "Failed to deassert resets\n");
-+		goto err_deassert;
-+	}
-+
-+	/* Configure Root Port type */
-+	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-+	val &= ~PCIEELBI_CTRL0_DEV_TYPE;
-+	val |= FIELD_PREP(PCIEELBI_CTRL0_DEV_TYPE, PCI_EXP_TYPE_ROOT_PORT);
-+	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		ret = eic7700_pcie_perst_reset(port, pcie);
-+		if (ret)
-+			goto err_perst;
-+	}
-+
-+	/* Configure app_hold_phy_rst */
-+	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-+	val &= ~PCIEELBI_APP_HOLD_PHY_RST;
-+	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
-+
-+	/* The maximum waiting time for the clock switch lock is 20ms */
-+	ret = readl_poll_timeout(pci->elbi_base + PCIEELBI_STATUS0_OFFSET, val,
-+				 !(val & PCIEELBI_PM_SEL_AUX_CLK), 1000,
-+				 20000);
-+	if (ret) {
-+		dev_err(pci->dev, "Timeout waiting for PM_SEL_AUX_CLK ready\n");
-+		goto err_phy_init;
-+	}
-+
-+	/*
-+	 * Configure ESWIN VID:DID for Root Port as the default values are
-+	 * invalid.
-+	 */
-+	dw_pcie_dbi_ro_wr_en(pci);
-+	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_ESWIN);
-+	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, PCI_DEVICE_ID_ESWIN_EIC7700);
-+	dw_pcie_dbi_ro_wr_dis(pci);
-+
-+	return 0;
-+
-+err_phy_init:
-+	list_for_each_entry(port, &pcie->ports, list)
-+		reset_control_assert(port->perst);
-+err_perst:
-+	reset_control_bulk_assert(EIC7700_NUM_RSTS, pcie->resets);
-+err_deassert:
-+	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+		reset_control_put(port->perst);
-+		list_del(&port->list);
-+	}
-+
-+	return ret;
-+}
-+
-+static void eic7700_pcie_host_deinit(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct eic7700_pcie *pcie = to_eic7700_pcie(pci);
-+
-+	eic7700_pcie_assert(pcie);
-+	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
-+}
-+
-+static void eic7700_pcie_pme_turn_off(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct eic7700_pcie *pcie = to_eic7700_pcie(pci);
-+
-+	/*
-+	 * The ESWIN EIC7700 SoC lacks hardware support for the L2/L3 low-power
-+	 * link states. It cannot enter the L2/L3 Ready state through the
-+	 * PME_Turn_Off/PME_To_Ack handshake protocol. To avoid this problem,
-+	 * the skip_l23_ready has been set.
-+	 */
-+	pp->skip_l23_ready = pcie->data->skip_l23;
-+}
-+
-+static const struct dw_pcie_host_ops eic7700_pcie_host_ops = {
-+	.init = eic7700_pcie_host_init,
-+	.deinit = eic7700_pcie_host_deinit,
-+	.pme_turn_off = eic7700_pcie_pme_turn_off,
-+};
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.start_link = eic7700_pcie_start_link,
-+	.link_up = eic7700_pcie_link_up,
-+};
-+
-+static int eic7700_pcie_probe(struct platform_device *pdev)
-+{
-+	const struct eic7700_pcie_data *data;
-+	struct eic7700_pcie_port *port, *tmp;
-+	struct device *dev = &pdev->dev;
-+	struct eic7700_pcie *pcie;
-+	struct dw_pcie *pci;
-+	int ret, i;
-+
-+	data = of_device_get_match_data(dev);
-+	if (!data)
-+		return dev_err_probe(dev, -ENODATA, "No platform data\n");
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&pcie->ports);
-+
-+	pci = &pcie->pci;
-+	pci->dev = dev;
-+	pci->ops = &dw_pcie_ops;
-+	pci->pp.ops = &eic7700_pcie_host_ops;
-+	pcie->data = data;
-+
-+	pcie->num_clks = devm_clk_bulk_get_all(dev, &pcie->clks);
-+	if (pcie->num_clks < 0)
-+		return dev_err_probe(dev, pcie->num_clks,
-+				     "Failed to get pcie clocks\n");
-+
-+	for (i = 0; i < EIC7700_NUM_RSTS; i++)
-+		pcie->resets[i].id = eic7700_pcie_rsts[i];
-+
-+	ret = devm_reset_control_bulk_get_exclusive(dev, EIC7700_NUM_RSTS,
-+						    pcie->resets);
-+	if (ret)
-+		return dev_err_probe(dev, ret, "Failed to get resets\n");
-+
-+	ret = eic7700_pcie_parse_ports(pcie);
-+	if (ret)
-+		return dev_err_probe(dev, ret, "Failed to parse Root Port\n");
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	pm_runtime_no_callbacks(dev);
-+	devm_pm_runtime_enable(dev);
-+	ret = pm_runtime_get_sync(dev);
-+	if (ret < 0)
-+		goto err_pm_runtime_put;
-+
-+	ret = dw_pcie_host_init(&pci->pp);
-+	if (ret) {
-+		dev_err(dev, "Failed to init host\n");
-+		goto err_init;
-+	}
-+
-+	return 0;
-+
-+err_pm_runtime_put:
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+		reset_control_put(port->perst);
-+		list_del(&port->list);
-+	}
-+err_init:
-+	pm_runtime_put(dev);
-+
-+	return ret;
-+}
-+
-+static int eic7700_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct eic7700_pcie *pcie = dev_get_drvdata(dev);
-+
-+	return dw_pcie_suspend_noirq(&pcie->pci);
-+}
-+
-+static int eic7700_pcie_resume_noirq(struct device *dev)
-+{
-+	struct eic7700_pcie *pcie = dev_get_drvdata(dev);
-+
-+	return dw_pcie_resume_noirq(&pcie->pci);
-+}
-+
-+DEFINE_NOIRQ_DEV_PM_OPS(eic7700_pcie_pm, eic7700_pcie_suspend_noirq,
-+			eic7700_pcie_resume_noirq);
-+
-+static const struct eic7700_pcie_data eic7700_data = {
-+	.skip_l23 = true,
-+};
-+
-+static const struct of_device_id eic7700_pcie_of_match[] = {
-+	{ .compatible = "eswin,eic7700-pcie", .data = &eic7700_data },
-+	{}
-+};
-+
-+static struct platform_driver eic7700_pcie_driver = {
-+	.probe = eic7700_pcie_probe,
-+	.driver = {
-+		.name = "eic7700-pcie",
-+		.of_match_table = eic7700_pcie_of_match,
-+		.suppress_bind_attrs = true,
-+		.pm = &eic7700_pcie_pm,
-+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
-+	},
-+};
-+builtin_platform_driver(eic7700_pcie_driver);
-+
-+MODULE_DESCRIPTION("Eswin EIC7700 PCIe host controller driver");
-+MODULE_AUTHOR("Yu Ning <ningyu@eswincomputing.com>");
-+MODULE_AUTHOR("Senchuan Zhang <zhangsenchuan@eswincomputing.com>");
-+MODULE_AUTHOR("Yanghui Ou <ouyanghui@eswincomputing.com>");
-+MODULE_LICENSE("GPL");
--- 
-2.25.1
-
+PiA+ID4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxMCAyLzJdIFBDSTogZWljNzcwMDog
+QWRkIEVzd2luIFBDSWUgaG9zdCBjb250cm9sbGVyIGRyaXZlcgo+ID4gPiA+ID4gPiA+IAo+ID4g
+PiA+ID4gPiA+IE9uIFRodSwgSmFuIDI5LCAyMDI2IGF0IDA1OjI5OjAwUE0gKzA4MDAsIHpoYW5n
+c2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tIHdyb3RlOgo+ID4gPiA+ID4gPiA+ID4gRnJvbTog
+U2VuY2h1YW4gWmhhbmcgPHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tPgo+ID4gPiA+
+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+ICtzdGF0aWMgaW50IGVpYzc3MDBfcGNpZV9zdXNwZW5k
+X25vaXJxKHN0cnVjdCBkZXZpY2UgKmRldikKPiA+ID4gPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiA+
+ID4gPiArCXN0cnVjdCBlaWM3NzAwX3BjaWUgKnBjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsK
+PiA+ID4gPiA+ID4gPiA+ICsKPiA+ID4gPiA+ID4gPiA+ICsJLyoKPiA+ID4gPiA+ID4gPiA+ICsJ
+ICogVGhlIEVTV0lOIEVJQzc3MDAgU29DIGxhY2tzIGhhcmR3YXJlIHN1cHBvcnQgZm9yIHRoZSBM
+Mi9MMyBsb3ctcG93ZXIKPiA+ID4gPiA+ID4gPiA+ICsJICogbGluayBzdGF0ZXMuIEl0IGNhbm5v
+dCBlbnRlciB0aGUgTDIvTDMgUmVhZHkgc3RhdGUgdGhyb3VnaCB0aGUKPiA+ID4gPiA+ID4gPiA+
+ICsJICogUE1FX1R1cm5fT2ZmL1BNRV9Ub19BY2sgaGFuZHNoYWtlIHByb3RvY29sLiBUbyBhdm9p
+ZCB0aGlzIHByb2JsZW0sCj4gPiA+ID4gPiA+ID4gPiArCSAqIHRoZSBkd19wY2llX3N1c3BlbmRf
+bm9pcnEgQVBJIGlzIG5vdCB1c2VkLgo+ID4gPiA+ID4gPiA+ID4gKwkgKi8KPiA+ID4gPiA+ID4g
+PiAKPiA+ID4gPiA+ID4gPiBXaXRoIDcuMCwgeW91IGNhbiBwcm92aWRlIGEgZHVtbXkgcG1lX3R1
+cm5fb2ZmKCkgQVBJIGFuZCBzZXQKPiA+ID4gPiA+ID4gPiAncGNpLT5wcC5za2lwX2wyM19yZWFk
+eScgdG8gcmV1c2UgdGhlIGR3X3BjaWVfe3N1c3BlbmQvcmVzdW1lfV9ub2lycSBBUElzLgo+ID4g
+PiA+ID4gPiA+IAo+ID4gPiA+ID4gPiAKPiA+ID4gPiA+ID4gSGkgTWFuaSwKPiA+ID4gPiA+ID4g
+Cj4gPiA+ID4gPiA+IFNldHRpbmcgcGNpLT5wcC5za2lwX2wyM19yZWFkeSBkb2VzIGluZGVlZCBh
+bGxvdyB1cyB0byByZXVzZSB0aGUKPiA+ID4gPiA+ID4gZHdfcGNpZV9zdXNwZW5kX25vaXJxIGZ1
+bmN0aW9uLiBIb3dldmVyLCBmb3IgdGhlIGR3X3BjaWVfcmVzdW1lX25vaXJxCj4gPiA+ID4gPiA+
+IGZ1bmN0aW9uLCBpZiB0aGUgZHdfcGNpZV9zdGFydF9saW5rIGFuZCBkd19wY2llX3dhaXRfZm9y
+X2xpbmsgQVBJcyBmYWlsIHRvCj4gPiA+ID4gPiA+IGV4ZWN1dGUsIHRoZSBjbGsvcmVzZXQgcmVz
+b3VyY2VzIGluIHRoZSBwY2ktPnBwLm9wcy0+aW5pdCBmdW5jdGlvbiBjYW5ub3QKPiA+ID4gPiA+
+ID4gYmUgcmVsZWFzZWQuIFBlcmhhcHMgdGhlIGR3X3BjaWVfcmVzdW1lX25vaXJxIGZ1bmN0aW9u
+IG5lZWRzIHRvIGJlIG9wdGltaXplZC4KPiA+ID4gPiA+IAo+ID4gPiA+ID4gV2lsbCB0aGlzIGhl
+bHA/Cj4gPiA+ID4gPiAKPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9s
+bGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9k
+d2MvcGNpZS1kZXNpZ253YXJlLWhvc3QuYwo+ID4gPiA+ID4gaW5kZXggNmFlNjE4OWU5YjhhLi4z
+OGFkNzliYmVhYjEgMTAwNjQ0Cj4gPiA+ID4gPiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVy
+L2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jCj4gPiA+ID4gPiArKysgYi9kcml2ZXJzL3BjaS9j
+b250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jCj4gPiA+ID4gPiBAQCAtMTMwMCwx
+NSArMTMwMCwyNCBAQCBpbnQgZHdfcGNpZV9yZXN1bWVfbm9pcnEoc3RydWN0IGR3X3BjaWUgKnBj
+aSkKPiA+ID4gPiA+ICAKPiA+ID4gPiA+ICAgICAgICAgcmV0ID0gZHdfcGNpZV9zdGFydF9saW5r
+KHBjaSk7Cj4gPiA+ID4gPiAgICAgICAgIGlmIChyZXQpCj4gPiA+ID4gPiAtICAgICAgICAgICAg
+ICAgcmV0dXJuIHJldDsKPiA+ID4gPiA+ICsgICAgICAgICAgICAgICBnb3RvIGVycl9kZWluaXQ7
+Cj4gPiA+ID4gPiAgCj4gPiA+ID4gPiAgICAgICAgIHJldCA9IGR3X3BjaWVfd2FpdF9mb3JfbGlu
+ayhwY2kpOwo+ID4gPiA+ID4gICAgICAgICBpZiAocmV0KQo+ID4gPiA+ID4gLSAgICAgICAgICAg
+ICAgIHJldHVybiByZXQ7Cj4gPiA+ID4gPiArICAgICAgICAgICAgICAgZ290byBlcnJfc3RvcF9s
+aW5rOwo+ID4gPiA+ID4gIAo+ID4gPiA+ID4gICAgICAgICBpZiAocGNpLT5wcC5vcHMtPnBvc3Rf
+aW5pdCkKPiA+ID4gPiA+ICAgICAgICAgICAgICAgICBwY2ktPnBwLm9wcy0+cG9zdF9pbml0KCZw
+Y2ktPnBwKTsKPiA+ID4gPiA+ICAKPiA+ID4gPiA+ICsgICAgICAgcmV0dXJuIDA7Cj4gPiA+ID4g
+PiArCj4gPiA+ID4gPiArZXJyX3N0b3BfbGluazoKPiA+ID4gPiA+ICsgICAgICAgZHdfcGNpZV9z
+dG9wX2xpbmsocGNpKTsKPiA+ID4gPiA+ICsKPiA+ID4gPiA+ICtlcnJfZGVpbml0Ogo+ID4gPiA+
+ID4gKyAgICAgICBpZiAocGNpLT5wcC5vcHMtPmRlaW5pdCkKPiA+ID4gPiA+ICsgICAgICAgICAg
+ICAgICBwY2ktPnBwLm9wcy0+ZGVpbml0KCZwY2ktPnBwKTsKPiA+ID4gPiA+ICsKPiA+ID4gPiA+
+ICAgICAgICAgcmV0dXJuIHJldDsKPiA+ID4gPiA+ICB9Cj4gPiA+ID4gPiAgRVhQT1JUX1NZTUJP
+TF9HUEwoZHdfcGNpZV9yZXN1bWVfbm9pcnEpOwo+ID4gPiA+ID4gCj4gPiA+ID4gCj4gPiA+ID4g
+WWVzLCB0aGlzIGNhbiByZWxlYXNlIHRoZSByZXNvdXJjZXMgYWZ0ZXIgaW5pdCwgYWZ0ZXIgb3B0
+aW1pemluZyB0aGUgCj4gPiA+ID4gcmVzdW1lIGZ1bmN0aW9uLCBpIGNhbiByZXVzZSB0aGUgZHdf
+cGNpZV97c3VzcGVuZC9yZXN1bWV9X25vaXJxIEFQSXMuCj4gPiA+ID4gCj4gPiA+ID4gSSBub3Rp
+Y2VkIHRoYXQgdGhlIGR3X3BjaWVfd2FpdF9mb3JfbGluayBmdW5jdGlvbiBoYXMgYmVlbiBvcHRp
+bWl6ZWQuIElzIAo+ID4gPiA+IGl0IG5lY2Vzc2FyeSB0byByZWxlYXNlIHRoZSByZXNvdXJjZXMg
+b25seSB3aGVuIGl0IHJldHVybiAtRVRJTUVPVVQ/Cj4gPiA+ID4gUGVyaGFwcyBpdCBuZWVkcyB0
+byBiZSBzbGlnaHRseSBpbXByb3ZlZO+8mgo+ID4gPiA+IAo+ID4gPiA+ICByZXQgPSBkd19wY2ll
+X3dhaXRfZm9yX2xpbmsocGNpKTsKPiA+ID4gPiAgaWYgKHJldCA9PSAtRVRJTUVPVVQpCj4gPiA+
+ID4gICAgICAgICAgZ290byBlcnJfc3RvcF9saW5rOwo+ID4gPiA+IAo+ID4gPiA+IFdoYXQgYWJv
+dXQgeW91ciBzdWdnZXN0aW9uPwo+ID4gPiA+IAo+ID4gPiAKPiA+ID4gQWJzb2x1dGVseSEgSSBm
+b3Jnb3QgbXkgb3duIHJld29yayA7KSBJJ2xsIGNvb2sgYSBwYXRjaCBmb3IgdGhlIGFib3ZlLiBU
+aGVuIGlmCj4gPiA+IHlvdSBiYXNlIHlvdXIgY29udHJvbGxlciBkcml2ZXIgcGF0Y2ggb24gdG9w
+IG9mIGl0LCB3ZSBjYW4gbWVyZ2UgYm90aCBpbiBhCj4gPiA+IHNpbmdsZSB0cmVlIChpZiBCam9y
+biBhZ3JlZXMpLgo+ID4gPiAKPiA+IAo+ID4gT2tleSx0aGFua3MhCj4gPiAKPiA+IEknbSBhIGxp
+dHRsZSB1bnN1cmUuIERvIEkgbmVlZCB0byBzZW5kIHRoZSB2MTEgcGF0Y2ggaGVyZSBmaXJzdD8g
+T3Igc2hvdWxkIEkgd2FpdAo+ID4gdW50aWwgeW91IHJlbGVhc2UgdGhlIG5ldyBmaXggcGF0Y2gs
+IGFuZCB0aGVuIHNlbmQgdGhlIHYxMSBwYXRjaD8KPiA+IAo+IAo+IEkndmUganVzdCBzZW50IHRo
+ZSBmaXg6Cj4gaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvbGludXgtcGNpLzIwMjYwMjI2MTMzOTUx
+LjI5Njc0My0xLW1hbmlAa2VybmVsLm9yZwo+IAo+IFlvdSBjYW4gcG9zdCB5b3VyIHNlcmllcyBv
+biB0b3Agb2YgaXQuIFRoZXJlIHNob3VsZCBiZSBubyBidWlsZCBkZXBlbmRlbmN5LCBidXQKPiB0
+aGVyZSBpcyBhIGZ1bmN0aW9uYWwgZGVwZW5kZW5jeS4gU28gd2UgbWF5IHB1dCB0aGlzIHBhdGNo
+IGFuZCB5b3VyIHNlcmllcyBpbiBhCj4gc2luZ2xlIGJyYW5jaC4KCk9rZXksdGhhbmtzISBJIGhh
+dmUgc2VudCB0aGUgdjExIHBhdGNoLgoKS2luZCByZWdhcmRzLApTZW5jaHVhbgoK
