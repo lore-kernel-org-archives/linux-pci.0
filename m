@@ -1,166 +1,99 @@
-Received: from flow-b1-smtp.messagingengine.com (flow-b1-smtp.messagingengine.com [202.12.124.136])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB44D26560A;
-	Fri, 27 Feb 2026 16:32:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C552329E53;
+	Fri, 27 Feb 2026 16:44:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772209964; cv=none; b=WO1zOp5U/V5COJd5rR/ZSDoocbuGrjtG5VtNSwTqbTf1+EYOkjjGp1VrXPB/VbRIGIp92ITv1VdcxETsCfgc6ZLYZMV0wxDkBRoXZ3455wYqwCIVal7wiajfvrnAOikNdvLUAk3gpr5Wl45SGoRhkW9wvZmz6cVmrCvj2CE2V1A=
+	t=1772210669; cv=none; b=RjBwooinlQneQZ0fq4sKeXYvjwLvscWZBwOHXUBrFKp3Z5QrUVx1ErkGGZcXQf1YMQzPPtd/u2GM59zxJIIBX1J9AWO5QaVrWSmN7veKaP5foR/b0iUIVQ0nMixnagOefzNJgh3bqyPJXU+Nd/FRYaNId/pVlWfSFn14ZqUwEbM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772209964; c=relaxed/simple;
-	bh=wrC11vtLTokHCycbkNFYy91o4ea5t4/SpwDnFVAceAw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OJC+Hm7Zrb6phev24i00avJQh2sw8+6PGiNKp3oS2pqQx7Tyu9WRanUQzeQ45vyr2p5kXaGQspEligMgvrEp09z2bSRTIT9RlwOMyXPqYgLxd3ah7IgdNH8GvWpKb/6ZGPJ58IKQQWjmhXqJnyWuCF6qylO+Qp3ArJokdL1FgNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=UvJQORvM; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=hDQJW6C9; arc=none smtp.client-ip=202.12.124.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1772210669; c=relaxed/simple;
+	bh=xEv7MiSgAutCAQPuAB/UPxkGdAyG7iqnARAOD3aXtMs=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=pImUrCGxZ1oA6exusOVV7ATN70hkjlCH/et11oQil0EzpDF1linC92kbWJarMEoFHPmivSC7ESPCqFOLO6zztBiaE8B/MOixHGLN2n9f4z67awv+XHf2fCg2Lxc9APYE23h13xqIxY6g35PMepYu+mO8vdaJO/Y4bssb3mnTIJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MfcyS/nf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="UvJQORvM";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="hDQJW6C9"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailflow.stl.internal (Postfix) with ESMTP id 471F51300DDC;
-	Fri, 27 Feb 2026 11:32:40 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-01.internal (MEProxy); Fri, 27 Feb 2026 11:32:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1772209960;
-	 x=1772217160; bh=U8o0TeKupqWBpq050X2z2KjPSahNrCwyfHa+2hao158=; b=
-	UvJQORvM3WSu1z7xDhvqaxf9hC6sa76YjMz/scZXjdy/L6YljiwPnaTuJ30TFex8
-	PNntGEmwaqA+vIv0O+jRj4gyQ4JqJiAsTjaCPr1D9eoxzBb0MdI4dA9c8o/Z5v2S
-	Q7gv4UM6c872LJRvs3yM96dYLdxOWYtX0T8q8F/WO51S2yri1/DKv0Rsi/6k4StV
-	SJOkAcVzvRHWFuj8vjnWS4vJHiStYc2ycYxTaeRSSSYtEoMXjoX8B8uPGH7gahuN
-	Wlz80WBR9iQTvIHWdFYAGZGJtbk21w+DNatLmEZw1qds3V2G/xe8GUqfcxC3fgKg
-	fXkztxWj7Y0GgGnzi73A1A==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1772209960; x=
-	1772217160; bh=U8o0TeKupqWBpq050X2z2KjPSahNrCwyfHa+2hao158=; b=h
-	DQJW6C9ZQsl+cSxSNqXEkYgt1MeeXA/LF+V/Q0vonxd/ZtKg+svWyiVt8Z0aQ9Gb
-	oG0Z/DkH/k6F1SsBn4/xRb6V4mz8s20F0k0/F37P0D3aX3UnJAmUZGWONhKWbGHr
-	QWgpqzs4CKH2WOJGvtuwZ5MDZGVF0YFNKXQtuIGYlbYDYu5u+xbmjDrbHTQOpYZ+
-	JjbPTUa78tPkuJUWrdp9YRAKRCZXuL57/vIzkXCJbPky9cyeiKEwz6BQfcyR5LPy
-	ns6iQ0WzaR1UssEeqJpnlymBANVKyhfpBExBaSeb0L6E8p7sLgfPncAbGLZ6auM0
-	bwTM1Qb4qg6OGApznwbPw==
-X-ME-Sender: <xms:J8ehafZlsZOjc3_GLRFi4h5tWZ_j39o91QnUDyRJrItDzcwi7KraSA>
-    <xme:J8ehacD4oLMaXgiufHOx7RuNmUZ2KcT58IQXmnadBxkzX7loWOuT_Faz9z10-R47c
-    s_mMj9iSe2a56NsAIHTwW5eXMvsyKiSrrmFI4cRQULuNzzQFJSrFQ>
-X-ME-Received: <xmr:J8ehaXgvfUMoIDFx1-N0_S2LZI5xIUBVR4hia4g9tz0jTB1PQar5sxgb1Zw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvgeelgeelucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkjghfofggtgfgsehtjeeftdertddvnecuhfhrohhmpeetlhgvgicu
-    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeegkeejhedvtdelledvvdekuefgieelgeeuleevhffghffggffhjefhfeeh
-    ueffudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepgeeipdhmohguvgep
-    shhmthhpohhuthdprhgtphhtthhopegumhgrthhlrggtkhesghhoohhglhgvrdgtohhmpd
-    hrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheprghj
-    rgihrggthhgrnhgurhgrsehnvhhiughirgdrtghomhdprhgtphhtthhopehgrhgrfhesrg
-    hmrgiiohhnrdgtohhmpdhrtghpthhtoheprghmrghsthhrohesfhgsrdgtohhmpdhrtghp
-    thhtoheprghpohhpphhlvgesnhhvihguihgrrdgtohhmpdhrtghpthhtoheprghkphhmse
-    hlihhnuhigqdhfohhunhgurghtihhonhdrohhrghdprhgtphhtthhopegrnhhkihhtrges
-    nhhvihguihgrrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtg
-    homh
-X-ME-Proxy: <xmx:J8ehaZQZcL6lZPF1tlS2vXNQrO4J8CAoDaz7yWMPTyzWglyUwjBO5g>
-    <xmx:J8ehaZsrct2tN8zKyTrWREhB4jzHQ_Fv2oAmSJc4BikE_AF4Xj42xg>
-    <xmx:J8ehaT_vdDuQ_DgLxEW0346_iNl-iCv0_xBOZodxKDVm2Tf1CiGErw>
-    <xmx:J8ehaVYG6UTWYipiljkmMYLzXh80DAKiM45iJealDLXXbTVMK8PklA>
-    <xmx:KMehaZfMe4KUyMFYKfHfXG7vObZA_yiAuEBY2xndXJSajNdx2KREBiW2>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 27 Feb 2026 11:32:35 -0500 (EST)
-Date: Fri, 27 Feb 2026 09:32:33 -0700
-From: Alex Williamson <alex@shazbot.org>
-To: David Matlack <dmatlack@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Adithya Jayachandran <ajayachandra@nvidia.com>,
- Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
- Alistair Popple <apopple@nvidia.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>,
- Jacob Pan <jacob.pan@linux.microsoft.com>,
- Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
- Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
- kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
- Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mm@kvack.org, linux-pci@vger.kernel.org,
- Lukas Wunner <lukas@wunner.de>,
- =?UTF-8?B?TWlj?= =?UTF-8?B?aGHFgg==?= Winiarski
- <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>,
- Parav Pandit <parav@nvidia.com>,
- Pasha Tatashin <pasha.tatashin@soleen.com>,
- Pranjal Shrivastava <praan@google.com>,
- Pratyush Yadav <pratyush@kernel.org>,
- Raghavendra Rao Ananta <rananta@google.com>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>,
- Saeed Mahameed <saeedm@nvidia.com>,
- Samiullah Khawaja <skhawaja@google.com>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Thomas =?UTF-8?B?SGVsbHN0csO2bQ==?= <thomas.hellstrom@linux.intel.com>,
- Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>,
- William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
- Zhu Yanjun <yanjun.zhu@linux.dev>, alex@shazbot.org
-Subject: Re: [PATCH v2 02/22] PCI: Add API to track PCI devices preserved
- across Live Update
-Message-ID: <20260227093233.45891424@shazbot.org>
-In-Reply-To: <aZ-TrC8P0tLYhxXO@google.com>
-References: <20260129212510.967611-3-dmatlack@google.com>
-	<20260225224651.GA3711085@bhelgaas>
-	<aZ-TrC8P0tLYhxXO@google.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MfcyS/nf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DB08C19423;
+	Fri, 27 Feb 2026 16:44:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772210668;
+	bh=xEv7MiSgAutCAQPuAB/UPxkGdAyG7iqnARAOD3aXtMs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=MfcyS/nfYFdd+s763JqDqyw62GRaDDVUV08SyoeW4+f5+86NgmRNeY6xlMPGdWiFq
+	 bvsCQpZPtByl0kHoYl6T7DLHLWe0xt8FlS9u7Opa+88SesnH2oaG5ijH3okdeQA+uV
+	 IK5qojL4FjuodmKaxkK1i868FP7fQxe9lt+GPe1T/U7CBT0gmgFoHX9rNU9WU+DEdd
+	 +LcTflBkLQs1X6PRb7V4bWZlgWiTXASdfIdXxZ1hznJ00xY70wF9bkNQSmXlcwnjTj
+	 TSkIGZga0zBn99S4AAusw9Uhmw2iLjZIl9wVaJ7iQwCkDREckw1vlj5wcD2kpOLMlm
+	 AUhCNpVQ6RIaw==
+Date: Fri, 27 Feb 2026 10:44:27 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Nilay Shroff <nilay@linux.ibm.com>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andreas Larsson <andreas@gaisler.com>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	sparclinux@vger.kernel.org, wangruikang@iscas.ac.cn,
+	tglx@kernel.org, npiggin@gmail.com, chleroy@kernel.org,
+	gjoyce@ibm.com
+Subject: Re: [PATCHv2 0/2] pci: fix msi_addr_mask on powerpc and sparc systems
+Message-ID: <20260227164427.GA3897611@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260220070239.1693303-1-nilay@linux.ibm.com>
 
-On Thu, 26 Feb 2026 00:28:28 +0000
-David Matlack <dmatlack@google.com> wrote:
-> > > +static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
-> > > +{
-> > > +	struct pci_dev *dev = NULL;
-> > > +	int max_nr_devices = 0;
-> > > +	struct pci_ser *ser;
-> > > +	unsigned long size;
-> > > +
-> > > +	for_each_pci_dev(dev)
-> > > +		max_nr_devices++;  
-> > 
-> > How is this protected against hotplug?  
-> 
-> Pranjal raised this as well. Here was my reply:
-> 
-> .  Yes, it's possible to run out space to preserve devices if devices are
-> .  hot-plugged and then preserved. But I think it's better to defer
-> .  handling such a use-case exists (unless you see an obvious simple
-> .  solution). So far I am not seeing preserving hot-plugged devices
-> .  across Live Update as a high priority use-case to support.
-> 
-> I am going to add a comment here in the next revision to clarify that.
-> I will also add a comment clarifying why this code doesn't bother to
-> account for VFs created after this call (preserving VFs are explicitly
-> disallowed to be preserved in this patch since they require additional
-> support).
+[cc->to powerpc, sparc maintainers for ack]
 
-TBH, without SR-IOV support and some examples of in-kernel PF
-preservation in support of vfio-pci VFs, it seems like this only
-supports a very niche use case.  I expect the majority of vfio-pci
-devices are VFs and I don't think we want to present a solution where
-the requirement is to move the PF driver to userspace.  It's not clear,
-for example, how we can have vfio-pci variant drivers relying on
-in-kernel channels to PF drivers to support migration in this model.
-Thanks,
+On Fri, Feb 20, 2026 at 12:32:26PM +0530, Nilay Shroff wrote:
+> Hi,
+> 
+> Recent changes [1] which replaced pci_dev::no_64bit_msi with pci_dev::
+> msi_addr_mask inadvertently missed to initialize the pci_dev::msi_addr_mask
+> to the DMA_BIT_MASK(64) on powerpc platform. Due to this, later the 
+> validation the programmed MSI address against the msi_addr_mask fails.
+> This causes pci device probe method failures on powerpc platform. We also
+> realized that similar issue could potentially happen on sparc system as
+> well. So this series initializes pci_dev::msi_addr_mask to DMA_BIT_MASK(64)
+> when pci_dev is instantiated for both powerpc and sparc platforms.
+> 
+> The first patch in the series fixes this on powerpc platform. The second
+> patch fixes this issue on sparc platform. Please note that as I don't have
+> access to the sparc platform, this patch was only compile tested on the
+> sparc system. Anyone from the community is welcome to test it who has
+> access to the sparc machine.
+> 
+> [1] https://lore.kernel.org/all/20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn/
+> 
+> Changes since v1:
+>   - Initialize the pci_dev:msi_addr_mask on sparc platform (Vivian Wang)
+>   - Some minor cosmetic fixes (Bjorn Helgaas)
+> 
+> Nilay Shroff (2):
+>   powerpc/pci: Initialize msi_addr_mask for OF-created PCI devices
+>   sparc/pci: Initialize msi_addr_mask for OF-created PCI devices
+> 
+>  arch/powerpc/kernel/pci_of_scan.c | 7 +++++++
+>  arch/sparc/kernel/pci.c           | 7 +++++++
+>  2 files changed, 14 insertions(+)
 
-Alex
+These fix regressions on powerpc and sparc caused by 386ced19e9a3
+("PCI/MSI: Convert the boolean no_64bit_msi flag to a DMA address
+mask").
+
+These fixes have been tested by Han Gao (SPARC Enterprise T5220),
+Nathaniel Roach (SPARC T5-2), and Venkat Rao Bagalkote (IBM Power
+System LPAR (pseries)).
+
+It'd be great to have acks from the powerpc and sparc folks so they
+could be merged either by Thomas (who merged 386ced19e9a3) or me (via
+PCI tree).
+
+Bjorn
