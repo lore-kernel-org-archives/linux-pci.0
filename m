@@ -1,84 +1,165 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBDF925B663;
-	Fri, 27 Feb 2026 13:34:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E08E355F37
+	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 13:38:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772199261; cv=none; b=LdOfTHab1eWaBj3KVY+IjNP+GyAnKSc8BWoWKmabe2PpfMQU9DiIoBjK6Lx22kiffSfBb2GtLteEJuCKvpjNEYgXafixUzTFuOXnQzM1BmVzmvrV2N+SVHEGsPGZ9xnqb9zjOu07zn8WDkbRT/AFDheRemzKvrvsJUpCV1890r8=
+	t=1772199545; cv=none; b=d4dUnd9hYfdfVj62PEIKtiXGrfYwfkXrhU5+fEaumuvrYheFbBX3wdLKpL3IedMuprhq1luzev/URTX/NQcz4v7eEkzQcNEo1pWAl/UOYQJE13P7r2k67XrcHu8evk4AtDMz0t/w2U/gNANFS0KBIuMn6vKXwZl5UXYiDLqsPCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772199261; c=relaxed/simple;
-	bh=Gj1ZRHoFyfOCPG4wFYQ7NFuIyqac++id6WLS2szSxL8=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YBRf1rraTDHJSuf+nXNfDlbeJcXaa6NEMxin2scgxvIhL+gQ+qsPjoZ2CSnJpGfUBie+HOURI2+8iRDTX2nqDsaVHRvJzLC09rjM871xAQPHiAeFB3rjDTAH4Srer23LIKdRxc1Dd63NOubrTqcuPHYI25Fr09GcR8ofS58sjWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.224.150])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fMq6M6GpwzJ46c9;
-	Fri, 27 Feb 2026 21:33:47 +0800 (CST)
-Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 6E5F04056E;
-	Fri, 27 Feb 2026 21:34:14 +0800 (CST)
-Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
- (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 27 Feb
- 2026 13:34:13 +0000
-Date: Fri, 27 Feb 2026 13:34:12 +0000
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Dave Jiang <dave.jiang@intel.com>
-CC: Vidya Sagar <vidyas@nvidia.com>, <bhelgaas@google.com>,
-	<raphael.norwitz@nutanix.com>, <vsethi@nvidia.com>, <sdonthineni@nvidia.com>,
-	<smadhavan@nvidia.com>, <skancherla@nvidia.com>, <vaslot@nvidia.com>,
-	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
-	<mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
-Subject: Re: [PATCH V2] PCI: Hide SBR from reset_methods if masked by CXL
-Message-ID: <20260227133412.0000139a@huawei.com>
-In-Reply-To: <b7c04f27-39a9-41df-af0a-14bc5005518e@intel.com>
-References: <20260220195259.2397847-1-vidyas@nvidia.com>
-	<20260225133801.30231-1-vidyas@nvidia.com>
-	<b7c04f27-39a9-41df-af0a-14bc5005518e@intel.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1772199545; c=relaxed/simple;
+	bh=tpW9PvxZ+NXjWkfpMVIL+JCMLeW5ytHBmzyoXWypKPM=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=jWJh1kHdmwsJX5Uzf2XOe7RSlC62KmhO9Srb4nMkk7RP7Z7FwglbsoFHnfsAnwUaYM+jkceegpEPEZogIN/4fbK0U8K6Cm32fO340HwDBXwff0ZBdbXQL6NegOc+D5nGsYfKOzt9ZmJlKh/j0q2yEhz8cv9HMlR+9wHwDSFnLJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=desiato.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rM62ZcaE; arc=none smtp.client-ip=90.155.92.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=desiato.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rM62ZcaE"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=desiato.20200630; h=MIME-Version:Content-Type:References:
+	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=tpW9PvxZ+NXjWkfpMVIL+JCMLeW5ytHBmzyoXWypKPM=; b=rM62ZcaEyu3bYuzGBEfYvjLr+2
+	qBW0qyBUXTxrwBY11jDr8xfUmL4cjsvhgBF8sKFdqcrtsVZjT6WuD7AxA5tkLCqMaX6ROEBSNBjCt
+	7t6NXeMF8TO0uxCEGcq+8Bm3WOFdAM5y0tJGUyYZvk2bR0nF74wKEIOKXdJ8SB9/Jh8yTCVPD3nYc
+	SIFvoh3+Di3ABZMSPgjaEmeRnNFEnO5Ix3QhXnF3YXH6MDQ5Uf78KBY9TAZBFTjVP/g/lgKUKuL/X
+	WR5BHwgMkpK8ozVNqYk8WttaHtYowdoVQBLOQAtn1MP6CgbL1F/Awe4XY6joJ0IO/Af5s/beuB0+r
+	p6p9eOTg==;
+Received: from [172.31.31.148] (helo=u09cd745991455d.lumleys.internal)
+	by desiato.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vvy3U-0000000D8Z2-3Xoc;
+	Fri, 27 Feb 2026 13:38:57 +0000
+Message-ID: <b167e3f69b49989dd069b32ddc41bc429abb1dba.camel@infradead.org>
+Subject: Re: [PATCH] PCI: Change PCIe capability registers offset to hex
+From: David Woodhouse <dwmw2@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: baruch@tkos.co.il, bhelgaas@google.com, linux-pci@vger.kernel.org, Alex
+ Williamson <alex@shazbot.org>
+Date: Fri, 27 Feb 2026 13:38:56 +0000
+In-Reply-To: <20260227124210.GA3891195@bhelgaas>
+References: <20260227124210.GA3891195@bhelgaas>
+Content-Type: multipart/signed; micalg="sha-256"; protocol="application/pkcs7-signature";
+	boundary="=-FUJAhzR/HTx1Fg8LDzET"
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500010.china.huawei.com (7.191.174.240) To
- dubpeml500005.china.huawei.com (7.214.145.207)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <dwmw2@infradead.org> by desiato.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, 25 Feb 2026 09:34:00 -0700
-Dave Jiang <dave.jiang@intel.com> wrote:
 
-> On 2/25/26 6:38 AM, Vidya Sagar wrote:
-> > The CXL specification (e.g., CXL r3.1 v1.0, sec 8.1.5.2) defines
-> > the "Unmask SBR" bit in the Port Control Extensions Register.
-> > When this bit is 0 (default), asserting the Secondary Bus Reset (SBR) bit
-> > in the Bridge Control register has no effect on the downstream bus.
-> > 
-> > Currently, the Linux PCI core checks this condition in
-> > pci_reset_bus_function(). If SBR is masked, it returns -ENOTTY during the
-> > execution of the reset. However, during the probe phase (when probe=true),
-> > the function currently returns 0. This 0 return value incorrectly signals
-> > to the PCI subsystem that SBR is a viable reset method for the device.
-> > 
-> > As a result, 'bus' is listed in the device's
-> > /sys/bus/pci/devices/.../reset_methods attribute, even though the hardware
-> > is incapable of performing it. If a user attempts to write bus to reset
-> > method or triggers a reset that falls back to SBR, the operation fails
-> > with: "bash: echo: write error: Inappropriate ioctl for device" error.
-> > 
-> > This patch modifies pci_reset_bus_function() to return -ENOTTY immediately
-> > if cxl_sbr_masked() is true, regardless of the probe argument. This
-> > ensures that 'bus' is not advertised in reset_methods when the hardware
-> > prevents it, improving clarity for users and aligning the sysfs capability
-> > report with actual hardware behavior.
-> > 
-> > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>  
-> 
-> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+--=-FUJAhzR/HTx1Fg8LDzET
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2026-02-27 at 06:42 -0600, Bjorn Helgaas wrote:
+> Ouch.=C2=A0 Unintentional and completely my mistake.=C2=A0 Did you trip o=
+ver
+> something, or find it by inspection?=C2=A0 If there's any kind of defect
+> signature, I'd like to include it in the commit log.
+
+It ended up breaking PCI capabilities in a VMM because the subsequent
+ones weren't DWORD-aligned, but nothing I can easily turn into a test
+case / signature.
+
+
+--=-FUJAhzR/HTx1Fg8LDzET
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCD9Aw
+ggSOMIIDdqADAgECAhAOmiw0ECVD4cWj5DqVrT9PMA0GCSqGSIb3DQEBCwUAMGUxCzAJBgNVBAYT
+AlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xJDAi
+BgNVBAMTG0RpZ2lDZXJ0IEFzc3VyZWQgSUQgUm9vdCBDQTAeFw0yNDAxMzAwMDAwMDBaFw0zMTEx
+MDkyMzU5NTlaMEExCzAJBgNVBAYTAkFVMRAwDgYDVQQKEwdWZXJva2V5MSAwHgYDVQQDExdWZXJv
+a2V5IFNlY3VyZSBFbWFpbCBHMjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMjvgLKj
+jfhCFqxYyRiW8g3cNFAvltDbK5AzcOaR7yVzVGadr4YcCVxjKrEJOgi7WEOH8rUgCNB5cTD8N/Et
+GfZI+LGqSv0YtNa54T9D1AWJy08ZKkWvfGGIXN9UFAPMJ6OLLH/UUEgFa+7KlrEvMUupDFGnnR06
+aDJAwtycb8yXtILj+TvfhLFhafxroXrflspavejQkEiHjNjtHnwbZ+o43g0/yxjwnarGI3kgcak7
+nnI9/8Lqpq79tLHYwLajotwLiGTB71AGN5xK+tzB+D4eN9lXayrjcszgbOv2ZCgzExQUAIt98mre
+8EggKs9mwtEuKAhYBIP/0K6WsoMnQCcCAwEAAaOCAVwwggFYMBIGA1UdEwEB/wQIMAYBAf8CAQAw
+HQYDVR0OBBYEFIlICOogTndrhuWByNfhjWSEf/xwMB8GA1UdIwQYMBaAFEXroq/0ksuCMS1Ri6en
+IZ3zbcgPMA4GA1UdDwEB/wQEAwIBhjAdBgNVHSUEFjAUBggrBgEFBQcDBAYIKwYBBQUHAwIweQYI
+KwYBBQUHAQEEbTBrMCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wQwYIKwYB
+BQUHMAKGN2h0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEFzc3VyZWRJRFJvb3RD
+QS5jcnQwRQYDVR0fBD4wPDA6oDigNoY0aHR0cDovL2NybDMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0
+QXNzdXJlZElEUm9vdENBLmNybDARBgNVHSAECjAIMAYGBFUdIAAwDQYJKoZIhvcNAQELBQADggEB
+ACiagCqvNVxOfSd0uYfJMiZsOEBXAKIR/kpqRp2YCfrP4Tz7fJogYN4fxNAw7iy/bPZcvpVCfe/H
+/CCcp3alXL0I8M/rnEnRlv8ItY4MEF+2T/MkdXI3u1vHy3ua8SxBM8eT9LBQokHZxGUX51cE0kwa
+uEOZ+PonVIOnMjuLp29kcNOVnzf8DGKiek+cT51FvGRjV6LbaxXOm2P47/aiaXrDD5O0RF5SiPo6
+xD1/ClkCETyyEAE5LRJlXtx288R598koyFcwCSXijeVcRvBB1cNOLEbg7RMSw1AGq14fNe2cH1HG
+W7xyduY/ydQt6gv5r21mDOQ5SaZSWC/ZRfLDuEYwggWbMIIEg6ADAgECAhAH5JEPagNRXYDiRPdl
+c1vgMA0GCSqGSIb3DQEBCwUAMEExCzAJBgNVBAYTAkFVMRAwDgYDVQQKEwdWZXJva2V5MSAwHgYD
+VQQDExdWZXJva2V5IFNlY3VyZSBFbWFpbCBHMjAeFw0yNDEyMzAwMDAwMDBaFw0yODAxMDQyMzU5
+NTlaMB4xHDAaBgNVBAMME2R3bXcyQGluZnJhZGVhZC5vcmcwggIiMA0GCSqGSIb3DQEBAQUAA4IC
+DwAwggIKAoICAQDali7HveR1thexYXx/W7oMk/3Wpyppl62zJ8+RmTQH4yZeYAS/SRV6zmfXlXaZ
+sNOE6emg8WXLRS6BA70liot+u0O0oPnIvnx+CsMH0PD4tCKSCsdp+XphIJ2zkC9S7/yHDYnqegqt
+w4smkqUqf0WX/ggH1Dckh0vHlpoS1OoxqUg+ocU6WCsnuz5q5rzFsHxhD1qGpgFdZEk2/c//ZvUN
+i12vPWipk8TcJwHw9zoZ/ZrVNybpMCC0THsJ/UEVyuyszPtNYeYZAhOJ41vav1RhZJzYan4a1gU0
+kKBPQklcpQEhq48woEu15isvwWh9/+5jjh0L+YNaN0I//nHSp6U9COUG9Z0cvnO8FM6PTqsnSbcc
+0j+GchwOHRC7aP2t5v2stVx3KbptaYEzi4MQHxm/0+HQpMEVLLUiizJqS4PWPU6zfQTOMZ9uLQRR
+ci+c5xhtMEBszlQDOvEQcyEG+hc++fH47K+MmZz21bFNfoBxLP6bjR6xtPXtREF5lLXxp+CJ6KKS
+blPKeVRg/UtyJHeFKAZXO8Zeco7TZUMVHmK0ZZ1EpnZbnAhKE19Z+FJrQPQrlR0gO3lBzuyPPArV
+hvWxjlO7S4DmaEhLzarWi/ze7EGwWSuI2eEa/8zU0INUsGI4ywe7vepQz7IqaAovAX0d+f1YjbmC
+VsAwjhLmveFjNwIDAQABo4IBsDCCAawwHwYDVR0jBBgwFoAUiUgI6iBOd2uG5YHI1+GNZIR//HAw
+HQYDVR0OBBYEFFxiGptwbOfWOtMk5loHw7uqWUOnMDAGA1UdEQQpMCeBE2R3bXcyQGluZnJhZGVh
+ZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2UwFAYDVR0gBA0wCzAJBgdngQwBBQEBMA4GA1UdDwEB/wQE
+AwIF4DAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwewYDVR0fBHQwcjA3oDWgM4YxaHR0
+cDovL2NybDMuZGlnaWNlcnQuY29tL1Zlcm9rZXlTZWN1cmVFbWFpbEcyLmNybDA3oDWgM4YxaHR0
+cDovL2NybDQuZGlnaWNlcnQuY29tL1Zlcm9rZXlTZWN1cmVFbWFpbEcyLmNybDB2BggrBgEFBQcB
+AQRqMGgwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBABggrBgEFBQcwAoY0
+aHR0cDovL2NhY2VydHMuZGlnaWNlcnQuY29tL1Zlcm9rZXlTZWN1cmVFbWFpbEcyLmNydDANBgkq
+hkiG9w0BAQsFAAOCAQEAQXc4FPiPLRnTDvmOABEzkIumojfZAe5SlnuQoeFUfi+LsWCKiB8Uextv
+iBAvboKhLuN6eG/NC6WOzOCppn4mkQxRkOdLNThwMHW0d19jrZFEKtEG/epZ/hw/DdScTuZ2m7im
+8ppItAT6GXD3aPhXkXnJpC/zTs85uNSQR64cEcBFjjoQDuSsTeJ5DAWf8EMyhMuD8pcbqx5kRvyt
+JPsWBQzv1Dsdv2LDPLNd/JUKhHSgr7nbUr4+aAP2PHTXGcEBh8lTeYea9p4d5k969pe0OHYMV5aL
+xERqTagmSetuIwolkAuBCzA9vulg8Y49Nz2zrpUGfKGOD0FMqenYxdJHgDCCBZswggSDoAMCAQIC
+EAfkkQ9qA1FdgOJE92VzW+AwDQYJKoZIhvcNAQELBQAwQTELMAkGA1UEBhMCQVUxEDAOBgNVBAoT
+B1Zlcm9rZXkxIDAeBgNVBAMTF1Zlcm9rZXkgU2VjdXJlIEVtYWlsIEcyMB4XDTI0MTIzMDAwMDAw
+MFoXDTI4MDEwNDIzNTk1OVowHjEcMBoGA1UEAwwTZHdtdzJAaW5mcmFkZWFkLm9yZzCCAiIwDQYJ
+KoZIhvcNAQEBBQADggIPADCCAgoCggIBANqWLse95HW2F7FhfH9bugyT/danKmmXrbMnz5GZNAfj
+Jl5gBL9JFXrOZ9eVdpmw04Tp6aDxZctFLoEDvSWKi367Q7Sg+ci+fH4KwwfQ8Pi0IpIKx2n5emEg
+nbOQL1Lv/IcNiep6Cq3DiyaSpSp/RZf+CAfUNySHS8eWmhLU6jGpSD6hxTpYKye7PmrmvMWwfGEP
+WoamAV1kSTb9z/9m9Q2LXa89aKmTxNwnAfD3Ohn9mtU3JukwILRMewn9QRXK7KzM+01h5hkCE4nj
+W9q/VGFknNhqfhrWBTSQoE9CSVylASGrjzCgS7XmKy/BaH3/7mOOHQv5g1o3Qj/+cdKnpT0I5Qb1
+nRy+c7wUzo9OqydJtxzSP4ZyHA4dELto/a3m/ay1XHcpum1pgTOLgxAfGb/T4dCkwRUstSKLMmpL
+g9Y9TrN9BM4xn24tBFFyL5znGG0wQGzOVAM68RBzIQb6Fz758fjsr4yZnPbVsU1+gHEs/puNHrG0
+9e1EQXmUtfGn4InoopJuU8p5VGD9S3Ikd4UoBlc7xl5yjtNlQxUeYrRlnUSmdlucCEoTX1n4UmtA
+9CuVHSA7eUHO7I88CtWG9bGOU7tLgOZoSEvNqtaL/N7sQbBZK4jZ4Rr/zNTQg1SwYjjLB7u96lDP
+sipoCi8BfR35/ViNuYJWwDCOEua94WM3AgMBAAGjggGwMIIBrDAfBgNVHSMEGDAWgBSJSAjqIE53
+a4blgcjX4Y1khH/8cDAdBgNVHQ4EFgQUXGIam3Bs59Y60yTmWgfDu6pZQ6cwMAYDVR0RBCkwJ4ET
+ZHdtdzJAaW5mcmFkZWFkLm9yZ4EQZGF2aWRAd29vZGhvdS5zZTAUBgNVHSAEDTALMAkGB2eBDAEF
+AQEwDgYDVR0PAQH/BAQDAgXgMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDB7BgNVHR8E
+dDByMDegNaAzhjFodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vVmVyb2tleVNlY3VyZUVtYWlsRzIu
+Y3JsMDegNaAzhjFodHRwOi8vY3JsNC5kaWdpY2VydC5jb20vVmVyb2tleVNlY3VyZUVtYWlsRzIu
+Y3JsMHYGCCsGAQUFBwEBBGowaDAkBggrBgEFBQcwAYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29t
+MEAGCCsGAQUFBzAChjRodHRwOi8vY2FjZXJ0cy5kaWdpY2VydC5jb20vVmVyb2tleVNlY3VyZUVt
+YWlsRzIuY3J0MA0GCSqGSIb3DQEBCwUAA4IBAQBBdzgU+I8tGdMO+Y4AETOQi6aiN9kB7lKWe5Ch
+4VR+L4uxYIqIHxR7G2+IEC9ugqEu43p4b80LpY7M4KmmfiaRDFGQ50s1OHAwdbR3X2OtkUQq0Qb9
+6ln+HD8N1JxO5nabuKbymki0BPoZcPdo+FeRecmkL/NOzzm41JBHrhwRwEWOOhAO5KxN4nkMBZ/w
+QzKEy4PylxurHmRG/K0k+xYFDO/UOx2/YsM8s138lQqEdKCvudtSvj5oA/Y8dNcZwQGHyVN5h5r2
+nh3mT3r2l7Q4dgxXlovERGpNqCZJ624jCiWQC4ELMD2+6WDxjj03PbOulQZ8oY4PQUyp6djF0keA
+MYIDuzCCA7cCAQEwVTBBMQswCQYDVQQGEwJBVTEQMA4GA1UEChMHVmVyb2tleTEgMB4GA1UEAxMX
+VmVyb2tleSBTZWN1cmUgRW1haWwgRzICEAfkkQ9qA1FdgOJE92VzW+AwDQYJYIZIAWUDBAIBBQCg
+ggE3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI2MDIyNzEzMzg1
+NlowLwYJKoZIhvcNAQkEMSIEIAgSLgC2/8fCCxv/h6DU/3DlSyJIeFw6S3gAZpjDkj4BMGQGCSsG
+AQQBgjcQBDFXMFUwQTELMAkGA1UEBhMCQVUxEDAOBgNVBAoTB1Zlcm9rZXkxIDAeBgNVBAMTF1Zl
+cm9rZXkgU2VjdXJlIEVtYWlsIEcyAhAH5JEPagNRXYDiRPdlc1vgMGYGCyqGSIb3DQEJEAILMVeg
+VTBBMQswCQYDVQQGEwJBVTEQMA4GA1UEChMHVmVyb2tleTEgMB4GA1UEAxMXVmVyb2tleSBTZWN1
+cmUgRW1haWwgRzICEAfkkQ9qA1FdgOJE92VzW+AwDQYJKoZIhvcNAQEBBQAEggIATswhVjPEYOFH
+fdJQn7nPgHenUaAtrIeJWeOiaQ+1WgP30IpKY4Zur5zaC9thX8GCMgXPo7RcfCDhYWoVuiS1lTdS
+27VcAa+UebUC8kqWnoQQlUPRhAqpmzP0bqONZNmKYS9xmtffPGgigw8uCITNGL295A79AxYjOeyX
+MC3AYcLJ7aIG4sXqsQBs8CbFcE7M13L2+CozmtqbcFJO1N/z9fQ5SgF+NtrY2VEfBGLYbcblmAd1
+/JraznJ/JiXpoybTw8X0hOTgp725kTrUhrT5HvmrewoOSJS3/c6dv1kP031jbAJvuT4bLfOznSvk
+jlcRbm8CQYROPQBIJt8PnTJhwpg0ISxe2hK5O8MnjwGg/+UWfGEr1lzqCgF0Q5UsmcvthqjtFBgp
+4jytUuPF7AqDxpz5Ix456orsAK7S6fstr4cxqZhaFwd+J0BV2+ou5dH5eXNZDg14IJk13mR66zGq
+mwlIVZ7RBEBRZ6D8qduzyUu+UgueeiGwVBZ+QU9AbbI4oHkx7VMVWQPfJ8oBKql2DXDPkQ/ybhlg
+cFMYvaJSImIv2WrGSTmSO3BsDXjlix5OZbBqt1aCslcoU2bzvFPHeS2zstUo+8TlqQEgXd2hewQW
+lnH92DbYRxNWED2eE3NskmbVSAtyqPdmhYEVmKAJoHc1tUS4x2bpLORzdc5m8c4AAAAAAAA=
+
+
+--=-FUJAhzR/HTx1Fg8LDzET--
