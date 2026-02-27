@@ -1,255 +1,90 @@
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 201A640FDB1;
-	Fri, 27 Feb 2026 15:34:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55DD843E48D;
+	Fri, 27 Feb 2026 15:34:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772206442; cv=none; b=q9YuOfqIYn9pgY+rO77fF3QeBHaXX8ksIl0FlhyICT2f1kvtJPGwoyHpwNo6FBsS+EHsLagkCeIt4NVsvBwtuNi3DAU0A7cV6QrYwAOJGMZnZMg34FW0L7WIUAVoswFJhXEYXZ8dkuOi/ykKXlHdD7OTNqnVQkul96sZbxtR0f4=
+	t=1772206449; cv=none; b=t87q/KplAPNVyGUdhxL7ZUbcIVv3CHMbwJRYgJyHr1ordtTLHepJInkQGkLsBzDbEUYFlXsorD9ZvzIrBuEUUU2wDZ+T1JzX0gjS4+mU6dEopmYKMd+Fx81+BiOGiANbn6f8UI6L+LY0Uajuu4MhIKEcqIGkeBOkS1zZOWMskAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772206442; c=relaxed/simple;
-	bh=IYK583hpYdhb6bvSPAzRjBSqd5GX6+iqbZoLi+IF8dU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=krb7Nujzik33Sq7GOM7pNAJGd3RiLYXMEtPfbS7ZvtM6f4VM349w6xVIpvwa7ra4hRiNqBzFRUR3IXqEyv0yfNMhGTlW+8MkRXaVQfotRp/yQMXzJPiGHEnUYDC/Tgmrb1ziUld4hD+Y0jJ5UjH1BeHkBQFkDfy22HJiHH0id5w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-X-CSE-ConnectionGUID: mwl+V5+zTm2CbRy79+8/vw==
-X-CSE-MsgGUID: sqpzTWN9SXi3m6HyFvn+Tg==
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 28 Feb 2026 00:34:00 +0900
-Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.57])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 77C854006C61;
-	Sat, 28 Feb 2026 00:33:55 +0900 (JST)
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: claudiu.beznea.uj@bp.renesas.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	geert+renesas@glider.be,
-	krzk+dt@kernel.org
-Cc: robh@kernel.org,
-	bhelgaas@google.com,
-	conor+dt@kernel.org,
-	magnus.damm@gmail.com,
-	biju.das.jz@bp.renesas.com,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-clk@vger.kernel.org,
-	john.madieu@gmail.com,
-	John Madieu <john.madieu.xa@bp.renesas.com>
-Subject: [PATCH v7 09/15] PCI: rzg3s-host: Add SoC-specific configuration and initialization callbacks
-Date: Fri, 27 Feb 2026 16:32:29 +0100
-Message-ID: <20260227153236.55988-10-john.madieu.xa@bp.renesas.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
-References: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
+	s=arc-20240116; t=1772206449; c=relaxed/simple;
+	bh=xA4eq1B4WHkeDiKdaYvOGPnwQRl6UE44kUbEbocjO44=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y3kflO1s1PzUoggaSQVtFURdsncfwQSRP4UlKHVr8P57/mOYDz9AKyCcYqCkPXLA70lD1iSmBJtLeHns3xNYorluHKRflj6kA12eLvMNFt5FPmEEkP5+X3GRQvJytp2vVCWBVUBrLJ6f15A0/p9BnJLHIjp3LDft5aIywPwctfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BMiFut1A; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BMiFut1A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 304ACC116C6;
+	Fri, 27 Feb 2026 15:34:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772206448;
+	bh=xA4eq1B4WHkeDiKdaYvOGPnwQRl6UE44kUbEbocjO44=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BMiFut1AAajy3447HZ0FGatLcDBQjA21nQ/vmhIP1fZ8/bW0gH6pUI3zBKGlKTbuM
+	 5uNhYBTuVsGtIjVf8itVzx42ISHdXLvJkYEN9zbmWgcvVM4BIYHWqrKT5UgeptieSy
+	 j3yBRAcvRl3JYEhgkR6H2s6kVL9tz9stZKlluFCeJmv6ETXqBOFmV8vY7qB7aIvKJg
+	 F5S/RqTRGK4Nniyfe+anUtc0HvftdQZtrBvgT9Z3f0SOZovdLPW4GWKFFZSKw+HFHR
+	 XyfUO7GTYVqenFvDZiSXD5MBPTFKxi7JuDXxkGSIE1VnD42DyafIEXIrO4ZwgLWqs0
+	 Q6AhV8s5bMwWg==
+Date: Fri, 27 Feb 2026 16:34:02 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Koichiro Den <den@valinux.co.jp>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
+	kishon@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com,
+	allenbh@gmail.com, Frank.Li@nxp.com, shinichiro.kawasaki@wdc.com,
+	christian.bruel@foss.st.com, mmaddireddy@nvidia.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ntb@lists.linux.dev
+Subject: Re: [PATCH v9 7/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell
+ fallback
+Message-ID: <aaG5asXVV5sxRbnQ@ryzen>
+References: <20260219081318.4156901-1-den@valinux.co.jp>
+ <20260219081318.4156901-8-den@valinux.co.jp>
+ <u5q2ntwbjlqweodsipkkxcdtyt4zikfbyvriygsi3a3asbujc5@rgpblec4nwa2>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <u5q2ntwbjlqweodsipkkxcdtyt4zikfbyvriygsi3a3asbujc5@rgpblec4nwa2>
 
-Add optional cfg_pre_init, cfg_post_init, and cfg_deinit callbacks
-to handle SoC-specific configuration methods. While RZ/G3S uses the Linux
-reset framework with dedicated reset lines, other SoC variants like RZ/G3E
-control configuration resets through PCIe AXI registers.
+On Sat, Feb 21, 2026 at 02:42:35AM +0900, Koichiro Den wrote:
+> On second thought, I'm wondering whether it makes sense to handle the case where
+> the embedded doorbell target resides behind an IOMMU in this series.
+> 
+> In v9, we simply expose the raw physical address without establishing an IOMMU
+> mapping. When the EPC parent device is attached to an IOMMU domain, a Host->EP
+> MMIO write through the BAR window may result in an IOMMU fault.
+> 
+> Initially, I planned to submit IOMMU support separately as a follow-up series
+> once this series is accepted, to avoid making this series too large [1].
+>
+> Niklas, any comments would be appreciated.
 
-As Linux reset bulk API gracefully handles optional NULL reset lines
-(num_cfg_resets = 0 for RZ/G3E), the driver continues to use the standard
-reset framework when reset lines are available, while custom callbacks
-are only invoked when provided.
+These patches are for NTB/vNTB:
 
-This provides a balanced pattern where:
-- RZ/G3S: Uses callbacks that fall back to the
-  reset framework
-- RZ/G3E: Sets num_cfg_resets=0, provides
-  cfg_pre_init/cfg_post_init/cfg_deinit
+> [1] Supporting such an IOMMU-backed case would likely require additional
+>     patches for vNTB + ntb_transport to demonstrate usability, such as:
+>     https://lore.kernel.org/all/20260118135440.1958279-12-den@valinux.co.jp/
+>     https://lore.kernel.org/all/20260118135440.1958279-16-den@valinux.co.jp/
+>     https://lore.kernel.org/all/20260118135440.1958279-19-den@valinux.co.jp/
 
-Add cfg_pre_init, cfg_post_init, and cfg_deinit callbacks to support
-custom configuration mechanism in preparation to RZ/G3E PCIe support.
+If the diff you pasted above is all you need for pci-epf-test to pass the
+doorbell test case when running against a PCI endpoint with IOMMU enabled,
+then I suggest you just send a v10 with those changes included, without
+any additional dependencies.
 
-Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
----
+I understand that you would need additional dependencies for vNTB to be able
+to use eDMA doorbell on a PCI endpoint with IOMMU enabled.
 
-Changes:
+Perhaps, drop the vNTB changes from this series, focus only on pci-epf-test,
+get this series merged, and then submit an follow up series that adds eDMA
+doorbells with IOMMU support for vNTB?
 
-v7:
- - Fixed commit message: clarified that RZ/G3S callbacks fall
-   back to the reset framework
- - Fixed checkpatch 75-char line length warning in commit
-   description
 
-v6:
-  - Fix config_reinit error path in suspend_noirq: call config_pre_init
-    before config_post_init as spotted by Claudiu.
-
-v5:
-  - Reorder got labels as per Claudiu's requirements
-
-v4: No changes
-v3: No changes
-
-v2:
-  - Renamed callbacks as per Claudiu's comments
-  - Reworded goto labels to be consistents with callbacks
-
- drivers/pci/controller/pcie-rzg3s-host.c | 61 +++++++++++++++++-------
- 1 file changed, 44 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index c741d5ac2594..f8f03b669153 100644
---- a/drivers/pci/controller/pcie-rzg3s-host.c
-+++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -233,6 +233,9 @@ struct rzg3s_pcie_host;
- /**
-  * struct rzg3s_pcie_soc_data - SoC specific data
-  * @init_phy: PHY initialization function
-+ * @config_pre_init: Optional callback for SoC-specific pre-configuration
-+ * @config_post_init: Callback for SoC-specific post-configuration
-+ * @config_deinit: Callback for SoC-specific de-initialization
-  * @power_resets: array with the resets that need to be de-asserted after
-  *                power-on
-  * @cfg_resets: array with the resets that need to be de-asserted after
-@@ -243,6 +246,9 @@ struct rzg3s_pcie_host;
-  */
- struct rzg3s_pcie_soc_data {
- 	int (*init_phy)(struct rzg3s_pcie_host *host);
-+	void (*config_pre_init)(struct rzg3s_pcie_host *host);
-+	int (*config_post_init)(struct rzg3s_pcie_host *host);
-+	int (*config_deinit)(struct rzg3s_pcie_host *host);
- 	const char * const *power_resets;
- 	const char * const *cfg_resets;
- 	struct rzg3s_sysc_info sysc_info;
-@@ -1109,6 +1115,18 @@ static int rzg3s_pcie_config_init(struct rzg3s_pcie_host *host)
- 	return 0;
- }
- 
-+static int rzg3s_pcie_config_post_init(struct rzg3s_pcie_host *host)
-+{
-+	return reset_control_bulk_deassert(host->data->num_cfg_resets,
-+					   host->cfg_resets);
-+}
-+
-+static int rzg3s_pcie_config_deinit(struct rzg3s_pcie_host *host)
-+{
-+	return reset_control_bulk_assert(host->data->num_cfg_resets,
-+					 host->cfg_resets);
-+}
-+
- static void rzg3s_pcie_irq_init(struct rzg3s_pcie_host *host)
- {
- 	/*
-@@ -1256,22 +1274,26 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
- 	u32 val;
- 	int ret;
- 
-+	/* SoC-specific pre-configuration */
-+	if (host->data->config_pre_init)
-+		host->data->config_pre_init(host);
-+
- 	/* Initialize the PCIe related registers */
- 	ret = rzg3s_pcie_config_init(host);
- 	if (ret)
--		return ret;
-+		goto config_deinit;
- 
- 	ret = rzg3s_pcie_host_init_port(host);
- 	if (ret)
--		return ret;
-+		goto config_deinit;
- 
- 	/* Initialize the interrupts */
- 	rzg3s_pcie_irq_init(host);
- 
--	ret = reset_control_bulk_deassert(host->data->num_cfg_resets,
--					  host->cfg_resets);
-+	/* SoC-specific post-configuration */
-+	ret = host->data->config_post_init(host);
- 	if (ret)
--		goto disable_port_refclk;
-+		goto config_deinit_and_refclk;
- 
- 	/* Wait for link up */
- 	ret = readl_poll_timeout(host->axi + RZG3S_PCI_PCSTAT1, val,
-@@ -1280,18 +1302,20 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
- 				 PCIE_LINK_WAIT_SLEEP_MS * MILLI *
- 				 PCIE_LINK_WAIT_MAX_RETRIES);
- 	if (ret)
--		goto cfg_resets_deassert;
-+		goto config_deinit_post;
- 
- 	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
- 	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
- 
- 	return 0;
- 
--cfg_resets_deassert:
--	reset_control_bulk_assert(host->data->num_cfg_resets,
--				  host->cfg_resets);
--disable_port_refclk:
-+config_deinit_post:
-+	host->data->config_deinit(host);
-+config_deinit_and_refclk:
- 	clk_disable_unprepare(host->port.refclk);
-+config_deinit:
-+	if (host->data->config_pre_init)
-+		host->data->config_deinit(host);
- 	return ret;
- }
- 
-@@ -1652,7 +1676,7 @@ static int rzg3s_pcie_probe(struct platform_device *pdev)
- 
- host_probe_teardown:
- 	rzg3s_pcie_teardown_irqdomain(host);
--	reset_control_bulk_assert(host->data->num_cfg_resets, host->cfg_resets);
-+	host->data->config_deinit(host);
- rpm_put:
- 	pm_runtime_put_sync(dev);
- rpm_disable:
-@@ -1685,15 +1709,15 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
- 
- 	clk_disable_unprepare(port->refclk);
- 
--	ret = reset_control_bulk_assert(data->num_cfg_resets,
--					host->cfg_resets);
-+	/* SoC-specific de-initialization */
-+	ret = data->config_deinit(host);
- 	if (ret)
- 		goto refclk_restore;
- 
- 	ret = reset_control_bulk_assert(data->num_power_resets,
- 					host->power_resets);
- 	if (ret)
--		goto cfg_resets_restore;
-+		goto config_reinit;
- 
- 	ret = rzg3s_sysc_config_func(sysc, RZG3S_SYSC_FUNC_ID_RST_RSM_B, 0);
- 	if (ret)
-@@ -1705,9 +1729,10 @@ static int rzg3s_pcie_suspend_noirq(struct device *dev)
- power_resets_restore:
- 	reset_control_bulk_deassert(data->num_power_resets,
- 				    host->power_resets);
--cfg_resets_restore:
--	reset_control_bulk_deassert(data->num_cfg_resets,
--				    host->cfg_resets);
-+config_reinit:
-+	if (data->config_pre_init)
-+		data->config_pre_init(host);
-+	data->config_post_init(host);
- refclk_restore:
- 	clk_prepare_enable(port->refclk);
- 	pm_runtime_resume_and_get(dev);
-@@ -1772,6 +1797,8 @@ static const struct rzg3s_pcie_soc_data rzg3s_soc_data = {
- 	.num_power_resets = ARRAY_SIZE(rzg3s_soc_power_resets),
- 	.cfg_resets = rzg3s_soc_cfg_resets,
- 	.num_cfg_resets = ARRAY_SIZE(rzg3s_soc_cfg_resets),
-+	.config_post_init = rzg3s_pcie_config_post_init,
-+	.config_deinit = rzg3s_pcie_config_deinit,
- 	.init_phy = rzg3s_soc_pcie_init_phy,
- 	.sysc_info = {
- 		.functions = {
--- 
-2.25.1
-
+Kind regards,
+Niklas
