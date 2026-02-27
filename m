@@ -1,75 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5DE41C2E4;
-	Fri, 27 Feb 2026 15:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 51F23329E66;
+	Fri, 27 Feb 2026 15:33:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772204788; cv=none; b=QKrNo2jL5pqyVEK/p2xOJxmPVJX1ICfHAnP0meumpxcPkCo2xAs/r3+82huOAmtdZSVgF8Ti0XWDkYb2/i+5HZMbudKb12nHmS3cP4GyhyfxjSCSt3fnVY3Ow4oXVxKvFc9sFXwvngxq1cz9LhjaZKS6cRvAWoRG0G4SHUA/xIY=
+	t=1772206397; cv=none; b=k5YDfkw3XYEZSwZccFVAPps5/tg2ubCLDnRKrqevWLxsFzs2WNf+C2Sk53ReaBlThU2hzkIOuyA8gkxhPIToKABm8CD19mp8QpwsSHuhTevm0bQ6D1wQKUY41DzcYOuw+MjTaySgV3MoEYlQRE3Hs7/qk22LkToV7N0e1RO/lro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772204788; c=relaxed/simple;
-	bh=aNAnNa3SKgbiJYH2fguLKoHPnuJ+A4SqSTlZsNZrSlo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lcO+b/vZxLCwbbpthBspO1DEYpDD2bAoHI4SJDUj6SWtUjALrbTeWVVGD8vU85zvTvxMbzabGW6tNf0VtUfYeTq/ZX5JLBgEvby6wTCnfkd74HiYsLU18mMsPSc5shqbqeSCiOAQm+6aJj8/ljNA0Dzy722wtMWKhwEXdpw7FwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JGdQhWRK; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JGdQhWRK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B29EC116C6;
-	Fri, 27 Feb 2026 15:06:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772204787;
-	bh=aNAnNa3SKgbiJYH2fguLKoHPnuJ+A4SqSTlZsNZrSlo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JGdQhWRKnQzmvvo8rshWrzSkNLsAia6Uiv51/sHhh0r99KOHgr0oHoi/0IpveUFyN
-	 7hzdXjSwaGitiKChulX+AqiXZ+Ytii6cUy9bVZYOeP3qQwtRQMc55ibsNij2I94jG1
-	 GSBN48/uKsT42jRZmIupy1tx9JAS9Bz3qIW6dvexaRLC5qDAEYuZpGUOi/pWjqWjBG
-	 IqLqhzn9EfgMJXievTans3e9Sat+a86NJQ9+9+7diFRNik499YxpcTvKQIgtovRTZH
-	 GBxPtnwSoEDcoyYM3AcUhZbFY67Lng03jyjdwL+/VYggp6CCVynyLCUtsnYtjX3cAV
-	 kry3gNRL3PeWA==
-Date: Fri, 27 Feb 2026 16:06:21 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	kishon@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com,
-	allenbh@gmail.com, Frank.Li@nxp.com, shinichiro.kawasaki@wdc.com,
-	christian.bruel@foss.st.com, mmaddireddy@nvidia.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ntb@lists.linux.dev
-Subject: Re: [PATCH v9 0/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell
- fallback
-Message-ID: <aaGy7aBtg_wcjedb@ryzen>
-References: <20260219081318.4156901-1-den@valinux.co.jp>
+	s=arc-20240116; t=1772206397; c=relaxed/simple;
+	bh=QaJZRqfifERunmmy3Bnm4as+wgmw3DjANJljxK2kohE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f7IVzL9KCe09rG+neG39zJ1V6NxSE7vlhs7+Rl/U2to5gB3/1TvDHwxMvmK1GLm8wNQINtS/hXxSwGmCbtCXFJ4ftqNkI3Z42RXgazT64lFa970Xok+McOCaRdn4Wb+XfNunvo22onC5mJ7hLFZT4rO2uo3bsG6cm57V7U/oX7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+X-CSE-ConnectionGUID: kF/8+ZY6SSGp2tZAvs3QnA==
+X-CSE-MsgGUID: nJ4LKzKZQyiqNN7x1HbM0A==
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie5.idc.renesas.com with ESMTP; 28 Feb 2026 00:33:07 +0900
+Received: from ubuntu.adwin.renesas.com (unknown [10.226.92.57])
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 41F614007132;
+	Sat, 28 Feb 2026 00:33:01 +0900 (JST)
+From: John Madieu <john.madieu.xa@bp.renesas.com>
+To: claudiu.beznea.uj@bp.renesas.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	geert+renesas@glider.be,
+	krzk+dt@kernel.org
+Cc: robh@kernel.org,
+	bhelgaas@google.com,
+	conor+dt@kernel.org,
+	magnus.damm@gmail.com,
+	biju.das.jz@bp.renesas.com,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-clk@vger.kernel.org,
+	john.madieu@gmail.com,
+	John Madieu <john.madieu.xa@bp.renesas.com>
+Subject: [PATCH v7 00/15] PCI: renesas: Add RZ/G3E PCIe controller support
+Date: Fri, 27 Feb 2026 16:32:20 +0100
+Message-ID: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260219081318.4156901-1-den@valinux.co.jp>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Feb 19, 2026 at 05:13:11PM +0900, Koichiro Den wrote:
+The Renesas RZ/G3E SoC features a PCIe controller that shares similarities with
+the existing RZ/G3S PCIe controller, but with several key differences.
+This series adds support for the RZ/G3E PCIe controller by extending the existing
+RZ/G3S driver and device tree bindings.
 
-(snip)
+Key differences between RZ/G3E and RZ/G3S PCIe controllers:
 
-> Tested on
-> ---------
-> 
-> I re-tested the embedded (DMA) doorbell fallback path (via pci-epf-test)
-> on R-Car Spider boards (with this v9 series):
-> 
->   $ ./pci_endpoint_test -t DOORBELL_TEST
->   TAP version 13
->   1..1
->   # Starting 1 tests from 1 test cases.
->   #  RUN           pcie_ep_doorbell.DOORBELL_TEST ...
->   #            OK  pcie_ep_doorbell.DOORBELL_TEST
->   ok 1 pcie_ep_doorbell.DOORBELL_TEST
->   # PASSED: 1 / 1 tests passed.
->   # Totals: pass:1 fail:0 xfail:0 xpass:0 skip:0 error:0
-> 
+Link Speed Support:
+ - RZ/G3E: Supports PCIe Gen3 (8.0 GT/s) alongside Gen2 (5.0 GT/s)
+ - RZ/G3S: Supports PCIe Gen2 (5.0 GT/s) only
 
-For the series:
-Tested-by: Niklas Cassel <cassel@kernel.org>
+Reset Control:
+ - RZ/G3E: Uses register-based reset control mechanism
+ - RZ/G3S: Uses exclusively external reset control signals
+
+Inbound Window Configuration:
+ - RZ/G3E: Requires precise power-of-2 window coverage with strict address
+   alignment constraints. Non-power-of-2 memory regions must be split into
+   multiple windows to avoid over-mapping, ensuring proper hardware address
+   decoding for DMA operations.
+ - RZ/G3S: Uses a simpler approach that rounds up to the next power-of-2,
+   creating single larger windows. The hardware tolerates over-mapped regions.
+
+Class/Revision IDs:
+ - RZ/G3E: Requires explicit setting of class/revision values
+ - RZ/G3S: Has default values in hardware
+
+Clock Naming:
+ - RZ/G3E: Uses "clkpmu" clock for power management
+ - RZ/G3S: Uses "clkl1pm" PM control clock while CLKREQ_B is deasserting
+
+Phy Settings:
+ - RZ/G3E: Does not need PHY settings as it works with default hw values
+ - RZ/G3S: Requires explicit PHY settings
+
+This series extends the existing driver to detect the SoC type from the device
+tree compatible string and configure the controller appropriately. The updates
+are minimal and focused on the hardware-specific differences while keeping the
+common code paths unified.
+
+Changes:
+
+v7:
+ - Removed former patch [04/16] adding support for init[off|asserted] clocks
+   and resets as these steps are not required anymore
+ - Renamed RZG3E_PCI_RESET* register defines to RZG3S_PCI_RESET* for
+   consistency, as upcoming SoCs (RZ/V2H, RZ/T2N, RZ/N2H) share these
+   registers
+ - Dropped some useless comments and reduced verbose descriptions to
+   concise forms 
+ - Unified function naming: rzg3s_pcie_config_{post_init,deinit}() and
+   rzg3e_pcie_config_{pre_init,post_init,deinit}()
+ - Used local mask variables in rzg3e_pcie_config_{pre_init,post_init}()
+   for compactness within 80-char line limit
+ - Fixed resume_noirq: reordered MODE before RST_RSM_B to match probe
+   sequence, fixing error path handling
+ - Fixed checkpatch commit message line length warnings
+
+v6:
+ - Replaced rzg3s_sysc_config() with enum-based rzg3s_sysc_config_func()
+   as suggested by Claudiu, dropping the -1 skip pattern
+ - Introduced enum rzg3s_sysc_func_id and array-based SYSC function
+   descriptors in patch 08
+ - Used regmap_update_bits() consistently for all SYSC accesses
+ - Fixed config_reinit error path in suspend_noirq: call config_pre_init
+   before config_post_init as spotted by Claudiu
+ - Fixed double config_deinit in rzg3s_pcie_host_init() error path by
+   separating config_deinit_post into a non-fall-through path
+ - Shortened comments as per Claudiu's suggestions
+ - Reordered patchset, moving v5's patch 09/16 to 02/16 and added Fixes tag 
+
+v5:
+ - Introduced new patch to reorder reset handling
+ - Introduced rzg3s_sysc_config() helper to handle SYS config
+ - Collected Tags on documentation
+
+v4:
+ - Collected Ab tag
+ - Fixed binding clock name constraint
+
+v3:
+ - Removed extra MaxItems in binding causing warnings
+ - Fix potential crash for non-initialized rcdev in CPG driver
+ - Fix binding contraints replacing 'description' with 'const' as per
+   Geert and Rob's comment
+
+v2:
+ - Address Bjorn typo comments
+ - Address Claidiu's comment on stylish
+ - Use single inbound-window-configuration function for both G3E/G3S
+ - Refactor goto laballing as per Claudiu's comments
+ - Update bindings and reused G3S's interrupt ordering
+   * This involves reordering interrupts in dt
+ - Remove Board-specific PCIe dma-range.
+
+John Madieu (15):
+  PCI: rzg3s-host: Fix reset handling in probe error path
+  PCI: rzg3s-host: Reorder reset assertion during suspend
+  PCI: renesas: rzg3s: Rework inbound window algorithm for multi-SoC
+    support
+  clk: renesas: r9a09g047: Add PCIe clocks and reset
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Fix naming properties
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Document RZ/G3E SoC
+  PCI: rzg3s-host: Make SYSC register offsets SoC-specific
+  PCI: rzg3s-host: Make configuration reset lines optional
+  PCI: rzg3s-host: Add SoC-specific configuration and initialization
+    callbacks
+  PCI: rzg3s-host: Explicitly set class code for RZ/G3E compatibility
+  PCI: rzg3s-host: Add PCIe Gen3 (8.0 GT/s) link speed support
+  PCI: rzg3s-host: Add support for RZ/G3E PCIe controller
+  arm64: dts: renesas: r9a09g047: Add PCIe node
+  arm64: dts: renesas: r9a09g047e57-smarc-som: Add PCIe reference clock
+  arm64: dts: renesas: r9a09g047e57-smarc: Enable PCIe
+
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 121 ++++--
+ arch/arm64/boot/dts/renesas/r9a09g047.dtsi    |  69 ++++
+ .../boot/dts/renesas/r9a09g047e57-smarc.dts   |  16 +
+ .../boot/dts/renesas/renesas-smarc2.dtsi      |   4 +
+ .../boot/dts/renesas/rzg3e-smarc-som.dtsi     |  11 +
+ drivers/clk/renesas/r9a09g047-cpg.c           |   5 +
+ drivers/pci/controller/pcie-rzg3s-host.c      | 362 ++++++++++++++----
+ 7 files changed, 478 insertions(+), 110 deletions(-)
+
+-- 
+2.25.1
+
