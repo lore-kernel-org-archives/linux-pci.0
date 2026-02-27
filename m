@@ -1,353 +1,291 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010021.outbound.protection.outlook.com [52.101.229.21])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8109733A030;
-	Fri, 27 Feb 2026 11:15:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.21
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772190938; cv=fail; b=mNsmVZwkRFxTq5wFfYqiselcr2EyYusn5Y628an9bf7w/h8trbHlDKGwGpYQK1Tms7qlSnY4R3x026vrNcaevTG0wl6qZOr53+yhqnpJupX8aZtaTVU9GVBPB+4BTk14ZL1mjEPFFlAgeqsu79P1hbGKSXvjje916pPK8wYs2hA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772190938; c=relaxed/simple;
-	bh=o3ik/tcF9Rfczm8mFuJvreItsZmPbbDkFSVvH2So+XA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=PF6ppMPInyL4veRSfpnLLd81VvkXm0JU+q4dXWF/FY9KglKAIZ4Sd0D1OcrEvEpWqpV4ojVnncBTz0zi8NIrouzXz//YB9v0wt45qfUjiZcmLOA8AXub7vPJlkzVkN7fJCEvTo1WiqgAvLO9b7h8HsNUh0iEV3qGxss9DyR9JPA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=e1vGCNYl; arc=fail smtp.client-ip=52.101.229.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="e1vGCNYl"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=W2I/G4bZTSJ2JDS5NNre1keqWg5g0Yvor/SBWj9EgClNRv4vOLsd2eBl9LI1YgILc/dbd7hYPbli0CGR/Acv3CvojIIaTuSMTOFbjbqvHmIJXtI1VrUgfRTxD1GG0DY7befyeqaqn5H+BeNLSDnF7T5IdYxcKG/ByFpWP0ODOyjF0VHGKfVWBGnllx2KSJyktOWPClV5YKI/X3Yo32aAkXEVV6psImWjWgWAAKK9OGZG4H5b3gTRapiTrBNuaiN7q3OOQLS0S7zsve0K4KbROlqfopJ/sSt4CWhtGcWOmzauWdG6h+f0wpnkMIGPyKM42vwBbFcgDlF0UOOtNOwScw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=o3ik/tcF9Rfczm8mFuJvreItsZmPbbDkFSVvH2So+XA=;
- b=e08UQzPm20r0kLH/DpGvu3QmL83POJlTDGH3+t01x6Zj+MfKGjbEoiqUIXDeBDVVdq3qMLalti0o/3fEWccCwiXpAgNK8q90iCZI+j1dFfLlTzx+3FCMnYKe9SJKq4B5UI+ipjx0vYMXCSrH7ixzdHsm0Qg3JVXSuTKHMlwPm16U1+sITjnHRn0u/KZdiA0B8VUzAxTBqZ/MHaE9SHskRJSw5+7VrfyOkeKqMLYugvempUnkp2lix4LRDNPqVGr9Pko1kktyUbjyiwSkjQgIKr9PTQJ5AKstQB5uYmcn4C065bpGMERglN9FTO788jUMn2p/LZ+lMxBoMekt2Yg2Xg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=o3ik/tcF9Rfczm8mFuJvreItsZmPbbDkFSVvH2So+XA=;
- b=e1vGCNYlNkHKCon5BKVUx3sBt5bG/bPdZXjtkMMo+Xe9F5EqDaZnUXlX5+BsBiCPIEIoirbOL2DqxVbBWu6biMGJrLKqhhHvamvVfpziFFagwzGySr1T7+l+WLSOvqG+6cRWeHQ9Js+WomLiXoKlJFRXcLyvyznyh4LXc1WT+t4=
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com (2603:1096:405:35b::6)
- by TYWPR01MB7355.jpnprd01.prod.outlook.com (2603:1096:400:ea::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.15; Fri, 27 Feb
- 2026 11:15:33 +0000
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::f373:26d6:86c4:6aa3]) by TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::f373:26d6:86c4:6aa3%4]) with mapi id 15.20.9654.014; Fri, 27 Feb 2026
- 11:15:33 +0000
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: Claudiu.Beznea <claudiu.beznea@tuxon.dev>, Claudiu Beznea
-	<claudiu.beznea.uj@bp.renesas.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "geert+renesas@glider.be"
-	<geert+renesas@glider.be>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>
-CC: "robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
-	magnus.damm <magnus.damm@gmail.com>, Biju Das <biju.das.jz@bp.renesas.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-clk@vger.kernel.org" <linux-clk@vger.kernel.org>,
-	"john.madieu@gmail.com" <john.madieu@gmail.com>
-Subject: RE: [PATCH v6 08/16] PCI: rzg3s-host: Make SYSC register offsets
- SoC-specific
-Thread-Topic: [PATCH v6 08/16] PCI: rzg3s-host: Make SYSC register offsets
- SoC-specific
-Thread-Index: AQHcofA9zqvTojedRkavFxOCKMMnRbWU4dAAgAGOyJA=
-Date: Fri, 27 Feb 2026 11:15:33 +0000
-Message-ID:
- <TY6PR01MB17377B0A19B317F8B45CCD736FF73A@TY6PR01MB17377.jpnprd01.prod.outlook.com>
-References: <20260219223542.6364-1-john.madieu.xa@bp.renesas.com>
- <20260219223542.6364-9-john.madieu.xa@bp.renesas.com>
- <8352571e-a6f0-4564-a837-22f2fe15df31@tuxon.dev>
-In-Reply-To: <8352571e-a6f0-4564-a837-22f2fe15df31@tuxon.dev>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=bp.renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY6PR01MB17377:EE_|TYWPR01MB7355:EE_
-x-ms-office365-filtering-correlation-id: 68244586-fd5e-49f5-9d3e-08de75f18657
-x-ld-processed: 53d82571-da19-47e4-9cb4-625a166a4a2a,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|376014|7416014|1800799024|38070700021;
-x-microsoft-antispam-message-info:
- bbbPitlBR4C5AbWGYfwjN+C6qoS2cfNBRC+BS9fX+hYuf5js3cvLNFSO1b+RDxjMHrYjXdYCR+R5eHQPMVD6ipmFDxo3Og0oGROoyqfD5zt14QznhUkbENApWNGrD2U3ULX53iOTWcTFIP92ey0rjaUJdFVDkHQLjuQXcEsF8gC637joKQbFnDloPDPDXuyjaVdnSRD5muFD5FEd209b+pnJ1QQVqnqj8O1BH17N4f/lVuiX7bIoKvTLI9xUwfFclg9dHMr5c8r/IX+kbYKUMdnMTBQJbXpMb6RMgU5zVHwFNwf+g//dpC5E62DD74R/mUbxORFfwEMifTJPYmF2R9mU6nqTrYJcaKSJqJflaAoiG495mdSF0eyGcJrMUWvEOIABnDcUd1yvS57VSK5hhHBgxGm9UOHMrm3tDEl1TyBIc1aL/IhcRFol3YDCj1+++97JQey4lRvn3OElUAemQbWSSZp1/gKG95y9ex3SYrEUv8MGQeScI5ixEWZjdeBNP2EXp2kKwAxYDMAtuYO/AYLCF7bxjOK8H8Zf4W/ymJQ5mc5bb9Y/G4UCO427BKUOBwFo01T57HV9FQDjEWURXhfDjFMyk1WCvg3UIp1SuG25RAZbeA9G3v7ONeenOPO0uj7tMeT3KECvm4aQl9rH/I+mWZLQ+Jsce8x3TFqXfjbwocNQz4MlCSt0UL0JuWWERScamJ3XPOf77+oaiTqLKTbxDbf62xPDeKHmGOjU2Flq+NMMKUhSyKiZoJhN4B2SppL4bT1bG6QJdbgWVj/lqdzj1+WC/C+m2LYjrUYQ52M=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY6PR01MB17377.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?Y0NVTnhOZURDNGI5SWp2SktSSGpJMy9seFhzK3hBMks3NnVWcDBqcElrTGtu?=
- =?utf-8?B?Wkt4bjhlT1A1N2l2Nlg0MmpwdVF0QUV1THBMWGkwS0hMNjdzV3dxNDJ5eDNx?=
- =?utf-8?B?RzVNdlN1OENRL0VQSjRaTWdoZWRFNXdzR2VjeDF4ZVpkSDVDRkxDMy8xUlBI?=
- =?utf-8?B?dTNBeVpabmdVeVg0dXVrcWIvVEtJNU9Td1dQVkk2b1NKakZ5ZGcwQ28xN213?=
- =?utf-8?B?eGdZWlVyNkhHcm85aDlaYjdWSEUza3VDOXZUZzFxRk96RC9XQk5wbkNxUVN4?=
- =?utf-8?B?eUM0SDRtODFwWEtyUGZTQzVZaUl5STRmcnQ5anJVK0pxSDlEY0tBUEdFcWx2?=
- =?utf-8?B?UXE5MnpwZjNhSWwzSXNoS05VVWFmdEI1OFRHVWFhTVJ2ajl6QVlld0srTDBm?=
- =?utf-8?B?bk1ZVm1uNWhOUVVqYkVKTHZLMm5FMGVVWldveVhhSE9JTlkwU0g5TjJiOGR4?=
- =?utf-8?B?SXZTUDlhYldrVDZBeUx5RFV1T3Y4OElNbm1jN0phVVl6d0xhcUFvYldPdGpt?=
- =?utf-8?B?dHQ4UkNJTGo4K3VFR3hIcTBKQXNYZW82UTBIdEx0dkx0MWpBWGE1dGpXRm0r?=
- =?utf-8?B?MGgzNkMwOTVwYjhhVVJPQmFsQ3FrY094bFhXeThNZnlYZ1R0SUhBWEsvanJ4?=
- =?utf-8?B?THVwNkVWeHc0VW5PWWI4anFsSVRKYm81NXl2N0MveEs1djZ1KzRXZ3dRMnFD?=
- =?utf-8?B?ak5kUHBWUHp3NkVaM0RWeklaaHdmcnh6cXM5R3VEenA2Z1BjSHgzTk9wdk5X?=
- =?utf-8?B?OERZOGtLZnFnWEdlcHlkNzkrYWdVci9IalFXanFua2o4M01Qc1lBTExaZHdi?=
- =?utf-8?B?VUpQeE0rN3ArRWMvTmQzTWxObG5uYS8zMmU1Z1oySEVKK3lOa3BUQ25rVk42?=
- =?utf-8?B?K0wwZUpudHhsSWVUYnpQY2ZETEVRajNldXFsQUVyZDFReit2RmQ5VGpOUEZa?=
- =?utf-8?B?VVNNcmNmYzdUekFGRFZhVW5qNzVzMC8ycHFVZUZtK1daS3RTRko0RGtUQUpO?=
- =?utf-8?B?ZDdsdmVQekFpRE52UHlMRzJUcEUxNUcwM3J6S2VmK21tNWcxQTJJNElGMUJ5?=
- =?utf-8?B?d3l5Ly8zRUNLaFpiS2lHL3FIeGxCd1cweW1aY2xYUUNKYTVQTmFxd3g2ckJl?=
- =?utf-8?B?RU5xU3VlR1hreDgrc0dKcFl4ejNPTzFvMVJLMWFSdkZwWHFEZDJhZTk0ZWQ3?=
- =?utf-8?B?aXVUR2lNSzBTdUVJelRKZlpWOFlkWHZRbjdEVCthbEhvUHVndk1qbHN5NkZW?=
- =?utf-8?B?MG9Eb3VKMTFQVmY1aXJtL3NSdWl2SEJacWdYN3ZXVWxraTBrTlRJaGt1V1Nu?=
- =?utf-8?B?UWVtVVBpdHlmY2FSbmJYaVJPWTFLKzNtNFVnRlFGb2NiUWpiTUdoZ3B6MjBS?=
- =?utf-8?B?RWk2ZU5IVGk1MkFES0hvcTROT2IxSGVXZEgveUtZdllPRUtnNjhLQ2ZyVFl3?=
- =?utf-8?B?ZStQY3NyRVV5cXlFQVNtalNPUnZHdHA0Qk5oTU43SzhZeHhONlNxem0wU2lx?=
- =?utf-8?B?WlNOeVhyMDlwYXIzd0dKeWc0Mll5YzByWkttam9YcXdQV1h4ZlRVM0NwaHdS?=
- =?utf-8?B?ZllqRmxieFBSZmZQMEZTMXVPaHB4bnRTeGpDSnNUNkE3SlYyQkp0YnprUlRZ?=
- =?utf-8?B?cnlMcy9QUkVENzhoWEtWUFg4Y2FubkNjekhmVFVySW1IQi83NjE2dFZ5VUpq?=
- =?utf-8?B?K3VLVWllM2lhWll1Wlh6TVRGcFBIN09pRGpMV0ZDRGNFOGZmTFNpNGkzd0Ex?=
- =?utf-8?B?VmhjOW4wUmZsUk1CUGJUd1NoL1NlbE5KY3ZsS1lXcnRaWjhQSmJRRGtyR2lm?=
- =?utf-8?B?cFZRTS9nTS8rZnB2bGxqZVJHdVRPWldQa0ZmU1VBM0kvbmI4ZTZpTHVUaWR4?=
- =?utf-8?B?SkFVTmJRemZRd0dKOW8waWVzbzFQclVIM3pFNDZjOXFySElQaVBxS0Zsd0oz?=
- =?utf-8?B?bnNUSGdKSW52WVZycEs1SGkzb3Jod3F6bnhKQ2NORkZFdGhOTjNoNFdTa0h6?=
- =?utf-8?B?RVAzdEpoZ3FsNm9yWTlDU0lRVUliekNNaW4yVkxnM2YvUmRId1ZXZWJ4cExT?=
- =?utf-8?B?R2I0TEVqc3BGd3hEWUkvM0ZGS0hsUERUSUJqUlpoeFdsU3ozWUY3TXhITXZO?=
- =?utf-8?B?ekNrdHYwa0hqRDdxRXI5dkRxMUlXUEp6ZkplcmpFMUdmWUhibzJ3M2E1aU9G?=
- =?utf-8?B?ZWcwT1l4K0tSTmNqekVua3h0cWlwVWtBQzlTRkZpUkI5cDYvREs0a2xOTnFx?=
- =?utf-8?B?N2hrZitkQlU3OHRJaDZqN3I1ZGFwVytqeFhFRklEMEtqYWM2T1FRdWlTUkE5?=
- =?utf-8?B?ckREZUJlTUt0SE0wSUxsbytGZXRaR3JXVzAwV2tCMnhKRHVZY21uWC95UnVl?=
- =?utf-8?Q?Uwi1+Q53JiwrMYys=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Received: from zg8tmtyylji0my4xnjeumjiw.icoremail.net (zg8tmtyylji0my4xnjeumjiw.icoremail.net [162.243.161.220])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4A90A33A030;
+	Fri, 27 Feb 2026 11:16:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.243.161.220
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772190976; cv=none; b=Mi6qGxluAPS27T4SXRNVAJNsWNKW/vOtI4jvQWHgqMGQLphRFOM3UxZ+Po5uUEYbhOeXKN1MIP7mbq31blajlOdGPsFsi6nAaAzeXnqwDoeAgJ9JgHV1U8I6yDNKYrq8U4FmUaI5CNexYXv/VgCTCqncNhTRAvUrFhfmVTzbRvQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772190976; c=relaxed/simple;
+	bh=Ug+ATOC3T0aBnT62tk4NvLp43DJDIqNdycmrhyJ5QlM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IK8ZRqUAJdgNGNdIhGhV8Ka3bAseDqVvUzUFizRMfRWHyh1JwYqJJyhfHtdFbKXeg+6POGuTvfqn+7PTCbugHsltC5Xz0LxbuhH+D6ar66xkz+gT5IvuXL6iJXv2CZ0F0lTQ7kub2rQ68/XW3xISqkGrNezVMytGkvDW/wDoZqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=162.243.161.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from E0004758DT.eswin.cn (unknown [10.12.96.83])
+	by app2 (Coremail) with SMTP id TQJkCgDn_aDcfKFpYx0EAA--.21998S2;
+	Fri, 27 Feb 2026 19:15:42 +0800 (CST)
+From: zhangsenchuan@eswincomputing.com
+To: bhelgaas@google.com,
+	mani@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	robh@kernel.org,
+	p.zabel@pengutronix.de,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	christian.bruel@foss.st.com,
+	shradha.t@samsung.com,
+	krishna.chundru@oss.qualcomm.com,
+	thippeswamy.havalige@amd.com,
+	inochiama@gmail.com,
+	Frank.li@nxp.com
+Cc: ningyu@eswincomputing.com,
+	linmin@eswincomputing.com,
+	pinkesh.vaghela@einfochips.com,
+	ouyanghui@eswincomputing.com,
+	Senchuan Zhang <zhangsenchuan@eswincomputing.com>
+Subject: [PATCH v11 0/2] Add driver support for Eswin EIC7700 SoC PCIe controller
+Date: Fri, 27 Feb 2026 19:15:36 +0800
+Message-ID: <20260227111536.1940-1-zhangsenchuan@eswincomputing.com>
+X-Mailer: git-send-email 2.49.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY6PR01MB17377.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 68244586-fd5e-49f5-9d3e-08de75f18657
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Feb 2026 11:15:33.4444
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: L2aoSIj+LGpGV3Xv8G5r2l3UxtlcAvwkeBKAcJ0ao27fTleWdXZ0sAmOz/ZMVkMXICuvPlb8UdWq2cxUzv474FDNxUin5Qh/hoEtS7DRaZ8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWPR01MB7355
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:TQJkCgDn_aDcfKFpYx0EAA--.21998S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3Zw1ftr45Wr4DtFyDKryUWrg_yoWkJF18pa
+	yvyFWjkrn0qr1xXrs7AF4F9F4fXan8ZFyYkw1xW34UZa12g3s2yryvkFW3tF9rArZxWrW5
+	tF4aqan0kF4DAFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBq14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwAKzVCY07xG64k0F24lc7CjxVAaw2AFwI0_GFv_Wrylc2xSY4AK6svPMxAIw2
+	8IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4l
+	x2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrw
+	CI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI
+	42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z2
+	80aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7sRi7KItUUUUU==
+X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/
 
-SGkgQ2xhdWRpdSwNCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3Lg0KDQo+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQo+IEZyb206IENsYXVkaXUgQmV6bmVhIDxjbGF1ZGl1LmJlem5lYUB0dXhv
-bi5kZXY+DQo+IFNlbnQ6IFRodXJzZGF5LCBGZWJydWFyeSAyNiwgMjAyNiAxMjoyNyBQTQ0KPiBU
-bzogSm9obiBNYWRpZXUgPGpvaG4ubWFkaWV1LnhhQGJwLnJlbmVzYXMuY29tPjsgQ2xhdWRpdSBC
-ZXpuZWENCj4gPGNsYXVkaXUuYmV6bmVhLnVqQGJwLnJlbmVzYXMuY29tPjsgbHBpZXJhbGlzaUBr
-ZXJuZWwub3JnOw0KPiBrd2lsY3p5bnNraUBrZXJuZWwub3JnOyBtYW5pQGtlcm5lbC5vcmc7IGdl
-ZXJ0K3JlbmVzYXNAZ2xpZGVyLmJlOw0KPiBrcnprK2R0QGtlcm5lbC5vcmcNCj4gQ2M6IHJvYmhA
-a2VybmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgY29ub3IrZHRAa2VybmVsLm9yZzsNCj4g
-bWFnbnVzLmRhbW0gPG1hZ251cy5kYW1tQGdtYWlsLmNvbT47IEJpanUgRGFzDQo+IDxiaWp1LmRh
-cy5qekBicC5yZW5lc2FzLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXJl
-bmVzYXMtDQo+IHNvY0B2Z2VyLmtlcm5lbC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3Jn
-OyBsaW51eC0NCj4gY2xrQHZnZXIua2VybmVsLm9yZzsgam9obi5tYWRpZXVAZ21haWwuY29tDQo+
-IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjYgMDgvMTZdIFBDSTogcnpnM3MtaG9zdDogTWFrZSBTWVND
-IHJlZ2lzdGVyDQo+IG9mZnNldHMgU29DLXNwZWNpZmljDQo+IA0KPiBIaSwgSm9obiwNCj4gDQo+
-IE9uIDIvMjAvMjYgMDA6MzUsIEpvaG4gTWFkaWV1IHdyb3RlOg0KPiA+IEluIHByZXBhcmF0aW9u
-IGZvciBhZGRpbmcgUlovRzNFIHN1cHBvcnQsIG1vdmUgdGhlIFJTVF9SU01fQiByZWdpc3Rlcg0K
-PiA+IG9mZnNldCBhbmQgbWFzayBpbnRvIGEgU29DLXNwZWNpZmljIGRhdGEgc3RydWN0dXJlLiBD
-b21wYXJlZCB3aXRoDQo+ID4gUlovRzNTLCB0aGUgUlovRzNFIFNZU0MgY29udHJvbHMgZGlmZmVy
-ZW50IGZ1bmN0aW9uYWxpdGllcyBmb3IgdGhlDQo+IFBDSWUgY29udHJvbGxlci4NCj4gPg0KPiA+
-IE1ha2UgU1lTQyBvcGVyYXRpb25zIGNvbmRpdGlvbmFsIG9uIHRoZSBwcmVzZW5jZSBvZiByZWdp
-c3RlciBvZmZzZXQNCj4gPiBpbmZvcm1hdGlvbiwgYWxsb3dpbmcgdGhlIGRyaXZlciB0byBoYW5k
-bGUgU29DcyB0aGF0IGRvbid0IHVzZSB0aGUNCj4gPiBSU1RfUlNNX0Igc2lnbmFsLg0KPiA+DQo+
-ID4gU2lnbmVkLW9mZi1ieTogSm9obiBNYWRpZXUgPGpvaG4ubWFkaWV1LnhhQGJwLnJlbmVzYXMu
-Y29tPg0KPiA+IC0tLQ0KPiA+DQo+ID4gQ2hhbmdlczoNCj4gPg0KPiA+IHY2Og0KPiA+ICAgLSBJ
-bnRyb2R1Y2UgZW51bSByemczc19zeXNjX2Z1bmNfaWQgYW5kIHJ6ZzNzX3N5c2NfY29uZmlnX2Z1
-bmMoKSBhcw0KPiA+ICAgICBzdWdnZXN0ZWQgYnkgQ2xhdWRpdS4gVGhpcyByZXBsYWNlcyBkaXJl
-Y3QgcmVnbWFwIGNhbGxzIGFuZCBkcm9wcw0KPiA+ICAgICB0aGUgLTEgc2tpcCBwYXR0ZXJuLg0K
-PiA+ICAgLSBSZW1vdmVkIFJiIHRhZyBmcm9tIENsYXVkaXUNCj4gPg0KPiA+IHY1OiBObyBjaGFu
-Z2VzDQo+ID4gdjQ6IE5vIGNoYW5nZXMNCj4gPiB2MzogTm8gY2hhbmdlcw0KPiA+IHYyOiBDb2xs
-ZWN0ZWQgdGFnLg0KPiA+DQo+ID4gICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaWUtcnpnM3Mt
-aG9zdC5jIHwgMTIwICsrKysrKysrKysrKysrKysrKy0tLQ0KPiAtLQ0KPiA+ICAgMSBmaWxlIGNo
-YW5nZWQsIDk0IGluc2VydGlvbnMoKyksIDI2IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1yemczcy1ob3N0LmMNCj4gPiBiL2Ry
-aXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1yemczcy1ob3N0LmMNCj4gPiBpbmRleCA3ZjVmZmM1
-YzIxOGEuLmE5MDQ4NzYxMGIzNyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9s
-bGVyL3BjaWUtcnpnM3MtaG9zdC5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9w
-Y2llLXJ6ZzNzLWhvc3QuYw0KPiA+IEBAIC0xNTksMTAgKzE1OSw2IEBADQo+ID4NCj4gPiAgICNk
-ZWZpbmUgUlpHM1NfUENJX0NGR19QQ0lFQwkJCTB4NjANCj4gPg0KPiA+IC0vKiBTeXN0ZW0gY29u
-dHJvbGxlciByZWdpc3RlcnMgKi8NCj4gPiAtI2RlZmluZSBSWkczU19TWVNfUENJRV9SU1RfUlNN
-X0IJCTB4ZDc0DQo+ID4gLSNkZWZpbmUgUlpHM1NfU1lTX1BDSUVfUlNUX1JTTV9CX01BU0sJCUJJ
-VCgwKQ0KPiA+IC0NCj4gPiAgIC8qIE1heGltdW0gbnVtYmVyIG9mIHdpbmRvd3MgKi8NCj4gPiAg
-ICNkZWZpbmUgUlpHM1NfTUFYX1dJTkRPV1MJCQk4DQo+ID4NCj4gPiBAQCAtMTc0LDYgKzE3MCw0
-NSBAQA0KPiA+ICAgLyogVGltZW91dHMgZXhwZXJpbWVudGFsbHkgZGV0ZXJtaW5lZCAqLw0KPiA+
-ICAgI2RlZmluZSBSWkczU19SRVFfSVNTVUVfVElNRU9VVF9VUwkJMjUwMA0KPiA+DQo+ID4gKy8q
-Kg0KPiA+ICsgKiBzdHJ1Y3QgcnpnM3Nfc3lzY19mdW5jdGlvbiAtIFN5c3RlbSBDb250cm9sbGVy
-IHJlZ2lzdGVyIGZ1bmN0aW9uDQo+ID4gK2Rlc2NyaXB0b3INCj4gDQo+IFBsZWFzZSBkcm9wIHJl
-Z2lzdGVyIHdvcmQgZnJvbSBoZXJlIC0tLS0tLS0tLS0tLS0tLS0tLS0tLV4NCj4gDQo+ID4gKyAq
-IEBvZmZzZXQ6IFJlZ2lzdGVyIG9mZnNldCBmcm9tIHRoZSBTeXN0ZW0gQ29udHJvbGxlciBiYXNl
-IGFkZHJlc3MNCj4gPiArICogQG1hc2s6IEJpdCBtYXNrIGZvciB0aGUgZnVuY3Rpb24gd2l0aGlu
-IHRoZSByZWdpc3RlciAgKi8gc3RydWN0DQo+ID4gK3J6ZzNzX3N5c2NfZnVuY3Rpb24gew0KPiA+
-ICsJdTMyIG9mZnNldDsNCj4gPiArCXUzMiBtYXNrOw0KPiA+ICt9Ow0KPiA+ICsNCj4gPiArDQo+
-IA0KPiBUaGVyZSBhcmUgMiBibGFuayBsaW5lcyBoZXJlLiBQbGVhc2UgZHJvcCBvbmUuDQo+IA0K
-PiA+ICsvKioNCj4gPiArICogZW51bSByemczc19zeXNjX2Z1bmNfaWQgLSBTeXN0ZW0gY29udHJv
-bGxlciBmdW5jdGlvbiBJRHMNCj4gPiArICogQFJaRzNTX1NZU0NfRlVOQ19JRF9SU1RfUlNNX0I6
-IFJTVF9SU01fQiBTWVNDIGZ1bmN0aW9uIElEDQo+ID4gKyAqIEBSWkczU19TWVNDX0ZVTkNfSURf
-TUFYOiBNYXggU1lTQyBmdW5jdGlvbiBJRCAgKi8gZW51bQ0KPiA+ICtyemczc19zeXNjX2Z1bmNf
-aWQgew0KPiA+ICsJUlpHM1NfU1lTQ19GVU5DX0lEX1JTVF9SU01fQiwNCj4gPiArCVJaRzNTX1NZ
-U0NfRlVOQ19JRF9NQVgsDQo+ID4gK307DQo+ID4gKw0KPiA+ICsvKioNCj4gPiArICogc3RydWN0
-IHJ6ZzNzX3N5c2NfaW5mbyAtIFJaL0czUyBTeXN0ZW0gQ29udHJvbGxlciBmdW5jdGlvbiBpbmZv
-DQo+IA0KPiBQbGVhc2UgZHJvcCBmdW5jdGlvbiBmcm9tIGhlcmUgLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tXiBhcyB3ZSBtYXkNCj4gYWRkIG90aGVyIGRhdGEgaW4gaXQgYXQgc29tZSBwb2lu
-dC4NCj4gDQo+ID4gKyAqIEBmdW5jdGlvbnM6IFNZU0MgZnVuY3Rpb24gZGVzY3JpcHRvcnMgYXJy
-YXkgICovIHN0cnVjdA0KPiA+ICtyemczc19zeXNjX2luZm8gew0KPiA+ICsJY29uc3Qgc3RydWN0
-IHJ6ZzNzX3N5c2NfZnVuY3Rpb24gZnVuY3Rpb25zW1JaRzNTX1NZU0NfRlVOQ19JRF9NQVhdOw0K
-PiA+ICt9Ow0KPiA+ICsNCj4gPiArLyoqDQo+ID4gKyAqIHN0cnVjdCByemczc19zeXNjIC0gUlov
-RzNTIFN5c3RlbSBDb250cm9sbGVyIGRlc2NyaXB0b3INCj4gPiArICogQHJlZ21hcDogU3lzdGVt
-IGNvbnRyb2xsZXIgcmVnbWFwDQo+ID4gKyAqIEBpbmZvOiBTeXN0ZW0gY29udHJvbGxlciBpbmZv
-DQo+ID4gKyAqLw0KPiA+ICtzdHJ1Y3QgcnpnM3Nfc3lzYyB7DQo+ID4gKwlzdHJ1Y3QgcmVnbWFw
-ICpyZWdtYXA7DQo+ID4gKwljb25zdCBzdHJ1Y3QgcnpnM3Nfc3lzY19pbmZvICppbmZvOw0KPiA+
-ICt9Ow0KPiA+ICsNCj4gPiAgIC8qKg0KPiA+ICAgICogc3RydWN0IHJ6ZzNzX3BjaWVfbXNpIC0g
-UlovRzNTIFBDSWUgTVNJIGRhdGEgc3RydWN0dXJlDQo+ID4gICAgKiBAZG9tYWluOiBJUlEgZG9t
-YWluDQo+ID4gQEAgLTIwMyw2ICsyMzgsNyBAQCBzdHJ1Y3QgcnpnM3NfcGNpZV9ob3N0Ow0KPiA+
-ICAgICogICAgICAgICAgICAgICAgcG93ZXItb24NCj4gPiAgICAqIEBjZmdfcmVzZXRzOiBhcnJh
-eSB3aXRoIHRoZSByZXNldHMgdGhhdCBuZWVkIHRvIGJlIGRlLWFzc2VydGVkDQo+IGFmdGVyDQo+
-ID4gICAgKiAgICAgICAgICAgICAgY29uZmlndXJhdGlvbg0KPiA+ICsgKiBAc3lzY19pbmZvOiBT
-WVNDIGZ1bmN0aW9uYWxpdGllcw0KPiANCj4gcy9mdW5jdGlvbmFsaXRpZXMvaW5mbw0KPiANCj4g
-PiAgICAqIEBudW1fcG93ZXJfcmVzZXRzOiBudW1iZXIgb2YgcG93ZXIgcmVzZXRzDQo+ID4gICAg
-KiBAbnVtX2NmZ19yZXNldHM6IG51bWJlciBvZiBjb25maWd1cmF0aW9uIHJlc2V0cw0KPiA+ICAg
-ICovDQo+ID4gQEAgLTIxMCw2ICsyNDYsNyBAQCBzdHJ1Y3QgcnpnM3NfcGNpZV9zb2NfZGF0YSB7
-DQo+ID4gICAJaW50ICgqaW5pdF9waHkpKHN0cnVjdCByemczc19wY2llX2hvc3QgKmhvc3QpOw0K
-PiA+ICAgCWNvbnN0IGNoYXIgKiBjb25zdCAqcG93ZXJfcmVzZXRzOw0KPiA+ICAgCWNvbnN0IGNo
-YXIgKiBjb25zdCAqY2ZnX3Jlc2V0czsNCj4gPiArCXN0cnVjdCByemczc19zeXNjX2luZm8gc3lz
-Y19pbmZvOw0KPiA+ICAgCXU4IG51bV9wb3dlcl9yZXNldHM7DQo+ID4gICAJdTggbnVtX2NmZ19y
-ZXNldHM7DQo+ID4gICB9Ow0KPiA+IEBAIC0yMzMsNyArMjcwLDcgQEAgc3RydWN0IHJ6ZzNzX3Bj
-aWVfcG9ydCB7DQo+ID4gICAgKiBAZGV2OiBzdHJ1Y3QgZGV2aWNlDQo+ID4gICAgKiBAcG93ZXJf
-cmVzZXRzOiByZXNldCBjb250cm9sIHNpZ25hbHMgdGhhdCBzaG91bGQgYmUgc2V0IGFmdGVyDQo+
-IHBvd2VyIHVwDQo+ID4gICAgKiBAY2ZnX3Jlc2V0czogcmVzZXQgY29udHJvbCBzaWduYWxzIHRo
-YXQgc2hvdWxkIGJlIHNldCBhZnRlcg0KPiA+IGNvbmZpZ3VyYXRpb24NCj4gPiAtICogQHN5c2M6
-IFNZU0MgcmVnbWFwDQo+ID4gKyAqIEBzeXNjOiBTWVNDIGRlc2NyaXB0b3INCj4gPiAgICAqIEBp
-bnR4X2RvbWFpbjogSU5UeCBJUlEgZG9tYWluDQo+ID4gICAgKiBAZGF0YTogU29DIHNwZWNpZmlj
-IGRhdGENCj4gPiAgICAqIEBtc2k6IE1TSSBkYXRhIHN0cnVjdHVyZQ0KPiA+IEBAIC0yNDgsNyAr
-Mjg1LDcgQEAgc3RydWN0IHJ6ZzNzX3BjaWVfaG9zdCB7DQo+ID4gICAJc3RydWN0IGRldmljZSAq
-ZGV2Ow0KPiA+ICAgCXN0cnVjdCByZXNldF9jb250cm9sX2J1bGtfZGF0YSAqcG93ZXJfcmVzZXRz
-Ow0KPiA+ICAgCXN0cnVjdCByZXNldF9jb250cm9sX2J1bGtfZGF0YSAqY2ZnX3Jlc2V0czsNCj4g
-PiAtCXN0cnVjdCByZWdtYXAgKnN5c2M7DQo+ID4gKwlzdHJ1Y3QgcnpnM3Nfc3lzYyAqc3lzYzsN
-Cj4gPiAgIAlzdHJ1Y3QgaXJxX2RvbWFpbiAqaW50eF9kb21haW47DQo+ID4gICAJY29uc3Qgc3Ry
-dWN0IHJ6ZzNzX3BjaWVfc29jX2RhdGEgKmRhdGE7DQo+ID4gICAJc3RydWN0IHJ6ZzNzX3BjaWVf
-bXNpIG1zaTsNCj4gPiBAQCAtMTE2MSw2ICsxMTk4LDMxIEBAIHN0YXRpYyBpbnQgcnpnM3NfcGNp
-ZV9ob3N0X3BhcnNlX3BvcnQoc3RydWN0DQo+IHJ6ZzNzX3BjaWVfaG9zdCAqaG9zdCkNCj4gPiAg
-IAlyZXR1cm4gMDsNCj4gPiAgIH0NCj4gPg0KPiA+ICsvKioNCj4gPiArICogcnpnM3Nfc3lzY19j
-b25maWdfZnVuYyAtIENvbmZpZ3VyZSBhIHNpbmdsZSBTWVNDIGZ1bmN0aW9uDQo+ID4gKyAqIEBz
-eXNjOiBTWVNDIGRlc2NyaXB0b3INCj4gPiArICogQGZpZDogRnVuY3Rpb24gSUQgdG8gY29uZmln
-dXJlDQo+ID4gKyAqIEB2YWw6IFZhbHVlIHRvIHNldA0KPiA+ICsgKg0KPiA+ICsgKiBSZXR1cm46
-IDAgb24gc3VjY2VzcywgbmVnYXRpdmUgZXJyb3IgY29kZSBvbiBmYWlsdXJlICAqLw0KPiANCj4g
-T3RoZXIgc2ltaWxhciBmdW5jdGlvbnMgaW4gdGhpcyBmaWxlIGRvbid0IHVzZSBkb2N1bWVudGF0
-aW9uLiBJIHRoaW5rDQo+IHRoZSBmdW5jdGlvbiBuYW1lIGFuZCBpdHMgYXJndW1lbnRzIGFyZSBk
-ZXNjcmlwdGl2ZSBlbm91Z2ggdG8gZHJvcCB0aGlzDQo+IGRvY3VtZW50YXRpb24uDQo+IA0KDQpX
-aWxsIGFkZHJlc3MgYWxsIG9mIHRoZSB0eXBvcyB5b3UgZW51bWVyYXRlZC4NCg0KPiANCj4gPiAr
-c3RhdGljIGludCByemczc19zeXNjX2NvbmZpZ19mdW5jKHN0cnVjdCByemczc19zeXNjICpzeXNj
-LA0KPiA+ICsJCQkJICBlbnVtIHJ6ZzNzX3N5c2NfZnVuY19pZCBmaWQsIHUzMiB2YWwpDQo+ID4g
-K3sNCj4gPiArCWNvbnN0IHN0cnVjdCByemczc19zeXNjX2luZm8gKmluZm8gPSBzeXNjLT5pbmZv
-Ow0KPiA+ICsJY29uc3Qgc3RydWN0IHJ6ZzNzX3N5c2NfZnVuY3Rpb24gKmZ1bmN0aW9ucyA9IGlu
-Zm8tPmZ1bmN0aW9uczsNCj4gPiArDQo+ID4gKwlpZiAoZmlkID49IFJaRzNTX1NZU0NfRlVOQ19J
-RF9NQVgpDQo+ID4gKwkJcmV0dXJuIC1FSU5WQUw7DQo+ID4gKw0KPiA+ICsJaWYgKCFmdW5jdGlv
-bnNbZmlkXS5tYXNrKQ0KPiA+ICsJCXJldHVybiAwOw0KPiA+ICsNCj4gPiArCXJldHVybiByZWdt
-YXBfdXBkYXRlX2JpdHMoc3lzYy0+cmVnbWFwLCBmdW5jdGlvbnNbZmlkXS5vZmZzZXQsDQo+ID4g
-KwkJCQkgIGZ1bmN0aW9uc1tmaWRdLm1hc2ssDQo+ID4gKwkJCQkgIGZpZWxkX3ByZXAoZnVuY3Rp
-b25zW2ZpZF0ubWFzaywgdmFsKSk7DQo+ID4gK30NCj4gPiArDQo+IA0KPiBDb3VsZCB5b3UgcGxl
-YXNlIG1vdmUgdGhpcyBmdW5jdGlvbiBiZWZvcmUgcnpnM3NfcGNpZV91cGRhdGVfYml0cygpPyBJ
-bg0KPiB0aGlzDQo+IHBhdGNoIGl0IGlzIGIvdyByemczc19wY2llX2hvc3RfcGFyc2VfcG9ydCgp
-IGFuZA0KPiByemczc19wY2llX2hvc3RfaW5pdF9wb3J0KCkgYW5kDQo+IEkgd291bGQgcHJlZmVy
-IHRvIGtlZXAgdGhlc2UgMiBjbG9zZSB0b2doZXRlci4NCg0KTm90ZWQuDQoNClJlZ2FyZHMsDQpK
-b2huDQoNCj4gDQo+IFRoZSByZXN0IExHVE0uDQo+IA0KPiBUaGFuayB5b3UsDQo+IENsYXVkaXUN
-Cj4gDQo+ID4gICBzdGF0aWMgaW50IHJ6ZzNzX3BjaWVfaG9zdF9pbml0X3BvcnQoc3RydWN0IHJ6
-ZzNzX3BjaWVfaG9zdCAqaG9zdCkNCj4gPiAgIHsNCj4gPiAgIAlzdHJ1Y3QgcnpnM3NfcGNpZV9w
-b3J0ICpwb3J0ID0gJmhvc3QtPnBvcnQ7DQo+ID4gQEAgLTE1MjEsNiArMTU4Myw3IEBAIHN0YXRp
-YyBpbnQgcnpnM3NfcGNpZV9wcm9iZShzdHJ1Y3QNCj4gcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0K
-PiA+ICAgCXN0cnVjdCBkZXZpY2Vfbm9kZSAqc3lzY19ucCBfX2ZyZWUoZGV2aWNlX25vZGUpID0N
-Cj4gPiAgIAkJb2ZfcGFyc2VfcGhhbmRsZShucCwgInJlbmVzYXMsc3lzYyIsIDApOw0KPiA+ICAg
-CXN0cnVjdCByemczc19wY2llX2hvc3QgKmhvc3Q7DQo+ID4gKwlzdHJ1Y3QgcnpnM3Nfc3lzYyAq
-c3lzYzsNCj4gPiAgIAlpbnQgcmV0Ow0KPiA+DQo+ID4gICAJYnJpZGdlID0gZGV2bV9wY2lfYWxs
-b2NfaG9zdF9icmlkZ2UoZGV2LCBzaXplb2YoKmhvc3QpKTsNCj4gPiBAQCAtMTUzMiw2ICsxNTk1
-LDEzIEBAIHN0YXRpYyBpbnQgcnpnM3NfcGNpZV9wcm9iZShzdHJ1Y3QNCj4gcGxhdGZvcm1fZGV2
-aWNlICpwZGV2KQ0KPiA+ICAgCWhvc3QtPmRhdGEgPSBkZXZpY2VfZ2V0X21hdGNoX2RhdGEoZGV2
-KTsNCj4gPiAgIAlwbGF0Zm9ybV9zZXRfZHJ2ZGF0YShwZGV2LCBob3N0KTsNCj4gPg0KPiA+ICsJ
-aG9zdC0+c3lzYyA9IGRldm1fa3phbGxvYyhkZXYsIHNpemVvZigqaG9zdC0+c3lzYyksIEdGUF9L
-RVJORUwpOw0KPiA+ICsJaWYgKCFob3N0LT5zeXNjKQ0KPiA+ICsJCXJldHVybiAtRU5PTUVNOw0K
-PiA+ICsNCj4gPiArCXN5c2MgPSBob3N0LT5zeXNjOw0KPiA+ICsJc3lzYy0+aW5mbyA9ICZob3N0
-LT5kYXRhLT5zeXNjX2luZm87DQo+ID4gKw0KPiA+ICAgCWhvc3QtPmF4aSA9IGRldm1fcGxhdGZv
-cm1faW9yZW1hcF9yZXNvdXJjZShwZGV2LCAwKTsNCj4gPiAgIAlpZiAoSVNfRVJSKGhvc3QtPmF4
-aSkpDQo+ID4gICAJCXJldHVybiBQVFJfRVJSKGhvc3QtPmF4aSk7DQo+ID4gQEAgLTE1NDUsMTUg
-KzE2MTUsMTMgQEAgc3RhdGljIGludCByemczc19wY2llX3Byb2JlKHN0cnVjdA0KPiBwbGF0Zm9y
-bV9kZXZpY2UgKnBkZXYpDQo+ID4gICAJaWYgKHJldCkNCj4gPiAgIAkJcmV0dXJuIHJldDsNCj4g
-Pg0KPiA+IC0JaG9zdC0+c3lzYyA9IHN5c2Nvbl9ub2RlX3RvX3JlZ21hcChzeXNjX25wKTsNCj4g
-PiAtCWlmIChJU19FUlIoaG9zdC0+c3lzYykpIHsNCj4gPiAtCQlyZXQgPSBQVFJfRVJSKGhvc3Qt
-PnN5c2MpOw0KPiA+ICsJc3lzYy0+cmVnbWFwID0gc3lzY29uX25vZGVfdG9fcmVnbWFwKHN5c2Nf
-bnApOw0KPiA+ICsJaWYgKElTX0VSUihzeXNjLT5yZWdtYXApKSB7DQo+ID4gKwkJcmV0ID0gUFRS
-X0VSUihzeXNjLT5yZWdtYXApOw0KPiA+ICAgCQlnb3RvIHBvcnRfcmVmY2xrX3B1dDsNCj4gPiAg
-IAl9DQo+ID4NCj4gPiAtCXJldCA9IHJlZ21hcF91cGRhdGVfYml0cyhob3N0LT5zeXNjLCBSWkcz
-U19TWVNfUENJRV9SU1RfUlNNX0IsDQo+ID4gLQkJCQkgUlpHM1NfU1lTX1BDSUVfUlNUX1JTTV9C
-X01BU0ssDQo+ID4gLQkJCQkgRklFTERfUFJFUChSWkczU19TWVNfUENJRV9SU1RfUlNNX0JfTUFT
-SywgMSkpOw0KPiA+ICsJcmV0ID0gcnpnM3Nfc3lzY19jb25maWdfZnVuYyhzeXNjLCBSWkczU19T
-WVNDX0ZVTkNfSURfUlNUX1JTTV9CLA0KPiAxKTsNCj4gPiAgIAlpZiAocmV0KQ0KPiA+ICAgCQln
-b3RvIHBvcnRfcmVmY2xrX3B1dDsNCj4gPg0KPiA+IEBAIC0xNjA1LDkgKzE2NzMsNyBAQCBzdGF0
-aWMgaW50IHJ6ZzNzX3BjaWVfcHJvYmUoc3RydWN0DQo+IHBsYXRmb3JtX2RldmljZSAqcGRldikN
-Cj4gPiAgIAkgKiBTWVNDIFJTVF9SU01fQiBzaWduYWwgbmVlZCB0byBiZSBhc3NlcnRlZCBiZWZv
-cmUgdHVybmluZyBvZmYgdGhlDQo+ID4gICAJICogcG93ZXIgdG8gdGhlIFBIWS4NCj4gPiAgIAkg
-Ki8NCj4gPiAtCXJlZ21hcF91cGRhdGVfYml0cyhob3N0LT5zeXNjLCBSWkczU19TWVNfUENJRV9S
-U1RfUlNNX0IsDQo+ID4gLQkJCSAgIFJaRzNTX1NZU19QQ0lFX1JTVF9SU01fQl9NQVNLLA0KPiA+
-IC0JCQkgICBGSUVMRF9QUkVQKFJaRzNTX1NZU19QQ0lFX1JTVF9SU01fQl9NQVNLLCAwKSk7DQo+
-ID4gKwlyemczc19zeXNjX2NvbmZpZ19mdW5jKHN5c2MsIFJaRzNTX1NZU0NfRlVOQ19JRF9SU1Rf
-UlNNX0IsIDApOw0KPiA+ICAgcG9ydF9yZWZjbGtfcHV0Og0KPiA+ICAgCWNsa19wdXQoaG9zdC0+
-cG9ydC5yZWZjbGspOw0KPiA+DQo+ID4gQEAgLTE2MTksNyArMTY4NSw3IEBAIHN0YXRpYyBpbnQg
-cnpnM3NfcGNpZV9zdXNwZW5kX25vaXJxKHN0cnVjdA0KPiBkZXZpY2UgKmRldikNCj4gPiAgIAlz
-dHJ1Y3QgcnpnM3NfcGNpZV9ob3N0ICpob3N0ID0gZGV2X2dldF9kcnZkYXRhKGRldik7DQo+ID4g
-ICAJY29uc3Qgc3RydWN0IHJ6ZzNzX3BjaWVfc29jX2RhdGEgKmRhdGEgPSBob3N0LT5kYXRhOw0K
-PiA+ICAgCXN0cnVjdCByemczc19wY2llX3BvcnQgKnBvcnQgPSAmaG9zdC0+cG9ydDsNCj4gPiAt
-CXN0cnVjdCByZWdtYXAgKnN5c2MgPSBob3N0LT5zeXNjOw0KPiA+ICsJc3RydWN0IHJ6ZzNzX3N5
-c2MgKnN5c2MgPSBob3N0LT5zeXNjOw0KPiA+ICAgCWludCByZXQ7DQo+ID4NCj4gPiAgIAlyZXQg
-PSBwbV9ydW50aW1lX3B1dF9zeW5jKGRldik7DQo+ID4gQEAgLTE2MzgsOSArMTcwNCw3IEBAIHN0
-YXRpYyBpbnQgcnpnM3NfcGNpZV9zdXNwZW5kX25vaXJxKHN0cnVjdA0KPiBkZXZpY2UgKmRldikN
-Cj4gPiAgIAlpZiAocmV0KQ0KPiA+ICAgCQlnb3RvIGNmZ19yZXNldHNfcmVzdG9yZTsNCj4gPg0K
-PiA+IC0JcmV0ID0gcmVnbWFwX3VwZGF0ZV9iaXRzKHN5c2MsIFJaRzNTX1NZU19QQ0lFX1JTVF9S
-U01fQiwNCj4gPiAtCQkJCSBSWkczU19TWVNfUENJRV9SU1RfUlNNX0JfTUFTSywNCj4gPiAtCQkJ
-CSBGSUVMRF9QUkVQKFJaRzNTX1NZU19QQ0lFX1JTVF9SU01fQl9NQVNLLCAwKSk7DQo+ID4gKwly
-ZXQgPSByemczc19zeXNjX2NvbmZpZ19mdW5jKHN5c2MsIFJaRzNTX1NZU0NfRlVOQ19JRF9SU1Rf
-UlNNX0IsDQo+IDApOw0KPiA+ICAgCWlmIChyZXQpDQo+ID4gICAJCWdvdG8gcG93ZXJfcmVzZXRz
-X3Jlc3RvcmU7DQo+ID4NCj4gPiBAQCAtMTY2MywxMiArMTcyNywxMCBAQCBzdGF0aWMgaW50IHJ6
-ZzNzX3BjaWVfcmVzdW1lX25vaXJxKHN0cnVjdA0KPiBkZXZpY2UgKmRldikNCj4gPiAgIHsNCj4g
-PiAgIAlzdHJ1Y3QgcnpnM3NfcGNpZV9ob3N0ICpob3N0ID0gZGV2X2dldF9kcnZkYXRhKGRldik7
-DQo+ID4gICAJY29uc3Qgc3RydWN0IHJ6ZzNzX3BjaWVfc29jX2RhdGEgKmRhdGEgPSBob3N0LT5k
-YXRhOw0KPiA+IC0Jc3RydWN0IHJlZ21hcCAqc3lzYyA9IGhvc3QtPnN5c2M7DQo+ID4gKwlzdHJ1
-Y3QgcnpnM3Nfc3lzYyAqc3lzYyA9IGhvc3QtPnN5c2M7DQo+ID4gICAJaW50IHJldDsNCj4gPg0K
-PiA+IC0JcmV0ID0gcmVnbWFwX3VwZGF0ZV9iaXRzKHN5c2MsIFJaRzNTX1NZU19QQ0lFX1JTVF9S
-U01fQiwNCj4gPiAtCQkJCSBSWkczU19TWVNfUENJRV9SU1RfUlNNX0JfTUFTSywNCj4gPiAtCQkJ
-CSBGSUVMRF9QUkVQKFJaRzNTX1NZU19QQ0lFX1JTVF9SU01fQl9NQVNLLCAxKSk7DQo+ID4gKwly
-ZXQgPSByemczc19zeXNjX2NvbmZpZ19mdW5jKHN5c2MsIFJaRzNTX1NZU0NfRlVOQ19JRF9SU1Rf
-UlNNX0IsDQo+IDEpOw0KPiA+ICAgCWlmIChyZXQpDQo+ID4gICAJCXJldHVybiByZXQ7DQo+ID4N
-Cj4gPiBAQCAtMTY5Nyw5ICsxNzU5LDcgQEAgc3RhdGljIGludCByemczc19wY2llX3Jlc3VtZV9u
-b2lycShzdHJ1Y3QgZGV2aWNlDQo+ICpkZXYpDQo+ID4gICAJcmVzZXRfY29udHJvbF9idWxrX2Fz
-c2VydChkYXRhLT5udW1fcG93ZXJfcmVzZXRzLA0KPiA+ICAgCQkJCSAgaG9zdC0+cG93ZXJfcmVz
-ZXRzKTsNCj4gPiAgIGFzc2VydF9yc3RfcnNtX2I6DQo+ID4gLQlyZWdtYXBfdXBkYXRlX2JpdHMo
-c3lzYywgUlpHM1NfU1lTX1BDSUVfUlNUX1JTTV9CLA0KPiA+IC0JCQkgICBSWkczU19TWVNfUENJ
-RV9SU1RfUlNNX0JfTUFTSywNCj4gPiAtCQkJICAgRklFTERfUFJFUChSWkczU19TWVNfUENJRV9S
-U1RfUlNNX0JfTUFTSywgMCkpOw0KPiA+ICsJcnpnM3Nfc3lzY19jb25maWdfZnVuYyhzeXNjLCBS
-WkczU19TWVNDX0ZVTkNfSURfUlNUX1JTTV9CLCAwKTsNCj4gPiAgIAlyZXR1cm4gcmV0Ow0KPiA+
-ICAgfQ0KPiA+DQo+ID4gQEAgLTE3MjIsNiArMTc4MiwxNCBAQCBzdGF0aWMgY29uc3Qgc3RydWN0
-IHJ6ZzNzX3BjaWVfc29jX2RhdGENCj4gcnpnM3Nfc29jX2RhdGEgPSB7DQo+ID4gICAJLmNmZ19y
-ZXNldHMgPSByemczc19zb2NfY2ZnX3Jlc2V0cywNCj4gPiAgIAkubnVtX2NmZ19yZXNldHMgPSBB
-UlJBWV9TSVpFKHJ6ZzNzX3NvY19jZmdfcmVzZXRzKSwNCj4gPiAgIAkuaW5pdF9waHkgPSByemcz
-c19zb2NfcGNpZV9pbml0X3BoeSwNCj4gPiArCS5zeXNjX2luZm8gPSB7DQo+ID4gKwkJLmZ1bmN0
-aW9ucyA9IHsNCj4gPiArCQkJW1JaRzNTX1NZU0NfRlVOQ19JRF9SU1RfUlNNX0JdID0gew0KPiA+
-ICsJCQkJLm9mZnNldCA9IDB4ZDc0LA0KPiA+ICsJCQkJLm1hc2sgPSBCSVQoMCksDQo+ID4gKwkJ
-CX0sDQo+ID4gKwkJfSwNCj4gPiArCX0sDQo+ID4gICB9Ow0KPiA+DQo+ID4gICBzdGF0aWMgY29u
-c3Qgc3RydWN0IG9mX2RldmljZV9pZCByemczc19wY2llX29mX21hdGNoW10gPSB7DQoNCg==
+From: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
+
+Changes in v11:
+- Updates: eswin,eic7700-pcie.yaml
+  - None
+
+- Updates: pcie-eic7700.c
+  - Add ".data = &eic7700_data" and ".pme_turn_off" callback, set
+    skip_l23_ready in eic7700_pcie_pme_turn_off API, because the EIC7700
+    SoC lacks hardware support for the L2/L3 low-power link states.
+  - Reuse the dw_pcie_{suspend/resume}_noirq APIs, depend on commit [1].
+- Link to V10: https://lore.kernel.org/all/20260129092629.1866-1-zhangsenchuan@eswincomputing.com/
+- Link to: https://lore.kernel.org/linux-pci/20260226133951.296743-1-mani@kernel.org/ [1]
+
+Changes in v10:
+- Updates: eswin,eic7700-pcie.yaml
+  - None
+
+- Updates: pcie-eic7700.c
+  - Remove devm_clk_bulk_get_all_enabled API, use devm_clk_bulk_get_all
+    and clk_bulk_prepare_enable. Add resource release codes and add
+    eic7700_pcie_host_deinit API.
+  - Update PCI_DEVICE_ID_ESWIN_EIC7700.
+  - Add reset_control_put release resources in "goto err_port:".
+  - Delete trailing comma after a terminator in eic7700_pcie_of_match.
+- Link to V9: https://lore.kernel.org/all/20251229113021.1859-1-zhangsenchuan@eswincomputing.com/
+
+Changes in v9:
+- Updates: eswin,eic7700-pcie.yaml
+  - None
+
+- Updates: pcie-eic7700.c
+  - Update comment, s/Rort/Port/.
+- Link to V8: https://lore.kernel.org/all/20251215095928.1712-1-zhangsenchuan@eswincomputing.com/
+
+Changes in v8:
+- Updates: eswin,eic7700-pcie.yaml
+  - None
+
+- Updates: pcie-eic7700.c
+  - Remove dw_pcie_suspend_noirq/dw_pcie_resume_noirq API and add a
+    comment, and remove .deinit.
+  - Remove no_pme_handshake flag.
+  - Add dw_pcie_dbi_ro_wr_en/dw_pcie_dbi_ro_wr_dis API.
+  - Add eic7700_pcie_assert helper function.
+  - Update NOIRQ_SYSTEM_SLEEP_PM_OPS to DEFINE_NOIRQ_DEV_PM_OPS.
+- Link to V7: https://lore.kernel.org/all/20251202090225.1602-1-zhangsenchuan@eswincomputing.com/
+
+Changes in v7:
+- Updates: eswin,eic7700-pcie.yaml
+  - None
+
+- Updates: pcie-eic7700.c
+  - Update "config PCIE_EIC7700" bool to tristate.
+  - Remove fix MSI-X code, depend on new commit [1].
+  - Add set no_pme_handshake flag.
+  - Update -EINVAL to -ENODATA and add PM runtime function.
+  - Add ".probe_type = PROBE_PREFER_ASYNCHRONOUS,".
+  - Update eic7700_pcie_perst_deassert function name to
+    eic7700_pcie_perst_reset.
+  - Update readw to dw_pcie_readw_dbi function.
+  - Add comments above reset_control_bulk_deassert function.
+
+- Updates: pcie-designware.h pcie-designware-host.c
+ -  The ESWIN EIC7700 SoC lacks hardware support for the L2/L3 low-power
+    link states. It cannot enter the L2/L3 ready state through the
+    PME_Turn_Off/PME_To_Ack handshake protocol. To address this, add a
+    no_pme_handshake flag skip PME_Turn_Off broadcast and link state check
+    code, other driver can reuse this flag if meet the similar situation.
+- Link to V6: https://lore.kernel.org/linux-pci/20251120101018.1477-1-zhangsenchuan@eswincomputing.com/
+- Link to: https://lore.kernel.org/linux-pci/20251109-remove_cap-v1-3-2208f46f4dc2@oss.qualcomm.com/ [1]
+
+Changes in v6:
+- Updates: eswin,eic7700-pcie.yaml
+  - Add Reviewed-by: Rob Herring (Arm) <robh@kernel.org>.
+
+- Updates: pcie-eic7700.c
+  - Remove pci_root_ports_have_device function judgment during suspend.
+  - Remove eic7700_pcie_pme_turn_off and eic7700_pcie_get_ltssm function.
+  - Add set no_suspport_L2 flag.
+
+- Updates: pcie-designware.h pcie-designware-host.c
+ - The ESWIN EIC7700 soc does not support enter L2 link state. Therefore
+   add no_suspport_L2 flag skip PME_Turn_Off broadcast and link state
+   check code, other driver can reuse this flag if meet the similar
+   situation.
+- Link to V5: https://lore.kernel.org/all/20251110090716.1392-1-zhangsenchuan@eswincomputing.com/
+- Link to: https://lore.kernel.org/all/e7plmtwtkkd4ymrt2hkztcqdx4ugfjk64oksjyf6lpi2oui53d@vhuo5occyref/
+
+Changes in v5:
+- Updates: eswin,eic7700-pcie.yaml
+  - Modify reg-names: update mgmt to elbi.
+  - Modify clock-names: update pclk to phy_reg.
+  - Modify reset-names: update powerup to pwr.
+  - Remove powerup modify in "snps,dw-pcie-common.yaml" file.
+
+- Updates: pcie-eic7700.c
+  - Update the driver submission comment, mention EIC7700 in the
+    "config PCIE_EIC7700" and in the driver title.
+  - Update some comments, for examples: "s/PME_TURN_OFF/PME_Turn_Off/",
+    "s/INTX/INTx/", "s/PERST/PERST#/", "s/perst/PERST#/", "s/id/ID/".
+  - Update "struct *_pcie" name and function name, add the eic7700 prefix.
+  - Use PCIEELBI_CTRL0_DEV_TYPE macro and update comment, use FIELD_PREP.
+  - Add eic7700_pcie_data pointer in struct eic7700_pcie.
+  - Update .deinit callback function name and removed the dw_pcie_link_up
+    judgment, add pci_root_ports_have_device function judgment.
+  - Remove devm_platform_ioremap_resource_byname function get mgmt, use
+    platform_get_resource_byname function get elbi in "pcie-designware.c".
+  - Update of_reset_control_get to of_reset_control_get_exclusive, use
+    devm_reset_control_bulk_get_exclusive function get resets, update use
+    reset_control_bulk_assert/reset_control_bulk_deassert function.
+- Link to V4: https://lore.kernel.org/all/20251030082900.1304-1-zhangsenchuan@eswincomputing.com/
+- Link to https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/tree/?h=controller/dwc
+
+Changes in v4:
+- Updates: eswin,eic7700-pcie.yaml
+  - Use snps,dw-pcie.yaml instead pci-host-bridge.yaml.
+
+- Updates: snps,dw-pcie-common.yaml
+  - Add powerup reset property, our powerup property is somewhat different
+    from the general attributes defined by Synopsys DWC binding.
+
+- Updates: pcie-eic7700.c
+  - Update the driver submission comment.
+  - Alphabetize so the menuconfig entries remain sorted by vendor.
+  - Update use PCI_CAP_LIST_NEXT_MASK macro.
+  - Use readl_poll_timeout function.
+  - Update eswin_pcie_suspend/eswin_pcie_resume name to
+    eswin_pcie_suspend_noirq/eswin_pcie_resume_noirq.
+  - PM use dw_pcie_suspend_noirq and dw_pcie_resume_noirq function and add
+    eswin_pcie_get_ltssm, eswin_pcie_pme_turn_off, eswin_pcie_host_exit
+    function adapt to PM.
+- Link to V3: https://lore.kernel.org/linux-pci/20250923120946.1218-1-zhangsenchuan@eswincomputing.com/
+
+Changes in v3:
+- Updates: eswin,eic7700-pcie.yaml
+  - Based on the last patch yaml file, devicetree separates the root port
+    node, changing it significantly. Therefore, "Reviewed-by: Krzysztof
+    Kozlowski <krzysztof.kozlowski@linaro.org>" is not added.
+  - Clock and reset drivers are under review. In yaml, macro definitions
+    used in clock and reset can only be replaced by constant values.
+  - Move the num-lanes and perst resets to the PCIe Root Port node, make
+    it easier to support multiple Root Ports in future versions of the
+    hardware.
+  - Update the num-lanes attribute and modify define num-lanes as decimal.
+  - Optimize the ranges attribute and clear the relocatable flag (bit 31)
+    for any regions.
+  - Update comment: inte~inth are actual interrupts and these names align
+    with the interrupt names in the hardware IP, inte~inth interrupts
+    corresponds to Deassert_INTA~Deassert_INTD.
+  - Add Signed-off-by: Yanghui Ou <ouyanghui@eswincomputing.com>.
+
+- Updates: pcie-eic7700.c
+  - Update the submission comment and add DWC IP revision, data rate, lane
+    information.
+  - Optimize the "config PCIE_EIC7700" configuration.
+  - Optimize the macro definition, add bitfield definition for the mask,
+    and remove redundant comments. optimize comments, make use of 80
+    columns for comments.
+  - Use the dw_pcie_find_capability function to obtain the offset by
+    traversing the function list.
+  - Remove the sets MPS code and configure it by PCI core.
+  - Alphabetize so the menuconfig entries remain sorted by vendor.
+  - Configure ESWIN VID:DID for Root Port as the default values are
+	invalid,and remove the redundant lane config.
+  - Use reverse Xmas order for all local variables in this driver
+  - Hardware doesn't support MSI-X but it advertises MSI-X capability, set
+    a flag and clear it conditionally.
+  - Resets are all necessary, Update the interface function for resets.
+  - Since driver does not depend on any parent to power on any resource,
+    the pm runtime related functions are removed.
+  - Remove "eswin_pcie_shutdown" function, our comment on the shutdown
+    function is incorrect. Moreover, when the host powers reboots,it will
+    enter the shutdown function, we are using host reset and do not need
+    to assert perst. Therefore, the shutdown function is not necessary.
+  - remove "eswin_pcie_remove", because it is not safe to remove it during
+    runtime, and this driver has been modified to builtin_platform_driver
+    and does not support hot plugging, therefore, the remove function is
+    not needed.
+  - The Suspend function adds link state judgment, and for controllers
+    with active devices, resources cannot be turned off.
+  - Add Signed-off-by: Yanghui Ou <ouyanghui@eswincomputing.com>.
+- Link to V2: https://lore.kernel.org/linux-pci/20250829082021.49-1-zhangsenchuan@eswincomputing.com/
+
+Changes in v2:
+- Updates: eswin,eic7700-pcie.yaml
+  - Optimize the naming of "clock-names" and "reset-names".
+  - Add a reference to "$ref: /schemas/pci/pci-host-bridge.yaml#".
+    (The name of the reset attribute in the "snps,dw-pcie-common.yaml"
+    file is different from our reset attribute and "snps,dw-pcie.yaml"
+    file cannot be directly referenced)
+  - Follow DTS coding style to optimize yaml attributes.
+  - Remove status = "disabled" from yaml.
+
+- Updates: pcie-eic7700.c
+  - Remove unnecessary imported header files.
+  - Use dev_err instead of pr_err and remove the WARN_ON function.
+  - The eswin_evb_socket_power_on function is removed and not supported.
+  - The eswin_pcie_remove function is placed after the probe function.
+  - Optimize function alignment.
+  - Manage the clock using the devm_clk_bulk_get_all_enabled function.
+  - Handle the release of resources after the dw_pcie_host_init function
+    call fails.
+  - Remove the dev_dbg function and remove __exit_p.
+  - Add support for the system pm function.
+- Link to V1: https://lore.kernel.org/all/20250516094057.1300-1-zhangsenchuan@eswincomputing.com/
+
+Senchuan Zhang (2):
+  dt-bindings: PCI: eic7700: Add Eswin PCIe host controller
+  PCI: eic7700: Add Eswin PCIe host controller driver
+
+ .../bindings/pci/eswin,eic7700-pcie.yaml      | 167 +++++++
+ drivers/pci/controller/dwc/Kconfig            |  11 +
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pcie-eic7700.c     | 409 ++++++++++++++++++
+ 4 files changed, 588 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/eswin,eic7700-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-eic7700.c
+
+--
+2.25.1
+
