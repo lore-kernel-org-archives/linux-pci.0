@@ -1,188 +1,70 @@
-Received: from fhigh-b7-smtp.messagingengine.com (fhigh-b7-smtp.messagingengine.com [202.12.124.158])
+Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78FE233A9EF;
-	Fri, 27 Feb 2026 20:51:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9935F2C237E
+	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 21:15:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772225493; cv=none; b=tQZ5CNMHhtwornifFBBWfu/njDGBztXgu+4mVAOI1r1HFaeszePWXEAAXMtVTSihMA7NS7zWr9l1hJ254XxWwXBciKoZEYJsU8HQiBG3eGkypA463/zXxMAVLULcA+GTt5A9qnOGybE+DCGo0tPSKECL+bzSPe0a7yCRgK7w0eg=
+	t=1772226930; cv=none; b=fPK/625eWk+J1VknfAROnoxM2HqUsek54yeR4QPhKmKY9SJySgn6EkYoAAtiDy/h92GIz6oVBkVHVpkkKfGgsMp0kZZSasRyfS25fXVD6aKUHsTtTDZNR60FKD2Ek3m5qDYYHBefDfW0KipHbFSK/Ea1kMa7ozWscoS0eH5MB/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772225493; c=relaxed/simple;
-	bh=pFL2OtyE4IwOTsf9kwlnN+dSmcMsyT2KLzxsCrSFL/A=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QTrvg9Vfyb82tlVcYGu4ghUYbxBTN7zPvAYo8t3fa1fjS7Q/lfS5BAclcLEGlcVLJqjSLTXagCq0o3SlENQGoNanBSR9XuinK/NjjjXVZS4Q5o6Ht+67gfknIWtCCEuarak8k15vqPPH0OXoqJx2UWy7/o42tZbjtwfdIE4cZ7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Wls0viGZ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=evdJ60kj; arc=none smtp.client-ip=202.12.124.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Wls0viGZ";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="evdJ60kj"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 4F6E57A022D;
-	Fri, 27 Feb 2026 15:51:30 -0500 (EST)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Fri, 27 Feb 2026 15:51:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1772225490;
-	 x=1772311890; bh=dHAFARK9/GwC5LQVntwuJiI1ujfKXWQd1sCvWsn3DKQ=; b=
-	Wls0viGZdTxV4f0VHZGAnusVmS0dWD9tsEKznd9w8f6q07APE1d/HXZK/cd+Gbqe
-	qg9sW5sBV3Ap0QaaFrUkAtzN2G387XhMEq4xAo9eHs39FqQ2ijzO9HX6zK/bguFD
-	cTz7lQ3R/7z2eNHmymYe5Bo0E8tokQPdGRNrFrSuZI/ZaO9dEwWy5n2AeSanjM16
-	md8kmCO1jGFGLZ/rBwDqiDyCMCyFrQqUbCilon567kffjkoFtD3EDC/LkzaAXbBP
-	KnuzI2DyOPm28ghRO2Tkfiqf1zjHCk4kK/ux66eD976bqm/gycDvSCzxIiISsBXH
-	sWWuvfxsWtv3ewwtlfAuvw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1772225490; x=
-	1772311890; bh=dHAFARK9/GwC5LQVntwuJiI1ujfKXWQd1sCvWsn3DKQ=; b=e
-	vdJ60kjug1ypkrrxjJD+oJQGsOvd+9BzpglO9Jl/mOmEvB/u+M10tZhUB1a9NN5d
-	dUkzgDgcA1xqcFkpUuPJVVXZ+LrLhlM9Ld+a1DZu+RWyd70y9LSMrVpMFVm3saB2
-	pwZi7oDVkLMBADf6jihMCqbJzqIjGj+czbjMa4rHKvknWFbfC3Z1R50RvZYp4Lg9
-	FiXx8Ow65I+I/XLbEFJzpUvgbqOOUAuHTZLCUzjvZlLTVfP8Up9pSZ61zy8nzRmT
-	42AxXxdV1aJi9A9LWjuHzLNEFNPqnIR3bvEPmY3+ygXZlwekHgc28bgDGssj/zHz
-	i0dyPga7WBzSMt1US+iWw==
-X-ME-Sender: <xms:0QOiafKNmSksLs9RRvcYRMSiJfF-CAc2VNSupAXKA_Nz_S30UcXWdA>
-    <xme:0QOiafQKo7u5vRTJKVKucqpP1OOcVVucf1o6ORECQxjvjTQAwnupHjmuOgXnsOhhD
-    WR2H2aXGyPpBnz9_Y8LMPLt8zrwA-pp6yIYLhcp7kaIpEmoiOG95g>
-X-ME-Received: <xmr:0QOiaTgufTnF0o8RDtH_metnpmvq3iQr2ohCfmg2j2__c924wQhvuBKOi-4>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvhedttdduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkjghfofggtgfgsehtqhertdertdejnecuhfhrohhmpeetlhgvgicu
-    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeegudevhfejueefveduieeuueeifeettdekveekhffgvdetfeelueehgfdt
-    heffhfenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepvddupdhmohguvgep
-    shhmthhpohhuthdprhgtphhtthhopehjuhhlihgrnhhrsehlihhnuhigrdhisghmrdgtoh
-    hmpdhrtghpthhtohepshgthhhnvghllhgvsehlihhnuhigrdhisghmrdgtohhmpdhrtghp
-    thhtohepfihinhhtvghrrgeslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehtsh
-    eslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehosggvrhhprghrsehlihhnuhig
-    rdhisghmrdgtohhmpdhrtghpthhtohepghgsrgihvghrsehlihhnuhigrdhisghmrdgtoh
-    hmpdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohephihishhhrghi
-    hhesnhhvihguihgrrdgtohhmpdhrtghpthhtohepshhkohhlohhthhhumhhthhhosehnvh
-    hiughirgdrtghomh
-X-ME-Proxy: <xmx:0QOiaRuZz7B8FOz0_CdgRF47jJWtOrVH-jX9mPBUdB7SimpUUuARAg>
-    <xmx:0QOiaWgj1VcsIWrLw0abfi9FBEvt5HlgEuUugninJp8nc8Yhk8dlpg>
-    <xmx:0QOiaQF53hA9phQjeNeZQf_Dvgwav6ItStXXEuOkB2dry6OPCWy_pw>
-    <xmx:0QOiaXLIyH6u0Ynv55of7SFS1D5_-oiXgFi1AT8F_Bjga0x0hLxCYg>
-    <xmx:0gOiae-xMQFXE4geg7TQA75jVkGgt_VsmrSfr2xjEPfv0b0sfoGk1Rmf>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 27 Feb 2026 15:51:28 -0500 (EST)
-Date: Fri, 27 Feb 2026 13:51:26 -0700
-From: Alex Williamson <alex@shazbot.org>
-To: Julian Ruess <julianr@linux.ibm.com>
-Cc: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
- oberpar@linux.ibm.com, gbayer@linux.ibm.com, Jason Gunthorpe
- <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>, Shameer Kolothum
- <skolothumtho@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
- mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
- hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
- kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-s390@vger.kernel.org, linux-pci@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH v2 1/3] vfio/pci: Rename vfio_config_do_rw() to
- vfio_pci_config_rw_single() and export it
-Message-ID: <20260227135126.5f3c900f@shazbot.org>
-In-Reply-To: <20260224-vfio_pci_ism-v2-1-f010945373fa@linux.ibm.com>
-References: <20260224-vfio_pci_ism-v2-0-f010945373fa@linux.ibm.com>
-	<20260224-vfio_pci_ism-v2-1-f010945373fa@linux.ibm.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1772226930; c=relaxed/simple;
+	bh=GLNKKQCpfivgD8nRR+YfFy5Iq0VKI3RCPIbSqPekDFU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sc5YkMjNerQUeonQTIXpWX1hgrWCZs+Fc5kiCfb1kKLJytKGUo2jq8HXc2mJIAwCz+U5KGimq8AXdkUpAbGmMSB8GWJYCELDsr4WJmXb40C1zCbzBaNp37DbgQxBSETNB6IVaBmzhlHfl/N1qTnQXz3iH0H+ceJ9oyt9xJJnUyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by bmailout1.hostsharing.net (Postfix) with ESMTPS id F255B202019F;
+	Fri, 27 Feb 2026 22:15:23 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id E26AC27C72; Fri, 27 Feb 2026 22:15:23 +0100 (CET)
+Date: Fri, 27 Feb 2026 22:15:23 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sizhe Liu <liusizhe5@huawei.com>, bhelgaas@google.com,
+	jonathan.cameron@huawei.com, shiju.jose@huawei.com,
+	keith.busch@intel.com, linux-pci@vger.kernel.org,
+	linuxarm@huawei.com, prime.zeng@hisilicon.com, fanghao11@huawei.com,
+	shenyang39@huawei.com, Shuai Xue <xueshuai@linux.alibaba.com>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Terry Bowman <terry.bowman@amd.com>
+Subject: Re: [PATCH] PCI/ERR: Clear fatal status of the reporting device
+Message-ID: <aaIJa_2XiQht4swq@wunner.de>
+References: <20260227102505.3966864-1-liusizhe5@huawei.com>
+ <20260227163118.GA3897131@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260227163118.GA3897131@bhelgaas>
 
-On Tue, 24 Feb 2026 13:34:32 +0100
-Julian Ruess <julianr@linux.ibm.com> wrote:
+On Fri, Feb 27, 2026 at 06:25:05PM +0800, Sizhe Liu wrote:
+> During PCIe native AER error recovery, ERR_FATAL status bits are not cleared
+> after fatal error handling. This causes stale ERR_FATAL bits to be reported
+> in subsequent AER events, even after reporting "device recovery successful".
 
-> A follow-up patch adds a new variant driver for s390 ISM devices. Since
-> this device uses a 256=E2=80=AFTiB BAR 0 that is never mapped, the variant
-> driver needs its own ISM_VFIO_PCI_OFFSET_MASK. To minimally mirror the
-> functionality of vfio_pci_config_rw() with such a custom mask, export
-> vfio_config_do_rw(). To better distinguish the now exported function
-> from vfio_pci_config_rw(), rename it to vfio_pci_config_rw_single()
-> emphasizing that it does a single config space read or write.
->=20
-> Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
-> ---
->  drivers/vfio/pci/vfio_pci_config.c | 8 +++++---
->  drivers/vfio/pci/vfio_pci_priv.h   | 4 ++++
->  2 files changed, 9 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
-ci_config.c
-> index b4e39253f98da61a5e2b6dd0089b2f6aef4b85a0..a724fdd8f4860bd529c5c7501=
-beb1f7156fae9b0 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -1880,8 +1880,9 @@ static size_t vfio_pci_cap_remaining_dword(struct v=
-fio_pci_core_device *vdev,
->  	return i;
->  }
-> =20
-> -static ssize_t vfio_config_do_rw(struct vfio_pci_core_device *vdev, char=
- __user *buf,
-> -				 size_t count, loff_t *ppos, bool iswrite)
-> +ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
-> +			      char __user *buf, size_t count, loff_t *ppos,
-> +			      bool iswrite)
->  {
->  	struct pci_dev *pdev =3D vdev->pdev;
->  	struct perm_bits *perm;
-> @@ -1970,6 +1971,7 @@ static ssize_t vfio_config_do_rw(struct vfio_pci_co=
-re_device *vdev, char __user
-> =20
->  	return ret;
->  }
-> +EXPORT_SYMBOL(vfio_pci_config_rw_single);
+Wrong.	The bits are cleared by:
 
-EXPORT_SYMBOL_GPL.  Thanks,
+report_slot_reset()
+  err_handler->slot_reset()
+    pci_restore_state()
+      pci_aer_clear_status()
+      	pci_aer_raw_clear_status()
 
-Alex
+Is this an LLM-generated submission?  The confidently worded but incorrect
+commit message seems to suggest that it is.  If so, please follow the
+guidelines in Documentation/process/generated-content.rst and be
+transparent about the tools you used to come up with the patch.
 
+Thanks,
 
-> =20
->  ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __use=
-r *buf,
->  			   size_t count, loff_t *ppos, bool iswrite)
-> @@ -1981,7 +1983,7 @@ ssize_t vfio_pci_config_rw(struct vfio_pci_core_dev=
-ice *vdev, char __user *buf,
->  	pos &=3D VFIO_PCI_OFFSET_MASK;
-> =20
->  	while (count) {
-> -		ret =3D vfio_config_do_rw(vdev, buf, count, &pos, iswrite);
-> +		ret =3D vfio_pci_config_rw_single(vdev, buf, count, &pos, iswrite);
->  		if (ret < 0)
->  			return ret;
-> =20
-> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci=
-_priv.h
-> index 27ac280f00b975989f6cbc02c11aaca01f9badf3..28a3edf65aeecfa06cd185663=
-7cd33eec1fa3006 100644
-> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> @@ -37,6 +37,10 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_devic=
-e *vdev, uint32_t flags,
->  ssize_t vfio_pci_config_rw(struct vfio_pci_core_device *vdev, char __use=
-r *buf,
->  			   size_t count, loff_t *ppos, bool iswrite);
-> =20
-> +ssize_t vfio_pci_config_rw_single(struct vfio_pci_core_device *vdev,
-> +			      char __user *buf, size_t count, loff_t *ppos,
-> +			      bool iswrite);
-> +
->  ssize_t vfio_pci_bar_rw(struct vfio_pci_core_device *vdev, char __user *=
-buf,
->  			size_t count, loff_t *ppos, bool iswrite);
-> =20
->=20
-
+Lukas
