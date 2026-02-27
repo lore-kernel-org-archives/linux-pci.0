@@ -1,120 +1,123 @@
-Received: from mail-qt1-f227.google.com (mail-qt1-f227.google.com [209.85.160.227])
+Received: from mail-yx1-f104.google.com (mail-yx1-f104.google.com [74.125.224.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFED737BE75
-	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 23:42:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 043CB28CF6F
+	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 23:52:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.104
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772235739; cv=pass; b=nR1Cdjm/9tO1YXmj5cOQo3vMHvj7YNpP9tZSLtII3ai9oVx6TIPgUjRq0RU6eG/isYDYj26v9wy0RY4DoE/0/gmUyIOYbvb87neefYuMVvgLgO9g4n5MNgjPTz0DhMtJZO3QXfO/gnBPv+yrbS0KpuzWb0h3kFk5fCPf4iZF0qE=
+	t=1772236362; cv=pass; b=qiXOSOyOA6v3sWRorqICZ7JfLR7ih/PZ9ZaoxbBWfKjnzexdknDbVdKYft8EkC5G303XFm0d3zagb2QKmI0pSsd0a7Y5qVkLuAkUhyOaTZaMm/7zzpsnDKri41/tQMfnAMlgjsPzEykjgE54EhIksC4JseeiBbVq69rG+mXlDHo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772235739; c=relaxed/simple;
-	bh=fqXxS073g/HG3jwynWPnSnuQsshEPXpSPP604bpZEK0=;
+	s=arc-20240116; t=1772236362; c=relaxed/simple;
+	bh=jFubAEdZCZclsZnDnIhRLggwaux+zxsuEGUztzc7rnE=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AjZICHH6vlmG9d509LzfoAaCnsb2E/ByeqB8AKmPsNMD0x1STd4EAZliiLvnegDmL3t8b1DsZQX0OEnEj7LHdwr7L0XNytgxo71+U4XHNyWwIBWEFm6xgv45CydJ+QtMwM+98zN+lRuoi6Yutfb/jjfbnxAt7gHjv6Y7zFWz5SM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Eqe/RXl5; arc=pass smtp.client-ip=209.85.160.227
+	 To:Cc:Content-Type; b=YnkVG0Ei3qf19JowTuWudLGyL+V+MfcuuOIY2w9rwQLL+URNkFLwgSALaoeIBNCAfKxRarQyRx1cQDNyBGFOexwp1qtNrR5THlPiBkJX1tkU/PoBjixk+yUHdvkWt2PB42BJhncF3XCqXIEsTEof5KMJzbXC3fmpzxxZ11lg6AM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=crwlwzQq; arc=pass smtp.client-ip=74.125.224.104
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Eqe/RXl5"
-Received: by mail-qt1-f227.google.com with SMTP id d75a77b69052e-506c00df428so25015821cf.3
-        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 15:42:17 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="crwlwzQq"
+Received: by mail-yx1-f104.google.com with SMTP id 956f58d0204a3-649278a69c5so2350794d50.3
+        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 15:52:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772235737; x=1772840537;
+        d=1e100.net; s=20230601; t=1772236360; x=1772841160;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=y/FABFCfkU9zC4sZduSbPBcYNRUHGz8YpUTlMz82Am8=;
-        b=Gr6VhE6uOK4dHOZr/2fzNDEQak7gssU9LRwQ0sm4Zc4EQWrgbJDTAwzmULmC17aAfo
-         e4wJmJnZbbSASxYpVcflQEHE2emfwsozk/48VCu8H8Sw17UFRQ2ZBTfKJ7Ahp5KaT6M2
-         spwUoqnWiKzf5czlqsaXoUsjIJEseepzdrhedMKC+h4HKCiKFXifEa6+Z7xW/k0gvhCC
-         r20yPXh22c4KzpCuMsDtRqGQu+BvhrdeTUoaAsVctbKihTWtX2dJZ6FjH9UO4lGAnvSr
-         eH7FQQF6IDy3FtWEQhswYJp2Ffegnj8VhbOftZTGIrVFWawojReK4q8zc3ejv2bH3vZO
-         ox8Q==
-X-Gm-Message-State: AOJu0YyrgJZk5lb50/7vjJ4KX06nEeRhWixY3vW/Femhb3ZvjAEn6bOH
-	MQvH4uXkf+YfJ1wHRpWNCtP9rjgXBSMZ95AhkxkXGQzDAEStWZ1jEXb34Vp0GWT5pjVOlAZmW5f
-	A4C8W3MuRdzisYONIZFVp6ffLmT/lRkiBfV/9/mBzzg9ympSvQRpcurch4ZUXEWCMBHakED60rK
-	L0RfBHT9cpwNt5Nfb/1oEBVGoup9Zr/UBMMEQkmG5e37Bwt5gmApPOclgAYUU7buyT8DMfLGjNU
-	k1WgPS7pxntkrxH
-X-Gm-Gg: ATEYQzzBTg4AXa5eDMO5wRVSKnVD/08eMTGDUw1AxrnCyfOLq8eS0UR2Obp/oViqmvK
-	VQYb0v1htJ66BU3Qt+pmpZaoIUzXnOwMBI5ypo9n/ZJ4dNWWRkuI3zt47JjBEaGSIJjGTID8WzD
-	mM0fRQYlxZ2ZW62ufbWuTWOz+RE4taDSqMoR1Q5wdelfHYeIWa4E5ZniaMtSxK5keNXU/IwR9OS
-	IJQ7KsbHsxsndfxm5K1BG3Rn3Aa2I7+3GBQzxuu9P1B1kqO9rdfYEo7DtJscnX99OdKOyQAtaYS
-	djQjqbWIjtvvFll0aN/wi2YNtJ62aNsw7ukWveow3GzVR+JEuXgvBAceDAc1l3FHT0ecpDeYNas
-	1RzXYzv5l9FIKoKXFsudNuicv+p+wEgmyn0zl2qACr8IkxnwTIuSrPE3ERfi6rmGlIVuEhDqrCM
-	a1JcYLVyMB8dwjsIZ/1Leox4Uxs6zeYnLC6M1qO0dbXD9x/s8kMK1KKQi8oH0m
-X-Received: by 2002:ac8:7dd4:0:b0:4ee:1ec9:f947 with SMTP id d75a77b69052e-507527caa48mr60966861cf.3.1772235736635;
-        Fri, 27 Feb 2026 15:42:16 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-103.dlp.protect.broadcom.com. [144.49.247.103])
-        by smtp-relay.gmail.com with ESMTPS id d75a77b69052e-50744a78567sm8103811cf.6.2026.02.27.15.42.16
+        bh=rU9sm6x0KT8GUzZ8y84PhcqMYC35Nr3VhVAobUJuhjc=;
+        b=oG1Y4QYve44RSbYGA5SDQpHAoHbp9V09Zh2Kk8UtnAkblaHEwNn3dXAGrWz+liEfcy
+         m65wdtL9zbxCJDFeUTLfldEWY+WXfaqF3OcnRNNc8CKq2x3ZIJfhVQkDYoiP2Iu6tjL1
+         ftJEkRQmsmLoczkNKploj2jvxZXqGv6Akvj9rIbswaTMaNNPm9nd5/9y2JmKZjbTO8lI
+         SMwhjsZNstgp8ARXbubpo5qiEv/hOIdNACRKGLVr73QgzByGd/ZuqIKA78y3xy92k+t2
+         ezhtHahBjUXLdc2IPq4Nu/yfF2sLdMKoXh83XmjNjBsZmIyIlgE4L8G7Jmuby1Bq43vQ
+         qYHw==
+X-Forwarded-Encrypted: i=2; AJvYcCWMu2b9q/X8mHXMgTpm18c2DM484hszGTLmUpf6Y8Bymn6vpM1nJsEqysnNFvMAKRwwfNKq+73k+tM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxNKXSh5NET7ClRwRsLwYOXJyEycXPfviYSVp+ZxgjlfIUEMLJe
+	3jXx0/XyJa6wqPE3IlYC/TLFYw6O1YTvH+/pYx59BBpAVGqQeZGVLsivo8kK7jvnMQNoT02ndhJ
+	aMsYqZ73erpJDc3zei0fo7X/793+copRnoZvnOAWvMiSm0+4YddbmqzfcNJ+mU8G9Q46OfWqOZE
+	GuXV9K0P6VSuCh+FfGW+T15c9lmaFPvSR1rnJL6YaVoayJRDRAXVee6jjEjMi+DzA2KyF29XpyM
+	ckPs5i0mlZDJQkGjBE=
+X-Gm-Gg: ATEYQzz41ELDO/POsORUcU56HI2/Q9seF9xMNHLH7CUg2Ipz1grbvEezCzvWfVLu7oE
+	QcbTzlvPPHTOX6RI5HqLo6Znt7+MrUo+DVKgsFoBU8FLfelRQyocixrV7yRdgfEfoTeZGak5za9
+	BYRu59N6Haa9LYn7y3qVeM9/0fxFLmWKFSHOeX3j/280+a46ESMvoOapiiSaRJDGHVuLpggg85C
+	1q/Q3HSMokgxaem+iyRH6JVtLgK0CKF00fodmQhhg0NHW7+Ep/evoDm5g4lnQxNysLPyMftZOrY
+	N1U5taNF5iPffOHnQHOmVyeQ2WRXOsm4ICQhQ4g7wNWeie6PCg4wcKH8IQ4cdt77rHYwo7yt26E
+	oXSHHYe7awPGFRMJVjz2wnQtpH7I3LkCpakEb+7TIzv75O9k0kzH51pgHJJbht0R1zy9CeyKKF5
+	HkO0aTmUaHvLXwSaRzoKrlSUnIY5RB7Uo1czgN71Zds8YjgDj/YmTsoE6ReSUS
+X-Received: by 2002:a53:c652:0:b0:649:b31e:8f4e with SMTP id 956f58d0204a3-64cc22c2ac6mr2889579d50.70.1772236359680;
+        Fri, 27 Feb 2026 15:52:39 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-118.dlp.protect.broadcom.com. [144.49.247.118])
+        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-64cb75fe60asm617070d50.9.2026.02.27.15.52.39
         for <linux-pci@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 27 Feb 2026 15:42:16 -0800 (PST)
+        Fri, 27 Feb 2026 15:52:39 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-389f0d519f9so15879301fa.0
-        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 15:42:16 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772235735; cv=none;
+Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-3871bd94811so19970101fa.2
+        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 15:52:39 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772236358; cv=none;
         d=google.com; s=arc-20240605;
-        b=ZPpK3ixP8YL46oLaRo+8X/CA2P+JY+uyXS69q80Au+JmPTqaQhQSS4zlWBhuRQ1fdy
-         OJk+b9AA/GfohpF12FtKLmmJmbW3Rz9vD3jl81EgLRUn6cOUXZYi2J19XhKyeJk2nZHw
-         ECc2BojXgSZjZmtItlHEkQHXEREZIL1UfGt5psPGAaNZkx3J3CgSwE5KSOyVYzlMuKGT
-         4X5Zb8CyEhAb1P5/SEquyvstu3it487iUJ1MyIDDrHaHTje6QcNUeEYLWKweSHqCwD26
-         RUMb/HFt6GTPfM6JOF3Zqc+vCL/KkL+6oq4mtYQYDMcgzpKSVo7BcO9dj3VHlCju4amQ
-         laxg==
+        b=bIPLEAY1LkGoD0qTbtKWP79UXclRqrTbmSKw3FBETe8dK5qO+Pq8oqukqPophavXCA
+         FLtYGCEiBs9uSwMdOkz1TAIo+86t9sEgkJf8QPIWvDyU+BUp7b69inBZEp21aUWciuFt
+         EmGTz7HnPZexeCVALhOLKaUVrh9vMvDdPPFkWnudWEcMGmejQNYfJIoD3iONnHWMl4t8
+         XpNQUjeLSy99qNR/3EAI0nxrVJy6n/xugGda9R6z5IUhCapV+0GPJx90GoVOmJ/h5/wF
+         maNb00igVbpblabKc/18dgiwMtpN05Zzpmpg6JbSfCf9scfj/uEa1aJGOhFLAIKB0iAn
+         KTbA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=y/FABFCfkU9zC4sZduSbPBcYNRUHGz8YpUTlMz82Am8=;
-        fh=7IlF+BoJet//4Naqb67Be76JSxT1NAv44cZQAn3GAFc=;
-        b=axF9xWyqdg+g6If2VC0erQZrJDPeov9mQ6NCBiACQPVY5BZvJx/XIZMXQxlCrWqwzu
-         J13V/YhNIphX5kgy2WttqYDH/+E1ytaR6kaUkY0fLKjLERE4OPZdOQAkURwGGQW2knd/
-         tgbHA1M46OUyLX8FmQJbvMEp/Uqz6fZK3ArfHwglwtlJZ1Uh+RXXD0CGuIu5Qdqy5wVB
-         oeRcoNaURp7Y2Ki6F9wj9tHXOs/zDmhhbeP2aiCdu1/+4V7jw1DqEu6lEpHyFHyHKt2U
-         od4fRqVmyj5/l4qMxR7RjemlOd8KlDFnb/647QYM7rhDtNOC50yrdJc6rJMZyBYs2WXg
-         XC0w==;
+        bh=rU9sm6x0KT8GUzZ8y84PhcqMYC35Nr3VhVAobUJuhjc=;
+        fh=h0l1TLfuMshmff+WRIQKFZNUqpFNmzwXgeDmVYZql3Y=;
+        b=i/qmceUjGnnu1734YLKHJRATKnZzAP5sfVJBbexOc8SM5HalcP9W9q5mOgQLejY8MH
+         Tjv9si5iI278KlOOeM/J88hDdXyzWN0Ytyb9jCsNVRE4YIqztq1cOOkw2evYGykjxkdm
+         Pg1WEmY/sDIXBh3ESfRj1kebNwXLx9lf/HOMkLq/cjeZ/s3K7ECFH7lMSytxewDyNQhA
+         Am92jVfGbiZOIDeOkQdnWyGdris1IntfFzECtPOBJWBv24MQ/zRZnxQxgzYArFM6lReG
+         87RXjNGJYsJWKxr3SofhCZzW6MDZZpZF5M9QZEL2gGWI+BjMr+9yu9+E1xyPwrgvXWNm
+         Hcbg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1772235735; x=1772840535; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1772236358; x=1772841158; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=y/FABFCfkU9zC4sZduSbPBcYNRUHGz8YpUTlMz82Am8=;
-        b=Eqe/RXl5VKQWdtGqKAQf/qbTE0Eq3EFIxiquFQUmGkt2B0c0rPgw5OGJfftmfVeNuM
-         JYZqCBgrP7t/JR39OLBVUclTexiM/XnJCsej6pbkDSRzHIKgX42WZjK9AOjFybO4R2Lq
-         LpRWqwbr+r5Azh70RaRaBQHt+Q3K3gmFvvWjU=
-X-Received: by 2002:a05:651c:330:b0:389:f95d:cd85 with SMTP id 38308e7fff4ca-389ff13bb5cmr20864151fa.18.1772235734717;
-        Fri, 27 Feb 2026 15:42:14 -0800 (PST)
-X-Received: by 2002:a05:651c:330:b0:389:f95d:cd85 with SMTP id
- 38308e7fff4ca-389ff13bb5cmr20864051fa.18.1772235734152; Fri, 27 Feb 2026
- 15:42:14 -0800 (PST)
+        bh=rU9sm6x0KT8GUzZ8y84PhcqMYC35Nr3VhVAobUJuhjc=;
+        b=crwlwzQqy7WhV2r8qEOxzlqn9V1Y90VlgVNvRih8L1uzBBkPwXYtf48k6lpEdNKare
+         p4Hq8r6sDj1r2TpOc3BDcHNCxOe/NJdWIHZW9nPrnv+6TOiG9JnI1fwyb/O2r6sFyAIc
+         R4/GsHkl77YNQivVKAyWt4z1BZSzyjpqqMHPk=
+X-Forwarded-Encrypted: i=1; AJvYcCXhBgC+FezieKjuTdwp3iHeOi56pm3G8j7H+qX1DmMbhyTZu4u4b5j1yzFhlXcXrermFDQczm6d+u4=@vger.kernel.org
+X-Received: by 2002:a05:651c:30ca:b0:380:a1c:7045 with SMTP id 38308e7fff4ca-389ff105688mr28751841fa.8.1772236357856;
+        Fri, 27 Feb 2026 15:52:37 -0800 (PST)
+X-Received: by 2002:a05:651c:30ca:b0:380:a1c:7045 with SMTP id
+ 38308e7fff4ca-389ff105688mr28751711fa.8.1772236357336; Fri, 27 Feb 2026
+ 15:52:37 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+-6iNzJM=C+Byb+wnmPYdJcYoTT7N-XwE3o2OpJzmcJrtOc8A@mail.gmail.com>
- <20260224230550.GA3754701@bhelgaas>
-In-Reply-To: <20260224230550.GA3754701@bhelgaas>
+References: <20200928194651.5393-2-james.quinlan@broadcom.com>
+ <20260220221106.GA3552425@bhelgaas> <CA+-6iNzJM=C+Byb+wnmPYdJcYoTT7N-XwE3o2OpJzmcJrtOc8A@mail.gmail.com>
+ <aZ731NM0TgqvwOlo@ryzen>
+In-Reply-To: <aZ731NM0TgqvwOlo@ryzen>
 From: Jim Quinlan <james.quinlan@broadcom.com>
-Date: Fri, 27 Feb 2026 18:42:02 -0500
-X-Gm-Features: AaiRm53R5GHQhD9GhtbNzLrSKc80-vr8FO-Gq63CpWQcyey-RQLjngSteD1V5t8
-Message-ID: <CA+-6iNwD=bWUBrzVdgPSXw5kqT2SMQH6FqoDxW6gN9qbU=x56w@mail.gmail.com>
+Date: Fri, 27 Feb 2026 18:52:25 -0500
+X-Gm-Features: AaiRm5339ubbkYR_U31qTji6EZOgKPfannORuqNblCmANAvrqF7kAFzwbjOmBzA
+Message-ID: <CA+-6iNwjn1PKufe-Ot0oefnKfkPxYsYoCk-RwuPxk117t=joww@mail.gmail.com>
 Subject: Re: [PATCH v2 RESEND 1/1] PCI: pcie_bus_config can be set at build time
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>, 
-	Hans Zhang <18255117159@163.com>, Niklas Cassel <cassel@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, 
+	bcm-kernel-feedback-list@broadcom.com, Bjorn Helgaas <bhelgaas@google.com>, 
+	open list <linux-kernel@vger.kernel.org>, Hans Zhang <18255117159@163.com>
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000745b4e064bd6c9ea"
+	boundary="00000000000097b7cf064bd6ee9c"
 
---000000000000745b4e064bd6c9ea
+--00000000000097b7cf064bd6ee9c
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Feb 24, 2026 at 6:05=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
+On Wed, Feb 25, 2026 at 8:23=E2=80=AFAM Niklas Cassel <cassel@kernel.org> w=
+rote:
 >
 > On Tue, Feb 24, 2026 at 04:10:17PM -0500, Jim Quinlan wrote:
 > > On Fri, Feb 20, 2026 at 5:11=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.o=
@@ -126,205 +129,39 @@ done at
 The
 > > > > pci_bus_config setting may still be overridden by the bootline para=
 m.
-> > > >
-> > > > Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
-> > >
-> > > We merged this as b0e85c3c8554 ("PCI: Add Kconfig options for MPS/MRR=
-S
-> > > strategy"), which appeared in v5.10.
-> > >
-> > > In retrospect, I think this might have been a mistake because it
-> > > forces a build-time configuration for something that may not be known
-> > > at build time and can be set via command-line parameter.
-> >
-> > I don't see much difference between setting the default at build time
-> > versus setting it via the boot command line --  both methods are
-> > performed before runtime and make assumptions.
 >
-> True.  I don't like baking unnecessary decisions into the kernel
-> binary.  This one seems useful for a point product but at the cost of
-> a small burden on everybody who builds a kernel.
+> Hello Jim,
 >
-> > > But I can't find any discussion about it.  Did you have a use case
-> > > where command line parameters weren't usable?
-> >
-> > Yes.  We have a Cable Modem (CM) customer who can update their Linux
-> > version but cannot update their boot loader or its default bootline.
-> > FWIW, they only want the option to set pcie_bus_config to
-> > PCIE_BUS_SAFE via the .config.
-> >
-> > > If there's a platform that requires one of these settings, maybe
-> > > there's a way to do that programmatically in the host bridge driver
-> > > rather than using a Kconfig symbol.
-> >
-> > It's a CM product which uses a particular Wifi chip.  Recognizing this
-> > scenario would have the RC trying to grab the EP's vendor-id (and
-> > possibly more info), and that seems awkward at best.
+> Could you perhaps test this series:
+> https://lore.kernel.org/linux-pci/20251127170908.14850-1-18255117159@163.=
+com/
 >
-> I assume a closed product like a CM doesn't run a plain vanilla
-> upstream kernel, so removing the Kconfig option would mean carrying a
-> one-line patch to set pcie_bus_config.  There's some trade-off between
-> carrying a source patch and tracking Kconfig requirements, but I don't
-> know where that would be in your case.
+>
+> Since the series above only defaults by setting MPS to MPSS for the
+> Root Port (and no other devices), for kernels with PCIE_BUS_SAFE=3Dy
+> pcie_bus_configure_settings() will still be called for each downstream
+> device, so it should not affect your CM product.
+>
+> But, it would be nice if you could test the series anyway, just to
+> verify.
 
-Our goal is to run a plain vanilla kernel with -- if needed -- BRCM
-modules, but we've got a ways to go.
->
->
-> Could this be decided in pcie-brcmstb.c based on DT or something
-> similar?  I guess you said it only applies to CMs with a particular
-> WiFi chip, so maybe that's not visible in DT.  But I wonder why it's
-> specific to the WiFi -- I would think the important thing is that it's
-> a closed system and every closed system would want PCIE_BUS_SAFE.
-We only needed it for a specific Wifi chip with a CM board.  All other
-boards were fine with the default action.
+Hello Niklas,
 
-Going forward, there are a number of ways for them to handle this if
-the CONFIG_PCIE_BUS_*  choices are dropped.  One is to use the DT
-bootargs with "pci=3Dpcie_bus_safe".  Another is to use
-CONFIG_CMDLINE/CMDLINE_FORCE to carry the same param.  And also what
-you have suggested above.
+Unfortunately I do not have the specific board that required us to use
+the PCIE_BUS_SAFE setting, so I really cannot do a proper test of your
+series.  I typically only test things on our STB boards using non-Brcm
+devices that have stock upstream drivers.
 
-If you are just going to modify upstream only, there should be no problem.
-If you are going to call this a "Fix" and backport to all of the past
-stable versions down to 5.10, there may be some havoc when this
-particular product pulls in the fixes.  I've given a heads-up to my CM
-colleague, but this info may fall through the cracks.
-
-Regards,
+Sorry & regards,
 Jim Quinlan
 Broadcom CM/STB
 
 >
 >
-> > > > ---
-> > > >  drivers/pci/Kconfig | 56 +++++++++++++++++++++++++++++++++++++++++=
-++++
-> > > >  drivers/pci/pci.c   | 12 ++++++++++
-> > > >  2 files changed, 68 insertions(+)
-> > > >
-> > > > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> > > > index 4bef5c2bae9f..15ce948858fb 100644
-> > > > --- a/drivers/pci/Kconfig
-> > > > +++ b/drivers/pci/Kconfig
-> > > > @@ -187,6 +187,62 @@ config PCI_HYPERV
-> > > >         The PCI device frontend driver allows the kernel to import =
-arbitrary
-> > > >         PCI devices from a PCI backend to support PCI driver domain=
-s.
-> > > >
-> > > > +choice
-> > > > +     prompt "PCIE default bus config setting"
-> > > > +     default PCIE_BUS_DEFAULT
-> > > > +     depends on PCI
-> > > > +     help
-> > > > +       One of the following choices will set the pci_bus_config at
-> > > > +       compile time.  The choices offered are the same as those of=
-fered
-> > > > +       for the bootline parameter 'pci'; i.e. 'pci=3Dpcie_bus_tune=
-_off',
-> > > > +       'pci=3Dpcie_bus_safe', 'pci=3Dpcie_bus_perf', and 'pci=3Dpc=
-ie_bus_peer2peer'.
-> > > > +       This is a compile-time setting and is still be overridden b=
-y the
-> > > > +       above bootline parameters, if present.  If unsure, chose PC=
-IE_BUS_DEFAULT.
-> > > > +
-> > > > +config PCIE_BUS_TUNE_OFF
-> > > > +     bool "Tune Off"
-> > > > +     depends on PCI
-> > > > +     help
-> > > > +       Use the BIOS defaults; doesn't touch MPS at all.  This is t=
-he same
-> > > > +       as booting with 'pci=3Dpcie_bus_tune_off'.
-> > > > +
-> > > > +config PCIE_BUS_DEFAULT
-> > > > +     bool "Default"
-> > > > +     depends on PCI
-> > > > +     help
-> > > > +       Default choice; ensures that the MPS matches upstream bridg=
-e.
-> > > > +
-> > > > +config PCIE_BUS_SAFE
-> > > > +     bool "Safe"
-> > > > +     depends on PCI
-> > > > +     help
-> > > > +       Use largest MPS that boot-time devices support.  If you hav=
-e a
-> > > > +       closed system with no possibility of adding new devices,
-> > > > +       this will use the largest MPS that's supported by all devic=
-es.
-> > > > +       This is the same as booting with 'pci=3Dpcie_bus_safe'.
-> > > > +
-> > > > +config PCIE_BUS_PERFORMANCE
-> > > > +     bool "Performance"
-> > > > +     depends on PCI
-> > > > +     help
-> > > > +       Use MPS and MRRS for best performance.  This setting ensure=
-s
-> > > > +       that a given device's MPS is no larger than its parent MPS,
-> > > > +       which allows us to keep all switches/bridges to the max MPS=
- supported
-> > > > +       by their parent and eventually the PHB.  This is the same a=
-s
-> > > > +       booting with 'pci=3Dpcie_bus_perf'.
-> > > > +
-> > > > +config PCIE_BUS_PEER2PEER
-> > > > +     bool "Peer2peer"
-> > > > +     depends on PCI
-> > > > +     help
-> > > > +       Set MPS =3D 128 for all devices.  MPS configuration effecte=
-d by
-> > > > +       the other options could cause the MPS on one root port to b=
-e
-> > > > +       different than that of the MPS on another.  Simply making t=
-he system
-> > > > +       wide MPS be set to the smallest possible value (128B) solve=
-s
-> > > > +       this issue.  This is the same as booting with 'pci=3Dpcie_b=
-us_peer2peer'.
-> > > > +
-> > > > +endchoice
-> > > > +
-> > > >  source "drivers/pci/hotplug/Kconfig"
-> > > >  source "drivers/pci/controller/Kconfig"
-> > > >  source "drivers/pci/endpoint/Kconfig"
-> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > index e39c5499770f..dfb52ed4a931 100644
-> > > > --- a/drivers/pci/pci.c
-> > > > +++ b/drivers/pci/pci.c
-> > > > @@ -101,7 +101,19 @@ unsigned long pci_hotplug_mmio_pref_size =3D D=
-EFAULT_HOTPLUG_MMIO_PREF_SIZE;
-> > > >  #define DEFAULT_HOTPLUG_BUS_SIZE     1
-> > > >  unsigned long pci_hotplug_bus_size =3D DEFAULT_HOTPLUG_BUS_SIZE;
-> > > >
-> > > > +
-> > > > +/* PCIE bus config, can be overridden by bootline param */
-> > > > +#ifdef CONFIG_PCIE_BUS_TUNE_OFF
-> > > > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_TUNE_OFF;
-> > > > +#elif defined CONFIG_PCIE_BUS_SAFE
-> > > > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_SAFE;
-> > > > +#elif defined CONFIG_PCIE_BUS_PERFORMANCE
-> > > > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_PERFORMANC=
-E;
-> > > > +#elif defined CONFIG_PCIE_BUS_PEER2PEER
-> > > > +enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_PEER2PEER;
-> > > > +#else
-> > > >  enum pcie_bus_config_types pcie_bus_config =3D PCIE_BUS_DEFAULT;
-> > > > +#endif
-> > > >
-> > > >  /*
-> > > >   * The default CLS is used if arch didn't set CLS explicitly and n=
-ot
-> > > > --
-> > > > 2.17.1
-> > > >
-> > >
-> > >
->
->
+> Kind regards,
+> Niklas
 
---000000000000745b4e064bd6c9ea
+--00000000000097b7cf064bd6ee9c
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -417,13 +254,13 @@ x/pX7N8Ff6YK+iN3vVah34vLkE1CMFyDQMtyTCzQPW+7XCTxCL9ML3LBAF+eNAtKpPOsrGIdRHy5
 7SjJ7t2kOITvbWcMkizMc33S9hfmYiXaVTjIi89NiO3EXCJouYShpptgGNG6mpYHcddnfdKiILOS
 06KlKNuHO4IpRmaGrzcDjsUQQSn8amMxggJXMIICUwIBATBiMFIxCzAJBgNVBAYTAkJFMRkwFwYD
 VQQKExBHbG9iYWxTaWduIG52LXNhMSgwJgYDVQQDEx9HbG9iYWxTaWduIEdDQyBSNiBTTUlNRSBD
-QSAyMDIzAgwHM7pH5w7o7Qb7yXUwDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEIDg6
-cKZYWyC3kuFVbQ8vL+3K2NoJdtnC7NmSPyLhxOy7MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEw
-HAYJKoZIhvcNAQkFMQ8XDTI2MDIyNzIzNDIxNVowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQME
+QSAyMDIzAgwHM7pH5w7o7Qb7yXUwDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEIAwz
+l7kW7u7ej4it/jNhKN9G+q3NVG14Ug06lDFqVMKJMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEw
+HAYJKoZIhvcNAQkFMQ8XDTI2MDIyNzIzNTIzOFowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQME
 ASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQcwCwYJ
-YIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAHTzGcNL1D2Eg/ojKM6wF/asvcVqgnPJ/l/KquDc
-Vu5VWOTr8RzoqxyGSprU1DtrrYVP5oFt/GzFnTxrIs8lAJYKxOHIhmTbVG5+0Sa1/MJrV4tfx1Qz
-e1lIJhr/A7fxijC5ucfTrm5BzYlGgShIBiOINDj5d9QeEW//4ippqLBtM73XOro5ByKq2vCOwUua
-Q9lTYI+x/poo+lBgmZyjeohspPcS+o/HrEDorYit3cd9iaDbeoIeU3QdI22Pr0FNs02eNdSC16A1
-EqJEOljFzLAYz3ragbF4wS03IEVDEw8v682YdYoWpvoLxVnmRWcO0/0BO9dnOEXI4y8zUh0/XfQ=
---000000000000745b4e064bd6c9ea--
+YIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKtrivNOAifHom2IqaB5/MMIJXCa4R034UxuA8uh
+7MCurfTOeN3407pKukIGES14gYEmoYJ9605yx522ZLr0kb4MW9gexAy8QYj+17rYMu3Yg2362Wh0
+MzSCVULiIN+q5n/l/tDcetc1aLU6/+E7v9KzThcPFXD/LpZxV5IyTTN1GMLKmrvZ0Y0KdmYxp5oo
+wnBMYwF+4WKTKpNXQ3qIBTAFhRm5qPzelGWxwysHFs52bHw6XSmd61FweCNQssowSH0Z4dWEFdnf
+J0kJCrjURlAcFkY+SauId1+N7XIwNzCM9uZIZbuKuJOFETwq/DsQfSK5EcWO5y2OeOQW4AO9xKs=
+--00000000000097b7cf064bd6ee9c--
