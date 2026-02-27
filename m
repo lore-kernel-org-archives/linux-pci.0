@@ -1,194 +1,162 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010011.outbound.protection.outlook.com [52.101.201.11])
+Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A250630FC2E;
-	Fri, 27 Feb 2026 08:16:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772180185; cv=fail; b=thsXG2k5numlFRoVl0MOjHbD9e7Tl6rqPgd7huDaWtCTZ6fYGCQH36VA7P2RDdmHjXqi75AAzpmyYd2Y3OgHbxdZ+2vRU3OEZm1/z+qjDcJ2+aCz9fQxGi5b9kMEbmuimzshY5YJtXIjNW49hU8GAjjF11rr3OU28HgOiXSVwks=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772180185; c=relaxed/simple;
-	bh=P5ccCvYpAiRp4XMmQRVoeXRIaiAqA47irD50XcjpxtM=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=E0L9gLm335yXMV88HyMuah0y9IG0ZVoV9/vs82GAzCBS7LWck5zrsbfSDPnsfM0iiRFrch1WDDj7SleGbUNXC/td2LFqBoctrw2nyWxFSNDdqNA+h2fIAictBO7fIuzkmdVnPdL1gIPwLCNAMBqXHAjgM8yEPs76ewA+WVxZ3AM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=HLS2oM6Y; arc=fail smtp.client-ip=52.101.201.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A94593876C5;
+	Fri, 27 Feb 2026 08:28:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.98
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772180939; cv=none; b=UZPVLUPGu248ekix5lXTtF89HbhmZY8+FlLqiW0mwUQ7zpfQjAKVcGAX/7U6wN3ry9tMd4fjuZHs+USl+rpz8LgslyDT2q+Kaypv9kLGd1A6OnW5gCbyr9P2X+wdt3fL2qT+Eowp2NKRyh38DrZMeHvZ9h9JlDdZHu5AbADiZtw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772180939; c=relaxed/simple;
+	bh=Lr3z9krdyzkJc04Exn6O0kaAlVSEhIG48nEE3vqdn9Y=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=OxfsuGDCZHcW3AkaOX4nqLrQU9LVK6dhE9Wm3l2AvpUi7Cu5XvvOYaxYspiRYcGQ/zDMKcFLGglv5477XnyYaDaNPeLDSeKvdJKN23dw/06443GlHl2ZkAn8QGMMZ46nj5U1ll690NsReEPPa4RndVjuWqcmco+rhCw7MiiSOJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=FkStHnFN; arc=none smtp.client-ip=115.124.30.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="HLS2oM6Y"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uJieOIZIPJzbCchHrjR2DRw8upBqQK1a/IfUANcvO6hYXndwWrItGzCzLk4gLxyvKRFxbLd6Ny4fJc6/EqCQ95ZLYUPMv9ydRKc5gm7WLYipuThBVBZWwm6FVNrxZpStgWlctXuv279LlSxoHtPX3jG+eRRdWFVpYgENkETKjv8At6eS7FiUfU0sCOXz1ScGMNrxdq1vATQbI4PO7ojYu2p5PDbX2zQ3/EN9lY72hdhqVf2RwPuErND+u0tCPnwa0ED6pmEAsn6AHYfpCoIp3Ld8ZhhlV/AqPhJqLshayJt5f7+9zVNzVXfu9+s/IVYtqWjguSUXQex55pBRspfnrw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Y0GvZ94LsbIvdzkg30/vvx2NxMJIzNexPBR7Q8OOKm8=;
- b=VJmHP08aod0UKvLBD23YD8s1b3j1ijbrfg9MiMfH/E2BILQhR29gtcBDpB3IdAEH7fdNXwapykoptDWnE8zs3cx/+0BAXl1HXCZsWXF5FRkPjfzcBmNR1PDjF+tKCBxEstfiDOAW1RGbf26A1U0QOokVeqRCmgMn5jcKpf1KlGpq/nlG+lkXS3h9IneIE14qHNfni+PjFaR7axh8yNGtPtpB3Ha5yg6baPyGAbEHEoamEty/ciQ8k6ZAKn3OpdzZwmdmoihGosUmtjbOxsmWXg7IPXJacqJbKuM4HQOliKUEQQ4fCjHGM7YRzXXZAxBpXP+99ihoHiwS3/ps+dVYsQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Y0GvZ94LsbIvdzkg30/vvx2NxMJIzNexPBR7Q8OOKm8=;
- b=HLS2oM6YHj78oxFBtIRCBAT0ielEsM5gp2mfwaBUwwpzmPIQ5cJ9/1KLQ0+RDm8cz1+l1+2UEV6kqkEfgibec+HYAIVMfQQlYzHDtty7Sm13KUEJJTF7SPke3y/SBzCJEhzVPatkfuCSLIwO6nPk0ArBoaKQ18rFozmaWFtEvg02zlBtG+rBIybHbr9wY4fZPMyueknNw8zv2CVVhBDnLM/BaHJdwNP94PxBVNZcgKrO8WBKsLoMd6fYDGvSmC/L/gBU2arBoFclxI+/JCxauKsYTBE03B+a+VNWileRQRtqFJsWug/1eGZoM17UXtKVspcfj46RCBmiWQpogzS+2g==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from IA1PR12MB7541.namprd12.prod.outlook.com (2603:10b6:208:42f::13)
- by DM4PR12MB7671.namprd12.prod.outlook.com (2603:10b6:8:104::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.14; Fri, 27 Feb
- 2026 08:16:07 +0000
-Received: from IA1PR12MB7541.namprd12.prod.outlook.com
- ([fe80::4445:7716:8576:62c7]) by IA1PR12MB7541.namprd12.prod.outlook.com
- ([fe80::4445:7716:8576:62c7%5]) with mapi id 15.20.9654.014; Fri, 27 Feb 2026
- 08:16:06 +0000
-Message-ID: <6391499b-d665-466a-a4df-b3d0b4921e28@nvidia.com>
-Date: Fri, 27 Feb 2026 10:16:00 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/4] PCI/MSI: Conservatively generalize no_64bit_msi
- into msi_addr_mask
-To: Vivian Wang <wangruikang@iscas.ac.cn>,
- Madhavan Srinivasan <maddy@linux.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Jaroslav Kysela <perex@perex.cz>,
- Takashi Iwai <tiwai@suse.com>, Brett Creeley <brett.creeley@amd.com>
-Cc: Han Gao <gaohan@iscas.ac.cn>, Thomas Gleixner <tglx@kernel.org>,
- linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
- amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
- netdev@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org, linux-riscv@lists.infradead.org,
- sophgo@lists.linux.dev, Takashi Iwai <tiwai@suse.de>,
- Maor Gottlieb <maorg@nvidia.com>
-References: <20260129-pci-msi-addr-mask-v4-0-70da998f2750@iscas.ac.cn>
- <20260129-pci-msi-addr-mask-v4-1-70da998f2750@iscas.ac.cn>
- <fb23d54a-fca0-43a2-ae1d-03ae52112192@nvidia.com>
- <c9329ae2-721d-4127-9380-b1ea454bd8f2@iscas.ac.cn>
-Content-Language: en-US
-From: Mark Bloch <mbloch@nvidia.com>
-In-Reply-To: <c9329ae2-721d-4127-9380-b1ea454bd8f2@iscas.ac.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR0P281CA0252.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:af::14) To IA1PR12MB7541.namprd12.prod.outlook.com
- (2603:10b6:208:42f::13)
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="FkStHnFN"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1772180933; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type;
+	bh=LRn/oGL+tuAtq64yYzAexbKedW997ZLDSHRH+Js7iPY=;
+	b=FkStHnFNPNvqXSJV4EkEgQy23FUUZV8ZLE19ltFe35oSlqdfIQ0MEPs56ZJo32TA9kEbQzwC5FAeVYIBchmwhnVZFCIfiXtsD3ldzvhHcdUtlo6A/O6BDRFUUGFyUkNCVTSfUTEXsMtA/SA+qHXDzI6h9zKGFXZB2thIMHeLbNM=
+Received: from 30.246.163.43(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0Wztj3at_1772180931 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 27 Feb 2026 16:28:52 +0800
+Message-ID: <234dcf9e-05ff-485c-a330-019a4fbb5f3b@linux.alibaba.com>
+Date: Fri, 27 Feb 2026 16:28:59 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA1PR12MB7541:EE_|DM4PR12MB7671:EE_
-X-MS-Office365-Filtering-Correlation-Id: a84e08db-4c3f-433d-bc96-08de75d874bf
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|921020;
-X-Microsoft-Antispam-Message-Info:
-	fpzdURIRXwUCpTnVZ/zeklUKfb7AJtI4zWuDuv19kcgTkpu1hhONXNDuM01R8wGq9OizN+ncACddFCicyNuWJUJlN5hrNaOuBl7xmAyQqVsEK2lUlw9ysoTr8rbTEf7W+3hM37Z9rImZal7bRMYymCoLzYtAnRczjgoFyaoZqIwcmqnT77kdI2DwAJKe2ORTz63yF8OEOm5mO8pB5jA4Zrz/YgokFlI7yEKuYHFmvYYfxtZLQ1HJaQKBTN3BW4tvD9f0RCMB0u1MyKByh+BAlnhP/E/HWhW1Dcd1cuntPnCOkDvPfKa9lgBzGZ3lgdWI/z8XyT/8IlfTr9pRBngwPIWgouNiaO2DtcnrsuiIF+ZzkLSJ/hPzyTCgX24oIXKi6NqzbmowR03R/CGYNSOCk+8puM/WWVLYMU1Eq1JCC5d+LYUqkke2Ht0lF+0pEaDjQROZfVNSUKkn7HSjYomJXKC1zi5MuxRRcUgtmG1xX800n6tmlzjXZ/4dXoK5ZAYZfy3/cc7Tw5v6ZvDzdGSUj2s1GM7f2OAhee8L1TYmdblsd7KBAqyQwY+aQOxmrFEFU4XjwVi0B1uvnsHED3s+439yt+9kG64ocL7pMrI+ZqUMmNZ/u2bzShplUOpdIo2laY3UXJVfBxKVAuiWQsEsEHtXRZL4yCqrpFrW03c0eVvgEO03iSogm21icoOhCpL/Rs+FBbzUZpegKSenYSWnZs8j/eB5aN4HjLMvZeySqidrFdpb1kucRz4QBFy5SWWj+O3EqwgWA6xhl8d0NZxtNrO7Wq2gqWC2PTaRs+r+mWg=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR12MB7541.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N3VMc2t5ZVltamlPT2hWZHV1TW40QVVXT05UMTBBTkU3M1BIbDlYNXRveVQz?=
- =?utf-8?B?eENOTkFCM2kxYk5DMUZabXE4VzFSZWZpNTRqT1RqdjlPdEYyMUc0UDIwSzFW?=
- =?utf-8?B?T1NDVnZIWEJIY3h0N2t6RTh4YStTU0piS3N5cUZ1OWF5V25MdGRkMDJJSGVw?=
- =?utf-8?B?STFXemJ4YTNxZUhNSlVPQmMwTStrNlNIa0U3UG5lTGUxd3RtWlpwR2ZiZmd1?=
- =?utf-8?B?T2NPY0ZRNlpBYkx2WFpsOFYrOHJudzlnNHNBK3dQbXVoU1RZVkMyUTNvNHFE?=
- =?utf-8?B?Z09obEt6SE9MVERSM25EYXFteVMrVldKdXQxeUkzaXNZUlRaYWlNOE9sY0VQ?=
- =?utf-8?B?RlluZTRrRFJBQTRJdHZ6dlNjNlEyOEZOZTRHYXYyT2QzNnRkb0lUai91dFc4?=
- =?utf-8?B?ZXVRdTFxdUlPU0NkLzRUc3VtMXVKNkFhUGNkODJWMWV2V0d4ay9yK1h4ZThz?=
- =?utf-8?B?anJRSS9hVkZ4eVBlVjhwYXM0RVR3czlFYkMrTEVSRm9PYjNiVjFWdC9Jbmlk?=
- =?utf-8?B?YkNEOExuYXlLWnRyTjNJTXo0alhIRnh2L0dIbEJMdG5UTVgwS2IyN3Rrb1By?=
- =?utf-8?B?V0lGWFhTTUFUeVFhUEp2bC9ZbUNLam9Ta1NLNmM5TGFqc2tILzZBVnJQa0hn?=
- =?utf-8?B?bUxUNVFhamRvbmlmTWQyYXlSZjh2YWVKWGwrM1VUYkUvL2tFT3ZScHR2bUVC?=
- =?utf-8?B?REJ0VDFLdHI4RmUyNjhVbkJ4VnNMSkJJUmFOUG9tVStFZ0tUUEtuTTdPRSs4?=
- =?utf-8?B?VjV0R3VRRmRVZE5MZjJ5YlhaVzBsQkY2R0JvMEZUeGt6TGNIdWZWLzA0YlY0?=
- =?utf-8?B?MTQ4K2g5ZnVaYUlUMUVRY1FQQ0d6eFRWa0h3T1ZPRXVWaC8vV1hsd2xBZ2Fv?=
- =?utf-8?B?cnFxeDN3anN6N1RUdmxmT0lBclB2TW5WVjVtVjZSVXFUamdaYTlhM2g0cUU5?=
- =?utf-8?B?ZGx2ZGhLZ0JFNkdob043cWlzREEvUE4zdTU0RlJFdDFGUEFreW0wQmZUcGxr?=
- =?utf-8?B?U21oSlNmckozcVJFYzBnbFZ3WGZ6NE1DdUZYWjM3ZkdYWnVIU25IWWVjWUZn?=
- =?utf-8?B?S1FHdldJdlN2Q21USjdZTklPOENZRXYyMDQzanM4OHBKS0ZsM3AwNEtMaXFI?=
- =?utf-8?B?bHdHbXlQU3ZZdnBSNUZlNFhkdUl4bCtkalVnSzlpdXV4Q0dxcWo3cGtQcVNE?=
- =?utf-8?B?cXdzZTBCQiswbjY1ZlhtbS9CZWRZUXFkeTgvYlNoNU9RNTlUYTlBSXN4NE5F?=
- =?utf-8?B?YjhMZ0lEOHlvVnFOc2hGeXhlZzFDNEJiUCtoczUrOU56V0NlajZHVUd2Wk9T?=
- =?utf-8?B?ZFl4VG1kWHF6TWhvZTRidHhEZVN2a1ZhTVUxUzBqK2pESDluRUtoSFM2WUJC?=
- =?utf-8?B?SHlvS0pwQnp5VFgvVUZGcmxJUGVBU05XMWxhTE1hczFSelhiK2tJREp6MHBV?=
- =?utf-8?B?UERXNkcybmsyeWRMQWpTNVpvVFBETm1TRjQ0NDRaUGJYL2NVUGxIL3k4M1B2?=
- =?utf-8?B?ZEdUL0x3RzhjclcyenFSdkYydFdNSzJzOVgzWDVZZUR6UWFIVGIrNWhuSlFh?=
- =?utf-8?B?cXJhN3ZCNkRKM3Fyc211cGpkT2xmcksxT0hmTlFrOGt2Um9GS1JTZU1ud3Er?=
- =?utf-8?B?Ym1WMDM4ak5ERlhYUGZ6c1FBNzE2MzlhcEhaUnJVQUdKZXRDRG9QTlR6eE9k?=
- =?utf-8?B?Y0t0b2VCOEpiSnZCb05GYS9FWlcxK3pOVE9iaUZXWDA0N05DVnEwWEhGSGFw?=
- =?utf-8?B?R1RneCtqeGx1UFpETDVjWDBPb0ozbEJGVVhWZjFNZ0lzQi9WZDhNdG5Qdlh2?=
- =?utf-8?B?RXB4MkZjdTlqTVlUb2NhUEp1QlVLSU9qNllzbGFMUlVkckFQQ0xvck0ydDkr?=
- =?utf-8?B?clBKNnFxd3N4RWl1MGNTV3JGS094Vkw1UWN1Uyt1WHMxcHpGeGhPR3VPYjRh?=
- =?utf-8?B?NkQxbDF4ZmhPdklaMkowR2w3NThUaCtOUFRxdnpmVXI0TXF0UTdkM0dHQStm?=
- =?utf-8?B?Uis5MTRWVzdFVXRacURTdmRNYmZiK21xVVBGQTZCL0JVYlExc095a25tUDNo?=
- =?utf-8?B?ajR6dVIzcHg0cXBOdm02VEd2NkJFRTdDMG5EbThyLzVQZmd2b0dCZU9SRXo1?=
- =?utf-8?B?WWxWZzJ4QUFKRGkwVUpUL0NNVURFZDlYZXlhSGFoYW94d0E4bC90Z0RHYzlC?=
- =?utf-8?B?ZGVONkExUEpUaktxdlFlZTAxRFFQRnA1bEtBSm43UjQxV2RjK3owWnArU1dx?=
- =?utf-8?B?cDBqWWFMdGxMV3J1TTJOb25nbXZjQWdsSGtCQ3QydzhsUGpaZXJhVjBiV3BO?=
- =?utf-8?B?OWlZaTlhbmVNUzBUajc2TXVDZWhjaXltcm9FdklhakZ5ZTB2by9MQT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a84e08db-4c3f-433d-bc96-08de75d874bf
-X-MS-Exchange-CrossTenant-AuthSource: IA1PR12MB7541.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Feb 2026 08:16:06.6869
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2zFIVGaP3j9FcAxUGOJ0tvWB6UjfapvrQRLAaNHUaEsCEDY/tsupjIUrFodbGi42+R7TjJvMcWj7T5Ka7arwLQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB7671
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 2/5] PCI/DPC: Run recovery on device that detected the
+ error
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com, kbusch@kernel.org,
+ sathyanarayanan.kuppuswamy@linux.intel.com, mahesh@linux.ibm.com,
+ oohall@gmail.com, Jonathan.Cameron@huawei.com, terry.bowman@amd.com,
+ tianruidong@linux.alibaba.com
+References: <20260124074557.73961-1-xueshuai@linux.alibaba.com>
+ <20260124074557.73961-3-xueshuai@linux.alibaba.com>
+ <aYCujqZIvxElSsOE@wunner.de> <aYESh4bCE2lzTg2S@wunner.de>
+ <924dce22-171e-4508-907c-74f57f1bdea8@linux.alibaba.com>
+In-Reply-To: <924dce22-171e-4508-907c-74f57f1bdea8@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
 
-On 27/02/2026 7:25, Vivian Wang wrote:
-> On 2/27/26 02:25, Mark Bloch wrote:
+On 2/7/26 3:48 PM, Shuai Xue wrote:
 > 
->> On 29/01/2026 3:56, Vivian Wang wrote:
->>> Some PCI devices have PCI_MSI_FLAGS_64BIT in the MSI capability, but
->>> implement less than 64 address bits. This breaks on platforms where such
->>> a device is assigned an MSI address higher than what's reachable.
+> 
+> On 2/3/26 5:09 AM, Lukas Wunner wrote:
+>> On Mon, Feb 02, 2026 at 03:02:54PM +0100, Lukas Wunner wrote:
+>>> You're assuming that the parent of the Requester is always identical
+>>> to the containing Downstream Port.  But that's not necessarily the case:
 >>>
->>> Currently, the no_64bit_msi bit is set for these devices, meaning that
->>> only 32-bit MSI addresses are allowed for them. However, on some
->>> platforms the MSI doorbell address is above the 32-bit limit but within
->>> the addressable range of the device.
->>>
->>> As a first step to enabling MSI on those combinations of devices and
->>> platforms, conservatively generalize the single-bit flag no_64bit_msi
->>> into msi_addr_mask. (The name msi_addr_mask is chosen to avoid confusion
->>> with msi_mask.)
->>>
->>> The translation is essentially:
->>>
->>> - no_64bit_msi = 1    ->    msi_addr_mask = DMA_BIT_MASK(32)
->>> - no_64bit_msi = 0    ->    msi_addr_mask = DMA_BIT_MASK(64)
->>> - if (no_64bit_msi)   ->    if (msi_addr_mask < DMA_BIT_MASK(64))
->>>
->> Hey Vivian,
+>>> E.g., imagine a DPC-capable Root Port with a PCIe switch below
+>>> whose Downstream Ports are not DPC-capable.  Let's say an Endpoint
+>>> beneath the PCIe switch sends ERR_FATAL upstream.  AFAICS, your patch
+>>> will cause pcie_do_recovery() to invoke dpc_reset_link() with the
+>>> Downstream Port of the PCIe switch as argument.  That function will
+>>> then happily use pdev->dpc_cap even though it's 0.
 >>
->> We are seeing issues while reloading mlx5 on a PPC64 platform.
+>> Thinking about this some more, I realized there's another problem:
+>>
+>> In a scenario like the one I've outlined above, after your change,
+>> pcie_do_recovery() will only broadcast error_detected (and other
+>> callbacks) below the downstream port of the PCIe switch -- and not
+>> to any other devices below the containing Root Port.
+>>
+>> However, the DPC-induced Link Down event at the Root Port results
+>> in a Hot Reset being propagated down the hierarchy to any device
+>> below the Root Port.  So with your change, the siblings of the
+>> downstream port on the PCIe switch will no longer be informed of
+>> the reset and thus are no longer given an opportunity to recover
+>> after reset.
+>>
+>> The premise on which this patch is built is false -- that the bridge
+>> upstream of the error-reporting device is always equal to the
+>> containing Downstream Port.
 > 
-> Mea culpa. There's a fix on the list [1] since last Friday. I'm not sure
-> why it hasn't moved yet, but please take a look.
+> Thanks again for the very detailed analysis and for the pointers to
+> your earlier mail.
+> 
+> You are right, thanks for pointing it out.
+> 
+>>
+>> It seems the only reason why you want to pass the reporting device
+>> to pcie_do_recovery() is that you want to call pcie_clear_device_status()
+>> and pci_aer_clear_nonfatal_status() with that device.
+> 
+> In the AER path, pcie_do_recovery() is indeed invoked with the Error
+> Source device found by find_source_device(), and internally it treats
+> that dev as the function that detected the error and derives the
+> containing Downstream Port (bridge) from it.  For DPC, however, the
+> error-detecting function is the DPC-capable Downstream Port itself, not
+> the Endpoint identified as Error Source, so passing the Endpoint to
+> pcie_do_recovery() breaks that assumption.
+>>
+>> However as I've said before, those calls are AER-specific and should
+>> be moved out of pcie_do_recovery() so that it becomes generic and can
+>> be used by EEH and s390:
+>>
+>> https://lore.kernel.org/all/aPYKe1UKKkR7qrt1@wunner.de/
+> 
+> Sure, I'd like to move it out.  I will remove the AER-specific calls
+> (pcie_clear_device_status() and pci_aer_raw_clear_status()) from
+> pcie_do_recovery() itself, and instead handle them in the AER and DPC
+> code paths where we already know which device(s) are the actual error
+> sources.  That way, pcie_do_recovery() becomes a generic recovery
+> framework that can be reused by EEH and s390.
+> 
+>>
+>> There's another problem:  When a device experiences an error while DPC
+>> is ongoing (i.e. while the link is down), its ERR_FATAL or ERR_NONFATAL
+>> Message may not come through.  Still the error bits are set in the
+>> device's Uncorrectable Error Status register.  So I think what we need to
+>> do is walk the hierarchy below the containing Downstream Port after the
+>> link is back up and search for devices with any error bits set,
+>> then report and clear those errors.  We may do this after first
+>> examining the device in the DPC Error Source ID register.
+>> Any additional errors found while walking the hierarchy can then
+>> be identified as "occurred during DPC recovery".
+> 
+> I agree this is similar in spirit to find_source_device() -- both walk
+> the bus and check AER Status registers.  For the DPC case, I'll perform
+> this walk after the link is back up (i.e., after dpc_reset_link()
+> succeeds).
+> 
+> Regarding pci_restore_state() in slot_reset(): I see now that it does
+> call pci_aer_clear_status(dev) (at line 1844 in pci.c), which will
+> clear the AER Status registers.  So if we walk the hierarchy after
+> the slot_reset callbacks, the error bits accumulated during DPC will
+> already be cleared.
+> 
+> To avoid losing those errors, I think the walk should happen after
+> dpc_reset_link() succeeds but *before* pcie_do_recovery() invokes the
+> slot_reset callbacks.  That way, we can capture the AER Status bits
+> before pci_restore_state() clears them.
+> 
+> Does that sound like the right approach, or would you prefer a
+> different placement?
+> 
+> Thanks a lot for your guidance.
+> 
+> Best Regards,
+> Shuai
 > 
 
-Thanks! I've looked at the patch, it seems fine and should fix the issue we
-are seeing.
+Hi, Lukas,
 
-Mark
+Gentle ping. Any feedback?
 
-> Vivian "dramforever" Wang
-> 
-> [1]: https://lore.kernel.org/all/20260220070239.1693303-1-nilay@linux.ibm.com/
-> 
+Thanks.
+Shuai
 
