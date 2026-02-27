@@ -1,134 +1,194 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [4.193.249.245])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5CC4E3EF0C0;
-	Fri, 27 Feb 2026 11:23:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=4.193.249.245
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 880E53EF0B8;
+	Fri, 27 Feb 2026 11:23:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772191392; cv=none; b=QMCZ2HYfc/6UThBwZ5hLFuUXmrInnloL9Z1j+xwZXcAGCpBKGvoKl+FQV7boXH2sgU4OJhWiTAZMXanpj0YEDNi3ruPio2N8+GhOGEhOHCXWk0x7Gakx8EZmZjVXLtDwVrRg/r/PYTq0Af+jlwMm3F2pX3+Fo41hE3X7zYzrfWE=
+	t=1772191412; cv=none; b=AbVA8EujdzlK4RHTTTDTftYzwuETNme5szkgj8d0jEFkpuAWrB+JIzpSM1W0qMiVji3/pr1UaihiL/O0VOfMY8XJ+8P1sTe5xfT+cs+9k9GuFjAfoNBZaJobM+rJuNvRe3WYO//SVNhH3UE4k6VljJnK02U6BfnBITC9BSLRHXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772191392; c=relaxed/simple;
-	bh=tAFIuFIKr0q2vXjiGgvB9bJkuyy0Yn91+HO/bU0+DLM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=NRCWEDAQ1KHsn6viXNNHA9dGpLHpEcdf6Cfyn2m1jxVkaAo6i3JA3646oBnF0yj3weL8Vp2dUBC+exY/ncFJCgCIuSdHHxPr7eNP6tfkewGQ0yhaDERBuJyMP2uBZa2wD95Pc1U+vbZb9nVXxwCn+1x7rvYR7mmGS3U6435ywbI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=4.193.249.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
- ajax-webmail-app2 (Coremail) ; Fri, 27 Feb 2026 19:22:43 +0800 (GMT+08:00)
-Date: Fri, 27 Feb 2026 19:22:43 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
-To: "Manivannan Sadhasivam" <mani@kernel.org>
-Cc: bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
-	p.zabel@pengutronix.de, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	christian.bruel@foss.st.com, shradha.t@samsung.com,
-	krishna.chundru@oss.qualcomm.com, thippeswamy.havalige@amd.com,
-	inochiama@gmail.com, Frank.li@nxp.com, ningyu@eswincomputing.com,
-	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com,
-	ouyanghui@eswincomputing.com
-Subject: Re: Re: [PATCH v10 2/2] PCI: eic7700: Add Eswin PCIe host
- controller driver
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2026 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <4lhrl2lqnndbieuctdtdrwdjlvjafw32googpv322kv5xe35ue@gtojpiksle74>
-References: <20260129092629.1866-1-zhangsenchuan@eswincomputing.com>
- <20260129092900.1900-1-zhangsenchuan@eswincomputing.com>
- <a3yu54e6feo5immtdju4fgvne7fh3p4ytlawfdhawmpzvagi64@o7wuhhdiitft>
- <78296255.3869.19c8eb694d6.Coremail.zhangsenchuan@eswincomputing.com>
- <cxfbgzwsybfvixu3qqi66fvspmhe5knuevwcj6zwsakkzqwd3z@czmitvgl7nwt>
- <694aeb1a.398e.19c98ff2727.Coremail.zhangsenchuan@eswincomputing.com>
- <rbmoxlc45bf4ij2o2mf3ofgni6vxqmsp52vdiqtc4wxxufmxkt@w2u5rkpq5mhs>
- <470bb42a.39bb.19c994fc998.Coremail.zhangsenchuan@eswincomputing.com>
- <4lhrl2lqnndbieuctdtdrwdjlvjafw32googpv322kv5xe35ue@gtojpiksle74>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1772191412; c=relaxed/simple;
+	bh=7lP2OlwL0IP8xBEk7nVacq4bj58bnRYBOhi4gg0xYzw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=N0V82DOJu4VeBpEm9b5qrpSpYSGn22QzDGv1FsixFqgnlMECtSS9FTPnOO7/AD6Em7zxZBwSOw1KTNFLAAYGIl8pBaTf/jnINivoWtBgrc0qY095ca/x0bZBixLUEMd0bmLXKtifz62hohc+p/wuFhHNcQZwU1VaQLeQVoSThxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=hZJtI0ZH; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="hZJtI0ZH"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61R4eW362760220;
+	Fri, 27 Feb 2026 11:23:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=CV0Nv2
+	MpYOZumLGTiltVSt/dqZv4evjHvl85pAzwaOs=; b=hZJtI0ZHPk6F8KCwzC59K1
+	j6ya0hpQkJ+Xi0rpbjD/78YKKQS0BLFWCbSBtZVGHAPRUD0VEn+kRs7HlprYNstY
+	ZZTyT7vTYGFe2FSqQmnXXHevcnJv7u81ISGrwcERd03ysJcW5ShWyn8sdKrokzKq
+	Nrm74gaaL2REOz9BJXUhlTZRLnxtVHj/Uvd968LbefZ7X/6LknlCsSSYHxq7bbJe
+	BCXusiMsIaA9cH6N/wcxMUrm6IPopCHvRhd1YZm5m8sfA2bEIQrG51QFYBvahO21
+	NexShAW9jjAzA18NrhGoqUjJYbH6SWaNXYyfVAEEwt+XRpEP83ADNi43NGPTI1Ow
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cf34ckev2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 27 Feb 2026 11:23:26 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61RAAwZN013431;
+	Fri, 27 Feb 2026 11:23:26 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cfqdyj00y-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 27 Feb 2026 11:23:26 +0000
+Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
+	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61RBNO1C37356152
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 27 Feb 2026 11:23:25 GMT
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DB45F5804E;
+	Fri, 27 Feb 2026 11:23:24 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id BFF8058054;
+	Fri, 27 Feb 2026 11:23:22 +0000 (GMT)
+Received: from [9.111.177.245] (unknown [9.111.177.245])
+	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 27 Feb 2026 11:23:22 +0000 (GMT)
+Message-ID: <5d30ad0a-9c16-4802-adfe-e795c38f5990@linux.ibm.com>
+Date: Fri, 27 Feb 2026 12:23:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <7dcea145.3a7f.19c9ed63012.Coremail.zhangsenchuan@eswincomputing.com>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:TQJkCgAHHaCDfqFpsB0EAA--.396W
-X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAQELBmmgd
-	ZEl5wACsg
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] PCI: Add write-only 'uevent' sysfs attribute for PCI
+ slots
+To: Leon Romanovsky <leon@kernel.org>, Ramesh Errabolu <ramesh@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>
+References: <20260225150815.81268-1-ramesh@linux.ibm.com>
+ <20260226083427.GF12611@unreal>
+ <b4d83f50-c3c1-4fdf-bc7c-50a3cc8353b6@linux.ibm.com>
+ <20260226183945.GL12611@unreal>
+From: Peter Oberparleiter <oberpar@linux.ibm.com>
+Content-Language: en-US
+In-Reply-To: <20260226183945.GL12611@unreal>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI3MDA5NyBTYWx0ZWRfX+pB6c2N1qjKC
+ ZhVmOxE+ME9+WGqlS35gTGl286HqTvR9BikGeEfBoAq/7MJEG4j2BhVup7CsITJ1M6x8gmr2gxR
+ /NapCNCcgVZ+szzGoa5TG40ja+0eAE8QcpLId8wln4qNmBOKZpoiGngSag4BTaEiGH1FyKAHLnK
+ pMamq8ktA7cXrLaQK4bEHbwsdcgBatZIFR7nPkgfK1SyQ9X0+Eu//D5fVAd+VJEt4C0XwZIrcUO
+ 9kmqUDkmciX6BE9UHQJ6AwGkE0EeinkKk3Z4I9RTcYTqXDsTeexSCIxuGQqGVpclpheBG9UFNwu
+ Wy81xbzzMXR4ISwbpKQ+cQwlyMHAaL+Y2HZXSW1iaASJXmp4dKGRahMCv/TkOys2kVTr3+RhBht
+ gS+FO5GecgIr0U1H33gI6txloDkNLzceLvxWmfWi7QlQs2WG/0kxEw9nBENYOJCfm3T3yDAym35
+ Nz7blaKaGHbNmMvVtQA==
+X-Proofpoint-ORIG-GUID: Q253pkMA2MCa5VkPCszBWVjNnDtIT2JR
+X-Authority-Analysis: v=2.4 cv=F9lat6hN c=1 sm=1 tr=0 ts=69a17eaf cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8
+ a=GhQEx97vAAAA:20 a=q3RWh7Z-AAAA:20 a=YJjgjBlOu19txBby-lAA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=bA3UWDv6hWIuX7UZL3qL:22
+X-Proofpoint-GUID: rzyBig3rccBvmEkL-9Qn0LHAeVh9qSUe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-27_01,2026-02-26_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 phishscore=0 bulkscore=0 adultscore=0 spamscore=0
+ clxscore=1011 suspectscore=0 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
+ definitions=main-2602270097
 
-PiA+ID4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIHYxMCAyLzJdIFBDSTogZWljNzcwMDog
-QWRkIEVzd2luIFBDSWUgaG9zdCBjb250cm9sbGVyIGRyaXZlcgo+ID4gPiA+ID4gPiA+IAo+ID4g
-PiA+ID4gPiA+IE9uIFRodSwgSmFuIDI5LCAyMDI2IGF0IDA1OjI5OjAwUE0gKzA4MDAsIHpoYW5n
-c2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tIHdyb3RlOgo+ID4gPiA+ID4gPiA+ID4gRnJvbTog
-U2VuY2h1YW4gWmhhbmcgPHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tPgo+ID4gPiA+
-ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiA+ICtzdGF0aWMgaW50IGVpYzc3MDBfcGNpZV9zdXNwZW5k
-X25vaXJxKHN0cnVjdCBkZXZpY2UgKmRldikKPiA+ID4gPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiA+
-ID4gPiArCXN0cnVjdCBlaWM3NzAwX3BjaWUgKnBjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsK
-PiA+ID4gPiA+ID4gPiA+ICsKPiA+ID4gPiA+ID4gPiA+ICsJLyoKPiA+ID4gPiA+ID4gPiA+ICsJ
-ICogVGhlIEVTV0lOIEVJQzc3MDAgU29DIGxhY2tzIGhhcmR3YXJlIHN1cHBvcnQgZm9yIHRoZSBM
-Mi9MMyBsb3ctcG93ZXIKPiA+ID4gPiA+ID4gPiA+ICsJICogbGluayBzdGF0ZXMuIEl0IGNhbm5v
-dCBlbnRlciB0aGUgTDIvTDMgUmVhZHkgc3RhdGUgdGhyb3VnaCB0aGUKPiA+ID4gPiA+ID4gPiA+
-ICsJICogUE1FX1R1cm5fT2ZmL1BNRV9Ub19BY2sgaGFuZHNoYWtlIHByb3RvY29sLiBUbyBhdm9p
-ZCB0aGlzIHByb2JsZW0sCj4gPiA+ID4gPiA+ID4gPiArCSAqIHRoZSBkd19wY2llX3N1c3BlbmRf
-bm9pcnEgQVBJIGlzIG5vdCB1c2VkLgo+ID4gPiA+ID4gPiA+ID4gKwkgKi8KPiA+ID4gPiA+ID4g
-PiAKPiA+ID4gPiA+ID4gPiBXaXRoIDcuMCwgeW91IGNhbiBwcm92aWRlIGEgZHVtbXkgcG1lX3R1
-cm5fb2ZmKCkgQVBJIGFuZCBzZXQKPiA+ID4gPiA+ID4gPiAncGNpLT5wcC5za2lwX2wyM19yZWFk
-eScgdG8gcmV1c2UgdGhlIGR3X3BjaWVfe3N1c3BlbmQvcmVzdW1lfV9ub2lycSBBUElzLgo+ID4g
-PiA+ID4gPiA+IAo+ID4gPiA+ID4gPiAKPiA+ID4gPiA+ID4gSGkgTWFuaSwKPiA+ID4gPiA+ID4g
-Cj4gPiA+ID4gPiA+IFNldHRpbmcgcGNpLT5wcC5za2lwX2wyM19yZWFkeSBkb2VzIGluZGVlZCBh
-bGxvdyB1cyB0byByZXVzZSB0aGUKPiA+ID4gPiA+ID4gZHdfcGNpZV9zdXNwZW5kX25vaXJxIGZ1
-bmN0aW9uLiBIb3dldmVyLCBmb3IgdGhlIGR3X3BjaWVfcmVzdW1lX25vaXJxCj4gPiA+ID4gPiA+
-IGZ1bmN0aW9uLCBpZiB0aGUgZHdfcGNpZV9zdGFydF9saW5rIGFuZCBkd19wY2llX3dhaXRfZm9y
-X2xpbmsgQVBJcyBmYWlsIHRvCj4gPiA+ID4gPiA+IGV4ZWN1dGUsIHRoZSBjbGsvcmVzZXQgcmVz
-b3VyY2VzIGluIHRoZSBwY2ktPnBwLm9wcy0+aW5pdCBmdW5jdGlvbiBjYW5ub3QKPiA+ID4gPiA+
-ID4gYmUgcmVsZWFzZWQuIFBlcmhhcHMgdGhlIGR3X3BjaWVfcmVzdW1lX25vaXJxIGZ1bmN0aW9u
-IG5lZWRzIHRvIGJlIG9wdGltaXplZC4KPiA+ID4gPiA+IAo+ID4gPiA+ID4gV2lsbCB0aGlzIGhl
-bHA/Cj4gPiA+ID4gPiAKPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250cm9s
-bGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9k
-d2MvcGNpZS1kZXNpZ253YXJlLWhvc3QuYwo+ID4gPiA+ID4gaW5kZXggNmFlNjE4OWU5YjhhLi4z
-OGFkNzliYmVhYjEgMTAwNjQ0Cj4gPiA+ID4gPiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVy
-L2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jCj4gPiA+ID4gPiArKysgYi9kcml2ZXJzL3BjaS9j
-b250cm9sbGVyL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jCj4gPiA+ID4gPiBAQCAtMTMwMCwx
-NSArMTMwMCwyNCBAQCBpbnQgZHdfcGNpZV9yZXN1bWVfbm9pcnEoc3RydWN0IGR3X3BjaWUgKnBj
-aSkKPiA+ID4gPiA+ICAKPiA+ID4gPiA+ICAgICAgICAgcmV0ID0gZHdfcGNpZV9zdGFydF9saW5r
-KHBjaSk7Cj4gPiA+ID4gPiAgICAgICAgIGlmIChyZXQpCj4gPiA+ID4gPiAtICAgICAgICAgICAg
-ICAgcmV0dXJuIHJldDsKPiA+ID4gPiA+ICsgICAgICAgICAgICAgICBnb3RvIGVycl9kZWluaXQ7
-Cj4gPiA+ID4gPiAgCj4gPiA+ID4gPiAgICAgICAgIHJldCA9IGR3X3BjaWVfd2FpdF9mb3JfbGlu
-ayhwY2kpOwo+ID4gPiA+ID4gICAgICAgICBpZiAocmV0KQo+ID4gPiA+ID4gLSAgICAgICAgICAg
-ICAgIHJldHVybiByZXQ7Cj4gPiA+ID4gPiArICAgICAgICAgICAgICAgZ290byBlcnJfc3RvcF9s
-aW5rOwo+ID4gPiA+ID4gIAo+ID4gPiA+ID4gICAgICAgICBpZiAocGNpLT5wcC5vcHMtPnBvc3Rf
-aW5pdCkKPiA+ID4gPiA+ICAgICAgICAgICAgICAgICBwY2ktPnBwLm9wcy0+cG9zdF9pbml0KCZw
-Y2ktPnBwKTsKPiA+ID4gPiA+ICAKPiA+ID4gPiA+ICsgICAgICAgcmV0dXJuIDA7Cj4gPiA+ID4g
-PiArCj4gPiA+ID4gPiArZXJyX3N0b3BfbGluazoKPiA+ID4gPiA+ICsgICAgICAgZHdfcGNpZV9z
-dG9wX2xpbmsocGNpKTsKPiA+ID4gPiA+ICsKPiA+ID4gPiA+ICtlcnJfZGVpbml0Ogo+ID4gPiA+
-ID4gKyAgICAgICBpZiAocGNpLT5wcC5vcHMtPmRlaW5pdCkKPiA+ID4gPiA+ICsgICAgICAgICAg
-ICAgICBwY2ktPnBwLm9wcy0+ZGVpbml0KCZwY2ktPnBwKTsKPiA+ID4gPiA+ICsKPiA+ID4gPiA+
-ICAgICAgICAgcmV0dXJuIHJldDsKPiA+ID4gPiA+ICB9Cj4gPiA+ID4gPiAgRVhQT1JUX1NZTUJP
-TF9HUEwoZHdfcGNpZV9yZXN1bWVfbm9pcnEpOwo+ID4gPiA+ID4gCj4gPiA+ID4gCj4gPiA+ID4g
-WWVzLCB0aGlzIGNhbiByZWxlYXNlIHRoZSByZXNvdXJjZXMgYWZ0ZXIgaW5pdCwgYWZ0ZXIgb3B0
-aW1pemluZyB0aGUgCj4gPiA+ID4gcmVzdW1lIGZ1bmN0aW9uLCBpIGNhbiByZXVzZSB0aGUgZHdf
-cGNpZV97c3VzcGVuZC9yZXN1bWV9X25vaXJxIEFQSXMuCj4gPiA+ID4gCj4gPiA+ID4gSSBub3Rp
-Y2VkIHRoYXQgdGhlIGR3X3BjaWVfd2FpdF9mb3JfbGluayBmdW5jdGlvbiBoYXMgYmVlbiBvcHRp
-bWl6ZWQuIElzIAo+ID4gPiA+IGl0IG5lY2Vzc2FyeSB0byByZWxlYXNlIHRoZSByZXNvdXJjZXMg
-b25seSB3aGVuIGl0IHJldHVybiAtRVRJTUVPVVQ/Cj4gPiA+ID4gUGVyaGFwcyBpdCBuZWVkcyB0
-byBiZSBzbGlnaHRseSBpbXByb3ZlZO+8mgo+ID4gPiA+IAo+ID4gPiA+ICByZXQgPSBkd19wY2ll
-X3dhaXRfZm9yX2xpbmsocGNpKTsKPiA+ID4gPiAgaWYgKHJldCA9PSAtRVRJTUVPVVQpCj4gPiA+
-ID4gICAgICAgICAgZ290byBlcnJfc3RvcF9saW5rOwo+ID4gPiA+IAo+ID4gPiA+IFdoYXQgYWJv
-dXQgeW91ciBzdWdnZXN0aW9uPwo+ID4gPiA+IAo+ID4gPiAKPiA+ID4gQWJzb2x1dGVseSEgSSBm
-b3Jnb3QgbXkgb3duIHJld29yayA7KSBJJ2xsIGNvb2sgYSBwYXRjaCBmb3IgdGhlIGFib3ZlLiBU
-aGVuIGlmCj4gPiA+IHlvdSBiYXNlIHlvdXIgY29udHJvbGxlciBkcml2ZXIgcGF0Y2ggb24gdG9w
-IG9mIGl0LCB3ZSBjYW4gbWVyZ2UgYm90aCBpbiBhCj4gPiA+IHNpbmdsZSB0cmVlIChpZiBCam9y
-biBhZ3JlZXMpLgo+ID4gPiAKPiA+IAo+ID4gT2tleSx0aGFua3MhCj4gPiAKPiA+IEknbSBhIGxp
-dHRsZSB1bnN1cmUuIERvIEkgbmVlZCB0byBzZW5kIHRoZSB2MTEgcGF0Y2ggaGVyZSBmaXJzdD8g
-T3Igc2hvdWxkIEkgd2FpdAo+ID4gdW50aWwgeW91IHJlbGVhc2UgdGhlIG5ldyBmaXggcGF0Y2gs
-IGFuZCB0aGVuIHNlbmQgdGhlIHYxMSBwYXRjaD8KPiA+IAo+IAo+IEkndmUganVzdCBzZW50IHRo
-ZSBmaXg6Cj4gaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvbGludXgtcGNpLzIwMjYwMjI2MTMzOTUx
-LjI5Njc0My0xLW1hbmlAa2VybmVsLm9yZwo+IAo+IFlvdSBjYW4gcG9zdCB5b3VyIHNlcmllcyBv
-biB0b3Agb2YgaXQuIFRoZXJlIHNob3VsZCBiZSBubyBidWlsZCBkZXBlbmRlbmN5LCBidXQKPiB0
-aGVyZSBpcyBhIGZ1bmN0aW9uYWwgZGVwZW5kZW5jeS4gU28gd2UgbWF5IHB1dCB0aGlzIHBhdGNo
-IGFuZCB5b3VyIHNlcmllcyBpbiBhCj4gc2luZ2xlIGJyYW5jaC4KCk9rZXksdGhhbmtzISBJIGhh
-dmUgc2VudCB0aGUgdjExIHBhdGNoLgoKS2luZCByZWdhcmRzLApTZW5jaHVhbgoK
+On 2/26/2026 7:39 PM, Leon Romanovsky wrote:
+> On Thu, Feb 26, 2026 at 11:53:32AM -0600, Ramesh Errabolu wrote:
+>> On 2/26/2026 2:34 AM, Leon Romanovsky wrote:
+>>> On Wed, Feb 25, 2026 at 09:08:15AM -0600, Ramesh Errabolu wrote:
+>>>> Add a new write-only 'uevent' attribute to PCI slot sysfs
+>>>> entries. This provides a mechanism for userspace to explicitly
+>>>> synthesize PCI slot uevents when needed.
+>>>>
+>>>> For cold-plugged PCI devices, slots may be created before
+>>>> udev is ready to receive events, causing the initial 'add'
+>>>> uevents to be missed. As a result, slot specific udev
+>>>> rules that define naming, permissions, and related policies,
+>>>> are not applied at boot. Allowing userspace to resynthesize
+>>>> the 'add' uevent ensures these rules are processed correctly.
+>>> This patch sounds like a hack to me. AFAIK, "udevadm trigger"
+>>> performs exactly that.
+>>>
+>>> Thanks
+>>
+>> AFAIK, PCI slots do not yet raise a uevent. 
+
+That is only partially true. PCI slots are represented in sysfs by a
+kobject (pci_slot.kobj) and pci_hotplug_core generates uevents for these
+kobjects during pci_hp_add() [1].
+
+Here is an example for these uevents:
+
+KERNEL[62021.190266] add      /bus/pci/slots/000018d0 (slots)
+ACTION=add
+DEVPATH=/bus/pci/slots/000018d0
+SUBSYSTEM=slots
+SEQNUM=1638
+
+KERNEL[62032.304390] remove   /bus/pci/slots/000018d0 (slots)
+ACTION=remove
+DEVPATH=/bus/pci/slots/000018d0
+SUBSYSTEM=slots
+SEQNUM=1682
+
+On s390 there is a use case for reacting to these events via udev rules,
+namely to persistently apply a user-specified, per-slot power state.
+
+>> Secondly there is no uevent attribute in slot-id directory to submit requests to raise a uevent. This 
+>> patch fills that gap
+> 
+> Please start from the beginning and explain what you mean by 'the gap'.
+> Which scenario failed before and began working after this patch? From your
+> description, it sounds like the behavior should already be covered by the
+> 'udevadm trigger' command.
+
+The problem is that PCI slots registered during early boot generate
+uevents before udevd is running, therefore no udev rule is triggered for
+them. While systemd re-triggers early uevents after udevd was started
+via a call to `udevadm trigger`, udevadm relies on the existence of
+writable "uevent" sysfs attributes [2] to generate these replay events.
+
+Driver model code automatically creates "uevent" attributes for struct
+devices (such as pci_dev.dev) and struct drivers, but there is no such
+automatism for kobjects like pci_slot.kobj. As a result, early uevents
+are missed by `udevadm trigger` and the per-slot udev rules are ineffective.
+
+This patch tries to resolve the issue by adding the "uevent" sysfs
+attribute for PCI slots. Another patch is required in systemd/udevadm to
+also consider these newly added "uevent" attributes during sysfs
+enumeration.
+
+> I want to note that drivers/pci/slot.c has remained largely unchanged since 2008.
+
+The requirement to be able to consume PCI slot uevents existed for some
+time on s390. This was previously addressed via crude workarounds using
+boot scripts [3] but with PCI usage increasing on recent s390 hardware,
+the lack of a proper solution is turning into a real limitation.
+
+
+[1]
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/hotplug/pci_hotplug_core.c#n424
+[2]
+https://github.com/systemd/systemd/blob/main/src/libsystemd/sd-device/sd-device.c#L2796
+[3]
+https://github.com/ibm-s390-linux/s390-tools/blob/master/zdev/dracut/95zdev/parse-zdev.sh#L48
+
+-- 
+Peter Oberparleiter
+Linux on IBM Z Development - IBM Germany R&D
