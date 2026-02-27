@@ -1,38 +1,38 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2A04218A1;
-	Fri, 27 Feb 2026 14:00:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E89241B35F;
+	Fri, 27 Feb 2026 14:00:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772200832; cv=none; b=mqdpVeGoefLP3jrmfTrujzbWdPx2fmmHWUKvuqBuokbcte1VS9s+ycho/b+Ncjcv4fU+bU75NPh8tS8xAdHrAhNuqIHTZnjhFeZ6urmQKrZyh1JHLhpQp6eBK7KsDtb6Az6MDA8Z9inIHO+BtAJAkQEParjid1lanV8OBLtF/14=
+	t=1772200850; cv=none; b=BO/osJbJ/130Yf7G+1Fl6U/sIiJ66xP9J/xT3lpFvqBPeKm5qEhar3Xdu/f1suqbWXWEGBVZtvUHNJUZa9pXMz4v2KsOWX1XwSywObIR6O5PtRDAM9h1eKeVt0dU1ZAhsjioXZ7P2LdbkFFOpZK+TrCZTzCuNpbTPKsPPiU9e/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772200832; c=relaxed/simple;
-	bh=t4S3Im2Q9VHd65b1LNW0YeMdFBvQQnKTQdoHV0TNdoM=;
+	s=arc-20240116; t=1772200850; c=relaxed/simple;
+	bh=z5qo+njxOq59cfnMFpWRPyGgRlTcviG2FIatZoRwOvA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j7Az/VOmWTG6lX6hSBT2n9Jj2jWh3YD+yT8FCIeUGHapBSnx1zvANK2sPOzeFPaDvjwHnbDY5s4GpMkNDBVZ9Ha8hE6DQfaly5LxUY5DlzEaJoBZuCW/fd8VAmG9bA8xur5HDDbwxMxh9RR0G46BtF9mwNrWqp1LEa20H2vVjq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=fFN1Mr7T; arc=none smtp.client-ip=185.246.84.56
+	 MIME-Version; b=pYL9q+MnWz6Qa+WaaRE8hkiOcxkpLPK+tvvJlgdK0O+f5piRds3E/m2mxsqh4SrOmiPSFOGUY2rqYrYKJroxsShTRliuT2EmDGdpYAqBvlUDlJsL/PrXzZsa63AsrvNffsKLMAwjnove/mTGqjd6NQAtux9C6oU1AjnVbPEz8j4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=R8PR1GRd; arc=none smtp.client-ip=185.246.85.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="fFN1Mr7T"
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="R8PR1GRd"
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id 5CE501A1B64;
-	Fri, 27 Feb 2026 14:00:29 +0000 (UTC)
+	by smtpout-03.galae.net (Postfix) with ESMTPS id 66DBF4E41912;
+	Fri, 27 Feb 2026 14:00:46 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 2D25F5FE46;
-	Fri, 27 Feb 2026 14:00:29 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B1DF51036946B;
-	Fri, 27 Feb 2026 15:00:04 +0100 (CET)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 3CC915FE46;
+	Fri, 27 Feb 2026 14:00:46 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 5F60A1036946F;
+	Fri, 27 Feb 2026 15:00:25 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1772200823; h=from:subject:date:message-id:to:cc:mime-version:
+	t=1772200842; h=from:subject:date:message-id:to:cc:mime-version:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=yjXgFwtIgYgLY+NqzIdKN5xDoSSBCrFHV69qZDYtiog=;
-	b=fFN1Mr7TgwZdDKmtKNAjCJMQWiyfFwr/M+zlCiuLD+TAIphnCVpCqBUz4GjqUVLgLcVMiN
-	iWjy1Jq/0syaYQTgtz7ZYl3uuT0hB9V6DgB26shloy6rnEfDcpOhEo3C6mJ+uRLP5W8La5
-	ciDEdeWtxn0vhNhdf1cdiTvRPTOKhmLPQP11W5WkJg5K498ddhrRJHCQX5e7+psNfGJ7Bj
-	pVfPN+S/X7w8Wxd8KEKeK9iQ9OJzG+PCXEhLJqN2ewcbKC//T2iwVq9WHQW7nUBbFU/FfA
-	bB7c2KSxF5B0l9NMRic4bFjYzWqw0C2TY5jup1wa6MrG6KcCAVmS9wY+jx1xwg==
+	bh=+z4Mrq3/T+2B2/cuOhiNyTSuL/eh3kHVXp5z8mKO858=;
+	b=R8PR1GRdilUpqqOvhhGPsRZnaqHC6zNY1SPSac42QkHa1KE18j1aSj3wQDpDzOvAZSE9Oh
+	Guj6PLsenxC3g9HSGqej2ADbLkIlHtAoN6BHNhHTAmy+WFZJ7asIbuX5F/RPfoWtsSnmNc
+	v9kud2Jw6vWmzu/pztvGKuQ94UEeq6EMbgxsB+agzxgpOd4aDODpCckdGhJMjdiSqIa5Ph
+	eEsrfaXugkZnXD6SrZWzCnCZGmr4c+fKDN/WeAczQC/EaM3d/DI2EbTwapsWZpVNpltqVQ
+	h2BLP/aXo61HdPcVjGbiFe0OrV6MDgylpAxlxk3Guw13l9YovaZrckn997mAqw==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Andrew Lunn <andrew@lunn.ch>,
 	Rob Herring <robh@kernel.org>,
@@ -97,9 +97,9 @@ Cc: Wolfram Sang <wsa@kernel.org>,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v5 19/28] clk: lan966x: Add MCHP_LAN966X_PCI dependency
-Date: Fri, 27 Feb 2026 14:54:16 +0100
-Message-ID: <20260227135428.783983-20-herve.codina@bootlin.com>
+Subject: [PATCH v5 20/28] i2c: busses: at91: Add MCHP_LAN966X_PCI dependency
+Date: Fri, 27 Feb 2026 14:54:17 +0100
+Message-ID: <20260227135428.783983-21-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260227135428.783983-1-herve.codina@bootlin.com>
 References: <20260227135428.783983-1-herve.codina@bootlin.com>
@@ -112,31 +112,30 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Last-TLS-Session-Version: TLSv1.3
 
-The lan966x clock controller depends on the LAN969x architecture or the
-LAN966x SoC.
+The AT91 I2C driver depends on ARCH_MICROCHIP.
 
-This clock controller can be used by the LAN966x PCI device and so it
-needs to be available when the LAN966x PCI device is enabled.
+This I2C controller can be used by the LAN966x PCI device and so
+it needs to be available when the LAN966x PCI device is enabled.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-Acked-by: Stephen Boyd <sboyd@kernel.org>
+Acked-by: Andi Shyti <andi.shyti@kernel.org>
 ---
- drivers/clk/Kconfig | 2 +-
+ drivers/i2c/busses/Kconfig | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/clk/Kconfig b/drivers/clk/Kconfig
-index 3d803b4cf5c1..0231dd449134 100644
---- a/drivers/clk/Kconfig
-+++ b/drivers/clk/Kconfig
-@@ -278,7 +278,7 @@ config COMMON_CLK_LAN966X
- 	tristate "Generic Clock Controller driver for LAN966X SoC"
- 	depends on HAS_IOMEM
- 	depends on OF
--	depends on SOC_LAN966 || ARCH_LAN969X || COMPILE_TEST
-+	depends on SOC_LAN966 || ARCH_LAN969X || MCHP_LAN966X_PCI || COMPILE_TEST
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index e11d50750e63..f43b3e8ca317 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -417,7 +417,7 @@ config I2C_ASPEED
+ 
+ config I2C_AT91
+ 	tristate "Atmel AT91 I2C Two-Wire interface (TWI)"
+-	depends on ARCH_MICROCHIP || COMPILE_TEST
++	depends on ARCH_MICROCHIP || MCHP_LAN966X_PCI || COMPILE_TEST
  	help
- 	  This driver provides support for Generic Clock Controller(GCK) on
- 	  LAN966X SoC. GCK generates and supplies clock to various peripherals
+ 	  This supports the use of the I2C interface on Atmel AT91
+ 	  processors.
 -- 
 2.53.0
 
