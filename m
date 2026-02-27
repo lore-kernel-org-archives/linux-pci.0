@@ -1,73 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4921121771C;
-	Fri, 27 Feb 2026 13:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBDF925B663;
+	Fri, 27 Feb 2026 13:34:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772197501; cv=none; b=HpyJYsEWmoaAwKwfzyKntcil/0YYa9yILwG6L7IAKtJo5btvenpqHhgrtbPuRKAoUhCpk/QWnsuaOTM/wxcKsvPLin4QCZTTxigxfFIR6dhf3wwlywnsSIg3kl12TteUPafQZ3dECkSo4KEdFzAtGX9nWMN5RN0KGyl0OfYZL9U=
+	t=1772199261; cv=none; b=LdOfTHab1eWaBj3KVY+IjNP+GyAnKSc8BWoWKmabe2PpfMQU9DiIoBjK6Lx22kiffSfBb2GtLteEJuCKvpjNEYgXafixUzTFuOXnQzM1BmVzmvrV2N+SVHEGsPGZ9xnqb9zjOu07zn8WDkbRT/AFDheRemzKvrvsJUpCV1890r8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772197501; c=relaxed/simple;
-	bh=iCzPOcKriOMXRsYKFBXac3LX4jsJNnFohj2Ac45N/fY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KazdKzpWE5QRvdc4eDxjPSYLPSyJAzFQVu/UyiA+CHmpCsr6n4P9CbO6bCW527KEe0RwjXqPSWaYgaozjRZMyQL8ejlczGk1U2q58G65fblU0qQA6XHKmRgV4eyRjnF/IIT8PZK8RocErZz6th0JEFJdgf+aUqfTw2w/sHkZHKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iVYXXo2g; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iVYXXo2g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF896C116C6;
-	Fri, 27 Feb 2026 13:05:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772197501;
-	bh=iCzPOcKriOMXRsYKFBXac3LX4jsJNnFohj2Ac45N/fY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=iVYXXo2gKSbajc15xIVGOfAMg4eZpKLeSGlD4lOLQrQjqDbHt33mmuz/BNCFpnrcZ
-	 MYY0/ZEb+Z0x1u6ywibATEZGUOG03DHyrvJuaF6LVPM7aoPJIU7HyORJKK2/QSPQKC
-	 yFqb52BPCeuL+SrnVe3Q+bIl09At6G9D/IyGw6sTnphZeU6fVLj7qBfbluTT2vcJTO
-	 PGWZrfoV9VlOOD84/jppr0mi5wx8l93SIni7NzAfjCNn9LzoN6vDLprDcV6ro188BY
-	 YhH4MKscPW5xl3MQnDAedm3uZkEFi8JNVsUU0Dhd+/oQYW6dxKy1nzv6g0rWbcPvHn
-	 4oTXkIASEMvGQ==
-Date: Fri, 27 Feb 2026 22:04:58 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	Alex Williamson <alex@shazbot.org>,
-	Baruch Siach <baruch@tkos.co.il>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Correct PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 value
-Message-ID: <20260227130458.GA1783251@rocinante>
-References: <20260227123653.3891008-1-bhelgaas@google.com>
+	s=arc-20240116; t=1772199261; c=relaxed/simple;
+	bh=Gj1ZRHoFyfOCPG4wFYQ7NFuIyqac++id6WLS2szSxL8=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YBRf1rraTDHJSuf+nXNfDlbeJcXaa6NEMxin2scgxvIhL+gQ+qsPjoZ2CSnJpGfUBie+HOURI2+8iRDTX2nqDsaVHRvJzLC09rjM871xAQPHiAeFB3rjDTAH4Srer23LIKdRxc1Dd63NOubrTqcuPHYI25Fr09GcR8ofS58sjWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.224.150])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTPS id 4fMq6M6GpwzJ46c9;
+	Fri, 27 Feb 2026 21:33:47 +0800 (CST)
+Received: from dubpeml500005.china.huawei.com (unknown [7.214.145.207])
+	by mail.maildlp.com (Postfix) with ESMTPS id 6E5F04056E;
+	Fri, 27 Feb 2026 21:34:14 +0800 (CST)
+Received: from localhost (10.203.177.15) by dubpeml500005.china.huawei.com
+ (7.214.145.207) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 27 Feb
+ 2026 13:34:13 +0000
+Date: Fri, 27 Feb 2026 13:34:12 +0000
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Dave Jiang <dave.jiang@intel.com>
+CC: Vidya Sagar <vidyas@nvidia.com>, <bhelgaas@google.com>,
+	<raphael.norwitz@nutanix.com>, <vsethi@nvidia.com>, <sdonthineni@nvidia.com>,
+	<smadhavan@nvidia.com>, <skancherla@nvidia.com>, <vaslot@nvidia.com>,
+	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
+	<mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
+Subject: Re: [PATCH V2] PCI: Hide SBR from reset_methods if masked by CXL
+Message-ID: <20260227133412.0000139a@huawei.com>
+In-Reply-To: <b7c04f27-39a9-41df-af0a-14bc5005518e@intel.com>
+References: <20260220195259.2397847-1-vidyas@nvidia.com>
+	<20260225133801.30231-1-vidyas@nvidia.com>
+	<b7c04f27-39a9-41df-af0a-14bc5005518e@intel.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260227123653.3891008-1-bhelgaas@google.com>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500010.china.huawei.com (7.191.174.240) To
+ dubpeml500005.china.huawei.com (7.214.145.207)
 
-Hello,
+On Wed, 25 Feb 2026 09:34:00 -0700
+Dave Jiang <dave.jiang@intel.com> wrote:
 
-[...]
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index ec1c54b5a310..14f634ab9350 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -712,7 +712,7 @@
->  #define  PCI_EXP_LNKCTL2_HASD		0x0020 /* HW Autonomous Speed Disable */
->  #define PCI_EXP_LNKSTA2		0x32	/* Link Status 2 */
->  #define  PCI_EXP_LNKSTA2_FLIT		0x0400 /* Flit Mode Status */
-> -#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	0x32	/* end of v2 EPs w/ link */
-> +#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	0x34	/* end of v2 EPs w/ link */
->  #define PCI_EXP_SLTCAP2		0x34	/* Slot Capabilities 2 */
->  #define  PCI_EXP_SLTCAP2_IBPD	0x00000001 /* In-band PD Disable Supported */
->  #define PCI_EXP_SLTCTL2		0x38	/* Slot Control 2 */
-
-Looks good!
-
-Reviewed-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-
-Thank you!
-
-	Krzysztof
+> On 2/25/26 6:38 AM, Vidya Sagar wrote:
+> > The CXL specification (e.g., CXL r3.1 v1.0, sec 8.1.5.2) defines
+> > the "Unmask SBR" bit in the Port Control Extensions Register.
+> > When this bit is 0 (default), asserting the Secondary Bus Reset (SBR) bit
+> > in the Bridge Control register has no effect on the downstream bus.
+> > 
+> > Currently, the Linux PCI core checks this condition in
+> > pci_reset_bus_function(). If SBR is masked, it returns -ENOTTY during the
+> > execution of the reset. However, during the probe phase (when probe=true),
+> > the function currently returns 0. This 0 return value incorrectly signals
+> > to the PCI subsystem that SBR is a viable reset method for the device.
+> > 
+> > As a result, 'bus' is listed in the device's
+> > /sys/bus/pci/devices/.../reset_methods attribute, even though the hardware
+> > is incapable of performing it. If a user attempts to write bus to reset
+> > method or triggers a reset that falls back to SBR, the operation fails
+> > with: "bash: echo: write error: Inappropriate ioctl for device" error.
+> > 
+> > This patch modifies pci_reset_bus_function() to return -ENOTTY immediately
+> > if cxl_sbr_masked() is true, regardless of the probe argument. This
+> > ensures that 'bus' is not advertised in reset_methods when the hardware
+> > prevents it, improving clarity for users and aligning the sysfs capability
+> > report with actual hardware behavior.
+> > 
+> > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>  
+> 
+> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
