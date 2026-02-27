@@ -1,505 +1,218 @@
-Received: from fout-b6-smtp.messagingengine.com (fout-b6-smtp.messagingengine.com [202.12.124.149])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB4D836BCE7;
-	Fri, 27 Feb 2026 22:12:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.149
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772230330; cv=none; b=ckUjS9QEMbq+oJ32uxU6wyvo8Wsjt4Opm4UuccmIr87p8NX6wDqULd/nTT8Zc4yR2DbzZOM1/pEusCF8DObq8HPLm8mHiZIkU7bKvhyyG2IfS2mk4c/kO5saATgYyF9NwjSJfXE9oNUv8ISnCF01wsjLVyg7F7YkNSB8QU4r4Ec=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772230330; c=relaxed/simple;
-	bh=dwi1oYcSG7oNWdR6HTqvj26S9/2sO0jCutzswDUYXQE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=idLT33uo0inqwCSvvphpbnBPSegi7o/1MNvvTtG9yNxxv9SZYNWSdh1Net5fzk1r7ff8w9Z1/Kvl21azsPW8SIeksXmUzDa6h9iTK6+EL7BwtlWQ0N0wRoMbI7m2BQir3bCmuOcH9a9pxNa+4NBO2TJCHX13FSTY0xLu+fEu9WM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=rN1wOGI7; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=KCt8eH9y; arc=none smtp.client-ip=202.12.124.149
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA0B47AF73
+	for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 22:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.174
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772230819; cv=pass; b=Igg331xAlFNMfGRlsAq7lzb0Ik1Pt2+CioDCBWeuU91TYOJ8RnIZsafBzzr8JC0OcAG0WbLJ7/MVIMue2UjXJ7E+8LGhd8cBDyo230JfSiKV/vCRXvUFVhkpzUBUlYExg1ONpYt6XYzy/e5NO0zUvcVzqpV44C8SG5PNKfMjRcA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772230819; c=relaxed/simple;
+	bh=GtsGyeZPiDudjfd8L49wF+hn5MDTTqKv6ZZkfauqv5s=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=MamZ4CELlDqe6+2OTOFozcPfXn09D5PjlSm6GAtIjFK6m01yN8Ns5QGXcL20tkJwJW4IFFXp6qbbFONVOzdYUdWmmx5kCrzl+QoyUo4m60Dqg9rRxOEgfd34g17QI5xnPqpRXfPiIlGEEQOJRK//mn2EdNUhzPixqjYZ/36bu/U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=0MQQxTeH; arc=pass smtp.client-ip=209.85.208.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="rN1wOGI7";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="KCt8eH9y"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfout.stl.internal (Postfix) with ESMTP id 5455B1D0000E;
-	Fri, 27 Feb 2026 17:12:05 -0500 (EST)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Fri, 27 Feb 2026 17:12:06 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1772230325;
-	 x=1772316725; bh=r+Xj36bmMJT5YeFG+hgTwlIyeySe3/X6/Z0Pd7OhyM8=; b=
-	rN1wOGI7Ou+M1DpR83xaW6Z1iQwZgbmrmSsEpuG4wQnNpNdF2XIjYrPb2u3AjHEW
-	E/pjjol/8A2MZrJRWRn9UyqGZM40vDF6qHgXSxlPf989r+qkJdEicH0L+yb3y2Uv
-	DguaM0M9fqiOCW7Wf76Wwd3A9ChCjDWOv1b16BTw9nLO26N2LJan3rog8kEHWfCl
-	CqUTPvlhDb5Amgwp0tNzXSQvJ4FOgyCAN006T1P3gFI5hjg8pndVWJIUdY+QeCBY
-	wQAxBjMAcg8Fhr6GRB5xtvgw8sRZfPj3ecfmMxeEAJCqxGCJJjBwjB549MCa7SRF
-	EbecCM/Qgg5ZXfvXqb2+0A==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1772230325; x=
-	1772316725; bh=r+Xj36bmMJT5YeFG+hgTwlIyeySe3/X6/Z0Pd7OhyM8=; b=K
-	Ct8eH9y5T/eTD1PWdyqfm4OKlLz6NDsRISuTQLUCv8cRc5CO7PopXq9gtd3hY0iA
-	QpR7pmr23CIsinOFPSpgvCZmi5hVmIXUrCrI5JzHf9UTNRJkkqxu+ZiUYQ9kYamf
-	en54HHPDo9EwTYLuYXZzYM6lNQr5+AiU+E3Cm2RguWgvhPRtdXRdnpJNJoO4XJMD
-	mJDQ5chcjvBhQF6EzJLUkwA8IVT0sidDgVgWooxmAv0QAPKZAT1EVw9xFqwPE3T5
-	kSfG6mjpeMEom4Z1m5ysMesImfcYT/87TmmBj8LTSVof2P9W5hIMjBXiFqNU++7L
-	aQlBRb4ACwTabuvFAqDbA==
-X-ME-Sender: <xms:tBaiaWeXvQJTmBIMqb5Wd2UgBPNt0MNsTajovyBjC1RlTAZWsxRnxg>
-    <xme:tBaiacUvVr4Y6MyeK7JKzsIrmUXMxDZLJiFZNE7ycxIFiekFNq2ZdQpMqrbKG3jsy
-    S1pno2yevGQKR3LyiegKRYZU0en6UVU2dc0TnyDcsAbzLuIrsYszg>
-X-ME-Received: <xmr:tBaiaTWhg4F1EtyKdB6TmLXHON-0K7pyX95sEz-nrOexA9NQl7wIS4_yeVw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvhedtudejucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
-    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
-    htthgvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudeg
-    veeuueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepvddupdhmohguvgep
-    shhmthhpohhuthdprhgtphhtthhopehjuhhlihgrnhhrsehlihhnuhigrdhisghmrdgtoh
-    hmpdhrtghpthhtohepshgthhhnvghllhgvsehlihhnuhigrdhisghmrdgtohhmpdhrtghp
-    thhtohepfihinhhtvghrrgeslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehtsh
-    eslhhinhhugidrihgsmhdrtghomhdprhgtphhtthhopehosggvrhhprghrsehlihhnuhig
-    rdhisghmrdgtohhmpdhrtghpthhtohepghgsrgihvghrsehlihhnuhigrdhisghmrdgtoh
-    hmpdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohephihishhhrghi
-    hhesnhhvihguihgrrdgtohhmpdhrtghpthhtohepshhkohhlohhthhhumhhthhhosehnvh
-    hiughirgdrtghomh
-X-ME-Proxy: <xmx:tBaiadTcGY6d5A9FjeyG8garTPGlsDgU06Wn0AYZebBiEBkPZs2Egg>
-    <xmx:tBaiaS0v2CWzVtkemazVAND1QVXooOjyTfAY__VcEFVx3t2LbfaXYQ>
-    <xmx:tBaiaeJ5WTQYjWlodP2BTnzzpZ-6-QCXVUYEuHNXrPYo53s3_7ygjg>
-    <xmx:tBaiaT9OXgqTs4v3FsECNj_mRnBbnjHKwrSPQhWs-nhEN4Udz0M0PQ>
-    <xmx:tRaiaf7rNXjh9lQLlGXZhTWMM89nyAatertr6t06PatkvPQmkOP7Ekvz>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 27 Feb 2026 17:12:03 -0500 (EST)
-Date: Fri, 27 Feb 2026 15:12:01 -0700
-From: Alex Williamson <alex@shazbot.org>
-To: Julian Ruess <julianr@linux.ibm.com>
-Cc: schnelle@linux.ibm.com, wintera@linux.ibm.com, ts@linux.ibm.com,
- oberpar@linux.ibm.com, gbayer@linux.ibm.com, Jason Gunthorpe
- <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>, Shameer Kolothum
- <skolothumtho@nvidia.com>, Kevin Tian <kevin.tian@intel.com>,
- mjrosato@linux.ibm.com, alifm@linux.ibm.com, raspl@linux.ibm.com,
- hca@linux.ibm.com, agordeev@linux.ibm.com, gor@linux.ibm.com,
- kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-s390@vger.kernel.org, linux-pci@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH v2 2/3] vfio/ism: Implement vfio_pci driver for ISM
- devices
-Message-ID: <20260227151201.61cdb696@shazbot.org>
-In-Reply-To: <20260224-vfio_pci_ism-v2-2-f010945373fa@linux.ibm.com>
-References: <20260224-vfio_pci_ism-v2-0-f010945373fa@linux.ibm.com>
-	<20260224-vfio_pci_ism-v2-2-f010945373fa@linux.ibm.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="0MQQxTeH"
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-386b553c70eso34228521fa.0
+        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 14:20:16 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772230815; cv=none;
+        d=google.com; s=arc-20240605;
+        b=A1+5gy2L+BksdKzaNR7qYcZLFdFTfc8o+qZWtCKQ0zeO9Js9S/siQ85Ke5KaxkyjGg
+         M/WsdlpXepiszBfoj2+H1uYF6mCGW4WwD0b4TlxxH6duxfZY5GHdxoJY00RAIAQXuD3X
+         2QWxzKSXpB8TUXYNMphGFXwYjgaMYaAhst5a+wBRganFFjEp2tE72A992HTtlZCGxxN6
+         JNMKsWvoDdU6Z693NmQDmloWE9GHwQjOs22bHw63QhDSYjmcv0dmpz0+m17Ogb1UsYi3
+         O3UGz/xuUpjoPBa2qqjHPyJ1cQ55KfohaJPzuipU0xyeiTVkC2X9eEPv82kddYaGTxAj
+         7JNQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=WC3H5DEaZJ5Vspp5jAs+PxKz8E7K+Tp6LHW5IP31g2M=;
+        fh=kBwKtmQlxg5s4UEIrlMkb2TpJByGZKILyTzlyttGAmE=;
+        b=GveQHkMHHeWiDQqnTBJ569tONJPBL6G38lMDO0blaimGqW7V1LmeF5dEtv2v8+jWPJ
+         +AnMRczGqp//Plca3rBeU6Cqjree1BxfnN4ztOq16sTyx1DZTzQq4VYsULQihygLF+uP
+         0DWsl5RgQrV+oxlJV3h75Tv2D6DJ2RwsquF8XXUGKriQpFs+RExljZiQ4LOUrbowzzjW
+         bCZxqxbClt/JANzW236uBiZV0lK+fQAmrXXR3Tza8/UT8Gc7Bh42xvgIYLkaEpbPI9rb
+         u2uwkjz2ULRfJr3dj5gsuAeazYX+hhrQrK7u5C7oHv8FOupccCdSQBLYKRIxEdbzaJM5
+         gFbA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1772230815; x=1772835615; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WC3H5DEaZJ5Vspp5jAs+PxKz8E7K+Tp6LHW5IP31g2M=;
+        b=0MQQxTeH4drNtPAxjqOERP30fqO8XGjxdB8a9Frg3KPY+t8k3Y0sxCohBY5MIxsuTV
+         0SYevnvypqsMoj3K43Wvq1GOO30l/rBN1wyPGme/CTUWr1yUJ2QCoLtzogotQH3yg2O6
+         d0rVcxDdYsnPoREkiLxgsIbopf84baaXx5kguZVoSSaXIyOBQaPlUuQJR7yqklfcEDzG
+         y6+H9dCbQP+sX0YaMOwfQlp3JLknU8Sgfx4baCXMStTha/TdULiY2ks5COvznkqBzgHP
+         G3WHoxY4XbgEXL/9dYBdBr78/vD3tKpWC9db+Q/AJSMI2Bswx2iLix5B6oYhW+txUhLK
+         NwPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772230815; x=1772835615;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=WC3H5DEaZJ5Vspp5jAs+PxKz8E7K+Tp6LHW5IP31g2M=;
+        b=Ryi+zmEnrq4pSCHASjU+IC/gDr0sIoMHuk8XxDhKpd42mbpEswJ7QQtT6R/CG4HV19
+         v3PRxP79aPmVq6DGG9cWOTd0eSYCzxVlVq8a9k3w+c3fSXVMq63dhpepC3lUFOI7rAG3
+         v7abfep1U/Byc8VoEIZJY5YV+pPTr8dbXj/WjYJV7IGKZlyQNRSMlorTgtYmAQlkGid5
+         vUqRrh5M3+IsTJG+KoOc649Q5NigXV1YXpDR6/xBEfDP2dtMgY9OLjwaqVVpP/hdvTYy
+         YiqAZuBxwx2Po371meJi955yw2EN7hkYfT35bAkdCrdgQoBl4QqVquUsH/Hiiy2/Nndp
+         c7rw==
+X-Forwarded-Encrypted: i=1; AJvYcCWJ427DwxYWvdE6fnY2hiGgw8Y4vYq6OhT6dzbQYQq2sTwPBqKkbfQM2O/BwNSgSuScRUzMGykF8OU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx+zVibzb1bBxNREMIo2dlxbdcvWKbnFfRCyVKvqa+47mbTGkpC
+	/MC2rnNNC3yR0ZWmj1xQTWXs3Ixo3ZbEIgmSCZ6bNbA4siVWqC5K4j8hl0PJh2Fin0FmeW9szUO
+	OsUYqqm8U7s1/XKd0T7QR0vF4YiR69BTZ14YEBRNb
+X-Gm-Gg: ATEYQzxPGMFRUxNk4VNlCP7MWsK8CDwGKTFOm2tLzjtQcFqmBSWSbcz/wpxK4nqWgXn
+	Z2ynmcbe0CT2edZxO4io9Tb/XWTomXWSu8FWhvzz01Dl0fT2tEpxvv+WsqkAniDxLXyeFTZeB/M
+	dgv5LZU0rweA1pgqAs+fvlq7W2UcXwYu1c+Kp+Nvv5JcooBRA3iyQPoPRKZVXhMqX5FCflCeBX5
+	Tx0sx8VbYyWw/ku6wN4Z3N87j5ePrNJWzK7JWA8TJfmfuDuYNPp1i+itq8AnSFAsx4+wB3zPklE
+	u78Y70jbs8Rbftql8g==
+X-Received: by 2002:a2e:be9b:0:b0:389:fcc6:4923 with SMTP id
+ 38308e7fff4ca-389ff36c676mr32953561fa.36.1772230814172; Fri, 27 Feb 2026
+ 14:20:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20260129212510.967611-3-dmatlack@google.com> <20260225224651.GA3711085@bhelgaas>
+ <aZ-TrC8P0tLYhxXO@google.com> <20260227093233.45891424@shazbot.org>
+ <CALzav=dxthSXYo13rOjY710uNbu=6UjzD-OJKm-Xt=wR7oc0mg@mail.gmail.com> <20260227112501.465e2a86@shazbot.org>
+In-Reply-To: <20260227112501.465e2a86@shazbot.org>
+From: David Matlack <dmatlack@google.com>
+Date: Fri, 27 Feb 2026 14:19:45 -0800
+X-Gm-Features: AaiRm50CpBktJDVkdNswfpkBixm1XqIc04gAiSgoLOF5-QNcfKrgPA3B04Dkoqw
+Message-ID: <CALzav=egQgG-eHjrjpznGnyf-gpdErSUU_L8y82rbp5u=rQ83A@mail.gmail.com>
+Subject: Re: [PATCH v2 02/22] PCI: Add API to track PCI devices preserved
+ across Live Update
+To: Alex Williamson <alex@shazbot.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Adithya Jayachandran <ajayachandra@nvidia.com>, 
+	Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>, Alistair Popple <apopple@nvidia.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Ankit Agrawal <ankita@nvidia.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Corbet <corbet@lwn.net>, 
+	Josh Hilke <jrhilke@google.com>, Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org, 
+	kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>, Leon Romanovsky <leonro@nvidia.com>, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
+	=?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>, 
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Raghavendra Rao Ananta <rananta@google.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Saeed Mahameed <saeedm@nvidia.com>, 
+	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
+	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+	Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>, 
+	Vivek Kasireddy <vivek.kasireddy@intel.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>, 
+	Zhu Yanjun <yanjun.zhu@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 24 Feb 2026 13:34:33 +0100
-Julian Ruess <julianr@linux.ibm.com> wrote:
+On Fri, Feb 27, 2026 at 10:25=E2=80=AFAM Alex Williamson <alex@shazbot.org>=
+ wrote:
+>
+> On Fri, 27 Feb 2026 09:19:28 -0800
+> David Matlack <dmatlack@google.com> wrote:
+>
+> > On Fri, Feb 27, 2026 at 8:32=E2=80=AFAM Alex Williamson <alex@shazbot.o=
+rg> wrote:
+> > >
+> > > On Thu, 26 Feb 2026 00:28:28 +0000
+> > > David Matlack <dmatlack@google.com> wrote:
+> > > > > > +static int pci_flb_preserve(struct liveupdate_flb_op_args *arg=
+s)
+> > > > > > +{
+> > > > > > + struct pci_dev *dev =3D NULL;
+> > > > > > + int max_nr_devices =3D 0;
+> > > > > > + struct pci_ser *ser;
+> > > > > > + unsigned long size;
+> > > > > > +
+> > > > > > + for_each_pci_dev(dev)
+> > > > > > +         max_nr_devices++;
+> > > > >
+> > > > > How is this protected against hotplug?
+> > > >
+> > > > Pranjal raised this as well. Here was my reply:
+> > > >
+> > > > .  Yes, it's possible to run out space to preserve devices if devic=
+es are
+> > > > .  hot-plugged and then preserved. But I think it's better to defer
+> > > > .  handling such a use-case exists (unless you see an obvious simpl=
+e
+> > > > .  solution). So far I am not seeing preserving hot-plugged devices
+> > > > .  across Live Update as a high priority use-case to support.
+> > > >
+> > > > I am going to add a comment here in the next revision to clarify th=
+at.
+> > > > I will also add a comment clarifying why this code doesn't bother t=
+o
+> > > > account for VFs created after this call (preserving VFs are explici=
+tly
+> > > > disallowed to be preserved in this patch since they require additio=
+nal
+> > > > support).
+> > >
+> > > TBH, without SR-IOV support and some examples of in-kernel PF
+> > > preservation in support of vfio-pci VFs, it seems like this only
+> > > supports a very niche use case.
+> >
+> > The intent is to start by supporting a simple use-case and expand to
+> > more complex scenarios over time, including preserving VFs. Full GPU
+> > passthrough is common at cloud providers so even non-VF preservation
+> > support is valuable.
+> >
+> > > I expect the majority of vfio-pci
+> > > devices are VFs and I don't think we want to present a solution where
+> > > the requirement is to move the PF driver to userspace.
+> >
+> > JasonG recommended the upstream support for VF preservation be limited
+> > to cases where the PF is also bound to VFIO:
+> >
+> >   https://lore.kernel.org/lkml/20251003120358.GL3195829@ziepe.ca/
+> >
+> > Within Google we have a way to support in-kernel PF drivers but we are
+> > trying to focus on simpler use-cases first upstream.
+> >
+> > > It's not clear,
+> > > for example, how we can have vfio-pci variant drivers relying on
+> > > in-kernel channels to PF drivers to support migration in this model.
+> >
+> > Agree this still needs to be fleshed out and designed. I think the
+> > roadmap will be something like:
+> >
+> >  1. Get non-VF preservation working end-to-end (device fully preserved
+> > and doing DMA continuously during Live Update).
+> >  2. Extend to support VF preservation where the PF is also bound to vfi=
+o-pci.
+> >  3. (Maybe) Extend to support in-kernel PF drivers.
+> >
+> > This series is the first step of #1. I have line of sight to how #2
+> > could work since it's all VFIO.
+>
+> Without 3, does this become a mainstream feature?
 
-> Add a vfio_pci variant driver for the s390-specific Internal Shared
-> Memory (ISM) devices used for inter-VM communication.
-> 
-> This enables the development of vfio-pci-based user space drivers for
-> ISM devices.
-> 
-> On s390, kernel primitives such as ioread() and iowrite() are switched
-> over from function handle based PCI load/stores instructions to PCI
-> memory-I/O (MIO) loads/stores when these are available and not
-> explicitly disabled. Since these instructions cannot be used with ISM
-> devices, ensure that classic function handle-based PCI instructions are
-> used instead.
-> 
-> The driver is still required even when MIO instructions are disabled, as
-> the ISM device relies on the PCI store block (PCISTB) instruction to
-> perform write operations.
-> 
-> Stores are not fragmented, therefore one ioctl corresponds to exactly
-> one PCISTB instruction. User space must ensure to not write more than
-> 4096 bytes at once to an ISM BAR which is the maximum payload of the
-> PCISTB instruction.
-> 
-> Signed-off-by: Julian Ruess <julianr@linux.ibm.com>
-> ---
->  drivers/vfio/pci/Kconfig      |   2 +
->  drivers/vfio/pci/Makefile     |   2 +
->  drivers/vfio/pci/ism/Kconfig  |  11 ++
->  drivers/vfio/pci/ism/Makefile |   3 +
->  drivers/vfio/pci/ism/main.c   | 297 ++++++++++++++++++++++++++++++++++++++++++
->  5 files changed, 315 insertions(+)
-> 
-> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-> index 1e82b44bda1a0a544e1add7f4b06edecf35aaf81..296bf01e185ecacc388ebc69e92706c99e47c814 100644
-> --- a/drivers/vfio/pci/Kconfig
-> +++ b/drivers/vfio/pci/Kconfig
-> @@ -60,6 +60,8 @@ config VFIO_PCI_DMABUF
->  
->  source "drivers/vfio/pci/mlx5/Kconfig"
->  
-> +source "drivers/vfio/pci/ism/Kconfig"
-> +
->  source "drivers/vfio/pci/hisilicon/Kconfig"
->  
->  source "drivers/vfio/pci/pds/Kconfig"
-> diff --git a/drivers/vfio/pci/Makefile b/drivers/vfio/pci/Makefile
-> index e0a0757dd1d2b0bc69b7e4d79441d5cacf4e1cd8..6138f1bf241df04e7419f196b404abdf9b194050 100644
-> --- a/drivers/vfio/pci/Makefile
-> +++ b/drivers/vfio/pci/Makefile
-> @@ -11,6 +11,8 @@ obj-$(CONFIG_VFIO_PCI) += vfio-pci.o
->  
->  obj-$(CONFIG_MLX5_VFIO_PCI)           += mlx5/
->  
-> +obj-$(CONFIG_ISM_VFIO_PCI)           += ism/
-> +
->  obj-$(CONFIG_HISI_ACC_VFIO_PCI) += hisilicon/
->  
->  obj-$(CONFIG_PDS_VFIO_PCI) += pds/
-> diff --git a/drivers/vfio/pci/ism/Kconfig b/drivers/vfio/pci/ism/Kconfig
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..072b41099601b84e8d3b4a915ebdb3eebdf10488
-> --- /dev/null
-> +++ b/drivers/vfio/pci/ism/Kconfig
-> @@ -0,0 +1,11 @@
-> +# SPDX-License-Identifier: GPL-2.0
-> +config ISM_VFIO_PCI
-> +	tristate "VFIO support for ISM devices"
-> +	depends on S390
-> +	select VFIO_PCI_CORE
-> +	help
-> +	  This provides user space support for
-> +	  IBM Internal Shared Memory (ISM) Adapter devices
-> +	  using the VFIO framework.
+I do think there will be enough demand for (3) that it will be worth
+doing. But I also think ordering the steps this way makes sense from
+an iterative development point of view.
 
-Nit, strange wrapping.
+> There's obviously a knee jerk reaction that moving PF drivers into
+> userspace is a means to circumvent the GPL that was evident at LPC,
+> even if the real reason is "in-kernel is hard".
+>
+> Related to that, there's also not much difference between a userspace
+> driver and an out-of-tree driver when it comes to adding in-kernel code
+> for their specific support requirements.  Therefore, unless migration is
+> entirely accomplished via a shared dmabuf between PF and VF,
+> orchestrated through userspace, I'm not sure how we get to migration,
+> making KHO vs migration a binary choice.  I have trouble seeing how
+> that's a viable intermediate step.  Thanks,
 
-> +
-> +	  If you don't know what to do here, say N.
-> diff --git a/drivers/vfio/pci/ism/Makefile b/drivers/vfio/pci/ism/Makefile
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..32cc3c66dd11395da85a2b6f05b3d97036ed8a35
-> --- /dev/null
-> +++ b/drivers/vfio/pci/ism/Makefile
-> @@ -0,0 +1,3 @@
-> +# SPDX-License-Identifier: GPL-2.0
-> +obj-$(CONFIG_ISM_VFIO_PCI) += ism-vfio-pci.o
-> +ism-vfio-pci-y := main.o
-> diff --git a/drivers/vfio/pci/ism/main.c b/drivers/vfio/pci/ism/main.c
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..5f9674f6dd1d44888c4e1e416d05edfd89fd09fe
-> --- /dev/null
-> +++ b/drivers/vfio/pci/ism/main.c
-> @@ -0,0 +1,297 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * vfio-ISM driver for s390
-> + *
-> + * Copyright IBM Corp.
-> + */
-> +
-> +#include "../vfio_pci_priv.h"
-> +
-> +#define ISM_VFIO_PCI_OFFSET_SHIFT   48
-> +#define ISM_VFIO_PCI_OFFSET_TO_INDEX(off) (off >> ISM_VFIO_PCI_OFFSET_SHIFT)
-> +#define ISM_VFIO_PCI_INDEX_TO_OFFSET(index) ((u64)(index) << ISM_VFIO_PCI_OFFSET_SHIFT)
-> +#define ISM_VFIO_PCI_OFFSET_MASK (((u64)(1) << ISM_VFIO_PCI_OFFSET_SHIFT) - 1)
-> +
-> +struct ism_vfio_pci_core_device {
-> +	struct vfio_pci_core_device core_device;
-> +};
-> +
-> +static int ism_pci_open_device(struct vfio_device *core_vdev)
-> +{
-> +	struct ism_vfio_pci_core_device *ivdev;
-> +	struct vfio_pci_core_device *vdev;
-> +	int ret;
-> +
-> +	ivdev = container_of(core_vdev, struct ism_vfio_pci_core_device,
-> +			     core_device.vdev);
-> +	vdev = &ivdev->core_device;
-> +
-> +	ret = vfio_pci_core_enable(vdev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	vfio_pci_core_finish_enable(vdev);
-> +	return 0;
-> +}
-> +
-> +static ssize_t ism_vfio_pci_do_io_r(struct vfio_pci_core_device *vdev,
-> +				    char __user *buf, loff_t off, size_t count,
-> +				    int bar)
-> +{
-> +	struct zpci_dev *zdev = to_zpci(vdev->pdev);
-> +	ssize_t ret, done = 0;
-> +	u64 req, length, tmp;
-> +
-> +	while (count) {
-> +		if (count >= 8 && IS_ALIGNED(off, 8))
-> +			length = 8;
-> +		else if (count >= 4 && IS_ALIGNED(off, 4))
-> +			length = 4;
-> +		else if (count >= 2 && IS_ALIGNED(off, 2))
-> +			length = 2;
-> +		else
-> +			length = 1;
-> +		req = ZPCI_CREATE_REQ(READ_ONCE(zdev->fh), bar, length);
-> +		/* use pcilg to prevent using MIO instructions */
-> +		ret = __zpci_load(&tmp, req, off);
-> +		if (ret)
-> +			return ret;
-> +		if (copy_to_user(buf, &tmp, length))
-> +			return -EFAULT;
-> +		count -= length;
-> +		done += length;
-> +		off += length;
-> +		buf += length;
-> +	}
-> +	return done;
-> +}
-> +
-> +static ssize_t ism_vfio_pci_do_io_w(struct vfio_pci_core_device *vdev,
-> +				    char __user *buf, loff_t off, size_t count,
-> +				    int bar)
-> +{
-> +	struct zpci_dev *zdev = to_zpci(vdev->pdev);
-> +	void *data __free(kfree) = NULL;
-> +	ssize_t ret;
-> +	u64 req;
-> +
-> +	if (count > zdev->maxstbl)
-> +		return -EINVAL;
-> +	data = kzalloc(count, GFP_KERNEL);
-> +	if (!data)
-> +		return -ENOMEM;
-> +	if (copy_from_user(data, buf, count))
-> +		return -EFAULT;
-> +	req = ZPCI_CREATE_REQ(READ_ONCE(zdev->fh), bar, count);
-> +	ret = __zpci_store_block(data, req, off);
-> +	if (ret)
-> +		return ret;
-> +	return count;
-> +}
-
-Some comments mirroring the commit log wrt this different read vs write
-behavior would likely be useful.  We could also note the requirement
-for the 48bit region address space above.  Thanks,
-
-Alex
-
-
-> +
-> +static ssize_t ism_vfio_pci_bar_rw(struct vfio_pci_core_device *vdev,
-> +				   char __user *buf, size_t count, loff_t *ppos,
-> +				   bool iswrite)
-> +{
-> +	int bar = ISM_VFIO_PCI_OFFSET_TO_INDEX(*ppos);
-> +	loff_t pos = *ppos & ISM_VFIO_PCI_OFFSET_MASK;
-> +	resource_size_t end;
-> +	ssize_t done = 0;
-> +
-> +	if (pci_resource_start(vdev->pdev, bar))
-> +		end = pci_resource_len(vdev->pdev, bar);
-> +	else
-> +		return -EINVAL;
-> +
-> +	if (pos >= end)
-> +		return -EINVAL;
-> +
-> +	count = min(count, (size_t)(end - pos));
-> +
-> +	if (iswrite)
-> +		done = ism_vfio_pci_do_io_w(vdev, buf, pos, count, bar);
-> +	else
-> +		done = ism_vfio_pci_do_io_r(vdev, buf, pos, count, bar);
-> +
-> +	if (done >= 0)
-> +		*ppos += done;
-> +
-> +	return done;
-> +}
-> +
-> +static ssize_t ism_vfio_pci_config_rw(struct vfio_pci_core_device *vdev,
-> +				      char __user *buf, size_t count,
-> +				      loff_t *ppos, bool iswrite)
-> +{
-> +	loff_t pos = *ppos;
-> +	size_t done = 0;
-> +	int ret = 0;
-> +
-> +	pos &= ISM_VFIO_PCI_OFFSET_MASK;
-> +
-> +	while (count) {
-> +		/*
-> +		 * zPCI must not use MIO instructions for config space access,
-> +		 * so we can use common code path here.
-> +		 */
-> +		ret = vfio_pci_config_rw_single(vdev, buf, count, &pos, iswrite);
-> +		if (ret < 0)
-> +			return ret;
-> +
-> +		count -= ret;
-> +		done += ret;
-> +		buf += ret;
-> +		pos += ret;
-> +	}
-> +
-> +	*ppos += done;
-> +
-> +	return done;
-> +}
-> +
-> +static ssize_t ism_vfio_pci_rw(struct vfio_device *core_vdev, char __user *buf,
-> +			       size_t count, loff_t *ppos, bool iswrite)
-> +{
-> +	unsigned int index = ISM_VFIO_PCI_OFFSET_TO_INDEX(*ppos);
-> +	struct vfio_pci_core_device *vdev;
-> +	int ret;
-> +
-> +	vdev = container_of(core_vdev, struct vfio_pci_core_device, vdev);
-> +
-> +	if (!count)
-> +		return 0;
-> +
-> +	switch (index) {
-> +	case VFIO_PCI_CONFIG_REGION_INDEX:
-> +		ret = ism_vfio_pci_config_rw(vdev, buf, count, ppos, iswrite);
-> +		break;
-> +
-> +	case VFIO_PCI_BAR0_REGION_INDEX ... VFIO_PCI_BAR5_REGION_INDEX:
-> +		ret = ism_vfio_pci_bar_rw(vdev, buf, count, ppos, iswrite);
-> +		break;
-> +
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static ssize_t ism_vfio_pci_read(struct vfio_device *core_vdev,
-> +				 char __user *buf, size_t count, loff_t *ppos)
-> +{
-> +	return ism_vfio_pci_rw(core_vdev, buf, count, ppos, false);
-> +}
-> +
-> +static ssize_t ism_vfio_pci_write(struct vfio_device *core_vdev,
-> +				  const char __user *buf, size_t count,
-> +				  loff_t *ppos)
-> +{
-> +	return ism_vfio_pci_rw(core_vdev, (char __user *)buf, count, ppos,
-> +			       true);
-> +}
-> +
-> +static int ism_vfio_pci_ioctl_get_region_info(struct vfio_device *core_vdev,
-> +					      struct vfio_region_info *info,
-> +					      struct vfio_info_cap *caps)
-> +{
-> +	struct vfio_pci_core_device *vdev =
-> +		container_of(core_vdev, struct vfio_pci_core_device, vdev);
-> +	struct pci_dev *pdev = vdev->pdev;
-> +
-> +	switch (info->index) {
-> +	case VFIO_PCI_CONFIG_REGION_INDEX:
-> +		info->offset = ISM_VFIO_PCI_INDEX_TO_OFFSET(info->index);
-> +		info->size = pdev->cfg_size;
-> +		info->flags = VFIO_REGION_INFO_FLAG_READ |
-> +			      VFIO_REGION_INFO_FLAG_WRITE;
-> +		break;
-> +	case VFIO_PCI_BAR0_REGION_INDEX ... VFIO_PCI_BAR5_REGION_INDEX:
-> +		info->offset = ISM_VFIO_PCI_INDEX_TO_OFFSET(info->index);
-> +		info->size = pci_resource_len(pdev, info->index);
-> +		if (!info->size) {
-> +			info->flags = 0;
-> +			break;
-> +		}
-> +		info->flags = VFIO_REGION_INFO_FLAG_READ |
-> +			      VFIO_REGION_INFO_FLAG_WRITE;
-> +		break;
-> +	default:
-> +		info->offset = 0;
-> +		info->size = 0;
-> +		info->flags = 0;
-> +	}
-> +	return 0;
-> +}
-> +
-> +static const struct vfio_device_ops ism_pci_ops = {
-> +	.name = "ism-vfio-pci",
-> +	.init = vfio_pci_core_init_dev,
-> +	.release = vfio_pci_core_release_dev,
-> +	.open_device = ism_pci_open_device,
-> +	.close_device = vfio_pci_core_close_device,
-> +	.ioctl = vfio_pci_core_ioctl,
-> +	.get_region_info_caps = ism_vfio_pci_ioctl_get_region_info,
-> +	.device_feature = vfio_pci_core_ioctl_feature,
-> +	.read = ism_vfio_pci_read,
-> +	.write = ism_vfio_pci_write,
-> +	.request = vfio_pci_core_request,
-> +	.match = vfio_pci_core_match,
-> +	.match_token_uuid = vfio_pci_core_match_token_uuid,
-> +	.bind_iommufd = vfio_iommufd_physical_bind,
-> +	.unbind_iommufd = vfio_iommufd_physical_unbind,
-> +	.attach_ioas = vfio_iommufd_physical_attach_ioas,
-> +	.detach_ioas = vfio_iommufd_physical_detach_ioas,
-> +};
-> +
-> +static int ism_vfio_pci_probe(struct pci_dev *pdev,
-> +			      const struct pci_device_id *id)
-> +{
-> +	struct ism_vfio_pci_core_device *ivpcd;
-> +	int ret;
-> +
-> +	ivpcd = vfio_alloc_device(ism_vfio_pci_core_device, core_device.vdev,
-> +				  &pdev->dev, &ism_pci_ops);
-> +	if (IS_ERR(ivpcd))
-> +		return PTR_ERR(ivpcd);
-> +
-> +	dev_set_drvdata(&pdev->dev, &ivpcd->core_device);
-> +	ret = vfio_pci_core_register_device(&ivpcd->core_device);
-> +	if (ret)
-> +		vfio_put_device(&ivpcd->core_device.vdev);
-> +	return ret;
-> +}
-> +
-> +static void ism_vfio_pci_remove(struct pci_dev *pdev)
-> +{
-> +	struct vfio_pci_core_device *core_device;
-> +	struct ism_vfio_pci_core_device *ivpcd;
-> +
-> +	core_device = dev_get_drvdata(&pdev->dev);
-> +	ivpcd = container_of(core_device, struct ism_vfio_pci_core_device,
-> +			     core_device);
-> +
-> +	vfio_pci_core_unregister_device(&ivpcd->core_device);
-> +	vfio_put_device(&ivpcd->core_device.vdev);
-> +}
-> +
-> +static const struct pci_device_id ism_device_table[] = {
-> +	{ PCI_DRIVER_OVERRIDE_DEVICE_VFIO(PCI_VENDOR_ID_IBM,
-> +					  PCI_DEVICE_ID_IBM_ISM) },
-> +	{}
-> +};
-> +MODULE_DEVICE_TABLE(pci, ism_device_table);
-> +
-> +static struct pci_driver ism_vfio_pci_driver = {
-> +	.name = KBUILD_MODNAME,
-> +	.id_table = ism_device_table,
-> +	.probe = ism_vfio_pci_probe,
-> +	.remove = ism_vfio_pci_remove,
-> +	.driver_managed_dma = true,
-> +};
-> +
-> +module_pci_driver(ism_vfio_pci_driver);
-> +
-> +MODULE_LICENSE("GPL");
-> +MODULE_DESCRIPTION("vfio-pci variant driver for the IBM Internal Shared Memory (ISM) device");
-> +MODULE_AUTHOR("IBM Corporation");
-> 
-
+What do you mean by "migration" in this context?
