@@ -1,38 +1,38 @@
-Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
+Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04475265621;
-	Fri, 27 Feb 2026 13:57:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F10924E4D4;
+	Fri, 27 Feb 2026 13:57:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772200653; cv=none; b=MzWj/R2pP6kNrWBSIPUc1p4khV0cJrfa80WqQCLkRHTQLUKLUsrxupnCcU/ZC0u7DOUndOZrcNb5GoOc1UK1KFuiZOJrsXSVY30OvYOezicmQHuXIqs1CSp2cPBFXpnhiFjE1npR0CFp8ELC7/TcOb/B/WmrgEYVIXKsRDq8ZFU=
+	t=1772200668; cv=none; b=sKgmqXWgZK/EYnmRiDUDLdkU/+Ao08sXz2d54gOH9ApVI82r0HKuITW+rI2rVMaLGJZ1NpoEHi2X9w6xbqxwVaFSZqSFsmCfx57DgSlGsiVnQr1fMBsn7q5USOOGeJF+6muaJcrfbBDwGPGkke9REsMyfjmC9kOKVzHnhinkgZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772200653; c=relaxed/simple;
-	bh=cjTs9Teo7h9jcgAtLf5zal+hTqCKlI8fBzAdsiIQ7PY=;
+	s=arc-20240116; t=1772200668; c=relaxed/simple;
+	bh=rXOUxEDV7eHxEIYWcWX2gadIAwende36HMpmxecb4yE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WR5TkvF7Pj5ipwdnlUutl5VmpOM61t6d8OgrxKfJq96Hmk0+6gyVGlK9BNkQEnCbZsZXlZhQEk3TI3Tf0oUlyRvg5zSccYltDA2kAlIAkFDgVyArYVtvhTTTKH+WRdkcAF+9meOKdteCUU4XGPup/Fn1Fs/xCkSMuYkHzgi0RVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=wfttePbG; arc=none smtp.client-ip=185.246.85.4
+	 MIME-Version; b=cI+0p2pqYAUO8amH9D4R5G7MvAJYQMYvMBOmRi3Sqe/DPdmUPTKBLpNsN+afkIwyY/qeELHbvuGnDFC2ghHaPJvptKIXrz+Lp3DuvwPXP196Cu8on3Bcada65tQ+KwEGKlVwsad4MPc/3sKZTyhF6sQcx+SwCy1mYrmkqYqbdUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=EhhKSt1B; arc=none smtp.client-ip=185.246.84.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="wfttePbG"
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="EhhKSt1B"
 Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-03.galae.net (Postfix) with ESMTPS id 68D044E41922;
-	Fri, 27 Feb 2026 13:57:29 +0000 (UTC)
+	by smtpout-02.galae.net (Postfix) with ESMTPS id D0E2C1A1A66;
+	Fri, 27 Feb 2026 13:57:45 +0000 (UTC)
 Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 3DDE85FE74;
-	Fri, 27 Feb 2026 13:57:29 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 5A84610369455;
-	Fri, 27 Feb 2026 14:57:09 +0100 (CET)
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 998E65FE74;
+	Fri, 27 Feb 2026 13:57:45 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 0BE6210369460;
+	Fri, 27 Feb 2026 14:57:26 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1772200645; h=from:subject:date:message-id:to:cc:mime-version:
+	t=1772200662; h=from:subject:date:message-id:to:cc:mime-version:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=qSi45MAHHZxO1b8V/Yy/dsNXbhVRxpFDFOrJhmV0YL0=;
-	b=wfttePbGMZnRtaettI5ju+ccNdECB0zUB96MetgSTzIuX7Il1NyzYdg/KvzF47JxhA3+4+
-	H1cLBwxY/ZMmXHyeKyf4gzYWoGd4QDou2/uFd+hzmzMrhSoDeg2SlGJHfwDNYbB6CclRu6
-	6feWg7oXwgxzKzrcGVHP7aufMjoA0MX5CkqxTtqAFmZ7M0k3oBMCIuzrK8M4I2B27H9wF3
-	RFcGJxx5pwfKfDk/j1BHaVT7dCxulAtAJfLo3k7BT6mwaHXCpEHEyQq7fmdbwihWrY5Wsl
-	zB18vqbstZoZowoD33/XJkhK1zQjzz/GNikzrhgkHRvznG7VkNxoBYeKJKlDfQ==
+	bh=+jkimMRAMrv/prhaWdnbklrnWJGtivMQ59Bh3f+hqFo=;
+	b=EhhKSt1BLp7fvrRybi9gQi4re2lUp8cvUZzh1xZxYWyDqepGCv8bQJSHNdmtVPugZdZb1c
+	l/NoGqlUVGyeWcY/qm/+djeA3lBldUib2zyK9bMhvDeqDcZROdqEH7r68n7RbcBVUCqzw/
+	25X0kfiq00ho3dz/kvDiVZtG70q6EkrsJ4bl0qRiVkTQFPo2HdcARtCbioFYBraYF0udiK
+	ZrHOX3oiWxx+FpG/kFHqoLgGYaAU4P50i+kljhh5EXOt6hEj/EevOuUewDqsrSMoZu09Ur
+	duJJLjuw6c5NnDwFh0LdbmVtwTfITgFbNHV0Gm9eDmTNrIXB/1ehmfnV4P2zbw==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Andrew Lunn <andrew@lunn.ch>,
 	Rob Herring <robh@kernel.org>,
@@ -97,9 +97,9 @@ Cc: Wolfram Sang <wsa@kernel.org>,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v5 08/28] drivers: core: Use fw_devlink_set_device()
-Date: Fri, 27 Feb 2026 14:54:05 +0100
-Message-ID: <20260227135428.783983-9-herve.codina@bootlin.com>
+Subject: [PATCH v5 09/28] pinctrl: cs42l43: Use fw_devlink_set_device()
+Date: Fri, 27 Feb 2026 14:54:06 +0100
+Message-ID: <20260227135428.783983-10-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260227135428.783983-1-herve.codina@bootlin.com>
 References: <20260227135428.783983-1-herve.codina@bootlin.com>
@@ -119,33 +119,23 @@ operation.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
 ---
- drivers/base/core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pinctrl/cirrus/pinctrl-cs42l43.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index a290bc8d2845..3f3a909306d2 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -3748,7 +3748,7 @@ int device_add(struct device *dev)
- 	 * device and the driver sync_state callback is called for this device.
- 	 */
- 	if (dev->fwnode && !dev->fwnode->dev) {
--		dev->fwnode->dev = dev;
-+		fw_devlink_set_device(dev->fwnode, dev);
- 		fw_devlink_link_device(dev);
+diff --git a/drivers/pinctrl/cirrus/pinctrl-cs42l43.c b/drivers/pinctrl/cirrus/pinctrl-cs42l43.c
+index a8f82104a384..a3dd8da15919 100644
+--- a/drivers/pinctrl/cirrus/pinctrl-cs42l43.c
++++ b/drivers/pinctrl/cirrus/pinctrl-cs42l43.c
+@@ -579,7 +579,7 @@ static int cs42l43_pin_probe(struct platform_device *pdev)
+ 				return ret;
+ 			}
+ 			if (!child->dev)
+-				child->dev = priv->dev;
++				fw_devlink_set_device(child, priv->dev);
+ 			fwnode = child;
+ 		}
  	}
- 
-@@ -3908,7 +3908,7 @@ void device_del(struct device *dev)
- 	device_unlock(dev);
- 
- 	if (dev->fwnode && dev->fwnode->dev == dev)
--		dev->fwnode->dev = NULL;
-+		fw_devlink_set_device(dev->fwnode, NULL);
- 
- 	/* Notify clients of device removal.  This call must come
- 	 * before dpm_sysfs_remove().
 -- 
 2.53.0
 
