@@ -1,237 +1,163 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11011042.outbound.protection.outlook.com [52.101.125.42])
+Received: from flow-b1-smtp.messagingengine.com (flow-b1-smtp.messagingengine.com [202.12.124.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34A03233E8;
-	Fri, 27 Feb 2026 15:43:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772207023; cv=fail; b=qf5gRoP35l8CmJPWAkR3iwkkpOnRZcmdcmkfuE3Jmz+J9Z/ANkF/49wAGd45cGVds6Nb48KkhqC2ndbt/GHQpx6H3uj/orF8ulfLGDv/B0+5N1WBD+SO+4OiLxuviZma7P7G+lOCTH2re0jFUS8ALfFjs9eti8Dd8DgUHvrf+Rk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772207023; c=relaxed/simple;
-	bh=0TGb48+gdyHzYkgv6oT5HcUrP+6HwfvrvSn4HMoLV8M=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=hQWsne3XIJbnwlppFkMY8W+GSM6NHlY5RN1dHQyGESJwRpbHeF7jiYT84P48iZUmxI2RxXtVSbtzu3mVAoGR1BnQI+3PuWjKdptFyQ3oAxFJy1JTpv8vg0sXQDc3c09erojrsLGq1JfNKAjdRolPQVdQltyTdhjJ5S6PHBX4Zjs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=DO/lN8+e; arc=fail smtp.client-ip=52.101.125.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180F33624D2;
+	Fri, 27 Feb 2026 15:47:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.136
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772207232; cv=none; b=ikzB0v/ow4l1qX5mVQBVfQB+0g5dWDDmPPNinL5B5ilST95rLL56mWrAGad66F51OWaeD2ZTbOY0V0o2M8OYTrmS4Jy6uqgWteML10BoI1kTBKdmBmLEyPm3yhw6PvQvTliJ9O+yskYbtkU2zTs63A3DYbGeWAGiJkCXA5xbl80=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772207232; c=relaxed/simple;
+	bh=UgSApk6Vz42Cpkj7RvGNFPFj/GJVlPPsed5rfjh7CB4=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VX8w4FVfb6Tr6R20AvKz+j5VU+BdU94jzazsKJQea2qr3Ht487wraRMVu5iSIeKnA4B9/CItG5SnDI13GYUjov9LtQSyHh3+H+45yFuz1kgKX+zcD5Z40vbiYGO5M0TJx82osZIbsHo2GBvpXYy3OvZ3OJfu8m++pFMkk/p8WP0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=nSbeJn09; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=A7cma9dB; arc=none smtp.client-ip=202.12.124.136
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="DO/lN8+e"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lm7Gh6evHYBHsUvWYNGA6y2oHM9DSUsMyDRfX9gWGXUzXAQXdHKq+lV0/jZu2w3dRl5DCXEccpXSnQaDYu7VqWFK0Z8jffzhOmD2V55ME1APAN5RT9w30Jb5OzjdYF2voSvAxSP5nNBkT1xik0AfQMzc7gbrNEius/C6RfYQTI7u26nalnmTl8ROXr4SAksik3hiawOqJ/tPpwIr6bjmTWboy+p27ZCVFGH7/rWxa5IlTBPGMkeTcQus1fFqdSC1Cbf89/t9tcTWsSKt/w5ZnY1fbHY21knhcPOc+KJiSjdLy3/DD4arC/oze4pmRLBhcRQaYy2rJ54eZXX/YVVwUg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5UpqlCZaxdez6gK/3/szsHrpLjqM17r/zVWfM/NS6ww=;
- b=zHoMVdZEo/04wFi8pCF+FQkS7pnyRnCHOuu5ctK1VB51uF7QLwjRNVP82+fOc4mI/h91sgC1fa+GlA8CyJL3YnIPzKw6ikaTzxBJt6tj4z8Ngw2oPRceJLVwUemPLa+XihwBZ2ycC91c1H3c4ggEVO3gOK82XXDNROX9sXKARPmK1nQ1rrqatiuyuM+R2f8AdkEW8E5yNcMJxEudvHj5E7ic0uHb95wxPg88vPWz3qIsmMbrBh22rtkQ+9OPeNV+yLk3WPIuO5wUqU1ll55fkQgw4V49zQsds9r5reXhbW9srQu7JDo6ZZZa/BsZ0XuXigqmS3O+VgvXMn89TS4KUA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5UpqlCZaxdez6gK/3/szsHrpLjqM17r/zVWfM/NS6ww=;
- b=DO/lN8+eo1ByPF7s0WX4O9VaZ2fLaN73eaaprvDc2HDLIBWZPsWKuiujUrN3ULqnAGBY+MPQ03co8MTSCjjOYCqXYn8JcnkFhUch5z5Pq9oxpFggnN8USgd0bMQv60j37U1wR/DFd/hfKe5RToK7+CkiL+e/7DOdGbFqdKarRhY=
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com (2603:1096:405:35b::6)
- by OS7PR01MB15042.jpnprd01.prod.outlook.com (2603:1096:604:38c::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.13; Fri, 27 Feb
- 2026 15:43:39 +0000
-Received: from TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::f373:26d6:86c4:6aa3]) by TY6PR01MB17377.jpnprd01.prod.outlook.com
- ([fe80::f373:26d6:86c4:6aa3%4]) with mapi id 15.20.9654.014; Fri, 27 Feb 2026
- 15:43:39 +0000
-From: John Madieu <john.madieu.xa@bp.renesas.com>
-To: Biju Das <biju.das.jz@bp.renesas.com>, Claudiu Beznea
-	<claudiu.beznea.uj@bp.renesas.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "geert+renesas@glider.be"
-	<geert+renesas@glider.be>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>
-CC: "robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
-	magnus.damm <magnus.damm@gmail.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "linux-clk@vger.kernel.org"
-	<linux-clk@vger.kernel.org>, "john.madieu@gmail.com" <john.madieu@gmail.com>
-Subject: RE: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E PCIe
- controller
-Thread-Topic: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E PCIe
- controller
-Thread-Index: AQHcp/6MRVhKQ7pRGE+/nFmphIYso7WWryeAgAAAS8A=
-Date: Fri, 27 Feb 2026 15:43:38 +0000
-Message-ID:
- <TY6PR01MB173776608DDA83CD05D26FEA5FF73A@TY6PR01MB17377.jpnprd01.prod.outlook.com>
-References: <20260227153236.55988-1-john.madieu.xa@bp.renesas.com>
- <20260227153236.55988-13-john.madieu.xa@bp.renesas.com>
- <TY3PR01MB11346B9FB9B0FE7BA3B82D6378673A@TY3PR01MB11346.jpnprd01.prod.outlook.com>
-In-Reply-To:
- <TY3PR01MB11346B9FB9B0FE7BA3B82D6378673A@TY3PR01MB11346.jpnprd01.prod.outlook.com>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=bp.renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY6PR01MB17377:EE_|OS7PR01MB15042:EE_
-x-ms-office365-filtering-correlation-id: 9919fab5-64c6-45f3-cc96-08de7616fa13
-x-ld-processed: 53d82571-da19-47e4-9cb4-625a166a4a2a,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|7416014|1800799024|376014|7053199007|38070700021;
-x-microsoft-antispam-message-info:
- CY//wTLek05v094YrMwVUrZqaCqCxsqXwWBTBBvrBM2q5LKpD47AF6z9PrgBfTK+CC89t3X7PW482OyQV9PwoojEmfGniRe/FQY3X3qdP5p0nNjxRDuEfveD1C+ckkKbaOfgQy88n6lzBOmZseXqnBuAgGa2JltsxtqdxTdvPVBnDVka+8Po+zLrsmvUhGtEicPI91TDkpEWdSLUFxFRInOdkys8HlsKBeAYVJhnH/MbmFsWz0FDoCxtX4JuuWbaVETBp8PT4hj6yGGxsA5sctrVOlVbGKBCQ4ovab2CwSx3diIj2/UTaGadgNt1nlmLhaWBKm7ba8+CejOFnvOQjo4GvqdVEpZb1mW/CnkNJ9PN2sQE5KRdaKhsBfgcBH+QUB3zl1ZzviUcAEcL4wIcwlT9ao63seTnfq/77SCKDxnsVYkrZYPscBJhaXR14krC7Emi2XBHzRvKj32OmD26OSvBnKYpZ+iECgu1bk8I/VDR1jX4KyeSXhYjER2ZmElOoUuNPh2bAbTn7z9UMhWAtJPL3vTJYUD6Ln5zBHE94fzgf8r6Gk/XKRvpVtQQBSORL013yPGH3yocomXcFD5sE6mjKqSNZT0uqwmBdT9aEUUtwNVtS+Bwnh1Yg4Hi1x+njv/9sKiP2VnUbXVzBXZ9AyP+aaCqmP2l07EGtDu+JmUc6rDhjEByHqjX+eGsQROqW9Sa6G8RrVhpXH1jRAn27QlgrBVR95VE1IYakcG8v+yhOwktz+yxWlH2Stm8CCiNsEl+1dRvxJt2lgXt+0+0Qf2xCLgnUE5Sv/zg1ObF9Fs=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY6PR01MB17377.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(1800799024)(376014)(7053199007)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?1cDGpY43/sao2lAckWM+U+4SNt9Ci8Md/sMz5uaMEY/pMicrRqBkougWSgAv?=
- =?us-ascii?Q?FbUkoKW3t4ukwswGDUSD+T6EH2MB016rljiMcUZ5B+z0qEL6oZqTafGp6wtw?=
- =?us-ascii?Q?iWZ7N1KqPhjPYAyMzz/zZ0U4OWJQ5EomH4vesSN5LVqjPdJla5oZXNniQwQp?=
- =?us-ascii?Q?FSJ5FvwsbmuE6o4lfa62WXu4TuTi2bQ38pizryCrxCWNKhrfl3u9AjEAG/5f?=
- =?us-ascii?Q?K4oa8XY9wZxkXALqv5Il03M2CYkVcz0ZazzxuNHngb5oPU1Vr1EQ17zbfojq?=
- =?us-ascii?Q?P6R+wUQIedwjLqv/oWqx6qmIu37mNGZnG4Pp0D20wp8CjIhQE6R8YrSF/vts?=
- =?us-ascii?Q?22PDa5ycgm3yaMmGV+AJNUy6fTBGTEfUFZfI9QHXqUxDjUj1Qw1TMcOkoJfM?=
- =?us-ascii?Q?WqBEnIn3/dOdNbmfS78cYaUylnzC7z81u7bo5hoqbEeyJJd4h9IeCbXG/ypw?=
- =?us-ascii?Q?yuLyOgcwdiwrMStw8nEIJIIEIqquI3yTXnrLQvBL0j/I71liXYhkwyxZE7yt?=
- =?us-ascii?Q?XOptVWr6K8vpJAg5iZ+J8IyJ7FoUN2he2Lh4rZIYC6kDEzbt+bVlfapSDaft?=
- =?us-ascii?Q?irpmCXoKR7xSu010AhAgJBlV/MoS8TTcerNHf3teRqoVaOlukBNXiPWTxkld?=
- =?us-ascii?Q?YlDTwtR7QQPZxVFo5GFrRi5kxV1GEKm2M5BABIO2tdwG7piJru8xQ5cmECN1?=
- =?us-ascii?Q?f5MYw1toRg1Ugwbh4vSfiy/F9pCr6nrJSIQGED0WMVaBQJ4kr1japyxdrCUW?=
- =?us-ascii?Q?/TWcpKgpyGQzUhAmZvztZKE+ZQhcIpPIIsQIsuSOowkmmDMwg4rnS96HzwL/?=
- =?us-ascii?Q?gzfGVE+Yw8EIhUTex8kde6M9NhWjJKuwAy4cD1Wg4uOVyqZbwzX3580/IX8x?=
- =?us-ascii?Q?4LFdbatlbmihLixhKtUwcRvgiDQD9GitZ3gOWBVHJg/fHfaq0vk+ZXdM/PCf?=
- =?us-ascii?Q?Qm62Pn/oHMSrucRzTX9V1YFPQaVeBYxonSPBb+s57/09cR7irekb2qbEUA+N?=
- =?us-ascii?Q?5E18S7i/d0lh/1i09iVoEOgrOuIsqG1I7lkc4ut3cKJ4sjnQVE+Ke/anOSoD?=
- =?us-ascii?Q?q/qs7ZMyrgPjEIASqRg/K4+UuKWRi77hKNmKzJ384fRL3Dl52bnvUhlNgRvA?=
- =?us-ascii?Q?DJBF2h9cvlUlF2gwfoqLZL9NArb/YmE4rV1bEQoe9gRR/4ggYJ2WHgntOe9l?=
- =?us-ascii?Q?UYAVQipw6SPbNDWKz9LlBOvYzwNTRwkS5e0QeNSbV19QNG/KnDMXADfET8mN?=
- =?us-ascii?Q?igm7BalZiIiekrBNUJkwDhC/EkHVECCRv4mV18jP9wZHsL8qGeU6AvKhu4TF?=
- =?us-ascii?Q?ILNqarMIpsSuhIZR6xfwFEw0Y3sX46i+FOF446dL7p5+jSuFlVB+jM1wIP9M?=
- =?us-ascii?Q?UQoR0BvbBrG2Log/Z/XzgHvOmDrvI7fUqxAy601u05PBDnixA6WV4Fhz1dQi?=
- =?us-ascii?Q?JghNlTHDajQ6u1S8SriOA7JtVsM1DA65ensLr72p/TBQoBq0ePULN3tywau/?=
- =?us-ascii?Q?PYwUqL4qLRRRc/m88JBSd8JU8T2TvhCRq8E9PyvfG5Ozg2ltmBRXHTMX6ONF?=
- =?us-ascii?Q?scbc+FpgD+LoBys4RQvYVEpgNVrERIZszp83L/MNaNUAtB/zcJjJ2psV0trW?=
- =?us-ascii?Q?vPDg4tWSTQXu/eUL45zSZisqNlGkxxOvf0txd9m/s4b9ApYauNj5MQWFCeQQ?=
- =?us-ascii?Q?XP9ctGvyy/IOPzrZWVAp+YXa5f55Ljs+QvOv6XMdpJUdzdYH6rni0f6p1LFf?=
- =?us-ascii?Q?Rv4tr5VnO+12H7qzbe3SMh9JF9XF2G8=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="nSbeJn09";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="A7cma9dB"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailflow.stl.internal (Postfix) with ESMTP id 1409613013DF;
+	Fri, 27 Feb 2026 10:47:06 -0500 (EST)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-02.internal (MEProxy); Fri, 27 Feb 2026 10:47:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1772207225;
+	 x=1772214425; bh=P3lrzFyQElxBxtWsP+osjrtrIRj/rA3HI8aIxSL+eHc=; b=
+	nSbeJn091CVUD7FTBlfHAGofIbMFpGvhhKPN5P+AXxi2R6g+zB9bTzPy8M7zKOX9
+	190koYZVQtOhErFW5Nk2ZXp3dvbyl6UiMLVn8Vdws7SsR0yodwKy9wHBllJkNGeA
+	AsGuDTTDeNXhDKsH6A+ttPLVwAgWN6I/IDfUUfKYIDL7djAhXluESe2mDgoVuE/0
+	H5H5lmhuaO4ap/bK0tc8OziXtOlDMPcxvZ9+r+b71xqQG/wIdKjH1rs6QDjOCkRk
+	NLaqv5GEjMIEAoVWLHqK6FLBpxQhya3L1m/31iVG+OzOLBESOmuKD7/FN0SBI+f3
+	94CVvMVtttES7JAOlQJp3g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1772207225; x=
+	1772214425; bh=P3lrzFyQElxBxtWsP+osjrtrIRj/rA3HI8aIxSL+eHc=; b=A
+	7cma9dBosB0GIWXa1m7+Lm/GchbRtgqA/xwo85CSUbQlkjtuGWtWnsFqnFaEz26K
+	XIjU47rn+BcT8PvTsqtvovSTHPoqwmFxcttdD8BqQeCdzm/9K2blLDhKqWUl3idP
+	wIyeWR3wYpc5y+VTOnLFWijeVmHt3I48Wf5E5jBf3bfwmmPzfIEl5Uiq1ztEtCUb
+	TtxChaiXmQlGbcnDqB0XuSPH9RUPouePhNnHw66TqOLnqCXBdIR+BZZwgl/mePTT
+	2Ndu2PcdwnDMxOAC1MaII1xlSg8Ocgn1jc3idGiGtiMejdDwaHcAThhlfyHUQ01U
+	YmEbEKrgFw3TDqLvqVi1A==
+X-ME-Sender: <xms:eLyhae8NLfiHQAfvFbwIf5yfJxGrx7KxbtT7pspvJckoKaT9zcfsGw>
+    <xme:eLyhae4tsQgypPwTHo2DeWnsQy7bTLUs3VcUPfd9RrYRFV5seJeMAhrG_sP3LC7Is
+    d9Lnz9eMprZ9jmWg9vNexMWxYMBNR85faQxljPC31hLURgUua9RsQ>
+X-ME-Received: <xmr:eLyhadjLu8rkkCiD9LuU-gLeXJaelMWBSD-DAgNH5GYD2MjN3YfraFIWVNQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvgeelfeelucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
+    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
+    htthgvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudeg
+    veeuueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepgeehpdhmohguvgep
+    shhmthhpohhuthdprhgtphhtthhopegumhgrthhlrggtkhesghhoohhglhgvrdgtohhmpd
+    hrtghpthhtoheprghjrgihrggthhgrnhgurhgrsehnvhhiughirgdrtghomhdprhgtphht
+    thhopehgrhgrfhesrghmrgiiohhnrdgtohhmpdhrtghpthhtoheprghmrghsthhrohesfh
+    gsrdgtohhmpdhrtghpthhtoheprghpohhpphhlvgesnhhvihguihgrrdgtohhmpdhrtghp
+    thhtoheprghkphhmsehlihhnuhigqdhfohhunhgurghtihhonhdrohhrghdprhgtphhtth
+    hopegrnhhkihhtrgesnhhvihguihgrrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghs
+    sehgohhoghhlvgdrtghomhdprhgtphhtthhopegthhhrihhslheskhgvrhhnvghlrdhorh
+    hg
+X-ME-Proxy: <xmx:eLyhaViQEXxZhGRPLBgx3cIxwcB6BJldmDuFBveN-s3uybKGEg4BVQ>
+    <xmx:eLyhaT1gmUrj3pS2nastletXexcegngkRYpkqQAlCWEUiBVKvt_8Uw>
+    <xmx:eLyhaQjFwwGVa8eE3K-VjdGUDc_gumNbDo92PQ-hmX33aTYcusuheg>
+    <xmx:eLyhaWqfdVOxky2hgCGNQH7N4KhqFKsCvw6Ruxq0xBQwJyfcQ9Ociw>
+    <xmx:ebyhaTuRNv-HWsJCaeyQT_E-CL0vqudE11keKbVebqGUMZseVXYpmczH>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 27 Feb 2026 10:47:00 -0500 (EST)
+Date: Fri, 27 Feb 2026 08:46:58 -0700
+From: Alex Williamson <alex@shazbot.org>
+To: David Matlack <dmatlack@google.com>
+Cc: Adithya Jayachandran <ajayachandra@nvidia.com>,
+ Alexander Graf <graf@amazon.com>, Alex Mastro <amastro@fb.com>,
+ Alistair Popple <apopple@nvidia.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Ankit Agrawal <ankita@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>,
+ Jacob Pan <jacob.pan@linux.microsoft.com>,
+ Jason Gunthorpe <jgg@nvidia.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+ Kevin Tian <kevin.tian@intel.com>, kexec@lists.infradead.org,
+ kvm@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
+ Leon Romanovsky <leonro@nvidia.com>, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-mm@kvack.org, linux-pci@vger.kernel.org,
+ Lukas Wunner <lukas@wunner.de>,
+ =?UTF-8?B?TWlj?= =?UTF-8?B?aGHFgg==?= Winiarski
+ <michal.winiarski@intel.com>, Mike Rapoport <rppt@kernel.org>,
+ Parav Pandit <parav@nvidia.com>,
+ Pasha Tatashin <pasha.tatashin@soleen.com>,
+ Pranjal Shrivastava <praan@google.com>,
+ Pratyush Yadav <pratyush@kernel.org>,
+ Raghavendra Rao Ananta <rananta@google.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ Saeed Mahameed <saeedm@nvidia.com>,
+ Samiullah Khawaja <skhawaja@google.com>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Thomas =?UTF-8?B?SGVsbHN0csO2bQ==?= <thomas.hellstrom@linux.intel.com>,
+ Tomita Moeko <tomitamoeko@gmail.com>, Vipin Sharma <vipinsh@google.com>,
+ Vivek Kasireddy <vivek.kasireddy@intel.com>,
+ William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>,
+ Zhu Yanjun <yanjun.zhu@linux.dev>, alex@shazbot.org
+Subject: Re: [PATCH v2 10/22] vfio/pci: Skip reset of preserved device after
+ Live Update
+Message-ID: <20260227084658.3767d801@shazbot.org>
+In-Reply-To: <aaDqhjdLyf1qSTSh@google.com>
+References: <20260129212510.967611-1-dmatlack@google.com>
+	<20260129212510.967611-11-dmatlack@google.com>
+	<20260226170030.5a938c74@shazbot.org>
+	<aaDqhjdLyf1qSTSh@google.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY6PR01MB17377.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9919fab5-64c6-45f3-cc96-08de7616fa13
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Feb 2026 15:43:38.9619
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: g34zOmD2SlRz7z38Z/h0xyqdixlP+kRk1e9qcWlfaemnnquz8DG7gDND0LpKgsLnRyBaI8E/JwbdyqIrEDptwibwcNxT6xDsM9XjKDNMuow=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS7PR01MB15042
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hi Biju,
+On Fri, 27 Feb 2026 00:51:18 +0000
+David Matlack <dmatlack@google.com> wrote:
 
-Thanks for the feedback.
+> On 2026-02-26 05:00 PM, Alex Williamson wrote:
+> > On Thu, 29 Jan 2026 21:24:57 +0000
+> > David Matlack <dmatlack@google.com> wrote:  
+> > >  
+> > > -	vdev->reset_works = !ret;
+> > >  	pci_save_state(pdev);
+> > >  	vdev->pci_saved_state = pci_store_saved_state(pdev);  
+> > 
+> > Isn't this a problem too?  In the first kernel we store the initial,
+> > post reset state of the device, now we're storing some arbitrary state.
+> > This is the state we're restore when the device is closed.  
+> 
+> The previous kernel resets the device and restores it back to its
+> post reset state in vfio_pci_liveupdate_freeze() before handing off
+> control to the next kernel. So my intention here is that VFIO will
+> receive the device in that state, allowing it to call
+> pci_store_saved_state() here to capture the post reset state of the
+> device again.
+> 
+> Eventually we want to drop the reset in vfio_pci_liveupdate_freeze() and
+> preserve vdev->pci_saved_state across the Live Update. But I was hoping
+> to add that in a follow up series to avoid this one getting too long.
 
-> -----Original Message-----
-> From: Biju Das <biju.das.jz@bp.renesas.com>
-> Sent: Friday, February 27, 2026 4:42 PM
-> To: John Madieu <john.madieu.xa@bp.renesas.com>; Claudiu Beznea
-> <claudiu.beznea.uj@bp.renesas.com>; lpieralisi@kernel.org;
-> kwilczynski@kernel.org; mani@kernel.org; geert+renesas@glider.be;
-> krzk+dt@kernel.org
-> Cc: robh@kernel.org; bhelgaas@google.com; conor+dt@kernel.org;
-> magnus.damm <magnus.damm@gmail.com>; linux-pci@vger.kernel.org; linux-
-> renesas-soc@vger.kernel.org; devicetree@vger.kernel.org; linux-
-> clk@vger.kernel.org; john.madieu@gmail.com; John Madieu
-> <john.madieu.xa@bp.renesas.com>
-> Subject: RE: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E
-> PCIe controller
->=20
-> Hi John,
->=20
-> > -----Original Message-----
-> > From: John Madieu <john.madieu.xa@bp.renesas.com>
-> > Sent: 27 February 2026 15:33
-> > Subject: [PATCH v7 12/15] PCI: rzg3s-host: Add support for RZ/G3E PCIe
-> > controller
-> >
-> > Add support for the PCIe controller found in RZ/G3E SoCs to the
-> > existing RZ/G3S PCIe host driver. The RZ/G3E PCIe controller is
-> similar to the RZ/G3S's, with the following key differences:
-> >
-> >  - Supports PCIe Gen3 (8.0 GT/s) link speeds alongside Gen2 (5.0 GT/s)
-> >  - Uses a different reset control mechanism via AXI registers instead
-> >    of the Linux reset framework
-> >  - Requires specific SYSC configuration for link state control and
-> >    Root Complex mode selection
-> >
-> > Signed-off-by: John Madieu <john.madieu.xa@bp.renesas.com>
-> > ---
-> >
-> > Changes:
-> >
-> > v7:
-> >  - Renamed RZG3E_PCI_RESET* defines to RZG3S_PCI_RESET* as these
-> >    registers are shared with upcoming SoCs (RZ/V2H, RZ/T2N, RZ/N2H),
-> >    dropped associated "RZ/G3E specific registers" comment
-> >  - Dropped "RZ/G3E SoC-specific config implementations" comment
-> >  - Unified function naming to rzg3e_pcie_config_{pre_init,post_init,
-> >    deinit}() and rzg3s_pcie_config_{post_init,deinit}()
-> >  - Simplified comments as per Claudiu's suggestions
-> >  - Used local mask variables for compactness within 80-char limit
-> >  - Fixed L1_ALLOW error path: goto config_deinit_and_refclk since
-> >    port refclk is already enabled
-> >  - Fixed resume: reordered MODE before RST_RSM_B to match probe
-> >    sequence, fixing error path handling
-> >
-> > v6:
-> >   - Use rzg3s_sysc_config_func() with per-function calls instead of
-> >     rzg3s_sysc_config() with -1 skip pattern, as suggested by Claudiu
-> >   - Extend enum rzg3s_sysc_func_id with L1_ALLOW and MODE entries
-> >   - Use regmap_update_bits() consistently for all SYSC accesses
-> >   - Shorten comment to "Put controller in RC mode and de-assert
-> RST_RSM_B."
-> >   - Drop "Enable ASPM L1 transition" comment (function ID is
-> > self-documenting)
-> >
-> > v5:
-> >   - Introduce rzg3s_sysc_config() helper for sys configuration
-> >
-> > v4: No changes
-> > v3: No changes
-> >
-> >  drivers/pci/controller/pcie-rzg3s-host.c | 90
-> > ++++++++++++++++++++++++
-> >  1 file changed, 90 insertions(+)
-> >
-> > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c
-> > b/drivers/pci/controller/pcie-rzg3s-host.c
-> > index 44ce056d62c6..b7f92f5aee4a 100644
-> > --- a/drivers/pci/controller/pcie-rzg3s-host.c
-> > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
-> > @@ -111,6 +111,15 @@
-> >  #define RZG3S_PCI_PERM_CFG_HWINIT_EN		BIT(2)
-> >  #define RZG3S_PCI_PERM_PIPE_PHY_REG_EN		BIT(1)
-> >
-> > +#define RZG3S_PCI_RESET				0x310
->=20
-> If there is any new version of the series, please put a comment
->=20
-> +#define RZG3S_PCI_RESET				0x310 # Only for RZ/G3E
->=20
+I appreciate reviewing this in smaller chunks, but how does userspace
+know whether the kernel contains a stub implementation of liveupdate or
+behaves according to the end goal?
 
-Noted for v8, if any.
+Also, didn't we violate our own contract in this patch by adding the
+reset_works field to the serialization data without updating the
+compatibility string?  Thanks,
 
-Regards,
-John
-
-> Cheers,
-> Biju
+Alex
