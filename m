@@ -1,163 +1,88 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.42.203.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D780426ED3F;
-	Sat, 28 Feb 2026 16:40:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89298430B85;
+	Sat, 28 Feb 2026 23:59:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.42.203.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772296814; cv=none; b=olE5v0gi1D+iiNJ6aFHGqR8p3NzWXlXcfLhqjzWlHS6c85U1vn4E+VSWm/AjgVwp02mBToMs0lnp6zzLAuqaaiEs2c7CVF5MHn/M4cm9uFVAi2p8ptZfO19/KXr8TDjd/GF42O3IpkLJ9EGiUFBVi3EmdcM4leh56et/LYBU9wE=
+	t=1772323191; cv=none; b=esA7zR5q7/AuwLDih1rzyXhk93VE9MHiUzpsYX3NiMkX9Lfro8b09EuQKJhc3QcZq+6/6Wfs04GagZ0qPkMwUgHKsTlTMNe9f2Rp6XwX1d1MONdbFFDuX4C7Tj1cErLOLeXl+lcu7rSeYjl2DAEgMdFSc2+EYUCn+uF5a6corGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772296814; c=relaxed/simple;
-	bh=20ZD/q9u7Pna7ErEGtD/WxcVWaoGoE94j4oG0k7JmeE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XaQSmrCZgQYbNcn1qfDJitqg6XzOHDghIx406MhC0ipsYaQPizUYswOt9UkcXxVY0SSj3S9jK5fmaDOs18PLgo7DpPhw/qda+I7G35Myw9u6oXGbMVAfvN6s9vCtxHzTMISuguo/XrpE10OEi3mZenvQX3uJCiAG+8BMwrcuNMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ZMMHyFQv; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1772323191; c=relaxed/simple;
+	bh=hKXMk9JqLxIF/o307cUGlK9XOB5P+KxCRqeDOLdx134=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=awIN2xRG9zohnm7qMgjjwEgwgGXFEK4mHS/j1dIZJVfuE2/8SqMXbG7enn1q2nkGVmsdBvoAEigjcf8orVBlOC+9H/SoegUKeFUH19ToJEvmd+d39y/fLoV3nsM4vkdqD3qy/n6EG5+QwbanUA7o2Rc0nQrTtpR93oK3u/24ln8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=RBycUBJz; arc=none smtp.client-ip=52.42.203.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ZMMHyFQv"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61S8R5FW2410721;
-	Sat, 28 Feb 2026 16:40:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=aY9/FtC0CIEX57GULpy8Nu8sVV3CVSs/yEkBexGqGjw=; b=ZMMHyFQvyVRA
-	8+TSxaesaTQ0cLMKR/WrAKS1m7/UQsZUkm09CZ/Lk2Aun1ygD2mYdGE/gcW2jI82
-	HYrkQ0OdWFJ2cyJofL0i/dCMPDfhx49bFOuBJVmvRWTed93tgy7YyPf8A5yeJgMh
-	KADfJPoQO8m85IMJum2idRXdWtnztL5UyPpNdf4zIs9OFOBl/5QmmzliV57SWehr
-	haXPRCvlJR3tE+yF8EUOInFZ99zcjiD3CjFbh3pDncGKHZBVhhbpbDXx67uzHh+E
-	U3y0BNYO+s679UgP83p/9GMywOmasRjibezqZGTqUddAOUeFQvHPB+c7qhfOaI1g
-	N/A2L1SWow==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cksrhsb9e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 28 Feb 2026 16:40:02 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61SGZ2LX027789;
-	Sat, 28 Feb 2026 16:40:02 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cfsr2f1mr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 28 Feb 2026 16:40:02 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61SGdurA45351252
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 28 Feb 2026 16:39:56 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5E97520040;
-	Sat, 28 Feb 2026 16:39:56 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4501120043;
-	Sat, 28 Feb 2026 16:39:56 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.111.19.15])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Sat, 28 Feb 2026 16:39:56 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1vwNMB-00000006yKn-37Hu;
-	Sat, 28 Feb 2026 17:39:55 +0100
-Date: Sat, 28 Feb 2026 17:39:55 +0100
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
-        bhelgaas@google.com, helgaas@kernel.org, sebott@linux.ibm.com,
-        schnelle@linux.ibm.com, alifm@linux.ibm.com, julianr@linux.ibm.com,
-        dtatulea@nvidia.com, ionut_n2001@yahoo.com, sunlightlinux@gmail.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v4 1/1] PCI/IOV: Add reentrant locking in
- sriov_add_vfs/sriov_del_vfs for complete serialization
-Message-ID: <20260228163955.GH13050@p1gen4-pw042f0m>
-References: <20260228120138.51197-2-ionut.nechita@windriver.com>
- <20260228120138.51197-4-ionut.nechita@windriver.com>
- <mvhrbhqxnxeitx4incfykvlgtcfs2jcrlje2warhujzvbyns4e@7eyme5xdea7g>
+	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="RBycUBJz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
+  t=1772323189; x=1803859189;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=hKXMk9JqLxIF/o307cUGlK9XOB5P+KxCRqeDOLdx134=;
+  b=RBycUBJzl1TnEirhzoDPyUP9699MSwRerISGm1K8Ukxqb5pjWYBbnP1O
+   5bgTEXuhiiMXxn/Ab2DImaA5ExD9+UNuOfe/Cn8RyO4JXTIdqnGxp4wMN
+   FNjl1M5ALJ6uAgnYBmmqMadcCd+vD9YaSfne1oR/JzlRg+AXyJQQJOsGe
+   ieLjzJ+PfG4EMmqJV/G6TLUzQESXHp3St3mydIeDv2DYeSoW2VUndo/vH
+   hugYKtfkoH5C/8D7pn0wK7vo9L+iz03MOF5IfFk+9Z5MYYkbegkrqOVY9
+   eeK3ZTnfQEa4VdKJNqH01OqRzAxsJELvr4fYLaFkpmSzVHr8AdFVcLmzb
+   w==;
+X-CSE-ConnectionGUID: UHUJOMCRSv23JoznsU88lg==
+X-CSE-MsgGUID: QEADJu9oSbqIMFSlYLgYag==
+X-IronPort-AV: E=Sophos;i="6.21,317,1763424000"; 
+   d="scan'208";a="14019297"
+Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
+  by internal-pdx-out-008.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Feb 2026 23:59:46 +0000
+Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.111:21683]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.33.152:2525] with esmtp (Farcaster)
+ id 34b04a31-8249-412d-b8fd-6b389c0de126; Sat, 28 Feb 2026 23:59:46 +0000 (UTC)
+X-Farcaster-Flow-ID: 34b04a31-8249-412d-b8fd-6b389c0de126
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sat, 28 Feb 2026 23:59:46 +0000
+Received: from dev-dsk-darnshah-1c-a4c7d5e9.eu-west-1.amazon.com (172.19.90.4)
+ by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Sat, 28 Feb 2026 23:59:44 +0000
+From: Darshit Shah <darnshah@amazon.de>
+To: <darnshah@amazon.de>
+CC: <Jonthan.Cameron@huawei.com>, <bhelgaas@google.com>, <darnir@gnu.org>,
+	<feng.tang@linux.alibaba.com>, <kbusch@kernel.org>, <kwilczynski@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<lukas@wunner.de>, <nh-open-source@amazon.com>, <olof@lixom.net>,
+	<sathyanarayanan.kuppuswamy@linux.intel.com>, <stable@vger.kernel.org>
+Subject: Re: [PATCH v3] drivers/pci: Decouple DPC from AER service
+Date: Sat, 28 Feb 2026 23:59:38 +0000
+Message-ID: <20260228235940.47613-1-darnshah@amazon.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20251211164257.81655-1-darnshah@amazon.de>
+References: <20251211164257.81655-1-darnshah@amazon.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <mvhrbhqxnxeitx4incfykvlgtcfs2jcrlje2warhujzvbyns4e@7eyme5xdea7g>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=Rp/I7SmK c=1 sm=1 tr=0 ts=69a31a63 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=8nJEP1OIZ-IA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
- a=t7CeM3EgAAAA:8 a=0-soeC0At488xzAx-joA:9 a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
- a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI4MDE1MyBTYWx0ZWRfX8KxAOqYzZ7l4
- CNURvvjqbHi1KZPw1bwf/vVAuDD3mNBp3ZoS2dPqNBXOoyMKAfVIWgByRycrOP6fx5KhoN0mOHV
- Wx94d2RY7NjxJ/rAlCNmCzwjkzZH2xNrHvgH6P7V3FDMyOzXdsX9HlADekGUdUgqHJolzE5CD9H
- RAkftL+i+/WuEhP+JIlKbCBLjWU7ZsMb0/9caAc+9ecfF4qhMxKkxxI6KrC82dhNy4iL4PqTlk8
- V5flE5vaAsIFSEG7t90o92vNdY8ZbQEp9fct2Mftzvncj/ofKbt5eHRRrGhcFPjnmtW3Mm1TbJ3
- GN7ijllNPlUPxC3hvbin3F0qq8bHrzz2PvpMTY4ma8gsIUkg4MG/yWQtWEMNT+pknVHIZIgEiLe
- NRM/2a3iqi7H9J89c/Wlo2B/X4IYV5uALVjnvdeGCtJAm0p5UATSTEwg0mfFx8dRaUV2GHpNUBD
- 98eZ2vJuBFB1SJylmZw==
-X-Proofpoint-GUID: P3js3V-P6kQsVOedTcTPfKQrdzxnP0iC
-X-Proofpoint-ORIG-GUID: t-2faXCGWRuHPD_m5cyDJgQ_tOHP8O7w
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-28_05,2026-02-27_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 priorityscore=1501 spamscore=0 phishscore=0 adultscore=0
- bulkscore=0 clxscore=1011 impostorscore=0 malwarescore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602280153
+X-ClientProxiedBy: EX19D044UWA002.ant.amazon.com (10.13.139.11) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-On Sat, Feb 28, 2026 at 08:43:33PM +0530, Manivannan Sadhasivam wrote:
-> On Sat, Feb 28, 2026 at 02:01:40PM +0200, Ionut Nechita (Wind River) wrote:
-> > From: Ionut Nechita <ionut.nechita@windriver.com>
-> > 
-> > After reverting commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove
-> > locking when enabling/disabling SR-IOV") and moving the lock to
-> > sriov_numvfs_store(), the path through driver .remove() (e.g. rmmod,
-> > or manual unbind) that calls pci_disable_sriov() directly remains
-> > unprotected against concurrent hotplug events. This affects any SR-IOV
-> > capable driver that calls pci_disable_sriov() from its .remove()
-> > callback (i40e, ice, mlx5, bnxt, etc.).
-> > 
-> > On s390, platform-generated hot-unplug events for VFs can race with
-> > sriov_del_vfs() when a PF driver is being unloaded. The platform event
-> > handler takes pci_rescan_remove_lock, but sriov_del_vfs() does not,
-> > leading to double removal and list corruption.
-> > 
-> > We cannot use a plain mutex_lock() here because sriov_del_vfs() may also
-> > be called from paths that already hold pci_rescan_remove_lock (e.g.
-> > remove_store -> pci_stop_and_remove_bus_device_locked, or
-> > sriov_numvfs_store with the lock taken by the previous patch). Using
-> > mutex_lock() in those cases would deadlock.
-> > 
-> > Instead, introduce owner tracking for pci_rescan_remove_lock via a new
-> > pci_lock_rescan_remove_reentrant() helper. This function checks if the
-> > current task already holds the lock:
-> >  - If the lock is not held: acquires it and returns true, providing
-> >    full serialization against concurrent hotplug events (including
-> >    platform-generated events on s390).
-> >  - If the lock is already held by the current task (reentrant call from
-> >    remove_store or sriov_numvfs_store paths): returns false without
-> >    re-acquiring, avoiding deadlock while the caller already provides
-> >    the necessary serialization.
-> >  - If the lock is held by another task (concurrent hotplug): blocks
-> >    until the lock is released, then acquires it, providing complete
-> >    serialization. This is the key improvement over a trylock approach.
-> 
-> Just curious. Why can't you use mutex_trylock() here?
+Hi Bjorn,
 
-One problem with mutex_trylock() is we don't know whether we ourself or
-someone else is holding the lock when it fails, we just know someone holds it;
-and we can't wait for someone else to release it when there is a chance we
-hold it ourself already. That was the problem with
-05703271c3cd ("PCI/IOV: Add PCI rescan-remove locking when enabling/disabling SR-IOV")
-before it was reverted.
+I'd like to follow up on the v3 of the patch submitted earlier and see if
+we can merge them.
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
+
+
+Amazon Web Services Development Center Germany GmbH
+Tamara-Danz-Str. 13
+10243 Berlin
+Geschaeftsfuehrung: Christof Hellmis, Andreas Stieger
+Eingetragen am Amtsgericht Charlottenburg unter HRB 257764 B
+Sitz: Berlin
+Ust-ID: DE 365 538 597
+
