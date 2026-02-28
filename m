@@ -1,251 +1,188 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021072.outbound.protection.outlook.com [40.107.74.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55324534B1;
-	Sat, 28 Feb 2026 15:13:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772291626; cv=none; b=TEb5CJTrXRbWg9s14Rv4waRNQpx5hvV8AKeSGcq+ByTq2sTa5McKWb6h2dUFbOlFZDSFSNHGLLeKAIrkoKHoNx79PWIled/Cpusyja78Gi08xU9nnCLByVzqIWR1u28DoJEUiwXweHKKXZBUHhGth8VydJe8Y6D4nDg+bj9ZtMA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772291626; c=relaxed/simple;
-	bh=5XBA28YFrH2MgLu5UMocW1pTudSFbGiCQXSre8BeW4s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hqJhGaTzimmfIAjW90OYcT9X/kcEJAWsyN80UZ5gj+4Wdq2/1ERnm8IIL9YDx05lMbck2lrFcn14+tt/hs790WcwCoPF/H1XO5LfI9zCH6xFdxduB5eXbKcXxdqyESC7q4KmBDumEzTVXsQQFZYkdzZBgyOh3JL82gPCBeiEp4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W5KON5P6; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188EC2D838E;
+	Sat, 28 Feb 2026 16:33:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.72
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772296435; cv=fail; b=oOZsb0jCBM0sTRU/nDwttRj0H6/9K2danx3PBSr+jDU7E3TrDkUwncm7gEpk5fMkB6V2JnuP5lGTps+w0hROTakcoVVlBIlkQLbqzDAuCqrQ41wUDhbBUAt4Z9n6rsUORC4JQY7o7ePxQtAznaSbazBVD2bRV7gCKS7s82NqYVQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772296435; c=relaxed/simple;
+	bh=ReYm5uhfX5iTn2HD0vdX/elN09HWBZAVs57C4haEzew=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=QJdoggaszn9sE7K6lgddyoAoW6hTzjEdDZEcx09VVHlBe1mEMzW7LU3CCXz0e4JSHu2SUa9p04T/uoa3Ju++nj9pPY0iddylN0znxdER6IRC8FqdX5ISiY7cGjm6gEN9vgmcCYkbV3AOFJldCpuSudr1nMax+ww2V2ZGjLfA85w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=OFgDKgoz; arc=fail smtp.client-ip=40.107.74.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W5KON5P6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 696D1C19421;
-	Sat, 28 Feb 2026 15:13:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772291626;
-	bh=5XBA28YFrH2MgLu5UMocW1pTudSFbGiCQXSre8BeW4s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=W5KON5P6KW9xYNdRZnsKBfuZVK/Toy7F5xBy+tZufVttQ5e1NzrLwlIhSk+9wc0c/
-	 55OAQqjzfBU6CrPZByay2IMdNiqxs6R9HF1EUizwWRwL6fJKvfzyL+0LlImTbpq7Kf
-	 f6is+klbroLEWw17VHuZr2/gYtXlhMxX/cZkORVpFLm6iLD/8XbEBj4kdybhLks3xw
-	 zBtZYhpce4xb183UAxAqnvl5bzZKrsL2uTuS6PiybTvnT4RBFlK2yOoLMVJxoTVHMd
-	 eAfFsMKJ+wq8nHTDAykc/PuMrv0l6Tqwh9wQDvEYkVq+ErrkIyAp9D+Aae8IV0HdkN
-	 wjzW2a4gm3aZg==
-Date: Sat, 28 Feb 2026 20:43:33 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-Cc: bhelgaas@google.com, helgaas@kernel.org, sebott@linux.ibm.com, 
-	schnelle@linux.ibm.com, bblock@linux.ibm.com, alifm@linux.ibm.com, julianr@linux.ibm.com, 
-	dtatulea@nvidia.com, ionut_n2001@yahoo.com, sunlightlinux@gmail.com, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v4 1/1] PCI/IOV: Add reentrant locking in
- sriov_add_vfs/sriov_del_vfs for complete serialization
-Message-ID: <mvhrbhqxnxeitx4incfykvlgtcfs2jcrlje2warhujzvbyns4e@7eyme5xdea7g>
-References: <20260228120138.51197-2-ionut.nechita@windriver.com>
- <20260228120138.51197-4-ionut.nechita@windriver.com>
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="OFgDKgoz"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=vr+l1qqvwHfjPokBxQYRA2ddFWTRwCS/z9GQJwSqUBFjgcNwp4aJlVE8pjbneEt9Afap7qYBIV4s4z9/ARS7WXQNF75k3P7v+b+0Yk5XnuPW0g6SPFz2fC6QeINHbk8FyvLeYu4WMo0oXN4n3SJldFtyypBG3G5ZChgGmfjhoR272PO1IrO6ebGLL6CbpR9z15GgcP/wykeZB/ffDoj1c19vqzL1riOvO/xGr78Wzi8E6IAvS86vf2diAzyuX0oEd94/K4+IaJPnhP6XivSa8Z3DcPELpmWughjScfaqm3PuARSfHdBXZdwLjQA28bdMMow/CfwUt3Bs33iONphziw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3pCOb9dyr6/+xW/eLaaPtrhkZ4NKDPQAGLwfVqmdSkA=;
+ b=qSXMWOYfoDhkBVmhtJoDmh2Mz+Oqw8AFsDuEqd5/JZLNNtIQzsnkh5ovQlHuaNVhDOfIHGw9HW4IdIlk1laGrSgP4LWILRjZF8oDY+sxll+X/42JqJFdAV7gNPxUtngy6YGBjlDa105/Z8msYIXg5q0uvhcnhaAvtJb1CLw/pBXmPuValkHi8Sn8HS7bL7msdopCrJ8sJZSSauFdyoN7bXUO/uZUw3tXqNLUwQ23rcstocaZy0m6kVbvwxRPvS4cxGAOfdP+GI8J2oCzqNp1eMnSJocpB3oxumgo0+tEM0+7vYeKBfTM6ephVq35Lut3x4/bIYayQkU1567K6wtbDg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3pCOb9dyr6/+xW/eLaaPtrhkZ4NKDPQAGLwfVqmdSkA=;
+ b=OFgDKgozxp9UkjELQgrw92llxiAp8de8FzUDBpJznufFY0P2UP1OO8ag4ADC8+056dn/ubi/NTf/9s8E49RR3de/y6pihn7XTWJU6iIofnNnaORI9Ywl9P05dXR3s8X1pYl/ukDLjGRfq1v+Cu+1EPoLxsi20kliewjPoVZJ1mQ=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYYP286MB4510.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:19b::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.11; Sat, 28 Feb
+ 2026 16:33:51 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9654.013; Sat, 28 Feb 2026
+ 16:33:50 +0000
+Date: Sun, 1 Mar 2026 01:33:49 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, kishon@kernel.org, 
+	jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com, Frank.Li@nxp.com, 
+	shinichiro.kawasaki@wdc.com, christian.bruel@foss.st.com, mmaddireddy@nvidia.com, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, ntb@lists.linux.dev
+Subject: Re: [PATCH v9 7/7] PCI: endpoint: pci-ep-msi: Add embedded doorbell
+ fallback
+Message-ID: <cevi2tkpb6kpdufnhlujey3dfsv733j66ulezobmiemro7vdm5@mffq47qhkxui>
+References: <20260219081318.4156901-1-den@valinux.co.jp>
+ <20260219081318.4156901-8-den@valinux.co.jp>
+ <u5q2ntwbjlqweodsipkkxcdtyt4zikfbyvriygsi3a3asbujc5@rgpblec4nwa2>
+ <aaG5asXVV5sxRbnQ@ryzen>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aaG5asXVV5sxRbnQ@ryzen>
+X-ClientProxiedBy: TYWPR01CA0043.jpnprd01.prod.outlook.com
+ (2603:1096:400:17f::17) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260228120138.51197-4-ionut.nechita@windriver.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYYP286MB4510:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3115a5bb-be73-4baf-9ee0-08de76e7279a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|10070799003;
+X-Microsoft-Antispam-Message-Info:
+	Tfklc+tQcbajYP5S75TBF9+ajUojKTFNjAS2RlNtZcj7SlTWAF1pwEKtdNwsgWHZb+IAhKK4Nua+nbjzIinxpOVk1c1xiDo8jgbM6PdUnZd/DkxOpr4baaFyC6RrXfgStf9aoziKzLTbFSyWSXZDF7UI36skk+GrGTLg6itq4AGauF7qvesf3RHphf7smGTB73pkS1CXmL89w7Ud+le+9hnY/QiUTmpHM3zCDmGxySdTMakcnYbl0Hf5vGN1fuALlq61hGlXwrzjFy4rvBp0DaZLt4KIRd29THXUw07umBEG4yhVSgmvlMFZdX6b7L1eeq0VGSujd64LUS503ABXGczvoXAMhEVnv6mWtyDgE1scRwLN72ZFZv6gFgrDfEAgKsjDxz0gQNoA5RYhjBVtlfRsDkMnrPUGDBpCMRFKbeKqeWNSADv1q6vDFuyQfHuWJ3UVqAqsSJtF8VNcT3F3TH+NTBaLyZwzHQYviTdjPrWosIb1qoL3RbF3XDOrFck3zlPJ/UAcA1QFQ5H9Oc6C9gJYobcELUtS8N5GxpcQIz61T9Z82zYDAyHsCrW5cd6hMk0jP5+J9TCXeH5FJHH27q7r1B5MgPY33DWaCc8C2Gi0WcyAQyrupoUpalQ2WMcmiWh8erruevOKFcXQKr0sk/BGG6ZJoOfQw3cpRMEUE1OCBEQqmuiGi9s1PV1Pn2Ou
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(10070799003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?50cVy7V7oLWIxyfUWA/vWV8Bx/+T6taqWOXq0dP5k/n9eGQNHuesU6vdHrVN?=
+ =?us-ascii?Q?+49Tvb8wYx3BTaTAkgb9xRn3fWbglJT5QA7y5hrf3iHeoIAxglksX/TCHMFQ?=
+ =?us-ascii?Q?p4UFzTFVINhCqUeErgduRJIviQzhgaXJDCnTodm+7yeUj593OXUzCJVm1auk?=
+ =?us-ascii?Q?RQ3BVvOcLKymI7SjfOnE0rhpYzLTPTX4fbAhnkTGczM69sqemxM8h/cyBa0Q?=
+ =?us-ascii?Q?UkoVMxvhJNRtBFTrAhSiZFrxDGGtQ67HlLAChsN0Q9iiTWjsNIde2H8Ov/Fr?=
+ =?us-ascii?Q?yBSxtSjpeq6q2q+xynCPz4WGqTLEYUeU3xiNJDQMRKbPenVU8u9mJnfmjCE8?=
+ =?us-ascii?Q?CC8NZIXVGOTNUSBFC+thPpaLQlNi6DWJ2MG+1/CraNx+7hcJ5fL7llmpIiAg?=
+ =?us-ascii?Q?kYEV6GPdCIPC6rbXK3BylxPjk2JKh9DbG47yHYYCXrFmZj532CLDipNOyoS+?=
+ =?us-ascii?Q?Cctn+ZuXyq/gqhe1zKDJGIMsDYPN86uji9kZAYHIiNvgK4vdpfc+VETLIIhZ?=
+ =?us-ascii?Q?r76EKsLsYVW/tHHMjq8ckAAlBGpD3cC8V4Qgsor8nnXFKV5+Fk4PD4sLAiLl?=
+ =?us-ascii?Q?ngp+/W4c4+4FEQO3Y6dKn0zjtzNjB+P7HhlW7a8opbx0CwDKaFZjdVXGRbeu?=
+ =?us-ascii?Q?WKW8DeMLJFdrHxk51dXUw3/2R/mPuX0T6XyXdGB2/dB8XSj1KN+N+gyi2jUA?=
+ =?us-ascii?Q?r3vs8Jo00HK0U/r5Pl8ggacY41N3QlCRyAAMBHwGx3FsnBCCH8nTEicOe5/H?=
+ =?us-ascii?Q?JB5s9H7+u2g2wDpWfzFEdtpVyYueJ8eryRT7HC5QOyPgwrXS3s40XCZaL1Sy?=
+ =?us-ascii?Q?bnZI/8hfoyboG1+h7WWdWU4wAXNyUh8pk6VbOLqg9UptLipBY04X62lEd+TL?=
+ =?us-ascii?Q?wXfyIKDOiyNznw6j5mNLS+EuxN1U5YRnIfMv1IG2VOulCUlgNJoZNXhmgaZy?=
+ =?us-ascii?Q?ACoMhOR4b89ahWBqEhk7cDn7siXEuV08U1TTtdo56hoNmXGrFY7Sza34vGzU?=
+ =?us-ascii?Q?pO3Xk1yb5OWIPh58uCFM0S2dH8kQGGq6KrjPVb9hFPx/ZnOvceAFGpbaVQXP?=
+ =?us-ascii?Q?HUmVeiEcLpi0m74OK/8UvyYQUhX4Pv0hXxxbfGAM0H+AWyPjATdUF+q6VejE?=
+ =?us-ascii?Q?5ifvrwBkfkjZ+5Oo6tehzSqkl0R+mnXsRkHzlS/skSAmYAVEAx2S9ESGHwWO?=
+ =?us-ascii?Q?Da9Jfs2j1uwLvDTgsXstJsAfn9OOwHaePQzoHvIVTfkmZL9ct0eAdYcmzcvl?=
+ =?us-ascii?Q?olB8m161HEX0vLWGhE8ZmpJdnTGZlh3meHg+o7eIudFhVWBUGdYw1n0kQBuy?=
+ =?us-ascii?Q?W77+6sgxm99fAjgZTqv9kAfNqiPngqceD4JrY6XwZp6r/odizzLx26gRIcPs?=
+ =?us-ascii?Q?tcIjHNZ0Aux5J+VigdVG0F/FPgN30kudqhoSI3qOS3BtaNUCy2bc/NCmksR7?=
+ =?us-ascii?Q?jE3HglpBn+AQzhkrABNp0XUSmfaUMSj1QKqFM7xwyWAOkie68ZS4C1w4GlwE?=
+ =?us-ascii?Q?4tZ6f/yBcaeFu8DinnEpbrLtD1jY2yDCoWOCGjK060W7/XnUgykpzE+D0j1B?=
+ =?us-ascii?Q?jxCCn6KV/ut+eIRM0j1cV0+THiSCDx9cujq5aBGXkuv6ljQDzAOvSMPKoChC?=
+ =?us-ascii?Q?6R+mnzfZppDpzJxvT+rwtCpfH2PMto46Sas+IsJguluOUDGWwipFrweDf495?=
+ =?us-ascii?Q?osk/Y5Ff2shFkoVh/gdEdScvQqjsYbXw+BAaRFVjF/FHCw/10jex43SFj9lO?=
+ =?us-ascii?Q?Cj6+k9QybSmikh6GEK6B/JitZNUJMOkAaFibjlQ5WhZ3mAgQKXlc?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3115a5bb-be73-4baf-9ee0-08de76e7279a
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2026 16:33:50.8149
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: jdr0XgoYl/ZZ1RWEnYzpiiEqNmEVusFYCqYaIx9chdUD/3mc6aKU5ht5ACyZbbl5EvBAHJFXlcIPgHvrRPv0mA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYYP286MB4510
 
-On Sat, Feb 28, 2026 at 02:01:40PM +0200, Ionut Nechita (Wind River) wrote:
-> From: Ionut Nechita <ionut.nechita@windriver.com>
+On Fri, Feb 27, 2026 at 04:34:02PM +0100, Niklas Cassel wrote:
+> On Sat, Feb 21, 2026 at 02:42:35AM +0900, Koichiro Den wrote:
+> > On second thought, I'm wondering whether it makes sense to handle the case where
+> > the embedded doorbell target resides behind an IOMMU in this series.
+> > 
+> > In v9, we simply expose the raw physical address without establishing an IOMMU
+> > mapping. When the EPC parent device is attached to an IOMMU domain, a Host->EP
+> > MMIO write through the BAR window may result in an IOMMU fault.
+> > 
+> > Initially, I planned to submit IOMMU support separately as a follow-up series
+> > once this series is accepted, to avoid making this series too large [1].
+> >
+> > Niklas, any comments would be appreciated.
 > 
-> After reverting commit 05703271c3cd ("PCI/IOV: Add PCI rescan-remove
-> locking when enabling/disabling SR-IOV") and moving the lock to
-> sriov_numvfs_store(), the path through driver .remove() (e.g. rmmod,
-> or manual unbind) that calls pci_disable_sriov() directly remains
-> unprotected against concurrent hotplug events. This affects any SR-IOV
-> capable driver that calls pci_disable_sriov() from its .remove()
-> callback (i40e, ice, mlx5, bnxt, etc.).
+> These patches are for NTB/vNTB:
 > 
-> On s390, platform-generated hot-unplug events for VFs can race with
-> sriov_del_vfs() when a PF driver is being unloaded. The platform event
-> handler takes pci_rescan_remove_lock, but sriov_del_vfs() does not,
-> leading to double removal and list corruption.
+> > [1] Supporting such an IOMMU-backed case would likely require additional
+> >     patches for vNTB + ntb_transport to demonstrate usability, such as:
+> >     https://lore.kernel.org/all/20260118135440.1958279-12-den@valinux.co.jp/
+> >     https://lore.kernel.org/all/20260118135440.1958279-16-den@valinux.co.jp/
+> >     https://lore.kernel.org/all/20260118135440.1958279-19-den@valinux.co.jp/
 > 
-> We cannot use a plain mutex_lock() here because sriov_del_vfs() may also
-> be called from paths that already hold pci_rescan_remove_lock (e.g.
-> remove_store -> pci_stop_and_remove_bus_device_locked, or
-> sriov_numvfs_store with the lock taken by the previous patch). Using
-> mutex_lock() in those cases would deadlock.
-> 
-> Instead, introduce owner tracking for pci_rescan_remove_lock via a new
-> pci_lock_rescan_remove_reentrant() helper. This function checks if the
-> current task already holds the lock:
->  - If the lock is not held: acquires it and returns true, providing
->    full serialization against concurrent hotplug events (including
->    platform-generated events on s390).
->  - If the lock is already held by the current task (reentrant call from
->    remove_store or sriov_numvfs_store paths): returns false without
->    re-acquiring, avoiding deadlock while the caller already provides
->    the necessary serialization.
->  - If the lock is held by another task (concurrent hotplug): blocks
->    until the lock is released, then acquires it, providing complete
->    serialization. This is the key improvement over a trylock approach.
-> 
+> If the diff you pasted above is all you need for pci-epf-test to pass the
+> doorbell test case when running against a PCI endpoint with IOMMU enabled,
+> then I suggest you just send a v10 with those changes included, without
+> any additional dependencies.
 
-Just curious. Why can't you use mutex_trylock() here?
+Thanks for the comment, Niklas.
 
-- Mani
+The three patches mentioned above are unrelated to whether pci-epf-test passes
+when running against a PCI endpoint with IOMMU enabled. From that perspective,
+the code snippet I pasted in the same comment (which you trimmed here) is the
+only relevant change.
 
-> A matching pci_unlock_rescan_remove_reentrant() helper takes the return
-> value of the lock function as argument, so callers don't need to
-> open-code the conditional unlock.
-> 
-> The "reentrant" naming is chosen to avoid confusion with existing
-> mutex_lock_nested() which is a lockdep annotation concept, not actual
-> reentrant locking.
-> 
-> Note: owner-tracking patterns for reentrant lock behavior exist elsewhere
-> in the kernel, for example in the regulator core (drivers/regulator/core.c)
-> with rdev->mutex_owner, and in the PPP subsystem (drivers/net/ppp/
-> ppp_generic.c) with xmit_recursion->owner.
-> 
-> The declarations are placed in include/linux/pci.h alongside the existing
-> pci_lock_rescan_remove()/pci_unlock_rescan_remove() declarations to
-> maintain API consistency and allow use by external drivers if needed.
-> 
-> Fixes: 18f9e9d150fc ("PCI/IOV: Factor out sriov_add_vfs()")
-> Cc: stable@vger.kernel.org
-> Tested-by: Dragos Tatulea <dtatulea@nvidia.com>
-> Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-> Tested-by: Benjamin Block <bblock@linux.ibm.com>
-> Signed-off-by: Ionut Nechita <ionut_n2001@yahoo.com>
-> Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
-> ---
-> Changes in v4:
->  - Rebased on linux-next (next-20260227)
->  - Declared pci_rescan_remove_owner as const pointer
->    (const struct task_struct *) to make clear it is not meant to
->    modify the task (Benjamin Block)
->  - Added Reviewed-by and Tested-by from Benjamin Block (IBM)
-> 
-> Changes in v3:
->  - Rebased on linux-next (next-20260225)
->  - Added Tested-by from Dragos Tatulea (NVIDIA)
->  - No code changes from v2
-> 
-> Changes in v2:
->  - Renamed from pci_lock_rescan_remove_nested() to
->    pci_lock_rescan_remove_reentrant() to avoid confusion with
->    mutex_lock_nested() lockdep annotations (Benjamin Block)
->  - Added pci_unlock_rescan_remove_reentrant(const bool locked) helper
->    to avoid open-coding conditional unlock at each call site
->    (Benjamin Block)
->  - Moved declarations from drivers/pci/pci.h to include/linux/pci.h
->    alongside existing lock/unlock declarations (Benjamin Block)
->  - Simplified callers: removed negation of return value and manual
->    conditional unlock in favor of the paired lock/unlock helpers
-> 
->  drivers/pci/iov.c   |  7 +++++++
->  drivers/pci/probe.c | 19 +++++++++++++++++++
->  include/linux/pci.h |  2 ++
->  3 files changed, 28 insertions(+)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 91ac4e37ecb9c..adbe4ecc587c9 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -629,19 +629,23 @@ static int sriov_add_vfs(struct pci_dev *dev, u16 num_vfs)
->  {
->  	unsigned int i;
->  	int rc;
-> +	bool locked;
->  
->  	if (dev->no_vf_scan)
->  		return 0;
->  
-> +	locked = pci_lock_rescan_remove_reentrant();
->  	for (i = 0; i < num_vfs; i++) {
->  		rc = pci_iov_add_virtfn(dev, i);
->  		if (rc)
->  			goto failed;
->  	}
-> +	pci_unlock_rescan_remove_reentrant(locked);
->  	return 0;
->  failed:
->  	while (i--)
->  		pci_iov_remove_virtfn(dev, i);
-> +	pci_unlock_rescan_remove_reentrant(locked);
->  
->  	return rc;
->  }
-> @@ -764,10 +768,13 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  static void sriov_del_vfs(struct pci_dev *dev)
->  {
->  	struct pci_sriov *iov = dev->sriov;
-> +	bool locked;
->  	int i;
->  
-> +	locked = pci_lock_rescan_remove_reentrant();
->  	for (i = 0; i < iov->num_VFs; i++)
->  		pci_iov_remove_virtfn(dev, i);
-> +	pci_unlock_rescan_remove_reentrant(locked);
->  }
->  
->  static void sriov_disable(struct pci_dev *dev)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bccc7a4bdd794..c7f672eac0698 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -3509,19 +3509,38 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
->   * routines should always be executed under this mutex.
->   */
->  DEFINE_MUTEX(pci_rescan_remove_lock);
-> +static const struct task_struct *pci_rescan_remove_owner;
->  
->  void pci_lock_rescan_remove(void)
->  {
->  	mutex_lock(&pci_rescan_remove_lock);
-> +	pci_rescan_remove_owner = current;
->  }
->  EXPORT_SYMBOL_GPL(pci_lock_rescan_remove);
->  
->  void pci_unlock_rescan_remove(void)
->  {
-> +	pci_rescan_remove_owner = NULL;
->  	mutex_unlock(&pci_rescan_remove_lock);
->  }
->  EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove);
->  
-> +bool pci_lock_rescan_remove_reentrant(void)
-> +{
-> +	if (pci_rescan_remove_owner == current)
-> +		return false;
-> +	pci_lock_rescan_remove();
-> +	return true;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_lock_rescan_remove_reentrant);
-> +
-> +void pci_unlock_rescan_remove_reentrant(const bool locked)
-> +{
-> +	if (locked)
-> +		pci_unlock_rescan_remove();
-> +}
-> +EXPORT_SYMBOL_GPL(pci_unlock_rescan_remove_reentrant);
-> +
->  static int __init pci_sort_bf_cmp(const struct device *d_a,
->  				  const struct device *d_b)
->  {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1c270f1d51230..080950f0bab33 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1535,6 +1535,8 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev);
->  unsigned int pci_rescan_bus(struct pci_bus *bus);
->  void pci_lock_rescan_remove(void);
->  void pci_unlock_rescan_remove(void);
-> +bool pci_lock_rescan_remove_reentrant(void);
-> +void pci_unlock_rescan_remove_reentrant(const bool locked);
->  
->  /* Vital Product Data routines */
->  ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
-> -- 
-> 2.53.0
-> 
-> 
+I'll prepare a v10 with that snippet (polished up as needed) squashed into Patch
+7. Before doing so, I'll also take a closer look at your v2 series to see if I
+can help move it forward.
 
--- 
-மணிவண்ணன் சதாசிவம்
+> 
+> I understand that you would need additional dependencies for vNTB to be able
+> to use eDMA doorbell on a PCI endpoint with IOMMU enabled.
+> 
+> Perhaps, drop the vNTB changes from this series, focus only on pci-epf-test,
+> get this series merged, and then submit an follow up series that adds eDMA
+> doorbells with IOMMU support for vNTB?
+
+The vNTB changes already included in this series (i.e. [PATCH v9 5/7]) are
+necessary. Without them, vNTB can break because the doorbell fallback can occur
+behind pci_epf_alloc_doorbell().
+
+Regarding the three patches mentioned above, since I included the vNTB ping
+performance improvement in the cover letter, I thought it made sense to consider
+those three patches as prerequisites for this series. However, as you suggest,
+it makes sense to treat them as a follow-up series.
+
+Best regards,
+Koichiro
+
+> 
+> 
+> Kind regards,
+> Niklas
