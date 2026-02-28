@@ -1,175 +1,183 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013027.outbound.protection.outlook.com [40.107.162.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8574136B05A
-	for <linux-pci@vger.kernel.org>; Sat, 28 Feb 2026 07:21:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772263305; cv=none; b=F0KiRSkSu+HTXEd3xGLpKrD5cbsKOp6B9A55LzBF8tVbmY47G5Z22ZXdWIq/albZVIehdeTw/1cuoNfMgOojoAri62zDEB8He8+1RN+GPRNsSQoCQFH9vcFhFwivDYekbcTDxd7NhnvNVCqy3cKR6x+qQuBYTteZ1myFbFkU+pc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772263305; c=relaxed/simple;
-	bh=KToCkKdMXLnoMcD1O0mEwf/a0xSBLAtGfGNwySmGtEE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jL4hHdDd+zdIxKJ+CBnVvVpbUUNAtndjH1+x0tJoNd+3PZYFwgfXWZVq0KNtJN5kBbl99NtihMsCrCOR7bZiAbfegK/fMms78nJz1OiD6oUxWN0CnPJjfAfRcCvxKPTZWy5cQv1jNXza7EAp8DiIkPRXhIceMnDD6dmk5pkT494=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=RB/U0NDW; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IF1/ODr+; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D905F3090E2;
+	Sat, 28 Feb 2026 07:29:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.27
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772263754; cv=fail; b=uYbHkhlRLSIDkeSvK4lSrp+ZAUMfIOwHZZuMcSPRoWTvdT+STr8l5kB7EsyCKl+VWbH4eLA+QFt0Wi4pbyS+L52uaDf5uRz+cNs4V83RKVRqSHT8q/BR/lQwKMcUyf2SwS1+LDhOBZazT+xTiP3FAgeCI8T9wIeaa/w3vKiI3JM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772263754; c=relaxed/simple;
+	bh=mbYH4pXfOgKKOS+B8/+btZICoL2eagVbUP6soEBnpAE=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=kZyK5HmegN8vdaXCmsFdT8wgoZOy1eYvwn6I8wOi8KXjlfRPUjvS9b4wjGVjvaddJ181s3YH5EumgWV7iH74DjzUpSvOLeCljJ1y3ai+9hkOPEoPUJeMsTpCeboPV3Uj1wgsJnJAyRTJozxD3kKQt5Ny/8Ck8YW9nUGtqfLKGvs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=dP3kkwJO; arc=fail smtp.client-ip=40.107.162.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="RB/U0NDW";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IF1/ODr+"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61S6WdVl3590937
-	for <linux-pci@vger.kernel.org>; Sat, 28 Feb 2026 07:21:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=tgBR7QUXG4sl2GL755Z8Q0KrRPuVcewAQzJ
-	Zk9kcF6Y=; b=RB/U0NDW4R4U/AVku2saiRBbNK6eLiuVrsw1JmpBVWUVoXnLkqi
-	iJqWqfw0s0fbZRhj8wgJGN6WK2rh159eVXlgIW7ILqC31lzJfIW70c3eVnbTrfh6
-	ZiDeJiMJpgK/vArxHwCAzaB+VtsaJ7W+FgE8B7aK+JcYaNiizPzxSu5DnM6z5tDR
-	idINFY8UlVcfI9bpAljLJ/QxYob1m44rpvSKvJGLPz0kvn13TmpgPf7Aq9mmXtD8
-	gYGCv7pPXPWJJ9esbjwKT8OvU1D3vaPtwmlVvmpjJivByKBkzo9J6p7IFiYc2cw6
-	W7oxmNU766fNQFF8X+jxzcCrUFu7qUl6r/g==
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cksf6gc7v-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sat, 28 Feb 2026 07:21:43 +0000 (GMT)
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-82743548918so1988556b3a.2
-        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 23:21:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772263302; x=1772868102; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=tgBR7QUXG4sl2GL755Z8Q0KrRPuVcewAQzJZk9kcF6Y=;
-        b=IF1/ODr+FAHsxigcfMI9s1ZlPWVa4Gtakwhkq6wFTogqwBOvRm3qQkr8JYqspQs6iy
-         BQLM10cmbr8XEgq45S3gjsqrCPKoKZpQQcrtboBWF2IncAXHOPh/uDNWV6k/D1sIRG+f
-         dlYj7IV2nVF1v59uBxeiAbvW1BxnK/3sFNHi4PZJIQ/EiaFOJgu4wI/VxN5H22tfbkEo
-         PeHKNuzc0mjY06cfltxY8L7r9Hw0ULfvUOZSoUuvcPELuRmjGB49flDUv2Js4M6NrzNA
-         ckuEKLXtMnH1nqqNLYNcNJxcRPpuknnPVcPTiSlBFt4sEvJdusF22rgwOik43jnna5+j
-         FTpQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772263302; x=1772868102;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tgBR7QUXG4sl2GL755Z8Q0KrRPuVcewAQzJZk9kcF6Y=;
-        b=IwOl2m9zkU7o4VgsfUF1oDQ0JWsdTKtbQk4ttFfTegaxWPfBY/9GtOtXfD4OdFR1AX
-         h5sYCSBtlEW7vqUS3c1xs1fYrLEQg5j4og7LANUtG1mspQDt73RjnYEZmT7MgDNhwZ1d
-         5AQ4lvw45tqSxkK8fooWyC00KIwAIfny3aWHlgSBUvWhV3t9NlM2ty9TgqXzGUf4qDTv
-         a8FgYgAacj0Xwkf93AuCWFbVjMOiysW3jFrlgzyJVLmB3g0VdVpAoytX5c+SF9WCwIKG
-         XPbBfkhAoD9b93FuSy58mKI0F4WZmJ/tucfbY8kySdn1it4+D2K/Q3oXFM4YKGZdIrrf
-         3h8w==
-X-Gm-Message-State: AOJu0YwiZD77qmKgl+s1Gt1Po0jJ2sIVUlVnuCy12iZ5LfRPmuwehZIa
-	E2ZwWCPaaisGvxxZj4gXtL0QdHUyx9CghlM29nfNVuebpUQLBWDvmB2uWwb2vewKeZZTAeHDU0K
-	rfUe0YlRoqV9KOuDDCL3nzMrgrBhtAwfTA7BhqG0F3FieccAniXTU0ohcGUu6Cpw=
-X-Gm-Gg: ATEYQzy9P1jw+d111rUgmfsT9MuTnVOa6cWYqLWV561kabYD4IIssH9jTQ8fh+Qr9GL
-	eOmaipSZo7TvT72NNmkuwCfO7dEgB1aKPLWTVw/IUO9BzRNVGBd8KGtGGC9wUqICtnToJ+nSrGz
-	y9ELheOf5+h1/aiX6z4eeLikSCrl2gnDvnPlSbo/Na8v9bsttzxTWtysl2sRijUH8J+IgKqiYEi
-	3219L+esIk9kbmfEeAUZIdQVK/vaMuS0te0NYEJNWE2V/FCm5riArtAWgSMTdM0yg9ciZm1EmAN
-	ACd3dSCaY3UisuCtryV4lPwpUva6lNj97npwbV09oYrnIz9QzGHBKS/k/TSSCfbyP+BVU7DNhlX
-	7DgCj0sFAsjiZGQrwsOrYDXAOSBXRFAq6AS6RV1wl24/xHg==
-X-Received: by 2002:a05:6a00:2e04:b0:824:4a22:ec02 with SMTP id d2e1a72fcca58-8274d9e62d2mr5050052b3a.42.1772263302188;
-        Fri, 27 Feb 2026 23:21:42 -0800 (PST)
-X-Received: by 2002:a05:6a00:2e04:b0:824:4a22:ec02 with SMTP id d2e1a72fcca58-8274d9e62d2mr5050032b3a.42.1772263301585;
-        Fri, 27 Feb 2026 23:21:41 -0800 (PST)
-Received: from work.lan ([2409:4091:a0f4:6806:1e32:bdc:2454:2ed6])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8273a048615sm6946659b3a.52.2026.02.27.23.21.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Feb 2026 23:21:41 -0800 (PST)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, lukas@wunner.de,
-        kwilczynski@kernel.org, mani@kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Shuan He <heshuan@bytedance.com>
-Subject: [PATCH v2] PCI: Remove redudant call to pci_proc_attach_device()
-Date: Sat, 28 Feb 2026 12:51:29 +0530
-Message-ID: <20260228072129.10445-1-manivannan.sadhasivam@oss.qualcomm.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="dP3kkwJO"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=PVh9BsGXNU+XZA8YjgnbewJJHKVWtmF8F42peoqLQYd/cDrT7j8DdVId8lonuwbsU7dIdowqHXwrNo8zxa7Qt1MCq4ndbJvyi6iWAKRbuZqigAGpyc+YR511RVhgWAs0H1mpBiCU35VobbpUhuXWFnTeC79l3Qdfb96NsZkA8EoUSxYRDi9NMkEnDgHz8m43KuBS0AHmZq4eaPdmboaZVz+nBPH8U9fJ2BVijev39BX5erLo93NIDgiP2nQJIVIY9YY9PR2od+7kwPJbH7sxk+0bOdcWTAqnRHTjLCN5QlhLgzd5dzFcW2DjBhWT/IlvqyJ+TZD2/Ppposl54VMZfA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=D/aYgbsoUR4XNDbHeLuKdktx2rZD2uUhaYoSxA8M2Jc=;
+ b=OPUYYotdbselz23xSrlQ2zAjoD6brnKxhbpIjQfZDXH3RLEraR1ATWJWL4nHakye3McFginCe95u0nDaUxWTqaaTM1PR4Q7RuuYANjscWwfGsoYk83rwOnsTNwGZZJ4XGyRJ4+9mDXyKxmkJPY2SjqUWciYNxwM338iNhxlyvNandx125oMde8I81o+2sJ1SB+VVWdPuBgs8bFNZkIyOBOT/4HqISf7V6/3mCdF7wL7PlnuvBo03tZQt3BU9Gs5pLGVhYqPTRJLh/W5KbtuE5KehPYzWIJBS85wcIy9nqPVXziwx+UguFeAnMpt0Uq8f3GvhP8UV1/hOeJQXfw1x6g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=D/aYgbsoUR4XNDbHeLuKdktx2rZD2uUhaYoSxA8M2Jc=;
+ b=dP3kkwJOaLoaFmuk5kose3Lr0kHx2mEBo4+OxBmaQGPYSqzcbpTU41gDYuf/ZV5bmrRTMGku9M1e54l/SVXPrE/R1VQ2szP6E9me50voZEOB/ftzmGPUwas6tb0yaR7+0MB2jby2l0owTZUNZCYUKEnnNJ+NMa+0lyQ5iRN5x+Nh8IqdJv+Y93530TBdLjOMrCK2TauPhg/cKFpuIu2P2yf0Stwq3z0KoQ2Fk5+vkRa6zHjJKfTTZt8p1Sz1zXVeKP1VN9Lvan9ll0vli2GlI5E82cXi2By/r0P9Iu9FTZ6dyE76t3dDOeDXVil5bGey/SPYF7Y+bBtCYRs2gtLj1Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com (2603:10a6:20b:42c::19)
+ by GV4PR04MB11971.eurprd04.prod.outlook.com (2603:10a6:150:2ec::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.14; Sat, 28 Feb
+ 2026 07:29:08 +0000
+Received: from AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86]) by AS8PR04MB8833.eurprd04.prod.outlook.com
+ ([fe80::209c:44e4:a205:8e86%3]) with mapi id 15.20.9654.015; Sat, 28 Feb 2026
+ 07:29:08 +0000
+From: Richard Zhu <hongxing.zhu@nxp.com>
+To: frank.li@nxp.com,
+	l.stach@pengutronix.de,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	s.hauer@pengutronix.de,
+	kernel@pengutronix.de,
+	festevam@gmail.com
+Cc: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Richard Zhu <hongxing.zhu@nxp.com>
+Subject: [PATCH v1] PCI: imx6: Fix IMX6SX_GPR12_PCIE_TEST_POWERDOWN handling
+Date: Sat, 28 Feb 2026 15:30:10 +0800
+Message-Id: <20260228073010.1554804-1-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.37.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR02CA0045.apcprd02.prod.outlook.com
+ (2603:1096:3:18::33) To AS8PR04MB8833.eurprd04.prod.outlook.com
+ (2603:10a6:20b:42c::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: QkLf2TIV5fx9cRY62NYhxAohPK2-4fRV
-X-Authority-Analysis: v=2.4 cv=JoL8bc4C c=1 sm=1 tr=0 ts=69a29787 cx=c_pps
- a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=xqWC_Br6kY4A:10 a=HzLeVaNsDn8A:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=_glEPmIy2e8OvE2BGh3C:22 a=VwQbUJbxAAAA:8 a=968KyxNXAAAA:8 a=EUspDBNiAAAA:8
- a=k4fLOqHC652wtFX-wEMA:9 a=2VI0MkxyNR6bbpdq8BZq:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI4MDA2MyBTYWx0ZWRfX/CXk4NJdXh5X
- OglylHVJ+Ykx1F3uEinEp1NEr62P8Pfc3YiZigmXF/OVvJfoE1eIcJr2GpY99JKZQfNf6xHE0bu
- GnhoB90voYzkwA/N9B1cKMCoTNQ/65MZ8ZaB5p+ABgy+KKPzqHAdhlZT2uF1zyfsjxY0ta3p4SW
- 4mBRitqtIRtWkJX/JZ11b9r5034Sif4y9+DOrVkcOkOv27Yap14LBQdEMD5aXdaNGb0oqrhy3Bs
- LlwptHtGWWyM6Rr78DwZG+lPvXPANPdXLqQ0TE72xjhcOoSYQoEe5TRQDWUvgJFT0gzncX+QSYX
- uTJb3dgQTkA/Le66rMtHTNPi/OkxaOERoWKKcH9tfogfPiuNIkXlJyVwVEBPwWaEOsOSCAQfL79
- 1xcCwfVMO+/n279MhnXSUxHP5x/sZBnWuZ81u1ueiC7aH44fAkGV9moEVaJPfTpu5dhW7Bnx8P2
- LzrqJPPkDmX6mk2CR0Q==
-X-Proofpoint-GUID: QkLf2TIV5fx9cRY62NYhxAohPK2-4fRV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-28_02,2026-02-27_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 suspectscore=0 malwarescore=0 priorityscore=1501
- adultscore=0 bulkscore=0 clxscore=1015 impostorscore=0 spamscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
- definitions=main-2602280063
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AS8PR04MB8833:EE_|GV4PR04MB11971:EE_
+X-MS-Office365-Filtering-Correlation-Id: 62e4d6aa-c1aa-453e-28b7-08de769b0f5e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|1800799024|366016|376014|7416014|52116014|921020|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	xs4VXbzXOR3++YbQBIOVPvCGj1BAljDUlfwuBr5PeF7OCURLxlVywZs3yNGAoWY4JhhjVK/3xMHX1cawsMClUiyoAIhow+jmeiuWnNrsnCD6SUgCsHpKbziOatVKaTvwXRnYiPuLsGaBdgp5qVOgONyRpy9H+3W4UIw1KP7uwdvHuzdBt7TI2v54yoB8bj2deWDlCcQRtEWssLr2LebYREQoTvQO/BbKEhYALGpaVZMmKvg8skZzq14TlJdnuXjGL7aQptZh9qkqQMf4nrTE68d7xsA5NyjIlnyrs1cejSMDvlP2l2ePDpVZdYOzEN/aa6cneZox3O8ygnTgB3gmar3P1FMxsphwyYkUbbhp3cc3zf8CkpuPQ+YOAIvBraaOWZ5D0Du1qc+b5sy/eWORgmamYKn5KAjU6DnCrUfn0ldt4wLxD6IFefuS8NhPRkGUlNGu3VlwoL1MesMdB7pZSYSsnexXu2vVYE7QC1P+S+bjNSVk4wu6NWFQUf4UOO37ArkPhfVpMJ4ROKgNZL30btTy8iNhTgvNDCnua+eZ76RI2kJmmOJtXYygoJ63f69qALP6kFqOAoUDkITWxNd6Zk1VuApzEO2XUe/wZc1P1xqIS/9ahrLQRzdxEeGmdz9fouje6xiqoAgIeGSvf+FKWuOrlBLR5wPzFMtdJUH9tyVd780dfdu9xvmhn9ii4m46UTgipG2Z+Sr4DLfbmdZI1Yx/SDuyPaUXzEHg2ylcw101YgmwpzhScbMrzc/KQf4GgtWcE/SFyBmsYHEUU8JNSUw/JcANZIHR4e5syCtnCjbtpqxByroaE9yfFMcTRNOF
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8833.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(376014)(7416014)(52116014)(921020)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?clHwaEAsbspYObmRPdd7ZkCWMqGKbAPnuYIuu2LGIW2arS7DHHJSw+cBjmDb?=
+ =?us-ascii?Q?MLFreXzkYUieCUJLwNup9q4e4e7Qy4ni0dnb6YjJc9btZXhkKNMw+w/KzImZ?=
+ =?us-ascii?Q?4pTkxRUVcbU3I1+T5iTcdCEmkeUQrvpCNtXm0umdqvXxapr1kpXmMrw3W1VD?=
+ =?us-ascii?Q?0IU9+/Z68W140OXseTkHuBt7i3t8VvLPeegBFVIVn+pm1wSpg8afdVFApgdb?=
+ =?us-ascii?Q?MRiCoJycX2+1tY7ytUmXlR0enPtNuZ0q+PA39WTfAWpIKE8sm/YmjaKRrsCM?=
+ =?us-ascii?Q?6m1Fs+aigRGmQia+E6jDopeTa9OFK7nlEaPea2uttffT/yMt+JGAxxTEYHGz?=
+ =?us-ascii?Q?STTC9fCpM+OLrUxe+Vz+OogcBVrnrzvpAFkwVOIkesYdnUeH+Tiu7sc318vB?=
+ =?us-ascii?Q?qolVZzSwieZ7y9sISKRd9aOPjOKjkJEly9LZIPyx8tdc5iKRw+5duksFyRtl?=
+ =?us-ascii?Q?tbkFnnsUjYFwkvqWRCbmNgdMS4ee4+D78fshBICC59ffS7Mwvz2FY+ZMSidu?=
+ =?us-ascii?Q?cGRSyJLS4op/odb/cJD2qVMCrmAEr6RpBeeXN0n9SBAalANiuKuFz0d4VMw8?=
+ =?us-ascii?Q?YCOCcTTdDMQtdEBvKZpt/ukU+uRgfE12nt05vKkpHeRXH2gxwyOquuqsaPGW?=
+ =?us-ascii?Q?f59SGRnLzLAvaECb7KgmftNjW/CRpNd8Vpz6Oxy2E5ON/BqGS2CxBX4udB5l?=
+ =?us-ascii?Q?LnF4XK1YP2VELUrhNcxLq/ag4XxBUxS1+mEDAY2Si/Tl1A12ExlZaDvBAsTV?=
+ =?us-ascii?Q?z0bkgG1c/JiiWzkm9mdzm5Z5ux6KJAm52pFmW73MmnSOl//V6SYPhYpApuFz?=
+ =?us-ascii?Q?CHSWwGOG7xdDRegWu3T+mP3amRdugkofXnGjl1SgyFkbDQNPUEFeWjtuH02k?=
+ =?us-ascii?Q?v+xg00q00RGmaf8HH6HRxovrf3s68fhuEZilvOMAqk5PMRUw8n+RhNyNc4Rv?=
+ =?us-ascii?Q?lWuREJ9ZGsQSXADDD/wGlClEFU9xLeOxTl+4r60qViZZScAQQzTigMZ2CS24?=
+ =?us-ascii?Q?MlFqDhsP9+L0BVNLGwlvMZ9NIqOGMFB8BDq6fWbHzF27Sm4FwNL6ilWcTT2u?=
+ =?us-ascii?Q?9iG7I78280u4e5ZcZpSTU2eGPrRmsCc1PX5v5/HhbXX5h/8DsYXIKJZkB8A6?=
+ =?us-ascii?Q?jH2Sz7Dw7pBFGhs17ZM3lz3vPtMXmtxRWUbSVqhS+FSy+91XvOO1j62uzTtl?=
+ =?us-ascii?Q?loXtQiz470WBWki5me4dwXAdVcGcROXMPjLUwzs4ANXDUJRoIc0RhH4JjitA?=
+ =?us-ascii?Q?gYZVn9qlLygUiJCPgYYNtrojYm1IxJ3Gvbrbsqye4DA8QPKVS2cBVRILcO/F?=
+ =?us-ascii?Q?QhLdsiFjLp1Z0W5j+iWGc8Gq78iCRptpcsTS23A2xlFJPyoGOcfXGZam/rKw?=
+ =?us-ascii?Q?N9bPnwGuUE3sngfKr2FnT0kEvZdX/clpfGV3mgvYj465eBf0Az2pO+ocF5i/?=
+ =?us-ascii?Q?E3I3TBsCKp5SyEpEh6U0iAhaJgcA10vZt1pceRGhg+GAJh6VJxGibpBgXtFd?=
+ =?us-ascii?Q?SBXMXb82eCGl1PcFzyTjD3U54KRgB7njfDf/5EZxUylbCE5HU8BRaS+BQ4cQ?=
+ =?us-ascii?Q?+mzeQNUfwkR19y27rLNygKrApUf9WYG3Y6Z/2g0GhwkSITM06+d0vvmdLqkl?=
+ =?us-ascii?Q?xNqMIIK/+rhuS51wkuyZ92mMoOWRtsaO38/aLUlGI0k9OZ4E2z5RLiaRId9m?=
+ =?us-ascii?Q?y3a1RJJBZlp0zBzhEFIsLSj49maXzP5YeLoItKCmqzwXTu8SK5s/EbbnjzMC?=
+ =?us-ascii?Q?NwFEMTwsbw=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 62e4d6aa-c1aa-453e-28b7-08de769b0f5e
+X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8833.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2026 07:29:08.6151
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: iJr7i3NPEhG/4e0r0alrETcxm31yfEvvJe56zmZLC+XPl14vPDWi6KisliMdAb/54BPpFJa+T5ad/giNRCuBpw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV4PR04MB11971
 
-pci_proc_init() should just initialize the top level procfs directory for
-PCI devices and let pci_bus_add_device() add the device specific procfs
-attributes later.
+The IMX6SX_GPR12_PCIE_TEST_POWERDOWN bit does not control the PCIe
+reference clock on i.MX6SX. Instead, it is part of i.MX6SX PCIe core
+reset sequence.
 
-But it is also calling pci_proc_attach_device() for each PCI device. This
-causes a race condition with pci_bus_add_device(), which may run in
-parallel, calling the same API, leading to the below warning spat:
+Move the IMX6SX_GPR12_PCIE_TEST_POWERDOWN assertion/deassertion into
+the core reset functions to properly reflect its purpose. Remove the
+.enable_ref_clk callback for i.MX6SX since it was incorrectly
+manipulating this bit.
 
- proc_dir_entry '000c:00/00.0' already registered
- WARNING: CPU: 2 PID: 179 at fs/proc/generic.c:375 proc_register+0xf6/0x180
-  proc_register+0xf6/0x180
-  proc_create_data+0x3e/0x60
-  pci_proc_attach_device+0x74/0x130
-  pci_bus_add_device+0x42/0x100
-  pci_bus_add_devices+0xc6/0x110
-
-Hence, remove the call to pci_proc_attach_device() from pci_proc_init().
-
-Reported-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Reported-by: Shuan He <heshuan@bytedance.com>
-Closes: https://lore.kernel.org/linux-pci/20250702155112.40124-1-heshuan@bytedance.com
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Fixes: e3c06cd063d6 ("PCI: imx6: Add initial imx6sx support")
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 ---
+ drivers/pci/controller/dwc/pci-imx6.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-Changes in v2:
-
-* Dropped the sysfs change as it is supposed to be replaced by static resources
-  change.
-
-NOTE: I don't know if there is any reason to call pci_proc_attach_device()
-before pci_bus_add_device(), but it definitely causes a race.
-
- drivers/pci/proc.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index ce36e35681e8..de894ae70e9a 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -463,13 +463,10 @@ int pci_proc_detach_bus(struct pci_bus *bus)
- 
- static int __init pci_proc_init(void)
- {
--	struct pci_dev *dev = NULL;
- 	proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
- 	proc_create_seq("devices", 0, proc_bus_pci_dir,
- 		    &proc_bus_pci_devices_op);
- 	proc_initialized = 1;
--	for_each_pci_dev(dev)
--		pci_proc_attach_device(dev);
- 
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index a5b8d0b71677..2d01c21b5570 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -663,14 +663,6 @@ static int imx_pcie_attach_pd(struct device *dev)
  	return 0;
  }
+ 
+-static int imx6sx_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+-{
+-	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+-			   enable ? 0 : IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
+-	return 0;
+-}
+-
+ static int imx6q_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ {
+ 	if (enable) {
+@@ -784,6 +776,9 @@ static int imx6sx_pcie_core_reset(struct imx_pcie *imx_pcie, bool assert)
+ 	if (assert)
+ 		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
++	else
++		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				  IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
+ 
+ 	/* Force PCIe PHY reset */
+ 	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR5, IMX6SX_GPR5_PCIE_BTNRST_RESET,
+@@ -1883,7 +1878,6 @@ static const struct imx_pcie_drvdata drvdata[] = {
+ 		.mode_off[0] = IOMUXC_GPR12,
+ 		.mode_mask[0] = IMX6Q_GPR12_DEVICE_TYPE,
+ 		.init_phy = imx6sx_pcie_init_phy,
+-		.enable_ref_clk = imx6sx_pcie_enable_ref_clk,
+ 		.core_reset = imx6sx_pcie_core_reset,
+ 		.ops = &imx_pcie_host_ops,
+ 	},
 -- 
-2.51.0
+2.37.1
 
