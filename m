@@ -1,72 +1,72 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
+Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABFB36A33B
-	for <linux-pci@vger.kernel.org>; Sat, 28 Feb 2026 00:06:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4C0C368943
+	for <linux-pci@vger.kernel.org>; Sat, 28 Feb 2026 00:28:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772237194; cv=none; b=dERXmABvw0+dNoFTEm1E9/1BKoghu3I93Cfl/LnF77WK4eYhWAoiK/s4E7wrN74ZRnhzqX7/KefQvxT5AycLF6xf2sHoU5wHtUAulnpawh4o2F3Mk8r/L8cQdKQ3BryQYlb9EB1FuUXyiHDYbizcz21FKY3edy82uB1M1UxpHS8=
+	t=1772238492; cv=none; b=gHKytqmJvJ/+LbolBQFE0/D4H1nfP75okUifZ0EnK71NFDz099tRuE3xgcFIsnt2Tl5iz+86AHoXMSsbn6nK6dxRyGbP8jyGVHyiUVrxOeQwtRtbJwHDndo/yEUDxXOXaR2qikTykC9BqaS0RG2zYN6c04xAckcSPibZCc0tWjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772237194; c=relaxed/simple;
-	bh=D9pygYo/MNi4R02Zm4iGOoF0L2rPsDKjb9gvCd6vgKs=;
+	s=arc-20240116; t=1772238492; c=relaxed/simple;
+	bh=YGNKoZbd9ItV0tpLlMFHS8bKihozZyqN701JI8Fx9wU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uLxxDQX/0EBoxf3LuRpWyGNbIgS8isTmHfRNnj1C0xFlNOrl8W4U13Hq83CptTa+ho85jESBAM5p1wuduwzPxQVmk+ENFEGzX51c1pZ//4XOHPgqFUuNPI+pVe8pd3941/67YVyVPMCd3rykrZsifKfNpNykHfUvHdHEW38YGII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=dkzrgaMg; arc=none smtp.client-ip=209.85.222.173
+	 Content-Type:Content-Disposition:In-Reply-To; b=G6bao6MWIrXZMMyeSaHhxRXcXhwX/XHOIfeE4l7WTAIgHM26Vj6uPkQEsrQhdrIH88A4iJWj6yRQZOymTOdnE5WzM6CVahH7Q/1ft3oRqyROQILGNOVwAyr+xHgZzJggUiBWUwQ4GfwksQQRhlmz6TIXWibpbXGd9NC/y+azZvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=Fjwi6nkk; arc=none smtp.client-ip=209.85.219.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="dkzrgaMg"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-8cbc593a67aso200587485a.2
-        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 16:06:32 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Fjwi6nkk"
+Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-899d6b7b073so12318996d6.2
+        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2026 16:28:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1772237192; x=1772841992; darn=vger.kernel.org;
+        d=ziepe.ca; s=google; t=1772238490; x=1772843290; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=S0PqAr3dacsxbzSna3ChPqWEVOFqnIEsALZmA66GjLs=;
-        b=dkzrgaMgalXVIq4VPm3pXWlfPaLhWVRII9QYSEEY7PMPFc8NcZANNZNC5sb+GOcz12
-         c1YIlimtlvGmKWT2ED6wfQvN9ZQRaLofd/EeTaL/GSjb+xJ0gZYQ2A/g3qPH1mV+M9my
-         v/fNbyTsbn/p7nxxYsCRb5oOWX8kYPvYZx0NVVxr7DQkZjQz8mBfbcP49XDi69hjRWfY
-         NxinZF224MnEr73E4RGAntwf7YBh3xXNkhWt6k7rnYdg6j1AY3dVA5Db312Eg3J2k7Dw
-         EMgArEKxeb+xKIbp7ibIkmlMZztWdURA3Dz16+kVHBV2WplIeI/PjNlpT/HkFKyjXUnf
-         nNjw==
+        bh=KAMLfTB0VdCLmRuczMOUd+4kmAfCR9U6SjigH585Y48=;
+        b=Fjwi6nkkLd2pShMhW0y/Rqwi+rnlcCHd51/o549qw65rRK3iTQANqTmQmzNTfBHHTS
+         L9/tjwH8Ehzd++W/jqfmkLdZ88Gwfe2wsCgpHGEdh/mCl1mivQ9sPua8mZsrVxzTdkY/
+         LHf3BI5WdM9WAVTnqCAbxToH9d2y8LCIUiFlicQsbd2rsYuMsnqjYd9PQoYxf0B/eaMh
+         6tO5JKHtwZyrBELyJN77izqMauDnTdiXOJqEBQBSNlyQSrYeIAdRPxXjzOyg8ZL7tECC
+         kQi1sbYm0YfLVz/lGV4luxnNOk3abuZG4aqaCOAxD/P/TcDAzmbzCzkj0AwllrGLVRyk
+         5cUw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772237192; x=1772841992;
+        d=1e100.net; s=20230601; t=1772238490; x=1772843290;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=S0PqAr3dacsxbzSna3ChPqWEVOFqnIEsALZmA66GjLs=;
-        b=UOfEnvkVGOti6Q0B5j6Lb9ay0LIViN7wqzsstmVA55wUdVl0/55YlnEs01jT5PWwtH
-         vtejiYNs+M/bz8bYNpR6LZ4HRnV8gGMai2Yvw2SuH69N2EHFzcD4P04lTEp1/r+ByfQN
-         mSGZcexwigvTGrm0xJskGXnMbq16dsoBoJWkBWCyRn57zrfuhiJ7kLwv8jMUOJhVash0
-         LEmzYr34wS6op7M56ZfwAdRjhOQLvYef2Onj7JZJnYq1xMmhKWjbxAPS8iLxaFfCvnbN
-         +vODqfuKaoGfXw1GEZ2my2Su1Xle571GOKHlT9+/rTLfQXuTzn9gsSPlfQHqLg06X2xu
-         lxkw==
-X-Forwarded-Encrypted: i=1; AJvYcCVFIzwCP4A0ai4ythXRrQtBZ+vnqZXeo64ZbOi0DW/y0aWyTBn6PKNNPlDOHFWF9Z9iK/IM9FLMX3U=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy2dzT6Ydoe2vbaYn1A0omCWmx2LXHrtvmjONU01tqwXB3E15C+
-	us4d3ih+2WCE/DUmN4OzLq5Uxr1RSnoluaDMCtMRbD8AhekdT8VvrFpDUD9JzhoZ7SU=
-X-Gm-Gg: ATEYQzxRmEBFaQr0p+Np/4JAHrl6m27TpiswC55gv4NQ8uoq6H5t/N2qVCI8k79eCAE
-	yse9oNT9wsJSivCZzfe34wOeGkCSay72Pq6b7Fs2LxcH1UmTUJYkCe1Ao+AhGScybyNczmzOo3S
-	S5fOT8OWfMclZm+NuisXsNYyi2vjPEzAJcvCHR5GktQhVIIMjTh+9lYQ7u2kHex+KHXpg+mxC2x
-	iEtBTlVueuPQFLGWv98oRNV2xVTGweg8BjO9As3Zr9yDKyY3MaLZHfuLX/f0TPT901pEsmgAk+S
-	ZEgLNZjSFggLV3MT76iqjosDneJkqlxjOLvi0pJ1wIwqFwqPUQtGaxTspcVxpBY6N9yqzyttN4S
-	dxZbUpYYSBVDzP4uqwPrR4Iil7DrI7VMf0TmO/zS7QqE1N3nV9pB7NnH30pYAIAYiUq28lRSv0t
-	hjBLKwRvVN7cke7YG/Qkmr8mX0uHgaoTLGoF8a5hPHyZT8+M8r9O1LTHCkczRNWPsY6EmoUB9es
-	3+9cj12
-X-Received: by 2002:a05:620a:1a92:b0:8c7:b0d:df23 with SMTP id af79cd13be357-8cbc8e39692mr613986085a.79.1772237191471;
-        Fri, 27 Feb 2026 16:06:31 -0800 (PST)
+        bh=KAMLfTB0VdCLmRuczMOUd+4kmAfCR9U6SjigH585Y48=;
+        b=POs5UKnZPzr2o3/n2E8lvj311241sLKBkt1z7ToLZIlcRMuyyn6Yuo/jTvyArVeAwh
+         Rzx/iLwcf8fd7ewYYKKAa6tYxzrhIaJ2Mx149S3ZUBEm7K2r3pq9mhL9m9T/nTsFrJSC
+         VZ88QDjVUtD4afyFrfixWW5CRdQ2ESJPTsluiO6d7UbbQu7ekD50RkGaGGpQE+wP9+DQ
+         lpeoW/zntutRS7Yc3dbEuMwfpYM94UYxuzAZc+5DFnvVbf6SeOOUHEt3psOl65bltClX
+         ZYX7GVFglZzrpsiD5It3nGLXk55EABDVoNpn1h0DuXdjvJW5x3F7blwOzu6G9hyumhGi
+         0yfQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXzXY3IV+5WTFZJNaF2QFKqTvZxSgCGmM5u72cOZez2pp55oWMJXBV7yWVG+8oxRtC2HYIyhnpUy+E=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx73Jb9G+gEOciV+Jlwiwl+UUWsfL19uELDnYRl/EgE4+vNdXhL
+	NWr0sts5ULY1I2UMTh26ZC9DA2yO4N7O4vsXWYytuv0aRi8dYYLsdXtlP6FBiHqFvz0=
+X-Gm-Gg: ATEYQzyofWHiTEoguLIBQwONLZ9aGft9NHtOsS5MA+vhmDrYE0EyWOBo4knD/ueVIx2
+	yNQWa0tQIcHhdc7FKJ8CLOc3Q8he/eecJfaoHHYttUvt6a+U1mPm32oqcrLJj1t9UxugjRke2n8
+	ndKkTwMmYA8rj4V0BInR4JL6dj8SI1zCllcm8Pf/pf1gjElRBxLsmKYZhTfR/Zc1Xq/NB7qk7Zv
+	vQGbaDZKu5LkAKCnZiTeAdXpgSBROYfhjuebxo2mdzS084JLmXAYZtW4Web6xcVi2+hpsifvA+V
+	iVjew+/pKgfVUZQfLZ83Pg66fvznmJ6ND1KgEbVp+g44v42Br1KFMpW1QVolX2zIIGL58aRtWmf
+	G+CM5PKjP8AsHd+klfHpLXpmE+4Dpdnk+II4H+hJfTZSIO1py7haQVc4Tu1G8gmFBYW8TYN6tBD
+	gimzkf4lrb4gWJzFJEcmAKfzcdjJSGIp6Gq/SlVIiu9/sBs9EufdSUIROk90B83H8fF6bJWAV3l
+	PX95F01
+X-Received: by 2002:ad4:5dc2:0:b0:896:f8dc:f6d4 with SMTP id 6a1803df08f44-899d1d6ca54mr69417576d6.5.1772238489925;
+        Fri, 27 Feb 2026 16:28:09 -0800 (PST)
 Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cbbf72d3casm601180485a.42.2026.02.27.16.06.30
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-899c7376847sm55825926d6.28.2026.02.27.16.28.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Feb 2026 16:06:30 -0800 (PST)
+        Fri, 27 Feb 2026 16:28:09 -0800 (PST)
 Received: from jgg by wakko with local (Exim 4.97)
 	(envelope-from <jgg@ziepe.ca>)
-	id 1vw7qo-00000001WqD-1LkU;
-	Fri, 27 Feb 2026 20:06:30 -0400
-Date: Fri, 27 Feb 2026 20:06:30 -0400
+	id 1vw8Bk-00000001WwN-1wgX;
+	Fri, 27 Feb 2026 20:28:08 -0400
+Date: Fri, 27 Feb 2026 20:28:08 -0400
 From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Alexey Kardashevskiy <aik@amd.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+To: dan.j.williams@intel.com
+Cc: Robin Murphy <robin.murphy@arm.com>, Alexey Kardashevskiy <aik@amd.com>,
+	x86@kernel.org, linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
 	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
 	Dave Hansen <dave.hansen@linux.intel.com>,
@@ -76,7 +76,6 @@ Cc: Alexey Kardashevskiy <aik@amd.com>, x86@kernel.org,
 	Andy Lutomirski <luto@kernel.org>,
 	Peter Zijlstra <peterz@infradead.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
 	Marek Szyprowski <m.szyprowski@samsung.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Catalin Marinas <catalin.marinas@arm.com>,
@@ -115,13 +114,15 @@ Cc: Alexey Kardashevskiy <aik@amd.com>, x86@kernel.org,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Stefano Stabellini <sstabellini@kernel.org>,
 	Claire Chang <tientzu@chromium.org>, linux-coco@lists.linux.dev,
-	iommu@lists.linux.dev, Jiri Pirko <jiri@resnulli.us>
-Subject: Re: [PATCH kernel 6/9] x86/dma-direct: Stop changing encrypted page
- state for TDISP devices
-Message-ID: <20260228000630.GN44359@ziepe.ca>
+	iommu@lists.linux.dev
+Subject: Re: [PATCH kernel 4/9] dma/swiotlb: Stop forcing SWIOTLB for TDISP
+ devices
+Message-ID: <20260228002808.GO44359@ziepe.ca>
 References: <20260225053806.3311234-1-aik@amd.com>
- <20260225053806.3311234-7-aik@amd.com>
- <d8102507-e537-4e7c-8137-082a43fd270d@arm.com>
+ <20260225053806.3311234-5-aik@amd.com>
+ <699f238873ae7_1cc5100b6@dwillia2-mobl4.notmuch>
+ <04b06a53-769c-44f1-a157-34591b9f8439@arm.com>
+ <699f621daab02_2f4a1008f@dwillia2-mobl4.notmuch>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -130,38 +131,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d8102507-e537-4e7c-8137-082a43fd270d@arm.com>
+In-Reply-To: <699f621daab02_2f4a1008f@dwillia2-mobl4.notmuch>
 
-On Wed, Feb 25, 2026 at 05:08:37PM +0000, Robin Murphy wrote:
+On Wed, Feb 25, 2026 at 12:57:01PM -0800, dan.j.williams@intel.com wrote:
+> > (since a device that's trusted to access private memory
+> > isn't necessarily prohibited from still also accessing shared memory as
+> > well), hmmm...
+> 
+> The specification allows it, but Linux DMA mapping core is not yet ready
+> for it. So the expectation to start is that the device loses access to
+> its original shared IOMMU mappings when converted to private operation.
 
-> I guess this comes back to the point I just raised on the previous patch -
-> the current assumption is that devices cannot access private memory at all,
-> and thus phys_to_dma() is implicitly only dealing with the mechanics of how
-> the given device accesses shared memory. Once that no longer holds, I don't
-> see how we can find the right answer without also consulting the relevant
-> state of paddr itself, and that really *should* be able to be commonly
-> abstracted across CoCo environments. 
+Yes, the underlying translation changes, but no, it doesn't loose DMA
+access to any shared pages, it just goes through the T=1 IOMMU now.
 
-Definately, I think building on this is a good place to start
+The T=1 IOMMU will still have them mapped on all three platforms
+AFAIK. On TDX/CCA the CPU and IOMMU S2 tables are identical, so of
+course the shared pages are mapped. On AMD there is only one IOMMU so
+the page must also be mapped or non-TDISP is broken.
 
-https://lore.kernel.org/all/20260223095136.225277-2-jiri@resnulli.us/
+When this TDISP awareness is put in the DMA API it needs to be done in
+a way that allows DMA_ATTR_CC_DECRYPTED to keep working for TDISP
+devices.
 
-Probably this series needs to take DMA_ATTR_CC_DECRYPTED and push it
-down into the phys_to_dma() and make the swiotlb shared allocation
-code force set it.
+This is important because we are expecting these sorts of things to
+work as part of integrating non-TDISP RDMA devices into CC guests. We
+can't loose access to the shared pages that are shared with the
+non-TDISP devices...
 
-But what value is stored in the phys_addr_t for shared pages on the
-three arches? Does ARM and Intel set the high GPA/IPA bit in the
-phys_addr or do they set it through the pgprot? What does AMD do?
+> So on ARM where shared addresses are high, it is future work to figure
+> out how an accepted device might also access shared mappings outside the
+> device's dma_mask.
 
-ie can we test a bit in the phys_addr_t to reliably determine if it is
-shared or private?
+ARM has a "solution" right now. The location of the high bit is
+controlled by the VMM and the VMM cannot create a CC VM where the IPA
+space exceeds the dma_mask of any assigned device.
 
-> > pci_device_add() enforces the FFFF_FFFF coherent DMA mask so
-> > dma_alloc_coherent() fails when SME=on, this is how I ended up fixing
-> > phys_to_dma() and not quite sure it is the right fix.
+Thus the VMM must limit the total available DRAM to fit within the HW
+restrictions.
 
-Does AMD have the shared/private GPA split like ARM and Intel do? Ie
-shared is always at a high GPA? What is the SME mask?
+Hopefully TDX can do the same.
 
 Jason
