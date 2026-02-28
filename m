@@ -1,242 +1,132 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A622D73A7
-	for <linux-pci@vger.kernel.org>; Sat, 28 Feb 2026 10:56:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70C8E2E7635
+	for <linux-pci@vger.kernel.org>; Sat, 28 Feb 2026 12:01:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772276163; cv=none; b=Sp7Qy9IXRHj6XncafOfOFU2aPyUvlzhX+qWCO8zCw3z74EaTWxvld1KTyAYmhPvyVbgsnhLImF2qKPHwwRGGed6atl0rjvPT4gnkEHzB2iN2St6ADKhZCrrvafroJF4k14KXeLOLiJLz2J/djsCia+YL1Yw8i3Kjgw8WDxzHurM=
+	t=1772280123; cv=none; b=oFLUvPTMkmHPGDqAYrhrH+miZN0JIoZpk29TRYsVEPEfqCjw2Hv5UL3gRP2woSuzWkzcmZVcHUZBFy8Z9YjNZ1Ga4sFedGsSLbSVfyc6BcClC9GmT56XX++oI+WTJpsk0LfVmVgyDNMTZy+bOfH2i2b6vWB7xvPhdX67+VutQVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772276163; c=relaxed/simple;
-	bh=pQPHMHBUPwcElzs6HXVe8UvAwFVytjyK01/RF24cO7w=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Nx8ISZKG18Fs6CJKW88bLdrfHhvBfqNiStPdWnsT6FbVRGB9mvwuQW7vfSGO5P6LrivuAT3DVKzAR77gHYhx1Tw4BlwUrpc3WOTfSwp3OwNnMLa3iiT9xeBtH8U14TBJHgCo/3amHeZ4xUtYHbrZ7t1qwTZklX3L3jddYVwC8yU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aGDnlN7H; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1772280123; c=relaxed/simple;
+	bh=eUVz3PgJDXvp1i5/BJZIdoCSpMiznh7UkFcMaV00+go=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=WFOz1+n/jfUA+O6dYLWRDyY7ZNbIWyOOwwZDAbb61XlYAchA3z/wsXGyIBUgDTNsEDC0rPtrS5PG0Hj++Pr5mUjtSLYHhsYqsnPvQoz2t3tlpSTIJGCYXl73zlOWbfzgh95yypmuBrpPef9vPKEUqjKkTsrbGj3B8XZabNT66bI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=aITySljN; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aGDnlN7H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1772276162; x=1803812162;
-  h=date:from:to:cc:subject:message-id;
-  bh=pQPHMHBUPwcElzs6HXVe8UvAwFVytjyK01/RF24cO7w=;
-  b=aGDnlN7HhHbzHeoHOs2qRH6HEPXcFxMD8c7g3ObG/DkA/nENkFNIwkFh
-   y0cpER5gCmD2wa4wT0ir6bFSXANPAT4k3m/mrqyYHKou56HYZzOShj9VI
-   Fy6YDWe3hvfHs2jAocR+MK8+bkVzTIDeqs7sDGO5xBr5nY8wsZy0AoQMr
-   TOnam/t9KnnzOfBbtpRqhIvhbndEMpL4Bi62+KuDMNX3CgcCMA43tpDbB
-   nOEX/AwjLD6NZRZ5+dEBeqUjcrAlG9C4ApcI376MGwKW9oBFnzCHsLPRN
-   ixG5Ywkup0YlPPyRRpYTNubNplZpij/B5HNkMsGiAm06M6nTG7ZgXPa9p
-   A==;
-X-CSE-ConnectionGUID: QIsVbIn8R3etoYXZqOxMkA==
-X-CSE-MsgGUID: 6xPlvP81TQesJIW6u9C8nw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11714"; a="90926572"
-X-IronPort-AV: E=Sophos;i="6.21,316,1763452800"; 
-   d="scan'208";a="90926572"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Feb 2026 02:56:01 -0800
-X-CSE-ConnectionGUID: 5fbBc/dAQKuHuwfnUBsuBg==
-X-CSE-MsgGUID: 138B6kuHQbObDQtQXeuWHA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,316,1763452800"; 
-   d="scan'208";a="240158680"
-Received: from lkp-server02.sh.intel.com (HELO a3936d6a266d) ([10.239.97.151])
-  by fmviesa002.fm.intel.com with ESMTP; 28 Feb 2026 02:56:00 -0800
-Received: from kbuild by a3936d6a266d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vwHyx-00000000BTT-0RGR;
-	Sat, 28 Feb 2026 10:55:45 +0000
-Date: Sat, 28 Feb 2026 18:54:22 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- 39195990e4c093c9eecf88f29811c6de29265214
-Message-ID: <202602281814.oMlxoAEc-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="aITySljN"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=qQuva9xjbkRnpPjhvFT+NYgCpaVLo48Kb9DlWjn4P54=;
+	b=aITySljNja19XaRqFt3gHqUNj8o43uUWyUnWQuCXFU/P1TOuq29CuUEq206f/0Rfb3h9T+6xK
+	cM9p78NteonEZNZvBfE3qbSJrBe0pDkKXUoidRF2EUh8neOzE0uL33R9sKDl3ZoREHRfugjo+EI
+	bkRYUbkKZmSyjIelESLwhyM=
+Received: from mail.maildlp.com (unknown [172.19.162.144])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4fNNw26bF5zcZxt;
+	Sat, 28 Feb 2026 19:56:50 +0800 (CST)
+Received: from dggemv706-chm.china.huawei.com (unknown [10.3.19.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id 631D540567;
+	Sat, 28 Feb 2026 20:01:57 +0800 (CST)
+Received: from kwepemn200012.china.huawei.com (7.202.194.135) by
+ dggemv706-chm.china.huawei.com (10.3.19.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Sat, 28 Feb 2026 20:01:57 +0800
+Received: from [10.67.120.233] (10.67.120.233) by
+ kwepemn200012.china.huawei.com (7.202.194.135) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Sat, 28 Feb 2026 20:01:56 +0800
+Message-ID: <46194828-2ea0-49e1-8812-07581cc04e8a@huawei.com>
+Date: Sat, 28 Feb 2026 20:01:55 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI/ERR: Clear fatal status of the reporting device
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
+CC: <bhelgaas@google.com>, <jonathan.cameron@huawei.com>,
+	<shiju.jose@huawei.com>, <keith.busch@intel.com>,
+	<linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+	<prime.zeng@hisilicon.com>, <fanghao11@huawei.com>, <shenyang39@huawei.com>,
+	Shuai Xue <xueshuai@linux.alibaba.com>, Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>, Terry Bowman
+	<terry.bowman@amd.com>
+References: <20260227102505.3966864-1-liusizhe5@huawei.com>
+ <20260227163118.GA3897131@bhelgaas> <aaIJa_2XiQht4swq@wunner.de>
+From: Sizhe Liu <liusizhe5@huawei.com>
+In-Reply-To: <aaIJa_2XiQht4swq@wunner.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemn200012.china.huawei.com (7.202.194.135)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: 39195990e4c093c9eecf88f29811c6de29265214  PCI: Correct PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 value
+On 2026/2/28 5:15, Lukas Wunner wrote:
 
-elapsed time: 1085m
+> On Fri, Feb 27, 2026 at 06:25:05PM +0800, Sizhe Liu wrote:
+>> During PCIe native AER error recovery, ERR_FATAL status bits are not cleared
+>> after fatal error handling. This causes stale ERR_FATAL bits to be reported
+>> in subsequent AER events, even after reporting "device recovery successful".
+> Wrong.	The bits are cleared by:
+>
+> report_slot_reset()
+>    err_handler->slot_reset()
+>      pci_restore_state()
+>        pci_aer_clear_status()
+>        	pci_aer_raw_clear_status()
+>
+> Is this an LLM-generated submission?  The confidently worded but incorrect
+> commit message seems to suggest that it is.  If so, please follow the
+> guidelines in Documentation/process/generated-content.rst and be
+> transparent about the tools you used to come up with the patch.
+Hi Lukas,
 
-configs tested: 165
-configs skipped: 5
+Thank you for your feedback and the detailed call trace. I had some
+misunderstanding about this issue.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I was not aware that we clear all AER status registers in 
+pci_restore_state(),
+which led me to incorrectly assume fatal error status was not cleared in 
+Native AER.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                        nsimosci_defconfig    gcc-15.2.0
-arc                   randconfig-001-20260228    gcc-14.3.0
-arc                   randconfig-002-20260228    gcc-8.5.0
-arc                        vdk_hs38_defconfig    gcc-15.2.0
-arm                               allnoconfig    clang-23
-arm                              allyesconfig    gcc-15.2.0
-arm                                 defconfig    clang-23
-arm                   randconfig-001-20260228    clang-16
-arm                   randconfig-002-20260228    clang-23
-arm                   randconfig-003-20260228    clang-23
-arm                   randconfig-004-20260228    gcc-11.5.0
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260228    clang-23
-arm64                 randconfig-002-20260228    gcc-8.5.0
-arm64                 randconfig-003-20260228    clang-23
-arm64                 randconfig-004-20260228    gcc-12.5.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260228    gcc-15.2.0
-csky                  randconfig-002-20260228    gcc-11.5.0
-hexagon                          allmodconfig    clang-17
-hexagon                           allnoconfig    clang-23
-hexagon                             defconfig    clang-23
-hexagon               randconfig-001-20260228    clang-23
-hexagon               randconfig-002-20260228    clang-23
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260228    clang-20
-i386        buildonly-randconfig-002-20260228    gcc-14
-i386        buildonly-randconfig-003-20260228    clang-20
-i386        buildonly-randconfig-004-20260228    clang-20
-i386        buildonly-randconfig-005-20260228    clang-20
-i386        buildonly-randconfig-006-20260228    clang-20
-i386                                defconfig    clang-20
-i386                  randconfig-001-20260228    gcc-13
-i386                  randconfig-002-20260228    gcc-14
-i386                  randconfig-003-20260228    gcc-14
-i386                  randconfig-004-20260228    clang-20
-i386                  randconfig-005-20260228    clang-20
-i386                  randconfig-006-20260228    clang-20
-i386                  randconfig-007-20260228    gcc-14
-i386                  randconfig-011-20260228    gcc-14
-i386                  randconfig-012-20260228    gcc-14
-i386                  randconfig-013-20260228    clang-20
-i386                  randconfig-014-20260228    clang-20
-i386                  randconfig-015-20260228    clang-20
-i386                  randconfig-016-20260228    clang-20
-i386                  randconfig-017-20260228    gcc-14
-loongarch                        allmodconfig    clang-19
-loongarch                         allnoconfig    clang-23
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260228    clang-23
-loongarch             randconfig-002-20260228    gcc-15.2.0
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    gcc-15.2.0
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    gcc-15.2.0
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                         bigsur_defconfig    gcc-15.2.0
-mips                       rbtx49xx_defconfig    gcc-15.2.0
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    gcc-11.5.0
-nios2                 randconfig-001-20260228    gcc-11.5.0
-nios2                 randconfig-002-20260228    gcc-11.5.0
-openrisc                         alldefconfig    gcc-15.2.0
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260228    gcc-9.5.0
-parisc                randconfig-002-20260228    gcc-9.5.0
-parisc64                            defconfig    gcc-15.2.0
-powerpc                     akebono_defconfig    clang-23
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc                    ge_imp3a_defconfig    gcc-15.2.0
-powerpc               randconfig-001-20260228    clang-23
-powerpc               randconfig-002-20260228    gcc-8.5.0
-powerpc64             randconfig-001-20260228    gcc-12.5.0
-powerpc64             randconfig-002-20260228    gcc-10.5.0
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    clang-23
-riscv                    nommu_virt_defconfig    clang-23
-riscv                 randconfig-001-20260228    gcc-11.5.0
-riscv                 randconfig-002-20260228    gcc-9.5.0
-s390                             allmodconfig    clang-18
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    clang-23
-s390                  randconfig-001-20260228    gcc-8.5.0
-s390                  randconfig-002-20260228    gcc-8.5.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-15.2.0
-sh                    randconfig-001-20260228    gcc-15.2.0
-sh                    randconfig-002-20260228    gcc-15.2.0
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260228    gcc-12.5.0
-sparc                 randconfig-002-20260228    gcc-15.2.0
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    clang-20
-sparc64               randconfig-001-20260228    gcc-15.2.0
-sparc64               randconfig-002-20260228    gcc-9.5.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                                  defconfig    clang-23
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260228    clang-20
-um                    randconfig-002-20260228    gcc-14
-um                           x86_64_defconfig    clang-23
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260228    gcc-14
-x86_64      buildonly-randconfig-002-20260228    gcc-14
-x86_64      buildonly-randconfig-003-20260228    clang-20
-x86_64      buildonly-randconfig-004-20260228    clang-20
-x86_64      buildonly-randconfig-005-20260228    gcc-14
-x86_64      buildonly-randconfig-006-20260228    clang-20
-x86_64                              defconfig    gcc-14
-x86_64                randconfig-001-20260228    clang-20
-x86_64                randconfig-002-20260228    gcc-14
-x86_64                randconfig-003-20260228    clang-20
-x86_64                randconfig-004-20260228    gcc-14
-x86_64                randconfig-005-20260228    gcc-14
-x86_64                randconfig-006-20260228    gcc-14
-x86_64                randconfig-011-20260228    clang-20
-x86_64                randconfig-012-20260228    clang-20
-x86_64                randconfig-013-20260228    gcc-13
-x86_64                randconfig-014-20260228    gcc-14
-x86_64                randconfig-015-20260228    clang-20
-x86_64                randconfig-016-20260228    gcc-14
-x86_64                randconfig-071-20260228    clang-20
-x86_64                randconfig-072-20260228    gcc-14
-x86_64                randconfig-073-20260228    gcc-14
-x86_64                randconfig-074-20260228    gcc-14
-x86_64                randconfig-075-20260228    clang-20
-x86_64                randconfig-076-20260228    clang-20
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                randconfig-001-20260228    gcc-8.5.0
-xtensa                randconfig-002-20260228    gcc-12.5.0
+This issue was discovered during native AER injection testing on the RP 
+side of
+the Kunpeng CPU platform. The relevant test process and kernel logs are 
+shown below:
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+[root@localhost ~]# busybox devmem aer_nce_inject_addr 32 0x10
+pcieport 0000:20:10.0: AER: Uncorrected (Fatal) error message received 
+from 0000:20:10.0
+pcieport 0000:20:10.0: PCIe Bus Error: severity=Uncorrected (Fatal), 
+type=Data Link Layer, (Receiver ID)
+pcieport 0000:20:10.0:   device [19e5:a120] error 
+status/mask=00000010/04580000
+pcieport 0000:20:10.0:    [ 4] DLP
+pcieport 0000:20:10.0: AER: Root Port link has been reset (0)
+pcieport 0000:20:10.0: AER: device recovery successful
+[root@localhost ~]# busybox devmem aer_nce_inject_addr 32 0x1000
+pcieport 0000:20:10.0: AER: Uncorrected (Non-Fatal) error message 
+received from 0000:20:10.0
+pcieport 0000:20:10.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), 
+type=Data Link Layer, (Receiver ID)
+pcieport 0000:20:10.0:   device [19e5:a120] error 
+status/mask=00001010/04580000
+pcieport 0000:20:10.0:    [ 4] DLP
+pcieport 0000:20:10.0:    [12] TLP                    (First)
+pcieport 0000:20:10.0: AER:   TLP Header: 00000000 00000000 00000000 
+00000000
+pcieport 0000:20:10.0: AER: device recovery successful
+
+The root cause of the problem may not be here. I will
+perform further analysis.
+
+Thanks,
+Sizhe
+>
+> Thanks,
+>
+> Lukas
+>
