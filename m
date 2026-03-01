@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14AE51EDA0F;
-	Sun,  1 Mar 2026 01:30:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 552F813B58A;
+	Sun,  1 Mar 2026 01:30:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328640; cv=none; b=oxnz5DdjBAIxyrjWuduG3vCQ1qr2oOoMNtf75OohxmFAUcjFrEIig3sP5HMrYallBZXYtO8V2QsDrkvJXGq9floDS5qU9VYx3THfplBUdszUKTAmbVfbVj2eDHu1Tcky1+qKuDwJod1YpPDXSVWW4gVL65AVmhX4XL2mK0DDyRc=
+	t=1772328642; cv=none; b=K+XqV5KV6ya1PKDZWbgm4L2WRNBg6OE3wvQv6dUZjhGPPrGb2Bv9aWkg0JIkwbHgroKfB9W85PetZl0bmXYbCabVfNYZ43Ul3zdHMXzvl2yYKsOXvxXCHpYU1NFQda/ofUpBdKf4pG6h+t3u/zQwRivyOJfMV5Lta2tbueMlNsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328640; c=relaxed/simple;
-	bh=/5CoOFRRPkzz1o3E1GegY2vGza9njbX89iLAEonXIE0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qah0IBHSLV0lPlqTp5dZOsOiOlFuhI+7Wa7dz+jRoHbK/zWNyiQUD9NGsq8KTwjCai+qm3VOC1l6kv0clSnhw/m6+xvkHLdOAjsqC9Ux9QOc+FBrjFTXGBIEAyYjkxAy2jHDT++bjA+atc8ELW0wbPzIMSAoz/h/v8G8QPMAmro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SWNCjxpU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328642; c=relaxed/simple;
+	bh=OiYdBn+YM100iH2TtITrKoBIb5SGtjy9JgEFFQJwjok=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FFB6EM8wD2oi2iPLR8VWSyaC2jI5GHPHS17W3QxxknsBSGvft5WIT8W/Lw1IERpu+1Dswv6kViOcKXBaYzF6SB/lTAz3dyWhBV305rSfZxU4d6zayD8AY47AeOWzJJAvIFTlGDjJF6k7EjV/uVQuNoJA6cx0oqI5soWfdkukuQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s4DMm8Zf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SWNCjxpU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C923C19421;
-	Sun,  1 Mar 2026 01:30:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s4DMm8Zf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4870C19421;
+	Sun,  1 Mar 2026 01:30:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328640;
-	bh=/5CoOFRRPkzz1o3E1GegY2vGza9njbX89iLAEonXIE0=;
+	s=k20201202; t=1772328642;
+	bh=OiYdBn+YM100iH2TtITrKoBIb5SGtjy9JgEFFQJwjok=;
 	h=From:To:Cc:Subject:Date:From;
-	b=SWNCjxpUp0XRaKnnYK5evXy+oNnTiesxVBUhYUDDVIAM5CevDWuoTbzBvI+i1aW3s
-	 yKcZo5BZ3OAHLDDd71Ts+cpps8EJjFC46HhQYRz3W7tli/0Jpu+RvAeFMFSfgjh2ze
-	 pxUkzfotBHGkF+MLyzKx2Ufmtw3FBNlv13geZ+SMY7NJjtxOvdOjd8pN41nId/f0ZP
-	 mA5liTX1JZDjdN4YnIESBYlSc3L1ILFB3Eu8zyD++Fm1nJbysMKkTBE+Q/7PsIliga
-	 L3t0h+iiKWMQtiMfEJrw33NLL+UNc2/dedDldTPolCnUKPD9xEuq1VBTCbeoegaL0L
-	 tv2Dp+g3IMEmA==
+	b=s4DMm8Zf5KKfd1PdAyWIHL0BTu9e/SbdnoMXyL687NsjDWl/ewpmVJ6Yjt2SBFxDw
+	 +4Rm7491jczjxh0lH1N+o0CfxbJMogM3bYxe5MP6St7HVnGPmVh9TbzbpkyXwIV/CR
+	 sbB0aRv3045gVS34GK+TT1sCYyhN0+Fcs+NtvkZREN0nVrsy/yXi4aXoYwPJSKhvlz
+	 VEJg3QeWePdnSFAXtkJCllpDsf+J8Adsnw/HwUSvpKFD0WvXaqdDn4eZ33x2dKlb7a
+	 bPpyhJ6G2dYiWO78hm/Iyz/llIKzWsJwdlwH2JOHzOb27i6gZm3cx3LUJaaLcrATAB
+	 5mRcdncAtktCQ==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	cassel@kernel.org
 Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Shawn Lin <shawn.lin@rock-chips.com>,
-	linux-arm-msm@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "Revert "PCI: qcom: Don't wait for link if we can detect Link Up"" failed to apply to 6.6-stable tree
-Date: Sat, 28 Feb 2026 20:30:37 -0500
-Message-ID: <20260301013038.1688839-1-sashal@kernel.org>
+Subject: FAILED: Patch "Revert "PCI: dwc: Don't wait for link up if driver can detect Link Up event"" failed to apply to 6.6-stable tree
+Date: Sat, 28 Feb 2026 20:30:40 -0500
+Message-ID: <20260301013040.1688904-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -56,13 +55,13 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From e9ce5b3804436301ab343bc14203a4c14b336d1b Mon Sep 17 00:00:00 2001
+From 142d5869f6eec3110adda0ad2d931f5b3c22371d Mon Sep 17 00:00:00 2001
 From: Niklas Cassel <cassel@kernel.org>
-Date: Mon, 22 Dec 2025 07:42:10 +0100
-Subject: [PATCH] Revert "PCI: qcom: Don't wait for link if we can detect Link
- Up"
+Date: Mon, 22 Dec 2025 07:42:13 +0100
+Subject: [PATCH] Revert "PCI: dwc: Don't wait for link up if driver can detect
+ Link Up event"
 
-This reverts commit 36971d6c5a9a134c15760ae9fd13c6d5f9a36abb.
+This reverts commit 8d3bf19f1b585a3cc0027f508b64c33484db8d0d.
 
 While this fake hotplugging was a nice idea, it has shown that this feature
 does not handle PCIe switches correctly:
@@ -99,8 +98,8 @@ then there is a problem when the downstream busses starts showing up and
 the PCI core doesn't extend the subordinate bus number and bridge resources
 after initial scan during boot.
 
-The long term plan is to migrate this driver to the upcoming pwrctrl APIs
-that are supposed to handle this problem elegantly.
+So revert the change that skipped dw_pcie_wait_for_link() if the Link up
+IRQ was used by a vendor glue driver.
 
 Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
@@ -108,34 +107,45 @@ Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
 Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
 Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251222064207.3246632-11-cassel@kernel.org
+Link: https://patch.msgid.link/20251222064207.3246632-14-cassel@kernel.org
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++--------
+ drivers/pci/controller/dwc/pcie-designware.h      |  1 -
+ 2 files changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 60373fe1362f8..e87ec6779d44f 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1958,10 +1958,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, pcie);
- 
--	irq = platform_get_irq_byname_optional(pdev, "global");
--	if (irq > 0)
--		pp->use_linkup_irq = true;
--
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "cannot initialize host\n");
-@@ -1975,6 +1971,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		goto err_host_deinit;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 8c41b90a1db1e..06c02fcc76c89 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -665,14 +665,8 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+ 			goto err_remove_edma;
  	}
  
-+	irq = platform_get_irq_byname_optional(pdev, "global");
- 	if (irq > 0) {
- 		ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
- 						qcom_pcie_global_irq_thread,
+-	/*
+-	 * Note: Skip the link up delay only when a Link Up IRQ is present.
+-	 * If there is no Link Up IRQ, we should not bypass the delay
+-	 * because that would require users to manually rescan for devices.
+-	 */
+-	if (!pp->use_linkup_irq)
+-		/* Ignore errors, the link may come up later */
+-		dw_pcie_wait_for_link(pci);
++	/* Ignore errors, the link may come up later */
++	dw_pcie_wait_for_link(pci);
+ 
+ 	ret = pci_host_probe(bridge);
+ 	if (ret)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index fc9cf8ce86290..a3a3f6e89a812 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -438,7 +438,6 @@ struct dw_pcie_rp {
+ 	bool			use_atu_msg;
+ 	int			msg_atu_index;
+ 	struct resource		*msg_res;
+-	bool			use_linkup_irq;
+ 	struct pci_eq_presets	presets;
+ 	struct pci_config_window *cfg;
+ 	bool			ecam_enabled;
 -- 
 2.51.0
 
