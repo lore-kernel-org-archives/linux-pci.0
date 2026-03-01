@@ -1,40 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38FBA1EF09B;
-	Sun,  1 Mar 2026 01:40:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 049A5145A1F;
+	Sun,  1 Mar 2026 01:43:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772329230; cv=none; b=mvZjqKwk8m2IN+JzsuvRNcsTBpAt6SHY3FCe8GtVUi2e2PkaOj74cEn00XzN0bPB7JNTVVhcjz/Jozwsa1AiN65njgGB1F0JxHwtfLv93FTOj1zAI6yWHG8Tj2Qg0vqpA84xWRvWVcBi6PSvN/0haIYjWHeHWB/BMsBAja8aNiY=
+	t=1772329401; cv=none; b=IvnjGmritrxj+DBum405/ZpaOV8nbEjXazCclFPTEly7B5AaciG8dB57d6xtCM60UnyTn8KQLk6AaViiGoAZ9Pr6UsWFS2EAaxXBWAviBD4Gx9k88EZjpTiA6avqVHr5iAM9UC2qoMZwXXTicgL1UWq0e/nY1q+wa0LOrOHi604=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772329230; c=relaxed/simple;
-	bh=qXPACjF+msHmR4ykWmbA3RT2S7OQ5lY7LY9fv8Tl8ic=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Dp5oGpuOfT88mYh9FKjUIZkio89Sv5l4W0KVpk+loWHLU5ycFwmLVLCsc0wJmV11rrVliVVFgMUqmeVE5oqJoS2uwSWAWjxqDNakWk8l9C5H36C7amo6j/5x2chGYMFRopyHRDk/zTJyfN86FPC6Hs6GknZoa6cawqVQWADshAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tiDViKvC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772329401; c=relaxed/simple;
+	bh=CSveXeKFRY6NMKjZcWQcH75+UINLpctLbHpkF6zG7oU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AQgiNYaQTv0JcaD7dUfZ4MO5pWBvctP5rBoq2EzG72QeUmHD/DfQVcDwM9oh/zC1QXAz1gendj4Gx4Zo9EOppBTKXol2KgbIYeA/FtRKBFzLxvMWu3U6+tAt2/nOTXtwjEpRZLl0D2iZyVht4U5XJzL27vIbFlPXEsr4AtHClfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ky4b13cf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tiDViKvC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29D83C19425;
-	Sun,  1 Mar 2026 01:40:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ky4b13cf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52628C19421;
+	Sun,  1 Mar 2026 01:43:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772329229;
-	bh=qXPACjF+msHmR4ykWmbA3RT2S7OQ5lY7LY9fv8Tl8ic=;
+	s=k20201202; t=1772329400;
+	bh=CSveXeKFRY6NMKjZcWQcH75+UINLpctLbHpkF6zG7oU=;
 	h=From:To:Cc:Subject:Date:From;
-	b=tiDViKvCl6aIYAK8yuT6zxCWzoPrh7QvFB0H6UN0oOPmpT5y2ltVHkk+wjPVx7EjX
-	 bpMFMc6mOLXKdnCjykAHRMHiGeVm4wOAo83kw4XzZTvt2Q2R1x/tRsOTZSr7yuhZzu
-	 NUfoDaZJrLr7KvgNubQiKjBKMvwUJAZ0f3U7LUt0ptHuYBRHHGM/Qf5eg92W3pv6Rz
-	 /6u3Q4rwzA9Q73YJ8HtKLVDlgpEuP4HRhI/mtYpNOmQVUgsbk5XdS7U7pjP9PiBWlA
-	 /O21+FNGsZBTgCZnBnxFj7ucBHXrLWHhcqxU+3ukh/k+LjJQbvc3UPTTqLGoU2ax1G
-	 RMpF/taN5GXwg==
+	b=Ky4b13cfkYKZQdQ0nqIgKhKquZNhZLXRyh8YJn3xZq+VyfGDE0z1ZoM2hITOWdeNc
+	 ZUxAJK3d3k8geEWPN2tPWS7AQzq2p7iS5Zl5nmu4Es3INRkzfQX1QgXx2jZ5DlMXcq
+	 xf226xuLNPgmph3phcBphbM2tqK6KlkqTL/s8At6vnReWy2/QjFSV15+dMF71OQpUl
+	 pUQVUPuFlTj18IoDRRZezuErClH+gujCYoOcA0j+ZpBsHKwOjM6zuUjz9+kxFrRPuf
+	 BASJzjXQkP0aQGvk9WcY/OKWOw2eUy4W04C6qD5v8vNy6WpIfxBlR7TwYCXevCl9Es
+	 23ktgsxCqF4OA==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	ilpo.jarvinen@linux.intel.com
+	briannorris@chromium.org
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Andy Shevchenko <andriy.shevchenko@intel.com>,
-	Christian Marangi <ansuelsmth@gmail.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "PCI: Use resource_set_range() that correctly sets ->end" failed to apply to 6.1-stable tree
-Date: Sat, 28 Feb 2026 20:40:27 -0500
-Message-ID: <20260301014028.1701693-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI/PM: Prevent runtime suspend until devices are fully initialized" failed to apply to 6.1-stable tree
+Date: Sat, 28 Feb 2026 20:43:18 -0500
+Message-ID: <20260301014319.1705393-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -44,7 +43,6 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: ignore
 X-stable: review
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 The patch below does not apply to the 6.1-stable tree.
@@ -57,63 +55,105 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 11721c45a8266a9d0c9684153d20e37159465f96 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 8 Dec 2025 16:56:54 +0200
-Subject: [PATCH] PCI: Use resource_set_range() that correctly sets ->end
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From 51c0996dadaea20d73eb0495aeda9cb0422243e8 Mon Sep 17 00:00:00 2001
+From: Brian Norris <briannorris@chromium.org>
+Date: Thu, 22 Jan 2026 09:48:15 -0800
+Subject: [PATCH] PCI/PM: Prevent runtime suspend until devices are fully
+ initialized
 
-__pci_read_base() sets resource start and end addresses when resource
-is larger than 4G but pci_bus_addr_t or resource_size_t are not capable
-of representing 64-bit PCI addresses. This creates a problematic
-resource that has non-zero flags but the start and end addresses do not
-yield to resource size of 0 but 1.
+Previously, it was possible for a PCI device to be runtime-suspended before
+it was fully initialized. When that happened, the suspend process could
+save invalid device state, for example, before BAR assignment. Restoring
+the invalid state during resume may leave the device non-functional.
 
-Replace custom resource addresses setup with resource_set_range()
-that correctly sets end address as -1 which results in resource_size()
-returning 0.
+Prevent runtime suspend for PCI devices until they are fully initialized by
+deferring pm_runtime_enable().
 
-For consistency, also use resource_set_range() in the other branch that
-does size based resource setup.
+More details on how exactly this may occur:
 
-Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
-Link: https://lore.kernel.org/all/20251207215359.28895-1-ansuelsmth@gmail.com/T/#m990492684913c5a158ff0e5fc90697d8ad95351b
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+  1. PCI device is created by pci_scan_slot() or similar
+
+  2. As part of pci_scan_slot(), pci_pm_init() puts the device in D0 and
+     prevents runtime suspend prevented via pm_runtime_forbid()
+
+  3. pci_device_add() adds the underlying 'struct device' via device_add(),
+     which means user space can allow runtime suspend, e.g.,
+
+       echo auto > /sys/bus/pci/devices/.../power/control
+
+  4. PCI device receives BAR configuration
+     (pci_assign_unassigned_bus_resources(), etc.)
+
+  5. pci_bus_add_device() applies final fixups, saves device state, and
+     tries to attach a driver
+
+The device may potentially be suspended between #3 and #5, so this is racy
+with user space (udev or similar).
+
+Many PCI devices are enumerated at subsys_initcall time and so will not
+race with user space, but devices created later by hotplug or modular
+pwrctrl or host controller drivers are susceptible to this race.
+
+More runtime PM details at the first Link: below.
+
+Link: https://lore.kernel.org/all/0e35a4e1-894a-47c1-9528-fc5ffbafd9e2@samsung.com/
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+[bhelgaas: update comments per https://lore.kernel.org/r/CAJZ5v0iBNOmMtqfqEbrYyuK2u+2J2+zZ-iQd1FvyCPjdvU2TJg@mail.gmail.com]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
 Cc: stable@vger.kernel.org
-Cc: Christian Marangi <ansuelsmth@gmail.com>
-Link: https://patch.msgid.link/20251208145654.5294-1-ilpo.jarvinen@linux.intel.com
+Link: https://patch.msgid.link/20260122094815.v5.1.I60a53c170a8596661883bd2b4ef475155c7aa72b@changeid
 ---
- drivers/pci/probe.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/pci/bus.c | 8 ++++++++
+ drivers/pci/pci.c | 8 +++++++-
+ 2 files changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 41183aed8f5d9..ad5ae05aad3c8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -287,8 +287,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		if ((sizeof(pci_bus_addr_t) < 8 || sizeof(resource_size_t) < 8)
- 		    && sz64 > 0x100000000ULL) {
- 			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
--			res->start = 0;
--			res->end = 0;
-+			resource_set_range(res, 0, 0);
- 			pci_err(dev, "%s: can't handle BAR larger than 4GB (size %#010llx)\n",
- 				res_name, (unsigned long long)sz64);
- 			goto out;
-@@ -297,8 +296,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		if ((sizeof(pci_bus_addr_t) < 8) && l) {
- 			/* Above 32-bit boundary; try to reallocate */
- 			res->flags |= IORESOURCE_UNSET;
--			res->start = 0;
--			res->end = sz64 - 1;
-+			resource_set_range(res, 0, sz64);
- 			pci_info(dev, "%s: can't handle BAR above 4GB (bus address %#010llx)\n",
- 				 res_name, (unsigned long long)l64);
- 			goto out;
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4383a36fd6ca0..41e5c45e38b5e 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -15,6 +15,7 @@
+ #include <linux/of.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/proc_fs.h>
+ #include <linux/slab.h>
+ 
+@@ -379,6 +380,13 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 		put_device(&pdev->dev);
+ 	}
+ 
++	/*
++	 * Enable runtime PM, which potentially allows the device to
++	 * suspend immediately, only after the PCI state has been
++	 * configured completely.
++	 */
++	pm_runtime_enable(&dev->dev);
++
+ 	if (!dn || of_device_is_available(dn))
+ 		pci_dev_allow_binding(dev);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 86ccbd0efb495..d5f4b52899ada 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3199,8 +3199,14 @@ void pci_pm_init(struct pci_dev *dev)
+ poweron:
+ 	pci_pm_power_up_and_verify_state(dev);
+ 	pm_runtime_forbid(&dev->dev);
++
++	/*
++	 * Runtime PM will be enabled for the device when it has been fully
++	 * configured, but since its parent and suppliers may suspend in
++	 * the meantime, prevent them from doing so by changing the
++	 * device's runtime PM status to "active".
++	 */
+ 	pm_runtime_set_active(&dev->dev);
+-	pm_runtime_enable(&dev->dev);
+ }
+ 
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
 -- 
 2.51.0
 
