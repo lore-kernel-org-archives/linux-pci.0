@@ -1,85 +1,67 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020087.outbound.protection.outlook.com [52.101.196.87])
+Received: from OS0P286CU011.outbound.protection.outlook.com (mail-japanwestazon11020077.outbound.protection.outlook.com [52.101.228.77])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7431327C08;
-	Sun,  1 Mar 2026 13:26:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.87
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8A31F03D9
+	for <linux-pci@vger.kernel.org>; Sun,  1 Mar 2026 13:30:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.228.77
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772371582; cv=fail; b=UMwFC0mH7u480dXCk/+DWz0DqvnUXhnZ1rPUXs7Hc3vtFFvDooa9gRI2dKsTrV2iC6cK+8Odr8az+D8dEkkmScV7Kg7JtN/28hhcgoxwQCFTKeysHefKZZ8u55AAwuBMVm11bPsTSIXpvCRqV6hCB/9vg6BGkHl2LIiKxXWM1X4=
+	t=1772371812; cv=fail; b=kHS8lKOAg4jB2ZCktX+mgDTPQPmJThMiTbrVAPOvqBpexJX6jLVOugcWUA5hEak9paylawFxD2Bh+ZQt57RZaDiMfjTQOlTQQMSaxbclUG3ILX7BeLNUDOtwQg0JLcP8eoCYBUMwJpgFmGesUyFXdNlfXpna0/Q5hYKV9YQJSH0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772371582; c=relaxed/simple;
-	bh=SabPlY97MDTqwed4UL9138Wiz9nWMG0T+S9M9FXSUfU=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=CNWWVbg7sQl777fehl5u3KFA6hkfbx4Fo6vWO622ydYOcWFJ62hLjQIz7NKxBJrVm/7pxqgT8KbJ6motmERBZo/NYbZLuxZdqFOyqmMIJiMYtnNp/UK9UUwo5gubhUnBOquq4SgXkwO7/emvVie7vtuxwHoI7p+NvigqqWloVnk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=Se1ukJx+; arc=fail smtp.client-ip=52.101.196.87
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1772371812; c=relaxed/simple;
+	bh=alfNLjQ6SxLpi+GEzCVxVqELftWntHgscZxhBAVR7JM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=p5pU15WVAC2l7wYP0EB0s8V9bv59E52OabGYsWyniWLxbQuV73SwHYLtzM0khDwg3bTCDOthPMPSxhMpkQaKFuTE3Tgp/XmA5SAJ9M3OYmgE2tjMEJ1lcuXNaIFxWDrHwnwOb1Q4t+zwiGMhR0Ar9I/tjRcZvM6OXdM0fVKZcPM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=bI4kyqQj; arc=fail smtp.client-ip=52.101.228.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="Se1ukJx+"
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="bI4kyqQj"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Az72xLEE1mi1Yj3AyQQTEtLaJLa080h2nKM9DWz6/MsqtuOQpdAGOfzZOpYPvPGSTfsaNHYbHRCCKrgmnFUxjaOx/8HGfRgVUNBORgS1LT50oRmXwoYWomngBlU2FNx8rnFS5oO3M6r6IkE7CGk+PrvecGTmZPe325LF9+TZWx49m2+MJbHAsqW9a1e35+f1zt79gs+SfYeDToR317UiSxEi5gwjGk0/oR51qw0uCxzyYf/QSO3IAmyAajxsvz8X+fdYtQS2YBip9wahY12klW2boWXrEVt5TME7oALkqut1hsUtsDHXLJnipHgn+Iry9jDOmj168URXfHyX1ABHEw==
+ b=LpOlTYaTmriYp2obPt/M70N4u+rq1s+r/SgLqWxhLHy7ybbvqOrEufv+FxAu3QXQk0BVX4Ne3XtNCApy8w4OgqzNFneO6WlnS04qnhQD3UZP2B4sy/xJxbbwoKQ/WzUTzOabnMQr+n9ChZlvu2mbhNkROYojWJPmLhZEZlp50KV75JpynSzwfoiAYotL7GpxpEy3qB74+TkynRbyfxk8qRCj9F0gKGwa7tgjgVLx6F9mCuJj+IfepPXgFzeXzxFN7smRlJbet1f8T23zq4YzxKAkH4L48MCj+zAZar8PWB62TFaQ/MgPMr9H0JXkbsoSE/oDBmDEXzs0dpsu+R19nw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+g/lR3Xw+DDAZVO+yaZkupin8NEPozqTdB7sa1zk22o=;
- b=RXX28GDABlICIVLb/gQRRaLk9bzTZAzGyeLsE+s5Nzf38fBs4lvCMvbVwzWNvydoL5347MfTmLWr4EUKKypFc/wS05HcPW/sj5wYQQwuapvTuOgUANQH8ezP7c3Cp772GnpBfZB7ju1aXtv2MQTcbDkiLtZ1B5c5W+PdIXLKlHMAFGvD0/tyieEbBjpYnyUCnoNf5Okpko0IVSwn1YaXBLb5pD1RXL6ZmIFPACNpPIXYwSv7oT0FrcXbO3ftAVZu5d/PiKtoKk5/izek8bYWqzN3QxICpU7BB47ZAYon7E37UwKI2nRml+pVPbZqWSgLBQuNxgTDIdnp5EnmFaRWqg==
+ bh=hJ1FzXmrfuOBVf6CMmd2tspI8GJnj0M60Hz1A0I/BAA=;
+ b=L8Do0r0WaZRwmIK2lBK4zTY9V78358lecXdHvWvyZ/P+szwnMFsoL5kjR+/ar7wrksiZ9Hyijnrrg6onbFG26RYixlXZkNTPZW/G9CxIqigBjifeFI2bwfsQJHq1MKaIa3UkxLew6ZA1+DMqW5DNzgEoc4CgTHm8bx4euqq07+FdBAtFk0KeusAr3lKMdhxjnIb5HrziltMoQYFZllCVGkvS3zk30zvravLegQmOL66EFOf72sEXs40EnelcQS9V977VffZtPNsBVeI4xM78CfQ6afsIkORzUXAxocYrkfCNxspuhIqau86VRv0nuwi3M7vuB/j9RDZ578jlaHIDfw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+g/lR3Xw+DDAZVO+yaZkupin8NEPozqTdB7sa1zk22o=;
- b=Se1ukJx+SnZ6383OleWh1YOxUyT20flP5coJ7KnwOMfJA2FWYg8gqKhtsZ0UOxhRAbfYeQNI7u8cX00qTC5VNWpIX28RRol92tV0ikjdnSQODmJhJipv7uZbRdLEFqaXL15NZgppoP0ySbVlZYZCiuDv0dAPolBO2THA7DtNoOw=
+ bh=hJ1FzXmrfuOBVf6CMmd2tspI8GJnj0M60Hz1A0I/BAA=;
+ b=bI4kyqQjkaSnBUKpyEeQJPJ/rfhEW579e5tcmabcuZgDFWDbnTXMdTrUJd1EJ1AQIiksCAI6BVnR5ihTow96uPJCZb6aUvgm4uDFIMpViR/ih7YxIkKRAqXckGJZTxYs79uUsRNWhBWkc56JyGcoQ0yntsLgiNJOxQNn+4KQtWQ=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO4P265MB3647.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:1bf::14) with
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TY4P286MB7053.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:343::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.20; Sun, 1 Mar
- 2026 13:26:19 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%5]) with mapi id 15.20.9654.015; Sun, 1 Mar 2026
- 13:26:19 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 01 Mar 2026 13:26:18 +0000
-Message-Id: <DGRHAEM7OFBD.27RUUCHCRHI6K@garyguo.net>
-Cc: <linux-kernel@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-block@vger.kernel.org>, <linux-security-module@vger.kernel.org>,
- <dri-devel@lists.freedesktop.org>, <linux-fsdevel@vger.kernel.org>,
- <linux-mm@kvack.org>, <linux-pm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v16 01/10] rust: alloc: add `KBox::into_nonnull`
-From: "Gary Guo" <gary@garyguo.net>
-To: "Andreas Hindborg" <a.hindborg@kernel.org>, "Miguel Ojeda"
- <ojeda@kernel.org>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>, "Trevor Gross"
- <tmgross@umich.edu>, "Danilo Krummrich" <dakr@kernel.org>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, "Dave Ertman"
- <david.m.ertman@intel.com>, "Ira Weiny" <ira.weiny@intel.com>, "Leon
- Romanovsky" <leon@kernel.org>, "Paul Moore" <paul@paul-moore.com>, "Serge
- Hallyn" <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "David Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>, "Christian Brauner"
- <brauner@kernel.org>, "Jan Kara" <jack@suse.cz>, "Igor Korotin"
- <igor.korotin.linux@gmail.com>, "Daniel Almeida"
- <daniel.almeida@collabora.com>, "Lorenzo Stoakes"
- <lorenzo.stoakes@oracle.com>, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- "Viresh Kumar" <vireshk@kernel.org>, "Nishanth Menon" <nm@ti.com>, "Stephen
- Boyd" <sboyd@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Boqun
- Feng" <boqun@kernel.org>, "Vlastimil Babka" <vbabka@suse.cz>, "Uladzislau
- Rezki" <urezki@gmail.com>
-X-Mailer: aerc 0.21.0
-References: <20260224-unique-ref-v16-0-c21afcb118d3@kernel.org>
- <20260224-unique-ref-v16-1-c21afcb118d3@kernel.org>
-In-Reply-To: <20260224-unique-ref-v16-1-c21afcb118d3@kernel.org>
-X-ClientProxiedBy: LO4P123CA0480.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:1a8::17) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+ 2026 13:30:07 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9654.015; Sun, 1 Mar 2026
+ 13:30:07 +0000
+Date: Sun, 1 Mar 2026 22:30:05 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Heiko Stuebner <heiko@sntech.de>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2 3/9] PCI: dw-rockchip: Describe RK3588 BAR4 DMA ctrl
+ window
+Message-ID: <i52ffvtjg7jep45k24e3z6wcasaxatp2sifqslkdjuqz6f5wnl@rbejwc2vfqu3>
+References: <20260225170324.4033466-11-cassel@kernel.org>
+ <20260225170324.4033466-14-cassel@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260225170324.4033466-14-cassel@kernel.org>
+X-ClientProxiedBy: TYCP286CA0189.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:382::15) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -87,108 +69,132 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO4P265MB3647:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3d8fb033-a2c8-41cb-d0fa-08de77961f76
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB7053:EE_
+X-MS-Office365-Filtering-Correlation-Id: 020e9ce0-b039-49b3-5359-08de7796a773
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|10070799003|921020|7053199007;
+	BCL:0;ARA:13230040|376014|7416014|10070799003|1800799024|366016|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	GFWpL0xljursFFSK8xcXUJ2sfAMA7oOgG1HLu+Y9yQ75CSpN3sglPzNhOWKJFQhZIAfyGiiQNnfbKngNKutvH7lV+iJBKftqjpl995oa/yUYkWnhcT45IOEKgFooy+10+885xQwXr4HPDigRDjsRtzP31CsTtDJt7E9TCr/TyVpIsqZj7G6OJ6LMxIpbLT8+gyon7g8i7aw8s+Wd91QRvH2QIvtEYUevmAMfauYAYIAAJ/Br82alsghHrsp3fMmsyHfyr7mvfKIEAU+qnCq+TxgfUrMipRf5/Yp3f0S4NDK9lOXFSluxTpSu3wFIjVK6sH2T41wkJ7l0WVm2SHz30PZmHH4IC7RFP7vKqkKna0YPs22pgipCoyRdwConIsPjHtR/PCcCuf1t04WqLFFwYEbu+b7GdPsPuLE99YHpXbfXK15HGzUafp/nDja53rZhmf+QNY+FI9G4stFPVgFfzYlQEFf9IFlRCkWicCgXg4SHmzHT4bvcL53htScU2Jp4Nl9SrCW957rYVek2+ilN1QTJ46iIjRxV6XVrN4/sgOBeO9USn644c8SmmRJBmFF/5dvoxtf2x+HLOBdg/RQdhA5zrK35hoSqCew+wr9T9It9yKUve+vFgyfRVbr+3GwDobZDdo2Jhbea9MrxAeyKMWAXBJmhdUDdwP2lisS2HMFj5dUEb2+ECSX/oKE8I6yfFhwOdiFn3BUBVLpWBS/uhmpstCv8y8ERb+g19Ib2ucnnjWgTxYmosJQYk5J9hHVQKluvh05HtaeF7djTal8C/g==
+	He6FJnuORUB9J2kvK+ZXCUeI1JUDDhE23me01Vg522JeF1hwSV/xrzAbnxwZuUeMsCo3awrHPz6Ym3Tm65TQW/WfTm1fU1r6xVI2jJBEWkdfkGTIxBt9WobRnsf6VGJp+YfOXnlgf9Klw0be364k0ftCT5IZYlaw4HNGXw55ZX65wMhNO5kiJB+iH/7K2KqVKdoSFP1a86A78USebh+l6lOrgO87+qx78h6ALGVRTD7wVJxBbIfcIDXlK5pYoMcpP17OUfyNEDAa+fZ5SDhu/HGKAVY7Q/923tWHLHSOsBR8RpX+PpluATj+6A2UYanm9qfVuoDXx37TN6MDp/1r76bYGujHfB7+ObQ3mwqCFOcHIVzihHWMVEtoUfmPlDwXOeNkhb5dJ5mbVJi+edDBdgyYTEKDEqk4V6jQxfr1z06733XxCsiy8chwabWEu/5yzR/eTYjz97TX/+cDVKy7tErZarN+UjRLKWs/TlnrptncHmnS9ZR+9cg097VA1rr57Zaeqo3e5aMotXgl+I1c0jxkF9psKBewZRP1VKdvIcAq9oU4RwOOj8177EdUu4S+6hFNbXkFHmghuy93mvdrqvFDDyDnRXaP9P1v7oLYXu0IYpnr3EdyV2XoDJ9AQj8PVSvS8RnbWW1ZZOo7GO/MgdEK0J0H/zuk/XsKhoVs+/nenzuqjhl+QgpNLho90lGIqKYvSBLA6Pxng/w+KT62+LrX700OLrY1OCVB5hjcn5Q=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(10070799003)(921020)(7053199007);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(10070799003)(1800799024)(366016)(7053199007);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?MWpndU5VZ3hEZXN3eVp0S0RsaU1EcldlLzJxS0JoMnBSWFdZd1A3b1M3ODUz?=
- =?utf-8?B?NnliNjd1NElrOEZBak5ra1hYVUtVelhKRGwzaS9YejJROVkwS25UUzhEcVRF?=
- =?utf-8?B?TThoMXV6Z2FhVURycG92QVU2QTJsR0ZXNDZkTnZGUVNwbHdneGIwMXdMQzhQ?=
- =?utf-8?B?dDgvWm4wLzduRUQ3Smo0aVpLZ2d6c0xJNTQvdW1BL1NtUHNreVBONG9SbmFM?=
- =?utf-8?B?OUZFd0dSR2hkWm5zMDhmNFZwc1BBVUg0QUZ5TmFpUlprM2xBSFFydUNrV3Nt?=
- =?utf-8?B?TmpSYjk0Y21PK1FFQUgxVHcvbWtWdzVOb2MvUFJERkFFK1dtZHF1RGgxSVRl?=
- =?utf-8?B?OUx2MU9ZN1VoVHgzbGYwRll4OERRMEhxZUlYVzBkV3NMTFRKUk05TVlLdEZ6?=
- =?utf-8?B?ZUE3ajAydzVkVEFZcGp4bXQ3TzhpSDhGS0U2UGZSZklVeFExVlRta2NjOFlD?=
- =?utf-8?B?ZnROVGRZUlpHSHUzcTQ0NkFOSG9WVi9Fc2tScDlEUFlINWR2cDBoejJNQnBB?=
- =?utf-8?B?TnVnYURMQm5jM2hraDNNUXQ1dkFaakJGTS9hZ0Roanp6U3dMczFzeDd2OFQ3?=
- =?utf-8?B?dllUcFdBWXVvNXFSYzJJQXZPOUd5U21icU5CZTkyN2lnTHFDeGRwVEFnZHhJ?=
- =?utf-8?B?Qk1KTWlhenJCbmJjWFUvd1c3UFVvYTRvSXVOR3E5VW5MYkE1THlVZ0UvVlNu?=
- =?utf-8?B?Z1VUaDJRQngzU1BUeS8yUDZ4ZUJrZkN6UUY0SnQ0eVJjUXpwcU0zTG9NN2tU?=
- =?utf-8?B?TURZRVJ0M24zSFdDNW5PWWF5Ry8yUk1LZXZVbHVuTkNjQmlEQWRNdFl4Z3Qz?=
- =?utf-8?B?QmI0TXdPMFpoaXJoWEFxNkIxZzZrbWtLQnkxZXRldi96cm4rU0xQaHNXNnZa?=
- =?utf-8?B?aDdkeWVGR3RFdGpMUytvd21pbStiUmN1TDU4T2FBR0dveHN1aSswQUo4NEtK?=
- =?utf-8?B?cXhabllXNmNubnpmV1Y1VWkrc1JJOVU1OEFlbVQxclU5YTQ4YkV1dG0ybjlG?=
- =?utf-8?B?YmQveGhCZDRjMjVqckdIbUQyMmVOV1dpT1RId3BoM1NwbmJpLzRrR0k5RmdK?=
- =?utf-8?B?MituNklHMVE4d251S3ZuSmo1NFJSRDI1RWVnZHRTeHlud1NzZCtoWTYzd1hR?=
- =?utf-8?B?blg0Qzg2NGJQakgyK2w3ZmtUaFBzVUNCMENMZzVkSENzYm9KV3ZyWmxDMlla?=
- =?utf-8?B?SzlvZUJOaENPNHpENkdtREFlZjNiaGtmWXdCVHd0MDhRZUd1SGZOQU12ajZJ?=
- =?utf-8?B?OW5STjY2aW16ZWNKM2pqTHpoeXB2U3RFRU04aVBMTFhnUCs1NlRpTlVNMXJs?=
- =?utf-8?B?dU1rWEZLR0J0UU9wcldPMkpCTTVINk5Zbm1HdTFxTUZvN3pxcTlxOWlKRHVV?=
- =?utf-8?B?ZHozSnpnWWY2eEtDSXNVUHlEWEYrU0tHS3RNdSsvcSs5eFRsZFZaVjJkTWJ0?=
- =?utf-8?B?U3pNY2habTJoNFFzUjdDZkYzMHo2aVk4ejd4Z2kwNGltUTdaK2RFeXBzSktw?=
- =?utf-8?B?RE9Icko3eUlZaWY2WEptazVjeEFqWUdWdlBudW15YzlZckFTV2hpK2dVRUxh?=
- =?utf-8?B?a0ZHOTc5dUFxSm9mMVZBK1A3N1FoaFM5RFdWajRFN05uZ29KaEIvdGNKMWZL?=
- =?utf-8?B?OHFhNy9JdTlHRVZmSTFXVGM0WVl6eGlIRnlrcWx6QU1paFdHcU8rZkxsbVlY?=
- =?utf-8?B?UmZ0Y3Z0Q0JRaHhuNzlxemJrWUt2cFhsZ3BzRS9QelFaV05rZGtFWXlZbk41?=
- =?utf-8?B?NVFOLzd6ek95cjU4aVVMTmJmUjNhOWVxYW1hQ0M2MjhEOHo2VjdXUSt2ZzRB?=
- =?utf-8?B?dmFxcXBaV3VDY0V0bWNYVjhQTzRudklNSjlPaFp6cFpIVWZuQklHMCtwOENJ?=
- =?utf-8?B?RXN5bHhORlNMZ0Fxcy9BSVpVNUJQSUhucHpuT0ZsY3lHb2RMU1llNlpRaUZz?=
- =?utf-8?B?T2c3ODladWVDd003cTBmVFVZTlhTL094d0xocmZlSFFZaTl4SXFxekFoRUth?=
- =?utf-8?B?cGk4a0d3TFdDUGpWZ2YyWEJZcWVScW1lOXNWUHllSjNFWXdzeVJHaEpDeGtn?=
- =?utf-8?B?TTd4ZjlBTVBQeUYzOWlEV05DeUJpK05hM2JFRFRzcEVvcmQrTWdqd291empo?=
- =?utf-8?B?d1dGWTlBVGk1d0wvM1Zvb3RzNHBHODVZTWYyRGpGVWp1M3hwNy9kTXlVb1lY?=
- =?utf-8?B?V2RnM1RHNDUzOXNMVVVoMzZNR016d3NTUDZwenJBSy9NM2E1blh1ZUo1cUpp?=
- =?utf-8?B?RWNvU090OXpzRkZzZ2E3Qi8xQ2dOTnlRS3NWaE8ydVZxSnRBdExWVm1zRWdw?=
- =?utf-8?B?anh3R296SFVJdXdnQ2tzY2tnSDlJUTNRZUI1ZDAyRk9obkVjc1Y2UT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3d8fb033-a2c8-41cb-d0fa-08de77961f76
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+	=?us-ascii?Q?6jmzx1N/MBi3sStduh1ugS8wfRoLhc6vlPEwe3mbOmInPVfdiCQ83aMMdE+q?=
+ =?us-ascii?Q?Oyot0rs4CAWBLQ5irddRHKn5KN9Vi4bjBqnMA0fIRTeeZGu+llbnp1ctPojd?=
+ =?us-ascii?Q?SSNhfmA8HSVPtdFaEKHWI3BD/jsPAPm3jS8+Ep35kZk2DTnTBQ2NDfiNKHF6?=
+ =?us-ascii?Q?TopBX5jgMjEmBXsiPLjx3N/7+2fG7m54mqAT1AvX+uGWnPQpVvXjGQF7Wp+r?=
+ =?us-ascii?Q?lpNK8xUOdjbYvqdbSrqHY4XySf4dClw33EA2QyAjxd9CAPBGCyg2WPK1Hdlu?=
+ =?us-ascii?Q?GZpuHTzBI1egCJ0Z6bclcQMKIKwtyHeTFeb0fg/eIBbXT89MgvKeHGN6p0Hy?=
+ =?us-ascii?Q?CSEZUXfmsVNYrYJ2IyaJC5gIFoI5j9DFviCgADIChkNTVGhVq+JGfr97uAu4?=
+ =?us-ascii?Q?3BbE9rsk237Vz0L7/SQN0ugaICIrq12/gf9BzFQe46gRvZ2c0yjU5Zyj95Bx?=
+ =?us-ascii?Q?FH2sAFhdOnHViRrFHolPBCYwjA9347TIA5fM8gyr8/KfMmBFVy+TzGmR4Qwp?=
+ =?us-ascii?Q?V9hIfAFUVRVUsZ4e2EXVSnwrPCgHHQfhFmsQkcz6RTFzKMvDNB1J0FuQugf/?=
+ =?us-ascii?Q?c49qXS5B4WgzaT8znq+3ujeuOe0tpo2yf03Tuai7T0mSbErTE6PyYI/JDC9q?=
+ =?us-ascii?Q?EiC/HMkW+HzP2GIcO8RSu1tvSYP7uA2S6xgLuuVoFuxNnP/zLv9+eLTrAJqF?=
+ =?us-ascii?Q?Y9TY/7JiXyP6F59r4R7dJ2KaZ+rbvJFP6ARRZqW79RZUFHCc0Cb+jhkQ3JgF?=
+ =?us-ascii?Q?hLuEide07Cbj1AL+RgNP/qdDcvncckKLlhfWLNz3MXnJJEOpQQUj09epNzre?=
+ =?us-ascii?Q?tlWDDIDddQrcU7DpjSrH43cTjeDAlTFLtShS4Tir8WU7M83a0DlBYW+N0N37?=
+ =?us-ascii?Q?2Z01J/sm1vhobLiMVd+dpDylyQzDZQuj05mTAR6CbgXCyz8jR8VzsLzoVVik?=
+ =?us-ascii?Q?TLdkg2re/atoCaPBH4c7glQBtTKUoA7iNMFnd2fm8VU8IW3CxrlF9mVvP+Y7?=
+ =?us-ascii?Q?yRcDlJHZ9nyr8HyAjlEk5GD1dMOlwEID062I2yvneaffrA2dLDMw7mOuMi2U?=
+ =?us-ascii?Q?Ki5sycI3Fn/cXobt6afj+DpUhlAVEWbsXDyv85rjirtjxxAqbHiO5PXtyEOE?=
+ =?us-ascii?Q?afkTTAi++YZQtz+P6S8X4G22qwxJ5mywa6gDDdyTQFGPxxC3bTyfmVaCTv+4?=
+ =?us-ascii?Q?dLhzu5mAR+A6+nkqPGMKS4yqb2GYmSdbegPp8AGW/AKagWK8dV6ehmGLo0E9?=
+ =?us-ascii?Q?zlQVySdbq5Qcql1IrgUMCKkCq2XJ+Ay6d3nFOttd0N0dfcvIGDuDpMKCt85a?=
+ =?us-ascii?Q?9n8WnCutB8VNBD1OeI6bHzM3q/l1wQ/7AkgFfiIZyrsU1ViLb7hn2Z6TVnr5?=
+ =?us-ascii?Q?OXprFMP5Jg6WQdpUsLIa8599oL1/QCTLairOiC1E2lNhXidhD8WFrtr6fCyq?=
+ =?us-ascii?Q?z/qKZdWGJAItvjHzpuSGCwJi0CG0VOdLb0WL29yqUfP2/nDkyA8fv6lCiRuX?=
+ =?us-ascii?Q?tT5RyVvAHN063o7FV5eVME6AfEQ1uJ9sOUfom2oznqd+8dPYNuqO7IL/QRYC?=
+ =?us-ascii?Q?/nGTj9ocEjBuJtNG7ZYvhBpGQgi3TSpkSiv0ytcbAeR5b4g8rMGVuZRUGWUd?=
+ =?us-ascii?Q?mTvUWGNa06CwkR5C+P+A6hp0vQhCUrAsz4aFeV17qRpqV28JGUdjria0BMiO?=
+ =?us-ascii?Q?/bnZ/lZ5TkSJN2aMlHHm2mj5FHEjlF/spyawgU0dtrH/PpScVjul9omoLqPI?=
+ =?us-ascii?Q?bE2otwLbLXZkp1L10dIESyVvYfUXLRTkBLlf6iz/v5opRmylXJaN?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 020e9ce0-b039-49b3-5359-08de7796a773
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Mar 2026 13:26:19.0582
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Mar 2026 13:30:07.1886
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TsjA09eLwLNYItAwdRFrk5Hgzs8cZIN2JCPna+hBPlvajL7oa5/fFN1+v1TKkAp53esO/yksqbVs6ymGcS6SfQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO4P265MB3647
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2k0s2TUzMQCj++ladojvHzEnyL906KF3xOFojqFKaV2Nhd9TwYFgeuY/hnilzs2iMGljgbniUUV28VayGZ5laQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB7053
 
-On Tue Feb 24, 2026 at 11:17 AM GMT, Andreas Hindborg wrote:
-> Add a method to consume a `Box<T, A>` and return a `NonNull<T>`. This
-> is a convenience wrapper around `Self::into_raw` for callers that need
-> a `NonNull` pointer rather than a raw pointer.
->
-> Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
+On Wed, Feb 25, 2026 at 06:03:26PM +0100, Niklas Cassel wrote:
+> From: Koichiro Den <den@valinux.co.jp>
+> 
+> On RK3588 PCIe3_4L in EP mode, the integrated DMA controller registers
+> are permanently mapped to BAR4 and must not be repurposed by EPF
+> drivers.
+> 
+> When the remote peer needs to access these registers, it must use the
+> fixed BAR4 window instead of creating another inbound mapping in a
+> different BAR. Mixing the fixed window with an additional mapping can
+> lead to incorrect behavior.
+> 
+> Advertise the DMA controller MMIO window as a reserved BAR subregion so
+> EPF drivers can reuse it safely.
+> 
+> Reviewed-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > ---
->  rust/kernel/alloc/kbox.rs | 8 ++++++++
->  1 file changed, 8 insertions(+)
->
-> diff --git a/rust/kernel/alloc/kbox.rs b/rust/kernel/alloc/kbox.rs
-> index 622b3529edfcb..e6efdd572aeea 100644
-> --- a/rust/kernel/alloc/kbox.rs
-> +++ b/rust/kernel/alloc/kbox.rs
-> @@ -213,6 +213,14 @@ pub fn leak<'a>(b: Self) -> &'a mut T {
->          // which points to an initialized instance of `T`.
->          unsafe { &mut *Box::into_raw(b) }
->      }
+
+Let me add a bit of context: this patch originally came from:
+https://lore.kernel.org/linux-pci/20260215163847.3522572-3-den@valinux.co.jp/
+where it was introduced for the embedded doorbell fallback consumer.
+
+That series was later split, and this part is now carried in the present
+series. As a result, the actual DMA_CAP consumer is not included here.
+
+This is why only DMA_CAP is described, and not ATU_CAP, MSI-X Table, etc in
+BAR4. The consumer side is being developed on top of this as a
+prerequisite.
+
+Just leaving this as additional context for anyone who may wonder.
+
+Best regards,
+Koichiro
+
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index 5b17da63151d..ecc28093c589 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -403,6 +403,15 @@ static const struct pci_epc_features rockchip_pcie_epc_features_rk3568 = {
+>  	.bar[BAR_5] = { .type = BAR_RESIZABLE, },
+>  };
+>  
+> +static const struct pci_epc_bar_rsvd_region rk3588_bar4_rsvd[] = {
+> +	{
+> +		/* DMA_CAP (BAR4: DMA Port Logic Structure) */
+> +		.type = PCI_EPC_BAR_RSVD_DMA_CTRL_MMIO,
+> +		.offset = 0x0,
+> +		.size = 0x2000,
+> +	},
+> +};
 > +
-> +    /// Consumes the `Box<T,A>` and returns a `NonNull<T>`.
-> +    ///
-> +    /// Like [`Self::into_raw`], but returns a `NonNull`.
-> +    pub fn into_nonnull(b: Self) -> NonNull<T> {
-> +        // SAFETY: `KBox::into_raw` returns a valid pointer.
-> +        unsafe { NonNull::new_unchecked(Self::into_raw(b)) }
-> +    }
-
-Hi Andreas,
-
-It looks like this patch and many others in the series are missing `#[inlin=
-e]`
-for quite a few very simple functions. Could you go through the series and =
-mark
-small functions as such?
-
-Thanks,
-Gary
-
->  }
-> =20
->  impl<T, A> Box<MaybeUninit<T>, A>
-
+>  /*
+>   * BAR4 on rk3588 exposes the ATU Port Logic Structure to the host regardless of
+>   * iATU settings for BAR4. This means that BAR4 cannot be used by an EPF driver,
+> @@ -420,7 +429,11 @@ static const struct pci_epc_features rockchip_pcie_epc_features_rk3588 = {
+>  	.bar[BAR_1] = { .type = BAR_RESIZABLE, },
+>  	.bar[BAR_2] = { .type = BAR_RESIZABLE, },
+>  	.bar[BAR_3] = { .type = BAR_RESIZABLE, },
+> -	.bar[BAR_4] = { .type = BAR_RESERVED, },
+> +	.bar[BAR_4] = {
+> +		.type = BAR_RESERVED,
+> +		.nr_rsvd_regions = ARRAY_SIZE(rk3588_bar4_rsvd),
+> +		.rsvd_regions = rk3588_bar4_rsvd,
+> +	},
+>  	.bar[BAR_5] = { .type = BAR_RESIZABLE, },
+>  };
+>  
+> -- 
+> 2.53.0
+> 
