@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 552F813B58A;
-	Sun,  1 Mar 2026 01:30:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66BE513B58A;
+	Sun,  1 Mar 2026 01:30:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328642; cv=none; b=K+XqV5KV6ya1PKDZWbgm4L2WRNBg6OE3wvQv6dUZjhGPPrGb2Bv9aWkg0JIkwbHgroKfB9W85PetZl0bmXYbCabVfNYZ43Ul3zdHMXzvl2yYKsOXvxXCHpYU1NFQda/ofUpBdKf4pG6h+t3u/zQwRivyOJfMV5Lta2tbueMlNsg=
+	t=1772328648; cv=none; b=c+kiFBnPmmidg+CtlUyoCym3W7NkNA/9HVXuRTvovS+GDN/422j/kedIYiXbBxIaL+AXcqfUkdK8d92O/SSceBVevTgLkAzTRqeey3k+Ixk6s6iRd3o37cxZAWqQ7E2s5uPefPJW8IJpQR0CO0BoUiJVBC3jUDOsrTrKtarKLdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328642; c=relaxed/simple;
-	bh=OiYdBn+YM100iH2TtITrKoBIb5SGtjy9JgEFFQJwjok=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FFB6EM8wD2oi2iPLR8VWSyaC2jI5GHPHS17W3QxxknsBSGvft5WIT8W/Lw1IERpu+1Dswv6kViOcKXBaYzF6SB/lTAz3dyWhBV305rSfZxU4d6zayD8AY47AeOWzJJAvIFTlGDjJF6k7EjV/uVQuNoJA6cx0oqI5soWfdkukuQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s4DMm8Zf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772328648; c=relaxed/simple;
+	bh=QQNqQy+c9NHqoKa20Up8OGm3l8I+Fz+aWKoCMSX2ZDs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=G/dvf8l3MZ37kSXeh0cIt1cA2PWFikgPZrVMbubLfcRhgTosqQHsUry/v5iIjmsYp/jRUWvazMxaIMlbBlLdbGepTV+fllEwZWqHL5Jn50O4Q0ErUNveRQBYhJiqjtCJW1Cs0xLksc88hM3arPSY7FDMciNCxP0P+aO3LkP/430=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XH/xY92u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s4DMm8Zf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4870C19421;
-	Sun,  1 Mar 2026 01:30:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XH/xY92u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2C8CC19421;
+	Sun,  1 Mar 2026 01:30:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328642;
-	bh=OiYdBn+YM100iH2TtITrKoBIb5SGtjy9JgEFFQJwjok=;
+	s=k20201202; t=1772328648;
+	bh=QQNqQy+c9NHqoKa20Up8OGm3l8I+Fz+aWKoCMSX2ZDs=;
 	h=From:To:Cc:Subject:Date:From;
-	b=s4DMm8Zf5KKfd1PdAyWIHL0BTu9e/SbdnoMXyL687NsjDWl/ewpmVJ6Yjt2SBFxDw
-	 +4Rm7491jczjxh0lH1N+o0CfxbJMogM3bYxe5MP6St7HVnGPmVh9TbzbpkyXwIV/CR
-	 sbB0aRv3045gVS34GK+TT1sCYyhN0+Fcs+NtvkZREN0nVrsy/yXi4aXoYwPJSKhvlz
-	 VEJg3QeWePdnSFAXtkJCllpDsf+J8Adsnw/HwUSvpKFD0WvXaqdDn4eZ33x2dKlb7a
-	 bPpyhJ6G2dYiWO78hm/Iyz/llIKzWsJwdlwH2JOHzOb27i6gZm3cx3LUJaaLcrATAB
-	 5mRcdncAtktCQ==
+	b=XH/xY92uyuu/bueOd5kvUpLeA7Bj3vkG5SlTN1KCviq+rEfRG0pjJMO+RJ66QEMpN
+	 kIyLlgMU848FEnf++krGPYHTnM8kQnsDFjTrZ6w1woQ1dzcW/h0pbrYaVAtph6w12w
+	 ohaBWib23v2KHfKHiW65JM5DRaTclTSAXn6S8+Z5db0rSQOGuA39D4TrYP8Faj0vuM
+	 4DHGObpvGy0vBK47UkvLTd/fN9Q+RcSt+BIUqsBAtvVDMy7m1b1B8GsXCi2mu5wILH
+	 vDF2+LfCzLIOTbIOIhVtayiOyGSmUTtVQQ6Ba+oDiOtp+bJnf9R4wtJIZ3YgjYml7w
+	 LOSzkpJzy4z8A==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
-	cassel@kernel.org
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
+	ilpo.jarvinen@linux.intel.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	Christian Marangi <ansuelsmth@gmail.com>,
 	linux-pci@vger.kernel.org
-Subject: FAILED: Patch "Revert "PCI: dwc: Don't wait for link up if driver can detect Link Up event"" failed to apply to 6.6-stable tree
-Date: Sat, 28 Feb 2026 20:30:40 -0500
-Message-ID: <20260301013040.1688904-1-sashal@kernel.org>
+Subject: FAILED: Patch "PCI: Use resource_set_range() that correctly sets ->end" failed to apply to 6.6-stable tree
+Date: Sat, 28 Feb 2026 20:30:46 -0500
+Message-ID: <20260301013046.1689049-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -43,6 +44,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: ignore
 X-stable: review
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 The patch below does not apply to the 6.6-stable tree.
@@ -55,97 +57,63 @@ Sasha
 
 ------------------ original commit in Linus's tree ------------------
 
-From 142d5869f6eec3110adda0ad2d931f5b3c22371d Mon Sep 17 00:00:00 2001
-From: Niklas Cassel <cassel@kernel.org>
-Date: Mon, 22 Dec 2025 07:42:13 +0100
-Subject: [PATCH] Revert "PCI: dwc: Don't wait for link up if driver can detect
- Link Up event"
+From 11721c45a8266a9d0c9684153d20e37159465f96 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 8 Dec 2025 16:56:54 +0200
+Subject: [PATCH] PCI: Use resource_set_range() that correctly sets ->end
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 8d3bf19f1b585a3cc0027f508b64c33484db8d0d.
+__pci_read_base() sets resource start and end addresses when resource
+is larger than 4G but pci_bus_addr_t or resource_size_t are not capable
+of representing 64-bit PCI addresses. This creates a problematic
+resource that has non-zero flags but the start and end addresses do not
+yield to resource size of 0 but 1.
 
-While this fake hotplugging was a nice idea, it has shown that this feature
-does not handle PCIe switches correctly:
-pci_bus 0004:43: busn_res: can not insert [bus 43-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:43: busn_res: [bus 43-41] end is updated to 43
-pci_bus 0004:43: busn_res: can not insert [bus 43] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:00.0: devices behind bridge are unusable because [bus 43] cannot be assigned for them
-pci_bus 0004:44: busn_res: can not insert [bus 44-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:44: busn_res: [bus 44-41] end is updated to 44
-pci_bus 0004:44: busn_res: can not insert [bus 44] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:02.0: devices behind bridge are unusable because [bus 44] cannot be assigned for them
-pci_bus 0004:45: busn_res: can not insert [bus 45-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:45: busn_res: [bus 45-41] end is updated to 45
-pci_bus 0004:45: busn_res: can not insert [bus 45] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:06.0: devices behind bridge are unusable because [bus 45] cannot be assigned for them
-pci_bus 0004:46: busn_res: can not insert [bus 46-41] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci_bus 0004:46: busn_res: [bus 46-41] end is updated to 46
-pci_bus 0004:46: busn_res: can not insert [bus 46] under [bus 42-41] (conflicts with (null) [bus 42-41])
-pci 0004:42:0e.0: devices behind bridge are unusable because [bus 46] cannot be assigned for them
-pci_bus 0004:42: busn_res: [bus 42-41] end is updated to 46
-pci_bus 0004:42: busn_res: can not insert [bus 42-46] under [bus 41] (conflicts with (null) [bus 41])
-pci 0004:41:00.0: devices behind bridge are unusable because [bus 42-46] cannot be assigned for them
-pcieport 0004:40:00.0: bridge has subordinate 41 but max busn 46
+Replace custom resource addresses setup with resource_set_range()
+that correctly sets end address as -1 which results in resource_size()
+returning 0.
 
-During the initial scan, PCI core doesn't see the switch and since the Root
-Port is not hot plug capable, the secondary bus number gets assigned as the
-subordinate bus number. This means, the PCI core assumes that only one bus
-will appear behind the Root Port since the Root Port is not hot plug
-capable.
+For consistency, also use resource_set_range() in the other branch that
+does size based resource setup.
 
-This works perfectly fine for PCIe endpoints connected to the Root Port,
-since they don't extend the bus. However, if a PCIe switch is connected,
-then there is a problem when the downstream busses starts showing up and
-the PCI core doesn't extend the subordinate bus number and bridge resources
-after initial scan during boot.
-
-So revert the change that skipped dw_pcie_wait_for_link() if the Link up
-IRQ was used by a vendor glue driver.
-
-Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
+Link: https://lore.kernel.org/all/20251207215359.28895-1-ansuelsmth@gmail.com/T/#m990492684913c5a158ff0e5fc90697d8ad95351b
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 Cc: stable@vger.kernel.org
-Link: https://patch.msgid.link/20251222064207.3246632-14-cassel@kernel.org
+Cc: Christian Marangi <ansuelsmth@gmail.com>
+Link: https://patch.msgid.link/20251208145654.5294-1-ilpo.jarvinen@linux.intel.com
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++--------
- drivers/pci/controller/dwc/pcie-designware.h      |  1 -
- 2 files changed, 2 insertions(+), 9 deletions(-)
+ drivers/pci/probe.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 8c41b90a1db1e..06c02fcc76c89 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -665,14 +665,8 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
- 			goto err_remove_edma;
- 	}
- 
--	/*
--	 * Note: Skip the link up delay only when a Link Up IRQ is present.
--	 * If there is no Link Up IRQ, we should not bypass the delay
--	 * because that would require users to manually rescan for devices.
--	 */
--	if (!pp->use_linkup_irq)
--		/* Ignore errors, the link may come up later */
--		dw_pcie_wait_for_link(pci);
-+	/* Ignore errors, the link may come up later */
-+	dw_pcie_wait_for_link(pci);
- 
- 	ret = pci_host_probe(bridge);
- 	if (ret)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index fc9cf8ce86290..a3a3f6e89a812 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -438,7 +438,6 @@ struct dw_pcie_rp {
- 	bool			use_atu_msg;
- 	int			msg_atu_index;
- 	struct resource		*msg_res;
--	bool			use_linkup_irq;
- 	struct pci_eq_presets	presets;
- 	struct pci_config_window *cfg;
- 	bool			ecam_enabled;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 41183aed8f5d9..ad5ae05aad3c8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -287,8 +287,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if ((sizeof(pci_bus_addr_t) < 8 || sizeof(resource_size_t) < 8)
+ 		    && sz64 > 0x100000000ULL) {
+ 			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+-			res->start = 0;
+-			res->end = 0;
++			resource_set_range(res, 0, 0);
+ 			pci_err(dev, "%s: can't handle BAR larger than 4GB (size %#010llx)\n",
+ 				res_name, (unsigned long long)sz64);
+ 			goto out;
+@@ -297,8 +296,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if ((sizeof(pci_bus_addr_t) < 8) && l) {
+ 			/* Above 32-bit boundary; try to reallocate */
+ 			res->flags |= IORESOURCE_UNSET;
+-			res->start = 0;
+-			res->end = sz64 - 1;
++			resource_set_range(res, 0, sz64);
+ 			pci_info(dev, "%s: can't handle BAR above 4GB (bus address %#010llx)\n",
+ 				 res_name, (unsigned long long)l64);
+ 			goto out;
 -- 
 2.51.0
 
